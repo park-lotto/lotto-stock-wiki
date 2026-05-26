@@ -1,0 +1,76 @@
+{
+  "nodes": [
+    {
+      "id": "t1", "type": "text",
+      "text": "## 🔴 수요 트리거\n빅테크 AI Capex **$806B** (+73% YoY)\n엔비디아 Blackwell 생산 가속",
+      "x": -780, "y": -120, "width": 260, "height": 100, "color": "1"
+    },
+    {
+      "id": "t2", "type": "text",
+      "text": "## 📊 수출 신호\nHBM 판가 **+114%** / 물량 +102%\n디램 판가 **+491%** (역대최고)",
+      "x": -780, "y": 60, "width": 260, "height": 90, "color": "2"
+    },
+    {
+      "id": "f1", "type": "file",
+      "file": "wiki/L5_섹터/반도체/stock/stock_SK하이닉스.md",
+      "x": -380, "y": -80, "width": 260, "height": 60
+    },
+    {
+      "id": "f2", "type": "file",
+      "file": "wiki/L5_섹터/반도체/stock/stock_삼성전자.md",
+      "x": -380, "y": 60, "width": 260, "height": 60
+    },
+    {
+      "id": "f3", "type": "file",
+      "file": "wiki/L5_섹터/반도체/stock/stock_삼성전기.md",
+      "x": -380, "y": 200, "width": 260, "height": 60
+    },
+    {
+      "id": "f4", "type": "text",
+      "text": "한미반도체\nTC본더 독점",
+      "x": 80, "y": -240, "width": 200, "height": 60, "color": "4"
+    },
+    {
+      "id": "f5", "type": "text",
+      "text": "HPSP\n고압 어닐링",
+      "x": 80, "y": -120, "width": 200, "height": 60, "color": "4"
+    },
+    {
+      "id": "f6", "type": "text",
+      "text": "이오테크닉스\n레이저 어닐링",
+      "x": 80, "y": 0, "width": 200, "height": 60, "color": "4"
+    },
+    {
+      "id": "f7", "type": "file",
+      "file": "wiki/L5_섹터/반도체/stock/stock_덕산하이메탈.md",
+      "x": 80, "y": 120, "width": 200, "height": 60
+    },
+    {
+      "id": "f8", "type": "file",
+      "file": "wiki/L5_섹터/반도체/stock/stock_대덕전자.md",
+      "x": 80, "y": 200, "width": 200, "height": 60
+    },
+    {
+      "id": "f9", "type": "text",
+      "text": "심텍\nHBM 기판",
+      "x": 80, "y": 280, "width": 200, "height": 60, "color": "4"
+    },
+    {
+      "id": "s1", "type": "file",
+      "file": "wiki/L5_섹터/반도체/반도체index.md",
+      "x": -780, "y": -260, "width": 260, "height": 60, "color": "6"
+    }
+  ],
+  "edges": [
+    {"id": "e1", "fromNode": "t1", "fromSide": "right", "toNode": "f1", "toSide": "left", "label": "HBM 독점 공급"},
+    {"id": "e2", "fromNode": "t2", "fromSide": "right", "toNode": "f1", "toSide": "left"},
+    {"id": "e3", "fromNode": "t1", "fromSide": "right", "toNode": "f2", "toSide": "left"},
+    {"id": "e4", "fromNode": "f1", "fromSide": "right", "toNode": "f4", "toSide": "left", "label": "패키징 장비"},
+    {"id": "e5", "fromNode": "f1", "fromSide": "right", "toNode": "f5", "toSide": "left"},
+    {"id": "e6", "fromNode": "f1", "fromSide": "right", "toNode": "f6", "toSide": "left"},
+    {"id": "e7", "fromNode": "f1", "fromSide": "right", "toNode": "f7", "toSide": "left", "label": "솔더볼 +97%"},
+    {"id": "e8", "fromNode": "f2", "fromSide": "right", "toNode": "f8", "toSide": "left", "label": "기판"},
+    {"id": "e9", "fromNode": "f1", "fromSide": "right", "toNode": "f9", "toSide": "left"},
+    {"id": "e10", "fromNode": "s1", "fromSide": "bottom", "toNode": "t1", "toSide": "top"}
+  ]
+}

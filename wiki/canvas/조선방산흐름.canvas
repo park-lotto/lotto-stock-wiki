@@ -1,0 +1,93 @@
+{
+  "nodes": [
+    {
+      "id": "s1", "type": "file",
+      "file": "wiki/L5_섹터/조선/조선index.md",
+      "x": -760, "y": -340, "width": 240, "height": 60, "color": "6"
+    },
+    {
+      "id": "s2", "type": "file",
+      "file": "wiki/L5_섹터/방산/방산index.md",
+      "x": -760, "y": 160, "width": 240, "height": 60, "color": "6"
+    },
+    {
+      "id": "t1", "type": "text",
+      "text": "## 🔴 조선 트리거\n호르무즈 해협 봉쇄\nSCC 하이퍼사이클 / 신조선가 184pt",
+      "x": -760, "y": -220, "width": 240, "height": 90, "color": "1"
+    },
+    {
+      "id": "t2", "type": "text",
+      "text": "## 🔴 방산 트리거\nMASGA 입법 진행\n지정학 리스크 구조적 상승",
+      "x": -760, "y": 60, "width": 240, "height": 90, "color": "1"
+    },
+    {
+      "id": "t3", "type": "text",
+      "text": "## 🟠 LNG 트리거\n미국 LNG FID 연속 발표\n카타르 라스라판 → 미국 수혜",
+      "x": -760, "y": -80, "width": 240, "height": 90, "color": "2"
+    },
+    {
+      "id": "f1", "type": "file",
+      "file": "wiki/L5_섹터/조선/stock/stock_HD한국조선해양.md",
+      "x": -360, "y": -300, "width": 260, "height": 60
+    },
+    {
+      "id": "f2", "type": "text",
+      "text": "한화오션\nAustal USA 19.9% / CPSP",
+      "x": -360, "y": -180, "width": 260, "height": 60, "color": "4"
+    },
+    {
+      "id": "f3", "type": "text",
+      "text": "삼성중공업\nDelfin FLNG / 탱커 리세일",
+      "x": -360, "y": -60, "width": 260, "height": 60, "color": "4"
+    },
+    {
+      "id": "f4", "type": "text",
+      "text": "대한조선\nSCC 27% 마진 / PER 9.8배",
+      "x": -360, "y": 60, "width": 260, "height": 60, "color": "4"
+    },
+    {
+      "id": "f5", "type": "file",
+      "file": "wiki/L5_섹터/방산/stock/stock_한화에어로스페이스.md",
+      "x": -360, "y": 180, "width": 260, "height": 60
+    },
+    {
+      "id": "f6", "type": "file",
+      "file": "wiki/L5_섹터/방산/stock/stock_LIG넥스원.md",
+      "x": -360, "y": 300, "width": 260, "height": 60
+    },
+    {
+      "id": "f7", "type": "file",
+      "file": "wiki/L5_섹터/방산/stock/stock_현대로템.md",
+      "x": -360, "y": 420, "width": 260, "height": 60
+    },
+    {
+      "id": "g1", "type": "text",
+      "text": "기자재\nHSD엔진 (MAN·WinGD)\n한국카본 (LNG 보냉재)\n동성화인텍 (LNG탱크)",
+      "x": 80, "y": -220, "width": 220, "height": 100, "color": "5"
+    },
+    {
+      "id": "g2", "type": "text",
+      "text": "MRO / 솔루션\nHD현대마린솔루션\nAI O&M / FSRU 특화",
+      "x": 80, "y": -80, "width": 220, "height": 80, "color": "5"
+    },
+    {
+      "id": "g3", "type": "text",
+      "text": "미국 방산 거점\nHJ중공업 (미 MRO)\nLSF 방산 수출",
+      "x": 80, "y": 180, "width": 220, "height": 80, "color": "5"
+    }
+  ],
+  "edges": [
+    {"id": "e1", "fromNode": "t1", "fromSide": "right", "toNode": "f1", "toSide": "left", "label": "수주잔고 89조"},
+    {"id": "e2", "fromNode": "t1", "fromSide": "right", "toNode": "f2", "toSide": "left"},
+    {"id": "e3", "fromNode": "t3", "fromSide": "right", "toNode": "f3", "toSide": "left", "label": "FLNG"},
+    {"id": "e4", "fromNode": "t1", "fromSide": "right", "toNode": "f4", "toSide": "left", "label": "SCC 중형"},
+    {"id": "e5", "fromNode": "t2", "fromSide": "right", "toNode": "f5", "toSide": "left", "label": "K-방산"},
+    {"id": "e6", "fromNode": "t2", "fromSide": "right", "toNode": "f6", "toSide": "left"},
+    {"id": "e7", "fromNode": "t2", "fromSide": "right", "toNode": "f7", "toSide": "left"},
+    {"id": "e8", "fromNode": "f1", "fromSide": "right", "toNode": "g1", "toSide": "left", "label": "기자재 수혜"},
+    {"id": "e9", "fromNode": "f1", "fromSide": "right", "toNode": "g2", "toSide": "left"},
+    {"id": "e10", "fromNode": "f2", "fromSide": "right", "toNode": "g3", "toSide": "left"},
+    {"id": "e11", "fromNode": "s1", "fromSide": "bottom", "toNode": "t1", "toSide": "top"},
+    {"id": "e12", "fromNode": "s2", "fromSide": "bottom", "toNode": "t2", "toSide": "top"}
+  ]
+}

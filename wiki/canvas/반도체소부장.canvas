@@ -1,0 +1,71 @@
+{
+  "nodes": [
+    {
+      "id": "s1", "type": "file",
+      "file": "wiki/L5_섹터/반도체/반도체index.md",
+      "x": -800, "y": -300, "width": 240, "height": 60, "color": "6"
+    },
+    {
+      "id": "t1", "type": "text",
+      "text": "## 🔴 수출 신호\nHBM +102% / 디램 +456%\nSSD+미국 +479%\n솔더볼 +97%",
+      "x": -800, "y": -160, "width": 240, "height": 110, "color": "1"
+    },
+    {
+      "id": "hub1", "type": "text",
+      "text": "**메모리 대장**\nSK하이닉스 / 삼성전자",
+      "x": -420, "y": -180, "width": 220, "height": 60, "color": "1"
+    },
+    {
+      "id": "mat1", "type": "text",
+      "text": "소재\n솔브레인 / 동진쎄미켐\n한솔케미칼 / 원익머트리얼즈",
+      "x": -30, "y": -340, "width": 220, "height": 80, "color": "4"
+    },
+    {
+      "id": "mat2", "type": "file",
+      "file": "wiki/L5_섹터/반도체/stock/stock_덕산하이메탈.md",
+      "x": -30, "y": -220, "width": 220, "height": 60
+    },
+    {
+      "id": "mat3", "type": "text",
+      "text": "부품 (소모성)\n코미코 / 에스앤에스텍\n원익QnC / 티씨케이",
+      "x": -30, "y": -100, "width": 220, "height": 80, "color": "4"
+    },
+    {
+      "id": "eq1", "type": "text",
+      "text": "전공정 장비\n주성엔지니어링\n원익IPS / 유진테크\nHPSP / 이오테크닉스",
+      "x": -30, "y": 40, "width": 220, "height": 100, "color": "5"
+    },
+    {
+      "id": "eq2", "type": "text",
+      "text": "후공정 OSAT\n한미반도체 (TC본더)\n하나마이크론 / 두산테스나",
+      "x": -30, "y": 200, "width": 220, "height": 80, "color": "5"
+    },
+    {
+      "id": "pcb1", "type": "text",
+      "text": "기판 / PCB\n대덕전자 / 심텍\n이수페타시스 / LG이노텍",
+      "x": -30, "y": 340, "width": 220, "height": 80, "color": "5"
+    },
+    {
+      "id": "mlcc", "type": "file",
+      "file": "wiki/L5_섹터/반도체/stock/stock_삼성전기.md",
+      "x": 380, "y": 320, "width": 220, "height": 60
+    },
+    {
+      "id": "t2", "type": "text",
+      "text": "MLCC 판가\n-10.5%(2025.12) → +3.9%(2026.05)\n판가 업사이클 초입",
+      "x": 380, "y": 160, "width": 220, "height": 90, "color": "2"
+    }
+  ],
+  "edges": [
+    {"id": "e1", "fromNode": "t1", "fromSide": "right", "toNode": "hub1", "toSide": "left"},
+    {"id": "e2", "fromNode": "hub1", "fromSide": "right", "toNode": "mat1", "toSide": "left", "label": "소재 수요↑"},
+    {"id": "e3", "fromNode": "hub1", "fromSide": "right", "toNode": "mat2", "toSide": "left", "label": "솔더볼 +97%"},
+    {"id": "e4", "fromNode": "hub1", "fromSide": "right", "toNode": "mat3", "toSide": "left"},
+    {"id": "e5", "fromNode": "hub1", "fromSide": "right", "toNode": "eq1", "toSide": "left", "label": "CAPEX↑"},
+    {"id": "e6", "fromNode": "hub1", "fromSide": "right", "toNode": "eq2", "toSide": "left", "label": "HBM 패키징"},
+    {"id": "e7", "fromNode": "hub1", "fromSide": "right", "toNode": "pcb1", "toSide": "left"},
+    {"id": "e8", "fromNode": "t2", "fromSide": "right", "toNode": "mlcc", "toSide": "left"},
+    {"id": "e9", "fromNode": "pcb1", "fromSide": "right", "toNode": "mlcc", "toSide": "left"},
+    {"id": "e10", "fromNode": "s1", "fromSide": "bottom", "toNode": "t1", "toSide": "top"}
+  ]
+}

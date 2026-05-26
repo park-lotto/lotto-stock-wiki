@@ -1,0 +1,69 @@
+{
+  "nodes": [
+    {
+      "id": "t1", "type": "text",
+      "text": "## 🔴 수요 트리거\nAI 데이터센터 전력 수요 폭증\n미국 전력망 노후화 교체 사이클",
+      "x": -760, "y": -60, "width": 260, "height": 90, "color": "1"
+    },
+    {
+      "id": "t2", "type": "text",
+      "text": "## 📊 수출 신호\n변압기 전체 YoY ↑\n변압기+미국 YoY ↑↑",
+      "x": -760, "y": 120, "width": 260, "height": 80, "color": "2"
+    },
+    {
+      "id": "s1", "type": "file",
+      "file": "wiki/L5_섹터/전력기기/전력기기index.md",
+      "x": -760, "y": -200, "width": 260, "height": 60, "color": "6"
+    },
+    {
+      "id": "f1", "type": "file",
+      "file": "wiki/L5_섹터/전력기기/stock/stock_효성중공업.md",
+      "x": -340, "y": -140, "width": 260, "height": 60
+    },
+    {
+      "id": "f2", "type": "text",
+      "text": "LS ELECTRIC\n배전반·차단기",
+      "x": -340, "y": -20, "width": 260, "height": 60, "color": "4"
+    },
+    {
+      "id": "f3", "type": "text",
+      "text": "HD현대일렉트릭\n대형 변압기",
+      "x": -340, "y": 100, "width": 260, "height": 60, "color": "4"
+    },
+    {
+      "id": "f4", "type": "text",
+      "text": "일진전기\n중형 변압기",
+      "x": -340, "y": 220, "width": 260, "height": 60, "color": "4"
+    },
+    {
+      "id": "f5", "type": "file",
+      "file": "wiki/L5_섹터/조선/stock/stock_HD한국조선해양.md",
+      "x": 80, "y": -140, "width": 260, "height": 60
+    },
+    {
+      "id": "t3", "type": "text",
+      "text": "HD현대중공업 힘쎈엔진\nH54GV — AI DC 발전용\n6,271억 수주 (2026-05-08)",
+      "x": 80, "y": 20, "width": 260, "height": 80, "color": "4"
+    },
+    {
+      "id": "t4", "type": "text",
+      "text": "삼성중공업 FDC\n부유식 데이터센터\nDelfin FLNG 수주 임박",
+      "x": 80, "y": 180, "width": 260, "height": 80, "color": "4"
+    },
+    {
+      "id": "s2", "type": "file",
+      "file": "wiki/L5_섹터/조선/조선index.md",
+      "x": 80, "y": -260, "width": 260, "height": 60, "color": "6"
+    }
+  ],
+  "edges": [
+    {"id": "e1", "fromNode": "t1", "fromSide": "right", "toNode": "f1", "toSide": "left", "label": "변압기 수요"},
+    {"id": "e2", "fromNode": "t1", "fromSide": "right", "toNode": "f2", "toSide": "left"},
+    {"id": "e3", "fromNode": "t1", "fromSide": "right", "toNode": "f3", "toSide": "left"},
+    {"id": "e4", "fromNode": "t2", "fromSide": "right", "toNode": "f1", "toSide": "left"},
+    {"id": "e5", "fromNode": "t1", "fromSide": "right", "toNode": "t3", "toSide": "left", "label": "발전 엔진"},
+    {"id": "e6", "fromNode": "t1", "fromSide": "right", "toNode": "t4", "toSide": "left", "label": "해상 데이터센터"},
+    {"id": "e7", "fromNode": "s1", "fromSide": "bottom", "toNode": "f1", "toSide": "top"},
+    {"id": "e8", "fromNode": "s2", "fromSide": "bottom", "toNode": "f5", "toSide": "top"}
+  ]
+}
