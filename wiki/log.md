@@ -1,3 +1,72 @@
+## 2026-05-27 (18차) — 인프라·도구 상담 세션 (코드 변경 없음)
+
+**논의 결과 메모** (의사결정 보조용, 향후 도입 시 재참조):
+
+- **외부 폰 조작 방법**:
+  - ① claude.ai/code 웹앱 (집 PC 파일 접근 불가)
+  - ② Tailscale + RDP (집 PC 켜둬야 함, 어디서든 그대로 사용) ⭐
+  - ③ 텔레그램 봇 게이트웨이 (기존 BOT_TOKEN 재활용, 명령 1줄로 ingest)
+  - 권장: ②+③ 조합
+
+- **NotebookLM MCP CLI (notebooklm-mcp-cli)**:
+  - 인증: 쿠키 기반 (`nlm login` → Chrome CDP), 비공식
+  - 비용: **Gemini API 토큰 안 씀**. AI Pro 구독($19.99)에 NotebookLM Plus 포함되므로 추가 0원
+  - 적합: 외부인사이트 누적 분석, 큰 리포트 교차질문
+  - 부적합: extract_report.py 정형 변환 (Gemini API 유지가 나음)
+
+- **Gemini API 무료 티어 (gemini-2.5-flash)**:
+  - 500 RPD / 10 RPM / 250K TPM, 카드 등록 불필요
+  - 현재 사용량 ≈ 20 RPD (사용률 4%) — 한도 매우 여유
+  - AI Pro 구독료와 API는 **별개 결제** (구독해도 API 한도 안 늘어남)
+  - API 키 여러 개 발급해도 같은 프로젝트면 한도 공유 → 트릭 무효
+
+- **막혔을 때 대안 우선순위**:
+  1. NotebookLM (구독 포함, 0원)
+  2. Claude Haiku 4.5 ($1/$5 per 1M)
+  3. Groq 무료 API (Llama 3.3 70B, 한국어 품질 떨어짐)
+  4. 로컬 LLM (Ollama)
+
+- **핀비즈 국내종목**: ❌ 미지원 (ETF/ADR만). 대안 = 네이버 증권 / FnGuide / Investing.com 한국 스크리너 / HTS 조건검색. 자체 히트맵 HTML 제작이 자연스러운 다음 단계로 식별.
+
+---
+
+## 2026-05-27 (17차) — VSCode·Obsidian 마크다운 스타일 통합 (STOCK BRAIN 다크 테마)
+
+**작업 유형**: 마크다운 렌더링 스타일 신규 세팅 (NotebookLM 클린 + 민트 액센트)
+
+**배경**: 영상 속 NotebookLM 정리 폼과 위키 폼이 달라서 가독성 차이 큼. 두 환경(VSCode·Obsidian) 모두 동일한 다크+민트 톤으로 통일.
+
+**신규 파일**:
+- `.vscode/markdown.css` — VSCode 마크다운 미리보기 CSS
+  - Pretendard Variable CDN 로드 (한글 가독성)
+  - 본문 16px / line-height 1.75 / letter-spacing -0.01em
+  - 헤딩 순백 / 본문 부드러운 회색 (#C9D1D9) / 민트 액센트 (#00FFD0)
+  - 테이블·블록쿼트·코드·리스트 마커 전면 스타일링
+- `.vscode/settings.json` — 워크스페이스 설정
+  - `markdown.styles` → markdown.css 연결
+  - `workbench.editorAssociations` → `.md` 파일 클릭 시 자동 미리보기 (편집은 우클릭 → Open With → Text Editor)
+- `.obsidian/snippets/stockbrain.css` — Obsidian CSS 스니펫 (설치 후 자동 인식)
+  - 동일한 컬러 토큰·폰트·레이아웃을 Obsidian 셀렉터(.theme-dark, .markdown-preview-view, .callout)로 재정의
+  - 콜아웃([!NOTE], [!WARNING]) 별도 스타일링
+  - 라이브 프리뷰(.cm-*) 셀렉터 보강
+
+**활성화 절차**:
+- VSCode: 워크스페이스 신뢰 한 번 → `.md` 클릭하면 즉시 적용
+- Obsidian (추후 설치 시): Settings → Appearance → Dark 모드 확인 → CSS snippets → stockbrain 토글 ON
+
+**컬러 토큰 (공통)**:
+```
+bg:        #0F1419  (배경)
+surface:   #161B22  (테이블·코드블록)
+text:      #E6EDF3  (헤딩)
+text-mid:  #C9D1D9  (본문)
+text-sub:  #8B949E  (보조)
+mint:      #00FFD0  (액센트)
+mint-dim:  #00BF9A  (리스트 마커)
+```
+
+---
+
 ## 2026-05-26 (16차) — 위키 파일 구조 정리 + 수급오실레이터 스크립트 완성
 
 **작업 유형**: 파일 구조 일괄 정리 + 자동화 스크립트 신규 개발
