@@ -231,7 +231,7 @@ body { background:var(--bg); color:var(--text); font-family:'Apple SD Gothic Neo
 .ann-st { margin-left:auto; font-size:9px; font-weight:700; padding:2px 6px; border-radius:3px; }
 .ann-st.live { background:rgba(0,255,208,0.08); color:var(--main); }
 .ann-st.wait { background:#161616; color:#444; }
-.ann-item { }
+.ann-item { display:block; }
 .ann-item.ghost { opacity:0.4; }
 .ann-date { font-size:10px; color:#444; margin-bottom:3px; }
 .ann-ttl { font-size:11px; font-weight:600; color:var(--text); margin-bottom:6px; line-height:1.35; }
@@ -787,7 +787,7 @@ body { background:var(--bg); color:var(--text); font-family:'Apple SD Gothic Neo
   </div>
   <div style="display:flex;align-items:center;gap:12px;">
     <div class="live-dot"></div>
-    <span class="hdate">2026년 05월 24일</span>
+    <span class="hdate">2026년 05월 26일</span>
   </div>
 </header>
 
@@ -797,41 +797,41 @@ body { background:var(--bg); color:var(--text); font-family:'Apple SD Gothic Neo
   <div class="market-summary">
     <div class="ms-head">
       <span class="ms-title">🧠 오늘의 반도체 시장</span>
-      <span class="ms-date">2026-05-24 (일)</span>
-      <span class="ms-mood warn">🟠 단기 조정 / 구조적 강세 유지</span>
+      <span class="ms-date">2026-05-26 (화)</span>
+      <span class="ms-mood bull">🔴 빅3 TP 역대최고 — 사이클 재확인</span>
     </div>
     <div class="ms-body">
 
-      <div class="ms-col">
+      <div class="ms-col hl">
         <div class="ms-lbl">📡 핵심 신호</div>
         <div class="ms-txt">
-          필반 <span class="r">-2.47%</span> 하락했지만 수출 데이터는 <span class="g">HBM +114% · 디램 +491%</span> 역대최고 사이클 그대로.<br>
-          숫자 하락 = 주가 조정이지 <span class="g">실적 훼손 아님</span>.
+          NH투자증권 <span class="g">SK하이닉스 310만 · 삼성전자 49만</span> 역대최고 TP.<br>
+          신한·SK증권 <span class="g">삼성전기 200만</span> 동반 격상. 빅3 동시 신고가 = 사이클 피크아웃 불식.
         </div>
       </div>
 
       <div class="ms-col">
         <div class="ms-lbl">🎯 오늘의 기회</div>
         <div class="ms-txt">
-          <span class="g">장비주 역행 강세</span> — AMAT +1.05%로 대형주와 반대로 움직임.<br>
-          수주 잔고 사상 최대 → 국내 주성엔지니어링·원익IPS 주목.
+          <span class="g">테크윙 1Q26 어닝서프</span> — 실적 9.7B vs 컨센 2.8B. 탑픽 3→4점.<br>
+          심텍·하나마이크론·티에스이 컨센 +20~76%. <span class="g">소부장 일제 재평가</span>.
         </div>
       </div>
 
       <div class="ms-col">
         <div class="ms-lbl">⚠️ 체크 포인트</div>
         <div class="ms-txt">
-          <span class="w">미중 회담 실패</span>로 AI 피크아웃 노이즈 재점화.<br>
-          <span class="w">5/28 엔비디아 실적</span> 가이던스가 섹터 방향 완전히 결정.
+          <span class="w">5/28 엔비디아 실적</span> 가이던스가 섹터 방향 최종 결정.<br>
+          미중 불확실성 잔존. HBM 수급 신호는 <span class="g">구조적 강세 유지</span>.
         </div>
       </div>
 
       <div class="ms-col hl">
         <div class="ms-lbl">💡 오늘의 결론</div>
         <div class="ms-big">
-          삼전·닉스 <span class="r">단기 쉬는 구간</span>.<br>
-          <span class="g">장비·소재주 선별 진입</span> 구간.<br>
-          5/28 엔비디아 실적 전까지 <span class="w">대형주 비중 유지</span>.
+          <span class="g">빅3 TP 신고가 = 진입 근거 강화</span>.<br>
+          소부장(테크윙·심텍·하나마이크론) <span class="g">선별 매집 구간</span>.<br>
+          5/28 엔비디아 실적 후 <span class="w">방향 최종 확인</span>.
         </div>
       </div>
 
@@ -910,35 +910,35 @@ body { background:var(--bg); color:var(--text); font-family:'Apple SD Gothic Neo
         <div class="news-item-sm">
           <div class="ni-top">
             <span class="ni-tag2 hot">핵심</span>
-            <span class="ni-src">한국경제 05/24</span>
+            <span class="ni-src">NH투자증권 05/26</span>
           </div>
-          <div class="ni-txt">삼성전자 유리기판 2027년 양산 검토 — 소재 협력사 선정 임박</div>
+          <div class="ni-txt">SK하이닉스 TP 1.8M→<b>3.1M</b> 역대최고 · 삼성전자 310K→<b>490K</b> 동반 격상</div>
           <div class="ni-sts">
-            <span class="ni-st h">SKC</span>
-            <span class="ni-st h">동우화인켐</span>
-            <span class="ni-st">이수화학</span>
+            <span class="ni-st h">SK하이닉스</span>
+            <span class="ni-st h">삼성전자</span>
+          </div>
+        </div>
+        <div class="news-item-sm">
+          <div class="ni-top">
+            <span class="ni-tag2 hot">핵심</span>
+            <span class="ni-src">신한·SK증권 05/26</span>
+          </div>
+          <div class="ni-txt">삼성전기 TP 1M·1.5M → <b>200만원</b> 상향 — 리포트 신고가 달성</div>
+          <div class="ni-sts">
+            <span class="ni-st h">삼성전기</span>
           </div>
         </div>
         <div class="news-item-sm">
           <div class="ni-top">
             <span class="ni-tag2 mid">주목</span>
-            <span class="ni-src">전자신문 05/23</span>
+            <span class="ni-src">컨센 05/26</span>
           </div>
-          <div class="ni-txt">SK하이닉스 HBM4 1β 공정 전환 완료 — 3분기 양산 예고</div>
+          <div class="ni-txt">테크윙 1Q26 서프라이즈 (실적 9.7B vs 컨센 2.8B) · 심텍·하나마이크론·티에스이 컨센 +20~76%</div>
           <div class="ni-sts">
-            <span class="ni-st h">덕산하이메탈</span>
-            <span class="ni-st h">한솔케미칼</span>
-          </div>
-        </div>
-        <div class="news-item-sm">
-          <div class="ni-top">
-            <span class="ni-tag2 new">신규</span>
-            <span class="ni-src">머니투데이 05/22</span>
-          </div>
-          <div class="ni-txt">에이직랜드, 삼성 SF2 기반 AI 추론칩 테이프아웃 완료</div>
-          <div class="ni-sts">
-            <span class="ni-st h">에이직랜드</span>
-            <span class="ni-st">알파홀딩스</span>
+            <span class="ni-st h">테크윙</span>
+            <span class="ni-st h">심텍</span>
+            <span class="ni-st h">하나마이크론</span>
+            <span class="ni-st h">티에스이</span>
           </div>
         </div>
       </div>
@@ -952,42 +952,42 @@ body { background:var(--bg); color:var(--text); font-family:'Apple SD Gothic Neo
         <div class="toppick-item">
           <div class="tp-top">
             <span class="tp-name">SK하이닉스</span>
-            <span class="tp-score s1">리포트 대기 / ?점</span>
+            <span class="tp-score s1">수급 확인 대기</span>
           </div>
           <div class="tp-sigs">
             <span class="sig on">수출🔴</span>
             <span class="sig on">판가↑</span>
             <span class="sig on">어닝서프</span>
-            <span class="sig w">수급미입력</span>
-            <span class="sig off">일정</span>
-          </div>
-          <div class="tp-reason">HBM 독점 공급 + 판가 역대최고. 수급 확인 후 최종 등급 확정</div>
-        </div>
-        <div class="toppick-item">
-          <div class="tp-top">
-            <span class="tp-name">덕산하이메탈</span>
-            <span class="tp-score s2">수급 대기 / ?점</span>
-          </div>
-          <div class="tp-sigs">
-            <span class="sig on">수출🔴 솔더볼+97%</span>
-            <span class="sig on">판가↑</span>
-            <span class="sig off">리포트</span>
+            <span class="sig on">리포트 NH 310만</span>
             <span class="sig w">수급미입력</span>
           </div>
-          <div class="tp-reason">수출 신호 가장 강함. 리포트·수급 들어오면 탑픽 확정 가능</div>
+          <div class="tp-reason">NH TP 310만 역대최고 = 리포트신고가 ✅. 수급 빈집 확인 시 즉시 탑픽</div>
         </div>
         <div class="toppick-item">
           <div class="tp-top">
             <span class="tp-name">삼성전기</span>
-            <span class="tp-score s2">4점 (수급 미입력)</span>
+            <span class="tp-score s1">5점 (수급 미입력)</span>
           </div>
           <div class="tp-sigs">
-            <span class="sig on">리포트 14사↑</span>
+            <span class="sig on">리포트 신고가 200만</span>
             <span class="sig on">MLCC판가전환</span>
+            <span class="sig on">컨센 다수↑</span>
             <span class="sig w">수급미입력</span>
-            <span class="sig off">수출</span>
           </div>
-          <div class="tp-reason">MLCC 판가 YoY 전환점. 수급 빈집 확인되면 진입 검토 구간</div>
+          <div class="tp-reason">신한·SK 200만 = 리포트신고가 달성. MLCC 판가사이클 초입. 수급 확인 시 즉시 탑픽</div>
+        </div>
+        <div class="toppick-item">
+          <div class="tp-top">
+            <span class="tp-name">테크윙</span>
+            <span class="tp-score s1">4점 (수급 미입력)</span>
+          </div>
+          <div class="tp-sigs">
+            <span class="sig on">어닝서프 +247%</span>
+            <span class="sig on">컨센 상향</span>
+            <span class="sig off">수출</span>
+            <span class="sig w">수급미입력</span>
+          </div>
+          <div class="tp-reason">1Q26 실적 9.7B vs 컨센 2.8B = 역대급 서프. HBM 테스트 장비 수요 폭발</div>
         </div>
       </div>
 
@@ -1034,41 +1034,51 @@ body { background:var(--bg); color:var(--text); font-family:'Apple SD Gothic Neo
 
       <!-- ── ACTIVE: 오늘 움직이는 서브섹터 ── -->
       <div class="ss-a">
-        <div class="ss-nm">전공정(장비)</div>
-        <div class="ss-why">필반 -2.47% 속 역행 강세<br>AMAT·LRCX 낙폭 대비 국내 장비 선방</div>
+        <div class="ss-nm">SK하이닉스</div>
+        <div class="ss-why">NH TP 310만 역대최고 — 리포트신고가 달성<br>HBM 독점 구조 + 수출 판가 초강세 재확인</div>
         <div class="ss-sks">
-          <span class="ss-sk">한미반도체</span>
-          <span class="ss-sk">HPSP</span>
-          <span class="ss-sk">주성엔지니어링</span>
-          <span class="ss-sk">원익IPS</span>
+          <span class="ss-sk">SK하이닉스</span>
         </div>
       </div>
 
       <div class="ss-a">
-        <div class="ss-nm">기판</div>
-        <div class="ss-why">삼성전기 14사 동반 TP 상향<br>FC-BGA·MLCC 가격인상 사이클</div>
-        <div class="ss-sks">
-          <span class="ss-sk">삼성전기</span>
-          <span class="ss-sk">심텍</span>
-          <span class="ss-sk">LG이노텍</span>
-          <span class="ss-sk">이수페타시스</span>
-        </div>
-      </div>
-
-      <!-- ── WARN: 조정·주의 ── -->
-      <div class="ss-w">
         <div class="ss-nm">삼성전자</div>
-        <div class="ss-why">미중 회담 실패 · AI 피크아웃 우려<br>필반 연동 단기 하방 압력</div>
+        <div class="ss-why">NH TP 49만 · 한화 TP 39만 동반 격상<br>DS부문 HBM 퀄+파운드리 테슬라딜 재료</div>
         <div class="ss-sks">
           <span class="ss-sk">삼성전자</span>
         </div>
       </div>
 
-      <div class="ss-w">
-        <div class="ss-nm">SK하이닉스</div>
-        <div class="ss-why">NVDA -2.47% 동반 조정<br>엔비디아 실적(5/28) 분수령 대기</div>
+      <div class="ss-a">
+        <div class="ss-nm">기판</div>
+        <div class="ss-why">삼성전기 신한·SK 200만 — 리포트신고가<br>MLCC 판가사이클 초입 + FC-BGA 수요 확대</div>
         <div class="ss-sks">
-          <span class="ss-sk">SK하이닉스</span>
+          <span class="ss-sk">삼성전기</span>
+          <span class="ss-sk">심텍</span>
+          <span class="ss-sk">이수페타시스</span>
+          <span class="ss-sk">LG이노텍</span>
+        </div>
+      </div>
+
+      <div class="ss-a">
+        <div class="ss-nm">전공정(소재)</div>
+        <div class="ss-why">테크윙 어닝서프 +247% · 심텍·하나마이크론 컨센 +20~30%<br>HBM 소부장 재평가 사이클 진입</div>
+        <div class="ss-sks">
+          <span class="ss-sk">테크윙</span>
+          <span class="ss-sk">하나마이크론</span>
+          <span class="ss-sk">티에스이</span>
+          <span class="ss-sk">덕산하이메탈</span>
+        </div>
+      </div>
+
+      <div class="ss-a">
+        <div class="ss-nm">전공정(장비)</div>
+        <div class="ss-why">AMAT 수주잔고 사상최대 — 국내 증착·ALD 선행<br>주성엔지니어링·원익IPS 수주 가속</div>
+        <div class="ss-sks">
+          <span class="ss-sk">주성엔지니어링</span>
+          <span class="ss-sk">원익IPS</span>
+          <span class="ss-sk">한미반도체</span>
+          <span class="ss-sk">HPSP</span>
         </div>
       </div>
 
@@ -1099,33 +1109,33 @@ body { background:var(--bg); color:var(--text); font-family:'Apple SD Gothic Neo
         <div style="position:absolute;top:12px;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--main),rgba(0,255,208,0.1) 80%,transparent);z-index:0;"></div>
 
         <div class="tn-card" style="position:relative;z-index:1;">
-          <div class="tn-meta"><span class="tn-tag hot">핵심</span><span class="tn-src">09:12</span></div>
-          <div class="tn-hl">삼성전자, 유리기판 2027년 양산 검토 — 소재 협력사 선정 임박</div>
-          <div class="tn-stocks" style="margin-top:6px;"><span class="tn-st h">SKC</span><span class="tn-st h">동우화인켐</span><span class="tn-st">삼성전기</span></div>
+          <div class="tn-meta"><span class="tn-tag hot">핵심</span><span class="tn-src">NH 05/26</span></div>
+          <div class="tn-hl">NH투자증권 SK하이닉스 TP 1.8M→3.1M · 삼성전자 310K→490K 역대최고 동반 격상</div>
+          <div class="tn-stocks" style="margin-top:6px;"><span class="tn-st h">SK하이닉스</span><span class="tn-st h">삼성전자</span></div>
         </div>
 
         <div class="tn-card" style="position:relative;z-index:1;">
-          <div class="tn-meta"><span class="tn-tag mid">주목</span><span class="tn-src">10:33</span></div>
-          <div class="tn-hl">미중 제네바 회담 결렬 — 수출 규제 추가 완화 없음 확인</div>
-          <div class="tn-stocks" style="margin-top:6px;"><span class="tn-st">SK하이닉스</span><span class="tn-st">삼성전자</span></div>
+          <div class="tn-meta"><span class="tn-tag hot">핵심</span><span class="tn-src">신한·SK 05/26</span></div>
+          <div class="tn-hl">삼성전기 신한 1M→2M · SK 1.5M→2M 동반 격상 — 리포트 신고가 달성</div>
+          <div class="tn-stocks" style="margin-top:6px;"><span class="tn-st h">삼성전기</span></div>
         </div>
 
         <div class="tn-card" style="position:relative;z-index:1;">
-          <div class="tn-meta"><span class="tn-tag hot">핵심</span><span class="tn-src">13:45</span></div>
-          <div class="tn-hl">AMAT 수주 잔고 사상 최대 — 국내 증착장비 수혜 전망</div>
-          <div class="tn-stocks" style="margin-top:6px;"><span class="tn-st h">주성엔지니어링</span><span class="tn-st h">원익IPS</span></div>
+          <div class="tn-meta"><span class="tn-tag hot">핵심</span><span class="tn-src">실적 05/26</span></div>
+          <div class="tn-hl">테크윙 1Q26 OP 9.7B — 컨센 2.8B 대비 +247% 서프라이즈. HBM 테스트 수요 폭발</div>
+          <div class="tn-stocks" style="margin-top:6px;"><span class="tn-st h">테크윙</span></div>
         </div>
 
         <div class="tn-card" style="position:relative;z-index:1;">
-          <div class="tn-meta"><span class="tn-tag mid">주목</span><span class="tn-src">15:20</span></div>
-          <div class="tn-hl">에이직랜드, 삼성 SF2 기반 AI 추론칩 테이프아웃 완료 공시</div>
-          <div class="tn-stocks" style="margin-top:6px;"><span class="tn-st h">에이직랜드</span><span class="tn-st">알파홀딩스</span></div>
+          <div class="tn-meta"><span class="tn-tag mid">주목</span><span class="tn-src">컨센 05/26</span></div>
+          <div class="tn-hl">티에스이 컨센 +76% · 심텍 +29% · 하나마이크론 +20% — 후공정·소부장 재평가 파동</div>
+          <div class="tn-stocks" style="margin-top:6px;"><span class="tn-st h">티에스이</span><span class="tn-st h">심텍</span><span class="tn-st h">하나마이크론</span></div>
         </div>
 
         <div class="tn-card" style="position:relative;z-index:1;">
-          <div class="tn-meta"><span class="tn-tag info">참고</span><span class="tn-src">16:58</span></div>
-          <div class="tn-hl">하나마이크론, CoWoS 후공정 라인 증설 3,000억 집행 결정</div>
-          <div class="tn-stocks" style="margin-top:6px;"><span class="tn-st">하나마이크론</span></div>
+          <div class="tn-meta"><span class="tn-tag info">예정</span><span class="tn-src">5/28</span></div>
+          <div class="tn-hl">엔비디아 2Q25 실적 발표 — 가이던스가 반도체 섹터 방향 최종 결정</div>
+          <div class="tn-stocks" style="margin-top:6px;"><span class="tn-st">SK하이닉스</span><span class="tn-st">삼성전자</span><span class="tn-st">한미반도체</span></div>
         </div>
 
       </div>
@@ -1237,9 +1247,13 @@ body { background:var(--bg); color:var(--text); font-family:'Apple SD Gothic Neo
         <div style="display:flex;flex-direction:column;">
           <div class="lbl">대표종목 컨센서스 변화</div>
           <div class="card" style="flex:1;">
-            <div class="cons-row"><span class="cons-name">SK하이닉스</span><span class="cons-tp">TP 230만</span><span class="cons-n">1사</span><span class="arr u">↑</span></div>
-            <div class="cons-row"><span class="cons-name">삼성전자</span><span class="cons-tp">TP 130,000</span><span class="cons-n">—</span><span class="arr s">–</span></div>
-            <div class="cons-row"><span class="cons-name">삼성전기</span><span class="cons-tp">TP 100만+</span><span class="cons-n">14사</span><span class="arr u">↑</span></div>
+            <div class="cons-row"><span class="cons-name">SK하이닉스</span><span class="cons-tp" style="color:var(--main);font-weight:700;">TP 310만 역대최고</span><span class="cons-n">NH</span><span class="arr u">↑</span></div>
+            <div class="cons-row"><span class="cons-name">삼성전자</span><span class="cons-tp" style="color:var(--main);font-weight:700;">TP 490,000원</span><span class="cons-n">NH·한화</span><span class="arr u">↑</span></div>
+            <div class="cons-row"><span class="cons-name">삼성전기</span><span class="cons-tp" style="color:var(--main);font-weight:700;">TP 200만 신고가</span><span class="cons-n">신한·SK</span><span class="arr u">↑</span></div>
+            <div class="cons-row"><span class="cons-name">테크윙</span><span class="cons-tp">컨센 +248%</span><span class="cons-n">어닝서프</span><span class="arr u">↑</span></div>
+            <div class="cons-row"><span class="cons-name">심텍</span><span class="cons-tp">컨센 +29.75%</span><span class="cons-n">상향</span><span class="arr u">↑</span></div>
+            <div class="cons-row"><span class="cons-name">하나마이크론</span><span class="cons-tp">컨센 +20.99%</span><span class="cons-n">상향</span><span class="arr u">↑</span></div>
+            <div class="cons-row"><span class="cons-name">티에스이</span><span class="cons-tp">컨센 +76.44%</span><span class="cons-n">상향</span><span class="arr u">↑</span></div>
           </div>
         </div>
       </div>
@@ -1401,10 +1415,19 @@ body { background:var(--bg); color:var(--text); font-family:'Apple SD Gothic Neo
 
             <div class="tl-item">
               <div class="tl-dc"><div class="tld o"></div></div>
-              <div class="tl-card today">
-                <div class="tl-meta"><span class="tl-date">2026-05-24</span><span class="tag td">TODAY</span></div>
+              <div class="tl-card">
+                <div class="tl-meta"><span class="tl-date">2026-05-24</span><span class="tag m">시장</span></div>
                 <div class="tl-ttl">필반 -2.47% / 미중 회담 실패</div>
                 <div class="tl-desc">AI 피크아웃 우려. 장비주만 역행 강세</div>
+              </div>
+            </div>
+
+            <div class="tl-item">
+              <div class="tl-dc"><div class="tld m"></div></div>
+              <div class="tl-card today">
+                <div class="tl-meta"><span class="tl-date">2026-05-26</span><span class="tag td">TODAY</span></div>
+                <div class="tl-ttl">NH 빅3 TP 역대최고 일제 격상</div>
+                <div class="tl-desc">SK하이닉스 310만 · 삼성전자 49만 · 삼성전기 200만. 테크윙 어닝서프 +247%</div>
               </div>
             </div>
 

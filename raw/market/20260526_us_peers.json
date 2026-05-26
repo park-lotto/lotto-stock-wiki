@@ -1,0 +1,263 @@
+{
+  "date": "2026-05-26",
+  "indices": [
+    {
+      "ticker": "^IXIC",
+      "name": "나스닥",
+      "price": "26343.97",
+      "chg1d": 0.19,
+      "chg5d": 0.45,
+      "dir1d": "→",
+      "dir5d": "→횡보"
+    },
+    {
+      "ticker": "^GSPC",
+      "name": "S&P500",
+      "price": "7473.47",
+      "chg1d": 0.37,
+      "chg5d": 0.88,
+      "dir1d": "→",
+      "dir5d": "→횡보"
+    },
+    {
+      "ticker": "^SOX",
+      "name": "필라델피아반도체",
+      "price": "12202.54",
+      "chg1d": 1.99,
+      "chg5d": 5.3,
+      "dir1d": "↑",
+      "dir5d": "↑강세"
+    },
+    {
+      "ticker": "^VIX",
+      "name": "VIX",
+      "price": "16.68",
+      "chg1d": 0.54,
+      "chg5d": -7.64,
+      "dir1d": "↑",
+      "dir5d": "↓약세"
+    }
+  ],
+  "sectors": {
+    "반도체": [
+      {
+        "ticker": "NVDA",
+        "name": "엔비디아",
+        "note": "HBM 수요 핵심 → SK하이닉스",
+        "price": "215.33",
+        "chg1d": -1.9,
+        "chg5d": -4.43,
+        "dir1d": "↓",
+        "dir5d": "↓약세"
+      },
+      {
+        "ticker": "AMAT",
+        "name": "AMAT",
+        "note": "전공정 장비 → 한미반도체·원익IPS",
+        "price": "432.16",
+        "chg1d": 1.12,
+        "chg5d": -1.02,
+        "dir1d": "↑",
+        "dir5d": "→횡보"
+      },
+      {
+        "ticker": "MU",
+        "name": "마이크론",
+        "note": "메모리 경쟁사 → 사이클 확인",
+        "price": "751.00",
+        "chg1d": -1.46,
+        "chg5d": 3.63,
+        "dir1d": "↓",
+        "dir5d": "↑강세"
+      },
+      {
+        "ticker": "TSM",
+        "name": "TSMC",
+        "note": "파운드리 → DB하이텍",
+        "price": "404.52",
+        "chg1d": -0.65,
+        "chg5d": 0.04,
+        "dir1d": "↓",
+        "dir5d": "→횡보"
+      }
+    ],
+    "로봇": [
+      {
+        "ticker": "TSLA",
+        "name": "테슬라",
+        "note": "옵티머스 → 레인보우로보틱스·에스비비테크",
+        "price": "426.01",
+        "chg1d": 1.95,
+        "chg5d": 0.89,
+        "dir1d": "↑",
+        "dir5d": "→횡보"
+      },
+      {
+        "ticker": "ABB",
+        "name": "ABB",
+        "note": "산업용 로봇 → 현대로보틱스",
+        "error": "No data"
+      },
+      {
+        "ticker": "ISRG",
+        "name": "Intuitive",
+        "note": "의료로봇 → 큐렉소·고영",
+        "price": "438.10",
+        "chg1d": -0.39,
+        "chg5d": 4.03,
+        "dir1d": "→",
+        "dir5d": "↑강세"
+      }
+    ],
+    "원전": [
+      {
+        "ticker": "CEG",
+        "name": "Constellation",
+        "note": "미국 최대 원전 → 두산에너빌리티",
+        "price": "294.07",
+        "chg1d": 2.88,
+        "chg5d": 10.06,
+        "dir1d": "↑",
+        "dir5d": "↑강세"
+      },
+      {
+        "ticker": "VST",
+        "name": "Vistra",
+        "note": "AI 전력 수요 → 한전기술",
+        "price": "156.27",
+        "chg1d": 4.82,
+        "chg5d": 11.88,
+        "dir1d": "↑",
+        "dir5d": "↑강세"
+      },
+      {
+        "ticker": "CCJ",
+        "name": "Cameco",
+        "note": "우라늄 → 원전 섹터 전반",
+        "price": "104.75",
+        "chg1d": -0.55,
+        "chg5d": -2.57,
+        "dir1d": "↓",
+        "dir5d": "↓약세"
+      }
+    ],
+    "LNG_조선": [
+      {
+        "ticker": "LNG",
+        "name": "Cheniere",
+        "note": "LNG 수출 → HD현대중공업·한화오션",
+        "price": "240.85",
+        "chg1d": 0.17,
+        "chg5d": -0.41,
+        "dir1d": "→",
+        "dir5d": "→횡보"
+      },
+      {
+        "ticker": "CQP",
+        "name": "CQP",
+        "note": "LNG 파트너십 → 삼성중공업",
+        "price": "63.39",
+        "chg1d": -2.04,
+        "chg5d": -0.19,
+        "dir1d": "↓",
+        "dir5d": "→횡보"
+      }
+    ],
+    "방산": [
+      {
+        "ticker": "LMT",
+        "name": "Lockheed",
+        "note": "F-35·미사일 → 한화에어로스페이스",
+        "price": "533.24",
+        "chg1d": 2,
+        "chg5d": 3.34,
+        "dir1d": "↑",
+        "dir5d": "↑강세"
+      },
+      {
+        "ticker": "RTX",
+        "name": "Raytheon",
+        "note": "방공·유도탄 → LIG넥스원",
+        "price": "177.01",
+        "chg1d": 0.59,
+        "chg5d": 3.41,
+        "dir1d": "↑",
+        "dir5d": "↑강세"
+      },
+      {
+        "ticker": "NOC",
+        "name": "Northrop",
+        "note": "B-21·우주 → 한국항공우주",
+        "price": "555.58",
+        "chg1d": 0.73,
+        "chg5d": 2.75,
+        "dir1d": "↑",
+        "dir5d": "↑강세"
+      }
+    ],
+    "ESS_2차전지": [
+      {
+        "ticker": "TSLA",
+        "name": "테슬라",
+        "note": "ESS·EV 배터리 → LG에너지솔루션",
+        "price": "426.01",
+        "chg1d": 1.95,
+        "chg5d": 0.89,
+        "dir1d": "↑",
+        "dir5d": "→횡보"
+      },
+      {
+        "ticker": "ENPH",
+        "name": "Enphase",
+        "note": "가정용 ESS → 솔라엣지 커플링",
+        "price": "64.03",
+        "chg1d": 2.71,
+        "chg5d": 21.06,
+        "dir1d": "↑",
+        "dir5d": "↑강세"
+      },
+      {
+        "ticker": "FSLR",
+        "name": "First Solar",
+        "note": "태양광 → 한화솔루션",
+        "price": "257.85",
+        "chg1d": 3.6,
+        "chg5d": 10.49,
+        "dir1d": "↑",
+        "dir5d": "↑강세"
+      }
+    ],
+    "전력기기": [
+      {
+        "ticker": "ETN",
+        "name": "Eaton",
+        "note": "전력 관리 → 현대일렉트릭·효성중공업",
+        "price": "391.35",
+        "chg1d": 2.58,
+        "chg5d": -2.03,
+        "dir1d": "↑",
+        "dir5d": "↓약세"
+      },
+      {
+        "ticker": "GEV",
+        "name": "GE Vernova",
+        "note": "변압기·그리드 → 일진전기",
+        "price": "1038.74",
+        "chg1d": -0.49,
+        "chg5d": -1,
+        "dir1d": "→",
+        "dir5d": "→횡보"
+      },
+      {
+        "ticker": "EMR",
+        "name": "Emerson",
+        "note": "전력 자동화 → LS일렉트릭",
+        "price": "136.42",
+        "chg1d": 1.13,
+        "chg5d": 2.53,
+        "dir1d": "↑",
+        "dir5d": "↑강세"
+      }
+    ]
+  }
+}
