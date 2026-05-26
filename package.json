@@ -1,0 +1,9 @@
+{
+  "devDependencies": {
+    "xlsx": "^0.18.5"
+  },
+  "dependencies": {
+    "pdf-parse": "^2.4.5",
+    "puppeteer": "^25.0.4"
+  }
+}

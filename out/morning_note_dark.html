@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=800">
+  <title>오늘의 전략 — STOCK BRAIN</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #03030c;
+      background-image:
+        linear-gradient(rgba(0,255,208,0.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,208,0.022) 1px, transparent 1px);
+      background-size: 48px 48px;
+      font-family: 'Noto Sans KR', sans-serif;
+      width: 800px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, #0d0d1c 0%, #0a0a16 55%, #080810 100%);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow:
+        0 0 60px rgba(0,255,208,0.10),
+        0 0 120px rgba(0,255,208,0.04),
+        0 60px 120px rgba(0,0,0,0.8),
+        inset 0 1px 0 rgba(0,255,208,0.08);
+      position: relative;
+    }
+
+    /* 상단 글로우라인 */
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg,
+        transparent 5%,
+        rgba(0,255,208,0.45) 30%,
+        rgba(0,255,208,1) 50%,
+        rgba(0,255,208,0.45) 70%,
+        transparent 95%);
+    }
+
+    /* ── HEADER ── */
+    .header {
+      padding: 22px 28px 18px;
+      border-bottom: 1px solid rgba(0,255,208,0.07);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .h-left {}
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .brand-txt {
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 5px;
+      color: #00FFD0;
+      text-transform: uppercase;
+    }
+
+    .brand-dot {
+      width: 6px; height: 6px;
+      background: #00FFD0;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #00FFD0, 0 0 16px rgba(0,255,208,0.5);
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      color: #555;
+    }
+
+    .h-title {
+      font-size: 34px;
+      font-weight: 900;
+      color: #FFFFFF;
+      letter-spacing: -0.5px;
+      line-height: 1;
+    }
+
+    .h-title .hl {
+      color: #00FFD0;
+      text-shadow: 0 0 22px rgba(0,255,208,0.45);
+    }
+
+    .h-right {
+      text-align: right;
+    }
+
+    /* ↓ 날짜는 매일 여기만 수정 */
+    .h-date {
+      font-size: 13px;
+      font-weight: 500;
+      color: #666;
+      margin-bottom: 7px;
+    }
+
+    .h-status {
+      font-size: 12px;
+      font-weight: 700;
+      color: #00FFD0;
+      background: rgba(0,255,208,0.1);
+      border: 1px solid rgba(0,255,208,0.2);
+      padding: 4px 14px;
+      border-radius: 20px;
+      letter-spacing: 1px;
+    }
+
+    /* ── SIGNAL STRIP ── */
+    .signal-strip {
+      display: flex;
+      gap: 6px;
+      padding: 9px 28px;
+      background: rgba(0,0,0,0.25);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .strip-lbl {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: #333;
+      margin-right: 4px;
+    }
+
+    .sc-chip {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 11px;
+      border-radius: 10px;
+      border: 1px solid;
+    }
+
+    .sc-hot  { background:rgba(0,255,208,0.10); border-color:rgba(0,255,208,0.28); color:#00FFD0; }
+    .sc-warm { background:rgba(255,214,0,0.08); border-color:rgba(255,214,0,0.22); color:#FFD600; }
+    .sc-mid  { background:rgba(255,140,66,0.08); border-color:rgba(255,140,66,0.22); color:#FF8C42; }
+    .sc-cool { background:rgba(77,150,255,0.08); border-color:rgba(77,150,255,0.22); color:#4D96FF; }
+
+    /* ── SECTIONS GRID ── */
+    .sections {
+      padding: 14px 18px 16px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .sec {
+      background: rgba(255,255,255,0.025);
+      border: 1px solid rgba(255,255,255,0.055);
+      border-radius: 12px;
+      padding: 13px 13px 11px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* top accent */
+    .sec::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      border-radius: 12px 12px 0 0;
+    }
+
+    .v-red::before  { background: #00FFD0; }
+    .v-warm::before { background: #FFD600; }
+    .v-mid::before  { background: #FF8C42; }
+    .v-cool::before { background: #4D96FF; }
+    .v-gray::before { background: #444; }
+
+    .sec-num {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: #383848;
+      margin-bottom: 5px;
+    }
+
+    .sec-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #FFFFFF;
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+
+    .sec-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+
+    .sec-list li {
+      font-size: 11px;
+      color: #7a7a9a;
+      line-height: 1.45;
+      padding-left: 11px;
+      position: relative;
+    }
+
+    .sec-list li::before {
+      content: '—';
+      position: absolute;
+      left: 0;
+      color: #30304a;
+      font-size: 9px;
+      line-height: 1.6;
+    }
+
+    .sig-tag {
+      display: inline-flex;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 8px;
+      border: 1px solid;
+    }
+
+    .v-red  .sig-tag { color:#00FFD0; border-color:rgba(0,255,208,0.28); background:rgba(0,255,208,0.07); }
+    .v-warm .sig-tag { color:#FFD600; border-color:rgba(255,214,0,0.25); background:rgba(255,214,0,0.07); }
+    .v-mid  .sig-tag { color:#FF8C42; border-color:rgba(255,140,66,0.25); background:rgba(255,140,66,0.07); }
+    .v-cool .sig-tag { color:#4D96FF; border-color:rgba(77,150,255,0.25); background:rgba(77,150,255,0.07); }
+    .v-gray .sig-tag { color:#666;    border-color:rgba(100,100,100,0.3); background:rgba(100,100,100,0.07); }
+
+    /* ── FOOTER ── */
+    .footer {
+      border-top: 1px solid rgba(255,255,255,0.04);
+      padding: 12px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .ft-brand { font-size: 11px; font-weight: 900; letter-spacing: 4px; color: #00FFD0; text-transform: uppercase; }
+    .ft-sub   { font-size: 10px; color: #333; }
+    .ft-date  { font-size: 10px; font-weight: 700; color: #2a2a3a; letter-spacing: 1px; }
+  </style>
+</head>
+<body>
+<div class="card">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="h-left">
+      <div class="brand-row">
+        <div class="brand-txt">STOCK BRAIN</div>
+        <div class="brand-dot"></div>
+        <div class="brand-sub">로또의 주식인사이트</div>
+      </div>
+      <div class="h-title">
+        <span class="hl">데이터</span>가 판단한다
+      </div>
+    </div>
+    <div class="h-right">
+      <!-- ↓ 날짜는 매일 여기만 수정 -->
+      <div class="h-date">2026. 05. 26</div>
+      <div class="h-status">▲ RISK ON</div>
+    </div>
+  </div>
+
+  <!-- SIGNAL STRIP -->
+  <div class="signal-strip">
+    <div class="strip-lbl">TODAY</div>
+    <div class="sc-chip sc-hot">반도체 🔴</div>
+    <div class="sc-chip sc-hot">조선 🔴</div>
+    <div class="sc-chip sc-warm">방산 🟡</div>
+    <div class="sc-chip sc-warm">로봇 🟡</div>
+    <div class="sc-chip sc-warm">바이오 🟡</div>
+    <div class="sc-chip sc-mid">전력기기</div>
+  </div>
+
+  <!-- SECTIONS 3×3 -->
+  <div class="sections">
+
+    <div class="sec v-red">
+      <div class="sec-num">01</div>
+      <div class="sec-title">HBM 반도체</div>
+      <ul class="sec-list">
+        <li>SK하이닉스 Vera Rubin HBM4E 독점 가능성 95%</li>
+        <li>M15X 70K/월 램프업 · Capa 35% 점유</li>
+        <li>NVDA AI 수요 구조적 확대 → 직결 수혜</li>
+      </ul>
+      <div class="sig-tag">🔴 강력 탑픽</div>
+    </div>
+
+    <div class="sec v-red">
+      <div class="sec-num">02</div>
+      <div class="sec-title">반도체 소부장</div>
+      <ul class="sec-list">
+        <li>삼성 파운드리 22.8조 테슬라 딜 낙수 체인</li>
+        <li>AMAT 수주 선행 → 국내 12~18개월 후행</li>
+        <li>솔브레인·동진쎄미켐 국산화 수혜</li>
+      </ul>
+      <div class="sig-tag">🔴 탑픽 후보</div>
+    </div>
+
+    <div class="sec v-red">
+      <div class="sec-num">03</div>
+      <div class="sec-title">조선 MASGA</div>
+      <ul class="sec-list">
+        <li>HD한국조선해양 수주잔고 89조 역대최고</li>
+        <li>미 해군 + 상선 + AI전력 삼각축 호황</li>
+        <li>신조선가 184pt · 쇼티지 구조 지속</li>
+      </ul>
+      <div class="sig-tag">🔴 강력 탑픽</div>
+    </div>
+
+    <div class="sec v-warm">
+      <div class="sec-num">04</div>
+      <div class="sec-title">방산</div>
+      <ul class="sec-list">
+        <li>한화에어로스페이스 수주잔고 118조 역대최고</li>
+        <li>K9·천무 해외 수출 지속 확대</li>
+        <li>LIG넥스원 천궁-II 수출비중 30% 상회</li>
+      </ul>
+      <div class="sig-tag">🟠 관심</div>
+    </div>
+
+    <div class="sec v-warm">
+      <div class="sec-num">05</div>
+      <div class="sec-title">로봇</div>
+      <ul class="sec-list">
+        <li>레인보우로보틱스 · 삼성전자 파트너십 확대</li>
+        <li>Physical AI 플랫폼 수요 본격화</li>
+        <li>2026 2Q 핵심 모멘텀 분기</li>
+      </ul>
+      <div class="sig-tag">🟠 관심</div>
+    </div>
+
+    <div class="sec v-warm">
+      <div class="sec-num">06</div>
+      <div class="sec-title">바이오</div>
+      <ul class="sec-list">
+        <li>레고켐바이오 ADC 글로벌 딜 진행</li>
+        <li>한미약품 GLP-1 임상 단계 진행</li>
+        <li>LLY·NVO 미국 커플링 → 국내 수혜</li>
+      </ul>
+      <div class="sig-tag">🟠 딜 모니터</div>
+    </div>
+
+    <div class="sec v-mid">
+      <div class="sec-num">07</div>
+      <div class="sec-title">대미투자 LNG</div>
+      <ul class="sec-list">
+        <li>카타르 잠수함 수주 협상 진행 중</li>
+        <li>대미투자 LNG 연계 → 조선·기자재 동시 수혜</li>
+        <li>한국카본·HSD엔진 밸류체인 연동</li>
+      </ul>
+      <div class="sig-tag">🟡 이벤트 대기</div>
+    </div>
+
+    <div class="sec v-mid">
+      <div class="sec-num">08</div>
+      <div class="sec-title">전력기기·ESS</div>
+      <ul class="sec-list">
+        <li>효성중공업 북미 생산 슬롯 2Q 본격화</li>
+        <li>AI 데이터센터 전력 수요 구조적 확대</li>
+        <li>ESS 설치 가속화 → 소재 연동</li>
+      </ul>
+      <div class="sig-tag">🟡 대기</div>
+    </div>
+
+    <div class="sec v-cool">
+      <div class="sec-num">09</div>
+      <div class="sec-title">매크로 체크</div>
+      <ul class="sec-list">
+        <li>9월 금리인하 확률 47% · 달러 약세 지속</li>
+        <li>VIX 16.7 · SOX +1.99% · 나스닥 호조</li>
+        <li>원달러 1,521원 → 수출주 환차익 유리</li>
+      </ul>
+      <div class="sig-tag">💡 Risk-On</div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="ft-brand">STOCK BRAIN</div>
+    <div class="ft-sub">로또의 주식인사이트 · 매일 아침 전략노트</div>
+    <div class="ft-date">2026.05.26</div>
+  </div>
+
+</div>
+</body>
+</html>

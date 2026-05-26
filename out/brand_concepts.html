@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Brand Concepts</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: #080810;
+    font-family: 'Noto Sans KR', sans-serif;
+    width: 1200px;
+    padding: 40px;
+  }
+  .title {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 5px;
+    color: #333;
+    text-align: center;
+    margin-bottom: 36px;
+    text-transform: uppercase;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+  }
+  .card {
+    background: #0d0d1c;
+    border: 1px solid #1a1a2e;
+    border-radius: 20px;
+    padding: 32px 20px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 20%; right: 20%;
+    height: 1px;
+  }
+  .card-a::before { background: linear-gradient(90deg, transparent, #FF9A3C, transparent); }
+  .card-b::before { background: linear-gradient(90deg, transparent, #00FFD0, transparent); }
+  .card-c::before { background: linear-gradient(90deg, transparent, #C77DFF, transparent); }
+  .card-d::before { background: linear-gradient(90deg, transparent, #4D96FF, transparent); }
+
+  .concept-label {
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    color: #333;
+  }
+  .concept-name {
+    font-size: 16px;
+    font-weight: 900;
+    color: #fff;
+    text-align: center;
+    line-height: 1.4;
+  }
+  .concept-sub {
+    font-size: 11px;
+    font-weight: 500;
+    color: #555;
+    text-align: center;
+    line-height: 1.6;
+  }
+  .tag {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid;
+  }
+  .tag-a { color: #FF9A3C; border-color: rgba(255,154,60,0.3); background: rgba(255,154,60,0.07); }
+  .tag-b { color: #00FFD0; border-color: rgba(0,255,208,0.3); background: rgba(0,255,208,0.07); }
+  .tag-c { color: #C77DFF; border-color: rgba(199,125,255,0.3); background: rgba(199,125,255,0.07); }
+  .tag-d { color: #4D96FF; border-color: rgba(77,150,255,0.3); background: rgba(77,150,255,0.07); }
+</style>
+</head>
+<body>
+
+<div class="title">Brand Identity Concepts — 로또의 주식인사이트 × STOCK BRAIN</div>
+
+<div class="grid">
+
+  <!-- A: 로또볼 캐릭터 -->
+  <div class="card card-a">
+    <div class="concept-label">CONCEPT A</div>
+
+    <svg width="160" height="160" viewBox="0 0 160 160">
+      <defs>
+        <radialGradient id="ballGrad" cx="38%" cy="32%" r="65%">
+          <stop offset="0%" stop-color="#FFE08A"/>
+          <stop offset="50%" stop-color="#FF9A3C"/>
+          <stop offset="100%" stop-color="#E05A00"/>
+        </radialGradient>
+        <radialGradient id="ballGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="rgba(255,154,60,0.4)"/>
+          <stop offset="100%" stop-color="rgba(255,154,60,0)"/>
+        </radialGradient>
+        <filter id="softGlow">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <!-- glow -->
+      <ellipse cx="80" cy="84" rx="56" ry="56" fill="url(#ballGlow)"/>
+      <!-- ball -->
+      <circle cx="80" cy="78" r="52" fill="url(#ballGrad)"/>
+      <!-- shine -->
+      <ellipse cx="62" cy="58" rx="14" ry="9" fill="rgba(255,255,255,0.35)" transform="rotate(-20,62,58)"/>
+      <!-- white band -->
+      <ellipse cx="80" cy="78" rx="52" ry="17" fill="rgba(255,255,255,0.18)" transform="rotate(-18,80,78)"/>
+      <!-- eyes — normal mode -->
+      <circle cx="64" cy="72" r="9" fill="#1a0800"/>
+      <circle cx="96" cy="72" r="9" fill="#1a0800"/>
+      <circle cx="67" cy="69" r="3.5" fill="white" opacity="0.9"/>
+      <circle cx="99" cy="69" r="3.5" fill="white" opacity="0.9"/>
+      <!-- smile -->
+      <path d="M 62 90 Q 80 104 98 90" stroke="#1a0800" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <!-- number badge -->
+      <circle cx="80" cy="118" r="16" fill="#1a0800" opacity="0.85"/>
+      <text x="80" y="123" text-anchor="middle" font-size="14" font-weight="900" fill="#FF9A3C" font-family="sans-serif">7</text>
+    </svg>
+
+    <div class="concept-name">로또볼<br>캐릭터</div>
+    <div class="concept-sub">
+      친근함 + 분석력<br>표정이 시그널 강도를 말함<br>이모티콘·스티커·워터마크
+    </div>
+    <div class="tag tag-a">친근함 × 분석</div>
+  </div>
+
+  <!-- B: BRAIN 아이콘 -->
+  <div class="card card-b">
+    <div class="concept-label">CONCEPT B</div>
+
+    <svg width="160" height="160" viewBox="0 0 160 160">
+      <defs>
+        <filter id="mintGlow">
+          <feGaussianBlur stdDeviation="5" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <radialGradient id="bgGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="rgba(0,255,208,0.18)"/>
+          <stop offset="100%" stop-color="rgba(0,255,208,0)"/>
+        </radialGradient>
+      </defs>
+      <!-- bg glow -->
+      <ellipse cx="80" cy="80" rx="65" ry="65" fill="url(#bgGlow)"/>
+
+      <!-- brain shape (simplified) -->
+      <g filter="url(#mintGlow)">
+        <!-- left hemisphere -->
+        <path d="M 80 44
+          C 60 40, 36 48, 34 66
+          C 32 76, 38 84, 38 90
+          C 36 100, 40 110, 50 114
+          C 60 118, 72 114, 78 110
+          L 78 44 Z"
+          fill="none" stroke="#00FFD0" stroke-width="2.5" stroke-linejoin="round"/>
+        <!-- right hemisphere -->
+        <path d="M 80 44
+          C 100 40, 124 48, 126 66
+          C 128 76, 122 84, 122 90
+          C 124 100, 120 110, 110 114
+          C 100 118, 88 114, 82 110
+          L 82 44 Z"
+          fill="none" stroke="#00FFD0" stroke-width="2.5" stroke-linejoin="round"/>
+        <!-- center split -->
+        <line x1="80" y1="44" x2="80" y2="110" stroke="#00FFD0" stroke-width="1.5" opacity="0.4"/>
+        <!-- wrinkles left -->
+        <path d="M 52 58 C 58 54, 66 56, 68 62" fill="none" stroke="#00FFD0" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M 44 74 C 52 70, 62 72, 64 80" fill="none" stroke="#00FFD0" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M 46 90 C 54 88, 62 90, 64 98" fill="none" stroke="#00FFD0" stroke-width="1.8" stroke-linecap="round"/>
+        <!-- wrinkles right -->
+        <path d="M 108 58 C 102 54, 94 56, 92 62" fill="none" stroke="#00FFD0" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M 116 74 C 108 70, 98 72, 96 80" fill="none" stroke="#00FFD0" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M 114 90 C 106 88, 98 90, 96 98" fill="none" stroke="#00FFD0" stroke-width="1.8" stroke-linecap="round"/>
+      </g>
+
+      <!-- circuit dots -->
+      <circle cx="56" cy="60" r="3" fill="#00FFD0" opacity="0.9"/>
+      <circle cx="48" cy="76" r="3" fill="#00FFD0" opacity="0.9"/>
+      <circle cx="50" cy="94" r="3" fill="#00FFD0" opacity="0.9"/>
+      <circle cx="104" cy="60" r="3" fill="#00FFD0" opacity="0.9"/>
+      <circle cx="112" cy="76" r="3" fill="#00FFD0" opacity="0.9"/>
+      <circle cx="110" cy="94" r="3" fill="#00FFD0" opacity="0.9"/>
+      <!-- center node -->
+      <circle cx="80" cy="78" r="5" fill="#00FFD0"/>
+      <circle cx="80" cy="78" r="9" fill="none" stroke="#00FFD0" stroke-width="1" opacity="0.4"/>
+    </svg>
+
+    <div class="concept-name">BRAIN<br>아이콘</div>
+    <div class="concept-sub">
+      프리미엄 로고형<br>STOCK BRAIN 직결<br>로고·앱아이콘·워터마크
+    </div>
+    <div class="tag tag-b">프리미엄 × AI</div>
+  </div>
+
+  <!-- C: 데이터 탐정 -->
+  <div class="card card-c">
+    <div class="concept-label">CONCEPT C</div>
+
+    <svg width="160" height="160" viewBox="0 0 160 160">
+      <defs>
+        <radialGradient id="lensGrad" cx="35%" cy="30%" r="65%">
+          <stop offset="0%" stop-color="#1a1040"/>
+          <stop offset="100%" stop-color="#080818"/>
+        </radialGradient>
+        <filter id="purpleGlow">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <!-- magnifier handle -->
+      <line x1="108" y1="108" x2="132" y2="132" stroke="#C77DFF" stroke-width="8" stroke-linecap="round"/>
+      <line x1="108" y1="108" x2="132" y2="132" stroke="#7B40B8" stroke-width="5" stroke-linecap="round"/>
+
+      <!-- magnifier ring -->
+      <circle cx="74" cy="74" r="46" fill="none" stroke="#C77DFF" stroke-width="6" filter="url(#purpleGlow)"/>
+      <circle cx="74" cy="74" r="40" fill="url(#lensGrad)"/>
+      <circle cx="74" cy="74" r="40" fill="rgba(199,125,255,0.05)"/>
+
+      <!-- chart inside lens -->
+      <!-- bars -->
+      <rect x="44" y="88" width="8" height="20" rx="2" fill="#C77DFF" opacity="0.6"/>
+      <rect x="56" y="76" width="8" height="32" rx="2" fill="#C77DFF" opacity="0.8"/>
+      <rect x="68" y="68" width="8" height="40" rx="2" fill="#C77DFF"/>
+      <rect x="80" y="58" width="8" height="50" rx="2" fill="#00FFD0"/>
+      <rect x="92" y="72" width="8" height="36" rx="2" fill="#C77DFF" opacity="0.7"/>
+      <!-- trend line -->
+      <polyline points="48,84 60,72 72,64 84,52 96,66" fill="none" stroke="#FFD600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- signal dot -->
+      <circle cx="84" cy="52" r="4" fill="#FF6B6B"/>
+
+      <!-- lens shine -->
+      <ellipse cx="58" cy="58" rx="10" ry="6" fill="rgba(255,255,255,0.12)" transform="rotate(-25,58,58)"/>
+    </svg>
+
+    <div class="concept-name">데이터<br>탐정</div>
+    <div class="concept-sub">
+      "남들이 못 보는 걸 본다"<br>유튜브 썸네일에서 폭발<br>스토리텔링 직결
+    </div>
+    <div class="tag tag-c">스토리 × 임팩트</div>
+  </div>
+
+  <!-- D: 시그널 아이 -->
+  <div class="card card-d">
+    <div class="concept-label">CONCEPT D</div>
+
+    <svg width="160" height="160" viewBox="0 0 160 160">
+      <defs>
+        <radialGradient id="eyeGrad" cx="50%" cy="40%" r="55%">
+          <stop offset="0%" stop-color="#1a2a4a"/>
+          <stop offset="100%" stop-color="#060814"/>
+        </radialGradient>
+        <filter id="blueGlow">
+          <feGaussianBlur stdDeviation="5" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <radialGradient id="irisGrad" cx="38%" cy="32%" r="62%">
+          <stop offset="0%" stop-color="#80C8FF"/>
+          <stop offset="45%" stop-color="#4D96FF"/>
+          <stop offset="100%" stop-color="#1a3a8a"/>
+        </radialGradient>
+      </defs>
+
+      <!-- radar rings -->
+      <circle cx="80" cy="80" r="68" fill="none" stroke="#4D96FF" stroke-width="0.8" opacity="0.15"/>
+      <circle cx="80" cy="80" r="55" fill="none" stroke="#4D96FF" stroke-width="0.8" opacity="0.22"/>
+      <circle cx="80" cy="80" r="42" fill="none" stroke="#4D96FF" stroke-width="1" opacity="0.3"/>
+      <circle cx="80" cy="80" r="29" fill="none" stroke="#4D96FF" stroke-width="1.2" opacity="0.4" filter="url(#blueGlow)"/>
+
+      <!-- radar sweep line -->
+      <line x1="80" y1="80" x2="80" y2="38" stroke="#4D96FF" stroke-width="1.5" opacity="0.5" stroke-dasharray="3,3"/>
+      <line x1="80" y1="80" x2="116" y2="54" stroke="#00FFD0" stroke-width="2" opacity="0.7" filter="url(#blueGlow)"/>
+
+      <!-- signal blips -->
+      <circle cx="106" cy="52" r="3.5" fill="#FF6B6B" filter="url(#blueGlow)"/>
+      <circle cx="54" cy="58" r="2.5" fill="#00FFD0" opacity="0.8"/>
+      <circle cx="116" cy="82" r="2" fill="#FFD600" opacity="0.6"/>
+
+      <!-- eye white -->
+      <ellipse cx="80" cy="80" rx="28" ry="18" fill="white"/>
+      <!-- iris -->
+      <circle cx="80" cy="80" r="14" fill="url(#irisGrad)"/>
+      <!-- pupil -->
+      <circle cx="80" cy="80" r="7" fill="#020408"/>
+      <!-- reflection -->
+      <circle cx="75" cy="76" r="3" fill="rgba(255,255,255,0.85)"/>
+      <circle cx="83" cy="82" r="1.5" fill="rgba(255,255,255,0.4)"/>
+      <!-- iris ring -->
+      <circle cx="80" cy="80" r="14" fill="none" stroke="#4D96FF" stroke-width="1.5" opacity="0.7" filter="url(#blueGlow)"/>
+      <!-- eye outline -->
+      <ellipse cx="80" cy="80" rx="28" ry="18" fill="none" stroke="#4D96FF" stroke-width="2" filter="url(#blueGlow)"/>
+    </svg>
+
+    <div class="concept-name">시그널 아이<br>Signal Eye</div>
+    <div class="concept-sub">
+      "빈집을 포착한다"<br>가장 단순 · 어디서든 인식<br>로고·프사·워터마크 완벽
+    </div>
+    <div class="tag tag-d">심볼 × 날카로움</div>
+  </div>
+
+</div>
+</body>
+</html>

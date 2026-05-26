@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LOTTO STOCK TERMINAL</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base:     #080c14;
+      --bg-panel:    #0d1321;
+      --bg-card:     #111827;
+      --bg-hover:    #1a2332;
+      --border:      #1e293b;
+      --border-bright: #2d3f55;
+
+      --orange:      #f97316;
+      --orange-dim:  #7c3a10;
+      --green:       #22c55e;
+      --green-dim:   #14532d;
+      --red:         #ef4444;
+      --red-dim:     #7f1d1d;
+      --yellow:      #eab308;
+      --yellow-dim:  #713f12;
+      --blue:        #3b82f6;
+      --blue-dim:    #1e3a5f;
+
+      --text-primary:   #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted:     #475569;
+
+      --font-mono: 'IBM Plex Mono', monospace;
+      --font-sans: 'IBM Plex Sans KR', sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg-base);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: #050810;
+      border-bottom: 2px solid var(--orange);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .header-logo {
+      font-family: var(--font-mono);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--orange);
+      letter-spacing: 3px;
+    }
+    .header-sub {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .header-time {
+      font-family: var(--font-mono);
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--orange);
+      letter-spacing: 2px;
+    }
+    .header-date {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-align: right;
+    }
+    .live-dot {
+      width: 8px; height: 8px;
+      background: var(--red);
+      border-radius: 50%;
+      animation: blink 1.2s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    /* ── LAYOUT ── */
+    .main {
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* ── ROW ── */
+    .row { display: grid; gap: 10px; }
+    .row-2 { grid-template-columns: 380px 1fr; }
+    .row-3 { grid-template-columns: repeat(3, 1fr); }
+    .row-4 { grid-template-columns: repeat(4, 1fr); }
+
+    /* ── PANEL ── */
+    .panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .panel-header {
+      background: #0a1020;
+      border-bottom: 1px solid var(--border);
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .panel-title {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--orange);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .panel-tag {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+    }
+    .panel-body { padding: 10px 12px; }
+
+    /* ── US MARKET ── */
+    .market-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .market-row:last-child { border-bottom: none; }
+    .market-name {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-secondary);
+      width: 110px;
+    }
+    .market-value {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+    .market-change {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      width: 80px;
+      text-align: right;
+    }
+    .up   { color: var(--green); }
+    .down { color: var(--red); }
+    .flat { color: var(--text-muted); }
+
+    /* ── KEY DRIVER ── */
+    .driver-item {
+      display: flex;
+      gap: 8px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+      align-items: flex-start;
+    }
+    .driver-item:last-child { border-bottom: none; }
+    .driver-num {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--orange);
+      background: var(--orange-dim);
+      border-radius: 2px;
+      padding: 1px 5px;
+      white-space: nowrap;
+      margin-top: 1px;
+    }
+    .driver-text {
+      font-size: 12px;
+      color: var(--text-primary);
+      line-height: 1.5;
+    }
+    .driver-tag {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 2px;
+      margin-left: 4px;
+    }
+    .tag-hot  { background: var(--red-dim);    color: var(--red); }
+    .tag-warm { background: var(--yellow-dim);  color: var(--yellow); }
+    .tag-cool { background: var(--blue-dim);    color: var(--blue); }
+
+    /* ── SECTOR HEATMAP ── */
+    .heatmap-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+    }
+    .heat-cell {
+      border-radius: 4px;
+      padding: 10px 8px;
+      text-align: center;
+      border: 1px solid transparent;
+      cursor: default;
+    }
+    .heat-cell:hover { border-color: var(--border-bright); }
+
+    .heat-hot    { background: #2d1500; border-color: var(--orange-dim); }
+    .heat-warm   { background: #1a2000; border-color: #2d3a00; }
+    .heat-mild   { background: #0f1f2d; border-color: var(--blue-dim); }
+    .heat-cool   { background: #1a1200; border-color: #2d2200; }
+    .heat-cold   { background: #0f1520; border-color: #1a2535; }
+
+    .heat-emoji  { font-size: 18px; display: block; margin-bottom: 4px; }
+    .heat-name   { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+    .heat-deg    { font-family: var(--font-mono); font-size: 20px; font-weight: 600; display: block; margin: 3px 0; }
+    .heat-delta  { font-family: var(--font-mono); font-size: 10px; }
+
+    .deg-hot  { color: var(--red); }
+    .deg-warm { color: var(--orange); }
+    .deg-mild { color: var(--yellow); }
+    .deg-cool { color: var(--blue); }
+    .deg-cold { color: #64748b; }
+
+    /* ── SECTOR DETAIL ── */
+    .detail-row {
+      display: grid;
+      grid-template-columns: 90px 1fr;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+      gap: 6px;
+      align-items: start;
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      padding-top: 1px;
+    }
+    .detail-value {
+      font-size: 12px;
+      color: var(--text-primary);
+      line-height: 1.5;
+    }
+
+    .badge {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 2px;
+      margin-right: 3px;
+    }
+    .badge-green  { background: var(--green-dim);  color: var(--green); }
+    .badge-red    { background: var(--red-dim);    color: var(--red); }
+    .badge-yellow { background: var(--yellow-dim); color: var(--yellow); }
+    .badge-orange { background: var(--orange-dim); color: var(--orange); }
+    .badge-blue   { background: var(--blue-dim);   color: var(--blue); }
+
+    /* ── TEMP BAR ── */
+    .temp-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 2px;
+    }
+    .temp-bar-bg {
+      flex: 1;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .temp-bar-fill { height: 100%; border-radius: 2px; }
+    .temp-bar-val {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      width: 32px;
+      text-align: right;
+    }
+
+    /* ── PICKS ── */
+    .pick-item {
+      display: grid;
+      grid-template-columns: 24px 110px 1fr auto;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .pick-item:last-child { border-bottom: none; }
+    .pick-rank {
+      font-family: var(--font-mono);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--orange);
+    }
+    .pick-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .pick-reason {
+      font-size: 11px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    .pick-action {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 2px;
+      white-space: nowrap;
+      font-weight: 600;
+    }
+    .action-buy   { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+    .action-watch { background: var(--yellow-dim); color: var(--yellow); border: 1px solid var(--yellow); }
+    .action-hold  { background: var(--blue-dim); color: var(--blue); border: 1px solid var(--blue); }
+    .action-avoid { background: var(--red-dim); color: var(--red); border: 1px solid var(--red); }
+
+    /* ── TICKER ── */
+    .ticker-wrap {
+      background: #050810;
+      border-top: 1px solid var(--orange-dim);
+      padding: 7px 0;
+      overflow: hidden;
+      position: relative;
+    }
+    .ticker-label {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      background: var(--orange);
+      color: #000;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 0 10px;
+      display: flex;
+      align-items: center;
+      letter-spacing: 1px;
+      z-index: 2;
+    }
+    .ticker-track {
+      display: flex;
+      gap: 40px;
+      animation: ticker 40s linear infinite;
+      padding-left: 90px;
+      white-space: nowrap;
+    }
+    @keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+    .ticker-item {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+    .ticker-item .t-time { color: var(--text-muted); margin-right: 6px; }
+    .ticker-item .t-hot  { color: var(--orange); }
+
+    /* ── DIVIDER ── */
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 2px 0;
+      border-left: 2px solid var(--orange);
+      padding-left: 8px;
+      margin-bottom: 4px;
+    }
+
+    /* ── STAR ── */
+    .star { color: var(--orange); }
+  </style>
+</head>
+<body>
+
+<!-- ════ HEADER ════ -->
+<div class="header">
+  <div class="header-brand">
+    <div>
+      <div class="header-logo">LOTTO STOCK TERMINAL</div>
+      <div class="header-sub">MORNING BRIEFING SYSTEM · KST EDITION</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="live-dot"></div>
+    <div>
+      <div class="header-time" id="clock">06:00</div>
+      <div class="header-date" id="dateStr">2026-05-16 · FRIDAY</div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- ════ ROW 1 : 미장 + 핵심 드라이버 ════ -->
+  <div class="row row-2">
+
+    <!-- 미장 마감 -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">🇺🇸 미장 마감</span>
+        <span class="panel-tag">US MARKET CLOSE</span>
+      </div>
+      <div class="panel-body">
+        <div class="market-row">
+          <span class="market-name">S&P 500</span>
+          <span class="market-value">5,302.47</span>
+          <span class="market-change up">▲ +0.82%</span>
+        </div>
+        <div class="market-row">
+          <span class="market-name">NASDAQ</span>
+          <span class="market-value">16,742.39</span>
+          <span class="market-change up">▲ +1.14%</span>
+        </div>
+        <div class="market-row">
+          <span class="market-name">DOW JONES</span>
+          <span class="market-value">39,512.84</span>
+          <span class="market-change up">▲ +0.31%</span>
+        </div>
+        <div class="market-row">
+          <span class="market-name">VIX</span>
+          <span class="market-value">14.23</span>
+          <span class="market-change down">▼ RISK ON</span>
+        </div>
+        <div class="market-row">
+          <span class="market-name">달러 인덱스</span>
+          <span class="market-value">103.42</span>
+          <span class="market-change down">▼ -0.21%</span>
+        </div>
+        <div class="market-row">
+          <span class="market-name">국채 10년</span>
+          <span class="market-value">4.31%</span>
+          <span class="market-change down">▼ -2bp</span>
+        </div>
+        <div class="market-row">
+          <span class="market-name">WTI 원유</span>
+          <span class="market-value">$82.40</span>
+          <span class="market-change up">▲ +2.10%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 핵심 드라이버 -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">📡 오늘의 핵심 드라이버</span>
+        <span class="panel-tag">KEY MARKET DRIVER</span>
+      </div>
+      <div class="panel-body">
+        <div class="driver-item">
+          <span class="driver-num">01</span>
+          <div class="driver-text">
+            빅테크 AI 인프라 투자 추가 발표 — NVDA +3.2% 급등
+            <span class="driver-tag tag-hot">HOT</span>
+          </div>
+        </div>
+        <div class="driver-item">
+          <span class="driver-num">02</span>
+          <div class="driver-text">
+            원유 재고 예상치 대폭 하회 → 국제 유가 급등
+            <span class="driver-tag tag-warm">에너지</span>
+          </div>
+        </div>
+        <div class="driver-item">
+          <span class="driver-num">03</span>
+          <div class="driver-text">
+            Fed 위원 금리인하 시사 발언 → 달러 약세 전환
+            <span class="driver-tag tag-cool">거시</span>
+          </div>
+        </div>
+        <div class="driver-item">
+          <span class="driver-num">04</span>
+          <div class="driver-text">
+            체코 원전 수주 협상 최종 단계 진입 보도
+            <span class="driver-tag tag-warm">원전</span>
+          </div>
+        </div>
+        <div class="driver-item">
+          <span class="driver-num">05</span>
+          <div class="driver-text">
+            중동 긴장 재고조 → 방산 ETF 장중 신고가
+            <span class="driver-tag tag-hot">방산</span>
+          </div>
+        </div>
+        <div style="margin-top:10px; padding-top:8px; border-top:1px solid var(--border);">
+          <div class="section-label">오늘 국내장 키워드</div>
+          <div style="margin-top:6px; display:flex; gap:6px; flex-wrap:wrap;">
+            <span class="badge badge-red">AI인프라</span>
+            <span class="badge badge-orange">원전</span>
+            <span class="badge badge-yellow">방산</span>
+            <span class="badge badge-green">에너지</span>
+            <span class="badge badge-blue">달러약세</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ════ ROW 2 : 섹터 온도 히트맵 ════ -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">🌡️ 섹터 온도계</span>
+      <span class="panel-tag">SECTOR TEMPERATURE · 전주 대비</span>
+    </div>
+    <div class="panel-body">
+      <div class="heatmap-grid">
+
+        <div class="heat-cell heat-hot">
+          <span class="heat-emoji">🔴</span>
+          <span class="heat-name">AI / 반도체</span>
+          <span class="heat-deg deg-hot">82°</span>
+          <div class="temp-bar-wrap">
+            <div class="temp-bar-bg"><div class="temp-bar-fill" style="width:82%;background:var(--red)"></div></div>
+          </div>
+          <span class="heat-delta up">▲ +14 전주比</span>
+        </div>
+
+        <div class="heat-cell heat-hot">
+          <span class="heat-emoji">🟠</span>
+          <span class="heat-name">원전 / 에너지</span>
+          <span class="heat-deg deg-warm">74°</span>
+          <div class="temp-bar-wrap">
+            <div class="temp-bar-bg"><div class="temp-bar-fill" style="width:74%;background:var(--orange)"></div></div>
+          </div>
+          <span class="heat-delta up">▲ +9 전주比</span>
+        </div>
+
+        <div class="heat-cell heat-mild">
+          <span class="heat-emoji">🟡</span>
+          <span class="heat-name">방산 / 우주</span>
+          <span class="heat-deg deg-mild">63°</span>
+          <div class="temp-bar-wrap">
+            <div class="temp-bar-bg"><div class="temp-bar-fill" style="width:63%;background:var(--yellow)"></div></div>
+          </div>
+          <span class="heat-delta up">▲ +3 전주比</span>
+        </div>
+
+        <div class="heat-cell heat-cool">
+          <span class="heat-emoji">🔵</span>
+          <span class="heat-name">조선 / 해운</span>
+          <span class="heat-deg deg-cool">44°</span>
+          <div class="temp-bar-wrap">
+            <div class="temp-bar-bg"><div class="temp-bar-fill" style="width:44%;background:var(--blue)"></div></div>
+          </div>
+          <span class="heat-delta down">▼ -6 전주比</span>
+        </div>
+
+        <div class="heat-cell heat-cold">
+          <span class="heat-emoji">❄️</span>
+          <span class="heat-name">2차전지</span>
+          <span class="heat-deg deg-cold">28°</span>
+          <div class="temp-bar-wrap">
+            <div class="temp-bar-bg"><div class="temp-bar-fill" style="width:28%;background:#475569"></div></div>
+          </div>
+          <span class="heat-delta down">▼ -11 전주比</span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ ROW 3 : 섹터 상세 (3개) ════ -->
+  <div class="row row-3">
+
+    <!-- 반도체 -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title" style="color:var(--red)">🔴 AI / 반도체</span>
+        <span class="panel-tag">82° · HOT</span>
+      </div>
+      <div class="panel-body">
+        <div class="detail-row">
+          <span class="detail-label">미장 흐름</span>
+          <span class="detail-value">
+            <span class="badge badge-green">NVDA +3.2%</span>
+            <span class="badge badge-green">AVGO +2.1%</span>
+            <span class="badge badge-green">AMD +1.8%</span>
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">수급</span>
+          <span class="detail-value">
+            <span class="badge badge-green">외국인 ▲매수</span>
+            <span class="badge badge-green">기관 ▲매수</span>
+            동반 유입
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">차트</span>
+          <span class="detail-value">
+            <span class="badge badge-green">정배열 ✅</span>
+            5MA &gt; 20MA · 52주 신고가 근접
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">핵심 뉴스</span>
+          <span class="detail-value">AI 서버 투자 가속 / HBM 수요 추가 확인</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">대장주</span>
+          <span class="detail-value">
+            <span class="star">★</span> SK하이닉스
+            &nbsp;<span class="star">★</span> 한미반도체
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 원전 -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title" style="color:var(--orange)">🟠 원전 / 에너지</span>
+        <span class="panel-tag">74° · WARM</span>
+      </div>
+      <div class="panel-body">
+        <div class="detail-row">
+          <span class="detail-label">미장 흐름</span>
+          <span class="detail-value">
+            <span class="badge badge-green">CCJ +2.8%</span>
+            <span class="badge badge-green">NuScale +4.1%</span>
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">수급</span>
+          <span class="detail-value">
+            <span class="badge badge-green">외국인 ▲매수</span>
+            <span class="badge badge-yellow">기관 중립</span>
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">차트</span>
+          <span class="detail-value">
+            <span class="badge badge-green">정배열 ✅</span>
+            20MA 지지 확인 · 추세 유효
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">핵심 뉴스</span>
+          <span class="detail-value">체코 원전 수주 협상 진전 / SMR 예산 통과</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">대장주</span>
+          <span class="detail-value">
+            <span class="star">★</span> 두산에너빌
+            &nbsp;<span class="star">★</span> 한전기술
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 방산 -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title" style="color:var(--yellow)">🟡 방산 / 우주</span>
+        <span class="panel-tag">63° · MILD</span>
+      </div>
+      <div class="panel-body">
+        <div class="detail-row">
+          <span class="detail-label">미장 흐름</span>
+          <span class="detail-value">
+            <span class="badge badge-green">LMT +1.1%</span>
+            <span class="badge badge-green">RTX +0.9%</span>
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">수급</span>
+          <span class="detail-value">
+            <span class="badge badge-yellow">외국인 중립</span>
+            <span class="badge badge-green">기관 ▲매수</span>
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">차트</span>
+          <span class="detail-value">
+            <span class="badge badge-green">정배열 ✅</span>
+            단기 저항선 근접 · 주의 구간
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">핵심 뉴스</span>
+          <span class="detail-value">중동 긴장 지속 / NATO 국방비 증액 합의</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">대장주</span>
+          <span class="detail-value">
+            <span class="star">★</span> 한화에어로
+            &nbsp;<span class="star">★</span> LIG넥스원
+          </span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ════ ROW 4 : 오늘의 픽 ════ -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">🎯 오늘의 판단</span>
+      <span class="panel-tag">LOTTO'S DAILY PICK</span>
+    </div>
+    <div class="panel-body">
+      <div class="pick-item">
+        <span class="pick-rank">1</span>
+        <div>
+          <div class="pick-name">AI / 반도체</div>
+          <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono)">SK하이닉스 · 한미반도체</div>
+        </div>
+        <div class="pick-reason">미장 훈풍 + 수급 동반 유입 + 정배열 삼박자 완성. 오늘 가장 강한 섹터.</div>
+        <span class="pick-action action-buy">적극 매수</span>
+      </div>
+      <div class="pick-item">
+        <span class="pick-rank">2</span>
+        <div>
+          <div class="pick-name">원전 / 에너지</div>
+          <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono)">두산에너빌 · 한전기술</div>
+        </div>
+        <div class="pick-reason">호재 뉴스 지속 중. 전일 눌림목 이후 반등 구간 진입 가능성.</div>
+        <span class="pick-action action-watch">매수 고려</span>
+      </div>
+      <div class="pick-item">
+        <span class="pick-rank">3</span>
+        <div>
+          <div class="pick-name">방산 / 우주</div>
+          <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono)">한화에어로 · LIG넥스원</div>
+        </div>
+        <div class="pick-reason">추세는 살아있으나 단기 저항 근접. 돌파 확인 후 진입 권고.</div>
+        <span class="pick-action action-hold">관망</span>
+      </div>
+      <div class="pick-item">
+        <span class="pick-rank" style="color:var(--red)">✕</span>
+        <div>
+          <div class="pick-name">2차전지</div>
+          <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono)">LG에너지솔루션 · 에코프로</div>
+        </div>
+        <div class="pick-reason">역배열 + 외국인 이탈 지속. 수급 반전 신호 나올 때까지 대기.</div>
+        <span class="pick-action action-avoid">손대지마</span>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- ════ TICKER ════ -->
+<div class="ticker-wrap">
+  <div class="ticker-label">NEWS</div>
+  <div class="ticker-track">
+    <span class="ticker-item"><span class="t-time">05:58</span> NVIDIA 실적 발표 예정 · AI 가이던스 주목 <span class="t-hot">🔴HOT</span></span>
+    <span class="ticker-item"><span class="t-time">05:30</span> Fed 5월 의사록 공개 · 금리인하 시사 여부 확인</span>
+    <span class="ticker-item"><span class="t-time">04:12</span> 중동 긴장 고조 재보도 · 호르무즈 리스크 재부각</span>
+    <span class="ticker-item"><span class="t-time">03:45</span> WTI 원유 $82 돌파 · 2주 만에 최고가</span>
+    <span class="ticker-item"><span class="t-time">02:20</span> 체코 정부 한국 원전 컨소시엄과 최종 협상 단계 진입 보도</span>
+    <span class="ticker-item"><span class="t-time">01:11</span> S&P500 반도체 섹터 지수 +2.3% · AI 랠리 재점화</span>
+    <!-- 반복 (무한 스크롤용) -->
+    <span class="ticker-item"><span class="t-time">05:58</span> NVIDIA 실적 발표 예정 · AI 가이던스 주목 <span class="t-hot">🔴HOT</span></span>
+    <span class="ticker-item"><span class="t-time">05:30</span> Fed 5월 의사록 공개 · 금리인하 시사 여부 확인</span>
+    <span class="ticker-item"><span class="t-time">04:12</span> 중동 긴장 고조 재보도 · 호르무즈 리스크 재부각</span>
+    <span class="ticker-item"><span class="t-time">03:45</span> WTI 원유 $82 돌파 · 2주 만에 최고가</span>
+    <span class="ticker-item"><span class="t-time">02:20</span> 체코 정부 한국 원전 컨소시엄과 최종 협상 단계 진입 보도</span>
+    <span class="ticker-item"><span class="t-time">01:11</span> S&P500 반도체 섹터 지수 +2.3% · AI 랠리 재점화</span>
+  </div>
+</div>
+
+<script>
+  function updateClock() {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2,'0');
+    const m = String(now.getMinutes()).padStart(2,'0');
+    const s = String(now.getSeconds()).padStart(2,'0');
+    document.getElementById('clock').textContent = `${h}:${m}:${s}`;
+
+    const days = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+    const yyyy = now.getFullYear();
+    const mm   = String(now.getMonth()+1).padStart(2,'0');
+    const dd   = String(now.getDate()).padStart(2,'0');
+    const day  = days[now.getDay()];
+    document.getElementById('dateStr').textContent = `${yyyy}-${mm}-${dd} · ${day}`;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+</script>
+
+</body>
+</html>

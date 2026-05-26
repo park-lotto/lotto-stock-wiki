@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #06060f; font-family: 'Segoe UI', sans-serif; color: #fff; padding: 40px; }
+  h1 { text-align: center; font-size: 13px; letter-spacing: 4px; color: #00FFD0; opacity: .4; margin-bottom: 44px; }
+  .row { display: flex; justify-content: center; gap: 70px; align-items: flex-end; margin-bottom: 52px; }
+  .card { text-align: center; }
+  .label { font-size: 11px; letter-spacing: 2px; color: #666; margin-top: 14px; }
+  .sublabel { font-size: 10px; color: #444; margin-top: 4px; }
+  hr { border: none; border-top: 1px solid #111122; margin: 8px 0 42px; }
+  .stitle { text-align: center; font-size: 10px; letter-spacing: 3px; color: #00FFD0; opacity: .35; margin-bottom: 30px; }
+</style>
+</head>
+<body>
+
+<h1>STOCK BRAIN — MASCOT v5</h1>
+
+<div class="row">
+
+  <!-- ══════════════ NORMAL MODE ══════════════ -->
+  <div class="card">
+    <svg width="220" height="300" viewBox="0 0 220 300">
+      <defs>
+        <!-- body white 3D gradient -->
+        <radialGradient id="whiteBody" cx="38%" cy="30%" r="68%">
+          <stop offset="0%"   stop-color="#ffffff"/>
+          <stop offset="55%"  stop-color="#e8f0ef"/>
+          <stop offset="100%" stop-color="#bcd4d0"/>
+        </radialGradient>
+        <radialGradient id="whiteHead" cx="38%" cy="28%" r="65%">
+          <stop offset="0%"   stop-color="#ffffff"/>
+          <stop offset="50%"  stop-color="#ecf4f3"/>
+          <stop offset="100%" stop-color="#c0d8d5"/>
+        </radialGradient>
+        <radialGradient id="screenBg" cx="45%" cy="35%" r="60%">
+          <stop offset="0%"   stop-color="#0e1820"/>
+          <stop offset="100%" stop-color="#060c10"/>
+        </radialGradient>
+        <radialGradient id="tealDot" cx="40%" cy="35%" r="60%">
+          <stop offset="0%"   stop-color="#40ffe8"/>
+          <stop offset="100%" stop-color="#00b894"/>
+        </radialGradient>
+        <radialGradient id="antennaBall" cx="38%" cy="32%" r="60%">
+          <stop offset="0%"   stop-color="#60fff0"/>
+          <stop offset="100%" stop-color="#00ccaa"/>
+        </radialGradient>
+        <radialGradient id="thruster" cx="50%" cy="20%" r="60%">
+          <stop offset="0%"   stop-color="#60ffee"/>
+          <stop offset="50%"  stop-color="#00d4b0"/>
+          <stop offset="100%" stop-color="#00675a" stop-opacity="0"/>
+        </radialGradient>
+        <!-- soft drop shadow -->
+        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#00d4b0" flood-opacity="0.25"/>
+        </filter>
+        <filter id="screenGlow" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="3" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="eyeGlow" x="-60%" y="-80%" width="220%" height="260%">
+          <feGaussianBlur stdDeviation="4" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="thrusterGlow" x="-40%" y="-10%" width="180%" height="130%">
+          <feGaussianBlur stdDeviation="8" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="bigShadow" x="-15%" y="-10%" width="130%" height="130%">
+          <feDropShadow dx="2" dy="6" stdDeviation="10" flood-color="#000" flood-opacity="0.35"/>
+        </filter>
+        <!-- ambient background glow -->
+        <radialGradient id="bgGlow" cx="50%" cy="55%" r="50%">
+          <stop offset="0%"   stop-color="#00d4b0" stop-opacity="0.07"/>
+          <stop offset="100%" stop-color="#00d4b0" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+
+      <!-- ambient -->
+      <ellipse cx="110" cy="165" rx="108" ry="108" fill="url(#bgGlow)"/>
+
+      <!-- ── THRUSTER (floating effect) ── -->
+      <ellipse cx="110" cy="262" rx="22" ry="32" fill="url(#thruster)" filter="url(#thrusterGlow)" opacity="0.9"/>
+      <ellipse cx="110" cy="252" rx="14" ry="10" fill="#b0fff4" opacity="0.6"/>
+
+      <!-- ── BODY ── -->
+      <ellipse cx="110" cy="218" rx="46" ry="44" fill="url(#whiteBody)" filter="url(#bigShadow)"/>
+      <!-- body sheen -->
+      <ellipse cx="98"  cy="202" rx="16" ry="10" fill="#fff" opacity="0.45" transform="rotate(-15,98,202)"/>
+      <!-- chest teal gem -->
+      <circle cx="110" cy="222" r="11" fill="url(#tealDot)" filter="url(#shadow)"/>
+      <circle cx="106" cy="218" r="4"  fill="#fff" opacity="0.55"/>
+
+      <!-- ── NECK ── -->
+      <rect x="97" y="176" width="26" height="14" rx="7" fill="url(#whiteBody)" filter="url(#shadow)"/>
+
+      <!-- ── HEAD ── -->
+      <ellipse cx="110" cy="140" rx="68" ry="64" fill="url(#whiteHead)" filter="url(#bigShadow)"/>
+      <!-- head sheen top-left -->
+      <ellipse cx="87"  cy="112" rx="22" ry="13" fill="#fff" opacity="0.5" transform="rotate(-20,87,112)"/>
+
+      <!-- ── EAR PODS ── -->
+      <circle cx="44"  cy="140" r="17" fill="url(#whiteBody)" filter="url(#shadow)"/>
+      <circle cx="44"  cy="140" r="8"  fill="url(#tealDot)" filter="url(#shadow)"/>
+      <circle cx="41"  cy="137" r="3"  fill="#fff" opacity="0.6"/>
+
+      <circle cx="176" cy="140" r="17" fill="url(#whiteBody)" filter="url(#shadow)"/>
+      <circle cx="176" cy="140" r="8"  fill="url(#tealDot)" filter="url(#shadow)"/>
+      <circle cx="173" cy="137" r="3"  fill="#fff" opacity="0.6"/>
+
+      <!-- ── FACE SCREEN ── -->
+      <rect x="66" y="106" width="88" height="74" rx="22" fill="url(#screenBg)" filter="url(#screenGlow)"/>
+      <!-- screen inner shine -->
+      <rect x="68" y="108" width="42" height="20" rx="8" fill="#fff" opacity="0.06"/>
+
+      <!-- ── HAPPY CLOSED EYES (curved arcs like the reference) ── -->
+      <!-- left eye: upward arc = happy squint -->
+      <path d="M 82 140 Q 92 128 102 140" stroke="#00FFD0" stroke-width="5" fill="none" stroke-linecap="round" filter="url(#eyeGlow)"/>
+      <!-- right eye -->
+      <path d="M 118 140 Q 128 128 138 140" stroke="#00FFD0" stroke-width="5" fill="none" stroke-linecap="round" filter="url(#eyeGlow)"/>
+      <!-- eye glow fill (subtle) -->
+      <path d="M 82 140 Q 92 128 102 140" stroke="#00FFD0" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.4"/>
+      <path d="M 118 140 Q 128 128 138 140" stroke="#00FFD0" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.4"/>
+
+      <!-- ── SMILE ── -->
+      <path d="M 92 158 Q 110 172 128 158" stroke="#00FFD0" stroke-width="4" fill="none" stroke-linecap="round" filter="url(#eyeGlow)"/>
+
+      <!-- ── ANTENNA ── -->
+      <line x1="110" y1="76" x2="110" y2="96" stroke="#d8ecec" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="110" cy="68" r="12" fill="url(#whiteBody)" filter="url(#shadow)"/>
+      <circle cx="110" cy="68" r="7"  fill="url(#antennaBall)" filter="url(#eyeGlow)"/>
+      <circle cx="107" cy="65" r="2.5" fill="#fff" opacity="0.75"/>
+    </svg>
+    <div class="label">NORMAL MODE</div>
+    <div class="sublabel">평소 · 든든한 AI 파트너</div>
+  </div>
+
+  <!-- ══════════════ SIGNAL MODE ══════════════ -->
+  <div class="card">
+    <svg width="220" height="300" viewBox="0 0 220 300">
+      <defs>
+        <radialGradient id="whiteBodyR" cx="38%" cy="30%" r="68%">
+          <stop offset="0%"   stop-color="#ffffff"/>
+          <stop offset="55%"  stop-color="#f0e8ee"/>
+          <stop offset="100%" stop-color="#d4b8c4"/>
+        </radialGradient>
+        <radialGradient id="whiteHeadR" cx="38%" cy="28%" r="65%">
+          <stop offset="0%"   stop-color="#ffffff"/>
+          <stop offset="50%"  stop-color="#f5ecf0"/>
+          <stop offset="100%" stop-color="#d4b8c0"/>
+        </radialGradient>
+        <radialGradient id="screenBgR" cx="45%" cy="35%" r="60%">
+          <stop offset="0%"   stop-color="#1a0c0c"/>
+          <stop offset="100%" stop-color="#0a0404"/>
+        </radialGradient>
+        <radialGradient id="redDot" cx="40%" cy="35%" r="60%">
+          <stop offset="0%"   stop-color="#ff8080"/>
+          <stop offset="100%" stop-color="#cc2020"/>
+        </radialGradient>
+        <radialGradient id="antennaBallR" cx="38%" cy="32%" r="60%">
+          <stop offset="0%"   stop-color="#ff8888"/>
+          <stop offset="100%" stop-color="#dd2222"/>
+        </radialGradient>
+        <radialGradient id="thrusterR" cx="50%" cy="20%" r="60%">
+          <stop offset="0%"   stop-color="#ff8888"/>
+          <stop offset="50%"  stop-color="#ee3333"/>
+          <stop offset="100%" stop-color="#880000" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="shadowR" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#ff4444" flood-opacity="0.3"/>
+        </filter>
+        <filter id="screenGlowR" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="3" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="eyeGlowR" x="-60%" y="-80%" width="220%" height="260%">
+          <feGaussianBlur stdDeviation="5" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="thrusterGlowR" x="-40%" y="-10%" width="180%" height="130%">
+          <feGaussianBlur stdDeviation="9" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="bigShadowR" x="-15%" y="-10%" width="130%" height="130%">
+          <feDropShadow dx="2" dy="6" stdDeviation="10" flood-color="#000" flood-opacity="0.35"/>
+        </filter>
+        <radialGradient id="bgGlowR" cx="50%" cy="55%" r="50%">
+          <stop offset="0%"   stop-color="#ff4444" stop-opacity="0.12"/>
+          <stop offset="100%" stop-color="#ff4444" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+
+      <ellipse cx="110" cy="165" rx="108" ry="108" fill="url(#bgGlowR)"/>
+      <!-- radar rings -->
+      <ellipse cx="110" cy="150" rx="102" ry="98"  fill="none" stroke="#ff4444" stroke-width="1" opacity="0.1"/>
+      <ellipse cx="110" cy="150" rx="115" ry="110" fill="none" stroke="#ff4444" stroke-width="1" opacity="0.06"/>
+
+      <!-- thruster (red) -->
+      <ellipse cx="110" cy="262" rx="24" ry="34" fill="url(#thrusterR)" filter="url(#thrusterGlowR)" opacity="0.95"/>
+      <ellipse cx="110" cy="252" rx="14" ry="10" fill="#ffaaaa" opacity="0.5"/>
+
+      <!-- body -->
+      <ellipse cx="110" cy="218" rx="46" ry="44" fill="url(#whiteBodyR)" filter="url(#bigShadowR)"/>
+      <ellipse cx="98"  cy="202" rx="16" ry="10" fill="#fff" opacity="0.4" transform="rotate(-15,98,202)"/>
+      <circle cx="110" cy="222" r="11" fill="url(#redDot)" filter="url(#shadowR)"/>
+      <circle cx="106" cy="218" r="4"  fill="#fff" opacity="0.5"/>
+
+      <!-- neck -->
+      <rect x="97" y="176" width="26" height="14" rx="7" fill="url(#whiteBodyR)" filter="url(#shadowR)"/>
+
+      <!-- head -->
+      <ellipse cx="110" cy="140" rx="68" ry="64" fill="url(#whiteHeadR)" filter="url(#bigShadowR)"/>
+      <ellipse cx="87"  cy="112" rx="22" ry="13" fill="#fff" opacity="0.45" transform="rotate(-20,87,112)"/>
+
+      <!-- ear pods (red) -->
+      <circle cx="44"  cy="140" r="17" fill="url(#whiteBodyR)" filter="url(#shadowR)"/>
+      <circle cx="44"  cy="140" r="8"  fill="url(#redDot)" filter="url(#shadowR)"/>
+      <circle cx="41"  cy="137" r="3"  fill="#fff" opacity="0.55"/>
+      <circle cx="176" cy="140" r="17" fill="url(#whiteBodyR)" filter="url(#shadowR)"/>
+      <circle cx="176" cy="140" r="8"  fill="url(#redDot)" filter="url(#shadowR)"/>
+      <circle cx="173" cy="137" r="3"  fill="#fff" opacity="0.55"/>
+
+      <!-- face screen -->
+      <rect x="66" y="106" width="88" height="74" rx="22" fill="url(#screenBgR)" filter="url(#screenGlowR)"/>
+      <rect x="68" y="108" width="42" height="20" rx="8" fill="#fff" opacity="0.04"/>
+
+      <!-- DETERMINED EYES (straight with slight frown — robot focus) -->
+      <!-- left: straight line with slight downward inner corner -->
+      <path d="M 82 136 L 102 136" stroke="#FF4444" stroke-width="5" fill="none" stroke-linecap="round" filter="url(#eyeGlowR)"/>
+      <path d="M 84 131 L 96 136" stroke="#FF4444" stroke-width="3.5" fill="none" stroke-linecap="round" filter="url(#eyeGlowR)" opacity="0.7"/>
+      <!-- right -->
+      <path d="M 118 136 L 138 136" stroke="#FF4444" stroke-width="5" fill="none" stroke-linecap="round" filter="url(#eyeGlowR)"/>
+      <path d="M 124 136 L 136 131" stroke="#FF4444" stroke-width="3.5" fill="none" stroke-linecap="round" filter="url(#eyeGlowR)" opacity="0.7"/>
+
+      <!-- flat / neutral mouth -->
+      <path d="M 94 160 L 126 160" stroke="#FF4444" stroke-width="4" fill="none" stroke-linecap="round" filter="url(#eyeGlowR)"/>
+
+      <!-- 탑픽 badge -->
+      <rect x="68" y="172" width="84" height="20" rx="10" fill="#FF4444" opacity="0.95"/>
+      <text x="110" y="186" text-anchor="middle" font-size="10" font-weight="700" fill="#fff" letter-spacing="0.5">🔴 탑픽 감지</text>
+
+      <!-- antenna (red) -->
+      <line x1="110" y1="76" x2="110" y2="96" stroke="#e8d4d4" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="110" cy="68" r="12" fill="url(#whiteHeadR)" filter="url(#shadowR)"/>
+      <circle cx="110" cy="68" r="7"  fill="url(#antennaBallR)" filter="url(#eyeGlowR)"/>
+      <circle cx="107" cy="65" r="2.5" fill="#fff" opacity="0.7"/>
+    </svg>
+    <div class="label">SIGNAL MODE</div>
+    <div class="sublabel">탑픽 발동 · 냉정 분석</div>
+  </div>
+
+</div>
+
+<hr>
+<div class="stitle">SIZE SCALE</div>
+
+<div class="row" style="align-items:center; gap:36px;">
+
+  <!-- 140px -->
+  <div class="card">
+    <svg width="130" height="140" viewBox="0 0 220 300">
+      <defs>
+        <radialGradient id="wH2" cx="38%" cy="28%" r="65%"><stop offset="0%" stop-color="#fff"/><stop offset="50%" stop-color="#ecf4f3"/><stop offset="100%" stop-color="#c0d8d5"/></radialGradient>
+        <radialGradient id="wB2" cx="38%" cy="30%" r="68%"><stop offset="0%" stop-color="#fff"/><stop offset="55%" stop-color="#e8f0ef"/><stop offset="100%" stop-color="#bcd4d0"/></radialGradient>
+        <radialGradient id="td2" cx="40%" cy="35%" r="60%"><stop offset="0%" stop-color="#40ffe8"/><stop offset="100%" stop-color="#00b894"/></radialGradient>
+        <radialGradient id="tr2" cx="50%" cy="20%" r="60%"><stop offset="0%" stop-color="#60ffee"/><stop offset="60%" stop-color="#00d4b0"/><stop offset="100%" stop-color="#00675a" stop-opacity="0"/></radialGradient>
+        <filter id="sh2"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#00d4b0" flood-opacity="0.2"/></filter>
+        <filter id="eg2"><feGaussianBlur stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="bs2"><feDropShadow dx="1" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.3"/></filter>
+      </defs>
+      <ellipse cx="110" cy="262" rx="20" ry="28" fill="url(#tr2)" filter="url(#eg2)" opacity="0.85"/>
+      <ellipse cx="110" cy="218" rx="46" ry="44" fill="url(#wB2)" filter="url(#bs2)"/>
+      <circle cx="110" cy="222" r="11" fill="url(#td2)" filter="url(#sh2)"/>
+      <circle cx="106" cy="218" r="4"  fill="#fff" opacity="0.55"/>
+      <rect x="97" y="176" width="26" height="14" rx="7" fill="url(#wB2)" filter="url(#sh2)"/>
+      <ellipse cx="110" cy="140" rx="68" ry="64" fill="url(#wH2)" filter="url(#bs2)"/>
+      <ellipse cx="87" cy="112" rx="22" ry="13" fill="#fff" opacity="0.45" transform="rotate(-20,87,112)"/>
+      <circle cx="44"  cy="140" r="17" fill="url(#wB2)" filter="url(#sh2)"/>
+      <circle cx="44"  cy="140" r="8"  fill="url(#td2)" filter="url(#sh2)"/>
+      <circle cx="176" cy="140" r="17" fill="url(#wB2)" filter="url(#sh2)"/>
+      <circle cx="176" cy="140" r="8"  fill="url(#td2)" filter="url(#sh2)"/>
+      <rect x="66" y="106" width="88" height="74" rx="22" fill="#080c10"/>
+      <path d="M 82 140 Q 92 128 102 140" stroke="#00FFD0" stroke-width="5.5" fill="none" stroke-linecap="round" filter="url(#eg2)"/>
+      <path d="M 118 140 Q 128 128 138 140" stroke="#00FFD0" stroke-width="5.5" fill="none" stroke-linecap="round" filter="url(#eg2)"/>
+      <path d="M 92 158 Q 110 172 128 158" stroke="#00FFD0" stroke-width="4.5" fill="none" stroke-linecap="round" filter="url(#eg2)"/>
+      <line x1="110" y1="76" x2="110" y2="96" stroke="#d8ecec" stroke-width="4"/>
+      <circle cx="110" cy="68" r="12" fill="url(#wH2)" filter="url(#sh2)"/>
+      <circle cx="110" cy="68" r="7"  fill="url(#td2)" filter="url(#eg2)"/>
+    </svg>
+    <div class="label" style="font-size:10px;">130px</div>
+  </div>
+
+  <!-- 80px head -->
+  <div class="card">
+    <svg width="80" height="80" viewBox="30 60 160 150">
+      <defs>
+        <radialGradient id="wH3" cx="38%" cy="28%" r="65%"><stop offset="0%" stop-color="#fff"/><stop offset="50%" stop-color="#ecf4f3"/><stop offset="100%" stop-color="#c0d8d5"/></radialGradient>
+        <radialGradient id="wB3" cx="38%" cy="30%" r="68%"><stop offset="0%" stop-color="#fff"/><stop offset="55%" stop-color="#e8f0ef"/><stop offset="100%" stop-color="#bcd4d0"/></radialGradient>
+        <radialGradient id="td3" cx="40%" cy="35%" r="60%"><stop offset="0%" stop-color="#40ffe8"/><stop offset="100%" stop-color="#00b894"/></radialGradient>
+        <filter id="sh3"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#00d4b0" flood-opacity="0.2"/></filter>
+        <filter id="eg3"><feGaussianBlur stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="bs3"><feDropShadow dx="1" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.3"/></filter>
+      </defs>
+      <ellipse cx="110" cy="140" rx="68" ry="64" fill="url(#wH3)" filter="url(#bs3)"/>
+      <ellipse cx="87" cy="112" rx="22" ry="13" fill="#fff" opacity="0.45" transform="rotate(-20,87,112)"/>
+      <circle cx="44"  cy="140" r="17" fill="url(#wB3)" filter="url(#sh3)"/>
+      <circle cx="44"  cy="140" r="8"  fill="url(#td3)"/>
+      <circle cx="176" cy="140" r="17" fill="url(#wB3)" filter="url(#sh3)"/>
+      <circle cx="176" cy="140" r="8"  fill="url(#td3)"/>
+      <rect x="66" y="106" width="88" height="74" rx="22" fill="#080c10"/>
+      <path d="M 82 140 Q 92 128 102 140" stroke="#00FFD0" stroke-width="6" fill="none" stroke-linecap="round" filter="url(#eg3)"/>
+      <path d="M 118 140 Q 128 128 138 140" stroke="#00FFD0" stroke-width="6" fill="none" stroke-linecap="round" filter="url(#eg3)"/>
+      <path d="M 92 158 Q 110 172 128 158" stroke="#00FFD0" stroke-width="5" fill="none" stroke-linecap="round" filter="url(#eg3)"/>
+      <line x1="110" y1="76" x2="110" y2="96" stroke="#d8ecec" stroke-width="4.5"/>
+      <circle cx="110" cy="68" r="12" fill="url(#wH3)" filter="url(#sh3)"/>
+      <circle cx="110" cy="68" r="7"  fill="url(#td3)" filter="url(#eg3)"/>
+    </svg>
+    <div class="label" style="font-size:10px;">80px</div>
+  </div>
+
+  <!-- 48px icon -->
+  <div class="card">
+    <svg width="48" height="48" viewBox="0 0 48 48">
+      <defs>
+        <radialGradient id="wH4" cx="38%" cy="28%" r="65%"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#cce8e4"/></radialGradient>
+        <radialGradient id="td4" cx="40%" cy="35%" r="60%"><stop offset="0%" stop-color="#40ffe8"/><stop offset="100%" stop-color="#00b894"/></radialGradient>
+        <filter id="eg4"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="bs4"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.3"/></filter>
+      </defs>
+      <rect width="48" height="48" rx="14" fill="#0a0a14"/>
+      <!-- antenna -->
+      <line x1="24" y1="4" x2="24" y2="9" stroke="#cde8e4" stroke-width="2.5"/>
+      <circle cx="24" cy="3" r="3.5" fill="url(#wH4)" filter="url(#bs4)"/>
+      <circle cx="24" cy="3" r="2"   fill="url(#td4)"/>
+      <!-- ear pods -->
+      <circle cx="6"  cy="24" r="5.5" fill="url(#wH4)"/>
+      <circle cx="6"  cy="24" r="3"   fill="url(#td4)"/>
+      <circle cx="42" cy="24" r="5.5" fill="url(#wH4)"/>
+      <circle cx="42" cy="24" r="3"   fill="url(#td4)"/>
+      <!-- head -->
+      <ellipse cx="24" cy="24" rx="18" ry="17" fill="url(#wH4)" filter="url(#bs4)"/>
+      <!-- screen -->
+      <rect x="10" y="15" width="28" height="22" rx="7" fill="#060c10"/>
+      <!-- happy eyes -->
+      <path d="M 13 24 Q 17 19 21 24" stroke="#00FFD0" stroke-width="2.5" fill="none" stroke-linecap="round" filter="url(#eg4)"/>
+      <path d="M 27 24 Q 31 19 35 24" stroke="#00FFD0" stroke-width="2.5" fill="none" stroke-linecap="round" filter="url(#eg4)"/>
+      <!-- smile -->
+      <path d="M 16 30 Q 24 36 32 30" stroke="#00FFD0" stroke-width="2" fill="none" stroke-linecap="round" filter="url(#eg4)"/>
+    </svg>
+    <div class="label" style="font-size:10px;">48px 아이콘</div>
+  </div>
+
+</div>
+
+<hr>
+<div class="stitle">USAGE</div>
+
+<div class="row" style="gap:44px; align-items:flex-start;">
+
+  <!-- dark profile card -->
+  <div class="card">
+    <div style="background:#06060f; border:1px solid #111122; border-radius:20px; padding:24px 20px 18px; width:190px; text-align:center;">
+      <svg width="110" height="150" viewBox="0 0 220 300" style="display:block;margin:0 auto;">
+        <defs>
+          <radialGradient id="wHu" cx="38%" cy="28%" r="65%"><stop offset="0%" stop-color="#fff"/><stop offset="50%" stop-color="#ecf4f3"/><stop offset="100%" stop-color="#c0d8d5"/></radialGradient>
+          <radialGradient id="wBu" cx="38%" cy="30%" r="68%"><stop offset="0%" stop-color="#fff"/><stop offset="55%" stop-color="#e8f0ef"/><stop offset="100%" stop-color="#bcd4d0"/></radialGradient>
+          <radialGradient id="tdu" cx="40%" cy="35%" r="60%"><stop offset="0%" stop-color="#40ffe8"/><stop offset="100%" stop-color="#00b894"/></radialGradient>
+          <radialGradient id="tru" cx="50%" cy="20%" r="60%"><stop offset="0%" stop-color="#60ffee"/><stop offset="60%" stop-color="#00d4b0"/><stop offset="100%" stop-color="#00675a" stop-opacity="0"/></radialGradient>
+          <filter id="shu"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#00d4b0" flood-opacity="0.2"/></filter>
+          <filter id="egu"><feGaussianBlur stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <filter id="bsu"><feDropShadow dx="1" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.3"/></filter>
+        </defs>
+        <ellipse cx="110" cy="262" rx="20" ry="28" fill="url(#tru)" filter="url(#egu)" opacity="0.8"/>
+        <ellipse cx="110" cy="218" rx="46" ry="44" fill="url(#wBu)" filter="url(#bsu)"/>
+        <circle cx="110" cy="222" r="11" fill="url(#tdu)" filter="url(#shu)"/>
+        <circle cx="106" cy="218" r="4"  fill="#fff" opacity="0.55"/>
+        <rect x="97" y="176" width="26" height="14" rx="7" fill="url(#wBu)" filter="url(#shu)"/>
+        <ellipse cx="110" cy="140" rx="68" ry="64" fill="url(#wHu)" filter="url(#bsu)"/>
+        <ellipse cx="87" cy="112" rx="22" ry="13" fill="#fff" opacity="0.45" transform="rotate(-20,87,112)"/>
+        <circle cx="44"  cy="140" r="17" fill="url(#wBu)" filter="url(#shu)"/>
+        <circle cx="44"  cy="140" r="8"  fill="url(#tdu)"/>
+        <circle cx="176" cy="140" r="17" fill="url(#wBu)" filter="url(#shu)"/>
+        <circle cx="176" cy="140" r="8"  fill="url(#tdu)"/>
+        <rect x="66" y="106" width="88" height="74" rx="22" fill="#080c10"/>
+        <path d="M 82 140 Q 92 128 102 140" stroke="#00FFD0" stroke-width="5.5" fill="none" stroke-linecap="round" filter="url(#egu)"/>
+        <path d="M 118 140 Q 128 128 138 140" stroke="#00FFD0" stroke-width="5.5" fill="none" stroke-linecap="round" filter="url(#egu)"/>
+        <path d="M 92 158 Q 110 172 128 158" stroke="#00FFD0" stroke-width="4.5" fill="none" stroke-linecap="round" filter="url(#egu)"/>
+        <line x1="110" y1="76" x2="110" y2="96" stroke="#d8ecec" stroke-width="4"/>
+        <circle cx="110" cy="68" r="12" fill="url(#wHu)" filter="url(#shu)"/>
+        <circle cx="110" cy="68" r="7"  fill="url(#tdu)" filter="url(#egu)"/>
+      </svg>
+      <div style="font-size:11px;color:#00FFD0;letter-spacing:2px;font-weight:700;margin-top:6px;">STOCK BRAIN</div>
+      <div style="font-size:8px;color:#444;margin-top:3px;">로또의 주식인사이트</div>
+    </div>
+    <div class="label">채널 프로필</div>
+  </div>
+
+  <!-- thumbnail -->
+  <div class="card">
+    <div style="background:linear-gradient(135deg,#0d0d20 0%,#0a1520 100%);border-radius:12px;width:213px;height:120px;position:relative;overflow:hidden;border:1px solid #111828;">
+      <svg width="90" height="120" viewBox="0 0 220 300" style="position:absolute;right:-4px;bottom:0;">
+        <defs>
+          <radialGradient id="wHt" cx="38%" cy="28%" r="65%"><stop offset="0%" stop-color="#fff"/><stop offset="50%" stop-color="#ecf4f3"/><stop offset="100%" stop-color="#c0d8d5"/></radialGradient>
+          <radialGradient id="wBt" cx="38%" cy="30%" r="68%"><stop offset="0%" stop-color="#fff"/><stop offset="55%" stop-color="#e8f0ef"/><stop offset="100%" stop-color="#bcd4d0"/></radialGradient>
+          <radialGradient id="tdt" cx="40%" cy="35%" r="60%"><stop offset="0%" stop-color="#40ffe8"/><stop offset="100%" stop-color="#00b894"/></radialGradient>
+          <radialGradient id="trt" cx="50%" cy="20%" r="60%"><stop offset="0%" stop-color="#60ffee"/><stop offset="60%" stop-color="#00d4b0"/><stop offset="100%" stop-color="#00675a" stop-opacity="0"/></radialGradient>
+          <filter id="sht"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#00d4b0" flood-opacity="0.2"/></filter>
+          <filter id="egt"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <filter id="bst"><feDropShadow dx="1" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.35"/></filter>
+        </defs>
+        <ellipse cx="110" cy="262" rx="20" ry="28" fill="url(#trt)" filter="url(#egt)" opacity="0.8"/>
+        <ellipse cx="110" cy="218" rx="46" ry="44" fill="url(#wBt)" filter="url(#bst)"/>
+        <circle cx="110" cy="222" r="11" fill="url(#tdt)" filter="url(#sht)"/>
+        <circle cx="106" cy="218" r="4" fill="#fff" opacity="0.55"/>
+        <rect x="97" y="176" width="26" height="14" rx="7" fill="url(#wBt)" filter="url(#sht)"/>
+        <ellipse cx="110" cy="140" rx="68" ry="64" fill="url(#wHt)" filter="url(#bst)"/>
+        <ellipse cx="87" cy="112" rx="22" ry="13" fill="#fff" opacity="0.4" transform="rotate(-20,87,112)"/>
+        <circle cx="44"  cy="140" r="17" fill="url(#wBt)" filter="url(#sht)"/>
+        <circle cx="44"  cy="140" r="8"  fill="url(#tdt)"/>
+        <circle cx="176" cy="140" r="17" fill="url(#wBt)" filter="url(#sht)"/>
+        <circle cx="176" cy="140" r="8"  fill="url(#tdt)"/>
+        <rect x="66" y="106" width="88" height="74" rx="22" fill="#080c10"/>
+        <path d="M 82 140 Q 92 128 102 140" stroke="#00FFD0" stroke-width="6" fill="none" stroke-linecap="round" filter="url(#egt)"/>
+        <path d="M 118 140 Q 128 128 138 140" stroke="#00FFD0" stroke-width="6" fill="none" stroke-linecap="round" filter="url(#egt)"/>
+        <path d="M 92 158 Q 110 172 128 158" stroke="#00FFD0" stroke-width="5" fill="none" stroke-linecap="round" filter="url(#egt)"/>
+        <line x1="110" y1="76" x2="110" y2="96" stroke="#d8ecec" stroke-width="4.5"/>
+        <circle cx="110" cy="68" r="12" fill="url(#wHt)" filter="url(#sht)"/>
+        <circle cx="110" cy="68" r="7"  fill="url(#tdt)" filter="url(#egt)"/>
+      </svg>
+      <div style="position:absolute;top:22px;left:12px;">
+        <div style="font-size:16px;font-weight:900;color:#fff;line-height:1.25;">오늘의<br><span style="color:#00FFD0;">탑픽</span></div>
+        <div style="font-size:7px;color:#555;margin-top:6px;letter-spacing:1px;">STOCK BRAIN</div>
+      </div>
+    </div>
+    <div class="label">썸네일</div>
+  </div>
+
+</div>
+
+</body>
+</html>

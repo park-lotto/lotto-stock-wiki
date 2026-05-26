@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5월 6일 나스닥 강세테마 × 국내 연결 포인트</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', '맑은 고딕', sans-serif;
+    background: #f0f2f5;
+    display: flex;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .card {
+    width: 1080px;
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  }
+
+  /* ── 헤더 ── */
+  .header {
+    background: linear-gradient(135deg, #0f1c3f 0%, #1a3a6b 60%, #1e4d8c 100%);
+    padding: 28px 32px 22px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::after {
+    content: '📈';
+    position: absolute;
+    right: 28px;
+    top: 18px;
+    font-size: 52px;
+    opacity: 0.25;
+  }
+  .header-date {
+    color: #7eb8f7;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .header-title {
+    color: #fff;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+  .header-subtitle {
+    color: #b8d4f5;
+    font-size: 15px;
+    margin-bottom: 16px;
+  }
+  .header-meta {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .meta-chip {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 4px 14px;
+    color: #d0e8ff;
+    font-size: 12.5px;
+    font-weight: 500;
+  }
+  .meta-chip span { color: #fff; font-weight: 700; }
+
+  /* ── 지수 바 ── */
+  .index-bar {
+    background: #0b1529;
+    display: flex;
+    gap: 0;
+  }
+  .index-item {
+    flex: 1;
+    padding: 10px 18px;
+    border-right: 1px solid rgba(255,255,255,0.07);
+  }
+  .index-item:last-child { border-right: none; }
+  .index-name { color: #6b8aad; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; }
+  .index-val { color: #fff; font-size: 16px; font-weight: 700; margin-top: 1px; }
+  .index-chg { font-size: 13px; font-weight: 700; margin-top: 1px; }
+  .up { color: #4ade80; }
+  .down { color: #f87171; }
+
+  /* ── 테이블 ── */
+  .table-wrap { padding: 0; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  thead tr {
+    background: #1e2d4a;
+  }
+  thead th {
+    color: #8faecf;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 12px 14px;
+    text-align: left;
+  }
+  thead th.center { text-align: center; }
+
+  tbody tr {
+    border-bottom: 1px solid #edf0f5;
+    transition: background 0.15s;
+  }
+  tbody tr:hover { background: #f7f9ff; }
+  tbody tr:nth-child(even) { background: #fafbfe; }
+  tbody tr:nth-child(even):hover { background: #f0f4ff; }
+
+  td {
+    padding: 14px 14px;
+    vertical-align: top;
+    font-size: 13.5px;
+    color: #1e2a3a;
+    line-height: 1.5;
+  }
+
+  /* 순위 */
+  .rank {
+    text-align: center;
+    width: 44px;
+  }
+  .rank-num {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 800;
+    margin: auto;
+    color: #fff;
+  }
+  .rank-1 { background: #e63946; }
+  .rank-2 { background: #e87c2a; }
+  .rank-3 { background: #f4a261; }
+  .rank-4 { background: #457b9d; }
+  .rank-5 { background: #6b8aad; }
+
+  /* 테마 */
+  .theme-cell { width: 170px; }
+  .theme-icon { font-size: 20px; margin-bottom: 4px; }
+  .theme-name {
+    font-weight: 700;
+    font-size: 14px;
+    color: #0f1c3f;
+    line-height: 1.3;
+  }
+  .theme-sub {
+    font-size: 11.5px;
+    color: #7a8fa6;
+    margin-top: 2px;
+  }
+
+  /* 연결강도 */
+  .strength-cell { text-align: center; width: 80px; }
+  .badge {
+    display: inline-block;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .badge-red    { background: #fff0f0; color: #c0392b; border: 1.5px solid #e74c3c; }
+  .badge-orange { background: #fff8ee; color: #d4700a; border: 1.5px solid #f39c12; }
+  .badge-green  { background: #f0fff4; color: #1a7a3c; border: 1.5px solid #27ae60; }
+
+  /* 미국 종목 */
+  .us-cell { width: 160px; }
+  .ticker {
+    display: inline-block;
+    background: #eef3ff;
+    color: #2563eb;
+    border-radius: 4px;
+    padding: 1px 7px;
+    font-size: 11.5px;
+    font-weight: 700;
+    margin: 2px 2px 2px 0;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+  .ticker-chg {
+    font-size: 11.5px;
+    color: #4ade80;
+    font-weight: 600;
+  }
+  .ticker-line {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 3px;
+    flex-wrap: wrap;
+  }
+  .ticker-note {
+    font-size: 11px;
+    color: #8faecf;
+    margin-top: 2px;
+  }
+
+  /* 국내 종목 */
+  .kr-cell { width: 160px; }
+  .kr-stock {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e2a3a;
+    padding: 2px 0;
+    border-left: 3px solid;
+    padding-left: 7px;
+    margin-bottom: 3px;
+  }
+  .kr-1 { border-color: #e63946; }
+  .kr-2 { border-color: #e87c2a; }
+  .kr-3 { border-color: #f4a261; }
+  .kr-4 { border-color: #457b9d; }
+  .kr-5 { border-color: #6b8aad; }
+
+  /* 인사이트 */
+  .insight-cell { color: #374151; font-size: 13px; line-height: 1.6; }
+  .insight-cell strong { color: #0f1c3f; }
+
+  /* ── 핵심 시사점 ── */
+  .bottom-box {
+    background: linear-gradient(90deg, #fff8e1 0%, #fffde4 100%);
+    border-top: 2px solid #f59e0b;
+    padding: 18px 24px;
+  }
+  .bottom-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #92400e;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .bottom-items {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .bottom-item {
+    font-size: 13px;
+    color: #44270a;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.5;
+  }
+  .bottom-item .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #f59e0b;
+    margin-top: 7px;
+    flex-shrink: 0;
+  }
+
+  /* ── 푸터 ── */
+  .footer {
+    background: #0b1529;
+    padding: 10px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-left { color: #4a6280; font-size: 11.5px; }
+  .footer-right { color: #4a6280; font-size: 11.5px; }
+  .footer-right strong { color: #7eb8f7; }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <!-- 헤더 -->
+  <div class="header">
+    <div class="header-date">🇺🇸 2026년 5월 5일 미국장 마감 기준 &nbsp;→&nbsp; 🇰🇷 2026년 5월 6일 국내장 적용</div>
+    <div class="header-title">5월 6일 나스닥 강세테마</div>
+    <div class="header-subtitle">국내 주식 연결 포인트 정리</div>
+    <div class="header-meta">
+      <div class="meta-chip">기간: <span>중단기</span></div>
+      <div class="meta-chip">방향: <span>상승 ↑</span></div>
+      <div class="meta-chip">시장 드라이버: <span>호르무즈 긴장 완화 · 유가·VIX 하락</span></div>
+      <div class="meta-chip">리스크: <span>통신서비스 약세 · 중동 재부각 가능</span></div>
+    </div>
+  </div>
+
+  <!-- 지수 바 -->
+  <div class="index-bar">
+    <div class="index-item">
+      <div class="index-name">나스닥</div>
+      <div class="index-val">25,326.13</div>
+      <div class="index-chg up">▲ +1.02%</div>
+    </div>
+    <div class="index-item">
+      <div class="index-name">S&amp;P 500</div>
+      <div class="index-val">7,259.22</div>
+      <div class="index-chg up">▲ +0.81%</div>
+    </div>
+    <div class="index-item">
+      <div class="index-name">러셀 2000</div>
+      <div class="index-val">—</div>
+      <div class="index-chg up">▲ +1.90%</div>
+    </div>
+    <div class="index-item">
+      <div class="index-name">SOX 반도체</div>
+      <div class="index-val">—</div>
+      <div class="index-chg up">▲ (강세 추정)</div>
+    </div>
+    <div class="index-item">
+      <div class="index-name">달러인덱스 / 원달러</div>
+      <div class="index-val">—</div>
+      <div class="index-chg" style="color:#8faecf">수집 필요</div>
+    </div>
+  </div>
+
+  <!-- 테이블 -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="center">순위</th>
+          <th>미국장 강세테마</th>
+          <th class="center">연결강도</th>
+          <th>미국 대표종목</th>
+          <th>국내 대표종목</th>
+          <th>인사이트</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <!-- 1위 -->
+        <tr>
+          <td class="rank"><div class="rank-num rank-1">1</div></td>
+          <td class="theme-cell">
+            <div class="theme-icon">🔬</div>
+            <div class="theme-name">AI 반도체·HBM</div>
+            <div class="theme-sub">데이터센터 수요<br>구조적 성장</div>
+          </td>
+          <td class="strength-cell"><span class="badge badge-red">🔴 높음</span></td>
+          <td class="us-cell">
+            <div class="ticker-line"><span class="ticker">AVGO</span><span class="ticker-chg">+2.6%</span></div>
+            <div class="ticker-line"><span class="ticker">MRVL</span><span class="ticker-chg">+3.11%</span></div>
+            <div class="ticker-line"><span class="ticker">MU</span><span class="ticker-chg">52주 신고가</span></div>
+            <div class="ticker-note">MU 시총 $700B 첫 돌파<br>MRVL UBS TP $195 상향</div>
+          </td>
+          <td class="kr-cell">
+            <div class="kr-stock kr-1">SK하이닉스</div>
+            <div class="kr-stock kr-1">한미반도체</div>
+            <div class="kr-stock kr-1">HPSP</div>
+            <div class="kr-stock kr-1">리노공업</div>
+          </td>
+          <td class="insight-cell">
+            MRVL 신고가 + UBS 목표가 $195 상향 → <strong>HBM 수요 구조적 성장 재확인.</strong><br>
+            국내 HBM 장비·소재주 1~2일 시차 수급 유입 패턴. 장 초반 외국인 순매수 방향 우선 확인.
+          </td>
+        </tr>
+
+        <!-- 2위 -->
+        <tr>
+          <td class="rank"><div class="rank-num rank-2">2</div></td>
+          <td class="theme-cell">
+            <div class="theme-icon">⚡</div>
+            <div class="theme-name">AI 인프라·전력</div>
+            <div class="theme-sub">데이터센터<br>건설·전력 수주</div>
+          </td>
+          <td class="strength-cell"><span class="badge badge-orange">🟡 보통</span></td>
+          <td class="us-cell">
+            <div class="ticker-line"><span class="ticker">STRL</span><span class="ticker-chg">+52.2%</span></div>
+            <div class="ticker-note">AI DC 수주잔고 급증<br>미국 인프라 직접 수혜</div>
+          </td>
+          <td class="kr-cell">
+            <div class="kr-stock kr-2">효성중공업</div>
+            <div class="kr-stock kr-2">LS ELECTRIC</div>
+            <div class="kr-stock kr-2">두산에너빌리티</div>
+            <div class="kr-stock kr-2">산일전기</div>
+          </td>
+          <td class="insight-cell">
+            STRL 하루 +52%는 <strong>AI DC 전력·건설 수요 폭발</strong> 신호.<br>
+            국내 전력기기주와는 공급망 직접 연결 아님 → 테마 공명 수준. 수급 유입 확인 후 판단 권장.
+          </td>
+        </tr>
+
+        <!-- 3위 -->
+        <tr>
+          <td class="rank"><div class="rank-num rank-3">3</div></td>
+          <td class="theme-cell">
+            <div class="theme-icon">🤖</div>
+            <div class="theme-name">AI 소프트웨어·플랫폼</div>
+            <div class="theme-sub">AI 밸류에이션<br>재평가 흐름</div>
+          </td>
+          <td class="strength-cell"><span class="badge badge-orange">🟡 보통</span></td>
+          <td class="us-cell">
+            <div class="ticker-line"><span class="ticker">GOOGL</span></div>
+            <div class="ticker-note">시총 $4.83T<br>장중 NVDA 추월</div>
+          </td>
+          <td class="kr-cell">
+            <div class="kr-stock kr-3">크래프톤</div>
+            <div class="kr-stock kr-3">카카오</div>
+            <div class="kr-stock kr-3">네이버</div>
+          </td>
+          <td class="insight-cell">
+            AI 플랫폼 밸류에이션 리레이팅 흐름.<br>
+            <strong>국내는 개별 실적 모멘텀 선(先) 확인</strong> 후 접근. 크래프톤 AI 게임 연계 모멘텀 주목.
+          </td>
+        </tr>
+
+        <!-- 4위 -->
+        <tr>
+          <td class="rank"><div class="rank-num rank-4">4</div></td>
+          <td class="theme-cell">
+            <div class="theme-icon">📦</div>
+            <div class="theme-name">소형주·경기민감</div>
+            <div class="theme-sub">중동 완화<br>리스크온 분위기</div>
+          </td>
+          <td class="strength-cell"><span class="badge badge-green">🟢 낮음</span></td>
+          <td class="us-cell">
+            <div class="ticker-line"><span class="ticker">IWM</span><span class="ticker-chg">+1.9%</span></div>
+            <div class="ticker-note">소재 섹터 +2.0%<br>전 섹터 상승</div>
+          </td>
+          <td class="kr-cell">
+            <div class="kr-stock kr-4">코스닥 중소형</div>
+            <div class="kr-stock kr-4">건설자재</div>
+          </td>
+          <td class="insight-cell">
+            러셀2000 상승은 글로벌 리스크온 신호.<br>
+            <strong>국내 코스닥 직접 연결 아님</strong> → 시장 전반 분위기 참고용. 수급빈집 종목 탐색 기회.
+          </td>
+        </tr>
+
+        <!-- 5위 -->
+        <tr>
+          <td class="rank"><div class="rank-num rank-5">5</div></td>
+          <td class="theme-cell">
+            <div class="theme-icon">📱</div>
+            <div class="theme-name">네트워크·온디바이스AI</div>
+            <div class="theme-sub">단말 부품<br>모니터링 단계</div>
+          </td>
+          <td class="strength-cell"><span class="badge badge-green">🟢 낮음</span></td>
+          <td class="us-cell">
+            <div class="ticker-line"><span class="ticker">SYNA</span><span class="ticker-chg">+6.45%</span></div>
+            <div class="ticker-note">$102.73 마감</div>
+          </td>
+          <td class="kr-cell">
+            <div class="kr-stock kr-5">파트론</div>
+            <div class="kr-stock kr-5">코위버</div>
+          </td>
+          <td class="insight-cell">
+            온디바이스AI 단말 부품 간접 수혜.<br>
+            <strong>국내 수급 아직 약함</strong> → 모니터링 단계. 관련 뉴스·수급 신호 발생 시 재검토.
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 핵심 시사점 -->
+  <div class="bottom-box">
+    <div class="bottom-title">⭐ 핵심 시사점 — 오늘 장 주목 포인트</div>
+    <div class="bottom-items">
+      <div class="bottom-item">
+        <div class="dot"></div>
+        <div><strong>SK하이닉스 장 초반 외국인 수급 방향 최우선 확인</strong> — MRVL·MU 동반 신고가 연동, 갭업 후 외국인 순매수 전환 시 HBM 장비주(한미반도체·HPSP) 동반 수급 유입 패턴 확인</div>
+      </div>
+      <div class="bottom-item">
+        <div class="dot"></div>
+        <div><strong>전력기기주(효성중공업·LS ELECTRIC) 수급 체크</strong> — STRL +52%는 AI DC 전력 수요 폭발 신호, 단 국내 공급망 직접 연결 아니므로 수급 선행 여부 확인 후 진입</div>
+      </div>
+      <div class="bottom-item">
+        <div class="dot"></div>
+        <div><strong>리스크온 분위기 → 코스닥 수급빈집 탐색 기회</strong> — 러셀2000 +2% 글로벌 리스크온, 코스닥 중소형 단기 모멘텀 발생 가능. 기존 수급빈집 추적 종목과 연계</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 푸터 -->
+  <div class="footer">
+    <div class="footer-left">출처: raw/20260506_market_나스닥연결포인트.md · 웹 검색 (2026-05-05 미국장)</div>
+    <div class="footer-right"><strong>로또의 주식</strong> — 나만의 지식 위키</div>
+  </div>
+
+</div>
+</body>
+</html>

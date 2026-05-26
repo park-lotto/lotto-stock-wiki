@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STOCK BRAIN | 반도체 섹터</title>
+<style>
+:root {
+  --bg: #080808;
+  --card: #111111;
+  --card2: #0e0e0e;
+  --card-active: #0a1a14;
+  --main: #00FFD0;
+  --main-dark: #003D31;
+  --text: #FFFFFF;
+  --sub: #666666;
+  --dim: #2a2a2a;
+  --border: #191919;
+  --red: #FF4B4B;
+  /* accent: mint = 긍정/강세 | red = 위험/약세 | white = 주요텍스트 */
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:'Apple SD Gothic Neo',-apple-system,'Malgun Gothic',sans-serif; min-height:100vh; }
+
+/* ── 헤더 ── */
+.hdr {
+  position:sticky; top:0; z-index:200;
+  background:rgba(8,8,8,0.95); backdrop-filter:blur(20px);
+  border-bottom:1px solid #141414;
+  height:56px; padding:0 36px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.hdr-l { display:flex; align-items:center; gap:14px; }
+.brand { font-size:10px; font-weight:800; letter-spacing:4px; color:var(--main); }
+.vl { width:1px; height:16px; background:#222; }
+.stitle { font-size:17px; font-weight:700; }
+.chip {
+  font-size:10px; font-weight:700; padding:3px 10px; border-radius:20px;
+  border:1px solid var(--main); background:rgba(0,255,208,0.07); color:var(--main); letter-spacing:1px;
+}
+.hdate { font-size:11px; color:var(--sub); }
+.live-dot { width:6px; height:6px; border-radius:50%; background:var(--main); box-shadow:0 0 7px var(--main); animation:blink 2s infinite; }
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:0.3} }
+
+/* ── 레이아웃 ── */
+.page { max-width:1560px; margin:0 auto; padding:24px 36px 60px; }
+.sec { margin-bottom:22px; }
+.lbl { font-size:9px; font-weight:800; letter-spacing:4px; color:var(--main); text-transform:uppercase; margin-bottom:12px; }
+
+/* ── 카드 기본 ── */
+.card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px; }
+.card-a { background:var(--card-active); border:1px solid rgba(0,255,208,0.18); border-radius:12px; padding:20px; }
+
+/* ═══════════════════════════════
+   오늘의 코멘트 (상단 4분할)
+═══════════════════════════════ */
+.today-grid {
+  display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:12px;
+}
+
+/* 공통 박스 */
+.tbox {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:12px; padding:13px 16px; display:flex; flex-direction:column; gap:7px;
+}
+.tbox-head { display:flex; align-items:center; gap:8px; margin-bottom:0; }
+.tbox-icon { font-size:20px; }
+.tbox-title { font-size:10px; font-weight:800; letter-spacing:1.5px; color:#aaa; text-transform:uppercase; }
+
+/* 박스1: 미국장 페어 */
+.pair-item { display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid #161616; }
+.pair-item:last-child { border-bottom:none; }
+.us-tick { font-size:12px; font-weight:800; min-width:44px; }
+.us-chg { font-size:12px; font-weight:700; min-width:48px; }
+.us-chg.up { color:var(--main); }
+.us-chg.dn { color:var(--red); }
+.us-chg.nt { color:var(--sub); }
+.pair-arr { color:var(--dim); font-size:12px; }
+.kr-chips { display:flex; flex-wrap:wrap; gap:3px; flex:1; }
+.kc { font-size:10px; padding:2px 6px; border-radius:4px; background:rgba(255,255,255,0.04); border:1px solid #222; color:#999; white-space:nowrap; }
+.kc.hot { background:rgba(0,255,208,0.07); border-color:rgba(0,255,208,0.2); color:var(--main); }
+.kc.bad { background:rgba(255,75,75,0.06); border-color:rgba(255,75,75,0.2); color:#ff7070; }
+
+/* 박스2: 국내 뉴스 종목 */
+.news-item-sm { padding:5px 0; border-bottom:1px solid #161616; }
+.news-item-sm:last-child { border-bottom:none; }
+.ni-top { display:flex; align-items:center; gap:6px; margin-bottom:4px; }
+.ni-tag2 { font-size:9px; font-weight:700; padding:1px 6px; border-radius:3px; }
+.ni-tag2.hot { background:rgba(0,255,208,0.1); color:var(--main); }
+.ni-tag2.mid { background:rgba(255,75,75,0.1); color:var(--red); }
+.ni-tag2.new { background:rgba(0,255,208,0.07); color:var(--main); }
+.ni-src { font-size:10px; color:#444; margin-left:auto; }
+.ni-txt { font-size:11px; color:#999; line-height:1.4; margin-bottom:5px; }
+.ni-sts { display:flex; flex-wrap:wrap; gap:3px; }
+.ni-st { font-size:9px; padding:1px 5px; border-radius:3px; background:rgba(255,255,255,0.04); border:1px solid #1e1e1e; color:#777; }
+.ni-st.h { background:rgba(0,255,208,0.06); border-color:rgba(0,255,208,0.2); color:var(--main); }
+
+/* 박스3: 탑픽 */
+.toppick-item { padding:5px 0; border-bottom:1px solid #161616; }
+.toppick-item:last-child { border-bottom:none; }
+.tp-top { display:flex; align-items:center; gap:8px; margin-bottom:5px; }
+.tp-name { font-size:13px; font-weight:700; }
+.tp-score {
+  margin-left:auto; font-size:11px; font-weight:800; padding:2px 8px; border-radius:5px;
+}
+.tp-score.s1 { background:rgba(0,255,208,0.1); color:var(--main); }
+.tp-score.s2 { background:rgba(255,75,75,0.1); color:var(--red); }
+.tp-score.s3 { background:#161616; color:var(--sub); }
+.tp-sigs { display:flex; flex-wrap:wrap; gap:3px; margin-bottom:4px; }
+.sig { font-size:9px; padding:1px 5px; border-radius:3px; font-weight:700; }
+.sig.on  { background:rgba(0,255,208,0.08); color:var(--main); }
+.sig.off { background:#161616; color:#444; text-decoration:line-through; }
+.sig.w   { background:rgba(255,75,75,0.08); color:var(--red); }
+.tp-reason { font-size:11px; color:var(--sub); line-height:1.4; }
+
+/* 박스4: 오늘 인사이트 */
+.insight-box {
+  background: linear-gradient(135deg, #0a1a14 0%, #0d0d0d 100%);
+  border:1px solid rgba(0,255,208,0.2); border-radius:12px; padding:20px;
+  position:relative; overflow:hidden;
+}
+.insight-box::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg, transparent, var(--main), transparent);
+}
+.ib-head { display:flex; align-items:center; gap:8px; margin-bottom:14px; }
+.ib-icon { font-size:16px; }
+.ib-lbl { font-size:10px; font-weight:800; letter-spacing:2px; color:var(--main); }
+.ib-body { font-size:13px; font-weight:500; line-height:1.8; color:#ddd; margin-bottom:14px; }
+.ib-body .h { color:var(--main); font-weight:700; }
+.ib-body .w { color:var(--red); font-weight:700; }
+.ib-bullets { display:flex; flex-direction:column; gap:6px; }
+.ib-b { display:flex; align-items:flex-start; gap:7px; font-size:11px; color:var(--sub); }
+.ib-dot { width:5px; height:5px; border-radius:50%; flex-shrink:0; margin-top:4px; }
+.ib-dot.r { background:var(--red); }
+.ib-dot.m { background:var(--main); }
+.ib-dot.o { background:var(--red); }
+.ib-dot.g { background:#333; }
+
+/* ═══════════════════════════════
+   크로스체크
+═══════════════════════════════ */
+.cc-row { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+.cc { background:var(--card); border:1px solid var(--border); border-radius:9px; padding:14px 16px; }
+.cc.ok  { border-color:rgba(0,255,208,0.18); }
+.cc.no  { border-color:rgba(255,75,75,0.15); }
+.cc.old { border-color:rgba(255,75,75,0.15); }
+.cc-t { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.cc-name { font-size:10px; font-weight:700; color:var(--sub); letter-spacing:1px; }
+.cc-badge { font-size:9px; font-weight:700; padding:2px 6px; border-radius:3px; }
+.cc-badge.ok  { background:rgba(0,255,208,0.1); color:var(--main); }
+.cc-badge.no  { background:rgba(255,75,75,0.1); color:var(--red); }
+.cc-badge.old { background:rgba(255,75,75,0.1); color:var(--red); }
+.cc-val { font-size:13px; font-weight:600; margin-bottom:3px; }
+.cc-sub { font-size:11px; color:#444; }
+
+/* ═══════════════════════════════
+   서브섹터 레이더
+═══════════════════════════════ */
+.ss-radar { display:flex; flex-wrap:wrap; gap:7px; align-items:flex-start; }
+
+/* quiet: 그냥 라벨 */
+.ss-q {
+  background:#0c0c0c; border:1px solid #181818; border-radius:7px;
+  padding:7px 11px; font-size:11px; font-weight:600; color:#363636;
+  white-space:nowrap;
+}
+
+/* active: 오늘 움직이는 서브섹터 */
+.ss-a {
+  background:rgba(0,255,208,0.04); border:1px solid rgba(0,255,208,0.22);
+  border-radius:7px; padding:9px 13px; min-width:170px;
+}
+.ss-a .ss-nm { font-size:12px; font-weight:800; color:var(--main); margin-bottom:4px; }
+.ss-a .ss-why { font-size:10px; color:#777; margin-bottom:5px; line-height:1.35; }
+.ss-a .ss-sks { display:flex; flex-wrap:wrap; gap:3px; }
+.ss-a .ss-sk  { font-size:9px; padding:2px 6px; border-radius:3px;
+                background:rgba(0,255,208,0.07); border:1px solid rgba(0,255,208,0.15);
+                color:var(--main); }
+
+/* warn: 조정·리스크 */
+.ss-w {
+  background:rgba(255,75,75,0.03); border:1px solid rgba(255,75,75,0.2);
+  border-radius:7px; padding:9px 13px; min-width:150px;
+}
+.ss-w .ss-nm { font-size:12px; font-weight:800; color:var(--red); margin-bottom:4px; }
+.ss-w .ss-why { font-size:10px; color:#777; margin-bottom:5px; line-height:1.35; }
+.ss-w .ss-sks { display:flex; flex-wrap:wrap; gap:3px; }
+.ss-w .ss-sk  { font-size:9px; padding:2px 6px; border-radius:3px;
+                background:rgba(255,75,75,0.07); border:1px solid rgba(255,75,75,0.18);
+                color:var(--red); }
+
+/* ═══════════════════════════════
+   메인 레이아웃 (좌 콘텐츠 + 우 타임라인)
+═══════════════════════════════ */
+.main-layout { display:grid; grid-template-columns:1fr 300px; gap:18px; align-items:start; }
+.left-col { display:flex; flex-direction:column; gap:18px; }
+.right-col { position:sticky; top:68px; }
+
+/* ── 커플링 전광판 ── */
+.cp-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+.cp { background:var(--card); border:1px solid var(--border); border-radius:9px; padding:13px 14px; border-left:2px solid; }
+.cp.up { border-left-color:var(--main); }
+.cp.dn { border-left-color:var(--red); }
+.cp.nt { border-left-color:#222; }
+.cp-us { display:flex; align-items:baseline; gap:6px; margin-bottom:7px; }
+.cp-tk { font-size:14px; font-weight:800; }
+.cp-co { font-size:10px; color:#444; }
+.cp-chg { font-size:13px; font-weight:700; margin-left:auto; }
+.cp-chg.up { color:var(--main); }
+.cp-chg.dn { color:var(--red); }
+.cp-chg.nt { color:var(--sub); }
+.cp-logic { font-size:10px; color:#555; margin-bottom:7px; line-height:1.35; }
+.cp-kr { display:flex; flex-wrap:wrap; gap:3px; margin-bottom:7px; }
+.cp-kr-c { font-size:10px; padding:2px 6px; border-radius:3px; background:rgba(255,255,255,0.03); border:1px solid #1e1e1e; color:#888; }
+.cp-kr-c.h { background:rgba(0,255,208,0.06); border-color:rgba(0,255,208,0.18); color:var(--main); }
+.cp-kr-c.b { background:rgba(255,75,75,0.05); border-color:rgba(255,75,75,0.18); color:#ff8080; }
+.cp-sig { font-size:9px; font-weight:700; padding:2px 7px; border-radius:3px; width:fit-content; }
+.cp-sig.bull { background:rgba(0,255,208,0.07); color:var(--main); }
+.cp-sig.bear { background:rgba(255,75,75,0.07); color:var(--red); }
+.cp-sig.neut { background:#161616; color:#555; }
+
+/* ── 국내 드리버 ── */
+.nd-grid { display:grid; grid-template-columns:240px 1fr; gap:14px; }
+.announce { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px; display:flex; flex-direction:column; gap:12px; }
+.ann-co { display:flex; align-items:center; gap:8px; padding-bottom:10px; border-bottom:1px solid #161616; }
+.ann-logo { width:26px; height:26px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; }
+.ann-logo.ss { background:rgba(20,90,255,0.12); color:#4a8aff; border:1px solid rgba(20,90,255,0.18); }
+.ann-logo.sk { background:rgba(255,100,0,0.1); color:#ff8c42; border:1px solid rgba(255,100,0,0.18); }
+.ann-name { font-size:12px; font-weight:700; }
+.ann-st { margin-left:auto; font-size:9px; font-weight:700; padding:2px 6px; border-radius:3px; }
+.ann-st.live { background:rgba(0,255,208,0.08); color:var(--main); }
+.ann-st.wait { background:#161616; color:#444; }
+.ann-item { }
+.ann-item.ghost { opacity:0.4; }
+.ann-date { font-size:10px; color:#444; margin-bottom:3px; }
+.ann-ttl { font-size:11px; font-weight:600; color:var(--text); margin-bottom:6px; line-height:1.35; }
+.ann-chips { display:flex; flex-wrap:wrap; gap:3px; }
+.ann-c { font-size:9px; padding:1px 6px; border-radius:3px; background:rgba(255,255,255,0.03); border:1px solid #1e1e1e; color:#888; }
+.ann-c.h { background:rgba(0,255,208,0.06); border-color:rgba(0,255,208,0.18); color:var(--main); }
+
+.theme-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.theme { background:var(--card); border:1px solid var(--border); border-radius:9px; padding:13px 14px; }
+.theme.on { background:var(--card-active); border-color:rgba(0,255,208,0.15); }
+.theme.warn { border-color:rgba(255,75,75,0.15); }
+.th-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px; }
+.th-name { font-size:12px; font-weight:700; }
+.th-sig { font-size:9px; font-weight:700; padding:2px 6px; border-radius:3px; }
+.th-sig.hot  { background:rgba(0,255,208,0.08); color:var(--main); }
+.th-sig.mid  { background:rgba(255,75,75,0.08); color:var(--red); }
+.th-sig.cold { background:#161616; color:#555; }
+.th-driver { font-size:10px; color:var(--sub); line-height:1.4; margin-bottom:7px; }
+.th-stocks { display:flex; flex-wrap:wrap; gap:3px; }
+.th-s { font-size:10px; padding:2px 6px; border-radius:3px; background:rgba(255,255,255,0.03); border:1px solid #1e1e1e; color:#888; }
+.th-s.h { background:rgba(0,255,208,0.06); border-color:rgba(0,255,208,0.18); color:var(--main); }
+
+/* ── 2열 패널 ── */
+.two-col { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+
+/* 수출 */
+.exp-row { display:flex; align-items:center; padding:10px 0; border-bottom:1px solid #161616; }
+.exp-row:last-child { border-bottom:none; }
+.exp-name { font-size:12px; color:var(--sub); flex:1; }
+.exp-nums { display:flex; gap:8px; align-items:center; }
+.en { font-size:12px; font-weight:700; }
+.en.s { color:var(--main); }
+.en.m { color:var(--red); }
+.en.w { color:#888; }
+.bar-w { width:60px; height:3px; background:#1a1a1a; border-radius:2px; overflow:hidden; }
+.bar { height:100%; border-radius:2px; background:var(--main); }
+
+/* 컨센 */
+.cons-row { display:flex; align-items:center; gap:8px; padding:10px 0; border-bottom:1px solid #161616; }
+.cons-row:last-child { border-bottom:none; }
+.cons-name { font-size:12px; font-weight:600; flex:1; }
+.cons-tp { font-size:11px; color:var(--sub); }
+.cons-n { font-size:10px; color:#444; background:#161616; padding:1px 5px; border-radius:3px; }
+.arr { font-size:14px; font-weight:700; }
+.arr.u { color:var(--main); }
+.arr.d { color:var(--red); }
+.arr.s { color:#444; }
+
+/* 수급 */
+.osc-row { display:flex; align-items:center; padding:10px 0; border-bottom:1px solid #161616; }
+.osc-row:last-child { border-bottom:none; }
+.osc-name { font-size:12px; font-weight:600; flex:1; }
+.osc-g { font-size:10px; font-weight:700; padding:2px 7px; border-radius:4px; }
+.osc-g.a { background:rgba(0,255,208,0.1); color:var(--main); }
+.osc-g.d { background:rgba(255,75,75,0.1); color:var(--red); }
+.osc-g.n { background:#161616; color:#444; }
+.osc-v { font-size:11px; color:var(--sub); margin-left:8px; }
+
+/* 미국 동종주 */
+.peer-row { display:flex; align-items:center; gap:8px; padding:9px 0; border-bottom:1px solid #161616; }
+.peer-row:last-child { border-bottom:none; }
+.peer-tk { font-size:12px; font-weight:800; min-width:50px; }
+.peer-nm { font-size:11px; color:var(--sub); flex:1; }
+.peer-bw { width:50px; height:3px; background:#1a1a1a; border-radius:2px; overflow:hidden; }
+.peer-b { height:100%; border-radius:2px; }
+.peer-chg { font-size:12px; font-weight:700; min-width:48px; text-align:right; }
+.peer-chg.u { color:var(--main); }
+.peer-chg.d { color:var(--red); }
+
+/* ── 오늘 뉴스피드 ── */
+.today-news { display:grid; grid-template-columns:auto 1fr; gap:0; }
+.tn-time-col { display:flex; flex-direction:column; align-items:center; padding-right:14px; position:relative; }
+.tn-time-col::after { content:''; position:absolute; top:0; bottom:0; right:7px; width:1px; background:linear-gradient(180deg, var(--main) 0%, #1a1a1a 100%); }
+.tn-items { display:flex; flex-direction:column; gap:0; }
+.tn-item { display:flex; gap:14px; padding-bottom:14px; }
+.tn-t { font-size:10px; font-weight:700; color:var(--sub); padding-top:4px; min-width:36px; text-align:right; }
+.tn-dot-w { width:14px; flex-shrink:0; display:flex; justify-content:center; padding-top:5px; position:relative; z-index:1; }
+.tn-dot { width:8px; height:8px; border-radius:50%; border:1.5px solid; background:var(--bg); flex-shrink:0; }
+.tn-dot.r { border-color:var(--red); background:rgba(255,75,75,0.2); }
+.tn-dot.o { border-color:var(--red); background:rgba(255,75,75,0.15); }
+.tn-dot.m { border-color:var(--main); background:rgba(0,255,208,0.15); }
+.tn-dot.g { border-color:#333; }
+.tn-card { flex:1; background:var(--card); border:1px solid var(--border); border-radius:8px; padding:10px 12px; }
+.tn-meta { display:flex; align-items:center; gap:6px; margin-bottom:4px; }
+.tn-tag { font-size:9px; font-weight:700; padding:1px 5px; border-radius:3px; }
+.tn-tag.hot { background:rgba(0,255,208,0.1); color:var(--main); }
+.tn-tag.mid { background:rgba(255,75,75,0.1); color:var(--red); }
+.tn-tag.info{ background:#161616; color:#555; }
+.tn-src { font-size:10px; color:#444; }
+.tn-hl { font-size:12px; color:#ccc; line-height:1.4; margin-bottom:5px; }
+.tn-stocks { display:flex; flex-wrap:wrap; gap:3px; }
+.tn-st { font-size:9px; padding:1px 5px; border-radius:3px; background:rgba(255,255,255,0.03); border:1px solid #1a1a1a; color:#666; }
+.tn-st.h { background:rgba(0,255,208,0.05); border-color:rgba(0,255,208,0.18); color:var(--main); }
+
+/* ── 지속 이벤트 ── */
+.ongoing-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.oc { background:var(--card); border:1px solid var(--border); border-radius:9px; padding:14px; }
+.oc-dir { font-size:14px; margin-bottom:6px; }
+.oc-title { font-size:12px; font-weight:600; margin-bottom:4px; }
+.oc-since { font-size:10px; color:#444; margin-bottom:6px; }
+.oc-desc { font-size:11px; color:var(--sub); line-height:1.4; }
+
+/* ── 캘린더 ── */
+.cal-scroll { overflow-x:auto; scrollbar-width:thin; scrollbar-color:#1e1e1e transparent; }
+.cal-track { display:flex; min-width:800px; position:relative; padding-bottom:28px; }
+.cal-line { position:absolute; left:0; right:0; top:20px; height:1px; background:linear-gradient(90deg,var(--main-dark),#1a1a1a); }
+.cal-col { flex:1; padding:0 6px; }
+.cal-ml { font-size:9px; font-weight:700; color:#2a2a2a; letter-spacing:1px; margin-bottom:14px; }
+.cal-ev { margin-top:10px; }
+.cd { width:8px; height:8px; border-radius:50%; margin-bottom:5px; }
+.cd.r { background:var(--red); box-shadow:0 0 5px var(--red); }
+.cd.o { background:var(--red); }
+.cd.m { background:var(--main); box-shadow:0 0 4px var(--main); }
+.cd.y { background:#444; }
+.cal-txt { font-size:10px; color:var(--sub); line-height:1.4; }
+
+/* ── 밸류체인 ── */
+.chain { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.cn { background:var(--card); border:1px solid var(--border); border-radius:7px; padding:9px 14px; }
+.cn.a { background:var(--card-active); border-color:rgba(0,255,208,0.2); }
+.cn-name { font-size:11px; font-weight:700; }
+.cn-sub { font-size:10px; color:var(--sub); margin-top:2px; }
+.ca { color:#2a2a2a; font-size:14px; }
+
+/* ═══════════════════════════════
+   우측 타임라인 (sticky)
+═══════════════════════════════ */
+.tl-box {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:12px; padding:18px;
+  max-height: calc(100vh - 90px);
+  overflow:hidden; display:flex; flex-direction:column;
+}
+.tl-title { font-size:9px; font-weight:800; letter-spacing:4px; color:var(--main); text-transform:uppercase; margin-bottom:14px; flex-shrink:0; }
+.tl-scroll { overflow-y:auto; flex:1; scrollbar-width:thin; scrollbar-color:#1e1e1e transparent; padding-right:2px; }
+.tl-line { position:relative; }
+.tl-rail { position:absolute; left:11px; top:0; bottom:0; width:1px; background:linear-gradient(180deg,var(--main) 0%,#003D31 50%,#1a1a1a 100%); }
+.tl-item { display:flex; gap:12px; margin-bottom:12px; }
+.tl-dc { width:24px; flex-shrink:0; display:flex; justify-content:center; padding-top:4px; }
+.tld { width:9px; height:9px; border-radius:50%; border:1.5px solid; background:var(--bg); flex-shrink:0; }
+.tld.r { border-color:var(--red); background:rgba(255,75,75,0.2); box-shadow:0 0 5px rgba(255,75,75,0.4); }
+.tld.o { border-color:var(--red); background:rgba(255,75,75,0.15); }
+.tld.m { border-color:var(--main); background:rgba(0,255,208,0.15); box-shadow:0 0 5px rgba(0,255,208,0.3); }
+.tld.y { border-color:#444; background:rgba(68,68,68,0.15); }
+.tld.f { border-color:#252525; border-style:dashed; background:transparent; }
+.tl-card { flex:1; background:#0d0d0d; border:1px solid #161616; border-radius:8px; padding:10px 12px; }
+.tl-card.today { background:var(--card-active); border-color:rgba(0,255,208,0.25); }
+.tl-card.future { opacity:0.45; border-style:dashed; }
+.tl-meta { display:flex; align-items:center; gap:5px; margin-bottom:4px; }
+.tl-date { font-size:10px; font-weight:700; color:var(--sub); }
+.tag { font-size:9px; font-weight:700; padding:1px 5px; border-radius:3px; }
+.tag.e { background:rgba(0,255,208,0.1); color:var(--main); }
+.tag.r { background:rgba(255,75,75,0.1); color:var(--red); }
+.tag.m { background:rgba(0,255,208,0.07); color:var(--main); }
+.tag.t { background:#161616; color:#555; }
+.tag.td{ background:rgba(0,255,208,0.15); color:var(--main); }
+.tl-ttl { font-size:11px; font-weight:600; color:var(--text); margin-bottom:3px; line-height:1.3; }
+.tl-desc { font-size:10px; color:var(--sub); line-height:1.35; }
+.fsep { text-align:center; font-size:9px; letter-spacing:3px; color:#222; text-transform:uppercase; margin:10px 0 8px; }
+
+/* scrollbar */
+::-webkit-scrollbar { width:3px; height:3px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:#1e1e1e; border-radius:2px; }
+
+/* ═══════════════════════════════════════════════
+   🎬 ANIMATION SYSTEM
+═══════════════════════════════════════════════ */
+
+/* ── 키프레임 정의 ── */
+
+/* 1. 페이지 로드 스캔라인 */
+@keyframes scanDown {
+  0%   { top:-2%; opacity:0; }
+  5%   { opacity:1; }
+  93%  { opacity:0.9; }
+  100% { top:103%; opacity:0; }
+}
+
+/* 2. 카드 등장 (아래 → 위) */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(22px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* 3. 섹션 레이블 (좌 → 우) */
+@keyframes slideLeft {
+  from { opacity:0; transform:translateX(-16px); }
+  to   { opacity:1; transform:translateX(0); }
+}
+
+/* 4. 민트 글로우 호흡 (핵심 수치) */
+@keyframes mintPulse {
+  0%,100% { text-shadow:0 0 8px rgba(0,255,208,0.3); }
+  50%     { text-shadow:0 0 22px rgba(0,255,208,1), 0 0 44px rgba(0,255,208,0.5), 0 0 88px rgba(0,255,208,0.2); }
+}
+
+/* 5. 민트 테두리 글로우 펄스 */
+@keyframes borderPulse {
+  0%,100% { box-shadow:0 0 6px rgba(0,255,208,0.06); }
+  50%     { box-shadow:0 0 20px rgba(0,255,208,0.4), 0 0 40px rgba(0,255,208,0.15), inset 0 0 20px rgba(0,255,208,0.03); }
+}
+
+/* 6. 레드 테두리 펄스 (warn) */
+@keyframes borderPulseRed {
+  0%,100% { box-shadow:0 0 6px rgba(255,75,75,0.06); }
+  50%     { box-shadow:0 0 16px rgba(255,75,75,0.3), 0 0 32px rgba(255,75,75,0.1); }
+}
+
+/* 7. 네온 플리커 (브랜드 로고) */
+@keyframes neonFlicker {
+  0%,17%,19%,21%,51%,53%,100% {
+    opacity:1;
+    text-shadow:0 0 10px rgba(0,255,208,0.7), 0 0 22px rgba(0,255,208,0.4), 0 0 44px rgba(0,255,208,0.2);
+  }
+  18%,20%,52% { opacity:0.5; text-shadow:none; }
+}
+
+/* 8. 라이브 도트 펄스 */
+@keyframes livePulse {
+  0%,100% { opacity:1; box-shadow:0 0 8px var(--main), 0 0 16px rgba(0,255,208,0.4); transform:scale(1); }
+  50%     { opacity:0.25; box-shadow:none; transform:scale(0.75); }
+}
+
+/* 9. 숫자 팝 (카운트업 완료) */
+@keyframes numPop {
+  0%   { transform:scale(0.65); opacity:0; }
+  70%  { transform:scale(1.1); }
+  100% { transform:scale(1); opacity:1; }
+}
+
+/* 10. 태그 팝 (스태거 등장) */
+@keyframes tagPop {
+  0%   { transform:scale(0.4) translateY(4px); opacity:0; }
+  75%  { transform:scale(1.12); }
+  100% { transform:scale(1) translateY(0); opacity:1; }
+}
+
+/* 11. 바 채우기 */
+@keyframes barFill {
+  from { transform:scaleX(0); transform-origin:left; }
+  to   { transform:scaleX(1); transform-origin:left; }
+}
+
+/* 12. 타임라인 레일 성장 */
+@keyframes railGrow {
+  from { transform:scaleY(0); transform-origin:top; }
+  to   { transform:scaleY(1); transform-origin:top; }
+}
+
+/* 13. 쉬머 (미입력·로딩 상태) */
+@keyframes shimmer {
+  0%   { background-position:-400px 0; }
+  100% { background-position:400px 0; }
+}
+
+/* 14. 깜빡임 (경고 신호) */
+@keyframes blinkWarn {
+  0%,100% { opacity:1; }
+  50%     { opacity:0.25; }
+}
+
+/* 15. 헤더 하단 글로우라인 */
+@keyframes hdrGlow {
+  0%,100% { opacity:0.25; }
+  50%     { opacity:1; }
+}
+
+/* 16. 타임라인 오늘 도트 펄스 */
+@keyframes tlDotPulse {
+  0%,100% { box-shadow:0 0 4px rgba(0,255,208,0.3); }
+  50%     { box-shadow:0 0 12px rgba(0,255,208,0.9), 0 0 24px rgba(0,255,208,0.4); }
+}
+
+/* 17. 플로트 (떠다니는 느낌 - 인사이트 아이콘) */
+@keyframes float {
+  0%,100% { transform:translateY(0); }
+  50%     { transform:translateY(-5px); }
+}
+
+/* 18. 슬라이드인 라이트 (우측에서) */
+@keyframes slideRight {
+  from { opacity:0; transform:translateX(20px); }
+  to   { opacity:1; transform:translateX(0); }
+}
+
+/* 19. 크로스체크 ok 플래시 */
+@keyframes okFlash {
+  0%   { background:rgba(0,255,208,0.15); }
+  100% { background:var(--card); }
+}
+
+/* 20. 스크롤 리빌 초기 상태 */
+.rv {
+  opacity:0;
+  transform:translateY(24px);
+  transition:opacity 0.6s cubic-bezier(0.22,1,0.36,1), transform 0.6s cubic-bezier(0.22,1,0.36,1);
+}
+.rv.vis { opacity:1; transform:translateY(0); }
+.rv-l { opacity:0; transform:translateX(-20px); transition:opacity 0.5s ease, transform 0.5s ease; }
+.rv-l.vis { opacity:1; transform:translateX(0); }
+.rv-r { opacity:0; transform:translateX(20px); transition:opacity 0.5s ease, transform 0.5s ease; }
+.rv-r.vis { opacity:1; transform:translateX(0); }
+
+/* ── 애니메이션 적용 ── */
+
+/* 헤더 하단 글로우라인 */
+.hdr { position:relative; }
+.hdr::after {
+  content:''; position:absolute; bottom:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg, transparent 0%, rgba(0,255,208,0.7) 40%, rgba(0,255,208,1) 50%, rgba(0,255,208,0.7) 60%, transparent 100%);
+  animation:hdrGlow 3s ease-in-out infinite;
+}
+
+/* 브랜드 네온 플리커 */
+.brand { animation:neonFlicker 9s infinite; }
+
+/* 라이브 도트 */
+.live-dot { animation:livePulse 2.2s ease-in-out infinite !important; }
+
+/* 섹션 레이블 */
+.lbl { animation:slideLeft 0.5s ease-out both; }
+
+/* 인사이트 박스 */
+.insight-box { animation:borderPulse 2.8s ease-in-out infinite; }
+
+/* active 서브섹터 */
+.ss-a { animation:borderPulse 2.5s ease-in-out infinite; }
+
+/* warn 서브섹터 */
+.ss-w { animation:borderPulseRed 2.5s ease-in-out infinite; }
+
+/* 인사이트 아이콘 플로트 */
+.ib-icon { display:inline-block; animation:float 3s ease-in-out infinite; }
+
+/* 민트 상승 수치 호흡 */
+.en.s { animation:mintPulse 3s ease-in-out infinite; }
+.us-chg.up { animation:mintPulse 3.2s ease-in-out infinite; }
+.cp-chg.up { animation:mintPulse 3.4s ease-in-out infinite; }
+
+/* 수출 바 채우기 */
+.bar { animation:barFill 1.1s cubic-bezier(0.22,1,0.36,1) both; }
+
+/* 타임라인 레일 */
+.tl-rail { animation:railGrow 1.4s cubic-bezier(0.22,1,0.36,1) both; animation-delay:0.5s; }
+
+/* 타임라인 today 카드 */
+.tl-card.today { animation:borderPulse 3s ease-in-out infinite; }
+
+/* 타임라인 today 도트 */
+.tld.m { animation:tlDotPulse 2.5s ease-in-out infinite; }
+
+/* 미입력 쉬머 */
+.cc.no .cc-val {
+  background:linear-gradient(90deg, #161616 0%, #222 40%, #2a2a2a 50%, #222 60%, #161616 100%);
+  background-size:400px 100%;
+  animation:shimmer 1.8s linear infinite;
+  color:transparent !important;
+  border-radius:4px;
+  user-select:none;
+}
+
+/* 경고 블링크 (warn chip) */
+.cc.no .cc-badge { animation:blinkWarn 2s ease-in-out infinite; }
+
+/* hover lift */
+.tbox, .cp, .theme, .cc, .ss-a, .ss-w, .oc, .cn, .tn-card {
+  transition:transform 0.22s ease, box-shadow 0.22s ease;
+}
+.tbox:hover, .cp:hover, .theme:hover, .cc:hover, .ss-a:hover, .ss-w:hover, .oc:hover, .cn:hover, .tn-card:hover {
+  transform:translateY(-3px);
+  box-shadow:0 8px 24px rgba(0,0,0,0.4);
+}
+
+/* cp up 카드 호버 민트 glow */
+.cp.up:hover { box-shadow:0 8px 24px rgba(0,255,208,0.12), 0 0 0 1px rgba(0,255,208,0.2); }
+.cp.dn:hover { box-shadow:0 8px 24px rgba(255,75,75,0.1), 0 0 0 1px rgba(255,75,75,0.15); }
+
+/* 탑픽 스코어 숫자 팝 */
+.tp-score { animation:numPop 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+
+/* ═══════════════════════════════
+   오늘의 반도체 시장 정리
+═══════════════════════════════ */
+.market-summary {
+  background:linear-gradient(135deg, #0d1510 0%, #0a0a0a 100%);
+  border:1px solid rgba(0,255,208,0.2);
+  border-radius:12px; padding:18px 22px;
+  margin-bottom:16px; position:relative; overflow:hidden;
+}
+.market-summary::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  background:linear-gradient(90deg, transparent, rgba(0,255,208,0.9), transparent);
+  animation:hdrGlow 3s ease-in-out infinite;
+}
+.ms-head {
+  display:flex; align-items:center; gap:12px;
+  margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid #161616;
+}
+.ms-title { font-size:15px; font-weight:800; color:var(--main); letter-spacing:1px; }
+.ms-date  { font-size:11px; color:#333; margin-left:auto; }
+.ms-mood  { font-size:12px; font-weight:700; padding:4px 14px; border-radius:20px; flex-shrink:0; }
+.ms-mood.bull { background:rgba(0,255,208,0.08); color:var(--main); border:1px solid rgba(0,255,208,0.22); }
+.ms-mood.warn { background:rgba(255,75,75,0.08); color:var(--red); border:1px solid rgba(255,75,75,0.22); }
+.ms-mood.bear { background:rgba(255,75,75,0.08); color:var(--red); border:1px solid rgba(255,75,75,0.22); }
+.ms-body { display:grid; grid-template-columns:1.1fr 1.1fr 1fr 1.1fr; gap:10px; }
+.ms-col  { padding:12px 14px; background:#0d0d0d; border-radius:8px; border:1px solid #181818; }
+.ms-col.hl { background:rgba(0,255,208,0.04); border-color:rgba(0,255,208,0.18); animation:borderPulse 3s ease-in-out infinite; }
+.ms-lbl  { font-size:14px; font-weight:800; letter-spacing:0.5px; color:#888; margin-bottom:10px; }
+.ms-txt  { font-size:13px; color:#aaa; line-height:1.65; }
+.ms-txt .g { color:var(--main); font-weight:700; }
+.ms-txt .w { color:var(--red); font-weight:600; }
+.ms-txt .r { color:var(--red); font-weight:700; }
+.ms-big  { font-size:14px; font-weight:700; color:#ddd; line-height:1.6; }
+.ms-big .g { color:var(--main); font-weight:800; }
+.ms-big .w { color:var(--red); font-weight:700; }
+.ms-big .r { color:var(--red); font-weight:800; }
+
+/* ── pair-hl (미국 페어 헤드라인) ── */
+.pair-hl { font-size:11px; color:#444; line-height:1.3; margin-top:3px; }
+
+/* ═══════════════════════════════
+   타입 시스템 + 글자 크기 상향
+   ──────────────────────────────
+   제목(title):  13~15px 700 #FFF   → 종목명, 섹션 주제
+   부제목(sub):  10~12px 800 #444   → 카테고리 레이블 (uppercase)
+   본문(body):   12~13px 400 #999   → 설명, 드라이버
+   세부(detail): 10~11px 400 #444   → 날짜, 출처, 태그
+   태그(chip):   10px 700           → mint(긍정) / red(위험) / dim(중립)
+═══════════════════════════════ */
+.lbl { font-size:11px !important; }
+.tbox-title { font-size:14px !important; }
+.us-tick { font-size:14px !important; }
+.us-chg  { font-size:13px !important; }
+.kc      { font-size:11px !important; padding:3px 8px !important; }
+.ni-txt  { font-size:13px !important; color:#999 !important; }
+.ni-tag2 { font-size:10px !important; }
+.ni-st   { font-size:10px !important; padding:2px 7px !important; }
+.tp-name { font-size:15px !important; }
+.tp-reason { font-size:12px !important; line-height:1.5 !important; color:#999 !important; }
+.sig     { font-size:10px !important; padding:2px 7px !important; }
+.ss-nm   { font-size:14px !important; }
+.ss-why  { font-size:11px !important; line-height:1.45 !important; }
+.ss-sk   { font-size:10px !important; }
+.ss-q    { font-size:12px !important; }
+.exp-name { font-size:13px !important; }
+.en      { font-size:13px !important; }
+.cons-name { font-size:13px !important; }
+.cons-tp { font-size:12px !important; }
+.tn-hl   { font-size:13px !important; line-height:1.5 !important; }
+.tn-st   { font-size:10px !important; }
+.tn-tag  { font-size:10px !important; }
+.th-name { font-size:13px !important; }
+.th-driver { font-size:11px !important; }
+.th-s    { font-size:11px !important; }
+.tl-ttl  { font-size:13px !important; }
+.tl-desc { font-size:11px !important; }
+.tl-date { font-size:11px !important; }
+.ann-ttl { font-size:12px !important; }
+.oc-title { font-size:13px !important; }
+.oc-desc { font-size:12px !important; }
+.oc-since { font-size:11px !important; }
+.cp-tk   { font-size:16px !important; }
+.cp-chg  { font-size:15px !important; }
+.stitle  { font-size:18px !important; }
+.hdate   { font-size:12px !important; }
+
+/* ═══════════════════════════════
+   📱 모바일 반응형
+═══════════════════════════════ */
+@media (max-width: 768px) {
+  /* 헤더 */
+  .hdr { padding:0 16px; height:48px; }
+  .brand { font-size:9px; letter-spacing:2px; }
+  .stitle { font-size:14px !important; }
+  .hdate { display:none; }
+  .chip { display:none; }
+
+  /* 페이지 패딩 */
+  .page { padding:14px 12px 40px; }
+
+  /* 시장 요약 4열 → 1열 */
+  .ms-body { grid-template-columns:1fr; gap:8px; }
+  .ms-lbl { font-size:12px !important; margin-bottom:6px; }
+  .ms-txt, .ms-big { font-size:12px !important; }
+
+  /* 오늘의 인사이트 4열 → 1열 */
+  .today-grid { grid-template-columns:1fr; gap:10px; }
+
+  /* 크로스체크 4열 → 2열 */
+  .cc-row { grid-template-columns:1fr 1fr; gap:8px; }
+
+  /* 커플링 4열 → 1열 */
+  .cp-grid { grid-template-columns:1fr; }
+
+  /* 국내 드리버 2열 → 1열 */
+  .nd-grid { grid-template-columns:1fr; }
+  .theme-grid { grid-template-columns:1fr 1fr; }
+
+  /* 테마 2열 안맞으면 1열로 */
+  @media (max-width:480px) {
+    .theme-grid { grid-template-columns:1fr; }
+    .cc-row { grid-template-columns:1fr; }
+  }
+
+  /* 메인 2열(콘텐츠+타임라인) → 1열 */
+  .main-layout { grid-template-columns:1fr; }
+  .right-col { position:static; }
+  .tl-box { max-height:none; }
+
+  /* 2분할 패널 → 1열 */
+  .two-col { grid-template-columns:1fr; }
+
+  /* 지속이벤트 3열 → 1열 */
+  .ongoing-grid { grid-template-columns:1fr; }
+
+  /* 뉴스 타임라인 5열 → 1열 */
+  .card > div[style*="grid-template-columns:repeat(5"] {
+    display:flex !important; flex-direction:column; gap:8px;
+  }
+
+  /* 캘린더 가로 스크롤 유지 */
+  .cal-scroll { -webkit-overflow-scrolling:touch; }
+
+  /* 서브섹터 레이더 — ss-a 너비 제한 해제 */
+  .ss-a, .ss-w { min-width:0; width:100%; }
+
+  /* hover transform 제거 (터치에서 어색) */
+  .tbox:hover, .cp:hover, .theme:hover, .cc:hover,
+  .ss-a:hover, .ss-w:hover, .oc:hover, .cn:hover, .tn-card:hover {
+    transform:none;
+    box-shadow:none;
+  }
+}
+
+@media (max-width:480px) {
+  .theme-grid { grid-template-columns:1fr; }
+  .cc-row { grid-template-columns:1fr; }
+  .ms-body { grid-template-columns:1fr; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<header class="hdr">
+  <div class="hdr-l">
+    <span class="brand">STOCK BRAIN</span>
+    <div class="vl"></div>
+    <span class="stitle">반도체 섹터</span>
+    <span class="chip">▲ 상승 가속</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="live-dot"></div>
+    <span class="hdate">2026년 05월 24일</span>
+  </div>
+</header>
+
+<div class="page">
+
+  <!-- 오늘의 반도체 시장 정리 -->
+  <div class="market-summary">
+    <div class="ms-head">
+      <span class="ms-title">🧠 오늘의 반도체 시장</span>
+      <span class="ms-date">2026-05-24 (일)</span>
+      <span class="ms-mood warn">🟠 단기 조정 / 구조적 강세 유지</span>
+    </div>
+    <div class="ms-body">
+
+      <div class="ms-col">
+        <div class="ms-lbl">📡 핵심 신호</div>
+        <div class="ms-txt">
+          필반 <span class="r">-2.47%</span> 하락했지만 수출 데이터는 <span class="g">HBM +114% · 디램 +491%</span> 역대최고 사이클 그대로.<br>
+          숫자 하락 = 주가 조정이지 <span class="g">실적 훼손 아님</span>.
+        </div>
+      </div>
+
+      <div class="ms-col">
+        <div class="ms-lbl">🎯 오늘의 기회</div>
+        <div class="ms-txt">
+          <span class="g">장비주 역행 강세</span> — AMAT +1.05%로 대형주와 반대로 움직임.<br>
+          수주 잔고 사상 최대 → 국내 주성엔지니어링·원익IPS 주목.
+        </div>
+      </div>
+
+      <div class="ms-col">
+        <div class="ms-lbl">⚠️ 체크 포인트</div>
+        <div class="ms-txt">
+          <span class="w">미중 회담 실패</span>로 AI 피크아웃 노이즈 재점화.<br>
+          <span class="w">5/28 엔비디아 실적</span> 가이던스가 섹터 방향 완전히 결정.
+        </div>
+      </div>
+
+      <div class="ms-col hl">
+        <div class="ms-lbl">💡 오늘의 결론</div>
+        <div class="ms-big">
+          삼전·닉스 <span class="r">단기 쉬는 구간</span>.<br>
+          <span class="g">장비·소재주 선별 진입</span> 구간.<br>
+          5/28 엔비디아 실적 전까지 <span class="w">대형주 비중 유지</span>.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ① 오늘의 코멘트 (3분할) -->
+  <div class="sec">
+    <div class="lbl">오늘의 인사이트</div>
+    <div class="today-grid">
+
+      <!-- 미국시장 → 국내 커플링 종목 -->
+      <div class="tbox">
+        <div class="tbox-head">
+          <span class="tbox-icon">🇺🇸</span>
+          <span class="tbox-title">미국시장 → 국내 커플링 종목</span>
+        </div>
+        <div class="pair-item">
+          <span class="us-tick">NVDA</span>
+          <span class="us-chg dn">-2.47%</span>
+          <span class="pair-arr">→</span>
+          <div class="kr-chips">
+            <span class="kc bad">SK하이닉스</span>
+            <span class="kc bad">삼성전자</span>
+          </div>
+        </div>
+        <div class="pair-hl">AI 피크아웃 우려 + 미중 회담 실패 → HBM 수요 의구심</div>
+        <div class="pair-item">
+          <span class="us-tick">MU</span>
+          <span class="us-chg dn">-1.83%</span>
+          <span class="pair-arr">→</span>
+          <div class="kr-chips">
+            <span class="kc bad">삼성전자</span>
+            <span class="kc bad">SK하이닉스</span>
+          </div>
+        </div>
+        <div class="pair-hl">DRAM 가격 상승 지속에도 차익실현 매물 출회</div>
+        <div class="pair-item">
+          <span class="us-tick">AMAT</span>
+          <span class="us-chg up">+1.05%</span>
+          <span class="pair-arr">→</span>
+          <div class="kr-chips">
+            <span class="kc hot">주성엔지니어링</span>
+            <span class="kc hot">원익IPS</span>
+          </div>
+        </div>
+        <div class="pair-hl">장비 수주 잔고 사상 최대 — 국내 증착·ALD 장비주 수혜</div>
+        <div class="pair-item">
+          <span class="us-tick">AVGO</span>
+          <span class="us-chg dn">-1.21%</span>
+          <span class="pair-arr">→</span>
+          <div class="kr-chips">
+            <span class="kc bad">삼성전기</span>
+            <span class="kc">심텍</span>
+          </div>
+        </div>
+        <div class="pair-hl">커스텀 ASIC 단기 조정 → FC-BGA 기판 수요 단기 영향</div>
+        <div class="pair-item">
+          <span class="us-tick">INTC</span>
+          <span class="us-chg nt">+0.31%</span>
+          <span class="pair-arr">→</span>
+          <div class="kr-chips">
+            <span class="kc">삼성 파운드리</span>
+            <span class="kc">DB하이텍</span>
+          </div>
+        </div>
+        <div class="pair-hl">파운드리 외주 확대 기대 유지 — 반도체 규제 완화 진행 중</div>
+      </div>
+
+      <!-- 국내 뉴스 매칭 -->
+      <div class="tbox">
+        <div class="tbox-head">
+          <span class="tbox-icon">📰</span>
+          <span class="tbox-title">국내 뉴스 매칭</span>
+        </div>
+        <div class="news-item-sm">
+          <div class="ni-top">
+            <span class="ni-tag2 hot">핵심</span>
+            <span class="ni-src">한국경제 05/24</span>
+          </div>
+          <div class="ni-txt">삼성전자 유리기판 2027년 양산 검토 — 소재 협력사 선정 임박</div>
+          <div class="ni-sts">
+            <span class="ni-st h">SKC</span>
+            <span class="ni-st h">동우화인켐</span>
+            <span class="ni-st">이수화학</span>
+          </div>
+        </div>
+        <div class="news-item-sm">
+          <div class="ni-top">
+            <span class="ni-tag2 mid">주목</span>
+            <span class="ni-src">전자신문 05/23</span>
+          </div>
+          <div class="ni-txt">SK하이닉스 HBM4 1β 공정 전환 완료 — 3분기 양산 예고</div>
+          <div class="ni-sts">
+            <span class="ni-st h">덕산하이메탈</span>
+            <span class="ni-st h">한솔케미칼</span>
+          </div>
+        </div>
+        <div class="news-item-sm">
+          <div class="ni-top">
+            <span class="ni-tag2 new">신규</span>
+            <span class="ni-src">머니투데이 05/22</span>
+          </div>
+          <div class="ni-txt">에이직랜드, 삼성 SF2 기반 AI 추론칩 테이프아웃 완료</div>
+          <div class="ni-sts">
+            <span class="ni-st h">에이직랜드</span>
+            <span class="ni-st">알파홀딩스</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 당일 리포트 탑픽 -->
+      <div class="tbox">
+        <div class="tbox-head">
+          <span class="tbox-icon">🎯</span>
+          <span class="tbox-title">당일 리포트 탑픽</span>
+        </div>
+        <div class="toppick-item">
+          <div class="tp-top">
+            <span class="tp-name">SK하이닉스</span>
+            <span class="tp-score s1">리포트 대기 / ?점</span>
+          </div>
+          <div class="tp-sigs">
+            <span class="sig on">수출🔴</span>
+            <span class="sig on">판가↑</span>
+            <span class="sig on">어닝서프</span>
+            <span class="sig w">수급미입력</span>
+            <span class="sig off">일정</span>
+          </div>
+          <div class="tp-reason">HBM 독점 공급 + 판가 역대최고. 수급 확인 후 최종 등급 확정</div>
+        </div>
+        <div class="toppick-item">
+          <div class="tp-top">
+            <span class="tp-name">덕산하이메탈</span>
+            <span class="tp-score s2">수급 대기 / ?점</span>
+          </div>
+          <div class="tp-sigs">
+            <span class="sig on">수출🔴 솔더볼+97%</span>
+            <span class="sig on">판가↑</span>
+            <span class="sig off">리포트</span>
+            <span class="sig w">수급미입력</span>
+          </div>
+          <div class="tp-reason">수출 신호 가장 강함. 리포트·수급 들어오면 탑픽 확정 가능</div>
+        </div>
+        <div class="toppick-item">
+          <div class="tp-top">
+            <span class="tp-name">삼성전기</span>
+            <span class="tp-score s2">4점 (수급 미입력)</span>
+          </div>
+          <div class="tp-sigs">
+            <span class="sig on">리포트 14사↑</span>
+            <span class="sig on">MLCC판가전환</span>
+            <span class="sig w">수급미입력</span>
+            <span class="sig off">수출</span>
+          </div>
+          <div class="tp-reason">MLCC 판가 YoY 전환점. 수급 빈집 확인되면 진입 검토 구간</div>
+        </div>
+      </div>
+
+      <!-- ④ 외국인/기관 수급빈집 탑픽 -->
+      <div class="tbox">
+        <div class="tbox-head">
+          <span class="tbox-icon">📊</span>
+          <span class="tbox-title">외국인/기관 수급빈집 탑픽</span>
+        </div>
+        <div style="padding:6px 0 4px;border-bottom:1px solid #161616;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+            <span style="font-size:13px;font-weight:700;">SK하이닉스</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:4px;background:#161616;color:#444;">미입력</span>
+          </div>
+          <div style="font-size:11px;color:#333;">xlsm 수급오실레이터 인제스트 필요</div>
+        </div>
+        <div style="padding:6px 0 4px;border-bottom:1px solid #161616;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+            <span style="font-size:13px;font-weight:700;">덕산하이메탈</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:4px;background:#161616;color:#444;">미입력</span>
+          </div>
+          <div style="font-size:11px;color:#333;">수출신호 🔴 — 수급 확인 시 즉시 탑픽</div>
+        </div>
+        <div style="padding:6px 0 4px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+            <span style="font-size:13px;font-weight:700;">삼성전기</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:4px;background:#161616;color:#444;">미입력</span>
+          </div>
+          <div style="font-size:11px;color:#333;">리포트 14사↑ — 빈집 확인 시 진입 검토</div>
+        </div>
+        <div style="margin-top:6px;padding:6px 10px;background:#0d0d0d;border-radius:6px;font-size:10px;color:#252525;text-align:center;">
+          ⚠ 수급오실레이터 아직 데이터가 안 들어왔습니다
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ③ 서브섹터 레이더 -->
+  <div class="sec">
+    <div class="lbl">오늘의 반도체 레이더</div>
+    <div class="ss-radar">
+
+      <!-- ── ACTIVE: 오늘 움직이는 서브섹터 ── -->
+      <div class="ss-a">
+        <div class="ss-nm">전공정(장비)</div>
+        <div class="ss-why">필반 -2.47% 속 역행 강세<br>AMAT·LRCX 낙폭 대비 국내 장비 선방</div>
+        <div class="ss-sks">
+          <span class="ss-sk">한미반도체</span>
+          <span class="ss-sk">HPSP</span>
+          <span class="ss-sk">주성엔지니어링</span>
+          <span class="ss-sk">원익IPS</span>
+        </div>
+      </div>
+
+      <div class="ss-a">
+        <div class="ss-nm">기판</div>
+        <div class="ss-why">삼성전기 14사 동반 TP 상향<br>FC-BGA·MLCC 가격인상 사이클</div>
+        <div class="ss-sks">
+          <span class="ss-sk">삼성전기</span>
+          <span class="ss-sk">심텍</span>
+          <span class="ss-sk">LG이노텍</span>
+          <span class="ss-sk">이수페타시스</span>
+        </div>
+      </div>
+
+      <!-- ── WARN: 조정·주의 ── -->
+      <div class="ss-w">
+        <div class="ss-nm">삼성전자</div>
+        <div class="ss-why">미중 회담 실패 · AI 피크아웃 우려<br>필반 연동 단기 하방 압력</div>
+        <div class="ss-sks">
+          <span class="ss-sk">삼성전자</span>
+        </div>
+      </div>
+
+      <div class="ss-w">
+        <div class="ss-nm">SK하이닉스</div>
+        <div class="ss-why">NVDA -2.47% 동반 조정<br>엔비디아 실적(5/28) 분수령 대기</div>
+        <div class="ss-sks">
+          <span class="ss-sk">SK하이닉스</span>
+        </div>
+      </div>
+
+      <!-- ── QUIET: 별다른 움직임 없음 ── -->
+      <div class="ss-q">HBM</div>
+      <div class="ss-q">IP</div>
+      <div class="ss-q">디자인하우스</div>
+      <div class="ss-q">팹리스</div>
+      <div class="ss-q">파운드리</div>
+      <div class="ss-q">전공정(소재)</div>
+      <div class="ss-q">전공정(부품)</div>
+      <div class="ss-q">후공정 OSAT</div>
+      <div class="ss-q">온디바이스AI</div>
+      <div class="ss-q">유리기판</div>
+      <div class="ss-q">저전력반도체</div>
+      <div class="ss-q">CXL</div>
+      <div class="ss-q">액침냉각</div>
+      <div class="ss-q">디스플레이</div>
+
+    </div>
+  </div>
+
+  <!-- 오늘 뉴스 타임라인 (전체폭) -->
+  <div class="sec">
+    <div class="lbl">오늘 뉴스 타임라인</div>
+    <div class="card" style="padding:18px 24px;">
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;position:relative;">
+        <div style="position:absolute;top:12px;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--main),rgba(0,255,208,0.1) 80%,transparent);z-index:0;"></div>
+
+        <div class="tn-card" style="position:relative;z-index:1;">
+          <div class="tn-meta"><span class="tn-tag hot">핵심</span><span class="tn-src">09:12</span></div>
+          <div class="tn-hl">삼성전자, 유리기판 2027년 양산 검토 — 소재 협력사 선정 임박</div>
+          <div class="tn-stocks" style="margin-top:6px;"><span class="tn-st h">SKC</span><span class="tn-st h">동우화인켐</span><span class="tn-st">삼성전기</span></div>
+        </div>
+
+        <div class="tn-card" style="position:relative;z-index:1;">
+          <div class="tn-meta"><span class="tn-tag mid">주목</span><span class="tn-src">10:33</span></div>
+          <div class="tn-hl">미중 제네바 회담 결렬 — 수출 규제 추가 완화 없음 확인</div>
+          <div class="tn-stocks" style="margin-top:6px;"><span class="tn-st">SK하이닉스</span><span class="tn-st">삼성전자</span></div>
+        </div>
+
+        <div class="tn-card" style="position:relative;z-index:1;">
+          <div class="tn-meta"><span class="tn-tag hot">핵심</span><span class="tn-src">13:45</span></div>
+          <div class="tn-hl">AMAT 수주 잔고 사상 최대 — 국내 증착장비 수혜 전망</div>
+          <div class="tn-stocks" style="margin-top:6px;"><span class="tn-st h">주성엔지니어링</span><span class="tn-st h">원익IPS</span></div>
+        </div>
+
+        <div class="tn-card" style="position:relative;z-index:1;">
+          <div class="tn-meta"><span class="tn-tag mid">주목</span><span class="tn-src">15:20</span></div>
+          <div class="tn-hl">에이직랜드, 삼성 SF2 기반 AI 추론칩 테이프아웃 완료 공시</div>
+          <div class="tn-stocks" style="margin-top:6px;"><span class="tn-st h">에이직랜드</span><span class="tn-st">알파홀딩스</span></div>
+        </div>
+
+        <div class="tn-card" style="position:relative;z-index:1;">
+          <div class="tn-meta"><span class="tn-tag info">참고</span><span class="tn-src">16:58</span></div>
+          <div class="tn-hl">하나마이크론, CoWoS 후공정 라인 증설 3,000억 집행 결정</div>
+          <div class="tn-stocks" style="margin-top:6px;"><span class="tn-st">하나마이크론</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ④ 메인 레이아웃 (좌 + 우 타임라인) -->
+  <div class="main-layout">
+
+    <!-- 좌측 콘텐츠 -->
+    <div class="left-col">
+
+      <!-- 국내 뉴스 드리버 -->
+      <div>
+        <div class="lbl">국내 뉴스 드리버 (삼전·닉스 발표 + 테마)</div>
+        <div class="nd-grid">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div class="announce">
+              <div class="ann-co">
+                <div class="ann-logo ss">SS</div>
+                <span class="ann-name">삼성전자</span>
+                <span class="ann-st live">모니터링</span>
+              </div>
+              <div class="ann-item">
+                <div class="ann-date">2026-05-06 · 1Q26 실적발표</div>
+                <div class="ann-ttl">DS부문 HBM 경쟁력 언급 + FC-BGA 공급 확대</div>
+                <div class="ann-chips">
+                  <span class="ann-c h">삼성전기</span><span class="ann-c">심텍</span><span class="ann-c">코미코</span>
+                </div>
+              </div>
+              <div class="ann-item ghost">
+                <div class="ann-date">대기 중 — 유리기판 채택 공식 발표</div>
+                <div class="ann-ttl">채택 시 국내 소재 직접 수혜</div>
+                <div class="ann-chips">
+                  <span class="ann-c">SKC</span><span class="ann-c">동우화인켐</span>
+                </div>
+              </div>
+            </div>
+            <div class="announce">
+              <div class="ann-co">
+                <div class="ann-logo sk">SK</div>
+                <span class="ann-name">SK하이닉스</span>
+                <span class="ann-st wait">발표 대기</span>
+              </div>
+              <div class="ann-item">
+                <div class="ann-date">2026-04 · HBM3E 독점 공급</div>
+                <div class="ann-ttl">엔비디아 B200 단독 탑재 확인</div>
+                <div class="ann-chips">
+                  <span class="ann-c h">덕산하이메탈</span><span class="ann-c h">엠케이전자</span>
+                </div>
+              </div>
+              <div class="ann-item ghost">
+                <div class="ann-date">대기 중 — HBM4 협력사 공개</div>
+                <div class="ann-ttl">소재·부품사 발표 시 직접 수혜</div>
+                <div class="ann-chips">
+                  <span class="ann-c">덕산하이메탈</span><span class="ann-c">한솔케미칼</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="theme-grid">
+            <div class="theme warn">
+              <div class="th-top"><span class="th-name">🔲 유리기판</span><span class="th-sig mid">대기 중</span></div>
+              <div class="th-driver">삼전 채택 발표가 트리거. 미국보다 국내 발표가 핵심</div>
+              <div class="th-stocks"><span class="th-s">SKC</span><span class="th-s">동우화인켐</span><span class="th-s">이수화학</span></div>
+            </div>
+            <div class="theme on">
+              <div class="th-top"><span class="th-name">⬡ 디자인하우스</span><span class="th-sig hot">주목 중</span></div>
+              <div class="th-driver">삼성 파운드리 SF2 수주 + AI 추론칩 설계 확대</div>
+              <div class="th-stocks"><span class="th-s h">에이직랜드</span><span class="th-s h">알파홀딩스</span><span class="th-s">가온칩스</span></div>
+            </div>
+            <div class="theme">
+              <div class="th-top"><span class="th-name">📦 후공정 OSAT</span><span class="th-sig mid">모니터링</span></div>
+              <div class="th-driver">HBM 패키징 증설 발표 시 직접 수혜</div>
+              <div class="th-stocks"><span class="th-s">하나마이크론</span><span class="th-s">SFA반도체</span><span class="th-s">네패스아크</span></div>
+            </div>
+            <div class="theme on">
+              <div class="th-top"><span class="th-name">🧪 HBM 소부장</span><span class="th-sig hot">🔴 신호 확인</span></div>
+              <div class="th-driver">솔더볼 수출 +97% 확인 — 수급 들어오면 탑픽 검토</div>
+              <div class="th-stocks"><span class="th-s h">덕산하이메탈</span><span class="th-s h">엠케이전자</span><span class="th-s">이엔에프테크</span></div>
+            </div>
+            <div class="theme">
+              <div class="th-top"><span class="th-name">📡 온디바이스AI</span><span class="th-sig cold">대기</span></div>
+              <div class="th-driver">Exynos 신제품 발표 시 국내 수혜. 스마트폰 AI 확대</div>
+              <div class="th-stocks"><span class="th-s">LX세미콘</span><span class="th-s">실리콘웍스</span></div>
+            </div>
+            <div class="theme">
+              <div class="th-top"><span class="th-name">⚙️ 반도체 장비</span><span class="th-sig mid">AMAT↑ 주목</span></div>
+              <div class="th-driver">AMAT +1.05% — 국내 장비 수주 3~6개월 선행 신호</div>
+              <div class="th-stocks"><span class="th-s h">주성엔지니어링</span><span class="th-s">원익IPS</span><span class="th-s">한미반도체</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 수출 + 컨센서스: 동일 높이 2열 -->
+      <div class="two-col" style="align-items:stretch;">
+        <div style="display:flex;flex-direction:column;">
+          <div class="lbl">수출 데이터 (2026-05-21 잠정)</div>
+          <div class="card" style="flex:1;">
+            <div class="exp-row"><span class="exp-name">HBM</span><div class="exp-nums"><span class="en s">물량+102%</span><span class="en s">판가+114%</span><div class="bar-w"><div class="bar" style="width:88%"></div></div></div></div>
+            <div class="exp-row"><span class="exp-name">디램</span><div class="exp-nums"><span class="en s">물량+456%</span><span class="en s">판가+491%</span><div class="bar-w"><div class="bar" style="width:100%"></div></div></div></div>
+            <div class="exp-row"><span class="exp-name">낸드</span><div class="exp-nums"><span class="en s">물량+183%</span><span class="en s">판가+311%</span><div class="bar-w"><div class="bar" style="width:78%"></div></div></div></div>
+            <div class="exp-row"><span class="exp-name">SSD+미국</span><div class="exp-nums"><span class="en s">물량+479%</span><span class="en s">판가+441%</span><div class="bar-w"><div class="bar" style="width:96%"></div></div></div></div>
+            <div class="exp-row"><span class="exp-name">반도체증착</span><div class="exp-nums"><span class="en s">+70%</span><span class="en m">판가+15%</span><div class="bar-w"><div class="bar" style="width:42%;background:var(--red)"></div></div></div></div>
+            <div class="exp-row"><span class="exp-name">MLCC</span><div class="exp-nums"><span class="en w">+22%</span><span class="en w">판가+3.9%</span><div class="bar-w"><div class="bar" style="width:18%;background:#444"></div></div></div></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;">
+          <div class="lbl">대표종목 컨센서스 변화</div>
+          <div class="card" style="flex:1;">
+            <div class="cons-row"><span class="cons-name">SK하이닉스</span><span class="cons-tp">TP 230만</span><span class="cons-n">1사</span><span class="arr u">↑</span></div>
+            <div class="cons-row"><span class="cons-name">삼성전자</span><span class="cons-tp">TP 130,000</span><span class="cons-n">—</span><span class="arr s">–</span></div>
+            <div class="cons-row"><span class="cons-name">삼성전기</span><span class="cons-tp">TP 100만+</span><span class="cons-n">14사</span><span class="arr u">↑</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 수급 오실레이터 (단독 행) -->
+      <div>
+        <div class="lbl">수급 오실레이터</div>
+        <div class="card">
+          <div class="osc-row"><span class="osc-name">SK하이닉스</span><span class="osc-g n">미입력</span><span class="osc-v">—</span></div>
+          <div class="osc-row"><span class="osc-name">삼성전자</span><span class="osc-g n">미입력</span><span class="osc-v">—</span></div>
+          <div class="osc-row"><span class="osc-name">삼성전기</span><span class="osc-g n">미입력</span><span class="osc-v">—</span></div>
+        </div>
+      </div>
+
+      <!-- 지속 이벤트 -->
+      <div>
+        <div class="lbl">지속 영향 이벤트</div>
+        <div class="ongoing-grid">
+          <div class="oc" style="border-color:rgba(0,255,208,0.15);">
+            <div class="oc-dir">🔴</div>
+            <div class="oc-title">엔비디아 Blackwell 생산 가속</div>
+            <div class="oc-since">2026-04~ 진행 중</div>
+            <div class="oc-desc">HBM 수요 직결. SK하이닉스 독점 공급 유지</div>
+          </div>
+          <div class="oc" style="border-color:rgba(0,255,208,0.15);">
+            <div class="oc-dir">🔴</div>
+            <div class="oc-title">빅테크 AI Capex $806B</div>
+            <div class="oc-since">2026-05~ 진행 중</div>
+            <div class="oc-desc">데이터센터 메모리 수요 구조적 유지</div>
+          </div>
+          <div class="oc" style="border-color:rgba(255,75,75,0.15);">
+            <div class="oc-dir">🟠</div>
+            <div class="oc-title">미중 관세 협상 (불확실성)</div>
+            <div class="oc-since">5/24 회담 실패 — 재확대</div>
+            <div class="oc-desc">단기 수급 불안 요인. 완화 기대 후퇴</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 캘린더 -->
+      <div>
+        <div class="lbl">2026 하반기 캘린더</div>
+        <div class="card">
+          <div class="cal-scroll">
+            <div class="cal-track">
+              <div class="cal-line"></div>
+              <div class="cal-col"><div class="cal-ml">5월 말</div><div class="cal-ev"><div class="cd r"></div><div class="cal-txt">NVDA 실적<br>5/28 분수령</div></div></div>
+              <div class="cal-col"><div class="cal-ml">6월</div><div class="cal-ev"><div class="cd m"></div><div class="cal-txt">수출 확정치<br>6/1 · 6/15</div></div></div>
+              <div class="cal-col"><div class="cal-ml">7월</div><div class="cal-ev"><div class="cd r"></div><div class="cal-txt">SK하이닉스<br>2Q26 실적</div></div></div>
+              <div class="cal-col"><div class="cal-ml">8월</div><div class="cal-ev"><div class="cd o"></div><div class="cal-txt">HBM4<br>샘플 출하</div></div></div>
+              <div class="cal-col"><div class="cal-ml">9월</div><div class="cal-ev"><div class="cd y"></div><div class="cal-txt">MLCC 2차<br>가격 인상?</div></div></div>
+              <div class="cal-col"><div class="cal-ml">10월</div><div class="cal-ev"><div class="cd r"></div><div class="cal-txt">3Q26 실적</div></div></div>
+              <div class="cal-col"><div class="cal-ml">11월</div><div class="cal-ev"><div class="cd o"></div><div class="cal-txt">HBM4<br>양산 여부</div></div></div>
+              <div class="cal-col"><div class="cal-ml">12월</div><div class="cal-ev"><div class="cd m"></div><div class="cal-txt">연간 수출<br>집계</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 밸류체인 -->
+      <div>
+        <div class="lbl">밸류체인</div>
+        <div class="card">
+          <div class="chain">
+            <div class="cn a"><div class="cn-name">HBM·디램·낸드</div><div class="cn-sub">판가 역대최고</div></div>
+            <span class="ca">→</span>
+            <div class="cn"><div class="cn-name">솔더볼 +97%</div><div class="cn-sub">덕산하이메탈·엠케이전자</div></div>
+            <span class="ca">→</span>
+            <div class="cn"><div class="cn-name">PCB +20%</div><div class="cn-sub">sector_PCB기판소재</div></div>
+            <span class="ca">→</span>
+            <div class="cn"><div class="cn-name">CCL +27%</div><div class="cn-sub">두산</div></div>
+            <span class="ca">→</span>
+            <div class="cn"><div class="cn-name">반도체증착 +70%</div><div class="cn-sub">주성엔지니어링</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /left-col -->
+
+    <!-- 우측 히스토리 타임라인 (sticky) -->
+    <div class="right-col">
+      <div class="tl-box">
+        <div class="tl-title">히스토리 타임라인</div>
+        <div class="tl-scroll">
+          <div class="tl-line">
+            <div class="tl-rail"></div>
+
+            <div class="tl-item">
+              <div class="tl-dc"><div class="tld o"></div></div>
+              <div class="tl-card">
+                <div class="tl-meta"><span class="tl-date">2025-11</span><span class="tag m">매크로</span></div>
+                <div class="tl-ttl">반도체 재고 바닥 확인</div>
+                <div class="tl-desc">PC·스마트폰 재고 정상화. DRAM 스팟가 반등</div>
+              </div>
+            </div>
+
+            <div class="tl-item">
+              <div class="tl-dc"><div class="tld y"></div></div>
+              <div class="tl-card">
+                <div class="tl-meta"><span class="tl-date">2025-12</span><span class="tag e">수출</span></div>
+                <div class="tl-ttl">MLCC 판가 YoY -10.5% 저점</div>
+                <div class="tl-desc">삼성전기 쇼크. 판가 바닥 신호</div>
+              </div>
+            </div>
+
+            <div class="tl-item">
+              <div class="tl-dc"><div class="tld r"></div></div>
+              <div class="tl-card">
+                <div class="tl-meta"><span class="tl-date">2026-01</span><span class="tag m">매크로</span></div>
+                <div class="tl-ttl">AI Capex $806B 일제 확인</div>
+                <div class="tl-desc">빅테크 HBM 수요 구조적 확인</div>
+              </div>
+            </div>
+
+            <div class="tl-item">
+              <div class="tl-dc"><div class="tld r"></div></div>
+              <div class="tl-card">
+                <div class="tl-meta"><span class="tl-date">2026-02</span><span class="tag t">기술</span></div>
+                <div class="tl-ttl">HBM3E SK하이닉스 독점 확인</div>
+                <div class="tl-desc">B200에 12Hi 단독 탑재. 삼성 퀄 지연</div>
+              </div>
+            </div>
+
+            <div class="tl-item">
+              <div class="tl-dc"><div class="tld o"></div></div>
+              <div class="tl-card">
+                <div class="tl-meta"><span class="tl-date">2026-03</span><span class="tag m">정책</span></div>
+                <div class="tl-ttl">미중 반도체 관세 협상 개시</div>
+                <div class="tl-desc">수출 제한 완화 기대. 낸드 불확실 지속</div>
+              </div>
+            </div>
+
+            <div class="tl-item">
+              <div class="tl-dc"><div class="tld r"></div></div>
+              <div class="tl-card">
+                <div class="tl-meta"><span class="tl-date">2026-04</span><span class="tag t">기술</span></div>
+                <div class="tl-ttl">Blackwell GB200 생산 가속 선언</div>
+                <div class="tl-desc">수율 개선 완료. HBM 생산량 확대 요구</div>
+              </div>
+            </div>
+
+            <div class="tl-item">
+              <div class="tl-dc"><div class="tld r"></div></div>
+              <div class="tl-card">
+                <div class="tl-meta"><span class="tl-date">2026-05-06</span><span class="tag r">리포트</span></div>
+                <div class="tl-ttl">증권사 일제 TP 상향</div>
+                <div class="tl-desc">SK하이닉스 230만, 삼성전기 14사 동반</div>
+              </div>
+            </div>
+
+            <div class="tl-item">
+              <div class="tl-dc"><div class="tld r"></div></div>
+              <div class="tl-card">
+                <div class="tl-meta"><span class="tl-date">2026-05-21</span><span class="tag e">수출</span></div>
+                <div class="tl-ttl">5월 잠정 — 역대 최고 사이클</div>
+                <div class="tl-desc">HBM +114%, 디램 +491%. 전 품목 초강세</div>
+              </div>
+            </div>
+
+            <div class="tl-item">
+              <div class="tl-dc"><div class="tld o"></div></div>
+              <div class="tl-card today">
+                <div class="tl-meta"><span class="tl-date">2026-05-24</span><span class="tag td">TODAY</span></div>
+                <div class="tl-ttl">필반 -2.47% / 미중 회담 실패</div>
+                <div class="tl-desc">AI 피크아웃 우려. 장비주만 역행 강세</div>
+              </div>
+            </div>
+
+            <div class="fsep">예 정</div>
+
+            <div class="tl-item">
+              <div class="tl-dc"><div class="tld f"></div></div>
+              <div class="tl-card future">
+                <div class="tl-meta"><span class="tl-date">2026-05-28</span><span class="tag t">촉매</span></div>
+                <div class="tl-ttl">엔비디아 1Q26 실적 발표</div>
+                <div class="tl-desc">가이던스 = 섹터 방향 결정</div>
+              </div>
+            </div>
+
+            <div class="tl-item">
+              <div class="tl-dc"><div class="tld f"></div></div>
+              <div class="tl-card future">
+                <div class="tl-meta"><span class="tl-date">2026-06-01</span><span class="tag e">수출</span></div>
+                <div class="tl-ttl">5월 수출 확정치</div>
+                <div class="tl-desc">잠정치 대비 방향 재확인</div>
+              </div>
+            </div>
+
+            <div class="tl-item">
+              <div class="tl-dc"><div class="tld f"></div></div>
+              <div class="tl-card future">
+                <div class="tl-meta"><span class="tl-date">2026-07</span><span class="tag r">실적</span></div>
+                <div class="tl-ttl">SK하이닉스 2Q26 실적</div>
+                <div class="tl-desc">HBM 매출 비중 + 3Q 가이던스</div>
+              </div>
+            </div>
+
+            <div class="tl-item">
+              <div class="tl-dc"><div class="tld f"></div></div>
+              <div class="tl-card future">
+                <div class="tl-meta"><span class="tl-date">2026-08</span><span class="tag t">기술</span></div>
+                <div class="tl-ttl">HBM4 샘플 출하 예정</div>
+                <div class="tl-desc">다음 사이클 리레이팅 트리거</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div><!-- /right-col -->
+
+  </div><!-- /main-layout -->
+</div>
+<script>
+/* ══════════════════════════════════════════
+   STOCK BRAIN — 애니메이션 JS
+══════════════════════════════════════════ */
+
+// ① 페이지 로드 스캔라인
+(function() {
+  const scan = document.createElement('div');
+  scan.style.cssText = [
+    'position:fixed','top:-2%','left:0','right:0','height:2px',
+    'background:linear-gradient(90deg,transparent 0%,#00FFD0 40%,#fff 50%,#00FFD0 60%,transparent 100%)',
+    'box-shadow:0 0 12px rgba(0,255,208,0.8)','z-index:9999','pointer-events:none',
+    'animation:scanDown 1.6s cubic-bezier(0.4,0,0.2,1) forwards'
+  ].join(';');
+  document.body.appendChild(scan);
+  setTimeout(() => { if(scan.parentNode) scan.remove(); }, 1800);
+})();
+
+// ② 스크롤 리빌 (IntersectionObserver)
+(function() {
+  const upTargets  = '.tbox,.cp,.cc,.theme,.oc,.tn-card,.tl-item,.ss-a,.ss-w,.cn,.tl-card';
+  const leftTargets = '.lbl';
+  const rightTargets = '.right-col .tl-box';
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        const delay = parseInt(e.target.dataset.delay || 0);
+        setTimeout(() => e.target.classList.add('vis'), delay);
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.06, rootMargin: '0px 0px -30px 0px' });
+
+  // fadeUp 대상
+  document.querySelectorAll(upTargets).forEach((el, i) => {
+    el.classList.add('rv');
+    el.dataset.delay = (i % 6) * 70;
+    io.observe(el);
+  });
+
+  // slideLeft 대상
+  document.querySelectorAll(leftTargets).forEach(el => {
+    el.classList.add('rv-l');
+    io.observe(el);
+  });
+
+  // slideRight 대상
+  document.querySelectorAll(rightTargets).forEach(el => {
+    el.classList.add('rv-r');
+    io.observe(el);
+  });
+})();
+
+// ③ 수치 카운트업
+(function() {
+  function animateCount(el) {
+    const raw = el.textContent.trim();
+    // "+491%" / "-2.47%" / "76,386" 등 파싱
+    const m = raw.match(/^([+\-]?)(\d[\d,]*)(\.\d+)?(%?)$/);
+    if (!m) return;
+    const sign    = m[1];
+    const intPart = m[2].replace(/,/g,'');
+    const decPart = m[3] || '';
+    const suffix  = m[4];
+    const target  = parseFloat(intPart + decPart);
+    const isFloat = decPart.length > 0;
+    const decimals= decPart.length > 1 ? decPart.length - 1 : 0;
+    const dur = Math.min(1400, 600 + target * 0.3);
+    const start = performance.now();
+
+    function tick(now) {
+      const p = Math.min((now - start) / dur, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      const val = target * ease;
+      const fmt = isFloat
+        ? val.toFixed(decimals)
+        : Math.floor(val).toLocaleString();
+      el.textContent = sign + fmt + suffix;
+      if (p < 1) requestAnimationFrame(tick);
+      else {
+        el.textContent = raw; // 원본값 복원
+        el.style.animation = 'numPop 0.4s ease-out both';
+      }
+    }
+    el.textContent = sign + '0' + suffix;
+    requestAnimationFrame(tick);
+  }
+
+  const countIO = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        animateCount(e.target);
+        countIO.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.8 });
+
+  // 수출 데이터 수치 (.en.s, .en.m, .en.w) + 커플링 등락률 타겟
+  document.querySelectorAll('.en.s, .en.m, .en.w, .cp-chg, .us-chg, .peer-chg').forEach(el => {
+    countIO.observe(el);
+  });
+})();
+
+// ④ 태그 스태거 팝
+(function() {
+  const tags = document.querySelectorAll('.sig,.kc,.ss-sk,.ann-c.h,.cp-kr-c,.th-s.h,.tn-st.h,.ni-st.h');
+  tags.forEach((el, i) => {
+    el.style.opacity = '0';
+    el.style.animation = `tagPop 0.38s cubic-bezier(0.22,1,0.36,1) ${0.04 * (i % 10) + 0.3}s both`;
+  });
+})();
+
+// ⑤ 수출 바 딜레이 (순차적으로)
+(function() {
+  document.querySelectorAll('.bar').forEach((el, i) => {
+    el.style.animationDelay = (0.3 + i * 0.1) + 's';
+  });
+})();
+
+// ⑥ 타임라인 아이템 순차 등장
+(function() {
+  document.querySelectorAll('.tl-item').forEach((el, i) => {
+    el.style.opacity = '0';
+    el.style.animation = `fadeUp 0.45s ease-out ${0.6 + i * 0.08}s both`;
+  });
+})();
+
+// ⑦ 커플링 카드 stagger
+(function() {
+  document.querySelectorAll('.cp').forEach((el, i) => {
+    el.style.animationDelay = (i * 0.08) + 's';
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,6 +1,8 @@
 node_modules/
+.env
 out/*.mp4
 out/*.pdf
+out/*.png
 raw/*.xlsm
 raw/*.xlsx
 raw/*.pdf
@@ -8,3 +10,6 @@ raw/*.png
 raw/리모션*
 .obsidian/
 demos/
+.claude/
+.agents/
+data/

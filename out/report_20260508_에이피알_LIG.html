@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>로또의 주식 | 리포트 브리핑 2026.05.08</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+    background: #f0f2f5;
+    color: #1a1a2e;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .wrapper {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+  }
+
+  /* ── 헤더 ── */
+  .report-header {
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    color: #fff;
+    border-radius: 16px;
+    padding: 36px 40px;
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .report-header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 50%;
+  }
+  .channel-badge {
+    display: inline-block;
+    background: rgba(255,200,0,0.15);
+    border: 1px solid rgba(255,200,0,0.4);
+    color: #ffc800;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+    text-transform: uppercase;
+  }
+  .report-header h1 {
+    font-size: 26px;
+    font-weight: 900;
+    line-height: 1.3;
+    margin-bottom: 8px;
+  }
+  .report-header h1 span { color: #ffc800; }
+  .report-meta {
+    display: flex;
+    gap: 20px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .report-meta span {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .report-meta span::before {
+    content: '▪';
+    color: #ffc800;
+  }
+
+  /* ── 요약 배너 ── */
+  .summary-bar {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    border-left: 5px solid #ffc800;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  }
+  .summary-bar h2 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #888;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .summary-bar p {
+    font-size: 15px;
+    font-weight: 500;
+    color: #1a1a2e;
+    line-height: 1.8;
+  }
+  .summary-bar p b { color: #e63946; }
+
+  /* ── 종목 카드 ── */
+  .stock-card {
+    background: #fff;
+    border-radius: 16px;
+    margin-bottom: 32px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 24px 32px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    position: relative;
+  }
+  .rank-badge {
+    position: absolute;
+    top: 20px; right: 28px;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 900;
+    color: #fff;
+  }
+  .rank-1 { background: linear-gradient(135deg, #f7971e, #ffd200); }
+  .rank-2 { background: linear-gradient(135deg, #bdc3c7, #95a5a6); }
+
+  .card-header .tp-badge {
+    display: inline-block;
+    background: #fff3cd;
+    color: #b8860b;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+    border: 1px solid #f0d060;
+  }
+  .card-header .tp-badge.defense {
+    background: #e8f0fe;
+    color: #1a56db;
+    border-color: #a0bef8;
+  }
+  .card-header h2 {
+    font-size: 22px;
+    font-weight: 900;
+    margin-bottom: 4px;
+    color: #1a1a2e;
+  }
+  .card-header .subtitle {
+    font-size: 13px;
+    color: #666;
+    font-weight: 500;
+    font-style: italic;
+  }
+
+  /* 주요 지표 그리드 */
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .metric-item {
+    padding: 18px 20px;
+    border-right: 1px solid #f0f0f0;
+    text-align: center;
+  }
+  .metric-item:last-child { border-right: none; }
+  .metric-label {
+    font-size: 11px;
+    color: #999;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .metric-value {
+    font-size: 18px;
+    font-weight: 900;
+    color: #1a1a2e;
+    line-height: 1.2;
+  }
+  .metric-value.up { color: #e63946; }
+  .metric-value.highlight { color: #2980b9; }
+  .metric-sub {
+    font-size: 11px;
+    color: #aaa;
+    margin-top: 2px;
+  }
+
+  /* 섹션 */
+  .card-body { padding: 24px 32px; }
+
+  .section-title {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: #fff;
+    background: #1a1a2e;
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 4px;
+    margin-bottom: 14px;
+    text-transform: uppercase;
+  }
+
+  /* 실적 테이블 */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 24px;
+    font-size: 13px;
+  }
+  .data-table thead tr {
+    background: #f8f9fa;
+  }
+  .data-table th {
+    padding: 10px 14px;
+    font-weight: 700;
+    color: #555;
+    text-align: left;
+    border-bottom: 2px solid #e0e0e0;
+    font-size: 12px;
+  }
+  .data-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #f0f0f0;
+    vertical-align: middle;
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table .highlight-row {
+    background: linear-gradient(90deg, #fff9e6, #fffdf0);
+    font-weight: 700;
+  }
+  .data-table .num { text-align: right; font-weight: 600; }
+  .data-table .up { color: #e63946; }
+  .data-table .dn { color: #888; }
+  .data-table .source { font-size: 11px; color: #999; }
+
+  /* 지역 분해 그리드 */
+  .region-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .region-card {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 14px 12px;
+    text-align: center;
+    border: 1px solid #e8e8e8;
+  }
+  .region-card.featured { background: #1a1a2e; border-color: #1a1a2e; }
+  .region-label { font-size: 11px; color: #999; font-weight: 700; margin-bottom: 4px; }
+  .region-card.featured .region-label { color: rgba(255,255,255,0.6); }
+  .region-num { font-size: 17px; font-weight: 900; color: #1a1a2e; }
+  .region-card.featured .region-num { color: #ffc800; }
+  .region-yoy { font-size: 11px; color: #e63946; font-weight: 700; margin-top: 2px; }
+  .region-card.featured .region-yoy { color: rgba(255,200,0,0.8); }
+
+  /* 애널리스트 의견 카드 */
+  .analyst-block {
+    border: 1px solid #e8e8e8;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .analyst-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e8e8e8;
+  }
+  .analyst-name {
+    font-size: 13px;
+    font-weight: 800;
+    color: #1a1a2e;
+  }
+  .analyst-firm {
+    font-size: 11px;
+    color: #888;
+    margin-top: 1px;
+  }
+  .analyst-tp {
+    text-align: right;
+  }
+  .tp-arrow {
+    font-size: 12px;
+    color: #e63946;
+    font-weight: 700;
+  }
+  .tp-arrow.maintain { color: #888; }
+  .analyst-body {
+    padding: 16px 18px;
+  }
+  .analyst-headline {
+    font-size: 15px;
+    font-weight: 800;
+    color: #1a1a2e;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #ffc800;
+    display: inline-block;
+  }
+  .analyst-quote {
+    background: #f8f9fa;
+    border-left: 3px solid #ffc800;
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 12px;
+    font-style: italic;
+    color: #333;
+    font-size: 13.5px;
+    line-height: 1.8;
+  }
+  .analyst-quote strong { color: #e63946; font-style: normal; }
+  .bullet-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .bullet-list li {
+    padding: 5px 0 5px 20px;
+    position: relative;
+    font-size: 13px;
+    color: #444;
+    line-height: 1.7;
+  }
+  .bullet-list li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: #ffc800;
+    font-weight: 700;
+  }
+  .bullet-list li b { color: #e63946; font-weight: 700; }
+  .bullet-list li .num-highlight {
+    background: #fff3cd;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-weight: 700;
+    color: #b8860b;
+  }
+
+  /* 핵심 포인트 박스 */
+  .key-point-box {
+    background: linear-gradient(135deg, #1a1a2e 0%, #302b63 100%);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-top: 20px;
+  }
+  .key-point-box h4 {
+    color: #ffc800;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .key-point-box p {
+    color: #fff;
+    font-size: 14px;
+    line-height: 1.8;
+    font-weight: 500;
+  }
+  .key-point-box p b { color: #ffc800; }
+
+  /* 리스크 */
+  .risk-box {
+    background: #fff8f8;
+    border: 1px solid #ffd0d0;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-top: 16px;
+  }
+  .risk-box h4 {
+    font-size: 11px;
+    font-weight: 800;
+    color: #cc0000;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .risk-box ul {
+    list-style: none;
+    padding: 0;
+  }
+  .risk-box ul li {
+    font-size: 12.5px;
+    color: #666;
+    padding: 3px 0 3px 14px;
+    position: relative;
+  }
+  .risk-box ul li::before {
+    content: '!';
+    position: absolute;
+    left: 0;
+    color: #cc0000;
+    font-weight: 700;
+    font-size: 11px;
+  }
+
+  /* 밸류에이션 비교 */
+  .valuation-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .val-card {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 14px 16px;
+    text-align: center;
+    border: 1px solid #e8e8e8;
+  }
+  .val-card .val-label { font-size: 11px; color: #999; margin-bottom: 4px; font-weight: 600; }
+  .val-card .val-num { font-size: 20px; font-weight: 900; color: #1a1a2e; }
+  .val-card .val-sub { font-size: 11px; color: #aaa; margin-top: 2px; }
+  .val-card.featured { background: #1a1a2e; border-color: #1a1a2e; }
+  .val-card.featured .val-label { color: rgba(255,255,255,0.6); }
+  .val-card.featured .val-num { color: #ffc800; }
+  .val-card.featured .val-sub { color: rgba(255,255,255,0.4); }
+
+  /* 구분선 */
+  .divider {
+    height: 1px;
+    background: #f0f0f0;
+    margin: 20px 0;
+  }
+
+  /* 최종 순위표 */
+  .ranking-section {
+    background: #fff;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    overflow: hidden;
+  }
+  .ranking-header {
+    background: linear-gradient(135deg, #0f0c29, #302b63);
+    padding: 20px 28px;
+    color: #fff;
+  }
+  .ranking-header h2 { font-size: 16px; font-weight: 800; }
+  .ranking-header p { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 4px; }
+  .ranking-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .ranking-table th {
+    background: #f8f9fa;
+    padding: 12px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #888;
+    letter-spacing: 0.5px;
+    text-align: center;
+    border-bottom: 2px solid #e0e0e0;
+    text-transform: uppercase;
+  }
+  .ranking-table td {
+    padding: 16px;
+    border-bottom: 1px solid #f0f0f0;
+    text-align: center;
+    font-size: 13px;
+  }
+  .ranking-table tr:last-child td { border-bottom: none; }
+  .ranking-table .stock-name { font-weight: 800; font-size: 15px; text-align: left; }
+  .ranking-table .stock-code { font-size: 11px; color: #999; font-weight: 400; }
+  .ranking-table .upside { color: #e63946; font-weight: 900; font-size: 16px; }
+  .rank-num {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 900; color: #fff;
+    margin: 0 auto;
+  }
+
+  /* 푸터 */
+  .report-footer {
+    text-align: center;
+    padding: 20px;
+    color: #aaa;
+    font-size: 11px;
+    line-height: 1.8;
+    border-top: 1px solid #e0e0e0;
+    margin-top: 32px;
+  }
+
+  /* 인쇄 */
+  @media print {
+    body { background: #fff; }
+    .wrapper { padding: 0; max-width: 100%; }
+    .stock-card, .ranking-section, .summary-bar {
+      break-inside: avoid;
+      box-shadow: none;
+      border: 1px solid #ddd;
+    }
+    .report-header {
+      background: #1a1a2e !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+  }
+
+  /* 반응형 */
+  @media (max-width: 640px) {
+    .metric-grid { grid-template-columns: repeat(2, 1fr); }
+    .valuation-grid { grid-template-columns: repeat(2, 1fr); }
+    .region-grid { grid-template-columns: repeat(3, 1fr); }
+    .card-body { padding: 16px 18px; }
+    .card-header { padding: 16px 18px 14px; }
+    .report-header { padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- ══ 헤더 ══ -->
+  <div class="report-header">
+    <div class="channel-badge">로또의 주식 · Research</div>
+    <h1>오늘의 리포트 브리핑<br><span>에이피알 × LIG 방산 완전 분석</span></h1>
+    <div class="report-meta">
+      <span>2026년 5월 8일 (금)</span>
+      <span>분석 리포트 7건 (에이피알 4건 · LIG D&A 3건)</span>
+      <span>선별 기준: 1Q26 어닝 서프라이즈 + 목표가 상향 릴레이</span>
+    </div>
+  </div>
+
+  <!-- ══ 오늘의 한줄 요약 ══ -->
+  <div class="summary-bar">
+    <h2>Today's Key Message</h2>
+    <p>
+      에이피알은 <b>4개 증권사 동시 커버, 교보 TP 550,000원 상향·유진 TP 330,000→510,000원 대폭 상향</b> —
+      "미국 온라인은 이미 정복, 이제 오프라인 38% 시장이 남았다."
+      LIG 디펜스앤에어로스페이스는 <b>iM증권 TP 1,230,000원 상향, 영업이익 컨센서스 +46% 초대형 서프라이즈</b> —
+      UAE 천궁-II 조기 인도에 이어 카타르·동남아 수주 러브콜이 줄을 잇고 있다.
+    </p>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════
+       ① 에이피알
+  ═══════════════════════════════════════════ -->
+  <div class="stock-card">
+    <div class="card-header">
+      <div class="rank-badge rank-1">1</div>
+      <div class="tp-badge">목표가 상향 2개사 · 4개사 동시 커버</div>
+      <h2>① 에이피알 (278470)</h2>
+      <div class="subtitle">"이제 본게임 시작 — 미국 온라인 10%에서 오프라인+유럽 38% 시장으로"</div>
+    </div>
+
+    <!-- 핵심 지표 -->
+    <div class="metric-grid">
+      <div class="metric-item">
+        <div class="metric-label">최고 목표주가</div>
+        <div class="metric-value up">550,000<span style="font-size:13px">원</span></div>
+        <div class="metric-sub">교보증권 상향</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-label">현재주가 (5/7)</div>
+        <div class="metric-value">401,500<span style="font-size:13px">원</span></div>
+        <div class="metric-sub">KOSPI</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-label">최대 상승여력</div>
+        <div class="metric-value up">+37.0%</div>
+        <div class="metric-sub">교보 TP 기준</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-label">1Q26 OPM</div>
+        <div class="metric-value up">25.7%</div>
+        <div class="metric-sub">+5.2%p YoY</div>
+      </div>
+    </div>
+
+    <div class="card-body">
+
+      <!-- 실적 요약 -->
+      <div class="section-title">1Q26 실적 & 전망</div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>구분</th>
+            <th class="num">1Q25</th>
+            <th class="num">4Q25</th>
+            <th class="num">1Q26P (실적)</th>
+            <th class="num">YoY</th>
+            <th class="num">컨센서스 대비</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>매출액 (억원)</td>
+            <td class="num">2,660</td>
+            <td class="num">5,476</td>
+            <td class="num">5,934</td>
+            <td class="num up">+123%</td>
+            <td class="num up">부합</td>
+          </tr>
+          <tr class="highlight-row">
+            <td>영업이익 (억원)</td>
+            <td class="num">546</td>
+            <td class="num">1,302</td>
+            <td class="num up"><b>1,523</b></td>
+            <td class="num up"><b>+174~179%</b></td>
+            <td class="num up"><b>+6~8% 상회</b></td>
+          </tr>
+          <tr>
+            <td>OPM (%)</td>
+            <td class="num">20.5%</td>
+            <td class="num">23.8%</td>
+            <td class="num up">25.7%</td>
+            <td class="num up">+5.2%p</td>
+            <td class="num">—</td>
+          </tr>
+          <tr>
+            <td class="source">자료: SK증권·교보증권·유안타증권·유진투자증권 추정</td>
+            <td></td><td></td><td></td><td></td><td></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- 지역별 매출 분해 -->
+      <div class="section-title">1Q26 지역별 매출 분해</div>
+      <div class="region-grid">
+        <div class="region-card featured">
+          <div class="region-label">미국</div>
+          <div class="region-num">2,485억</div>
+          <div class="region-yoy">+251% YoY</div>
+        </div>
+        <div class="region-card featured">
+          <div class="region-label">기타(유럽 등)</div>
+          <div class="region-num">1,900억</div>
+          <div class="region-yoy">+213% YoY</div>
+        </div>
+        <div class="region-card">
+          <div class="region-label">일본</div>
+          <div class="region-num" style="color:#1a1a2e">589억</div>
+          <div class="region-yoy">+101% YoY</div>
+        </div>
+        <div class="region-card">
+          <div class="region-label">중화권</div>
+          <div class="region-num" style="color:#1a1a2e">307억</div>
+          <div class="region-yoy">+8.1% YoY</div>
+        </div>
+        <div class="region-card">
+          <div class="region-label">한국</div>
+          <div class="region-num" style="color:#888">653억</div>
+          <div class="region-yoy" style="color:#888">-14.9% YoY</div>
+        </div>
+      </div>
+      <p style="font-size:12px;color:#888;margin-top:-16px;margin-bottom:20px">
+        ※ 해외 비중 <b style="color:#e63946">89%</b> — 비수기임에도 기타지역(유럽·중남미·동남아) <b style="color:#e63946">QoQ +60%</b> 급증. 글로벌 초과수요 상황.
+      </p>
+
+      <!-- 목표가 변경 현황 -->
+      <div class="section-title">목표가 변경 현황</div>
+      <table class="data-table" style="margin-bottom:24px">
+        <thead>
+          <tr>
+            <th>증권사</th>
+            <th>담당 애널리스트</th>
+            <th class="num">기존 TP</th>
+            <th class="num">신규 TP</th>
+            <th class="num">변동</th>
+            <th>Valuation 근거</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="highlight-row">
+            <td><b>교보증권</b></td>
+            <td>권우정</td>
+            <td class="num">470,000원</td>
+            <td class="num up">550,000원</td>
+            <td class="num up"><b>+17.0% 상향</b></td>
+            <td>12MF EPS × Target P/E 35배</td>
+          </tr>
+          <tr class="highlight-row">
+            <td><b>유진투자증권</b></td>
+            <td>이해니</td>
+            <td class="num">330,000원</td>
+            <td class="num up">510,000원</td>
+            <td class="num up"><b>+54.5% 대폭 상향</b></td>
+            <td>1Q 호실적 + 26/27E 추정치 대폭 상향 반영</td>
+          </tr>
+          <tr>
+            <td>SK증권</td>
+            <td>형권훈</td>
+            <td class="num">510,000원</td>
+            <td class="num">510,000원</td>
+            <td class="num dn">유지</td>
+            <td>브랜드사 중 Top-pick</td>
+          </tr>
+          <tr>
+            <td>유안타증권</td>
+            <td>—</td>
+            <td class="num">540,000원</td>
+            <td class="num">540,000원</td>
+            <td class="num dn">유지</td>
+            <td>12MF EPS × 글로벌 피어 PER</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- 애널리스트 의견 -->
+      <div class="section-title">애널리스트 상세 의견</div>
+
+      <!-- 교보증권 -->
+      <div class="analyst-block">
+        <div class="analyst-header">
+          <div>
+            <div class="analyst-name">권우정 애널리스트</div>
+            <div class="analyst-firm">교보증권 · 화장품/음식료</div>
+          </div>
+          <div class="analyst-tp">
+            <div class="tp-arrow">470,000 → 550,000원 ▲ (+17%)</div>
+            <div style="font-size:11px;color:#888;margin-top:2px">BUY 유지 | 상승여력 +37.0%</div>
+          </div>
+        </div>
+        <div class="analyst-body">
+          <div class="analyst-headline">"초과수요 × 수익성 개선 × 지역 확장 콜라보"</div>
+          <div class="analyst-quote">
+            "1분기 비수기에도 <strong>글로벌 수요 증가 속도가 재고 증가 속도를 넘어서는 초과수요 상황</strong>으로 파악됨.
+            Target 초도물량이 인식되었으며, 오프라인 매출(ULTA+Target)은 약 <strong>250~300억원</strong> 추정.
+            6월부터 <strong>Walmart 3,200개 점포 입점 예정</strong>, Costco도 추가 입점 예정.
+            관세 환급 비용 <strong>200억원 이상</strong> — 2~3분기에 걸쳐 추가 이익으로 인식 전망."
+          </div>
+          <ul class="bullet-list">
+            <li>ULTA 입점 SKU: 온라인 51개·오프라인 20개 / Target: 온라인 17개·오프라인 12개</li>
+            <li>미국 2,485억원(+251%), 비수기에도 아마존 스프링데이 호조 + 평시 매출 증가</li>
+            <li>기타지역 1,900억원(+213%) — 영국 아마존/틱톡샵 성장 + 유럽·동남아·중남미 확산</li>
+            <li><b>Walmart 3,200개 + Target 전점 + Costco 추가 = 오프라인 침투 본격 개막</b></li>
+            <li>운반비(에어물량): 1Q 200억원 → 2~3분기 점진 QoQ 감소 → 수익성 추가 개선</li>
+            <li>26E: 매출 <b>2조 8,780억원</b>(+88%), 영업이익 <b>7,220억원</b>(+97%)</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 유진투자증권 -->
+      <div class="analyst-block">
+        <div class="analyst-header">
+          <div>
+            <div class="analyst-name">이해니 애널리스트</div>
+            <div class="analyst-firm">유진투자증권 · 유통</div>
+          </div>
+          <div class="analyst-tp">
+            <div class="tp-arrow">330,000 → 510,000원 ▲ (+54.5%!)</div>
+            <div style="font-size:11px;color:#888;margin-top:2px">BUY 유지 | 상승여력 +27.0%</div>
+          </div>
+        </div>
+        <div class="analyst-body">
+          <div class="analyst-headline">"1Q26 Review: 화장품 대장의 위용"</div>
+          <div class="analyst-quote">
+            "1Q26 뷰티 5,853억원(+128.7% YoY), 화장품 4,526억원(+174.3%).
+            <strong>메디큐브 스테디셀러뿐 아니라 신규 제품군 매출 증가로 특정 제품 의존도가 낮아졌다.</strong>
+            디바이스는 신규 런칭한 <strong>부스터프로 X2</strong> 영향으로 고신장 — 2~3분기 중 미국 출시 예정.
+            오프라인 비중을 현재 10% 수준에서 <strong>중장기 20%까지</strong> 끌어올리는 것이 목표."
+          </div>
+          <ul class="bullet-list">
+            <li>한국 653억원(-14.9%), 해외 5,281억원(+179%) — 해외 비중 <b>89%</b></li>
+            <li>미국: ULTA('25.8) → Target 전점('26.4) → <b>Walmart·Costco 2~3분기 입점 예정</b></li>
+            <li>관세 환급금 <b>약 200억원 초중반</b> — 빠르면 2Q, 늦어도 내년 초까지 분할 인식</li>
+            <li>26E: 매출 <b>2조 8,026억원</b>(+83.5%), 영업이익 <b>7,222억원</b>(+97.6%), OPM 25.8%</li>
+            <li>27E: EPS <b>19,937원</b> → Target P/E 25.6배 적용</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- SK증권 -->
+      <div class="analyst-block">
+        <div class="analyst-header">
+          <div>
+            <div class="analyst-name">형권훈 애널리스트</div>
+            <div class="analyst-firm">SK증권 · 화장품</div>
+          </div>
+          <div class="analyst-tp">
+            <div class="tp-arrow maintain">목표주가 510,000원 유지</div>
+            <div style="font-size:11px;color:#888;margin-top:2px">매수 유지 | 상승여력 +27.0%</div>
+          </div>
+        </div>
+        <div class="analyst-body">
+          <div class="analyst-headline">"이제 본게임 시작 — 글로벌 오프라인 시장 38%가 남았다"</div>
+          <div class="analyst-quote">
+            "과거 실적 성장의 많은 부분이 미국 온라인 산업에서 나왔는데,
+            이 산업의 규모는 <strong>글로벌 뷰티 산업의 약 10%에 불과</strong>하다.
+            반면 <strong>미국 오프라인과 유럽 온·오프라인 시장의 비중은 38%</strong>다.
+            유럽·미국 오프라인 침투라는 거대한 실적 성장 모멘텀이 반영되는 구간의 초입에 있다."
+          </div>
+          <ul class="bullet-list">
+            <li>1Q26 영업이익 <b>1,523억원</b> — SK증권 추정 대비 +11.2%, 컨센서스 대비 +6% 상회</li>
+            <li>기타지역(유럽) QoQ <b>+60%</b> 급증 — 영국·독일·스페인·프랑스·이탈리아 온라인 순차 진출</li>
+            <li>미국 메이저 유통채널 월마트·타겟·코스트코 <b>입점 확정</b></li>
+            <li>26E: 매출 <b>2조 8,780억원</b>, 영업이익 <b>7,220억원</b>, OPM 25.1%</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 유안타증권 -->
+      <div class="analyst-block">
+        <div class="analyst-header">
+          <div>
+            <div class="analyst-name">유안타증권 담당 애널리스트</div>
+            <div class="analyst-firm">유안타증권 · 화장품/소비재</div>
+          </div>
+          <div class="analyst-tp">
+            <div class="tp-arrow maintain">목표주가 540,000원 유지</div>
+            <div style="font-size:11px;color:#888;margin-top:2px">BUY 유지 | 상승여력 +34%</div>
+          </div>
+        </div>
+        <div class="analyst-body">
+          <div class="analyst-headline">"또 최대 실적 — 이제는 글로벌 메가 브랜드"</div>
+          <div class="analyst-quote">
+            "Target 4월 전매장 입점 완료, 2~3분기 중 <strong>Costco·Walmart 추가 입점 예정</strong>.
+            Walmart(4,700개)·Target(1,995개) 등 <strong>대형 유통망 확대만으로도 구조적 외형 성장</strong> 가능성이 높다.
+            유럽 역시 영국 중심으로 Amazon·TikTok Shop 순위 상승이 이어지며,
+            프랑스·독일·스페인으로 판매 지역 확대 중."
+          </div>
+          <ul class="bullet-list">
+            <li>실적 발표 당일 주가 -5% — 선반영(한달간 +34%)과 고베이스 부담이 원인</li>
+            <li>단기 변동성 존재하나 <b>중장기 우상향 흐름 유효</b> — 미국 오프라인+유럽 본격화</li>
+            <li>관세 환급금 <b>약 200억원</b> — 빠르면 2Q부터 수익성 개선 요인</li>
+            <li>26F: 매출 <b>25,500억원</b>, 영업이익 <b>6,480억원</b>, PER 28.6배</li>
+            <li>27F: 매출 <b>34,000억원</b>, 영업이익 <b>8,800억원</b>, ROE 68.3%</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 밸류에이션 -->
+      <div class="section-title" style="margin-top:20px">밸류에이션 현황</div>
+      <div class="valuation-grid">
+        <div class="val-card featured">
+          <div class="val-label">26E OPM</div>
+          <div class="val-num">25~26%</div>
+          <div class="val-sub">글로벌 뷰티 최상위</div>
+        </div>
+        <div class="val-card">
+          <div class="val-label">26E PER</div>
+          <div class="val-num">26~29배</div>
+          <div class="val-sub">성장성 감안 합리적</div>
+        </div>
+        <div class="val-card">
+          <div class="val-label">12M 주가 수익률</div>
+          <div class="val-num">+425%</div>
+          <div class="val-sub">KOSPI 대비 +81%p</div>
+        </div>
+      </div>
+
+      <!-- 핵심 포인트 -->
+      <div class="key-point-box">
+        <h4>로또의 주식 매매 포인트</h4>
+        <p>
+          <b>교보 TP 550,000원 상향 + 유진 TP 330,000→510,000원 대폭 상향</b> — 4개 증권사 동시 매수.
+          비수기(1Q)에 컨센서스를 6~8% 상회했다는 것이 핵심이다.
+          미국 온라인 시장(전체의 10%)은 이미 지배 중. <b>이제 오프라인 + 유럽(38%) 시장이 열린다.</b>
+          Walmart 6월 입점 + Costco 추가 입점 = 2Q26 서프라이즈 기대 구간.
+          관세 환급금 200억원도 2~3분기 추가 이익으로 인식 예정이다.
+          단기 주가 조정은 오히려 <b>최대 실적을 더 싸게 살 수 있는 기회</b>다.
+        </p>
+      </div>
+
+      <div class="risk-box">
+        <h4>리스크 요인</h4>
+        <ul>
+          <li>미국 관세 정책 변동 시 오프라인 채널 확장 비용 부담 증가</li>
+          <li>2Q26 전년 고베이스(+111% YoY) → 성장률 둔화 착시 가능</li>
+          <li>에어 운반비 감소 지연 시 OPM 개선폭 축소</li>
+          <li>글로벌 경기 둔화 시 프리미엄 뷰티 소비 위축 리스크</li>
+        </ul>
+      </div>
+
+    </div><!-- /.card-body -->
+  </div><!-- /.stock-card -->
+
+
+  <!-- ═══════════════════════════════════════════
+       ② LIG 디펜스앤에어로스페이스
+  ═══════════════════════════════════════════ -->
+  <div class="stock-card">
+    <div class="card-header">
+      <div class="rank-badge rank-2">2</div>
+      <div class="tp-badge defense">iM증권 TP 1,230,000원 상향 · 영업이익 컨센 +46% 초대형 서프</div>
+      <h2>② LIG 디펜스앤에어로스페이스 (079550)</h2>
+      <div class="subtitle">"현시점 가장 귀한 방산기업 — 천궁-II, 이제 중동 3국을 넘어 세계로"</div>
+    </div>
+
+    <!-- 핵심 지표 -->
+    <div class="metric-grid">
+      <div class="metric-item">
+        <div class="metric-label">최고 목표주가</div>
+        <div class="metric-value up">1,250,000<span style="font-size:11px">원</span></div>
+        <div class="metric-sub">키움증권</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-label">현재주가 (5/7)</div>
+        <div class="metric-value">866,000<span style="font-size:13px">원</span></div>
+        <div class="metric-sub">KOSPI</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-label">최대 상승여력</div>
+        <div class="metric-value up">+44.3%</div>
+        <div class="metric-sub">키움 TP 기준</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-label">1Q26 OPM</div>
+        <div class="metric-value up">14.7%</div>
+        <div class="metric-sub">연간 가이던스 7% 대폭 상회</div>
+      </div>
+    </div>
+
+    <div class="card-body">
+
+      <!-- 실적 요약 -->
+      <div class="section-title">1Q26 실적 & 전망</div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>구분</th>
+            <th class="num">1Q25</th>
+            <th class="num">4Q25</th>
+            <th class="num">1Q26P (실적)</th>
+            <th class="num">YoY</th>
+            <th class="num">컨센서스 대비</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>매출액 (억원)</td>
+            <td class="num">9,076</td>
+            <td class="num">14,048</td>
+            <td class="num">11,679</td>
+            <td class="num up">+28.7%</td>
+            <td class="num up">+7.0% 상회</td>
+          </tr>
+          <tr class="highlight-row">
+            <td>영업이익 (억원)</td>
+            <td class="num">1,097</td>
+            <td class="num">386</td>
+            <td class="num up"><b>1,711</b></td>
+            <td class="num up"><b>+56.1%</b></td>
+            <td class="num up"><b>+46.2% 대폭 상회</b></td>
+          </tr>
+          <tr>
+            <td>OPM (%)</td>
+            <td class="num">12.1%</td>
+            <td class="num">2.7%</td>
+            <td class="num up">14.7%</td>
+            <td class="num up">+2.6%p</td>
+            <td class="num">—</td>
+          </tr>
+          <tr>
+            <td>수출 매출 (억원)</td>
+            <td class="num">~1,850</td>
+            <td class="num">—</td>
+            <td class="num up">4,052</td>
+            <td class="num up">+119%</td>
+            <td class="num">수출 비중 34.7%</td>
+          </tr>
+          <tr>
+            <td class="source">자료: iM증권·SK증권·키움증권 추정 | 컨센서스 영업이익: 1,173억원</td>
+            <td></td><td></td><td></td><td></td><td></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- 사업 부문별 실적 -->
+      <div class="section-title">사업 부문별 매출 분해 (SK증권 추정)</div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>부문</th>
+            <th class="num">1Q26P</th>
+            <th class="num">YoY</th>
+            <th class="num">26E 연간</th>
+            <th>비고</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="highlight-row">
+            <td><b>유도무기</b></td>
+            <td class="num up"><b>6,890억원</b></td>
+            <td class="num up"><b>+62.0%</b></td>
+            <td class="num up">2조 8,764억원</td>
+            <td>천궁-II UAE 조기납품, 후속계약 포함</td>
+          </tr>
+          <tr>
+            <td>항공/전자</td>
+            <td class="num">1,883억원</td>
+            <td class="num up">+75.8%</td>
+            <td class="num">8,296억원</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td>감시정찰</td>
+            <td class="num">1,082억원</td>
+            <td class="num dn">-13.5%</td>
+            <td class="num">5,099억원</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td>기타</td>
+            <td class="num">1,922억원</td>
+            <td class="num">—</td>
+            <td class="num">—</td>
+            <td>고스트로보틱스 영업손실 130억 반영</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- 목표가 변경 현황 -->
+      <div class="section-title">목표가 변경 현황</div>
+      <table class="data-table" style="margin-bottom:24px">
+        <thead>
+          <tr>
+            <th>증권사</th>
+            <th>담당 애널리스트</th>
+            <th class="num">기존 TP</th>
+            <th class="num">신규 TP</th>
+            <th class="num">변동</th>
+            <th>Valuation 근거</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="highlight-row">
+            <td><b>iM증권</b></td>
+            <td>변용진</td>
+            <td class="num">—</td>
+            <td class="num up">1,230,000원</td>
+            <td class="num up"><b>상향</b></td>
+            <td>28F EPS × Target P/E <b>50배</b> (Legacy 방산 최고)</td>
+          </tr>
+          <tr>
+            <td>SK증권</td>
+            <td>한승한</td>
+            <td class="num">1,150,000원</td>
+            <td class="num">1,150,000원</td>
+            <td class="num dn">유지</td>
+            <td>28F EPS 28,481원 × Target P/E 40배</td>
+          </tr>
+          <tr>
+            <td>키움증권</td>
+            <td>이한결</td>
+            <td class="num">1,250,000원</td>
+            <td class="num">1,250,000원</td>
+            <td class="num dn">유지</td>
+            <td>매수 유지, 수주 기회 확대에 주목</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- 애널리스트 의견 -->
+      <div class="section-title">애널리스트 상세 의견</div>
+
+      <!-- iM증권 -->
+      <div class="analyst-block">
+        <div class="analyst-header">
+          <div>
+            <div class="analyst-name">변용진 애널리스트</div>
+            <div class="analyst-firm">iM증권 · 조선/기계/방산</div>
+          </div>
+          <div class="analyst-tp">
+            <div class="tp-arrow">목표주가 1,230,000원 ▲ 상향</div>
+            <div style="font-size:11px;color:#888;margin-top:2px">BUY | 상승여력 +42.0%</div>
+          </div>
+        </div>
+        <div class="analyst-body">
+          <div class="analyst-headline">"현시점 가장 귀한 방산기업 — 방위산업 Top Picks"</div>
+          <div class="analyst-quote">
+            "패트리어트 PAC-3의 재고는 바닥 수준이며, 제조사 록히드마틴은 이미 기존 계약 국가들에 <strong>인도 지연을 통보</strong>하기 시작했다.
+            반면 LIG D&A는 <strong>전쟁 당사자와 다름없는 중동 3국(사우디·이라크·UAE)을 이미 고객으로 확보</strong>하고 있으며,
+            카타르에서도 문의가 쇄도 중. 러-우 전쟁 이후 최고 밸류를 받은 <strong>독일 Rheinmetall보다 생산여력이 확연히 우수</strong>하다."
+          </div>
+          <ul class="bullet-list">
+            <li>UAE향 천궁-II 1,700억원 — 이란-이스라엘 전쟁으로 조기 인도 + 수리부속·정비 후속계약 추가</li>
+            <li>Target P/E <b>50배</b> 적용 — Legacy 방산업체 현시점 최고 수준, 과하지 않다는 판단</li>
+            <li>중동 국가들의 엠바고 요구로 가이던스는 보수적이나, <b>모든 정황이 수주·실적 상승을 가리킴</b></li>
+            <li>종전 이후에도 <b>비어버린 무기 곳간을 채워야 하는 수요</b>는 이제 시작될 것</li>
+            <li>26E: 매출 <b>5조 830억원</b>, 영업이익 <b>4,830억원</b> / 28E: EPS <b>25,786원</b></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- SK증권 -->
+      <div class="analyst-block">
+        <div class="analyst-header">
+          <div>
+            <div class="analyst-name">한승한 애널리스트</div>
+            <div class="analyst-firm">SK증권 · 조선/방산</div>
+          </div>
+          <div class="analyst-tp">
+            <div class="tp-arrow maintain">목표주가 1,150,000원 유지</div>
+            <div style="font-size:11px;color:#888;margin-top:2px">매수 유지 | 상승여력 +32.8%</div>
+          </div>
+        </div>
+        <div class="analyst-body">
+          <div class="analyst-headline">"어닝 서프와 함께 맞이한 조정, 과하다"</div>
+          <div class="analyst-quote">
+            "<strong>일회성 요인 없이</strong> 시장예상치 1,173억원을 큰 폭 상회하는 영업이익 1,711억원 달성.
+            고수익성 천궁-2 수출 비중 확대와 <strong>후속계약(수리부속+정비사업) 투입</strong>이 주요 요인.
+            연간 OPM 가이던스 7% 유지는 보수적 — <strong>실제로는 7%를 상회하는 이익률 전망</strong>."
+          </div>
+          <ul class="bullet-list">
+            <li>현재 가동률 <b>약 70~80%</b> — 조기납품·추가물량 대응 여력 충분</li>
+            <li>26~27년 각 <b>약 3,000억원</b> 설비투자(캐파 확대) → 28~29년 매출 인식 본격화</li>
+            <li>카타르 포함 중동 여러 국가 천궁-2 러브콜 + 동남아 해궁 문의 확대</li>
+            <li>26E: 매출 <b>5조 650억원</b>(+17.6%), 영업이익 <b>4,690억원</b>(+46.9%), OPM 9.3%</li>
+            <li>28E EPS 28,481원 × Target P/E 40배 = 목표주가 1,150,000원</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 키움증권 -->
+      <div class="analyst-block">
+        <div class="analyst-header">
+          <div>
+            <div class="analyst-name">이한결 애널리스트</div>
+            <div class="analyst-firm">키움증권 · 조선/기계/방산/항공우주</div>
+          </div>
+          <div class="analyst-tp">
+            <div class="tp-arrow maintain">목표주가 1,250,000원 유지</div>
+            <div style="font-size:11px;color:#888;margin-top:2px">BUY 유지 | 상승여력 +44.3%</div>
+          </div>
+        </div>
+        <div class="analyst-body">
+          <div class="analyst-headline">"늘어나는 수주 기회에 주목"</div>
+          <div class="analyst-quote">
+            "미국-이란 종전에 가까워지고 있으나 <strong>방공 미사일에 대한 수요는 지속적으로 증가</strong>.
+            중동·동남아 등 다양한 지역에서 <strong>천궁Ⅱ·해궁 수주 확대 기대</strong>.
+            <strong>4월 말 말레이시아와 해궁 공급 계약 체결</strong> — 동남아 방산 수출 본격화의 신호탄."
+          </div>
+          <ul class="bullet-list">
+            <li>UAE 천궁-II 약 <b>1,700억원</b> 반영 — 전년 동기 대비 매출 <b>2배 이상</b> 확대</li>
+            <li>수출 매출 4,052억원(YoY +119%), 수출 비중 <b>34.7%</b> 달성</li>
+            <li>카타르·쿠웨이트 등 중동 여러 국가 수주 문의 확대</li>
+            <li><b>말레이시아 해궁 공급 계약</b>(4월 말) — 해양 방공 미사일 동남아 첫 수출</li>
+            <li>26F: 매출 <b>5조 893억원</b>(+18.2%), 영업이익 <b>4,416억원</b>(+38.2%), OPM 8.7%</li>
+            <li>자회사 고스트로보틱스(GR): Vision 60 추가 수주 시 영업손실 축소 가능성</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 밸류에이션 -->
+      <div class="section-title" style="margin-top:20px">밸류에이션 현황</div>
+      <div class="valuation-grid">
+        <div class="val-card featured">
+          <div class="val-label">26E OPM</div>
+          <div class="val-num">8.7~9.3%</div>
+          <div class="val-sub">가이던스 7% 대비 상회</div>
+        </div>
+        <div class="val-card">
+          <div class="val-label">26E PER</div>
+          <div class="val-num">49~52배</div>
+          <div class="val-sub">고성장 방산 프리미엄</div>
+        </div>
+        <div class="val-card">
+          <div class="val-label">시가총액</div>
+          <div class="val-num">19.1조</div>
+          <div class="val-sub">KOSPI 방산 대형주</div>
+        </div>
+      </div>
+
+      <!-- 핵심 포인트 -->
+      <div class="key-point-box">
+        <h4>로또의 주식 매매 포인트</h4>
+        <p>
+          <b>컨센서스 +46% 초대형 어닝 서프라이즈</b>인데 주가가 오히려 빠졌다 — 이게 매수 포인트다.
+          회사 가이던스(OPM 7%)가 보수적이어서 실망 매물이 나왔지만,
+          애널리스트 3사 모두 <b>실제로는 가이던스를 크게 상회할 것</b>으로 본다.
+          패트리어트 재고 바닥 + 록히드 납기 지연 = <b>천궁-II가 글로벌 유일한 대안</b>이다.
+          중동 3국 기확보 + 카타르·쿠웨이트 수주 문의 + 말레이시아 해궁 계약까지.
+          <b>종전 이후에도 비어버린 무기 곳간을 채워야 하는 구조적 수요</b>는 이제 시작점이다.
+        </p>
+      </div>
+
+      <div class="risk-box">
+        <h4>리스크 요인</h4>
+        <ul>
+          <li>중동 전쟁 조기 종전 시 긴급 수출물량 소멸 가능성</li>
+          <li>회사 보수적 가이던스(OPM 7%)에 따른 단기 실망 매물 지속</li>
+          <li>자회사 고스트로보틱스(GR) 영업손실(-130억/분기) 지속 시 연결 이익 훼손</li>
+          <li>천궁-II 추가 수주 지연 또는 경쟁작(패트리어트) 생산 확대 시 점유율 위협</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════
+       최종 순위 요약표
+  ═══════════════════════════════════════════ -->
+  <div class="ranking-section">
+    <div class="ranking-header">
+      <h2>오늘의 종목 순위 요약</h2>
+      <p>선별 기준: 어닝 서프라이즈 강도 × 목표가 상향 수 × 중장기 성장 모멘텀</p>
+    </div>
+    <table class="ranking-table">
+      <thead>
+        <tr>
+          <th>순위</th>
+          <th style="text-align:left">종목</th>
+          <th>현재가</th>
+          <th>최고 목표주가</th>
+          <th>상승여력</th>
+          <th>TP 상향</th>
+          <th style="text-align:left">핵심 모멘텀</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="rank-num" style="background:linear-gradient(135deg,#f7971e,#ffd200)">1</div></td>
+          <td style="text-align:left">
+            <div class="stock-name">에이피알</div>
+            <div class="stock-code">278470 · KOSPI</div>
+          </td>
+          <td>401,500원</td>
+          <td style="color:#e63946;font-weight:900">550,000원</td>
+          <td class="upside">+37.0%</td>
+          <td style="color:#e63946;font-weight:700">2개사 상향 (교보·유진)</td>
+          <td style="text-align:left">미국 오프라인 3社 입점 확정 + 유럽 본격화 + OPM 26% 비수기 달성</td>
+        </tr>
+        <tr>
+          <td><div class="rank-num" style="background:linear-gradient(135deg,#bdc3c7,#95a5a6)">2</div></td>
+          <td style="text-align:left">
+            <div class="stock-name">LIG 디펜스앤에어로스페이스</div>
+            <div class="stock-code">079550 · KOSPI</div>
+          </td>
+          <td>866,000원</td>
+          <td style="color:#1a56db;font-weight:900">1,250,000원</td>
+          <td class="upside">+44.3%</td>
+          <td style="color:#e63946;font-weight:700">iM증권 상향 ↑</td>
+          <td style="text-align:left">컨센서스 +46% 서프 + 천궁-II 중동 수주 러브콜 + 말레이시아 해궁 계약</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 푸터 -->
+  <div class="report-footer">
+    <p><b>로또의 주식</b> · 리포트 브리핑 · 2026년 5월 8일</p>
+    <p>본 자료는 공개된 증권사 리포트(SK증권·교보증권·유안타증권·유진투자증권·iM증권·키움증권)를<br>
+    기반으로 유튜브 콘텐츠 참고 목적으로 정리된 자료입니다. 투자 판단 및 그 결과에 대한 책임은 투자자 본인에게 있습니다.</p>
+    <p style="margin-top:8px;color:#ccc">출처: raw/20260508_company_404250000.pdf · 529159000.pdf · 734745000.pdf · 841887000.pdf · 333618000.pdf · 424880000.pdf · 557455000.pdf</p>
+  </div>
+
+</div>
+</body>
+</html>

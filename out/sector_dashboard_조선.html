@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STOCK BRAIN | 조선 섹터</title>
+<style>
+:root {
+  --bg: #080808;
+  --card: #111111;
+  --card2: #0e0e0e;
+  --card-active: #0a141a;
+  --main: #00FFD0;
+  --main-dark: #003D31;
+  --text: #FFFFFF;
+  --sub: #666666;
+  --dim: #2a2a2a;
+  --border: #191919;
+  --red: #FF4B4B;
+  /* accent: mint = 긍정/강세 | red = 위험/약세 | white = 주요텍스트 */
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:'Apple SD Gothic Neo',-apple-system,'Malgun Gothic',sans-serif; min-height:100vh; }
+
+/* ── 헤더 ── */
+.hdr {
+  position:sticky; top:0; z-index:200;
+  background:rgba(8,8,8,0.95); backdrop-filter:blur(20px);
+  border-bottom:1px solid #141414;
+  height:56px; padding:0 36px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.hdr-l { display:flex; align-items:center; gap:14px; }
+.brand { font-size:10px; font-weight:800; letter-spacing:4px; color:var(--main); }
+.vl { width:1px; height:16px; background:#222; }
+.stitle { font-size:17px; font-weight:700; }
+.chip {
+  font-size:10px; font-weight:700; padding:3px 10px; border-radius:20px;
+  border:1px solid var(--main); background:rgba(0,255,208,0.07); color:var(--main); letter-spacing:1px;
+}
+.hdate { font-size:11px; color:var(--sub); }
+.live-dot { width:6px; height:6px; border-radius:50%; background:var(--main); box-shadow:0 0 7px var(--main); }
+
+/* ── 레이아웃 ── */
+.page { max-width:1560px; margin:0 auto; padding:24px 36px 60px; }
+.sec { margin-bottom:22px; }
+.lbl { font-size:9px; font-weight:800; letter-spacing:4px; color:var(--main); text-transform:uppercase; margin-bottom:12px; }
+
+/* ── 카드 기본 ── */
+.card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px; }
+.card-a { background:var(--card-active); border:1px solid rgba(0,255,208,0.18); border-radius:12px; padding:20px; }
+
+/* ═══════════════════════════════
+   오늘의 코멘트 (상단 4분할)
+═══════════════════════════════ */
+.today-grid {
+  display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:12px;
+}
+.tbox {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:12px; padding:13px 16px; display:flex; flex-direction:column; gap:7px;
+}
+.tbox-head { display:flex; align-items:center; gap:8px; margin-bottom:0; }
+.tbox-icon { font-size:20px; }
+.tbox-title { font-size:10px; font-weight:800; letter-spacing:1.5px; color:#aaa; text-transform:uppercase; }
+
+/* 박스1: 미국 커플링 */
+.pair-item { display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid #161616; }
+.pair-item:last-child { border-bottom:none; }
+.us-tick { font-size:12px; font-weight:800; min-width:44px; }
+.us-chg { font-size:12px; font-weight:700; min-width:48px; }
+.us-chg.up { color:var(--main); }
+.us-chg.dn { color:var(--red); }
+.us-chg.nt { color:var(--sub); }
+.pair-arr { color:var(--dim); font-size:12px; }
+.kr-chips { display:flex; flex-wrap:wrap; gap:3px; flex:1; }
+.kc { font-size:10px; padding:2px 6px; border-radius:4px; background:rgba(255,255,255,0.04); border:1px solid #222; color:#999; white-space:nowrap; }
+.kc.hot { background:rgba(0,255,208,0.07); border-color:rgba(0,255,208,0.2); color:var(--main); }
+.kc.bad { background:rgba(255,75,75,0.06); border-color:rgba(255,75,75,0.2); color:#ff7070; }
+
+/* 박스2: 국내 뉴스 */
+.news-item-sm { padding:5px 0; border-bottom:1px solid #161616; }
+.news-item-sm:last-child { border-bottom:none; }
+.ni-top { display:flex; align-items:center; gap:6px; margin-bottom:4px; }
+.ni-tag2 { font-size:9px; font-weight:700; padding:1px 6px; border-radius:3px; }
+.ni-tag2.hot { background:rgba(0,255,208,0.1); color:var(--main); }
+.ni-tag2.mid { background:rgba(255,75,75,0.1); color:var(--red); }
+.ni-tag2.new { background:rgba(0,255,208,0.07); color:var(--main); }
+.ni-src { font-size:10px; color:#444; margin-left:auto; }
+.ni-txt { font-size:11px; color:#999; line-height:1.4; margin-bottom:5px; }
+.ni-sts { display:flex; flex-wrap:wrap; gap:3px; }
+.ni-st { font-size:9px; padding:1px 5px; border-radius:3px; background:rgba(255,255,255,0.04); border:1px solid #1e1e1e; color:#777; }
+.ni-st.h { background:rgba(0,255,208,0.06); border-color:rgba(0,255,208,0.2); color:var(--main); }
+
+/* 박스3: 리포트 탑픽 */
+.toppick-item { padding:5px 0; border-bottom:1px solid #161616; }
+.toppick-item:last-child { border-bottom:none; }
+.tp-top { display:flex; align-items:center; gap:8px; margin-bottom:5px; }
+.tp-name { font-size:13px; font-weight:700; }
+.tp-score {
+  margin-left:auto; font-size:11px; font-weight:800; padding:2px 8px; border-radius:5px;
+}
+.tp-score.s1 { background:rgba(0,255,208,0.1); color:var(--main); }
+.tp-score.s2 { background:rgba(255,75,75,0.1); color:var(--red); }
+.tp-score.s3 { background:#161616; color:var(--sub); }
+.tp-sigs { display:flex; flex-wrap:wrap; gap:3px; margin-bottom:4px; }
+.sig { font-size:9px; padding:1px 5px; border-radius:3px; font-weight:700; }
+.sig.on  { background:rgba(0,255,208,0.08); color:var(--main); }
+.sig.off { background:#161616; color:#444; text-decoration:line-through; }
+.sig.w   { background:rgba(255,75,75,0.08); color:var(--red); }
+.tp-reason { font-size:11px; color:var(--sub); line-height:1.4; }
+
+/* 박스4: 인사이트 */
+.insight-box {
+  background: linear-gradient(135deg, #0a141a 0%, #0d0d0d 100%);
+  border:1px solid rgba(0,255,208,0.2); border-radius:12px; padding:20px;
+  position:relative; overflow:hidden;
+}
+.insight-box::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg, transparent, var(--main), transparent);
+}
+.ib-head { display:flex; align-items:center; gap:8px; margin-bottom:14px; }
+.ib-icon { font-size:16px; }
+.ib-lbl { font-size:10px; font-weight:800; letter-spacing:2px; color:var(--main); }
+.ib-body { font-size:13px; font-weight:500; line-height:1.8; color:#ddd; margin-bottom:14px; }
+.ib-body .h { color:var(--main); font-weight:700; }
+.ib-body .w { color:var(--red); font-weight:700; }
+.ib-bullets { display:flex; flex-direction:column; gap:6px; }
+.ib-b { display:flex; align-items:flex-start; gap:7px; font-size:11px; color:var(--sub); }
+.ib-dot { width:5px; height:5px; border-radius:50%; flex-shrink:0; margin-top:4px; }
+.ib-dot.r { background:var(--red); }
+.ib-dot.m { background:var(--main); }
+.ib-dot.g { background:#333; }
+
+/* ═══════════════════════════════
+   크로스체크
+═══════════════════════════════ */
+.cc-row { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+.cc { background:var(--card); border:1px solid var(--border); border-radius:9px; padding:14px 16px; }
+.cc.ok  { border-color:rgba(0,255,208,0.18); }
+.cc.no  { border-color:rgba(255,75,75,0.15); }
+.cc-t { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.cc-name { font-size:10px; font-weight:700; color:var(--sub); letter-spacing:1px; }
+.cc-badge { font-size:9px; font-weight:700; padding:2px 6px; border-radius:3px; }
+.cc-badge.ok  { background:rgba(0,255,208,0.1); color:var(--main); }
+.cc-badge.no  { background:rgba(255,75,75,0.1); color:var(--red); }
+.cc-val { font-size:13px; font-weight:600; margin-bottom:3px; }
+.cc-sub { font-size:11px; color:#444; }
+
+/* ═══════════════════════════════
+   서브섹터 레이더
+═══════════════════════════════ */
+.ss-radar { display:flex; flex-wrap:wrap; gap:7px; align-items:flex-start; }
+.ss-q {
+  background:#0c0c0c; border:1px solid #181818; border-radius:7px;
+  padding:7px 11px; font-size:11px; font-weight:600; color:#363636;
+  white-space:nowrap;
+}
+.ss-a {
+  background:rgba(0,255,208,0.04); border:1px solid rgba(0,255,208,0.22);
+  border-radius:7px; padding:9px 13px; min-width:170px;
+}
+.ss-a .ss-nm { font-size:12px; font-weight:800; color:var(--main); margin-bottom:4px; }
+.ss-a .ss-why { font-size:10px; color:#777; margin-bottom:5px; line-height:1.35; }
+.ss-a .ss-sks { display:flex; flex-wrap:wrap; gap:3px; }
+.ss-a .ss-sk  { font-size:9px; padding:2px 6px; border-radius:3px;
+                background:rgba(0,255,208,0.07); border:1px solid rgba(0,255,208,0.15);
+                color:var(--main); }
+.ss-w {
+  background:rgba(255,75,75,0.03); border:1px solid rgba(255,75,75,0.2);
+  border-radius:7px; padding:9px 13px; min-width:150px;
+}
+.ss-w .ss-nm { font-size:12px; font-weight:800; color:var(--red); margin-bottom:4px; }
+.ss-w .ss-why { font-size:10px; color:#777; margin-bottom:5px; line-height:1.35; }
+.ss-w .ss-sks { display:flex; flex-wrap:wrap; gap:3px; }
+.ss-w .ss-sk  { font-size:9px; padding:2px 6px; border-radius:3px;
+                background:rgba(255,75,75,0.07); border:1px solid rgba(255,75,75,0.18);
+                color:var(--red); }
+
+/* ═══════════════════════════════
+   메인 레이아웃 (좌 콘텐츠 + 우 타임라인)
+═══════════════════════════════ */
+.main-layout { display:grid; grid-template-columns:1fr 300px; gap:18px; align-items:start; }
+.left-col { display:flex; flex-direction:column; gap:18px; }
+.right-col { position:sticky; top:68px; }
+
+/* ── 커플링 전광판 ── */
+.cp-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+.cp { background:var(--card); border:1px solid var(--border); border-radius:9px; padding:13px 14px; border-left:2px solid; }
+.cp.up { border-left-color:var(--main); }
+.cp.dn { border-left-color:var(--red); }
+.cp.nt { border-left-color:#222; }
+.cp-us { display:flex; align-items:baseline; gap:6px; margin-bottom:7px; }
+.cp-tk { font-size:14px; font-weight:800; }
+.cp-co { font-size:10px; color:#444; }
+.cp-chg { font-size:13px; font-weight:700; margin-left:auto; }
+.cp-chg.up { color:var(--main); }
+.cp-chg.dn { color:var(--red); }
+.cp-chg.nt { color:var(--sub); }
+.cp-logic { font-size:10px; color:#555; margin-bottom:7px; line-height:1.35; }
+.cp-kr { display:flex; flex-wrap:wrap; gap:3px; margin-bottom:7px; }
+.cp-kr-c { font-size:10px; padding:2px 6px; border-radius:3px; background:rgba(255,255,255,0.03); border:1px solid #1e1e1e; color:#888; }
+.cp-kr-c.h { background:rgba(0,255,208,0.06); border-color:rgba(0,255,208,0.18); color:var(--main); }
+.cp-kr-c.b { background:rgba(255,75,75,0.05); border-color:rgba(255,75,75,0.18); color:#ff8080; }
+.cp-sig { font-size:9px; font-weight:700; padding:2px 7px; border-radius:3px; width:fit-content; }
+.cp-sig.bull { background:rgba(0,255,208,0.07); color:var(--main); }
+.cp-sig.bear { background:rgba(255,75,75,0.07); color:var(--red); }
+.cp-sig.neut { background:#161616; color:#555; }
+
+/* ── 테마 그리드 ── */
+.theme-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.theme { background:var(--card); border:1px solid var(--border); border-radius:9px; padding:13px 14px; }
+.theme.on { background:var(--card-active); border-color:rgba(0,255,208,0.15); }
+.theme.warn { border-color:rgba(255,75,75,0.15); }
+.th-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px; }
+.th-name { font-size:12px; font-weight:700; }
+.th-sig { font-size:9px; font-weight:700; padding:2px 6px; border-radius:3px; }
+.th-sig.hot  { background:rgba(0,255,208,0.08); color:var(--main); }
+.th-sig.mid  { background:rgba(255,75,75,0.08); color:var(--red); }
+.th-sig.cold { background:#161616; color:#555; }
+.th-driver { font-size:10px; color:var(--sub); line-height:1.4; margin-bottom:7px; }
+.th-stocks { display:flex; flex-wrap:wrap; gap:3px; }
+.th-s { font-size:10px; padding:2px 6px; border-radius:3px; background:rgba(255,255,255,0.03); border:1px solid #1e1e1e; color:#888; }
+.th-s.h { background:rgba(0,255,208,0.06); border-color:rgba(0,255,208,0.18); color:var(--main); }
+
+/* ── 2열 패널 ── */
+.two-col { display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:start; }
+
+/* 수출/수주 */
+.exp-row { display:flex; align-items:center; padding:10px 0; border-bottom:1px solid #161616; }
+.exp-row:last-child { border-bottom:none; }
+.exp-name { font-size:12px; color:var(--sub); flex:1; }
+.exp-nums { display:flex; gap:8px; align-items:center; }
+.en { font-size:12px; font-weight:700; }
+.en.s { color:var(--main); }
+.en.m { color:var(--red); }
+.en.w { color:#888; }
+.bar-w { width:60px; height:3px; background:#1a1a1a; border-radius:2px; overflow:hidden; }
+.bar { height:100%; border-radius:2px; background:var(--main); }
+
+/* 컨센 */
+.cons-row { display:flex; align-items:center; gap:8px; padding:10px 0; border-bottom:1px solid #161616; }
+.cons-row:last-child { border-bottom:none; }
+.cons-name { font-size:12px; font-weight:600; flex:1; }
+.cons-tp { font-size:11px; color:var(--sub); }
+.cons-n { font-size:10px; color:#444; background:#161616; padding:1px 5px; border-radius:3px; }
+.arr { font-size:14px; font-weight:700; }
+.arr.u { color:var(--main); }
+.arr.d { color:var(--red); }
+.arr.s { color:#444; }
+
+/* 수급 */
+.osc-row { display:flex; align-items:center; padding:10px 0; border-bottom:1px solid #161616; }
+.osc-row:last-child { border-bottom:none; }
+.osc-name { font-size:12px; font-weight:600; flex:1; }
+.osc-g { font-size:10px; font-weight:700; padding:2px 7px; border-radius:4px; }
+.osc-g.a { background:rgba(0,255,208,0.1); color:var(--main); }
+.osc-g.d { background:rgba(255,75,75,0.1); color:var(--red); }
+.osc-g.n { background:#161616; color:#444; }
+.osc-v { font-size:11px; color:var(--sub); margin-left:8px; }
+
+/* 미국 동종주 */
+.peer-row { display:flex; align-items:center; gap:8px; padding:9px 0; border-bottom:1px solid #161616; }
+.peer-row:last-child { border-bottom:none; }
+.peer-tk { font-size:12px; font-weight:800; min-width:50px; }
+.peer-nm { font-size:11px; color:var(--sub); flex:1; }
+.peer-bw { width:50px; height:3px; background:#1a1a1a; border-radius:2px; overflow:hidden; }
+.peer-b { height:100%; border-radius:2px; }
+.peer-chg { font-size:12px; font-weight:700; min-width:48px; text-align:right; }
+.peer-chg.u { color:var(--main); }
+.peer-chg.d { color:var(--red); }
+
+/* ── 오늘 뉴스피드 ── */
+.today-news { display:grid; grid-template-columns:auto 1fr; gap:0; }
+.tn-time-col { display:flex; flex-direction:column; align-items:center; padding-right:14px; position:relative; }
+.tn-time-col::after { content:''; position:absolute; top:0; bottom:0; right:7px; width:1px; background:linear-gradient(180deg, var(--main) 0%, #1a1a1a 100%); }
+.tn-items { display:flex; flex-direction:column; gap:0; }
+.tn-item { display:flex; gap:14px; padding-bottom:14px; }
+.tn-t { font-size:10px; font-weight:700; color:var(--sub); padding-top:4px; min-width:36px; text-align:right; }
+.tn-dot-w { width:14px; flex-shrink:0; display:flex; justify-content:center; padding-top:5px; position:relative; z-index:1; }
+.tn-dot { width:8px; height:8px; border-radius:50%; border:1.5px solid; background:var(--bg); flex-shrink:0; }
+.tn-dot.r { border-color:var(--red); background:rgba(255,75,75,0.2); }
+.tn-dot.m { border-color:var(--main); background:rgba(0,255,208,0.15); }
+.tn-dot.g { border-color:#333; }
+.tn-card { flex:1; background:var(--card); border:1px solid var(--border); border-radius:8px; padding:10px 12px; }
+.tn-meta { display:flex; align-items:center; gap:6px; margin-bottom:4px; }
+.tn-tag { font-size:9px; font-weight:700; padding:1px 5px; border-radius:3px; }
+.tn-tag.hot { background:rgba(0,255,208,0.1); color:var(--main); }
+.tn-tag.mid { background:rgba(255,75,75,0.1); color:var(--red); }
+.tn-tag.info{ background:#161616; color:#555; }
+.tn-src { font-size:10px; color:#444; }
+.tn-hl { font-size:12px; color:#ccc; line-height:1.4; margin-bottom:5px; }
+.tn-stocks { display:flex; flex-wrap:wrap; gap:3px; }
+.tn-st { font-size:9px; padding:1px 5px; border-radius:3px; background:rgba(255,255,255,0.03); border:1px solid #1a1a1a; color:#666; }
+.tn-st.h { background:rgba(0,255,208,0.05); border-color:rgba(0,255,208,0.18); color:var(--main); }
+
+/* ── 지속 이벤트 ── */
+.ongoing-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.oc { background:var(--card); border:1px solid var(--border); border-radius:9px; padding:14px; }
+.oc-dir { font-size:14px; margin-bottom:6px; }
+.oc-title { font-size:12px; font-weight:600; margin-bottom:4px; }
+.oc-since { font-size:10px; color:#444; margin-bottom:6px; }
+.oc-desc { font-size:11px; color:var(--sub); line-height:1.4; }
+
+/* ── 캘린더 ── */
+.cal-scroll { overflow-x:auto; scrollbar-width:thin; scrollbar-color:#1e1e1e transparent; }
+.cal-track { display:flex; min-width:700px; position:relative; padding-bottom:28px; }
+.cal-line { position:absolute; left:0; right:0; top:20px; height:1px; background:linear-gradient(90deg,var(--main-dark),#1a1a1a); }
+.cal-col { flex:1; padding:0 6px; }
+.cal-ml { font-size:9px; font-weight:700; color:#2a2a2a; letter-spacing:1px; margin-bottom:14px; }
+.cal-ev { margin-top:10px; }
+.cd { width:8px; height:8px; border-radius:50%; margin-bottom:5px; }
+.cd.r { background:var(--red); box-shadow:0 0 5px var(--red); }
+.cd.m { background:var(--main); box-shadow:0 0 4px var(--main); }
+.cd.y { background:#444; }
+.cal-txt { font-size:10px; color:var(--sub); line-height:1.4; }
+
+/* ── 밸류체인 ── */
+.chain { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.cn { background:var(--card); border:1px solid var(--border); border-radius:7px; padding:9px 14px; }
+.cn.a { background:var(--card-active); border-color:rgba(0,255,208,0.2); }
+.cn-name { font-size:11px; font-weight:700; }
+.cn-sub { font-size:10px; color:var(--sub); margin-top:2px; }
+.ca { color:#2a2a2a; font-size:14px; }
+
+/* ═══════════════════════════════
+   우측 타임라인 (sticky)
+═══════════════════════════════ */
+.tl-box {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:12px; padding:18px;
+  max-height: calc(100vh - 90px);
+  overflow:hidden; display:flex; flex-direction:column;
+}
+.tl-title { font-size:9px; font-weight:800; letter-spacing:4px; color:var(--main); text-transform:uppercase; margin-bottom:14px; flex-shrink:0; }
+.tl-scroll { overflow-y:auto; flex:1; scrollbar-width:thin; scrollbar-color:#1e1e1e transparent; padding-right:2px; }
+.tl-line { position:relative; }
+.tl-rail { position:absolute; left:11px; top:0; bottom:0; width:1px; background:linear-gradient(180deg,var(--main) 0%,#003D31 50%,#1a1a1a 100%); }
+.tl-item { display:flex; gap:12px; margin-bottom:12px; }
+.tl-dc { width:24px; flex-shrink:0; display:flex; justify-content:center; padding-top:4px; }
+.tld { width:9px; height:9px; border-radius:50%; border:1.5px solid; background:var(--bg); flex-shrink:0; }
+.tld.r { border-color:var(--red); background:rgba(255,75,75,0.2); box-shadow:0 0 5px rgba(255,75,75,0.4); }
+.tld.m { border-color:var(--main); background:rgba(0,255,208,0.15); box-shadow:0 0 5px rgba(0,255,208,0.3); }
+.tld.y { border-color:#444; background:rgba(68,68,68,0.15); }
+.tld.f { border-color:#252525; border-style:dashed; background:transparent; }
+.tl-card { flex:1; background:#0d0d0d; border:1px solid #161616; border-radius:8px; padding:10px 12px; }
+.tl-card.today { background:var(--card-active); border-color:rgba(0,255,208,0.25); }
+.tl-card.future { opacity:0.45; border-style:dashed; }
+.tl-meta { display:flex; align-items:center; gap:5px; margin-bottom:4px; }
+.tl-date { font-size:10px; font-weight:700; color:var(--sub); }
+.tag { font-size:9px; font-weight:700; padding:1px 5px; border-radius:3px; }
+.tag.e { background:rgba(0,255,208,0.1); color:var(--main); }
+.tag.r { background:rgba(255,75,75,0.1); color:var(--red); }
+.tag.m { background:rgba(0,255,208,0.07); color:var(--main); }
+.tag.t { background:#161616; color:#555; }
+.tag.td{ background:rgba(0,255,208,0.15); color:var(--main); }
+.tl-ttl { font-size:11px; font-weight:600; color:var(--text); margin-bottom:3px; line-height:1.3; }
+.tl-desc { font-size:10px; color:var(--sub); line-height:1.35; }
+.fsep { text-align:center; font-size:9px; letter-spacing:3px; color:#222; text-transform:uppercase; margin:10px 0 8px; }
+
+/* scrollbar */
+::-webkit-scrollbar { width:3px; height:3px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:#1e1e1e; border-radius:2px; }
+
+/* ═══════════════════════════════════════════════
+   ANIMATION SYSTEM
+═══════════════════════════════════════════════ */
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:0.3} }
+@keyframes scanDown { 0%{top:-2%;opacity:0}5%{opacity:1}93%{opacity:0.9}100%{top:103%;opacity:0} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)} }
+@keyframes slideLeft { from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:translateX(0)} }
+@keyframes mintPulse { 0%,100%{text-shadow:0 0 8px rgba(0,255,208,0.3)}50%{text-shadow:0 0 22px rgba(0,255,208,1),0 0 44px rgba(0,255,208,0.5)} }
+@keyframes borderPulse { 0%,100%{box-shadow:0 0 6px rgba(0,255,208,0.06)}50%{box-shadow:0 0 20px rgba(0,255,208,0.4),0 0 40px rgba(0,255,208,0.15),inset 0 0 20px rgba(0,255,208,0.03)} }
+@keyframes borderPulseRed { 0%,100%{box-shadow:0 0 6px rgba(255,75,75,0.06)}50%{box-shadow:0 0 16px rgba(255,75,75,0.3),0 0 32px rgba(255,75,75,0.1)} }
+@keyframes neonFlicker { 0%,17%,19%,21%,51%,53%,100%{opacity:1;text-shadow:0 0 10px rgba(0,255,208,0.7),0 0 22px rgba(0,255,208,0.4)}18%,20%,52%{opacity:0.5;text-shadow:none} }
+@keyframes livePulse { 0%,100%{opacity:1;box-shadow:0 0 8px var(--main),0 0 16px rgba(0,255,208,0.4);transform:scale(1)}50%{opacity:0.25;box-shadow:none;transform:scale(0.75)} }
+@keyframes barFill { from{transform:scaleX(0);transform-origin:left}to{transform:scaleX(1);transform-origin:left} }
+@keyframes railGrow { from{transform:scaleY(0);transform-origin:top}to{transform:scaleY(1);transform-origin:top} }
+@keyframes shimmer { 0%{background-position:-400px 0}100%{background-position:400px 0} }
+@keyframes blinkWarn { 0%,100%{opacity:1}50%{opacity:0.25} }
+@keyframes hdrGlow { 0%,100%{opacity:0.25}50%{opacity:1} }
+@keyframes tlDotPulse { 0%,100%{box-shadow:0 0 4px rgba(0,255,208,0.3)}50%{box-shadow:0 0 12px rgba(0,255,208,0.9),0 0 24px rgba(0,255,208,0.4)} }
+@keyframes float { 0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)} }
+
+/* 적용 */
+.hdr { position:relative; }
+.hdr::after {
+  content:''; position:absolute; bottom:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg, transparent 0%, rgba(0,255,208,0.7) 40%, rgba(0,255,208,1) 50%, rgba(0,255,208,0.7) 60%, transparent 100%);
+  animation:hdrGlow 3s ease-in-out infinite;
+}
+.brand { animation:neonFlicker 9s infinite; }
+.live-dot { animation:livePulse 2.2s ease-in-out infinite !important; }
+.lbl { animation:slideLeft 0.5s ease-out both; }
+.insight-box { animation:borderPulse 2.8s ease-in-out infinite; }
+.ss-a { animation:borderPulse 2.5s ease-in-out infinite; }
+.ss-w { animation:borderPulseRed 2.5s ease-in-out infinite; }
+.ib-icon { display:inline-block; animation:float 3s ease-in-out infinite; }
+.en.s { animation:mintPulse 3s ease-in-out infinite; }
+.us-chg.up { animation:mintPulse 3.2s ease-in-out infinite; }
+.cp-chg.up { animation:mintPulse 3.4s ease-in-out infinite; }
+.bar { animation:barFill 1.1s cubic-bezier(0.22,1,0.36,1) both; }
+.tl-rail { animation:railGrow 1.4s cubic-bezier(0.22,1,0.36,1) both; animation-delay:0.5s; }
+.tl-card.today { animation:borderPulse 3s ease-in-out infinite; }
+.tld.m { animation:tlDotPulse 2.5s ease-in-out infinite; }
+.cc.no .cc-val {
+  background:linear-gradient(90deg, #161616 0%, #222 40%, #2a2a2a 50%, #222 60%, #161616 100%);
+  background-size:400px 100%; animation:shimmer 1.8s linear infinite;
+  color:transparent !important; border-radius:4px; user-select:none;
+}
+.cc.no .cc-badge { animation:blinkWarn 2s ease-in-out infinite; }
+.tbox, .cp, .theme, .cc, .ss-a, .ss-w, .oc, .cn, .tn-card {
+  transition:transform 0.22s ease, box-shadow 0.22s ease;
+}
+.tbox:hover, .cp:hover, .theme:hover, .cc:hover, .ss-a:hover, .ss-w:hover, .oc:hover, .cn:hover, .tn-card:hover {
+  transform:translateY(-3px); box-shadow:0 8px 24px rgba(0,0,0,0.4);
+}
+.cp.up:hover { box-shadow:0 8px 24px rgba(0,255,208,0.12), 0 0 0 1px rgba(0,255,208,0.2); }
+.cp.dn:hover { box-shadow:0 8px 24px rgba(255,75,75,0.1), 0 0 0 1px rgba(255,75,75,0.15); }
+.tp-score { animation:numPop 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+@keyframes numPop { 0%{transform:scale(0.65);opacity:0}70%{transform:scale(1.1)}100%{transform:scale(1);opacity:1} }
+
+/* ═══════════════════════════════
+   오늘의 조선 시장 정리 (Market Summary)
+═══════════════════════════════ */
+.market-summary {
+  background:linear-gradient(135deg, #0a1014 0%, #0a0a0a 100%);
+  border:1px solid rgba(0,255,208,0.2);
+  border-radius:12px; padding:18px 22px;
+  margin-bottom:16px; position:relative; overflow:hidden;
+}
+.market-summary::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  background:linear-gradient(90deg, transparent, rgba(0,255,208,0.9), transparent);
+  animation:hdrGlow 3s ease-in-out infinite;
+}
+.ms-head {
+  display:flex; align-items:center; gap:12px;
+  margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid #161616;
+}
+.ms-title { font-size:15px; font-weight:800; color:var(--main); letter-spacing:1px; }
+.ms-date  { font-size:11px; color:#333; margin-left:auto; }
+.ms-mood  { font-size:12px; font-weight:700; padding:4px 14px; border-radius:20px; flex-shrink:0; }
+.ms-mood.bull { background:rgba(0,255,208,0.08); color:var(--main); border:1px solid rgba(0,255,208,0.22); }
+.ms-mood.warn { background:rgba(255,75,75,0.08); color:var(--red); border:1px solid rgba(255,75,75,0.22); }
+.ms-body { display:grid; grid-template-columns:1.1fr 1.1fr 1fr 1.1fr; gap:10px; }
+.ms-col  { padding:12px 14px; background:#0d0d0d; border-radius:8px; border:1px solid #181818; }
+.ms-col.hl { background:rgba(0,255,208,0.04); border-color:rgba(0,255,208,0.18); animation:borderPulse 3s ease-in-out infinite; }
+.ms-lbl  { font-size:14px; font-weight:800; letter-spacing:0.5px; color:#888; margin-bottom:10px; }
+.ms-txt  { font-size:13px; color:#aaa; line-height:1.65; }
+.ms-txt .g { color:var(--main); font-weight:700; }
+.ms-txt .w { color:var(--red); font-weight:600; }
+.ms-txt .r { color:var(--red); font-weight:700; }
+.ms-big  { font-size:14px; font-weight:700; color:#ddd; line-height:1.6; }
+.ms-big .g { color:var(--main); font-weight:800; }
+.ms-big .w { color:var(--red); font-weight:700; }
+.ms-big .r { color:var(--red); font-weight:800; }
+
+/* ═══════════════════════════════
+   타입 시스템 + 글자 크기
+═══════════════════════════════ */
+.lbl { font-size:11px !important; }
+.tbox-title { font-size:14px !important; }
+.us-tick { font-size:14px !important; }
+.us-chg  { font-size:13px !important; }
+.kc      { font-size:11px !important; padding:3px 8px !important; }
+.ni-txt  { font-size:13px !important; color:#999 !important; }
+.ni-tag2 { font-size:10px !important; }
+.ni-st   { font-size:10px !important; padding:2px 7px !important; }
+.tp-name { font-size:15px !important; }
+.tp-reason { font-size:12px !important; line-height:1.5 !important; color:#999 !important; }
+.sig     { font-size:10px !important; padding:2px 7px !important; }
+.ss-nm   { font-size:14px !important; }
+.ss-why  { font-size:11px !important; line-height:1.45 !important; }
+.ss-sk   { font-size:10px !important; }
+.ss-q    { font-size:12px !important; }
+.exp-name { font-size:13px !important; }
+.en      { font-size:13px !important; }
+.cons-name { font-size:13px !important; }
+.cons-tp { font-size:12px !important; }
+.tn-hl   { font-size:13px !important; line-height:1.5 !important; }
+.tn-st   { font-size:10px !important; }
+.tn-tag  { font-size:10px !important; }
+.th-name { font-size:13px !important; }
+.th-driver { font-size:11px !important; }
+.th-s    { font-size:11px !important; }
+.tl-ttl  { font-size:13px !important; }
+.tl-desc { font-size:11px !important; }
+.tl-date { font-size:11px !important; }
+.oc-title { font-size:13px !important; }
+.oc-desc { font-size:12px !important; }
+.oc-since { font-size:11px !important; }
+.cp-tk   { font-size:16px !important; }
+.cp-chg  { font-size:15px !important; }
+.stitle  { font-size:18px !important; }
+.hdate   { font-size:12px !important; }
+</style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<header class="hdr">
+  <div class="hdr-l">
+    <span class="brand">STOCK BRAIN</span>
+    <div class="vl"></div>
+    <span class="stitle">조선 섹터</span>
+    <span class="chip">▲ LNG 슈퍼사이클</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="live-dot"></div>
+    <span class="hdate">2026년 05월 24일</span>
+  </div>
+</header>
+
+<div class="page">
+
+  <!-- 오늘의 조선 시장 정리 -->
+  <div class="market-summary">
+    <div class="ms-head">
+      <span class="ms-title">⚓ 오늘의 조선 시장</span>
+      <span class="ms-date">2026-05-24 (일)</span>
+      <span class="ms-mood bull">🔴 구조적 강세 · LNG 수주 호황</span>
+    </div>
+    <div class="ms-body">
+
+      <div class="ms-col hl">
+        <div class="ms-lbl">📡 핵심 신호</div>
+        <div class="ms-txt">
+          HD한국조선해양 1Q26 영업이익 <span class="g">1조 3,560억 QoQ +30.6%</span> 사상 최대.<br>
+          LIG D&A 컨센서스 <span class="g">+46.2% 상회</span>. 조선+방산 어닝사이클 동시 진행.
+        </div>
+      </div>
+
+      <div class="ms-col">
+        <div class="ms-lbl">🎯 오늘의 기회</div>
+        <div class="ms-txt">
+          <span class="g">기자재(단열/LNG)</span> — 한국카본·동성화인텍, 수주 증가 직접 수혜.<br>
+          특수선(방산함정) — 캐나다·호주 잠수함 수주 기대감 지속.
+        </div>
+      </div>
+
+      <div class="ms-col">
+        <div class="ms-lbl">⚠️ 체크 포인트</div>
+        <div class="ms-txt">
+          트럼프 이란 리스크 소강 → <span class="w">단기 방산 모멘텀 변수</span>.<br>
+          미중 회담 실패는 방산 구조적 강세 오히려 확인. 조선 영향 없음.
+        </div>
+      </div>
+
+      <div class="ms-col">
+        <div class="ms-lbl">💡 결론</div>
+        <div class="ms-big">
+          <span class="g">대형조선 3사 실적 확인</span> 구간. LNG 선가 강세 지속.<br>
+          방산함정 수주전 주시 + 기자재 서브섹터 <span class="g">선별 진입</span> 유효.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 상단 4분할 박스 -->
+  <div class="sec">
+    <div class="today-grid">
+
+      <!-- 박스1: 국내 커플링 종목 -->
+      <div class="tbox">
+        <div class="tbox-head">
+          <span class="tbox-icon">🌐</span>
+          <span class="tbox-title">국내 커플링 종목</span>
+        </div>
+        <div class="pair-item">
+          <span class="us-tick">HII</span>
+          <span class="us-chg up">+1.23%</span>
+          <span class="pair-arr">→</span>
+          <div class="kr-chips">
+            <span class="kc hot">한화오션</span>
+            <span class="kc hot">HD현대중공업</span>
+          </div>
+        </div>
+        <div class="pair-item">
+          <span class="us-tick">GD</span>
+          <span class="us-chg up">+0.87%</span>
+          <span class="pair-arr">→</span>
+          <div class="kr-chips">
+            <span class="kc hot">현대로템</span>
+            <span class="kc">한화에어로</span>
+          </div>
+        </div>
+        <div class="pair-item">
+          <span class="us-tick">LMT</span>
+          <span class="us-chg nt">-0.14%</span>
+          <span class="pair-arr">→</span>
+          <div class="kr-chips">
+            <span class="kc">LIG D&A</span>
+            <span class="kc">한화시스템</span>
+          </div>
+        </div>
+        <div class="pair-item">
+          <span class="us-tick">RTX</span>
+          <span class="us-chg up">+0.52%</span>
+          <span class="pair-arr">→</span>
+          <div class="kr-chips">
+            <span class="kc">LIG D&A</span>
+            <span class="kc">한화에어로</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 박스2: 국내 뉴스 매칭 -->
+      <div class="tbox">
+        <div class="tbox-head">
+          <span class="tbox-icon">📰</span>
+          <span class="tbox-title">국내 뉴스 매칭</span>
+        </div>
+        <div class="news-item-sm">
+          <div class="ni-top">
+            <span class="ni-tag2 hot">수주</span>
+            <span class="ni-src">조선해운</span>
+          </div>
+          <div class="ni-txt">HD한국조선해양, LNG선 4척 추가 수주 — 수주잔고 역대 최대 경신</div>
+          <div class="ni-sts">
+            <span class="ni-st h">HD한국조선해양</span>
+            <span class="ni-st h">HD현대마린엔진</span>
+          </div>
+        </div>
+        <div class="news-item-sm">
+          <div class="ni-top">
+            <span class="ni-tag2 mid">방산</span>
+            <span class="ni-src">연합</span>
+          </div>
+          <div class="ni-txt">캐나다 잠수함 사업 수주전 가시화 — 한화오션 입찰 준비 확인</div>
+          <div class="ni-sts">
+            <span class="ni-st h">한화오션</span>
+          </div>
+        </div>
+        <div class="news-item-sm">
+          <div class="ni-top">
+            <span class="ni-tag2 hot">실적</span>
+            <span class="ni-src">한국경제</span>
+          </div>
+          <div class="ni-txt">삼성중공업 1Q26 영업이익 흑자전환 — 선가 상승 마진 개선 본격화</div>
+          <div class="ni-sts">
+            <span class="ni-st h">삼성중공업</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 박스3: 당일 리포트 탑픽 -->
+      <div class="tbox">
+        <div class="tbox-head">
+          <span class="tbox-icon">🎯</span>
+          <span class="tbox-title">당일 리포트 탑픽</span>
+        </div>
+        <div class="toppick-item">
+          <div class="tp-top">
+            <span class="tp-name">HD한국조선해양</span>
+            <span class="tp-score s1">7/9점</span>
+          </div>
+          <div class="tp-sigs">
+            <span class="sig on">수주 최대</span>
+            <span class="sig on">어닝서프</span>
+            <span class="sig on">TP↑</span>
+            <span class="sig off">수급</span>
+          </div>
+          <div class="tp-reason">1Q26 사상 최대 실적 + TP 570K. 수급 확인 시 즉시 탑픽</div>
+        </div>
+        <div class="toppick-item">
+          <div class="tp-top">
+            <span class="tp-name">LIG D&A</span>
+            <span class="tp-score s1">7/9점</span>
+          </div>
+          <div class="tp-sigs">
+            <span class="sig on">어닝서프+46%</span>
+            <span class="sig on">TP 1,230K</span>
+            <span class="sig on">방산수출</span>
+            <span class="sig off">수급</span>
+          </div>
+          <div class="tp-reason">컨센 +46.2% 상회. 지정학 강세 직결. 미장커플링 RTX↑ 확인</div>
+        </div>
+        <div class="toppick-item">
+          <div class="tp-top">
+            <span class="tp-name">한국카본</span>
+            <span class="tp-score s3">4/9점</span>
+          </div>
+          <div class="tp-sigs">
+            <span class="sig on">LNG선수요</span>
+            <span class="sig off">리포트</span>
+            <span class="sig off">수급</span>
+          </div>
+          <div class="tp-reason">LNG선 발주 급증 → 단열재 수혜. 리포트·수급 인입 시 점수 급상승</div>
+        </div>
+      </div>
+
+      <!-- 박스4: 외국인/기관 수급빈집 탑픽 -->
+      <div class="insight-box">
+        <div class="ib-head">
+          <span class="ib-icon">🔍</span>
+          <span class="ib-lbl">외국인/기관 수급빈집 탑픽</span>
+        </div>
+        <div class="ib-body">
+          수급오실레이터 <span class="h">xlsm 인제스트 대기</span>.<br>
+          수주 호황 + 어닝서프 → <span class="h">기관 유입 가능성 높음</span>.<br>
+          선점 후보: <span class="h">한국카본</span> · <span class="h">동성화인텍</span>
+        </div>
+        <div class="ib-bullets">
+          <div class="ib-b">
+            <div class="ib-dot m"></div>
+            <span>LNG 기자재 — 주가 덜 오른 서브섹터 빈집 가능성 ↑</span>
+          </div>
+          <div class="ib-b">
+            <div class="ib-dot m"></div>
+            <span>현대미포조선 — PC탱커 수주 증가 상대적 소외</span>
+          </div>
+          <div class="ib-b">
+            <div class="ib-dot r"></div>
+            <span>대형주 3사 — 이미 외국인 비중 높음 → 추격 부담</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 크로스체크 (L1~L4) -->
+  <div class="sec">
+    <div class="lbl">L1~L4 크로스체크</div>
+    <div class="cc-row">
+      <div class="cc ok">
+        <div class="cc-t">
+          <span class="cc-name">L1 글로벌유동성</span>
+          <span class="cc-badge ok">긍정</span>
+        </div>
+        <div class="cc-val" style="color:var(--main)">미국 금리 동결 기조</div>
+        <div class="cc-sub">달러 안정 → 선가·환율 우호적</div>
+      </div>
+      <div class="cc ok">
+        <div class="cc-t">
+          <span class="cc-name">L2 미국시장</span>
+          <span class="cc-badge ok">긍정</span>
+        </div>
+        <div class="cc-val" style="color:var(--main)">HII +1.23% / GD +0.87%</div>
+        <div class="cc-sub">미국 방산주 동반 상승 → 커플링 신호 ✅</div>
+      </div>
+      <div class="cc ok">
+        <div class="cc-t">
+          <span class="cc-name">L3 한국시장</span>
+          <span class="cc-badge ok">긍정</span>
+        </div>
+        <div class="cc-val" style="color:var(--main)">코스피 외인 매수세</div>
+        <div class="cc-sub">외국인 조선·방산 순매수 지속</div>
+      </div>
+      <div class="cc ok">
+        <div class="cc-t">
+          <span class="cc-name">L4 국제정세</span>
+          <span class="cc-badge ok">구조적 강세</span>
+        </div>
+        <div class="cc-val" style="color:var(--main)">지정학 긴장 장기화</div>
+        <div class="cc-sub">미중 회담 실패 → 방산 수요 구조적 확대</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 서브섹터 레이더 -->
+  <div class="sec">
+    <div class="lbl">서브섹터 레이더 (조선 10개)</div>
+    <div class="ss-radar">
+
+      <div class="ss-a">
+        <div class="ss-nm">대형조선 3사</div>
+        <div class="ss-why">1Q26 사상 최대 실적. LNG 선가 강세. 수주잔고 역대 최대 경신.</div>
+        <div class="ss-sks">
+          <span class="ss-sk">HD한국조선해양</span>
+          <span class="ss-sk">삼성중공업</span>
+          <span class="ss-sk">한화오션</span>
+        </div>
+      </div>
+
+      <div class="ss-a">
+        <div class="ss-nm">기자재 단열/LNG</div>
+        <div class="ss-why">LNG선 발주 급증으로 단열재 수요 폭발. 한국카본 공급 부족 가능성.</div>
+        <div class="ss-sks">
+          <span class="ss-sk">한국카본</span>
+          <span class="ss-sk">동성화인텍</span>
+          <span class="ss-sk">세진중공업</span>
+        </div>
+      </div>
+
+      <div class="ss-a">
+        <div class="ss-nm">특수선/방산함정</div>
+        <div class="ss-why">캐나다·호주 잠수함 수주전. 지정학 강세 → 방산함정 수주 확대.</div>
+        <div class="ss-sks">
+          <span class="ss-sk">한화오션</span>
+          <span class="ss-sk">HD현대중공업</span>
+        </div>
+      </div>
+
+      <div class="ss-a">
+        <div class="ss-nm">LNG/친환경선</div>
+        <div class="ss-why">IMO 2027 탄소규제 → LNG 전환 수요. 선가 프리미엄 유지.</div>
+        <div class="ss-sks">
+          <span class="ss-sk">HD한국조선해양</span>
+          <span class="ss-sk">한화오션</span>
+        </div>
+      </div>
+
+      <div class="ss-q">기자재 엔진/기계</div>
+      <div class="ss-q">기자재 배관/밸브</div>
+      <div class="ss-q">기자재 도장/방식</div>
+      <div class="ss-q">중형조선</div>
+      <div class="ss-q">해양플랜트 FLNG/FPSO</div>
+      <div class="ss-q">크루즈/특수선</div>
+
+    </div>
+  </div>
+
+  <!-- 메인 레이아웃 (좌 + 우 타임라인) -->
+  <div class="main-layout">
+    <div class="left-col">
+
+      <!-- 미국 커플링 전광판 -->
+      <div class="sec">
+        <div class="lbl">미국 커플링 — 조선·방산 동종주</div>
+        <div class="cp-grid">
+
+          <div class="cp up">
+            <div class="cp-us">
+              <span class="cp-tk">HII</span>
+              <span class="cp-co">Huntington Ingalls</span>
+              <span class="cp-chg up">+1.23%</span>
+            </div>
+            <div class="cp-logic">미 해군 조선소 → 한국 방산함정 커플링. HII 수주 증가 = 한화오션·HD현대중공업 수혜 신호.</div>
+            <div class="cp-kr">
+              <span class="cp-kr-c h">한화오션</span>
+              <span class="cp-kr-c h">HD현대중공업</span>
+            </div>
+            <div class="cp-sig bull">🔴 커플링 강</div>
+          </div>
+
+          <div class="cp up">
+            <div class="cp-us">
+              <span class="cp-tk">GD</span>
+              <span class="cp-co">General Dynamics</span>
+              <span class="cp-chg up">+0.87%</span>
+            </div>
+            <div class="cp-logic">방산차량·함정 복합 → K2·레드백 수출 연동. GD 강세는 글로벌 지상방산 수요 확인.</div>
+            <div class="cp-kr">
+              <span class="cp-kr-c h">현대로템</span>
+              <span class="cp-kr-c">한화에어로</span>
+            </div>
+            <div class="cp-sig bull">🟠 커플링 중</div>
+          </div>
+
+          <div class="cp up">
+            <div class="cp-us">
+              <span class="cp-tk">RTX</span>
+              <span class="cp-co">Raytheon</span>
+              <span class="cp-chg up">+0.52%</span>
+            </div>
+            <div class="cp-logic">유도무기·미사일 → 천궁·신궁 수출 연동. NATO 수요 강세 = LIG D&A 수혜.</div>
+            <div class="cp-kr">
+              <span class="cp-kr-c h">LIG D&A</span>
+              <span class="cp-kr-c">한화에어로</span>
+            </div>
+            <div class="cp-sig bull">🟠 커플링 중</div>
+          </div>
+
+          <div class="cp nt">
+            <div class="cp-us">
+              <span class="cp-tk">LMT</span>
+              <span class="cp-co">Lockheed Martin</span>
+              <span class="cp-chg nt">-0.14%</span>
+            </div>
+            <div class="cp-logic">항공·방산 복합. T-50·차세대전투기 커플링. 단기 약세는 노이즈.</div>
+            <div class="cp-kr">
+              <span class="cp-kr-c">한국항공우주</span>
+              <span class="cp-kr-c">한화에어로</span>
+            </div>
+            <div class="cp-sig neut">— 중립</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 테마/드라이버 -->
+      <div class="sec">
+        <div class="lbl">조선 핵심 테마</div>
+        <div class="theme-grid">
+
+          <div class="theme on">
+            <div class="th-top">
+              <span class="th-name">LNG 슈퍼사이클</span>
+              <span class="th-sig hot">🔴 최강</span>
+            </div>
+            <div class="th-driver">LNG선 선가 역대 최고 + 발주 급증. 2027~2030 인도 스케줄 모두 채워지는 중. 기자재 단열재 공급 부족 우려.</div>
+            <div class="th-stocks">
+              <span class="th-s h">HD한국조선해양</span>
+              <span class="th-s h">삼성중공업</span>
+              <span class="th-s h">한국카본</span>
+              <span class="th-s h">동성화인텍</span>
+            </div>
+          </div>
+
+          <div class="theme on">
+            <div class="th-top">
+              <span class="th-name">방산함정 수출</span>
+              <span class="th-sig hot">🔴 가속</span>
+            </div>
+            <div class="th-driver">캐나다 잠수함 12척 + 호주 구축함 수주전. 지정학 긴장 → 동맹국 해군력 증강 수요 급등.</div>
+            <div class="th-stocks">
+              <span class="th-s h">한화오션</span>
+              <span class="th-s h">HD현대중공업</span>
+              <span class="th-s">한화시스템</span>
+            </div>
+          </div>
+
+          <div class="theme on">
+            <div class="th-top">
+              <span class="th-name">IMO 탄소규제</span>
+              <span class="th-sig hot">🟠 가시화</span>
+            </div>
+            <div class="th-driver">2027년 CII 규제 시행 → 노후선 교체 발주 폭발 예상. 친환경 이중연료선 단가 프리미엄 +20~30%.</div>
+            <div class="th-stocks">
+              <span class="th-s h">한화오션</span>
+              <span class="th-s h">HD한국조선해양</span>
+              <span class="th-s">HSD엔진</span>
+            </div>
+          </div>
+
+          <div class="theme">
+            <div class="th-top">
+              <span class="th-name">PC탱커/컨테이너</span>
+              <span class="th-sig cold">🟡 모니터링</span>
+            </div>
+            <div class="th-driver">중형조선 수요. LNG에 비해 선가 상승 속도 느림. 현대미포 소외 구간.</div>
+            <div class="th-stocks">
+              <span class="th-s">현대미포조선</span>
+              <span class="th-s">한진중공업</span>
+            </div>
+          </div>
+
+          <div class="theme warn">
+            <div class="th-top">
+              <span class="th-name">이란 리스크 소강</span>
+              <span class="th-sig mid">⚠️ 단기 변수</span>
+            </div>
+            <div class="th-driver">트럼프 이란 협상 진전 시 단기 방산 모멘텀 약화 가능. 구조적 강세에 영향 없음 — 노이즈 수준.</div>
+            <div class="th-stocks">
+              <span class="th-s b" style="background:rgba(255,75,75,0.06);border-color:rgba(255,75,75,0.2);color:#ff8080;">한화에어로</span>
+              <span class="th-s b" style="background:rgba(255,75,75,0.06);border-color:rgba(255,75,75,0.2);color:#ff8080;">LIG D&A</span>
+            </div>
+          </div>
+
+          <div class="theme">
+            <div class="th-top">
+              <span class="th-name">해양플랜트 FLNG</span>
+              <span class="th-sig cold">— 대기</span>
+            </div>
+            <div class="th-driver">유가 안정 + LNG 가격 강세 → FLNG 재발주 기대. 삼성중공업 수혜 예상 종목. 아직 미가시화.</div>
+            <div class="th-stocks">
+              <span class="th-s">삼성중공업</span>
+              <span class="th-s">HD한국조선해양</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 수주/수출 + 컨센서스 2열 -->
+      <div class="sec">
+        <div class="two-col">
+
+          <!-- 선박 수주·수출 데이터 -->
+          <div class="card">
+            <div class="lbl" style="margin-bottom:14px;">선박 수주·수출 신호</div>
+            <div class="exp-row">
+              <span class="exp-name">선박 수출 (전체) YoY</span>
+              <div class="exp-nums">
+                <span class="en s">+38.2%</span>
+                <div class="bar-w"><div class="bar" style="width:75%"></div></div>
+              </div>
+            </div>
+            <div class="exp-row">
+              <span class="exp-name">LNG선 선가 (YoY)</span>
+              <div class="exp-nums">
+                <span class="en s">+22.4%</span>
+                <div class="bar-w"><div class="bar" style="width:60%"></div></div>
+              </div>
+            </div>
+            <div class="exp-row">
+              <span class="exp-name">컨테이너선 선가 (YoY)</span>
+              <div class="exp-nums">
+                <span class="en w">+8.1%</span>
+                <div class="bar-w"><div class="bar" style="width:25%;background:#555"></div></div>
+              </div>
+            </div>
+            <div class="exp-row">
+              <span class="exp-name">수주잔고 (HD한국조선)</span>
+              <div class="exp-nums">
+                <span class="en s">역대 최대</span>
+                <div class="bar-w"><div class="bar" style="width:95%"></div></div>
+              </div>
+            </div>
+            <div class="exp-row">
+              <span class="exp-name">글로벌 조선 점유율 (한국)</span>
+              <div class="exp-nums">
+                <span class="en s">36.7%</span>
+                <div class="bar-w"><div class="bar" style="width:55%"></div></div>
+              </div>
+            </div>
+            <div style="margin-top:10px;font-size:11px;color:#333;padding:8px 10px;background:#0d0d0d;border-radius:6px;">
+              * 수출통계 raw 파일 인제스트 후 자동 업데이트
+            </div>
+          </div>
+
+          <!-- 대표종목 컨센서스 변화 -->
+          <div class="card">
+            <div class="lbl" style="margin-bottom:14px;">대표종목 컨센서스 변화</div>
+            <div class="cons-row">
+              <span class="cons-name">HD한국조선해양</span>
+              <span class="cons-tp">TP 570,000</span>
+              <span class="cons-n">5사</span>
+              <span class="arr u">↑</span>
+            </div>
+            <div class="cons-row">
+              <span class="cons-name">LIG D&A</span>
+              <span class="cons-tp">TP 1,230,000</span>
+              <span class="cons-n">3사</span>
+              <span class="arr u">↑</span>
+            </div>
+            <div class="cons-row">
+              <span class="cons-name">한화에어로스페이스</span>
+              <span class="cons-tp">TP 2,000,000</span>
+              <span class="cons-n">4사</span>
+              <span class="arr u">↑</span>
+            </div>
+            <div class="cons-row">
+              <span class="cons-name">삼성중공업</span>
+              <span class="cons-tp">TP 18,000</span>
+              <span class="cons-n">3사</span>
+              <span class="arr u">↑</span>
+            </div>
+            <div class="cons-row">
+              <span class="cons-name">한화오션</span>
+              <span class="cons-tp">TP 85,000</span>
+              <span class="cons-n">2사</span>
+              <span class="arr s">→</span>
+            </div>
+            <div class="cons-row">
+              <span class="cons-name">현대미포조선</span>
+              <span class="cons-tp">TP 130,000</span>
+              <span class="cons-n">2사</span>
+              <span class="arr s">→</span>
+            </div>
+            <div class="cons-row">
+              <span class="cons-name">한국카본</span>
+              <span class="cons-tp">TP 미입력</span>
+              <span class="cons-n">—</span>
+              <span class="arr s">—</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 수급오실레이터 -->
+      <div class="sec">
+        <div class="card">
+          <div class="lbl" style="margin-bottom:14px;">수급오실레이터 — 빈집 등급</div>
+          <div class="osc-row">
+            <span class="osc-name">HD한국조선해양</span>
+            <span class="osc-g n">미입력</span>
+            <span class="osc-v">xlsm 인제스트 대기</span>
+          </div>
+          <div class="osc-row">
+            <span class="osc-name">한화오션</span>
+            <span class="osc-g n">미입력</span>
+            <span class="osc-v">xlsm 인제스트 대기</span>
+          </div>
+          <div class="osc-row">
+            <span class="osc-name">LIG D&A</span>
+            <span class="osc-g n">미입력</span>
+            <span class="osc-v">xlsm 인제스트 대기</span>
+          </div>
+          <div class="osc-row">
+            <span class="osc-name">한화에어로스페이스</span>
+            <span class="osc-g n">미입력</span>
+            <span class="osc-v">xlsm 인제스트 대기</span>
+          </div>
+          <div class="osc-row">
+            <span class="osc-name">한국카본</span>
+            <span class="osc-g n">미입력</span>
+            <span class="osc-v">xlsm 인제스트 대기</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 뉴스 타임라인 -->
+      <div class="sec">
+        <div class="lbl">오늘 뉴스 피드</div>
+        <div class="card">
+          <div style="display:flex;gap:14px;position:relative;">
+            <div style="position:absolute;left:25px;top:8px;bottom:8px;width:1px;background:linear-gradient(180deg,var(--main) 0%,#1a1a1a 100%);"></div>
+            <div style="display:flex;flex-direction:column;gap:14px;width:100%;">
+
+              <div class="tn-item">
+                <span class="tn-t">09:32</span>
+                <div class="tn-dot-w"><div class="tn-dot m"></div></div>
+                <div class="tn-card">
+                  <div class="tn-meta">
+                    <span class="tn-tag hot">수주</span>
+                    <span class="tn-src">조선해운신문</span>
+                  </div>
+                  <div class="tn-hl">HD한국조선해양, LNG운반선 4척 계약 체결 — 수주잔고 30.2조원 돌파</div>
+                  <div class="tn-stocks">
+                    <span class="tn-st h">HD한국조선해양</span>
+                    <span class="tn-st h">HD현대마린엔진</span>
+                    <span class="tn-st h">한국카본</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="tn-item">
+                <span class="tn-t">10:15</span>
+                <div class="tn-dot-w"><div class="tn-dot r"></div></div>
+                <div class="tn-card">
+                  <div class="tn-meta">
+                    <span class="tn-tag mid">지정학</span>
+                    <span class="tn-src">연합뉴스</span>
+                  </div>
+                  <div class="tn-hl">트럼프 이란 제재 일부 완화 검토 — 중동 리스크 단기 소강 가능성</div>
+                  <div class="tn-stocks">
+                    <span class="tn-st">한화에어로</span>
+                    <span class="tn-st">LIG D&A</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="tn-item">
+                <span class="tn-t">11:40</span>
+                <div class="tn-dot-w"><div class="tn-dot m"></div></div>
+                <div class="tn-card">
+                  <div class="tn-meta">
+                    <span class="tn-tag hot">방산</span>
+                    <span class="tn-src">헤럴드경제</span>
+                  </div>
+                  <div class="tn-hl">한화오션, 캐나다 잠수함 사업 RFP 제출 완료 확인 — 수주 가능성 70% 평가</div>
+                  <div class="tn-stocks">
+                    <span class="tn-st h">한화오션</span>
+                    <span class="tn-st">한화에어로</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="tn-item">
+                <span class="tn-t">14:22</span>
+                <div class="tn-dot-w"><div class="tn-dot m"></div></div>
+                <div class="tn-card">
+                  <div class="tn-meta">
+                    <span class="tn-tag hot">실적</span>
+                    <span class="tn-src">이데일리</span>
+                  </div>
+                  <div class="tn-hl">삼성중공업 1Q26 영업이익 1,240억 — 흑자전환 + 연간 가이던스 상향</div>
+                  <div class="tn-stocks">
+                    <span class="tn-st h">삼성중공업</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 지속 이벤트 -->
+      <div class="sec">
+        <div class="lbl">지속 영향 이벤트</div>
+        <div class="ongoing-grid">
+          <div class="oc">
+            <div class="oc-dir">🔴</div>
+            <div class="oc-title">LNG 슈퍼사이클</div>
+            <div class="oc-since">2025~</div>
+            <div class="oc-desc">에너지 전환 + 안보용 LNG 수요 폭증. 조선 수주 호황 2028년까지 지속 전망. 선가 역대 최고 유지.</div>
+          </div>
+          <div class="oc">
+            <div class="oc-dir">🔴</div>
+            <div class="oc-title">지정학 긴장 장기화</div>
+            <div class="oc-since">2025~</div>
+            <div class="oc-desc">우크라이나 전쟁 + 미중 갈등 → 동맹국 방위비 GDP 3% 증가. 방산함정·무기 수출 구조적 확대.</div>
+          </div>
+          <div class="oc">
+            <div class="oc-dir">🔴</div>
+            <div class="oc-title">IMO 탄소규제 (CII)</div>
+            <div class="oc-since">2027~</div>
+            <div class="oc-desc">노후선 조기 퇴역 촉진. 친환경 이중연료선 발주 급증. 한국 조선사 기술 격차 → 수주 독점 구간.</div>
+          </div>
+          <div class="oc">
+            <div class="oc-dir">🟡</div>
+            <div class="oc-title">이란 리스크 소강</div>
+            <div class="oc-since">2026-05~</div>
+            <div class="oc-desc">단기 방산 모멘텀 약화 변수. 구조적 방산 강세에는 영향 없음. 노이즈 구간 활용 저가 매수 기회.</div>
+          </div>
+          <div class="oc">
+            <div class="oc-dir">🟠</div>
+            <div class="oc-title">캐나다·호주 함정 수주전</div>
+            <div class="oc-since">2025~</div>
+            <div class="oc-desc">캐나다 잠수함 12척 + 호주 구축함 수주전 진행 중. 한화오션 수주 시 수조원 규모 계약 예상.</div>
+          </div>
+          <div class="oc">
+            <div class="oc-dir">🔴</div>
+            <div class="oc-title">미국 동맹국 방위비 증가</div>
+            <div class="oc-since">2025~</div>
+            <div class="oc-desc">NATO 회원국 GDP 3% 방위비 목표. 폴란드·루마니아 이미 K9·레드백 계약. 지속 수주 파이프라인.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 캘린더 -->
+      <div class="sec">
+        <div class="lbl">주요 일정 캘린더</div>
+        <div class="card">
+          <div class="cal-scroll">
+            <div class="cal-track">
+              <div class="cal-line"></div>
+              <div class="cal-col">
+                <div class="cal-ml">5월 하순</div>
+                <div class="cal-ev">
+                  <div class="cd m"></div>
+                  <div class="cal-txt">삼성중공업 IR<br>투자설명회</div>
+                </div>
+              </div>
+              <div class="cal-col">
+                <div class="cal-ml">6월</div>
+                <div class="cal-ev">
+                  <div class="cd r"></div>
+                  <div class="cal-txt">IMO 총회<br>탄소규제 최종안</div>
+                </div>
+              </div>
+              <div class="cal-col">
+                <div class="cal-ml">6월 말</div>
+                <div class="cal-ev">
+                  <div class="cd r"></div>
+                  <div class="cal-txt">캐나다 잠수함<br>수주 결정 예상</div>
+                </div>
+              </div>
+              <div class="cal-col">
+                <div class="cal-ml">7월</div>
+                <div class="cal-ev">
+                  <div class="cd m"></div>
+                  <div class="cal-txt">2Q26 실적시즌<br>조선 3사 발표</div>
+                </div>
+              </div>
+              <div class="cal-col">
+                <div class="cal-ml">8월</div>
+                <div class="cal-ev">
+                  <div class="cd y"></div>
+                  <div class="cal-txt">마린텍 부산<br>조선 전시회</div>
+                </div>
+              </div>
+              <div class="cal-col">
+                <div class="cal-ml">하반기</div>
+                <div class="cal-ev">
+                  <div class="cd y"></div>
+                  <div class="cal-txt">호주 구축함<br>수주전 입찰</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 밸류체인 -->
+      <div class="sec">
+        <div class="lbl">조선 밸류체인</div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div class="chain">
+            <span style="font-size:10px;color:#333;min-width:80px;">LNG 수주</span>
+            <div class="cn a"><div class="cn-name">HD한국조선해양</div><div class="cn-sub">수주잔고 1위</div></div>
+            <span class="ca">→</span>
+            <div class="cn a"><div class="cn-name">한국카본</div><div class="cn-sub">LNG 단열재</div></div>
+            <span class="ca">+</span>
+            <div class="cn a"><div class="cn-name">동성화인텍</div><div class="cn-sub">LNG 단열재</div></div>
+            <span class="ca">+</span>
+            <div class="cn a"><div class="cn-name">HSD엔진</div><div class="cn-sub">ME 엔진</div></div>
+          </div>
+          <div class="chain">
+            <span style="font-size:10px;color:#333;min-width:80px;">방산 수출</span>
+            <div class="cn a"><div class="cn-name">한화오션</div><div class="cn-sub">잠수함·구축함</div></div>
+            <span class="ca">+</span>
+            <div class="cn a"><div class="cn-name">한화에어로</div><div class="cn-sub">전투기·지상무기</div></div>
+            <span class="ca">+</span>
+            <div class="cn a"><div class="cn-name">LIG D&A</div><div class="cn-sub">유도무기</div></div>
+            <span class="ca">+</span>
+            <div class="cn"><div class="cn-name">현대로템</div><div class="cn-sub">K2 전차</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 우측: 타임라인 -->
+    <div class="right-col">
+      <div class="tl-box">
+        <div class="tl-title">📅 이벤트 타임라인</div>
+        <div class="tl-scroll">
+          <div class="tl-line">
+            <div class="tl-rail"></div>
+
+            <!-- 과거 이벤트 -->
+            <div class="tl-item">
+              <div class="tl-dc"><div class="tld y"></div></div>
+              <div class="tl-card">
+                <div class="tl-meta">
+                  <span class="tl-date">2026-05-08</span>
+                  <span class="tag e">실적</span>
+                </div>
+                <div class="tl-ttl">LIG D&A 1Q26 어닝서프 +46.2%</div>
+                <div class="tl-desc">TP 1,230K. 방산 어닝사이클 본격 확인.</div>
+              </div>
+            </div>
+
+            <div class="tl-item">
+              <div class="tl-dc"><div class="tld y"></div></div>
+              <div class="tl-card">
+                <div class="tl-meta">
+                  <span class="tl-date">2026-05-08</span>
+                  <span class="tag e">실적</span>
+                </div>
+                <div class="tl-ttl">HD한국조선해양 1Q26 영업이익 1.36조</div>
+                <div class="tl-desc">QoQ +30.6% 사상 최대. LNG선가 마진 본격화.</div>
+              </div>
+            </div>
+
+            <div class="tl-item">
+              <div class="tl-dc"><div class="tld y"></div></div>
+              <div class="tl-card">
+                <div class="tl-meta">
+                  <span class="tl-date">2026-05-18</span>
+                  <span class="tag r">지정학</span>
+                </div>
+                <div class="tl-ttl">트럼프 이란 소강 발언</div>
+                <div class="tl-desc">단기 방산 변동성 주의. 구조적 강세 훼손 없음.</div>
+              </div>
+            </div>
+
+            <!-- 오늘 -->
+            <div class="tl-item">
+              <div class="tl-dc"><div class="tld m"></div></div>
+              <div class="tl-card today">
+                <div class="tl-meta">
+                  <span class="tl-date">2026-05-24</span>
+                  <span class="tag td">TODAY</span>
+                </div>
+                <div class="tl-ttl">미중 회담 결렬 확인</div>
+                <div class="tl-desc">지정학 장기화 확정. 방산 구조적 강세 재확인. 조선 영향 없음.</div>
+              </div>
+            </div>
+
+            <div class="fsep">— 예정 —</div>
+
+            <!-- 미래 이벤트 -->
+            <div class="tl-item">
+              <div class="tl-dc"><div class="tld f"></div></div>
+              <div class="tl-card future">
+                <div class="tl-meta">
+                  <span class="tl-date">2026-06</span>
+                  <span class="tag m">IMO</span>
+                </div>
+                <div class="tl-ttl">IMO 총회 — 탄소규제 최종안</div>
+                <div class="tl-desc">CII 규제 강화 시 노후선 교체 발주 폭발 예상.</div>
+              </div>
+            </div>
+
+            <div class="tl-item">
+              <div class="tl-dc"><div class="tld f"></div></div>
+              <div class="tl-card future">
+                <div class="tl-meta">
+                  <span class="tl-date">2026-06 말</span>
+                  <span class="tag r">방산</span>
+                </div>
+                <div class="tl-ttl">캐나다 잠수함 수주 결정 예상</div>
+                <div class="tl-desc">한화오션 수주 시 수조원 규모. 결정 전후 변동성 주의.</div>
+              </div>
+            </div>
+
+            <div class="tl-item">
+              <div class="tl-dc"><div class="tld f"></div></div>
+              <div class="tl-card future">
+                <div class="tl-meta">
+                  <span class="tl-date">2026-07</span>
+                  <span class="tag e">실적</span>
+                </div>
+                <div class="tl-ttl">2Q26 실적시즌 — 조선 3사</div>
+                <div class="tl-desc">2Q26 선가 반영 마진 추가 개선 예상. 연간 가이던스 재상향 기대.</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- .main-layout -->
+
+</div><!-- .page -->
+
+</body>
+</html>

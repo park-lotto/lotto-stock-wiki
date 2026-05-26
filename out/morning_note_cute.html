@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=800">
+  <title>오늘의 전략 — 로또의 주식인사이트</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #FFF2E8;
+      font-family: 'Noto Sans KR', sans-serif;
+      width: 800px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .card {
+      background: #FFFFFF;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.13);
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: linear-gradient(135deg, #FF6B6B 0%, #FF9A3C 55%, #FFD460 100%);
+      padding: 22px 28px 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header-deco1 { position:absolute; top:10px; right:36px; font-size:26px; opacity:0.55; }
+    .header-deco2 { position:absolute; bottom:10px; left:180px; font-size:18px; opacity:0.45; }
+    .header-deco3 { position:absolute; top:18px; right:200px; font-size:14px; opacity:0.4; }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .channel-badge {
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.95);
+      background: rgba(255,255,255,0.25);
+      padding: 4px 13px;
+      border-radius: 20px;
+      letter-spacing: 0.3px;
+    }
+
+    .date-badge {
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.9);
+      letter-spacing: 0.3px;
+    }
+
+    .header-title {
+      font-size: 44px;
+      font-weight: 900;
+      color: #FFFFFF;
+      letter-spacing: -1px;
+      text-shadow: 0 3px 14px rgba(0,0,0,0.18);
+      line-height: 1;
+    }
+
+    .header-sub {
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.85);
+      margin-top: 5px;
+      letter-spacing: 0.2px;
+    }
+
+    /* ── SIGNAL BAR ── */
+    .signal-bar {
+      background: #FFF8F0;
+      border-bottom: 1.5px solid #FFE0C0;
+      padding: 9px 24px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .signal-label {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: #FF9A3C;
+      margin-right: 4px;
+    }
+
+    .chip {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 11px;
+      border-radius: 12px;
+    }
+
+    .chip-red  { background: #FFECEC; color: #E53935; }
+    .chip-org  { background: #FFF3E0; color: #E65100; }
+    .chip-yel  { background: #FFFDE7; color: #F57F17; }
+    .chip-grn  { background: #E8F5E9; color: #2E7D32; }
+
+    /* ── GRID ── */
+    .sections {
+      padding: 16px 20px 18px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .sc {
+      background: #FAFAFA;
+      border: 1.5px solid #F0F0F0;
+      border-radius: 14px;
+      padding: 13px 14px 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* top accent bar */
+    .sc::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: 14px 14px 0 0;
+    }
+
+    .c1::before { background: #FF6B6B; }
+    .c2::before { background: #FF9A3C; }
+    .c3::before { background: #4D96FF; }
+    .c4::before { background: #52C87A; }
+    .c5::before { background: #C77DFF; }
+    .c6::before { background: #00C9BD; }
+    .c7::before { background: #FF85A1; }
+    .c8::before { background: #FFD460; }
+    .c9::before { background: #A0A0A0; }
+
+    .sc-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      font-size: 10px;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .c1 .sc-num { background: #FF6B6B; }
+    .c2 .sc-num { background: #FF9A3C; }
+    .c3 .sc-num { background: #4D96FF; }
+    .c4 .sc-num { background: #52C87A; }
+    .c5 .sc-num { background: #C77DFF; }
+    .c6 .sc-num { background: #00C9BD; }
+    .c7 .sc-num { background: #FF85A1; }
+    .c8 .sc-num { background: #E6B800; }
+    .c9 .sc-num { background: #888; }
+
+    .sc-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+
+    .sc-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+
+    .sc-list li {
+      font-size: 11px;
+      color: #555;
+      line-height: 1.45;
+      padding-left: 11px;
+      position: relative;
+    }
+
+    .sc-list li::before {
+      content: '·';
+      position: absolute;
+      left: 1px;
+      color: #BBB;
+      font-weight: 900;
+      font-size: 14px;
+      line-height: 1.1;
+    }
+
+    .sc-sig {
+      display: inline-flex;
+      align-items: center;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 9px;
+    }
+
+    .sig-red  { background:#FFECEC; color:#E53935; }
+    .sig-org  { background:#FFF3E0; color:#E65100; }
+    .sig-yel  { background:#FFFDE7; color:#F57F17; }
+    .sig-grn  { background:#E8F5E9; color:#2E7D32; }
+    .sig-gray { background:#F5F5F5; color:#777; }
+
+    /* ── FOOTER ── */
+    .footer {
+      background: #FFF8F0;
+      border-top: 1.5px solid #FFE0C0;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .ft-brand { font-size: 13px; font-weight: 800; color: #FF6B6B; }
+    .ft-sub   { font-size: 11px; color: #AAAAAA; }
+    .ft-tag   {
+      font-size: 11px; font-weight: 700; color: #FF9A3C;
+      background: rgba(255,154,60,0.1);
+      padding: 3px 11px; border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-deco1">⭐</div>
+    <div class="header-deco2">✨</div>
+    <div class="header-deco3">★</div>
+    <div class="header-top">
+      <div class="channel-badge">📈 로또의 주식인사이트</div>
+      <!-- ↓ 날짜는 매일 여기만 수정 -->
+      <div class="date-badge">2026년 5월 26일 (화)</div>
+    </div>
+    <div class="header-title">오늘의 전략</div>
+    <div class="header-sub">STOCK BRAIN · 데이터가 판단하게 만든다</div>
+  </div>
+
+  <!-- SIGNAL BAR -->
+  <div class="signal-bar">
+    <div class="signal-label">TODAY</div>
+    <!-- ↓ 오늘 핫 섹터 -->
+    <div class="chip chip-red">반도체 🔴</div>
+    <div class="chip chip-red">조선 🔴</div>
+    <div class="chip chip-org">방산 🟠</div>
+    <div class="chip chip-org">로봇 🟠</div>
+    <div class="chip chip-org">바이오 🟠</div>
+    <div class="chip chip-yel">전력기기 🟡</div>
+  </div>
+
+  <!-- SECTIONS 3×3 -->
+  <div class="sections">
+
+    <!-- 01 HBM -->
+    <div class="sc c1">
+      <div class="sc-num">01</div>
+      <div class="sc-title">🔴 HBM 반도체</div>
+      <ul class="sc-list">
+        <li>SK하이닉스 Vera Rubin HBM4E 독점 가능성 95%</li>
+        <li>M15X 70K/월 램프업 · DRAM Capa 35% 점유</li>
+        <li>NVDA AI 수요 구조적 확대 → 직결 수혜</li>
+      </ul>
+      <div class="sc-sig sig-red">🔴 강력 탑픽</div>
+    </div>
+
+    <!-- 02 반도체 소부장 -->
+    <div class="sc c2">
+      <div class="sc-num">02</div>
+      <div class="sc-title">🔴 반도체 소부장</div>
+      <ul class="sc-list">
+        <li>삼성 파운드리 22.8조 테슬라 딜 → 낙수 체인</li>
+        <li>AMAT 수주 선행 → 국내 장비주 12~18개월 후행</li>
+        <li>솔브레인·동진쎄미켐 국산화 탑픽 후보</li>
+      </ul>
+      <div class="sc-sig sig-red">🔴 탑픽 후보</div>
+    </div>
+
+    <!-- 03 조선 -->
+    <div class="sc c3">
+      <div class="sc-num">03</div>
+      <div class="sc-title">🔴 조선 MASGA</div>
+      <ul class="sc-list">
+        <li>HD한국조선해양 수주잔고 89조 역대최고</li>
+        <li>미 해군 + 상선 + AI전력 삼각축 호황</li>
+        <li>신조선가 184pt · 중고선가 역전 = 쇼티지 극심</li>
+      </ul>
+      <div class="sc-sig sig-red">🔴 강력 탑픽</div>
+    </div>
+
+    <!-- 04 방산 -->
+    <div class="sc c4">
+      <div class="sc-num">04</div>
+      <div class="sc-title">🟠 방산</div>
+      <ul class="sc-list">
+        <li>한화에어로스페이스 수주잔고 118조 역대최고</li>
+        <li>K9 자주포·천무 해외 수출 지속 확대</li>
+        <li>LIG넥스원 천궁-II 수출비중 30% 상회</li>
+      </ul>
+      <div class="sc-sig sig-org">🟠 관심 주목</div>
+    </div>
+
+    <!-- 05 로봇 -->
+    <div class="sc c5">
+      <div class="sc-num">05</div>
+      <div class="sc-title">🟠 로봇</div>
+      <ul class="sc-list">
+        <li>레인보우로보틱스 · 삼성전자 파트너십 확대</li>
+        <li>Physical AI 플랫폼 수요 본격화</li>
+        <li>2026 2Q 핵심 모멘텀 분기 진입</li>
+      </ul>
+      <div class="sc-sig sig-org">🟠 관심 주목</div>
+    </div>
+
+    <!-- 06 바이오 -->
+    <div class="sc c6">
+      <div class="sc-num">06</div>
+      <div class="sc-title">🟠 바이오</div>
+      <ul class="sc-list">
+        <li>레고켐바이오 ADC 글로벌 딜 진행 중</li>
+        <li>한미약품 GLP-1 비만치료제 임상 단계</li>
+        <li>LLY·NVO 미국 커플링 → 국내 수혜</li>
+      </ul>
+      <div class="sc-sig sig-org">🟠 딜 모니터링</div>
+    </div>
+
+    <!-- 07 LNG -->
+    <div class="sc c7">
+      <div class="sc-num">07</div>
+      <div class="sc-title">🟠 대미투자 LNG</div>
+      <ul class="sc-list">
+        <li>카타르 잠수함 수주 협상 진행</li>
+        <li>대미투자 LNG 연계 → 조선·기자재 동시 수혜</li>
+        <li>한국카본·HSD엔진 밸류체인 연동</li>
+      </ul>
+      <div class="sc-sig sig-org">🟠 이벤트 대기</div>
+    </div>
+
+    <!-- 08 전력기기 ESS -->
+    <div class="sc c8">
+      <div class="sc-num">08</div>
+      <div class="sc-title">🟡 전력기기·ESS</div>
+      <ul class="sc-list">
+        <li>효성중공업 북미 생산 슬롯 2Q 본격화</li>
+        <li>AI 데이터센터 전력 수요 구조적 확대</li>
+        <li>ESS 설치 가속화 → 2차전지 소재 연동</li>
+      </ul>
+      <div class="sc-sig sig-yel">🟡 대기 중</div>
+    </div>
+
+    <!-- 09 매크로 -->
+    <div class="sc c9">
+      <div class="sc-num">09</div>
+      <div class="sc-title">💡 매크로 체크</div>
+      <ul class="sc-list">
+        <li>9월 금리인하 확률 47% · 달러 약세 지속</li>
+        <li>VIX 16.7 · SOX +1.99% · 나스닥 호조</li>
+        <li>원달러 1,521원 → 수출주 환차익 유리</li>
+      </ul>
+      <div class="sc-sig sig-grn">💡 Risk-On 유지</div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="ft-brand">📈 로또의 주식인사이트</div>
+    <div class="ft-sub">STOCK BRAIN · 매일 아침 오늘의 전략</div>
+    <div class="ft-tag">@lotto_stock_insight</div>
+  </div>
+
+</div>
+</body>
+</html>

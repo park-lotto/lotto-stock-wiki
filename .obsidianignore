@@ -1,0 +1,8 @@
+node_modules/
+remotion-stock/
+.agents/
+.claude/
+.git/
+demos/
+out/
+raw/
