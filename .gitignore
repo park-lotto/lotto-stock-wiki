@@ -13,3 +13,10 @@ demos/
 .claude/
 .agents/
 data/
+
+# 카카오 OAuth 비밀
+scripts/kakao/.env
+scripts/kakao/.tokens.json
+
+# Playwright MCP cache
+.playwright-mcp/

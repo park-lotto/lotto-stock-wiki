@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@900&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 1080px; height: 3000px;
+    background: radial-gradient(ellipse at top right, #102530 0%, #0a0f14 50%, #050a0e 100%);
+    color: #e8f4f1;
+    font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+    font-weight: 700;
+    overflow: hidden;
+    position: relative;
+    -webkit-font-smoothing: antialiased;
+  }
+  .glow-mint { position: absolute; top: -200px; right: -200px; width: 800px; height: 800px; background: radial-gradient(circle, rgba(94,234,212,0.22) 0%, transparent 65%); filter: blur(20px); }
+  .glow-amber { position: absolute; top: 1100px; left: -250px; width: 700px; height: 700px; background: radial-gradient(circle, rgba(251,191,36,0.12) 0%, transparent 65%); filter: blur(20px); }
+  .glow-red { position: absolute; bottom: -200px; right: -150px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(220,38,38,0.10) 0%, transparent 65%); filter: blur(20px); }
+  .card { padding: 80px 70px; position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; gap: 56px; }
+
+  .header { display: flex; justify-content: space-between; align-items: center; }
+  .tag { display: inline-flex; align-items: center; gap: 10px; padding: 16px 32px; background: linear-gradient(90deg, #dc2626, #ef4444); color: #fff; border-radius: 999px; font-size: 26px; font-weight: 900; letter-spacing: 0.5px; box-shadow: 0 12px 36px rgba(220,38,38,0.4); }
+  .brand { font-size: 22px; color: #5eead4; letter-spacing: 4px; font-weight: 900; opacity: 0.7; }
+
+  .name { font-size: 145px; font-weight: 900; background: linear-gradient(135deg, #5eead4 0%, #38bdf8 50%, #818cf8 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -5px; line-height: 1; filter: drop-shadow(0 8px 30px rgba(94,234,212,0.35)); }
+  .code-row { margin-top: 18px; display: flex; align-items: baseline; gap: 16px; }
+  .code { font-size: 42px; color: #94a3b8; font-weight: 800; letter-spacing: 2px; }
+  .sector { font-size: 28px; color: #5eead4; font-weight: 800; padding: 8px 22px; background: rgba(94,234,212,0.1); border-radius: 999px; border: 1px solid rgba(94,234,212,0.3); }
+
+  .score-block { padding: 48px 52px; background: linear-gradient(135deg, rgba(94,234,212,0.08) 0%, rgba(251,191,36,0.05) 100%); border: 2px solid rgba(94,234,212,0.25); border-radius: 36px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 16px 48px rgba(94,234,212,0.08); }
+  .score-num { font-size: 150px; font-weight: 900; color: #fbbf24; letter-spacing: -5px; line-height: 0.9; text-shadow: 0 0 60px rgba(251,191,36,0.4); }
+  .score-num small { font-size: 70px; opacity: 0.5; }
+  .score-meta { text-align: right; }
+  .score-meta .lab { font-size: 26px; color: #94a3b8; font-weight: 800; letter-spacing: 1px; }
+  .score-meta .val { font-size: 42px; color: #5eead4; font-weight: 900; margin-top: 8px; letter-spacing: -1px; }
+
+  .summary { font-size: 38px; line-height: 1.55; color: #f1f5f9; font-weight: 800; border-left: 6px solid #5eead4; padding: 8px 0 8px 28px; letter-spacing: -0.5px; }
+  .summary strong { color: #fbbf24; font-weight: 900; text-shadow: 0 0 30px rgba(251,191,36,0.3); }
+  .summary .mute { color: #94a3b8; font-weight: 700; }
+
+  .section { padding: 40px 44px; background: rgba(15,24,32,0.6); border-radius: 30px; border: 1px solid rgba(94,234,212,0.15); }
+  .section-title { font-size: 24px; color: #94a3b8; font-weight: 900; letter-spacing: 3px; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
+  .section-title .dot { width: 10px; height: 10px; border-radius: 50%; background: #5eead4; box-shadow: 0 0 12px #5eead4; }
+
+  .crow { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px dashed rgba(94,234,212,0.1); font-size: 30px; }
+  .crow:last-child { border-bottom: none; }
+  .firm { color: #cbd5e1; font-weight: 800; }
+  .tp { color: #5eead4; font-weight: 900; }
+  .tp-up { color: #fbbf24; font-weight: 900; font-size: 24px; margin-left: 12px; }
+
+  .event { display: flex; gap: 18px; padding: 20px 0; border-bottom: 1px dashed rgba(94,234,212,0.1); }
+  .event:last-child { border-bottom: none; }
+  .event-date { color: #5eead4; font-weight: 900; font-size: 22px; min-width: 110px; padding-top: 4px; }
+  .event-body { color: #cbd5e1; font-size: 26px; line-height: 1.4; font-weight: 700; }
+  .event-body strong { color: #fbbf24; font-weight: 900; }
+
+  .schedule { display: flex; gap: 16px; padding: 18px 0; border-bottom: 1px dashed rgba(94,234,212,0.1); align-items: center; }
+  .schedule:last-child { border-bottom: none; }
+  .dday { padding: 8px 18px; background: linear-gradient(90deg, #f59e0b, #fbbf24); color: #0a0f14; border-radius: 999px; font-weight: 900; font-size: 20px; min-width: 80px; text-align: center; }
+  .sch-body { color: #cbd5e1; font-size: 26px; font-weight: 700; }
+
+  .signals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .sig { padding: 26px 8px; border-radius: 20px; background: linear-gradient(135deg, rgba(94,234,212,0.12) 0%, rgba(94,234,212,0.05) 100%); color: #5eead4; font-size: 20px; font-weight: 900; text-align: center; border: 1.5px solid rgba(94,234,212,0.3); letter-spacing: -0.3px; }
+  .sig.off { background: rgba(71,85,105,0.1); color: #475569; border-color: rgba(71,85,105,0.15); }
+  .sig-icon { font-size: 24px; display: block; margin-bottom: 6px; }
+
+  .footer { margin-top: auto; text-align: center; font-size: 22px; color: #475569; letter-spacing: 4px; font-weight: 800; padding-top: 32px; border-top: 1px solid rgba(94,234,212,0.08); }
+</style>
+</head>
+<body>
+<div class="glow-mint"></div><div class="glow-amber"></div><div class="glow-red"></div>
+<div class="card">
+
+  <div class="header"><span class="tag">🔴 오늘의 탑픽</span><span class="brand">STOCK BRAIN</span></div>
+
+  <div>
+    <div class="name">삼성전자</div>
+    <div class="code-row"><span class="code">005930</span><span class="sector">반도체 #1</span></div>
+  </div>
+
+  <div class="score-block">
+    <div class="score-num">8<small>/9</small></div>
+    <div class="score-meta"><div class="lab">탑픽 스코어</div><div class="val">TP 39~55만원</div></div>
+  </div>
+
+  <div class="summary">
+    파운드리 리스크 해소<br>+ 메모리 <strong>전략자산</strong> 전환<br>
+    <span class="mute">2nm GAA Groq·Apple·Qualcomm 수주 가시화</span>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="dot"></span>증권사 컨센서스 TOP 5</div>
+    <div class="crow"><span class="firm">미래에셋</span><span><span class="tp">550,000원</span><span class="tp-up">↑+14.6%</span></span></div>
+    <div class="crow"><span class="firm">SK증권</span><span><span class="tp">500,000원</span></span></div>
+    <div class="crow"><span class="firm">전진투자</span><span><span class="tp">500,000원</span></span></div>
+    <div class="crow"><span class="firm">NH투자</span><span><span class="tp">490,000원</span><span class="tp-up">↑+58.1%</span></span></div>
+    <div class="crow"><span class="firm">하나증권</span><span><span class="tp">430,000원</span></span></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="dot"></span>최신 이벤트</div>
+    <div class="event"><div class="event-date">5/27</div><div class="event-body">미래에셋 TP <strong>480→550K</strong> [리레이팅 +14.6%]</div></div>
+    <div class="event"><div class="event-date">5/26</div><div class="event-body">NH투자 TP <strong>310→490K (+58.1%)</strong><br>한화투자 TP 330→390K (+18.2%)</div></div>
+    <div class="event"><div class="event-date">5/21</div><div class="event-body"><strong>RSU 전환 결정</strong> + iM증권 신규 39만</div></div>
+    <div class="event"><div class="event-date">5/18</div><div class="event-body">SK·전진투자 TP <strong>500K</strong> 강조 (Strong Buy)</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="dot"></span>일정·촉매</div>
+    <div class="schedule"><div class="dday">D-4</div><div class="sch-body">6/1 COMPUTEX 젠슨황 — Vera Rubin 로드맵</div></div>
+    <div class="schedule"><div class="dday">3Q</div><div class="sch-body">파운드리 4nm 가동률 100% + BEP</div></div>
+    <div class="schedule"><div class="dday">2027</div><div class="sch-body">P5 NAND 공장 착공 재개</div></div>
+  </div>
+
+  <div class="signals">
+    <div class="sig"><span class="sig-icon">✓</span>수급빈집</div>
+    <div class="sig"><span class="sig-icon">✓</span>수출 🔴</div>
+    <div class="sig"><span class="sig-icon">✓</span>판가</div>
+    <div class="sig"><span class="sig-icon">✓</span>어닝서프</div>
+    <div class="sig"><span class="sig-icon">✓</span>리포트신고가</div>
+    <div class="sig"><span class="sig-icon">✓</span>미국커플링</div>
+    <div class="sig off"><span class="sig-icon">✗</span>정책이슈</div>
+    <div class="sig"><span class="sig-icon">✓</span>일정재료</div>
+  </div>
+
+  <div class="footer">2026-05-28 · 로또의 주식인사이트</div>
+</div>
+</body>
+</html>
