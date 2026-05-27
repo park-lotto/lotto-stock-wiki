@@ -1,11 +1,9 @@
 {
-  "markdown.styles": [
-    ".vscode/markdown.css"
-  ],
-  "markdown.preview.fontFamily": "'Pretendard Variable', Pretendard, 'Noto Sans KR', -apple-system, sans-serif",
-  "markdown.preview.fontSize": 16,
-  "markdown.preview.lineHeight": 1.75,
   "workbench.editorAssociations": {
     "*.md": "vscode.markdown.preview.editor"
-  }
+  },
+  "markdown.preview.fontSize": 14,
+  "markdown.preview.lineHeight": 1.6,
+  "markdown.preview.fontFamily": "'Noto Sans KR', 'Malgun Gothic', sans-serif",
+  "markdown.styles": [".vscode/markdown-preview.css"]
 }

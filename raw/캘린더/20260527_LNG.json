@@ -1,0 +1,65 @@
+[
+  {
+    "date": "2026-06-01",
+    "company": null,
+    "event": "2026년 5월 수출입 동향 발표 (잠정치)",
+    "type": "기타",
+    "importance": "MID",
+    "desc": "한국의 5월 수출입 실적 발표, 조선 및 철강 산업의 수출 동향 확인 가능.",
+    "confirmed": false
+  },
+  {
+    "date": "2026-06-02",
+    "company": null,
+    "event": "미국 알래스카 LNG 서밋 개최 및 한국/일본 투자 공식 발표 압박",
+    "type": "정책",
+    "importance": "HIGH",
+    "desc": "미국 정부가 한국 및 일본에 알래스카 LNG 프로젝트 투자 의향서 서명을 압박하며, 국내 조선사들의 FLNG 및 LNG선 수주 기대감 증폭. 또한 미국 루이지애나주 LNG 사업(부유식 LNG 터미널 포함) 발표 예정.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-17",
+    "company": "HD현대중공업 외",
+    "event": "2026 국제 해양·안전대전 (KOREA OCEAN EXPO 2026) 개막",
+    "type": "전시",
+    "importance": "HIGH",
+    "desc": "조선, 선박, 해양안전, AI, 자율운항, 친환경 선박 등 미래 해양기술을 조명하는 수도권 유일 해양 특화 전시회. HD현대 등 주요 조선소 참여 예정.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-19",
+    "company": "HD현대중공업 외",
+    "event": "2026 국제 해양·안전대전 (KOREA OCEAN EXPO 2026) 폐막",
+    "type": "전시",
+    "importance": "HIGH",
+    "desc": "조선, 선박, 해양안전, AI, 자율운항, 친환경 선박 등 미래 해양기술을 조명하는 수도권 유일 해양 특화 전시회. HD현대 등 주요 조선소 참여 예정.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-23",
+    "company": "한화오션",
+    "event": "CITIC CLSA Northeast Asia Forum (Seoul) 참가",
+    "type": "IR",
+    "importance": "MID",
+    "desc": "한화오션의 기업설명회 참여, 2분기 사업 전망 및 투자 포인트 발표 예상.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-24",
+    "company": "한화오션",
+    "event": "CITIC CLSA Northeast Asia Forum (Seoul) 참가",
+    "type": "IR",
+    "importance": "MID",
+    "desc": "한화오션의 기업설명회 참여, 2분기 사업 전망 및 투자 포인트 발표 예상.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-30",
+    "company": "한화오션",
+    "event": "캐나다 잠수함 사업(CPSP) 결과 발표 예상",
+    "type": "기타",
+    "importance": "HIGH",
+    "desc": "한화오션의 캐나다 잠수함 사업 수주 여부 결정, 방산 부문 실적 및 주가에 영향 예상.",
+    "confirmed": false
+  }
+]

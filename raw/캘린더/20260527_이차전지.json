@@ -1,0 +1,47 @@
+[
+  {
+    "date": "2026-06-21",
+    "company": null,
+    "event": "EVS 39 (The 39th International Electric Vehicle Symposium & Exhibition)",
+    "type": "전시",
+    "importance": "HIGH",
+    "desc": "세계 최대 규모의 전기차 및 미래 모빌리티 산업 전시회 및 학술대회. 전기차 기술, 인프라, 정책, 시장 동향 등 전기모빌리티 산업 전반 논의.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-24",
+    "company": null,
+    "event": "EVS 39 (The 39th International Electric Vehicle Symposium & Exhibition) 종료",
+    "type": "전시",
+    "importance": "HIGH",
+    "desc": "세계 최대 규모의 전기차 및 미래 모빌리티 산업 전시회 및 학술대회 종료.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-01",
+    "company": null,
+    "event": "유럽연합(EU) 2차전지 관련 정책 모멘텀 본격화 예상",
+    "type": "정책",
+    "importance": "HIGH",
+    "desc": "유럽연합(EU)의 전기차(EV) 및 에너지저장장치(ESS) 수요 확대를 위한 정책 발표 및 강화가 6월부터 본격화될 것으로 전망됨.",
+    "confirmed": false
+  },
+  {
+    "date": "2026-06-30",
+    "company": "LG에너지솔루션",
+    "event": "2분기 실적 턴어라운드 기대 (ESS 매출 급증)",
+    "type": "실적발표",
+    "importance": "HIGH",
+    "desc": "북미 신규 생산 거점(랜싱, UC2) 양산 시작으로 ESS 매출이 전 분기 대비 50% 이상 급증하며 2분기 흑자 전환 기대.",
+    "confirmed": false
+  },
+  {
+    "date": "2026-06-30",
+    "company": "삼성SDI",
+    "event": "ESS 및 전기차 배터리 수주 확대 지속",
+    "type": "수주",
+    "importance": "MID",
+    "desc": "메르세데스-벤츠 하이니켈 NCM 배터리 및 ESS용 LFP 각형 배터리 대규모 수주에 이어 추가 수주 기대감 지속.",
+    "confirmed": false
+  }
+]

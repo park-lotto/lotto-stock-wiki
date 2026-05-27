@@ -1,0 +1,138 @@
+/* 로또의 주식 — Markdown Preview 스타일 */
+body {
+  font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  font-size: 14px;
+  line-height: 1.7;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 32px;
+  color: #e0e0e0;
+  background-color: #1a1a2e;
+}
+
+h1 {
+  color: #00ffcc;
+  border-bottom: 2px solid #00ffcc;
+  padding-bottom: 8px;
+  font-size: 1.8em;
+}
+
+h2 {
+  color: #00d4aa;
+  border-bottom: 1px solid #2a2a4a;
+  padding-bottom: 4px;
+  margin-top: 32px;
+  font-size: 1.3em;
+}
+
+h3 {
+  color: #80ffdd;
+  font-size: 1.1em;
+  margin-top: 20px;
+}
+
+/* 테이블 */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 12px 0;
+  font-size: 13px;
+}
+
+th {
+  background-color: #0f3460;
+  color: #00ffcc;
+  padding: 8px 12px;
+  text-align: left;
+  border: 1px solid #2a2a5a;
+}
+
+td {
+  padding: 6px 12px;
+  border: 1px solid #2a2a4a;
+  color: #c8c8d0;
+}
+
+tr:nth-child(even) td {
+  background-color: #1e1e3a;
+}
+
+tr:hover td {
+  background-color: #252545;
+}
+
+/* 코드 */
+code {
+  background-color: #0f3460;
+  color: #00ffcc;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-family: 'Consolas', 'D2Coding', monospace;
+}
+
+pre {
+  background-color: #0d1b2a;
+  border: 1px solid #2a3a5a;
+  border-radius: 6px;
+  padding: 16px;
+  overflow-x: auto;
+}
+
+pre code {
+  background: none;
+  color: #80ffdd;
+  padding: 0;
+}
+
+/* 인용구 */
+blockquote {
+  border-left: 4px solid #00ffcc;
+  background-color: #0f2040;
+  margin: 12px 0;
+  padding: 12px 16px;
+  color: #a0d8d0;
+  border-radius: 0 4px 4px 0;
+}
+
+/* 리스트 */
+ul, ol {
+  padding-left: 20px;
+}
+
+li {
+  margin: 4px 0;
+  color: #c8c8d0;
+}
+
+/* 링크 */
+a {
+  color: #00ccaa;
+  text-decoration: none;
+}
+a:hover {
+  color: #00ffcc;
+  text-decoration: underline;
+}
+
+/* 구분선 */
+hr {
+  border: none;
+  border-top: 1px solid #2a2a4a;
+  margin: 24px 0;
+}
+
+/* 강조 */
+strong {
+  color: #ffe066;
+}
+
+em {
+  color: #a0c8ff;
+}
+
+/* 신호 색상 (이모지 옆 텍스트) */
+li:has(> *:first-child[title="🔴"]),
+td:first-child:contains("🔴") {
+  color: #ff6060;
+}

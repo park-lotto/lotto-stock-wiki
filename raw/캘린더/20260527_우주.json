@@ -1,0 +1,38 @@
+[
+  {
+    "date": "2026-06-09",
+    "company": null,
+    "event": "NASA Artemis III Mission Astronaut Announcement",
+    "type": "기타",
+    "importance": "MID",
+    "desc": "NASA의 아르테미스 III 임무에 배정될 우주비행사 발표 예정.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-09",
+    "company": null,
+    "event": "2026 대한민국 국방산업발전대전",
+    "type": "전시",
+    "importance": "MID",
+    "desc": "대전컨벤션센터에서 개최되며, 국방 우주과학기술 세미나를 통해 미래 육군 우주전력 강화 방안 논의 예정.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-12",
+    "company": "미래에셋증권·스피어",
+    "event": "SpaceX IPO (상장 목표일)",
+    "type": "기타",
+    "importance": "HIGH",
+    "desc": "일론 머스크의 스페이스X가 6월 12일 나스닥 상장을 목표로 하고 있으며, 미래에셋증권이 인수단에 참여하고 스피어 등 관련 종목에 영향 예상.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-16",
+    "company": "컨텍",
+    "event": "ISS 2026 (국제 우주 컨퍼런스)",
+    "type": "전시",
+    "importance": "HIGH",
+    "desc": "컨텍 스페이스그룹과 대전광역시가 공동 주최하는 아시아 최대 규모의 국제 우주 컨퍼런스로, 차세대 위성, 발사체, 광통신, 데이터 활용 등 우주산업 전주기 세션 및 기업 전시, B2B 미팅 진행.",
+    "confirmed": true
+  }
+]

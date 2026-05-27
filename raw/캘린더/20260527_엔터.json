@@ -1,0 +1,38 @@
+[
+  {
+    "date": "2026-05-27",
+    "company": null,
+    "event": "엑스러브 미니 2집 '아이,갓' 발매",
+    "type": "기타",
+    "importance": "MID",
+    "desc": "신인 아티스트 엑스러브의 미니 2집 발매로 음원 시장 반응 주목.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-05-30",
+    "company": null,
+    "event": "제22회 서원밸리 자선 그린콘서트",
+    "type": "전시",
+    "importance": "MID",
+    "desc": "전 세계 K-POP 팬들이 찾는 글로벌 한류 축제로, 엔터 산업 전반의 관심 증대 예상.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-05-30",
+    "company": null,
+    "event": "G-Dragon 대만 K-Spark 음악 페스티벌 헤드라이너",
+    "type": "기타",
+    "importance": "HIGH",
+    "desc": "K-POP 대표 아티스트 G-Dragon의 해외 페스티벌 참여로 글로벌 팬덤 활동 부각.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-30",
+    "company": null,
+    "event": "K-POP VIBE SEOUL K-POP 댄스 경연대회 참가 신청 마감",
+    "type": "기타",
+    "importance": "LOW",
+    "desc": "외국인 주민 및 유학생 대상 K-POP 댄스 경연대회로 K-POP 문화 확산에 기여.",
+    "confirmed": true
+  }
+]

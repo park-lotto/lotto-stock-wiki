@@ -1,0 +1,47 @@
+[
+  {
+    "date": "2026-06-16",
+    "company": null,
+    "event": "2026 해상풍력 공급망 컨퍼런스 전시회 개최",
+    "type": "전시",
+    "importance": "MID",
+    "desc": "풍력협회와 전라남도청 공동 주최로 여수세계박람회장에서 해상풍력 공급망 관련 컨퍼런스 및 전시회 개최 (6월 16일~17일).",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-XX",
+    "company": null,
+    "event": "러시아 금속 야금 공정 및 철강 제품 박람회 2026",
+    "type": "전시",
+    "importance": "LOW",
+    "desc": "러시아 모스크바 EXPOCENTRE에서 2026년 6월 중 개최 예정인 금속 및 철강 제품 박람회.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-XX",
+    "company": null,
+    "event": "K-스틸법(철강산업 경쟁력 강화 및 탄소중립 전환) 시행",
+    "type": "정책",
+    "importance": "HIGH",
+    "desc": "철강산업의 구조 전환과 경쟁력 제고를 위한 '철강산업 경쟁력 강화 및 탄소중립 전환을 위한 특별법'이 2026년 6월 시행될 예정.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-XX",
+    "company": null,
+    "event": "산업부 '철스크랩 산업 육성방안' 발표",
+    "type": "정책",
+    "importance": "MID",
+    "desc": "산업통상자원부가 상반기 중 '철스크랩 산업 육성방안'을 발표할 예정으로, 철강산업 고도화 방안의 후속 조치.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-01",
+    "company": null,
+    "event": "EU 한국산 철강 관세 50% 상향 및 쿼터 축소 시행",
+    "type": "정책",
+    "importance": "HIGH",
+    "desc": "유럽연합(EU) 의회가 한국산 철강제품 관세를 기존 25%에서 50%로 상향하고 무관세 수입쿼터를 절반으로 축소하는 강화안을 승인했으며, 7월 1일부터 시행될 예정.",
+    "confirmed": true
+  }
+]

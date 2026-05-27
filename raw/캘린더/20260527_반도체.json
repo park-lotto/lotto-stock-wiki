@@ -1,0 +1,74 @@
+[
+  {
+    "date": "2026-05-27",
+    "company": "한국은행",
+    "event": "5월 기업경기조사 및 경제심리지수 발표",
+    "type": "기타",
+    "importance": "HIGH",
+    "desc": "5월 제조업 기업심리지수 '낙관' 전환, 반도체 등 IT 제품 수출 호조 영향 확인.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-05-29",
+    "company": "한국반도체디스플레이기술학회",
+    "event": "2026년 국내학술대회",
+    "type": "전시",
+    "importance": "MID",
+    "desc": "AI를 활용한 반도체·디스플레이 및 에너지 관련 학술대회 개최.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-01",
+    "company": "null",
+    "event": "5월 수출입 동향 발표 (반도체 품목 포함)",
+    "type": "기타",
+    "importance": "HIGH",
+    "desc": "산업통상자원부의 월별 수출입 동향 발표 예정, 반도체 수출 데이터 확인 가능.",
+    "confirmed": false
+  },
+  {
+    "date": "2026-06-04",
+    "company": "테크윙",
+    "event": "기업설명회(IR) 개최",
+    "type": "IR",
+    "importance": "HIGH",
+    "desc": "기관투자자 및 애널리스트 대상 사업 진행 현황 및 전망, Cube Prober 사업 및 Memory/SOC Test Handler 사업 진행 현황 및 전망, 반도체 검사시장 성장 전망에 따른 기회 설명.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-23",
+    "company": "반도체공학회",
+    "event": "Physical AI WS (Physical AI Workshop)",
+    "type": "전시",
+    "importance": "LOW",
+    "desc": "Physical AI 관련 기술 워크숍 개최.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-23",
+    "company": "슈나이더 일렉트릭 코리아",
+    "event": "이노베이션 데이(Innovation Day: EcoStruxure for Semiconductor 2026)",
+    "type": "전시",
+    "importance": "MID",
+    "desc": "AI 기반 반도체 제조 혁신 방안 제시, 전력 운영 안정성 및 효율 확보, AI 기반 산업 자동화 및 스마트 장비 구축 논의.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-23",
+    "company": "대한전자공학회",
+    "event": "2026년 하계종합학술대회",
+    "type": "전시",
+    "importance": "MID",
+    "desc": "전자공학 전반의 학술대회로, 반도체 관련 세션 포함 가능성.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-30",
+    "company": "정부",
+    "event": "'K-온디바이스 AI반도체' 국책 과제 발표",
+    "type": "정책",
+    "importance": "HIGH",
+    "desc": "국내 시스템 반도체 생태계 육성을 위한 'K-온디바이스 AI반도체' 국책 과제 발표 예상.",
+    "confirmed": false
+  }
+]

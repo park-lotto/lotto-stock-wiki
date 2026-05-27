@@ -1,0 +1,137 @@
+[
+  {
+    "date": "2026-05-27",
+    "company": "기아",
+    "event": "UBS Asian Investment Conference 참석",
+    "type": "IR",
+    "importance": "HIGH",
+    "desc": "글로벌 투자자 대상 기업설명회 및 투자 유치 활동 (5/26~5/28 진행)",
+    "confirmed": true
+  },
+  {
+    "date": "2026-05-27",
+    "company": "기아",
+    "event": "CITIC CLSA Korea Access Day in US 2026 참석",
+    "type": "IR",
+    "importance": "HIGH",
+    "desc": "미국 투자자 대상 기업설명회 및 투자 유치 활동 (5/26~5/28 진행)",
+    "confirmed": true
+  },
+  {
+    "date": "2026-05-27",
+    "company": "현대차",
+    "event": "KIS Korea Corporate Day 2026 참석",
+    "type": "IR",
+    "importance": "HIGH",
+    "desc": "여의도 금융투자교육원에서 진행되는 기업설명회 참석",
+    "confirmed": true
+  },
+  {
+    "date": "2026-05-27",
+    "company": null,
+    "event": "JSAE 자동차 엔지니어링 박람회",
+    "type": "전시",
+    "importance": "MID",
+    "desc": "일본 요코하마에서 개최되는 국제 자동차 엔지니어링 전시회 (5/27~5/29 진행)",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-03",
+    "company": null,
+    "event": "AUTOEXPO AFRICA - KENYA 2026",
+    "type": "전시",
+    "importance": "LOW",
+    "desc": "케냐 나이로비에서 개최되는 자동차 박람회 (6/3~6/5 진행)",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-03",
+    "company": null,
+    "event": "전기차 배터리 정보 제공 의무화 시행",
+    "type": "정책",
+    "importance": "HIGH",
+    "desc": "전기차 배터리 제조사, 용량, 전압 등 정보 공개 의무화",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-09",
+    "company": null,
+    "event": "MOBILITY LIVE MIDDLE EAST 2026",
+    "type": "전시",
+    "importance": "LOW",
+    "desc": "아랍에미리트 두바이에서 개최되는 모빌리티 컨퍼런스 및 박람회 (6/9~6/10 진행)",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-11",
+    "company": null,
+    "event": "베트남 자동차 및 운송 산업 박람회 2026",
+    "type": "전시",
+    "importance": "LOW",
+    "desc": "베트남 하노이에서 개최되는 자동차, 운송 및 부품 산업 전시회 (6/11~6/13 진행)",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-12",
+    "company": null,
+    "event": "KLASSIKWELT BODENSEE 2026",
+    "type": "전시",
+    "importance": "LOW",
+    "desc": "독일 프리드리히스하펜에서 개최되는 클래식 자동차 및 오토바이 전시회 (6/12~6/14 진행)",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-17",
+    "company": null,
+    "event": "MOVE LONDON 2026",
+    "type": "전시",
+    "importance": "LOW",
+    "desc": "영국 런던에서 개최되는 모빌리티 컨퍼런스 및 박람회 (6/17~6/18 진행)",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-20",
+    "company": null,
+    "event": "2026년 5월 자동차 산업 동향 발표 (수출 데이터 포함)",
+    "type": "기타",
+    "importance": "HIGH",
+    "desc": "산업통상자원부의 월별 자동차 생산, 내수, 수출 동향 발표 (예상)",
+    "confirmed": false
+  },
+  {
+    "date": "2026-06-21",
+    "company": null,
+    "event": "39차 국제 전기차 학술대회 및 전시회 2026 (EVS 39)",
+    "type": "전시",
+    "importance": "HIGH",
+    "desc": "미국 롱비치에서 개최되는 세계 최대 규모의 전기차 및 미래 모빌리티 산업 전시회 및 학술대회 (6/21~6/24 진행)",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-23",
+    "company": null,
+    "event": "자율주행차 기술 엑스포 유럽",
+    "type": "전시",
+    "importance": "MID",
+    "desc": "독일 슈투트가르트에서 열리는 자율주행 및 ADAS 기술 전시회 (6/23~6/25 진행)",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-30",
+    "company": null,
+    "event": "승용차 개별소비세 30% 인하 조치 종료",
+    "type": "정책",
+    "importance": "HIGH",
+    "desc": "승용차 구매 시 적용되던 개별소비세 30% 인하 조치 기한 만료",
+    "confirmed": true
+  },
+  {
+    "date": "2026-06-30",
+    "company": null,
+    "event": "자동차 부품 공급망 이슈 정상화 전망",
+    "type": "정책",
+    "importance": "MID",
+    "desc": "산업통상자원부, 부품 공급망 문제로 인한 생산 차질이 6월부터 정상화될 것으로 전망",
+    "confirmed": true
+  }
+]
