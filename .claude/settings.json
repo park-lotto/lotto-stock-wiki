@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Start-Process *)",
+      "PowerShell(code *)",
+      "Bash(start *)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe",
+            "args": ["-NoProfile", "-Command", "git pull"],
+            "timeout": 60,
+            "statusMessage": "git pull (회사 PC 변경사항 받는 중)..."
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe",
+            "args": ["-NoProfile", "-Command", "git add .; if ((git status --porcelain).Length -gt 0) { git commit -m 'auto: session changes'; git push }"],
+            "timeout": 120,
+            "statusMessage": "git commit + push (변경사항 업로드 중)..."
+          }
+        ]
+      }
+    ]
+  }
+}
