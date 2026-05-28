@@ -1,385 +1,494 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=800">
-  <title>오늘의 전략 — 로또의 주식인사이트</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>코코노트 — 2026.05.28 투자전략 핵심 정리</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Space+Grotesk:wght@500;700&display=swap');
 
-    body {
-      background: #FFF2E8;
-      font-family: 'Noto Sans KR', sans-serif;
-      width: 800px;
-      margin: 0 auto;
-      padding: 16px;
-    }
+* { margin:0; padding:0; box-sizing:border-box; }
 
-    .card {
-      background: #FFFFFF;
-      border-radius: 24px;
-      overflow: hidden;
-      box-shadow: 0 8px 40px rgba(0,0,0,0.13);
-    }
+body {
+  font-family:'Noto Sans KR','Apple SD Gothic Neo',sans-serif;
+  background:linear-gradient(135deg,#e8d5ff 0%,#ffd6e8 50%,#d5eaff 100%);
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  padding:20px;
+}
 
-    /* ── HEADER ── */
-    .header {
-      background: linear-gradient(135deg, #FF6B6B 0%, #FF9A3C 55%, #FFD460 100%);
-      padding: 22px 28px 18px;
-      position: relative;
-      overflow: hidden;
-    }
+.page {
+  width:800px;
+  background:#fff;
+  border-radius:24px;
+  overflow:hidden;
+  box-shadow:0 24px 70px rgba(130,60,200,0.22);
+  border:3px solid #d8a8f0;
+}
 
-    .header-deco1 { position:absolute; top:10px; right:36px; font-size:26px; opacity:0.55; }
-    .header-deco2 { position:absolute; bottom:10px; left:180px; font-size:18px; opacity:0.45; }
-    .header-deco3 { position:absolute; top:18px; right:200px; font-size:14px; opacity:0.4; }
+/* TOP BAR */
+.top-bar {
+  background:linear-gradient(90deg,#9333ea,#ec4899);
+  padding:9px 22px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.top-title { color:#fff; font-size:19px; font-weight:900; letter-spacing:3px; }
+.top-badge {
+  background:rgba(255,255,255,0.22);
+  color:#fff;
+  border-radius:20px;
+  padding:4px 16px;
+  font-size:12px; font-weight:700;
+  border:1.5px solid rgba(255,255,255,0.45);
+}
 
-    .header-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 6px;
-    }
+/* HEADER */
+.header {
+  background:linear-gradient(180deg,#fdf4ff 0%,#fff9fe 100%);
+  padding:18px 26px 20px;
+  display:flex;
+  gap:18px;
+  align-items:flex-start;
+  border-bottom:2.5px dashed #e0b0ff;
+  position:relative;
+}
+.header::after {
+  content:'✦  ✧  ✦  ✧  ✦';
+  position:absolute;
+  bottom:5px; left:50%;
+  transform:translateX(-50%);
+  color:#d4a0f5; font-size:11px; letter-spacing:8px;
+}
 
-    .channel-badge {
-      font-size: 12px;
-      font-weight: 700;
-      color: rgba(255,255,255,0.95);
-      background: rgba(255,255,255,0.25);
-      padding: 4px 13px;
-      border-radius: 20px;
-      letter-spacing: 0.3px;
-    }
+.mascot { display:flex; flex-direction:column; align-items:center; gap:5px; padding-top:4px; }
+.mascot-emoji { font-size:62px; line-height:1; }
+.mascot-lbl {
+  background:linear-gradient(135deg,#e9d5ff,#fce7f3);
+  color:#9333ea; font-size:11px; font-weight:900;
+  padding:3px 10px; border-radius:12px;
+  border:1.5px solid #d8b4fe; white-space:nowrap;
+}
 
-    .date-badge {
-      font-size: 12px;
-      font-weight: 600;
-      color: rgba(255,255,255,0.9);
-      letter-spacing: 0.3px;
-    }
+.header-mid { flex:1; }
+.h-date { font-size:24px; font-weight:900; color:#444; margin-bottom:2px; }
+.h-date .em { color:#ec4899; }
+.h-title {
+  font-size:28px; font-weight:900;
+  background:linear-gradient(135deg,#7c3aed,#ec4899);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  margin-bottom:11px; line-height:1.2;
+}
+.h-pts { display:flex; flex-direction:column; gap:5px; }
+.h-pt { display:flex; align-items:flex-start; gap:7px; font-size:12.5px; color:#555; font-weight:500; line-height:1.45; }
+.h-chk { color:#ec4899; font-weight:900; font-size:15px; flex-shrink:0; margin-top:-1px; }
 
-    .header-title {
-      font-size: 44px;
-      font-weight: 900;
-      color: #FFFFFF;
-      letter-spacing: -1px;
-      text-shadow: 0 3px 14px rgba(0,0,0,0.18);
-      line-height: 1;
-    }
+.header-right { display:flex; flex-direction:column; gap:8px; align-items:center; }
+.focus-box {
+  background:linear-gradient(135deg,#fef3ff,#fce7f3);
+  border:2px solid #f0abdc;
+  border-radius:14px; padding:11px 16px;
+  text-align:center; min-width:130px;
+}
+.fb-label { font-size:10px; font-weight:700; color:#be185d; letter-spacing:0.5px; margin-bottom:4px; }
+.fb-main  { font-size:18px; font-weight:900; color:#9333ea; margin-bottom:3px; }
+.fb-sub   { font-size:10.5px; color:#db2777; font-weight:600; }
+.greeting-box {
+  background:#fffbeb; border:1.5px solid #fcd34d;
+  border-radius:10px; padding:5px 14px;
+  font-size:11.5px; color:#b45309; font-weight:700; white-space:nowrap;
+}
 
-    .header-sub {
-      font-size: 13px;
-      font-weight: 500;
-      color: rgba(255,255,255,0.85);
-      margin-top: 5px;
-      letter-spacing: 0.2px;
-    }
+/* GRID */
+.grid {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:11px;
+  padding:13px;
+  background:#fdf8ff;
+}
 
-    /* ── SIGNAL BAR ── */
-    .signal-bar {
-      background: #FFF8F0;
-      border-bottom: 1.5px solid #FFE0C0;
-      padding: 9px 24px;
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      flex-wrap: wrap;
-    }
+.card { background:#fff; border-radius:14px; overflow:hidden; box-shadow:0 3px 12px rgba(0,0,0,0.08); }
 
-    .signal-label {
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 2px;
-      color: #FF9A3C;
-      margin-right: 4px;
-    }
+.ch { padding:9px 12px; display:flex; align-items:center; gap:7px; }
+.cn {
+  width:23px; height:23px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:12px; font-weight:900; color:#fff; flex-shrink:0;
+}
+.ct { font-size:13px; font-weight:900; flex:1; }
+.ci { font-size:17px; }
+.hot { background:#ff4757; color:#fff; font-size:8px; font-weight:900; padding:1px 6px; border-radius:4px; white-space:nowrap; }
 
-    .chip {
-      font-size: 11px;
-      font-weight: 700;
-      padding: 3px 11px;
-      border-radius: 12px;
-    }
+.cb { padding:6px 12px 10px; }
+.cpts { margin-bottom:7px; }
+.cpt {
+  font-size:11.5px; color:#444; line-height:1.5;
+  padding-left:10px; position:relative; margin-bottom:1px;
+}
+.cpt::before { content:'·'; position:absolute; left:2px; font-size:16px; line-height:1.2; color:#ccc; font-weight:900; }
 
-    .chip-red  { background: #FFECEC; color: #E53935; }
-    .chip-org  { background: #FFF3E0; color: #E65100; }
-    .chip-yel  { background: #FFFDE7; color: #F57F17; }
-    .chip-grn  { background: #E8F5E9; color: #2E7D32; }
+.cstocks { background:#f9f9fc; border-radius:8px; padding:6px 8px; }
+.csl { font-size:10px; font-weight:700; color:#aaa; letter-spacing:0.3px; margin-bottom:4px; }
+.csr { display:flex; align-items:center; gap:5px; margin-bottom:3px; }
+.csr:last-child { margin-bottom:0; }
+.crk { font-size:10px; font-weight:900; color:#fff; border-radius:4px; padding:1px 5px; white-space:nowrap; flex-shrink:0; }
+.r1 { background:#ff4757; }
+.r2 { background:#ff9500; }
+.r3 { background:#3b82f6; }
+.csn { font-size:11px; font-weight:700; color:#333; }
 
-    /* ── GRID ── */
-    .sections {
-      padding: 16px 20px 18px;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-    }
+/* Card colour themes */
+.v1 .ch { background:linear-gradient(90deg,#fff0f0,#fff5f0); }
+.v1 .cn { background:#ef4444; } .v1 .ct { color:#b91c1c; }
 
-    .sc {
-      background: #FAFAFA;
-      border: 1.5px solid #F0F0F0;
-      border-radius: 14px;
-      padding: 13px 14px 12px;
-      position: relative;
-      overflow: hidden;
-    }
+.v2 .ch { background:linear-gradient(90deg,#f0f9ff,#e0f2fe); }
+.v2 .cn { background:#0ea5e9; } .v2 .ct { color:#0369a1; }
 
-    /* top accent bar */
-    .sc::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
-      border-radius: 14px 14px 0 0;
-    }
+.v3 .ch { background:linear-gradient(90deg,#f0fdf4,#dcfce7); }
+.v3 .cn { background:#22c55e; } .v3 .ct { color:#15803d; }
 
-    .c1::before { background: #FF6B6B; }
-    .c2::before { background: #FF9A3C; }
-    .c3::before { background: #4D96FF; }
-    .c4::before { background: #52C87A; }
-    .c5::before { background: #C77DFF; }
-    .c6::before { background: #00C9BD; }
-    .c7::before { background: #FF85A1; }
-    .c8::before { background: #FFD460; }
-    .c9::before { background: #A0A0A0; }
+.v4 .ch { background:linear-gradient(90deg,#f5f3ff,#ede9fe); }
+.v4 .cn { background:#7c3aed; } .v4 .ct { color:#5b21b6; }
 
-    .sc-num {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 20px; height: 20px;
-      border-radius: 50%;
-      font-size: 10px;
-      font-weight: 900;
-      color: #fff;
-      margin-bottom: 6px;
-    }
+.v5 .ch { background:linear-gradient(90deg,#fffbeb,#fef3c7); }
+.v5 .cn { background:#f59e0b; } .v5 .ct { color:#92400e; }
 
-    .c1 .sc-num { background: #FF6B6B; }
-    .c2 .sc-num { background: #FF9A3C; }
-    .c3 .sc-num { background: #4D96FF; }
-    .c4 .sc-num { background: #52C87A; }
-    .c5 .sc-num { background: #C77DFF; }
-    .c6 .sc-num { background: #00C9BD; }
-    .c7 .sc-num { background: #FF85A1; }
-    .c8 .sc-num { background: #E6B800; }
-    .c9 .sc-num { background: #888; }
+.v6 .ch { background:linear-gradient(90deg,#fff0f6,#fce7f3); }
+.v6 .cn { background:#ec4899; } .v6 .ct { color:#9d174d; }
 
-    .sc-title {
-      font-size: 13px;
-      font-weight: 800;
-      color: #1a1a1a;
-      margin-bottom: 8px;
-      line-height: 1.3;
-    }
+.v7 .ch { background:linear-gradient(90deg,#eef2ff,#e0e7ff); }
+.v7 .cn { background:#6366f1; } .v7 .ct { color:#3730a3; }
 
-    .sc-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      margin-bottom: 10px;
-    }
+.v8 .ch { background:linear-gradient(90deg,#f0fdfa,#ccfbf1); }
+.v8 .cn { background:#14b8a6; } .v8 .ct { color:#0f766e; }
 
-    .sc-list li {
-      font-size: 11px;
-      color: #555;
-      line-height: 1.45;
-      padding-left: 11px;
-      position: relative;
-    }
+.v9 .ch { background:linear-gradient(90deg,#fdf4ff,#fae8ff); }
+.v9 .cn { background:#a855f7; } .v9 .ct { color:#7e22ce; }
 
-    .sc-list li::before {
-      content: '·';
-      position: absolute;
-      left: 1px;
-      color: #BBB;
-      font-weight: 900;
-      font-size: 14px;
-      line-height: 1.1;
-    }
+/* BOTTOM FULL CARD */
+.bottom { padding:0 13px 13px; background:#fdf8ff; }
+.full-card { background:#fff; border-radius:14px; overflow:hidden; box-shadow:0 3px 12px rgba(0,0,0,0.08); }
+.full-head {
+  padding:10px 16px;
+  background:linear-gradient(90deg,#fff0f0,#fff5f0);
+  display:flex; align-items:center; gap:10px;
+  border-bottom:1px solid #fde8e8;
+}
+.full-head .cn { background:#ef4444; width:26px; height:26px; font-size:11px; }
+.full-head .ct { font-size:14px; font-weight:900; color:#b91c1c; }
+.fh-sub { margin-left:auto; font-size:11px; color:#999; }
 
-    .sc-sig {
-      display: inline-flex;
-      align-items: center;
-      font-size: 10px;
-      font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 9px;
-    }
+.full-body { padding:13px 16px; display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.fb-col-title { font-size:10px; font-weight:700; color:#aaa; letter-spacing:0.5px; margin-bottom:7px; }
 
-    .sig-red  { background:#FFECEC; color:#E53935; }
-    .sig-org  { background:#FFF3E0; color:#E65100; }
-    .sig-yel  { background:#FFFDE7; color:#F57F17; }
-    .sig-grn  { background:#E8F5E9; color:#2E7D32; }
-    .sig-gray { background:#F5F5F5; color:#777; }
+.checklist { display:flex; flex-direction:column; gap:5px; }
+.cl-row { display:flex; align-items:center; gap:9px; font-size:12px; color:#444; line-height:1.4; }
+.clbadge { width:19px; height:19px; border-radius:5px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:900; flex-shrink:0; }
+.ok   { background:#d1fae5; color:#065f46; }
+.warn { background:#fef3c7; color:#92400e; }
+.eye  { background:#dbeafe; color:#1d4ed8; }
 
-    /* ── FOOTER ── */
-    .footer {
-      background: #FFF8F0;
-      border-top: 1.5px solid #FFE0C0;
-      padding: 12px 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+.tplist { display:flex; flex-direction:column; gap:6px; }
+.tp { display:flex; align-items:center; gap:9px; background:#fafafa; border-radius:9px; padding:6px 10px; }
+.tp-n { width:21px; height:21px; border-radius:50%; background:#ef4444; color:#fff; font-size:11px; font-weight:900; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.tp-name { font-size:12px; font-weight:800; color:#222; flex:1; }
+.tp-why  { font-size:10.5px; color:#888; }
 
-    .ft-brand { font-size: 13px; font-weight: 800; color: #FF6B6B; }
-    .ft-sub   { font-size: 11px; color: #AAAAAA; }
-    .ft-tag   {
-      font-size: 11px; font-weight: 700; color: #FF9A3C;
-      background: rgba(255,154,60,0.1);
-      padding: 3px 11px; border-radius: 10px;
-    }
-  </style>
+/* FOOTER */
+.footer {
+  background:linear-gradient(90deg,#ec4899,#9333ea);
+  padding:12px 20px;
+  text-align:center;
+  color:#fff; font-size:14px; font-weight:700; letter-spacing:0.5px;
+}
+</style>
 </head>
 <body>
-<div class="card">
+<div class="page">
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="top-title">☆ Co Co Note ☆</div>
+    <div class="top-badge">알은개미방 Co Co ♡</div>
+  </div>
 
   <!-- HEADER -->
   <div class="header">
-    <div class="header-deco1">⭐</div>
-    <div class="header-deco2">✨</div>
-    <div class="header-deco3">★</div>
-    <div class="header-top">
-      <div class="channel-badge">📈 로또의 주식인사이트</div>
-      <!-- ↓ 날짜는 매일 여기만 수정 -->
-      <div class="date-badge">2026년 5월 26일 (화)</div>
+    <div class="mascot">
+      <div class="mascot-emoji">🐼</div>
+      <div class="mascot-lbl">👑 코코</div>
     </div>
-    <div class="header-title">오늘의 전략</div>
-    <div class="header-sub">STOCK BRAIN · 데이터가 판단하게 만든다</div>
+    <div class="header-mid">
+      <div class="h-date">5월 28일 <span class="em">(목)</span></div>
+      <div class="h-title">투자전략 핵심 정리</div>
+      <div class="h-pts">
+        <div class="h-pt"><span class="h-chk">✓</span>조선 슈퍼사이클 1차 랠리 때 담은 분 — 당시 반영된 건 "수주잔고 증가"였고, 지금은 방산·에너지 복합 재평가라는 다른 이유로 비슷한 가격대 복귀!</div>
+        <div class="h-pt"><span class="h-chk">✓</span>2차 랠리의 엔진은 다르다 — CPSP·장보고N·FLNG라는 새 카탈리스트가 추가됨!</div>
+        <div class="h-pt"><span class="h-chk">✓</span>7~8월 2Q 실적 발표에서 고선가 물량이 처음으로 실적에 반영되는 구간.</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="focus-box">
+        <div class="fb-label">오늘의 핵심</div>
+        <div class="fb-main">조선 ⭐</div>
+        <div class="fb-sub">8대 이슈 전부 활성화</div>
+      </div>
+      <div class="greeting-box">좋은 아침이에요! ☀️</div>
+    </div>
   </div>
 
-  <!-- SIGNAL BAR -->
-  <div class="signal-bar">
-    <div class="signal-label">TODAY</div>
-    <!-- ↓ 오늘 핫 섹터 -->
-    <div class="chip chip-red">반도체 🔴</div>
-    <div class="chip chip-red">조선 🔴</div>
-    <div class="chip chip-org">방산 🟠</div>
-    <div class="chip chip-org">로봇 🟠</div>
-    <div class="chip chip-org">바이오 🟠</div>
-    <div class="chip chip-yel">전력기기 🟡</div>
-  </div>
+  <!-- 9-CARD GRID -->
+  <div class="grid">
 
-  <!-- SECTIONS 3×3 -->
-  <div class="sections">
-
-    <!-- 01 HBM -->
-    <div class="sc c1">
-      <div class="sc-num">01</div>
-      <div class="sc-title">🔴 HBM 반도체</div>
-      <ul class="sc-list">
-        <li>SK하이닉스 Vera Rubin HBM4E 독점 가능성 95%</li>
-        <li>M15X 70K/월 램프업 · DRAM Capa 35% 점유</li>
-        <li>NVDA AI 수요 구조적 확대 → 직결 수혜</li>
-      </ul>
-      <div class="sc-sig sig-red">🔴 강력 탑픽</div>
+    <div class="card v1">
+      <div class="ch">
+        <div class="cn">1</div>
+        <div class="ct">조선 슈퍼사이클</div>
+        <span class="hot">HOT</span>
+        <div class="ci">🚢</div>
+      </div>
+      <div class="cb">
+        <div class="cpts">
+          <div class="cpt">현재적 피크 — 이벤트 신호 2028~2030년</div>
+          <div class="cpt">선반영 부담 있지만 8대 이슈 촉매 지속 중</div>
+          <div class="cpt">2Q 실적 고선가 반영 첫 구간 — 미리 포지셔닝</div>
+        </div>
+        <div class="cstocks">
+          <div class="csl">관심 종목</div>
+          <div class="csr"><span class="crk r1">1순위</span><span class="csn">한화오션 (CPSP·MRO)</span></div>
+          <div class="csr"><span class="crk r2">2순위</span><span class="csn">HD현대중공업 (방산·SMR)</span></div>
+          <div class="csr"><span class="crk r3">3순위</span><span class="csn">삼성중공업 (FLNG 독과점)</span></div>
+        </div>
+      </div>
     </div>
 
-    <!-- 02 반도체 소부장 -->
-    <div class="sc c2">
-      <div class="sc-num">02</div>
-      <div class="sc-title">🔴 반도체 소부장</div>
-      <ul class="sc-list">
-        <li>삼성 파운드리 22.8조 테슬라 딜 → 낙수 체인</li>
-        <li>AMAT 수주 선행 → 국내 장비주 12~18개월 후행</li>
-        <li>솔브레인·동진쎄미켐 국산화 탑픽 후보</li>
-      </ul>
-      <div class="sc-sig sig-red">🔴 탑픽 후보</div>
+    <div class="card v2">
+      <div class="ch">
+        <div class="cn">2</div>
+        <div class="ct">캐나다 잠수함 수주</div>
+        <div class="ci">🌊</div>
+      </div>
+      <div class="cb">
+        <div class="cpts">
+          <div class="cpt">캐나다 잠수함 수주 이슈 지속</div>
+          <div class="cpt">핵심잠수함 기대감 → 대장 연결 기대</div>
+          <div class="cpt">아직 기간 여유 → 흐름 체크 후 전략!</div>
+        </div>
+        <div class="cstocks">
+          <div class="csl">관심 종목</div>
+          <div class="csr"><span class="crk r1">1순위</span><span class="csn">범한퓨얼셀, 원일티엔아이, 한화오션</span></div>
+          <div class="csr"><span class="crk r2">2순위</span><span class="csn">HD대한중공업, STX엔진</span></div>
+          <div class="csr"><span class="crk r3">3순위</span><span class="csn">다목적전기공사, 삼영엘텍</span></div>
+        </div>
+      </div>
     </div>
 
-    <!-- 03 조선 -->
-    <div class="sc c3">
-      <div class="sc-num">03</div>
-      <div class="sc-title">🔴 조선 MASGA</div>
-      <ul class="sc-list">
-        <li>HD한국조선해양 수주잔고 89조 역대최고</li>
-        <li>미 해군 + 상선 + AI전력 삼각축 호황</li>
-        <li>신조선가 184pt · 중고선가 역전 = 쇼티지 극심</li>
-      </ul>
-      <div class="sc-sig sig-red">🔴 강력 탑픽</div>
+    <div class="card v4">
+      <div class="ch">
+        <div class="cn">3</div>
+        <div class="ct">방산 · 장보고N</div>
+        <div class="ci">🛡️</div>
+      </div>
+      <div class="cb">
+        <div class="cpts">
+          <div class="cpt">28.9조원 기획예산 → 건조사 선정 하반기 발표</div>
+          <div class="cpt">나토 방산 수출 + 폴란드·루마니아 대형 계약</div>
+          <div class="cpt">방산·조선 양쪽 연결 = 한화그룹 시너지 극대화</div>
+        </div>
+        <div class="cstocks">
+          <div class="csl">관심 종목</div>
+          <div class="csr"><span class="crk r1">1순위</span><span class="csn">한화에어로스페이스</span></div>
+          <div class="csr"><span class="crk r2">2순위</span><span class="csn">LIG넥스원</span></div>
+          <div class="csr"><span class="crk r3">3순위</span><span class="csn">현대로템</span></div>
+        </div>
+      </div>
     </div>
 
-    <!-- 04 방산 -->
-    <div class="sc c4">
-      <div class="sc-num">04</div>
-      <div class="sc-title">🟠 방산</div>
-      <ul class="sc-list">
-        <li>한화에어로스페이스 수주잔고 118조 역대최고</li>
-        <li>K9 자주포·천무 해외 수출 지속 확대</li>
-        <li>LIG넥스원 천궁-II 수출비중 30% 상회</li>
-      </ul>
-      <div class="sc-sig sig-org">🟠 관심 주목</div>
+    <div class="card v5">
+      <div class="ch">
+        <div class="cn">4</div>
+        <div class="ct">대미투자 원전·SMR</div>
+        <div class="ci">⚛️</div>
+      </div>
+      <div class="cb">
+        <div class="cpts">
+          <div class="cpt">대미투자 프로젝트 + AI 전력 수요 확대</div>
+          <div class="cpt">테라파워 FA 체결 5/21 — NRC 건설허가 진행 중</div>
+          <div class="cpt">발표 시기 5월말~6월 — 관련 사업 체크!</div>
+        </div>
+        <div class="cstocks">
+          <div class="csl">관심 종목</div>
+          <div class="csr"><span class="crk r1">1순위</span><span class="csn">두산에너빌리티</span></div>
+          <div class="csr"><span class="crk r2">2순위</span><span class="csn">보성파워텍, 한신기계, 이아이아</span></div>
+          <div class="csr"><span class="crk r3">3순위</span><span class="csn">우리기술, 지투파워, 한전산업 등</span></div>
+        </div>
+      </div>
     </div>
 
-    <!-- 05 로봇 -->
-    <div class="sc c5">
-      <div class="sc-num">05</div>
-      <div class="sc-title">🟠 로봇</div>
-      <ul class="sc-list">
-        <li>레인보우로보틱스 · 삼성전자 파트너십 확대</li>
-        <li>Physical AI 플랫폼 수요 본격화</li>
-        <li>2026 2Q 핵심 모멘텀 분기 진입</li>
-      </ul>
-      <div class="sc-sig sig-org">🟠 관심 주목</div>
+    <div class="card v3">
+      <div class="ch">
+        <div class="cn">5</div>
+        <div class="ct">대미투자 LNG</div>
+        <div class="ci">⛽</div>
+      </div>
+      <div class="cb">
+        <div class="cpts">
+          <div class="cpt">대미투자 1호 프로젝트 기사 지속</div>
+          <div class="cpt">LNG 터미널 가능성 = 가장 유력!</div>
+          <div class="cpt">지수 해운 존재 → 안정 후 스윙!</div>
+        </div>
+        <div class="cstocks">
+          <div class="csl">관심 종목</div>
+          <div class="csr"><span class="crk r1">1순위</span><span class="csn">넥스틸, 하이스틸, SNT에너지 등</span></div>
+          <div class="csr"><span class="crk r2">2순위</span><span class="csn">삼성중공업 (FLNG 직접 수혜)</span></div>
+          <div class="csr"><span class="crk r3">3순위</span><span class="csn">한국카본, 동성화인텍</span></div>
+        </div>
+      </div>
     </div>
 
-    <!-- 06 바이오 -->
-    <div class="sc c6">
-      <div class="sc-num">06</div>
-      <div class="sc-title">🟠 바이오</div>
-      <ul class="sc-list">
-        <li>레고켐바이오 ADC 글로벌 딜 진행 중</li>
-        <li>한미약품 GLP-1 비만치료제 임상 단계</li>
-        <li>LLY·NVO 미국 커플링 → 국내 수혜</li>
-      </ul>
-      <div class="sc-sig sig-org">🟠 딜 모니터링</div>
+    <div class="card v9">
+      <div class="ch">
+        <div class="cn">6</div>
+        <div class="ct">로봇 배터리</div>
+        <div class="ci">🔋</div>
+      </div>
+      <div class="cb">
+        <div class="cpts">
+          <div class="cpt">코스닥 조정으로 체제 눌림</div>
+          <div class="cpt">로봇 에인 호흡의 서브 테마</div>
+          <div class="cpt">비중 확대보단 관망 우선!</div>
+        </div>
+        <div class="cstocks">
+          <div class="csl">관심 종목</div>
+          <div class="csr"><span class="crk r1">1순위</span><span class="csn">이수스페셜티케미컬, 애경케미칼</span></div>
+          <div class="csr"><span class="crk r2">2순위</span><span class="csn">한농화학, 와이아이씨</span></div>
+          <div class="csr"><span class="crk r3">3순위</span><span class="csn">레이크머티리얼즈</span></div>
+        </div>
+      </div>
     </div>
 
-    <!-- 07 LNG -->
-    <div class="sc c7">
-      <div class="sc-num">07</div>
-      <div class="sc-title">🟠 대미투자 LNG</div>
-      <ul class="sc-list">
-        <li>카타르 잠수함 수주 협상 진행</li>
-        <li>대미투자 LNG 연계 → 조선·기자재 동시 수혜</li>
-        <li>한국카본·HSD엔진 밸류체인 연동</li>
-      </ul>
-      <div class="sc-sig sig-org">🟠 이벤트 대기</div>
+    <div class="card v7">
+      <div class="ch">
+        <div class="cn">7</div>
+        <div class="ct">로봇</div>
+        <div class="ci">🤖</div>
+      </div>
+      <div class="cb">
+        <div class="cpts">
+          <div class="cpt">보스턴다이나믹스 IPO 기대감</div>
+          <div class="cpt">현대오토에버 장세 호흡</div>
+          <div class="cpt">현대차 그룹 로봇 참여 기대</div>
+        </div>
+        <div class="cstocks">
+          <div class="csl">관심 종목</div>
+          <div class="csr"><span class="crk r1">1순위</span><span class="csn">현대로보틱스, 현대모비스</span></div>
+          <div class="csr"><span class="crk r2">2순위</span><span class="csn">현대오토에버</span></div>
+          <div class="csr"><span class="crk r3">3순위</span><span class="csn">HL만도, 에스엘, 한국피아이엠</span></div>
+        </div>
+      </div>
     </div>
 
-    <!-- 08 전력기기 ESS -->
-    <div class="sc c8">
-      <div class="sc-num">08</div>
-      <div class="sc-title">🟡 전력기기·ESS</div>
-      <ul class="sc-list">
-        <li>효성중공업 북미 생산 슬롯 2Q 본격화</li>
-        <li>AI 데이터센터 전력 수요 구조적 확대</li>
-        <li>ESS 설치 가속화 → 2차전지 소재 연동</li>
-      </ul>
-      <div class="sc-sig sig-yel">🟡 대기 중</div>
+    <div class="card v6">
+      <div class="ch">
+        <div class="cn">8</div>
+        <div class="ct">우주</div>
+        <div class="ci">🚀</div>
+      </div>
+      <div class="cb">
+        <div class="cpts">
+          <div class="cpt">스페이스X 상장 이슈 관련</div>
+          <div class="cpt">수조 펼침, 지수 폭락, 개별 급락</div>
+          <div class="cpt">가격 조정 → 체크 후 대응 구간!</div>
+        </div>
+        <div class="cstocks">
+          <div class="csl">관심 종목</div>
+          <div class="csr"><span class="crk r1">1순위</span><span class="csn">에이치아이엠, 켄코아에어로스페이스</span></div>
+          <div class="csr"><span class="crk r2">2순위</span><span class="csn">미래에셋번처투자, 아주IB투자 등</span></div>
+          <div class="csr"><span class="crk r3">3순위</span><span class="csn">전략: 1~2주 단기 스윙 관점</span></div>
+        </div>
+      </div>
     </div>
 
-    <!-- 09 매크로 -->
-    <div class="sc c9">
-      <div class="sc-num">09</div>
-      <div class="sc-title">💡 매크로 체크</div>
-      <ul class="sc-list">
-        <li>9월 금리인하 확률 47% · 달러 약세 지속</li>
-        <li>VIX 16.7 · SOX +1.99% · 나스닥 호조</li>
-        <li>원달러 1,521원 → 수출주 환차익 유리</li>
-      </ul>
-      <div class="sc-sig sig-grn">💡 Risk-On 유지</div>
+    <div class="card v8">
+      <div class="ch">
+        <div class="cn">9</div>
+        <div class="ct">엔비디아 컴퓨텍스(GTC)</div>
+        <div class="ci">💡</div>
+      </div>
+      <div class="cb">
+        <div class="cpts">
+          <div class="cpt">6월 1일 컴퓨텍스 행사 예정</div>
+          <div class="cpt">에이전틱AI · 피지컬AI · AI팩토리</div>
+          <div class="cpt">단기 움직임 가능성 체크!</div>
+        </div>
+        <div class="cstocks">
+          <div class="csl">관심 종목</div>
+          <div class="csr"><span class="crk r1">1순위</span><span class="csn">노하, LG전자</span></div>
+          <div class="csr"><span class="crk r2">2순위</span><span class="csn">LG씨엔에스, 두산로보틱스</span></div>
+          <div class="csr"><span class="crk r3">3순위</span><span class="csn">SK하이닉스, 한미반도체</span></div>
+        </div>
+      </div>
     </div>
 
+  </div><!-- /grid -->
+
+  <!-- BOTTOM FULL CARD -->
+  <div class="bottom">
+    <div class="full-card">
+      <div class="full-head">
+        <div class="cn" style="background:#ef4444; width:26px; height:26px; font-size:11px;">10</div>
+        <div class="ct" style="font-size:14px; font-weight:900; color:#b91c1c;">AI 인프라 (SI) ⚡</div>
+        <span class="fh-sub">2026.05.28 기준</span>
+      </div>
+      <div class="full-body">
+        <div>
+          <div class="fb-col-title">공통점!</div>
+          <div class="checklist">
+            <div class="cl-row"><div class="clbadge ok">✓</div><span>AI 데이터센터, 피지컬AI, 기업형 AI 환경 구축을 위한 시스템 통합(SI) 사업!</span></div>
+            <div class="cl-row"><div class="clbadge ok">✓</div><span>조선 CPSP D-30 바이너리 — 진입 비중·타이밍 확인</span></div>
+            <div class="cl-row"><div class="clbadge warn">!</div><span>삼성중공업 FLNG 계약 공시 여부 실시간 체크</span></div>
+            <div class="cl-row"><div class="clbadge warn">!</div><span>장보고N — 건조사 선정 방식 발표 모니터링</span></div>
+            <div class="cl-row"><div class="clbadge eye">?</div><span>전력기기 미장 커플링 (GE버노바·이튼 주가 확인)</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="fb-col-title">핵심 해석!</div>
+          <div class="tplist">
+            <div class="tp">
+              <div class="tp-n">①</div>
+              <div class="tp-name">한화오션</div>
+              <div class="tp-why">CPSP + 장보고N + MRO 3중 모멘텀</div>
+            </div>
+            <div class="tp">
+              <div class="tp-n">②</div>
+              <div class="tp-name">삼성중공업</div>
+              <div class="tp-why">FLNG 독과점 + 상대 저평가 대안</div>
+            </div>
+            <div class="tp">
+              <div class="tp-n">③</div>
+              <div class="tp-name">HD한국조선해양</div>
+              <div class="tp-why">8대 이슈 5개 커버 — 가장 효율적</div>
+            </div>
+            <div class="tp">
+              <div class="tp-n">④</div>
+              <div class="tp-name">효성중공업</div>
+              <div class="tp-why">전력기기 수혜 + 상대 저평가</div>
+            </div>
+          </div>
+          <div style="margin-top:8px; padding:8px 10px; background:#fdf4ff; border-radius:8px; font-size:11px; color:#7e22ce; font-weight:600; line-height:1.5;">
+            "AI를 전체 산업 영역에서 어떻게 연결하고 활용하는 것이 핵심!"
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- FOOTER -->
   <div class="footer">
-    <div class="ft-brand">📈 로또의 주식인사이트</div>
-    <div class="ft-sub">STOCK BRAIN · 매일 아침 오늘의 전략</div>
-    <div class="ft-tag">@lotto_stock_insight</div>
+    💕 오늘도 고생 많으셨어요! 꾸준함이 수익을 만듭니다! 화이팅! 🐼
   </div>
 
 </div>

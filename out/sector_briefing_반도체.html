@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=800">
+<title>반도체섹터 데일리 브리핑 — STOCK BRAIN 2026.05.28</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Space+Grotesk:wght@400;500;700&display=swap');
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg:     #07090f;
+  --card:   #0d1020;
+  --card2:  #111828;
+  --border: rgba(0,229,198,0.07);
+  --border2:rgba(0,229,198,0.2);
+  --mint:   #00e5c6;
+  --cyan:   #00e5c6;
+  --green:  #00ffa3;
+  --red:    #ff2244;
+  --yellow: #ffe500;
+  --purple: #c084fc;
+  --text:   #f0f8ff;
+  --sub:    #8896aa;
+  --dim:    #64748b;
+}
+
+body {
+  background:var(--bg);
+  background-image:
+    linear-gradient(rgba(0,229,198,0.022) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,229,198,0.022) 1px,transparent 1px);
+  background-size:40px 40px;
+  font-family:'Noto Sans KR',sans-serif;
+  color:var(--text);
+  width:800px;
+  margin:0 auto;
+  padding:16px;
+}
+
+.wrap {
+  background:var(--card);
+  border-radius:16px;
+  overflow:hidden;
+  border:1px solid var(--border);
+  position:relative;
+}
+.wrap::before {
+  content:'';
+  position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent 5%,rgba(0,229,198,0.5) 30%,#00e5c6 50%,rgba(0,229,198,0.5) 70%,transparent 95%);
+}
+
+/* HEADER */
+.hd {
+  padding:16px 22px 13px;
+  display:flex;justify-content:space-between;align-items:flex-end;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+}
+.brand-row { display:flex;align-items:center;gap:7px;margin-bottom:5px; }
+.brand-dot { width:6px;height:6px;border-radius:50%;background:var(--mint);box-shadow:0 0 8px var(--mint),0 0 16px rgba(0,229,198,0.3); }
+.brand-txt { font-size:10px;font-weight:900;letter-spacing:4px;color:var(--mint); }
+.hd-title  { font-size:32px;font-weight:900;color:#fff;letter-spacing:-0.5px;line-height:1; }
+.hd-title .hl { color:var(--mint);text-shadow:0 0 20px rgba(0,229,198,0.4); }
+.hd-sub    { font-size:11px;color:var(--sub);margin-top:4px; }
+.hd-right  { text-align:right; }
+.hd-brand-sub { font-size:10px;color:var(--sub);margin-bottom:6px; }
+.hd-date { background:var(--mint);color:#001a14;font-size:12px;font-weight:900;padding:4px 14px;border-radius:18px;display:inline-block; }
+
+/* TODAY INSIGHT */
+.today-sum {
+  margin:10px 16px 0;
+  padding:11px 15px;
+  border-radius:8px;
+  border-left:3px solid var(--mint);
+  background:rgba(0,229,198,0.05);
+}
+.ts-lbl { font-size:9px;font-weight:900;color:var(--mint);letter-spacing:2.5px;margin-bottom:5px; }
+.ts-txt { font-size:12.5px;line-height:1.7;color:#ddeeff;font-weight:400; }
+
+/* CHAPTER THERMOMETER */
+.chap-bar {
+  margin:10px 16px 0;
+  padding:10px 14px;
+  background:rgba(0,0,0,0.3);
+  border:1px solid rgba(255,255,255,0.05);
+  border-radius:8px;
+}
+.chap-bar-lbl { font-size:9px;font-weight:900;color:#8896aa;letter-spacing:2.5px;margin-bottom:8px; }
+.chap-chips { display:flex;flex-wrap:wrap;gap:5px; }
+.chap-chip {
+  font-size:10px;font-weight:700;padding:3px 10px;border-radius:5px;
+  display:inline-flex;align-items:center;gap:4px;
+  border:1px solid;
+}
+.chap-chip.hot  { background:rgba(255,34,68,0.1);  color:#ff5577;  border-color:rgba(255,34,68,0.25); }
+.chap-chip.warm { background:rgba(255,180,0,0.08); color:#ffa040;  border-color:rgba(255,180,0,0.2); }
+.chap-chip.cool { background:rgba(100,116,139,0.1);color:#94a3b8; border-color:rgba(100,116,139,0.2); }
+.chap-temp { font-size:11px; }
+
+/* REPORT / NEWS */
+.rn-grid {
+  padding:10px 16px 0;
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+}
+.rn-card {
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:10px;padding:11px 14px;
+}
+.rn-lbl { font-size:9.5px;font-weight:900;color:#a8b8cc;letter-spacing:2px;margin-bottom:8px; }
+.rn-row {
+  display:flex;align-items:flex-start;gap:7px;
+  padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.07);
+  font-size:11px;color:#c8d8ec;line-height:1.45;
+}
+.rn-row:last-child { border-bottom:none; }
+.rn-tag {
+  font-size:9px;font-weight:900;padding:1px 6px;border-radius:3px;
+  flex-shrink:0;margin-top:1px;white-space:nowrap;
+}
+.rn-tag.rep  { background:rgba(0,229,198,0.1);  color:var(--mint); }
+.rn-tag.news { background:rgba(255,229,0,0.1);   color:var(--yellow); }
+
+/* SECTION HEADER */
+.sec-hd {
+  padding:9px 22px 6px;
+  display:flex;align-items:center;gap:7px;
+  border-top:1px solid rgba(255,255,255,0.04);
+  margin-top:10px;
+}
+.sec-dia { color:var(--mint);font-size:14px;line-height:1; }
+.sec-lbl { font-size:10px;font-weight:900;color:#a8b8cc;letter-spacing:3px; }
+.sec-cnt { margin-left:auto;font-size:10px;color:#8896aa; }
+
+/* 이슈 4×2 */
+.issue-grid {
+  padding:0 16px 10px;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+}
+.ic {
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:10px;padding:10px 11px;
+  position:relative;overflow:hidden;
+}
+.ic::before { content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:10px 10px 0 0; }
+.ic.gs::before { background:var(--mint); }
+.ic.ga::before { background:var(--yellow); }
+.ic.gb::before { background:rgba(255,255,255,0.2); }
+.ic.gr::before { background:var(--red); }
+.ic.gs { border-color:rgba(0,229,198,0.15); }
+.ic.ga { border-color:rgba(255,229,0,0.12); }
+.ic.gb { border-color:rgba(255,255,255,0.08); }
+.ic.gr { border-color:rgba(255,34,68,0.15); }
+
+.ic-top { display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px; }
+.ic-num { font-size:9px;font-weight:700;color:#8896aa; }
+.ic-grade {
+  font-size:9px;font-weight:900;padding:1px 7px;border-radius:4px;border:1px solid;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:3px;
+}
+.ic.gs .ic-grade { color:var(--mint);   border-color:rgba(0,229,198,0.35);  background:rgba(0,229,198,0.08); }
+.ic.gr .ic-grade { color:var(--red);    border-color:rgba(255,34,68,0.35);   background:rgba(255,34,68,0.08); }
+.ic.ga .ic-grade { color:var(--yellow); border-color:rgba(255,229,0,0.35);  background:rgba(255,229,0,0.08); }
+.ic.gb .ic-grade { color:#a8b8cc;       border-color:rgba(255,255,255,0.18);background:rgba(255,255,255,0.05); }
+
+.ic-name  { font-size:11.5px;font-weight:900;color:#fff;margin-bottom:3px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.ic-stage { font-size:10.5px;color:#a8b8cc;margin-bottom:5px;line-height:1.4; }
+.ic-trigger {
+  font-size:10.5px;color:#c8d8ec;
+  padding:4px 7px;background:rgba(0,0,0,0.3);border-radius:5px;
+  margin-bottom:5px;line-height:1.4;
+}
+.tg-lbl { font-size:8.5px;font-weight:900;color:var(--mint);display:block;margin-bottom:1px;letter-spacing:0.5px; }
+
+.ic-stks { display:flex;flex-wrap:wrap;gap:3px; }
+.isk { font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;white-space:nowrap; }
+.isk-a { background:rgba(0,229,198,0.1);    color:var(--mint); }
+.isk-b { background:rgba(255,255,255,0.06); color:#c8d8ec; }
+.isk-c { background:rgba(255,229,0,0.08);   color:var(--yellow); }
+.isk-r { background:rgba(255,34,68,0.08);   color:#ff5577; }
+
+/* STOCK CARDS 4×1 */
+.stk-grid {
+  padding:0 16px 10px;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+}
+.skc {
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:10px;padding:11px 12px;
+  position:relative;overflow:hidden;
+}
+.skc::before { content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:10px 10px 0 0; }
+.skc.sa::before { background:linear-gradient(90deg,var(--mint),var(--purple)); }
+.skc.sb::before { background:linear-gradient(90deg,var(--purple),var(--mint)); }
+.skc.sc::before { background:linear-gradient(90deg,var(--yellow),var(--mint)); }
+
+.skc-top { display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px; }
+.sk-name { font-size:12.5px;font-weight:900;color:#fff; }
+.sk-code { font-size:9.5px;color:var(--sub);margin-top:1px; }
+.sk-score {
+  font-size:9.5px;font-weight:900;padding:2px 7px;border-radius:5px;border:1px solid;white-space:nowrap;
+}
+.ss-hot  { color:var(--mint);   border-color:rgba(0,229,198,0.4);  background:rgba(0,229,198,0.1); }
+.ss-warm { color:var(--yellow); border-color:rgba(255,229,0,0.4);  background:rgba(255,229,0,0.08); }
+
+.sk-pts { display:flex;flex-direction:column;gap:3px;margin-bottom:6px; }
+.skpt   { display:flex;gap:4px;font-size:11px;color:#c8d8ec;line-height:1.4; }
+.skpt-mk { width:11px;flex-shrink:0;font-size:10px;margin-top:1px; }
+.up { color:var(--mint); } .dn { color:var(--red); }
+
+.sk-evt {
+  font-size:10.5px;padding:4px 8px;border-radius:5px;
+  background:rgba(0,0,0,0.3);color:#b8cce0;
+}
+.sk-evt strong { color:var(--mint); }
+
+/* D-DAY CALENDAR */
+.dday-row {
+  margin:0 16px;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
+}
+.dd {
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:8px;padding:8px 10px;
+  position:relative;overflow:hidden;
+}
+.dd::before { content:'';position:absolute;top:0;left:0;right:0;height:2px; }
+.dd.dd-hot::before  { background:var(--red); }
+.dd.dd-warm::before { background:var(--yellow); }
+.dd.dd-cool::before { background:#2a3240; }
+.dd-count { font-size:18px;font-weight:900;line-height:1; }
+.dd-count.cnt-hot  { color:var(--red); }
+.dd-count.cnt-warm { color:var(--yellow); }
+.dd-count.cnt-cool { color:#4a5568; }
+.dd-date { font-size:9px;color:#8896aa;margin-top:1px;margin-bottom:4px; }
+.dd-title { font-size:10px;font-weight:700;color:#c8d8ec;line-height:1.3; }
+.dd-stk { font-size:9px;color:#64748b;margin-top:3px; }
+
+/* CHECKLIST */
+.chk-wrap {
+  margin:10px 16px 12px;
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:10px;padding:12px 14px;
+}
+.chk-col-lbl { font-size:10px;font-weight:900;color:#a8b8cc;letter-spacing:2px;margin-bottom:9px; }
+.chklst { display:grid;grid-template-columns:1fr 1fr;gap:5px 12px; }
+.chkrow { display:flex;align-items:center;gap:8px;font-size:11.5px;color:#c8d8ec;line-height:1.4; }
+.cbadge { width:17px;height:17px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;flex-shrink:0; }
+.cb-ok   { background:rgba(0,229,198,0.1);   color:var(--mint);   border:1px solid rgba(0,229,198,0.3); }
+.cb-warn { background:rgba(255,229,0,0.1);   color:var(--yellow); border:1px solid rgba(255,229,0,0.3); }
+.cb-eye  { background:rgba(255,255,255,0.06);color:#c8d8ec;        border:1px solid rgba(255,255,255,0.15); }
+
+/* NARRATIVE BAR */
+.narr-bar {
+  margin:10px 16px 0;
+  padding:9px 14px;
+  border-radius:8px;
+  background:rgba(0,0,0,0.4);
+  border:1px solid rgba(0,229,198,0.08);
+  border-left:3px solid rgba(0,229,198,0.4);
+}
+.narr-lbl { font-size:8.5px;font-weight:900;color:#8896aa;letter-spacing:2.5px;margin-bottom:4px; }
+.narr-txt { font-size:11px;color:#94a3b8;line-height:1.55;font-style:italic; }
+.narr-txt strong { color:var(--mint);font-style:normal; }
+
+/* FOOTER */
+.ft {
+  border-top:1px solid rgba(255,255,255,0.04);
+  padding:10px 22px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.ft-brand { font-size:10px;font-weight:900;letter-spacing:4px;color:var(--mint); }
+.ft-sub   { font-size:9px;color:#7a8a9e; }
+.ft-date  { font-size:9px;font-weight:700;color:#7a8a9e; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="hd">
+    <div>
+      <div class="brand-row">
+        <div class="brand-dot"></div>
+        <div class="brand-txt">STOCK BRAIN</div>
+      </div>
+      <div class="hd-title">반도체섹터 <span class="hl">데일리</span></div>
+      <div class="hd-sub">🎬 스토리보드 기반 &nbsp;·&nbsp; 📊 대표종목 &nbsp;·&nbsp; 📅 D-Day 달력</div>
+    </div>
+    <div class="hd-right">
+      <div class="hd-brand-sub">로또의 주식인사이트</div>
+      <div class="hd-date">5월 28일 목요일</div>
+    </div>
+  </div>
+
+  <!-- 대서사 바 -->
+  <div class="narr-bar">
+    <div class="narr-lbl">🎬 대서사 — 스토리보드 핵심 테제</div>
+    <div class="narr-txt"><strong>"메모리가 사이클 상품에서 전략 자산으로 재정의되는 순간,</strong> 한국이 그 유일한 공급자다."</div>
+  </div>
+
+  <!-- TODAY'S 인사이트 -->
+  <div class="today-sum" style="margin-top:8px;">
+    <div class="ts-lbl">⚡ TODAY'S 반도체 인사이트</div>
+    <div class="ts-txt">미래에셋이 SK하이닉스 380만·삼성전자 55만을 동시 리레이팅하면서 섹터 기준선이 올라갔어요! 디램 판가 +491% 역대최고 + HBM4 독점 확인 → 이제 빅2에서 소부장까지 같이 움직이는 구간. 6월 1일 수출입 동향 발표가 다음 촉매 — 그전에 포지션 챙겨두세요 📈</div>
+  </div>
+
+  <!-- 챕터 온도계 -->
+  <div class="chap-bar">
+    <div class="chap-bar-lbl">🌡️ 스토리보드 챕터 온도 (2026-05-28 기준)</div>
+    <div class="chap-chips">
+      <span class="chap-chip hot"><span class="chap-temp">🔴</span>챕터1 HBM×VR</span>
+      <span class="chap-chip hot"><span class="chap-temp">🔴</span>챕터2 삼성 듀얼엔진</span>
+      <span class="chap-chip hot"><span class="chap-temp">🔴</span>챕터3 MLCC 업사이클</span>
+      <span class="chap-chip warm"><span class="chap-temp">🟠</span>챕터4 소부장 리레이팅</span>
+      <span class="chap-chip warm"><span class="chap-temp">🟠</span>챕터5 미중 패권</span>
+      <span class="chap-chip cool"><span class="chap-temp">🟡</span>챕터6 유리기판 씨앗</span>
+    </div>
+  </div>
+
+  <!-- 리포트 / 뉴스 -->
+  <div class="rn-grid">
+    <div class="rn-card">
+      <div class="rn-lbl">📄 오늘의 리포트</div>
+      <div class="rn-row">
+        <span class="rn-tag rep">미래에셋</span>
+        <span>SK하이닉스 TP 380만 — EV/EBITDA 재산정, HBM4 독점 완전 반영</span>
+      </div>
+      <div class="rn-row">
+        <span class="rn-tag rep">미래에셋</span>
+        <span>삼성전자 TP 55만 — 파운드리 4nm 회복 + 메모리 동반 리레이팅</span>
+      </div>
+      <div class="rn-row">
+        <span class="rn-tag rep">SK증권</span>
+        <span>삼성전기 TP 200만 — MLCC 업사이클 + FC-BGA 동반</span>
+      </div>
+      <div class="rn-row">
+        <span class="rn-tag rep">미래에셋</span>
+        <span>솔브레인 TP 60만 (+178%) — 소부장 밸류에이션 리레이팅</span>
+      </div>
+    </div>
+    <div class="rn-card">
+      <div class="rn-lbl">📰 오늘의 뉴스</div>
+      <div class="rn-row">
+        <span class="rn-tag news">HBM</span>
+        <span>Blackwell 생산 가속 — SK하이닉스 HBM3E 추가 물량 확정 관측</span>
+      </div>
+      <div class="rn-row">
+        <span class="rn-tag news">수출</span>
+        <span>디램 판가 +491% — HBM 비중 급증, 2Q26 강세 지속 전망</span>
+      </div>
+      <div class="rn-row">
+        <span class="rn-tag news">MLCC</span>
+        <span>판가 YoY 전환 — AI서버향 고사양 믹스 개선 가속</span>
+      </div>
+      <div class="rn-row">
+        <span class="rn-tag news">국책</span>
+        <span>K-AI반도체 국책과제 6월 말 발표 — 팹리스·IP 사전 모니터링</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 이슈현황 HEADER -->
+  <div class="sec-hd">
+    <div class="sec-dia">🎬</div>
+    <div class="sec-lbl">스토리보드 챕터별 현황</div>
+    <div class="sec-cnt">🔴 S급 3챕터 · 🟠 A급 2챕터 · 🟡 B급 1챕터 + 촉매 2건</div>
+  </div>
+
+  <!-- 이슈 4×2 — 스토리보드 챕터 1:1 매핑 -->
+  <div class="issue-grid">
+
+    <!-- 챕터1: HBM × Vera Rubin -->
+    <div class="ic gs">
+      <div class="ic-top"><span class="ic-num">챕터 1</span><span class="ic-grade">🔴 S급</span></div>
+      <div class="ic-name">🧬 HBM × Vera Rubin</div>
+      <div class="ic-stage">SK하이닉스 독점구조 · HBM3E→4→4E 폭증</div>
+      <div class="ic-trigger"><span class="tg-lbl">▶ 핵심 논거</span>GPU 1장당 HBM 세대마다 3배↑. 삼성 TC본딩 수율 지연 = 독점 지속</div>
+      <div class="ic-stks">
+        <span class="isk isk-a">SK하이닉스</span>
+        <span class="isk isk-b">한미반도체</span>
+        <span class="isk isk-b">HPSP</span>
+        <span class="isk isk-b">심텍</span>
+      </div>
+    </div>
+
+    <!-- 챕터2: 삼성전자 듀얼엔진 -->
+    <div class="ic gs">
+      <div class="ic-top"><span class="ic-num">챕터 2</span><span class="ic-grade">🔴 S급</span></div>
+      <div class="ic-name">⚙️ 삼성 듀얼엔진</div>
+      <div class="ic-stage">메모리 DRAM ASP +92% · 파운드리 4nm 100%</div>
+      <div class="ic-trigger"><span class="tg-lbl">▶ 핵심 논거</span>두 엔진 동시 가동 + 주식성과금 전환 = CapEx 재원 보존</div>
+      <div class="ic-stks">
+        <span class="isk isk-a">삼성전자</span>
+        <span class="isk isk-b">DB하이텍</span>
+      </div>
+    </div>
+
+    <!-- 챕터3: MLCC 업사이클 -->
+    <div class="ic gs">
+      <div class="ic-top"><span class="ic-num">챕터 3</span><span class="ic-grade">🔴 S급</span></div>
+      <div class="ic-name">🔌 MLCC 업사이클 초입</div>
+      <div class="ic-stage">판가 YoY -10.5% → +3.9% 전환점 확인</div>
+      <div class="ic-trigger"><span class="tg-lbl">▶ 핵심 논거</span>AI서버 = 스마트폰의 10배 탑재. 판가 전환 = 업사이클 시작</div>
+      <div class="ic-stks">
+        <span class="isk isk-a">삼성전기</span>
+      </div>
+    </div>
+
+    <!-- 챕터4: 소부장 리레이팅 -->
+    <div class="ic ga">
+      <div class="ic-top"><span class="ic-num">챕터 4</span><span class="ic-grade">🟠 A급</span></div>
+      <div class="ic-name">🔬 소부장 리레이팅</div>
+      <div class="ic-stage">대형주 이후 소부장 순서 — 수출로 이미 확인</div>
+      <div class="ic-trigger"><span class="tg-lbl">▶ 핵심 논거</span>솔더볼 +97% · 증착 +70% — CapEx 확대→장비→소재 연쇄 수혜</div>
+      <div class="ic-stks">
+        <span class="isk isk-a">솔브레인</span>
+        <span class="isk isk-b">코미코</span>
+        <span class="isk isk-b">동진쎄미켐</span>
+      </div>
+    </div>
+
+    <!-- 챕터5: 미중 패권 -->
+    <div class="ic ga">
+      <div class="ic-top"><span class="ic-num">챕터 5</span><span class="ic-grade">🟠 A급</span></div>
+      <div class="ic-name">🌏 미중 패권</div>
+      <div class="ic-stage">CXMT DDR5 진입 선언 — 실제론 2~3세대 뒤</div>
+      <div class="ic-trigger"><span class="tg-lbl">▶ 핵심 논거</span>미국 수출규제 강화 → 중국 빅테크 한국 메모리 의존 심화</div>
+      <div class="ic-stks">
+        <span class="isk isk-a">SK하이닉스</span>
+        <span class="isk isk-b">삼성전자</span>
+      </div>
+    </div>
+
+    <!-- 챕터6: 유리기판 -->
+    <div class="ic gb">
+      <div class="ic-top"><span class="ic-num">챕터 6</span><span class="ic-grade">🟡 B급</span></div>
+      <div class="ic-name">🔮 유리기판 2027 씨앗</div>
+      <div class="ic-stage">삼성전기 Si-Cap 수주 공시 · 파일럿 단계</div>
+      <div class="ic-trigger"><span class="tg-lbl">▶ 핵심 논거</span>2027 양산 목표. 삼성전기 TP 200만에 옵션가치 포함</div>
+      <div class="ic-stks">
+        <span class="isk isk-c">삼성전기</span>
+        <span class="isk isk-c">SKC앱솔릭스</span>
+      </div>
+    </div>
+
+    <!-- 촉매: COMPUTEX D-4 -->
+    <div class="ic gr">
+      <div class="ic-top"><span class="ic-num">D-4 촉매</span><span class="ic-grade">🔴 즉각</span></div>
+      <div class="ic-name">📡 COMPUTEX 6/1</div>
+      <div class="ic-stage">젠슨황 Vera Rubin 상세 발표 + 수출입 동향</div>
+      <div class="ic-trigger"><span class="tg-lbl">▶ 촉매 포인트</span>HBM4E 로드맵 확인 시 SK하이닉스·한미반도체 즉각 반응</div>
+      <div class="ic-stks">
+        <span class="isk isk-r">SK하이닉스</span>
+        <span class="isk isk-r">한미반도체</span>
+      </div>
+    </div>
+
+    <!-- 촉매: M15X 풀가동 -->
+    <div class="ic gb">
+      <div class="ic-top"><span class="ic-num">Q3 촉매</span><span class="ic-grade">🟠 예정</span></div>
+      <div class="ic-name">🏭 M15X 70K 풀가동</div>
+      <div class="ic-stage">3Q26 SK하이닉스 HBM 라인 완전 가동</div>
+      <div class="ic-trigger"><span class="tg-lbl">▶ 촉매 포인트</span>장비·소재 수주 반영 시차 6~12개월 — 지금이 선점 구간</div>
+      <div class="ic-stks">
+        <span class="isk isk-b">주성엔지니어링</span>
+        <span class="isk isk-b">피에스케이홀딩스</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 대표종목 HEADER -->
+  <div class="sec-hd">
+    <div class="sec-dia">📊</div>
+    <div class="sec-lbl">스토리보드 대표종목</div>
+    <div class="sec-cnt">챕터 → 종목 연결</div>
+  </div>
+
+  <!-- STOCK CARDS 4×1 -->
+  <div class="stk-grid">
+
+    <div class="skc sa">
+      <div class="skc-top">
+        <div><div class="sk-name">SK하이닉스</div><div class="sk-code">000660 · 챕터1+5</div></div>
+        <div class="sk-score ss-hot">HBM 독점</div>
+      </div>
+      <div class="sk-pts">
+        <div class="skpt"><span class="skpt-mk up">▲</span><span>HBM4 NVDA 전량 독점 공급</span></div>
+        <div class="skpt"><span class="skpt-mk up">▲</span><span>TP 380만 — EV/EBITDA 리레이팅</span></div>
+        <div class="skpt"><span class="skpt-mk up">▲</span><span>LTA 계약 = 수익 구조화</span></div>
+      </div>
+      <div class="sk-evt">📅 다음: <strong>COMPUTEX 6/1 · HBM4E 퀄완료</strong></div>
+    </div>
+
+    <div class="skc sb">
+      <div class="skc-top">
+        <div><div class="sk-name">삼성전자</div><div class="sk-code">005930 · 챕터2</div></div>
+        <div class="sk-score ss-hot">듀얼엔진</div>
+      </div>
+      <div class="sk-pts">
+        <div class="skpt"><span class="skpt-mk up">▲</span><span>TP 55만 — 파운드리+메모리 동반</span></div>
+        <div class="skpt"><span class="skpt-mk up">▲</span><span>4nm 가동률 100% 회복</span></div>
+        <div class="skpt"><span class="skpt-mk" style="color:var(--yellow);">!</span><span>2nm GAA 수주 확정 모니터링</span></div>
+      </div>
+      <div class="sk-evt">📅 다음: <strong>Groq·Apple 2nm 수주 공시</strong></div>
+    </div>
+
+    <div class="skc sc">
+      <div class="skc-top">
+        <div><div class="sk-name">삼성전기</div><div class="sk-code">009150 · 챕터3+6</div></div>
+        <div class="sk-score ss-warm">MLCC+유리기판</div>
+      </div>
+      <div class="sk-pts">
+        <div class="skpt"><span class="skpt-mk up">▲</span><span>MLCC 판가 YoY 양전환 확인</span></div>
+        <div class="skpt"><span class="skpt-mk up">▲</span><span>TP 200만 — MLCC+FC-BGA+유리기판</span></div>
+        <div class="skpt"><span class="skpt-mk up">▲</span><span>Si-Cap 삼성전자 공급 가시화</span></div>
+      </div>
+      <div class="sk-evt">📅 다음: <strong>2Q 풀캐파 전환 확인</strong></div>
+    </div>
+
+    <div class="skc sb">
+      <div class="skc-top">
+        <div><div class="sk-name">솔브레인</div><div class="sk-code">357780 · 챕터4</div></div>
+        <div class="sk-score ss-hot">소재 선두</div>
+      </div>
+      <div class="sk-pts">
+        <div class="skpt"><span class="skpt-mk up">▲</span><span>TP 60만 — +178% 리레이팅</span></div>
+        <div class="skpt"><span class="skpt-mk up">▲</span><span>식각액 ASP 연동계약 체결</span></div>
+        <div class="skpt"><span class="skpt-mk up">▲</span><span>HBM 생산 증가 = 반복 수요</span></div>
+      </div>
+      <div class="sk-evt">📅 다음: <strong>2Q 실적 (7~8월)</strong></div>
+    </div>
+
+  </div>
+
+  <!-- D-DAY 달력 HEADER -->
+  <div class="sec-hd">
+    <div class="sec-dia">📅</div>
+    <div class="sec-lbl">D-DAY 촉매 달력</div>
+    <div class="sec-cnt">스토리보드 Act 3 기준</div>
+  </div>
+
+  <!-- D-Day 4칸 -->
+  <div class="dday-row" style="margin-bottom:10px;">
+
+    <div class="dd dd-hot">
+      <div class="dd-count cnt-hot">D-4</div>
+      <div class="dd-date">2026-06-01</div>
+      <div class="dd-title">COMPUTEX<br>젠슨황 VR 발표</div>
+      <div class="dd-stk">SK하이닉스 · 한미반도체</div>
+    </div>
+
+    <div class="dd dd-hot">
+      <div class="dd-count cnt-hot">D-4</div>
+      <div class="dd-date">2026-06-01</div>
+      <div class="dd-title">5월 수출입 동향<br>반도체 품목 확인</div>
+      <div class="dd-stk">섹터 전체</div>
+    </div>
+
+    <div class="dd dd-warm">
+      <div class="dd-count cnt-warm">D-30</div>
+      <div class="dd-date">2026-06 말</div>
+      <div class="dd-title">K-AI국책과제<br>팹리스·IP 발표</div>
+      <div class="dd-stk">오픈엣지 · 칩스앤미디어</div>
+    </div>
+
+    <div class="dd dd-cool">
+      <div class="dd-count cnt-cool">Q3</div>
+      <div class="dd-date">2026 3Q</div>
+      <div class="dd-title">M15X 70K<br>완전 가동 확인</div>
+      <div class="dd-stk">소부장 밸류체인 전체</div>
+    </div>
+
+  </div>
+
+  <!-- 체크리스트 -->
+  <div class="sec-hd">
+    <div class="sec-dia">✅</div>
+    <div class="sec-lbl">오늘의 체크리스트</div>
+  </div>
+
+  <div class="chk-wrap">
+    <div class="chk-col-lbl">확인할 것</div>
+    <div class="chklst">
+      <div class="chkrow"><div class="cbadge cb-ok">✓</div><span>SK하이닉스 HBM4 NVDA 납품 물량 뉴스</span></div>
+      <div class="chkrow"><div class="cbadge cb-warn">!</div><span>6/1 D-4 — COMPUTEX 발표 사전 포지션</span></div>
+      <div class="chkrow"><div class="cbadge cb-ok">✓</div><span>삼성전기 MLCC 3Q 풀캐파 타임라인 확인</span></div>
+      <div class="chkrow"><div class="cbadge cb-warn">!</div><span>소부장 수급빈집 xlsm 등록 후 스코어 확인</span></div>
+      <div class="chkrow"><div class="cbadge cb-eye">?</div><span>삼성전자 2nm 수주 세부 발표 모니터링</span></div>
+      <div class="chkrow"><div class="cbadge cb-eye">?</div><span>CXMT DDR5 실제 출하량 데이터 추적</span></div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="ft">
+    <div class="ft-brand">STOCK BRAIN</div>
+    <div class="ft-sub">로또의 주식인사이트 · 반도체섹터 데일리 브리핑 · 스토리보드 기반</div>
+    <div class="ft-date">2026.05.28</div>
+  </div>
+
+</div>
+</body>
+</html>

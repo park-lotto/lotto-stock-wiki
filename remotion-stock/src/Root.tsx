@@ -12,6 +12,8 @@ import { LeadingStockVideo } from './LeadingStockVideo';
 import { DataDetectiveVideo, DATA_DETECTIVE_FRAMES } from './DataDetectiveVideo';
 import { KosdaqPolicyVideo, KOSDAQ_POLICY_FRAMES } from './KosdaqPolicyVideo';
 import { LoseReasonVideo, LOSE_REASON_FRAMES } from './LoseReasonVideo';
+import { ShipyardVideo } from './ShipyardVideo';
+import { ChartScene } from './scenes/ChartScene';
 import { SDUR } from './constants';
 
 export const RemotionRoot: React.FC = () => {
@@ -102,6 +104,25 @@ export const RemotionRoot: React.FC = () => {
         id="LoseReasonVideo"
         component={LoseReasonVideo}
         durationInFrames={LOSE_REASON_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      {/* 차트 분석 씬 — KODEX 조선 ETF (12초) */}
+      <Composition
+        id="ChartScene"
+        component={ChartScene}
+        durationInFrames={360}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* 조선 섹터 브리핑 — 이미지 활용 데모 (3장면 × 6초) */}
+      <Composition
+        id="ShipyardVideo"
+        component={ShipyardVideo}
+        durationInFrames={SDUR * 3}
         fps={30}
         width={1920}
         height={1080}

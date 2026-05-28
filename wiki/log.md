@@ -1,3 +1,20 @@
+- 2026-05-28 — 이미지 시스템 + Remotion 차트씬 구축:
+  [이미지 다운로드] scripts/download_images.py 신규 — Wikimedia Commons API 기반, 보고서 내용 분석→쿼리 자동 생성(--from-html/--from-text), 한국어→영문 변환 사전(KR_TO_EN), CC라이선스 자동 확인 + 출처_attribution.txt 생성
+  [보고서 샘플] out/report_nvidia_sample.html — 젠슨황 히어로+프로필+NVIDIA로고 삽입, STOCK BRAIN 다크 테마
+  [보고서 샘플] out/report_조선_20260528.html — 컨테이너선 히어로+LNG탱커 배너+조선소크레인 스플릿, 삼각축 호황 내용
+  [Remotion] remotion-stock/src/scenes/ImgScene.tsx 신규 — ImgHeroScene(켄번스줌+오버레이텍스트), ImgSplitScene(좌이미지↔우불릿) 재사용 컴포넌트
+  [Remotion] remotion-stock/src/ShipyardVideo.tsx 신규 — 조선섹터 3씬(히어로+LNG스플릿+종목스플릿)
+  [Remotion] remotion-stock/src/scenes/ChartScene.tsx 신규 — 실제 차트이미지(KODEX조선ETF)+스캔라인+펄스서클+추세화살표 드로잉 애니메이션 (12초)
+  [public] remotion-stock/public/images/ — ship_hero, lng_tanker, jensen_keynote, jensen_profile, chart_조선etf 추가
+  [원칙] 모든 보고서/영상 생성 시 고정 매핑 금지, 내용 분석→동적 이미지 검색 적용
+- 2026-05-28 — 반도체 미국커플링 DB 구축: 미국커플링_로직.md 신규(NVDA·MU·ASML·TSMC·AMD·Intel·Broadcom·LRCX/AMAT 8종목 한국 반응 매핑 + 브리핑 오류방지 체크리스트) + SK하이닉스·삼성전자·삼성전기 stock/ 파일에 미국 커플링 섹션 추가
+- 2026-05-28 — sector_반도체.md 재구성 완료: Q1~Q7 원본(6.5MB) → 조선 섹터 구조 기반 정리본(17.7KB). 지속영향이벤트·타임라인·90일일정·소부장테이블·미중패권분석·종목포지션맵 포함
+- 2026-05-28 — 반도체 Q4~Q7 재실행 완료: 성공 ['Q4', 'Q5', 'Q6', 'Q7'] / 실패 []
+- 2026-05-28 — 반도체 섹터 Q1~Q7 딥리서치 완료 (Gemini Flash 연속 대화, 7개 질문)
+- 2026-05-28 — 반도체 스토리보드 시스템 구축: 스토리보드_반도체.md(6챕터 대서사) + sector_briefing_반도체.html 스토리보드 연동 업데이트(챕터온도계·D-Day달력 추가) + report_반도체_20260528.html 심층리포트 생성(6챕터+주가구간평가+D-Day+리스크매트릭스) + CLAUDE.md 스토리보드 운영규칙 추가
+- 2026-05-28 — 조선 섹터 추가 심층 분석 3건: MRO(미해군함정정비 MSRA·42건 발주) + 미해군신조(MASGA·NGLS·필리조선소·무인함 USV/UUV) + FLNG(삼성중공업 4기 10조 임박·크시리심스·코랄노르트) + 8대 이슈 전체맵. sector_조선.md 추가.
+- 2026-05-28 — 조선 섹터 주가구간 평가 보고서 생성: out/report_20260528_조선섹터_주가구간평가.html (기존주주·예비주주 전략 + D-Day 달력)
+- 2026-05-28 — 조선 섹터 심층 분석 3건 완료: ① 조선엔진×데이터센터 (HD현대힘센엔진 6271억·삼성중공업FDC) ② 핵추진잠수함 장보고-N (28.9조, 한화오션 ADD설계, 2030년대 중반 진수) ③ HD현대 원전 파운드리 (테라파워 나트륨SMR RES 우선협상자·NRC허가 2026-12). sector_조선.md 3개 섹션 추가.
 - 2026-05-28 — fetch_투경.py 재설계 완료 (목록수집 제거 → 조건분석 전용). KRX API 필드 버그(mktId→marketEngName) 수정. 표시 버그(×60%→×160%) 수정. 재실행 결과: 제주반도체·코리아써키트 3조건 모두 해소 → 5/29 해제 예상. 투경관리.md·양 stock 파일 업데이트.
 - 2026-05-28 — 투경 확인: 제주반도체·코리아써키트 스크립트 오판(네이버 15건 제한) → 실제 KIND 미해제. 심텍·티에스이 5/26 신규 지정·네이처셀·바이젠셀·아모텍 5/28 신규 지정 반영. fetch_투경.py 페이지네이션 버그 확인.
 - 2026-05-27 — 리포트 ingest (115건) → 위키 반영: SK하이닉스·삼성전자·삼성전기·솔브레인·코미코·ISC 업데이트 + SNT다이내믹스·OCI홀딩스·SK·삼성물산·덴티움·한올바이오파마 업데이트 + 유니테스트·아이씨티케이·아모텍·삼성중공업·HJ중공업·비에이치아이·수산인더스트리·두산퓨얼셀·성일하이텍·솔루엠 신규 생성 (20종목). 반도체·방산 index 업데이트.
@@ -790,3 +807,6 @@ python calc_oscillator.py SK하이닉스 삼성전자 한미반도체 --tg
 
 **신규 파일**:
 - `wiki/L5_섹터/sector_반도체_서브섹터.md` — 18개 서브섹터 × 대표종목 매핑 마스터 (일별 활성 로그 포함)
+
+- 2026-05-28: [2차전지ESS] 섹터 딥리서치 완료 (Gemini 2.5 Flash + Google Search)
+- 2026-05-28: [조선] 섹터 딥리서치 완료 (Gemini 2.5 Flash + Google Search)

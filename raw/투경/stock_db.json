@@ -3,7 +3,7 @@
     "name": "KBI메탈",
     "code": "024840",
     "market": "KOSDAQ",
-    "last_seen_warning": "2026-05-27",
+    "last_seen_warning": "2026-05-28",
     "des_date_warning": "2026-05-26"
   },
   "048770": {
@@ -26,8 +26,10 @@
     "name": "광전자",
     "code": "017900",
     "market": "KOSDAQ",
-    "last_seen_warning": "2026-05-27",
-    "des_date_warning": "2026-05-22"
+    "last_seen_warning": "2026-05-28",
+    "des_date_warning": "2026-05-22",
+    "last_seen_risk": "2026-05-28",
+    "des_date_risk": "2026-04-14"
   },
   "085910": {
     "name": "네오티스",
@@ -41,7 +43,7 @@
     "name": "네패스아크",
     "code": "330860",
     "market": "KOSDAQ",
-    "last_seen_warning": "2026-05-27",
+    "last_seen_warning": "2026-05-28",
     "des_date_warning": "2026-05-27",
     "date_approx_warning": true
   },
@@ -57,7 +59,7 @@
     "name": "드림시큐리티",
     "code": "203650",
     "market": "KOSDAQ",
-    "last_seen_warning": "2026-05-27",
+    "last_seen_warning": "2026-05-28",
     "des_date_warning": "2026-05-27",
     "date_approx_warning": true
   },
@@ -89,7 +91,7 @@
     "name": "미래산업",
     "code": "025560",
     "market": "KOSDAQ",
-    "last_seen_warning": "2026-05-27",
+    "last_seen_warning": "2026-05-28",
     "des_date_warning": "2026-05-26"
   },
   "452200": {
@@ -144,7 +146,7 @@
     "name": "심텍",
     "code": "222800",
     "market": "KOSDAQ",
-    "last_seen_warning": "2026-05-27",
+    "last_seen_warning": "2026-05-28",
     "des_date_warning": "2026-05-26"
   },
   "217320": {
@@ -152,7 +154,9 @@
     "code": "217320",
     "market": "KOSDAQ",
     "last_seen_warning": "2026-05-27",
-    "des_date_warning": "2026-05-21"
+    "des_date_warning": "2026-05-21",
+    "last_seen_risk": "2026-05-28",
+    "des_date_risk": "2026-04-01"
   },
   "159010": {
     "name": "아스플로",
@@ -189,7 +193,7 @@
     "name": "엠케이전자",
     "code": "033160",
     "market": "KOSDAQ",
-    "last_seen_warning": "2026-05-27",
+    "last_seen_warning": "2026-05-28",
     "des_date_warning": "2026-05-22"
   },
   "080220": {
@@ -234,14 +238,14 @@
     "name": "타이거일렉",
     "code": "219130",
     "market": "KOSDAQ",
-    "last_seen_warning": "2026-05-27",
+    "last_seen_warning": "2026-05-28",
     "des_date_warning": "2026-05-22"
   },
   "131290": {
     "name": "티에스이",
     "code": "131290",
     "market": "KOSDAQ",
-    "last_seen_warning": "2026-05-27",
+    "last_seen_warning": "2026-05-28",
     "des_date_warning": "2026-05-26"
   },
   "004870": {
@@ -262,7 +266,7 @@
     "name": "피엠티",
     "code": "147760",
     "market": "KOSDAQ",
-    "last_seen_warning": "2026-05-27",
+    "last_seen_warning": "2026-05-28",
     "des_date_warning": "2026-05-27",
     "date_approx_warning": true
   },
@@ -277,9 +281,11 @@
     "name": "한국첨단소재",
     "code": "062970",
     "market": "KOSDAQ",
-    "last_seen_warning": "2026-05-27",
+    "last_seen_warning": "2026-05-28",
     "des_date_warning": "2026-05-27",
-    "date_approx_warning": true
+    "date_approx_warning": true,
+    "last_seen_risk": "2026-05-28",
+    "des_date_risk": "2026-04-09"
   },
   "452280": {
     "name": "한선엔지니어링",
@@ -309,10 +315,10 @@
     "name": "대원전선우",
     "code": "006345",
     "market": "KOSDAQ",
-    "last_seen_risk": "2026-05-27",
-    "des_date_risk": "2026-05-27",
-    "date_approx_risk": true,
-    "des_date_warning": "2026-05-27"
+    "last_seen_risk": "2026-05-28",
+    "des_date_risk": "2026-05-11",
+    "des_date_warning": "2026-05-27",
+    "last_seen_warning": "2026-05-28"
   },
   "332190": {
     "name": "오션스바이오",
@@ -327,9 +333,71 @@
     "name": "피델릭스",
     "code": "032580",
     "market": "KOSDAQ",
-    "last_seen_risk": "2026-05-27",
-    "des_date_risk": "2026-05-27",
-    "date_approx_risk": true,
+    "last_seen_risk": "2026-05-28",
+    "des_date_risk": "2026-05-26",
     "des_date_warning": "2026-05-27"
+  },
+  "007390": {
+    "name": "네이처셀",
+    "code": "007390",
+    "market": "KOSDAQ",
+    "last_seen_warning": "2026-05-28",
+    "des_date_warning": "2026-05-28"
+  },
+  "308080": {
+    "name": "바이젠셀",
+    "code": "308080",
+    "market": "KOSDAQ",
+    "last_seen_warning": "2026-05-28",
+    "des_date_warning": "2026-05-28"
+  },
+  "052710": {
+    "name": "아모텍",
+    "code": "052710",
+    "market": "KOSDAQ",
+    "last_seen_warning": "2026-05-28",
+    "des_date_warning": "2026-05-28"
+  },
+  "000500": {
+    "name": "가온전선",
+    "code": "000500",
+    "market": "KOSDAQ",
+    "last_seen_risk": "2026-05-28",
+    "des_date_risk": "2026-05-11"
+  },
+  "388790": {
+    "name": "라이콤",
+    "code": "388790",
+    "market": "KOSDAQ",
+    "last_seen_risk": "2026-05-28",
+    "des_date_risk": "2026-04-16"
+  },
+  "046970": {
+    "name": "우리로",
+    "code": "046970",
+    "market": "KOSDAQ",
+    "last_seen_risk": "2026-05-28",
+    "des_date_risk": "2026-04-17"
+  },
+  "069540": {
+    "name": "빛과전자",
+    "code": "069540",
+    "market": "KOSDAQ",
+    "last_seen_risk": "2026-05-28",
+    "des_date_risk": "2026-04-15"
+  },
+  "215790": {
+    "name": "이노인스트루먼트",
+    "code": "215790",
+    "market": "KOSDAQ",
+    "last_seen_risk": "2026-05-28",
+    "des_date_risk": "2026-04-08"
+  },
+  "049080": {
+    "name": "기가레인",
+    "code": "049080",
+    "market": "KOSDAQ",
+    "last_seen_risk": "2026-05-28",
+    "des_date_risk": "2026-04-03"
   }
 }

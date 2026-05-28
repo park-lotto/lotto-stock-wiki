@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>삼성전자 TradingView 차트</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #131722; height: 100vh; display: flex; flex-direction: column; }
+  .header {
+    padding: 12px 20px;
+    background: #1e222d;
+    border-bottom: 1px solid #2a2e39;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .header h1 { color: #d1d4dc; font-size: 16px; font-family: 'Malgun Gothic', sans-serif; font-weight: 700; }
+  .header span { color: #787b86; font-size: 12px; font-family: 'Malgun Gothic', sans-serif; }
+  #tv-chart { flex: 1; width: 100%; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>삼성전자</h1>
+  <span>KRX · 005930 · TradingView 위젯</span>
+</div>
+
+<div id="tv-chart">
+  <!-- TradingView Widget BEGIN -->
+  <div class="tradingview-widget-container" style="height:100%;width:100%">
+    <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
+    <div class="tradingview-widget-copyright">
+      <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">
+        <span class="blue-text">Track all markets on TradingView</span>
+      </a>
+    </div>
+    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+    {
+      "autosize": true,
+      "symbol": "KRX:005930",
+      "interval": "D",
+      "timezone": "Asia/Seoul",
+      "theme": "dark",
+      "style": "1",
+      "locale": "kr",
+      "backgroundColor": "rgba(19, 23, 34, 1)",
+      "gridColor": "rgba(42, 46, 57, 0.5)",
+      "hide_top_toolbar": false,
+      "hide_legend": false,
+      "save_image": true,
+      "calendar": false,
+      "studies": [
+        "STD;MA",
+        "STD;MA",
+        "STD;Volume"
+      ],
+      "show_popup_button": true,
+      "popup_width": "1000",
+      "popup_height": "650"
+    }
+    </script>
+  </div>
+  <!-- TradingView Widget END -->
+</div>
+
+</body>
+</html>

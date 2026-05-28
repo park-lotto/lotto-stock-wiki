@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>삼성전자 (005930) 일봉</title>
+<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0d1117;
+    font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    color: #e6edf3;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  /* 헤더 */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px 10px;
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+    flex-shrink: 0;
+  }
+  .stock-info { display: flex; align-items: baseline; gap: 12px; }
+  .stock-name { font-size: 18px; font-weight: 800; color: #e6edf3; letter-spacing: -0.5px; }
+  .stock-code { font-size: 12px; color: #8b949e; font-weight: 400; }
+  .price-block { display: flex; align-items: baseline; gap: 10px; }
+  .price { font-size: 26px; font-weight: 900; letter-spacing: -1px; }
+  .price.up   { color: #ff6b6b; }
+  .price.down { color: #4dabf7; }
+  .change { font-size: 13px; font-weight: 600; padding: 3px 8px; border-radius: 5px; }
+  .change.up   { background: rgba(255,107,107,0.15); color: #ff6b6b; }
+  .change.down { background: rgba(77,171,247,0.15); color: #4dabf7; }
+
+  /* 범례 */
+  .legend {
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    padding: 8px 20px;
+    background: #161b22;
+    border-bottom: 1px solid #21262d;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+  .leg-item { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: #8b949e; }
+  .leg-dot { width: 10px; height: 2px; border-radius: 1px; }
+  .period-btns { margin-left: auto; display: flex; gap: 4px; }
+  .pbtn {
+    background: #21262d;
+    border: 1px solid #30363d;
+    color: #8b949e;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .pbtn:hover, .pbtn.active { background: #388bfd22; border-color: #388bfd; color: #58a6ff; }
+
+  /* 차트 */
+  #chart-container {
+    flex: 1;
+    position: relative;
+    padding: 0 8px 8px;
+    background: #0d1117;
+  }
+  #chart { width: 100%; height: 100%; }
+
+  /* 십자선 툴팁 */
+  #tooltip {
+    position: absolute;
+    top: 12px;
+    left: 16px;
+    background: rgba(22,27,34,0.95);
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 10;
+    display: none;
+    min-width: 180px;
+  }
+  #tooltip .tt-date { color: #8b949e; font-size: 11px; margin-bottom: 6px; }
+  #tooltip .tt-row { display: flex; justify-content: space-between; gap: 16px; line-height: 1.8; }
+  #tooltip .tt-label { color: #8b949e; }
+  #tooltip .tt-val { font-weight: 700; }
+  #tooltip .tt-val.up   { color: #ff6b6b; }
+  #tooltip .tt-val.down { color: #4dabf7; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="stock-info">
+    <span class="stock-name">삼성전자</span>
+    <span class="stock-code">KRX · 005930 · 일봉</span>
+  </div>
+  <div class="price-block">
+    <span class="price down" id="cur-price">299,500</span>
+    <span class="change down" id="cur-change">▼ 7,500 (-2.44%)</span>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="leg-item"><div class="leg-dot" style="background:#26a69a;height:6px;width:6px;border-radius:50%"></div>양봉</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#ef5350;height:6px;width:6px;border-radius:50%"></div>음봉</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#f0c040;"></div>MA5</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#e040fb;"></div>MA20</div>
+  <span style="font-size:11px;color:#8b949e">pykrx · 2026.01~05.28</span>
+  <div class="period-btns">
+    <button class="pbtn" onclick="setRange(30)">1M</button>
+    <button class="pbtn active" onclick="setRange(90)">3M</button>
+    <button class="pbtn" onclick="setRange(0)">ALL</button>
+  </div>
+</div>
+
+<div id="chart-container">
+  <div id="chart"></div>
+  <div id="tooltip"></div>
+</div>
+
+<script>
+const CANDLES = [{"time": "2026-01-02", "open": 120200, "high": 128500, "low": 120200, "close": 128500}, {"time": "2026-01-05", "open": 134600, "high": 138600, "low": 133600, "close": 138100}, {"time": "2026-01-06", "open": 135300, "high": 139300, "low": 132700, "close": 138900}, {"time": "2026-01-07", "open": 143500, "high": 144400, "low": 137600, "close": 141000}, {"time": "2026-01-08", "open": 138300, "high": 144500, "low": 138300, "close": 138800}, {"time": "2026-01-09", "open": 136000, "high": 140700, "low": 135200, "close": 139000}, {"time": "2026-01-12", "open": 141000, "high": 142000, "low": 136900, "close": 138800}, {"time": "2026-01-13", "open": 139800, "high": 140200, "low": 136900, "close": 137600}, {"time": "2026-01-14", "open": 137000, "high": 140300, "low": 136800, "close": 140300}, {"time": "2026-01-15", "open": 139000, "high": 144000, "low": 138300, "close": 143900}, {"time": "2026-01-16", "open": 145300, "high": 149500, "low": 144300, "close": 148900}, {"time": "2026-01-19", "open": 147200, "high": 150600, "low": 146600, "close": 149300}, {"time": "2026-01-20", "open": 148500, "high": 149300, "low": 143900, "close": 145200}, {"time": "2026-01-21", "open": 141900, "high": 149800, "low": 141800, "close": 149500}, {"time": "2026-01-22", "open": 155000, "high": 157000, "low": 150800, "close": 152300}, {"time": "2026-01-23", "open": 154700, "high": 156000, "low": 150100, "close": 152100}, {"time": "2026-01-26", "open": 154900, "high": 156400, "low": 151500, "close": 152100}, {"time": "2026-01-27", "open": 150500, "high": 159500, "low": 149200, "close": 159500}, {"time": "2026-01-28", "open": 162600, "high": 163300, "low": 160200, "close": 162400}, {"time": "2026-01-29", "open": 166200, "high": 166600, "low": 157100, "close": 160700}, {"time": "2026-01-30", "open": 160100, "high": 166500, "low": 160100, "close": 160500}, {"time": "2026-02-02", "open": 155700, "high": 159600, "low": 150400, "close": 150400}, {"time": "2026-02-03", "open": 157900, "high": 167500, "low": 157200, "close": 167500}, {"time": "2026-02-04", "open": 163500, "high": 169400, "low": 163100, "close": 169100}, {"time": "2026-02-05", "open": 162000, "high": 164000, "low": 158500, "close": 159300}, {"time": "2026-02-06", "open": 154100, "high": 160300, "low": 151600, "close": 158600}, {"time": "2026-02-09", "open": 168600, "high": 168700, "low": 165000, "close": 166400}, {"time": "2026-02-10", "open": 167400, "high": 168100, "low": 165500, "close": 165800}, {"time": "2026-02-11", "open": 164000, "high": 168600, "low": 162000, "close": 167800}, {"time": "2026-02-12", "open": 171200, "high": 179600, "low": 170100, "close": 178600}, {"time": "2026-02-13", "open": 179500, "high": 184400, "low": 178900, "close": 181200}, {"time": "2026-02-19", "open": 188000, "high": 190900, "low": 187100, "close": 190000}, {"time": "2026-02-20", "open": 190000, "high": 190300, "low": 188600, "close": 190100}, {"time": "2026-02-23", "open": 194400, "high": 197600, "low": 190500, "close": 193000}, {"time": "2026-02-24", "open": 193000, "high": 200000, "low": 192000, "close": 200000}, {"time": "2026-02-25", "open": 202500, "high": 206000, "low": 201000, "close": 203500}, {"time": "2026-02-26", "open": 206500, "high": 219000, "low": 206000, "close": 218000}, {"time": "2026-02-27", "open": 210000, "high": 223000, "low": 210000, "close": 216500}, {"time": "2026-03-03", "open": 209500, "high": 212500, "low": 195100, "close": 195100}, {"time": "2026-03-04", "open": 184200, "high": 195900, "low": 171900, "close": 172200}, {"time": "2026-03-05", "open": 195000, "high": 199700, "low": 188100, "close": 191600}, {"time": "2026-03-06", "open": 186100, "high": 189700, "low": 181000, "close": 188200}, {"time": "2026-03-09", "open": 173500, "high": 175500, "low": 167300, "close": 173500}, {"time": "2026-03-10", "open": 187600, "high": 191500, "low": 184300, "close": 187900}, {"time": "2026-03-11", "open": 193000, "high": 194800, "low": 187700, "close": 190000}, {"time": "2026-03-12", "open": 186600, "high": 190000, "low": 185900, "close": 187900}, {"time": "2026-03-13", "open": 180000, "high": 186200, "low": 179900, "close": 183500}, {"time": "2026-03-16", "open": 184600, "high": 189000, "low": 183600, "close": 188700}, {"time": "2026-03-17", "open": 198000, "high": 198000, "low": 193100, "close": 193900}, {"time": "2026-03-18", "open": 200500, "high": 209000, "low": 199700, "close": 208500}, {"time": "2026-03-19", "open": 199900, "high": 205000, "low": 199600, "close": 200500}, {"time": "2026-03-20", "open": 202000, "high": 202500, "low": 199000, "close": 199400}, {"time": "2026-03-23", "open": 190500, "high": 191200, "low": 186300, "close": 186300}, {"time": "2026-03-24", "open": 195500, "high": 196000, "low": 185500, "close": 189700}, {"time": "2026-03-25", "open": 193700, "high": 196400, "low": 189000, "close": 189000}, {"time": "2026-03-26", "open": 185500, "high": 185900, "low": 178900, "close": 180100}, {"time": "2026-03-27", "open": 172100, "high": 181700, "low": 172000, "close": 179700}, {"time": "2026-03-30", "open": 171000, "high": 176650, "low": 170600, "close": 176300}, {"time": "2026-03-31", "open": 170000, "high": 174700, "low": 167000, "close": 167200}, {"time": "2026-04-01", "open": 179000, "high": 190800, "low": 178000, "close": 189600}, {"time": "2026-04-02", "open": 192600, "high": 193600, "low": 175000, "close": 178400}, {"time": "2026-04-03", "open": 184200, "high": 187200, "low": 182700, "close": 186200}, {"time": "2026-04-06", "open": 190900, "high": 194600, "low": 190100, "close": 193100}, {"time": "2026-04-07", "open": 202000, "high": 202500, "low": 192400, "close": 196500}, {"time": "2026-04-08", "open": 214000, "high": 214500, "low": 207500, "close": 210500}, {"time": "2026-04-09", "open": 207000, "high": 207500, "low": 202000, "close": 204000}, {"time": "2026-04-10", "open": 208500, "high": 211000, "low": 205500, "close": 206000}, {"time": "2026-04-13", "open": 198200, "high": 203000, "low": 198200, "close": 201000}, {"time": "2026-04-14", "open": 208000, "high": 210000, "low": 205500, "close": 206500}, {"time": "2026-04-15", "open": 215000, "high": 215500, "low": 210000, "close": 211000}, {"time": "2026-04-16", "open": 212000, "high": 218000, "low": 210500, "close": 217500}, {"time": "2026-04-17", "open": 217000, "high": 218000, "low": 215000, "close": 216000}, {"time": "2026-04-20", "open": 214500, "high": 219000, "low": 213000, "close": 214500}, {"time": "2026-04-21", "open": 218000, "high": 220000, "low": 216000, "close": 219000}, {"time": "2026-04-22", "open": 218500, "high": 222500, "low": 215500, "close": 217500}, {"time": "2026-04-23", "open": 223000, "high": 229500, "low": 216000, "close": 224500}, {"time": "2026-04-24", "open": 224000, "high": 225000, "low": 216500, "close": 219500}, {"time": "2026-04-27", "open": 220000, "high": 226000, "low": 218500, "close": 224500}, {"time": "2026-04-28", "open": 224000, "high": 226000, "low": 221500, "close": 222000}, {"time": "2026-04-29", "open": 219500, "high": 228000, "low": 218500, "close": 226000}, {"time": "2026-04-30", "open": 229000, "high": 230000, "low": 220500, "close": 220500}, {"time": "2026-05-04", "open": 228000, "high": 232500, "low": 224000, "close": 232500}, {"time": "2026-05-06", "open": 254000, "high": 270000, "low": 251000, "close": 266000}, {"time": "2026-05-07", "open": 272000, "high": 277000, "low": 260000, "close": 271500}, {"time": "2026-05-08", "open": 260000, "high": 270000, "low": 260000, "close": 268500}, {"time": "2026-05-11", "open": 284500, "high": 288500, "low": 280000, "close": 285500}, {"time": "2026-05-12", "open": 290000, "high": 291500, "low": 266000, "close": 279000}, {"time": "2026-05-13", "open": 264000, "high": 285500, "low": 262000, "close": 284000}, {"time": "2026-05-14", "open": 282000, "high": 299500, "low": 282000, "close": 296000}, {"time": "2026-05-15", "open": 291000, "high": 296500, "low": 266000, "close": 270500}, {"time": "2026-05-18", "open": 269500, "high": 288500, "low": 262000, "close": 281000}, {"time": "2026-05-19", "open": 274000, "high": 281500, "low": 266000, "close": 275500}, {"time": "2026-05-20", "open": 278000, "high": 282500, "low": 263500, "close": 276000}, {"time": "2026-05-21", "open": 291000, "high": 299500, "low": 287000, "close": 299500}, {"time": "2026-05-22", "open": 300000, "high": 300500, "low": 292000, "close": 292500}, {"time": "2026-05-26", "open": 298000, "high": 302000, "low": 297500, "close": 299000}, {"time": "2026-05-27", "open": 321500, "high": 323000, "low": 306000, "close": 307000}, {"time": "2026-05-28", "open": 305000, "high": 306500, "low": 287500, "close": 299500}];
+
+const VOLUMES = [{"time": "2026-01-02", "value": 30463279, "color": "#26a69a55"}, {"time": "2026-01-05", "value": 42863376, "color": "#26a69a55"}, {"time": "2026-01-06", "value": 45321341, "color": "#26a69a55"}, {"time": "2026-01-07", "value": 46317413, "color": "#ef535055"}, {"time": "2026-01-08", "value": 41449329, "color": "#26a69a55"}, {"time": "2026-01-09", "value": 29520566, "color": "#26a69a55"}, {"time": "2026-01-12", "value": 26271134, "color": "#ef535055"}, {"time": "2026-01-13", "value": 22384699, "color": "#ef535055"}, {"time": "2026-01-14", "value": 18444394, "color": "#26a69a55"}, {"time": "2026-01-15", "value": 24701126, "color": "#26a69a55"}, {"time": "2026-01-16", "value": 30000219, "color": "#26a69a55"}, {"time": "2026-01-19", "value": 22762497, "color": "#26a69a55"}, {"time": "2026-01-20", "value": 24059218, "color": "#ef535055"}, {"time": "2026-01-21", "value": 31703610, "color": "#26a69a55"}, {"time": "2026-01-22", "value": 32073624, "color": "#ef535055"}, {"time": "2026-01-23", "value": 25407497, "color": "#ef535055"}, {"time": "2026-01-26", "value": 20561689, "color": "#ef535055"}, {"time": "2026-01-27", "value": 29423670, "color": "#26a69a55"}, {"time": "2026-01-28", "value": 29456431, "color": "#ef535055"}, {"time": "2026-01-29", "value": 36087223, "color": "#ef535055"}, {"time": "2026-01-30", "value": 40557267, "color": "#26a69a55"}, {"time": "2026-02-02", "value": 39748369, "color": "#ef535055"}, {"time": "2026-02-03", "value": 36529813, "color": "#26a69a55"}, {"time": "2026-02-04", "value": 29943042, "color": "#26a69a55"}, {"time": "2026-02-05", "value": 38435228, "color": "#ef535055"}, {"time": "2026-02-06", "value": 36358081, "color": "#26a69a55"}, {"time": "2026-02-09", "value": 25098971, "color": "#ef535055"}, {"time": "2026-02-10", "value": 19369566, "color": "#ef535055"}, {"time": "2026-02-11", "value": 22760242, "color": "#26a69a55"}, {"time": "2026-02-12", "value": 41296011, "color": "#26a69a55"}, {"time": "2026-02-13", "value": 34454192, "color": "#26a69a55"}, {"time": "2026-02-19", "value": 27049388, "color": "#26a69a55"}, {"time": "2026-02-20", "value": 24213880, "color": "#26a69a55"}, {"time": "2026-02-23", "value": 26364684, "color": "#ef535055"}, {"time": "2026-02-24", "value": 28060617, "color": "#26a69a55"}, {"time": "2026-02-25", "value": 26987996, "color": "#26a69a55"}, {"time": "2026-02-26", "value": 30095763, "color": "#26a69a55"}, {"time": "2026-02-27", "value": 51774768, "color": "#26a69a55"}, {"time": "2026-03-03", "value": 54879010, "color": "#ef535055"}, {"time": "2026-03-04", "value": 89427954, "color": "#ef535055"}, {"time": "2026-03-05", "value": 53959129, "color": "#ef535055"}, {"time": "2026-03-06", "value": 29522650, "color": "#26a69a55"}, {"time": "2026-03-09", "value": 43066020, "color": "#26a69a55"}, {"time": "2026-03-10", "value": 33530170, "color": "#26a69a55"}, {"time": "2026-03-11", "value": 24311356, "color": "#ef535055"}, {"time": "2026-03-12", "value": 20440753, "color": "#26a69a55"}, {"time": "2026-03-13", "value": 19566331, "color": "#26a69a55"}, {"time": "2026-03-16", "value": 19747901, "color": "#26a69a55"}, {"time": "2026-03-17", "value": 20300082, "color": "#ef535055"}, {"time": "2026-03-18", "value": 25148481, "color": "#26a69a55"}, {"time": "2026-03-19", "value": 19884483, "color": "#26a69a55"}, {"time": "2026-03-20", "value": 35279762, "color": "#ef535055"}, {"time": "2026-03-23", "value": 30268173, "color": "#ef535055"}, {"time": "2026-03-24", "value": 25458914, "color": "#ef535055"}, {"time": "2026-03-25", "value": 22995904, "color": "#ef535055"}, {"time": "2026-03-26", "value": 32074131, "color": "#ef535055"}, {"time": "2026-03-27", "value": 29138966, "color": "#26a69a55"}, {"time": "2026-03-30", "value": 22269147, "color": "#26a69a55"}, {"time": "2026-03-31", "value": 38659593, "color": "#ef535055"}, {"time": "2026-04-01", "value": 32390251, "color": "#26a69a55"}, {"time": "2026-04-02", "value": 38615231, "color": "#ef535055"}, {"time": "2026-04-03", "value": 20194447, "color": "#26a69a55"}, {"time": "2026-04-06", "value": 20635958, "color": "#26a69a55"}, {"time": "2026-04-07", "value": 30848053, "color": "#ef535055"}, {"time": "2026-04-08", "value": 35890973, "color": "#ef535055"}, {"time": "2026-04-09", "value": 42320839, "color": "#ef535055"}, {"time": "2026-04-10", "value": 18244459, "color": "#ef535055"}, {"time": "2026-04-13", "value": 19603415, "color": "#26a69a55"}, {"time": "2026-04-14", "value": 23672078, "color": "#ef535055"}, {"time": "2026-04-15", "value": 24092884, "color": "#ef535055"}, {"time": "2026-04-16", "value": 21499788, "color": "#26a69a55"}, {"time": "2026-04-17", "value": 18079322, "color": "#ef535055"}, {"time": "2026-04-20", "value": 17107741, "color": "#26a69a55"}, {"time": "2026-04-21", "value": 16752132, "color": "#26a69a55"}, {"time": "2026-04-22", "value": 16823480, "color": "#ef535055"}, {"time": "2026-04-23", "value": 34525485, "color": "#26a69a55"}, {"time": "2026-04-24", "value": 19626666, "color": "#ef535055"}, {"time": "2026-04-27", "value": 22870374, "color": "#26a69a55"}, {"time": "2026-04-28", "value": 18444490, "color": "#ef535055"}, {"time": "2026-04-29", "value": 20363756, "color": "#26a69a55"}, {"time": "2026-04-30", "value": 22161975, "color": "#ef535055"}, {"time": "2026-05-04", "value": 32920816, "color": "#26a69a55"}, {"time": "2026-05-06", "value": 53097996, "color": "#26a69a55"}, {"time": "2026-05-07", "value": 41404687, "color": "#ef535055"}, {"time": "2026-05-08", "value": 25875880, "color": "#26a69a55"}, {"time": "2026-05-11", "value": 36031094, "color": "#26a69a55"}, {"time": "2026-05-12", "value": 41211149, "color": "#ef535055"}, {"time": "2026-05-13", "value": 35540134, "color": "#26a69a55"}, {"time": "2026-05-14", "value": 39314752, "color": "#26a69a55"}, {"time": "2026-05-15", "value": 38075487, "color": "#ef535055"}, {"time": "2026-05-18", "value": 33555214, "color": "#26a69a55"}, {"time": "2026-05-19", "value": 30767569, "color": "#26a69a55"}, {"time": "2026-05-20", "value": 35662077, "color": "#ef535055"}, {"time": "2026-05-21", "value": 36168689, "color": "#26a69a55"}, {"time": "2026-05-22", "value": 18395274, "color": "#ef535055"}, {"time": "2026-05-26", "value": 23441371, "color": "#26a69a55"}, {"time": "2026-05-27", "value": 33916688, "color": "#ef535055"}, {"time": "2026-05-28", "value": 30039189, "color": "#ef535055"}];
+
+const MA5  = [{"time": "2026-01-08", "value": 137060}, {"time": "2026-01-09", "value": 139160}, {"time": "2026-01-12", "value": 139300}, {"time": "2026-01-13", "value": 139040}, {"time": "2026-01-14", "value": 138900}, {"time": "2026-01-15", "value": 139920}, {"time": "2026-01-16", "value": 141900}, {"time": "2026-01-19", "value": 144000}, {"time": "2026-01-20", "value": 145520}, {"time": "2026-01-21", "value": 147360}, {"time": "2026-01-22", "value": 149040}, {"time": "2026-01-23", "value": 149680}, {"time": "2026-01-26", "value": 150240}, {"time": "2026-01-27", "value": 153100}, {"time": "2026-01-28", "value": 155680}, {"time": "2026-01-29", "value": 157360}, {"time": "2026-01-30", "value": 159040}, {"time": "2026-02-02", "value": 158700}, {"time": "2026-02-03", "value": 160300}, {"time": "2026-02-04", "value": 161640}, {"time": "2026-02-05", "value": 161360}, {"time": "2026-02-06", "value": 160980}, {"time": "2026-02-09", "value": 164180}, {"time": "2026-02-10", "value": 163840}, {"time": "2026-02-11", "value": 163580}, {"time": "2026-02-12", "value": 167440}, {"time": "2026-02-13", "value": 171960}, {"time": "2026-02-19", "value": 176680}, {"time": "2026-02-20", "value": 181540}, {"time": "2026-02-23", "value": 186580}, {"time": "2026-02-24", "value": 190860}, {"time": "2026-02-25", "value": 195320}, {"time": "2026-02-26", "value": 200920}, {"time": "2026-02-27", "value": 206200}, {"time": "2026-03-03", "value": 206620}, {"time": "2026-03-04", "value": 201060}, {"time": "2026-03-05", "value": 198680}, {"time": "2026-03-06", "value": 192720}, {"time": "2026-03-09", "value": 184120}, {"time": "2026-03-10", "value": 182680}, {"time": "2026-03-11", "value": 186240}, {"time": "2026-03-12", "value": 185500}, {"time": "2026-03-13", "value": 184560}, {"time": "2026-03-16", "value": 187600}, {"time": "2026-03-17", "value": 188800}, {"time": "2026-03-18", "value": 192500}, {"time": "2026-03-19", "value": 195020}, {"time": "2026-03-20", "value": 198200}, {"time": "2026-03-23", "value": 197720}, {"time": "2026-03-24", "value": 196880}, {"time": "2026-03-25", "value": 192980}, {"time": "2026-03-26", "value": 188900}, {"time": "2026-03-27", "value": 184960}, {"time": "2026-03-30", "value": 182960}, {"time": "2026-03-31", "value": 178460}, {"time": "2026-04-01", "value": 178580}, {"time": "2026-04-02", "value": 178240}, {"time": "2026-04-03", "value": 179540}, {"time": "2026-04-06", "value": 182900}, {"time": "2026-04-07", "value": 188760}, {"time": "2026-04-08", "value": 192940}, {"time": "2026-04-09", "value": 198060}, {"time": "2026-04-10", "value": 202020}, {"time": "2026-04-13", "value": 203600}, {"time": "2026-04-14", "value": 205600}, {"time": "2026-04-15", "value": 205700}, {"time": "2026-04-16", "value": 208400}, {"time": "2026-04-17", "value": 210400}, {"time": "2026-04-20", "value": 213100}, {"time": "2026-04-21", "value": 215600}, {"time": "2026-04-22", "value": 216900}, {"time": "2026-04-23", "value": 218300}, {"time": "2026-04-24", "value": 219000}, {"time": "2026-04-27", "value": 221000}, {"time": "2026-04-28", "value": 221600}, {"time": "2026-04-29", "value": 223300}, {"time": "2026-04-30", "value": 222500}, {"time": "2026-05-04", "value": 225100}, {"time": "2026-05-06", "value": 233400}, {"time": "2026-05-07", "value": 243300}, {"time": "2026-05-08", "value": 251800}, {"time": "2026-05-11", "value": 264800}, {"time": "2026-05-12", "value": 274100}, {"time": "2026-05-13", "value": 277700}, {"time": "2026-05-14", "value": 282600}, {"time": "2026-05-15", "value": 283000}, {"time": "2026-05-18", "value": 282100}, {"time": "2026-05-19", "value": 281400}, {"time": "2026-05-20", "value": 279800}, {"time": "2026-05-21", "value": 280500}, {"time": "2026-05-22", "value": 284900}, {"time": "2026-05-26", "value": 288500}, {"time": "2026-05-27", "value": 294800}, {"time": "2026-05-28", "value": 299500}];
+
+const MA20 = [{"time": "2026-01-29", "value": 145845}, {"time": "2026-01-30", "value": 147445}, {"time": "2026-02-02", "value": 148060}, {"time": "2026-02-03", "value": 149490}, {"time": "2026-02-04", "value": 150895}, {"time": "2026-02-05", "value": 151920}, {"time": "2026-02-06", "value": 152900}, {"time": "2026-02-09", "value": 154280}, {"time": "2026-02-10", "value": 155690}, {"time": "2026-02-11", "value": 157065}, {"time": "2026-02-12", "value": 158800}, {"time": "2026-02-13", "value": 160415}, {"time": "2026-02-19", "value": 162450}, {"time": "2026-02-20", "value": 164695}, {"time": "2026-02-23", "value": 166870}, {"time": "2026-02-24", "value": 169255}, {"time": "2026-02-25", "value": 171825}, {"time": "2026-02-26", "value": 175120}, {"time": "2026-02-27", "value": 177970}, {"time": "2026-03-03", "value": 179605}, {"time": "2026-03-04", "value": 180180}, {"time": "2026-03-05", "value": 181735}, {"time": "2026-03-06", "value": 183625}, {"time": "2026-03-09", "value": 183925}, {"time": "2026-03-10", "value": 184865}, {"time": "2026-03-11", "value": 186400}, {"time": "2026-03-12", "value": 187865}, {"time": "2026-03-13", "value": 188720}, {"time": "2026-03-16", "value": 189865}, {"time": "2026-03-17", "value": 191170}, {"time": "2026-03-18", "value": 192665}, {"time": "2026-03-19", "value": 193630}, {"time": "2026-03-20", "value": 194100}, {"time": "2026-03-23", "value": 193910}, {"time": "2026-03-24", "value": 193745}, {"time": "2026-03-25", "value": 193195}, {"time": "2026-03-26", "value": 192025}, {"time": "2026-03-27", "value": 190110}, {"time": "2026-03-30", "value": 188100}, {"time": "2026-03-31", "value": 186705}, {"time": "2026-04-01", "value": 187575}, {"time": "2026-04-02", "value": 186915}, {"time": "2026-04-03", "value": 186815}, {"time": "2026-04-06", "value": 187795}, {"time": "2026-04-07", "value": 188225}, {"time": "2026-04-08", "value": 189250}, {"time": "2026-04-09", "value": 190055}, {"time": "2026-04-10", "value": 191180}, {"time": "2026-04-13", "value": 191795}, {"time": "2026-04-14", "value": 192425}, {"time": "2026-04-15", "value": 192550}, {"time": "2026-04-16", "value": 193400}, {"time": "2026-04-17", "value": 194230}, {"time": "2026-04-20", "value": 195640}, {"time": "2026-04-21", "value": 197105}, {"time": "2026-04-22", "value": 198530}, {"time": "2026-04-23", "value": 200750}, {"time": "2026-04-24", "value": 202740}, {"time": "2026-04-27", "value": 205150}, {"time": "2026-04-28", "value": 207890}, {"time": "2026-04-29", "value": 209710}, {"time": "2026-04-30", "value": 211815}, {"time": "2026-05-04", "value": 214130}, {"time": "2026-05-06", "value": 217775}, {"time": "2026-05-07", "value": 221525}, {"time": "2026-05-08", "value": 224425}, {"time": "2026-05-11", "value": 228500}, {"time": "2026-05-12", "value": 232150}, {"time": "2026-05-13", "value": 236300}, {"time": "2026-05-14", "value": 240775}, {"time": "2026-05-15", "value": 243750}, {"time": "2026-05-18", "value": 246925}, {"time": "2026-05-19", "value": 249900}, {"time": "2026-05-20", "value": 252975}, {"time": "2026-05-21", "value": 257000}, {"time": "2026-05-22", "value": 260750}, {"time": "2026-05-26", "value": 264475}, {"time": "2026-05-27", "value": 268850}, {"time": "2026-05-28", "value": 272600}];
+
+// ── 차트 초기화 ─────────────────────────
+const container = document.getElementById('chart');
+const chart = LightweightCharts.createChart(container, {
+  width:  container.offsetWidth,
+  height: container.offsetHeight,
+  layout: { background: { color: '#0d1117' }, textColor: '#8b949e' },
+  grid: {
+    vertLines: { color: '#21262d' },
+    horzLines: { color: '#21262d' },
+  },
+  crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+  rightPriceScale: { borderColor: '#30363d' },
+  timeScale: { borderColor: '#30363d', timeVisible: true },
+});
+
+// 캔들 시리즈
+const candleSeries = chart.addCandlestickSeries({
+  upColor:          '#26a69a',
+  downColor:        '#ef5350',
+  borderUpColor:    '#26a69a',
+  borderDownColor:  '#ef5350',
+  wickUpColor:      '#26a69a',
+  wickDownColor:    '#ef5350',
+});
+candleSeries.setData(CANDLES);
+
+// 거래량 (보조 패널)
+const volSeries = chart.addHistogramSeries({
+  priceFormat: { type: 'volume' },
+  priceScaleId: 'vol',
+  scaleMargins: { top: 0.8, bottom: 0 },
+});
+volSeries.setData(VOLUMES);
+
+// MA5
+const ma5Series = chart.addLineSeries({
+  color: '#f0c040', lineWidth: 1.5, priceLineVisible: false, lastValueVisible: false,
+});
+ma5Series.setData(MA5);
+
+// MA20
+const ma20Series = chart.addLineSeries({
+  color: '#e040fb', lineWidth: 1.5, priceLineVisible: false, lastValueVisible: false,
+});
+ma20Series.setData(MA20);
+
+// 기본 범위: 최근 3개월
+function setRange(days) {
+  document.querySelectorAll('.pbtn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  if (days === 0) {
+    chart.timeScale().fitContent();
+    return;
+  }
+  const last = CANDLES[CANDLES.length - 1].time;
+  const from = new Date(last);
+  from.setDate(from.getDate() - days);
+  chart.timeScale().setVisibleRange({
+    from: from.toISOString().slice(0,10),
+    to:   last
+  });
+}
+setRange(90);
+
+// 크기 자동 맞춤
+new ResizeObserver(() => {
+  chart.applyOptions({ width: container.offsetWidth, height: container.offsetHeight });
+}).observe(container);
+
+// ── 십자선 툴팁 ─────────────────────────
+const tooltip = document.getElementById('tooltip');
+chart.subscribeCrosshairMove(param => {
+  if (!param.time || !param.seriesData.has(candleSeries)) {
+    tooltip.style.display = 'none';
+    return;
+  }
+  const c = param.seriesData.get(candleSeries);
+  const v = param.seriesData.get(volSeries);
+  const isUp = c.close >= c.open;
+  const cls  = isUp ? 'up' : 'down';
+  const diff = c.close - c.open;
+  const pct  = ((diff / c.open) * 100).toFixed(2);
+  const fmt  = n => n.toLocaleString();
+  const fmtV = n => (n / 1e6).toFixed(1) + 'M';
+
+  tooltip.innerHTML = `
+    <div class="tt-date">${param.time}</div>
+    <div class="tt-row"><span class="tt-label">시가</span><span class="tt-val">${fmt(c.open)}</span></div>
+    <div class="tt-row"><span class="tt-label">고가</span><span class="tt-val up">${fmt(c.high)}</span></div>
+    <div class="tt-row"><span class="tt-label">저가</span><span class="tt-val down">${fmt(c.low)}</span></div>
+    <div class="tt-row"><span class="tt-label">종가</span><span class="tt-val ${cls}">${fmt(c.close)}</span></div>
+    <div class="tt-row"><span class="tt-label">등락</span><span class="tt-val ${cls}">${diff >= 0 ? '+' : ''}${fmt(diff)} (${pct}%)</span></div>
+    ${v ? `<div class="tt-row"><span class="tt-label">거래량</span><span class="tt-val">${fmtV(v.value)}</span></div>` : ''}
+  `;
+  tooltip.style.display = 'block';
+});
+</script>
+</body>
+</html>

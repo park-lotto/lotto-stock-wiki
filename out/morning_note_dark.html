@@ -1,403 +1,449 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=800">
-  <title>오늘의 전략 — STOCK BRAIN</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=800">
+<title>모닝 브리핑 — STOCK BRAIN 2026.05.28</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Space+Grotesk:wght@400;500;700&display=swap');
 
-    body {
-      background: #03030c;
-      background-image:
-        linear-gradient(rgba(0,255,208,0.022) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,255,208,0.022) 1px, transparent 1px);
-      background-size: 48px 48px;
-      font-family: 'Noto Sans KR', sans-serif;
-      width: 800px;
-      margin: 0 auto;
-      padding: 16px;
-    }
+* { margin:0; padding:0; box-sizing:border-box; }
 
-    .card {
-      background: linear-gradient(180deg, #0d0d1c 0%, #0a0a16 55%, #080810 100%);
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow:
-        0 0 60px rgba(0,255,208,0.10),
-        0 0 120px rgba(0,255,208,0.04),
-        0 60px 120px rgba(0,0,0,0.8),
-        inset 0 1px 0 rgba(0,255,208,0.08);
-      position: relative;
-    }
+:root {
+  --bg:     #07090f;
+  --bg2:    #0a0d16;
+  --card:   #0d1020;
+  --card2:  #111828;
+  --border: rgba(0,200,255,0.07);
+  --border2:rgba(0,200,255,0.18);
+  --cyan:   #00d4ff;
+  --green:  #00ffa3;
+  --red:    #ff3b5c;
+  --yellow: #ffd600;
+  --orange: #ff9500;
+  --purple: #c084fc;
+  --text:   #e2e8f0;
+  --sub:    #4a5568;
+  --dim:    #2d3748;
+}
 
-    /* 상단 글로우라인 */
-    .card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg,
-        transparent 5%,
-        rgba(0,255,208,0.45) 30%,
-        rgba(0,255,208,1) 50%,
-        rgba(0,255,208,0.45) 70%,
-        transparent 95%);
-    }
+body {
+  background:var(--bg);
+  background-image:
+    linear-gradient(rgba(0,200,255,0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,200,255,0.022) 1px, transparent 1px);
+  background-size:40px 40px;
+  font-family:'Noto Sans KR',sans-serif;
+  color:var(--text);
+  width:800px;
+  margin:0 auto;
+  padding:16px;
+}
 
-    /* ── HEADER ── */
-    .header {
-      padding: 22px 28px 18px;
-      border-bottom: 1px solid rgba(0,255,208,0.07);
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-    }
+/* ═══ MAIN CARD ═══ */
+.wrap {
+  background:var(--card);
+  border-radius:16px;
+  overflow:hidden;
+  border:1px solid var(--border);
+  position:relative;
+}
+.wrap::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg, transparent 5%, rgba(0,212,255,0.5) 30%, rgba(0,212,255,1) 50%, rgba(0,212,255,0.5) 70%, transparent 95%);
+}
 
-    .h-left {}
+/* ═══ HEADER ═══ */
+.hd {
+  padding:18px 24px 14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+}
+.brand-row { display:flex; align-items:center; gap:7px; margin-bottom:6px; }
+.brand-dot {
+  width:6px; height:6px; border-radius:50%;
+  background:var(--cyan);
+  box-shadow:0 0 8px var(--cyan), 0 0 16px rgba(0,212,255,0.4);
+}
+.brand-txt { font-size:11px; font-weight:900; letter-spacing:4px; color:var(--cyan); }
+.hd-title  { font-size:36px; font-weight:900; color:#fff; letter-spacing:-1px; line-height:1; }
+.hd-title .hl { color:var(--cyan); text-shadow:0 0 20px rgba(0,212,255,0.4); }
+.hd-sub    { font-size:12px; color:var(--sub); margin-top:5px; line-height:1.4; }
 
-    .brand-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
+.hd-right  { text-align:right; }
+.hd-brand-sub { font-size:11px; color:var(--sub); margin-bottom:7px; }
+.hd-date {
+  background:var(--cyan); color:#000;
+  font-size:12px; font-weight:900;
+  padding:5px 16px; border-radius:20px;
+  display:inline-block;
+}
 
-    .brand-txt {
-      font-size: 11px;
-      font-weight: 900;
-      letter-spacing: 5px;
-      color: #00FFD0;
-      text-transform: uppercase;
-    }
+/* ═══ INSIGHT BOXES ═══ */
+.insights { padding:12px 16px; display:flex; flex-direction:column; gap:8px; }
+.insight {
+  padding:11px 14px; border-radius:8px; border-left:3px solid;
+  display:flex; gap:10px; align-items:flex-start;
+  font-size:12px; line-height:1.6;
+}
+.ins-g { border-color:var(--cyan);  background:rgba(0,212,255,0.05); }
+.ins-m { border-color:var(--green); background:rgba(0,255,163,0.04); }
+.ins-lbl {
+  font-size:11px; font-weight:900; white-space:nowrap;
+  flex-shrink:0; padding-top:1px;
+}
+.ins-g .ins-lbl { color:var(--cyan); }
+.ins-m .ins-lbl { color:var(--green); }
+.ins-txt { color:rgba(226,232,240,0.72); }
 
-    .brand-dot {
-      width: 6px; height: 6px;
-      background: #00FFD0;
-      border-radius: 50%;
-      box-shadow: 0 0 8px #00FFD0, 0 0 16px rgba(0,255,208,0.5);
-    }
+/* ═══ MARKET DATA ═══ */
+.mkt-row {
+  padding:10px 16px 8px;
+  display:grid; grid-template-columns:1fr 1fr 1.3fr; gap:10px;
+}
+.mkt-card {
+  background:var(--card2); border:1px solid var(--border);
+  border-radius:10px; padding:13px 15px;
+}
+.mkt-lbl {
+  font-size:10px; font-weight:700; color:var(--sub);
+  letter-spacing:0.5px; margin-bottom:9px;
+}
+.mkt-val {
+  font-family:'Space Grotesk',sans-serif;
+  font-size:28px; font-weight:700; color:#fff;
+  letter-spacing:-0.5px; line-height:1; margin-bottom:4px;
+}
+.mkt-val .unit { font-size:16px; color:var(--sub); font-weight:500; }
+.mkt-chg { font-size:12px; font-weight:700; }
 
-    .brand-sub {
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: 2px;
-      color: #555;
-    }
+.idx-tbl { display:flex; flex-direction:column; gap:2px; }
+.idx-row {
+  display:flex; align-items:center;
+  padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.03);
+}
+.idx-row:last-child { border-bottom:none; }
+.idx-nm  { font-size:11px; color:var(--sub); flex:1; }
+.idx-val { font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:600; color:#ccc; margin-right:8px; }
+.idx-chg { font-size:11px; font-weight:700; width:56px; text-align:right; }
 
-    .h-title {
-      font-size: 34px;
-      font-weight: 900;
-      color: #FFFFFF;
-      letter-spacing: -0.5px;
-      line-height: 1;
-    }
+.up   { color:var(--cyan); }
+.down { color:var(--red); }
 
-    .h-title .hl {
-      color: #00FFD0;
-      text-shadow: 0 0 22px rgba(0,255,208,0.45);
-    }
+/* ═══ US INDICES ═══ */
+.us-row {
+  padding:0 16px 12px;
+  display:grid; grid-template-columns:repeat(4,1fr); gap:10px;
+}
+.us-card {
+  background:var(--card2); border:1px solid var(--border);
+  border-radius:10px; padding:11px 13px;
+}
+.us-nm  { font-size:10px; font-weight:700; color:var(--sub); letter-spacing:0.5px; margin-bottom:6px; }
+.us-val { font-family:'Space Grotesk',sans-serif; font-size:16px; font-weight:700; color:#fff; margin-bottom:3px; }
+.us-chg { font-size:11px; font-weight:700; }
 
-    .h-right {
-      text-align: right;
-    }
+/* ═══ SECTOR HEADER ═══ */
+.sec-hd {
+  padding:10px 24px 8px;
+  display:flex; align-items:center; gap:8px;
+  border-top:1px solid rgba(255,255,255,0.04);
+}
+.sec-diamond { color:var(--cyan); font-size:11px; }
+.sec-hd-txt  { font-size:10px; font-weight:700; color:var(--sub); letter-spacing:3.5px; }
 
-    /* ↓ 날짜는 매일 여기만 수정 */
-    .h-date {
-      font-size: 13px;
-      font-weight: 500;
-      color: #666;
-      margin-bottom: 7px;
-    }
+/* ═══ SECTOR GRID 4×2 ═══ */
+.sec-grid {
+  padding:0 16px 16px;
+  display:grid; grid-template-columns:repeat(4,1fr); gap:10px;
+}
+.sc {
+  background:var(--card2); border:1px solid var(--border);
+  border-radius:10px; padding:12px 12px 10px;
+  position:relative; overflow:hidden;
+}
+.sc::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  border-radius:10px 10px 0 0;
+}
+.sc.t-cyan::before   { background:var(--cyan); }
+.sc.t-green::before  { background:var(--green); }
+.sc.t-yellow::before { background:var(--yellow); }
+.sc.t-purple::before { background:var(--purple); }
+.sc.t-orange::before { background:var(--orange); }
+.sc.t-dim::before    { background:#334155; }
 
-    .h-status {
-      font-size: 12px;
-      font-weight: 700;
-      color: #00FFD0;
-      background: rgba(0,255,208,0.1);
-      border: 1px solid rgba(0,255,208,0.2);
-      padding: 4px 14px;
-      border-radius: 20px;
-      letter-spacing: 1px;
-    }
+.sc.hot {
+  border-color:rgba(0,212,255,0.18);
+  background:linear-gradient(160deg, rgba(0,212,255,0.04) 0%, var(--card2) 45%);
+}
 
-    /* ── SIGNAL STRIP ── */
-    .signal-strip {
-      display: flex;
-      gap: 6px;
-      padding: 9px 28px;
-      background: rgba(0,0,0,0.25);
-      border-bottom: 1px solid rgba(255,255,255,0.04);
-      align-items: center;
-      flex-wrap: wrap;
-    }
+.sc-th { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:9px; }
+.sc-name { font-size:13px; font-weight:900; color:#fff; line-height:1.2; }
+.sc-name small { display:block; font-size:9.5px; font-weight:500; color:var(--sub); margin-top:2px; }
+.sc-ico  { font-size:22px; opacity:.75; }
 
-    .strip-lbl {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 3px;
-      color: #333;
-      margin-right: 4px;
-    }
+.sc-pts { display:flex; flex-direction:column; gap:4px; }
+.spt {
+  display:flex; gap:4px; align-items:flex-start;
+  font-size:11px; line-height:1.45; color:rgba(226,232,240,0.62);
+}
+.spt-mk { width:14px; flex-shrink:0; margin-top:1px; font-size:10px; font-weight:900; }
+.up-mk   { color:var(--cyan); }
+.dn-mk   { color:var(--red); }
+.neu-mk  { color:var(--yellow); }
 
-    .sc-chip {
-      font-size: 11px;
-      font-weight: 700;
-      padding: 3px 11px;
-      border-radius: 10px;
-      border: 1px solid;
-    }
+.ctry {
+  font-size:9px; font-weight:700;
+  padding:1px 5px; border-radius:3px;
+  margin-right:2px; flex-shrink:0; margin-top:1px;
+}
+.c-us { background:rgba(0,212,255,0.1);  color:var(--cyan); }
+.c-kr { background:rgba(168,85,247,0.1); color:var(--purple); }
+.c-gl { background:rgba(0,255,163,0.08); color:var(--green); }
 
-    .sc-hot  { background:rgba(0,255,208,0.10); border-color:rgba(0,255,208,0.28); color:#00FFD0; }
-    .sc-warm { background:rgba(255,214,0,0.08); border-color:rgba(255,214,0,0.22); color:#FFD600; }
-    .sc-mid  { background:rgba(255,140,66,0.08); border-color:rgba(255,140,66,0.22); color:#FF8C42; }
-    .sc-cool { background:rgba(77,150,255,0.08); border-color:rgba(77,150,255,0.22); color:#4D96FF; }
+.sc-tag {
+  display:inline-flex; font-size:9px; font-weight:700;
+  padding:2px 8px; border-radius:5px; border:1px solid;
+  margin-top:8px;
+}
+.tg-hot  { color:var(--cyan);   border-color:rgba(0,212,255,0.3);   background:rgba(0,212,255,0.07); }
+.tg-warm { color:var(--yellow); border-color:rgba(255,214,0,0.3);   background:rgba(255,214,0,0.07); }
+.tg-wtch { color:var(--orange); border-color:rgba(255,149,0,0.3);   background:rgba(255,149,0,0.07); }
+.tg-cool { color:var(--purple); border-color:rgba(192,132,252,0.3); background:rgba(192,132,252,0.07); }
+.tg-gray { color:var(--sub);    border-color:rgba(74,85,104,0.3);   background:rgba(74,85,104,0.07); }
 
-    /* ── SECTIONS GRID ── */
-    .sections {
-      padding: 14px 18px 16px;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-    }
-
-    .sec {
-      background: rgba(255,255,255,0.025);
-      border: 1px solid rgba(255,255,255,0.055);
-      border-radius: 12px;
-      padding: 13px 13px 11px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    /* top accent */
-    .sec::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      border-radius: 12px 12px 0 0;
-    }
-
-    .v-red::before  { background: #00FFD0; }
-    .v-warm::before { background: #FFD600; }
-    .v-mid::before  { background: #FF8C42; }
-    .v-cool::before { background: #4D96FF; }
-    .v-gray::before { background: #444; }
-
-    .sec-num {
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 1px;
-      color: #383848;
-      margin-bottom: 5px;
-    }
-
-    .sec-title {
-      font-size: 13px;
-      font-weight: 800;
-      color: #FFFFFF;
-      margin-bottom: 8px;
-      line-height: 1.3;
-    }
-
-    .sec-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      margin-bottom: 10px;
-    }
-
-    .sec-list li {
-      font-size: 11px;
-      color: #7a7a9a;
-      line-height: 1.45;
-      padding-left: 11px;
-      position: relative;
-    }
-
-    .sec-list li::before {
-      content: '—';
-      position: absolute;
-      left: 0;
-      color: #30304a;
-      font-size: 9px;
-      line-height: 1.6;
-    }
-
-    .sig-tag {
-      display: inline-flex;
-      font-size: 10px;
-      font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 8px;
-      border: 1px solid;
-    }
-
-    .v-red  .sig-tag { color:#00FFD0; border-color:rgba(0,255,208,0.28); background:rgba(0,255,208,0.07); }
-    .v-warm .sig-tag { color:#FFD600; border-color:rgba(255,214,0,0.25); background:rgba(255,214,0,0.07); }
-    .v-mid  .sig-tag { color:#FF8C42; border-color:rgba(255,140,66,0.25); background:rgba(255,140,66,0.07); }
-    .v-cool .sig-tag { color:#4D96FF; border-color:rgba(77,150,255,0.25); background:rgba(77,150,255,0.07); }
-    .v-gray .sig-tag { color:#666;    border-color:rgba(100,100,100,0.3); background:rgba(100,100,100,0.07); }
-
-    /* ── FOOTER ── */
-    .footer {
-      border-top: 1px solid rgba(255,255,255,0.04);
-      padding: 12px 28px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .ft-brand { font-size: 11px; font-weight: 900; letter-spacing: 4px; color: #00FFD0; text-transform: uppercase; }
-    .ft-sub   { font-size: 10px; color: #333; }
-    .ft-date  { font-size: 10px; font-weight: 700; color: #2a2a3a; letter-spacing: 1px; }
-  </style>
+/* ═══ FOOTER ═══ */
+.ft {
+  border-top:1px solid rgba(255,255,255,0.04);
+  padding:11px 24px;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.ft-brand { font-size:11px; font-weight:900; letter-spacing:4px; color:var(--cyan); }
+.ft-sub   { font-size:10px; color:var(--dim); }
+.ft-date  { font-size:10px; font-weight:700; color:var(--dim); }
+</style>
 </head>
 <body>
-<div class="card">
+<div class="wrap">
 
   <!-- HEADER -->
-  <div class="header">
-    <div class="h-left">
+  <div class="hd">
+    <div>
       <div class="brand-row">
-        <div class="brand-txt">STOCK BRAIN</div>
         <div class="brand-dot"></div>
-        <div class="brand-sub">로또의 주식인사이트</div>
+        <div class="brand-txt">STOCK BRAIN</div>
       </div>
-      <div class="h-title">
-        <span class="hl">데이터</span>가 판단한다
+      <div class="hd-title">모닝 <span class="hl">브리핑</span></div>
+      <div class="hd-sub">美 주요 지수 최고가 경신 속 필라란 약세, 국내장은 2차전지 강세와 K자 쏠림 심화</div>
+    </div>
+    <div class="hd-right">
+      <div class="hd-brand-sub">로또의 주식인사이트</div>
+      <div class="hd-date">5월 28일 목요일</div>
+    </div>
+  </div>
+
+  <!-- INSIGHTS -->
+  <div class="insights">
+    <div class="insight ins-g">
+      <div class="ins-lbl">🌐 글로벌</div>
+      <div class="ins-txt">마이란 협상 낙관론에 WTI가 급락하며 시장 심리를 안정시키는 듯했으나, 백악관 부인과 트럼프의 비판으로 불확실성이 남아있습니다.</div>
+    </div>
+    <div class="insight ins-m">
+      <div class="ins-lbl">⚡ 매크로</div>
+      <div class="ins-txt">유가 급락에도 연준 이사들의 매파적 발언이 이어지며 금리 인상 가능성을 시사했고, 한국은행은 오늘 금통위에서 매파적 동결과 성장률 상향을 발표할 것으로 보입니다.</div>
+    </div>
+  </div>
+
+  <!-- MARKET DATA -->
+  <div class="mkt-row">
+    <div class="mkt-card">
+      <div class="mkt-lbl">🛢 WTI 유가</div>
+      <div class="mkt-val">$91.58</div>
+      <div class="mkt-chg up">▲3.27%</div>
+    </div>
+    <div class="mkt-card">
+      <div class="mkt-lbl">🔄 USD/KRW</div>
+      <div class="mkt-val">1,504<span class="unit">원</span></div>
+      <div class="mkt-chg down">▼0.08%</div>
+    </div>
+    <div class="mkt-card">
+      <div class="mkt-lbl">🟦 주요 지표</div>
+      <div class="idx-tbl">
+        <div class="idx-row">
+          <div class="idx-nm">미 10년물</div>
+          <div class="idx-val">4.48%</div>
+          <div class="idx-chg down">▼0.27%</div>
+        </div>
+        <div class="idx-row">
+          <div class="idx-nm">VIX</div>
+          <div class="idx-val">16.29</div>
+          <div class="idx-chg up">▼4.23%</div>
+        </div>
+        <div class="idx-row">
+          <div class="idx-nm">DXY</div>
+          <div class="idx-val">99.42</div>
+          <div class="idx-chg up">▼0.21%</div>
+        </div>
       </div>
     </div>
-    <div class="h-right">
-      <!-- ↓ 날짜는 매일 여기만 수정 -->
-      <div class="h-date">2026. 05. 26</div>
-      <div class="h-status">▲ RISK ON</div>
+  </div>
+
+  <!-- US INDICES -->
+  <div class="us-row">
+    <div class="us-card">
+      <div class="us-nm">다우</div>
+      <div class="us-val">50,644.28</div>
+      <div class="us-chg up">▲0.36%</div>
+    </div>
+    <div class="us-card">
+      <div class="us-nm">나스닥</div>
+      <div class="us-val">26,674.73</div>
+      <div class="us-chg up">▲0.07%</div>
+    </div>
+    <div class="us-card">
+      <div class="us-nm">S&amp;P500</div>
+      <div class="us-val">7,520.36</div>
+      <div class="us-chg up">▲0.02%</div>
+    </div>
+    <div class="us-card">
+      <div class="us-nm">필라델피아</div>
+      <div class="us-val">12,702.19</div>
+      <div class="us-chg down">▼1.36%</div>
     </div>
   </div>
 
-  <!-- SIGNAL STRIP -->
-  <div class="signal-strip">
-    <div class="strip-lbl">TODAY</div>
-    <div class="sc-chip sc-hot">반도체 🔴</div>
-    <div class="sc-chip sc-hot">조선 🔴</div>
-    <div class="sc-chip sc-warm">방산 🟡</div>
-    <div class="sc-chip sc-warm">로봇 🟡</div>
-    <div class="sc-chip sc-warm">바이오 🟡</div>
-    <div class="sc-chip sc-mid">전력기기</div>
+  <!-- SECTOR HEADER -->
+  <div class="sec-hd">
+    <div class="sec-diamond">◆</div>
+    <div class="sec-hd-txt">섹터별 흐름</div>
   </div>
 
-  <!-- SECTIONS 3×3 -->
-  <div class="sections">
+  <!-- SECTOR GRID 4×2 -->
+  <div class="sec-grid">
 
-    <div class="sec v-red">
-      <div class="sec-num">01</div>
-      <div class="sec-title">HBM 반도체</div>
-      <ul class="sec-list">
-        <li>SK하이닉스 Vera Rubin HBM4E 독점 가능성 95%</li>
-        <li>M15X 70K/월 램프업 · Capa 35% 점유</li>
-        <li>NVDA AI 수요 구조적 확대 → 직결 수혜</li>
-      </ul>
-      <div class="sig-tag">🔴 강력 탑픽</div>
+    <!-- 조선 -->
+    <div class="sc t-cyan hot">
+      <div class="sc-th">
+        <div class="sc-name">조선<small>슈퍼사이클 2차</small></div>
+        <div class="sc-ico">🚢</div>
+      </div>
+      <div class="sc-pts">
+        <div class="spt"><span class="spt-mk up-mk">▲</span><span><span class="ctry c-kr">KR</span>장보고N 28.9조 기획예산 → 전 종목 급등</span></div>
+        <div class="spt"><span class="spt-mk up-mk">▲</span><span><span class="ctry c-kr">KR</span>CPSP D-30 바이너리 이벤트 임박</span></div>
+        <div class="spt"><span class="spt-mk up-mk">▲</span><span><span class="ctry c-kr">KR</span>삼성중공업 FLNG 4건 70억달러 임박</span></div>
+      </div>
+      <div class="sc-tag tg-hot">🔴 강력 탑픽</div>
     </div>
 
-    <div class="sec v-red">
-      <div class="sec-num">02</div>
-      <div class="sec-title">반도체 소부장</div>
-      <ul class="sec-list">
-        <li>삼성 파운드리 22.8조 테슬라 딜 낙수 체인</li>
-        <li>AMAT 수주 선행 → 국내 12~18개월 후행</li>
-        <li>솔브레인·동진쎄미켐 국산화 수혜</li>
-      </ul>
-      <div class="sig-tag">🔴 탑픽 후보</div>
+    <!-- 방산 -->
+    <div class="sc t-cyan hot">
+      <div class="sc-th">
+        <div class="sc-name">방산<small>장보고N·K방산</small></div>
+        <div class="sc-ico">🛡️</div>
+      </div>
+      <div class="sc-pts">
+        <div class="spt"><span class="spt-mk up-mk">▲</span><span><span class="ctry c-kr">KR</span>한화에어로 수주잔고 118조 역대최고</span></div>
+        <div class="spt"><span class="spt-mk up-mk">▲</span><span><span class="ctry c-gl">글로벌</span>나토 방산 + 폴란드·루마니아 계약</span></div>
+        <div class="spt"><span class="spt-mk neu-mk">●</span><span>조선 장보고N 연결 수혜 지속</span></div>
+      </div>
+      <div class="sc-tag tg-hot">🔴 탑픽 후보</div>
     </div>
 
-    <div class="sec v-red">
-      <div class="sec-num">03</div>
-      <div class="sec-title">조선 MASGA</div>
-      <ul class="sec-list">
-        <li>HD한국조선해양 수주잔고 89조 역대최고</li>
-        <li>미 해군 + 상선 + AI전력 삼각축 호황</li>
-        <li>신조선가 184pt · 쇼티지 구조 지속</li>
-      </ul>
-      <div class="sig-tag">🔴 강력 탑픽</div>
+    <!-- CPSP -->
+    <div class="sc t-cyan hot">
+      <div class="sc-th">
+        <div class="sc-name">CPSP<small>캐나다 잠수함</small></div>
+        <div class="sc-ico">🌊</div>
+      </div>
+      <div class="sc-pts">
+        <div class="spt"><span class="spt-mk up-mk">▲</span><span><span class="ctry c-gl">글로벌</span>우선협상자 선정 D-30 이벤트</span></div>
+        <div class="spt"><span class="spt-mk up-mk">▲</span><span>계약 규모 26~28조원, 한화오션 유력</span></div>
+        <div class="spt"><span class="spt-mk dn-mk">▼</span><span>±20% 변동폭 예상 — 비중 주의</span></div>
+      </div>
+      <div class="sc-tag tg-hot">🔴 바이너리 이벤트</div>
     </div>
 
-    <div class="sec v-warm">
-      <div class="sec-num">04</div>
-      <div class="sec-title">방산</div>
-      <ul class="sec-list">
-        <li>한화에어로스페이스 수주잔고 118조 역대최고</li>
-        <li>K9·천무 해외 수출 지속 확대</li>
-        <li>LIG넥스원 천궁-II 수출비중 30% 상회</li>
-      </ul>
-      <div class="sig-tag">🟠 관심</div>
+    <!-- 전장·로봇 -->
+    <div class="sc t-yellow">
+      <div class="sc-th">
+        <div class="sc-name">전장·로봇</div>
+        <div class="sc-ico">🤖</div>
+      </div>
+      <div class="sc-pts">
+        <div class="spt"><span class="spt-mk up-mk">▲</span><span><span class="ctry c-gl">글로벌</span>보스턴다이나믹스 IPO 기대감</span></div>
+        <div class="spt"><span class="spt-mk neu-mk">●</span><span><span class="ctry c-kr">KR</span>현대오토에버 장세 호흡 중</span></div>
+        <div class="spt"><span class="spt-mk neu-mk">●</span><span>모니터링 — 관련 이슈 없음</span></div>
+      </div>
+      <div class="sc-tag tg-warm">🟠 관심</div>
     </div>
 
-    <div class="sec v-warm">
-      <div class="sec-num">05</div>
-      <div class="sec-title">로봇</div>
-      <ul class="sec-list">
-        <li>레인보우로보틱스 · 삼성전자 파트너십 확대</li>
-        <li>Physical AI 플랫폼 수요 본격화</li>
-        <li>2026 2Q 핵심 모멘텀 분기</li>
-      </ul>
-      <div class="sig-tag">🟠 관심</div>
+    <!-- 에너지·LNG -->
+    <div class="sc t-green">
+      <div class="sc-th">
+        <div class="sc-name">에너지·LNG<small>FLNG 연동</small></div>
+        <div class="sc-ico">⛽</div>
+      </div>
+      <div class="sc-pts">
+        <div class="spt"><span class="spt-mk up-mk">▲</span><span><span class="ctry c-kr">KR</span>삼성중공업 FLNG 독과점 → AI 전력 연결</span></div>
+        <div class="spt"><span class="spt-mk up-mk">▲</span><span><span class="ctry c-us">US</span>대미투자 LNG 터미널 가능성 최유력</span></div>
+        <div class="spt"><span class="spt-mk dn-mk">▼</span><span>WTI 급락 → 장기 흐름 재확인 필요</span></div>
+      </div>
+      <div class="sc-tag tg-warm">🟠 이벤트 대기</div>
     </div>
 
-    <div class="sec v-warm">
-      <div class="sec-num">06</div>
-      <div class="sec-title">바이오</div>
-      <ul class="sec-list">
-        <li>레고켐바이오 ADC 글로벌 딜 진행</li>
-        <li>한미약품 GLP-1 임상 단계 진행</li>
-        <li>LLY·NVO 미국 커플링 → 국내 수혜</li>
-      </ul>
-      <div class="sig-tag">🟠 딜 모니터</div>
+    <!-- SMR·원전 -->
+    <div class="sc t-orange">
+      <div class="sc-th">
+        <div class="sc-name">SMR·원전<small>대미투자</small></div>
+        <div class="sc-ico">⚛️</div>
+      </div>
+      <div class="sc-pts">
+        <div class="spt"><span class="spt-mk up-mk">▲</span><span><span class="ctry c-us">US</span>테라파워 FA 체결(5/21), NRC 진행 중</span></div>
+        <div class="spt"><span class="spt-mk up-mk">▲</span><span><span class="ctry c-kr">KR</span>두산에너빌리티 대미투자 수혜 기대</span></div>
+        <div class="spt"><span class="spt-mk neu-mk">●</span><span>발표 시기 5월말~6월 집중 체크</span></div>
+      </div>
+      <div class="sc-tag tg-wtch">🟡 이벤트 대기</div>
     </div>
 
-    <div class="sec v-mid">
-      <div class="sec-num">07</div>
-      <div class="sec-title">대미투자 LNG</div>
-      <ul class="sec-list">
-        <li>카타르 잠수함 수주 협상 진행 중</li>
-        <li>대미투자 LNG 연계 → 조선·기자재 동시 수혜</li>
-        <li>한국카본·HSD엔진 밸류체인 연동</li>
-      </ul>
-      <div class="sig-tag">🟡 이벤트 대기</div>
+    <!-- 반도체·HBM -->
+    <div class="sc t-purple">
+      <div class="sc-th">
+        <div class="sc-name">반도체·HBM</div>
+        <div class="sc-ico">💡</div>
+      </div>
+      <div class="sc-pts">
+        <div class="spt"><span class="spt-mk up-mk">▲</span><span><span class="ctry c-us">US</span>엔비디아 컴퓨텍스(6/1) 단기 촉매</span></div>
+        <div class="spt"><span class="spt-mk dn-mk">▼</span><span><span class="ctry c-us">US</span>필라델피아 반도체 지수 전일 하락</span></div>
+        <div class="spt"><span class="spt-mk dn-mk">▼</span><span><span class="ctry c-kr">KR</span>필라델피아 지수 하락 영향과 차익실현 압력</span></div>
+      </div>
+      <div class="sc-tag tg-wtch">🟡 모니터링</div>
     </div>
 
-    <div class="sec v-mid">
-      <div class="sec-num">08</div>
-      <div class="sec-title">전력기기·ESS</div>
-      <ul class="sec-list">
-        <li>효성중공업 북미 생산 슬롯 2Q 본격화</li>
-        <li>AI 데이터센터 전력 수요 구조적 확대</li>
-        <li>ESS 설치 가속화 → 소재 연동</li>
-      </ul>
-      <div class="sig-tag">🟡 대기</div>
+    <!-- AI인프라 -->
+    <div class="sc t-dim">
+      <div class="sc-th">
+        <div class="sc-name">AI인프라<small>SI·데이터센터</small></div>
+        <div class="sc-ico">🖥️</div>
+      </div>
+      <div class="sc-pts">
+        <div class="spt"><span class="spt-mk up-mk">▲</span><span><span class="ctry c-kr">KR</span>AI 데이터센터 + 피지컬AI 구축 수혜</span></div>
+        <div class="spt"><span class="spt-mk up-mk">▲</span><span>공공기관 AI SI 사업 수주 본격화</span></div>
+        <div class="spt"><span class="spt-mk neu-mk">●</span><span>삼성SDS·LG CNS·현대오토에버 체크</span></div>
+      </div>
+      <div class="sc-tag tg-cool">💡 구조적 성장</div>
     </div>
 
-    <div class="sec v-cool">
-      <div class="sec-num">09</div>
-      <div class="sec-title">매크로 체크</div>
-      <ul class="sec-list">
-        <li>9월 금리인하 확률 47% · 달러 약세 지속</li>
-        <li>VIX 16.7 · SOX +1.99% · 나스닥 호조</li>
-        <li>원달러 1,521원 → 수출주 환차익 유리</li>
-      </ul>
-      <div class="sig-tag">💡 Risk-On</div>
-    </div>
-
-  </div>
+  </div><!-- /sec-grid -->
 
   <!-- FOOTER -->
-  <div class="footer">
+  <div class="ft">
     <div class="ft-brand">STOCK BRAIN</div>
     <div class="ft-sub">로또의 주식인사이트 · 매일 아침 전략노트</div>
-    <div class="ft-date">2026.05.26</div>
+    <div class="ft-date">2026.05.28</div>
   </div>
 
 </div>

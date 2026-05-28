@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=800">
+<title>조선섹터 데일리 브리핑 — STOCK BRAIN 2026.05.28</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Space+Grotesk:wght@400;500;700&display=swap');
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg:     #07090f;
+  --card:   #0d1020;
+  --card2:  #111828;
+  --border: rgba(0,229,198,0.07);
+  --border2:rgba(0,229,198,0.2);
+  --mint:   #00e5c6;
+  --cyan:   #00e5c6;
+  --green:  #00ffa3;
+  --red:    #ff2244;
+  --yellow: #ffe500;
+  --purple: #c084fc;
+  --text:   #f0f8ff;
+  --sub:    #8896aa;
+  --dim:    #64748b;
+}
+
+body {
+  background:var(--bg);
+  background-image:
+    linear-gradient(rgba(0,229,198,0.022) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,229,198,0.022) 1px,transparent 1px);
+  background-size:40px 40px;
+  font-family:'Noto Sans KR',sans-serif;
+  color:var(--text);
+  width:800px;
+  margin:0 auto;
+  padding:16px;
+}
+
+/* ═══ WRAP ═══ */
+.wrap {
+  background:var(--card);
+  border-radius:16px;
+  overflow:hidden;
+  border:1px solid var(--border);
+  position:relative;
+}
+.wrap::before {
+  content:'';
+  position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent 5%,rgba(0,229,198,0.5) 30%,#00e5c6 50%,rgba(0,229,198,0.5) 70%,transparent 95%);
+}
+
+/* ═══ HEADER ═══ */
+.hd {
+  padding:16px 22px 13px;
+  display:flex;justify-content:space-between;align-items:flex-end;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+}
+.brand-row { display:flex;align-items:center;gap:7px;margin-bottom:5px; }
+.brand-dot { width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan),0 0 16px rgba(0,229,198,0.3); }
+.brand-txt { font-size:10px;font-weight:900;letter-spacing:4px;color:var(--cyan); }
+.hd-title  { font-size:32px;font-weight:900;color:#fff;letter-spacing:-0.5px;line-height:1; }
+.hd-title .hl { color:var(--cyan);text-shadow:0 0 20px rgba(0,229,198,0.4); }
+.hd-sub    { font-size:11px;color:var(--sub);margin-top:4px; }
+.hd-right  { text-align:right; }
+.hd-brand-sub { font-size:10px;color:var(--sub);margin-bottom:6px; }
+.hd-date { background:var(--cyan);color:#001a14;font-size:12px;font-weight:900;padding:4px 14px;border-radius:18px;display:inline-block; }
+
+/* ═══ TODAY INSIGHT ═══ */
+.today-sum {
+  margin:10px 16px 0;
+  padding:11px 15px;
+  border-radius:8px;
+  border-left:3px solid var(--cyan);
+  background:rgba(0,229,198,0.05);
+}
+.ts-lbl { font-size:9px;font-weight:900;color:var(--cyan);letter-spacing:2.5px;margin-bottom:5px; }
+.ts-txt { font-size:12.5px;line-height:1.7;color:#ddeeff;font-weight:400; }
+
+/* ═══ REPORT / NEWS SECTION ═══ */
+.rn-grid {
+  padding:10px 16px 0;
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+}
+.rn-card {
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:10px;padding:11px 14px;
+}
+.rn-lbl { font-size:9.5px;font-weight:900;color:#a8b8cc;letter-spacing:2px;margin-bottom:8px; }
+.rn-row {
+  display:flex;align-items:flex-start;gap:7px;
+  padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.07);
+  font-size:11px;color:#c8d8ec;line-height:1.45;
+}
+.rn-row:last-child { border-bottom:none; }
+.rn-tag {
+  font-size:9px;font-weight:900;padding:1px 6px;border-radius:3px;
+  flex-shrink:0;margin-top:1px;white-space:nowrap;
+}
+.rn-tag.rep  { background:rgba(0,229,198,0.1);  color:var(--mint); }
+.rn-tag.news { background:rgba(255,229,0,0.1);  color:var(--yellow); }
+
+/* ═══ SECTION HEADER ═══ */
+.sec-hd {
+  padding:9px 22px 6px;
+  display:flex;align-items:center;gap:7px;
+  border-top:1px solid rgba(255,255,255,0.04);
+  margin-top:10px;
+}
+.sec-dia { color:var(--cyan);font-size:14px;line-height:1; }
+.sec-lbl { font-size:10px;font-weight:900;color:#a8b8cc;letter-spacing:3px; }
+.sec-cnt { margin-left:auto;font-size:10px;color:#8896aa; }
+
+/* ═══ 이슈 4×2 ═══ */
+.issue-grid {
+  padding:0 16px 10px;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+}
+.ic {
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:10px;padding:10px 11px;
+  position:relative;overflow:hidden;
+}
+.ic::before { content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:10px 10px 0 0; }
+.ic.gs::before { background:var(--mint); }
+.ic.ga::before { background:var(--yellow); }
+.ic.gb::before { background:rgba(255,255,255,0.2); }
+.ic.gs { border-color:rgba(0,229,198,0.15); }
+.ic.ga { border-color:rgba(255,229,0,0.12); }
+.ic.gb { border-color:rgba(255,255,255,0.08); }
+
+.ic-top { display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px; }
+.ic-num { font-size:9px;font-weight:700;color:#8896aa; }
+.ic-grade {
+  font-size:9px;font-weight:900;padding:1px 7px;border-radius:4px;border:1px solid;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:3px;
+}
+.ic.gs .ic-grade { color:var(--mint);   border-color:rgba(0,229,198,0.35);  background:rgba(0,229,198,0.08); }
+.ic.ga .ic-grade { color:var(--yellow); border-color:rgba(255,229,0,0.35);  background:rgba(255,229,0,0.08); }
+.ic.gb .ic-grade { color:#a8b8cc;       border-color:rgba(255,255,255,0.18);background:rgba(255,255,255,0.05); }
+
+.ic-name  { font-size:11.5px;font-weight:900;color:#fff;margin-bottom:3px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.ic-stage { font-size:10.5px;color:#a8b8cc;margin-bottom:5px;line-height:1.4; }
+.ic-trigger {
+  font-size:10.5px;color:#c8d8ec;
+  padding:4px 7px;background:rgba(0,0,0,0.3);border-radius:5px;
+  margin-bottom:5px;line-height:1.4;
+}
+.tg-lbl { font-size:8.5px;font-weight:900;color:var(--cyan);display:block;margin-bottom:1px;letter-spacing:0.5px; }
+
+.ic-stks { display:flex;flex-wrap:wrap;gap:3px; }
+.isk {
+  font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;white-space:nowrap;
+}
+.isk-a { background:rgba(0,229,198,0.1);  color:var(--mint); }
+.isk-b { background:rgba(255,255,255,0.06); color:#c8d8ec; }
+.isk-c { background:rgba(0,255,163,0.08); color:var(--green); }
+
+/* ═══ STOCK CARDS 4×1 ═══ */
+.stk-grid {
+  padding:0 16px 10px;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+}
+.skc {
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:10px;padding:11px 12px;
+  position:relative;overflow:hidden;
+}
+.skc::before { content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:10px 10px 0 0; }
+.skc.sa::before { background:linear-gradient(90deg,var(--cyan),var(--purple)); }
+.skc.sb::before { background:linear-gradient(90deg,var(--purple),var(--cyan)); }
+
+.skc-top { display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px; }
+.sk-name { font-size:12.5px;font-weight:900;color:#fff; }
+.sk-code { font-size:9.5px;color:var(--sub);margin-top:1px; }
+.sk-score {
+  font-size:9.5px;font-weight:900;padding:2px 7px;border-radius:5px;border:1px solid;white-space:nowrap;
+}
+.ss-hot  { color:var(--mint);   border-color:rgba(0,229,198,0.4);   background:rgba(0,229,198,0.1); }
+.ss-warm { color:var(--yellow); border-color:rgba(255,229,0,0.4);   background:rgba(255,229,0,0.08); }
+
+.sk-pts { display:flex;flex-direction:column;gap:3px;margin-bottom:6px; }
+.skpt   { display:flex;gap:4px;font-size:11px;color:#c8d8ec;line-height:1.4; }
+.skpt-mk { width:11px;flex-shrink:0;font-size:10px;margin-top:1px; }
+
+.sk-evt {
+  font-size:10.5px;padding:4px 8px;border-radius:5px;
+  background:rgba(0,0,0,0.3);color:#b8cce0;
+}
+.sk-evt strong { color:var(--cyan); }
+
+/* ═══ CHECKLIST SECTION ═══ */
+.chk-wrap {
+  margin:0 16px 12px;
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:10px;padding:12px 14px;
+}
+.chk-col-lbl { font-size:10px;font-weight:900;color:#a8b8cc;letter-spacing:2px;margin-bottom:9px; }
+.chklst { display:grid;grid-template-columns:1fr 1fr;gap:5px 12px; }
+.chkrow { display:flex;align-items:center;gap:8px;font-size:11.5px;color:#c8d8ec;line-height:1.4; }
+.cbadge { width:17px;height:17px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;flex-shrink:0; }
+.cb-ok   { background:rgba(0,229,198,0.1);  color:var(--mint);   border:1px solid rgba(0,229,198,0.3); }
+.cb-warn { background:rgba(255,229,0,0.1);  color:var(--yellow); border:1px solid rgba(255,229,0,0.3); }
+.cb-eye  { background:rgba(255,255,255,0.06);color:#c8d8ec;       border:1px solid rgba(255,255,255,0.15); }
+
+/* ═══ FOOTER ═══ */
+.ft {
+  border-top:1px solid rgba(255,255,255,0.04);
+  padding:10px 22px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.ft-brand { font-size:10px;font-weight:900;letter-spacing:4px;color:var(--cyan); }
+.ft-sub   { font-size:9px;color:#7a8a9e; }
+.ft-date  { font-size:9px;font-weight:700;color:#7a8a9e; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="hd">
+    <div>
+      <div class="brand-row">
+        <div class="brand-dot"></div>
+        <div class="brand-txt">STOCK BRAIN</div>
+      </div>
+      <div class="hd-title">조선섹터 <span class="hl">데일리</span></div>
+      <div class="hd-sub">⚓ 이슈현황 &nbsp;·&nbsp; 🚢 대표종목 &nbsp;·&nbsp; ✅ 체크포인트</div>
+    </div>
+    <div class="hd-right">
+      <div class="hd-brand-sub">로또의 주식인사이트</div>
+      <div class="hd-date">5월 28일 목요일</div>
+    </div>
+  </div>
+
+  <!-- TODAY'S 조선 인사이트 -->
+  <div class="today-sum">
+    <div class="ts-lbl">⚡ TODAY'S 조선 인사이트</div>
+    <div class="ts-txt">CPSP(캐나다 잠수함)가 이제 D-30 카운트다운에 들어갔어요! 6월 말 결과가 나오면 한화오션 주가에 바이너리 이벤트가 될 수 있으니 포지션 꼭 챙기세요. 핵잠수함(장보고N) 건조사 선정 뉴스도 언제든 터질 수 있는 타이밍이라, 지금 조선 섹터는 여러 촉매가 동시에 켜진 상태예요. 쉬어가는 날 분할매수 전략이 유효한 구간이에요 👀</div>
+  </div>
+
+  <!-- 리포트 / 뉴스 -->
+  <div class="rn-grid">
+    <div class="rn-card">
+      <div class="rn-lbl">📄 오늘의 리포트</div>
+      <div class="rn-row">
+        <span class="rn-tag rep">미래에셋</span>
+        <span>한화오션 — CPSP 수주 시 TP 30% 상향 여지, 핵심 바이너리 이벤트로 분류</span>
+      </div>
+      <div class="rn-row">
+        <span class="rn-tag rep">메리츠</span>
+        <span>삼성중공업 — FLNG 4건 계약 확정 시 연간 실적 전망치 20%↑ 불가피</span>
+      </div>
+      <div class="rn-row">
+        <span class="rn-tag rep">NH투자</span>
+        <span>조선섹터 — 2Q26 첫 고선가 실적 확인 구간, 매수 기회 유지 의견</span>
+      </div>
+    </div>
+    <div class="rn-card">
+      <div class="rn-lbl">📰 오늘의 뉴스</div>
+      <div class="rn-row">
+        <span class="rn-tag news">CPSP</span>
+        <span>최종 협상 가속 — 6월 말 우선협상자 선정 확률 70%+ 관측, 실시간 모니터링</span>
+      </div>
+      <div class="rn-row">
+        <span class="rn-tag news">장보고N</span>
+        <span>28.9조 예산 확정, 하반기 건조사 선정 방식 발표 예고 — 한화·HD현중 주목</span>
+      </div>
+      <div class="rn-row">
+        <span class="rn-tag news">FLNG</span>
+        <span>삼성중공업 코랄노르트 15억달러 계약 '이번주 안' 관측 — 공시 긴급 모니터링</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 조선섹터 주요 이슈현황 HEADER -->
+  <div class="sec-hd">
+    <div class="sec-dia">⚓</div>
+    <div class="sec-lbl">조선섹터 주요 이슈현황</div>
+    <div class="sec-cnt">🔴 S급 3건 · 🟠 A급 3건 · 🟡 B급 2건</div>
+  </div>
+
+  <!-- 이슈 4×2 -->
+  <div class="issue-grid">
+
+    <div class="ic gs">
+      <div class="ic-top"><span class="ic-num">① CPSP</span><span class="ic-grade">🔴 S급</span></div>
+      <div class="ic-name">🇨🇦 캐나다 잠수함 수주</div>
+      <div class="ic-stage">최종 협상 → D-30 바이너리</div>
+      <div class="ic-trigger"><span class="tg-lbl">▶ TRIGGER</span>6월 말 우선협상자 선정 ±20%</div>
+      <div class="ic-stks">
+        <span class="isk isk-a">한화오션</span>
+        <span class="isk isk-b">HD한조</span>
+      </div>
+    </div>
+
+    <div class="ic gs">
+      <div class="ic-top"><span class="ic-num">② 장보고N</span><span class="ic-grade">🔴 S급</span></div>
+      <div class="ic-name">⚡ 핵잠수함 28.9조 예산</div>
+      <div class="ic-stage">기획예산 발표 → 건조사 선정</div>
+      <div class="ic-trigger"><span class="tg-lbl">▶ TRIGGER</span>건조사 선정 방식 발표 (하반기)</div>
+      <div class="ic-stks">
+        <span class="isk isk-a">한화오션</span>
+        <span class="isk isk-b">HD현대중공업</span>
+      </div>
+    </div>
+
+    <div class="ic gs">
+      <div class="ic-top"><span class="ic-num">⑦ FLNG</span><span class="ic-grade">🔴 S급</span></div>
+      <div class="ic-name">💎 삼성중공업 독과점</div>
+      <div class="ic-stage">4건 본계약 임박 · 세계 6/10기</div>
+      <div class="ic-trigger"><span class="tg-lbl">▶ TRIGGER</span>코랄노르트 15억달러 공시 임박</div>
+      <div class="ic-stks">
+        <span class="isk isk-a">삼성중공업</span>
+      </div>
+    </div>
+
+    <div class="ic ga">
+      <div class="ic-top"><span class="ic-num">⑤ MRO</span><span class="ic-grade">🟠 A급</span></div>
+      <div class="ic-name">🔧 미 해군 함정 정비</div>
+      <div class="ic-stage">2026년 4건 · 작년比 3배 급증</div>
+      <div class="ic-trigger"><span class="tg-lbl">▶ TRIGGER</span>NGLS 본설계 선정 (하반기)</div>
+      <div class="ic-stks">
+        <span class="isk isk-a">한화오션</span>
+        <span class="isk isk-b">HD현대중공업</span>
+      </div>
+    </div>
+
+    <div class="ic ga">
+      <div class="ic-top"><span class="ic-num">③ FDC</span><span class="ic-grade">🟠 A급</span></div>
+      <div class="ic-name">💻 FDC 엔진 선박</div>
+      <div class="ic-stage">선급인증 완료 → 첫 계약 대기</div>
+      <div class="ic-trigger"><span class="tg-lbl">▶ TRIGGER</span>FDC 첫 계약 공시 (하반기)</div>
+      <div class="ic-stks">
+        <span class="isk isk-a">삼성중공업</span>
+        <span class="isk isk-b">HD현대중공업</span>
+      </div>
+    </div>
+
+    <div class="ic ga">
+      <div class="ic-top"><span class="ic-num">④ SMR</span><span class="ic-grade">🟠 A급</span></div>
+      <div class="ic-name">☢️ SMR 테라파워</div>
+      <div class="ic-stage">FA 체결 5/21 · NRC 건설허가</div>
+      <div class="ic-trigger"><span class="tg-lbl">▶ TRIGGER</span>NRC 건설허가 2026-12</div>
+      <div class="ic-stks">
+        <span class="isk isk-a">HD현대중공업</span>
+      </div>
+    </div>
+
+    <div class="ic gb">
+      <div class="ic-top"><span class="ic-num">⑥ 미해군신조</span><span class="ic-grade">🟡 B급</span></div>
+      <div class="ic-name">🇺🇸 MASGA 동맹국 협력</div>
+      <div class="ic-stage">FY2027 $658억 · MAP 발표</div>
+      <div class="ic-trigger"><span class="tg-lbl">▶ TRIGGER</span>필리조선소 인수 협상 진행</div>
+      <div class="ic-stks">
+        <span class="isk isk-a">한화오션</span>
+        <span class="isk isk-b">HD현대중공업</span>
+        <span class="isk isk-c">삼성중공업</span>
+      </div>
+    </div>
+
+    <div class="ic gb">
+      <div class="ic-top"><span class="ic-num">⑧ 무인함</span><span class="ic-grade">🟡 B급</span></div>
+      <div class="ic-name">🤖 USV/UUV 안두릴</div>
+      <div class="ic-stage">시제함 건조 중 · Replicator 목표</div>
+      <div class="ic-trigger"><span class="tg-lbl">▶ TRIGGER</span>USV 완공 2026-10 + 시험</div>
+      <div class="ic-stks">
+        <span class="isk isk-a">HD현대중공업</span>
+      </div>
+    </div>
+
+  </div><!-- /issue-grid -->
+
+  <!-- 조선섹터 대표종목 HEADER -->
+  <div class="sec-hd">
+    <div class="sec-dia">🚢</div>
+    <div class="sec-lbl">조선섹터 대표종목</div>
+  </div>
+
+  <!-- STOCK CARDS 4×1 -->
+  <div class="stk-grid">
+
+    <div class="skc sa">
+      <div class="skc-top">
+        <div><div class="sk-name">한화오션</div><div class="sk-code">042660 · KOSPI</div></div>
+        <div class="sk-score ss-hot">3중 모멘텀</div>
+      </div>
+      <div class="sk-pts">
+        <div class="skpt"><span class="skpt-mk up">▲</span><span>CPSP 우선협상 유력 후보</span></div>
+        <div class="skpt"><span class="skpt-mk up">▲</span><span>장보고N + MRO 동시 수혜</span></div>
+        <div class="skpt"><span class="skpt-mk" style="color:var(--yellow);">!</span><span>D-30 선반영 부담 주의</span></div>
+      </div>
+      <div class="sk-evt">📅 다음: <strong>CPSP 결과 D-30</strong></div>
+    </div>
+
+    <div class="skc sb">
+      <div class="skc-top">
+        <div><div class="sk-name">HD한국조선해양</div><div class="sk-code">009540 · 지주사</div></div>
+        <div class="sk-score ss-hot">5개 커버</div>
+      </div>
+      <div class="sk-pts">
+        <div class="skpt"><span class="skpt-mk up">▲</span><span>8대 이슈 5개 단일 포지션 커버</span></div>
+        <div class="skpt"><span class="skpt-mk up">▲</span><span>수주잔고 89조 역대최고</span></div>
+        <div class="skpt"><span class="skpt-mk" style="color:var(--sub);">—</span><span>지주사 할인 10~15% 존재</span></div>
+      </div>
+      <div class="sk-evt">📅 다음: <strong>2Q 실적 (7~8월)</strong></div>
+    </div>
+
+    <div class="skc sb">
+      <div class="skc-top">
+        <div><div class="sk-name">HD현대중공업</div><div class="sk-code">329180 · KOSPI</div></div>
+        <div class="sk-score ss-warm">방산·SMR</div>
+      </div>
+      <div class="sk-pts">
+        <div class="skpt"><span class="skpt-mk up">▲</span><span>장보고N 건조사 선정 유력</span></div>
+        <div class="skpt"><span class="skpt-mk up">▲</span><span>SMR 파운드리 + 필리조선소</span></div>
+        <div class="skpt"><span class="skpt-mk up">▲</span><span>무인함 USV/UUV 개발 진행</span></div>
+      </div>
+      <div class="sk-evt">📅 다음: <strong>장보고N 건조사 발표</strong></div>
+    </div>
+
+    <div class="skc sa">
+      <div class="skc-top">
+        <div><div class="sk-name">삼성중공업</div><div class="sk-code">010140 · KOSPI</div></div>
+        <div class="sk-score ss-hot">FLNG 독점</div>
+      </div>
+      <div class="sk-pts">
+        <div class="skpt"><span class="skpt-mk up">▲</span><span>FLNG S급 독과점 직접 수혜</span></div>
+        <div class="skpt"><span class="skpt-mk up">▲</span><span>CPSP 리스크 없는 안전 대안</span></div>
+        <div class="skpt"><span class="skpt-mk up">▲</span><span>FDC 선급인증 완료 → 첫 계약</span></div>
+      </div>
+      <div class="sk-evt">📅 다음: <strong>FLNG 공시 (임박)</strong></div>
+    </div>
+
+  </div><!-- /stk-grid -->
+
+  <!-- 주요 체크리스트 -->
+  <div class="sec-hd">
+    <div class="sec-dia">✅</div>
+    <div class="sec-lbl">주요 체크리스트</div>
+  </div>
+
+  <div class="chk-wrap">
+    <div class="chk-col-lbl">오늘 확인할 것</div>
+    <div class="chklst">
+      <div class="chkrow"><div class="cbadge cb-ok">✓</div><span>CPSP 협상 진척 뉴스 실시간 확인</span></div>
+      <div class="chkrow"><div class="cbadge cb-ok">✓</div><span>삼성중공업 FLNG 계약 공시 여부</span></div>
+      <div class="chkrow"><div class="cbadge cb-warn">!</div><span>조선 수급오실레이터 빈집 여부 확인</span></div>
+      <div class="chkrow"><div class="cbadge cb-warn">!</div><span>장보고N 건조사 선정 방식 관련 뉴스</span></div>
+      <div class="chkrow"><div class="cbadge cb-eye">?</div><span>2Q 실적 시즌 전 선반영 수준 판단</span></div>
+      <div class="chkrow"><div class="cbadge cb-eye">?</div><span>WTI 급등 → LNG선·FLNG 발주 수요 확인</span></div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="ft">
+    <div class="ft-brand">STOCK BRAIN</div>
+    <div class="ft-sub">로또의 주식인사이트 · 조선섹터 데일리 브리핑</div>
+    <div class="ft-date">2026.05.28</div>
+  </div>
+
+</div>
+</body>
+</html>

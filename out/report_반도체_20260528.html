@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>반도체섹터 심층 리포트 — 2026.05.28 | STOCK BRAIN</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Space+Grotesk:wght@400;500;700&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#07090f;--card:#0d1020;--card2:#111828;--card3:#0a0c14;
+  --border:rgba(0,229,198,0.07);--border2:rgba(0,229,198,0.2);
+  --mint:#00e5c6;--red:#ff2244;--yellow:#ffe500;--purple:#c084fc;
+  --text:#f0f8ff;--sub:#8896aa;--dim:#64748b;
+}
+body{
+  background:var(--bg);
+  background-image:
+    linear-gradient(rgba(0,229,198,0.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,229,198,0.018) 1px,transparent 1px);
+  background-size:40px 40px;
+  font-family:'Noto Sans KR',sans-serif;
+  color:var(--text);
+  max-width:900px;
+  margin:0 auto;
+  padding:24px 20px 60px;
+}
+
+/* ─────────── HEADER ─────────── */
+.doc-hd {
+  padding:24px 28px 20px;
+  background:var(--card);
+  border-radius:16px;
+  border:1px solid var(--border2);
+  margin-bottom:20px;
+  position:relative;
+  overflow:hidden;
+}
+.doc-hd::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent 5%,var(--mint) 50%,transparent 95%);
+}
+.doc-brand { font-size:9px;font-weight:900;letter-spacing:5px;color:var(--mint);margin-bottom:10px; }
+.doc-category { font-size:11px;color:var(--sub);letter-spacing:1.5px;margin-bottom:6px; }
+.doc-title { font-size:30px;font-weight:900;color:#fff;letter-spacing:-0.5px;line-height:1.15;margin-bottom:8px; }
+.doc-title .hl { color:var(--mint); }
+.doc-meta { display:flex;gap:16px;align-items:center;flex-wrap:wrap; }
+.doc-date { font-size:11px;color:var(--sub); }
+.doc-tag {
+  font-size:10px;font-weight:700;padding:2px 10px;border-radius:4px;
+  background:rgba(0,229,198,0.08);color:var(--mint);border:1px solid rgba(0,229,198,0.2);
+}
+
+/* 대서사 블록 */
+.thesis {
+  background:rgba(0,229,198,0.04);
+  border-left:4px solid var(--mint);
+  border-radius:0 10px 10px 0;
+  padding:16px 20px;
+  margin:20px 0;
+}
+.thesis-lbl { font-size:9px;font-weight:900;color:var(--mint);letter-spacing:3px;margin-bottom:8px; }
+.thesis-txt { font-size:17px;font-weight:700;color:#e8f4f8;line-height:1.6;letter-spacing:-0.2px; }
+.thesis-sub { font-size:12px;color:var(--sub);margin-top:8px;line-height:1.6; }
+
+/* ─────────── ACT 구분선 ─────────── */
+.act-divider {
+  display:flex;align-items:center;gap:12px;margin:28px 0 16px;
+}
+.act-divider::before,.act-divider::after{
+  content:'';flex:1;height:1px;background:rgba(0,229,198,0.1);
+}
+.act-lbl {
+  font-size:10px;font-weight:900;letter-spacing:4px;color:var(--mint);
+  padding:4px 16px;border:1px solid rgba(0,229,198,0.15);border-radius:20px;
+  background:rgba(0,229,198,0.04);white-space:nowrap;
+}
+
+/* ─────────── 챕터 카드 ─────────── */
+.chapter {
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  margin-bottom:14px;overflow:hidden;
+}
+.ch-head {
+  padding:14px 20px 12px;
+  display:flex;align-items:flex-start;gap:12px;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+  position:relative;
+}
+.ch-head::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+}
+.ch-hot .ch-head::before { background:var(--red); }
+.ch-warm .ch-head::before { background:var(--yellow); }
+.ch-cool .ch-head::before { background:#2a3240; }
+.ch-icon { font-size:22px;line-height:1;flex-shrink:0;margin-top:2px; }
+.ch-meta { flex:1; }
+.ch-num-row { display:flex;align-items:center;gap:8px;margin-bottom:4px; }
+.ch-num { font-size:10px;font-weight:700;color:var(--sub); }
+.ch-heat-badge {
+  font-size:9px;font-weight:900;padding:2px 8px;border-radius:4px;border:1px solid;
+}
+.ch-hot .ch-heat-badge  { color:var(--red);   border-color:rgba(255,34,68,0.3);   background:rgba(255,34,68,0.08); }
+.ch-warm .ch-heat-badge { color:var(--yellow);border-color:rgba(255,229,0,0.3);   background:rgba(255,229,0,0.08); }
+.ch-cool .ch-heat-badge { color:#64748b;       border-color:rgba(100,116,139,0.2); background:rgba(100,116,139,0.05); }
+.ch-title { font-size:18px;font-weight:900;color:#fff;letter-spacing:-0.2px;line-height:1.2; }
+.ch-subtitle { font-size:12px;color:var(--sub);margin-top:3px; }
+
+.ch-body { padding:16px 20px; }
+.ch-story {
+  font-size:13px;line-height:1.85;color:#c8d8ec;margin-bottom:14px;
+}
+.ch-story strong { color:var(--mint);font-weight:700; }
+.ch-story em { color:var(--yellow);font-style:normal;font-weight:600; }
+
+/* 챕터 내 테이블 */
+.ch-table { width:100%;border-collapse:collapse;margin-bottom:14px;font-size:12px; }
+.ch-table th {
+  background:rgba(0,229,198,0.05);color:var(--mint);
+  font-weight:700;font-size:10px;letter-spacing:1px;
+  padding:7px 12px;text-align:left;border-bottom:1px solid rgba(0,229,198,0.1);
+}
+.ch-table td { padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.04);color:#c8d8ec;line-height:1.4; }
+.ch-table tr:last-child td { border-bottom:none; }
+.td-hot  { color:var(--red)!important;font-weight:700; }
+.td-warm { color:var(--yellow)!important;font-weight:700; }
+.td-mint { color:var(--mint)!important;font-weight:700; }
+.td-dim  { color:#64748b!important; }
+
+/* 밸류체인 */
+.chain-flow {
+  background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.05);
+  border-radius:8px;padding:12px 16px;margin-bottom:14px;
+}
+.chain-lbl { font-size:9px;font-weight:900;color:var(--mint);letter-spacing:2px;margin-bottom:10px; }
+.chain-step {
+  display:flex;align-items:flex-start;gap:10px;padding:7px 0;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+}
+.chain-step:last-child{border-bottom:none;}
+.chain-arrow { color:var(--mint);font-size:10px;flex-shrink:0;margin-top:3px;font-weight:900; }
+.chain-name { font-size:12px;font-weight:700;color:#fff;min-width:100px; }
+.chain-why  { font-size:11px;color:#8896aa;line-height:1.4;flex:1; }
+.chain-stk  { font-size:10px;font-weight:700;color:var(--mint);margin-top:2px;white-space:nowrap; }
+
+/* 투자포인트 / 리스크 2컬럼 */
+.two-col { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
+.pt-block {
+  background:rgba(0,229,198,0.03);border:1px solid rgba(0,229,198,0.08);
+  border-radius:8px;padding:12px 14px;
+}
+.pt-block.risk {
+  background:rgba(255,34,68,0.03);border-color:rgba(255,34,68,0.1);
+}
+.pt-lbl { font-size:9px;font-weight:900;letter-spacing:2px;color:var(--mint);margin-bottom:8px; }
+.pt-block.risk .pt-lbl { color:var(--red); }
+.pt-item {
+  display:flex;align-items:flex-start;gap:7px;
+  font-size:11.5px;color:#c8d8ec;line-height:1.5;
+  padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);
+}
+.pt-item:last-child{border-bottom:none;}
+.pt-dot { width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:5px; }
+.pt-dot-m { background:var(--mint); }
+.pt-dot-r { background:var(--red); }
+
+/* ─────────── 종목 가격 평가 ─────────── */
+.stock-zone-grid {
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;
+  margin-bottom:20px;
+}
+.szc {
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;
+}
+.szc-head {
+  padding:12px 16px 10px;border-bottom:1px solid rgba(255,255,255,0.04);
+  display:flex;align-items:flex-start;gap:10px;
+}
+.szc-name { font-size:16px;font-weight:900;color:#fff; }
+.szc-code { font-size:10px;color:var(--sub);margin-top:2px; }
+.szc-story { font-size:10px;color:var(--sub);margin-top:2px;font-style:italic; }
+.szc-badge {
+  margin-left:auto;font-size:9px;font-weight:900;padding:3px 9px;
+  border-radius:5px;border:1px solid;white-space:nowrap;flex-shrink:0;
+}
+.b-hot  { color:var(--mint);   border-color:rgba(0,229,198,0.4);  background:rgba(0,229,198,0.1); }
+.b-warm { color:var(--yellow); border-color:rgba(255,229,0,0.4);  background:rgba(255,229,0,0.08); }
+.b-cool { color:#64748b;       border-color:rgba(100,116,139,0.3);background:rgba(100,116,139,0.05); }
+
+.szc-body { padding:12px 16px; }
+.zone-bar-wrap { margin-bottom:12px; }
+.zone-labels { display:flex;justify-content:space-between;font-size:9.5px;color:#64748b;margin-bottom:5px; }
+.zone-bar {
+  height:8px;border-radius:4px;background:#1a2030;
+  position:relative;overflow:visible;margin-bottom:5px;
+}
+.zone-fill { height:100%;border-radius:4px; }
+.zone-fill-hot  { background:linear-gradient(90deg,rgba(0,229,198,0.3),var(--mint)); }
+.zone-fill-warm { background:linear-gradient(90deg,rgba(255,229,0,0.3),var(--yellow)); }
+.zone-current {
+  position:absolute;top:-3px;height:14px;width:3px;
+  border-radius:2px;background:#fff;box-shadow:0 0 8px rgba(255,255,255,0.5);
+}
+.zone-tick-row { display:flex;justify-content:space-between;font-size:9px;color:#8896aa; }
+.price-row { display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11.5px; }
+.price-row:last-child{border-bottom:none;}
+.pr-lbl { color:#8896aa; }
+.pr-val { font-weight:700;color:#c8d8ec; }
+.pr-val.hot  { color:var(--mint); }
+.pr-val.warn { color:var(--yellow); }
+.szc-verdict {
+  margin-top:10px;padding:8px 11px;border-radius:6px;
+  background:rgba(0,0,0,0.3);font-size:11.5px;color:#c8d8ec;line-height:1.5;
+}
+.szc-verdict strong { color:var(--mint); }
+
+/* ─────────── ACT3 타임라인 ─────────── */
+.timeline { position:relative;padding-left:28px;margin-bottom:10px; }
+.tl-rail {
+  position:absolute;left:9px;top:0;bottom:0;width:1px;
+  background:linear-gradient(180deg,var(--mint) 0%,rgba(0,229,198,0.2) 60%,transparent 100%);
+}
+.tl-item { position:relative;margin-bottom:12px; }
+.tl-dot {
+  position:absolute;left:-22px;top:11px;
+  width:10px;height:10px;border-radius:50%;border:2px solid;background:var(--bg);
+}
+.tl-dot-hot  { border-color:var(--red);   background:rgba(255,34,68,0.2); }
+.tl-dot-warm { border-color:var(--yellow);background:rgba(255,229,0,0.15); }
+.tl-dot-cool { border-color:#2a3240;      background:#0f1220; }
+.tl-box {
+  background:var(--card2);border:1px solid rgba(255,255,255,0.05);
+  border-radius:9px;padding:10px 14px;
+}
+.tl-box-hot  { border-color:rgba(255,34,68,0.15);background:rgba(255,34,68,0.04); }
+.tl-box-warm { border-color:rgba(255,229,0,0.1); background:rgba(255,229,0,0.03); }
+.tl-meta { display:flex;align-items:center;gap:8px;margin-bottom:4px; }
+.tl-date { font-size:10px;font-weight:700;color:var(--sub); }
+.tl-tag  {
+  font-size:9px;font-weight:900;padding:1px 7px;border-radius:4px;
+  background:rgba(0,229,198,0.08);color:var(--mint);border:1px solid rgba(0,229,198,0.15);
+}
+.tl-tag-r {
+  background:rgba(255,34,68,0.08);color:var(--red);border-color:rgba(255,34,68,0.2);
+}
+.tl-title { font-size:13px;font-weight:700;color:#fff;margin-bottom:3px;line-height:1.3; }
+.tl-desc  { font-size:11.5px;color:#8896aa;line-height:1.5; }
+.tl-stk   { display:flex;flex-wrap:wrap;gap:4px;margin-top:6px; }
+.tl-s { font-size:10px;font-weight:700;padding:1px 7px;border-radius:4px;background:rgba(0,229,198,0.07);color:var(--mint);border:1px solid rgba(0,229,198,0.15); }
+.tl-s-w { background:rgba(255,229,0,0.07);color:var(--yellow);border-color:rgba(255,229,0,0.15); }
+
+/* 리스크 매트릭스 */
+.risk-grid { display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px; }
+.risk-item {
+  background:rgba(255,34,68,0.04);border:1px solid rgba(255,34,68,0.1);
+  border-radius:8px;padding:10px 12px;
+}
+.risk-item.med {
+  background:rgba(255,229,0,0.03);border-color:rgba(255,229,0,0.1);
+}
+.risk-item.low {
+  background:rgba(100,116,139,0.04);border-color:rgba(100,116,139,0.12);
+}
+.ri-level { font-size:10px;font-weight:900;margin-bottom:5px; }
+.ri-level.high { color:var(--red); }
+.ri-level.mid  { color:var(--yellow); }
+.ri-level.low  { color:#64748b; }
+.ri-title { font-size:12px;font-weight:700;color:#c8d8ec;margin-bottom:4px;line-height:1.3; }
+.ri-desc  { font-size:10.5px;color:#8896aa;line-height:1.4; }
+
+/* ─────────── 범용 ─────────── */
+.section { margin-bottom:24px; }
+.sec-title {
+  font-size:14px;font-weight:900;color:#fff;letter-spacing:0.5px;
+  margin-bottom:14px;
+  display:flex;align-items:center;gap:8px;
+}
+.sec-title::after { content:'';flex:1;height:1px;background:rgba(255,255,255,0.06); }
+.sec-num { font-size:11px;font-weight:900;color:var(--mint);font-family:'Space Grotesk',monospace; }
+
+/* 요약 박스 */
+.summary-box {
+  background:var(--card);border:1px solid var(--border2);
+  border-radius:12px;padding:16px 20px;margin-bottom:20px;
+}
+.sb-title { font-size:11px;font-weight:900;color:var(--mint);letter-spacing:2px;margin-bottom:10px; }
+.sb-row { display:flex;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px; }
+.sb-row:last-child{border-bottom:none;}
+.sb-lbl { color:var(--sub);min-width:90px;flex-shrink:0; }
+.sb-val { color:#c8d8ec;flex:1;line-height:1.5; }
+.sb-val .m { color:var(--mint);font-weight:700; }
+.sb-val .r { color:var(--red);font-weight:700; }
+.sb-val .y { color:var(--yellow);font-weight:700; }
+
+/* footer */
+.doc-footer {
+  margin-top:40px;padding:16px 20px;
+  border-top:1px solid rgba(255,255,255,0.04);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.df-brand { font-size:10px;font-weight:900;letter-spacing:4px;color:var(--mint); }
+.df-sub   { font-size:10px;color:#4a5568; }
+</style>
+</head>
+<body>
+
+<!-- ══════════ HEADER ══════════ -->
+<div class="doc-hd">
+  <div class="doc-brand">STOCK BRAIN · SECTOR DEEP REPORT</div>
+  <div class="doc-category">SEMICONDUCTOR SECTOR · STORYBOARD-BASED ANALYSIS</div>
+  <div class="doc-title">반도체 섹터 <span class="hl">스토리보드</span><br>심층 분석 리포트</div>
+  <div class="doc-meta">
+    <span class="doc-date">2026년 5월 28일 목요일</span>
+    <span class="doc-tag">스토리보드 V1 기준</span>
+    <span class="doc-tag">6챕터 · 주가구간 평가 포함</span>
+  </div>
+</div>
+
+<!-- 대서사 -->
+<div class="thesis">
+  <div class="thesis-lbl">🎬 대서사 — 이 리포트의 핵심 테제</div>
+  <div class="thesis-txt">"메모리가 사이클 상품에서 전략 자산으로 재정의되는 순간,<br>한국이 그 유일한 공급자다."</div>
+  <div class="thesis-sub">
+    AI Capex $806B(+73% YoY) → GPU → HBM → SK하이닉스 독점 공급 구조.<br>
+    이 흐름이 DRAM 판가 +491% 역대최고를 만들었고, 삼성·SK하이닉스·소부장 순서로 리레이팅 중.
+  </div>
+</div>
+
+<!-- 현황 요약 -->
+<div class="summary-box">
+  <div class="sb-title">📊 오늘 기준 핵심 데이터</div>
+  <div class="sb-row"><div class="sb-lbl">DRAM 판가 YoY</div><div class="sb-val"><span class="m">+491% — 역대최고 수준</span></div></div>
+  <div class="sb-row"><div class="sb-lbl">HBM 판가 YoY</div><div class="sb-val"><span class="m">+114%</span> · SK하이닉스 HBM3E 독점 공급 중</div></div>
+  <div class="sb-row"><div class="sb-lbl">MLCC 판가 YoY</div><div class="sb-val"><span class="m">+3.9%</span> · <span class="y">-10.5% → +3.9% 전환점 확인</span></div></div>
+  <div class="sb-row"><div class="sb-lbl">AI Capex 4사</div><div class="sb-val"><span class="m">$806B (+73% YoY)</span> · MS·Google·Amazon·Meta</div></div>
+  <div class="sb-row"><div class="sb-lbl">TP 컨센서스</div><div class="sb-val">SK하이닉스 <span class="m">280만</span>(최고 380만) · 삼성전자 <span class="m">44만</span>(최고 55만)</div></div>
+  <div class="sb-row"><div class="sb-lbl">솔더볼 수출 YoY</div><div class="sb-val"><span class="m">+97%</span> · 소부장 수출 선행지표 확인</div></div>
+</div>
+
+<!-- ═══════════ ACT 1: 배경 ═══════════ -->
+<div class="act-divider"><span class="act-lbl">Act 1 · 여기까지 어떻게 왔는가</span></div>
+
+<div class="section">
+  <div class="sec-title"><span class="sec-num">01</span> 구조적 변화가 사이클을 삼킨 순간</div>
+  <div class="chapter ch-hot" style="border:1px solid rgba(0,229,198,0.1);">
+    <div class="ch-body" style="padding-top:16px;">
+      <div class="ch-story">
+        2023~2024년 초까지 반도체는 전형적인 사이클주였다. <em>재고 조정 → 감산 → 판가 회복 → 주가 반등.</em> 이 패턴을 반복했다.<br><br>
+        전환점은 <strong>2024년 하반기 엔비디아 Blackwell 출시</strong>였다. HBM 수요가 "있으면 좋겠다"에서 "없으면 못 만든다"로 바뀌었다. 빅테크 4사의 2026년 AI Capex 합계는 <strong>$806B(+73% YoY)</strong>. 이 돈이 데이터센터 → GPU → HBM으로 흘렀다.<br><br>
+        결과: DRAM 판가 YoY <strong>+491%, HBM 판가 YoY +114%</strong>. 역대 최고 수준. 이것이 단순 사이클이 아닌 이유는 이 수요가 <em>구조적이고 장기적</em>이기 때문이다. AI 인프라 투자는 한두 분기 만에 꺼지지 않는다.
+      </div>
+      <table class="ch-table">
+        <tr><th>시기</th><th>시장 상황</th><th>주가 방향</th><th>핵심 이유</th></tr>
+        <tr><td>2023</td><td>재고조정·감산</td><td class="td-dim">↓ 하락</td><td>사이클 저점, ChatGPT 등장</td></tr>
+        <tr><td>2024 상반기</td><td>HBM 수요 인지 시작</td><td class="td-warm">↗ 반등</td><td>엔비디아 Hopper 물량 급증</td></tr>
+        <tr><td>2024 하반기</td><td>Blackwell 발표</td><td class="td-hot">↑ 강세</td><td>HBM3E 수요 폭발 · 삼성 HBM 지연</td></tr>
+        <tr><td>2025~2026</td><td>AI Capex 폭등</td><td class="td-hot">↑↑ 전면 리레이팅</td><td>LTA 계약 · 판가 역대최고</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ACT 2: 6챕터 ═══════════ -->
+<div class="act-divider"><span class="act-lbl">Act 2 · 지금 무슨 일이 벌어지는가</span></div>
+
+<!-- 챕터1: HBM -->
+<div class="section">
+  <div class="sec-title"><span class="sec-num">CH1</span> HBM × Vera Rubin — 이번 사이클의 진짜 엔진 🔴</div>
+  <div class="chapter ch-hot">
+    <div class="ch-head">
+      <div class="ch-icon">🧬</div>
+      <div class="ch-meta">
+        <div class="ch-num-row">
+          <span class="ch-num">챕터 1</span>
+          <span class="ch-heat-badge">🔴 최고온도 — 지금 가장 뜨거운 챕터</span>
+        </div>
+        <div class="ch-title">HBM × Vera Rubin</div>
+        <div class="ch-subtitle">SK하이닉스 독점 구조 · 세대마다 3배 수요 증가 · TC본딩 밸류체인</div>
+      </div>
+    </div>
+    <div class="ch-body">
+      <div class="ch-story">
+        GPU 1장에 들어가는 HBM 용량이 세대마다 2~3배씩 늘고 있다.
+        엔비디아 <strong>Vera Rubin(2026 하반기)</strong>에서는 HBM4E가 탑재되며 용량이 전 세대 대비 3배 이상.
+        SK하이닉스가 HBM3E 독점 공급 중이며, <em>HBM4에서도 독점 유지 가능성 95%</em>로 평가됨.<br><br>
+        삼성전자가 뒤처진 이유는 <strong>TC본딩 수율 문제와 발열 해결 지연</strong>. 2026년 내 따라잡기 어렵다는 것이 컨센서스.
+        단, HBM4E 단계에서 삼성이 추격 성공하면 SK하이닉스 독점 구조가 균열될 수 있는 유일한 시나리오.
+      </div>
+      <table class="ch-table">
+        <tr><th>세대</th><th>GPU</th><th>HBM 용량</th><th>공급자</th><th>한국 반영</th></tr>
+        <tr><td>HBM2E</td><td>A100</td><td>80GB</td><td>SK하이닉스·삼성</td><td>초기 반영</td></tr>
+        <tr><td>HBM3</td><td>H100</td><td>80GB</td><td>SK하이닉스 우세</td><td>TP 상향 시작</td></tr>
+        <tr><td>HBM3E</td><td>H200/Blackwell</td><td>141GB</td><td class="td-hot">SK하이닉스 독점</td><td class="td-hot">판가 역대최고</td></tr>
+        <tr><td>HBM4</td><td>Vera Rubin</td><td>~280GB(예상)</td><td class="td-hot">SK하이닉스 유력</td><td class="td-hot">2026 H2 확정 대기</td></tr>
+        <tr><td>HBM4E</td><td>Vera Rubin Ultra</td><td>~480GB(예상)</td><td class="td-dim">삼성 재도전 기회</td><td class="td-warm">COMPUTEX 6/1 단서</td></tr>
+      </table>
+      <div class="chain-flow">
+        <div class="chain-lbl">밸류체인 흐름</div>
+        <div class="chain-step">
+          <div class="chain-arrow">→</div>
+          <div style="flex:1">
+            <div class="chain-name">엔비디아 수요</div>
+            <div class="chain-why">Blackwell → Vera Rubin 세대 교체. GPU당 HBM 3배 증가 구조</div>
+          </div>
+        </div>
+        <div class="chain-step">
+          <div class="chain-arrow">→</div>
+          <div style="flex:1">
+            <div class="chain-name">SK하이닉스</div>
+            <div class="chain-why">HBM3E 전량 공급. M15X 70K 풀가동 목표 (2026 3Q)</div>
+            <div class="chain-stk">000660</div>
+          </div>
+        </div>
+        <div class="chain-step">
+          <div class="chain-arrow">→</div>
+          <div style="flex:1">
+            <div class="chain-name">한미반도체</div>
+            <div class="chain-why">TC본더 독점 장비. HBM 생산 증가 = 장비 수주 직결</div>
+            <div class="chain-stk">042700</div>
+          </div>
+        </div>
+        <div class="chain-step">
+          <div class="chain-arrow">→</div>
+          <div style="flex:1">
+            <div class="chain-name">HPSP</div>
+            <div class="chain-why">고압수소어닐링 장비 독점. 수율 개선 핵심 공정</div>
+            <div class="chain-stk">403870</div>
+          </div>
+        </div>
+        <div class="chain-step">
+          <div class="chain-arrow">→</div>
+          <div style="flex:1">
+            <div class="chain-name">심텍</div>
+            <div class="chain-why">HBM용 MR-MUF 기판. 교체 주기 단축 = 반복 수요</div>
+            <div class="chain-stk">222810</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 챕터2: 삼성전자 -->
+<div class="section">
+  <div class="sec-title"><span class="sec-num">CH2</span> 삼성전자 — 파운드리 + 메모리 동반 🔴</div>
+  <div class="chapter ch-hot">
+    <div class="ch-head">
+      <div class="ch-icon">⚙️</div>
+      <div class="ch-meta">
+        <div class="ch-num-row">
+          <span class="ch-num">챕터 2</span>
+          <span class="ch-heat-badge">🔴 고온 — 두 엔진 동시 점화</span>
+        </div>
+        <div class="ch-title">삼성전자 듀얼엔진</div>
+        <div class="ch-subtitle">메모리 ASP 역대최고 + 파운드리 회복 동시 진행</div>
+      </div>
+    </div>
+    <div class="ch-body">
+      <div class="ch-story">
+        삼성전자는 2024~2025년 파운드리 위기(4nm 수율 문제)로 메모리 강세에도 주가가 눌렸다.
+        2026년 들어 <strong>두 엔진이 동시에 켜지기 시작</strong>했다.<br><br>
+        메모리: DRAM ASP +92% QoQ(1Q26), NAND 흑자 전환. 파운드리: <em>4nm 가동률 90%→100%</em> 회복.
+        2nm GAA 수주(Groq·Qualcomm·Apple) 가시화. 추가 촉매: 특별성과금 → 주식 지급 전환
+        = <strong>현금 유출 차단 = CapEx 재원 보존</strong>. 이것이 미래에셋 TP 55만 논거의 핵심.
+      </div>
+      <table class="ch-table">
+        <tr><th>엔진</th><th>현재 상황</th><th>2026 하반기 전망</th><th>핵심 촉매</th></tr>
+        <tr><td>메모리 (DRAM)</td><td class="td-hot">ASP +92% QoQ</td><td class="td-hot">HBM2 +LPDDR 동반</td><td>Vera Rubin NVL144 탑재</td></tr>
+        <tr><td>메모리 (NAND)</td><td class="td-warm">흑자 전환</td><td class="td-warm">판가 YoY 안정화</td><td>AI서버 SSD 수요</td></tr>
+        <tr><td>파운드리 (4nm)</td><td class="td-warm">100% 가동률 복귀</td><td class="td-hot">BEP 달성 예상</td><td>Groq 수주 물량 확대</td></tr>
+        <tr><td>파운드리 (2nm)</td><td class="td-dim">협상 진행 중</td><td class="td-warm">계약 발표 예정</td><td>Apple·Qualcomm 공식 발표</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 챕터3: MLCC -->
+<div class="section">
+  <div class="sec-title"><span class="sec-num">CH3</span> MLCC — AI 부품 업사이클 초입 🔴</div>
+  <div class="chapter ch-hot">
+    <div class="ch-head">
+      <div class="ch-icon">🔌</div>
+      <div class="ch-meta">
+        <div class="ch-num-row">
+          <span class="ch-num">챕터 3</span>
+          <span class="ch-heat-badge">🔴 전환점 — 판가 YoY 음→양 전환</span>
+        </div>
+        <div class="ch-title">MLCC 업사이클 초입</div>
+        <div class="ch-subtitle">판가 YoY -10.5% → +3.9% · AI서버 탑재량 스마트폰의 10배</div>
+      </div>
+    </div>
+    <div class="ch-body">
+      <div class="ch-story">
+        MLCC는 전자 부품의 쌀. 스마트폰 침체로 2023~2024년 판가가 바닥이었다.
+        그런데 AI 서버에 들어가는 MLCC 수량이 스마트폰의 <strong>10배</strong>.
+        2026년 5월 현재 판가 YoY <em>+3.9% — 음수에서 양수로 전환</em>한 순간이 지금이다.<br><br>
+        판가 YoY 전환은 업사이클의 시작 신호다. 2026 2Q부터 고사양 MLCC 믹스 개선 가속.
+        FC-BGA(반도체 패키지 기판)도 AI 서버 수요로 쇼티지 진입 중.
+        <strong>삼성전기(009150): MLCC 국내 1위 + FC-BGA + 유리기판</strong>. 3가지가 동시에 업사이클.
+      </div>
+      <table class="ch-table">
+        <tr><th>품목</th><th>2024 판가 YoY</th><th>현재 판가 YoY</th><th>방향</th><th>삼성전기 수혜</th></tr>
+        <tr><td>MLCC (일반)</td><td class="td-dim">-10.5%</td><td class="td-hot">+3.9%</td><td class="td-hot">↑ 전환</td><td class="td-hot">직접 수혜</td></tr>
+        <tr><td>MLCC (고사양 AI)</td><td class="td-dim">보합</td><td class="td-hot">+15%↑ 예상</td><td class="td-hot">↑↑ 가속</td><td class="td-hot">믹스 개선</td></tr>
+        <tr><td>FC-BGA</td><td class="td-dim">공급과잉</td><td class="td-warm">쇼티지 진입</td><td class="td-hot">↑</td><td class="td-hot">직접 수혜</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 챕터4: 소부장 -->
+<div class="section">
+  <div class="sec-title"><span class="sec-num">CH4</span> 소부장 리레이팅 — 대형주 다음은 여기 🟠</div>
+  <div class="chapter ch-warm">
+    <div class="ch-head">
+      <div class="ch-icon">🔬</div>
+      <div class="ch-meta">
+        <div class="ch-num-row">
+          <span class="ch-num">챕터 4</span>
+          <span class="ch-heat-badge">🟠 승온 — 수출 데이터로 선행 확인</span>
+        </div>
+        <div class="ch-title">소부장 리레이팅</div>
+        <div class="ch-subtitle">솔더볼 +97% · 증착 +70% · 증권사 목표가 2배 상향 러시</div>
+      </div>
+    </div>
+    <div class="ch-body">
+      <div class="ch-story">
+        대형주(삼성·SK하이닉스)가 먼저 리레이팅됐다. 소부장이 뒤따른다.
+        수출 데이터로 이미 확인: <strong>솔더볼 +97%, 반도체증착 +70%, PCB +20%</strong>.
+        증권사들이 소부장 목표가를 일제히 2배 이상 상향 중 (솔브레인 +178%, 코미코 +100%).<br><br>
+        핵심 메커니즘: <em>Capex 확대 → 장비 발주 → 소재·부품 수요 증가 → 교체 주기 단축 → 반복 수요.</em>
+        이 사이클이 돌아가는 동안 소부장 이익이 대형주보다 <strong>더 빠르게 증가</strong>한다.
+      </div>
+      <table class="ch-table">
+        <tr><th>분류</th><th>종목</th><th>코드</th><th>수혜 근거</th><th>TP</th></tr>
+        <tr><td class="td-hot">직접 수혜</td><td>솔브레인</td><td>357780</td><td>식각액 ASP 연동계약</td><td class="td-hot">60만</td></tr>
+        <tr><td class="td-hot">직접 수혜</td><td>코미코</td><td>183300</td><td>부품 세정 1위 · 교체 주기</td><td class="td-hot">24만</td></tr>
+        <tr><td class="td-hot">직접 수혜</td><td>동진쎄미켐</td><td>005290</td><td>PR·전구체 국산화</td><td class="td-warm">—</td></tr>
+        <tr><td class="td-warm">장비 수혜</td><td>한미반도체</td><td>042700</td><td>TC본더 독점</td><td class="td-warm">—</td></tr>
+        <tr><td class="td-warm">장비 수혜</td><td>HPSP</td><td>403870</td><td>고압수소어닐링 독점</td><td class="td-warm">—</td></tr>
+        <tr><td class="td-dim">후공정</td><td>심텍</td><td>222810</td><td>HBM용 MR-MUF</td><td class="td-dim">—</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 챕터5+6 -->
+<div class="section">
+  <div class="sec-title"><span class="sec-num">CH5·6</span> 미중 패권 + 유리기판 🟠🟡</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <div class="chapter ch-warm">
+      <div class="ch-head" style="padding:12px 16px;">
+        <div class="ch-icon">🌏</div>
+        <div class="ch-meta">
+          <div class="ch-num-row">
+            <span class="ch-num">챕터 5</span>
+            <span class="ch-heat-badge">🟠 중온</span>
+          </div>
+          <div class="ch-title" style="font-size:15px;">미중 패권</div>
+        </div>
+      </div>
+      <div class="ch-body">
+        <div class="ch-story" style="font-size:12px;">
+          미국이 중국 반도체 수출을 막을수록 중국 빅테크는 한국 메모리를 더 산다.
+          CXMT DDR5 진입 선언했지만 <strong>실제 기술은 삼성 1b nm 대비 2~3세대 뒤</strong>.
+          HBM은 근처도 못 간다.<br><br>
+          단기~중기(2~3년)는 한국 독점 구조 유지. 위협 시나리오는 2027~2028년
+          범용 서버 DRAM에서 CXMT 점유율 상승 시 ASP 하락 압력.
+        </div>
+      </div>
+    </div>
+    <div class="chapter ch-cool">
+      <div class="ch-head" style="padding:12px 16px;">
+        <div class="ch-icon">🔮</div>
+        <div class="ch-meta">
+          <div class="ch-num-row">
+            <span class="ch-num">챕터 6</span>
+            <span class="ch-heat-badge">🟡 저온 — 2027년의 씨앗</span>
+          </div>
+          <div class="ch-title" style="font-size:15px;">유리기판</div>
+        </div>
+      </div>
+      <div class="ch-body">
+        <div class="ch-story" style="font-size:12px;">
+          인텔 EMIB-T, 삼성전기 Si-Cap 수주 공시. 현재 파일럿 단계.
+          2027년 본격 양산 목표.<br><br>
+          삼성전기 TP 200만에 유리기판 옵션가치 포함됐다는 해석.
+          SKC 앱솔릭스가 소재 공급 선점 경쟁 중. 주가 모멘텀은
+          <strong>2027 양산 타임라인 구체화 시 재점화</strong> 예상.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ 종목별 주가 구간 평가 ═══════════ -->
+<div class="act-divider"><span class="act-lbl">종목별 주가 구간 평가</span></div>
+
+<div class="stock-zone-grid">
+
+  <!-- SK하이닉스 -->
+  <div class="szc">
+    <div class="szc-head">
+      <div>
+        <div class="szc-name">SK하이닉스</div>
+        <div class="szc-code">000660</div>
+        <div class="szc-story">챕터1 핵심 수혜주</div>
+      </div>
+      <div class="szc-badge b-hot">HBM 독점</div>
+    </div>
+    <div class="szc-body">
+      <div class="zone-bar-wrap">
+        <div class="zone-labels"><span>TP 하단 150만</span><span>컨센 280만</span><span>TP 최고 380만</span></div>
+        <div class="zone-bar">
+          <div class="zone-fill zone-fill-hot" style="width:60%;"></div>
+          <div class="zone-current" style="left:45%;"></div>
+        </div>
+        <div class="zone-tick-row"><span>↑ 매수 구간</span><span>현재가 ~200만</span><span>리레이팅 여지</span></div>
+      </div>
+      <div class="price-row"><div class="pr-lbl">컨센서스 TP</div><div class="pr-val hot">280만원 (8개사 평균)</div></div>
+      <div class="price-row"><div class="pr-lbl">최고 TP</div><div class="pr-val hot">380만원 (미래에셋)</div></div>
+      <div class="price-row"><div class="pr-lbl">리레이팅 근거</div><div class="pr-val">EV/EBITDA 재산정 · LTA 구조화</div></div>
+      <div class="price-row"><div class="pr-lbl">리스크</div><div class="pr-val warn">HBM4E 삼성 추격 시 독점 균열</div></div>
+      <div class="szc-verdict"><strong>판단:</strong> LTA 계약 = 수익 구조화. 단기 선반영 부담 있으나 HBM4 독점 확인 시 380만 경로 유효. 수급빈집 확인 후 분할 접근 권장.</div>
+    </div>
+  </div>
+
+  <!-- 삼성전자 -->
+  <div class="szc">
+    <div class="szc-head">
+      <div>
+        <div class="szc-name">삼성전자</div>
+        <div class="szc-code">005930</div>
+        <div class="szc-story">챕터2 듀얼엔진</div>
+      </div>
+      <div class="szc-badge b-hot">파운드리+메모리</div>
+    </div>
+    <div class="szc-body">
+      <div class="zone-bar-wrap">
+        <div class="zone-labels"><span>TP 하단 39만</span><span>컨센 44만</span><span>TP 최고 55만</span></div>
+        <div class="zone-bar">
+          <div class="zone-fill zone-fill-hot" style="width:55%;"></div>
+          <div class="zone-current" style="left:38%;"></div>
+        </div>
+        <div class="zone-tick-row"><span>↑ 파운드리 미반영</span><span>현재가 ~38만</span><span>2nm 발표 시</span></div>
+      </div>
+      <div class="price-row"><div class="pr-lbl">컨센서스 TP</div><div class="pr-val hot">44만원 평균</div></div>
+      <div class="price-row"><div class="pr-lbl">최고 TP</div><div class="pr-val hot">55만원 (미래에셋)</div></div>
+      <div class="price-row"><div class="pr-lbl">리레이팅 근거</div><div class="pr-val">파운드리 회복 + CapEx 재원 보존</div></div>
+      <div class="price-row"><div class="pr-lbl">리스크</div><div class="pr-val warn">HBM 퀄 지연 · 2nm 수주 불확실</div></div>
+      <div class="szc-verdict"><strong>판단:</strong> 파운드리 회복이 아직 완전히 반영되지 않음. 2nm 수주 공시 시 55만 경로 열림. 현재는 메모리 강세만 반영된 가격 수준.</div>
+    </div>
+  </div>
+
+  <!-- 삼성전기 -->
+  <div class="szc">
+    <div class="szc-head">
+      <div>
+        <div class="szc-name">삼성전기</div>
+        <div class="szc-code">009150</div>
+        <div class="szc-story">챕터3+6 이중 수혜</div>
+      </div>
+      <div class="szc-badge b-warm">MLCC+유리기판</div>
+    </div>
+    <div class="szc-body">
+      <div class="zone-bar-wrap">
+        <div class="zone-labels"><span>150만</span><span>TP 200만</span><span>유리기판 옵션</span></div>
+        <div class="zone-bar">
+          <div class="zone-fill zone-fill-warm" style="width:70%;"></div>
+          <div class="zone-current" style="left:35%;"></div>
+        </div>
+        <div class="zone-tick-row"><span>↑ MLCC 전환점</span><span>현재가 ~150만</span><span>유리기판 옵션</span></div>
+      </div>
+      <div class="price-row"><div class="pr-lbl">TP (신한·SK증권)</div><div class="pr-val hot">200만원</div></div>
+      <div class="price-row"><div class="pr-lbl">밸류에이션</div><div class="pr-val">PER 59배 — AI 부품주 리레이팅</div></div>
+      <div class="price-row"><div class="pr-lbl">핵심 촉매</div><div class="pr-val warn">2Q 풀캐파 전환 확인 (7월)</div></div>
+      <div class="szc-verdict"><strong>판단:</strong> MLCC 판가 전환 + FC-BGA + 유리기판 3중 수혜. 수급빈집 확인 시 탑픽 등급. 2Q 실적 확인 전 분할 진입 전략 유효.</div>
+    </div>
+  </div>
+
+  <!-- 솔브레인 -->
+  <div class="szc">
+    <div class="szc-head">
+      <div>
+        <div class="szc-name">솔브레인</div>
+        <div class="szc-code">357780</div>
+        <div class="szc-story">챕터4 소부장 선두</div>
+      </div>
+      <div class="szc-badge b-hot">소재 리레이팅</div>
+    </div>
+    <div class="szc-body">
+      <div class="zone-bar-wrap">
+        <div class="zone-labels"><span>20만</span><span>TP 60만</span><span>리레이팅 여지</span></div>
+        <div class="zone-bar">
+          <div class="zone-fill zone-fill-hot" style="width:50%;"></div>
+          <div class="zone-current" style="left:25%;"></div>
+        </div>
+        <div class="zone-tick-row"><span>↑ 직전 TP 22만</span><span>현재가 ~25만</span><span>목표 60만</span></div>
+      </div>
+      <div class="price-row"><div class="pr-lbl">TP (미래에셋)</div><div class="pr-val hot">60만원 (+178% 상향)</div></div>
+      <div class="price-row"><div class="pr-lbl">직전 TP</div><div class="pr-val warn">22만원 → 60만으로 급등</div></div>
+      <div class="price-row"><div class="pr-lbl">리레이팅 근거</div><div class="pr-val">식각액 ASP 연동계약 · HBM 수혜</div></div>
+      <div class="szc-verdict"><strong>판단:</strong> 목표가 급상향 직후 = 대형주 이후 소부장 리레이팅 시작. ASP 연동계약 = 구조적 이익 성장. 수급빈집 확인 시 최우선 소부장 후보.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════ ACT3: 미래 씬 ═══════════ -->
+<div class="act-divider"><span class="act-lbl">Act 3 · 앞으로 어떻게 될 것인가</span></div>
+
+<div class="section">
+  <div class="sec-title"><span class="sec-num">03</span> D-Day 촉매 달력 — 향후 6개월</div>
+  <div class="timeline">
+    <div class="tl-rail"></div>
+
+    <div class="tl-item">
+      <div class="tl-dot tl-dot-hot"></div>
+      <div class="tl-box tl-box-hot">
+        <div class="tl-meta">
+          <span class="tl-date">2026-06-01 (D-4)</span>
+          <span class="tl-tag tl-tag-r">🔴 최우선</span>
+        </div>
+        <div class="tl-title">COMPUTEX — 젠슨황 Vera Rubin 상세 발표</div>
+        <div class="tl-desc">HBM4E 탑재량·로드맵 공개 예정. SK하이닉스 독점 지속 여부 단서. 동일자 5월 수출입 동향 발표 — 반도체 품목 역대치 확인.</div>
+        <div class="tl-stk">
+          <span class="tl-s">SK하이닉스</span><span class="tl-s">한미반도체</span><span class="tl-s">섹터 전체</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot tl-dot-warm"></div>
+      <div class="tl-box tl-box-warm">
+        <div class="tl-meta">
+          <span class="tl-date">2026-06-04</span>
+          <span class="tl-tag">🟠 모니터링</span>
+        </div>
+        <div class="tl-title">테크윙 IR — Cube Prober·테스트 핸들러</div>
+        <div class="tl-desc">HBM 테스트 장비 수주 현황. 소부장 밸류체인 후공정 진도 확인 기회.</div>
+        <div class="tl-stk"><span class="tl-s tl-s-w">테크윙</span><span class="tl-s tl-s-w">유니테스트</span></div>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot tl-dot-warm"></div>
+      <div class="tl-box">
+        <div class="tl-meta">
+          <span class="tl-date">2026-06 말 (D-30)</span>
+          <span class="tl-tag">🟠</span>
+        </div>
+        <div class="tl-title">K-온디바이스 AI반도체 국책과제 발표</div>
+        <div class="tl-desc">팹리스·IP 섹터 수혜주 발표. 오픈엣지·칩스앤미디어 등 소형주 테마 재점화 가능성.</div>
+        <div class="tl-stk"><span class="tl-s">오픈엣지</span><span class="tl-s">칩스앤미디어</span></div>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot tl-dot-hot"></div>
+      <div class="tl-box tl-box-hot">
+        <div class="tl-meta">
+          <span class="tl-date">2026-06 말</span>
+          <span class="tl-tag tl-tag-r">🔴</span>
+        </div>
+        <div class="tl-title">삼성전자·SK하이닉스 2Q26 실적 가이던스</div>
+        <div class="tl-desc">HBM 비중 구체화 + DRAM ASP 지속 여부 확인. 소부장 밸류체인 이익 가시화 타이밍.</div>
+        <div class="tl-stk"><span class="tl-s">삼성전자</span><span class="tl-s">SK하이닉스</span><span class="tl-s">솔브레인</span></div>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot tl-dot-hot"></div>
+      <div class="tl-box">
+        <div class="tl-meta">
+          <span class="tl-date">2026 3Q</span>
+          <span class="tl-tag">🟠</span>
+        </div>
+        <div class="tl-title">SK하이닉스 M15X 70K 완전 가동 확인</div>
+        <div class="tl-desc">소부장 밸류체인 전체 수혜 본격화. 수주 반영 시차 6~12개월이면 지금이 선점 구간.</div>
+        <div class="tl-stk"><span class="tl-s">솔브레인</span><span class="tl-s">코미코</span><span class="tl-s">HPSP</span><span class="tl-s">주성엔지니어링</span></div>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot tl-dot-hot"></div>
+      <div class="tl-box tl-box-hot">
+        <div class="tl-meta">
+          <span class="tl-date">2026 4Q</span>
+          <span class="tl-tag tl-tag-r">🔴</span>
+        </div>
+        <div class="tl-title">HBM4E 초도 생산 확인 — 독점 재확인 분기점</div>
+        <div class="tl-desc">삼성전자 HBM4E 퀄테스트 결과에 따라 SK하이닉스 독점 지속 여부 결정. 섹터 스토리의 핵심 전환점.</div>
+        <div class="tl-stk"><span class="tl-s">SK하이닉스</span><span class="tl-s">삼성전자</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 미반영 씬 -->
+<div class="section">
+  <div class="sec-title"><span class="sec-num">04</span> 시장이 아직 반영 못한 씬</div>
+  <div class="chapter" style="background:var(--card);border:1px solid rgba(0,229,198,0.06);">
+    <div class="ch-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+        <div style="background:rgba(0,229,198,0.04);border:1px solid rgba(0,229,198,0.1);border-radius:8px;padding:12px;">
+          <div style="font-size:10px;font-weight:900;color:var(--mint);letter-spacing:2px;margin-bottom:7px;">씬 A</div>
+          <div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:5px;">소버린AI 100조 수혜 구체화</div>
+          <div style="font-size:11px;color:#8896aa;line-height:1.5;">각국 AI 인프라 100조 투자 → GPU → HBM 흐름이 예상보다 빠를 수 있음. LTA 확장 모멘텀.</div>
+        </div>
+        <div style="background:rgba(255,229,0,0.03);border:1px solid rgba(255,229,0,0.08);border-radius:8px;padding:12px;">
+          <div style="font-size:10px;font-weight:900;color:var(--yellow);letter-spacing:2px;margin-bottom:7px;">씬 B</div>
+          <div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:5px;">MLCC 공급 타이트 3Q26</div>
+          <div style="font-size:11px;color:#8896aa;line-height:1.5;">지금 판가 전환점. 3Q26 실제 쇼티지 신호 나오면 삼성전기 2차 급등. 수출 YoY +20% 초과 달이 매수 트리거.</div>
+        </div>
+        <div style="background:rgba(192,132,252,0.03);border:1px solid rgba(192,132,252,0.1);border-radius:8px;padding:12px;">
+          <div style="font-size:10px;font-weight:900;color:var(--purple);letter-spacing:2px;margin-bottom:7px;">씬 C</div>
+          <div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:5px;">삼성 파운드리 2nm 수주 공시</div>
+          <div style="font-size:11px;color:#8896aa;line-height:1.5;">Groq·Apple·Qualcomm 협상 중. 계약 공시 시 파운드리 리레이팅 본격화. 삼성 TP 55만 이상 경로.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 리스크 매트릭스 -->
+<div class="section">
+  <div class="sec-title"><span class="sec-num">05</span> 리스크 매트릭스</div>
+  <div class="risk-grid">
+    <div class="risk-item">
+      <div class="ri-level high">🔴 고위험</div>
+      <div class="ri-title">삼성전자 HBM4E 퀄 성공</div>
+      <div class="ri-desc">SK하이닉스 독점 구조 균열. 판가 경쟁 심화 → 섹터 전체 밸류에이션 압박</div>
+    </div>
+    <div class="risk-item">
+      <div class="ri-level high">🔴 고위험</div>
+      <div class="ri-title">빅테크 AI Capex 감속</div>
+      <div class="ri-desc">MS·Google 투자 축소 발표 시 HBM 수요 전망 하향. 대형주 TP 일제 하향</div>
+    </div>
+    <div class="risk-item med">
+      <div class="ri-level mid">🟡 중위험</div>
+      <div class="ri-title">미중 추가 규제 확대</div>
+      <div class="ri-desc">한국 메모리 대중 수출 규제 확대 가능성. 단기 불확실성 확대</div>
+    </div>
+    <div class="risk-item med">
+      <div class="ri-level mid">🟡 중위험</div>
+      <div class="ri-title">MLCC 업사이클 속도 둔화</div>
+      <div class="ri-desc">AI서버 고사양 수요 예상 대비 더딜 경우 삼성전기 TP 하향 조정</div>
+    </div>
+    <div class="risk-item low">
+      <div class="ri-level low">⚪ 저위험</div>
+      <div class="ri-title">CXMT 범용 DRAM 침투</div>
+      <div class="ri-desc">2027~2028년 이슈. 단기는 HBM에 집중되어 영향 제한적</div>
+    </div>
+    <div class="risk-item low">
+      <div class="ri-level low">⚪ 저위험</div>
+      <div class="ri-title">유리기판 양산 지연</div>
+      <div class="ri-desc">2027 목표 지연 시 삼성전기 유리기판 옵션가치 축소. 본업 영향 없음</div>
+    </div>
+  </div>
+</div>
+
+<!-- 종합 판단 -->
+<div class="thesis">
+  <div class="thesis-lbl">📋 종합 판단</div>
+  <div class="thesis-txt" style="font-size:14px;">HBM 독점 + MLCC 전환 + 파운드리 회복 — 3가지가 동시에 열린 구간</div>
+  <div class="thesis-sub">
+    스토리보드 6챕터 중 3개가 🔴 최고온도. 소부장은 수출 데이터로 선행 확인된 상태.<br>
+    단기 촉매: <strong>COMPUTEX 6/1 (D-4)</strong> — Vera Rubin 발표가 섹터 방향 결정.<br>
+    전략: <em>빅2 (선반영 부담) → 소부장 (리레이팅 시작)</em> 순서로 비중 이동 구간.
+    수급빈집 xlsm 데이터 입력 후 탑픽 스코어 최종 확인 필수.
+  </div>
+</div>
+
+<div class="doc-footer">
+  <div class="df-brand">STOCK BRAIN</div>
+  <div class="df-sub">로또의 주식인사이트 · 반도체섹터 스토리보드 기반 심층 리포트 · 2026.05.28</div>
+</div>
+
+</body>
+</html>

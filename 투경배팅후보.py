@@ -14,8 +14,9 @@ from datetime import date
 
 sys.stdout.reconfigure(encoding='utf-8')
 
-BASE  = Path(__file__).parent
-TODAY = date.today().strftime('%Y-%m-%d')
+BASE         = Path(__file__).parent
+TODAY        = date.today().strftime('%Y-%m-%d')
+투경현황_JSON = BASE / 'raw' / '투경' / '투경현황.json'
 
 GRADE_ICON = {'A 완전빈집': '🔴', 'B 반빈집': '🟠', 'C 정상': '⚪', 'D 과매수': '🟡'}
 
@@ -163,11 +164,21 @@ def main():
     args = parser.parse_args()
 
     tokens = args.stocks
-    if len(tokens) % 2 != 0:
-        print('오류: 종목코드와 지정일을 쌍으로 입력하세요')
-        sys.exit(1)
 
-    targets = [(tokens[i], tokens[i + 1]) for i in range(0, len(tokens), 2)]
+    if not tokens:
+        # 인자 없으면 투경현황.json 자동 로드
+        if not 투경현황_JSON.exists():
+            print(f'오류: {투경현황_JSON} 없음. 종목을 직접 입력하거나 파일을 생성하세요.')
+            sys.exit(1)
+        with open(투경현황_JSON, encoding='utf-8') as f:
+            data = json.load(f)
+        targets = [(s['code'], s['des_date']) for s in data['stocks']]
+        print(f"투경현황.json 로드 ({data['updated']} 기준, {len(targets)}종목)")
+    else:
+        if len(tokens) % 2 != 0:
+            print('오류: 종목코드와 지정일을 쌍으로 입력하세요')
+            sys.exit(1)
+        targets = [(tokens[i], tokens[i + 1]) for i in range(0, len(tokens), 2)]
 
     # ── 투경 분석 ──────────────────────────────────────────────
     mod = _load_module('fetch_투경', 'fetch_투경.py')
