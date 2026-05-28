@@ -1,3 +1,16 @@
+- 2026-05-29 — **2회차 "현대모비스 종목 추적 시연" 기획 + stock 페이지 + 대본 1차** (이어작업): 다음 세션 트리거 = "현대모비스 2회영상 이어서"
+  [stock] wiki/L5_섹터/자동차/stock/stock_현대모비스.md 신규 — 탑픽 6/9점 (B 반빈집 21% + 5/27 진입 그날). 자동차부품 X / 로봇·자율주행 코어 / 현대차계열 최저평가 리레이팅
+  [대본] channel/yt/yt_2회차_대본.md 13씬 1차 (약 6분 50초). 핵심 메시지 "종목<타이밍" 4회 박힘. 키워드 민트 강조 마크다운 표시
+  [영상 골격] 벤치마킹 영상(영상감독 호흡 사례 1.5분)의 9단계 설득구조 매핑 — 권위 디테일 1개 깊게 패턴. Remotion 한 번 제작 + 사용자 녹음 + Whisper 자동 싱크 흐름
+  [Remotion 기존 자산 확인] ImgHeroScene·ImgSplitScene·ChartScene·7가지 스윕효과 다 만들어져 있음 — 자료 캡처 7장만 준비하면 새로 만들 컴포넌트 거의 없음
+  [합의 미적용] 사용자 보강 요청 5곳: ① strategy_빈집원리.md 신규 ② stock_현대모비스 주도 7근거 섹션 ③ 대본 씬 2(신고가/눌림)·3(욕조)·4-0 신규(빈집+주도)·4-1(7근거)·6(두 조건) → 다음 세션 첫 작업
+  [메모리] project_2회차_현대모비스 + feedback_빈집주도원칙 (욕조 비유·종목<타이밍·빈집+주도)
+- 2026-05-28 — **2강 "딸깍" 기획 + B1~B4 컷 제작** (이어작업): 다음 세션 트리거 = "2강 리모션 영상편집 이어서 할게"
+  [기획서] [channel/yt/yt_2강_딸깍_기획서.md](../channel/yt/yt_2강_딸깍_기획서.md) — 하루 다큐 형식, 10분, Remotion only, 시그니처=시계+실제UI재현
+  [방향 결정] 7단계 설득구조(1강 동일) 폐기 → 시간순 다큐 채택. 4안(다이얼/UI콜라주/픽토그램도시/데이터1인칭) 비교 → B(UI) 선택
+  [B 진화] 8초 콜라주 → 12초 사실적 한컷. 텔레그램·Claude·VSCode·STOCK BRAIN UI 직접 재현
+  [Remotion] src/dakkak/ 8개 파일 (Dakkak A-D 보류, B1-B4 채택). Root.tsx 등록 완료. tsc 통과
+  [잔여 작업] B1~B4 90~60초 확장 + OPENING/CH5매수/CH6자유시간/CH7복기/CH8취침/CTA 6개 컷 미제작
 - 2026-05-28 — 이미지 시스템 + Remotion 차트씬 구축:
   [이미지 다운로드] scripts/download_images.py 신규 — Wikimedia Commons API 기반, 보고서 내용 분석→쿼리 자동 생성(--from-html/--from-text), 한국어→영문 변환 사전(KR_TO_EN), CC라이선스 자동 확인 + 출처_attribution.txt 생성
   [보고서 샘플] out/report_nvidia_sample.html — 젠슨황 히어로+프로필+NVIDIA로고 삽입, STOCK BRAIN 다크 테마
