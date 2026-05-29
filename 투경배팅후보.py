@@ -158,7 +158,7 @@ def main():
         description='투경배팅후보 — 투경 해제 임박 × 수급 빈집',
         epilog='예) python 투경배팅후보.py 080220 2026-05-14 007810 2026-05-14'
     )
-    parser.add_argument('stocks', nargs='+',
+    parser.add_argument('stocks', nargs='*',
                         help='종목코드 지정일 쌍  예: 080220 2026-05-14')
     parser.add_argument('--tg', action='store_true', help='텔레그램 전송')
     args = parser.parse_args()
