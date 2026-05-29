@@ -3,7 +3,29 @@
     "allow": [
       "PowerShell(Start-Process *)",
       "PowerShell(code *)",
-      "Bash(start *)"
+      "Bash(start *)",
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell(Test-Path *)",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_take_screenshot",
+      "PowerShell(git add *)",
+      "PowerShell(git commit *)",
+      "PowerShell(git push *)",
+      "PowerShell(git pull *)",
+      "PowerShell(New-Item *)",
+      "PowerShell(Copy-Item *)",
+      "PowerShell(Move-Item *)",
+      "PowerShell(Remove-Item *)",
+      "PowerShell(Set-Content *)",
+      "PowerShell(Out-File *)",
+      "PowerShell(Rename-Item *)",
+      "PowerShell(mkdir *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git add *)",
+      "Bash(mv *)",
+      "Bash(mkdir *)",
+      "Bash(cp *)"
     ]
   },
   "hooks": {
