@@ -1,18 +1,233 @@
 {
-  "updated": "2026-05-28",
+  "updated": "2026-05-29",
   "stocks": [
-    {"code": "080220", "des_date": "2026-05-14", "name": "제주반도체"},
-    {"code": "007810", "des_date": "2026-05-14", "name": "코리아써키트"},
-    {"code": "222800", "des_date": "2026-05-26", "name": "심텍"},
-    {"code": "131290", "des_date": "2026-05-26", "name": "티에스이"},
-    {"code": "330860", "des_date": "2026-05-27", "name": "네패스아크"},
-    {"code": "203650", "des_date": "2026-05-27", "name": "드림시큐리티"},
-    {"code": "147760", "des_date": "2026-05-27", "name": "피엠티"},
-    {"code": "017900", "des_date": "2026-05-22", "name": "광전자"},
-    {"code": "033160", "des_date": "2026-05-22", "name": "엠케이전자"},
-    {"code": "219130", "des_date": "2026-05-22", "name": "타이거일렉"},
-    {"code": "007390", "des_date": "2026-05-28", "name": "네이처셀"},
-    {"code": "308080", "des_date": "2026-05-28", "name": "바이젠셀"},
-    {"code": "052710", "des_date": "2026-05-28", "name": "아모텍"}
+    {
+      "name": "디앤디파마텍",
+      "code": "347850",
+      "des_date": "2026-05-29",
+      "type": "warning"
+    },
+    {
+      "name": "삼화콘덴서",
+      "code": "001820",
+      "des_date": "2026-05-29",
+      "type": "warning"
+    },
+    {
+      "name": "셀레믹스",
+      "code": "331920",
+      "des_date": "2026-05-29",
+      "type": "warning"
+    },
+    {
+      "name": "네이처셀",
+      "code": "007390",
+      "des_date": "2026-05-28",
+      "type": "warning"
+    },
+    {
+      "name": "대원전선우",
+      "code": "006345",
+      "des_date": "2026-05-28",
+      "type": "warning"
+    },
+    {
+      "name": "바이젠셀",
+      "code": "308080",
+      "des_date": "2026-05-28",
+      "type": "warning"
+    },
+    {
+      "name": "아모텍",
+      "code": "052710",
+      "des_date": "2026-05-28",
+      "type": "warning"
+    },
+    {
+      "name": "네패스아크",
+      "code": "330860",
+      "des_date": "2026-05-27",
+      "type": "warning"
+    },
+    {
+      "name": "드림시큐리티",
+      "code": "203650",
+      "des_date": "2026-05-27",
+      "type": "warning"
+    },
+    {
+      "name": "피엠티",
+      "code": "147760",
+      "des_date": "2026-05-27",
+      "type": "warning"
+    },
+    {
+      "name": "한국첨단소재",
+      "code": "062970",
+      "des_date": "2026-05-27",
+      "type": "warning"
+    },
+    {
+      "name": "KBI메탈",
+      "code": "024840",
+      "des_date": "2026-05-26",
+      "type": "warning"
+    },
+    {
+      "name": "미래산업",
+      "code": "025560",
+      "des_date": "2026-05-26",
+      "type": "warning"
+    },
+    {
+      "name": "심텍",
+      "code": "222800",
+      "des_date": "2026-05-26",
+      "type": "warning"
+    },
+    {
+      "name": "티에스이",
+      "code": "131290",
+      "des_date": "2026-05-26",
+      "type": "warning"
+    },
+    {
+      "name": "광전자",
+      "code": "017900",
+      "des_date": "2026-05-22",
+      "type": "warning"
+    },
+    {
+      "name": "엠케이전자",
+      "code": "033160",
+      "des_date": "2026-05-22",
+      "type": "warning"
+    },
+    {
+      "name": "타이거일렉",
+      "code": "219130",
+      "des_date": "2026-05-22",
+      "type": "warning"
+    },
+    {
+      "name": "티웨이홀딩스",
+      "code": "004870",
+      "des_date": "2026-05-22",
+      "type": "warning"
+    },
+    {
+      "name": "하나마이크론",
+      "code": "067310",
+      "des_date": "2026-05-22",
+      "type": "warning"
+    },
+    {
+      "name": "썬테크",
+      "code": "217320",
+      "des_date": "2026-05-21",
+      "type": "warning"
+    },
+    {
+      "name": "아이로보틱스",
+      "code": "066430",
+      "des_date": "2026-05-20",
+      "type": "warning"
+    },
+    {
+      "name": "진원생명과학",
+      "code": "011000",
+      "des_date": "2026-05-20",
+      "type": "warning"
+    },
+    {
+      "name": "한선엔지니어링",
+      "code": "452280",
+      "des_date": "2026-05-20",
+      "type": "warning"
+    },
+    {
+      "name": "소룩스",
+      "code": "290690",
+      "des_date": "2026-05-19",
+      "type": "warning"
+    },
+    {
+      "name": "에스에이엠티",
+      "code": "031330",
+      "des_date": "2026-05-19",
+      "type": "warning"
+    },
+    {
+      "name": "메디젠휴먼케어",
+      "code": "236340",
+      "des_date": "2026-05-18",
+      "type": "warning"
+    },
+    {
+      "name": "사토시홀딩스",
+      "code": "223310",
+      "des_date": "2026-05-18",
+      "type": "warning"
+    },
+    {
+      "name": "삼성전기우",
+      "code": "009155",
+      "des_date": "2026-05-18",
+      "type": "warning"
+    },
+    {
+      "name": "TPC로보틱스",
+      "code": "048770",
+      "des_date": "2026-05-15",
+      "type": "warning"
+    },
+    {
+      "name": "네오티스",
+      "code": "085910",
+      "des_date": "2026-05-15",
+      "type": "warning"
+    },
+    {
+      "name": "미래반도체",
+      "code": "254490",
+      "des_date": "2026-05-15",
+      "type": "warning"
+    },
+    {
+      "name": "민테크",
+      "code": "452200",
+      "des_date": "2026-05-15",
+      "type": "warning"
+    },
+    {
+      "name": "성문전자",
+      "code": "014910",
+      "des_date": "2026-05-15",
+      "type": "warning"
+    },
+    {
+      "name": "코스텍시스템",
+      "code": "169670",
+      "des_date": "2026-05-15",
+      "type": "warning"
+    },
+    {
+      "name": "제주반도체",
+      "code": "080220",
+      "des_date": "2026-05-14",
+      "type": "warning"
+    },
+    {
+      "name": "코리아써키트",
+      "code": "007810",
+      "des_date": "2026-05-14",
+      "type": "warning"
+    },
+    {
+      "name": "조이웍스앤코",
+      "code": "309930",
+      "des_date": "2026-04-29",
+      "type": "warning"
+    }
   ]
 }
