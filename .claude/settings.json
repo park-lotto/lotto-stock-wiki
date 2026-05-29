@@ -25,7 +25,8 @@
       "Bash(git add *)",
       "Bash(mv *)",
       "Bash(mkdir *)",
-      "Bash(cp *)"
+      "Bash(cp *)",
+      "WebSearch"
     ]
   },
   "hooks": {

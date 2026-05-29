@@ -22,6 +22,8 @@ import { B1_Telegram } from './dakkak/B1_Telegram';
 import { B2_Claude } from './dakkak/B2_Claude';
 import { B3_Wiki } from './dakkak/B3_Wiki';
 import { B4_Dashboard } from './dakkak/B4_Dashboard';
+import { S01_Hook } from './dakkak/S01_Hook';
+import { S02_Chaos } from './dakkak/S02_Chaos';
 import { SDUR } from './constants';
 
 export const RemotionRoot: React.FC = () => {
@@ -199,6 +201,24 @@ export const RemotionRoot: React.FC = () => {
         id="B4-Dashboard"
         component={B4_Dashboard}
         durationInFrames={360}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* ─── 딸깍 자동화 시스템 영상 — 씬별 컴포지션 ─── */}
+      <Composition
+        id="S01-Hook"
+        component={S01_Hook}
+        durationInFrames={600}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="S02-Chaos"
+        component={S02_Chaos}
+        durationInFrames={1350}
         fps={30}
         width={1920}
         height={1080}
