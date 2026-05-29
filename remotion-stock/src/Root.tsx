@@ -14,6 +14,14 @@ import { KosdaqPolicyVideo, KOSDAQ_POLICY_FRAMES } from './KosdaqPolicyVideo';
 import { LoseReasonVideo, LOSE_REASON_FRAMES } from './LoseReasonVideo';
 import { ShipyardVideo } from './ShipyardVideo';
 import { ChartScene } from './scenes/ChartScene';
+import { DakkakA_Dial } from './dakkak/DakkakA_Dial';
+import { DakkakB_UICollage } from './dakkak/DakkakB_UICollage';
+import { DakkakC_Pictogram } from './dakkak/DakkakC_Pictogram';
+import { DakkakD_DataFlow } from './dakkak/DakkakD_DataFlow';
+import { B1_Telegram } from './dakkak/B1_Telegram';
+import { B2_Claude } from './dakkak/B2_Claude';
+import { B3_Wiki } from './dakkak/B3_Wiki';
+import { B4_Dashboard } from './dakkak/B4_Dashboard';
 import { SDUR } from './constants';
 
 export const RemotionRoot: React.FC = () => {
@@ -123,6 +131,74 @@ export const RemotionRoot: React.FC = () => {
         id="ShipyardVideo"
         component={ShipyardVideo}
         durationInFrames={SDUR * 3}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* ─── "딸깍" 2강 — 4가지 시각 방향 샘플 (각 8초/240프레임) ─── */}
+      <Composition
+        id="DakkakA-Dial"
+        component={DakkakA_Dial}
+        durationInFrames={240}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="DakkakB-UICollage"
+        component={DakkakB_UICollage}
+        durationInFrames={240}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="DakkakC-Pictogram"
+        component={DakkakC_Pictogram}
+        durationInFrames={240}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="DakkakD-DataFlow"
+        component={DakkakD_DataFlow}
+        durationInFrames={240}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* ─── B 진화 버전 — UI 콜라주 사실적 4컷 (각 12초/360프레임) ─── */}
+      <Composition
+        id="B1-Telegram"
+        component={B1_Telegram}
+        durationInFrames={360}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="B2-Claude"
+        component={B2_Claude}
+        durationInFrames={360}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="B3-Wiki"
+        component={B3_Wiki}
+        durationInFrames={360}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="B4-Dashboard"
+        component={B4_Dashboard}
+        durationInFrames={360}
         fps={30}
         width={1920}
         height={1080}

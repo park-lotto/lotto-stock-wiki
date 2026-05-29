@@ -10,7 +10,8 @@ raw/*.png
 raw/리모션*
 .obsidian/
 demos/
-.claude/
+.claude/*
+!.claude/settings.json
 .agents/
 data/
 
