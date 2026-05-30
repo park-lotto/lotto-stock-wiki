@@ -36,6 +36,27 @@ def call(prompt: str, system: str = '', model: str = 'gemini-2.5-flash', tempera
     return resp.text.strip()
 
 
+def search(query: str, model: str = 'gemini-2.5-flash') -> str:
+    """실제 Google Search grounding — 실시간 웹 검색"""
+    if not GEMINI_KEY:
+        raise RuntimeError('.env에 GEMINI_API_KEY 없음')
+
+    from google import genai
+    from google.genai import types
+
+    client = genai.Client(api_key=GEMINI_KEY)
+
+    resp = client.models.generate_content(
+        model=model,
+        contents=query,
+        config=types.GenerateContentConfig(
+            tools=[types.Tool(google_search=types.GoogleSearch())],
+            temperature=0,
+        ),
+    )
+    return resp.text.strip()
+
+
 def call_json(prompt: str, system: str = '') -> dict:
     """JSON 응답 파싱"""
     import json, re

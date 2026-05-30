@@ -84,8 +84,7 @@ def run(idea: str, start_from: str = None, pipeline_id: str = None, mode: str = 
         save_state(pid, state)
         _pass(f"기획서 → {plan_file.name}")
 
-        if mode == 'step':
-            input("\n  [Enter] 다음 단계...")
+        pass  # 자동 진행
 
     plan_text = Path(state['files'].get('plan', '')).read_text(encoding='utf-8') if state['files'].get('plan') else ''
 
@@ -120,8 +119,7 @@ def run(idea: str, start_from: str = None, pipeline_id: str = None, mode: str = 
         save_state(pid, state)
         _pass(f"대본 → {script_file.name}")
 
-        if mode == 'step':
-            input("\n  [Enter] 다음 단계...")
+        pass  # 자동 진행
 
     script_text = Path(state['files'].get('script', '')).read_text(encoding='utf-8') if state['files'].get('script') else ''
 
@@ -165,8 +163,7 @@ def run(idea: str, start_from: str = None, pipeline_id: str = None, mode: str = 
         _pass(f"Remotion 씬 {len(scenes_info)}개 생성 완료")
         agent_render.open_studio()
 
-        if mode == 'step':
-            input("\n  Remotion Studio에서 확인 후 [Enter]...")
+        pass  # Remotion Studio에서 별도 확인
 
     scenes_info = state['steps'].get('remotion', {}).get('scenes', [])
     scene_comps = [s['comp'] for s in scenes_info]

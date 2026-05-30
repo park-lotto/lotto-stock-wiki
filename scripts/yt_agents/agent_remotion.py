@@ -223,19 +223,27 @@ def qc_creative(script_text: str, scene_files: list[str]) -> dict:
         if p.exists():
             codes.append(f"=== {p.name} ===\n{p.read_text(encoding='utf-8')[:1500]}")
 
-    system = """Remotion 영상 품질 QC 전문가. 6개 기준 채점 후 JSON 반환.
+    system = """Remotion 영상 QC 전문가. 주관 금지. 코드에서 직접 확인 가능한 항목만 채점.
 
-채점:
-1. phase_variety: 각 씬에 Phase 전환 2개 이상 있는가
-2. no_static: 정적 5초 이상 구간 없는가 (애니메이션 충분)
-3. subtitle_bar: 모든 씬에 자막바 있는가
-4. style_match: BRAIN SIGNAL 스타일 (민트·다크·이모지+텍스트)과 일치하는가
-5. text_no_typo: 화면 텍스트에 오타 없는가
-6. climax_exists: 클라이맥스 씬에 elastic scale + glow 효과 있는가
+채점 (각 1점):
+1. has_subtitle: 모든 씬 코드에 SUBS 배열과 하단 자막 div 있는가
+2. has_fade_in: 모든 씬에 ip(f, 0, 18) fadeIn 있는가
+3. has_audio: 모든 씬에 Html5Audio 태그 있는가
+4. has_phase: 각 씬에 Phase 구분 주석 또는 분기 2개 이상 있는가
+5. mint_color: C.main (#00FFD0) 포인트 컬러 사용됐는가
+6. has_emoji: 이모지 3개 이상 사용됐는가
+7. climax_elastic: 클라이맥스 씬에 Easing.elastic 있는가
+8. dark_bg: 배경이 #080c14 계열 다크인가
 
 반환:
-{"scores":{"phase_variety":1,...},"total":5,"passed":true,"feedback":"...","weak_scenes":["..."]}}
-passed = total >= 5"""
+{
+  "scores": {"has_subtitle":1, "has_fade_in":0, ...},
+  "total": 6,
+  "passed": true,
+  "feedback": "실패: has_fade_in — 씬3에 fadeIn 없음. opacity: ip(f, 0, 18) 추가 필요.",
+  "weak_scenes": ["씬3: fadeIn 누락"]
+}
+passed = total >= 6"""
 
     prompt = f"대본 (요약):\n{script_text[:500]}\n\n씬 코드 샘플:\n{''.join(codes)}\n\n채점하세요."
     return G.call_json(prompt, system)
