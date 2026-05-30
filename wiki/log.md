@@ -1,3 +1,11 @@
+- 2026-05-30 — 국민성장펀드 빌드업 영상 씬1~3 Remotion 제작 완료:
+  [GB01] 훅 임팩트형 (539프레임, Whisper 싱크 완료) — 녹음: "국 씬1.m4a"
+  [GB02] 조건 체크리스트 리스트형 (1350프레임) — 녹음 대기
+  [GB03] 카운트업+비교형 4Phase (2700프레임) — 녹음 대기
+  [가이드 준수] 빨강 제거, 폰트 크기, 스캔라인, 자막바 전면 수정
+  [다음] GB02·GB03 녹음 파일 → Whisper 싱크 → 깃커밋
+  [스크립트] scripts/whisper_sync.py, scripts/fetch_yt_trending.py 완성
+  [YouTube API] .env에 키 저장 완료
 - 2026-05-30 — STOCK BRAIN 서비스 아키텍처 확정:
   [구독 서비스] Push 방식 우선 (텔레그램 봇). SaaS/앱은 나중 단계
   [기술] 크롤링·분류=서버(Python) / 요약·인사이트=Claude API(Haiku 80%+Sonnet 20%)

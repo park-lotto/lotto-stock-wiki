@@ -787,6 +787,174 @@ export const FadeWrapper: React.FC<{ children: React.ReactNode; dur?: number }> 
 답이 나오면 그것을 구현한다. 기존 형식에서 고르지 않는다.
 ```
 
+---
+
+## 12. 카드 레이아웃 씬 — 크기·비율·가독성 규칙
+
+> AG 시리즈(AI 직원 영상), B 시리즈(딸깍) 실제 검증 기반.
+> 카드를 나열하는 모든 씬에 적용한다.
+
+### 12-1. 타이포그래피 최소 기준 (1920×1080 기준)
+
+| 요소 | 최소 fontSize | 권장 fontSize | fontWeight |
+|------|-------------|-------------|-----------|
+| 카드 메인 라벨 | **22px** | **24~32px** | 700 |
+| 카드 서브 텍스트 | **15px** | **16~18px** | 400~500 |
+| 타임스탬프 / 코드형 | **18px** | **20~26px** | 600 |
+| 헤더 (좌상단) | **52px** | **58~72px** | 900 |
+| 씬 라벨 (우상단) | **14px** | **15~16px** | 600 |
+| 클라이맥스 대형 텍스트 | **100px** | **120~140px** | 900 |
+| 보스/총괄 카드 이름 | **28px** | **30~36px** | 900 |
+| 배지 텍스트 | **12px** | **13~14px** | 700 |
+
+> ⚠️ 이 기준 미만이면 영상에서 읽을 수 없다. 무조건 크게.
+
+---
+
+### 12-2. 카드 크기 — 화면 꽉 채우기 원칙
+
+**원칙: 카드는 화면을 가득 채워야 한다. 여백이 넓으면 카드가 작아 보인다.**
+
+```
+// 이벤트 리스트형 (타임라인 등) — 높이 자동 계산
+const AVAIL_H = 1080 - TOP_MARGIN - BOTTOM_MARGIN;   // 예: 1080 - 80 - 60 = 940
+const CARD_H  = Math.floor(AVAIL_H / itemCount) - GAP;
+
+// 카드 그리드형 (2열 등) — 너비 자동 계산
+const CARD_W  = (1920 - PAD_X * 2 - COL_GAP * (COLS - 1)) / COLS;
+// 예) PAD_X=80, COL_GAP=36, COLS=2 → CARD_W = (1920-160-36)/2 = 862px
+
+// 보스/헤더 카드
+BOSS_W: 600~750px  (전체 너비의 31~39%)
+BOSS_H: 110~130px
+```
+
+**이벤트 7개 기준 권장값 (hook 모드)**
+```
+CARD_H ≈ 128px   (여백 포함 약 140px/이벤트)
+CARD_W: 화면 너비 - 타임라인 X 위치 - 우측 패널 - 마진
+```
+
+**직원 10명 기준 권장값 (2열 × 5행)**
+```
+CARD_W ≈ 842px   (PAD_X=80, COL_GAP=36 기준)
+CARD_H ≈ 148px   (GRID_H 약 790px ÷ 5행 - gap)
+```
+
+---
+
+### 12-3. 네온 글로우 절제 원칙
+
+**씬 전체에서 네온(GLOW)을 쓰는 요소는 최대 3개.**
+
+```
+✅ 네온 허용 요소 (씬당 1~3개)
+  - 좌상단 헤더 숫자/시간 → GLOW.mid.text
+  - 보스/총괄 카드 → boxShadow 강한 네온
+  - 클라이맥스 대형 텍스트 (₩0, 숫자 등) → GLOW.strong.text
+  - 통계 숫자 (우측 패널) → GLOW.weak.text
+
+❌ 네온 금지 요소
+  - 일반 직원/이벤트 카드 전체 (너무 많으면 눈 아픔)
+  - 서브 텍스트, 배지, 타임스탬프
+  - 배경 전체 글로우 (opacity 0.04 이하로 극히 미묘하게만)
+```
+
+**배경 글로우 기준**
+```ts
+// 눈에 거의 안 보이는 수준으로
+background: 'radial-gradient(ellipse at 50% 35%, rgba(0,255,208,0.04~0.06) 0%, transparent 58%)'
+// opacity 고정값 사용. Math.sin 펄스 사용 안 함 (배경 전체 움직이면 혼란)
+```
+
+---
+
+### 12-4. 애니메이션 속도 기준
+
+| 항목 | 기준값 | 설명 |
+|------|--------|------|
+| 씬 전체 길이 | **750~900프레임** (25~30초) | 카드 씬은 여유 있게 |
+| 이벤트 스태거 간격 | **60~80프레임** | 너무 빠르면 읽기 전에 지나감 |
+| 직원 카드 스태거 | **45~55프레임** | 10명 × 50 = 500프레임 소요 |
+| 카드 등장 easing | `Easing.out(Easing.back(1.4~2.2))` | 보스는 2.2, 직원은 1.4 |
+| 클라이맥스 easing | `Easing.out(Easing.elastic(0.55~0.65))` | 강한 탄성 |
+| 등장 slide 거리 | **28~50px** | 너무 크면 어지러움 |
+| fadeIn 구간 | **f0~24** | 0~20보다 여유 있게 |
+
+---
+
+### 12-5. 레이아웃 골격 (카드 씬 표준)
+
+```tsx
+<AbsoluteFill style={{ background: '#080c14', opacity: fadeIn, fontFamily: FONT }}>
+
+  {/* 배경 — 극히 미묘하게만 */}
+  <div style={{
+    position: 'absolute', inset: 0,
+    background: 'radial-gradient(ellipse at 50% 35%, rgba(0,255,208,0.05) 0%, transparent 58%)',
+    pointerEvents: 'none',
+  }} />
+
+  {/* 우상단 씬 라벨 — 회색, 작게 */}
+  <div style={{
+    position: 'absolute', top: 28, right: 48,
+    color: '#4b5563', fontSize: 16, fontWeight: 600, letterSpacing: 3, opacity: timeOp,
+  }}>SCENE N · 씬 이름</div>
+
+  {/* 좌상단 헤더 — 민트 네온 허용 */}
+  <div style={{ position: 'absolute', top: 30, left: 60, opacity: timeOp }}>
+    <div style={{ color: '#4b5563', fontSize: 13, letterSpacing: 5, marginBottom: 4 }}>카테고리</div>
+    <div style={{
+      color: C.main, fontSize: 58, fontWeight: 900,
+      fontFamily: '"Consolas","Menlo",monospace',
+      textShadow: GLOW.mid.text,
+    }}>헤더 텍스트</div>
+  </div>
+
+  {/* 카드 영역 — 화면 꽉 채우기 */}
+  ...카드들...
+
+  {/* 클라이맥스 — 가장 강한 네온, 화면 하단 */}
+  <div style={{
+    position: 'absolute', bottom: 56, left: 0, right: 0,
+    textAlign: 'center',
+    opacity: salaryOp, transform: `scale(${salaryScale})`, transformOrigin: 'center bottom',
+  }}>
+    <div style={{
+      color: C.main, fontSize: 130, fontWeight: 900,
+      fontFamily: '"Consolas","Menlo",monospace',
+      textShadow: GLOW.strong.text,  // 클라이맥스만 STRONG
+    }}>핵심 텍스트</div>
+  </div>
+
+  {/* 하단 씬 라벨 */}
+  <div style={{
+    position: 'absolute', bottom: 18, left: 0, right: 0,
+    textAlign: 'center', color: '#374151', fontSize: 18, letterSpacing: 4,
+  }}>SCENE N · 설명</div>
+
+</AbsoluteFill>
+```
+
+---
+
+### 12-6. ✅ / ❌ 빠른 체크리스트
+
+```
+✅ 카드 메인 라벨 22px 이상인가?
+✅ 서브 텍스트 15px 이상인가?
+✅ 카드가 화면 대부분을 채우는가? (여백 < 전체의 20%)
+✅ 네온 요소가 씬 전체에 3개 이하인가?
+✅ 스태거 간격이 45프레임 이상인가?
+✅ 클라이맥스 텍스트가 100px 이상인가?
+✅ 배경 글로우 opacity가 0.06 이하인가?
+
+❌ 카드가 화면 절반도 못 채우는가? → 카드 키우기
+❌ 모든 카드에 네온이 있는가? → 절제
+❌ 이벤트가 30프레임마다 넘어가는가? → 스태거 늘리기
+❌ 헤더/서브 텍스트 같은 크기인가? → 위계 강화
+```
+
 - 색상·폰트·기술 제약 (위 섹션들) 은 지킨다
 - 레이아웃·구성·요소 배치는 매 씬 새로 설계한다
 - 이전 영상에서 쓴 형식이면 다른 방법을 찾는다

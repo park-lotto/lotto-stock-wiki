@@ -26,6 +26,9 @@ import { S01_Hook } from './dakkak/S01_Hook';
 import { S02_Chaos } from './dakkak/S02_Chaos';
 import { AG01_Timeline } from './agents/AG01_Timeline';
 import { AG02_Agents } from './agents/AG02_Agents';
+import { GB01_Hook } from './buildup/GB01_Hook';
+import { GB02_Checklist } from './buildup/GB02_Checklist';
+import { GB03_Compare } from './buildup/GB03_Compare';
 import { SDUR } from './constants';
 
 export const RemotionRoot: React.FC = () => {
@@ -230,7 +233,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="AG01-Timeline-Hook"
         component={() => <AG01_Timeline mode="hook" />}
-        durationInFrames={750}
+        durationInFrames={600}  // 씬1 수정 녹음 19.98초 기준
         fps={30}
         width={1920}
         height={1080}
@@ -247,6 +250,32 @@ export const RemotionRoot: React.FC = () => {
         id="AG02-Agents"
         component={AG02_Agents}
         durationInFrames={600}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* ─── 국민성장펀드 빌드업 영상 — 씬1~3 ─── */}
+      <Composition
+        id="GB01-Hook"
+        component={GB01_Hook}
+        durationInFrames={539}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="GB02-Checklist"
+        component={GB02_Checklist}
+        durationInFrames={1350}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="GB03-Compare"
+        component={GB03_Compare}
+        durationInFrames={2700}
         fps={30}
         width={1920}
         height={1080}
