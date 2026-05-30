@@ -27,7 +27,8 @@
       "Bash(mv *)",
       "Bash(mkdir *)",
       "Bash(cp *)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(*)"
     ]
   },
   "hooks": {
