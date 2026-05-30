@@ -28,7 +28,12 @@
       "Bash(mkdir *)",
       "Bash(cp *)",
       "WebSearch",
-      "Bash(*)"
+      "Bash(*)",
+      "Write(*)",
+      "Edit(*)",
+      "Read(*)",
+      "Glob(*)",
+      "Grep(*)"
     ]
   },
   "hooks": {

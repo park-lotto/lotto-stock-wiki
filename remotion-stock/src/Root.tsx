@@ -39,9 +39,17 @@ import { AG_S04_4_Toppick } from './agents/AG_S04_4_Toppick';
 import { AG_S04_5_Brief }   from './agents/AG_S04_5_Brief';
 import { AG_S04_6_Deploy }  from './agents/AG_S04_6_Deploy';
 import { AG_S04_7_Others }  from './agents/AG_S04_7_Others';
+import { AG_S04_2_Collect as AG_S04_2_v2 } from './agents/AG_S04_2_Collect_v2';
+import { AG_S05_Climax }   from './agents/AG_S05_Climax';
+import { AG_S06_Awareness } from './agents/AG_S06_Awareness';
+import { AG_S07_Tease }    from './agents/AG_S07_Tease';
+import { AG_S08_CTA }      from './agents/AG_S08_CTA';
 import { GB01_Hook } from './buildup/GB01_Hook';
 import { GB02_Checklist } from './buildup/GB02_Checklist';
 import { GB03_Compare } from './buildup/GB03_Compare';
+import { GB04_Telegram } from './buildup/GB04_Telegram';
+import { GB05_StockBrain } from './buildup/GB05_StockBrain';
+import { GB06_CTA } from './buildup/GB06_CTA';
 import { SDUR } from './constants';
 
 export const RemotionRoot: React.FC = () => {
@@ -322,6 +330,11 @@ export const RemotionRoot: React.FC = () => {
       <Composition id="AG-S04-5-Brief"   component={AG_S04_5_Brief}   durationInFrames={667}  fps={30} width={1920} height={1080} />
       <Composition id="AG-S04-6-Deploy"  component={AG_S04_6_Deploy}  durationInFrames={617}  fps={30} width={1920} height={1080} />
       <Composition id="AG-S04-7-Others"  component={AG_S04_7_Others}  durationInFrames={716}  fps={30} width={1920} height={1080} />
+      <Composition id="AG-S04-2-v2"     component={AG_S04_2_v2}      durationInFrames={1720} fps={30} width={1920} height={1080} />
+      <Composition id="AG-S05-Climax"   component={AG_S05_Climax}    durationInFrames={1140} fps={30} width={1920} height={1080} />
+      <Composition id="AG-S06-Awareness" component={AG_S06_Awareness} durationInFrames={1260} fps={30} width={1920} height={1080} />
+      <Composition id="AG-S07-Tease"    component={AG_S07_Tease}     durationInFrames={960}  fps={30} width={1920} height={1080} />
+      <Composition id="AG-S08-CTA"      component={AG_S08_CTA}       durationInFrames={960}  fps={30} width={1920} height={1080} />
 
       {/* ─── 국민성장펀드 빌드업 영상 — 씬1~3 ─── */}
       <Composition
@@ -344,6 +357,30 @@ export const RemotionRoot: React.FC = () => {
         id="GB03-Compare"
         component={GB03_Compare}
         durationInFrames={2700}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="GB04-Telegram"
+        component={GB04_Telegram}
+        durationInFrames={1410}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="GB05-StockBrain"
+        component={GB05_StockBrain}
+        durationInFrames={1380}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="GB06-CTA"
+        component={GB06_CTA}
+        durationInFrames={930}
         fps={30}
         width={1920}
         height={1080}
