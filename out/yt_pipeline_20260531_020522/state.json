@@ -1,0 +1,77 @@
+{
+  "id": "20260531_020522",
+  "idea": "AI가 주식 자동 분석 — 아침에 딸깍 한 번으로 끝내는 법",
+  "created": "2026-05-31T02:05:22.717966",
+  "steps": {
+    "plan": {
+      "status": "done",
+      "qc_score": 7,
+      "attempts": 1
+    },
+    "script": {
+      "status": "done",
+      "qc_score": 8,
+      "attempts": 1
+    },
+    "remotion": {
+      "status": "done",
+      "qc_score": 4,
+      "scenes": [
+        {
+          "num": "1",
+          "name": "훅",
+          "comp": "YT_AI_S01_훅"
+        },
+        {
+          "num": "2",
+          "name": "공감",
+          "comp": "YT_AI_S02_공감"
+        },
+        {
+          "num": "3",
+          "name": "선언",
+          "comp": "YT_AI_S03_선언"
+        },
+        {
+          "num": "4",
+          "name": "데모",
+          "comp": "YT_AI_S04_데모"
+        },
+        {
+          "num": "5",
+          "name": "클라이맥스",
+          "comp": "YT_AI_S05_클라이맥스"
+        },
+        {
+          "num": "6",
+          "name": "자각",
+          "comp": "YT_AI_S06_자각"
+        },
+        {
+          "num": "7",
+          "name": "여운",
+          "comp": "YT_AI_S07_여운"
+        },
+        {
+          "num": "8",
+          "name": "CTA",
+          "comp": "YT_AI_S08_CTA"
+        }
+      ],
+      "files": [
+        "C:\\Users\\CH\\Desktop\\로또의 주식\\remotion-stock\\src\\agents\\YT_AI_S01_훅.tsx",
+        "C:\\Users\\CH\\Desktop\\로또의 주식\\remotion-stock\\src\\agents\\YT_AI_S02_공감.tsx",
+        "C:\\Users\\CH\\Desktop\\로또의 주식\\remotion-stock\\src\\agents\\YT_AI_S03_선언.tsx",
+        "C:\\Users\\CH\\Desktop\\로또의 주식\\remotion-stock\\src\\agents\\YT_AI_S04_데모.tsx",
+        "C:\\Users\\CH\\Desktop\\로또의 주식\\remotion-stock\\src\\agents\\YT_AI_S05_클라이맥스.tsx",
+        "C:\\Users\\CH\\Desktop\\로또의 주식\\remotion-stock\\src\\agents\\YT_AI_S06_자각.tsx",
+        "C:\\Users\\CH\\Desktop\\로또의 주식\\remotion-stock\\src\\agents\\YT_AI_S07_여운.tsx",
+        "C:\\Users\\CH\\Desktop\\로또의 주식\\remotion-stock\\src\\agents\\YT_AI_S08_CTA.tsx"
+      ]
+    }
+  },
+  "files": {
+    "plan": "C:\\Users\\CH\\Desktop\\로또의 주식\\out\\yt_pipeline_20260531_020522\\plan.md",
+    "script": "C:\\Users\\CH\\Desktop\\로또의 주식\\out\\yt_pipeline_20260531_020522\\script.md"
+  }
+}

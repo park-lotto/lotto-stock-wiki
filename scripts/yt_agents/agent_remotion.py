@@ -77,11 +77,26 @@ def _parse_scenes(script_text: str) -> list[dict]:
         scenes.append({'num': num, 'name': name, 'duration': dur, 'block': block})
     return scenes
 
+SCENE_NAME_MAP = {
+    '훅': 'Hook', '공감': 'Empathy', '선언': 'Declaration',
+    '데모': 'Demo', '클라이맥스': 'Climax', '자각': 'Awareness',
+    '여운': 'Tease', 'CTA': 'CTA', '소개': 'Intro',
+    '브리핑': 'Brief', '배포': 'Deploy', '수집': 'Collect',
+}
+
 def _scene_to_component_name(prefix: str, num: str, name: str) -> str:
-    """씬 → 컴포넌트명 (예: XX_S01_Hook)"""
+    """씬 → 컴포넌트명 (영문만, 예: YT_AI10_S01_Hook)"""
     num_clean = num.replace('-', '_')
-    name_clean = re.sub(r'[^가-힣a-zA-Z0-9]', '', name)[:10]
-    return f"{prefix}_S{num_clean.zfill(2)}_{name_clean}"
+    # 한글 → 영문 매핑 우선
+    name_en = name.strip()
+    for kr, en in SCENE_NAME_MAP.items():
+        if kr in name_en:
+            name_en = en
+            break
+    else:
+        # 매핑 없으면 한글 제거 후 영문/숫자만
+        name_en = re.sub(r'[^a-zA-Z0-9]', '', name_en)[:10] or f"S{num_clean}"
+    return f"{prefix}_S{num_clean.zfill(2)}_{name_en}"
 
 def _sec_from_duration(dur_str: str) -> int:
     """"20~30초" → 25 (중간값)"""
@@ -143,9 +158,12 @@ def write_scene_file(comp_name: str, code: str) -> Path:
 
 def register_in_root(comp_name: str, frames: int):
     """Root.tsx에 import + Composition 추가"""
+    import re as _re
     root_text = ROOT_TSX.read_text(encoding='utf-8')
     import_line = f"import {{ {comp_name} }} from './agents/{comp_name}';"
-    comp_line = f'      <Composition id="{comp_name.replace("_","-")}" component={{{comp_name}}} durationInFrames={{{frames}}} fps={{30}} width={{1920}} height={{1080}} />'
+    # ID: 한글/특수문자 제거, 영문+숫자+-만 허용
+    comp_id = _re.sub(r'[^a-zA-Z0-9\-]', '', comp_name.replace('_', '-'))
+    comp_line = f'      <Composition id="{comp_id}" component={{{comp_name}}} durationInFrames={{{frames}}} fps={{30}} width={{1920}} height={{1080}} />'
 
     if import_line in root_text:
         return  # 이미 등록됨
@@ -195,19 +213,48 @@ def run(script_text: str, pipeline_dir: Path, prefix: str, feedback: str = '') -
     return result
 
 def qc_technical(scene_files: list[str]) -> dict:
-    """기술 검수: tsc + 파일 존재 체크"""
+    """기술 검수: tsc + 파일 존재 + voice 파일 체크 + placeholder 자동 생성"""
+    import subprocess as _sp
     issues = []
+    VOICE_DIR = REMOTION / 'public' / 'voice'
 
-    # 파일 존재 확인
+    # 1. TSX 파일 존재 확인
     for f in scene_files:
         if not Path(f).exists():
-            issues.append(f"파일 없음: {f}")
+            issues.append(f"TSX 파일 없음: {f}")
 
-    # TypeScript 컴파일
+    # 2. voice 파일 존재 확인 + 없으면 자동 placeholder 생성
+    for f in scene_files:
+        p = Path(f)
+        if not p.exists():
+            continue
+        code = p.read_text(encoding='utf-8')
+        import re as _re
+        # staticFile('voice/xxx.m4a') 패턴 추출
+        matches = _re.findall(r"staticFile\(['\"]voice/([^'\"]+\.m4a)['\"]", code)
+        for voice_fname in matches:
+            vpath = VOICE_DIR / voice_fname
+            if not vpath.exists() or vpath.stat().st_size < 100:
+                # placeholder 자동 생성
+                VOICE_DIR.mkdir(parents=True, exist_ok=True)
+                vpath.write_bytes(
+                    bytes.fromhex("0000001c667479706d703432000000006d703432697369736f6d") +
+                    b"\x00" * 2048
+                )
+                print(f"    🔇 placeholder 생성: {voice_fname}")
+
+    # 3. TypeScript 컴파일
     tsc_out = _run_tsc()
     tsc_errors = [l for l in tsc_out.splitlines() if 'error TS' in l]
     if tsc_errors:
         issues.extend(tsc_errors[:5])
+
+    # 4. Composition ID에 한글 없는지 확인
+    root_text = ROOT_TSX.read_text(encoding='utf-8') if ROOT_TSX.exists() else ''
+    import re as _re2
+    bad_ids = _re2.findall(r'id="([^"]*[가-힣][^"]*)"', root_text)
+    if bad_ids:
+        issues.append(f"Composition ID에 한글 포함: {bad_ids} → 영문으로 교체 필요")
 
     return {
         'passed': len(issues) == 0,

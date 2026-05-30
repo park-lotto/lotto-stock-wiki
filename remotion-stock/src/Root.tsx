@@ -44,6 +44,14 @@ import { AG_S05_Climax }   from './agents/AG_S05_Climax';
 import { AG_S06_Awareness } from './agents/AG_S06_Awareness';
 import { AG_S07_Tease }    from './agents/AG_S07_Tease';
 import { AG_S08_CTA }      from './agents/AG_S08_CTA';
+import { YT_AI_S01_훅 } from './agents/YT_AI_S01_훅';
+import { YT_AI_S02_공감 } from './agents/YT_AI_S02_공감';
+import { YT_AI_S03_선언 } from './agents/YT_AI_S03_선언';
+import { YT_AI_S04_데모 } from './agents/YT_AI_S04_데모';
+import { YT_AI_S05_클라이맥스 } from './agents/YT_AI_S05_클라이맥스';
+import { YT_AI_S06_자각 } from './agents/YT_AI_S06_자각';
+import { YT_AI_S07_여운 } from './agents/YT_AI_S07_여운';
+import { YT_AI_S08_CTA } from './agents/YT_AI_S08_CTA';
 import { GB01_Hook } from './buildup/GB01_Hook';
 import { GB02_Checklist } from './buildup/GB02_Checklist';
 import { GB03_Compare } from './buildup/GB03_Compare';
@@ -335,6 +343,16 @@ export const RemotionRoot: React.FC = () => {
       <Composition id="AG-S06-Awareness" component={AG_S06_Awareness} durationInFrames={1260} fps={30} width={1920} height={1080} />
       <Composition id="AG-S07-Tease"    component={AG_S07_Tease}     durationInFrames={960}  fps={30} width={1920} height={1080} />
       <Composition id="AG-S08-CTA"      component={AG_S08_CTA}       durationInFrames={960}  fps={30} width={1920} height={1080} />
+
+      {/* ─── AI 주식 자동 분석 영상 (YT_AI 시리즈) ─── */}
+      <Composition id="YT-AI-S01-Hook"     component={YT_AI_S01_훅}        durationInFrames={780}  fps={30} width={1920} height={1080} />
+      <Composition id="YT-AI-S02-Empathy"  component={YT_AI_S02_공감}       durationInFrames={1380} fps={30} width={1920} height={1080} />
+      <Composition id="YT-AI-S03-Declare"  component={YT_AI_S03_선언}       durationInFrames={780}  fps={30} width={1920} height={1080} />
+      <Composition id="YT-AI-S04-Demo"     component={YT_AI_S04_데모}       durationInFrames={3690} fps={30} width={1920} height={1080} />
+      <Composition id="YT-AI-S05-Climax"   component={YT_AI_S05_클라이맥스}  durationInFrames={1230} fps={30} width={1920} height={1080} />
+      <Composition id="YT-AI-S06-Aware"    component={YT_AI_S06_자각}       durationInFrames={930}  fps={30} width={1920} height={1080} />
+      <Composition id="YT-AI-S07-Tease"    component={YT_AI_S07_여운}       durationInFrames={780}  fps={30} width={1920} height={1080} />
+      <Composition id="YT-AI-S08-CTA"      component={YT_AI_S08_CTA}       durationInFrames={780}  fps={30} width={1920} height={1080} />
 
       {/* ─── 국민성장펀드 빌드업 영상 — 씬1~3 ─── */}
       <Composition
