@@ -316,6 +316,9 @@ D 과매수:   상위 25% 이상
     > 상세: `wiki/rules/analysis_rules.md` §2
 14. **TYPE 분류 적용**: 섹터 분석 전 TYPE A/B/C 판단
     > 상세: `wiki/rules/analysis_rules.md` §1
+15. **모델 자동 분기**: 작업 성격에 따라 Haiku 서브에이전트 vs Sonnet 직접 처리 선택
+    - Haiku 위임: log.md 기록 / index.md 업데이트 / 파일 탐색 / 단순 라우팅 (포맷에 데이터 넣기)
+    - Sonnet 직접: Q10 리서치 / 섹터·종목 분석 / 대본·HTML 생성 / WebSearch / 충돌·신호 해석
 
 ---
 

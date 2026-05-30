@@ -1,3 +1,4 @@
+- 2026-05-30 — 모델 자동 분기 설정 완료: 단순작업(log·index·파일탐색)=Haiku 서브에이전트 / 분석·아이디어확장·WebSearch=Sonnet 직접처리. 실행 전 [Haiku]/[Sonnet] 분류 먼저 표시 후 처리.
 - 2026-05-30 — 바이오 Tier 1 Phase 1 전체 완료 (Day 1~4): 8종목 stock 마스터 페이지 신규 생성/보강.
   [신규] stock_한미약품.md — GLP-1/MASH, 에페글레나타이드 허가 신청, MSD 기술이전
   [신규] stock_HLB.md — 리보세라닙 PDUFA 2026-07-23 D-Day 확인
