@@ -24,6 +24,8 @@ import { B3_Wiki } from './dakkak/B3_Wiki';
 import { B4_Dashboard } from './dakkak/B4_Dashboard';
 import { S01_Hook } from './dakkak/S01_Hook';
 import { S02_Chaos } from './dakkak/S02_Chaos';
+import { AG01_Timeline } from './agents/AG01_Timeline';
+import { AG02_Agents } from './agents/AG02_Agents';
 import { SDUR } from './constants';
 
 export const RemotionRoot: React.FC = () => {
@@ -219,6 +221,32 @@ export const RemotionRoot: React.FC = () => {
         id="S02-Chaos"
         component={S02_Chaos}
         durationInFrames={1350}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* ─── AI 직원 10명 영상 — 씬별 컴포지션 ─── */}
+      <Composition
+        id="AG01-Timeline-Hook"
+        component={() => <AG01_Timeline mode="hook" />}
+        durationInFrames={750}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="AG01-Timeline-Climax"
+        component={() => <AG01_Timeline mode="climax" />}
+        durationInFrames={750}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="AG02-Agents"
+        component={AG02_Agents}
+        durationInFrames={600}
         fps={30}
         width={1920}
         height={1080}

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: #0a0e1a;
+    color: #f0f4f8;
+    font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px;
+  }
+  .card {
+    width: 680px;
+    background: #111827;
+    border: 1px solid #1e2d45;
+    border-radius: 20px;
+    padding: 36px;
+    box-shadow: 0 0 60px #00e5c320;
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #1e2d45;
+  }
+  .ticker { font-size: 28px; font-weight: 700; color: #00e5c3; }
+  .name   { font-size: 14px; color: #6b7280; margin-top: 4px; }
+  .score-badge {
+    background: #00e5c320;
+    border: 2px solid #00e5c3;
+    border-radius: 50%;
+    width: 80px; height: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 30px #00e5c340;
+  }
+  .score-num  { font-size: 32px; font-weight: 900; color: #00e5c3; line-height: 1; }
+  .score-deno { font-size: 12px; color: #4a5568; }
+  .criteria   { display: flex; flex-direction: column; gap: 10px; }
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 14px;
+    background: #0d1420;
+    border-radius: 10px;
+    border: 1px solid #1e2d45;
+  }
+  .row.pass { border-color: #00e5c340; background: #00e5c308; }
+  .row.fail { border-color: #1e2d4580; opacity: 0.5; }
+  .check { font-size: 18px; width: 24px; flex-shrink: 0; }
+  .crit-name { font-size: 13px; font-weight: 600; flex: 1; }
+  .crit-val  { font-size: 12px; color: #6b7280; }
+  .pass .crit-val { color: #00e5c3; }
+  .grade {
+    margin-top: 24px;
+    padding: 14px 20px;
+    background: #ff475720;
+    border: 1px solid #ff475760;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .grade-label { font-size: 18px; font-weight: 700; color: #ff4757; }
+  .grade-desc  { font-size: 13px; color: #9ca3af; }
+  .ts { font-size: 11px; color: #374151; margin-top: 16px; text-align: right; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <div>
+      <div class="ticker">삼성전기 (009150)</div>
+      <div class="name">MLCC · FC-BGA · 반도체 소부장</div>
+    </div>
+    <div class="score-badge">
+      <div class="score-num">7</div>
+      <div class="score-deno">/ 9점</div>
+    </div>
+  </div>
+
+  <div class="criteria">
+    <div class="row pass">
+      <span class="check">✅</span>
+      <span class="crit-name">#0 수급 빈집</span>
+      <span class="crit-val">B등급 (하위 18%) — 2점</span>
+    </div>
+    <div class="row pass">
+      <span class="check">✅</span>
+      <span class="crit-name">#1 수출 데이터 🔴</span>
+      <span class="crit-val">전기전자 YoY +24.8% — 1점</span>
+    </div>
+    <div class="row fail">
+      <span class="check">❌</span>
+      <span class="crit-name">#2 판가 이슈</span>
+      <span class="crit-val">MLCC 판가 횡보 — 미충족</span>
+    </div>
+    <div class="row pass">
+      <span class="check">✅</span>
+      <span class="crit-name">#3 어닝 서프라이즈</span>
+      <span class="crit-val">1Q26 OP 3,120억 vs 컨센 2,800억 — 1점</span>
+    </div>
+    <div class="row pass">
+      <span class="check">✅</span>
+      <span class="crit-name">#4 리포트 컨센 신고가</span>
+      <span class="crit-val">TP 200만→220만 (한국투자) — 1점</span>
+    </div>
+    <div class="row pass">
+      <span class="check">✅</span>
+      <span class="crit-name">#5 미국 유사기업 커플링</span>
+      <span class="crit-val">Murata +3.2% / TDK +2.8% — 1점</span>
+    </div>
+    <div class="row fail">
+      <span class="check">❌</span>
+      <span class="crit-name">#6 정책 이슈</span>
+      <span class="crit-val">해당 없음 — 미충족</span>
+    </div>
+    <div class="row pass">
+      <span class="check">✅</span>
+      <span class="crit-name">#7 일정 재료 D-30 이내</span>
+      <span class="crit-val">MLCC CAPA 증설 완료 D-22 — 1점</span>
+    </div>
+  </div>
+
+  <div class="grade">
+    <div class="grade-label">🔴 오늘의 탑픽 후보</div>
+    <div class="grade-desc">수급빈집 ✅ + 7/9점 = 탑픽 후보 등급</div>
+  </div>
+
+  <div class="ts">분석 시각: 2026-05-30 05:33 | STOCK BRAIN AI 직원팀</div>
+</div>
+</body>
+</html>
