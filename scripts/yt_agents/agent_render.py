@@ -63,10 +63,19 @@ def qc(render_result: dict) -> dict:
     }
 
 def open_studio():
-    """Remotion Studio 열기 (미리보기)"""
-    subprocess.Popen(
-        ['npm', 'run', 'dev'],
-        cwd=str(REMOTION),
-        creationflags=0x08000000,
-    )
-    print("    🎬 Remotion Studio 열리는 중... (localhost:3000)")
+    """Remotion Studio 열기 — 실패해도 파이프라인 계속 진행"""
+    try:
+        # npm 경로 탐색 (Windows)
+        import shutil
+        npm_path = shutil.which('npm') or r'C:\Program Files\nodejs\npm.cmd'
+
+        subprocess.Popen(
+            [npm_path, 'run', 'dev'],
+            cwd=str(REMOTION),
+            creationflags=0x08000000,
+            shell=False,
+        )
+        print("    🎬 Remotion Studio 열리는 중... (localhost:3000)")
+    except Exception as e:
+        print(f"    ℹ️  Remotion Studio 자동 열기 실패 ({e}) — 수동으로 열어주세요")
+        print(f"    → cd remotion-stock && npm run dev")
