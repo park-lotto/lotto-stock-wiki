@@ -319,6 +319,11 @@ D 과매수:   상위 25% 이상
 15. **모델 자동 분기**: 작업 성격에 따라 Haiku 서브에이전트 vs Sonnet 직접 처리 선택
     - Haiku 위임: log.md 기록 / index.md 업데이트 / 파일 탐색 / 단순 라우팅 (포맷에 데이터 넣기)
     - Sonnet 직접: Q10 리서치 / 섹터·종목 분석 / 대본·HTML 생성 / WebSearch / 충돌·신호 해석
+16. **MCP 최우선 사용**: 어떤 작업이든 MCP로 가능하면 MCP 먼저. Python 스크립트·Bash는 MCP로 못 하는 경우에만.
+    - 웹 크롤링·URL 읽기 → Fetch MCP (requests 스크립트 X)
+    - 브라우저 자동화 → Playwright MCP (별도 스크립트 X)
+    - 데이터 저장·조회 → SQLite MCP (CSV/MD 파일 X)
+    - Python 스크립트 → 복잡한 연산·파일처리 등 MCP 불가 작업만
 
 ---
 
