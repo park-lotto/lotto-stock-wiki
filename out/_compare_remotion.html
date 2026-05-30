@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { width:1920px; height:1080px; background:#080c14; overflow:hidden;
+  font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif; }
+canvas { display:none; }
+
+/* 고정 요소들 */
+#scene-label {
+  position:absolute; top:28px; right:48px;
+  color:#4b5563; font-size:16px; font-weight:600; letter-spacing:3px;
+}
+#subtitle-bar {
+  position:absolute; bottom:0; left:0; right:0; height:172px;
+  display:flex; align-items:center; justify-content:center; padding:0 80px;
+  background:linear-gradient(to top, rgba(8,12,20,0.88) 0%, transparent 100%);
+  pointer-events:none;
+}
+#subtitle-text {
+  color:#fff; font-size:40px; font-weight:700; text-align:center;
+  text-shadow:0 2px 8px rgba(0,0,0,0.9); opacity:0;
+}
+
+/* 배경 글로우 */
+#bg-glow {
+  position:absolute; inset:0;
+  background:radial-gradient(ellipse at 50% 40%, rgba(0,255,208,1) 0%, transparent 65%);
+  opacity:0; pointer-events:none;
+}
+
+/* 스캔라인 */
+#scanline {
+  position:absolute; left:0; right:0; height:2px;
+  background:linear-gradient(90deg, transparent 0%, #00FFD0 20%, #80FFE8 50%, #00FFD0 80%, transparent 100%);
+  box-shadow:0 0 10px rgba(0,255,208,0.9);
+  opacity:0; z-index:10;
+}
+
+/* Phase 컨테이너 */
+.phase {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  opacity:0; gap:20px;
+}
+
+/* Phase 1 요소 */
+#ph1-label { color:#4b5563; font-size:20px; font-weight:700; letter-spacing:8px; opacity:0; }
+#ph1-row { display:flex; align-items:center; gap:36px; }
+#ph1-emoji { font-size:100px; opacity:0; display:inline-block; }
+#ph1-text {
+  font-size:88px; font-weight:900; color:#e5e7eb; opacity:0;
+  display:inline-block; transform:translateX(-140px);
+}
+
+/* Phase 2 요소 */
+#ph2-label { color:#4b5563; font-size:20px; font-weight:700; letter-spacing:8px; opacity:0; }
+#ph2-row { display:flex; align-items:center; gap:32px; }
+#ph2-emoji { font-size:88px; opacity:0; display:inline-block; }
+#ph2-info {}
+#ph2-ai-label { font-size:40px; font-weight:700; color:#9ca3af; margin-bottom:8px; opacity:0; }
+#ph2-ten-wrap { display:flex; align-items:baseline; gap:12px; opacity:0; transform-origin:left center; }
+#ph2-ten {
+  font-size:130px; font-weight:900; line-height:1;
+  font-family:'Consolas','Menlo',monospace;
+  color:#00FFD0;
+}
+#ph2-ten-unit { font-size:56px; font-weight:700; color:#9ca3af; }
+#ph2-desc { font-size:48px; font-weight:700; color:#9ca3af; opacity:0; transform:translateY(45px); }
+
+/* Phase 3 — Org Chart */
+#ph3 { position:absolute; inset:0; opacity:0; }
+#boss-card {
+  position:absolute;
+  display:flex; align-items:center; gap:20px; padding:0 28px;
+  border:2px solid #00FFD0; border-radius:20px;
+  background:rgba(0,255,208,0.07);
+  opacity:0;
+}
+#boss-icon {
+  width:54px; height:54px; border-radius:14px; background:#00FFD0;
+  display:flex; align-items:center; justify-content:center; font-size:28px; flex-shrink:0;
+}
+#boss-title { color:#00FFD0; font-size:30px; font-weight:900; letter-spacing:5px; }
+#boss-sub { color:#6b7280; font-size:15px; margin-top:3px; }
+#boss-tag {
+  color:#4b5563; font-size:12px; font-weight:700; letter-spacing:2px;
+  padding:5px 14px; border-radius:8px;
+  background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+}
+#org-svg { position:absolute; inset:0; width:1920px; height:1080px; pointer-events:none; }
+
+/* Phase 4 */
+#ph4-row { display:flex; align-items:center; gap:28px; }
+#ph4-emoji { font-size:90px; opacity:0; display:inline-block; }
+#ph4-time { font-size:52px; font-weight:700; color:#9ca3af; opacity:0; transform:translateY(35px); display:inline-block; }
+#ph4-result {
+  font-size:100px; font-weight:900; color:#00FFD0; opacity:0;
+  display:inline-block; transform-origin:center;
+}
+#ph4-bottom { text-align:center; margin-top:8px; opacity:0; display:inline-block; transform-origin:center bottom; }
+#ph4-sub-label { color:#6b7280; font-size:22px; font-weight:600; letter-spacing:8px; margin-bottom:6px; }
+#ph4-price {
+  font-size:120px; font-weight:900; line-height:1;
+  font-family:'Consolas','Menlo',monospace; color:#00FFD0; letter-spacing:4px;
+}
+
+/* 워커 카드 */
+.worker-card {
+  position:absolute; opacity:0;
+  display:flex; align-items:center; gap:18px; padding:0 24px;
+  background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08);
+  border-radius:16px;
+}
+.worker-icon-box {
+  width:52px; height:52px; border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:26px; flex-shrink:0;
+}
+.worker-name { font-size:22px; font-weight:700; color:#e5e7eb; margin-bottom:4px; }
+.worker-role { font-size:15px; color:#4b5563; }
+.worker-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+/* 프레임 카운터 (개발용) */
+#frame-counter {
+  position:fixed; top:8px; left:8px; color:rgba(0,255,208,0.3);
+  font-family:monospace; font-size:11px; z-index:999;
+}
+</style>
+</head>
+<body>
+
+<div id="bg-glow"></div>
+<div id="scanline"></div>
+<div id="scene-label">SCENE 3 · 선언</div>
+
+<!-- Phase 1 -->
+<div class="phase" id="ph1">
+  <div id="ph1-label">SOLUTION</div>
+  <div id="ph1-row">
+    <span id="ph1-emoji">💼</span>
+    <span id="ph1-text">직원을 고용했습니다.</span>
+  </div>
+</div>
+
+<!-- Phase 2 -->
+<div class="phase" id="ph2">
+  <div id="ph2-label">INTRODUCING</div>
+  <div id="ph2-row">
+    <span id="ph2-emoji">👥</span>
+    <div id="ph2-info">
+      <div id="ph2-ai-label">AI 직원</div>
+      <div id="ph2-ten-wrap">
+        <span id="ph2-ten">10</span>
+        <span id="ph2-ten-unit">명</span>
+      </div>
+    </div>
+  </div>
+  <div id="ph2-desc">이게 각자 역할이 딱딱 정해져 있어요.</div>
+</div>
+
+<!-- Phase 3 Org Chart -->
+<div id="ph3">
+  <svg id="org-svg"></svg>
+  <div id="boss-card">
+    <div id="boss-icon">🧠</div>
+    <div>
+      <div id="boss-title">총괄</div>
+      <div id="boss-sub">지시 · 취합 · 조율</div>
+    </div>
+    <div id="boss-tag">ORCHESTRATOR</div>
+  </div>
+</div>
+
+<!-- Phase 4 -->
+<div class="phase" id="ph4">
+  <div id="ph4-row">
+    <span id="ph4-emoji">☀️</span>
+    <span id="ph4-time">7시에 일어나서</span>
+  </div>
+  <span id="ph4-result">결과만 봅니다.</span>
+  <div id="ph4-bottom">
+    <div id="ph4-sub-label">퇴근 없음 · 불평 없음 · 인건비</div>
+    <div id="ph4-price">₩0</div>
+  </div>
+</div>
+
+<!-- 자막바 -->
+<div id="subtitle-bar"><div id="subtitle-text"></div></div>
+<div id="frame-counter">f:0</div>
+
+<script>
+// ─── Easing 함수 (Remotion 동일) ─────────────────────────────────
+const E = {
+  outCubic:  t => 1 - Math.pow(1-t, 3),
+  outElastic: (t, a=1.0) => {
+    if (t<=0) return 0; if (t>=1) return 1;
+    return Math.pow(2,-10*t) * Math.sin((t*10 - 0.75) * Math.PI*2/3) + 1;
+  },
+  outElastic08: (t) => {
+    if (t<=0) return 0; if (t>=1) return 1;
+    return Math.pow(2,-10*t) * Math.sin((t*10 - 0.75) * Math.PI*2/3.75) + 1;
+  },
+  outBack: (t, s=2.2) => {
+    return 1 + (s+1)*Math.pow(t-1,3) + s*Math.pow(t-1,2);
+  },
+};
+
+function clamp(v,lo=0,hi=1){ return Math.max(lo, Math.min(hi, v)); }
+
+function ip(f, a, b, from=0, to=1, ease=E.outCubic) {
+  if (b === a) return f >= a ? to : from;
+  const t = clamp((f - a) / (b - a));
+  return from + (to - from) * ease(t);
+}
+
+// ─── 워커 데이터 ─────────────────────────────────────────────────
+const WORKERS = [
+  { icon:'📡', name:'수집',   role:'24시간 뉴스·리포트',  col:'#00FFD0' },
+  { icon:'🇺🇸', name:'미국장', role:'나스닥·SOX 추적',     col:'#FFA502' },
+  { icon:'📄', name:'리포트', role:'증권사 자동 분류',     col:'#9ca3af' },
+  { icon:'🔍', name:'수급',   role:'500종목 빈집 스캔',   col:'#00FFD0' },
+  { icon:'⚠️', name:'투경',   role:'투자경고 모니터링',   col:'#FFA502' },
+  { icon:'📊', name:'분석',   role:'8개 기준 교차',       col:'#00FFD0' },
+  { icon:'🎯', name:'탑픽',   role:'탑픽 자동 선정',      col:'#FF4757' },
+  { icon:'📋', name:'브리핑', role:'아침 노트 생성',      col:'#00FFD0' },
+  { icon:'✅', name:'검증',   role:'팩트체크',            col:'#9ca3af' },
+  { icon:'📨', name:'배포',   role:'텔레그램 전송',       col:'#00FFD0' },
+];
+
+// ─── 레이아웃 상수 ───────────────────────────────────────────────
+const PAD_X  = 80, COLS = 2, ROWS = 5, COL_GAP = 36;
+const BOSS_H = 100, BOSS_Y = 52, BOSS_W = 640;
+const GRID_Y = BOSS_Y + BOSS_H + 28;
+const GRID_H = 1080 - GRID_Y - 165;
+const CARD_W = (1920 - PAD_X*2 - COL_GAP) / COLS;
+const CARD_H = (GRID_H - (ROWS-1)*10) / ROWS;
+const ROW_GAP = 10;
+const WORKER_START = WORKERS.map((_,i) => Math.round(241 + i*17.8));
+
+// ─── 자막 ────────────────────────────────────────────────────────
+const SUBS = [
+  { s:0,   e:69,  text:'그래서 저는 직원을 고용했습니다.' },
+  { s:95,  e:134, text:'AI 직원 10명인데요.' },
+  { s:158, e:220, text:'이게 각자 역할이 딱딱 정해져 있어요.' },
+  { s:241, e:418, text:'수집·분석·수급 체크·탑픽 선정·브리핑·배포까지.' },
+  { s:435, e:532, text:'저는 7시에 일어나서 결과만 봅니다.' },
+];
+function getSub(f) {
+  const seg = SUBS.find(s => f >= s.s && f <= s.e);
+  if (!seg) return null;
+  return { text: seg.text, op: Math.min((f-seg.s)/8, 1, (seg.e-f)/8) };
+}
+
+// ─── DOM refs ────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const bgGlow    = $('bg-glow');
+const scanline  = $('scanline');
+const sceneLabel = $('scene-label');
+const ph1       = $('ph1');
+const ph1Label  = $('ph1-label');
+const ph1Emoji  = $('ph1-emoji');
+const ph1Text   = $('ph1-text');
+const ph2       = $('ph2');
+const ph2Label  = $('ph2-label');
+const ph2Emoji  = $('ph2-emoji');
+const ph2AiLbl  = $('ph2-ai-label');
+const ph2TenW   = $('ph2-ten-wrap');
+const ph2Desc   = $('ph2-desc');
+const ph3       = $('ph3');
+const bossCard  = $('boss-card');
+const orgSvg    = $('org-svg');
+const ph4       = $('ph4');
+const ph4Emoji  = $('ph4-emoji');
+const ph4Time   = $('ph4-time');
+const ph4Result = $('ph4-result');
+const ph4Bottom = $('ph4-bottom');
+const subText   = $('subtitle-text');
+const subBar    = $('subtitle-bar');
+const frameCnt  = $('frame-counter');
+
+// ─── 워커 카드 DOM 생성 ──────────────────────────────────────────
+const workerEls = WORKERS.map((w, i) => {
+  const col = i % COLS, row = Math.floor(i / COLS);
+  const x = PAD_X + col * (CARD_W + COL_GAP);
+  const y = GRID_Y + row * (CARD_H + ROW_GAP);
+  const el = document.createElement('div');
+  el.className = 'worker-card';
+  el.style.cssText = `left:${x}px;top:${y}px;width:${CARD_W}px;height:${CARD_H}px;`;
+  el.innerHTML = `
+    <div class="worker-icon-box" style="background:${w.col}18;border:1px solid ${w.col}30">
+      <span>${w.icon}</span>
+    </div>
+    <div style="flex:1;min-width:0">
+      <div class="worker-name">${w.name} 직원</div>
+      <div class="worker-role">${w.role}</div>
+    </div>
+    <div class="worker-dot" style="background:${w.col};box-shadow:0 0 6px ${w.col}88"></div>
+  `;
+  ph3.appendChild(el);
+  return el;
+});
+
+// ─── Boss 카드 포지션 ─────────────────────────────────────────────
+bossCard.style.cssText = `left:${960 - BOSS_W/2}px;top:${BOSS_Y}px;width:${BOSS_W}px;height:${BOSS_H}px;`;
+
+// ─── SVG 라인 생성 ───────────────────────────────────────────────
+const lineEls = WORKERS.map((_, i) => {
+  const col = i % COLS, row = Math.floor(i / COLS);
+  const wx = PAD_X + col*(CARD_W+COL_GAP) + CARD_W/2;
+  const wy = GRID_Y + row*(CARD_H+ROW_GAP) + CARD_H/2;
+  const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+  line.setAttribute('x1', 960);
+  line.setAttribute('y1', BOSS_Y + BOSS_H);
+  line.setAttribute('stroke','rgba(0,255,208,0.12)');
+  line.setAttribute('stroke-width','1.5');
+  line.setAttribute('stroke-dasharray','9 6');
+  line._wx = wx; line._wy = wy;
+  orgSvg.appendChild(line);
+  return line;
+});
+
+// ─── 렌더 함수 ──────────────────────────────────────────────────
+function render(f) {
+  frameCnt.textContent = `f:${f}`;
+
+  const fadeIn = ip(f, 0, 18);
+  const timeOp = ip(f, 10, 28);
+  const bgGlowV = Math.sin(f * 0.04) * 0.028 + 0.05;
+  const pulse   = Math.sin(f * 0.07) * 0.5 + 0.5;
+  const gSz     = 10 + pulse * 20;
+  const dynGlow = `0 0 ${gSz}px #00FFD0, 0 0 ${gSz*2}px rgba(0,255,208,0.5)`;
+
+  // 전체 페이드인
+  document.body.style.opacity = fadeIn;
+  sceneLabel.style.opacity = timeOp;
+  bgGlow.style.opacity = bgGlowV;
+
+  // ── 자막 ──
+  const sub = getSub(f);
+  if (sub) {
+    subText.textContent = sub.text;
+    subText.style.opacity = sub.op;
+  } else {
+    subText.style.opacity = 0;
+  }
+
+  // ─── Phase 1 (f0~94) ──────────────────────────────────────────
+  const ph1Out = f < 96 ? (1 - ip(f, 72, 95)) : 0;
+  ph1.style.opacity = ph1Out;
+  ph1.style.display = ph1Out > 0.01 ? 'flex' : 'none';
+
+  if (ph1Out > 0.01) {
+    // 스캔라인
+    const scanY  = ip(f, 0, 38, -2, 104, t => t);
+    const scanOp = f < 5 ? f/5 : f < 33 ? 1 : f < 38 ? (38-f)/5 : 0;
+    scanline.style.top = scanY + '%';
+    scanline.style.opacity = Math.max(0, Math.min(1, scanOp));
+
+    // 라벨
+    ph1Label.style.opacity = ip(f, 20, 48);
+
+    // 이모지 elastic
+    const em1Scale = ip(f, 8, 40, 0.2, 1, t => E.outElastic(t, 1.0));
+    const em1Op    = ip(f, 8, 38);
+    const em1Float = Math.sin(f * 0.09) * 7;
+    ph1Emoji.style.opacity    = em1Op;
+    ph1Emoji.style.transform  = `scale(${em1Scale}) translateY(${em1Float}px)`;
+
+    // 텍스트 X슬라이드
+    const t1X  = ip(f, 30, 68, -140, 0, E.outCubic);
+    const t1Op = ip(f, 30, 68);
+    const t1Ls = ip(f, 30, 68, 16, 0, E.outCubic);
+    ph1Text.style.opacity       = t1Op;
+    ph1Text.style.transform     = `translateX(${t1X}px)`;
+    ph1Text.style.letterSpacing = t1Ls + 'px';
+  } else {
+    scanline.style.opacity = 0;
+  }
+
+  // ─── Phase 2 (f90~240) ────────────────────────────────────────
+  const ph2Out = (f >= 90) ? (1 - ip(f, 228, 241)) : 0;
+  ph2.style.opacity = ph2Out;
+  ph2.style.display = ph2Out > 0.01 ? 'flex' : 'none';
+
+  if (ph2Out > 0.01) {
+    const aiLabelOp = ip(f, 100, 128);
+    ph2Label.style.opacity  = aiLabelOp;
+    ph2AiLbl.style.opacity  = aiLabelOp;
+
+    // 👥 이모지 elastic
+    const em2Scale = ip(f, 120, 155, 0.2, 1, t => E.outElastic(t, 1.0));
+    const em2Op    = ip(f, 120, 152);
+    ph2Emoji.style.opacity   = em2Op;
+    ph2Emoji.style.transform = `scale(${em2Scale})`;
+
+    // 10 숫자 elastic
+    const tenOp    = ip(f, 108, 140);
+    const tenScale = ip(f, 108, 145, 0.2, 1, t => E.outElastic08(t));
+    const tenPulse = tenOp > 0.9 ? 1 + Math.sin(f*0.1)*0.025 : 1;
+    ph2TenW.style.opacity   = tenOp;
+    ph2TenW.style.transform = `scale(${tenScale * tenPulse})`;
+    ph2TenW.children[0].style.textShadow = dynGlow;
+
+    // 설명 텍스트
+    const t3Y  = ip(f, 162, 210, 45, 0, E.outCubic);
+    const t3Op = ip(f, 162, 210);
+    ph2Desc.style.opacity   = t3Op;
+    ph2Desc.style.transform = `translateY(${t3Y}px)`;
+  }
+
+  // ─── Phase 3 Org Chart (f152~435) ─────────────────────────────
+  const ph3Vis = (f >= 152 && f < 436);
+  ph3.style.opacity = ph3Vis ? 1 : 0;
+
+  if (ph3Vis) {
+    // Boss 카드
+    const bossOp    = ip(f, 158, 195);
+    const bossScale = ip(f, 158, 195, 0.3, 1, t => E.outBack(t, 2.2));
+    const bossPulse = Math.sin(f * 0.07) * 0.5 + 0.5;
+    bossCard.style.opacity    = bossOp;
+    bossCard.style.transform  = `scale(${bossScale})`;
+    bossCard.style.transformOrigin = 'center center';
+    bossCard.style.background = `rgba(0,255,208,${0.07 + bossPulse*0.04})`;
+    bossCard.style.boxShadow  = `0 0 ${28 + bossPulse*22}px rgba(0,255,208,${0.4 + bossPulse*0.18})`;
+    $('boss-title').style.textShadow = `0 0 20px rgba(0,255,208,0.8)`;
+
+    // 연결선 draw-on
+    const lineProg = ip(f, 205, 245);
+    lineEls.forEach((line, i) => {
+      const wx = line._wx, wy = line._wy;
+      const tx = 960 + (wx - 960) * lineProg;
+      const ty = (BOSS_Y + BOSS_H) + (wy - (BOSS_Y + BOSS_H)) * lineProg;
+      line.setAttribute('x2', tx);
+      line.setAttribute('y2', ty);
+    });
+
+    // 워커 카드 순차 등장
+    workerEls.forEach((el, i) => {
+      const s = WORKER_START[i];
+      const workerOp = ip(f, s, s+20);
+      const workerTy = ip(f, s, s+20, 28, 0, t => E.outBack(t, 1.4));
+      el.style.opacity   = workerOp;
+      el.style.transform = `translateY(${workerTy}px)`;
+    });
+  }
+
+  // ─── Phase 4 (f432~532) ───────────────────────────────────────
+  const ph4Vis = f >= 432;
+  ph4.style.opacity = ph4Vis ? 1 : 0;
+  ph4.style.display = ph4Vis ? 'flex' : 'none';
+
+  if (ph4Vis) {
+    // ☀️ 이모지
+    const emSunScale = ip(f, 438, 470, 0.2, 1, t => E.outElastic(t, 0.9));
+    const emSunOp    = ip(f, 438, 468);
+    ph4Emoji.style.opacity   = emSunOp;
+    ph4Emoji.style.transform = `scale(${emSunScale})`;
+    ph4Emoji.style.filter    = `drop-shadow(0 0 ${20*emSunOp}px rgba(255,200,0,0.7))`;
+
+    // "7시에 일어나서"
+    const p4aOp = ip(f, 442, 478);
+    const p4aY  = ip(f, 442, 478, 35, 0, E.outCubic);
+    ph4Time.style.opacity   = p4aOp;
+    ph4Time.style.transform = `translateY(${p4aY}px)`;
+
+    // "결과만 봅니다" elastic
+    const resultOp    = ip(f, 470, 510);
+    const resultScale = ip(f, 470, 510, 0.4, 1, t => E.outElastic(t, 0.75));
+    const resultPulse = resultOp > 0.95 ? 1 + Math.sin(f*0.09)*0.025 : 1;
+    ph4Result.style.opacity   = resultOp;
+    ph4Result.style.transform = `scale(${resultScale * resultPulse})`;
+    ph4Result.style.textShadow = dynGlow;
+
+    // ₩0
+    const wOp    = ip(f, 490, 525);
+    const wScale = ip(f, 490, 525, 0.2, 1, t => E.outElastic(t, 0.65));
+    const wPulse = wOp > 0.97 ? 1 + Math.sin(f*0.1)*0.03 : 1;
+    ph4Bottom.style.opacity   = wOp;
+    ph4Bottom.style.transform = `scale(${wScale * wPulse})`;
+    $('ph4-price').style.textShadow = dynGlow;
+  }
+}
+
+// ─── 애니메이션 루프 ────────────────────────────────────────────
+const TOTAL = 532;
+const FPS   = 30;
+const params = new URLSearchParams(location.search);
+const snapFrame = params.has('f') ? parseInt(params.get('f')) : null;
+
+if (snapFrame !== null) {
+  // 정적 프레임 (스크린샷용)
+  render(snapFrame);
+} else {
+  // 풀 애니메이션
+  let start = null;
+  function loop(ts) {
+    if (!start) start = ts;
+    const f = Math.min(Math.floor((ts - start) / 1000 * FPS), TOTAL);
+    render(f);
+    if (f < TOTAL) requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { width:1920px; height:1080px; background:#fafaf7; font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif; overflow:hidden; }
+
+/* 화이트보드 질감 */
+.board {
+  position:absolute; inset:0;
+  background: linear-gradient(135deg, #fafaf7 0%, #f5f4ef 100%);
+}
+.board::before {
+  content:''; position:absolute; inset:0;
+  background-image: repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(0,0,0,0.04) 39px, rgba(0,0,0,0.04) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(0,0,0,0.04) 39px, rgba(0,0,0,0.04) 40px);
+}
+
+/* 손글씨 느낌 폰트 효과 */
+.title {
+  position:absolute; left:120px; top:80px;
+  font-size:68px; font-weight:900; color:#1a1a1a;
+  font-style:italic;
+  border-bottom:6px solid #e63946;
+  padding-bottom:8px;
+  animation: writeIn 0.8s ease-out;
+}
+@keyframes writeIn { from{clip-path:inset(0 100% 0 0)} to{clip-path:inset(0 0% 0 0)} }
+
+.subtitle {
+  position:absolute; left:124px; top:188px;
+  font-size:24px; color:#444; font-style:italic;
+  animation: fadeIn 0.5s 0.8s ease-out both;
+}
+
+/* 중앙 다이어그램 */
+.diagram { position:absolute; left:100px; top:260px; width:1720px; height:680px; }
+
+/* 욕조 SVG (수급빈집 설명) */
+svg.main-svg { width:100%; height:100%; }
+
+/* 레이블 박스들 */
+.label-box {
+  position:absolute; background:#fff;
+  border:3px solid #1a1a1a; border-radius:8px;
+  padding:14px 20px;
+  box-shadow: 4px 4px 0 #1a1a1a;
+}
+.label-box .num { font-size:42px; font-weight:900; color:#e63946; font-style:italic; }
+.label-box .txt { font-size:15px; color:#333; margin-top:4px; }
+
+/* 화살표 레이블 */
+.arrow-label { position:absolute; font-size:18px; color:#333; font-style:italic; font-weight:700; }
+
+/* 강조 원 */
+.circle-hl {
+  position:absolute; border-radius:50%;
+  border:4px solid #e63946;
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; font-weight:900; color:#e63946; font-style:italic;
+  animation: popIn 0.4s ease-out both;
+}
+@keyframes popIn { from{transform:scale(0)} to{transform:scale(1)} }
+
+/* 하단 자막 */
+.sub-bar {
+  position:absolute; bottom:0; left:0; right:0; height:80px;
+  background:#1a1a1a; display:flex; align-items:center; justify-content:center;
+}
+.sub-text { font-size:32px; font-weight:700; color:#fff; font-style:italic; }
+.sub-text span { color:#ffd60a; }
+
+@keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+@keyframes drawPath {
+  from { stroke-dashoffset: 2000; }
+  to   { stroke-dashoffset: 0; }
+}
+</style>
+</head>
+<body>
+
+<div class="board"></div>
+
+<div class="title">수급 빈집이란?</div>
+<div class="subtitle">외인·기관이 팔고 나간 자리 → 재진입하면 전량 신규매수</div>
+
+<svg style="position:absolute;left:0;top:0;width:1920px;height:1080px" viewBox="0 0 1920 1080">
+  <!-- 욕조 그림 -->
+  <!-- 욕조 몸체 -->
+  <path d="M 300 700 Q 300 820 380 820 L 900 820 Q 980 820 980 700"
+    fill="none" stroke="#1a1a1a" stroke-width="8" stroke-linecap="round"
+    stroke-dasharray="1500" stroke-dashoffset="1500"
+    style="animation:drawPath 1.2s 0.3s ease-out forwards"/>
+  <!-- 욕조 테두리 상단 -->
+  <line x1="260" y1="700" x2="1020" y2="700" stroke="#1a1a1a" stroke-width="12" stroke-linecap="round"
+    stroke-dasharray="800" stroke-dashoffset="800"
+    style="animation:drawPath 0.8s 0.2s ease-out forwards"/>
+  <!-- 욕조 다리 -->
+  <line x1="380" y1="820" x2="380" y2="870" stroke="#1a1a1a" stroke-width="8" stroke-linecap="round"/>
+  <line x1="900" y1="820" x2="900" y2="870" stroke="#1a1a1a" stroke-width="8" stroke-linecap="round"/>
+
+  <!-- 물 (낮은 수위 = 빈집) -->
+  <rect x="301" y="780" width="678" height="40" rx="4" fill="#3a86ff" opacity="0.3"
+    style="animation:fadeIn 0.5s 1.4s ease-out both"/>
+  <path d="M301 780 Q 450 770 600 780 Q 750 790 979 780" fill="none" stroke="#3a86ff" stroke-width="3" opacity="0.8"
+    style="animation:fadeIn 0.5s 1.4s ease-out both"/>
+
+  <!-- 외인 기관 아이콘들 (나가는 화살표) -->
+  <text x="500" y="580" font-size="52" style="animation:fadeIn 0.4s 1.6s ease-out both;opacity:0">🏦</text>
+  <text x="650" y="540" font-size="52" style="animation:fadeIn 0.4s 1.8s ease-out both;opacity:0">🌍</text>
+  <!-- 나가는 화살표 -->
+  <path d="M 560 580 L 640 480 L 680 520 M 640 480 L 680 460"
+    fill="none" stroke="#e63946" stroke-width="5" stroke-linecap="round"
+    style="animation:fadeIn 0.4s 2.0s ease-out both;opacity:0"/>
+  <text x="690" y="475" font-size="18" fill="#e63946" font-weight="bold" font-style="italic"
+    style="animation:fadeIn 0.4s 2.0s ease-out both;opacity:0">팔고 나감!</text>
+
+  <!-- 빈집 표시 -->
+  <text x="570" y="760" font-size="28" fill="#3a86ff" font-weight="900" text-anchor="middle" font-style="italic"
+    style="animation:fadeIn 0.5s 2.2s ease-out both;opacity:0">텅 빈 상태 (수위 낮음)</text>
+
+  <!-- 오른쪽: 재진입 시나리오 -->
+  <!-- 같은 욕조 -->
+  <path d="M 1060 700 Q 1060 820 1140 820 L 1660 820 Q 1740 820 1740 700"
+    fill="none" stroke="#1a1a1a" stroke-width="8" stroke-linecap="round"
+    stroke-dasharray="1500" stroke-dashoffset="1500"
+    style="animation:drawPath 1.2s 0.5s ease-out forwards"/>
+  <line x1="1020" y1="700" x2="1780" y2="700" stroke="#1a1a1a" stroke-width="12" stroke-linecap="round"
+    stroke-dasharray="800" stroke-dashoffset="800"
+    style="animation:drawPath 0.8s 0.4s ease-out forwards"/>
+  <line x1="1140" y1="820" x2="1140" y2="870" stroke="#1a1a1a" stroke-width="8" stroke-linecap="round"/>
+  <line x1="1660" y1="820" x2="1660" y2="870" stroke="#1a1a1a" stroke-width="8" stroke-linecap="round"/>
+
+  <!-- 물 많이 -->
+  <rect x="1061" y="705" width="678" height="115" rx="4" fill="#3a86ff" opacity="0.25"
+    style="animation:fadeIn 0.8s 2.6s ease-out both;opacity:0"/>
+  <path d="M1061 705 Q 1220 695 1400 705 Q 1580 715 1739 705" fill="none" stroke="#3a86ff" stroke-width="3" opacity="0.8"
+    style="animation:fadeIn 0.8s 2.6s ease-out both;opacity:0"/>
+
+  <!-- 들어오는 아이콘들 -->
+  <text x="1260" y="560" font-size="52" style="animation:fadeIn 0.4s 2.8s ease-out both;opacity:0">🏦</text>
+  <text x="1410" y="540" font-size="52" style="animation:fadeIn 0.4s 3.0s ease-out both;opacity:0">🌍</text>
+  <!-- 들어오는 화살표 -->
+  <path d="M 1320 570 L 1350 650 L 1300 640 M 1350 650 L 1380 630"
+    fill="none" stroke="#2dc653" stroke-width="5" stroke-linecap="round"
+    style="animation:fadeIn 0.4s 3.2s ease-out both;opacity:0"/>
+  <text x="1390" y="645" font-size="18" fill="#2dc653" font-weight="bold" font-style="italic"
+    style="animation:fadeIn 0.4s 3.2s ease-out both;opacity:0">재진입 = 전량 신규매수!</text>
+
+  <!-- 수위 화살표 -->
+  <text x="1400" y="760" font-size="28" fill="#2dc653" font-weight="900" text-anchor="middle" font-style="italic"
+    style="animation:fadeIn 0.5s 3.4s ease-out both;opacity:0">🚀 급등 탄력!</text>
+
+  <!-- 가운데 화살표 -->
+  <path d="M 1020 760 L 1060 760" stroke="#e63946" stroke-width="6" stroke-linecap="round"
+    marker-end="url(#arr)"
+    style="animation:fadeIn 0.4s 2.4s ease-out both;opacity:0"/>
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#e63946"/>
+    </marker>
+  </defs>
+  <text x="1025" y="750" font-size="22" fill="#e63946" font-weight="900" font-style="italic"
+    style="animation:fadeIn 0.4s 2.4s ease-out both;opacity:0">매수 유입</text>
+
+  <!-- 레이블: 빈집 등급 A -->
+  <rect x="260" y="320" width="200" height="120" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="3"
+    style="filter:drop-shadow(4px 4px 0 #1a1a1a)"/>
+  <text x="360" y="370" font-size="16" fill="#999" text-anchor="middle" letter-spacing="2">빈집 등급</text>
+  <text x="360" y="420" font-size="56" fill="#e63946" font-weight="900" text-anchor="middle" font-style="italic">A</text>
+
+  <!-- 레이블: 탑픽 점수 -->
+  <rect x="1730" y="320" width="180" height="120" rx="8" fill="#ffd60a" stroke="#1a1a1a" stroke-width="3"
+    style="filter:drop-shadow(4px 4px 0 #1a1a1a)"/>
+  <text x="820" y="420" font-size="18" fill="#1a1a1a" text-anchor="middle" font-weight="700"
+    style="animation:fadeIn 0.5s 3.6s ease-out both;opacity:0">8 / 9점</text>
+  <text x="1820" y="365" font-size="14" fill="#1a1a1a" text-anchor="middle" letter-spacing="1">탑픽점수</text>
+  <text x="1820" y="420" font-size="52" fill="#1a1a1a" font-weight="900" text-anchor="middle">8</text>
+</svg>
+
+<div class="sub-bar">
+  <div class="sub-text">빈집 + <span>주도섹터</span> 두 조건이 겹칠 때만 진입한다</div>
+</div>
+
+</body>
+</html>
