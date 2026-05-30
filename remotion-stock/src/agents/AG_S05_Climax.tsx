@@ -1,4 +1,4 @@
-// AG_S05 — 씬5 클라이맥스 (1110프레임 / 37초)
+﻿// AG_S05 — 씬5 클라이맥스 (1110프레임 / 37초)
 // ※ 녹음 후 Whisper 싱크로 타이밍 조정 필요
 // [01] f0000~0090  "오프닝에서 봤던 이 메시지"
 // [02] f0120~0200  "자는 동안만이 아닙니다"
@@ -12,7 +12,7 @@
 // [10] f0870~0980  "주식 분석 팀을 운영합니다"
 
 import { AbsoluteFill, Easing, Html5Audio, interpolate, staticFile, useCurrentFrame } from 'remotion';
-import { C, FONT, GLOW } from '../constants';
+import { C, FONT } from '../constants';
 
 function ip(
   f: number, a: number, b: number,

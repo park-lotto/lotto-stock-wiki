@@ -1,4 +1,4 @@
-// AG_S07 — 씬7 여운 (930프레임 / 31초)
+﻿// AG_S07 — 씬7 여운 (930프레임 / 31초)
 // ※ 녹음 후 Whisper 싱크로 타이밍 조정 필요
 // [01] f0000~0060  "이 시스템."
 // [02] f0070~0180  "어떻게 설계됐는지 궁금하시죠?"
@@ -8,7 +8,7 @@
 // [06] f0580~0730  "다음 영상에서 전부 보여드리겠습니다"
 
 import { AbsoluteFill, Easing, Html5Audio, interpolate, staticFile, useCurrentFrame } from 'remotion';
-import { C, FONT, GLOW } from '../constants';
+import { C, FONT } from '../constants';
 
 function ip(
   f: number, a: number, b: number,

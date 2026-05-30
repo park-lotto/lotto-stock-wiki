@@ -1,6 +1,6 @@
-// YT_AI_S08_CTA — 씬 8 CTA (750프레임 / 25초)
+﻿// YT_AI_S08_CTA — 씬 8 CTA (750프레임 / 25초)
 import { AbsoluteFill, Easing, Html5Audio, interpolate, staticFile, useCurrentFrame } from 'remotion';
-import { C, FONT, GLOW } from '../constants';
+import { C, FONT } from '../constants';
 
 function ip(
   f: number, a: number, b: number,
@@ -43,7 +43,7 @@ export const YT_AI_S08_CTA: React.FC = () => {
 
   // "댓글에 '로또AI'라고 남겨주세요!"
   const ctaTextOp = ip(f, 210, 240, 0, 1);
-  const ctaTextScale = ip(f, 210, 240, 0.8, 1, Easing.out(Easing.back));
+  const ctaTextScale = ip(f, 210, 240, 0.8, 1, Easing.out(Easing.back(1.7)));
   const lottoAIGlowOp = ip(f, 240, 300, 0.5, 1) * ip(f, 300, 360, 1, 0.5);
 
   // Comment box UI
@@ -53,12 +53,12 @@ export const YT_AI_S08_CTA: React.FC = () => {
   // ━━━━ Phase 2 (15-25s / f450-750)
   // "선착순으로 서비스 대기 신청 링크를 드립니다."
   const secondaryCtaOp = ip(f, 450, 480, 0, 1);
-  const secondaryCtaScale = ip(f, 450, 480, 0.8, 1, Easing.out(Easing.back));
+  const secondaryCtaScale = ip(f, 450, 480, 0.8, 1, Easing.out(Easing.back(1.7)));
   const firstComeGlowOp = ip(f, 480, 540, 0.5, 1) * ip(f, 540, 600, 1, 0.5);
 
   // "지금 바로 댓글 남겨주시고, AI와 함께하는 새로운 투자 경험을 시작하세요!"
   const finalCtaOp = ip(f, 540, 570, 0, 1);
-  const finalCtaScale = ip(f, 540, 570, 0.8, 1, Easing.out(Easing.back));
+  const finalCtaScale = ip(f, 540, 570, 0.8, 1, Easing.out(Easing.back(1.7)));
   const newExperienceGlowOp = ip(f, 570, 630, 0.5, 1) * ip(f, 630, 690, 1, 0.5);
 
   // Link/Button UI

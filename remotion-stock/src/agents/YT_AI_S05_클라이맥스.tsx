@@ -1,6 +1,6 @@
-// YT_AI_S05_클라이맥스 — 씬5 클라이맥스 (1200프레임 / 40초)
+﻿// YT_AI_S05_클라이맥스 — 씬5 클라이맥스 (1200프레임 / 40초)
 import { AbsoluteFill, Easing, Html5Audio, interpolate, staticFile, useCurrentFrame } from 'remotion';
-import { C, FONT, GLOW } from '../constants';
+import { C, FONT } from '../constants';
 
 function ip(
   f: number, a: number, b: number,
@@ -56,14 +56,13 @@ export const YT_AI_S05_클라이맥스: React.FC = () => {
   const phase2Opacity = ip(f, 600, 630, 0, 1);
 
   // '핵심 종목 3가지' text animation
-  const keyTextScale = ip(f, 120, 180, 0.8, 1.2, Easing.out(Easing.back));
+  const keyTextScale = ip(f, 120, 180, 0.8, 1.2, Easing.out(Easing.back(1.7)));
   const keyTextOpacity = ip(f, 120, 150, 0, 1);
   const keyTextGlowVal = ip(f, 120, 400, 0, 1);
   const keyTextShadow = `0 0 ${keyTextGlowVal * 20}px ${C.main}, 0 0 ${keyTextGlowVal * 40}px rgba(0,255,208,0.5)`;
 
   // '300개 정보 노가다 → 딸깍 한 번 → 주도주 딱 3개' text animation
-  const coreMessageScale = ip(f, 630, 750, 0.5, 1.0, Easing.out(Easing.elastic));
-  const coreMessageOpacity = ip(f, 600, 660, 0, 1);
+  const coreMessageScale = ip(f, 630, 750, 0.5, 1.0, Easing.out(Easing.elastic(1)));
   const coreMessageGlowVal = ip(f, 600, 1200, 0, 1);
   const coreMessageShadow = `0 0 ${coreMessageGlowVal * 20}px ${C.main}, 0 0 ${coreMessageGlowVal * 40}px rgba(0,255,208,0.5)`;
 
@@ -73,7 +72,7 @@ export const YT_AI_S05_클라이맥스: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#080c14', overflow: 'hidden' }}>
-      <Html5Audio src={staticFile('voice/yt_ai_s05_클라이맥스.m4a')} />
+      <Html5Audio src={staticFile('voice/yt_ai_s05_climax.m4a')} />
 
       {/* Phase 1: Briefing Summary */}
       <div style={{
@@ -107,7 +106,7 @@ export const YT_AI_S05_클라이맥스: React.FC = () => {
         }}>
           {TOP_PICKS.map((stock, i) => {
             const stockOp = ip(f, stock.highlightStart, stock.highlightStart + 30, 0, 1);
-            const stockScale = ip(f, stock.highlightStart, stock.highlightStart + 60, 0.8, 1.1, Easing.out(Easing.back));
+            const stockScale = ip(f, stock.highlightStart, stock.highlightStart + 60, 0.8, 1.1, Easing.out(Easing.back(1.7)));
             const stockGlow = ip(f, stock.highlightStart, stock.highlightEnd, 0, 1, Easing.inOut(Easing.cubic));
             return (
               <div key={i} style={{
@@ -147,7 +146,7 @@ export const YT_AI_S05_클라이맥스: React.FC = () => {
         }}>
           {MAIN_SECTORS.map((sector, i) => {
             const sectorOp = ip(f, sector.highlightStart, sector.highlightStart + 30, 0, 1);
-            const sectorScale = ip(f, sector.highlightStart, sector.highlightStart + 60, 0.8, 1.1, Easing.out(Easing.back));
+            const sectorScale = ip(f, sector.highlightStart, sector.highlightStart + 60, 0.8, 1.1, Easing.out(Easing.back(1.7)));
             const sectorGlow = ip(f, sector.highlightStart, sector.highlightEnd, 0, 1, Easing.inOut(Easing.cubic));
             return (
               <div key={i} style={{

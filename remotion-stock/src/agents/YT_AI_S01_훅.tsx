@@ -1,6 +1,6 @@
-// YT_AI_S01_훅 — 씬1 훅 (750프레임 / 25초)
+﻿// YT_AI_S01_훅 — 씬1 훅 (750프레임 / 25초)
 import { AbsoluteFill, Easing, Html5Audio, interpolate, staticFile, useCurrentFrame } from 'remotion';
-import { C, FONT, GLOW } from '../constants';
+import { FONT } from '../constants';
 
 function ip(f: number, a: number, b: number, from = 0, to = 1, ease: (t: number) => number = Easing.out(Easing.cubic)) {
   return interpolate(f, [a, b], [from, to], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: ease });
@@ -47,26 +47,26 @@ export const YT_AI_S01_훅: React.FC = () => {
   const phase1Out = ip(f, 270, 330, 1, 0); // Fade out chaos elements
 
   // Phase 2: Lotto님 and AI graphics (300-750 frames)
-  const lottoIn = ip(f, 300, 360, 0, 1, Easing.out(Easing.back)); // Lotto님 fade in with a slight bounce
+  const lottoIn = ip(f, 300, 360, 0, 1, Easing.out(Easing.back(1.7))); // Lotto님 fade in with a slight bounce
   const aiGraphicOpacity = ip(f, 330, 390, 0, 1); // AI graphic fade in
   const aiGraphicPulse = Math.sin(f * 0.1) * 0.5 + 0.5; // Pulsing effect for AI graphic
 
   // Emphasized keywords animation
   // "미친 AI" (0-240)
-  const keyword1Scale = ip(f, 150, 180, 0.5, 1, Easing.out(Easing.back));
+  const keyword1Scale = ip(f, 150, 180, 0.5, 1, Easing.out(Easing.back(1.7)));
   const keyword1Op = ip(f, 150, 180, 0, 1) * ip(f, 220, 250, 1, 0);
 
   // "정보 노가다" (300-750)
-  const keyword2Scale = ip(f, 380, 410, 0.5, 1, Easing.out(Easing.back));
+  const keyword2Scale = ip(f, 380, 410, 0.5, 1, Easing.out(Easing.back(1.7)));
   const keyword2Op = ip(f, 380, 410, 0, 1) * ip(f, 450, 480, 1, 0);
 
   // "시장 선점" (300-750)
-  const keyword3Scale = ip(f, 580, 610, 0.5, 1, Easing.out(Easing.back));
+  const keyword3Scale = ip(f, 580, 610, 0.5, 1, Easing.out(Easing.back(1.7)));
   const keyword3Op = ip(f, 580, 610, 0, 1) * ip(f, 650, 680, 1, 0);
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#080c14', overflow: 'hidden' }}>
-      <Html5Audio src={staticFile('voice/yt_ai_s01_훅.m4a')} />
+      <Html5Audio src={staticFile('voice/yt_ai_s01_hook.m4a')} />
 
       {/* Background glow for overall scene */}
       <div style={{

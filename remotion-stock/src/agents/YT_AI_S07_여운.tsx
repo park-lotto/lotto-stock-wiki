@@ -1,7 +1,7 @@
-// YT_AI_S07_여운 — 씬 7 여운 (780프레임 / 25초)
+﻿// YT_AI_S07_여운 — 씬 7 여운 (780프레임 / 25초)
 
 import { AbsoluteFill, Easing, Html5Audio, interpolate, staticFile, useCurrentFrame } from 'remotion';
-import { C, FONT, GLOW } from '../constants';
+import { C, FONT } from '../constants';
 
 function ip(
   f: number, a: number, b: number,
@@ -54,12 +54,9 @@ export const YT_AI_S07_여운: React.FC = () => {
   const currentThumbnailOpacity = f < 450 ? thumbnailOpacity_P1 : thumbnailOpacity_P2;
 
   // Keyword highlighting logic based on dialogue
-  const highlightStockBrain = f >= 0 && f <= 240;
   const highlightHiddenKeyword = f >= 0 && f <= 299;
   const highlightSupplyEmptyHouse = f >= 0 && f <= 299;
   const highlightNewsCrawling = f >= 300 && f <= 450;
-  const highlightDeepAnalysis = f >= 300 && f <= 450;
-
   const getKeywordStyle = (highlight: boolean) => ({
     color: highlight ? C.main : '#FFF',
     textShadow: highlight ? dynGlow : 'none',
@@ -68,7 +65,7 @@ export const YT_AI_S07_여운: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#080c14', overflow: 'hidden' }}>
-      <Html5Audio src={staticFile('voice/yt_ai_s07_여운.m4a')} />
+      <Html5Audio src={staticFile('voice/yt_ai_s07_tease.m4a')} />
 
       {/* Background glow effect */}
       <div style={{

@@ -1,7 +1,7 @@
-// YT_AI10_S01_훅 — 씬1 훅 (780프레임 / 25초)
+﻿// YT_AI10_S01_훅 — 씬1 훅 (780프레임 / 25초)
 
 import { AbsoluteFill, Easing, Html5Audio, interpolate, staticFile, useCurrentFrame } from 'remotion';
-import { C, FONT, GLOW } from '../constants';
+import { C, FONT } from '../constants';
 
 function ip(
   f: number, a: number, b: number,
@@ -85,7 +85,7 @@ export const YT_AI10_S01_훅: React.FC = () => {
           style={{
             ...textStyle,
             fontSize: 100,
-            transform: `translate(-50%, -50%) scale(${ip(f, 150, 180, 0.5, 1, Easing.out(Easing.back))})`,
+            transform: `translate(-50%, -50%) scale(${ip(f, 150, 180, 0.5, 1, Easing.out(Easing.back(1.7)))})`,
             opacity: ip(f, 150, 180, 0, 1) * ip(f, 270, 300, 1, 0),
             color: '#FF4757', // Red for strong negation
             textShadow: dynGlow,
@@ -100,7 +100,7 @@ export const YT_AI10_S01_훅: React.FC = () => {
         <div style={{ ...textStyle, opacity: ip(f, 300, 330, 0, 1) * ip(f, 420, 450, 1, 0) }}>
           <div
             style={{
-              transform: `translateX(${ip(f, 300, 330, -100, 0, Easing.out(Easing.back))}px)`,
+              transform: `translateX(${ip(f, 300, 330, -100, 0, Easing.out(Easing.back(1.7)))}px)`,
               display: 'inline-block',
             }}
           >
@@ -108,7 +108,7 @@ export const YT_AI10_S01_훅: React.FC = () => {
           </div>{' '}
           <div
             style={{
-              transform: `translateX(${ip(f, 300, 330, 100, 0, Easing.out(Easing.back))}px)`,
+              transform: `translateX(${ip(f, 300, 330, 100, 0, Easing.out(Easing.back(1.7)))}px)`,
               display: 'inline-block',
             }}
           >
@@ -122,7 +122,7 @@ export const YT_AI10_S01_훅: React.FC = () => {
         <div style={{ ...textStyle, opacity: ip(f, 510, 540, 0, 1) * ip(f, 570, 600, 1, 0) }}>
           <div
             style={{
-              transform: `translateX(${ip(f, 510, 540, 100, 0, Easing.out(Easing.back))}px)`,
+              transform: `translateX(${ip(f, 510, 540, 100, 0, Easing.out(Easing.back(1.7)))}px)`,
               display: 'inline-block',
             }}
           >
@@ -130,7 +130,7 @@ export const YT_AI10_S01_훅: React.FC = () => {
           </div>{' '}
           <div
             style={{
-              transform: `translateX(${ip(f, 510, 540, -100, 0, Easing.out(Easing.back))}px)`,
+              transform: `translateX(${ip(f, 510, 540, -100, 0, Easing.out(Easing.back(1.7)))}px)`,
               display: 'inline-block',
             }}
           >
@@ -144,7 +144,7 @@ export const YT_AI10_S01_훅: React.FC = () => {
         <div
           style={{
             ...textStyle,
-            transform: `translate(-50%, ${ip(f, 600, 630, 100, -50, Easing.out(Easing.back))}%)`,
+            transform: `translate(-50%, ${ip(f, 600, 630, 100, -50, Easing.out(Easing.back(1.7)))}%)`,
             opacity: ip(f, 600, 630, 0, 1) * ip(f, 750, 780, 1, 0),
           }}
         >

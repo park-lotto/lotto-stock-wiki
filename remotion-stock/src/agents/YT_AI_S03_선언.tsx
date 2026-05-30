@@ -1,6 +1,6 @@
-// YT_AI_S03_선언 — 씬3 선언 (750프레임 / 25초)
+﻿// YT_AI_S03_선언 — 씬3 선언 (750프레임 / 25초)
 import { AbsoluteFill, Easing, Html5Audio, interpolate, staticFile, useCurrentFrame } from 'remotion';
-import { C, FONT, GLOW } from '../constants';
+import { FONT } from '../constants';
 
 function ip(
   f: number, a: number, b: number,
@@ -61,12 +61,12 @@ export const YT_AI_S03_선언: React.FC = () => {
 
   // STOCK BRAIN logo (appears around 375)
   const stockBrainOpacity = ip(f, 375, 425, 0, 1, Easing.out(Easing.cubic));
-  const stockBrainScale = ip(f, 375, 425, 0.8, 1.1, Easing.out(Easing.back)); // Slightly overshoots
+  const stockBrainScale = ip(f, 375, 425, 0.8, 1.1, Easing.out(Easing.back(1.7))); // Slightly overshoots
   const stockBrainScaleFinal = ip(f, 425, 475, 1.1, 1); // Settles down
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#080c14', overflow: 'hidden' }}>
-      <Html5Audio src={staticFile('voice/yt_ai_s03_선언.m4a')} />
+      <Html5Audio src={staticFile('voice/yt_ai_s03_declaration.m4a')} />
 
       {/* Background Glow */}
       <div style={{

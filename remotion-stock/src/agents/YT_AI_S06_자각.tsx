@@ -1,7 +1,7 @@
-// YT_AI_S06_자각 — 씬6 자각 (900프레임 / 30초)
+﻿// YT_AI_S06_자각 — 씬6 자각 (900프레임 / 30초)
 
 import { AbsoluteFill, Easing, Html5Audio, interpolate, staticFile, useCurrentFrame } from 'remotion';
-import { C, FONT, GLOW } from '../constants';
+import { C, FONT } from '../constants';
 
 function ip(
   f: number, a: number, b: number,
@@ -32,7 +32,6 @@ export const YT_AI_S06_자각: React.FC = () => {
   const f = useCurrentFrame();
   const sub = getSub(f);
 
-  const bgGlow = Math.sin(f * 0.04) * 0.028 + 0.05; // Not directly used, but kept for style consistency
   const pulse = Math.sin(f * 0.07) * 0.5 + 0.5;
   const gSz = interpolate(pulse, [0, 1], [10, 30]);
   const dynGlow = `0 0 ${gSz}px #00FFD0, 0 0 ${gSz * 2}px rgba(0,255,208,0.5)`;
@@ -45,27 +44,27 @@ export const YT_AI_S06_자각: React.FC = () => {
 
   // Keyword highlights style
   const keywordStyle = (startFrame: number, endFrame: number, color: string = C.main) => ({
-    fontFamily: FONT.bold,
+    fontFamily: FONT,
     fontSize: 72,
     color: color,
     textShadow: dynGlow,
     opacity: ip(f, startFrame, startFrame + 15, 0, 1) * ip(f, endFrame - 15, endFrame, 1, 0),
-    transform: `scale(${ip(f, startFrame, startFrame + 15, 0.8, 1, Easing.out(Easing.back))})`,
+    transform: `scale(${ip(f, startFrame, startFrame + 15, 0.8, 1, Easing.out(Easing.back(1.7)))})`,
   });
 
   // STOCK BRAIN animation
   const stockBrainOp = ip(f, 330, 360, 0, 1);
-  const stockBrainScale = ip(f, 330, 360, 0.8, 1, Easing.out(Easing.back));
+  const stockBrainScale = ip(f, 330, 360, 0.8, 1, Easing.out(Easing.back(1.7)));
   const stockBrainGlow = interpolate(f, [330, 390, 420, 480], [10, 40, 10, 40], {extrapolateLeft:'clamp', extrapolateRight:'clamp', easing: Easing.inOut(Easing.quad)}); // Pulsating glow
   const stockBrainColor = f % 60 < 30 ? C.main : '#FFA502'; // Alternating color
 
   // Phase 2: 450-900 frames (15-30s)
   const speedTextOp = ip(f, 500, 530, 0, 1);
-  const speedTextScale = ip(f, 500, 530, 0.8, 1, Easing.out(Easing.back));
+  const speedTextScale = ip(f, 500, 530, 0.8, 1, Easing.out(Easing.back(1.7)));
   const speedTextTranslateY = ip(f, 500, 680, 0, -20); // Slight upward movement
 
   const gapTextOp = ip(f, 700, 730, 0, 1);
-  const gapTextScale = ip(f, 700, 730, 0.8, 1, Easing.out(Easing.back));
+  const gapTextScale = ip(f, 700, 730, 0.8, 1, Easing.out(Easing.back(1.7)));
 
   // Visual for "정보의 격차 극복"
   const gapRectWidth = ip(f, 700, 780, 400, 0, Easing.out(Easing.cubic)); // Gap closing
@@ -74,7 +73,7 @@ export const YT_AI_S06_자각: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#080c14', overflow: 'hidden' }}>
-      <Html5Audio src={staticFile('voice/yt_ai_s06_자각.m4a')} />
+      <Html5Audio src={staticFile('voice/yt_ai_s06_awareness.m4a')} />
 
       {/* Background UI Graphics */}
       <AbsoluteFill style={{
@@ -144,7 +143,7 @@ export const YT_AI_S06_자각: React.FC = () => {
 
         {/* STOCK BRAIN */}
         <div style={{
-          fontFamily: FONT.bold,
+          fontFamily: FONT,
           fontSize: 120,
           color: stockBrainColor,
           textShadow: `0 0 ${stockBrainGlow}px ${stockBrainColor}, 0 0 ${stockBrainGlow * 2}px rgba(0,255,208,0.5)`,
@@ -156,7 +155,7 @@ export const YT_AI_S06_자각: React.FC = () => {
           STOCK BRAIN
         </div>
         <div style={{
-          fontFamily: FONT.regular,
+          fontFamily: FONT,
           fontSize: 48,
           color: '#FFF',
           opacity: ip(f, 360, 390, 0, 1),
@@ -189,7 +188,7 @@ export const YT_AI_S06_자각: React.FC = () => {
           transform: `scale(${gapTextScale})`,
         }}>
           <div style={{
-            fontFamily: FONT.bold,
+            fontFamily: FONT,
             fontSize: 60,
             color: '#FF4757',
             marginRight: 20,
@@ -219,7 +218,7 @@ export const YT_AI_S06_자각: React.FC = () => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontFamily: FONT.bold,
+              fontFamily: FONT,
               fontSize: 36,
               color: '#080c14',
             }}>
@@ -227,7 +226,7 @@ export const YT_AI_S06_자각: React.FC = () => {
             </div>
           </div>
           <div style={{
-            fontFamily: FONT.bold,
+            fontFamily: FONT,
             fontSize: 60,
             color: C.main,
             marginLeft: 20,
@@ -239,12 +238,12 @@ export const YT_AI_S06_자각: React.FC = () => {
         <div style={{
           position: 'absolute',
           bottom: '18%',
-          fontFamily: FONT.bold,
+          fontFamily: FONT,
           fontSize: 72,
           color: C.main,
           textShadow: dynGlow,
           opacity: ip(f, 780, 810, 0, 1),
-          transform: `scale(${ip(f, 780, 810, 0.8, 1, Easing.out(Easing.back))})`,
+          transform: `scale(${ip(f, 780, 810, 0.8, 1, Easing.out(Easing.back(1.7)))})`,
         }}>
           정보의 천재
         </div>

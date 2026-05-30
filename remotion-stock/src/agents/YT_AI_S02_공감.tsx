@@ -1,7 +1,7 @@
-// YT_AI_S02_공감 — 씬2 공감 (1350프레임 / 45초)
+﻿// YT_AI_S02_공감 — 씬2 공감 (1350프레임 / 45초)
 
 import { AbsoluteFill, Easing, Html5Audio, interpolate, staticFile, useCurrentFrame } from 'remotion';
-import { C, FONT, GLOW } from '../constants';
+import { FONT } from '../constants';
 
 function ip(
   f: number, a: number, b: number,
@@ -40,7 +40,6 @@ export const YT_AI_S02_공감: React.FC = () => {
   const f = useCurrentFrame();
   const sub = getSub(f);
 
-  const bgGlow = Math.sin(f * 0.04) * 0.028 + 0.05;
   const pulse = Math.sin(f * 0.07) * 0.5 + 0.5;
   const gSz = interpolate(pulse, [0, 1], [10, 30]);
   const dynGlow = `0 0 ${gSz}px #00FFD0, 0 0 ${gSz * 2}px rgba(0,255,208,0.5)`;
@@ -87,7 +86,7 @@ export const YT_AI_S02_공감: React.FC = () => {
               backgroundColor: color,
               boxShadow: glow,
               opacity: ip(f, 0, 30, 0, 0.5) * opacity,
-              transform: `scale(${ip(f, i * 5, i * 5 + 30, 0.5, 1.2, Easing.out(Easing.back))})`,
+              transform: `scale(${ip(f, i * 5, i * 5 + 30, 0.5, 1.2, Easing.out(Easing.back(1.7)))})`,
             }}
           />
         );
@@ -125,7 +124,7 @@ export const YT_AI_S02_공감: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#080c14', overflow: 'hidden' }}>
-      <Html5Audio src={staticFile('voice/yt_ai_s02_공감.m4a')} />
+      <Html5Audio src={staticFile('voice/yt_ai_s02_empathy.m4a')} />
 
       {/* Background */}
       {renderBackground(
@@ -139,7 +138,7 @@ export const YT_AI_S02_공감: React.FC = () => {
       {phase1Active && ICONS_DATA.map((icon, i) => {
         const iconOp = ip(f, icon.start, icon.start + 30);
         const textOp = ip(f, icon.start + 30, icon.start + 60);
-        const scale = ip(f, icon.start, icon.start + 15, 0.5, 1, Easing.out(Easing.back));
+        const scale = ip(f, icon.start, icon.start + 15, 0.5, 1, Easing.out(Easing.back(1.7)));
         const yOffset = ip(f, icon.start, icon.start + 30, 50, 0, Easing.out(Easing.cubic));
         const glowPulse = Math.sin(f * 0.1 + i) * 0.5 + 0.5;
         const iconGlowSz = interpolate(glowPulse, [0, 1], [10, 25]);

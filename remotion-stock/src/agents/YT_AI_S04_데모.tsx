@@ -1,6 +1,6 @@
-// YT_AI_S04_데모 — 씬4 데모 (7200프레임 / 240초)
+﻿// YT_AI_S04_데모 — 씬4 데모 (7200프레임 / 240초)
 import { AbsoluteFill, Easing, Html5Audio, interpolate, staticFile, useCurrentFrame } from 'remotion';
-import { C, FONT, GLOW } from '../constants';
+import { C, FONT } from '../constants';
 
 function ip(
   f: number, a: number, b: number,
@@ -74,7 +74,7 @@ export const YT_AI_S04_데모: React.FC = () => {
 
   // ── 애니메이션 값 ──────────────────────────────────────────────
   // Phase 1: Tablet & Dashboard Intro (0-600f)
-  const tabletScale = ip(f, 0, 30, 0.5, 1, Easing.out(Easing.back));
+  const tabletScale = ip(f, 0, 30, 0.5, 1, Easing.out(Easing.back(1.7)));
   const tabletOpacity = ip(f, 0, 30, 0, 1);
   const dashboardIntroY = ip(f, 0, 30, 200, 0, Easing.out(Easing.cubic));
   const dawn4amOpacity = ip(f, 210, 240, 0, 1);
@@ -85,7 +85,7 @@ export const YT_AI_S04_데모: React.FC = () => {
   const yurigipanClickScale = ip(f, 1320, 1335, 1, 0.9, Easing.out(Easing.cubic));
   const yurigipanClickScaleBack = ip(f, 1335, 1350, 0.9, 1, Easing.out(Easing.cubic));
   const popupOpacity = ip(f, 1350, 1400, 0, 1);
-  const popupScale = ip(f, 1350, 1400, 0.8, 1, Easing.out(Easing.back));
+  const popupScale = ip(f, 1350, 1400, 0.8, 1, Easing.out(Easing.back(1.7)));
   const popupFadeOut = ip(f, 2280, 2330, 1, 0);
 
   // Phase 3: Filter Intro (2520-4140f)
@@ -96,11 +96,11 @@ export const YT_AI_S04_데모: React.FC = () => {
   // Phase 4: Filtered Stocks & Graphs (4140-6000f)
   const filteredDashboardOpacity = ip(f, 3930, 3980, 0, 1); // Transition to filtered dashboard
   const stockHighlightPulse = Math.sin(f * 0.1) * 0.5 + 0.5;
-  const stockHighlightGlow = `0 0 ${interpolate(stockHighlightPulse, [0, 1], [5, 20])}px ${C.red}`;
+  const stockHighlightGlow = `0 0 ${interpolate(stockHighlightPulse, [0, 1], [5, 20])}px ${'#FF4757'}`;
   const graphOpacity = ip(f, 5040, 5090, 0, 1);
 
   // Phase 5: Final Emphasis (6000-7200f)
-  const ddalggakScale = ip(f, 6480, 6580, 0.5, 1.2, Easing.out(Easing.back));
+  const ddalggakScale = ip(f, 6480, 6580, 0.5, 1.2, Easing.out(Easing.back(1.7)));
   const ddalggakOpacity = ip(f, 6480, 6580, 0, 1);
   const ddalggakFadeOut = ip(f, 6780, 6880, 1, 0);
 
@@ -112,7 +112,7 @@ export const YT_AI_S04_데모: React.FC = () => {
   // ── 렌더링 ─────────────────────────────────────────────────────
   return (
     <AbsoluteFill style={{ backgroundColor: C.bg, overflow: 'hidden', fontFamily: FONT }}>
-      <Html5Audio src={staticFile('voice/yt_ai_s04_데모.m4a')} />
+      <Html5Audio src={staticFile('voice/yt_ai_s04_demo.m4a')} />
 
       {/* Background glow */}
       <div style={{
@@ -207,7 +207,7 @@ export const YT_AI_S04_데모: React.FC = () => {
             <p><strong>뉴스:</strong> "유리기판, 차세대 반도체 기판으로 부상... 삼성전기 투자 확대"</p>
             <p><strong>텔레그램:</strong> "[속보] 유리기판 관련주, 장 초반 강세... 기관 매수세 유입"</p>
             <p><strong>리포트:</strong> "OO증권: 유리기판, 2025년 시장 5배 성장 전망... 핵심 기업 분석"</p>
-            <p style={{marginTop: 20, color: C.amber}}>
+            <p style={{marginTop: 20, color: '#FFA502'}}>
               AI 분석: 유리기판은 고성능 반도체 수요 증가와 함께 성장 잠재력이 높은 섹터입니다.
               주요 기업들의 투자 확대와 기관 매수세가 포착되어 단기 및 중장기적 관심이 필요합니다.
             </p>

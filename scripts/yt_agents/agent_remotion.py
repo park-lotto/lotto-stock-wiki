@@ -15,13 +15,24 @@ ROOT_TSX  = REMOTION / 'src' / 'Root.tsx'
 # ── BRAIN SIGNAL 스타일 핵심 요약 (프롬프트 삽입용) ─────────────────
 STYLE_SNIPPET = """
 === BRAIN SIGNAL 스타일 규칙 ===
-배경: #080c14 / 포인트: #00FFD0(민트) / 보조: #FFA502(앰버) #FF4757(레드)
-폰트: FONT 상수 / 숫자: "Consolas","Menlo",monospace
+배경: #080c14 / 포인트: C.main=#00FFD0(민트) / 보조: #FFA502(앰버) #FF4757(레드)
+FONT = 문자열 상수 (FONT.bold 같은 속성 없음 — 그냥 FONT 사용)
+숫자 폰트: "Consolas","Menlo",monospace
 
 공통 헬퍼 (모든 씬에 복사):
-function ip(f,a,b,from=0,to=1,ease=Easing.out(Easing.cubic)) {
+function ip(f: number, a: number, b: number, from=0, to=1, ease=(t:number)=>t) {
   return interpolate(f,[a,b],[from,to],{extrapolateLeft:'clamp',extrapolateRight:'clamp',easing:ease});
 }
+
+⚠️ Easing 팩토리 함수 주의 — 반드시 파라미터를 넣어 호출해야 함:
+  올바름: Easing.out(Easing.back(1.7))   ← back(1.7) 호출해서 함수 전달
+  올바름: Easing.out(Easing.elastic(1))  ← elastic(1) 호출해서 함수 전달
+  올바름: Easing.out(Easing.poly(4))     ← poly(4) 호출해서 함수 전달
+  잘못됨: Easing.out(Easing.back)        ← back 자체는 팩토리, 타입 에러!
+
+⚠️ JSX style 속성 — 각 속성은 반드시 별도 키로 분리:
+  올바름: style={{ textShadow: dynGlow, opacity: glowOp }}
+  잘못됨: style={{ textShadow: dynopacity: glowOp }}  ← 합치면 문법 에러!
 
 자막바 (모든 씬 필수):
 <div style={{position:'absolute',bottom:0,left:0,right:0,height:'16%',
@@ -32,11 +43,11 @@ function ip(f,a,b,from=0,to=1,ease=Easing.out(Easing.cubic)) {
 </div>
 
 Phase 전환 원칙: 1씬 내 최소 2~3개 Phase / 정적 5초 이상 금지
-dynGlow: `0 0 ${gSz}px #00FFD0, 0 0 ${gSz*2}px rgba(0,255,208,0.5)`
+dynGlow = `0 0 ${gSz}px #00FFD0, 0 0 ${gSz*2}px rgba(0,255,208,0.5)`
 
-import 필수:
+⚠️ import 규칙 — 실제 사용하는 것만 import (미사용 시 컴파일 에러):
 import { AbsoluteFill, Easing, Html5Audio, interpolate, staticFile, useCurrentFrame } from 'remotion';
-import { C, FONT, GLOW } from '../constants';
+import { C, FONT } from '../constants';  // C 미사용이면 FONT만, GLOW는 import 금지
 """
 
 # ── 예시 컴포넌트 (few-shot) ─────────────────────────────────────────
@@ -124,7 +135,8 @@ def generate_scene(scene: dict, prefix: str, feedback: str = '') -> tuple[str, s
     comp_name = _scene_to_component_name(prefix, scene['num'], scene['name'])
     sec = _sec_from_duration(scene['duration'])
     frames = sec * 30 + 30
-    voice_file = f"{comp_name.lower()}.m4a"
+    # ASCII only — 한글 있으면 URL 인코딩 후 404 에러
+    voice_file = re.sub(r'[^a-z0-9_]', '', comp_name.lower()) + '.m4a'
 
     example = _load_example()
     fb_note = f"\n\n이전 TypeScript 에러 (반드시 수정):\n{feedback}" if feedback else ''
