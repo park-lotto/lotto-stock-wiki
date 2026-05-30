@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "fetch": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-fetch"]
+    },
+    "puppeteer": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-puppeteer"]
+    },
+    "sqlite": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sqlite", "--db-path", "C:\\Users\\TheRose\\Desktop\\로또의 주식\\data\\stockbrain.db"]
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    }
+  }
+}
