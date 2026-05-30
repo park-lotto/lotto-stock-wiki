@@ -1,0 +1,41 @@
+{
+  "audio_file": "국씬2.m4a",
+  "scene": "GB02",
+  "total_sec": 15.44,
+  "total_frames": 463,
+  "fps": 30,
+  "segments": [
+    {
+      "index": 1,
+      "text": "와, 소득공제 40% 정부, 손실 방어.",
+      "start_sec": 0.0,
+      "end_sec": 4.52,
+      "start_frame": 0,
+      "end_frame": 136
+    },
+    {
+      "index": 2,
+      "text": "음, 얘기만 들으면 무조건 넣어야 될 것 같죠?",
+      "start_sec": 5.08,
+      "end_sec": 7.5,
+      "start_frame": 152,
+      "end_frame": 225
+    },
+    {
+      "index": 3,
+      "text": "근데 진짜 중요한 조건이 하나 붙어 있습니다.",
+      "start_sec": 8.56,
+      "end_sec": 10.98,
+      "start_frame": 257,
+      "end_frame": 329
+    },
+    {
+      "index": 4,
+      "text": "이 조건이 안 맞으면 반도체 ETF가 훨씬 더 많이 벌더라고요.",
+      "start_sec": 11.74,
+      "end_sec": 15.44,
+      "start_frame": 352,
+      "end_frame": 463
+    }
+  ]
+}

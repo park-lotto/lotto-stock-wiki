@@ -1,5 +1,13 @@
 // GB03 — 씬3 카운트업 + 비교형 (90초 = 2700프레임)
 // Phase1: 원금 카운트업 → Phase2: 두 갈래 분기 → Phase3: 비교 dimming → Phase4: 반전
+//
+// ── 수치 계산 근거 (2026-05-30 검증) ──
+// 국민성장펀드: 3,000만원 × (1.06)^5 = 4,014.7만원
+//   - 분리과세 9.9%: -100.5만원 → 세후 3,914.2만원
+//   - 소득공제 환급: 3,000만원×40%=1,200만원 × 26.4% = 316.8만원
+//   - 실수령 합계: 4,231만원
+// TIGER 반도체 ETF: 3,000만원 × (1.10)^5 = 4,831.5만원 (타이밍 맞는 경우, 매매차익 비과세)
+// 차이: 4,831 - 4,231 = 600만원
 import { AbsoluteFill, Audio, Easing, interpolate, staticFile, useCurrentFrame } from 'remotion';
 import { C, FONT, GLOW } from '../constants';
 
@@ -12,8 +20,7 @@ const lerp = (a: number, b: number, fa: number, fb: number, ea = Easing.out(Easi
 export const GB03_Compare = () => {
   const f = useCurrentFrame();
 
-  const fadeIn  = interpolate(f, [0, 15], [0, 1], { extrapolateRight: 'clamp' });
-  const fadeOut = interpolate(f, [2660, 2700], [1, 0], { extrapolateLeft: 'clamp' });
+  const fadeIn = interpolate(f, [0, 15], [0, 1], { extrapolateRight: 'clamp' });
 
   // ── 배경 글로우 ──
   const bgGlow = Math.sin(f * 0.03) * 0.025 + 0.04;
@@ -55,13 +62,13 @@ export const GB03_Compare = () => {
   const ph2 = {
     cardOp:   lerp(0, 1, 620, 700)(f),
     cardY:    lerp(30, 0, 620, 700)(f),
-    // 펀드 카운트업
-    fundNum: Math.round(interpolate(f, [700, 960], [3000, 4254], {
+    // 펀드 카운트업: 4,231만원 (연6%×5년 세후 3,914 + 소득공제환급 317)
+    fundNum: Math.round(interpolate(f, [700, 960], [3000, 4231], {
       extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
       easing: Easing.out(Easing.cubic),
     })),
-    // ETF 카운트업 (펀드보다 늦게 시작, 더 높이)
-    etfNum:  Math.round(interpolate(f, [780, 1060], [3000, 4800], {
+    // ETF 카운트업: 4,831만원 (연10%×5년, 매매차익 비과세)
+    etfNum:  Math.round(interpolate(f, [780, 1060], [3000, 4831], {
       extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
       easing: Easing.out(Easing.cubic),
     })),
@@ -70,8 +77,9 @@ export const GB03_Compare = () => {
   };
 
   // ── 바 높이 (비율) ──
-  const fundBarH = interpolate(ph2.fundNum, [3000, 4254], [0, 88.6], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-  const etfBarH  = interpolate(ph2.etfNum,  [3000, 4800], [0, 100],  { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  // 바 높이: 4231/4831 = 87.6%
+  const fundBarH = interpolate(ph2.fundNum, [3000, 4231], [0, 87.6], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const etfBarH  = interpolate(ph2.etfNum,  [3000, 4831], [0, 100],  { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 
   // ═══════════════════════════════════════
   // PHASE 3 (f1200-2000): 비교 dimming + 차이 강조
@@ -81,7 +89,7 @@ export const GB03_Compare = () => {
     fundDim:   interpolate(f, [1230, 1360], [1, 0.35], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
     etfReveal: interpolate(f, [1230, 1360], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
     // 차이 숫자 (f1400-1650)
-    diffNum: Math.round(interpolate(f, [1400, 1650], [0, 546], {
+    diffNum: Math.round(interpolate(f, [1400, 1650], [0, 600], {
       extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
       easing: Easing.out(Easing.cubic),
     })),
@@ -138,7 +146,7 @@ export const GB03_Compare = () => {
   const cap4Op = f >= 2000 ? interpolate(f, [2400, 2460], [0, 1], { extrapolateRight: 'clamp' }) : 0;
 
   return (
-    <AbsoluteFill style={{ background: C.bg, opacity: fadeIn * fadeOut, fontFamily: FONT }}>
+    <AbsoluteFill style={{ background: C.bg, opacity: fadeIn, fontFamily: FONT }}>
       {HAS_AUDIO && <Audio src={staticFile(AUDIO)} />}
 
       {/* 배경 글로우 */}
@@ -259,7 +267,7 @@ export const GB03_Compare = () => {
                 국민성장펀드
               </div>
               <div style={{ color: C.textPrimary, fontSize: 26, fontWeight: 600, marginBottom: 20 }}>
-                소득공제 + 운용수익 (연 6%)
+                소득공제 + 운용수익 (연 6% 가정)
               </div>
               {/* 바 */}
               <div style={{
@@ -283,7 +291,7 @@ export const GB03_Compare = () => {
                 <div style={{ color: C.textSub, fontSize: 28, fontWeight: 600 }}>만원</div>
               </div>
               <div style={{ opacity: ph2.taxOp, color: C.mainMid, fontSize: 24, fontWeight: 600, marginTop: 10 }}>
-                절세 효과 약 +240만원 포함
+                소득공제 환급 317만원 포함 (세율 26.4%)
               </div>
             </div>
 

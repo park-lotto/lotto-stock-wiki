@@ -1,0 +1,49 @@
+{
+  "audio_file": "씬3 대본.m4a",
+  "scene": "AG_S03",
+  "total_sec": 17.74,
+  "total_frames": 532,
+  "fps": 30,
+  "segments": [
+    {
+      "index": 1,
+      "text": "그래서 저는 직원을 고용했습니다.",
+      "start_sec": 0.0,
+      "end_sec": 2.3,
+      "start_frame": 0,
+      "end_frame": 69
+    },
+    {
+      "index": 2,
+      "text": "AI 직원 10명인데요.",
+      "start_sec": 3.18,
+      "end_sec": 4.46,
+      "start_frame": 95,
+      "end_frame": 134
+    },
+    {
+      "index": 3,
+      "text": "이게 각자 역할이 딱딱 정해져 있어요.",
+      "start_sec": 5.26,
+      "end_sec": 7.32,
+      "start_frame": 158,
+      "end_frame": 220
+    },
+    {
+      "index": 4,
+      "text": "자료수집과 분석, 수급 체크, 탑픽 선정, 브리핑 자료, 배폭까지.",
+      "start_sec": 8.04,
+      "end_sec": 13.94,
+      "start_frame": 241,
+      "end_frame": 418
+    },
+    {
+      "index": 5,
+      "text": "저는 7시에 일어나서 결과만 봅니다.",
+      "start_sec": 14.5,
+      "end_sec": 17.74,
+      "start_frame": 435,
+      "end_frame": 532
+    }
+  ]
+}

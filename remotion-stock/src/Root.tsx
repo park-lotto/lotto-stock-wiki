@@ -26,6 +26,19 @@ import { S01_Hook } from './dakkak/S01_Hook';
 import { S02_Chaos } from './dakkak/S02_Chaos';
 import { AG01_Timeline } from './agents/AG01_Timeline';
 import { AG02_Agents } from './agents/AG02_Agents';
+import { AG03_Awareness } from './agents/AG03_Awareness';
+import { AG04_Tease } from './agents/AG04_Tease';
+import { AG05_CTA } from './agents/AG05_CTA';
+import { AG06_Delivery } from './agents/AG06_Delivery';
+import { AG_S02_Empathy } from './agents/AG_S02_Empathy';
+import { AG_S03_Declaration } from './agents/AG_S03_Declaration';
+import { AG_S04_1_Boss }    from './agents/AG_S04_1_Boss';
+import { AG_S04_2_Collect } from './agents/AG_S04_2_Collect';
+import { AG_S04_3_Supply }  from './agents/AG_S04_3_Supply';
+import { AG_S04_4_Toppick } from './agents/AG_S04_4_Toppick';
+import { AG_S04_5_Brief }   from './agents/AG_S04_5_Brief';
+import { AG_S04_6_Deploy }  from './agents/AG_S04_6_Deploy';
+import { AG_S04_7_Others }  from './agents/AG_S04_7_Others';
 import { GB01_Hook } from './buildup/GB01_Hook';
 import { GB02_Checklist } from './buildup/GB02_Checklist';
 import { GB03_Compare } from './buildup/GB03_Compare';
@@ -233,7 +246,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="AG01-Timeline-Hook"
         component={() => <AG01_Timeline mode="hook" />}
-        durationInFrames={600}  // 씬1 수정 녹음 19.98초 기준
+        durationInFrames={630}  // 씬1 수정 녹음 19.98초 + 여백 1초
         fps={30}
         width={1920}
         height={1080}
@@ -254,12 +267,67 @@ export const RemotionRoot: React.FC = () => {
         width={1920}
         height={1080}
       />
+      <Composition
+        id="AG03-Awareness"
+        component={AG03_Awareness}
+        durationInFrames={1200}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="AG04-Tease"
+        component={AG04_Tease}
+        durationInFrames={900}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="AG05-CTA"
+        component={AG05_CTA}
+        durationInFrames={900}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="AG06-Delivery"
+        component={AG06_Delivery}
+        durationInFrames={750}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="AG-S02-Empathy"
+        component={AG_S02_Empathy}
+        durationInFrames={1009}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="AG-S03-Declaration"
+        component={AG_S03_Declaration}
+        durationInFrames={562}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition id="AG-S04-1-Boss"    component={AG_S04_1_Boss}    durationInFrames={442}  fps={30} width={1920} height={1080} />
+      <Composition id="AG-S04-2-Collect" component={AG_S04_2_Collect} durationInFrames={1690} fps={30} width={1920} height={1080} />
+      <Composition id="AG-S04-3-Supply"  component={AG_S04_3_Supply}  durationInFrames={755}  fps={30} width={1920} height={1080} />
+      <Composition id="AG-S04-4-Toppick" component={AG_S04_4_Toppick} durationInFrames={580}  fps={30} width={1920} height={1080} />
+      <Composition id="AG-S04-5-Brief"   component={AG_S04_5_Brief}   durationInFrames={667}  fps={30} width={1920} height={1080} />
+      <Composition id="AG-S04-6-Deploy"  component={AG_S04_6_Deploy}  durationInFrames={617}  fps={30} width={1920} height={1080} />
+      <Composition id="AG-S04-7-Others"  component={AG_S04_7_Others}  durationInFrames={716}  fps={30} width={1920} height={1080} />
 
       {/* ─── 국민성장펀드 빌드업 영상 — 씬1~3 ─── */}
       <Composition
         id="GB01-Hook"
         component={GB01_Hook}
-        durationInFrames={539}
+        durationInFrames={569}
         fps={30}
         width={1920}
         height={1080}
@@ -267,7 +335,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="GB02-Checklist"
         component={GB02_Checklist}
-        durationInFrames={1350}
+        durationInFrames={463}
         fps={30}
         width={1920}
         height={1080}

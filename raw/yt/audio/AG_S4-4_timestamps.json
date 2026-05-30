@@ -1,0 +1,49 @@
+{
+  "audio_file": "씬4-4.m4a",
+  "scene": "AG_S4-4",
+  "total_sec": 18.32,
+  "total_frames": 550,
+  "fps": 30,
+  "segments": [
+    {
+      "index": 1,
+      "text": "이 직원은 가장 머리가 좋은 직원인데요.",
+      "start_sec": 0.0,
+      "end_sec": 3.0,
+      "start_frame": 0,
+      "end_frame": 90
+    },
+    {
+      "index": 2,
+      "text": "그 수출 데이터, 증권사, tp 현황,",
+      "start_sec": 3.6,
+      "end_sec": 6.2,
+      "start_frame": 108,
+      "end_frame": 186
+    },
+    {
+      "index": 3,
+      "text": "리레이팅 방향, 중위 이벤트, 수급 빈집 등등에서",
+      "start_sec": 6.74,
+      "end_sec": 11.04,
+      "start_frame": 202,
+      "end_frame": 331
+    },
+    {
+      "index": 4,
+      "text": "8가지 기준으로 제가 교차분석을 해서 제 기준에 스쿼를 내고",
+      "start_sec": 11.56,
+      "end_sec": 16.22,
+      "start_frame": 347,
+      "end_frame": 487
+    },
+    {
+      "index": 5,
+      "text": "마음을 결정을 해주는 직원입니다.",
+      "start_sec": 16.22,
+      "end_sec": 18.32,
+      "start_frame": 487,
+      "end_frame": 550
+    }
+  ]
+}

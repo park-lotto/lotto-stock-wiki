@@ -3,7 +3,7 @@
 import { AbsoluteFill, Audio, Easing, interpolate, staticFile, useCurrentFrame } from 'remotion';
 import { C, FONT, GLOW } from '../constants';
 
-const AUDIO = 'audio/국 씬1.m4a';
+const AUDIO = 'audio/국씬1 수정.m4a';
 const HAS_AUDIO = true;
 
 export const GB01_Hook = () => {
@@ -43,27 +43,25 @@ export const GB01_Hook = () => {
   const burstOp    = interpolate(f, [85, 92, 118], [0, 0.55, 0], { extrapolateRight: 'clamp' });
   const burstScale = interpolate(f, [85, 118], [0.2, 2.8], { extrapolateRight: 'clamp' });
 
-  // ── 통계 수치 등장 → f167 "6천억 모집" 대사 시작에 맞춤 ──
-  const statOp = interpolate(f, [167, 210], [0, 1], { extrapolateRight: 'clamp' });
-  const statY  = interpolate(f, [167, 210], [30, 0], { extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) });
+  // ── 통계 수치 등장 → f166 "6천억 모집" (Whisper: 5.52s) ──
+  const statOp = interpolate(f, [166, 209], [0, 1], { extrapolateRight: 'clamp' });
+  const statY  = interpolate(f, [166, 209], [30, 0], { extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) });
 
-  // ── 반전 박스 → f279 "완판이라는데" + f403 "저는 안 넣었어요" ──
-  const revealOp = interpolate(f, [279, 330], [0, 1], { extrapolateRight: 'clamp' });
-  const revealY  = interpolate(f, [279, 330], [24, 0], { extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) });
-  // "저는 안 넣었어요" 강조 글로우 (f403)
-  const revealGlow = interpolate(f, [403, 442], [0, 1], { extrapolateRight: 'clamp' });
+  // ── 반전 박스 → f273 "완판이라는데" (Whisper: 9.10s) + f403 "저는 안 넣었어요" ──
+  const revealOp = interpolate(f, [273, 324], [0, 1], { extrapolateRight: 'clamp' });
+  const revealY  = interpolate(f, [273, 324], [24, 0], { extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) });
+  // "저는 안 넣었어요" 강조 글로우 (f403, Whisper: 13.44s)
+  const revealGlow = interpolate(f, [403, 443], [0, 1], { extrapolateRight: 'clamp' });
 
-  // ── 서브 텍스트 → f463 "이유 말씀드리겠습니다" ──
-  const subOp = interpolate(f, [463, 510], [0, 1], { extrapolateRight: 'clamp' });
+  // ── 서브 텍스트 → f468 "지금부터 이유 말씀드려볼게요" (Whisper: 15.60s) ──
+  const subOp = interpolate(f, [468, 515], [0, 1], { extrapolateRight: 'clamp' });
 
-  // ── fadeOut → 539프레임에 맞춤 ──
-  const fadeOut = interpolate(f, [505, 539], [1, 0], { extrapolateLeft: 'clamp' });
 
   // ── 자막 바 (f80-105) ──
   const capOp = interpolate(f, [80, 105], [0, 1], { extrapolateRight: 'clamp' });
 
   return (
-    <AbsoluteFill style={{ background: C.bg, opacity: fadeIn * fadeOut, fontFamily: FONT }}>
+    <AbsoluteFill style={{ background: C.bg, opacity: fadeIn, fontFamily: FONT }}>
       {HAS_AUDIO && <Audio src={staticFile(AUDIO)} />}
 
       {/* 배경 중앙 글로우 */}
@@ -113,14 +111,14 @@ export const GB01_Hook = () => {
           lineHeight: 1,
         }}>국민성장펀드</div>
 
-        {/* Line2 — 넣지 마세요 */}
+        {/* Line2 — 청약하셨나요? */}
         <div style={{
           fontSize: 148, fontWeight: 900, color: C.main,
           opacity: t2Op,
           transform: `translateX(${t2X}px) scale(${breathe})`,
           textShadow: dynGlow,
           lineHeight: 1, marginTop: 8,
-        }}>넣지 마세요</div>
+        }}>청약하셨나요?</div>
 
         {/* 통계 */}
         <div style={{

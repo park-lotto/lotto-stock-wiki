@@ -1,0 +1,41 @@
+{
+  "audio_file": "씬4-3.m4a",
+  "scene": "AG_S4-3",
+  "total_sec": 24.18,
+  "total_frames": 725,
+  "fps": 30,
+  "segments": [
+    {
+      "index": 1,
+      "text": "다음으로 수급을 분석하는 직원이에요. 이 친구는 새벽 3시 출근합니다. 2500개 종목 중에서",
+      "start_sec": 0.0,
+      "end_sec": 8.2,
+      "start_frame": 0,
+      "end_frame": 246
+    },
+    {
+      "index": 2,
+      "text": "약 500개 정도 되는 의미 있는 종목만 분석하기 일을 시켜놨거든요.",
+      "start_sec": 8.88,
+      "end_sec": 12.44,
+      "start_frame": 266,
+      "end_frame": 373
+    },
+    {
+      "index": 3,
+      "text": "최근 외국인이랑 기관 수급이 빠진 종목들을 골라내게끔 해놨어요.",
+      "start_sec": 13.2,
+      "end_sec": 17.1,
+      "start_frame": 396,
+      "end_frame": 513
+    },
+    {
+      "index": 4,
+      "text": "저는 이걸 수급 빈집이라고 하는데 이건 정말로 중요하니까 다음 영상으로 따로 설명드리도록 할게요.",
+      "start_sec": 17.72,
+      "end_sec": 24.18,
+      "start_frame": 532,
+      "end_frame": 725
+    }
+  ]
+}

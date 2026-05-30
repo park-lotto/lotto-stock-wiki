@@ -3,26 +3,32 @@
 import { AbsoluteFill, Audio, Easing, interpolate, staticFile, useCurrentFrame } from 'remotion';
 import { C, FONT, GLOW } from '../constants';
 
-const AUDIO = 'audio/GB02_voice.mp3';
-const HAS_AUDIO = false;
+const AUDIO = 'audio/국씬2.m4a';
+const HAS_AUDIO = true;
 
-const CARD_START = [200, 420, 640];
+// Whisper: 총 463프레임(15.44s) / [01]f0~136 / [02]f152~225 / [03]f257~329 / [04]f352~463
+// 대사: 소득공제40%+정부손실방어 → 무조건넣어야할것같죠? → 조건이하나 → ETF가훨씬더
+// Card1·2: 혜택(seg1) / Card3: 반전(seg3)
+const CARD_START = [60, 110, 257];
 
 const CONDITIONS = [
   {
-    icon: '💰',
-    title: '소득공제 여유 확인',
-    desc: '기타소득공제 연 한도 2,500만원\n이미 꽉 찼다면 절세 효과 없음',
+    icon: '📈',
+    title: '소득공제 40%',
+    desc: '납입액의 40% 소득공제\n절세 효과 연 최대 264만원',
+    warn: false,
   },
   {
-    icon: '🔒',
-    title: '5년간 안 써도 되는 돈',
-    desc: '중도 해지 시 세금 추징 + 손실\n생활비·비상금은 절대 금지',
+    icon: '🛡️',
+    title: '정부 손실 방어',
+    desc: '원금 손실 일부를 정부 보전\n하락장에서도 안전망 역할',
+    warn: false,
   },
   {
-    icon: '📊',
-    title: '금융소득 2,000만원 이하',
-    desc: '금융소득종합과세 대상자는 불리\n가입 전 반드시 홈택스 확인',
+    icon: '⚠️',
+    title: '근데 조건이 있어요',
+    desc: '이 조건 하나가 안 맞으면\nETF가 훨씬 더 많이 법니다',
+    warn: true,
   },
 ];
 
@@ -54,14 +60,14 @@ export const GB02_Checklist = () => {
     scale: interpolate(f, [s, s + 22], [0.92, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) }),
     scanY: interpolate(f, [s + 10, s + 28], [0, 110], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
     scanO: interpolate(f, [s + 10, s + 15, s + 24, s + 28], [0, 0.9, 0.9, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
-    // 체크마크: 카드 등장 후 60프레임 뒤 elastic
-    checkScale: interpolate(f, [s + 60, s + 82], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.elastic(1.2)) }),
-    checkOp:    interpolate(f, [s + 60, s + 70], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
+    // 체크마크: 카드 등장 후 40프레임 뒤 elastic (압축)
+    checkScale: interpolate(f, [s + 40, s + 62], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.elastic(1.2)) }),
+    checkOp:    interpolate(f, [s + 40, s + 50], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
   }));
 
-  // ── 순환 글로우 (f >= 900, 60프레임 주기) ──
-  const allVisible = f >= 900;
-  const ringPhase = allVisible ? ((f - 900) % 60) / 60 : 0;
+  // ── 순환 글로우 (f >= 310, 60프레임 주기) ──
+  const allVisible = f >= 310;
+  const ringPhase = allVisible ? ((f - 310) % 60) / 60 : 0;
   const cardGlow = (i: number) => {
     if (!allVisible) return 0;
     const center = i / TOTAL + 1 / (TOTAL * 2);
@@ -69,12 +75,13 @@ export const GB02_Checklist = () => {
     return Math.max(0, 1 - dist * TOTAL * 1.8);
   };
 
-  // ── 판결 박스 (f950-1030) ──
-  const verdictOp = interpolate(f, [950, 1030], [0, 1], { extrapolateRight: 'clamp' });
-  const verdictY  = interpolate(f, [950, 1030], [20, 0], { extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) });
+  // ── 판결 박스 (f352 "이 조건이 안 맞으면 반도체 ETF") ──
+  const verdictOp = interpolate(f, [352, 410], [0, 1], { extrapolateRight: 'clamp' });
+  const verdictY  = interpolate(f, [352, 410], [20, 0], { extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) });
 
-  // ── 자막 바 (f1100-1130) ──
-  const capOp = interpolate(f, [1100, 1130], [0, 1], { extrapolateRight: 'clamp' });
+  // ── 자막 바 (f380-420) ──
+  const capOp = interpolate(f, [380, 420], [0, 1], { extrapolateRight: 'clamp' });
+
 
   return (
     <AbsoluteFill style={{ background: C.bg, opacity: fadeIn, fontFamily: FONT }}>
@@ -108,7 +115,7 @@ export const GB02_Checklist = () => {
         <div style={{
           fontSize: 28, fontWeight: 500, color: C.textSub, letterSpacing: 5,
           opacity: labelOp, alignSelf: 'flex-start',
-        }}>조건 분석</div>
+        }}>펀드 혜택</div>
 
         {/* 타이틀 */}
         <div style={{
@@ -116,24 +123,26 @@ export const GB02_Checklist = () => {
           opacity: titleOp,
           transform: `translateY(${titleY}px)`,
           alignSelf: 'flex-start', lineHeight: 1,
-        }}>조건이&nbsp;
-          <span style={{ color: C.main, textShadow: GLOW.mid.text }}>있습니다.</span>
+        }}>들으면&nbsp;
+          <span style={{ color: C.main, textShadow: GLOW.mid.text }}>넣어야 할 것 같죠?</span>
         </div>
 
         {/* 카드 3개 */}
         <div style={{ display: 'flex', gap: 24, width: '100%' }}>
           {CONDITIONS.map((cond, i) => {
             const gOp = cardGlow(i);
+            const isWarn = cond.warn;
+            const accentColor = isWarn ? '#FFB800' : C.main;
             return (
               <div key={i} style={{
                 flex: 1,
                 opacity: cards[i].op,
                 transform: `translateX(${cards[i].tx}px) scale(${cards[i].scale})`,
-                background: C.cardBg,
-                border: `1.5px solid ${gOp > 0.3 ? C.main : C.borderSub}`,
+                background: isWarn ? 'rgba(255,184,0,0.06)' : C.cardBg,
+                border: `1.5px solid ${gOp > 0.3 ? accentColor : (isWarn ? 'rgba(255,184,0,0.4)' : C.borderSub)}`,
                 borderRadius: 16, padding: '26px 32px',
                 position: 'relative', overflow: 'hidden',
-                boxShadow: gOp > 0.2 ? `0 0 ${16 * gOp}px rgba(0,255,208,${0.6 * gOp})` : undefined,
+                boxShadow: gOp > 0.2 ? `0 0 ${16 * gOp}px rgba(${isWarn ? '255,184,0' : '0,255,208'},${0.6 * gOp})` : undefined,
               }}>
 
                 {/* 카드 내부 스캔라인 */}
@@ -147,9 +156,9 @@ export const GB02_Checklist = () => {
                 {/* 번호 배지 */}
                 <div style={{
                   width: 64, height: 64, borderRadius: 14,
-                  background: C.main, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: accentColor, display: 'flex', alignItems: 'center', justifyContent: 'center',
                   marginBottom: 16,
-                  boxShadow: GLOW.weak.box,
+                  boxShadow: isWarn ? '0 0 12px rgba(255,184,0,0.4)' : GLOW.weak.box,
                 }}>
                   <span style={{ fontSize: 30, fontWeight: 900, color: '#000' }}>0{i + 1}</span>
                 </div>
@@ -163,7 +172,7 @@ export const GB02_Checklist = () => {
                 {/* 제목 */}
                 <div style={{
                   fontSize: 42, fontWeight: 700,
-                  color: gOp > 0.3 ? C.main : C.textPrimary,
+                  color: gOp > 0.3 ? accentColor : (isWarn ? '#FFB800' : C.textPrimary),
                   lineHeight: 1.3, marginBottom: 12,
                 }}>{cond.title}</div>
 
@@ -206,23 +215,23 @@ export const GB02_Checklist = () => {
         }}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ color: C.textSub, fontSize: 28, fontWeight: 500, letterSpacing: 4, marginBottom: 10 }}>
-              조건 3개 모두 해당
+              조건 해당되면
             </div>
             <div style={{
               color: C.main, fontSize: 42, fontWeight: 900,
               textShadow: GLOW.mid.text,
-            }}>✅ 펀드 적합</div>
+            }}>✅ 펀드 GO</div>
           </div>
           <div style={{ width: 1, background: 'rgba(255,255,255,0.15)', alignSelf: 'stretch' }} />
           <div style={{ textAlign: 'center' }}>
             <div style={{ color: C.textSub, fontSize: 28, fontWeight: 500, letterSpacing: 4, marginBottom: 10 }}>
-              하나라도 미해당
+              조건 안 맞으면
             </div>
             <div style={{
-              color: C.textPrimary, fontSize: 42, fontWeight: 900,
-              border: `1.5px solid rgba(255,255,255,0.25)`,
+              color: '#FFB800', fontSize: 42, fontWeight: 900,
+              border: '1.5px solid rgba(255,184,0,0.4)',
               padding: '4px 20px', borderRadius: 8,
-            }}>ETF가 유리</div>
+            }}>⚡ ETF가 낫다</div>
           </div>
         </div>
 
@@ -238,8 +247,8 @@ export const GB02_Checklist = () => {
           color: C.textPrimary, fontSize: 40, fontWeight: 700,
           textAlign: 'center', paddingInline: 80,
         }}>
-          하나라도 미해당이면&nbsp;
-          <span style={{ color: C.main, textShadow: GLOW.weak.text }}>반도체 ETF가 유리합니다</span>
+          이 조건이 안 맞으면&nbsp;
+          <span style={{ color: '#FFB800' }}>반도체 ETF가 훨씬 더 많이 법니다</span>
         </div>
       </div>
 

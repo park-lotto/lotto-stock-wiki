@@ -1,0 +1,41 @@
+{
+  "audio_file": "씬4-1.m4a",
+  "scene": "AG_S4-1",
+  "total_sec": 13.74,
+  "total_frames": 412,
+  "fps": 30,
+  "segments": [
+    {
+      "index": 1,
+      "text": "자 가운데 있는 친구가 팀장 역할의 총괄입니다.",
+      "start_sec": 0.0,
+      "end_sec": 3.14,
+      "start_frame": 0,
+      "end_frame": 94
+    },
+    {
+      "index": 2,
+      "text": "팀장 아래 직원들한테 지시하고 결과를 취합하는 역할인데요.",
+      "start_sec": 3.98,
+      "end_sec": 7.42,
+      "start_frame": 119,
+      "end_frame": 223
+    },
+    {
+      "index": 3,
+      "text": "저는 이 친구한테만 지시합니다.",
+      "start_sec": 8.1,
+      "end_sec": 9.76,
+      "start_frame": 243,
+      "end_frame": 293
+    },
+    {
+      "index": 4,
+      "text": "그럼 팀장에 알아서 나머지 팀원들한테 일을 분배해주거든요.",
+      "start_sec": 10.52,
+      "end_sec": 13.74,
+      "start_frame": 316,
+      "end_frame": 412
+    }
+  ]
+}

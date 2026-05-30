@@ -1,0 +1,49 @@
+{
+  "audio_file": "국씬1 수정.m4a",
+  "scene": "GB01",
+  "total_sec": 17.72,
+  "total_frames": 532,
+  "fps": 30,
+  "segments": [
+    {
+      "index": 1,
+      "text": "자 여러분 국민성장 펀드 나왔다는데 이번에 청약하셨나요?",
+      "start_sec": 0.0,
+      "end_sec": 4.72,
+      "start_frame": 0,
+      "end_frame": 142
+    },
+    {
+      "index": 2,
+      "text": "6천억 모집에 수십만 명이 몰렸다고 합니다.",
+      "start_sec": 5.52,
+      "end_sec": 8.52,
+      "start_frame": 166,
+      "end_frame": 256
+    },
+    {
+      "index": 3,
+      "text": "청약할 수도 없게 시작하자마자 완판이라는데",
+      "start_sec": 9.1,
+      "end_sec": 12.78,
+      "start_frame": 273,
+      "end_frame": 383
+    },
+    {
+      "index": 4,
+      "text": "근데 저는 일부러 안 넣었어요.",
+      "start_sec": 13.44,
+      "end_sec": 14.78,
+      "start_frame": 403,
+      "end_frame": 443
+    },
+    {
+      "index": 5,
+      "text": "지금부터 그 이후 말씀드려볼게요.",
+      "start_sec": 15.6,
+      "end_sec": 17.72,
+      "start_frame": 468,
+      "end_frame": 532
+    }
+  ]
+}

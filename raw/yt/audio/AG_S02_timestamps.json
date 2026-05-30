@@ -1,0 +1,105 @@
+{
+  "audio_file": "씬2 대본.m4a",
+  "scene": "AG_S02",
+  "total_sec": 32.62,
+  "total_frames": 979,
+  "fps": 30,
+  "segments": [
+    {
+      "index": 1,
+      "text": "주식하시는 분들 매일 아침에 어떠세요?",
+      "start_sec": 0.0,
+      "end_sec": 3.12,
+      "start_frame": 0,
+      "end_frame": 94
+    },
+    {
+      "index": 2,
+      "text": "탈레방 한 10개 정도 돌아다니고",
+      "start_sec": 3.86,
+      "end_sec": 6.24,
+      "start_frame": 116,
+      "end_frame": 187
+    },
+    {
+      "index": 3,
+      "text": "증권사, 네이버, 뉴스 찾으러 다니고",
+      "start_sec": 6.24,
+      "end_sec": 9.48,
+      "start_frame": 187,
+      "end_frame": 284
+    },
+    {
+      "index": 4,
+      "text": "유튜브 시원 찾아다니면서",
+      "start_sec": 9.48,
+      "end_sec": 12.04,
+      "start_frame": 284,
+      "end_frame": 361
+    },
+    {
+      "index": 5,
+      "text": "다 보시죠?",
+      "start_sec": 12.92,
+      "end_sec": 13.72,
+      "start_frame": 388,
+      "end_frame": 412
+    },
+    {
+      "index": 6,
+      "text": "이거 다 하고 나면 진짜 9시가 다 되는데",
+      "start_sec": 14.26,
+      "end_sec": 17.32,
+      "start_frame": 428,
+      "end_frame": 520
+    },
+    {
+      "index": 7,
+      "text": "어휴",
+      "start_sec": 18.08,
+      "end_sec": 18.56,
+      "start_frame": 542,
+      "end_frame": 557
+    },
+    {
+      "index": 8,
+      "text": "중요한 건 정작 뭘 사야 될지를",
+      "start_sec": 19.28,
+      "end_sec": 21.66,
+      "start_frame": 578,
+      "end_frame": 650
+    },
+    {
+      "index": 9,
+      "text": "더 모르겠다는 거예요",
+      "start_sec": 21.66,
+      "end_sec": 22.7,
+      "start_frame": 650,
+      "end_frame": 681
+    },
+    {
+      "index": 10,
+      "text": "저 10년 동안 그랬습니다",
+      "start_sec": 23.82,
+      "end_sec": 25.12,
+      "start_frame": 715,
+      "end_frame": 754
+    },
+    {
+      "index": 11,
+      "text": "매일 아침, 매일 같은 로틴으로",
+      "start_sec": 26.0,
+      "end_sec": 28.28,
+      "start_frame": 780,
+      "end_frame": 848
+    },
+    {
+      "index": 12,
+      "text": "근데 결론은 항상 확신이 없고 흐릿했어요",
+      "start_sec": 28.28,
+      "end_sec": 32.62,
+      "start_frame": 848,
+      "end_frame": 979
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "audio_file": "씬4-5.m4a",
+  "scene": "AG_S4-5",
+  "total_sec": 21.24,
+  "total_frames": 637,
+  "fps": 30,
+  "segments": [
+    {
+      "index": 1,
+      "text": "이 직원은 브리핑자료만 만들어요. 제가 아침에 일어나서 보는 게 바로 이 친구가 만들어주는 겁니다.",
+      "start_sec": 0.0,
+      "end_sec": 6.46,
+      "start_frame": 0,
+      "end_frame": 194
+    },
+    {
+      "index": 2,
+      "text": "그 섹터의 온도, 오늘의 탑픽, 새벽 시왕, 오늘의 일정 등등,",
+      "start_sec": 7.18,
+      "end_sec": 11.84,
+      "start_frame": 215,
+      "end_frame": 355
+    },
+    {
+      "index": 3,
+      "text": "그래서 이 친구가 만들어주는 한 장만 보면 되거든요.",
+      "start_sec": 12.38,
+      "end_sec": 14.76,
+      "start_frame": 371,
+      "end_frame": 443
+    },
+    {
+      "index": 4,
+      "text": "구체적이고 디테일한 내용들은 따로 대시보드 웹페이지에 올릴 수 있도록 많은 자리를 만들어내고 있습니다.",
+      "start_sec": 15.38,
+      "end_sec": 21.24,
+      "start_frame": 461,
+      "end_frame": 637
+    }
+  ]
+}

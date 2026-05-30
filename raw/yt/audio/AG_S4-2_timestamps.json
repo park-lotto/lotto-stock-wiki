@@ -1,0 +1,97 @@
+{
+  "audio_file": "씬4-2.m4a",
+  "scene": "AG_S4-2",
+  "total_sec": 55.34,
+  "total_frames": 1660,
+  "fps": 30,
+  "segments": [
+    {
+      "index": 1,
+      "text": "그다음 자료 수집하는 직원부터 볼게요. 이 친구는 24시간 되기 중입니다.",
+      "start_sec": 0.0,
+      "end_sec": 5.56,
+      "start_frame": 0,
+      "end_frame": 167
+    },
+    {
+      "index": 2,
+      "text": "낮에 증권사리포트 올라오면 바로받고 지정된 텔레그램 채널들 내용을 올라오면 바로받게 해놓고",
+      "start_sec": 6.04,
+      "end_sec": 11.86,
+      "start_frame": 181,
+      "end_frame": 356
+    },
+    {
+      "index": 3,
+      "text": "키워드 설정에 넣으면 네이버나 이런 뉴스에서 드는 그런 것들을 바로 가져옵니다.",
+      "start_sec": 12.54,
+      "end_sec": 17.34,
+      "start_frame": 376,
+      "end_frame": 520
+    },
+    {
+      "index": 4,
+      "text": "유튜브 채널 제가 좋아하는 분들 인사이트도 뜨자마자 바로 가져와요.",
+      "start_sec": 17.9,
+      "end_sec": 21.92,
+      "start_frame": 537,
+      "end_frame": 658
+    },
+    {
+      "index": 5,
+      "text": "그리고 제가 자는 동안엔 미국장률을 잖아요.",
+      "start_sec": 22.56,
+      "end_sec": 25.88,
+      "start_frame": 677,
+      "end_frame": 776
+    },
+    {
+      "index": 6,
+      "text": "그리고 낮은 싹 섹턴 움직임 추적하고 미국실적 발편화 아니면 충용 이벤트들 나오면 바로바로 긁어와요.",
+      "start_sec": 25.88,
+      "end_sec": 33.6,
+      "start_frame": 776,
+      "end_frame": 1008
+    },
+    {
+      "index": 7,
+      "text": "이게 제 PC 서버에 있는 지식벌더에 계속 쌓입니다.",
+      "start_sec": 33.6,
+      "end_sec": 37.32,
+      "start_frame": 1008,
+      "end_frame": 1120
+    },
+    {
+      "index": 8,
+      "text": "화면 보시면 낮 2시에도 적혀있고 밤 11시에도 지켜있고 새벽 1시에도 지켜있잖아요.",
+      "start_sec": 38.3,
+      "end_sec": 44.28,
+      "start_frame": 1149,
+      "end_frame": 1328
+    },
+    {
+      "index": 9,
+      "text": "제가 자는 동안만이 아닙니다.",
+      "start_sec": 45.12,
+      "end_sec": 46.66,
+      "start_frame": 1354,
+      "end_frame": 1400
+    },
+    {
+      "index": 10,
+      "text": "제가 밥 먹고 운동하는 시간 그 시간 동안에도 계속해서 새로운 정보가 들어오면 바로바로 처리해요.",
+      "start_sec": 47.52,
+      "end_sec": 53.7,
+      "start_frame": 1426,
+      "end_frame": 1611
+    },
+    {
+      "index": 11,
+      "text": "끄부리는 게 없어요.",
+      "start_sec": 53.7,
+      "end_sec": 55.34,
+      "start_frame": 1611,
+      "end_frame": 1660
+    }
+  ]
+}
