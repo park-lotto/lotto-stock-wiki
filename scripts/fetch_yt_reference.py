@@ -166,7 +166,7 @@ def write_markdown(all_videos: list[dict], out_path: str):
 
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     Path(out_path).write_text("\n".join(lines), encoding="utf-8")
-    print(f"\n✅ 저장 완료: {out_path}")
+    print(f"\n[저장완료] {out_path}")
 
 
 def main():
