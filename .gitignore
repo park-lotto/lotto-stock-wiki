@@ -21,3 +21,19 @@ scripts/kakao/.tokens.json
 
 # Playwright MCP cache
 .playwright-mcp/
+
+# 네이버 프리미엄 아카이브 (대용량 로컬 전용)
+raw/naver_premium/
+
+# 임시 테스트/스크린샷 파일
+viewtrap_check.png
+naver_premium_test.png
+raw/actual_ingest_result.txt
+raw/full_test_result.txt
+raw/ingest_now.txt
+raw/osc_*.txt
+raw/tg_test.txt
+raw/universe_check.txt
+raw/wise_test.txt
+raw/excel_*.txt
+scripts/__pycache__/
