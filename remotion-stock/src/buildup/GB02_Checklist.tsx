@@ -1,12 +1,11 @@
-// GB02 — 씬2 "12개 섹터 + 혜택 + 반전" v2 (60초 = 1800프레임)
-// Phase1: 12개 섹터 이모지 폭발 (f0~600)
-// Phase2: 150조 / 30조 수치 (f600~1050)
-// Phase3: 혜택 2개 + 반전 (f1050~1800)
+// GB02 — 씬2 Whisper 싱크 (34.90s + 30f = 1077프레임)
+// Whisper: f0~159 펀드소개/f159~506 섹터12개/f506~598 30조/f598~849 혜택/f849~904 조건/f904~1047 ETF
+// Phase1 f0~480 / Phase2 f490~660 / Phase3 f660~1077
 import { AbsoluteFill, Audio, Easing, interpolate, staticFile, useCurrentFrame } from 'remotion';
 import { C, FONT, GLOW } from '../constants';
 
 const AUDIO     = 'audio/국씬2.m4a';
-const HAS_AUDIO = false;
+const HAS_AUDIO = true;
 
 const fi = (fa: number, fb: number) => (f: number) =>
   interpolate(f, [fa, fb], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
@@ -34,24 +33,24 @@ export const GB02_Checklist = () => {
   const f = useCurrentFrame();
   const bgGlow = Math.sin(f * 0.03) * 0.03 + 0.04;
 
-  // ─── Phase 전환 ───
-  const ph1 = f < 540 ? fi(0, 20)(f) : fo(540, 600)(f);
-  const ph2 = f < 600 ? 0 : f < 990 ? fi(600, 640)(f) : fo(990, 1050)(f);
-  const ph3 = f < 1050 ? 0 : fi(1050, 1090)(f);
+  // ─── Phase 전환 (Whisper 기준) ───
+  const ph1 = f < 440 ? fi(0, 20)(f) : fo(440, 490)(f);
+  const ph2 = f < 490 ? 0 : f < 620 ? fi(490, 525)(f) : fo(620, 660)(f);
+  const ph3 = f < 660 ? 0 : fi(660, 695)(f);
 
   // ─── 스캔라인 ───
   const scanX  = lr(-2, 104, 0, 36)(f);
   const scanOp = f < 36 ? interpolate(f, [0, 4, 30, 36], [0, 1, 1, 0]) : 0;
 
-  // ─── Phase1 — 섹터 stagger ───
+  // ─── Phase1 — 섹터 stagger (Whisper f159 "AI, 반도체") ───
   const p1TitleOp = fi(15, 50)(f);
   const p1TitleY  = lr(30, 0, 15, 50)(f);
-  // 각 섹터 카드 stagger (12개, 30프레임 간격)
+  // 섹터 카드: f155 시작, 18프레임 간격 (완료 ~f375)
   const sectorCards = SECTORS.map((_, i) => {
-    const start = 60 + i * 28;
+    const start = 155 + i * 18;
     return {
-      op:    fi(start, start + 22)(f),
-      scale: lr(0.5, 1, start, start + 22)(f),
+      op:    fi(start, start + 18)(f),
+      scale: lr(0.5, 1, start, start + 18)(f),
       y:     lr(24, 0, start, start + 22)(f),
     };
   });
@@ -64,38 +63,37 @@ export const GB02_Checklist = () => {
     return Math.max(0, 1 - dist * 12 * 1.8);
   };
 
-  // ─── Phase2 — 수치 ───
-  const p2TitleOp = fi(610, 650)(f);
-  const p2Num1Op  = fi(660, 710)(f);
-  const p2Num1Y   = lr(30, 0, 660, 710)(f);
-  const p2Num2Op  = fi(740, 790)(f);
-  const p2Num2Y   = lr(30, 0, 740, 790)(f);
-  const p2SubOp   = fi(840, 880)(f);
+  // ─── Phase2 — 수치 (Whisper f506 "30조") ───
+  const p2TitleOp = fi(500, 535)(f);
+  const p2Num1Op  = fi(540, 580)(f);
+  const p2Num1Y   = lr(30, 0, 540, 585)(f);
+  const p2Num2Op  = fi(575, 618)(f);
+  const p2Num2Y   = lr(30, 0, 575, 618)(f);
+  const p2SubOp   = fi(610, 648)(f);
   const p2CountPulse = Math.sin(f * 0.08) * 0.5 + 0.5;
 
-  // ─── Phase3 — 혜택 + 반전 ───
-  const p3TitleOp = fi(1060, 1100)(f);
-  const p3C1Op    = fi(1110, 1155)(f);
-  const p3C1X     = lr(-80, 0, 1110, 1155)(f);
-  const p3C2Op    = fi(1155, 1200)(f);
-  const p3C2X     = lr(80, 0, 1155, 1200)(f);
-  const p3WarnOp  = fi(1280, 1330)(f);
-  const p3WarnY   = lr(24, 0, 1280, 1330)(f);
-  const p3VerdOp  = fi(1450, 1510)(f);
-  const p3VerdY   = lr(20, 0, 1450, 1510)(f);
-  // 순환 글로우
+  // ─── Phase3 — 혜택 + 반전 (Whisper f598 "소득공제", f849 "조건") ───
+  const p3TitleOp = fi(670, 705)(f);
+  const p3C1Op    = fi(705, 745)(f);
+  const p3C1X     = lr(-80, 0, 705, 745)(f);
+  const p3C2Op    = fi(745, 785)(f);
+  const p3C2X     = lr(80, 0, 745, 785)(f);
+  const p3WarnOp  = fi(850, 890)(f);   // Whisper f849 "조건이 있습니다"
+  const p3WarnY   = lr(24, 0, 850, 890)(f);
+  const p3VerdOp  = fi(905, 945)(f);   // Whisper f904 "ETF가 더"
+  const p3VerdY   = lr(20, 0, 905, 945)(f);
   const cardGlow  = (i: number) => {
-    if (f < 1250) return 0;
-    const ph = ((f - 1250) % 60) / 60;
+    if (f < 760) return 0;
+    const ph = ((f - 760) % 60) / 60;
     const center = i / 2 + 0.25;
     const dist = Math.min(Math.abs(ph - center), 1 - Math.abs(ph - center));
     return Math.max(0, 1 - dist * 2 * 1.8);
   };
 
-  // ─── 자막 ───
-  const cap1 = ph1 > 0.5 ? fi(400, 440)(f) : 0;
-  const cap2 = ph2 > 0.1 ? fi(840, 880)(f) : 0;
-  const cap3 = ph3 > 0.1 ? fi(1460, 1500)(f) : 0;
+  // ─── 자막 (Whisper 타이밍) ───
+  const cap1 = ph1 > 0.5 ? fi(355, 395)(f) : 0;   // f350 "순환 글로우"
+  const cap2 = ph2 > 0.1 ? fi(555, 595)(f) : 0;   // f506 "30조 집행"
+  const cap3 = ph3 > 0.1 ? fi(920, 960)(f) : 0;    // Whisper f904 "조건 안 맞으면 ETF"
 
   return (
     <AbsoluteFill style={{ background: C.bg, fontFamily: FONT, overflow: 'hidden' }}>

@@ -28,6 +28,7 @@
       "Bash(mkdir *)",
       "Bash(cp *)",
       "WebSearch",
+      "PowerShell(*)",
       "Bash(*)",
       "Write(*)",
       "Edit(*)",

@@ -34,10 +34,10 @@ import { AG_S04_5_Brief }   from './agents/AG_S04_5_Brief_done';
 import { AG_S04_6_Deploy }  from './agents/AG_S04_6_Deploy_done';
 import { AG_S04_7_Others }  from './agents/AG_S04_7_Others_done';
 import { AG_S04_2_Collect as AG_S04_2_v2 } from './agents/AG_S04_2_Collect_v2_done';
-import { AG_S05_Climax }   from './agents/AG_S05_Climax_pending';
-import { AG_S06_Awareness } from './agents/AG_S06_Awareness_pending';
-import { AG_S07_Tease }    from './agents/AG_S07_Tease_pending';
-import { AG_S08_CTA }      from './agents/AG_S08_CTA_pending';
+import { AG_S05_Climax }   from './agents/AG_S05_Climax_done';
+import { AG_S06_Awareness } from './agents/AG_S06_Awareness_done';
+import { AG_S07_Tease }    from './agents/AG_S07_Tease_done';
+import { AG_S08_CTA }      from './agents/AG_S08_CTA_done';
 import { GB01_Hook } from './buildup/GB01_Hook';
 import { GB02_Checklist } from './buildup/GB02_Checklist';
 import { GB03_Compare } from './buildup/GB03_Compare';
@@ -265,17 +265,17 @@ export const RemotionRoot: React.FC = () => {
       <Composition id="AG-S04-5-Brief-done"   component={AG_S04_5_Brief}   durationInFrames={667}  fps={30} width={1920} height={1080} />
       <Composition id="AG-S04-6-Deploy-done"  component={AG_S04_6_Deploy}  durationInFrames={617}  fps={30} width={1920} height={1080} />
       <Composition id="AG-S04-7-Others-done"  component={AG_S04_7_Others}  durationInFrames={716}  fps={30} width={1920} height={1080} />
-      <Composition id="AG-S05-Climax-pending"    component={AG_S05_Climax}    durationInFrames={1140} fps={30} width={1920} height={1080} />
-      <Composition id="AG-S06-Awareness-pending" component={AG_S06_Awareness} durationInFrames={1260} fps={30} width={1920} height={1080} />
-      <Composition id="AG-S07-Tease-pending"     component={AG_S07_Tease}     durationInFrames={960}  fps={30} width={1920} height={1080} />
-      <Composition id="AG-S08-CTA-pending"       component={AG_S08_CTA}       durationInFrames={960}  fps={30} width={1920} height={1080} />
+      <Composition id="AG-S05-Climax-done"    component={AG_S05_Climax}    durationInFrames={682} fps={30} width={1920} height={1080} />
+      <Composition id="AG-S06-Awareness-done" component={AG_S06_Awareness} durationInFrames={570} fps={30} width={1920} height={1080} />
+      <Composition id="AG-S07-Tease-done"     component={AG_S07_Tease}     durationInFrames={548} fps={30} width={1920} height={1080} />
+      <Composition id="AG-S08-CTA-done"       component={AG_S08_CTA}       durationInFrames={562} fps={30} width={1920} height={1080} />
 
 
       {/* ─── 국민성장펀드 빌드업 영상 — 씬1~3 ─── */}
       <Composition
-        id="GB01-Hook-pending"
+        id="GB01-Hook-done"
         component={GB01_Hook}
-        durationInFrames={930}
+        durationInFrames={806}
         fps={30}
         width={1920}
         height={1080}
@@ -289,9 +289,9 @@ export const RemotionRoot: React.FC = () => {
         height={1080}
       />
       <Composition
-        id="GB03-Compare-pending"
+        id="GB03-Compare-done"
         component={GB03_Compare}
-        durationInFrames={2700}
+        durationInFrames={1616}
         fps={30}
         width={1920}
         height={1080}

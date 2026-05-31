@@ -1,13 +1,11 @@
-// GB01 — 씬1 훅 v3 (30초 = 930프레임)
-// Phase1: 💸 "이틀 만에 완판" 임팩트 (f0~300)
-//   - 10분 완판(모바일 앱) / 이틀 완판(전체 6,000억) 구분 표시
-// Phase2: 😔 "못 들어가셨죠?" 공감 (f300~540)
-// Phase3: 🎯 "진짜 기회는 따로" 반전 (f540~900)
+// GB01 — 씬1 훅 Whisper 싱크 (25.88s + 30f 여백 = 806프레임)
+// Whisper: f0~167 완판/f167~341 10분/f341~510 이틀/f510~595 못들어가셨죠/f595~661 진짜기회/f661~776 5분만
+// Phase1 f0~480 / Phase2 f510~620 / Phase3 f630~806
 import { AbsoluteFill, Audio, Easing, interpolate, staticFile, useCurrentFrame } from 'remotion';
 import { C, FONT, GLOW } from '../constants';
 
 const AUDIO     = 'audio/국씬1.m4a';
-const HAS_AUDIO = false;
+const HAS_AUDIO = true;
 
 const fi = (fa: number, fb: number) => (f: number) =>
   interpolate(f, [fa, fb], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
@@ -20,10 +18,11 @@ export const GB01_Hook = () => {
   const f = useCurrentFrame();
   const bgGlow = Math.sin(f * 0.035) * 0.03 + 0.045;
 
-  // ─── Phase 전환 ───
-  const ph1 = f < 255 ? fi(0, 18)(f) : fo(255, 300)(f);
-  const ph2 = f < 300 ? 0 : f < 490 ? fi(300, 330)(f) : fo(490, 540)(f);
-  const ph3 = f < 540 ? 0 : fi(540, 570)(f);
+  // ─── Phase 전환 (Whisper 기준) ───
+  // f510 "실망하실 거 없어요" → Phase2 / f630 "진짜 기회" → Phase3
+  const ph1 = f < 468 ? fi(0, 18)(f) : fo(468, 510)(f);
+  const ph2 = f < 510 ? 0 : f < 598 ? fi(510, 535)(f) : fo(598, 628)(f);
+  const ph3 = f < 628 ? 0 : fi(628, 655)(f);
 
   // 스캔라인
   const scanY  = lr(-2, 104, 0, 36)(f);
@@ -33,47 +32,50 @@ export const GB01_Hook = () => {
   const p1Icon   = fi(12, 45)(f);
   const p1TitleOp= fi(30, 65)(f);
   const p1TitleX = lr(-200, 0, 30, 65)(f);
-  const p1Sub1Op = fi(65, 100)(f);
-  const p1Sub1Y  = lr(20, 0, 65, 100)(f);
+  const p1Sub1Op = fi(100, 140)(f);  // f100: 완판 설명 완료 후
+  const p1Sub1Y  = lr(20, 0, 100, 140)(f);
 
-  // 10분 카드 (f110~155)
-  const p1C1Op   = fi(110, 155)(f);
-  const p1C1Y    = lr(30, 0, 110, 155)(f);
-  // 이틀 카드 (f155~200)
-  const p1C2Op   = fi(155, 200)(f);
-  const p1C2Y    = lr(30, 0, 155, 200)(f);
+  // 10분 카드: f145~185 (Whisper f167 "10분")
+  const p1C1Op   = fi(145, 185)(f);
+  const p1C1Y    = lr(30, 0, 145, 185)(f);
+  // 이틀 카드: f318~358 (Whisper f341 "이틀")
+  const p1C2Op   = fi(318, 358)(f);
+  const p1C2Y    = lr(30, 0, 318, 358)(f);
 
-  // 글로우 버스트
-  const burstOp    = interpolate(f, [195, 202, 232], [0, 0.5, 0], { extrapolateRight: 'clamp' });
-  const burstScale = lr(0.2, 2.8, 195, 232)(f);
+  // 글로우 버스트 (이틀 카드 등장 시)
+  const burstOp    = interpolate(f, [352, 360, 392], [0, 0.5, 0], { extrapolateRight: 'clamp' });
+  const burstScale = lr(0.2, 2.8, 352, 392)(f);
 
   const p1Pulse  = Math.sin(f * 0.07) * 0.5 + 0.5;
   const p1GlowSz = interpolate(p1Pulse, [0, 1], [10, 36]);
   const p1DynGlow = `0 0 ${p1GlowSz}px #00FFD0, 0 0 ${p1GlowSz*2}px rgba(0,255,208,0.55), 0 0 ${p1GlowSz*4}px rgba(0,191,154,0.3)`;
 
-  // ─── Phase2 ───
-  const p2Icon  = fi(305, 335)(f);
-  const p2IconY = lr(40, 0, 305, 335)(f);
-  const p2TextOp= fi(345, 385)(f);
-  const p2TextY = lr(30, 0, 345, 385)(f);
-  const p2SubOp = fi(415, 455)(f);
+  // ─── Phase2 (f510~628) ───
+  // f510 "실망하실 거 없어요" / f595 "진짜 기회는"
+  const p2Icon  = fi(515, 545)(f);
+  const p2IconY = lr(40, 0, 515, 545)(f);
+  const p2TextOp= fi(548, 582)(f);
+  const p2TextY = lr(30, 0, 548, 582)(f);
+  const p2SubOp = fi(570, 608)(f);
   const p2Breathe = Math.sin(f * 0.09) * 0.025 + 1;
 
-  // ─── Phase3 ───
-  const p3Icon  = fi(548, 578)(f);
-  const p3L1Op  = fi(582, 622)(f);
-  const p3L1Y   = lr(36, 0, 582, 622)(f);
-  const p3L2Op  = fi(635, 675)(f);
-  const p3L2Y   = lr(36, 0, 635, 675)(f);
+  // ─── Phase3 (f628~806) ───
+  // f595 "진짜 기회" / f661 "5분만"
+  const p3Icon  = fi(632, 660)(f);
+  const p3L1Op  = fi(642, 678)(f);
+  const p3L1Y   = lr(36, 0, 642, 678)(f);
+  const p3L2Op  = fi(678, 715)(f);
+  const p3L2Y   = lr(36, 0, 678, 715)(f);
   const p3L2Pulse = Math.sin(f * 0.08) * 0.025 + 1;
-  const p3BoxOp = fi(708, 752)(f);
-  const p3BoxY  = lr(20, 0, 708, 752)(f);
+  // CTA박스: f665 "5분만" Whisper
+  const p3BoxOp = fi(668, 706)(f);
+  const p3BoxY  = lr(20, 0, 668, 706)(f);
   const p3DynGlow = `0 0 ${p1GlowSz}px #00FFD0, 0 0 ${p1GlowSz*2}px rgba(0,255,208,0.55)`;
 
-  // ─── 자막 ───
-  const cap1 = ph1 > 0.5 ? fi(170, 210)(f) : 0;
-  const cap2 = ph2 > 0.1 ? fi(400, 440)(f) : 0;
-  const cap3 = ph3 > 0.1 ? fi(690, 730)(f) : 0;
+  // ─── 자막 (Whisper 타임스탬프 기준, 요약 텍스트) ───
+  const cap1 = ph1 > 0.5 ? fi(155, 190)(f) : 0;   // f167 10분 카드 등장 시
+  const cap2 = ph2 > 0.1 ? fi(522, 555)(f) : 0;   // f510 "실망하실 거 없어요"
+  const cap3 = ph3 > 0.1 ? fi(655, 688)(f) : 0;   // f661 "5분만"
 
   return (
     <AbsoluteFill style={{ background: C.bg, fontFamily: FONT, overflow: 'hidden' }}>
@@ -174,7 +176,7 @@ export const GB01_Hook = () => {
       {/* 자막 바 */}
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '16%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {[
-          { o: cap1, text: <><span style={{ color: C.main }}>모바일 10분 / 전체 ��틀</span> — 6,000억 완판</> },
+          { o: cap1, text: <><span style={{ color: C.main }}>모바일 10분 / 전체 이틀</span> — 6,000억 완판</> },
           { o: cap2, text: <>못 들어가셨죠? <span style={{ color: C.main }}>아직 늦지 않았습니다</span></> },
           { o: cap3, text: <>진짜 기회는 따로 있습니다 — <span style={{ color: C.main }}>5분만 시간 내주세요</span></> },
         ].map(({ o, text }, i) => (

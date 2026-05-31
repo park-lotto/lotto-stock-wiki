@@ -1,18 +1,15 @@
-// GB03 — 씬3 카운트업 + 비교형 (90초 = 2700프레임)
-// Phase1: 원금 카운트업 → Phase2: 두 갈래 분기 → Phase3: 비교 dimming → Phase4: 반전
+// GB03 — 씬3 수익률 비교 Whisper 싱크 (55.82s + 30f = 1616프레임)
+// Whisper(국씬3.m4a): f0~185 직접계산/f185~448 6%→3900/f448~694 소득공제→4200
+//                    f694~946 ETF10%비과세/f946~1170 4800·차이600/f1170~1385 확정수익아님/f1385~1586 타이밍질문
+// Phase1 f0~380 / Phase2+3 f380~1200 / Phase4 f1200~1616
 //
-// ── 수치 계산 근거 (2026-05-30 검증) ──
-// 국민성장펀드: 3,000만원 × (1.06)^5 = 4,014.7만원
-//   - 분리과세 9.9%: -100.5만원 → 세후 3,914.2만원
-//   - 소득공제 환급: 3,000만원×40%=1,200만원 × 26.4% = 316.8만원
-//   - 실수령 합계: 4,231만원
-// TIGER 반도체 ETF: 3,000만원 × (1.10)^5 = 4,831.5만원 (타이밍 맞는 경우, 매매차익 비과세)
-// 차이: 4,831 - 4,231 = 600만원
+// ── 수치 (2026-05-30 검증) ──
+// 국민성장펀드: 4,231만원 (세후+소득공제환급) / ETF: 4,831만원 / 차이: 600만원
 import { AbsoluteFill, Audio, Easing, interpolate, staticFile, useCurrentFrame } from 'remotion';
 import { C, FONT, GLOW } from '../constants';
 
-const AUDIO = 'audio/GB03_voice.mp3';
-const HAS_AUDIO = false;
+const AUDIO = 'audio/국씬3.m4a';
+const HAS_AUDIO = true;
 
 const lerp = (a: number, b: number, fa: number, fb: number, ea = Easing.out(Easing.cubic)) =>
   (f: number) => interpolate(f, [fa, fb], [a, b], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: ea });
@@ -58,20 +55,21 @@ export const GB03_Compare = () => {
   // PHASE 2 (f600-1200): 두 갈래 → 각각 카운트업
   // ═══════════════════════════════════════
   const ph2 = {
-    cardOp:   lerp(0, 1, 620, 700)(f),
-    cardY:    lerp(30, 0, 620, 700)(f),
-    // 펀드 카운트업: 4,231만원 (연6%×5년 세후 3,914 + 소득공제환급 317)
-    fundNum: Math.round(interpolate(f, [700, 960], [3000, 4231], {
+    cardOp:   lerp(0, 1, 390, 450)(f),
+    cardY:    lerp(30, 0, 390, 450)(f),
+    // 펀드 카운트업: f420~694 (Whisper f448 "4,200만원" 끝나는 시점)
+    fundNum: Math.round(interpolate(f, [420, 694], [3000, 4231], {
       extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
       easing: Easing.out(Easing.cubic),
     })),
-    // ETF 카운트업: 4,831만원 (연10%×5년, 매매차익 비과세)
-    etfNum:  Math.round(interpolate(f, [780, 1060], [3000, 4831], {
+    // ETF 카운트업: f560~946 (Whisper f946 "4,800" 끝나는 시점)
+    etfNum:  Math.round(interpolate(f, [560, 946], [3000, 4831], {
       extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
       easing: Easing.out(Easing.cubic),
     })),
-    taxOp:   lerp(0, 1, 980, 1050)(f),
-    riskOp:  lerp(0, 1, 1060, 1130)(f),
+    // f694 "소득공제" / f730 "비과세"
+    taxOp:   lerp(0, 1, 694, 760)(f),
+    riskOp:  lerp(0, 1, 760, 830)(f),
   };
 
   // ── 바 높이 (비율) ──
@@ -83,17 +81,18 @@ export const GB03_Compare = () => {
   // PHASE 3 (f1200-2000): 비교 dimming + 차이 강조
   // ═══════════════════════════════════════
   const ph3 = {
-    // 왼쪽(펀드) 점점 흐려짐, 오른쪽(ETF) 글로우 강해짐 (f1230-1360)
-    fundDim:   interpolate(f, [1230, 1360], [1, 0.35], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
-    etfReveal: interpolate(f, [1230, 1360], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
-    // 차이 숫자 (f1400-1650)
-    diffNum: Math.round(interpolate(f, [1400, 1650], [0, 600], {
+    // f946 "차이 600만원" → ETF 글로우 강해짐
+    fundDim:   interpolate(f, [946, 1060], [1, 0.35], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
+    etfReveal: interpolate(f, [946, 1060], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
+    // 차이 카운트업 f960~1160 (Whisper f946~f1170 "차이 600만원")
+    diffNum: Math.round(interpolate(f, [960, 1160], [0, 600], {
       extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
       easing: Easing.out(Easing.cubic),
     })),
-    diffOp:  lerp(0, 1, 1380, 1450)(f),
-    diffY:   lerp(20, 0, 1380, 1450)(f),
-    vsOp:    lerp(0, 1, 1200, 1260)(f),
+    diffOp:  lerp(0, 1, 950, 1010)(f),
+    diffY:   lerp(20, 0, 950, 1010)(f),
+    // VS 라인 f400~
+    vsOp:    lerp(0, 1, 400, 455)(f),
   };
 
   // ── ETF 동적 글로우 (Phase 3에서 강해짐) ──
@@ -105,27 +104,25 @@ export const GB03_Compare = () => {
   // PHASE 4 (f2000-2700): 반전 "타이밍이 관건"
   // ═══════════════════════════════════════
   const ph4 = {
-    // 크로스 스캔 (f2000-2038)
-    scan4X:  interpolate(f, [2000, 2038], [-2, 104], { extrapolateRight: 'clamp' }),
-    scan4Y:  interpolate(f, [2000, 2038], [-2, 104], { extrapolateRight: 'clamp' }),
-    scan4Op: interpolate(f, [2000, 2005, 2033, 2038], [0, 1, 1, 0], { extrapolateRight: 'clamp' }),
-    // "근데" 텍스트
-    but:     lerp(0, 1, 2040, 2090)(f),
-    butY:    lerp(24, 0, 2040, 2090)(f),
-    // "타이밍이 관건입니다" 클라이맥스형
-    t1Op:    lerp(0, 1, 2100, 2140)(f),
-    t1Y:     lerp(-60, 0, 2100, 2140)(f),
-    t1Ls:    lerp(20, 0, 2100, 2140)(f),
-    t2Op:    lerp(0, 1, 2160, 2200)(f),
-    t2Y:     lerp(60, 0, 2160, 2200)(f),
-    // 씬 줌인
-    zoom:    interpolate(f, [2000, 2700], [1, 1.04], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
-    // 버스트 (f2240-2270)
-    burstOp:    interpolate(f, [2240, 2248, 2275], [0, 0.6, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
-    burstScale: interpolate(f, [2240, 2275], [0.2, 3.0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
-    // 서브
-    subOp:   lerp(0, 1, 2290, 2350)(f),
-    subY:    lerp(18, 0, 2290, 2350)(f),
+    // 크로스 스캔 (f1200~1238, Whisper f1170 "확정수익 아님")
+    scan4X:  interpolate(f, [1200, 1238], [-2, 104], { extrapolateRight: 'clamp' }),
+    scan4Y:  interpolate(f, [1200, 1238], [-2, 104], { extrapolateRight: 'clamp' }),
+    scan4Op: interpolate(f, [1200, 1205, 1232, 1238], [0, 1, 1, 0], { extrapolateRight: 'clamp' }),
+    but:     lerp(0, 1, 1240, 1282)(f),
+    butY:    lerp(24, 0, 1240, 1282)(f),
+    // f1385 "타이밍이 맞았을 때 이야기"
+    t1Op:    lerp(0, 1, 1290, 1330)(f),
+    t1Y:     lerp(-60, 0, 1290, 1330)(f),
+    t1Ls:    lerp(20, 0, 1290, 1330)(f),
+    t2Op:    lerp(0, 1, 1345, 1385)(f),
+    t2Y:     lerp(60, 0, 1345, 1385)(f),
+    zoom:    interpolate(f, [1200, 1616], [1, 1.04], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
+    // 버스트 f1420
+    burstOp:    interpolate(f, [1420, 1428, 1458], [0, 0.6, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
+    burstScale: interpolate(f, [1420, 1458], [0.2, 3.0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
+    // f1490 "수혜주는 찾을 수 있습니다"
+    subOp:   lerp(0, 1, 1468, 1525)(f),
+    subY:    lerp(18, 0, 1468, 1525)(f),
   };
 
   // ── Phase4 동적 글로우 ──
@@ -133,15 +130,16 @@ export const GB03_Compare = () => {
   const gSz4      = interpolate(pulse4, [0, 1], [14, 40]);
   const climaxGlow = `0 0 ${gSz4}px #00FFD0, 0 0 ${gSz4 * 2}px rgba(0,255,208,0.6), 0 0 ${gSz4 * 4}px rgba(0,191,154,0.35)`;
 
-  // ── Phase 전환 ──
-  const showPh1 = f < 600 ? 1 : interpolate(f, [600, 650], [1, 0], { extrapolateRight: 'clamp' });
-  const showPh2 = f < 600 ? 0 : f > 2000 ? interpolate(f, [2000, 2060], [1, 0], { extrapolateRight: 'clamp' }) : 1;
-  const showPh4 = f < 1900 ? 0 : interpolate(f, [1900, 1970], [0, 1], { extrapolateRight: 'clamp' });
+  // ── Phase 전환 (Whisper 국씬3 기준) ──
+  // f340~380: Ph1 페이드 / f1160~1200: Ph2 페이드 / Phase4 f1200~
+  const showPh1 = f < 340 ? 1 : interpolate(f, [340, 380], [1, 0], { extrapolateRight: 'clamp' });
+  const showPh2 = f < 380 ? 0 : f > 1160 ? interpolate(f, [1160, 1200], [1, 0], { extrapolateRight: 'clamp' }) : 1;
+  const showPh4 = f < 1150 ? 0 : interpolate(f, [1150, 1210], [0, 1], { extrapolateRight: 'clamp' });
 
-  // 자막 변화
-  const cap1Op = f < 600 ? interpolate(f, [350, 400], [0, 1], { extrapolateRight: 'clamp' }) : 0;
-  const cap2Op = f >= 600 && f < 2000 ? interpolate(f, [900, 960], [0, 1], { extrapolateRight: 'clamp' }) : 0;
-  const cap4Op = f >= 2000 ? interpolate(f, [2400, 2460], [0, 1], { extrapolateRight: 'clamp' }) : 0;
+  // 자막 (Whisper 타이밍 기반 요약)
+  const cap1Op = f < 380 ? interpolate(f, [140, 178], [0, 1], { extrapolateRight: 'clamp' }) : 0;
+  const cap2Op = f >= 380 && f < 1160 ? interpolate(f, [958, 995], [0, 1], { extrapolateRight: 'clamp' }) : 0;
+  const cap4Op = f >= 1200 ? interpolate(f, [1490, 1528], [0, 1], { extrapolateRight: 'clamp' }) : 0;
 
   return (
     <AbsoluteFill style={{ background: C.bg, opacity: fadeIn, fontFamily: FONT }}>

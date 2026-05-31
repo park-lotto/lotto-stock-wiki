@@ -6,7 +6,7 @@ import { AbsoluteFill, Audio, Easing, interpolate, staticFile, useCurrentFrame }
 import { C, FONT, GLOW } from '../constants';
 
 const AUDIO     = 'audio/국씬4.m4a';
-const HAS_AUDIO = false;
+const HAS_AUDIO = true;
 
 const fi = (fa: number, fb: number) => (f: number) =>
   interpolate(f, [fa, fb], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
@@ -27,9 +27,10 @@ export const GB04_Telegram = () => {
   const fadeIn = interpolate(f, [0, 15], [0, 1], { extrapolateRight: 'clamp' });
   const bgGlow = Math.sin(f * 0.04) * 0.03 + 0.04;
 
-  const showPh1 = f < 370 ? fi(0, 18)(f) : fo(370, 420)(f);
-  const showPh2 = f < 420 ? 0 : f < 1040 ? fi(420, 460)(f) : fo(1040, 1080)(f);
-  const showPh3 = f < 1080 ? 0 : fi(1080, 1120)(f);
+  // Whisper: f0~376 Phase1질문, f376~762 Phase2카드, f762~822 Phase3
+  const showPh1 = f < 340 ? fi(0, 18)(f) : fo(340, 380)(f);
+  const showPh2 = f < 380 ? 0 : f < 735 ? fi(380, 415)(f) : fo(735, 762)(f);
+  const showPh3 = f < 762 ? 0 : fi(762, 800)(f);
 
   // ─── Phase1 ───
   const scan1Y  = lr(-2, 104, 0, 36)(f);
