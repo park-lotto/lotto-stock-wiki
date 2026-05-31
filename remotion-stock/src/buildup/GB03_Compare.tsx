@@ -30,23 +30,21 @@ export const GB03_Compare = () => {
   const scanOp = interpolate(f, [0, 5, 33, 38], [0, 1, 1, 0], { extrapolateRight: 'clamp' });
 
   // ═══════════════════════════════════════
-  // PHASE 1 (f0-600): 원금 3,000만원 카운트업
+  // PHASE 1 (f0-600): 3,000만원 → 두 갈래 분기
+  // (카운트업 제거 — 3,000은 출발점, 결과가 아님)
   // ═══════════════════════════════════════
   const ph1 = {
     labelOp: lerp(0, 1, 10, 40)(f),
     titleOp: lerp(0, 1, 30, 70)(f),
     titleY:  lerp(40, 0, 30, 70)(f),
-    // 원금 카운트업 (200px, 카운트업형 기준)
-    numProg: interpolate(f, [60, 350], [0, 3000], {
-      extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
-      easing: Easing.out(Easing.cubic),
-    }),
-    numOp:   lerp(0, 1, 55, 90)(f),
+    // 원금 이모지 + 수치 (정적 등장, 카운트업 없음)
+    numOp:   lerp(0, 1, 80, 120)(f),
+    numScale: interpolate(f, [80, 130], [0.7, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.elastic(1.2)) }),
     subOp:   lerp(0, 1, 200, 260)(f),
     subY:    lerp(20, 0, 200, 260)(f),
-    // 두 갈래 화살표 (f420-500)
-    splitOp: lerp(0, 1, 420, 500)(f),
-    splitY:  lerp(16, 0, 420, 500)(f),
+    // 두 갈래 화살표 (f380-460)
+    splitOp: lerp(0, 1, 380, 460)(f),
+    splitY:  lerp(16, 0, 380, 460)(f),
     // 페이드아웃 (f520-600)
     fadeOut: lerp(1, 0, 520, 600)(f),
   };
@@ -198,23 +196,23 @@ export const GB03_Compare = () => {
             opacity: ph1.titleOp, transform: `translateY(${ph1.titleY}px)`,
           }}>같은 <span style={{ color: C.main, textShadow: GLOW.mid.text }}>3,000만원</span>으로</div>
 
-          {/* 원금 카운트업 (200px) */}
+          {/* 3,000만원 — 정적 등장 (출발점, 카운트업 없음) */}
           <div style={{
-            display: 'flex', alignItems: 'baseline', gap: 12,
-            opacity: ph1.numOp,
+            display: 'flex', alignItems: 'center', gap: 24,
+            opacity: ph1.numOp, transform: `scale(${ph1.numScale})`,
           }}>
+            <div style={{ fontSize: 96 }}>💰</div>
             <div style={{
-              fontSize: 200, fontWeight: 900, color: C.main,
+              fontSize: 160, fontWeight: 900, color: C.main,
               fontFamily: '"Consolas","Menlo",monospace',
               textShadow: strongGlow, lineHeight: 0.9,
-            }}>{Math.round(ph1.numProg).toLocaleString('ko-KR')}</div>
-            <div style={{ color: C.textSub, fontSize: 48, fontWeight: 600 }}>만원</div>
+            }}>3,000<span style={{ fontSize: 72 }}>만원</span></div>
           </div>
 
           <div style={{
             opacity: ph1.subOp, transform: `translateY(${ph1.subY}px)`,
             color: C.textSub, fontSize: 32, fontWeight: 500, letterSpacing: 2,
-          }}>5년 후 손에 쥐는 돈이 다릅니다</div>
+          }}>같은 돈 — 5년 후 결과가 다릅니다</div>
 
           {/* 두 갈래 화살표 */}
           <div style={{
@@ -411,13 +409,44 @@ export const GB03_Compare = () => {
               lineHeight: 1,
             }}>타이밍이 있습니다</div>
 
+            {/* 질문 + 불확실성 시각화 */}
             <div style={{
               opacity: ph4.subOp, transform: `translateY(${ph4.subY}px)`,
-              color: C.textSub, fontSize: 34, fontWeight: 500,
-              paddingInline: 180, textAlign: 'center', lineHeight: 1.6,
+              textAlign: 'center',
             }}>
-              지금이 그 타이밍인지 어떻게 아세요?&nbsp;
-              <span style={{ color: C.main, textShadow: GLOW.weak.text }}>저는 매일 아침 알림을 받습니다.</span>
+              <div style={{
+                fontSize: 52, fontWeight: 900, color: C.textPrimary,
+                lineHeight: 1.3, marginBottom: 28,
+              }}>
+                지금 그 타이밍인지&nbsp;
+                <span style={{ color: C.main, textShadow: GLOW.mid.text }}>알 수 있나요??</span>
+              </div>
+
+              {/* 불확실성 그래프 (봉차트형) */}
+              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 10, marginBottom: 24 }}>
+                {[
+                  { body: 30, upper: 8, lower: 5, up: true },
+                  { body: 50, upper: 60, lower: 6, up: true, hi: true },
+                  { body: 40, upper: 10, lower: 8, up: false },
+                  { body: 35, upper: 6,  lower: 12, up: false },
+                  { body: 28, upper: 5,  lower: 30, up: false, shadow: true },
+                  { body: 44, upper: 8,  lower: 6, up: true },
+                  { body: 20, upper: 45, lower: 5, up: false, hi2: true },
+                ].map(({ body, upper, lower, up, hi, shadow, hi2 }, i) => {
+                  const color = up ? C.dataUp : C.dataDown;
+                  return (
+                    <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <div style={{ width: 2, height: upper, background: color }} />
+                      <div style={{ width: hi || hi2 ? 32 : 28, height: body, background: color, borderRadius: 2, boxShadow: (hi || hi2) ? `0 0 10px ${color}` : 'none' }} />
+                      <div style={{ width: 2, height: lower, background: color }} />
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div style={{ fontSize: 30, color: C.textSub, fontWeight: 600 }}>
+                📌 펀드는 못 넣었지만 — <span style={{ color: C.main }}>수혜주는 찾을 수 있습니다</span>
+              </div>
             </div>
 
           </div>
@@ -455,8 +484,8 @@ export const GB03_Compare = () => {
           textAlign: 'center', paddingInline: 80,
           opacity: cap4Op,
         }}>
-          그 타이밍,&nbsp;
-          <span style={{ color: C.main, textShadow: GLOW.weak.text }}>저는 자동으로 받고 있습니다 →</span>
+          펀드는 못 넣었지만&nbsp;—&nbsp;
+          <span style={{ color: C.main, textShadow: GLOW.weak.text }}>수혜주는 찾을 수 있습니다</span>
         </div>
       </div>
 

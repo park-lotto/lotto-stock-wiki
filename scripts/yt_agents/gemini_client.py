@@ -57,6 +57,27 @@ def search(query: str, model: str = 'gemini-2.5-flash') -> str:
     return resp.text.strip()
 
 
+def fetch_url(url: str, prompt: str, model: str = 'gemini-2.5-flash') -> str:
+    """URL을 Gemini가 직접 읽고 분석 — Naver 블로그 등 WebFetch 차단 사이트 우회"""
+    if not GEMINI_KEY:
+        raise RuntimeError('.env에 GEMINI_API_KEY 없음')
+
+    from google import genai
+    from google.genai import types
+
+    client = genai.Client(api_key=GEMINI_KEY)
+
+    resp = client.models.generate_content(
+        model=model,
+        contents=f"{prompt}\n\nURL: {url}",
+        config=types.GenerateContentConfig(
+            tools=[types.Tool(url_context=types.UrlContext())],
+            temperature=0,
+        ),
+    )
+    return resp.text.strip()
+
+
 def call_json(prompt: str, system: str = '') -> dict:
     """JSON 응답 파싱"""
     import json, re

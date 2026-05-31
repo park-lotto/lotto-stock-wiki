@@ -24,37 +24,24 @@ import { B3_Wiki } from './dakkak/B3_Wiki';
 import { B4_Dashboard } from './dakkak/B4_Dashboard';
 import { S01_Hook } from './dakkak/S01_Hook';
 import { S02_Chaos } from './dakkak/S02_Chaos';
-import { AG01_Timeline } from './agents/AG01_Timeline';
-import { AG02_Agents } from './agents/AG02_Agents';
-import { AG03_Awareness } from './agents/AG03_Awareness';
-import { AG04_Tease } from './agents/AG04_Tease';
-import { AG05_CTA } from './agents/AG05_CTA';
-import { AG06_Delivery } from './agents/AG06_Delivery';
-import { AG_S02_Empathy } from './agents/AG_S02_Empathy';
-import { AG_S03_Declaration } from './agents/AG_S03_Declaration';
-import { AG_S04_1_Boss }    from './agents/AG_S04_1_Boss';
-import { AG_S04_2_Collect } from './agents/AG_S04_2_Collect';
-import { AG_S04_3_Supply }  from './agents/AG_S04_3_Supply';
-import { AG_S04_4_Toppick } from './agents/AG_S04_4_Toppick';
-import { AG_S04_5_Brief }   from './agents/AG_S04_5_Brief';
-import { AG_S04_6_Deploy }  from './agents/AG_S04_6_Deploy';
-import { AG_S04_7_Others }  from './agents/AG_S04_7_Others';
-import { AG_S04_2_Collect as AG_S04_2_v2 } from './agents/AG_S04_2_Collect_v2';
-import { AG_S05_Climax }   from './agents/AG_S05_Climax';
-import { AG_S06_Awareness } from './agents/AG_S06_Awareness';
-import { AG_S07_Tease }    from './agents/AG_S07_Tease';
-import { AG_S08_CTA }      from './agents/AG_S08_CTA';
-import { YT_AI_S01_훅 } from './agents/YT_AI_S01_훅';
-import { YT_AI_S02_공감 } from './agents/YT_AI_S02_공감';
-import { YT_AI_S03_선언 } from './agents/YT_AI_S03_선언';
-import { YT_AI_S04_데모 } from './agents/YT_AI_S04_데모';
-import { YT_AI_S05_클라이맥스 } from './agents/YT_AI_S05_클라이맥스';
-import { YT_AI_S06_자각 } from './agents/YT_AI_S06_자각';
-import { YT_AI_S07_여운 } from './agents/YT_AI_S07_여운';
-import { YT_AI_S08_CTA } from './agents/YT_AI_S08_CTA';
+import { AG01_Timeline } from './agents/AG_S01_Hook_done';
+import { AG_S02_Empathy } from './agents/AG_S02_Empathy_done';
+import { AG_S03_Declaration } from './agents/AG_S03_Declaration_done';
+import { AG_S04_1_Boss }    from './agents/AG_S04_1_Boss_done';
+import { AG_S04_3_Supply }  from './agents/AG_S04_3_Supply_done';
+import { AG_S04_4_Toppick } from './agents/AG_S04_4_Toppick_done';
+import { AG_S04_5_Brief }   from './agents/AG_S04_5_Brief_done';
+import { AG_S04_6_Deploy }  from './agents/AG_S04_6_Deploy_done';
+import { AG_S04_7_Others }  from './agents/AG_S04_7_Others_done';
+import { AG_S04_2_Collect as AG_S04_2_v2 } from './agents/AG_S04_2_Collect_v2_done';
+import { AG_S05_Climax }   from './agents/AG_S05_Climax_pending';
+import { AG_S06_Awareness } from './agents/AG_S06_Awareness_pending';
+import { AG_S07_Tease }    from './agents/AG_S07_Tease_pending';
+import { AG_S08_CTA }      from './agents/AG_S08_CTA_pending';
 import { GB01_Hook } from './buildup/GB01_Hook';
 import { GB02_Checklist } from './buildup/GB02_Checklist';
 import { GB03_Compare } from './buildup/GB03_Compare';
+import { GB03_5_RealBenefit } from './buildup/GB03_5_RealBenefit';
 import { GB04_Telegram } from './buildup/GB04_Telegram';
 import { GB05_StockBrain } from './buildup/GB05_StockBrain';
 import { GB06_CTA } from './buildup/GB06_CTA';
@@ -259,120 +246,50 @@ export const RemotionRoot: React.FC = () => {
       />
 
       {/* ─── AI 직원 10명 영상 — 씬별 컴포지션 ─── */}
+      {/* 씬1 훅 */}
       <Composition
-        id="AG01-Timeline-Hook"
+        id="AG-S01-Hook-done"
         component={() => <AG01_Timeline mode="hook" />}
-        durationInFrames={630}  // 씬1 수정 녹음 19.98초 + 여백 1초
+        durationInFrames={630}
         fps={30}
         width={1920}
         height={1080}
       />
-      <Composition
-        id="AG01-Timeline-Climax"
-        component={() => <AG01_Timeline mode="climax" />}
-        durationInFrames={750}
-        fps={30}
-        width={1920}
-        height={1080}
-      />
-      <Composition
-        id="AG02-Agents"
-        component={AG02_Agents}
-        durationInFrames={600}
-        fps={30}
-        width={1920}
-        height={1080}
-      />
-      <Composition
-        id="AG03-Awareness"
-        component={AG03_Awareness}
-        durationInFrames={1200}
-        fps={30}
-        width={1920}
-        height={1080}
-      />
-      <Composition
-        id="AG04-Tease"
-        component={AG04_Tease}
-        durationInFrames={900}
-        fps={30}
-        width={1920}
-        height={1080}
-      />
-      <Composition
-        id="AG05-CTA"
-        component={AG05_CTA}
-        durationInFrames={900}
-        fps={30}
-        width={1920}
-        height={1080}
-      />
-      <Composition
-        id="AG06-Delivery"
-        component={AG06_Delivery}
-        durationInFrames={750}
-        fps={30}
-        width={1920}
-        height={1080}
-      />
-      <Composition
-        id="AG-S02-Empathy"
-        component={AG_S02_Empathy}
-        durationInFrames={1009}
-        fps={30}
-        width={1920}
-        height={1080}
-      />
-      <Composition
-        id="AG-S03-Declaration"
-        component={AG_S03_Declaration}
-        durationInFrames={562}
-        fps={30}
-        width={1920}
-        height={1080}
-      />
-      <Composition id="AG-S04-1-Boss"    component={AG_S04_1_Boss}    durationInFrames={442}  fps={30} width={1920} height={1080} />
-      <Composition id="AG-S04-2-Collect" component={AG_S04_2_Collect} durationInFrames={1690} fps={30} width={1920} height={1080} />
-      <Composition id="AG-S04-3-Supply"  component={AG_S04_3_Supply}  durationInFrames={755}  fps={30} width={1920} height={1080} />
-      <Composition id="AG-S04-4-Toppick" component={AG_S04_4_Toppick} durationInFrames={580}  fps={30} width={1920} height={1080} />
-      <Composition id="AG-S04-5-Brief"   component={AG_S04_5_Brief}   durationInFrames={667}  fps={30} width={1920} height={1080} />
-      <Composition id="AG-S04-6-Deploy"  component={AG_S04_6_Deploy}  durationInFrames={617}  fps={30} width={1920} height={1080} />
-      <Composition id="AG-S04-7-Others"  component={AG_S04_7_Others}  durationInFrames={716}  fps={30} width={1920} height={1080} />
-      <Composition id="AG-S04-2-v2"     component={AG_S04_2_v2}      durationInFrames={1720} fps={30} width={1920} height={1080} />
-      <Composition id="AG-S05-Climax"   component={AG_S05_Climax}    durationInFrames={1140} fps={30} width={1920} height={1080} />
-      <Composition id="AG-S06-Awareness" component={AG_S06_Awareness} durationInFrames={1260} fps={30} width={1920} height={1080} />
-      <Composition id="AG-S07-Tease"    component={AG_S07_Tease}     durationInFrames={960}  fps={30} width={1920} height={1080} />
-      <Composition id="AG-S08-CTA"      component={AG_S08_CTA}       durationInFrames={960}  fps={30} width={1920} height={1080} />
+      {/* 씬2~3 */}
+      <Composition id="AG-S02-Empathy-done"    component={AG_S02_Empathy}    durationInFrames={1009} fps={30} width={1920} height={1080} />
+      <Composition id="AG-S03-Declaration-done" component={AG_S03_Declaration} durationInFrames={562}  fps={30} width={1920} height={1080} />
+      <Composition id="AG-S04-1-Boss-done"    component={AG_S04_1_Boss}    durationInFrames={442}  fps={30} width={1920} height={1080} />
+      <Composition id="AG-S04-2-Collect-done" component={AG_S04_2_v2}      durationInFrames={1720} fps={30} width={1920} height={1080} />
+      <Composition id="AG-S04-3-Supply-done"  component={AG_S04_3_Supply}  durationInFrames={755}  fps={30} width={1920} height={1080} />
+      <Composition id="AG-S04-4-Toppick-done" component={AG_S04_4_Toppick} durationInFrames={580}  fps={30} width={1920} height={1080} />
+      <Composition id="AG-S04-5-Brief-done"   component={AG_S04_5_Brief}   durationInFrames={667}  fps={30} width={1920} height={1080} />
+      <Composition id="AG-S04-6-Deploy-done"  component={AG_S04_6_Deploy}  durationInFrames={617}  fps={30} width={1920} height={1080} />
+      <Composition id="AG-S04-7-Others-done"  component={AG_S04_7_Others}  durationInFrames={716}  fps={30} width={1920} height={1080} />
+      <Composition id="AG-S05-Climax-pending"    component={AG_S05_Climax}    durationInFrames={1140} fps={30} width={1920} height={1080} />
+      <Composition id="AG-S06-Awareness-pending" component={AG_S06_Awareness} durationInFrames={1260} fps={30} width={1920} height={1080} />
+      <Composition id="AG-S07-Tease-pending"     component={AG_S07_Tease}     durationInFrames={960}  fps={30} width={1920} height={1080} />
+      <Composition id="AG-S08-CTA-pending"       component={AG_S08_CTA}       durationInFrames={960}  fps={30} width={1920} height={1080} />
 
-      {/* ─── AI 주식 자동 분석 영상 (YT_AI 시리즈) ─── */}
-      <Composition id="YT-AI-S01-Hook"     component={YT_AI_S01_훅}        durationInFrames={780}  fps={30} width={1920} height={1080} />
-      <Composition id="YT-AI-S02-Empathy"  component={YT_AI_S02_공감}       durationInFrames={1380} fps={30} width={1920} height={1080} />
-      <Composition id="YT-AI-S03-Declare"  component={YT_AI_S03_선언}       durationInFrames={780}  fps={30} width={1920} height={1080} />
-      <Composition id="YT-AI-S04-Demo"     component={YT_AI_S04_데모}       durationInFrames={3690} fps={30} width={1920} height={1080} />
-      <Composition id="YT-AI-S05-Climax"   component={YT_AI_S05_클라이맥스}  durationInFrames={1230} fps={30} width={1920} height={1080} />
-      <Composition id="YT-AI-S06-Aware"    component={YT_AI_S06_자각}       durationInFrames={930}  fps={30} width={1920} height={1080} />
-      <Composition id="YT-AI-S07-Tease"    component={YT_AI_S07_여운}       durationInFrames={780}  fps={30} width={1920} height={1080} />
-      <Composition id="YT-AI-S08-CTA"      component={YT_AI_S08_CTA}       durationInFrames={780}  fps={30} width={1920} height={1080} />
 
       {/* ─── 국민성장펀드 빌드업 영상 — 씬1~3 ─── */}
       <Composition
-        id="GB01-Hook"
+        id="GB01-Hook-pending"
         component={GB01_Hook}
-        durationInFrames={569}
+        durationInFrames={930}
         fps={30}
         width={1920}
         height={1080}
       />
       <Composition
-        id="GB02-Checklist"
+        id="GB02-Checklist-pending"
         component={GB02_Checklist}
-        durationInFrames={463}
+        durationInFrames={1830}
         fps={30}
         width={1920}
         height={1080}
       />
       <Composition
-        id="GB03-Compare"
+        id="GB03-Compare-pending"
         component={GB03_Compare}
         durationInFrames={2700}
         fps={30}
@@ -380,15 +297,23 @@ export const RemotionRoot: React.FC = () => {
         height={1080}
       />
       <Composition
-        id="GB04-Telegram"
-        component={GB04_Telegram}
-        durationInFrames={1410}
+        id="GB03-5-RealBenefit-pending"
+        component={GB03_5_RealBenefit}
+        durationInFrames={2730}
         fps={30}
         width={1920}
         height={1080}
       />
       <Composition
-        id="GB05-StockBrain"
+        id="GB04-Telegram-pending"
+        component={GB04_Telegram}
+        durationInFrames={1500}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="GB05-StockBrain-pending"
         component={GB05_StockBrain}
         durationInFrames={1380}
         fps={30}
@@ -396,7 +321,7 @@ export const RemotionRoot: React.FC = () => {
         height={1080}
       />
       <Composition
-        id="GB06-CTA"
+        id="GB06-CTA-pending"
         component={GB06_CTA}
         durationInFrames={930}
         fps={30}

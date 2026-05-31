@@ -1,257 +1,252 @@
-// GB02 — 씬2 리스트형 (45초 = 1350프레임)
-// 리스트형: 24프레임 stagger + 카드 내부 스캔 + 순환 글로우
+// GB02 — 씬2 "12개 섹터 + 혜택 + 반전" v2 (60초 = 1800프레임)
+// Phase1: 12개 섹터 이모지 폭발 (f0~600)
+// Phase2: 150조 / 30조 수치 (f600~1050)
+// Phase3: 혜택 2개 + 반전 (f1050~1800)
 import { AbsoluteFill, Audio, Easing, interpolate, staticFile, useCurrentFrame } from 'remotion';
 import { C, FONT, GLOW } from '../constants';
 
-const AUDIO = 'audio/국씬2.m4a';
-const HAS_AUDIO = true;
+const AUDIO     = 'audio/국씬2.m4a';
+const HAS_AUDIO = false;
 
-// Whisper: 총 463프레임(15.44s) / [01]f0~136 / [02]f152~225 / [03]f257~329 / [04]f352~463
-// 대사: 소득공제40%+정부손실방어 → 무조건넣어야할것같죠? → 조건이하나 → ETF가훨씬더
-// Card1·2: 혜택(seg1) / Card3: 반전(seg3)
-const CARD_START = [60, 110, 257];
+const fi = (fa: number, fb: number) => (f: number) =>
+  interpolate(f, [fa, fb], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+const fo = (fa: number, fb: number) => (f: number) =>
+  interpolate(f, [fa, fb], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+const lr = (a: number, b: number, fa: number, fb: number, ea = Easing.out(Easing.cubic)) =>
+  (f: number) => interpolate(f, [fa, fb], [a, b], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: ea });
 
-const CONDITIONS = [
-  {
-    icon: '📈',
-    title: '소득공제 40%',
-    desc: '납입액의 40% 소득공제\n절세 효과 연 최대 264만원',
-    warn: false,
-  },
-  {
-    icon: '🛡️',
-    title: '정부 손실 방어',
-    desc: '원금 손실 일부를 정부 보전\n하락장에서도 안전망 역할',
-    warn: false,
-  },
-  {
-    icon: '⚠️',
-    title: '근데 조건이 있어요',
-    desc: '이 조건 하나가 안 맞으면\nETF가 훨씬 더 많이 법니다',
-    warn: true,
-  },
+const SECTORS = [
+  { icon: '🤖', name: 'AI' },
+  { icon: '💻', name: '반도체' },
+  { icon: '🧬', name: '바이오' },
+  { icon: '🔋', name: '이차전지' },
+  { icon: '🦾', name: '로봇' },
+  { icon: '🛡️', name: '방산' },
+  { icon: '🚗', name: '미래차' },
+  { icon: '⚡', name: '수소' },
+  { icon: '📱', name: '디스플레이' },
+  { icon: '💉', name: '백신' },
+  { icon: '🎬', name: '콘텐츠' },
+  { icon: '⛏️', name: '핵심광물' },
 ];
-
-const TOTAL = CONDITIONS.length;
 
 export const GB02_Checklist = () => {
   const f = useCurrentFrame();
+  const bgGlow = Math.sin(f * 0.03) * 0.03 + 0.04;
 
-  const fadeIn = interpolate(f, [0, 15], [0, 1], { extrapolateRight: 'clamp' });
+  // ─── Phase 전환 ───
+  const ph1 = f < 540 ? fi(0, 20)(f) : fo(540, 600)(f);
+  const ph2 = f < 600 ? 0 : f < 990 ? fi(600, 640)(f) : fo(990, 1050)(f);
+  const ph3 = f < 1050 ? 0 : fi(1050, 1090)(f);
 
-  // ── 배경 글로우 (리스트형 기준) ──
-  const bgGlow = Math.sin(f * 0.04) * 0.03 + 0.04;
+  // ─── 스캔라인 ───
+  const scanX  = lr(-2, 104, 0, 36)(f);
+  const scanOp = f < 36 ? interpolate(f, [0, 4, 30, 36], [0, 1, 1, 0]) : 0;
 
-  // ── 수직 스캔라인 좌→우 (데이터 로딩, f0-38) ──
-  const scanX  = interpolate(f, [0, 38], [-2, 104], { extrapolateRight: 'clamp' });
-  const scanOp = interpolate(f, [0, 5, 33, 38], [0, 1, 1, 0], { extrapolateRight: 'clamp' });
-
-  // ── 라벨 (f10-30) ──
-  const labelOp = interpolate(f, [10, 30], [0, 1], { extrapolateRight: 'clamp' });
-
-  // ── 타이틀 (f22-48, 100px Y슬라이드) ──
-  const titleY  = interpolate(f, [22, 48], [40, 0], { extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) });
-  const titleOp = interpolate(f, [22, 48], [0, 1],  { extrapolateRight: 'clamp' });
-
-  // ── 카드 stagger ──
-  const cards = CARD_START.map((s) => ({
-    op:    interpolate(f, [s, s + 22], [0, 1],   { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
-    tx:    interpolate(f, [s, s + 22], [-80, 0],  { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) }),
-    scale: interpolate(f, [s, s + 22], [0.92, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) }),
-    scanY: interpolate(f, [s + 10, s + 28], [0, 110], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
-    scanO: interpolate(f, [s + 10, s + 15, s + 24, s + 28], [0, 0.9, 0.9, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
-    // 체크마크: 카드 등장 후 40프레임 뒤 elastic (압축)
-    checkScale: interpolate(f, [s + 40, s + 62], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.elastic(1.2)) }),
-    checkOp:    interpolate(f, [s + 40, s + 50], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
-  }));
-
-  // ── 순환 글로우 (f >= 310, 60프레임 주기) ──
-  const allVisible = f >= 310;
-  const ringPhase = allVisible ? ((f - 310) % 60) / 60 : 0;
-  const cardGlow = (i: number) => {
-    if (!allVisible) return 0;
-    const center = i / TOTAL + 1 / (TOTAL * 2);
-    const dist = Math.min(Math.abs(ringPhase - center), 1 - Math.abs(ringPhase - center));
-    return Math.max(0, 1 - dist * TOTAL * 1.8);
+  // ─── Phase1 — 섹터 stagger ───
+  const p1TitleOp = fi(15, 50)(f);
+  const p1TitleY  = lr(30, 0, 15, 50)(f);
+  // 각 섹터 카드 stagger (12개, 30프레임 간격)
+  const sectorCards = SECTORS.map((_, i) => {
+    const start = 60 + i * 28;
+    return {
+      op:    fi(start, start + 22)(f),
+      scale: lr(0.5, 1, start, start + 22)(f),
+      y:     lr(24, 0, start, start + 22)(f),
+    };
+  });
+  // 순환 글로우 (f400 이후, 48프레임 주기)
+  const sectorGlow = (i: number) => {
+    if (f < 400) return 0;
+    const phase = ((f - 400) % 48) / 48;
+    const center = i / 12;
+    const dist = Math.min(Math.abs(phase - center), 1 - Math.abs(phase - center));
+    return Math.max(0, 1 - dist * 12 * 1.8);
   };
 
-  // ── 판결 박스 (f352 "이 조건이 안 맞으면 반도체 ETF") ──
-  const verdictOp = interpolate(f, [352, 410], [0, 1], { extrapolateRight: 'clamp' });
-  const verdictY  = interpolate(f, [352, 410], [20, 0], { extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) });
+  // ─── Phase2 — 수치 ───
+  const p2TitleOp = fi(610, 650)(f);
+  const p2Num1Op  = fi(660, 710)(f);
+  const p2Num1Y   = lr(30, 0, 660, 710)(f);
+  const p2Num2Op  = fi(740, 790)(f);
+  const p2Num2Y   = lr(30, 0, 740, 790)(f);
+  const p2SubOp   = fi(840, 880)(f);
+  const p2CountPulse = Math.sin(f * 0.08) * 0.5 + 0.5;
 
-  // ── 자막 바 (f380-420) ──
-  const capOp = interpolate(f, [380, 420], [0, 1], { extrapolateRight: 'clamp' });
+  // ─── Phase3 — 혜택 + 반전 ───
+  const p3TitleOp = fi(1060, 1100)(f);
+  const p3C1Op    = fi(1110, 1155)(f);
+  const p3C1X     = lr(-80, 0, 1110, 1155)(f);
+  const p3C2Op    = fi(1155, 1200)(f);
+  const p3C2X     = lr(80, 0, 1155, 1200)(f);
+  const p3WarnOp  = fi(1280, 1330)(f);
+  const p3WarnY   = lr(24, 0, 1280, 1330)(f);
+  const p3VerdOp  = fi(1450, 1510)(f);
+  const p3VerdY   = lr(20, 0, 1450, 1510)(f);
+  // 순환 글로우
+  const cardGlow  = (i: number) => {
+    if (f < 1250) return 0;
+    const ph = ((f - 1250) % 60) / 60;
+    const center = i / 2 + 0.25;
+    const dist = Math.min(Math.abs(ph - center), 1 - Math.abs(ph - center));
+    return Math.max(0, 1 - dist * 2 * 1.8);
+  };
 
+  // ─── 자막 ───
+  const cap1 = ph1 > 0.5 ? fi(400, 440)(f) : 0;
+  const cap2 = ph2 > 0.1 ? fi(840, 880)(f) : 0;
+  const cap3 = ph3 > 0.1 ? fi(1460, 1500)(f) : 0;
 
   return (
-    <AbsoluteFill style={{ background: C.bg, opacity: fadeIn, fontFamily: FONT }}>
+    <AbsoluteFill style={{ background: C.bg, fontFamily: FONT, overflow: 'hidden' }}>
       {HAS_AUDIO && <Audio src={staticFile(AUDIO)} />}
 
-      {/* 배경 글로우 */}
-      <div style={{
-        position: 'absolute', inset: 0, pointerEvents: 'none',
-        background: 'radial-gradient(ellipse at 50% 50%, rgba(0,255,208,1) 0%, transparent 65%)',
-        opacity: bgGlow,
-      }} />
+      {/* 배경 */}
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none',
+        background: `radial-gradient(ellipse at 50% 50%, rgba(0,255,208,1) 0%, transparent 65%)`,
+        opacity: bgGlow }} />
 
       {/* 수직 스캔라인 */}
-      <div style={{
-        position: 'absolute', top: 0, bottom: 0,
-        left: `${scanX}%`, width: 2,
+      {f < 36 && <div style={{
+        position: 'absolute', top: 0, bottom: 0, left: `${scanX}%`, width: 2,
         background: 'linear-gradient(180deg, transparent 0%, #00FFD0 20%, #80FFE8 50%, #00FFD0 80%, transparent 100%)',
-        boxShadow: '0 0 10px rgba(0,255,208,0.9)',
-        opacity: scanOp, zIndex: 10, pointerEvents: 'none',
-      }} />
+        boxShadow: '0 0 10px rgba(0,255,208,0.9)', opacity: scanOp, zIndex: 10,
+      }} />}
 
-      {/* 콘텐츠 영역 (상단 82%) */}
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, bottom: '18%',
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
-        paddingInline: 160, gap: 32,
-      }}>
-
-        {/* 라벨 */}
-        <div style={{
-          fontSize: 28, fontWeight: 500, color: C.textSub, letterSpacing: 5,
-          opacity: labelOp, alignSelf: 'flex-start',
-        }}>펀드 혜택</div>
-
-        {/* 타이틀 */}
-        <div style={{
-          fontSize: 100, fontWeight: 900, color: C.textPrimary,
-          opacity: titleOp,
-          transform: `translateY(${titleY}px)`,
-          alignSelf: 'flex-start', lineHeight: 1,
-        }}>들으면&nbsp;
-          <span style={{ color: C.main, textShadow: GLOW.mid.text }}>넣어야 할 것 같죠?</span>
+      {/* ═══ PHASE 1 — 12개 섹터 이모지 ═══ */}
+      <div style={{ position: 'absolute', inset: 0, bottom: '16%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: ph1, padding: '0 100px' }}>
+        <div style={{ opacity: p1TitleOp, transform: `translateY(${p1TitleY}px)`, marginBottom: 32 }}>
+          <div style={{ fontSize: 36, color: C.textSub, fontWeight: 500, textAlign: 'center', letterSpacing: 3 }}>
+            이 펀드가 투자하는 곳
+          </div>
+          <div style={{ fontSize: 88, fontWeight: 900, color: C.textPrimary, textAlign: 'center', lineHeight: 1.1, marginTop: 4 }}>
+            <span style={{ color: C.main, textShadow: GLOW.mid.text }}>12개</span> 첨단전략산업
+          </div>
         </div>
 
-        {/* 카드 3개 */}
-        <div style={{ display: 'flex', gap: 24, width: '100%' }}>
-          {CONDITIONS.map((cond, i) => {
-            const gOp = cardGlow(i);
-            const isWarn = cond.warn;
-            const accentColor = isWarn ? '#FFB800' : C.main;
+        {/* 섹터 4×3 그리드 */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 16, width: '100%' }}>
+          {SECTORS.map((s, i) => {
+            const g = sectorGlow(i);
             return (
               <div key={i} style={{
-                flex: 1,
-                opacity: cards[i].op,
-                transform: `translateX(${cards[i].tx}px) scale(${cards[i].scale})`,
-                background: isWarn ? 'rgba(255,184,0,0.06)' : C.cardBg,
-                border: `1.5px solid ${gOp > 0.3 ? accentColor : (isWarn ? 'rgba(255,184,0,0.4)' : C.borderSub)}`,
-                borderRadius: 16, padding: '26px 32px',
-                position: 'relative', overflow: 'hidden',
-                boxShadow: gOp > 0.2 ? `0 0 ${16 * gOp}px rgba(${isWarn ? '255,184,0' : '0,255,208'},${0.6 * gOp})` : undefined,
+                opacity: sectorCards[i].op,
+                transform: `translateY(${sectorCards[i].y}px) scale(${sectorCards[i].scale})`,
+                background: g > 0.3 ? 'rgba(0,255,208,0.1)' : 'rgba(255,255,255,0.04)',
+                border: `1.5px solid ${g > 0.3 ? C.main : C.borderSub}`,
+                borderRadius: 16, padding: '16px 8px',
+                textAlign: 'center',
+                boxShadow: g > 0.2 ? `0 0 ${14 * g}px rgba(0,255,208,${0.5 * g})` : 'none',
               }}>
-
-                {/* 카드 내부 스캔라인 */}
-                <div style={{
-                  position: 'absolute', left: 0, right: 0,
-                  top: `${cards[i].scanY}%`, height: 1,
-                  background: 'linear-gradient(90deg, transparent, rgba(0,255,208,0.6), transparent)',
-                  opacity: cards[i].scanO,
-                }} />
-
-                {/* 번호 배지 */}
-                <div style={{
-                  width: 64, height: 64, borderRadius: 14,
-                  background: accentColor, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  marginBottom: 16,
-                  boxShadow: isWarn ? '0 0 12px rgba(255,184,0,0.4)' : GLOW.weak.box,
-                }}>
-                  <span style={{ fontSize: 30, fontWeight: 900, color: '#000' }}>0{i + 1}</span>
-                </div>
-
-                {/* 아이콘 */}
-                <div style={{
-                  fontSize: 68, marginBottom: 12,
-                  filter: GLOW.weak.filter,
-                }}>{cond.icon}</div>
-
-                {/* 제목 */}
-                <div style={{
-                  fontSize: 42, fontWeight: 700,
-                  color: gOp > 0.3 ? accentColor : (isWarn ? '#FFB800' : C.textPrimary),
-                  lineHeight: 1.3, marginBottom: 12,
-                }}>{cond.title}</div>
-
-                {/* 설명 */}
-                <div style={{
-                  fontSize: 26, fontWeight: 500, color: C.textSub,
-                  lineHeight: 1.65, whiteSpace: 'pre-line',
-                }}>{cond.desc}</div>
-
-                {/* 체크마크 */}
-                <div style={{
-                  position: 'absolute', top: 20, right: 20,
-                  opacity: cards[i].checkOp,
-                  transform: `scale(${cards[i].checkScale})`,
-                  width: 48, height: 48,
-                  background: C.main, borderRadius: '50%',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: GLOW.mid.box,
-                }}>
-                  <svg width="24" height="18" viewBox="0 0 24 18">
-                    <path d="M2 9L9 16L22 2" stroke="#000" strokeWidth="3.5"
-                      strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                  </svg>
-                </div>
-
+                <div style={{ fontSize: 44, lineHeight: 1 }}>{s.icon}</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: g > 0.3 ? C.main : C.textPrimary, marginTop: 8 }}>{s.name}</div>
               </div>
             );
           })}
         </div>
+      </div>
 
-        {/* 판결 박스 */}
-        <div style={{
-          opacity: verdictOp,
-          transform: `translateY(${verdictY}px)`,
-          width: '100%',
-          border: `1.5px solid rgba(0,255,208,0.35)`,
-          borderRadius: 14, padding: '22px 40px',
-          background: 'rgba(0,255,208,0.04)',
-          display: 'flex', justifyContent: 'space-around', alignItems: 'center',
-        }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ color: C.textSub, fontSize: 28, fontWeight: 500, letterSpacing: 4, marginBottom: 10 }}>
-              조건 해당되면
-            </div>
-            <div style={{
-              color: C.main, fontSize: 42, fontWeight: 900,
-              textShadow: GLOW.mid.text,
-            }}>✅ 펀드 GO</div>
-          </div>
-          <div style={{ width: 1, background: 'rgba(255,255,255,0.15)', alignSelf: 'stretch' }} />
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ color: C.textSub, fontSize: 28, fontWeight: 500, letterSpacing: 4, marginBottom: 10 }}>
-              조건 안 맞으면
-            </div>
-            <div style={{
-              color: '#FFB800', fontSize: 42, fontWeight: 900,
-              border: '1.5px solid rgba(255,184,0,0.4)',
-              padding: '4px 20px', borderRadius: 8,
-            }}>⚡ ETF가 낫다</div>
+      {/* ═══ PHASE 2 — 150조 / 30조 ═══ */}
+      <div style={{ position: 'absolute', inset: 0, bottom: '16%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: ph2, gap: 0 }}>
+        <div style={{ opacity: p2TitleOp, fontSize: 38, color: C.textSub, fontWeight: 600, marginBottom: 32, textAlign: 'center' }}>
+          정부가 쏟아붓는 규모
+        </div>
+
+        {/* 150조 */}
+        <div style={{ opacity: p2Num1Op, transform: `translateY(${p2Num1Y}px)`, textAlign: 'center', marginBottom: 16 }}>
+          <div style={{ fontSize: 28, color: C.textSub, letterSpacing: 4, marginBottom: 8 }}>5년간 총</div>
+          <div style={{ fontSize: 180, fontWeight: 900, color: C.main, lineHeight: 0.9, textShadow: `0 0 ${interpolate(p2CountPulse, [0, 1], [20, 60])}px rgba(0,255,208,0.6)` }}>
+            150조
           </div>
         </div>
 
-      </div>
+        {/* 30조 */}
+        <div style={{ opacity: p2Num2Op, transform: `translateY(${p2Num2Y}px)`, textAlign: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 24, justifyContent: 'center' }}>
+            <div style={{ fontSize: 28, color: C.textSub }}>올해만</div>
+            <div style={{ fontSize: 120, fontWeight: 900, color: C.textPrimary }}>30조</div>
+            <div style={{ fontSize: 28, color: C.textSub }}>집행</div>
+          </div>
+        </div>
 
-      {/* 하단 자막 바 */}
-      <div style={{
-        position: 'absolute', bottom: 0, left: 0, right: 0, height: '16%',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        opacity: capOp,
-      }}>
-        <div style={{
-          color: C.textPrimary, fontSize: 40, fontWeight: 700,
-          textAlign: 'center', paddingInline: 80,
-        }}>
-          이 조건이 안 맞으면&nbsp;
-          <span style={{ color: '#FFB800' }}>반도체 ETF가 훨씬 더 많이 법니다</span>
+        <div style={{ opacity: p2SubOp, marginTop: 28, fontSize: 34, color: C.main, fontWeight: 700, textShadow: GLOW.weak.text }}>
+          🚀 지금 집행 시작 중입니다
         </div>
       </div>
 
+      {/* ═══ PHASE 3 — 혜택 + 반전 ═══ */}
+      <div style={{ position: 'absolute', inset: 0, bottom: '16%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: ph3, padding: '0 120px', gap: 0 }}>
+        <div style={{ opacity: p3TitleOp, fontSize: 80, fontWeight: 900, color: C.textPrimary, textAlign: 'center', lineHeight: 1.15, marginBottom: 32 }}>
+          들으면 무조건&nbsp;
+          <span style={{ color: C.main, textShadow: GLOW.mid.text }}>넣어야 할 것 같죠?</span>
+        </div>
+
+        {/* 혜택 카드 2개 */}
+        <div style={{ display: 'flex', gap: 24, width: '100%', marginBottom: 20 }}>
+          {[
+            { o: p3C1Op, tx: p3C1X, icon: '📈', title: '소득공제 40%', desc: '납입액 40% 소득공제\n절세 효과 연 최대 264만원', g: cardGlow(0) },
+            { o: p3C2Op, tx: p3C2X, icon: '🛡️', title: '정부 손실 방어', desc: '원금 손실 일부를 정부 보전\n하락장에도 안전망', g: cardGlow(1) },
+          ].map(({ o, tx, icon, title, desc, g }) => (
+            <div key={title} style={{
+              flex: 1, opacity: o, transform: `translateX(${tx}px)`,
+              background: g > 0.3 ? 'rgba(0,255,208,0.1)' : C.cardBg,
+              border: `1.5px solid ${g > 0.3 ? C.main : C.borderSub}`,
+              borderRadius: 20, padding: '28px 36px',
+              boxShadow: g > 0.2 ? `0 0 ${16 * g}px rgba(0,255,208,${0.5 * g})` : 'none',
+            }}>
+              <div style={{ fontSize: 72, marginBottom: 14 }}>{icon}</div>
+              <div style={{ fontSize: 40, fontWeight: 700, color: g > 0.3 ? C.main : C.textPrimary, marginBottom: 10 }}>{title}</div>
+              <div style={{ fontSize: 26, color: C.textSub, lineHeight: 1.65, whiteSpace: 'pre-line' }}>{desc}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* 반전 박스 */}
+        <div style={{
+          opacity: p3WarnOp, transform: `translateY(${p3WarnY}px)`,
+          width: '100%', background: 'rgba(255,184,0,0.06)',
+          border: '1.5px solid rgba(255,184,0,0.5)', borderRadius: 16, padding: '20px 36px',
+          display: 'flex', alignItems: 'center', gap: 20,
+        }}>
+          <div style={{ fontSize: 52 }}>⚠️</div>
+          <div style={{ fontSize: 36, fontWeight: 700, color: '#FFB800' }}>
+            조건이 있습니다 — 이 조건 안 맞으면 <span style={{ color: C.textPrimary }}>ETF가 더 법니다</span>
+          </div>
+        </div>
+
+        {/* 판결 */}
+        <div style={{
+          opacity: p3VerdOp, transform: `translateY(${p3VerdY}px)`,
+          display: 'flex', gap: 0, width: '100%', marginTop: 16,
+          background: 'rgba(0,255,208,0.04)', border: `1px solid ${C.borderSub}`,
+          borderRadius: 14, overflow: 'hidden',
+        }}>
+          <div style={{ flex: 1, padding: '18px 32px', textAlign: 'center' }}>
+            <div style={{ color: C.textSub, fontSize: 22, marginBottom: 6 }}>조건 해당되면</div>
+            <div style={{ color: C.main, fontSize: 36, fontWeight: 900, textShadow: GLOW.weak.text }}>✅ 펀드 GO</div>
+          </div>
+          <div style={{ width: 1, background: 'rgba(255,255,255,0.12)' }} />
+          <div style={{ flex: 1, padding: '18px 32px', textAlign: 'center' }}>
+            <div style={{ color: C.textSub, fontSize: 22, marginBottom: 6 }}>조건 안 맞으면</div>
+            <div style={{ color: '#FFB800', fontSize: 36, fontWeight: 900 }}>⚡ ETF가 낫다</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ═══ 하단 자막 바 ═══ */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '16%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {[
+          { o: cap1, text: <><span style={{ color: C.main }}>12개 첨단전략산업</span> — AI·반도체·바이오·이차전지·로봇·방산</> },
+          { o: cap2, text: <>5년간 <span style={{ color: C.main }}>150조</span> — 올해만 30조 집행 시작</> },
+          { o: cap3, text: <>조건이 있습니다 — <span style={{ color: '#FFB800' }}>안 맞으면 ETF가 더 법니다</span></> },
+        ].map(({ o, text }, i) => (
+          <div key={i} style={{
+            position: 'absolute', color: C.textPrimary, fontSize: 36, fontWeight: 700,
+            textAlign: 'center', paddingInline: 80, opacity: o,
+            textShadow: '0 2px 8px rgba(0,0,0,0.9)',
+          }}>{text}</div>
+        ))}
+      </div>
     </AbsoluteFill>
   );
 };
