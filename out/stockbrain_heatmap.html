@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0a0a0f;
+    display: flex; justify-content: center; align-items: center;
+    min-height: 100vh; font-family: 'Noto Sans KR', sans-serif; padding: 20px;
+  }
+  .card {
+    width: 560px; background: #111118;
+    border: 1px solid #1e1e2e; border-radius: 16px; overflow: hidden;
+    box-shadow: 0 0 60px rgba(0,255,136,0.06);
+  }
+  .header {
+    background: linear-gradient(135deg, #0d1f12 0%, #111820 100%);
+    border-bottom: 1px solid #00ff8830;
+    padding: 14px 22px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-icon {
+    width: 30px; height: 30px; background: #00ff88; border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 15px; color: #000;
+  }
+  .brand-name { font-size: 14px; font-weight: 700; color: #00ff88; letter-spacing: 2px; }
+  .header-title { font-size: 14px; color: #888; font-weight: 700; }
+
+  .sub-header {
+    padding: 10px 22px;
+    background: #0d0d14;
+    border-bottom: 1px solid #1e1e2e;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .sub-title { font-size: 18px; font-weight: 900; color: #fff; }
+  .sub-date { font-size: 12px; color: #555; }
+  .legend {
+    display: flex; gap: 12px;
+    padding: 10px 22px;
+    border-bottom: 1px solid #1e1e2e;
+    background: #0d0d14;
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #666; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+  .heatmap { padding: 14px 22px; display: flex; flex-direction: column; gap: 8px; }
+
+  .sector-row {
+    border-radius: 10px; padding: 12px 14px;
+    display: flex; align-items: center; gap: 12px;
+    position: relative; overflow: hidden;
+  }
+  .sector-row.red    { background: #1a0808; border: 1px solid #ff444430; }
+  .sector-row.orange { background: #1a1008; border: 1px solid #ff880030; }
+  .sector-row.yellow { background: #14140a; border: 1px solid #cccc0030; }
+  .sector-row.gray   { background: #0f0f14; border: 1px solid #2a2a3a; }
+
+  .sector-signal {
+    font-size: 18px; min-width: 24px; text-align: center;
+  }
+  .sector-name {
+    font-size: 15px; font-weight: 700; min-width: 90px;
+  }
+  .sector-row.red    .sector-name { color: #ff6666; }
+  .sector-row.orange .sector-name { color: #ffaa44; }
+  .sector-row.yellow .sector-name { color: #dddd44; }
+  .sector-row.gray   .sector-name { color: #555; }
+
+  .sector-stocks {
+    flex: 1; font-size: 12px; color: #777;
+    line-height: 1.5;
+  }
+  .sector-row.red    .sector-stocks { color: #cc4444; }
+  .sector-row.orange .sector-stocks { color: #cc8833; }
+
+  .sector-right { text-align: right; min-width: 80px; }
+  .grade-box {
+    display: inline-block; padding: 3px 8px;
+    border-radius: 5px; font-size: 11px; font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .grade-A { background: #00ff8820; color: #00ff88; }
+  .grade-B { background: #88ff0020; color: #aaff44; }
+  .grade-C { background: #ffaa0020; color: #ffaa00; }
+  .grade-D { background: #ff444420; color: #ff4444; }
+
+  .temp-bar-wrap { height: 4px; background: #1e1e2e; border-radius: 2px; margin-top: 4px; }
+  .temp-bar { height: 4px; border-radius: 2px; }
+  .red-bar    { background: linear-gradient(90deg, #ff4444, #ff6666); }
+  .orange-bar { background: linear-gradient(90deg, #ff8800, #ffaa44); }
+  .yellow-bar { background: linear-gradient(90deg, #cccc00, #eeee44); }
+  .gray-bar   { background: #333; }
+
+  .today-note {
+    margin: 0 22px 14px;
+    background: #0a1520; border: 1px solid #1a4060;
+    border-radius: 10px; padding: 12px 16px;
+  }
+  .today-note-title { font-size: 11px; color: #4db8ff; font-weight: 700; margin-bottom: 8px; letter-spacing: 1px; }
+  .today-note-item {
+    font-size: 12px; color: #888; padding: 3px 0;
+    display: flex; gap: 8px;
+  }
+  .today-note-item::before { content: '▸'; color: #4db8ff; }
+
+  .footer {
+    padding: 10px 22px; border-top: 1px solid #1e1e2e;
+    display: flex; justify-content: space-between;
+  }
+  .footer-brand { font-size: 11px; color: #333; }
+  .footer-warn { font-size: 10px; color: #2a2a3a; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <div class="brand">
+      <div class="brand-icon">S</div>
+      <div class="brand-name">STOCK BRAIN</div>
+    </div>
+    <div class="header-title">섹터 수급 빈집 히트맵</div>
+  </div>
+
+  <div class="sub-header">
+    <div class="sub-title">오늘의 섹터 온도계</div>
+    <div class="sub-date">2026.06.01 기준</div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#ff4444"></div>🔴 탑픽 (빈집+주도)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ff8800"></div>🟠 관심</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#cccc00"></div>🟡 모니터링</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#444"></div>⚫ 대기</div>
+  </div>
+
+  <div class="heatmap">
+
+    <div class="sector-row red">
+      <div class="sector-signal">🔴</div>
+      <div>
+        <div class="sector-name">AI · 반도체</div>
+        <div class="sector-stocks">LG이노텍 · SK하이닉스 · 삼성전자</div>
+      </div>
+      <div class="sector-right">
+        <div class="grade-box grade-A">빈집 A</div>
+        <div class="temp-bar-wrap"><div class="temp-bar red-bar" style="width:88%"></div></div>
+      </div>
+    </div>
+
+    <div class="sector-row red">
+      <div class="sector-signal">🔴</div>
+      <div>
+        <div class="sector-name">AI 소프트웨어</div>
+        <div class="sector-stocks">네이버 · 카카오 · 더블유게임즈</div>
+      </div>
+      <div class="sector-right">
+        <div class="grade-box grade-B">빈집 B</div>
+        <div class="temp-bar-wrap"><div class="temp-bar red-bar" style="width:74%"></div></div>
+      </div>
+    </div>
+
+    <div class="sector-row orange">
+      <div class="sector-signal">🟠</div>
+      <div>
+        <div class="sector-name">방산</div>
+        <div class="sector-stocks">한화에어로 · LIG디펜스 · 한국항공우주</div>
+      </div>
+      <div class="sector-right">
+        <div class="grade-box grade-B">빈집 B</div>
+        <div class="temp-bar-wrap"><div class="temp-bar orange-bar" style="width:65%"></div></div>
+      </div>
+    </div>
+
+    <div class="sector-row orange">
+      <div class="sector-signal">🟠</div>
+      <div>
+        <div class="sector-name">전력기기</div>
+        <div class="sector-stocks">효성중공업 · LS · 한국전력</div>
+      </div>
+      <div class="sector-right">
+        <div class="grade-box grade-C">정상 C</div>
+        <div class="temp-bar-wrap"><div class="temp-bar orange-bar" style="width:58%"></div></div>
+      </div>
+    </div>
+
+    <div class="sector-row yellow">
+      <div class="sector-signal">🟡</div>
+      <div>
+        <div class="sector-name">조선</div>
+        <div class="sector-stocks">HD한국조선 · LS마린솔루션 · 한국카본</div>
+      </div>
+      <div class="sector-right">
+        <div class="grade-box grade-C">정상 C</div>
+        <div class="temp-bar-wrap"><div class="temp-bar yellow-bar" style="width:42%"></div></div>
+      </div>
+    </div>
+
+    <div class="sector-row yellow">
+      <div class="sector-signal">🟡</div>
+      <div>
+        <div class="sector-name">2차전지</div>
+        <div class="sector-stocks">SK아이이테크 · 성일하이텍 · 에코프로</div>
+      </div>
+      <div class="sector-right">
+        <div class="grade-box grade-C">정상 C</div>
+        <div class="temp-bar-wrap"><div class="temp-bar yellow-bar" style="width:38%"></div></div>
+      </div>
+    </div>
+
+    <div class="sector-row gray">
+      <div class="sector-signal">⚫</div>
+      <div>
+        <div class="sector-name">바이오</div>
+        <div class="sector-stocks">삼성바이오 · 셀트리온 · 한미약품</div>
+      </div>
+      <div class="sector-right">
+        <div class="grade-box grade-D">과매수 D</div>
+        <div class="temp-bar-wrap"><div class="temp-bar gray-bar" style="width:20%"></div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="today-note">
+    <div class="today-note-title">📌 오늘의 핵심 이슈</div>
+    <div class="today-note-item">젠슨황 방한 2차 확정 → LG·현대차·네이버 미팅 예정 (AI·반도체 최우선)</div>
+    <div class="today-note-item">SK하이닉스 임협 6월 시작 — 노조 리스크 주시, 비중 조절 권고</div>
+    <div class="today-note-item">코스피 신고가 돌파 — 오버슈팅 구간, 빈집 A등급 위주로만 진입</div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-brand">STOCK BRAIN by 로또의 주식인사이트</div>
+    <div class="footer-warn">투자 판단은 개인의 몫입니다</div>
+  </div>
+</div>
+</body>
+</html>

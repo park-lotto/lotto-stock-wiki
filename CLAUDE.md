@@ -316,9 +316,10 @@ D 과매수:   상위 25% 이상
     > 상세: `wiki/rules/analysis_rules.md` §2
 14. **TYPE 분류 적용**: 섹터 분석 전 TYPE A/B/C 판단
     > 상세: `wiki/rules/analysis_rules.md` §1
-15. **모델 자동 분기**: 작업 성격에 따라 Haiku 서브에이전트 vs Sonnet 직접 처리 선택
-    - Haiku 위임: log.md 기록 / index.md 업데이트 / 파일 탐색 / 단순 라우팅 (포맷에 데이터 넣기)
-    - Sonnet 직접: Q10 리서치 / 섹터·종목 분석 / 대본·HTML 생성 / WebSearch / 충돌·신호 해석
+15. **모델 분기 — 필수 규칙** (선택 아님):
+    - **Haiku 필수 위임** (Agent tool, model: "haiku"): log.md 기록 / index.md 업데이트 / 파일 탐색 / 단순 라우팅 / 템플릿에 데이터 채우기
+    - **Sonnet 전용** (Gemini·Haiku 절대 불가): Q10 리서치 / 섹터·종목 분석 / 대본·HTML 생성 / WebSearch / 신호 해석 / 판단·창작
+    - Gemini는 이 환경에서 직접 호출 불가 → Haiku로 대체. 퀄리티 필요 작업에 Gemini 권고 금지.
 16. **MCP 최우선 사용**: 어떤 작업이든 MCP로 가능하면 MCP 먼저. Python 스크립트·Bash는 MCP로 못 하는 경우에만.
     - 웹 크롤링·URL 읽기 → Fetch MCP (requests 스크립트 X)
     - 브라우저 자동화 → Playwright MCP (별도 스크립트 X)
