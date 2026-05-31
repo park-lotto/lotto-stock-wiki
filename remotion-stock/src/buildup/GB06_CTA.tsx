@@ -1,11 +1,11 @@
-// GB06 — 씬6 CTA "구독 누르시면 절대 놓치지 않습니다" (31초 = 930프레임)
-// Phase1 (f0~480):  🤖 AI 직원 자료 카드 + "다음 영상에서도 계속"
-// Phase2 (f480~930): 🔔 채널명 + 구독 버튼 클로징
+// GB06 — 씬6 CTA Whisper 싱크 (10s 오디오 + 구독 애니 = 600프레임)
+// Whisper: f0~235 "AI직원 자료...계속 보여드릴 테니까" / f235~300 "구독 누르시면..."
+// Phase1 f0~235 / Phase2 f235~600 (오디오 끝 후 구독 버튼 애니 계속)
 import { AbsoluteFill, Audio, Easing, interpolate, staticFile, useCurrentFrame } from 'remotion';
 import { C, FONT, GLOW } from '../constants';
 
 const AUDIO     = 'audio/국씬6.m4a';
-const HAS_AUDIO = false;
+const HAS_AUDIO = true;
 
 const fi = (fa: number, fb: number) => (f: number) =>
   interpolate(f, [fa, fb], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
@@ -24,8 +24,10 @@ export const GB06_CTA = () => {
   const fadeIn = interpolate(f, [0, 15], [0, 1], { extrapolateRight: 'clamp' });
   const bgGlow = Math.sin(f * 0.04) * 0.03 + 0.045;
 
-  const showPh1 = f < 430 ? fi(0, 18)(f) : fo(430, 480)(f);
-  const showPh2 = f < 480 ? 0 : fi(480, 520)(f);
+  // ─── Phase 전환 (Whisper 기준) ───
+  // f235 "구독 누르시면" 시작에 맞춰 Phase2 전환
+  const showPh1 = f < 198 ? fi(0, 18)(f) : fo(198, 235)(f);
+  const showPh2 = f < 235 ? 0 : fi(235, 268)(f);
 
   // ─── Phase1 ───
   const diagX  = lr(-120, 120, 0, 40)(f);
@@ -35,7 +37,8 @@ export const GB06_CTA = () => {
   const p1TitleOp = fi(30, 68)(f);
   const p1TitleY  = lr(40, 0, 30, 68)(f);
 
-  const cardS = [90, 180];
+  // 카드 2개 f235 이전에 다 등장 (기존 [90,180] → [55,130])
+  const cardS = [55, 130];
   const cardAnims = cardS.map(s => ({
     op:    fi(s, s + 40)(f),
     tx:    lr(-80, 0, s, s + 40)(f),
@@ -44,8 +47,8 @@ export const GB06_CTA = () => {
     scanO: f >= s + 12 && f < s + 30 ? interpolate(f, [s+12, s+16, s+26, s+30], [0, 0.9, 0.9, 0]) : 0,
   }));
 
-  const allVis = f >= 260;
-  const ringPh = allVis ? ((f - 260) % 70) / 70 : 0;
+  const allVis = f >= 185;
+  const ringPh = allVis ? ((f - 185) % 70) / 70 : 0;
   const cardGlow = (i: number) => {
     if (!allVis) return 0;
     const center = i / 2 + 0.25;
@@ -53,29 +56,29 @@ export const GB06_CTA = () => {
     return Math.max(0, 1 - dist * 2 * 1.8);
   };
 
-  const sub1Op = fi(300, 360)(f);
-  const sub1Y  = lr(20, 0, 300, 360)(f);
+  const sub1Op = fi(185, 225)(f);
+  const sub1Y  = lr(20, 0, 185, 225)(f);
 
   // ─── Phase2 ───
-  const diag2X  = lr(-120, 120, 480, 520)(f);
-  const diag2Op = f >= 480 && f < 520 ? interpolate(f, [480, 484, 512, 520], [0, 1, 1, 0]) : 0;
+  const diag2X  = lr(-120, 120, 235, 268)(f);
+  const diag2Op = f >= 235 && f < 268 ? interpolate(f, [235, 239, 260, 268], [0, 1, 1, 0]) : 0;
 
-  const chIconSc  = interpolate(f, [535, 570], [0.4, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.elastic(1)) });
-  const chIconOp  = fi(535, 550)(f);
-  const chNameOp  = fi(570, 608)(f);
-  const chNameY   = lr(70, 0, 570, 608)(f);
-  const chNameLs  = lr(12, -2, 570, 608)(f);
-  const sloganOp  = fi(615, 645)(f);
-  const sloganY   = lr(30, 0, 615, 645)(f);
+  const chIconSc  = interpolate(f, [280, 315], [0.4, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.elastic(1)) });
+  const chIconOp  = fi(280, 295)(f);
+  const chNameOp  = fi(315, 353)(f);
+  const chNameY   = lr(70, 0, 315, 353)(f);
+  const chNameLs  = lr(12, -2, 315, 353)(f);
+  const sloganOp  = fi(360, 390)(f);
+  const sloganY   = lr(30, 0, 360, 390)(f);
 
-  const btnOp     = fi(660, 698)(f);
-  const btnScale  = interpolate(f, [660, 698], [0.4, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.elastic(1)) });
-  const btnMag    = Math.min(1, (f - 660) / 50);
+  const btnOp     = fi(410, 448)(f);
+  const btnScale  = interpolate(f, [410, 448], [0.4, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.elastic(1)) });
+  const btnMag    = Math.min(1, (f - 410) / 50);
   const btnPulse  = Math.sin(f * 0.1) * 0.5 + 0.5;
   const btnGlow   = `0 0 ${interpolate(btnPulse, [0, 1], [16, 32]) * btnMag}px rgba(0,255,208,${0.7 * btnMag}), 0 0 ${interpolate(btnPulse, [0, 1], [24, 48]) * btnMag}px rgba(0,255,208,${0.35 * btnMag})`;
   const iconPulse = Math.sin(f * 0.08) * 0.015 + 1;
 
-  const bgGlowAmp = interpolate(f, [660, 870], [0, 0.06], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const bgGlowAmp = interpolate(f, [410, 570], [0, 0.06], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
   const bgGlowPh2 = Math.sin(f * 0.05) * 0.04 + 0.06 + bgGlowAmp;
 
   // 파티클
@@ -85,8 +88,8 @@ export const GB06_CTA = () => {
     { x: 78, delay: 15, size: 5 }, { x: 88, delay: 40, size: 4 },
   ];
 
-  const cap1 = showPh1 > 0.5 ? fi(220, 260)(f) : 0;
-  const cap2 = showPh2 > 0.1 ? fi(760, 800)(f) : 0;
+  const cap1 = showPh1 > 0.5 ? fi(165, 205)(f) : 0;  // Phase1 후반 (f235 직전)
+  const cap2 = showPh2 > 0.1 ? fi(460, 500)(f) : 0;  // 버튼 등장 직후
 
   return (
     <AbsoluteFill style={{ background: C.bg, opacity: fadeIn, fontFamily: FONT, overflow: 'hidden' }}>
@@ -129,7 +132,7 @@ export const GB06_CTA = () => {
       {/* ═══ PHASE 2 — 채널 클로징 ═══ */}
       <AbsoluteFill style={{ opacity: showPh2, pointerEvents: 'none' }}>
         {PARTICLES.map(({ x, delay, size }) => {
-          const prog = Math.max(0, (f - 660 - delay) / 200);
+          const prog = Math.max(0, (f - 410 - delay) / 160);
           if (prog <= 0) return null;
           return (
             <div key={x} style={{ position: 'absolute', left: `${x}%`, bottom: `${20 + prog * 60}%`, width: size, height: size, borderRadius: '50%', background: C.main, opacity: Math.max(0, 1 - prog * 1.2), boxShadow: `0 0 ${size * 2}px ${C.main}` }} />

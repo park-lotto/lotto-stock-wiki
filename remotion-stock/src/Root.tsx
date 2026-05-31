@@ -38,6 +38,7 @@ import { AG_S05_Climax }   from './agents/AG_S05_Climax_done';
 import { AG_S06_Awareness } from './agents/AG_S06_Awareness_done';
 import { AG_S07_Tease }    from './agents/AG_S07_Tease_done';
 import { AG_S08_CTA }      from './agents/AG_S08_CTA_done';
+import { AG_Full, TOTAL_FRAMES } from './agents/AG_Full';
 import { GB01_Hook } from './buildup/GB01_Hook';
 import { GB02_Checklist } from './buildup/GB02_Checklist';
 import { GB03_Compare } from './buildup/GB03_Compare';
@@ -45,6 +46,11 @@ import { GB03_5_RealBenefit } from './buildup/GB03_5_RealBenefit';
 import { GB04_Telegram } from './buildup/GB04_Telegram';
 import { GB05_StockBrain } from './buildup/GB05_StockBrain';
 import { GB06_CTA } from './buildup/GB06_CTA';
+import { GB_Full, GB_TOTAL_FRAMES } from './buildup/GB_Full';
+import { GB_Thumbnail } from './buildup/GB_Thumbnail';
+import { GB_Thumb_A } from './buildup/GB_Thumb_A';
+import { GB_Thumb_B } from './buildup/GB_Thumb_B';
+import { GB_Thumb_C } from './buildup/GB_Thumb_C';
 import { SDUR } from './constants';
 
 export const RemotionRoot: React.FC = () => {
@@ -245,6 +251,9 @@ export const RemotionRoot: React.FC = () => {
         height={1080}
       />
 
+      {/* ─── AI 직원 10명 영상 — 전체 합본 ─── */}
+      <Composition id="AG-Full" component={AG_Full} durationInFrames={TOTAL_FRAMES} fps={30} width={1920} height={1080} />
+
       {/* ─── AI 직원 10명 영상 — 씬별 컴포지션 ─── */}
       {/* 씬1 훅 */}
       <Composition
@@ -270,6 +279,22 @@ export const RemotionRoot: React.FC = () => {
       <Composition id="AG-S07-Tease-done"     component={AG_S07_Tease}     durationInFrames={548} fps={30} width={1920} height={1080} />
       <Composition id="AG-S08-CTA-done"       component={AG_S08_CTA}       durationInFrames={562} fps={30} width={1920} height={1080} />
 
+
+      {/* ─── 국민성장펀드 썸네일 (1280×720 정적) ─── */}
+      <Composition id="GB-Thumbnail"   component={GB_Thumbnail} durationInFrames={1} fps={30} width={1280} height={720} />
+      <Composition id="GB-Thumb-A"     component={GB_Thumb_A}   durationInFrames={1} fps={30} width={1280} height={720} />
+      <Composition id="GB-Thumb-B"     component={GB_Thumb_B}   durationInFrames={1} fps={30} width={1280} height={720} />
+      <Composition id="GB-Thumb-C"     component={GB_Thumb_C}   durationInFrames={1} fps={30} width={1280} height={720} />
+
+      {/* ─── 국민성장펀드 빌드업 — 전체 합본 ─── */}
+      <Composition
+        id="GB-Full"
+        component={GB_Full}
+        durationInFrames={GB_TOTAL_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
 
       {/* ─── 국민성장펀드 빌드업 영상 — 씬1~3 ─── */}
       <Composition
@@ -297,9 +322,9 @@ export const RemotionRoot: React.FC = () => {
         height={1080}
       />
       <Composition
-        id="GB03-5-RealBenefit-pending"
+        id="GB03-5-RealBenefit-done"
         component={GB03_5_RealBenefit}
-        durationInFrames={2730}
+        durationInFrames={5529}
         fps={30}
         width={1920}
         height={1080}
@@ -313,17 +338,17 @@ export const RemotionRoot: React.FC = () => {
         height={1080}
       />
       <Composition
-        id="GB05-StockBrain-pending"
+        id="GB05-StockBrain-done"
         component={GB05_StockBrain}
-        durationInFrames={1380}
+        durationInFrames={1245}
         fps={30}
         width={1920}
         height={1080}
       />
       <Composition
-        id="GB06-CTA-pending"
+        id="GB06-CTA-done"
         component={GB06_CTA}
-        durationInFrames={930}
+        durationInFrames={600}
         fps={30}
         width={1920}
         height={1080}

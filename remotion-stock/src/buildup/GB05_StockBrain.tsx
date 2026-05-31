@@ -1,12 +1,11 @@
-// GB05 — 씬5 "AI 에이전트 직원들" (46초 = 1380프레임)
-// Phase1 (f0~540):  🤖 AI 직원 4명 orbit 등장 + "매일 시키는 일이 있어요"
-// Phase2 (f540~1050): 📋 "아침에 이미 정리" + 실제 내용 목업
-// Phase3 (f1050~1380): 💬 "따로 영상으로" + 댓글 CTA
+// GB05 — 씬5 "AI 에이전트 직원들" Whisper 싱크 (40.5s + 30f = 1245프레임)
+// Whisper: f0~315 "AI직원 24시간" / f315~548 "아침 정리" / f548~952 "국민성장펀드 센티" / f952~1214 "따로영상·댓글"
+// Phase1 f0~310 / Phase2 f348~952 / Phase3 f952~1245
 import { AbsoluteFill, Audio, Easing, interpolate, staticFile, useCurrentFrame } from 'remotion';
 import { C, FONT, GLOW } from '../constants';
 
 const AUDIO     = 'audio/국씬5.m4a';
-const HAS_AUDIO = false;
+const HAS_AUDIO = true;
 
 const fi = (fa: number, fb: number) => (f: number) =>
   interpolate(f, [fa, fb], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
@@ -34,9 +33,11 @@ export const GB05_StockBrain = () => {
   const fadeIn = interpolate(f, [0, 15], [0, 1], { extrapolateRight: 'clamp' });
   const bgGlow = Math.sin(f * 0.04) * 0.03 + 0.04;
 
-  const showPh1 = f < 490 ? fi(0, 20)(f) : fo(490, 540)(f);
-  const showPh2 = f < 540 ? 0 : f < 1000 ? fi(540, 580)(f) : fo(1000, 1050)(f);
-  const showPh3 = f < 1050 ? 0 : fi(1050, 1090)(f);
+  // ─── Phase 전환 (Whisper 기준) ───
+  // f310 "아침에 정리" → Phase2 / f952 "따로 영상으로" → Phase3
+  const showPh1 = f < 310 ? fi(0, 20)(f) : fo(310, 348)(f);
+  const showPh2 = f < 348 ? 0 : f < 912 ? fi(348, 388)(f) : fo(912, 952)(f);
+  const showPh3 = f < 952 ? 0 : fi(952, 992)(f);
 
   // ─── Phase1 스캔라인 ───
   const scanX  = lr(-2, 104, 0, 36)(f);
@@ -47,9 +48,9 @@ export const GB05_StockBrain = () => {
   const p1TitleY  = lr(40, 0, 20, 55)(f);
   const p1SubOp   = fi(70, 110)(f);
 
-  // 직원 4명 stagger elastic
+  // 직원 4명 stagger elastic (f310 이전에 다 등장하도록 앞당김)
   const workers = WORKERS.map((_, i) => {
-    const s = 120 + i * 70;
+    const s = 90 + i * 55;
     return {
       op:    fi(s, s + 35)(f),
       scale: interpolate(f, [s, s + 50], [0.3, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.elastic(1.2)) }),
@@ -57,9 +58,9 @@ export const GB05_StockBrain = () => {
     };
   });
 
-  // 순환 글로우
-  const allW = f >= 400;
-  const wRing = allW ? ((f - 400) % 72) / 72 : 0;
+  // 순환 글로우 (직원들 다 등장 후)
+  const allW = f >= 290;
+  const wRing = allW ? ((f - 290) % 72) / 72 : 0;
   const wGlow = (i: number) => {
     if (!allW) return 0;
     const center = i / 4 + 0.125;
@@ -68,21 +69,22 @@ export const GB05_StockBrain = () => {
   };
 
   // ─── Phase2 ───
-  const scan2Y  = lr(-2, 104, 540, 578)(f);
-  const scan2Op = f >= 540 && f < 578 ? interpolate(f, [540, 544, 572, 578], [0, 1, 1, 0]) : 0;
+  // f315 "아침에 정리해서 보내줘요" 시작에 맞춰 Phase2 전환
+  const scan2Y  = lr(-2, 104, 348, 386)(f);
+  const scan2Op = f >= 348 && f < 386 ? interpolate(f, [348, 352, 380, 386], [0, 1, 1, 0]) : 0;
 
-  const p2TitleOp = fi(585, 625)(f);
-  const p2TitleY  = lr(30, 0, 585, 625)(f);
+  const p2TitleOp = fi(388, 428)(f);
+  const p2TitleY  = lr(30, 0, 388, 428)(f);
   const itemAnims = ITEMS.map((_, i) => {
-    const s = 640 + i * 80;
+    const s = 440 + i * 60;
     return {
       op:    fi(s, s + 40)(f),
       tx:    lr(260, 0, s, s + 40)(f),
       scale: lr(0.92, 1, s, s + 40)(f),
     };
   });
-  const allItems = f >= 960;
-  const iRing = allItems ? ((f - 960) % 60) / 60 : 0;
+  const allItems = f >= 660;
+  const iRing = allItems ? ((f - 660) % 60) / 60 : 0;
   const iGlow = (i: number) => {
     if (!allItems) return 0;
     const center = i / 4 + 0.125;
@@ -91,28 +93,29 @@ export const GB05_StockBrain = () => {
   };
 
   // ─── Phase3 ───
-  const p3scan1Y  = lr(-2, 104, 1050, 1088)(f);
-  const p3scan1Op = f >= 1050 && f < 1088 ? interpolate(f, [1050, 1054, 1082, 1088], [0, 1, 1, 0]) : 0;
-  const p3Icon    = fi(1092, 1125)(f);
-  const p3L1Op    = fi(1130, 1168)(f);
-  const p3L1Y     = lr(-60, 0, 1130, 1168)(f);
-  const p3L2Op    = fi(1175, 1215)(f);
-  const p3L2Y     = lr(60, 0, 1175, 1215)(f);
+  // f952 "따로 영상으로 올려드릴게요" 시작에 맞춤
+  const p3scan1Y  = lr(-2, 104, 952, 990)(f);
+  const p3scan1Op = f >= 952 && f < 990 ? interpolate(f, [952, 956, 984, 990], [0, 1, 1, 0]) : 0;
+  const p3Icon    = fi(992, 1025)(f);
+  const p3L1Op    = fi(1030, 1068)(f);
+  const p3L1Y     = lr(-60, 0, 1030, 1068)(f);
+  const p3L2Op    = fi(1075, 1115)(f);
+  const p3L2Y     = lr(60, 0, 1075, 1115)(f);
   const p3Breathe = p3L2Op > 0.9 ? Math.sin(f * 0.08) * 0.02 + 1 : 1;
   const p3Pulse   = Math.sin(f * 0.08) * 0.5 + 0.5;
   const p3GSz     = interpolate(p3Pulse, [0, 1], [14, 40]);
   const p3Glow    = `0 0 ${p3GSz}px #00FFD0, 0 0 ${p3GSz*2}px rgba(0,255,208,0.6), 0 0 ${p3GSz*4}px rgba(0,191,154,0.35)`;
-  const burstOp   = interpolate(f, [1230, 1238, 1268], [0, 0.55, 0], { extrapolateRight: 'clamp' });
-  const burstSc   = lr(0.2, 2.8, 1230, 1268)(f);
-  const btnOp     = fi(1275, 1335)(f);
-  const btnSc     = interpolate(f, [1275, 1335], [0.4, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.elastic(1)) });
+  const burstOp   = interpolate(f, [1128, 1136, 1166], [0, 0.55, 0], { extrapolateRight: 'clamp' });
+  const burstSc   = lr(0.2, 2.8, 1128, 1166)(f);
+  const btnOp     = fi(1175, 1225)(f);
+  const btnSc     = interpolate(f, [1175, 1225], [0.4, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.elastic(1)) });
   const btnPulse  = Math.sin(f * 0.1) * 0.5 + 0.5;
-  const btnGlow   = `0 0 ${interpolate(btnPulse, [0, 1], [16, 32]) * Math.min(1, (f-1275)/40)}px rgba(0,255,208,0.6)`;
+  const btnGlow   = `0 0 ${interpolate(btnPulse, [0, 1], [16, 32]) * Math.min(1, (f-1175)/40)}px rgba(0,255,208,0.6)`;
 
-  // 자막
-  const cap1 = showPh1 > 0.5 ? fi(400, 440)(f) : 0;
-  const cap2 = showPh2 > 0.1 ? fi(920, 960)(f) : 0;
-  const cap3 = showPh3 > 0.1 ? fi(1290, 1330)(f) : 0;
+  // 자막 (Whisper 세그먼트 기준)
+  const cap1 = showPh1 > 0.5 ? fi(260, 300)(f) : 0;  // f315 이전, 직원들 다 등장 후
+  const cap2 = showPh2 > 0.1 ? fi(820, 860)(f) : 0;  // f824 "오늘 영상 아이디어" 시점
+  const cap3 = showPh3 > 0.1 ? fi(1130, 1170)(f) : 0; // f1069 "댓글로 남겨놔주세요" 시점
 
   return (
     <AbsoluteFill style={{ background: C.bg, opacity: fadeIn, fontFamily: FONT, overflow: 'hidden' }}>
@@ -120,8 +123,8 @@ export const GB05_StockBrain = () => {
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: `radial-gradient(ellipse at 50% 50%, rgba(0,255,208,1) 0%, transparent 65%)`, opacity: bgGlow }} />
 
       {f < 36 && <div style={{ position: 'absolute', top: 0, bottom: 0, left: `${scanX}%`, width: 2, background: 'linear-gradient(180deg, transparent, #00FFD0, #80FFE8, #00FFD0, transparent)', boxShadow: '0 0 10px rgba(0,255,208,0.9)', opacity: scanOp, zIndex: 10 }} />}
-      {f >= 540 && f < 578 && <div style={{ position: 'absolute', left: 0, right: 0, top: `${scan2Y}%`, height: 2, background: 'linear-gradient(90deg, transparent, #00FFD0, #80FFE8, #00FFD0, transparent)', opacity: scan2Op, zIndex: 10 }} />}
-      {f >= 1050 && f < 1088 && <div style={{ position: 'absolute', left: 0, right: 0, top: `${p3scan1Y}%`, height: 2, background: 'linear-gradient(90deg, transparent, #00FFD0, #80FFE8, #00FFD0, transparent)', opacity: p3scan1Op, zIndex: 10 }} />}
+      {f >= 348 && f < 386 && <div style={{ position: 'absolute', left: 0, right: 0, top: `${scan2Y}%`, height: 2, background: 'linear-gradient(90deg, transparent, #00FFD0, #80FFE8, #00FFD0, transparent)', opacity: scan2Op, zIndex: 10 }} />}
+      {f >= 952 && f < 990 && <div style={{ position: 'absolute', left: 0, right: 0, top: `${p3scan1Y}%`, height: 2, background: 'linear-gradient(90deg, transparent, #00FFD0, #80FFE8, #00FFD0, transparent)', opacity: p3scan1Op, zIndex: 10 }} />}
 
       <div style={{ position: 'absolute', top: '44%', left: '50%', width: 560, height: 560, marginLeft: -280, marginTop: -280, borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,255,208,0.28) 0%, transparent 70%)', opacity: burstOp, transform: `scale(${burstSc})`, pointerEvents: 'none' }} />
 
