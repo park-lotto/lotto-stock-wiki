@@ -13,7 +13,7 @@ export const GB_Thumb_A = () => (
     <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 7, background: 'linear-gradient(180deg, #FF4336 0%, #FF9800 50%, #00FFD0 100%)' }} />
 
     {/* ── 좌측 메인 콘텐츠 ── */}
-    <div style={{ position: 'absolute', left: 56, top: 0, bottom: 0, width: 760, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 0 }}>
+    <div style={{ position: 'absolute', left: 56, top: 0, bottom: 0, width: 660, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 0 }}>
 
       {/* 날짜 배지 */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
@@ -21,15 +21,18 @@ export const GB_Thumb_A = () => (
           6월 15일
         </div>
         <div style={{ fontSize: 20, color: '#666', fontWeight: 600 }}>실제 집행 시작</div>
+        <div style={{ background: 'transparent', border: '1.5px solid #00FFD0', borderRadius: 6, padding: '5px 14px', fontSize: 18, fontWeight: 900, color: '#00FFD0', letterSpacing: 2 }}>
+          확정
+        </div>
       </div>
 
       {/* 내일부터 */}
       <div style={{ fontSize: 96, fontWeight: 900, lineHeight: 0.95, letterSpacing: -3, color: '#fff' }}>
-        내일<span style={{ color: '#FF4336' }}>부터</span>
+        오늘<span style={{ color: '#FF4336' }}>부터</span>
       </div>
 
       {/* 구분선 */}
-      <div style={{ width: 680, height: 3, background: 'linear-gradient(90deg, #FF4336 0%, #FF9800 40%, #00FFD0 80%, transparent 100%)', margin: '14px 0 10px', borderRadius: 2 }} />
+      <div style={{ width: 580, height: 3, background: 'linear-gradient(90deg, #FF4336 0%, #FF9800 40%, #00FFD0 80%, transparent 100%)', margin: '14px 0 10px', borderRadius: 2 }} />
 
       {/* 국민성장펀드 — 크게 강조 */}
       <div style={{
@@ -49,45 +52,62 @@ export const GB_Thumb_A = () => (
 
     </div>
 
-    {/* ── 우측 실사 이미지 패널 ── */}
-    <div style={{
-      position: 'absolute', right: 0, top: 0, bottom: 0, width: 460,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'rgba(255,255,255,0.02)',
-      borderLeft: '1px solid rgba(0,255,208,0.1)',
-    }}>
-      {/* 이미지 */}
-      <div style={{ position: 'relative', width: 400, height: 540 }}>
-        {/* 이미지 외곽 글로우 */}
-        <div style={{
-          position: 'absolute', inset: -4,
-          borderRadius: 16,
-          boxShadow: '0 0 30px rgba(0,255,208,0.25), 0 0 60px rgba(0,255,208,0.1)',
-          border: '1.5px solid rgba(0,255,208,0.3)',
-          pointerEvents: 'none',
-          zIndex: 2,
-        }} />
-        <Img
-          src={staticFile('images/fund_img_14.jpg')}
-          style={{
-            width: '100%', height: '100%',
-            objectFit: 'cover',
-            borderRadius: 12,
-            display: 'block',
-          }}
-        />
-        {/* 이미지 하단 그라디언트 (배경과 자연스럽게) */}
-        <div style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0, height: 80,
-          background: 'linear-gradient(transparent, rgba(0,0,0,0.6))',
-          borderRadius: '0 0 12px 12px',
-        }} />
-      </div>
+    {/* ── 우측 실사 이미지 — 풀블리드 ── */}
+    <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 580, overflow: 'hidden' }}>
+
+      {/* 실사 이미지 */}
+      <Img
+        src={staticFile('images/배터리공장.png')}
+        style={{
+          width: '100%', height: '100%',
+          objectFit: 'cover',
+          display: 'block',
+          filter: 'brightness(0.85) contrast(1.2) saturate(1.1)',
+        }}
+      />
+
+      {/* 민트 색조 오버레이 */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: 'rgba(0,255,208,0.07)',
+      }} />
+
+      {/* 스캔라인 */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        backgroundImage: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 1px, transparent 1px, transparent 3px)',
+      }} />
+
+      {/* 좌측 페이드 — 텍스트와 자연스럽게 블렌드 */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: 'linear-gradient(90deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 30%, transparent 60%)',
+      }} />
+
+      {/* 상단 페이드 */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0, height: 120,
+        background: 'linear-gradient(rgba(0,0,0,0.5), transparent)',
+      }} />
+
+      {/* 하단 페이드 */}
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0, height: 120,
+        background: 'linear-gradient(transparent, rgba(0,0,0,0.6))',
+      }} />
+
     </div>
 
-    {/* 채널명 */}
-    <div style={{ position: 'absolute', bottom: 20, left: 56, fontSize: 17, color: '#3a3a3a', fontWeight: 600, letterSpacing: 2 }}>
-      로또의 주식인사이트
+    {/* STOCK BRAIN 로고 */}
+    <div style={{ position: 'absolute', bottom: 20, left: 56, display: 'flex', alignItems: 'center', gap: 0 }}>
+      {/* 왼쪽 민트 액센트 바 */}
+      <div style={{ width: 4, height: 36, background: '#00FFD0', borderRadius: 2, marginRight: 12, boxShadow: '0 0 10px #00FFD0, 0 0 20px rgba(0,255,208,0.6)' }} />
+      <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
+        <div style={{
+          fontSize: 22, fontWeight: 900, color: '#00FFD0', letterSpacing: 6,
+          textShadow: '0 0 10px #00FFD0, 0 0 25px rgba(0,255,208,0.7), 0 0 50px rgba(0,255,208,0.4)',
+        }}>STOCK BRAIN</div>
+      </div>
     </div>
 
   </AbsoluteFill>

@@ -51,6 +51,8 @@ import { GB_Thumbnail } from './buildup/GB_Thumbnail';
 import { GB_Thumb_A } from './buildup/GB_Thumb_A';
 import { GB_Thumb_B } from './buildup/GB_Thumb_B';
 import { GB_Thumb_C } from './buildup/GB_Thumb_C';
+import { GB_Thumb_D } from './buildup/GB_Thumb_D';
+import { GB_Thumb_E } from './buildup/GB_Thumb_E';
 import { SDUR } from './constants';
 
 export const RemotionRoot: React.FC = () => {
@@ -285,6 +287,8 @@ export const RemotionRoot: React.FC = () => {
       <Composition id="GB-Thumb-A"     component={GB_Thumb_A}   durationInFrames={1} fps={30} width={1280} height={720} />
       <Composition id="GB-Thumb-B"     component={GB_Thumb_B}   durationInFrames={1} fps={30} width={1280} height={720} />
       <Composition id="GB-Thumb-C"     component={GB_Thumb_C}   durationInFrames={1} fps={30} width={1280} height={720} />
+      <Composition id="GB-Thumb-D"     component={GB_Thumb_D}   durationInFrames={1} fps={30} width={1280} height={720} />
+      <Composition id="GB-Thumb-E"     component={GB_Thumb_E}   durationInFrames={1} fps={30} width={1280} height={720} />
 
       {/* ─── 국민성장펀드 빌드업 — 전체 합본 ─── */}
       <Composition
