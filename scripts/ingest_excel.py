@@ -385,17 +385,13 @@ def parse_유동성체크(dry_run: bool) -> dict:
 
 # ─── 파서 5: 수급오실레이터 (COM 기반 EMA MACD 방식) ─────────────
 
-def parse_수급오실레이터(dry_run: bool) -> dict:
-    path = find_excel("수급오실레이터")
-    if not path:
-        return {"error": "수급오실레이터 파일 없음"}
-
+def _run_osc_com(path: Path) -> dict:
+    """COM으로 xlsm 열어 EMA MACD 오실레이터 계산 (대형주·중소형주 공용)"""
     try:
         import win32com.client as win32
     except ImportError:
         return {"error": "win32com 없음 — pip install pywin32"}
 
-    # EMA 상수 (calc_oscillator.py 동일)
     K12, K26, K9 = 2/13, 2/27, 2/10
     DATA_START, DATA_END = 15, 91
     STAT_COL = 12
@@ -418,18 +414,25 @@ def parse_수급오실레이터(dry_run: bool) -> dict:
     xl.AutomationSecurity = 3
     wb_com = xl.Workbooks.Open(str(path))
 
-    ws_osc  = wb_com.Sheets("수급오실레이터")
     ws_size = wb_com.Sheets("시가총액")
     ws_forn = wb_com.Sheets("외국인매수데이터")
     ws_inst = wb_com.Sheets("기관매수데이터")
 
-    p10 = ws_osc.Cells(11, STAT_COL).Value2
-    p25 = ws_osc.Cells(10, STAT_COL).Value2
-    p75 = ws_osc.Cells(8,  STAT_COL).Value2
-    p90 = ws_osc.Cells(7,  STAT_COL).Value2
-    last_date = ws_forn.Cells(DATA_END, 1).Value2
+    # 기준값: 수급오실레이터 시트가 있으면 읽고, 없으면 계산값으로 대체
+    p10 = p25 = p75 = p90 = None
+    if "수급오실레이터" in [wb_com.Sheets(i+1).Name for i in range(wb_com.Sheets.Count)]:
+        ws_osc = wb_com.Sheets("수급오실레이터")
+        try:
+            p10 = float(ws_osc.Cells(11, STAT_COL).Value2)
+            p25 = float(ws_osc.Cells(10, STAT_COL).Value2)
+            p75 = float(ws_osc.Cells(8,  STAT_COL).Value2)
+            p90 = float(ws_osc.Cells(7,  STAT_COL).Value2)
+        except (TypeError, ValueError):
+            pass
 
+    last_date = ws_forn.Cells(DATA_END, 1).Value2
     max_col = ws_forn.UsedRange.Columns.Count
+
     xl_stocks = {}
     for c in range(2, max_col + 1):
         name = ws_forn.Cells(9, c).Value2
@@ -466,6 +469,14 @@ def parse_수급오실레이터(dry_run: bool) -> dict:
     if not results:
         return {"file": path.name, "error": "계산 가능 종목 없음"}
 
+    # 기준값이 없으면 계산값 기반으로 산출
+    all_sorted = sorted(r["osc"] for r in results)
+    n = len(all_sorted)
+    if p10 is None: p10 = all_sorted[int(n * 0.10)]
+    if p25 is None: p25 = all_sorted[int(n * 0.25)]
+    if p75 is None: p75 = all_sorted[int(n * 0.75)]
+    if p90 is None: p90 = all_sorted[int(n * 0.90)]
+
     def pct(v):
         if v <= p10: return 10 * (v / p10) if p10 else 5
         if v <= p25: return 10 + (v - p10) / (p25 - p10) * 15
@@ -478,7 +489,6 @@ def parse_수급오실레이터(dry_run: bool) -> dict:
     for r in results:
         r["pct"] = pct(r["osc"])
 
-    n = len(results)
     if isinstance(last_date, datetime):
         last_date_str = last_date.strftime("%Y-%m-%d")
     else:
@@ -487,11 +497,29 @@ def parse_수급오실레이터(dry_run: bool) -> dict:
     return {
         "file": path.name,
         "date": last_date_str,
-        "total": n,
+        "total": len(results),
         "빈집_A": [{"name": r["name"], "code": r["code"], "osc": r["osc"], "pct": r["pct"], "trend": r["trend"]} for r in 빈집_A],
         "빈집_B": [{"name": r["name"], "code": r["code"], "osc": r["osc"], "pct": r["pct"], "trend": r["trend"]} for r in 빈집_B],
-        "note": f"전체 {n}종목 | 빈집A: {len(빈집_A)}개 | 빈집B: {len(빈집_B)}개 | 기준A≤{p10:.6f} B≤{p25:.6f}",
+        "note": f"전체 {len(results)}종목 | 빈집A: {len(빈집_A)}개 | 빈집B: {len(빈집_B)}개 | 기준A≤{p10:.6f} B≤{p25:.6f}",
     }
+
+
+def parse_수급오실레이터(dry_run: bool) -> dict:
+    path = find_excel("(700)")
+    if not path:
+        path = find_excel("수급오실레이터")
+    if not path:
+        return {"error": "수급오실레이터(700) 파일 없음"}
+    return _run_osc_com(path)
+
+
+# ─── 파서 6: 중소형주 오실레이터 (700-1400) ───────────────────────
+
+def parse_중소형주오실레이터(dry_run: bool) -> dict:
+    path = find_excel("(700-1400)")
+    if not path:
+        return {"error": "수급오실레이터(700-1400) 파일 없음"}
+    return _run_osc_com(path)
 
 
 # ─── 리포트 생성 ──────────────────────────────────────────────
@@ -568,29 +596,26 @@ def build_report(results: dict) -> str:
                 lines.append(f"| {it['rank']} | {it['name']} | {it['latest_date']} | {it['brokerage']} |")
         lines.append("")
 
-    # 5. 수급오실레이터
-    r = results.get("수급", {})
-    if r.get("빈집_A") or r.get("빈집_B"):
-        lines += ["## 5. 수급 빈집 탐지", ""]
+    def _빈집_섹션(lines, r, title_prefix, sec_num):
+        if not (r.get("빈집_A") or r.get("빈집_B")):
+            return
+        lines += [f"## {sec_num}. {title_prefix} 수급 빈집 탐지", ""]
         if r.get("date"):
             lines.append(f"> 기준일: {r['date']} | {r.get('note', '')}")
             lines.append("")
-        a_list = r.get("빈집_A", [])
-        b_list = r.get("빈집_B", [])
-        if a_list:
-            lines.append(f"### 🏚️ 빈집A — 완전빈집 (하위 10%) {len(a_list)}종목")
+        for grade, label in [("빈집_A", "🏚️ 빈집A — 완전빈집 (하위 10%)"),
+                              ("빈집_B", "🏠 빈집B — 반빈집 (하위 10~25%)")]:
+            items = r.get(grade, [])
+            if not items: continue
+            lines.append(f"### {label} {len(items)}종목")
             lines.append("| 종목 | 오실레이터 | 퍼센타일 | 방향 |")
             lines.append("|------|----------|---------|------|")
-            for it in a_list[:20]:
+            for it in items[:20]:
                 lines.append(f"| {it['name']} | {it['osc']:+.6f} | 하위{it['pct']:.1f}% | {it.get('trend','')} |")
             lines.append("")
-        if b_list:
-            lines.append(f"### 🏠 빈집B — 반빈집 (하위 10~25%) {len(b_list)}종목")
-            lines.append("| 종목 | 오실레이터 | 퍼센타일 | 방향 |")
-            lines.append("|------|----------|---------|------|")
-            for it in b_list[:20]:
-                lines.append(f"| {it['name']} | {it['osc']:+.6f} | 하위{it['pct']:.1f}% | {it.get('trend','')} |")
-            lines.append("")
+
+    _빈집_섹션(lines, results.get("수급", {}),       "대형주(700)",       "5")
+    _빈집_섹션(lines, results.get("중소형주수급", {}), "중소형주(700-1400)", "6")
 
     return "\n".join(lines)
 
@@ -636,35 +661,59 @@ def send_telegram(text: str) -> bool:
     return True
 
 
-def build_빈집_tg(r: dict, results: dict) -> str:
-    """수급빈집 + 레이팅 상향 top → 텔레그램 메시지"""
+def _빈집_tg_블록(a_list: list) -> list:
+    """빈집A 리스트 → 심화중 / 유턴중 분리 라인 반환"""
+    심화 = [it for it in a_list if '심화' in it.get('trend', '')]
+    유턴 = [it for it in a_list if '재진입' in it.get('trend', '')]
+    lines = []
+    if 심화:
+        lines.append(f"<b>📉 빈집 심화중 — {len(심화)}종목</b>")
+        for it in 심화:
+            lines.append(f"  {it['name']}  <code>{it['osc']:+.6f}</code>  하위{it.get('pct',0):.0f}%")
+        lines.append("")
+    if 유턴:
+        lines.append(f"<b>↩️ 빈집 유턴중 — {len(유턴)}종목</b>")
+        for it in 유턴:
+            lines.append(f"  {it['name']}  <code>{it['osc']:+.6f}</code>  하위{it.get('pct',0):.0f}%")
+        lines.append("")
+    return lines
+
+
+def _build_중소형주_tg(r: dict) -> str:
     date_str = r.get("date", TODAY)
     total    = r.get("total", 0)
     a_list   = r.get("빈집_A", [])
-    b_list   = r.get("빈집_B", [])
-
+    심화 = [it for it in a_list if '심화' in it.get('trend', '')]
+    유턴 = [it for it in a_list if '재진입' in it.get('trend', '')]
     lines = [
-        f"🏚️ <b>수급 빈집 탐지</b> — {date_str}",
-        f"전체 {total}종목 | A:{len(a_list)}개 B:{len(b_list)}개",
+        f"🏚️ <b>중소형주(700-1400) 수급 빈집</b> — {date_str}",
+        f"전체 {total}종목 | 심화중: {len(심화)}개  유턴중: {len(유턴)}개",
         "",
     ]
+    lines += _빈집_tg_블록(a_list)
+    return "\n".join(lines)
 
-    # ── A 완전빈집
-    if a_list:
-        lines.append(f"<b>🔴 완전빈집A (하위10%) — {len(a_list)}종목</b>")
-        # 2개씩 한 줄로
-        for it in a_list:
-            trend = it.get("trend", "")
-            lines.append(f"  {it['name']}  <code>{it['osc']:+.6f}</code>  하위{it.get('pct',0):.0f}%  {trend}")
-        lines.append("")
 
-    # ── 레이팅 상향 TOP5 (추정이익변경에서)
+def build_빈집_tg(r: dict, results: dict) -> str:
+    date_str = r.get("date", TODAY)
+    total    = r.get("total", 0)
+    a_list   = r.get("빈집_A", [])
+    심화 = [it for it in a_list if '심화' in it.get('trend', '')]
+    유턴 = [it for it in a_list if '재진입' in it.get('trend', '')]
+    lines = [
+        f"🏚️ <b>대형주(700) 수급 빈집</b> — {date_str}",
+        f"전체 {total}종목 | 심화중: {len(심화)}개  유턴중: {len(유턴)}개",
+        "",
+    ]
+    lines += _빈집_tg_블록(a_list)
+
+    # ── 레이팅 상향 TOP5
     rating_up = results.get("추정이익변경", {}).get("results", {}).get("Rating_Up", [])
     if rating_up:
         lines.append("<b>📈 레이팅 상향 TOP5</b>")
         for it in rating_up[:5]:
-            op  = f"{it['op_old']}→{it['op_new']}"
-            tp  = fmt_num(it['tp_new'], "원") if it['tp_new'] else "—"
+            op = f"{it['op_old']}→{it['op_new']}"
+            tp = fmt_num(it['tp_new'], "원") if it['tp_new'] else "—"
             lines.append(f"  · {it['name']} ({it['brokerage']}) {op} TP {tp}")
         lines.append("")
 
@@ -711,6 +760,7 @@ def main():
         "수출":     ("수출",         lambda: parse_수출정리(dry_run)),
         "유동성":   ("유동성",       lambda: parse_유동성체크(dry_run)),
         "수급":     ("수급",         lambda: parse_수급오실레이터(dry_run)),
+        "중소형주":  ("중소형주수급",  lambda: parse_중소형주오실레이터(dry_run)),
     }
 
     for key, (label, fn) in parsers.items():
@@ -740,12 +790,18 @@ def main():
                 summary_parts.append(label)
         append_log("·".join(summary_parts) + f" → {report_path.name}")
 
-        # 수급빈집 텔레그램 발송
+        # 대형주 수급빈집 텔레그램 발송
         r_수급 = results.get("수급", {})
         if r_수급.get("빈집_A") or r_수급.get("빈집_B"):
-            print("\n📲 텔레그램 발송 중...")
+            print("\n📲 [대형주] 텔레그램 발송 중...")
             msg = build_빈집_tg(r_수급, results)
             send_telegram(msg)
+
+        # 중소형주 빈집A 텔레그램 발송
+        r_중소 = results.get("중소형주수급", {})
+        if r_중소.get("빈집_A"):
+            print("\n📲 [중소형주] 텔레그램 발송 중...")
+            send_telegram(_build_중소형주_tg(r_중소))
 
     print("\n" + "="*50)
     print(report[:2000])
