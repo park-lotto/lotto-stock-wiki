@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800">
+  <defs>
+    <radialGradient id="bgGrad" cx="40%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#1a1f35"/>
+      <stop offset="100%" stop-color="#0a0d1a"/>
+    </radialGradient>
+    <radialGradient id="glowGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#4f6ef7" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#4f6ef7" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4f6ef7"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#c8d0ff"/>
+    </linearGradient>
+    <clipPath id="circle">
+      <circle cx="400" cy="400" r="400"/>
+    </clipPath>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- 배경 원 -->
+  <circle cx="400" cy="400" r="400" fill="url(#bgGrad)"/>
+
+  <!-- 배경 글로우 -->
+  <circle cx="400" cy="400" r="300" fill="url(#glowGrad)"/>
+
+  <!-- 장식 링 -->
+  <circle cx="400" cy="400" r="355" fill="none" stroke="url(#accentGrad)" stroke-width="2" stroke-opacity="0.4"/>
+  <circle cx="400" cy="400" r="370" fill="none" stroke="url(#accentGrad)" stroke-width="1" stroke-opacity="0.15"/>
+
+  <!-- 뇌 아이콘 (단순화) — 상단 -->
+  <g transform="translate(400, 205)" filter="url(#softGlow)">
+    <!-- 뇌 실루엣 -->
+    <ellipse cx="-28" cy="0" rx="34" ry="38" fill="none" stroke="url(#accentGrad)" stroke-width="3"/>
+    <ellipse cx="28" cy="0" rx="34" ry="38" fill="none" stroke="url(#accentGrad)" stroke-width="3"/>
+    <!-- 중앙 연결 -->
+    <line x1="-6" y1="-20" x2="6" y2="-20" stroke="#4f6ef7" stroke-width="3"/>
+    <line x1="-6" y1="0" x2="6" y2="0" stroke="#4f6ef7" stroke-width="3"/>
+    <line x1="-6" y1="20" x2="6" y2="20" stroke="#4f6ef7" stroke-width="3"/>
+    <!-- 왼쪽 주름 -->
+    <path d="M -44 -15 Q -55 0 -44 15" fill="none" stroke="#a855f7" stroke-width="2.5"/>
+    <path d="M -36 -28 Q -50 -15 -38 -5" fill="none" stroke="#a855f7" stroke-width="2"/>
+    <!-- 오른쪽 주름 -->
+    <path d="M 44 -15 Q 55 0 44 15" fill="none" stroke="#a855f7" stroke-width="2.5"/>
+    <path d="M 36 -28 Q 50 -15 38 -5" fill="none" stroke="#a855f7" stroke-width="2"/>
+    <!-- 차트 선 (뇌 안) -->
+    <polyline points="-20,10 -10,-5 0,8 10,-12 20,2" fill="none" stroke="#4f6ef7" stroke-width="2" stroke-opacity="0.7"/>
+    <circle cx="10" cy="-12" r="3" fill="#a855f7"/>
+  </g>
+
+  <!-- 메인 텍스트 : 로또 -->
+  <text
+    x="400" y="420"
+    font-family="'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif"
+    font-size="170"
+    font-weight="900"
+    text-anchor="middle"
+    fill="url(#textGrad)"
+    filter="url(#softGlow)"
+    letter-spacing="-4"
+  >로또</text>
+
+  <!-- 서브 텍스트 : 구분선 -->
+  <rect x="160" y="455" width="480" height="2" rx="1" fill="url(#accentGrad)" opacity="0.6"/>
+
+  <!-- STOCK BRAIN -->
+  <text
+    x="400" y="530"
+    font-family="'SF Pro Display', 'Helvetica Neue', Arial, sans-serif"
+    font-size="52"
+    font-weight="700"
+    text-anchor="middle"
+    fill="url(#accentGrad)"
+    filter="url(#softGlow)"
+    letter-spacing="8"
+  >STOCK BRAIN</text>
+
+  <!-- 하단 태그라인 -->
+  <text
+    x="400" y="590"
+    font-family="'SF Pro Display', 'Helvetica Neue', Arial, sans-serif"
+    font-size="22"
+    font-weight="400"
+    text-anchor="middle"
+    fill="#8892c8"
+    letter-spacing="3"
+  >DATA · SIGNAL · INSIGHT</text>
+
+  <!-- 하단 장식 점 3개 -->
+  <circle cx="350" cy="635" r="4" fill="#4f6ef7" opacity="0.6"/>
+  <circle cx="400" cy="635" r="5" fill="url(#accentGrad)" opacity="0.9"/>
+  <circle cx="450" cy="635" r="4" fill="#a855f7" opacity="0.6"/>
+
+</svg>

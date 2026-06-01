@@ -48,6 +48,7 @@ def load_wb(path: Path):
 def find_excel(pattern: str) -> Path | None:
     """패턴 문자열로 EXCEL_DIR에서 파일 찾기"""
     for f in EXCEL_DIR.iterdir():
+        if f.name.startswith("~$"): continue
         if pattern in f.name and f.suffix in (".xlsx", ".xlsm"):
             return f
     return None
@@ -382,133 +383,114 @@ def parse_유동성체크(dry_run: bool) -> dict:
     return {"file": path.name, "results": results}
 
 
-# ─── 파서 5: 수급오실레이터 (외국인+기관 5일누적/시총 퍼센타일) ──────
-
-def _read_wide_latest(ws, code_row_idx: int = 7, data_start_idx: int = 14) -> tuple[dict, str]:
-    """
-    wide-format 시트에서 종목코드→최신행값 딕셔너리 반환.
-    code_row_idx: codes가 있는 행의 0-based index (기본 row8 → index 7)
-    data_start_idx: 데이터 시작 행의 0-based index (기본 row15 → index 14)
-    반환: ({code: value}, last_date_str)
-    """
-    all_rows = list(ws.iter_rows(values_only=True))
-    if len(all_rows) <= code_row_idx:
-        return {}, ""
-
-    code_row = all_rows[code_row_idx]
-    # col1 이후: A로 시작하는 종목코드
-    col_to_code = {}
-    for i in range(1, len(code_row)):
-        v = code_row[i]
-        if isinstance(v, str) and v.startswith("A") and len(v) == 7:
-            col_to_code[i] = v
-
-    # 마지막 데이터 행 찾기 (col0 = date)
-    last_data = None
-    last_date = ""
-    for row in all_rows[data_start_idx:]:
-        if row and row[0] is not None:
-            last_data = row
-            if isinstance(row[0], (datetime, date)):
-                last_date = row[0].strftime("%Y-%m-%d")
-
-    result = {}
-    if last_data:
-        for col_idx, code in col_to_code.items():
-            val = last_data[col_idx] if col_idx < len(last_data) else None
-            if isinstance(val, (int, float)):
-                result[code] = float(val)
-
-    return result, last_date
-
+# ─── 파서 5: 수급오실레이터 (COM 기반 EMA MACD 방식) ─────────────
 
 def parse_수급오실레이터(dry_run: bool) -> dict:
     path = find_excel("수급오실레이터")
     if not path:
         return {"error": "수급오실레이터 파일 없음"}
 
-    wb = load_wb(path)
-    if not wb: return {"error": "열기 실패"}
+    try:
+        import win32com.client as win32
+    except ImportError:
+        return {"error": "win32com 없음 — pip install pywin32"}
 
-    # ── Step 1: 유니버스 → {code: (name, mktcap KRW bil)} ──
-    mktcap: dict[str, float] = {}
-    stock_names: dict[str, str] = {}
-    if "유니버스" in wb.sheetnames:
-        ws = wb["유니버스"]
-        for row in ws.iter_rows(min_row=14, values_only=True):
-            code = row[1] if len(row) > 1 else None
-            name = row[2] if len(row) > 2 else None
-            cap  = row[4] if len(row) > 4 else None
-            if not isinstance(code, str) or not code.startswith("A"): continue
-            if not isinstance(cap, (int, float)) or cap <= 0: continue
-            mktcap[code] = float(cap)
-            if name:
-                stock_names[code] = str(name).strip()
+    # EMA 상수 (calc_oscillator.py 동일)
+    K12, K26, K9 = 2/13, 2/27, 2/10
+    DATA_START, DATA_END = 15, 91
+    STAT_COL = 12
 
-    # ── Step 2: 외국인매수데이터 → {code: 5일누적외국인순매수 KRW bil} ──
-    latest_for, last_date = {}, ""
-    if "외국인매수데이터" in wb.sheetnames:
-        latest_for, last_date = _read_wide_latest(wb["외국인매수데이터"])
+    def ema(vals, k):
+        r = [vals[0]]
+        for v in vals[1:]:
+            r.append(v * k + r[-1] * (1 - k))
+        return r
 
-    # ── Step 3: 기관매수데이터 → {code: 5일누적기관순매수 KRW bil} ──
-    latest_inst = {}
-    if "기관매수데이터" in wb.sheetnames:
-        latest_inst, ld = _read_wide_latest(wb["기관매수데이터"])
-        if not last_date:
-            last_date = ld
+    def calc_osc(signal):
+        e12 = ema(signal, K12); e26 = ema(signal, K26)
+        macd = [a - b for a, b in zip(e12, e26)]
+        sig  = ema(macd, K9)
+        return [m - s for m, s in zip(macd, sig)]
 
-    wb.close()
+    print("    [COM] Excel 열기...")
+    xl = win32.Dispatch("Excel.Application")
+    xl.Visible = False
+    xl.AutomationSecurity = 3
+    wb_com = xl.Workbooks.Open(str(path))
 
-    # ── Step 4: 오실레이터 = (외인5일 + 기관5일) / 시총 ──
-    all_codes = set(latest_for) | set(latest_inst)
-    oscillators: dict[str, float] = {}
-    for code in all_codes:
-        cap = mktcap.get(code)
-        if not cap:
+    ws_osc  = wb_com.Sheets("수급오실레이터")
+    ws_size = wb_com.Sheets("시가총액")
+    ws_forn = wb_com.Sheets("외국인매수데이터")
+    ws_inst = wb_com.Sheets("기관매수데이터")
+
+    p10 = ws_osc.Cells(11, STAT_COL).Value2
+    p25 = ws_osc.Cells(10, STAT_COL).Value2
+    p75 = ws_osc.Cells(8,  STAT_COL).Value2
+    p90 = ws_osc.Cells(7,  STAT_COL).Value2
+    last_date = ws_forn.Cells(DATA_END, 1).Value2
+
+    max_col = ws_forn.UsedRange.Columns.Count
+    xl_stocks = {}
+    for c in range(2, max_col + 1):
+        name = ws_forn.Cells(9, c).Value2
+        code = ws_forn.Cells(8, c).Value2
+        if name:
+            xl_stocks[str(name)] = {"col": c, "code": str(code or "").replace("A", "")}
+
+    def to_matrix(ws):
+        raw = ws.Range(ws.Cells(DATA_START, 1), ws.Cells(DATA_END, max_col)).Value
+        return raw or []
+
+    mat_size = to_matrix(ws_size)
+    mat_forn = to_matrix(ws_forn)
+    mat_inst = to_matrix(ws_inst)
+    wb_com.Close(False); xl.Quit()
+    print(f"    [COM] Excel 닫힘. {len(xl_stocks)}종목 계산 중...")
+
+    results = []
+    for name, info in xl_stocks.items():
+        c = info["col"] - 1
+        size_v = [float(mat_size[r][c]) if mat_size[r][c] else None for r in range(len(mat_size))]
+        forn_v = [float(mat_forn[r][c]) if mat_forn[r][c] else None for r in range(len(mat_forn))]
+        inst_v = [float(mat_inst[r][c]) if mat_inst[r][c] else None for r in range(len(mat_inst))]
+        pairs  = [((fv or 0) + (iv or 0), sv)
+                  for fv, iv, sv in zip(forn_v, inst_v, size_v) if sv and sv > 0]
+        if len(pairs) < 27:
             continue
-        oscillators[code] = (latest_for.get(code, 0.0) + latest_inst.get(code, 0.0)) / cap
+        series = calc_osc([net / sz for net, sz in pairs])
+        osc = series[-1]
+        trend = "↑ 재진입" if len(series) >= 5 and osc > sum(series[-5:-1])/4 * 1.05 else \
+                "↓ 빈집심화" if len(series) >= 5 and osc < sum(series[-5:-1])/4 * 0.95 else "→ 횡보"
+        results.append({"name": name, "code": info["code"], "osc": osc, "trend": trend})
 
-    if not oscillators:
-        return {"file": path.name, "error": "오실레이터 계산 실패 — 데이터 없음"}
+    if not results:
+        return {"file": path.name, "error": "계산 가능 종목 없음"}
 
-    # ── Step 5: 퍼센타일 랭킹 → 빈집 등급 ──
-    sorted_vals = sorted(oscillators.values())
-    n = len(sorted_vals)
+    def pct(v):
+        if v <= p10: return 10 * (v / p10) if p10 else 5
+        if v <= p25: return 10 + (v - p10) / (p25 - p10) * 15
+        if v <= p75: return 25 + (v - p25) / (p75 - p25) * 50
+        if v <= p90: return 75 + (v - p75) / (p90 - p75) * 15
+        return min(90 + (v - p90) / abs(p90) * 5 if p90 else 95, 100)
 
-    def pct_rank(v: float) -> float:
-        lo, hi = 0, n
-        while lo < hi:
-            mid = (lo + hi) // 2
-            if sorted_vals[mid] <= v:
-                lo = mid + 1
-            else:
-                hi = mid
-        return lo / n
+    빈집_A = sorted([r for r in results if r["osc"] <= p10], key=lambda x: x["osc"])
+    빈집_B = sorted([r for r in results if p10 < r["osc"] <= p25], key=lambda x: x["osc"])
+    for r in results:
+        r["pct"] = pct(r["osc"])
 
-    빈집_A, 빈집_B = [], []
-    for code, osc in oscillators.items():
-        pct = pct_rank(osc)
-        entry = {
-            "code": code,
-            "name": stock_names.get(code, code),
-            "osc": osc,
-            "pct": pct,
-        }
-        if pct <= 0.10:
-            빈집_A.append(entry)
-        elif pct <= 0.25:
-            빈집_B.append(entry)
-
-    빈집_A.sort(key=lambda x: x["osc"])
-    빈집_B.sort(key=lambda x: x["osc"])
+    n = len(results)
+    if isinstance(last_date, datetime):
+        last_date_str = last_date.strftime("%Y-%m-%d")
+    else:
+        last_date_str = TODAY
 
     return {
         "file": path.name,
-        "date": last_date or TODAY,
+        "date": last_date_str,
         "total": n,
-        "빈집_A": 빈집_A[:30],
-        "빈집_B": 빈집_B[:30],
-        "note": f"전체 {n}종목 | 빈집A: {len(빈집_A)}개 ({len(빈집_A)/n:.0%}) | 빈집B: {len(빈집_B)}개 ({len(빈집_B)/n:.0%})",
+        "빈집_A": [{"name": r["name"], "code": r["code"], "osc": r["osc"], "pct": r["pct"], "trend": r["trend"]} for r in 빈집_A],
+        "빈집_B": [{"name": r["name"], "code": r["code"], "osc": r["osc"], "pct": r["pct"], "trend": r["trend"]} for r in 빈집_B],
+        "note": f"전체 {n}종목 | 빈집A: {len(빈집_A)}개 | 빈집B: {len(빈집_B)}개 | 기준A≤{p10:.6f} B≤{p25:.6f}",
     }
 
 
@@ -597,17 +579,17 @@ def build_report(results: dict) -> str:
         b_list = r.get("빈집_B", [])
         if a_list:
             lines.append(f"### 🏚️ 빈집A — 완전빈집 (하위 10%) {len(a_list)}종목")
-            lines.append("| 종목 | 오실레이터 | 퍼센타일 |")
-            lines.append("|------|----------|---------|")
+            lines.append("| 종목 | 오실레이터 | 퍼센타일 | 방향 |")
+            lines.append("|------|----------|---------|------|")
             for it in a_list[:20]:
-                lines.append(f"| {it['name']} | {it['osc']:.4f} | {it['pct']:.0%} |")
+                lines.append(f"| {it['name']} | {it['osc']:+.6f} | 하위{it['pct']:.1f}% | {it.get('trend','')} |")
             lines.append("")
         if b_list:
             lines.append(f"### 🏠 빈집B — 반빈집 (하위 10~25%) {len(b_list)}종목")
-            lines.append("| 종목 | 오실레이터 | 퍼센타일 |")
-            lines.append("|------|----------|---------|")
+            lines.append("| 종목 | 오실레이터 | 퍼센타일 | 방향 |")
+            lines.append("|------|----------|---------|------|")
             for it in b_list[:20]:
-                lines.append(f"| {it['name']} | {it['osc']:.4f} | {it['pct']:.0%} |")
+                lines.append(f"| {it['name']} | {it['osc']:+.6f} | 하위{it['pct']:.1f}% | {it.get('trend','')} |")
             lines.append("")
 
     return "\n".join(lines)
@@ -671,17 +653,9 @@ def build_빈집_tg(r: dict, results: dict) -> str:
     if a_list:
         lines.append(f"<b>🔴 완전빈집A (하위10%) — {len(a_list)}종목</b>")
         # 2개씩 한 줄로
-        names = [f"{it['name']}({it['osc']:+.3f})" for it in a_list[:20]]
-        for i in range(0, len(names), 3):
-            lines.append("  " + "  |  ".join(names[i:i+3]))
-        lines.append("")
-
-    # ── B 반빈집
-    if b_list:
-        lines.append(f"<b>🟠 반빈집B (하위10~25%) — {len(b_list)}종목</b>")
-        names = [f"{it['name']}({it['osc']:+.3f})" for it in b_list[:20]]
-        for i in range(0, len(names), 3):
-            lines.append("  " + "  |  ".join(names[i:i+3]))
+        for it in a_list:
+            trend = it.get("trend", "")
+            lines.append(f"  {it['name']}  <code>{it['osc']:+.6f}</code>  하위{it.get('pct',0):.0f}%  {trend}")
         lines.append("")
 
     # ── 레이팅 상향 TOP5 (추정이익변경에서)

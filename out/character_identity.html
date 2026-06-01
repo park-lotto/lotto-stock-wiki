@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>로또 캐릭터 아이덴티티</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0d1a;
+    color: #e8eaf6;
+    font-family: 'Noto Sans KR', sans-serif;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  h1 {
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: #5c6bc0;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  h2 {
+    font-size: 36px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #fff 40%, #9fa8da);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 6px;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: #5c6bc0;
+    margin-bottom: 60px;
+    letter-spacing: 1px;
+  }
+
+  /* ── 섹션 ── */
+  .section { margin-bottom: 70px; }
+  .section-title {
+    font-size: 11px;
+    letter-spacing: 5px;
+    color: #5c6bc0;
+    text-transform: uppercase;
+    border-left: 3px solid #3f51b5;
+    padding-left: 12px;
+    margin-bottom: 28px;
+  }
+
+  /* ── 캐릭터 카드 그리드 ── */
+  .char-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  .char-card {
+    background: #0f1325;
+    border: 1px solid #1e2442;
+    border-radius: 16px;
+    padding: 28px 20px;
+    text-align: center;
+    transition: border-color 0.2s;
+  }
+  .char-card:hover { border-color: #3f51b5; }
+
+  .char-card .label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: #5c6bc0;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .char-card .name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    margin-top: 16px;
+    margin-bottom: 6px;
+  }
+  .char-card .desc {
+    font-size: 12px;
+    color: #5c6bc0;
+    line-height: 1.7;
+  }
+
+  /* ── 캐릭터 SVG 스케치 ── */
+  .face-wrap {
+    width: 140px;
+    height: 140px;
+    margin: 0 auto;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #131830;
+    border: 2px solid #1e2442;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── 키워드 뱃지 ── */
+  .badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .badge {
+    background: #131830;
+    border: 1px solid #2a3060;
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 12px;
+    color: #9fa8da;
+    letter-spacing: 0.5px;
+  }
+  .badge.accent { border-color: #3f51b5; color: #7986cb; }
+
+  /* ── 색상 팔레트 ── */
+  .palette {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .swatch {
+    width: 72px;
+    text-align: center;
+  }
+  .swatch-color {
+    width: 72px;
+    height: 72px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .swatch-name { font-size: 10px; color: #5c6bc0; letter-spacing: 0.5px; }
+  .swatch-hex { font-size: 11px; color: #9fa8da; font-weight: 500; }
+
+  /* ── 표정 섹션 ── */
+  .emotion-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  .emotion-card {
+    background: #0f1325;
+    border: 1px solid #1e2442;
+    border-radius: 14px;
+    padding: 20px 16px;
+    text-align: center;
+  }
+  .emotion-card .emo-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 12px;
+    margin-bottom: 4px;
+  }
+  .emotion-card .emo-quote {
+    font-size: 11px;
+    color: #5c6bc0;
+    line-height: 1.6;
+    font-style: italic;
+  }
+
+  /* ── 사용처 테이블 ── */
+  .use-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  .use-card {
+    background: #0f1325;
+    border: 1px solid #1e2442;
+    border-radius: 14px;
+    padding: 20px 24px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .use-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: #131830;
+    border: 1px solid #2a3060;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 18px;
+  }
+  .use-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; color: #c5cae9; }
+  .use-desc { font-size: 12px; color: #5c6bc0; line-height: 1.7; }
+
+  /* ── 페르소나 블록 ── */
+  .persona-block {
+    background: #0f1325;
+    border: 1px solid #1e2442;
+    border-radius: 16px;
+    padding: 32px 36px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 32px;
+  }
+  .persona-item .pi-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: #3f51b5;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .persona-item .pi-value {
+    font-size: 15px;
+    font-weight: 600;
+    color: #c5cae9;
+    line-height: 1.6;
+  }
+
+  hr.divider {
+    border: none;
+    border-top: 1px solid #1e2442;
+    margin: 50px 0;
+  }
+
+  .tag-accent { color: #7986cb; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- 헤더 -->
+  <h1>LOTTO × STOCK BRAIN</h1>
+  <h2>캐릭터 아이덴티티 가이드</h2>
+  <p class="subtitle">CHARACTER IDENTITY DIRECTION v1.0 · 2026-06-01</p>
+
+  <!-- ─────────────────────────── 컨셉 ─────────────────────────── -->
+  <div class="section">
+    <p class="section-title">01 · Character Concept</p>
+
+    <div style="background:#0f1325;border:1px solid #1e2442;border-radius:16px;padding:32px 36px;margin-bottom:20px;">
+      <div style="font-size:13px;color:#5c6bc0;letter-spacing:2px;margin-bottom:12px;">CORE CONCEPT</div>
+      <div style="font-size:28px;font-weight:900;color:#fff;margin-bottom:16px;line-height:1.4;">
+        "20년 내공을 숨긴 <span class="tag-accent">친구 같은 고수</span>"
+      </div>
+      <div style="font-size:14px;color:#9fa8da;line-height:1.9;max-width:700px;">
+        자랑하지 않는다. 화내지 않는다. 당황하지 않는다.<br>
+        데이터가 말하게 두고, 본인은 커피 한 잔 들고 옆에서 조용히 설명해주는 사람.<br>
+        처음 보면 그냥 평범한 아저씨인데, 말 한마디가 꽂힌다.
+      </div>
+      <div class="badge-row" style="margin-top:20px;">
+        <span class="badge accent"># 친근한</span>
+        <span class="badge accent"># 냉정한</span>
+        <span class="badge accent"># 20년 내공</span>
+        <span class="badge"># 과시 없음</span>
+        <span class="badge"># 데이터 중심</span>
+        <span class="badge"># 감정 배제</span>
+        <span class="badge"># 실전파</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────── 표정 3종 ─────────────────────────── -->
+  <div class="section">
+    <p class="section-title">02 · Expression Kit — 4종 표정</p>
+    <div class="emotion-grid">
+
+      <!-- 기본 -->
+      <div class="emotion-card">
+        <svg width="90" height="100" viewBox="0 0 90 100">
+          <!-- 얼굴 -->
+          <ellipse cx="45" cy="52" rx="34" ry="38" fill="#1a2040" stroke="#2a3570" stroke-width="1.5"/>
+          <!-- 머리카락 -->
+          <ellipse cx="45" cy="22" rx="34" ry="16" fill="#111828"/>
+          <rect x="11" y="20" width="68" height="12" fill="#111828"/>
+          <!-- 눈 — 평온 -->
+          <ellipse cx="33" cy="50" rx="5" ry="5.5" fill="#fff"/>
+          <circle cx="33" cy="50" r="3.5" fill="#1a2040"/>
+          <circle cx="34" cy="49" r="1" fill="#fff"/>
+          <ellipse cx="57" cy="50" rx="5" ry="5.5" fill="#fff"/>
+          <circle cx="57" cy="50" r="3.5" fill="#1a2040"/>
+          <circle cx="58" cy="49" r="1" fill="#fff"/>
+          <!-- 눈썹 — 자신감 -->
+          <path d="M28 43 Q33 40 38 43" stroke="#ccc" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <path d="M52 43 Q57 40 62 43" stroke="#ccc" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <!-- 코 -->
+          <path d="M43 57 Q45 62 47 57" stroke="#4a5580" stroke-width="1.5" fill="none"/>
+          <!-- 입 — 부드러운 미소 -->
+          <path d="M37 68 Q45 74 53 68" stroke="#ccc" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <!-- 안경 -->
+          <rect x="27" y="45" width="12" height="11" rx="4" fill="none" stroke="#5c6bc0" stroke-width="1.5"/>
+          <rect x="51" y="45" width="12" height="11" rx="4" fill="none" stroke="#5c6bc0" stroke-width="1.5"/>
+          <line x1="39" y1="50" x2="51" y2="50" stroke="#5c6bc0" stroke-width="1.5"/>
+        </svg>
+        <div class="emo-label" style="color:#7986cb;">기본 · CALM</div>
+        <div class="emo-quote">"그래서 수급이<br>뭐라고 하냐면요."</div>
+      </div>
+
+      <!-- 탑픽 발견 -->
+      <div class="emotion-card">
+        <svg width="90" height="100" viewBox="0 0 90 100">
+          <ellipse cx="45" cy="52" rx="34" ry="38" fill="#1a2040" stroke="#2a3570" stroke-width="1.5"/>
+          <ellipse cx="45" cy="22" rx="34" ry="16" fill="#111828"/>
+          <rect x="11" y="20" width="68" height="12" fill="#111828"/>
+          <!-- 눈 — 반짝 -->
+          <ellipse cx="33" cy="50" rx="6" ry="6.5" fill="#fff"/>
+          <circle cx="33" cy="50" r="4" fill="#3f51b5"/>
+          <circle cx="34" cy="48" r="1.5" fill="#fff"/>
+          <ellipse cx="57" cy="50" rx="6" ry="6.5" fill="#fff"/>
+          <circle cx="57" cy="50" r="4" fill="#3f51b5"/>
+          <circle cx="58" cy="48" r="1.5" fill="#fff"/>
+          <!-- 눈썹 — 들뜸 -->
+          <path d="M27 41 Q33 37 39 40" stroke="#ccc" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <path d="M51 41 Q57 37 63 40" stroke="#ccc" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <!-- 코 -->
+          <path d="M43 57 Q45 62 47 57" stroke="#4a5580" stroke-width="1.5" fill="none"/>
+          <!-- 입 — 크게 웃음 -->
+          <path d="M35 68 Q45 77 55 68" stroke="#ccc" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <!-- 안경 -->
+          <rect x="27" y="44" width="12" height="12" rx="4" fill="none" stroke="#7986cb" stroke-width="1.5"/>
+          <rect x="51" y="44" width="12" height="12" rx="4" fill="none" stroke="#7986cb" stroke-width="1.5"/>
+          <line x1="39" y1="50" x2="51" y2="50" stroke="#7986cb" stroke-width="1.5"/>
+          <!-- 빛 이펙트 -->
+          <circle cx="70" cy="30" r="3" fill="#ffd740" opacity="0.8"/>
+          <circle cx="75" cy="38" r="2" fill="#ffd740" opacity="0.5"/>
+          <circle cx="65" cy="22" r="2" fill="#ffd740" opacity="0.5"/>
+        </svg>
+        <div class="emo-label" style="color:#ffd740;">탑픽 · FOUND</div>
+        <div class="emo-quote">"나왔다.<br>빈집 + 신호 겹쳤어요."</div>
+      </div>
+
+      <!-- 경고/분석 -->
+      <div class="emotion-card">
+        <svg width="90" height="100" viewBox="0 0 90 100">
+          <ellipse cx="45" cy="52" rx="34" ry="38" fill="#1a2040" stroke="#2a3570" stroke-width="1.5"/>
+          <ellipse cx="45" cy="22" rx="34" ry="16" fill="#111828"/>
+          <rect x="11" y="20" width="68" height="12" fill="#111828"/>
+          <!-- 눈 — 날카롭게 -->
+          <ellipse cx="33" cy="50" rx="5" ry="4" fill="#fff"/>
+          <circle cx="33" cy="50" r="3" fill="#1a2040"/>
+          <circle cx="34" cy="49" r="1" fill="#fff"/>
+          <ellipse cx="57" cy="50" rx="5" ry="4" fill="#fff"/>
+          <circle cx="57" cy="50" r="3" fill="#1a2040"/>
+          <circle cx="58" cy="49" r="1" fill="#fff"/>
+          <!-- 눈썹 — 찌푸림 -->
+          <path d="M28 44 Q33 41 38 44" stroke="#ccc" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path d="M52 44 Q57 41 62 44" stroke="#ccc" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path d="M30 43 Q33 40 36 43" stroke="#ccc" stroke-width="1" fill="none"/>
+          <!-- 코 -->
+          <path d="M43 57 Q45 62 47 57" stroke="#4a5580" stroke-width="1.5" fill="none"/>
+          <!-- 입 — 일자 -->
+          <line x1="38" y1="69" x2="52" y2="69" stroke="#aaa" stroke-width="2" stroke-linecap="round"/>
+          <!-- 안경 -->
+          <rect x="27" y="45" width="12" height="9" rx="3" fill="none" stroke="#ef5350" stroke-width="1.5"/>
+          <rect x="51" y="45" width="12" height="9" rx="3" fill="none" stroke="#ef5350" stroke-width="1.5"/>
+          <line x1="39" y1="50" x2="51" y2="50" stroke="#ef5350" stroke-width="1.5"/>
+        </svg>
+        <div class="emo-label" style="color:#ef5350;">경고 · ALERT</div>
+        <div class="emo-quote">"이거 수급<br>안 좋아요. 패스."</div>
+      </div>
+
+      <!-- 설명 중 -->
+      <div class="emotion-card">
+        <svg width="90" height="100" viewBox="0 0 90 100">
+          <ellipse cx="45" cy="52" rx="34" ry="38" fill="#1a2040" stroke="#2a3570" stroke-width="1.5"/>
+          <ellipse cx="45" cy="22" rx="34" ry="16" fill="#111828"/>
+          <rect x="11" y="20" width="68" height="12" fill="#111828"/>
+          <!-- 눈 — 한쪽 찡긋 -->
+          <ellipse cx="33" cy="50" rx="5" ry="5.5" fill="#fff"/>
+          <circle cx="33" cy="50" r="3.5" fill="#1a2040"/>
+          <circle cx="34" cy="49" r="1" fill="#fff"/>
+          <!-- 오른눈 반쯤 감음 -->
+          <ellipse cx="57" cy="51" rx="5" ry="3" fill="#fff"/>
+          <circle cx="57" cy="51" r="2.5" fill="#1a2040"/>
+          <path d="M52 49 Q57 47 62 49" stroke="#ddd" stroke-width="1.5" fill="none"/>
+          <!-- 눈썹 -->
+          <path d="M28 43 Q33 41 38 43" stroke="#ccc" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <path d="M52 42 Q57 40 62 43" stroke="#ccc" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <!-- 코 -->
+          <path d="M43 57 Q45 62 47 57" stroke="#4a5580" stroke-width="1.5" fill="none"/>
+          <!-- 입 — 한쪽 올라간 미소 -->
+          <path d="M38 68 Q43 72 52 67" stroke="#ccc" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <!-- 안경 -->
+          <rect x="27" y="45" width="12" height="11" rx="4" fill="none" stroke="#5c6bc0" stroke-width="1.5"/>
+          <rect x="51" y="45" width="12" height="11" rx="4" fill="none" stroke="#5c6bc0" stroke-width="1.5"/>
+          <line x1="39" y1="50" x2="51" y2="50" stroke="#5c6bc0" stroke-width="1.5"/>
+        </svg>
+        <div class="emo-label" style="color:#26c6da;">설명 · EXPLAIN</div>
+        <div class="emo-quote">"이해되셨죠?<br>사실 간단해요."</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ─────────────────────────── 색상 팔레트 ─────────────────────────── -->
+  <div class="section">
+    <p class="section-title">03 · Color Palette</p>
+    <div class="palette">
+      <div class="swatch">
+        <div class="swatch-color" style="background:#1a2040;"></div>
+        <div class="swatch-name">SKIN BASE</div>
+        <div class="swatch-hex">#1A2040</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#111828;"></div>
+        <div class="swatch-name">HAIR</div>
+        <div class="swatch-hex">#111828</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#3f51b5;"></div>
+        <div class="swatch-name">GLASSES</div>
+        <div class="swatch-hex">#3F51B5</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#263238;"></div>
+        <div class="swatch-name">SHIRT</div>
+        <div class="swatch-hex">#263238</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#ffd740;"></div>
+        <div class="swatch-name">SIGNAL 🔴</div>
+        <div class="swatch-hex">#FFD740</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#ef5350;"></div>
+        <div class="swatch-name">ALERT</div>
+        <div class="swatch-hex">#EF5350</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#26c6da;"></div>
+        <div class="swatch-name">DATA</div>
+        <div class="swatch-hex">#26C6DA</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#a855f7;"></div>
+        <div class="swatch-name">BRAIN</div>
+        <div class="swatch-hex">#A855F7</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────── 페르소나 ─────────────────────────── -->
+  <div class="section">
+    <p class="section-title">04 · Character Persona</p>
+    <div class="persona-block">
+      <div class="persona-item">
+        <div class="pi-label">이름</div>
+        <div class="pi-value">로또<br><span style="font-size:12px;color:#5c6bc0;">LOTTO</span></div>
+      </div>
+      <div class="persona-item">
+        <div class="pi-label">경력</div>
+        <div class="pi-value">주식 20년<br>개인 사업자</div>
+      </div>
+      <div class="persona-item">
+        <div class="pi-label">나이대</div>
+        <div class="pi-value">40대 느낌<br>실제 나이 무관</div>
+      </div>
+      <div class="persona-item">
+        <div class="pi-label">특징 외형</div>
+        <div class="pi-value">가는 뿔테 안경<br>세미캐주얼 복장</div>
+      </div>
+      <div class="persona-item">
+        <div class="pi-label">말투</div>
+        <div class="pi-value">"-요" 체<br>낮고 편안하게</div>
+      </div>
+      <div class="persona-item">
+        <div class="pi-label">시그니처</div>
+        <div class="pi-value">커피 한 잔<br>+ 차트 배경</div>
+      </div>
+      <div class="persona-item">
+        <div class="pi-label">절대 안 하는 것</div>
+        <div class="pi-value">뇌동 매매<br>과시 / 흥분</div>
+      </div>
+      <div class="persona-item">
+        <div class="pi-label">무기</div>
+        <div class="pi-value">수급 빈집 탐지<br>STOCK BRAIN</div>
+      </div>
+      <div class="persona-item">
+        <div class="pi-label">한 줄 정체성</div>
+        <div class="pi-value" style="color:#7986cb;">"데이터가<br>말하게 둔다."</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────── 사용처 ─────────────────────────── -->
+  <div class="section">
+    <p class="section-title">05 · Usage Scenes</p>
+    <div class="use-grid">
+      <div class="use-card">
+        <div class="use-icon">▶</div>
+        <div>
+          <div class="use-title">유튜브 썸네일</div>
+          <div class="use-desc">표정 2종 조합 — 기본(설명 중) + 탑픽(발견). 텍스트 없이도 감정 전달.</div>
+        </div>
+      </div>
+      <div class="use-card">
+        <div class="use-icon">✦</div>
+        <div>
+          <div class="use-title">Remotion 영상 내 자막바</div>
+          <div class="use-desc">말풍선 + 얼굴 아이콘 콤보. 씬 전환마다 표정 바꿔 내레이터 역할.</div>
+        </div>
+      </div>
+      <div class="use-card">
+        <div class="use-icon">📲</div>
+        <div>
+          <div class="use-title">텔레그램 브리핑 카드</div>
+          <div class="use-desc">카드 하단 우측 고정 배치. 탑픽 🔴 = 탑픽 발견 표정 / 경고 = 빨간 안경 표정.</div>
+        </div>
+      </div>
+      <div class="use-card">
+        <div class="use-icon">🧠</div>
+        <div>
+          <div class="use-title">STOCK BRAIN 대시보드</div>
+          <div class="use-desc">신호 등급별 표정 자동 매핑. 섹터 온도 🔴 = 탑픽 표정, 🟡 = 설명 표정.</div>
+        </div>
+      </div>
+      <div class="use-card">
+        <div class="use-icon">🖼</div>
+        <div>
+          <div class="use-title">채널 아트 / 프로필</div>
+          <div class="use-desc">기본 표정 + STOCK BRAIN 로고 조합. 배경 다크 네이비 고정.</div>
+        </div>
+      </div>
+      <div class="use-card">
+        <div class="use-icon">📌</div>
+        <div>
+          <div class="use-title">굿즈 / 스티커팩</div>
+          <div class="use-desc">4종 표정 기본. 추후 확장 — 커피 들기 / 차트 가리키기 / 어깨 으쓱.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────── NEXT STEP ─────────────────────────── -->
+  <div class="section">
+    <p class="section-title">06 · Next Step</p>
+    <div style="background:#0f1325;border:1px solid #1e2442;border-radius:14px;padding:28px 32px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid #1a2035;">
+          <span style="color:#3f51b5;font-weight:700;font-size:13px;margin-top:2px;">01</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#c5cae9;margin-bottom:3px;">일러스트레이터 의뢰 or 직접 제작</div>
+            <div style="font-size:11px;color:#5c6bc0;">이 가이드 PDF + 표정 4종 SVG 레퍼런스 전달</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid #1a2035;">
+          <span style="color:#3f51b5;font-weight:700;font-size:13px;margin-top:2px;">02</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#c5cae9;margin-bottom:3px;">PNG 스프라이트 4종 확보</div>
+            <div style="font-size:11px;color:#5c6bc0;">투명 배경 PNG로 각 표정별 1장씩</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;">
+          <span style="color:#3f51b5;font-weight:700;font-size:13px;margin-top:2px;">03</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#c5cae9;margin-bottom:3px;">Remotion 캐릭터 컴포넌트 제작</div>
+            <div style="font-size:11px;color:#5c6bc0;">표정 props로 전환, 말풍선 자동 연동</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;">
+          <span style="color:#3f51b5;font-weight:700;font-size:13px;margin-top:2px;">04</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#c5cae9;margin-bottom:3px;">신호 등급별 표정 자동 매핑</div>
+            <div style="font-size:11px;color:#5c6bc0;">STOCK BRAIN 대시보드 캐릭터 반응 연동</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

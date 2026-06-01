@@ -2,657 +2,522 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=800">
-<title>투경 대시보드 — STOCK BRAIN 2026.05.29</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>투경 대시보드 2026-06-01</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Space+Grotesk:wght@400;500;700&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0d1117; color: #e6edf3; font-family: 'Segoe UI', sans-serif; font-size: 14px; padding: 20px; }
+  h1 { font-size: 20px; color: #58a6ff; margin-bottom: 4px; }
+  .meta { color: #8b949e; font-size: 12px; margin-bottom: 24px; }
+  .meta b { color: #f0f6fc; }
 
-* { margin:0; padding:0; box-sizing:border-box; }
+  /* 상단 요약 카드 */
+  .summary { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+  .sum-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+               padding: 14px 20px; flex: 1; min-width: 130px; }
+  .sum-card .num { font-size: 32px; font-weight: 700; line-height: 1; }
+  .sum-card .lbl { font-size: 11px; color: #8b949e; margin-top: 4px; }
+  .sum-card.red   .num { color: #f85149; }
+  .sum-card.green .num { color: #3fb950; }
+  .sum-card.orange .num { color: #d29922; }
+  .sum-card.blue  .num { color: #58a6ff; }
 
-:root {
-  --bg:     #07090f;
-  --card:   #0d1020;
-  --card2:  #111828;
-  --border: rgba(0,229,198,0.07);
-  --border2:rgba(0,229,198,0.2);
-  --mint:   #00e5c6;
-  --green:  #00ffa3;
-  --red:    #ff2244;
-  --yellow: #ffe500;
-  --orange: #ff9040;
-  --purple: #c084fc;
-  --text:   #f0f8ff;
-  --sub:    #8896aa;
-  --dim:    #64748b;
-}
+  /* 섹션 */
+  .section { margin-bottom: 28px; }
+  .section-title { font-size: 15px; font-weight: 600; margin-bottom: 12px;
+                    padding-bottom: 6px; border-bottom: 1px solid #21262d; }
+  .section-title.green { color: #3fb950; }
+  .section-title.red   { color: #f85149; }
+  .section-title.gold  { color: #d29922; }
+  .section-title.blue  { color: #58a6ff; }
 
-body {
-  background:var(--bg);
-  background-image:
-    linear-gradient(rgba(0,229,198,0.022) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(0,229,198,0.022) 1px,transparent 1px);
-  background-size:40px 40px;
-  font-family:'Noto Sans KR',sans-serif;
-  color:var(--text);
-  width:800px;
-  margin:0 auto;
-  padding:16px;
-}
+  /* 이벤트 칩 */
+  .chip { display: inline-block; padding: 5px 12px; border-radius: 20px;
+           font-size: 13px; margin: 3px; }
+  .chip.green { background: #0d4429; border: 1px solid #3fb950; color: #3fb950; }
+  .chip.red   { background: #3d0914; border: 1px solid #f85149; color: #f85149; }
+  .none-text  { color: #8b949e; font-size: 13px; }
 
-.wrap {
-  background:var(--card);
-  border-radius:16px;
-  overflow:hidden;
-  border:1px solid var(--border);
-  position:relative;
-}
-.wrap::before {
-  content:'';
-  position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent 5%,rgba(0,229,198,0.5) 30%,#00e5c6 50%,rgba(0,229,198,0.5) 70%,transparent 95%);
-}
+  /* 종가배팅 카드 */
+  .bet-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+               padding: 14px 16px; margin-bottom: 10px; }
+  .bet-name { font-size: 16px; font-weight: 700; color: #f0f6fc; }
+  .bet-code { font-size: 12px; color: #8b949e; font-weight: 400; }
+  .bet-mkt  { font-size: 11px; background: #21262d; padding: 2px 6px; border-radius: 4px;
+               color: #8b949e; margin-left: 6px; }
+  .bet-price { margin: 6px 0; color: #8b949e; font-size: 13px; }
+  .bet-price b { color: #f0f6fc; font-size: 15px; }
+  .bet-conds { margin: 8px 0; display: flex; gap: 6px; flex-wrap: wrap; }
+  .verdict { padding: 8px 12px; border-radius: 6px; font-size: 13px; margin-top: 8px; font-weight: 600; }
+  .verdict.green  { background: #0d4429; color: #3fb950; }
+  .verdict.orange { background: #3d2e00; color: #d29922; }
 
-/* HEADER */
-.hd {
-  padding:16px 22px 13px;
-  display:flex;justify-content:space-between;align-items:flex-end;
-  border-bottom:1px solid rgba(255,255,255,0.04);
-}
-.brand-row { display:flex;align-items:center;gap:7px;margin-bottom:5px; }
-.brand-dot { width:6px;height:6px;border-radius:50%;background:var(--mint);box-shadow:0 0 8px var(--mint),0 0 16px rgba(0,229,198,0.3); }
-.brand-txt { font-size:10px;font-weight:900;letter-spacing:4px;color:var(--mint); }
-.hd-title  { font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.5px;line-height:1; }
-.hd-title .hl { color:var(--mint);text-shadow:0 0 20px rgba(0,229,198,0.4); }
-.hd-sub    { font-size:11px;color:var(--sub);margin-top:4px; }
-.hd-right  { text-align:right; }
-.hd-brand-sub { font-size:10px;color:var(--sub);margin-bottom:6px; }
-.hd-date { background:var(--mint);color:#001a14;font-size:12px;font-weight:900;padding:4px 14px;border-radius:18px;display:inline-block; }
+  /* 조건 뱃지 */
+  .cond { padding: 3px 8px; border-radius: 4px; font-size: 12px; margin: 2px; display: inline-block; }
+  .cond.ok { background: #0d4429; color: #3fb950; }
+  .cond.ng { background: #3d0914; color: #f85149; }
 
-/* 요약 카운터 */
-.stat-row {
-  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
-  padding:12px 16px;
-  border-bottom:1px solid rgba(255,255,255,0.04);
-}
-.stat {
-  background:var(--card2);border:1px solid var(--border);
-  border-radius:10px;padding:10px 14px;text-align:center;
-  position:relative;overflow:hidden;
-}
-.stat::before { content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:10px 10px 0 0; }
-.stat.s-mint::before   { background:var(--mint); }
-.stat.s-red::before    { background:var(--red); }
-.stat.s-yellow::before { background:var(--yellow); }
-.stat.s-purple::before { background:var(--purple); }
-.stat-num { font-size:28px;font-weight:900;line-height:1;margin-bottom:4px; }
-.stat.s-mint   .stat-num { color:var(--mint); }
-.stat.s-red    .stat-num { color:var(--red); }
-.stat.s-yellow .stat-num { color:var(--yellow); }
-.stat.s-purple .stat-num { color:var(--purple); }
-.stat-lbl { font-size:10px;color:var(--sub); }
-
-/* SECTION HEADER */
-.sec-hd {
-  padding:9px 22px 6px;
-  display:flex;align-items:center;gap:7px;
-  border-top:1px solid rgba(255,255,255,0.04);
-  margin-top:0;
-}
-.sec-dia { color:var(--mint);font-size:14px;line-height:1; }
-.sec-lbl { font-size:10px;font-weight:900;color:#a8b8cc;letter-spacing:3px; }
-.sec-cnt { margin-left:auto;font-size:10px;color:#8896aa; }
-
-/* 종가배팅 카드 그리드 (4×2) */
-.bet-grid {
-  padding:0 16px 10px;
-  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
-}
-.bc {
-  background:var(--card2);border:1px solid var(--border);
-  border-radius:10px;padding:10px 11px;
-  position:relative;overflow:hidden;
-}
-.bc::before { content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:10px 10px 0 0; }
-.bc.top::before  { background:linear-gradient(90deg,var(--mint),#00ffa3); }
-.bc.sure::before { background:var(--mint); }
-.bc.cond::before { background:var(--yellow); }
-.bc.fail::before { background:rgba(100,116,139,0.5); }
-.bc.top  { border-color:rgba(0,229,198,0.25); }
-.bc.sure { border-color:rgba(0,229,198,0.15); }
-.bc.cond { border-color:rgba(255,229,0,0.15); }
-.bc.fail { border-color:rgba(100,116,139,0.15); }
-
-.bc-badge {
-  font-size:9px;font-weight:900;padding:2px 7px;border-radius:4px;border:1px solid;
-  display:inline-flex;align-items:center;gap:3px;margin-bottom:5px;
-}
-.bc.top  .bc-badge { color:var(--mint);   border-color:rgba(0,229,198,0.4);  background:rgba(0,229,198,0.1); }
-.bc.sure .bc-badge { color:var(--mint);   border-color:rgba(0,229,198,0.3);  background:rgba(0,229,198,0.07); }
-.bc.cond .bc-badge { color:var(--yellow); border-color:rgba(255,229,0,0.35); background:rgba(255,229,0,0.08); }
-.bc.fail .bc-badge { color:#64748b;       border-color:rgba(100,116,139,0.3);background:rgba(100,116,139,0.07); }
-
-.bc-name  { font-size:12px;font-weight:900;color:#fff;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
-.bc-code  { font-size:9.5px;color:var(--sub);margin-bottom:5px; }
-.bc-price { font-size:11px;font-weight:700;color:#c8d8ec;margin-bottom:5px; }
-
-.bc-conds { display:flex;flex-direction:column;gap:2px;margin-bottom:5px; }
-.bcc { font-size:9.5px;line-height:1.3; }
-.bcc.ok { color:#4ade80; }
-.bcc.ng { color:#f87171; }
-
-.bc-verdict {
-  font-size:9.5px;font-weight:700;padding:3px 7px;border-radius:4px;
-  line-height:1.4;
-}
-.bc.top  .bc-verdict { background:rgba(0,229,198,0.1); color:var(--mint); }
-.bc.sure .bc-verdict { background:rgba(0,229,198,0.08);color:var(--mint); }
-.bc.cond .bc-verdict { background:rgba(255,229,0,0.08);color:var(--yellow); }
-.bc.fail .bc-verdict { background:rgba(100,116,139,0.08);color:#64748b; }
-
-/* 수급 오실레이터 칩 */
-.osc-chip {
-  display:inline-flex;align-items:center;gap:3px;
-  font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;
-  margin-top:4px;border:1px solid;
-}
-.osc-a { background:rgba(255,34,68,0.1);   color:#ff5577;  border-color:rgba(255,34,68,0.3); }
-.osc-b { background:rgba(255,144,64,0.1);  color:#ff9040;  border-color:rgba(255,144,64,0.3); }
-.osc-c { background:rgba(100,116,139,0.1); color:#94a3b8;  border-color:rgba(100,116,139,0.2); }
-.osc-d { background:rgba(255,229,0,0.08);  color:#d4b800;  border-color:rgba(255,229,0,0.2); }
-.osc-na{ background:rgba(100,116,139,0.07);color:#64748b;  border-color:rgba(100,116,139,0.15); }
-
-/* 전체 목록 */
-.list-wrap { padding:0 16px 14px; }
-table { width:100%;border-collapse:collapse; }
-thead th {
-  background:rgba(0,0,0,0.3);color:var(--sub);font-size:10px;font-weight:700;
-  padding:7px 10px;text-align:left;
-  border-bottom:1px solid rgba(255,255,255,0.06);letter-spacing:0.5px;
-}
-tbody td {
-  padding:6px 10px;border-bottom:1px solid rgba(255,255,255,0.04);
-  font-size:11px;vertical-align:middle;
-}
-tbody tr:hover td { background:rgba(0,229,198,0.02); }
-
-.tname { color:#d0e8ff;font-weight:700; }
-.tcode { color:var(--dim);font-size:10px; }
-.tmkt  { font-size:9px;color:var(--dim);background:rgba(255,255,255,0.05);padding:1px 5px;border-radius:3px; }
-.tday  { color:var(--sub);font-size:11px;text-align:center; }
-
-.tbadge {
-  font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:4px;border:1px solid;white-space:nowrap;
-  display:inline-flex;align-items:center;gap:3px;
-}
-.tb-top  { color:var(--mint);  border-color:rgba(0,229,198,0.4);  background:rgba(0,229,198,0.1); }
-.tb-sure { color:#4ade80;      border-color:rgba(74,222,128,0.3);  background:rgba(74,222,128,0.07); }
-.tb-cond { color:var(--yellow);border-color:rgba(255,229,0,0.35); background:rgba(255,229,0,0.08); }
-.tb-wait { color:#475569;      border-color:rgba(71,85,105,0.3);   background:rgba(71,85,105,0.07); }
-.tb-red  { color:#f87171;      border-color:rgba(248,113,113,0.3); background:rgba(248,113,113,0.07); }
-
-.tcond-row { font-size:9.5px;color:var(--dim); }
-.tcond-ok  { color:#4ade80; }
-.tcond-ng  { color:#f87171; }
-
-/* FOOTER */
-.ft {
-  border-top:1px solid rgba(255,255,255,0.04);
-  padding:10px 22px;
-  display:flex;justify-content:space-between;align-items:center;
-}
-.ft-brand { font-size:10px;font-weight:900;letter-spacing:4px;color:var(--mint); }
-.ft-sub   { font-size:9px;color:#7a8a9e; }
-.ft-date  { font-size:9px;font-weight:700;color:#7a8a9e; }
+  /* 전체 목록 테이블 */
+  table { width: 100%; border-collapse: collapse; }
+  th { background: #161b22; color: #8b949e; font-size: 12px; font-weight: 600;
+        padding: 8px 10px; text-align: left; border-bottom: 1px solid #30363d; }
+  td { padding: 8px 10px; border-bottom: 1px solid #21262d; vertical-align: top; }
+  tr:hover td { background: #161b22; }
+  .stock-link { color: #58a6ff; text-decoration: none; font-weight: 600; }
+  .stock-link:hover { text-decoration: underline; }
+  .code { color: #8b949e; font-size: 12px; }
+  .biz  { color: #8b949e; font-size: 12px; text-align: center; }
+  .conds { font-size: 11px; }
+  .badge { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .badge.green  { background: #0d4429; color: #3fb950; }
+  .badge.orange { background: #3d2e00; color: #d29922; }
+  .badge.red    { background: #3d0914; color: #f85149; }
+  .badge.wait   { background: #21262d; color: #8b949e; }
+  .badge.gray   { background: #21262d; color: #6e7681; }
 </style>
+<script>
+  // 10초마다 자동 새로고침
+  setTimeout(() => location.reload(), 60000);
+</script>
 </head>
 <body>
-<div class="wrap">
 
-  <!-- HEADER -->
-  <div class="hd">
-    <div>
-      <div class="brand-row">
-        <div class="brand-dot"></div>
-        <div class="brand-txt">STOCK BRAIN</div>
-      </div>
-      <div class="hd-title">투자경고 <span class="hl">대시보드</span></div>
-      <div class="hd-sub">⚡ 해제 조건 자동 분석 &nbsp;·&nbsp; 🎯 종가배팅 후보 &nbsp;·&nbsp; 📋 전체 38종목</div>
-    </div>
-    <div class="hd-right">
-      <div class="hd-brand-sub">로또의 주식인사이트</div>
-      <div class="hd-date">5월 29일 목요일</div>
-    </div>
+<h1>📊 투경 대시보드</h1>
+<p class="meta">업데이트: <b>2026-06-01 11:02</b>  |  기준: KIND 공식 데이터  |  매 7:00 / 14:30 자동 갱신</p>
+
+<!-- 요약 카드 -->
+<div class="summary">
+  <div class="sum-card blue">
+    <div class="num">34</div>
+    <div class="lbl">전체 투경 중</div>
   </div>
-
-  <!-- 요약 카운터 -->
-  <div class="stat-row">
-    <div class="stat s-mint">
-      <div class="stat-num">38</div>
-      <div class="stat-lbl">전체 투경 중</div>
-    </div>
-    <div class="stat s-yellow">
-      <div class="stat-num">7</div>
-      <div class="stat-lbl">내일(06/01) 해제 예상</div>
-    </div>
-    <div class="stat s-red">
-      <div class="stat-num">1</div>
-      <div class="stat-lbl">🎯 빈집+해제 탑픽</div>
-    </div>
-    <div class="stat s-purple">
-      <div class="stat-num">3</div>
-      <div class="stat-lbl">오늘 신규 지정</div>
-    </div>
+  <div class="sum-card red">
+    <div class="num">0</div>
+    <div class="lbl">오늘 신규 지정</div>
   </div>
-
-  <!-- 종가배팅 후보 -->
-  <div class="sec-hd">
-    <div class="sec-dia">🎯</div>
-    <div class="sec-lbl">종가배팅 후보 — 내일(06/01) 해제</div>
-    <div class="sec-cnt">🔴 빈집+해제 교집합 · 🟢 해제확실 · 🟠 조건부</div>
+  <div class="sum-card green">
+    <div class="num">0</div>
+    <div class="lbl">오늘 해제</div>
   </div>
-
-  <div class="bet-grid">
-
-    <!-- 제주반도체 — 빈집+해제 탑픽 -->
-    <div class="bc top">
-      <div class="bc-badge">🔴 빈집+해제 탑픽</div>
-      <div class="bc-name">제주반도체</div>
-      <div class="bc-code">080220 · KOSDAQ</div>
-      <div class="bc-price">97,700원</div>
-      <div class="bc-conds">
-        <div class="bcc ok">✅ T-5 110,200 이하</div>
-        <div class="bcc ok">✅ T-15 117,000 이하</div>
-        <div class="bcc ok">✅ 신고가 미경신</div>
-      </div>
-      <div class="bc-verdict">3조건 충족 → 06/01 해제</div>
-      <div class="osc-chip osc-a">🔴 A 완전빈집 하위36%</div>
-    </div>
-
-    <!-- 사토시홀딩스 -->
-    <div class="bc sure">
-      <div class="bc-badge">🟢 해제확실</div>
-      <div class="bc-name">사토시홀딩스</div>
-      <div class="bc-code">223310 · KOSDAQ</div>
-      <div class="bc-price">6,960원</div>
-      <div class="bc-conds">
-        <div class="bcc ok">✅ T-5 18,208 이하</div>
-        <div class="bcc ok">✅ T-15 22,760 이하</div>
-        <div class="bcc ok">✅ 신고가 미경신</div>
-      </div>
-      <div class="bc-verdict">3조건 충족 → 06/01 해제</div>
-      <div class="osc-chip osc-na">❓ xlsm 미등록</div>
-    </div>
-
-    <!-- TPC로보틱스 -->
-    <div class="bc sure">
-      <div class="bc-badge">🟢 해제확실</div>
-      <div class="bc-name">TPC로보틱스</div>
-      <div class="bc-code">048770 · KOSDAQ</div>
-      <div class="bc-price">5,110원</div>
-      <div class="bc-conds">
-        <div class="bcc ok">✅ T-5 7,464 이하</div>
-        <div class="bcc ok">✅ T-15 7,010 이하</div>
-        <div class="bcc ok">✅ 신고가 미경신</div>
-      </div>
-      <div class="bc-verdict">3조건 충족 → 06/01 해제</div>
-      <div class="osc-chip osc-na">❓ xlsm 미등록</div>
-    </div>
-
-    <!-- 네오티스 -->
-    <div class="bc sure">
-      <div class="bc-badge">🟢 해제확실</div>
-      <div class="bc-name">네오티스</div>
-      <div class="bc-code">085910 · KOSDAQ</div>
-      <div class="bc-price">30,500원</div>
-      <div class="bc-conds">
-        <div class="bcc ok">✅ T-5 46,560 이하</div>
-        <div class="bcc ok">✅ T-15 54,300 이하</div>
-        <div class="bcc ok">✅ 신고가 미경신</div>
-      </div>
-      <div class="bc-verdict">3조건 충족 → 06/01 해제</div>
-      <div class="osc-chip osc-na">❓ xlsm 미등록</div>
-    </div>
-
-    <!-- 미래반도체 -->
-    <div class="bc sure">
-      <div class="bc-badge">🟢 해제확실</div>
-      <div class="bc-name">미래반도체</div>
-      <div class="bc-code">254490 · KOSDAQ</div>
-      <div class="bc-price">26,300원</div>
-      <div class="bc-conds">
-        <div class="bcc ok">✅ T-5 49,360 이하</div>
-        <div class="bcc ok">✅ T-15 38,400 이하</div>
-        <div class="bcc ok">✅ 신고가 미경신</div>
-      </div>
-      <div class="bc-verdict">3조건 충족 → 06/01 해제</div>
-      <div class="osc-chip osc-na">❓ xlsm 미등록</div>
-    </div>
-
-    <!-- 민테크 -->
-    <div class="bc sure">
-      <div class="bc-badge">🟢 해제확실</div>
-      <div class="bc-name">민테크</div>
-      <div class="bc-code">452200 · KOSDAQ</div>
-      <div class="bc-price">3,770원</div>
-      <div class="bc-conds">
-        <div class="bcc ok">✅ T-5 5,520 이하</div>
-        <div class="bcc ok">✅ T-15 5,450 이하</div>
-        <div class="bcc ok">✅ 신고가 미경신</div>
-      </div>
-      <div class="bc-verdict">3조건 충족 → 06/01 해제</div>
-      <div class="osc-chip osc-na">❓ xlsm 미등록</div>
-    </div>
-
-    <!-- 코스텍시스템 -->
-    <div class="bc sure">
-      <div class="bc-badge">🟢 해제확실</div>
-      <div class="bc-name">코스텍시스템</div>
-      <div class="bc-code">169670 · KONEX</div>
-      <div class="bc-price">7,000원</div>
-      <div class="bc-conds">
-        <div class="bcc ok">✅ T-5 7,097 이하</div>
-        <div class="bcc ok">✅ T-15 7,332 이하</div>
-        <div class="bcc ok">✅ 신고가 미경신</div>
-      </div>
-      <div class="bc-verdict">3조건 충족 → 06/01 해제</div>
-      <div class="osc-chip osc-na">❓ xlsm 미등록</div>
-    </div>
-
-    <!-- 코리아써키트 — 조건부 -->
-    <div class="bc cond">
-      <div class="bc-badge">🟠 조건부</div>
-      <div class="bc-name">코리아써키트</div>
-      <div class="bc-code">007810 · KOSPI</div>
-      <div class="bc-price">118,100원</div>
-      <div class="bc-conds">
-        <div class="bcc ok">✅ T-5 148,190 이하</div>
-        <div class="bcc ok">✅ T-15 156,800 이하</div>
-        <div class="bcc ng">❌ 오늘=15일최고가</div>
-      </div>
-      <div class="bc-verdict">신고가 미경신 시 해제</div>
-      <div class="osc-chip osc-d">🟡 D 과매수 하위83%</div>
-    </div>
-
+  <div class="sum-card orange">
+    <div class="num">7</div>
+    <div class="lbl">종가배팅 후보<br><small>(06/02 해제 예상)</small></div>
   </div>
-
-  <!-- 전체 목록 -->
-  <div class="sec-hd">
-    <div class="sec-dia">📋</div>
-    <div class="sec-lbl">전체 투경 목록</div>
-    <div class="sec-cnt">38종목 · 2026-05-29 기준</div>
-  </div>
-
-  <div class="list-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>종목명</th>
-          <th>코드</th>
-          <th style="text-align:center">영업일</th>
-          <th>상태</th>
-          <th>조건 요약</th>
-        </tr>
-      </thead>
-      <tbody>
-
-        <!-- 내일 해제 예상 그룹 -->
-        <tr>
-          <td><span class="tname">제주반도체</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">080220</td>
-          <td class="tday">12</td>
-          <td><span class="tbadge tb-top">🔴 빈집+해제 탑픽</span></td>
-          <td class="tcond-row"><span class="tcond-ok">✅ T5</span> <span class="tcond-ok">✅ T15</span> <span class="tcond-ok">✅ 신고가</span> · 97,700원</td>
-        </tr>
-        <tr>
-          <td><span class="tname">사토시홀딩스</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">223310</td>
-          <td class="tday">10</td>
-          <td><span class="tbadge tb-sure">🟢 06/01 해제</span></td>
-          <td class="tcond-row"><span class="tcond-ok">✅ T5</span> <span class="tcond-ok">✅ T15</span> <span class="tcond-ok">✅ 신고가</span> · 6,960원</td>
-        </tr>
-        <tr>
-          <td><span class="tname">TPC로보틱스</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">048770</td>
-          <td class="tday">11</td>
-          <td><span class="tbadge tb-sure">🟢 06/01 해제</span></td>
-          <td class="tcond-row"><span class="tcond-ok">✅ T5</span> <span class="tcond-ok">✅ T15</span> <span class="tcond-ok">✅ 신고가</span> · 5,110원</td>
-        </tr>
-        <tr>
-          <td><span class="tname">네오티스</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">085910</td>
-          <td class="tday">11</td>
-          <td><span class="tbadge tb-sure">🟢 06/01 해제</span></td>
-          <td class="tcond-row"><span class="tcond-ok">✅ T5</span> <span class="tcond-ok">✅ T15</span> <span class="tcond-ok">✅ 신고가</span> · 30,500원</td>
-        </tr>
-        <tr>
-          <td><span class="tname">미래반도체</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">254490</td>
-          <td class="tday">11</td>
-          <td><span class="tbadge tb-sure">🟢 06/01 해제</span></td>
-          <td class="tcond-row"><span class="tcond-ok">✅ T5</span> <span class="tcond-ok">✅ T15</span> <span class="tcond-ok">✅ 신고가</span> · 26,300원</td>
-        </tr>
-        <tr>
-          <td><span class="tname">민테크</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">452200</td>
-          <td class="tday">11</td>
-          <td><span class="tbadge tb-sure">🟢 06/01 해제</span></td>
-          <td class="tcond-row"><span class="tcond-ok">✅ T5</span> <span class="tcond-ok">✅ T15</span> <span class="tcond-ok">✅ 신고가</span> · 3,770원</td>
-        </tr>
-        <tr>
-          <td><span class="tname">코스텍시스템</span> <span class="tmkt">KONEX</span></td>
-          <td class="tcode">169670</td>
-          <td class="tday">11</td>
-          <td><span class="tbadge tb-sure">🟢 06/01 해제</span></td>
-          <td class="tcond-row"><span class="tcond-ok">✅ T5</span> <span class="tcond-ok">✅ T15</span> <span class="tcond-ok">✅ 신고가</span> · 7,000원</td>
-        </tr>
-        <tr>
-          <td><span class="tname">코리아써키트</span> <span class="tmkt">KOSPI</span></td>
-          <td class="tcode">007810</td>
-          <td class="tday">12</td>
-          <td><span class="tbadge tb-cond">🟠 신고가 미경신 시</span></td>
-          <td class="tcond-row"><span class="tcond-ok">✅ T5</span> <span class="tcond-ok">✅ T15</span> <span class="tcond-ng">❌ 신고가=오늘</span> · 118,100원</td>
-        </tr>
-
-        <!-- 조건 미달 — 해제검토 중 -->
-        <tr>
-          <td><span class="tname">메디젠휴먼케어</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">236340</td>
-          <td class="tday">10</td>
-          <td><span class="tbadge tb-red">🔴 T-5 미충족</span></td>
-          <td class="tcond-row"><span class="tcond-ng">❌ T5</span> <span class="tcond-ok">✅ T15</span> <span class="tcond-ok">✅ 신고가</span> · 3,200원</td>
-        </tr>
-        <tr>
-          <td><span class="tname">삼성전기우</span> <span class="tmkt">KOSPI</span></td>
-          <td class="tcode">009155</td>
-          <td class="tday">10</td>
-          <td><span class="tbadge tb-red">🔴 전조건 미충족</span></td>
-          <td class="tcond-row"><span class="tcond-ng">❌ T5</span> <span class="tcond-ng">❌ T15</span> <span class="tcond-ng">❌ 신고가</span> · 739,000원</td>
-        </tr>
-        <tr>
-          <td><span class="tname">성문전자</span> <span class="tmkt">KOSPI</span></td>
-          <td class="tcode">014910</td>
-          <td class="tday">11</td>
-          <td><span class="tbadge tb-red">🔴 T5·T15 미충족</span></td>
-          <td class="tcond-row"><span class="tcond-ng">❌ T5</span> <span class="tcond-ng">❌ T15</span> <span class="tcond-ok">✅ 신고가</span> · 3,255원</td>
-        </tr>
-        <tr>
-          <td><span class="tname">조이웍스앤코</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">309930</td>
-          <td class="tday">23</td>
-          <td><span class="tbadge tb-red">🔴 T-15 미충족</span></td>
-          <td class="tcond-row"><span class="tcond-ok">✅ T5</span> <span class="tcond-ng">❌ T15</span> <span class="tcond-ok">✅ 신고가</span> · 2,635원</td>
-        </tr>
-
-        <!-- 해제검토 전 (10영업일 미만) -->
-        <tr><td colspan="5" style="padding:5px 10px;font-size:9.5px;color:var(--dim);letter-spacing:1px;background:rgba(0,0,0,0.2);">⏳ 해제검토 전 — 10영업일 미만</td></tr>
-        <tr>
-          <td><span class="tname">디앤디파마텍</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">347850</td><td class="tday">1</td>
-          <td><span class="tbadge tb-wait">⏳ 대기</span></td>
-          <td class="tcond-row" style="color:var(--dim);">2026-05-29 신규</td>
-        </tr>
-        <tr>
-          <td><span class="tname">삼화콘덴서</span> <span class="tmkt">KOSPI</span></td>
-          <td class="tcode">001820</td><td class="tday">1</td>
-          <td><span class="tbadge tb-wait">⏳ 대기</span></td>
-          <td class="tcond-row" style="color:var(--dim);">2026-05-29 신규</td>
-        </tr>
-        <tr>
-          <td><span class="tname">셀레믹스</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">331920</td><td class="tday">1</td>
-          <td><span class="tbadge tb-wait">⏳ 대기</span></td>
-          <td class="tcond-row" style="color:var(--dim);">2026-05-29 신규</td>
-        </tr>
-        <tr>
-          <td><span class="tname">네이처셀</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">007390</td><td class="tday">2</td>
-          <td><span class="tbadge tb-wait">⏳ 대기</span></td>
-          <td class="tcond-row" style="color:var(--dim);">2026-05-28 지정</td>
-        </tr>
-        <tr>
-          <td><span class="tname">대원전선우</span> <span class="tmkt">KOSPI</span></td>
-          <td class="tcode">006345</td><td class="tday">2</td>
-          <td><span class="tbadge tb-wait">⏳ 대기</span></td>
-          <td class="tcond-row" style="color:var(--dim);">2026-05-28 지정</td>
-        </tr>
-        <tr>
-          <td><span class="tname">바이젠셀</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">308080</td><td class="tday">2</td>
-          <td><span class="tbadge tb-wait">⏳ 대기</span></td>
-          <td class="tcond-row" style="color:var(--dim);">2026-05-28 지정</td>
-        </tr>
-        <tr>
-          <td><span class="tname">아모텍</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">052710</td><td class="tday">2</td>
-          <td><span class="tbadge tb-wait">⏳ 대기</span></td>
-          <td class="tcond-row" style="color:var(--dim);">2026-05-28 지정</td>
-        </tr>
-        <tr>
-          <td><span class="tname">네패스아크</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">330860</td><td class="tday">3</td>
-          <td><span class="tbadge tb-wait">⏳ 대기</span></td>
-          <td class="tcond-row" style="color:var(--dim);">2026-05-27 지정</td>
-        </tr>
-        <tr>
-          <td><span class="tname">드림시큐리티</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">203650</td><td class="tday">3</td>
-          <td><span class="tbadge tb-wait">⏳ 대기</span></td>
-          <td class="tcond-row" style="color:var(--dim);">2026-05-27 지정</td>
-        </tr>
-        <tr>
-          <td><span class="tname">피엠티</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">147760</td><td class="tday">3</td>
-          <td><span class="tbadge tb-wait">⏳ 대기</span></td>
-          <td class="tcond-row" style="color:var(--dim);">2026-05-27 지정</td>
-        </tr>
-        <tr>
-          <td><span class="tname">한국첨단소재</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">062970</td><td class="tday">3</td>
-          <td><span class="tbadge tb-wait">⏳ 대기</span></td>
-          <td class="tcond-row" style="color:var(--dim);">2026-05-27 지정</td>
-        </tr>
-        <tr>
-          <td><span class="tname">KBI메탈</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">024840</td><td class="tday">4</td>
-          <td><span class="tbadge tb-wait">⏳ 대기</span></td>
-          <td class="tcond-row" style="color:var(--dim);">2026-05-26 지정</td>
-        </tr>
-        <tr>
-          <td><span class="tname">미래산업</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">025560</td><td class="tday">4</td>
-          <td><span class="tbadge tb-wait">⏳ 대기</span></td>
-          <td class="tcond-row" style="color:var(--dim);">2026-05-26 지정</td>
-        </tr>
-        <tr>
-          <td><span class="tname">심텍</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">222800</td><td class="tday">4</td>
-          <td><span class="tbadge tb-wait">⏳ 대기</span></td>
-          <td class="tcond-row" style="color:var(--dim);">2026-05-26 지정</td>
-        </tr>
-        <tr>
-          <td><span class="tname">티에스이</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">131290</td><td class="tday">4</td>
-          <td><span class="tbadge tb-wait">⏳ 대기</span></td>
-          <td class="tcond-row" style="color:var(--dim);">2026-05-26 지정</td>
-        </tr>
-        <tr>
-          <td><span class="tname">광전자</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">017900</td><td class="tday">6</td>
-          <td><span class="tbadge tb-wait">⏳ 대기</span></td>
-          <td class="tcond-row" style="color:var(--dim);">2026-05-22 지정</td>
-        </tr>
-        <tr>
-          <td><span class="tname">엠케이전자</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">033160</td><td class="tday">6</td>
-          <td><span class="tbadge tb-wait">⏳ 대기</span></td>
-          <td class="tcond-row" style="color:var(--dim);">2026-05-22 지정</td>
-        </tr>
-        <tr>
-          <td><span class="tname">타이거일렉</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">219130</td><td class="tday">6</td>
-          <td><span class="tbadge tb-wait">⏳ 대기</span></td>
-          <td class="tcond-row" style="color:var(--dim);">2026-05-22 지정</td>
-        </tr>
-        <tr>
-          <td><span class="tname">티웨이홀딩스</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">004870</td><td class="tday">6</td>
-          <td><span class="tbadge tb-wait">⏳ 대기</span></td>
-          <td class="tcond-row" style="color:var(--dim);">2026-05-22 지정</td>
-        </tr>
-        <tr>
-          <td><span class="tname">하나마이크론</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">067310</td><td class="tday">6</td>
-          <td><span class="tbadge tb-wait">⏳ 대기</span></td>
-          <td class="tcond-row" style="color:var(--dim);">2026-05-22 지정</td>
-        </tr>
-        <tr>
-          <td><span class="tname">썬테크</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">217320</td><td class="tday">7</td>
-          <td><span class="tbadge tb-wait">⏳ 대기</span></td>
-          <td class="tcond-row" style="color:var(--dim);">2026-05-21 지정</td>
-        </tr>
-        <tr>
-          <td><span class="tname">아이로보틱스</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">066430</td><td class="tday">8</td>
-          <td><span class="tbadge tb-wait">⏳ 대기</span></td>
-          <td class="tcond-row" style="color:var(--dim);">2026-05-20 지정</td>
-        </tr>
-        <tr>
-          <td><span class="tname">진원생명과학</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">011000</td><td class="tday">8</td>
-          <td><span class="tbadge tb-wait">⏳ 대기</span></td>
-          <td class="tcond-row" style="color:var(--dim);">2026-05-20 지정</td>
-        </tr>
-        <tr>
-          <td><span class="tname">한선엔지니어링</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">452280</td><td class="tday">8</td>
-          <td><span class="tbadge tb-wait">⏳ 대기</span></td>
-          <td class="tcond-row" style="color:var(--dim);">2026-05-20 지정</td>
-        </tr>
-        <tr>
-          <td><span class="tname">소룩스</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">290690</td><td class="tday">9</td>
-          <td><span class="tbadge tb-wait">⏳ 대기</span></td>
-          <td class="tcond-row" style="color:var(--dim);">2026-05-19 지정</td>
-        </tr>
-        <tr>
-          <td><span class="tname">에스에이엠티</span> <span class="tmkt">KOSDAQ</span></td>
-          <td class="tcode">031330</td><td class="tday">9</td>
-          <td><span class="tbadge tb-wait">⏳ 대기</span></td>
-          <td class="tcond-row" style="color:var(--dim);">2026-05-19 지정</td>
-        </tr>
-
-      </tbody>
-    </table>
-  </div>
-
-  <!-- FOOTER -->
-  <div class="ft">
-    <div class="ft-brand">STOCK BRAIN</div>
-    <div class="ft-sub">로또의 주식인사이트 · 투자경고 해제 분석 · fetch_투경.py 자동화</div>
-    <div class="ft-date">2026.05.29</div>
-  </div>
-
 </div>
+
+<!-- 섹션 1: 종가배팅 후보 -->
+<div class="section">
+  <div class="section-title gold">💰 오늘 종가배팅 후보 — 내일(06/02) 해제 예상</div>
+  
+        <div class="bet-card">
+          <div class="bet-name">소룩스 <span class="bet-code">(290690)</span>
+            <span class="bet-mkt">KOSDAQ</span></div>
+          <div class="bet-price">현재가 <b>4,795원</b>  |  지정일 2026-05-19  |  10영업일</div>
+          <div class="bet-conds">
+            <span class="cond ok">✅ T-5 5090x160%=8144</span>
+            <span class="cond ok">✅ T-15 3275x200%=6550</span>
+            <span class="cond ok">✅ 15일최고가 6020</span>
+          </div>
+          <div class="verdict green">✅ 3조건 모두 충족 — 내일(06/02) 해제 확실</div>
+        </div>
+        <div class="bet-card">
+          <div class="bet-name">에스에이엠티 <span class="bet-code">(031330)</span>
+            <span class="bet-mkt">KOSDAQ</span></div>
+          <div class="bet-price">현재가 <b>14,420원</b>  |  지정일 2026-05-19  |  10영업일</div>
+          <div class="bet-conds">
+            <span class="cond ok">✅ T-5 15590x160%=24944</span>
+            <span class="cond ok">✅ T-15 8560x200%=17120</span>
+            <span class="cond ok">✅ 15일최고가 18590</span>
+          </div>
+          <div class="verdict green">✅ 3조건 모두 충족 — 내일(06/02) 해제 확실</div>
+        </div>
+        <div class="bet-card">
+          <div class="bet-name">메디젠휴먼케어 <span class="bet-code">(236340)</span>
+            <span class="bet-mkt">KONEX</span></div>
+          <div class="bet-price">현재가 <b>3,000원</b>  |  지정일 2026-05-18  |  11영업일</div>
+          <div class="bet-conds">
+            <span class="cond ok">✅ T-5 3500x160%=5600</span>
+            <span class="cond ok">✅ T-15 1901x200%=3802</span>
+            <span class="cond ok">✅ 15일최고가 4000</span>
+          </div>
+          <div class="verdict green">✅ 3조건 모두 충족 — 내일(06/02) 해제 확실</div>
+        </div>
+        <div class="bet-card">
+          <div class="bet-name">사토시홀딩스 <span class="bet-code">(223310)</span>
+            <span class="bet-mkt">KOSDAQ</span></div>
+          <div class="bet-price">현재가 <b>6,660원</b>  |  지정일 2026-05-18  |  11영업일</div>
+          <div class="bet-conds">
+            <span class="cond ok">✅ T-5 9400x160%=15040</span>
+            <span class="cond ok">✅ T-15 11380x200%=22760</span>
+            <span class="cond ok">✅ 15일최고가 14790</span>
+          </div>
+          <div class="verdict green">✅ 3조건 모두 충족 — 내일(06/02) 해제 확실</div>
+        </div>
+        <div class="bet-card">
+          <div class="bet-name">제주반도체 <span class="bet-code">(080220)</span>
+            <span class="bet-mkt">KOSDAQ</span></div>
+          <div class="bet-price">현재가 <b>97,500원</b>  |  지정일 2026-05-14  |  13영업일</div>
+          <div class="bet-conds">
+            <span class="cond ok">✅ T-5 118700x160%=189920</span>
+            <span class="cond ok">✅ T-15 54700x200%=109400</span>
+            <span class="cond ok">✅ 15일최고가 118900</span>
+          </div>
+          <div class="verdict green">✅ 3조건 모두 충족 — 내일(06/02) 해제 확실</div>
+        </div>
+        <div class="bet-card">
+          <div class="bet-name">조이웍스앤코 <span class="bet-code">(309930)</span>
+            <span class="bet-mkt">KOSDAQ</span></div>
+          <div class="bet-price">현재가 <b>1,965원</b>  |  지정일 2026-04-29  |  24영업일</div>
+          <div class="bet-conds">
+            <span class="cond ok">✅ T-5 2810x160%=4496</span>
+            <span class="cond ok">✅ T-15 2810x200%=5620</span>
+            <span class="cond ok">✅ 15일최고가 3650</span>
+          </div>
+          <div class="verdict green">✅ 3조건 모두 충족 — 내일(06/02) 해제 확실</div>
+        </div>
+        <div class="bet-card">
+          <div class="bet-name">코리아써키트 <span class="bet-code">(007810)</span>
+            <span class="bet-mkt">KOSPI</span></div>
+          <div class="bet-price">현재가 <b>120,800원</b>  |  지정일 2026-05-14  |  13영업일</div>
+          <div class="bet-conds">
+            <span class="cond ok">✅ T-5 100700x160%=161120</span>
+            <span class="cond ok">✅ T-15 102200x200%=204400</span>
+            <span class="cond ng">❌ 15일최고가 120800</span>
+          </div>
+          <div class="verdict orange">⚠️ ①② 충족 — 오늘 120,800원 미경신 시 내일 해제</div>
+        </div>
+</div>
+
+<!-- 섹션 2: 오늘 이벤트 -->
+<div class="section">
+  <div class="section-title green">🟢 오늘 해제 확정</div>
+  <span class="none-text">없음</span>
+</div>
+<div class="section">
+  <div class="section-title red">🔴 오늘 신규 지정 — 종가배팅 제외</div>
+  <span class="none-text">없음</span>
+</div>
+
+<!-- 섹션 3: 전체 목록 -->
+<div class="section">
+  <div class="section-title blue">📋 전체 투경 목록 (34종목)</div>
+  <table>
+    <thead>
+      <tr>
+        <th>종목명</th><th>코드</th><th>지정일</th><th style="text-align:center">영업일</th>
+        <th>상태</th><th>해제 조건 (T-5·T-15·신고가 — 고정 지정일 기준)</th>
+      </tr>
+    </thead>
+    <tbody>
+      
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=026910" target="_blank" class="stock-link">광진실업</a></td>
+          <td class="code">026910</td>
+          <td>2026-06-01</td>
+          <td class="biz">1</td>
+          <td><span class="badge wait">⏳ 1영업일 (해제검토 전)</span></td>
+          <td class="conds"></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=242040" target="_blank" class="stock-link">나무기술</a></td>
+          <td class="code">242040</td>
+          <td>2026-06-01</td>
+          <td class="biz">1</td>
+          <td><span class="badge wait">⏳ 1영업일 (해제검토 전)</span></td>
+          <td class="conds"></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=347850" target="_blank" class="stock-link">디앤디파마텍</a></td>
+          <td class="code">347850</td>
+          <td>2026-05-29</td>
+          <td class="biz">2</td>
+          <td><span class="badge wait">⏳ 2영업일 (해제검토 전)</span></td>
+          <td class="conds"></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=001820" target="_blank" class="stock-link">삼화콘덴서</a></td>
+          <td class="code">001820</td>
+          <td>2026-05-29</td>
+          <td class="biz">2</td>
+          <td><span class="badge wait">⏳ 2영업일 (해제검토 전)</span></td>
+          <td class="conds"></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=331920" target="_blank" class="stock-link">셀레믹스</a></td>
+          <td class="code">331920</td>
+          <td>2026-05-29</td>
+          <td class="biz">2</td>
+          <td><span class="badge wait">⏳ 2영업일 (해제검토 전)</span></td>
+          <td class="conds"></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=007390" target="_blank" class="stock-link">네이처셀</a></td>
+          <td class="code">007390</td>
+          <td>2026-05-28</td>
+          <td class="biz">3</td>
+          <td><span class="badge wait">⏳ 3영업일 (해제검토 전)</span></td>
+          <td class="conds"></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=006345" target="_blank" class="stock-link">대원전선우</a></td>
+          <td class="code">006345</td>
+          <td>2026-05-28</td>
+          <td class="biz">3</td>
+          <td><span class="badge wait">⏳ 3영업일 (해제검토 전)</span></td>
+          <td class="conds"></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=308080" target="_blank" class="stock-link">바이젠셀</a></td>
+          <td class="code">308080</td>
+          <td>2026-05-28</td>
+          <td class="biz">3</td>
+          <td><span class="badge wait">⏳ 3영업일 (해제검토 전)</span></td>
+          <td class="conds"></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=052710" target="_blank" class="stock-link">아모텍</a></td>
+          <td class="code">052710</td>
+          <td>2026-05-28</td>
+          <td class="biz">3</td>
+          <td><span class="badge wait">⏳ 3영업일 (해제검토 전)</span></td>
+          <td class="conds"></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=330860" target="_blank" class="stock-link">네패스아크</a></td>
+          <td class="code">330860</td>
+          <td>2026-05-27</td>
+          <td class="biz">4</td>
+          <td><span class="badge wait">⏳ 4영업일 (해제검토 전)</span></td>
+          <td class="conds"></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=203650" target="_blank" class="stock-link">드림시큐리티</a></td>
+          <td class="code">203650</td>
+          <td>2026-05-27</td>
+          <td class="biz">4</td>
+          <td><span class="badge wait">⏳ 4영업일 (해제검토 전)</span></td>
+          <td class="conds"></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=147760" target="_blank" class="stock-link">피엠티</a></td>
+          <td class="code">147760</td>
+          <td>2026-05-27</td>
+          <td class="biz">4</td>
+          <td><span class="badge wait">⏳ 4영업일 (해제검토 전)</span></td>
+          <td class="conds"></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=062970" target="_blank" class="stock-link">한국첨단소재</a></td>
+          <td class="code">062970</td>
+          <td>2026-05-27</td>
+          <td class="biz">4</td>
+          <td><span class="badge wait">⏳ 4영업일 (해제검토 전)</span></td>
+          <td class="conds"></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=024840" target="_blank" class="stock-link">KBI메탈</a></td>
+          <td class="code">024840</td>
+          <td>2026-05-26</td>
+          <td class="biz">5</td>
+          <td><span class="badge wait">⏳ 5영업일 (해제검토 전)</span></td>
+          <td class="conds"></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=025560" target="_blank" class="stock-link">미래산업</a></td>
+          <td class="code">025560</td>
+          <td>2026-05-26</td>
+          <td class="biz">5</td>
+          <td><span class="badge wait">⏳ 5영업일 (해제검토 전)</span></td>
+          <td class="conds"></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=222800" target="_blank" class="stock-link">심텍</a></td>
+          <td class="code">222800</td>
+          <td>2026-05-26</td>
+          <td class="biz">5</td>
+          <td><span class="badge wait">⏳ 5영업일 (해제검토 전)</span></td>
+          <td class="conds"></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=131290" target="_blank" class="stock-link">티에스이</a></td>
+          <td class="code">131290</td>
+          <td>2026-05-26</td>
+          <td class="biz">5</td>
+          <td><span class="badge wait">⏳ 5영업일 (해제검토 전)</span></td>
+          <td class="conds"></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=017900" target="_blank" class="stock-link">광전자</a></td>
+          <td class="code">017900</td>
+          <td>2026-05-22</td>
+          <td class="biz">7</td>
+          <td><span class="badge wait">⏳ 7영업일 (해제검토 전)</span></td>
+          <td class="conds"></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=033160" target="_blank" class="stock-link">엠케이전자</a></td>
+          <td class="code">033160</td>
+          <td>2026-05-22</td>
+          <td class="biz">7</td>
+          <td><span class="badge wait">⏳ 7영업일 (해제검토 전)</span></td>
+          <td class="conds"></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=219130" target="_blank" class="stock-link">타이거일렉</a></td>
+          <td class="code">219130</td>
+          <td>2026-05-22</td>
+          <td class="biz">7</td>
+          <td><span class="badge wait">⏳ 7영업일 (해제검토 전)</span></td>
+          <td class="conds"></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=004870" target="_blank" class="stock-link">티웨이홀딩스</a></td>
+          <td class="code">004870</td>
+          <td>2026-05-22</td>
+          <td class="biz">7</td>
+          <td><span class="badge wait">⏳ 7영업일 (해제검토 전)</span></td>
+          <td class="conds"></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=067310" target="_blank" class="stock-link">하나마이크론</a></td>
+          <td class="code">067310</td>
+          <td>2026-05-22</td>
+          <td class="biz">7</td>
+          <td><span class="badge wait">⏳ 7영업일 (해제검토 전)</span></td>
+          <td class="conds"></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=217320" target="_blank" class="stock-link">썬테크</a></td>
+          <td class="code">217320</td>
+          <td>2026-05-21</td>
+          <td class="biz">8</td>
+          <td><span class="badge wait">⏳ 8영업일 (해제검토 전)</span></td>
+          <td class="conds"></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=066430" target="_blank" class="stock-link">아이로보틱스</a></td>
+          <td class="code">066430</td>
+          <td>2026-05-20</td>
+          <td class="biz">9</td>
+          <td><span class="badge wait">⏳ 9영업일 (해제검토 전)</span></td>
+          <td class="conds"></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=011000" target="_blank" class="stock-link">진원생명과학</a></td>
+          <td class="code">011000</td>
+          <td>2026-05-20</td>
+          <td class="biz">9</td>
+          <td><span class="badge wait">⏳ 9영업일 (해제검토 전)</span></td>
+          <td class="conds"></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=452280" target="_blank" class="stock-link">한선엔지니어링</a></td>
+          <td class="code">452280</td>
+          <td>2026-05-20</td>
+          <td class="biz">9</td>
+          <td><span class="badge wait">⏳ 9영업일 (해제검토 전)</span></td>
+          <td class="conds"></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=290690" target="_blank" class="stock-link">소룩스</a></td>
+          <td class="code">290690</td>
+          <td>2026-05-19</td>
+          <td class="biz">10</td>
+          <td><span class="badge green">🟢 내일(06/02) 해제 예상</span></td>
+          <td class="conds"><span class="cond ok">✅ T-5 5,090x160%=8,144</span> <span class="cond ok">✅ T-15 3,275x200%=6,550</span> <span class="cond ok">✅ 신고가 아님</span><br><small>현재가 4,795원</small></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=031330" target="_blank" class="stock-link">에스에이엠티</a></td>
+          <td class="code">031330</td>
+          <td>2026-05-19</td>
+          <td class="biz">10</td>
+          <td><span class="badge green">🟢 내일(06/02) 해제 예상</span></td>
+          <td class="conds"><span class="cond ok">✅ T-5 15,590x160%=24,944</span> <span class="cond ok">✅ T-15 8,560x200%=17,120</span> <span class="cond ok">✅ 신고가 아님</span><br><small>현재가 14,420원</small></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=236340" target="_blank" class="stock-link">메디젠휴먼케어</a></td>
+          <td class="code">236340</td>
+          <td>2026-05-18</td>
+          <td class="biz">11</td>
+          <td><span class="badge green">🟢 내일(06/02) 해제 예상</span></td>
+          <td class="conds"><span class="cond ok">✅ T-5 3,500x160%=5,600</span> <span class="cond ok">✅ T-15 1,901x200%=3,802</span> <span class="cond ok">✅ 신고가 아님</span><br><small>현재가 3,000원</small></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=223310" target="_blank" class="stock-link">사토시홀딩스</a></td>
+          <td class="code">223310</td>
+          <td>2026-05-18</td>
+          <td class="biz">11</td>
+          <td><span class="badge green">🟢 내일(06/02) 해제 예상</span></td>
+          <td class="conds"><span class="cond ok">✅ T-5 9,400x160%=15,040</span> <span class="cond ok">✅ T-15 11,380x200%=22,760</span> <span class="cond ok">✅ 신고가 아님</span><br><small>현재가 6,660원</small></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=009155" target="_blank" class="stock-link">삼성전기우</a></td>
+          <td class="code">009155</td>
+          <td>2026-05-18</td>
+          <td class="biz">11</td>
+          <td><span class="badge red">🔴 11영업일 유지 중</span></td>
+          <td class="conds"><span class="cond ng">❌ T-5 454,000x160%=726,400</span> <span class="cond ng">❌ T-15 379,500x200%=759,000</span> <span class="cond ng">❌ 신고가 아님</span><br><small>현재가 777,000원</small></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=080220" target="_blank" class="stock-link">제주반도체</a></td>
+          <td class="code">080220</td>
+          <td>2026-05-14</td>
+          <td class="biz">13</td>
+          <td><span class="badge green">🟢 내일(06/02) 해제 예상</span></td>
+          <td class="conds"><span class="cond ok">✅ T-5 118,700x160%=189,920</span> <span class="cond ok">✅ T-15 54,700x200%=109,400</span> <span class="cond ok">✅ 신고가 아님</span><br><small>현재가 97,500원</small></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=007810" target="_blank" class="stock-link">코리아써키트</a></td>
+          <td class="code">007810</td>
+          <td>2026-05-14</td>
+          <td class="biz">13</td>
+          <td><span class="badge orange">🔥 신고가만 안 찍으면 해제</span></td>
+          <td class="conds"><span class="cond ok">✅ T-5 100,700x160%=161,120</span> <span class="cond ok">✅ T-15 102,200x200%=204,400</span> <span class="cond ng">❌ 신고가 아님</span><br><small>현재가 120,800원</small></td>
+        </tr>
+
+        <tr>
+          <td><a href="https://kind.krx.co.kr/corpgeneral/corpList.do?method=loadInitPage&searchCorpCode=309930" target="_blank" class="stock-link">조이웍스앤코</a></td>
+          <td class="code">309930</td>
+          <td>2026-04-29</td>
+          <td class="biz">24</td>
+          <td><span class="badge green">🟢 내일(06/02) 해제 예상</span></td>
+          <td class="conds"><span class="cond ok">✅ T-5 2,810x160%=4,496</span> <span class="cond ok">✅ T-15 2,810x200%=5,620</span> <span class="cond ok">✅ 신고가 아님</span><br><small>현재가 1,965원</small></td>
+        </tr>
+    </tbody>
+  </table>
+</div>
+
 </body>
 </html>

@@ -21,11 +21,14 @@ SAVE_DIR = BASE / 'raw' / '매일 엑셀넣을것'
 TODAY    = date.today()
 MMDD     = TODAY.strftime('%m%d')
 
-# ── 링크 (1주일마다 갱신 시 여기만 수정) ─────────────
+# ── 링크 (mybox_links.json에서 로드) ─────────────────
+import json as _json
+_links_path = Path(__file__).parent / 'mybox_links.json'
+_links = _json.loads(_links_path.read_text(encoding='utf-8'))
 URL = {
-    'ame':    'https://naver.me/G0pfbTjL',
-    'cafe':   'https://naver.me/xvC6NfsH',
-    'bingsu': 'https://naver.me/5o0wZsUJ',
+    'ame':    _links['ame'],
+    'cafe':   _links['cafe'],
+    'bingsu': _links['bingsu'],
 }
 
 # ── 파일 셀렉터 ──────────────────────────────────────

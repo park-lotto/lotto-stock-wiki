@@ -1,4 +1,10 @@
 - 2026-06-01 — Excel ingest 완료: 수급 → ingest_report_2026-06-01.md
+- 2026-06-01 — Excel ingest 완료: 수급 → ingest_report_2026-06-01.md
+- 2026-06-01 — Excel ingest 완료: 추정이익변경·컨센움직임·수출·유동성·수급 → ingest_report_2026-06-01.md
+- 2026-06-01 — Excel ingest 완료: 수급 → ingest_report_2026-06-01.md
+- 2026-06-01 — Excel ingest 완료: 추정이익변경·컨센움직임·수출·유동성·수급 → ingest_report_2026-06-01.md
+- 2026-06-01 — Excel ingest 완료: 추정이익변경·컨센움직임·수출·유동성·수급 → ingest_report_2026-06-01.md
+- 2026-06-01 — Excel ingest 완료: 수급 → ingest_report_2026-06-01.md
 - 2026-06-01 — Excel ingest 완료: 추정이익변경·컨센움직임·수출·유동성·수급 → ingest_report_2026-06-01.md
 - 2026-06-01 — Excel ingest 완료: 추정이익변경·컨센움직임·수출·유동성·수급 → ingest_report_2026-06-01.md
 - 2026-05-30 — 국민성장펀드 빌드업 영상 씬4~6 Remotion 완성 (녹음 전 버전):
