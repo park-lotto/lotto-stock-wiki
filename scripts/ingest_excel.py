@@ -504,13 +504,151 @@ def _run_osc_com(path: Path) -> dict:
     }
 
 
+def _run_osc_openpyxl(path: Path) -> dict:
+    """openpyxl로 xlsm 읽어 EMA MACD 오실레이터 계산 (COM 없이 동작)"""
+    K12, K26, K9 = 2/13, 2/27, 2/10
+    DATA_START, DATA_END = 15, 91
+    STAT_COL = 12
+
+    def ema(vals, k):
+        r = [vals[0]]
+        for v in vals[1:]:
+            r.append(v * k + r[-1] * (1 - k))
+        return r
+
+    def calc_osc(signal):
+        e12 = ema(signal, K12); e26 = ema(signal, K26)
+        macd = [a - b for a, b in zip(e12, e26)]
+        sig  = ema(macd, K9)
+        return [m - s for m, s in zip(macd, sig)]
+
+    print("    [openpyxl] 열기...")
+    try:
+        wb = openpyxl.load_workbook(str(path), data_only=True, read_only=True, keep_vba=False)
+    except Exception as e:
+        return {"error": f"openpyxl 열기 실패: {e}"}
+
+    ws_size = wb["시가총액"]
+    ws_forn = wb["외국인매수데이터"]
+    ws_inst = wb["기관매수데이터"]
+
+    # 백분위 기준값 (수급오실레이터 시트)
+    p10 = p25 = p75 = p90 = None
+    if "수급오실레이터" in wb.sheetnames:
+        ws_osc = wb["수급오실레이터"]
+        try:
+            p90 = float(ws_osc.cell(7,  STAT_COL).value)
+            p75 = float(ws_osc.cell(8,  STAT_COL).value)
+            p25 = float(ws_osc.cell(10, STAT_COL).value)
+            p10 = float(ws_osc.cell(11, STAT_COL).value)
+        except (TypeError, ValueError):
+            pass
+
+    # 마지막 날짜
+    last_date_val = ws_forn.cell(DATA_END, 1).value
+    if isinstance(last_date_val, datetime):
+        last_date_str = last_date_val.strftime("%Y-%m-%d")
+    else:
+        last_date_str = TODAY
+
+    # 종목 헤더 (row 9, col 2~)
+    max_col = 0
+    for cell in ws_forn[9]:
+        if cell.value is not None:
+            max_col = cell.column
+        else:
+            break
+    if max_col < 2:
+        max_col = 800
+
+    xl_stocks = {}
+    for c in range(2, max_col + 1):
+        name = ws_forn.cell(9, c).value
+        code = ws_forn.cell(8, c).value
+        if not name:
+            break
+        xl_stocks[str(name)] = {"col": c, "code": str(code or "").replace("A", "")}
+
+    print(f"    [openpyxl] {len(xl_stocks)}종목 계산 중...")
+
+    # 데이터 행렬 읽기 (iter_rows 방식 — cell() 반복보다 10~20배 빠름)
+    def read_matrix(ws):
+        mat = []
+        for i, row in enumerate(ws.iter_rows(min_row=DATA_START, max_row=DATA_END,
+                                              min_col=1, max_col=max_col, values_only=True)):
+            mat.append(list(row))
+        return mat
+
+    mat_size = read_matrix(ws_size)
+    mat_forn = read_matrix(ws_forn)
+    mat_inst = read_matrix(ws_inst)
+    wb.close()
+
+    results = []
+    for name, info in xl_stocks.items():
+        c = info["col"] - 1
+        size_v = [float(mat_size[r][c]) if mat_size[r][c] else None for r in range(len(mat_size))]
+        forn_v = [float(mat_forn[r][c]) if mat_forn[r][c] else None for r in range(len(mat_forn))]
+        inst_v = [float(mat_inst[r][c]) if mat_inst[r][c] else None for r in range(len(mat_inst))]
+        pairs  = [((fv or 0) + (iv or 0), sv)
+                  for fv, iv, sv in zip(forn_v, inst_v, size_v) if sv and sv > 0]
+        if len(pairs) < 27:
+            continue
+        series = calc_osc([net / sz for net, sz in pairs])
+        osc = series[-1]
+        trend = "↑ 재진입" if len(series) >= 5 and osc > sum(series[-5:-1])/4 * 1.05 else \
+                "↓ 빈집심화" if len(series) >= 5 and osc < sum(series[-5:-1])/4 * 0.95 else "→ 횡보"
+        results.append({"name": name, "code": info["code"], "osc": osc, "trend": trend})
+
+    if not results:
+        return {"file": path.name, "error": "계산 가능 종목 없음"}
+
+    all_sorted = sorted(r["osc"] for r in results)
+    n = len(all_sorted)
+    if p10 is None: p10 = all_sorted[int(n * 0.10)]
+    if p25 is None: p25 = all_sorted[int(n * 0.25)]
+    if p75 is None: p75 = all_sorted[int(n * 0.75)]
+    if p90 is None: p90 = all_sorted[int(n * 0.90)]
+
+    def pct(v):
+        if v <= p10: return 10 * (v / p10) if p10 else 5
+        if v <= p25: return 10 + (v - p10) / (p25 - p10) * 15
+        if v <= p75: return 25 + (v - p25) / (p75 - p25) * 50
+        if v <= p90: return 75 + (v - p75) / (p90 - p75) * 15
+        return min(90 + (v - p90) / abs(p90) * 5 if p90 else 95, 100)
+
+    빈집_A = sorted([r for r in results if r["osc"] <= p10], key=lambda x: x["osc"])
+    빈집_B = sorted([r for r in results if p10 < r["osc"] <= p25], key=lambda x: x["osc"])
+    for r in results:
+        r["pct"] = pct(r["osc"])
+
+    return {
+        "file": path.name,
+        "date": last_date_str,
+        "total": len(results),
+        "빈집_A": [{"name": r["name"], "code": r["code"], "osc": r["osc"], "pct": r["pct"], "trend": r["trend"]} for r in 빈집_A],
+        "빈집_B": [{"name": r["name"], "code": r["code"], "osc": r["osc"], "pct": r["pct"], "trend": r["trend"]} for r in 빈집_B],
+        "note": f"전체 {len(results)}종목 | 빈집A: {len(빈집_A)}개 | 빈집B: {len(빈집_B)}개 | 기준A≤{p10:.6f} B≤{p25:.6f}",
+    }
+
+
+def _run_osc(path: Path) -> dict:
+    """COM 우선, 실패 시 openpyxl 폴백"""
+    try:
+        import win32com.client as win32
+        return _run_osc_com(path)
+    except Exception:
+        print("    [COM 실패] openpyxl 폴백 사용")
+        return _run_osc_openpyxl(path)
+
+
 def parse_수급오실레이터(dry_run: bool) -> dict:
     path = find_excel("(700)")
     if not path:
         path = find_excel("수급오실레이터")
     if not path:
         return {"error": "수급오실레이터(700) 파일 없음"}
-    return _run_osc_com(path)
+    return _run_osc(path)
 
 
 # ─── 파서 6: 중소형주 오실레이터 (700-1400) ───────────────────────
@@ -519,7 +657,7 @@ def parse_중소형주오실레이터(dry_run: bool) -> dict:
     path = find_excel("(700-1400)")
     if not path:
         return {"error": "수급오실레이터(700-1400) 파일 없음"}
-    return _run_osc_com(path)
+    return _run_osc(path)
 
 
 # ─── 파서 7: 가속화모멘텀 ────────────────────────────────────────
