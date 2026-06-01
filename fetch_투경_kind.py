@@ -24,7 +24,14 @@ TELEGRAM_DIR = BASE_DIR / 'raw' / 'telegram'
 KIND_URL  = ('https://kind.krx.co.kr/investwarn/investattentwarnrisky.do'
              '?method=investattentwarnriskyMain')
 
-MARKET_THRESH = {'KOSDAQ': (1.60, 2.00), 'KOSPI': (1.45, 1.75), 'KONEX': (1.45, 1.75)}
+# 지정유형별 임계값 (시장 구분 아님)
+# 실증검증 완료(2026-06-01): 급등형 160/200% — 6종목 전수 역산 일치
+TYPE_THRESH = {
+    'surge':  (1.60, 2.00),   # 급등형: 초단기/단기/중장기급등, 투자주의반복
+    'unfair': (1.45, 1.75),   # 불건전형: 단기/중장기상승+불건전거래
+}
+DEFAULT_TYPE  = 'surge'       # 미확인 시 급등형 기본 적용
+UNFAIR_KEYWORDS = ['불건전', '단기상승&', '중장기상승&', '초장기상승&']
 
 
 # ── 유틸 ──────────────────────────────────────────────────────────────────
@@ -103,17 +110,24 @@ def fetch_kind_warn_list() -> list[dict]:
         for row in rows:
             cells = row.query_selector_all('td')
             texts = [c.inner_text().strip() for c in cells]
-            # 컬럼: 번호 | 종목명 | 공시일 | 지정일 | 해제일
+            # 컬럼: 번호 | 종목명 | 공시일 | 지정일 | 해제일 | (지정사유 있을 수도)
             if len(texts) >= 5 and texts[0].isdigit():
                 name     = texts[1].strip()
                 pub_date = texts[2].strip()
                 des_date = texts[3].strip()
                 rel_date = texts[4].strip()
+                # 지정사유 컬럼이 있으면 캡처 (컬럼 수에 따라 위치 다를 수 있음)
+                reason = ''
+                for t in texts[5:]:
+                    if t and t != '-':
+                        reason = t
+                        break
                 if name and rel_date == '-':   # 해제일 없음 = 현재 활성
                     results.append({
                         'name':     name,
                         'pub_date': pub_date,
                         'des_date': des_date,
+                        'reason':   reason,
                     })
 
         browser.close()
@@ -205,10 +219,12 @@ def get_fixed_ref_price(code: str, des_date_str: str, n_days: int) -> tuple[str,
         pass
     return ('', 0)
 
-def analyze_release(name: str, code: str, market: str, des_date: str) -> dict:
-    """고정 지정일 기준 해제 조건 분석."""
+def analyze_release(name: str, code: str, market: str, des_date: str,
+                    warn_type: str = DEFAULT_TYPE) -> dict:
+    """롤링 기준 해제 조건 분석 (KRX 규정: 최근 5일/15일 주가상승률 기준)."""
     result = {'name': name, 'code': code, 'market': market,
-              'des_date': des_date, 'can_release': False, 'note': ''}
+              'des_date': des_date, 'warn_type': warn_type,
+              'can_release': False, 'note': ''}
 
     elapsed_biz = business_days_elapsed(des_date, TODAY_DT)
     result['elapsed_biz'] = elapsed_biz
@@ -221,19 +237,19 @@ def analyze_release(name: str, code: str, market: str, des_date: str) -> dict:
         result['note'] = '코드 미확인'
         return result
 
-    t5_mult, t15_mult = MARKET_THRESH.get(market, MARKET_THRESH['KOSDAQ'])
+    t5_mult, t15_mult = TYPE_THRESH.get(warn_type, TYPE_THRESH[DEFAULT_TYPE])
 
-    # 오늘 종가
+    # 오늘 포함 최근 22영업일 종가 (newest-first)
     prices_today = get_prices(code, 22)
-    if not prices_today:
-        result['note'] = '가격 데이터 없음'
+    if len(prices_today) < 16:
+        result['note'] = f'가격 데이터 부족 ({len(prices_today)}건)'
         return result
     today_close = prices_today[0][1]
     today_date  = prices_today[0][0]
 
-    # 고정 기준가 (지정일 기준 T-5, T-15)
-    t5_date,  t5_close  = get_fixed_ref_price(code, des_date, 5)
-    t15_date, t15_close = get_fixed_ref_price(code, des_date, 15)
+    # 롤링 기준가: 오늘 기준 직전 5·15영업일 종가 (KRX 규정 "최근 N일간 주가상승률")
+    t5_date,  t5_close  = prices_today[5][0],  prices_today[5][1]
+    t15_date, t15_close = prices_today[15][0], prices_today[15][1]
 
     if not t5_close or not t15_close:
         result['note'] = '기준가 조회 실패'
@@ -301,9 +317,12 @@ def print_analysis(analyses: list[dict]):
             c1 = '✅' if a['cond1'] else '❌'
             c2 = '✅' if a['cond2'] else '❌'
             c3 = '✅' if a['cond3'] else '❌'
-            t5p  = int(a.get('t5_mult',  1.60) * 100) if 't5_mult'  not in a else int(MARKET_THRESH.get(a['market'], (1.60,))[0] * 100)
-            t15p = int(a.get('t15_mult', 2.00) * 100) if 't15_mult' not in a else int(MARKET_THRESH.get(a['market'], (0, 2.00))[1] * 100)
-            print(f'  현재가 {a["today_close"]:,}원  ({a["today_date"]})')
+            wtype = a.get('warn_type', DEFAULT_TYPE)
+            t5_mult, t15_mult = TYPE_THRESH.get(wtype, TYPE_THRESH[DEFAULT_TYPE])
+            t5p  = int(t5_mult  * 100)
+            t15p = int(t15_mult * 100)
+            type_label = '🔸불건전' if wtype == 'unfair' else '⬜급등'
+            print(f'  현재가 {a["today_close"]:,}원  ({a["today_date"]})  [{type_label}]')
             print(f'  {c1} ① T-5  {a["t5_close"]:,}({a["t5_date"]}) × {t5p}% = {a["tp5"]:,}  ({a["t5_ratio"]}%)')
             print(f'  {c2} ② T-15 {a["t15_close"]:,}({a["t15_date"]}) × {t15p}% = {a["tp15"]:,}  ({a["t15_ratio"]}%)')
             print(f'  {c3} ③ 15일최고 {a["high15"]:,}({a["high15_date"]})')
@@ -443,15 +462,20 @@ def main():
     print(f'전체 {len(stocks)}종목  |  신규 {len(new_stocks)}  |  해제 {len(released_stocks)}')
     print_warn_list(stocks)
 
-    # 3. 종목코드 enrichment
+    # 3. 종목코드 + 지정유형 enrichment
     enriched = []
     for s in stocks:
         code, market = get_stock_info(s['name'])
+        # 지정유형 판별: KIND 컬럼 reason 또는 이전 저장값 참조
+        reason = s.get('reason', '') or prev_stocks.get(s['name'], {}).get('reason', '')
+        warn_type = 'unfair' if any(k in reason for k in UNFAIR_KEYWORDS) else DEFAULT_TYPE
         enriched.append({
-            'name':     s['name'],
-            'code':     code or prev_stocks.get(s['name'], {}).get('code', ''),
-            'des_date': s['des_date'],
-            'type':     'warning',
+            'name':      s['name'],
+            'code':      code or prev_stocks.get(s['name'], {}).get('code', ''),
+            'des_date':  s['des_date'],
+            'reason':    reason,
+            'warn_type': warn_type,   # 'surge' or 'unfair'
+            'type':      'warning',
         })
 
     # 신규/해제에도 코드 보완
@@ -491,9 +515,12 @@ def main():
         if business_days_elapsed(e['des_date'], TODAY_DT) < 10:
             continue
         a = analyze_release(e['name'], e['code'],
-                            _mkt_cache.get(e['name'], 'KOSDAQ'), e['des_date'])
+                            _mkt_cache.get(e['name'], 'KOSDAQ'),
+                            e['des_date'],
+                            e.get('warn_type', DEFAULT_TYPE))
         analyses.append(a)
-        print(f'  {e["name"]} ({e["code"]}): {a["note"]}')
+        type_tag = '🔸불건전' if e.get('warn_type') == 'unfair' else '⬜급등'
+        print(f'  {type_tag} {e["name"]} ({e["code"]}): {a["note"]}')
 
     print_analysis(analyses)
 
@@ -545,9 +572,9 @@ def generate_dashboard(stocks: list[dict], analyses: list[dict],
                 status_html = f'<span class="badge orange">🔥 신고가만 안 찍으면 해제</span>'
             else:
                 status_html = f'<span class="badge red">🔴 {biz}영업일 유지 중</span>'
-            mkt = a['market']
-            t5p  = int(MARKET_THRESH.get(mkt, (1.60, 2.00))[0] * 100)
-            t15p = int(MARKET_THRESH.get(mkt, (1.60, 2.00))[1] * 100)
+            wtype = a.get('warn_type', DEFAULT_TYPE)
+            t5p, t15p = int(TYPE_THRESH.get(wtype, TYPE_THRESH[DEFAULT_TYPE])[0]*100), \
+                        int(TYPE_THRESH.get(wtype, TYPE_THRESH[DEFAULT_TYPE])[1]*100)
             l1 = f'T-5 {a["t5_close"]:,}x{t5p}%={a["tp5"]:,}'
             l2 = f'T-15 {a["t15_close"]:,}x{t15p}%={a["tp15"]:,}'
             conds_html = (
@@ -573,9 +600,10 @@ def generate_dashboard(stocks: list[dict], analyses: list[dict],
     rows_html = '\n'.join(stock_row(e) for e in stocks)
 
     def bet_card(a: dict) -> str:
-        mkt  = a['market']
-        t5p  = int(MARKET_THRESH.get(mkt, (1.60, 2.00))[0] * 100)
-        t15p = int(MARKET_THRESH.get(mkt, (1.60, 2.00))[1] * 100)
+        mkt   = a['market']
+        wtype = a.get('warn_type', DEFAULT_TYPE)
+        t5p   = int(TYPE_THRESH.get(wtype, TYPE_THRESH[DEFAULT_TYPE])[0] * 100)
+        t15p  = int(TYPE_THRESH.get(wtype, TYPE_THRESH[DEFAULT_TYPE])[1] * 100)
         if a.get('can_release'):
             verdict = f'<div class="verdict green">✅ 3조건 모두 충족 — 내일({next_biz_str}) 해제 확실</div>'
         else:
