@@ -1,3 +1,12 @@
+- 2026-06-02 — 세션 마무리: 영상 제작 파이프라인 + 소재찾기 루틴 확립
+  [CLAUDE.md] 세션마무리 4단계 / /소재찾기 5단계 루틴 / 영상제작 프로세스 추가
+  [소재분석] 젠슨황 방한 소재: 깐부회동 시즌2 + 5일 성수동 + LG씨엔에스 상한가
+  [Gemini이미지] generate_jh_images.py 완성 — 씬별 프롬프트 + 인물 레퍼런스 → 이미지 5장 생성
+  [Remotion] JH_Sample.tsx (30초 5씬) + LGcns_Scene.tsx (하이브리드 깐부회동+차트) 완성
+  [방향확정] 스토리형 AI이미지 + 실사 하이브리드 방향. 이슈형=당일제작 / 분석형=Remotion
+  [퍼미션] .claude/settings.json Playwright MCP 전체 자동승인 추가
+- 2026-06-01 — Excel ingest 완료:  → ingest_report_2026-06-01.md
+- 2026-06-01 — Excel ingest 완료: 추정이익변경·컨센움직임·수출·유동성·가속화모멘텀·RS → ingest_report_2026-06-01.md
 - 2026-06-01 — Excel ingest 완료: RS → ingest_report_2026-06-01.md
 - 2026-06-01 — Excel ingest 완료: RS → ingest_report_2026-06-01.md
 - 2026-06-01 — Excel ingest 완료: RS → ingest_report_2026-06-01.md

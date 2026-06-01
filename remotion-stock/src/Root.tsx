@@ -54,10 +54,31 @@ import { GB_Thumb_C } from './buildup/GB_Thumb_C';
 import { GB_Thumb_D } from './buildup/GB_Thumb_D';
 import { GB_Thumb_E } from './buildup/GB_Thumb_E';
 import { SDUR } from './constants';
+import { JH_Sample, JH_SAMPLE_FRAMES } from './news/JH_Sample';
+import { LGcns_Scene, LGCNS_FRAMES } from './news/LGcns_Scene';
 
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* 깐부회동 + LG차트 하이브리드 씬 */}
+      <Composition
+        id="LGcns-Hybrid"
+        component={LGcns_Scene}
+        durationInFrames={LGCNS_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* 젠슨황 방한 30초 샘플 */}
+      <Composition
+        id="Jensen-Korea-2026"
+        component={JH_Sample}
+        durationInFrames={JH_SAMPLE_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
       {/* 쇼츠 포맷 (9:16) */}
       <Composition
         id="StockShorts"
