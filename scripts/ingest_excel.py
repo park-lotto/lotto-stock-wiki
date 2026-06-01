@@ -522,6 +522,143 @@ def parse_중소형주오실레이터(dry_run: bool) -> dict:
     return _run_osc_com(path)
 
 
+# ─── 파서 7: 가속화모멘텀 ────────────────────────────────────────
+
+def parse_가속화모멘텀(dry_run: bool) -> dict:
+    path = find_excel("유동성 체크")
+    if not path:
+        path = find_excel("가속화모멘텀")
+    if not path:
+        return {"error": "유동성체크 파일 없음"}
+
+    wb = load_wb(path)
+    if not wb: return {"error": "열기 실패"}
+    if "가속화모멘텀" not in wb.sheetnames:
+        wb.close(); return {"error": "가속화모멘텀 시트 없음"}
+
+    ws = wb["가속화모멘텀"]
+
+    # 4개 그룹: 각 그룹 = (순위col, 종목col, 스코어col, 변화24col, 변화25col)
+    groups = {
+        "추정이익3개+": (1, 2, 3, 4, 5),
+        "추정이익1개+": (6, 7, 8, 9, 10),
+        "시총상위300":  (11, 12, 13, 14, 15),
+        "주당순이익1개+": (16, 17, 18, 19, 20),  # 태린이아빠 선호
+    }
+
+    result = {}
+    for g_name, (c_rank, c_name, c_score, c_24, c_25) in groups.items():
+        items = []
+        for r in range(6, ws.max_row + 1):
+            name = ws.cell(r, c_name).value
+            score = ws.cell(r, c_score).value
+            if not name or not isinstance(name, str): continue
+            try: score = float(score)
+            except (TypeError, ValueError): continue
+            chg24 = ws.cell(r, c_24).value
+            chg25 = ws.cell(r, c_25).value
+            items.append({
+                "name":   name.strip(),
+                "score":  round(score, 4),
+                "chg24":  float(chg24) if isinstance(chg24, (int, float)) else None,
+                "chg25":  float(chg25) if isinstance(chg25, (int, float)) else None,
+            })
+        result[g_name] = items
+
+    wb.close()
+    return {"file": path.name, "results": result}
+
+
+# ─── 파서 8: 상대강도 RS ─────────────────────────────────────────
+
+def parse_rs(dry_run: bool) -> dict:
+    path = find_excel("한국상대강도")
+    if not path:
+        return {"error": "한국상대강도 파일 없음"}
+
+    wb = load_wb(path)
+    if not wb: return {"error": "열기 실패"}
+    if "종가" not in wb.sheetnames:
+        wb.close(); return {"error": "종가 시트 없음"}
+
+    ws = wb["종가"]
+
+    # 헤더 읽기
+    headers = []
+    for c in range(1, ws.max_column + 1):
+        v = ws.cell(1, c).value
+        headers.append(str(v).strip() if v else None)
+
+    # 가격 데이터 읽기
+    prices = {h: [] for h in headers[1:] if h}
+    dates = []
+    for r in range(2, ws.max_row + 1):
+        date_v = ws.cell(r, 1).value
+        if date_v is None: continue
+        dates.append(date_v)
+        for c, h in enumerate(headers[1:], 2):
+            if not h: continue
+            v = ws.cell(r, c).value
+            prices[h].append(float(v) if isinstance(v, (int, float)) else None)
+
+    wb.close()
+    if not dates:
+        return {"error": "종가 데이터 없음"}
+
+    kospi = prices.get("코스피", [])
+    n = len(dates)
+
+    # RS 계산: 각 기간 절대 수익률 (종목 - 코스피 상대)
+    results = {}
+    for stock, plist in prices.items():
+        if stock == "코스피": continue
+        row = {"name": stock}
+        for period in [60, 120, 250]:
+            if n > period:
+                p_now = plist[-1]
+                p_ago = next((plist[-(period + 1 + i)] for i in range(5)
+                              if -(period + 1 + i) >= -n and plist[-(period + 1 + i)] is not None), None)
+                k_now = kospi[-1]
+                k_ago = next((kospi[-(period + 1 + i)] for i in range(5)
+                              if -(period + 1 + i) >= -n and kospi[-(period + 1 + i)] is not None), None)
+                if p_now and p_ago and k_now and k_ago:
+                    s_ret = (p_now / p_ago - 1) * 100
+                    k_ret = (k_now / k_ago - 1) * 100
+                    row[f"RS_{period}d"] = round(s_ret - k_ret, 2)
+        results[stock] = row
+
+    # 정규화: 퍼센타일
+    for period in [60, 120, 250]:
+        key = f"RS_{period}d"
+        vals = sorted(v[key] for v in results.values() if key in v)
+        nv = len(vals)
+        for v in results.values():
+            if key in v:
+                rank = sum(1 for x in vals if x <= v[key])
+                v[f"norm_RS_{period}"] = round(rank / nv * 100, 2)
+
+    # 평균 RS
+    for v in results.values():
+        rs_vals  = [v[f"RS_{p}d"]     for p in [60, 120, 250] if f"RS_{p}d"     in v]
+        nr_vals  = [v[f"norm_RS_{p}"] for p in [60, 120, 250] if f"norm_RS_{p}" in v]
+        if rs_vals:  v["RS_avg"]      = round(sum(rs_vals) / len(rs_vals), 2)
+        if nr_vals:  v["norm_RS_avg"] = round(sum(nr_vals) / len(nr_vals), 2)
+
+    sorted_r = sorted(
+        [v for v in results.values() if "norm_RS_avg" in v],
+        key=lambda x: x["norm_RS_avg"], reverse=True
+    )
+
+    last_date = str(dates[-1])[:10] if dates else TODAY
+    return {
+        "file":    path.name,
+        "date":    last_date,
+        "total":   len(sorted_r),
+        "top30":   sorted_r[:30],
+        "bottom10": sorted_r[-10:],
+    }
+
+
 # ─── 리포트 생성 ──────────────────────────────────────────────
 
 def build_report(results: dict) -> str:
@@ -616,6 +753,34 @@ def build_report(results: dict) -> str:
 
     _빈집_섹션(lines, results.get("수급", {}),       "대형주(700)",       "5")
     _빈집_섹션(lines, results.get("중소형주수급", {}), "중소형주(700-1400)", "6")
+
+    # 7. 가속화모멘텀 (Q열 — 주당순이익 1개+)
+    r = results.get("가속화모멘텀", {})
+    if "results" in r:
+        q_items = r["results"].get("주당순이익1개+", [])
+        if q_items:
+            lines += ["## 7. 가속화모멘텀 TOP30 (주당순이익 1개+)", ""]
+            lines.append("| 순위 | 종목 | 모멘텀스코어 | 이익변화24 | 이익변화25 |")
+            lines.append("|------|------|------------|---------|---------|")
+            for i, it in enumerate(q_items[:30], 1):
+                c24 = f"{it['chg24']:+.0%}" if it['chg24'] is not None else "—"
+                c25 = f"{it['chg25']:+.0%}" if it['chg25'] is not None else "—"
+                lines.append(f"| {i} | {it['name']} | {it['score']:.2f} | {c24} | {c25} |")
+            lines.append("")
+
+    # 8. RS 상대강도 TOP30
+    r = results.get("RS", {})
+    if r.get("top30"):
+        lines += [f"## 8. RS 상대강도 TOP30 — {r.get('date','')}", ""]
+        lines.append("| 종목 | RS_60d | RS_120d | RS_250d | norm평균 |")
+        lines.append("|------|--------|---------|---------|---------|")
+        for it in r["top30"]:
+            r60  = f"{it.get('RS_60d',0):+.1f}%"  if 'RS_60d'  in it else "—"
+            r120 = f"{it.get('RS_120d',0):+.1f}%" if 'RS_120d' in it else "—"
+            r250 = f"{it.get('RS_250d',0):+.1f}%" if 'RS_250d' in it else "—"
+            nav  = f"{it.get('norm_RS_avg',0):.1f}"
+            lines.append(f"| {it['name']} | {r60} | {r120} | {r250} | {nav} |")
+        lines.append("")
 
     return "\n".join(lines)
 
@@ -761,6 +926,8 @@ def main():
         "유동성":   ("유동성",       lambda: parse_유동성체크(dry_run)),
         "수급":     ("수급",         lambda: parse_수급오실레이터(dry_run)),
         "중소형주":  ("중소형주수급",  lambda: parse_중소형주오실레이터(dry_run)),
+        "가속화":    ("가속화모멘텀",  lambda: parse_가속화모멘텀(dry_run)),
+        "RS":        ("RS",           lambda: parse_rs(dry_run)),
     }
 
     for key, (label, fn) in parsers.items():

@@ -210,6 +210,20 @@ def run_bingsu(page):
     for idx, pat, base, ext in TARGETS_BINGSU:
         download_one(page, idx, pat, base, ext)
 
+    # 서브폴더: 다양한 코드 → 한국 개별종목 상대강도
+    log('  📁 다양한 코드 → 한국 개별종목 상대강도...')
+    page.goto(URL['bingsu'], wait_until='networkidle', timeout=30000)
+    page.wait_for_timeout(2000)
+    items = get_items(page)
+    if 1 < len(items):
+        items[1].click()          # 다양한 코드
+        page.wait_for_timeout(2500)
+        items2 = get_items(page)
+        if 1 < len(items2):
+            items2[1].click()     # 한국 개별종목 상대강도
+            page.wait_for_timeout(2500)
+            download_one(page, 0, '종목상대강도', '한국상대강도', '.xlsx')
+
 
 # ═══════════════════════════════════════════════════
 # 유튜브 게시물 수집
