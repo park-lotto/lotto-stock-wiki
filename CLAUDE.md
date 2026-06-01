@@ -337,10 +337,11 @@ D 과매수:   상위 25% 이상
     - 데이터 저장·조회 → SQLite MCP (CSV/MD 파일 X)
     - Python 스크립트 → 복잡한 연산·파일처리 등 MCP 불가 작업만
 
-17. **세션 마무리**: 사용자가 "마무리", "세션 끝", "저장해줘" 입력 시 아래 3단계 순서대로 실행
-    1. `wiki/log.md` — 이번 세션 완료 항목 기록 (영상 완료·ingest·분석 등 모두)
-    2. `memory/*.md` — 완료/변경된 프로젝트 상태 업데이트 (완료 항목은 ✅ 표시)
-    3. `git add wiki/log.md` → `git commit -m "session: {한줄요약}"` → `git push`
+17. **세션 마무리**: 사용자가 "마무리", "세션 끝", "저장해줘" 입력 시 아래 4단계 순서대로 실행
+    1. `/ingest today` — 오늘 raw/ 미처리 파일 ingest
+    2. `wiki/log.md` — 이번 세션 완료 항목 기록 (영상 완료·ingest·분석 등 모두)
+    3. `memory/*.md` — 완료/변경된 프로젝트 상태 업데이트 (완료 항목은 ✅ 표시)
+    4. `git add wiki/log.md` → `git commit -m "session: {한줄요약}"` → `git push`
     > memory는 git 밖이라 push로 동기화 안 됨. 중요 상태는 반드시 log.md에도 남길 것.
 
 ---
