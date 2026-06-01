@@ -1,3 +1,7 @@
+- 2026-06-01 — Excel ingest 완료: RS → ingest_report_2026-06-01.md
+- 2026-06-01 — Excel ingest 완료: RS → ingest_report_2026-06-01.md
+- 2026-06-01 — Excel ingest 완료: RS → ingest_report_2026-06-01.md
+- 2026-06-01 — Excel ingest 완료: 가속화모멘텀 → ingest_report_2026-06-01.md
 - 2026-06-01 — Excel ingest 완료: 중소형주수급 → ingest_report_2026-06-01.md
 - 2026-06-01 — Excel ingest 완료: 수급 → ingest_report_2026-06-01.md
 - 2026-06-01 — Excel ingest 완료: 중소형주수급 → ingest_report_2026-06-01.md

@@ -583,64 +583,74 @@ def parse_rs(dry_run: bool) -> dict:
 
     ws = wb["종가"]
 
-    # 헤더 읽기
-    headers = []
-    for c in range(1, ws.max_column + 1):
-        v = ws.cell(1, c).value
-        headers.append(str(v).strip() if v else None)
+    # iter_rows로 일괄 읽기 (셀 단위보다 10배+ 빠름)
+    all_rows = list(ws.iter_rows(values_only=True))
+    wb.close()
 
-    # 가격 데이터 읽기
+    if not all_rows:
+        return {"error": "종가 데이터 없음"}
+
+    headers = [str(v).strip() if v else None for v in all_rows[0]]
     prices = {h: [] for h in headers[1:] if h}
     dates = []
-    for r in range(2, ws.max_row + 1):
-        date_v = ws.cell(r, 1).value
-        if date_v is None: continue
-        dates.append(date_v)
-        for c, h in enumerate(headers[1:], 2):
+    for row in all_rows[1:]:
+        if row[0] is None: continue
+        dates.append(row[0])
+        for c, h in enumerate(headers[1:], 1):
             if not h: continue
-            v = ws.cell(r, c).value
+            v = row[c] if c < len(row) else None
             prices[h].append(float(v) if isinstance(v, (int, float)) else None)
-
-    wb.close()
     if not dates:
         return {"error": "종가 데이터 없음"}
 
-    kospi = prices.get("코스피", [])
+    import math
+
+    def mansfield_rs(price_list, kospi_list, ma_period):
+        """Mansfield RS: (log(stock/kospi) - rolling_mean) * 100"""
+        n = len(price_list)
+        if n < ma_period + 1:
+            return None
+        log_rel = []
+        for p, k in zip(price_list, kospi_list):
+            if p and k and p > 0 and k > 0:
+                log_rel.append(math.log(p / k))
+            else:
+                log_rel.append(None)
+        # rolling mean (ma_period)
+        rs_series = []
+        for i in range(len(log_rel)):
+            window = [v for v in log_rel[max(0, i - ma_period + 1):i + 1] if v is not None]
+            if len(window) >= ma_period and log_rel[i] is not None:
+                ma = sum(window) / len(window)
+                rs_series.append((log_rel[i] - ma) * 100)
+            else:
+                rs_series.append(None)
+        last = next((v for v in reversed(rs_series) if v is not None), None)
+        return last
+
+    def norm_sigmoid(x, scale=12):
+        return round(100 / (1 + math.exp(-x / scale)), 2)
+
+    kospi_list = prices.get("코스피", [])
     n = len(dates)
 
-    # RS 계산: 각 기간 절대 수익률 (종목 - 코스피 상대)
+    # Mansfield RS 계산
     results = {}
     for stock, plist in prices.items():
         if stock == "코스피": continue
+        if len(plist) < 63: continue
         row = {"name": stock}
         for period in [60, 120, 250]:
-            if n > period:
-                p_now = plist[-1]
-                p_ago = next((plist[-(period + 1 + i)] for i in range(5)
-                              if -(period + 1 + i) >= -n and plist[-(period + 1 + i)] is not None), None)
-                k_now = kospi[-1]
-                k_ago = next((kospi[-(period + 1 + i)] for i in range(5)
-                              if -(period + 1 + i) >= -n and kospi[-(period + 1 + i)] is not None), None)
-                if p_now and p_ago and k_now and k_ago:
-                    s_ret = (p_now / p_ago - 1) * 100
-                    k_ret = (k_now / k_ago - 1) * 100
-                    row[f"RS_{period}d"] = round(s_ret - k_ret, 2)
+            raw = mansfield_rs(plist, kospi_list, period)
+            if raw is not None:
+                row[f"RS_{period}d"]    = round(raw, 2)
+                row[f"norm_RS_{period}"] = norm_sigmoid(raw)
         results[stock] = row
 
-    # 정규화: 퍼센타일
-    for period in [60, 120, 250]:
-        key = f"RS_{period}d"
-        vals = sorted(v[key] for v in results.values() if key in v)
-        nv = len(vals)
-        for v in results.values():
-            if key in v:
-                rank = sum(1 for x in vals if x <= v[key])
-                v[f"norm_RS_{period}"] = round(rank / nv * 100, 2)
-
-    # 평균 RS
+    # RS_avg, norm_RS_avg
     for v in results.values():
-        rs_vals  = [v[f"RS_{p}d"]     for p in [60, 120, 250] if f"RS_{p}d"     in v]
-        nr_vals  = [v[f"norm_RS_{p}"] for p in [60, 120, 250] if f"norm_RS_{p}" in v]
+        rs_vals = [v[f"RS_{p}d"]      for p in [60, 120, 250] if f"RS_{p}d"      in v]
+        nr_vals = [v[f"norm_RS_{p}"]  for p in [60, 120, 250] if f"norm_RS_{p}"  in v]
         if rs_vals:  v["RS_avg"]      = round(sum(rs_vals) / len(rs_vals), 2)
         if nr_vals:  v["norm_RS_avg"] = round(sum(nr_vals) / len(nr_vals), 2)
 
@@ -893,6 +903,37 @@ def build_빈집_tg(r: dict, results: dict) -> str:
     return "\n".join(lines)
 
 
+def _build_가속화_tg(r: dict) -> str:
+    items = r.get("results", {}).get("주당순이익1개+", [])
+    lines = [
+        f"⚡ <b>가속화모멘텀 TOP30</b> (주당순이익 1개+)",
+        f"총 {len(items)}종목 중 상위 30",
+        "",
+    ]
+    for i, it in enumerate(items[:30], 1):
+        star = "⭐" if it["score"] >= 1.0 else "  "
+        lines.append(f"{star}{i:2d}. {it['name']}  <code>{it['score']:.2f}</code>")
+    return "\n".join(lines)
+
+
+def _build_rs_tg(r: dict) -> str:
+    date_str = r.get("date", TODAY)
+    items    = r.get("top30", [])
+    lines = [
+        f"📈 <b>RS 상대강도 TOP30</b> — {date_str}",
+        f"전체 {r.get('total',0)}종목 | norm 평균 퍼센타일 기준",
+        "",
+        "<b>종목  RS60  RS120  RS250  norm평균</b>",
+    ]
+    for it in items[:30]:
+        r60  = f"{it.get('RS_60d', 0):+.0f}"  if 'RS_60d'  in it else "—"
+        r120 = f"{it.get('RS_120d',0):+.0f}" if 'RS_120d' in it else "—"
+        r250 = f"{it.get('RS_250d',0):+.0f}" if 'RS_250d' in it else "—"
+        nav  = f"{it.get('norm_RS_avg',0):.0f}"
+        lines.append(f"{it['name']}  {r60}  {r120}  {r250}  <code>{nav}</code>")
+    return "\n".join(lines)
+
+
 # ─── log.md 기록 ───────────────────────────────────────────────
 
 def append_log(summary: str):
@@ -969,6 +1010,18 @@ def main():
         if r_중소.get("빈집_A"):
             print("\n📲 [중소형주] 텔레그램 발송 중...")
             send_telegram(_build_중소형주_tg(r_중소))
+
+        # 가속화모멘텀 텔레그램 발송
+        r_가속 = results.get("가속화모멘텀", {})
+        if r_가속.get("results"):
+            print("\n📲 [가속화모멘텀] 텔레그램 발송 중...")
+            send_telegram(_build_가속화_tg(r_가속))
+
+        # RS 상대강도 텔레그램 발송
+        r_rs = results.get("RS", {})
+        if r_rs.get("top30"):
+            print("\n📲 [RS] 텔레그램 발송 중...")
+            send_telegram(_build_rs_tg(r_rs))
 
     print("\n" + "="*50)
     print(report[:2000])
