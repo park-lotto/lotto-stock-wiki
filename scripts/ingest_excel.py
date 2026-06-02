@@ -845,37 +845,36 @@ def parse_쏠림지수(dry_run: bool) -> dict:
                     first_prices[i] = row[i]
                 last_prices[i] = row[i]
 
-    sector_rs = []
-    for i, name in name_map.items():
-        if name == "코스피": continue
-        fp, lp = first_prices[i], last_prices[i]
-        if fp and lp and fp > 0:
-            ret = (lp - fp) / fp * 100
-            sector_rs.append({"name": name, "ret_30d": round(ret, 2)})
+    # 최종 시트 — 쏠림지수 (붉은선) 분석
+    # 컬럼: 0=DATE, 1=코스피, 2=코스닥, 4=롱숏, 5=지수화, 6=12EMA, 7=26EMA, 8=MACD, 9=시그널, 10=오실레이터
+    idx_val = macd_val = osc_val = None
+    direction = None  # "up" or "down"
 
-    sector_rs.sort(key=lambda x: x["ret_30d"], reverse=True)
-
-    # 최종 시트 — 쏠림 MACD 최신값
-    crowding_val = None
     if "최종" in wb.sheetnames:
         ws2 = wb["최종"]
-        macd_rows = list(ws2.iter_rows(min_row=15, max_row=2000, max_col=8, values_only=True))
+        macd_rows = list(ws2.iter_rows(min_row=15, max_row=3000, max_col=11, values_only=True))
         valid = [r for r in macd_rows if r[0] is not None and isinstance(r[0], datetime)]
-        if valid:
-            last_r = valid[-1]
-            # 오실레이터 = MACD - 시그널 (컬럼 6 = MACD, 7 = 시그널, 8 = 오실)
+        if len(valid) >= 6:
+            last_r  = valid[-1]
+            prev5   = valid[-6:-1]
             try:
-                if len(last_r) >= 8 and isinstance(last_r[7], (int, float)):
-                    crowding_val = round(float(last_r[7]), 4)
+                idx_val  = round(float(last_r[5]),  2) if len(last_r) > 5  and isinstance(last_r[5],  (int,float)) else None
+                macd_val = round(float(last_r[8]),  4) if len(last_r) > 8  and isinstance(last_r[8],  (int,float)) else None
+                osc_val  = round(float(last_r[10]), 4) if len(last_r) > 10 and isinstance(last_r[10], (int,float)) else None
+                # 5일 전 대비 지수화 방향
+                prev_idx = next((r[5] for r in reversed(prev5) if r[5] and isinstance(r[5], (int,float))), None)
+                if idx_val and prev_idx:
+                    direction = "up" if idx_val > prev_idx else "down"
             except:
                 pass
 
     wb.close()
     return {
-        "file": path.name,
-        "crowding": crowding_val,
-        "top10": sector_rs[:10],
-        "bottom10": sector_rs[-10:] if len(sector_rs) >= 10 else sector_rs,
+        "file":      path.name,
+        "idx":       idx_val,    # 지수화 현재값 (붉은선 레벨)
+        "macd":      macd_val,   # MACD
+        "osc":       osc_val,    # 오실레이터 (MACD 모멘텀)
+        "direction": direction,  # 최근 5일 방향
     }
 
 
@@ -1012,24 +1011,32 @@ def parse_일정(dry_run: bool) -> dict:
 # ─── 텔레그램 빌더 — 쏠림/ETF/일정 ───────────────────────────────
 
 def _build_쏠림_tg(r: dict) -> str:
-    lines = [f"🌊 <b>업종 쏠림지수</b> — {TODAY}", ""]
-    if r.get("crowding") is not None:
-        c = r["crowding"]
-        sig = "🔥 쏠림 강함" if c > 0 else "🔄 순환매 장세"
-        lines.append(f"쏠림지수: <code>{c:+.4f}</code>  {sig}")
-        lines.append("")
-    top = r.get("top10", [])
-    if top:
-        lines.append("<b>📈 강한 업종 Top 5 (30일)</b>")
-        for it in top[:5]:
-            lines.append(f"  {it['name']}  <code>{it['ret_30d']:+.1f}%</code>")
-        lines.append("")
-    bot = r.get("bottom10", [])
-    if bot:
-        lines.append("<b>📉 약한 업종 Bottom 5</b>")
-        for it in list(reversed(bot))[:5]:
-            lines.append(f"  {it['name']}  <code>{it['ret_30d']:+.1f}%</code>")
-    return "\n".join(lines)
+    idx  = r.get("idx")
+    macd = r.get("macd")
+    osc  = r.get("osc")
+    dirn = r.get("direction")
+
+    # 시장 판단
+    if macd is not None and macd > 0:
+        if dirn == "up":
+            judge = "🔥 쏠림 장세 — 주도업종 집중 상승 중\n→ 주도섹터 안에서 종목 선별 필수"
+        else:
+            judge = "🟡 쏠림 약화 중 — 순환매 전환 가능성\n→ 주도업종 유지 여부 체크"
+    elif macd is not None and macd <= 0:
+        judge = "🔄 순환매 장세 — 여러 종목 분산 상승\n→ 종목 선택 폭 넓음, 수익내기 상대적으로 쉬운 장"
+    else:
+        judge = "—"
+
+    lines = [
+        f"🌊 <b>업종 쏠림지수 (시장 상단 판단)</b> — {TODAY}",
+        "",
+        judge,
+        "",
+        f"붉은선(지수화): <code>{idx:,.2f}</code>" if idx else "",
+        f"MACD: <code>{macd:+.2f}</code>  오실레이터: <code>{osc:+.4f}</code>" if macd else "",
+        f"방향: {'↑ 상승 (쏠림 강화)' if dirn=='up' else '↓ 하락 (순환매 진행)' if dirn=='down' else '—'}",
+    ]
+    return "\n".join(l for l in lines if l is not None)
 
 
 def _build_액티브ETF_tg(r: dict) -> str:
@@ -1425,7 +1432,7 @@ def main():
 
         # 업종 쏠림지수 텔레그램 발송
         r_쏠림 = results.get("쏠림지수", {})
-        if r_쏠림.get("top10"):
+        if r_쏠림.get("idx") or r_쏠림.get("macd"):
             print("\n📲 [쏠림지수] 텔레그램 발송 중...")
             send_telegram(_build_쏠림_tg(r_쏠림))
 
