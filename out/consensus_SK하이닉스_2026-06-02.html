@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>SK하이닉스 — 컨센서스 시각화</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Pretendard',Arial,sans-serif; background:#f8fafc; color:#1e293b; padding:24px; }
+  h1 { font-size:26px; font-weight:700; margin-bottom:4px; }
+  .subtitle { font-size:14px; color:#64748b; margin-bottom:24px; }
+  .consensus-badge {
+    display:inline-block; background:#1e40af; color:#fff;
+    font-size:20px; font-weight:700; padding:8px 20px;
+    border-radius:8px; margin-bottom:24px;
+  }
+  .section { background:#fff; border-radius:12px; padding:20px 24px; margin-bottom:20px; box-shadow:0 1px 4px rgba(0,0,0,.08); }
+  .section-title { font-size:15px; font-weight:700; color:#374151; margin-bottom:16px; border-left:4px solid #3b82f6; padding-left:10px; }
+  .cards-wrap { display:flex; gap:12px; flex-wrap:wrap; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th { background:#f1f5f9; color:#475569; font-weight:600; padding:10px 12px; text-align:left; }
+  td { padding:10px 12px; border-bottom:1px solid #f1f5f9; }
+  tr:last-child td { border-bottom:none; }
+  canvas { max-height:340px; }
+</style>
+</head>
+<body>
+
+<h1>SK하이닉스</h1>
+<div class="subtitle">추정이익 변경 시각화 — 2026-06-02 기준 | 증권사 12개 | 전체 변경 15건</div>
+
+<div>
+  <span class="consensus-badge">📊 컨센서스 평균 3,175,250원</span>
+  &nbsp;
+  <span style="font-size:14px;color:#64748b">최고 6,133,000원 / 12개사</span>
+</div>
+
+<div class="section">
+  <div class="section-title">증권사별 현재 TP</div>
+  <div class="cards-wrap">
+        <div style="background:#fff;border:2px solid #ef4444;border-radius:10px;padding:14px 18px;min-width:160px;flex-shrink:0">
+          <div style="font-size:12px;color:#6b7280;margin-bottom:4px">—</div>
+          <div style="font-size:22px;font-weight:700;color:#111">6,133,000<span style="font-size:13px;font-weight:400">원</span></div>
+          <div style="font-size:13px;color:#ef4444;margin-top:2px">▼ 17.6% <span style="color:#9ca3af;font-size:12px">(7,445,000원→)</span></div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:4px">2026-05-19</div>
+        </div>
+        <div style="background:#fff;border:2px solid #22c55e;border-radius:10px;padding:14px 18px;min-width:160px;flex-shrink:0">
+          <div style="font-size:12px;color:#6b7280;margin-bottom:4px">SK증권</div>
+          <div style="font-size:22px;font-weight:700;color:#111">4,000,000<span style="font-size:13px;font-weight:400">원</span></div>
+          <div style="font-size:13px;color:#22c55e;margin-top:2px">▲ 33.3% <span style="color:#9ca3af;font-size:12px">(3,000,000원→)</span></div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:4px">2026-06-01</div>
+        </div>
+        <div style="background:#fff;border:2px solid #22c55e;border-radius:10px;padding:14px 18px;min-width:160px;flex-shrink:0">
+          <div style="font-size:12px;color:#6b7280;margin-bottom:4px">한국투자증권</div>
+          <div style="font-size:22px;font-weight:700;color:#111">3,800,000<span style="font-size:13px;font-weight:400">원</span></div>
+          <div style="font-size:13px;color:#22c55e;margin-top:2px">▲ 85.4% <span style="color:#9ca3af;font-size:12px">(2,050,000원→)</span></div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:4px">2026-05-20</div>
+        </div>
+        <div style="background:#fff;border:2px solid #22c55e;border-radius:10px;padding:14px 18px;min-width:160px;flex-shrink:0">
+          <div style="font-size:12px;color:#6b7280;margin-bottom:4px">미래에셋증권</div>
+          <div style="font-size:22px;font-weight:700;color:#111">3,800,000<span style="font-size:13px;font-weight:400">원</span></div>
+          <div style="font-size:13px;color:#22c55e;margin-top:2px">▲ 18.8% <span style="color:#9ca3af;font-size:12px">(3,200,000원→)</span></div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:4px">2026-05-27</div>
+        </div>
+        <div style="background:#fff;border:2px solid #22c55e;border-radius:10px;padding:14px 18px;min-width:160px;flex-shrink:0">
+          <div style="font-size:12px;color:#6b7280;margin-bottom:4px">KB증권</div>
+          <div style="font-size:22px;font-weight:700;color:#111">3,800,000<span style="font-size:13px;font-weight:400">원</span></div>
+          <div style="font-size:13px;color:#22c55e;margin-top:2px">▲ 26.7% <span style="color:#9ca3af;font-size:12px">(3,000,000원→)</span></div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:4px">2026-05-29</div>
+        </div>
+        <div style="background:#fff;border:2px solid #22c55e;border-radius:10px;padding:14px 18px;min-width:160px;flex-shrink:0">
+          <div style="font-size:12px;color:#6b7280;margin-bottom:4px">대신증권</div>
+          <div style="font-size:22px;font-weight:700;color:#111">3,400,000<span style="font-size:13px;font-weight:400">원</span></div>
+          <div style="font-size:13px;color:#22c55e;margin-top:2px">▲ 36.0% <span style="color:#9ca3af;font-size:12px">(2,500,000원→)</span></div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:4px">2026-06-02</div>
+        </div>
+        <div style="background:#fff;border:2px solid #22c55e;border-radius:10px;padding:14px 18px;min-width:160px;flex-shrink:0">
+          <div style="font-size:12px;color:#6b7280;margin-bottom:4px">유안타증권</div>
+          <div style="font-size:22px;font-weight:700;color:#111">3,300,000<span style="font-size:13px;font-weight:400">원</span></div>
+          <div style="font-size:13px;color:#22c55e;margin-top:2px">▲ 73.7% <span style="color:#9ca3af;font-size:12px">(1,900,000원→)</span></div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:4px">2026-06-01</div>
+        </div>
+        <div style="background:#fff;border:2px solid #22c55e;border-radius:10px;padding:14px 18px;min-width:160px;flex-shrink:0">
+          <div style="font-size:12px;color:#6b7280;margin-bottom:4px">NH투자증권</div>
+          <div style="font-size:22px;font-weight:700;color:#111">3,100,000<span style="font-size:13px;font-weight:400">원</span></div>
+          <div style="font-size:13px;color:#22c55e;margin-top:2px">▲ 72.2% <span style="color:#9ca3af;font-size:12px">(1,800,000원→)</span></div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:4px">2026-05-22</div>
+        </div>
+        <div style="background:#fff;border:2px solid #22c55e;border-radius:10px;padding:14px 18px;min-width:160px;flex-shrink:0">
+          <div style="font-size:12px;color:#6b7280;margin-bottom:4px">키움증권</div>
+          <div style="font-size:22px;font-weight:700;color:#111">2,600,000<span style="font-size:13px;font-weight:400">원</span></div>
+          <div style="font-size:13px;color:#22c55e;margin-top:2px">▲ 36.8% <span style="color:#9ca3af;font-size:12px">(1,900,000원→)</span></div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:4px">2026-06-01</div>
+        </div>
+        <div style="background:#fff;border:2px solid #22c55e;border-radius:10px;padding:14px 18px;min-width:160px;flex-shrink:0">
+          <div style="font-size:12px;color:#6b7280;margin-bottom:4px">다올투자증권</div>
+          <div style="font-size:22px;font-weight:700;color:#111">2,500,000<span style="font-size:13px;font-weight:400">원</span></div>
+          <div style="font-size:13px;color:#22c55e;margin-top:2px">▲ 19.0% <span style="color:#9ca3af;font-size:12px">(2,100,000원→)</span></div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:4px">2026-05-19</div>
+        </div>
+        <div style="background:#fff;border:2px solid #22c55e;border-radius:10px;padding:14px 18px;min-width:160px;flex-shrink:0">
+          <div style="font-size:12px;color:#6b7280;margin-bottom:4px">BNK투자증권</div>
+          <div style="font-size:22px;font-weight:700;color:#111">900,000<span style="font-size:13px;font-weight:400">원</span></div>
+          <div style="font-size:13px;color:#22c55e;margin-top:2px">▲ 157.1% <span style="color:#9ca3af;font-size:12px">(350,000원→)</span></div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:4px">2026-05-27</div>
+        </div>
+        <div style="background:#fff;border:2px solid #22c55e;border-radius:10px;padding:14px 18px;min-width:160px;flex-shrink:0">
+          <div style="font-size:12px;color:#6b7280;margin-bottom:4px">신한투자증권</div>
+          <div style="font-size:22px;font-weight:700;color:#111">770,000<span style="font-size:13px;font-weight:400">원</span></div>
+          <div style="font-size:13px;color:#22c55e;margin-top:2px">▲ 22.2% <span style="color:#9ca3af;font-size:12px">(630,000원→)</span></div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:4px">2026-05-27</div>
+        </div></div>
+</div>
+
+<div class="section">
+  <div class="section-title">TP 바차트 (현재 목표주가, 높은 순)</div>
+  <canvas id="barChart"></canvas>
+</div>
+
+<div class="section">
+  <div class="section-title">TP 타임라인 (날짜별 변화)</div>
+  <canvas id="lineChart"></canvas>
+</div>
+
+<div class="section"><div class="section-title">레이팅 변경 이력</div><table><thead><tr><th>날짜</th><th>증권사</th><th>레이팅 변경</th><th>TP 변경</th></tr></thead><tbody>
+        <tr>
+          <td>2026-05-19</td>
+          <td><b>—</b></td>
+          <td><span style="background:#ef4444;color:#fff;padding:3px 8px;border-radius:4px;font-size:13px;font-weight:600">↓ 139454000 → 142243000</span></td>
+          <td>7,445,000원 → <b>6,133,000원</b></td>
+        </tr></tbody></table></div>
+
+<script>
+const barCtx = document.getElementById('barChart').getContext('2d');
+new Chart(barCtx, {
+  type: 'bar',
+  data: {
+    labels: ["—", "SK증권", "한국투자증권", "미래에셋증권", "KB증권", "대신증권", "유안타증권", "NH투자증권", "키움증권", "다올투자증권", "BNK투자증권", "신한투자증권"],
+    datasets: [{
+      label: 'TP (원)',
+      data: [6133000, 4000000, 3800000, 3800000, 3800000, 3400000, 3300000, 3100000, 2600000, 2500000, 900000, 770000],
+      backgroundColor: ["rgba(59,130,246,0.85)", "rgba(34,197,94,0.85)", "rgba(34,197,94,0.85)", "rgba(34,197,94,0.85)", "rgba(34,197,94,0.85)", "rgba(34,197,94,0.85)", "rgba(34,197,94,0.85)", "rgba(34,197,94,0.85)", "rgba(34,197,94,0.85)", "rgba(34,197,94,0.85)", "rgba(34,197,94,0.85)", "rgba(34,197,94,0.85)"],
+      borderRadius: 6,
+      borderWidth: 0,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: function(ctx) {
+            const pcts = [-17.6, 33.3, 85.4, 18.8, 26.7, 36.0, 73.7, 72.2, 36.8, 19.0, 157.1, 22.2];
+            const pct = pcts[ctx.dataIndex];
+            const sign = pct > 0 ? '+' : '';
+            return ` ${ctx.parsed.x.toLocaleString()}원  (${sign}${pct}%)`;
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        beginAtZero: false,
+        ticks: { callback: v => (v/10000).toFixed(0)+'만' },
+        grid: { color: '#f1f5f9' }
+      },
+      y: { grid: { display: false } }
+    }
+  }
+});
+
+const lineCtx = document.getElementById('lineChart').getContext('2d');
+new Chart(lineCtx, {
+  type: 'scatter',
+  data: { datasets: [{"label": "대신증권", "data": [{"x": "2026-06-02", "y": 3400000}], "borderColor": "#4E79A7", "backgroundColor": "#4E79A7", "pointRadius": 8, "pointHoverRadius": 11, "showLine": true, "tension": 0.3, "borderWidth": 2}, {"label": "유안타증권", "data": [{"x": "2026-06-01", "y": 3300000}], "borderColor": "#F28E2B", "backgroundColor": "#F28E2B", "pointRadius": 8, "pointHoverRadius": 11, "showLine": true, "tension": 0.3, "borderWidth": 2}, {"label": "키움증권", "data": [{"x": "2026-06-01", "y": 2600000}], "borderColor": "#E15759", "backgroundColor": "#E15759", "pointRadius": 8, "pointHoverRadius": 11, "showLine": true, "tension": 0.3, "borderWidth": 2}, {"label": "SK증권", "data": [{"x": "2026-05-27", "y": 800000}, {"x": "2026-06-01", "y": 4000000}], "borderColor": "#76B7B2", "backgroundColor": "#76B7B2", "pointRadius": 8, "pointHoverRadius": 11, "showLine": true, "tension": 0.3, "borderWidth": 2}, {"label": "KB증권", "data": [{"x": "2026-05-29", "y": 3800000}], "borderColor": "#59A14F", "backgroundColor": "#59A14F", "pointRadius": 8, "pointHoverRadius": 11, "showLine": true, "tension": 0.3, "borderWidth": 2}, {"label": "미래에셋증권", "data": [{"x": "2026-05-27", "y": 3800000}], "borderColor": "#EDC948", "backgroundColor": "#EDC948", "pointRadius": 8, "pointHoverRadius": 11, "showLine": true, "tension": 0.3, "borderWidth": 2}, {"label": "신한투자증권", "data": [{"x": "2026-05-21", "y": 3800000}, {"x": "2026-05-22", "y": 630000}, {"x": "2026-05-27", "y": 770000}], "borderColor": "#B07AA1", "backgroundColor": "#B07AA1", "pointRadius": 8, "pointHoverRadius": 11, "showLine": true, "tension": 0.3, "borderWidth": 2}, {"label": "BNK투자증권", "data": [{"x": "2026-05-27", "y": 900000}], "borderColor": "#FF9DA7", "backgroundColor": "#FF9DA7", "pointRadius": 8, "pointHoverRadius": 11, "showLine": true, "tension": 0.3, "borderWidth": 2}, {"label": "NH투자증권", "data": [{"x": "2026-05-22", "y": 3100000}], "borderColor": "#9C755F", "backgroundColor": "#9C755F", "pointRadius": 8, "pointHoverRadius": 11, "showLine": true, "tension": 0.3, "borderWidth": 2}, {"label": "한국투자증권", "data": [{"x": "2026-05-20", "y": 3800000}], "borderColor": "#BAB0AC", "backgroundColor": "#BAB0AC", "pointRadius": 8, "pointHoverRadius": 11, "showLine": true, "tension": 0.3, "borderWidth": 2}, {"label": "다올투자증권", "data": [{"x": "2026-05-19", "y": 2500000}], "borderColor": "#3A9EBF", "backgroundColor": "#3A9EBF", "pointRadius": 8, "pointHoverRadius": 11, "showLine": true, "tension": 0.3, "borderWidth": 2}, {"label": "—", "data": [{"x": "2026-05-19", "y": 6133000}], "borderColor": "#F07C6E", "backgroundColor": "#F07C6E", "pointRadius": 8, "pointHoverRadius": 11, "showLine": true, "tension": 0.3, "borderWidth": 2}] },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { position: 'right', labels: { boxWidth: 12, font: { size: 12 } } },
+      tooltip: {
+        callbacks: {
+          label: function(ctx) {
+            return ` ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()}원`;
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        type: 'time',
+        time: { unit: 'day', tooltipFormat: 'yyyy-MM-dd', displayFormats: { day: 'MM/dd' } },
+        grid: { color: '#f1f5f9' }
+      },
+      y: {
+        ticks: { callback: v => (v/10000).toFixed(0)+'만' },
+        grid: { color: '#f1f5f9' }
+      }
+    }
+  }
+});
+</script>
+</body>
+</html>
