@@ -1,3 +1,10 @@
+- 2026-06-02 — Excel ingest 완료: 액티브ETF → ingest_report_2026-06-02.md
+- 2026-06-02 — Excel ingest 완료: 일정 → ingest_report_2026-06-02.md
+- 2026-06-02 — Excel ingest 완료: 액티브ETF → ingest_report_2026-06-02.md
+- 2026-06-02 — Excel ingest 완료: 쏠림지수 → ingest_report_2026-06-02.md
+- 2026-06-02 — Excel ingest 완료: 일정 → ingest_report_2026-06-02.md
+- 2026-06-02 — Excel ingest 완료: 액티브ETF → ingest_report_2026-06-02.md
+- 2026-06-02 — Excel ingest 완료: 쏠림지수 → ingest_report_2026-06-02.md
 - 2026-06-02 — 소라티노 구현 완료: scan_sortino.py (Sortino Top 20 / Mansfield RS ≥70)
   [소라티노] 태린이아빠 코드 그대로 로컬 구현. 이미지와 100% 일치 확인. --tg 텔레 전송
   [다운로드] 소라티노ETF상대강도 + 특정업종쏠림지수국내 매일 자동 수집 추가

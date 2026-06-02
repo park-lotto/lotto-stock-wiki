@@ -807,6 +807,265 @@ def parse_rs(dry_run: bool) -> dict:
     }
 
 
+# ─── 파서 9: 업종 쏠림지수 ─────────────────────────────────────
+
+def parse_쏠림지수(dry_run: bool) -> dict:
+    path = find_excel("특정업종쏠림지수국내")
+    if not path:
+        return {"error": "특정업종쏠림지수국내 파일 없음"}
+    wb = load_wb(path)
+    if not wb: return {"error": "열기 실패"}
+
+    # 상대강도 시트 — 업종별 RS 데이터
+    if "상대강도" not in wb.sheetnames:
+        wb.close(); return {"error": "상대강도 시트 없음"}
+
+    ws = wb["상대강도"]
+    all_rows = list(ws.iter_rows(min_row=8, max_row=2000, max_col=60, values_only=True))
+
+    # 헤더: Code행(8), Name행(9)
+    codes = list(all_rows[0])
+    names = list(all_rows[1])
+    name_map = {i: str(names[i]) for i in range(len(names)) if names[i] and names[i] != "Name"}
+
+    # 날짜 데이터
+    data_rows = [r for r in all_rows[4:] if r[0] is not None]
+    if not data_rows:
+        wb.close(); return {"error": "데이터 없음"}
+
+    # 최신 30일 수익률 계산
+    last_30 = data_rows[-30:]
+    first_prices = {i: None for i in name_map}
+    last_prices  = {i: None for i in name_map}
+
+    for row in last_30:
+        for i in name_map:
+            if i < len(row) and isinstance(row[i], (int, float)):
+                if first_prices[i] is None:
+                    first_prices[i] = row[i]
+                last_prices[i] = row[i]
+
+    sector_rs = []
+    for i, name in name_map.items():
+        if name == "코스피": continue
+        fp, lp = first_prices[i], last_prices[i]
+        if fp and lp and fp > 0:
+            ret = (lp - fp) / fp * 100
+            sector_rs.append({"name": name, "ret_30d": round(ret, 2)})
+
+    sector_rs.sort(key=lambda x: x["ret_30d"], reverse=True)
+
+    # 최종 시트 — 쏠림 MACD 최신값
+    crowding_val = None
+    if "최종" in wb.sheetnames:
+        ws2 = wb["최종"]
+        macd_rows = list(ws2.iter_rows(min_row=15, max_row=2000, max_col=8, values_only=True))
+        valid = [r for r in macd_rows if r[0] is not None and isinstance(r[0], datetime)]
+        if valid:
+            last_r = valid[-1]
+            # 오실레이터 = MACD - 시그널 (컬럼 6 = MACD, 7 = 시그널, 8 = 오실)
+            try:
+                if len(last_r) >= 8 and isinstance(last_r[7], (int, float)):
+                    crowding_val = round(float(last_r[7]), 4)
+            except:
+                pass
+
+    wb.close()
+    return {
+        "file": path.name,
+        "crowding": crowding_val,
+        "top10": sector_rs[:10],
+        "bottom10": sector_rs[-10:] if len(sector_rs) >= 10 else sector_rs,
+    }
+
+
+# ─── 파서 10: 액티브ETF 비중 변화 ────────────────────────────────
+
+SECTOR_SHEETS_ETF = [
+    "코스닥액티브", "반도체", "수급, 배당성장", "신재생, 2차전지",
+    "이노, 소비, AI인프라", "코스피, 조선, 테크", "수출, 로봇, 컬쳐",
+    "밸류업, 제조업, 바이오", "바이오"
+]
+
+def parse_액티브ETF(dry_run: bool) -> dict:
+    path = find_excel("액티브ETF관리")
+    if not path:
+        return {"error": "액티브ETF관리 파일 없음"}
+    wb = load_wb(path)
+    if not wb: return {"error": "열기 실패"}
+
+    increase, decrease = [], []
+
+    for sname in SECTOR_SHEETS_ETF:
+        if sname not in wb.sheetnames: continue
+        ws = wb[sname]
+        rows = list(ws.iter_rows(min_row=1, max_row=100, max_col=60, values_only=True))
+
+        # ETF 이름: 행3(idx=2)에서 col 1, 7, 13... (6 간격)
+        etf_name_row = rows[2] if len(rows) > 2 else []
+        etf_blocks = []  # (블록시작col, etf이름)
+        for j, v in enumerate(etf_name_row):
+            if v and isinstance(v, str) and len(str(v)) > 3:
+                # 데이터 블록 시작 = j-1 (이름 컬럼 -1 = mkt 컬럼)
+                etf_blocks.append((j - 1, str(v)))
+
+        # 데이터 행 시작
+        data_start = None
+        for i, row in enumerate(rows):
+            if row and row[0] in ("KS", "KQ"):
+                data_start = i; break
+        if data_start is None: continue
+
+        # 각 ETF 블록: start=mkt, start+1=name, start+4=diff, start+5=rate
+        for blk_start, etf_name in etf_blocks:
+            if blk_start < 0: continue
+            for row in rows[data_start:]:
+                if blk_start >= len(row): continue
+                mkt = row[blk_start]
+                if mkt not in ("KS", "KQ"): continue
+                name = row[blk_start + 1] if blk_start + 1 < len(row) else None
+                diff = row[blk_start + 4] if blk_start + 4 < len(row) else None
+                rate = row[blk_start + 5] if blk_start + 5 < len(row) else None
+                if not name or not isinstance(diff, (int, float)): continue
+                if diff > 0.3:
+                    increase.append({"etf": etf_name, "name": str(name), "diff": round(diff, 2), "rate": round(float(rate)*100, 1) if isinstance(rate, float) else 0})
+                elif diff < -0.3:
+                    decrease.append({"etf": etf_name, "name": str(name), "diff": round(diff, 2), "rate": round(float(rate)*100, 1) if isinstance(rate, float) else 0})
+
+    wb.close()
+
+    # 중복 제거 (종목명 기준 최대 비중차이)
+    inc_map, dec_map = {}, {}
+    for it in increase:
+        if it["name"] not in inc_map or it["diff"] > inc_map[it["name"]]["diff"]:
+            inc_map[it["name"]] = it
+    for it in decrease:
+        if it["name"] not in dec_map or it["diff"] < dec_map[it["name"]]["diff"]:
+            dec_map[it["name"]] = it
+
+    return {
+        "file": path.name,
+        "increase": sorted(inc_map.values(), key=lambda x: x["diff"], reverse=True)[:20],
+        "decrease": sorted(dec_map.values(), key=lambda x: x["diff"])[:10],
+    }
+
+
+# ─── 파서 11: 카페라떼 일정 D-30 ───────────────────────────────
+
+def parse_일정(dry_run: bool) -> dict:
+    path = find_excel("일정 및 수주잔고")
+    if not path:
+        return {"error": "일정 및 수주잔고 파일 없음"}
+    wb = load_wb(path)
+    if not wb: return {"error": "열기 실패"}
+
+    from datetime import timedelta
+    import re as _re
+
+    today = datetime.today()
+    d7  = today + timedelta(days=7)
+    d30 = today + timedelta(days=30)
+    events_7, events_30 = [], []
+
+    if "25년 말~26년" not in wb.sheetnames:
+        wb.close(); return {"error": "일정 시트 없음"}
+
+    ws = wb["25년 말~26년"]
+    for row in ws.iter_rows(min_row=2, max_row=500, max_col=6, values_only=True):
+        # 컬럼: [0]=None, [1]=년도, [2]=날짜, [3]=관련종목, [4]=내용
+        raw_d = row[2] if len(row) > 2 else None
+        if not raw_d: continue
+        dt = None
+        try:
+            if isinstance(raw_d, datetime):
+                dt = raw_d
+            elif isinstance(raw_d, str):
+                # '6월 15~17일', '6월 8일', '6월 말' 등
+                m = _re.search(r'(\d+)월\s*(\d+)', raw_d)
+                if m:
+                    yr = int(str(row[1] or "2026").replace("년","").strip()) if row[1] else 2026
+                    dt = datetime(yr, int(m.group(1)), int(m.group(2)))
+        except:
+            continue
+        if not dt: continue
+        if not (today <= dt <= d30): continue
+
+        related = str(row[3] or "").strip()
+        content  = str(row[4] or row[3] or "").strip()
+        label    = related if related else content
+        if not label: continue
+
+        ev = {"date": dt.strftime("%Y-%m-%d"), "related": related, "content": content or related}
+        if dt <= d7:
+            events_7.append(ev)
+        else:
+            events_30.append(ev)
+
+    wb.close()
+    return {
+        "file": path.name,
+        "d7":   events_7,
+        "d30":  events_30,
+    }
+
+
+# ─── 텔레그램 빌더 — 쏠림/ETF/일정 ───────────────────────────────
+
+def _build_쏠림_tg(r: dict) -> str:
+    lines = [f"🌊 <b>업종 쏠림지수</b> — {TODAY}", ""]
+    if r.get("crowding") is not None:
+        c = r["crowding"]
+        sig = "🔥 쏠림 강함" if c > 0 else "🔄 순환매 장세"
+        lines.append(f"쏠림지수: <code>{c:+.4f}</code>  {sig}")
+        lines.append("")
+    top = r.get("top10", [])
+    if top:
+        lines.append("<b>📈 강한 업종 Top 5 (30일)</b>")
+        for it in top[:5]:
+            lines.append(f"  {it['name']}  <code>{it['ret_30d']:+.1f}%</code>")
+        lines.append("")
+    bot = r.get("bottom10", [])
+    if bot:
+        lines.append("<b>📉 약한 업종 Bottom 5</b>")
+        for it in list(reversed(bot))[:5]:
+            lines.append(f"  {it['name']}  <code>{it['ret_30d']:+.1f}%</code>")
+    return "\n".join(lines)
+
+
+def _build_액티브ETF_tg(r: dict) -> str:
+    inc = r.get("increase", [])
+    dec = r.get("decrease", [])
+    lines = [f"📊 <b>액티브ETF 비중 변화</b> — {TODAY}", ""]
+    if inc:
+        lines.append(f"<b>📈 편입 증가 ({len(inc)}종목)</b>")
+        for it in inc[:15]:
+            lines.append(f"  {it['name']}  <code>+{it['diff']:.2f}%</code>  ({it['etf'][:8]})")
+        lines.append("")
+    if dec:
+        lines.append(f"<b>📉 편출 감소 ({len(dec)}종목)</b>")
+        for it in dec[:8]:
+            lines.append(f"  {it['name']}  <code>{it['diff']:.2f}%</code>")
+    return "\n".join(lines)
+
+
+def _build_일정_tg(r: dict) -> str:
+    d7  = r.get("d7",  [])
+    d30 = r.get("d30", [])
+    lines = [f"📅 <b>이벤트 일정</b> — {TODAY}", ""]
+    if d7:
+        lines.append(f"<b>🚨 D-7 이내 ({len(d7)}건)</b>")
+        for ev in d7:
+            lines.append(f"  {ev['date']}  {ev['related']}  {ev['content'][:30]}")
+        lines.append("")
+    if d30:
+        lines.append(f"<b>📌 D-30 이내 ({len(d30)}건)</b>")
+        for ev in d30[:10]:
+            lines.append(f"  {ev['date']}  {ev['related']}  {ev['content'][:30]}")
+    if not d7 and not d30:
+        lines.append("D-30 이내 주요 이벤트 없음")
+    return "\n".join(lines)
+
+
 # ─── 리포트 생성 ──────────────────────────────────────────────
 
 def build_report(results: dict) -> str:
@@ -1107,6 +1366,9 @@ def main():
         "중소형주":  ("중소형주수급",  lambda: parse_중소형주오실레이터(dry_run)),
         "가속화":    ("가속화모멘텀",  lambda: parse_가속화모멘텀(dry_run)),
         "RS":        ("RS",           lambda: parse_rs(dry_run)),
+        "쏠림":      ("쏠림지수",      lambda: parse_쏠림지수(dry_run)),
+        "ETF":       ("액티브ETF",     lambda: parse_액티브ETF(dry_run)),
+        "일정":      ("일정",          lambda: parse_일정(dry_run)),
     }
 
     for key, (label, fn) in parsers.items():
@@ -1160,6 +1422,24 @@ def main():
         if r_rs.get("top30"):
             print("\n📲 [RS] 텔레그램 발송 중...")
             send_telegram(_build_rs_tg(r_rs))
+
+        # 업종 쏠림지수 텔레그램 발송
+        r_쏠림 = results.get("쏠림지수", {})
+        if r_쏠림.get("top10"):
+            print("\n📲 [쏠림지수] 텔레그램 발송 중...")
+            send_telegram(_build_쏠림_tg(r_쏠림))
+
+        # 액티브ETF 비중 변화 텔레그램 발송
+        r_etf = results.get("액티브ETF", {})
+        if r_etf.get("increase") or r_etf.get("decrease"):
+            print("\n📲 [액티브ETF] 텔레그램 발송 중...")
+            send_telegram(_build_액티브ETF_tg(r_etf))
+
+        # 이벤트 일정 텔레그램 발송 (D-7 이내 있을 때만)
+        r_일정 = results.get("일정", {})
+        if r_일정.get("d7") or r_일정.get("d30"):
+            print("\n📲 [일정] 텔레그램 발송 중...")
+            send_telegram(_build_일정_tg(r_일정))
 
     print("\n" + "="*50)
     print(report[:2000])
