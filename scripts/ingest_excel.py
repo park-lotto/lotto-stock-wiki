@@ -36,6 +36,57 @@ WIKI_DIR  = ROOT / "wiki"
 LOG_FILE  = WIKI_DIR / "log.md"
 TODAY     = datetime.today().strftime("%Y-%m-%d")
 
+# ─── 섹터/종목 매핑 ───────────────────────────────────────────
+
+SECTOR_FOLDER_MAP: dict[str, Path] = {
+    "반도체":         WIKI_DIR / "L5_섹터" / "반도체",
+    "반도체부품":     WIKI_DIR / "L5_섹터" / "반도체",
+    "기판":           WIKI_DIR / "L5_섹터" / "반도체",
+    "2차전지":        WIKI_DIR / "L5_섹터" / "2차전지ESS",
+    "2차전지ESS":     WIKI_DIR / "L5_섹터" / "2차전지ESS",
+    "조선":           WIKI_DIR / "L5_섹터" / "조선",
+    "전력기기":       WIKI_DIR / "L5_섹터" / "전력기기",
+    "로봇":           WIKI_DIR / "L5_섹터" / "로봇",
+    "바이오":         WIKI_DIR / "L5_섹터" / "바이오",
+    "방산":           WIKI_DIR / "L5_섹터" / "방산",
+    "자동차":         WIKI_DIR / "L5_섹터" / "자동차",
+    "화장품":         WIKI_DIR / "L5_섹터" / "화장품",
+    "소비내수":       WIKI_DIR / "L5_섹터" / "소비내수",
+    "AI소프트웨어":   WIKI_DIR / "L5_섹터" / "AI소프트웨어",
+    "신재생":         WIKI_DIR / "L5_섹터" / "신재생",
+    "원전":           WIKI_DIR / "L5_섹터" / "원전",
+    "LNG":            WIKI_DIR / "L5_섹터" / "LNG",
+    "우주":           WIKI_DIR / "L5_섹터" / "우주",
+    "철강":           WIKI_DIR / "L5_섹터" / "철강",
+    "전력":           WIKI_DIR / "L5_섹터" / "전력",
+    "전자전기":       WIKI_DIR / "L5_섹터" / "전자전기",
+    "테마이벤트":     WIKI_DIR / "L5_섹터" / "테마이벤트",
+    "미용":           WIKI_DIR / "L5_섹터" / "미용",
+    "엔터":           WIKI_DIR / "L5_섹터" / "엔터",
+}
+
+# 투자아이디어정리.xlsx 시트명 → 섹터 키 (None=제외)
+IDEA_SHEET_SECTOR_MAP: dict[str, str | None] = {
+    "반도체소부장":          "반도체",
+    "리노공업이오테크닉스":  "반도체",
+    "리노공업·이오테크닉스": "반도체",
+    "바이오":                "바이오",
+    "중소바이오":            "바이오",
+    "전력기기":              "전력기기",
+    "SNT에너지":             "전력기기",
+    "조선":                  "조선",
+    "동성화인텍한국카본":    "조선",
+    "동성화인텍·한국카본":   "조선",
+    "로봇":                  "로봇",
+    "로보티즈고영":          "로봇",
+    "로보티즈·고영":         "로봇",
+    "방산":                  "방산",
+    "자동차":                "자동차",
+    "화장품":                "화장품",
+    "2차전지":               "2차전지",
+    "해외주식":              None,
+}
+
 # ─── 헬퍼 ────────────────────────────────────────────────────
 
 def load_wb(path: Path):
@@ -54,17 +105,44 @@ def find_excel(pattern: str) -> Path | None:
             return f
     return None
 
-def find_stock_page(name: str) -> Path | None:
-    """종목명으로 wiki stock 페이지 경로 찾기"""
-    name_clean = name.strip().replace(" ", "")
-    for p in WIKI_DIR.rglob(f"stock_{name_clean}.md"):
-        return p
-    # 부분 매칭 시도
+_STOCK_PAGE_CACHE: dict[str, Path] | None = None
+
+def _build_stock_cache() -> dict[str, Path]:
+    """wiki/L5_섹터 1회 스캔 → 종목명(공백제거) : Path 캐시"""
+    cache = {}
     for p in WIKI_DIR.rglob("stock_*.md"):
-        stem = p.stem.replace("stock_", "").replace(" ", "")
-        if name_clean in stem or stem in name_clean:
-            return p
+        name = p.stem.replace("stock_", "").replace(" ", "")
+        cache[name] = p
+    return cache
+
+def find_stock_page(name: str) -> Path | None:
+    """종목명으로 wiki stock 페이지 경로 찾기 (캐시 사용)"""
+    global _STOCK_PAGE_CACHE
+    if _STOCK_PAGE_CACHE is None:
+        _STOCK_PAGE_CACHE = _build_stock_cache()
+    name_clean = name.strip().replace(" ", "")
+    if name_clean in _STOCK_PAGE_CACHE:
+        return _STOCK_PAGE_CACHE[name_clean]
+    for k, v in _STOCK_PAGE_CACHE.items():
+        if name_clean in k or k in name_clean:
+            return v
     return None
+
+def get_sector_folder(sector_name: str) -> Path | None:
+    """섹터 키워드 → wiki L5_섹터 폴더 Path"""
+    return SECTOR_FOLDER_MAP.get(sector_name)
+
+def get_stock_sector(stock_name: str) -> str | None:
+    """종목 wiki 페이지 경로에서 섹터 폴더명 추출"""
+    page = find_stock_page(stock_name)
+    if not page:
+        return None
+    parts = list(page.parts)
+    try:
+        idx = parts.index("L5_섹터")
+        return parts[idx + 1]
+    except (ValueError, IndexError):
+        return None
 
 def rows_from_sheet(ws, max_row=500, max_col=20):
     """시트에서 값 있는 행만 추출"""
@@ -282,16 +360,17 @@ def parse_컨센움직임(dry_run: bool) -> dict:
 
 # ─── 파서 3: 핵심 수출 데이터 ────────────────────────────────────
 
-EXPORT_KEY_SHEETS = {
-    "디램":       ("반도체", ["삼성전자", "SK하이닉스"]),
-    "낸드":       ("반도체", ["삼성전자", "SK하이닉스"]),
-    "HBM":        ("반도체", ["SK하이닉스"]),
-    "동박":       ("2차전지", ["롯데에너지머티리얼즈", "SKC"]),
-    "양극재(NCM+NCA)": ("2차전지", ["에코프로비엠", "포스코퓨처엠"]),
-    "MLCC":       ("반도체부품", ["삼성전기"]),
-    "CCL":        ("기판", ["두산"]),
-    "선박 엔진":  ("조선", ["HD현대중공업", "한화오션"]),
-    "고용량변압기": ("전력기기", ["HD현대일렉트릭", "효성중공업"]),
+# (섹터 키, 관련 종목) — 섹터 키는 SECTOR_FOLDER_MAP 키와 동일
+EXPORT_KEY_SHEETS: dict[str, tuple[str, list[str]]] = {
+    "디램":            ("반도체",   ["삼성전자", "SK하이닉스"]),
+    "낸드":            ("반도체",   ["삼성전자", "SK하이닉스"]),
+    "HBM":             ("반도체",   ["SK하이닉스"]),
+    "동박":            ("2차전지",  ["롯데에너지머티리얼즈", "SKC"]),
+    "양극재(NCM+NCA)": ("2차전지",  ["에코프로비엠", "포스코퓨처엠"]),
+    "MLCC":            ("반도체부품", ["삼성전기"]),
+    "CCL":             ("기판",     ["두산"]),
+    "선박 엔진":       ("조선",     ["HD현대중공업", "한화오션"]),
+    "고용량변압기":    ("전력기기", ["HD현대일렉트릭", "효성중공업"]),
 }
 
 def parse_수출정리(dry_run: bool) -> dict:
@@ -1180,7 +1259,7 @@ def parse_투자아이디어(dry_run: bool) -> dict:
         ]
         return any(t in v for t in targets)
 
-    SKIP_SHEETS = {"정기변경", "Sheet1"}
+    SKIP_SHEETS = {"정기변경", "Sheet1", "해외주식"}
     ideas = []
 
     def _clean(v) -> str:
@@ -1190,6 +1269,10 @@ def parse_투자아이디어(dry_run: bool) -> dict:
 
     for sname in wb.sheetnames:
         if sname in SKIP_SHEETS: continue
+        # IDEA_SHEET_SECTOR_MAP에서 섹터 확인 (None이면 제외)
+        sector_key = IDEA_SHEET_SECTOR_MAP.get(sname, sname)  # 매핑 없으면 시트명=종목명으로 간주
+        if sector_key is None: continue
+
         ws = wb[sname]
         rows = list(ws.iter_rows(min_row=1, max_row=200, max_col=6, values_only=True))
         if not rows: continue
@@ -1203,6 +1286,12 @@ def parse_투자아이디어(dry_run: bool) -> dict:
                 break
         if not company:
             company = sname
+
+        # 섹터 폴더 (IDEA_SHEET_SECTOR_MAP 사용, 없으면 종목명으로 wiki 검색)
+        if sname in IDEA_SHEET_SECTOR_MAP and IDEA_SHEET_SECTOR_MAP[sname]:
+            sector_folder = get_sector_folder(IDEA_SHEET_SECTOR_MAP[sname])
+        else:
+            sector_folder = get_sector_folder(get_stock_sector(company) or "")
 
         # 헤더 행: B열에 '분기' 있는 행
         data_start = None
@@ -1220,11 +1309,13 @@ def parse_투자아이디어(dry_run: bool) -> dict:
             if not match_q(quarter_v): continue
             if not momentum_v: continue
             ideas.append({
-                "sheet":    sname,
-                "company":  company,
-                "quarter":  quarter_v,
-                "momentum": momentum_v[:80],
-                "detail":   detail_v[:100],
+                "sheet":         sname,
+                "company":       company,
+                "sector":        IDEA_SHEET_SECTOR_MAP.get(sname, get_stock_sector(company) or "—"),
+                "sector_folder": str(sector_folder) if sector_folder else None,
+                "quarter":       quarter_v,
+                "momentum":      momentum_v[:80],
+                "detail":        detail_v[:100],
             })
 
     wb.close()
