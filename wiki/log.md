@@ -1,3 +1,8 @@
+- 2026-06-02 — 소라티노 구현 완료: scan_sortino.py (Sortino Top 20 / Mansfield RS ≥70)
+  [소라티노] 태린이아빠 코드 그대로 로컬 구현. 이미지와 100% 일치 확인. --tg 텔레 전송
+  [다운로드] 소라티노ETF상대강도 + 특정업종쏠림지수국내 매일 자동 수집 추가
+  [원리] 소르티노 = 연수익 / 하방편차. 3-6-12M 평균. 50일선 필터. 우상향 강한 섹터 탐지
+  [주도업종시스템] 유동성컨셉 + RS필터 + 소르티노 3종 조합 완성
 - 2026-06-02 — 세션 마무리: 태린이파일 자동화 + LG이노텍 분석 + 추정이익 카드뉴스 완성
   [스케줄] STOCKBRAIN_Daily_Download 오류 수정 / STOCKBRAIN_Daily_Ingest 신규 등록 (07:50)
   [스케줄] run_download.bat+run_ingest.bat 경로 수정(CH→TheRose) / setup_schedule.bat 신규 (집PC 이전용)
