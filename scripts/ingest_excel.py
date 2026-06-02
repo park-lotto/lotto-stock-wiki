@@ -16,6 +16,7 @@ import os
 import re
 import glob
 import argparse
+import subprocess
 from datetime import datetime, date
 from pathlib import Path
 
@@ -212,6 +213,14 @@ def _update_consensus(page: Path, item: dict) -> str:
 
 
 # ─── 파서 2: 컨센움직임서프쇼크 ─────────────────────────────────
+#
+# 실제 컬럼 구조 (0-based, 검증 완료):
+#   컨센상향/하향: r[1]=종목코드 r[2]=종목명 r[3]=업종
+#                  r[4]=1M수익률 r[5]=3M수익률 r[6]=2026OP
+#                  r[14]=컨센변화(정렬기준) r[16]=30일전컨센변화
+#   서프라이즈/쇼크: r[1]=종목코드 r[2]=종목명 r[3]=업종
+#                    r[4]=1M수익률 r[5]=3M수익률
+#                    r[7]=1Q실제발표 r[11]=어닝서프율(정렬기준) r[12]=컨센변화
 
 def parse_컨센움직임(dry_run: bool) -> dict:
     path = find_excel("컨센움직임서프쇼크")
@@ -221,40 +230,54 @@ def parse_컨센움직임(dry_run: bool) -> dict:
     wb = load_wb(path)
     if not wb: return {"error": "열기 실패"}
 
-    sheets = {
-        "컨센상향": [], "컨센하향": [],
-        "서프라이즈": [], "쇼크": [],
-    }
+    # 마지막 업데이트 날짜
+    last_update = None
+    if "1개월 컨센 1개월일 변화" in wb.sheetnames:
+        ws2 = wb["1개월 컨센 1개월일 변화"]
+        for r in ws2.iter_rows(min_row=1, max_row=5, max_col=5, values_only=True):
+            for v in r:
+                if v and "Last Update" in str(v):
+                    last_update = str(v).replace("Last Update : ", "").strip()[:10]
+                    break
+
+    sheets = {"컨센상향": [], "컨센하향": [], "서프라이즈": [], "쇼크": []}
 
     for sheet_name, bucket in sheets.items():
         if sheet_name not in wb.sheetnames: continue
         ws = wb[sheet_name]
-        rows = rows_from_sheet(ws, max_row=300, max_col=20)
+        is_surf = sheet_name in ("서프라이즈", "쇼크")
 
-        # 종목코드 'A'로 시작하는 행이 실데이터
-        for r in rows:
+        for r in ws.iter_rows(min_row=1, max_row=500, max_col=22, values_only=True):
             code = r[1] if len(r) > 1 else None
-            name = r[2] if len(r) > 2 else None
             if not isinstance(code, str) or not code.startswith("A"): continue
-            if not name: continue
+            name = r[2] if len(r) > 2 else None
+            if not name or not isinstance(name, str): continue
 
-            entry = {
-                "code":     code,
-                "name":     str(name).strip(),
-                "sector":   str(r[3]).strip() if r[3] else "—",
-                "ret_1m":   r[4],   # 1개월 수익률
-                "ret_3m":   r[5],   # 3개월 수익률
-                "op_2026":  r[6],   # 2026년 영업이익 (십억원)
-                "op_chg1m": r[7],   # 1개월 변화
-            }
-
-            if sheet_name in ("서프라이즈", "쇼크"):
-                entry["surprise_rate"] = r[11] if len(r) > 11 else None
-
-            bucket.append(entry)
+            if is_surf:
+                bucket.append({
+                    "code":          code,
+                    "name":          name.strip(),
+                    "sector":        str(r[3]).strip() if r[3] else "—",
+                    "ret_1m":        r[4],
+                    "ret_3m":        r[5],
+                    "op_1q_actual":  r[7],   # 1Q 실제발표
+                    "surprise_rate": r[11],  # 어닝서프율 (정렬 기준)
+                    "csen_chg":      r[12],  # 컨센변화
+                })
+            else:
+                bucket.append({
+                    "code":      code,
+                    "name":      name.strip(),
+                    "sector":    str(r[3]).strip() if r[3] else "—",
+                    "ret_1m":    r[4],
+                    "ret_3m":    r[5],
+                    "op_2026":   r[6],   # 2026 영업이익(십억)
+                    "csen_chg":  r[14],  # 컨센변화율 (정렬 기준)
+                    "csen_30d":  r[16],  # 30일전 컨센변화율
+                })
 
     wb.close()
-    return {"file": path.name, "results": sheets}
+    return {"file": path.name, "last_update": last_update, "results": sheets}
 
 
 # ─── 파서 3: 핵심 수출 데이터 ────────────────────────────────────
@@ -484,8 +507,12 @@ def _run_osc_com(path: Path) -> dict:
         if v <= p90: return 75 + (v - p75) / (p90 - p75) * 15
         return min(90 + (v - p90) / abs(p90) * 5 if p90 else 95, 100)
 
-    빈집_A = sorted([r for r in results if r["osc"] <= p10], key=lambda x: x["osc"])
-    빈집_B = sorted([r for r in results if p10 < r["osc"] <= p25], key=lambda x: x["osc"])
+    빈집_A    = sorted([r for r in results if r["osc"] <= p10], key=lambda x: x["osc"])
+    빈집_B    = sorted([r for r in results if p10 < r["osc"] <= p25], key=lambda x: x["osc"])
+    과매수_하락 = sorted(
+        [r for r in results if r["osc"] >= p75 and r.get("trend", "") == "↓ 빈집심화"],
+        key=lambda x: x["osc"], reverse=True
+    )[:30]
     for r in results:
         r["pct"] = pct(r["osc"])
 
@@ -494,12 +521,14 @@ def _run_osc_com(path: Path) -> dict:
     else:
         last_date_str = TODAY
 
+    def _row(r): return {"name": r["name"], "code": r["code"], "osc": r["osc"], "pct": r["pct"], "trend": r["trend"]}
     return {
-        "file": path.name,
-        "date": last_date_str,
-        "total": len(results),
-        "빈집_A": [{"name": r["name"], "code": r["code"], "osc": r["osc"], "pct": r["pct"], "trend": r["trend"]} for r in 빈집_A],
-        "빈집_B": [{"name": r["name"], "code": r["code"], "osc": r["osc"], "pct": r["pct"], "trend": r["trend"]} for r in 빈집_B],
+        "file":       path.name,
+        "date":       last_date_str,
+        "total":      len(results),
+        "빈집_A":     [_row(r) for r in 빈집_A],
+        "빈집_B":     [_row(r) for r in 빈집_B],
+        "과매수_하락": [_row(r) for r in 과매수_하락],
         "note": f"전체 {len(results)}종목 | 빈집A: {len(빈집_A)}개 | 빈집B: {len(빈집_B)}개 | 기준A≤{p10:.6f} B≤{p25:.6f}",
     }
 
@@ -617,17 +646,28 @@ def _run_osc_openpyxl(path: Path) -> dict:
         if v <= p90: return 75 + (v - p75) / (p90 - p75) * 15
         return min(90 + (v - p90) / abs(p90) * 5 if p90 else 95, 100)
 
-    빈집_A = sorted([r for r in results if r["osc"] <= p10], key=lambda x: x["osc"])
-    빈집_B = sorted([r for r in results if p10 < r["osc"] <= p25], key=lambda x: x["osc"])
+    빈집_A    = sorted([r for r in results if r["osc"] <= p10], key=lambda x: x["osc"])
+    빈집_B    = sorted([r for r in results if p10 < r["osc"] <= p25], key=lambda x: x["osc"])
+    과매수_상승 = sorted(
+        [r for r in results if r["osc"] >= p75 and r.get("trend", "") == "↑ 재진입"],
+        key=lambda x: x["osc"], reverse=True
+    )[:30]
+    과매수_하락 = sorted(
+        [r for r in results if r["osc"] >= p75 and r.get("trend", "") == "↓ 빈집심화"],
+        key=lambda x: x["osc"], reverse=True
+    )[:30]
     for r in results:
         r["pct"] = pct(r["osc"])
 
+    def _row(r): return {"name": r["name"], "code": r["code"], "osc": r["osc"], "pct": r["pct"], "trend": r["trend"]}
     return {
-        "file": path.name,
-        "date": last_date_str,
-        "total": len(results),
-        "빈집_A": [{"name": r["name"], "code": r["code"], "osc": r["osc"], "pct": r["pct"], "trend": r["trend"]} for r in 빈집_A],
-        "빈집_B": [{"name": r["name"], "code": r["code"], "osc": r["osc"], "pct": r["pct"], "trend": r["trend"]} for r in 빈집_B],
+        "file":       path.name,
+        "date":       last_date_str,
+        "total":      len(results),
+        "빈집_A":     [_row(r) for r in 빈집_A],
+        "빈집_B":     [_row(r) for r in 빈집_B],
+        "과매수_상승": [_row(r) for r in 과매수_상승],
+        "과매수_하락": [_row(r) for r in 과매수_하락],
         "note": f"전체 {len(results)}종목 | 빈집A: {len(빈집_A)}개 | 빈집B: {len(빈집_B)}개 | 기준A≤{p10:.6f} B≤{p25:.6f}",
     }
 
@@ -1008,7 +1048,240 @@ def parse_일정(dry_run: bool) -> dict:
     }
 
 
+# ─── 파서 12: 한국ETF 상대강도 (Mansfield RS) ──────────────────────
+
+def _etf_file_fresh(path) -> bool:
+    """파일 내 데이터 마지막 날짜가 10일 이내인지 확인"""
+    try:
+        wb = openpyxl.load_workbook(str(path), read_only=True, data_only=True)
+        ws = wb[wb.sheetnames[0]]
+        dates = [r[0] for r in ws.iter_rows(min_row=2, max_row=5000, max_col=1, values_only=True) if r[0]]
+        wb.close()
+        if not dates: return False
+        last = dates[-1] if isinstance(dates[-1], datetime) else datetime.strptime(str(dates[-1])[:10], "%Y-%m-%d")
+        return (datetime.today() - last).days <= 10
+    except Exception:
+        return False
+
+
+def parse_한국ETF상대강도(dry_run: bool) -> dict:
+    # 한국ETF상대강도 신선하면 사용, 오래됐으면 소라티노ETF 파일로 폴백
+    path = find_excel("한국ETF상대강도")
+    fallback_used = False
+    if not path or not _etf_file_fresh(path):
+        path = find_excel("소라티노ETF상대강도")
+        fallback_used = True
+    if not path:
+        return {"error": "한국ETF상대강도 / 소라티노ETF상대강도 파일 없음"}
+
+    wb = load_wb(path)
+    if not wb: return {"error": "열기 실패"}
+
+    sheet_name = "데이터" if "데이터" in wb.sheetnames else wb.sheetnames[0]
+    ws = wb[sheet_name]
+    all_rows = list(ws.iter_rows(values_only=True))
+    wb.close()
+
+    if not all_rows:
+        return {"error": "데이터 없음"}
+
+    headers = [str(v).strip() if v else None for v in all_rows[0]]
+    prices = {h: [] for h in headers[1:] if h}
+    dates = []
+
+    for row in all_rows[1:]:
+        if row[0] is None: continue
+        dates.append(row[0])
+        for c, h in enumerate(headers[1:], 1):
+            if not h: continue
+            v = row[c] if c < len(row) else None
+            prices[h].append(float(v) if isinstance(v, (int, float)) else None)
+
+    if not dates:
+        return {"error": "데이터 없음"}
+
+    import math
+
+    def _mansfield(price_list, kospi_list, ma_period):
+        log_rel = []
+        for p, k in zip(price_list, kospi_list):
+            if p and k and p > 0 and k > 0:
+                log_rel.append(math.log(p / k))
+            else:
+                log_rel.append(None)
+        rs_series = []
+        for i in range(len(log_rel)):
+            window = [v for v in log_rel[max(0, i - ma_period + 1):i + 1] if v is not None]
+            if len(window) >= ma_period and log_rel[i] is not None:
+                ma = sum(window) / len(window)
+                rs_series.append((log_rel[i] - ma) * 100)
+            else:
+                rs_series.append(None)
+        return next((v for v in reversed(rs_series) if v is not None), None)
+
+    def _norm(x, scale=12):
+        return round(100 / (1 + math.exp(-x / scale)), 2)
+
+    kospi_key = next((k for k in prices if "코스피" in k), None)
+    kospi_list = prices.get(kospi_key, []) if kospi_key else []
+
+    results = []
+    for etf, plist in prices.items():
+        if etf == kospi_key: continue
+        if len(plist) < 63: continue
+        row = {"name": etf}
+        rs_vals, nr_vals = [], []
+        for period in [60, 120, 250]:
+            raw = _mansfield(plist, kospi_list, period)
+            if raw is not None:
+                row[f"RS_{period}d"] = round(raw, 2)
+                row[f"norm_{period}"] = _norm(raw)
+                rs_vals.append(raw); nr_vals.append(_norm(raw))
+        if rs_vals:
+            row["RS_avg"]       = round(sum(rs_vals) / len(rs_vals), 2)
+            row["norm_RS_avg"]  = round(sum(nr_vals) / len(nr_vals), 2)
+            results.append(row)
+
+    sorted_r = sorted(results, key=lambda x: x.get("norm_RS_avg", 0), reverse=True)
+    last_date = str(dates[-1])[:10] if dates else TODAY
+    return {
+        "file":   path.name,
+        "date":   last_date,
+        "total":  len(sorted_r),
+        "top20":  sorted_r[:20],
+        "rs70+":  [v for v in sorted_r if v.get("norm_RS_avg", 0) >= 70],
+    }
+
+
+# ─── 파서 13: 투자아이디어정리 ──────────────────────────────────────
+
+def parse_투자아이디어(dry_run: bool) -> dict:
+    path = find_excel("투자아이디어정리")
+    if not path:
+        return {"error": "투자아이디어정리 파일 없음"}
+
+    wb = load_wb(path)
+    if not wb: return {"error": "열기 실패"}
+
+    today_dt = datetime.today()
+    month = today_dt.month
+    year  = today_dt.year
+    q     = (month - 1) // 3 + 1
+    next_q = q + 1 if q < 4 else 1
+    next_y = year if q < 4 else year + 1
+
+    # 분기 문자열 매칭 (다양한 표기 대응: "2026 2Q", "26년 2Q", "2Q26" 등)
+    def match_q(v) -> bool:
+        if not isinstance(v, str): return False
+        v = v.strip()
+        targets = [
+            f"{year} {q}Q", f"{year % 100}년 {q}Q", f"{q}Q{year % 100}",
+            f"{next_y} {next_q}Q", f"{next_y % 100}년 {next_q}Q", f"{next_q}Q{next_y % 100}",
+        ]
+        return any(t in v for t in targets)
+
+    SKIP_SHEETS = {"정기변경", "Sheet1"}
+    ideas = []
+
+    def _clean(v) -> str:
+        if v is None: return ""
+        s = str(v).strip().lstrip("'")  # Excel 텍스트 prefix ' 제거
+        return s
+
+    for sname in wb.sheetnames:
+        if sname in SKIP_SHEETS: continue
+        ws = wb[sname]
+        rows = list(ws.iter_rows(min_row=1, max_row=200, max_col=6, values_only=True))
+        if not rows: continue
+
+        # 데이터가 B열(idx=1)에 있음 — 종목명: 헤더('분기') 이전 첫 비어있지 않은 B열 값
+        company = None
+        for r in rows[:6]:
+            v = _clean(r[1] if len(r) > 1 else None)
+            if v and "분기" not in v and len(v) > 1:
+                company = v
+                break
+        if not company:
+            company = sname
+
+        # 헤더 행: B열에 '분기' 있는 행
+        data_start = None
+        for i, r in enumerate(rows):
+            v = _clean(r[1] if len(r) > 1 else None)
+            if "분기" in v:
+                data_start = i + 1
+                break
+        if data_start is None: continue
+
+        for r in rows[data_start:]:
+            quarter_v  = _clean(r[1] if len(r) > 1 else None)
+            momentum_v = _clean(r[2] if len(r) > 2 else None)
+            detail_v   = _clean(r[3] if len(r) > 3 else None)
+            if not match_q(quarter_v): continue
+            if not momentum_v: continue
+            ideas.append({
+                "sheet":    sname,
+                "company":  company,
+                "quarter":  quarter_v,
+                "momentum": momentum_v[:80],
+                "detail":   detail_v[:100],
+            })
+
+    wb.close()
+    quarters_label = f"{year} {q}Q / {next_y} {next_q}Q"
+    return {
+        "file":    path.name,
+        "quarters": quarters_label,
+        "ideas":   ideas,
+    }
+
+
 # ─── 텔레그램 빌더 — 쏠림/ETF/일정 ───────────────────────────────
+
+def _build_컨센움직임_tg(r: dict) -> str:
+    last_upd = r.get("last_update", TODAY)
+    res = r.get("results", {})
+    lines = [f"📊 <b>컨센움직임·서프·쇼크</b> — {last_upd}", ""]
+
+    # 컨센상향 TOP10
+    up = sorted(
+        [it for it in res.get("컨센상향", []) if isinstance(it.get("csen_chg"), (int, float))],
+        key=lambda x: x["csen_chg"], reverse=True
+    )[:10]
+    if up:
+        lines.append(f"<b>📈 컨센상향 TOP10 (컨센변화율 기준)</b>")
+        for it in up:
+            chg = f"{it['csen_chg']:+.2f}" if isinstance(it['csen_chg'], float) else "—"
+            r1m = f"{it['ret_1m']:+.1f}%" if isinstance(it['ret_1m'], (int, float)) else "—"
+            lines.append(f"  {it['name']}({it['sector']})  컨센{chg}  1M{r1m}")
+        lines.append("")
+
+    # 서프라이즈 TOP10
+    surf = sorted(
+        [it for it in res.get("서프라이즈", []) if isinstance(it.get("surprise_rate"), (int, float))],
+        key=lambda x: x["surprise_rate"], reverse=True
+    )[:10]
+    if surf:
+        lines.append(f"<b>🎉 어닝서프라이즈 TOP10</b>")
+        for it in surf:
+            sr = f"{it['surprise_rate']:+.2f}" if isinstance(it['surprise_rate'], float) else "—"
+            r1m = f"{it['ret_1m']:+.1f}%" if isinstance(it['ret_1m'], (int, float)) else "—"
+            lines.append(f"  {it['name']}({it['sector']})  서프{sr}  1M{r1m}")
+        lines.append("")
+
+    # 쇼크 (피해야 할 종목, 간략히)
+    shock = sorted(
+        [it for it in res.get("쇼크", []) if isinstance(it.get("surprise_rate"), (int, float))],
+        key=lambda x: x["surprise_rate"]
+    )[:5]
+    if shock:
+        lines.append(f"<b>💥 어닝쇼크 TOP5 (주의)</b>")
+        for it in shock:
+            sr = f"{it['surprise_rate']:+.2f}" if isinstance(it['surprise_rate'], float) else "—"
+            lines.append(f"  {it['name']}({it['sector']})  쇼크{sr}")
+
+    return "\n".join(lines)
+
 
 def _build_쏠림_tg(r: dict) -> str:
     idx  = r.get("idx")
@@ -1196,6 +1469,15 @@ def build_report(results: dict) -> str:
             lines.append(f"| {it['name']} | {r60} | {r120} | {r250} | {nav} |")
         lines.append("")
 
+    # 9. 교차분석 탑픽
+    교차_msg = _build_교차분석_tg(results)
+    if 교차_msg:
+        lines += ["## 9. 교차분석 탑픽 (수급빈집 × RS × 가속화)", ""]
+        lines.append("```")
+        lines.append(교차_msg.replace("<b>", "").replace("</b>", "").replace("<code>", "").replace("</code>", ""))
+        lines.append("```")
+        lines.append("")
+
     return "\n".join(lines)
 
 
@@ -1338,6 +1620,270 @@ def _build_rs_tg(r: dict) -> str:
     return "\n".join(lines)
 
 
+def _build_etf_rs_tg(r: dict) -> str:
+    date_str = r.get("date", TODAY)
+    rs70     = r.get("rs70+", [])
+    top20    = r.get("top20", [])
+    lines = [
+        f"📈 <b>한국ETF 상대강도 (Mansfield RS)</b> — {date_str}",
+        f"전체 {r.get('total', 0)}개 ETF | RS≥70: {len(rs70)}개",
+        "",
+    ]
+    if rs70:
+        lines.append(f"<b>🔴 RS ≥ 70 ETF ({len(rs70)}개)</b>")
+        for it in rs70[:15]:
+            lines.append(f"  {it['name']}  <code>{it.get('norm_RS_avg', 0):.0f}</code>")
+        lines.append("")
+    if top20:
+        lines.append("<b>▶ Top 10</b>")
+        for i, it in enumerate(top20[:10], 1):
+            lines.append(f"  {i:2d}. {it['name']}  <code>{it.get('norm_RS_avg', 0):.1f}</code>")
+    return "\n".join(lines)
+
+
+def _build_투자아이디어_tg(r: dict) -> str:
+    ideas    = r.get("ideas", [])
+    quarters = r.get("quarters", "")
+    lines = [
+        f"💡 <b>투자아이디어 트리거 ({quarters})</b> — {TODAY}",
+        f"총 {len(ideas)}개 트리거",
+        "",
+    ]
+    if not ideas:
+        lines.append("해당 분기 트리거 없음")
+        return "\n".join(lines)
+    by_company: dict = {}
+    for it in ideas:
+        by_company.setdefault(it["company"], []).append(it)
+    for company, items in list(by_company.items())[:15]:
+        lines.append(f"<b>▶ {company}</b>")
+        for it in items[:3]:
+            lines.append(f"  [{it['quarter']}] {it['momentum']}")
+        lines.append("")
+    return "\n".join(lines)
+
+
+def _build_컨센_탑픽_tg(results: dict) -> str:
+    """수급빈집 × 컨센(리레이팅·신고가·상향·TP·가속화) 종합 스코어링 → 탑픽"""
+
+    # ── 수급빈집 ──────────────────────────────────────────────────
+    빈집_A: set[str] = set()
+    빈집_B: set[str] = set()
+    빈집_detail: dict[str, dict] = {}
+    for key, label in [("수급", "대형주"), ("중소형주수급", "중소형주")]:
+        r = results.get(key, {})
+        for it in r.get("빈집_A", []):
+            빈집_A.add(it["name"])
+            빈집_detail[it["name"]] = {"pct": it.get("pct", 0), "trend": it.get("trend", "")}
+        for it in r.get("빈집_B", []):
+            if it["name"] not in 빈집_detail:
+                빈집_B.add(it["name"])
+                빈집_detail[it["name"]] = {"pct": it.get("pct", 0), "trend": it.get("trend", "")}
+
+    # ── 리레이팅 (Rating_Up) ──────────────────────────────────────
+    r_추정 = results.get("추정이익변경", {})
+    리레이팅 = {it["name"] for it in r_추정.get("results", {}).get("Rating_Up", [])}
+    리레이팅_detail = {it["name"]: f"{it['op_old']}→{it['op_new']} ({it['brokerage']})"
+                      for it in r_추정.get("results", {}).get("Rating_Up", [])}
+
+    # ── TP 상향 ───────────────────────────────────────────────────
+    tp_up = {it["name"] for it in r_추정.get("results", {}).get("TP_Up", [])}
+
+    # ── 컨센신고가 TOP10 ──────────────────────────────────────────
+    r_유동 = results.get("유동성", {})
+    신고가 = {it["name"] for it in r_유동.get("results", {}).get("컨센신고가", [])[:10]}
+
+    # ── 컨센상향 (방향 양수) ──────────────────────────────────────
+    r_컨센 = results.get("컨센움직임", {})
+    컨센상향 = {
+        it["name"] for it in r_컨센.get("results", {}).get("컨센상향", [])
+        if isinstance(it.get("csen_chg"), (int, float)) and it["csen_chg"] > 0
+    }
+    컨센_detail = {
+        it["name"]: it.get("csen_chg", 0)
+        for it in r_컨센.get("results", {}).get("컨센상향", [])
+    }
+
+    # ── 가속화모멘텀 TOP30 ────────────────────────────────────────
+    r_가속 = results.get("가속화모멘텀", {})
+    가속화 = {it["name"] for it in r_가속.get("results", {}).get("주당순이익1개+", [])[:30]}
+
+    # ── 전체 종목 스코어링 ────────────────────────────────────────
+    # 수급빈집 없으면 후순위 처리 (0.5점 감점 아닌 별도 섹션)
+    all_names = (빈집_A | 빈집_B | 리레이팅 | 신고가 | 컨센상향 | tp_up | 가속화)
+
+    scored = []
+    for name in all_names:
+        pts = []
+        score = 0
+        if name in 빈집_A:   score += 2; pts.append("빈집A(+2)")
+        if name in 빈집_B:   score += 1; pts.append("빈집B(+1)")
+        if name in 리레이팅: score += 2; pts.append("리레이팅(+2)")
+        if name in 신고가:   score += 2; pts.append("컨센신고가(+2)")
+        if name in 가속화:   score += 1; pts.append("가속화(+1)")
+        if name in 컨센상향: score += 1; pts.append("컨센상향(+1)")
+        if name in tp_up:    score += 1; pts.append("TP상향(+1)")
+        has_빈집 = name in 빈집_A or name in 빈집_B
+        scored.append({
+            "name":     name,
+            "score":    score,
+            "has_빈집": has_빈집,
+            "pts":      pts,
+            "빈집_info": 빈집_detail.get(name, {}),
+            "컨센_chg":  컨센_detail.get(name),
+            "rating":   리레이팅_detail.get(name),
+        })
+
+    # 수급 상태별 분류
+    재진입 = sorted(
+        [s for s in scored if s["has_빈집"] and "재진입" in s["빈집_info"].get("trend", "")],
+        key=lambda x: x["score"], reverse=True
+    )
+    빠지는중 = sorted(
+        [s for s in scored if s["has_빈집"] and "재진입" not in s["빈집_info"].get("trend", "")],
+        key=lambda x: x["score"], reverse=True
+    )
+
+    # 과매수 상승/하락 — 오실레이터 결과에서 직접
+    꽉참_상승_names: set[str] = set()
+    꽉참_턴_names: set[str] = set()
+    for key in ["수급", "중소형주수급"]:
+        for it in results.get(key, {}).get("과매수_상승", []):
+            꽉참_상승_names.add(it["name"])
+        for it in results.get(key, {}).get("과매수_하락", []):
+            꽉참_턴_names.add(it["name"])
+
+    꽉참_상승중 = sorted(
+        [s for s in scored if not s["has_빈집"] and s["name"] in 꽉참_상승_names],
+        key=lambda x: x["score"], reverse=True
+    )
+    꽉참_턴중 = sorted(
+        [s for s in scored if not s["has_빈집"] and s["name"] in 꽉참_턴_names],
+        key=lambda x: x["score"], reverse=True
+    )
+
+    def _fmt(s):
+        pts_clean = [p.split("(")[0] for p in s["pts"] if "빈집" not in p]
+        return f"  <b>{s['name']}</b>  {s['score']}점  {' · '.join(pts_clean)}"
+
+    lines = [
+        f"🎯 <b>컨센 종합 탑픽</b> — {TODAY}",
+        f"수급 × 리레이팅 × 컨센신고가 × 상향 × TP × 가속화 (10점 만점)",
+        "",
+    ]
+
+    if 재진입:
+        lines.append(f"<b>🔴 수급 바닥 턴중 ({len(재진입)}종목)</b>")
+        for s in 재진입[:10]:
+            lines.append(_fmt(s))
+            if s["rating"]:
+                lines.append(f"    └ 리레이팅: {s['rating']}")
+        lines.append("")
+
+    if 빠지는중:
+        lines.append(f"<b>🟡 수급 바닥 하락중 ({len(빠지는중)}종목, 상위 5개)</b>")
+        for s in 빠지는중[:5]:
+            lines.append(_fmt(s))
+        lines.append("")
+
+    if 꽉참_상승중:
+        lines.append(f"<b>⚪ 수급 꽉참 상승중 ({len(꽉참_상승중)}종목, 상위 5개)</b>")
+        for s in 꽉참_상승중[:5]:
+            pts_clean = [p.split("(")[0] for p in s["pts"]]
+            lines.append(f"  {s['name']}  {s['score']}점  {' · '.join(pts_clean)}")
+        lines.append("")
+
+    if 꽉참_턴중:
+        lines.append(f"<b>🔵 수급 꽉참 턴중 ({len(꽉참_턴중)}종목, 상위 5개)</b>")
+        for s in 꽉참_턴중[:5]:
+            pts_clean = [p.split("(")[0] for p in s["pts"]]
+            lines.append(f"  {s['name']}  {s['score']}점  {' · '.join(pts_clean)}")
+
+    return "\n".join(lines)
+
+
+def _build_교차분석_tg(results: dict) -> str:
+    """수급빈집 × RS × 가속화모멘텀 교집합 → 탑픽 후보 텔레그램 메시지"""
+    # 1. 수급빈집 집합 (대형주 A, 중소형주 A/B)
+    빈집_names: set[str] = set()
+    빈집_detail: dict[str, dict] = {}
+
+    for key, label in [("수급", "대형주"), ("중소형주수급", "중소형주")]:
+        r = results.get(key, {})
+        for it in r.get("빈집_A", []):
+            빈집_names.add(it["name"])
+            빈집_detail[it["name"]] = {
+                "grade": f"{label}A",
+                "pct":   it.get("pct", 0),
+                "trend": it.get("trend", ""),
+            }
+        for it in r.get("빈집_B", []):
+            if it["name"] not in 빈집_detail:
+                빈집_names.add(it["name"])
+                빈집_detail[it["name"]] = {
+                    "grade": f"{label}B",
+                    "pct":   it.get("pct", 0),
+                    "trend": it.get("trend", ""),
+                }
+
+    # 2. RS top30 집합
+    r_rs = results.get("RS", {})
+    rs_names  = {it["name"] for it in r_rs.get("top30", [])}
+    rs_score  = {it["name"]: it.get("norm_RS_avg", 0) for it in r_rs.get("top30", [])}
+
+    # 3. 가속화모멘텀 top30 집합 (주당순이익1개+)
+    r_가속  = results.get("가속화모멘텀", {})
+    가속_items = r_가속.get("results", {}).get("주당순이익1개+", [])[:30]
+    가속_names = {it["name"] for it in 가속_items}
+    가속_score = {it["name"]: it.get("score", 0) for it in 가속_items}
+
+    if not 빈집_names:
+        return ""
+
+    triple     = 빈집_names & rs_names & 가속_names
+    double_rs  = (빈집_names & rs_names)  - triple
+    double_가속 = (빈집_names & 가속_names) - triple
+
+    lines = [
+        f"🎯 <b>교차분석 탑픽 후보</b> — {TODAY}",
+        f"빈집({len(빈집_names)}) × RS({len(rs_names)}) × 가속화({len(가속_names)})",
+        "",
+    ]
+
+    def _row(name: str) -> str:
+        d = 빈집_detail.get(name, {})
+        rs = f"  RS:{rs_score[name]:.0f}" if name in rs_score else ""
+        가속 = f"  가속:{가속_score[name]:.2f}" if name in 가속_score else ""
+        trend = f"  {d.get('trend','')}" if d.get("trend") else ""
+        return f"  {name}  빈집{d.get('grade','')}(하위{d.get('pct',0):.0f}%){rs}{가속}{trend}"
+
+    if triple:
+        lines.append(f"<b>🔴 3중 교집합 ({len(triple)}종목)</b>")
+        for name in sorted(triple):
+            lines.append(_row(name))
+        lines.append("")
+
+    if double_rs:
+        lines.append(f"<b>🟠 빈집×RS ({len(double_rs)}종목)</b>")
+        for name in sorted(double_rs):
+            lines.append(_row(name))
+        lines.append("")
+
+    if double_가속:
+        lines.append(f"<b>🟡 빈집×가속화 ({len(double_가속)}종목)</b>")
+        for name in sorted(double_가속):
+            lines.append(_row(name))
+        lines.append("")
+
+    if not triple and not double_rs and not double_가속:
+        lines.append("교집합 없음 — 빈집 단독 후보")
+        빈집_only = sorted(빈집_names, key=lambda n: 빈집_detail[n].get("pct", 100))[:10]
+        for name in 빈집_only:
+            lines.append(_row(name))
+
+    return "\n".join(lines)
+
+
 # ─── log.md 기록 ───────────────────────────────────────────────
 
 def append_log(summary: str):
@@ -1376,6 +1922,8 @@ def main():
         "쏠림":      ("쏠림지수",      lambda: parse_쏠림지수(dry_run)),
         "ETF":       ("액티브ETF",     lambda: parse_액티브ETF(dry_run)),
         "일정":      ("일정",          lambda: parse_일정(dry_run)),
+        "ETFRS":     ("한국ETF_RS",    lambda: parse_한국ETF상대강도(dry_run)),
+        "아이디어":  ("투자아이디어",  lambda: parse_투자아이디어(dry_run)),
     }
 
     for key, (label, fn) in parsers.items():
@@ -1404,6 +1952,14 @@ def main():
             if "error" not in data:
                 summary_parts.append(label)
         append_log("·".join(summary_parts) + f" → {report_path.name}")
+
+        # 컨센움직임 텔레그램 발송
+        r_컨센 = results.get("컨센움직임", {})
+        if r_컨센.get("results"):
+            has_data = any(r_컨센["results"].get(k) for k in ["컨센상향", "서프라이즈", "쇼크"])
+            if has_data:
+                print("\n📲 [컨센움직임] 텔레그램 발송 중...")
+                send_telegram(_build_컨센움직임_tg(r_컨센))
 
         # 대형주 수급빈집 텔레그램 발송
         r_수급 = results.get("수급", {})
@@ -1447,6 +2003,60 @@ def main():
         if r_일정.get("d7") or r_일정.get("d30"):
             print("\n📲 [일정] 텔레그램 발송 중...")
             send_telegram(_build_일정_tg(r_일정))
+
+        # 교차분석 텔레그램 발송 (수급빈집 있을 때)
+        교차_msg = _build_교차분석_tg(results)
+        if 교차_msg:
+            print("\n📲 [교차분석] 텔레그램 발송 중...")
+            send_telegram(교차_msg)
+
+        # 컨센 종합 탑픽 발송
+        컨센_탑픽_msg = _build_컨센_탑픽_tg(results)
+        if 컨센_탑픽_msg:
+            print("\n📲 [컨센 종합 탑픽] 텔레그램 발송 중...")
+            send_telegram(컨센_탑픽_msg)
+
+        # 한국ETF RS 텔레그램 발송
+        r_etf_rs = results.get("한국ETF_RS", {})
+        if r_etf_rs.get("top20"):
+            print("\n📲 [한국ETF RS] 텔레그램 발송 중...")
+            send_telegram(_build_etf_rs_tg(r_etf_rs))
+
+        # 투자아이디어 텔레그램 발송 (트리거 있을 때만)
+        r_아이디어 = results.get("투자아이디어", {})
+        if r_아이디어.get("ideas"):
+            print("\n📲 [투자아이디어] 텔레그램 발송 중...")
+            send_telegram(_build_투자아이디어_tg(r_아이디어))
+
+        # 업종 오실레이터 실행 (별도 스크립트)
+        업종_script = ROOT / "scripts" / "scan_업종오실레이터.py"
+        if 업종_script.exists():
+            print("\n⚙️ 업종 오실레이터 실행 중...")
+            subprocess.run([sys.executable, str(업종_script), "--tg"], check=False)
+
+        # 소라티노 ETF 랭킹 실행 (별도 스크립트)
+        sortino_script = ROOT / "scripts" / "scan_sortino.py"
+        if sortino_script.exists():
+            print("\n⚙️ 소라티노 ETF 실행 중...")
+            subprocess.run([sys.executable, str(sortino_script), "--tg"], check=False)
+
+        # 추정이익 카드뉴스 자동 생성 (오늘 TP 상향 TOP3)
+        r_추정 = results.get("추정이익변경", {})
+        tp_up = r_추정.get("results", {}).get("TP_Up", [])
+        if tp_up:
+            seen: dict[str, dict] = {}
+            for it in tp_up:
+                if it["date"] == TODAY and it["name"] not in seen:
+                    seen[it["name"]] = it
+            top_names = list(seen.keys())[:3]
+            if top_names:
+                card_script = ROOT / "scripts" / "viz_card.py"
+                if card_script.exists():
+                    print(f"\n카드뉴스 자동 생성: {', '.join(top_names)}")
+                    subprocess.run(
+                        [sys.executable, str(card_script)] + top_names + ["--tg"],
+                        check=False
+                    )
 
     print("\n" + "="*50)
     print(report[:2000])

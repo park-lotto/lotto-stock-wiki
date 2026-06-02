@@ -148,7 +148,7 @@ def build_message(results: list, top_n: int) -> str:
         f"📊 <b>업종 수급 오실레이터</b> — {TODAY_KR}",
         f"<i>외인+기관 순매수/시가총액 MACD | 양수=수급유입 강화</i>",
         "",
-        f"<b>🔴 수급 강한 업종 Top {top_n}</b>",
+        f"<b>🔴 수급 유입 중 업종 Top {top_n}</b>",
     ]
     for r in top:
         arrow = "🔺" if r["trend"] == "↑" else ("🔻" if r["trend"] == "↓" else "➡️")
@@ -180,7 +180,7 @@ def main():
     print(f"\n{'='*55}")
     print(f"📊 업종 수급 오실레이터 — {TODAY}")
     print(f"{'='*55}")
-    print(f"\n🔴 수급 강한 업종 Top {args.top}:")
+    print(f"\n🔴 수급 유입 중 업종 Top {args.top}:")
     for r in display[:args.top]:
         arrow = "▲" if r["trend"]=="↑" else ("▼" if r["trend"]=="↓" else "→")
         print(f"  {arrow} {r['name']:25s}  {r['osc']:+.6f}")

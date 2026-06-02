@@ -375,9 +375,9 @@ def build_tg_message(stocks: list[dict], analyses: list[dict],
     if can_release:
         lines.append('  <b>[3조건 모두 충족 — 내일 해제 확실]</b>')
         for a in can_release:
-            mkt  = a['market']
-            t5p  = int(MARKET_THRESH.get(mkt, (1.60, 2.00))[0] * 100)
-            t15p = int(MARKET_THRESH.get(mkt, (1.60, 2.00))[1] * 100)
+            wtype = a.get('warn_type', DEFAULT_TYPE)
+            t5p  = int(TYPE_THRESH.get(wtype, TYPE_THRESH[DEFAULT_TYPE])[0] * 100)
+            t15p = int(TYPE_THRESH.get(wtype, TYPE_THRESH[DEFAULT_TYPE])[1] * 100)
             lines.append(
                 f'  • <b>{a["name"]}</b> ({a["code"]})  지정:{a["des_date"]}  {a.get("elapsed_biz","")}영업일\n'
                 f'    현재가 <b>{a["today_close"]:,}원</b>\n'
@@ -389,9 +389,9 @@ def build_tg_message(stocks: list[dict], analyses: list[dict],
     if cond12_ok:
         lines.append('  <b>[①② 충족 — 오늘 신고가만 안 찍으면 내일 해제]</b>')
         for a in cond12_ok:
-            mkt  = a['market']
-            t5p  = int(MARKET_THRESH.get(mkt, (1.60, 2.00))[0] * 100)
-            t15p = int(MARKET_THRESH.get(mkt, (1.60, 2.00))[1] * 100)
+            wtype = a.get('warn_type', DEFAULT_TYPE)
+            t5p  = int(TYPE_THRESH.get(wtype, TYPE_THRESH[DEFAULT_TYPE])[0] * 100)
+            t15p = int(TYPE_THRESH.get(wtype, TYPE_THRESH[DEFAULT_TYPE])[1] * 100)
             watch_price = a.get('high15', 0)
             lines.append(
                 f'  • <b>{a["name"]}</b> ({a["code"]})  지정:{a["des_date"]}  {a.get("elapsed_biz","")}영업일\n'
