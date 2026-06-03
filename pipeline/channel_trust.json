@@ -1,0 +1,31 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-06-04",
+  "channels": {
+    "태린이아빠": {
+      "display_name": "태린이아빠",
+      "platform": "telegram_paid",
+      "speciality": ["매크로타이밍", "주도업종추정", "오실레이터", "미국시장"],
+      "grade": "신규",
+      "stats": {
+        "total_calls": 0,
+        "correct": 0,
+        "incorrect": 0,
+        "pending": 0,
+        "accuracy_rate": 0.0
+      },
+      "by_category": {},
+      "by_sector": {},
+      "calls": []
+    }
+  },
+  "grade_thresholds": {
+    "S":  {"min_accuracy": 0.85, "min_calls": 20},
+    "A+": {"min_accuracy": 0.80, "min_calls": 15},
+    "A-": {"min_accuracy": 0.75, "min_calls": 15},
+    "B+": {"min_accuracy": 0.70, "min_calls": 10},
+    "B-": {"min_accuracy": 0.60, "min_calls": 10},
+    "C":  {"min_accuracy": 0.50, "min_calls": 5},
+    "D":  {"min_accuracy": 0.00, "min_calls": 0}
+  }
+}
