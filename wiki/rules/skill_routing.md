@@ -140,6 +140,7 @@
 | raw/ 파일 → wiki 처리 | `ingest` |
 | 아침 노트 / 소재 탐색 | `morning-note` |
 | 장전 브리핑 | `morning-brief` |
+| 세션 마감·인계 | `session-close` (없으면 CLAUDE.md 저장 트리거 참조) |
 | Claude API 개발·최적화 | `claude-api` |
 | 코드 리뷰 (ultra 딥리뷰) | `code-review` |
 | 설정 파일 변경 | `update-config` |
