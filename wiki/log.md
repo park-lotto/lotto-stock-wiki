@@ -1,3 +1,10 @@
+- 2026-06-04 — 다채널 집계 파이프라인 설계+구현 + 스킬 설치 (집PC 세션)
+  [구현] scripts/channel_pipeline/ 10개 파일 완성 (커밋 4627295)
+    · agent_A(Gemini), agent_B(Sonnet 토론), agent_C1(승격판단), agent_D(wiki), agent_E(브리핑)
+    · models.py + trust_tracker.py + file_manifest.py + cost_estimator.py + pipeline.py
+  [구조] wiki/채널토론/ + raw/inbox/ + pipeline/channel_trust.json 신규
+  [스킬설치] 집PC에 gstack+superpowers+understand-anything+agentmemory+context-engineering+claude-video
+  [다음] Claude 재시작 → inbox 테스트 → 스킬 활용 검증 (plan-eng-review → superpowers:brainstorming)
 - 2026-06-03 — YouTube 영상 파이프라인 전면 재설계 세션
   [작업] yt-content-research + yt-gemini-pipeline 스킬 완성 + 소재 탐색 실전 진행
   [핵심 변경]
