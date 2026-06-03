@@ -163,7 +163,7 @@ body {
 }
 .pick-name {
   font-family: 'Instrument Serif', serif;
-  font-size: 20px;
+  font-size: 22px;
   color: var(--text-1);
   line-height: 1;
   margin-bottom: 10px;
@@ -191,17 +191,29 @@ body {
   font-weight: 600;
   padding: 3px 8px;
   border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.pick-grade::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 .pick-grade.red {
   background: var(--red-2);
   color: var(--red);
   border: 1px solid var(--red-3);
 }
+.pick-grade.red::before { background: var(--red); }
 .pick-grade.orange {
   background: var(--orange-2);
   color: var(--orange);
   border: 1px solid rgba(255,124,67,0.25);
 }
+.pick-grade.orange::before { background: var(--orange); }
 .pick-score {
   font-family: 'Geist Mono', monospace;
   font-size: 10px;
@@ -267,50 +279,70 @@ body {
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 1px;
-  padding: 2px 7px;
+  padding: 2px 8px 2px 6px;
   border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.sector-badge::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 .sector-badge.hot  { background:rgba(255,71,87,0.12);  color:var(--red);    border:1px solid rgba(255,71,87,0.2); }
+.sector-badge.hot::before  { background: var(--red); }
 .sector-badge.warm { background:rgba(255,124,67,0.12); color:var(--orange); border:1px solid rgba(255,124,67,0.2); }
+.sector-badge.warm::before { background: var(--orange); }
 .sector-badge.mid  { background:rgba(255,211,42,0.1);  color:#ffd32a;       border:1px solid rgba(255,211,42,0.2); }
+.sector-badge.mid::before  { background: #ffd32a; }
 .sector-badge.cool { background:rgba(255,255,255,0.05);color:var(--text-3); border:1px solid rgba(255,255,255,0.07); }
+.sector-badge.cool::before { background: var(--text-3); }
 
 
 /* ── 글로벌 컨텍스트 (한 줄, 작게) ──────────── */
 .context {
-  padding: 14px 32px;
+  padding: 12px 24px;
   display: flex;
   align-items: center;
   gap: 0;
   border-bottom: 1px solid var(--rule);
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
 .ctx-item {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 0 16px;
+  gap: 4px;
+  padding: 0 10px;
   border-right: 1px solid rgba(255,255,255,0.06);
+  flex: 1 1 0;
+  min-width: 0;
 }
 .ctx-item:first-child { padding-left: 0; }
 .ctx-item:last-child  { border-right: none; }
 .ctx-label {
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 600;
-  letter-spacing: 1.5px;
+  letter-spacing: 1.2px;
   color: var(--text-3);
   text-transform: uppercase;
+  white-space: nowrap;
 }
 .ctx-val {
   font-family: 'Geist Mono', monospace;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--text-1);
+  white-space: nowrap;
 }
 .ctx-chg {
   font-family: 'Geist Mono', monospace;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 500;
+  white-space: nowrap;
 }
 .ctx-chg.up { color: var(--green); }
 .ctx-chg.dn { color: var(--red); }
@@ -358,11 +390,12 @@ body {
 .footer-brand {
   font-family: 'Instrument Serif', serif;
   font-size: 11px;
-  color: var(--text-3);
+  color: var(--text-2);
 }
 .footer-note {
   font-size: 9px;
   color: var(--text-3);
+  opacity: 0.8;
 }
 
 </style>
@@ -404,7 +437,7 @@ body {
         <strong>HBM 패키지 직수혜</strong> — 빈집 A등급 완전빈집. 외국인 재진입 시 전량 신규매수
       </div>
       <div class="pick-bottom">
-        <div class="pick-grade red">🔴 탑픽</div>
+        <div class="pick-grade red">탑픽</div>
         <div class="pick-score">8 / 9점</div>
       </div>
     </div>
@@ -416,7 +449,7 @@ body {
         <strong>투경 해제 D-1</strong> — 해제 당일 갭업 패턴. 빈집 B등급 + 일정 재료 동시
       </div>
       <div class="pick-bottom">
-        <div class="pick-grade red">🔴 탑픽</div>
+        <div class="pick-grade red">탑픽</div>
         <div class="pick-score">7 / 9점</div>
       </div>
     </div>
@@ -428,7 +461,7 @@ body {
         <strong>HBM 관련 · 미국 커플링</strong> — SOX 강세 연동. 빈집 B등급 후보
       </div>
       <div class="pick-bottom">
-        <div class="pick-grade orange">🟠 후보</div>
+        <div class="pick-grade orange">후보</div>
         <div class="pick-score">5 / 9점</div>
       </div>
     </div>
@@ -478,23 +511,23 @@ body {
 
     <div class="sector-row">
       <div class="sector-name">반도체</div>
-      <div class="sector-badge hot">SUPER HOT 🔴</div>
+      <div class="sector-badge hot">SUPER HOT</div>
     </div>
     <div class="sector-row">
       <div class="sector-name">자동차 · 로봇</div>
-      <div class="sector-badge hot">HOT 🔴</div>
+      <div class="sector-badge hot">HOT</div>
     </div>
     <div class="sector-row">
       <div class="sector-name">네트워크 장비</div>
-      <div class="sector-badge warm">WARM 🟠</div>
+      <div class="sector-badge warm">WARM</div>
     </div>
     <div class="sector-row">
       <div class="sector-name">전력 · 에너지</div>
-      <div class="sector-badge mid">MID 🟡</div>
+      <div class="sector-badge mid">MID</div>
     </div>
     <div class="sector-row">
       <div class="sector-name">2차 전지</div>
-      <div class="sector-badge cool">COLD ⚪</div>
+      <div class="sector-badge cool">COLD</div>
     </div>
   </div>
 
@@ -531,7 +564,7 @@ body {
   <div class="ctx-item">
     <div class="ctx-label">야간선물</div>
     <div class="ctx-val">+0.4%</div>
-    <div class="ctx-chg up">▲상승</div>
+    <div class="ctx-chg up">▲</div>
   </div>
 </div>
 
