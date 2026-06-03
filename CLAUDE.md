@@ -14,6 +14,18 @@
 5. wiki/rules/analysis_rules.md               → 분석 행동 규칙 (TYPE/Gemini/매크로/위키먼저)
 ```
 
+### ⚡ git pull 후 CLAUDE.md 재로딩 규칙
+
+**git pull 실행 후 CLAUDE.md가 변경됐으면 즉시 다시 읽어라.**
+
+```
+git pull → 변경 파일 목록에 CLAUDE.md 있음 → Read CLAUDE.md 재실행 → 새 규칙 적용
+```
+
+> 세션 중 git pull로 규칙이 바뀌었는데 모르고 작업하면 스킬 라우팅·행동 원칙이 틀려진다.
+
+---
+
 ### ⚡ 토큰 절약 규칙 (컨텍스트 비대화 방지)
 
 **툴 결과 처리 원칙 — 무조건 적용:**
