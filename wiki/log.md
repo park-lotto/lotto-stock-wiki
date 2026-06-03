@@ -1,3 +1,17 @@
+- 2026-06-03 — YouTube 영상 파이프라인 전면 재설계 세션
+  [작업] yt-content-research + yt-gemini-pipeline 스킬 완성 + 소재 탐색 실전 진행
+  [핵심 변경]
+    · 채널명 → 로또의 스탁브레인
+    · 파이프라인: Claude(소재발굴) → Gemini(딥리서치+스토리+대본) → Claude(검수)
+    · yt-content-research: 브레인스토밍 확인 → 정량 이슈 스캔 → YouTube 실사 → 오염체크
+    · yt-gemini-pipeline: 브리프 생성 → Gemini 3단계(딥리서치/스토리설계/대본) → 검수
+  [소재 탐색 결과]
+    · 주제 확정: "반도체 독주 끝나면 다음 주도주 — 6월 순환매 후보"
+    · 이슈 온도: 🔴 코스피 8800, ADR 최저, MBC 핫이슈 영상 5/30
+    · 브리프 파일: channel/yt/brief_순환매_20260603.md
+  [미결] Gemini API 호출 (집에서 이어서 진행)
+  [다음 할 일] yt-gemini-pipeline 실행 — brief_순환매_20260603.md → Gemini → 대본
+
 - 2026-06-03 — 아침 브리핑 HTML 디자인 시스템 구축 세션
   [작업] 스킬 파이프라인 실험 + 브리핑 v2 레이아웃 완성
   [스킬 순서] design-consultation → design-html → design-review (3단계 검증)
