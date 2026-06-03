@@ -20,9 +20,11 @@ metadata:
     ↓
 [STEP 1] yt-content-research  ← 소재 탐색 + 이슈 타이밍 체크
     ↓ 주제 + 각도 확정
-[STEP 2] yt-planner           ← 씬 구성 + 기획서
+[STEP 2] yt-deep-research     ← YouTube 유사영상 + 기사 + 데이터 + 비교/응용/예시 수집
+    ↓ 리서치 브리프
+[STEP 3] yt-planner           ← 씬 구성 + 기획서 (리서치 브리프 기반)
     ↓ 기획서 컨펌 (사용자 확인)
-[STEP 3] yt-script-writer     ← 대본 (wiki 데이터 활용)
+[STEP 4] yt-script-writer     ← 대본 (리서치 브리프 + wiki 데이터 활용)
     ↓
 [STEP 4] Remotion 씬 작성     ← videoagent-director or 직접 TSX
     ↓

@@ -661,7 +661,8 @@ D 과매수:   상위 25% 이상
 | "영상 만들자" / `/make-video` | `yt-make-video` (전체 파이프라인 오케스트레이터) |
 | "소재 찾자" / `/소재찾기` | `yt-content-research` (YouTube 리서치 → 주제 선정) |
 | "기획서 써줘" / "씬 짜줘" | `yt-planner` (씬 구성 + 이슈 타이밍 체크) |
-| "대본 써줘" / `/script` | `yt-script-writer` (wiki 기반 대본) |
+| "리서치해줘" / `/리서치` | `yt-deep-research` (YouTube 유사영상 + 기사 + 데이터 + 비교사례 수집 → 리서치 브리프) |
+| "대본 써줘" / `/script` | `yt-script-writer` (리서치 브리프 기반 대본) |
 | 대본 완성 후 Remotion 제작 | `remotion-best-practices` → `videoagent-director` |
 | 씬 이미지 생성 | `videoagent-image-studio` |
 | 음성·음악 처리 | `videoagent-audio-studio` |
