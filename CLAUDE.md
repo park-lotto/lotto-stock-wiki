@@ -14,6 +14,23 @@
 5. wiki/rules/analysis_rules.md               → 분석 행동 규칙 (TYPE/Gemini/매크로/위키먼저)
 ```
 
+### ⚡ Superpowers 자동 트리거 (사용자 요청 없이도 즉시 실행)
+
+아래 조건 감지 시 **즉시** 해당 스킬을 호출한다. 설명 없이 바로 실행.
+
+| 트리거 조건 | 실행 스킬 |
+|------------|---------|
+| "만들자" / "설계하자" / "기획하자" / 새 시스템·기능 논의 시작 | `superpowers:brainstorming` |
+| brainstorming 완료 후 구현 단계 진입 | `superpowers:writing-plans` |
+| writing-plans 완료 후 코드 작성 시작 | `superpowers:executing-plans` |
+| 에러·버그·오작동 발생 | `superpowers:systematic-debugging` |
+| "다 됐어" / "완료" / 커밋 전 마지막 확인 | `superpowers:verification-before-completion` |
+| 씬 여러 개 동시 제작 / 파이프라인 병렬 처리 | `superpowers:dispatching-parallel-agents` |
+| 커스텀 슬래시 명령어 새로 만들 때 | `superpowers:writing-skills` |
+| 영상 제작 파이프라인 디버깅 | `superpowers:systematic-debugging` |
+
+> **원칙**: 트리거 조건과 1%라도 겹치면 무조건 실행. "이건 간단해서 괜찮겠지" 금지.
+
 읽기 완료 후 요약:
 ```
 📋 세션 시작 요약
