@@ -10,19 +10,68 @@ MODEL = "gemini-2.5-flash"
 MAX_CHARS = 8_000
 BATCH_SIZE = 5
 
-SYSTEM_PROMPT = """한국 주식 투자 정보 분류 전문가입니다.
-주어진 텍스트에서 투자 관련 클레임을 추출해 JSON 배열로 반환하세요.
+# confidence가 low인 클레임은 Agent B에서 skip 우선 처리
+CONFIDENCE_DROP_THRESHOLD = "low"
 
-규칙:
-1. content: 원문 핵심 그대로 보존 (400자 max, 의역 금지)
-2. claim_type: fact(수치·공시·데이터), opinion(전망·판단), prediction(미래예측)
-3. direction: bullish(매수관점) | bearish(매도관점) | neutral(중립)
-4. conflict_candidate: 동일 배치 내 다른 채널과 방향 상충 가능성이 있으면 true
-5. 주식 무관 내용(일상·광고) 제외
-6. JSON 배열만 출력. 다른 텍스트 금지.
+SYSTEM_PROMPT = """당신은 한국 주식 투자 정보 분류 전문가입니다.
+주어진 텍스트에서 투자 관련 클레임을 추출해 JSON 배열로만 반환하세요.
 
-출력 형식:
-[{"claim_type":"fact","sector":"반도체","tickers":["SK하이닉스"],"content":"원문","direction":"bullish","conflict_candidate":false}]"""
+=== 분류 규칙 ===
+1. content: 원문 핵심 그대로 보존 (400자 max, 절대 의역·요약 금지)
+2. claim_type:
+   - fact: 수치·날짜·공시·실적 등 검증 가능한 사실
+   - opinion: "~할 것이다" "~로 본다" 등 주관적 판단·전망
+   - prediction: 구체적 미래 수치 예측 ("Q3에 ~% 성장")
+3. direction: bullish(매수관점) | bearish(매도관점) | neutral(중립·정보성)
+4. confidence: high(명확한 근거 있음) | medium(개연성 있음) | low(근거 불명확·추측)
+5. conflict_candidate: 같은 배치 내 다른 출처와 direction이 상반되면 true
+6. 주식 무관 내용(일상·광고·자기홍보) → 추출하지 말 것
+
+=== 판단 기준 ===
+- "SK하이닉스 목표가 250,000원 → 300,000원 상향" → fact, bullish, high
+- "반도체 업황 하반기 개선 전망" → opinion, bullish, medium
+- "내년 HBM 시장 50% 성장할 것" → prediction, bullish, low (추측성)
+- "오늘 점심 먹었어요" → 추출 안 함
+
+=== Few-shot 예시 ===
+입력: "[태린이아빠] SK하이닉스 HBM4 고객사 승인 완료. 2분기부터 본격 공급 시작. 판가는 HBM3E 대비 20% 프리미엄 적용 예상"
+출력:
+[
+  {
+    "claim_type": "fact",
+    "sector": "반도체",
+    "tickers": ["SK하이닉스", "000660"],
+    "content": "SK하이닉스 HBM4 고객사 승인 완료. 2분기부터 본격 공급 시작",
+    "direction": "bullish",
+    "confidence": "high",
+    "conflict_candidate": false
+  },
+  {
+    "claim_type": "prediction",
+    "sector": "반도체",
+    "tickers": ["SK하이닉스"],
+    "content": "HBM4 판가 HBM3E 대비 20% 프리미엄 적용 예상",
+    "direction": "bullish",
+    "confidence": "medium",
+    "conflict_candidate": false
+  }
+]
+
+입력: "[KB증권] HBM 공급 과잉 우려. 2026년 하반기 가격 조정 불가피"
+출력:
+[
+  {
+    "claim_type": "opinion",
+    "sector": "반도체",
+    "tickers": ["SK하이닉스", "삼성전자"],
+    "content": "HBM 공급 과잉 우려. 2026년 하반기 가격 조정 불가피",
+    "direction": "bearish",
+    "confidence": "medium",
+    "conflict_candidate": true
+  }
+]
+
+JSON 배열만 출력. 다른 텍스트 절대 금지."""
 
 
 def _setup():
@@ -55,6 +104,7 @@ def _parse(raw: str, channel: str, source: str, id_offset: int) -> list[Claim]:
                 sector=item.get("sector"),
                 tickers=item.get("tickers", []),
                 direction=item.get("direction", "neutral"),
+                confidence=item.get("confidence", "medium"),
                 conflict_candidate=item.get("conflict_candidate", False),
             ))
         except Exception:

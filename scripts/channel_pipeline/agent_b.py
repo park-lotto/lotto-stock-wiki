@@ -17,6 +17,7 @@ SYSTEM_PROMPT = """당신은 한국 주식 wiki 에디터입니다.
    - append: wiki에 1줄 추가 (중요 팩트·의견)
    - flag: append + ⚠️ 충돌 주석 (다른 채널과 방향 상충)
    - skip: wiki 미반영 (중복·무관·노이즈)
+   ** confidence=low 클레임은 skip 우선 처리. 단, 여러 채널에서 동일 방향이면 예외적으로 append 가능.
 2. wiki_file: 정확한 상대경로 (wiki/L5_섹터/{섹터}/stock/stock_{종목}.md)
    - 섹터 폴더명은 한국어 그대로 (반도체, 조선, 전력기기, 방산, 2차전지ESS 등)
    - 종목 파일 없으면 신규 생성 경로 지정

@@ -12,6 +12,7 @@ class Claim(BaseModel):
     sector: Optional[str] = None
     tickers: list[str] = Field(default_factory=list)
     direction: Literal["bullish", "bearish", "neutral"] = "neutral"
+    confidence: Literal["high", "medium", "low"] = "medium"
     conflict_candidate: bool = False
 
 
