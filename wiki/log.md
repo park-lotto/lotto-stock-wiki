@@ -1,3 +1,11 @@
+- 2026-06-03 — Claude Code 플러그인/스킬 대규모 설치 세션
+  [설치완료] superpowers(14개스킬포함) / prompt-architect / context-engineering / frontend-design
+  [설치완료] Firecrawl MCP / Browser Use MCP / ElevenLabs MCP (uv 신규설치)
+  [설치완료] Pexo 5개스킬 / claude-video(/watch) / Understand-Anything / agentmemory
+  [설치완료] gstack (YC CEO 가리탄 셋업, 40개스킬, Bun 신규설치, Playwright Chromium 포함)
+  [보류] context-engineering → muratcankoylan/Agent-Skills-for-Context-Engineering 으로 최종 설치
+  [주의] /plugin 슬래시명령어는 VS Code 확장에서 작동 안함 → Bash로 실행 필요
+  [미설정] Firecrawl API키(FIRECRAWL_API_KEY) / ElevenLabs API키(ELEVENLABS_API_KEY) 추후 등록 필요
 - 2026-06-03 — SpaceX IPO 영상 소재찾기 + 대본 완성 (집PC 세션)
   [소재찾기] 5단계 루틴 실행 — WebSearch + YouTube Playwright 분석
   [핵심소재] "젠슨황 가고 머스크 온다" 내러티브 확정
