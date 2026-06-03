@@ -16,28 +16,42 @@ metadata:
 ## 전체 파이프라인
 
 ```
-[사용자] 아이디어 OR "영상 만들자"
+[사용자] "영상 만들자" OR 아이디어
     ↓
-[STEP 1] yt-content-research  ← 소재 탐색 + 이슈 타이밍 체크
-    ↓ 주제 + 각도 확정
-[STEP 2] yt-deep-research     ← YouTube 유사영상 + 기사 + 데이터 + 비교/응용/예시 수집
-    ↓ 리서치 브리프
-[STEP 3] yt-planner           ← 씬 구성 + 기획서 (리서치 브리프 기반)
-    ↓ 기획서 컨펌 (사용자 확인)
-[STEP 4] yt-script-writer     ← 대본 (리서치 브리프 + wiki 데이터 활용)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1단계 | 소재 발굴 (Claude 주도)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[STEP 1] yt-content-research
+  - superpowers:brainstorming 필수 선행
+  - YouTube 조회수 실사 + 이슈 타이밍 체크
+  - 서비스 연결 오염 방지 체크 (수정된 규칙 적용)
+  → 출력: 주제 확정 + Claude 브리프 (GEMINI INPUT BRIEF 포맷)
+    ↓ 사용자 브리프 컨펌 ← 개입 1회
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2단계 | 딥리서치 + 대본 (Gemini 주도)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[STEP 2] yt-gemini-pipeline
+  - Claude 브리프 → Gemini API 호출
+  - Gemini: 딥리서치 → 스토리 설계 → 구어체 대본
+  - Claude: 70/20/10 검수 체크리스트
+  → 출력: script_{주제}_final.md
+    ↓ 사용자 대본 컨펌 ← 개입 2회
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3단계 | 영상 제작 (Claude 주도)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[STEP 3] Remotion 씬 작성
+  - remotion-best-practices + videoagent-director
     ↓
-[STEP 4] Remotion 씬 작성     ← videoagent-director or 직접 TSX
+[STEP 4] 실화면 촬영 ← 사용자 직접 (AI 불가) ← 개입 3회
     ↓
-[STEP 5] 실화면 촬영           ← 사용자 직접 (AI 불가)
+[STEP 5] 녹음 ← 사용자 직접 (AI 불가) ← 개입 4회
     ↓
-[STEP 6] 녹음                 ← 사용자 직접 (AI 불가)
+[STEP 6] yt-editor  ← Whisper 싱크 + 렌더
     ↓
-[STEP 7] yt-editor            ← Whisper 싱크 + 렌더
-    ↓
-[STEP 8] yt-publisher         ← YouTube 업로드 + 텔레그램 공지
+[STEP 7] yt-publisher ← YouTube 업로드 + 텔레그램 공지
 ```
 
-**사용자 개입**: STEP 2 컨펌, STEP 5 실화면 촬영, STEP 6 녹음 (총 3회)
+**사용자 개입**: 브리프 컨펌 / 대본 컨펌 / 실화면 촬영 / 녹음 (총 4회)
 
 ---
 
