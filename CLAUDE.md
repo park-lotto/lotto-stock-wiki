@@ -31,6 +31,45 @@
 
 > **원칙**: 트리거 조건과 1%라도 겹치면 무조건 실행. "이건 간단해서 괜찮겠지" 금지.
 
+---
+
+## 🎯 스킬 활용 원칙 (모든 업무에 적용)
+
+**모든 업무 시작 전, 사용 가능한 스킬 목록을 확인하고 가장 적합한 스킬을 선택해 실행한다.**
+
+### 핵심 규칙
+
+1. **스킬 먼저 확인** — 작업 시작 전 Skill 목록 스캔. 맞는 게 있으면 즉시 호출.
+2. **2개 이상 조합 적극 권장** — 최고의 결과물을 위해 스킬을 체이닝한다.
+3. **스킬 없이 혼자 하는 건 차선** — 스킬이 있는데 쓰지 않는 것은 품질 저하.
+
+### Superpowers × Gstack 역할 분담
+
+| 단계 | Superpowers (사고/프로세스) | Gstack (도구/실행) |
+|------|--------------------------|-----------------|
+| 설계 | `brainstorming` | `office-hours` (아이디어 검증) |
+| 계획 | `writing-plans` | — |
+| 구현 | `executing-plans` | — |
+| 확인 | `verification-before-completion` | `qa` (브라우저 실제 확인) |
+| 검수 | — | `design-review` · `review` |
+| 배포 | `finishing-a-development-branch` | `ship` |
+| 디버그 | `systematic-debugging` | `investigate` |
+| 병렬 | `dispatching-parallel-agents` | — |
+
+### 업무별 추천 스킬 조합
+
+| 업무 | 조합 |
+|------|------|
+| 새 기능 설계+구현 | `brainstorming` → `writing-plans` → `executing-plans` → `qa` |
+| 영상 제작 | `brainstorming` → `executing-plans` → `videoagent-*` → `qa` |
+| 오류 수정 | `systematic-debugging` → `investigate` → `verification-before-completion` |
+| HTML 결과물 | `executing-plans` → `qa` → `design-review` |
+| 커밋/배포 | `verification-before-completion` → `review` → `ship` |
+
+> **목표**: 스킬 조합으로 혼자 작업할 때보다 항상 더 높은 품질의 결과물을 낸다.
+
+---
+
 읽기 완료 후 요약:
 ```
 📋 세션 시작 요약
@@ -535,3 +574,28 @@ D 과매수:   상위 25% 이상
 
 **자동 열기 대상**: `out/` 폴더 신규 생성·주요 수정 파일
 **자동 열기 제외**: ingest 자동 갱신 파일 / log.md / index.md / 임시 파일
+
+---
+
+## Skill routing
+
+When the user's request matches an available skill, invoke it via the Skill tool. When in doubt, invoke the skill.
+
+Key routing rules:
+- 새 아이디어·기능 논의 → invoke `superpowers:brainstorming`
+- 구현 계획 필요 → invoke `superpowers:writing-plans`
+- 계획 실행 → invoke `superpowers:executing-plans`
+- 에러·버그 → invoke `superpowers:systematic-debugging` then `gstack:investigate`
+- 완료 전 최종 확인 → invoke `superpowers:verification-before-completion`
+- 병렬 작업 (씬 여러 개·파이프라인) → invoke `superpowers:dispatching-parallel-agents`
+- 새 슬래시 명령어 작성 → invoke `superpowers:writing-skills`
+- HTML 결과물 브라우저 확인 → invoke `gstack:qa`
+- 디자인·UI 시각 검수 → invoke `gstack:design-review`
+- 코드 diff 리뷰 → invoke `gstack:review`
+- 커밋+PR+배포 → invoke `gstack:ship`
+- 아이디어 빠른 검증 → invoke `gstack:office-hours`
+- 영상 이미지 생성 → invoke `gstack:videoagent-image-studio`
+- 영상 연출 지시 → invoke `gstack:videoagent-director`
+- 세션 중간 저장 → invoke `gstack:context-save`
+- 세션 복원 → invoke `gstack:context-restore`
+- 보안 점검 → invoke `gstack:cso`
