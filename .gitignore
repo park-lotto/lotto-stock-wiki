@@ -13,6 +13,7 @@ demos/
 .claude/*
 !.claude/settings.json
 .agents/
+!.agents/skills/**
 data/
 
 # 카카오 OAuth 비밀
@@ -37,3 +38,4 @@ raw/universe_check.txt
 raw/wise_test.txt
 raw/excel_*.txt
 scripts/__pycache__/
+.gstack/

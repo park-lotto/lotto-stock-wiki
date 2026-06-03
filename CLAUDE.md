@@ -640,15 +640,27 @@ D 과매수:   상위 25% 이상
 | 앱 실행 및 동작 확인 | `run` |
 | 권한 프롬프트 최소화 | `fewer-permission-prompts` |
 
-### 🎬 Gstack Videoagent — 영상 제작
+### 🎬 영상 제작 파이프라인 (커스텀 스킬 + Gstack)
+
+> **진입점**: 항상 `yt-make-video`부터. 절대 중간 단계부터 시작하지 말 것.
 
 | 트리거 | 스킬 |
 |--------|------|
-| 영상 전체 연출·씬 지시 | `videoagent-director` |
+| "영상 만들자" / `/make-video` | `yt-make-video` (전체 파이프라인 오케스트레이터) |
+| "소재 찾자" / `/소재찾기` | `yt-content-research` (YouTube 리서치 → 주제 선정) |
+| "기획서 써줘" / "씬 짜줘" | `yt-planner` (씬 구성 + 이슈 타이밍 체크) |
+| "대본 써줘" / `/script` | `yt-script-writer` (wiki 기반 대본) |
+| 대본 완성 후 Remotion 제작 | `remotion-best-practices` → `videoagent-director` |
 | 씬 이미지 생성 | `videoagent-image-studio` |
 | 음성·음악 처리 | `videoagent-audio-studio` |
 | 최종 영상 합성 | `videoagent-video-studio` |
-| Remotion 작성 규칙 확인 | `remotion-best-practices` |
+| "편집해줘" / 녹음 끝난 후 | `yt-editor` (Whisper 싱크 + 렌더) |
+| "업로드해줘" | `yt-publisher` (YouTube + 텔레그램) |
+
+**이슈 타이밍 원칙**:
+- 이슈 터진 날 = 업로드 해야 하는 날
+- 이슈 후 3일 지나면 → 각도 변경 or 새 소재
+- `yt-content-research` STEP 0에서 항상 타이밍 체크 먼저
 
 ### 🧬 Agentmemory — 세션 간 기억
 
