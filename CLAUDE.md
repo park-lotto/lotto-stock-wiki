@@ -577,25 +577,122 @@ D 과매수:   상위 25% 이상
 
 ---
 
-## Skill routing
+## Skill routing — 전체 스킬 활용 맵
 
-When the user's request matches an available skill, invoke it via the Skill tool. When in doubt, invoke the skill.
+> **규칙**: 요청이 아래 조건과 일치하면 즉시 해당 스킬 호출. 의심스러우면 호출. 스킬이 있는데 직접 답하는 건 품질 저하.
 
-Key routing rules:
-- 새 아이디어·기능 논의 → invoke `superpowers:brainstorming`
-- 구현 계획 필요 → invoke `superpowers:writing-plans`
-- 계획 실행 → invoke `superpowers:executing-plans`
-- 에러·버그 → invoke `superpowers:systematic-debugging` then `gstack:investigate`
-- 완료 전 최종 확인 → invoke `superpowers:verification-before-completion`
-- 병렬 작업 (씬 여러 개·파이프라인) → invoke `superpowers:dispatching-parallel-agents`
-- 새 슬래시 명령어 작성 → invoke `superpowers:writing-skills`
-- HTML 결과물 브라우저 확인 → invoke `gstack:qa`
-- 디자인·UI 시각 검수 → invoke `gstack:design-review`
-- 코드 diff 리뷰 → invoke `gstack:review`
-- 커밋+PR+배포 → invoke `gstack:ship`
-- 아이디어 빠른 검증 → invoke `gstack:office-hours`
-- 영상 이미지 생성 → invoke `gstack:videoagent-image-studio`
-- 영상 연출 지시 → invoke `gstack:videoagent-director`
-- 세션 중간 저장 → invoke `gstack:context-save`
-- 세션 복원 → invoke `gstack:context-restore`
-- 보안 점검 → invoke `gstack:cso`
+### 🧠 Superpowers — 사고·프로세스 규율
+
+| 트리거 | 스킬 |
+|--------|------|
+| 새 시스템·기능·영상 기획 시작 | `superpowers:brainstorming` |
+| 설계 끝나고 구현 계획 작성 | `superpowers:writing-plans` |
+| 계획대로 코드 실행 | `superpowers:executing-plans` |
+| 에러·버그·오작동 | `superpowers:systematic-debugging` |
+| 작업 완료 전 최종 체크 | `superpowers:verification-before-completion` |
+| 씬 여러 개 동시·파이프라인 병렬 | `superpowers:dispatching-parallel-agents` |
+| 대형 작업 서브에이전트 분산 | `superpowers:subagent-driven-development` |
+| 새 슬래시 명령어 만들기 | `superpowers:writing-skills` |
+| 브랜치 마무리·PR 준비 | `superpowers:finishing-a-development-branch` |
+| 코드 리뷰 요청 | `superpowers:requesting-code-review` |
+| 코드 리뷰 받기 | `superpowers:receiving-code-review` |
+| 테스트 기반 개발 | `superpowers:test-driven-development` |
+| 병렬 브랜치 작업 | `superpowers:using-git-worktrees` |
+
+### 🛠 Gstack — 브라우저·QA·배포·검수
+
+| 트리거 | 스킬 |
+|--------|------|
+| HTML 결과물·사이트 실제 확인 | `qa` |
+| 버그만 찾고 수정 안 할 때 | `qa-only` |
+| 디자인·UI 시각적 검수 | `design-review` |
+| 디자인 시스템 전체 설계 | `design-consultation` |
+| 디자인 여러 시안 비교 | `design-shotgun` |
+| 프로덕션용 HTML/CSS 생성 | `design-html` |
+| 코드 diff 리뷰 | `review` |
+| 보안 취약점 점검 | `cso` or `security-review` |
+| 커밋+PR+배포 한번에 | `ship` |
+| 머지+배포+검증 통합 | `land-and-deploy` |
+| 배포 후 모니터링 | `canary` |
+| 배포 설정 초기화 | `setup-deploy` |
+| 버그·오류 심층 조사 | `investigate` |
+| 아이디어 빠른 CEO 검증 | `office-hours` |
+| 전략·규모·방향 검토 | `plan-ceo-review` |
+| 아키텍처 설계 검토 | `plan-eng-review` |
+| 디자인 계획 검토 | `plan-design-review` |
+| DX·API 설계 검토 | `plan-devex-review` |
+| 전체 리뷰 자동 파이프라인 | `autoplan` |
+| 스펙·이슈·백로그 작성 | `spec` |
+| 문서 신규 생성 | `document-generate` |
+| 배포 후 문서 업데이트 | `document-release` |
+| 주간 회고 | `retro` |
+| 코드 품질 대시보드 | `health` |
+| 성능 회귀 측정 | `benchmark` |
+| 웹 스크래핑 | `scrape` |
+| PDF 생성 | `make-pdf` |
+| 세션 저장 | `context-save` |
+| 세션 복원 | `context-restore` |
+| 특정 디렉토리 수정 잠금 | `freeze` / `unfreeze` |
+| 안전 모드 (위험 작업 전) | `careful` / `guard` |
+| gstack 업그레이드 | `gstack-upgrade` |
+| 반복 실행 태스크 설정 | `loop` |
+| 예약 실행 설정 | `schedule` |
+| 앱 실행 및 동작 확인 | `run` |
+| 권한 프롬프트 최소화 | `fewer-permission-prompts` |
+
+### 🎬 Gstack Videoagent — 영상 제작
+
+| 트리거 | 스킬 |
+|--------|------|
+| 영상 전체 연출·씬 지시 | `videoagent-director` |
+| 씬 이미지 생성 | `videoagent-image-studio` |
+| 음성·음악 처리 | `videoagent-audio-studio` |
+| 최종 영상 합성 | `videoagent-video-studio` |
+| Remotion 작성 규칙 확인 | `remotion-best-practices` |
+
+### 🧬 Agentmemory — 세션 간 기억
+
+| 트리거 | 스킬 |
+|--------|------|
+| 과거 세션 내용 검색 | `agentmemory:recall` |
+| 중요 내용 저장 | `agentmemory:remember` |
+| 잘못된 메모리 삭제 | `agentmemory:forget` |
+| 세션 컨텍스트 커밋 | `agentmemory:commit-context` |
+| 세션 이력 확인 | `agentmemory:session-history` |
+| 현재 세션 요약 | `agentmemory:recap` |
+| 다른 에이전트에 인계 | `agentmemory:handoff` |
+
+### 🔍 Understand-anything — 코드베이스 이해
+
+| 트리거 | 스킬 |
+|--------|------|
+| 새 프로젝트 구조 파악 | `understand-anything:understand-onboard` |
+| 코드에 대해 질문 | `understand-anything:understand-chat` |
+| 특정 파일·함수 설명 | `understand-anything:understand-explain` |
+| 비즈니스 도메인 분석 | `understand-anything:understand-domain` |
+| 지식 그래프 조회 | `understand-anything:understand-knowledge` |
+| 코드 변경 분석 | `understand-anything:understand-diff` |
+
+### ⚙️ Context-engineering — 컨텍스트 최적화
+
+| 트리거 | 스킬 |
+|--------|------|
+| 대화가 너무 길어질 때 | `context-engineering:context-compression` |
+| 멀티 에이전트 설계 | `context-engineering:multi-agent-patterns` |
+| 메모리 시스템 설계 | `context-engineering:memory-systems` |
+
+### 🎨 기타 전문 스킬
+
+| 트리거 | 스킬 |
+|--------|------|
+| 프롬프트 설계·최적화 | `prompt-architect:prompt-architect` |
+| 프론트엔드 UI 설계 | `frontend-design:frontend-design` |
+| 영상 자막 처리 (Whisper) | `watch:watch` |
+| raw/ 파일 → wiki 처리 | `ingest` |
+| 시황브리핑 스크립트 작성 | `yt-briefing` |
+| Claude API 개발·최적화 | `claude-api` |
+| 코드 리뷰 (ultra 딥리뷰) | `code-review` |
+| 코드 단순화·리팩터 | `simplify` |
+| 설정 파일 변경 | `update-config` |
+| 키바인딩 설정 | `keybindings-help` |
+| 변경사항 실제 동작 검증 | `verify` |
