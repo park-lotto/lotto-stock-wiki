@@ -1,3 +1,7 @@
+- 2026-06-03 — agentmemory 백엔드 서버 미실행 확인
+  [진단] MCP 클라이언트(@agentmemory/mcp) 연결 ✅ / 백엔드 서버(localhost:3111) ❌ 미실행
+  [원인] myagentmemory 전역 CLI 미설치 → 서버 미구동으로 메모리 조회 결과 0건
+  [해결] npm install -g myagentmemory → myagentmemory 실행 후 Claude Code 재시작 필요
 - 2026-06-03 — Claude Code 플러그인/스킬 대규모 설치 세션
   [설치완료] superpowers(14개스킬포함) / prompt-architect / context-engineering / frontend-design
   [설치완료] Firecrawl MCP / Browser Use MCP / ElevenLabs MCP (uv 신규설치)
