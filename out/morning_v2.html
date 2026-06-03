@@ -1,89 +1,161 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=800">
-<title>아침 브리핑 v2 — 로또의 주식인사이트</title>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<title>아침 브리핑 — STOCK BRAIN</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@500;700;900&family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 
-:root {
+/* ── 테마 토큰 ─────────────────────────────────── */
+[data-theme="dark"] {
   --bg:       #080808;
-  --surface:  #101010;
-  --raised:   #161616;
+  --surface:  #111111;
+  --raised:   #1a1a1a;
+  --border:   rgba(255,255,255,0.07);
   --gold:     #e8b84b;
-  --gold-2:   rgba(232,184,75,0.65);
-  --gold-3:   rgba(232,184,75,0.12);
-  --text-1:   #f0ebe2;
-  --text-2:   #a09890;
-  --text-3:   #5a5450;
-  --red:      #ff4757;
-  --red-2:    rgba(255,71,87,0.12);
-  --red-3:    rgba(255,71,87,0.25);
-  --orange:   #ff7c43;
-  --orange-2: rgba(255,124,67,0.12);
-  --green:    #2ed573;
-  --rule:     rgba(255,255,255,0.07);
+  --gold-dim: rgba(232,184,75,0.55);
+  --gold-bg:  rgba(232,184,75,0.10);
+  --text-1:   #f0ebe0;
+  --text-2:   #a09080;
+  --text-3:   #504840;
+  --red:      #ff3b4e;
+  --red-bg:   rgba(255,59,78,0.10);
+  --red-bdr:  rgba(255,59,78,0.22);
+  --orange:   #ff7340;
+  --orange-bg:rgba(255,115,64,0.10);
+  --orange-bdr:rgba(255,115,64,0.22);
+  --green:    #2ecc71;
+  --brand-txt:#e8b84b;
+  --sb-bg:    rgba(232,184,75,0.06);
+  --sb-bdr:   rgba(232,184,75,0.18);
+}
+
+[data-theme="beige"] {
+  --bg:       #F7F2EA;
+  --surface:  #EDE7DB;
+  --raised:   #E5DDD0;
+  --border:   rgba(0,0,0,0.09);
+  --gold:     #A87020;
+  --gold-dim: rgba(168,112,32,0.60);
+  --gold-bg:  rgba(168,112,32,0.08);
+  --text-1:   #1C1810;
+  --text-2:   #6A5E50;
+  --text-3:   #A0917E;
+  --red:      #C0332A;
+  --red-bg:   rgba(192,51,42,0.08);
+  --red-bdr:  rgba(192,51,42,0.20);
+  --orange:   #C06020;
+  --orange-bg:rgba(192,96,32,0.08);
+  --orange-bdr:rgba(192,96,32,0.20);
+  --green:    #1E7A3C;
+  --brand-txt:#7A5010;
+  --sb-bg:    rgba(168,112,32,0.06);
+  --sb-bdr:   rgba(168,112,32,0.20);
 }
 
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
 body {
   background: var(--bg);
-  font-family: 'Geist', sans-serif;
+  font-family: 'Noto Sans KR', sans-serif;
   -webkit-font-smoothing: antialiased;
   width: 800px;
+  position: relative;
 }
 
-/* ── 헤더 (얇게 — 브랜드 + 날짜만) ─────────────── */
-.hd {
-  padding: 16px 32px;
+/* ── 테마 토글 버튼 (캡처 시 숨김 처리 가능) ── */
+.theme-toggle {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 999;
+  background: var(--raised);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  font-family: 'Geist', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+}
+.theme-toggle:hover { color: var(--text-1); border-color: var(--gold-dim); }
+
+/* ── STOCK BRAIN 아이덴티티 헤더 ─────────────── */
+.brand-header {
+  background: var(--sb-bg);
+  border-bottom: 1px solid var(--sb-bdr);
+  padding: 14px 28px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--rule);
 }
-.hd-brand {
-  font-family: 'Instrument Serif', serif;
-  font-size: 13px;
-  color: var(--gold);
-  letter-spacing: 0.3px;
-}
-.hd-right {
+.brand-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
-.hd-date {
-  font-size: 11px;
+.brand-logo {
+  width: 32px;
+  height: 32px;
+  background: var(--gold);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.brand-logo svg { width: 18px; height: 18px; }
+.brand-name {
+  font-family: 'Geist', sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--brand-txt);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.brand-sub {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 10px;
   font-weight: 500;
+  color: var(--text-3);
+  letter-spacing: 0.5px;
+  margin-top: 1px;
+}
+.brand-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+.brand-date {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
   color: var(--text-2);
 }
-.hd-time {
+.brand-time {
   font-family: 'Geist Mono', monospace;
-  font-size: 10px;
-  color: var(--gold-2);
-  background: var(--gold-3);
-  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gold);
+  background: var(--gold-bg);
+  padding: 3px 9px;
   border-radius: 4px;
+  letter-spacing: 0.5px;
 }
 
 
-/* ── 오늘의 콜 (가장 크게) ────────────────────── */
+/* ── 오늘의 판단 ──────────────────────────────── */
 .call {
-  padding: 28px 32px 24px;
-  border-bottom: 1px solid var(--rule);
-  position: relative;
-}
-.call::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 32px; right: 32px;
-  height: 1px;
-  background: linear-gradient(90deg, var(--gold) 0%, transparent 60%);
-  opacity: 0.4;
+  padding: 26px 28px 22px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
 }
 .call-label {
+  font-family: 'Geist', sans-serif;
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 3px;
@@ -92,33 +164,41 @@ body {
   margin-bottom: 10px;
 }
 .call-text {
-  font-family: 'Instrument Serif', serif;
-  font-size: 30px;
-  line-height: 1.15;
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 34px;
+  line-height: 1.2;
   color: var(--text-1);
-  letter-spacing: -0.3px;
+  letter-spacing: -0.5px;
+  word-break: keep-all;
 }
-.call-text em { font-style: italic; color: var(--gold); }
+.call-text em {
+  font-style: normal;
+  color: var(--gold);
+}
 .call-sub {
+  font-family: 'Noto Sans KR', sans-serif;
   font-size: 12px;
+  font-weight: 500;
   color: var(--text-2);
-  margin-top: 8px;
-  line-height: 1.6;
+  margin-top: 10px;
+  line-height: 1.65;
+  word-break: keep-all;
 }
 
 
-/* ── 탑픽 (결론 먼저) ────────────────────────── */
+/* ── 탑픽 ────────────────────────────────────── */
 .picks {
-  padding: 24px 32px;
-  border-bottom: 1px solid var(--rule);
+  padding: 20px 28px;
+  border-bottom: 1px solid var(--border);
 }
 .section-label {
+  font-family: 'Geist', sans-serif;
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 3px;
-  color: var(--gold-2);
+  color: var(--gold-dim);
   text-transform: uppercase;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -127,7 +207,7 @@ body {
   content: '';
   flex: 1;
   height: 1px;
-  background: var(--gold-3);
+  background: var(--gold-bg);
 }
 
 .pick-grid {
@@ -138,9 +218,9 @@ body {
 
 .pick-card {
   background: var(--surface);
-  border: 1px solid rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 16px;
+  padding: 14px 14px 12px;
   position: relative;
   overflow: hidden;
 }
@@ -148,37 +228,39 @@ body {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 2px;
+  height: 3px;
 }
-.pick-card.s1::before { background: var(--red); }
-.pick-card.s2::before { background: var(--red); }
+.pick-card.s1::before, .pick-card.s2::before { background: var(--red); }
 .pick-card.s3::before { background: var(--orange); }
 
 .pick-rank {
   font-family: 'Geist Mono', monospace;
-  font-size: 9px;
-  font-weight: 600;
+  font-size: 8px;
+  font-weight: 700;
   color: var(--text-3);
-  margin-bottom: 8px;
+  letter-spacing: 1.5px;
+  margin-bottom: 6px;
 }
 .pick-name {
-  font-family: 'Instrument Serif', serif;
-  font-size: 22px;
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 21px;
   color: var(--text-1);
-  line-height: 1;
-  margin-bottom: 10px;
-  letter-spacing: 0.2px;
+  line-height: 1.1;
+  margin-bottom: 9px;
+  word-break: keep-all;
 }
 .pick-reason {
+  font-family: 'Noto Sans KR', sans-serif;
   font-size: 11px;
   font-weight: 500;
   color: var(--text-2);
   line-height: 1.55;
-  margin-bottom: 12px;
+  margin-bottom: 11px;
+  word-break: keep-all;
 }
 .pick-reason strong {
   color: var(--text-1);
-  font-weight: 600;
+  font-weight: 700;
 }
 .pick-bottom {
   display: flex;
@@ -186,14 +268,15 @@ body {
   justify-content: space-between;
 }
 .pick-grade {
-  font-family: 'Geist Mono', monospace;
+  font-family: 'Geist', sans-serif;
   font-size: 10px;
-  font-weight: 600;
-  padding: 3px 8px;
+  font-weight: 700;
+  padding: 3px 9px;
   border-radius: 4px;
   display: flex;
   align-items: center;
   gap: 5px;
+  letter-spacing: 0.3px;
 }
 .pick-grade::before {
   content: '';
@@ -203,84 +286,86 @@ body {
   flex-shrink: 0;
 }
 .pick-grade.red {
-  background: var(--red-2);
+  background: var(--red-bg);
   color: var(--red);
-  border: 1px solid var(--red-3);
+  border: 1px solid var(--red-bdr);
 }
 .pick-grade.red::before { background: var(--red); }
 .pick-grade.orange {
-  background: var(--orange-2);
+  background: var(--orange-bg);
   color: var(--orange);
-  border: 1px solid rgba(255,124,67,0.25);
+  border: 1px solid var(--orange-bdr);
 }
 .pick-grade.orange::before { background: var(--orange); }
 .pick-score {
   font-family: 'Geist Mono', monospace;
   font-size: 10px;
+  font-weight: 600;
   color: var(--text-3);
 }
 
 
-/* ── 왜 맞나 (수급 + 섹터) ───────────────────── */
+/* ── 수급 + 섹터 2컬럼 ───────────────────────── */
 .why {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--border);
 }
 .why-col {
-  padding: 20px 32px;
+  padding: 18px 28px;
 }
 .why-col + .why-col {
-  border-left: 1px solid var(--rule);
+  border-left: 1px solid var(--border);
 }
 
-/* 수급 방향 */
 .flow-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 7px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.03);
+  border-bottom: 1px solid rgba(128,128,128,0.06);
 }
 .flow-row:last-child { border-bottom: none; }
 .flow-who {
+  font-family: 'Noto Sans KR', sans-serif;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 700;
   color: var(--text-2);
 }
 .flow-dir {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-family: 'Geist Mono', monospace;
+  gap: 5px;
+  font-family: 'Noto Sans KR', sans-serif;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
 }
 .flow-dir.sell { color: var(--red); }
 .flow-dir.buy  { color: var(--green); }
 .flow-dir.neu  { color: var(--text-3); }
-.flow-arrow { font-size: 13px; }
+.flow-arrow { font-size: 12px; }
 
-/* 섹터 */
 .sector-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 7px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.03);
+  border-bottom: 1px solid rgba(128,128,128,0.06);
 }
 .sector-row:last-child { border-bottom: none; }
 .sector-name {
+  font-family: 'Noto Sans KR', sans-serif;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 700;
   color: var(--text-1);
 }
 .sector-badge {
+  font-family: 'Geist', sans-serif;
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 1px;
-  padding: 2px 8px 2px 6px;
-  border-radius: 3px;
+  padding: 3px 8px 3px 6px;
+  border-radius: 4px;
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -292,24 +377,32 @@ body {
   border-radius: 50%;
   flex-shrink: 0;
 }
-.sector-badge.hot  { background:rgba(255,71,87,0.12);  color:var(--red);    border:1px solid rgba(255,71,87,0.2); }
+.sector-badge.hot  { background:var(--red-bg);    color:var(--red);    border:1px solid var(--red-bdr); }
 .sector-badge.hot::before  { background: var(--red); }
-.sector-badge.warm { background:rgba(255,124,67,0.12); color:var(--orange); border:1px solid rgba(255,124,67,0.2); }
+.sector-badge.warm { background:var(--orange-bg); color:var(--orange); border:1px solid var(--orange-bdr); }
 .sector-badge.warm::before { background: var(--orange); }
-.sector-badge.mid  { background:rgba(255,211,42,0.1);  color:#ffd32a;       border:1px solid rgba(255,211,42,0.2); }
-.sector-badge.mid::before  { background: #ffd32a; }
-.sector-badge.cool { background:rgba(255,255,255,0.05);color:var(--text-3); border:1px solid rgba(255,255,255,0.07); }
+.sector-badge.mid  {
+  background: rgba(200,160,40,0.08);
+  color: var(--gold);
+  border: 1px solid rgba(200,160,40,0.20);
+}
+.sector-badge.mid::before  { background: var(--gold); }
+.sector-badge.cool {
+  background: rgba(128,128,128,0.06);
+  color: var(--text-3);
+  border: 1px solid var(--border);
+}
 .sector-badge.cool::before { background: var(--text-3); }
 
 
-/* ── 글로벌 컨텍스트 (한 줄, 작게) ──────────── */
+/* ── 글로벌 컨텍스트 ──────────────────────────── */
 .context {
-  padding: 12px 24px;
+  padding: 11px 28px;
   display: flex;
   align-items: center;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
   gap: 0;
-  border-bottom: 1px solid var(--rule);
-  flex-wrap: nowrap;
   overflow: hidden;
 }
 .ctx-item {
@@ -317,15 +410,16 @@ body {
   align-items: center;
   gap: 4px;
   padding: 0 10px;
-  border-right: 1px solid rgba(255,255,255,0.06);
+  border-right: 1px solid var(--border);
   flex: 1 1 0;
   min-width: 0;
 }
 .ctx-item:first-child { padding-left: 0; }
 .ctx-item:last-child  { border-right: none; }
 .ctx-label {
+  font-family: 'Geist', sans-serif;
   font-size: 8px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 1.2px;
   color: var(--text-3);
   text-transform: uppercase;
@@ -334,14 +428,14 @@ body {
 .ctx-val {
   font-family: 'Geist Mono', monospace;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-1);
   white-space: nowrap;
 }
 .ctx-chg {
   font-family: 'Geist Mono', monospace;
   font-size: 9px;
-  font-weight: 500;
+  font-weight: 600;
   white-space: nowrap;
 }
 .ctx-chg.up { color: var(--green); }
@@ -349,14 +443,15 @@ body {
 .ctx-chg.neu { color: var(--text-3); }
 
 
-/* ── 리스크 (경고) ───────────────────────────── */
+/* ── 리스크 ──────────────────────────────────── */
 .risk {
-  padding: 14px 32px;
+  padding: 13px 28px;
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  border-bottom: 1px solid var(--rule);
-  background: rgba(255,71,87,0.03);
+  border-bottom: 1px solid var(--border);
+  background: var(--red-bg);
+  border-left: 3px solid var(--red);
 }
 .risk-icon {
   font-size: 13px;
@@ -364,55 +459,81 @@ body {
   margin-top: 1px;
 }
 .risk-label {
-  font-size: 9px;
+  font-family: 'Geist', sans-serif;
+  font-size: 8px;
   font-weight: 700;
   letter-spacing: 2px;
-  color: rgba(255,71,87,0.5);
+  color: var(--red);
+  opacity: 0.7;
   text-transform: uppercase;
   margin-bottom: 3px;
 }
 .risk-text {
+  font-family: 'Noto Sans KR', sans-serif;
   font-size: 12px;
   font-weight: 500;
   color: var(--text-2);
-  line-height: 1.55;
+  line-height: 1.6;
+  word-break: keep-all;
 }
-.risk-text strong { color: var(--red); font-weight: 600; }
+.risk-text strong { color: var(--red); font-weight: 700; }
 
 
 /* ── 푸터 ────────────────────────────────────── */
 .footer {
-  padding: 14px 32px;
+  padding: 12px 28px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  background: var(--surface);
 }
 .footer-brand {
-  font-family: 'Instrument Serif', serif;
+  font-family: 'Geist', sans-serif;
   font-size: 11px;
+  font-weight: 700;
   color: var(--text-2);
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 .footer-note {
+  font-family: 'Noto Sans KR', sans-serif;
   font-size: 9px;
+  font-weight: 500;
   color: var(--text-3);
-  opacity: 0.8;
 }
 
 </style>
 </head>
 <body>
 
-<!-- ── 헤더 ── -->
-<div class="hd">
-  <div class="hd-brand">로또의 주식인사이트</div>
-  <div class="hd-right">
-    <div class="hd-date">2026년 6월 3일 화요일</div>
-    <div class="hd-time">07:40 장전</div>
+<button class="theme-toggle" onclick="document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme')==='dark'?'beige':'dark')">
+  🌓 테마 전환
+</button>
+
+<!-- ── STOCK BRAIN 헤더 ── -->
+<div class="brand-header">
+  <div class="brand-left">
+    <div class="brand-logo">
+      <!-- 뇌 아이콘 SVG -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="#080808" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2a5 5 0 0 1 5 5c0 1-.2 2-.6 2.8A4 4 0 0 1 20 13c0 2-1.5 3.7-3.5 4-.1.6-.3 1.2-.7 1.7A4 4 0 0 1 12 22a4 4 0 0 1-3.8-3.3c-2-.3-3.5-2-3.5-4a4 4 0 0 1 3.6-3.2C7.8 10.8 7 9.4 7 8a5 5 0 0 1 5-6z"/>
+        <line x1="12" y1="10" x2="12" y2="14"/>
+        <line x1="10" y1="12" x2="14" y2="12"/>
+      </svg>
+    </div>
+    <div>
+      <div class="brand-name">STOCK BRAIN</div>
+      <div class="brand-sub">로또의 주식인사이트 · 장전 브리핑</div>
+    </div>
+  </div>
+  <div class="brand-right">
+    <div class="brand-date">2026년 6월 3일 화요일</div>
+    <div class="brand-time">07:40 장전</div>
   </div>
 </div>
 
 
-<!-- ── 오늘의 콜 ── -->
+<!-- ── 오늘의 판단 ── -->
 <div class="call">
   <div class="call-label">오늘의 판단</div>
   <div class="call-text">
@@ -424,10 +545,9 @@ body {
 </div>
 
 
-<!-- ── 탑픽 (결론 먼저) ── -->
+<!-- ── 탑픽 ── -->
 <div class="picks">
   <div class="section-label">오늘의 탑픽</div>
-
   <div class="pick-grid">
 
     <div class="pick-card s1">
@@ -470,45 +590,30 @@ body {
 </div>
 
 
-<!-- ── 왜 맞나 (수급 + 섹터) ── -->
+<!-- ── 수급 + 섹터 ── -->
 <div class="why">
-
   <div class="why-col">
     <div class="section-label">수급 방향</div>
-
     <div class="flow-row">
       <div class="flow-who">외국인</div>
-      <div class="flow-dir sell">
-        <span class="flow-arrow">↓</span>
-        18거래일 연속 매도
-      </div>
+      <div class="flow-dir sell"><span class="flow-arrow">↓</span>18거래일 연속 매도</div>
     </div>
     <div class="flow-row">
       <div class="flow-who">기관</div>
-      <div class="flow-dir sell">
-        <span class="flow-arrow">↓</span>
-        코스닥 순매도
-      </div>
+      <div class="flow-dir sell"><span class="flow-arrow">↓</span>코스닥 순매도</div>
     </div>
     <div class="flow-row">
       <div class="flow-who">개인</div>
-      <div class="flow-dir buy">
-        <span class="flow-arrow">↑</span>
-        반도체 집중 매수
-      </div>
+      <div class="flow-dir buy"><span class="flow-arrow">↑</span>반도체 집중 매수</div>
     </div>
     <div class="flow-row">
       <div class="flow-who">액티브 ETF</div>
-      <div class="flow-dir buy">
-        <span class="flow-arrow">↑</span>
-        반도체 비중 확대
-      </div>
+      <div class="flow-dir buy"><span class="flow-arrow">↑</span>반도체 비중 확대</div>
     </div>
   </div>
 
   <div class="why-col">
     <div class="section-label">섹터 온도</div>
-
     <div class="sector-row">
       <div class="sector-name">반도체</div>
       <div class="sector-badge hot">SUPER HOT</div>
@@ -530,7 +635,6 @@ body {
       <div class="sector-badge cool">COLD</div>
     </div>
   </div>
-
 </div>
 
 
@@ -571,7 +675,7 @@ body {
 
 <!-- ── 리스크 ── -->
 <div class="risk">
-  <div class="risk-icon">⚠️</div>
+  <div class="risk-icon">⚠</div>
   <div>
     <div class="risk-label">오늘 주의</div>
     <div class="risk-text">
@@ -583,7 +687,7 @@ body {
 
 <!-- ── 푸터 ── -->
 <div class="footer">
-  <div class="footer-brand">로또의 주식인사이트 · Stock Brain</div>
+  <div class="footer-brand">STOCK BRAIN</div>
   <div class="footer-note">본 브리핑은 투자 참고용입니다 · 투자 결정의 책임은 본인에게 있습니다</div>
 </div>
 
