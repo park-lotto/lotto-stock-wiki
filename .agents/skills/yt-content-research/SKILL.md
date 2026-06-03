@@ -212,4 +212,4 @@ wiki/log.md → 최근 관련 ingest 내용
 
 ## 다음 단계
 
-→ `yt-planner` 호출 (씬 구성, 기획서 작성)
+→ `yt-gemini-pipeline` 호출 (Claude 브리프 → Gemini 딥리서치 + 대본)
