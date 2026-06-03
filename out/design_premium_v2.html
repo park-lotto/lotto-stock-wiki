@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>아침 브리핑 — 프리미엄 리디자인 D / E</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600&family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #1a1a1a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 80px;
+  padding: 60px 20px;
+}
+
+.label-wrap {
+  text-align: center;
+  margin-bottom: 20px;
+}
+.label-main {
+  font-family: 'Geist', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: #555;
+}
+.label-sub {
+  font-family: 'Geist', sans-serif;
+  font-size: 12px;
+  color: #444;
+  margin-top: 6px;
+}
+
+
+/* ════════════════════════════════════════════════════════
+   D — TRUE PREMIUM DARK
+   영감: Bloomberg Wealth / Robinhood Gold / Stripe Dashboard
+   원칙: 타이포그래피가 디자인이다. 색은 신호에만 쓴다.
+════════════════════════════════════════════════════════ */
+
+.d {
+  width: 800px;
+  background: #080808;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 40px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.03);
+}
+
+/* 헤더 */
+.d-header {
+  padding: 32px 36px 28px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  position: relative;
+}
+.d-header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+.d-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.d-brand-name {
+  font-family: 'Instrument Serif', serif;
+  font-size: 15px;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.5px;
+}
+.d-brand-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  background: #d4a853;
+  border-radius: 50%;
+  margin: 0 8px;
+  vertical-align: middle;
+}
+.d-brand-service {
+  font-family: 'Geist', sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 4px;
+  color: rgba(212,168,83,0.5);
+  text-transform: uppercase;
+}
+.d-datetime {
+  text-align: right;
+}
+.d-date-big {
+  font-family: 'Instrument Serif', serif;
+  font-size: 13px;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 1px;
+}
+.d-time {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  color: rgba(212,168,83,0.4);
+  margin-top: 4px;
+}
+
+/* 메인 헤드라인 */
+.d-headline {
+  font-family: 'Instrument Serif', serif;
+  font-size: 38px;
+  line-height: 1.1;
+  color: #f5f0e8;
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+}
+.d-headline em {
+  font-style: italic;
+  color: #d4a853;
+}
+.d-subline {
+  font-family: 'Geist', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.3);
+  line-height: 1.6;
+}
+
+/* 매크로 스트립 */
+.d-macro {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+.d-stat {
+  padding: 20px 28px;
+  border-right: 1px solid rgba(255,255,255,0.04);
+  position: relative;
+}
+.d-stat:last-child { border-right: none; }
+.d-stat-label {
+  font-family: 'Geist', sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+  color: rgba(255,255,255,0.18);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.d-stat-val {
+  font-family: 'Instrument Serif', serif;
+  font-size: 28px;
+  color: #f0ece4;
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+.d-stat-chg {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.d-stat-chg.up { color: #4ade80; }
+.d-stat-chg.dn { color: #f87171; }
+.d-stat-chg.neu { color: rgba(255,255,255,0.25); }
+.d-stat-chg::before {
+  content: '';
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* 바디 */
+.d-body {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+.d-col {
+  padding: 28px 36px;
+}
+.d-col + .d-col {
+  border-left: 1px solid rgba(255,255,255,0.04);
+}
+
+.d-col-title {
+  font-family: 'Geist', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: rgba(212,168,83,0.4);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.d-col-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(212,168,83,0.1);
+}
+
+/* 섹터 */
+.d-sector-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  gap: 14px;
+}
+.d-sector-row:last-child { border-bottom: none; }
+.d-sector-rank {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  color: rgba(255,255,255,0.12);
+  width: 16px;
+  flex-shrink: 0;
+}
+.d-sector-name {
+  font-family: 'Geist', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.75);
+  flex: 1;
+}
+.d-sector-bar {
+  width: 80px;
+  height: 2px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 1px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.d-sector-bar-fill {
+  height: 100%;
+  border-radius: 1px;
+}
+.d-sector-bar-fill.hot { background: #f87171; width: 92%; }
+.d-sector-bar-fill.warm { background: #fb923c; width: 68%; }
+.d-sector-bar-fill.mid { background: #facc15; width: 44%; }
+.d-sector-bar-fill.cool { background: rgba(255,255,255,0.15); width: 18%; }
+.d-sector-sig {
+  font-family: 'Geist', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  width: 32px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.d-sector-sig.hot { color: #f87171; }
+.d-sector-sig.warm { color: #fb923c; }
+.d-sector-sig.mid { color: #facc15; }
+.d-sector-sig.cool { color: rgba(255,255,255,0.2); }
+
+/* 탑픽 */
+.d-pick {
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.d-pick:last-child { border-bottom: none; }
+.d-pick-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+.d-pick-name {
+  font-family: 'Instrument Serif', serif;
+  font-size: 18px;
+  color: #f0ece4;
+  letter-spacing: 0.2px;
+}
+.d-pick-score {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 4px;
+}
+.d-pick-score.s1 {
+  background: rgba(248,113,113,0.12);
+  color: #f87171;
+  border: 1px solid rgba(248,113,113,0.18);
+}
+.d-pick-score.s2 {
+  background: rgba(251,146,60,0.12);
+  color: #fb923c;
+  border: 1px solid rgba(251,146,60,0.18);
+}
+.d-pick-meta {
+  font-family: 'Geist', sans-serif;
+  font-size: 11px;
+  color: rgba(255,255,255,0.25);
+  line-height: 1.5;
+}
+.d-pick-meta span {
+  color: rgba(212,168,83,0.5);
+  margin-right: 6px;
+}
+
+/* 푸터 */
+.d-footer {
+  padding: 16px 36px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.d-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.d-footer-logo {
+  font-family: 'Instrument Serif', serif;
+  font-size: 12px;
+  color: rgba(212,168,83,0.3);
+}
+.d-footer-note {
+  font-family: 'Geist', sans-serif;
+  font-size: 10px;
+  color: rgba(255,255,255,0.1);
+}
+
+
+/* ════════════════════════════════════════════════════════
+   E — PREMIUM LIGHT
+   영감: FT Weekend / Morning Brew / Substack Premium
+   원칙: 크림 배경, 강한 타이포 위계, 색은 딱 한 가지만
+════════════════════════════════════════════════════════ */
+
+.e {
+  width: 800px;
+  background: #faf9f6;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #e8e4dc;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.06);
+}
+
+/* 상단 룰 라인 */
+.e-top-rule {
+  height: 3px;
+  background: #1a1a1a;
+}
+
+/* 마스트헤드 */
+.e-masthead {
+  padding: 24px 36px 20px;
+  border-bottom: 1px solid #e0dbd0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.e-brand-name {
+  font-family: 'Lora', serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+  letter-spacing: -0.3px;
+}
+.e-brand-sub {
+  font-family: 'Geist', sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  color: #999;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+.e-meta-right {
+  text-align: right;
+}
+.e-date {
+  font-family: 'Lora', serif;
+  font-size: 13px;
+  color: #444;
+}
+.e-time {
+  font-family: 'Geist', sans-serif;
+  font-size: 10px;
+  color: #aaa;
+  margin-top: 3px;
+}
+
+/* 헤드라인 배너 */
+.e-hero {
+  padding: 28px 36px 24px;
+  border-bottom: 2px solid #1a1a1a;
+  background: #f5f3ee;
+}
+.e-hero-label {
+  font-family: 'Geist', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: #999;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.e-hero-title {
+  font-family: 'Lora', serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1.15;
+  letter-spacing: -0.5px;
+}
+.e-hero-title em {
+  font-style: italic;
+  color: #b5451b;
+}
+.e-hero-desc {
+  font-family: 'Geist', sans-serif;
+  font-size: 12px;
+  color: #888;
+  margin-top: 10px;
+  line-height: 1.6;
+}
+
+/* 매크로 */
+.e-macro {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-bottom: 1px solid #e0dbd0;
+}
+.e-stat {
+  padding: 18px 24px;
+  border-right: 1px solid #e8e4dc;
+}
+.e-stat:last-child { border-right: none; }
+.e-stat-label {
+  font-family: 'Geist', sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: #bbb;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.e-stat-val {
+  font-family: 'Lora', serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1;
+}
+.e-stat-chg {
+  font-family: 'Geist', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  margin-top: 5px;
+}
+.e-stat-chg.up { color: #16a34a; }
+.e-stat-chg.dn { color: #dc2626; }
+.e-stat-chg.neu { color: #999; }
+
+/* 바디 */
+.e-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.e-col {
+  padding: 28px 36px;
+}
+.e-col + .e-col {
+  border-left: 1px solid #e8e4dc;
+}
+.e-col-title {
+  font-family: 'Geist', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: #aaa;
+  text-transform: uppercase;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #e0dbd0;
+  margin-bottom: 4px;
+}
+
+/* 섹터 */
+.e-sector-row {
+  display: flex;
+  align-items: center;
+  padding: 11px 0;
+  border-bottom: 1px solid #f0ece4;
+  gap: 12px;
+}
+.e-sector-row:last-child { border-bottom: none; }
+.e-sector-name {
+  font-family: 'Geist', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #2a2a2a;
+  flex: 1;
+}
+.e-temp-pill {
+  font-family: 'Geist', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+.e-temp-pill.hot { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+.e-temp-pill.warm { background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; }
+.e-temp-pill.mid { background: #fefce8; color: #ca8a04; border: 1px solid #fef08a; }
+.e-temp-pill.cool { background: #f8fafc; color: #94a3b8; border: 1px solid #e2e8f0; }
+
+/* 탑픽 */
+.e-pick {
+  padding: 14px 0;
+  border-bottom: 1px solid #f0ece4;
+}
+.e-pick:last-child { border-bottom: none; }
+.e-pick-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 5px;
+}
+.e-pick-name {
+  font-family: 'Lora', serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+.e-pick-badge {
+  font-family: 'Geist', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  padding: 3px 9px;
+  border-radius: 3px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.e-pick-badge.top { background: #1a1a1a; color: #faf9f6; }
+.e-pick-badge.cand { background: #f5f3ee; color: #666; border: 1px solid #ddd; }
+.e-pick-reason {
+  font-family: 'Geist', sans-serif;
+  font-size: 11px;
+  color: #888;
+  line-height: 1.5;
+}
+.e-pick-reason b { color: #b5451b; font-weight: 600; }
+
+/* 오늘의 시그널 */
+.e-signal-box {
+  margin-top: 20px;
+  background: #1a1a1a;
+  border-radius: 6px;
+  padding: 14px 18px;
+}
+.e-signal-label {
+  font-family: 'Geist', sans-serif;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.3);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.e-signal-text {
+  font-family: 'Lora', serif;
+  font-size: 13px;
+  font-style: italic;
+  color: rgba(255,255,255,0.7);
+  line-height: 1.6;
+}
+
+/* 푸터 */
+.e-footer {
+  padding: 14px 36px;
+  border-top: 2px solid #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f5f3ee;
+}
+.e-footer-brand {
+  font-family: 'Lora', serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+}
+.e-footer-note {
+  font-family: 'Geist', sans-serif;
+  font-size: 10px;
+  color: #bbb;
+}
+
+</style>
+</head>
+<body>
+
+<!-- ════ OPTION D ════ -->
+<div>
+  <div class="label-wrap">
+    <div class="label-main">D — True Premium Dark</div>
+    <div class="label-sub">Bloomberg Wealth · 골드 액센트 · 타이포그래피가 디자인</div>
+  </div>
+  <div class="d">
+    <div class="d-header">
+      <div class="d-header-top">
+        <div class="d-brand">
+          <div class="d-brand-name">로또의 주식인사이트<span class="d-brand-dot"></span></div>
+          <div class="d-brand-service">Morning Intelligence · Stock Brain</div>
+        </div>
+        <div class="d-datetime">
+          <div class="d-date-big">2026년 6월 3일 화요일</div>
+          <div class="d-time">07:40 KST · 장전 브리핑</div>
+        </div>
+      </div>
+      <div class="d-headline">반도체 <em>슈퍼사이클</em><br>재가동 신호</div>
+      <div class="d-subline">글로벌 AI 인프라 투자 재가속 · SOX 지수 사상 최고 경신 · 국내 수급 빈집 해소 국면</div>
+    </div>
+
+    <div class="d-macro">
+      <div class="d-stat">
+        <div class="d-stat-label">달러 / 원</div>
+        <div class="d-stat-val">1,387</div>
+        <div class="d-stat-chg dn">4.2원 하락</div>
+      </div>
+      <div class="d-stat">
+        <div class="d-stat-label">S&P 500</div>
+        <div class="d-stat-val">5,784</div>
+        <div class="d-stat-chg up">+0.62% 상승</div>
+      </div>
+      <div class="d-stat">
+        <div class="d-stat-label">VIX</div>
+        <div class="d-stat-val">17.3</div>
+        <div class="d-stat-chg neu">안정 구간</div>
+      </div>
+      <div class="d-stat">
+        <div class="d-stat-label">야간 선물</div>
+        <div class="d-stat-val">+0.4%</div>
+        <div class="d-stat-chg up">상승 우세</div>
+      </div>
+    </div>
+
+    <div class="d-body">
+      <div class="d-col">
+        <div class="d-col-title">섹터 온도</div>
+        <div class="d-sector-row">
+          <div class="d-sector-rank">01</div>
+          <div class="d-sector-name">반도체</div>
+          <div class="d-sector-bar"><div class="d-sector-bar-fill hot"></div></div>
+          <div class="d-sector-sig hot">🔴</div>
+        </div>
+        <div class="d-sector-row">
+          <div class="d-sector-rank">02</div>
+          <div class="d-sector-name">자동차 · 로봇</div>
+          <div class="d-sector-bar"><div class="d-sector-bar-fill hot"></div></div>
+          <div class="d-sector-sig hot">🔴</div>
+        </div>
+        <div class="d-sector-row">
+          <div class="d-sector-rank">03</div>
+          <div class="d-sector-name">네트워크 장비</div>
+          <div class="d-sector-bar"><div class="d-sector-bar-fill warm"></div></div>
+          <div class="d-sector-sig warm">🟠</div>
+        </div>
+        <div class="d-sector-row">
+          <div class="d-sector-rank">04</div>
+          <div class="d-sector-name">전력 · 에너지</div>
+          <div class="d-sector-bar"><div class="d-sector-bar-fill mid"></div></div>
+          <div class="d-sector-sig mid">🟡</div>
+        </div>
+        <div class="d-sector-row">
+          <div class="d-sector-rank">05</div>
+          <div class="d-sector-name">2차 전지</div>
+          <div class="d-sector-bar"><div class="d-sector-bar-fill cool"></div></div>
+          <div class="d-sector-sig cool">⚪</div>
+        </div>
+      </div>
+
+      <div class="d-col">
+        <div class="d-col-title">오늘의 탑픽</div>
+        <div class="d-pick">
+          <div class="d-pick-top">
+            <div class="d-pick-name">코리아써키트</div>
+            <div class="d-pick-score s1">🔴 탑픽 8/9</div>
+          </div>
+          <div class="d-pick-meta"><span>섹터</span>반도체 패키지 &nbsp;·&nbsp; <span>빈집</span>A등급 완전빈집</div>
+        </div>
+        <div class="d-pick">
+          <div class="d-pick-top">
+            <div class="d-pick-name">제주반도체</div>
+            <div class="d-pick-score s1">🔴 탑픽 7/9</div>
+          </div>
+          <div class="d-pick-meta"><span>이벤트</span>투경 해제 D-1 &nbsp;·&nbsp; <span>빈집</span>B등급</div>
+        </div>
+        <div class="d-pick">
+          <div class="d-pick-top">
+            <div class="d-pick-name">에스비비테크</div>
+            <div class="d-pick-score s2">🟠 후보 5/9</div>
+          </div>
+          <div class="d-pick-meta"><span>섹터</span>HBM 관련 &nbsp;·&nbsp; <span>커플링</span>미국 강세 연동</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-footer">
+      <div class="d-footer-left">
+        <div class="d-footer-logo">로또의 주식인사이트</div>
+      </div>
+      <div class="d-footer-note">본 브리핑은 투자 참고용입니다 · 투자 결정의 책임은 본인에게 있습니다</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════ OPTION E ════ -->
+<div>
+  <div class="label-wrap">
+    <div class="label-main">E — Premium Light</div>
+    <div class="label-sub">FT Weekend · Morning Brew · 크림 배경 + 강한 타이포</div>
+  </div>
+  <div class="e">
+    <div class="e-top-rule"></div>
+
+    <div class="e-masthead">
+      <div>
+        <div class="e-brand-name">로또의 주식인사이트</div>
+        <div class="e-brand-sub">Morning Intelligence · Stock Brain</div>
+      </div>
+      <div class="e-meta-right">
+        <div class="e-date">2026년 6월 3일 화요일</div>
+        <div class="e-time">07:40 KST · 장전 브리핑</div>
+      </div>
+    </div>
+
+    <div class="e-hero">
+      <div class="e-hero-label">오늘의 메인 테마</div>
+      <div class="e-hero-title">반도체 슈퍼사이클,<br><em>다시 불붙었다</em></div>
+      <div class="e-hero-desc">SOX 지수 사상 최고 경신 · AI 인프라 투자 재가속 · 국내 수급 빈집 해소 국면에서 탑픽 3종목</div>
+    </div>
+
+    <div class="e-macro">
+      <div class="e-stat">
+        <div class="e-stat-label">달러 / 원</div>
+        <div class="e-stat-val">1,387</div>
+        <div class="e-stat-chg dn">▼ 4.2원 하락</div>
+      </div>
+      <div class="e-stat">
+        <div class="e-stat-label">S&P 500</div>
+        <div class="e-stat-val">5,784</div>
+        <div class="e-stat-chg up">▲ +0.62%</div>
+      </div>
+      <div class="e-stat">
+        <div class="e-stat-label">VIX</div>
+        <div class="e-stat-val">17.3</div>
+        <div class="e-stat-chg neu">안정 구간</div>
+      </div>
+      <div class="e-stat">
+        <div class="e-stat-label">야간 선물</div>
+        <div class="e-stat-val">+0.4%</div>
+        <div class="e-stat-chg up">▲ 상승 우세</div>
+      </div>
+    </div>
+
+    <div class="e-body">
+      <div class="e-col">
+        <div class="e-col-title">섹터 온도</div>
+        <div class="e-sector-row">
+          <div class="e-sector-name">반도체</div>
+          <div class="e-temp-pill hot">SUPER HOT 🔴</div>
+        </div>
+        <div class="e-sector-row">
+          <div class="e-sector-name">자동차 · 로봇</div>
+          <div class="e-temp-pill hot">HOT 🔴</div>
+        </div>
+        <div class="e-sector-row">
+          <div class="e-sector-name">네트워크 장비</div>
+          <div class="e-temp-pill warm">WARM 🟠</div>
+        </div>
+        <div class="e-sector-row">
+          <div class="e-sector-name">전력 · 에너지</div>
+          <div class="e-temp-pill mid">MID 🟡</div>
+        </div>
+        <div class="e-sector-row">
+          <div class="e-sector-name">2차 전지</div>
+          <div class="e-temp-pill cool">COLD ⚪</div>
+        </div>
+
+        <div class="e-signal-box">
+          <div class="e-signal-label">오늘의 시그널</div>
+          <div class="e-signal-text">"SOX +1.4% · 야간선물 상승 · 수급빈집 해소 — 세 가지가 같은 방향 가리킨다"</div>
+        </div>
+      </div>
+
+      <div class="e-col">
+        <div class="e-col-title">오늘의 탑픽</div>
+        <div class="e-pick">
+          <div class="e-pick-header">
+            <div class="e-pick-name">코리아써키트</div>
+            <div class="e-pick-badge top">🔴 탑픽</div>
+          </div>
+          <div class="e-pick-reason">반도체 패키지 · 빈집 A등급 완전빈집<br><b>HBM 수혜 직접 수혜주</b> · 8/9점</div>
+        </div>
+        <div class="e-pick">
+          <div class="e-pick-header">
+            <div class="e-pick-name">제주반도체</div>
+            <div class="e-pick-badge top">🔴 탑픽</div>
+          </div>
+          <div class="e-pick-reason">투경 해제 D-1 · 빈집 B등급<br><b>내일 해제 시 갭업 가능성</b> · 7/9점</div>
+        </div>
+        <div class="e-pick">
+          <div class="e-pick-header">
+            <div class="e-pick-name">에스비비테크</div>
+            <div class="e-pick-badge cand">🟠 후보</div>
+          </div>
+          <div class="e-pick-reason">HBM 관련주 · 미국 강세 커플링<br>빈집 B등급 · 5/9점</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="e-footer">
+      <div class="e-footer-brand">로또의 주식인사이트</div>
+      <div class="e-footer-note">본 브리핑은 투자 참고용입니다 · 투자 결정의 책임은 본인에게 있습니다</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

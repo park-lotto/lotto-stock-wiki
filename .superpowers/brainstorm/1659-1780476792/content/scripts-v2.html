@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0d1117; color: #e6edf3; font-family: -apple-system, sans-serif; }
+  .tabs { display: flex; border-bottom: 1px solid #30363d; background: #161b22; }
+  .tab { padding: 12px 20px; cursor: pointer; font-size: 14px; color: #8b949e; border-bottom: 2px solid transparent; }
+  .tab.active { color: #e6edf3; border-bottom-color: #58a6ff; }
+  .tab:hover { color: #e6edf3; background: #1c2128; }
+  .badge { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+  .badge-urgent { background: #f8514929; color: #f85149; }
+  .badge-ok { background: #3fb95029; color: #3fb950; }
+  .content { display: none; max-width: 860px; margin: 0 auto; }
+  .content.active { display: block; }
+  .meta { padding: 14px 20px; background: #161b22; border-bottom: 1px solid #21262d; font-size: 13px; color: #8b949e; display: flex; flex-wrap: wrap; gap: 20px; }
+  .meta strong { color: #e6edf3; }
+  .ratio-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin: 12px 20px; }
+  .ratio-info { padding: 0px 20px 12px; font-size: 12px; color: #8b949e; display: flex; gap: 16px; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+  .scene { border: 1px solid #21262d; border-radius: 6px; margin: 8px 16px; }
+  .scene-head { background: #161b22; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-radius: 6px; }
+  .scene-head:hover { background: #1c2128; }
+  .scene-title { font-size: 14px; font-weight: 600; }
+  .scene-meta { display: flex; gap: 10px; align-items: center; font-size: 12px; color: #8b949e; }
+  .type-badge { padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+  .type-info { background: #1a3a4a; color: #79c0ff; }
+  .type-indirect { background: #2d2a1a; color: #e3b341; }
+  .type-cta { background: #2a1a3a; color: #bc8cff; }
+  .scene-body { padding: 14px; display: none; }
+  .scene-body.open { display: block; }
+  .script { line-height: 2.2; font-size: 15px; white-space: pre-wrap; }
+  .pause { color: #58a6ff; font-size: 12px; font-style: italic; }
+  .kws { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .kw { background: #1a3a4a; color: #79c0ff; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+  .expand-btn { padding: 6px 16px; font-size: 12px; color: #58a6ff; cursor: pointer; text-align: right; }
+</style>
+</head>
+<body>
+
+<div class="tabs">
+  <div class="tab" onclick="show('b')" id="tab-b">B. 금양 투경 교육 <span class="badge badge-urgent">⚠️ 6/7</span></div>
+  <div class="tab" onclick="show('a')" id="tab-a">A. 시황보는시대끝났다 <span class="badge badge-ok">상시</span></div>
+  <div class="tab" onclick="show('c')" id="tab-c">C. 수급빈집 역발상 <span class="badge badge-ok">상시</span></div>
+</div>
+
+<!-- B -->
+<div class="content" id="content-b">
+  <div class="meta">
+    <span><strong>제목</strong> "금양 상폐 — 투자경고 제도, 이제라도 알아두세요"</span>
+    <span><strong>시간</strong> 9분~10분</span>
+    <span style="color:#f85149"><strong>업로드</strong> 6월 6~7일</span>
+  </div>
+  <div class="ratio-bar">
+    <div style="width:72%;background:#58a6ff"></div>
+    <div style="width:17%;background:#e3b341"></div>
+    <div style="width:6%;background:#bc8cff"></div>
+    <div style="width:5%;background:#30363d"></div>
+  </div>
+  <div class="ratio-info">
+    <span><span class="dot" style="background:#58a6ff"></span>정보 72%</span>
+    <span><span class="dot" style="background:#e3b341"></span>간접 17%</span>
+    <span><span class="dot" style="background:#bc8cff"></span>CTA 6%</span>
+  </div>
+  <div class="expand-btn" onclick="expandAll('b')">전체 펼치기 ▾</div>
+
+  <div class="scene">
+    <div class="scene-head" onclick="toggle(this)">
+      <span class="scene-title">S1. 위로 훅</span>
+      <div class="scene-meta"><span class="type-badge type-info">정보</span><span>0:00~0:30</span></div>
+    </div>
+    <div class="scene-body open">
+      <div class="script">금양 투자하셨던 분들.
+
+[쉼]
+
+정말 힘드셨을 겁니다.
+
+[긴쉼]
+
+오늘은 결과를 되짚는 게 아니에요.
+
+[쉼]
+
+앞으로는 이런 상황을 미리 알 수 있도록 —
+투자경고 제도에 대해 제대로 설명드리려고 합니다.
+
+[긴쉼]
+
+이 제도를 모르셨던 분 정말 많으실 거예요.
+잘 안 알려져 있거든요.
+
+[쉼]
+
+오늘 끝까지 보시면 — 앞으로는 이 신호가 보일 겁니다.</div>
+      <div class="kws"><span class="kw">힘드셨을 겁니다</span><span class="kw">앞으로를 위한</span><span class="kw">잘 안 알려져 있거든요</span></div>
+    </div>
+  </div>
+
+  <div class="scene">
+    <div class="scene-head" onclick="toggle(this)">
+      <span class="scene-title">S2. 금양 팩트</span>
+      <div class="scene-meta"><span class="type-badge type-info">정보</span><span>0:30~1:30</span></div>
+    </div>
+    <div class="scene-body">
+      <div class="script">금양. 한때 2차전지 대장주였습니다.
+2023년에 19만원까지 올랐어요.
+
+[쉼]
+
+그런데 감사의견 거절이 2년 연속으로 나왔습니다.
+2024년. 그리고 2025년.
+
+[긴쉼]
+
+감사의견 거절이 뭐냐면요.
+회계법인이 이 회사의 재무 상황을 제대로 확인할 수 없다는 뜻이에요.
+KRX 규정상 이게 2년 연속이면 상장폐지 요건이 됩니다.
+
+[쉼]
+
+5월 20일에 상폐 결정이 났고.
+6월 8일 최종 상폐가 예정되어 있습니다.
+
+[쉼]
+
+24만 소액주주분들이 이 상황에 놓여 계세요.</div>
+      <div class="kws"><span class="kw">감사의견 거절 2년</span><span class="kw">6월 8일</span><span class="kw">24만 소액주주</span></div>
+    </div>
+  </div>
+
+  <div class="scene">
+    <div class="scene-head" onclick="toggle(this)">
+      <span class="scene-title">S3. 투경 제도란?</span>
+      <div class="scene-meta"><span class="type-badge type-info">정보</span><span>1:30~3:00</span></div>
+    </div>
+    <div class="scene-body">
+      <div class="script">투자경고 제도에 대해 설명드릴게요.
+
+[쉼]
+
+KRX, 한국거래소에서 운영하는 제도예요.
+
+주가가 비정상적으로 빠르게 오르는 종목에 대해
+거래소가 공식적으로 "주의가 필요하다"는 신호를 보내는 겁니다.
+
+[긴쉼]
+
+이 제도가 생긴 이유가 있어요.
+
+[쉼]
+
+실체 없이 급등하는 종목에
+일반 투자자들이 뒤늦게 몰려들어
+큰 손실을 보는 경우가 반복됐거든요.
+
+그래서 거래소가 경보 역할을 하는 거예요.
+
+[긴쉼]
+
+투경이 지정되면 어떻게 되냐면요.
+
+[쉼]
+
+매매 자체는 됩니다.
+하지만 신용매수가 안 돼요.
+대출받아서 살 수 없어요.
+
+[쉼]
+
+그러면 레버리지를 쓰고 있던 자금들이 빠져나가야 하거든요.
+이게 자연스럽게 가격에 영향을 줘요.</div>
+      <div class="kws"><span class="kw">KRX 경보</span><span class="kw">실체 없는 급등</span><span class="kw">신용매수 불가</span></div>
+    </div>
+  </div>
+
+  <div class="scene">
+    <div class="scene-head" onclick="toggle(this)">
+      <span class="scene-title">S4. 급등형 vs 불건전형</span>
+      <div class="scene-meta"><span class="type-badge type-info">정보</span><span>3:00~4:30</span></div>
+    </div>
+    <div class="scene-body">
+      <div class="script">투경에는 두 가지 종류가 있어요.
+
+[긴쉼]
+
+첫 번째. 급등형.
+주가가 5일 안에 60% 이상 올랐거나
+15일 안에 100% 이상 올랐을 때예요.
+빠르게 많이 올랐다는 거예요.
+
+[긴쉼]
+
+두 번째. 불건전형.
+급등한 데다가 특정 계좌가 이 주식 거래를 주도한 흔적이 있을 때예요.
+
+[쉼]
+
+공시에 지정 사유가 적혀 있어요.
+"불건전"이라는 단어가 들어가 있으면 두 번째 유형이에요.
+
+[긴쉼]
+
+왜 이걸 구분해야 하냐면요.
+
+[쉼]
+
+나중에 해제 조건이 달라지거든요.
+불건전형은 기준이 더 엄격해요.
+
+[쉼]
+
+급등형은 T-5일 종가 기준으로 160%,
+T-15일 종가 기준으로 200% 아래로 내려와야 해제가 됩니다.
+
+불건전형은 같은 기준이 145%, 175%예요.
+조건이 더 낮아요.</div>
+      <div class="kws"><span class="kw">급등형</span><span class="kw">불건전형</span><span class="kw">T-5 160%</span><span class="kw">T-15 200%</span></div>
+    </div>
+  </div>
+
+  <div class="scene">
+    <div class="scene-head" onclick="toggle(this)">
+      <span class="scene-title">S5. 해제 공식 (KRX 공식 규정)</span>
+      <div class="scene-meta"><span class="type-badge type-info">정보</span><span>4:30~6:00</span></div>
+    </div>
+    <div class="scene-body">
+      <div class="script">투경 해제 조건을 설명드릴게요.
+
+[쉼]
+
+세 가지 조건이 동시에 충족돼야 다음 영업일 해제됩니다.
+
+[긴쉼]
+
+첫 번째.
+오늘 종가가 5거래일 전 종가의 160% 미만이어야 해요.
+
+[쉼]
+
+두 번째.
+오늘 종가가 15거래일 전 종가의 200% 미만이어야 해요.
+
+[쉼]
+
+세 번째.
+오늘이 최근 15거래일 중 최고가가 아니어야 해요.
+
+[긴쉼]
+
+이 세 가지가 모두 충족되면 — 다음 영업일 해제됩니다.
+
+[쉼]
+
+중요한 건 이 기준이 매일 다르다는 거예요.
+"T-5일 전 종가"가 오늘 기준으로 계속 바뀌거든요.
+
+[긴쉼]
+
+그래서 해제 예측을 하려면
+매일 계산을 새로 해야 해요.</div>
+      <div class="kws"><span class="kw">T-5 160%</span><span class="kw">T-15 200%</span><span class="kw">15일 최고가 아님</span><span class="kw">매일 새로 계산</span></div>
+    </div>
+  </div>
+
+  <div class="scene">
+    <div class="scene-head" onclick="toggle(this)">
+      <span class="scene-title">S6. 실제 해제 사례 데이터</span>
+      <div class="scene-meta"><span class="type-badge type-info">정보</span><span>6:00~7:00</span></div>
+    </div>
+    <div class="scene-body">
+      <div class="script">최근 실제로 해제된 종목들 데이터 보여드릴게요.
+
+[쉼]
+
+지난달 말.
+
+민테크, 미래반도체, TPC로보틱스.
+이 세 종목이 5월 29일에 해제 조건을 충족했어요.
+다음 영업일인 6월 1일에 실제로 해제됐습니다.
+
+[쉼]
+
+네오티스도 마찬가지예요.
+불건전형이었는데 — 5월 29일 충족, 6월 1일 해제.
+
+[긴쉼]
+
+코리아써키트, 제주반도체는 6월 3일 해제됐어요.
+
+[쉼]
+
+이 데이터를 보시면 — 해제 조건은 계산이 가능한 공식이에요.
+공시에 있는 숫자로 직접 확인할 수 있어요.
+
+[긴쉼]
+
+KIND 사이트에 가시면 — 투경 지정 공시에 지정 사유와 기준가가 나와 있어요.
+거기서 T-5, T-15 기준을 직접 계산해볼 수 있어요.</div>
+      <div class="kws"><span class="kw">민테크 미래반도체 TPC로보틱스</span><span class="kw">6/1 해제</span><span class="kw">KIND 공시</span></div>
+    </div>
+  </div>
+
+  <div class="scene">
+    <div class="scene-head" onclick="toggle(this)">
+      <span class="scene-title">S7. 저는 이렇게 확인합니다 (간접)</span>
+      <div class="scene-meta"><span class="type-badge type-indirect">간접</span><span>7:00~8:30</span></div>
+    </div>
+    <div class="scene-body">
+      <div class="script">저는 이 투경 정보를 어떻게 활용하냐고요.
+
+[쉼]
+
+매일 KIND 사이트에서 현재 투경 지정 종목을 확인하고
+해제 조건에 맞는 계산식을 직접 적용해봐요.
+
+[긴쉼]
+
+이걸 하는 이유는 두 가지예요.
+
+[쉼]
+
+첫 번째. 위험 회피.
+현재 투경 지정된 종목을 알아야 — 거기 들어가는 걸 피할 수 있거든요.
+신용 막혀있는 상태에서 주가 방향을 예측하기 더 어려우니까요.
+
+[쉼]
+
+두 번째. 해제 타이밍 파악.
+해제가 가까워진 종목을 미리 알면 — 수급이 어떻게 바뀌는지 볼 수 있어요.
+
+[긴쉼]
+
+다만 한 가지 주의하실 게 있어요.
+
+[쉼]
+
+투경 해제됐다고 바로 들어가는 건 위험해요.
+해제 후에도 10거래일 정도는 재지정 위험 구간이에요.
+그 기간 동안 주가가 다시 급등하면 — 다시 투경이 걸릴 수 있거든요.
+
+[쉼]
+
+해제됐다면 — 수급이 정상화되는지를 며칠 더 지켜보고
+그 다음에 판단하는 게 좋아요.</div>
+      <div class="kws"><span class="kw">KIND 공시 직접 확인</span><span class="kw">위험 회피</span><span class="kw">10거래일 재지정 위험</span></div>
+    </div>
+  </div>
+
+  <div class="scene">
+    <div class="scene-head" onclick="toggle(this)">
+      <span class="scene-title">S8. CTA</span>
+      <div class="scene-meta"><span class="type-badge type-cta">CTA</span><span>8:30~9:00</span></div>
+    </div>
+    <div class="scene-body">
+      <div class="script">오늘 투자경고 제도 — 어떻게 작동하는지, 해제 조건이 뭔지까지 설명드렸어요.
+
+[쉼]
+
+이 내용 도움이 되셨다면 — 주변에도 알려주세요.
+아직 모르는 분들이 정말 많거든요.
+
+[긴쉼]
+
+다음 편에서는 — 투경 지정 전 나타나는 신호들을 얘기해볼게요.
+미리 알 수 있는 패턴들이 있어요.
+
+구독하고 알림 켜두시면 바로 볼 수 있어요.</div>
+      <div class="kws"><span class="kw">주변에도 알려주세요</span><span class="kw">지정 전 신호</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- A -->
+<div class="content" id="content-a">
+  <div class="meta">
+    <span><strong>제목</strong> "아침마다 시황 챙기는 사람들에게 미안한 말"</span>
+    <span><strong>시간</strong> 9분 15초</span>
+    <span style="color:#3fb950"><strong>업로드</strong> 상시</span>
+  </div>
+  <div class="ratio-bar">
+    <div style="width:81%;background:#58a6ff"></div>
+    <div style="width:16%;background:#e3b341"></div>
+    <div style="width:8%;background:#bc8cff"></div>
+  </div>
+  <div class="ratio-info">
+    <span><span class="dot" style="background:#58a6ff"></span>정보 81%</span>
+    <span><span class="dot" style="background:#e3b341"></span>간접 16%</span>
+    <span><span class="dot" style="background:#bc8cff"></span>CTA 8%</span>
+  </div>
+  <div class="expand-btn" onclick="expandAll('a')">전체 펼치기 ▾</div>
+  <div class="scene"><div class="scene-head" onclick="toggle(this)"><span class="scene-title">S1~S6 정보 구간 (81%)</span><div class="scene-meta"><span class="type-badge type-info">정보</span><span>0:00~7:00</span></div></div>
+  <div class="scene-body open"><div class="script" style="color:#8b949e">정보 과잉 심리학 + 좋은 투자 정보 조건 3가지 + 수급 데이터 보는 법
+내 시스템·서비스명 전 씬 0회 — 순수 교육 콘텐츠
+
+VS Code에서 yt_시황보는시대끝났다_대본v2.md 전문 확인</div></div></div>
+  <div class="scene"><div class="scene-head" onclick="toggle(this)"><span class="scene-title">S7 간접 (16%)</span><div class="scene-meta"><span class="type-badge type-indirect">간접</span><span>7:00~8:30</span></div></div>
+  <div class="scene-body"><div class="script">저는 아침마다 이 원칙대로 해요.
+1층(매크로) → 2층(섹터) → 3층(수급 빈집)
+자는 동안 미리 처리해두는 방식을 씁니다. ← 시스템명 없음</div></div></div>
+</div>
+
+<!-- C -->
+<div class="content" id="content-c">
+  <div class="meta">
+    <span><strong>제목</strong> "코스피 8,500 다들 비싸다는데 — 외국인·기관이 아직 안 들어간 종목이 있습니다"</span>
+    <span><strong>시간</strong> 8분 30초</span>
+    <span style="color:#3fb950"><strong>업로드</strong> 상시</span>
+  </div>
+  <div class="ratio-bar">
+    <div style="width:74%;background:#58a6ff"></div>
+    <div style="width:18%;background:#e3b341"></div>
+    <div style="width:6%;background:#bc8cff"></div>
+  </div>
+  <div class="ratio-info">
+    <span><span class="dot" style="background:#58a6ff"></span>정보 74%</span>
+    <span><span class="dot" style="background:#e3b341"></span>간접 18%</span>
+    <span><span class="dot" style="background:#bc8cff"></span>CTA 6%</span>
+  </div>
+  <div class="expand-btn" onclick="expandAll('c')">전체 펼치기 ▾</div>
+  <div class="scene"><div class="scene-head" onclick="toggle(this)"><span class="scene-title">S1~S6 정보 구간 (74%)</span><div class="scene-meta"><span class="type-badge type-info">정보</span><span>0:00~7:00</span></div></div>
+  <div class="scene-body open"><div class="script" style="color:#8b949e">가격 지표 vs 수급 지표 + 외국인·기관 개념 + 오실레이터 읽는 법 + 빈집 원리 + HTS 보는 법
+욕조 비유로 수급빈집 원리 설명 — 내 시스템·서비스명 전 씬 0회
+
+VS Code에서 yt_수급빈집역발상_대본v2.md 전문 확인</div></div></div>
+  <div class="scene"><div class="scene-head" onclick="toggle(this)"><span class="scene-title">S7 간접 (18%)</span><div class="scene-meta"><span class="type-badge type-indirect">간접</span><span>7:00~8:30</span></div></div>
+  <div class="scene-body"><div class="script">주도 섹터 → 그 안의 수급 빈 종목 → 재료 교집합
+"제가 20년 동안 정착된 흐름" ← 시스템명 없음</div></div></div>
+</div>
+
+<script>
+function show(id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  document.getElementById('content-'+id).classList.add('active');
+}
+function toggle(h) { h.nextElementSibling.classList.toggle('open'); }
+function expandAll(id) {
+  document.querySelectorAll('#content-'+id+' .scene-body').forEach(b => b.classList.add('open'));
+}
+show('b');
+</script>
+</body>
+</html>

@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=800">
+<title>아침 브리핑 v2 — 로또의 주식인사이트</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+
+:root {
+  --bg:       #080808;
+  --surface:  #101010;
+  --raised:   #161616;
+  --gold:     #e8b84b;
+  --gold-2:   rgba(232,184,75,0.65);
+  --gold-3:   rgba(232,184,75,0.12);
+  --text-1:   #f0ebe2;
+  --text-2:   #a09890;
+  --text-3:   #5a5450;
+  --red:      #ff4757;
+  --red-2:    rgba(255,71,87,0.12);
+  --red-3:    rgba(255,71,87,0.25);
+  --orange:   #ff7c43;
+  --orange-2: rgba(255,124,67,0.12);
+  --green:    #2ed573;
+  --rule:     rgba(255,255,255,0.07);
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  font-family: 'Geist', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  width: 800px;
+}
+
+/* ── 헤더 (얇게 — 브랜드 + 날짜만) ─────────────── */
+.hd {
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--rule);
+}
+.hd-brand {
+  font-family: 'Instrument Serif', serif;
+  font-size: 13px;
+  color: var(--gold);
+  letter-spacing: 0.3px;
+}
+.hd-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hd-date {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-2);
+}
+.hd-time {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  color: var(--gold-2);
+  background: var(--gold-3);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+
+/* ── 오늘의 콜 (가장 크게) ────────────────────── */
+.call {
+  padding: 28px 32px 24px;
+  border-bottom: 1px solid var(--rule);
+  position: relative;
+}
+.call::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 32px; right: 32px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--gold) 0%, transparent 60%);
+  opacity: 0.4;
+}
+.call-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.call-text {
+  font-family: 'Instrument Serif', serif;
+  font-size: 30px;
+  line-height: 1.15;
+  color: var(--text-1);
+  letter-spacing: -0.3px;
+}
+.call-text em { font-style: italic; color: var(--gold); }
+.call-sub {
+  font-size: 12px;
+  color: var(--text-2);
+  margin-top: 8px;
+  line-height: 1.6;
+}
+
+
+/* ── 탑픽 (결론 먼저) ────────────────────────── */
+.picks {
+  padding: 24px 32px;
+  border-bottom: 1px solid var(--rule);
+}
+.section-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: var(--gold-2);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--gold-3);
+}
+
+.pick-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.pick-card {
+  background: var(--surface);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.pick-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+}
+.pick-card.s1::before { background: var(--red); }
+.pick-card.s2::before { background: var(--red); }
+.pick-card.s3::before { background: var(--orange); }
+
+.pick-rank {
+  font-family: 'Geist Mono', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-3);
+  margin-bottom: 8px;
+}
+.pick-name {
+  font-family: 'Instrument Serif', serif;
+  font-size: 20px;
+  color: var(--text-1);
+  line-height: 1;
+  margin-bottom: 10px;
+  letter-spacing: 0.2px;
+}
+.pick-reason {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-2);
+  line-height: 1.55;
+  margin-bottom: 12px;
+}
+.pick-reason strong {
+  color: var(--text-1);
+  font-weight: 600;
+}
+.pick-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.pick-grade {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+.pick-grade.red {
+  background: var(--red-2);
+  color: var(--red);
+  border: 1px solid var(--red-3);
+}
+.pick-grade.orange {
+  background: var(--orange-2);
+  color: var(--orange);
+  border: 1px solid rgba(255,124,67,0.25);
+}
+.pick-score {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  color: var(--text-3);
+}
+
+
+/* ── 왜 맞나 (수급 + 섹터) ───────────────────── */
+.why {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid var(--rule);
+}
+.why-col {
+  padding: 20px 32px;
+}
+.why-col + .why-col {
+  border-left: 1px solid var(--rule);
+}
+
+/* 수급 방향 */
+.flow-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.flow-row:last-child { border-bottom: none; }
+.flow-who {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-2);
+}
+.flow-dir {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+}
+.flow-dir.sell { color: var(--red); }
+.flow-dir.buy  { color: var(--green); }
+.flow-dir.neu  { color: var(--text-3); }
+.flow-arrow { font-size: 13px; }
+
+/* 섹터 */
+.sector-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.sector-row:last-child { border-bottom: none; }
+.sector-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-1);
+}
+.sector-badge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 2px 7px;
+  border-radius: 3px;
+}
+.sector-badge.hot  { background:rgba(255,71,87,0.12);  color:var(--red);    border:1px solid rgba(255,71,87,0.2); }
+.sector-badge.warm { background:rgba(255,124,67,0.12); color:var(--orange); border:1px solid rgba(255,124,67,0.2); }
+.sector-badge.mid  { background:rgba(255,211,42,0.1);  color:#ffd32a;       border:1px solid rgba(255,211,42,0.2); }
+.sector-badge.cool { background:rgba(255,255,255,0.05);color:var(--text-3); border:1px solid rgba(255,255,255,0.07); }
+
+
+/* ── 글로벌 컨텍스트 (한 줄, 작게) ──────────── */
+.context {
+  padding: 14px 32px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border-bottom: 1px solid var(--rule);
+  flex-wrap: wrap;
+}
+.ctx-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 16px;
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+.ctx-item:first-child { padding-left: 0; }
+.ctx-item:last-child  { border-right: none; }
+.ctx-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+.ctx-val {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-1);
+}
+.ctx-chg {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+}
+.ctx-chg.up { color: var(--green); }
+.ctx-chg.dn { color: var(--red); }
+.ctx-chg.neu { color: var(--text-3); }
+
+
+/* ── 리스크 (경고) ───────────────────────────── */
+.risk {
+  padding: 14px 32px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border-bottom: 1px solid var(--rule);
+  background: rgba(255,71,87,0.03);
+}
+.risk-icon {
+  font-size: 13px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.risk-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: rgba(255,71,87,0.5);
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+.risk-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-2);
+  line-height: 1.55;
+}
+.risk-text strong { color: var(--red); font-weight: 600; }
+
+
+/* ── 푸터 ────────────────────────────────────── */
+.footer {
+  padding: 14px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.footer-brand {
+  font-family: 'Instrument Serif', serif;
+  font-size: 11px;
+  color: var(--text-3);
+}
+.footer-note {
+  font-size: 9px;
+  color: var(--text-3);
+}
+
+</style>
+</head>
+<body>
+
+<!-- ── 헤더 ── -->
+<div class="hd">
+  <div class="hd-brand">로또의 주식인사이트</div>
+  <div class="hd-right">
+    <div class="hd-date">2026년 6월 3일 화요일</div>
+    <div class="hd-time">07:40 장전</div>
+  </div>
+</div>
+
+
+<!-- ── 오늘의 콜 ── -->
+<div class="call">
+  <div class="call-label">오늘의 판단</div>
+  <div class="call-text">
+    반도체 주도 속 <em>수급 빈집</em>에서<br>기회 잡는 날
+  </div>
+  <div class="call-sub">
+    SOX 사상 최고 · 외국인 연속 매도에도 수급 빈집 종목은 재진입 시 전량 신규매수 → 탄력 극대화 구간
+  </div>
+</div>
+
+
+<!-- ── 탑픽 (결론 먼저) ── -->
+<div class="picks">
+  <div class="section-label">오늘의 탑픽</div>
+
+  <div class="pick-grid">
+
+    <div class="pick-card s1">
+      <div class="pick-rank">PICK 01</div>
+      <div class="pick-name">코리아써키트</div>
+      <div class="pick-reason">
+        <strong>HBM 패키지 직수혜</strong> — 빈집 A등급 완전빈집. 외국인 재진입 시 전량 신규매수
+      </div>
+      <div class="pick-bottom">
+        <div class="pick-grade red">🔴 탑픽</div>
+        <div class="pick-score">8 / 9점</div>
+      </div>
+    </div>
+
+    <div class="pick-card s2">
+      <div class="pick-rank">PICK 02</div>
+      <div class="pick-name">제주반도체</div>
+      <div class="pick-reason">
+        <strong>투경 해제 D-1</strong> — 해제 당일 갭업 패턴. 빈집 B등급 + 일정 재료 동시
+      </div>
+      <div class="pick-bottom">
+        <div class="pick-grade red">🔴 탑픽</div>
+        <div class="pick-score">7 / 9점</div>
+      </div>
+    </div>
+
+    <div class="pick-card s3">
+      <div class="pick-rank">PICK 03</div>
+      <div class="pick-name">에스비비테크</div>
+      <div class="pick-reason">
+        <strong>HBM 관련 · 미국 커플링</strong> — SOX 강세 연동. 빈집 B등급 후보
+      </div>
+      <div class="pick-bottom">
+        <div class="pick-grade orange">🟠 후보</div>
+        <div class="pick-score">5 / 9점</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ── 왜 맞나 (수급 + 섹터) ── -->
+<div class="why">
+
+  <div class="why-col">
+    <div class="section-label">수급 방향</div>
+
+    <div class="flow-row">
+      <div class="flow-who">외국인</div>
+      <div class="flow-dir sell">
+        <span class="flow-arrow">↓</span>
+        18거래일 연속 매도
+      </div>
+    </div>
+    <div class="flow-row">
+      <div class="flow-who">기관</div>
+      <div class="flow-dir sell">
+        <span class="flow-arrow">↓</span>
+        코스닥 순매도
+      </div>
+    </div>
+    <div class="flow-row">
+      <div class="flow-who">개인</div>
+      <div class="flow-dir buy">
+        <span class="flow-arrow">↑</span>
+        반도체 집중 매수
+      </div>
+    </div>
+    <div class="flow-row">
+      <div class="flow-who">액티브 ETF</div>
+      <div class="flow-dir buy">
+        <span class="flow-arrow">↑</span>
+        반도체 비중 확대
+      </div>
+    </div>
+  </div>
+
+  <div class="why-col">
+    <div class="section-label">섹터 온도</div>
+
+    <div class="sector-row">
+      <div class="sector-name">반도체</div>
+      <div class="sector-badge hot">SUPER HOT 🔴</div>
+    </div>
+    <div class="sector-row">
+      <div class="sector-name">자동차 · 로봇</div>
+      <div class="sector-badge hot">HOT 🔴</div>
+    </div>
+    <div class="sector-row">
+      <div class="sector-name">네트워크 장비</div>
+      <div class="sector-badge warm">WARM 🟠</div>
+    </div>
+    <div class="sector-row">
+      <div class="sector-name">전력 · 에너지</div>
+      <div class="sector-badge mid">MID 🟡</div>
+    </div>
+    <div class="sector-row">
+      <div class="sector-name">2차 전지</div>
+      <div class="sector-badge cool">COLD ⚪</div>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ── 글로벌 컨텍스트 ── -->
+<div class="context">
+  <div class="ctx-item">
+    <div class="ctx-label">달러/원</div>
+    <div class="ctx-val">1,387</div>
+    <div class="ctx-chg dn">▼4.2</div>
+  </div>
+  <div class="ctx-item">
+    <div class="ctx-label">S&P 500</div>
+    <div class="ctx-val">5,784</div>
+    <div class="ctx-chg up">▲+0.62%</div>
+  </div>
+  <div class="ctx-item">
+    <div class="ctx-label">나스닥</div>
+    <div class="ctx-val">18,960</div>
+    <div class="ctx-chg up">▲+0.81%</div>
+  </div>
+  <div class="ctx-item">
+    <div class="ctx-label">SOX</div>
+    <div class="ctx-val">사상최고</div>
+    <div class="ctx-chg up">▲+1.4%</div>
+  </div>
+  <div class="ctx-item">
+    <div class="ctx-label">VIX</div>
+    <div class="ctx-val">17.3</div>
+    <div class="ctx-chg neu">안정</div>
+  </div>
+  <div class="ctx-item">
+    <div class="ctx-label">야간선물</div>
+    <div class="ctx-val">+0.4%</div>
+    <div class="ctx-chg up">▲상승</div>
+  </div>
+</div>
+
+
+<!-- ── 리스크 ── -->
+<div class="risk">
+  <div class="risk-icon">⚠️</div>
+  <div>
+    <div class="risk-label">오늘 주의</div>
+    <div class="risk-text">
+      외국인 <strong>18거래일 연속 순매도</strong> 중 — 지수는 올라도 개인 혼자 떠받치는 구조. KOSPI 상장 82%가 하락 중. 주도주 아닌 종목 손절 기준 미리 잡고 진입.
+    </div>
+  </div>
+</div>
+
+
+<!-- ── 푸터 ── -->
+<div class="footer">
+  <div class="footer-brand">로또의 주식인사이트 · Stock Brain</div>
+  <div class="footer-note">본 브리핑은 투자 참고용입니다 · 투자 결정의 책임은 본인에게 있습니다</div>
+</div>
+
+</body>
+</html>
