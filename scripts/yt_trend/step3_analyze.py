@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -69,7 +70,9 @@ def _analyze(model, title: str, hook: str, full: str, comments: list[str]) -> di
   "comment_reaction": "댓글 반응 핵심 키워드 3개"
 }}"""
     resp = model.generate_content(prompt)
-    text = resp.text.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
+    text = resp.text.strip()
+    text = re.sub(r'^```(?:json)?\s*', '', text)
+    text = re.sub(r'\s*```$', '', text).strip()
     try:
         return json.loads(text)
     except json.JSONDecodeError:

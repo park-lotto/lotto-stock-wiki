@@ -38,4 +38,7 @@ raw/universe_check.txt
 raw/wise_test.txt
 raw/excel_*.txt
 scripts/__pycache__/
+__pycache__/
+*.pyc
+*.pyo
 .gstack/
