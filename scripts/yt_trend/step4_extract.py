@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -66,14 +67,34 @@ def run(date_str: str):
 
     genai.configure(api_key=GEMINI_KEY)
     model = genai.GenerativeModel("gemini-2.0-flash")
-    resp = model.generate_content(prompt)
 
-    text = resp.text.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
+    try:
+        resp = model.generate_content(prompt)
+    except Exception as e:
+        print(f"❌ Gemini API 오류: {e}")
+        sys.exit(1)
+
+    text = resp.text.strip()
+    text = re.sub(r'^```(?:json)?\s*', '', text)
+    text = re.sub(r'\s*```$', '', text).strip()
+
     try:
         ideas = json.loads(text)
     except json.JSONDecodeError as e:
         print(f"❌ Gemini 응답 파싱 실패: {e}\n원문:\n{resp.text[:500]}")
         sys.exit(1)
+
+    # Validate Gemini response structure
+    if not isinstance(ideas, list) or len(ideas) == 0:
+        print(f"❌ Gemini 응답 형식 오류: list 예상, {type(ideas).__name__} 수신")
+        sys.exit(1)
+
+    required_keys = {"rank", "title_hook", "angle", "key_points", "why_viral"}
+    for i, idea in enumerate(ideas):
+        missing = required_keys - set(idea.keys())
+        if missing:
+            print(f"❌ 소재 {i+1} 필드 누락: {missing}")
+            sys.exit(1)
 
     out_file.write_text(json.dumps(ideas, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"✅ step4 done: {len(ideas)}개 소재 → {out_file}")
