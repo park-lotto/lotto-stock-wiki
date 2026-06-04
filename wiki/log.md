@@ -1,3 +1,4 @@
+- 2026-06-04 — crawling_bot_data ingest 파이프라인 설계 착수 | B안 확정: pdf_summarize.py(Gemini Flash) + ingest_crawl.py(Haiku) + crawl_ingest_state.json | 투경 관리 12종목 완성 | Task Scheduler 5개 python경로 수정 | yt 주제확정: 반도체독주→순환매 6월핵심
 - 2026-06-04 — yt-gemini-pipeline 파이프라인 재설계 시행착오 | SKILL.md 종목선정 5단계 규칙 정립 | 영상주제_후보풀.md 생성(세트1) | LIG D&A Deep Research 리포트 확보 | 핵심학습: Claude=편집장(리서치X), Gemini Deep Research 활용 방향 확립
 - 2026-06-04 — yt-gemini-pipeline 완료 — 순환매 후보 3선 | 스토리: 불안공감→3중필터 공개→TOP3 선정→리스크→결론 | 파일: script_순환매_final.md / yt_순환매_기획서.md
 - 2026-06-04 — Excel ingest 완료: 추정이익변경·컨센움직임·수출·유동성·수급·중소형주수급·가속화모멘텀·액티브ETF·일정·투자아이디어 → ingest_report_2026-06-04.md
