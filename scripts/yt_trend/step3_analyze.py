@@ -15,7 +15,7 @@ YOUTUBE_KEY = os.environ.get("YOUTUBE_API_KEY", "")
 BASE_DIR = Path(__file__).parent.parent.parent / "raw" / "yt_trend"
 
 
-def _get_transcript(video_id: str):
+def _get_transcript(video_id: str) -> tuple[str | None, str | None]:
     """Returns (hook_text, full_text) or (None, None) on failure."""
     try:
         segments = YouTubeTranscriptApi.get_transcript(video_id, languages=["ko", "ko-KR"])
@@ -37,8 +37,12 @@ def _get_comments(video_id: str) -> list[str]:
     try:
         r = requests.get("https://www.googleapis.com/youtube/v3/commentThreads", params=params, timeout=10)
         items = r.json().get("items", [])
-        return [i["snippet"]["topLevelComment"]["snippet"]["textDisplay"] for i in items]
-    except Exception:
+        return [
+            i.get("snippet", {}).get("topLevelComment", {}).get("snippet", {}).get("textDisplay", "")
+            for i in items
+            if i.get("snippet", {}).get("topLevelComment", {}).get("snippet", {}).get("textDisplay")
+        ]
+    except (requests.RequestException, KeyError, ValueError):
         return []
 
 
