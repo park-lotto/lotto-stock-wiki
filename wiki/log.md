@@ -1,3 +1,4 @@
+- 2026-06-05 — yt-trend 2026-06-04 파이프라인 완전 재실행 | API 키 갱신(YOUTUBE+GEMINI AQ.형식) | step2 Python 신규·step3/4 google.genai 마이그레이션 | 대본 완성(소부장 3근거: 일본TEL선행+최태원증산+TSMC팹) | S1/S3/S5/S7 디벨롭 완료 | 다음: yt-planner → Remotion
 - 2026-06-04 — Smart App Control 차단 해제 | 집PC Python 실행 차단 원인: SAC(VerifiedAndReputablePolicyState=1) | 관리자 레지스트리 변경으로 0 세팅 완료 | 재시작 후 yt-trend 파이프라인 처음부터 재실행 예정 (오늘 폭락 반영 대본 목적)
 - 2026-06-04 — Gemini 딥리서치 파이프라인 구축 완료 | gemini_yt_deep_research.py 완성(Interactions API) | .mcp.json MCP A/B 등록 | yt-content-research 실전실행: 소부장자금순환 각도 → 원익IPS+유진테크 → Gemini 대본 완성 → 검수PASS | 파일: script_소부장자금순환_20260604_final.md | 다음: yt-planner → Remotion
 - 2026-06-04 — 채널 인사이트 시스템 완성 | ingest_crawl.py: coupling타입+Pass2(인사이트추출) 추가 | channel_registry.json 생성 | wiki/insights/ 폴더 구조 완성 | 텔레6채널 인제스트(sector16/stock21/coupling16) | 반도체 핵심인사이트: 낸야테크+730%·젠슨황HBM4E증산요청·브로드컴가이던스미달·TEL+13%→장비주상한가
