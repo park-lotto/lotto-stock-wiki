@@ -1,5 +1,9 @@
 """
-pdf_summarize.py — reports/*.md PDF 링크 → Gemini 2.0 Flash 요약 → .md 주입 (Pass 1)
+pdf_summarize.py — reports/*.md PDF 링크 → Gemini 요약 → reports_summarized/ 저장 (Pass 1)
+
+원본 파일은 수정하지 않음.
+결과: crawling_bot_data/{date}/reports_summarized/{원본파일명}.md
+       = 원본 내용 + ## 📄 AI 요약 섹션
 
 사용:
   python scripts/pdf_summarize.py --date 2026-06-04
@@ -89,29 +93,32 @@ def summarize_with_gemini(pdf_bytes: bytes, filename: str) -> str | None:
         print(f'  Gemini 요약 실패 ({filename}): {e}')
         return None
 
-# ── .md 파일에 요약 주입 ────────────────────────────────────────────────────────
+# ── 별도 폴더에 요약 파일 저장 ─────────────────────────────────────────────────
 ALREADY_SUMMARIZED = '## 📄 AI 요약'
-
-def inject_summary(md_path: Path, summary: str) -> bool:
-    """기존 .md 파일 끝에 AI 요약 섹션 추가. 이미 있으면 스킵 → False 반환."""
-    text = md_path.read_text(encoding='utf-8')
-    if ALREADY_SUMMARIZED in text:
+def save_summarized(md_path: Path, out_dir: Path, summary: str) -> bool:
+    """원본 내용 + AI 요약 섹션을 out_dir/{원본파일명}.md 로 저장.
+    이미 출력 파일이 있으면 스킵 → False 반환."""
+    out_path = out_dir / md_path.name
+    if out_path.exists():
         return False
+    original = md_path.read_text(encoding='utf-8')
     block = f'\n\n{ALREADY_SUMMARIZED}\n\n{summary}\n'
-    md_path.write_text(text + block, encoding='utf-8')
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(original + block, encoding='utf-8')
     return True
 
 # ── 날짜 처리 메인 ─────────────────────────────────────────────────────────────
 def process_date(date_str: str, limit: int = 0):
-    state      = load_state()
+    state       = load_state()
     reports_dir = CRAWL_BASE / date_str / 'reports'
+    out_dir     = ROOT / 'raw' / 'report' / date_str
 
     if not reports_dir.exists():
         print(f'reports 폴더 없음: {reports_dir}')
         return
 
     md_files = sorted(reports_dir.glob('*.md'))
-    print(f'reports/ 파일 {len(md_files)}개 발견')
+    print(f'reports/ 파일 {len(md_files)}개 발견  →  저장: raw/report/{date_str}/')
 
     processed = 0
     for md_path in md_files:
@@ -121,19 +128,18 @@ def process_date(date_str: str, limit: int = 0):
 
         rel_key = f'{date_str}/reports/{md_path.name}'
 
-        # 이미 처리된 파일 스킵
+        # state.json에 이미 기록된 파일 스킵
         if rel_key in state['pdf_summarized']:
             print(f'  [SKIP] {md_path.name}')
             continue
 
-        text = md_path.read_text(encoding='utf-8')
-
-        # 이미 요약 섹션 있으면 state에만 기록
-        if ALREADY_SUMMARIZED in text:
+        # 출력 파일이 이미 존재하면 state에만 기록
+        if (out_dir / md_path.name).exists():
             state['pdf_summarized'].append(rel_key)
             continue
 
         # PDF 링크 없으면 완료 처리
+        text    = md_path.read_text(encoding='utf-8')
         pdf_url = extract_pdf_url(text)
         if not pdf_url:
             print(f'  [NO PDF] {md_path.name}')
@@ -153,9 +159,9 @@ def process_date(date_str: str, limit: int = 0):
         if not summary:
             continue
 
-        injected = inject_summary(md_path, summary)
-        if injected:
-            print(f'  [✅ OK] 요약 주입 완료: {md_path.name}')
+        saved = save_summarized(md_path, out_dir, summary)
+        if saved:
+            print(f'  [✅ OK] raw/report/{date_str}/{md_path.name}')
             state['pdf_summarized'].append(rel_key)
             save_state(state)
             processed += 1
