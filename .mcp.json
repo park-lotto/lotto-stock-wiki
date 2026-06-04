@@ -19,6 +19,20 @@
     "memory": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-memory"]
+    },
+    "gemini-research": {
+      "command": "uvx",
+      "args": ["gemini-research-mcp"],
+      "env": {
+        "GEMINI_API_KEY": "${GEMINI_API_KEY}"
+      }
+    },
+    "gemini": {
+      "command": "npx",
+      "args": ["-y", "@rlabs-inc/gemini-mcp"],
+      "env": {
+        "GEMINI_API_KEY": "${GEMINI_API_KEY}"
+      }
     }
   }
 }
