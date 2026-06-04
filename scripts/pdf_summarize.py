@@ -69,13 +69,22 @@ def download_pdf(url: str) -> bytes | None:
         return None
 
 # ── Gemini 요약 ────────────────────────────────────────────────────────────────
-SUMMARY_PROMPT = """이 증권사 리포트 PDF를 아래 형식으로 한국어로 요약해줘.
+SUMMARY_PROMPT = """이 증권사 리포트 PDF를 아래 형식으로 한국어로 정리해줘.
+반드시 실제 수치, 날짜, 종목명, 퍼센트를 그대로 포함해. 추상적인 표현 금지.
 
-**핵심 주장 (1줄)**:
-**주요 내용 (3줄 이내)**:
--
-**언급 종목/섹터**:
-**투자 시사점**: """
+📄 {증권사명}
+👤 작성자: {애널리스트 이름 — PDF에서 추출, 없으면 생략}
+📅 발행일: {YYYY-MM-DD 형식}
+📄 페이지 수: p. {총 페이지 수}
+
+개요
+{리포트 전체 핵심을 하나의 문단으로. 핵심 주장 + 주요 근거 수치 + 결론 포함. 3~5문장. 구체적 숫자 필수.}
+
+주요 내용
+{PDF의 실제 섹션/챕터 제목을 번호와 함께 그대로 사용. 각 섹션 아래 핵심 데이터 bullet로 정리.
+- 수치가 있으면 수치 그대로 기재
+- 그래프/표가 있으면 그 내용 해석해서 포함
+- 각 섹션 최소 3개 이상 bullet}"""
 
 def summarize_with_gemini(pdf_bytes: bytes, filename: str) -> str | None:
     try:
@@ -169,14 +178,59 @@ def process_date(date_str: str, limit: int = 0):
     print(f'\npdf_summarize 완료: {date_str} | {processed}개 신규 처리')
 
 # ── argparse ──────────────────────────────────────────────────────────────────
+def process_one(date_str: str, keyword: str):
+    """파일명에 keyword가 포함된 파일 1개만 처리."""
+    state       = load_state()
+    reports_dir = CRAWL_BASE / date_str / 'reports'
+    out_dir     = ROOT / 'raw' / 'report' / date_str
+
+    matches = [p for p in reports_dir.glob('*.md') if keyword in p.name]
+    if not matches:
+        print(f'파일 없음: "{keyword}" 포함된 파일이 reports/에 없음'); return
+    if len(matches) > 1:
+        print(f'여러 개 매칭됨:')
+        for m in matches: print(f'  {m.name}')
+        print('더 구체적인 키워드를 사용하세요'); return
+
+    md_path = matches[0]
+    rel_key = f'{date_str}/reports/{md_path.name}'
+    print(f'대상: {md_path.name}')
+
+    if (out_dir / md_path.name).exists():
+        print(f'이미 요약됨: raw/report/{date_str}/{md_path.name}'); return
+
+    text    = md_path.read_text(encoding='utf-8')
+    pdf_url = extract_pdf_url(text)
+    if not pdf_url:
+        print('PDF 링크 없음'); return
+
+    print(f'PDF URL: {pdf_url[:80]}...')
+    pdf_bytes = download_pdf(pdf_url)
+    if not pdf_bytes: return
+
+    print(f'PDF {len(pdf_bytes)//1024}KB 다운로드 완료')
+    summary = summarize_with_gemini(pdf_bytes, md_path.name)
+    if not summary: return
+
+    save_summarized(md_path, out_dir, summary)
+    state['pdf_summarized'].append(rel_key)
+    save_state(state)
+    print(f'[✅ OK] raw/report/{date_str}/{md_path.name}')
+
 def main():
-    parser = argparse.ArgumentParser(description='reports PDF → Gemini 요약 → .md 주입')
+    parser = argparse.ArgumentParser(description='reports PDF → Gemini 요약 → raw/report/ 저장')
     parser.add_argument('--date',  default=date.today().strftime('%Y-%m-%d'),
                         help='처리 날짜 (기본: 오늘)')
     parser.add_argument('--limit', type=int, default=0,
-                        help='최대 처리 개수 (0=무제한, 테스트용)')
+                        help='최대 처리 개수 (0=무제한)')
+    parser.add_argument('--file',  default=None,
+                        help='파일명 키워드로 1개 지정 (예: --file "국내 시총")')
     args = parser.parse_args()
-    process_date(args.date, args.limit)
+
+    if args.file:
+        process_one(args.date, args.file)
+    else:
+        process_date(args.date, args.limit)
 
 if __name__ == '__main__':
     main()
