@@ -5,7 +5,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-import google.generativeai as genai
+from google import genai
 
 sys.stdout.reconfigure(encoding="utf-8")
 
@@ -65,11 +65,10 @@ def run(date_str: str):
   ...
 ]"""
 
-    genai.configure(api_key=GEMINI_KEY)
-    model = genai.GenerativeModel("gemini-2.5-flash")
+    client = genai.Client(api_key=GEMINI_KEY)
 
     try:
-        resp = model.generate_content(prompt)
+        resp = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
     except Exception as e:
         print(f"❌ Gemini API 오류: {e}")
         sys.exit(1)

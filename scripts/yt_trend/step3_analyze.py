@@ -6,7 +6,8 @@ from datetime import datetime
 from pathlib import Path
 
 import requests
-import google.generativeai as genai
+from google import genai as genai_client
+from google.genai import types as genai_types
 from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound, TranscriptsDisabled
 
 sys.stdout.reconfigure(encoding="utf-8")
@@ -71,7 +72,7 @@ def _analyze(model, title: str, hook: str, full: str, comments: list[str]) -> di
   "structure": "전체 흐름 3줄 요약",
   "comment_reaction": "댓글 반응 핵심 키워드 3개"
 }}"""
-    resp = model.generate_content(prompt)
+    resp = model.models.generate_content(model="gemini-2.5-flash", contents=prompt)
     text = resp.text.strip()
     text = re.sub(r'^```(?:json)?\s*', '', text)
     text = re.sub(r'\s*```$', '', text).strip()
@@ -101,8 +102,8 @@ def run(date_str: str):
     videos = json.loads(step1_file.read_text(encoding="utf-8"))
     top5 = videos[:5]
 
-    genai.configure(api_key=GEMINI_KEY)
-    model = genai.GenerativeModel("gemini-2.5-flash")
+    client = genai_client.Client(api_key=GEMINI_KEY)
+    model = client
 
     results = []
     for v in top5:
