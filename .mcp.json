@@ -5,8 +5,7 @@
       "args": [
         "@playwright/mcp@latest",
         "--browser", "chrome",
-        "--user-data-dir", "C:\\Users\\TheRose\\AppData\\Local\\Google\\Chrome\\User Data",
-        "--no-headless"
+        "--user-data-dir", "C:\\Users\\TheRose\\AppData\\Local\\Google\\Chrome\\User Data"
       ]
     },
     "fetch": {
