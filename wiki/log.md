@@ -1,3 +1,4 @@
+- 2026-06-04 — 채널 인사이트 시스템 완성 | ingest_crawl.py: coupling타입+Pass2(인사이트추출) 추가 | channel_registry.json 생성 | wiki/insights/ 폴더 구조 완성 | 텔레6채널 인제스트(sector16/stock21/coupling16) | 반도체 핵심인사이트: 낸야테크+730%·젠슨황HBM4E증산요청·브로드컴가이던스미달·TEL+13%→장비주상한가
 - 2026-06-04 — ingest | raw/telegram/2026-06-03_태린이아빠_유튜브.md → wiki/외부인사이트/태린이아빠.md | 광통신 군집 신고가·HBM4 가격협상·TGA 유동성 경고·삼성전기 TP320만원
 - 2026-06-04 — crawling_bot_data ingest 파이프라인 설계 착수 | B안 확정: pdf_summarize.py(Gemini Flash) + ingest_crawl.py(Haiku) + crawl_ingest_state.json | 투경 관리 12종목 완성 | Task Scheduler 5개 python경로 수정 | yt 주제확정: 반도체독주→순환매 6월핵심
 - 2026-06-04 — yt-gemini-pipeline 파이프라인 재설계 시행착오 | SKILL.md 종목선정 5단계 규칙 정립 | 영상주제_후보풀.md 생성(세트1) | LIG D&A Deep Research 리포트 확보 | 핵심학습: Claude=편집장(리서치X), Gemini Deep Research 활용 방향 확립

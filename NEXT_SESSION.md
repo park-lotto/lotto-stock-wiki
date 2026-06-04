@@ -1,60 +1,52 @@
 # NEXT SESSION
-
-날짜: 2026-06-04 | PC: 사무실PC
+> 2026-06-04 | 집PC
 
 ## 세션 요약
-투경 관리 시스템 완성 + 스케줄 버그 수정 + yt-content-research + crawling_bot_data ingest 파이프라인 설계 착수
+텔레그램 인제스트 파이프라인 완성 + 채널 인사이트 시스템(Pass 2) 설계·구현
 
 ---
 
 ## ✅ 완료
 
-- pipeline/투경_관리.json 생성 (12종목)
-- wiki/rules/투경_관리규칙.md 작성
-- scripts/crawl_kind.py 완전 재작성 (관리종목만 표시 + 오늘신규 질문)
-- scripts/ingest_excel.py KeyError 2건 수정 (op_2026, op_chg1m)
-- scripts/download_daily.py 서브폴더 try/except 추가
-- Task Scheduler 5개 python 전체경로로 수정
-- yt-content-research STEP 0~6 완료
-  - 최종 주제: "반도체만 올랐다, 이제 이 업종이 달린다 — 6월 순환매 핵심"
+- `scripts/ingest_crawl.py` 커플링(coupling) 타입 추가 — 해외기업 → 연관 섹터에 [커플링: ...] 자동 분류
+- `scripts/ingest_crawl.py` Pass 2 인사이트 추출 로직 추가 — `pass2: true` 채널 → `wiki/insights/{채널}.md` 별도 저장
+- `pipeline/channel_registry.json` 생성 — 채널별 타입/처리규칙 등록 구조
+- `wiki/insights/` 폴더 + `_consensus.md` 생성
+- 2026-06-04 텔레그램 6채널 실제 인제스트 완료 (sector 16 / stock 21 / coupling 16)
+- 반도체 오늘 핵심 인사이트 정리: 낸야테크 +730%, 젠슨황 HBM4E 증산요청, 브로드컴 가이던스 미달, TEL +13%→장비주 상한가
 
 ---
 
 ## ⏳ 미완료 — 다음 세션 최우선
 
-### 크롤링봇 ingest 파이프라인 (brainstorming 진행 중, B안 확정)
+### 채널 레지스트리 등록 대기
+사용자가 크롤링 폴더에 채널 전부 넣으면 → 채널별 문항지(3문항) 작성 → `channel_registry.json` 등록
 
-**소스**: `C:\Users\TheRose\crawling_bot_data\YYYY-MM-DD\`
-**구조**: blog / market / news / reports / telegram / youtube
+등록 항목:
+- `type`: A(증권사공식) / B(큐레이션) / C(섹터전문) / D(인사이트흐름)
+- `pass1`: 섹터/종목 wiki 뿌리기 (기본 true)
+- `pass2`: 인사이트 별도 저장 (배우고 싶은 채널만 true)
+- `specialty`: 전문 섹터
+- `trust`: high / medium
 
-**구현할 컴포넌트 (설계 확정):**
+### Pass 2 실제 동작 테스트 미완
+registry에 `pass2: true` 채널 없어서 아직 실행 안 됨
+채널 등록 후 테스트 필요 → `wiki/insights/{채널}.md` 생성 확인
 
-1. `scripts/pdf_summarize.py`
-   - reports/*.md 안의 PDF 다운로드 링크 감지
-   - PDF 다운로드 → Gemini 2.0 Flash API 요약 → .md에 주입
-   - 처리완료 상태 저장 (선행 처리 필수)
+### _consensus.md 자동 집계 로직 미구현
+지금은 수동. 추후: 날짜별로 채널별 언급 섹터 집계 → 3개↑ 자동 🔴 플래그
 
-2. `scripts/ingest_crawl.py`
-   - 파일명 HHMM 기준 시간대 필터 (`--from 07:00 --to 10:00`)
-   - `pipeline/crawl_ingest_state.json`으로 중복 방지 (안된것만 ingest)
-   - 라우팅: reports→L5섹터별 / news→L5 / telegram→L6수급 / blog→L6종목 / market→L3
-   - Haiku 서브에이전트로 저비용 운영
+---
 
-3. `pipeline/crawl_ingest_state.json` — 처리완료 파일 기록
-
-**사용법:**
-```bash
-python scripts/ingest_crawl.py --from 07:00 --to 10:00
-python scripts/ingest_crawl.py --today
-python scripts/ingest_crawl.py --date 2026-06-04
-```
-
-**다음 세션 순서:**
-1. `superpowers:brainstorming` 이어서 → spec 문서 작성 → writing-plans → executing-plans
+## 관련 파일
+- `scripts/ingest_crawl.py` — Pass 2 포함 전체 파이프라인
+- `pipeline/channel_registry.json` — 채널 등록소
+- `wiki/insights/` — 인사이트 누적 폴더 (현재 비어있음)
+- `wiki/insights/_consensus.md` — 교집합 신호 집계 (수동)
+- `wiki/L5_섹터/반도체/sector_반도체.md` — 오늘 커플링 포함 26개 코멘트 추가
 
 ---
 
 ## yt-gemini-pipeline 대기
-
 주제: **"반도체만 올랐다, 이제 이 업종이 달린다 — 6월 순환매 핵심 3종목"**
 Gemini 브리프 완성. 다음: yt-gemini-pipeline 스킬 실행

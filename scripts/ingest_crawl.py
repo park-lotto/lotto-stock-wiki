@@ -39,6 +39,15 @@ for line in (ROOT / '.env').read_text(encoding='utf-8').splitlines():
 client = genai.Client(api_key=env['GEMINI_API_KEY'])
 L5_SECTORS = sorted(d.name for d in WIKI_L5.iterdir() if d.is_dir())
 
+# ── 채널 레지스트리 로드 ──────────────────────────────────────────────────────
+def load_registry() -> dict:
+    if REGISTRY_PATH.exists():
+        data = json.loads(REGISTRY_PATH.read_text(encoding='utf-8'))
+        return {k: v for k, v in data.items() if not k.startswith('_')}
+    return {}
+
+CHANNEL_REGISTRY = load_registry()
+
 TELEGRAM_PROMPT = """\
 아래 텔레그램 채널 요약에서 섹터/종목 관련 코멘트를 모두 추출해줘.
 하나의 파일에서 여러 섹터·종목이 나와도 각각 별도 항목으로 추출.
@@ -81,6 +90,83 @@ def classify_telegram(reports: list) -> list:
     raw = re.sub(r'^```[\w]*\n?', '', resp.text.strip())
     raw = re.sub(r'\n?```$', '', raw)
     return json.loads(raw)
+
+INSIGHTS_PROMPT = """\
+아래 발언에서 이 사람의 사고방식과 인사이트를 추출해줘.
+팩트(수치·이벤트)는 제외하고, 생각의 구조와 판단 방식만 뽑아줘.
+
+추출 항목:
+1. frameworks: 반복 등장하는 분석 공식·원칙 (없으면 빈 배열)
+2. signals: "A를 보면 B를 판단" 같은 시그널 패턴 (없으면 빈 배열)
+3. calls: 실제 언급한 관심/매수/매도 (없으면 빈 배열)
+4. summary: 오늘 핵심 주장 1~2줄
+
+JSON만 반환:
+{{
+  "frameworks": ["공식1", "공식2"],
+  "signals": ["TEL 강세 → 당일 국내 장비주 진입 타이밍"],
+  "calls": [{{"type":"관심","target":"주성엔지니어링","reason":"TEL 팔로잉"}}],
+  "summary": "핵심 주장"
+}}
+
+발언:
+{content}
+"""
+
+def extract_insights(channel: str, content: str) -> dict:
+    prompt = INSIGHTS_PROMPT.format(content=content)
+    resp = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=[types.Content(role='user', parts=[types.Part(text=prompt)])]
+    )
+    raw = re.sub(r'^```[\w]*\n?', '', resp.text.strip())
+    raw = re.sub(r'\n?```$', '', raw)
+    return json.loads(raw)
+
+def append_insight(channel: str, date_str: str, data: dict):
+    insight_file = WIKI_INSIGHTS / f'{channel}.md'
+
+    if not insight_file.exists():
+        reg = CHANNEL_REGISTRY.get(channel, {})
+        type_label = {'A':'증권사 공식','B':'고급 큐레이션','C':'섹터 전문가','D':'인사이트·흐름형'}.get(reg.get('type',''), '')
+        specialty = ', '.join(reg.get('specialty', []))
+        insight_file.write_text(
+            f'# {channel} — 인사이트 누적\n'
+            f'> 타입: {type_label} | 전문: {specialty}\n\n'
+            f'## 반복 공식\n\n'
+            f'## 콜 히스토리\n'
+            f'| 날짜 | 타입 | 대상 | 이유 |\n'
+            f'|------|------|------|------|\n\n'
+            f'## 일별 로그\n',
+            encoding='utf-8'
+        )
+
+    content = insight_file.read_text(encoding='utf-8')
+
+    # 콜 히스토리 테이블에 추가
+    calls = data.get('calls', [])
+    call_lines = ''
+    for c in calls:
+        call_lines += f'| {date_str} | {c.get("type","")} | {c.get("target","")} | {c.get("reason","")} |\n'
+
+    # 일별 로그에 추가
+    fw = ' / '.join(data.get('frameworks', []))
+    sg = ' / '.join(data.get('signals', []))
+    summary = data.get('summary', '')
+    log_entry = f'\n[{date_str}] {summary}'
+    if fw:  log_entry += f'\n- 공식: {fw}'
+    if sg:  log_entry += f'\n- 시그널: {sg}'
+
+    # 테이블 뒤에 콜 삽입
+    if call_lines:
+        content = content.replace(
+            '| 날짜 | 타입 | 대상 | 이유 |\n|------|------|------|------|\n',
+            f'| 날짜 | 타입 | 대상 | 이유 |\n|------|------|------|------|\n{call_lines}'
+        )
+
+    content += log_entry + '\n'
+    insight_file.write_text(content, encoding='utf-8')
+    return True
 
 # ── state ─────────────────────────────────────────────────────────────────────
 def load_state():
@@ -241,6 +327,21 @@ def process(date_str: str, dry_run=False, limit=0, file_kw=None, source='report'
                 tag = f'{c.get("sector","")}' + (f'/{c.get("stock","")}' if c['type']=='stock' else '')
             print(f'  [{c["type"]:8}] {tag:30} → {c.get("comment","")[:60]}')
         return
+
+    # ── Pass 2: 인사이트 채널별 처리 ──────────────────────────────────────────
+    if source == 'telegram':
+        for r in reports:
+            channel = r['broker']
+            reg = CHANNEL_REGISTRY.get(channel, {})
+            if reg.get('pass2', False):
+                print(f'  [인사이트] {channel} Pass 2 추출 중...')
+                try:
+                    data = extract_insights(channel, r['summary'])
+                    append_insight(channel, date_str, data)
+                    calls_cnt = len(data.get('calls', []))
+                    print(f'  [인사이트✅] {channel} → {data.get("summary","")[:60]} (콜 {calls_cnt}개)')
+                except Exception as e:
+                    print(f'  [인사이트⚠️] {channel} 실패: {e}')
 
     newly_done = []
     for c in classified:
