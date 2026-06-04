@@ -1,0 +1,10 @@
+[brief] brief_각도D.md
+[model] gemini-2.5-pro
+[search] Google Search grounding 활성화
+[running] Gemini 딥리서치 + 대본 작성 중... (2~5분 소요)
+
+[검수] Google Search grounding 실제 사용 여부:
+  [WARN] 검색 출처 없음 - Gemini가 학습 데이터만 사용했을 수 있음
+         모델이 grounding을 지원하지 않거나 검색이 필요 없다고 판단한 것
+
+[done] 완료 -> channel\yt\script_각도D_gemini.md

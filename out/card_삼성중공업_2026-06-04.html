@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+html{margin:0;padding:0;background:#1a1a2e}
+body{
+  margin:0;padding:0;
+  background:#1a1a2e;
+  font-family:'Noto Sans KR','Malgun Gothic',sans-serif;
+  -webkit-font-smoothing:antialiased;
+  line-height:1;
+  display:inline-block;
+}
+.card{
+  width:420px;background:#fff;
+  display:flex;flex-direction:column;
+}
+
+/* ── 희생 구역 (텔레그램 상단 크롭 흡수) ── */
+.sacrifice-zone{
+  background:#1a1a2e;
+  height:52px;
+  display:flex;align-items:center;
+  padding:0 16px;gap:8px;
+  flex-shrink:0;
+}
+.brand-text{font-size:12px;font-weight:800;color:#fff;letter-spacing:.5px}
+.brand-div{font-size:11px;color:#475569}
+.brand-sub{font-size:11px;color:#94a3b8}
+
+/* ── 타이틀 영역 ── */
+.title-area{
+  padding:10px 16px 8px;
+  background:#fff;
+  border-bottom:3px solid #1a1a2e;
+}
+.stock-name{
+  font-size:26px;font-weight:900;color:#1a1a2e;
+  letter-spacing:-1px;line-height:1.1;
+}
+.card-subtitle{
+  font-size:16px;font-weight:700;color:#1a1a2e;
+  margin-top:1px;
+}
+.meta-line{font-size:10px;color:#888;margin-top:4px}
+.date-line{font-size:9px;color:#aaa;margin-top:1px}
+
+/* ── 종합통계 박스 ── */
+.stats-box{
+  background:#f8f9fa;
+  margin:8px 14px;
+  border-radius:5px;
+  overflow:hidden;
+  border:1px solid #e9ecef;
+}
+.stats-header{
+  background:#e9ecef;text-align:center;
+  font-size:11px;font-weight:700;color:#495057;
+  padding:4px;letter-spacing:1px;
+}
+.stats-row{
+  display:flex;justify-content:space-between;
+  padding:5px 12px;border-bottom:1px solid #e9ecef;
+  font-size:11px;
+}
+.stats-row:last-child{border-bottom:none}
+.stats-label{color:#666}
+.stats-val{font-weight:700;color:#1a1a2e}
+.stats-val.red{color:#c0392b}
+
+/* ── 랭킹 카드 ── */
+.rank-card{
+  display:flex;
+  margin:5px 14px 0;
+  background:#fff;
+  border:1px solid #e9ecef;
+  border-radius:4px;
+  overflow:hidden;
+  border-left-width:5px !important;
+}
+.rank-left{
+  width:44px;flex-shrink:0;
+  background:#fafafa;
+  border-right:1px solid #f0f0f0;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:5px 3px;text-align:center;
+}
+.rank-num{font-size:12px;font-weight:900;margin-bottom:3px}
+.rank-prev{font-size:9px;color:#aaa;line-height:1.4}
+.rank-right{flex:1;padding:5px 10px 5px}
+.broker-row{display:flex;align-items:center;gap:4px;margin-bottom:1px}
+.flag{font-size:11px}
+.broker-name{font-size:11px;font-weight:700;color:#333}
+.rating-chg{font-size:9px;color:#888;margin-left:3px}
+.tp-value{font-size:21px;font-weight:900;letter-spacing:-1px;line-height:1.1}
+.pct-row{margin-top:1px}
+.pct-badge{font-size:12px;font-weight:700}
+.bar-track{height:4px;background:#f0f0f0;border-radius:0;margin-top:5px}
+.bar-fill{height:4px;border-radius:0}
+
+/* ── 코멘터리 ── */
+.commentary{
+  margin:8px 14px 0;
+  padding:8px 12px;
+  background:#f8f9fa;
+  border-radius:4px;
+  border-left:3px solid #dee2e6;
+}
+.commentary p{
+  font-size:10.5px;color:#444;line-height:1.6;
+  margin-bottom:4px;
+}
+.commentary p:last-child{margin-bottom:0}
+
+/* ── 하단 푸터 ── */
+.footer{
+  margin-top:8px;
+  background:#1a1a2e;
+  padding:7px 14px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.footer-brand{display:flex;align-items:center;gap:7px}
+.footer-icon{
+  width:22px;height:22px;background:#c0392b;
+  border-radius:3px;display:flex;align-items:center;justify-content:center;
+  font-size:11px;color:#fff;font-weight:900;
+}
+.footer-text{color:#fff;font-size:10px;font-weight:700}
+.footer-sub{color:#64748b;font-size:8px;margin-top:1px}
+.footer-url{color:#64748b;font-size:9px}
+</style>
+</head>
+<body>
+<div class="card">
+
+  <!-- 희생 구역: 텔레그램이 항상 위 ~50px 자름 → 여기서 흡수 -->
+  <div class="sacrifice-zone">
+    <span class="brand-text">STOCK BRAIN</span>
+    <span class="brand-div">|</span>
+    <span class="brand-sub">금융 전문가 분석</span>
+  </div>
+
+  <!-- 타이틀 (희생 구역 아래부터 보임) -->
+  <div class="title-area">
+    <div class="stock-name">삼성중공업</div>
+    <div class="card-subtitle">추정이익 카드뉴스</div>
+    <div class="meta-line">최근 45일 기준, 1개 증권사 분석 결과 · 2026년 06월 04일</div>
+  </div>
+
+  <!-- 종합 통계 -->
+  <div class="stats-box">
+    <div class="stats-header">종합 통계</div>
+    <div class="stats-row">
+      <span class="stats-label">전문가 평균 목표주가</span>
+      <span class="stats-val">44,000원</span>
+    </div>
+    <div class="stats-row">
+      <span class="stats-label">최고 목표가 (신고가)</span>
+      <span class="stats-val red">44,000원 (한국투자증권)</span>
+    </div>
+  </div>
+
+  <!-- 랭킹 카드 -->
+  
+        <div class="rank-card" style="border-left:5px solid #c0392b">
+          <div class="rank-left">
+            <div class="rank-num" style="color:#c0392b">1위</div>
+            <div class="rank-prev">4만원<br>→</div>
+          </div>
+          <div class="rank-right">
+            <div class="broker-row">
+              <span class="flag">🇰🇷</span>
+              <span class="broker-name">한국투자증권</span>
+              
+            </div>
+            <div class="tp-value" style="color:#c0392b">44,000원</div>
+            <div class="pct-row">
+              <span class="pct-badge" style="color:#c0392b">▲+2%</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill" style="width:100%;background:#c0392b"></div>
+            </div>
+          </div>
+        </div>
+
+  <!-- 푸터 -->
+  <div class="footer">
+    <div class="footer-brand">
+      <div class="footer-icon">S</div>
+      <div>
+        <div class="footer-text">STOCK BRAIN INTELLIGENCE</div>
+        <div class="footer-sub">카드뉴스 제공: SBINTEL.COM</div>
+      </div>
+    </div>
+    <span class="footer-url">sbintel.com</span>
+  </div>
+
+</div>
+</body></html>

@@ -212,39 +212,44 @@ def run_bingsu(page):
         download_one(page, idx, pat, base, ext)
 
     # 서브폴더: 다양한 코드 → 한국 개별종목 상대강도
-    log('  📁 다양한 코드 → 한국 개별종목 상대강도...')
-    page.goto(URL['bingsu'], wait_until='networkidle', timeout=30000)
-    page.wait_for_timeout(2000)
-    items = get_items(page)
-    if 1 < len(items):
-        items[1].click()          # 다양한 코드
-        page.wait_for_timeout(2500)
-        items2 = get_items(page)
-        if 1 < len(items2):
-            items2[1].click()     # 한국 개별종목 상대강도
+    try:
+        log('  📁 다양한 코드 → 한국 개별종목 상대강도...')
+        page.goto(URL['bingsu'], wait_until='networkidle', timeout=30000)
+        page.wait_for_timeout(2000)
+        items = get_items(page)
+        if 1 < len(items):
+            items[1].click()          # 다양한 코드
             page.wait_for_timeout(2500)
-            download_one(page, 0, '종목상대강도', '한국상대강도', '.xlsx')
+            items2 = get_items(page)
+            if 1 < len(items2):
+                items2[1].click()     # 한국 개별종목 상대강도
+                page.wait_for_timeout(2500)
+                download_one(page, 0, '종목상대강도', '한국상대강도', '.xlsx')
+    except Exception as e:
+        log(f'  ⚠️ 한국상대강도 서브폴더 실패: {e}')
 
     # 서브폴더: 다양한 코드 → 한국 ETF 상대강도 (소라티노 + 한국ETF RS)
-    log('  📁 다양한 코드 → 한국 ETF 상대강도 (소라티노)...')
-    page.goto(URL['bingsu'], wait_until='networkidle', timeout=30000)
-    page.wait_for_timeout(2000)
-    items = get_items(page)
-    if 1 < len(items):
-        items[1].click()          # 다양한 코드
-        page.wait_for_timeout(2500)
-        items2 = get_items(page)
-        if 2 < len(items2):
-            items2[2].click()     # 한국 etf 활용한 상대강도 추출
+    try:
+        log('  📁 다양한 코드 → 한국 ETF 상대강도 (소라티노)...')
+        page.goto(URL['bingsu'], wait_until='networkidle', timeout=30000)
+        page.wait_for_timeout(2000)
+        items = get_items(page)
+        if 1 < len(items):
+            items[1].click()          # 다양한 코드
             page.wait_for_timeout(2500)
-            download_one(page, 1, 'etf상대강도데이터.xlsx', '소라티노ETF상대강도', '.xlsx')
-            # 같은 파일을 한국ETF상대강도로도 저장 (Mansfield RS 파서용)
-            import shutil
-            src = SAVE_DIR / dest_name('소라티노ETF상대강도', '.xlsx')
-            dst = SAVE_DIR / dest_name('한국ETF상대강도', '.xlsx')
-            if src.exists():
-                shutil.copy2(str(src), str(dst))
-                log(f'  ✅ 한국ETF상대강도 복사 완료 → {dst.name}')
+            items2 = get_items(page)
+            if 2 < len(items2):
+                items2[2].click()     # 한국 etf 활용한 상대강도 추출
+                page.wait_for_timeout(2500)
+                download_one(page, 1, 'etf상대강도데이터.xlsx', '소라티노ETF상대강도', '.xlsx')
+                import shutil
+                src = SAVE_DIR / dest_name('소라티노ETF상대강도', '.xlsx')
+                dst = SAVE_DIR / dest_name('한국ETF상대강도', '.xlsx')
+                if src.exists():
+                    shutil.copy2(str(src), str(dst))
+                    log(f'  ✅ 한국ETF상대강도 복사 완료 → {dst.name}')
+    except Exception as e:
+        log(f'  ⚠️ 소라티노ETF상대강도 서브폴더 실패: {e}')
 
 
 # ═══════════════════════════════════════════════════

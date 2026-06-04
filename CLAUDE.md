@@ -26,7 +26,10 @@
 
 log.md에 `투경 해제 예측 검증` / `종가배팅 시스템` 키워드 있으면 **요약 전에 먼저 표로 보고**.
 
-> 상세 규칙 파일: `wiki/rules/` — analysis_rules / ingest_rules / naming_rules / topick_rules / skill_routing / page_templates
+> 상세 규칙 파일: `wiki/rules/` — analysis_rules / ingest_rules / naming_rules / topick_rules / skill_routing / page_templates / **투경_관리규칙**
+
+> **투경 관리**: `wiki/rules/투경_관리규칙.md` — 관리 종목·신규 추가 절차·텔레 메시지 구조
+> 관리 종목 파일: `pipeline/투경_관리.json` (12종목) | 신규 종목은 사용자 확인 후 추가
 
 ---
 

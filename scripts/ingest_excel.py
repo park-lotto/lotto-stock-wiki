@@ -1479,8 +1479,9 @@ def build_report(results: dict) -> str:
                 lines.append("| 종목 | 섹터 | 1M수익률 | 2026E영업이익(억) | 1M변화 |")
                 lines.append("|------|------|---------|----------------|--------|")
                 for it in items[:10]:
-                    op_str = fmt_num(it['op_2026'], "") if it['op_2026'] else "—"
-                    lines.append(f"| {it['name']} | {it['sector']} | {fmt_pct(it['ret_1m'])} | {op_str} | {fmt_pct(it['op_chg1m'])} |")
+                    op_val = it.get('op_2026')
+                    op_str = fmt_num(op_val, "") if op_val else "—"
+                    lines.append(f"| {it['name']} | {it.get('sector','—')} | {fmt_pct(it.get('ret_1m'))} | {op_str} | {fmt_pct(it.get('op_chg1m'))} |")
                 lines.append("")
 
     # 3. 수출

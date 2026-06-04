@@ -175,22 +175,85 @@ def send_tg(text: str):
             print(f"  ❌ 발송 실패: {e}")
 
 
+def load_managed() -> dict:
+    """pipeline/투경_관리.json 읽기 → {종목명: info} 딕셔너리"""
+    p = ROOT / "pipeline" / "투경_관리.json"
+    if not p.exists():
+        return {}
+    data = json.loads(p.read_text(encoding="utf-8"))
+    return {s["name"]: s for s in data.get("managed", [])}
+
+
+def get_prev_names() -> set:
+    """어제 투경 목록 종목명 세트 — 오늘 신규 판별용"""
+    from datetime import timedelta
+    yesterday = (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d")
+    prev_path = ROOT / "raw" / "투경" / f"투경_{yesterday}.json"
+    if not prev_path.exists():
+        # 어제 파일 없으면 투경현황.json의 updated가 오늘이 아닌 경우만 참고
+        fb = ROOT / "raw" / "투경" / "투경현황.json"
+        if fb.exists():
+            data = json.loads(fb.read_text(encoding="utf-8"))
+            if data.get("updated", "") != TODAY:
+                return {s["name"] for s in data.get("stocks", [])}
+        return set()
+    prev = json.loads(prev_path.read_text(encoding="utf-8"))
+    names = set()
+    for items in prev.values():
+        for it in items:
+            names.add(it["name"])
+    return names
+
+
 def build_message(warn_data: dict) -> str:
-    lines = [
-        f"⚠️ <b>투자경고/주의 종목</b> — {TODAY_KR}",
-        f"<i>출처: KIND(한국거래소 공시)</i>",
-        "",
-    ]
-    for label, code in WARN_TYPES:
-        items = warn_data.get(code, [])
-        if not items: continue
-        icon = "🚨" if code in ("0301","0302") else "⚡"
-        lines.append(f"<b>{icon} {label} ({len(items)}종목)</b>")
-        for it in items[:15]:
-            dt  = f" ({it['dsgn_dt']})" if it["dsgn_dt"] else ""
-            rls = f" → 해제{it['rls_dt']}" if it["rls_dt"] else ""
-            lines.append(f"  • {it['name']}{dt}{rls}")
+    managed = load_managed()
+    managed_names = set(managed.keys())
+    prev_names = get_prev_names()
+
+    # 전체 현재 투경 종목 플랫 리스트
+    all_items = []
+    for items in warn_data.values():
+        all_items.extend(items)
+
+    current_names = {it["name"] for it in all_items}
+
+    # 관리 종목 중 현재 투경에 있는 것
+    active_managed = [it for it in all_items if it["name"] in managed_names]
+    # 관리 종목 중 해제된 것
+    released = [n for n in managed_names if n not in current_names]
+    # 오늘 신규 진입 = 지정일이 오늘인 것 (관리 외 종목만)
+    truly_new = [it for it in all_items
+                 if it.get("dsgn_dt", "")[:10] == TODAY and it["name"] not in managed_names]
+
+    lines = [f"📋 <b>투경 관리 현황</b> — {TODAY_KR}", ""]
+
+    # 관리 종목만 표시
+    if active_managed:
+        lines.append(f"<b>✅ 관리 종목 ({len(active_managed)}종목)</b>")
+        for it in active_managed:
+            dt = f" | 지정 {it['dsgn_dt']}" if it["dsgn_dt"] else ""
+            lines.append(f"  • {it['name']}{dt}")
         lines.append("")
+
+    # 관리 종목 해제
+    if released:
+        lines.append(f"<b>🎉 해제 ({len(released)}종목)</b>")
+        for n in released:
+            lines.append(f"  • {n}")
+        lines.append("")
+
+    # 오늘 신규 진입 종목만 — 추가 여부 질문
+    if truly_new:
+        lines.append(f"<b>🆕 오늘 신규 투경 ({len(truly_new)}종목) — 관리 추가하시겠어요?</b>")
+        for it in truly_new:
+            dt = f" | 지정 {it['dsgn_dt']}" if it["dsgn_dt"] else ""
+            lines.append(f"  • {it['name']}{dt}")
+        lines.append("")
+        lines.append("<i>→ Claude에게 '투경 관리에 {종목명} 추가해줘' 라고 말하세요</i>")
+
+    if not active_managed and not truly_new and not released:
+        lines.append("관리 종목 이상 없음")
+
     return "\n".join(lines)
 
 
@@ -205,7 +268,7 @@ def main():
     print(f"⏳ KIND 투경 종목 조회 중 ({TODAY})...")
 
     warn_data = {}
-    api_ok = False
+    from_kind = False  # KIND에서 실제 데이터를 받았는지 여부
 
     # 1차: API 시도
     for label, code in WARN_TYPES:
@@ -213,7 +276,7 @@ def main():
         items = parse_items(items_raw)
         warn_data[code] = items
         if items:
-            api_ok = True
+            from_kind = True
         print(f"  {label}: {len(items)}종목")
 
     # API가 모두 실패하면 Playwright 폴백
@@ -224,7 +287,52 @@ def main():
         if pw_data:
             warn_data = pw_data
             total = sum(len(v) for v in warn_data.values())
+            if total > 0:
+                from_kind = True
             print(f"  → Playwright: 총 {total}종목")
+
+    # Playwright도 실패하면 투경현황.json 폴백 (KIND 서버 다운 시)
+    total = sum(len(v) for v in warn_data.values())
+    if total == 0:
+        fallback = ROOT / "raw" / "투경" / "투경현황.json"
+        if fallback.exists():
+            fb = json.loads(fallback.read_text(encoding="utf-8"))
+            stocks = fb.get("stocks", [])
+            fb_updated = fb.get("updated", "?")
+            # warning → 0302(투자경고), risk → 0301(투자위험)으로 매핑
+            warn_data = {"0301": [], "0302": [], "0303": [], "0401": []}
+            for s in stocks:
+                t = s.get("type", "warning")
+                code = "0301" if t == "risk" else "0302"
+                warn_data[code].append({
+                    "name":    s["name"],
+                    "code":    s.get("code", ""),
+                    "dsgn_dt": s.get("des_date", ""),
+                    "rls_dt":  "",
+                })
+            total = sum(len(v) for v in warn_data.values())
+            print(f"  → KIND 서버 다운. 투경현황.json 폴백 사용 ({fb_updated} 기준, {total}종목)")
+
+    # KIND에서 실제 데이터 받았으면 투경현황.json 자동 갱신 (폴백 데이터는 갱신 안 함)
+    total = sum(len(v) for v in warn_data.values())
+    if from_kind and total > 0:
+        fallback = ROOT / "raw" / "투경" / "투경현황.json"
+        # warn_data → stocks 형식으로 변환
+        type_map = {"0301": "risk", "0302": "warning", "0303": "warning", "0401": "warning"}
+        stocks = []
+        for code, items in warn_data.items():
+            for it in items:
+                stocks.append({
+                    "name":     it["name"],
+                    "code":     it.get("code", ""),
+                    "des_date": it.get("dsgn_dt", ""),
+                    "reason":   "",
+                    "warn_type": "surge",
+                    "type":     type_map.get(code, "warning"),
+                })
+        fb_data = {"updated": TODAY, "stocks": stocks}
+        fallback.write_text(json.dumps(fb_data, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"  ✅ 투경현황.json 갱신 ({TODAY}, {len(stocks)}종목)")
 
     # 출력
     print(f"\n{'='*50}")
