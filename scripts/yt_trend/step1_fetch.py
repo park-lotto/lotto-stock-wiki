@@ -15,7 +15,7 @@ KEYWORDS = ["주식 급등", "급상승 종목", "수급 터진", "반도체 주
 
 
 def _published_after():
-    dt = datetime.now(timezone.utc) - timedelta(hours=48)
+    dt = datetime.now(timezone.utc) - timedelta(hours=12)
     return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
