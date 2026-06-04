@@ -66,7 +66,7 @@ def run(date_str: str):
 ]"""
 
     genai.configure(api_key=GEMINI_KEY)
-    model = genai.GenerativeModel("gemini-2.0-flash")
+    model = genai.GenerativeModel("gemini-2.5-flash")
 
     try:
         resp = model.generate_content(prompt)

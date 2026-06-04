@@ -19,11 +19,13 @@ BASE_DIR = Path(__file__).parent.parent.parent / "raw" / "yt_trend"
 def _get_transcript(video_id: str) -> tuple[str | None, str | None]:
     """Returns (hook_text, full_text) or (None, None) on failure."""
     try:
-        segments = YouTubeTranscriptApi.get_transcript(video_id, languages=["ko", "ko-KR"])
-        hook = " ".join(s["text"] for s in segments if s["start"] < 30)
-        full = " ".join(s["text"] for s in segments)
+        tl = YouTubeTranscriptApi().list(video_id)
+        t = tl.find_transcript(["ko", "ko-KR"])
+        segments = list(t.fetch())
+        hook = " ".join(s.text for s in segments if s.start < 30)
+        full = " ".join(s.text for s in segments)
         return hook, full
-    except (NoTranscriptFound, TranscriptsDisabled):
+    except Exception:
         return None, None
 
 
@@ -100,7 +102,7 @@ def run(date_str: str):
     top5 = videos[:5]
 
     genai.configure(api_key=GEMINI_KEY)
-    model = genai.GenerativeModel("gemini-2.0-flash")
+    model = genai.GenerativeModel("gemini-2.5-flash")
 
     results = []
     for v in top5:
