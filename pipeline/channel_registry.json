@@ -1,0 +1,27 @@
+{
+  "_comment": "채널 레지스트리 — 채널명: 텔레그램 파일명에서 _요약.md 제거한 이름과 일치",
+  "_types": {
+    "A": "증권사 공식 (시황·섹터·리포트)",
+    "B": "고급 큐레이션 (정보 수집·정리형)",
+    "C": "개인 섹터 전문가",
+    "D": "인사이트·흐름형 (사고방식 배울 채널)"
+  },
+  "_pass2": "true = 사고방식 wiki/insights/{채널}.md 에 별도 저장",
+
+  "신한리서치": {
+    "type": "A",
+    "specialty": ["전체"],
+    "pass1": true,
+    "pass2": false,
+    "trust": "high",
+    "note": ""
+  },
+  "주공고급수집": {
+    "type": "B",
+    "specialty": ["글로벌"],
+    "pass1": true,
+    "pass2": false,
+    "trust": "medium",
+    "note": "해외 뉴스 커플링 중심"
+  }
+}

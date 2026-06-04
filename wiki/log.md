@@ -1,3 +1,4 @@
+- 2026-06-04 — ingest | raw/telegram/2026-06-03_태린이아빠_유튜브.md → wiki/외부인사이트/태린이아빠.md | 광통신 군집 신고가·HBM4 가격협상·TGA 유동성 경고·삼성전기 TP320만원
 - 2026-06-04 — crawling_bot_data ingest 파이프라인 설계 착수 | B안 확정: pdf_summarize.py(Gemini Flash) + ingest_crawl.py(Haiku) + crawl_ingest_state.json | 투경 관리 12종목 완성 | Task Scheduler 5개 python경로 수정 | yt 주제확정: 반도체독주→순환매 6월핵심
 - 2026-06-04 — yt-gemini-pipeline 파이프라인 재설계 시행착오 | SKILL.md 종목선정 5단계 규칙 정립 | 영상주제_후보풀.md 생성(세트1) | LIG D&A Deep Research 리포트 확보 | 핵심학습: Claude=편집장(리서치X), Gemini Deep Research 활용 방향 확립
 - 2026-06-04 — yt-gemini-pipeline 완료 — 순환매 후보 3선 | 스토리: 불안공감→3중필터 공개→TOP3 선정→리스크→결론 | 파일: script_순환매_final.md / yt_순환매_기획서.md
@@ -1137,4 +1138,8 @@ python calc_oscillator.py SK하이닉스 삼성전자 한미반도체 --tg
 - `wiki/L5_섹터/sector_반도체_서브섹터.md` — 18개 서브섹터 × 대표종목 매핑 마스터 (일별 활성 로그 포함)
 
 - 2026-05-28: [2차전지ESS] 섹터 딥리서치 완료 (Gemini 2.5 Flash + Google Search)
-- 2026-05-28: [조선] 섹터 딥리서치 완료 (Gemini 2.5 Flash + Google Search)
+- 2026-05-28: [조선] 섹터 딥리서치 완료 (Gemini 2.5 Flash + Google Search)- 2026-06-04 ingest_crawl: sector 0개, stock 0개 wiki 업데이트
+- 2026-06-04 ingest_crawl: sector 1개, stock 0개 wiki 업데이트
+- 2026-06-04 ingest_crawl: sector 1개, stock 0개 wiki 업데이트
+- 2026-06-04 ingest_crawl: sector 9개, stock 9개 코멘트 추가
+- 2026-06-04 ingest_crawl(telegram): sector 16개, stock 21개 코멘트 추가

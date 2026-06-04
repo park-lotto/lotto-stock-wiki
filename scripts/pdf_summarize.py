@@ -175,6 +175,8 @@ def process_date(date_str: str, limit: int = 0):
             save_state(state)
             processed += 1
 
+    # 루프 종료 후 state.json 최종 저장 (file-exists·NO PDF 경로도 반영)
+    save_state(state)
     print(f'\npdf_summarize 완료: {date_str} | {processed}개 신규 처리')
 
 # ── argparse ──────────────────────────────────────────────────────────────────
