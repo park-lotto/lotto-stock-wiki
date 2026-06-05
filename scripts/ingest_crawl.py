@@ -275,9 +275,20 @@ def append_stock_comment(sector: str, stock: str, code: str,
 # ── 메인 ─────────────────────────────────────────────────────────────────────
 def load_telegram(md_path: Path) -> dict:
     text  = md_path.read_text(encoding='utf-8')
-    # 채널명: 파일명에서 추출 (예: 신한리서치_요약.md → 신한리서치)
-    channel = md_path.stem.replace('_요약', '')
+    # 채널명: 날짜 프리픽스({YYYY-MM-DD}_) + HHMM 서픽스(_{HHMM}) + _요약 제거
+    channel = md_path.stem
+    channel = re.sub(r'^\d{4}-\d{2}-\d{2}_', '', channel)
+    channel = re.sub(r'_\d{4}$', '', channel)
+    channel = channel.replace('_요약', '')
     return {'file': md_path.name, 'title': channel, 'broker': channel, 'summary': text}
+
+def load_blog(md_path: Path) -> dict:
+    text  = md_path.read_text(encoding='utf-8')
+    lines = text.splitlines()
+    title  = next((l.lstrip('# ').strip() for l in lines if l.startswith('#')), md_path.stem)
+    # 출처: **출처**: pokara61 블로그 패턴
+    broker = next((l.split('**출처**:')[-1].strip() for l in lines if '**출처**:' in l), '블로그')
+    return {'file': md_path.name, 'title': title, 'broker': broker, 'summary': text[:3000]}
 
 def process(date_str: str, dry_run=False, limit=0, file_kw=None, source='report'):
     state = load_state()
@@ -287,6 +298,11 @@ def process(date_str: str, dry_run=False, limit=0, file_kw=None, source='report'
         state_key = 'ingested_tg'
         label     = f'raw/telegram/{date_str}/'
         loader    = load_telegram
+    elif source == 'blog':
+        raw_dir   = ROOT / 'raw' / 'blog' / date_str
+        state_key = 'ingested_blog'
+        label     = f'raw/blog/{date_str}/'
+        loader    = load_blog
     else:
         raw_dir   = ROOT / 'raw' / 'report' / date_str
         state_key = 'ingested'
@@ -309,6 +325,7 @@ def process(date_str: str, dry_run=False, limit=0, file_kw=None, source='report'
 
     reports = [loader(f) for f in todo]
     print(f'  Gemini 분류+코멘트 추출 중... ({len(reports)}개)')
+    # telegram: telegram 프롬프트 / report·blog: report 프롬프트 재사용
     classified = classify_telegram(reports) if source == 'telegram' else classify_and_extract(reports)
 
     s = sum(1 for c in classified if c['type']=='sector')
@@ -390,7 +407,7 @@ def main():
     p.add_argument('--dry-run', action='store_true')
     p.add_argument('--limit',   type=int, default=0)
     p.add_argument('--file',    default=None)
-    p.add_argument('--source',  default='report', choices=['report', 'telegram'])
+    p.add_argument('--source',  default='report', choices=['report', 'telegram', 'blog'])
     a = p.parse_args()
     process(a.date, a.dry_run, a.limit, a.file, a.source)
 
