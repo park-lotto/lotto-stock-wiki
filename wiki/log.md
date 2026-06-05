@@ -1,3 +1,5 @@
+- 2026-06-05 — 폴더 정리+건강검진 | 삭제: wiki/wiki(중복)·out구폴더3개·demos | 이동: raw/투경→pipeline/투경 | 통합: raw/리모션영상→raw/리모션/ | 이동: raw/미국장→raw/L2_미국시장 | 이름정리: 매일엑셀/크롤링/테마맵/캡처본 공백·오타제거 | 오타수정: 유뷰트→유튜브 | 방치섹터: 철강·우주·2차전지ESS
+- 2026-06-05 — Excel ingest 완료: 추정이익변경·컨센움직임·수출·유동성·수급·중소형주수급·가속화모멘텀·액티브ETF·일정·투자아이디어 → ingest_report_2026-06-05.md
 - 2026-06-05 — yt-trend 2026-06-04 파이프라인 완전 재실행 | API 키 갱신(YOUTUBE+GEMINI AQ.형식) | step2 Python 신규·step3/4 google.genai 마이그레이션 | 대본 완성(소부장 3근거: 일본TEL선행+최태원증산+TSMC팹) | S1/S3/S5/S7 디벨롭 완료 | 다음: yt-planner → Remotion
 - 2026-06-04 — Smart App Control 차단 해제 | 집PC Python 실행 차단 원인: SAC(VerifiedAndReputablePolicyState=1) | 관리자 레지스트리 변경으로 0 세팅 완료 | 재시작 후 yt-trend 파이프라인 처음부터 재실행 예정 (오늘 폭락 반영 대본 목적)
 - 2026-06-04 — Gemini 딥리서치 파이프라인 구축 완료 | gemini_yt_deep_research.py 완성(Interactions API) | .mcp.json MCP A/B 등록 | yt-content-research 실전실행: 소부장자금순환 각도 → 원익IPS+유진테크 → Gemini 대본 완성 → 검수PASS | 파일: script_소부장자금순환_20260604_final.md | 다음: yt-planner → Remotion
