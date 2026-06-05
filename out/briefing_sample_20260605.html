@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>로또의 주식인사이트 — 오늘의 판단 브리핑</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0a0a;
+    color: #e8e8e8;
+    font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    min-height: 100vh;
+    padding: 24px 16px;
+  }
+
+  .card {
+    max-width: 480px;
+    margin: 0 auto;
+    background: #111;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid #222;
+  }
+
+  /* 헤더 */
+  .header {
+    background: #111;
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid #1e1e1e;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header-left .brand {
+    font-size: 11px;
+    color: #555;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .header-left .date {
+    font-size: 15px;
+    font-weight: 700;
+    color: #e8e8e8;
+  }
+  .header-right .market-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.04em;
+  }
+  .badge-caution { background: #2a1a00; color: #f59e0b; border: 1px solid #3d2600; }
+  .badge-ok { background: #0a2010; color: #34d399; border: 1px solid #0d3018; }
+  .badge-danger { background: #1a0a0a; color: #f87171; border: 1px solid #2d1010; }
+
+  /* 오늘의 판단 — 메인 */
+  .main-verdict {
+    padding: 20px 24px 18px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  .verdict-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #555;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .verdict-text {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.45;
+    letter-spacing: -0.01em;
+  }
+  .verdict-sub {
+    font-size: 13px;
+    color: #888;
+    margin-top: 8px;
+    line-height: 1.6;
+  }
+
+  /* 오늘의 해석 */
+  .interpretation {
+    padding: 18px 24px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #555;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .reason-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .reason-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    color: #bbb;
+    line-height: 1.55;
+  }
+  .reason-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* 살 곳 / 피할 곳 */
+  .action-zone {
+    padding: 18px 24px;
+    border-bottom: 1px solid #1a1a1a;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .action-box {
+    border-radius: 12px;
+    padding: 14px 14px;
+  }
+  .action-box.buy { background: #0d1f12; border: 1px solid #1a3820; }
+  .action-box.avoid { background: #1a0d0d; border: 1px solid #2d1515; }
+  .action-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .action-box.buy .action-title { color: #34d399; }
+  .action-box.avoid .action-title { color: #f87171; }
+  .action-content {
+    font-size: 13px;
+    font-weight: 700;
+    color: #e8e8e8;
+    line-height: 1.5;
+    margin-bottom: 6px;
+  }
+  .action-why {
+    font-size: 11px;
+    color: #666;
+    line-height: 1.5;
+  }
+
+  /* 오늘 주목 종목 */
+  .stocks {
+    padding: 18px 24px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  .stock-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #181818;
+  }
+  .stock-row:last-child { border-bottom: none; }
+  .stock-info { display: flex; flex-direction: column; gap: 3px; }
+  .stock-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #e8e8e8;
+  }
+  .stock-reason {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.4;
+  }
+  .stock-signal {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+  }
+  .signal-chip {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .chip-watch { background: #1a2a3a; color: #60a5fa; }
+  .chip-enter { background: #0a2010; color: #34d399; }
+  .chip-wait { background: #1e1a0a; color: #f59e0b; }
+  .stock-tp {
+    font-size: 11px;
+    color: #555;
+  }
+
+  /* 리스크 한 줄 */
+  .risk-bar {
+    padding: 14px 24px;
+    background: #0f0a0a;
+    border-bottom: 1px solid #1a1a1a;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .risk-icon { font-size: 14px; }
+  .risk-text {
+    font-size: 12px;
+    color: #888;
+    line-height: 1.5;
+  }
+  .risk-text strong { color: #f87171; }
+
+  /* 푸터 */
+  .footer {
+    padding: 14px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-note {
+    font-size: 10px;
+    color: #444;
+    line-height: 1.5;
+  }
+  .footer-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #e8b84b;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- 헤더 -->
+  <div class="header">
+    <div class="header-left">
+      <div class="brand">로또의 주식인사이트</div>
+      <div class="date">2026년 6월 5일 목요일</div>
+    </div>
+    <div class="header-right">
+      <span class="market-badge badge-caution">⚡ 변동 장세</span>
+    </div>
+  </div>
+
+  <!-- 오늘의 판단 -->
+  <div class="main-verdict">
+    <div class="verdict-label">오늘의 판단</div>
+    <div class="verdict-text">반도체 주도주는 흔들리지만<br>소부장·조선 빈집은 살아있다</div>
+    <div class="verdict-sub">브로드컴 -12.6% 쇼크로 삼전·닉스 -6~8% 급락. 근데 이게 끝 아니에요. 수출 877억달러 역대최대, DRAM 판가 월별 +12.6% 가속 중. 흔들 때가 오히려 소부장 빈집 잡는 타이밍입니다.</div>
+  </div>
+
+  <!-- 오늘 시장 해석 -->
+  <div class="interpretation">
+    <div class="section-label">왜 이렇게 보는가</div>
+    <ul class="reason-list">
+      <li class="reason-item">
+        <span class="reason-icon">📉</span>
+        <span>브로드컴 가이던스 컨센 하회 → 단기 AI 피크아웃 공포. 삼전·닉스 급락은 이것 때문</span>
+      </li>
+      <li class="reason-item">
+        <span class="reason-icon">📦</span>
+        <span>5월 수출 877억달러 역대최대. DRAM 단가 MoM +12.6%, NAND +23.4% — 업사이클 꺾인 게 아님</span>
+      </li>
+      <li class="reason-item">
+        <span class="reason-icon">🏗️</span>
+        <span>최태원 CAPA 2배 + 엔비디아 Vera CPU 수요 확대 = 소부장 2027 랠리 근거 여전히 유효</span>
+      </li>
+      <li class="reason-item">
+        <span class="reason-icon">🚢</span>
+        <span>조선은 아무도 안 봄. 삼성중공업 FLNG 4.3조 확정 + 미군함 2.8조 검토. 빈집 중 빈집</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- 살 곳 / 피할 곳 -->
+  <div class="action-zone">
+    <div class="action-box buy">
+      <div class="action-title">▲ 들어갈 곳</div>
+      <div class="action-content">소부장 눌림목<br>조선 기자재</div>
+      <div class="action-why">수급 빠진 자리. 펀더멘털은 그대로</div>
+    </div>
+    <div class="action-box avoid">
+      <div class="action-title">▼ 피할 곳</div>
+      <div class="action-content">반도체 대형주<br>단기 추격 매수</div>
+      <div class="action-why">추격 들어가면 변동성에 당함</div>
+    </div>
+  </div>
+
+  <!-- 오늘 주목 종목 -->
+  <div class="stocks">
+    <div class="section-label">오늘 주목 종목</div>
+
+    <div class="stock-row">
+      <div class="stock-info">
+        <div class="stock-name">삼성전기</div>
+        <div class="stock-reason">AI MLCC 공급부족 + Si-Cap 확대<br>어닝 모멘텀 최고조</div>
+      </div>
+      <div class="stock-signal">
+        <span class="signal-chip chip-enter">매수 관심</span>
+        <span class="stock-tp">TP 210만원</span>
+      </div>
+    </div>
+
+    <div class="stock-row">
+      <div class="stock-info">
+        <div class="stock-name">한국카본</div>
+        <div class="stock-reason">LNG 보냉재 과점 + FLNG 수주 확대<br>조선 빈집 대표주</div>
+      </div>
+      <div class="stock-signal">
+        <span class="signal-chip chip-watch">주시</span>
+        <span class="stock-tp">TP 61,000원</span>
+      </div>
+    </div>
+
+    <div class="stock-row">
+      <div class="stock-info">
+        <div class="stock-name">피에스케이</div>
+        <div class="stock-reason">전일 상한가. Capex 확대 수혜<br>장비 사이클 선반영</div>
+      </div>
+      <div class="stock-signal">
+        <span class="signal-chip chip-wait">추격 금지</span>
+        <span class="stock-tp">눌림 대기</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 리스크 -->
+  <div class="risk-bar">
+    <span class="risk-icon">⚠️</span>
+    <span class="risk-text">
+      <strong>리스크</strong> — 브로드컴 쇼크 여진 지속 시 반도체 전반 추가 조정 가능. 손절선 지키고 비중 절반 이하로.
+    </span>
+  </div>
+
+  <!-- 푸터 -->
+  <div class="footer">
+    <span class="footer-note">투자 판단은 본인 책임. 정보 제공 목적.</span>
+    <div class="footer-dot"></div>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>반도체 판단 브리핑 — 2026.06.05</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0a;
+    color: #e8e8e8;
+    font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    min-height: 100vh;
+    padding: 24px 16px;
+  }
+  .card {
+    max-width: 480px;
+    margin: 0 auto;
+    background: #111;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid #222;
+  }
+
+  /* 헤더 */
+  .header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid #1e1e1e;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header-left .brand { font-size: 11px; color: #555; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 2px; }
+  .header-left .date { font-size: 15px; font-weight: 700; color: #e8e8e8; }
+  .market-badge {
+    font-size: 11px; font-weight: 700; padding: 4px 10px;
+    border-radius: 20px; letter-spacing: 0.04em;
+    background: #1a1500; color: #f59e0b; border: 1px solid #3d2e00;
+  }
+
+  /* 오늘의 판단 */
+  .main-verdict {
+    padding: 20px 24px 18px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  .verdict-label { font-size: 10px; font-weight: 700; color: #555; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px; }
+  .verdict-text { font-size: 18px; font-weight: 800; color: #fff; line-height: 1.45; letter-spacing: -0.01em; }
+  .verdict-sub { font-size: 13px; color: #888; margin-top: 8px; line-height: 1.6; }
+
+  /* 근거 */
+  .interpretation { padding: 18px 24px; border-bottom: 1px solid #1a1a1a; }
+  .section-label { font-size: 10px; font-weight: 700; color: #555; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px; }
+  .reason-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .reason-item { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: #bbb; line-height: 1.55; }
+  .reason-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+
+  /* 살 곳 / 피할 곳 */
+  .action-zone {
+    padding: 18px 24px; border-bottom: 1px solid #1a1a1a;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  }
+  .action-box { border-radius: 12px; padding: 14px; }
+  .action-box.buy { background: #0d1f12; border: 1px solid #1a3820; }
+  .action-box.avoid { background: #1a0d0d; border: 1px solid #2d1515; }
+  .action-title { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+  .action-box.buy .action-title { color: #34d399; }
+  .action-box.avoid .action-title { color: #f87171; }
+  .action-content { font-size: 13px; font-weight: 700; color: #e8e8e8; line-height: 1.5; margin-bottom: 6px; }
+  .action-why { font-size: 11px; color: #666; line-height: 1.5; }
+
+  /* 종목 */
+  .stocks { padding: 18px 24px; border-bottom: 1px solid #1a1a1a; }
+  .stock-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #181818; }
+  .stock-row:last-child { border-bottom: none; }
+  .stock-info { display: flex; flex-direction: column; gap: 3px; }
+  .stock-name { font-size: 14px; font-weight: 700; color: #e8e8e8; }
+  .stock-reason { font-size: 12px; color: #666; line-height: 1.4; }
+  .stock-signal { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+  .signal-chip { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.04em; white-space: nowrap; }
+  .chip-enter { background: #0a2010; color: #34d399; }
+  .chip-watch { background: #1a2a3a; color: #60a5fa; }
+  .chip-wait  { background: #1e1a0a; color: #f59e0b; }
+  .chip-skip  { background: #1a0d0d; color: #f87171; }
+  .stock-tp { font-size: 11px; color: #555; }
+
+  /* 리스크 */
+  .risk-bar {
+    padding: 14px 24px; background: #0f0a0a;
+    border-bottom: 1px solid #1a1a1a;
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .risk-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+  .risk-text { font-size: 12px; color: #888; line-height: 1.6; }
+  .risk-text strong { color: #f87171; }
+
+  /* 푸터 */
+  .footer { padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; }
+  .footer-note { font-size: 10px; color: #444; line-height: 1.5; }
+  .footer-dot { width: 6px; height: 6px; border-radius: 50%; background: #e8b84b; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <!-- 헤더 -->
+  <div class="header">
+    <div class="header-left">
+      <div class="brand">로또의 주식인사이트 · 반도체</div>
+      <div class="date">2026년 6월 5일 목요일</div>
+    </div>
+    <div class="header-right">
+      <span class="market-badge">⚡ 단기 변동 구간</span>
+    </div>
+  </div>
+
+  <!-- 오늘의 판단 -->
+  <div class="main-verdict">
+    <div class="verdict-label">오늘의 판단</div>
+    <div class="verdict-text">대형주는 쉬어간다<br>소부장 장기 모멘텀은 살아있다</div>
+    <div class="verdict-sub">브로드컴 가이던스 미스로 삼전·닉스 -6~8% 급락. 근데 수출 877억 역대최대, DRAM 판가 MoM +12.6% 가속 중. 펀더멘탈 꺾인 게 아니라 기대치가 높았던 것. 대형주 추격은 잠시 멈추고, 2027 용인팹 수혜 소부장 자리 잡는 구간으로 보면 된다.</div>
+  </div>
+
+  <!-- 근거 -->
+  <div class="interpretation">
+    <div class="section-label">왜 이렇게 보는가</div>
+    <ul class="reason-list">
+      <li class="reason-item">
+        <span class="reason-icon">📉</span>
+        <span>브로드컴 Q3 AI 가이던스 160억달러 — 컨센 172억 대비 미스. 구글 TPU M/S 희석 경영진 시인. "수요 꺾임"이 아닌 "컨센 과열" 조정</span>
+      </li>
+      <li class="reason-item">
+        <span class="reason-icon">📦</span>
+        <span>5월 DRAM 단가 MoM +12.6%, NAND +23.4% 동시 가속. 모건스탠리 마이크론 TP 520→1,050달러(+102%). 공급부족 장기화 컨센 유지</span>
+      </li>
+      <li class="reason-item">
+        <span class="reason-icon">🏗️</span>
+        <span>최태원 CAPA 5년 내 2배 선언 + 용인팹 2027 본격 발주. SK증권: 이번 사이클 길고 강해지는 것이 특징. 소부장 조정 = 매수 기회</span>
+      </li>
+      <li class="reason-item">
+        <span class="reason-icon">⚠️</span>
+        <span>외국인 19거래일 연속 순매도 67조 역대최대. 코스피 주봉 신고가→음전 전환. 반대매매 출회 가능성 다음주 잔존</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- 살 곳 / 피할 곳 -->
+  <div class="action-zone">
+    <div class="action-box buy">
+      <div class="action-title">▲ 관심 구간</div>
+      <div class="action-content">전공정 장비·소재<br>(눌림목)</div>
+      <div class="action-why">신고가 돌파 확인 후 진입.<br>급하게 따라가지 말 것</div>
+    </div>
+    <div class="action-box avoid">
+      <div class="action-title">▼ 지금 아닌 곳</div>
+      <div class="action-content">삼전·닉스 추격<br>단기 반등 베팅</div>
+      <div class="action-why">변동성 4.2% 이례적 구간.<br>시초가/종가 아닌 장중 분산</div>
+    </div>
+  </div>
+
+  <!-- 오늘 주목 종목 -->
+  <div class="stocks">
+    <div class="section-label">오늘 주목 종목</div>
+
+    <div class="stock-row">
+      <div class="stock-info">
+        <div class="stock-name">삼성전기</div>
+        <div class="stock-reason">AI MLCC 공급부족 + Si-Cap ASP 범용대비 10배<br>⚠️ ETF 리밸런싱 6/15 단기 매도압력 주의</div>
+      </div>
+      <div class="stock-signal">
+        <span class="signal-chip chip-wait">리밸 후 재진입</span>
+        <span class="stock-tp">TP 210만원</span>
+      </div>
+    </div>
+
+    <div class="stock-row">
+      <div class="stock-info">
+        <div class="stock-name">피에스케이</div>
+        <div class="stock-reason">전공정 최선호주. 모든 고객 Capex 상향<br>전일 급등 — 눌림 대기</div>
+      </div>
+      <div class="stock-signal">
+        <span class="signal-chip chip-watch">눌림 대기</span>
+        <span class="stock-tp">TP 16만원</span>
+      </div>
+    </div>
+
+    <div class="stock-row">
+      <div class="stock-info">
+        <div class="stock-name">LG이노텍</div>
+        <div class="stock-reason">AI기판 증설 즉시 풀가동 / 2028까지 공급부족<br>2Q26 영업이익 +16배 서프라이즈</div>
+      </div>
+      <div class="stock-signal">
+        <span class="signal-chip chip-enter">매수 관심</span>
+        <span class="stock-tp">TP 200만원</span>
+      </div>
+    </div>
+
+    <div class="stock-row">
+      <div class="stock-info">
+        <div class="stock-name">SK하이닉스</div>
+        <div class="stock-reason">젠슨황 "HBM4E 더 달라" 직접 요청 확인<br>단기 -8% 급락 — 중기 방향은 유효</div>
+      </div>
+      <div class="stock-signal">
+        <span class="signal-chip chip-skip">단기 추격 금지</span>
+        <span class="stock-tp">TP 380만원</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 리스크 -->
+  <div class="risk-bar">
+    <span class="risk-icon">⚠️</span>
+    <span class="risk-text">
+      <strong>핵심 리스크</strong> — DeepSeek 美기업 지출 1위 등극. 저비용 추론 확산 시 HBM 수요 성장 속도 중기 영향 가능. 단기 이벤트 아닌 구조 변화 여부 모니터링 필요.
+    </span>
+  </div>
+
+  <!-- 푸터 -->
+  <div class="footer">
+    <span class="footer-note">투자 판단은 본인 책임. 정보 제공 목적.</span>
+    <div class="footer-dot"></div>
+  </div>
+
+</div>
+</body>
+</html>
