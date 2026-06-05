@@ -1,0 +1,34 @@
+{
+  "_schema_version": "1.0",
+  "_note": "일정 캘린더 DB. 날짜 지나면 active: false로 자동 처리. 섹터방향성 판단에 활용.",
+  "schedules": [
+    {
+      "id": "20260605_반도체_High-NA_EUV_001",
+      "date_added": "2026-06-05",
+      "event_date": "2027-01-01",
+      "event_date_precision": "year",
+      "sector": "반도체",
+      "ticker": null,
+      "title": "TSMC High-NA EUV 생산 도입 일정",
+      "content": "TSMC CEO: High-NA EUV 비용 이슈로 현재 생산 미사용. 도입 시기 불명확. 2027년 이후로 추정.",
+      "impact": "중립",
+      "active": true,
+      "source": "하나차이나 2026-06-05",
+      "tags": ["TSMC", "EUV", "파운드리기술"]
+    },
+    {
+      "id": "20260605_반도체_CoPoS_001",
+      "date_added": "2026-06-05",
+      "event_date": "2028-06-01",
+      "event_date_precision": "year_range",
+      "sector": "반도체",
+      "ticker": null,
+      "title": "TSMC CoPoS 생산량 대폭 증가 시점",
+      "content": "TSMC CEO: CoPoS 첨단패키징 파일럿 운영중. 2~3년내 생산량 대폭 증가 예정.",
+      "impact": "강세",
+      "active": true,
+      "source": "하나차이나 2026-06-05",
+      "tags": ["TSMC", "CoPoS", "첨단패키징", "HBM"]
+    }
+  ]
+}

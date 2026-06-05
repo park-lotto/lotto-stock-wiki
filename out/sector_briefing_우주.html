@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=800">
+<title>우주 섹터 데일리 — STOCK BRAIN</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --mint:   #00e5c6;
+  --white:  #f0f8ff;
+  --red:    #ff2244;
+  --yellow: #ffe500;
+  --orange: #ff8c00;
+  --purple: #a78bfa;
+  --bg:     #07090f;
+  --card:   #0a0c1a;
+  --card2:  #0f1222;
+  --t0: #ffffff;
+  --t1: #ddeeff;
+  --t2: #c0d0e4;
+  --t3: #8fa0b8;
+  --t4: #6478a0;
+  --t5: #3d4e6a;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:#020307;
+  background-image:
+    radial-gradient(ellipse at 20% 20%, rgba(0,229,198,0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(167,139,250,0.04) 0%, transparent 50%),
+    linear-gradient(rgba(0,229,198,0.015) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,229,198,0.015) 1px,transparent 1px);
+  background-size:100% 100%,100% 100%,44px 44px,44px 44px;
+  display:flex;justify-content:center;
+  padding:36px 0 52px;
+  font-family:'Geist',-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.card{
+  width:800px;
+  background:var(--card);
+  border-radius:20px;
+  overflow:hidden;
+  border:1px solid rgba(167,139,250,0.15);
+  box-shadow:
+    0 0 80px rgba(167,139,250,0.07),
+    0 0 80px rgba(0,229,198,0.05),
+    0 80px 140px rgba(0,0,0,0.95),
+    inset 0 1px 0 rgba(167,139,250,0.1);
+  position:relative;
+}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;z-index:2;
+  background:linear-gradient(90deg,
+    transparent 0%,
+    rgba(167,139,250,0.3) 10%,
+    rgba(0,229,198,0.6) 35%,
+    #00e5c6 50%,
+    rgba(167,139,250,0.8) 70%,
+    rgba(167,139,250,0.3) 90%,
+    transparent 100%);
+}
+
+/* ── VERIFY BANNER ───────────────────────── */
+.verify-bar{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(167,139,250,0.06);
+  border-bottom:1px solid rgba(167,139,250,0.1);
+  padding:7px 24px;
+  font-size:9px;font-weight:600;letter-spacing:1.5px;color:var(--t4);
+}
+.verify-dot{width:5px;height:5px;border-radius:50%;background:var(--purple);box-shadow:0 0 4px var(--purple);flex-shrink:0}
+.verify-txt{color:var(--purple);font-weight:700}
+
+/* ── HEADER ───────────────────────────────── */
+.hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:22px 28px 20px;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  background:linear-gradient(180deg,rgba(167,139,250,0.04) 0%,transparent 100%);
+}
+.hdr-left{display:flex;align-items:center;gap:14px}
+.brand-wrap{display:flex;align-items:center;gap:8px}
+.brand-dot{width:7px;height:7px;border-radius:50%;background:var(--mint);box-shadow:0 0 10px var(--mint),0 0 20px rgba(0,229,198,0.4)}
+.brand{font-size:9.5px;font-weight:900;letter-spacing:5px;color:var(--mint);text-transform:uppercase}
+.divider{width:1px;height:20px;background:rgba(255,255,255,0.1)}
+.sector-title{display:flex;flex-direction:column;gap:2px}
+.sector-pre{font-size:8.5px;font-weight:600;letter-spacing:2px;color:var(--t4);text-transform:uppercase}
+.sector-nm{font-size:22px;font-weight:900;color:var(--t0);letter-spacing:-0.5px}
+.sector-nm span{color:var(--purple)}
+.hdr-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.date-badge{
+  background:linear-gradient(135deg,var(--purple),#7c3aed);
+  color:#fff;
+  font-size:10.5px;font-weight:800;letter-spacing:0.5px;
+  padding:5px 15px;border-radius:20px;
+}
+.countdown{
+  font-size:10px;font-weight:700;color:var(--purple);
+  background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.25);
+  padding:3px 10px;border-radius:12px;letter-spacing:0.3px;
+}
+.verified-tag{font-size:8px;font-weight:700;letter-spacing:1px;color:var(--mint);opacity:0.6;text-align:right}
+
+/* ── IPO COUNTDOWN ────────────────────────── */
+.ipo-bar{
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  background:rgba(167,139,250,0.06);
+  border-bottom:1px solid rgba(167,139,250,0.1);
+  padding:10px 24px;
+}
+.ipo-label{font-size:9px;font-weight:600;letter-spacing:2px;color:var(--t4);text-transform:uppercase}
+.ipo-title{font-size:13px;font-weight:800;color:var(--t0)}
+.ipo-title span{color:var(--purple)}
+.ipo-sep{color:var(--t5)}
+.ipo-data{display:flex;gap:16px}
+.ipo-stat{text-align:center}
+.ipo-stat-val{font-size:12px;font-weight:800;color:var(--mint)}
+.ipo-stat-lbl{font-size:8px;color:var(--t4);margin-top:1px;letter-spacing:0.5px}
+.ipo-d{
+  display:flex;align-items:center;gap:4px;
+  background:var(--purple);color:#fff;
+  font-size:11px;font-weight:900;padding:4px 12px;border-radius:10px;
+  margin-left:4px;
+}
+
+/* ── INSIGHT ──────────────────────────────── */
+.insight-wrap{
+  margin:16px 24px;
+  background:rgba(167,139,250,0.04);
+  border-left:3px solid var(--purple);
+  border-radius:0 12px 12px 0;
+  padding:15px 20px;
+}
+.insight-label{font-size:8.5px;font-weight:800;letter-spacing:4px;color:var(--purple);text-transform:uppercase;margin-bottom:9px;opacity:0.8}
+.insight-body{font-size:13px;line-height:1.8;color:var(--t1);font-weight:400}
+.insight-body b{color:var(--mint);font-weight:700}
+.insight-body .warn{color:var(--yellow)}
+.insight-body .purple{color:var(--purple)}
+
+/* ── REPORT / NEWS ────────────────────────── */
+.rn-wrap{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 24px 16px}
+.rn-col{background:var(--card2);border-radius:12px;padding:14px 16px;border:1px solid rgba(255,255,255,0.04)}
+.rn-col-title{font-size:8.5px;font-weight:700;letter-spacing:3px;color:var(--t4);text-transform:uppercase;margin-bottom:11px}
+.rn-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px}
+.rn-item:last-child{margin-bottom:0}
+.rn-tag{font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;white-space:nowrap;flex-shrink:0;margin-top:2px}
+.rn-tag.rep{background:rgba(0,229,198,0.1);color:var(--mint);border:1px solid rgba(0,229,198,0.22)}
+.rn-tag.rep-p{background:rgba(167,139,250,0.1);color:var(--purple);border:1px solid rgba(167,139,250,0.25)}
+.rn-tag.news{background:rgba(255,229,0,0.09);color:var(--yellow);border:1px solid rgba(255,229,0,0.22)}
+.rn-tag.danger{background:rgba(255,34,68,0.09);color:#ff6680;border:1px solid rgba(255,34,68,0.22)}
+.rn-tag.old{background:rgba(255,140,0,0.09);color:var(--orange);border:1px solid rgba(255,140,0,0.22)}
+.rn-text{font-size:11.5px;color:var(--t2);line-height:1.55}
+
+/* ── SECTION HEADER ───────────────────────── */
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin:0 24px 9px;padding-top:4px}
+.sec-title{font-size:8.5px;font-weight:700;letter-spacing:3.5px;color:var(--t4);text-transform:uppercase;display:flex;align-items:center;gap:7px}
+.sec-cnt{font-size:9px;color:var(--t5);letter-spacing:0.3px}
+
+/* ── ISSUE GRID ───────────────────────────── */
+.issue-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:0 24px 16px}
+.ic{background:var(--card2);border-radius:11px;padding:12px 11px 11px;border:1px solid transparent;position:relative;overflow:hidden}
+.ic::before{content:'';position:absolute;top:0;left:0;right:0;height:2.5px;border-radius:11px 11px 0 0}
+.ic.s::before{background:linear-gradient(90deg,var(--mint),rgba(0,229,198,0.4))}
+.ic.s{border-color:rgba(0,229,198,0.18);background:rgba(0,229,198,0.03)}
+.ic.sp::before{background:linear-gradient(90deg,var(--purple),rgba(167,139,250,0.4))}
+.ic.sp{border-color:rgba(167,139,250,0.22);background:rgba(167,139,250,0.04)}
+.ic.a::before{background:linear-gradient(90deg,var(--yellow),rgba(255,229,0,0.4))}
+.ic.a{border-color:rgba(255,229,0,0.18);background:rgba(255,229,0,0.02)}
+.ic.b::before{background:rgba(255,255,255,0.15)}
+.ic.b{border-color:rgba(255,255,255,0.08)}
+.ic-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.ic-num{font-size:9px;font-weight:600;color:var(--t5)}
+.ic-badge{font-size:8px;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:0.5px}
+.ic-badge.s{background:rgba(0,229,198,0.12);color:var(--mint);border:1px solid rgba(0,229,198,0.28)}
+.ic-badge.sp{background:rgba(167,139,250,0.12);color:var(--purple);border:1px solid rgba(167,139,250,0.3)}
+.ic-badge.a{background:rgba(255,229,0,0.10);color:var(--yellow);border:1px solid rgba(255,229,0,0.28)}
+.ic-badge.b{background:rgba(255,255,255,0.05);color:var(--t3);border:1px solid rgba(255,255,255,0.13)}
+.ic-name{font-size:11px;font-weight:800;color:var(--t0);margin-bottom:3px;line-height:1.3}
+.ic-stage{font-size:9.5px;color:var(--t3);margin-bottom:7px;line-height:1.45}
+.ic-trigger{background:rgba(0,0,0,0.35);border-radius:6px;border:1px solid rgba(255,255,255,0.05);padding:5px 8px;margin-bottom:7px;font-size:9px;color:var(--t2);line-height:1.45}
+.ic-trigger .trig-lbl{color:var(--mint);font-weight:700;font-size:8px;letter-spacing:1px;display:block;margin-bottom:2px}
+.ic-trigger.p-trig .trig-lbl{color:var(--purple)}
+.ic-chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{font-size:8.5px;font-weight:600;padding:2px 6px;border-radius:3px}
+.chip.hot{background:rgba(0,229,198,0.10);color:var(--mint);border:1px solid rgba(0,229,198,0.22)}
+.chip.pur{background:rgba(167,139,250,0.10);color:var(--purple);border:1px solid rgba(167,139,250,0.22)}
+.chip.sub{background:rgba(255,255,255,0.05);color:var(--t3);border:1px solid rgba(255,255,255,0.10)}
+
+/* ── STOCKS ───────────────────────────────── */
+.stock-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:0 24px 16px}
+.sk{background:var(--card2);border-radius:11px;padding:14px 13px;border:1px solid rgba(167,139,250,0.08)}
+.sk-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:1px}
+.sk-name{font-size:13px;font-weight:800;color:var(--t0)}
+.sk-badge{font-size:8px;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:0.5px}
+.sk-badge.hot{background:rgba(0,229,198,0.12);color:var(--mint);border:1px solid rgba(0,229,198,0.28)}
+.sk-badge.pur{background:rgba(167,139,250,0.12);color:var(--purple);border:1px solid rgba(167,139,250,0.28)}
+.sk-badge.watch{background:rgba(255,229,0,0.10);color:var(--yellow);border:1px solid rgba(255,229,0,0.28)}
+.sk-code{font-size:9px;color:var(--t5);margin-bottom:10px;letter-spacing:0.3px}
+.sk-bullets{margin-bottom:9px;display:flex;flex-direction:column;gap:4px}
+.sk-bullet{font-size:10.5px;line-height:1.5;color:var(--t2);display:flex;gap:5px}
+.skpt-mk{flex-shrink:0;font-size:9px;font-weight:700;margin-top:2px}
+.skpt-mk.up{color:var(--mint)}
+.skpt-mk.warn{color:var(--yellow)}
+.sk-evt{background:rgba(0,0,0,0.25);border-radius:5px;padding:5px 7px;font-size:9.5px;color:var(--t3);border:1px solid rgba(255,255,255,0.05)}
+.sk-evt b{color:var(--purple);font-weight:700}
+
+/* ── UPCOMING ─────────────────────────────── */
+.upcoming-row{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:0 24px 16px}
+.up-item{
+  background:var(--card2);border-radius:9px;padding:10px 12px;
+  border:1px solid rgba(167,139,250,0.1);
+}
+.up-date{font-size:9px;font-weight:700;color:var(--purple);margin-bottom:4px;letter-spacing:0.5px}
+.up-text{font-size:10.5px;color:var(--t2);line-height:1.5;font-weight:500}
+.up-chip{display:inline-block;font-size:8px;font-weight:600;padding:1px 6px;border-radius:3px;margin-top:4px;background:rgba(167,139,250,0.09);color:var(--purple);border:1px solid rgba(167,139,250,0.2)}
+
+/* ── CHECKLIST ────────────────────────────── */
+.chk-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 24px 16px}
+.chk-item{display:flex;align-items:flex-start;gap:10px;background:var(--card2);border-radius:9px;padding:10px 13px;border:1px solid rgba(255,255,255,0.04)}
+.cbadge{width:19px;height:19px;border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;margin-top:1px}
+.cbadge.ok{background:rgba(0,229,198,0.12);color:var(--mint);border:1px solid rgba(0,229,198,0.28)}
+.cbadge.pur{background:rgba(167,139,250,0.12);color:var(--purple);border:1px solid rgba(167,139,250,0.28)}
+.cbadge.warn{background:rgba(255,229,0,0.10);color:var(--yellow);border:1px solid rgba(255,229,0,0.28)}
+.cbadge.q{background:rgba(255,255,255,0.05);color:var(--t3);border:1px solid rgba(255,255,255,0.12)}
+.chk-text{font-size:11px;color:var(--t2);line-height:1.55}
+.chk-text b{color:var(--mint)}
+.chk-text .yw{color:var(--yellow)}
+.chk-text .pu{color:var(--purple)}
+
+/* ── FOOTER ───────────────────────────────── */
+.footer{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-top:1px solid rgba(167,139,250,0.08);background:rgba(0,0,0,0.25)}
+.footer-brand{font-size:9px;font-weight:800;letter-spacing:4px;color:var(--mint);text-transform:uppercase}
+.footer-ch{font-size:9px;color:var(--t5)}
+.footer-date{font-size:9px;color:var(--t5);letter-spacing:0.3px}
+</style>
+</head>
+<body>
+<div class="card">
+
+<!-- 검증 배너 -->
+<div class="verify-bar">
+  <div class="verify-dot"></div>
+  <span class="verify-txt">VERIFIED</span>
+  <span>V-1~V-5 날짜 검증 통과 · [어제] 라벨 2건(한화에어로·KAI 리포트) · TRIGGER 전부 미발생 확인</span>
+</div>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-left">
+    <div class="brand-wrap">
+      <div class="brand-dot"></div>
+      <div class="brand">STOCK BRAIN</div>
+    </div>
+    <div class="divider"></div>
+    <div class="sector-title">
+      <div class="sector-pre">SECTOR DAILY</div>
+      <div class="sector-nm">🚀 우주 <span>브리핑</span></div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div class="date-badge">2026년 6월 5일 목요일</div>
+    <div class="countdown">🛸 SpaceX IPO D-7</div>
+    <div class="verified-tag">✓ DATE VERIFIED</div>
+  </div>
+</div>
+
+<!-- IPO COUNTDOWN BAR -->
+<div class="ipo-bar">
+  <div class="ipo-label">IPO</div>
+  <div class="ipo-title">SpaceX <span>SPCX</span> 나스닥 상장</div>
+  <div class="ipo-d">D-7</div>
+  <div class="ipo-sep">|</div>
+  <div class="ipo-data">
+    <div class="ipo-stat">
+      <div class="ipo-stat-val">$190억</div>
+      <div class="ipo-stat-lbl">연간 매출</div>
+    </div>
+    <div class="ipo-stat">
+      <div class="ipo-stat-val">$70억</div>
+      <div class="ipo-stat-lbl">EBITDA</div>
+    </div>
+    <div class="ipo-stat">
+      <div class="ipo-stat-val">1,030만</div>
+      <div class="ipo-stat-lbl">스타링크 가입자</div>
+    </div>
+    <div class="ipo-stat">
+      <div class="ipo-stat-val">1조↑</div>
+      <div class="ipo-stat-lbl">국내 ETF 자금</div>
+    </div>
+  </div>
+</div>
+
+<!-- TODAY'S INSIGHT -->
+<div class="insight-wrap">
+  <div class="insight-label">⚡ TODAY'S 인사이트</div>
+  <div class="insight-body" style="line-height:2;font-size:12.5px">
+
+    <b>D-7.</b> 이제 진짜 일주일밖에 안 남았어요.<br><br>
+
+    작년부터 스페이스엑스 IPO 기대감 하나로 국내 우주주들은 크게 달려줬어요.<br>
+    인텔리안테크, 에이치브이엠, 컨텍, 켄코아...<br>
+    이미 많이 올랐고, 이미 많이 빠진 종목들도 있죠.<br><br>
+
+    문제는 지금 <span class="warn">타이밍</span>이에요.<br>
+    브로드컴 쇼크에 나스닥까지 흔들리는 상황.<br>
+    지수 하락이 겹치면서 사려던 손도 주춤하고 있어요.<br><br>
+
+    블루오리진 뉴글렌은 1주 전 폭발하면서 SpaceX 독점 구조는 더 굳어졌고,<br>
+    RFHIC는 오늘 Collins 220억 수주까지 확인했어요. <b>펀더멘탈은 나쁘지 않아요.</b><br><br>
+
+    그런데 핵심 질문은 이거예요.<br>
+    <span class="purple" style="font-size:13.5px;font-weight:800">6월 12일 상장 — 재료 소멸인가, 재점화인가?</span><br><br>
+
+    ETF 괴리율이 이미 12%를 넘어 주의 ETF로 지정됐고,<br>
+    1조 이상의 자금이 이미 들어와 있어요. <span class="warn">선반영이 많이 됐다는 신호예요.</span><br><br>
+
+    하지만 IPO 직후 S&P500 편입 기대는 살아있고,<br>
+    스타십 V3가 4분기 배치되면 스타링크 용량이 10배 뛰어요. 장기 스토리는 유효하죠.<br><br>
+
+    지금은 — 먼저 들어가는 게 아니라<br>
+    <b>6월 12일 상장 직후 실제 주가 반응을 보고 판단하는 타이밍</b>이에요.
+
+  </div>
+</div>
+
+<!-- REPORT / NEWS -->
+<div class="rn-wrap">
+  <div class="rn-col">
+    <div class="rn-col-title">📄 오늘의 리포트</div>
+    <div class="rn-item">
+      <div class="rn-tag rep">신한투자</div>
+      <div class="rn-text">RFHIC — Collins Aerospace(RTX) 220억 공급계약 체결. 방산+위성통신 GaN 수주 지속</div>
+    </div>
+    <div class="rn-item">
+      <div class="rn-tag rep">wisereport</div>
+      <div class="rn-text">AP위성 — "하반기가 진짜 시작". 위성통신 단말기 하반기 수요 가속화 기대</div>
+    </div>
+    <div class="rn-item">
+      <div class="rn-tag rep">wisereport</div>
+      <div class="rn-text">우주항공과국방 섹터 Overweight 유지 — 블루오리진 폭발 후 SpaceX 독점 강화 재확인</div>
+    </div>
+    <div class="rn-item">
+      <div class="rn-tag old">한화에어로[어제]</div>
+      <div class="rn-text">하반기 이익 +62.7% — 방산수출+누리호+KAI 지분 복합 성장 (wisereport 2026-06-04)</div>
+    </div>
+    <div class="rn-item">
+      <div class="rn-tag old">KAI[어제]</div>
+      <div class="rn-text">하반기 이익 +137% — FA-50·KF-21·군 위성 수주 본격화 (wisereport 2026-06-04)</div>
+    </div>
+  </div>
+  <div class="rn-col">
+    <div class="rn-col-title">🛸 오늘의 뉴스</div>
+    <div class="rn-item">
+      <div class="rn-tag news">SpaceXIPO</div>
+      <div class="rn-text">로드쇼 공개 — 매출 $190억·EBITDA $70억·가입자 1,030만. S&P500 조기편입 불가(분기 이익 미충족)</div>
+    </div>
+    <div class="rn-item">
+      <div class="rn-tag news">스타링크V3</div>
+      <div class="rn-text">위성 1기당 1Tbps (V2 대비 10배). 스타십 배치 2026 4분기 목표 — 용량 대폭 확장</div>
+    </div>
+    <div class="rn-item">
+      <div class="rn-tag old">블루오리진[1주전]</div>
+      <div class="rn-text">뉴글렌 로켓 폭발(5/28) — 상업 발사 최소 6개월 차질. SpaceX 독점 구조 더욱 강화</div>
+    </div>
+    <div class="rn-item">
+      <div class="rn-tag news">ETF쏠림</div>
+      <div class="rn-text">TIGER 미국우주테크 자금 1조↑ 집중 — 괴리율 12% 초과 주의 지정. 선반영 고점 논란</div>
+    </div>
+  </div>
+</div>
+
+<!-- ISSUE GRID -->
+<div class="sec-hdr">
+  <div class="sec-title"><span>🚀</span>오늘 주요 이슈현황</div>
+  <div class="sec-cnt">🟣 IPO 2&nbsp;&nbsp;🔴 S급 2&nbsp;&nbsp;🟡 A급 2&nbsp;&nbsp;⚪ B급 2</div>
+</div>
+<div class="issue-grid">
+
+  <div class="ic sp">
+    <div class="ic-top"><span class="ic-num">①</span><span class="ic-badge sp">IPO D-7</span></div>
+    <div class="ic-name">🚀 SpaceX 나스닥 상장</div>
+    <div class="ic-stage">6/12 · 매출$190억 · 가입자 1,030만</div>
+    <div class="ic-trigger p-trig">
+      <span class="trig-lbl">▶ TRIGGER</span>
+      IPO 후 국내 ETF 편입 비중 급변 시
+    </div>
+    <div class="ic-chips">
+      <span class="chip pur">TIGER우주테크</span>
+      <span class="chip pur">KODEX우주항공</span>
+    </div>
+  </div>
+
+  <div class="ic sp">
+    <div class="ic-top"><span class="ic-num">②</span><span class="ic-badge sp">IPO수혜</span></div>
+    <div class="ic-name">💰 선반영 vs 실제 수혜</div>
+    <div class="ic-stage">ETF 1조8천억 · 고점 논란</div>
+    <div class="ic-trigger p-trig">
+      <span class="trig-lbl">▶ TRIGGER</span>
+      6/12 IPO 후 실제 주가 방향 확인 후 진입
+    </div>
+    <div class="ic-chips">
+      <span class="chip pur">인텔리안테크</span>
+      <span class="chip sub">컨텍</span>
+    </div>
+  </div>
+
+  <div class="ic s">
+    <div class="ic-top"><span class="ic-num">③</span><span class="ic-badge s">S급</span></div>
+    <div class="ic-name">💥 블루오리진 폭발</div>
+    <div class="ic-stage">뉴글렌 로켓 · SpaceX 독점 강화</div>
+    <div class="ic-trigger">
+      <span class="trig-lbl">▶ TRIGGER</span>
+      SpaceX 추가 수주·공급망 계약 갱신 발표
+    </div>
+    <div class="ic-chips">
+      <span class="chip hot">에이치브이엠</span>
+      <span class="chip hot">켄코아</span>
+      <span class="chip sub">와이제이링크</span>
+    </div>
+  </div>
+
+  <div class="ic s">
+    <div class="ic-top"><span class="ic-num">④</span><span class="ic-badge s">S급</span></div>
+    <div class="ic-name">📡 RFHIC Collins 220억</div>
+    <div class="ic-stage">RTX 방산+위성통신 GaN 수주</div>
+    <div class="ic-trigger">
+      <span class="trig-lbl">▶ TRIGGER</span>
+      추가 수주 or 계약 갱신 공시
+    </div>
+    <div class="ic-chips">
+      <span class="chip hot">RFHIC</span>
+      <span class="chip sub">제노코</span>
+    </div>
+  </div>
+
+  <div class="ic a">
+    <div class="ic-top"><span class="ic-num">⑤</span><span class="ic-badge a">A급</span></div>
+    <div class="ic-name">📶 AP위성 하반기 가속</div>
+    <div class="ic-stage">"하반기가 진짜 시작" · Thuraya</div>
+    <div class="ic-trigger">
+      <span class="trig-lbl">▶ TRIGGER</span>
+      하반기 단말기 수주 계약 공시
+    </div>
+    <div class="ic-chips">
+      <span class="chip hot">AP위성</span>
+      <span class="chip sub">인텔리안테크</span>
+    </div>
+  </div>
+
+  <div class="ic a">
+    <div class="ic-top"><span class="ic-num">⑥</span><span class="ic-badge a">A급</span></div>
+    <div class="ic-name">🛰 스타링크 V3 · 1Tbps</div>
+    <div class="ic-stage">V2 대비 10배 · 스타십 4Q 목표</div>
+    <div class="ic-trigger">
+      <span class="trig-lbl">▶ TRIGGER</span>
+      스타십 2026 4분기 배치 확인 · V3 상용화
+    </div>
+    <div class="ic-chips">
+      <span class="chip hot">인텔리안테크</span>
+      <span class="chip sub">AP위성</span>
+    </div>
+  </div>
+
+  <div class="ic b">
+    <div class="ic-top"><span class="ic-num">⑦</span><span class="ic-badge b">B급</span></div>
+    <div class="ic-name">🌙 NASA 아르테미스 D-4</div>
+    <div class="ic-stage">6/9 우주비행사 발표 예정</div>
+    <div class="ic-trigger">
+      <span class="trig-lbl">▶ TRIGGER</span>
+      발표 후 SLS 추가 수요 확인 시
+    </div>
+    <div class="ic-chips">
+      <span class="chip sub">켄코아에어로</span>
+    </div>
+  </div>
+
+  <div class="ic b">
+    <div class="ic-top"><span class="ic-num">⑧</span><span class="ic-badge b">B급</span></div>
+    <div class="ic-name">🌐 ISS 2026 · 컨텍 주최</div>
+    <div class="ic-stage">6/16 대전 · 아시아 최대 규모</div>
+    <div class="ic-trigger">
+      <span class="trig-lbl">▶ TRIGGER</span>
+      컨퍼런스 파트너십 or 수주 발표
+    </div>
+    <div class="ic-chips">
+      <span class="chip sub">컨텍</span>
+      <span class="chip sub">나라스페이스</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- STOCKS -->
+<div class="sec-hdr">
+  <div class="sec-title"><span>📊</span>대표 종목</div>
+</div>
+<div class="stock-grid">
+
+  <div class="sk">
+    <div class="sk-top">
+      <div class="sk-name">인텔리안테크</div>
+      <div class="sk-badge pur">VSAT 1위</div>
+    </div>
+    <div class="sk-code">189300 · KOSDAQ</div>
+    <div class="sk-bullets">
+      <div class="sk-bullet"><span class="skpt-mk up">▲</span>VSAT 세계 1위, LEO 전환 수혜</div>
+      <div class="sk-bullet"><span class="skpt-mk up">▲</span>스타링크 V3 확장 = 수요 폭발</div>
+      <div class="sk-bullet"><span class="skpt-mk warn">!</span>IPO 선반영 여부 6/12 확인</div>
+    </div>
+    <div class="sk-evt">📅 <b>다음:</b> SpaceX IPO 후 ETF 편입 반응</div>
+  </div>
+
+  <div class="sk">
+    <div class="sk-top">
+      <div class="sk-name">에이치브이엠</div>
+      <div class="sk-badge hot">SpaceX직납</div>
+    </div>
+    <div class="sk-code">295310 · KOSDAQ</div>
+    <div class="sk-bullets">
+      <div class="sk-bullet"><span class="skpt-mk up">▲</span>SpaceX 직공급 특수금속 유일</div>
+      <div class="sk-bullet"><span class="skpt-mk up">▲</span>블루오리진 폭발 → 독점 강화</div>
+      <div class="sk-bullet"><span class="skpt-mk warn">!</span>계약 갱신 여부 핵심 모니터링</div>
+    </div>
+    <div class="sk-evt">📅 <b>다음:</b> SpaceX 추가 수주 공시</div>
+  </div>
+
+  <div class="sk">
+    <div class="sk-top">
+      <div class="sk-name">컨텍</div>
+      <div class="sk-badge pur">지상국</div>
+    </div>
+    <div class="sk-code">451760 · KOSDAQ</div>
+    <div class="sk-bullets">
+      <div class="sk-bullet"><span class="skpt-mk up">▲</span>국내 유일 민간 지상국 운영</div>
+      <div class="sk-bullet"><span class="skpt-mk up">▲</span>ISS 2026 주최(6/16) — 글로벌 노출</div>
+      <div class="sk-bullet"><span class="skpt-mk up">▲</span>SaaS 데이터 플랫폼 수익화</div>
+    </div>
+    <div class="sk-evt">📅 <b>다음:</b> ISS 2026 파트너십 발표</div>
+  </div>
+
+  <div class="sk">
+    <div class="sk-top">
+      <div class="sk-name">RFHIC</div>
+      <div class="sk-badge hot">방산+위성</div>
+    </div>
+    <div class="sk-code">218410 · KOSDAQ</div>
+    <div class="sk-bullets">
+      <div class="sk-bullet"><span class="skpt-mk up">▲</span>Collins 220억 오늘 공시 확인</div>
+      <div class="sk-bullet"><span class="skpt-mk up">▲</span>GaN RF — 방산·위성통신 복합</div>
+      <div class="sk-bullet"><span class="skpt-mk warn">!</span>추가 수주 연속성 여부 확인</div>
+    </div>
+    <div class="sk-evt">📅 <b>다음:</b> RTX 추가 수주 계약</div>
+  </div>
+
+</div>
+
+<!-- UPCOMING EVENTS -->
+<div class="sec-hdr">
+  <div class="sec-title"><span>📅</span>이번주 예정 이벤트</div>
+</div>
+<div class="upcoming-row">
+  <div class="up-item">
+    <div class="up-date">06 / 09 (월)</div>
+    <div class="up-text">NASA 아르테미스 III 우주비행사 발표</div>
+    <span class="up-chip">켄코아에어로스페이스</span>
+  </div>
+  <div class="up-item">
+    <div class="up-date">06 / 09 (월)</div>
+    <div class="up-text">대한민국 국방산업발전대전 — 미래 우주전력 논의</div>
+    <span class="up-chip">한화시스템·LIG넥스원</span>
+  </div>
+  <div class="up-item">
+    <div class="up-date">06 / 12 (목)</div>
+    <div class="up-text">🚀 SpaceX SPCX 나스닥 상장 — 국내 ETF·수혜주 반응</div>
+    <span class="up-chip">우주ETF 전종목</span>
+  </div>
+  <div class="up-item">
+    <div class="up-date">06 / 16 (월)</div>
+    <div class="up-text">ISS 2026 국제우주컨퍼런스 — 아시아 최대·컨텍 주최</div>
+    <span class="up-chip">컨텍·나라스페이스</span>
+  </div>
+</div>
+
+<!-- CHECKLIST -->
+<div class="sec-hdr">
+  <div class="sec-title"><span>✅</span>오늘 체크리스트</div>
+</div>
+<div class="chk-grid">
+  <div class="chk-item">
+    <div class="cbadge pur">★</div>
+    <div class="chk-text"><span class="pu">SpaceX IPO D-7</span> — ETF 국내 수혜주 쏠림 패턴 체크</div>
+  </div>
+  <div class="chk-item">
+    <div class="cbadge ok">✓</div>
+    <div class="chk-text">RFHIC Collins <b>220억 수주</b> — 공시 원문 확인 (신한투자 리포트 기반)</div>
+  </div>
+  <div class="chk-item">
+    <div class="cbadge warn">!</div>
+    <div class="chk-text">에이치브이엠·켄코아 <span class="yw">SpaceX 독점 강화 반응</span> — 장중 수급 확인</div>
+  </div>
+  <div class="chk-item">
+    <div class="cbadge warn">!</div>
+    <div class="chk-text">AP위성 <span class="yw">하반기 단말기 수주</span> 일정 — 구체적 발표 여부</div>
+  </div>
+  <div class="chk-item">
+    <div class="cbadge pur">★</div>
+    <div class="chk-text"><span class="pu">6/12 IPO 전까지</span> 선반영 vs 실수혜 구분 — 진입 타이밍 판단</div>
+  </div>
+  <div class="chk-item">
+    <div class="cbadge q">?</div>
+    <div class="chk-text">블루오리진 폭발 — SpaceX 수주 추가 공시 여부 모니터링</div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="footer-brand">STOCK BRAIN</div>
+  <div class="footer-ch">로또의 주식인사이트</div>
+  <div class="footer-date">2026-06-05 · 우주섹터 데일리 · V-1~V-5 VERIFIED</div>
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=800">
+<title>로봇 섹터 데일리 — STOCK BRAIN</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --mint:   #00e5c6;
+  --white:  #f0f8ff;
+  --red:    #ff2244;
+  --yellow: #ffe500;
+  --bg:     #07090f;
+  --card:   #0c0f1e;
+  --card2:  #101525;
+  --card3:  #0d1120;
+  --t0: #ffffff;
+  --t1: #ddeeff;
+  --t2: #c0d0e4;
+  --t3: #8fa0b8;
+  --t4: #6478a0;
+  --t5: #3d4e6a;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:#030408;
+  background-image:
+    linear-gradient(rgba(0,229,198,0.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,229,198,0.018) 1px,transparent 1px);
+  background-size:44px 44px;
+  display:flex;justify-content:center;
+  padding:36px 0 52px;
+  font-family:'Geist',-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.card{
+  width:800px;
+  background:var(--card);
+  border-radius:20px;
+  overflow:hidden;
+  border:1px solid rgba(0,229,198,0.13);
+  box-shadow:
+    0 0 80px rgba(0,229,198,0.09),
+    0 0 160px rgba(0,229,198,0.03),
+    0 80px 140px rgba(0,0,0,0.9),
+    inset 0 1px 0 rgba(0,229,198,0.1);
+  position:relative;
+}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;z-index:2;
+  background:linear-gradient(90deg,
+    transparent 0%,
+    rgba(0,229,198,0.3) 20%,
+    rgba(0,229,198,0.9) 40%,
+    #00e5c6 50%,
+    rgba(0,229,198,0.9) 60%,
+    rgba(0,229,198,0.3) 80%,
+    transparent 100%);
+}
+
+/* ── VERIFY BANNER ───────────────────────── */
+.verify-bar{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(0,229,198,0.06);
+  border-bottom:1px solid rgba(0,229,198,0.1);
+  padding:7px 24px;
+  font-size:9px;font-weight:600;letter-spacing:1.5px;color:var(--t4);
+}
+.verify-dot{width:5px;height:5px;border-radius:50%;background:var(--mint);box-shadow:0 0 4px var(--mint);flex-shrink:0}
+.verify-txt{color:var(--mint);font-weight:700}
+
+/* ── HEADER ───────────────────────────────── */
+.hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:22px 28px 20px;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  background:linear-gradient(180deg,rgba(0,229,198,0.04) 0%,transparent 100%);
+}
+.hdr-left{display:flex;align-items:center;gap:14px}
+.brand-wrap{display:flex;align-items:center;gap:8px}
+.brand-dot{width:7px;height:7px;border-radius:50%;background:var(--mint);box-shadow:0 0 10px var(--mint),0 0 20px rgba(0,229,198,0.4)}
+.brand{font-size:9.5px;font-weight:900;letter-spacing:5px;color:var(--mint);text-transform:uppercase}
+.divider{width:1px;height:20px;background:rgba(255,255,255,0.1)}
+.sector-title{display:flex;flex-direction:column;gap:2px}
+.sector-pre{font-size:8.5px;font-weight:600;letter-spacing:2px;color:var(--t4);text-transform:uppercase}
+.sector-nm{font-size:22px;font-weight:900;color:var(--t0);letter-spacing:-0.5px}
+.sector-nm span{color:var(--mint)}
+.hdr-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.date-badge{
+  background:var(--mint);color:#020c0a;
+  font-size:10.5px;font-weight:800;letter-spacing:0.5px;
+  padding:5px 15px;border-radius:20px;
+}
+.verified-tag{
+  font-size:8px;font-weight:700;letter-spacing:1px;
+  color:var(--mint);opacity:0.6;text-align:right;
+}
+
+/* ── INSIGHT ──────────────────────────────── */
+.insight-wrap{
+  margin:16px 24px;
+  background:rgba(0,229,198,0.045);
+  border-left:3px solid var(--mint);
+  border-radius:0 12px 12px 0;
+  padding:15px 20px;
+  position:relative;
+}
+.insight-label{
+  font-size:8.5px;font-weight:800;letter-spacing:4px;
+  color:var(--mint);text-transform:uppercase;margin-bottom:9px;opacity:0.75;
+}
+.insight-body{
+  font-size:13px;line-height:1.8;color:var(--t1);font-weight:400;
+}
+.insight-body b{color:var(--mint);font-weight:700}
+.insight-body .warn{color:var(--yellow)}
+
+/* ── REPORT / NEWS ────────────────────────── */
+.rn-wrap{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 24px 16px}
+.rn-col{background:var(--card2);border-radius:12px;padding:14px 16px;border:1px solid rgba(255,255,255,0.04)}
+.rn-col-title{
+  font-size:8.5px;font-weight:700;letter-spacing:3px;
+  color:var(--t4);text-transform:uppercase;margin-bottom:11px;
+  display:flex;align-items:center;gap:6px;
+}
+.rn-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px}
+.rn-item:last-child{margin-bottom:0}
+.rn-tag{
+  font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;
+  white-space:nowrap;flex-shrink:0;margin-top:2px;letter-spacing:0.3px;
+}
+.rn-tag.rep{background:rgba(0,229,198,0.1);color:var(--mint);border:1px solid rgba(0,229,198,0.22)}
+.rn-tag.news{background:rgba(255,229,0,0.09);color:var(--yellow);border:1px solid rgba(255,229,0,0.22)}
+.rn-tag.danger{background:rgba(255,34,68,0.09);color:#ff6680;border:1px solid rgba(255,34,68,0.22)}
+.rn-text{font-size:11.5px;color:var(--t2);line-height:1.55}
+
+/* ── SECTION HEADER ───────────────────────── */
+.sec-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  margin:0 24px 9px;padding-top:4px;
+}
+.sec-title{font-size:8.5px;font-weight:700;letter-spacing:3.5px;color:var(--t4);text-transform:uppercase;display:flex;align-items:center;gap:7px}
+.sec-title .ico{font-size:11px}
+.sec-cnt{font-size:9px;color:var(--t5);letter-spacing:0.3px}
+
+/* ── ISSUE GRID ───────────────────────────── */
+.issue-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:0 24px 16px}
+.ic{
+  background:var(--card2);border-radius:11px;padding:12px 11px 11px;
+  border:1px solid transparent;position:relative;overflow:hidden;
+  transition:border-color .2s;
+}
+.ic::before{content:'';position:absolute;top:0;left:0;right:0;height:2.5px;border-radius:11px 11px 0 0}
+.ic.s::before{background:linear-gradient(90deg,var(--mint),rgba(0,229,198,0.4))}
+.ic.s{border-color:rgba(0,229,198,0.18);background:rgba(0,229,198,0.03)}
+.ic.a::before{background:linear-gradient(90deg,var(--yellow),rgba(255,229,0,0.4))}
+.ic.a{border-color:rgba(255,229,0,0.18);background:rgba(255,229,0,0.02)}
+.ic.b::before{background:rgba(255,255,255,0.15)}
+.ic.b{border-color:rgba(255,255,255,0.08)}
+.ic-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.ic-num{font-size:9px;font-weight:600;color:var(--t5)}
+.ic-badge{font-size:8px;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:0.5px}
+.ic-badge.s{background:rgba(0,229,198,0.12);color:var(--mint);border:1px solid rgba(0,229,198,0.28)}
+.ic-badge.a{background:rgba(255,229,0,0.10);color:var(--yellow);border:1px solid rgba(255,229,0,0.28)}
+.ic-badge.b{background:rgba(255,255,255,0.05);color:var(--t3);border:1px solid rgba(255,255,255,0.13)}
+.ic-name{
+  font-size:11px;font-weight:800;color:var(--t0);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  margin-bottom:3px;
+}
+.ic-stage{font-size:9.5px;color:var(--t3);margin-bottom:7px;line-height:1.45}
+.ic-trigger{
+  background:rgba(0,0,0,0.35);border-radius:6px;
+  border:1px solid rgba(255,255,255,0.05);
+  padding:5px 8px;margin-bottom:7px;
+  font-size:9px;color:var(--t2);line-height:1.45;
+}
+.ic-trigger .trig-lbl{color:var(--mint);font-weight:700;font-size:8px;letter-spacing:1px;display:block;margin-bottom:2px}
+.ic-chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{font-size:8.5px;font-weight:600;padding:2px 6px;border-radius:3px}
+.chip.hot{background:rgba(0,229,198,0.10);color:var(--mint);border:1px solid rgba(0,229,198,0.22)}
+.chip.sub{background:rgba(255,255,255,0.05);color:var(--t3);border:1px solid rgba(255,255,255,0.10)}
+
+/* ── STOCKS ───────────────────────────────── */
+.stock-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:0 24px 16px}
+.sk{
+  background:var(--card2);border-radius:11px;padding:14px 13px;
+  border:1px solid rgba(0,229,198,0.07);
+}
+.sk-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:1px}
+.sk-name{font-size:13px;font-weight:800;color:var(--t0)}
+.sk-badge{font-size:8px;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:0.5px}
+.sk-badge.hot{background:rgba(0,229,198,0.12);color:var(--mint);border:1px solid rgba(0,229,198,0.28)}
+.sk-badge.watch{background:rgba(255,229,0,0.10);color:var(--yellow);border:1px solid rgba(255,229,0,0.28)}
+.sk-code{font-size:9px;color:var(--t5);margin-bottom:10px;letter-spacing:0.3px}
+.sk-bullets{margin-bottom:9px;display:flex;flex-direction:column;gap:4px}
+.sk-bullet{font-size:10.5px;line-height:1.5;color:var(--t2);display:flex;gap:5px}
+.skpt-mk{flex-shrink:0;font-size:9px;font-weight:700;margin-top:2px}
+.skpt-mk.up{color:var(--mint)}
+.skpt-mk.warn{color:var(--yellow)}
+.sk-evt{
+  background:rgba(0,0,0,0.25);border-radius:5px;padding:5px 7px;
+  font-size:9.5px;color:var(--t3);border:1px solid rgba(255,255,255,0.05);
+}
+.sk-evt b{color:var(--mint);font-weight:700}
+
+/* ── CHECKLIST ────────────────────────────── */
+.chk-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 24px 16px}
+.chk-item{
+  display:flex;align-items:flex-start;gap:10px;
+  background:var(--card2);border-radius:9px;padding:10px 13px;
+  border:1px solid rgba(255,255,255,0.04);
+}
+.cbadge{
+  width:19px;height:19px;border-radius:5px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:800;margin-top:1px;
+}
+.cbadge.ok{background:rgba(0,229,198,0.12);color:var(--mint);border:1px solid rgba(0,229,198,0.28)}
+.cbadge.warn{background:rgba(255,229,0,0.10);color:var(--yellow);border:1px solid rgba(255,229,0,0.28)}
+.cbadge.q{background:rgba(255,255,255,0.05);color:var(--t3);border:1px solid rgba(255,255,255,0.12)}
+.chk-text{font-size:11px;color:var(--t2);line-height:1.55}
+.chk-text b{color:var(--mint)}
+.chk-text .yw{color:var(--yellow)}
+
+/* ── FOOTER ───────────────────────────────── */
+.footer{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 24px;
+  border-top:1px solid rgba(0,229,198,0.07);
+  background:rgba(0,0,0,0.25);
+}
+.footer-brand{font-size:9px;font-weight:800;letter-spacing:4px;color:var(--mint);text-transform:uppercase}
+.footer-ch{font-size:9px;color:var(--t5)}
+.footer-date{font-size:9px;color:var(--t5);letter-spacing:0.3px}
+</style>
+</head>
+<body>
+<div class="card">
+
+<!-- 검증 배너 -->
+<div class="verify-bar">
+  <div class="verify-dot"></div>
+  <span class="verify-txt">VERIFIED</span>
+  <span>V-1~V-5 날짜 검증 통과 · 오늘자(2026-06-05) 데이터만 반영 · 과거 이슈 2건 제외</span>
+</div>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-left">
+    <div class="brand-wrap">
+      <div class="brand-dot"></div>
+      <div class="brand">STOCK BRAIN</div>
+    </div>
+    <div class="divider"></div>
+    <div class="sector-title">
+      <div class="sector-pre">SECTOR DAILY</div>
+      <div class="sector-nm">🤖 로봇 <span>브리핑</span></div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div class="date-badge">2026년 6월 5일 목요일</div>
+    <div class="verified-tag">✓ DATE VERIFIED</div>
+  </div>
+</div>
+
+<!-- TODAY'S INSIGHT -->
+<div class="insight-wrap">
+  <div class="insight-label">⚡ TODAY'S 인사이트</div>
+  <div class="insight-body">
+    오늘 핵심은 두 가지예요. 젠슨 황이 <b>개방형 휴머노이드 플랫폼</b>을 발표했고 LIG D&A 방문까지 검토됐어요 — 방산과 로봇AI가 동시에 열리는 국면이에요. 동시에 KB증권이 현대모비스 목표가를 <b>74만 → 120만원(+60%)</b>으로 올렸는데, 로봇 사업부 분리·독립 상장 가능성을 처음으로 밸류에이션에 집어넣은 거예요. <span class="warn">단기는 브로드컴 쇼크로 같이 쉬는 중</span>이니 10일선 이탈 여부만 체크해두세요 👀
+  </div>
+</div>
+
+<!-- REPORT / NEWS -->
+<div class="rn-wrap">
+  <div class="rn-col">
+    <div class="rn-col-title">📄 오늘의 리포트</div>
+    <div class="rn-item">
+      <div class="rn-tag rep">KB증권</div>
+      <div class="rn-text">현대모비스 TP 120만(↑) — 액추에이터 TAM 14조·사업부 분리 옵션 첫 반영</div>
+    </div>
+    <div class="rn-item">
+      <div class="rn-tag rep">SK증권</div>
+      <div class="rn-text">KH바텍 신규 — 알루미늄 정밀가공→로봇 부품사 변모, 하반기 매출 도약 시작</div>
+    </div>
+    <div class="rn-item">
+      <div class="rn-tag rep">유안타</div>
+      <div class="rn-text">세나테크놀로지 신규 — 음성제어 로봇 전문, 물류·골프카트, 현재가 49,800</div>
+    </div>
+    <div class="rn-item">
+      <div class="rn-tag rep">하나증권</div>
+      <div class="rn-text">시선AI×유온×한화로보틱스 — 1.5조 APC 팔레타이징 자동화 신규 커버</div>
+    </div>
+  </div>
+  <div class="rn-col">
+    <div class="rn-col-title">📰 오늘의 뉴스</div>
+    <div class="rn-item">
+      <div class="rn-tag news">젠슨황방한</div>
+      <div class="rn-text">LIG D&A 방문 검토 + 개방형 휴머노이드 플랫폼 발표 — "수조달러 기회"</div>
+    </div>
+    <div class="rn-item">
+      <div class="rn-tag news">K피지컬AI</div>
+      <div class="rn-text">NC소프트·현대로템·포스코DX 컨소시엄 — 게임 시뮬레이션→로봇 AI 전용</div>
+    </div>
+    <div class="rn-item">
+      <div class="rn-tag news">ETF수급</div>
+      <div class="rn-text">미래에셋 하반기 코스닥 핵심 ETF = 로봇 + 바이오 기술이전 (국민성장펀드 10.4조)</div>
+    </div>
+    <div class="rn-item">
+      <div class="rn-tag danger">단기조정</div>
+      <div class="rn-text">브로드컴 쇼크 여파 — 로봇 동반 숨고르기. 추세 훼손 여부 10일선으로 판단</div>
+    </div>
+  </div>
+</div>
+
+<!-- ISSUE GRID -->
+<div class="sec-hdr">
+  <div class="sec-title"><span class="ico">🤖</span>오늘 주요 이슈현황</div>
+  <div class="sec-cnt">🔴 S급 3&nbsp;&nbsp;🟡 A급 3&nbsp;&nbsp;⚪ B급 2</div>
+</div>
+<div class="issue-grid">
+
+  <div class="ic s">
+    <div class="ic-top"><span class="ic-num">①</span><span class="ic-badge s">S급</span></div>
+    <div class="ic-name">🤖 젠슨황×LIG D&A</div>
+    <div class="ic-stage">방산·피지컬AI 협력 논의</div>
+    <div class="ic-trigger">
+      <span class="trig-lbl">▶ TRIGGER</span>
+      엔비디아×LIG D&A 공식 협력 발표
+    </div>
+    <div class="ic-chips">
+      <span class="chip hot">LIG D&A</span>
+      <span class="chip sub">아이쓰리시스템</span>
+    </div>
+  </div>
+
+  <div class="ic s">
+    <div class="ic-top"><span class="ic-num">②</span><span class="ic-badge s">S급</span></div>
+    <div class="ic-name">🌐 개방형 휴머노이드</div>
+    <div class="ic-stage">NVDA Isaac 오픈 플랫폼</div>
+    <div class="ic-trigger">
+      <span class="trig-lbl">▶ TRIGGER</span>
+      국내 파트너사 공식 등재 발표
+    </div>
+    <div class="ic-chips">
+      <span class="chip hot">레인보우로보틱스</span>
+      <span class="chip sub">로보티즈</span>
+    </div>
+  </div>
+
+  <div class="ic s">
+    <div class="ic-top"><span class="ic-num">③</span><span class="ic-badge s">S급</span></div>
+    <div class="ic-name">📝 현대모비스 TP 120만</div>
+    <div class="ic-stage">KB +60% · 사업부 분리 옵션</div>
+    <div class="ic-trigger">
+      <span class="trig-lbl">▶ TRIGGER</span>
+      로봇사업부 분리·독립 상장 공시
+    </div>
+    <div class="ic-chips">
+      <span class="chip hot">현대모비스</span>
+      <span class="chip sub">현대오토에버</span>
+    </div>
+  </div>
+
+  <div class="ic a">
+    <div class="ic-top"><span class="ic-num">④</span><span class="ic-badge a">A급</span></div>
+    <div class="ic-name">💰 코스닥 ETF=로봇</div>
+    <div class="ic-stage">미래에셋 하반기 핵심 ETF</div>
+    <div class="ic-trigger">
+      <span class="trig-lbl">▶ TRIGGER</span>
+      로봇 ETF 신규 편입 or 비중 확대
+    </div>
+    <div class="ic-chips">
+      <span class="chip hot">두산로보틱스</span>
+      <span class="chip sub">에스비비테크</span>
+    </div>
+  </div>
+
+  <div class="ic a">
+    <div class="ic-top"><span class="ic-num">⑤</span><span class="ic-badge a">A급</span></div>
+    <div class="ic-name">📊 감속기 수출 +15%</div>
+    <div class="ic-stage">1Q26 YoY · 영업이익률 20%</div>
+    <div class="ic-trigger">
+      <span class="trig-lbl">▶ TRIGGER</span>
+      2Q 수출 +20% 이상 확인 시 재가속
+    </div>
+    <div class="ic-chips">
+      <span class="chip hot">에스비비테크</span>
+      <span class="chip sub">에스피지</span>
+    </div>
+  </div>
+
+  <div class="ic a">
+    <div class="ic-top"><span class="ic-num">⑥</span><span class="ic-badge a">A급</span></div>
+    <div class="ic-name">🏭 1.5조 APC 자동화</div>
+    <div class="ic-stage">시선AI+유온×한화로보틱스</div>
+    <div class="ic-trigger">
+      <span class="trig-lbl">▶ TRIGGER</span>
+      수주 계약 공시 or 착공 발표
+    </div>
+    <div class="ic-chips">
+      <span class="chip hot">한화로보틱스</span>
+      <span class="chip sub">씨메스</span>
+    </div>
+  </div>
+
+  <div class="ic b">
+    <div class="ic-top"><span class="ic-num">⑦</span><span class="ic-badge b">B급</span></div>
+    <div class="ic-name">⚠️ 단기 숨고르기</div>
+    <div class="ic-stage">브로드컴 쇼크 동반 조정</div>
+    <div class="ic-trigger">
+      <span class="trig-lbl">▶ TRIGGER</span>
+      나스닥 반등 + 10일선 재안착 시 종료
+    </div>
+    <div class="ic-chips">
+      <span class="chip sub">전 종목 모니터링</span>
+    </div>
+  </div>
+
+  <div class="ic b">
+    <div class="ic-top"><span class="ic-num">⑧</span><span class="ic-badge b">B급</span></div>
+    <div class="ic-name">🎮 NC소프트 피지컬AI</div>
+    <div class="ic-stage">현대로템·포스코DX 컨소시엄</div>
+    <div class="ic-trigger">
+      <span class="trig-lbl">▶ TRIGGER</span>
+      K-피지컬AI 얼라이언스 공식 출범
+    </div>
+    <div class="ic-chips">
+      <span class="chip sub">현대로템</span>
+      <span class="chip sub">포스코DX</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- STOCKS -->
+<div class="sec-hdr">
+  <div class="sec-title"><span class="ico">📊</span>대표 종목</div>
+</div>
+<div class="stock-grid">
+
+  <div class="sk">
+    <div class="sk-top">
+      <div class="sk-name">현대모비스</div>
+      <div class="sk-badge hot">HOT</div>
+    </div>
+    <div class="sk-code">012330 · KOSPI</div>
+    <div class="sk-bullets">
+      <div class="sk-bullet"><span class="skpt-mk up">▲</span>KB TP 120만 +60% 오늘 상향</div>
+      <div class="sk-bullet"><span class="skpt-mk up">▲</span>액추에이터 TAM 14조(2035)</div>
+      <div class="sk-bullet"><span class="skpt-mk warn">!</span>분리 타임라인 미확정</div>
+    </div>
+    <div class="sk-evt">📅 <b>다음:</b> 로봇사업부 분리 공시</div>
+  </div>
+
+  <div class="sk">
+    <div class="sk-top">
+      <div class="sk-name">레인보우로보틱스</div>
+      <div class="sk-badge hot">HOT</div>
+    </div>
+    <div class="sk-code">277810 · KOSDAQ</div>
+    <div class="sk-bullets">
+      <div class="sk-bullet"><span class="skpt-mk up">▲</span>NVDA 개방형 직접 수혜 후보</div>
+      <div class="sk-bullet"><span class="skpt-mk up">▲</span>현대차 보스턴다이나믹스 연계</div>
+      <div class="sk-bullet"><span class="skpt-mk warn">!</span>10일선 이탈 시 단기 주의</div>
+    </div>
+    <div class="sk-evt">📅 <b>다음:</b> NVDA 파트너 공식 등재</div>
+  </div>
+
+  <div class="sk">
+    <div class="sk-top">
+      <div class="sk-name">에스비비테크</div>
+      <div class="sk-badge watch">수출↑</div>
+    </div>
+    <div class="sk-code">389500 · KOSDAQ</div>
+    <div class="sk-bullets">
+      <div class="sk-bullet"><span class="skpt-mk up">▲</span>1Q26 감속기 수출 +15% YoY</div>
+      <div class="sk-bullet"><span class="skpt-mk up">▲</span>영업이익률 20% 유지</div>
+      <div class="sk-bullet"><span class="skpt-mk warn">!</span>옵티머스 납품 확인 미완료</div>
+    </div>
+    <div class="sk-evt">📅 <b>다음:</b> 2Q 수출 데이터 발표</div>
+  </div>
+
+  <div class="sk">
+    <div class="sk-top">
+      <div class="sk-name">LIG D&A</div>
+      <div class="sk-badge watch">방산AI</div>
+    </div>
+    <div class="sk-code">방산·피지컬AI 교집합</div>
+    <div class="sk-bullets">
+      <div class="sk-bullet"><span class="skpt-mk up">▲</span>젠슨황 방문 검토 오늘 보도</div>
+      <div class="sk-bullet"><span class="skpt-mk up">▲</span>방산+로봇AI 이중 모멘텀</div>
+      <div class="sk-bullet"><span class="skpt-mk warn">!</span>방문 공식 확인 전 추정</div>
+    </div>
+    <div class="sk-evt">📅 <b>다음:</b> 엔비디아 협력 공식 발표</div>
+  </div>
+
+</div>
+
+<!-- CHECKLIST -->
+<div class="sec-hdr">
+  <div class="sec-title"><span class="ico">✅</span>오늘 체크리스트</div>
+</div>
+<div class="chk-grid">
+  <div class="chk-item">
+    <div class="cbadge ok">✓</div>
+    <div class="chk-text">레인보우·에스비비테크 <b>10일선</b> 이탈 여부 — 오늘 종가 확인</div>
+  </div>
+  <div class="chk-item">
+    <div class="cbadge ok">✓</div>
+    <div class="chk-text">엔비디아 <b>개방형 플랫폼</b> 국내 파트너 공식 리스트 확인</div>
+  </div>
+  <div class="chk-item">
+    <div class="cbadge warn">!</div>
+    <div class="chk-text">현대모비스 <span class="yw">사업부 분리</span> 관련 IR·공시 채널 모니터링</div>
+  </div>
+  <div class="chk-item">
+    <div class="cbadge warn">!</div>
+    <div class="chk-text">LIG D&A <span class="yw">젠슨황 방문 결과</span> — 오후 IR 채널·텔레 확인</div>
+  </div>
+  <div class="chk-item">
+    <div class="cbadge q">?</div>
+    <div class="chk-text">브로드컴 쇼크 여파 — 나스닥 선물 방향으로 오늘 로봇주 흐름 판단</div>
+  </div>
+  <div class="chk-item">
+    <div class="cbadge q">?</div>
+    <div class="chk-text">국민성장펀드 로봇 ETF 편입 비중 증가 시기 — 하반기 수급 모멘텀 확인</div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="footer-brand">STOCK BRAIN</div>
+  <div class="footer-ch">로또의 주식인사이트</div>
+  <div class="footer-date">2026-06-05 · 로봇섹터 데일리 · V-1~V-5 VERIFIED</div>
+</div>
+
+</div>
+</body>
+</html>
