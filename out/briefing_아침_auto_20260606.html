@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#03030c;font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;
+     display:flex;justify-content:center;padding:24px;}
+.card{width:800px;background:linear-gradient(160deg,#0d0d1c,#0a0a16,#080810);
+       border-radius:16px;border:1px solid rgba(0,229,198,0.15);
+       box-shadow:0 0 60px rgba(0,229,198,0.10),0 60px 120px rgba(0,0,0,0.8);
+       overflow:hidden;position:relative;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+               background:linear-gradient(90deg,transparent 5%,rgba(0,229,198,0.5) 35%,
+               #00e5c6 50%,rgba(0,229,198,0.5) 65%,transparent 95%);}
+.hdr{display:flex;justify-content:space-between;align-items:center;
+      padding:18px 24px;border-bottom:1px solid rgba(255,255,255,0.06);}
+.brand{font-size:11px;font-weight:900;letter-spacing:5px;color:#00e5c6;}
+.hdr-r{display:flex;align-items:center;gap:10px;}
+.ch{font-size:11px;color:#8896aa;}
+.db{background:#00e5c6;color:#000;font-size:11px;font-weight:700;
+     padding:4px 10px;border-radius:20px;}
+.body{padding:20px 24px;display:flex;flex-direction:column;gap:16px;}
+.ib{background:rgba(0,229,198,0.05);border-left:3px solid #00e5c6;
+     border-radius:0 8px 8px 0;padding:14px 16px;}
+.ih{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.il{font-size:10px;font-weight:700;letter-spacing:3px;color:#00e5c6;}
+.vb{font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;
+     color:#ffe500;background:rgba(255,229,0,0.15);border:1px solid #ffe50040;}
+.it{font-size:13px;color:#ddeeff;line-height:1.75;}
+.st{font-size:10px;font-weight:700;letter-spacing:3px;color:#8896aa;margin-bottom:10px;}
+.dg{display:flex;flex-direction:column;gap:8px;}
+.data-item{display:flex;align-items:center;gap:12px;padding:10px 14px;
+            background:rgba(255,255,255,0.03);border-radius:8px;}
+.dl{font-size:12px;color:#c8d8ec;font-weight:600;min-width:80px;}
+.dv{font-size:15px;font-weight:900;}
+.dn{font-size:11px;color:#8896aa;flex:1;}
+.watermark{position:absolute;top:14px;right:24px;font-size:11px;color:#ffe500;
+            background:rgba(255,229,0,0.1);padding:3px 8px;border-radius:8px;
+            border:1px solid rgba(255,229,0,0.3);}
+.ft-bar{padding:12px 24px;border-top:1px solid rgba(255,255,255,0.06);
+         display:flex;justify-content:space-between;}
+.ft{font-size:10px;color:#64748b;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="watermark">⚠️ 자동생성 초안</div>
+  <div class="hdr">
+    <div class="brand">STOCK BRAIN</div>
+    <div class="hdr-r">
+      <span class="ch">로또의 주식인사이트</span>
+      <span class="db">6월 6일 토요일</span>
+    </div>
+  </div>
+  <div class="body">
+    <div class="ib">
+      <div class="ih">
+        <span class="il">⚡ TODAY'S 인사이트</span>
+        <span class="vb">⚠ 자동초안</span>
+      </div>
+      <div class="it">반도체 섹터 — 브로드컴 쇼크 여파에 주목해요. 자동 생성 초안입니다.</div>
+    </div>
+    <div>
+      <div class="st">📊 반도체 핵심 데이터</div>
+      <div class="dg">
+        <div class="data-item">
+          <span class="dl">SK하이닉스</span>
+          <span class="dv" style="color:#ffe500">삼성전자 시총의 92%</span>
+          <span class="dn">시가총액 1위 위협 근접, 강력한 업황 낙수효과 기대</span>
+        </div>
+        <div class="data-item">
+          <span class="dl">마이크론</span>
+          <span class="dv" style="color:#ffe500">1조 달러 돌파</span>
+          <span class="dn">강력한 AI 투자 사이클과 반도체 랠리 확인</span>
+        </div>
+        <div class="data-item">
+          <span class="dl">낸야테크놀로지</span>
+          <span class="dv" style="color:#ffe500">730% 급증</span>
+          <span class="dn">5월 매출 전년 대비, HBM/DDR5 집중으로 인한 공급 부족 심화</span>
+        </div></div>
+    </div>
+  </div>
+  <div class="ft-bar">
+    <span class="ft">STOCK BRAIN · 로또의 주식인사이트</span>
+    <span class="ft">아침 브리핑 · 2026-06-06</span>
+  </div>
+</div>
+</body>
+</html>
