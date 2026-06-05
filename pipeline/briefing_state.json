@@ -1,47 +1,17 @@
 {
-  "date": "2026-06-05",
+  "date": "2026-06-06",
   "issues": [
     {
-      "sector": "방산",
-      "headline": "하반기 어닝 가속화, 수출 모멘텀",
-      "pivot_a": "대형주 실적 상향 기대",
-      "pivot_b": "단기 이벤트 소진 우려"
-    },
-    {
-      "sector": "소비내수",
-      "headline": "카지노주, 5월 동반 두자릿수 성장",
-      "pivot_a": "성수기 진입, 실적 모멘텀",
-      "pivot_b": "일회성 성과, 상승 둔화"
-    },
-    {
-      "sector": "우주",
-      "headline": "SpaceX IPO 임박, 고점 논란 심화",
-      "pivot_a": "상장 기대감, ETF 자금 유입",
-      "pivot_b": "선반영 고점, 차익실현 우려"
-    },
-    {
-      "sector": "이차전지",
-      "headline": "유럽 탈중국 기대 vs 실적 부진",
-      "pivot_a": "중장기 공급망 재편 수혜",
-      "pivot_b": "단기 EV 역성장 지속"
-    },
-    {
-      "sector": "전력",
-      "headline": "수주 강세에도 비주도 섹터",
-      "pivot_a": "AI DC, 인프라 수혜 지속",
-      "pivot_b": "시장 조정 시 현금 대피"
-    },
-    {
-      "sector": "통신",
-      "headline": "통신장비, AI·5G 주도주 부상",
-      "pivot_a": "광통신 구조적 성장 견인",
-      "pivot_b": "단기 과열, 매물 출회 가능성"
+      "sector": "반도체",
+      "headline": "브로드컴 쇼크 여파",
+      "pivot_a": "일시 조정 — AI 가이던스 상향",
+      "pivot_b": "추세 전환 — 네트워크 부진 구조적"
     }
   ],
-  "selected_index": null,
-  "verdict": "",
-  "reason": "",
-  "card_html": "",
+  "selected_index": 0,
+  "verdict": "A",
+  "reason": "AI 가이던스는 상향인데 네트워킹만 부진 부각된 것",
+  "card_html": "C:\\Users\\CH\\Desktop\\로또의 주식\\out\\briefing_아침_auto_20260606.html",
   "card_png": "",
-  "stage": "collected"
+  "stage": "card_done"
 }
