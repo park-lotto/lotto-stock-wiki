@@ -40,15 +40,22 @@ def build_insight(state: dict, auto: bool) -> tuple:
         badge_label = '자동초안'
     else:
         idx = state['selected_index'] or 0
-        issue = state['issues'][idx]
-        sector = issue['sector']
-        verdict = state['verdict']
-        reason = state['reason']
-        pivot = issue['pivot_a'] if verdict == 'A' else issue['pivot_b']
-        insight = f"{sector} — {reason}." if reason else f"{sector} {pivot}으로 봐요."
-        badge_label = pivot[:12]
+        issue = state['issues'][idx] if state['issues'] else {}
+        sector = issue.get('sector', '시장')
+        verdict = state.get('verdict', 'FREE')
+        reason = state.get('reason', '')
 
-    color_hex, bg_color, symbol = VERDICT_BADGE[verdict]
+        if verdict == 'FREE':
+            # 자유 텍스트 판단 — 운영자 말 그대로
+            insight = reason if reason else f"{sector} — 오늘의 판단을 확인하세요."
+            badge_label = sector[:8]
+            return insight, badge_label, '#00e5c6', 'rgba(0,229,198,0.15)', '💬'
+        else:
+            pivot = issue.get('pivot_a', '') if verdict == 'A' else issue.get('pivot_b', '')
+            insight = f"{sector} — {reason}." if reason else f"{sector} {pivot}으로 봐요."
+            badge_label = pivot[:12]
+
+    color_hex, bg_color, symbol = VERDICT_BADGE.get(verdict, VERDICT_BADGE['AUTO'])
     return insight, badge_label, color_hex, bg_color, symbol
 
 def get_sector_data(state: dict, auto: bool) -> list:
