@@ -1,5 +1,59 @@
 {
-  "telegram_last_time": {},
+  "telegram_last_time": {
+    "2026-06-05": {
+      "태린이아빠 주식투자": {
+        "last_ingested_ts": "13:58"
+      },
+      "미래시황": {
+        "last_ingested_ts": "07:43"
+      },
+      "키움시황": {
+        "last_ingested_ts": "07:44"
+      },
+      "대신시황": {
+        "last_ingested_ts": "07:45"
+      },
+      "독학주식첵터정리": {
+        "last_ingested_ts": "09:45"
+      },
+      "잠실개미고급수집": {
+        "last_ingested_ts": "03:04"
+      },
+      "한화철강": {
+        "last_ingested_ts": "08:16"
+      },
+      "다올조선방산": {
+        "last_ingested_ts": "09:10"
+      },
+      "그로스리서치": {
+        "last_ingested_ts": "18:53"
+      },
+      "삼성반도체": {
+        "last_ingested_ts": "07:43"
+      },
+      "유안타시황": {
+        "last_ingested_ts": "09:32"
+      },
+      "요약하는 고잉": {
+        "last_ingested_ts": "11:23"
+      },
+      "주공고급수집": {
+        "last_ingested_ts": "08:51"
+      },
+      "신한리서치": {
+        "last_ingested_ts": "07:48"
+      },
+      "하나차이나": {
+        "last_ingested_ts": "15:07"
+      },
+      "하나반도체": {
+        "last_ingested_ts": "13:45"
+      },
+      "리포트요약": {
+        "last_ingested_ts": "17:02"
+      }
+    }
+  },
   "pdf_summarized": [
     "2026-06-04/reports/2026-06-04_1359_0527, Kiwoom Morning Letter.md",
     "2026-06-04/reports/2026-06-04_1359_0528, Kiwoom Morning Letter.md",

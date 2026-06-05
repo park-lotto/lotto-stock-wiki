@@ -1,0 +1,104 @@
+{
+  "_comment": "텔레그램 채널별 메타 설정. telegram_extract.py가 읽음.",
+
+  "채널목록": {
+    "태린이아빠 주식투자": {
+      "type": "personal_analyst",
+      "priority": 1,
+      "sectors": ["반도체", "로봇", "바이오", "전력", "통신"]
+    },
+    "미래시황": {
+      "type": "market_overview",
+      "priority": 2,
+      "sectors": ["전체"]
+    },
+    "키움시황": {
+      "type": "market_overview",
+      "priority": 3,
+      "sectors": ["전체"]
+    },
+    "대신시황": {
+      "type": "market_overview",
+      "priority": 4,
+      "sectors": ["전체"]
+    },
+    "그로스리서치": {
+      "type": "report_channel",
+      "priority": 5,
+      "sectors": ["반도체", "바이오", "소비내수"]
+    },
+    "독학주식첵터정리": {
+      "type": "personal_analyst",
+      "priority": 6,
+      "sectors": ["반도체", "전력", "통신"]
+    },
+    "잠실개미고급수집": {
+      "type": "supply_theme",
+      "priority": 7,
+      "sectors": ["전체"]
+    },
+    "주공고급수집": {
+      "type": "supply_theme",
+      "priority": 8,
+      "sectors": ["전체"]
+    },
+    "한화철강": {
+      "type": "sector_specialist",
+      "priority": 9,
+      "sectors": ["조선", "방산", "철강"]
+    },
+    "다올조선방산": {
+      "type": "sector_specialist",
+      "priority": 10,
+      "sectors": ["조선", "방산"]
+    },
+    "신한리서치": {
+      "type": "report_channel",
+      "priority": 11,
+      "sectors": ["반도체", "바이오", "전력"]
+    },
+    "하나반도체": {
+      "type": "report_channel",
+      "priority": 12,
+      "sectors": ["반도체"]
+    },
+    "하나차이나": {
+      "type": "report_channel",
+      "priority": 13,
+      "sectors": ["반도체", "통신", "소재"]
+    },
+    "삼성반도체": {
+      "type": "report_channel",
+      "priority": 14,
+      "sectors": ["반도체"]
+    },
+    "리포트요약": {
+      "type": "report_channel",
+      "priority": 15,
+      "sectors": ["전체"]
+    },
+    "유안타시황": {
+      "type": "market_overview",
+      "priority": 16,
+      "sectors": ["전체"]
+    },
+    "요약하는 고잉": {
+      "type": "report_channel",
+      "priority": 17,
+      "sectors": ["반도체", "전력"]
+    },
+    "한투글로벌": {
+      "type": "report_channel",
+      "priority": 18,
+      "sectors": ["반도체", "바이오", "전력"]
+    }
+  },
+
+  "타입별_프롬프트": {
+    "personal_analyst": "personal_analyst",
+    "market_overview":  "market_overview",
+    "report_channel":   "report_channel",
+    "supply_theme":     "supply_theme",
+    "sector_specialist":"sector_specialist"
+  }
+}
