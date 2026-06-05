@@ -2,12 +2,12 @@
 assistant_bot.py — 텔레그램 Gemini 어시스턴트 봇
 
 명령어:
-  /s [검색어]     — 실시간 웹서치 후 결과 요약
-  /ask [질문]     — Gemini 분석/질문 답변
-  /brief          — 오늘 브리핑 카드 재생성 (보강 포함)
-  /보강 [내용]    — 브리핑에 특정 데이터 추가 서치 후 재생성
-  /wiki [질문]    — 로컬 wiki에서 검색 후 답변
-  /help           — 명령어 목록
+  /s [검색어]       — 실시간 웹서치 후 결과 요약
+  /ask [질문]       — Gemini 분석/질문 답변
+  /brief            — 오늘 브리핑 카드 재생성 (보강 포함)
+  /enhance [내용]   — 브리핑에 특정 데이터 추가 서치 후 재생성
+  /wiki [질문]      — 로컬 wiki에서 검색 후 답변
+  /help             — 명령어 목록
 
 사용:
   python scripts/briefing/assistant_bot.py
@@ -148,9 +148,9 @@ async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
 /brief
   오늘 브리핑 카드 다시 생성
 
-/보강 [요청내용]
+/enhance [요청내용]
   브리핑에 추가 데이터 서치 후 보강
-  예) /보강 미국장 마감 데이터 추가해줘
+  예) /enhance 미국장 마감 데이터 추가해줘
 
 /wiki [검색어]
   로컬 wiki에서 검색
@@ -211,7 +211,7 @@ async def cmd_brief(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def cmd_enhance(update: Update, context: ContextTypes.DEFAULT_TYPE):
     request = ' '.join(context.args)
     if not request:
-        await update.message.reply_text('보강 내용을 입력해주세요.\n예) /보강 미국장 마감 데이터 추가해줘')
+        await update.message.reply_text('보강 내용을 입력해주세요.\n예) /enhance 미국장 마감 데이터 추가해줘')
         return
     await update.message.reply_text(f'🔍 보강 데이터 서치 중...')
     try:
@@ -274,23 +274,19 @@ async def handle_free_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # ── 메인 ──────────────────────────────────────────────────────────────────────
 
-async def main():
+def main():
     app = Application.builder().token(BOT_TOKEN).build()
 
     app.add_handler(CommandHandler('help', cmd_help))
     app.add_handler(CommandHandler('s', cmd_search))
     app.add_handler(CommandHandler('ask', cmd_ask))
     app.add_handler(CommandHandler('brief', cmd_brief))
-    app.add_handler(CommandHandler('보강', cmd_enhance))
+    app.add_handler(CommandHandler('enhance', cmd_enhance))
     app.add_handler(CommandHandler('wiki', cmd_wiki))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_free_text))
 
     print('[assistant_bot] 시작. 텔레그램 대기 중...')
-    async with app:
-        await app.start()
-        await app.updater.start_polling()
-        await app.updater.idle()
-        await app.stop()
+    app.run_polling()
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    main()
