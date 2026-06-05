@@ -8,7 +8,7 @@ collect.py — wiki L5_섹터에서 오늘 핵심 이슈 3~5개 추출
 import sys, io, json, argparse
 from datetime import date
 from pathlib import Path
-import anthropic
+from google import genai
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
@@ -16,6 +16,15 @@ sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='repla
 ROOT       = Path(__file__).parent.parent.parent
 WIKI_L5    = ROOT / 'wiki' / 'L5_섹터'
 STATE_PATH = ROOT / 'pipeline' / 'briefing_state.json'
+
+# ── env ───────────────────────────────────────────────────────────────────────
+env = {}
+for line in (ROOT / '.env').read_text(encoding='utf-8').splitlines():
+    if '=' in line and not line.startswith('#'):
+        k, v = line.split('=', 1)
+        env[k.strip()] = v.strip()
+
+client = genai.Client(api_key=env['GEMINI_API_KEY'])
 
 def load_state() -> dict:
     return json.loads(STATE_PATH.read_text(encoding='utf-8'))
@@ -25,7 +34,7 @@ def save_state(s: dict):
 
 def _find_sector_index(sector_dir: Path) -> Path | None:
     """섹터 디렉터리에서 인덱스 파일 탐색.
-    우선순위: sector_{name}.md → *index.md → sector_*.md 첫 번째
+    우선순위: sector_{name}.md → {name}index.md → *index.md → sector_*.md
     """
     # 1순위: sector_{name}.md
     primary = sector_dir / f'sector_{sector_dir.name}.md'
@@ -35,7 +44,7 @@ def _find_sector_index(sector_dir: Path) -> Path | None:
     index_md = sector_dir / f'{sector_dir.name}index.md'
     if index_md.exists():
         return index_md
-    # 3순위: *index.md 패턴 (AI소프트웨어 등 이름 변형)
+    # 3순위: *index.md 패턴
     for p in sector_dir.glob('*index.md'):
         return p
     # 4순위: sector_*.md
@@ -65,8 +74,7 @@ def gather_recent_wiki(target_date: str) -> str:
     return '\n\n'.join(chunks[:8])
 
 def extract_issues(wiki_text: str, target_date: str) -> list[dict]:
-    """Haiku로 오늘 핵심 이슈 3~5개 추출"""
-    client = anthropic.Anthropic()
+    """Gemini Flash로 오늘 핵심 이슈 3~5개 추출"""
     prompt = f"""아래는 {target_date} 기준 주식 섹터 위키 내용이다.
 
 {wiki_text}
@@ -86,12 +94,11 @@ def extract_issues(wiki_text: str, target_date: str) -> list[dict]:
 - pivot_b: 약세/주의 판단 시나리오 (20자 이내)
 JSON만 반환, 다른 텍스트 없이."""
 
-    resp = client.messages.create(
-        model='claude-haiku-4-5-20251001',
-        max_tokens=800,
-        messages=[{'role': 'user', 'content': prompt}]
+    resp = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=prompt,
     )
-    text = resp.content[0].text.strip()
+    text = resp.text.strip()
     if text.startswith('```'):
         text = text.split('```')[1]
         if text.startswith('json'):
