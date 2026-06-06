@@ -1,4 +1,5 @@
 - 2026-06-06 — 장전 브리핑 자동화 시스템 구축 | collect(wiki→Gemini이슈추출)+bot(텔레브리핑+자유판단)+card_gen(HTML카드)+publish(Playwright+채널전송)+run_briefing.bat | assistant_bot(/s /ask /brief /enhance /wiki, Gemini어시스턴트) | Task Scheduler 전체 7개 평일(월~금)만 실행으로 변경 | 다음: assistant_bot 상시실행 Task Scheduler 등록 + 첫 브리핑 풀플로우 검증(6/8 월)
+- 2026-06-06 — Excel ingest 완료: 추정이익변경·컨센움직임·수출·유동성·수급·중소형주수급·가속화모멘텀·액티브ETF·일정·투자아이디어 → ingest_report_2026-06-06.md
 - 2026-06-05 — daily_scenario.py 완성 | wisereport+텔레그램+블로그 3소스 종합 → 브리핑 카드 시나리오 | 포맷: 카드형+주린이 말투(ETF→펀드 등) | ingest_record/blog/analyze_blog.py 구축 | insights.json dry run 53건·blog dry run 29건 | 실제 저장은 다음 세션
 - 2026-06-05 — 섹터 브리핑 카드 v1(로봇/반도체/우주) + v2 구조 시안(판단배지+SIGNAL BAR+주가반응+진입조건) | v2도 "와닿지 않는다" 피드백 → 내일 컨셉 재정립
 - 2026-06-05 — telegram ingest 4차 완료 | 신한리서치+하나차이나+하나반도체+리포트요약 처리 | 반도체index(TSMC CEO 3대발언·Broadcom AI네트워크30→40%·모건스탠리마이크론TP1050·키옥시아Capex66%↑·한국이익일본추월·광섬유프리폼550%↑·XPU칩리스크)+로봇(시선AI+유온로보틱스1.5조)+에치에프알AT&T벤더확인 | 전채널 완료 (17개)
