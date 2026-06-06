@@ -1,3 +1,4 @@
+- 2026-06-06 — 채널 방향 전환 결정 | 슈퍼샘플 개념(베끼는시대) 분석 → "STOCK BRAIN 개발 과정을 500만원 실전으로 검증하며 공개" 방향 확정 | 출처 오픈 원칙(태린이지표·텔레채널·리포트 출처 명시) | 쇼츠+커뮤니티 선행→롱폼 순서 결정 | 생성파일: 500만원챌린지_공개규칙·EP0기획서·포트폴리오트래커·채널방향doc갱신
 - 2026-06-06 — 장전 브리핑 자동화 시스템 구축 | collect(wiki→Gemini이슈추출)+bot(텔레브리핑+자유판단)+card_gen(HTML카드)+publish(Playwright+채널전송)+run_briefing.bat | assistant_bot(/s /ask /brief /enhance /wiki, Gemini어시스턴트) | Task Scheduler 전체 7개 평일(월~금)만 실행으로 변경 | 다음: assistant_bot 상시실행 Task Scheduler 등록 + 첫 브리핑 풀플로우 검증(6/8 월)
 - 2026-06-06 — Excel ingest 완료: 추정이익변경·컨센움직임·수출·유동성·수급·중소형주수급·가속화모멘텀·액티브ETF·일정·투자아이디어 → ingest_report_2026-06-06.md
 - 2026-06-05 — daily_scenario.py 완성 | wisereport+텔레그램+블로그 3소스 종합 → 브리핑 카드 시나리오 | 포맷: 카드형+주린이 말투(ETF→펀드 등) | ingest_record/blog/analyze_blog.py 구축 | insights.json dry run 53건·blog dry run 29건 | 실제 저장은 다음 세션

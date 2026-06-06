@@ -1,76 +1,56 @@
 # NEXT SESSION
-> 2026-06-06 | 집PC → 회사PC 이어서
+
+> 날짜: 2026-06-06 | PC: 집PC
 
 ## 세션 요약
-장전 브리핑 자동화 시스템 전체 구축 완료.  
-Task Scheduler 전체 7개 평일(월~금)만 실행으로 변경.  
-다음 실행: 6월 8일(월) 07:40~
+
+슈퍼샘플 개념(YouTube 영상 분석) → 채널 방향 전환 결정.
+STOCK BRAIN 개발 과정을 500만원 실전 검증하며 공개하는 채널로.
 
 ---
 
-## 완료
+## 완료 항목
 
-- `scripts/briefing/collect.py` — wiki L5_섹터 → Gemini 이슈 3~5개 추출
-- `scripts/briefing/bot.py` — 텔레그램 양방향 브리핑 봇 (자유 텍스트 판단, 08:00 타임아웃)
-- `scripts/briefing/card_gen.py` — 운영자 판단 담긴 HTML 카드 생성 (FREE/A/B/AUTO 배지)
-- `scripts/briefing/publish.py` — Playwright PNG 캡처 → 채널(@stockbrain_lotto) 전송
-- `scripts/briefing/run_briefing.bat` — collect→bot→publish 순서 자동 실행
-- `pipeline/briefing_state.json` — stage 기반 상태 관리
-- `scripts/briefing/assistant_bot.py` — Gemini 어시스턴트 봇 (/s /ask /brief /enhance /wiki)
-- Task Scheduler 7개 전부 평일(월~금) 07:40~ 실행으로 변경
+- [x] 채널 방향 전환 결정 — "과정 공개" 모델 확정
+- [x] 500만원_챌린지_공개규칙.md 생성 (3원칙 포함)
+- [x] yt_ep0_500만원_선언_기획서.md 생성 (7씬 구조)
+- [x] 500만원_포트폴리오.md 생성 (트래커 포맷)
+- [x] yt_전략_채널방향.md 방향 전환 내용 추가
 
 ---
 
-## 미완료 → 회사PC에서 이어서
+## 미완료 / 다음 할 것
 
-### 🔴 assistant_bot.py 상시 실행 Task Scheduler 등록 (최우선)
-현재 수동 실행만 됨. 로그인 시 자동 시작되게 등록 필요.
-```
-태스크명: StockBrain_AssistantBot
-실행: C:\Users\CH\Desktop\로또의 주식\scripts\briefing\run_assistant_bot.bat (새로 만들어야 함)
-트리거: 로그온 시 / 또는 평일 06:00
-```
+### 우선순위 1 — 채널 성장 먼저 (구독자 0→500)
+- [ ] **쇼츠 포맷 설계** — "오늘 수급빈집 상위 3개" 60초 형식
+- [ ] **첫 쇼츠 제작** — daily_scenario.py 출력 → 쇼츠로 변환
+- [ ] **커뮤니티 전략** — 태린이 댓글, 주식 카페 존재감 만들기
 
-### 🟡 6월 8일(월) 첫 브리핑 풀플로우 검증
-- 07:40 Task Scheduler 자동 실행 확인
-- 텔레그램에서 이슈 수신 → 답변 → 카드 생성 → 채널 전송 전 과정 확인
+### 우선순위 2 — Episode 0 준비
+- [ ] 전용 계좌 개설 (기존 계좌와 분리 필수)
+- [ ] STOCK BRAIN 현재 신호 뽑기 (EP0 실제 내용)
+- [ ] 촬영 날짜 확정
 
-### 🟡 publish.py Playwright chromium 설치 확인
-```
-.venv\Scripts\playwright.exe install chromium
-```
+### 우선순위 3 — 기술 (기존 미완)
+- [ ] assistant_bot 상시실행 Task Scheduler 등록
+- [ ] 첫 브리핑 풀플로우 검증 (6/8 월요일)
 
 ---
 
-## 명령어 정리 (assistant_bot.py)
+## 핵심 결정 사항
 
-| 명령어 | 기능 |
-|--------|------|
-| `/s [검색어]` | Gemini 웹서치 |
-| `/ask [질문]` | Gemini 분석 |
-| `/brief` | 브리핑 카드 재생성 + 채널 전송 |
-| `/enhance [내용]` | 서치 후 브리핑 보강 재생성 |
-| `/wiki [검색어]` | 로컬 wiki 검색 |
-| 자유 텍스트 | Gemini 자동 답변 |
-
----
-
-## Task Scheduler 현황 (전체 7개, 평일만)
-
-| 태스크명 | 실행시간 |
-|----------|---------|
-| StockBrainBriefing | 07:40 |
-| LottoStock_Download_0700 | 07:00 |
-| LottoStock_Wisereport_0705 | 07:05 |
-| LottoStock_Ingest_0730 | 07:30 |
-| LottoStock_Download_0900 | 09:00 |
-| LottoStock_Wisereport_0905 | 09:05 |
-| LottoStock_Ingest_0930 | 09:30 |
+1. **출처 오픈 원칙**: 태린이 지표, 텔레 채널들, 리포트 — 전부 출처 명시. 교차 합성이 내 것.
+2. **성장 순서**: 쇼츠 먼저 → 커뮤니티 → 구독자 500명 → 그때 EP0 롱폼
+3. **영상 스타일**: 다큐 X. 화면 녹화 + 직접 카메라 실황. Remotion은 특별편만.
+4. **서비스 현실**: 아직 완성 안 됨 = 약점 아님, 콘텐츠 시작점
 
 ---
 
 ## 관련 파일
 
-- `scripts/briefing/` — 전체 브리핑 파이프라인
-- `pipeline/briefing_state.json` — 상태 파일
-- `docs/superpowers/specs/2026-06-06-morning-briefing-design.md` — 설계 스펙
+| 파일 | 경로 |
+|------|------|
+| 챌린지 규칙 | `channel/strategy/500만원_챌린지_공개규칙.md` |
+| EP0 기획서 | `channel/yt/yt_ep0_500만원_선언_기획서.md` |
+| 포트폴리오 | `channel/strategy/500만원_포트폴리오.md` |
+| 채널 전략 | `channel/yt/yt_전략_채널방향.md` |
