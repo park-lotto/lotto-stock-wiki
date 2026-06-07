@@ -138,6 +138,68 @@ def oscillator_json_to_atoms(json_file: str, date: str = None) -> list[dict]:
     return atoms
 
 
+def wisereport_json_to_atoms(json_file: str, date: str = None) -> list[dict]:
+    """wisereport _parsed.json (증권사 리포트 요약) → 원자 리스트."""
+    data = json.loads(Path(json_file).read_text(encoding="utf-8"))
+    date = date or data.get("date", datetime.now().strftime("%Y-%m-%d"))
+    atoms = []
+
+    for entry in data.get("corp", []):
+        if len(entry) < 9:
+            continue
+        broker = str(entry[0]).strip()
+        stock_raw = str(entry[1]).strip()
+        opinion = str(entry[3]).strip()
+        tp_change = str(entry[4]).strip()   # ▲ 상향 / ▼ 하향 / = 유지
+        tp = str(entry[5]).strip()
+        title = str(entry[7]).strip()
+        summary = str(entry[8]).strip()
+
+        # 종목명에서 코드 분리: "삼성전자[005930]" → "삼성전자"
+        stock = stock_raw.split("[")[0].strip()
+
+        # 신호 결정
+        if tp_change == "▲" or "상향" in tp_change:
+            signal = "bullish"
+        elif tp_change == "▼" or "하향" in tp_change:
+            signal = "bearish"
+        else:
+            signal = "neutral"
+
+        # 투자의견 기반 보정
+        if opinion.upper() in ("SELL", "UNDERPERFORM", "REDUCE"):
+            signal = "bearish"
+        elif opinion.upper() in ("BUY", "STRONG BUY", "매수", "OVERWEIGHT"):
+            if signal == "neutral":
+                signal = "bullish"
+
+        content = f"{broker} | {stock} | {opinion} | TP {tp}원({tp_change}) | {title}. {summary}"
+
+        atoms.append({
+            "id": _atom_id(date, broker, stock),
+            "date": date,
+            "source_type": "report",
+            "source_name": broker,
+            "source_trust": "A",
+            "raw_file": str(json_file),
+            "layer": "L5",
+            "sector": "기타",
+            "asset": stock,
+            "asset_level": "stock",
+            "signal": signal,
+            "event_type": "consensus",
+            "magnitude": "minor",
+            "content_type": "analysis",
+            "strength_score": 3,
+            "validity_type": "date",
+            "validity_until": _next_week(date),
+            "is_active": 1,
+            "content": content,
+            "relations": [],
+        })
+    return atoms
+
+
 def consensus_to_atoms(file_path: str, date: str) -> list[dict]:
     """컨센서스 변화 Excel → 원자 리스트."""
     df = pd.read_excel(file_path)

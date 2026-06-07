@@ -15,7 +15,7 @@ from datetime import datetime
 from .db import init_db, insert_atom
 from .atomizer import atomize_text
 from .vector_db import embed_and_store
-from .excel_converter import oscillator_to_atoms, consensus_to_atoms, oscillator_json_to_atoms
+from .excel_converter import oscillator_to_atoms, consensus_to_atoms, oscillator_json_to_atoms, wisereport_json_to_atoms
 from .taxonomy import SOURCE_TRUST_BY_PATH
 
 _EXCEL_SUFFIXES = {".xlsx", ".xlsm", ".xls"}
@@ -64,6 +64,8 @@ def _ingest_json(path: Path, date: str) -> int:
     name = path.stem.lower()
     if "oscillator" in name or "오실레이터" in name or "scan" in name:
         atoms = oscillator_json_to_atoms(str(path), date)
+    elif "parsed" in name or "wisereport" in name or str(path).lower().replace("\\", "/").find("/wisereport/") != -1:
+        atoms = wisereport_json_to_atoms(str(path), date)
     else:
         print(f"[WARN] 인식 불가 JSON 파일: {path.name} (0개 저장)")
         return 0
@@ -124,6 +126,8 @@ def _guess_source_type(path: Path) -> str:
         return "blog"
     if "market" in name:
         return "news"
+    if "/yt/" in name or "youtube" in name:
+        return "yt"
     return "unknown"
 
 

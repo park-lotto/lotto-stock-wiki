@@ -77,8 +77,22 @@ def delete_atom(atom_id: str) -> None:
 
 
 def get_embedding_count() -> int:
-    """ChromaDB에 저장된 임베딩 수."""
-    return get_collection().count()
+    """ChromaDB에 저장된 임베딩 수.
+
+    ChromaDB Rust HNSW reader 오류 시 chroma.sqlite3에서 직접 카운트.
+    """
+    try:
+        return get_collection().count()
+    except Exception:
+        import sqlite3 as _sqlite3
+        chroma_sqlite = _CHROMA_PATH / "chroma.sqlite3"
+        if not chroma_sqlite.exists():
+            return 0
+        conn = _sqlite3.connect(str(chroma_sqlite))
+        try:
+            return conn.execute("SELECT COUNT(*) FROM embeddings").fetchone()[0]
+        finally:
+            conn.close()
 
 
 def query_similar(
