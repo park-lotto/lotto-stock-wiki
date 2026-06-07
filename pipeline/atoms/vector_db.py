@@ -19,10 +19,43 @@ _collection: Optional[chromadb.Collection] = None
 _embed_client: Optional[genai.Client] = None
 
 
+def _heal_hnsw_if_corrupt() -> None:
+    """ChromaDB HNSW 인덱스 부패 감지 및 자동 수복.
+
+    증상: index_metadata.pickle 존재 + HNSW max_seq_id > 0 → 반쪽 컴팩션 상태.
+    처치: pickle 삭제 + HNSW 세그먼트 max_seq_id를 0으로 리셋 → 새 세션에서 클린 백필.
+    """
+    import sqlite3 as _sqlite3
+    import os as _os
+
+    # Delete stale index_metadata.pickle files
+    for p in _CHROMA_PATH.glob("*/index_metadata.pickle"):
+        _os.remove(p)
+
+    # Reset HNSW segment max_seq_id to 0
+    chroma_sqlite = _CHROMA_PATH / "chroma.sqlite3"
+    if not chroma_sqlite.exists():
+        return
+    conn = _sqlite3.connect(str(chroma_sqlite))
+    try:
+        segs = conn.execute("SELECT id, type FROM segments").fetchall()
+        for seg_id, seg_type in segs:
+            if "hnsw" in seg_type.lower():
+                conn.execute(
+                    "UPDATE max_seq_id SET seq_id = 0 WHERE segment_id = ?",
+                    (seg_id,),
+                )
+        conn.commit()
+    finally:
+        conn.close()
+
+
 def _get_client() -> chromadb.ClientAPI:
     global _client
     if _client is None:
         _CHROMA_PATH.mkdir(parents=True, exist_ok=True)
+        # Auto-heal HNSW corruption before opening client
+        _heal_hnsw_if_corrupt()
         _client = chromadb.PersistentClient(path=str(_CHROMA_PATH))
     return _client
 
