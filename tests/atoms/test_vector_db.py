@@ -18,6 +18,11 @@ FAKE_EMBEDDING = [0.1] * 3072
 def isolated_chroma(tmp_path, monkeypatch):
     """격리된 ChromaDB 클라이언트 (인메모리)."""
     client = chromadb.EphemeralClient()
+    # 이전 테스트 잔여 컬렉션 제거 (EphemeralClient는 프로세스 내 공유)
+    try:
+        client.delete_collection("atoms")
+    except Exception:
+        pass
     monkeypatch.setattr(vdb_module, "_client", client)
     monkeypatch.setattr(vdb_module, "_collection", None)
 

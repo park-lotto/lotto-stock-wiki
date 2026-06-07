@@ -1,7 +1,9 @@
 import pytest
 from pathlib import Path
 from unittest.mock import patch, MagicMock
+import chromadb
 import pipeline.atoms.db as db_module
+import pipeline.atoms.vector_db as vdb_module
 from pipeline.atoms.db import init_db, query_atoms
 from pipeline.atoms.ingest import (
     ingest_file,
@@ -15,6 +17,20 @@ from pipeline.atoms.ingest import (
 def fresh_db(tmp_path, monkeypatch):
     monkeypatch.setattr(db_module, "DB_PATH", tmp_path / "test.db")
     init_db()
+
+
+@pytest.fixture(autouse=True)
+def mock_vector_db(monkeypatch):
+    """ingest 테스트에서 ChromaDB/Gemini API 호출 방지."""
+    client = chromadb.EphemeralClient()
+    # 이전 테스트 잔여 컬렉션 제거 후 재생성 (EphemeralClient는 프로세스 내 공유)
+    try:
+        client.delete_collection("atoms")
+    except Exception:
+        pass
+    monkeypatch.setattr(vdb_module, "_client", client)
+    monkeypatch.setattr(vdb_module, "_collection", None)
+    monkeypatch.setattr(vdb_module, "embed_text", lambda t: [0.1] * 3072)
 
 
 def test_guess_trust_report_path():
@@ -98,3 +114,31 @@ def test_ingest_nonexistent_file_returns_zero(tmp_path):
 
     count = ingest_file(str(nonexistent), "2026-06-07")
     assert count == 0
+
+
+from pipeline.atoms.vector_db import get_embedding_count
+
+
+@patch("pipeline.atoms.ingest.atomize_text")
+def test_ingest_also_embeds_atoms(mock_atomize, tmp_path):
+    """ingest 후 ChromaDB에도 원자가 저장되는지 확인."""
+    test_file = tmp_path / "telegram" / "2026-06-07_신한.md"
+    test_file.parent.mkdir(parents=True)
+    test_file.write_text("테스트 내용.", encoding="utf-8")
+
+    mock_atomize.return_value = [{
+        "id": "atom_embed_test",
+        "date": "2026-06-07",
+        "source_type": "telegram", "source_name": "신한",
+        "source_trust": "C", "raw_file": str(test_file),
+        "layer": "L5", "sector": "반도체", "asset": "브로드컴",
+        "asset_level": "stock", "signal": "bearish",
+        "event_type": "earnings", "magnitude": "major",
+        "content_type": "fact", "strength_score": 2,
+        "validity_type": "permanent", "validity_until": None,
+        "is_active": 1, "content": "테스트 내용.", "relations": [],
+    }]
+
+    count = ingest_file(str(test_file), "2026-06-07")
+    assert count == 1
+    assert get_embedding_count() == 1

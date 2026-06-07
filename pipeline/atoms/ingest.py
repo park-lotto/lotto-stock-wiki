@@ -14,6 +14,7 @@ from datetime import datetime
 
 from .db import init_db, insert_atom
 from .atomizer import atomize_text
+from .vector_db import embed_and_store
 from .excel_converter import oscillator_to_atoms, consensus_to_atoms, oscillator_json_to_atoms
 from .taxonomy import SOURCE_TRUST_BY_PATH
 
@@ -55,6 +56,7 @@ def _ingest_excel(path: Path, date: str) -> int:
 
     for atom in atoms:
         insert_atom(atom)
+        embed_and_store(atom)
     return len(atoms)
 
 
@@ -67,6 +69,7 @@ def _ingest_json(path: Path, date: str) -> int:
         return 0
     for atom in atoms:
         insert_atom(atom)
+        embed_and_store(atom)
     return len(atoms)
 
 
@@ -91,6 +94,7 @@ def _ingest_text(path: Path, date: str, force_trust: str = None) -> int:
     )
     for atom in atoms:
         insert_atom(atom)
+        embed_and_store(atom)
     return len(atoms)
 
 
