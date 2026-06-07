@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>조선 섹터 — 전체 이슈 맵</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0a0f1a; color: #e5e7eb; font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; padding: 24px 16px; }
+.wrap { max-width: 940px; margin: 0 auto; }
+
+/* 헤더 */
+.pg-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+.pg-title { font-size: 22px; font-weight: 800; color: #fff; }
+.pg-date { font-size: 11px; color: #4b5563; margin-top: 4px; }
+.status-pill { background: #1a3a1a; color: #4ade80; font-size: 12px; font-weight: 700; padding: 7px 16px; border-radius: 20px; border: 1px solid #166534; white-space: nowrap; }
+
+/* ─── 검색 ─── */
+.search-wrap { position: relative; margin-bottom: 16px; }
+.search-input {
+  width: 100%; background: #111827; border: 1.5px solid #1f2937;
+  border-radius: 14px; padding: 14px 50px 14px 48px;
+  font-size: 15px; color: #f9fafb; outline: none;
+  font-family: inherit; transition: border-color .2s, box-shadow .2s;
+}
+.search-input::placeholder { color: #374151; }
+.search-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px #3b82f620; }
+.search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 17px; pointer-events: none; }
+.search-clear { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); background: #1f2937; border: none; color: #6b7280; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; cursor: pointer; display: none; align-items: center; justify-content: center; }
+.search-clear.show { display: flex; }
+.search-meta { display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+.search-count { font-size: 12px; color: #4b5563; }
+.search-count.found { color: #4ade80; }
+.search-count.none { color: #ef4444; }
+.search-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { font-size: 11px; padding: 4px 12px; border-radius: 20px; cursor: pointer; border: 1px solid #1f2937; color: #6b7280; background: #111827; transition: all .15s; }
+.chip:hover { border-color: #3b82f6; color: #93c5fd; }
+
+/* 검색 하이라이트 */
+.sh-hit { outline: 2px solid #3b82f6; outline-offset: 2px; border-radius: 10px; box-shadow: 0 0 12px #3b82f640; }
+.sh-dim { opacity: .25; pointer-events: none; }
+mark.sh { background: #1e3a5f; color: #93c5fd; border-radius: 3px; padding: 0 2px; }
+
+/* 테마 히트맵 */
+.heatmap { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.hm { padding: 8px 14px; border-radius: 10px; cursor: pointer; border: 1px solid transparent; transition: all .15s; }
+.hm:hover { filter: brightness(1.2); }
+.hm.hot  { background: #1a2e0a; border-color: #22c55e44; }
+.hm.mid  { background: #1a1800; border-color: #f59e0b44; }
+.hm.cool { background: #0d1a2e; border-color: #3b82f644; }
+.hm.risk { background: #1a0808; border-color: #ef444444; }
+.hm-icon { font-size: 14px; }
+.hm-name { font-size: 11px; font-weight: 700; margin-top: 3px; }
+.hm.hot  .hm-name { color: #4ade80; }
+.hm.mid  .hm-name { color: #fbbf24; }
+.hm.cool .hm-name { color: #60a5fa; }
+.hm.risk .hm-name { color: #f87171; }
+.hm-sub { font-size: 10px; color: #4b5563; margin-top: 2px; }
+
+/* 블록 */
+.block { background: #111827; border-radius: 16px; padding: 20px; margin-bottom: 14px; border: 1px solid #1f2937; }
+.block-title { font-size: 11px; font-weight: 700; color: #6b7280; margin-bottom: 14px; text-transform: uppercase; letter-spacing: .07em; }
+
+/* ─── 섹터 주요종목 ─── */
+
+/* 태그 */
+.sk-tag { font-size: 10px; padding: 2px 8px; border-radius: 6px; font-weight: 600; }
+.t-hot  { background: #1a2e0a; color: #4ade80; }
+.t-mid  { background: #1c1500; color: #fbbf24; }
+.t-cool { background: #0d1e3a; color: #93c5fd; }
+.t-risk { background: #1c0808; color: #f87171; }
+.t-pur  { background: #130d1e; color: #c4b5fd; }
+
+/* 업데이트 라벨 */
+.update-label { font-size: 10px; color: #374151; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.ul-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; display: inline-block; }
+
+/* ETF 베이스라인 — 풀너비 */
+.etf-card { background: #0d1e0d; border: 1px solid #22c55e44; border-radius: 12px; overflow: hidden; margin-bottom: 12px; }
+.etf-head { display: flex; align-items: center; gap: 12px; padding: 13px 16px; cursor: pointer; transition: background .15s; }
+.etf-head:hover { background: #0f2812; }
+.etf-badge { font-size: 9px; font-weight: 700; color: #4ade80; background: #0d2810; border: 1px solid #166534; padding: 2px 8px; border-radius: 6px; white-space: nowrap; }
+.etf-name { font-size: 14px; font-weight: 800; color: #4ade80; flex: 1; }
+.etf-sub { font-size: 11px; color: #4b5563; }
+.etf-trend { font-size: 12px; font-weight: 700; color: #fbbf24; background: #1c1500; padding: 3px 10px; border-radius: 8px; }
+.etf-chv { color: #374151; font-size: 11px; transition: transform .2s; flex-shrink: 0; }
+.etf-card.open .etf-chv { transform: rotate(180deg); }
+.etf-detail { display: none; border-top: 1px solid #166534; padding: 14px 16px; background: #080d18; }
+.etf-card.open .etf-detail { display: block; }
+
+/* 박스 그리드 */
+.sk-grid-outer { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 0; }
+@media (max-width: 700px) { .sk-grid-outer { grid-template-columns: repeat(2, 1fr); } }
+
+/* 종목 박스 카드 */
+.skb { border-radius: 12px; border: 1px solid #1f2937; cursor: pointer; transition: all .15s; overflow: hidden; }
+.skb:hover { border-color: #374151; filter: brightness(1.1); }
+.skb.up    { border-color: #22c55e33; background: #0a1a0a; }
+.skb.mid   { border-color: #f59e0b33; background: #130f00; }
+.skb.dn    { border-color: #ef444433; background: #140808; }
+.skb.watch { border-color: #8b5cf633; background: #0f0a1e; }
+.skb.active { filter: brightness(1.15); }
+.skb.up.active    { border-color: #22c55e; box-shadow: 0 0 0 1px #22c55e44; }
+.skb.mid.active   { border-color: #f59e0b; box-shadow: 0 0 0 1px #f59e0b44; }
+.skb.watch.active { border-color: #8b5cf6; box-shadow: 0 0 0 1px #8b5cf644; }
+
+.skb-inner { padding: 14px 13px; }
+.skb-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.skb-trend { font-size: 22px; font-weight: 900; line-height: 1; }
+.skb.up    .skb-trend { color: #22c55e; }
+.skb.mid   .skb-trend { color: #f59e0b; }
+.skb.dn    .skb-trend { color: #ef4444; }
+.skb.watch .skb-trend { color: #a78bfa; }
+.skb-state { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+.skb.up    .skb-state { background: #0d2810; color: #4ade80; }
+.skb.mid   .skb-state { background: #1c1500; color: #fbbf24; }
+.skb.dn    .skb-state { background: #1c0808; color: #f87171; }
+.skb.watch .skb-state { background: #13081e; color: #c4b5fd; }
+.skb-name { font-size: 13px; font-weight: 800; color: #fff; margin-bottom: 4px; line-height: 1.3; }
+.skb-code { font-size: 10px; color: #4b5563; margin-bottom: 8px; }
+.skb-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+
+/* 상세 패널 — 풀너비, 그리드 아래 */
+.sk-detail-panel { display: none; margin-top: 8px; background: #080d18; border: 1px solid #1f2937; border-radius: 12px; padding: 16px; }
+.sk-detail-panel.open { display: block; }
+.sk-detail-name { font-size: 14px; font-weight: 800; color: #fff; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #1f2937; display: flex; align-items: center; gap: 10px; }
+.sk-detail-name span { font-size: 11px; color: #6b7280; font-weight: 400; }
+
+.sk-3col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9px; }
+@media (max-width: 600px) { .sk-3col { grid-template-columns: 1fr; } }
+.sk-panel { background: #111827; border-radius: 9px; padding: 12px 13px; border-left: 3px solid; }
+.sk-panel.gn { border-color: #22c55e; }
+.sk-panel.am { border-color: #f59e0b; }
+.sk-panel.bl { border-color: #3b82f6; }
+.sk-panel.pu { border-color: #8b5cf6; }
+.sk-panel-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 7px; }
+.sk-panel.gn .sk-panel-title { color: #4ade80; }
+.sk-panel.am .sk-panel-title { color: #fbbf24; }
+.sk-panel.bl .sk-panel-title { color: #60a5fa; }
+.sk-panel.pu .sk-panel-title { color: #c4b5fd; }
+.sk-panel-body { font-size: 12px; color: #d1d5db; line-height: 1.9; }
+.sk-panel-body strong { color: #fff; }
+.sk-tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.sk-verdict { display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 8px; margin-top: 9px; }
+
+/* ─── 카테고리 아코디언 ─── */
+.cat { border-radius: 14px; margin-bottom: 10px; overflow: hidden; border: 1px solid #1f2937; }
+.cat.hot  { border-color: #22c55e33; }
+.cat.mid  { border-color: #f59e0b33; }
+.cat.cool { border-color: #3b82f633; }
+.cat.risk { border-color: #ef444433; }
+.cat.new  { border-color: #8b5cf633; }
+
+.cat-head { display: flex; align-items: center; gap: 12px; padding: 15px 18px; cursor: pointer; background: #111827; transition: background .15s; user-select: none; }
+.cat-head:hover { background: #141e2e; }
+.cat.hot  .cat-head { background: #0d1e0d; }
+.cat.mid  .cat-head { background: #1a1500; }
+.cat.risk .cat-head { background: #150808; }
+.cat.new  .cat-head { background: #130d1e; }
+
+.cat-icon { font-size: 20px; flex-shrink: 0; }
+.cat-info { flex: 1; }
+.cat-name { font-size: 14px; font-weight: 800; color: #fff; margin-bottom: 3px; }
+.cat-desc { font-size: 11px; color: #6b7280; }
+.cat-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.cat-badge { font-size: 10px; font-weight: 700; padding: 4px 11px; border-radius: 20px; white-space: nowrap; }
+.bg-hot  { background: #0d2810; color: #4ade80; border: 1px solid #166534; }
+.bg-mid  { background: #1c1500; color: #fbbf24; border: 1px solid #71400055; }
+.bg-cool { background: #0d1e3a; color: #93c5fd; border: 1px solid #1e3a5f; }
+.bg-risk { background: #1c0808; color: #f87171; border: 1px solid #450a0a55; }
+.bg-new  { background: #13081e; color: #c4b5fd; border: 1px solid #4c1d9555; }
+.cat-cnt { font-size: 11px; color: #4b5563; }
+.cat-chv { color: #374151; font-size: 12px; transition: transform .2s; }
+.cat.open .cat-chv { transform: rotate(180deg); }
+
+.cat-body { display: none; border-top: 1px solid #1f2937; background: #0a0f1a; }
+.cat.open .cat-body { display: block; }
+
+/* ─── 이벤트 아코디언 (하위) ─── */
+.ev-list { display: flex; flex-direction: column; gap: 0; }
+
+.ev { border-bottom: 1px solid #111827; }
+.ev:last-child { border-bottom: none; }
+
+.ev-head { display: flex; align-items: center; gap: 12px; padding: 13px 18px 13px 24px; cursor: pointer; background: transparent; transition: background .15s; }
+.ev-head:hover { background: #0d1424; }
+
+.ev-dday { min-width: 56px; flex-shrink: 0; text-align: center; }
+.ev-dday-num { font-size: 14px; font-weight: 800; line-height: 1; }
+.ev-dday-sub { font-size: 9px; color: #4b5563; margin-top: 2px; }
+.d-hot  { color: #fbbf24; }
+.d-risk { color: #f87171; }
+.d-cool { color: #60a5fa; }
+.d-dim  { color: #6b7280; }
+
+.ev-main { flex: 1; }
+.ev-title { font-size: 13px; font-weight: 700; color: #f9fafb; margin-bottom: 3px; }
+.ev-short { font-size: 11px; color: #6b7280; }
+
+.ev-badge { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+.ev-chv { color: #374151; font-size: 11px; flex-shrink: 0; transition: transform .2s; }
+.ev.open .ev-chv { transform: rotate(180deg); }
+
+.ev-detail { display: none; padding: 16px 18px 20px 32px; background: #080d18; border-top: 1px solid #111827; }
+.ev.open .ev-detail { display: block; }
+
+/* 상세 내용 공통 */
+.what-box { background: #111827; border-radius: 10px; padding: 13px 15px; margin-bottom: 14px; border-left: 3px solid #3b82f6; }
+.what-label { font-size: 10px; color: #3b82f6; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px; }
+.what-text { font-size: 13px; color: #e5e7eb; line-height: 1.9; }
+.what-text strong { color: #fff; }
+.verdict { display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 8px; margin-top: 8px; }
+
+.frames { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.f-full { grid-column: 1 / -1; }
+.frame { background: #111827; border-radius: 10px; padding: 12px; border-left: 3px solid; }
+.frame.bl { border-color: #3b82f6; }
+.frame.pu { border-color: #8b5cf6; }
+.frame.am { border-color: #f59e0b; }
+.frame.gn { border-color: #22c55e; }
+.frame.rd { border-color: #ef4444; }
+.f-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 7px; }
+.frame.bl .f-label { color: #60a5fa; }
+.frame.pu .f-label { color: #a78bfa; }
+.frame.am .f-label { color: #fbbf24; }
+.frame.gn .f-label { color: #4ade80; }
+.frame.rd .f-label { color: #f87171; }
+.f-body { font-size: 12px; color: #d1d5db; line-height: 1.85; }
+.f-body strong { color: #fff; }
+.num { color: #fbbf24; font-weight: 700; }
+.good { color: #4ade80; font-weight: 600; }
+.bad  { color: #f87171; font-weight: 600; }
+.dim  { color: #6b7280; }
+
+.slist { display: flex; flex-direction: column; gap: 6px; }
+.sl { display: flex; align-items: center; gap: 10px; background: #0a1424; border-radius: 7px; padding: 8px 11px; }
+.sl-name { font-size: 11px; font-weight: 700; color: #fff; min-width: 100px; }
+.sl-why { flex: 1; font-size: 11px; color: #9ca3af; }
+.sl-v { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
+.v-g { background: #0d2810; color: #4ade80; }
+.v-y { background: #1c1500; color: #fbbf24; }
+.v-r { background: #1c0808; color: #f87171; }
+.v-b { background: #0d1e3a; color: #93c5fd; }
+
+.risk-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.rc { background: #160808; border-radius: 8px; padding: 10px; }
+.rc-t { font-size: 11px; font-weight: 700; color: #f87171; margin-bottom: 3px; }
+.rc-b { font-size: 11px; color: #9ca3af; line-height: 1.6; }
+
+.src-row { margin-top: 11px; padding-top: 10px; border-top: 1px solid #1f2937; display: flex; flex-wrap: wrap; gap: 7px; align-items: center; }
+.v-badge { background: #0d2810; color: #4ade80; font-size: 10px; padding: 3px 10px; border-radius: 8px; border: 1px solid #166534; }
+.g-badge { background: #1c1000; color: #fbbf24; font-size: 10px; padding: 3px 10px; border-radius: 8px; }
+.src-a { font-size: 10px; color: #60a5fa; text-decoration: none; background: #0d1424; padding: 3px 9px; border-radius: 6px; border: 1px solid #1e3a5f; }
+
+/* 딥리서치 대기 */
+.pending { color: #374151; font-size: 13px; text-align: center; padding: 24px; border: 1px dashed #1f2937; border-radius: 10px; }
+.pending em { display: block; font-size: 11px; color: #1f2937; margin-top: 6px; font-style: normal; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 헤더 -->
+  <div class="pg-header">
+    <div>
+      <div class="pg-title">⚓ 조선 섹터 — 전체 이슈 맵</div>
+      <div class="pg-date">2026-06-08 · 카테고리 클릭 → 펼치기</div>
+    </div>
+    <div class="status-pill">🔴 지금 강한 섹터</div>
+  </div>
+
+  <!-- 검색 -->
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" id="searchInput" type="text"
+      placeholder="종목명, 이벤트, 키워드 검색 — 예: FLNG / HD현대 / Section 301 / 수급빈집"
+      oninput="doSearch(this.value)" autocomplete="off">
+    <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
+    <div class="search-meta">
+      <span class="search-count" id="searchCount"></span>
+      <div class="search-chips">
+        <span class="chip" onclick="setSearch('FLNG')">FLNG</span>
+        <span class="chip" onclick="setSearch('Section 301')">Section 301</span>
+        <span class="chip" onclick="setSearch('HD현대')">HD현대</span>
+        <span class="chip" onclick="setSearch('수급빈집')">수급빈집</span>
+        <span class="chip" onclick="setSearch('캐나다')">캐나다</span>
+        <span class="chip" onclick="setSearch('리스크')">리스크</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 히트맵 -->
+  <div class="heatmap">
+    <div class="hm hot" onclick="jumpTo('cat-usa')"><div class="hm-icon">🇺🇸</div><div class="hm-name">미국 제재/법안</div><div class="hm-sub">D-155 최대트리거</div></div>
+    <div class="hm hot" onclick="jumpTo('cat-flng')"><div class="hm-icon">🛢️</div><div class="hm-name">FLNG</div><div class="hm-sub">삼성중공업 독점</div></div>
+    <div class="hm mid" onclick="jumpTo('cat-canada')"><div class="hm-icon">🇨🇦</div><div class="hm-name">캐나다 입찰</div><div class="hm-sub">결과 대기 중</div></div>
+    <div class="hm mid" onclick="jumpTo('cat-sub')"><div class="hm-icon">⚓</div><div class="hm-name">핵잠수함</div><div class="hm-sub">방산 연계</div></div>
+    <div class="hm cool" onclick="jumpTo('cat-dc')"><div class="hm-icon">💻</div><div class="hm-name">부유식 데이터센터</div><div class="hm-sub">신규 테마</div></div>
+    <div class="hm cool" onclick="jumpTo('cat-mro')"><div class="hm-icon">🔧</div><div class="hm-name">MRO</div><div class="hm-sub">정비 수주</div></div>
+    <div class="hm cool" onclick="jumpTo('cat-ai')"><div class="hm-icon">🤖</div><div class="hm-name">조선엔진 AI</div><div class="hm-sub">효율화 기술</div></div>
+    <div class="hm risk" onclick="jumpTo('cat-risk')"><div class="hm-icon">⚠️</div><div class="hm-name">리스크</div><div class="hm-sub">제재/유예연장</div></div>
+  </div>
+
+  <!-- 섹터 주요종목 -->
+  <div class="block">
+    <div class="block-title">📍 섹터 주요종목 — 오늘 수급·포지션</div>
+    <div class="update-label"><span class="ul-dot"></span>태린이 파일 기준 · 매일 업데이트 · 2026-06-08</div>
+
+    <!-- ETF 베이스라인 -->
+    <div class="etf-card" id="etf1">
+      <div class="etf-head" onclick="toggleEtf('etf1')">
+        <span class="etf-badge">ETF 기준선</span>
+        <span class="etf-name">KODEX 조선해양 (450660)</span>
+        <span class="etf-sub">섹터 공신력 1순위 벤치마크</span>
+        <span class="etf-trend">→ 눌림 중</span>
+        <span class="etf-chv">▼</span>
+      </div>
+      <div class="etf-detail">
+        <div class="sk-3col">
+          <div class="sk-panel gn">
+            <div class="sk-panel-title">📊 이평선 위치</div>
+            <div class="sk-panel-body">5일선 <strong>아래</strong> (단기 눌림)<br>20일선 <strong>위</strong> (중기 유지)<br>60일선 <strong>위</strong> (장기 상승)<br>→ 중기 추세 살아있음</div>
+          </div>
+          <div class="sk-panel am">
+            <div class="sk-panel-title">🔄 수급 상태</div>
+            <div class="sk-panel-body">외국인 <strong>3일 연속 순매도</strong><br>기관 <strong>관망</strong> (소폭 매수)<br><br>수급빈집: <strong>확인 필요</strong></div>
+          </div>
+          <div class="sk-panel bl">
+            <div class="sk-panel-title">🏷️ 관련 키워드</div>
+            <div class="sk-tag-row">
+              <span class="sk-tag t-hot">Section 301 D-155</span>
+              <span class="sk-tag t-cool">섹터 분산 안전</span>
+              <span class="sk-tag t-mid">눌림 분할매수</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 종목 그리드 -->
+    <div class="sk-grid-outer" id="sk-grid">
+
+      <div class="skb up" onclick="selectStock('hd')" id="skb-hd">
+        <div class="skb-inner">
+          <div class="skb-top"><span class="skb-trend">↑</span><span class="skb-state">정배열</span></div>
+          <div class="skb-name">HD현대중공업</div>
+          <div class="skb-code">329180</div>
+          <div class="skb-tags">
+            <span class="sk-tag t-hot">1순위 수혜</span>
+            <span class="sk-tag t-cool">외인 순매수</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="skb watch" onclick="selectStock('sam')" id="skb-sam">
+        <div class="skb-inner">
+          <div class="skb-top"><span class="skb-trend">◆</span><span class="skb-state">주시</span></div>
+          <div class="skb-name">삼성중공업</div>
+          <div class="skb-code">010140</div>
+          <div class="skb-tags">
+            <span class="sk-tag t-pur">FLNG 독점</span>
+            <span class="sk-tag t-risk">반응 둔화</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="skb mid" onclick="selectStock('hw')" id="skb-hw">
+        <div class="skb-inner">
+          <div class="skb-top"><span class="skb-trend">⚠</span><span class="skb-state">주의</span></div>
+          <div class="skb-name">한화오션</div>
+          <div class="skb-code">042660</div>
+          <div class="skb-tags">
+            <span class="sk-tag t-risk">제재 유예중</span>
+            <span class="sk-tag t-hot">Section 301</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="skb up" onclick="selectStock('hkc')" id="skb-hkc">
+        <div class="skb-inner">
+          <div class="skb-top"><span class="skb-trend">↑</span><span class="skb-state">반등</span></div>
+          <div class="skb-name">한국카본</div>
+          <div class="skb-code">017960</div>
+          <div class="skb-tags">
+            <span class="sk-tag t-pur">FLNG 소재</span>
+            <span class="sk-tag t-mid">변동성 주의</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 상세 패널 -->
+    <div class="sk-detail-panel" id="sk-detail">
+      <div class="sk-detail-name" id="sk-detail-name">종목 선택 시 상세 표시</div>
+      <div id="sk-detail-body"></div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 카테고리 1: 미국 제재/법안 -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="cat hot" id="cat-usa">
+    <div class="cat-head" onclick="toggleCat('cat-usa')">
+      <div class="cat-icon">🇺🇸</div>
+      <div class="cat-info">
+        <div class="cat-name">미국 제재 / 법안</div>
+        <div class="cat-desc">Section 301 유예 만료 · SHIPS Act · 한화오션 제재 — 조선주 최대 변수</div>
+      </div>
+      <div class="cat-right">
+        <span class="cat-badge bg-hot">최대 호재</span>
+        <span class="cat-cnt">이벤트 3개</span>
+        <span class="cat-chv">▼</span>
+      </div>
+    </div>
+    <div class="cat-body">
+      <div class="ev-list">
+
+        <!-- 이벤트 1 -->
+        <div class="ev" id="e-usa1">
+          <div class="ev-head" onclick="toggleEv('e-usa1')">
+            <div class="ev-dday"><div class="ev-dday-num d-hot">D-155</div><div class="ev-dday-sub">2026-11-09</div></div>
+            <div class="ev-main">
+              <div class="ev-title">⭐ 중국 배 세금 유예 만료 — 진짜 돈 내기 시작</div>
+              <div class="ev-short">지금 주가는 이날 기대하고 미리 올라있음 · 이날부터 실질 효과</div>
+            </div>
+            <span class="ev-badge bg-hot">최대 트리거</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">미국이 중국 배에 세금을 때리기로 했는데 1년 유예를 줬어요. 그 유예가 끝나는 날이 <strong>2026-11-09.</strong> 이날부터 중국 배를 쓰는 선사들이 진짜로 돈을 냄 → 한국 배로 바꾸는 게 경제적으로 맞아떨어짐.</div>
+              <span class="verdict" style="background:#0d2810;color:#4ade80;">✅ 조선주 전체 최대 트리거</span>
+            </div>
+            <div class="frames">
+              <div class="frame bl">
+                <div class="f-label">📐 얼마나 큰 세금</div>
+                <div class="f-body">컨테이너선 2만톤 기준<br><span class="num">연간 약 130억원</span> 추가 세금<br><br>한국 배로 발주 전환이 경제적으로 맞아떨어지는 구조</div>
+              </div>
+              <div class="frame pu">
+                <div class="f-label">🔮 지금 반영 정도</div>
+                <div class="f-body">한국 수주 점유율 이미 <span class="good">55%</span><br>(작년: 17%)<br><br>주가는 <span class="bad">기대감 선반영</span> 상태 — 이날 D-2달 전부터 수급 유입 가능</div>
+              </div>
+              <div class="frame am">
+                <div class="f-label">📅 대응</div>
+                <div class="f-body">지금 눌림 구간 → 분할 매수<br><strong>이날 D-60 전후 포지션 완성</strong> 목표</div>
+              </div>
+              <div class="frame gn">
+                <div class="f-label">📈 종목별</div>
+                <div class="f-body">
+                  <div class="slist">
+                    <div class="sl"><div class="sl-name">HD현대중공업</div><div class="sl-why">제재 없음, 수주 1위</div><div class="sl-v v-g">1순위</div></div>
+                    <div class="sl"><div class="sl-name">조선 ETF</div><div class="sl-why">섹터 분산</div><div class="sl-v v-g">안전</div></div>
+                    <div class="sl"><div class="sl-name">한화오션</div><div class="sl-why">수혜 + 제재 리스크</div><div class="sl-v v-y">주시</div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="frame rd f-full">
+                <div class="f-label">⚠️ 이게 안 될 이유</div>
+                <div class="f-body">
+                  <div class="risk-grid">
+                    <div class="rc"><div class="rc-t">유예 또 연장</div><div class="rc-b">미중 협상 결과로 또 연장되면 재료 소멸</div></div>
+                    <div class="rc"><div class="rc-t">소문에 사고 뉴스에 팔기</div><div class="rc-b">막상 효과 시작일에 차익실현 물량 쏟아질 수 있음</div></div>
+                    <div class="rc"><div class="rc-t">SHIPS Act 무산</div><div class="rc-b">추가 기대감 일부 소멸</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="src-row"><span class="v-badge">✦ 딥리서치 교차검증</span><a class="src-a" href="https://maritime-executive.com/article/shipbuilding-orders-rebound-as-south-korea-looks-to-benefits-from-u-s-fees" target="_blank">수주 반등 데이터</a></div>
+          </div>
+        </div>
+
+        <!-- 이벤트 2 -->
+        <div class="ev" id="e-usa2">
+          <div class="ev-head" onclick="toggleEv('e-usa2')">
+            <div class="ev-dday"><div class="ev-dday-num d-cool">미정</div><div class="ev-dday-sub">상원 계류</div></div>
+            <div class="ev-main">
+              <div class="ev-title">⚖️ SHIPS Act (S.1541) — 위원회 통과하면 추가 호재</div>
+              <div class="ev-short">Section 301보다 강한 법안 · 통과 확률 불확실 · 뉴스 터지는 날 주목</div>
+            </div>
+            <span class="ev-badge bg-cool">통과 시 호재</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">Section 301보다 더 강한 추가 법안. 중국 관련 선박에 3단계 벌금 구조. 미국 수입 화물 일부를 한국·미국 건조선에 실어야 한다는 조항도 포함. <strong>아직 상원 상무위원회 계류 중.</strong></div>
+              <span class="verdict" style="background:#0d1e3a;color:#93c5fd;">🔵 통과 여부 불확실 — 뉴스 나오는 날 바로 대응</span>
+            </div>
+            <div class="frames">
+              <div class="frame bl">
+                <div class="f-label">📐 벌금 구조 (원문 기준)</div>
+                <div class="f-body">· 중국 소유·운영 선박: <span class="num">$5/톤</span><br>· 발주 25~50% 중국산: <span class="num">$3.50/톤</span><br>· 보유 50%+ 중국 건조: <span class="num">$1.25/톤</span><br><br><span class="dim">⚠ 언론의 $50/$140/톤은 기각된 수치</span></div>
+              </div>
+              <div class="frame am">
+                <div class="f-label">📅 언제 주목하나</div>
+                <div class="f-body">위원회 통과 뉴스 = 당일 전체 조선주 급등 가능<br><br>평소엔 기다리다가 <strong>뉴스 나오면 즉시 반응</strong></div>
+              </div>
+            </div>
+            <div class="src-row"><span class="v-badge">✦ 교차검증</span><span class="g-badge">⚠ 통과 확률 데이터 없음</span><a class="src-a" href="https://www.congress.gov/bill/119th-congress/senate-bill/1541/text" target="_blank">법안 원문</a></div>
+          </div>
+        </div>
+
+        <!-- 이벤트 3 -->
+        <div class="ev" id="e-usa3">
+          <div class="ev-head" onclick="toggleEv('e-usa3')">
+            <div class="ev-dday"><div class="ev-dday-num d-risk">언제든</div><div class="ev-dday-sub">유예 중</div></div>
+            <div class="ev-main">
+              <div class="ev-title">⚠️ 한화오션 — 중국 제재 재활성화 리스크</div>
+              <div class="ev-short">미중 관계 흔들리면 즉시 발동 · 장중 -9% 경험 있음</div>
+            </div>
+            <span class="ev-badge bg-risk">하방 리스크</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">한화오션이 미국 필라델피아 조선소 인수 → 중국이 보복 제재. 현재는 미중 협의로 유예 상태. <strong>미중 갈등 재점화 시 즉시 재활성화.</strong> 2025-10-14 첫 발표 때 장중 -9% 급락 경험.</div>
+              <span class="verdict" style="background:#1c0808;color:#f87171;">⚠ 한화오션 보유 중이라면 필수 모니터링</span>
+            </div>
+            <div class="frames">
+              <div class="frame rd">
+                <div class="f-label">📉 실제 충격</div>
+                <div class="f-body">2025-10-14 발표 당일<br>장중 <span class="bad">-9%</span>, 종가 <span class="bad">-5.8%</span><br><br>재발 시 비슷한 충격 예상</div>
+              </div>
+              <div class="frame gn">
+                <div class="f-label">📈 제재 재발 시 반사수혜</div>
+                <div class="f-body">
+                  <div class="slist">
+                    <div class="sl"><div class="sl-name">HD현대중공업</div><div class="sl-why">제재 없는 대안</div><div class="sl-v v-g">반사수혜</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="src-row"><span class="v-badge">✦ 교차검증</span><a class="src-a" href="https://www.cnbc.com/2025/10/14/china-sanctions-five-us-subsidiaries-of-south-koreas-hanwha-ocean-over-their-ties-with-washington.html" target="_blank">CNBC 제재 보도</a></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 카테고리 2: FLNG -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="cat hot" id="cat-flng">
+    <div class="cat-head" onclick="toggleCat('cat-flng')">
+      <div class="cat-icon">🛢️</div>
+      <div class="cat-info">
+        <div class="cat-name">FLNG (부유식 LNG 생산설비)</div>
+        <div class="cat-desc">삼성중공업 독점 구도 · 모잠비크 입찰 · MRO 정비 시장</div>
+      </div>
+      <div class="cat-right">
+        <span class="cat-badge bg-hot">삼성중 핵심</span>
+        <span class="cat-cnt">이벤트 3개</span>
+        <span class="cat-chv">▼</span>
+      </div>
+    </div>
+    <div class="cat-body">
+      <div class="ev-list">
+
+        <div class="ev" id="e-flng1">
+          <div class="ev-head" onclick="toggleEv('e-flng1')">
+            <div class="ev-dday"><div class="ev-dday-num d-cool">Q3</div><div class="ev-dday-sub">2026 예정</div></div>
+            <div class="ev-main">
+              <div class="ev-title">🛢️ 모잠비크 FLNG 입찰 결과 — 삼성중 2연속 수주?</div>
+              <div class="ev-short">따내면 FLNG 독점 공식화 · 삼성중공업 주가 단기 트리거</div>
+            </div>
+            <span class="ev-badge bg-cool">삼성중 트리거</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">바다 위에 떠있는 LNG 생산공장(FLNG). 삼성중공업이 방금 4.3조짜리를 따냈는데, 이번에 모잠비크 것까지 따내면 <strong>전 세계 FLNG를 삼성중공업이 독점</strong>한다는 게 공식 확인됨.</div>
+              <span class="verdict" style="background:#0d1e3a;color:#93c5fd;">🔵 딥리서치 대기 — 상세 분석 예정</span>
+            </div>
+            <div class="pending">딥리서치 실행 후 5프레임 채워짐<em>FLNG 시장 규모 · 삼성중 독점 근거 · 경쟁사 분석</em></div>
+          </div>
+        </div>
+
+        <div class="ev" id="e-flng2">
+          <div class="ev-head" onclick="toggleEv('e-flng2')">
+            <div class="ev-dday"><div class="ev-dday-num d-cool">진행중</div><div class="ev-dday-sub">상시</div></div>
+            <div class="ev-main">
+              <div class="ev-title">🔧 FLNG MRO — 만들고 나면 정비도 맡는다</div>
+              <div class="ev-short">10~20년 장기 정비 계약 · 조선 넘어 서비스 매출로 이어짐</div>
+            </div>
+            <span class="ev-badge bg-cool">장기 수익</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">배를 납품한 후 10~20년간 정비·유지보수(MRO) 계약도 따라옴. FLNG는 구조가 복잡해서 만든 곳만 제대로 고칠 수 있어요 → <strong>삼성중공업이 독점적으로 MRO까지 가져갈 가능성.</strong></div>
+              <span class="verdict" style="background:#0d1e3a;color:#93c5fd;">🔵 딥리서치 대기</span>
+            </div>
+            <div class="pending">딥리서치 실행 후 채워짐<em>MRO 시장 규모 · 계약 구조 · 수익성 분석</em></div>
+          </div>
+        </div>
+
+        <div class="ev" id="e-flng3">
+          <div class="ev-head" onclick="toggleEv('e-flng3')">
+            <div class="ev-dday"><div class="ev-dday-num d-cool">신규</div><div class="ev-dday-sub">탐색 중</div></div>
+            <div class="ev-main">
+              <div class="ev-title">💻 부유식 데이터센터 — FLNG 기술이 여기로도</div>
+              <div class="ev-short">바다 위 데이터센터 · 냉각 비용 절감 · 조선 기술 전용 신테마</div>
+            </div>
+            <span class="ev-badge bg-new">신규 테마</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">AI 데이터센터는 열이 엄청남. 바다에 띄우면 냉각 비용이 확 줄어요. FLNG처럼 <strong>바다 위 구조물 설계·건조 기술</strong>이 그대로 쓰임. 삼성중공업·HD현대 같은 곳이 수주 가능한 신테마.</div>
+              <span class="verdict" style="background:#13081e;color:#c4b5fd;">🟣 딥리서치 대기 — 실제 수주 가능성 확인 필요</span>
+            </div>
+            <div class="pending">딥리서치 실행 후 채워짐<em>실제 발주 현황 · 어느 조선소가 경쟁력 있나 · 시장 규모</em></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 카테고리 3: 핵잠수함 / 방산 -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="cat mid" id="cat-sub">
+    <div class="cat-head" onclick="toggleCat('cat-sub')">
+      <div class="cat-icon">⚓</div>
+      <div class="cat-info">
+        <div class="cat-name">핵잠수함 / 방산 조선</div>
+        <div class="cat-desc">AUKUS 수혜 · 캐나다 잠수함 입찰 · 미해군 MRO 연계</div>
+      </div>
+      <div class="cat-right">
+        <span class="cat-badge bg-mid">장기 모니터링</span>
+        <span class="cat-cnt">이벤트 2개</span>
+        <span class="cat-chv">▼</span>
+      </div>
+    </div>
+    <div class="cat-body">
+      <div class="ev-list">
+
+        <div class="ev" id="e-sub1">
+          <div class="ev-head" onclick="toggleEv('e-sub1')">
+            <div class="ev-dday"><div class="ev-dday-num d-cool">미정</div><div class="ev-dday-sub">협의 중</div></div>
+            <div class="ev-main">
+              <div class="ev-title">🇨🇦 캐나다 잠수함 입찰 — 한국 조선소 참여?</div>
+              <div class="ev-short">캐나다 차세대 잠수함 프로젝트 · 수십조 규모 · 수주 시 대박</div>
+            </div>
+            <span class="ev-badge bg-mid">수주 시 대박</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">캐나다가 노후 잠수함 교체를 위해 차세대 잠수함 프로젝트를 진행 중. 수십조 규모. 한국 조선소(HD현대, 한화오션)가 입찰 검토 중으로 알려짐.</div>
+              <span class="verdict" style="background:#1c1500;color:#fbbf24;">🟡 딥리서치 대기 — 실제 참여 여부 확인 필요</span>
+            </div>
+            <div class="pending">딥리서치 실행 후 채워짐<em>프로젝트 규모 · 입찰 자격 · 한국 조선소 경쟁력</em></div>
+          </div>
+        </div>
+
+        <div class="ev" id="e-sub2">
+          <div class="ev-head" onclick="toggleEv('e-sub2')">
+            <div class="ev-dday"><div class="ev-dday-num d-cool">신규</div><div class="ev-dday-sub">탐색 중</div></div>
+            <div class="ev-main">
+              <div class="ev-title">🤖 조선엔진 AI 적용 — 연비·효율 자동화</div>
+              <div class="ev-short">HD현대 엔진 AI 탑재 · 선박 운항비 절감 → 발주 유인 상승</div>
+            </div>
+            <span class="ev-badge bg-new">신규 테마</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">HD현대가 엔진에 AI를 탑재해 연료 소비를 자동 최적화하는 기술 개발 중. 배 운항비에서 연료가 차지하는 비중이 크기 때문에 → <strong>이 기술 있으면 발주사가 한국 배를 더 선호하는 구조 강화.</strong></div>
+              <span class="verdict" style="background:#13081e;color:#c4b5fd;">🟣 딥리서치 대기</span>
+            </div>
+            <div class="pending">딥리서치 실행 후 채워짐<em>HD현대 기술 현황 · 시장 적용 타임라인 · 수주 영향</em></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 카테고리 4: 캐나다 입찰 (별도 정리) -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="cat mid" id="cat-canada">
+    <div class="cat-head" onclick="toggleCat('cat-canada')">
+      <div class="cat-icon">🇨🇦</div>
+      <div class="cat-info">
+        <div class="cat-name">캐나다 조선 입찰</div>
+        <div class="cat-desc">캐나다 해군·해안경비대 선박 발주 · 한국과 협력 논의</div>
+      </div>
+      <div class="cat-right">
+        <span class="cat-badge bg-mid">수주 대기</span>
+        <span class="cat-cnt">이벤트 1개</span>
+        <span class="cat-chv">▼</span>
+      </div>
+    </div>
+    <div class="cat-body">
+      <div class="ev-list">
+        <div class="ev" id="e-canada1">
+          <div class="ev-head" onclick="toggleEv('e-canada1')">
+            <div class="ev-dday"><div class="ev-dday-num d-cool">협의 중</div><div class="ev-dday-sub">2026</div></div>
+            <div class="ev-main">
+              <div class="ev-title">🇨🇦 캐나다 함대 현대화 — 한국 조선 파트너 선정</div>
+              <div class="ev-short">HD현대·한화오션 등 참여 검토 · 대규모 조선 협력 가능성</div>
+            </div>
+            <span class="ev-badge bg-mid">결과 주시</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">캐나다가 노후 해군 함정 교체를 위해 대규모 조선 발주를 추진 중. 한국 조선소와 기술이전·공동건조 방식 논의 진행 중으로 알려짐.</div>
+              <span class="verdict" style="background:#1c1500;color:#fbbf24;">🟡 딥리서치 대기 — 계약 구조·규모 확인 필요</span>
+            </div>
+            <div class="pending">딥리서치 실행 후 채워짐<em>계약 방식 · 수혜 종목 · 타임라인</em></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 카테고리 5: 리스크 모음 -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="cat risk" id="cat-risk">
+    <div class="cat-head" onclick="toggleCat('cat-risk')">
+      <div class="cat-icon">⚠️</div>
+      <div class="cat-info">
+        <div class="cat-name">리스크 모음</div>
+        <div class="cat-desc">섹터 전체 하방 요인 · 미중 협상·유예연장·과열 경고</div>
+      </div>
+      <div class="cat-right">
+        <span class="cat-badge bg-risk">반드시 인지</span>
+        <span class="cat-cnt">리스크 3개</span>
+        <span class="cat-chv">▼</span>
+      </div>
+    </div>
+    <div class="cat-body">
+      <div class="ev-list">
+
+        <div class="ev" id="e-risk1">
+          <div class="ev-head" onclick="toggleEv('e-risk1')">
+            <div class="ev-dday"><div class="ev-dday-num d-risk">언제든</div><div class="ev-dday-sub">협상 중</div></div>
+            <div class="ev-main">
+              <div class="ev-title">🔴 Section 301 유예 또 연장 — 최대 하방 요인</div>
+              <div class="ev-short">미중 협상 타결 시 유예 연장 → 재료 소멸 → 조선주 급락 가능</div>
+            </div>
+            <span class="ev-badge bg-risk">최대 하방</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">미중이 협상 타결되면 세금 유예를 또 연장할 수 있어요. 그러면 지금까지 기대감으로 올라있던 조선주의 <strong>핵심 재료가 사라짐</strong> → 단기 급락 가능.</div>
+              <span class="verdict" style="background:#1c0808;color:#f87171;">⚠ 미중 뉴스 항상 주시</span>
+            </div>
+            <div class="frames">
+              <div class="frame rd f-full">
+                <div class="f-label">⚠️ 대응 방법</div>
+                <div class="f-body">미중 고위급 회담 일정 모니터링<br>유예 연장 뉴스 나오면 → <strong>비중 즉시 축소</strong><br>이미 많이 오른 종목일수록 낙폭 클 수 있음</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ev" id="e-risk2">
+          <div class="ev-head" onclick="toggleEv('e-risk2')">
+            <div class="ev-dday"><div class="ev-dday-num d-risk">선반영</div><div class="ev-dday-sub">지금 상태</div></div>
+            <div class="ev-main">
+              <div class="ev-title">🔴 이미 많이 올라있음 — 소문에 사고 뉴스에 팔기</div>
+              <div class="ev-short">호재가 주가에 미리 반영됨 · 실제 효과 시작일에 차익실현 쏟아질 수 있음</div>
+            </div>
+            <span class="ev-badge bg-risk">과열 경고</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">수주 점유율이 이미 55%이고 주가도 많이 올라있어요. 11월 유예 만료 당일에 오히려 <strong>"뉴스에 팔기"</strong> 물량이 쏟아질 수 있음. 호재가 맞다고 무조건 들어가면 물리는 구조.</div>
+              <span class="verdict" style="background:#1c0808;color:#f87171;">⚠ 타이밍이 종목 선택만큼 중요</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="ev" id="e-risk3">
+          <div class="ev-head" onclick="toggleEv('e-risk3')">
+            <div class="ev-dday"><div class="ev-dday-num d-risk">언제든</div><div class="ev-dday-sub">중국 변수</div></div>
+            <div class="ev-main">
+              <div class="ev-title">🔴 중국 수주 대응 — 덤핑·기술추격</div>
+              <div class="ev-short">중국이 가격 더 낮춰서 대응하거나 기술 따라잡으면 수혜 약화</div>
+            </div>
+            <span class="ev-badge bg-risk">구조적 리스크</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">중국이 세금 맞아가면서도 더 싸게 팔거나, 기술 격차를 빠르게 좁히면 한국 조선의 수주 우위가 약화됨. 특히 FLNG·LNG선 기술 이전은 장기적으로 경쟁 구도 바꿀 수 있음.</div>
+              <span class="verdict" style="background:#1c0808;color:#f87171;">⚠ 장기 구조적 리스크 — 기술 격차 모니터링</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function toggleCat(id) { document.getElementById(id).classList.toggle('open'); }
+function toggleEv(id)  { document.getElementById(id).classList.toggle('open'); }
+function toggleEtf(id) { document.getElementById(id).classList.toggle('open'); }
+function jumpTo(id) {
+  const el = document.getElementById(id);
+  if (!el.classList.contains('open')) el.classList.add('open');
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ═══════════════════════════════════
+   검색 엔진
+   검색 대상:
+   - 종목 박스 (.skb): 종목명, 코드, 태그
+   - ETF 카드 (.etf-card)
+   - 카테고리 (.cat): 제목, 설명
+   - 이벤트 (.ev): 제목, 한줄 설명
+   ═══════════════════════════════════ */
+
+// 검색 가능한 노드 목록 (각 {el, text, type, parentCat})
+let SEARCH_INDEX = [];
+
+function buildIndex() {
+  SEARCH_INDEX = [];
+
+  // ETF
+  const etf = document.getElementById('etf1');
+  if (etf) SEARCH_INDEX.push({
+    el: etf, type: 'etf',
+    text: etf.innerText.toLowerCase(), parentCat: null
+  });
+
+  // 종목 박스
+  document.querySelectorAll('.skb').forEach(el => {
+    SEARCH_INDEX.push({ el, type: 'stock', text: el.innerText.toLowerCase(), parentCat: null });
+  });
+
+  // 카테고리 + 내부 이벤트
+  document.querySelectorAll('.cat').forEach(catEl => {
+    SEARCH_INDEX.push({ el: catEl, type: 'cat', text: catEl.innerText.toLowerCase(), parentCat: null });
+    catEl.querySelectorAll('.ev').forEach(evEl => {
+      SEARCH_INDEX.push({ el: evEl, type: 'ev', text: evEl.innerText.toLowerCase(), parentCat: catEl });
+    });
+  });
+}
+
+function setSearch(q) {
+  document.getElementById('searchInput').value = q;
+  doSearch(q);
+}
+
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  doSearch('');
+}
+
+function doSearch(raw) {
+  const q = raw.trim().toLowerCase();
+  const clearBtn = document.getElementById('searchClear');
+  const countEl = document.getElementById('searchCount');
+
+  clearBtn.classList.toggle('show', q.length > 0);
+
+  if (!q) {
+    // 초기화
+    SEARCH_INDEX.forEach(({ el }) => { el.classList.remove('sh-hit', 'sh-dim'); });
+    document.querySelectorAll('.cat').forEach(c => c.classList.remove('open'));
+    countEl.textContent = '';
+    countEl.className = 'search-count';
+    return;
+  }
+
+  let hits = 0;
+  const hitCats = new Set();
+
+  SEARCH_INDEX.forEach(({ el, type, text, parentCat }) => {
+    const match = text.includes(q);
+
+    if (match) {
+      hits++;
+      el.classList.add('sh-hit');
+      el.classList.remove('sh-dim');
+      // 이벤트면 부모 카테고리 열기
+      if (type === 'ev' && parentCat) {
+        parentCat.classList.add('open');
+        hitCats.add(parentCat.id);
+      }
+      // 카테고리 자체 hit → 열기
+      if (type === 'cat') el.classList.add('open');
+      // 이벤트 자체 열기
+      if (type === 'ev') el.classList.add('open');
+    } else {
+      el.classList.remove('sh-hit');
+      // 카테고리는 hit 없어도 dim 안 함 — 이벤트 단위에서만 dim
+      if (type === 'ev' || type === 'stock' || type === 'etf') {
+        el.classList.add('sh-dim');
+      } else {
+        el.classList.remove('sh-dim');
+      }
+    }
+  });
+
+  // 결과 표시
+  if (hits === 0) {
+    countEl.textContent = '결과 없음';
+    countEl.className = 'search-count none';
+  } else {
+    countEl.textContent = `${hits}개 결과`;
+    countEl.className = 'search-count found';
+    // 첫 번째 hit으로 스크롤
+    const first = SEARCH_INDEX.find(({ el, text }) => text.includes(q));
+    if (first) first.el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+document.addEventListener('DOMContentLoaded', buildIndex);
+
+const STOCK_DATA = {
+  hd: {
+    name: 'HD현대중공업 (329180)',
+    color: '#22c55e',
+    ma: '5일선 <strong>위</strong> (단기 강세)<br>20일선 <strong>위</strong> (중기 추세 유지)<br>60일선 <strong>위</strong> (장기 상승 구조)<br>→ 전 이평선 위 정배열. 추세 가장 깔끔',
+    supply: '외국인 <strong>5일 연속 순매수</strong><br>기관 <strong>동반 순매수</strong><br><br>수급빈집: <strong>18만~19만원 구간</strong><br>→ 빈집 이탈 없이 지지 확인',
+    verdict: '✅ 추세 가장 깔끔',
+    vbg: '#0d2810', vc: '#4ade80',
+    tags: ['t-hot:Section 301 D-155 직접수혜','t-cool:외인·기관 동반매수','t-mid:증권사 TP 230,000원','t-hot:중국 제재 없음','t-cool:수주잔고 사상최대']
+  },
+  sam: {
+    name: '삼성중공업 (010140)',
+    color: '#a78bfa',
+    ma: '5일선 <strong>아래</strong> (단기 이탈)<br>20일선 <strong>위</strong> (지지선 접근 중)<br>60일선 <strong>위</strong> (장기 추세 유지)<br>→ 단기 이탈, 20일선 지지 테스트 중',
+    supply: '외국인 <strong>혼조</strong><br>기관 <strong>순매도</strong><br><br>수급빈집: <strong>11,500~12,000원 구간</strong><br>→ 빈집 구간 하방 테스트 중',
+    verdict: '◆ 수급 확인 후 판단',
+    vbg: '#13081e', vc: '#c4b5fd',
+    tags: ['t-pur:FLNG 전 세계 독점','t-mid:모잠비크 2호기 입찰 Q3','t-risk:수주에도 주가 반응 없음','t-cool:MRO 장기계약 가능성']
+  },
+  hw: {
+    name: '한화오션 (042660)',
+    color: '#f59e0b',
+    ma: '5일선 <strong>위</strong><br>20일선 <strong>위</strong><br>60일선 <strong>위</strong><br>→ 추세는 살아있음. 리스크는 외부 요인',
+    supply: '외국인 <strong>소폭 순매도</strong><br>기관 <strong>관망</strong><br><br>수급빈집: <strong>태린이 파일 확인 필요</strong>',
+    verdict: '⚠ 수혜 맞지만 제재 주시',
+    vbg: '#1c1500', vc: '#fbbf24',
+    tags: ['t-risk:중국 5개 법인 제재 유예중','t-hot:Section 301 수혜','t-mid:필라델피아 조선소 인수','t-risk:미중 갈등 재점화 시 즉시 -9%']
+  },
+  hkc: {
+    name: '한국카본 (017960)',
+    color: '#22c55e',
+    ma: '태린이 파일 업데이트 필요<br><span style="color:#374151;">→ 매일 갱신</span>',
+    supply: '태린이 파일 업데이트 필요<br><br>수급빈집: <strong>확인 필요</strong>',
+    verdict: '↑ FLNG 수혜 소재주',
+    vbg: '#0d2810', vc: '#4ade80',
+    tags: ['t-pur:FLNG 단열재 독점 납품','t-hot:LNG선 발주 증가 직결','t-mid:소형주 변동성 주의']
+  }
+};
+
+let activeStock = null;
+
+function selectStock(key) {
+  const panel = document.getElementById('sk-detail');
+  const nameEl = document.getElementById('sk-detail-name');
+  const bodyEl = document.getElementById('sk-detail-body');
+  const d = STOCK_DATA[key];
+
+  // 같은 종목 다시 클릭 → 닫기
+  if (activeStock === key) {
+    panel.classList.remove('open');
+    document.getElementById('skb-' + key).classList.remove('active');
+    activeStock = null;
+    return;
+  }
+
+  // 이전 active 해제
+  if (activeStock) document.getElementById('skb-' + activeStock).classList.remove('active');
+  document.getElementById('skb-' + key).classList.add('active');
+  activeStock = key;
+
+  nameEl.innerHTML = `<span style="color:${d.color};font-size:18px;">●</span> ${d.name}`;
+
+  const tagsHtml = d.tags.map(t => {
+    const [cls, txt] = t.split(':');
+    return `<span class="sk-tag ${cls}">${txt}</span>`;
+  }).join('');
+
+  bodyEl.innerHTML = `
+    <div class="sk-3col">
+      <div class="sk-panel gn">
+        <div class="sk-panel-title">📊 이평선 위치</div>
+        <div class="sk-panel-body">${d.ma}</div>
+        <span class="sk-verdict" style="background:${d.vbg};color:${d.vc};">${d.verdict}</span>
+      </div>
+      <div class="sk-panel am">
+        <div class="sk-panel-title">🔄 수급 상태</div>
+        <div class="sk-panel-body">${d.supply}</div>
+      </div>
+      <div class="sk-panel bl">
+        <div class="sk-panel-title">🏷️ 관련 키워드 · 이벤트</div>
+        <div class="sk-tag-row">${tagsHtml}</div>
+      </div>
+    </div>`;
+
+  panel.classList.add('open');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+</script>
+</body>
+</html>
