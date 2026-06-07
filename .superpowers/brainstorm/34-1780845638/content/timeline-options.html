@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>타임라인 보완 방안</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0a0f1a; color: #e5e7eb; font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; padding: 24px 16px; }
+.wrap { max-width: 900px; margin: 0 auto; }
+h2 { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+.sub { font-size: 12px; color: #4b5563; margin-bottom: 20px; }
+.section { margin-bottom: 40px; }
+.label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #6b7280; margin-bottom: 14px; padding: 6px 12px; background: #111827; border-radius: 6px; display: inline-block; }
+
+/* ──────────────────────────────────────
+   A안: 흐름 스테이지 + 앞으로 볼 날짜 표
+────────────────────────────────────── */
+
+/* 스테이지 바 */
+.stage-bar { display: flex; align-items: stretch; gap: 0; margin-bottom: 20px; border-radius: 12px; overflow: hidden; }
+.stage { flex: 1; padding: 12px 14px; position: relative; }
+.stage.done { background: #1a2235; opacity: .7; }
+.stage.here { background: #1a3a1a; border: 2px solid #22c55e; }
+.stage.next { background: #1c1000; border: 2px solid #f59e0b55; }
+.stage.far  { background: #111827; }
+.st-label { font-size: 9px; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
+.stage.done .st-label { color: #4b5563; }
+.stage.here .st-label { color: #22c55e; }
+.stage.next .st-label { color: #f59e0b; }
+.stage.far  .st-label { color: #374151; }
+.st-text { font-size: 11px; font-weight: 700; color: #e5e7eb; line-height: 1.4; }
+.stage.done .st-text { color: #6b7280; }
+.arrow { display: flex; align-items: center; color: #2d3748; font-size: 14px; padding: 0 2px; background: #0a0f1a; }
+
+/* 앞으로 볼 날짜 표 */
+.trigger-table { width: 100%; border-collapse: separate; border-spacing: 0 6px; }
+.trigger-table th { font-size: 10px; color: #4b5563; font-weight: 600; text-transform: uppercase; padding: 4px 12px; text-align: left; }
+.tr-row td { padding: 12px 14px; background: #111827; font-size: 12px; }
+.tr-row td:first-child { border-radius: 10px 0 0 10px; }
+.tr-row td:last-child  { border-radius: 0 10px 10px 0; }
+.tr-row.hot td { background: #1c1000; }
+.tr-row.risk td { background: #1c0808; }
+.tr-row.mid td { background: #111827; }
+
+.dday { font-weight: 800; font-size: 14px; }
+.dday.hot  { color: #fbbf24; }
+.dday.risk { color: #f87171; }
+.dday.mid  { color: #93c5fd; }
+.dday.far  { color: #4b5563; }
+
+.ev-name { font-weight: 700; color: #f9fafb; margin-bottom: 3px; }
+.ev-desc { color: #9ca3af; font-size: 11px; line-height: 1.5; }
+
+.impact-pill { display: inline-block; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+.ip-big  { background: #0d2810; color: #4ade80; }
+.ip-risk { background: #1c0808; color: #f87171; }
+.ip-mid  { background: #0d1e3a; color: #93c5fd; }
+.ip-far  { background: #1f2937; color: #6b7280; }
+
+.action-text { font-size: 11px; color: #6b7280; line-height: 1.6; }
+.action-text strong { color: #fbbf24; }
+
+/* ──────────────────────────────────────
+   B안: 과거 접기 + 미래 강조
+────────────────────────────────────── */
+.history-toggle { background: #111827; border-radius: 10px; padding: 12px 16px; margin-bottom: 14px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; border: 1px solid #1f2937; }
+.ht-label { font-size: 12px; color: #4b5563; }
+.ht-items { font-size: 11px; color: #374151; margin-top: 3px; }
+.expand-btn { color: #4b5563; font-size: 11px; }
+.history-body { display: none; padding: 0 4px; }
+.history-toggle.open + .history-body { display: block; }
+
+.past-list { display: flex; flex-direction: column; gap: 8px; padding: 10px 0; }
+.past-item { display: flex; gap: 12px; align-items: flex-start; padding: 10px 12px; background: #0d1424; border-radius: 8px; }
+.pi-date { font-size: 10px; color: #4b5563; min-width: 72px; flex-shrink: 0; padding-top: 2px; }
+.pi-event { font-size: 12px; color: #6b7280; font-weight: 600; margin-bottom: 2px; }
+.pi-why { font-size: 11px; color: #374151; line-height: 1.5; }
+
+/* 미래 트리거 카드 */
+.future-cards { display: flex; flex-direction: column; gap: 10px; }
+.fc { border-radius: 12px; padding: 16px; border: 1px solid; }
+.fc.big  { background: #0f1a0a; border-color: #166534; }
+.fc.risk { background: #1a0a0a; border-color: #7f1d1d; }
+.fc.mid  { background: #0a1020; border-color: #1e3a5f; }
+.fc.far  { background: #111827; border-color: #1f2937; }
+
+.fc-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+.fc-date { font-size: 11px; font-weight: 700; }
+.fc.big  .fc-date { color: #fbbf24; }
+.fc.risk .fc-date { color: #f87171; }
+.fc.mid  .fc-date { color: #93c5fd; }
+.fc.far  .fc-date { color: #4b5563; }
+.fc-countdown { font-size: 20px; font-weight: 800; }
+.fc.big  .fc-countdown { color: #4ade80; }
+.fc.risk .fc-countdown { color: #f87171; }
+.fc.mid  .fc-countdown { color: #60a5fa; }
+.fc.far  .fc-countdown { color: #374151; }
+
+.fc-title { font-size: 14px; font-weight: 800; color: #fff; margin-bottom: 5px; }
+.fc-why { font-size: 12px; color: #9ca3af; line-height: 1.7; margin-bottom: 10px; }
+.fc-why strong { color: #e5e7eb; }
+.fc-action { font-size: 12px; font-weight: 600; padding: 7px 12px; border-radius: 8px; display: inline-block; }
+.fc.big  .fc-action { background: #0d2810; color: #4ade80; }
+.fc.risk .fc-action { background: #1c0808; color: #f87171; }
+.fc.mid  .fc-action { background: #0d1e3a; color: #93c5fd; }
+.fc.far  .fc-action { background: #1f2937; color: #6b7280; }
+
+.divider { border: none; border-top: 1px solid #1f2937; margin: 8px 0; }
+
+/* 옵션 선택 버튼 */
+.options { display: flex; gap: 10px; margin-top: 20px; }
+.opt-btn { flex: 1; padding: 14px; border-radius: 12px; border: 2px solid #1f2937; background: #111827; cursor: pointer; text-align: center; transition: border-color .2s; }
+.opt-btn:hover { border-color: #3b82f6; }
+.opt-btn.selected { border-color: #3b82f6; background: #0d1e3a; }
+.ob-title { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 5px; }
+.ob-desc  { font-size: 11px; color: #6b7280; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h2>타임라인 보완 방안</h2>
+  <p class="sub">두 가지 방향 — 둘 중 어느 쪽이 더 투자 판단에 도움이 되는지 골라주세요</p>
+
+  <!-- ════════════════
+       A안
+  ════════════════ -->
+  <div class="section">
+    <div class="label">A안 — 스테이지 흐름 + 앞으로 볼 날짜 표</div>
+
+    <!-- 스테이지 바 -->
+    <div class="stage-bar">
+      <div class="stage done">
+        <div class="st-label">완료</div>
+        <div class="st-text">수요 폭발<br>(호르무즈)</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage done">
+        <div class="st-label">완료</div>
+        <div class="st-text">법안 발효<br>(세금 시작)</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage here">
+        <div class="st-label">📍 지금 여기</div>
+        <div class="st-text">기대감<br>선반영 구간</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage next">
+        <div class="st-label">D-155</div>
+        <div class="st-text">실질 효과<br>시작</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage far">
+        <div class="st-label">불확실</div>
+        <div class="st-text">법안<br>통과</div>
+      </div>
+    </div>
+
+    <!-- 앞으로 볼 날짜 표 -->
+    <table class="trigger-table">
+      <thead>
+        <tr>
+          <th>D-day</th>
+          <th>이벤트</th>
+          <th>주가 영향</th>
+          <th>지금 할 것</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="tr-row hot">
+          <td><div class="dday hot">D-155<br><span style="font-size:10px;font-weight:400;color:#6b7280">2026-11-09</span></div></td>
+          <td>
+            <div class="ev-name">⭐ 중국 배 세금 유예 만료</div>
+            <div class="ev-desc">이날부터 실제로 돈 냄 → 발주 전환 본격화</div>
+          </td>
+          <td><span class="impact-pill ip-big">최대 호재</span></td>
+          <td><div class="action-text"><strong>미리 포지션 잡는 자리.</strong><br>HD현대·조선ETF 눌림에서 분할 매수</div></td>
+        </tr>
+        <tr class="tr-row risk">
+          <td><div class="dday risk">언제든<br><span style="font-size:10px;font-weight:400;color:#6b7280">현재 유예 중</span></div></td>
+          <td>
+            <div class="ev-name">⚠ 한화오션 중국 제재 재활성화</div>
+            <div class="ev-desc">트럼프-시진핑 협의 깨지면 즉시 발동</div>
+          </td>
+          <td><span class="impact-pill ip-risk">한화오션 직격</span></td>
+          <td><div class="action-text">한화오션 보유 중이라면<br><strong>리스크 뉴스 실시간 주시</strong></div></td>
+        </tr>
+        <tr class="tr-row mid">
+          <td><div class="dday mid">2026 Q3<br><span style="font-size:10px;font-weight:400;color:#6b7280">일정 미정</span></div></td>
+          <td>
+            <div class="ev-name">모잠비크 FLNG 입찰 결과</div>
+            <div class="ev-desc">삼성중공업 2연속 수주 여부</div>
+          </td>
+          <td><span class="impact-pill ip-mid">삼성중공업 트리거</span></td>
+          <td><div class="action-text">결과 발표 전후<br><strong>삼성중공업 단기 반응 노릴 수 있음</strong></div></td>
+        </tr>
+        <tr class="tr-row mid">
+          <td><div class="dday far">불확실<br><span style="font-size:10px;font-weight:400;color:#6b7280">위원회 계류</span></div></td>
+          <td>
+            <div class="ev-name">SHIPS Act 위원회 통과</div>
+            <div class="ev-desc">법안이 위원회 넘으면 추가 상승 트리거</div>
+          </td>
+          <td><span class="impact-pill ip-mid">전체 조선주 호재</span></td>
+          <td><div class="action-text">뉴스 나오는 날 반응 클 수 있음.<br><strong>평소엔 기다리기</strong></div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr style="border:none;border-top:2px solid #1f2937;margin-bottom:40px;">
+
+  <!-- ════════════════
+       B안
+  ════════════════ -->
+  <div class="section">
+    <div class="label">B안 — 과거 접어두기 + 미래 트리거 카드</div>
+
+    <!-- 과거 접기 -->
+    <div class="history-toggle" onclick="this.classList.toggle('open')">
+      <div>
+        <div class="ht-label">📁 지금까지 왜 여기까지 왔나 (과거 흐름)</div>
+        <div class="ht-items">호르무즈 봉쇄 → Section 301 발효 → 삼성중공업 FLNG 수주 · · ·</div>
+      </div>
+      <div class="expand-btn">펼치기 ▼</div>
+    </div>
+    <div class="history-body">
+      <div class="past-list">
+        <div class="past-item">
+          <div class="pi-date">2025-05</div>
+          <div>
+            <div class="pi-event">호르무즈 봉쇄 → 배 부족 → 조선 슈퍼사이클 시작</div>
+            <div class="pi-why">이란이 항로 막음 → 가용 선박 급감 → 새 배 주문 폭증. 이게 지금 강세의 시작.</div>
+          </div>
+        </div>
+        <div class="past-item">
+          <div class="pi-date">2025-10-14</div>
+          <div>
+            <div class="pi-event">미국 중국 배 세금 발효 (유예 중)</div>
+            <div class="pi-why">시작은 됐는데 바로 유예. 기대감만 주가에 반영됨.</div>
+          </div>
+        </div>
+        <div class="past-item">
+          <div class="pi-date">2026-06-05</div>
+          <div>
+            <div class="pi-event">삼성중공업 FLNG 4.3조 수주</div>
+            <div class="pi-why">바다 위 LNG 공장 20년 만에 발주 재개. 삼성만 만들 수 있음.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 미래 카드 -->
+    <div class="future-cards">
+      <div class="fc big">
+        <div class="fc-top">
+          <div>
+            <div class="fc-date">⭐ 2026년 11월 9일 — D-155</div>
+            <div class="fc-title">중국 배 세금 유예 끝, 실제로 돈 내기 시작</div>
+          </div>
+          <div class="fc-countdown">D-155</div>
+        </div>
+        <div class="fc-why">
+          이날부터 중국 배를 쓰는 선사가 <strong>배 한 척당 연 130억원</strong> 추가 비용 발생. 비용 계산해보면 한국 배 새로 주문하는 게 나음 → <strong>발주 전환 본격화.</strong> 지금 주가는 이날을 기대하고 미리 올라있는 상태.
+        </div>
+        <span class="fc-action">✅ 호재 — 미리 포지션 잡는 자리</span>
+      </div>
+
+      <div class="fc risk">
+        <div class="fc-top">
+          <div>
+            <div class="fc-date">⚠ 언제든 — 현재 잠재 리스크</div>
+            <div class="fc-title">한화오션 중국 제재 재활성화</div>
+          </div>
+          <div class="fc-countdown" style="font-size:14px;">주시</div>
+        </div>
+        <div class="fc-why">
+          중국이 한화오션 미국 법인에 걸어놓은 제재가 <strong>협의로 잠깐 멈춘 것.</strong> 미중 관계 흔들리면 즉시 재활성화. 터지면 한화오션 주가 당일 -8~9% 직격.
+        </div>
+        <span class="fc-action">⚠ 한화오션 보유 중이면 뉴스 주시</span>
+      </div>
+
+      <div class="fc mid">
+        <div class="fc-top">
+          <div>
+            <div class="fc-date">2026 Q3 — 날짜 미정</div>
+            <div class="fc-title">모잠비크 FLNG 입찰 결과</div>
+          </div>
+          <div class="fc-countdown" style="font-size:14px;">Q3</div>
+        </div>
+        <div class="fc-why">
+          삼성중공업이 연속으로 따내면 FLNG 독점 확인 → <strong>삼성중공업 주가 추가 상승 트리거.</strong> 실패하면 단기 조정.
+        </div>
+        <span class="fc-action">→ 결과 발표 전후 삼성중공업 주시</span>
+      </div>
+
+      <div class="fc far">
+        <div class="fc-top">
+          <div>
+            <div class="fc-date">불확실 — 미국 의회</div>
+            <div class="fc-title">SHIPS Act 위원회 통과</div>
+          </div>
+          <div class="fc-countdown" style="font-size:14px;">미정</div>
+        </div>
+        <div class="fc-why">
+          아직 위원회도 못 넘음. 통과되면 전체 조선주 추가 상승 트리거. 통과 못 하면 "기대감 소멸" 조정 가능.
+        </div>
+        <span class="fc-action">→ 평소엔 기다리다 뉴스 나오면 반응 노리기</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 선택 버튼 -->
+  <div class="options">
+    <div class="opt-btn" data-choice="a" onclick="toggleSelect(this)">
+      <div class="letter" style="font-size:18px;font-weight:800;color:#6b7280;margin-bottom:6px;">A</div>
+      <div class="ob-title">스테이지 + 표</div>
+      <div class="ob-desc">지금 몇 번째 스테이지인지 한눈에, 날짜·영향·행동이 표로 정리</div>
+    </div>
+    <div class="opt-btn" data-choice="b" onclick="toggleSelect(this)">
+      <div class="letter" style="font-size:18px;font-weight:800;color:#6b7280;margin-bottom:6px;">B</div>
+      <div class="ob-title">과거 접기 + 미래 카드</div>
+      <div class="ob-desc">과거는 숨기고, 앞으로 올 이벤트만 카드로 크게 강조</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function toggleSelect(el) {
+  document.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  if (window.recordSelection) recordSelection(el.dataset.choice, el.querySelector('.ob-title').textContent);
+}
+</script>
+
+</body>
+</html>

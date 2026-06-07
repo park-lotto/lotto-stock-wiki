@@ -1,0 +1,157 @@
+<h2>섹터 지식베이스 — 카테고리 구조</h2>
+<p class="subtitle">각 이슈가 "한 줄"이 아니라 연결고리 전체로 펼쳐지는 구조</p>
+
+<style>
+.map-wrap { max-width: 960px; margin: 0 auto; font-family: 'Apple SD Gothic Neo', sans-serif; }
+
+/* Level 0: 전체 섹터 */
+.sector-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+.sector-chip { background: #1e2a3a; border: 1px solid #2a4a6a; border-radius: 20px; padding: 8px 18px; font-size: 13px; color: #90caf9; cursor: pointer; }
+.sector-chip.active { background: #0d47a1; border-color: #42a5f5; color: #fff; }
+
+/* Level 1: 섹터 내 토픽 */
+.sector-block { background: #111827; border-radius: 14px; border: 1px solid #1e3a5f; padding: 20px; margin-bottom: 20px; }
+.sector-title { font-size: 16px; font-weight: bold; color: #fff; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+.signal { font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+.signal.red { background: #7f1d1d; color: #fca5a5; }
+.sector-sub { color: #6b7280; font-size: 12px; margin-bottom: 14px; }
+
+.topics { display: flex; gap: 10px; flex-wrap: wrap; }
+.topic-card { background: #1f2937; border: 1px solid #374151; border-radius: 10px; padding: 12px 14px; min-width: 140px; cursor: pointer; transition: border-color 0.2s; }
+.topic-card:hover { border-color: #60a5fa; }
+.topic-card.expanded { border-color: #3b82f6; background: #1a2942; }
+.topic-name { font-size: 13px; color: #e5e7eb; font-weight: 600; margin-bottom: 4px; }
+.topic-fresh { font-size: 10px; color: #34d399; }
+.topic-stale { font-size: 10px; color: #f87171; }
+
+/* Level 2: 이슈 상세 펼침 */
+.issue-detail { background: #0f172a; border-radius: 12px; border: 1px solid #1e40af; padding: 20px; margin-top: 16px; }
+.issue-title { color: #93c5fd; font-size: 15px; font-weight: bold; margin-bottom: 16px; }
+
+.chain { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.chain-item { background: #1e293b; border-radius: 10px; padding: 14px; border-left: 3px solid; }
+.chain-item.fact { border-color: #60a5fa; }
+.chain-item.meaning { border-color: #a78bfa; }
+.chain-item.stocks { border-color: #34d399; }
+.chain-item.events { border-color: #fbbf24; }
+.chain-item.risk { border-color: #f87171; }
+.chain-item.link { border-color: #94a3b8; }
+
+.chain-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; opacity: 0.7; }
+.chain-item.fact .chain-label { color: #60a5fa; }
+.chain-item.meaning .chain-label { color: #a78bfa; }
+.chain-item.stocks .chain-label { color: #34d399; }
+.chain-item.events .chain-label { color: #fbbf24; }
+.chain-item.risk .chain-label { color: #f87171; }
+.chain-item.link .chain-label { color: #94a3b8; }
+
+.chain-body { font-size: 12px; color: #d1d5db; line-height: 1.6; }
+.chain-body strong { color: #fff; }
+
+.stock-tag { display: inline-block; background: #064e3b; color: #6ee7b7; font-size: 11px; padding: 2px 8px; border-radius: 10px; margin: 2px; }
+.event-tag { display: inline-block; background: #451a03; color: #fde68a; font-size: 11px; padding: 2px 8px; border-radius: 10px; margin: 2px; }
+
+.divider { border: none; border-top: 1px solid #1f2937; margin: 20px 0; }
+</style>
+
+<div class="map-wrap">
+
+  <!-- 섹터 선택 -->
+  <div class="sector-row">
+    <div class="sector-chip active">⚓ 조선</div>
+    <div class="sector-chip">💾 반도체</div>
+    <div class="sector-chip">🛡️ 방산</div>
+    <div class="sector-chip">⚡ 전력기기</div>
+    <div class="sector-chip">🤖 로봇</div>
+    <div class="sector-chip">☢️ 원전</div>
+    <div class="sector-chip">🚀 우주</div>
+  </div>
+
+  <!-- 조선 섹터 펼침 -->
+  <div class="sector-block">
+    <div class="sector-title">
+      ⚓ 조선 섹터
+      <span class="signal red">🔴 강세</span>
+    </div>
+    <div class="sector-sub">마지막 갱신: 2026-06-05 · 6개 토픽 · 오늘 2건 신규</div>
+
+    <div class="topics">
+      <div class="topic-card expanded">
+        <div class="topic-name">🛢️ FLNG / 부유식</div>
+        <div class="topic-fresh">● 오늘 업데이트</div>
+      </div>
+      <div class="topic-card">
+        <div class="topic-name">⚖️ MASGA 입법</div>
+        <div class="topic-fresh">● 3일 전</div>
+      </div>
+      <div class="topic-card">
+        <div class="topic-name">🚢 미 해군 수주</div>
+        <div class="topic-fresh">● 5일 전</div>
+      </div>
+      <div class="topic-card">
+        <div class="topic-name">🇨🇳 중국 경쟁구도</div>
+        <div class="topic-stale">⚠ 14일 전</div>
+      </div>
+      <div class="topic-card">
+        <div class="topic-name">📊 수주 파이프라인</div>
+        <div class="topic-fresh">● 2일 전</div>
+      </div>
+      <div class="topic-card">
+        <div class="topic-name">🏭 대장주 현황</div>
+        <div class="topic-fresh">● 오늘</div>
+      </div>
+    </div>
+
+    <!-- FLNG 펼침 예시 -->
+    <div class="issue-detail">
+      <div class="issue-title">🛢️ FLNG / 부유식 LNG — 연결고리 전체 보기</div>
+
+      <div class="chain">
+        <div class="chain-item fact">
+          <div class="chain-label">📌 팩트</div>
+          <div class="chain-body">삼성중공업, 델핀 에너지 FLNG <strong>4.3조원</strong> 수주 확정 (2026-06-05)<br>모잠비크 Coral Norte FLNG 입찰 개시</div>
+        </div>
+
+        <div class="chain-item meaning">
+          <div class="chain-label">💡 이게 왜 중요한가</div>
+          <div class="chain-body">글로벌 FLNG 발주 사이클이 <strong>20년 만에 재개</strong>됨. 러-우 이후 에너지 안보로 LNG 수요 구조적 증가. 삼성중공업이 전 세계 FLNG 시장 점유율 1위.</div>
+        </div>
+
+        <div class="chain-item stocks">
+          <div class="chain-label">📈 실제 수혜 종목</div>
+          <div class="chain-body">
+            <span class="stock-tag">삼성중공업 ★★★</span>
+            <span class="stock-tag">한국카본 ★★</span>
+            <span class="stock-tag">동성화인텍 ★★</span>
+            <span class="stock-tag">태광 ★</span>
+          </div>
+        </div>
+
+        <div class="chain-item events">
+          <div class="chain-label">🔮 다음에 올 이벤트</div>
+          <div class="chain-body">
+            <span class="event-tag">모잠비크 입찰 결과 (Q3)</span>
+            <span class="event-tag">카타르 FLNG 추가 발주</span>
+            <span class="event-tag">삼성중 수주잔고 발표</span>
+          </div>
+        </div>
+
+        <div class="chain-item risk">
+          <div class="chain-label">⚠️ 리스크</div>
+          <div class="chain-body">카타르 라스라판 <strong>가동 중단</strong> 변수. 이란 리스크 소강 시 단기 모멘텀 약화 가능.</div>
+        </div>
+
+        <div class="chain-item link">
+          <div class="chain-label">🔗 연결 섹터</div>
+          <div class="chain-body">→ <strong>원전</strong> (에너지 안보 동일 테마)<br>→ <strong>방산</strong> (호르무즈 봉쇄 연동)<br>→ <strong>전력기기</strong> (LNG발전소 수요)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+  <p style="color: #4b5563; font-size: 12px; text-align: center;">
+    각 토픽 클릭 → 연결고리 6개 카드 펼침 · AI가 매일 자동 갱신 · 오래된 항목은 ⚠️ 표시
+  </p>
+
+</div>
