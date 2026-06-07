@@ -52,14 +52,22 @@ def atomize_text(
         List of atom dicts with metadata, id, and strength_score calculated
     """
     model = genai.GenerativeModel("gemini-2.0-flash")
-    response = model.generate_content(
-        _PROMPT.format(text=text),
-        generation_config={"response_mime_type": "application/json"},
-    )
-    raw_atoms: list[dict] = json.loads(response.text)
+    try:
+        response = model.generate_content(
+            _PROMPT.format(text=text),
+            generation_config={"response_mime_type": "application/json"},
+        )
+        raw_atoms: list[dict] = json.loads(response.text)
+    except (json.JSONDecodeError, ValueError) as e:
+        raise ValueError(f"Gemini returned invalid JSON: {e}\nResponse: {getattr(response, 'text', 'no response')[:200]}")
+    except Exception as e:
+        raise RuntimeError(f"Gemini API call failed: {e}")
 
     atoms = []
     for i, a in enumerate(raw_atoms):
+        content = a.get("content", "")
+        if not content:
+            continue  # skip atoms with no content
         atoms.append(
             {
                 "id": _make_id(date, source_name, i),
@@ -80,7 +88,7 @@ def atomize_text(
                 "validity_type": a.get("validity_type", "permanent"),
                 "validity_until": a.get("validity_until"),
                 "is_active": 1,
-                "content": a["content"],
+                "content": content,
                 "relations": [],
             }
         )

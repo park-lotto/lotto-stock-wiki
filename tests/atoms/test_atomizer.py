@@ -94,3 +94,36 @@ def test_atomize_text_preserves_content_exactly(mock_genai):
         date="2026-06-07",
     )
     assert atoms[0]["content"] == original
+
+
+@patch("pipeline.atoms.atomizer.genai")
+def test_atomize_text_invalid_json_raises(mock_genai):
+    mock_model = MagicMock()
+    mock_genai.GenerativeModel.return_value = mock_model
+    mock_model.generate_content.return_value.text = "not valid json"
+    with pytest.raises(ValueError, match="invalid JSON"):
+        atomize_text(
+            text="test", source_type="news", source_name="test",
+            source_trust="D", raw_file="raw/test.md", date="2026-06-07",
+        )
+
+
+@patch("pipeline.atoms.atomizer.genai")
+def test_atomize_text_skips_empty_content(mock_genai):
+    mock_model = MagicMock()
+    mock_genai.GenerativeModel.return_value = mock_model
+    mock_model.generate_content.return_value.text = '''[
+        {"content": "", "sector": "기타", "asset": "X", "asset_level": "stock",
+         "signal": "neutral", "event_type": "news", "magnitude": "minor",
+         "content_type": "fact", "validity_type": "permanent", "validity_until": null},
+        {"content": "유효한 원자 내용.", "sector": "반도체", "asset": "삼성",
+         "asset_level": "stock", "signal": "bullish", "event_type": "news",
+         "magnitude": "minor", "content_type": "fact", "validity_type": "permanent",
+         "validity_until": null}
+    ]'''
+    atoms = atomize_text(
+        text="test", source_type="news", source_name="test",
+        source_trust="D", raw_file="raw/test.md", date="2026-06-07",
+    )
+    assert len(atoms) == 1
+    assert atoms[0]["content"] == "유효한 원자 내용."
