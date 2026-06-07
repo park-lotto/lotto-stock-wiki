@@ -85,7 +85,18 @@ def query_atoms(
     conn = get_conn()
     rows = conn.execute(sql, params).fetchall()
     conn.close()
-    return [dict(r) for r in rows]
+    result = []
+    for r in rows:
+        d = dict(r)
+        if d.get("relations"):
+            try:
+                d["relations"] = json.loads(d["relations"])
+            except (json.JSONDecodeError, TypeError):
+                d["relations"] = []
+        else:
+            d["relations"] = []
+        result.append(d)
+    return result
 
 
 def expire_atoms() -> int:

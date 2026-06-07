@@ -86,3 +86,10 @@ def test_get_atom_count():
     insert_atom(_make_atom({"id": "atom_a"}))
     insert_atom(_make_atom({"id": "atom_b"}))
     assert get_atom_count() == 2
+
+def test_relations_deserialized_as_list():
+    atom = _make_atom({"relations": [{"type": "confirms", "target_id": "atom_002"}]})
+    insert_atom(atom)
+    results = query_atoms(days=1)
+    assert isinstance(results[0]["relations"], list)
+    assert results[0]["relations"][0]["type"] == "confirms"
