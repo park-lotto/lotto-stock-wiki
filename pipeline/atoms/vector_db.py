@@ -134,30 +134,26 @@ def query_similar(
     sector: Optional[str] = None,
     signal: Optional[str] = None,
 ) -> list[dict]:
-    """질문 텍스트를 임베딩하여 유사 원자를 반환. (Task 3에서 SQLite 조인 추가 예정)"""
+    """질문 텍스트를 임베딩하여 유사 원자를 반환.
+
+    sector/signal 필터는 ChromaDB where 대신 Python 후처리로 적용.
+    (ChromaDB Rust 레이어 where 필터가 세그먼트 누락 시 InternalError 발생하는 문제 우회)
+    """
     from pipeline.atoms.db import get_conn
 
     query_embedding = embed_text(text)
-
-    where: dict = {}
-    if sector:
-        where["sector"] = sector
-    if signal:
-        where["signal"] = signal
-
     col = get_collection()
     count = col.count()
     if count == 0:
         return []
 
-    kwargs: dict = {
-        "query_embeddings": [query_embedding],
-        "n_results": min(n_results, count),
-    }
-    if where:
-        kwargs["where"] = where
+    # 필터가 있으면 여유분 확보, Python에서 후처리
+    fetch_n = min(n_results * 5 if (sector or signal) else n_results, count)
 
-    results = col.query(**kwargs)
+    results = col.query(
+        query_embeddings=[query_embedding],
+        n_results=fetch_n,
+    )
 
     ids = results["ids"][0]
     distances = results["distances"][0]
@@ -180,6 +176,11 @@ def query_similar(
         if atom_id not in id_to_row:
             continue
         atom = dict(id_to_row[atom_id])
+        # Python 레벨 필터
+        if sector and atom.get("sector", "") != sector:
+            continue
+        if signal and atom.get("signal", "") != signal:
+            continue
         atom["similarity_score"] = round(1.0 - id_to_dist[atom_id], 4)
         if atom.get("relations"):
             import json as _json
@@ -189,4 +190,5 @@ def query_similar(
                 atom["relations"] = []
         atoms.append(atom)
 
-    return sorted(atoms, key=lambda a: a["similarity_score"], reverse=True)
+    atoms = sorted(atoms, key=lambda a: a["similarity_score"], reverse=True)
+    return atoms[:n_results]
