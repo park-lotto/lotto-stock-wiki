@@ -25,6 +25,9 @@ def ingest_file(file_path: str, date: str = None, source_trust: str = None) -> i
     path = Path(file_path)
     date = date or datetime.now().strftime("%Y-%m-%d")
 
+    if not path.exists():
+        return 0
+
     if path.suffix in _EXCEL_SUFFIXES:
         return _ingest_excel(path, date)
 
@@ -42,6 +45,9 @@ def _ingest_excel(path: Path, date: str) -> int:
         atoms = oscillator_to_atoms(str(path), date)
     elif "컨센" in name or "consensus" in name or "이익" in name:
         atoms = consensus_to_atoms(str(path), date)
+    else:
+        print(f"⚠️ 인식 불가 Excel 파일: {path.name} (0개 저장)")
+        return 0
 
     for atom in atoms:
         insert_atom(atom)
@@ -49,7 +55,7 @@ def _ingest_excel(path: Path, date: str) -> int:
 
 
 def _ingest_text(path: Path, date: str, force_trust: str = None) -> int:
-    text = path.read_text(encoding="utf-8", errors="replace")
+    text = path.read_text(encoding="utf-8-sig", errors="replace")
     if not text.strip():
         return 0
 

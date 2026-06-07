@@ -79,3 +79,22 @@ def test_ingest_markdown_stores_atoms(mock_atomize, tmp_path, monkeypatch):
     results = query_atoms(sector="반도체", days=1)
     assert len(results) == 1
     assert results[0]["signal"] == "bearish"
+
+
+def test_ingest_unknown_excel_returns_zero(tmp_path, capsys):
+    test_file = tmp_path / "unknown_format.xlsx"
+    test_file.write_bytes(b"PK\x03\x04")
+
+    count = ingest_file(str(test_file), "2026-06-07")
+    assert count == 0
+
+    captured = capsys.readouterr()
+    assert "⚠️ 인식 불가 Excel 파일:" in captured.out
+    assert "unknown_format.xlsx" in captured.out
+
+
+def test_ingest_nonexistent_file_returns_zero(tmp_path):
+    nonexistent = tmp_path / "does_not_exist.md"
+
+    count = ingest_file(str(nonexistent), "2026-06-07")
+    assert count == 0
