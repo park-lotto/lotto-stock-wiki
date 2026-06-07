@@ -237,8 +237,9 @@ def main():
     import win32com.client as win32
 
     raw_args = sys.argv[1:]
-    send_tg  = "--tg" in raw_args
-    raw_args = [a for a in raw_args if a != "--tg"]
+    send_tg   = "--tg"   in raw_args
+    send_json = "--json" in raw_args   # JSON 출력 → osc_ingest.py 파이프용
+    raw_args = [a for a in raw_args if a not in ("--tg", "--json")]
 
     # --all 또는 --sector 파싱
     do_all = "--all" in raw_args
@@ -440,6 +441,26 @@ def main():
         print(f"\n과매수 상위 {len(bot10)}:")
         for r in bot10:
             print(f"  {r['name']:<16} {r['code']:<8} {r['osc']:>12.6f} 하위{r['pct']:>4.1f}% {r['grade']}")
+
+    # JSON 출력 (osc_ingest.py 파이프용)
+    if send_json:
+        import json as _json
+        output = []
+        for r in results:
+            # sector 정보가 있으면 포함, 없으면 기타
+            output.append({
+                "name":        r["name"],
+                "code":        r.get("code", ""),
+                "sector":      r.get("sector", "기타"),
+                "osc":         r["osc"],
+                "macd":        r.get("macd", 0),
+                "signal_line": r.get("sig", 0),
+                "pct":         r.get("pct", 50),
+                "grade":       r.get("grade", "C"),
+                "trend":       trend(r),
+            })
+        print(_json.dumps(output, ensure_ascii=False))
+        return  # JSON 출력 후 종료
 
     # 텔레그램 (기존 모드)
     if send_tg:

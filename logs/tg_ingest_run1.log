@@ -1,0 +1,104 @@
+미처리 전체: 39개 | 이번 처리: 39개 (limit=39)
+유형 필터: telegram
+
+[1/39] [telegram] 2026-06-05_리포트요약.md
+  → 63개 원자
+[2/39] [telegram] 2026-06-05_미래시황.md
+  → 0개 원자
+[3/39] [telegram] 2026-06-05_신한리서치.md
+  → 104개 원자
+[4/39] [telegram] 2026-06-05_요약하는 고잉.md
+  → 0개 원자
+[5/39] [telegram] 2026-06-05_유안타시황.md
+  → 0개 원자
+[6/39] [telegram] 2026-06-05_주공고급수집.md
+  → 15개 원자
+[7/39] [telegram] 2026-06-05_키움시황.md
+  → 37개 원자
+[8/39] [telegram] 2026-06-05_태린이아빠_유튜브.md
+  → 1개 원자
+[9/39] [telegram] 2026-06-05_하나반도체.md
+  → 0개 원자
+[10/39] [telegram] 2026-06-05_한화철강.md
+  → 0개 원자
+[11/39] [telegram] 2026-06-04_대신시황.md
+  → 37개 원자
+[12/39] [telegram] 2026-06-04_독학주식첵터정리.md
+  → 25개 원자
+[13/39] [telegram] 2026-06-04_미래시황.md
+  → 0개 원자
+[14/39] [telegram] 2026-06-04_신한리서치.md
+  → 0개 원자
+[15/39] [telegram] 2026-06-04_유안타시황.md
+  → 0개 원자
+[16/39] [telegram] 2026-06-04_잠실개미고급수집.md
+  → 25개 원자
+[17/39] [telegram] 2026-06-04_주공고급수집.md
+  → 0개 원자
+[18/39] [telegram] 2026-06-04_키움시황.md
+  → 0개 원자
+[19/39] [telegram] 2026-06-04_태린이아빠 주식투자.md
+  → 실패: Gemini returned invalid JSON: Unterminated string starting at: line 4668 column 16 (char 149820)
+Response: [
+  {
+    "sector": "반도체",
+    "asset": "SIMO",
+    "asset_level": "stock",
+    "signal": "bullish",
+    "event_type": "demand",
+    "magnitude": "major",
+    "content_type": "fact",
+    "validity_typ
+[20/39] [telegram] 2026-06-04_태린이아빠_유튜브.md
+  → 1개 원자
+[21/39] [telegram] 2026-06-04_하나반도체.md
+  → 0개 원자
+[22/39] [telegram] 2026-06-04_하나차이나.md
+  → 73개 원자
+[23/39] [telegram] 2026-06-04_한투글로벌.md
+  → 0개 원자
+[24/39] [telegram] 2026-06-04_한화철강.md
+  → 0개 원자
+[25/39] [telegram] 그로스리서치_요약.md
+  → 0개 원자
+[26/39] [telegram] 신한리서치_요약.md
+  → 0개 원자
+[27/39] [telegram] 요약하는고잉_요약.md
+  → 0개 원자
+[28/39] [telegram] 주공고급수집_요약.md
+  → 실패: Gemini returned invalid JSON: Expecting ',' delimiter: line 24 column 38 (char 1335)
+Response: [
+  {
+    "sector": "바이오",
+    "asset": "릴리",
+    "asset_level": "stock",
+    "signal": "catalyst",
+    "event_type": "deal",
+    "magnitude": "major",
+    "content_type": "fact",
+    "validity_type":
+[29/39] [telegram] 태린이아빠_요약.md
+  → 17개 원자
+[30/39] [telegram] 하나차이나_요약.md
+  → 0개 원자
+[31/39] [telegram] 2026-06-03_그로스리서치.md
+  → 9개 원자
+[32/39] [telegram] 2026-06-03_신한리서치.md
+  → 0개 원자
+[33/39] [telegram] 2026-06-03_태린이아빠 주식투자.md
+  → 0개 원자
+[34/39] [telegram] 2026-06-03_태린이아빠_유튜브.md
+  → 0개 원자
+[35/39] [telegram] 2026-06-03_하나차이나.md
+  → 2개 원자
+[36/39] [telegram] 2026-06-02_태린이아빠_유튜브.md
+  → 0개 원자
+[37/39] [telegram] 2026-06-01_태린이아빠_유튜브.md
+  → 0개 원자
+[38/39] [telegram] 2026-06-01_투경현황.md
+  → 0개 원자
+[39/39] [telegram] 2026-05-28_태린이아빠_유튜브.md
+  → 0개 원자
+
+완료: 39개 파일, 409개 원자 생성
+남은 미처리: 0개

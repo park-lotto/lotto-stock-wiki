@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Description>STOCK BRAIN 원자 DB 자동 파이프라인 (저녁 21:00)</Description>
+  </RegistrationInfo>
+  <Triggers>
+    <CalendarTrigger>
+      <StartBoundary>2026-06-08T21:00:00</StartBoundary>
+      <Enabled>true</Enabled>
+      <ScheduleByDay>
+        <DaysInterval>1</DaysInterval>
+      </ScheduleByDay>
+    </CalendarTrigger>
+  </Triggers>
+  <Settings>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <ExecutionTimeLimit>PT1H</ExecutionTimeLimit>
+    <Enabled>true</Enabled>
+  </Settings>
+  <Actions>
+    <Exec>
+      <Command>C:\Users\TheRose\AppData\Local\Python\bin\python.exe</Command>
+      <Arguments>scripts\atom_pipeline.py --skip-pdf</Arguments>
+      <WorkingDirectory>C:\Users\TheRose\Desktop\로또의 주식</WorkingDirectory>
+    </Exec>
+  </Actions>
+</Task>

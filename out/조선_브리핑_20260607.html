@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>조선 섹터 브리핑 — 2026.06.07</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#0d0d0d; color:#e8e0d0; font-family:'Pretendard','Apple SD Gothic Neo',sans-serif; font-size:14px; line-height:1.6; }
+  .wrap { max-width:900px; margin:0 auto; padding:44px 24px 100px; }
+
+  /* 헤더 */
+  .hd { border-left:4px solid #c8a84b; padding-left:18px; margin-bottom:36px; }
+  .hd-tag { font-size:11px; letter-spacing:2px; color:#c8a84b; text-transform:uppercase; margin-bottom:8px; }
+  .hd-title { font-size:28px; font-weight:700; line-height:1.3; }
+  .hd-meta { font-size:12px; color:#666; margin-top:8px; }
+
+  /* 종합판단 */
+  .verdict-box { background:linear-gradient(135deg,#1c1800,#1a1a1a); border:1px solid #c8a84b55; border-radius:10px; padding:22px 26px; margin-bottom:32px; }
+  .verdict-box h3 { font-size:11px; letter-spacing:1.5px; color:#c8a84b; text-transform:uppercase; margin-bottom:12px; }
+  .verdict-main { font-size:22px; font-weight:700; color:#ffcc44; margin-bottom:10px; }
+  .verdict-desc { font-size:13px; color:#ccc; line-height:1.75; }
+
+  /* 섹션 */
+  .sec { margin-bottom:36px; }
+  .sec-title { font-size:11px; letter-spacing:2px; color:#c8a84b; text-transform:uppercase; padding-bottom:8px; border-bottom:1px solid #2a2a2a; margin-bottom:18px; }
+
+  /* 주가 카드 */
+  .price-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .price-card { background:#161616; border:1px solid #252525; border-radius:8px; padding:14px 16px; }
+  .pc-name { font-size:13px; font-weight:600; margin-bottom:4px; }
+  .pc-price { font-size:18px; font-weight:700; margin-bottom:8px; color:#e8e0d0; }
+  .pc-perfs { display:flex; gap:8px; flex-wrap:wrap; }
+  .pf { font-size:11px; }
+  .pf b { font-weight:700; }
+  .up { color:#ff6b6b; } .dn { color:#5bc0de; } .nt { color:#888; }
+
+  /* 이벤트 카드 */
+  .ev { background:#161616; border:1px solid #252525; border-radius:8px; padding:16px 18px; margin-bottom:10px; display:grid; grid-template-columns:80px 1fr; gap:14px; align-items:start; }
+  .ev-badge { font-size:11px; font-weight:700; padding:4px 8px; border-radius:5px; text-align:center; line-height:1.4; white-space:nowrap; }
+  .b-hot  { background:#2a1500; color:#ff8c00; border:1px solid #ff8c0055; }
+  .b-ok   { background:#0a2a0a; color:#4caf50; border:1px solid #4caf5055; }
+  .b-eye  { background:#1a1a2a; color:#7c9eff; border:1px solid #7c9eff55; }
+  .b-risk { background:#2a0a0a; color:#f44336; border:1px solid #f4433655; }
+  .ev-title { font-size:14px; font-weight:600; margin-bottom:5px; }
+  .ev-date  { font-size:11px; color:#555; margin-bottom:6px; }
+  .ev-body  { font-size:13px; color:#bbb; line-height:1.65; }
+  .hl { color:#c8a84b; font-weight:600; }
+
+  /* 테이블 */
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { background:#161616; color:#c8a84b; font-size:11px; letter-spacing:1px; text-transform:uppercase; padding:10px 14px; text-align:left; }
+  td { padding:11px 14px; border-bottom:1px solid #1e1e1e; color:#ccc; vertical-align:top; }
+  tr:last-child td { border-bottom:none; }
+  .star { color:#c8a84b; letter-spacing:-2px; }
+
+  /* 신호 요약 바 */
+  .signal-bar { display:flex; gap:16px; margin-bottom:24px; flex-wrap:wrap; }
+  .sb-item { background:#161616; border-radius:6px; padding:10px 16px; text-align:center; flex:1; min-width:90px; }
+  .sb-num { font-size:22px; font-weight:700; }
+  .sb-label { font-size:11px; color:#666; margin-top:2px; }
+  .col-bull { color:#ff6b6b; } .col-bear { color:#5bc0de; } .col-cat { color:#ffc107; } .col-risk { color:#f44336; }
+
+  /* 리스크 */
+  .risk-row { display:flex; gap:10px; padding:10px 0; border-bottom:1px solid #1e1e1e; }
+  .risk-row:last-child { border:none; }
+  .risk-icon { color:#f44336; flex-shrink:0; font-size:15px; }
+
+  /* 하단 */
+  .foot { margin-top:48px; padding-top:20px; border-top:1px solid #1e1e1e; font-size:11px; color:#444; display:flex; gap:12px; flex-wrap:wrap; }
+  .foot span { color:#666; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 헤더 -->
+  <div class="hd">
+    <div class="hd-tag">Sector Briefing · 2026.06.07 · atoms 145개</div>
+    <div class="hd-title">조선 섹터 — 멀티 카탈리스트 집중 구간</div>
+    <div class="hd-meta">소스: report 65 · telegram 34 · blog 31 · news 10 · YT 5 | 기준: 전체 원자 DB</div>
+  </div>
+
+  <!-- 종합 판단 -->
+  <div class="verdict-box">
+    <h3>종합 판단</h3>
+    <div class="verdict-main">🔺 비중확대 — 조정 중 카탈리스트 다중 점화 대기</div>
+    <div class="verdict-desc">
+      이익추정치 상향 대비 주가 반영이 낮음 (가격 매력도 업종 최상위권). 수주잔고 4년+ · 고선가 실적 2026 본격 반영 · 캐나다 잠수함 60조 결과 6월 말 · 부유식 데이터센터 신규 수요 · 모로코 잠수함 3파전 진행 중.
+      단기 -10~18% 조정은 펀더멘탈 훼손 아닌 차익 실현. 분할 매수 기회.
+    </div>
+  </div>
+
+  <!-- 핵심 이벤트 -->
+  <div class="sec">
+    <div class="sec-title">핵심 이벤트 전체 (6/2~6/7)</div>
+
+    <div class="ev">
+      <div><span class="ev-badge b-hot">🔥 D-Day<br>6월 말</span></div>
+      <div>
+        <div class="ev-title">캐나다 차세대 잠수함 최대 60조 — 결과 이달 말 발표</div>
+        <div class="ev-date">2026-06-05~06 | 텔레그램·YT·리포트</div>
+        <div class="ev-body">
+          HD현대중공업 + 한화오션 컨소시엄 vs 독일 TKMS. <span class="hl">한국 수주 가능성 높다</span>는 복수 분석.
+          한국 정부 연계 카드: <span class="hl">수소 트럭 패키지 3.4조 (프로젝트 비버)</span> 비공식 제안, 원유 1,600만 배럴 구매 포함.
+          안규백·강훈식·강훈식 의원 캐나다 국방장관 직접 접촉. 수주 확정 시 HD현대중공업·한화오션·범한퓨얼셀 동반 급등.
+        </div>
+      </div>
+    </div>
+
+    <div class="ev">
+      <div><span class="ev-badge b-ok">✅ 확정<br>수주</span></div>
+      <div>
+        <div class="ev-title">삼성중공업 — 미국 첫 FLNG 델핀 1호기 4.3조 수주</div>
+        <div class="ev-date">2026-06-04~05 | 텔레그램·리포트</div>
+        <div class="ev-body">
+          루이지애나 연안 75km 해상, 연간 LNG 440만톤 생산. 멀티플 FLNG 모델 — 후속 2,3호기 최대 총 1,320만톤.
+          <span class="hl">글로벌 FLNG 신조 11기 중 7기 독점 (점유율 60%+)</span>. EPC 전 과정 단독 수행 첫 사례.
+          하반기 델핀 2호기 + 캐나다 Ksi Lisims 추가 수주 기대. KB국민은행 4조 규모 공동주선 참여.
+        </div>
+      </div>
+    </div>
+
+    <div class="ev">
+      <div><span class="ev-badge b-ok">NEW<br>수요</span></div>
+      <div>
+        <div class="ev-title">한국 조선 3사 — 부유식 데이터센터 수주 문의 급증</div>
+        <div class="ev-date">2026-06-04 | 텔레그램</div>
+        <div class="ev-body">
+          HD현대·한화오션·삼성중공업 모두 부유식 데이터센터 문의 급증.
+          <span class="hl">삼성중공업 50MW급 AIP(기본인정) 획득으로 가장 앞선 것으로 평가</span>. 조선소의 새 수익원 등장.
+        </div>
+      </div>
+    </div>
+
+    <div class="ev">
+      <div><span class="ev-badge b-eye">모니터<br>진행 중</span></div>
+      <div>
+        <div class="ev-title">모로코 잠수함 — 스페인 탈락, 한국·독일·프랑스 3파전</div>
+        <div class="ev-date">2026-06-04 | 리포트</div>
+        <div class="ev-body">
+          캐나다 수주와 별도로 <span class="hl">모로코 잠수함 사업도 진행 중</span>. 스페인 탈락 후 한국이 유력 후보.
+          추가 방산 수출 파이프라인으로 한화오션·HD현대중공업 모두 수혜.
+        </div>
+      </div>
+    </div>
+
+    <div class="ev">
+      <div><span class="ev-badge b-eye">검토 중<br>2.8조</span></div>
+      <div>
+        <div class="ev-title">미국 국방부 — 군함 2.8조 한국·일본 건조 검토</div>
+        <div class="ev-date">2026-06-04 | 리포트</div>
+        <div class="ev-body">
+          한화오션이 미국 해군 미사일 방어청 다목적선 2척 건조 신청.
+          <span class="hl">한국 조선소의 미국 방산 진출 본격화</span> 시그널. 확정 시 장기 수주 계약으로 연결.
+        </div>
+      </div>
+    </div>
+
+    <div class="ev">
+      <div><span class="ev-badge b-ok">1Q<br>서프라이즈</span></div>
+      <div>
+        <div class="ev-title">HD현대중공업 1Q26 — 매출·영익·순익 컨센 상회</div>
+        <div class="ev-date">2026-06-05 | 블로그·리포트</div>
+        <div class="ev-body">
+          엔진사업 매출비중 15.1% → 영업이익 기여도 <span class="hl">18.6% (고마진 구조)</span>.
+          데이터센터 발전기 시장 점유율 <span class="hl">35%</span>. 바르질라(핀란드)와 DC 엔진 계약 체결(4월). 4행정 엔진 시장 신고가.
+          그리스 최대 조선소와 협력 MOU. 수급: 외국인·투신·사모·연기금 4월 순매수.
+        </div>
+      </div>
+    </div>
+
+    <div class="ev">
+      <div><span class="ev-badge b-ok">TP<br>+95%</span></div>
+      <div>
+        <div class="ev-title">한국카본 — TP 61,000원 / 현재 31,200원 (다올투자증권)</div>
+        <div class="ev-date">2026-06-04~05 | 텔레그램</div>
+        <div class="ev-body">
+          <span class="hl">NO96 Super+ 신규 수주</span> (삼성·HD현대만의 Q 돌파).
+          밀양 산단 투자(SB·자동화), 방산 양산 개시, 미국 법인 신설.
+          LNG 발주 하반기 더 강해질 예정 → "주가 조정 상태 = 매수 기회".
+        </div>
+      </div>
+    </div>
+
+    <div class="ev">
+      <div><span class="ev-badge b-eye">모니터<br>연동주</span></div>
+      <div>
+        <div class="ev-title">범한퓨얼셀 — 잠수함 엔진 척당 매출 500억+ 밸류에이션 변곡</div>
+        <div class="ev-date">2026-06-06 | YT</div>
+        <div class="ev-body">
+          캐나다 잠수함 수주 확정 시 <span class="hl">디젤 잠수함 엔진 수주 → 척당 500억원+ 매출</span>. 밸류에이션 완전히 바뀌는 재료.
+          6월 말 결과 발표와 직결. 고위험·고수익 카탈리스트 플레이.
+        </div>
+      </div>
+    </div>
+
+    <div class="ev">
+      <div><span class="ev-badge b-risk">리스크<br>비용</span></div>
+      <div>
+        <div class="ev-title">HD현대중공업 노조 + 2Q 원가 상승</div>
+        <div class="ev-date">2026-06-05 | 블로그</div>
+        <div class="ev-body">
+          노동조합 영업익 30% 성과급 요구 + NH투자증권 2Q 원가 상승 압력 경고.
+          후판 가격 YoY <span class="hl">+20% (톤당 120만원)</span>. 단기 수익성 압박 요인.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 종목별 전망 -->
+  <div class="sec">
+    <div class="sec-title">종목별 투자 포인트</div>
+    <table>
+      <thead><tr><th>종목</th><th>핵심 포인트</th><th>카탈리스트</th><th>비고</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>삼성중공업</b></td>
+          <td>FLNG 60% 독점 · 부유식DC 선두 · 델핀 2,3호기 파이프</td>
+          <td>하반기 FLNG 추가 수주</td>
+          <td class="star">★★★</td>
+        </tr>
+        <tr>
+          <td><b>HD현대중공업</b></td>
+          <td>1Q 어닝서프 · 엔진 DC 35% · 그리스 조선소 협력</td>
+          <td>캐나다 잠수함 + DC엔진 수주</td>
+          <td class="star">★★★</td>
+        </tr>
+        <tr>
+          <td><b>한국카본</b></td>
+          <td>TP 61K (현 31.2K, +95%) · NO96 Super+ · 방산 양산</td>
+          <td>LNG 발주 하반기 가속</td>
+          <td class="star">★★★</td>
+        </tr>
+        <tr>
+          <td><b>한화오션</b></td>
+          <td>캐나다 잠수함 컨소시엄 · 미 군함 신청 · AI 용접 로봇</td>
+          <td>캐나다 6월 말 + 미 군함 확정</td>
+          <td class="star">★★☆</td>
+        </tr>
+        <tr>
+          <td><b>범한퓨얼셀</b></td>
+          <td>잠수함 엔진 척당 500억 · 밸류에이션 변곡 재료</td>
+          <td>캐나다 결과 직결 (고위험)</td>
+          <td class="star">★★☆</td>
+        </tr>
+        <tr>
+          <td><b>HD한국조선해양</b></td>
+          <td>1개월 -18% 낙폭과대 · 수주잔고 기반 실적 안정</td>
+          <td>기술적 반등 + 지주사 할인 축소</td>
+          <td class="star">★★☆</td>
+        </tr>
+        <tr>
+          <td><b>HD현대마린솔루션</b></td>
+          <td>선박 서비스 매출 YoY +17.8% · 친환경 개조 수혜</td>
+          <td>글로벌 환경 규제 강화 수혜</td>
+          <td class="star">★★☆</td>
+        </tr>
+        <tr>
+          <td><b>현대미포조선</b></td>
+          <td>PC선·탱커 수주 견조 · 1월 수주 목표 14.7% 달성</td>
+          <td>중소형 선박 수요 지속</td>
+          <td class="star">★★☆</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 리스크 -->
+  <div class="sec">
+    <div class="sec-title">리스크 요인</div>
+    <div class="risk-row"><span class="risk-icon">⚠</span><span>캐나다 잠수함 독일 TKMS 수주 시 → 단기 급락 트리거 (60조 기대 해소)</span></div>
+    <div class="risk-row"><span class="risk-icon">⚠</span><span>HD현대중공업 노조 파업 + 2Q 원가 상승 → 수익성 단기 훼손</span></div>
+    <div class="risk-row"><span class="risk-icon">⚠</span><span>후판 가격 YoY +20% (톤당 120만원) → 조선 전반 마진 압박</span></div>
+    <div class="risk-row"><span class="risk-icon">⚠</span><span>미중 관세 지속 → 글로벌 LNG 수요 감소·발주 지연 가능성</span></div>
+    <div class="risk-row"><span class="risk-icon">⚠</span><span>외인 매도 지속 시 HD한국조선해양 추가 하락 여지</span></div>
+  </div>
+
+  <!-- 섹터 판단 요약 -->
+  <div class="sec">
+    <div class="sec-title">투자 전략 요약</div>
+    <table>
+      <thead><tr><th>구분</th><th>내용</th></tr></thead>
+      <tbody>
+        <tr><td><b>단기 (1~2주)</b></td><td>조정 지속 가능. 캐나다 잠수함 결과(6월 말) 앞두고 눈치 장세. 결과 전 포지션 선제 구축 전략.</td></tr>
+        <tr><td><b>중기 (3~6개월)</b></td><td>고선가 수주 실적 반영 구간 진입. FLNG·잠수함·부유식DC 신규 수요까지 → 이익 급증 구조. 업종 투자의견 비중확대 상향.</td></tr>
+        <tr><td><b>1순위 종목</b></td><td>삼성중공업 (FLNG 독점·DC 선두) · 한국카본 (TP 2배) · 범한퓨얼셀 (잠수함 연동 高리스크·高수익)</td></tr>
+        <tr><td><b>밸류에이션</b></td><td>이익추정 상향 vs 주가 미반영 → 타 업종 대비 가격 매력도 최상위권 (6/5 리포트 확인)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="foot">
+    <span>SOURCE</span>
+    <span>report 65개 · telegram 34개 · blog 31개 · news 10개 · YT 5개</span>
+    <span>|</span>
+    <span>조선 관련 원자 총 145개 (A/B등급 63개) 전수 분석</span>
+    <span>|</span>
+    <span>생성: 2026-06-07 로또의 주식 STOCK BRAIN</span>
+  </div>
+
+</div>
+</body>
+</html>
