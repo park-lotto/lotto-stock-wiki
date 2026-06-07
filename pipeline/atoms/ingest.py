@@ -14,11 +14,12 @@ from datetime import datetime
 
 from .db import init_db, insert_atom
 from .atomizer import atomize_text
-from .excel_converter import oscillator_to_atoms, consensus_to_atoms
+from .excel_converter import oscillator_to_atoms, consensus_to_atoms, oscillator_json_to_atoms
 from .taxonomy import SOURCE_TRUST_BY_PATH
 
 _EXCEL_SUFFIXES = {".xlsx", ".xlsm", ".xls"}
 _TEXT_SUFFIXES = {".md", ".txt"}
+_JSON_SUFFIXES = {".json"}
 
 
 def ingest_file(file_path: str, date: str = None, source_trust: str = None) -> int:
@@ -33,6 +34,9 @@ def ingest_file(file_path: str, date: str = None, source_trust: str = None) -> i
 
     if path.suffix in _TEXT_SUFFIXES:
         return _ingest_text(path, date, source_trust)
+
+    if path.suffix in _JSON_SUFFIXES:
+        return _ingest_json(path, date)
 
     return 0
 
@@ -49,6 +53,18 @@ def _ingest_excel(path: Path, date: str) -> int:
         print(f"[WARN] 인식 불가 Excel 파일: {path.name} (0개 저장)")
         return 0
 
+    for atom in atoms:
+        insert_atom(atom)
+    return len(atoms)
+
+
+def _ingest_json(path: Path, date: str) -> int:
+    name = path.stem.lower()
+    if "oscillator" in name or "오실레이터" in name or "scan" in name:
+        atoms = oscillator_json_to_atoms(str(path), date)
+    else:
+        print(f"[WARN] 인식 불가 JSON 파일: {path.name} (0개 저장)")
+        return 0
     for atom in atoms:
         insert_atom(atom)
     return len(atoms)

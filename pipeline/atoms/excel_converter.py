@@ -1,5 +1,7 @@
 import hashlib
+import json
 from datetime import datetime, timedelta
+from pathlib import Path
 
 import pandas as pd
 
@@ -80,6 +82,59 @@ def oscillator_to_atoms(file_path: str, date: str) -> list[dict]:
             "content": content,
             "relations": [],
         })
+    return atoms
+
+
+def oscillator_json_to_atoms(json_file: str, date: str = None) -> list[dict]:
+    """oscillator_scan.json (calc_oscillator.py 출력) → 원자 리스트.
+
+    JSON 형식: {date, thresholds:{A:float,B:float}, A:[[종목명,값],...], B:...}
+    수급빈집 역발상: A/B 등급(음수) = bullish, D 등급(양수) = bearish
+    """
+    data = json.loads(Path(json_file).read_text(encoding="utf-8"))
+    date = date or data.get("date", datetime.now().strftime("%Y-%m-%d"))
+
+    _GRADE_SIGNAL = {"A": "bullish", "B": "bullish", "C": "neutral", "D": "bearish"}
+    _GRADE_LABEL = {"A": "완전빈집", "B": "반빈집", "C": "정상", "D": "과매수"}
+    _GRADE_DESC = {
+        "A": "극도 수급 빈집 — 역발상 매수 적기",
+        "B": "수급 반빈집 — 매수 검토 구간",
+        "C": "정상 수급 범위",
+        "D": "수급 과매수 — 매도 압력 경계",
+    }
+
+    atoms = []
+    for grade in ["A", "B", "C", "D"]:
+        for entry in data.get(grade, []):
+            name, val = entry[0], float(entry[1])
+            magnitude = "major" if grade == "A" else "minor"
+            content = (
+                f"{name} 수급오실레이터 {val:+.5f}. "
+                f"빈집등급: {grade} {_GRADE_LABEL[grade]}. "
+                f"{_GRADE_DESC[grade]}."
+            )
+            atoms.append({
+                "id": _atom_id(date, "수급오실레이터", name),
+                "date": date,
+                "source_type": "excel",
+                "source_name": "수급오실레이터",
+                "source_trust": "A",
+                "raw_file": str(json_file),
+                "layer": "L6",
+                "sector": "기타",
+                "asset": name,
+                "asset_level": "stock",
+                "signal": _GRADE_SIGNAL[grade],
+                "event_type": "supply",
+                "magnitude": magnitude,
+                "content_type": "data",
+                "strength_score": 4 if grade == "A" else 3,
+                "validity_type": "date",
+                "validity_until": _next_week(date),
+                "is_active": 1,
+                "content": content,
+                "relations": [],
+            })
     return atoms
 
 

@@ -32,11 +32,9 @@ def test_calc_strength_d_source_minor():
     assert score == 1  # 1 base only
 
 
-@patch("pipeline.atoms.atomizer.genai")
-def test_atomize_text_returns_atoms(mock_genai):
-    mock_model = MagicMock()
-    mock_genai.GenerativeModel.return_value = mock_model
-    mock_model.generate_content.return_value.text = '''[
+@patch("pipeline.atoms.atomizer._client")
+def test_atomize_text_returns_atoms(mock_client):
+    mock_client.models.generate_content.return_value.text = '''[
         {
             "content": "브로드컴 AI 가이던스 -11.8% 미달.",
             "sector": "반도체",
@@ -69,12 +67,10 @@ def test_atomize_text_returns_atoms(mock_genai):
     assert a["id"].startswith("atom_")
 
 
-@patch("pipeline.atoms.atomizer.genai")
-def test_atomize_text_preserves_content_exactly(mock_genai):
+@patch("pipeline.atoms.atomizer._client")
+def test_atomize_text_preserves_content_exactly(mock_client):
     original = "원문 그대로 보존해야 한다. 절대 요약 금지."
-    mock_model = MagicMock()
-    mock_genai.GenerativeModel.return_value = mock_model
-    mock_model.generate_content.return_value.text = f'''[
+    mock_client.models.generate_content.return_value.text = f'''[
         {{
             "content": "{original}",
             "sector": "기타", "asset": "테스트",
@@ -96,11 +92,9 @@ def test_atomize_text_preserves_content_exactly(mock_genai):
     assert atoms[0]["content"] == original
 
 
-@patch("pipeline.atoms.atomizer.genai")
-def test_atomize_text_invalid_json_raises(mock_genai):
-    mock_model = MagicMock()
-    mock_genai.GenerativeModel.return_value = mock_model
-    mock_model.generate_content.return_value.text = "not valid json"
+@patch("pipeline.atoms.atomizer._client")
+def test_atomize_text_invalid_json_raises(mock_client):
+    mock_client.models.generate_content.return_value.text = "not valid json"
     with pytest.raises(ValueError, match="invalid JSON"):
         atomize_text(
             text="test", source_type="news", source_name="test",
@@ -108,11 +102,9 @@ def test_atomize_text_invalid_json_raises(mock_genai):
         )
 
 
-@patch("pipeline.atoms.atomizer.genai")
-def test_atomize_text_skips_empty_content(mock_genai):
-    mock_model = MagicMock()
-    mock_genai.GenerativeModel.return_value = mock_model
-    mock_model.generate_content.return_value.text = '''[
+@patch("pipeline.atoms.atomizer._client")
+def test_atomize_text_skips_empty_content(mock_client):
+    mock_client.models.generate_content.return_value.text = '''[
         {"content": "", "sector": "기타", "asset": "X", "asset_level": "stock",
          "signal": "neutral", "event_type": "news", "magnitude": "minor",
          "content_type": "fact", "validity_type": "permanent", "validity_until": null},

@@ -89,7 +89,7 @@ def test_ingest_unknown_excel_returns_zero(tmp_path, capsys):
     assert count == 0
 
     captured = capsys.readouterr()
-    assert "⚠️ 인식 불가 Excel 파일:" in captured.out
+    assert "인식 불가 Excel 파일:" in captured.out
     assert "unknown_format.xlsx" in captured.out
 
 

@@ -1,9 +1,26 @@
 import os
 import json
 import hashlib
-import google.generativeai as genai
+from pathlib import Path
+from google import genai
+from google.genai import types
 
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY", ""))
+_GEMINI_MODEL = "gemini-2.5-flash-lite"
+
+
+def _load_gemini_key() -> str:
+    key = os.environ.get("GEMINI_API_KEY", "")
+    if not key:
+        env_path = Path(__file__).parent.parent.parent / ".env"
+        if env_path.exists():
+            for line in env_path.read_text(encoding="utf-8").splitlines():
+                if line.startswith("GEMINI_API_KEY=") and not line.startswith("#"):
+                    key = line.split("=", 1)[1].strip()
+                    break
+    return key
+
+
+_client = genai.Client(api_key=_load_gemini_key())
 
 _PROMPT = """다음 텍스트를 주식 시장 정보 '원자' 단위로 분해하라.
 
@@ -36,26 +53,13 @@ def atomize_text(
     date: str,
     layer: str = "L5",
 ) -> list[dict]:
-    """
-    Atomize text into market information atoms using Gemini Flash.
-
-    Args:
-        text: The raw text to atomize
-        source_type: e.g., "telegram", "news", "report"
-        source_name: e.g., "신한리서치"
-        source_trust: A/B/C/D/E source trustworthiness
-        raw_file: path to raw file for reference
-        date: YYYY-MM-DD format
-        layer: Knowledge layer (L1-L6), defaults to L5
-
-    Returns:
-        List of atom dicts with metadata, id, and strength_score calculated
-    """
-    model = genai.GenerativeModel("gemini-2.0-flash")
     try:
-        response = model.generate_content(
-            _PROMPT.format(text=text),
-            generation_config={"response_mime_type": "application/json"},
+        response = _client.models.generate_content(
+            model=_GEMINI_MODEL,
+            contents=_PROMPT.format(text=text),
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+            ),
         )
         raw_atoms: list[dict] = json.loads(response.text)
     except (json.JSONDecodeError, ValueError) as e:
@@ -67,7 +71,7 @@ def atomize_text(
     for i, a in enumerate(raw_atoms):
         content = a.get("content", "")
         if not content:
-            continue  # skip atoms with no content
+            continue
         atoms.append(
             {
                 "id": _make_id(date, source_name, i),
@@ -96,25 +100,11 @@ def atomize_text(
 
 
 def _make_id(date: str, source_name: str, index: int) -> str:
-    """
-    Generate a deterministic atom ID from date, source, and index.
-    Format: atom_<12-char-hex>
-    """
     raw = f"{date}_{source_name}_{index}"
     return "atom_" + hashlib.md5(raw.encode()).hexdigest()[:12]
 
 
 def _calc_strength(atom: dict, source_trust: str) -> int:
-    """
-    Calculate atom strength score (1-5).
-
-    Score formula:
-    - Base: 1
-    - A source: +2
-    - B source: +1
-    - Major magnitude: +1
-    - Cap: 5
-    """
     score = 1
     score += {"A": 2, "B": 1}.get(source_trust, 0)
     if atom.get("magnitude") == "major":
