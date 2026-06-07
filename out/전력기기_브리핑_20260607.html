@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>전력기기 섹터 브리핑 | 2026-06-07</title>
+<style>
+  :root {
+    --bg: #0d0d0d; --card: #1e1e1e; --border: #2a2a2a;
+    --gold: #c9a84c; --gold-light: #e0c070; --text: #e0e0e0; --muted: #888;
+    --bull: #4ade80; --bear: #f87171; --neutral: #94a3b8;
+    --accent: #fb923c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Pretendard','Apple SD Gothic Neo',sans-serif; font-size: 14px; line-height: 1.6; }
+  .header { background: linear-gradient(135deg, #100a04 0%, #1a1000 100%); border-bottom: 1px solid var(--accent); padding: 28px 40px 22px; display: flex; align-items: baseline; gap: 16px; }
+  .header-sector { font-size: 22px; font-weight: 700; color: #fdba74; letter-spacing: 0.5px; }
+  .header-date { font-size: 13px; color: var(--muted); }
+  .header-source { margin-left: auto; font-size: 11px; color: var(--muted); text-align: right; line-height: 1.8; }
+  .db-note { background: rgba(251,146,60,0.08); border: 1px solid rgba(251,146,60,0.2); border-radius: 8px; padding: 10px 16px; margin: 0 24px 24px; font-size: 12px; color: #fdba74; max-width: 1072px; margin-left: auto; margin-right: auto; }
+  .container { max-width: 1120px; margin: 0 auto; padding: 0 24px 60px; }
+  .section-title { font-size: 13px; font-weight: 700; color: var(--accent); letter-spacing: 1.5px; text-transform: uppercase; border-left: 3px solid var(--accent); padding-left: 10px; margin-bottom: 20px; }
+  .timeline-section { margin-bottom: 48px; }
+  .timeline { position: relative; padding-left: 20px; border-left: 2px solid var(--border); }
+  .tl-date-header { display: flex; align-items: center; gap: 10px; margin: 0 0 4px -26px; }
+  .tl-date-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); flex-shrink: 0; box-shadow: 0 0 8px rgba(251,146,60,0.5); }
+  .tl-date-label { font-size: 12px; font-weight: 700; color: #fdba74; letter-spacing: 0.5px; }
+  .tl-events { padding: 4px 0 20px 0; display: flex; flex-direction: column; gap: 8px; }
+  .tl-event { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; align-items: start; }
+  .tl-event:hover { border-color: rgba(251,146,60,0.3); }
+  .tl-event-main { grid-column: 1; } .tl-event-tag { grid-column: 2; }
+  .tl-event-title { font-size: 13.5px; font-weight: 600; color: var(--text); margin-bottom: 5px; line-height: 1.5; }
+  .tl-event-detail { font-size: 12.5px; color: #aaa; line-height: 1.55; }
+  .tl-event-detail b { color: #fdba74; font-weight: 600; }
+  .tl-event-source { font-size: 11px; color: var(--muted); margin-top: 6px; }
+  .tag { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 4px; white-space: nowrap; }
+  .tag-bull { background: rgba(74,222,128,0.1); color: var(--bull); border: 1px solid rgba(74,222,128,0.25); }
+  .tag-bear { background: rgba(248,113,113,0.1); color: var(--bear); border: 1px solid rgba(248,113,113,0.25); }
+  .tag-neu  { background: rgba(148,163,184,0.1); color: var(--neutral); border: 1px solid rgba(148,163,184,0.25); }
+  .tag-hot  { background: rgba(251,146,60,0.1); color: var(--accent); border: 1px solid rgba(251,146,60,0.3); }
+  .momentum-section { margin-bottom: 48px; }
+  .momentum-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .m-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .m-card-header { padding: 12px 16px 10px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .m-card-icon { width: 32px; height: 32px; border-radius: 8px; background: rgba(251,146,60,0.1); border: 1px solid rgba(251,146,60,0.2); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .m-card-name { font-size: 14px; font-weight: 700; color: #fdba74; }
+  .m-card-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .m-card-body { padding: 14px 16px; }
+  .fact-list { display: flex; flex-direction: column; gap: 10px; }
+  .fact-item { display: grid; grid-template-columns: 3px 1fr; gap: 0 10px; align-items: start; }
+  .fact-bar { margin-top: 4px; width: 3px; min-height: 12px; border-radius: 2px; align-self: stretch; }
+  .fact-bar.bull { background: var(--bull); } .fact-bar.bear { background: var(--bear); } .fact-bar.neu { background: var(--neutral); }
+  .fact-text { font-size: 12.5px; color: var(--text); line-height: 1.55; }
+  .fact-text b { color: #fdba74; font-weight: 600; }
+  .fact-meta { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .footer { border-top: 1px solid var(--border); padding: 20px 40px; font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-sector">⚡ 전력기기 섹터</div>
+  <div class="header-date">2026-06-07 기준</div>
+  <div class="header-source">소스: 키움증권 · SK증권 · iM증권<br>수급오실레이터 · IBK투자증권</div>
+</div>
+
+<div style="max-width:1120px;margin:16px auto 0;padding:0 24px;">
+  <div class="db-note">⚠ DB 현황: 원전·SMR 전용 원자 데이터 부족 — 원전 전용 리포트가 DB에 수집되지 않은 상태. 두산에너빌리티 주가 트래킹 1건만 존재. 이 브리핑은 전력기기(변압기·케이블·개폐기) 데이터 중심으로 구성됩니다.</div>
+</div>
+
+<div class="container">
+
+  <!-- 타임라인 -->
+  <div class="timeline-section">
+    <div class="section-title">핵심 이벤트 타임라인</div>
+    <div class="timeline">
+
+      <!-- 06-05 -->
+      <div class="tl-item">
+        <div class="tl-date-header"><div class="tl-date-dot"></div><div class="tl-date-label">2026-06-05</div></div>
+        <div class="tl-events">
+          <div class="tl-event">
+            <div class="tl-event-main">
+              <div class="tl-event-title">키움: "전력기기 비중 확대 전략 변함없음 — 최근 1달 코스피 성과 하회, 전술적 비중 확대 시점"</div>
+              <div class="tl-event-detail">키움: <b>"견조한 실적 전망에도 최근 1달간 코스피 성과 하회한 전력기기 업종 — 기존 주도주 비중 확대 전략 변함없으나 단기 전술적 차원에서 비중 확대 시점"</b>이라고 직접 명시.</div>
+              <div class="tl-event-source">출처: 키움증권 · 2026-06-05</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-hot">전술 매수</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 06-04 -->
+      <div class="tl-item">
+        <div class="tl-date-header"><div class="tl-date-dot"></div><div class="tl-date-label">2026-06-04 (SK증권 주가 트래킹)</div></div>
+        <div class="tl-events">
+          <div class="tl-event">
+            <div class="tl-event-main">
+              <div class="tl-event-title">HD현대일렉트릭 <b>995,000원</b> — 1개월 -23.4%, 연초대비 +28.6%, 1년 +163.2%</div>
+              <div class="tl-event-detail">단기 급락(1개월 -23.4%)이지만 연초대비 +28.6%, 1년 +163.2%.</div>
+              <div class="tl-event-source">출처: SK증권 · 2026-06-04</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-neu">주가</span></div>
+          </div>
+          <div class="tl-event">
+            <div class="tl-event-main">
+              <div class="tl-event-title">두산에너빌리티 <b>100,000원</b> — 연초대비 +32.8%, 1년 +144.2%</div>
+              <div class="tl-event-detail">1개월 -21.4% 단기 조정. 연초대비 +32.8%, 1년 +144.2%.</div>
+              <div class="tl-event-source">출처: SK증권 · 2026-06-04</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-neu">주가</span></div>
+          </div>
+          <div class="tl-event">
+            <div class="tl-event-main">
+              <div class="tl-event-title">한국전력 <b>37,750원</b> — 1개월 -15.2%, 3개월 -17.1%, 연초대비 -20.0%</div>
+              <div class="tl-event-detail">1년 +25.4%이나 최근 3개월 -17.1%, 연초대비 -20.0% 약세 지속.</div>
+              <div class="tl-event-source">출처: SK증권 · 2026-06-04</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-bear">주가</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 06-02 -->
+      <div class="tl-item">
+        <div class="tl-date-header"><div class="tl-date-dot"></div><div class="tl-date-label">2026-06-02 (키움증권 실적 트래킹)</div></div>
+        <div class="tl-events">
+          <div class="tl-event">
+            <div class="tl-event-main">
+              <div class="tl-event-title">HD현대일렉트릭 Q2 — 매출 <b>7,770억</b>(+38%), 영업이익 <b>730억</b>(+160%)</div>
+              <div class="tl-event-detail">북미 전력 설비 투자 확대 + 대형 변압기 수주 증가 영향. 영업이익 YoY +160%, QoQ +47%.</div>
+              <div class="tl-event-source">출처: 키움증권 · 2026-06-02</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-bull">실적</span></div>
+          </div>
+          <div class="tl-event">
+            <div class="tl-event-main">
+              <div class="tl-event-title">효성중공업 Q2 — 매출 <b>1조 1,350억</b>(+18%), 영업이익 <b>960억</b>(+25%)</div>
+              <div class="tl-event-detail">전력기기 사업 호조 + 해외 수주 확대 영향.</div>
+              <div class="tl-event-source">출처: 키움증권 · 2026-06-02</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-bull">실적</span></div>
+          </div>
+          <div class="tl-event">
+            <div class="tl-event-main">
+              <div class="tl-event-title">LS ELECTRIC Q2 — 영업이익 <b>1,307억</b>(YoY +13.1%) / LS전선 — 매출 <b>1.66조</b>(+14%), 영업이익 <b>1,120억</b>(+35%)</div>
+              <div class="tl-event-detail">LS ELECTRIC 전력기기·해외 수주 확대 견인. LS전선 전력 케이블 + 해저 케이블 수주 증가. 하반기 미국·유럽 수주 추가 확대 기대.</div>
+              <div class="tl-event-source">출처: 키움증권 · 2026-06-02</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-bull">실적</span></div>
+          </div>
+          <div class="tl-event">
+            <div class="tl-event-main">
+              <div class="tl-event-title">한국전력 Q2 영업이익 <b>2조 4,477억</b> — 흑자 전환 성공</div>
+              <div class="tl-event-detail">연료비 상승분 전기요금 반영 + 발전 공기업 실적 개선. 단, <b>누적 적자 해소 위해 추가 요금 인상·비용 절감 필요</b>하다고 키움 명시.</div>
+              <div class="tl-event-source">출처: 키움증권 · 2026-06-02</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-bull">실적</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 개별 모멘텀 -->
+  <div class="momentum-section">
+    <div class="section-title">개별 모멘텀</div>
+    <div class="momentum-grid">
+
+      <div class="m-card">
+        <div class="m-card-header"><div class="m-card-icon">🔌</div><div><div class="m-card-name">HD현대일렉트릭</div><div class="m-card-sub">267260 · 대형 변압기 / 북미</div></div></div>
+        <div class="m-card-body"><div class="fact-list">
+          <div class="fact-item"><div class="fact-bar bull"></div><div class="fact-content"><div class="fact-text">Q2 매출 <b>7,770억</b>(YoY +38%, QoQ +16%), 영업이익 <b>730억</b>(YoY +160%, QoQ +47%).</div><div class="fact-meta">키움증권 · 06-02</div></div></div>
+          <div class="fact-item"><div class="fact-bar neu"></div><div class="fact-content"><div class="fact-text">주가 <b>995,000원</b> (1개월 -23.4%, 1년 +163.2%). 단기 급락 vs 장기 강세 대비.</div><div class="fact-meta">SK증권 · 06-04</div></div></div>
+        </div></div>
+      </div>
+
+      <div class="m-card">
+        <div class="m-card-header"><div class="m-card-icon">⚡</div><div><div class="m-card-name">효성중공업</div><div class="m-card-sub">298040 · 전력기기 / 해외 수주</div></div></div>
+        <div class="m-card-body"><div class="fact-list">
+          <div class="fact-item"><div class="fact-bar bull"></div><div class="fact-content"><div class="fact-text">Q2 매출 <b>1조 1,350억</b>(YoY +18%, QoQ +8%), 영업이익 <b>960억</b>(YoY +25%, QoQ +14%).</div><div class="fact-meta">키움증권 · 06-02</div></div></div>
+          <div class="fact-item"><div class="fact-bar bull"></div><div class="fact-content"><div class="fact-text">전력기기 사업 호조 + 해외 수주 확대 영향으로 견조한 실적 달성.</div><div class="fact-meta">키움증권 · 06-02</div></div></div>
+        </div></div>
+      </div>
+
+      <div class="m-card">
+        <div class="m-card-header"><div class="m-card-icon">🔋</div><div><div class="m-card-name">LS ELECTRIC / LS전선</div><div class="m-card-sub">010120 / 스마트 그리드·해저 케이블</div></div></div>
+        <div class="m-card-body"><div class="fact-list">
+          <div class="fact-item"><div class="fact-bar bull"></div><div class="fact-content"><div class="fact-text">LS ELECTRIC Q2 영업이익 <b>1,307억</b>(YoY +13.1%). 하반기 미국·유럽 수주 확대 기대.</div><div class="fact-meta">키움증권 · 06-02</div></div></div>
+          <div class="fact-item"><div class="fact-bar bull"></div><div class="fact-content"><div class="fact-text">LS전선 Q2 매출 <b>1.66조</b>(+14%), 영업이익 <b>1,120억</b>(+35%). 해저 케이블 수주 증가.</div><div class="fact-meta">키움증권 · 06-02</div></div></div>
+        </div></div>
+      </div>
+
+      <div class="m-card">
+        <div class="m-card-header"><div class="m-card-icon">🏭</div><div><div class="m-card-name">두산에너빌리티</div><div class="m-card-sub">034020 · 원전/가스터빈 (원전 전용 데이터 부족)</div></div></div>
+        <div class="m-card-body"><div class="fact-list">
+          <div class="fact-item"><div class="fact-bar neu"></div><div class="fact-content"><div class="fact-text">주가 <b>100,000원</b> (1개월 -21.4%, 3개월 +24.1%, 연초대비 +32.8%, 1년 +144.2%). DB에 실적·수주 전용 데이터 없음.</div><div class="fact-meta">SK증권 · 06-04</div></div></div>
+          <div class="fact-item"><div class="fact-bar neu"></div><div class="fact-content"><div class="fact-text">⚠ 원전·SMR 전용 리포트 원자 미수집. 추가 ingest 필요.</div><div class="fact-meta">DB 공백</div></div></div>
+        </div></div>
+      </div>
+
+      <div class="m-card">
+        <div class="m-card-header"><div class="m-card-icon">💡</div><div><div class="m-card-name">한국전력</div><div class="m-card-sub">015760 · 유틸리티 / 전기요금</div></div></div>
+        <div class="m-card-body"><div class="fact-list">
+          <div class="fact-item"><div class="fact-bar bull"></div><div class="fact-content"><div class="fact-text">Q2 영업이익 <b>2조 4,477억</b> 흑자 전환. 연료비 연동제 + 발전 공기업 원가 절감.</div><div class="fact-meta">키움증권 · 06-02</div></div></div>
+          <div class="fact-item"><div class="fact-bar bear"></div><div class="fact-content"><div class="fact-text">주가 <b>37,750원</b> — 연초대비 <b>-20.0%</b>. 3개월 -17.1%. 국제 유가 변동 리스크 상존.</div><div class="fact-meta">SK증권 · 06-04</div></div></div>
+          <div class="fact-item"><div class="fact-bar neu"></div><div class="fact-content"><div class="fact-text">키움: "누적 적자 해소 위해 추가 요금 인상·비용 절감 필요" 명시.</div><div class="fact-meta">키움증권 · 06-02</div></div></div>
+        </div></div>
+      </div>
+
+      <div class="m-card">
+        <div class="m-card-header"><div class="m-card-icon">🇺🇸</div><div><div class="m-card-name">미국 전력 인프라 ETF (AMLP)</div><div class="m-card-sub">미드스트림 MLP · 고배당</div></div></div>
+        <div class="m-card-body"><div class="fact-list">
+          <div class="fact-item"><div class="fact-bar bull"></div><div class="fact-content"><div class="fact-text">iM: AMLP ETF <b>배당 7.35%</b>. AI 투자 + 전력 부족 현상으로 중장기 수요 전망 긍정. 트럼프 에너지 생산 증가 = 물동량 모멘텀 요인.</div><div class="fact-meta">iM증권 · 06-04</div></div></div>
+        </div></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+<div class="footer">
+  <span>로또의 주식 | Stock Brain</span>
+  <span>원자 DB 기준 2026-06-07 · atoms.db 팩트 직접 인용 · 원전 전용 데이터 부족 — ingest 보완 필요</span>
+</div>
+</body>
+</html>

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>반도체 섹터 브리핑 | 2026-06-07</title>
+<style>
+  :root {
+    --bg: #0d0d0d; --surface: #161616; --card: #1e1e1e; --border: #2a2a2a;
+    --gold: #c9a84c; --gold-light: #e0c070; --text: #e0e0e0; --muted: #888;
+    --bull: #4ade80; --bear: #f87171; --neutral: #94a3b8; --blue: #60a5fa;
+    --accent: #818cf8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Pretendard','Apple SD Gothic Neo',sans-serif; font-size: 14px; line-height: 1.6; }
+  .header { background: linear-gradient(135deg, #0a0a14 0%, #0d1420 100%); border-bottom: 1px solid var(--accent); padding: 28px 40px 22px; display: flex; align-items: baseline; gap: 16px; }
+  .header-sector { font-size: 22px; font-weight: 700; color: #a5b4fc; letter-spacing: 0.5px; }
+  .header-date { font-size: 13px; color: var(--muted); }
+  .header-source { margin-left: auto; font-size: 11px; color: var(--muted); text-align: right; line-height: 1.8; }
+  .container { max-width: 1120px; margin: 0 auto; padding: 32px 24px 60px; }
+  .section-title { font-size: 13px; font-weight: 700; color: var(--accent); letter-spacing: 1.5px; text-transform: uppercase; border-left: 3px solid var(--accent); padding-left: 10px; margin-bottom: 20px; }
+  .timeline-section { margin-bottom: 48px; }
+  .timeline { position: relative; padding-left: 20px; border-left: 2px solid var(--border); }
+  .tl-date-header { display: flex; align-items: center; gap: 10px; margin: 0 0 4px -26px; }
+  .tl-date-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); flex-shrink: 0; box-shadow: 0 0 8px rgba(129,140,248,0.5); }
+  .tl-date-label { font-size: 12px; font-weight: 700; color: #a5b4fc; letter-spacing: 0.5px; }
+  .tl-events { padding: 4px 0 20px 0; display: flex; flex-direction: column; gap: 8px; }
+  .tl-event { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; align-items: start; }
+  .tl-event:hover { border-color: rgba(129,140,248,0.3); }
+  .tl-event-main { grid-column: 1; }
+  .tl-event-tag { grid-column: 2; }
+  .tl-event-title { font-size: 13.5px; font-weight: 600; color: var(--text); margin-bottom: 5px; line-height: 1.5; }
+  .tl-event-detail { font-size: 12.5px; color: #aaa; line-height: 1.55; }
+  .tl-event-detail b { color: #a5b4fc; font-weight: 600; }
+  .tl-event-source { font-size: 11px; color: var(--muted); margin-top: 6px; }
+  .tag { display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.3px; padding: 3px 8px; border-radius: 4px; white-space: nowrap; }
+  .tag-bull { background: rgba(74,222,128,0.1); color: var(--bull); border: 1px solid rgba(74,222,128,0.25); }
+  .tag-bear { background: rgba(248,113,113,0.1); color: var(--bear); border: 1px solid rgba(248,113,113,0.25); }
+  .tag-neu  { background: rgba(148,163,184,0.1); color: var(--neutral); border: 1px solid rgba(148,163,184,0.25); }
+  .tag-hot  { background: rgba(129,140,248,0.1); color: var(--accent); border: 1px solid rgba(129,140,248,0.3); }
+  .momentum-section { margin-bottom: 48px; }
+  .momentum-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .m-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .m-card-header { padding: 12px 16px 10px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .m-card-icon { width: 32px; height: 32px; border-radius: 8px; background: rgba(129,140,248,0.1); border: 1px solid rgba(129,140,248,0.2); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .m-card-name { font-size: 14px; font-weight: 700; color: #a5b4fc; }
+  .m-card-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .m-card-body { padding: 14px 16px; }
+  .fact-list { display: flex; flex-direction: column; gap: 10px; }
+  .fact-item { display: grid; grid-template-columns: 3px 1fr; gap: 0 10px; align-items: start; }
+  .fact-bar { margin-top: 4px; width: 3px; min-height: 12px; border-radius: 2px; align-self: stretch; }
+  .fact-bar.bull { background: var(--bull); } .fact-bar.bear { background: var(--bear); } .fact-bar.neu { background: var(--neutral); }
+  .fact-text { font-size: 12.5px; color: var(--text); line-height: 1.55; }
+  .fact-text b { color: #a5b4fc; font-weight: 600; }
+  .fact-meta { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .footer { border-top: 1px solid var(--border); padding: 20px 40px; font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; }
+  .supply-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 700; }
+  .supply-bull { background: rgba(74,222,128,0.1); color: var(--bull); border: 1px solid rgba(74,222,128,0.2); }
+  .supply-bear { background: rgba(248,113,113,0.1); color: var(--bear); border: 1px solid rgba(248,113,113,0.2); }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-sector">💡 반도체 섹터</div>
+  <div class="header-date">2026-06-07 기준</div>
+  <div class="header-source">소스: 유진투자증권 · 키움증권 · iM증권 · 다올투자증권<br>DS투자증권 · SK증권 · KB증권 · 수급오실레이터</div>
+</div>
+<div class="container">
+
+  <!-- 타임라인 -->
+  <div class="timeline-section">
+    <div class="section-title">핵심 이벤트 타임라인</div>
+    <div class="timeline">
+
+      <!-- 06-07 -->
+      <div class="tl-item">
+        <div class="tl-date-header"><div class="tl-date-dot"></div><div class="tl-date-label">2026-06-07 (오늘)</div></div>
+        <div class="tl-events">
+          <div class="tl-event">
+            <div class="tl-event-main">
+              <div class="tl-event-title">수급 오실레이터 — SK하이닉스 <b>+73</b>(강매수) / 삼성전자 <b>-20</b>(매도) / 한미반도체 <b>완전빈집</b></div>
+              <div class="tl-event-detail">SK하이닉스 외국인+기관 수급 오실레이터 <b>+73 강한 매수 우위</b>. 삼성전자 -20 매도 우위. 한미반도체 오실레이터 -0.25430, <b>빈집등급 A(완전빈집) — 역발상 매수 적기 신호</b>.</div>
+              <div class="tl-event-source">출처: 수급오실레이터 · 2026-06-07</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-hot">수급</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 06-06 -->
+      <div class="tl-item">
+        <div class="tl-date-header"><div class="tl-date-dot"></div><div class="tl-date-label">2026-06-06</div></div>
+        <div class="tl-events">
+          <div class="tl-event">
+            <div class="tl-event-main">
+              <div class="tl-event-title">신한: "반도체 언와인딩 수급" — KOSDAQ 소부장에 볕</div>
+              <div class="tl-event-detail">신한 Market Review: 반도체 대형주 수급 언와인딩 중. 전닉(전체 닉) 쉬는 사이 KOSDAQ 소부장 주목.</div>
+              <div class="tl-event-source">출처: 신한증권 · 2026-06-06</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-neu">수급 분산</span></div>
+          </div>
+          <div class="tl-event">
+            <div class="tl-event-main">
+              <div class="tl-event-title">중국 CXMT 과창50 상장 — 반도체 패키징·테스트 강점</div>
+              <div class="tl-event-detail">중국 CXMT(창장케지) 과창50 지수 상장. 패키징·테스트 분야 강점 보유.</div>
+              <div class="tl-event-source">출처: 중국 테마 전략 · 2026-06-06</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-bear">중국 경쟁</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 06-05 -->
+      <div class="tl-item">
+        <div class="tl-date-header"><div class="tl-date-dot"></div><div class="tl-date-label">2026-06-05</div></div>
+        <div class="tl-events">
+          <div class="tl-event">
+            <div class="tl-event-main">
+              <div class="tl-event-title">브로드컴 <b>-12.6%</b> 급락 — 가이던스 컨센 하회, 마이크론 <b>-7.7%</b> 동반 하락</div>
+              <div class="tl-event-detail">브로드컴 실적 가이던스가 컨센서스를 하회하며 시간외 -12.6%. AMD -3.56%, 마이크론 -7.74% 동반 하락. <b>키움: "반도체 주도주 변동성 증가, 포지션 축소 고민 국면 진입"</b>.</div>
+              <div class="tl-event-source">출처: 키움증권 · 2026-06-05</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-bear">미국 충격파</span></div>
+          </div>
+          <div class="tl-event">
+            <div class="tl-event-main">
+              <div class="tl-event-title">유진: 코스피 Q1 반도체 비중 — 영업이익 53%, 순이익 <b>60%</b> 집중</div>
+              <div class="tl-event-detail">1Q26 코스피 영업이익 177조원(YoY +144.5%). <b>반도체 사이클 2026년 업종별 이익 성장률 +565%(yoy)</b>, 전체 1위. 유진: "코스피 구성 시가총액 비중 20% 수준 → 현재 압도적으로 높음 — 쏠림 리스크".</div>
+              <div class="tl-event-source">출처: 유진투자증권 · 2026-06-05</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-hot">빅사이클</span></div>
+          </div>
+          <div class="tl-event">
+            <div class="tl-event-main">
+              <div class="tl-event-title">유진: "AI/HBM 사이클 — 금리 인상 시그널 강화되면 AI Capex 민감"</div>
+              <div class="tl-event-detail">AI/HBM 중심 이번 사이클은 구조적 성격 강하나, <b>AI 서버 투자는 대규모 CAPEX → 금리 환경 민감</b>하다고 명시. 리스크 요인.</div>
+              <div class="tl-event-source">출처: 유진투자증권 · 2026-06-05</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-bear">리스크</span></div>
+          </div>
+          <div class="tl-event">
+            <div class="tl-event-main">
+              <div class="tl-event-title">최태원 SK 회장, TSMC 회장과 2년 만에 대만 회동 — 차세대 HBM 협력</div>
+              <div class="tl-event-detail">최태원 SK 회장과 TSMC 회장이 2년 만에 대만에서 회동. AI 메모리 시장 선점을 위한 <b>차세대 HBM 개발 협력</b> 논의.</div>
+              <div class="tl-event-source">출처: 다올투자증권 · 2026-06-05</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-bull">HBM</span></div>
+          </div>
+          <div class="tl-event">
+            <div class="tl-event-main">
+              <div class="tl-event-title">한미반도체, 컴퓨텍스 2026 — 글로벌 AI 반도체용 TC 본더 최신 제품군 공개</div>
+              <div class="tl-event-detail">한미반도체가 컴퓨텍스 2026에서 글로벌 AI 반도체 시장 공략용 최첨단 TC 본더 제품군 소개 예정.</div>
+              <div class="tl-event-source">출처: 다올투자증권 · 2026-06-05</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-bull">소부장</span></div>
+          </div>
+          <div class="tl-event">
+            <div class="tl-event-main">
+              <div class="tl-event-title">키움: "반도체→비반도체 업종 순환매 장세 전개" 전망</div>
+              <div class="tl-event-detail">미국 반도체주 약세 + 달러/원 1,530원대 돌파 부담으로 <b>"반도체에서 비반도체로 순환매 장세 전개"</b>를 금일 전망으로 제시.</div>
+              <div class="tl-event-source">출처: 키움증권 · 2026-06-05</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-neu">순환매</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 06-04 -->
+      <div class="tl-item">
+        <div class="tl-date-header"><div class="tl-date-dot"></div><div class="tl-date-label">2026-06-04</div></div>
+        <div class="tl-events">
+          <div class="tl-event">
+            <div class="tl-event-main">
+              <div class="tl-event-title">삼성전자, 컴퓨텍스 2026 — <b>HBM5 실물 모형 최초 공개</b></div>
+              <div class="tl-event-detail">삼성전자가 컴퓨텍스 2026에서 HBM5 실물 모형 최초 공개. 삼성생명·SK스퀘어는 각각 삼성전자·SK하이닉스 호실적 기대로 지분가치 재평가 강세.</div>
+              <div class="tl-event-source">출처: KB증권 · 2026-06-04</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-hot">HBM5</span></div>
+          </div>
+          <div class="tl-event">
+            <div class="tl-event-main">
+              <div class="tl-event-title">iM증권: SOXX ETF <b>역대 최장 18거래일 연속 상승</b> 기록 후 추가 상승세 지속</div>
+              <div class="tl-event-detail">AI Capex 투자 우호환경 + 앤쓰로픽향 투자·알파벳 8세대 TPU 발표·AI Agent 전환 긍정 작용. <b>SOXX ETF 역사상 최장 랠리 기록</b> 후 추가 상승 지속.</div>
+              <div class="tl-event-source">출처: iM증권 · 2026-06-04</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-bull">AI 수혜</span></div>
+          </div>
+          <div class="tl-event">
+            <div class="tl-event-main">
+              <div class="tl-event-title">원익QnC, 구미 사업장 <b>255억원 증설</b> — 2026년 12월 준공, CAPA +450억원</div>
+              <div class="tl-event-detail">장비사·고객사 수요 증가 대응. 구미 사업장 255억원 투자 증설 — 2026년 12월 준공 목표. <b>매출액 기준 약 450억원 CAPA 추가</b>. GAA 구조 전환 + DRAM 식각 공정 증가로 쿼츠 수요 구조적 성장.</div>
+              <div class="tl-event-source">출처: 쿼츠 수요의 구조적 성장 · 2026-06-04</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-bull">소부장 증설</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 개별 모멘텀 -->
+  <div class="momentum-section">
+    <div class="section-title">개별 모멘텀</div>
+    <div class="momentum-grid">
+
+      <div class="m-card">
+        <div class="m-card-header"><div class="m-card-icon">🧠</div><div><div class="m-card-name">SK하이닉스</div><div class="m-card-sub">000660 · HBM / DRAM</div></div></div>
+        <div class="m-card-body"><div class="fact-list">
+          <div class="fact-item"><div class="fact-bar bull"></div><div class="fact-content"><div class="fact-text">수급 오실레이터 <b>+73</b> — 외국인+기관 강한 매수 우위.</div><div class="fact-meta">수급오실레이터 · 06-07</div></div></div>
+          <div class="fact-item"><div class="fact-bar bull"></div><div class="fact-content"><div class="fact-text">최태원 회장 TSMC 회장 대만 회동. <b>차세대 HBM 개발 협력</b> 논의.</div><div class="fact-meta">다올투자증권 · 06-05</div></div></div>
+          <div class="fact-item"><div class="fact-bar neu"></div><div class="fact-content"><div class="fact-text">키움 모닝: SK하이닉스 <b>84,600원</b> (전일 -1.40%). KOSPI 상승 속 반도체 약세.</div><div class="fact-meta">키움증권 · 06-05</div></div></div>
+        </div></div>
+      </div>
+
+      <div class="m-card">
+        <div class="m-card-header"><div class="m-card-icon">📱</div><div><div class="m-card-name">삼성전자</div><div class="m-card-sub">005930 · DRAM / HBM5 / 파운드리</div></div></div>
+        <div class="m-card-body"><div class="fact-list">
+          <div class="fact-item"><div class="fact-bar bull"></div><div class="fact-content"><div class="fact-text">컴퓨텍스 2026 — <b>HBM5 실물 모형 최초 공개</b>. KB: 지분 가치 재평가 기대 강세.</div><div class="fact-meta">KB증권 · 06-04</div></div></div>
+          <div class="fact-item"><div class="fact-bar bear"></div><div class="fact-content"><div class="fact-text">수급 오실레이터 <b>-20</b> 매도 우위. 외국인+기관 매도 방향.</div><div class="fact-meta">수급오실레이터 · 06-07</div></div></div>
+          <div class="fact-item"><div class="fact-bar bull"></div><div class="fact-content"><div class="fact-text">키움 모닝: 전일 <b>+2.68% 69,000원</b> 기록. KOSPI 사상 최고치 견인.</div><div class="fact-meta">키움증권 · 06-05</div></div></div>
+        </div></div>
+      </div>
+
+      <div class="m-card">
+        <div class="m-card-header"><div class="m-card-icon">⚙</div><div><div class="m-card-name">한미반도체</div><div class="m-card-sub">042700 · TC 본더 / HBM 패키징</div></div></div>
+        <div class="m-card-body"><div class="fact-list">
+          <div class="fact-item"><div class="fact-bar bull"></div><div class="fact-content"><div class="fact-text">수급 오실레이터 <b>-0.25430, 빈집등급 A 완전빈집</b> — "역발상 매수 적기" 신호.</div><div class="fact-meta">수급오실레이터 · 06-07</div></div></div>
+          <div class="fact-item"><div class="fact-bar bull"></div><div class="fact-content"><div class="fact-text">컴퓨텍스 2026에서 <b>글로벌 AI 반도체용 TC 본더 최신 제품군 공개</b> 예정.</div><div class="fact-meta">다올투자증권 · 06-05</div></div></div>
+        </div></div>
+      </div>
+
+      <div class="m-card">
+        <div class="m-card-header"><div class="m-card-icon">🔬</div><div><div class="m-card-name">원익QnC</div><div class="m-card-sub">쿼츠 소재 / GAA·DRAM 식각</div></div></div>
+        <div class="m-card-body"><div class="fact-list">
+          <div class="fact-item"><div class="fact-bar bull"></div><div class="fact-content"><div class="fact-text">구미 사업장 <b>255억원 증설</b> 결정 — 2026년 12월 준공. <b>매출 기준 +450억 CAPA</b> 추가.</div><div class="fact-meta">쿼츠 수요의 구조적 성장 · 06-04</div></div></div>
+          <div class="fact-item"><div class="fact-bar bull"></div><div class="fact-content"><div class="fact-text">GAA 전환: 소자 높이 증가 → 식각 공정 step 수 대폭 확대. 구조적 수요 증가.</div><div class="fact-meta">쿼츠 수요의 구조적 성장 · 06-04</div></div></div>
+          <div class="fact-item"><div class="fact-bar bull"></div><div class="fact-content"><div class="fact-text">DRAM HBM TSV 공정 쿼츠 수요 성장. NAND 300단+ 고종횡비 채널홀 식각 필수.</div><div class="fact-meta">쿼츠 수요의 구조적 성장 · 06-04</div></div></div>
+        </div></div>
+      </div>
+
+      <div class="m-card">
+        <div class="m-card-header"><div class="m-card-icon">🌐</div><div><div class="m-card-name">에이텀 (관찰)</div><div class="m-card-sub">평판형 트랜스 / AI DC 전력</div></div></div>
+        <div class="m-card-body"><div class="fact-list">
+          <div class="fact-item"><div class="fact-bar bull"></div><div class="fact-content"><div class="fact-text">평판형 트랜스 전력효율 <b>98~99%</b>(코일형 92~96% 대비 높음). AI DC 800VDC 전력 구조 수혜.</div><div class="fact-meta">게임 체인저 · 06-05</div></div></div>
+          <div class="fact-item"><div class="fact-bar bear"></div><div class="fact-content"><div class="fact-text">2024년 영업이익률 <b>-12.8%</b>, 부채비율 415.8%. SK증권 'Not Rated'. 실적 개선 전 관찰 단계.</div><div class="fact-meta">게임 체인저 · 06-05</div></div></div>
+        </div></div>
+      </div>
+
+      <div class="m-card">
+        <div class="m-card-header"><div class="m-card-icon">📊</div><div><div class="m-card-name">업종 빅픽처</div><div class="m-card-sub">유진투자증권 리포트 직접 인용</div></div></div>
+        <div class="m-card-body"><div class="fact-list">
+          <div class="fact-item"><div class="fact-bar bull"></div><div class="fact-content"><div class="fact-text">2026년 코스피 영업이익 중 <b>반도체 비중 67%</b>. 업종별 이익 성장률 <b>+565%</b> 1위.</div><div class="fact-meta">유진투자증권 · 06-05</div></div></div>
+          <div class="fact-item"><div class="fact-bar bull"></div><div class="fact-content"><div class="fact-text">유진: "과거 반도체 업사이클 — 재고조정 종료 → 가격 반등 → 이익 추정 상향 → 주가 재평가. 현재 사이클은 가격 회복 이후 상향 및 주가 급등이 본격화."</div><div class="fact-meta">유진투자증권 · 06-05</div></div></div>
+          <div class="fact-item"><div class="fact-bar bear"></div><div class="fact-content"><div class="fact-text">리스크: 코스피 내 반도체 쏠림 심화 — 시가총액 비중 기존 20% → 현재 압도적 확대. 유진이 직접 "리스크"로 명시.</div><div class="fact-meta">유진투자증권 · 06-05</div></div></div>
+        </div></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+<div class="footer">
+  <span>로또의 주식 | Stock Brain</span>
+  <span>원자 DB 기준 2026-06-07 · 출처: atoms.db 팩트 직접 인용 · Claude 자체 판단 없음</span>
+</div>
+</body>
+</html>

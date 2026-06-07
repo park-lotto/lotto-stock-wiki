@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>항공우주·방산 브리핑 | 2026-06-07</title>
+<style>
+  :root {
+    --bg: #0d0d0d; --card: #1e1e1e; --border: #2a2a2a;
+    --text: #e0e0e0; --muted: #888;
+    --bull: #4ade80; --bear: #f87171; --neutral: #94a3b8;
+    --accent: #34d399;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Pretendard','Apple SD Gothic Neo',sans-serif; font-size: 14px; line-height: 1.6; }
+  .header { background: linear-gradient(135deg, #040d0a 0%, #081410 100%); border-bottom: 1px solid var(--accent); padding: 28px 40px 22px; display: flex; align-items: baseline; gap: 16px; }
+  .header-sector { font-size: 22px; font-weight: 700; color: #6ee7b7; letter-spacing: 0.5px; }
+  .header-date { font-size: 13px; color: var(--muted); }
+  .header-source { margin-left: auto; font-size: 11px; color: var(--muted); text-align: right; line-height: 1.8; }
+  .db-note { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); border-radius: 8px; padding: 10px 16px; margin: 16px auto 0; font-size: 12px; color: #fca5a5; max-width: 1072px; }
+  .container { max-width: 1120px; margin: 0 auto; padding: 20px 24px 60px; }
+  .section-title { font-size: 13px; font-weight: 700; color: var(--accent); letter-spacing: 1.5px; text-transform: uppercase; border-left: 3px solid var(--accent); padding-left: 10px; margin-bottom: 20px; }
+  .timeline-section { margin-bottom: 48px; }
+  .timeline { position: relative; padding-left: 20px; border-left: 2px solid var(--border); }
+  .tl-date-header { display: flex; align-items: center; gap: 10px; margin: 0 0 4px -26px; }
+  .tl-date-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); flex-shrink: 0; box-shadow: 0 0 8px rgba(52,211,153,0.5); }
+  .tl-date-label { font-size: 12px; font-weight: 700; color: #6ee7b7; letter-spacing: 0.5px; }
+  .tl-events { padding: 4px 0 20px 0; display: flex; flex-direction: column; gap: 8px; }
+  .tl-event { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; align-items: start; }
+  .tl-event:hover { border-color: rgba(52,211,153,0.3); }
+  .tl-event.alert { border-color: rgba(248,113,113,0.4); background: rgba(248,113,113,0.04); }
+  .tl-event-main { grid-column: 1; } .tl-event-tag { grid-column: 2; }
+  .tl-event-title { font-size: 13.5px; font-weight: 600; color: var(--text); margin-bottom: 5px; line-height: 1.5; }
+  .tl-event-detail { font-size: 12.5px; color: #aaa; line-height: 1.55; }
+  .tl-event-detail b { color: #6ee7b7; font-weight: 600; }
+  .tl-event-detail .red { color: var(--bear); font-weight: 600; }
+  .tl-event-source { font-size: 11px; color: var(--muted); margin-top: 6px; }
+  .tag { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 4px; white-space: nowrap; }
+  .tag-bull { background: rgba(74,222,128,0.1); color: var(--bull); border: 1px solid rgba(74,222,128,0.25); }
+  .tag-bear { background: rgba(248,113,113,0.1); color: var(--bear); border: 1px solid rgba(248,113,113,0.25); }
+  .tag-neu  { background: rgba(148,163,184,0.1); color: var(--neutral); border: 1px solid rgba(148,163,184,0.25); }
+  .tag-hot  { background: rgba(52,211,153,0.1); color: var(--accent); border: 1px solid rgba(52,211,153,0.3); }
+  .tag-alert { background: rgba(248,113,113,0.15); color: var(--bear); border: 1px solid rgba(248,113,113,0.4); }
+  .momentum-section { margin-bottom: 48px; }
+  .momentum-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .m-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .m-card-header { padding: 12px 16px 10px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .m-card-icon { width: 32px; height: 32px; border-radius: 8px; background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.2); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .m-card-name { font-size: 14px; font-weight: 700; color: #6ee7b7; }
+  .m-card-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .m-card-body { padding: 14px 16px; }
+  .fact-list { display: flex; flex-direction: column; gap: 10px; }
+  .fact-item { display: grid; grid-template-columns: 3px 1fr; gap: 0 10px; align-items: start; }
+  .fact-bar { margin-top: 4px; width: 3px; min-height: 12px; border-radius: 2px; align-self: stretch; }
+  .fact-bar.bull { background: var(--bull); } .fact-bar.bear { background: var(--bear); } .fact-bar.neu { background: var(--neutral); }
+  .fact-text { font-size: 12.5px; color: var(--text); line-height: 1.55; }
+  .fact-text b { color: #6ee7b7; font-weight: 600; }
+  .fact-text .red { color: var(--bear); }
+  .fact-meta { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .footer { border-top: 1px solid var(--border); padding: 20px 40px; font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-sector">🚀 항공우주·방산 섹터</div>
+  <div class="header-date">2026-06-07 기준</div>
+  <div class="header-source">소스: 키움증권 · DS투자증권 · 다올투자증권<br>IBK투자증권 · SK증권 · 중요한 건 아직 꺾이지 않은 업사이클</div>
+</div>
+
+<div style="max-width:1120px;margin:16px auto 0;padding:0 24px;">
+  <div class="db-note">⚠ DB 현황: 순수 우주(위성·발사체·누리호) 전용 데이터 부족. 이 브리핑은 항공우주·방산(한화에어로스페이스·한국항공우주·LIG D&A 등) 데이터 중심으로 구성됩니다. 우주 전용 리포트 ingest 보완 필요.</div>
+</div>
+
+<div class="container">
+
+  <!-- 타임라인 -->
+  <div class="timeline-section">
+    <div class="section-title">핵심 이벤트 타임라인</div>
+    <div class="timeline">
+
+      <!-- 06-05 -->
+      <div class="tl-item">
+        <div class="tl-date-header"><div class="tl-date-dot"></div><div class="tl-date-label">2026-06-05</div></div>
+        <div class="tl-events">
+          <div class="tl-event alert">
+            <div class="tl-event-main">
+              <div class="tl-event-title">한화에어로스페이스 — <span style="color:var(--bear)">창사 첫 전사 조업 중단</span></div>
+              <div class="tl-event-detail">대전 사업장 폭발 사고 후속으로 <span class="red">창사 최초 전사 조업 중단</span> 결정.</div>
+              <div class="tl-event-source">출처: 안녕하세요 데일리에요(로봇/방산/조선) · 2026-06-05</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-alert">사고 후속</span></div>
+          </div>
+          <div class="tl-event">
+            <div class="tl-event-main">
+              <div class="tl-event-title">라이콤, 과기부·NST 주관 <b>우주항공반도체 전략연구단 1,050억원</b> 참여기관 선정</div>
+              <div class="tl-event-detail">25년 과기부·국가과학기술연구회(NST) 주관 1,050억원 규모 우주항공반도체 전략연구단에 라이콤 참여기관 선정.</div>
+              <div class="tl-event-source">출처: 숨겨진 광통신 수혜주 · 2026-06-05</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-hot">우주 연구단</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 06-04 -->
+      <div class="tl-item">
+        <div class="tl-date-header"><div class="tl-date-dot"></div><div class="tl-date-label">2026-06-04</div></div>
+        <div class="tl-events">
+          <div class="tl-event alert">
+            <div class="tl-event-main">
+              <div class="tl-event-title">한화에어로스페이스 대전 사업장 폭발 — <span style="color:var(--bear)">5명 사망, 2명 부상</span></div>
+              <div class="tl-event-detail">한화그룹: "한화에어로 사고, 국민과 유가족께 고개 숙여 사죄". 다올투자증권 리스크 플래그. 주가·이미지 리스크 동시 발생.</div>
+              <div class="tl-event-source">출처: 다올투자증권 · 2026-06-04</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-alert">폭발 사고</span></div>
+          </div>
+          <div class="tl-event">
+            <div class="tl-event-main">
+              <div class="tl-event-title">리포트: "방산 업사이클 아직 안 꺾였다" — 한화에어로 하반기 영업이익 <b>2.7조</b>(YoY +62.7%)</div>
+              <div class="tl-event-detail">하반기 매출액 17.2조(+15.5%), 영업이익 2.7조(+62.7%). <b>수주잔고 38조원</b> → "2027·2028년에도 이익 증가세 지속" 전망. 고마진 지상방산 수출 기여도 확대가 이익 성장률 높이는 이유.</div>
+              <div class="tl-event-source">출처: 중요한 건 아직 꺾이지 않은 업사이클 · 2026-06-04</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-hot">업사이클</span></div>
+          </div>
+          <div class="tl-event">
+            <div class="tl-event-main">
+              <div class="tl-event-title">한국항공우주(KAI) 하반기 — 매출 <b>3.5조</b>(YoY +64.5%), 영업이익 <b>3,213억</b>(+137%)</div>
+              <div class="tl-event-detail">목표주가 <b>230,000원</b>, 투자의견 매수 유지. <b>수주잔고 26.6조원 = 7.3년치 매출</b>. 상반기 성장률 32.6%를 하반기 137%가 상회 전망.</div>
+              <div class="tl-event-source">출처: 중요한 건 아직 꺾이지 않은 업사이클 · 2026-06-04</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-bull">KAI</span></div>
+          </div>
+          <div class="tl-event">
+            <div class="tl-event-main">
+              <div class="tl-event-title">DS투자증권: KAI 20D 순매수 <b>+51.7%</b> / 한화에어로 +13.0% — 외국인 순매수 지속</div>
+              <div class="tl-event-detail">외국인 20일 누적 기준 한화에어로스페이스·현대로템·LIG D&A·한국항공우주·한화시스템 순매수. 기관은 동일 종목 순매도.</div>
+              <div class="tl-event-source">출처: DS투자증권 · 2026-06-04</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-neu">수급</span></div>
+          </div>
+          <div class="tl-event">
+            <div class="tl-event-main">
+              <div class="tl-event-title">2026년 예상 EPS — LIG D&A +19.1%, KAI +51.7%, 한화시스템 +18.4% 성장</div>
+              <div class="tl-event-detail">DS투자증권 26F(2026년) 예상 EPS 기준. KAI +51.7%로 방산 업종 내 최고 성장률.</div>
+              <div class="tl-event-source">출처: DS투자증권 · 2026-06-04</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-bull">밸류에이션</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 06-02 -->
+      <div class="tl-item">
+        <div class="tl-date-header"><div class="tl-date-dot"></div><div class="tl-date-label">2026-06-02</div></div>
+        <div class="tl-events">
+          <div class="tl-event">
+            <div class="tl-event-main">
+              <div class="tl-event-title">한화에어로스페이스 Q2 — 매출 <b>1.5조</b>(+22.5%), 영업이익 <b>1,154억</b>(+60.8%)</div>
+              <div class="tl-event-detail">항공 부문 견조한 성장 + 자주포 수출 확대 견인. 하반기 폴란드 추가 수주 가능성 언급.</div>
+              <div class="tl-event-source">출처: 키움증권 · 2026-06-02</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-bull">실적</span></div>
+          </div>
+          <div class="tl-event">
+            <div class="tl-event-main">
+              <div class="tl-event-title">한국항공우주(KAI) Q2 — 매출 <b>7,610억</b>(+16%), 영업이익 <b>590억</b>(+25%)</div>
+              <div class="tl-event-detail">수리온·LAH 등 기동헬기 사업 호조 + 수출 확대 영향.</div>
+              <div class="tl-event-source">출처: 키움증권 · 2026-06-02</div>
+            </div>
+            <div class="tl-event-tag"><span class="tag tag-bull">실적</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 개별 모멘텀 -->
+  <div class="momentum-section">
+    <div class="section-title">개별 모멘텀</div>
+    <div class="momentum-grid">
+
+      <div class="m-card">
+        <div class="m-card-header"><div class="m-card-icon">✈</div><div><div class="m-card-name">한화에어로스페이스</div><div class="m-card-sub">012450 · 자주포 수출 / 방산·항공</div></div></div>
+        <div class="m-card-body"><div class="fact-list">
+          <div class="fact-item"><div class="fact-bar bear"></div><div class="fact-content"><div class="fact-text"><span class="red">대전 사업장 폭발 사고 — 5명 사망 2명 부상. 창사 첫 전사 조업 중단.</span></div><div class="fact-meta">다올·데일리 · 06-04~05</div></div></div>
+          <div class="fact-item"><div class="fact-bar bull"></div><div class="fact-content"><div class="fact-text">수주잔고 <b>38조원</b>. 리포트: "2027·2028년에도 이익 증가세 지속." 하반기 영업이익 <b>2.7조</b>(YoY +62.7%).</div><div class="fact-meta">중요한 건 아직 꺾이지 않은 업사이클 · 06-04</div></div></div>
+          <div class="fact-item"><div class="fact-bar bull"></div><div class="fact-content"><div class="fact-text">핀란드 K9 자주포 방산수출 이행약정 941.4억원(매출 3.5% 비중). T-50 수출 엔진 계약 472.8억원.</div><div class="fact-meta">DS투자증권 · 06-04</div></div></div>
+          <div class="fact-item"><div class="fact-bar neu"></div><div class="fact-content"><div class="fact-text">주가 <b>1,070,000원</b> (1주 -14.0%, 1개월 -27.0%, 연초대비 +13.7%). 사고 이후 급락.</div><div class="fact-meta">SK증권 · 06-04</div></div></div>
+        </div></div>
+      </div>
+
+      <div class="m-card">
+        <div class="m-card-header"><div class="m-card-icon">🛩</div><div><div class="m-card-name">한국항공우주 (KAI)</div><div class="m-card-sub">047810 · T-50 / 수리온 / 수출</div></div></div>
+        <div class="m-card-body"><div class="fact-list">
+          <div class="fact-item"><div class="fact-bar bull"></div><div class="fact-content"><div class="fact-text">목표주가 <b>230,000원</b> 매수 유지. 수주잔고 <b>26.6조원 = 7.3년치</b> 매출.</div><div class="fact-meta">중요한 건 아직 꺾이지 않은 업사이클 · 06-04</div></div></div>
+          <div class="fact-item"><div class="fact-bar bull"></div><div class="fact-content"><div class="fact-text">하반기 매출 <b>3.5조</b>(YoY +64.5%), 영업이익 <b>3,213억</b>(+137%). 상반기 32.6% 성장률 대폭 상회.</div><div class="fact-meta">중요한 건 아직 꺾이지 않은 업사이클 · 06-04</div></div></div>
+          <div class="fact-item"><div class="fact-bar bull"></div><div class="fact-content"><div class="fact-text">DS: 26F 예상 EPS <b>+51.7%</b> 방산 내 최고. 20일 순매수 +51.7%.</div><div class="fact-meta">DS투자증권 · 06-04</div></div></div>
+          <div class="fact-item"><div class="fact-bar neu"></div><div class="fact-content"><div class="fact-text">IBK 주석: "내수 중심 성장이라 수익성 낮다. 다만 절대 영업이익 규모 증가에 주목."</div><div class="fact-meta">IBK투자증권 · 06-04</div></div></div>
+        </div></div>
+      </div>
+
+      <div class="m-card">
+        <div class="m-card-header"><div class="m-card-icon">🔭</div><div><div class="m-card-name">라이콤 (관찰)</div><div class="m-card-sub">우주항공 광통신 / 연구단 참여</div></div></div>
+        <div class="m-card-body"><div class="fact-list">
+          <div class="fact-item"><div class="fact-bar bull"></div><div class="fact-content"><div class="fact-text">과기부·NST 주관 <b>우주항공반도체 전략연구단 1,050억원</b> 참여기관 선정 (2025년).</div><div class="fact-meta">숨겨진 광통신 수혜주 · 06-05</div></div></div>
+        </div></div>
+      </div>
+
+      <div class="m-card">
+        <div class="m-card-header"><div class="m-card-icon">📊</div><div><div class="m-card-name">업종 빅픽처</div><div class="m-card-sub">리포트 직접 인용 · 수급 현황</div></div></div>
+        <div class="m-card-body"><div class="fact-list">
+          <div class="fact-item"><div class="fact-bar bull"></div><div class="fact-content"><div class="fact-text">방산 업사이클 리포트: "영업이익 성장률 — 한화에어로 YoY +62.7%, 한국항공우주 +137%, 한화시스템 +486%, LIG D&A +27%, 현대로템 +22.5%."</div><div class="fact-meta">중요한 건 아직 꺾이지 않은 업사이클 · 06-04</div></div></div>
+          <div class="fact-item"><div class="fact-bar neu"></div><div class="fact-content"><div class="fact-text">우주 섹터 PER <b>22.1배</b>, PBR <b>3.5배</b> — 시장 평균(PER 12.5배, PBR 1.5배) 대비 프리미엄.</div><div class="fact-meta">키움증권 · 05-28</div></div></div>
+          <div class="fact-item"><div class="fact-bar neu"></div><div class="fact-content"><div class="fact-text">DS: 외국인 순매수(한화에어로·로템·LIG·KAI·한화시스템) vs 기관 순매도 동일 종목. 방향 엇갈림.</div><div class="fact-meta">DS투자증권 · 06-04</div></div></div>
+        </div></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+<div class="footer">
+  <span>로또의 주식 | Stock Brain</span>
+  <span>원자 DB 기준 2026-06-07 · atoms.db 팩트 직접 인용 · 순수 우주(위성·발사체) 데이터 부족 — ingest 보완 필요</span>
+</div>
+</body>
+</html>
