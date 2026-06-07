@@ -46,7 +46,7 @@ def _ingest_excel(path: Path, date: str) -> int:
     elif "컨센" in name or "consensus" in name or "이익" in name:
         atoms = consensus_to_atoms(str(path), date)
     else:
-        print(f"⚠️ 인식 불가 Excel 파일: {path.name} (0개 저장)")
+        print(f"[WARN] 인식 불가 Excel 파일: {path.name} (0개 저장)")
         return 0
 
     for atom in atoms:
@@ -123,4 +123,4 @@ if __name__ == "__main__":
     file_path = sys.argv[1]
     date = sys.argv[2] if len(sys.argv) > 2 else None
     count = ingest_file(file_path, date)
-    print(f"✅ {count}개 원자 저장 완료")
+    print(f"[OK] {count}개 원자 저장 완료")
