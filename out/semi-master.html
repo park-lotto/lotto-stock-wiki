@@ -2,284 +2,567 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>A안 — 탭 네비 · 반도체</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#080d18">
+<meta name="description" content="반도체 섹터 마스터 — HBM4 전쟁, CAPEX 사이클, 미반영 인사이트 5가지">
+<meta property="og:title" content="반도체 섹터 마스터 · 로또의 주식">
+<meta property="og:description" content="지금 반도체는 HBM4 전쟁이다. 다음 트리거: 7/29 SK하이닉스 2Q26">
+<meta property="og:type" content="website">
+<title>반도체 마스터 · 로또의 주식</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#080d18;--card:#0f1a2e;--border:#1e3050;--green:#22c55e;--amber:#f59e0b;--red:#ef4444;--blue:#3b82f6;--purple:#a855f7;--text:#e2e8f0;--muted:#64748b;}
-*{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--bg);color:var(--text);font-family:'Pretendard','Noto Sans KR',sans-serif;font-size:14px;line-height:1.6;}
+/* ───────── TOKENS ───────── */
+:root{
+  --bg:#080d18; --card:#0f1a2e; --card2:#111f38;
+  --border:#1e3050; --border2:#243858;
+  --green:#22c55e; --amber:#f59e0b; --red:#ef4444;
+  --blue:#3b82f6; --purple:#a855f7; --teal:#14b8a6;
+  --text:#e2e8f0; --muted:#64748b; --muted2:#8898aa;
+}
 
-/* LEDE */
+/* ───────── RESET ───────── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  font-size:14px;line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ───────── LEDE ───────── */
 .lede{
-  background:linear-gradient(135deg,#080d18 0%,#0d1b32 60%,#080d18 100%);
-  padding:36px 32px 28px;
+  background:linear-gradient(160deg,#06111f 0%,#0c1e38 55%,#06111f 100%);
+  padding:clamp(24px,5vw,44px) clamp(16px,4vw,32px) clamp(20px,4vw,32px);
   border-bottom:1px solid var(--border);
-  position:relative; overflow:hidden;
+  position:relative;overflow:hidden;
 }
 .lede::after{
-  content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse 70% 50% at 50% -20%,rgba(59,130,246,.12) 0%,transparent 70%);
-  pointer-events:none;
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 80% 55% at 50% -15%,rgba(59,130,246,.1) 0%,transparent 70%);
 }
-.lede-inner{max-width:960px;margin:0 auto;}
-.lede-meta{font-size:11px;color:var(--muted);letter-spacing:.5px;margin-bottom:14px;}
+.lede-inner{max-width:960px;margin:0 auto;position:relative;z-index:1;}
+
+.lede-meta{
+  font-size:11px;color:var(--muted);letter-spacing:.4px;margin-bottom:12px;
+  display:flex;align-items:center;gap:6px;
+}
+.live-dot{
+  width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;
+  animation:blink 1.8s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(34,197,94,.4)}60%{opacity:.3;box-shadow:0 0 0 5px rgba(34,197,94,0)}}
+
 .lede-hl{
-  font-size:clamp(22px,3.5vw,36px);font-weight:900;color:#fff;
-  line-height:1.25;margin-bottom:16px;
+  font-size:clamp(24px,5.5vw,40px);font-weight:900;color:#fff;
+  line-height:1.2;margin-bottom:6px;letter-spacing:-0.5px;
 }
 .lede-hl em{color:var(--amber);font-style:normal;}
-.lede-hl span{color:var(--blue);}
-.signals{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;}
+.lede-sub{font-size:clamp(13px,2.5vw,16px);color:rgba(255,255,255,.45);margin-bottom:20px;font-weight:400;}
+
+/* 3 signals */
+.signals{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}
+@media(max-width:560px){.signals{grid-template-columns:1fr;gap:8px;}}
 .sig{
-  display:flex;align-items:center;gap:8px;
-  background:rgba(255,255,255,.04);border:1px solid var(--border);
-  border-radius:10px;padding:10px 14px;flex:1;min-width:200px;
+  display:flex;align-items:flex-start;gap:10px;
+  background:rgba(255,255,255,.035);border:1px solid var(--border);
+  border-radius:12px;padding:12px 14px;
 }
-.sig-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-.sig-dot.r{background:var(--red);animation:blink 1.5s infinite;}
+.sig-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.sig-dot.r{background:var(--red);animation:blink 1.5s ease-in-out infinite;}
 .sig-dot.a{background:var(--amber);}
 .sig-dot.g{background:var(--green);}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
-.sig-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;}
-.sig-val{font-size:13px;font-weight:700;color:#fff;margin-top:1px;}
-.next-trigger{
-  display:inline-flex;align-items:center;gap:8px;
-  background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);
-  border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:var(--red);
-}
-.next-trigger .date{font-size:18px;font-weight:900;margin-right:2px;}
+.sig-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+.sig-val{font-size:12px;font-weight:700;color:#fff;margin-top:2px;line-height:1.4;}
 
-/* TABS */
+/* trigger bar */
+.trigger{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.28);
+  border-radius:10px;padding:12px 16px;
+}
+.trigger-date{font-size:clamp(18px,4vw,24px);font-weight:900;color:var(--red);white-space:nowrap;}
+.trigger-text{font-size:12px;color:rgba(255,255,255,.7);line-height:1.5;}
+.trigger-text b{color:#fff;}
+
+/* ───────── TAB BAR ───────── */
 .tab-bar{
-  background:var(--card);border-bottom:1px solid var(--border);
+  background:rgba(8,13,24,.96);backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
   position:sticky;top:0;z-index:100;
 }
-.tab-bar-inner{max-width:960px;margin:0 auto;display:flex;gap:0;}
+.tab-bar-scroll{
+  max-width:960px;margin:0 auto;
+  display:flex;overflow-x:auto;
+  scrollbar-width:none;-ms-overflow-style:none;
+}
+.tab-bar-scroll::-webkit-scrollbar{display:none;}
 .tab-btn{
-  padding:14px 24px;font-size:13px;font-weight:700;color:var(--muted);
-  cursor:pointer;border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none;
-  transition:color .15s,border-color .15s;white-space:nowrap;
+  flex-shrink:0;
+  padding:0 20px;height:48px;
+  font-size:13px;font-weight:700;color:var(--muted);
+  background:none;border:none;border-bottom:2px solid transparent;
+  cursor:pointer;white-space:nowrap;
+  transition:color .15s,border-color .15s;
+  font-family:inherit;
 }
 .tab-btn.active{color:var(--amber);border-bottom-color:var(--amber);}
 .tab-btn:hover:not(.active){color:var(--text);}
+@media(max-width:480px){
+  .tab-btn{padding:0 14px;font-size:12px;}
+}
 
-/* PANELS */
-.panels{max-width:960px;margin:0 auto;padding:28px 20px;}
+/* ───────── PANELS ───────── */
+.panels{max-width:960px;margin:0 auto;padding:24px clamp(12px,3vw,20px) 48px;}
 .panel{display:none;}
 .panel.active{display:block;}
 
-/* CATEGORY HEATMAP */
-.hm{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
-@media(max-width:800px){.hm{grid-template-columns:repeat(2,1fr);}}
-.hm-card{border-radius:12px;padding:16px;border:1px solid;transition:transform .15s;}
-.hm-card:hover{transform:translateY(-2px);}
-.hm-card.r{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.4);}
-.hm-card.a{background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.35);}
-.hm-card.b{background:rgba(59,130,246,.06);border-color:rgba(59,130,246,.3);}
-.hm-card.p{background:rgba(168,85,247,.06);border-color:rgba(168,85,247,.3);}
-.hm-urg{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;}
-.hm-card.r .hm-urg{color:var(--red);}
-.hm-card.a .hm-urg{color:var(--amber);}
-.hm-card.b .hm-urg{color:var(--blue);}
-.hm-card.p .hm-urg{color:var(--purple);}
-.hm-title{font-size:13px;font-weight:800;color:#fff;margin-bottom:6px;}
-.hm-q{font-size:11px;color:var(--muted);line-height:1.55;margin-bottom:8px;}
-.hm-trg{font-size:10px;font-weight:600;padding:3px 8px;border-radius:5px;display:inline-block;}
-.hm-card.r .hm-trg{background:rgba(239,68,68,.15);color:var(--red);}
-.hm-card.a .hm-trg{background:rgba(245,158,11,.15);color:var(--amber);}
-.hm-card.b .hm-trg{background:rgba(59,130,246,.15);color:var(--blue);}
-.hm-card.p .hm-trg{background:rgba(168,85,247,.15);color:var(--purple);}
-.hm-stk{font-size:10px;color:var(--muted);margin-top:6px;}
+/* section title */
+.stitle{font-size:15px;font-weight:900;color:#fff;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.sbadge{font-size:9px;font-weight:700;padding:2px 8px;border-radius:8px;}
+.sb-r{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3);}
+.sb-a{background:rgba(245,158,11,.15);color:var(--amber);border:1px solid rgba(245,158,11,.3);}
+.sb-g{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.3);}
+.sb-b{background:rgba(59,130,246,.15);color:var(--blue);border:1px solid rgba(59,130,246,.3);}
+.sb-p{background:rgba(168,85,247,.15);color:var(--purple);border:1px solid rgba(168,85,247,.3);}
 
-/* STOCK TABLE */
-.stk-t{width:100%;border-collapse:collapse;}
-.stk-t th{padding:10px 12px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);text-align:left;}
-.stk-t td{padding:12px;border-bottom:1px solid rgba(30,48,80,.35);font-size:12px;vertical-align:top;}
+/* ───────── HEATMAP ───────── */
+.hm{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+@media(max-width:780px){.hm{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:400px){.hm{grid-template-columns:1fr;}}
+
+.hmc{border-radius:12px;padding:14px;border:1px solid;transition:transform .15s,box-shadow .15s;}
+.hmc:active{transform:scale(.98);}
+@media(hover:hover){.hmc:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.35);}}
+
+.hmc.r{background:rgba(239,68,68,.07);border-color:rgba(239,68,68,.35);}
+.hmc.a{background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.3);}
+.hmc.b{background:rgba(59,130,246,.05);border-color:rgba(59,130,246,.25);}
+.hmc.p{background:rgba(168,85,247,.05);border-color:rgba(168,85,247,.25);}
+
+.hmc-urg{font-size:8px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:6px;}
+.hmc.r .hmc-urg{color:var(--red);}
+.hmc.a .hmc-urg{color:var(--amber);}
+.hmc.b .hmc-urg{color:var(--blue);}
+.hmc.p .hmc-urg{color:var(--purple);}
+
+.hmc-title{font-size:12px;font-weight:800;color:#fff;margin-bottom:5px;line-height:1.3;}
+.hmc-q{font-size:10px;color:var(--muted2);line-height:1.55;margin-bottom:8px;}
+.hmc-trg{font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;display:inline-block;margin-bottom:6px;}
+.hmc.r .hmc-trg{background:rgba(239,68,68,.12);color:var(--red);}
+.hmc.a .hmc-trg{background:rgba(245,158,11,.12);color:var(--amber);}
+.hmc.b .hmc-trg{background:rgba(59,130,246,.12);color:var(--blue);}
+.hmc.p .hmc-trg{background:rgba(168,85,247,.12);color:var(--purple);}
+.hmc-stk{font-size:9px;color:var(--muted);line-height:1.5;}
+
+/* ───────── STOCK TABLE ───────── */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:12px;border:1px solid var(--border);}
+.stk-t{width:100%;border-collapse:collapse;min-width:520px;}
+.stk-t th{
+  padding:10px 12px;font-size:9px;font-weight:700;
+  letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);
+  border-bottom:1px solid var(--border);text-align:left;
+  background:rgba(255,255,255,.02);
+}
+.stk-t td{padding:12px;border-bottom:1px solid rgba(30,48,80,.3);font-size:12px;vertical-align:top;}
 .stk-t tr:last-child td{border-bottom:none;}
+.stk-t tr:hover td{background:rgba(255,255,255,.02);}
 .sn{font-weight:800;font-size:13px;color:#fff;}
 .sc{font-size:10px;color:var(--muted);}
 .tag{display:inline-block;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;margin:1px 2px 1px 0;}
-.tg{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.25);}
-.ta{background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.25);}
-.tb{background:rgba(59,130,246,.12);color:var(--blue);border:1px solid rgba(59,130,246,.25);}
-.tp{background:rgba(168,85,247,.12);color:var(--purple);border:1px solid rgba(168,85,247,.25);}
+.tg{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2);}
+.ta{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.2);}
+.tb{background:rgba(59,130,246,.1);color:var(--blue);border:1px solid rgba(59,130,246,.2);}
+.tp{background:rgba(168,85,247,.1);color:var(--purple);border:1px solid rgba(168,85,247,.2);}
 .verdict{font-size:11px;font-weight:700;}
 .vs{color:var(--green);} .vm{color:var(--amber);}
 
-/* TIMELINE */
-.tl{position:relative;padding-left:22px;}
-.tl::before{content:'';position:absolute;left:5px;top:8px;bottom:8px;width:1px;background:linear-gradient(180deg,var(--red),var(--amber),var(--blue));}
-.tl-item{position:relative;margin-bottom:18px;}
+/* ───────── TIMELINE ───────── */
+.tl{position:relative;padding-left:24px;}
+.tl::before{
+  content:'';position:absolute;left:5px;top:10px;bottom:10px;
+  width:1px;background:linear-gradient(180deg,var(--red),var(--amber),var(--blue));
+}
+.tl-item{position:relative;margin-bottom:20px;}
 .tl-item:last-child{margin-bottom:0;}
-.tl-dot{position:absolute;left:-17px;top:5px;width:12px;height:12px;border-radius:50%;border:2px solid;background:var(--bg);}
+.tl-dot{
+  position:absolute;left:-19px;top:5px;
+  width:12px;height:12px;border-radius:50%;border:2px solid;background:var(--bg);
+}
 .tl-dot.r{border-color:var(--red);}
 .tl-dot.a{border-color:var(--amber);}
 .tl-dot.b{border-color:var(--blue);}
 .tl-dot.g{border-color:var(--green);}
-.tl-dot.p{border-color:var(--purple);}
-.tl-date{font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--amber);}
-.tl-title{font-size:13px;font-weight:800;color:#fff;margin:2px 0;}
-.tl-desc{font-size:11px;color:var(--muted);line-height:1.6;}
+.tl-date{font-size:9px;font-weight:700;letter-spacing:.8px;color:var(--amber);text-transform:uppercase;}
+.tl-title{font-size:13px;font-weight:800;color:#fff;margin:3px 0 4px;}
+.tl-desc{font-size:11px;color:var(--muted2);line-height:1.65;}
 .tl-desc b{color:var(--text);}
-.tt{display:inline-block;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:6px;}
-.tt-up{background:rgba(34,197,94,.15);color:var(--green);}
-.tt-dn{background:rgba(239,68,68,.15);color:var(--red);}
-.tt-mix{background:rgba(245,158,11,.15);color:var(--amber);}
+.tt{display:inline-block;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:4px;vertical-align:middle;}
+.tt-up{background:rgba(34,197,94,.13);color:var(--green);}
+.tt-dn{background:rgba(239,68,68,.13);color:var(--red);}
+.tt-mix{background:rgba(245,158,11,.13);color:var(--amber);}
 
-/* RISK */
-.risk-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-@media(max-width:600px){.risk-grid{grid-template-columns:1fr;}}
-.rc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;border-left:3px solid;}
+/* ───────── RISK ───────── */
+.risk-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:600px){.risk-cols{grid-template-columns:1fr;}}
+.risk-col-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;}
+.risk-col-label.g{color:var(--green);}
+.risk-col-label.r{color:var(--red);}
+.risk-items{display:flex;flex-direction:column;gap:8px;}
+.rc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;border-left:3px solid;}
 .rc.over{border-left-color:var(--green);}
 .rc.under{border-left-color:var(--red);}
-.rc-lv{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+.rc-lv{font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;}
 .rc.over .rc-lv{color:var(--green);}
 .rc.under .rc-lv{color:var(--red);}
-.rc-title{font-size:13px;font-weight:800;color:#fff;margin-bottom:4px;}
-.rc-prob{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:5px;margin-bottom:6px;}
-.rc.over .rc-prob{background:rgba(34,197,94,.12);color:var(--green);}
-.rc.under .rc-prob{background:rgba(239,68,68,.12);color:var(--red);}
-.rc-body{font-size:11px;color:var(--muted);line-height:1.6;}
+.rc-title{font-size:12px;font-weight:800;color:#fff;display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+.rc-prob{font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;}
+.rc.over .rc-prob{background:rgba(34,197,94,.1);color:var(--green);}
+.rc.under .rc-prob{background:rgba(239,68,68,.1);color:var(--red);}
+.rc-body{font-size:11px;color:var(--muted2);line-height:1.6;}
 .rc-body b{color:var(--text);}
 
-/* INSIGHT */
-.ins-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+/* ───────── INSIGHT ───────── */
+.ins-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 @media(max-width:600px){.ins-grid{grid-template-columns:1fr;}}
-.ins-card{background:var(--card);border:1px solid rgba(245,158,11,.25);border-left:3px solid var(--amber);border-radius:10px;padding:14px 16px;}
-.ins-num{font-size:9px;font-weight:700;color:var(--amber);margin-bottom:4px;}
-.ins-title{font-size:13px;font-weight:800;color:#fff;margin-bottom:6px;}
-.ins-body{font-size:11px;color:var(--muted);line-height:1.65;}
+.ins-card{
+  background:var(--card);border:1px solid rgba(245,158,11,.2);
+  border-left:3px solid var(--amber);border-radius:10px;padding:14px;
+}
+.ins-card.wide{grid-column:span 2;}
+@media(max-width:600px){.ins-card.wide{grid-column:span 1;}}
+.ins-num{font-size:9px;font-weight:700;color:var(--amber);letter-spacing:.5px;margin-bottom:4px;}
+.ins-title{font-size:12px;font-weight:800;color:#fff;margin-bottom:6px;line-height:1.4;}
+.ins-body{font-size:11px;color:var(--muted2);line-height:1.65;}
 .ins-body b{color:var(--text);}
-.ins-sig{font-size:10px;color:var(--green);font-weight:700;margin-top:8px;}
+.ins-sig{font-size:10px;font-weight:700;color:var(--green);margin-top:10px;border-top:1px solid rgba(30,48,80,.6);padding-top:8px;}
 
-/* UTIL */
-.sec-title{font-size:16px;font-weight:800;color:#fff;margin-bottom:16px;}
-.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;}
-.mt20{margin-top:20px;}
+/* ───────── UTIL ───────── */
+.mt16{margin-top:16px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;}
+.hl{
+  background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.18);
+  border-radius:8px;padding:12px 14px;font-size:11px;color:var(--text);line-height:1.7;margin-top:14px;
+}
+.hl b{color:var(--amber);}
+
+/* ───────── FOOTER ───────── */
+.footer{
+  border-top:1px solid var(--border);
+  padding:20px 16px;text-align:center;
+  font-size:11px;color:var(--muted);
+  max-width:960px;margin:0 auto;
+}
 </style>
 </head>
 <body>
 
-<!-- LEDE -->
+<!-- ① LEDE -->
 <div class="lede">
 <div class="lede-inner">
-  <div class="lede-meta">🔵 반도체 섹터 마스터 · 2026-06-08 · A안: 편집장 리드 + 탭 네비</div>
-  <div class="lede-hl">지금 반도체는 <em>HBM4 전쟁</em>이다.<br><span>CAPEX 사이클 확인 구간</span> — 다음 실적이 방향을 결정한다.</div>
+  <div class="lede-meta"><span class="live-dot"></span>반도체 섹터 마스터 &nbsp;·&nbsp; 2026-06-08 &nbsp;·&nbsp; 로또의 주식</div>
+
+  <div class="lede-hl">지금 반도체는<br><em>HBM4 전쟁</em>이다.</div>
+  <div class="lede-sub">CAPEX 사이클 확인 구간 — 다음 실적이 하반기 방향을 결정한다</div>
+
   <div class="signals">
     <div class="sig">
       <div class="sig-dot r"></div>
-      <div><div class="sig-label">즉시 시그널</div><div class="sig-val">삼성 HBM4E 퀄 통과 대기</div></div>
+      <div><div class="sig-label">즉시 시그널</div><div class="sig-val">삼성 HBM4E<br>퀄 통과 대기</div></div>
     </div>
     <div class="sig">
       <div class="sig-dot a"></div>
-      <div><div class="sig-label">미반영 인사이트</div><div class="sig-val">AMD EPYC 수주 협의 미공개</div></div>
+      <div><div class="sig-label">미반영 인사이트</div><div class="sig-val">AMD EPYC<br>수주 협의 미공개</div></div>
     </div>
     <div class="sig">
       <div class="sig-dot g"></div>
-      <div><div class="sig-label">역발상</div><div class="sig-val">CXMT 과공포 — 실제 증설 불가</div></div>
+      <div><div class="sig-label">역발상 기회</div><div class="sig-val">CXMT 과공포<br>실제 증설 불가</div></div>
     </div>
   </div>
-  <div class="next-trigger">
-    <span>다음 트리거</span>
-    <span class="date">7/29</span>
-    <span>SK하이닉스 2Q26 실적 — HBM4 비중·3Q 가이던스</span>
+
+  <div class="trigger">
+    <div class="trigger-date">📅 7/29</div>
+    <div class="trigger-text"><b>SK하이닉스 2Q26 실적</b><br>HBM4 비중 + 3Q 가이던스 — 하반기 방향 첫 확인</div>
   </div>
 </div>
 </div>
 
-<!-- TAB BAR -->
+<!-- ② TAB BAR -->
 <div class="tab-bar">
-<div class="tab-bar-inner">
-  <button class="tab-btn active" onclick="switchTab('cat')">카테고리</button>
-  <button class="tab-btn" onclick="switchTab('stk')">종목</button>
-  <button class="tab-btn" onclick="switchTab('cal')">이벤트</button>
-  <button class="tab-btn" onclick="switchTab('risk')">리스크</button>
-  <button class="tab-btn" onclick="switchTab('ins')">미반영 인사이트</button>
-</div>
+  <div class="tab-bar-scroll">
+    <button class="tab-btn active" onclick="switchTab('cat',this)">카테고리</button>
+    <button class="tab-btn" onclick="switchTab('stk',this)">종목</button>
+    <button class="tab-btn" onclick="switchTab('cal',this)">이벤트</button>
+    <button class="tab-btn" onclick="switchTab('risk',this)">리스크</button>
+    <button class="tab-btn" onclick="switchTab('ins',this)">미반영 인사이트</button>
+  </div>
 </div>
 
-<!-- PANELS -->
+<!-- ③ PANELS -->
 <div class="panels">
 
   <!-- 카테고리 -->
   <div class="panel active" id="pan-cat">
-    <div class="sec-title">긴급도 카테고리</div>
+    <div class="stitle">8개 카테고리 긴급도 <span class="sbadge sb-r">🔴 즉시 2개</span></div>
     <div class="hm">
-      <div class="hm-card r"><div class="hm-urg">🔴 즉시</div><div class="hm-title">① HBM 세대전환</div><div class="hm-q">HBM3E→HBM4 교체 — 삼성 퀄 통과가 SK 점유율 얼마나 뺏나</div><div class="hm-trg">삼성 HBM4 퀄 통과 발표</div><div class="hm-stk">SK하이닉스 · 한미반도체</div></div>
-      <div class="hm-card r"><div class="hm-urg">🔴 즉시</div><div class="hm-title">② 빅테크 CAPEX</div><div class="hm-q">MS·구글·아마존·메타 가이던스 — 하향 vs 상향 서프라이즈</div><div class="hm-trg">매 분기 어닝콜</div><div class="hm-stk">SK하이닉스 · 삼성전자</div></div>
-      <div class="hm-card a"><div class="hm-urg">🟡 중기</div><div class="hm-title">③ 기판·부품 병목</div><div class="hm-q">FC-BGA·MLCC·ABF — 공급 부족이 가격 인상으로 연결되는 구간</div><div class="hm-trg">삼성전기 2Q 가격인상 확인</div><div class="hm-stk">삼성전기 · 이수페타시스</div></div>
-      <div class="hm-card a"><div class="hm-urg">🟡 중기</div><div class="hm-title">④ 장비·소재 CAPEX</div><div class="hm-q">삼성·SK 설비투자 실행률이 가이던스 대비 올라오는가</div><div class="hm-trg">분기 CAPEX 집행액 공시</div><div class="hm-stk">HPSP · 한미반도체 · 원익IPS</div></div>
-      <div class="hm-card a"><div class="hm-urg">🟡 중기</div><div class="hm-title">⑤ 후공정·패키징</div><div class="hm-q">CoWoS 병목 — 한국 OSAT가 엔비디아 공급망에 실질 진입했나</div><div class="hm-trg">TSMC 한계 → 한국 대안 발주</div><div class="hm-stk">한미반도체 · 두산전자 · 심텍</div></div>
-      <div class="hm-card b"><div class="hm-urg">🔵 관망</div><div class="hm-title">⑥ NAND 반등·eSSD</div><div class="hm-q">NAND 현물가 반등 확인 시 삼성 낸드 흑자전환 가능한가</div><div class="hm-trg">고정거래가 반등 첫 확인</div><div class="hm-stk">삼성전자 · SK하이닉스</div></div>
-      <div class="hm-card b"><div class="hm-urg">🔵 관망</div><div class="hm-title">⑦ 삼성 파운드리</div><div class="hm-q">2nm 수율 60% + AMD EPYC 수주 시 밸류에이션 재평가 구간</div><div class="hm-trg">대형 고객 테이프아웃 공시</div><div class="hm-stk">삼성전자 · 에스티아이</div></div>
-      <div class="hm-card p"><div class="hm-urg">🟣 불확실</div><div class="hm-title">⑧ 수출규제·관세</div><div class="hm-q">추가 규제가 한국 기업 중국 매출을 직접 타격하는가</div><div class="hm-trg">9~10월 위험 구간</div><div class="hm-stk">리스크:삼성 / 수혜:한솔케미칼</div></div>
+      <div class="hmc r">
+        <div class="hmc-urg">🔴 즉시</div>
+        <div class="hmc-title">① HBM 세대전환</div>
+        <div class="hmc-q">SK 독주 vs 삼성 퀄 통과 — 점유율 재편</div>
+        <div class="hmc-trg">삼성 HBM4 퀄 통과</div>
+        <div class="hmc-stk">SK하이닉스 · 한미반도체</div>
+      </div>
+      <div class="hmc r">
+        <div class="hmc-urg">🔴 즉시</div>
+        <div class="hmc-title">② 빅테크 CAPEX</div>
+        <div class="hmc-q">MS·구글·아마존·메타 가이던스 — 하향 vs 상향</div>
+        <div class="hmc-trg">매 분기 어닝콜</div>
+        <div class="hmc-stk">SK하이닉스 · 삼성전자</div>
+      </div>
+      <div class="hmc a">
+        <div class="hmc-urg">🟡 중기</div>
+        <div class="hmc-title">③ 기판·부품 병목</div>
+        <div class="hmc-q">FC-BGA·MLCC·ABF — 부족 → 가격 인상 구간</div>
+        <div class="hmc-trg">삼성전기 2Q 가격인상</div>
+        <div class="hmc-stk">삼성전기 · 이수페타시스</div>
+      </div>
+      <div class="hmc a">
+        <div class="hmc-urg">🟡 중기</div>
+        <div class="hmc-title">④ 장비·소재 CAPEX</div>
+        <div class="hmc-q">삼성·SK 설비투자 실행률이 올라오는가</div>
+        <div class="hmc-trg">분기 CAPEX 집행액</div>
+        <div class="hmc-stk">HPSP · 한미반도체 · 원익IPS</div>
+      </div>
+      <div class="hmc a">
+        <div class="hmc-urg">🟡 중기</div>
+        <div class="hmc-title">⑤ 후공정·패키징</div>
+        <div class="hmc-q">CoWoS 병목 → 한국 OSAT 대안 부상</div>
+        <div class="hmc-trg">TSMC 한계 → 한국 발주</div>
+        <div class="hmc-stk">한미반도체 · 두산전자 · 심텍</div>
+      </div>
+      <div class="hmc b">
+        <div class="hmc-urg">🔵 관망</div>
+        <div class="hmc-title">⑥ NAND 반등</div>
+        <div class="hmc-q">현물가 반등 시 삼성 낸드 흑자전환 가능</div>
+        <div class="hmc-trg">고정거래가 반등 첫 확인</div>
+        <div class="hmc-stk">삼성전자 · SK하이닉스</div>
+      </div>
+      <div class="hmc b">
+        <div class="hmc-urg">🔵 관망</div>
+        <div class="hmc-title">⑦ 삼성 파운드리</div>
+        <div class="hmc-q">2nm 수율 60% + AMD 수주 시 밸류 재평가</div>
+        <div class="hmc-trg">대형 고객 테이프아웃</div>
+        <div class="hmc-stk">삼성전자 · 에스티아이</div>
+      </div>
+      <div class="hmc p">
+        <div class="hmc-urg">🟣 불확실</div>
+        <div class="hmc-title">⑧ 수출규제·관세</div>
+        <div class="hmc-q">추가 규제가 한국 중국 매출 직접 타격하나</div>
+        <div class="hmc-trg">9~10월 위험 구간</div>
+        <div class="hmc-stk">리스크:삼성 / 수혜:한솔케미칼</div>
+      </div>
     </div>
   </div>
 
   <!-- 종목 -->
   <div class="panel" id="pan-stk">
-    <div class="sec-title">핵심 종목 포지셔닝</div>
+    <div class="stitle">핵심 종목 포지셔닝 <span class="sbadge sb-g">2026.06.08</span></div>
+    <div class="tbl-wrap">
     <table class="stk-t">
-      <thead><tr><th>종목</th><th>포지션</th><th>미반영 인사이트</th><th>다음 트리거</th><th>판단</th></tr></thead>
+      <thead>
+        <tr><th>종목</th><th>포지션</th><th>미반영 인사이트</th><th>다음 트리거</th><th>판단</th></tr>
+      </thead>
       <tbody>
-        <tr><td><div class="sn">SK하이닉스</div><div class="sc">000660</div></td><td><span class="tag tg">HBM 독주</span><span class="tag ta">LTA 보호</span></td><td style="font-size:11px;">LTA 실제 가격 미공개 → 공개 시 이익 전면 상향</td><td style="font-size:11px;color:var(--amber);">7/29 실적</td><td><span class="verdict vs">구조적 매수</span></td></tr>
-        <tr><td><div class="sn">삼성전자</div><div class="sc">005930</div></td><td><span class="tag tg">HBM4E</span><span class="tag tb">파운드리</span></td><td style="font-size:11px;">AMD EPYC 수주 협의 → 성사 시 파운드리 디스카운트 해소</td><td style="font-size:11px;color:var(--green);">파운드리 수주 공시</td><td><span class="verdict vm">역발상</span></td></tr>
-        <tr><td><div class="sn">한미반도체</div><div class="sc">042700</div></td><td><span class="tag tg">TCB 독점</span><span class="tag ta">HBM4</span></td><td style="font-size:11px;">TSMC 진입 시 매출 레벨 자체가 달라짐</td><td style="font-size:11px;color:var(--amber);">2Q 수주잔고</td><td><span class="verdict vs">추세 매수</span></td></tr>
-        <tr><td><div class="sn">HPSP</div><div class="sc">403870</div></td><td><span class="tag tg">고압어닐링 독점</span><span class="tag tb">GAA 필수</span></td><td style="font-size:11px;">TSMC 벤더 진입 시 삼성·SK 의존 100% → 분산 수혜</td><td style="font-size:11px;color:var(--blue);">TSMC 벤더 공시</td><td><span class="verdict vs">구조적 매수</span></td></tr>
-        <tr><td><div class="sn">삼성전기</div><div class="sc">009150</div></td><td><span class="tag tg">FC-BGA</span><span class="tag ta">MLCC</span><span class="tag tb">Si-CAP</span></td><td style="font-size:11px;">Si-CAP 1.5조 공급 계약 — 3개 제품 동시 업사이클 유일</td><td style="font-size:11px;color:var(--amber);">2Q 가격인상 15~20%</td><td><span class="verdict vm">조정 후 매수</span></td></tr>
-        <tr><td><div class="sn">심텍</div><div class="sc">222800</div></td><td><span class="tag tb">SOCAMM 50%</span><span class="tag tp">HBM 기판</span></td><td style="font-size:11px;">6월 대량양산 개시 — 실적 가시화 시작</td><td style="font-size:11px;color:var(--green);">SOCAMM 수주 공시</td><td><span class="verdict vm">모멘텀 확인</span></td></tr>
+        <tr>
+          <td><div class="sn">SK하이닉스</div><div class="sc">000660</div></td>
+          <td><span class="tag tg">HBM 독주</span><span class="tag ta">LTA</span></td>
+          <td style="font-size:11px;color:var(--muted2);">LTA 조건 공개 시 이익 전면 상향</td>
+          <td style="font-size:11px;color:var(--amber);">7/29 실적</td>
+          <td><span class="verdict vs">구조적 매수</span></td>
+        </tr>
+        <tr>
+          <td><div class="sn">삼성전자</div><div class="sc">005930</div></td>
+          <td><span class="tag tg">HBM4E</span><span class="tag tb">파운드리</span></td>
+          <td style="font-size:11px;color:var(--muted2);">AMD 수주 협의 — 성사 시 파운드리 디스카운트 해소</td>
+          <td style="font-size:11px;color:var(--green);">파운드리 수주 공시</td>
+          <td><span class="verdict vm">역발상</span></td>
+        </tr>
+        <tr>
+          <td><div class="sn">한미반도체</div><div class="sc">042700</div></td>
+          <td><span class="tag tg">TCB 독점</span><span class="tag ta">HBM4</span></td>
+          <td style="font-size:11px;color:var(--muted2);">TSMC 진입 시 매출 레벨 완전히 달라짐</td>
+          <td style="font-size:11px;color:var(--amber);">2Q 수주잔고</td>
+          <td><span class="verdict vs">추세 매수</span></td>
+        </tr>
+        <tr>
+          <td><div class="sn">HPSP</div><div class="sc">403870</div></td>
+          <td><span class="tag tg">어닐링 독점</span><span class="tag tb">GAA</span></td>
+          <td style="font-size:11px;color:var(--muted2);">TSMC 벤더 진입 협의 중 — 어느 리포트도 미반영</td>
+          <td style="font-size:11px;color:var(--blue);">TSMC 벤더 공시</td>
+          <td><span class="verdict vs">구조적 매수</span></td>
+        </tr>
+        <tr>
+          <td><div class="sn">삼성전기</div><div class="sc">009150</div></td>
+          <td><span class="tag tg">FC-BGA</span><span class="tag ta">MLCC</span><span class="tag tb">Si-CAP</span></td>
+          <td style="font-size:11px;color:var(--muted2);">3개 제품 동시 업사이클 — Si-CAP 1.5조 계약</td>
+          <td style="font-size:11px;color:var(--amber);">2Q 가격인상 15~20%</td>
+          <td><span class="verdict vm">조정 후 매수</span></td>
+        </tr>
+        <tr>
+          <td><div class="sn">심텍</div><div class="sc">222800</div></td>
+          <td><span class="tag tb">SOCAMM 50%</span><span class="tag tp">HBM기판</span></td>
+          <td style="font-size:11px;color:var(--muted2);">6월 대량양산 시작 — 실적 가시화 구간 진입</td>
+          <td style="font-size:11px;color:var(--green);">SOCAMM 수주 공시</td>
+          <td><span class="verdict vm">모멘텀 확인</span></td>
+        </tr>
       </tbody>
     </table>
+    </div>
+    <div class="hl"><b>두산전자BG (숨은 수혜주):</b> 엔비디아 블랙웰 CCL 핵심 공급사. 대만 EMC 품질 실패 반사수혜. 아마존·구글 확대 중. 2027년 CAPA +50% 증설.</div>
   </div>
 
   <!-- 이벤트 -->
   <div class="panel" id="pan-cal">
-    <div class="sec-title">2026 하반기 이벤트 캘린더</div>
+    <div class="stitle">2026 하반기 이벤트 캘린더 <span class="sbadge sb-b">7~12월</span></div>
     <div class="tl">
-      <div class="tl-item"><div class="tl-dot r"></div><div class="tl-date">7월 1일 — 확정</div><div class="tl-title">마이크론 3Q FY2026 실적 <span class="tt tt-mix">혼재</span></div><div class="tl-desc">예상 매출 225억달러. <b>가이던스 335억달러 달성 여부</b>가 한국 메모리 심리 결정</div></div>
-      <div class="tl-item"><div class="tl-dot a"></div><div class="tl-date">7월 22일 — 유력</div><div class="tl-title">삼성 갤럭시 Z폴드8 언팩 <span class="tt tt-up">상승</span></div><div class="tl-desc">런던 언팩. 애플 폴드 대비 <b>8주 선점</b>. LPDDR5X 탑재 확인 시 메모리 수요 증거</div></div>
-      <div class="tl-item"><div class="tl-dot r"></div><div class="tl-date">7월 29일 — 확정</div><div class="tl-title">SK하이닉스 2Q26 실적 <span class="tt tt-up">기대</span></div><div class="tl-desc">예상 매출 79.4조. <b>HBM4 비중 + 3Q 가이던스</b>가 하반기 방향 첫 확인</div></div>
-      <div class="tl-item"><div class="tl-dot a"></div><div class="tl-date">2026 H2 — 유력</div><div class="tl-title">엔비디아 베라 루빈 NVL144 출하 <span class="tt tt-up">상승</span></div><div class="tl-desc">HBM4 탑재 AI 슈퍼컴퓨터. <b>SK하이닉스·삼성 HBM4 실물 물량</b> 결정하는 직접 트리거</div></div>
-      <div class="tl-item"><div class="tl-dot b"></div><div class="tl-date">2026 H2 — 유력</div><div class="tl-title">SKC 앱솔릭스 유리기판 양산 <span class="tt tt-mix">혼재</span></div><div class="tl-desc">성공 시 SKC 재점화. 지연 시 <b>삼성전기 반사수혜</b></div></div>
-      <div class="tl-item"><div class="tl-dot r"></div><div class="tl-date">9~10월 — 위험 구간</div><div class="tl-title">미국 대중 반도체 추가 규제 <span class="tt tt-dn">하락 리스크</span></div><div class="tl-desc">관행적으로 이 시기 집중. 삼성전자 레거시 D램·낸드 중국 노출도 점검 필수</div></div>
+      <div class="tl-item">
+        <div class="tl-dot r"></div>
+        <div class="tl-date">7월 1일 — 확정</div>
+        <div class="tl-title">마이크론 3Q FY2026 실적 <span class="tt tt-mix">혼재</span></div>
+        <div class="tl-desc">예상 매출 225억달러. <b>가이던스 335억달러 달성 여부</b>가 한국 메모리 심리 전반 결정</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot a"></div>
+        <div class="tl-date">7월 22일 — 유력</div>
+        <div class="tl-title">삼성 갤럭시 Z폴드8 언팩 <span class="tt tt-up">상승</span></div>
+        <div class="tl-desc">런던 언팩. 애플 폴드 대비 <b>8주 선점</b>. LPDDR5X 탑재 확인 시 메모리 수요 증거</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot r"></div>
+        <div class="tl-date">7월 29일 — 확정 🔑</div>
+        <div class="tl-title">SK하이닉스 2Q26 실적 <span class="tt tt-up">기대</span></div>
+        <div class="tl-desc">예상 매출 79.4조. <b>HBM4 비중 + 3Q 가이던스</b>가 하반기 방향 첫 확인 기회</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot a"></div>
+        <div class="tl-date">2026 H2 — 유력</div>
+        <div class="tl-title">엔비디아 베라 루빈 NVL144 출하 <span class="tt tt-up">상승</span></div>
+        <div class="tl-desc">HBM4 탑재 AI 슈퍼컴퓨터. <b>SK하이닉스·삼성 HBM4 실물 물량</b> 결정하는 직접 트리거</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot b"></div>
+        <div class="tl-date">2026 H2 — 유력</div>
+        <div class="tl-title">SKC 앱솔릭스 유리기판 양산 <span class="tt tt-mix">혼재</span></div>
+        <div class="tl-desc">성공 시 SKC 재점화. 지연 시 <b>삼성전기 반사수혜</b> (브로드컴·애플 샘플 이미 납품)</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot r"></div>
+        <div class="tl-date">9~10월 — ⚠️ 위험 구간</div>
+        <div class="tl-title">미국 대중 반도체 추가 규제 <span class="tt tt-dn">리스크</span></div>
+        <div class="tl-desc">관행적으로 이 시기 집중 발표. <b>삼성전자 레거시 D램·낸드 중국 노출도</b> 점검 필요</div>
+      </div>
     </div>
   </div>
 
   <!-- 리스크 -->
   <div class="panel" id="pan-risk">
-    <div class="sec-title">리스크 역발상 — 과공포 vs 과소평가</div>
-    <div class="risk-grid">
-      <div class="rc over"><div class="rc-lv">과공포 — 급락 시 매수</div><div class="rc-title">AI 효율화 → HBM 붕괴</div><div class="rc-prob">발생 15%</div><div class="rc-body">딥시크 급락 = 반복 매수 기회 패턴. <b>효율↑ → 추론량↑ → 수요↑</b> 제빈스 패러독스</div></div>
-      <div class="rc under"><div class="rc-lv">과소평가 — 진짜 리스크</div><div class="rc-title">레거시 D램 공급과잉</div><div class="rc-prob">발생 45%</div><div class="rc-body">CXMT DDR4 저가 물량이 PC·모바일 시장 잠식. <b>삼성전자 레거시 수익성 급락</b> 미반영</div></div>
-      <div class="rc over"><div class="rc-lv">과공포 — 급락 시 매수</div><div class="rc-title">한국 반도체 100% 관세</div><div class="rc-prob">발생 20%</div><div class="rc-body">빅테크 AI 서버 원가 50%가 HBM. <b>엔비디아·구글·MS 동시 반발</b> 구조 → 입법 불가</div></div>
-      <div class="rc under"><div class="rc-lv">과소평가 — 진짜 리스크</div><div class="rc-title">미국 팹 이전 압박</div><div class="rc-prob">발생 40%</div><div class="rc-body">삼성·SK 투자 미국 이동 시 <b>원익IPS·동진쎄미켐 국내 발주 감소</b> — 어느 리포트도 미반영</div></div>
-      <div class="rc over"><div class="rc-lv">과공포 — 급락 시 매수</div><div class="rc-title">CXMT HBM 침투</div><div class="rc-prob">발생 12%</div><div class="rc-body">월 24만장 이미 최대. 미국산 장비 도입 지연으로 <b>계획한 증설 불가</b></div></div>
-      <div class="rc under"><div class="rc-lv">과소평가 — 진짜 리스크</div><div class="rc-title">빅테크 CAPEX 하향 첫 분기</div><div class="rc-prob">발생 35%</div><div class="rc-body">첫 하향 가이던스 나오는 분기가 <b>전 밸류체인 동반 하락</b> 변곡점</div></div>
+    <div class="stitle">리스크 역발상 <span class="sbadge sb-p">과공포 vs 과소평가</span></div>
+    <div class="risk-cols">
+      <div>
+        <div class="risk-col-label g">✅ 과공포 — 급락 시 매수 기회</div>
+        <div class="risk-items">
+          <div class="rc over">
+            <div class="rc-lv">과공포</div>
+            <div class="rc-title">AI 효율화 → HBM 붕괴 <span class="rc-prob">15%</span></div>
+            <div class="rc-body">제빈스 패러독스. 딥시크 급락 = 반복 매수 패턴. <b>효율↑ → 추론량↑ → 수요↑</b></div>
+          </div>
+          <div class="rc over">
+            <div class="rc-lv">과공포</div>
+            <div class="rc-title">한국 반도체 100% 관세 <span class="rc-prob">20%</span></div>
+            <div class="rc-body">AI 서버 원가 50%가 HBM. <b>빅테크 동시 반발</b> → 입법 사실상 불가</div>
+          </div>
+          <div class="rc over">
+            <div class="rc-lv">과공포</div>
+            <div class="rc-title">CXMT HBM 침투 <span class="rc-prob">12%</span></div>
+            <div class="rc-body">월 24만장 이미 최대. <b>미국산 장비 지연 → 계획 증설 불가</b></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="risk-col-label r">⚠️ 과소평가 — 진짜 봐야 할 리스크</div>
+        <div class="risk-items">
+          <div class="rc under">
+            <div class="rc-lv">과소평가</div>
+            <div class="rc-title">레거시 D램 공급과잉 <span class="rc-prob">45%</span></div>
+            <div class="rc-body">CXMT DDR4 저가 잠식. <b>삼성 레거시 수익성 급락 미반영</b></div>
+          </div>
+          <div class="rc under">
+            <div class="rc-lv">과소평가</div>
+            <div class="rc-title">미국 팹 이전 압박 <span class="rc-prob">40%</span></div>
+            <div class="rc-body">삼성·SK 투자 미국 이동 시 <b>국내 소부장 발주 감소</b> 미반영</div>
+          </div>
+          <div class="rc under">
+            <div class="rc-lv">과소평가</div>
+            <div class="rc-title">빅테크 CAPEX 첫 하향 <span class="rc-prob">35%</span></div>
+            <div class="rc-body"><b>첫 하향 분기가 전 밸류체인 변곡점</b> — 7/29 SK 가이던스가 첫 신호</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- 인사이트 -->
+  <!-- 미반영 인사이트 -->
   <div class="panel" id="pan-ins">
-    <div class="sec-title">시장 미반영 인사이트</div>
+    <div class="stitle">시장 미반영 인사이트 <span class="sbadge sb-a">주가에 없는 것</span></div>
     <div class="ins-grid">
-      <div class="ins-card"><div class="ins-num">UNKNOWN #1</div><div class="ins-title">삼성 HBM4E에서 역전 가능성</div><div class="ins-body">삼성이 업계 최초 HBM4E 샘플 공급 완료. AMD 공급망에서 <b>삼성 비중 30%+ 컨센서스 미반영</b></div><div class="ins-sig">📡 트리거: HBM4E 양산 확정 공시</div></div>
-      <div class="ins-card"><div class="ins-num">UNKNOWN #2</div><div class="ins-title">AMD EPYC Venice 파운드리 수주 협의</div><div class="ins-body">삼성 파운드리가 AMD 서버 CPU를 2nm SF2P로 위탁 협의 중. 성사 시 <b>메모리+파운드리 동시 수주</b></div><div class="ins-sig">📡 트리거: AMD-삼성 파운드리 계약 발표</div></div>
-      <div class="ins-card"><div class="ins-num">UNKNOWN #3</div><div class="ins-title">HPSP·한미반도체 TSMC 진입</div><div class="ins-body">현재 삼성·SK 100% 의존 → TSMC 진입 시 <b>매출 레벨 완전히 달라짐</b>. 어느 리포트도 미반영</div><div class="ins-sig">📡 트리거: TSMC 1~2개 벤더 공시</div></div>
-      <div class="ins-card"><div class="ins-num">UNKNOWN #4</div><div class="ins-title">LTA 실제 가격 조건 미공개</div><div class="ins-body">SK하이닉스 LTA 조건 미공개. <b>단가가 현물보다 높게 체결됐는지</b>에 따라 2027~2028 이익 추정치 전면 달라짐</div><div class="ins-sig">📡 트리거: IR에서 LTA 조건 일부 공개</div></div>
-      <div class="ins-card" style="grid-column:span 2;"><div class="ins-num">UNKNOWN #5 — 역발상</div><div class="ins-title">CXMT 증설 위협이 실제론 규제로 제한적</div><div class="ins-body">CXMT 월 24만장 이미 최대치. 미국산 장비 도입 지연으로 계획한 만큼 증설 불가. <b>딥시크 쇼크처럼 헤드라인 급락 = 매수 기회 패턴</b></div><div class="ins-sig">📡 모니터링: TrendForce CXMT 실제 출하량 vs 헤드라인 갭</div></div>
+      <div class="ins-card">
+        <div class="ins-num">UNKNOWN #1</div>
+        <div class="ins-title">삼성 HBM4E에서 역전 가능성</div>
+        <div class="ins-body">업계 최초 샘플 공급 완료. AMD 비중 <b>30%+ 미반영</b>. 양산 선점 시 목표주가 전면 재산정</div>
+        <div class="ins-sig">📡 트리거: HBM4E 양산 확정 공시</div>
+      </div>
+      <div class="ins-card">
+        <div class="ins-num">UNKNOWN #2</div>
+        <div class="ins-title">AMD EPYC Venus 파운드리 협의</div>
+        <div class="ins-body">삼성 파운드리가 AMD 서버 CPU를 <b>2nm SF2P로 협의</b>. 성사 시 파운드리 디스카운트 해소</div>
+        <div class="ins-sig">📡 트리거: AMD-삼성 계약 공식 발표</div>
+      </div>
+      <div class="ins-card">
+        <div class="ins-num">UNKNOWN #3</div>
+        <div class="ins-title">HPSP·한미 TSMC 진입 여부</div>
+        <div class="ins-body">삼성·SK 100% 의존 → TSMC 진입 시 <b>매출 레벨 완전히 달라짐</b>. 리포트 미반영</div>
+        <div class="ins-sig">📡 트리거: TSMC 1~2개 한국 벤더 공시</div>
+      </div>
+      <div class="ins-card">
+        <div class="ins-num">UNKNOWN #4</div>
+        <div class="ins-title">SK하이닉스 LTA 실제 조건</div>
+        <div class="ins-body">가격 조건 미공개. <b>현물보다 높게 체결됐는지</b>에 따라 2027~28 이익 추정 전면 달라짐</div>
+        <div class="ins-sig">📡 트리거: IR에서 LTA 조건 일부 공개</div>
+      </div>
+      <div class="ins-card wide">
+        <div class="ins-num">UNKNOWN #5 — 역발상</div>
+        <div class="ins-title">CXMT 증설 위협 — 실제론 규제로 제한적</div>
+        <div class="ins-body">월 24만장 이미 최대치. 미국산 장비 도입 지연으로 계획 증설 불가. <b>헤드라인 급락 = 반복 매수 기회.</b> 딥시크 쇼크와 같은 패턴</div>
+        <div class="ins-sig">📡 모니터링: TrendForce CXMT 실제 출하량 vs 헤드라인 갭</div>
+      </div>
     </div>
   </div>
 
-</div>
+</div><!-- /panels -->
 
-<div style="max-width:960px;margin:0 auto;padding:16px 20px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);text-align:center;">A안 — 탭 네비 · 반도체 섹터 마스터 · 2026-06-08</div>
+<div class="footer">반도체 섹터 마스터 · 로또의 주식 · 2026-06-08 · 투자 참고용</div>
 
 <script>
-function switchTab(id){
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  event.target.classList.add('active');
-  document.getElementById('pan-'+id).classList.add('active');
+function switchTab(id, btn){
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('pan-' + id).classList.add('active');
+  // 탭 버튼 화면 중앙으로 스크롤
+  btn.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
 }
 </script>
 </body>
