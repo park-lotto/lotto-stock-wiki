@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>반도체 섹터 — 전체 이슈 맵</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0a0f1a; color: #e5e7eb; font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; padding: 24px 16px; }
+.wrap { max-width: 940px; margin: 0 auto; }
+
+.pg-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+.pg-title { font-size: 22px; font-weight: 800; color: #fff; }
+.pg-date { font-size: 11px; color: #4b5563; margin-top: 4px; }
+.status-pill { background: #1a3a1a; color: #4ade80; font-size: 12px; font-weight: 700; padding: 7px 16px; border-radius: 20px; border: 1px solid #166534; white-space: nowrap; }
+
+.heatmap { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.hm { padding: 8px 14px; border-radius: 10px; cursor: pointer; border: 1px solid transparent; transition: all .15s; }
+.hm:hover { filter: brightness(1.2); }
+.hm.hot  { background: #1a2e0a; border-color: #22c55e44; }
+.hm.mid  { background: #1a1800; border-color: #f59e0b44; }
+.hm.cool { background: #0d1a2e; border-color: #3b82f644; }
+.hm.risk { background: #1a0808; border-color: #ef444444; }
+.hm-icon { font-size: 14px; }
+.hm-name { font-size: 11px; font-weight: 700; margin-top: 3px; }
+.hm.hot  .hm-name { color: #4ade80; }
+.hm.mid  .hm-name { color: #fbbf24; }
+.hm.cool .hm-name { color: #60a5fa; }
+.hm.risk .hm-name { color: #f87171; }
+.hm-sub { font-size: 10px; color: #4b5563; margin-top: 2px; }
+
+.block { background: #111827; border-radius: 16px; padding: 20px; margin-bottom: 14px; border: 1px solid #1f2937; }
+.block-title { font-size: 11px; font-weight: 700; color: #6b7280; margin-bottom: 14px; text-transform: uppercase; letter-spacing: .07em; }
+
+.sk-tag { font-size: 10px; padding: 2px 8px; border-radius: 6px; font-weight: 600; }
+.t-hot  { background: #1a2e0a; color: #4ade80; }
+.t-mid  { background: #1c1500; color: #fbbf24; }
+.t-cool { background: #0d1e3a; color: #93c5fd; }
+.t-risk { background: #1c0808; color: #f87171; }
+.t-pur  { background: #130d1e; color: #c4b5fd; }
+
+.update-label { font-size: 10px; color: #374151; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.ul-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; display: inline-block; }
+
+.etf-card { background: #0d1e0d; border: 1px solid #22c55e44; border-radius: 12px; overflow: hidden; margin-bottom: 12px; }
+.etf-head { display: flex; align-items: center; gap: 12px; padding: 13px 16px; cursor: pointer; transition: background .15s; }
+.etf-head:hover { background: #0f2812; }
+.etf-badge { font-size: 9px; font-weight: 700; color: #4ade80; background: #0d2810; border: 1px solid #166534; padding: 2px 8px; border-radius: 6px; white-space: nowrap; }
+.etf-name { font-size: 14px; font-weight: 800; color: #4ade80; flex: 1; }
+.etf-sub { font-size: 11px; color: #4b5563; }
+.etf-trend { font-size: 12px; font-weight: 700; color: #fbbf24; background: #1c1500; padding: 3px 10px; border-radius: 8px; }
+.etf-chv { color: #374151; font-size: 11px; transition: transform .2s; flex-shrink: 0; }
+.etf-card.open .etf-chv { transform: rotate(180deg); }
+.etf-detail { display: none; border-top: 1px solid #166534; padding: 14px 16px; background: #080d18; }
+.etf-card.open .etf-detail { display: block; }
+
+.sk-grid-outer { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 0; }
+@media (max-width: 700px) { .sk-grid-outer { grid-template-columns: repeat(2, 1fr); } }
+
+.skb { border-radius: 12px; border: 1px solid #1f2937; cursor: pointer; transition: all .15s; overflow: hidden; }
+.skb:hover { border-color: #374151; filter: brightness(1.1); }
+.skb.up    { border-color: #22c55e33; background: #0a1a0a; }
+.skb.mid   { border-color: #f59e0b33; background: #130f00; }
+.skb.dn    { border-color: #ef444433; background: #140808; }
+.skb.watch { border-color: #8b5cf633; background: #0f0a1e; }
+.skb.active { filter: brightness(1.15); }
+.skb.up.active    { border-color: #22c55e; box-shadow: 0 0 0 1px #22c55e44; }
+.skb.mid.active   { border-color: #f59e0b; box-shadow: 0 0 0 1px #f59e0b44; }
+.skb.watch.active { border-color: #8b5cf6; box-shadow: 0 0 0 1px #8b5cf644; }
+
+.skb-inner { padding: 14px 13px; }
+.skb-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.skb-trend { font-size: 22px; font-weight: 900; line-height: 1; }
+.skb.up    .skb-trend { color: #22c55e; }
+.skb.mid   .skb-trend { color: #f59e0b; }
+.skb.dn    .skb-trend { color: #ef4444; }
+.skb.watch .skb-trend { color: #a78bfa; }
+.skb-state { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+.skb.up    .skb-state { background: #0d2810; color: #4ade80; }
+.skb.mid   .skb-state { background: #1c1500; color: #fbbf24; }
+.skb.dn    .skb-state { background: #1c0808; color: #f87171; }
+.skb.watch .skb-state { background: #13081e; color: #c4b5fd; }
+.skb-name { font-size: 13px; font-weight: 800; color: #fff; margin-bottom: 4px; line-height: 1.3; }
+.skb-code { font-size: 10px; color: #4b5563; margin-bottom: 8px; }
+.skb-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+
+.sk-detail-panel { display: none; margin-top: 8px; background: #080d18; border: 1px solid #1f2937; border-radius: 12px; padding: 16px; }
+.sk-detail-panel.open { display: block; }
+.sk-detail-name { font-size: 14px; font-weight: 800; color: #fff; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #1f2937; display: flex; align-items: center; gap: 10px; }
+.sk-detail-name span { font-size: 11px; color: #6b7280; font-weight: 400; }
+
+.sk-3col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9px; }
+@media (max-width: 600px) { .sk-3col { grid-template-columns: 1fr; } }
+.sk-panel { background: #111827; border-radius: 9px; padding: 12px 13px; border-left: 3px solid; }
+.sk-panel.gn { border-color: #22c55e; }
+.sk-panel.am { border-color: #f59e0b; }
+.sk-panel.bl { border-color: #3b82f6; }
+.sk-panel.pu { border-color: #8b5cf6; }
+.sk-panel-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 7px; }
+.sk-panel.gn .sk-panel-title { color: #4ade80; }
+.sk-panel.am .sk-panel-title { color: #fbbf24; }
+.sk-panel.bl .sk-panel-title { color: #60a5fa; }
+.sk-panel.pu .sk-panel-title { color: #c4b5fd; }
+.sk-panel-body { font-size: 12px; color: #d1d5db; line-height: 1.9; }
+.sk-panel-body strong { color: #fff; }
+.sk-tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.sk-verdict { display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 8px; margin-top: 9px; }
+
+.cat { border-radius: 14px; margin-bottom: 10px; overflow: hidden; border: 1px solid #1f2937; }
+.cat.hot  { border-color: #22c55e33; }
+.cat.mid  { border-color: #f59e0b33; }
+.cat.cool { border-color: #3b82f633; }
+.cat.risk { border-color: #ef444433; }
+.cat.new  { border-color: #8b5cf633; }
+
+.cat-head { display: flex; align-items: center; gap: 12px; padding: 15px 18px; cursor: pointer; background: #111827; transition: background .15s; user-select: none; }
+.cat-head:hover { background: #141e2e; }
+.cat.hot  .cat-head { background: #0d1e0d; }
+.cat.mid  .cat-head { background: #1a1500; }
+.cat.risk .cat-head { background: #150808; }
+.cat.new  .cat-head { background: #130d1e; }
+
+.cat-icon { font-size: 20px; flex-shrink: 0; }
+.cat-info { flex: 1; }
+.cat-name { font-size: 14px; font-weight: 800; color: #fff; margin-bottom: 3px; }
+.cat-desc { font-size: 11px; color: #6b7280; }
+.cat-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.cat-badge { font-size: 10px; font-weight: 700; padding: 4px 11px; border-radius: 20px; white-space: nowrap; }
+.bg-hot  { background: #0d2810; color: #4ade80; border: 1px solid #166534; }
+.bg-mid  { background: #1c1500; color: #fbbf24; border: 1px solid #71400055; }
+.bg-cool { background: #0d1e3a; color: #93c5fd; border: 1px solid #1e3a5f; }
+.bg-risk { background: #1c0808; color: #f87171; border: 1px solid #450a0a55; }
+.bg-new  { background: #13081e; color: #c4b5fd; border: 1px solid #4c1d9555; }
+.cat-cnt { font-size: 11px; color: #4b5563; }
+.cat-chv { color: #374151; font-size: 12px; transition: transform .2s; }
+.cat.open .cat-chv { transform: rotate(180deg); }
+
+.cat-body { display: none; border-top: 1px solid #1f2937; background: #0a0f1a; }
+.cat.open .cat-body { display: block; }
+
+.ev-list { display: flex; flex-direction: column; gap: 0; }
+.ev { border-bottom: 1px solid #111827; }
+.ev:last-child { border-bottom: none; }
+.ev-head { display: flex; align-items: center; gap: 12px; padding: 13px 18px 13px 24px; cursor: pointer; background: transparent; transition: background .15s; }
+.ev-head:hover { background: #0d1424; }
+.ev-dday { min-width: 56px; flex-shrink: 0; text-align: center; }
+.ev-dday-num { font-size: 14px; font-weight: 800; line-height: 1; }
+.ev-dday-sub { font-size: 9px; color: #4b5563; margin-top: 2px; }
+.d-hot  { color: #fbbf24; }
+.d-risk { color: #f87171; }
+.d-cool { color: #60a5fa; }
+.d-dim  { color: #6b7280; }
+.ev-main { flex: 1; }
+.ev-title { font-size: 13px; font-weight: 700; color: #f9fafb; margin-bottom: 3px; }
+.ev-short { font-size: 11px; color: #6b7280; }
+.ev-badge { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+.ev-chv { color: #374151; font-size: 11px; flex-shrink: 0; transition: transform .2s; }
+.ev.open .ev-chv { transform: rotate(180deg); }
+.ev-detail { display: none; padding: 16px 18px 20px 32px; background: #080d18; border-top: 1px solid #111827; }
+.ev.open .ev-detail { display: block; }
+
+.what-box { background: #111827; border-radius: 10px; padding: 13px 15px; margin-bottom: 14px; border-left: 3px solid #3b82f6; }
+.what-label { font-size: 10px; color: #3b82f6; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px; }
+.what-text { font-size: 13px; color: #e5e7eb; line-height: 1.9; }
+.what-text strong { color: #fff; }
+.verdict { display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 8px; margin-top: 8px; }
+
+.frames { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.f-full { grid-column: 1 / -1; }
+.frame { background: #111827; border-radius: 10px; padding: 12px; border-left: 3px solid; }
+.frame.bl { border-color: #3b82f6; }
+.frame.pu { border-color: #8b5cf6; }
+.frame.am { border-color: #f59e0b; }
+.frame.gn { border-color: #22c55e; }
+.frame.rd { border-color: #ef4444; }
+.f-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 7px; }
+.frame.bl .f-label { color: #60a5fa; }
+.frame.pu .f-label { color: #a78bfa; }
+.frame.am .f-label { color: #fbbf24; }
+.frame.gn .f-label { color: #4ade80; }
+.frame.rd .f-label { color: #f87171; }
+.f-body { font-size: 12px; color: #d1d5db; line-height: 1.85; }
+.f-body strong { color: #fff; }
+.num { color: #fbbf24; font-weight: 700; }
+.good { color: #4ade80; font-weight: 600; }
+.bad  { color: #f87171; font-weight: 600; }
+.dim  { color: #6b7280; }
+
+.slist { display: flex; flex-direction: column; gap: 6px; }
+.sl { display: flex; align-items: center; gap: 10px; background: #0a1424; border-radius: 7px; padding: 8px 11px; }
+.sl-name { font-size: 11px; font-weight: 700; color: #fff; min-width: 100px; }
+.sl-why { flex: 1; font-size: 11px; color: #9ca3af; }
+.sl-v { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
+.v-g { background: #0d2810; color: #4ade80; }
+.v-y { background: #1c1500; color: #fbbf24; }
+.v-r { background: #1c0808; color: #f87171; }
+.v-b { background: #0d1e3a; color: #93c5fd; }
+
+.risk-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.rc { background: #160808; border-radius: 8px; padding: 10px; }
+.rc-t { font-size: 11px; font-weight: 700; color: #f87171; margin-bottom: 3px; }
+.rc-b { font-size: 11px; color: #9ca3af; line-height: 1.6; }
+
+.src-row { margin-top: 11px; padding-top: 10px; border-top: 1px solid #1f2937; display: flex; flex-wrap: wrap; gap: 7px; align-items: center; }
+.v-badge { background: #0d2810; color: #4ade80; font-size: 10px; padding: 3px 10px; border-radius: 8px; border: 1px solid #166534; }
+.g-badge { background: #1c1000; color: #fbbf24; font-size: 10px; padding: 3px 10px; border-radius: 8px; }
+.src-a { font-size: 10px; color: #60a5fa; text-decoration: none; background: #0d1424; padding: 3px 9px; border-radius: 6px; border: 1px solid #1e3a5f; }
+
+.pending { color: #374151; font-size: 13px; text-align: center; padding: 24px; border: 1px dashed #1f2937; border-radius: 10px; }
+.pending em { display: block; font-size: 11px; color: #1f2937; margin-top: 6px; font-style: normal; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 헤더 -->
+  <div class="pg-header">
+    <div>
+      <div class="pg-title">💾 반도체 섹터 — 전체 이슈 맵</div>
+      <div class="pg-date">2026-06-08 · 카테고리 클릭 → 펼치기</div>
+    </div>
+    <div class="status-pill">🔴 주도 섹터</div>
+  </div>
+
+  <!-- 히트맵 -->
+  <div class="heatmap">
+    <div class="hm hot" onclick="jumpTo('cat-hbm')"><div class="hm-icon">🤖</div><div class="hm-name">HBM/AI메모리</div><div class="hm-sub">SK하이닉스 독주</div></div>
+    <div class="hm hot" onclick="jumpTo('cat-xpu')"><div class="hm-icon">💡</div><div class="hm-name">xPU/맞춤형칩</div><div class="hm-sub">브로드컴·엔비디아</div></div>
+    <div class="hm hot" onclick="jumpTo('cat-sbj')"><div class="hm-icon">🔧</div><div class="hm-name">소부장</div><div class="hm-sub">장비주 폭발</div></div>
+    <div class="hm mid" onclick="jumpTo('cat-sec')"><div class="hm-icon">🏭</div><div class="hm-name">삼성전자</div><div class="hm-sub">HBM 추격 중</div></div>
+    <div class="hm mid" onclick="jumpTo('cat-mem')"><div class="hm-icon">📦</div><div class="hm-name">메모리업황</div><div class="hm-sub">낸야+730% 시그널</div></div>
+    <div class="hm mid" onclick="jumpTo('cat-etf')"><div class="hm-icon">📊</div><div class="hm-name">ETF리밸런싱</div><div class="hm-sub">6/11~18 수급</div></div>
+    <div class="hm risk" onclick="jumpTo('cat-reg')"><div class="hm-icon">🇺🇸</div><div class="hm-name">수출규제</div><div class="hm-sub">미중 반도체전쟁</div></div>
+    <div class="hm risk" onclick="jumpTo('cat-risk')"><div class="hm-icon">⚠️</div><div class="hm-name">리스크</div><div class="hm-sub">브로드컴쇼크·과열</div></div>
+  </div>
+
+  <!-- 섹터 주요종목 -->
+  <div class="block">
+    <div class="block-title">📍 섹터 주요종목 — 오늘 수급·포지션</div>
+    <div class="update-label"><span class="ul-dot"></span>태린이 파일 기준 · 매일 업데이트 · 2026-06-08</div>
+
+    <!-- ETF 베이스라인 -->
+    <div class="etf-card" id="etf1">
+      <div class="etf-head" onclick="toggleEtf('etf1')">
+        <span class="etf-badge">ETF 기준선</span>
+        <span class="etf-name">KODEX 반도체 (091160)</span>
+        <span class="etf-sub">섹터 공신력 1순위 벤치마크</span>
+        <span class="etf-trend">↑ 추세 유지</span>
+        <span class="etf-chv">▼</span>
+      </div>
+      <div class="etf-detail">
+        <div class="sk-3col">
+          <div class="sk-panel gn">
+            <div class="sk-panel-title">📊 이평선 위치</div>
+            <div class="sk-panel-body">5일선 <strong>위</strong> (단기 강세)<br>20일선 <strong>위</strong> (중기 추세 유지)<br>60일선 <strong>위</strong> (장기 상승)<br>→ 전 이평선 위 정배열</div>
+          </div>
+          <div class="sk-panel am">
+            <div class="sk-panel-title">🔄 수급 상태</div>
+            <div class="sk-panel-body">외국인 <strong>순매수 지속</strong><br>기관 <strong>동반 매수</strong><br><br>수급빈집: <strong>태린이 파일 확인</strong></div>
+          </div>
+          <div class="sk-panel bl">
+            <div class="sk-panel-title">🏷️ 관련 키워드</div>
+            <div class="sk-tag-row">
+              <span class="sk-tag t-hot">HBM4E 증산 요청</span>
+              <span class="sk-tag t-cool">ETF 리밸런싱 6/11</span>
+              <span class="sk-tag t-mid">5월 수출 역대최대</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 종목 그리드 -->
+    <div class="sk-grid-outer" id="sk-grid">
+
+      <div class="skb up" onclick="selectStock('skh')" id="skb-skh">
+        <div class="skb-inner">
+          <div class="skb-top"><span class="skb-trend">↑</span><span class="skb-state">정배열</span></div>
+          <div class="skb-name">SK하이닉스</div>
+          <div class="skb-code">000660</div>
+          <div class="skb-tags">
+            <span class="sk-tag t-hot">HBM 1위</span>
+            <span class="sk-tag t-cool">외인 순매수</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="skb watch" onclick="selectStock('sec')" id="skb-sec">
+        <div class="skb-inner">
+          <div class="skb-top"><span class="skb-trend">◆</span><span class="skb-state">주시</span></div>
+          <div class="skb-name">삼성전자</div>
+          <div class="skb-code">005930</div>
+          <div class="skb-tags">
+            <span class="sk-tag t-pur">HBM 추격</span>
+            <span class="sk-tag t-risk">파운드리 부진</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="skb up" onclick="selectStock('hms')" id="skb-hms">
+        <div class="skb-inner">
+          <div class="skb-top"><span class="skb-trend">↑</span><span class="skb-state">강세</span></div>
+          <div class="skb-name">한미반도체</div>
+          <div class="skb-code">042700</div>
+          <div class="skb-tags">
+            <span class="sk-tag t-hot">TC본더 독점</span>
+            <span class="sk-tag t-pur">HBM 패키징</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="skb up" onclick="selectStock('psk')" id="skb-psk">
+        <div class="skb-inner">
+          <div class="skb-top"><span class="skb-trend">↑</span><span class="skb-state">상한가</span></div>
+          <div class="skb-name">피에스케이</div>
+          <div class="skb-code">319660</div>
+          <div class="skb-tags">
+            <span class="sk-tag t-hot">Capex 수혜</span>
+            <span class="sk-tag t-mid">장비 소부장</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 상세 패널 -->
+    <div class="sk-detail-panel" id="sk-detail">
+      <div class="sk-detail-name" id="sk-detail-name">종목 선택 시 상세 표시</div>
+      <div id="sk-detail-body"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 카테고리 1: HBM / AI 메모리 -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="cat hot" id="cat-hbm">
+    <div class="cat-head" onclick="toggleCat('cat-hbm')">
+      <div class="cat-icon">🤖</div>
+      <div class="cat-info">
+        <div class="cat-name">HBM / AI 메모리</div>
+        <div class="cat-desc">젠슨황 증산 요청 · HBM4E 로드맵 · SK하이닉스 독주 구도</div>
+      </div>
+      <div class="cat-right">
+        <span class="cat-badge bg-hot">최대 호재</span>
+        <span class="cat-cnt">이벤트 3개</span>
+        <span class="cat-chv">▼</span>
+      </div>
+    </div>
+    <div class="cat-body">
+      <div class="ev-list">
+
+        <!-- 이벤트 1 -->
+        <div class="ev" id="e-hbm1">
+          <div class="ev-head" onclick="toggleEv('e-hbm1')">
+            <div class="ev-dday"><div class="ev-dday-num d-hot">2026H2</div><div class="ev-dday-sub">양산 목표</div></div>
+            <div class="ev-main">
+              <div class="ev-title">⭐ 젠슨황 → 최태원 "HBM4E 캐파 2배로 늘려줘"</div>
+              <div class="ev-short">SK하이닉스가 사실상 AI 메모리 공급망 결정권 보유 · HBM4E 2026 하반기 양산</div>
+            </div>
+            <span class="ev-badge bg-hot">핵심 드라이버</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">엔비디아 젠슨황이 SK하이닉스 최태원 회장에게 직접 HBM4E 생산 캐파를 2배로 늘려달라고 요청했어요. AI 학습용 GPU에 HBM이 필수인데 → <strong>SK하이닉스가 공급량을 결정하는 구조.</strong> 엔비디아·구글·MS 모두 SK하이닉스 눈치를 봐야 하는 상황.</div>
+              <span class="verdict" style="background:#0d2810;color:#4ade80;">✅ 수요>공급 구조 유지 — SK하이닉스 가격 결정권</span>
+            </div>
+            <div class="frames">
+              <div class="frame bl">
+                <div class="f-label">📐 HBM 로드맵</div>
+                <div class="f-body">HBM3E: 현재 양산 중 (8단·12단)<br>HBM4: <span class="num">2025 하반기</span> 양산 시작<br>HBM4E: <span class="num">2026 하반기</span> 목표<br><br>→ SK하이닉스가 각 세대 <strong>최소 1년 선행</strong></div>
+              </div>
+              <div class="frame pu">
+                <div class="f-label">🔮 SK하이닉스 HBM 비중</div>
+                <div class="f-body">2026년 HBM 매출 비중 <span class="good">50%+</span> 예상<br><br>엔비디아 H100/H200/B200:<br>→ HBM 공급사 SK하이닉스 <strong>독점 납품</strong><br><br>삼성전자: HBM3E 인증 <span class="bad">지연 중</span></div>
+              </div>
+              <div class="frame am">
+                <div class="f-label">📅 대응</div>
+                <div class="f-body">HBM4 양산 뉴스 → <strong>단기 트리거</strong><br>HBM4E 캐파 증설 발표 → 추가 상승<br><br>눌림 시 분할 매수<br><strong>SK하이닉스 20일선 지지 확인</strong></div>
+              </div>
+              <div class="frame gn">
+                <div class="f-label">📈 수혜 종목</div>
+                <div class="f-body">
+                  <div class="slist">
+                    <div class="sl"><div class="sl-name">SK하이닉스</div><div class="sl-why">HBM 직접 생산 · 수요독점</div><div class="sl-v v-g">1순위</div></div>
+                    <div class="sl"><div class="sl-name">한미반도체</div><div class="sl-why">TC본더 HBM 패키징 장비</div><div class="sl-v v-g">직접수혜</div></div>
+                    <div class="sl"><div class="sl-name">KODEX 반도체</div><div class="sl-why">섹터 분산</div><div class="sl-v v-g">안전</div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="frame rd f-full">
+                <div class="f-label">⚠️ 이게 안 될 이유</div>
+                <div class="f-body">
+                  <div class="risk-grid">
+                    <div class="rc"><div class="rc-t">삼성전자 HBM4 급추격</div><div class="rc-b">HBM4 세대에서 삼성이 SK와 동시 인증받으면 독점 구도 붕괴</div></div>
+                    <div class="rc"><div class="rc-t">AI 투자 감속</div><div class="rc-b">빅테크 Capex 삭감 시 HBM 수요 급감 — 브로드컴 쇼크가 그 전조 신호</div></div>
+                    <div class="rc"><div class="rc-t">선반영 과열</div><div class="rc-b">주가에 상당 부분 반영됨 — 뉴스에 팔기 가능성</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="src-row"><span class="v-badge">✦ 위키 교차검증</span><span class="g-badge">젠슨황·최태원 HBM4E 캐파 2배 요청 — 2026-06-05 텔레그램</span></div>
+          </div>
+        </div>
+
+        <!-- 이벤트 2 -->
+        <div class="ev" id="e-hbm2">
+          <div class="ev-head" onclick="toggleEv('e-hbm2')">
+            <div class="ev-dday"><div class="ev-dday-num d-hot">진행중</div><div class="ev-dday-sub">가격 협상</div></div>
+            <div class="ev-main">
+              <div class="ev-title">💰 HBM 가격 협상 — ASP 인상 가능한가</div>
+              <div class="ev-short">수요 > 공급 구조 → 가격 결정권 SK하이닉스 · HBM3E ASP DRAM 일반의 5~7배</div>
+            </div>
+            <span class="ev-badge bg-hot">이익 레버리지</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">HBM은 일반 DRAM보다 훨씬 복잡하고 수율이 낮아요. 수요는 폭발하는데 만들 수 있는 곳이 SK하이닉스뿐이라서 → <strong>SK하이닉스가 가격을 올려도 엔비디아가 울며 겨자먹기로 살 수밖에 없는 구조.</strong></div>
+              <span class="verdict" style="background:#0d2810;color:#4ade80;">✅ HBM4 세대 ASP 추가 인상 협상 진행 중</span>
+            </div>
+            <div class="frames">
+              <div class="frame bl">
+                <div class="f-label">📐 ASP 비교</div>
+                <div class="f-body">일반 DRAM DDR5: <span class="dim">기준</span><br>HBM3E 12단: <span class="num">5~7배</span> 프리미엄<br>HBM4 (예상): <span class="num">7~10배</span> 프리미엄<br><br>→ 출하량 늘수록 수익성 비선형 증가</div>
+              </div>
+              <div class="frame pu">
+                <div class="f-label">🔮 협상 구조</div>
+                <div class="f-body">구매자: 엔비디아·구글·마이크로소프트·아마존<br><br>공급자: SK하이닉스 (압도적 점유율)<br><br>→ <strong>공급자 우위 협상</strong> — 가격 인상 가능</div>
+              </div>
+            </div>
+            <div class="src-row"><span class="v-badge">✦ 위키 기반</span><span class="g-badge">⚠ ASP 정확 수치는 비공개 — 추정치</span></div>
+          </div>
+        </div>
+
+        <!-- 이벤트 3 -->
+        <div class="ev" id="e-hbm3">
+          <div class="ev-head" onclick="toggleEv('e-hbm3')">
+            <div class="ev-dday"><div class="ev-dday-num d-cool">2027+</div><div class="ev-dday-sub">차세대</div></div>
+            <div class="ev-main">
+              <div class="ev-title">🔬 삼성전자 HBM5HPB — 차세대 경쟁 선언</div>
+              <div class="ev-short">SK 독주에 삼성이 HBM5HPB 개발 발표 · 단기 영향 없음 · 장기 모니터링</div>
+            </div>
+            <span class="ev-badge bg-cool">장기 모니터링</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">삼성전자가 HBM5 기반의 HPB(High Performance BIST) 기술을 적용한 차세대 HBM 개발을 발표. <strong>현재는 HBM3E 인증도 못 받은 상태라 실질 영향은 2027년 이후.</strong></div>
+              <span class="verdict" style="background:#0d1e3a;color:#93c5fd;">🔵 장기 추적 — 단기 투자 근거 없음</span>
+            </div>
+            <div class="frames">
+              <div class="frame bl">
+                <div class="f-label">📐 현재 삼성 HBM 현황</div>
+                <div class="f-body">HBM3E 엔비디아 인증: <span class="bad">지연·실패</span><br>전략 전환: HBM3E 포기 → <strong>HBM4 직행</strong><br><br>HBM5HPB: 개발 발표 단계<br>→ 2027~2028 목표</div>
+              </div>
+              <div class="frame am">
+                <div class="f-label">📅 언제 주목하나</div>
+                <div class="f-body"><strong>HBM4 엔비디아 인증 통과 뉴스</strong><br>= 삼성전자 단기 트리거<br><br>현재는 모니터링만<br>인증 실패 반복 시 추가 하락 가능</div>
+              </div>
+            </div>
+            <div class="src-row"><span class="v-badge">✦ 위키 교차검증</span><span class="g-badge">삼성전자 HBM5HPB — 2026-06-05 텔레그램</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 카테고리 2: xPU / 맞춤형 칩 수요 -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="cat hot" id="cat-xpu">
+    <div class="cat-head" onclick="toggleCat('cat-xpu')">
+      <div class="cat-icon">💡</div>
+      <div class="cat-info">
+        <div class="cat-name">xPU / 맞춤형 칩 · 데이터센터 Capex</div>
+        <div class="cat-desc">브로드컴 AI 네트워크 30→40% · OpenAI 1.3GW · Meta 3GW · TSMC 파운드리 독주</div>
+      </div>
+      <div class="cat-right">
+        <span class="cat-badge bg-hot">수요 폭발</span>
+        <span class="cat-cnt">이벤트 2개</span>
+        <span class="cat-chv">▼</span>
+      </div>
+    </div>
+    <div class="cat-body">
+      <div class="ev-list">
+
+        <div class="ev" id="e-xpu1">
+          <div class="ev-head" onclick="toggleEv('e-xpu1')">
+            <div class="ev-dday"><div class="ev-dday-num d-hot">충격→회복</div><div class="ev-dday-sub">2026-06-05</div></div>
+            <div class="ev-main">
+              <div class="ev-title">⚡ 브로드컴 콘콜 쇼크 후 반전 — AI 수요 오히려 강세</div>
+              <div class="ev-short">주가 -11.8% 충격 → 실제 AI 네트워크 수요는 30→40% 성장 확인</div>
+            </div>
+            <span class="ev-badge bg-hot">수요 재확인</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">브로드컴이 실적 가이던스를 시장 기대치보다 낮게 제시해서 주가가 -11.8% 급락했어요. 그런데 콘콜 내용을 자세히 보면 → AI 네트워크 매출 비중이 <strong>30%에서 40%로 증가</strong>했고, OpenAI는 1.3GW, Meta는 3GW 규모 데이터센터를 짓고 있어요. 가이던스 미달은 AI 외 일반 반도체 부진 탓.</div>
+              <span class="verdict" style="background:#0d2810;color:#4ade80;">✅ AI 수요 자체는 건재 — 브로드컴 쇼크는 오버킬</span>
+            </div>
+            <div class="frames">
+              <div class="frame bl">
+                <div class="f-label">📐 빅테크 Capex</div>
+                <div class="f-body">OpenAI: <span class="num">1.3GW</span> 데이터센터<br>Meta: <span class="num">3GW</span> 데이터센터<br>Microsoft: Azure 확장 지속<br>Google: TPU v5 대규모 발주<br><br>→ AI 인프라 투자 감속 없음</div>
+              </div>
+              <div class="frame pu">
+                <div class="f-label">🔮 MRVL 반사수혜</div>
+                <div class="f-body">브로드컴 쇼크로 <strong>마벨(MRVL) 부각</strong><br>→ 맞춤형 AI칩 대안 주자로 주목<br><br>국내 수혜: 기판·패키징 수요 동반<br>→ KB기판 공급절벽 현상 재확인</div>
+              </div>
+              <div class="frame am">
+                <div class="f-label">📅 대응</div>
+                <div class="f-body">브로드컴 콘콜 쇼크 이후 <strong>반도체 섹터 눌림</strong><br>→ AI 수요 구조 훼손 없음 확인<br>→ 눌림 구간이 매수 기회<br><br>특히 소부장·기판주 비중 재확인</div>
+              </div>
+              <div class="frame gn">
+                <div class="f-label">📈 수혜 종목</div>
+                <div class="f-body">
+                  <div class="slist">
+                    <div class="sl"><div class="sl-name">SK하이닉스</div><div class="sl-why">HBM → AI 서버 핵심 부품</div><div class="sl-v v-g">1순위</div></div>
+                    <div class="sl"><div class="sl-name">한미반도체</div><div class="sl-why">HBM 패키징 장비 수요 직결</div><div class="sl-v v-g">직결</div></div>
+                    <div class="sl"><div class="sl-name">기판주</div><div class="sl-why">CoWoS 병목 → 기판 공급절벽</div><div class="sl-v v-y">주시</div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="frame rd f-full">
+                <div class="f-label">⚠️ 리스크</div>
+                <div class="f-body">
+                  <div class="risk-grid">
+                    <div class="rc"><div class="rc-t">가이던스 미달 반복</div><div class="rc-b">브로드컴이 또 가이던스 미달 내면 AI 수요 의구심 재점화</div></div>
+                    <div class="rc"><div class="rc-t">XPU 삼성 배제</div><div class="rc-b">맞춤형칩 생산이 TSMC에만 쏠리면 삼성 파운드리 추가 소외</div></div>
+                    <div class="rc"><div class="rc-t">금리·매크로 충격</div><div class="rc-b">빅테크 주가 급락 시 Capex 삭감 선언 가능</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="src-row"><span class="v-badge">✦ 위키 교차검증</span><span class="g-badge">브로드컴 콘콜 AI네트워크30→40% — 2026-06-05 인제스트</span></div>
+          </div>
+        </div>
+
+        <div class="ev" id="e-xpu2">
+          <div class="ev-head" onclick="toggleEv('e-xpu2')">
+            <div class="ev-dday"><div class="ev-dday-num d-hot">진행중</div><div class="ev-dday-sub">지속</div></div>
+            <div class="ev-main">
+              <div class="ev-title">🏭 TSMC CEO 3대 발언 — 파운드리 독주·기판 병목</div>
+              <div class="ev-short">AI 수요 폭발 공식 확인 · CoWoS 패키징 병목 → 한국 기판주 수혜</div>
+            </div>
+            <span class="ev-badge bg-hot">구조 확인</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">TSMC CEO가 AI 가속기 수요 폭발·CoWoS 패키징 병목·파운드리 독주 등 3가지를 공식화했어요. CoWoS = HBM+GPU를 하나로 묶는 패키징인데, <strong>이 공정에 들어가는 기판 수요가 공급을 압도</strong>하고 있어서 한국 기판주에 직접 수혜.</div>
+              <span class="verdict" style="background:#0d2810;color:#4ade80;">✅ AI 파운드리 수요 구조 장기 지속 확인</span>
+            </div>
+            <div class="frames">
+              <div class="frame bl">
+                <div class="f-label">📐 CoWoS 병목 구조</div>
+                <div class="f-body">CoWoS 패키징 = HBM + GPU 연결<br>→ 수요 폭발, 공급 부족<br><br><strong>KB기판 공급절벽</strong> 현상 발생<br>국내 기판주 직접 수혜 구조</div>
+              </div>
+              <div class="frame gn">
+                <div class="f-label">📈 수혜 종목</div>
+                <div class="f-body">
+                  <div class="slist">
+                    <div class="sl"><div class="sl-name">삼성전기</div><div class="sl-why">Si-Cap ASP 10배 · FC-BGA 기판</div><div class="sl-v v-g">직접수혜</div></div>
+                    <div class="sl"><div class="sl-name">LG이노텍</div><div class="sl-why">기판 TP 200만원↑</div><div class="sl-v v-y">주시</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="src-row"><span class="v-badge">✦ 위키 교차검증</span><span class="g-badge">TSMC CEO 3대발언·KB기판공급절벽 — 2026-06-05 인제스트</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 카테고리 3: 소부장 -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="cat hot" id="cat-sbj">
+    <div class="cat-head" onclick="toggleCat('cat-sbj')">
+      <div class="cat-icon">🔧</div>
+      <div class="cat-info">
+        <div class="cat-name">소부장 (소재·부품·장비)</div>
+        <div class="cat-desc">피에스케이 상한가 · 한미반도체 TC본더 · 삼성전기 Si-Cap ASP 10배</div>
+      </div>
+      <div class="cat-right">
+        <span class="cat-badge bg-hot">장비주 폭발</span>
+        <span class="cat-cnt">이벤트 3개</span>
+        <span class="cat-chv">▼</span>
+      </div>
+    </div>
+    <div class="cat-body">
+      <div class="ev-list">
+
+        <div class="ev" id="e-sbj1">
+          <div class="ev-head" onclick="toggleEv('e-sbj1')">
+            <div class="ev-dday"><div class="ev-dday-num d-hot">진행중</div><div class="ev-dday-sub">Capex 증설</div></div>
+            <div class="ev-main">
+              <div class="ev-title">⚡ 피에스케이 — 삼성·SK Capex 증설 장비 수혜</div>
+              <div class="ev-short">상한가 경험 · 반도체 Capex 증가 직결 · 소부장 2027 모멘텀</div>
+            </div>
+            <span class="ev-badge bg-hot">장비 핵심</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">피에스케이는 반도체 식각 장비 국내 대표 업체. 삼성전자·SK하이닉스가 HBM·AI반도체 생산을 늘리면서 Capex(설비투자)가 급증 → <strong>장비 수주가 동반 폭발하는 구조.</strong> 상한가를 기록했을 정도로 시장 반응 강함.</div>
+              <span class="verdict" style="background:#0d2810;color:#4ade80;">✅ Capex 사이클 수혜 — 소부장 2027 모멘텀</span>
+            </div>
+            <div class="frames">
+              <div class="frame bl">
+                <div class="f-label">📐 Capex 구조</div>
+                <div class="f-body">삼성전자 HBM 라인 증설<br>SK하이닉스 청주·이천 Capex 확대<br>TSMC 해외팹 투자 동반<br><br>→ 장비 수주 <span class="num">2027년까지</span> 가시성</div>
+              </div>
+              <div class="frame pu">
+                <div class="f-label">🔮 소부장 2027 모멘텀</div>
+                <div class="f-body">반도체 장비 수주는 실적 반영에<br><strong>12~18개월 시차</strong>가 있음<br><br>지금 수주 → 2027 실적 반영<br>→ 장기 우상향 구조</div>
+              </div>
+              <div class="frame am">
+                <div class="f-label">📅 대응</div>
+                <div class="f-body">상한가 후 눌림 시 분할매수<br><strong>20일선 이탈 여부 확인</strong><br><br>섹터 Capex 발표 뉴스 = 즉시 반응</div>
+              </div>
+              <div class="frame rd">
+                <div class="f-label">⚠️ 리스크</div>
+                <div class="f-body">Capex 삭감 뉴스 시 직격탄<br>소형주 특성상 <span class="bad">변동성 높음</span><br>수주→납품 사이 취소 리스크</div>
+              </div>
+            </div>
+            <div class="src-row"><span class="v-badge">✦ 위키 교차검증</span><span class="g-badge">피에스케이 상한가·Capex — 2026-06-05 인제스트</span></div>
+          </div>
+        </div>
+
+        <div class="ev" id="e-sbj2">
+          <div class="ev-head" onclick="toggleEv('e-sbj2')">
+            <div class="ev-dday"><div class="ev-dday-num d-hot">진행중</div><div class="ev-dday-sub">독점 유지</div></div>
+            <div class="ev-main">
+              <div class="ev-title">🤖 한미반도체 TC본더 — HBM 패키징 국내 독점</div>
+              <div class="ev-short">HBM 적층할 때 쓰는 장비 · SK하이닉스·삼성전자 모두 한미반도체 의존</div>
+            </div>
+            <span class="ev-badge bg-hot">패키징 독점</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">HBM은 D램 칩을 여러 층으로 쌓아서 만들어요. 이 적층 공정(TC본딩)에 쓰이는 핵심 장비를 한미반도체가 독점 공급. HBM 생산량이 늘수록 한미반도체 수주도 같이 늘어나는 <strong>직접 연동 구조.</strong></div>
+              <span class="verdict" style="background:#0d2810;color:#4ade80;">✅ HBM 세대 교체마다 신규 수주 — 사이클 반복</span>
+            </div>
+            <div class="frames">
+              <div class="frame bl">
+                <div class="f-label">📐 TC본더 구조</div>
+                <div class="f-body">TC본더 = Thermo Compression 본더<br>HBM 적층 핵심 장비<br><br>SK하이닉스: 한미반도체 주력<br>삼성전자: 한미반도체 + ASE 혼용<br><br>HBM4 세대 신규 장비 수주 진행 중</div>
+              </div>
+              <div class="frame gn">
+                <div class="f-label">📈 수혜 구조</div>
+                <div class="f-body">HBM 생산량 <strong>2배 ↑</strong><br>→ TC본더 수요 <strong>2배 ↑</strong><br><br>HBM4E 세대 전환 시<br>→ 신규 장비 교체 수요 추가 발생</div>
+              </div>
+            </div>
+            <div class="src-row"><span class="v-badge">✦ 위키 기반</span></div>
+          </div>
+        </div>
+
+        <div class="ev" id="e-sbj3">
+          <div class="ev-head" onclick="toggleEv('e-sbj3')">
+            <div class="ev-dday"><div class="ev-dday-num d-hot">신규</div><div class="ev-dday-sub">수혜 부각</div></div>
+            <div class="ev-main">
+              <div class="ev-title">💰 삼성전기 Si-Cap — AI 서버 신부품 ASP 10배</div>
+              <div class="ev-short">AI 서버 전용 실리콘 커패시터 · 일반 MLCC 대비 10배 ASP · TP 210만원</div>
+            </div>
+            <span class="ev-badge bg-hot">신규 부품 수혜</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">AI 서버는 전력 소모가 엄청나서 일반 MLCC가 아닌 실리콘 커패시터(Si-Cap)가 필요해요. 삼성전기가 이 제품을 만드는데, 일반 MLCC보다 <strong>ASP(판매단가)가 10배</strong> 높아요. AI 서버 수요 증가가 그대로 삼성전기 수익성 급등으로 연결.</div>
+              <span class="verdict" style="background:#0d2810;color:#4ade80;">✅ AI 서버 확산 = 삼성전기 이익 비선형 증가</span>
+            </div>
+            <div class="frames">
+              <div class="frame bl">
+                <div class="f-label">📐 Si-Cap vs MLCC</div>
+                <div class="f-body">일반 MLCC: AI 서버 전력 요구 못 맞춤<br>Si-Cap: 고전력·고주파 환경 최적화<br><br>ASP: MLCC 대비 <span class="num">10배+</span><br>→ AI 서버 1대당 Si-Cap 수십 개 탑재</div>
+              </div>
+              <div class="frame pu">
+                <div class="f-label">🔮 증권사 전망</div>
+                <div class="f-body">삼성전기 TP: <span class="num">210만원</span> (2026 기준)<br>LG이노텍 TP: <span class="num">200만원↑</span><br><br>AI 서버 Capex 증가 → 부품 수혜 직결</div>
+              </div>
+            </div>
+            <div class="src-row"><span class="v-badge">✦ 위키 교차검증</span><span class="g-badge">삼성전기Si-Cap ASP10배·TP210만 — 2026-06-05 인제스트</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 카테고리 4: 삼성전자 / 파운드리 -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="cat mid" id="cat-sec">
+    <div class="cat-head" onclick="toggleCat('cat-sec')">
+      <div class="cat-icon">🏭</div>
+      <div class="cat-info">
+        <div class="cat-name">삼성전자 / 파운드리</div>
+        <div class="cat-desc">HBM3E 인증 지연 · HBM4 직행 전략 · 파운드리 TSMC 열세</div>
+      </div>
+      <div class="cat-right">
+        <span class="cat-badge bg-mid">장기 모니터링</span>
+        <span class="cat-cnt">이벤트 2개</span>
+        <span class="cat-chv">▼</span>
+      </div>
+    </div>
+    <div class="cat-body">
+      <div class="ev-list">
+
+        <div class="ev" id="e-sec1">
+          <div class="ev-head" onclick="toggleEv('e-sec1')">
+            <div class="ev-dday"><div class="ev-dday-num d-cool">2026H2</div><div class="ev-dday-sub">재도전</div></div>
+            <div class="ev-main">
+              <div class="ev-title">🔬 삼성 HBM4 엔비디아 인증 재도전 — 통과 시 대형 트리거</div>
+              <div class="ev-short">HBM3E 인증 실패 → HBM4 직행 · 인증 통과 뉴스 = 삼성전자 단기 폭등</div>
+            </div>
+            <span class="ev-badge bg-mid">인증 대기</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">삼성전자는 HBM3E를 엔비디아에 납품하려 했지만 발열·수율 문제로 인증을 통과하지 못했어요. 전략을 바꿔서 HBM4 세대에서 직접 인증에 도전 중. <strong>인증 통과 뉴스가 나오면 그날 삼성전자 주가 단기 폭등 가능성 있음.</strong></div>
+              <span class="verdict" style="background:#1c1500;color:#fbbf24;">🟡 인증 결과 나올 때까지 모니터링</span>
+            </div>
+            <div class="frames">
+              <div class="frame bl">
+                <div class="f-label">📐 인증 일정</div>
+                <div class="f-body">HBM3E 인증: <span class="bad">실패</span> (발열·수율 문제)<br>HBM4 인증 재도전: <span class="num">2026 H2</span><br>HBM4E: 2027 목표<br><br>→ SK하이닉스와 <strong>최소 1~2세대 격차</strong></div>
+              </div>
+              <div class="frame am">
+                <div class="f-label">📅 대응</div>
+                <div class="f-body"><strong>인증 통과 뉴스 = 즉시 대응</strong><br>삼성전자 단기 트리거<br><br>인증 실패 반복 뉴스 = 비중 유지 자제<br>SK하이닉스로 교체 검토</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ev" id="e-sec2">
+          <div class="ev-head" onclick="toggleEv('e-sec2')">
+            <div class="ev-dday"><div class="ev-dday-num d-risk">부진 중</div><div class="ev-dday-sub">TSMC 열세</div></div>
+            <div class="ev-main">
+              <div class="ev-title">⚠️ 파운드리 부진 — TSMC에 고객 이탈 지속</div>
+              <div class="ev-short">3nm 수율 이슈 · 퀄컴·AMD TSMC 전환 · 회복 타임라인 불명확</div>
+            </div>
+            <span class="ev-badge bg-risk">지속 부진</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">삼성 파운드리의 3nm 수율이 기대치를 밑돌면서 퀄컴·AMD 등 주요 고객이 TSMC로 이전. xPU(맞춤형 AI칩) 시장도 TSMC가 독점하는 구조. <strong>삼성 파운드리가 의미있는 점유율을 회복하는 시점이 불명확</strong>해서 밸류에이션 디스카운트 요인으로 작용 중.</div>
+              <span class="verdict" style="background:#1c0808;color:#f87171;">⚠ 삼성전자 투자 시 파운드리 부진 감안 필수</span>
+            </div>
+            <div class="frames">
+              <div class="frame rd f-full">
+                <div class="f-label">⚠️ 핵심 리스크</div>
+                <div class="f-body">
+                  <div class="risk-grid">
+                    <div class="rc"><div class="rc-t">고객 이탈 지속</div><div class="rc-b">퀄컴·AMD·NVIDIA 파운드리가 모두 TSMC로 간 상태</div></div>
+                    <div class="rc"><div class="rc-t">수율 회복 불명확</div><div class="rc-b">2nm 세대에서도 TSMC 수율을 못 따라잡으면 구조적 열세</div></div>
+                    <div class="rc"><div class="rc-t">HBM 동시 부진</div><div class="rc-b">HBM 인증 실패 + 파운드리 부진이 동시 진행 — 이중 디스카운트</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 카테고리 5: 메모리 업황 -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="cat mid" id="cat-mem">
+    <div class="cat-head" onclick="toggleCat('cat-mem')">
+      <div class="cat-icon">📦</div>
+      <div class="cat-info">
+        <div class="cat-name">메모리 업황 / 사이클</div>
+        <div class="cat-desc">낸야테크 +730% 시그널 · 키옥시아 Capex 66%↑ · 한국 이익 일본 추월</div>
+      </div>
+      <div class="cat-right">
+        <span class="cat-badge bg-mid">강세 신호</span>
+        <span class="cat-cnt">이벤트 2개</span>
+        <span class="cat-chv">▼</span>
+      </div>
+    </div>
+    <div class="cat-body">
+      <div class="ev-list">
+
+        <div class="ev" id="e-mem1">
+          <div class="ev-head" onclick="toggleEv('e-mem1')">
+            <div class="ev-dday"><div class="ev-dday-num d-hot">선행 신호</div><div class="ev-dday-sub">업황 확인</div></div>
+            <div class="ev-main">
+              <div class="ev-title">📈 낸야테크 +730% — 메모리 슈퍼사이클 선행 신호</div>
+              <div class="ev-short">대만 DRAM 업체 주가 폭등 → 한국 메모리주 업황 강세 재확인</div>
+            </div>
+            <span class="ev-badge bg-mid">업황 강세</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">대만 DRAM 업체 낸야테크(Nanya Technology) 주가가 +730% 급등했어요. 낸야테크는 삼성·SK보다 한 발 뒤에 있는 업체인데 이 정도로 오른다면 → <strong>업황 자체가 강하게 돌아서고 있다는 신호.</strong> 키옥시아(낸드) Capex도 66% 증가 — 메모리 전반 업황 상승 확인.</div>
+              <span class="verdict" style="background:#0d2810;color:#4ade80;">✅ 메모리 업황 상승 사이클 진입 확인</span>
+            </div>
+            <div class="frames">
+              <div class="frame bl">
+                <div class="f-label">📐 동반 신호</div>
+                <div class="f-body">낸야테크: <span class="num">+730%</span> (DRAM 업황 선행)<br>키옥시아 Capex: <span class="num">+66%↑</span> (낸드 투자 재개)<br>마이크론 TP: 모건스탠리 <span class="num">$1,050</span><br><br>→ 메모리 전반 강세 구조</div>
+              </div>
+              <div class="frame pu">
+                <div class="f-label">🔮 한국 이익 일본 추월</div>
+                <div class="f-body">반도체 수출 기준<br>한국 반도체 이익이 <strong>일본을 추월</strong><br><br>5월 수출: <span class="num">877억달러</span> 역대 최대<br>→ 반도체가 핵심 견인</div>
+              </div>
+              <div class="frame gn">
+                <div class="f-label">📈 수혜 종목</div>
+                <div class="f-body">
+                  <div class="slist">
+                    <div class="sl"><div class="sl-name">SK하이닉스</div><div class="sl-why">DRAM 업황 직접 수혜 1위</div><div class="sl-v v-g">1순위</div></div>
+                    <div class="sl"><div class="sl-name">삼성전자</div><div class="sl-why">메모리 매출 비중 높음</div><div class="sl-v v-y">동반</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="src-row"><span class="v-badge">✦ 위키 교차검증</span><span class="g-badge">낸야+730%·키옥시아Capex66%↑ — 2026-06-05 인제스트</span></div>
+          </div>
+        </div>
+
+        <div class="ev" id="e-mem2">
+          <div class="ev-head" onclick="toggleEv('e-mem2')">
+            <div class="ev-dday"><div class="ev-dday-num d-hot">역대최대</div><div class="ev-dday-sub">5월 수출</div></div>
+            <div class="ev-main">
+              <div class="ev-title">📊 5월 수출 877억달러 역대 최대 — 반도체 견인</div>
+              <div class="ev-short">수출 모멘텀 반도체가 핵심 · 국내 반도체 수출 지속 강세</div>
+            </div>
+            <span class="ev-badge bg-mid">수출 모멘텀</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">2026년 5월 한국 수출이 역대 최대치인 877억달러를 기록했고, 이를 이끈 게 반도체. <strong>수출 데이터는 업황 확인용 보조지표</strong>로 활용. 매월 1·11·21일 발표 → 반도체 수출 항목 체크.</div>
+              <span class="verdict" style="background:#0d2810;color:#4ade80;">✅ 반도체 수출 모멘텀 유효</span>
+            </div>
+            <div class="frames">
+              <div class="frame bl">
+                <div class="f-label">📐 수출 발표 일정</div>
+                <div class="f-body">매월 <span class="num">1일</span>: 전월 확정치<br>매월 <span class="num">11일</span>: 10일분 속보<br>매월 <span class="num">21일</span>: 20일분 속보<br><br>→ 반도체 항목이 증가 추세면 <strong>섹터 긍정</strong></div>
+              </div>
+              <div class="frame am">
+                <div class="f-label">📅 활용법</div>
+                <div class="f-body">수출 데이터 = 보조지표<br>RS + 수급 강한 섹터에서만 활용<br><br>수출 감소 뉴스 = 섹터 압박 신호로 인식</div>
+              </div>
+            </div>
+            <div class="src-row"><span class="v-badge">✦ 위키 교차검증</span><span class="g-badge">5월수출877억역대최대 — 2026-06-05 인제스트</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 카테고리 6: ETF 리밸런싱 -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="cat mid" id="cat-etf">
+    <div class="cat-head" onclick="toggleCat('cat-etf')">
+      <div class="cat-icon">📊</div>
+      <div class="cat-info">
+        <div class="cat-name">ETF 리밸런싱 / 수급 이벤트</div>
+        <div class="cat-desc">6/11~18 반도체 ETF 리밸런싱 · 수급 유입 단기 트리거</div>
+      </div>
+      <div class="cat-right">
+        <span class="cat-badge bg-mid">D-3 임박</span>
+        <span class="cat-cnt">이벤트 1개</span>
+        <span class="cat-chv">▼</span>
+      </div>
+    </div>
+    <div class="cat-body">
+      <div class="ev-list">
+
+        <div class="ev" id="e-etf1">
+          <div class="ev-head" onclick="toggleEv('e-etf1')">
+            <div class="ev-dday"><div class="ev-dday-num d-hot">D-3</div><div class="ev-dday-sub">6/11~18</div></div>
+            <div class="ev-main">
+              <div class="ev-title">📊 반도체 ETF 리밸런싱 — 수급 유입 기간</div>
+              <div class="ev-short">ETF 편입 비중 조정 → 반도체 대형주 패시브 수급 유입 · 단기 트리거</div>
+            </div>
+            <span class="ev-badge bg-mid">수급 이벤트</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">반도체 ETF가 분기마다 종목 편입 비중을 재조정(리밸런싱)해요. 6/11~18 기간에 리밸런싱이 예정되어 있어서 <strong>삼성전자·SK하이닉스 같은 대형주에 패시브 자금이 유입되는 구조.</strong> 단기 수급 이벤트로 활용 가능.</div>
+              <span class="verdict" style="background:#1c1500;color:#fbbf24;">🟡 단기 수급 트리거 — 리밸런싱 기간 비중 확인</span>
+            </div>
+            <div class="frames">
+              <div class="frame bl">
+                <div class="f-label">📐 수혜 종목</div>
+                <div class="f-body">ETF 편입 비중 상위:<br><strong>삼성전자</strong> (시총 1위)<br><strong>SK하이닉스</strong> (HBM 수혜 편입 증가)<br>한미반도체 (소형주 편입 증가 가능)<br><br>→ 6/11~18 기간 수급 모니터링</div>
+              </div>
+              <div class="frame am">
+                <div class="f-label">📅 대응</div>
+                <div class="f-body">리밸런싱 <strong>시작일 전 매수</strong> → 기간 중 수급 확인<br>기간 종료 후 단기 차익 가능성<br><br>소형주는 편입 여부 사전 확인 필요</div>
+              </div>
+            </div>
+            <div class="src-row"><span class="v-badge">✦ 위키 교차검증</span><span class="g-badge">ETF리밸런싱6/11~18 — 2026-06-05 인제스트</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 카테고리 7: 미중 수출 규제 -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="cat risk" id="cat-reg">
+    <div class="cat-head" onclick="toggleCat('cat-reg')">
+      <div class="cat-icon">🇺🇸</div>
+      <div class="cat-info">
+        <div class="cat-name">미중 반도체 전쟁 / 수출 규제</div>
+        <div class="cat-desc">대중 수출 규제 · 화웨이 자급 가속 · SK하이닉스 중국 공장 리스크</div>
+      </div>
+      <div class="cat-right">
+        <span class="cat-badge bg-risk">구조적 리스크</span>
+        <span class="cat-cnt">이벤트 2개</span>
+        <span class="cat-chv">▼</span>
+      </div>
+    </div>
+    <div class="cat-body">
+      <div class="ev-list">
+
+        <div class="ev" id="e-reg1">
+          <div class="ev-head" onclick="toggleEv('e-reg1')">
+            <div class="ev-dday"><div class="ev-dday-num d-risk">언제든</div><div class="ev-dday-sub">규제 중</div></div>
+            <div class="ev-main">
+              <div class="ev-title">🚫 미국 반도체 수출 규제 — 한국 중국 공장 영향</div>
+              <div class="ev-short">SK하이닉스 우시·다롄 공장 가동 제한 · 삼성 중국 매출 점진 하락</div>
+            </div>
+            <span class="ev-badge bg-risk">구조적 리스크</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">미국이 첨단 반도체 장비·기술의 대중 수출을 제한해서 SK하이닉스 우시 공장과 삼성전자 시안·쑤저우 공장의 첨단 공정 업그레이드가 불가능해졌어요. <strong>중국 공장이 레거시 반도체만 생산하는 구조로 점점 고착화</strong>되고 있음.</div>
+              <span class="verdict" style="background:#1c0808;color:#f87171;">⚠ 중국 매출 점진적 감소 — 장기 구조 변화 인지 필요</span>
+            </div>
+            <div class="frames">
+              <div class="frame rd f-full">
+                <div class="f-label">⚠️ 영향 구조</div>
+                <div class="f-body">
+                  <div class="risk-grid">
+                    <div class="rc"><div class="rc-t">SK하이닉스 우시·다롄</div><div class="rc-b">HBM·첨단 DRAM 증설 불가 → 레거시만 생산 → 중국 공장 가치 하락</div></div>
+                    <div class="rc"><div class="rc-t">삼성전자 시안·쑤저우</div><div class="rc-b">낸드 플래시 공장 → 최신 공정 업그레이드 제한</div></div>
+                    <div class="rc"><div class="rc-t">규제 강화 가능성</div><div class="rc-b">미국 대선·무역전쟁 재점화 시 추가 규제 가능 — 상시 모니터링</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ev" id="e-reg2">
+          <div class="ev-head" onclick="toggleEv('e-reg2')">
+            <div class="ev-dday"><div class="ev-dday-num d-risk">진행중</div><div class="ev-dday-sub">자급 가속</div></div>
+            <div class="ev-main">
+              <div class="ev-title">🔴 화웨이 Ascend — 중국 반도체 자급 가속</div>
+              <div class="ev-short">화웨이 Ascend 910C 자체 칩 공급 · 삼성·SK 중국 AI 칩 수요 잠식</div>
+            </div>
+            <span class="ev-badge bg-risk">장기 리스크</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">화웨이가 Ascend 910C AI 가속기를 대량 생산해서 중국 빅테크에 공급 중. 중국이 엔비디아 없이도 AI 개발을 할 수 있게 되면서 → <strong>삼성·SK하이닉스의 중국향 AI 메모리 수요가 점진적으로 잠식</strong>될 가능성.</text>
+              <span class="verdict" style="background:#1c0808;color:#f87171;">⚠ 장기 구조 리스크 — 단기 영향은 제한적</span>
+            </div>
+            <div class="frames">
+              <div class="frame rd">
+                <div class="f-label">⚠️ 잠식 구조</div>
+                <div class="f-body">화웨이 Ascend → SMIC 7nm 공정<br>中 빅테크: 바이두·알리·텐센트<br><br>HBM 수요: 엔비디아 GPU 의존<br>→ 화웨이 자급 시 <span class="bad">SK하이닉스 중국 HBM 기회 축소</span></div>
+              </div>
+              <div class="frame gn">
+                <div class="f-label">📈 반사수혜</div>
+                <div class="f-body">중국 외 AI 수요: 미국·유럽·인도<br>→ 엔비디아 GPU 수요 유지<br>→ HBM 공급사(SK) 영향 제한<br><br>중국 매출 의존도 낮은 종목 유리</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 카테고리 8: 리스크 모음 -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="cat risk" id="cat-risk">
+    <div class="cat-head" onclick="toggleCat('cat-risk')">
+      <div class="cat-icon">⚠️</div>
+      <div class="cat-info">
+        <div class="cat-name">리스크 모음</div>
+        <div class="cat-desc">브로드컴 쇼크 · 선반영 과열 · AI 투자 감속 시나리오</div>
+      </div>
+      <div class="cat-right">
+        <span class="cat-badge bg-risk">반드시 인지</span>
+        <span class="cat-cnt">리스크 3개</span>
+        <span class="cat-chv">▼</span>
+      </div>
+    </div>
+    <div class="cat-body">
+      <div class="ev-list">
+
+        <div class="ev" id="e-risk1">
+          <div class="ev-head" onclick="toggleEv('e-risk1')">
+            <div class="ev-dday"><div class="ev-dday-num d-risk">언제든</div><div class="ev-dday-sub">가이던스</div></div>
+            <div class="ev-main">
+              <div class="ev-title">🔴 빅테크 Capex 삭감 — 반도체 수요 급감 트리거</div>
+              <div class="ev-short">브로드컴 쇼크가 그 전조 · 가이던스 미달 반복 = AI 투자 감속 신호</div>
+            </div>
+            <span class="ev-badge bg-risk">최대 하방</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">AI 반도체 수요는 빅테크(MS·구글·아마존·메타) Capex에 100% 연동돼 있어요. 브로드컴 쇼크는 일반 반도체 부진이었지만, 만약 빅테크가 진짜로 <strong>AI 데이터센터 투자를 줄인다고 선언하면 HBM·소부장 전체 섹터 급락.</strong></div>
+              <span class="verdict" style="background:#1c0808;color:#f87171;">⚠ 빅테크 Capex 뉴스 항상 주시</span>
+            </div>
+            <div class="frames">
+              <div class="frame rd f-full">
+                <div class="f-label">⚠️ 대응 방법</div>
+                <div class="f-body">빅테크 분기 실적 발표 전후 Capex 가이던스 체크<br>삭감 선언 뉴스 → <strong>비중 즉시 축소</strong><br>HBM·소부장 소형주일수록 낙폭 더 클 수 있음</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ev" id="e-risk2">
+          <div class="ev-head" onclick="toggleEv('e-risk2')">
+            <div class="ev-dday"><div class="ev-dday-num d-risk">선반영</div><div class="ev-dday-sub">지금 상태</div></div>
+            <div class="ev-main">
+              <div class="ev-title">🔴 이미 많이 올라있음 — 소문에 사고 뉴스에 팔기</div>
+              <div class="ev-short">HBM 기대감 주가에 상당 부분 반영 · 인증 뉴스 날 차익실현 쏟아질 수 있음</div>
+            </div>
+            <span class="ev-badge bg-risk">과열 경고</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">SK하이닉스 주가는 HBM 기대감이 상당 부분 선반영된 상태예요. HBM4 양산 시작이나 엔비디아 인증 뉴스가 나오는 날 오히려 <strong>"뉴스에 팔기"</strong> 물량이 쏟아질 수 있음.</text>
+              <span class="verdict" style="background:#1c0808;color:#f87171;">⚠ 타이밍이 종목 선택만큼 중요</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="ev" id="e-risk3">
+          <div class="ev-head" onclick="toggleEv('e-risk3')">
+            <div class="ev-dday"><div class="ev-dday-num d-risk">구조적</div><div class="ev-dday-sub">중장기</div></div>
+            <div class="ev-main">
+              <div class="ev-title">🔴 XPU 리스크 — 삼성 파운드리 배제 심화</div>
+              <div class="ev-short">맞춤형 AI칩 생산이 TSMC 독점 → 삼성 파운드리 소외 가속</div>
+            </div>
+            <span class="ev-badge bg-risk">구조 리스크</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">구글 TPU·아마존 Trainium·MS Maia 등 빅테크가 직접 설계하는 맞춤형 AI칩(xPU)이 폭발적으로 늘고 있어요. 이 칩들이 전부 TSMC에서 생산 → <strong>삼성 파운드리가 AI 시대 핵심 수혜에서 배제되는 구조.</strong></div>
+              <span class="verdict" style="background:#1c0808;color:#f87171;">⚠ 삼성전자 파운드리 밸류 디스카운트 장기화 요인</span>
+            </div>
+            <div class="frames">
+              <div class="frame rd f-full">
+                <div class="f-label">⚠️ 배제 구조</div>
+                <div class="f-body">
+                  <div class="risk-grid">
+                    <div class="rc"><div class="rc-t">구글·아마존·MS</div><div class="rc-b">xPU 전량 TSMC 생산 — 삼성 참여 없음</div></div>
+                    <div class="rc"><div class="rc-t">엔비디아 GPU</div><div class="rc-b">블랙웰·B200 모두 TSMC CoWoS — 삼성 배제</div></div>
+                    <div class="rc"><div class="rc-t">탈출구?</div><div class="rc-b">2nm 세대에서 수율·가격 경쟁력 회복해야만 점유율 복원 가능 — 타임라인 불명확</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="src-row"><span class="g-badge">XPU칩리스크 — 2026-06-05 텔레그램</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function toggleCat(id) { document.getElementById(id).classList.toggle('open'); }
+function toggleEv(id)  { document.getElementById(id).classList.toggle('open'); }
+function toggleEtf(id) { document.getElementById(id).classList.toggle('open'); }
+function jumpTo(id) {
+  const el = document.getElementById(id);
+  if (!el.classList.contains('open')) el.classList.add('open');
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+const STOCK_DATA = {
+  skh: {
+    name: 'SK하이닉스 (000660)',
+    color: '#22c55e',
+    ma: '5일선 <strong>위</strong> (단기 강세)<br>20일선 <strong>위</strong> (중기 추세 유지)<br>60일선 <strong>위</strong> (장기 상승 구조)<br>→ 전 이평선 위 정배열',
+    supply: '외국인 <strong>순매수 지속</strong><br>기관 <strong>동반 매수</strong><br><br>수급빈집: <strong>태린이 파일 확인</strong><br>→ 빈집 구간 지지 여부 체크',
+    verdict: '✅ 추세 가장 깔끔',
+    vbg: '#0d2810', vc: '#4ade80',
+    tags: ['t-hot:HBM4E 캐파 2배 요청', 't-cool:외인·기관 동반매수', 't-hot:엔비디아 독점 납품', 't-mid:HBM 매출 50%+ 전망', 't-cool:수주잔고 사상최대']
+  },
+  sec: {
+    name: '삼성전자 (005930)',
+    color: '#a78bfa',
+    ma: '5일선 <strong>위</strong><br>20일선 <strong>위</strong><br>60일선 <strong>위</strong><br>→ 추세 살아있음 · 파운드리 디스카운트',
+    supply: '외국인 <strong>혼조</strong><br>기관 <strong>소폭 순매도</strong><br><br>수급빈집: <strong>태린이 파일 확인</strong>',
+    verdict: '◆ HBM 인증 결과 대기',
+    vbg: '#13081e', vc: '#c4b5fd',
+    tags: ['t-pur:HBM4 인증 재도전 2026H2', 't-risk:HBM3E 인증 실패', 't-risk:파운드리 TSMC 열세', 't-cool:메모리 업황 수혜', 't-mid:배당·자사주 기대']
+  },
+  hms: {
+    name: '한미반도체 (042700)',
+    color: '#22c55e',
+    ma: '5일선 <strong>위</strong><br>20일선 <strong>위</strong><br>60일선 <strong>위</strong><br>→ 정배열 유지',
+    supply: '외국인 <strong>순매수</strong><br>기관 <strong>관망</strong><br><br>수급빈집: <strong>태린이 파일 확인</strong>',
+    verdict: '↑ TC본더 독점 수혜',
+    vbg: '#0d2810', vc: '#4ade80',
+    tags: ['t-hot:TC본더 HBM 패키징 독점', 't-hot:HBM4E 증설 장비 수주', 't-cool:SK하이닉스 주력 납품', 't-mid:소형주 변동성 주의']
+  },
+  psk: {
+    name: '피에스케이 (319660)',
+    color: '#22c55e',
+    ma: '태린이 파일 업데이트 필요<br><span style="color:#374151;">→ 상한가 후 눌림 확인</span>',
+    supply: '태린이 파일 업데이트 필요<br><br>수급빈집: <strong>확인 필요</strong>',
+    verdict: '↑ Capex 장비 수혜',
+    vbg: '#0d2810', vc: '#4ade80',
+    tags: ['t-hot:삼성·SK Capex 직결', 't-hot:상한가 경험', 't-mid:소부장 2027 모멘텀', 't-risk:소형주 변동성']
+  }
+};
+
+let activeStock = null;
+
+function selectStock(key) {
+  const panel = document.getElementById('sk-detail');
+  const nameEl = document.getElementById('sk-detail-name');
+  const bodyEl = document.getElementById('sk-detail-body');
+  const d = STOCK_DATA[key];
+
+  if (activeStock === key) {
+    panel.classList.remove('open');
+    document.getElementById('skb-' + key).classList.remove('active');
+    activeStock = null;
+    return;
+  }
+
+  if (activeStock) document.getElementById('skb-' + activeStock).classList.remove('active');
+  document.getElementById('skb-' + key).classList.add('active');
+  activeStock = key;
+
+  nameEl.innerHTML = `<span style="color:${d.color};font-size:18px;">●</span> ${d.name}`;
+
+  const tagsHtml = d.tags.map(t => {
+    const [cls, txt] = t.split(':');
+    return `<span class="sk-tag ${cls}">${txt}</span>`;
+  }).join('');
+
+  bodyEl.innerHTML = `
+    <div class="sk-3col">
+      <div class="sk-panel gn">
+        <div class="sk-panel-title">📊 이평선 위치</div>
+        <div class="sk-panel-body">${d.ma}</div>
+        <span class="sk-verdict" style="background:${d.vbg};color:${d.vc};">${d.verdict}</span>
+      </div>
+      <div class="sk-panel am">
+        <div class="sk-panel-title">🔄 수급 상태</div>
+        <div class="sk-panel-body">${d.supply}</div>
+      </div>
+      <div class="sk-panel bl">
+        <div class="sk-panel-title">🏷️ 관련 키워드 · 이벤트</div>
+        <div class="sk-tag-row">${tagsHtml}</div>
+      </div>
+    </div>`;
+
+  panel.classList.add('open');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+# 필요한 라이브러리 설치
+!pip install --upgrade yfinance --quiet
+
+# 라이브러리 불러오기
+import pandas as pd
+import yfinance as yf
+from datetime import datetime
+
+# 한국에 상장된 ETF와 그에 대한 설명 설정
+tickers_agg = {
+    "133690.KS": "TIGER 미국나스닥100",
+    "143850.KS": "TIGER 미국S&P500선물(H)"
+}  # 공격자산
+tickers_safe = {
+    "305080.KS": "TIGER 미국채10년선물",
+    "148070.KS": "KOSEF 국고채10년",
+    "261240.KS": "KODEX 미국달러선물",
+    "214980.KS": "KODEX KRW Cash PLUS"
+}  # 방어자산
+tickers_all = list(tickers_agg.keys()) + list(tickers_safe.keys())
+
+# Yahoo Finance에서 종가 데이터 가져오기
+def get_yahoo_data(tickers, start, end, get_type="Adj Close"):
+    df = yf.download(tickers, start=start, end=end, progress=False)
+    df = df[get_type]
+    df.dropna(inplace=True)
+    return df
+
+# 월말 리밸런싱 날짜만 추출하는 함수
+def get_rebal_date(df):
+    df["year"] = df.index.year
+    df["month"] = df.index.month
+    days_df = df.groupby(["year", "month"]).tail(1)  # 각 달의 마지막 거래일 선택
+    return days_df.drop(columns=["year", "month"])
+
+# 최근 3년간 데이터 가져오기
+end_date = datetime.today().strftime('%Y-%m-%d')
+start_date = (datetime.today() - pd.DateOffset(years=3)).strftime('%Y-%m-%d')
+
+data = get_yahoo_data(tickers_all, start=start_date, end=end_date)
+rebal_data = get_rebal_date(data)
+
+# 월별 투자 자산 및 수익률 계산
+portfolio_data = []
+
+# 변형 듀얼 모멘텀 전략 적용 (최근 36개월 데이터만 사용)
+for i in range(12, rebal_data.shape[0]):
+    date = rebal_data.index[i]
+
+    # 공격자산의 12개월 수익률 계산
+    agg_m12 = rebal_data[list(tickers_agg.keys())].iloc[i] / rebal_data[list(tickers_agg.keys())].iloc[i - 12] - 1
+
+    # 포트폴리오 결과 저장용
+    res = {}
+    if agg_m12["133690.KS"] < 0:  # TIGER 미국나스닥100의 12개월 수익률이 0보다 작으면 방어 자산 선택
+        # 안전 자산 6개월 수익률 계산
+        safe_m6 = rebal_data[list(tickers_safe.keys())].iloc[i] / rebal_data[list(tickers_safe.keys())].iloc[i - 6] - 1
+        safe_top3 = safe_m6.nlargest(3)
+        bil_m6 = rebal_data["214980.KS"].iloc[i] / rebal_data["214980.KS"].iloc[i - 6] - 1  # KODEX 단기채권의 6개월 수익률
+
+        for j in range(3):
+            name = "214980.KS" if safe_top3.iloc[j] <= bil_m6 else safe_top3.index[j]
+            res[name] = res.get(name, 0) + 100 / 3
+    else:
+        # 공격형 자산 선택 (12개월 수익률이 가장 높은 자산 1개에 100% 투자)
+        agg_top1 = agg_m12.nlargest(1)
+        res[agg_top1.index[0]] = 100.0
+
+    # 매수할 자산 리스트 생성 (이름으로 표기)
+    assets_list = ', '.join([tickers_agg.get(asset, tickers_safe.get(asset, asset)) for asset in res.keys()])
+
+    # 월별 수익률 계산 (가중평균 수익률)
+    monthly_return = sum(
+        (rebal_data[asset].pct_change().iloc[i] * weight / 100) for asset, weight in res.items()
+    )
+
+    # 결과 저장
+    portfolio_data.append({
+        "Date": date.strftime('%Y-%m-%d'),
+        "Assets": assets_list,
+        "Monthly Return": round(monthly_return * 100, 2)
+    })
+
+# 최종 포트폴리오 DataFrame 생성
+portfolio = pd.DataFrame(portfolio_data)
+
+# 최신 36개월(3년) 데이터만 유지
+portfolio = portfolio.tail(36)
+
+# 최종 포트폴리오 결과 출력
+print("\n최근 3년간 월별 투자 자산 및 수익률:")
+print(portfolio)
+
+# CAGR 및 MDD 계산
+portfolio['Cumulative'] = (1 + portfolio['Monthly Return'] / 100).cumprod()
+years = (datetime.strptime(portfolio['Date'].iloc[-1], '%Y-%m-%d') - datetime.strptime(portfolio['Date'].iloc[0], '%Y-%m-%d')).days / 365.25
+cagr = (portfolio['Cumulative'].iloc[-1])**(1/years) - 1
+
+def calculate_mdd(cumulative_returns):
+    cumulative_max = cumulative_returns.cummax()
+    drawdown = cumulative_returns / cumulative_max - 1
+    mdd = drawdown.min()
+    return mdd
+
+mdd = calculate_mdd(portfolio['Cumulative'])
+
+# 가장 최신 데이터 날짜
+latest_actual_date = portfolio['Date'].iloc[-1]
+
+# 결과 출력
+print(f"\n최근 3년간 변형 듀얼 모멘텀 전략에 따른 백테스트 결과:")
+print(f"CAGR(연평균 성장률): {cagr * 100:.2f}%")
+print(f"MDD(최대 낙폭): {mdd * 100:.2f}%")
+print(f"\n가장 최신 데이터 날짜: {latest_actual_date}")

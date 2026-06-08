@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>조선 섹터 마스터 — 전교 1등 비법서 · 2026</title>
+<style>
+:root{--bg:#080d18;--card:#0f1a2e;--border:#1e3050;--green:#22c55e;--amber:#f59e0b;--red:#ef4444;--blue:#3b82f6;--purple:#a855f7;--teal:#14b8a6;--text:#e2e8f0;--muted:#64748b;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif;font-size:14px;line-height:1.6;}
+
+/* ── STICKY NAV ── */
+.snav{position:sticky;top:0;z-index:100;background:rgba(8,13,24,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:0;padding:0 20px;overflow-x:auto;white-space:nowrap;}
+.snav-logo{color:var(--amber);font-weight:900;font-size:13px;padding:14px 16px 14px 0;flex-shrink:0;}
+.snav a{color:var(--muted);text-decoration:none;font-size:11px;font-weight:600;padding:14px 12px;border-bottom:2px solid transparent;transition:all .15s;}
+.snav a:hover,.snav a.active{color:var(--text);border-bottom-color:var(--amber);}
+.snav-date{color:var(--muted);font-size:10px;margin-left:auto;padding:14px 0;flex-shrink:0;}
+
+/* ── STEP 1 — 5초 ── */
+.step1{background:linear-gradient(170deg,#060e1e 0%,#0d1e38 50%,#060e1e 100%);padding:44px 28px 36px;border-bottom:2px solid rgba(245,158,11,.3);position:relative;overflow:hidden;}
+.step1::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(245,158,11,.07) 0%,transparent 70%);pointer-events:none;}
+.step1::after{content:'⚓';position:absolute;right:48px;top:32px;font-size:100px;opacity:.05;pointer-events:none;}
+.s1-inner{max-width:900px;margin:0 auto;}
+.step-badge{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--amber);margin-bottom:16px;}
+.step-badge::before,.step-badge::after{content:'';width:20px;height:1px;background:var(--amber);}
+.big-hl{font-size:clamp(26px,4vw,42px);font-weight:900;color:#fff;line-height:1.2;margin-bottom:8px;}
+.big-hl em{color:var(--amber);font-style:normal;}
+.big-sub{font-size:clamp(14px,2vw,17px);font-weight:600;color:rgba(255,255,255,.5);margin-bottom:24px;}
+.kpi-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px;}
+.kpi{flex:1;min-width:140px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:14px 16px;}
+.kpi-val{font-size:22px;font-weight:900;margin-bottom:4px;}
+.kpi-val.r{color:var(--red);}
+.kpi-val.a{color:var(--amber);}
+.kpi-val.g{color:var(--green);}
+.kpi-val.b{color:var(--blue);}
+.kpi-lbl{font-size:10px;color:var(--muted);}
+.kpi-desc{font-size:12px;color:var(--text);margin-top:3px;font-weight:600;}
+.trigger-bar{display:flex;align-items:center;gap:16px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:12px 20px;}
+.trigger-icon{font-size:20px;}
+.trigger-main{font-size:16px;font-weight:900;color:var(--red);}
+.trigger-desc{font-size:12px;color:var(--muted);}
+
+/* ── STEP 2 — 30초 ── */
+.step2{padding:36px 28px;border-bottom:1px solid var(--border);background:var(--bg);}
+.s2-inner{max-width:900px;margin:0 auto;}
+.step-label{display:flex;align-items:center;gap:10px;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:20px;}
+.step-num{width:24px;height:24px;border-radius:50%;border:1px solid var(--muted);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--muted);}
+.step-num.active{border-color:var(--amber);color:var(--amber);}
+.hm-compact{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+@media(max-width:800px){.hm-compact{grid-template-columns:repeat(2,1fr);}}
+.hmc{border-radius:10px;padding:12px 14px;border:1px solid;cursor:pointer;transition:transform .12s;}
+.hmc:hover{transform:translateY(-2px);}
+.hmc.r{background:rgba(239,68,68,.07);border-color:rgba(239,68,68,.35);}
+.hmc.a{background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.3);}
+.hmc.b{background:rgba(59,130,246,.05);border-color:rgba(59,130,246,.25);}
+.hmc.p{background:rgba(168,85,247,.05);border-color:rgba(168,85,247,.25);}
+.hmc.t{background:rgba(20,184,166,.05);border-color:rgba(20,184,166,.25);}
+.hmc-urg{font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;}
+.hmc.r .hmc-urg{color:var(--red);}
+.hmc.a .hmc-urg{color:var(--amber);}
+.hmc.b .hmc-urg{color:var(--blue);}
+.hmc.p .hmc-urg{color:var(--purple);}
+.hmc.t .hmc-urg{color:var(--teal);}
+.hmc-title{font-size:12px;font-weight:800;color:#fff;margin-bottom:4px;}
+.hmc-stk{font-size:10px;color:var(--muted);}
+
+/* ── STEP 3 — 10분 ── */
+.step3{padding:36px 28px;max-width:900px;margin:0 auto;}
+.acc-item{margin-bottom:8px;}
+.acc-head{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 18px;cursor:pointer;transition:border-color .15s;}
+.acc-head:hover{border-color:rgba(245,158,11,.3);}
+.acc-head.open{border-color:rgba(245,158,11,.4);border-radius:10px 10px 0 0;}
+.acc-head-left{display:flex;align-items:center;gap:10px;}
+.acc-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.acc-dot.r{background:var(--red);}
+.acc-dot.a{background:var(--amber);}
+.acc-dot.b{background:var(--blue);}
+.acc-dot.g{background:var(--green);}
+.acc-dot.p{background:var(--purple);}
+.acc-dot.t{background:var(--teal);}
+.acc-title{font-size:13px;font-weight:800;color:#fff;}
+.acc-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+.acc-head-right{display:flex;align-items:center;gap:8px;}
+.acc-tag{font-size:9px;font-weight:700;padding:2px 8px;border-radius:5px;}
+.at-r{background:rgba(239,68,68,.15);color:var(--red);}
+.at-a{background:rgba(245,158,11,.15);color:var(--amber);}
+.at-b{background:rgba(59,130,246,.15);color:var(--blue);}
+.at-p{background:rgba(168,85,247,.15);color:var(--purple);}
+.at-g{background:rgba(34,197,94,.15);color:var(--green);}
+.at-t{background:rgba(20,184,166,.15);color:var(--teal);}
+.acc-arrow{font-size:12px;color:var(--muted);transition:transform .2s;}
+.acc-arrow.open{transform:rotate(180deg);color:var(--amber);}
+.acc-body{display:none;background:rgba(15,26,46,.7);border:1px solid rgba(245,158,11,.25);border-top:none;border-radius:0 0 10px 10px;padding:18px;}
+.acc-body.open{display:block;}
+.acc-content{font-size:12px;color:var(--muted);line-height:1.8;}
+.acc-content b{color:var(--text);}
+.acc-content h4{font-size:11px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.08em;margin:14px 0 8px;padding-top:12px;border-top:1px solid var(--border);}
+.acc-content h4:first-child{margin-top:0;padding-top:0;border-top:none;}
+.acc-signal{font-size:11px;font-weight:700;color:var(--green);margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+.acc-stks{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+.stk-chip{font-size:10px;font-weight:700;padding:3px 10px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);}
+.stk-chip.s{border-color:rgba(34,197,94,.3);color:var(--green);}
+.stk-chip.m{border-color:rgba(245,158,11,.3);color:var(--amber);}
+.stk-chip.b{border-color:rgba(59,130,246,.3);color:var(--blue);}
+.stk-chip.p{border-color:rgba(168,85,247,.3);color:var(--purple);}
+
+/* 리스크 2열 */
+.risk-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:600px){.risk-grid{grid-template-columns:1fr;}}
+.risk-col-title{font-size:10px;font-weight:700;letter-spacing:1px;margin-bottom:10px;}
+.risk-item{margin-bottom:10px;}
+.risk-item b{color:var(--text);}
+
+/* 이벤트 테이블 */
+.ev-table{width:100%;border-collapse:separate;border-spacing:0 5px;font-size:11px;}
+.ev-table th{font-size:9px;font-weight:700;color:var(--muted);text-align:left;padding:4px 8px;text-transform:uppercase;letter-spacing:.08em;}
+.ev-table td{padding:8px 8px;background:rgba(255,255,255,.03);border-top:1px solid rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle;}
+.ev-table td:first-child{border-left:1px solid rgba(255,255,255,.05);border-radius:6px 0 0 6px;}
+.ev-table td:last-child{border-right:1px solid rgba(255,255,255,.05);border-radius:0 6px 6px 0;}
+.ev-confirmed{color:var(--green);font-weight:700;}
+.ev-expected{color:var(--amber);font-weight:700;}
+.ev-up{color:var(--green);}
+.ev-down{color:var(--red);}
+.ev-mixed{color:var(--amber);}
+
+/* PC 트래커 카드 */
+.pc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;}
+@media(max-width:700px){.pc-row{grid-template-columns:repeat(2,1fr);}}
+.pc-c{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
+.pc-c.up{border-color:rgba(34,197,94,.3);}
+.pc-c.a{border-color:rgba(245,158,11,.3);}
+.pc-name{font-size:10px;color:var(--muted);margin-bottom:4px;}
+.pc-val{font-size:18px;font-weight:900;color:#fff;margin-bottom:2px;}
+.pc-delta{font-size:11px;font-weight:600;}
+.pc-delta.up{color:var(--green);}
+.pc-delta.a{color:var(--amber);}
+.pc-desc{font-size:10px;color:#374151;margin-top:5px;line-height:1.5;}
+
+/* 밸류체인 종목 카드 */
+.vc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+@media(max-width:700px){.vc-grid{grid-template-columns:repeat(2,1fr);}}
+.vc-card{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:11px 13px;}
+.vc-name{font-size:12px;font-weight:800;color:#fff;margin-bottom:2px;}
+.vc-info{font-size:10px;color:var(--muted);line-height:1.6;}
+.vc-badge{display:inline-block;font-size:9px;font-weight:700;padding:1px 7px;border-radius:4px;margin-top:5px;}
+.vb-s{background:rgba(34,197,94,.12);color:var(--green);}
+.vb-m{background:rgba(245,158,11,.12);color:var(--amber);}
+.vb-b{background:rgba(59,130,246,.12);color:var(--blue);}
+</style>
+</head>
+<body>
+
+<!-- ── STICKY NAV ── -->
+<nav class="snav">
+  <span class="snav-logo">⚓ 조선 마스터</span>
+  <a href="#s1">5초 핵심</a>
+  <a href="#s2">30초 카테고리</a>
+  <a href="#s3">10분 분석</a>
+  <span class="snav-date" id="snav-date">2026-06-08</span>
+</nav>
+
+<!-- ══════════════════════════════════════════════
+     STEP 1 — 5초 · 지금 뭐가 제일 중요한가
+     ══════════════════════════════════════════════ -->
+<div class="step1" id="s1">
+<div class="s1-inner">
+  <div class="step-badge">STEP 1 — 5초 · 지금 뭐가 제일 중요한가</div>
+
+  <div class="big-hl">지금 조선은<br><em>실적의 원년</em>이자 <em>방산의 개화</em>다.</div>
+  <div class="big-sub">2022~2024년 고선가 수주 물량이 본격 인도 — 영업이익률 14%+ 시대 · 미 해군 MRO·CPSP·KDDX 방산 3각 모멘텀 동시 점화</div>
+
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-val r" id="dday-cpsp">D-22</div>
+      <div class="kpi-lbl">가장 급한 것</div>
+      <div class="kpi-desc">CPSP 60조 결정 (6/30)</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-val a">0%</div>
+      <div class="kpi-lbl">시장이 모르는 것</div>
+      <div class="kpi-desc">삼성중공업 FDC·무인함정 — 주가 미반영</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-val g">역발상</div>
+      <div class="kpi-lbl">과공포 = 매수 기회</div>
+      <div class="kpi-desc">MASGA 전투함 금지 ≠ MRO+무인함정 소멸</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-val b">55%</div>
+      <div class="kpi-lbl">진짜 리스크 (과소평가)</div>
+      <div class="kpi-desc">인력 부족 → 납기 지연 → OPM 하향</div>
+    </div>
+  </div>
+
+  <div class="trigger-bar">
+    <div class="trigger-icon">📅</div>
+    <div>
+      <div class="trigger-main">다음 트리거: 6월 말 — CPSP 결정 + 빅3 2Q26 실적</div>
+      <div class="trigger-desc">CPSP 수주 성사 시 한화오션·HD현대 단기 폭등. 빅3 합산 2Q 영업이익 사상 최대 시 기자재 동반 리레이팅. 아래 ↓ 카테고리별 세부 확인</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     STEP 2 — 30초 · 9개 카테고리 긴급도 한눈에
+     ══════════════════════════════════════════════ -->
+<div class="step2" id="s2">
+<div class="s2-inner">
+  <div class="step-label">
+    <div class="step-num active">2</div>
+    STEP 2 — 30초 · 9개 카테고리 긴급도 한눈에
+  </div>
+  <div class="hm-compact">
+    <div class="hmc r"><div class="hmc-urg">🔴 즉시</div><div class="hmc-title">고선가 실적 현실화</div><div class="hmc-stk">HD한국조선해양 · 빅3 전체</div></div>
+    <div class="hmc r"><div class="hmc-urg">🔴 즉시</div><div class="hmc-title">LNG 수주 슈퍼사이클</div><div class="hmc-stk">삼성중공업 · 한화오션 · 동성화인텍</div></div>
+    <div class="hmc a"><div class="hmc-urg">🟡 중기</div><div class="hmc-title">美 해군 MRO·방산</div><div class="hmc-stk">한화오션 · HD현대중공업 · STX엔진</div></div>
+    <div class="hmc a"><div class="hmc-urg">🟡 중기</div><div class="hmc-title">기자재 낙수효과</div><div class="hmc-stk">동성화인텍 · 한국카본 · 성광벤드</div></div>
+    <div class="hmc a"><div class="hmc-urg">🟡 중기</div><div class="hmc-title">엔진·DF 이중연료</div><div class="hmc-stk">HD현대중공업 · HSD엔진 · STX중공업</div></div>
+    <div class="hmc a"><div class="hmc-urg">🟡 중기</div><div class="hmc-title">FLNG·해양플랜트</div><div class="hmc-stk">삼성중공업 · 한화오션 · 평산</div></div>
+    <div class="hmc t"><div class="hmc-urg">🩵 중기</div><div class="hmc-title">애프터마켓·AM</div><div class="hmc-stk">HD현대마린솔루션 · 에스앤더블류</div></div>
+    <div class="hmc b"><div class="hmc-urg">🔵 관망</div><div class="hmc-title">친환경·암모니아</div><div class="hmc-stk">HD현대중공업 · 삼성중공업 · HSD엔진</div></div>
+    <div class="hmc p"><div class="hmc-urg">🟣 불확실</div><div class="hmc-title">탱커·벌크 지정학</div><div class="hmc-stk">현대미포조선 · 대한조선 · 대한해운</div></div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     STEP 3 — 10분 · 아코디언 상세
+     ══════════════════════════════════════════════ -->
+<div class="step3" id="s3">
+  <div class="step-label" style="margin-bottom:20px;">
+    <div class="step-num active">3</div>
+    STEP 3 — 10분 · 펼쳐서 보고 싶은 것만 클릭
+  </div>
+
+  <!-- ★ 미반영 인사이트 -->
+  <div class="acc-item">
+    <div class="acc-head" onclick="toggle(this)">
+      <div class="acc-head-left"><div class="acc-dot p"></div><div><div class="acc-title">★ 시장 미반영 인사이트 5가지</div><div class="acc-sub">주가에 아직 반영 안 된 것 — 이게 핵심</div></div></div>
+      <div class="acc-head-right"><div class="acc-tag at-p">프리미엄</div><div class="acc-arrow">▾</div></div>
+    </div>
+    <div class="acc-body">
+      <div class="acc-content">
+        <b>#1 삼성중공업 FDC (부유식 데이터센터) 첫 수주</b>: ABS·LR 개념설계 인증(AiP) 획득 완료. 포시도니아 2026에서 그리스 선주사·캐피탈·LR 3자 협력 MOU. 슈퍼마이크로와 AI서버 공동개발 착수. 첫 수주 계약 나오는 순간 삼성중공업 밸류에이션 체계 자체가 바뀜 — 조선사가 아닌 AI 인프라 플랫폼으로 리레이팅. 현재 주가 반영률: 0%<br><br>
+        <b>#2 HD현대-안두릴 무인함정(UUV·USV) 방산 리레이팅</b>: HD현대·안두릴·ABS 무인수상정·무인잠수정 MOU. 10월 시제함 미국 연안 시험 운항 예정. 글로벌 무인잠수정 시장 2025년 55억달러 → 2035년 259억달러(CAGR 16.6%). 의회의 전투함 금지와 관계없이 USV/UUV 루트는 열려있음. HD현대중공업 "상선 조선소→AI방산 플랫폼" 리레이팅 시작점<br><br>
+        <b>#3 환율 1,400원대 × 고선가 이익 레버리지</b>: 한화오션 1Q26 컨센서스 4.8% 초과 주원인은 수주 당시 환율(1,330원) 대비 현재 매출 인식 환율(1,464원). 고선가 수주 물량이 3Q26까지 계속 인식될수록 애널리스트 추정치를 반복적으로 초과하는 구조 — 대부분 모델이 이를 충분히 반영하지 않고 있음<br><br>
+        <b>#4 CPSP 불발 후 한화오션 대안 파이프라인</b>: 시장은 "CPSP 불발 = 한화오션 급락"으로 단순 보는데, 에스토니아 OPV·태국 호위함·중동 잠수함 파이프라인이 이미 협의 중. CPSP 실패가 방산 모멘텀 소멸을 의미하지 않는다는 점이 과소평가됨<br><br>
+        <b>#5 삼성E&A (삼성엔지니어링) LNG EPC 신시장 진입</b>: 기존 LNG 라이선서 폐쇄 생태계를 정면 돌파 아닌 라이선서와 공동으로 중소형 LNG 시장 개척. 조선 슈퍼사이클 수혜가 EPC 밸류체인까지 확산. 오늘(2026-06-08) wisereport: KB증권 TP 7.35만원 — "The First Call EPC"
+      </div>
+      <div class="acc-signal">📡 트리거 순서: CPSP 결정(6/30) → FDC 첫 수주 → UUV 시험 운항(10월) → 환율 유지 × 3Q 실적 서프라이즈</div>
+    </div>
+  </div>
+
+  <!-- ① 고선가 실적 현실화 -->
+  <div class="acc-item">
+    <div class="acc-head" onclick="toggle(this)">
+      <div class="acc-head-left"><div class="acc-dot r"></div><div><div class="acc-title">① 고선가 실적 현실화 — 수주→매출 변환 사이클</div><div class="acc-sub">2022~2024 역대급 선가 수주가 지금 이익으로 쏟아진다</div></div></div>
+      <div class="acc-head-right"><div class="acc-tag at-r">🔴 즉시</div><div class="acc-arrow">▾</div></div>
+    </div>
+    <div class="acc-body">
+      <div class="acc-content">
+        <h4>핵심 질문</h4>
+        2022~2024년 고선가 수주 물량이 실제 분기 매출·영업이익으로 얼마나 빠르게 인식되고 있는가?
+        <h4>현황 (2026-06-08)</h4>
+        조선 빅3 2026년 1분기 합산 영업이익 <b>2조 702억원 — 사상 최대</b>. 하반기로 갈수록 고선가 물량 인식 효과가 더욱 커지는 구조. NH투자증권: 2026년 국내 조선사 영업이익률 <b>14%+ 유지</b> 전망. HD현대중공업 2026년 매출 전년 대비 <b>+38.3%</b> 예상. 삼성중공업 <b>+20%</b> 목표.<br><br>
+        <b>사이클 위치</b>: 중기 (3Q26까지 고점 실적 구간, 이후 기저 효과 논란 대비 필요)
+        <h4>다음 트리거</h4>
+        빅3의 2Q26 합산 영업이익이 전년 동기 대비 <b>70~80% 성장</b> 확인 → MSCI 리밸런싱 수급과 겹치면 수급 폭발. 3Q26 어닝 서프라이즈가 최고점 확인 구간.
+      </div>
+      <div class="acc-signal">📡 트리거: 8월 초 빅3 2Q26 실적 발표 — 컨센 대비 서프라이즈 폭이 다음 주가 트리거</div>
+      <div class="acc-stks">
+        <div class="stk-chip s">HD한국조선해양 — 구조적</div>
+        <div class="stk-chip s">한화오션 — 추세</div>
+        <div class="stk-chip m">삼성중공업 — 역발상</div>
+        <div class="stk-chip s">HD현대중공업 — 정배열</div>
+        <div class="stk-chip b">HJ중공업</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ② LNG 수주 슈퍼사이클 -->
+  <div class="acc-item">
+    <div class="acc-head" onclick="toggle(this)">
+      <div class="acc-head-left"><div class="acc-dot r"></div><div><div class="acc-title">② LNG선 수주 슈퍼사이클 — 북미 FID 대기</div><div class="acc-sub">2026년 예상 115~150척 발주 · 클락슨 NPI 185.02 고공행진</div></div></div>
+      <div class="acc-head-right"><div class="acc-tag at-r">🔴 즉시</div><div class="acc-arrow">▾</div></div>
+    </div>
+    <div class="acc-body">
+      <div class="acc-content">
+        <h4>핵심 질문</h4>
+        2026년 예상 115~150척 LNG선 발주 중 한국 빅3가 수주하는 척수가 컨센서스를 초과하는가?
+        <h4>현황 (P&C 데이터)</h4>
+        클락슨 신조선가 지수(NPI): <b>185.02pt</b> (2026.05 말, 전월 183.41 대비 +1.61). LNG 운반선 신조가 <b>척당 2.6억달러</b>. 조선용 후판 t당 <b>80만원 중반</b>(전 분기 초반 대비 소폭 인상). 선가-후판 스프레드 <b>양호 유지</b> — 이익률 개선 구조 유효.<br><br>
+        2023년부터 증가한 친환경 LNG 이중연료 선박 발주가 2026년 실적에 본격 반영. 한화오션은 <b>카타르에너지</b> LNG 운반선 계약 진행 중. 미국 벤처글로벌·체니어 등 북미 LNG 프로젝트 최종투자결정(FID)이 확정되면 연쇄 대량 발주.
+        <h4>다음 트리거</h4>
+        카타르 2차 프로젝트 잔여분 + 북미 대형 LNG선 추가 50척 규모 본계약. <b>CP2·CP3 FID 공식 발표</b>가 신호탄.
+      </div>
+      <div class="acc-signal">📡 트리거: 카타르에너지 2차 잔여 발주 + 미국 CP2/CP3 LNG 프로젝트 FID 결정</div>
+      <div class="acc-stks">
+        <div class="stk-chip s">삼성중공업</div>
+        <div class="stk-chip s">한화오션</div>
+        <div class="stk-chip s">HD한국조선해양</div>
+        <div class="stk-chip m">동성화인텍 — LNG 보냉재</div>
+        <div class="stk-chip m">세진중공업</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ③ 美 해군 MRO·방산 -->
+  <div class="acc-item">
+    <div class="acc-head" onclick="toggle(this)">
+      <div class="acc-head-left"><div class="acc-dot a"></div><div><div class="acc-title">③ 美 해군 MRO·MASGA — 방산 특수선 수주 확장</div><div class="acc-sub">MRO 교두보 → 무인함정(USV·UUV) → 장기 방산 플랫폼</div></div></div>
+      <div class="acc-head-right"><div class="acc-tag at-a">🟡 중기</div><div class="acc-arrow">▾</div></div>
+    </div>
+    <div class="acc-body">
+      <div class="acc-content">
+        <h4>핵심 질문</h4>
+        미 해군 함정 MRO에서 시작된 한미 조선 협력이 실제 함정 건조 수주로 업그레이드되는가?
+        <h4>현황 — 이미 진행 중인 것</h4>
+        HD현대중공업·한화오션 미 해군 MRO 올해 들어 각각 2건씩 수주 — <b>지난해 연간 실적을 3개월 만에 초과</b>. 한화오션은 필라델피아 조선소 인수로 미국 내 거점 확보.<br><br>
+        <b>MASGA 실질 경로</b>: 의회가 전투함 해외 건조 예산 사용을 제한했으나, <b>무인수상정(USV)·무인잠수정(UUV)은 별개</b>. HD현대-안두릴-ABS 3자 무인함정 공동 개발. 시제함 <b>10월 미국 연안 시험 운항</b> 예정. 미 해군 실발주 전환 시 "상선 조선사→AI 방산 플랫폼" 리레이팅 시작.
+        <h4>사이클 위치 & 다음 트리거</h4>
+        초기→중기 전환점. 미 하원 NDAA 전투함 금지 조항은 MRO·무인함정 루트와 무관. 10월 시험 운항 결과 + 미 해군 실발주 결정이 직접 트리거.
+      </div>
+      <div class="acc-signal">📡 트리거: 10월 HD현대-안두릴 무인함정 시험 운항 → 미 해군 실발주 공시</div>
+      <div class="acc-stks">
+        <div class="stk-chip s">한화오션 — 필라델피아 거점</div>
+        <div class="stk-chip s">HD현대중공업 — 안두릴 파트너</div>
+        <div class="stk-chip m">삼성중공업 — MASGA 후발</div>
+        <div class="stk-chip m">HJ중공업 — 특수선 생산</div>
+        <div class="stk-chip m">한화에어로스페이스 — 방산 시스템</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ④ 기자재 낙수효과 -->
+  <div class="acc-item">
+    <div class="acc-head" onclick="toggle(this)">
+      <div class="acc-head-left"><div class="acc-dot a"></div><div><div class="acc-title">④ 조선기자재 낙수효과 — 도크 포화 속 협력사 수혜</div><div class="acc-sub">2023~2024 수주 → 2026~2027 기자재 피크 · 7종목 스코어카드</div></div></div>
+      <div class="acc-head-right"><div class="acc-tag at-a">🟡 중기</div><div class="acc-arrow">▾</div></div>
+    </div>
+    <div class="acc-body">
+      <div class="acc-content">
+        <h4>낙수 타이밍</h4>
+        조선소 수주 → 6~12개월 후 기자재 발주 → <b>2023~2024 대규모 수주 = 2026~2027이 피크</b>. 지금이 낙수 본격 시작점.
+        <h4>듀오폴(양대 독점) 보냉재 — 가장 직접 수혜</h4>
+        <b>동성화인텍</b>: 1Q26 영업이익 +58.4% YoY. 고객사 NO96 보냉재 확대(한화오션向). 퓨얼탱크 부문 전 선종 확대. 증권가 TP 3.8만원 — 현재 저평가 구간.<br>
+        <b>한국카본</b>: OPM 19.4% (고마진 수주물량 반영). HD현대중공업 등과 <b>2280억원 LNG 보냉재 공급 계약</b> (2026.03). SK증권 TP <b>5.8만원</b> 상향.
+        <h4>피팅·밸브 — 북미 LNG 연동</h4>
+        <b>성광벤드</b>: 북미·중동 LNG FID 승인 물량 2026년부터 수주 본격화. 주가 <b>5년 내 최고가</b> 근접.<br>
+        <b>태광</b>: 1Q26 매출 +31.4%, OP +26.3% YoY. LNG 운반선 + 석화 플랜트 수요.
+        <h4>기타 핵심 종목</h4>
+        <b>세아제강</b>: 컨센서스 <b>43% 상회</b> 어닝 서프라이즈. 에너지용 강관(OCTG) 수출 호조.<br>
+        <b>케이에스피</b>: 수주잔고 <b>창사 이래 최초 1000억 돌파</b> (2026.04). 슈퍼사이클 직결 엔진부품.<br>
+        <b>하이록코리아</b>: 고마진 계측밸브 전문. 조선주 대비 밸류 할인 — 숨은 수혜주.
+        <h4>숨은 수혜주 (아직 주목 안 받는 것)</h4>
+        <b>세진중공업</b> (LNG 화물창 직납, 시장 인지도 대비 저평가) · <b>동방선기</b> (의장품 직납, 도크 포화 시 납기 프리미엄) · <b>대양전기공업</b> (선박 분전반 독점, LNG선 전기화 확대)
+      </div>
+      <div class="acc-signal">📡 트리거: 빅3 합산 OPM 14%+ 확인 시 기자재 협력사 멀티플 동반 리레이팅</div>
+      <div class="acc-stks">
+        <div class="stk-chip s">동성화인텍 — OP+58.4%</div>
+        <div class="stk-chip s">한국카본 — TP 5.8만</div>
+        <div class="stk-chip s">성광벤드 — 5년고점</div>
+        <div class="stk-chip m">태광 · 세아제강</div>
+        <div class="stk-chip m">케이에스피 — 수주1000억</div>
+        <div class="stk-chip b">하이록·세진·동방선기</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑤ 엔진·DF 이중연료 -->
+  <div class="acc-item">
+    <div class="acc-head" onclick="toggle(this)">
+      <div class="acc-head-left"><div class="acc-dot a"></div><div><div class="acc-title">⑤ 선박 엔진·DF 이중연료 — OPM 두 자릿수 안착</div><div class="acc-sub">한화-HD현대 양대 수직계열화 · 데이터센터 신시장 부상</div></div></div>
+      <div class="acc-head-right"><div class="acc-tag at-a">🟡 중기</div><div class="acc-arrow">▾</div></div>
+    </div>
+    <div class="acc-body">
+      <div class="acc-content">
+        <h4>핵심 질문</h4>
+        친환경 DF 엔진 쇼티지 국면에서 양대 수직계열화(한화-HD현대)의 시너지가 OPM 폭발로 증명되는가?
+        <h4>현황</h4>
+        HD현대중공업 엔진기계 사업부 1Q26 OPM <b>21.1%</b> — 경이적 수익성. 이중연료(DF) 엔진 비중 확대 + 판가 상승 효과. 증권가 목표주가 <b>100만원 이상</b> 상향.<br><br>
+        <b>데이터센터 신시장</b>: 국내 선박엔진 업계가 미국 데이터센터 수혜주로 부상. 가스터빈 대체재로 선박용 중속엔진 주목 — 한화엔진 4거래일 +40%, STX엔진 장중 상한가 경험. 조선+방산+데이터센터 3중 수혜 구조.
+        <h4>다음 트리거</h4>
+        메탄올·암모니아 DF 엔진 납품 단가 추가 인상 + 노후선 대상 친환경 엔진 리트로핏(Retrofit) 대규모 계약. 데이터센터용 엔진 실수주 공시.
+      </div>
+      <div class="acc-signal">📡 트리거: 분기별 엔진 ASP(판가) 인상 발표 + DC용 엔진 수주 공시</div>
+      <div class="acc-stks">
+        <div class="stk-chip s">HD현대중공업 — OPM 21.1%</div>
+        <div class="stk-chip m">HSD엔진(한화엔진)</div>
+        <div class="stk-chip m">STX중공업(HD마린엔진)</div>
+        <div class="stk-chip m">STX엔진 — DC 수혜</div>
+        <div class="stk-chip b">디아이씨</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑥ FLNG·해양플랜트 -->
+  <div class="acc-item">
+    <div class="acc-head" onclick="toggle(this)">
+      <div class="acc-head-left"><div class="acc-dot a"></div><div><div class="acc-title">⑥ FLNG·FPSO 해양플랜트 — 삼성 독점 가시화</div><div class="acc-sub">전 세계 11기 중 7기 수주(64%) · 모잠비크 추가 시 70% 독점</div></div></div>
+      <div class="acc-head-right"><div class="acc-tag at-a">🟡 중기</div><div class="acc-arrow">▾</div></div>
+    </div>
+    <div class="acc-body">
+      <div class="acc-content">
+        <h4>핵심 질문</h4>
+        고유가 환경에서 기당 2~3조 FLNG 해양플랜트 수주를 독식해 턴어라운드를 가속화하는가?
+        <h4>삼성중공업 현황</h4>
+        FLNG 전 세계 11기 중 <b>7기 수주(64%)</b>. 6월 <b>4.3조원 델핀 FLNG</b> 계약 체결. 모잠비크 코랄노르트 Q3 추가 입찰 시 점유율 <b>70% → 사실상 독점 공식화</b>.<br>
+        <b>MRO 장기 매출</b>: FLNG 건조사 = 정비·유지보수 독점. 수천 개 맞춤 설계 부품 → 만든 곳만 제대로 고칠 수 있음. 1기당 MRO 1조+ 장기 매출 기대.<br>
+        <b>FDC (부유식 데이터센터)</b>: FLNG 설계 기술의 자연스러운 확장. 2026년 AiP 획득 완료. 첫 수주 시 삼성중공업 밸류에이션 체계 붕괴 (조선→AI 인프라 리레이팅).<br>
+        <b>과소평가 리스크</b>: 여러 FLNG 프로젝트 동시 진행 = 2015년 해양플랜트 충당금 트라우마 소환 가능. 삼성중공업 FLNG 공정 이슈 발생 시 급락 위험.
+        <h4>다음 트리거</h4>
+        모잠비크 코랄노르트 Q3 입찰 결과 + 북미·아프리카 심해 가스전 FLNG 2기 이상 본계약. 삼성 FDC 첫 수주.
+      </div>
+      <div class="acc-signal">📡 트리거: 모잠비크 FLNG 입찰(Q3) → 삼성 FDC 첫 수주 → 해양플랜트 독점 확정 발표</div>
+      <div class="acc-stks">
+        <div class="stk-chip s">삼성중공업 — FLNG 64%</div>
+        <div class="stk-chip m">한화오션 — FPSO 확장</div>
+        <div class="stk-chip m">이엔드디 · 평산 — 기자재</div>
+        <div class="stk-chip b">삼강엠앤티 — 하부구조물</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑦ 애프터마켓·AM -->
+  <div class="acc-item">
+    <div class="acc-head" onclick="toggle(this)">
+      <div class="acc-head-left"><div class="acc-dot t"></div><div><div class="acc-title">⑦ 애프터마켓(AM) — 인도 완료 선박의 Lock-in 효과</div><div class="acc-sub">무상 보증 종료 → 고마진 순정 부품·디지털 솔루션 구조적 성장</div></div></div>
+      <div class="acc-head-right"><div class="acc-tag at-t">🩵 초기→중기</div><div class="acc-arrow">▾</div></div>
+    </div>
+    <div class="acc-body">
+      <div class="acc-content">
+        <h4>핵심 질문</h4>
+        2020년대 초반 붐 수주 친환경 선박들의 무상 보증 기간 종료 → 고마진 순정 부품·서비스 매출이 계단식 폭발하는가?
+        <h4>현황</h4>
+        <b>HD현대마린솔루션</b>: 자체 개발 HIMSEN 엔진 기반 부품·정비 독점 공급. 경쟁사 대비 수익성 우위. 2024년 인도 완료 선박 수 누적치 최고점 돌파로 AM 매출 본격화. 데이터센터용 엔진 수요 확대가 신성장 동력.<br><br>
+        <b>에스앤더블류</b>: 선박 운항 솔루션·유지보수. 자율운항 전환 수혜.
+        <h4>다음 트리거</h4>
+        인도 완료 선박 수 누적치 최고점 돌파 → 분기별 AM 부문 OPM 15%+ 서프라이즈 공시.
+      </div>
+      <div class="acc-signal">📡 트리거: 분기별 AM 매출 비중 증가 확인 + OPM 15%+ 진입</div>
+      <div class="acc-stks">
+        <div class="stk-chip s">HD현대마린솔루션 — 구조적</div>
+        <div class="stk-chip m">에스앤더블류</div>
+        <div class="stk-chip b">씨피시스템 — 자율운항</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑧ 친환경·암모니아 -->
+  <div class="acc-item">
+    <div class="acc-head" onclick="toggle(this)">
+      <div class="acc-head-left"><div class="acc-dot b"></div><div><div class="acc-title">⑧ 친환경·암모니아(NH3) — 초기 사이클, IMO 일정 변수</div><div class="acc-sub">CII 등급 D·E 노후선 교체 + 암모니아·LCO2 차세대 운반선</div></div></div>
+      <div class="acc-head-right"><div class="acc-tag at-b">🔵 관망</div><div class="acc-arrow">▾</div></div>
+    </div>
+    <div class="acc-body">
+      <div class="acc-content">
+        <h4>핵심 질문</h4>
+        IMO 탄소 규제 강화 속에서 2026년 탄소 포집·수소 생태계 핵심인 대형 암모니아 운반선(VLAC) 글로벌 발주 비중의 몇 %를 독점하는가?
+        <h4>현황</h4>
+        <b>세계최초 암모니아DF추진선</b>: HD현대중공업 세계최초 암모니아 이중연료 추진선 건조 완료. 친환경 선가 프리미엄이 가장 높게 형성되는 초기 단계.<br><br>
+        트럼프 행정부 반대로 IMO 탄소세 <b>연기 가능성</b> 있음. 그러나 탄소세 연기되어도 LNG 이중연료선 발주는 지속 — 결론이 어떻게 나오든 한국 조선사에 양방향 수혜 구조.<br><br>
+        <b>사이클 위치</b>: 초기. 선대 교체 초기 단계 — 친환경 프리미엄 선가가 가장 높게 형성되는 마진 시작점.
+        <h4>다음 트리거</h4>
+        IMO MEPC 2026 탄소세 표결 결과 + 글로벌 메이저 선사의 대형 LCO2·암모니아 추진선 시리즈선 역대 최대 규모 수주 공시.
+      </div>
+      <div class="acc-signal">📡 트리거: IMO MEPC 탄소세 확정 발표 (채택=교체 가속, 연기=LNG이중연료 지속)</div>
+      <div class="acc-stks">
+        <div class="stk-chip m">HD현대중공업 — 암모니아DF 세계최초</div>
+        <div class="stk-chip m">삼성중공업 · HD현대삼호</div>
+        <div class="stk-chip b">HSD엔진 · 메디콕스</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑨ 탱커·벌크 지정학 -->
+  <div class="acc-item">
+    <div class="acc-head" onclick="toggle(this)">
+      <div class="acc-head-left"><div class="acc-dot p"></div><div><div class="acc-title">⑨ 탱커·벌크 지정학 — 호르무즈·파나마 리스크 연동</div><div class="acc-sub">대한조선 P/E 7배 저평가 · 호르무즈 100일차 대체항로 수요</div></div></div>
+      <div class="acc-head-right"><div class="acc-tag at-p">🟣 불확실</div><div class="acc-arrow">▾</div></div>
+    </div>
+    <div class="acc-body">
+      <div class="acc-content">
+        <h4>핵심 질문</h4>
+        중동 분쟁·러시아 제재 등 지정학 리스크가 탱커 운임과 노후선 교체 발주를 지속적으로 끌어올리는가?
+        <h4>현황 — 오늘(2026-06-08) 리서치</h4>
+        LS증권 조운날 Weekly: <b>호르무즈 봉쇄 100일차</b> — 파나마 운하로도 리스크 시선 이동. 대체 항로 수요로 운임·수주 양면 호재.<br><br>
+        <b>대한조선(439260)</b>: 한국투자증권 강경태 — "<b>전 세계 최상위 수에즈막스 플랫폼을 P/E 7배에 매수할 기회</b>". 2026년 3월 유조선 스팟 운임 고점 후 조정. 탄탄한 수주잔량으로 호실적 연결. 대형 4사에 가려진 중소형 최강 펀더멘털.<br><br>
+        SCFI(컨테이너 운임): 한달 사이 <b>+43% 급등</b>. 성수기 재고비축 급행. 조선 발주 추가 자극 가능.
+        <h4>다음 트리거</h4>
+        호르무즈 해협 봉쇄 리스크 재부각 + 러시아 제재 강화 → 러시아산 원유 탱커 대체 수요 폭발.
+      </div>
+      <div class="acc-signal">📡 트리거: 지정학 이벤트 재점화 시 탱커 관련주 단기 급등 — 대한조선 P/E 7배 이하 진입 시 역발상 매수</div>
+      <div class="acc-stks">
+        <div class="stk-chip s">대한조선 — P/E 7배 저평가</div>
+        <div class="stk-chip m">현대미포조선 — MR탱커</div>
+        <div class="stk-chip m">HD한국조선해양 — VLCC</div>
+        <div class="stk-chip b">대한해운 · HJ중공업</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- P&C 트래커 -->
+  <div class="acc-item">
+    <div class="acc-head" onclick="toggle(this)">
+      <div class="acc-head-left"><div class="acc-dot g"></div><div><div class="acc-title">P&amp;C 트래커 — 선가 · 원가 실시간</div><div class="acc-sub">클락슨 NPI · LNG선 신조가 · 후판 · 스프레드</div></div></div>
+      <div class="acc-head-right"><div class="acc-tag at-g">데이터</div><div class="acc-arrow">▾</div></div>
+    </div>
+    <div class="acc-body">
+      <div class="acc-content">
+        <div class="pc-row">
+          <div class="pc-c up">
+            <div class="pc-name">클락슨 NPI</div>
+            <div class="pc-val">185.02</div>
+            <div class="pc-delta up">▲ 183.41 → +1.61pt</div>
+            <div class="pc-desc">2026.05 말 기준. 전월 대비 상승 지속.</div>
+          </div>
+          <div class="pc-c up">
+            <div class="pc-name">LNG선 신조가</div>
+            <div class="pc-val">$2.6억</div>
+            <div class="pc-delta up">▲ 174k CBM 기준 · 강세 유지</div>
+            <div class="pc-desc">2027 인도분 $2.55억 거래 중.</div>
+          </div>
+          <div class="pc-c a">
+            <div class="pc-name">조선용 후판</div>
+            <div class="pc-val">80만원</div>
+            <div class="pc-delta a">▲ 중반대 / t당 (상반기 합의)</div>
+            <div class="pc-desc">전분기 초반 대비 소폭 인상. 中 저가 유입 제한적.</div>
+          </div>
+          <div class="pc-c up">
+            <div class="pc-name">P-C 스프레드</div>
+            <div class="pc-val">양호</div>
+            <div class="pc-delta up">▲ 선가↑ > 후판↑ — 마진 구조 개선</div>
+            <div class="pc-desc">NH투자증권: 2026년 OPM 14%+ 유지.</div>
+          </div>
+        </div>
+        <b>핵심 논리</b>: 조선주는 수주량(Q)이 아무리 많아도 선가(P)가 낮거나 후판 원가(C)가 오르면 적자. NPI 185pt 고점 유지 + 후판 소폭 인상 = 스프레드 양호. 2026년은 고선가 물량 매출 반영 시작 → 마진율 변곡점 확인 구간.
+      </div>
+      <div class="acc-signal">📡 트리거: NPI 전고점 경신 OR 한국 조선소 슬롯 2029년까지 채워지는 발표 = 밸류에이션 리레이팅</div>
+    </div>
+  </div>
+
+  <!-- 이벤트 캘린더 -->
+  <div class="acc-item">
+    <div class="acc-head" onclick="toggle(this)">
+      <div class="acc-head-left"><div class="acc-dot g"></div><div><div class="acc-title">2026 하반기 이벤트 캘린더</div><div class="acc-sub">6/30 CPSP → 8월 실적 → 10월 무인함정 → 11/9 Section 301 만료</div></div></div>
+      <div class="acc-head-right"><div class="acc-tag at-g">캘린더</div><div class="acc-arrow">▾</div></div>
+    </div>
+    <div class="acc-body">
+      <table class="ev-table">
+        <thead>
+          <tr><th>시점</th><th>이벤트</th><th>영향</th><th>수혜 종목</th><th>확정</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>6월 말</b></td>
+            <td>캐나다 CPSP 60조 사업자 선정 (D-22)</td>
+            <td class="ev-up">↑ 한화·HD</td>
+            <td>한화오션 · HD현대중공업</td>
+            <td class="ev-expected">예상</td>
+          </tr>
+          <tr>
+            <td><b>7월 중</b></td>
+            <td>SHIPS Act NDAA 상원 본회의 통과 여부</td>
+            <td class="ev-up">↑ 빅3</td>
+            <td>조선 빅3 전체</td>
+            <td class="ev-expected">예상</td>
+          </tr>
+          <tr>
+            <td><b>8월 초</b></td>
+            <td>한화오션·HD현대중공업 2Q26 실적 발표</td>
+            <td class="ev-up">↑ 서프라이즈</td>
+            <td>빅3 + 기자재</td>
+            <td class="ev-confirmed">확정</td>
+          </tr>
+          <tr>
+            <td><b>8월 중</b></td>
+            <td>삼성중공업 2Q26 실적 + FLNG 수주 업데이트</td>
+            <td class="ev-up">↑ FLNG 독점</td>
+            <td>삼성중공업</td>
+            <td class="ev-confirmed">확정</td>
+          </tr>
+          <tr>
+            <td><b>Q3</b></td>
+            <td>모잠비크 코랄노르트 FLNG 입찰 결과</td>
+            <td class="ev-up">↑ 삼성 독점화</td>
+            <td>삼성중공업 · 한국카본</td>
+            <td class="ev-expected">예상</td>
+          </tr>
+          <tr>
+            <td><b>Q3</b></td>
+            <td>카타르에너지 2차 LNG선 잔여 발주 본계약</td>
+            <td class="ev-up">↑ 한화·삼성</td>
+            <td>한화오션 · 삼성중공업 · 동성화인텍</td>
+            <td class="ev-expected">예상</td>
+          </tr>
+          <tr>
+            <td><b>10월</b></td>
+            <td>HD현대-안두릴 무인함정(USV) 시험 운항</td>
+            <td class="ev-up">↑ 방산 리레이팅</td>
+            <td>HD현대중공업</td>
+            <td class="ev-expected">예상</td>
+          </tr>
+          <tr>
+            <td><b>11월 9일</b></td>
+            <td>Section 301 유예 만료 — 중국선 항만세 실발동</td>
+            <td class="ev-up">↑ 구조 전환</td>
+            <td>조선 빅3 전체</td>
+            <td class="ev-confirmed">확정</td>
+          </tr>
+          <tr>
+            <td><b>H2</b></td>
+            <td>삼성중공업 FDC (부유식 데이터센터) 첫 수주 여부</td>
+            <td class="ev-up">↑ 폭발</td>
+            <td>삼성중공업</td>
+            <td class="ev-expected">불확실</td>
+          </tr>
+          <tr>
+            <td><b>H2</b></td>
+            <td>IMO MEPC 탄소세 표결 결과</td>
+            <td class="ev-mixed">혼재</td>
+            <td>친환경 선박 전 종목</td>
+            <td class="ev-expected">예상</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 리스크 역발상 -->
+  <div class="acc-item">
+    <div class="acc-head" onclick="toggle(this)">
+      <div class="acc-head-left"><div class="acc-dot b"></div><div><div class="acc-title">리스크 역발상 — 과공포 vs 진짜 위험</div><div class="acc-sub">틀리게 두려워하는 것과 진짜 경계할 것을 구분한다</div></div></div>
+      <div class="acc-head-right"><div class="acc-tag at-b">역발상</div><div class="acc-arrow">▾</div></div>
+    </div>
+    <div class="acc-body">
+      <div class="acc-content">
+        <div class="risk-grid">
+          <div>
+            <div class="risk-col-title" style="color:var(--green);">✅ 과공포 — 급락 시 매수 기회</div>
+            <div class="risk-item">
+              <b style="color:var(--text);">중국 LNG선 진입 (20% 확률)</b><br>
+              중국산 선박 미국 입항 시 2028년까지 점진적 수수료 부과. LNG 기술 장벽 여전. 헤드라인 급락 = 매수 기회.
+            </div>
+            <div class="risk-item">
+              <b style="color:var(--text);">MASGA 전투함 완전 무산 (15%)</b><br>
+              의회 전투함 금지 ≠ MRO·무인함정 루트 소멸. 두 경로는 별개. "방산 끝났다" 급락 = 역발상.
+            </div>
+            <div class="risk-item">
+              <b style="color:var(--text);">유가 급락·LNG FID 취소 (12%)</b><br>
+              $55 이하 지속 6개월+ 돼야 실질적 LNG 발주 취소. WTI $70+ 유지 중 — 과공포.
+            </div>
+            <div class="risk-item">
+              <b style="color:var(--text);">CPSP 불발 (35%)</b><br>
+              불발 시 한화오션 단기 급락. 그러나 에스토니아·태국·중동 파이프라인 존재 → 방산 모멘텀 소멸 아님.
+            </div>
+          </div>
+          <div>
+            <div class="risk-col-title" style="color:var(--red);">⚠️ 과소평가 — 진짜 경계할 것</div>
+            <div class="risk-item">
+              <b style="color:var(--text);">인력 부족 납기 지연 (55%)</b><br>
+              E-7 비자 축소로 외국인 숙련공 확보 난항. 첫 납기 지연 사례 나오면 OPM 추정치 일제 하향. 가장 위험한 리스크.
+            </div>
+            <div class="risk-item">
+              <b style="color:var(--text);">2028년 수주 절벽론 (40%)</b><br>
+              2025.1~5월 전세계 수주 전년 동기 절반 수준. HD현대 공식 언급 "2028 수주 절벽". 하반기 중 가시화 시 밸류에이션 피크아웃 논쟁 급부상.
+            </div>
+            <div class="risk-item">
+              <b style="color:var(--text);">해양플랜트 재트라우마 (30%)</b><br>
+              삼성중공업 FLNG 여러 건 동시 진행. 공정 이슈 = 2015년 충당금 쇼크 즉각 소환. 삼성 FLNG 부문 진행률 분기마다 체크 필수.
+            </div>
+            <div class="risk-item">
+              <b style="color:var(--text);">원화 강세 환율 역전 (25%)</b><br>
+              수주 당시 환율(1,330원) 대비 현재 환율(1,464원) 차이가 이익 레버리지. 원화 강세로 1,300원 진입 시 이익 추정치 전면 재산정.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 종목 밸류체인 맵 -->
+  <div class="acc-item">
+    <div class="acc-head" onclick="toggle(this)">
+      <div class="acc-head-left"><div class="acc-dot g"></div><div><div class="acc-title">종목 밸류체인 맵 — 수혜 강도 · 지속기간</div><div class="acc-sub">설계→건조→기자재→엔진→AM 단계별 수혜 구조</div></div></div>
+      <div class="acc-head-right"><div class="acc-tag at-g">밸류체인</div><div class="acc-arrow">▾</div></div>
+    </div>
+    <div class="acc-body">
+      <div class="acc-content">
+        <h4>조선소 (상방 직접 수혜)</h4>
+        <div class="vc-grid">
+          <div class="vc-card">
+            <div class="vc-name">한화오션 (042660)</div>
+            <div class="vc-info">CPSP K-원팀 주도 D-22 / KDDX 7.8조 유리 / OP +390.8% / FCF 플러스 전환 / 中 제재 유예</div>
+            <span class="vc-badge vb-s">수혜 강 · 구조적</span>
+          </div>
+          <div class="vc-card">
+            <div class="vc-name">HD현대중공업 (329180)</div>
+            <div class="vc-info">OP +188.9% / CPSP 1/3 / 엔진 OPM 21.1% / 외인·기관 동반매수 / 안두릴 무인함정</div>
+            <span class="vc-badge vb-s">수혜 강 · 구조적</span>
+          </div>
+          <div class="vc-card">
+            <div class="vc-name">삼성중공업 (010140)</div>
+            <div class="vc-info">FLNG 64% / 4.3조 잭팟 / FDC 미반영 / 수급 확인 필요 / 해양플랜트 트라우마 리스크</div>
+            <span class="vc-badge vb-m">수혜 중 · 역발상</span>
+          </div>
+          <div class="vc-card">
+            <div class="vc-name">HD한국조선해양 (009540)</div>
+            <div class="vc-info">매출 +38.3% / 수주목표 204억달러 / 자율항해 세계최초 / 그룹 최강 실적 가시성</div>
+            <span class="vc-badge vb-s">수혜 강 · 구조적</span>
+          </div>
+          <div class="vc-card">
+            <div class="vc-name">대한조선 (439260)</div>
+            <div class="vc-info">수에즈막스 글로벌 최상위 / P/E 7배 저평가 / 유조선 사이클 지속 / 운임 조정 매수 기회</div>
+            <span class="vc-badge vb-m">수혜 중 · 역발상</span>
+          </div>
+          <div class="vc-card">
+            <div class="vc-name">현대미포조선 (010620)</div>
+            <div class="vc-info">MR탱커 전문 / 중소형 이중연료선 / 친환경 교체 수혜 / HD그룹 내 특화</div>
+            <span class="vc-badge vb-m">수혜 중 · 중기</span>
+          </div>
+        </div>
+        <h4>기자재 (낙수 수혜)</h4>
+        <div class="vc-grid">
+          <div class="vc-card">
+            <div class="vc-name">동성화인텍 (033500)</div>
+            <div class="vc-info">LNG 보냉재 듀오폴 / OP +58.4% / TP 3.8만원 저평가 / 퓨얼탱크 전선종 확대</div>
+            <span class="vc-badge vb-s">수혜 강 · 중기</span>
+          </div>
+          <div class="vc-card">
+            <div class="vc-name">한국카본 (017960)</div>
+            <div class="vc-info">OPM 19.4% / 2280억 계약 / TP 5.8만원 / 수주·실적·모멘텀 3박자</div>
+            <span class="vc-badge vb-s">수혜 강 · 구조적</span>
+          </div>
+          <div class="vc-card">
+            <div class="vc-name">성광벤드 (014620)</div>
+            <div class="vc-info">5년 최고가 / 북미·중동 LNG FID 물량 / 역대급 실적 전망</div>
+            <span class="vc-badge vb-s">수혜 강 · 중기</span>
+          </div>
+          <div class="vc-card">
+            <div class="vc-name">세아제강 (003030)</div>
+            <div class="vc-info">컨센 +43% 서프라이즈 / OCTG 수출 호조 / LNG·해상풍력 매출</div>
+            <span class="vc-badge vb-s">수혜 강 · 중기</span>
+          </div>
+          <div class="vc-card">
+            <div class="vc-name">케이에스피 (073010)</div>
+            <div class="vc-info">수주잔고 1000억 돌파 (창사최초) / OP +43% / 엔진부품 직결</div>
+            <span class="vc-badge vb-m">수혜 중 · 중기</span>
+          </div>
+          <div class="vc-card">
+            <div class="vc-name">하이록코리아 (013030)</div>
+            <div class="vc-info">고마진 계측밸브 / 조선주 대비 밸류 할인 / 숨은 수혜주</div>
+            <span class="vc-badge vb-b">숨은 수혜</span>
+          </div>
+        </div>
+        <h4>엔진·방산 (고부가 수직계열화)</h4>
+        <div class="vc-grid">
+          <div class="vc-card">
+            <div class="vc-name">HSD엔진 (한화엔진)</div>
+            <div class="vc-info">DF 엔진 4거래일 +40% / DC 전원용 신시장 / 한화그룹 캡티브</div>
+            <span class="vc-badge vb-m">수혜 중 · 테마</span>
+          </div>
+          <div class="vc-card">
+            <div class="vc-name">STX엔진 (077970)</div>
+            <div class="vc-info">장중 상한가 / DC 전원 엔진 / MRO·방산 시스템 연계</div>
+            <span class="vc-badge vb-m">수혜 중 · 테마</span>
+          </div>
+          <div class="vc-card">
+            <div class="vc-name">HD현대마린솔루션</div>
+            <div class="vc-info">HIMSEN 엔진 AM 독점 / 인도 완료 선박 누적 최고 / DC 신성장 / 구조적 Lock-in</div>
+            <span class="vc-badge vb-s">수혜 강 · 구조적</span>
+          </div>
+        </div>
+      </div>
+      <div class="acc-signal">📡 지금 당장 포지션: 🔴 고선가 실적(빅3) · 🔴 LNG 수주 / 🟡 MRO방산·기자재·엔진 / 🔵 관망 후 친환경·AM</div>
+    </div>
+  </div>
+
+</div><!-- /step3 -->
+
+<div style="max-width:900px;margin:0 auto;padding:16px 28px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);">
+  조선 섹터 마스터 · 전교 1등 비법서 · 로또의 주식인사이트 내부 자료 · 업데이트 <span id="footer-date">2026-06-08</span>
+  &nbsp;|&nbsp;
+  <a href="#s1" style="color:#374151;text-decoration:none;">↑ 맨 위</a>
+</div>
+
+<script>
+function toggle(head){
+  const body=head.nextElementSibling;
+  const arrow=head.querySelector('.acc-arrow');
+  const isOpen=body.classList.contains('open');
+  body.classList.toggle('open',!isOpen);
+  head.classList.toggle('open',!isOpen);
+  arrow.classList.toggle('open',!isOpen);
+}
+
+// D-day 자동 계산
+function calcDday(targetDate){
+  const today=new Date();today.setHours(0,0,0,0);
+  const target=new Date(targetDate);target.setHours(0,0,0,0);
+  const diff=Math.round((target-today)/(1000*60*60*24));
+  if(diff>0) return 'D-'+diff;
+  if(diff===0) return 'D-Day';
+  return 'D+'+Math.abs(diff);
+}
+document.getElementById('dday-cpsp').textContent=calcDday('2026-06-30');
+
+const now=new Date();
+const ds=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+document.getElementById('snav-date').textContent=ds+' 기준';
+document.getElementById('footer-date').textContent=ds;
+
+// 스크롤 nav 하이라이트
+const sections=[{id:'s1',el:document.getElementById('s1')},{id:'s2',el:document.getElementById('s2')},{id:'s3',el:document.getElementById('s3')}];
+const navLinks=document.querySelectorAll('.snav a[href^="#"]');
+window.addEventListener('scroll',()=>{
+  let cur='s1';
+  sections.forEach(s=>{if(s.el&&window.scrollY>=s.el.offsetTop-80)cur=s.id;});
+  navLinks.forEach(a=>{
+    const active=a.getAttribute('href')==='#'+cur;
+    a.style.color=active?'#f59e0b':'';
+    a.style.borderBottomColor=active?'#f59e0b':'transparent';
+  });
+});
+</script>
+</body>
+</html>

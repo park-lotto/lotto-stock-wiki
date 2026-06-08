@@ -24,14 +24,14 @@
       "command": "uvx",
       "args": ["gemini-research-mcp"],
       "env": {
-        "GEMINI_API_KEY": "${GEMINI_API_KEY}"
+        "GEMINI_API_KEY": "REMOVED_API_KEY"
       }
     },
     "gemini": {
       "command": "npx",
       "args": ["-y", "@rlabs-inc/gemini-mcp"],
       "env": {
-        "GEMINI_API_KEY": "${GEMINI_API_KEY}"
+        "GEMINI_API_KEY": "REMOVED_API_KEY"
       }
     }
   }

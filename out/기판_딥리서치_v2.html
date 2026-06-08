@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>반도체 기판 딥리서치 — 2026.06.08</title>
+<style>
+  :root {
+    --bg: #080d18;
+    --card: #0f1a2e;
+    --card2: #111d33;
+    --border: #1e3050;
+    --green: #22c55e;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --blue: #3b82f6;
+    --purple: #a855f7;
+    --teal: #14b8a6;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --accent: #f59e0b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Pretendard', 'Noto Sans KR', sans-serif; font-size: 14px; line-height: 1.6; }
+
+  /* ─── HERO ─── */
+  .hero {
+    background: linear-gradient(135deg, #0a0f1a 0%, #0d1f3c 50%, #091428 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 48px 24px 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(245,158,11,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-tag {
+    display: inline-block;
+    background: rgba(245,158,11,0.15);
+    border: 1px solid rgba(245,158,11,0.4);
+    color: var(--amber);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+  .hero h1 {
+    font-size: clamp(24px, 4vw, 42px);
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+  .hero h1 em { color: var(--amber); font-style: normal; }
+  .hero-sub {
+    font-size: 16px;
+    color: #94a3b8;
+    margin-bottom: 24px;
+    max-width: 680px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .hero-meta {
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .hero-meta span { display: flex; align-items: center; gap: 4px; }
+  .dot-green { width: 8px; height: 8px; border-radius: 50%; background: var(--green); display: inline-block; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+  /* ─── LAYOUT ─── */
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+  .section { padding: 40px 20px; border-bottom: 1px solid var(--border); }
+  .section-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title .badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: rgba(245,158,11,0.2);
+    color: var(--amber);
+    border: 1px solid rgba(245,158,11,0.3);
+  }
+  .section-desc { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+
+  /* ─── STAT CARDS ─── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 0;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .stat-card.green::before { background: var(--green); }
+  .stat-card.amber::before { background: var(--amber); }
+  .stat-card.red::before { background: var(--red); }
+  .stat-card.blue::before { background: var(--blue); }
+  .stat-card.purple::before { background: var(--purple); }
+  .stat-card.teal::before { background: var(--teal); }
+  .stat-label { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .stat-value { font-size: 26px; font-weight: 800; color: #fff; line-height: 1.1; }
+  .stat-unit { font-size: 13px; font-weight: 400; color: var(--muted); }
+  .stat-sub { font-size: 11px; color: var(--muted); margin-top: 6px; }
+  .stat-sub b { color: var(--green); }
+  .stat-sub.warn b { color: var(--amber); }
+  .stat-sub.danger b { color: var(--red); }
+
+  /* ─── ONELINER ─── */
+  .oneliner {
+    background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(245,158,11,0.03));
+    border: 1px solid rgba(245,158,11,0.3);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 32px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.5;
+  }
+  .oneliner span { color: var(--amber); }
+
+  /* ─── DEEP DIVE BLOCKS ─── */
+  .block-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 768px) { .block-grid { grid-template-columns: 1fr; } }
+  .block {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .block-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .block-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .block-icon.amber { background: rgba(245,158,11,0.15); }
+  .block-icon.green { background: rgba(34,197,94,0.15); }
+  .block-icon.blue { background: rgba(59,130,246,0.15); }
+  .block-icon.purple { background: rgba(168,85,247,0.15); }
+  .block-icon.teal { background: rgba(20,184,166,0.15); }
+  .block-title { font-weight: 700; font-size: 14px; color: #fff; }
+  .block-sub { font-size: 11px; color: var(--muted); }
+  .block-body { padding: 18px; }
+
+  /* ─── ROW ITEMS ─── */
+  .row-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(30,48,80,0.6);
+    gap: 12px;
+  }
+  .row-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .row-label { font-size: 12px; color: var(--muted); min-width: 120px; }
+  .row-value { font-size: 13px; font-weight: 600; color: #fff; text-align: right; }
+  .row-value.green { color: var(--green); }
+  .row-value.amber { color: var(--amber); }
+  .row-value.red { color: var(--red); }
+
+  /* ─── TIMELINE ─── */
+  .timeline { position: relative; padding-left: 24px; }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 7px; top: 6px; bottom: 6px;
+    width: 1px;
+    background: linear-gradient(180deg, var(--amber), var(--blue), var(--green));
+  }
+  .tl-item { position: relative; margin-bottom: 20px; }
+  .tl-item:last-child { margin-bottom: 0; }
+  .tl-dot {
+    position: absolute;
+    left: -20px; top: 4px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid;
+    background: var(--bg);
+  }
+  .tl-dot.amber { border-color: var(--amber); }
+  .tl-dot.green { border-color: var(--green); }
+  .tl-dot.blue { border-color: var(--blue); }
+  .tl-dot.red { border-color: var(--red); }
+  .tl-dot.purple { border-color: var(--purple); }
+  .tl-date { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--amber); margin-bottom: 3px; text-transform: uppercase; }
+  .tl-title { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 3px; }
+  .tl-desc { font-size: 12px; color: var(--muted); }
+  .tl-desc b { color: var(--text); }
+
+  /* ─── STOCK TABLE ─── */
+  .stock-table { width: 100%; border-collapse: collapse; }
+  .stock-table th {
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .stock-table td {
+    padding: 12px 12px;
+    border-bottom: 1px solid rgba(30,48,80,0.4);
+    font-size: 13px;
+  }
+  .stock-table tr:last-child td { border-bottom: none; }
+  .stock-name { font-weight: 700; color: #fff; }
+  .stock-code { font-size: 10px; color: var(--muted); font-weight: 400; }
+  .tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-right: 3px;
+  }
+  .tag.s { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+  .tag.a { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+  .tag.r { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+  .tag.b { background: rgba(59,130,246,0.15); color: var(--blue); border: 1px solid rgba(59,130,246,0.3); }
+  .tag.p { background: rgba(168,85,247,0.15); color: var(--purple); border: 1px solid rgba(168,85,247,0.3); }
+  .verdict { font-size: 12px; font-weight: 600; }
+  .verdict.strong { color: var(--green); }
+  .verdict.mid { color: var(--amber); }
+  .verdict.watch { color: var(--blue); }
+
+  /* ─── PIPELINE FLOW ─── */
+  .pipeline {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 20px 0;
+  }
+  .pipe-node {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    text-align: center;
+    min-width: 100px;
+    flex-shrink: 0;
+  }
+  .pipe-node .pn-label { font-size: 10px; color: var(--muted); margin-bottom: 4px; }
+  .pipe-node .pn-val { font-size: 13px; font-weight: 700; color: #fff; }
+  .pipe-arrow {
+    font-size: 18px;
+    color: var(--border);
+    margin: 0 6px;
+    flex-shrink: 0;
+  }
+  .pipe-node.highlight { border-color: var(--amber); background: rgba(245,158,11,0.05); }
+  .pipe-node.highlight .pn-val { color: var(--amber); }
+
+  /* ─── RISK GRID ─── */
+  .risk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 600px) { .risk-grid { grid-template-columns: 1fr; } }
+  .risk-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    border-left: 3px solid;
+  }
+  .risk-card.high { border-left-color: var(--red); }
+  .risk-card.med { border-left-color: var(--amber); }
+  .risk-card.low { border-left-color: var(--blue); }
+  .risk-level { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .risk-card.high .risk-level { color: var(--red); }
+  .risk-card.med .risk-level { color: var(--amber); }
+  .risk-card.low .risk-level { color: var(--blue); }
+  .risk-title { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .risk-desc { font-size: 11px; color: var(--muted); }
+
+  /* ─── SEPARATOR ─── */
+  .sep { height: 1px; background: var(--border); margin: 24px 0; }
+
+  /* ─── HIGHLIGHT BOX ─── */
+  .hlbox {
+    background: rgba(245,158,11,0.05);
+    border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.7;
+  }
+  .hlbox strong { color: var(--amber); }
+
+  /* ─── FOOTER ─── */
+  .footer {
+    padding: 24px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ HERO ═══ -->
+<div class="hero">
+  <div class="hero-tag">반도체 기판 딥리서치</div>
+  <h1>왜 지금 <em>기판</em>인가</h1>
+  <p class="hero-sub">
+    GPU 병목은 끝났다. 다음 쇼티지는 <strong>FC-BGA·MLCC·ABF</strong>다.<br>
+    AI 서버 1대에 들어가는 기판·부품의 가치가 스마트폰 300대 분량.
+  </p>
+  <div class="hero-meta">
+    <span><span class="dot-green"></span> 네이버뉴스 API 91건 수집</span>
+    <span>📅 2026-06-08 기준</span>
+    <span>🎯 수급빈집 + 딥리서치 결합 분석</span>
+  </div>
+</div>
+
+<!-- ═══ SECTION 1: 핵심 통계 ═══ -->
+<div class="section">
+<div class="container">
+  <div class="oneliner">
+    AI 병목이 GPU→메모리→<span>기판</span>으로 이동했다. FC-BGA 공급 부족은 2028년까지 해소 불가. 삼성전기 홀로 2026~2027년 <span>FC-BGA CAPEX 8조원</span> 베팅. 에이전틱 AI로 CPU 기판 수요까지 폭발 중.
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card amber">
+      <div class="stat-label">삼성전기 FC-BGA CAPEX</div>
+      <div class="stat-value">8<span class="stat-unit">조원</span></div>
+      <div class="stat-sub warn">2026년 3조 + 2027년 <b>5조</b></div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">삼성전기 2026E 영업이익</div>
+      <div class="stat-value">+77<span class="stat-unit">%</span></div>
+      <div class="stat-sub">YoY · 1.56조원 (<b>매출 13.5조</b>)</div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-label">FC-BGA 가격 인상</div>
+      <div class="stat-value">15<span class="stat-unit">~20%</span></div>
+      <div class="stat-sub danger">2Q 협상 중 (<b>경쟁사 먼저 성공</b>)</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-label">AI 서버 ABF 기판 수요</div>
+      <div class="stat-value">1.8<span class="stat-unit">배</span></div>
+      <div class="stat-sub">2024→2026 · 2028년 <b>2.5배</b> (이비덴)</div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-label">MLCC ASP 상승</div>
+      <div class="stat-value">+8.1<span class="stat-unit">%</span></div>
+      <div class="stat-sub">1Q26 YoY · 공급부족 지속</div>
+    </div>
+    <div class="stat-card teal">
+      <div class="stat-label">유리기판 첫 양산</div>
+      <div class="stat-value">2026<span class="stat-unit">H2</span></div>
+      <div class="stat-sub">SKC 앱솔릭스 · AMD 고객 타겟</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ SECTION 2: FC-BGA 딥다이브 ═══ -->
+<div class="section">
+<div class="container">
+  <div class="section-title">FC-BGA 시장 전체 <span class="badge">핵심 병목</span></div>
+  <div class="section-desc">플립칩 볼그리드 어레이 — AI 가속기·CPU·네트워크칩 모두 이 기판 위에 앉는다</div>
+
+  <!-- 공급망 흐름 -->
+  <div class="pipeline">
+    <div class="pipe-node">
+      <div class="pn-label">ABF 소재</div>
+      <div class="pn-val">아지노모토 독점</div>
+    </div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-node">
+      <div class="pn-label">CCL 동박적층판</div>
+      <div class="pn-val">공급 타이트</div>
+    </div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-node highlight">
+      <div class="pn-label">FC-BGA 기판</div>
+      <div class="pn-val">⚡ 병목 구간</div>
+    </div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-node">
+      <div class="pn-label">CoWoS 패키징</div>
+      <div class="pn-val">TSMC 처리</div>
+    </div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-node">
+      <div class="pn-label">AI 서버</div>
+      <div class="pn-val">최종 탑재</div>
+    </div>
+  </div>
+
+  <div class="block-grid">
+    <div class="block">
+      <div class="block-header">
+        <div class="block-icon amber">📊</div>
+        <div>
+          <div class="block-title">공급-수요 갭 현황</div>
+          <div class="block-sub">출처: 네이버뉴스 6월 수집분</div>
+        </div>
+      </div>
+      <div class="block-body">
+        <div class="row-item">
+          <span class="row-label">수급 상황</span>
+          <span class="row-value amber">공급 부족 장기화</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">서버용 기판 공급 부족</span>
+          <span class="row-value red">해소 안됨</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">ABF 수요 배수 (2028)</span>
+          <span class="row-value amber">2024 대비 2.5배</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">가격 인상 현황</span>
+          <span class="row-value green">2Q 15~20% 협상 중</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">삼성전기 CAPEX (2026)</span>
+          <span class="row-value green">3조원</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">삼성전기 CAPEX (2027)</span>
+          <span class="row-value amber">5조원 (증설 가속)</span>
+        </div>
+        <div class="hlbox">
+          <strong>핵심 포인트:</strong> AI 가속기 크기·성능이 높아질수록 FC-BGA는 더 크고, 더 고층(多層)으로 진화. 단가는 일반 PC 기판 대비 <strong>5~10배</strong>. 공급사가 늘어도 기술 격차로 진입 장벽 유지.
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header">
+        <div class="block-icon green">🏭</div>
+        <div>
+          <div class="block-title">주요 플레이어 경쟁 구도</div>
+          <div class="block-sub">국내 vs 일본 vs 대만</div>
+        </div>
+      </div>
+      <div class="block-body">
+        <div class="row-item">
+          <span class="row-label">이비덴 (일본 1위)</span>
+          <span class="row-value amber">글로벌 최대 공급사</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">삼성전기</span>
+          <span class="row-value green">국내 1위, CAPEX 8조</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">LG이노텍</span>
+          <span class="row-value blue">ECTC 2026 샘플 공개</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">南亞플라스틱·킨서스 (대만)</span>
+          <span class="row-value">AMD 공급망 진입</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">대덕전자</span>
+          <span class="row-value">국내 3위, 고다층 PCB</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">국가안보 이슈</span>
+          <span class="row-value red">비중국 조달 사활</span>
+        </div>
+        <div class="hlbox">
+          <strong>차별점:</strong> 북미 고객사가 중국 공급망 리스크로 <strong>비중국 조달처 확보에 사활</strong>을 걸면서 삼성전기·LG이노텍 수혜 구조 강화. AI 가속기 하단 기판이 국가안보 이슈로 격상됨.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 에이전틱 AI 수요 폭발 -->
+  <div style="margin-top:16px;">
+  <div class="block">
+    <div class="block-header">
+      <div class="block-icon purple">🤖</div>
+      <div>
+        <div class="block-title">에이전틱 AI → CPU FC-BGA 수요 폭발</div>
+        <div class="block-sub">새 성장축 — GPU 기판에서 CPU 기판으로 확산</div>
+      </div>
+    </div>
+    <div class="block-body">
+      <div class="block-grid" style="gap:12px;">
+        <div>
+          <div class="row-item">
+            <span class="row-label">NVIDIA 베라 루빈</span>
+            <span class="row-value amber">베라 CPU + 루빈 GPU 통합</span>
+          </div>
+          <div class="row-item">
+            <span class="row-label">CPU 수요 변화</span>
+            <span class="row-value green">에이전틱 AI = CPU 기판 2차 폭발</span>
+          </div>
+          <div class="row-item">
+            <span class="row-label">ARM 발표</span>
+            <span class="row-value">에이전틱 AI → DC 전력 급증</span>
+          </div>
+          <div class="row-item">
+            <span class="row-label">삼성전기 공식 답변</span>
+            <span class="row-value green">"에이전틱 AI 확산으로 수요 급증"</span>
+          </div>
+        </div>
+        <div>
+          <div class="hlbox">
+            <strong>메커니즘:</strong><br>
+            에이전틱 AI(자율 에이전트)는 GPU만으로 처리 불가 → CPU 역할 재부상<br>
+            CPU:GPU 비율이 1:8에서 <strong>1:1~2로 수렴</strong><br>
+            → CPU용 고다층 FC-BGA 수요 급폭발<br>
+            → 삼성전기·LG이노텍 추가 수혜 구조
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ SECTION 3: MLCC + Si-CAP ═══ -->
+<div class="section">
+<div class="container">
+  <div class="section-title">MLCC + Si-CAP <span class="badge">가격 폭발</span></div>
+  <div class="section-desc">AI 서버 1대당 MLCC 탑재량 스마트폰의 30배 — 공급 부족으로 ASP 가파른 상승</div>
+
+  <div class="block-grid">
+    <div class="block">
+      <div class="block-header">
+        <div class="block-icon amber">🔋</div>
+        <div>
+          <div class="block-title">MLCC 수요·가격 현황</div>
+          <div class="block-sub">적층세라믹콘덴서 — AI서버용 고급 제품 주도</div>
+        </div>
+      </div>
+      <div class="block-body">
+        <div class="row-item">
+          <span class="row-label">1Q26 MLCC ASP</span>
+          <span class="row-value green">+8.1% YoY</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">AI 서버용 MLCC 수량</span>
+          <span class="row-value amber">스마트폰 대비 30배+</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">삼성전기 시총 순위</span>
+          <span class="row-value green">34위 → 상위권 (YTD +589%)</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">공급 부족 해소</span>
+          <span class="row-value red">미해소 · 지속 중</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">코스모신소재</span>
+          <span class="row-value blue">국내 최초 AI서버용 MLCC 소재 인증</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">목표주가 (메리츠)</span>
+          <span class="row-value green">210만원 (상향)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header">
+        <div class="block-icon teal">⚡</div>
+        <div>
+          <div class="block-title">Si-CAP (실리콘 커패시터)</div>
+          <div class="block-sub">삼성전기 3대 성장축: MLCC + ABF + Si-CAP</div>
+        </div>
+      </div>
+      <div class="block-body">
+        <div class="row-item">
+          <span class="row-label">소재</span>
+          <span class="row-value">세라믹 대신 실리콘 웨이퍼</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">특성</span>
+          <span class="row-value amber">초박형·초정밀 · AI서버 전용</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">ASP</span>
+          <span class="row-value green">일반 MLCC 대비 고배수</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">공급 구조</span>
+          <span class="row-value amber">삼성전기 사실상 독점</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">NVIDIA 공급 관계</span>
+          <span class="row-value green">그록(Groq)3 추론 가속기 탑재</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">성장 방향성</span>
+          <span class="row-value green">변화 없음 (메리츠 확인)</span>
+        </div>
+        <div class="hlbox">
+          <strong>삼성전기 독특한 포지션:</strong> Si-CAP + ABF 기판을 <strong>동시에 공급하는 유일한 업체</strong>. 인벤토리 사이클 조정이 와도 두 제품 중 하나는 항상 업사이클.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ SECTION 4: 유리기판 타임라인 ═══ -->
+<div class="section">
+<div class="container">
+  <div class="section-title">유리기판 (Glass Substrate) 타임라인 <span class="badge">차세대</span></div>
+  <div class="section-desc">플라스틱 기판의 한계를 유리가 대체 — 2027~2029년 상용화 진입, 선점 경쟁 시작</div>
+
+  <div class="block-grid">
+    <div class="block">
+      <div class="block-header">
+        <div class="block-icon blue">📅</div>
+        <div>
+          <div class="block-title">국내외 양산 타임라인</div>
+          <div class="block-sub">출처: 세레니티 리포트 · 네이버뉴스 2026.06</div>
+        </div>
+      </div>
+      <div class="block-body">
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-dot amber"></div>
+            <div class="tl-date">2026 H2</div>
+            <div class="tl-title">SKC 앱솔릭스 — 첫 양산 목표</div>
+            <div class="tl-desc">미국 조지아 공장 · <b>AMD 고객 타겟</b> · 현재 신뢰성 평가 중</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot red"></div>
+            <div class="tl-date">2026 말~2027 초?</div>
+            <div class="tl-title">앱솔릭스 양산 지연 리스크</div>
+            <div class="tl-desc">일부 시각: 양산 시점 <b>2029년 초까지 지연 가능</b> (기술 난제)</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot blue"></div>
+            <div class="tl-date">2027 H2</div>
+            <div class="tl-title">삼성전기 — 양산 목표</div>
+            <div class="tl-desc">세종 파일럿 라인 · <b>브로드컴·애플 샘플 공급 완료</b> · 스미토모화학 협력</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot purple"></div>
+            <div class="tl-date">2030</div>
+            <div class="tl-title">인텔 — 유리기판 상용화 목표</div>
+            <div class="tl-desc"><b>10억 달러(1.35조원)</b> 투자 · 2030년 공식 상용화 계획</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot green"></div>
+            <div class="tl-date">2030~</div>
+            <div class="tl-title">대규모 시장 형성</div>
+            <div class="tl-desc">이비덴·쇼와덴코 일본 업체도 준비 중 · TAM 급성장 구간</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header">
+        <div class="block-icon teal">🔬</div>
+        <div>
+          <div class="block-title">기술 우위와 경쟁 현황</div>
+          <div class="block-sub">국내 3파전: SKC vs 삼성전기 vs LG이노텍</div>
+        </div>
+      </div>
+      <div class="block-body">
+        <div class="row-item">
+          <span class="row-label">SKC 앱솔릭스</span>
+          <span class="row-value amber">세계 최초 양산 공장 보유</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">SKC 리스크</span>
+          <span class="row-value red">10년만 희망퇴직 · 수율 불확실</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">삼성전기</span>
+          <span class="row-value green">브로드컴·애플 샘플 납품 완료</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">삼성전기 전략</span>
+          <span class="row-value">수직계열화 · 글라스코어 확보</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">LG이노텍</span>
+          <span class="row-value blue">구미 RD 파일럿 라인 개발 중</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">이비덴 (일본)</span>
+          <span class="row-value">유리기판 준비 중 (확인 필요)</span>
+        </div>
+        <div class="hlbox">
+          <strong>핵심 관전 포인트:</strong> 삼성전기는 <strong>브로드컴·애플 샘플 공급</strong>으로 선두권 진입. SKC보다 늦게 시작했지만 기술력으로 따라잡는 중. 유리기판 양산 시 기존 FC-BGA 수요가 점차 대체되며 <strong>TAM 자체 확장</strong>.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ SECTION 5: ABF·CCL 공급망 ═══ -->
+<div class="section">
+<div class="container">
+  <div class="section-title">ABF·CCL 공급망 <span class="badge">소재 병목</span></div>
+  <div class="section-desc">아지노모토 독점 ABF — 조미료 회사가 AI 반도체 공급망을 쥐고 있다</div>
+
+  <div class="block-grid">
+    <div class="block">
+      <div class="block-header">
+        <div class="block-icon red">⚠️</div>
+        <div>
+          <div class="block-title">ABF 필름 독점 현황</div>
+          <div class="block-sub">모건스탠리: AI 최대 병목 = ABF + HBM</div>
+        </div>
+      </div>
+      <div class="block-body">
+        <div class="row-item">
+          <span class="row-label">공급사</span>
+          <span class="row-value red">아지노모토 단독 (사실상 독점)</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">원산지</span>
+          <span class="row-value">MSG 제조 부산물 활용</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">수요 성장 (이비덴)</span>
+          <span class="row-value amber">2026년 1.8배 / 2028년 2.5배</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">모건스탠리 진단</span>
+          <span class="row-value red">AI 최대 걸림돌 = ABF + HBM</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">삼성전기 공급 포지션</span>
+          <span class="row-value green">Si-CAP + ABF 동시 공급 유일</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">국산화 시도</span>
+          <span class="row-value blue">에이치엔에스하이텍 (2026.04)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header">
+        <div class="block-icon green">📈</div>
+        <div>
+          <div class="block-title">이수페타시스 · 심텍 포지셔닝</div>
+          <div class="block-sub">MLB·패키지 기판 수혜 종목</div>
+        </div>
+      </div>
+      <div class="block-body">
+        <div class="row-item">
+          <span class="row-label">이수페타시스</span>
+          <span class="row-value green">AI 네트워크용 MLB 대표주</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">이수 수혜 구조</span>
+          <span class="row-value">빅테크 투자 확대 직결</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">이수 최근 흐름</span>
+          <span class="row-value amber">단기 차익실현 후 재상승 기대</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">심텍</span>
+          <span class="row-value">DDR5·HBM 패키지 기판</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">심텍 관건</span>
+          <span class="row-value red">AI 서버용 비중 확대 여부</span>
+        </div>
+        <div class="row-item">
+          <span class="row-label">대덕전자</span>
+          <span class="row-value blue">고다층 PCB · AI 서버 수혜</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ SECTION 6: 종목별 포지셔닝 ═══ -->
+<div class="section">
+<div class="container">
+  <div class="section-title">기판 섹터 종목 포지셔닝 <span class="badge">2026.06</span></div>
+  <div class="section-desc">수급빈집 + 실적 방향성 + 공급망 포지션 종합 판단</div>
+
+  <div class="block">
+    <div class="block-body" style="padding:0; overflow-x:auto;">
+      <table class="stock-table">
+        <thead>
+          <tr>
+            <th>종목</th>
+            <th>핵심 포지션</th>
+            <th>성장 동인</th>
+            <th>최근 시그널</th>
+            <th>판단</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div class="stock-name">삼성전기</div>
+              <div class="stock-code">009150</div>
+            </td>
+            <td>
+              <span class="tag a">FC-BGA</span>
+              <span class="tag s">MLCC</span>
+              <span class="tag b">Si-CAP</span>
+            </td>
+            <td style="font-size:12px;">CAPEX 8조·TP 210만<br>3대 성장축 동시</td>
+            <td style="font-size:12px; color:#ef4444;">6월 17.3% 급락 후<br>단기 조정 구간</td>
+            <td><span class="verdict strong">구조적 매수</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="stock-name">LG이노텍</div>
+              <div class="stock-code">011070</div>
+            </td>
+            <td>
+              <span class="tag a">FC-BGA</span>
+              <span class="tag b">유리기판</span>
+            </td>
+            <td style="font-size:12px;">ECTC 2026 샘플공개<br>베트남 생산 이원화</td>
+            <td style="font-size:12px; color:#22c55e;">상한가 급등 경험<br>TP 200만 제시</td>
+            <td><span class="verdict strong">추세 매수</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="stock-name">이수페타시스</div>
+              <div class="stock-code">007660</div>
+            </td>
+            <td>
+              <span class="tag s">MLB</span>
+              <span class="tag b">네트워크 PCB</span>
+            </td>
+            <td style="font-size:12px;">빅테크 AI 인프라<br>MLB 수요 직결</td>
+            <td style="font-size:12px; color:#f59e0b;">단기 차익실현<br>기대 유효</td>
+            <td><span class="verdict mid">조정 후 접근</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="stock-name">심텍</div>
+              <div class="stock-code">222800</div>
+            </td>
+            <td>
+              <span class="tag b">DDR5</span>
+              <span class="tag p">HBM 기판</span>
+            </td>
+            <td style="font-size:12px;">HBM 수요 확대<br>메모리 업황 연동</td>
+            <td style="font-size:12px; color:#f59e0b;">AI 서버 비중 확대<br>확인 필요</td>
+            <td><span class="verdict watch">모니터링</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="stock-name">SKC</div>
+              <div class="stock-code">011790</div>
+            </td>
+            <td>
+              <span class="tag p">유리기판</span>
+              <span class="tag a">앱솔릭스</span>
+            </td>
+            <td style="font-size:12px;">유리기판 선점<br>2026 H2 양산 목표</td>
+            <td style="font-size:12px; color:#ef4444;">양산 지연 우려<br>2029 지연 시각도</td>
+            <td><span class="verdict mid">양산 확인 후</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="stock-name">대덕전자</div>
+              <div class="stock-code">353200</div>
+            </td>
+            <td>
+              <span class="tag s">고다층 PCB</span>
+              <span class="tag b">AI 서버</span>
+            </td>
+            <td style="font-size:12px;">AI 서버 고다층<br>기판 수요 수혜</td>
+            <td style="font-size:12px; color:#f59e0b;">단기 급등 후 조정<br>재상승 기대</td>
+            <td><span class="verdict watch">모니터링</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ SECTION 7: 트리거 캘린더 ═══ -->
+<div class="section">
+<div class="container">
+  <div class="section-title">2026년 하반기 트리거 캘린더</div>
+  <div class="section-desc">이 날짜에 무슨 일이 일어나면 기판 섹터는 어떻게 움직이나</div>
+
+  <div class="block">
+    <div class="block-body">
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-dot amber"></div>
+          <div class="tl-date">2Q26 실적 시즌 (7월)</div>
+          <div class="tl-title">삼성전기 FC-BGA 가격 인상 15~20% 확인</div>
+          <div class="tl-desc">2분기 실적에서 MLCC ASP + ABF 기판 가격 인상 반영 여부. <b>확인 시 추가 상승 모멘텀</b></div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot blue"></div>
+          <div class="tl-date">2026 H2 (연내)</div>
+          <div class="tl-title">SKC 앱솔릭스 유리기판 양산 개시 여부</div>
+          <div class="tl-desc">성공 시 SKC 주가 재점화. 지연 시 삼성전기 상대적 수혜 (<b>브로드컴·애플 샘플 이미 납품</b>)</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot green"></div>
+          <div class="tl-date">하반기 지속</div>
+          <div class="tl-title">NVIDIA 베라 루빈 출하 → FC-BGA 주문 폭발</div>
+          <div class="tl-desc">베라 CPU + 루빈 GPU 통합 → <b>고다층 FC-BGA 신규 주문</b> 삼성전기·LG이노텍 직접 수혜</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot purple"></div>
+          <div class="tl-date">2026 하반기</div>
+          <div class="tl-title">삼성전기 베트남 공장 가동 (1.8조원 투자)</div>
+          <div class="tl-desc">FC-BGA CAPA 증설 가시화. <b>공급 부족 해소보다 수요가 더 빠를 전망</b></div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot red"></div>
+          <div class="tl-date">리스크 모니터</div>
+          <div class="tl-title">미중 무역 협상 ABF·기판 예외 조항</div>
+          <div class="tl-desc">아지노모토 ABF가 미중 관세 대상 여부 + 한국 기판의 비중국 조달 지위 유지 여부</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ SECTION 8: 리스크 ═══ -->
+<div class="section">
+<div class="container">
+  <div class="section-title">리스크 매트릭스</div>
+
+  <div class="risk-grid">
+    <div class="risk-card high">
+      <div class="risk-level">🔴 HIGH</div>
+      <div class="risk-title">단기 주가 급락 후 투자심리 위축</div>
+      <div class="risk-desc">삼성전기 6월 17.3% 급락, FC-BGA·PCB주 일제 약세. 공포 매도 시 추가 하락 가능</div>
+    </div>
+    <div class="risk-card high">
+      <div class="risk-level">🔴 HIGH</div>
+      <div class="risk-title">유리기판 양산 지연</div>
+      <div class="risk-desc">SKC 앱솔릭스 기술 난제. 2029년까지 지연 가능성 거론. 선점 기대 프리미엄 소멸 위험</div>
+    </div>
+    <div class="risk-card med">
+      <div class="risk-level">🟡 MEDIUM</div>
+      <div class="risk-title">아지노모토 ABF 공급 쇼크</div>
+      <div class="risk-desc">독점 소재 공급에 문제 시 전체 기판 공급망 마비. 국산화 진행 중이나 시간 필요</div>
+    </div>
+    <div class="risk-card med">
+      <div class="risk-level">🟡 MEDIUM</div>
+      <div class="risk-title">빅테크 AI 투자 축소 우려</div>
+      <div class="risk-desc">AI 기대감이 실적으로 연결 안 될 경우 설비 투자 삭감 → 기판 수요 감소 직격</div>
+    </div>
+    <div class="risk-card low">
+      <div class="risk-level">🔵 LOW (현재)</div>
+      <div class="risk-title">중국 기판 업체 진입</div>
+      <div class="risk-desc">현재 기술 격차로 진입 어려우나 중장기 위협. 국가안보 이슈로 빅테크 사용 제한</div>
+    </div>
+    <div class="risk-card low">
+      <div class="risk-level">🔵 LOW (현재)</div>
+      <div class="risk-title">미중 협상 타결 → 규제 완화</div>
+      <div class="risk-desc">비중국 조달 필요성 감소 시 한국 기판 프리미엄 약화. 현 시점 가능성 낮음</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ FOOTER ═══ -->
+<div class="footer">
+  <div>반도체 기판 딥리서치 — 로또의 주식인사이트</div>
+  <div style="margin-top:4px;">📊 네이버뉴스 API 91건 수집 (2026-06-08) + Gemini 딥리서치 (진행중) · 투자 참고용 · 매매 결정은 본인 책임</div>
+</div>
+
+</body>
+</html>

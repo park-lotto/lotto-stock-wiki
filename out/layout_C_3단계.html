@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C안 — 3단계 훑기 · 반도체</title>
+<style>
+:root{--bg:#080d18;--card:#0f1a2e;--border:#1e3050;--green:#22c55e;--amber:#f59e0b;--red:#ef4444;--blue:#3b82f6;--purple:#a855f7;--text:#e2e8f0;--muted:#64748b;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Pretendard','Noto Sans KR',sans-serif;font-size:14px;line-height:1.6;}
+
+/* STEP 1 — 5초 */
+.step1{
+  background:linear-gradient(170deg,#060e1e 0%,#0d1e38 50%,#060e1e 100%);
+  padding:44px 28px 36px;
+  border-bottom:2px solid rgba(245,158,11,.3);
+  position:relative;overflow:hidden;
+}
+.step1::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(245,158,11,.07) 0%,transparent 70%);
+  pointer-events:none;
+}
+.step1-inner{max-width:900px;margin:0 auto;}
+.step-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--amber);margin-bottom:16px;
+}
+.step-badge::before{content:'';width:20px;height:1px;background:var(--amber);}
+.step-badge::after{content:'';width:20px;height:1px;background:var(--amber);}
+
+.big-hl{font-size:clamp(26px,4vw,42px);font-weight:900;color:#fff;line-height:1.2;margin-bottom:8px;}
+.big-hl em{color:var(--amber);font-style:normal;}
+.big-sub{font-size:clamp(14px,2vw,18px);font-weight:600;color:rgba(255,255,255,.55);margin-bottom:24px;}
+
+.kpi-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:24px;}
+.kpi{
+  flex:1;min-width:140px;
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:12px;padding:14px 16px;
+}
+.kpi-val{font-size:22px;font-weight:900;margin-bottom:4px;}
+.kpi-val.r{color:var(--red);}
+.kpi-val.a{color:var(--amber);}
+.kpi-val.g{color:var(--green);}
+.kpi-val.b{color:var(--blue);}
+.kpi-lbl{font-size:11px;color:var(--muted);}
+.kpi-desc{font-size:12px;color:var(--text);margin-top:3px;font-weight:600;}
+
+.trigger-bar{
+  display:flex;align-items:center;gap:16px;
+  background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);
+  border-radius:10px;padding:12px 20px;
+}
+.trigger-icon{font-size:20px;}
+.trigger-main{font-size:16px;font-weight:900;color:var(--red);}
+.trigger-desc{font-size:12px;color:var(--muted);}
+
+/* STEP 2 — 30초 */
+.step2{
+  padding:36px 28px;
+  border-bottom:1px solid var(--border);
+  background:var(--bg);
+}
+.step2-inner{max-width:900px;margin:0 auto;}
+.step-label{
+  display:flex;align-items:center;gap:10px;
+  font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--muted);margin-bottom:20px;
+}
+.step-num{
+  width:24px;height:24px;border-radius:50%;
+  border:1px solid var(--muted);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:var(--muted);
+}
+.step-num.active{border-color:var(--amber);color:var(--amber);}
+
+/* COMPACT HEATMAP */
+.hm-compact{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+@media(max-width:800px){.hm-compact{grid-template-columns:repeat(2,1fr);}}
+.hmc{
+  border-radius:10px;padding:12px 14px;border:1px solid;cursor:pointer;
+  transition:transform .12s;
+}
+.hmc:hover{transform:translateY(-2px);}
+.hmc.r{background:rgba(239,68,68,.07);border-color:rgba(239,68,68,.35);}
+.hmc.a{background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.3);}
+.hmc.b{background:rgba(59,130,246,.05);border-color:rgba(59,130,246,.25);}
+.hmc.p{background:rgba(168,85,247,.05);border-color:rgba(168,85,247,.25);}
+.hmc-urg{font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;}
+.hmc.r .hmc-urg{color:var(--red);}
+.hmc.a .hmc-urg{color:var(--amber);}
+.hmc.b .hmc-urg{color:var(--blue);}
+.hmc.p .hmc-urg{color:var(--purple);}
+.hmc-title{font-size:12px;font-weight:800;color:#fff;margin-bottom:4px;}
+.hmc-stk{font-size:10px;color:var(--muted);}
+
+/* STEP 3 — 10분 (accordions) */
+.step3{padding:36px 28px;max-width:900px;margin:0 auto;}
+.acc-item{margin-bottom:10px;}
+.acc-head{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:14px 18px;cursor:pointer;
+  transition:border-color .15s;
+}
+.acc-head:hover{border-color:rgba(245,158,11,.3);}
+.acc-head.open{border-color:rgba(245,158,11,.4);border-radius:10px 10px 0 0;}
+.acc-head-left{display:flex;align-items:center;gap:10px;}
+.acc-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.acc-dot.r{background:var(--red);}
+.acc-dot.a{background:var(--amber);}
+.acc-dot.b{background:var(--blue);}
+.acc-dot.g{background:var(--green);}
+.acc-dot.p{background:var(--purple);}
+.acc-title{font-size:13px;font-weight:800;color:#fff;}
+.acc-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+.acc-head-right{display:flex;align-items:center;gap:8px;}
+.acc-tag{font-size:9px;font-weight:700;padding:2px 8px;border-radius:5px;}
+.at-r{background:rgba(239,68,68,.15);color:var(--red);}
+.at-a{background:rgba(245,158,11,.15);color:var(--amber);}
+.at-b{background:rgba(59,130,246,.15);color:var(--blue);}
+.at-p{background:rgba(168,85,247,.15);color:var(--purple);}
+.at-g{background:rgba(34,197,94,.15);color:var(--green);}
+.acc-arrow{font-size:12px;color:var(--muted);transition:transform .2s;}
+.acc-arrow.open{transform:rotate(180deg);color:var(--amber);}
+
+.acc-body{
+  display:none;
+  background:rgba(15,26,46,.7);border:1px solid rgba(245,158,11,.25);
+  border-top:none;border-radius:0 0 10px 10px;padding:18px;
+}
+.acc-body.open{display:block;}
+.acc-content{font-size:12px;color:var(--muted);line-height:1.75;}
+.acc-content b{color:var(--text);}
+.acc-signal{font-size:11px;font-weight:700;color:var(--green);margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+.acc-stks{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.stk-chip{font-size:10px;font-weight:700;padding:3px 10px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);}
+.stk-chip.s{border-color:rgba(34,197,94,.3);color:var(--green);}
+.stk-chip.m{border-color:rgba(245,158,11,.3);color:var(--amber);}
+</style>
+</head>
+<body>
+
+<!-- STEP 1: 5초 -->
+<div class="step1">
+<div class="step1-inner">
+  <div class="step-badge">STEP 1 — 5초 · 지금 뭐가 제일 중요한가</div>
+
+  <div class="big-hl">지금 반도체는<br><em>HBM4 전쟁</em>이다.</div>
+  <div class="big-sub">CAPEX 사이클 확인 구간 — 다음 실적이 하반기 방향을 결정한다</div>
+
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-val r">즉시</div>
+      <div class="kpi-lbl">가장 급한 것</div>
+      <div class="kpi-desc">삼성 HBM4E 퀄 통과 여부</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-val a">미반영</div>
+      <div class="kpi-lbl">시장이 모르는 것</div>
+      <div class="kpi-desc">AMD EPYC 수주 협의 중</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-val g">역발상</div>
+      <div class="kpi-lbl">과공포 = 매수 기회</div>
+      <div class="kpi-desc">CXMT 증설 실제론 불가</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-val b">45%</div>
+      <div class="kpi-lbl">가장 과소평가된 리스크</div>
+      <div class="kpi-desc">레거시 D램 공급과잉</div>
+    </div>
+  </div>
+
+  <div class="trigger-bar">
+    <div class="trigger-icon">📅</div>
+    <div>
+      <div class="trigger-main">다음 트리거: 7월 29일 — SK하이닉스 2Q26 실적</div>
+      <div class="trigger-desc">HBM4 비중 + 3Q 가이던스가 하반기 방향 첫 확인. 아래 ↓ 스크롤해서 카테고리별 세부 확인</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- STEP 2: 30초 -->
+<div class="step2">
+<div class="step2-inner">
+  <div class="step-label">
+    <div class="step-num active">2</div>
+    STEP 2 — 30초 · 8개 카테고리 긴급도 한눈에
+  </div>
+  <div class="hm-compact">
+    <div class="hmc r"><div class="hmc-urg">🔴 즉시</div><div class="hmc-title">HBM 세대전환</div><div class="hmc-stk">SK하이닉스 · 한미반도체</div></div>
+    <div class="hmc r"><div class="hmc-urg">🔴 즉시</div><div class="hmc-title">빅테크 CAPEX</div><div class="hmc-stk">SK하이닉스 · 삼성전자</div></div>
+    <div class="hmc a"><div class="hmc-urg">🟡 중기</div><div class="hmc-title">기판·부품 병목</div><div class="hmc-stk">삼성전기 · 이수페타시스</div></div>
+    <div class="hmc a"><div class="hmc-urg">🟡 중기</div><div class="hmc-title">장비·소재 CAPEX</div><div class="hmc-stk">HPSP · 한미반도체</div></div>
+    <div class="hmc a"><div class="hmc-urg">🟡 중기</div><div class="hmc-title">후공정·패키징</div><div class="hmc-stk">한미반도체 · 심텍</div></div>
+    <div class="hmc b"><div class="hmc-urg">🔵 관망</div><div class="hmc-title">NAND 반등·eSSD</div><div class="hmc-stk">삼성전자 · SK하이닉스</div></div>
+    <div class="hmc b"><div class="hmc-urg">🔵 관망</div><div class="hmc-title">삼성 파운드리</div><div class="hmc-stk">삼성전자 · 에스티아이</div></div>
+    <div class="hmc p"><div class="hmc-urg">🟣 불확실</div><div class="hmc-title">수출규제·관세</div><div class="hmc-stk">9~10월 위험 구간</div></div>
+  </div>
+</div>
+</div>
+
+<!-- STEP 3: 10분 (accordions) -->
+<div class="step3">
+  <div class="step-label" style="margin-bottom:20px;">
+    <div class="step-num active">3</div>
+    STEP 3 — 10분 · 펼쳐서 보고 싶은 것만 클릭
+  </div>
+
+  <!-- 프리미엄 -->
+  <div class="acc-item">
+    <div class="acc-head" onclick="toggle(this)">
+      <div class="acc-head-left"><div class="acc-dot p"></div><div><div class="acc-title">★ 시장 미반영 인사이트 5가지</div><div class="acc-sub">주가에 아직 반영 안 된 것 — 이게 핵심</div></div></div>
+      <div class="acc-head-right"><div class="acc-tag at-p">프리미엄</div><div class="acc-arrow">▾</div></div>
+    </div>
+    <div class="acc-body">
+      <div class="acc-content">
+        <b>#1 삼성 HBM4E 역전:</b> 업계 최초 샘플 공급 완료. AMD 비중 30%+ 미반영. 양산 선점 시 목표주가 전면 재산정<br><br>
+        <b>#2 AMD EPYC 수주 협의:</b> 삼성 파운드리가 AMD 서버 CPU를 2nm SF2P로 협의 중. 성사 시 파운드리 디스카운트 해소<br><br>
+        <b>#3 HPSP·한미 TSMC 진입:</b> TSMC 진입 시 매출 레벨 완전히 달라짐. 어느 리포트도 숫자로 미반영<br><br>
+        <b>#4 LTA 실제 가격 조건 미공개:</b> 단가가 현물보다 높게 체결됐는지 미공개. 공개 시 2027~2028 이익 추정 전면 달라짐<br><br>
+        <b>#5 CXMT 과공포 역발상:</b> 월 24만장 이미 최대. 미국산 장비 도입 지연으로 계획 증설 불가. 헤드라인 급락 = 매수 기회
+      </div>
+      <div class="acc-signal">📡 트리거 순서: HBM4E 양산 → AMD 수주 → TSMC 벤더 공시 → LTA 조건 공개</div>
+    </div>
+  </div>
+
+  <!-- HBM -->
+  <div class="acc-item">
+    <div class="acc-head" onclick="toggle(this)">
+      <div class="acc-head-left"><div class="acc-dot r"></div><div><div class="acc-title">① HBM 세대전환</div><div class="acc-sub">HBM3E → HBM4 교체 전쟁</div></div></div>
+      <div class="acc-head-right"><div class="acc-tag at-r">🔴 즉시</div><div class="acc-arrow">▾</div></div>
+    </div>
+    <div class="acc-body">
+      <div class="acc-content">
+        <b>SK하이닉스</b>: HBM4 양산 독점 진행 중. 엔비디아 블랙웰·루빈 주공급사.<br>
+        <b>삼성전자</b>: HBM4 퀄 통과 대기 + HBM4E 샘플 업계 최초 공급. AMD 비중 확대.<br><br>
+        포인트: 삼성이 AMD 주공급 진입 + HBM4E 선점 시 현재 밸류에이션 완전히 달라짐
+      </div>
+      <div class="acc-signal">📡 다음 트리거: 삼성전자 HBM4 공식 퀄 통과 발표</div>
+      <div class="acc-stks"><div class="stk-chip s">SK하이닉스 — 구조적 매수</div><div class="stk-chip m">삼성전자 — 역발상</div><div class="stk-chip s">한미반도체 — 추세 매수</div></div>
+    </div>
+  </div>
+
+  <!-- CAPEX -->
+  <div class="acc-item">
+    <div class="acc-head" onclick="toggle(this)">
+      <div class="acc-head-left"><div class="acc-dot r"></div><div><div class="acc-title">② 빅테크 CAPEX 사이클</div><div class="acc-sub">AI 서버 투자의 천장 논쟁</div></div></div>
+      <div class="acc-head-right"><div class="acc-tag at-r">🔴 즉시</div><div class="acc-arrow">▾</div></div>
+    </div>
+    <div class="acc-body">
+      <div class="acc-content">
+        클라우드 10개사 합산 CAPEX: <b>6,850억달러</b>. 딥시크 이후 오히려 가이던스 상향.<br>
+        제빈스 패러독스 — 모델 효율↑ → 추론량↑ → HBM 수요↑<br><br>
+        <b>리스크</b>: 첫 하향 가이던스 나오는 분기가 전 밸류체인 동반 하락 변곡점
+      </div>
+      <div class="acc-signal">📡 트리거: 매 분기 빅테크 어닝콜 CAPEX 숫자 — 7/29 SK하이닉스가 첫 한국 체크포인트</div>
+    </div>
+  </div>
+
+  <!-- 기판 -->
+  <div class="acc-item">
+    <div class="acc-head" onclick="toggle(this)">
+      <div class="acc-head-left"><div class="acc-dot a"></div><div><div class="acc-title">③ 기판·부품 병목</div><div class="acc-sub">FC-BGA · MLCC · ABF — 공급이 모자라서 오르는 구조</div></div></div>
+      <div class="acc-head-right"><div class="acc-tag at-a">🟡 중기</div><div class="acc-arrow">▾</div></div>
+    </div>
+    <div class="acc-body">
+      <div class="acc-content">
+        <b>FC-BGA</b>: 삼성전기 사장 직접 발언 "수요가 공급 초과 50%+". AI서버용 = PC 대비 4배 면적·20층 이상·가격 2~3배<br>
+        <b>MLCC</b>: GB200 한 대 40만개(스마트폰 400배). 베라 루빈 NVL72 = 60만개+. 골드만삭스 2030년 4.3배 성장<br>
+        <b>Si-CAP</b>: 삼성전기 1.5조 2년 공급 계약. 글로벌 메이저사와 체결<br>
+        <b>ABF 이중 병목</b>: 아지노모토 95%+ 독점 + T글라스 닛토보 독점. AI 가속기용 소모량 5~10배. CCL +74.5% YoY
+      </div>
+      <div class="acc-signal">📡 트리거: 삼성전기 2Q 가격인상 15~20% 확인</div>
+      <div class="acc-stks"><div class="stk-chip m">삼성전기 — 조정 후 매수</div><div class="stk-chip m">이수페타시스 — 조정 후</div><div class="stk-chip m">심텍 — 모멘텀 확인</div></div>
+    </div>
+  </div>
+
+  <!-- 장비 -->
+  <div class="acc-item">
+    <div class="acc-head" onclick="toggle(this)">
+      <div class="acc-head-left"><div class="acc-dot a"></div><div><div class="acc-title">④ 장비·소재 CAPEX 타임라그</div><div class="acc-sub">삼성·SK 설비투자 실행률 확인 구간</div></div></div>
+      <div class="acc-head-right"><div class="acc-tag at-a">🟡 중기</div><div class="acc-arrow">▾</div></div>
+    </div>
+    <div class="acc-body">
+      <div class="acc-content">
+        <b>HPSP</b>: 고압어닐링 독점 + GAA 공정 필수. TSMC 진입 시 매출 레벨 다른 차원<br>
+        <b>한미반도체</b>: TCB 글로벌 1위. 2026E OP 4015억. TSMC 진입 협의<br>
+        <b>원익IPS</b>: 삼성·SK CAPEX 집행 실행률 따라 수주잔고 변동<br><br>
+        리스크: 투자가 미국으로 이동 시 국내 소부장 발주 감소 (국내 CAPEX 집행 비중 모니터링 필요)
+      </div>
+      <div class="acc-signal">📡 트리거: 분기 CAPEX 집행액 공시 + 국내/해외 비중</div>
+      <div class="acc-stks"><div class="stk-chip s">HPSP — 구조적 매수</div><div class="stk-chip s">한미반도체 — 추세 매수</div></div>
+    </div>
+  </div>
+
+  <!-- 후공정 -->
+  <div class="acc-item">
+    <div class="acc-head" onclick="toggle(this)">
+      <div class="acc-head-left"><div class="acc-dot a"></div><div><div class="acc-title">⑤ 후공정·어드밴스드 패키징</div><div class="acc-sub">CoWoS 병목 → 한국 대안 부상</div></div></div>
+      <div class="acc-head-right"><div class="acc-tag at-a">🟡 중기</div><div class="acc-arrow">▾</div></div>
+    </div>
+    <div class="acc-body">
+      <div class="acc-content">
+        TSMC CoWoS 캐파 한계 → 엔비디아 루빈 출하 지연의 주원인<br>
+        <b>심텍</b>: SOCAMM PCB 6월 대량양산 시작. 50% 점유 목표. 2026 1Q 흑자전환<br>
+        <b>한화세미텍</b>: SK하이닉스 공급망 진입. 독점 균열 수혜 (숨은 수혜주)<br>
+        <b>하나마이크론</b>: OSAT 대안으로 부상 가능
+      </div>
+      <div class="acc-signal">📡 트리거: TSMC CoWoS 한계 → 한국 대안 발주 공시</div>
+      <div class="acc-stks"><div class="stk-chip m">심텍 — 모멘텀 확인</div><div class="stk-chip m">한화세미텍 — 숨은 수혜</div></div>
+    </div>
+  </div>
+
+  <!-- 리스크 역발상 -->
+  <div class="acc-item">
+    <div class="acc-head" onclick="toggle(this)">
+      <div class="acc-head-left"><div class="acc-dot b"></div><div><div class="acc-title">리스크 역발상</div><div class="acc-sub">과공포 vs 과소평가 — 틀리게 두려워하는 것을 구분한다</div></div></div>
+      <div class="acc-head-right"><div class="acc-tag at-b">역발상</div><div class="acc-arrow">▾</div></div>
+    </div>
+    <div class="acc-body">
+      <div class="acc-content" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:var(--green);margin-bottom:8px;letter-spacing:1px;">✅ 과공포 — 급락 시 매수</div>
+          <div style="margin-bottom:8px;"><b style="color:var(--text);">AI 효율화→HBM 붕괴 (15%)</b><br>제빈스 패러독스. 딥시크 급락 반복 매수</div>
+          <div style="margin-bottom:8px;"><b style="color:var(--text);">100% 관세 (20%)</b><br>빅테크 동시 반발. AI서버 원가 50%가 HBM</div>
+          <div><b style="color:var(--text);">CXMT 침투 (12%)</b><br>월 24만장 최대. 장비 도입 지연으로 증설 불가</div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:var(--red);margin-bottom:8px;letter-spacing:1px;">⚠️ 과소평가 — 진짜 경계</div>
+          <div style="margin-bottom:8px;"><b style="color:var(--text);">레거시 D램 공급과잉 (45%)</b><br>삼성 레거시 수익성 급락 — HBM에 집중하며 미반영</div>
+          <div style="margin-bottom:8px;"><b style="color:var(--text);">미국 팹 이전 (40%)</b><br>국내 소부장 발주 감소 — 어느 리포트도 미반영</div>
+          <div><b style="color:var(--text);">CAPEX 첫 하향 (35%)</b><br>첫 하향 분기가 전 밸류체인 변곡점</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 이벤트 캘린더 -->
+  <div class="acc-item">
+    <div class="acc-head" onclick="toggle(this)">
+      <div class="acc-head-left"><div class="acc-dot g"></div><div><div class="acc-title">2026 하반기 이벤트 캘린더</div><div class="acc-sub">7/1 마이크론 → 7/29 SK하이닉스 → 9~10월 규제 위험 구간</div></div></div>
+      <div class="acc-head-right"><div class="acc-tag at-g">캘린더</div><div class="acc-arrow">▾</div></div>
+    </div>
+    <div class="acc-body">
+      <div class="acc-content">
+        <b>7월 1일 (확정)</b> — 마이크론 3Q FY2026. 예상 225억달러. 가이던스 335억 달성 여부가 한국 메모리 심리 결정<br>
+        <b>7월 22일 (유력)</b> — 갤럭시 Z폴드8 언팩. 런던. 애플 폴드보다 8주 선점<br>
+        <b>7월 29일 (확정)</b> — SK하이닉스 2Q26 실적. HBM4 비중 + 3Q 가이던스가 하반기 방향 첫 확인<br>
+        <b>2026 H2 (유력)</b> — 엔비디아 베라 루빈 NVL144 본격 출하. HBM4 실물 물량 규모 결정<br>
+        <b>2026 H2 (유력)</b> — SKC 앱솔릭스 유리기판 첫 양산. 성공 시 SKC 재점화, 지연 시 삼성전기 반사수혜<br>
+        <b>9~10월 (위험)</b> — 미국 대중 반도체 추가 규제. 관행적으로 이 시기 집중 발표
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="max-width:900px;margin:0 auto;padding:16px 28px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);">C안 — 3단계 훑기 · 반도체 섹터 마스터 · 2026-06-08</div>
+
+<script>
+function toggle(head){
+  const body=head.nextElementSibling;
+  const arrow=head.querySelector('.acc-arrow');
+  const isOpen=body.classList.contains('open');
+  body.classList.toggle('open',!isOpen);
+  head.classList.toggle('open',!isOpen);
+  arrow.classList.toggle('open',!isOpen);
+}
+</script>
+</body>
+</html>

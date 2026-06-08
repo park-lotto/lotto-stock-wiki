@@ -1,0 +1,510 @@
+# ============================================
+# 0) Settings: ticker list
+# ============================================
+tickers = ["^ks11","^kq11","QQQ","SPY" ]  # ← 여기에 원하는 티커들 쭉 넣으면 됨
+
+# ============================================
+# 1) Imports & basic matplotlib settings
+# ============================================
+!pip install --quiet yfinance
+
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+import pandas as pd
+import numpy as np
+import yfinance as yf
+
+mpl.rcParams.update(mpl.rcParamsDefault)
+mpl.rcParams['axes.unicode_minus'] = False
+
+
+# ============================================
+# DeMark TD Setup 카운트 함수 (일봉/주봉/월봉 공통)
+# ► 여기서만 로직 수정: Sell=4일, Buy=2일
+# ============================================
+def add_td_setup_counts(df, price_col='Close', label_prefix='TD'):
+    """
+    커스텀 TD Setup 버전
+
+    - Sell Setup: Close(t) > Close(t-4) 연속이면 +1, 아니면 0으로 리셋  (4일 기준 상승 피로)
+    - Buy  Setup: Close(t) < Close(t-2) 연속이면 +1, 아니면 0으로 리셋  (2일 기준 하락 피로)
+
+    둘 다 독립적으로 카운트(동시에 올라갈 수도 있음).
+    """
+
+    n = len(df)
+    sell = np.zeros(n)
+    buy = np.zeros(n)
+
+    prices = df[price_col].values
+
+    for i in range(n):
+        # ---------- Sell Setup: 4일 전보다 계속 위에 있으면 카운트 ----------
+        if i >= 4 and prices[i] > prices[i-4]:
+            sell[i] = sell[i-1] + 1
+        else:
+            sell[i] = 0
+
+        # ---------- Buy Setup: 2일 전보다 계속 아래 있으면 카운트 ----------
+        if i >= 2 and prices[i] < prices[i-2]:
+            buy[i] = buy[i-1] + 1
+        else:
+            buy[i] = 0
+
+    df[f'{label_prefix}_SellSetup'] = sell
+    df[f'{label_prefix}_BuySetup'] = buy
+    return df
+
+
+# ============================================
+# 2) Main strategy function (per ticker)
+# ============================================
+def run_strategy(ticker, start_date="2022-01-01", end_date=None):
+
+    print(f"\n==================== {ticker} ====================\n")
+
+    # ---- 1) Download from Yahoo Finance (Daily)
+    df = yf.download(
+        ticker,
+        start=start_date,
+        end=end_date,
+        auto_adjust=True,
+        group_by="column",
+        progress=False
+    )
+
+    # Handle MultiIndex columns
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = df.columns.get_level_values(0)
+
+    # Handle duplicated columns
+    if df.columns.duplicated().any():
+        df = df.groupby(df.columns, axis=1).first()
+
+    # Keep OHLCV
+    try:
+        df = df[['Open', 'High', 'Low', 'Close', 'Volume']].dropna()
+    except Exception as e:
+        print(f"{ticker}: Missing OHLCV data → skipped ({e})")
+        return None, None
+
+    # Remove zero price rows
+    df = df[df[['Open', 'High', 'Low', 'Close']].ne(0).all(axis=1)]
+
+    if df.empty:
+        print(f"{ticker}: No valid price data after cleaning → skipped")
+        return None, None
+
+    # ====================================================
+    # (A) 일봉 기준 TD Setup 계산 (원본 df 기준)
+    # ====================================================
+    df_td_daily = add_td_setup_counts(df.copy(), price_col='Close', label_prefix='TD')
+
+    # ---- 2) Weekly resample (Friday)
+    resampled = df.resample('W-FRI')
+    weekly = pd.DataFrame()
+    weekly['Open'] = resampled['Open'].first()
+    weekly['High'] = resampled['High'].max()
+    weekly['Low'] = resampled['Low'].min()
+    weekly['Close'] = resampled['Close'].last()
+    weekly['Volume'] = resampled['Volume'].sum()
+    weekly = weekly.dropna()
+
+    weekly['Prev_High'] = weekly['High'].shift(1)
+    weekly['Prev_Low'] = weekly['Low'].shift(1)
+    weekly['MA10'] = weekly['Close'].rolling(10).mean()
+
+    # ---- 3) CMF (Chaikin Money Flow)
+    price_range = (weekly['High'] - weekly['Low'])
+    mf_mult = ((weekly['Close'] - weekly['Low']) - (weekly['High'] - weekly['Close'])) / price_range.replace(0, np.nan)
+    mf_volume = mf_mult * weekly['Volume']
+    weekly['CMF'] = mf_volume.rolling(4).sum() / weekly['Volume'].rolling(4).sum()
+
+    # ---- 4) Signals
+    weekly['BuySignal'] = 0
+    weekly['SellSignal'] = 0
+    weekly['ActualSellSignal'] = 0
+
+    weekly.loc[
+        (weekly['High'] > weekly['Prev_High']) &
+        (weekly['Close'] > weekly['MA10']) &
+        (weekly['CMF'] > 0),
+        'BuySignal'
+    ] = 1
+
+    weekly.loc[
+        (weekly['Low'] < weekly['Prev_Low']) &
+        (weekly['Close'] < weekly['MA10']) &
+        (weekly['CMF'] < 0),
+        'SellSignal'
+    ] = 1
+
+    # Mark first sell after entry as ActualSellSignal
+    position = False
+    for i in range(1, len(weekly)):
+        row = weekly.iloc[i]
+        if not position and row['BuySignal'] == 1:
+            position = True
+        elif position and row['SellSignal'] == 1:
+            weekly.loc[weekly.index[i], 'ActualSellSignal'] = 1
+            position = False
+
+    # ---- 5) Backtest (entry/exit pairs)
+    entries, exits = [], []
+    position = False
+
+    for i in range(1, len(weekly)):
+        row = weekly.iloc[i]
+        if not position and row['BuySignal'] == 1:
+            entry_date = row.name
+            entry_price = row['Open']
+            position = True
+        elif position and row['SellSignal'] == 1:
+            exit_date = row.name
+            exit_price = row['Close']
+            entries.append((entry_date, entry_price))
+            exits.append((exit_date, exit_price))
+            position = False
+
+    # Close last open position at last bar (optional)
+    if position:
+        last_row = weekly.iloc[-1]
+        entries.append((entry_date, entry_price))
+        exits.append((last_row.name, last_row['Close']))
+
+    bt_df = pd.DataFrame(columns=['EntryDate','EntryPrice','ExitDate','ExitPrice','Return','CumulativeReturn'])
+
+    if entries:
+        bt_df = pd.DataFrame(entries, columns=['EntryDate','EntryPrice'])
+        bt_df['ExitDate'], bt_df['ExitPrice'] = zip(*exits)
+        bt_df['Return'] = (bt_df['ExitPrice'] - bt_df['EntryPrice']) / bt_df['EntryPrice']
+        bt_df['CumulativeReturn'] = (1 + bt_df['Return']).cumprod()
+
+    # ---- 6) Fear & Greed index (Weekly)
+    weekly['Momentum5'] = (np.log(weekly['Close']) - np.log(weekly['Close'].shift(5))) * 100
+
+    low52 = weekly['Close'].rolling(52, min_periods=1).min()
+    high52 = weekly['Close'].rolling(52, min_periods=1).max()
+    weekly['Pos52W'] = ((weekly['Close'] - low52) / (high52 - low52)).clip(0, 1)
+
+    vol_recent = weekly['Volume'].rolling(5, min_periods=1).mean()
+    vol_past = weekly['Volume'].rolling(20, min_periods=1).mean()
+    weekly['VolSurge'] = (vol_recent / vol_past).clip(0, 3)
+
+    ret = weekly['Close'].pct_change()
+    vol_r = ret.rolling(5, min_periods=1).std()
+    vol_p = ret.rolling(20, min_periods=1).std()
+    weekly['VolSpike'] = (vol_r / vol_p).clip(0, 3)
+
+    m = (weekly['Momentum5'].rolling(7, min_periods=1).mean() / 10).clip(-1, 1.5)
+    p = (2 * weekly['Pos52W'].rolling(7, min_periods=1).mean() - 1).clip(-1, 1.5)
+    v = (weekly['VolSurge'].rolling(10, min_periods=1).mean() - 1).clip(-0.5, 1.2)
+    vs = -(weekly['VolSpike'].rolling(10, min_periods=1).mean() - 1).clip(-0.5, 1.2)
+
+    weekly['FG'] = 0.45*m + 0.45*p + 0.05*v + 0.05*vs
+
+    # ---- 7) Print summary
+    if not bt_df.empty:
+        print(bt_df)
+
+        print("\n--- Performance ---")
+        print(f"Trades: {len(bt_df)}")
+        print(f"Avg Return: {bt_df['Return'].mean():.2%}")
+        print(f"Cumulative Return: {bt_df['CumulativeReturn'].iloc[-1]-1:.2%}")
+        print(f"Win Rate: {(bt_df['Return']>0).mean():.2%}")
+    else:
+        print("No trades generated.")
+
+    # ---- 8) Plot (Weekly strategy + FG)
+    fig, ax1 = plt.subplots(figsize=(16,5))
+    ax1.plot(weekly.index, weekly['Close'], label="Close")
+    ax1.plot(weekly.index, weekly['MA10'], label="MA10", linestyle="--")
+
+    # BUY SIGNALS (Primary / Additional)
+    if not bt_df.empty:
+        primary_buy_idx = bt_df['EntryDate']
+    else:
+        primary_buy_idx = pd.Index([])
+
+    all_buy_idx = weekly.index[weekly['BuySignal'] == 1]
+    additional_buy_idx = all_buy_idx.difference(primary_buy_idx)
+
+    if len(additional_buy_idx) > 0:
+        ax1.scatter(
+            additional_buy_idx,
+            weekly.loc[additional_buy_idx, 'Close'],
+            marker='^',
+            s=60,
+            alpha=0.4,
+            color='red',
+            label="Additional Buy"
+        )
+
+    if len(primary_buy_idx) > 0:
+        ax1.scatter(
+            primary_buy_idx,
+            weekly.loc[primary_buy_idx, 'Close'],
+            marker='^',
+            s=100,
+            alpha=1.0,
+            color='darkred',
+            label="Primary Buy"
+        )
+
+    # SELL SIGNALS (Primary / Additional)
+    primary_sell_idx = weekly.index[weekly['ActualSellSignal'] == 1]
+    all_sell_idx = weekly.index[weekly['SellSignal'] == 1]
+    additional_sell_idx = all_sell_idx.difference(primary_sell_idx)
+
+    if len(additional_sell_idx) > 0:
+        ax1.scatter(
+            additional_sell_idx,
+            weekly.loc[additional_sell_idx, 'Close'],
+            marker='v',
+            s=60,
+            alpha=0.4,
+            color='blue',
+            label="Additional Sell"
+        )
+
+    if len(primary_sell_idx) > 0:
+        ax1.scatter(
+            primary_sell_idx,
+            weekly.loc[primary_sell_idx, 'Close'],
+            marker='v',
+            s=100,
+            alpha=1.0,
+            color='darkblue',
+            label="Primary Sell"
+        )
+
+    ax1.set_title(f"{ticker} Weekly Strategy + Fear & Greed")
+    ax1.set_xlabel("Date")
+    ax1.set_ylabel("Price")
+    ax1.grid(True)
+    ax1.legend(loc="upper left")
+
+    # Fear & Greed on secondary axis
+    ax2 = ax1.twinx()
+    ax2.plot(weekly.index, weekly['FG'], color='orange', label='FG Index')
+    ax2.axhline(0.5, linestyle='--', color='red')
+    ax2.axhline(-0.5, linestyle='--', color='green')
+    ax2.set_ylabel("FG")
+
+    plt.tight_layout()
+    plt.show()
+
+    # ============================================
+    # 9) Elder Impulse System (Weekly, last 1 year)
+    # ============================================
+
+    # 13-week EMA
+    ema13 = weekly['Close'].ewm(span=13, adjust=False).mean()
+
+    # MACD (12, 26, 9) on weekly data
+    ema12 = weekly['Close'].ewm(span=12, adjust=False).mean()
+    ema26 = weekly['Close'].ewm(span=26, adjust=False).mean()
+    macd_line = ema12 - ema26
+    macd_signal = macd_line.ewm(span=9, adjust=False).mean()
+    macd_hist = macd_line - macd_signal
+
+    # 임펄스 조건 (주봉 기준)
+    ema_slope = ema13.diff()
+    hist_slope = macd_hist.diff()
+
+    impulse = pd.Series("neutral", index=weekly.index)
+    impulse[(ema_slope > 0) & (hist_slope > 0)] = "bull"
+    impulse[(ema_slope < 0) & (hist_slope < 0)] = "bear"
+
+    # 최근 1년 (52주 정도)만 표시
+    if len(weekly) > 0:
+        last_date = weekly.index.max()
+        start_1y = last_date - pd.DateOffset(years=1)
+        mask = weekly.index >= start_1y
+    else:
+        mask = weekly.index > "1900-01-01"
+
+    weekly_1y = weekly.loc[mask]
+    ema13_1y = ema13.loc[mask]
+    impulse_1y = impulse.loc[mask]
+
+    if not weekly_1y.empty:
+        fig2, ax_price = plt.subplots(figsize=(16,5))
+
+        # 종가 라인
+        ax_price.plot(weekly_1y.index, weekly_1y['Close'], linewidth=1.0, label="Close")
+
+        # 13-Week EMA
+        ax_price.plot(weekly_1y.index, ema13_1y, linestyle="--", linewidth=1.0, label="EMA13 (Weekly)")
+
+        # Bull / Bear / Neutral 포인트 색상 표시
+        bull_idx = impulse_1y[impulse_1y == "bull"].index
+        bear_idx = impulse_1y[impulse_1y == "bear"].index
+        neutral_idx = impulse_1y[impulse_1y == "neutral"].index
+
+        if len(neutral_idx) > 0:
+            ax_price.scatter(neutral_idx, weekly_1y.loc[neutral_idx, 'Close'],
+                             s=30, alpha=0.7, color="gray", label="Neutral")
+        if len(bull_idx) > 0:
+            ax_price.scatter(bull_idx, weekly_1y.loc[bull_idx, 'Close'],
+                             s=40, alpha=0.9, color="green", label="Bullish Impulse")
+        if len(bear_idx) > 0:
+            ax_price.scatter(bear_idx, weekly_1y.loc[bear_idx, 'Close'],
+                             s=40, alpha=0.9, color="red", label="Bearish Impulse")
+
+        ax_price.set_title(f"{ticker} Elder Impulse System (Weekly, last 1 year)")
+        ax_price.set_xlabel("Date")
+        ax_price.set_ylabel("Price")
+        ax_price.grid(True)
+        ax_price.legend(loc="upper left")
+
+        plt.tight_layout()
+        plt.show()
+    else:
+        print("Not enough weekly data for 1-year Elder Impulse chart.")
+
+    # ============================================
+    # 10) DeMark TD Setup Count (Weekly, last 1 year)
+    # ============================================
+    weekly_td = add_td_setup_counts(weekly.copy(), price_col='Close', label_prefix='TD')
+
+    if len(weekly_td) > 0:
+        last_date_td = weekly_td.index.max()
+        start_1y_td = last_date_td - pd.DateOffset(years=1)
+        mask_td = weekly_td.index >= start_1y_td
+        weekly_td_1y = weekly_td.loc[mask_td]
+    else:
+        weekly_td_1y = weekly_td
+
+    if not weekly_td_1y.empty:
+        fig3, ax_price_td = plt.subplots(figsize=(16,5))
+
+        # 주봉 종가
+        ax_price_td.plot(weekly_td_1y.index, weekly_td_1y['Close'], color='black', label='Close')
+
+        ax_price_td.set_title(f"{ticker} Weekly DeMark TD Setup Counts (last 1 year)")
+        ax_price_td.set_xlabel("Date")
+        ax_price_td.set_ylabel("Price")
+        ax_price_td.grid(True)
+        ax_price_td.legend(loc="upper left")
+
+        # TD 카운트 (우측 축)
+        ax_td = ax_price_td.twinx()
+        ax_td.plot(weekly_td_1y.index, weekly_td_1y['TD_SellSetup'],
+                   color='red', label='TD Sell Setup')
+        ax_td.plot(weekly_td_1y.index, weekly_td_1y['TD_BuySetup'],
+                   color='blue', label='TD Buy Setup')
+        ax_td.set_ylabel("TD Setup Count", color='gray')
+        ax_td.tick_params(axis='y', labelcolor='gray')
+
+        max_td_w = weekly_td_1y[['TD_SellSetup', 'TD_BuySetup']].max().max()
+        ax_td.set_ylim(0, max_td_w + 2)
+
+        ax_td.legend(loc="upper right")
+
+        plt.tight_layout()
+        plt.show()
+    else:
+        print("Not enough weekly data for DeMark TD weekly chart.")
+
+    # ============================================
+    # 11) DeMark TD Setup Count (Daily, last 1 year)
+    # ============================================
+    if len(df_td_daily) > 0:
+        last_date_d = df_td_daily.index.max()
+        start_1y_d = last_date_d - pd.DateOffset(years=1)
+        mask_d = df_td_daily.index >= start_1y_d
+        df_td_daily_1y = df_td_daily.loc[mask_d]
+    else:
+        df_td_daily_1y = df_td_daily
+
+    if not df_td_daily_1y.empty:
+        fig4, ax_price_d = plt.subplots(figsize=(16,5))
+
+        # 일봉 종가
+        ax_price_d.plot(df_td_daily_1y.index, df_td_daily_1y['Close'], color='black', label='Close')
+
+        ax_price_d.set_title(f"{ticker} Daily DeMark TD Setup Counts (last 1 year)")
+        ax_price_d.set_xlabel("Date")
+        ax_price_d.set_ylabel("Price")
+        ax_price_d.grid(True)
+        ax_price_d.legend(loc="upper left")
+
+        # TD 카운트 (우측 축)
+        ax_td_d = ax_price_d.twinx()
+        ax_td_d.plot(df_td_daily_1y.index, df_td_daily_1y['TD_SellSetup'],
+                     color='red', label='TD Sell Setup')
+        ax_td_d.plot(df_td_daily_1y.index, df_td_daily_1y['TD_BuySetup'],
+                     color='blue', label='TD Buy Setup')
+        ax_td_d.set_ylabel("TD Setup Count", color='gray')
+        ax_td_d.tick_params(axis='y', labelcolor='gray')
+
+        max_td_d = df_td_daily_1y[['TD_SellSetup', 'TD_BuySetup']].max().max()
+        ax_td_d.set_ylim(0, max_td_d + 2)
+
+        ax_td_d.legend(loc="upper right")
+
+        plt.tight_layout()
+        plt.show()
+    else:
+        print("Not enough daily data for DeMark TD daily chart.")
+
+    # ============================================
+    # 12) DeMark TD Setup Count (Monthly, 전체 기간)
+    # ============================================
+    # 월봉 리샘플 (월말 기준)
+    resampled_m = df.resample('M')
+    monthly = pd.DataFrame()
+    monthly['Open'] = resampled_m['Open'].first()
+    monthly['High'] = resampled_m['High'].max()
+    monthly['Low'] = resampled_m['Low'].min()
+    monthly['Close'] = resampled_m['Close'].last()
+    monthly['Volume'] = resampled_m['Volume'].sum()
+    monthly = monthly.dropna()
+
+    if not monthly.empty:
+        monthly_td = add_td_setup_counts(monthly.copy(), price_col='Close', label_prefix='TD')
+
+        fig5, ax_price_m = plt.subplots(figsize=(16,5))
+
+        # 월봉 종가
+        ax_price_m.plot(monthly_td.index, monthly_td['Close'], color='black', label='Close')
+
+        ax_price_m.set_title(f"{ticker} Monthly DeMark TD Setup Counts (Full Period)")
+        ax_price_m.set_xlabel("Date")
+        ax_price_m.set_ylabel("Price")
+        ax_price_m.grid(True)
+        ax_price_m.legend(loc="upper left")
+
+        # TD 카운트 (우측 축)
+        ax_td_m = ax_price_m.twinx()
+        ax_td_m.plot(monthly_td.index, monthly_td['TD_SellSetup'],
+                     color='red', label='TD Sell Setup')
+        ax_td_m.plot(monthly_td.index, monthly_td['TD_BuySetup'],
+                     color='blue', label='TD Buy Setup')
+        ax_td_m.set_ylabel("TD Setup Count", color='gray')
+        ax_td_m.tick_params(axis='y', labelcolor='gray')
+
+        max_td_m = monthly_td[['TD_SellSetup', 'TD_BuySetup']].max().max()
+        ax_td_m.set_ylim(0, max_td_m + 2)
+
+        ax_td_m.legend(loc="upper right")
+
+        plt.tight_layout()
+        plt.show()
+    else:
+        print("Not enough monthly data for DeMark TD monthly chart.")
+
+    return weekly, bt_df
+
+
+# ============================================
+# 3) Run for multiple tickers
+# ============================================
+results = {}
+
+for t in tickers:
+    weekly, bt = run_strategy(t)
+    results[t] = {"weekly": weekly, "backtest": bt}
+
+print("\n=== Finished running all tickers ===")

@@ -1,0 +1,467 @@
+# ----------------------------
+# 1. 라이브러리 임포트
+# ----------------------------
+import pandas as pd
+import numpy as np
+from google.colab import files
+import io
+from IPython.display import display
+
+# ----------------------------
+# 2. 엑셀 업로드 및 불러오기
+# ----------------------------
+uploaded = files.upload()
+filename = list(uploaded.keys())[0]
+df = pd.read_excel(io.BytesIO(uploaded[filename]), sheet_name="데이터")
+
+# ----------------------------
+# 3. 데이터 전처리
+# ----------------------------
+df = df.dropna(subset=['DATE'])
+df['DATE'] = pd.to_datetime(df['DATE'])
+df.set_index('DATE', inplace=True)
+
+kospi = df['코스피'].dropna()
+etf_data = df.drop(columns=['코스피'])
+
+# ----------------------------
+# 4. Mansfield RS 계산 함수
+# ----------------------------
+def compute_mansfield_rs(etf, benchmark, ma_period=52):
+    """
+    etf와 benchmark(코스피)의 비율(relative)을 ma_period 이동평균으로 나눈 편차(%)를 Mansfield RS로 계산
+    Note: 일간 데이터 기준 ma_period=52면 52일 이동평균
+    """
+    relative = etf / benchmark
+    ma = relative.rolling(window=ma_period, min_periods=ma_period).mean()
+    rs = ((relative / ma) - 1) * 100
+    return rs
+
+def normalize_to_100_scale(x, scale=12):
+    """
+    Mansfield RS(%)를 0~100 스케일로 변환 (시그모이드)
+    scale이 작을수록 민감도↑
+    """
+    return 100 * (1 / (1 + np.exp(-x / scale)))
+
+# ----------------------------
+# 5. RS 계산 실행 (60d / 120d / 250d + 평균)
+# ----------------------------
+RS_WINDOWS = [60, 120, 250]
+
+mansfield_rows = []
+
+for column in etf_data.columns:
+    series = etf_data[column].dropna()
+    common_idx = series.index.intersection(kospi.index)
+    etf_series = series.loc[common_idx]
+    kospi_series = kospi.loc[common_idx]
+
+    if len(etf_series) < min(RS_WINDOWS):
+        continue
+
+    latest = {}
+    # 각 기간별 RS 계산 및 최신값 저장
+    for win in RS_WINDOWS:
+        if len(etf_series) >= win:
+            rs_series = compute_mansfield_rs(etf_series, kospi_series, ma_period=win).dropna()
+            if not rs_series.empty:
+                raw = float(rs_series.iloc[-1])
+                latest[f"RS_{win}d"] = round(raw, 2)
+                latest[f"Norm_RS_{win}d"] = round(normalize_to_100_scale(raw), 2)
+
+    # 최소 하나라도 계산되었는지 확인
+    raw_keys = [k for k in latest.keys() if k.startswith("RS_") and k.endswith("d")]
+    if len(raw_keys) == 0:
+        continue
+
+    # 사용 가능한 구간만 평균 (raw 기준)
+    raw_values = [latest[k] for k in raw_keys]
+    rs_avg = round(sum(raw_values) / len(raw_values), 2)
+    norm_rs_avg = round(normalize_to_100_scale(rs_avg), 2)
+
+    # 결과 행 구성 (없는 구간은 NaN)
+    row = {
+        "ETF": column,
+        "RS_60d": np.nan, "RS_120d": np.nan, "RS_250d": np.nan, "RS_avg": rs_avg,
+        "Norm_RS_60d": np.nan, "Norm_RS_120d": np.nan, "Norm_RS_250d": np.nan, "Norm_RS_avg": norm_rs_avg
+    }
+    for win in RS_WINDOWS:
+        if f"RS_{win}d" in latest:
+            row[f"RS_{win}d"] = latest[f"RS_{win}d"]
+            row[f"Norm_RS_{win}d"] = latest[f"Norm_RS_{win}d"]
+
+    mansfield_rows.append(row)
+
+mansfield_df = pd.DataFrame(mansfield_rows).sort_values(by="Norm_RS_avg", ascending=False)
+
+# ----------------------------
+# 6. 변동성 조정 모멘텀 계산 함수 (기존 유지)
+# ----------------------------
+def calculate_risk_adjusted_momentum(data, last_n_days=10, ma_filter_days=None, top_n=20):
+    """
+    3/6/12개월 수익률을 각 기간 표준편차로 나눠 평균한 위험조정 모멘텀 점수.
+    ma_filter_days가 주어지면 해당 이동평균 하회 종목 제외.
+    """
+    daily_top = {}
+    trading_days = data.dropna(how='all').index[-last_n_days:]
+
+    for day in trading_days:
+        if day not in data.index:
+            continue
+
+        end_idx = data.index.get_indexer_for([day])[0]
+        start_3m = max(0, end_idx - 62)
+        start_6m = max(0, end_idx - 125)
+        start_12m = max(0, end_idx - 251)
+
+        window_3m = data.iloc[start_3m:end_idx + 1]
+        window_6m = data.iloc[start_6m:end_idx + 1]
+        window_12m = data.iloc[start_12m:end_idx + 1]
+
+        returns_3m = window_3m.pct_change(fill_method=None).mean(skipna=True)
+        returns_6m = window_6m.pct_change(fill_method=None).mean(skipna=True)
+        returns_12m = window_12m.pct_change(fill_method=None).mean(skipna=True)
+
+        vol_3m = window_3m.pct_change(fill_method=None).std(skipna=True)
+        vol_6m = window_6m.pct_change(fill_method=None).std(skipna=True)
+        vol_12m = window_12m.pct_change(fill_method=None).std(skipna=True)
+
+        valid = (vol_3m > 0) & (vol_6m > 0) & (vol_12m > 0)
+
+        # 이동평균선 필터가 있다면 적용 (종가 >= MA만 통과)
+        if ma_filter_days is not None:
+            ma_ok = []
+            for col in data.columns:
+                series = data[col].iloc[:end_idx + 1].dropna()
+                if len(series) < ma_filter_days:
+                    ma_ok.append(False)
+                else:
+                    ma_value = series.rolling(window=ma_filter_days).mean().iloc[-1]
+                    price_value = series.iloc[-1]
+                    ma_ok.append(price_value >= ma_value)
+            ma_ok = pd.Series(ma_ok, index=data.columns)
+            valid &= ma_ok
+
+        risk_adj = (returns_3m[valid] / vol_3m[valid] +
+                    returns_6m[valid] / vol_6m[valid] +
+                    returns_12m[valid] / vol_12m[valid]) / 3
+
+        top_list = risk_adj.nlargest(top_n).index.tolist()
+        while len(top_list) < top_n:
+            top_list.append(None)
+
+        daily_top[day] = top_list
+
+    df_top = pd.DataFrame.from_dict(
+        daily_top, orient="index",
+        columns=[f"Top {i+1}" for i in range(top_n)]
+    )
+    df_top.index.name = "Date"
+    return df_top
+
+# ============================================================
+# ✅ 7. (추가) Sortino / ETR Comfort (모멘텀과 동일 조건/기간)
+#     - 3m(63) / 6m(126) / 12m(252) 각각 계산 -> 평균 점수
+#     - 필터: 종가 >= MA(10/20/50)
+#     - 출력: 최근 10일 x Top 20 (모멘텀과 동일 폼)
+# ============================================================
+
+def _mdd_from_returns(ret: pd.Series) -> float:
+    cum = (1 + ret.fillna(0)).cumprod()
+    peak = cum.cummax()
+    dd = (cum - peak) / peak
+    return float(dd.min())
+
+def _sortino_from_returns(ret: pd.Series, mar: float = 0.0, periods_per_year: int = 252) -> float:
+    ret = ret.dropna()
+    if len(ret) < 5:
+        return np.nan
+    mar_daily = (1 + mar) ** (1 / periods_per_year) - 1
+    excess = ret - mar_daily
+    downside = excess[excess < 0]
+    if len(downside) < 5:
+        return np.nan
+    downside_dev = downside.std(ddof=1) * np.sqrt(periods_per_year)
+    if downside_dev == 0 or np.isnan(downside_dev):
+        return np.nan
+    annual_excess = excess.mean() * periods_per_year
+    return float(annual_excess / downside_dev)
+
+def _cagr_from_prices_window(prices: pd.Series, periods_per_year: int = 252) -> float:
+    prices = prices.dropna()
+    if len(prices) < 2:
+        return np.nan
+    n = len(prices)
+    return float((prices.iloc[-1] / prices.iloc[0]) ** (periods_per_year / (n - 1)) - 1)
+
+def _etr_comfort_from_prices_window(prices: pd.Series, periods_per_year: int = 252) -> float:
+    prices = prices.dropna()
+    if len(prices) < 60:
+        return np.nan
+    ret = prices.pct_change(fill_method=None).dropna()
+    if len(ret) < 5:
+        return np.nan
+    cagr = _cagr_from_prices_window(prices, periods_per_year=periods_per_year)
+    vol = float(ret.std(ddof=1) * np.sqrt(periods_per_year))
+    mdd = _mdd_from_returns(ret)
+    denom = abs(mdd) * vol
+    if denom == 0 or np.isnan(denom) or np.isnan(cagr):
+        return np.nan
+    return float(cagr / denom)
+
+def _ma_ok_mask(close_df: pd.DataFrame, end_idx: int, ma_days: int) -> pd.Series:
+    ok = {}
+    for col in close_df.columns:
+        s = close_df[col].iloc[:end_idx + 1].dropna()
+        if len(s) < ma_days:
+            ok[col] = False
+        else:
+            ma = s.rolling(ma_days).mean().iloc[-1]
+            ok[col] = bool(s.iloc[-1] >= ma)
+    return pd.Series(ok)
+
+def rank_sortino_or_etr_like_momentum(
+    data: pd.DataFrame,
+    metric: str = "sortino",  # "sortino" or "etr"
+    last_n_days: int = 10,
+    ma_filter_days: int = 10,
+    top_n: int = 20,
+    mar: float = 0.0,
+    periods_per_year: int = 252,
+    period_3m: int = 63,
+    period_6m: int = 126,
+    period_12m: int = 252,
+) -> pd.DataFrame:
+
+    daily_top = {}
+    trading_days = data.dropna(how="all").index[-last_n_days:]
+    wins = [period_3m, period_6m, period_12m]
+
+    for day in trading_days:
+        end_idx = data.index.get_indexer_for([day])[0]
+        ok = _ma_ok_mask(data, end_idx=end_idx, ma_days=ma_filter_days)
+
+        scores = {}
+        for col in data.columns:
+            if not ok.get(col, False):
+                continue
+
+            vals = []
+            for win in wins:
+                start_idx = max(0, end_idx - (win - 1))
+                w_prices = data[col].iloc[start_idx:end_idx + 1].dropna()
+
+                # 데이터 부족 방지(윈도우 80% 미만이면 제외)
+                if len(w_prices) < max(20, int(win * 0.8)):
+                    continue
+
+                if metric == "sortino":
+                    r = w_prices.pct_change(fill_method=None).dropna()
+                    v = _sortino_from_returns(r, mar=mar, periods_per_year=periods_per_year)
+                elif metric == "etr":
+                    v = _etr_comfort_from_prices_window(w_prices, periods_per_year=periods_per_year)
+                else:
+                    raise ValueError("metric은 'sortino' 또는 'etr'만 지원합니다.")
+
+                if pd.notna(v):
+                    vals.append(float(v))
+
+            if len(vals) == 0:
+                continue
+
+            scores[col] = float(np.mean(vals))
+
+        if len(scores) == 0:
+            daily_top[day] = [None] * top_n
+            continue
+
+        ranked = pd.Series(scores).sort_values(ascending=False).head(top_n).index.tolist()
+        while len(ranked) < top_n:
+            ranked.append(None)
+
+        daily_top[day] = ranked
+
+    out = pd.DataFrame.from_dict(
+        daily_top, orient="index",
+        columns=[f"Top {i+1}" for i in range(top_n)]
+    )
+    out.index.name = "Date"
+    return out
+
+# ----------------------------
+# 7. 기본 변동성 조정 모멘텀
+# ----------------------------
+momentum_df = calculate_risk_adjusted_momentum(etf_data, last_n_days=10, ma_filter_days=None, top_n=20)
+print("\n📌 최근 10일간 변동성 조정 모멘텀 Top 20 ETF (전체):")
+display(momentum_df)
+
+# ----------------------------
+# 8. 10일선(10MA) 이상 모멘텀
+# ----------------------------
+momentum_df_ma10 = calculate_risk_adjusted_momentum(etf_data, last_n_days=10, ma_filter_days=10, top_n=20)
+print("\n📌 최근 10일간 변동성 조정 모멘텀 Top 20 ETF (10일선 이상):")
+display(momentum_df_ma10)
+
+# ----------------------------
+# 9. 20일선(20MA) 이상 모멘텀
+# ----------------------------
+momentum_df_ma20 = calculate_risk_adjusted_momentum(etf_data, last_n_days=10, ma_filter_days=20, top_n=20)
+print("\n📌 최근 10일간 변동성 조정 모멘텀 Top 20 ETF (20일선 이상):")
+display(momentum_df_ma20)
+
+# ----------------------------
+# 10. 10주선(50일) 이상 모멘텀
+# ----------------------------
+momentum_df_ma10w = calculate_risk_adjusted_momentum(etf_data, last_n_days=10, ma_filter_days=50, top_n=20)
+print("\n📌 최근 10일간 변동성 조정 모멘텀 Top 20 ETF (10주선(50일) 이상):")
+display(momentum_df_ma10w)
+
+# ----------------------------
+# ✅ 11. Sortino: 10/20/50 MA 이상 (모멘텀과 동일 기간 구조)
+# ----------------------------
+sortino_ma10 = rank_sortino_or_etr_like_momentum(etf_data, metric="sortino", last_n_days=10, ma_filter_days=10, top_n=20)
+print("\n📌 최근 10일간 Sortino Top 20 ETF (10일선 이상 / 3-6-12M 평균):")
+display(sortino_ma10)
+
+sortino_ma20 = rank_sortino_or_etr_like_momentum(etf_data, metric="sortino", last_n_days=10, ma_filter_days=20, top_n=20)
+print("\n📌 최근 10일간 Sortino Top 20 ETF (20일선 이상 / 3-6-12M 평균):")
+display(sortino_ma20)
+
+sortino_ma10w = rank_sortino_or_etr_like_momentum(etf_data, metric="sortino", last_n_days=10, ma_filter_days=50, top_n=20)
+print("\n📌 최근 10일간 Sortino Top 20 ETF (10주선(50일) 이상 / 3-6-12M 평균):")
+display(sortino_ma10w)
+
+# ----------------------------
+# ✅ 12. ETR Comfort: 10/20/50 MA 이상 (모멘텀과 동일 기간 구조)
+# ----------------------------
+etr_ma10 = rank_sortino_or_etr_like_momentum(etf_data, metric="etr", last_n_days=10, ma_filter_days=10, top_n=20)
+print("\n📌 최근 10일간 ETR Comfort Top 20 ETF (10일선 이상 / 3-6-12M 평균):")
+display(etr_ma10)
+
+etr_ma20 = rank_sortino_or_etr_like_momentum(etf_data, metric="etr", last_n_days=10, ma_filter_days=20, top_n=20)
+print("\n📌 최근 10일간 ETR Comfort Top 20 ETF (20일선 이상 / 3-6-12M 평균):")
+display(etr_ma20)
+
+etr_ma10w = rank_sortino_or_etr_like_momentum(etf_data, metric="etr", last_n_days=10, ma_filter_days=50, top_n=20)
+print("\n📌 최근 10일간 ETR Comfort Top 20 ETF (10주선(50일) 이상 / 3-6-12M 평균):")
+display(etr_ma10w)
+
+# ----------------------------
+# 13. Mansfield RS 결과 출력 (60/120/250일 + 평균)
+# ----------------------------
+print("\n📌 Mansfield RS (60/120/250일 + 평균) 결과 (Norm_RS_avg 내림차순):")
+display(mansfield_df)
+
+mansfield_df_70 = mansfield_df[mansfield_df["Norm_RS_avg"] >= 70].copy()
+print("\n📌 Normalized RS 평균 ≥ 70 (필터링):")
+display(mansfield_df_70)
+
+# ============================================================
+# ✅ 14. 업종(테마) "쏠림지수" (6개월 수익률 랭킹-가중 분산)
+#  - 아이디어(IBK): 업종 6개월 수익률을 랭킹에 따라 가중하고,
+#    가중된 값들의 표준편차를 "쏠림강도"로 사용 (35 이상 과열 구간) :contentReference[oaicite:1]{index=1}
+#  - 입력: etf_data (DATE index, columns=업종/테마 ETF 종가)
+#  - 출력:
+#     1) crowding_series: 날짜별 쏠림지수 시계열
+#     2) 최신 날짜 기준 Top/Bottom 업종 리스트
+# ============================================================
+
+def compute_crowding_index(
+    price_df: pd.DataFrame,
+    lookback_days: int = 126,        # 6개월(거래일 기준) ≈ 126
+    min_universe: int = 10,          # 최소 ETF 개수
+    score_mode: str = "linear",      # "linear" or "centered"
+    scale: float = 100.0             # 지수 스케일(값이 너무 작으면 200~300으로 키워도 됨)
+):
+    """
+    1) 6개월 수익률 계산
+    2) 날짜별 수익률 랭킹(높을수록 상위)
+    3) 랭킹 기반 가중치(score) 부여
+    4) score*return의 표준편차를 쏠림지수로 정의
+
+    score_mode:
+      - "linear"  : 상위일수록 +1에 가깝게, 하위일수록 0에 가깝게 (0~1)
+      - "centered": 상위 +1, 하위 -1로 대칭(-1~1) → "상/하 격차"를 더 강하게 반영
+    """
+    # 6개월 수익률
+    ret6m = price_df.pct_change(lookback_days, fill_method=None)
+
+    crowding_vals = []
+    valid_dates = ret6m.index
+
+    for dt in valid_dates:
+        r = ret6m.loc[dt].dropna()
+        n = len(r)
+        if n < min_universe:
+            crowding_vals.append(np.nan)
+            continue
+
+        # 수익률 랭킹: 1이 최고
+        rank = r.rank(ascending=False, method="average")
+
+        if score_mode == "linear":
+            # 0~1 (1=최고)
+            score = (n - rank) / (n - 1)
+        elif score_mode == "centered":
+            # -1~1 (상위는 +, 하위는 -)
+            score = ( (n + 1) / 2 - rank ) / ( (n - 1) / 2 )
+        else:
+            raise ValueError("score_mode는 'linear' 또는 'centered'만 지원합니다.")
+
+        # 랭킹 가중을 반영한 '쏠림 값'을 만들고 분산(표준편차)로 쏠림 강도 측정
+        weighted = score * r
+        crowd = float(weighted.std(ddof=1) * scale)
+        crowding_vals.append(crowd)
+
+    crowding_series = pd.Series(crowding_vals, index=valid_dates, name="CrowdingIndex").dropna()
+    return crowding_series, ret6m
+
+
+# ----------------------------
+# ✅ 14-1) 쏠림지수 시계열 계산
+# ----------------------------
+crowding_series, ret6m = compute_crowding_index(
+    etf_data,
+    lookback_days=126,     # 6개월
+    min_universe=10,
+    score_mode="centered", # 상/하 격차 강조(IBK 의도에 더 가까움)
+    scale=100.0
+)
+
+print("\n📌 업종(테마) 쏠림지수(6개월 수익률 기반) 최신값:")
+latest_dt = crowding_series.index[-1]
+latest_crowd = crowding_series.iloc[-1]
+print(f"- Date: {latest_dt.date()}  |  CrowdingIndex: {latest_crowd:.2f}")
+print("  (참고: IBK는 35 이상을 '과열/쏠림' 신호로 사용)")
+
+display(crowding_series.tail(20))
+
+
+# ----------------------------
+# ✅ 14-2) 최신 날짜 기준 '주도/소외' 업종 리스트 출력 (분리형)
+# ----------------------------
+def show_leaders_laggards(ret6m: pd.DataFrame, date: pd.Timestamp, top_k: int = 10):
+    r = ret6m.loc[date].dropna().sort_values(ascending=False)
+
+    top = r.head(top_k)
+    bottom = r.tail(top_k).sort_values(ascending=True)
+
+    print(f"\n📈 주도 업종 Top {top_k} (6개월 수익률)")
+    display(top.to_frame("6M Return"))
+
+    print(f"\n📉 소외 업종 Bottom {top_k} (6개월 수익률)")
+    display(bottom.to_frame("6M Return"))
+
+# 실행
+print("\n📌 최신일 기준 6개월 수익률 주도/소외 업종:")
+show_leaders_laggards(ret6m, latest_dt, top_k=10)
+
+
+# ----------------------------
+# ✅ 14-3) 간단 신호(과열/비과열) 라벨링
+# ----------------------------
+threshold = 35.0  # IBK 기준선 참고값
+signal = "🔥 과열/쏠림" if latest_crowd >= threshold else "✅ 비과열/확산"
+print(f"\n📌 쏠림 판정: {signal} (threshold={threshold}, value={latest_crowd:.2f})")
+

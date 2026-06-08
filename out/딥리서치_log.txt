@@ -1,0 +1,50 @@
+Traceback (most recent call last):
+  File "C:\Users\TheRose\Desktop\�ζ��� �ֽ�\pipeline\gemini_deep_research.py", line 168, in <module>
+    print(f"������ġ ���� \u2014 {len(TOPICS)}�� ����")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'cp949' codec can't encode character '\u2014' in position 8: illegal multibyte sequence
+딥리서치 시작 — 8개 토픽
+저장 위치: C:\Users\TheRose\Desktop\로또의 주식\out\딥리서치
+
+============================================================
+[01_FLNG_시장전체] 리서치 시작...
+  완료 (3675 chars)
+  저장: C:\Users\TheRose\Desktop\로또의 주식\out\딥리서치\01_FLNG_시장전체.md
+
+============================================================
+[02_캐나다_잠수함_함대] 리서치 시작...
+  완료 (3807 chars)
+  저장: C:\Users\TheRose\Desktop\로또의 주식\out\딥리서치\02_캐나다_잠수함_함대.md
+
+============================================================
+[03_AUKUS_핵잠수함] 리서치 시작...
+  완료 (4195 chars)
+  저장: C:\Users\TheRose\Desktop\로또의 주식\out\딥리서치\03_AUKUS_핵잠수함.md
+
+============================================================
+[04_FLNG_MRO] 리서치 시작...
+  완료 (3481 chars)
+  저장: C:\Users\TheRose\Desktop\로또의 주식\out\딥리서치\04_FLNG_MRO.md
+
+============================================================
+[05_부유식_데이터센터] 리서치 시작...
+  완료 (4937 chars)
+  저장: C:\Users\TheRose\Desktop\로또의 주식\out\딥리서치\05_부유식_데이터센터.md
+
+============================================================
+[06_조선엔진_AI] 리서치 시작...
+  완료 (3626 chars)
+  저장: C:\Users\TheRose\Desktop\로또의 주식\out\딥리서치\06_조선엔진_AI.md
+
+============================================================
+[07_Section301_리스크_시나리오] 리서치 시작...
+  완료 (3762 chars)
+  저장: C:\Users\TheRose\Desktop\로또의 주식\out\딥리서치\07_Section301_리스크_시나리오.md
+
+============================================================
+[08_미해군_MRO] 리서치 시작...
+  완료 (3732 chars)
+  저장: C:\Users\TheRose\Desktop\로또의 주식\out\딥리서치\08_미해군_MRO.md
+
+
+✅ 완료 — C:\Users\TheRose\Desktop\로또의 주식\out\딥리서치 에 8개 파일 저장

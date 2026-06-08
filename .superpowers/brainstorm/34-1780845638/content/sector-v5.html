@@ -15,31 +15,6 @@ body { background: #0a0f1a; color: #e5e7eb; font-family: 'Apple SD Gothic Neo', 
 .pg-date { font-size: 11px; color: #4b5563; margin-top: 4px; }
 .status-pill { background: #1a3a1a; color: #4ade80; font-size: 12px; font-weight: 700; padding: 7px 16px; border-radius: 20px; border: 1px solid #166534; white-space: nowrap; }
 
-/* ─── 검색 ─── */
-.search-wrap { position: relative; margin-bottom: 16px; }
-.search-input {
-  width: 100%; background: #111827; border: 1.5px solid #1f2937;
-  border-radius: 14px; padding: 14px 50px 14px 48px;
-  font-size: 15px; color: #f9fafb; outline: none;
-  font-family: inherit; transition: border-color .2s, box-shadow .2s;
-}
-.search-input::placeholder { color: #374151; }
-.search-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px #3b82f620; }
-.search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 17px; pointer-events: none; }
-.search-clear { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); background: #1f2937; border: none; color: #6b7280; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; cursor: pointer; display: none; align-items: center; justify-content: center; }
-.search-clear.show { display: flex; }
-.search-meta { display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
-.search-count { font-size: 12px; color: #4b5563; }
-.search-count.found { color: #4ade80; }
-.search-count.none { color: #ef4444; }
-.search-chips { display: flex; gap: 6px; flex-wrap: wrap; }
-.chip { font-size: 11px; padding: 4px 12px; border-radius: 20px; cursor: pointer; border: 1px solid #1f2937; color: #6b7280; background: #111827; transition: all .15s; }
-.chip:hover { border-color: #3b82f6; color: #93c5fd; }
-
-/* 검색 하이라이트 */
-.sh-hit { outline: 2px solid #3b82f6; outline-offset: 2px; border-radius: 10px; box-shadow: 0 0 12px #3b82f640; }
-.sh-dim { opacity: .25; pointer-events: none; }
-mark.sh { background: #1e3a5f; color: #93c5fd; border-radius: 3px; padding: 0 2px; }
 
 /* 테마 히트맵 */
 .heatmap { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
@@ -62,6 +37,20 @@ mark.sh { background: #1e3a5f; color: #93c5fd; border-radius: 3px; padding: 0 2p
 .block-title { font-size: 11px; font-weight: 700; color: #6b7280; margin-bottom: 14px; text-transform: uppercase; letter-spacing: .07em; }
 
 /* ─── 섹터 주요종목 ─── */
+
+/* 키 이벤트 스트립 */
+.key-strip { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.ks { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; border: 1px solid; flex: 1; min-width: 180px; }
+.ks.urgent  { background: #1a0a0a; border-color: #ef444444; }
+.ks.hot     { background: #0a1a0a; border-color: #22c55e44; }
+.ks.mid     { background: #1a1400; border-color: #f59e0b44; }
+.ks-dday { font-size: 20px; font-weight: 900; line-height: 1; }
+.ks.urgent .ks-dday { color: #f87171; }
+.ks.hot .ks-dday    { color: #4ade80; }
+.ks.mid .ks-dday    { color: #fbbf24; }
+.ks-info { flex: 1; }
+.ks-title { font-size: 12px; font-weight: 700; color: #f9fafb; }
+.ks-sub   { font-size: 10px; color: #6b7280; margin-top: 2px; }
 
 /* 태그 */
 .sk-tag { font-size: 10px; padding: 2px 8px; border-radius: 6px; font-weight: 600; }
@@ -269,22 +258,28 @@ mark.sh { background: #1e3a5f; color: #93c5fd; border-radius: 3px; padding: 0 2p
     <div class="status-pill">🔴 지금 강한 섹터</div>
   </div>
 
-  <!-- 검색 -->
-  <div class="search-wrap">
-    <span class="search-icon">🔍</span>
-    <input class="search-input" id="searchInput" type="text"
-      placeholder="종목명, 이벤트, 키워드 검색 — 예: FLNG / HD현대 / Section 301 / 수급빈집"
-      oninput="doSearch(this.value)" autocomplete="off">
-    <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
-    <div class="search-meta">
-      <span class="search-count" id="searchCount"></span>
-      <div class="search-chips">
-        <span class="chip" onclick="setSearch('FLNG')">FLNG</span>
-        <span class="chip" onclick="setSearch('Section 301')">Section 301</span>
-        <span class="chip" onclick="setSearch('HD현대')">HD현대</span>
-        <span class="chip" onclick="setSearch('수급빈집')">수급빈집</span>
-        <span class="chip" onclick="setSearch('캐나다')">캐나다</span>
-        <span class="chip" onclick="setSearch('리스크')">리스크</span>
+
+  <!-- 키 이벤트 타이머 -->
+  <div class="key-strip">
+    <div class="ks urgent">
+      <div class="ks-dday">D-22</div>
+      <div class="ks-info">
+        <div class="ks-title">🇨🇦 캐나다 잠수함 우협 발표</div>
+        <div class="ks-sub">2026-06-30 · 60조 · 한화오션 vs TKMS</div>
+      </div>
+    </div>
+    <div class="ks hot">
+      <div class="ks-dday">D-154</div>
+      <div class="ks-info">
+        <div class="ks-title">🇺🇸 Section 301 유예 만료</div>
+        <div class="ks-sub">2026-11-09 · 중국 배 세금 본격 개시</div>
+      </div>
+    </div>
+    <div class="ks mid">
+      <div class="ks-dday">Q3</div>
+      <div class="ks-info">
+        <div class="ks-title">🛢️ 모잠비크 FLNG 입찰 결과</div>
+        <div class="ks-sub">2026 Q3 예정 · 삼성중 → 70% 독점 확정전</div>
       </div>
     </div>
   </div>
@@ -292,12 +287,15 @@ mark.sh { background: #1e3a5f; color: #93c5fd; border-radius: 3px; padding: 0 2p
   <!-- 히트맵 -->
   <div class="heatmap">
     <div class="hm hot" onclick="jumpTo('cat-usa')"><div class="hm-icon">🇺🇸</div><div class="hm-name">미국 제재/법안</div><div class="hm-sub">D-155 최대트리거</div></div>
-    <div class="hm hot" onclick="jumpTo('cat-flng')"><div class="hm-icon">🛢️</div><div class="hm-name">FLNG</div><div class="hm-sub">삼성중공업 독점</div></div>
-    <div class="hm mid" onclick="jumpTo('cat-canada')"><div class="hm-icon">🇨🇦</div><div class="hm-name">캐나다 입찰</div><div class="hm-sub">결과 대기 중</div></div>
-    <div class="hm mid" onclick="jumpTo('cat-sub')"><div class="hm-icon">⚓</div><div class="hm-name">핵잠수함</div><div class="hm-sub">방산 연계</div></div>
-    <div class="hm cool" onclick="jumpTo('cat-dc')"><div class="hm-icon">💻</div><div class="hm-name">부유식 데이터센터</div><div class="hm-sub">신규 테마</div></div>
-    <div class="hm cool" onclick="jumpTo('cat-mro')"><div class="hm-icon">🔧</div><div class="hm-name">MRO</div><div class="hm-sub">정비 수주</div></div>
-    <div class="hm cool" onclick="jumpTo('cat-ai')"><div class="hm-icon">🤖</div><div class="hm-name">조선엔진 AI</div><div class="hm-sub">효율화 기술</div></div>
+    <div class="hm hot" onclick="jumpTo('cat-flng')"><div class="hm-icon">🛢️</div><div class="hm-name">FLNG</div><div class="hm-sub">삼성중 64% 독점</div></div>
+    <div class="hm hot" onclick="jumpTo('cat-canada')"><div class="hm-icon">🇨🇦</div><div class="hm-name">캐나다 잠수함</div><div class="hm-sub">60조 D-22 결정</div></div>
+    <div class="hm mid" onclick="jumpTo('cat-sub')"><div class="hm-icon">⚓</div><div class="hm-name">방산·핵잠수함</div><div class="hm-sub">AUKUS 연계</div></div>
+    <div class="hm cool" onclick="jumpTo('e-flng3')"><div class="hm-icon">💻</div><div class="hm-name">부유식 데이터센터</div><div class="hm-sub">신규 테마 탐색</div></div>
+    <div class="hm cool" onclick="jumpTo('e-flng2')"><div class="hm-icon">🔧</div><div class="hm-name">FLNG MRO</div><div class="hm-sub">10~20년 정비계약</div></div>
+    <div class="hm cool" onclick="jumpTo('cat-ai')"><div class="hm-icon">🤖</div><div class="hm-name">조선엔진 AI</div><div class="hm-sub">연료 3.9% 절감</div></div>
+    <div class="hm hot" onclick="jumpTo('e-kddx')"><div class="hm-icon">⚓</div><div class="hm-name">KDDX 7.8조</div><div class="hm-sub">한화오션 첫 도전</div></div>
+    <div class="hm mid" onclick="jumpTo('cat-pc')"><div class="hm-icon">📊</div><div class="hm-name">선가·원가 [P&C]</div><div class="hm-sub">마진 변곡점</div></div>
+    <div class="hm cool" onclick="jumpTo('cat-parts')"><div class="hm-icon">⚙️</div><div class="hm-name">기자재 낙수 [Q]</div><div class="hm-sub">도크 포화 수혜주</div></div>
     <div class="hm risk" onclick="jumpTo('cat-risk')"><div class="hm-icon">⚠️</div><div class="hm-name">리스크</div><div class="hm-sub">제재/유예연장</div></div>
   </div>
 
@@ -352,26 +350,26 @@ mark.sh { background: #1e3a5f; color: #93c5fd; border-radius: 3px; padding: 0 2p
         </div>
       </div>
 
-      <div class="skb watch" onclick="selectStock('sam')" id="skb-sam">
+      <div class="skb up" onclick="selectStock('sam')" id="skb-sam">
         <div class="skb-inner">
-          <div class="skb-top"><span class="skb-trend">◆</span><span class="skb-state">주시</span></div>
+          <div class="skb-top"><span class="skb-trend">↑</span><span class="skb-state">모잠비크대기</span></div>
           <div class="skb-name">삼성중공업</div>
           <div class="skb-code">010140</div>
           <div class="skb-tags">
-            <span class="sk-tag t-pur">FLNG 독점</span>
-            <span class="sk-tag t-risk">반응 둔화</span>
+            <span class="sk-tag t-pur">FLNG 64% 독점</span>
+            <span class="sk-tag t-hot">6월 4.3조잭팟</span>
           </div>
         </div>
       </div>
 
       <div class="skb mid" onclick="selectStock('hw')" id="skb-hw">
         <div class="skb-inner">
-          <div class="skb-top"><span class="skb-trend">⚠</span><span class="skb-state">주의</span></div>
+          <div class="skb-top"><span class="skb-trend">🇨🇦</span><span class="skb-state">최종2파전</span></div>
           <div class="skb-name">한화오션</div>
           <div class="skb-code">042660</div>
           <div class="skb-tags">
+            <span class="sk-tag t-hot">캐나다 60조 D-22</span>
             <span class="sk-tag t-risk">제재 유예중</span>
-            <span class="sk-tag t-hot">Section 301</span>
           </div>
         </div>
       </div>
@@ -486,8 +484,8 @@ mark.sh { background: #1e3a5f; color: #93c5fd; border-radius: 3px; padding: 0 2p
           <div class="ev-detail">
             <div class="what-box">
               <div class="what-label">이게 뭔지</div>
-              <div class="what-text">Section 301보다 더 강한 추가 법안. 중국 관련 선박에 3단계 벌금 구조. 미국 수입 화물 일부를 한국·미국 건조선에 실어야 한다는 조항도 포함. <strong>아직 상원 상무위원회 계류 중.</strong></div>
-              <span class="verdict" style="background:#0d1e3a;color:#93c5fd;">🔵 통과 여부 불확실 — 뉴스 나오는 날 바로 대응</span>
+              <div class="what-text">Section 301보다 더 강한 추가 법안. 중국 관련 선박에 3단계 벌금 구조. 미국 수입 화물 일부를 한국·미국 건조선에 실어야 한다는 조항도 포함. <strong>2026.06.02 상원 군사위원회가 NDAA에 포함 처리 확정</strong> → 통과 가능성 매우 높아짐.</div>
+              <span class="verdict" style="background:#0d2810;color:#4ade80;">🟢 NDAA 포함 확정 (2026.06.02) — 통과 가능성 매우 높음. 통과 시 조선주 폭등</span>
             </div>
             <div class="frames">
               <div class="frame bl">
@@ -574,10 +572,44 @@ mark.sh { background: #1e3a5f; color: #93c5fd; border-radius: 3px; padding: 0 2p
           <div class="ev-detail">
             <div class="what-box">
               <div class="what-label">이게 뭔지</div>
-              <div class="what-text">바다 위에 떠있는 LNG 생산공장(FLNG). 삼성중공업이 방금 4.3조짜리를 따냈는데, 이번에 모잠비크 것까지 따내면 <strong>전 세계 FLNG를 삼성중공업이 독점</strong>한다는 게 공식 확인됨.</div>
-              <span class="verdict" style="background:#0d1e3a;color:#93c5fd;">🔵 딥리서치 대기 — 상세 분석 예정</span>
+              <div class="what-text">바다 위에 떠있는 LNG 생산공장(FLNG). 삼성중공업이 4.3조짜리 델핀 FLNG를 따냈는데, 이번에 모잠비크 것까지 따내면 <strong>전 세계 FLNG 점유율 70% — 사실상 독점 공식화.</strong></div>
+              <span class="verdict" style="background:#0d2810;color:#4ade80;">✅ 현재 11기 중 7기 수주(64%) — 모잠비크 추가 시 70%</span>
             </div>
-            <div class="pending">딥리서치 실행 후 5프레임 채워짐<em>FLNG 시장 규모 · 삼성중 독점 근거 · 경쟁사 분석</em></div>
+            <div class="frames">
+              <div class="frame bl">
+                <div class="f-label">📐 FLNG 시장 현황</div>
+                <div class="f-body">전 세계 신조 FLNG <span class="num">11기</span> 중 삼성중 <span class="good">7기 수주</span> (64%)<br><br>2026년 수주 목표: <span class="num">4기</span> · <span class="num">80억달러</span><br><span class="dim">입찰 중: 모잠비크 코랄노르트 · 델핀 1·2호기 · 캐나다 크시리심스</span></div>
+              </div>
+              <div class="frame pu">
+                <div class="f-label">🔮 모잠비크 입찰 현황</div>
+                <div class="f-body">발주사: <strong>에니(ENI)</strong> 이탈리아<br>입찰명: 코랄 노르트 (Coral Norte)<br><br>경쟁사: 한화오션 · 위슨뉴에너지(중) · 사이펨 · 테크닙에너지스 · JGC<br><br>결과: <span class="num">2026 Q3</span> 예상</div>
+              </div>
+              <div class="frame am">
+                <div class="f-label">📅 대응</div>
+                <div class="f-body"><strong>최종계약 확정 뉴스 = 즉시 트리거</strong><br><br>2026년 6월 현재 4.3조 잭팟 달성<br>→ 최대 <span class="num">13조</span> 수주 목표<br><br><span class="dim">⚠ 이전에도 최종계약 수차례 지연된 전례</span></div>
+              </div>
+              <div class="frame gn">
+                <div class="f-label">📈 수혜 종목</div>
+                <div class="f-body">
+                  <div class="slist">
+                    <div class="sl"><div class="sl-name">삼성중공업</div><div class="sl-why">직접 수주 주체 · FLNG 최강자</div><div class="sl-v v-g">1순위</div></div>
+                    <div class="sl"><div class="sl-name">조선 ETF</div><div class="sl-why">수주 뉴스 시 섹터 전반 상승</div><div class="sl-v v-g">안전</div></div>
+                    <div class="sl"><div class="sl-name">한화오션</div><div class="sl-why">경쟁사 — 패배 시 영향 제한적</div><div class="sl-v v-y">중립</div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="frame rd f-full">
+                <div class="f-label">⚠️ 이게 안 될 이유</div>
+                <div class="f-body">
+                  <div class="risk-grid">
+                    <div class="rc"><div class="rc-t">중국 위슨뉴에너지 가격 공세</div><div class="rc-b">FLNG에도 중국산 저가 물량 투입 가능성 — 장기적 경쟁 구도 변화 리스크</div></div>
+                    <div class="rc"><div class="rc-t">최종계약 또 지연</div><div class="rc-b">모잠비크 사업은 수년째 지연 반복 — "수주 발표 = 확정" 아님</div></div>
+                    <div class="rc"><div class="rc-t">가이던스 달성 실패 전례</div><div class="rc-b">FLNG 지연으로 전년도 수주 목표 달성 실패 이력 있음</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="src-row"><span class="v-badge">✦ 교차검증</span><a class="src-a" href="https://www.creditnews.kr/news/articleView.html?idxno=2499" target="_blank">FLNG 11기 중 7기 수주</a> · <a class="src-a" href="https://www.mt.co.kr/industry/2026/06/02/2026060216295593929" target="_blank">6월 4조 잭팟·13조 기대</a></div>
           </div>
         </div>
 
@@ -594,10 +626,42 @@ mark.sh { background: #1e3a5f; color: #93c5fd; border-radius: 3px; padding: 0 2p
           <div class="ev-detail">
             <div class="what-box">
               <div class="what-label">이게 뭔지</div>
-              <div class="what-text">배를 납품한 후 10~20년간 정비·유지보수(MRO) 계약도 따라옴. FLNG는 구조가 복잡해서 만든 곳만 제대로 고칠 수 있어요 → <strong>삼성중공업이 독점적으로 MRO까지 가져갈 가능성.</strong></div>
-              <span class="verdict" style="background:#0d1e3a;color:#93c5fd;">🔵 딥리서치 대기</span>
+              <div class="what-text">배를 납품한 후 10~20년간 정비·유지보수(MRO) 계약도 따라옴. FLNG는 수천 개 맞춤 설계 부품으로 이루어져 만든 곳만 제대로 고칠 수 있어요 → <strong>삼성중공업이 건조+MRO 패키지로 장기 매출 독점.</strong></div>
+              <span class="verdict" style="background:#0d2810;color:#4ade80;">✅ 구조적으로 건조사 독점 — 1기당 MRO 1조+ 추정</span>
             </div>
-            <div class="pending">딥리서치 실행 후 채워짐<em>MRO 시장 규모 · 계약 구조 · 수익성 분석</em></div>
+            <div class="frames">
+              <div class="frame bl">
+                <div class="f-label">📐 왜 독점인가</div>
+                <div class="f-body">FLNG = 수천 개 맞춤 설계 부품<br>→ 외부 업체는 <strong>설계 도면 접근 불가</strong><br><br>선박 MRO 통상 건조비의 <span class="num">20~30%</span> 수준<br>FLNG 1기 ≈ 4~5조 → 잠재 MRO <span class="num">1조+/기</span></div>
+              </div>
+              <div class="frame pu">
+                <div class="f-label">🔮 계약 구조</div>
+                <div class="f-body">일반 선박 MRO: 5~10년<br><strong>FLNG: 10~20년 초장기</strong> 계약 가능<br><br>· 정기 검사: 2.5~5년 주기<br>· 부품 교체: 건조사 독점 공급<br>· AI 원격 모니터링: 솔루션 연계</div>
+              </div>
+              <div class="frame am">
+                <div class="f-label">📅 타임라인</div>
+                <div class="f-body">델핀 FLNG FID <span class="num">2026 Q1</span><br>→ 완공 후 즉시 MRO 협상 시작<br><br>모잠비크 수주 확정 시<br>→ <strong>건조+MRO 패키지 계약</strong> 가능성</div>
+              </div>
+              <div class="frame gn">
+                <div class="f-label">📈 수혜 종목</div>
+                <div class="f-body">
+                  <div class="slist">
+                    <div class="sl"><div class="sl-name">삼성중공업</div><div class="sl-why">건조+MRO 패키지 — 장기 안정 매출</div><div class="sl-v v-g">핵심</div></div>
+                    <div class="sl"><div class="sl-name">HD현대마린솔루션</div><div class="sl-why">선박 MRO 전문 자회사 — AI 모니터링 연계</div><div class="sl-v v-y">주시</div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="frame rd f-full">
+                <div class="f-label">⚠️ 리스크</div>
+                <div class="f-body">
+                  <div class="risk-grid">
+                    <div class="rc"><div class="rc-t">MRO 전문 업체 진입</div><div class="rc-b">글로벌 엔지니어링 업체가 라이선스 계약 후 정비 시장 진입 가능</div></div>
+                    <div class="rc"><div class="rc-t">원거리 정비 어려움</div><div class="rc-b">모잠비크 등 원해 FLNG — 국내 정비 센터 기준 물류 비용 압박</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="src-row"><span class="v-badge">✦ 교차검증</span><span class="g-badge">⚠ FLNG 전용 MRO 공개 데이터 없음 — 건조비 비율 추정치</span></div>
           </div>
         </div>
 
@@ -614,10 +678,42 @@ mark.sh { background: #1e3a5f; color: #93c5fd; border-radius: 3px; padding: 0 2p
           <div class="ev-detail">
             <div class="what-box">
               <div class="what-label">이게 뭔지</div>
-              <div class="what-text">AI 데이터센터는 열이 엄청남. 바다에 띄우면 냉각 비용이 확 줄어요. FLNG처럼 <strong>바다 위 구조물 설계·건조 기술</strong>이 그대로 쓰임. 삼성중공업·HD현대 같은 곳이 수주 가능한 신테마.</div>
-              <span class="verdict" style="background:#13081e;color:#c4b5fd;">🟣 딥리서치 대기 — 실제 수주 가능성 확인 필요</span>
+              <div class="what-text">AI 데이터센터는 열이 엄청남. 바다에 띄우면 냉각 비용이 확 줄어요. FLNG처럼 <strong>바다 위 구조물 설계·건조 기술</strong>이 그대로 쓰임. 삼성중공업·HD현대 같은 곳이 수주 가능한 신테마 — 그러나 아직 발주는 없음.</div>
+              <span class="verdict" style="background:#1c1500;color:#fbbf24;">🟡 탐색 단계 — 실제 대형 발주 아직 없음</span>
             </div>
-            <div class="pending">딥리서치 실행 후 채워짐<em>실제 발주 현황 · 어느 조선소가 경쟁력 있나 · 시장 규모</em></div>
+            <div class="frames">
+              <div class="frame bl">
+                <div class="f-label">📐 시장 규모</div>
+                <div class="f-body">글로벌 부유식 데이터센터<br>2024: <span class="num">3.17억달러</span> → 2034: <span class="num">8.29억달러</span><br>CAGR: <span class="num">10.1%</span><br><br>아시아태평양 <span class="good">86%</span> 점유<br><span class="dim">⚠ 조선소 전문 발주는 아직 없음</span></div>
+              </div>
+              <div class="frame pu">
+                <div class="f-label">🔮 현재 상황</div>
+                <div class="f-body"><strong>개념 설계 단계</strong> — 대형 RFP 없음<br><br>• Microsoft · Meta 해상 냉각 연구 중<br>• 조선소: FLNG 기술 전용 검토<br><br>→ 실제 발주 시 삼성중·HD현대 유력<br><span class="dim">지금은 모니터링만</span></div>
+              </div>
+              <div class="frame am">
+                <div class="f-label">📅 언제 주목하나</div>
+                <div class="f-body"><strong>빅테크 RFP 발행 = 트리거</strong><br><br>→ 조선소 타당성 조사 의뢰 공식 발표<br>→ 뉴스 나오는 날 주목<br><br><span class="dim">지금은 투자 근거 없음</span></div>
+              </div>
+              <div class="frame gn">
+                <div class="f-label">📈 잠재 수혜</div>
+                <div class="f-body">
+                  <div class="slist">
+                    <div class="sl"><div class="sl-name">삼성중공업</div><div class="sl-why">FLNG 설계 기술 직접 전용 가능</div><div class="sl-v v-y">잠재</div></div>
+                    <div class="sl"><div class="sl-name">HD현대삼호</div><div class="sl-why">FPSO 설계·건조 경험 응용 가능</div><div class="sl-v v-y">잠재</div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="frame rd f-full">
+                <div class="f-label">⚠️ 리스크</div>
+                <div class="f-body">
+                  <div class="risk-grid">
+                    <div class="rc"><div class="rc-t">발주까지 5~10년 소요 가능</div><div class="rc-b">개념 → 상업화 긴 사이클 — 지금 당장 투자 근거 없음</div></div>
+                    <div class="rc"><div class="rc-t">육상 대비 비용 열위</div><div class="rc-b">해상 건설비·운영비가 육상 데이터센터 대비 경쟁력 아직 미검증</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="src-row"><span class="v-badge">✦ 교차검증</span><a class="src-a" href="https://market.us/report/floating-data-center-market/" target="_blank">Market.us 시장 리포트</a> · <a class="src-a" href="https://splash247.com/floating-data-centres-become-a-new-segment-for-shipping-to-pursue/" target="_blank">Splash247 조선업 진입 분석</a></div>
           </div>
         </div>
 
@@ -626,17 +722,203 @@ mark.sh { background: #1e3a5f; color: #93c5fd; border-radius: 3px; padding: 0 2p
   </div>
 
   <!-- ═══════════════════════════════════════ -->
-  <!-- 카테고리 3: 핵잠수함 / 방산 -->
+  <!-- 카테고리 3: AUKUS / 핵잠수함 / 미해군 MRO -->
   <!-- ═══════════════════════════════════════ -->
   <div class="cat mid" id="cat-sub">
     <div class="cat-head" onclick="toggleCat('cat-sub')">
       <div class="cat-icon">⚓</div>
       <div class="cat-info">
-        <div class="cat-name">핵잠수함 / 방산 조선</div>
-        <div class="cat-desc">AUKUS 수혜 · 캐나다 잠수함 입찰 · 미해군 MRO 연계</div>
+        <div class="cat-name">AUKUS / 핵잠수함 / 미해군 MRO</div>
+        <div class="cat-desc">AUKUS 한국 연계 기회 · 미해군 함정 MRO · 동맹 방산 조선</div>
       </div>
       <div class="cat-right">
-        <span class="cat-badge bg-mid">장기 모니터링</span>
+        <span class="cat-badge bg-mid">딥리서치 대기</span>
+        <span class="cat-cnt">이벤트 2개</span>
+        <span class="cat-chv">▼</span>
+      </div>
+    </div>
+    <div class="cat-body">
+      <div class="ev-list">
+
+        <div class="ev" id="e-aukus1">
+          <div class="ev-head" onclick="toggleEv('e-aukus1')">
+            <div class="ev-dday"><div class="ev-dday-num d-cool">장기</div><div class="ev-dday-sub">2032~2040+</div></div>
+            <div class="ev-main">
+              <div class="ev-title">🤝 AUKUS — 한국 부품·MRO 연계 기회</div>
+              <div class="ev-short">버지니아급 중고 3척 호주 이전 확정 · 한국은 MRO·부품 공급 참여 논의</div>
+            </div>
+            <span class="ev-badge bg-mid">장기 모니터링</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">2026.05.31 AUKUS 3국 국방장관 합의 — 호주에 버지니아급 잠수함 <strong>중고 3척</strong>(신규 건조 → 변경) 이전 확정. 한국은 직접 당사자 아니지만, 미국 조선업 역량 부족으로 <strong>부품 공급·MRO·블록 제작</strong> 참여 기회 현실화.</div>
+              <span class="verdict" style="background:#102030;color:#38bdf8;">🔵 장기 구도 — MRO 단기, 부품 공급 중기, 신조 참여 장기</span>
+            </div>
+            <div class="frames">
+              <div class="frame bl">
+                <div class="f-label">📐 협약 규모</div>
+                <div class="f-body">버지니아급 중고 <span class="num">3척</span> — 2032년부터 4년마다 1척<br>SSN-AUKUS 신규: <span class="num">2040년대 초</span><br>호주 핵잠수함 허브(핸더슨): <span class="num">250억 달러</span><br><br>→ 미 해군 조선 병목 = 한국 기회</div>
+              </div>
+              <div class="frame pu">
+                <div class="f-label">🔮 한국 참여 시나리오</div>
+                <div class="f-body"><strong>단기 (1~3년):</strong> MRO 수주 확대<br><strong>중기 (3~7년):</strong> 선체 블록·부품 공급<br>&nbsp;&nbsp;→ 반스-톨레프슨법 우회 가능<br><strong>장기 (7년+):</strong> SSN-AUKUS 공동 개발<br>&nbsp;&nbsp;→ 원자력 협정 개정 필요</div>
+              </div>
+              <div class="frame am">
+                <div class="f-label">📅 모니터링 포인트</div>
+                <div class="f-body">한미 조선협력 워킹그룹 결과<br>호주 핸더슨 허브 한국 파트너 선정<br><br>→ <strong>LIG넥스원</strong>: 소나 체계 참여 가능<br>→ <strong>한화시스템</strong>: 전투체계(CMS) 연계<br>→ <strong>한화에어로스페이스</strong>: 잠수함 리튬전지</div>
+              </div>
+              <div class="frame gn">
+                <div class="f-label">📈 수혜 종목</div>
+                <div class="f-body">
+                  <div class="slist">
+                    <div class="sl"><div class="sl-name">한화오션</div><div class="sl-why">필라델피아 조선소 — 미국 내 거점 확보</div><div class="sl-v v-g">직접</div></div>
+                    <div class="sl"><div class="sl-name">LIG넥스원</div><div class="sl-why">소나·수중센서 체계 — 기술 독보적</div><div class="sl-v v-g">중기</div></div>
+                    <div class="sl"><div class="sl-name">한화시스템</div><div class="sl-why">전투체계(CMS) — 국산화 완료</div><div class="sl-v v-y">연계</div></div>
+                    <div class="sl"><div class="sl-name">HD현대중공업</div><div class="sl-why">MRO 수주 확대 · MSRA 체결</div><div class="sl-v v-y">연계</div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="frame rd f-full">
+                <div class="f-label">⚠️ 이게 안 될 이유</div>
+                <div class="f-body">
+                  <div class="risk-grid">
+                    <div class="rc"><div class="rc-t">반스-톨레프슨법</div><div class="rc-b">미 해군 함정 해외 건조 원칙적 금지 — 개정 시 의회 저항</div></div>
+                    <div class="rc"><div class="rc-t">ITAR 기술 통제</div><div class="rc-b">핵추진 기술 이전 = 영국 외 선례 없음. 한국 참여 범위 제약</div></div>
+                    <div class="rc"><div class="rc-t">중국 반발 리스크</div><div class="rc-b">한국의 AUKUS 연계 강화 시 중국 경제 보복 변수</div></div>
+                    <div class="rc"><div class="rc-t">타임라인 매우 길다</div><div class="rc-b">2032년 첫 함 인도 — 주가 선반영 후 장기 대기</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="src-row"><span class="v-badge">✦ Gemini 딥리서치</span> AUKUS 3국 국방장관 공동성명 2026.05.31 · 호주 핸더슨 핵잠수함 허브 $25B · 한미 조선협력 워킹그룹</div>
+          </div>
+        </div>
+
+        <div class="ev" id="e-navy-mro">
+          <div class="ev-head" onclick="toggleEv('e-navy-mro')">
+            <div class="ev-dday"><div class="ev-dday-num d-mid">진행중</div><div class="ev-dday-sub">2026~</div></div>
+            <div class="ev-main">
+              <div class="ev-title">🚢 미해군 MRO — 한국 조선소 군함 정비 수주</div>
+              <div class="ev-short">한화오션·HD현대 MSRA 체결 · 연 20조 시장 · 필라델피아 조선소 거점</div>
+            </div>
+            <span class="ev-badge bg-mid">수주 확대 중</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">미국 조선업의 심각한 역량 부족 — 숙련공 부족·노후 시설로 자국 해군 수요조차 못 맞춤. <strong>한화오션·HD현대중공업</strong>이 미 해군 정비협약(MSRA) 체결 후 군수지원함 MRO 수주. 한화오션은 필라델피아 조선소 인수로 미국 내 거점까지 확보.</div>
+              <span class="verdict" style="background:#0d2810;color:#4ade80;">🟢 실수주 진행 중 — 한화·HD현대 모두 계약 체결 완료</span>
+            </div>
+            <div class="frames">
+              <div class="frame bl">
+                <div class="f-label">📐 시장 규모</div>
+                <div class="f-body">미 해군 전체 MRO: 연 <span class="num">20조원</span><br>한국 접근 가능: 해외 주둔 <span class="num">약 40척</span><br><br><strong>기수주:</strong><br>• 한화오션: 월리쉬라함(2023, 국내 최초)<br>• HD현대: 앨런셰퍼드(2025), 세사르차베즈·버드함(2026)</div>
+              </div>
+              <div class="frame pu">
+                <div class="f-label">🔮 전략 구조</div>
+                <div class="f-body"><strong>미국 MASGA 정책</strong> — "동맹국 브릿지 전략"<br>단기: 동맹국에서 건조·정비<br>중기: 미국 내 자국 조선소 투자 병행<br><br>→ 한화오션 필라델피아 인수 = <strong>존스법 우회 + 신조 시장 진출 포석</strong><br>→ SHIPS Act NDAA 포함 통과 유력</div>
+              </div>
+              <div class="frame am">
+                <div class="f-label">📅 타임라인</div>
+                <div class="f-body">2023.12 월리쉬라함 — 한화오션 최초 수주<br>2025~ HD현대 MSRA 체결·수주<br>2026 SHIPS Act NDAA 포함 통과 유력<br><br>→ 비전투 지원선 <strong>해외 건조 2척 예외</strong> 이미 허용<br>→ 점진적 확대 예상</div>
+              </div>
+              <div class="frame gn">
+                <div class="f-label">📈 수혜 종목</div>
+                <div class="f-body">
+                  <div class="slist">
+                    <div class="sl"><div class="sl-name">한화오션</div><div class="sl-why">필라델피아 조선소 인수 — 미국 내 거점·신조 포석</div><div class="sl-v v-g">1순위</div></div>
+                    <div class="sl"><div class="sl-name">HD현대중공업</div><div class="sl-why">MSRA 체결·2026년 연속 수주</div><div class="sl-v v-g">직접</div></div>
+                    <div class="sl"><div class="sl-name">HJ중공업·대한조선</div><div class="sl-why">MSRA 획득 준비 중 — 후발 진입</div><div class="sl-v v-y">주시</div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="frame rd f-full">
+                <div class="f-label">⚠️ 이게 안 될 이유</div>
+                <div class="f-body">
+                  <div class="risk-grid">
+                    <div class="rc"><div class="rc-t">보호무역 강화</div><div class="rc-b">미 하원 군사위 "전투함 해외건조 금지" 수정안 통과 — 신조 시장 막힐 수 있음</div></div>
+                    <div class="rc"><div class="rc-t">MRO 수익성 낮다</div><div class="rc-b">신조 대비 마진 낮고, 일본·싱가포르 가격 경쟁 치열</div></div>
+                    <div class="rc"><div class="rc-t">한국 접근 범위 제한</div><div class="rc-b">해외 주둔 비전투 함정 40척 — 전체 20조 중 극히 일부만 접근 가능</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="src-row"><span class="v-badge">✦ Gemini 딥리서치</span> 한화오션 월리쉬라함 2023 최초 수주 · HD현대 MSRA 체결 · SHIPS Act S.1541 상원 계류 · 미 하원 NDAA 수정안</div>
+          </div>
+        </div>
+
+        <div class="ev" id="e-kddx">
+          <div class="ev-head" onclick="toggleEv('e-kddx')">
+            <div class="ev-dday"><div class="ev-dday-num d-hot">진행중</div><div class="ev-dday-sub">2026 선정</div></div>
+            <div class="ev-main">
+              <div class="ev-title">⚓ KDDX 7.8조 — 한화오션 첫 도전, 경쟁입찰 전환</div>
+              <div class="ev-short">한국형 차기 구축함 7.8조 · HD현대 독점→경쟁입찰 · 한화오션에 유리</div>
+            </div>
+            <span class="ev-badge bg-hot">한화오션 유리</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">한국형 차기 구축함(KDDX) 7조 8000억원 사업. 과거 HD현대중공업 수의계약 관례였으나, <strong>HD현대 직원 군사기밀 유출 사건</strong>으로 2025.12.22 경쟁입찰로 전환됨. 한화오션에 첫 번째 수주 기회.</div>
+              <span class="verdict" style="background:#0d2810;color:#4ade80;">🟢 경쟁입찰 전환 = 한화오션 기회 열림 — HD현대 보안 감점 예상</span>
+            </div>
+            <div class="frames">
+              <div class="frame bl">
+                <div class="f-label">📐 사업 규모</div>
+                <div class="f-body">총 사업비 <span class="num">7조 8000억원</span><br>한국형 차기 구축함 건조<br><br>변경: 수의계약 → <strong>경쟁입찰</strong><br>전환일: 2025.12.22<br><br>이유: HD현대중공업 직원 군사기밀 유출 사건</div>
+              </div>
+              <div class="frame pu">
+                <div class="f-label">🔮 경쟁 구도</div>
+                <div class="f-body"><strong>한화오션</strong> — 첫 번째 기회<br>&nbsp;&nbsp;· CPSP 경험 + 방산 역량 증명 중<br>&nbsp;&nbsp;· 보안 감점 없음<br><br><strong>HD현대중공업</strong> — 방어전<br>&nbsp;&nbsp;· 과거 구축함 건조 경험 우위<br>&nbsp;&nbsp;· 군사기밀 유출로 <strong>보안 감점</strong> 예상</div>
+              </div>
+              <div class="frame am">
+                <div class="f-label">📅 타임라인</div>
+                <div class="f-body">2025.12.22 경쟁입찰 전환 결정<br>2026년 중 입찰·선정 예정<br><br>→ 결과 발표 시 해당 종목 주가 급등락<br>→ <strong>모니터링 필수</strong></div>
+              </div>
+              <div class="frame gn">
+                <div class="f-label">📈 수혜 종목</div>
+                <div class="f-body">
+                  <div class="slist">
+                    <div class="sl"><div class="sl-name">한화오션</div><div class="sl-why">경쟁입찰 전환 최대 수혜 — 기회 열림</div><div class="sl-v v-g">수주 시 폭등</div></div>
+                    <div class="sl"><div class="sl-name">한화시스템</div><div class="sl-why">구축함 전투체계 연계 가능성</div><div class="sl-v v-y">연계</div></div>
+                    <div class="sl"><div class="sl-name">LIG넥스원</div><div class="sl-why">구축함 소나·무장체계 공급</div><div class="sl-v v-y">연계</div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="frame rd f-full">
+                <div class="f-label">⚠️ 리스크</div>
+                <div class="f-body">
+                  <div class="risk-grid">
+                    <div class="rc"><div class="rc-t">HD현대 경험 우위</div><div class="rc-b">구축함 건조 실적에서 HD현대가 앞서 — 보안 감점이 얼마나 반영될지 불확실</div></div>
+                    <div class="rc"><div class="rc-t">선정 지연</div><div class="rc-b">경쟁입찰 전환으로 선정 일정 지연 가능</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="src-row"><span class="v-badge">✦ 네이버 뉴스</span> 2025.12.22 KDDX 경쟁입찰 전환 결정 · HD현대 군사기밀 유출 사건 · 한화오션 한화시스템 연계</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 카테고리 4: 캐나다 — 잠수함 + 함대 협력 -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="cat hot" id="cat-canada">
+    <div class="cat-head" onclick="toggleCat('cat-canada')">
+      <div class="cat-icon">🇨🇦</div>
+      <div class="cat-info">
+        <div class="cat-name">캐나다 — 잠수함 CPSP + 함대 협력</div>
+        <div class="cat-desc">60조 잠수함 D-22 결정 · 한화↔어빙 협력 · 함대 현대화</div>
+      </div>
+      <div class="cat-right">
+        <span class="cat-badge bg-hot">D-22 결정임박</span>
         <span class="cat-cnt">이벤트 2개</span>
         <span class="cat-chv">▼</span>
       </div>
@@ -646,66 +928,60 @@ mark.sh { background: #1e3a5f; color: #93c5fd; border-radius: 3px; padding: 0 2p
 
         <div class="ev" id="e-sub1">
           <div class="ev-head" onclick="toggleEv('e-sub1')">
-            <div class="ev-dday"><div class="ev-dday-num d-cool">미정</div><div class="ev-dday-sub">협의 중</div></div>
+            <div class="ev-dday"><div class="ev-dday-num d-hot">D-22</div><div class="ev-dday-sub">2026-06-30</div></div>
             <div class="ev-main">
-              <div class="ev-title">🇨🇦 캐나다 잠수함 입찰 — 한국 조선소 참여?</div>
-              <div class="ev-short">캐나다 차세대 잠수함 프로젝트 · 수십조 규모 · 수주 시 대박</div>
+              <div class="ev-title">🇨🇦 캐나다 잠수함 CPSP — 60조 K-원팀 vs TKMS</div>
+              <div class="ev-short">한화오션(주도)+HD현대(1/3) K-원팀 vs 독일 TKMS · 6월 말 우협 결정 유력</div>
             </div>
-            <span class="ev-badge bg-mid">수주 시 대박</span>
+            <span class="ev-badge bg-hot">D-22 결정</span>
             <span class="ev-chv">▼</span>
           </div>
           <div class="ev-detail">
             <div class="what-box">
               <div class="what-label">이게 뭔지</div>
-              <div class="what-text">캐나다가 노후 잠수함 교체를 위해 차세대 잠수함 프로젝트를 진행 중. 수십조 규모. 한국 조선소(HD현대, 한화오션)가 입찰 검토 중으로 알려짐.</div>
-              <span class="verdict" style="background:#1c1500;color:#fbbf24;">🟡 딥리서치 대기 — 실제 참여 여부 확인 필요</span>
+              <div class="what-text">캐나다 순찰잠수함 프로젝트(CPSP) — 12척, 60조원. <strong>K-원팀</strong>: 한화오션(설계·건조 주도) + HD현대중공업(전체 물량 1/3 담당) 컨소시엄 vs 독일 TKMS. 카니 총리 "2분기 말까지 결론" → <strong>6월 말이 분수령.</strong></div>
+              <span class="verdict" style="background:#0d2810;color:#4ade80;">🟢 K-원팀 구성 완료 — 한화오션 주도 + HD현대 1/3 공동수주 방안 추진 중</span>
             </div>
-            <div class="pending">딥리서치 실행 후 채워짐<em>프로젝트 규모 · 입찰 자격 · 한국 조선소 경쟁력</em></div>
+            <div class="frames">
+              <div class="frame bl">
+                <div class="f-label">📐 사업 규모 · 납기 조건</div>
+                <div class="f-body">총 <span class="num">12척</span> · 사업비 <span class="num">60조원</span><br>건조비: <span class="num">약 20조</span> · 30년 MRO: <span class="num">40조</span><br><br><strong>캐나다 요구 납기:</strong><br>• 1번함 <span class="num">2035년</span> 이전 인도 필수<br>• 최소 <span class="num">3000톤급</span> · 20일 이상 잠항<br>• 북극 얼음 밑 운용 가능<br><br><strong>한국 제안:</strong> 2035년 4척 → 2043년 12척 완납</div>
+              </div>
+              <div class="frame pu">
+                <div class="f-label">🔮 현재 상황 (2026.06)</div>
+                <div class="f-body"><strong>K-원팀 vs TKMS 최종 2파전</strong><br>• <span class="good">K-원팀</span>: 한화오션(KSS-III 배치-II, 주도)<br>&nbsp;&nbsp;+ HD현대중공업(수주물량 1/3 담당)<br>&nbsp;&nbsp;→ 한국 정부가 K-원팀 구성 지원<br>• 독일 TKMS — 212CD형<br>&nbsp;&nbsp;(NATO 회원국 논리 강점)<br><br>→ <span class="num">6월 말</span> 우협 결정 유력</div>
+              </div>
+              <div class="frame am">
+                <div class="f-label">📅 대응</div>
+                <div class="f-body"><strong>한화오션 수주 확정 = 즉시 매수 신호</strong><br><br>KSS-III 캐나다 기지 입항 완료 (실물 쇼케이스)<br><br><span class="dim">⚠ NATO 동맹 논리 — TKMS 배제 단정 금물</span></div>
+              </div>
+              <div class="frame gn">
+                <div class="f-label">📈 수혜 종목</div>
+                <div class="f-body">
+                  <div class="slist">
+                    <div class="sl"><div class="sl-name">한화오션</div><div class="sl-why">K-원팀 주도 · KSS-III 설계·건조</div><div class="sl-v v-g">1순위</div></div>
+                    <div class="sl"><div class="sl-name">HD현대중공업</div><div class="sl-why">K-원팀 공동수주 · 전체 1/3 담당</div><div class="sl-v v-g">공동1순위</div></div>
+                    <div class="sl"><div class="sl-name">한화에어로스페이스</div><div class="sl-why">잠수함 리튬이온 배터리 체계 공급</div><div class="sl-v v-y">연계</div></div>
+                    <div class="sl"><div class="sl-name">삼성SDI</div><div class="sl-why">한화에어로 배터리의 셀 납품 이력</div><div class="sl-v v-y">간접</div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="frame rd f-full">
+                <div class="f-label">⚠️ 이게 안 될 이유</div>
+                <div class="f-body">
+                  <div class="risk-grid">
+                    <div class="rc"><div class="rc-t">경제패키지 압박</div><div class="rc-b">캐나다, 전기차·배터리 공장 투자 요구 — 독일 폭스바겐은 온타리오 공장 기건설. 한국 불리</div></div>
+                    <div class="rc"><div class="rc-t">TKMS NATO 정치 변수</div><div class="rc-b">독일은 NATO 회원국 안보 연대 논리 — 정치적 결정 가능성</div></div>
+                    <div class="rc"><div class="rc-t">결정 또 연기</div><div class="rc-b">캐나다 정치·예산 일정 변수 — 연기 전례 있음</div></div>
+                    <div class="rc"><div class="rc-t">수주 후 즉각 실적 없음</div><div class="rc-b">착공까지 2~3년 소요 — 주가 선반영 후 조정 가능</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="src-row"><span class="v-badge">✦ 교차검증</span><a class="src-a" href="https://www.dnews.co.kr/uhtml/view.jsp?idxno=202605311230463100595" target="_blank">60조 수주전 '결전의 6월'</a> · <a class="src-a" href="https://www.newsis.com/view/NISX20260527_0003645527" target="_blank">뉴시스 6월 말 결정</a></div>
           </div>
         </div>
 
-        <div class="ev" id="e-sub2">
-          <div class="ev-head" onclick="toggleEv('e-sub2')">
-            <div class="ev-dday"><div class="ev-dday-num d-cool">신규</div><div class="ev-dday-sub">탐색 중</div></div>
-            <div class="ev-main">
-              <div class="ev-title">🤖 조선엔진 AI 적용 — 연비·효율 자동화</div>
-              <div class="ev-short">HD현대 엔진 AI 탑재 · 선박 운항비 절감 → 발주 유인 상승</div>
-            </div>
-            <span class="ev-badge bg-new">신규 테마</span>
-            <span class="ev-chv">▼</span>
-          </div>
-          <div class="ev-detail">
-            <div class="what-box">
-              <div class="what-label">이게 뭔지</div>
-              <div class="what-text">HD현대가 엔진에 AI를 탑재해 연료 소비를 자동 최적화하는 기술 개발 중. 배 운항비에서 연료가 차지하는 비중이 크기 때문에 → <strong>이 기술 있으면 발주사가 한국 배를 더 선호하는 구조 강화.</strong></div>
-              <span class="verdict" style="background:#13081e;color:#c4b5fd;">🟣 딥리서치 대기</span>
-            </div>
-            <div class="pending">딥리서치 실행 후 채워짐<em>HD현대 기술 현황 · 시장 적용 타임라인 · 수주 영향</em></div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════════════════ -->
-  <!-- 카테고리 4: 캐나다 입찰 (별도 정리) -->
-  <!-- ═══════════════════════════════════════ -->
-  <div class="cat mid" id="cat-canada">
-    <div class="cat-head" onclick="toggleCat('cat-canada')">
-      <div class="cat-icon">🇨🇦</div>
-      <div class="cat-info">
-        <div class="cat-name">캐나다 조선 입찰</div>
-        <div class="cat-desc">캐나다 해군·해안경비대 선박 발주 · 한국과 협력 논의</div>
-      </div>
-      <div class="cat-right">
-        <span class="cat-badge bg-mid">수주 대기</span>
-        <span class="cat-cnt">이벤트 1개</span>
-        <span class="cat-chv">▼</span>
-      </div>
-    </div>
-    <div class="cat-body">
-      <div class="ev-list">
         <div class="ev" id="e-canada1">
           <div class="ev-head" onclick="toggleEv('e-canada1')">
             <div class="ev-dday"><div class="ev-dday-num d-cool">협의 중</div><div class="ev-dday-sub">2026</div></div>
@@ -719,10 +995,42 @@ mark.sh { background: #1e3a5f; color: #93c5fd; border-radius: 3px; padding: 0 2p
           <div class="ev-detail">
             <div class="what-box">
               <div class="what-label">이게 뭔지</div>
-              <div class="what-text">캐나다가 노후 해군 함정 교체를 위해 대규모 조선 발주를 추진 중. 한국 조선소와 기술이전·공동건조 방식 논의 진행 중으로 알려짐.</div>
-              <span class="verdict" style="background:#1c1500;color:#fbbf24;">🟡 딥리서치 대기 — 계약 구조·규모 확인 필요</span>
+              <div class="what-text">한화오션이 캐나다 어빙조선(Irving Shipbuilding)과 협력 MOU 체결 완료. 온타리오 훈련함 <strong>2026년 착공 예정</strong>. CPSP(60조 잠수함) 수주 확정 시 캐나다 전역 조선·교육 투자 전면 확대.</div>
+              <span class="verdict" style="background:#0d2810;color:#4ade80;">🟢 한화↔어빙조선 협력 확정 — CPSP 수주 시 전면 확대</span>
             </div>
-            <div class="pending">딥리서치 실행 후 채워짐<em>계약 방식 · 수혜 종목 · 타임라인</em></div>
+            <div class="frames">
+              <div class="frame bl">
+                <div class="f-label">📐 경제 효과 (KPMG 분석)</div>
+                <div class="f-body">2026~2040 <span class="num">20만 person-years</span> 고용<br>→ 연평균 <span class="num">15,000명/년</span><br><br>캐나다 GDP 효과: <span class="num">102조원</span> 추산<br><span class="dim">(CPSP 수주 확정 시 기준)</span></div>
+              </div>
+              <div class="frame pu">
+                <div class="f-label">🔮 협력 현황</div>
+                <div class="f-body">✅ <strong>한화오션 ↔ 어빙조선</strong><br>함정 MRO · 인력 교육 · 공급망 협력<br><br>✅ <strong>온타리오 훈련함</strong><br>한화 기술 지원 → <strong>2026년 착공</strong><br><br>캐나다 국방차관 거제 조선소 방문 완료</div>
+              </div>
+              <div class="frame am">
+                <div class="f-label">📅 타임라인</div>
+                <div class="f-body"><strong>6월 말 CPSP 우협 발표</strong> = 분수령<br><br>→ 수주 확정 시 협력 전면 즉시 확대<br>→ 캐나다 교육센터·공급망 투자 착수<br><br><span class="dim">⚠ CPSP가 선결 조건</span></div>
+              </div>
+              <div class="frame gn">
+                <div class="f-label">📈 수혜 종목</div>
+                <div class="f-body">
+                  <div class="slist">
+                    <div class="sl"><div class="sl-name">한화오션</div><div class="sl-why">CPSP 수주 + 캐나다 협력 주도</div><div class="sl-v v-g">핵심</div></div>
+                    <div class="sl"><div class="sl-name">한화에어로스페이스</div><div class="sl-why">방산 장비·무기체계 연계 공급</div><div class="sl-v v-g">연계</div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="frame rd f-full">
+                <div class="f-label">⚠️ 리스크</div>
+                <div class="f-body">
+                  <div class="risk-grid">
+                    <div class="rc"><div class="rc-t">TKMS 수주 시 협력 무산</div><div class="rc-b">독일 수주 시 어빙조선 협력 전면 백지화 위험 — 훈련함도 불확실</div></div>
+                    <div class="rc"><div class="rc-t">정치 지연</div><div class="rc-b">캐나다 연방 예산·정치 일정 변수 — 착공 연기 가능성</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="src-row"><span class="v-badge">✦ 교차검증</span><a class="src-a" href="https://canadiandefencereview.com/irving-shipbuilding-and-hanwha-ocean-outline-vision-for-naval-modernization/" target="_blank">어빙-한화 협력 발표</a> · <a class="src-a" href="https://gcaptain.com/canada-south-korea-partner-to-rebuild-great-lakes-shipbuilding-and-train-submarine-workforce/" target="_blank">gCaptain 협력 분석</a></div>
           </div>
         </div>
       </div>
@@ -730,7 +1038,232 @@ mark.sh { background: #1e3a5f; color: #93c5fd; border-radius: 3px; padding: 0 2p
   </div>
 
   <!-- ═══════════════════════════════════════ -->
-  <!-- 카테고리 5: 리스크 모음 -->
+  <!-- 카테고리 5: 조선 AI · 자율운항 기술 -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="cat cool" id="cat-ai">
+    <div class="cat-head" onclick="toggleCat('cat-ai')">
+      <div class="cat-icon">🤖</div>
+      <div class="cat-info">
+        <div class="cat-name">조선 AI · 자율운항 기술</div>
+        <div class="cat-desc">HD현대 AI 3종 패키지 · 세계 최초 자율 태평양 항해 · 발주 프리미엄 구조화</div>
+      </div>
+      <div class="cat-right">
+        <span class="cat-badge bg-cool">신규 테마</span>
+        <span class="cat-cnt">이벤트 1개</span>
+        <span class="cat-chv">▼</span>
+      </div>
+    </div>
+    <div class="cat-body">
+      <div class="ev-list">
+        <div class="ev" id="e-sub2">
+          <div class="ev-head" onclick="toggleEv('e-sub2')">
+            <div class="ev-dday"><div class="ev-dday-num d-cool">신규</div><div class="ev-dday-sub">탐색 중</div></div>
+            <div class="ev-main">
+              <div class="ev-title">🤖 조선엔진 AI 적용 — 연비·효율 자동화</div>
+              <div class="ev-short">HD현대 엔진 AI 탑재 · 선박 운항비 절감 → 발주 유인 상승</div>
+            </div>
+            <span class="ev-badge bg-new">신규 테마</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">이게 뭔지</div>
+              <div class="what-text">HD현대가 AI 3종 패키지로 연료 자동 최적화 + 자율 항해 기술 실용화 완료. <strong>세계 최초 LNG 대형선 완전 자율 태평양 항해 성공</strong> — 연료 3.9% 절감. 발주사가 한국 배 더 선호하는 구조 강화.</div>
+              <span class="verdict" style="background:#0d2810;color:#4ade80;">✅ 실증 완료 — 연료 3.9% 절감 · 자율 태평양 항해 세계 최초</span>
+            </div>
+            <div class="frames">
+              <div class="frame bl">
+                <div class="f-label">📐 실증 수치</div>
+                <div class="f-body">연료 절감 최대 <span class="num">3.9%</span> (실해역 검증)<br><br>세계 최초: LNG 대형선 <strong>완전 자율 태평양 항해</strong><br>휴스턴 → 한국 / 인간 개입 0<br><br>2025년 7월 에이치라인해운 공급계약</div>
+              </div>
+              <div class="frame pu">
+                <div class="f-label">🔮 기술 구조</div>
+                <div class="f-body"><strong>AI 3종 통합 패키지</strong><br>• <strong>하이나스(HiNAS)</strong> — 자율운항 (아비커스)<br>• <strong>오션와이즈</strong> — 항로 최적화 (마린솔루션)<br>• <strong>AI-CHS</strong> — 화물 운영 자동화 (HD한국조선해양)</div>
+              </div>
+              <div class="frame am">
+                <div class="f-label">📅 타임라인</div>
+                <div class="f-body">2025.07 에이치라인해운 공급계약<br>2026.03 자율운항 실증 클러스터 MOU<br><br>→ 적용 선박 확대 중<br>→ <strong>신규 수주 협상 차별화 카드</strong></div>
+              </div>
+              <div class="frame gn">
+                <div class="f-label">📈 수혜 종목</div>
+                <div class="f-body">
+                  <div class="slist">
+                    <div class="sl"><div class="sl-name">HD현대중공업</div><div class="sl-why">AI 탑재 선박 수주 → 프리미엄 마진</div><div class="sl-v v-g">직접</div></div>
+                    <div class="sl"><div class="sl-name">HD현대아비커스</div><div class="sl-why">하이나스 소프트웨어 판매</div><div class="sl-v v-g">성장주</div></div>
+                    <div class="sl"><div class="sl-name">HD현대마린솔루션</div><div class="sl-why">오션와이즈 솔루션 공급</div><div class="sl-v v-y">연계</div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="frame rd f-full">
+                <div class="f-label">⚠️ 리스크</div>
+                <div class="f-body">
+                  <div class="risk-grid">
+                    <div class="rc"><div class="rc-t">3.9% 절감 = 발주 결정 변수?</div><div class="rc-b">연료비 절감이 선박 가격 프리미엄 상쇄하는지 발주사 입장 검증 필요</div></div>
+                    <div class="rc"><div class="rc-t">경쟁사도 AI 개발 중</div><div class="rc-b">한화오션·삼성중도 스마트선박 기술 경쟁 — 독점 기술 아님</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="src-row"><span class="v-badge">✦ 교차검증</span><a class="src-a" href="https://www.sedaily.com/article/20023195" target="_blank">서울경제 AI 자율운항 개발</a> · <a class="src-a" href="https://www.bloter.net/news/articleView.html?idxno=646473" target="_blank">APEC 2025 자율운항 기술</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 카테고리 P&C: 선가·원가 트래커 -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="cat mid" id="cat-pc">
+    <div class="cat-head" onclick="toggleCat('cat-pc')">
+      <div class="cat-icon">📊</div>
+      <div class="cat-info">
+        <div class="cat-name">선가·원가 트래커 [P &amp; C]</div>
+        <div class="cat-desc">신조선가 지수(NPI) × 후판 가격 — 마진율 변곡점 핵심 지표</div>
+      </div>
+      <div class="cat-right">
+        <span class="cat-badge bg-mid">마진 분석</span>
+        <span class="cat-cnt">이벤트 1개</span>
+        <span class="cat-chv">▼</span>
+      </div>
+    </div>
+    <div class="cat-body">
+      <div class="ev-list">
+        <div class="ev" id="e-pc1">
+          <div class="ev-head" onclick="toggleEv('e-pc1')">
+            <div class="ev-dday"><div class="ev-dday-num d-mid">매주</div><div class="ev-dday-sub">클락슨 발표</div></div>
+            <div class="ev-main">
+              <div class="ev-title">📈 신조선가 지수(NPI) × 후판 가격 — 마진 스프레드</div>
+              <div class="ev-short">선가 높을수록 Good · 후판값 오를수록 Bad · 스프레드가 실적 결정</div>
+            </div>
+            <span class="ev-badge bg-mid">리서치 중</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">왜 중요한가</div>
+              <div class="what-text">조선주는 수주량(Q)이 아무리 많아도 <strong>배 가격(P)이 낮거나 철판 원가(C)가 오르면 적자</strong>. 2026년 조선업 최대 화두 '마진율 변곡점' — NPI와 후판 스프레드를 보면 조선사 실적 방향이 보인다.</div>
+              <span class="verdict" style="background:#0d2810;color:#4ade80;">🟢 선가 강세 + 후판 소폭 인상 — 스프레드 양호. 2026년 고선가 물량 매출 반영 시작</span>
+            </div>
+            <div class="frames">
+              <div class="frame bl">
+                <div class="f-label">📐 신조선가 지수 (NPI)</div>
+                <div class="f-body">클락슨 NPI: <span class="num">185.02</span> (2026.05 말)<br>전월(183.41) 대비 소폭 상승 · 고점 유지<br><br><strong>LNG선 174K CBM:</strong> <span class="num">2억 6,000만 달러</span>/척<br>&nbsp;&nbsp;(약 3,700억원 · 강세 지속)<br><br><strong>컨테이너선 18,000 TEU:</strong><br>&nbsp;&nbsp;LNG DF 18척 = 27억 달러 (척당 1.5억)</div>
+              </div>
+              <div class="frame pu">
+                <div class="f-label">🔩 후판 가격 (원가 C)</div>
+                <div class="f-body"><strong>국내 조선용 후판:</strong> <span class="num">t당 80만원 중반</span> (2026 상반기)<br>→ 2025 Q4(80만원 초반) 대비 소폭 인상<br>→ 2024 하반기 저점(70만원대) 대비 +14%<br><br><strong>중국 HRB:</strong> t당 <span class="num">434달러</span> (2026.05)<br>→ 중국 부동산 침체 · 과잉생산 → 저가 공세<br>→ 국내 인상 압력 제한적</div>
+              </div>
+              <div class="frame am">
+                <div class="f-label">📊 마진 스프레드 판단</div>
+                <div class="f-body"><strong>현재: 스프레드 양호</strong><br>선가 ↑↑ (NPI 185) vs 후판 ↑ (소폭)<br>→ 선가 인상폭 > 원가 인상폭<br><br>핵심: <strong>2023~2024 고선가 수주물량</strong>이<br>2026년 매출로 인식 시작<br>→ HD현대 매출 +38.3% · 삼성중 +20% 예상<br><br><span class="dim">⚠️ 후판 추가 인상 or 중국 선가 덤핑 시 반전</span></div>
+              </div>
+              <div class="frame gn">
+                <div class="f-label">📈 수혜 종목 (마진 개선 시)</div>
+                <div class="f-body">
+                  <div class="slist">
+                    <div class="sl"><div class="sl-name">삼성중공업</div><div class="sl-why">FLNG 고부가 + 마진 개선 직결</div><div class="sl-v v-g">직접</div></div>
+                    <div class="sl"><div class="sl-name">HD현대중공업</div><div class="sl-why">수주잔고 최대 + 선가 반영 구조</div><div class="sl-v v-g">직접</div></div>
+                    <div class="sl"><div class="sl-name">한화오션</div><div class="sl-why">특수선 고마진 + LNG 비중 확대</div><div class="sl-v v-y">직접</div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="frame rd f-full">
+                <div class="f-label">⚠️ 마진 악화 시나리오</div>
+                <div class="f-body">
+                  <div class="risk-grid">
+                    <div class="rc"><div class="rc-t">후판 가격 급등</div><div class="rc-b">중국 철강 수출 감소 + 국내 철강사 인상 시 원가 급등</div></div>
+                    <div class="rc"><div class="rc-t">선가 하락</div><div class="rc-b">중국 저가 수주 경쟁 심화 + 발주 위축 시 협상력 약화</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 카테고리 Q: 낙수효과 기자재 -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="cat cool" id="cat-parts">
+    <div class="cat-head" onclick="toggleCat('cat-parts')">
+      <div class="cat-icon">⚙️</div>
+      <div class="cat-info">
+        <div class="cat-name">낙수효과 기자재 [Q] — 도크 포화 수혜</div>
+        <div class="cat-desc">조선소 꽉 찼을 때 돈 가는 곳 · 엔진·피팅·단열재·강관 중소형 세력주</div>
+      </div>
+      <div class="cat-right">
+        <span class="cat-badge bg-cool">중소형 세력주</span>
+        <span class="cat-cnt">이벤트 1개</span>
+        <span class="cat-chv">▼</span>
+      </div>
+    </div>
+    <div class="cat-body">
+      <div class="ev-list">
+        <div class="ev" id="e-parts1">
+          <div class="ev-head" onclick="toggleEv('e-parts1')">
+            <div class="ev-dday"><div class="ev-dday-num d-cool">호황기</div><div class="ev-dday-sub">도크 포화</div></div>
+            <div class="ev-main">
+              <div class="ev-title">⚙️ 조선 기자재 낙수효과 — 대형주 이후 중소형 순환</div>
+              <div class="ev-short">엔진·피팅·단열재·강관 · 조선소 수주잔고 3년치 = 기자재 2~3년 밀려있음</div>
+            </div>
+            <span class="ev-badge bg-cool">순환매 타깃</span>
+            <span class="ev-chv">▼</span>
+          </div>
+          <div class="ev-detail">
+            <div class="what-box">
+              <div class="what-label">메커니즘</div>
+              <div class="what-text">조선소 도크가 <strong>3년치 수주잔고로 포화</strong> → 더 이상 배를 넣을 자리 없음 → 대형주 주가 무거워짐 → 시장 자금이 <strong>배 속에 들어가는 기자재 업체</strong>로 이동. 엔진·피팅·단열재·강관 순서로 오더 확정되면 주가 반응.</div>
+              <span class="verdict" style="background:#0d2810;color:#4ade80;">🟢 2023~2024 수주 → 2026~2027 기자재 납품 피크 — 지금 오더 들어오는 시점</span>
+            </div>
+            <div class="frames">
+              <div class="frame bl">
+                <div class="f-label">📐 낙수 타이밍</div>
+                <div class="f-body">조선소 수주 → 설계 6~12개월 → 기자재 발주<br><br>2023~2024 대규모 수주<br>→ <strong>2026~2027 기자재 납품 피크</strong><br>→ 지금이 오더 확정 + 실적 반영 시점<br><br>NH투자증권: 조선사 영업이익률 14%대 유지<br>→ 기자재 업계 동반 성장 전망</div>
+              </div>
+              <div class="frame pu">
+                <div class="f-label">🔮 2026 Q1 실적 서프라이즈</div>
+                <div class="f-body"><strong>동성화인텍</strong> 영업이익 <span class="num">+58.4%</span> (Q1)<br><strong>세아제강</strong> 컨센서스 <span class="num">+43%</span> 상회<br><strong>한국카본</strong> 영업이익률 <span class="num">19.4%</span><br><strong>태광</strong> 매출 +31.4% · 영업이익 +26.3%<br><strong>케이에스피</strong> 매출 +15% · 영업이익 +43%<br><strong>성광벤드</strong> 5년 내 최고가 근접</div>
+              </div>
+              <div class="frame am">
+                <div class="f-label">📅 종목별 최신 이벤트</div>
+                <div class="f-body"><strong>한국카본</strong> 2026.03 HD현대중공업과<br>&nbsp;&nbsp;LNG 보냉재 <span class="num">2,280억</span> 공급계약 체결<br><strong>케이에스피</strong> 수주잔고 <span class="num">1,000억</span> 창사 최초 돌파<br><strong>세아제강</strong> 3년 최저점 대비 +200%<br><strong>성광벤드</strong> LNG 프로젝트 FID → 수주 본격화</div>
+              </div>
+              <div class="frame gn">
+                <div class="f-label">📈 카테고리별 수혜주</div>
+                <div class="f-body">
+                  <div class="slist">
+                    <div class="sl"><div class="sl-name">동성화인텍</div><div class="sl-why">LNG 보냉재 · Q1 영업이익 +58.4% · TP 38,000원</div><div class="sl-v v-g">단열재</div></div>
+                    <div class="sl"><div class="sl-name">한국카본</div><div class="sl-why">FLNG 보냉재 · 2280억 계약 · TP 58,000원</div><div class="sl-v v-g">단열재</div></div>
+                    <div class="sl"><div class="sl-name">성광벤드</div><div class="sl-why">LNG 피팅 · FID 물량 수주 본격화 · 5년 최고가</div><div class="sl-v v-g">피팅</div></div>
+                    <div class="sl"><div class="sl-name">태광</div><div class="sl-why">조선 피팅 1위 · 매출 +31.4%</div><div class="sl-v v-g">피팅</div></div>
+                    <div class="sl"><div class="sl-name">세아제강</div><div class="sl-why">에너지 강관 · 어닝서프라이즈 · +43% 상회</div><div class="sl-v v-y">강관</div></div>
+                    <div class="sl"><div class="sl-name">케이에스피</div><div class="sl-why">엔진부품 · 수주잔고 1000억 돌파</div><div class="sl-v v-y">엔진부품</div></div>
+                    <div class="sl"><div class="sl-name">대양전기공업</div><div class="sl-why">선박 전기시스템 · TP 40,000원</div><div class="sl-v v-y">전장</div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="frame rd f-full">
+                <div class="f-label">⚠️ 리스크</div>
+                <div class="f-body">
+                  <div class="risk-grid">
+                    <div class="rc"><div class="rc-t">중국산 저가 경쟁</div><div class="rc-b">중국 기자재 업체 품질 향상 + 가격 경쟁력 — 납품 비중 잠식 가능</div></div>
+                    <div class="rc"><div class="rc-t">납기 지연 리스크</div><div class="rc-b">기자재 수급 차질 시 조선소 인도 지연 → 선사 클레임</div></div>
+                    <div class="rc"><div class="rc-t">소형주 변동성</div><div class="rc-b">대형주 대비 유동성 낮아 급등락 위험 — 단기 세력 개입 주의</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 카테고리 6: 리스크 모음 -->
   <!-- ═══════════════════════════════════════ -->
   <div class="cat risk" id="cat-risk">
     <div class="cat-head" onclick="toggleCat('cat-risk')">
@@ -827,112 +1360,6 @@ function jumpTo(id) {
   el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-/* ═══════════════════════════════════
-   검색 엔진
-   검색 대상:
-   - 종목 박스 (.skb): 종목명, 코드, 태그
-   - ETF 카드 (.etf-card)
-   - 카테고리 (.cat): 제목, 설명
-   - 이벤트 (.ev): 제목, 한줄 설명
-   ═══════════════════════════════════ */
-
-// 검색 가능한 노드 목록 (각 {el, text, type, parentCat})
-let SEARCH_INDEX = [];
-
-function buildIndex() {
-  SEARCH_INDEX = [];
-
-  // ETF
-  const etf = document.getElementById('etf1');
-  if (etf) SEARCH_INDEX.push({
-    el: etf, type: 'etf',
-    text: etf.innerText.toLowerCase(), parentCat: null
-  });
-
-  // 종목 박스
-  document.querySelectorAll('.skb').forEach(el => {
-    SEARCH_INDEX.push({ el, type: 'stock', text: el.innerText.toLowerCase(), parentCat: null });
-  });
-
-  // 카테고리 + 내부 이벤트
-  document.querySelectorAll('.cat').forEach(catEl => {
-    SEARCH_INDEX.push({ el: catEl, type: 'cat', text: catEl.innerText.toLowerCase(), parentCat: null });
-    catEl.querySelectorAll('.ev').forEach(evEl => {
-      SEARCH_INDEX.push({ el: evEl, type: 'ev', text: evEl.innerText.toLowerCase(), parentCat: catEl });
-    });
-  });
-}
-
-function setSearch(q) {
-  document.getElementById('searchInput').value = q;
-  doSearch(q);
-}
-
-function clearSearch() {
-  document.getElementById('searchInput').value = '';
-  doSearch('');
-}
-
-function doSearch(raw) {
-  const q = raw.trim().toLowerCase();
-  const clearBtn = document.getElementById('searchClear');
-  const countEl = document.getElementById('searchCount');
-
-  clearBtn.classList.toggle('show', q.length > 0);
-
-  if (!q) {
-    // 초기화
-    SEARCH_INDEX.forEach(({ el }) => { el.classList.remove('sh-hit', 'sh-dim'); });
-    document.querySelectorAll('.cat').forEach(c => c.classList.remove('open'));
-    countEl.textContent = '';
-    countEl.className = 'search-count';
-    return;
-  }
-
-  let hits = 0;
-  const hitCats = new Set();
-
-  SEARCH_INDEX.forEach(({ el, type, text, parentCat }) => {
-    const match = text.includes(q);
-
-    if (match) {
-      hits++;
-      el.classList.add('sh-hit');
-      el.classList.remove('sh-dim');
-      // 이벤트면 부모 카테고리 열기
-      if (type === 'ev' && parentCat) {
-        parentCat.classList.add('open');
-        hitCats.add(parentCat.id);
-      }
-      // 카테고리 자체 hit → 열기
-      if (type === 'cat') el.classList.add('open');
-      // 이벤트 자체 열기
-      if (type === 'ev') el.classList.add('open');
-    } else {
-      el.classList.remove('sh-hit');
-      // 카테고리는 hit 없어도 dim 안 함 — 이벤트 단위에서만 dim
-      if (type === 'ev' || type === 'stock' || type === 'etf') {
-        el.classList.add('sh-dim');
-      } else {
-        el.classList.remove('sh-dim');
-      }
-    }
-  });
-
-  // 결과 표시
-  if (hits === 0) {
-    countEl.textContent = '결과 없음';
-    countEl.className = 'search-count none';
-  } else {
-    countEl.textContent = `${hits}개 결과`;
-    countEl.className = 'search-count found';
-    // 첫 번째 hit으로 스크롤
-    const first = SEARCH_INDEX.find(({ el, text }) => text.includes(q));
-    if (first) first.el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
-}
-
-document.addEventListener('DOMContentLoaded', buildIndex);
 
 const STOCK_DATA = {
   hd: {
@@ -940,9 +1367,9 @@ const STOCK_DATA = {
     color: '#22c55e',
     ma: '5일선 <strong>위</strong> (단기 강세)<br>20일선 <strong>위</strong> (중기 추세 유지)<br>60일선 <strong>위</strong> (장기 상승 구조)<br>→ 전 이평선 위 정배열. 추세 가장 깔끔',
     supply: '외국인 <strong>5일 연속 순매수</strong><br>기관 <strong>동반 순매수</strong><br><br>수급빈집: <strong>18만~19만원 구간</strong><br>→ 빈집 이탈 없이 지지 확인',
-    verdict: '✅ 추세 가장 깔끔',
+    verdict: '✅ 실적 + CPSP K-원팀 + KDDX 3각 모멘텀',
     vbg: '#0d2810', vc: '#4ade80',
-    tags: ['t-hot:Section 301 D-155 직접수혜','t-cool:외인·기관 동반매수','t-mid:증권사 TP 230,000원','t-hot:중국 제재 없음','t-cool:수주잔고 사상최대']
+    tags: ['t-hot:2025 영업이익 +188.9% (1.3조)','t-hot:CPSP K-원팀 1/3 공동수주','t-hot:KDDX 7.8조 경쟁입찰 도전','t-cool:외인·기관 동반매수','t-cool:세계최초 암모니아DF추진선 건조']
   },
   sam: {
     name: '삼성중공업 (010140)',
@@ -951,16 +1378,16 @@ const STOCK_DATA = {
     supply: '외국인 <strong>혼조</strong><br>기관 <strong>순매도</strong><br><br>수급빈집: <strong>11,500~12,000원 구간</strong><br>→ 빈집 구간 하방 테스트 중',
     verdict: '◆ 수급 확인 후 판단',
     vbg: '#13081e', vc: '#c4b5fd',
-    tags: ['t-pur:FLNG 전 세계 독점','t-mid:모잠비크 2호기 입찰 Q3','t-risk:수주에도 주가 반응 없음','t-cool:MRO 장기계약 가능성']
+    tags: ['t-pur:FLNG 11기중 7기 수주(64%)','t-hot:6월 4.3조 잭팟·13조 목표','t-mid:모잠비크 코랄노르트 Q3 입찰','t-cool:MRO 장기계약 패키지 가능성']
   },
   hw: {
     name: '한화오션 (042660)',
     color: '#f59e0b',
     ma: '5일선 <strong>위</strong><br>20일선 <strong>위</strong><br>60일선 <strong>위</strong><br>→ 추세는 살아있음. 리스크는 외부 요인',
     supply: '외국인 <strong>소폭 순매도</strong><br>기관 <strong>관망</strong><br><br>수급빈집: <strong>태린이 파일 확인 필요</strong>',
-    verdict: '⚠ 수혜 맞지만 제재 주시',
+    verdict: '🟡 CPSP D-22 + KDDX 경쟁입찰 — 제재 리스크 병행',
     vbg: '#1c1500', vc: '#fbbf24',
-    tags: ['t-risk:중국 5개 법인 제재 유예중','t-hot:Section 301 수혜','t-mid:필라델피아 조선소 인수','t-risk:미중 갈등 재점화 시 즉시 -9%']
+    tags: ['t-hot:2025 영업이익 +390.8% (9297억) 턴어라운드','t-hot:CPSP K-원팀 주도 D-22','t-hot:KDDX 7.8조 경쟁입찰 유리','t-hot:잉여현금흐름 플러스 전환','t-risk:중국 5개 법인 제재 유예중']
   },
   hkc: {
     name: '한국카본 (017960)',

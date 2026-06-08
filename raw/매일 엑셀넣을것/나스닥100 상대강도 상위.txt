@@ -1,0 +1,77 @@
+!pip install --upgrade yfinance --quiet
+import yfinance as yf
+import pandas as pd
+import numpy as np
+
+# 제공된 나스닥 100 티커 리스트
+nasdaq_100_tickers = [
+    'AAPL', 'ABNB', 'ADBE', 'ADI', 'ADP', 'ADSK', 'AEP', 'AMAT', 'AMD', 'AMGN',
+    'AMZN', 'ANSS', 'ARM', 'ASML', 'AVGO', 'AZN', 'BIIB', 'BKNG', 'BKR', 'CCEP',
+    'CDNS', 'CDW', 'CEG', 'CHTR', 'CMCSA', 'COST', 'CPRT', 'CRWD', 'CSCO', 'CSGP',
+    'CSX', 'CTAS', 'CTSH', 'DASH', 'DDOG', 'DLTR', 'DXCM', 'EA', 'EXC', 'FANG',
+    'FAST', 'FTNT', 'GEHC', 'GFS', 'GILD', 'GOOG', 'GOOGL', 'HON', 'IDXX', 'ILMN',
+    'INTC', 'INTU', 'ISRG', 'KDP', 'KHC', 'KLAC', 'LIN', 'LRCX', 'LULU', 'MAR',
+    'MCHP', 'MDB', 'MDLZ', 'MELI', 'META', 'MNST', 'MRNA', 'MRVL', 'MSFT', 'MU',
+    'NFLX', 'NVDA', 'NXPI', 'ODFL', 'ON', 'ORLY', 'PANW', 'PAYX', 'PCAR', 'PDD',
+    'PEP', 'PYPL', 'QCOM', 'REGN', 'ROP', 'ROST', 'SBUX', 'SMCI', 'SNPS', 'TEAM',
+    'TMUS', 'TSLA', 'TTD', 'TTWO', 'TXN', 'VRSK', 'VRTX', 'WBD', 'WDAY', 'XEL',
+    'ZS', 'SPY'  # SPY를 기준으로 상대강도 계산
+]
+
+# 주가 데이터를 다운로드 (수정주가, 기간: 1년)
+data = yf.download(nasdaq_100_tickers, period="1y")['Adj Close']
+
+# 날짜를 인덱스로 정렬
+data = data.sort_index()
+
+# 결측값 처리 (NaN 값을 이전 값으로 채움)
+data = data.ffill()
+
+# 3개월, 6개월, 12개월 평균 모멘텀 계산 함수 (SPY는 결과에서 제외)
+def calculate_momentum(data, period_3m=63, period_6m=126, period_12m=252, last_n_days=10):
+    daily_top_15_stocks = {}
+
+    # 최근 N 거래일 가져오기
+    trading_days = data.index[-last_n_days:]
+
+    for day in trading_days:
+        end_date_index = data.index.get_loc(day)
+
+        # 각 기간별 수익률 계산
+        start_3m = max(0, end_date_index - period_3m + 1)
+        start_6m = max(0, end_date_index - period_6m + 1)
+        start_12m = max(0, end_date_index - period_12m + 1)
+
+        # 각 기간별 수익률 평균 계산
+        returns_3m = data.iloc[start_3m:end_date_index + 1].pct_change().mean()
+        returns_6m = data.iloc[start_6m:end_date_index + 1].pct_change().mean()
+        returns_12m = data.iloc[start_12m:end_date_index + 1].pct_change().mean()
+
+        # 가중치를 적용하여 평균 모멘텀 계산 (3개월, 6개월, 12개월에 가중치 부여)
+        weights = np.array([0.5, 0.3, 0.2])  # 3개월: 50%, 6개월: 30%, 12개월: 20%
+        average_momentum = (returns_3m * weights[0] + returns_6m * weights[1] + returns_12m * weights[2])
+
+        # SPY를 기준으로 상대강도 계산
+        spy_return = average_momentum['SPY']  # S&P 500 ETF
+        relative_strength = average_momentum.drop('SPY') / spy_return
+
+        # 상대강도 상위 15개 종목 추출
+        top_stocks = relative_strength.nlargest(15).index.tolist()
+
+        # 해당 날짜에 대해 저장
+        daily_top_15_stocks[day] = top_stocks
+
+    # 딕셔너리를 DataFrame으로 변환
+    daily_top_15_stocks_df = pd.DataFrame.from_dict(daily_top_15_stocks, orient='index', columns=[f'Top {i+1}' for i in range(15)])
+    
+    # Date 인덱스를 'YYYY-MM-DD' 형식으로 변환
+    daily_top_15_stocks_df.index = daily_top_15_stocks_df.index.strftime('%Y-%m-%d')
+    daily_top_15_stocks_df.index.name = 'Date'
+    
+    return daily_top_15_stocks_df
+
+# 3개월, 6개월, 12개월 모멘텀 기준 상대강도 상위 종목 계산
+result_df = calculate_momentum(data, period_3m=63, period_6m=126, period_12m=252, last_n_days=10)
+
+# 결과 확인
+result_df

@@ -1,0 +1,110 @@
+# 1. Install required libraries (if needed)
+!pip install pytrends
+!pip install --upgrade yfinance --quiet
+
+# 2. Import libraries
+import pandas as pd
+import matplotlib.pyplot as plt
+from pytrends.request import TrendReq
+import numpy as np
+import yfinance as yf
+
+# 3. Get keywords from user
+def get_keywords():
+    print("Enter keywords to analyze (comma-separated, e.g., REJURAN, COSRX, buldak):")
+    user_input = input("Keywords: ")
+    keywords = [kw.strip() for kw in user_input.split(',') if kw.strip()]
+    if not keywords:
+        print("Please enter at least one valid keyword.")
+        return get_keywords()
+    return keywords
+
+keywords = get_keywords()
+print(f"\nSelected Keywords: {keywords}")
+
+# 4. Ask if stock price should be included
+use_stock = input("\nDo you want to analyze stock prices along with keywords? (y/n): ").strip().lower()
+
+if use_stock == 'y':
+    stock_symbol = input("Enter stock symbol (e.g., AAPL, TSLA, 005930.KS): ").strip().upper()
+    print(f"Stock selected: {stock_symbol}")
+else:
+    stock_symbol = None
+    print("Only Google Trends will be analyzed.")
+
+# 5. Set up pytrends
+pytrends = TrendReq(hl='en-US', tz=540)  # Language: English, Timezone: Korea
+
+# 6. Fetch Google Trends data (last 5 years)
+pytrends.build_payload(keywords, cat=0, timeframe='today 5-y', geo='', gprop='')
+data = pytrends.interest_over_time()
+
+# Drop 'isPartial' column
+if 'isPartial' in data.columns:
+    data = data.drop(columns=['isPartial'])
+
+print("\n[Google Trends Data Preview]")
+print(data.head())
+
+# 7. Calculate moving average (12-week)
+moving_avg_window = 12
+for kw in keywords:
+    if kw in data.columns:
+        data[f'{kw}_MA'] = data[kw].rolling(window=moving_avg_window).mean()
+
+# 8. Fetch stock data if selected
+if stock_symbol:
+    print(f"\nFetching stock data for: {stock_symbol}...")
+    stock_data = yf.download(stock_symbol, period='5y')
+    print("\n[Yahoo Finance Data Preview]")
+    print(stock_data.head())
+
+    # Convert to weekly data and align with trends index
+    stock_data = stock_data.resample('W').last()
+    stock_data = stock_data.reindex(data.index, method='ffill')
+
+# 9. Plotting
+for kw in keywords:
+    if kw in data.columns:
+        plt.figure(figsize=(14, 7))
+
+        ax1 = plt.gca()
+        color1 = 'tab:blue'
+        ax1.set_xlabel('Date')
+        ax1.set_ylabel('Interest', color=color1)
+
+        ax1.plot(data.index, data[kw], label=f'{kw} Interest', color=color1, alpha=0.7)
+        ax1.plot(data.index, data[f'{kw}_MA'], label=f'{kw} {moving_avg_window}-week MA',
+                 color=color1, linestyle='--')
+
+        # Trend arrows
+        above = data[kw] > data[f'{kw}_MA']
+        below = data[kw] <= data[f'{kw}_MA']
+
+        ax1.scatter(data.index[above], data[kw][above], color='red', marker='^', alpha=0.6, label='Above MA')
+        ax1.scatter(data.index[below], data[kw][below], color='blue', marker='v', alpha=0.6, label='Below MA')
+
+        ax1.tick_params(axis='y', labelcolor=color1)
+
+        plt.title(f"{kw} Interest Trend{' with Stock Price' if stock_symbol else ''}", fontsize=14)
+
+        # If stock data selected, plot on secondary axis
+        if stock_symbol:
+            ax2 = ax1.twinx()
+            color2 = 'tab:red'
+            ax2.set_ylabel('Stock Price', color=color2)
+            ax2.plot(stock_data.index, stock_data['Close'], label=f'{stock_symbol} Close', color=color2, alpha=0.6)
+            ax2.tick_params(axis='y', labelcolor=color2)
+
+            # Combine legends
+            lines1, labels1 = ax1.get_legend_handles_labels()
+            lines2, labels2 = ax2.get_legend_handles_labels()
+            ax2.legend(lines1 + lines2, labels1 + labels2, loc='upper left')
+        else:
+            ax1.legend(loc='upper left')
+
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
+    else:
+        print(f"Warning: No data found for keyword '{kw}'.")

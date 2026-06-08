@@ -1,0 +1,288 @@
+# ============================================================
+# Full Code: KOSPI/KOSDAQ Fear&Greed Oscillator + Elder Impulse
+#          + Daily DeMark TD Setup (custom: Sell=4, Buy=2)
+# ============================================================
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler
+from google.colab import files
+
+# =============================
+# 색상 팔레트 (임펄스 제외)
+# =============================
+COL_OSC = '#6A5ACD'       # Fear & Greed (보라)
+COL_PRICE = '#2F2F2F'     # 지수 가격 (진회색)
+COL_SUPERMA = '#FF8C00'   # SuperMA (주황)
+COL_GAP = '#00B3B3'       # Gap% (청록)
+GRID_ALPHA = 0.3
+
+# =============================
+# 1) 엑셀 업로드 & 로드
+# =============================
+uploaded = files.upload()
+file_name = list(uploaded.keys())[0]
+
+kospi_df = pd.read_excel(file_name, sheet_name='KOSPI')
+kosdaq_df = pd.read_excel(file_name, sheet_name='KOSDAQ')
+
+# =============================
+# 2) Date 컬럼 처리
+# =============================
+def ensure_date_col(df):
+    if 'Date' not in df.columns:
+        df = df.rename(columns={df.columns[0]: 'Date'})
+    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+    return df.dropna(subset=['Date']).copy()
+
+kospi_df = ensure_date_col(kospi_df)
+kosdaq_df = ensure_date_col(kosdaq_df)
+
+# =============================
+# 3) 수치형 컬럼 변환
+# =============================
+kospi_cols = ['5년 국채선물 추종 지수','10년국채선물지수','코스피 200 변동성지수','코스피','최근월물 CALL ATM','최근월물 PUT ATM']
+kosdaq_cols = ['5년 국채선물 추종 지수','10년국채선물지수','코스피 200 변동성지수','코스닥','최근월물 CALL ATM','최근월물 PUT ATM']
+
+for c in kospi_cols:
+    kospi_df[c] = pd.to_numeric(kospi_df[c], errors='coerce')
+for c in kosdaq_cols:
+    kosdaq_df[c] = pd.to_numeric(kosdaq_df[c], errors='coerce')
+
+kospi = kospi_df.copy()
+kosdaq = kosdaq_df.copy()
+
+# =============================
+# 4) RSI
+# =============================
+def calculate_rsi(df, col, window=10):
+    df = df.copy()
+    delta = df[col].diff()
+    gain = delta.where(delta > 0, 0).rolling(window).mean()
+    loss = -delta.where(delta < 0, 0).rolling(window).mean()
+    rs = gain / loss
+    df['RSI_10'] = 100 - (100 / (1 + rs))
+    return df
+
+# =============================
+# 5) Fear & Greed Index (안정화)
+# =============================
+def calculate_fear_greed(df, index_col, vix_col, call_col, put_col, bond5_col, bond10_col):
+    df = df.copy()
+
+    df['MA125'] = df[index_col].rolling(125).mean()
+    df['Momentum'] = (df[index_col] - df['MA125']) / df['MA125'] * 100
+    df['PutCall'] = df[put_col] / df[call_col].replace(0, np.nan)
+    df['Volatility'] = df[vix_col]
+    df['BondDiff'] = df[bond10_col] - df[bond5_col]
+
+    df.replace([np.inf, -np.inf], np.nan, inplace=True)
+
+    features = ['Momentum','PutCall','Volatility','BondDiff','RSI_10']
+    valid = df.dropna(subset=features).index
+
+    df['Fear_Greed_Index'] = np.nan
+    if len(valid) == 0:
+        return df
+
+    scaler = MinMaxScaler()
+    df.loc[valid, features] = scaler.fit_transform(df.loc[valid, features])
+
+    df.loc[valid, 'Fear_Greed_Index'] = (
+        df.loc[valid,'Momentum'] * 0.2 +
+        (1 - df.loc[valid,'PutCall']) * 0.2 +
+        (1 - df.loc[valid,'Volatility']) * 0.2 +
+        df.loc[valid,'BondDiff'] * 0.2 +
+        df.loc[valid,'RSI_10'] * 0.2
+    )
+    return df
+
+# =============================
+# 6) MACD (F&G 기준)
+# =============================
+def calculate_macd(df, col):
+    df = df.copy()
+    ema12 = df[col].ewm(span=12, adjust=False).mean()
+    ema26 = df[col].ewm(span=26, adjust=False).mean()
+    macd = ema12 - ema26
+    signal = macd.ewm(span=9, adjust=False).mean()
+    df['Oscillator'] = macd - signal
+    return df
+
+# =============================
+# 7) SuperMA + Gap%
+# =============================
+def add_super_ma_gap(df, price_col, label):
+    df = df.copy()
+    for w in [20,60,120,200]:
+        df[f'{label}_MA{w}'] = df[price_col].rolling(w).mean()
+    mas = [f'{label}_MA{w}' for w in [20,60,120,200]]
+    df[f'{label}_SuperMA'] = df[mas].mean(axis=1)
+    df[f'{label}_GapPct'] = (df[price_col] - df[f'{label}_SuperMA']) / df[f'{label}_SuperMA'] * 100
+    return df
+
+# =============================
+# 8) 임펄스 시스템 (기존 색 유지)
+# =============================
+def add_impulse_components(df, price_col, label):
+    df = df.copy()
+    df[f'{label}_EMA13'] = df[price_col].ewm(span=13, adjust=False).mean()
+    ema12 = df[price_col].ewm(span=12, adjust=False).mean()
+    ema26 = df[price_col].ewm(span=26, adjust=False).mean()
+    macd = ema12 - ema26
+    signal = macd.ewm(span=9, adjust=False).mean()
+    df[f'{label}_MACD_Hist'] = macd - signal
+    return df
+
+def get_impulse_colors(df, ema_col, macd_col):
+    colors = []
+    for i in range(len(df)):
+        if i == 0:
+            colors.append('gray')
+            continue
+        ema_up = df[ema_col].iloc[i] > df[ema_col].iloc[i-1]
+        ema_down = df[ema_col].iloc[i] < df[ema_col].iloc[i-1]
+        macd_up = df[macd_col].iloc[i] > df[macd_col].iloc[i-1]
+        macd_down = df[macd_col].iloc[i] < df[macd_col].iloc[i-1]
+
+        if ema_up and macd_up:
+            colors.append('green')
+        elif ema_down and macd_down:
+            colors.append('red')
+        else:
+            colors.append('blue')
+    return colors
+
+# =============================
+# 9) (추가) DeMark TD Setup (Daily) - custom (Sell=4, Buy=2)
+# =============================
+def add_td_setup_counts(df, price_col, label='TD'):
+    """
+    커스텀 DeMark TD Setup
+    - Sell: Close(t) > Close(t-4) 이면 연속 카운트, 아니면 0 리셋
+    - Buy : Close(t) < Close(t-2) 이면 연속 카운트, 아니면 0 리셋
+    """
+    df = df.copy()
+    prices = df[price_col].values
+    sell = np.zeros(len(df))
+    buy = np.zeros(len(df))
+
+    for i in range(len(df)):
+        if i >= 4 and prices[i] > prices[i-4]:
+            sell[i] = sell[i-1] + 1
+        else:
+            sell[i] = 0
+
+        if i >= 2 and prices[i] < prices[i-2]:
+            buy[i] = buy[i-1] + 1
+        else:
+            buy[i] = 0
+
+    df[f'{label}_SellSetup'] = sell
+    df[f'{label}_BuySetup'] = buy
+    return df
+
+# =============================
+# 10) 파이프라인 실행
+# =============================
+kospi = calculate_rsi(kospi, '코스피')
+kosdaq = calculate_rsi(kosdaq, '코스닥')
+
+kospi = calculate_fear_greed(kospi,'코스피','코스피 200 변동성지수','최근월물 CALL ATM','최근월물 PUT ATM','5년 국채선물 추종 지수','10년국채선물지수')
+kosdaq = calculate_fear_greed(kosdaq,'코스닥','코스피 200 변동성지수','최근월물 CALL ATM','최근월물 PUT ATM','5년 국채선물 추종 지수','10년국채선물지수')
+
+kospi = calculate_macd(kospi,'Fear_Greed_Index')
+kosdaq = calculate_macd(kosdaq,'Fear_Greed_Index')
+
+kospi = add_super_ma_gap(kospi,'코스피','KOSPI')
+kosdaq = add_super_ma_gap(kosdaq,'코스닥','KOSDAQ')
+
+kospi = add_impulse_components(kospi,'코스피','KOSPI')
+kosdaq = add_impulse_components(kosdaq,'코스닥','KOSDAQ')
+
+# (추가) DeMark 계산
+kospi = add_td_setup_counts(kospi, '코스피', 'TD')
+kosdaq = add_td_setup_counts(kosdaq, '코스닥', 'TD')
+
+# 최근 6개월
+recent_kospi = kospi[kospi['Date'] >= kospi['Date'].max() - pd.DateOffset(months=6)].dropna(subset=['Oscillator'])
+recent_kosdaq = kosdaq[kosdaq['Date'] >= kosdaq['Date'].max() - pd.DateOffset(months=6)].dropna(subset=['Oscillator'])
+
+# =============================
+# 11) Fear & Greed + 지수
+# =============================
+def plot_fg(df, price_col, title):
+    fig, ax1 = plt.subplots(figsize=(14,7))
+    ax1.plot(df['Date'], df['Oscillator'], color=COL_OSC, linewidth=2, label='Fear & Greed Oscillator')
+    ax1.set_ylabel('Fear & Greed', color=COL_OSC)
+    ax1.tick_params(axis='y', labelcolor=COL_OSC)
+    ax1.grid(True, alpha=GRID_ALPHA)
+
+    ax2 = ax1.twinx()
+    ax2.plot(df['Date'], df[price_col], color=COL_PRICE, linewidth=1.8, label=price_col)
+    ax2.set_ylabel(price_col, color=COL_PRICE)
+    ax2.tick_params(axis='y', labelcolor=COL_PRICE)
+
+    lines = ax1.get_lines() + ax2.get_lines()
+    ax1.legend(lines, [l.get_label() for l in lines], loc='upper left')
+    plt.title(title)
+    plt.tight_layout()
+    plt.show()
+
+plot_fg(recent_kospi,'코스피','KOSPI – Fear & Greed Oscillator')
+plot_fg(recent_kosdaq,'코스닥','KOSDAQ – Fear & Greed Oscillator')
+
+# =============================
+# 12) 임펄스 시스템 그래프
+# =============================
+def plot_impulse(df, price_col, ema_col, macd_col, title):
+    colors = get_impulse_colors(df, ema_col, macd_col)
+    plt.figure(figsize=(14,7))
+    plt.plot(df['Date'], df[price_col], color=COL_PRICE, linewidth=1.5)
+    plt.scatter(df['Date'], df[price_col], c=colors, s=20)
+    plt.grid(True, alpha=GRID_ALPHA)
+    plt.title(title)
+    plt.tight_layout()
+    plt.show()
+
+plot_impulse(recent_kospi,'코스피','KOSPI_EMA13','KOSPI_MACD_Hist','KOSPI – Elder Impulse System')
+plot_impulse(recent_kosdaq,'코스닥','KOSDAQ_EMA13','KOSDAQ_MACD_Hist','KOSDAQ – Elder Impulse System')
+
+# =============================
+# 13) (추가) Daily DeMark TD Setup 그래프
+# =============================
+def plot_demark_daily(df, price_col, title):
+    df = df.copy()
+    df = df[df['Date'] >= df['Date'].max() - pd.DateOffset(months=6)]
+
+    # TD 컬럼이 없다면 방어적으로 계산
+    if ('TD_SellSetup' not in df.columns) or ('TD_BuySetup' not in df.columns):
+        df = add_td_setup_counts(df, price_col, 'TD')
+
+    fig, ax1 = plt.subplots(figsize=(14,7))
+
+    # 가격
+    ax1.plot(df['Date'], df[price_col], color=COL_PRICE, linewidth=1.5, label=price_col)
+    ax1.set_ylabel(price_col, color=COL_PRICE)
+    ax1.tick_params(axis='y', labelcolor=COL_PRICE)
+    ax1.grid(True, alpha=GRID_ALPHA)
+
+    # TD 카운트 (우측)
+    ax2 = ax1.twinx()
+    ax2.plot(df['Date'], df['TD_SellSetup'], color='red', linewidth=1.2, label='TD Sell Setup')
+    ax2.plot(df['Date'], df['TD_BuySetup'], color='blue', linewidth=1.2, label='TD Buy Setup')
+    ax2.set_ylabel('TD Setup Count')
+
+    max_td = float(df[['TD_SellSetup','TD_BuySetup']].max().max())
+    ax2.set_ylim(0, max_td + 2)
+
+    lines = ax1.get_lines() + ax2.get_lines()
+    ax1.legend(lines, [l.get_label() for l in lines], loc='upper left')
+
+    plt.title(title)
+    plt.tight_layout()
+    plt.show()
+
+plot_demark_daily(kospi, '코스피', 'KOSPI – Daily DeMark TD Setup (Sell=4, Buy=2)')
+plot_demark_daily(kosdaq, '코스닥', 'KOSDAQ – Daily DeMark TD Setup (Sell=4, Buy=2)')
