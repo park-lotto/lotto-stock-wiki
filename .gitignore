@@ -42,3 +42,9 @@ __pycache__/
 *.pyc
 *.pyo
 .gstack/
+
+# MCP 설정 (API 키 포함 가능)
+.mcp.json
+
+# 캡처 이미지 폴더
+raw/캡쳐본/
