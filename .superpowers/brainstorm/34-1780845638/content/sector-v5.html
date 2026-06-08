@@ -6,12 +6,13 @@
 <title>조선 섹터 — 전체 이슈 맵</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: #0a0f1a; color: #e5e7eb; font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; padding: 24px 16px; }
+html { -webkit-text-size-adjust: 100%; }
+body { background: #0a0f1a; color: #e5e7eb; font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; padding: 20px 14px; overflow-x: hidden; }
 .wrap { max-width: 940px; margin: 0 auto; }
 
 /* 헤더 */
-.pg-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
-.pg-title { font-size: 22px; font-weight: 800; color: #fff; }
+.pg-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; gap: 10px; }
+.pg-title { font-size: 20px; font-weight: 800; color: #fff; }
 .pg-date { font-size: 11px; color: #4b5563; margin-top: 4px; }
 .status-pill { background: #1a3a1a; color: #4ade80; font-size: 12px; font-weight: 700; padding: 7px 16px; border-radius: 20px; border: 1px solid #166534; white-space: nowrap; }
 
@@ -244,6 +245,100 @@ body { background: #0a0f1a; color: #e5e7eb; font-family: 'Apple SD Gothic Neo', 
 /* 딥리서치 대기 */
 .pending { color: #374151; font-size: 13px; text-align: center; padding: 24px; border: 1px dashed #1f2937; border-radius: 10px; }
 .pending em { display: block; font-size: 11px; color: #1f2937; margin-top: 6px; font-style: normal; }
+
+/* ═══════════════════════════
+   모바일 최적화
+   ═══════════════════════════ */
+@media (max-width: 640px) {
+
+  body { padding: 14px 12px; }
+
+  /* 헤더 */
+  .pg-header { flex-direction: column; gap: 10px; }
+  .pg-title { font-size: 18px; }
+  .status-pill { align-self: flex-start; font-size: 11px; padding: 6px 13px; }
+
+  /* 검색 */
+  .search-input { font-size: 14px; padding: 13px 44px 13px 42px; border-radius: 12px; }
+  .search-chips { gap: 5px; }
+  .chip { font-size: 10px; padding: 4px 10px; }
+
+  /* 히트맵 — 가로 스크롤 */
+  .heatmap {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+    gap: 7px;
+    scrollbar-width: none;
+  }
+  .heatmap::-webkit-scrollbar { display: none; }
+  .hm { flex-shrink: 0; padding: 8px 12px; }
+  .hm-name { font-size: 10px; }
+
+  /* 블록 */
+  .block { padding: 16px 14px; border-radius: 14px; margin-bottom: 12px; }
+  .block-title { font-size: 10px; margin-bottom: 12px; }
+
+  /* ETF 카드 */
+  .etf-head { padding: 14px 13px; gap: 9px; min-height: 56px; }
+  .etf-name { font-size: 13px; }
+  .etf-sub { display: none; }
+  .etf-detail { padding: 13px; }
+
+  /* 종목 박스 그리드 — 2열 고정 */
+  .sk-grid-outer { grid-template-columns: repeat(2, 1fr); gap: 7px; }
+  .skb-inner { padding: 12px 11px; }
+  .skb-trend { font-size: 20px; }
+  .skb-name { font-size: 12px; }
+  .skb-code { font-size: 9px; }
+  .skb-tags { gap: 3px; }
+  .sk-tag { font-size: 9px; padding: 2px 6px; }
+
+  /* 상세 패널 */
+  .sk-detail-panel { padding: 14px 12px; }
+  .sk-detail-name { font-size: 13px; margin-bottom: 10px; }
+  .sk-3col { grid-template-columns: 1fr; gap: 8px; }
+
+  /* 카테고리 아코디언 */
+  .cat { border-radius: 12px; margin-bottom: 8px; }
+  .cat-head { padding: 14px 13px; gap: 9px; min-height: 60px; }
+  .cat-icon { font-size: 18px; }
+  .cat-name { font-size: 13px; }
+  .cat-desc { font-size: 10px; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+  .cat-cnt { display: none; }
+  .cat-badge { font-size: 9px; padding: 3px 8px; }
+
+  /* 이벤트 아코디언 */
+  .ev-head { padding: 13px 13px 13px 14px; gap: 9px; min-height: 56px; }
+  .ev-dday { min-width: 46px; }
+  .ev-dday-num { font-size: 13px; }
+  .ev-title { font-size: 12px; }
+  .ev-short { font-size: 10px; }
+  .ev-badge { display: none; }
+  .ev-detail { padding: 14px 13px 16px 14px; }
+
+  /* 5프레임 */
+  .what-box { padding: 12px 13px; margin-bottom: 12px; }
+  .what-text { font-size: 12px; line-height: 1.8; }
+  .frames { grid-template-columns: 1fr; gap: 7px; }
+  .f-full { grid-column: 1; }
+  .frame { padding: 11px 12px; }
+  .f-body { font-size: 11px; }
+  .risk-cols { grid-template-columns: 1fr; gap: 6px; }
+  .slist { gap: 5px; }
+  .sl { padding: 8px 10px; }
+  .sl-name { min-width: 80px; font-size: 11px; }
+  .sl-why { font-size: 10px; }
+
+  /* 소스 행 */
+  .src-row { gap: 5px; }
+  .src-a { font-size: 9px; padding: 3px 7px; }
+
+  /* 스크롤 패널 패딩 */
+  .sk-panel { padding: 11px 12px; }
+  .sk-panel-body { font-size: 11px; }
+}
 </style>
 </head>
 <body>
