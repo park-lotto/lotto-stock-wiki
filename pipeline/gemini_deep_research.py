@@ -9,7 +9,14 @@ sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1)
 from google import genai
 from google.genai import types
 
-API_KEY = "REMOVED_API_KEY"
+_env = Path(__file__).parent.parent / ".env"
+if _env.exists():
+    for line in _env.read_text(encoding="utf-8").splitlines():
+        if "=" in line and not line.startswith("#"):
+            k, v = line.split("=", 1)
+            os.environ.setdefault(k.strip(), v.strip())
+
+API_KEY = os.environ["GEMINI_API_KEY"]
 OUT_DIR = Path(__file__).parent.parent / "out" / "딥리서치"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 

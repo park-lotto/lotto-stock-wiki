@@ -16,7 +16,7 @@ if _env.exists():
             k, v = line.split("=", 1)
             os.environ.setdefault(k.strip(), v.strip())
 
-API_KEY = os.environ.get("GEMINI_API_KEY", "REMOVED_API_KEY")
+API_KEY = os.environ["GEMINI_API_KEY"]
 OUT_DIR = Path(__file__).parent.parent / "out" / "딥리서치"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
