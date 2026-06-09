@@ -211,35 +211,35 @@ def run_bingsu(page):
     for idx, pat, base, ext in TARGETS_BINGSU:
         download_one(page, idx, pat, base, ext)
 
-    # 서브폴더: 다양한 코드 → 한국 개별종목 상대강도
+    # 서브폴더: 다양한 코드(idx 0) → 한국 개별종목 상대강도(idx 1)
     try:
         log('  📁 다양한 코드 → 한국 개별종목 상대강도...')
         page.goto(URL['bingsu'], wait_until='networkidle', timeout=30000)
         page.wait_for_timeout(2000)
         items = get_items(page)
-        if 1 < len(items):
-            items[1].click()          # 다양한 코드
+        if 0 < len(items):
+            items[0].click()          # 다양한 코드 (idx 0)
             page.wait_for_timeout(2500)
             items2 = get_items(page)
             if 1 < len(items2):
-                items2[1].click()     # 한국 개별종목 상대강도
+                items2[1].click()     # 한국 개별종목 상대강도 (idx 1)
                 page.wait_for_timeout(2500)
-                download_one(page, 0, '종목상대강도', '한국상대강도', '.xlsx')
+                download_one(page, 1, '종목상대강도데이터', '한국상대강도', '.xlsx')
     except Exception as e:
         log(f'  ⚠️ 한국상대강도 서브폴더 실패: {e}')
 
-    # 서브폴더: 다양한 코드 → 한국 ETF 상대강도 (소라티노 + 한국ETF RS)
+    # 서브폴더: 다양한 코드(idx 0) → 한국 ETF 상대강도(idx 2) → etf상대강도데이터.xlsx(idx 1)
     try:
         log('  📁 다양한 코드 → 한국 ETF 상대강도 (소라티노)...')
         page.goto(URL['bingsu'], wait_until='networkidle', timeout=30000)
         page.wait_for_timeout(2000)
         items = get_items(page)
-        if 1 < len(items):
-            items[1].click()          # 다양한 코드
+        if 0 < len(items):
+            items[0].click()          # 다양한 코드 (idx 0)
             page.wait_for_timeout(2500)
             items2 = get_items(page)
             if 2 < len(items2):
-                items2[2].click()     # 한국 etf 활용한 상대강도 추출
+                items2[2].click()     # 한국 etf 활용한 상대강도 추출 (idx 2)
                 page.wait_for_timeout(2500)
                 download_one(page, 1, 'etf상대강도데이터.xlsx', '소라티노ETF상대강도', '.xlsx')
                 import shutil

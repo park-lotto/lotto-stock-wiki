@@ -1,0 +1,2015 @@
+[
+  {
+    "filename": "2026-06-09_그로스리서치.md",
+    "skip": false,
+    "sector": "반도체",
+    "type": "섹터분석",
+    "stocks": [
+      "인텔",
+      "구글",
+      "엔비디아",
+      "테슬라",
+      "애플"
+    ],
+    "wiki_level": "L5",
+    "key_insights": [
+      "구글, 2028년까지 인텔 파운드리에서 300만개 이상의 TPU 생산 계획",
+      "AI 칩 수요 급증으로 TSMC 생산 능력 부족 심화",
+      "인텔, 미국 정부, 엔비디아, 소프트뱅크 등으로부터 대규모 투자 유치"
+    ],
+    "structural_facts": [
+      "구글, 인텔 파운드리 활용 검토",
+      "엔비디아, 테슬라, 애플도 인텔 검토",
+      "인텔 파운드리 사업 정상화의 핵심 레퍼런스가 될 가능성"
+    ]
+  },
+  {
+    "filename": "2026-06-09_그로스리서치.md",
+    "skip": false,
+    "sector": "기타",
+    "type": "섹터분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "AI 데이터센터 확산으로 전력 및 냉각 문제 심화",
+      "우주 태양광은 장기적으로 에너지, AI, 우주 산업이 결합되는 핵심 테마로 부각"
+    ],
+    "structural_facts": [
+      "일론 머스크, 우주 태양광을 인류 에너지 확장의 다음 단계로 제시",
+      "우주에서 태양 에너지 포획 시 지상 발전소 건설 및 냉각 부담 감소",
+      "우주는 진공 환경을 활용하여 지구보다 열 방출 및 냉각에 유리"
+    ]
+  },
+  {
+    "filename": "2026-06-09_그로스리서치.md",
+    "skip": false,
+    "sector": "반도체",
+    "type": "종목분석",
+    "stocks": [
+      "애플",
+      "구글"
+    ],
+    "wiki_level": "L5",
+    "key_insights": [
+      "애플, WWDC 2026에서 AI 기능 탑재한 차세대 시리 공개",
+      "아이폰에서 챗GPT·제미나이 앱 접속 없이 음성으로 정보 검색, 사진 정리, 일정 확인 등 수행 가능",
+      "애플, 자체 AI 모델 개발 지연 끝에 구글 제미나이 기술 활용"
+    ],
+    "structural_facts": [
+      "애플, 개인 메시지·사진·메모 등 기기 내 데이터 활용하여 사용자 맥락 기반 답변 제공",
+      "온디바이스 AI와 비공개 클라우드를 통해 사용자 데이터 접근·저장 차단 강조",
+      "EU와 중국은 개인정보·규제 이슈로 기능 제공 제한 예정"
+    ]
+  },
+  {
+    "filename": "2026-06-09_다올조선방산.md",
+    "skip": false,
+    "sector": "조선",
+    "type": "섹터분석",
+    "stocks": [
+      "삼성중공업",
+      "대한조선",
+      "HD한국조선해양"
+    ],
+    "wiki_level": "L5",
+    "key_insights": [
+      "삼성중공업, LNG운반선 1척 3855억원 수주, 상선 목표 91% 달성",
+      "삼성중공업, 3조6000억원 규모 FLNG 1기 수주, 해양 부문 연간 목표 54% 달성",
+      "HD한국조선해양, 초대형 가스운반선 2척 수주"
+    ],
+    "structural_facts": [
+      "대한조선, 미 해군함정 정비·보수·유지 시장 진출",
+      "조선업 휴머노이드 스타트업, 한화오션과 실증 진행"
+    ]
+  },
+  {
+    "filename": "2026-06-09_다올조선방산.md",
+    "skip": false,
+    "sector": "방산",
+    "type": "섹터분석",
+    "stocks": [
+      "한화에어로",
+      "현대로템",
+      "LIG넥스원"
+    ],
+    "wiki_level": "L5",
+    "key_insights": [
+      "한화에어로, '산안법 위반' 인정 시 1년간 방산 계약 불가",
+      "현대로템, 우즈벡 2000억대 고속철 추가 수주 가시권",
+      "LIG넥스원, 인도네시아 천궁-II 도입 추진, 구매 의향서 제출"
+    ],
+    "structural_facts": [
+      "방산기술 '재판정' 절차 도입 예정"
+    ]
+  },
+  {
+    "filename": "2026-06-09_다올조선방산.md",
+    "skip": false,
+    "sector": "조선",
+    "type": "섹터분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "올해 2개의 FLNG 수주 달성",
+      "연말까지 Delfin 2호선 등 추가 수주 여부 관심"
+    ],
+    "structural_facts": [
+      "Coral Norte (코랄2) 최종 계약 완료"
+    ]
+  },
+  {
+    "filename": "2026-06-09_대신시황.md",
+    "skip": false,
+    "sector": "매크로",
+    "type": "매크로",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "트럼프, 네타냐후 총리에게 이란과의 독자적 무력 전쟁 시 미국 지원 없을 수 있다고 경고",
+      "중국, 7가지 희토류 수출 제한 중, 특히 디스프로슘·테르뷴 공급 전면 차단",
+      "한국, 엔비디아 차세대 AI 가속기 '베라 루빈' 최우선 공급 합의"
+    ],
+    "structural_facts": [
+      "트럼프, 토드 블랜치 법무장관 대행 지명",
+      "일본, 호주 희토류 광산 지분 취득 등 활로 모색 중",
+      "이재명 대통령, 부동산 가격 상승 압력 누르고 공공 임대 주택 공급 확대 및 보유세 개편 예고",
+      "영국, 독일, 프랑스 정상, 우크라이나-러시아 직접 대화 지지 공동 성명 발표",
+      "일본 1분기 GDP(QoQ) 0.5%, 연간 환산 GDP 1.8%"
+    ]
+  },
+  {
+    "filename": "2026-06-09_대신시황.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "시황",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "국내 증시 KOSPI -6.50% 하락, KOSDAQ -7.63% 하락",
+      "원/달러 환율 1539.3원 기록"
+    ],
+    "structural_facts": [
+      "올해 세 번째 서킷 브레이커 발동",
+      "젠슨 황 발언 영향력 제한"
+    ]
+  },
+  {
+    "filename": "2026-06-09_독학주식첵터정리.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "시황",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "중동 리스크 완화, 유가 안정세 유입",
+      "반도체 중심 기술적 반등, 필라델피아 반도체 +5.61%",
+      "애플 WWDC AI 전략 실망감, 수요일 CPI 발표 앞둔 국채 금리 상승 부담"
+    ],
+    "structural_facts": [
+      "코스피 77% 상승 (1.1~6.8), 코스닥 -1% 하락",
+      "이란-이스라엘 교전 잠정 중단",
+      "미국 증시 혼조 마감 (다우 -0.16%, 나스닥 +0.86%, S&P500 +0.30%)"
+    ]
+  },
+  {
+    "filename": "2026-06-09_독학주식첵터정리.md",
+    "skip": false,
+    "sector": "반도체",
+    "type": "섹터분석",
+    "stocks": [
+      "인텔",
+      "마이크론",
+      "KLA",
+      "AMAT",
+      "엔비디아"
+    ],
+    "wiki_level": "L5",
+    "key_insights": [
+      "과매도 인식 및 글로벌 AI 투자 사이클 건재 확인으로 반도체 섹터 폭등세 주도",
+      "인텔 +11.19%, 마이크론 +9.87%, KLA +9.27%, AMAT +8.64%, 엔비디아 +1.73%"
+    ],
+    "structural_facts": [
+      "반도체/장비·스토리지 섹터 강세"
+    ]
+  },
+  {
+    "filename": "2026-06-09_독학주식첵터정리.md",
+    "skip": false,
+    "sector": "통신",
+    "type": "섹터분석",
+    "stocks": [
+      "라이콤",
+      "오이솔루션",
+      "이노인스트루먼트",
+      "성호전자",
+      "케이엠더블유",
+      "대한광통신",
+      "광전자",
+      "RFHIC"
+    ],
+    "wiki_level": "L5",
+    "key_insights": [
+      "코닝, 아마존과 수십억 달러 규모 광섬유 공급 계약 체결 소식에 밸류체인 동반 급등"
+    ],
+    "structural_facts": [
+      "광통신/인프라 섹터 강세"
+    ]
+  },
+  {
+    "filename": "2026-06-09_독학주식첵터정리.md",
+    "skip": false,
+    "sector": "로봇",
+    "type": "섹터분석",
+    "stocks": [
+      "레인보우로보틱스",
+      "현대무벡스",
+      "로보스타",
+      "로보티즈",
+      "두산로보틱스",
+      "뉴로메카",
+      "클로봇",
+      "유일로보틱스",
+      "씨메스로보틱스"
+    ],
+    "wiki_level": "L5",
+    "key_insights": [],
+    "structural_facts": [
+      "로봇 관련주 섹터 관심"
+    ]
+  },
+  {
+    "filename": "2026-06-09_독학주식첵터정리.md",
+    "skip": false,
+    "sector": "반도체",
+    "type": "섹터분석",
+    "stocks": [
+      "LG이노텍",
+      "인텍플러스",
+      "기가비스",
+      "티엘비",
+      "이수페타시스",
+      "대덕전자",
+      "심텍",
+      "코리아써키트",
+      "삼성전기",
+      "아모텍",
+      "삼화콘텐서",
+      "대주전자재료",
+      "코스모신소재",
+      "지아이에스"
+    ],
+    "wiki_level": "L5",
+    "key_insights": [],
+    "structural_facts": [
+      "기판/MLCC 섹터 관심"
+    ]
+  },
+  {
+    "filename": "2026-06-09_독학주식첵터정리.md",
+    "skip": false,
+    "sector": "전력",
+    "type": "섹터분석",
+    "stocks": [
+      "대원전선",
+      "HD현대일렉트릭",
+      "대한전선",
+      "LS ELECTRIC",
+      "LS마린솔루션",
+      "LS에코에너지",
+      "산일전기",
+      "세명전기",
+      "일진전기",
+      "가온전선",
+      "제일일렉트릭",
+      "제룡산업",
+      "서전기전",
+      "kbi메탈",
+      "선도전기",
+      "티씨머티리얼즈"
+    ],
+    "wiki_level": "L5",
+    "key_insights": [],
+    "structural_facts": [
+      "전기전력 섹터 관심"
+    ]
+  },
+  {
+    "filename": "2026-06-09_리포트요약.md",
+    "skip": false,
+    "sector": "기타",
+    "type": "리포트",
+    "stocks": [
+      "성호전자"
+    ],
+    "wiki_level": "L5",
+    "key_insights": [
+      "성호전자, ADS테크 인수를 통해 광 I/O 시대 핵심인 액티브 얼라인 장비 회사로 변모",
+      "2028년부터 본격 개화 예상되는 스케일업 광 시장 성장 핵심 투자 포인트"
+    ],
+    "structural_facts": [
+      "작성일: 2026.06.09, 작성자: 대신증권 (리서치센터), 작성일 주가: 41,700원"
+    ]
+  },
+  {
+    "filename": "2026-06-09_리포트요약.md",
+    "skip": false,
+    "sector": "기타",
+    "type": "리포트",
+    "stocks": [
+      "NAVER"
+    ],
+    "wiki_level": "L5",
+    "key_insights": [
+      "NAVER, 엔비디아와 AI 팩토리 사업 진출로 새로운 성장 동력 확보",
+      "투자의견 '매수' 유지, AI 사업 초기 실적 반영하여 목표주가 400,000원으로 상향 (하나증권)",
+      "글로벌 AI 팩토리 사업 본격화로 중장기 성장 동력 확보, 5년 후 매출 20조 원 목표 제시 (KB증권)"
+    ],
+    "structural_facts": [
+      "작성일: 2026.06.09, 작성자: 하나증권 (이준호), 목표주가: 400,000원 (상향), 작성일 주가: 279,000원",
+      "작성일: 2026.06.08, 작성자: KB증권 (이지은), 목표주가: 330,000원 (상향), 작성일 주가: 279,000원"
+    ]
+  },
+  {
+    "filename": "2026-06-09_리포트요약.md",
+    "skip": false,
+    "sector": "기타",
+    "type": "리포트",
+    "stocks": [
+      "NAVER"
+    ],
+    "wiki_level": "L5",
+    "key_insights": [
+      "NAVER, 신규 AI 팩토리 사업 가치 11.1조 원 반영",
+      "투자의견 'Outperform'으로 하향 조정 (키움증권)"
+    ],
+    "structural_facts": [
+      "작성일: 2026.06.09, 작성자: 키움증권 (리서치센터), 목표주가: 320,000원 (상향), 작성일 주가: 279,000원"
+    ]
+  },
+  {
+    "filename": "2026-06-09_리포트요약.md",
+    "skip": false,
+    "sector": "반도체",
+    "type": "리포트",
+    "stocks": [
+      "SK하이닉스"
+    ],
+    "wiki_level": "L5",
+    "key_insights": [
+      "AI 에이전트 시장 확산에 따른 메모리 수요 가속 국면 진입, 2027년 공급 부족 심화 전망",
+      "투자의견 'Buy'와 목표주가 3,800,000원 유지, 최근 주가 조정은 매수 기회로 판단 (KB증권)"
+    ],
+    "structural_facts": [
+      "작성일: 2026.06.09, 작성자: KB증권 (김동원), 목표주가: 3,800,000원 (유지), 작성일 주가: 1,911,000원"
+    ]
+  },
+  {
+    "filename": "2026-06-09_리포트요약.md",
+    "skip": false,
+    "sector": "바이오",
+    "type": "리포트",
+    "stocks": [
+      "제이피아이헬스케어"
+    ],
+    "wiki_level": "L5",
+    "key_insights": [
+      "제이피아이헬스케어, 글로벌 1위 영상의료기기 부품 '그리드' 업체",
+      "하반기 러시아향 신규 계약 및 고부가가치 제품 출시로 실적 회복 및 외형 확장 기대"
+    ],
+    "structural_facts": [
+      "작성일: 2026.06.09, 작성자: 키움증권 (허혜민), 작성일 주가: 8,350원"
+    ]
+  },
+  {
+    "filename": "2026-06-09_미래시황.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "시황",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "미국 증시 혼조 마감 (다우 -0.16%, 나스닥 +0.86%, S&P500 +0.30%, 러셀2000 +0.77%)",
+      "이란-이스라엘 교전 잠정 중단으로 유가 진정세",
+      "반도체주 급락 멈추고 반등"
+    ],
+    "structural_facts": [
+      "MSCI 한국지수 ETF +5.96%",
+      "필라델피아 반도체 +5.61%",
+      "달러인덱스 -0.09%",
+      "WTI +0.84%, 브렌트유 +1.19%",
+      "금 -0.04%, 은 -0.75%",
+      "미국 10년물 국채 금리 +3.2bp 상승"
+    ]
+  },
+  {
+    "filename": "2026-06-09_미래시황.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "시황",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "미국 증시 지수별 혼조 마감",
+      "이란과 이스라엘 교전 중단 발표로 긴장 완화",
+      "반도체주 반등이 긍정적 영향"
+    ],
+    "structural_facts": [
+      "다우존스 산업 평균 지수 -0.16%",
+      "S&P500지수 +0.30%",
+      "나스닥지수 +0.86%",
+      "러셀2천지수 +0.77%",
+      "VIX 변동성지수 -12.04%"
+    ]
+  },
+  {
+    "filename": "2026-06-09_삼성반도체.md",
+    "skip": false,
+    "sector": "반도체",
+    "type": "섹터분석",
+    "stocks": [
+      "인텔",
+      "구글",
+      "엔비디아",
+      "브로드컴"
+    ],
+    "wiki_level": "L5",
+    "key_insights": [
+      "AI 투자 사이클은 아직 전반전",
+      "SOCAMM 탑재량 축소는 엔비디아의 불가피한 선택이며 공급 부족의 증거",
+      "이번 사이클의 본질은 AI이며, 스마트폰 수요 부진이나 중국 메모리 증설 영향은 제한적"
+    ],
+    "structural_facts": [
+      "펀더멘털 견고, Agent 사용자 증가, 빅테크 AI 투자 확대 의지 확고, 메모리 공급 부족 해소 요원",
+      "주가 변동성 확대는 주식 시장 구조 변화와 단기 과열된 기대감 때문",
+      "구글과 메타의 유상증자는 AI 투자 사이클이 아직 전반전임을 의미",
+      "브로드컴은 기대가 앞선 케이스이며, 방향이 바뀌지 않았다면 조정은 일시적"
+    ]
+  },
+  {
+    "filename": "2026-06-09_신한리서치.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "시황",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "정부, 포용금융 확장 요구에 은행권 '노인 마통' 출시",
+      "금융당국, 치솟은 환율에 은행권 소집, 시장교란 검사 및 엄정 조치 예고",
+      "보험사 자본성증권 발행 90% 급감",
+      "원화 스테이블코인 시장 3200억 달러 규모 열릴 전망"
+    ],
+    "structural_facts": [
+      "기업 대출 늘리는 은행들, 1분기 산업별 대출금 35.6조 증가",
+      "은행들, 퇴직연금 ETF 유치 경쟁",
+      "한화생명, RSU 파장",
+      "숏 감마 공포, 금리 상승 시 불안",
+      "KDB생명·예별손보 새 주인 찾나",
+      "미래에셋, 싱가포르 대형 증권사와 외국인 통합계좌 체결",
+      "산은, 민간 은행·증권사와 경쟁하며 M&A 인수금융 2배 증가",
+      "잇따른 유증 증권사들, 신용공여 한도 확대 가능성",
+      "캐피털사, 메리츠·한화도 노린다",
+      "환율 급등 못 따라가는 USDT, 거래 위축 및 역프리미엄 발생"
+    ]
+  },
+  {
+    "filename": "2026-06-09_신한리서치.md",
+    "skip": false,
+    "sector": "반도체",
+    "type": "섹터분석",
+    "stocks": [
+      "SK하이닉스",
+      "엔비디아",
+      "삼성전자",
+      "인텔",
+      "한미반도체"
+    ],
+    "wiki_level": "L5",
+    "key_insights": [
+      "SK하이닉스, 엔비디아와 AI 팩토리용 차세대 메모리 공동 개발",
+      "전영현 삼성전자 부회장, 젠슨 황 만나 HBM4·파운드리 등 협력 논의",
+      "인텔, 구글 TPU 300만장 생산 소식으로 TSMC 독주 균열",
+      "한미반도체, SK하이닉스와 HBM4용 TC본더 442억원 규모 공급 계약 체결"
+    ],
+    "structural_facts": [
+      "반도체/장비 섹터 강세"
+    ]
+  },
+  {
+    "filename": "2026-06-09_신한리서치.md",
+    "skip": false,
+    "sector": "디스플레이",
+    "type": "섹터분석",
+    "stocks": [
+      "삼성디스플레이",
+      "LG디스플레이",
+      "SK디스플레이"
+    ],
+    "wiki_level": "L5",
+    "key_insights": [
+      "삼성·SK, 청색 OLED 소재 특허전에서 SK 계열사 SFC에 1억원 배상 판결",
+      "삼성, 게이밍 OLED 경쟁에서 고주사율 강점",
+      "LG디스플레이, 베트남 하이퐁시와 투자협력 MOU 체결",
+      "LG디스플레이, 차량용 디스플레이 기술로 시장 변동성 대응, 3세대 탠덤 OLED 강점",
+      "갤럭시Z 폴드8, 와이드 화면 탑재 및 선명한 화면 제공",
+      "삼성 '초격차' vs LG '차별화', 500조 OLED 경쟁 심화"
+    ],
+    "structural_facts": [
+      "디스플레이 섹터 동향"
+    ]
+  },
+  {
+    "filename": "2026-06-09_요약하는 고잉.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "시황",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "코스닥, 코로나 때 한 달간 -38% 하락 대비 이번 9거래일간 -24% 하락",
+      "RSI 과매도 구간 진입, 하락 거의 끝까지 왔다는 판단"
+    ],
+    "structural_facts": [
+      "글로벌 증시 상승률 (1.1~6.8): 코스피 77%, 대만 55%, 니케이 27%, 나스닥 12%",
+      "코스닥 -1%, 홍콩 -4%, 베트남 -4%"
+    ]
+  },
+  {
+    "filename": "2026-06-09_요약하는 고잉.md",
+    "skip": false,
+    "sector": "기타",
+    "type": "기타",
+    "stocks": [],
+    "wiki_level": "L6",
+    "key_insights": [
+      "5천만원 빌려달라는 요구 사건 발생, 친분 쌓은 후 접근하여 금전 요구",
+      "피해 입는 사람 없기를 바라며 공유"
+    ],
+    "structural_facts": [
+      "단톡방 링크를 이용해 사람들을 데리고 간 후 포트 봐준다고 접근",
+      "친분 쌓은 후 5천만원 빌려달라고 수차례 요구",
+      "대화 내용 및 캡처 화면 확보"
+    ]
+  },
+  {
+    "filename": "2026-06-09_요약하는 고잉.md",
+    "skip": false,
+    "sector": "반도체",
+    "type": "섹터분석",
+    "stocks": [
+      "네이버",
+      "SK하이닉스",
+      "SK텔레콤",
+      "LG전자",
+      "LG씨엔에스",
+      "LG유플러스",
+      "LG이노텍",
+      "현대차",
+      "두산",
+      "두산로보틱스",
+      "두산퓨얼셀",
+      "두산에너빌리티",
+      "삼성전자"
+    ],
+    "wiki_level": "L5",
+    "key_insights": [
+      "엔비디아, 한국과 AI 동맹 구축",
+      "네이버: 글로벌 AI팩토리 구축 공동 진출",
+      "SK그룹: 메모리 기술 협력, AI 팩토리 구축",
+      "LG그룹: 로보틱스, AI 데이터센터, 모빌리티 협력",
+      "현대차: 피지컬AI, 자율주행, 새만금 AI밸리 협력",
+      "두산그룹: 로보틱스, 에너지 및 첨단소재 사업 협력",
+      "삼성전자: HBM4 공급, HBM5 개발, 파운드리 협력"
+    ],
+    "structural_facts": [
+      "엔비디아, 한국을 아시아 AI 인프라 허브로 동맹 관계 구축"
+    ]
+  },
+  {
+    "filename": "2026-06-09_요약하는 고잉.md",
+    "skip": false,
+    "sector": "반도체",
+    "type": "섹터분석",
+    "stocks": [
+      "엔비디아",
+      "네이버",
+      "SK하이닉스",
+      "LG",
+      "현대차",
+      "두산",
+      "삼성전자"
+    ],
+    "wiki_level": "L5",
+    "key_insights": [
+      "엔비디아와 한국은 서로 이용하기 좋은 관계",
+      "한국이 잘하는 것을 살리면 더 좋은 위치에 갈 수 있음"
+    ],
+    "structural_facts": [
+      "환율 우려 및 불안정한 면 존재",
+      "월요일은 넋 놓고 있어야 했던 장세, 화요일 흐름 따라가야 함"
+    ]
+  },
+  {
+    "filename": "2026-06-09_유안타시황.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "시황",
+    "stocks": [
+      "삼성전자",
+      "SK하이닉스"
+    ],
+    "wiki_level": "L5",
+    "key_insights": [
+      "고용보고서, 스페이스X 상장, 환율 변동성 등 단기 충격 악재 작용 가능성",
+      "반도체 포함 호실적주 이익 주도력 여전히 강력",
+      "과거 지수 8% 이상 급락 이후 주가 V자 반등 사례 고려 시 투매보다는 관망 후 낙폭 과대 실적주 비중 확대 시점 고려"
+    ],
+    "structural_facts": [
+      "KOSPI, KOSDAQ 장중 8% 이상 급락, 서킷브레이커 및 매도 사이드카 발동",
+      "미국 주식시장 급락 (S&P500 -2.6%, NASDAQ -4.8%, 필라델피아 반도체지수 -10.3%)",
+      "5월 비농가고용 17.2만명 급증, 실업률 4.3%",
+      "반도체 노이즈 (브로드컴 가이던스 부진, 엔비디아 SOCAMM 용량 다운그레이드 우려)",
+      "원/달러 환율 1,550원 근처 등락",
+      "KOSPI 12개월 선행 PER 7.1배 수준",
+      "삼성전자, SK하이닉스 장중 주가 30만원, 200만원선에서 지지받는 상황"
+    ]
+  },
+  {
+    "filename": "2026-06-09_유안타시황.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "시황",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "고용보고서, 스페이스X 상장, 환율 변동성 등 단기 충격 악재 작용 가능성",
+      "반도체 포함 호실적주 이익 주도력 여전히 강력",
+      "과거 지수 8% 이상 급락 이후 주가 V자 반등 사례 고려 시 투매보다는 관망 후 낙폭 과대 실적주 비중 확대 시점 고려"
+    ],
+    "structural_facts": [
+      "KOSPI 7,484pt(-8.3%), KOSDAQ 911pt(-9.1%) 마감",
+      "미국 주식시장 급락 (S&P500 -2.6%, NASDAQ -4.8%, 필라델피아 반도체지수 -10.3%)",
+      "예상치 크게 상회한 비농가 고용 (+17.2만, 예상치 8.5만)",
+      "외국인 순매도 규모 확연히 줄어듦"
+    ]
+  },
+  {
+    "filename": "2026-06-09_잠실개미고급수집.md",
+    "skip": false,
+    "sector": "반도체",
+    "type": "리포트",
+    "stocks": [
+      "삼성전자",
+      "SK하이닉스",
+      "마이크론"
+    ],
+    "wiki_level": "L5",
+    "key_insights": [
+      "2026년 6월 8일 기준 메모리 3사 12MF P/E: 삼성전자 5.95X, SK하이닉스 5.60X, 마이크론 9.01X (Bloomberg consensus)",
+      "VR / NVL72 랙 한 대의 비용 추정치: 약 910만 달러 (언론 보도 800만 달러 상회)",
+      "2027년 HBM4 가격 예상치: GB당 53달러 (현재 약 16.6달러 가정 시)",
+      "메모리 및 스토리지 비용: 약 320만 달러 근접 예상 (과거 200만 달러 대비 상승)",
+      "Nvidia Vera Rubin SO-CAMM 용량 축소 원인: LPDDR5X 공급 부족 (비용 상승 아님)"
+    ],
+    "structural_facts": [
+      "Google, Intel로부터 3백만 개 이상의 TPU 주문",
+      "메모리 3사 12MF P/E 업데이트 (06/08)",
+      "VR / NVL72 랙 비용 및 HBM 가격 전망",
+      "Nvidia Vera Rubin SO-CAMM 용량 축소 및 LPDDR5X 공급 부족 이슈"
+    ]
+  },
+  {
+    "filename": "2026-06-09_키움시황.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "시황",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "6월 8일 코스피 8.3%, 코스닥 9.1% 폭락, 올해 3번째 서킷브레이커 발동",
+      "이번 조정은 펀더멘털발 조정이 아닌, 주도주 쏠림 및 레벨 부담으로 인한 조정 성격 강함",
+      "코스피 7,400pt 이하에서 반도체, MLCC, 증권, 유통, 방산, 조선 등 비중 확대 권고",
+      "미국 증시 반도체주 중심 반등 (마이크론 +9.9%)",
+      "연초 이후 '국내 반도체주 상승 → 미국 반도체주 상승 → 다음날 국내 반도체주 상승' 긍정적 루프에서 '금요일 국내 급락 → 미국 급락 → 월요일 국내 급락' 부정적 루프 일시 형성",
+      "미-이란 군사 공격 중단 소식, 뉴욕 연은 기대인플레이션 둔화 (3.5%) 등 매크로 불확실성 완화"
+    ],
+    "structural_facts": [
+      "코스피 및 코스닥 서킷브레이커 발동 및 주가 회복력 패턴",
+      "6/9 이슈 분석: 코스피 폭락 코멘트 (속도 문제, 펀더멘털 이상 없음)",
+      "6/9 장 시작 전 생각: 안도의 반등 (미국 증시 및 반도체주 흐름)",
+      "과거 서킷브레이커 발동 후 주식시장 주가 회복력"
+    ]
+  },
+  {
+    "filename": "2026-06-09_태린이아빠 주식투자.md",
+    "skip": false,
+    "sector": "운송",
+    "type": "섹터분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "미국 물류 업황 바닥 치고 도약 전망, IYT ETF (철도+트럭+우버+항공) 투자 고려",
+      "트럭 운송 부문 (비중 22%) 하반기 단가 인상과 함께 턴어라운드 확정 전망",
+      "미국 테크 외 업종 (금융, 운송, 헬스케어) 견고, 52주 신고가 움직임",
+      "피어앤그리드 오실레이터 바닥권 진입 신호",
+      "포트폴리오 섹터 분산 (테크, 헬스케어, 소비재, 산업재, 운송, 금융)",
+      "MDD -15% 구간에서 포트폴리오 베타 높이는 전략 고려"
+    ],
+    "structural_facts": [
+      "미국 트럭 운송 부문 턴어라운드 전망 및 IYT ETF 소개",
+      "미국 비테크 업종 투자 확대 및 포트폴리오 구성 전략",
+      "중동 우려 완화 및 반도체 반등세 속 시장 흐름 분석"
+    ]
+  },
+  {
+    "filename": "2026-06-09_하나반도체.md",
+    "skip": false,
+    "sector": "반도체",
+    "type": "시황",
+    "stocks": [
+      "Micron",
+      "Intel"
+    ],
+    "wiki_level": "L5",
+    "key_insights": [
+      "6월 9일 필라델피아 반도체 지수 5.6% 상승 마감",
+      "중동 갈등 마무리 기대감에 3대 지수 모두 상승",
+      "낙폭이 컸던 Micron, Intel 주가 큰 폭 상승",
+      "AI 관련 메모리 및 CPU 수요 견고, 매크로 및 반도체 우려 재차 회복"
+    ],
+    "structural_facts": [
+      "06/09 필라델피아 반도체 지수 코멘트",
+      "Micron, Intel 주가 상승 및 AI 관련 수요 견조"
+    ]
+  },
+  {
+    "filename": "2026-06-09_하나차이나.md",
+    "skip": false,
+    "sector": "전력",
+    "type": "섹터분석",
+    "stocks": [
+      "Wolfspeed",
+      "GE Aerospace"
+    ],
+    "wiki_level": "L5",
+    "key_insights": [
+      "AI와 전기화로 전력 수요 증가, GE Aerospace와 Wolfspeed 고전압 실리콘카바이드(SiC) 전략 협력 체결",
+      "10kV급 SiC 전력 모듈 표준화 공동 추진, AI 데이터센터, 산업 전기화, 항공우주 및 방산 시장 목표",
+      "고품질 SiC 기판 공급 부족 및 가격 큰 폭 상승, 주요 기판 업체 가동률 90% 이상",
+      "2025년 4분기 이후 SiC 웨이퍼 신규 생산능력 증설 속도 둔화, 자동차, 태양광·ESS, 충전 인프라 등 핵심 응용 시장 성장세 유지",
+      "소비자 전자기기 및 AI 신규 응용 분야 수요 확대, 완성품 업체 재고 축적 수요 증가로 SiC 산업 호황 강화",
+      "차량용 메모리 칩 가격 최근 3개월간 최대 180% 급등",
+      "중국 10개 이상 전기차 업체 차량 판매가 인상 또는 할인 축소 시작"
+    ],
+    "structural_facts": [
+      "GE Aerospace와 Wolfspeed의 고전압 SiC 전략 협력 체결",
+      "SiC 산업 전반 수요·공급 호황 및 가격 상승",
+      "AI로 인한 메모리 생산능력 잠식 및 자동차 칩 가격 급등",
+      "중국 신에너지차 업계 집단 가격 인상 시작"
+    ]
+  },
+  {
+    "filename": "2026-06-09_한투글로벌.md",
+    "skip": false,
+    "sector": "기타",
+    "type": "리포트",
+    "stocks": [
+      "OpenAI",
+      "Apple"
+    ],
+    "wiki_level": "L5",
+    "key_insights": [
+      "OpenAI, 미국 SEC에 비공개 IPO 신청서 제출, 올해 4분기 상장 가능성",
+      "OpenAI 기업가치 약 8,520억 달러 평가",
+      "애플 WWDC 2026에서 차세대 AI 플랫폼 및 'Siri AI' 공개",
+      "새로운 Siri AI, 화면 이해, 웹 검색, 이전 대화 기억, 개인 맥락 활용 가능",
+      "Siri 독립형 AI 앱으로 제공, ChatGPT 등과 경쟁",
+      "애플 AI 기능 대부분 기기 내 또는 'Private Cloud Compute' 처리로 개인정보 보호 강조",
+      "Siri AI 공개에도 불구하고 애플 주가 -1.9% 하락"
+    ],
+    "structural_facts": [
+      "OpenAI 비공개 IPO 신청서 제출",
+      "애플 차세대 AI 플랫폼 및 Siri AI 공개 내용"
+    ]
+  },
+  {
+    "filename": "2026-06-09_한화철강.md",
+    "skip": false,
+    "sector": "기타",
+    "type": "리포트",
+    "stocks": [
+      "LS MnM",
+      "고려아연",
+      "풍산"
+    ],
+    "wiki_level": "L5",
+    "key_insights": [
+      "구리 가격 강세 본질: 정제구리 총량 부족보다 광산 원료 병목 및 재고 위치 변화",
+      "2026년 정제구리 시장 약 9만 6,000톤 공급 우위 전망에도 가격 강세 유지",
+      "주요 산지 (인도네시아, DRC, 칠레) 광산 생산 차질 지속",
+      "2026년 연간 TC 벤치마크 톤당 0달러 타결, 현물 TC 마이너스권 진입",
+      "주요 거래소 재고는 2003년 이후 최고 수준이나 가격 강세 지속 (미국 정제구리 관세 우려 비축, COMEX 중심 재고 축적)",
+      "전통 건설 수요 약하나, 전력망 교체 및 AI 데이터센터 중심 전력 인프라 수요 부상",
+      "구리 가격 자체보다 밸류체인별 마진 구조 근거 투자 시점 (제련, 전선 밸류체인 우위)",
+      "영국 크라운 에스테이트, 1.5GW 해상풍력 부지 재입찰 (2026년 7월 시작)",
+      "Aclara Resources, 칠레 첫 희토류 광산 개발 위해 미국 DFC와 협의 중 (2028년 중희토류 생산 개시 목표)"
+    ],
+    "structural_facts": [
+      "구리 가격 강세 요인 분석 및 밸류체인별 투자 전략",
+      "영국 해상풍력 부지 재입찰 계획",
+      "Aclara Resources의 칠레 희토류 광산 개발 및 미국 DFC 협의"
+    ]
+  },
+  {
+    "filename": "2026-06-09_0700_(매크로 따라잡기) 견조한 미국 고용, 높아진 환율 변...md",
+    "skip": false,
+    "sector": "매크로",
+    "type": "매크로",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "견조한 미국 고용 지표 발표",
+      "환율 변동성 확대 가능성 시사"
+    ],
+    "structural_facts": [],
+    "skip_reason": ""
+  },
+  {
+    "filename": "2026-06-09_0700_0606, Kiwoom Morning Letter.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "매크로",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "6월 6일자 모닝레터 내용 요약"
+    ],
+    "structural_facts": [],
+    "skip_reason": ""
+  },
+  {
+    "filename": "2026-06-09_0700_0608(월) - 과열 청구서.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "리포트",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "6월 8일자 시장 분석",
+      "과열 가능성에 대한 언급"
+    ],
+    "structural_facts": [],
+    "skip_reason": ""
+  },
+  {
+    "filename": "2026-06-09_0700_2026년 6월 둘째 주 반도체 Weekly.md",
+    "skip": false,
+    "sector": "반도체",
+    "type": "섹터분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "2026년 6월 둘째 주 반도체 산업 동향 분석"
+    ],
+    "structural_facts": [],
+    "skip_reason": ""
+  },
+  {
+    "filename": "2026-06-09_0700_5월 미국 고용 부정할 수 없는 견고함.md",
+    "skip": true,
+    "sector": "매크로",
+    "type": "매크로",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "5월 미국 고용 지표의 견고함 강조"
+    ],
+    "structural_facts": [],
+    "skip_reason": "파일 1과 중복되는 내용으로 판단됨. 첫 번째 파일에서 이미 미국 고용에 대한 언급이 있었음."
+  },
+  {
+    "filename": "2026-06-09_0700_5월 미국 고용 자세히 보면 약하다.md",
+    "skip": true,
+    "sector": "매크로",
+    "type": "매크로",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "5월 미국 고용 지표의 이면 분석 및 약점 지적"
+    ],
+    "structural_facts": [],
+    "skip_reason": "파일 1과 중복되는 내용으로 판단됨. 첫 번째 파일에서 이미 미국 고용에 대한 언급이 있었음."
+  },
+  {
+    "filename": "2026-06-09_0700_5월 미국 고용 표면의 안정, 깊어진 꼬리 위험.md",
+    "skip": true,
+    "sector": "매크로",
+    "type": "매크로",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "5월 미국 고용 지표의 표면적 안정성과 잠재적 위험 분석"
+    ],
+    "structural_facts": [],
+    "skip_reason": "파일 1과 중복되는 내용으로 판단됨. 첫 번째 파일에서 이미 미국 고용에 대한 언급이 있었음."
+  },
+  {
+    "filename": "2026-06-09_0700_[Conviction Call] AI반도체 밸류체인 금리 발작(Tant...md",
+    "skip": false,
+    "sector": "반도체",
+    "type": "투자정보",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "AI 반도체 밸류체인 관련 투자 전략",
+      "금리 변동성(Tantrum)에 대한 분석"
+    ],
+    "structural_facts": [],
+    "skip_reason": ""
+  },
+  {
+    "filename": "2026-06-09_0700_[Econ Snapshot] 미국 5월 비농업 고용 주도 업종 분...md",
+    "skip": true,
+    "sector": "매크로",
+    "type": "매크로",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "미국 5월 비농업 고용 지표의 주도 업종 분석"
+    ],
+    "structural_facts": [],
+    "skip_reason": "파일 1과 중복되는 내용으로 판단됨. 첫 번째 파일에서 이미 미국 고용에 대한 언급이 있었음."
+  },
+  {
+    "filename": "2026-06-09_0700_[Morning Brief] 반도체 업종 급락, 나스닥 중심 미 ...md",
+    "skip": false,
+    "sector": "반도체",
+    "type": "시황",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "반도체 업종 급락 현상 분석",
+      "나스닥 중심 미국 증시 동향"
+    ],
+    "structural_facts": [],
+    "skip_reason": ""
+  },
+  {
+    "filename": "2026-06-09_0700_[Quant Comment] 국내외 주간 이익 동향 체크.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "리포트",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "국내외 주간 이익 동향 체크"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_[디지털자산] 디지털자산 Weekly 2026.06.05.md",
+    "skip": false,
+    "sector": "기타",
+    "type": "리포트",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "디지털자산 Weekly 2026.06.05"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_[마켓 준클리] 금리는 시장을 부러뜨릴 수 없다.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "리포트",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "금리는 시장을 부러뜨릴 수 없다"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_[장중 시황] 과거 일일 8% 이상 지수가 빠졌을 때를 ....md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "시황",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "과거 일일 8% 이상 지수 하락 시점 분석"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_[주간 퀀틴전시 플랜] 이번에도 기회일까 핵심은 펀....md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "리포트",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "이번에도 기회일까? 핵심은 펀더멘털"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_[주간 파생시황] 2026년 6월 1일~4일.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "리포트",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "주간 파생시황 (2026년 6월 1일~4일)"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_ADA2026; 주목해서 볼 결과.md",
+    "skip": false,
+    "sector": "기타",
+    "type": "리포트",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "ADA2026; 주목해서 볼 결과"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_CEO-애널리스트 미팅 후기 전 부문 차별화 ....md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "종목분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "CEO-애널리스트 미팅 후기: 전 부문 차별화"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_Daily Market Digest (6월 8일).md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "시황",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "Daily Market Digest (6월 8일)"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_Daily 신한생각 (6월 8일).md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "시황",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "Daily 신한생각 (6월 8일)"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_Kiwoom ETF Weekly (0608).md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "리포트",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "2026년 6월 8일 기준 키움증권 ETF 주간 리포트"
+    ],
+    "structural_facts": [],
+    "skip_reason": ""
+  },
+  {
+    "filename": "2026-06-09_0700_LO 가이던스 달성, 그러나 아직 몇 발 더 남...md",
+    "skip": false,
+    "sector": "기타",
+    "type": "종목분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "L/O 가이던스 달성 및 추가적인 성장 가능성 시사"
+    ],
+    "structural_facts": [],
+    "skip_reason": ""
+  },
+  {
+    "filename": "2026-06-09_0700_Next Energy(Power & Battery Weekly) - Spac...md",
+    "skip": false,
+    "sector": "전력",
+    "type": "산업분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "차주 전력 및 배터리 산업 주간 동향 분석"
+    ],
+    "structural_facts": [],
+    "skip_reason": ""
+  },
+  {
+    "filename": "2026-06-09_0700_Re-NEWable Weekly [6월 2주차].md",
+    "skip": false,
+    "sector": "전력",
+    "type": "산업분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "6월 2주차 신재생에너지 산업 주간 동향 분석"
+    ],
+    "structural_facts": [],
+    "skip_reason": ""
+  },
+  {
+    "filename": "2026-06-09_0700_ROE와 RoRWA의 동반 개선.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "산업분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "ROE와 RoRWA의 동반 개선 추세 분석"
+    ],
+    "structural_facts": [],
+    "skip_reason": ""
+  },
+  {
+    "filename": "2026-06-09_0700_SCFI 전쟁 이후 두 배 넘게 상승.md",
+    "skip": false,
+    "sector": "기타",
+    "type": "종목분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "SCFI 전쟁 이후 관련 종목의 두 배 이상 상승 분석"
+    ],
+    "structural_facts": [],
+    "skip_reason": ""
+  },
+  {
+    "filename": "2026-06-09_0700_SGF 2026 리뷰. 시프트업NC 신작 정보 공개.md",
+    "skip": false,
+    "sector": "기타",
+    "type": "산업분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "SGF 2026 리뷰 및 시프트업/NC 신작 정보 공개 내용 포함"
+    ],
+    "structural_facts": [],
+    "skip_reason": ""
+  },
+  {
+    "filename": "2026-06-09_0700_SK증권 Global Carbon Market Daily_260608.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "시황정보",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "2026년 6월 8일 글로벌 탄소 시장 일일 시황 정보"
+    ],
+    "structural_facts": [],
+    "skip_reason": ""
+  },
+  {
+    "filename": "2026-06-09_0700_Yuanta Morning Snapshot (26.06.08).md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "시황정보",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "2026년 6월 8일 유안타증권 모닝 스냅샷"
+    ],
+    "structural_facts": [],
+    "skip_reason": ""
+  },
+  {
+    "filename": "2026-06-09_0700_건설부동산 Weekly - 낮아진 밸류에이션 부...md",
+    "skip": false,
+    "sector": "기타",
+    "type": "산업분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "건설/부동산 산업의 낮아진 밸류에이션 관련 분석"
+    ],
+    "structural_facts": [],
+    "skip_reason": ""
+  },
+  {
+    "filename": "2026-06-09_0700_경제 - AI로 분석한 케빈 워시, 그는 정말 매인가.md",
+    "skip": false,
+    "sector": "매크로",
+    "type": "경제분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "AI 분석을 통해 케빈 워시의 경제 정책 방향을 분석함."
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_고삐 풀린 원화, 잡을 수 있나.md",
+    "skip": false,
+    "sector": "매크로",
+    "type": "경제분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "원화 가치 급등의 원인과 향후 전망을 분석함."
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_고용 서프에도 인상 판단 유보.md",
+    "skip": false,
+    "sector": "매크로",
+    "type": "경제분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "예상치를 뛰어넘는 고용 지표 발표에도 불구하고 금리 인상 판단을 유보한 배경을 분석함."
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_국내주식 마감 시황 (26.06.05) - 의구심을 타고 오르....md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "시황",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "26.06.05 국내 주식 시장 마감 시황을 분석하며 시장의 의구심 속 상승세를 설명함."
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_드디어 시작된 AI팩토리의 외부 사업화.md",
+    "skip": false,
+    "sector": "로봇",
+    "type": "종목분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "AI팩토리의 외부 사업화 시작을 알리며 관련 기업 분석을 제공함."
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_롤러코스터 증시, 편안한 배당매력에 주목.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "종목분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "변동성이 큰 증시 상황에서 배당 매력이 있는 종목에 주목할 것을 제안함."
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_마켓레이더 - 반도체 투매와 Black Monday (6월 8일).md",
+    "skip": false,
+    "sector": "반도체",
+    "type": "시황",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "6월 8일 반도체 시장의 투매 현상과 'Black Monday'에 대한 분석을 제공함."
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_묵묵히 가던 길을 가겠습니다..md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "시황",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "시장의 변동성에도 불구하고 꾸준히 투자 전략을 유지할 것을 강조함."
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_미국 고용: 아직 인상 허들을 넘지는 않았다.md",
+    "skip": false,
+    "sector": "매크로",
+    "type": "경제분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "미국 고용 지표가 금리 인상 결정의 충분한 근거가 되지 못함을 분석함."
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_반도체 조정에 흔들린 KOSPI, 시선은 삼쏘회동으로.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "투자정보",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "반도체 섹터 조정으로 KOSPI가 흔들렸으나, '삼쏘회동'에 주목할 필요가 있음을 시사함."
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_발주처의 지갑이 두툼할 때 EPC사의 수주도 ...md",
+    "skip": false,
+    "sector": "기타",
+    "type": "종목분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_사우디, 7월에도 증산 지속.md",
+    "skip": false,
+    "sector": "매크로",
+    "type": "투자정보",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_성공적인 MASH 결과 들고 다음 스텝으로 (NDR...md",
+    "skip": false,
+    "sector": "기타",
+    "type": "종목분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_수도권 광역단체장 당선인 주거 공약 점검.md",
+    "skip": false,
+    "sector": "기타",
+    "type": "산업분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_신한 플랫폼 Weekly 돈이 되는 오지랖(6월 2...md",
+    "skip": false,
+    "sector": "기타",
+    "type": "산업분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_신호와 소음.md",
+    "skip": false,
+    "sector": "기타",
+    "type": "종목분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_아직은 AI 보다는 주주환원을 투자포인트로.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "시황",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_의심할 필요가 없는 PBR 0.7배 저렴한 주가.md",
+    "skip": false,
+    "sector": "기타",
+    "type": "종목분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_한번은 겪어야 할 과정이 시작 됐음을 보여주다.md",
+    "skip": false,
+    "sector": "기타",
+    "type": "투자정보",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_0700_현 시점에서는 가장 매력적인 방어주.md",
+    "skip": false,
+    "sector": "기타",
+    "type": "종목분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_(깐부)치킨게임 시작.md",
+    "skip": false,
+    "sector": "기타",
+    "type": "종목분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_0609, Kiwoom Morning Letter.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "매크로",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_1,550원 이상 환율은 과도해 보인다.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "매크로",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "1,550원 이상 환율은 과도해 보임"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_2026년 6월 둘째 주 자동차 Weekly.md",
+    "skip": false,
+    "sector": "자동차",
+    "type": "산업분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_5월 미국 고용 부정할 수 없는 견고함.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "매크로",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "5월 미국 고용 견고함"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_5월 미국 고용 자세히 보면 약하다.md",
+    "skip": true,
+    "skip_reason": "이전 파일(5월 미국 고용 부정할 수 없는 견고함)과 중복되는 내용으로 판단됨. 상세 내용은 이전 파일 참조."
+  },
+  {
+    "filename": "2026-06-09_1000_5월 미국 고용 표면의 안정, 깊어진 꼬리 위험.md",
+    "skip": true,
+    "skip_reason": "이전 파일(5월 미국 고용 부정할 수 없는 견고함)과 중복되는 내용으로 판단됨. 상세 내용은 이전 파일 참조."
+  },
+  {
+    "filename": "2026-06-09_1000_69 KB 리서치 모닝코멘트.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "시황",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_[Econ Snapshot] 미국 5월 비농업 고용 주도 업종 분....md",
+    "skip": true,
+    "skip_reason": "이전 파일(5월 미국 고용 부정할 수 없는 견고함)과 중복되는 내용으로 판단됨. 상세 내용은 이전 파일 참조."
+  },
+  {
+    "filename": "2026-06-09_1000_[ESG & Transition] 통키[通 Keys] Transitio....md",
+    "skip": false,
+    "sector": "기타",
+    "type": "산업분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_[Global ETF] ETF 트렌드 & 포트폴리오 변동성 대응 ...md",
+    "skip": false,
+    "sector": "기타",
+    "type": "리포트",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "2026년 6월 9일 기준 ETF 트렌드 및 포트폴리오 변동성 대응 전략 분석"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_[IBKS Daily] Morning Brief(260609).md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "시황",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "2026년 6월 9일 IBK투자증권 모닝브리프 요약"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_[Morning Brief] 반도체 반발매수세 유입으로 미 증시...md",
+    "skip": false,
+    "sector": "반도체",
+    "type": "시황",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "반도체 반발 매수세 유입으로 인한 미국 증시 동향 분석"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_Agentic Commerce와 A2A Economy, 블록체인의 역할은 ...md",
+    "skip": false,
+    "sector": "기타",
+    "type": "리포트",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "Agentic Commerce와 A2A Economy에서 블록체인의 역할 분석"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_AI 팩토리 사업 진출을 통한 신성장 전략 공...md",
+    "skip": false,
+    "sector": "기타",
+    "type": "종목분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "AI 팩토리 사업 진출을 통한 신성장 전략 분석"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_AI 팩토리, 보수적으로 추정해도 현재가치 19...md",
+    "skip": false,
+    "sector": "기타",
+    "type": "종목분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "AI 팩토리의 보수적 추정 시 현재 가치 19조원 이상 전망"
+    ],
+    "structural_facts": [
+      "AI 팩토리 현재 가치: 19조원 이상 (보수적 추정)"
+    ]
+  },
+  {
+    "filename": "2026-06-09_1000_Chemicals Monthly Data（2026.6.9일, xls데...md",
+    "skip": false,
+    "sector": "화학",
+    "type": "산업분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "2026년 6월 9일 기준 화학 산업 월간 데이터 분석"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_Daily Market Digest (6월 9일).md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "시황",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "2026년 6월 9일 일일 시장 요약 정보"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_Daily Morning Brief(2026.06.08).md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "시황",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "2026년 6월 8일 일일 모닝브리프 요약"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_Daily Morning Brief(2026.06.09).md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "시황",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "2026년 6월 9일 일일 모닝브리프 요약"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_Daily 신한생각 (6월 9일).md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "시황",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "26.06.09 신한투자증권 시황정보"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_DS Futures Daily.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "리포트",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "26.06.09 DS투자증권 투자정보"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_ECM, 단기 테마 아닌 구조적 성장.md",
+    "skip": false,
+    "sector": "기타",
+    "type": "산업분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "ECM, 단기 테마 아닌 구조적 성장 분석 (26.06.09)"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_K-뷰티 다이내믹스 지역채널카테고리편.md",
+    "skip": false,
+    "sector": "화장품",
+    "type": "산업분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "K-뷰티 다이내믹스: 지역/채널/카테고리 분석 (26.06.09)"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_SK증권 아침에 슥_2026.06.09.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "시황",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "26.06.09 SK증권 시황정보"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_THE GLOBAL 마켓 파인더.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "리포트",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "26.06.09 대신증권 투자정보"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_Weekly Quant Momentum Strategy(26.06.09).md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "리포트",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "26.06.09 유진투자증권 투자정보 (Weekly Quant Momentum Strategy)"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_Yuanta Morning Snapshot (26.06.09).md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "시황",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "26.06.09 유안타증권 시황정보"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_고용 서프에도 인상 판단 유보.md",
+    "skip": false,
+    "sector": "매크로",
+    "type": "매크로",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "26.06.08 고용 서프라이즈에도 금리 인상 판단 유보 (신한투자증권)"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_광 IO 시대의 정렬자.md",
+    "skip": false,
+    "sector": "반도체",
+    "type": "종목분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "광 I/O 시대의 정렬자 분석 (26.06.09)"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_구리 가격 자체보다 밸류체인별 마진 구조를...md",
+    "skip": false,
+    "sector": "기타",
+    "type": "산업분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "구리 가격 자체보다 밸류체인별 마진 구조 분석이 중요함"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_국내주식 마감 시황 (26.06.08) - Black Monday임에도...md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "시황",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "26.06.08 국내 주식 시장 마감 시황 분석"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_금리 상승 및 관리급여 도입 수혜주.md",
+    "skip": false,
+    "sector": "기타",
+    "type": "종목분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "금리 상승 및 관리급여 도입 수혜주 분석"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_내년에도 훌륭한 실적 모멘텀이 대기 중입니...md",
+    "skip": false,
+    "sector": "기타",
+    "type": "종목분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "내년에도 훌륭한 실적 모멘텀이 기대되는 종목 분석"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_롯데쇼핑 CEO 간담회 후기.md",
+    "skip": false,
+    "sector": "유통",
+    "type": "종목분석",
+    "stocks": [
+      "롯데쇼핑"
+    ],
+    "wiki_level": "L5",
+    "key_insights": [
+      "롯데쇼핑 CEO 간담회 후기 요약"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_미국 고용 아직 인상 허들을 넘지는 않았다.md",
+    "skip": false,
+    "sector": "매크로",
+    "type": "경제분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "미국 고용 지표가 금리 인상 허들을 아직 넘지 못했음"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_변함없을 방향성, 원자재와 함께 춤을.md",
+    "skip": false,
+    "sector": "기타",
+    "type": "경제분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "변함없는 시장 방향성과 원자재 시장 동향 분석"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_불안한 시장 분위기, 눈길 끄는 기업가치 제고계획.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "투자정보",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "불안한 시장 분위기 속 기업가치 제고 계획 주목"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_성장성을 되찾은 성장주, 위를 보자.md",
+    "skip": false,
+    "sector": "기타",
+    "type": "종목분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "성장성을 되찾은 성장주에 대한 긍정적 전망 제시"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_수급의 정석, 구조와 알파.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "투자정보",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "수급의 정석, 구조 및 알파 전략 분석"
+    ],
+    "structural_facts": []
+  },
+  {
+    "filename": "2026-06-09_1000_시가총액으로 보면 아직도 갈 길이 멉니다.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "종목분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "2026년 6월 9일 기준, 시가총액으로 볼 때 아직 성장할 여지가 많음."
+    ],
+    "structural_facts": [],
+    "skip_reason": null
+  },
+  {
+    "filename": "2026-06-09_1000_쏠림이 잠시 되돌려지는 과정.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "투자정보",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "2026년 6월 9일 기준, 시장의 쏠림 현상이 일시적으로 되돌려지는 과정에 있음."
+    ],
+    "structural_facts": [],
+    "skip_reason": null
+  },
+  {
+    "filename": "2026-06-09_1000_안녕하세요 데일리에요(로봇방산조선).md",
+    "skip": false,
+    "sector": "로봇|방산|조선",
+    "type": "산업분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "2026년 6월 9일 기준, 로봇, 방산, 조선 산업에 대한 분석."
+    ],
+    "structural_facts": [],
+    "skip_reason": null
+  },
+  {
+    "filename": "2026-06-09_1000_어두울땐 실적을 켜자.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "종목분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "2026년 6월 9일 기준, 어려운 시기에는 실적에 주목해야 함을 강조."
+    ],
+    "structural_facts": [],
+    "skip_reason": null
+  },
+  {
+    "filename": "2026-06-09_1000_언제까지 무관심일 수는 없잖아.md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "산업분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "2026년 6월 9일 기준, 특정 시장 또는 종목에 대한 무관심이 지속될 수 없음을 시사."
+    ],
+    "structural_facts": [],
+    "skip_reason": null
+  },
+  {
+    "filename": "2026-06-09_1000_예약된 호황, LTA가 확정한 수급 방정식.md",
+    "skip": false,
+    "sector": "기타",
+    "type": "산업분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "2026년 6월 9일 기준, LTA(장기 공급 계약)를 통해 예약된 호황과 수급 방정식을 분석."
+    ],
+    "structural_facts": [
+      "LTA(장기 공급 계약) 확정"
+    ],
+    "skip_reason": null
+  },
+  {
+    "filename": "2026-06-09_1000_원달러 급등, 되돌림 조건은.md",
+    "skip": false,
+    "sector": "매크로",
+    "type": "경제분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "2026년 6월 9일 기준, 원/달러 환율 급등의 원인과 되돌림 조건을 분석."
+    ],
+    "structural_facts": [],
+    "skip_reason": null
+  },
+  {
+    "filename": "2026-06-09_1000_주간 금리·환율 전망.md",
+    "skip": false,
+    "sector": "매크로",
+    "type": "투자정보",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "2026년 6월 9일 기준, 해당 주의 금리 및 환율 전망 제공."
+    ],
+    "structural_facts": [],
+    "skip_reason": null
+  },
+  {
+    "filename": "2026-06-09_1000_코스피, 코스닥 서킷 브레이커 발동. 젠슨 황도 막지 ...md",
+    "skip": false,
+    "sector": "시장전체",
+    "type": "투자정보",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "2026년 6월 9일 기준, 코스피 및 코스닥 시장에서 서킷 브레이커가 발동될 정도로 급락했음을 언급."
+    ],
+    "structural_facts": [
+      "코스피, 코스닥 서킷 브레이커 발동"
+    ],
+    "skip_reason": null
+  },
+  {
+    "filename": "2026-06-09_1000_한국 방산 길어진 소외, 좋아진 손익비.md",
+    "skip": false,
+    "sector": "방산",
+    "type": "산업분석",
+    "stocks": [],
+    "wiki_level": "L5",
+    "key_insights": [
+      "2026년 6월 9일 기준, 한국 방산 산업이 길어진 소외 기간을 거쳤으나 손익비가 개선되었음을 분석."
+    ],
+    "structural_facts": [
+      "한국 방산 산업 손익비 개선"
+    ],
+    "skip_reason": null
+  }
+]
