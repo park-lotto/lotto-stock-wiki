@@ -44,9 +44,12 @@ def find_excel(pattern: str) -> Path | None:
 # ── 데이터 로드 ───────────────────────────────────────────────
 
 def load_etf_data() -> pd.DataFrame:
-    path = find_excel("소라티노ETF상대강도")
+    path = (find_excel("소라티노ETF상대강도")
+            or EXCEL_DIR / "etf상대강도데이터.xlsx"
+            if (EXCEL_DIR / "etf상대강도데이터.xlsx").exists()
+            else find_excel("etf상대강도데이터"))
     if not path:
-        print("❌ 소라티노ETF상대강도 파일 없음")
+        print("❌ 소라티노ETF상대강도 / etf상대강도데이터 파일 없음")
         sys.exit(1)
     print(f"📂 {path.name} 로딩...")
     df = pd.read_excel(str(path), sheet_name="데이터", engine="openpyxl")
@@ -194,7 +197,38 @@ def send_tg(text: str):
             print(f"  ❌ 발송 실패: {e}")
 
 
-def build_tg_message(sortino_df: pd.DataFrame, rs_df: pd.DataFrame) -> str:
+def fetch_etf_holdings(etf_name: str) -> str:
+    """ETF 구성종목 상위 5개를 웹서치로 가져와 1줄 요약."""
+    import urllib.request, urllib.parse, json as _json
+    env = {}
+    ep = ROOT / ".env"
+    if ep.exists():
+        for line in ep.read_text(encoding="utf-8").splitlines():
+            if "=" in line and not line.startswith("#"):
+                k, v = line.split("=", 1)
+                env[k.strip()] = v.strip()
+
+    api_key = env.get("BRAVE_API_KEY") or env.get("SEARCH_API_KEY", "")
+    if not api_key:
+        return ""
+
+    query = urllib.parse.quote(f"{etf_name} ETF 구성종목 상위 비중 2026")
+    url = f"https://api.search.brave.com/res/v1/web/search?q={query}&count=3"
+    req = urllib.request.Request(url, headers={
+        "Accept": "application/json",
+        "Accept-Encoding": "gzip",
+        "X-Subscription-Token": api_key,
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=8) as r:
+            data = _json.loads(r.read())
+        snippets = [item.get("description", "") for item in data.get("web", {}).get("results", [])[:2]]
+        return " / ".join(s[:80] for s in snippets if s)
+    except Exception:
+        return ""
+
+
+def build_tg_message(sortino_df: pd.DataFrame, rs_df: pd.DataFrame, with_holdings: bool = False) -> str:
     lines = [
         f"📊 <b>소라티노 ETF 랭킹</b> — {TODAY_KR}",
         f"<i>Sortino Top 20 (10주선=50일↑ / 3-6-12M 평균)</i>",
@@ -207,7 +241,12 @@ def build_tg_message(sortino_df: pd.DataFrame, rs_df: pd.DataFrame) -> str:
     for i in range(10):
         etf = sortino_df.loc[last_day, f"Top {i+1}"]
         if etf:
-            lines.append(f"  {i+1:2d}. {etf}")
+            line = f"  {i+1:2d}. {etf}"
+            if with_holdings:
+                holdings = fetch_etf_holdings(etf)
+                if holdings:
+                    line += f"\n      └ {holdings}"
+            lines.append(line)
     lines.append("")
 
     # Mansfield RS ≥ 70
@@ -224,7 +263,8 @@ def build_tg_message(sortino_df: pd.DataFrame, rs_df: pd.DataFrame) -> str:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--tg",   action="store_true")
+    ap.add_argument("--tg",       action="store_true")
+    ap.add_argument("--holdings", action="store_true", help="ETF 구성종목 서칭 포함")
     ap.add_argument("--days", type=int, default=10)
     ap.add_argument("--ma",   type=int, default=50, help="MA 필터 (기본 50=10주선)")
     args = ap.parse_args()
@@ -260,8 +300,8 @@ def main():
             print(f"    • {row['ETF']}  RS_avg={row['RS_avg']:+.1f}  Norm={row['Norm_avg']:.1f}")
 
     if args.tg:
-        msg = build_tg_message(sortino_df, rs_df)
-        print("\n📲 텔레그램 발송 중...")
+        msg = build_tg_message(sortino_df, rs_df, with_holdings=args.holdings)
+        print("\n텔레그램 발송 중...")
         send_tg(msg)
 
 
