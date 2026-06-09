@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>반도체 인텔리전스 브리프</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0A0B0F;
+  --surface: #111318;
+  --surface2: #181B22;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --text: #E8EAF0;
+  --text2: #8B909E;
+  --text3: #555A6B;
+  --green: #00D4A0;
+  --green-dim: rgba(0,212,160,0.12);
+  --red: #FF5B5B;
+  --red-dim: rgba(255,91,91,0.12);
+  --yellow: #FFB547;
+  --yellow-dim: rgba(255,181,71,0.12);
+  --blue: #4D9FFF;
+  --blue-dim: rgba(77,159,255,0.1);
+  --purple: #9B7FFF;
+  --mono: 'DM Mono', monospace;
+  --sans: 'Noto Sans KR', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+/* 스크롤바 */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* 레이아웃 */
+.shell { display: flex; height: 100vh; overflow: hidden; }
+
+/* 사이드바 */
+.sidebar {
+  width: 220px; flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  padding: 0;
+  position: relative; z-index: 10;
+}
+.sidebar-header {
+  padding: 20px 18px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.brand { font-size: 11px; font-weight: 500; letter-spacing: .1em; color: var(--text3); text-transform: uppercase; margin-bottom: 4px; }
+.brand-title { font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.2; }
+.issue-badge {
+  display: inline-block; margin-top: 8px;
+  font-size: 10px; font-family: var(--mono);
+  color: var(--green); background: var(--green-dim);
+  padding: 2px 8px; border-radius: 3px;
+}
+
+.nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+.nav-label { font-size: 9px; letter-spacing: .1em; color: var(--text3); text-transform: uppercase; padding: 6px 18px 4px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 18px; cursor: pointer;
+  font-size: 13px; color: var(--text2);
+  transition: all .15s; border-left: 2px solid transparent;
+  position: relative;
+}
+.nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.nav-item.active { color: var(--text); background: rgba(255,255,255,0.05); border-left-color: var(--green); }
+.nav-icon { font-size: 15px; width: 18px; text-align: center; opacity: .7; }
+.nav-badge { font-size: 9px; background: var(--red); color: #fff; padding: 1px 5px; border-radius: 10px; margin-left: auto; }
+.nav-badge.yellow { background: var(--yellow); color: #000; }
+
+.sidebar-footer {
+  padding: 14px 18px;
+  border-top: 1px solid var(--border);
+  font-size: 10px; color: var(--text3);
+  font-family: var(--mono);
+}
+.live-dot { display: inline-block; width: 6px; height: 6px; background: var(--green); border-radius: 50%; margin-right: 5px; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* 메인 */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* 탑바 */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.page-title { font-size: 16px; font-weight: 700; color: var(--text); }
+.page-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.date-chip { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+
+/* 콘텐츠 영역 */
+.content { flex: 1; overflow-y: auto; padding: 20px 24px; }
+
+/* 페이지 */
+.page { display: none; animation: fadeIn .2s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:translateY(0)} }
+
+/* 요약 3카드 */
+.summary-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+.sum-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px;
+  display: flex; gap: 12px; align-items: flex-start;
+  cursor: pointer; transition: border-color .15s;
+}
+.sum-card:hover { border-color: var(--border2); }
+.sum-card.up { border-top: 2px solid var(--green); }
+.sum-card.dn { border-top: 2px solid var(--red); }
+.sum-card.nu { border-top: 2px solid var(--yellow); }
+.sum-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+.sum-dot.up { background: var(--green); }
+.sum-dot.dn { background: var(--red); }
+.sum-dot.nu { background: var(--yellow); }
+.sum-body { flex: 1; }
+.sum-title { font-size: 12px; font-weight: 500; color: var(--text); line-height: 1.4; margin-bottom: 3px; }
+.sum-why { font-size: 10px; color: var(--text2); line-height: 1.4; }
+
+/* 섹션 헤더 */
+.sec-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.sec-title { font-size: 13px; font-weight: 700; color: var(--text); }
+.sec-sub { font-size: 11px; color: var(--text3); }
+
+/* 종목 그리드 */
+.stock-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
+.stock-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 14px;
+  cursor: pointer; transition: all .15s; position: relative; overflow: hidden;
+}
+.stock-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  opacity: 0; transition: opacity .15s;
+}
+.stock-card.str::before { background: var(--green); }
+.stock-card.mid::before { background: var(--yellow); }
+.stock-card:hover { border-color: var(--border2); transform: translateY(-1px); }
+.stock-card:hover::before { opacity: 1; }
+.sc-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.sc-name { font-size: 12px; font-weight: 700; color: var(--text); }
+.sc-sig { width: 7px; height: 7px; border-radius: 50%; }
+.sc-desc { font-size: 10px; color: var(--text2); line-height: 1.4; margin-bottom: 8px; }
+.sc-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+.tag { font-size: 9px; padding: 2px 6px; border-radius: 3px; font-family: var(--mono); }
+.t-str { background: var(--green-dim); color: var(--green); }
+.t-mid { background: var(--yellow-dim); color: var(--yellow); }
+.t-new { background: var(--blue-dim); color: var(--blue); }
+.t-long { background: rgba(155,127,255,.12); color: var(--purple); }
+.t-now { background: var(--red-dim); color: var(--red); }
+
+/* 토글 섹션 */
+.toggle-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 24px; }
+.toggle-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.toggle-hdr {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; cursor: pointer;
+  transition: background .12s;
+}
+.toggle-hdr:hover { background: rgba(255,255,255,0.02); }
+.toggle-icon { font-size: 14px; transition: transform .2s; flex-shrink: 0; color: var(--text3); }
+.toggle-item.open .toggle-icon { transform: rotate(90deg); color: var(--green); }
+.toggle-label { flex: 1; font-size: 12px; font-weight: 500; color: var(--text); }
+.toggle-badge { font-size: 9px; font-family: var(--mono); padding: 2px 7px; border-radius: 3px; }
+.toggle-body { display: none; padding: 0 16px 14px; border-top: 1px solid var(--border); }
+.toggle-item.open .toggle-body { display: block; }
+.toggle-text { font-size: 11px; color: var(--text2); line-height: 1.7; padding-top: 12px; }
+.toggle-stocks { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.stock-pill { font-size: 10px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 3px 10px; border-radius: 20px; font-family: var(--mono); }
+.stock-pill.hidden { border-color: var(--red); color: var(--red); background: var(--red-dim); }
+
+/* 이벤트 캘린더 */
+.calendar-wrap { display: flex; flex-direction: column; gap: 6px; margin-bottom: 24px; }
+.cal-item {
+  display: flex; gap: 12px; align-items: flex-start;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 11px 14px;
+  transition: border-color .12s;
+}
+.cal-item.hot { border-color: rgba(255,91,91,0.3); background: rgba(255,91,91,0.04); }
+.cal-item:hover { border-color: var(--border2); }
+.cal-date { font-size: 10px; font-family: var(--mono); color: var(--text3); min-width: 44px; padding-top: 1px; line-height: 1.4; text-align: center; flex-shrink: 0; }
+.cal-date.hot-date { color: var(--red); }
+.cal-body { flex: 1; }
+.cal-title { font-size: 12px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+.cal-note { font-size: 10px; color: var(--text2); line-height: 1.4; }
+.cal-dir { font-size: 10px; font-weight: 700; font-family: var(--mono); flex-shrink: 0; padding-top: 1px; }
+.dir-up { color: var(--green); }
+.dir-dn { color: var(--red); }
+.dir-mx { color: var(--yellow); }
+.cal-confirmed { font-size: 9px; font-family: var(--mono); padding: 1px 5px; border-radius: 3px; background: var(--green-dim); color: var(--green); margin-left: 6px; }
+
+/* 리스크 */
+.risk-wrap { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+.risk-item {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px;
+  cursor: pointer; transition: all .15s;
+}
+.risk-item.ob { border-left: 3px solid var(--green); border-radius: 0 10px 10px 0; }
+.risk-item.ur { border-left: 3px solid var(--red); border-radius: 0 10px 10px 0; }
+.risk-item.re { border-left: 3px solid var(--yellow); border-radius: 0 10px 10px 0; }
+.ri-top { display: flex; align-items: center; gap: 10px; margin-bottom: 0; }
+.ri-prob { font-size: 20px; font-weight: 700; font-family: var(--mono); min-width: 48px; }
+.prob-lo { color: var(--green); }
+.prob-mid { color: var(--yellow); }
+.prob-hi { color: var(--red); }
+.ri-center { flex: 1; }
+.ri-title { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.ri-badge { font-size: 9px; font-family: var(--mono); padding: 2px 7px; border-radius: 3px; }
+.b-ob { background: var(--green-dim); color: var(--green); }
+.b-ur { background: var(--red-dim); color: var(--red); }
+.b-re { background: var(--yellow-dim); color: var(--yellow); }
+.ri-expand { font-size: 12px; color: var(--text3); transition: transform .2s; }
+.risk-item.open .ri-expand { transform: rotate(180deg); }
+.ri-body { display: none; padding-top: 10px; border-top: 1px solid var(--border); margin-top: 10px; }
+.risk-item.open .ri-body { display: block; }
+.ri-text { font-size: 11px; color: var(--text2); line-height: 1.7; margin-bottom: 8px; }
+.ri-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 10px; }
+.ri-col-label { color: var(--text3); font-family: var(--mono); margin-bottom: 3px; }
+.ri-col-val { color: var(--text2); line-height: 1.5; }
+.ri-signal { font-size: 10px; color: var(--text3); background: var(--surface2); border-radius: 6px; padding: 6px 10px; margin-top: 6px; }
+.ri-signal span { color: var(--yellow); font-weight: 500; }
+
+/* 밸류체인 */
+.chain-flow { display: flex; flex-direction: column; gap: 0; margin-bottom: 24px; }
+.chain-node {
+  display: flex; gap: 0; align-items: stretch;
+}
+.chain-left { display: flex; flex-direction: column; align-items: center; width: 36px; flex-shrink: 0; }
+.chain-num { width: 28px; height: 28px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; font-family: var(--mono); color: var(--green); flex-shrink: 0; }
+.chain-line { width: 1px; background: var(--border); flex: 1; margin: 2px 0; min-height: 12px; }
+.chain-node:last-child .chain-line { display: none; }
+.chain-content {
+  flex: 1; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; margin-left: 10px;
+  cursor: pointer; transition: border-color .15s;
+}
+.chain-content:hover { border-color: var(--border2); }
+.chain-content.open { border-color: rgba(0,212,160,0.25); }
+.chain-stage { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+.chain-sub { font-size: 10px; color: var(--text3); margin-bottom: 6px; }
+.chain-picks { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 0; }
+.chain-detail { display: none; padding-top: 10px; border-top: 1px solid var(--border); margin-top: 10px; }
+.chain-content.open .chain-detail { display: block; }
+.chain-detail-text { font-size: 10px; color: var(--text2); line-height: 1.6; }
+.hidden-pill { font-size: 9px; background: var(--red-dim); border: 1px solid rgba(255,91,91,0.3); color: var(--red); padding: 2px 7px; border-radius: 10px; }
+.chain-hidden-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+.chain-hidden-label { font-size: 9px; color: var(--text3); font-family: var(--mono); }
+
+/* 미반영 분석 */
+.mirror-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+.mirror-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.mirror-header { padding: 10px 14px; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; font-family: var(--mono); }
+.mirror-card.known .mirror-header { background: rgba(255,255,255,0.03); color: var(--text3); }
+.mirror-card.under .mirror-header { background: rgba(255,181,71,0.08); color: var(--yellow); }
+.mirror-card.hidden-r .mirror-header { background: rgba(77,159,255,0.08); color: var(--blue); }
+.mirror-items { padding: 10px 14px; display: flex; flex-direction: column; gap: 8px; }
+.mirror-item { font-size: 10px; color: var(--text2); line-height: 1.5; padding-left: 10px; border-left: 2px solid var(--border2); }
+.mirror-card.under .mirror-item { border-left-color: rgba(255,181,71,0.4); }
+.mirror-card.hidden-r .mirror-item { border-left-color: rgba(77,159,255,0.4); }
+
+/* 업데이트 로그 */
+.log-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 24px; }
+.log-row { display: flex; gap: 12px; padding: 9px 14px; border-bottom: 1px solid var(--border); font-size: 11px; align-items: flex-start; }
+.log-row:last-child { border-bottom: none; }
+.log-date { font-family: var(--mono); font-size: 10px; color: var(--text3); min-width: 36px; flex-shrink: 0; padding-top: 1px; }
+.log-dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+.log-text { color: var(--text2); line-height: 1.4; flex: 1; }
+.log-text.new-item { color: var(--red); }
+
+/* 프로그레스 바 */
+.prob-bar { height: 3px; background: var(--surface2); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+.prob-fill { height: 100%; border-radius: 2px; transition: width .5s ease; }
+
+/* 슬라이드 네비게이션 (캘린더) */
+.month-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.month-btn {
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text2); padding: 5px 12px; border-radius: 6px;
+  font-size: 11px; cursor: pointer; transition: all .15s; font-family: var(--sans);
+}
+.month-btn.active { background: var(--green-dim); border-color: rgba(0,212,160,0.3); color: var(--green); }
+.month-btn:hover:not(.active) { border-color: var(--border2); color: var(--text); }
+
+/* 호버 툴팁 */
+.tip { position: relative; }
+.tip-box {
+  display: none; position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  background: #1E2230; border: 1px solid var(--border2);
+  border-radius: 7px; padding: 8px 12px; font-size: 10px; color: var(--text);
+  white-space: nowrap; z-index: 100; pointer-events: none;
+  line-height: 1.5;
+}
+.tip:hover .tip-box { display: block; }
+
+/* 범례 */
+.legend-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; font-size: 10px; color: var(--text3); }
+.leg { display: flex; align-items: center; gap: 4px; }
+.leg-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+/* ═══════════════════════════
+   모바일 최적화
+   ═══════════════════════════ */
+
+/* 하단 탭바 */
+.mobile-tabbar {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: var(--surface); border-top: 1px solid var(--border);
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.mobile-tabbar::-webkit-scrollbar { display: none; }
+.mobile-tabbar-inner { display: flex; min-width: max-content; }
+.mob-tab {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 10px 16px 12px;
+  cursor: pointer; font-size: 10px; color: var(--text3);
+  border-top: 2px solid transparent; transition: all .15s;
+  white-space: nowrap;
+}
+.mob-tab.active { color: var(--green); border-top-color: var(--green); }
+.mob-tab-icon { font-size: 16px; line-height: 1; }
+
+@media (max-width: 640px) {
+  html { -webkit-text-size-adjust: 100%; }
+
+  /* 사이드바 숨기기 */
+  .sidebar { display: none; }
+
+  /* 하단 탭바 표시 */
+  .mobile-tabbar { display: block; }
+
+  /* 레이아웃 풀폭으로 */
+  .shell { height: 100dvh; }
+  .main { width: 100%; overflow: hidden; }
+
+  /* 탑바 */
+  .topbar { padding: 12px 14px; }
+  .page-title { font-size: 14px; }
+  .page-sub { font-size: 10px; }
+  .date-chip { font-size: 10px; }
+
+  /* 콘텐츠 하단 탭바 높이만큼 패딩 */
+  .content { padding: 14px 12px 72px; }
+
+  /* 요약 3카드 → 1열 */
+  .summary-row { grid-template-columns: 1fr; gap: 8px; }
+  .sum-card { padding: 12px 13px; }
+  .sum-title { font-size: 11px; }
+  .sum-why { font-size: 10px; }
+
+  /* 종목 그리드 → 2열 */
+  .stock-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .stock-card { padding: 11px 12px; }
+  .sc-name { font-size: 11px; }
+  .sc-desc { font-size: 9px; }
+
+  /* 미반영 분석 → 1열 */
+  .mirror-grid { grid-template-columns: 1fr; gap: 8px; }
+
+  /* 토글 항목 */
+  .toggle-hdr { padding: 13px 14px; min-height: 52px; }
+  .toggle-label { font-size: 12px; }
+  .toggle-body { padding: 0 14px 13px; }
+  .toggle-text { font-size: 11px; }
+
+  /* 이벤트 캘린더 */
+  .cal-item { padding: 11px 12px; gap: 10px; }
+  .cal-title { font-size: 11px; }
+  .cal-note { font-size: 10px; }
+
+  /* 리스크 */
+  .risk-item { padding: 13px 14px; }
+  .ri-prob { font-size: 18px; min-width: 42px; }
+  .ri-title { font-size: 11px; }
+  .ri-badge { font-size: 9px; }
+  .ri-row { grid-template-columns: 1fr; gap: 8px; }
+  .ri-text { font-size: 11px; }
+
+  /* 밸류체인 */
+  .chain-stage { font-size: 11px; }
+  .chain-sub { font-size: 10px; }
+  .chain-detail-text { font-size: 10px; }
+
+  /* 섹션 헤더 */
+  .sec-title { font-size: 12px; }
+  .sec-sub { font-size: 10px; }
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+<!-- 사이드바 -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="brand">Korea Stock Intel</div>
+    <div class="brand-title">반도체<br>인텔리전스</div>
+    <span class="issue-badge">#Issue 23</span>
+  </div>
+  <nav class="nav">
+    <div class="nav-label">브리프</div>
+    <div class="nav-item active" onclick="goPage('home')">
+      <span class="nav-icon">⬡</span> 오늘의 핵심
+    </div>
+    <div class="nav-item" onclick="goPage('watch')">
+      <span class="nav-icon">◎</span> 종목 워치
+    </div>
+    <div class="nav-item" onclick="goPage('events')">
+      <span class="nav-icon">◷</span> 이벤트 캘린더
+      <span class="nav-badge yellow">HOT</span>
+    </div>
+    <div class="nav-label">분석</div>
+    <div class="nav-item" onclick="goPage('chain')">
+      <span class="nav-icon">⬢</span> 돈 흐름 (밸류체인)
+    </div>
+    <div class="nav-item" onclick="goPage('unknown')">
+      <span class="nav-icon">◈</span> 시장 미반영
+    </div>
+    <div class="nav-item" onclick="goPage('risk')">
+      <span class="nav-icon">◬</span> 리스크 역발상
+      <span class="nav-badge">2</span>
+    </div>
+    <div class="nav-label">기록</div>
+    <div class="nav-item" onclick="goPage('log')">
+      <span class="nav-icon">◫</span> 업데이트 로그
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <span class="live-dot"></span> 2026.06.08 · AM 07:00
+  </div>
+</aside>
+
+<!-- 메인 -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title" id="pageTitle">오늘의 핵심 3가지</div>
+      <div class="page-sub" id="pageSub">매일 아침 꼭 봐야 할 것만</div>
+    </div>
+    <div class="topbar-right">
+      <span class="date-chip">2026.06.08 MON</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- 홈 -->
+    <div class="page active" id="page-home">
+      <div class="summary-row">
+        <div class="sum-card up">
+          <span class="sum-dot up"></span>
+          <div class="sum-body">
+            <div class="sum-title">SK하이닉스 HBM4 독주 — 엔비디아 베라루빈 출하 시작</div>
+            <div class="sum-why">HBM4를 공급하는 곳은 SK하이닉스뿐. 삼성은 아직 테스트 통과 중.</div>
+          </div>
+        </div>
+        <div class="sum-card nu">
+          <span class="sum-dot nu"></span>
+          <div class="sum-body">
+            <div class="sum-title">빅테크 2분기 실적 시즌 — AI CAPEX 방향이 핵심</div>
+            <div class="sum-why">구글·MS 투자 확대 발표 시 HBM 수요 전망 상향. 어닝콜 주목.</div>
+          </div>
+        </div>
+        <div class="sum-card dn">
+          <span class="sum-dot dn"></span>
+          <div class="sum-body">
+            <div class="sum-title">미국 수출규제 강화 논의 재개</div>
+            <div class="sum-why">중국향 매출 10~15% 차단 리스크. Entity List 확대 여부 하반기 최대 변수.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 빠른 요약 -->
+      <div class="sec-hdr">
+        <div class="sec-title">지금 사이클 위치</div>
+        <div class="sec-sub">클릭하면 상세 보기</div>
+      </div>
+      <div class="toggle-group">
+        <div class="toggle-item">
+          <div class="toggle-hdr" onclick="toggleItem(this)">
+            <span class="toggle-icon">▶</span>
+            <span class="toggle-label">HBM 세대전환 (HBM3E → HBM4)</span>
+            <span class="toggle-badge t-str">중기 · 수혜 강</span>
+          </div>
+          <div class="toggle-body">
+            <div class="toggle-text">
+              <strong style="color:var(--text)">핵심 질문:</strong> SK하이닉스가 HBM4 독점 지위를 언제까지 유지할 수 있는가?<br><br>
+              엔비디아 베라루빈 GPU에 탑재되는 HBM4를 공급할 수 있는 곳은 현재 SK하이닉스뿐입니다. 삼성전자는 퀄 테스트 통과를 위해 도전 중이며, 통과 시 경쟁 구도가 바뀝니다. 한미반도체·ISC는 HBM 세대 교체마다 신규 장비·소켓 교체 수요가 발생합니다.
+            </div>
+            <div class="toggle-stocks">
+              <span class="stock-pill">SK하이닉스</span>
+              <span class="stock-pill">한미반도체</span>
+              <span class="stock-pill">ISC</span>
+              <span class="stock-pill hidden">숨은: 이수페타시스</span>
+            </div>
+          </div>
+        </div>
+        <div class="toggle-item">
+          <div class="toggle-hdr" onclick="toggleItem(this)">
+            <span class="toggle-icon">▶</span>
+            <span class="toggle-label">빅테크 AI CAPEX 사이클</span>
+            <span class="toggle-badge t-str">중기 · 수혜 강</span>
+          </div>
+          <div class="toggle-body">
+            <div class="toggle-text">
+              <strong style="color:var(--text)">핵심 질문:</strong> 구글·MS·아마존의 AI 데이터센터 투자가 2026년 하반기에도 증가하는가?<br><br>
+              빅테크의 분기별 AI 인프라 투자 발표가 한국 메모리·장비 주가를 직접 움직입니다. CAPEX 상향 발표 → SK하이닉스·삼성 HBM 수요 증가 → 한미반도체·원익IPS 장비 수주 확대로 이어지는 구조입니다.
+            </div>
+            <div class="toggle-stocks">
+              <span class="stock-pill">SK하이닉스</span>
+              <span class="stock-pill">삼성전자</span>
+              <span class="stock-pill">원익IPS</span>
+            </div>
+          </div>
+        </div>
+        <div class="toggle-item">
+          <div class="toggle-hdr" onclick="toggleItem(this)">
+            <span class="toggle-icon">▶</span>
+            <span class="toggle-label">NAND 반등 타이밍</span>
+            <span class="toggle-badge t-mid">초기 · 수혜 중</span>
+          </div>
+          <div class="toggle-body">
+            <div class="toggle-text">
+              <strong style="color:var(--text)">핵심 질문:</strong> PC·스마트폰용 NAND 고정거래가격이 언제 바닥을 찍고 반등하는가?<br><br>
+              HBM 호황에 가려져 있지만 삼성전자 실적의 큰 부분을 차지하는 NAND는 아직 공급과잉 상태입니다. 고정가 첫 반등 시그널이 나오면 삼성전자 주가에 가장 강한 재평가 트리거가 됩니다.
+            </div>
+            <div class="toggle-stocks">
+              <span class="stock-pill">삼성전자</span>
+              <span class="stock-pill hidden">숨은: 에스앤에스텍</span>
+            </div>
+          </div>
+        </div>
+        <div class="toggle-item">
+          <div class="toggle-hdr" onclick="toggleItem(this)">
+            <span class="toggle-icon">▶</span>
+            <span class="toggle-label">삼성 2nm 파운드리</span>
+            <span class="toggle-badge t-mid">초기 · 불확실</span>
+          </div>
+          <div class="toggle-body">
+            <div class="toggle-text">
+              <strong style="color:var(--text)">핵심 질문:</strong> 삼성 2nm 수율이 회복돼 TSMC에게 빼앗긴 고객을 되찾을 수 있는가?<br><br>
+              삼성 파운드리 부진은 이미 주가에 반영됐습니다. 반전 시나리오(AMD EPYC, 퀄컴 수주)가 현실화되면 삼성전자 주가에 서프라이즈 요인이 됩니다. 에스티아이·테스나가 간접 수혜.
+            </div>
+            <div class="toggle-stocks">
+              <span class="stock-pill">삼성전자</span>
+              <span class="stock-pill hidden">숨은: 에스티아이</span>
+              <span class="stock-pill hidden">숨은: 테스나</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 종목 워치 -->
+    <div class="page" id="page-watch">
+      <div class="legend-row">
+        <div class="leg"><span class="leg-dot" style="background:var(--green)"></span>수혜 강</div>
+        <div class="leg"><span class="leg-dot" style="background:var(--yellow)"></span>수혜 중</div>
+        <div class="leg"><span class="leg-dot" style="background:var(--text3)"></span>관망</div>
+      </div>
+      <div class="sec-hdr"><div class="sec-title">핵심 종목</div><div class="sec-sub">카드 클릭 → 심층 질문</div></div>
+      <div class="stock-grid">
+        <div class="stock-card str">
+          <div class="sc-head"><span class="sc-name">SK하이닉스</span><span class="sc-sig" style="background:var(--green)"></span></div>
+          <div class="sc-desc">HBM4 사실상 독점. 엔비디아 베라루빈 납품 중. HBM 매출 비중 40%+.</div>
+          <div class="sc-tags"><span class="tag t-str">수혜 강</span><span class="tag t-long">구조적</span></div>
+        </div>
+        <div class="stock-card mid">
+          <div class="sc-head"><span class="sc-name">삼성전자</span><span class="sc-sig" style="background:var(--yellow)"></span></div>
+          <div class="sc-desc">HBM4 퀄 도전 중. NAND 반등 + 2nm 파운드리 수율이 하반기 변수.</div>
+          <div class="sc-tags"><span class="tag t-mid">수혜 중</span><span class="tag t-now">퀄 결과 주목</span></div>
+        </div>
+        <div class="stock-card str">
+          <div class="sc-head"><span class="sc-name">한미반도체</span><span class="sc-sig" style="background:var(--green)"></span></div>
+          <div class="sc-desc">HBM 제조 핵심 장비 TC본더 독점. SK하이닉스 증설 시 자동 수혜.</div>
+          <div class="sc-tags"><span class="tag t-str">수혜 강</span><span class="tag t-long">구조적</span></div>
+        </div>
+        <div class="stock-card str">
+          <div class="sc-head"><span class="sc-name">HPSP</span><span class="sc-sig" style="background:var(--green)"></span></div>
+          <div class="sc-desc">고압 수소 어닐링 장비 세계 유일. 2nm 이하 공정 전환 때마다 신규 수요.</div>
+          <div class="sc-tags"><span class="tag t-str">수혜 강</span><span class="tag t-long">구조적</span></div>
+        </div>
+        <div class="stock-card str">
+          <div class="sc-head"><span class="sc-name">원익IPS</span><span class="sc-sig" style="background:var(--green)"></span></div>
+          <div class="sc-desc">삼성·SK CAPEX 증설 시 CVD·ALD 장비 납품. 빅테크 투자 확대 직결.</div>
+          <div class="sc-tags"><span class="tag t-str">수혜 강</span><span class="tag t-mid">중기</span></div>
+        </div>
+        <div class="stock-card str">
+          <div class="sc-head"><span class="sc-name">ISC</span><span class="sc-sig" style="background:var(--green)"></span></div>
+          <div class="sc-desc">HBM 테스트용 소켓 공급. HBM 세대 교체마다 전량 교체 수요 발생.</div>
+          <div class="sc-tags"><span class="tag t-str">수혜 강</span><span class="tag t-long">구조적</span></div>
+        </div>
+        <div class="stock-card str">
+          <div class="sc-head"><span class="sc-name">이수페타시스</span><span class="sc-sig" style="background:var(--green)"></span></div>
+          <div class="sc-desc">AI 서버용 고다층 PCB 기판 공급. 빅테크 서버 증설 직수혜.</div>
+          <div class="sc-tags"><span class="tag t-str">수혜 강</span><span class="tag t-new">숨은 수혜</span></div>
+        </div>
+        <div class="stock-card mid">
+          <div class="sc-head"><span class="sc-name">리노공업</span><span class="sc-sig" style="background:var(--yellow)"></span></div>
+          <div class="sc-desc">스마트폰 AP 테스트 소켓 강자. 온디바이스 AI 확산 시 수혜 대기.</div>
+          <div class="sc-tags"><span class="tag t-mid">수혜 중</span><span class="tag t-now">트리거 대기</span></div>
+        </div>
+      </div>
+
+      <div class="sec-hdr"><div class="sec-title">소재·소부장 숨은 수혜주</div></div>
+      <div class="stock-grid">
+        <div class="stock-card str">
+          <div class="sc-head"><span class="sc-name">솔브레인</span><span class="sc-sig" style="background:var(--green)"></span></div>
+          <div class="sc-desc">식각액·세정액 공급. CAPEX 증설마다 소재 수요 자동 확대.</div>
+          <div class="sc-tags"><span class="tag t-str">수혜 강</span><span class="tag t-long">구조적</span></div>
+        </div>
+        <div class="stock-card str">
+          <div class="sc-head"><span class="sc-name">동진쎄미켐</span><span class="sc-sig" style="background:var(--green)"></span></div>
+          <div class="sc-desc">포토레지스트 핵심 소재. 2nm 공정 전환 시 고마진 소재 수요↑.</div>
+          <div class="sc-tags"><span class="tag t-str">수혜 강</span><span class="tag t-long">구조적</span></div>
+        </div>
+        <div class="stock-card mid">
+          <div class="sc-head"><span class="sc-name">후성</span><span class="sc-sig" style="background:var(--yellow)"></span></div>
+          <div class="sc-desc">특수가스 독점 공급. HBM·파운드리 증설 시 가스 수요 연동.</div>
+          <div class="sc-tags"><span class="tag t-mid">수혜 중</span><span class="tag t-new">숨은 수혜</span></div>
+        </div>
+        <div class="stock-card mid">
+          <div class="sc-head"><span class="sc-name">넥스틴</span><span class="sc-sig" style="background:var(--yellow)"></span></div>
+          <div class="sc-desc">반도체 검사 장비 국산화. 장비 국산화 정책 수혜.</div>
+          <div class="sc-tags"><span class="tag t-mid">수혜 중</span><span class="tag t-new">숨은 수혜</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 이벤트 캘린더 -->
+    <div class="page" id="page-events">
+      <div class="month-nav">
+        <button class="month-btn active" onclick="filterMonth('all', this)">전체</button>
+        <button class="month-btn" onclick="filterMonth('6', this)">6월</button>
+        <button class="month-btn" onclick="filterMonth('7', this)">7월</button>
+        <button class="month-btn" onclick="filterMonth('8', this)">8~9월</button>
+        <button class="month-btn" onclick="filterMonth('10', this)">10~11월</button>
+        <button class="month-btn" onclick="filterMonth('12', this)">12월</button>
+      </div>
+      <div class="calendar-wrap" id="calWrap">
+        <div class="cal-item hot" data-month="6">
+          <div class="cal-date hot-date">이번 주<br>HOT</div>
+          <div class="cal-body">
+            <div class="cal-title">삼성전자 HBM4 엔비디아 퀄 결과 <span class="cal-confirmed">확정 예정</span></div>
+            <div class="cal-note">통과 시 삼성전자 급등. 실패 시 SK하이닉스 독점 스토리 강화. 2026년 최대 관심사.</div>
+          </div>
+          <div class="cal-dir dir-mx">혼재</div>
+        </div>
+        <div class="cal-item" data-month="7">
+          <div class="cal-date">07/01</div>
+          <div class="cal-body">
+            <div class="cal-title">마이크론 3분기 실적 <span class="cal-confirmed">확정</span></div>
+            <div class="cal-note">"HBM 부족" 발언 나오면 SK하이닉스 급등 신호. HBM3E 수요 가이던스가 핵심.</div>
+          </div>
+          <div class="cal-dir dir-up">상승↑</div>
+        </div>
+        <div class="cal-item" data-month="7">
+          <div class="cal-date">07/22</div>
+          <div class="cal-body">
+            <div class="cal-title">삼성 갤럭시 언팩 (런던)</div>
+            <div class="cal-note">온디바이스 AI 신기능 발표. 갤럭시 AI 확대 시 리노공업·테스나 수혜.</div>
+          </div>
+          <div class="cal-dir dir-up">상승↑</div>
+        </div>
+        <div class="cal-item" data-month="7">
+          <div class="cal-date">07/29</div>
+          <div class="cal-body">
+            <div class="cal-title">SK하이닉스 2분기 실적 <span class="cal-confirmed">확정</span></div>
+            <div class="cal-note">HBM4 공급 물량·ASP·마진 첫 공식 확인. 컨센서스 초과 여부가 하반기 방향 결정.</div>
+          </div>
+          <div class="cal-dir dir-up">상승↑</div>
+        </div>
+        <div class="cal-item" data-month="8">
+          <div class="cal-date">8월~</div>
+          <div class="cal-body">
+            <div class="cal-title">엔비디아 베라루빈 본격 출하</div>
+            <div class="cal-note">HBM4 탑재 확인 = SK하이닉스 독점 공식화. 한미반도체·ISC 동반 상승 기대.</div>
+          </div>
+          <div class="cal-dir dir-up">상승↑</div>
+        </div>
+        <div class="cal-item" data-month="10">
+          <div class="cal-date">10/07</div>
+          <div class="cal-body">
+            <div class="cal-title">삼성전자 3분기 잠정 실적</div>
+            <div class="cal-note">HBM4 퀄 결과가 처음 반영되는 분기. 파운드리 수율 코멘트 핵심.</div>
+          </div>
+          <div class="cal-dir dir-mx">혼재</div>
+        </div>
+        <div class="cal-item" data-month="10">
+          <div class="cal-date">10월 말</div>
+          <div class="cal-body">
+            <div class="cal-title">MSCI 반기 리밸런싱 <span class="cal-confirmed">확정</span></div>
+            <div class="cal-note">SK하이닉스 비중 상향 가능. 패시브 자금 수급과 실적 시즌 겹쳐 변동성 확대.</div>
+          </div>
+          <div class="cal-dir dir-up">상승↑</div>
+        </div>
+        <div class="cal-item" data-month="12">
+          <div class="cal-date">12월</div>
+          <div class="cal-body">
+            <div class="cal-title">IEDM 2026 — 차세대 반도체 기술 로드맵</div>
+            <div class="cal-note">HBM5·2nm 이하 공정 방향 공개. 소부장 장비 다음 사이클 수요 윤곽.</div>
+          </div>
+          <div class="cal-dir dir-up">상승↑</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 돈 흐름 -->
+    <div class="page" id="page-chain">
+      <div class="sec-hdr">
+        <div class="sec-title">AI 반도체 만들어지는 순서</div>
+        <div class="sec-sub">단계 클릭 시 상세 펼침</div>
+      </div>
+      <div class="chain-flow">
+        <div class="chain-node">
+          <div class="chain-left"><div class="chain-num">1</div><div class="chain-line"></div></div>
+          <div class="chain-content" onclick="toggleChain(this)">
+            <div class="chain-stage">소재 — 반도체 만드는 재료</div>
+            <div class="chain-sub">수요 증가 시 가장 먼저 주문이 들어오는 곳. 수혜 강 · 구조적</div>
+            <div class="chain-picks">
+              <span class="tag t-str">솔브레인</span>
+              <span class="tag t-str">동진쎄미켐</span>
+              <span class="tag t-mid">한솔케미칼</span>
+            </div>
+            <div class="chain-detail">
+              <div class="chain-detail-text">식각액·세정액·포토레지스트 등 공정 필수 소재. CAPEX 증설마다 소재 사용량 비례 증가. 재고 조정 위험이 적은 소모품 특성.</div>
+              <div class="chain-hidden-row">
+                <span class="chain-hidden-label">숨은 수혜:</span>
+                <span class="hidden-pill">후성 (특수가스 독점)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="chain-node">
+          <div class="chain-left"><div class="chain-num">2</div><div class="chain-line"></div></div>
+          <div class="chain-content" onclick="toggleChain(this)">
+            <div class="chain-stage">장비 — 반도체 찍어내는 기계</div>
+            <div class="chain-sub">공장 증설할 때마다 폭발적 수주. 수혜 강 · 구조적</div>
+            <div class="chain-picks">
+              <span class="tag t-str">한미반도체</span>
+              <span class="tag t-str">HPSP</span>
+              <span class="tag t-str">원익IPS</span>
+            </div>
+            <div class="chain-detail">
+              <div class="chain-detail-text">HBM TC본더(한미반도체), 고압 어닐링(HPSP), CVD/ALD(원익IPS). HBM 세대 교체마다 신규 장비 구매가 필수. HPSP는 2nm 이하 전환 시 독점적 위치.</div>
+              <div class="chain-hidden-row">
+                <span class="chain-hidden-label">숨은 수혜:</span>
+                <span class="hidden-pill">넥스틴 (검사 장비 국산화)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="chain-node">
+          <div class="chain-left"><div class="chain-num">3</div><div class="chain-line"></div></div>
+          <div class="chain-content" onclick="toggleChain(this)">
+            <div class="chain-stage">메모리 — AI 서버의 핵심 두뇌</div>
+            <div class="chain-sub">HBM이 AI 필수 부품. 독점 여부가 주가 결정. 수혜 강 · 구조적</div>
+            <div class="chain-picks">
+              <span class="tag t-str">SK하이닉스</span>
+              <span class="tag t-mid">삼성전자</span>
+            </div>
+            <div class="chain-detail">
+              <div class="chain-detail-text">SK하이닉스 HBM4 독점 → 엔비디아 마진 20%+ 추정. 삼성은 HBM4 퀄 통과 도전 중. LTA(장기공급계약) 기반으로 이익 하방이 보호됨. NAND 반등 시 삼성 추가 모멘텀.</div>
+            </div>
+          </div>
+        </div>
+        <div class="chain-node">
+          <div class="chain-left"><div class="chain-num">4</div><div class="chain-line"></div></div>
+          <div class="chain-content" onclick="toggleChain(this)">
+            <div class="chain-stage">기판 — 칩 연결하는 회로판</div>
+            <div class="chain-sub">AI 서버 증가로 수요 폭발. 수혜 강 · 중기</div>
+            <div class="chain-picks">
+              <span class="tag t-str">삼성전기</span>
+              <span class="tag t-str">이수페타시스</span>
+            </div>
+            <div class="chain-detail">
+              <div class="chain-detail-text">AI 서버 한 대에 들어가는 PCB 기판 가격이 일반 서버 대비 3~5배. 이수페타시스는 북미 빅테크 직납 구조. 빅테크 CAPEX 증가 = 기판 수요 직결.</div>
+              <div class="chain-hidden-row">
+                <span class="chain-hidden-label">숨은 수혜:</span>
+                <span class="hidden-pill">심텍</span>
+                <span class="hidden-pill">티엘비</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="chain-node">
+          <div class="chain-left"><div class="chain-num">5</div><div class="chain-line"></div></div>
+          <div class="chain-content" onclick="toggleChain(this)">
+            <div class="chain-stage">패키징 — 칩 묶어서 완성품 만들기</div>
+            <div class="chain-sub">HBM 핵심 후공정. 세대 교체마다 신규 수요. 수혜 강 · 구조적</div>
+            <div class="chain-picks">
+              <span class="tag t-str">한미반도체</span>
+              <span class="tag t-str">리노공업</span>
+              <span class="tag t-str">ISC</span>
+            </div>
+            <div class="chain-detail">
+              <div class="chain-detail-text">HBM 적층 수 증가(HBM4: 12단 이상)로 TC본더 수요 폭증. ISC는 HBM 테스트 소켓 전량 교체 수요. 리노공업은 온디바이스AI 확산 시 추가 모멘텀.</div>
+              <div class="chain-hidden-row">
+                <span class="chain-hidden-label">숨은 수혜:</span>
+                <span class="hidden-pill">하나마이크론</span>
+                <span class="hidden-pill">한화세미텍</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="chain-node">
+          <div class="chain-left"><div class="chain-num">6</div><div class="chain-line"></div></div>
+          <div class="chain-content" onclick="toggleChain(this)">
+            <div class="chain-stage">시스템반도체 — 스마트폰·자동차·AI 두뇌</div>
+            <div class="chain-sub">파운드리 수율 회복이 열쇠. 수혜 중 · 불확실</div>
+            <div class="chain-picks">
+              <span class="tag t-mid">삼성전자</span>
+              <span class="tag t-mid">DB하이텍</span>
+            </div>
+            <div class="chain-detail">
+              <div class="chain-detail-text">삼성 2nm 파운드리 수율 회복 시 재평가. 온디바이스AI 확산으로 스마트폰 AP 수요 증가. DB하이텍은 전력반도체 구조적 성장.</div>
+              <div class="chain-hidden-row">
+                <span class="chain-hidden-label">숨은 수혜:</span>
+                <span class="hidden-pill">가온칩스 (설계)</span>
+                <span class="hidden-pill">퀄리타스반도체</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 시장 미반영 -->
+    <div class="page" id="page-unknown">
+      <div class="mirror-grid">
+        <div class="mirror-card known">
+          <div class="mirror-header">✓ 이미 주가에 반영</div>
+          <div class="mirror-items">
+            <div class="mirror-item">HBM 독주 구도 (SK하이닉스)</div>
+            <div class="mirror-item">빅테크 CAPEX → HBM 수요</div>
+            <div class="mirror-item">삼성 파운드리 부진</div>
+            <div class="mirror-item">메모리 구조적 성장</div>
+            <div class="mirror-item">한미반도체 TC본더 독점</div>
+          </div>
+        </div>
+        <div class="mirror-card under">
+          <div class="mirror-header">△ 과소평가된 것</div>
+          <div class="mirror-items">
+            <div class="mirror-item">LTA 계약의 이익 하방 보호 구조 — 가격이 떨어져도 계약량은 보장됨</div>
+            <div class="mirror-item">삼성 2nm 수율 회복 속도 — 컨센서스보다 빠를 수 있음</div>
+            <div class="mirror-item">HBM 너머 서버D램·eSSD 확산 — AI 수혜가 더 넓게 퍼짐</div>
+            <div class="mirror-item">CXMT 위협이 실제로 제한적 — 미국 규제로 양산 불가</div>
+          </div>
+        </div>
+        <div class="mirror-card hidden-r">
+          <div class="mirror-header">? 아직 미반영 (상방)</div>
+          <div class="mirror-items">
+            <div class="mirror-item">삼성 HBM4E 역전 시나리오 — 퀄 통과 시 독점 스토리 붕괴</div>
+            <div class="mirror-item">엔비디아 루빈 내 삼성 실제 점유율 — 발표 전 추측 불가</div>
+            <div class="mirror-item">소부장 TSMC 공급망 진입 — 실현 시 완전 새로운 수요처</div>
+            <div class="mirror-item">삼성 AMD EPYC 파운드리 수주 가능성</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec-hdr"><div class="sec-title">카테고리별 시장 반영도</div></div>
+      <div class="toggle-group">
+        <div class="toggle-item">
+          <div class="toggle-hdr" onclick="toggleItem(this)">
+            <span class="toggle-icon">▶</span>
+            <span class="toggle-label">LTA(장기공급계약) 이익 보호 — 과소평가됨</span>
+            <span class="toggle-badge t-mid">과소평가</span>
+          </div>
+          <div class="toggle-body">
+            <div class="toggle-text">
+              SK하이닉스와 삼성은 빅테크·엔비디아와 장기 공급 계약을 맺고 있습니다. 계약 기간 내에는 HBM 가격이 떨어져도 최소 납품 수량이 보장됩니다. 시장은 단기 ASP 변동에만 집중하지만, 실제 이익 하방은 LTA가 지켜주는 구조입니다. 애널리스트 모델 대부분이 이를 충분히 반영하지 않아 EPS 하향 위험이 과대평가돼 있을 수 있습니다.
+            </div>
+          </div>
+        </div>
+        <div class="toggle-item">
+          <div class="toggle-hdr" onclick="toggleItem(this)">
+            <span class="toggle-icon">▶</span>
+            <span class="toggle-label">소부장 TSMC 공급망 진입 — 미반영</span>
+            <span class="toggle-badge" style="background:var(--blue-dim);color:var(--blue)">미반영</span>
+          </div>
+          <div class="toggle-body">
+            <div class="toggle-text">
+              솔브레인·동진쎄미켐·HPSP 등 한국 소재·장비 업체들이 TSMC의 공식 공급망에 진입하는 시나리오입니다. TSMC 입장에서도 일본 의존도를 낮추고 공급망을 다변화할 유인이 있습니다. 이 시나리오가 현실화되는 순간, 해당 종목들의 매출 규모와 밸류에이션 기준이 완전히 달라집니다.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 리스크 -->
+    <div class="page" id="page-risk">
+      <div class="sec-hdr">
+        <div class="sec-title">리스크 역발상</div>
+        <div class="sec-sub">항목 클릭 시 상세 분석 펼침</div>
+      </div>
+      <div class="risk-wrap">
+
+        <div class="risk-item ob" onclick="toggleRisk(this)">
+          <div class="ri-top">
+            <span class="ri-prob prob-lo">15%</span>
+            <div class="ri-center">
+              <div class="ri-title">AI 거품 꺼지면 HBM 수요 붕괴</div>
+              <span class="ri-badge b-ob">과대공포 — 겁먹지 않아도 됨</span>
+            </div>
+            <span class="ri-expand">▾</span>
+          </div>
+          <div class="prob-bar"><div class="prob-fill" style="width:15%;background:var(--green)"></div></div>
+          <div class="ri-body">
+            <div class="ri-text">AI가 효율화돼도 학습용 GPU 수요는 유지됩니다. 빅테크들이 CAPEX를 실제로 줄였을 때만 위협이에요. 현재 구글·MS·아마존 모두 증설 중이고, LTA 계약으로 단기 수요 변동에도 SK하이닉스 납품량은 보장됩니다.</div>
+            <div class="ri-row">
+              <div><div class="ri-col-label">타격 종목</div><div class="ri-col-val">SK하이닉스, 한미반도체<br>(심리 타격)</div></div>
+              <div><div class="ri-col-label">오히려 수혜</div><div class="ri-col-val">없음 — 실제 타격이 없으니<br>급락 시 매수 기회</div></div>
+            </div>
+            <div class="ri-signal"><span>실제 신호:</span> 빅테크 어닝콜에서 "AI CAPEX 삭감" 단어가 직접 나왔을 때</div>
+          </div>
+        </div>
+
+        <div class="risk-item ob" onclick="toggleRisk(this)">
+          <div class="ri-top">
+            <span class="ri-prob prob-lo">12%</span>
+            <div class="ri-center">
+              <div class="ri-title">중국 CXMT가 HBM 양산 — 한국 독점 끝</div>
+              <span class="ri-badge b-ob">과대공포 — 겁먹지 않아도 됨</span>
+            </div>
+            <span class="ri-expand">▾</span>
+          </div>
+          <div class="prob-bar"><div class="prob-fill" style="width:12%;background:var(--green)"></div></div>
+          <div class="ri-body">
+            <div class="ri-text">CXMT가 HBM을 개발 중이지만 미국 장비 수출 규제로 실제 양산은 제한적입니다. 고성능 HBM4 수준을 따라오려면 최소 3~5년. 헤드라인 뉴스에 흔들리지 않아도 됩니다.</div>
+            <div class="ri-row">
+              <div><div class="ri-col-label">타격 종목</div><div class="ri-col-val">SK하이닉스, 삼성전자<br>(주가 심리 타격)</div></div>
+              <div><div class="ri-col-label">오히려 수혜</div><div class="ri-col-val">없음 — 실제로 일어나기 어려운<br>헤드라인 리스크</div></div>
+            </div>
+            <div class="ri-signal"><span>실제 신호:</span> CXMT HBM3E 이상을 글로벌 AI 기업에 납품했다는 뉴스</div>
+          </div>
+        </div>
+
+        <div class="risk-item ur" onclick="toggleRisk(this)">
+          <div class="ri-top">
+            <span class="ri-prob prob-hi">45%</span>
+            <div class="ri-center">
+              <div class="ri-title">레거시 D램 공급 과잉 — NAND 가격 또 폭락</div>
+              <span class="ri-badge b-ur">진짜 위험 — 주가에 거의 미반영</span>
+            </div>
+            <span class="ri-expand">▾</span>
+          </div>
+          <div class="prob-bar"><div class="prob-fill" style="width:45%;background:var(--red)"></div></div>
+          <div class="ri-body">
+            <div class="ri-text">HBM 호황에 가려져 있지만 PC·스마트폰용 일반 메모리는 수요가 약합니다. 삼성전자 실적의 절반이 여기서 나오는데, 가격이 떨어지면 실적 쇼크 가능성이 있어요. 시장은 HBM만 보고 이 리스크를 외면하고 있습니다.</div>
+            <div class="ri-row">
+              <div><div class="ri-col-label">타격 종목</div><div class="ri-col-val">삼성전자 (레거시 비중 높음)<br>SK하이닉스 NAND 부문</div></div>
+              <div><div class="ri-col-label">오히려 수혜</div><div class="ri-col-val">HPSP, 원익IPS<br>(HBM 특화, 레거시 무관)</div></div>
+            </div>
+            <div class="ri-signal"><span>실제 신호:</span> DRAM 고정거래가격 3개월 연속 하락 + 삼성 재고 증가 공시</div>
+          </div>
+        </div>
+
+        <div class="risk-item ur" onclick="toggleRisk(this)">
+          <div class="ri-top">
+            <span class="ri-prob prob-hi">40%</span>
+            <div class="ri-center">
+              <div class="ri-title">미국이 삼성·SK 중국 공장 제한 강화</div>
+              <span class="ri-badge b-ur">진짜 위험 — 주가에 거의 미반영</span>
+            </div>
+            <span class="ri-expand">▾</span>
+          </div>
+          <div class="prob-bar"><div class="prob-fill" style="width:40%;background:var(--red)"></div></div>
+          <div class="ri-body">
+            <div class="ri-text">미국이 Entity List를 확대하거나 중국 내 한국 공장 가동을 제한하면 매출 타격이 큽니다. 삼성전자 중국 매출 15%, SK하이닉스 중국 매출 10%+. 하반기 미중 관계가 핵심 모니터링 포인트입니다.</div>
+            <div class="ri-row">
+              <div><div class="ri-col-label">타격 종목</div><div class="ri-col-val">삼성전자, SK하이닉스<br>(중국 공장 직접 타격)</div></div>
+              <div><div class="ri-col-label">오히려 수혜</div><div class="ri-col-val">한미반도체, HPSP<br>(중국 노출 없음)</div></div>
+            </div>
+            <div class="ri-signal"><span>실제 신호:</span> 미국 상무부 Entity List에 중국 반도체 기업 20개+ 추가 공지</div>
+          </div>
+        </div>
+
+        <div class="risk-item re" onclick="toggleRisk(this)">
+          <div class="ri-top">
+            <span class="ri-prob prob-mid">25%</span>
+            <div class="ri-center">
+              <div class="ri-title">삼성 HBM4E 역전 — SK 독점 스토리 붕괴</div>
+              <span class="ri-badge b-re">적정 반영 — 주시 필요</span>
+            </div>
+            <span class="ri-expand">▾</span>
+          </div>
+          <div class="prob-bar"><div class="prob-fill" style="width:25%;background:var(--yellow)"></div></div>
+          <div class="ri-body">
+            <div class="ri-text">현재 SK하이닉스 독점 스토리로 주가가 많이 올랐는데, 삼성이 HBM4E에서 먼저 퀄을 통과하면 SK 주가에 단기 급락이 올 수 있어요. 하지만 이 시나리오는 삼성에게는 상방 리스크입니다.</div>
+            <div class="ri-row">
+              <div><div class="ri-col-label">타격 종목</div><div class="ri-col-val">SK하이닉스<br>(단기 급락 가능)</div></div>
+              <div><div class="ri-col-label">오히려 수혜</div><div class="ri-col-val">삼성전자<br>(독점 붕괴 → 경쟁 구도)</div></div>
+            </div>
+            <div class="ri-signal"><span>실제 신호:</span> 삼성전자 "HBM4E 엔비디아 납품 개시" 공식 발표</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 업데이트 로그 -->
+    <div class="page" id="page-log">
+      <div class="log-wrap">
+        <div class="log-row">
+          <div class="log-date">6/8</div>
+          <div class="log-dot" style="background:var(--red)"></div>
+          <div class="log-text new-item">삼성전자 HBM4 퀄 결과 이번 주 내 가능 — 최우선 모니터링 추가</div>
+        </div>
+        <div class="log-row">
+          <div class="log-date">6/8</div>
+          <div class="log-dot" style="background:var(--red)"></div>
+          <div class="log-text new-item">엔비디아 베라루빈 출하 공식 시작 확인 — SK하이닉스 수혜 강도 상향</div>
+        </div>
+        <div class="log-row">
+          <div class="log-date">6/5</div>
+          <div class="log-dot" style="background:var(--yellow)"></div>
+          <div class="log-text">이수페타시스 AI 서버용 PCB 수주 확대 — 숨은 수혜주 등급 상향</div>
+        </div>
+        <div class="log-row">
+          <div class="log-date">6/1</div>
+          <div class="log-dot" style="background:var(--text3)"></div>
+          <div class="log-text">마이크론 3Q 실적 7/1 확정 일정 추가</div>
+        </div>
+        <div class="log-row">
+          <div class="log-date">5/28</div>
+          <div class="log-dot" style="background:var(--yellow)"></div>
+          <div class="log-text">레거시 D램 공급과잉 리스크 발생 확률 35% → 45%로 상향</div>
+        </div>
+        <div class="log-row">
+          <div class="log-date">5/28</div>
+          <div class="log-dot" style="background:var(--text3)"></div>
+          <div class="log-text">HPSP 2nm 이하 공정 전환 수혜 분석 추가</div>
+        </div>
+        <div class="log-row">
+          <div class="log-date">5/20</div>
+          <div class="log-dot" style="background:var(--text3)"></div>
+          <div class="log-text">LTA 이익 하방 보호 효과 — 시장 미반영 섹션 추가</div>
+        </div>
+        <div class="log-row">
+          <div class="log-date">5/15</div>
+          <div class="log-dot" style="background:var(--text3)"></div>
+          <div class="log-text">소부장 TSMC 공급망 진입 시나리오 분석 추가</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- content -->
+</div><!-- main -->
+</div><!-- shell -->
+
+<!-- 모바일 하단 탭바 -->
+<nav class="mobile-tabbar">
+  <div class="mobile-tabbar-inner">
+    <div class="mob-tab active" id="mtab-home" onclick="goPage('home')">
+      <span class="mob-tab-icon">⬡</span>오늘 핵심
+    </div>
+    <div class="mob-tab" id="mtab-watch" onclick="goPage('watch')">
+      <span class="mob-tab-icon">◎</span>종목
+    </div>
+    <div class="mob-tab" id="mtab-events" onclick="goPage('events')">
+      <span class="mob-tab-icon">◷</span>이벤트
+    </div>
+    <div class="mob-tab" id="mtab-chain" onclick="goPage('chain')">
+      <span class="mob-tab-icon">⬢</span>밸류체인
+    </div>
+    <div class="mob-tab" id="mtab-unknown" onclick="goPage('unknown')">
+      <span class="mob-tab-icon">◈</span>미반영
+    </div>
+    <div class="mob-tab" id="mtab-risk" onclick="goPage('risk')">
+      <span class="mob-tab-icon">◬</span>리스크
+    </div>
+    <div class="mob-tab" id="mtab-log" onclick="goPage('log')">
+      <span class="mob-tab-icon">◫</span>로그
+    </div>
+  </div>
+</nav>
+
+<script>
+const pages = {
+  home: { title: '오늘의 핵심 3가지', sub: '매일 아침 꼭 봐야 할 것만' },
+  watch: { title: '종목 워치', sub: '신호등으로 보는 투자 현황' },
+  events: { title: '이벤트 캘린더', sub: '하반기 주가 트리거 일정' },
+  chain: { title: '돈 흐름 (밸류체인)', sub: 'AI 반도체 만들어지는 순서' },
+  unknown: { title: '시장 미반영 분석', sub: '주가에 아직 안 담긴 것들' },
+  risk: { title: '리스크 역발상', sub: '과대공포 vs 진짜 위험 구분' },
+  log: { title: '업데이트 로그', sub: '최근 변경사항 기록' }
+};
+
+function goPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.mob-tab').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  const info = pages[id];
+  document.getElementById('pageTitle').textContent = info.title;
+  document.getElementById('pageSub').textContent = info.sub;
+  const items = document.querySelectorAll('.nav-item');
+  const order = ['home','watch','events','chain','unknown','risk','log'];
+  items[order.indexOf(id)].classList.add('active');
+  const mtab = document.getElementById('mtab-' + id);
+  if (mtab) mtab.classList.add('active');
+  // 모바일에서 탭 선택 시 상단으로 스크롤
+  document.querySelector('.content').scrollTop = 0;
+}
+
+function toggleItem(hdr) {
+  const item = hdr.closest('.toggle-item');
+  item.classList.toggle('open');
+}
+
+function toggleChain(el) {
+  el.classList.toggle('open');
+}
+
+function toggleRisk(el) {
+  el.classList.toggle('open');
+}
+
+function filterMonth(m, btn) {
+  document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#calWrap .cal-item').forEach(item => {
+    if (m === 'all') { item.style.display = ''; return; }
+    const dm = item.getAttribute('data-month');
+    item.style.display = (dm === m) ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>
