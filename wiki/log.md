@@ -1,3 +1,4 @@
+- 2026-06-09 — Excel ingest 완료: 추정이익변경·수출·수급·중소형주수급·일정·투자아이디어 → ingest_report_2026-06-09.md
 - 2026-06-08 — 수급오실레이터700 엑셀 완전 해독 | 22개 시트 구조·합산공식(외국인+기관매도대금 단순합산)·K~X열구조(PERCENTILE통계·RS강도테이블헤더8개)·관심도db API코드(I101200~U117120) | 업데이트시각: 관심도db=18:46·매도데이터=18:52·파일저장=18:57 KST | VBA p-code 한계: oletools 읽기 불가 (Excel VBA편집기 직접확인만 가능)
 - 2026-06-08 — 레이아웃 A/B/C 3안 비교 → A안(탭네비) 확정 | GitHub Pages 호스팅 완료 (.github/workflows/pages.yml) | semi-master.html 모바일최적화 | URL: park-lotto.github.io/lotto-stock-wiki/out/semi-master.html | 서비스방향: 정보정리+수급빈집+주도섹터강도가 핵심차별점 확정
 - 2026-06-08 — 반도체 섹터 마스터 v2 완성 | Gemini 5프롬프트 결합 | 8카테고리 히트맵+시장미반영인사이트5개+밸류체인맵(숨은수혜주)+H2이벤트캘린더+리스크역발상(과공포vs과소평가)+종목포지셔닝7개 | 생성파일: out/sector_반도체_v2.html
