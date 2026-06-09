@@ -1890,6 +1890,29 @@ def _build_컨센_탑픽_tg(results: dict) -> str:
         for s in 꽉참_턴중[:5]:
             pts_clean = [p.split("(")[0] for p in s["pts"]]
             lines.append(f"  {s['name']}  {s['score']}점  {' · '.join(pts_clean)}")
+        lines.append("")
+
+    # 빈집/과매수 없지만 컨센 신호 2개+ 종목
+    컨센단독 = sorted(
+        [s for s in scored
+         if not s["has_빈집"]
+         and s["name"] not in 꽉참_상승_names
+         and s["name"] not in 꽉참_턴_names
+         and s["score"] >= 2],
+        key=lambda x: x["score"], reverse=True
+    )
+    if 컨센단독:
+        lines.append(f"<b>⚡ 컨센 단독 후보 ({len(컨센단독)}종목, 상위 10개)</b>")
+        lines.append("<i>수급 중립 — 컨센·리레이팅·TP 신호만</i>")
+        for s in 컨센단독[:10]:
+            pts_clean = [p.split("(")[0] for p in s["pts"]]
+            line = f"  <b>{s['name']}</b>  {s['score']}점  {' · '.join(pts_clean)}"
+            if s["rating"]:
+                line += f"\n    └ {s['rating']}"
+            lines.append(line)
+
+    if not any([재진입, 빠지는중, 꽉참_상승중, 꽉참_턴중, 컨센단독]):
+        lines.append("후보 없음")
 
     return "\n".join(lines)
 
