@@ -177,14 +177,14 @@ QUESTIONS = [
 print(f"{'='*60}")
 print(f"  반도체 섹터 Q1~Q7 학습 세션 시작")
 print(f"  기준일: {TODAY}")
-print(f"  모델: gemini-2.5-flash")
+print(f"  모델: gemini-3-flash-preview")
 print(f"{'='*60}\n")
 
 client = genai.Client(api_key=API_KEY)
 
 # 채팅 세션 생성 (컨텍스트 유지)
 chat = client.chats.create(
-    model='gemini-2.5-flash',
+    model='gemini-3-flash-preview',
     config=types.GenerateContentConfig(
         tools=[types.Tool(google_search=types.GoogleSearch())],
         temperature=0.3,

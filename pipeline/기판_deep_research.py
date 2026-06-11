@@ -99,7 +99,7 @@ def research_topic(topic: dict) -> str:
     print(f"[{topic['id']}] 리서치 중...")
     try:
         response = client.models.generate_content(
-            model="gemini-2.5-pro",
+            model="gemini-3-flash-preview",
             contents=topic["query"],
             config=types.GenerateContentConfig(
                 tools=[types.Tool(google_search=types.GoogleSearch())],

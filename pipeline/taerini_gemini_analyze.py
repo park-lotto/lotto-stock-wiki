@@ -105,7 +105,7 @@ def analyze(date_str: str, max_images: int = 40):
     print(f"[INFO] Gemini Flash에 전송 중...")
     try:
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-3-flash-preview",
             contents=parts,
         )
         return response.text

@@ -99,7 +99,7 @@ def extract_issues(wiki_text: str, target_date: str) -> list[dict]:
 JSON만 반환, 다른 텍스트 없이."""
 
     resp = client.models.generate_content(
-        model='gemini-2.5-flash',
+        model='gemini-3-flash-preview',
         contents=prompt,
     )
     text = resp.text.strip()

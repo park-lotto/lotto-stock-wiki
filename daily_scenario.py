@@ -176,7 +176,7 @@ def main():
         .replace('{blogs}',      bl[:9000])
         .replace('{telegram}',   tg[:3500]))
 
-    resp     = client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
+    resp     = client.models.generate_content(model='gemini-3-flash-preview', contents=prompt)
     scenario = resp.text
 
     OUT_DIR.mkdir(exist_ok=True)

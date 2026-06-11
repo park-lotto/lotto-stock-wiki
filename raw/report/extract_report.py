@@ -41,7 +41,7 @@ REPORT_DIR = pathlib.Path(__file__).parent
 SUMMARY_DIR = REPORT_DIR / "요약"
 SUMMARY_DIR.mkdir(exist_ok=True)
 
-MODEL = "models/gemini-2.5-flash"
+MODEL = "models/gemini-3-flash-preview"
 
 # 폴더명 → 유형 코드 매핑
 FOLDER_TYPE = {

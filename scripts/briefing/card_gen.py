@@ -84,7 +84,7 @@ def get_sector_data(state: dict, auto: bool) -> list:
     content = sector_files[0].read_text(encoding='utf-8')[-3000:]
     client = genai.Client(api_key=os.environ['GEMINI_API_KEY'])
     resp = client.models.generate_content(
-        model='gemini-2.5-flash',
+        model='gemini-3-flash-preview',
         contents=f"""아래 {sector} 섹터 위키에서 오늘 가장 중요한 수치/팩트 3개를 JSON 배열로 추출하라.
 형식: [{{"label":"브로드컴", "value":"-11.8%", "note":"AI 가이던스는 상향"}}]
 JSON만, 3개 정확히.

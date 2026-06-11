@@ -187,7 +187,7 @@ def analyze_with_gemini(topic_name: str, articles: list[dict]) -> str:
 
     try:
         resp = gemini_client.models.generate_content(
-            model="gemini-2.5-pro",
+            model="gemini-3-flash-preview",
             contents=prompt,
             config=types.GenerateContentConfig(
                 tools=[types.Tool(google_search=types.GoogleSearch())],

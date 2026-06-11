@@ -266,7 +266,7 @@ def fetch_gemini_today_sectors():
     try:
         client = genai.Client(api_key=api_key)
         resp = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-3-flash-preview',
             contents=prompt,
             config=types.GenerateContentConfig(
                 tools=[types.Tool(google_search=types.GoogleSearch())],

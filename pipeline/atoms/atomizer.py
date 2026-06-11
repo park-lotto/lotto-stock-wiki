@@ -5,7 +5,7 @@ from pathlib import Path
 from google import genai
 from google.genai import types
 
-_GEMINI_MODEL = "gemini-2.5-flash-lite"
+_GEMINI_MODEL = "gemini-3.1-flash-lite"
 
 
 def _load_gemini_key() -> str:

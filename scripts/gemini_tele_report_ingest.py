@@ -13,7 +13,7 @@ from google import genai
 from google.genai import types
 
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-MODELS = ["gemini-2.5-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash"]
+MODELS = ["gemini-3-flash-preview", "gemini-3.1-flash-lite"]
 
 PROMPT_TEMPLATE = """
 아래는 {source_type} 파일들입니다. 각 파일을 분석해서 위키 인제스트용 구조화 요약을 만들어주세요.

@@ -116,7 +116,7 @@ def main():
 
         try:
             prompt = PROMPT.replace('{content}', content[:4000])
-            resp   = client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
+            resp   = client.models.generate_content(model='gemini-3-flash-preview', contents=prompt)
             items  = json.loads(extract_json(resp.text))
         except Exception as e:
             print(f"오류({e})")

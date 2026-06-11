@@ -67,7 +67,7 @@ def main():
 
         try:
             prompt = PROMPT.replace('{content}', content)
-            resp   = client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
+            resp   = client.models.generate_content(model='gemini-3-flash-preview', contents=prompt)
             data   = json.loads(extract_json(resp.text))
             data['file'] = fname
             results.append(data)

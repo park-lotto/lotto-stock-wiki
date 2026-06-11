@@ -29,7 +29,7 @@ from .db import init_db, insert_atom, get_conn
 from .vector_db import embed_and_store
 
 RAW_ROOT = Path(__file__).parent.parent.parent / "raw"
-_MODEL = "gemini-2.5-flash-lite"
+_MODEL = "gemini-3.1-flash-lite"
 
 _PROMPT = """당신은 한국 주식시장 전문 애널리스트입니다.
 아래 증권사 리포트 PDF를 읽고, 투자 판단에 실질적으로 쓸 수 있는 정보만 '원자' 단위로 추출하라.
