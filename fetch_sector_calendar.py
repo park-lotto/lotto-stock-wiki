@@ -61,7 +61,7 @@ def ask_gemini(prompt: str, retries: int = 2) -> str:
     for attempt in range(retries + 1):
         try:
             resp = client.models.generate_content(
-                model="gemini-2.5-flash",
+                model="gemini-3-flash-preview",
                 contents=prompt,
                 config=GENERATE_CFG,
             )

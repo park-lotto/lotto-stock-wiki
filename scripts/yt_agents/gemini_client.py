@@ -17,7 +17,7 @@ def _load_env():
 _env = _load_env()
 GEMINI_KEY = _env.get('GEMINI_API_KEY', os.environ.get('GEMINI_API_KEY', ''))
 
-def call(prompt: str, system: str = '', model: str = 'gemini-2.5-flash', temperature: float = 0.7) -> str:
+def call(prompt: str, system: str = '', model: str = 'gemini-3-flash-preview', temperature: float = 0.7) -> str:
     """Gemini 단일 호출 → 텍스트 반환"""
     if not GEMINI_KEY:
         raise RuntimeError('.env에 GEMINI_API_KEY 없음')
@@ -36,7 +36,7 @@ def call(prompt: str, system: str = '', model: str = 'gemini-2.5-flash', tempera
     return resp.text.strip()
 
 
-def search(query: str, model: str = 'gemini-2.5-flash') -> str:
+def search(query: str, model: str = 'gemini-3-flash-preview') -> str:
     """실제 Google Search grounding — 실시간 웹 검색"""
     if not GEMINI_KEY:
         raise RuntimeError('.env에 GEMINI_API_KEY 없음')
@@ -57,7 +57,7 @@ def search(query: str, model: str = 'gemini-2.5-flash') -> str:
     return resp.text.strip()
 
 
-def fetch_url(url: str, prompt: str, model: str = 'gemini-2.5-flash') -> str:
+def fetch_url(url: str, prompt: str, model: str = 'gemini-3-flash-preview') -> str:
     """URL을 Gemini가 직접 읽고 분석 — Naver 블로그 등 WebFetch 차단 사이트 우회"""
     if not GEMINI_KEY:
         raise RuntimeError('.env에 GEMINI_API_KEY 없음')
@@ -78,7 +78,7 @@ def fetch_url(url: str, prompt: str, model: str = 'gemini-2.5-flash') -> str:
     return resp.text.strip()
 
 
-def call_with_grounding(prompt: str, system: str = '', model: str = 'gemini-2.5-pro', temperature: float = 0.7) -> tuple[str, list]:
+def call_with_grounding(prompt: str, system: str = '', model: str = 'gemini-3-flash-preview', temperature: float = 0.7) -> tuple[str, list]:
     """Google Search grounding 활성화 호출 → (텍스트, 검색출처목록) 반환"""
     if not GEMINI_KEY:
         raise RuntimeError('.env에 GEMINI_API_KEY 없음')

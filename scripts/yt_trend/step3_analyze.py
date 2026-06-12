@@ -72,7 +72,7 @@ def _analyze(model, title: str, hook: str, full: str, comments: list[str]) -> di
   "structure": "전체 흐름 3줄 요약",
   "comment_reaction": "댓글 반응 핵심 키워드 3개"
 }}"""
-    resp = model.models.generate_content(model="gemini-2.5-flash", contents=prompt)
+    resp = model.models.generate_content(model="gemini-3-flash-preview", contents=prompt)
     text = resp.text.strip()
     text = re.sub(r'^```(?:json)?\s*', '', text)
     text = re.sub(r'\s*```$', '', text).strip()

@@ -68,7 +68,7 @@ def run(date_str: str):
     client = genai.Client(api_key=GEMINI_KEY)
 
     try:
-        resp = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
+        resp = client.models.generate_content(model="gemini-3-flash-preview", contents=prompt)
     except Exception as e:
         print(f"❌ Gemini API 오류: {e}")
         sys.exit(1)

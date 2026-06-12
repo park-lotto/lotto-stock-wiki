@@ -93,7 +93,7 @@ print(f'   조사 기준: {TODAY}\n')
 
 # ── Gemini 호출 (Google Search 그라운딩) ────────────────────────────────────
 response = client.models.generate_content(
-    model='gemini-2.5-flash',
+    model='gemini-3-flash-preview',
     contents=PROMPT,
     config=types.GenerateContentConfig(
         tools=[types.Tool(google_search=types.GoogleSearch())],

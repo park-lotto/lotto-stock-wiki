@@ -151,7 +151,7 @@ def call_gemini(market_str, news_text):
 
     client = genai.Client(api_key=api_key)
     prompt = PROMPT.replace('{market_data}', market_str).replace('{news_text}', news_text[:4000])
-    resp   = client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
+    resp   = client.models.generate_content(model='gemini-3-flash-preview', contents=prompt)
 
     raw = resp.text.strip()
     if '```' in raw:

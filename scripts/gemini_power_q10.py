@@ -289,7 +289,7 @@ def call_gemini(qnum: str, qtext: str, context: dict) -> str:
     for attempt in range(5):
         try:
             resp = client.models.generate_content(
-                model='gemini-2.5-flash',
+                model='gemini-3-flash-preview',
                 contents=ctx + qtext,
                 config=types.GenerateContentConfig(
                     tools=[types.Tool(google_search=types.GoogleSearch())],
@@ -311,7 +311,7 @@ def call_gemini(qnum: str, qtext: str, context: dict) -> str:
 print(f"{'='*60}")
 print(f"  전력기기 섹터 Q1~Q10 리서치")
 print(f"  기준일: {TODAY} | TYPE C 하이브리드 (실적형+성장형)")
-print(f"  gemini-2.5-flash + Google Search | 독립 호출 방식")
+print(f"  gemini-3-flash-preview + Google Search | 독립 호출 방식")
 print(f"{'='*60}\n")
 
 results   = {}

@@ -42,7 +42,7 @@ if not API_KEY:
     sys.exit(1)
 
 client = genai.Client(api_key=API_KEY)
-MODEL = "models/gemini-2.5-flash"
+MODEL = "models/gemini-3-flash-preview"
 
 EXCEL_DIR = ROOT / "raw" / "매일 엑셀넣을것"
 SUMMARY_DIR = ROOT / "raw" / "매일요약"

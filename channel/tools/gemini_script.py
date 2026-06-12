@@ -26,7 +26,7 @@ def load_system_prompt() -> str:
     return ''
 
 
-def run(brief_path: str, output_path: str = None, model: str = 'gemini-2.5-pro') -> str:
+def run(brief_path: str, output_path: str = None, model: str = 'gemini-3-flash-preview') -> str:
     brief_file = Path(brief_path)
     if not brief_file.exists():
         print(f"[error] 브리프 파일 없음: {brief_path}")
@@ -81,7 +81,7 @@ def main():
     parser = argparse.ArgumentParser(description='Gemini 대본 생성기 (Google Search grounding)')
     parser.add_argument('--brief',  required=True, help='브리프 파일 경로')
     parser.add_argument('--output', default=None,  help='출력 파일 경로')
-    parser.add_argument('--model',  default='gemini-2.5-pro', help='Gemini 모델')
+    parser.add_argument('--model',  default='gemini-3-flash-preview', help='Gemini 모델')
     args = parser.parse_args()
     run(args.brief, args.output, args.model)
 

@@ -241,7 +241,7 @@ def ingest_telegram(date_str, client, existing_ids):
                       .replace('{channel}', channel)
                       .replace('{date}', date_str)
                       .replace('{content}', content[:4000]))
-            resp     = client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
+            resp     = client.models.generate_content(model='gemini-3-flash-preview', contents=prompt)
             raw_json = extract_json(resp.text)
             items    = json.loads(raw_json)
         except Exception as e:

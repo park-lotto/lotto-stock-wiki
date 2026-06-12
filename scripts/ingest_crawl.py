@@ -84,7 +84,7 @@ def classify_telegram(reports: list) -> list:
 
     prompt = TELEGRAM_PROMPT.format(sectors=', '.join(L5_SECTORS), reports=reports_text)
     resp = client.models.generate_content(
-        model='gemini-2.5-flash',
+        model='gemini-3-flash-preview',
         contents=[types.Content(role='user', parts=[types.Part(text=prompt)])]
     )
     raw = re.sub(r'^```[\w]*\n?', '', resp.text.strip())
@@ -116,7 +116,7 @@ JSON만 반환:
 def extract_insights(channel: str, content: str) -> dict:
     prompt = INSIGHTS_PROMPT.format(content=content)
     resp = client.models.generate_content(
-        model='gemini-2.5-flash',
+        model='gemini-3-flash-preview',
         contents=[types.Content(role='user', parts=[types.Part(text=prompt)])]
     )
     raw = re.sub(r'^```[\w]*\n?', '', resp.text.strip())
@@ -224,7 +224,7 @@ def classify_and_extract(reports: list) -> list:
     prompt = PROMPT.format(sectors=', '.join(L5_SECTORS), reports=reports_text)
 
     resp = client.models.generate_content(
-        model='gemini-2.5-flash',
+        model='gemini-3-flash-preview',
         contents=[types.Content(role='user', parts=[types.Part(text=prompt)])]
     )
     raw = re.sub(r'^```[\w]*\n?', '', resp.text.strip())

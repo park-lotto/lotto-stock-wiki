@@ -63,7 +63,7 @@ async def send_long(update: Update, text: str):
 def gemini_search(query: str) -> str:
     """웹서치 포함 Gemini 응답"""
     resp = client.models.generate_content(
-        model='gemini-2.5-flash',
+        model='gemini-3-flash-preview',
         contents=f"""다음을 웹에서 검색하고 핵심만 한국어로 요약해줘. 수치·날짜 포함.
 출처도 1~2개 간단히 표시해줘.
 
@@ -81,7 +81,7 @@ def gemini_ask(question: str, context_text: str = '') -> str:
     if context_text:
         contents = f"참고 데이터:\n{context_text}\n\n질문: {question}"
     resp = client.models.generate_content(
-        model='gemini-2.5-flash',
+        model='gemini-3-flash-preview',
         contents=contents,
         config=gtypes.GenerateContentConfig(temperature=0.5)
     )
@@ -90,7 +90,7 @@ def gemini_ask(question: str, context_text: str = '') -> str:
 def gemini_search_and_enhance(briefing_text: str, request: str) -> str:
     """브리핑 보강 — 부족한 내용 서치 후 보완"""
     resp = client.models.generate_content(
-        model='gemini-2.5-flash',
+        model='gemini-3-flash-preview',
         contents=f"""아래는 현재 아침 브리핑 내용이다.
 
 {briefing_text}

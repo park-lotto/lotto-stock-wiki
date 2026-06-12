@@ -81,7 +81,7 @@ def call_gemini(files_data):
 
     prompt = PROMPT_TEMPLATE.format(files_content=files_content)
 
-    models = ["gemini-2.5-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash"]
+    models = ["gemini-3-flash-preview", "gemini-3.1-flash-lite"]
     for model in models:
         for attempt in range(5):
             try:

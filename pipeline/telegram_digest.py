@@ -23,7 +23,7 @@ _TELEGRAM_DIR = _ROOT / "raw" / "telegram"
 _SUMMARY_THRESHOLD = 500  # 이 글자수 이하면 원문 그대로
 
 # Gemini 요약용 (긴 파일만)
-_GEMINI_MODEL = "gemini-2.5-flash-lite"
+_GEMINI_MODEL = "gemini-3.1-flash-lite"
 _SUMMARY_PROMPT = """다음 텔레그램 메시지에서 핵심 투자 포인트만 3~5줄로 요약하라.
 - 종목명·섹터·수치는 반드시 그대로 보존
 - 말투: "~함", "~권고", "~예상" (간결하게)

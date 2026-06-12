@@ -35,7 +35,7 @@ def generate(scene_id, prompt, ref_paths):
         "generationConfig": {"responseModalities": ["IMAGE", "TEXT"]}
     }).encode()
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key={API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview-image:generateContent?key={API_KEY}"
     req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
 
     try:

@@ -227,7 +227,7 @@ def call_gemini(qnum: str, qtext: str, context: dict) -> str:
     for attempt in range(5):
         try:
             resp = client.models.generate_content(
-                model='gemini-2.5-flash',
+                model='gemini-3-flash-preview',
                 contents=full_prompt,
                 config=types.GenerateContentConfig(
                     tools=[types.Tool(google_search=types.GoogleSearch())],

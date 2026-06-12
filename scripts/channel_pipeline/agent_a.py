@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 from scripts.channel_pipeline.models import Claim
 
-MODEL = "gemini-2.5-flash"
+MODEL = "gemini-3-flash-preview"
 MAX_CHARS = 8_000
 BATCH_SIZE = 5
 

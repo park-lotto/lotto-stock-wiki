@@ -257,14 +257,14 @@ QUESTIONS = [
 print(f"{'='*60}")
 print(f"  반도체 섹터 Q1~Q10 리서치 시작")
 print(f"  기준일: {TODAY}")
-print(f"  모델: gemini-2.5-flash + Google Search")
+print(f"  모델: gemini-3-flash-preview + Google Search")
 print(f"  총 {len(QUESTIONS)}개 질문")
 print(f"{'='*60}\n")
 
 client = genai.Client(api_key=API_KEY)
 
 chat = client.chats.create(
-    model='gemini-2.5-flash',
+    model='gemini-3-flash-preview',
     config=types.GenerateContentConfig(
         tools=[types.Tool(google_search=types.GoogleSearch())],
         temperature=0.3,

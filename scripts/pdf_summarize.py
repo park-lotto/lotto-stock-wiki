@@ -77,19 +77,33 @@ SUMMARY_PROMPT = """이 증권사 리포트 PDF를 아래 형식으로 한국어
 📅 발행일: {YYYY-MM-DD 형식}
 📄 페이지 수: p. {총 페이지 수}
 
-개요
-{리포트 전체 핵심을 하나의 문단으로. 핵심 주장 + 주요 근거 수치 + 결론 포함. 3~5문장. 구체적 숫자 필수.}
+## 투자의견 요약
+| 항목 | 내용 |
+|---|---|
+| 투자의견 | |
+| 목표주가 | |
+| 현재주가 | |
+| 핵심 테마 | |
 
-주요 내용
-{PDF의 실제 섹션/챕터 제목을 번호와 함께 그대로 사용. 각 섹션 아래 핵심 데이터 bullet로 정리.
-- 수치가 있으면 수치 그대로 기재
-- 그래프/표가 있으면 그 내용 해석해서 포함
-- 각 섹션 최소 3개 이상 bullet}"""
+## 핵심 투자 포인트
+{스토리라인으로 1~5장 구조. 각 장은 제목 + 핵심 수치 포함 2~3문장}
+
+## 재무 전망 (표)
+{연도별 매출/영업이익/OPM/EPS 표}
+
+## 촉매 이벤트
+{주가를 움직일 향후 이벤트 bullet}
+
+## 리스크
+{투자 리스크 bullet}
+
+## 빠진 내용 없는지 재확인
+{위 내용 외 투자자가 알아야 할 추가 포인트가 있으면 기재. 없으면 "없음"}"""
 
 def summarize_with_gemini(pdf_bytes: bytes, filename: str) -> str | None:
     try:
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-3-flash-preview',
             contents=[
                 types.Content(role='user', parts=[
                     types.Part.from_bytes(data=pdf_bytes, mime_type='application/pdf'),
@@ -219,6 +233,21 @@ def process_one(date_str: str, keyword: str):
     save_state(state)
     print(f'[✅ OK] raw/report/{date_str}/{md_path.name}')
 
+def summarize_local_pdf(pdf_path: str):
+    """로컬 PDF 파일 직접 요약 → 콘솔 출력 + 같은 폴더에 _summary.md 저장"""
+    p = Path(pdf_path)
+    if not p.exists():
+        print(f'파일 없음: {pdf_path}'); return
+    pdf_bytes = p.read_bytes()
+    print(f'[처리중] {p.name} ({len(pdf_bytes)//1024}KB)')
+    summary = summarize_with_gemini(pdf_bytes, p.name)
+    if not summary:
+        print('요약 실패'); return
+    out_path = p.parent / (p.stem + '_summary.md')
+    out_path.write_text(summary, encoding='utf-8')
+    print(summary)
+    print(f'\n[저장] {out_path}')
+
 def main():
     parser = argparse.ArgumentParser(description='reports PDF → Gemini 요약 → raw/report/ 저장')
     parser.add_argument('--date',  default=date.today().strftime('%Y-%m-%d'),
@@ -227,9 +256,13 @@ def main():
                         help='최대 처리 개수 (0=무제한)')
     parser.add_argument('--file',  default=None,
                         help='파일명 키워드로 1개 지정 (예: --file "국내 시총")')
+    parser.add_argument('--pdf',   default=None,
+                        help='로컬 PDF 직접 요약 (예: --pdf C:/Downloads/report.pdf)')
     args = parser.parse_args()
 
-    if args.file:
+    if args.pdf:
+        summarize_local_pdf(args.pdf)
+    elif args.file:
         process_one(args.date, args.file)
     else:
         process_date(args.date, args.limit)
