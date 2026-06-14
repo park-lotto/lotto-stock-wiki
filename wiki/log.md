@@ -1,3 +1,5 @@
+- 2026-06-14 — STOCK BRAIN 시그니처 인트로 완성 (StockBrainIntro.tsx): 스캔라인 빌드업+스크램블 리빌+글리치 버스트 8초 | 카카오클로드 대본 v5 완성: v3+v4 통합+S0-A/S0-B 오프닝 추가 (15씬 ~12분) | Remotion 효과 3종 커밋 (DocHighlight/FocusZoom/TechFeed)
+- 2026-06-14 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-06-14.md
 - 2026-06-13 — 신채널 브레인스토밍: AI+주식 별도 채널 설계 착수 | B안(내 시스템 공개) 확정 | 레벨 5단계 주제 구성 완료 | 미결: 채널명·첫 영상 기획 → docs/superpowers/specs/2026-06-13-ai주식-신채널-design.md
 - 2026-06-13 — Excel ingest 완료: 추정이익변경·컨센움직임·수출·유동성·수급·중소형주수급·가속화모멘텀·RS·쏠림지수·액티브ETF·일정·한국ETF_RS·투자아이디어 → ingest_report_2026-06-13.md
 - 2026-06-12 — Excel ingest 완료: 컨센움직임·수출·유동성·수급·중소형주수급·가속화모멘텀·액티브ETF·일정·투자아이디어 → ingest_report_2026-06-12.md
