@@ -1,44 +1,48 @@
-# NEXT SESSION — 2026-06-14 집PC
+# NEXT SESSION — 2026-06-14 집PC (2차)
 
-**세션 요약 (2026-06-14 집)**
-카카오클로드 대본 v5 완성 + STOCK BRAIN 시그니처 인트로 구현
+**세션 요약**  
+카카오+클로드 유튜브 영상 — S1·S2 Remotion 씬 완성 + 전체 13씬 대본 확정 (1차)
 
-## 완료
-- 카카오클로드 대본 v5 완성 (v3 상세나레이션 + v4 효과태그 + S0-A/S0-B 오프닝 추가, 15씬)
-- STOCK BRAIN 시그니처 인트로 (`remotion-stock/src/signature/StockBrainIntro.tsx`)
-  - 스캔라인 빌드업 → 스크램블 리빌 → 글리치 버스트 → 슬라이드업 (240프레임, 8초)
-  - Root.tsx에 `StockBrain-Intro` Composition 등록 완료
-- Remotion 효과 3종 커밋 (DocHighlight / FocusZoom / TechFeed)
+---
 
-## 미완료 — 다음에 이어서
+## ✅ 완료
 
-### 1. 카카오클로드 영상 제작 (메인)
-```
-① 실화면 녹화 (OBS) — S5·S7·S8·S9·S10 촬영
-② Pexels 배경 영상 5종 다운로드
-   - "dark tech" / "stock market" / "smartphone dark"
-③ 채널 로고 PNG/SVG 준비 → S0-B LogoIntro 구현
-④ Remotion 씬 구현 (순수 그래픽):
-   - S0-A (임팩트 하이라이트)
-   - S1 (훅), S2 (페인포인트), S3 (철학선언), S4 (로드맵)
-   - S6 (MCP 허브 다이어그램), S11 (응용 카드), S13 (클로징)
-⑤ [IMPACT]·[SPLIT] 효과 컴포넌트 구현
-```
+- `remotion-stock/src/kakao/S01_Hook.tsx` 신규 생성 (540f, 흰 배경, 카톡 알림 → "자동" 임팩트)
+- `remotion-stock/src/kakao/S02_PainPoint.tsx` 대폭 수정
+  - 카드 5개: 인베스팅닷컴·네이버·텔레그램·쇼츠·뇌동매매
+  - X슬라이드 진입, 자막 갱신, "정보 소비" 클라이맥스
+- `remotion-stock/src/components/PostFX.tsx` 후처리 래퍼 완성
+- Root.tsx: Kakao-S01, S02-Dark/Light, S05, S07 등록
+- **S0-A~S13 전체 대본 1차 완성**
 
-### 2. 섹터 시그널 파이프라인 (계속 밀림)
-```
-pipeline/sector_signal/sector_signal_ingest.py
-pipeline/sector_signal/sector_master_update.py
-pipeline/sector_signal/stock_wiki_update.py
-run_final_test.py 모델 교체: gemini-3.1-flash-lite
-```
+---
 
-### 3. 기타 밀린 것
-- 태린이 파일 2번~끝 데이터 정의
-- morning_sector_pick.py 3단계 통합 (소라티노 ETF)
+## ⏳ 다음 세션 — Remotion 스타일 다듬기
 
-## 관련 파일
-- `channel/yt/yt_카카오클로드_대본_v5.md` — 최종 대본
-- `remotion-stock/src/signature/StockBrainIntro.tsx` — 시그니처 인트로
-- `remotion-stock/src/scenes/` — 완성 효과 3종
-- `channel/strategy/remotion_효과_레퍼런스.md` — 효과 현황
+**다음 목표:** S1·S2 스타일 퀄리티 개선 후 나머지 씬 제작
+
+### 제작 대기 씬 (Remotion)
+| 씬 | 내용 |
+|----|------|
+| S0-A/B | 효과음 인트로 (알림음 타이밍 애니메이션) |
+| S3 | 철학 선언 "AI 치트키는 없다" |
+| S4 | 로드맵 5단계 카드 stagger |
+| S6 | MCP 개념 USB-C 비유 인포그래픽 |
+| S11 | 응용 아이디어 4개 리스트 |
+| S12 | 수미상관 결론 |
+| S13 | CTA |
+
+### 실화면 녹화 씬 (사용자 직접)
+S5(Claude 설치), S7(PlayMCP), S8(브리핑 프롬프트), S9(플러그인), S10(스케줄)
+
+### 녹화 후 워크플로
+1. `python -m whisper audio.wav --language ko --output_format srt`
+2. SRT 타임스탬프 → durationInFrames 조정
+3. DaVinci Resolve에서 Remotion + 실화면 + 나레이션 조립
+
+---
+
+## 참고 파일
+- Remotion 씬: `remotion-stock/src/kakao/`
+- 레퍼런스: `channel/strategy/remotion_레퍼런스_국민성장펀드.md`
+- 가이드: `channel/strategy/strategy_remotion_가이드.md`

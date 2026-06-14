@@ -65,15 +65,76 @@ import { TechFeedScene, TECHFEED_DEMO_FRAMES } from './scenes/TechFeedScene';
 import { FocusZoomScene, FOCUS_ZOOM_FRAMES } from './scenes/FocusZoomScene';
 import { FocusZoomDemo, FOCUS_ZOOM_DEMO_FRAMES } from './scenes/FocusZoomDemo';
 import { StockBrainIntro, STOCK_BRAIN_INTRO_FRAMES } from './signature/StockBrainIntro';
+import { S01_Hook as Kakao_S01_Hook, S01_FRAMES } from './kakao/S01_Hook';
+import { S02_PainPoint, S02_FRAMES } from './kakao/S02_PainPoint';
+import { S05_ClaudeSetup, S05_FRAMES } from './kakao/S05_ClaudeSetup';
+import { S07_PlayMCPConnect, S07_FRAMES } from './kakao/S07_PlayMCPConnect';
+import { PostFX } from './components/PostFX';
+
+// PostFX 래퍼 컴포넌트 — Composition component 에 직접 람다 못 쓰므로 별도 정의
+const StockBrainIntroFX   = () => <PostFX><StockBrainIntro /></PostFX>;
+const Kakao_S01_FX = () => <PostFX grain={0.06} vignette={0.50} light><Kakao_S01_Hook /></PostFX>;
+const Kakao_S02_Dark_FX   = () => <PostFX><S02_PainPoint variant="dark"  /></PostFX>;
+const Kakao_S02_Light_FX  = () => <PostFX grain={0.06} vignette={0.50} light><S02_PainPoint variant="light" /></PostFX>;
+const Kakao_S05_FX = () => <PostFX><S05_ClaudeSetup /></PostFX>;
+const Kakao_S07_FX = () => <PostFX><S07_PlayMCPConnect /></PostFX>;
 
 export const RemotionRoot: React.FC = () => {
   return (
     <>
-      {/* ── STOCK BRAIN 시그니처 인트로 (매 영상 공통) ── */}
+      {/* ── STOCK BRAIN 시그니처 인트로 (PostFX 적용) ── */}
       <Composition
         id="StockBrain-Intro"
-        component={StockBrainIntro}
+        component={StockBrainIntroFX}
         durationInFrames={STOCK_BRAIN_INTRO_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* ── 카카오클로드 S01 훅 (흰 배경, PostFX 라이트) ── */}
+      <Composition
+        id="Kakao-S01"
+        component={Kakao_S01_FX}
+        durationInFrames={S01_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* ── 카카오클로드 S02 페인포인트 — 다크 (PostFX 적용) ── */}
+      <Composition
+        id="Kakao-S02-Dark"
+        component={Kakao_S02_Dark_FX}
+        durationInFrames={S02_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      {/* ── 카카오클로드 S02 페인포인트 — 라이트 (PostFX 적용) ── */}
+      <Composition
+        id="Kakao-S02-Light"
+        component={Kakao_S02_Light_FX}
+        durationInFrames={S02_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* ── 카카오클로드 S05 — Claude 설치 (PostFX 적용) ── */}
+      <Composition
+        id="Kakao-S05"
+        component={Kakao_S05_FX}
+        durationInFrames={S05_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      {/* ── 카카오클로드 S07 — PlayMCP 연결 (PostFX 적용) ── */}
+      <Composition
+        id="Kakao-S07"
+        component={Kakao_S07_FX}
+        durationInFrames={S07_FRAMES}
         fps={30}
         width={1920}
         height={1080}
