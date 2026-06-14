@@ -56,10 +56,131 @@ import { GB_Thumb_E } from './buildup/GB_Thumb_E';
 import { SDUR } from './constants';
 import { JH_Sample, JH_SAMPLE_FRAMES } from './news/JH_Sample';
 import { LGcns_Scene, LGCNS_FRAMES } from './news/LGcns_Scene';
+import {
+  DocumentHighlightScene,
+  DocPanScene,
+} from './scenes/DocumentHighlightScene';
+import { DocHighlight_Demo, DOC_DEMO_FRAMES } from './scenes/DocHighlight_Demo';
+import { TechFeedScene, TECHFEED_DEMO_FRAMES } from './scenes/TechFeedScene';
+import { FocusZoomScene, FOCUS_ZOOM_FRAMES } from './scenes/FocusZoomScene';
+import { FocusZoomDemo, FOCUS_ZOOM_DEMO_FRAMES } from './scenes/FocusZoomDemo';
+import { StockBrainIntro, STOCK_BRAIN_INTRO_FRAMES } from './signature/StockBrainIntro';
 
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* ── STOCK BRAIN 시그니처 인트로 (매 영상 공통) ── */}
+      <Composition
+        id="StockBrain-Intro"
+        component={StockBrainIntro}
+        durationInFrames={STOCK_BRAIN_INTRO_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* ── TechFeed 데모 (배경 dim + 한국어 오버레이 + FocusCard + 줌인) ── */}
+      <Composition
+        id="TechFeed-Demo"
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        component={TechFeedScene as any}
+        durationInFrames={TECHFEED_DEMO_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* ── FocusZoom 순수 Remotion 데모 (이미지 불필요, SpaceX 장면 재현) ── */}
+      <Composition
+        id="FocusZoom-SpaceX"
+        component={FocusZoomDemo}
+        durationInFrames={FOCUS_ZOOM_DEMO_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* ── FocusZoom 데모 (SpaceX: 한국어 텍스트 박스 강조 + 줌인) ── */}
+      <Composition
+        id="FocusZoom-Demo"
+        component={() => (
+          <FocusZoomScene
+            imageSrc="images/spacex_demo.png"
+            focusBox={{ top: 665, left: 222, width: 1476, height: 124 }}
+            zoomScale={2.5}
+            overlayDark={0.80}
+            dimStart={0}
+            zoomStart={38}
+          />
+        )}
+        durationInFrames={FOCUS_ZOOM_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* ── DocHighlight 데모 (뉴스 헤드라인 팬+형광펜) ── */}
+      <Composition
+        id="DocHighlight-Demo"
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        component={DocHighlight_Demo as any}
+        durationInFrames={DOC_DEMO_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* ── DocumentHighlight 단일 크롭 테스트 ── */}
+      <Composition
+        id="DocHighlight-Test"
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        component={DocumentHighlightScene as any}
+        durationInFrames={150}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{
+          imageSrc: 'images/report_sample.png',
+          crop: { top: 30, right: 5, bottom: 40, left: 5 },
+          highlights: [
+            { top: 48, left: 8, width: 58, height: 12, delay: 45, animDur: 18 },
+          ],
+          caption: '2Q26 OPM 13.2% — 컨센서스 대비 +2.1%p 상회',
+          tag: { text: '삼성전기 실적발표', sub: '2026.06.13' },
+        }}
+      />
+
+      {/* ── DocPanScene 멀티 세그먼트 팬 테스트 ── */}
+      <Composition
+        id="DocPan-Test"
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        component={DocPanScene as any}
+        durationInFrames={270}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{
+          imageSrc: 'images/report_sample.png',
+          segments: [
+            {
+              startFrame: 0,
+              endFrame: 120,
+              crop: { top: 10, right: 5, bottom: 60, left: 5 },
+              highlights: [{ top: 45, left: 5, width: 50, height: 14, delay: 45 }],
+              caption: '수주 잔고 2.8조 — 역대 최대',
+            },
+            {
+              startFrame: 120,
+              endFrame: 270,
+              crop: { top: 55, right: 5, bottom: 10, left: 5 },
+              highlights: [{ top: 40, left: 10, width: 65, height: 12, delay: 135, color: '#FF6B35' }],
+              caption: 'OPM 13.2% — 분기 최고치 경신',
+            },
+          ],
+          tag: { text: '하나증권 리포트', sub: '2026.06.13' },
+        }}
+      />
+
       {/* 깐부회동 + LG차트 하이브리드 씬 */}
       <Composition
         id="LGcns-Hybrid"

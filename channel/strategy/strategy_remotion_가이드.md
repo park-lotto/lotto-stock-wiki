@@ -1,6 +1,24 @@
 # 로또의 주식 — Remotion 영상 제작 가이드
 
-> 작성일: 2026-05-22 | 최종 수정: 2026-05-31
+> 작성일: 2026-05-22 | 최종 수정: 2026-06-14
+
+---
+
+## ⚡ 효과 라이브러리 (T3CHFEED 스타일) — 항상 여기서 꺼내 쓴다
+
+> 전체 상세: `channel/strategy/remotion_효과_레퍼런스.md`
+
+| # | 효과명 | 파일 | 상태 | 한 줄 설명 |
+|---|-------|------|------|-----------|
+| 1 | **DocHighlight** | `scenes/DocumentHighlightScene.tsx` | ✅ 완성 | 스크린샷 크롭+줌+형광펜 |
+| 2 | **FocusZoom** | `scenes/FocusZoomDemo.tsx` | ✅ 완성 | 블러 배경 + 카드 중앙이동 + 1.22× 확대 |
+| 3 | **TechFeed** | `scenes/TechFeedScene.tsx` | ✅ 완성 | 실화면 dim + 한국어 stagger 오버레이 |
+| 4 | **ImpactText** | 인라인 구현 | 🔧 미구현 | 어두운 배경 + 큰 숫자/텍스트 |
+| 5 | **HubDiagram** | 미구현 | 🔧 미구현 | MCP 허브 + 아이콘 + SVG 화살표 드로잉 |
+| 6 | **SplitScreen** | 미구현 | 🔧 미구현 | 좌우 분할 동시 비교 |
+| 7 | **LogoIntro** | 미구현 | 🔧 로고 필요 | 채널 로고 elastic 등장 + 효과음 |
+
+**새 효과 추가 시** → `remotion_효과_레퍼런스.md`에 먼저 스펙 작성 후 구현
 
 ---
 
