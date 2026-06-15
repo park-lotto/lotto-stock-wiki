@@ -1,3 +1,4 @@
+- 2026-06-15 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-06-15.md
 - 2026-06-14 — 카카오클로드 영상 Remotion S1·S2 완성: S01_Hook(카톡 알림→자동 임팩트, 540f), S02_PainPoint(5카드 X슬라이드·정보소비 클라이맥스·관망 훅), PostFX 후처리, 전체 13씬 대본 1차 확정. 다음: 스타일 다듬기 + S3·S4·S6·S11·S12·S13 제작
 - 2026-06-14 — STOCK BRAIN 시그니처 인트로 완성 (StockBrainIntro.tsx): 스캔라인 빌드업+스크램블 리빌+글리치 버스트 8초 | 카카오클로드 대본 v5 완성: v3+v4 통합+S0-A/S0-B 오프닝 추가 (15씬 ~12분) | Remotion 효과 3종 커밋 (DocHighlight/FocusZoom/TechFeed)
 - 2026-06-14 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-06-14.md

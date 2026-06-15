@@ -1,48 +1,40 @@
-# NEXT SESSION — 2026-06-14 집PC (2차)
+# NEXT SESSION — 2026-06-15 (L30 컴포넌트 전면 업데이트)
 
 **세션 요약**  
-카카오+클로드 유튜브 영상 — S1·S2 Remotion 씬 완성 + 전체 13씬 대본 확정 (1차)
+life30 Remotion 씬 — 스크린샷 레퍼런스 분석 후 5개 컴포넌트 전면 수정 진행 중
 
 ---
 
 ## ✅ 완료
 
-- `remotion-stock/src/kakao/S01_Hook.tsx` 신규 생성 (540f, 흰 배경, 카톡 알림 → "자동" 임팩트)
-- `remotion-stock/src/kakao/S02_PainPoint.tsx` 대폭 수정
-  - 카드 5개: 인베스팅닷컴·네이버·텔레그램·쇼츠·뇌동매매
-  - X슬라이드 진입, 자막 갱신, "정보 소비" 클라이맥스
-- `remotion-stock/src/components/PostFX.tsx` 후처리 래퍼 완성
-- Root.tsx: Kakao-S01, S02-Dark/Light, S05, S07 등록
-- **S0-A~S13 전체 대본 1차 완성**
+- `pipeline/atoms/atomizer.py` — `_sanitize()` 추가 (서로게이트 유니코드 오류 방지)
 
 ---
 
-## ⏳ 다음 세션 — Remotion 스타일 다듬기
+## ⏳ 미완료 — L30 컴포넌트 전면 업데이트
 
-**다음 목표:** S1·S2 스타일 퀄리티 개선 후 나머지 씬 제작
+레퍼런스 스크린샷: `raw/리모션/레퍼런스/image 1.png ~ image 39.png`  
+대상 폴더: `remotion-stock/src/life30/`
 
-### 제작 대기 씬 (Remotion)
-| 씬 | 내용 |
-|----|------|
-| S0-A/B | 효과음 인트로 (알림음 타이밍 애니메이션) |
-| S3 | 철학 선언 "AI 치트키는 없다" |
-| S4 | 로드맵 5단계 카드 stagger |
-| S6 | MCP 개념 USB-C 비유 인포그래픽 |
-| S11 | 응용 아이디어 4개 리스트 |
-| S12 | 수미상관 결론 |
-| S13 | CTA |
+### 수정 항목 5가지
 
-### 실화면 녹화 씬 (사용자 직접)
-S5(Claude 설치), S7(PlayMCP), S8(브리핑 프롬프트), S9(플러그인), S10(스케줄)
+| 파일 | 수정 내용 |
+|------|----------|
+| `L30_BarChart.tsx` | 3D 바 효과 + 값 위치 수정(위→아래: 깃발→국가→값→바) + NVIDIA 수평 기준선 |
+| `L30_PipAvatar.tsx` | 빨간 점(라임→빨강) + 세로 포트레이트 모드 + "LIVE·09:16" 타임 형식 |
+| `L30_CircuitPattern.tsx` | **신규 생성** — PCB 회로기판 패턴 (스크린샷1 핵심 비주얼) |
+| `L30_Leaderboard.tsx` | **신규 생성** — 01~10 랭킹 테이블 (스크린샷4 GLOBAL TOP10) |
+| `L30_DataCard.tsx` | MetricCard "$420 B" 스타일 (B 작고 라임색) + NvidiaBar 신규 |
 
-### 녹화 후 워크플로
-1. `python -m whisper audio.wav --language ko --output_format srt`
-2. SRT 타임스탬프 → durationInFrames 조정
-3. DaVinci Resolve에서 Remotion + 실화면 + 나레이션 조립
+### 분석 4가지 (스크린샷에서 추출)
+1. 색감
+2. 폰트 구성·모양·크기
+3. 장면전환
+4. 백그라운드 + 글자·로고·국기 레이어층
 
 ---
 
 ## 참고 파일
-- Remotion 씬: `remotion-stock/src/kakao/`
-- 레퍼런스: `channel/strategy/remotion_레퍼런스_국민성장펀드.md`
+- 기존 컴포넌트: `remotion-stock/src/life30/L30_*.tsx`
+- 레퍼런스 이미지: `raw/리모션/레퍼런스/image 1.png` ~ `image 39.png`
 - 가이드: `channel/strategy/strategy_remotion_가이드.md`

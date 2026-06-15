@@ -44,6 +44,10 @@ JSON 배열만 반환하라. 다른 텍스트 없이.
 {text}"""
 
 
+def _sanitize(text: str) -> str:
+    return text.encode("utf-8", errors="replace").decode("utf-8")
+
+
 def atomize_text(
     text: str,
     source_type: str,
@@ -53,6 +57,7 @@ def atomize_text(
     date: str,
     layer: str = "L5",
 ) -> list[dict]:
+    text = _sanitize(text)
     try:
         response = _client.models.generate_content(
             model=_GEMINI_MODEL,

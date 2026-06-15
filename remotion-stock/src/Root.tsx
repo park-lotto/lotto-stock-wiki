@@ -69,6 +69,8 @@ import { S01_Hook as Kakao_S01_Hook, S01_FRAMES } from './kakao/S01_Hook';
 import { S02_PainPoint, S02_FRAMES } from './kakao/S02_PainPoint';
 import { S05_ClaudeSetup, S05_FRAMES } from './kakao/S05_ClaudeSetup';
 import { S07_PlayMCPConnect, S07_FRAMES } from './kakao/S07_PlayMCPConnect';
+import { S01_Hook_AV, S01_AV_FRAMES } from './kakao/S01_Hook_AV';
+import { S05_ClaudeSetup_AV, S05_AV_FRAMES } from './kakao/S05_ClaudeSetup_AV';
 import { PostFX } from './components/PostFX';
 
 // PostFX 래퍼 컴포넌트 — Composition component 에 직접 람다 못 쓰므로 별도 정의
@@ -78,6 +80,9 @@ const Kakao_S02_Dark_FX   = () => <PostFX><S02_PainPoint variant="dark"  /></Pos
 const Kakao_S02_Light_FX  = () => <PostFX grain={0.06} vignette={0.50} light><S02_PainPoint variant="light" /></PostFX>;
 const Kakao_S05_FX = () => <PostFX><S05_ClaudeSetup /></PostFX>;
 const Kakao_S07_FX = () => <PostFX><S07_PlayMCPConnect /></PostFX>;
+// ── 아바타 영상 버전 래퍼 ──
+const Kakao_S01_AV_FX = () => <S01_Hook_AV />;
+const Kakao_S05_AV_FX = () => <S05_ClaudeSetup_AV />;
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -135,6 +140,26 @@ export const RemotionRoot: React.FC = () => {
         id="Kakao-S07"
         component={Kakao_S07_FX}
         durationInFrames={S07_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* ══ 아바타 영상 버전 (실제 아바타 MP4 + 화면녹화 합성) ══════════ */}
+      {/* avatar_s01.mp4 준비 후 확인 */}
+      <Composition
+        id="Kakao-AV-S01"
+        component={Kakao_S01_AV_FX}
+        durationInFrames={S01_AV_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      {/* avatar_s05.mp4 + screen_s05.mp4 준비 후 확인 */}
+      <Composition
+        id="Kakao-AV-S05"
+        component={Kakao_S05_AV_FX}
+        durationInFrames={S05_AV_FRAMES}
         fps={30}
         width={1920}
         height={1080}

@@ -1,0 +1,454 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"> 
+ <html xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:x="urn:schemas-microsoft-com:office:excel"
+xmlns="http://www.w3.org/TR/REC-html40">
+	<HEAD>
+		<title>리포트서머리</title>
+		<meta name="CODE_LANGUAGE" Content="C#">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<style type="text/css">
+			td { FONT: 11px '맑은 고딕'; COLOR: #333333; border-top:none;border-bottom:0.5pt solid rgb(209,209,209);}
+			br {mso-data-placement:same-cell;}
+			body { PADDING-RIGHT: 0px; PADDING-LEFT: 0px; PADDING-BOTTOM: 0px; MARGIN: 0px; FONT: 9pt '맑은 고딕'; PADDING-TOP: 0px }
+			form { PADDING-RIGHT: 0px; PADDING-LEFT: 0px; PADDING-BOTTOM: 0px; MARGIN: 0px; FONT: 9pt '맑은 고딕'; PADDING-TOP: 0px }
+			.title{font:bold 14pt 'HY견고딕';color:rgb(47,71,107)}
+			.hd { font: bold 9pt '맑은 고딕'; color: rgb(53,91,157); height: 30px; background-color: rgb(247,247,247); text-align: center;border-top:1px rgb(47,71,107) solid}
+			.strdeg{mso-width-source:userset;width:80px;height: 24px;text-align: left}
+			.pre_recomm{mso-width-source:userset;width:80px;height: 24px;text-align: left}
+			.recomm{width:80px;height: 24px;text-align: left}
+			.brk{mso-width-source:userset;width:110px;height: 24px;text-align: left}
+			.cmp,.ind{mso-width-source:userset;width:90px;height: 24px;text-align: left}
+			.strprc{mso-width-source:userset;width:60px;height: 24px;text-align: right}
+			.pre_targer_prc{mso-width-source:userset;width:60px;height: 24px;text-align: right}
+			.close_prc{mso-width-source:userset;width:80px;height: 24px;text-align: right}
+			.comment{width:500px;height: 49px;}
+			.comment2{width:450px;height: 49px;}
+			.rpt_title{width:275px;height:24px;text-align: left}
+			.img0{width:20px;height:30px;line-height:30px;font-size:11pt;font-family:'HY견고딕';font-weight:bold;color:rgb(101,102,102)}
+			.img1{width:20px;height:30px;line-height:30px;font-size:7pt;font-family:'맑은 고딕';color:rgb(254,1,10)}
+			.img2{width:20px;height:30px;line-height:30px;font-size:11pt;font-family:'맑은 고딕';font-weight:bold;color:rgb(14,152,15)}
+			.img3{width:20px;height:30px;line-height:30px;font-size:7pt;font-family:'맑은 고딕';color:rgb(52,101,254)}
+			.img4{width:20px;height:30px;line-height:30px;font-size:9pt;font-family:'맑은 고딕';font-weight:bold;color:rgb(254,1,10)}
+			@page
+	            {mso-header-data:"&R리포트서머리";
+	            mso-footer-data:"Page &P of &N";
+	            margin:.5in 0in .4in 0in;
+	            mso-header-margin:.31in;
+	            mso-footer-margin:.2in;
+	            mso-page-orientation:landscape;}
+		</style>
+    <!--[if gte mso 9]><xml>
+       <x:ExcelWorkbook>
+        <x:ExcelWorksheets>
+         <x:ExcelWorksheet>
+          <x:Name>WiseReport ReportSummary</x:Name>
+          <x:WorksheetOptions>
+            <x:FreezePanes/>
+            <x:FrozenNoSplit/>
+            <x:SplitHorizontal>5</x:SplitHorizontal>
+            <x:TopRowBottomPane>5</x:TopRowBottomPane>
+            <x:ActivePane>2</x:ActivePane>
+            <x:DoNotDisplayGridlines/>
+            <x:Print>
+                <x:PaperSizeIndex>9</x:PaperSizeIndex>
+                <x:Scale>90</x:Scale> 
+                <x:ValidPrinterInfo/>
+            </x:Print>
+          </x:WorksheetOptions>
+         </x:ExcelWorksheet>
+        </x:ExcelWorksheets>
+       </x:ExcelWorkbook>
+      </xml><![endif]-->
+	</HEAD>
+	<body bottomMargin="0" leftMargin="0" topMargin="0" rightMargin="0">
+         
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-C8B2QNTM16"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-C8B2QNTM16');
+</script>
+
+		<form method="post" action="./summaryexcel.aspx?cn=&amp;fmt=2&amp;ee=20260612&amp;sortCol=&amp;sortTyp=" id="Form1">
+<div class="aspNetHidden">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwULLTE5ODc1MjczMzhkZK1uVmb2cGLVvIQ+lHb37TlJRESJ" />
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+var theForm = document.forms['Form1'];
+if (!theForm) {
+    theForm = document.Form1;
+}
+function __doPostBack(eventTarget, eventArgument) {
+    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+        theForm.__EVENTTARGET.value = eventTarget;
+        theForm.__EVENTARGUMENT.value = eventArgument;
+        theForm.submit();
+    }
+}
+//]]>
+</script>
+
+
+<script src="/WebResource.axd?d=EnHdU53b5uA6lKGq8bLJgCXexEBiKJSTKiXq84RtXnNu7LDCmV1KxyTtwXgDEBhZaJdTNK9Rr5w1-1BOBKBccwQcrBs1&amp;t=638286403360000000" type="text/javascript"></script>
+
+<div class="aspNetHidden">
+
+	<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="3E16E249" />
+	<input type="hidden" name="__SCROLLPOSITIONX" id="__SCROLLPOSITIONX" value="0" />
+	<input type="hidden" name="__SCROLLPOSITIONY" id="__SCROLLPOSITIONY" value="0" />
+	<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="" />
+	<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="" />
+</div>
+        <div id="ind_excel">
+                <table style="border-collapse:collapse;table-layout:fixed;mso-width-source:userset;width:1100px">
+                     <col style='mso-width-source:userset;width:90px'>
+                     <col style='mso-width-source:userset;width:90px'>                     
+                     <col style='mso-width-source:userset;width:25px'>
+                     <col style='mso-width-source:userset;width:80px'>
+                     <col style='mso-width-source:userset;width:90px'>
+					<col style='mso-width-source:userset;width:275px'>
+                     <col style='mso-width-source:userset;width:450px'>
+				    <tr>
+					    <td colspan="7" height="30" align="center" class="title">산업리포트 요약(2026.06.12)</td>
+				    </tr>
+                    <tr>
+                        <td class="hd">기관명/작성자</td>
+                        <td class="hd">산업명</td>                        
+                        <td class="hd" colspan="2">투자의견</td>
+                        <td class="hd">이전의견</td>
+						<td class="hd">제목</td>
+                        <td class="hd">요약</td>
+                    </tr>
+                    <tr>
+                        <td colspan="7" style="height: 1px;border-bottom:1px solid rgb(209,209,209)"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">LS증권</font><br/>이재광</td>
+                        <td class="ind"><font color="rgb(53,91,157)">우주항공과국방</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">스페이스X, 니가 좋아</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 밸류에이션 논란: PSR 100배에서 30배로 낮아질 것<br/><span class="comment_text">▶</span> 사업 부문별 전망: 우주 데이터센터, 커서, 스타링크<br/><span class="comment_text">▶</span> 향후 추가 인수 전망: 테슬라, 이동통신사업자</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">DS투자증권</font><br/>강태호</td>
+                        <td class="ind"><font color="rgb(53,91,157)">우주항공과국방</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">DS Defense Daily</td>
+                        <td class="comment2"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">한국투자증권</font><br/>홍예림</td>
+                        <td class="ind"><font color="rgb(53,91,157)">우주항공과국방</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">비중확대</td>
+                        
+                        <td class="pre_recomm">비중확대</td>
+						<td class="rpt_title">스페이스X의 우주 데이터센터: 무엇을 상상하든 그 이상</td>
+                        <td class="comment2"><span class="comment_text">▶</span> AI1: 우주 데이터센터의 최소 단위<br/><span class="comment_text">▶</span> 우주 데이터센터를 위한 두가지 열쇠</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>채운샘</td>
+                        <td class="ind"><font color="rgb(53,91,157)">우주항공과국방</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">유럽 6세대 전투기 개발 교착: 높아지는 KF-21의 매력도</td>
+                        <td class="comment2"><span class="comment_text">▶</span> FCAS: 유럽 차세대 공중전 체계 공동개발 사업<br/><span class="comment_text">▶</span> 차세대 전투기 공동개발은 더 이상 지속하기 어려워진 것으로 파악<br/><span class="comment_text">▶</span> 중장기 관점에서 높아지는 KF-21의 구매 매력도</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">신한투자증권</font><br/>김선미</td>
+                        <td class="ind"><font color="rgb(53,91,157)">건설</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">비중확대</td>
+                        
+                        <td class="pre_recomm">비중확대</td>
+						<td class="rpt_title">기대는 높이되, 속도감은 조절</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 상반기 대비 더딜 수 있으나 원전 모멘텀 가시성은 확대<br/><span class="comment_text">▶</span> 건설사 주가 상승은 시공사 가격결정력 및 글로벌 원전 투자의지 투영된 “계약구조 변화’가 견인<br/><span class="comment_text">▶</span> 수혜 가시성+ 실적방어력 = 최선호주 현대건설, 차선호주 삼성E&A</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">한화투자증권</font><br/>송유림,김예인</td>
+                        <td class="ind"><font color="rgb(53,91,157)">건설</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">Positive</td>
+                        
+                        <td class="pre_recomm">Positive</td>
+						<td class="rpt_title">[2026년 하반기 전망] 꿈과 현실이 맞닿는 곳에</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 원전 기대감 확산<br/><span class="comment_text">▶</span> [2026년 하반기 전망] 1) 원전, 2) 재건, 3) 주택<br/><span class="comment_text">▶</span> 꿈과 현실이 맞닿는 곳에</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>김승준</td>
+                        <td class="ind"><font color="rgb(53,91,157)">건설</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">SCV-기대하는 7월 대미투자</td>
+                        <td class="comment2"><span class="comment_text">▶</span> Story: 대미투자를 위한 작업 계획대로 진행 중<br/><span class="comment_text">▶</span> Concept: 수익률 5.3% 이상, 사업성 중점<br/><span class="comment_text">▶</span> Value: SMR 기대</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">유진투자증권</font><br/>양승윤</td>
+                        <td class="ind"><font color="rgb(53,91,157)">기계</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">안녕하세요 데일리에요(로봇/방산/조선)</td>
+                        <td class="comment2"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">메리츠증권</font><br/>배기연,김현비</td>
+                        <td class="ind"><font color="rgb(53,91,157)">조선</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">항해일지</td>
+                        <td class="comment2"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">흥국증권</font><br/>마건우</td>
+                        <td class="ind"><font color="rgb(53,91,157)">자동차</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">비중확대</td>
+                        
+                        <td class="pre_recomm">비중확대</td>
+						<td class="rpt_title">Physical AI 구현 인프라를 보유한 기업의 시간</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 현대자동차그룹에대한 인식의 변화<br/><span class="comment_text">▶</span> Physical AI 밸류체인Checkpoint<br/><span class="comment_text">▶</span> 실적 점검</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">다올투자증권</font><br/>유지웅</td>
+                        <td class="ind"><font color="rgb(53,91,157)">자동차</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">패닉셀 이후 나타날 반등의 근거</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 최근 2주에 걸친 업종 하락<br/><span class="comment_text">▶</span> 반등 국면에서의 종목별 차별화 기대</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">메리츠증권</font><br/>김준성,배현서</td>
+                        <td class="ind"><font color="rgb(53,91,157)">자동차</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">Mobility at a glance</td>
+                        <td class="comment2"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">한국투자증권</font><br/>김명주</td>
+                        <td class="ind"><font color="rgb(53,91,157)">판매업체</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm">비중확대</td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">유통 Bi-weekly: Charts of week: 백화점이 좋을 수 밖에 없지</td>
+                        <td class="comment2"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">메리츠증권</font><br/>김정욱,황홍진</td>
+                        <td class="ind"><font color="rgb(53,91,157)">식품</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">F&B Morning Talk</td>
+                        <td class="comment2"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">다올투자증권</font><br/>박종현</td>
+                        <td class="ind"><font color="rgb(53,91,157)">건강관리장비와용품</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">Longevity에 투자하라</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 2026.05월 의료관광 소비 YoY +75% 증가 및 6/10일 수출 데이터 톡신 및 기초 화장품 호조 확인<br/><span class="comment_text">▶</span> 2Q26E 실적 기대감 형성 구간</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">메리츠증권</font><br/>조아해,공건희</td>
+                        <td class="ind"><font color="rgb(53,91,157)">은행</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">메리츠 Financial Daily</td>
+                        <td class="comment2"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">흥국증권</font><br/>유준석</td>
+                        <td class="ind"><font color="rgb(53,91,157)">은행</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm">비중확대</td>
+						<td class="rpt_title">5월 여수신 동향: 법인자금발 예금 증가, 관건은 지속성</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 5월 은행 여신: +17.5조원(MoM +0.7%)<br/><span class="comment_text">▶</span> 5월 은행 수신: +48.8조원 (MoM +1.9%)</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">다올투자증권</font><br/>김지원</td>
+                        <td class="ind"><font color="rgb(53,91,157)">은행</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">(5월) 여수신 동향: 보다 확대된 대출성장</td>
+                        <td class="comment2"> <span class="comment_text">▶</span>  여신: 가계대출과 기업대출 모두 증가<br/><span class="comment_text">▶</span>  여신 증감폭: 가계대출 +6.9조원(vs. 26년 4월 +2.1조원), 기업대출 +10.6조원(vs. 26년 4월 +10.7조원)<br/><span class="comment_text">▶</span>  수신: 다시 증가 전환. 기업들의 대기성 자금 유입으로 수시입출식예금과 정기예금 증가<br/><span class="comment_text">▶</span>  수신 증감폭: +48.8조원(vs. 26년 4월 -6.8조원)</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">신한투자증권</font><br/>임희연,이지연</td>
+                        <td class="ind"><font color="rgb(53,91,157)">손해보험</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm">비중확대</td>
+						<td class="rpt_title">비급여 1위 항목이 사라진다</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 7월부터 본격적인 실손 손해율 개선 시작<br/><span class="comment_text">▶</span> 관리급여 시행으로 연간 도수치료 시장 규모 축소 예상<br/><span class="comment_text">▶</span> 손해율 경로 차원에서는 7월 일시적 손해율 개선 효과 집중 전망</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">메리츠증권</font><br/>김선우,우서현</td>
+                        <td class="ind"><font color="rgb(53,91,157)">IT서비스</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">Meritz Overnight Tech</td>
+                        <td class="comment2"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">KB증권</font><br/>김동원,이창민,강다현</td>
+                        <td class="ind"><font color="rgb(53,91,157)">반도체와반도체장비</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">애플 올킬 전략: 아이폰 독주의 시작</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 아이폰18, 시리 AI 구동 위해 12GB 탑재 및 가격 동결 전망 <br/><span class="comment_text">▶</span> 2026~2027년 출하량 확대 전략, 아이폰 출하량: 2025년 (2.4억대) → 2027년 (2.7억대) <br/><span class="comment_text">▶</span> 2027년 아이폰 20주년 기대, Top picks: 삼성전자, SK하이닉스, LG이노텍</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>김홍식,이상훈</td>
+                        <td class="ind"><font color="rgb(53,91,157)">무선통신서비스</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">통신서비스 Weekly - AI RAN 관련주에 집중할 시점</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 2026년 이익 및 배당 조기 정상화/5G SA 확산 기대감 고조, 올해 AI 국책 사업자 선정 가능성도 긍정적<br/><span class="comment_text">▶</span> 2026년 높은 이익 성장 전망, 저 PBR/저 PER 관련주, 26년 DPS 성장/27년 자사주 소각 규모 증가 예상<br/><span class="comment_text">▶</span> 주가 상승 폭 낮아 주가 반등 예상, 단 인건비 재차 증가하고 배당 정체될 것이라 탄력적인 상승은 어려울 듯</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">다올투자증권</font><br/>임도영</td>
+                        <td class="ind"><font color="rgb(53,91,157)">방송과엔터테인먼트</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">빅뱅 투어 서프 + 저연차 성장은 순항 중</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 빅뱅, 예상치를 상회하는 투어 규모 발표<br/><span class="comment_text">▶</span> 시간이 필요할 뿐, 저연차 IP 성장은 순항 중<br/><span class="comment_text">▶</span> 하반기 개선된 주가 흐름 기대</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">IBK투자증권</font><br/>이승훈,박상준</td>
+                        <td class="ind"><font color="rgb(53,91,157)">양방향미디어와서비스</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">IBKS Daily [인터넷/게임]</td>
+                        <td class="comment2"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>유재선</td>
+                        <td class="ind"><font color="rgb(53,91,157)">복합유틸리티</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm">Neutral</td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">유틸리티 Weekly-호르무즈 해협 재봉쇄</td>
+                        <td class="comment2"><span class="comment_text">▶</span> SMP 상한제 시사한 정부 뒤엔…발전社로 날아든 가스값 청구서<br/><span class="comment_text">▶</span> 석유제품 최고가격제, 종료?…산업부, 아직 아니다<br/><span class="comment_text">▶</span> 일반수소 시장 폐지 면해…정부, 올해 입찰물량 930GWh 확정</td>
+                    </tr>
+                    
+                    <!--tr style="height:5px; border:0px;">
+                        <td colspan="7" style="border-bottom:0px solid rgb(209,209,209)"></td>
+                    </tr-->
+				    <tr>
+                        <td colspan="7" style="height:96px;border-bottom:0px solid rgb(209,209,209)"><img alt="" src="https://www.wisereport.co.kr/wisereport/summary/images/excel_footer.png"/></td>
+				    </tr>
+			    </table>
+            </div>
+    
+
+<script type="text/javascript">
+//<![CDATA[
+
+theForm.oldSubmit = theForm.submit;
+theForm.submit = WebForm_SaveScrollPositionSubmit;
+
+theForm.oldOnSubmit = theForm.onsubmit;
+theForm.onsubmit = WebForm_SaveScrollPositionOnSubmit;
+//]]>
+</script>
+</form>
+	</body>
+</HTML>
+
