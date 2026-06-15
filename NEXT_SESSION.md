@@ -1,40 +1,36 @@
-# NEXT SESSION — 2026-06-15 (L30 컴포넌트 전면 업데이트)
+# NEXT_SESSION
+날짜: 2026-06-15 | PC: 집PC
 
-**세션 요약**  
-life30 Remotion 씬 — 스크린샷 레퍼런스 분석 후 5개 컴포넌트 전면 수정 진행 중
-
----
+## 세션 요약
+카카오×클로드 영상 S1·S2·S3 Remotion 오버레이 완성.
+S2·S3는 Whisper로 실제 대본 추출 후 그래픽 카드 내용 일치.
 
 ## ✅ 완료
+- S1: HyperFrames로 렌더 완료 (`out/output_v3_final.mp4`)
+- S2: Remotion KK_S2_L30.tsx 작성 + Whisper 대본 일치 + 렌더 완료 (`out/kakao_s2_l30.mp4`)
+- S3: Remotion KK_S3_L30.tsx 작성 + Whisper 대본 일치 + 렌더 완료 (`out/kakao_s3_l30.mp4`)
+- Root.tsx에 S2·S3 컴포지션 등록
 
-- `pipeline/atoms/atomizer.py` — `_sanitize()` 추가 (서로게이트 유니코드 오류 방지)
+## ❌ 미완료 / 다음 할 것
+1. **S2·S3 검토** — 실제 영상 확인 후 타이밍·디자인 수정 필요시 알려주기
+2. **다음 씬 작업** — 영상 + 대본 파일을 `클로드 카톡방` 폴더에 함께 넣어주면 바로 진행
+3. **캡컷 설정 변경** — 앞으로 1080p MP4 H.264 30fps로 다운받기 (8K → 렌더 느림)
+4. **3개 씬 최종 합치기** — S1+S2+S3 ffmpeg concat 또는 캡컷 편집
+5. **S1 Remotion 전환** — 선택사항 (HyperFrames → Remotion)
 
----
+## 관련 파일
+- `remotion-stock/src/kakao/KK_S2_L30.tsx` — S2 컴포넌트
+- `remotion-stock/src/kakao/KK_S3_L30.tsx` — S3 컴포넌트
+- `remotion-stock/src/Root.tsx` — 컴포지션 등록
+- `videos/s2scene/audio.json` — S2 Whisper 전사 결과
+- `videos/s3scene/audio.json` — S3 Whisper 전사 결과
+- `out/kakao_s2_l30.mp4` — S2 렌더 출력 (로컬)
+- `out/kakao_s3_l30.mp4` — S3 렌더 출력 (로컬)
 
-## ⏳ 미완료 — L30 컴포넌트 전면 업데이트
-
-레퍼런스 스크린샷: `raw/리모션/레퍼런스/image 1.png ~ image 39.png`  
-대상 폴더: `remotion-stock/src/life30/`
-
-### 수정 항목 5가지
-
-| 파일 | 수정 내용 |
-|------|----------|
-| `L30_BarChart.tsx` | 3D 바 효과 + 값 위치 수정(위→아래: 깃발→국가→값→바) + NVIDIA 수평 기준선 |
-| `L30_PipAvatar.tsx` | 빨간 점(라임→빨강) + 세로 포트레이트 모드 + "LIVE·09:16" 타임 형식 |
-| `L30_CircuitPattern.tsx` | **신규 생성** — PCB 회로기판 패턴 (스크린샷1 핵심 비주얼) |
-| `L30_Leaderboard.tsx` | **신규 생성** — 01~10 랭킹 테이블 (스크린샷4 GLOBAL TOP10) |
-| `L30_DataCard.tsx` | MetricCard "$420 B" 스타일 (B 작고 라임색) + NvidiaBar 신규 |
-
-### 분석 4가지 (스크린샷에서 추출)
-1. 색감
-2. 폰트 구성·모양·크기
-3. 장면전환
-4. 백그라운드 + 글자·로고·국기 레이어층
-
----
-
-## 참고 파일
-- 기존 컴포넌트: `remotion-stock/src/life30/L30_*.tsx`
-- 레퍼런스 이미지: `raw/리모션/레퍼런스/image 1.png` ~ `image 39.png`
-- 가이드: `channel/strategy/strategy_remotion_가이드.md`
+## 워크플로우 확정
+```
+캡컷 1080p MP4 H.264 30fps 내보내기
+→ remotion-stock/public/kakao/ 에 복사
+→ TSX 작성 (대본 파일 있으면 Whisper 불필요)
+→ npx remotion render --concurrency=4
+```

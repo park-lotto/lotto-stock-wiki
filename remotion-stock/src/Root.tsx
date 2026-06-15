@@ -71,6 +71,13 @@ import { S05_ClaudeSetup, S05_FRAMES } from './kakao/S05_ClaudeSetup';
 import { S07_PlayMCPConnect, S07_FRAMES } from './kakao/S07_PlayMCPConnect';
 import { S01_Hook_AV, S01_AV_FRAMES } from './kakao/S01_Hook_AV';
 import { S05_ClaudeSetup_AV, S05_AV_FRAMES } from './kakao/S05_ClaudeSetup_AV';
+import { KK_Veo_S1, KK_VEO_S1_FRAMES } from './kakao/KK_Veo_S1';
+import { KK_Veo_S2, KK_VEO_S2_FRAMES } from './kakao/KK_Veo_S2';
+import { KK_Veo_S3, KK_VEO_S3_FRAMES } from './kakao/KK_Veo_S3';
+import { KK_S1_Hooking, KK_S1_HOOKING_FRAMES } from './kakao/KK_S1_Hooking';
+import { KK_S1_L30, KK_S1_L30_FRAMES } from './kakao/KK_S1_L30';
+import { KK_S2_L30, KK_S2_L30_FRAMES } from './kakao/KK_S2_L30';
+import { KK_S3_L30, KK_S3_L30_FRAMES } from './kakao/KK_S3_L30';
 import { PostFX } from './components/PostFX';
 
 // PostFX 래퍼 컴포넌트 — Composition component 에 직접 람다 못 쓰므로 별도 정의
@@ -83,6 +90,16 @@ const Kakao_S07_FX = () => <PostFX><S07_PlayMCPConnect /></PostFX>;
 // ── 아바타 영상 버전 래퍼 ──
 const Kakao_S01_AV_FX = () => <S01_Hook_AV />;
 const Kakao_S05_AV_FX = () => <S05_ClaudeSetup_AV />;
+// ── Veo AI 아바타 씬 ──
+const KK_Veo_S1_FX = () => <KK_Veo_S1 />;
+const KK_Veo_S2_FX = () => <KK_Veo_S2 />;
+const KK_Veo_S3_FX = () => <KK_Veo_S3 />;
+// ── 후킹 스타일 씬 ──
+const KK_S1_Hooking_FX = () => <KK_S1_Hooking />;
+// ── LIFE 3.0 오버레이 씬 ──
+const KK_S1_L30_FX = () => <KK_S1_L30 />;
+const KK_S2_L30_FX = () => <KK_S2_L30 />;
+const KK_S3_L30_FX = () => <KK_S3_L30 />;
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -92,6 +109,68 @@ export const RemotionRoot: React.FC = () => {
         id="StockBrain-Intro"
         component={StockBrainIntroFX}
         durationInFrames={STOCK_BRAIN_INTRO_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* ── Veo AI 아바타 씬 S1~S3 ── */}
+      <Composition
+        id="Kakao-Veo-S1"
+        component={KK_Veo_S1_FX}
+        durationInFrames={KK_VEO_S1_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="Kakao-Veo-S2"
+        component={KK_Veo_S2_FX}
+        durationInFrames={KK_VEO_S2_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="Kakao-Veo-S3"
+        component={KK_Veo_S3_FX}
+        durationInFrames={KK_VEO_S3_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      {/* ── 후킹 스타일 S1 ── */}
+      <Composition
+        id="Kakao-S1-Hooking"
+        component={KK_S1_Hooking_FX}
+        durationInFrames={KK_S1_HOOKING_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      {/* ── LIFE 3.0 오버레이 S1 (프레젠터 영상 + L30 그래픽) ── */}
+      <Composition
+        id="Kakao-S1-L30"
+        component={KK_S1_L30_FX}
+        durationInFrames={KK_S1_L30_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      {/* ── LIFE 3.0 오버레이 S2 (페인포인트 씬 + L30 그래픽) ── */}
+      <Composition
+        id="Kakao-S2-L30"
+        component={KK_S2_L30_FX}
+        durationInFrames={KK_S2_L30_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      {/* ── LIFE 3.0 오버레이 S3 (AI신화파괴 + 진짜이유) ── */}
+      <Composition
+        id="Kakao-S3-L30"
+        component={KK_S3_L30_FX}
+        durationInFrames={KK_S3_L30_FRAMES}
         fps={30}
         width={1920}
         height={1080}

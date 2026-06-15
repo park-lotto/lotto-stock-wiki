@@ -5,3 +5,7 @@ dist
 
 # Ignore the output video from Git but not videos you import into src/.
 out
+
+# 대용량 소스 영상 (로컬 전용)
+public/kakao/*.mp4
+build/
