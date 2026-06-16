@@ -23,7 +23,7 @@ import {
 export const KK_S5_PIP_FRAMES = 942; // 31.4s × 30fps
 
 // ── 화면 녹화 파일 경로 (파일 생기면 여기만 교체) ──
-const SCREEN_SRC: string | null = null; // 예: staticFile('kakao/s5_screen.mp4')
+const SCREEN_SRC: string | null = null; // 파일 생기면: staticFile('kakao/ep1/s05_screen.mp4')
 
 // ── PiP 크기 ──
 const PIP_W      = 316;
@@ -154,7 +154,7 @@ export const KK_S5_PiP: React.FC = () => {
         outlineOffset: -1,
       }}>
         <OffthreadVideo
-          src={staticFile('kakao/s5scene.mp4')}
+          src={staticFile('kakao/ep1/s05_screen.mp4')}
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         />
       </div>

@@ -1,0 +1,17 @@
+## remotion-stock/public/kakao/ep1/ — Remotion 소스 영상
+
+TSX 파일에서 staticFile('kakao/ep1/파일명') 으로 참조.
+productions/kakao_ep1/에서 인코딩 완료된 파일을 여기로 복사.
+
+필요한 파일 목록:
+  s02_face.mp4       ← KK_S2_L30.tsx 배경 (얼굴 녹화본)
+  s03_face.mp4       ← KK_S3_L30.tsx 배경 (얼굴 녹화본)
+  s05_screen.mp4     ← KK_S5_PiP.tsx 화면 영역 (화면 녹화본)
+  s06_bg.mp4         ← KK_S6_MCP.tsx 배경 (선택 — 없으면 검정 배경)
+  s07_screen.mp4     ← KK_S7_PiP.tsx (미완성)
+  s08_screen.mp4     ← KK_S8_PiP.tsx (미완성)
+  s09_screen.mp4     ← KK_S9_PiP.tsx (미완성)
+  s10_screen.mp4     ← KK_S10_PiP.tsx (미완성)
+
+스펙: 1920×1080, 30fps, H.264
+이 폴더의 MP4는 .gitignore 처리됨 (로컬 전용)

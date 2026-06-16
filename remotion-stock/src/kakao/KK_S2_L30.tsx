@@ -117,7 +117,7 @@ export const KK_S2_L30: React.FC = () => {
     <AbsoluteFill style={{ fontFamily: "'Inter', sans-serif", overflow: 'hidden', background: '#000' }}>
 
       <OffthreadVideo
-        src={staticFile('kakao/s2scene.mp4')}
+        src={staticFile('kakao/ep1/s02_face.mp4')}
         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
       />
 

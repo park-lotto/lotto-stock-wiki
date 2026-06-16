@@ -1,0 +1,15 @@
+## 02_face/ — 발표자 얼굴 녹화본 (카메라)
+
+카메라로 녹화한 얼굴 영상 원본.
+Remotion이 이 파일을 배경 + PiP로 사용.
+
+파일명 규칙:
+  s02_face.mp4   ← S2 페인포인트 장면 (나레이션 포함)
+  s03_face.mp4   ← S3 철학 장면 (나레이션 포함)
+
+스펙: 1920×1080 or 1080×1920(세로), 30fps
+편집: 캡컷 내보내기 후 복사
+
+→ Remotion 경로: remotion-stock/public/kakao/ep1/ 에도 복사 필요
+   (KK_S2_L30.tsx → kakao/ep1/s02_face.mp4)
+   (KK_S3_L30.tsx → kakao/ep1/s03_face.mp4)

@@ -1,0 +1,24 @@
+## 06_final/ — 최종 합본
+
+ffmpeg concat으로 만든 최종 영상.
+
+파일:
+  concat.txt            ← ffmpeg 입력 목록
+  kakao_ep1_final.mp4   ← 최종 완성본
+
+concat.txt 순서:
+  file '../03_screen/cold_open.mp4'
+  file '../01_veo/intro_1.mp4'
+  file '../01_veo/intro_2.mp4'
+  file '../01_veo/intro_3.mp4'
+  file '../01_veo/intro_4.mp4'
+  file 'transition_ai2me.mp4'      ← 04_remotion/에서 복사
+  [S2 ~ S11 씬들...]
+  file 'transition_me2ai.mp4'
+  file '../01_veo/outro_a.mp4'
+  file '../01_veo/outro_b.mp4'
+  file '../01_veo/outro_c.mp4'
+  file '../01_veo/outro_d.mp4'
+
+합치기 명령:
+  ffmpeg -f concat -safe 0 -i concat.txt -c copy kakao_ep1_final.mp4

@@ -27,7 +27,7 @@ const ITEMS = [
 ];
 
 export const KK_S6: React.FC = () => (
-  <SceneBase video="kakao/s6scene.mp4" subs={SUBS}>
+  <SceneBase video="kakao/ep1/SCENE_VIDEO.mp4" subs={SUBS}>
     {(f) => {
       // ── Phase 타이밍 계산 ──
       const phase1Op = panelOp(f, 0, 180);

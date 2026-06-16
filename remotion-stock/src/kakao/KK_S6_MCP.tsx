@@ -46,7 +46,7 @@ const SERVICES = [
 ];
 
 export const KK_S6_MCP: React.FC = () => (
-  <SceneBase video="kakao/s6scene.mp4" subs={SUBS}>
+  <SceneBase video="kakao/ep1/s06_bg.mp4" subs={SUBS}>
     {(f) => {
       const phase1Op = panelOp(f, 5, 320);
       const phase1Scale = 0.82 + sp(f, 5, 8, 280, 0.6) * 0.18;
