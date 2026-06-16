@@ -78,6 +78,8 @@ import { KK_S1_Hooking, KK_S1_HOOKING_FRAMES } from './kakao/KK_S1_Hooking';
 import { KK_S1_L30, KK_S1_L30_FRAMES } from './kakao/KK_S1_L30';
 import { KK_S2_L30, KK_S2_L30_FRAMES } from './kakao/KK_S2_L30';
 import { KK_S3_L30, KK_S3_L30_FRAMES } from './kakao/KK_S3_L30';
+import { KK_S5_L30, KK_S5_L30_FRAMES } from './kakao/KK_S5_L30';
+import { KK_S5_PiP, KK_S5_PIP_FRAMES } from './kakao/KK_S5_PiP';
 import { PostFX } from './components/PostFX';
 
 // PostFX 래퍼 컴포넌트 — Composition component 에 직접 람다 못 쓰므로 별도 정의
@@ -100,6 +102,8 @@ const KK_S1_Hooking_FX = () => <KK_S1_Hooking />;
 const KK_S1_L30_FX = () => <KK_S1_L30 />;
 const KK_S2_L30_FX = () => <KK_S2_L30 />;
 const KK_S3_L30_FX = () => <KK_S3_L30 />;
+const KK_S5_L30_FX = () => <KK_S5_L30 />;
+const KK_S5_PiP_FX = () => <KK_S5_PiP />;
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -171,6 +175,24 @@ export const RemotionRoot: React.FC = () => {
         id="Kakao-S3-L30"
         component={KK_S3_L30_FX}
         durationInFrames={KK_S3_L30_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      {/* ── LIFE 3.0 오버레이 S5 (클로드 설치 + 유료 플랜) ── */}
+      <Composition
+        id="Kakao-S5-L30"
+        component={KK_S5_L30_FX}
+        durationInFrames={KK_S5_L30_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      {/* ── S5 PiP 레이아웃 (발표자 우측 9:16 + 좌측 화면 녹화) ── */}
+      <Composition
+        id="Kakao-S5-PiP"
+        component={KK_S5_PiP_FX}
+        durationInFrames={KK_S5_PIP_FRAMES}
         fps={30}
         width={1920}
         height={1080}

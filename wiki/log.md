@@ -1,3 +1,5 @@
+- 2026-06-16 — S5 Remotion 완성: KK_S5_L30(풀스크린 5Phase 오버레이·38MB) + KK_S5_PiP(발표자 우측9:16 PiP·spring전환·LIVE배지·좌측 화면녹화 플레이스홀더). 다음: s5_screen.mp4 연결
+- 2026-06-16 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-06-16.md
 - 2026-06-15 — 카카오클로드 S2·S3 Remotion 완성: Whisper 실제 대본 추출 후 그래픽 카드 일치. S2(656f·22s·페인포인트), S3(1212f·40s·AI신화파괴+진짜이유). KK_S2_L30.tsx·KK_S3_L30.tsx 생성. 다음: 씬 검토 + 다음 씬 작업(대본 함께 제공)
 - 2026-06-15 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-06-15.md
 - 2026-06-14 — 카카오클로드 영상 Remotion S1·S2 완성: S01_Hook(카톡 알림→자동 임팩트, 540f), S02_PainPoint(5카드 X슬라이드·정보소비 클라이맥스·관망 훅), PostFX 후처리, 전체 13씬 대본 1차 확정. 다음: 스타일 다듬기 + S3·S4·S6·S11·S12·S13 제작
