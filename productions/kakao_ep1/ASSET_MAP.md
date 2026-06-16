@@ -26,7 +26,7 @@ kakao_ep1/
 │   (TSX: KK_Veo_Intro.tsx / KK_Veo_Outro.tsx — 오푸스 설계 필요)
 │
 ├── 02_face/                        🟡 발표자 얼굴 녹화 (네 카메라)
-│   └── s03_face.mp4                [ ] S3 철학 나레이션 (~40초)
+│   └── s03_face.mp4                [ ] S3 철학 나레이션 (~40초)  ← 얼굴 나오는 유일한 씬
 │
 ├── 03_screen/                      🟢 화면 녹화 (OBS or 캡컷)
 │   ├── cold_open.mp4               [ ] 콜드오픈: 폰에 카톡 브리핑 오는 화면 (2초, 무음)
@@ -87,7 +87,7 @@ kakao/ep1/
 | **Veo 인트로** | KK_Veo_Intro.tsx | ❌ 오푸스 설계 필요 | ep1/veo_intro_1~4.mp4 |
 | **Veo 아웃트로** | KK_Veo_Outro.tsx | ❌ 오푸스 설계 필요 | ep1/veo_outro_a~d.mp4 |
 | **전환컷** | KK_Transition.tsx | ❌ 오푸스 설계 필요 | 없음 (순수 그래픽) |
-| S2 페인포인트 | KK_S2_L30.tsx | ✓ 완성 (경로·SUBS 재싱크 필요) | ep1/s02_screen.mp4 (화면녹화로 변경) |
+| S2 페인포인트 | KK_S2_L30.tsx | ✓ 완성 (SUBS 재싱크 필요) | ep1/s02_screen.mp4 (화면녹화 배경 + Remotion 오버레이) |
 | S3 철학 | KK_S3_L30.tsx | ✓ 완성 (SUBS 재싱크 필요) | ep1/s03_face.mp4 |
 | S4 로드맵 | — | ❌ 미제작 | 없음 (순수 그래픽) |
 | S5 PiP | KK_S5_PiP.tsx | ✓ 완성 (SUBS 재싱크 필요) | ep1/s05_screen.mp4 |
