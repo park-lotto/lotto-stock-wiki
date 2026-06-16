@@ -1,57 +1,59 @@
 # NEXT_SESSION
-날짜: 2026-06-16 | PC: 집PC (오푸스 세션 → 소넷 이어받기)
+날짜: 2026-06-16 | PC: 집PC (소넷 세션)
 
 ## 세션 요약
-카카오클로드 영상 제작 구조 전면 재설계 + v7 대본 확정.
-1) theme.ts + SceneBase.tsx 공통 인프라 생성 → 신규 씬 350줄→80줄
-2) KK_S6_MCP.tsx (MCP 개념 설명, 900f) 완성
-3) KK_S6_TEMPLATE.tsx (신규 씬 스타터 템플릿) 생성
-4) v7 대본 확정: 3레인 구조 + Veo 8초 클립 공식 + 북엔드 AI여자 앵커
+카카오클로드 EP1 에셋 폴더 구조 완성 + 씬별 방식 확정.
 
 ## ✅ 완료
-- `remotion-stock/src/kakao/theme.ts` — 공통 컬러 + 애니메이션 헬퍼
-- `remotion-stock/src/kakao/SceneBase.tsx` — 공통 베이스 래퍼 (비디오+그래디언트+자막바)
-- `remotion-stock/src/kakao/KK_S6_MCP.tsx` — S6 MCP 개념 씬 (900f, 4페이즈)
-- `remotion-stock/src/kakao/KK_S6_TEMPLATE.tsx` — 재사용 템플릿
-- `remotion-stock/src/Root.tsx` — Kakao-S6-MCP 컴포지션 등록
-- `channel/yt/yt_카카오클로드_대본_v7.md` — **최종 확정 대본**
-  - 콜드오픈(2초 무음) + 인트로 Veo 4클립(32s) + 본론 S2~S11 + 아웃트로 Veo 4클립(32s)
-  - 음절 공식: 한국어 5음절/초 → 8초 클립 = 최대 43음절
-  - Clip 4 AI 리빌: "방금까지 설명한 저, 사실 클로드가 만든 AI예요. 이제 클로드가 만드는 주식 자동화, 그 첫 단계 들어보세요."
-  - 아웃트로 구독 명분: "다음 편이 진짜인데 오늘 걸 세팅해둬야 따라온다" (선행조건+FOMO)
-- 레퍼런스 영상 분석 완료: Claude Code × HyperFrames 구조 확인
+- `productions/kakao_ep1/` 전체 폴더 구조 확정
+  - 01_veo/intro/ (4클립) + 01_veo/outro/ (4클립) — 씬 2개
+  - 02_face/ (S3만 얼굴)
+  - 03_screen/ (S2·S5·S7·S8·S9·S10·cold_open)
+  - 04_remotion/ / 05_audio/ / 06_final/
+- `ASSET_MAP.md` — 전체 에셋 체크리스트 완성
+- 씬별 대본 txt 파일 생성 (각 폴더 안)
+- **S2 대본 사용자가 직접 수정** → `02_face/s02_script.txt` (더 자연스러운 말투)
+- **Veo 클립 + Remotion 오버레이** 방식 확정 (KK_Veo_Intro.tsx / KK_Veo_Outro.tsx — 오푸스 설계 필요)
+- S2: 화면녹화 배경 + 별도 음성 방식 확정 → `KK_S2_L30.tsx` 경로 s02_screen.mp4로 변경
+- MP4 gitignore 처리 (videos/**/*.mp4, remotion-stock/public/**/*.mp4)
+- TSX 경로 전체 ep1/ 로 통일
 
-## ❌ 미완료 / 다음 할 것
+## 전체 씬 구조 (확정)
+| 씬 | 배경 | Remotion | TSX |
+|---|---|---|---|
+| Veo 인트로 (4클립) | AI여자 Veo | 카톡목업·전환효과 | KK_Veo_Intro.tsx ❌ |
+| Veo 아웃트로 (4클립) | AI여자 Veo | 수미상관·구독CTA | KK_Veo_Outro.tsx ❌ |
+| S2 페인포인트 | 화면녹화(앱브라우징) | 앱아이콘·"30분" | KK_S2_L30.tsx ✓ |
+| S3 철학 | 얼굴 녹화 | 텍스트 그래픽 | KK_S3_L30.tsx ✓ |
+| S4 로드맵 | 없음 | 순수 Remotion | ❌ 미제작 |
+| S5 설치 | 화면녹화 | PiP + 자막 | KK_S5_PiP.tsx ✓ |
+| S6 MCP | 없음/bg | 순수 Remotion | KK_S6_MCP.tsx ✓ |
+| S7~S10 | 화면녹화 | PiP + 자막 | ❌ 미제작 |
+| S11 응용 | 없음 | 순수 Remotion | ❌ 미제작 |
+| 전환컷 0.7s | 없음 | 순수 Remotion | ❌ 미제작 |
 
-### 🧑 사용자가 해야 할 것 (이게 먼저)
-1. **콜드오픈 소재** — 폰에 브리핑 카톡 오는 화면 2초 녹화
-2. **Veo 클립 8개** — v7 대본 그대로 각 8초 (인트로 1·2·3·4 / 아웃트로 A·B·C·D)
-3. **화면 녹화 5개** — S5(설치)·S7(연동)·S8(프롬프트)·S9(플러그인)·S10(스케줄)
+## ❌ 다음 할 것
 
-### 🔴 오푸스 1회 창의 작업 (소넷 못하는 것)
-1. **전환컷(0.7s) "룩" 디자인** — AI여자 → 사용자 화면 전환 컴포넌트
-2. **AI여자 라벨/오버레이 컨셉** — "STOCK BRAIN AI" 배지 디자인
+### 🧑 네가 할 것
+- [ ] Veo 클립 생성: `01_veo/intro/` 4개 + `01_veo/outro/` 4개
+- [ ] 화면 녹화: cold_open, s02_screen, s05~s10_screen → `03_screen/`
+- [ ] 얼굴 녹화: s03_face → `02_face/`
+- [ ] 음성 별도 녹음: s02_voice.mp3 → `05_audio/`
 
-### ⚙️ 소넷 반복 작업 (이어서 바로 시작 가능)
-1. 본론 S2~S11 대사 최종 다듬기 (v7 톤 기준)
-2. S6 씬 렌더 확인 (s6scene.mp4 필요 — 녹화 후)
-3. Veo·녹화본 Whisper 싱크 → SUBS 배열 교체
-4. S4 로드맵 씬 (KK_S6_TEMPLATE.tsx 복제 + 데이터 채우기)
-5. Root.tsx 신규 컴포지션 등록
-6. 렌더 + ffmpeg concat
+### 🔴 오푸스 1회 설계 (한번에 같이)
+- [ ] KK_Veo_Intro.tsx (4클립 × Remotion 오버레이)
+- [ ] KK_Veo_Outro.tsx (4클립 × Remotion 오버레이)
+- [ ] KK_Transition.tsx (전환컷 0.7s)
+
+### ⚙️ 소넷 작업 (녹화 완료 후)
+- [ ] S2 대본 수정본 → SUBS 업데이트 (새 대본 이미 `02_face/s02_script.txt`에 있음)
+- [ ] S4·S7~S11 TSX 제작 (KK_S6_TEMPLATE.tsx 복제)
+- [ ] Whisper → SUBS 싱크
+- [ ] 렌더 + ffmpeg concat
 
 ## 관련 파일
-- `channel/yt/yt_카카오클로드_대본_v7.md` — **최종 대본 (소넷 레퍼런스)**
-- `remotion-stock/src/kakao/theme.ts` — 공통 인프라
-- `remotion-stock/src/kakao/SceneBase.tsx` — 공통 베이스
-- `remotion-stock/src/kakao/KK_S6_MCP.tsx` — S6 완성본
-- `remotion-stock/src/kakao/KK_S6_TEMPLATE.tsx` — 신규 씬 템플릿
-- `remotion-stock/src/Root.tsx` — 컴포지션 등록
-
-## 3레인 구조 요약 (빠른 참고)
-| 레인 | 방식 | 목소리 | 씬 |
-|---|---|---|---|
-| 🟦 AI | Veo 8초 클립 | AI여자(앵커) | 인트로·아웃트로 |
-| 🟡 오버레이 | 네 영상+리모션 | 너 | S2·S3 |
-| 🟢 화면녹화 | 실화면+PiP | 너 | S5·S7·S8·S9·S10 |
-| 🔴 리모션 | 순수 그래픽 | 너/무음 | S4·S6·S11·전환컷 |
+- `productions/kakao_ep1/ASSET_MAP.md` — 전체 체크리스트
+- `productions/kakao_ep1/01_veo/intro/*.txt` — Veo 클립 대사
+- `productions/kakao_ep1/02_face/s02_script.txt` — S2 수정 대본 ⚡
+- `channel/yt/yt_카카오클로드_대본_v7.md` — 전체 대본
+- `remotion-stock/src/kakao/` — TSX 코드
