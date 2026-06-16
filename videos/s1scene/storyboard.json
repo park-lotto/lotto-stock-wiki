@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 3,
+  "composition": {
+    "fps": 30,
+    "width": 1920,
+    "height": 1080,
+    "durationSeconds": 27.93,
+    "layout": "landscape",
+    "themeId": "noir",
+    "seed": 42
+  },
+  "videoTrack": {
+    "sourcePath": "input-video.mp4",
+    "startSec": 0,
+    "endSec": 27.93,
+    "bounds": { "x": 0, "y": 0, "width": 1920, "height": 1080 }
+  },
+  "subtitles": { "enabled": false },
+  "cards": [
+    {
+      "id": "card-01",
+      "intent": "AI 앱 순위 리더보드 — 클로드가 GPT·Gemini를 제치고 1위",
+      "startSec": 0.2,
+      "endSec": 5.1,
+      "accentIndex": 2,
+      "zone": "video-overlay",
+      "contentHints": {
+        "kicker": "APP STORE · AI RANKING (US 2025.06)",
+        "rows": ["01 🤖 CLAUDE #1 (highlight)", "02 💬 CHATGPT #2", "03 💎 GEMINI #3", "04 🔍 PERPLEXITY #4"],
+        "tag": "→ GPT · GEMINI 추월"
+      }
+    },
+    {
+      "id": "card-02",
+      "intent": "CLAUDE #1 카운트다운 숫자 — 오른쪽에 big metric 카드",
+      "startSec": 4.8,
+      "endSec": 9.1,
+      "accentIndex": 2,
+      "zone": "video-overlay",
+      "contentHints": {
+        "kicker": "PRODUCTIVITY · RANKING",
+        "value": "#1",
+        "detail": "클로드 · 앱스토어 1위",
+        "underline": true
+      }
+    },
+    {
+      "id": "card-03",
+      "intent": "자동화 특화 기능 4가지 스태거 체크리스트",
+      "startSec": 8.7,
+      "endSec": 14.3,
+      "accentIndex": 2,
+      "zone": "video-overlay",
+      "contentHints": {
+        "kicker": "자동화 · 특화 기능",
+        "items": ["웹 리서치 자동화", "카톡 자동 발송", "MCP 외부 연결", "스케줄 자동 실행"]
+      }
+    },
+    {
+      "id": "card-04",
+      "intent": "카카오 브리핑 타임스탬프 + 메시지 미리보기",
+      "startSec": 14.1,
+      "endSec": 21.0,
+      "accentIndex": 0,
+      "zone": "video-overlay",
+      "contentHints": {
+        "timestamp": "08 : 00",
+        "label": "DAILY · BRIEFING · LIVE",
+        "messages": ["📊 코스피 2,856 (+0.3%)", "🔥 주도섹터: 반도체 / 조선", "⭐ 관심: 삼성전기 · HD현대"]
+      }
+    },
+    {
+      "id": "card-05",
+      "intent": "코딩 없음 + 프롬프트 공유 임팩트 — 하단 중앙",
+      "startSec": 20.8,
+      "endSec": 25.6,
+      "accentIndex": 2,
+      "zone": "video-overlay",
+      "contentHints": {
+        "title": "복잡한 코딩 전혀 없음",
+        "sub": "프롬프트 고정 댓글로 전부 공유",
+        "badge": "FREE"
+      }
+    },
+    {
+      "id": "card-06",
+      "intent": "딱 10분 CTA 마무리 — 중앙 임팩트",
+      "startSec": 25.3,
+      "endSec": 27.93,
+      "accentIndex": 2,
+      "zone": "video-overlay",
+      "contentHints": {
+        "label": "세팅 소요 시간",
+        "title": "딱 10분",
+        "sub": "오늘 영상 끝까지만 집중해 주세요 👇"
+      }
+    }
+  ]
+}

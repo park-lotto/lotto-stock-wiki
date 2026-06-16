@@ -1,0 +1,51 @@
+<div class="card" data-card-id="card-04">
+  <style>
+    .card[data-card-id="card-04"] .root {
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.88);
+      border: 1.5px solid rgba(170,255,0,0.65);
+      border-radius: 4px;
+      backdrop-filter: blur(10px);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .card[data-card-id="card-04"] .ts-block {
+      padding: 16px 18px 14px;
+      border-bottom: 1px solid rgba(170,255,0,0.30);
+      opacity: 0;
+    }
+    .card[data-card-id="card-04"] .ts-label {
+      font-family: 'Courier New', monospace; font-size: 10px;
+      color: rgba(170,255,0,0.6); letter-spacing: 2.5px; text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .card[data-card-id="card-04"] .ts-time {
+      font-family: 'Inter', sans-serif; font-size: 38px;
+      font-weight: 900; color: #AAFF00; line-height: 1;
+      text-shadow: 0 0 12px rgba(170,255,0,0.6);
+      letter-spacing: 4px;
+    }
+    .card[data-card-id="card-04"] .msg-header {
+      font-family: 'Courier New', monospace; font-size: 10px;
+      color: #AAFF00; letter-spacing: 2px; text-transform: uppercase;
+      padding: 12px 18px 8px;
+    }
+    .card[data-card-id="card-04"] .msg {
+      display: flex; gap: 8px; align-items: flex-start;
+      padding: 7px 18px;
+      font-family: 'Inter', sans-serif; font-size: 13px;
+      color: #fff; line-height: 1.5;
+      opacity: 0;
+    }
+  </style>
+  <div class="root">
+    <div class="ts-block" id="c04-ts">
+      <div class="ts-label">DAILY · BRIEFING · LIVE</div>
+      <div class="ts-time">08 : 00</div>
+    </div>
+    <div class="msg-header">카카오 · 주식 AI 브리핑</div>
+    <div class="msg" id="c04-m1"><span>📊</span><span>코스피 2,856 (+0.3%)</span></div>
+    <div class="msg" id="c04-m2"><span>🔥</span><span>주도섹터: 반도체 / 조선</span></div>
+    <div class="msg" id="c04-m3"><span>⭐</span><span>관심: 삼성전기 · HD현대</span></div>
+  </div>
+</div>

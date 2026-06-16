@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; }
+    #stage { position:relative; width:100%; height:100%; overflow:hidden; }
+    #video-wrap { position:absolute; left:0; top:0; width:1920px; height:1080px; }
+    #video-wrap video { width:100%; height:100%; object-fit:cover; }
+    .card-host { position:absolute; pointer-events:none; overflow:hidden; }
+
+    #subtitle-bar { position:absolute; bottom:0; left:0; right:0; height:190px;
+      background:linear-gradient(to top,rgba(0,0,0,0.94) 0%,rgba(0,0,0,0.5) 55%,transparent 100%);
+      z-index:90; pointer-events:none; }
+    .sub-seg { position:absolute; bottom:0; left:0; right:0; text-align:center;
+      padding:0 80px 52px; font:700 46px/1.3 'Inter',sans-serif;
+      color:#fff; text-shadow:0 2px 20px rgba(0,0,0,1); opacity:0; }
+    .sub-seg .accent { color:#AAFF00; text-shadow:0 0 12px rgba(170,255,0,0.9),0 2px 8px rgba(0,0,0,1); }
+  </style>
+</head>
+<body>
+<div id="stage"
+  data-composition-id="graphic-overlays"
+  data-start="0" data-duration="27.93"
+  data-fps="30" data-width="1920" data-height="1080">
+
+  <div id="video-wrap">
+    <video id="bg-video" src="input-video.mp4" muted playsinline
+      data-start="0" data-duration="27.93" data-track-index="1"></video>
+  </div>
+
+  <!-- ════════════════════════════════════
+       CARD 01  0.2 ~ 5.1s  ── 풀 캔버스 바차트
+       LEFT: ChatGPT(#2) + Gemini(#3)
+       RIGHT: CLAUDE(#1) DOMINANT
+  ══════════════════════════════════════ -->
+  <div class="card-host" data-card-id="card-01" data-track-index="2"
+    style="left:0;top:0;width:1920px;height:1080px;visibility:hidden;opacity:0;">
+
+    <!-- 상단 중앙 레이블 -->
+    <div id="c01hdr" style="position:absolute;top:32px;left:50%;transform:translateX(-50%);
+      font:600 13px/1 'Courier New',monospace;color:rgba(255,255,255,0.55);letter-spacing:4px;
+      text-transform:uppercase;white-space:nowrap;opacity:0;
+      text-shadow:0 1px 10px rgba(0,0,0,0.95)">
+      APP STORE &nbsp;·&nbsp; AI PRODUCTIVITY RANK &nbsp;·&nbsp; US 2025.06
+    </div>
+
+    <!-- ── LEFT: ChatGPT #2  ── -->
+    <div id="c01left" style="position:absolute;left:0;top:0;width:500px;height:1080px;opacity:0;">
+
+      <div id="c01before" style="position:absolute;top:32px;left:36px;opacity:0;">
+        <div style="font:600 11px/1 'Courier New',monospace;color:rgba(255,255,255,0.4);
+          letter-spacing:3px;text-shadow:0 1px 8px rgba(0,0,0,0.95)">RANK #2 · BEFORE</div>
+      </div>
+
+      <!-- ChatGPT 바 -->
+      <div id="bar-gpt" style="position:absolute;bottom:220px;left:36px;width:190px;height:0;
+        background:linear-gradient(to top,#0a7a60,#10A37F,#17d49e);
+        border-radius:6px 6px 0 0;
+        box-shadow:0 0 40px rgba(16,163,127,0.45),0 0 80px rgba(16,163,127,0.15);">
+        <div id="bar-gpt-top" style="position:absolute;top:-56px;left:0;right:0;text-align:center;opacity:0;">
+          <div style="font:900 20px/1 'Inter',sans-serif;color:#10A37F;
+            text-shadow:0 0 16px rgba(0,0,0,0.95),0 0 24px rgba(16,163,127,0.5)">#2</div>
+        </div>
+      </div>
+
+      <!-- Gemini 바 -->
+      <div id="bar-gem" style="position:absolute;bottom:220px;left:260px;width:190px;height:0;
+        background:linear-gradient(to top,#1a3eaa,#4285F4,#74a8ff);
+        border-radius:6px 6px 0 0;
+        box-shadow:0 0 35px rgba(66,133,244,0.4),0 0 70px rgba(66,133,244,0.12);">
+        <div id="bar-gem-top" style="position:absolute;top:-56px;left:0;right:0;text-align:center;opacity:0;">
+          <div style="font:900 20px/1 'Inter',sans-serif;color:#74a8ff;
+            text-shadow:0 0 16px rgba(0,0,0,0.95),0 0 20px rgba(66,133,244,0.5)">#3</div>
+        </div>
+      </div>
+
+      <!-- 하단 로고 영역 -->
+      <div id="c01llabels" style="position:absolute;bottom:0;left:0;width:500px;height:215px;
+        background:linear-gradient(to top,rgba(0,0,0,0.88) 0%,rgba(0,0,0,0.25) 100%);
+        display:flex;align-items:center;opacity:0;">
+
+        <!-- ChatGPT -->
+        <div style="flex:1;padding:0 0 0 36px;">
+          <svg width="72" height="72" viewBox="0 0 72 72" style="display:block;margin-bottom:10px;filter:drop-shadow(0 2px 12px rgba(0,0,0,0.9))">
+            <rect width="72" height="72" rx="18" fill="#0d0d0d"/>
+            <circle cx="36" cy="36" r="19" fill="none" stroke="#10A37F" stroke-width="3.5"/>
+            <circle cx="36" cy="36" r="9.5" fill="#10A37F"/>
+            <!-- spokes -->
+            <line x1="36" y1="17" x2="36" y2="27" stroke="#10A37F" stroke-width="3" stroke-linecap="round"/>
+            <line x1="36" y1="45" x2="36" y2="55" stroke="#10A37F" stroke-width="3" stroke-linecap="round"/>
+            <line x1="17" y1="36" x2="27" y2="36" stroke="#10A37F" stroke-width="3" stroke-linecap="round"/>
+            <line x1="45" y1="36" x2="55" y2="36" stroke="#10A37F" stroke-width="3" stroke-linecap="round"/>
+            <line x1="23" y1="23" x2="30" y2="30" stroke="#10A37F" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="42" y1="42" x2="49" y2="49" stroke="#10A37F" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="49" y1="23" x2="42" y2="30" stroke="#10A37F" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="30" y1="42" x2="23" y2="49" stroke="#10A37F" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+          <div style="font:700 24px/1 'Inter',sans-serif;color:#fff;
+            text-shadow:0 2px 14px rgba(0,0,0,0.95);margin-bottom:5px">ChatGPT</div>
+          <div style="font:600 10px/1 'Courier New',monospace;color:rgba(255,255,255,0.38);letter-spacing:2px">OPENAI</div>
+        </div>
+
+        <!-- Gemini -->
+        <div style="flex:1;padding:0 0 0 20px;">
+          <svg width="72" height="72" viewBox="0 0 72 72" style="display:block;margin-bottom:10px;filter:drop-shadow(0 2px 12px rgba(0,0,0,0.9))">
+            <defs>
+              <linearGradient id="gbl" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#4285F4"/>
+                <stop offset="45%" stop-color="#9c27b0"/>
+                <stop offset="100%" stop-color="#EA4335"/>
+              </linearGradient>
+            </defs>
+            <rect width="72" height="72" rx="18" fill="url(#gbl)"/>
+            <path d="M36 10C36 10 34.5 24 28 30C21.5 36 8 33 8 33C8 33 19 33.5 26 41C33 48.5 36 62 36 62C36 62 39 48.5 46 41C53 33.5 64 33 64 33C64 33 50.5 36 44 30C37.5 24 36 10 36 10Z" fill="white" opacity="0.93"/>
+          </svg>
+          <div style="font:700 24px/1 'Inter',sans-serif;color:#fff;
+            text-shadow:0 2px 14px rgba(0,0,0,0.95);margin-bottom:5px">Gemini</div>
+          <div style="font:600 10px/1 'Courier New',monospace;color:rgba(255,255,255,0.38);letter-spacing:2px">GOOGLE</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RIGHT: CLAUDE #1 DOMINANT ── -->
+    <div id="c01right" style="position:absolute;right:0;top:0;width:500px;height:1080px;opacity:0;">
+
+      <div id="c01after" style="position:absolute;top:32px;right:36px;text-align:right;opacity:0;">
+        <div style="font:600 11px/1 'Courier New',monospace;color:rgba(170,255,0,0.65);
+          letter-spacing:3px;text-shadow:0 0 10px rgba(170,255,0,0.3),0 1px 8px rgba(0,0,0,0.95)">RANK #1 · AFTER</div>
+      </div>
+
+      <!-- 임팩트 "1위" -->
+      <div id="c01impact" style="position:absolute;top:50px;right:22px;text-align:right;opacity:0;">
+        <div style="font:600 11px/1 'Courier New',monospace;color:rgba(170,255,0,0.7);letter-spacing:3px;
+          text-shadow:0 0 10px rgba(170,255,0,0.4),0 1px 8px rgba(0,0,0,0.95);margin-bottom:2px">NEW · GLOBAL · LEADER</div>
+        <div style="font:900 180px/1 'Inter',sans-serif;color:#AAFF00;letter-spacing:-6px;
+          text-shadow:0 0 60px rgba(170,255,0,0.7),0 0 130px rgba(170,255,0,0.25),0 6px 30px rgba(0,0,0,0.95)">1위</div>
+      </div>
+
+      <!-- Claude 바 (TALL) -->
+      <div id="bar-claude" style="position:absolute;bottom:220px;right:130px;width:240px;height:0;
+        background:linear-gradient(to top,#6baa00,#99ee00,#AAFF00);
+        border-radius:6px 6px 0 0;
+        box-shadow:0 0 80px rgba(170,255,0,0.55),0 0 160px rgba(170,255,0,0.2);">
+        <div id="bar-claude-top" style="position:absolute;top:-70px;left:0;right:0;text-align:center;opacity:0;">
+          <div style="font:600 11px/1 'Courier New',monospace;color:#AAFF00;letter-spacing:2.5px;
+            text-shadow:0 0 14px rgba(170,255,0,0.7),0 2px 10px rgba(0,0,0,0.95)">APP STORE</div>
+          <div style="font:900 44px/1 'Inter',sans-serif;color:#AAFF00;
+            text-shadow:0 0 28px rgba(170,255,0,0.75),0 3px 16px rgba(0,0,0,0.95)">#1</div>
+        </div>
+      </div>
+
+      <!-- 하단 Claude 로고 -->
+      <div id="c01rlabel" style="position:absolute;bottom:0;right:0;width:500px;height:215px;
+        background:linear-gradient(to top,rgba(0,0,0,0.88) 0%,rgba(0,0,0,0.25) 100%);
+        display:flex;align-items:center;justify-content:flex-end;padding-right:36px;opacity:0;">
+        <div style="text-align:right;">
+          <!-- Claude / Anthropic logo (3 pillars) -->
+          <svg width="78" height="78" viewBox="0 0 78 78" style="display:block;margin:0 0 10px auto;filter:drop-shadow(0 0 14px rgba(170,255,0,0.35)),drop-shadow(0 2px 12px rgba(0,0,0,0.9))">
+            <rect width="78" height="78" rx="19" fill="#D97757"/>
+            <rect x="13" y="13" width="12" height="52" rx="6" fill="white"/>
+            <rect x="33" y="13" width="12" height="52" rx="6" fill="white"/>
+            <rect x="53" y="13" width="12" height="52" rx="6" fill="white"/>
+          </svg>
+          <div style="font:900 32px/1 'Inter',sans-serif;color:#AAFF00;
+            text-shadow:0 0 18px rgba(170,255,0,0.65),0 2px 16px rgba(0,0,0,0.95);margin-bottom:6px">CLAUDE</div>
+          <div style="font:600 10px/1 'Courier New',monospace;color:rgba(170,255,0,0.5);letter-spacing:2px">ANTHROPIC</div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /CARD 01 -->
+
+  <!-- ════════════════════════════════════
+       CARD 02  4.8 ~ 9.1s  ── 오른쪽 패널
+  ══════════════════════════════════════ -->
+  <div class="card-host" data-card-id="card-02" data-track-index="2"
+    style="left:1380px;top:55px;width:500px;height:490px;visibility:hidden;opacity:0;">
+    <style>
+      #c02b { width:100%;height:100%;
+        background:rgba(0,0,0,0.80);border:1.5px solid rgba(170,255,0,0.45);
+        border-radius:8px;backdrop-filter:blur(14px);padding:28px 30px;display:flex;flex-direction:column; }
+      #c02b .kk { font:600 11px/1 'Courier New',monospace;color:rgba(170,255,0,0.6);
+        letter-spacing:3px;text-transform:uppercase;margin-bottom:18px; }
+      #c02b .lr { display:flex;align-items:center;gap:14px;margin-bottom:16px; }
+      #c02b .bn { font:900 30px/1 'Inter',sans-serif;color:#AAFF00;
+        text-shadow:0 0 18px rgba(170,255,0,0.6),0 2px 16px rgba(0,0,0,0.9); }
+      #c02b .nr { display:flex;align-items:baseline;gap:6px; }
+      #c02b .hs { font:700 30px/1 'Courier New',monospace;color:rgba(170,255,0,0.5); }
+      #c02b .bnum { font:900 104px/1 'Inter',sans-serif;color:#AAFF00;letter-spacing:-5px;
+        text-shadow:0 0 40px rgba(170,255,0,0.65),0 0 90px rgba(170,255,0,0.2),0 5px 24px rgba(0,0,0,0.95); }
+      #c02b .dt { font:600 11px/1 'Courier New',monospace;color:rgba(255,255,255,0.38);
+        letter-spacing:1.5px;margin-top:4px; }
+      #c02b .ll { height:2px;background:#AAFF00;width:0;margin-top:20px;border-radius:1px;
+        box-shadow:0 0 12px rgba(170,255,0,0.8); }
+    </style>
+    <div id="c02b">
+      <div class="kk">PRODUCTIVITY APP · 앱스토어 순위</div>
+      <div class="lr">
+        <svg width="54" height="54" viewBox="0 0 54 54" id="c02logo" style="opacity:0;filter:drop-shadow(0 0 10px rgba(170,255,0,0.4)),drop-shadow(0 2px 12px rgba(0,0,0,0.9))">
+          <rect width="54" height="54" rx="13" fill="#D97757"/>
+          <rect x="11" y="10" width="9" height="34" rx="4.5" fill="white"/>
+          <rect x="22.5" y="10" width="9" height="34" rx="4.5" fill="white"/>
+          <rect x="34" y="10" width="9" height="34" rx="4.5" fill="white"/>
+        </svg>
+        <span class="bn" id="c02brand" style="opacity:0">CLAUDE</span>
+      </div>
+      <div class="nr">
+        <span class="hs">#</span>
+        <span class="bnum" id="c02num">9</span>
+      </div>
+      <div class="dt">클로드 · 미국 앱스토어 생산성 부문</div>
+      <div class="ll" id="c02line"></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════
+       CARD 03  8.7 ~ 14.3s  ── 왼쪽 패널
+  ══════════════════════════════════════ -->
+  <div class="card-host" data-card-id="card-03" data-track-index="2"
+    style="left:36px;top:85px;width:460px;height:380px;visibility:hidden;opacity:0;">
+    <style>
+      #c03b { width:100%;height:100%;
+        background:rgba(0,0,0,0.82);border:1px solid rgba(170,255,0,0.38);
+        border-radius:8px;backdrop-filter:blur(12px);display:flex;flex-direction:column;overflow:hidden; }
+      #c03b .hd { font:600 11px/1 'Courier New',monospace;color:#AAFF00;letter-spacing:3px;text-transform:uppercase;
+        padding:16px 22px 14px;border-bottom:1px solid rgba(170,255,0,0.22);
+        text-shadow:0 0 8px rgba(170,255,0,0.3); }
+      #c03b .ft { display:flex;align-items:center;gap:14px;padding:14px 22px;
+        border-bottom:1px solid rgba(255,255,255,0.04);opacity:0; }
+      #c03b .fn { font:700 13px/1 'Courier New',monospace;color:rgba(170,255,0,0.5);width:22px; }
+      #c03b .fl { font:600 16px/1 'Inter',sans-serif;color:#fff;flex:1;
+        text-shadow:0 1px 10px rgba(0,0,0,0.9); }
+      #c03b .fo { font:600 10px/1 'Courier New',monospace;color:#AAFF00;
+        letter-spacing:1.5px;opacity:0;text-shadow:0 0 8px rgba(170,255,0,0.6); }
+    </style>
+    <div id="c03b">
+      <div class="hd">CLAUDE · 자동화 특화 기능</div>
+      <div class="ft" id="c03f1"><span class="fn">01</span><span class="fl">웹 리서치 자동화</span><span class="fo" id="c03on1">✓ ON</span></div>
+      <div class="ft" id="c03f2"><span class="fn">02</span><span class="fl">카카오톡 자동 발송</span><span class="fo" id="c03on2">✓ ON</span></div>
+      <div class="ft" id="c03f3"><span class="fn">03</span><span class="fl">MCP 외부 서비스 연결</span><span class="fo" id="c03on3">✓ ON</span></div>
+      <div class="ft" id="c03f4"><span class="fn">04</span><span class="fl">스케줄 자동 실행</span><span class="fo" id="c03on4">✓ ON</span></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════
+       CARD 04  14.1 ~ 21.0s  ── 오른쪽 패널
+  ══════════════════════════════════════ -->
+  <div class="card-host" data-card-id="card-04" data-track-index="2"
+    style="left:1400px;top:50px;width:480px;height:480px;visibility:hidden;opacity:0;">
+    <style>
+      #c04b { width:100%;height:100%;
+        background:rgba(0,0,0,0.82);border:1px solid rgba(170,255,0,0.38);
+        border-radius:8px;backdrop-filter:blur(12px);display:flex;flex-direction:column;overflow:hidden; }
+      #c04b .tsb { padding:16px 22px 14px;border-bottom:1px solid rgba(170,255,0,0.22);opacity:0; }
+      #c04b .tsl { font:600 10px/1 'Courier New',monospace;color:rgba(170,255,0,0.6);
+        letter-spacing:2.5px;text-transform:uppercase;margin-bottom:7px; }
+      #c04b .tst { font:900 48px/1 'Inter',sans-serif;color:#AAFF00;letter-spacing:5px;
+        text-shadow:0 0 24px rgba(170,255,0,0.55),0 3px 18px rgba(0,0,0,0.95); }
+      #c04b .mh { font:600 10px/1 'Courier New',monospace;color:#AAFF00;
+        letter-spacing:2px;text-transform:uppercase;padding:13px 22px 8px; }
+      #c04b .msg { display:flex;gap:12px;align-items:flex-start;padding:9px 22px;opacity:0; }
+      #c04b .msg span:last-child { font:500 15px/1.5 'Inter',sans-serif;color:#fff;
+        text-shadow:0 1px 10px rgba(0,0,0,0.9); }
+    </style>
+    <div id="c04b">
+      <div class="tsb" id="c04ts">
+        <div class="tsl">DAILY · BRIEFING · LIVE</div>
+        <div class="tst">08 : 00</div>
+      </div>
+      <div class="mh">카카오 · 클로드 주식 AI 브리핑</div>
+      <div class="msg" id="c04m1"><span style="font-size:20px">📊</span><span>코스피 2,856 (+0.3%)</span></div>
+      <div class="msg" id="c04m2"><span style="font-size:20px">🔥</span><span>주도섹터: 반도체 / 조선</span></div>
+      <div class="msg" id="c04m3"><span style="font-size:20px">⭐</span><span>관심: 삼성전기 · HD현대</span></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════
+       CARD 05  20.8 ~ 25.6s  ── 센터 하단
+  ══════════════════════════════════════ -->
+  <div class="card-host" data-card-id="card-05" data-track-index="2"
+    style="left:560px;top:700px;width:800px;height:290px;visibility:hidden;opacity:0;">
+    <style>
+      #c05b { width:100%;height:100%;
+        background:rgba(0,0,0,0.90);border:1px solid rgba(170,255,0,0.4);
+        border-radius:8px;backdrop-filter:blur(14px);
+        display:flex;flex-direction:column;justify-content:center;align-items:center;
+        padding:26px 40px;text-align:center; }
+      #c05b .stk { font:700 24px/1 'Inter',sans-serif;color:rgba(255,255,255,0.38);
+        text-decoration:line-through;text-decoration-color:#AAFF00;text-decoration-thickness:3px;
+        margin-bottom:12px;opacity:0; }
+      #c05b .bdg { font:900 70px/1 'Inter',sans-serif;color:#AAFF00;letter-spacing:-2px;
+        text-shadow:0 0 40px rgba(170,255,0,0.65),0 0 90px rgba(170,255,0,0.2),0 5px 24px rgba(0,0,0,0.95);
+        opacity:0; }
+      #c05b .sb { font:600 11px/1 'Courier New',monospace;color:rgba(255,255,255,0.4);
+        letter-spacing:2.5px;text-transform:uppercase;margin-top:12px;opacity:0; }
+      #c05b .lb { height:2px;background:#AAFF00;width:0;margin-top:16px;border-radius:1px;
+        box-shadow:0 0 12px rgba(170,255,0,0.8); }
+    </style>
+    <div id="c05b">
+      <div class="stk" id="c05stk">복잡한 코딩</div>
+      <div class="bdg" id="c05bdg">FREE</div>
+      <div class="sb"  id="c05sb">프롬프트 전체 · 고정 댓글 공유</div>
+      <div class="lb"  id="c05lb"></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════
+       CARD 06  25.3 ~ 27.93s  ── 센터 CTA
+  ══════════════════════════════════════ -->
+  <div class="card-host" data-card-id="card-06" data-track-index="2"
+    style="left:480px;top:630px;width:960px;height:360px;visibility:hidden;opacity:0;">
+    <style>
+      #c06b { width:100%;height:100%;
+        background:rgba(0,0,0,0.92);border:1px solid rgba(170,255,0,0.4);
+        border-radius:8px;backdrop-filter:blur(14px);
+        display:flex;flex-direction:column;justify-content:center;align-items:center;
+        padding:30px 44px;text-align:center; }
+      #c06b .cl { font:600 12px/1 'Courier New',monospace;color:rgba(170,255,0,0.6);
+        letter-spacing:4px;text-transform:uppercase;margin-bottom:12px;opacity:0; }
+      #c06b .ct { font:900 100px/1 'Inter',sans-serif;color:#AAFF00;letter-spacing:-4px;
+        text-shadow:0 0 50px rgba(170,255,0,0.65),0 0 120px rgba(170,255,0,0.2),0 5px 28px rgba(0,0,0,0.95);
+        opacity:0; }
+      #c06b .cs { font:500 18px/1 'Inter',sans-serif;color:rgba(255,255,255,0.5);
+        margin-top:16px;opacity:0;text-shadow:0 1px 10px rgba(0,0,0,0.95); }
+    </style>
+    <div id="c06b">
+      <div class="cl" id="c06cl">세팅 소요 시간</div>
+      <div class="ct" id="c06ct">딱 10분</div>
+      <div class="cs" id="c06cs">오늘 영상 끝까지만 집중해 주세요 👇</div>
+    </div>
+  </div>
+
+  <div id="subtitle-bar"></div>
+
+  <script src="vendor/gsap.min.js"></script>
+  <script>
+  (function(){
+    var gsap = window.gsap;
+    var tl = gsap.timeline({ paused: true });
+
+    /* 자막 */
+    var SUBS = [
+      { from:0.0,  to:4.8,  html:'AI를 <span class="accent">GPT나 Gemini</span> 안 씁니다' },
+      { from:5.0,  to:6.5,  html:'대부분 <span class="accent">클로드</span>로 갈아탔어요' },
+      { from:6.9,  to:8.9,  html:'미국 앱스토어에서 이미 <span class="accent">난리</span>가 났는데' },
+      { from:8.9,  to:13.8, html:'<span class="accent">자동화</span> 기능까지 특화되어서 그렇더라고요' },
+      { from:14.3, to:18.5, html:'어젯밤 <span class="accent">클로드 자동화</span> 설정만 해뒀어서' },
+      { from:18.5, to:20.7, html:'아침 <span class="accent">브리핑</span>으로 받을 수 있었습니다' },
+      { from:21.1, to:22.4, html:'복잡한 <span class="accent">코딩 전혀</span> 없고요' },
+      { from:22.8, to:25.6, html:'<span class="accent">고정 댓글</span>로 다 퍼드릴 테니까' },
+      { from:25.6, to:27.5, html:'오늘 영상 <span class="accent">끝까지</span>만 집중해 주세요 👇' }
+    ];
+    var sbar = document.getElementById('subtitle-bar');
+    SUBS.forEach(function(s){
+      var d = document.createElement('div');
+      d.className = 'sub-seg'; d.innerHTML = s.html; sbar.appendChild(d);
+      var dur = Math.min(0.12,(s.to-s.from)*0.08);
+      tl.fromTo(d,{opacity:0},{opacity:1,duration:dur,ease:'none'},s.from);
+      tl.to(d,{opacity:0,duration:0.08,ease:'none'},s.to-0.08);
+    });
+
+    /* ── CARD 01 ── */
+    var ch01 = document.querySelector('[data-card-id="card-01"]');
+    tl.set(ch01,{visibility:'visible'},0.2);
+    tl.fromTo(ch01,{opacity:0},{opacity:1,duration:0.3},0.2);
+    tl.fromTo('#c01hdr',  {opacity:0,y:-14},{opacity:1,y:0,duration:0.4,ease:'power2.out'},0.35);
+    tl.fromTo('#c01left', {opacity:0,x:-36},{opacity:1,x:0,duration:0.45,ease:'power2.out'},0.28);
+    tl.fromTo('#c01before',{opacity:0},{opacity:1,duration:0.3},0.5);
+    tl.fromTo('#bar-gpt', {height:0},{height:680,duration:1.35,ease:'power3.out'},0.52);
+    tl.fromTo('#bar-gem', {height:0},{height:510,duration:1.15,ease:'power3.out'},0.68);
+    tl.fromTo('#bar-gpt-top',{opacity:0},{opacity:1,duration:0.3},1.35);
+    tl.fromTo('#bar-gem-top',{opacity:0},{opacity:1,duration:0.3},1.35);
+    tl.fromTo('#c01right',{opacity:0,x:36},{opacity:1,x:0,duration:0.45,ease:'power2.out'},0.35);
+    tl.fromTo('#c01after',{opacity:0},{opacity:1,duration:0.3},0.6);
+    tl.fromTo('#bar-claude',{height:0},{height:860,duration:1.55,ease:'power3.out'},0.58);
+    tl.fromTo('#bar-claude-top',{opacity:0},{opacity:1,duration:0.35},1.52);
+    tl.fromTo('#c01impact',{opacity:0,scale:0.65},{opacity:1,scale:1,duration:0.6,ease:'back.out(1.8)'},1.9);
+    tl.fromTo('#c01llabels',{opacity:0,y:16},{opacity:1,y:0,duration:0.4,ease:'power2.out'},1.65);
+    tl.fromTo('#c01rlabel', {opacity:0,y:16},{opacity:1,y:0,duration:0.4,ease:'power2.out'},1.75);
+    tl.to(ch01,{opacity:0,duration:0.4,ease:'power2.in'},4.72);
+    tl.set(ch01,{visibility:'hidden'},5.15);
+
+    /* ── CARD 02 ── */
+    var ch02 = document.querySelector('[data-card-id="card-02"]');
+    tl.set(ch02,{visibility:'visible'},4.8);
+    tl.fromTo(ch02,{opacity:0,x:55,scale:0.85},{opacity:1,x:0,scale:1,duration:0.52,ease:'back.out(1.5)'},4.8);
+    tl.fromTo('#c02logo', {opacity:0,scale:0.6},{opacity:1,scale:1,duration:0.38,ease:'back.out(2)'},5.05);
+    tl.fromTo('#c02brand',{opacity:0},{opacity:1,duration:0.3},5.22);
+    [9,7,5,3,2,1].forEach(function(n,i){
+      tl.call(function(){ var e=document.getElementById('c02num'); if(e) e.textContent=n; },[],5.12+i*0.24);
+    });
+    tl.fromTo('#c02line',{width:0},{width:440,duration:0.55,ease:'power2.out'},5.75);
+    tl.to(ch02,{opacity:0,duration:0.38,ease:'power2.in'},8.72);
+    tl.set(ch02,{visibility:'hidden'},9.12);
+
+    /* ── CARD 03 ── */
+    var ch03 = document.querySelector('[data-card-id="card-03"]');
+    tl.set(ch03,{visibility:'visible'},8.7);
+    tl.fromTo(ch03,{opacity:0,x:-48,scale:0.88},{opacity:1,x:0,scale:1,duration:0.5,ease:'back.out(1.4)'},8.7);
+    [['#c03f1','#c03on1',9.15,9.58],['#c03f2','#c03on2',9.68,10.08],
+     ['#c03f3','#c03on3',10.18,10.58],['#c03f4','#c03on4',10.68,11.08]].forEach(function(r){
+      tl.fromTo(r[0],{opacity:0,x:-20},{opacity:1,x:0,duration:0.3,ease:'power2.out'},r[2]);
+      tl.fromTo(r[1],{opacity:0},{opacity:1,duration:0.22},r[3]);
+    });
+    tl.to(ch03,{opacity:0,duration:0.38,ease:'power2.in'},14.0);
+    tl.set(ch03,{visibility:'hidden'},14.38);
+
+    /* ── CARD 04 ── */
+    var ch04 = document.querySelector('[data-card-id="card-04"]');
+    tl.set(ch04,{visibility:'visible'},14.1);
+    tl.fromTo(ch04,{opacity:0,x:55,scale:0.88},{opacity:1,x:0,scale:1,duration:0.5,ease:'back.out(1.4)'},14.1);
+    tl.fromTo('#c04ts',{opacity:0,y:14},{opacity:1,y:0,duration:0.4,ease:'power2.out'},14.48);
+    tl.fromTo('#c04m1',{opacity:0,y:10},{opacity:1,y:0,duration:0.3,ease:'power2.out'},14.98);
+    tl.fromTo('#c04m2',{opacity:0,y:10},{opacity:1,y:0,duration:0.3,ease:'power2.out'},15.4);
+    tl.fromTo('#c04m3',{opacity:0,y:10},{opacity:1,y:0,duration:0.3,ease:'power2.out'},15.82);
+    tl.to(ch04,{opacity:0,duration:0.38,ease:'power2.in'},20.65);
+    tl.set(ch04,{visibility:'hidden'},21.05);
+
+    /* ── CARD 05 ── */
+    var ch05 = document.querySelector('[data-card-id="card-05"]');
+    tl.set(ch05,{visibility:'visible'},20.8);
+    tl.fromTo(ch05,{opacity:0,y:36,scale:0.85},{opacity:1,y:0,scale:1,duration:0.5,ease:'back.out(1.6)'},20.8);
+    tl.fromTo('#c05stk',{opacity:0},{opacity:1,duration:0.3},21.22);
+    tl.fromTo('#c05bdg',{opacity:0,scale:0.62},{opacity:1,scale:1,duration:0.48,ease:'back.out(2.2)'},21.55);
+    tl.fromTo('#c05sb', {opacity:0},{opacity:1,duration:0.32},22.08);
+    tl.fromTo('#c05lb', {width:0},{width:720,duration:0.52,ease:'power2.out'},22.42);
+    tl.to(ch05,{opacity:0,duration:0.38,ease:'power2.in'},25.22);
+    tl.set(ch05,{visibility:'hidden'},25.62);
+
+    /* ── CARD 06 ── */
+    var ch06 = document.querySelector('[data-card-id="card-06"]');
+    tl.set(ch06,{visibility:'visible'},25.3);
+    tl.fromTo(ch06,{opacity:0,y:38,scale:0.82},{opacity:1,y:0,scale:1,duration:0.55,ease:'back.out(1.6)'},25.3);
+    tl.fromTo('#c06cl',{opacity:0},{opacity:1,duration:0.3},25.68);
+    tl.fromTo('#c06ct',{opacity:0,scale:0.68},{opacity:1,scale:1,duration:0.58,ease:'back.out(2)'},25.85);
+    tl.fromTo('#c06cs',{opacity:0},{opacity:1,duration:0.35},26.45);
+
+    window.__timelines = window.__timelines || {};
+    window.__timelines['graphic-overlays'] = tl;
+  })();
+  </script>
+</div>
+</body>
+</html>

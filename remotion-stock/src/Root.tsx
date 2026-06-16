@@ -79,7 +79,13 @@ import { KK_S1_L30, KK_S1_L30_FRAMES } from './kakao/KK_S1_L30';
 import { KK_S2_L30, KK_S2_L30_FRAMES } from './kakao/KK_S2_L30';
 import { KK_S3_L30, KK_S3_L30_FRAMES } from './kakao/KK_S3_L30';
 import { KK_S5_L30, KK_S5_L30_FRAMES } from './kakao/KK_S5_L30';
+import { KK_S6_MCP, KK_S6_FRAMES } from './kakao/KK_S6_MCP';
 import { KK_S5_PiP, KK_S5_PIP_FRAMES } from './kakao/KK_S5_PiP';
+import { KK_S5_Screenshots, KK_S5_SCREENSHOTS_FRAMES } from './kakao/KK_S5_Screenshots';
+import { NV_S01_Intro, NV_S01_FRAMES } from './nvidia/NV_S01_Intro';
+import { KK_S5_Activation, KK_S5_ACTIVATION_FRAMES } from './kakao/KK_S5_Activation';
+import { KK_S5_ClaudeLive, KK_S5_CLAUDELIVE_FRAMES } from './kakao/KK_S5_ClaudeLive';
+import { KK_S3_ClaudeLive, KK_S3_CLAUDELIVE_FRAMES } from './kakao/KK_S3_ClaudeLive';
 import { PostFX } from './components/PostFX';
 
 // PostFX 래퍼 컴포넌트 — Composition component 에 직접 람다 못 쓰므로 별도 정의
@@ -103,8 +109,12 @@ const KK_S1_L30_FX = () => <KK_S1_L30 />;
 const KK_S2_L30_FX = () => <KK_S2_L30 />;
 const KK_S3_L30_FX = () => <KK_S3_L30 />;
 const KK_S5_L30_FX = () => <KK_S5_L30 />;
-const KK_S5_PiP_FX = () => <KK_S5_PiP />;
-
+const KK_S5_PiP_FX         = () => <KK_S5_PiP />;
+const KK_S5_Screenshots_FX = () => <KK_S5_Screenshots />;
+const NV_S01_FX = () => <NV_S01_Intro />;
+const KK_S5_Activation_FX = () => <KK_S5_Activation />;
+const KK_S5_ClaudeLive_FX = () => <KK_S5_ClaudeLive />;
+const KK_S3_ClaudeLive_FX = () => <KK_S3_ClaudeLive />;
 export const RemotionRoot: React.FC = () => {
   return (
     <>
@@ -193,6 +203,65 @@ export const RemotionRoot: React.FC = () => {
         id="Kakao-S5-PiP"
         component={KK_S5_PiP_FX}
         durationInFrames={KK_S5_PIP_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      {/* ── S5 스크린샷 버전 (실화면 캡쳐 + AI PiP 우하단 이동) ── */}
+      <Composition
+        id="Kakao-S5-Screenshots"
+        component={KK_S5_Screenshots_FX}
+        durationInFrames={KK_S5_SCREENSHOTS_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* ── S3 Claude Live — AI 신화파괴 + 진짜이유 ── */}
+      <Composition
+        id="KK-S3-ClaudeLive"
+        component={KK_S3_ClaudeLive_FX}
+        durationInFrames={KK_S3_CLAUDELIVE_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* ── S5 Claude Live — 클로드 CI/BI 역동·다채 테마 (신규) ── */}
+      <Composition
+        id="KK-S5-ClaudeLive"
+        component={KK_S5_ClaudeLive_FX}
+        durationInFrames={KK_S5_CLAUDELIVE_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* ── S5 Activation — Activation 디자인 테마 ── */}
+      <Composition
+        id="KK-S5-Activation"
+        component={KK_S5_Activation_FX}
+        durationInFrames={KK_S5_ACTIVATION_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* ── NVIDIA Scene01: 레퍼런스 프레임 기반 팟캐스트 하이라이트 ── */}
+      <Composition
+        id="NV-S01-Intro"
+        component={NV_S01_FX}
+        durationInFrames={NV_S01_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* ── S6 MCP 개념 설명 ── */}
+      <Composition
+        id="Kakao-S6-MCP"
+        component={KK_S6_MCP}
+        durationInFrames={KK_S6_FRAMES}
         fps={30}
         width={1920}
         height={1080}

@@ -1,0 +1,60 @@
+<div class="card" data-card-id="card-03">
+  <style>
+    .card[data-card-id="card-03"] .root {
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.88);
+      border: 1.5px solid rgba(170,255,0,0.65);
+      border-radius: 4px;
+      backdrop-filter: blur(10px);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .card[data-card-id="card-03"] .kicker {
+      font-family: 'Courier New', monospace; font-size: 11px;
+      color: #AAFF00; letter-spacing: 3px; text-transform: uppercase;
+      padding: 14px 18px 12px;
+      border-bottom: 1px solid rgba(170,255,0,0.30);
+    }
+    .card[data-card-id="card-03"] .feat {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      opacity: 0;
+    }
+    .card[data-card-id="card-03"] .icon {
+      font-family: 'Courier New', monospace; font-size: 13px;
+      color: #AAFF00; flex-shrink: 0; width: 16px;
+    }
+    .card[data-card-id="card-03"] .label {
+      font-family: 'Inter', sans-serif; font-size: 14px;
+      font-weight: 600; color: #fff; flex: 1;
+    }
+    .card[data-card-id="card-03"] .on {
+      font-family: 'Courier New', monospace; font-size: 10px;
+      color: #AAFF00; letter-spacing: 1.5px; opacity: 0;
+    }
+  </style>
+  <div class="root">
+    <div class="kicker">자동화 · 특화 기능</div>
+    <div class="feat" id="c03-f1">
+      <span class="icon">▶</span>
+      <span class="label">웹 리서치 자동화</span>
+      <span class="on" id="c03-on1">✓ ON</span>
+    </div>
+    <div class="feat" id="c03-f2">
+      <span class="icon">▶</span>
+      <span class="label">카톡 자동 발송</span>
+      <span class="on" id="c03-on2">✓ ON</span>
+    </div>
+    <div class="feat" id="c03-f3">
+      <span class="icon">▶</span>
+      <span class="label">MCP 외부 연결</span>
+      <span class="on" id="c03-on3">✓ ON</span>
+    </div>
+    <div class="feat" id="c03-f4">
+      <span class="icon">▶</span>
+      <span class="label">스케줄 자동 실행</span>
+      <span class="on" id="c03-on4">✓ ON</span>
+    </div>
+  </div>
+</div>

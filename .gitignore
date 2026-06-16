@@ -48,3 +48,11 @@ __pycache__/
 
 # 캡처 이미지 폴더
 raw/캡쳐본/
+
+# videos 폴더 대용량 MP4 (로컬 전용)
+videos/**/*.mp4
+videos/**/input-video.mp4
+
+# remotion public 영상 (로컬 전용)
+remotion-stock/public/**/*.mp4
+remotion-stock/public/**/*.mov

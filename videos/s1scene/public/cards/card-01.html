@@ -1,0 +1,71 @@
+<div class="card" data-card-id="card-01">
+  <style>
+    .card[data-card-id="card-01"] .root {
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.88);
+      border: 1.5px solid rgba(170,255,0,0.65);
+      border-radius: 4px;
+      backdrop-filter: blur(10px);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .card[data-card-id="card-01"] .kicker {
+      font-family: 'Courier New', monospace;
+      font-size: 11px; color: #AAFF00;
+      letter-spacing: 3px; text-transform: uppercase;
+      padding: 14px 18px 12px;
+      border-bottom: 1px solid rgba(170,255,0,0.30);
+    }
+    .card[data-card-id="card-01"] .row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      opacity: 0;
+    }
+    .card[data-card-id="card-01"] .row.hi { background: rgba(170,255,0,0.08); }
+    .card[data-card-id="card-01"] .rn {
+      font-family: 'Courier New', monospace; font-size: 11px;
+      color: rgba(170,255,0,0.5); width: 22px; flex-shrink: 0;
+    }
+    .card[data-card-id="card-01"] .nm {
+      font-family: 'Inter', sans-serif; font-size: 14px;
+      font-weight: 600; color: rgba(255,255,255,0.55);
+      flex: 1; letter-spacing: 0.5px;
+    }
+    .card[data-card-id="card-01"] .row.hi .nm { color: #AAFF00; text-shadow: 0 0 8px rgba(170,255,0,0.85); }
+    .card[data-card-id="card-01"] .vl {
+      font-family: 'Courier New', monospace; font-size: 12px;
+      color: rgba(255,255,255,0.4);
+    }
+    .card[data-card-id="card-01"] .row.hi .vl { color: #AAFF00; }
+    .card[data-card-id="card-01"] .tag {
+      font-family: 'Courier New', monospace; font-size: 10px;
+      color: #AAFF00; letter-spacing: 1.5px;
+      padding: 10px 18px;
+      opacity: 0;
+    }
+    .card[data-card-id="card-01"] .lime-line {
+      height: 2px; background: #AAFF00; width: 0;
+      margin: 0 18px 12px;
+      box-shadow: 0 0 8px rgba(170,255,0,0.8);
+      border-radius: 1px;
+    }
+  </style>
+  <div class="root">
+    <div class="kicker">APP STORE · AI RANKING (US 2025.06)</div>
+    <div class="row hi" id="c01-r1">
+      <span class="rn">01</span><span style="font-size:18px">🤖</span><span class="nm">CLAUDE</span><span class="vl">#1</span>
+    </div>
+    <div class="row" id="c01-r2">
+      <span class="rn">02</span><span style="font-size:18px">💬</span><span class="nm">CHATGPT</span><span class="vl">#2</span>
+    </div>
+    <div class="row" id="c01-r3">
+      <span class="rn">03</span><span style="font-size:18px">💎</span><span class="nm">GEMINI</span><span class="vl">#3</span>
+    </div>
+    <div class="row" id="c01-r4">
+      <span class="rn">04</span><span style="font-size:18px">🔍</span><span class="nm">PERPLEXITY</span><span class="vl">#4</span>
+    </div>
+    <div class="lime-line" id="c01-line"></div>
+    <div class="tag" id="c01-tag">→ GPT · GEMINI 추월</div>
+  </div>
+</div>

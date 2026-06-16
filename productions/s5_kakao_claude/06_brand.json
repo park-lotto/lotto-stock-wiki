@@ -1,0 +1,89 @@
+{
+  "name": "S5 클로드 데스크탑 설치 — Claude Live 테마",
+  "concept": "Claude Live — 따뜻한 클로드 세계에서 AI 발표자가 라이브로 안내하는 역동적·다채로운 쇼",
+  "version": "2.0",
+
+  "colors": {
+    "claude_coral":  "#D97757",
+    "coral_deep":    "#BE5D3A",
+    "coral_soft":    "#E89B7D",
+    "coral_25":      "rgba(217,119,87,0.25)",
+    "coral_12":      "rgba(217,119,87,0.12)",
+    "cream":         "#F0EEE6",
+    "bone":          "#FAF9F5",
+    "warm_dark":     "#1F1E1D",
+    "warm_dark_2":   "#141413",
+    "ink":           "#1F1E1D",
+    "text_on_dark":  "#F0EEE6",
+    "muted":         "#9A938A",
+    "card_dark":     "rgba(20,19,19,0.86)",
+    "card_cream":    "rgba(240,238,230,0.96)"
+  },
+
+  "accents": {
+    "A_intro":    "#D97757",
+    "B_search":   "#6E92C4",
+    "C_download": "#4F9D9B",
+    "D_plan":     "#D97757",
+    "E_price":    "#E8A93C",
+    "F_loss":     "#D9694F",
+    "G_value":    "#7FA66B",
+    "H_warning":  "#E8A93C",
+    "I_cowork":   "#9B6A8E",
+    "J_done":     "#6FA86A"
+  },
+
+  "typography": {
+    "font_serif":  "Fraunces, 'Noto Serif KR', Georgia, serif",
+    "font_sans":   "Pretendard, 'Noto Sans KR', sans-serif",
+    "weight_serif_bold": 700,
+    "weight_serif_med":  600,
+    "title_size":     32,
+    "display_size":   56,
+    "number_size":    64,
+    "body_size":      20,
+    "label_size":     18,
+    "subtitle_size":  44,
+    "label_spacing":  "0.10em"
+  },
+
+  "animation": {
+    "easing":          "cubic-bezier(0.22, 1, 0.36, 1)",
+    "spring_damping":  11,
+    "spring_stiffness":260,
+    "spring_mass":     0.7,
+    "stagger_frames":  3,
+    "blob_period_sec": 8,
+    "float_amplitude_px": 4,
+    "accent_blend_frames": 18
+  },
+
+  "layout": {
+    "canvas_w":            1920,
+    "canvas_h":            1080,
+    "window_x":            70,
+    "window_y":            170,
+    "window_w":            1120,
+    "window_h":            630,
+    "window_right_edge":   1190,
+    "right_col_x":         1230,
+    "right_col_w":         650,
+    "right_col_right_edge":1880,
+    "window_right_gap":    40,
+    "window_bottom":       800,
+    "subtitle_top":        907,
+    "window_subtitle_gap": 107,
+    "progress_bar_height": 5,
+    "subtitle_height_pct": 16,
+    "safe_margin":         40,
+    "card_radius":         16
+  },
+
+  "video": {
+    "fps":          30,
+    "total_frames": 942,
+    "duration_sec": 31.4,
+    "resolution":   "1920x1080",
+    "source":       "kakao/s5_ai.mp4 (01_presenter.mp4, 31.37s)"
+  }
+}

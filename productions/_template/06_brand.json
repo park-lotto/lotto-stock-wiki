@@ -1,0 +1,43 @@
+{
+  "name": "{시리즈명}",
+  "series": "{series-id}",
+  "version": "1.0",
+
+  "colors": {
+    "primary":     "{주색상 HEX}",
+    "primary_50":  "{주색상 50% 투명도}",
+    "primary_20":  "{주색상 20% 투명도}",
+    "background":  "#000000",
+    "card":        "rgba(0,0,0,0.84)",
+    "card_border": "{주색상 45% 투명도}",
+    "text":        "#FFFFFF",
+    "text_muted":  "rgba(255,255,255,0.6)"
+  },
+
+  "typography": {
+    "font_display":  "Pretendard, Inter, sans-serif",
+    "font_mono":     "Courier New, monospace",
+    "weight_hero":   900,
+    "weight_body":   700,
+    "label_size":    10,
+    "label_spacing": 3,
+    "subtitle_size": 38
+  },
+
+  "animation": {
+    "spring_damping":   10,
+    "spring_stiffness": 240,
+    "spring_mass":      0.8,
+    "stagger_frames":   18
+  },
+
+  "layout": {
+    "subtitle_height_pct": 18,
+    "pip_width":  380,
+    "pip_height": 214,
+    "pip_right":  48,
+    "pip_bottom": 210
+  },
+
+  "mood_keywords": []
+}
