@@ -26,11 +26,11 @@ kakao_ep1/
 │   (TSX: KK_Veo_Intro.tsx / KK_Veo_Outro.tsx — 오푸스 설계 필요)
 │
 ├── 02_face/                        🟡 발표자 얼굴 녹화 (네 카메라)
-│   ├── s02_face.mp4                [ ] S2 페인포인트 나레이션 (~22초)
 │   └── s03_face.mp4                [ ] S3 철학 나레이션 (~40초)
 │
 ├── 03_screen/                      🟢 화면 녹화 (OBS or 캡컷)
 │   ├── cold_open.mp4               [ ] 콜드오픈: 폰에 카톡 브리핑 오는 화면 (2초, 무음)
+│   ├── s02_screen.mp4              [ ] S2 인베스팅·네이버·텔레그램 브라우징 (무음 녹화)
 │   ├── s05_screen.mp4              [ ] S5 Claude 설치 과정
 │   ├── s07_screen.mp4              [ ] S7 PlayMCP 연동
 │   ├── s08_screen.mp4              [ ] S8 프롬프트 입력
@@ -44,8 +44,9 @@ kakao_ep1/
 │   ├── transition_ai2me.mp4        [ ] 전환컷 0.7s AI→나 (오푸스 설계 필요)
 │   └── transition_me2ai.mp4        [ ] 전환컷 0.7s 나→AI (오푸스 설계 필요)
 │
-├── 05_audio/                       🎤 Whisper 전사 결과
-│   ├── s02_whisper.json            [ ] s02_face.mp4 Whisper 후 생성
+├── 05_audio/                       🎤 음성 원본 + Whisper 전사
+│   ├── s02_voice.mp3               [ ] S2 음성 별도 녹음 (화면 보면서 따로)
+│   ├── s02_whisper.json            [ ] s02_voice.mp3 Whisper 후 생성
 │   ├── s03_whisper.json            [ ] s03_face.mp4 Whisper 후 생성
 │   ├── s05_whisper.json            [ ] s05_screen.mp4 Whisper 후 생성
 │   ├── s07_whisper.json            [ ]
@@ -86,7 +87,7 @@ kakao/ep1/
 | **Veo 인트로** | KK_Veo_Intro.tsx | ❌ 오푸스 설계 필요 | ep1/veo_intro_1~4.mp4 |
 | **Veo 아웃트로** | KK_Veo_Outro.tsx | ❌ 오푸스 설계 필요 | ep1/veo_outro_a~d.mp4 |
 | **전환컷** | KK_Transition.tsx | ❌ 오푸스 설계 필요 | 없음 (순수 그래픽) |
-| S2 페인포인트 | KK_S2_L30.tsx | ✓ 완성 (SUBS 재싱크 필요) | ep1/s02_face.mp4 |
+| S2 페인포인트 | KK_S2_L30.tsx | ✓ 완성 (경로·SUBS 재싱크 필요) | ep1/s02_screen.mp4 (화면녹화로 변경) |
 | S3 철학 | KK_S3_L30.tsx | ✓ 완성 (SUBS 재싱크 필요) | ep1/s03_face.mp4 |
 | S4 로드맵 | — | ❌ 미제작 | 없음 (순수 그래픽) |
 | S5 PiP | KK_S5_PiP.tsx | ✓ 완성 (SUBS 재싱크 필요) | ep1/s05_screen.mp4 |
