@@ -1,3 +1,5 @@
+- 2026-06-17 — 카카오클로드 EP1 씬폴더 재구조화(미디어타입→씬별) + design.md/script.txt 전체 생성 + OBS·VLC 세팅. 다음: 음성·화면 녹화 → 소넷 검수 → 오푸스 TSX 설계
+- 2026-06-17 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-06-17.md
 - 2026-06-16 — 카카오클로드 EP1 에셋 폴더 구조 완성: productions/kakao_ep1/ 전체 설계, 씬별 대본 txt, Veo+Remotion 오버레이 확정, S2 화면녹화 방식 변경. 다음: 녹화 후 오푸스로 Veo TSX 3종 설계
 - 2026-06-16 — 카카오클로드 v7 대본 확정 + Remotion 공통 인프라 구축: theme.ts+SceneBase.tsx 생성(씬 350줄→80줄), KK_S6_MCP.tsx(900f MCP개념 4페이즈) + 템플릿 완성. 3레인 구조+Veo 8초 공식+북엔드 AI여자 앵커 설계. 다음: Veo 클립 8개 + 전환컷 설계
 - 2026-06-16 — S5 Remotion 완성: KK_S5_L30(풀스크린 5Phase 오버레이·38MB) + KK_S5_PiP(발표자 우측9:16 PiP·spring전환·LIVE배지·좌측 화면녹화 플레이스홀더). 다음: s5_screen.mp4 연결
