@@ -1198,3 +1198,4 @@ python calc_oscillator.py SK하이닉스 삼성전자 한미반도체 --tg
 - 2026-06-04 ingest_crawl: sector 9개, stock 9개 코멘트 추가
 - 2026-06-04 ingest_crawl(telegram): sector 16개, stock 21개 코멘트 추가
 2026-06-04 | yt-trend 파이프라인(유튜브 제작가이드2) 완성. step1~5 전체 구현+실행. 수집→자막분석→소재추출→대본S1~S8. step2 당일시황 반영 프롬프트 수정. step1 12시간 윈도우로 변경.
+2026-06-18 | 카카오EP1 S08·S09 대본 업데이트. S7·S8 녹화+음성 MP4 완성 (로컬). 남은 녹화: S2·S5·S9·S10·cold_open.
