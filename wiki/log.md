@@ -1,3 +1,4 @@
+- 2026-06-18 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-06-18.md
 - 2026-06-17 — 카카오클로드 EP1 씬폴더 재구조화(미디어타입→씬별) + design.md/script.txt 전체 생성 + OBS·VLC 세팅. 다음: 음성·화면 녹화 → 소넷 검수 → 오푸스 TSX 설계
 - 2026-06-17 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-06-17.md
 - 2026-06-16 — 카카오클로드 EP1 에셋 폴더 구조 완성: productions/kakao_ep1/ 전체 설계, 씬별 대본 txt, Veo+Remotion 오버레이 확정, S2 화면녹화 방식 변경. 다음: 녹화 후 오푸스로 Veo TSX 3종 설계
