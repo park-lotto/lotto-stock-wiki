@@ -1,0 +1,209 @@
+{
+  "scene": "S03",
+  "source_file": "s3녹음.mp4",
+  "total_sec": 80.12,
+  "total_frames": 2404,
+  "fps": 30,
+  "segments": [
+    {
+      "index": 1,
+      "text": "그리고 요즘에 유튜브에 나오는 것 중에",
+      "start_sec": 0.0,
+      "end_sec": 3.56,
+      "start_frame": 0,
+      "end_frame": 107
+    },
+    {
+      "index": 2,
+      "text": "혹시 AI가 알아서 타점 잡아준다는 프로그램들 본 적 있으신가요?",
+      "start_sec": 3.56,
+      "end_sec": 7.76,
+      "start_frame": 107,
+      "end_frame": 233
+    },
+    {
+      "index": 3,
+      "text": "근데 진짜 단언컨데",
+      "start_sec": 7.76,
+      "end_sec": 10.24,
+      "start_frame": 233,
+      "end_frame": 307
+    },
+    {
+      "index": 4,
+      "text": "주식판에 이런 절대치 특히나 존재하지 않습니다",
+      "start_sec": 10.24,
+      "end_sec": 13.24,
+      "start_frame": 307,
+      "end_frame": 397
+    },
+    {
+      "index": 5,
+      "text": "AI가 로직을 잘 짜고 코드는 정말 잘 만들고",
+      "start_sec": 13.24,
+      "end_sec": 17.68,
+      "start_frame": 397,
+      "end_frame": 530
+    },
+    {
+      "index": 6,
+      "text": "백테스팅 수없이 돌릴 수 있어요",
+      "start_sec": 17.68,
+      "end_sec": 20.08,
+      "start_frame": 530,
+      "end_frame": 602
+    },
+    {
+      "index": 7,
+      "text": "하지만 주식이라는 세계에서 아직까지 1%가 부족한 게",
+      "start_sec": 20.08,
+      "end_sec": 23.8,
+      "start_frame": 602,
+      "end_frame": 714
+    },
+    {
+      "index": 8,
+      "text": "인간의 도움이 필요하더라고요",
+      "start_sec": 23.8,
+      "end_sec": 25.8,
+      "start_frame": 714,
+      "end_frame": 774
+    },
+    {
+      "index": 9,
+      "text": "다들 아시다시피 주식은 살아있는 생물이잖아요",
+      "start_sec": 25.8,
+      "end_sec": 29.6,
+      "start_frame": 774,
+      "end_frame": 888
+    },
+    {
+      "index": 10,
+      "text": "그래서 기계가 숫자만으로는 절대 예측하지 못하는",
+      "start_sec": 30.16,
+      "end_sec": 33.72,
+      "start_frame": 905,
+      "end_frame": 1012
+    },
+    {
+      "index": 11,
+      "text": "시장의 심리, 인간의 관기가 있다는 게 핵심입니다",
+      "start_sec": 33.72,
+      "end_sec": 37.84,
+      "start_frame": 1012,
+      "end_frame": 1135
+    },
+    {
+      "index": 12,
+      "text": "제가 아침에 여러 가지 자동화 프로그램을 만들어서",
+      "start_sec": 37.84,
+      "end_sec": 40.84,
+      "start_frame": 1135,
+      "end_frame": 1225
+    },
+    {
+      "index": 13,
+      "text": "실제로 되게 많이 돌리고 있는데",
+      "start_sec": 40.84,
+      "end_sec": 43.0,
+      "start_frame": 1225,
+      "end_frame": 1290
+    },
+    {
+      "index": 14,
+      "text": "그 중에 하나가 오늘 설명드리려는 카톡으로",
+      "start_sec": 43.0,
+      "end_sec": 45.68,
+      "start_frame": 1290,
+      "end_frame": 1370
+    },
+    {
+      "index": 15,
+      "text": "정보를 받는 수집 프로그램이에요",
+      "start_sec": 45.68,
+      "end_sec": 48.04,
+      "start_frame": 1370,
+      "end_frame": 1441
+    },
+    {
+      "index": 16,
+      "text": "이걸 만든 것도 AI한테 단순하게 종목을 추천받으려고 하는 게 아닙니다",
+      "start_sec": 48.04,
+      "end_sec": 53.68,
+      "start_frame": 1441,
+      "end_frame": 1610
+    },
+    {
+      "index": 17,
+      "text": "아침에 일어나서 장 열리기 전에 우리가 하고 있는 건",
+      "start_sec": 53.68,
+      "end_sec": 57.44,
+      "start_frame": 1610,
+      "end_frame": 1723
+    },
+    {
+      "index": 18,
+      "text": "생각해보시면 너무나 단순 반복 일이거든요",
+      "start_sec": 57.48,
+      "end_sec": 60.88,
+      "start_frame": 1724,
+      "end_frame": 1826
+    },
+    {
+      "index": 19,
+      "text": "이런 건 AI가 인간보다 월등히 잘한다고 보시면 되는 부분입니다",
+      "start_sec": 60.88,
+      "end_sec": 64.92,
+      "start_frame": 1826,
+      "end_frame": 1948
+    },
+    {
+      "index": 20,
+      "text": "바로 정보수집과 요약입니다",
+      "start_sec": 64.92,
+      "end_sec": 67.72,
+      "start_frame": 1948,
+      "end_frame": 2032
+    },
+    {
+      "index": 21,
+      "text": "앞으로 이런 일들은 AI한테 모두 자동화 시켜버리고",
+      "start_sec": 67.72,
+      "end_sec": 72.24,
+      "start_frame": 2032,
+      "end_frame": 2167
+    },
+    {
+      "index": 22,
+      "text": "우리는 장이 열렸을 때",
+      "start_sec": 72.24,
+      "end_sec": 74.04,
+      "start_frame": 2167,
+      "end_frame": 2221
+    },
+    {
+      "index": 23,
+      "text": "오늘은 주도하는 섹터가 어디지?",
+      "start_sec": 74.04,
+      "end_sec": 76.36,
+      "start_frame": 2221,
+      "end_frame": 2291
+    },
+    {
+      "index": 24,
+      "text": "돈은 어디로 가고 있지?",
+      "start_sec": 76.36,
+      "end_sec": 77.92,
+      "start_frame": 2291,
+      "end_frame": 2338
+    },
+    {
+      "index": 25,
+      "text": "이런 흐름들만 집중해서 보자는 겁니다",
+      "start_sec": 77.92,
+      "end_sec": 80.12,
+      "start_frame": 2338,
+      "end_frame": 2404
+    }
+  ]
+}

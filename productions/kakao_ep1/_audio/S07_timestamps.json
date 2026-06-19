@@ -1,0 +1,361 @@
+{
+  "scene": "S07",
+  "source_file": "S7 녹화+음석.mp4",
+  "total_sec": 143.16,
+  "total_frames": 4295,
+  "fps": 30,
+  "segments": [
+    {
+      "index": 1,
+      "text": "이제 방금 말씀드렸던 Play MCP를 다운받을 건데요.",
+      "start_sec": 0.0,
+      "end_sec": 3.92,
+      "start_frame": 0,
+      "end_frame": 118
+    },
+    {
+      "index": 2,
+      "text": "구글에 접속하셔서 Play MCP",
+      "start_sec": 3.92,
+      "end_sec": 7.2,
+      "start_frame": 118,
+      "end_frame": 216
+    },
+    {
+      "index": 3,
+      "text": "접속하셔서 들어가시면 되고",
+      "start_sec": 7.2,
+      "end_sec": 10.72,
+      "start_frame": 216,
+      "end_frame": 322
+    },
+    {
+      "index": 4,
+      "text": "우측 상단에 있는 로그인 버튼을 눌러서 로그인 해주시면 됩니다.",
+      "start_sec": 11.32,
+      "end_sec": 16.56,
+      "start_frame": 340,
+      "end_frame": 497
+    },
+    {
+      "index": 5,
+      "text": "아래쪽에 보시면 네이버 MCP 카카오톡 MCP가 두 개가 보이는데",
+      "start_sec": 17.08,
+      "end_sec": 22.04,
+      "start_frame": 512,
+      "end_frame": 661
+    },
+    {
+      "index": 6,
+      "text": "안 보이시는 분들은 MCP 검색해서 찾으시면 됩니다.",
+      "start_sec": 22.04,
+      "end_sec": 25.44,
+      "start_frame": 661,
+      "end_frame": 763
+    },
+    {
+      "index": 7,
+      "text": "네이버 MCP는 클로드가 네이버에 직접 검색하기 할 수 있는 기능이고",
+      "start_sec": 25.44,
+      "end_sec": 30.04,
+      "start_frame": 763,
+      "end_frame": 901
+    },
+    {
+      "index": 8,
+      "text": "카톡 MCP는 검색된 정보를 카톡으로 보낼 수 있게 연결해주는 기능이라고 보시면 됩니다.",
+      "start_sec": 30.04,
+      "end_sec": 36.24,
+      "start_frame": 901,
+      "end_frame": 1087
+    },
+    {
+      "index": 9,
+      "text": "두 개 다 모두 다운받아야 되니 하나씩 들어가셔서 도구함에 추가 누르시면 되고",
+      "start_sec": 36.24,
+      "end_sec": 41.92,
+      "start_frame": 1087,
+      "end_frame": 1258
+    },
+    {
+      "index": 10,
+      "text": "카톡도 추가해주시면 됩니다.",
+      "start_sec": 41.92,
+      "end_sec": 44.56,
+      "start_frame": 1258,
+      "end_frame": 1337
+    },
+    {
+      "index": 11,
+      "text": "그 다음 추가 있으면 코어커로 돌아와서 세팅을 해주셔야 되는데",
+      "start_sec": 44.56,
+      "end_sec": 48.32,
+      "start_frame": 1337,
+      "end_frame": 1450
+    },
+    {
+      "index": 12,
+      "text": "들어와 보시면 플러스 버튼이 나오는데",
+      "start_sec": 48.32,
+      "end_sec": 50.44,
+      "start_frame": 1450,
+      "end_frame": 1513
+    },
+    {
+      "index": 13,
+      "text": "커넥터 들어가시고 커넥터 관리 눌러 보시면",
+      "start_sec": 50.44,
+      "end_sec": 54.2,
+      "start_frame": 1513,
+      "end_frame": 1626
+    },
+    {
+      "index": 14,
+      "text": "여기 커넥터 옆에 돋보기 모양이 보입니다.",
+      "start_sec": 54.2,
+      "end_sec": 56.84,
+      "start_frame": 1626,
+      "end_frame": 1705
+    },
+    {
+      "index": 15,
+      "text": "돋보기의 커넥터 검색을 누르시고 Play MCP를 누르시면",
+      "start_sec": 56.84,
+      "end_sec": 60.76,
+      "start_frame": 1705,
+      "end_frame": 1823
+    },
+    {
+      "index": 16,
+      "text": "아래쪽에 Play MCP라고 뜹니다.",
+      "start_sec": 60.76,
+      "end_sec": 63.28,
+      "start_frame": 1823,
+      "end_frame": 1898
+    },
+    {
+      "index": 17,
+      "text": "Play MCP를 누르시면 오른쪽 보시면 연결되지 않았습니다.",
+      "start_sec": 63.28,
+      "end_sec": 67.12,
+      "start_frame": 1898,
+      "end_frame": 2014
+    },
+    {
+      "index": 18,
+      "text": "라고 나옵니다.",
+      "start_sec": 67.12,
+      "end_sec": 68.08,
+      "start_frame": 2014,
+      "end_frame": 2042
+    },
+    {
+      "index": 19,
+      "text": "그 아래 보시면 연결이라는 문구가 나오는데",
+      "start_sec": 68.08,
+      "end_sec": 70.32,
+      "start_frame": 2042,
+      "end_frame": 2110
+    },
+    {
+      "index": 20,
+      "text": "연결이라는 걸 눌러 보시면 연결이 될 겁니다.",
+      "start_sec": 70.32,
+      "end_sec": 73.4,
+      "start_frame": 2110,
+      "end_frame": 2202
+    },
+    {
+      "index": 21,
+      "text": "잠시만 기다려 보세요.",
+      "start_sec": 73.4,
+      "end_sec": 75.72,
+      "start_frame": 2202,
+      "end_frame": 2272
+    },
+    {
+      "index": 22,
+      "text": "클로드의 Play MCP를 연결하기가 나옵니다.",
+      "start_sec": 75.72,
+      "end_sec": 78.68,
+      "start_frame": 2272,
+      "end_frame": 2360
+    },
+    {
+      "index": 23,
+      "text": "아래 보시면 필수 버튼 2개를 눌러 주시고",
+      "start_sec": 78.68,
+      "end_sec": 81.68,
+      "start_frame": 2360,
+      "end_frame": 2450
+    },
+    {
+      "index": 24,
+      "text": "모두 동의 후 계속하기.",
+      "start_sec": 81.68,
+      "end_sec": 83.6,
+      "start_frame": 2450,
+      "end_frame": 2508
+    },
+    {
+      "index": 25,
+      "text": "인증을 진행 중입니다.",
+      "start_sec": 83.6,
+      "end_sec": 84.88,
+      "start_frame": 2508,
+      "end_frame": 2546
+    },
+    {
+      "index": 26,
+      "text": "잠시 후에 연결이 될 건데 조금만 기다려 주세요.",
+      "start_sec": 84.88,
+      "end_sec": 88.8,
+      "start_frame": 2546,
+      "end_frame": 2664
+    },
+    {
+      "index": 27,
+      "text": "연결되면 나옵니다.",
+      "start_sec": 88.8,
+      "end_sec": 92.04,
+      "start_frame": 2664,
+      "end_frame": 2761
+    },
+    {
+      "index": 28,
+      "text": "Play MCP가 연결이 되었다고 나왔습니다.",
+      "start_sec": 92.04,
+      "end_sec": 94.68,
+      "start_frame": 2761,
+      "end_frame": 2840
+    },
+    {
+      "index": 29,
+      "text": "연결이 되었으면 뒤로 가기를 누르셔서",
+      "start_sec": 94.68,
+      "end_sec": 97.04,
+      "start_frame": 2840,
+      "end_frame": 2911
+    },
+    {
+      "index": 30,
+      "text": "메인화면으로 다시 오시고요.",
+      "start_sec": 97.04,
+      "end_sec": 98.92,
+      "start_frame": 2911,
+      "end_frame": 2968
+    },
+    {
+      "index": 31,
+      "text": "보시면 여기 검색창에 Play MCP가 연결이 잘 되었는지",
+      "start_sec": 98.92,
+      "end_sec": 102.8,
+      "start_frame": 2968,
+      "end_frame": 3084
+    },
+    {
+      "index": 32,
+      "text": "한번 간단하게 한번 해볼게요.",
+      "start_sec": 102.8,
+      "end_sec": 104.84,
+      "start_frame": 3084,
+      "end_frame": 3145
+    },
+    {
+      "index": 33,
+      "text": "연결된 Play MCP를 활용해서",
+      "start_sec": 104.84,
+      "end_sec": 107.4,
+      "start_frame": 3145,
+      "end_frame": 3222
+    },
+    {
+      "index": 34,
+      "text": "네이버에서 오늘 증시가 어땠는지 검색하고",
+      "start_sec": 107.4,
+      "end_sec": 110.12,
+      "start_frame": 3222,
+      "end_frame": 3304
+    },
+    {
+      "index": 35,
+      "text": "카톡으로 보내주라고 한번 해보겠습니다.",
+      "start_sec": 110.12,
+      "end_sec": 112.48,
+      "start_frame": 3304,
+      "end_frame": 3374
+    },
+    {
+      "index": 36,
+      "text": "네이버 검색 MCP가 잘 돌아가고 있네요.",
+      "start_sec": 113.84,
+      "end_sec": 117.4,
+      "start_frame": 3415,
+      "end_frame": 3522
+    },
+    {
+      "index": 37,
+      "text": "카카오톡 나체방 MCP도 잘 돌아가고 있습니다.",
+      "start_sec": 117.4,
+      "end_sec": 121.2,
+      "start_frame": 3522,
+      "end_frame": 3636
+    },
+    {
+      "index": 38,
+      "text": "중간에 이 작업에 허용이 나오시면 이걸 눌러 주셔야 됩니다.",
+      "start_sec": 121.2,
+      "end_sec": 125.12,
+      "start_frame": 3636,
+      "end_frame": 3754
+    },
+    {
+      "index": 39,
+      "text": "카톡으로 전송이 완료됐다고 하는데 한번 볼게요.",
+      "start_sec": 125.12,
+      "end_sec": 128.96,
+      "start_frame": 3754,
+      "end_frame": 3869
+    },
+    {
+      "index": 40,
+      "text": "카카오톡에 잘 왔는지 한번 보겠습니다.",
+      "start_sec": 128.96,
+      "end_sec": 131.68,
+      "start_frame": 3869,
+      "end_frame": 3950
+    },
+    {
+      "index": 41,
+      "text": "카카오톡에 잘 왔는지 한번 보겠습니다.",
+      "start_sec": 132.64,
+      "end_sec": 135.56,
+      "start_frame": 3979,
+      "end_frame": 4067
+    },
+    {
+      "index": 42,
+      "text": "오늘 증시 마감 내용들 잘 나와 있죠.",
+      "start_sec": 135.56,
+      "end_sec": 138.36,
+      "start_frame": 4067,
+      "end_frame": 4151
+    },
+    {
+      "index": 43,
+      "text": "이렇게 해서 간단하게 테스트를 마쳤습니다.",
+      "start_sec": 138.36,
+      "end_sec": 141.16,
+      "start_frame": 4151,
+      "end_frame": 4235
+    },
+    {
+      "index": 44,
+      "text": "여기까지 잘 따라오셨습니다.",
+      "start_sec": 141.16,
+      "end_sec": 143.16,
+      "start_frame": 4235,
+      "end_frame": 4295
+    }
+  ]
+}

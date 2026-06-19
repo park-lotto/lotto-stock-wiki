@@ -1,0 +1,193 @@
+{
+  "scene": "S05",
+  "source_file": "s5 녹화+음성.mp4",
+  "total_sec": 84.84,
+  "total_frames": 2545,
+  "fps": 30,
+  "segments": [
+    {
+      "index": 1,
+      "text": "먼저 PC에 클로드 데스크탑 앱을 설치할 겁니다.",
+      "start_sec": 0.0,
+      "end_sec": 4.38,
+      "start_frame": 0,
+      "end_frame": 131
+    },
+    {
+      "index": 2,
+      "text": "구글에 먼저 접속하셔서 클로드 데스크탑 앱이라고 검색해 보세요.",
+      "start_sec": 4.38,
+      "end_sec": 9.52,
+      "start_frame": 131,
+      "end_frame": 286
+    },
+    {
+      "index": 3,
+      "text": "메뉴에 나옵니다.",
+      "start_sec": 9.52,
+      "end_sec": 10.96,
+      "start_frame": 286,
+      "end_frame": 329
+    },
+    {
+      "index": 4,
+      "text": "들어가시면 파란 글자로 클로드 다운로드 페이지라고 있을 거예요.",
+      "start_sec": 10.96,
+      "end_sec": 16.28,
+      "start_frame": 329,
+      "end_frame": 488
+    },
+    {
+      "index": 5,
+      "text": "그걸 클릭하세요.",
+      "start_sec": 16.28,
+      "end_sec": 17.44,
+      "start_frame": 488,
+      "end_frame": 523
+    },
+    {
+      "index": 6,
+      "text": "다음엔 윈도우 버전 네 클릭하시면 됩니다.",
+      "start_sec": 17.44,
+      "end_sec": 22.16,
+      "start_frame": 523,
+      "end_frame": 665
+    },
+    {
+      "index": 7,
+      "text": "네 PC에 다운로드가 될 겁니다.",
+      "start_sec": 22.16,
+      "end_sec": 24.36,
+      "start_frame": 665,
+      "end_frame": 731
+    },
+    {
+      "index": 8,
+      "text": "이제 다운로드 된 볼더에서 파일을 실행시켜볼 거예요.",
+      "start_sec": 24.36,
+      "end_sec": 29.28,
+      "start_frame": 731,
+      "end_frame": 878
+    },
+    {
+      "index": 9,
+      "text": "약 1분 정도 소유 될 겁니다.",
+      "start_sec": 29.44,
+      "end_sec": 31.36,
+      "start_frame": 883,
+      "end_frame": 941
+    },
+    {
+      "index": 10,
+      "text": "자 설치를 완료하고 앱을 실행시켜보시면",
+      "start_sec": 33.16,
+      "end_sec": 36.64,
+      "start_frame": 995,
+      "end_frame": 1099
+    },
+    {
+      "index": 11,
+      "text": "좌측 상단에 코워크 탭 보입니다.",
+      "start_sec": 36.64,
+      "end_sec": 40.36,
+      "start_frame": 1099,
+      "end_frame": 1211
+    },
+    {
+      "index": 12,
+      "text": "여기에요.",
+      "start_sec": 40.36,
+      "end_sec": 42.44,
+      "start_frame": 1211,
+      "end_frame": 1273
+    },
+    {
+      "index": 13,
+      "text": "일단 설치는 성공적으로 되었으니 잠시 후에",
+      "start_sec": 42.44,
+      "end_sec": 46.08,
+      "start_frame": 1273,
+      "end_frame": 1382
+    },
+    {
+      "index": 14,
+      "text": "프론포트 넣어보고 질문을 해보도록 하죠.",
+      "start_sec": 46.08,
+      "end_sec": 50.32,
+      "start_frame": 1382,
+      "end_frame": 1510
+    },
+    {
+      "index": 15,
+      "text": "카톡 자동화를 하기 위해서 코워크라는 기능을 써야 되는데",
+      "start_sec": 50.32,
+      "end_sec": 54.4,
+      "start_frame": 1510,
+      "end_frame": 1632
+    },
+    {
+      "index": 16,
+      "text": "이건 유료 플랜이 필요합니다.",
+      "start_sec": 54.4,
+      "end_sec": 56.6,
+      "start_frame": 1632,
+      "end_frame": 1698
+    },
+    {
+      "index": 17,
+      "text": "근데 아쉽게도 무료 버전엔 이 자동화 기능 자체가 없거든요.",
+      "start_sec": 56.6,
+      "end_sec": 61.2,
+      "start_frame": 1698,
+      "end_frame": 1836
+    },
+    {
+      "index": 18,
+      "text": "구글에 클로드 AI라고 들어가셔서 가입만 하면 되는데요.",
+      "start_sec": 61.2,
+      "end_sec": 66.08,
+      "start_frame": 1836,
+      "end_frame": 1982
+    },
+    {
+      "index": 19,
+      "text": "무료 AI도 많은데 굳이 CPC잖아요.",
+      "start_sec": 66.08,
+      "end_sec": 70.52,
+      "start_frame": 1982,
+      "end_frame": 2116
+    },
+    {
+      "index": 20,
+      "text": "근데 주식하다 보면 솔직히 3만원은 수수료 나가는 거나",
+      "start_sec": 70.52,
+      "end_sec": 75.0,
+      "start_frame": 2116,
+      "end_frame": 2250
+    },
+    {
+      "index": 21,
+      "text": "손절나가는 거에 비해서 사실 굉장히 작은 액수잖아요.",
+      "start_sec": 75.0,
+      "end_sec": 78.8,
+      "start_frame": 2250,
+      "end_frame": 2364
+    },
+    {
+      "index": 22,
+      "text": "매일 아침 자동으로 리포트 대령해주는 비서한테",
+      "start_sec": 78.8,
+      "end_sec": 82.16,
+      "start_frame": 2364,
+      "end_frame": 2465
+    },
+    {
+      "index": 23,
+      "text": "월 3만원 기꺼이 투자 해보세요.",
+      "start_sec": 82.16,
+      "end_sec": 84.84,
+      "start_frame": 2465,
+      "end_frame": 2545
+    }
+  ]
+}

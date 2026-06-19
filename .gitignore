@@ -56,3 +56,10 @@ videos/**/input-video.mp4
 # remotion public 영상 (로컬 전용)
 remotion-stock/public/**/*.mp4
 remotion-stock/public/**/*.mov
+
+# productions 원본 녹화·음성 (대용량 로컬 전용)
+productions/**/*.mp4
+productions/**/*.mkv
+productions/**/*.m4a
+productions/**/*.mp3
+productions/**/*.wav

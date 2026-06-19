@@ -1,4 +1,4 @@
-/**
+﻿/**
  * KK_Veo_S2 — S2 페인포인트 (Veo AI 아바타, 웃음 반응)
  *
  * veo_s2.mp4 전체화면 + 앱 아이콘 혼돈 오버레이
@@ -200,7 +200,7 @@ export const KK_Veo_S2: React.FC = () => {
           padding: '3px 11px', borderRadius: 6,
         }}>카카오 × 클로드</div>
         <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, fontWeight: 500 }}>
-          로또의 주식인사이트
+          STOCKBRAIN
         </div>
       </div>
 

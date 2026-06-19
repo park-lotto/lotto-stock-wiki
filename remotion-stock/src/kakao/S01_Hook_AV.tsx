@@ -1,4 +1,4 @@
-/**
+﻿/**
  * S01_Hook_AV — 훅 씬 (아바타 전체화면 버전)
  *
  * 레이아웃: KakaoLayout fullscreen
@@ -50,7 +50,7 @@ const ChannelBadge: React.FC<{ f: number }> = ({ f }) => {
         padding: '4px 12px', borderRadius: 6,
       }}>카카오 × 클로드</div>
       <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12, fontWeight: 500 }}>
-        로또의 주식인사이트
+        STOCKBRAIN
       </div>
     </div>
   );

@@ -1,242 +1,142 @@
 /**
- * KK_S5_PiP — S5 PiP 레이아웃 (발표자 우측 9:16 + 화면 녹화 좌측)
- *
- * 전환 구조:
- *   f0      : 발표자 영상 풀스크린
- *   f0~40   : spring 축소 → 우측 9:16 PiP 프레임
- *   f20~50  : 화면 녹화 영역 fade-in (좌측)
- *
- * 화면 녹화 파일 교체:
- *   SCREEN_SRC 상수에 staticFile('kakao/s5_screen.mp4') 로 교체
+ * KK_S5_PiP — 클로드 설치 (2545f · 튜토리얼 모드 v3 "액션 줌인")
+ * 풀스크린 녹화 + 단계별 줌인(시선 유도) + 단계 전환 컷 + 화면 밖 자막.
+ * 화면 위 그래픽 최소화: 줌으로 강조, STEP은 전환 카드 + 상단 얇은 진행바.
  */
 
 import React from 'react';
-import {
-  AbsoluteFill,
-  interpolate,
-  OffthreadVideo,
-  spring,
-  staticFile,
-  useCurrentFrame,
-} from 'remotion';
+import { AbsoluteFill, OffthreadVideo, staticFile, useCurrentFrame, interpolate } from 'remotion';
+import { cl, pop, flashAt } from './fx';
+import { Watermark, LifeSubBar, ClaudeIcon, LIME, ORANGE, ORANGE_GLOW, SUB } from './life';
 
-export const KK_S5_PIP_FRAMES = 942; // 31.4s × 30fps
+export const KK_S5_PIP_FRAMES = 2545;
 
-// ── 화면 녹화 파일 경로 (파일 생기면 여기만 교체) ──
-const SCREEN_SRC: string | null = null; // 파일 생기면: staticFile('kakao/ep1/s05_screen.mp4')
+const NUM = "'Archivo',sans-serif";
+const MONO = "'Space Mono','Roboto Mono',monospace";
 
-// ── PiP 크기 ──
-const PIP_W      = 316;
-const PIP_H      = Math.round(PIP_W * 16 / 9); // 562px
-const PIP_RIGHT  = 52;
-const PIP_TOP    = Math.round((1080 - PIP_H) / 2); // 259px
-const PIP_RADIUS = 22;
-
-const LIME   = '#AAFF00';
-const LIME50 = 'rgba(170,255,0,0.5)';
-const LIME15 = 'rgba(170,255,0,0.15)';
-const CARD   = 'rgba(0,0,0,0.84)';
-const BORDER = 'rgba(170,255,0,0.55)';
-
-const ci = (f: number, a: number, b: number, va = 0, vb = 1) =>
-  interpolate(f, [a, b], [va, vb], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-
-const sp = (f: number, from = 0, damping = 14, stiffness = 180, mass = 0.9) =>
-  spring({ frame: Math.max(0, f - from), fps: 30, config: { damping, stiffness, mass } });
-
-// ── 자막 세그먼트 ──
+// Whisper 23세그 1:1 정렬 (음성 싱크 정확)
 const SUBS = [
-  { from: 0,   to: 87,  text: '클로드 데스크탑 앱을 설치하는 것이\n첫 번째 단계입니다.',                  accent: '첫 번째 단계' },
-  { from: 97,  to: 180, text: '구글에서 클로드 AI를 검색하면 바로 나타납니다.',                            accent: '클로드 AI' },
-  { from: 188, to: 230, text: '다운로드해서 설치해야 합니다.',                                              accent: '설치' },
-  { from: 239, to: 344, text: '자동화를 하려면 유료 플랜이 필요합니다.',                                    accent: '유료 플랜' },
-  { from: 356, to: 392, text: '월 3만 원 정도예요.',                                                        accent: '3만 원' },
-  { from: 405, to: 469, text: '꼭 돈을 써야 해 하실 수 있을 텐데요.',                                      accent: '돈을 써야' },
-  { from: 478, to: 556, text: '주식할 때 손절하고 수십만 원 나가는 건 쉽죠.',                              accent: '수십만 원' },
-  { from: 574, to: 696, text: '매일 나를 위해 일하는 비서한테\n월 3만 원 주는 거 아까워하시면 안 됩니다.', accent: '3만 원' },
-  { from: 709, to: 778, text: '무료 버전엔 이 자동화 기능을 아예 없어요.',                                  accent: '자동화 기능' },
-  { from: 796, to: 888, text: '설치하고 실행하면 왼쪽에\nComputer Use 탭이 보일 텐데',                     accent: 'Computer Use' },
-  { from: 888, to: 925, text: '이제 클릭하시면 됩니다.',                                                    accent: '클릭' },
+  { from: 0, to: 131, text: '먼저 PC에 클로드 데스크탑 앱을 설치할 겁니다.', accent: '클로드 데스크탑 앱' },
+  { from: 131, to: 286, text: '구글에 먼저 접속해서 "클로드 데스크탑 앱"이라고 검색해 보세요.', accent: '클로드 데스크탑 앱' },
+  { from: 286, to: 329, text: '메뉴에 나옵니다.', accent: '' },
+  { from: 329, to: 488, text: '들어가시면 파란 글자로 "클로드 다운로드 페이지"라고 있을 거예요.', accent: '다운로드 페이지' },
+  { from: 488, to: 523, text: '그걸 클릭하세요.', accent: '클릭' },
+  { from: 523, to: 665, text: '다음엔 윈도우 버전, 네 클릭하시면 됩니다.', accent: '윈도우 버전' },
+  { from: 665, to: 731, text: '내 PC에 다운로드가 될 겁니다.', accent: '다운로드' },
+  { from: 731, to: 878, text: '이제 다운로드된 폴더에서 파일을 실행시켜 볼 거예요.', accent: '실행' },
+  { from: 883, to: 941, text: '약 1분 정도 소요될 겁니다.', accent: '1분' },
+  { from: 995, to: 1099, text: '자, 설치를 완료하고 앱을 실행시켜 보시면', accent: '' },
+  { from: 1099, to: 1211, text: '좌측 상단에 코워크 탭 보입니다.', accent: '코워크 탭' },
+  { from: 1211, to: 1273, text: '여기예요.', accent: '' },
+  { from: 1273, to: 1382, text: '일단 설치는 성공적으로 되었으니, 잠시 후에', accent: '성공적으로' },
+  { from: 1382, to: 1510, text: '프롬프트 넣어보고 질문을 해보도록 하죠.', accent: '프롬프트' },
+  { from: 1510, to: 1632, text: '카톡 자동화를 하기 위해선 코워크라는 기능을 써야 되는데,', accent: '코워크' },
+  { from: 1632, to: 1698, text: '이건 유료 플랜이 필요합니다.', accent: '유료 플랜' },
+  { from: 1698, to: 1836, text: '근데 아쉽게도 무료 버전엔 이 자동화 기능 자체가 없거든요.', accent: '자동화 기능' },
+  { from: 1836, to: 1982, text: '구글에 "클로드 AI"라고 들어가서 가입만 하면 되는데요.', accent: '가입' },
+  { from: 1982, to: 2116, text: '무료 AI도 많은데 굳이 싶으시죠.', accent: '굳이' },
+  { from: 2116, to: 2250, text: '근데 주식하다 보면 솔직히 3만원은 수수료 나가는 거나,', accent: '3만원' },
+  { from: 2250, to: 2364, text: '손절 나가는 거에 비해서 사실 굉장히 작은 액수잖아요.', accent: '작은 액수' },
+  { from: 2364, to: 2465, text: '매일 아침 자동으로 리포트 대령해주는 비서한테,', accent: '리포트 대령' },
+  { from: 2465, to: 2545, text: '월 3만원, 기꺼이 투자해 보세요.', accent: '월 3만원' },
 ];
+
+const STEPS = [
+  { at: 0, label: '구글에서 검색' },
+  { at: 329, label: '다운로드 페이지 클릭' },
+  { at: 523, label: '윈도우 버전 클릭' },
+  { at: 731, label: '설치 파일 실행' },
+  { at: 995, label: '코워크 탭 확인' },
+];
+
+// 줌 키프레임 [frame, focusX(0~1), focusY(0~1), scale]
+const KF = [0, 329, 523, 731, 995, 1211, 1510, 2545];
+const FX = [0.5, 0.5, 0.5, 0.5, 0.16, 0.16, 0.5, 0.5];
+const FY = [0.42, 0.46, 0.5, 0.56, 0.1, 0.1, 0.5, 0.5];
+const SC = [1.32, 1.36, 1.4, 1.32, 1.55, 1.4, 1.06, 1.06];
 
 export const KK_S5_PiP: React.FC = () => {
   const f = useCurrentFrame();
 
-  // ── 전환 progress (0→1, 약 1.3초) ──
-  const trans = sp(f, 0, 14, 180, 0.9);
+  const fx = interpolate(f, KF, FX, { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const fy = interpolate(f, KF, FY, { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  let sc = interpolate(f, KF, SC, { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  // 단계 시작마다 살짝 펀치 + 미세 드리프트
+  const stepStart = STEPS.find((s) => f >= s.at && f < s.at + 16);
+  if (stepStart) sc += (1 - pop(f, stepStart.at, { damping: 7 })) * 0.06;
+  sc += Math.sin(f * 0.02) * 0.006;
 
-  // ── 발표자 컨테이너 애니메이션 ──
-  const presW      = interpolate(trans, [0, 1], [1920, PIP_W]);
-  const presH      = interpolate(trans, [0, 1], [1080, PIP_H]);
-  const presX      = interpolate(trans, [0, 1], [0,    1920 - PIP_W - PIP_RIGHT]);
-  const presY      = interpolate(trans, [0, 1], [0,    PIP_TOP]);
-  const presRadius = interpolate(trans, [0, 1], [0,    PIP_RADIUS]);
+  const step = STEPS.reduce((acc, s, i) => (f >= s.at ? i : acc), 0);
 
-  // ── 좌측 화면 영역 ──
-  const screenOp  = ci(f, 20, 50);
-  const screenX   = interpolate(trans, [0, 1], [-60, 0]);
+  // 단계 전환 카드 (각 STEP 시작 0.7초)
+  const trans = STEPS.find((s) => f >= s.at && f < s.at + 22);
 
-  // ── LIVE 배지 ──
-  const badgeOp   = ci(f, 35, 55);
-
-  // ── 그림자 glow ──
-  const glowAmt   = interpolate(trans, [0, 1], [0, 1]);
-
-  const activeSub = SUBS.find(s => f >= s.from && f < s.to);
+  // 가치 카드 ($19) — 마지막 "월 3만원" 라인(f2465)에서만
+  const showVal = f >= 2455;
+  const valOp = cl(f, 2455, 2480) * cl(f, 2532, 2545, 1, 0);
 
   return (
-    <AbsoluteFill style={{ fontFamily: "'Inter', sans-serif", overflow: 'hidden', background: '#0a0a0a' }}>
+    <AbsoluteFill style={{ background: '#000', fontFamily: "'Noto Sans KR', sans-serif", overflow: 'hidden' }}>
+      {/* 풀스크린 녹화 + 줌 */}
+      <OffthreadVideo
+        src={staticFile('kakao/ep1/s05_bg.mp4')}
+        style={{ width: '100%', height: '100%', objectFit: 'cover', transform: `scale(${sc})`, transformOrigin: `${fx * 100}% ${fy * 100}%` }}
+      />
 
-      {/* ── 좌측: 화면 녹화 영역 ── */}
-      <div style={{
-        position: 'absolute',
-        left: 0,
-        top: 0,
-        right: PIP_W + PIP_RIGHT + 20,
-        bottom: 0,
-        opacity: screenOp,
-        transform: `translateX(${screenX}px)`,
-        overflow: 'hidden',
-      }}>
-        {SCREEN_SRC ? (
-          <OffthreadVideo
-            src={SCREEN_SRC}
-            style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000' }}
-          />
-        ) : (
-          /* 플레이스홀더 — 화면 녹화 파일 없을 때 */
-          <div style={{
-            width: '100%', height: '100%',
-            background: 'linear-gradient(135deg, #0d1117 0%, #111a1a 100%)',
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center', gap: 18,
-          }}>
-            {/* 터미널 느낌 프레임 */}
-            <div style={{
-              border: `1px solid rgba(170,255,0,0.25)`,
-              borderRadius: 8,
-              padding: '28px 48px',
-              textAlign: 'center',
-            }}>
-              <div style={{ fontFamily: "'Courier New',monospace", fontSize: 11,
-                color: LIME50, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 16 }}>
-                SCREEN RECORDING
-              </div>
-              <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 20, fontWeight: 700,
-                color: 'rgba(255,255,255,0.35)' }}>
-                설치 화면 녹화 영역
-              </div>
-              <div style={{ fontFamily: "'Courier New',monospace", fontSize: 10,
-                color: 'rgba(255,255,255,0.18)', marginTop: 10, letterSpacing: 1 }}>
-                s5_screen.mp4 → public/kakao/
-              </div>
+      {/* 상단/하단 미세 스크림 (텍스트 가독, 화면 본문은 밝게 유지) */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 90, background: 'linear-gradient(rgba(0,0,0,0.55), transparent)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 200, background: 'linear-gradient(transparent, rgba(0,0,0,0.85))', pointerEvents: 'none' }} />
+
+      {/* 상단 얇은 진행바 (5단계) */}
+      <div style={{ position: 'absolute', top: 22, left: 56, right: 56, display: 'flex', gap: 8 }}>
+        {STEPS.map((_, i) => (
+          <div key={i} style={{ flex: 1, height: 5, borderRadius: 3, background: i <= step ? LIME : 'rgba(255,255,255,0.18)', boxShadow: i <= step ? `0 0 8px ${LIME}` : 'none' }} />
+        ))}
+      </div>
+      <div style={{ position: 'absolute', top: 38, left: 56, fontFamily: MONO, fontSize: 16, letterSpacing: 3, color: LIME }}>
+        STEP {String(step + 1).padStart(2, '0')}/05 · CLAUDE SETUP
+      </div>
+
+      {/* 단계 전환 컷 카드 */}
+      {trans && (
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+          <div style={{ position: 'absolute', inset: 0, background: '#000', opacity: cl(f, trans.at, trans.at + 4) * cl(f, trans.at + 14, trans.at + 22, 1, 0) * 0.74 }} />
+          <div style={{ opacity: cl(f, trans.at, trans.at + 5) * cl(f, trans.at + 16, trans.at + 22, 1, 0), transform: `scale(${0.8 + pop(f, trans.at, { damping: 8 }) * 0.2})`, textAlign: 'center' }}>
+            <div style={{ fontFamily: NUM, fontSize: 130, fontWeight: 900, color: LIME, lineHeight: 0.9, textShadow: `0 0 40px ${LIME}` }}>
+              STEP {step + 1}
+            </div>
+            <div style={{ fontSize: 56, fontWeight: 900, color: '#fff', marginTop: 10, letterSpacing: -1 }}>{STEPS[step].label}</div>
+          </div>
+        </div>
+      )}
+
+      {/* 컷 플래시 */}
+      {STEPS.map((s) => (
+        <div key={s.at} style={{ position: 'absolute', inset: 0, background: '#fff', opacity: flashAt(f, s.at, 8, 0.4), pointerEvents: 'none' }} />
+      ))}
+
+      {/* $19 가치 카드 (클라이맥스) */}
+      {showVal && (
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: valOp }}>
+          <div style={{ width: 820, padding: '54px 70px', borderRadius: 26, background: 'rgba(20,16,14,0.94)', border: `2px solid ${ORANGE}`, boxShadow: `0 0 70px ${ORANGE_GLOW}`, display: 'flex', flexDirection: 'column', alignItems: 'center', transform: `scale(${0.86 + pop(f, 2360, { damping: 9 }) * 0.14})` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 22 }}>
+              <ClaudeIcon size={46} />
+              <span style={{ fontFamily: MONO, fontSize: 20, letterSpacing: 5, color: ORANGE }}>CLAUDE PRO</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline' }}>
+              <span style={{ fontFamily: NUM, fontSize: 170, fontWeight: 900, color: ORANGE, letterSpacing: -6, lineHeight: 0.9, textShadow: `0 0 50px ${ORANGE_GLOW}` }}>$19</span>
+              <span style={{ fontFamily: NUM, fontSize: 54, fontWeight: 800, color: SUB, marginLeft: 12 }}>/ month</span>
+            </div>
+            <div style={{ marginTop: 22, fontSize: 36, fontWeight: 800, color: '#fff' }}>
+              월 <span style={{ color: LIME }}>3만원</span> — 기꺼이 투자해 보세요
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* ── 발표자 PiP 컨테이너 ── */}
-      <div style={{
-        position: 'absolute',
-        left: presX,
-        top: presY,
-        width: presW,
-        height: presH,
-        borderRadius: presRadius,
-        overflow: 'hidden',
-        boxShadow: glowAmt > 0.05
-          ? `0 0 ${Math.round(glowAmt * 32)}px rgba(170,255,0,${glowAmt * 0.45}), 0 8px 40px rgba(0,0,0,0.8)`
-          : 'none',
-        // 라임 테두리 (전환 후에만)
-        outline: glowAmt > 0.1
-          ? `${Math.round(glowAmt * 2)}px solid rgba(170,255,0,${glowAmt * 0.6})`
-          : 'none',
-        outlineOffset: -1,
-      }}>
-        <OffthreadVideo
-          src={staticFile('kakao/ep1/s05_screen.mp4')}
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-        />
-      </div>
-
-      {/* ── LIVE 배지 (PiP 상단 좌측) ── */}
-      <div style={{
-        position: 'absolute',
-        left: presX + 10,
-        top: presY + 10,
-        opacity: badgeOp * interpolate(trans, [0, 1], [0, 1]),
-        display: 'flex', alignItems: 'center', gap: 6,
-        background: CARD,
-        border: `1px solid ${BORDER}`,
-        borderRadius: 5,
-        padding: '4px 10px',
-        pointerEvents: 'none',
-      }}>
-        {/* 빨간 라이브 dot */}
-        <div style={{
-          width: 7, height: 7, borderRadius: '50%',
-          background: '#ff4444',
-          boxShadow: '0 0 6px rgba(255,60,60,0.8)',
-        }} />
-        <span style={{ fontFamily: "'Courier New',monospace", fontSize: 9,
-          color: LIME, letterSpacing: 2.5, textTransform: 'uppercase' }}>
-          LIVE
-        </span>
-        <span style={{ fontFamily: "'Courier New',monospace", fontSize: 9,
-          color: 'rgba(255,255,255,0.4)', letterSpacing: 1 }}>
-          · 09:16
-        </span>
-      </div>
-
-      {/* ── 수직 구분선 (전환 후) ── */}
-      <div style={{
-        position: 'absolute',
-        top: 60,
-        bottom: 60,
-        right: PIP_W + PIP_RIGHT + 18,
-        width: 1,
-        background: `linear-gradient(to bottom, transparent, ${LIME15} 30%, ${LIME15} 70%, transparent)`,
-        opacity: interpolate(trans, [0.6, 1], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
-      }} />
-
-      {/* ── 하단 그라데이션 ── */}
-      <div style={{
-        position: 'absolute', bottom: 0, left: 0, right: 0, height: '18%',
-        background: 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, transparent 100%)',
-        pointerEvents: 'none',
-      }} />
-
-      {/* ── 자막 바 ── */}
-      <div style={{
-        position: 'absolute', bottom: 0, left: 0,
-        // 좌측 콘텐츠 영역 기준 (PiP 아래까지 내려오지 않도록)
-        right: PIP_W + PIP_RIGHT + 20,
-        height: '18%',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        {activeSub && (
-          <div style={{
-            fontFamily: "'Inter',sans-serif",
-            fontSize: 34, fontWeight: 700, color: '#fff',
-            textAlign: 'center', paddingInline: 48,
-            textShadow: '0 2px 18px rgba(0,0,0,0.98), 0 0 40px rgba(0,0,0,0.9)',
-            lineHeight: 1.5,
-            whiteSpace: 'pre-line',
-          }}>
-            {activeSub.text.split(activeSub.accent).map((part, i, arr) => (
-              <React.Fragment key={i}>
-                {part}
-                {i < arr.length - 1 && (
-                  <span style={{ color: LIME, textShadow: `0 0 14px rgba(170,255,0,0.9)` }}>
-                    {activeSub.accent}
-                  </span>
-                )}
-              </React.Fragment>
-            ))}
-          </div>
-        )}
-      </div>
-
+      <LifeSubBar f={f} subs={SUBS} />
+      <Watermark />
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, background: '#FF4455', boxShadow: '0 0 12px #FF4455' }} />
     </AbsoluteFill>
   );
 };

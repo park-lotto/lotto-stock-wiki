@@ -1,0 +1,57 @@
+{
+  "scene": "S10",
+  "source_file": "s10 녹화 음성.mp4",
+  "total_sec": 43.6,
+  "total_frames": 1308,
+  "fps": 30,
+  "segments": [
+    {
+      "index": 1,
+      "text": "이제 거의 다 왔습니다. 예약자동화 작업을 이번에는 해볼건데, 채팅창에 이렇게 한번 입력해볼게요.",
+      "start_sec": 0.0,
+      "end_sec": 7.56,
+      "start_frame": 0,
+      "end_frame": 227
+    },
+    {
+      "index": 2,
+      "text": "방금 만든 플러그인을 매일 아침 모전 7시에 아침 브리핑으로 실행해줘 이렇게 한번 넣어볼게요.",
+      "start_sec": 7.56,
+      "end_sec": 15.88,
+      "start_frame": 227,
+      "end_frame": 476
+    },
+    {
+      "index": 3,
+      "text": "예약 작업이 설정이 완료되었습니다. 클로드 앱이 켜져 있을 때는 매일 아침 7시부터 자동 실행이 되니까 기다려 보시면 될 것 같습니다.",
+      "start_sec": 15.88,
+      "end_sec": 25.2,
+      "start_frame": 476,
+      "end_frame": 756
+    },
+    {
+      "index": 4,
+      "text": "그리고 출근할 때 켜놓으면 전기세만이 나오지 않느냐 이렇게 물어보시는 분들도 가끔 계세요.",
+      "start_sec": 25.2,
+      "end_sec": 31.2,
+      "start_frame": 756,
+      "end_frame": 936
+    },
+    {
+      "index": 5,
+      "text": "근데 윈도우 설정에서 절전 모드 끄고 화면만 꺼지게 그렇게 해두면 되거든요.",
+      "start_sec": 31.2,
+      "end_sec": 37.6,
+      "start_frame": 936,
+      "end_frame": 1128
+    },
+    {
+      "index": 6,
+      "text": "그니까 본체만 도니까 전기세는 거의 안 듭니다. 그렇게 설정 한번 해보세요.",
+      "start_sec": 37.6,
+      "end_sec": 43.6,
+      "start_frame": 1128,
+      "end_frame": 1308
+    }
+  ]
+}

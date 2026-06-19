@@ -1,0 +1,65 @@
+{
+  "scene": "S09",
+  "source_file": "s9 녹화+음성.mp4",
+  "total_sec": 47.08,
+  "total_frames": 1412,
+  "fps": 30,
+  "segments": [
+    {
+      "index": 1,
+      "text": "자 지금까지 만든 걸 이제 매일 반복해서 해줄 건데 이것도 처음부터 하려면 정말 큰일입니다.",
+      "start_sec": 0.0,
+      "end_sec": 7.36,
+      "start_frame": 0,
+      "end_frame": 221
+    },
+    {
+      "index": 2,
+      "text": "첫 번째로는 이걸 하나의 패키징으로 묶어서 언제든 간다는 명령으로 바로 이를 시키는 겁니다.",
+      "start_sec": 7.36,
+      "end_sec": 14.2,
+      "start_frame": 221,
+      "end_frame": 426
+    },
+    {
+      "index": 3,
+      "text": "클로드의 가장 큰 장점은 초보자인 여러분들도 일상생활에 쓰는 자연어로만 대화해도 쉽게 코딩을 짜준다는 겁니다.",
+      "start_sec": 14.2,
+      "end_sec": 22.6,
+      "start_frame": 426,
+      "end_frame": 678
+    },
+    {
+      "index": 4,
+      "text": "복잡한 것 없이 날벗 그대로 한번 해보겠습니다.",
+      "start_sec": 22.6,
+      "end_sec": 27.32,
+      "start_frame": 678,
+      "end_frame": 820
+    },
+    {
+      "index": 5,
+      "text": "채팅창에 이렇게 한번 넣어 보겠습니다. 방금 만든 아침 브리핑을 플러그인으로 패키징 해줘.",
+      "start_sec": 27.32,
+      "end_sec": 35.52,
+      "start_frame": 820,
+      "end_frame": 1066
+    },
+    {
+      "index": 6,
+      "text": "작업이 완료되었습니다. 보시면 지금 카토로 보냈다고 하는데 한번 보겠습니다.",
+      "start_sec": 35.52,
+      "end_sec": 41.76,
+      "start_frame": 1066,
+      "end_frame": 1253
+    },
+    {
+      "index": 7,
+      "text": "지금 브리핑이 잘 들어왔네요. 좋습니다.",
+      "start_sec": 41.76,
+      "end_sec": 47.08,
+      "start_frame": 1253,
+      "end_frame": 1412
+    }
+  ]
+}

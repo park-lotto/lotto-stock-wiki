@@ -1,0 +1,127 @@
+{
+  "scene": "INTRO",
+  "fps": 30,
+  "total_frames": 917,
+  "segments": [
+    {
+      "index": 0,
+      "text": "방금 이 카톡 제가 보낸 거 아니에요",
+      "start_frame": 0,
+      "end_frame": 84,
+      "start_sec": 0.0,
+      "end_sec": 2.8
+    },
+    {
+      "index": 1,
+      "text": "어제 밤 클로드한테 한 번 시켜둔 게",
+      "start_frame": 84,
+      "end_frame": 158,
+      "start_sec": 2.8,
+      "end_sec": 5.26
+    },
+    {
+      "index": 2,
+      "text": "오늘 아침 7시에 저절로 온 겁니다",
+      "start_frame": 158,
+      "end_frame": 239,
+      "start_sec": 5.26,
+      "end_sec": 7.96
+    },
+    {
+      "index": 3,
+      "text": "요즘 주식 좀 한다는 분들",
+      "start_frame": 239,
+      "end_frame": 298,
+      "start_sec": 7.96,
+      "end_sec": 9.94
+    },
+    {
+      "index": 4,
+      "text": "GPT 잘 안 써요",
+      "start_frame": 298,
+      "end_frame": 345,
+      "start_sec": 9.94,
+      "end_sec": 11.5
+    },
+    {
+      "index": 5,
+      "text": "다 클로드로 갈아탔습니다",
+      "start_frame": 345,
+      "end_frame": 406,
+      "start_sec": 11.5,
+      "end_sec": 13.54
+    },
+    {
+      "index": 6,
+      "text": "리서치에 자동화까지 되니까요",
+      "start_frame": 406,
+      "end_frame": 467,
+      "start_sec": 13.54,
+      "end_sec": 15.56
+    },
+    {
+      "index": 7,
+      "text": "여러분도 딱 10분만 투자하면",
+      "start_frame": 467,
+      "end_frame": 532,
+      "start_sec": 15.56,
+      "end_sec": 17.72
+    },
+    {
+      "index": 8,
+      "text": "내일 아침부터 검색창 안 켜도 됩니다",
+      "start_frame": 532,
+      "end_frame": 634,
+      "start_sec": 17.72,
+      "end_sec": 21.12
+    },
+    {
+      "index": 9,
+      "text": "코딩요?",
+      "start_frame": 634,
+      "end_frame": 662,
+      "start_sec": 21.12,
+      "end_sec": 22.08
+    },
+    {
+      "index": 10,
+      "text": "한 줄도 없어요",
+      "start_frame": 662,
+      "end_frame": 698,
+      "start_sec": 22.08,
+      "end_sec": 23.28
+    },
+    {
+      "index": 11,
+      "text": "방금까지 설명한 저",
+      "start_frame": 698,
+      "end_frame": 743,
+      "start_sec": 23.28,
+      "end_sec": 24.76
+    },
+    {
+      "index": 12,
+      "text": "사실 클로드가 만든 AI예요",
+      "start_frame": 743,
+      "end_frame": 806,
+      "start_sec": 24.76,
+      "end_sec": 26.88
+    },
+    {
+      "index": 13,
+      "text": "이제 클로드가 만드는 주식 자동화",
+      "start_frame": 806,
+      "end_frame": 875,
+      "start_sec": 26.88,
+      "end_sec": 29.16
+    },
+    {
+      "index": 14,
+      "text": "그 첫 단계 들어보세요",
+      "start_frame": 875,
+      "end_frame": 917,
+      "start_sec": 29.16,
+      "end_sec": 30.56
+    }
+  ]
+}

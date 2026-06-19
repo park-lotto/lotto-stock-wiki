@@ -1,0 +1,41 @@
+{
+  "scene": "S11",
+  "source_file": "s11 녹음 + 음성.mp4",
+  "total_sec": 24.8,
+  "total_frames": 744,
+  "fps": 30,
+  "segments": [
+    {
+      "index": 1,
+      "text": "자 세팅은 모두 마쳤습니다. 이제 이 구조만 익히면 응용은 무궁무진합니다.",
+      "start_sec": 0.0,
+      "end_sec": 5.4,
+      "start_frame": 0,
+      "end_frame": 162
+    },
+    {
+      "index": 2,
+      "text": "아침 브리핑, 개별 종목 브리핑, 이번 주 핵심 일정, 장중 매시간 브리핑 등등 너무나 많은데",
+      "start_sec": 5.4,
+      "end_sec": 13.24,
+      "start_frame": 162,
+      "end_frame": 397
+    },
+    {
+      "index": 3,
+      "text": "제가 4개의 프론포트는 고정 댓글에다가 올려 둘 테니까 문장 몇 개만 바꾸시면 전부 여러 분만의 무기가 되는 겁니다.",
+      "start_sec": 13.24,
+      "end_sec": 20.92,
+      "start_frame": 397,
+      "end_frame": 628
+    },
+    {
+      "index": 4,
+      "text": "잘 활용해 보시기 바랍니다. 감사합니다.",
+      "start_sec": 20.92,
+      "end_sec": 24.8,
+      "start_frame": 628,
+      "end_frame": 744
+    }
+  ]
+}

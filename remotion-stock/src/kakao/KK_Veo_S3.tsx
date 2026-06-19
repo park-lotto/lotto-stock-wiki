@@ -1,4 +1,4 @@
-/**
+﻿/**
  * KK_Veo_S3 — S3 철학 선언 (Veo AI 아바타, 클로즈업 진지)
  *
  * veo_s3.mp4 전체화면 + 철학 텍스트 + 글자수 카톡 데모
@@ -394,7 +394,7 @@ export const KK_Veo_S3: React.FC = () => {
           padding: '3px 11px', borderRadius: 6,
         }}>카카오 × 클로드</div>
         <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, fontWeight: 500 }}>
-          로또의 주식인사이트
+          STOCKBRAIN
         </div>
       </div>
 

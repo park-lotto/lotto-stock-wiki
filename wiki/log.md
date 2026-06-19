@@ -1,3 +1,5 @@
+- 2026-06-19 — 카카오EP1 Remotion LIFE 3.0 재설계: DESIGN.md(3씬모드)+life.tsx 신규. 인트로/아웃트로 Whisper자막+음성정렬 확정, S5 풀스크린 액션줌 v3(자막 23세그 1:1 싱크). 다음(집PC): S7~S10·S2 액션줌 적용 → S3/S6/S11 모드C. 상세=NEXT_SESSION.md
+- 2026-06-19 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-06-19.md
 - 2026-06-18 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-06-18.md
 - 2026-06-17 — 카카오클로드 EP1 씬폴더 재구조화(미디어타입→씬별) + design.md/script.txt 전체 생성 + OBS·VLC 세팅. 다음: 음성·화면 녹화 → 소넷 검수 → 오푸스 TSX 설계
 - 2026-06-17 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-06-17.md

@@ -1,0 +1,73 @@
+{
+  "scene": "S06",
+  "source_file": "s6녹음.mp4",
+  "total_sec": 65.08,
+  "total_frames": 1952,
+  "fps": 30,
+  "segments": [
+    {
+      "index": 1,
+      "text": "이제 하나의 프로그램을 더 다운 받을 건데 Play MCP라는 기능입니다.",
+      "start_sec": 0.0,
+      "end_sec": 5.76,
+      "start_frame": 0,
+      "end_frame": 173
+    },
+    {
+      "index": 2,
+      "text": "개발용어 다 빼고 MCP라는 게 먼지만 잠깐 설명 들어볼게요.",
+      "start_sec": 5.76,
+      "end_sec": 10.52,
+      "start_frame": 173,
+      "end_frame": 316
+    },
+    {
+      "index": 3,
+      "text": "원래 AI한테 일을 시키고 싶어서 주직정보 뉴스를 네이버 검색해서 카톡으로 보내 라고 시키면",
+      "start_sec": 10.52,
+      "end_sec": 18.8,
+      "start_frame": 316,
+      "end_frame": 564
+    },
+    {
+      "index": 4,
+      "text": "자동화를 만들려면 개발자들 불러야 되고 돈 주고 새롭게 코딩을 짜야 했었어요.",
+      "start_sec": 18.8,
+      "end_sec": 24.68,
+      "start_frame": 564,
+      "end_frame": 740
+    },
+    {
+      "index": 5,
+      "text": "그 이유는 네이버랑 카카오 모든 회사들이 AI가 호출해서 쓰는 구조 자체가 다 달랐었거든요.",
+      "start_sec": 24.68,
+      "end_sec": 32.52,
+      "start_frame": 740,
+      "end_frame": 976
+    },
+    {
+      "index": 6,
+      "text": "옛날에 생각해 보면 우리 스마트폰 쓸 때 충전기 5핀 8핀 다 따로 쓰던 거 기억나시죠?",
+      "start_sec": 32.52,
+      "end_sec": 40.08,
+      "start_frame": 976,
+      "end_frame": 1202
+    },
+    {
+      "index": 7,
+      "text": "그걸 USB-C 타입 하나로 대통합한 것처럼 AI 코딩 3개에서 USB-C 타입을 만든 게 바로 AI의 MCP라는 겁니다. 쉽죠?",
+      "start_sec": 40.08,
+      "end_sec": 52.52,
+      "start_frame": 1202,
+      "end_frame": 1576
+    },
+    {
+      "index": 8,
+      "text": "오늘 쓸 Play MCP라는 건 국내 웬만한 서비스에 다 통영되는 멀티 허브고요. 여기에 꽂아 두면 클로드가 네이버도 카톡도 딸깍 처리합니다.",
+      "start_sec": 52.52,
+      "end_sec": 65.08,
+      "start_frame": 1576,
+      "end_frame": 1952
+    }
+  ]
+}

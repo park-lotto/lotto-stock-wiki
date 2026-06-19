@@ -1,4 +1,4 @@
-/**
+﻿/**
  * KK_S1_Hooking — S1 훅 씬 (후킹 채널 벤치마킹 스타일)
  *
  * ▶ 배경: s1scene.mp4  →  public/kakao/s1scene.mp4 에 복사 필요
@@ -356,7 +356,7 @@ export const KK_S1_Hooking: React.FC = () => {
           fontSize: 11,
           fontWeight: 500,
         }}>
-          로또의 주식인사이트
+          STOCKBRAIN
         </div>
       </div>
 

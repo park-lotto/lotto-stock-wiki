@@ -1,0 +1,33 @@
+{
+  "scene": "S04",
+  "source_file": "s4 녹음.m4a",
+  "total_sec": 10.72,
+  "total_frames": 322,
+  "fps": 30,
+  "segments": [
+    {
+      "index": 1,
+      "text": "오늘 할 것 5단계입니다.",
+      "start_sec": 0.0,
+      "end_sec": 3.6,
+      "start_frame": 0,
+      "end_frame": 108
+    },
+    {
+      "index": 2,
+      "text": "길게 안 끌고 딱 10분 안에만 끝내드릴 거예요.",
+      "start_sec": 3.6,
+      "end_sec": 6.72,
+      "start_frame": 108,
+      "end_frame": 202
+    },
+    {
+      "index": 3,
+      "text": "코딩 같은 거 한 줄도 없으니까 편하게 따라와 보세요.",
+      "start_sec": 6.72,
+      "end_sec": 10.72,
+      "start_frame": 202,
+      "end_frame": 322
+    }
+  ]
+}

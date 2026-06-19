@@ -88,6 +88,26 @@ import { KK_S5_ClaudeLive, KK_S5_CLAUDELIVE_FRAMES } from './kakao/KK_S5_ClaudeL
 import { KK_S3_ClaudeLive, KK_S3_CLAUDELIVE_FRAMES } from './kakao/KK_S3_ClaudeLive';
 import { PostFX } from './components/PostFX';
 
+// ── 카카오EP1 v2 (오푸스 전면 재작성) ──
+import { KK_ChannelSting, KK_CHANNELSTING_FRAMES } from './kakao/KK_ChannelSting';
+import { KK_EndSting, KK_ENDSTING_FRAMES } from './kakao/KK_EndSting';
+import { KK_ColdOpen, KK_COLDOPEN_FRAMES } from './kakao/KK_ColdOpen';
+import { KK_S2_PiP, KK_S2_PIP_FRAMES } from './kakao/KK_S2_PiP';
+import { KK_S4_Roadmap, KK_S4_ROADMAP_FRAMES } from './kakao/KK_S4_Roadmap';
+import { KK_S7_PiP, KK_S7_PIP_FRAMES } from './kakao/KK_S7_PiP';
+import { KK_S8_PiP, KK_S8_PIP_FRAMES } from './kakao/KK_S8_PiP';
+import { KK_S9_PiP, KK_S9_PIP_FRAMES } from './kakao/KK_S9_PiP';
+import { KK_S10_PiP, KK_S10_PIP_FRAMES } from './kakao/KK_S10_PiP';
+import { KK_S11_Apply, KK_S11_APPLY_FRAMES } from './kakao/KK_S11_Apply';
+import { KK_Veo_Intro, KK_VEO_INTRO_FRAMES } from './kakao/KK_Veo_Intro';
+import { KK_Veo_Outro, KK_VEO_OUTRO_FRAMES } from './kakao/KK_Veo_Outro';
+import { KK_EP1_Full, KK_EP1_FULL_FRAMES } from './kakao/KK_EP1_Full';
+
+// ── LIFE 3.0 디자인 샘플 3종 ──
+import { KK_Sample_AI, KK_SAMPLE_AI_FRAMES } from './kakao/samples/KK_Sample_AI';
+import { KK_Sample_Tut, KK_SAMPLE_TUT_FRAMES } from './kakao/samples/KK_Sample_Tut';
+import { KK_Sample_Solo, KK_SAMPLE_SOLO_FRAMES } from './kakao/samples/KK_Sample_Solo';
+
 // PostFX 래퍼 컴포넌트 — Composition component 에 직접 람다 못 쓰므로 별도 정의
 const StockBrainIntroFX   = () => <PostFX><StockBrainIntro /></PostFX>;
 const Kakao_S01_FX = () => <PostFX grain={0.06} vignette={0.50} light><Kakao_S01_Hook /></PostFX>;
@@ -118,6 +138,29 @@ const KK_S3_ClaudeLive_FX = () => <KK_S3_ClaudeLive />;
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* ════════ LIFE 3.0 디자인 샘플 3종 (모드 A/B/C) ════════ */}
+      <Composition id="KKEP1-SAMPLE-A-AI" component={KK_Sample_AI} durationInFrames={KK_SAMPLE_AI_FRAMES} fps={30} width={1920} height={1080} />
+      <Composition id="KKEP1-SAMPLE-B-TUT" component={KK_Sample_Tut} durationInFrames={KK_SAMPLE_TUT_FRAMES} fps={30} width={1920} height={1080} />
+      <Composition id="KKEP1-SAMPLE-C-SOLO" component={KK_Sample_Solo} durationInFrames={KK_SAMPLE_SOLO_FRAMES} fps={30} width={1920} height={1080} />
+
+      {/* ════════ 카카오EP1 v2 — 전체 + 씬별 (오푸스 재작성) ════════ */}
+      <Composition id="KKEP1-00-Full" component={KK_EP1_Full} durationInFrames={KK_EP1_FULL_FRAMES} fps={30} width={1920} height={1080} />
+      <Composition id="KKEP1-Sting" component={KK_ChannelSting} durationInFrames={KK_CHANNELSTING_FRAMES} fps={30} width={1920} height={1080} />
+      <Composition id="KKEP1-VeoIntro" component={KK_Veo_Intro} durationInFrames={KK_VEO_INTRO_FRAMES} fps={30} width={1920} height={1080} />
+      <Composition id="KKEP1-ColdOpen" component={KK_ColdOpen} durationInFrames={KK_COLDOPEN_FRAMES} fps={30} width={1920} height={1080} />
+      <Composition id="KKEP1-S2" component={KK_S2_PiP} durationInFrames={KK_S2_PIP_FRAMES} fps={30} width={1920} height={1080} />
+      <Composition id="KKEP1-S3" component={KK_S3_L30} durationInFrames={KK_S3_L30_FRAMES} fps={30} width={1920} height={1080} />
+      <Composition id="KKEP1-S4" component={KK_S4_Roadmap} durationInFrames={KK_S4_ROADMAP_FRAMES} fps={30} width={1920} height={1080} />
+      <Composition id="KKEP1-S5" component={KK_S5_PiP} durationInFrames={KK_S5_PIP_FRAMES} fps={30} width={1920} height={1080} />
+      <Composition id="KKEP1-S6" component={KK_S6_MCP} durationInFrames={KK_S6_FRAMES} fps={30} width={1920} height={1080} />
+      <Composition id="KKEP1-S7" component={KK_S7_PiP} durationInFrames={KK_S7_PIP_FRAMES} fps={30} width={1920} height={1080} />
+      <Composition id="KKEP1-S8" component={KK_S8_PiP} durationInFrames={KK_S8_PIP_FRAMES} fps={30} width={1920} height={1080} />
+      <Composition id="KKEP1-S9" component={KK_S9_PiP} durationInFrames={KK_S9_PIP_FRAMES} fps={30} width={1920} height={1080} />
+      <Composition id="KKEP1-S10" component={KK_S10_PiP} durationInFrames={KK_S10_PIP_FRAMES} fps={30} width={1920} height={1080} />
+      <Composition id="KKEP1-S11" component={KK_S11_Apply} durationInFrames={KK_S11_APPLY_FRAMES} fps={30} width={1920} height={1080} />
+      <Composition id="KKEP1-VeoOutro" component={KK_Veo_Outro} durationInFrames={KK_VEO_OUTRO_FRAMES} fps={30} width={1920} height={1080} />
+      <Composition id="KKEP1-EndSting" component={KK_EndSting} durationInFrames={KK_ENDSTING_FRAMES} fps={30} width={1920} height={1080} />
+
       {/* ── STOCK BRAIN 시그니처 인트로 (PostFX 적용) ── */}
       <Composition
         id="StockBrain-Intro"

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * KK_S1_L30 — S1 훅 씬 (LIFE 3.0 × 역동적 오버레이)
  *
  * 838프레임 = 27.93s @ 30fps
@@ -639,7 +639,7 @@ export const KK_S1_L30: React.FC = () => {
         textTransform: 'uppercase', opacity: 0.36,
         zIndex: 50,
       }}>
-        로또의 주식인사이트
+        STOCKBRAIN
       </div>
 
     </AbsoluteFill>
