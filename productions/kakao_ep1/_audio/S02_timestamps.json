@@ -1,8 +1,193 @@
 {
   "scene": "S02",
-  "source_file": "s2 녹화본.mkv",
-  "total_sec": 0,
-  "total_frames": 0,
+  "source_file": "s2 녹화+음성.mp4",
+  "total_sec": 58.4,
+  "total_frames": 1752,
   "fps": 30,
-  "segments": []
+  "segments": [
+    {
+      "index": 1,
+      "text": "반갑습니다.",
+      "start_sec": 0.0,
+      "end_sec": 1.32,
+      "start_frame": 0,
+      "end_frame": 40
+    },
+    {
+      "index": 2,
+      "text": "스탑브레인입니다.",
+      "start_sec": 2.06,
+      "end_sec": 2.8,
+      "start_frame": 62,
+      "end_frame": 84
+    },
+    {
+      "index": 3,
+      "text": "자,",
+      "start_sec": 3.52,
+      "end_sec": 3.52,
+      "start_frame": 106,
+      "end_frame": 106
+    },
+    {
+      "index": 4,
+      "text": "아침에 우리 눈 뜨자마자 주식 하시는 분들 솔직히",
+      "start_sec": 4.08,
+      "end_sec": 7.32,
+      "start_frame": 122,
+      "end_frame": 220
+    },
+    {
+      "index": 5,
+      "text": "다 똑같죠?",
+      "start_sec": 7.32,
+      "end_sec": 8.58,
+      "start_frame": 220,
+      "end_frame": 257
+    },
+    {
+      "index": 6,
+      "text": "폰부터 잡고 하루를 시작합니다.",
+      "start_sec": 8.94,
+      "end_sec": 10.9,
+      "start_frame": 268,
+      "end_frame": 327
+    },
+    {
+      "index": 7,
+      "text": "어제 종배하신 분들,",
+      "start_sec": 11.64,
+      "end_sec": 12.86,
+      "start_frame": 349,
+      "end_frame": 386
+    },
+    {
+      "index": 8,
+      "text": "야간 선물 어떻게 됐는지 긴장하면서 보실 거고요.",
+      "start_sec": 13.42,
+      "end_sec": 16.6,
+      "start_frame": 403,
+      "end_frame": 498
+    },
+    {
+      "index": 9,
+      "text": "미국장 어떻게 됐는지 쓱 봐야 되고,",
+      "start_sec": 17.04,
+      "end_sec": 19.58,
+      "start_frame": 511,
+      "end_frame": 587
+    },
+    {
+      "index": 10,
+      "text": "내가 가진 종목들, 뉴스 뜬 거 있나 막 뒤져봐야",
+      "start_sec": 19.82,
+      "end_sec": 22.5,
+      "start_frame": 595,
+      "end_frame": 675
+    },
+    {
+      "index": 11,
+      "text": "되죠?",
+      "start_sec": 22.5,
+      "end_sec": 23.34,
+      "start_frame": 675,
+      "end_frame": 700
+    },
+    {
+      "index": 12,
+      "text": "텔레그램이랑 유튜브 시황 그런 거 보다 보면",
+      "start_sec": 24.2,
+      "end_sec": 27.2,
+      "start_frame": 726,
+      "end_frame": 816
+    },
+    {
+      "index": 13,
+      "text": "정신없이 8시가 금세 됩니다.",
+      "start_sec": 27.2,
+      "end_sec": 28.88,
+      "start_frame": 816,
+      "end_frame": 866
+    },
+    {
+      "index": 14,
+      "text": "정작 제일 중요한 장 열릴 때는 눈도 침침하고",
+      "start_sec": 28.88,
+      "end_sec": 33.06,
+      "start_frame": 866,
+      "end_frame": 992
+    },
+    {
+      "index": 15,
+      "text": "머리도 잘 안 돌아가잖아요.",
+      "start_sec": 33.06,
+      "end_sec": 35.0,
+      "start_frame": 992,
+      "end_frame": 1050
+    },
+    {
+      "index": 16,
+      "text": "아침부터 준비가 안 된 상황이라서 다 그런 겁니다.",
+      "start_sec": 35.5,
+      "end_sec": 39.0,
+      "start_frame": 1065,
+      "end_frame": 1170
+    },
+    {
+      "index": 17,
+      "text": "그래서 결국 장 초반부터 허둥지둥 하다가 계획도",
+      "start_sec": 39.48,
+      "end_sec": 43.2,
+      "start_frame": 1184,
+      "end_frame": 1296
+    },
+    {
+      "index": 18,
+      "text": "없던 뇌동매매로 하루를 꼬이면서 시작을 하게 되는",
+      "start_sec": 43.2,
+      "end_sec": 46.18,
+      "start_frame": 1296,
+      "end_frame": 1385
+    },
+    {
+      "index": 19,
+      "text": "거죠.",
+      "start_sec": 46.18,
+      "end_sec": 46.6,
+      "start_frame": 1385,
+      "end_frame": 1398
+    },
+    {
+      "index": 20,
+      "text": "제 말이 맞나요? 매일 아침 반복되는 이 지독한",
+      "start_sec": 47.44,
+      "end_sec": 50.88,
+      "start_frame": 1423,
+      "end_frame": 1526
+    },
+    {
+      "index": 21,
+      "text": "정보수집 노가다들,",
+      "start_sec": 50.88,
+      "end_sec": 52.54,
+      "start_frame": 1526,
+      "end_frame": 1576
+    },
+    {
+      "index": 22,
+      "text": "이제 클로드한테 통째로 외주 맡기자고요. 진짜 쉽게",
+      "start_sec": 52.92,
+      "end_sec": 57.0,
+      "start_frame": 1588,
+      "end_frame": 1710
+    },
+    {
+      "index": 23,
+      "text": "끝납니다. 한번 보세요.",
+      "start_sec": 57.0,
+      "end_sec": 58.4,
+      "start_frame": 1710,
+      "end_frame": 1752
+    }
+  ]
 }

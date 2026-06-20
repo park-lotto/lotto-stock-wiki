@@ -49,26 +49,24 @@ const STEPS = [
   { at: 995, label: '코워크 탭 확인' },
 ];
 
-// 줌 키프레임 [frame, focusX(0~1), focusY(0~1), scale]
-const KF = [0, 329, 523, 731, 995, 1211, 1510, 2545];
-const FX = [0.5, 0.5, 0.5, 0.5, 0.16, 0.16, 0.5, 0.5];
-const FY = [0.52, 0.54, 0.55, 0.58, 0.12, 0.12, 0.5, 0.5];
-const SC = [1.22, 1.26, 1.30, 1.22, 1.48, 1.35, 1.06, 1.06];
+// 줌 키프레임 — STEP 안에서 완전히 고정, 컷(플래시)에서만 순간 변경
+// [직전f, 컷f] 쌍으로 동일 값 유지 → 배경 떨림 완전 제거
+const KF = [0, 328, 329, 522, 523, 730, 731, 994, 995, 1210, 1211, 1509, 1510, 2545];
+const FX = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.16, 0.16, 0.16, 0.16, 0.5, 0.5];
+const FY = [0.52, 0.52, 0.54, 0.54, 0.55, 0.55, 0.58, 0.58, 0.12, 0.12, 0.12, 0.12, 0.5, 0.5];
+const SC = [1.22, 1.22, 1.26, 1.26, 1.30, 1.30, 1.22, 1.22, 1.48, 1.48, 1.35, 1.35, 1.06, 1.06];
 
 export const KK_S5_PiP: React.FC = () => {
   const f = useCurrentFrame();
 
   const fx = interpolate(f, KF, FX, { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
   const fy = interpolate(f, KF, FY, { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-  let sc = interpolate(f, KF, SC, { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-  // 단계 시작마다 살짝 펀치 (드리프트 제거)
-  const stepStart = STEPS.find((s) => f >= s.at && f < s.at + 16);
-  if (stepStart) sc += (1 - pop(f, stepStart.at, { damping: 9 })) * 0.04;
+  const sc = interpolate(f, KF, SC, { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 
   const step = STEPS.reduce((acc, s, i) => (f >= s.at ? i : acc), 0);
 
-  // 단계 전환 카드 (각 STEP 시작 0.7초)
-  const trans = STEPS.find((s) => f >= s.at && f < s.at + 22);
+  // 단계 전환 카드 (각 STEP 시작 1.5초)
+  const trans = STEPS.find((s) => f >= s.at && f < s.at + 45);
 
   // 가치 카드 ($19) — 마지막 "월 3만원" 라인(f2465)에서만
   const showVal = f >= 2455;
@@ -99,8 +97,8 @@ export const KK_S5_PiP: React.FC = () => {
       {/* 단계 전환 컷 카드 */}
       {trans && (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-          <div style={{ position: 'absolute', inset: 0, background: '#000', opacity: cl(f, trans.at, trans.at + 4) * cl(f, trans.at + 14, trans.at + 22, 1, 0) * 0.74 }} />
-          <div style={{ opacity: cl(f, trans.at, trans.at + 5) * cl(f, trans.at + 16, trans.at + 22, 1, 0), transform: `scale(${0.8 + pop(f, trans.at, { damping: 8 }) * 0.2})`, textAlign: 'center' }}>
+          <div style={{ position: 'absolute', inset: 0, background: '#000', opacity: cl(f, trans.at, trans.at + 4) * cl(f, trans.at + 36, trans.at + 45, 1, 0) * 0.74 }} />
+          <div style={{ opacity: cl(f, trans.at, trans.at + 5) * cl(f, trans.at + 38, trans.at + 45, 1, 0), transform: `scale(${0.8 + pop(f, trans.at, { damping: 8 }) * 0.2})`, textAlign: 'center' }}>
             <div style={{ fontFamily: NUM, fontSize: 130, fontWeight: 900, color: LIME, lineHeight: 0.9, textShadow: `0 0 40px ${LIME}` }}>
               STEP {step + 1}
             </div>

@@ -1,75 +1,136 @@
-﻿/**
- * KK_S9_PiP — 플러그인 패키징 (1412f · 화면녹화 배경)
- * Whisper 7세그 자막 + Before(긴 프롬프트) → After(/브리핑) 대비.
+/**
+ * KK_S9_PiP — 플러그인 패키징 (1412f · 튜토리얼 모드 v3 "액션 줌인")
+ * S5/S7/S8과 동일 아키텍처: 풀스크린 녹화 + 단계별 줌 + 단계 전환 카드
+ * + 화면 밖 자막(S09_timestamps 1:1) + 패키징완료/카톡도착 클라이맥스.
  *
- * 에셋 도착 후: BG = 'kakao/ep1/s09_bg.mp4'
+ * 자막 = S09_timestamps.json 1:1 (긴 세그만 분할). ASR 교정: 날벗→날것 / 이를→일을 / 간다는→간단한 / 카토로→카톡으로.
  */
 
 import React from 'react';
-import { SceneBase } from './SceneBase';
-import { LIME, RED } from './theme';
-import { pop, cl, Sfx, type Sub } from './fx';
+import { AbsoluteFill, OffthreadVideo, staticFile, useCurrentFrame, interpolate } from 'remotion';
+import { cl, pop, flashAt, shake, Sfx } from './fx';
+import { Watermark, LifeSubBar, ClaudeIcon, LIME } from './life';
 
 export const KK_S9_PIP_FRAMES = 1412;
 
-const BG = 'kakao/ep1/s09_bg.mp4'; // ✅ 활성화
+const NUM = "'Archivo',sans-serif";
+const MONO = "'Space Mono','Roboto Mono',monospace";
 
-const SUBS: Sub[] = [
-  { from: 0, to: 221, text: '이걸 매일 반복하면 그것도 일이잖아요.', accent: '매일 반복' },
-  { from: 221, to: 426, text: '하나로 패키징해서, 한 줄 명령으로 실행합니다.', accent: '한 줄 명령' },
-  { from: 426, to: 678, text: '클로드는 자연어로 대화만 해도 코딩을 짜줍니다.', accent: '자연어' },
-  { from: 678, to: 820, text: '복잡한 것 없이 날것 그대로 해볼게요.', accent: '날것 그대로' },
-  { from: 820, to: 1066, text: '"방금 만든 아침 브리핑을 플러그인으로 패키징해줘"', accent: '패키징해줘' },
-  { from: 1066, to: 1253, text: '작업 완료! 카톡으로 보냈다고 하네요.', accent: '작업 완료' },
-  { from: 1253, to: 1412, text: '브리핑이 잘 들어왔습니다. 좋습니다.', accent: '잘 들어왔습니다' },
+// S09_timestamps 7세그 1:1 — 긴 세그(1·2·3·5·6)만 자연 위치 분할(프레임 비례)
+const SUBS = [
+  { from: 0, to: 120, text: '자 지금까지 만든 걸 이제 매일 반복해서 해줄 건데', accent: '매일 반복' },
+  { from: 120, to: 221, text: '이것도 처음부터 하려면 정말 큰일입니다', accent: '큰일' },
+  { from: 221, to: 330, text: '첫 번째로는 이걸 하나의 패키징으로 묶어서', accent: '패키징' },
+  { from: 330, to: 426, text: '언제든 간단한 명령으로 바로 일을 시키는 겁니다', accent: '간단한 명령' },
+  { from: 426, to: 550, text: '클로드의 가장 큰 장점은 초보자인 여러분들도', accent: '초보자' },
+  { from: 550, to: 678, text: '일상 자연어로만 대화해도 쉽게 코딩을 짜준다는 겁니다', accent: '자연어' },
+  { from: 678, to: 820, text: '복잡한 것 없이 날것 그대로 한번 해보겠습니다', accent: '날것 그대로' },
+  { from: 820, to: 940, text: '채팅창에 이렇게 한번 넣어 보겠습니다', accent: '채팅창' },
+  { from: 940, to: 1066, text: '방금 만든 아침 브리핑을 플러그인으로 패키징 해줘', accent: '패키징 해줘' },
+  { from: 1066, to: 1150, text: '작업이 완료되었습니다', accent: '완료' },
+  { from: 1150, to: 1253, text: '카톡으로 보냈다고 하는데 한번 보겠습니다', accent: '카톡으로' },
+  { from: 1253, to: 1412, text: '지금 브리핑이 잘 들어왔네요. 좋습니다', accent: '잘 들어왔네요' },
 ];
 
-export const KK_S9_PiP: React.FC = () => (
-  <SceneBase video={BG} subs={SUBS} dim={0.12}>
-    {(f) => {
-      const beforeOp = cl(f, 40, 70) * cl(f, 660, 700, 1, 0);
-      const afterOp = cl(f, 700, 740);
-      const afterPunch = pop(f, 700, { damping: 9, stiffness: 220 });
-      const doneOp = cl(f, 1066, 1096) * cl(f, 1380, 1412, 1, 0.3);
-      const donePunch = pop(f, 1066, { damping: 8, stiffness: 240 });
+const STEPS = [
+  { at: 0, label: '매일 반복 자동화' },
+  { at: 678, label: '자연어로 패키징' },
+  { at: 1066, label: '완료 → 카톡 도착' },
+];
 
-      return (
-        <>
-          <Sfx at={700} file="transition_swipe.mp3" vol={0.4} />
-          <Sfx at={1066} file="chime_up.mp3" vol={0.4} />
-          <Sfx at={1253} file="kakao_ding.mp3" vol={0.5} />
+// 줌 키프레임 — STEP 안에서 완전히 고정, 컷(플래시)에서만 순간 변경 (S5/S7/S8 동일 원칙)
+const KF = [0, 677, 678, 1065, 1066, 1412];
+const FX = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
+const FY = [0.48, 0.48, 0.55, 0.55, 0.45, 0.45];
+const SC = [1.12, 1.12, 1.14, 1.14, 1.14, 1.14];
 
-          {/* Before: 긴 반복 작업 */}
-          {f < 700 && (
-            <div style={{ position: 'absolute', top: 150, left: '50%', transform: 'translateX(-50%)', opacity: beforeOp, width: 760, padding: '26px 30px', background: 'rgba(0,0,0,0.84)', border: `2px solid ${RED}`, borderRadius: 16 }}>
-              <div style={{ fontFamily: "'Roboto Mono', monospace", fontSize: 13, letterSpacing: 4, color: RED, marginBottom: 16 }}>BEFORE · 매일 반복</div>
-              {['MCP 연결 확인', '프롬프트 다시 입력', '종목·조건 재설정', '검색·허용 클릭', '결과 카톡 확인'].map((t, i) => (
-                <div key={i} style={{ fontSize: 22, fontWeight: 600, color: 'rgba(255,255,255,0.75)', padding: '8px 0', display: 'flex', gap: 12 }}>
-                  <span style={{ color: RED }}>↻</span> {t}
-                </div>
-              ))}
+export const KK_S9_PiP: React.FC = () => {
+  const f = useCurrentFrame();
+
+  const fx = interpolate(f, KF, FX, { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const fy = interpolate(f, KF, FY, { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const sc = interpolate(f, KF, SC, { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+
+  const step = STEPS.reduce((acc, s, i) => (f >= s.at ? i : acc), 0);
+
+  // 단계 전환 카드 (각 STEP 시작 1.5초)
+  const trans = STEPS.find((s) => f >= s.at && f < s.at + 45);
+
+  // 패키징 완료 배지 (1066~1250)
+  const doneOp = cl(f, 1069, 1096) * cl(f, 1210, 1250, 1, 0);
+  // 카톡 브리핑 도착 클라이맥스 (1253~1412)
+  const kakaoOp = cl(f, 1256, 1284) * cl(f, 1380, 1412, 1, 0);
+  const kakaoShake = shake(f, 1256, 14, 4);
+
+  return (
+    <AbsoluteFill style={{ background: '#000', fontFamily: "'Noto Sans KR', sans-serif", overflow: 'hidden' }}>
+      {/* 풀스크린 녹화 + 줌 */}
+      <OffthreadVideo
+        src={staticFile('kakao/ep1/s09_bg.mp4')}
+        style={{ width: '100%', height: '100%', objectFit: 'cover', transform: `scale(${sc})`, transformOrigin: `${fx * 100}% ${fy * 100}%` }}
+      />
+
+      {/* 상단/하단 미세 스크림 */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 90, background: 'linear-gradient(rgba(0,0,0,0.55), transparent)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 200, background: 'linear-gradient(transparent, rgba(0,0,0,0.85))', pointerEvents: 'none' }} />
+
+      {/* 상단 얇은 진행바 (3단계) */}
+      <div style={{ position: 'absolute', top: 22, left: 56, right: 56, display: 'flex', gap: 8 }}>
+        {STEPS.map((_, i) => (
+          <div key={i} style={{ flex: 1, height: 5, borderRadius: 3, background: i <= step ? LIME : 'rgba(255,255,255,0.18)', boxShadow: i <= step ? `0 0 8px ${LIME}` : 'none' }} />
+        ))}
+      </div>
+      <div style={{ position: 'absolute', top: 38, left: 56, fontFamily: MONO, fontSize: 16, letterSpacing: 3, color: LIME }}>
+        STEP {String(step + 1).padStart(2, '0')}/03 · 플러그인 패키징
+      </div>
+
+      {/* 단계 전환 컷 카드 */}
+      {trans && (
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+          <div style={{ position: 'absolute', inset: 0, background: '#000', opacity: cl(f, trans.at, trans.at + 4) * cl(f, trans.at + 36, trans.at + 45, 1, 0) * 0.74 }} />
+          <div style={{ opacity: cl(f, trans.at, trans.at + 5) * cl(f, trans.at + 38, trans.at + 45, 1, 0), transform: `scale(${0.8 + pop(f, trans.at, { damping: 8 }) * 0.2})`, textAlign: 'center' }}>
+            <div style={{ fontFamily: NUM, fontSize: 130, fontWeight: 900, color: LIME, lineHeight: 0.9, textShadow: `0 0 40px ${LIME}` }}>
+              STEP {step + 1}
             </div>
-          )}
+            <div style={{ fontSize: 56, fontWeight: 900, color: '#fff', marginTop: 10, letterSpacing: -1 }}>{STEPS[step].label}</div>
+          </div>
+        </div>
+      )}
 
-          {/* After: /브리핑 한 줄 */}
-          {f >= 700 && f < 1066 && (
-            <div style={{ position: 'absolute', top: 220, left: '50%', transform: `translateX(-50%) scale(${0.9 + afterPunch * 0.1})`, opacity: afterOp, textAlign: 'center' }}>
-              <div style={{ fontFamily: "'Roboto Mono', monospace", fontSize: 15, letterSpacing: 5, color: LIME, marginBottom: 22 }}>AFTER · 패키징 한 방</div>
-              <div style={{ display: 'inline-block', fontFamily: "'Roboto Mono', monospace", fontSize: 64, fontWeight: 900, color: '#fff', padding: '24px 56px', background: 'rgba(0,0,0,0.85)', border: `2.5px solid ${LIME}`, borderRadius: 16, boxShadow: '0 0 40px rgba(170,255,0,0.3)' }}>
-                <span style={{ color: LIME }}>/브리핑</span>
-              </div>
-              <div style={{ fontSize: 24, color: 'rgba(255,255,255,0.6)', marginTop: 22 }}>새 창에서도 이 한 줄이면 끝</div>
-            </div>
-          )}
+      {/* 컷 플래시 */}
+      {STEPS.map((s) => (
+        <div key={s.at} style={{ position: 'absolute', inset: 0, background: '#fff', opacity: flashAt(f, s.at, 8, 0.4), pointerEvents: 'none' }} />
+      ))}
 
-          {/* 완료 배지 */}
-          {f >= 1066 && (
-            <div style={{ position: 'absolute', top: '38%', left: '50%', transform: `translate(-50%,-50%) scale(${0.85 + donePunch * 0.15})`, opacity: doneOp, padding: '22px 44px', background: 'rgba(0,0,0,0.85)', border: `2.5px solid ${LIME}`, borderRadius: 16, fontSize: 38, fontWeight: 900, color: LIME, boxShadow: '0 0 34px rgba(170,255,0,0.4)' }}>
-              📦 플러그인 패키징 완료 → 💬 카톡 도착
-            </div>
-          )}
-        </>
-      );
-    }}
-  </SceneBase>
-);
+      {/* 패키징 완료 배지 */}
+      {f >= 1066 && f < 1253 && (
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 150, pointerEvents: 'none' }}>
+          <div style={{ opacity: doneOp, transform: `scale(${0.86 + pop(f, 1069, { damping: 9 }) * 0.14})`, display: 'flex', alignItems: 'center', gap: 14, padding: '16px 34px', borderRadius: 999, background: 'rgba(20,16,14,0.92)', border: `2px solid ${LIME}`, boxShadow: `0 0 44px rgba(170,255,0,0.32)` }}>
+            <span style={{ fontSize: 34 }}>📦</span>
+            <span style={{ fontSize: 36, fontWeight: 900, color: '#fff' }}>플러그인 <span style={{ color: LIME }}>패키징 완료</span></span>
+          </div>
+        </div>
+      )}
+
+      {/* 카톡 브리핑 도착 클라이맥스 */}
+      {f >= 1253 && (
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 150, pointerEvents: 'none' }}>
+          <div style={{ opacity: kakaoOp, transform: `translate(${kakaoShake.x}px, ${kakaoShake.y}px) scale(${0.86 + pop(f, 1256, { damping: 9 }) * 0.14})`, display: 'flex', alignItems: 'center', gap: 16, padding: '18px 36px', borderRadius: 999, background: 'rgba(20,16,14,0.92)', border: `2px solid ${LIME}`, boxShadow: `0 0 50px rgba(170,255,0,0.35)` }}>
+            <ClaudeIcon size={40} />
+            <span style={{ fontSize: 40, fontWeight: 900, color: '#fff' }}>카톡 <span style={{ color: LIME }}>브리핑 도착!</span></span>
+          </div>
+        </div>
+      )}
+
+      <Sfx at={1069} file="chime_up.mp3" vol={0.35} />
+      <Sfx at={1256} file="kakao_ding.mp3" vol={0.5} />
+      {STEPS.map((s) => (
+        <Sfx key={s.at} at={s.at} file="tick.mp3" vol={0.22} />
+      ))}
+
+      <LifeSubBar f={f} subs={SUBS} />
+      <Watermark />
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, background: '#FF4455', boxShadow: '0 0 12px #FF4455' }} />
+    </AbsoluteFill>
+  );
+};
