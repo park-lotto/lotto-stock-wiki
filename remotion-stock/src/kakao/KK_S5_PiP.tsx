@@ -52,8 +52,8 @@ const STEPS = [
 // 줌 키프레임 [frame, focusX(0~1), focusY(0~1), scale]
 const KF = [0, 329, 523, 731, 995, 1211, 1510, 2545];
 const FX = [0.5, 0.5, 0.5, 0.5, 0.16, 0.16, 0.5, 0.5];
-const FY = [0.42, 0.46, 0.5, 0.56, 0.1, 0.1, 0.5, 0.5];
-const SC = [1.32, 1.36, 1.4, 1.32, 1.55, 1.4, 1.06, 1.06];
+const FY = [0.52, 0.54, 0.55, 0.58, 0.12, 0.12, 0.5, 0.5];
+const SC = [1.22, 1.26, 1.30, 1.22, 1.48, 1.35, 1.06, 1.06];
 
 export const KK_S5_PiP: React.FC = () => {
   const f = useCurrentFrame();
@@ -61,10 +61,9 @@ export const KK_S5_PiP: React.FC = () => {
   const fx = interpolate(f, KF, FX, { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
   const fy = interpolate(f, KF, FY, { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
   let sc = interpolate(f, KF, SC, { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-  // 단계 시작마다 살짝 펀치 + 미세 드리프트
+  // 단계 시작마다 살짝 펀치 (드리프트 제거)
   const stepStart = STEPS.find((s) => f >= s.at && f < s.at + 16);
-  if (stepStart) sc += (1 - pop(f, stepStart.at, { damping: 7 })) * 0.06;
-  sc += Math.sin(f * 0.02) * 0.006;
+  if (stepStart) sc += (1 - pop(f, stepStart.at, { damping: 9 })) * 0.04;
 
   const step = STEPS.reduce((acc, s, i) => (f >= s.at ? i : acc), 0);
 
