@@ -32,6 +32,12 @@ CREATE TABLE IF NOT EXISTS atoms (
     -- 관계 그래프 (JSON: [{type, target_id}])
     relations TEXT DEFAULT '[]',
 
+    -- 텔레그램 2층 모델 필드
+    stance_key TEXT,
+    mention_channels TEXT,
+    mention_count INTEGER DEFAULT 1,
+    msg_ts TEXT,
+
     created_at TEXT NOT NULL,
     updated_at TEXT
 );
@@ -43,3 +49,4 @@ CREATE INDEX IF NOT EXISTS idx_atoms_asset ON atoms(asset);
 CREATE INDEX IF NOT EXISTS idx_atoms_is_active ON atoms(is_active);
 CREATE INDEX IF NOT EXISTS idx_atoms_validity ON atoms(validity_until);
 CREATE INDEX IF NOT EXISTS idx_atoms_source_trust ON atoms(source_trust);
+CREATE INDEX IF NOT EXISTS idx_atoms_stance_key ON atoms(stance_key);

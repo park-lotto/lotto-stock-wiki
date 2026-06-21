@@ -7,6 +7,13 @@ from typing import Optional
 DB_PATH = Path(__file__).parent.parent.parent / "pipeline" / "atoms" / "atoms.db"
 SCHEMA_PATH = Path(__file__).parent / "schema.sql"
 
+_TG_COLUMNS = [
+    ("stance_key", "TEXT"),
+    ("mention_channels", "TEXT"),
+    ("mention_count", "INTEGER DEFAULT 1"),
+    ("msg_ts", "TEXT"),
+]
+
 
 def get_conn() -> sqlite3.Connection:
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -22,11 +29,28 @@ def init_db():
     conn.close()
 
 
+def migrate_db():
+    """기존 DB에 텔레그램 필드 멱등 추가 (이미 있으면 무시)."""
+    conn = get_conn()
+    for name, decl in _TG_COLUMNS:
+        try:
+            conn.execute(f"ALTER TABLE atoms ADD COLUMN {name} {decl}")
+        except sqlite3.OperationalError:
+            pass  # 이미 존재
+    conn.commit()
+    conn.close()
+
+
 def insert_atom(atom: dict) -> str:
     a = dict(atom)
     if isinstance(a.get("relations"), list):
         a["relations"] = json.dumps(a["relations"], ensure_ascii=False)
     a.setdefault("created_at", datetime.now().isoformat())
+    a.setdefault("stance_key", None)
+    a.setdefault("mention_count", 1)
+    a.setdefault("msg_ts", None)
+    mc = a.get("mention_channels")
+    a["mention_channels"] = json.dumps(mc, ensure_ascii=False) if isinstance(mc, list) else mc
     conn = get_conn()
     conn.execute(
         """
@@ -35,13 +59,15 @@ def insert_atom(atom: dict) -> str:
          layer, sector, asset, asset_level,
          signal, event_type, magnitude, content_type, strength_score,
          validity_type, validity_until, is_active,
-         content, relations, created_at)
+         content, relations, created_at,
+         stance_key, mention_channels, mention_count, msg_ts)
         VALUES
         (:id, :date, :source_type, :source_name, :source_trust, :raw_file,
          :layer, :sector, :asset, :asset_level,
          :signal, :event_type, :magnitude, :content_type, :strength_score,
          :validity_type, :validity_until, :is_active,
-         :content, :relations, :created_at)
+         :content, :relations, :created_at,
+         :stance_key, :mention_channels, :mention_count, :msg_ts)
         """,
         a,
     )
