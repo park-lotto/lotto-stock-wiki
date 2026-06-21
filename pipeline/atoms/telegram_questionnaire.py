@@ -89,7 +89,7 @@ def _norm_sector(s: str) -> str:
 
 def _base(meta: dict, **kw) -> dict:
     d = {
-        "id": "", "date": meta["date"], "source_type": "telegram",
+        "id": "", "date": meta["date"], "source_type": meta.get("source_type", "telegram"),
         "source_name": meta["channel"], "source_trust": meta.get("trust", "C"),
         "raw_file": meta.get("raw_file", ""), "layer": "L5",
         "sector": meta.get("sector") or "기타", "asset": "", "asset_level": "sector",
