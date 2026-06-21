@@ -56,3 +56,49 @@ def test_event_key_groups_same_fact():
 def test_strength_caps_at_4():
     assert _strength("B", "fact", mention_count=10) <= 4
     assert _strength("C", "stance", mention_count=1) >= 1
+
+
+def test_report_relay_korean_yes_foreign_no():
+    """report_relay: 한국주(삼성전자)는 종목원자 생성, 외국주(마이크론)는 생성 안 됨."""
+    q = {
+        "reports": [
+            {"stock": "삼성전자", "broker": "한화", "rating": "BUY",
+             "tp": "100000", "ts": "09:00", "quote": "목표가 상향"},
+            {"stock": "마이크론", "broker": "한화", "rating": "BUY",
+             "tp": "150", "ts": "09:05", "quote": "AI 수혜"},
+        ],
+        "quote": "반도체 업황 개선세",
+    }
+    meta = {"date": "2026-06-19", "channel": "신한리서치",
+            "type": "report_relay", "trust": "B"}
+    atoms = questionnaire_to_atoms_tg(q, meta)
+    stock_atoms = [a for a in atoms if a["asset_level"] == "stock"]
+    names = {a["asset"] for a in stock_atoms}
+    # 한국주는 종목원자 생성
+    assert "삼성전자" in names
+    # 외국주는 종목원자 없음
+    assert "마이크론" not in names
+    # content에 broker / 목표가 흔적 포함
+    se_atom = next(a for a in stock_atoms if a["asset"] == "삼성전자")
+    assert "한화" in se_atom["content"] or "100000" in se_atom["content"]
+
+
+def test_stock_tips_quote_takes_priority_over_reason():
+    """stock_tips: quote와 reason이 다를 때 quote가 content에 포함되고 reason은 포함 안 됨."""
+    q = {
+        "stocks": [
+            {"name": "삼성전자", "signal": "bull",
+             "reason": "리즌텍스트ABC", "ts": "10:00", "quote": "인용텍스트XYZ"},
+        ],
+        "news_items": [],
+        "quote": "시장 전반 긍정",
+    }
+    meta = {"date": "2026-06-19", "channel": "테스트채널",
+            "type": "stock_tips", "trust": "B"}
+    atoms = questionnaire_to_atoms_tg(q, meta)
+    stock_atoms = [a for a in atoms if a["asset_level"] == "stock"]
+    assert stock_atoms, "삼성전자 종목원자가 생성되어야 함"
+    content = stock_atoms[0]["content"]
+    # quote 우선: 인용텍스트XYZ 포함, 리즌텍스트ABC 미포함
+    assert "인용텍스트XYZ" in content
+    assert "리즌텍스트ABC" not in content

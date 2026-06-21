@@ -1,11 +1,14 @@
 """텔레그램 타입별 질문지 프롬프트 + Gemini 추출."""
+import hashlib
 import json
+import re as _re
 from pathlib import Path
 
 from google import genai
 from google.genai import types
 
 from .atomizer import _load_gemini_key
+from .stock_resolve import resolve_stock
 
 _MODEL = "gemini-3.1-flash-lite"
 
@@ -47,11 +50,6 @@ noise_ratio(0~1 추정), quote(가장 통찰력 있는 한 문장)""",
 칸: reports:[{broker, stock, rating, tp, ts, quote}], quote""",
 }
 
-
-import hashlib
-import re as _re
-
-from .stock_resolve import resolve_stock
 
 _TRUST_BASE = {"A": 4, "B": 3, "C": 2, "D": 1}
 _LAYER_W = {"fact": 1.0, "stance": 0.8, "method": 0.7}
