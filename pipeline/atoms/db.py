@@ -27,6 +27,7 @@ def init_db():
     conn.executescript(SCHEMA_PATH.read_text(encoding="utf-8"))
     conn.commit()
     conn.close()
+    migrate_db()
 
 
 def migrate_db():
