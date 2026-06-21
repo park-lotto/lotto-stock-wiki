@@ -1,4 +1,5 @@
 """리포트 질문지 추출 — Gemini가 PDF를 고정 슬롯에 옮긴다."""
+import hashlib
 import json
 from pathlib import Path
 
@@ -6,6 +7,7 @@ from google import genai
 from google.genai import types
 
 from .atomizer import _load_gemini_key
+from .codemap import is_korean_stock
 
 _MODEL = "gemini-3.1-flash-lite"
 
@@ -85,3 +87,150 @@ def extract_questionnaire(pdf_path: Path) -> dict:
             client.files.delete(name=fobj.name)
         except Exception:
             pass
+
+
+# ─────────────────────────────────────────────────────────────────
+# 질문지 → 원자 변환 (fan-out)
+# ─────────────────────────────────────────────────────────────────
+
+_SECTOR_LIST = [
+    "반도체", "조선", "로봇", "방산", "바이오", "전력", "2차전지",
+    "자동차", "통신", "AI소프트웨어", "우주", "소비내수", "미용",
+    "LNG", "신재생", "기타",
+]
+
+
+def _norm_sector(s: str) -> str:
+    if not s:
+        return "기타"
+    for k in _SECTOR_LIST:
+        if k in s:
+            return k
+    return "기타"
+
+
+def _mk_id(date: str, broker: str, tag: str, i: int) -> str:
+    raw = f"{date}_{broker}_{tag}_{i}"
+    return "atom_" + hashlib.md5(raw.encode()).hexdigest()[:12]
+
+
+def _base(meta: dict, **kw) -> dict:
+    """원자 공통 필드 + 기본값. kw로 덮어쓴다."""
+    d = {
+        "date": meta["date"],
+        "source_type": "report",
+        "source_name": meta["broker"],
+        "source_trust": "A",
+        "raw_file": meta["raw_file"],
+        "layer": "L5",
+        "sector": "기타",
+        "asset": "",
+        "asset_level": "stock",
+        "signal": "neutral",
+        "event_type": "report",
+        "magnitude": "minor",
+        "content_type": "analysis",
+        "strength_score": 1,
+        "validity_type": "permanent",
+        "validity_until": None,
+        "is_active": 1,
+        "content": "",
+        "relations": [],
+    }
+    d.update(kw)
+    return d
+
+
+def _stock_atom(meta, sector, name, content, *, strong, signal, i, tag) -> dict:
+    return _base(
+        meta,
+        id=_mk_id(meta["date"], meta["broker"], tag, i),
+        sector=_norm_sector(sector),
+        asset=name,
+        asset_level="stock",
+        signal=signal,
+        magnitude="major" if strong else "minor",
+        strength_score=4 if strong else 2,
+        content=content,
+    )
+
+
+def _guess_sector_from_stock(name: str) -> str:
+    """종목 섹터 추정 — 현재는 기타. 후속에서 종목→섹터 맵 연결."""
+    return "기타"
+
+
+def questionnaire_to_atoms(q: dict, meta: dict) -> list[dict]:
+    """채워진 질문지 dict + meta → 원자 dict 리스트."""
+    kind = q.get("target_kind")
+    atoms: list[dict] = []
+
+    if kind == "stock":
+        for i, s in enumerate(q.get("stocks", [])):
+            name = (s.get("name") or "").strip()
+            if not name:
+                continue
+            sig = {"up": "bullish", "down": "bearish"}.get(s.get("tp_direction"), "neutral")
+            parts = [
+                f"투자의견 {s.get('rating')}({s.get('rating_changed') or ''})",
+                f"목표가 {s.get('tp_prev')}→{s.get('tp_new')}" if s.get("tp_new") else "",
+                s.get("earnings_outlook") or "",
+                "; ".join(s.get("thesis") or []),
+                f"리스크: {s.get('risk')}" if s.get("risk") else "",
+            ]
+            content = " / ".join(p for p in parts if p)
+            atoms.append(_stock_atom(
+                meta, _guess_sector_from_stock(name), name, content,
+                strong=bool(s.get("tp_new")), signal=sig, i=i, tag="stk",
+            ))
+
+    elif kind == "sector":
+        sec = _norm_sector(q.get("sector_name"))
+        thesis = "; ".join(q.get("thesis") or [])
+        atoms.append(_base(
+            meta,
+            id=_mk_id(meta["date"], meta["broker"], "sec", 0),
+            sector=sec, asset=q.get("sector_name") or sec, asset_level="sector",
+            signal="bullish" if "확대" in (q.get("sector_view") or "") else "neutral",
+            event_type="report", magnitude="major", strength_score=4,
+            content=f"[{q.get('sector_view')}] {thesis}",
+        ))
+        for i, p in enumerate(q.get("top_picks") or []):
+            name = (p.get("name") or "").strip()
+            if not is_korean_stock(name):
+                continue
+            atoms.append(_stock_atom(
+                meta, sec, name, f"{sec} 섹터리포트 탑픽 거론: {p.get('reason') or ''}",
+                strong=False, signal="bullish", i=i, tag="secpick",
+            ))
+
+    elif kind == "market":
+        atoms.append(_base(
+            meta,
+            id=_mk_id(meta["date"], meta["broker"], "mkt", 0),
+            sector="기타", asset="시장", asset_level="market",
+            signal="neutral", event_type="macro", magnitude="major", strength_score=3,
+            content=q.get("market_direction") or "; ".join(
+                rs.get("reason", "") for rs in q.get("recommended_sectors") or []
+            ),
+        ))
+        for i, rs in enumerate(q.get("recommended_sectors") or []):
+            sec = _norm_sector(rs.get("sector"))
+            atoms.append(_base(
+                meta,
+                id=_mk_id(meta["date"], meta["broker"], "mktsec", i),
+                sector=sec, asset=rs.get("sector") or sec, asset_level="sector",
+                signal="bullish" if "확대" in (rs.get("stance") or "") else "neutral",
+                event_type="report", magnitude="minor", strength_score=2,
+                content=f"시황리포트 추천섹터: {rs.get('reason') or ''}",
+            ))
+        for i, name in enumerate(q.get("top_picks") or []):
+            name = (name or "").strip()
+            if not is_korean_stock(name):
+                continue
+            atoms.append(_stock_atom(
+                meta, _guess_sector_from_stock(name), name,
+                "시황리포트 탑픽 거론", strong=False, signal="bullish", i=i, tag="mktpick",
+            ))
+
+    return atoms
