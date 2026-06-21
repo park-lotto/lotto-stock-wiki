@@ -23,6 +23,7 @@ def test_parse_blog_header(tmp_path):
     assert h["blogger"] == "pokara61"        # "블로그" 접미사 제거
     assert h["date"] == "2026-06-21"
     assert "blog.naver.com/pokara61/123" in h["link"]
+    assert h["title"]  # 제목(파일 stem) 존재
 
 
 def test_get_done_blog_files_basename(tmp_path):

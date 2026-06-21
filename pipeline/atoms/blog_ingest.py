@@ -57,10 +57,12 @@ def get_done_blog_files() -> set[str]:
 
 
 def get_pending_blog(date_filter: str = None) -> list[Path]:
+    if not _BLOG_DIR.exists():
+        return []
     done = get_done_blog_files()
     files = []
     for f in sorted(_BLOG_DIR.glob("*.md")):
-        if f.suffix != ".md" or "_analysis" in f.name:
+        if "_analysis" in f.name:
             continue
         m = _FNAME.match(f.stem)
         if date_filter and (not m or m.group(1) != date_filter):
@@ -98,8 +100,8 @@ def ingest_blog(md_path: Path) -> int:
         insert_atom(a)
         try:
             embed_and_store(a)
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"  [WARN] embed 실패: {e}")
     return len(atoms)
 
 
