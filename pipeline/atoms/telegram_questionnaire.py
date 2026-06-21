@@ -156,7 +156,7 @@ def questionnaire_to_atoms_tg(q: dict, meta: dict) -> list[dict]:
                 log_foreign_unmapped(info["name"], meta["date"], meta["channel"])
 
     if ctype == "sector":
-        sec = _norm_sector(q.get("sector_name")) if q.get("sector_name") else (meta.get("sector") or "기타")
+        sec = meta.get("sector") or _norm_sector(q.get("sector_name")) or "기타"
         add_stocks(q.get("stocks_mentioned"), "name", "comment")
         body = "; ".join(q.get("points") or [])
         atoms.append(_base(
