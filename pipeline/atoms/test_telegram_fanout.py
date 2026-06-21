@@ -1,9 +1,19 @@
 # pipeline/atoms/test_telegram_fanout.py
 import json
 from pathlib import Path
+import pytest
+import pipeline.atoms.stock_resolve as sr
 from pipeline.atoms.telegram_questionnaire import (
     questionnaire_to_atoms_tg, _event_key, _strength,
 )
+
+
+@pytest.fixture(autouse=True)
+def _temp_unmatched_log(tmp_path, monkeypatch):
+    """Isolate UNMATCHED_LOG to tmp_path to prevent test pollution of raw/telegram_unmatched.log."""
+    monkeypatch.setattr(sr, "UNMATCHED_LOG", tmp_path / "unmatched.log")
+    yield
+
 
 FIX = json.loads((Path(__file__).parent / "fixtures" / "tg_spike.json").read_text(encoding="utf-8"))
 
