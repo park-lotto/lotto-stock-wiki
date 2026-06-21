@@ -33,6 +33,26 @@ def test_sector_report_fans_out_korean_picks_only():
             assert a["strength_score"] <= 2  # 거론 레벨 = 약한 신호
 
 
+def test_report_stock_uses_sector_hint():
+    q = {"target_kind": "stock", "stocks": [
+        {"name": "삼성전자", "rating": "BUY", "tp_new": "100000",
+         "tp_direction": "up", "sector": "반도체", "quote": "q"}]}
+    meta = {"date": "2026-06-21", "broker": "테스트", "raw_file": "x.md"}
+    atoms = questionnaire_to_atoms(q, meta)
+    sams = [a for a in atoms if a["asset"] == "삼성전자"]
+    assert sams and sams[0]["sector"] == "반도체"  # 기타 아님
+
+
+def test_report_stock_no_hint_falls_back_to_기타():
+    q = {"target_kind": "stock", "stocks": [
+        {"name": "삼성전자", "rating": "BUY", "tp_new": "100000",
+         "tp_direction": "up", "quote": "q"}]}
+    meta = {"date": "2026-06-21", "broker": "테스트", "raw_file": "x.md"}
+    atoms = questionnaire_to_atoms(q, meta)
+    sams = [a for a in atoms if a["asset"] == "삼성전자"]
+    assert sams and sams[0]["sector"] == "기타"  # hint 없으면 기타 fallback
+
+
 def test_market_report_fans_out_sectors_and_picks():
     atoms = questionnaire_to_atoms(_result_for(2), META)  # 로봇/방산/조선 데일리
     sectors = {a["sector"] for a in atoms if a["asset_level"] == "sector"}

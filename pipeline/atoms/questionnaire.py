@@ -8,6 +8,7 @@ from google.genai import types
 
 from .atomizer import _load_gemini_key
 from .codemap import is_korean_stock
+from .sector_classify import sectors_list, resolve_sector
 
 _MODEL = "gemini-3.1-flash-lite"
 
@@ -60,6 +61,12 @@ broker(증권사), analyst(애널리스트), report_date
 질문지 1장을 JSON 객체 하나로. target_kind에 해당하는 칸만 채우고 나머지는 생략.
 다른 텍스트 절대 금지."""
 
+_SECTOR_RULE = (
+    "각 종목에 sector를 붙여라(목록에서 하나, 모르면 기타): "
+    + " / ".join(sectors_list()) + "\n"
+)
+QUESTIONNAIRE_PROMPT = QUESTIONNAIRE_PROMPT + "\n" + _SECTOR_RULE
+
 
 def extract_questionnaire(pdf_path: Path) -> dict:
     """PDF를 Gemini로 읽어 채워진 질문지 dict 반환. 실패 시 {}."""
@@ -93,11 +100,7 @@ def extract_questionnaire(pdf_path: Path) -> dict:
 # 질문지 → 원자 변환 (fan-out)
 # ─────────────────────────────────────────────────────────────────
 
-_SECTOR_LIST = [
-    "반도체", "조선", "로봇", "방산", "바이오", "전력", "2차전지",
-    "자동차", "통신", "AI소프트웨어", "우주", "소비내수", "미용",
-    "LNG", "신재생", "기타",
-]
+_SECTOR_LIST = sectors_list()
 
 
 def _norm_sector(s: str) -> str:
@@ -160,11 +163,6 @@ def _stock_atom(meta, sector, name, content, *, strong, signal, i, tag) -> dict:
     )
 
 
-def _guess_sector_from_stock(name: str) -> str:
-    """종목 섹터 추정 — 현재는 기타. 후속에서 종목→섹터 맵 연결."""
-    return "기타"
-
-
 def questionnaire_to_atoms(q: dict, meta: dict) -> list[dict]:
     """채워진 질문지 dict + meta → 원자 dict 리스트."""
     kind = q.get("target_kind")
@@ -184,8 +182,9 @@ def questionnaire_to_atoms(q: dict, meta: dict) -> list[dict]:
                 f"리스크: {s.get('risk')}" if s.get("risk") else "",
             ]
             content = " / ".join(p for p in parts if p)
+            sec = resolve_sector(name, s.get("sector"), is_foreign=False)[0][0]
             atoms.append(_stock_atom(
-                meta, _guess_sector_from_stock(name), name, content,
+                meta, sec, name, content,
                 strong=bool(s.get("tp_new")), signal=sig, i=i, tag="stk",
             ))
 
@@ -233,8 +232,9 @@ def questionnaire_to_atoms(q: dict, meta: dict) -> list[dict]:
             name = (name or "").strip()
             if not is_korean_stock(name):
                 continue
+            sec = resolve_sector(name, None, is_foreign=False)[0][0]
             atoms.append(_stock_atom(
-                meta, _guess_sector_from_stock(name), name,
+                meta, sec, name,
                 "시황리포트 탑픽 거론", strong=False, signal="bullish", i=i, tag="mktpick",
             ))
 
