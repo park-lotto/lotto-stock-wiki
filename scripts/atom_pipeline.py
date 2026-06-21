@@ -55,6 +55,7 @@ def main():
         if not args.skip_pdf:
             subprocess.run([PYTHON, "-m", "pipeline.atoms.report_ingest", "--all", "--dry-run", "--limit", "5"], cwd=str(ROOT))
         subprocess.run([PYTHON, "-m", "pipeline.atoms.telegram_ingest", "--all", "--dry-run", "--limit", "5"], cwd=str(ROOT))
+        subprocess.run([PYTHON, "-m", "pipeline.atoms.blog_ingest", "--all", "--dry-run", "--limit", "5"], cwd=str(ROOT))
         return
 
     # 1단계: 동기화 + 새 파일 원자화
@@ -76,6 +77,11 @@ def main():
     run([PYTHON, "-m", "pipeline.atoms.telegram_ingest",
          "--all", "--limit", "30"],
         "STEP3.5 telegram")
+
+    # 3.6단계: 블로그 인제스트 (내용라우팅 + 2층 fan-out)
+    run([PYTHON, "-m", "pipeline.atoms.blog_ingest",
+         "--all", "--limit", "30"],
+        "STEP3.6 blog")
 
     # 4단계: 수급 오실레이터 (xlsm 파일 있을 때만)
     osc_xlsm = list(ROOT.glob("raw/매일 엑셀넣을것/외국인기관수급오실레이터*.xlsm"))
