@@ -1,0 +1,56 @@
+{
+  "target_kind": "sector",
+  "sector_name": "반도체",
+  "sector_view": "긍정",
+  "points": [
+    "에이전틱 AI 확산에 따른 CPU 및 광연결(Connectivity) 기술 수요 급증",
+    "데이터센터 인프라의 광기술(Optical) 전환 가속화 및 광부품 수요 확대",
+    "고대역폭 메모리(HBM) 및 대용량 SCoAMM 제품을 통한 개인 HPC 시장 개화",
+    "엔비디아 Vera CPU의 성능 우위를 통한 x86 대체 및 매출 성장 가시화"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "엔비디아",
+      "comment": "Vera CPU를 통해 x86 대비 성능 우위를 점하며 2024년 200억 달러 매출 예상",
+      "ts": "2024년",
+      "quote": "엔비디아 Vera CPU는 88개 Arm 코어 기반, x86 대비 코어당 대역폭 3배, 전체 대역폭 2배, 실제 성능 1.8배 우위를 보이며 2024년 단독 매출 200억 달러 예상.",
+      "sector": "반도체"
+    },
+    {
+      "name": "마벨",
+      "comment": "광연결 기술 전환 및 CPO 기술을 통해 데이터센터 인프라 수혜 예상",
+      "ts": null,
+      "quote": "마벨의 광기술(옵티컬) 전환은 데이터센터 인프라 수요 확대를 시사한다.",
+      "sector": "반도체"
+    },
+    {
+      "name": "삼성전자",
+      "comment": "HBM8세대(HBM5) 개발 등 메모리 기술 경쟁력을 통한 실적 성장 기반 마련",
+      "ts": null,
+      "quote": "HBM 8세대(HBM5) 개발 시작(삼성전자), SCoAMM 128GB~256GB 대용량 제품 확대(엔비디아·SK·마이크론)로 개인 HPC 시장으로 수요 저변 확대.",
+      "sector": "반도체"
+    },
+    {
+      "name": "SK하이닉스",
+      "comment": "대용량 SCoAMM 제품 확대로 인한 중장기적 실적 수혜 가능성",
+      "ts": null,
+      "quote": "SK하이닉스(192GB SCoAMM)의 경쟁 심화 및 실적 성장 기대.",
+      "sector": "반도체"
+    },
+    {
+      "name": "마이크론",
+      "comment": "256GB SCoAMM 제품을 통한 개인 AI 장치 보급 수혜",
+      "ts": null,
+      "quote": "마이크론(256GB SCoAMM)의 경쟁 심화 및 실적 성장 기대.",
+      "sector": "반도체"
+    }
+  ],
+  "events": [
+    {
+      "fact": "데이터센터 내 400Gbps 전환으로 인한 광수요 10배 급증",
+      "ts": null,
+      "quote": "400Gbps 전환 시 데이터센터 내 광수요가 10배 급증한다."
+    }
+  ],
+  "quote": "에이전틱 AI 확산으로 CPU와 Connectivity 시장이 핵심 성장 포인트가 되고 있다."
+}

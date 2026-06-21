@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-05",
+    "broker": "SK증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_1000_로봇전장 부품사로 업그레이드.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "SK증권",
+    "analyst": "박형우, R.A 정영환",
+    "report_date": "2026-06-05",
+    "stocks": [
+      {
+        "name": "KH 바텍",
+        "code": "060720",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026 년 매출액은 4,481억원(+5%, 이하 YoY), 영업이익 329 억원(+4%, OPM 7.3%)을 전망한다.",
+        "estimate_revision": null,
+        "next_catalyst": "26 년 하반기, 로봇외장부품 및 전장부품 양산 본격화",
+        "thesis": [
+          "로봇용 부품으로 사업영역 다각화: 금속 가공·금형 역량을 로봇 외장으로 확장했다. 감속기 연구개발과 EMS 까지 더해 부품 단가를 높여간다.",
+          "폴더블 힌지 업그레이드: 매번 소재·설계가 바뀌어 CR(원가절감) 압박을 방어한다. 와이드 폴드 신규 모델과 중국향 확대가 외형을 키운다.",
+          "전장부품 양산 본격화: 26 년 하반기가 매출 도약의 시작점이다. 롤러블 디지털콕핏과 칙소몰딩 브라켓이 동시에 양산에 진입하며, 27 년부터 매출 기여가 본격화된다."
+        ],
+        "valuation_basis": null,
+        "risk": "스마트폰 고객사의 폴더블 경쟁 심화와 IT 전방 수요의 불확실성이다.",
+        "supply_comment": null,
+        "quote": "Signal: 26 년 하반기, 로봇외장부품 및 전장부품 양산 본격화"
+      }
+    ]
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_1000_완성차 도매판매 동향(2026년 5월).md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "송선재",
+    "report_date": "2026.6.4",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "현대차",
+        "code": null,
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "760,000",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 자동차 부문의 실적은 ‘물량 정체 vs. 환율 상승과 관세율 인하 효과’로 이익 소폭 증가라는 기존 전망을 유지",
+        "estimate_revision": null,
+        "next_catalyst": "테슬라 옵티머스 3세대 공개 및 중국 유니트리 상장, BD의 RMAC 개소 및 공장 실증 테스트 시작, BD의 IPO 주간사 선정",
+        "thesis": [
+          "자동차 실적으로는 주가 오버슈팅 국면",
+          "하반기 로봇 및 자율주행 모멘텀이 강화",
+          "주가 급등으로 완성차 Valuation은 글로벌 Peers 및 Historical 대비 크게 상회"
+        ],
+        "valuation_basis": "Valuation Multiple 상승의 추가 촉매로서 로봇 및 자율주행 모멘텀을 주목할 수 밖에 없음",
+        "risk": "산업수요 저성장 및 경쟁심화, 국내 부품공급 차질",
+        "supply_comment": "산업수요 저성장 및 경쟁심화가 이어진 가운데, 국내 부품공급 차질까지 더해지면서 현대차/기아 판매는 목표치를 하회 중",
+        "quote": "Key Insight: 자동차 실적으로는 주가 오버슈팅 국면. 하반기 로봇 및 자율주행 모멘텀이 강화"
+      },
+      {
+        "name": "기아",
+        "code": null,
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "220,000",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 자동차 부문의 실적은 ‘물량 정체 vs. 환율 상승과 관세율 인하 효과’로 이익 소폭 증가라는 기존 전망을 유지",
+        "estimate_revision": null,
+        "next_catalyst": "테슬라 옵티머스 3세대 공개 및 중국 유니트리 상장, BD의 RMAC 개소 및 공장 실증 테스트 시작, BD의 IPO 주간사 선정",
+        "thesis": [
+          "자동차 실적으로는 주가 오버슈팅 국면",
+          "하반기 로봇 및 자율주행 모멘텀이 강화",
+          "EV3/EV5 등 전기차 모델과 PV5의 신차 효과 등으로 상대적으로 양호한 내수 판매 기록"
+        ],
+        "valuation_basis": "Valuation Multiple 상승의 추가 촉매로서 로봇 및 자율주행 모멘텀을 주목할 수 밖에 없음",
+        "risk": "산업수요 저성장 및 경쟁심화, 국내 부품공급 차질",
+        "supply_comment": "산업수요 저성장 및 경쟁심화가 이어진 가운데, 국내 부품공급 차질까지 더해지면서 현대차/기아 판매는 목표치를 하회 중",
+        "quote": "Key Insight: 자동차 실적으로는 주가 오버슈팅 국면. 하반기 로봇 및 자율주행 모멘텀이 강화"
+      }
+    ]
+  }
+}

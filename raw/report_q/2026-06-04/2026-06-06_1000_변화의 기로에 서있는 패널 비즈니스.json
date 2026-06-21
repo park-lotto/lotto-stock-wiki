@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_1000_변화의 기로에 서있는 패널 비즈니스.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "강민구",
+    "report_date": "2026. 6. 4",
+    "target_kind": "sector",
+    "sector_name": "IT/디스플레이",
+    "sector_view": null,
+    "thesis": [
+      "주요 디스플레이 제조사들이 유리 기반 첨단 패키지 및 광 인터커넥터 기업으로 변모하고 있음",
+      "패널사들의 신사업 진출 배경에는 Set 불황과 기술적 공통점이 있음",
+      "디스플레이와 광통신 제품의 공정 유사성이 신사업 진출의 동인으로 작용"
+    ],
+    "timeline": [
+      "2026년 SmartPhone 출하량 전년대비 13.9% 감소 전망",
+      "광통신 시장의 유리기판 기반 PLC, Glass Interposer 등 제품 상용화 임박"
+    ],
+    "top_picks": [
+      {
+        "name": "AUO",
+        "reason": "Micro LED 생산 경험과 그룹 내 계열사 시너지를 기반으로 광통신 모듈 사업 진출 선언",
+        "tp": null
+      },
+      {
+        "name": "BOE",
+        "reason": "Corning과 유리기판, 광통신, 패로브스카이트 분야에서의 협업을 골자로 MOU 체결",
+        "tp": null
+      }
+    ],
+    "risk": "메모리 반도체 가격 상승으로 인한 SmartPhone, Tablet PC 등 Set 시장 위축 및 중저가 패널 출하 감소, 국내외 패널사 간의 본업 점유율 및 가동률 차이, BOE의 LTPO TFT 수율 문제",
+    "quote": "주요 디스플레이 제조사들이 유리 기반 첨단 패키지 및 광 인터커넥터 기업으로 변모하고 있다."
+  }
+}

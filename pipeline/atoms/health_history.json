@@ -5,5 +5,12 @@
     },
     "queue_new": 0,
     "pytest_ok": true
+  },
+  "2026-06-22": {
+    "atoms": {
+      "news": 7
+    },
+    "queue_new": 0,
+    "pytest_ok": true
   }
 }

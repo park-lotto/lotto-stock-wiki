@@ -1,0 +1,149 @@
+{
+  "updated": "2026-06-22",
+  "stocks": [
+    {
+      "name": "강동씨앤엘",
+      "code": "198440",
+      "des_date": "2026-06-22",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "미래에셋생명",
+      "code": "085620",
+      "des_date": "2026-06-22",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "뉴엔AI",
+      "code": "463020",
+      "des_date": "2026-06-19",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "인텍플러스",
+      "code": "064290",
+      "des_date": "2026-06-19",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "CSA 코스믹",
+      "code": "083660",
+      "des_date": "2026-06-18",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "듀오백",
+      "code": "073190",
+      "des_date": "2026-06-18",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "서산",
+      "code": "079650",
+      "des_date": "2026-06-17",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "메카로",
+      "code": "241770",
+      "des_date": "2026-06-16",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "후성",
+      "code": "093370",
+      "des_date": "2026-06-16",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "아스플로",
+      "code": "159010",
+      "des_date": "2026-06-15",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "피에스케이홀딩스",
+      "code": "031980",
+      "des_date": "2026-06-15",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "라이콤",
+      "code": "388790",
+      "des_date": "2026-06-12",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "오션스바이오",
+      "code": "332190",
+      "des_date": "2026-06-12",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "가이아코퍼레이션",
+      "code": "296520",
+      "des_date": "2026-06-11",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "피델릭스",
+      "code": "032580",
+      "des_date": "2026-06-11",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "화신정공",
+      "code": "126640",
+      "des_date": "2026-06-11",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "팸텍",
+      "code": "271830",
+      "des_date": "2026-06-09",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "크레오에스지",
+      "code": "040350",
+      "des_date": "2026-06-08",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    }
+  ]
+}

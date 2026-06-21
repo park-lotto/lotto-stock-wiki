@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-05",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_1000_테일러메이드 매각 vs 인수 시나리오 분석.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유진투자증권",
+    "analyst": "이해니",
+    "report_date": "2026.06.05",
+    "stocks": [
+      {
+        "name": "F&F",
+        "code": "383220",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "100,000원",
+        "tp_prev": "100,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026E 매출액 2,070억, 영업이익 526억 / 2027E 매출액 2,172억, 영업이익 558억",
+        "estimate_revision": null,
+        "next_catalyst": "테일러메이드 매각 혹은 신규 인수자 유치에 따른 투자금 회수, 연결 편입 현실화",
+        "thesis": [
+          "테일러메이드 매각 시 세후 차익 약 7,000억원 추정 및 주주환원 확대 기대",
+          "테일러메이드 인수 시 연결 실적 인식으로 인한 밸류에이션 리레이팅 및 포트폴리오 다변화",
+          "현재 12MF FWD PER 6~7배 수준으로 저평가 상태"
+        ],
+        "valuation_basis": "테일러메이드 기업 가치는 4.0조~4.5조로 평가(2024년 EBITDA 220M에 EV/EBITDA 18~20x 적용). 연결 편입 시 글로벌 브랜드 수준의 PER 20~30배 적용 가능",
+        "risk": "인수 초기 일회성 비용(PPA 상각비, 딜 클로징)에 따른 단기 EPS 훼손 가능성",
+        "supply_comment": null,
+        "quote": "투자의견 ‘BUY’ 유지, 목표주가 100,000원 유지. 향후 테일러메이드 매각 또는 연결 편입 현실화될 경우 실적 및 목표주가 상향 가능성 존재"
+      }
+    ]
+  }
+}

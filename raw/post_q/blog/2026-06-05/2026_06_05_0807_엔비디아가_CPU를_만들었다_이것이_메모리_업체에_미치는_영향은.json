@@ -1,0 +1,39 @@
+{
+  "target_kind": "sector",
+  "sector_name": "반도체",
+  "sector_view": "긍정",
+  "points": [
+    "엔비디아 Vera CPU 및 AI PC 도입으로 인한 LPDDR5X 메모리 수요 급증",
+    "기존 x86 CPU 중심에서 LPDDR5X 중심의 메모리 시장 구조 재편",
+    "메모리 대역폭 증가에 따른 고성능 메모리 공급 확대 필요"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "Samsung Electronics",
+      "comment": "AI PC 및 서버 시장의 LPDDR5X 수요 증가로 인한 수익 성장 수혜 전망",
+      "ts": "2026-06-05",
+      "quote": "Samsung Electronics, SK Hynix 등 메모리 제조사는 AI PC와 서버에서 사용되는 LPDDR5X 수요 증가로 수혜를 받을 것으로 전망된다.",
+      "sector": "반도체"
+    },
+    {
+      "name": "SK Hynix",
+      "comment": "AI PC 및 서버 시장의 LPDDR5X 수요 증가로 인한 수익 성장 수혜 전망",
+      "ts": "2026-06-05",
+      "quote": "Samsung Electronics, SK Hynix 등 메모리 제조사는 AI PC와 서버에서 사용되는 LPDDR5X 수요 증가로 수혜를 받을 것으로 전망된다.",
+      "sector": "반도체"
+    }
+  ],
+  "events": [
+    {
+      "fact": "Oracle Cloud의 Vera CPU 10만 개 이상 도입 결정",
+      "ts": "2026-06-05",
+      "quote": "Oracle Cloud는 2026년부터 10만 개 이상의 Vera CPU를 도입하기로 발표했으며, Meta, Alibaba, ByteDance도 확대 의향을 밝혔다."
+    },
+    {
+      "fact": "주요 OEM 업체의 AI PC 모델 LPDDR5X 기본 탑재 계획",
+      "ts": "2026-06-05",
+      "quote": "ASUS, Dell, Microsoft 등 주요 OEM이 2026년 하반기에 출하할 AI PC 모델에 LPDDR5X 메모리가 기본 장착될 계획이다."
+    }
+  ],
+  "quote": "엔비디아가 출시한 Vera CPU와 AI PC는 기존 메모리 규격에서 LPDDR5X로 전환하며 메모리 수요를 두 배 이상 증가시킬 수 있다."
+}

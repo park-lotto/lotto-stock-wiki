@@ -1,0 +1,59 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_1000_월간 디지털자산 시장 동향 기관자금, RWA, D...md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "최윤영",
+    "report_date": "2026년 6월 2일",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "비트코인 ETP 자금 유출입",
+      "스테이블코인 공급량",
+      "무기한선물 펀딩비",
+      "RWA 시장 규모",
+      "DEX 거래량"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "기타",
+        "stance": "중립",
+        "reason": "기관 관망세 지속 및 파생상품 시장 정상화 과정에서 변동성 확대 가능성 상존"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026년 5월 1일",
+        "event": "Cerebras Systems 연계 Pre-IPO 무기한선물 출시"
+      },
+      {
+        "date": "2026년 5월 12일",
+        "event": "Anthropic, 승인 없는 주식 거래 원천 무효 선언"
+      },
+      {
+        "date": "2026년 5월 18일",
+        "event": "SpaceX 무기한선물 출시"
+      }
+    ],
+    "top_picks": [
+      "trade.xyz",
+      "Anthropic",
+      "OpenAI",
+      "Cerebras Systems",
+      "SpaceX",
+      "Bitcoin",
+      "Ethereum",
+      "USDT",
+      "USDC",
+      "PYUSD",
+      "USDe",
+      "USDS"
+    ],
+    "risk": "기관투자자의 관망세, 스테이블코인 공급 위축, RWA 관련 발행사 경고 및 법적 리스크, 무기한선물 포지션 재조정에 따른 변동성",
+    "quote": "현물 시장에서는 월초 비트코인 ETP 중심 유입 이후 차익 실현 전환. 파생 시장은 CME 베이시스 축소 등 기관 관망세 지속, 무기한선물은 음수 펀딩비 장기화 후 양수 전환되며 포지셔닝 정상화 흐름"
+  }
+}

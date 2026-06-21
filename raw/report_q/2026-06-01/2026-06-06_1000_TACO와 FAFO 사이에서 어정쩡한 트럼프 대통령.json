@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-01",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_1000_TACO와 FAFO 사이에서 어정쩡한 트럼프 대통령.md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": "박상현",
+    "report_date": "2026-06-01",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "미국-이란 종전 협상 MOU",
+      "호르무즈 해협 봉쇄 및 원유 공급망 차질",
+      "유가",
+      "글로벌 원유 재고",
+      "미국 내구재수주",
+      "미국 투자사이클"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026-06-30",
+        "event": "호르무즈 해협 봉쇄 해소 기한"
+      },
+      {
+        "date": "2026-07-04",
+        "event": "미국 독립 250주년"
+      }
+    ],
+    "top_picks": null,
+    "risk": "호르무즈 해협 봉쇄 지속에 따른 원유 공급 차질 및 유가 추가 급등 리스크",
+    "quote": "호르무즈 해협 봉쇄가 6월말까지 해소되지 못한다면 7월부터 원유 재고 부족에 따른 유가 추가 급등이 현실화될 것이라는 경고음이 커지고 있다."
+  }
+}

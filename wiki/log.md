@@ -1,4 +1,5 @@
 - 2026-06-22 — [브레인스토밍] 태린이 파일 활용 메뉴얼 80% 합의: "3단 깔때기 탑다운 스토리" 컨셉 확정(STAGE1 GO판정→STAGE2 섹터좁힘→STAGE3 종목픽업) + 드릴다운 4섹션 + 9점표 v1 채용. 다음세션 결정3개(GO룰/섹터매핑/펼침방식) 남김. NEXT_SESSION 2트랙(대시보드개편+태린이)으로 통합.
+- 2026-06-22 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-06-22.md
 - 2026-06-21 — 5소스 원자 파이프라인 완성: 뉴스 인제스트(post_sources news 추가)·daily_health MVP(텔레카드 실발송 확인)·리포트 섹터 통일(resolve_sector)·채널간 이벤트 병합(비파괴 A안)·7AM 작업스케줄러 등록 완료. 모델=Sonnet으로 전환.
 - 2026-06-21 — 카카오EP1 모드C 전환 완료(S4·S6·S11·ChannelSting·EndSting) + ColdOpen 제거 + 아웃트로 이음새 처리 + **최종 렌더 완료**(kakao_ep1_final.mp4, 210.9MB, 11분18초)
 - 2026-06-21 — Plan B 3단 자동 검증 구현: verify_questionnaire.py(㉠인용대조·㉡wisereport정답지·㉢구조룰), trust_score→strength_score 조정, report_ingest 연결. 20 tests pass.

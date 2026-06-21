@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-05",
+    "broker": "SK증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_1000_게임 체인저.md"
+  },
+  "questionnaire": {
+    "broker": "SK증권",
+    "analyst": "나승두",
+    "report_date": "2026-06-04",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "에이텀",
+        "code": "355690",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2025년 연간 매출액 704억원, 영업이익 -65억원 기록, 1Q26 매출액 261억원, 영업이익 -14억원 기록",
+        "estimate_revision": null,
+        "next_catalyst": "신공장 가동을 통한 휴대용 충전기, TV, EV 용 트랜스 납품 확대 및 AI 데이터센터와 방산 등 신규 분야 사업 확장",
+        "thesis": [
+          "국내 유일 평판형 트랜스 기술 보유로 소형화/경량화 및 생산 자동화 가능",
+          "AI 데이터센터 전력 공급 효율을 높이는 핵심 밸류체인으로 부상",
+          "계열사 청한전자(MLCC)와 디에스티(선박 엔진 부품)의 동반 성장에 따른 시장 재평가 기대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "평판형 트랜스는 생산 자동화가 가능하다는 점에서 공급망 관리 및 비용 절감에 뚜렷한 강점을 보인다.",
+        "quote": "국내 유일 평판형 트랜스(Trans) 기술 보유. 다양한 산업 내 트랜스 분야에서 완벽한 게임 체인저가 될 것으로 판단된다."
+      }
+    ]
+  }
+}

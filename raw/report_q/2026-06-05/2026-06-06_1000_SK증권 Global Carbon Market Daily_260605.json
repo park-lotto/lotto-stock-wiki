@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date": "2026-06-05",
+    "broker": "SK securities",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_1000_SK증권 Global Carbon Market Daily_260605.md"
+  },
+  "questionnaire": {
+    "broker": "SK securities",
+    "analyst": "최관순",
+    "report_date": "2026-06-05",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "글로벌 배출권 가격",
+      "글로벌 에너지 가격"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "기타",
+        "stance": null,
+        "reason": "국제유가, 이스라엘·레바논 휴전합의에 반락…WTI 3%↓"
+      },
+      {
+        "sector": "기타",
+        "stance": null,
+        "reason": "일상 속 온실가스 감축, 배출권거래제에 활용한다"
+      },
+      {
+        "sector": "기타",
+        "stance": null,
+        "reason": "中 1분기 배출량 2% 증가…재생에너지 늘고 ‘버려지는 전력’도 늘어"
+      }
+    ],
+    "style": null,
+    "event_calendar": null,
+    "top_picks": null,
+    "risk": null,
+    "quote": "국제유가, 이스라엘·레바논 휴전합의에 반락…WTI 3%↓, 일상 속 온실가스 감축, 배출권거래제에 활용한다, 中 1분기 배출량 2% 증가…재생에너지 늘고 ‘버려지는 전력’도 늘어"
+  }
+}

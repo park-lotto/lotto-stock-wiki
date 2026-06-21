@@ -1,0 +1,33 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "SK 증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_1000_소외될 이유가 있을까.md"
+  },
+  "questionnaire": {
+    "broker": "SK 증권",
+    "analyst": "이동주",
+    "report_date": "2026-06-04",
+    "target_kind": "sector",
+    "sector_name": "반도체",
+    "sector_view": null,
+    "thesis": [
+      "반도체 주가 조정은 업황보다는 국내 ETF 수급 영향에 따른 일시적 현상임",
+      "해외 주요 장비사들의 WFE(Wafer Fab Equipment) 시장 성장률 상향 및 AI 메모리 수요의 강력한 모멘텀 지속",
+      "실질 CAPA 제약(공정 난이도 상승, HBM 비중 확대 등)으로 인한 명목 CAPA 증설 강도는 향후 4년간 매우 강할 것으로 전망"
+    ],
+    "timeline": [
+      "2026년 CAPA 증가 제한적",
+      "2027년말부터 CAPA 가파르게 증가 예상",
+      "2027년 상반기 기점으로 2029년까지 증설 관련 장비 발주 및 Fab-in 랠리 예상",
+      "2030년까지 증설 사이클 지속 예상"
+    ],
+    "top_picks": null,
+    "risk": [
+      "선단 테크 노드로 진화에 따른 공정 난이도 상승",
+      "HBM 비중 확대에 따른 캐파 잠식 효과로 인한 실질 공급 대응력 약화",
+      "클린룸 공간에 대한 제약으로 인한 2026년 추가 CAPA 확보 제한"
+    ],
+    "quote": "Signal: 주가 조정 배경은 업황보다는 ETF 수급 영향, Key: 강한 CAPA 증설 수반 (Feat. SK 하이닉스 CAPA 2X 목표), Step: 이번 조정은 좋은 매수 기회"
+  }
+}

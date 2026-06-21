@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-05",
+    "broker": "SK증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_1000_숨겨진 광통신 수혜주.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "SK증권",
+    "analyst": "허선재",
+    "report_date": "2026-06-05",
+    "stocks": [
+      {
+        "name": "라이콤",
+        "code": "388790",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "라이콤 26년 실적은 매출액 226억원(+27.5% YoY)과 영업이익 8억원(+43.9% YoY, OPM 3.7%)으로 전망된다. 내년부터 실적 레버리지가 본격화되며 27 년 매출액 432 억원(+91.6% YoY)과 영업이익 101 억원(+1106.4% YoY, OPM 23.3%)이 전망된다.",
+        "estimate_revision": null,
+        "next_catalyst": "26 년 수주 원년 → 27 년 실적 레버리지",
+        "thesis": [
+          "북미 AI 데이터센터 구축 본격화로 광증폭기 수주잔고 급증",
+          "방산·우주 관련 신사업의 본격적인 실적 기여 시작",
+          "레이저 무기체계 양산 확대에 따른 수혜"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "광증폭기, 광섬유레이저, 광중계기 제조 및 글로벌 고객사 공급",
+        "quote": "지금 라이콤에 주목할만한 이유는 올해부터 ①북미 AI 데이터센터 구축 본격화로 광증폭기 수주잔고가 급증하며 실적 성장의 가시성이 높아지고 있고 ②지난 10 년간 준비한 방산·우주 관련 신사업의 본격적인 실적 기여가 시작될 것으로 전망되기 때문이다.",
+        "sector": "통신"
+      }
+    ]
+  }
+}
