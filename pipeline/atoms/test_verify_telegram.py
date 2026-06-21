@@ -1,4 +1,3 @@
-import pytest
 from pipeline.atoms.verify_telegram import verify_telegram_quotes, _all_quotes
 
 
@@ -20,3 +19,10 @@ def test_all_quotes_collects_nested():
          "stance": [{"quote": "c문장"}]}
     qs = set(_all_quotes(q))
     assert {"a문장", "b문장", "c문장"} <= qs
+
+
+def test_none_and_empty_quote_ignored():
+    q = {"stocks": [{"name": "X", "quote": None}, {"name": "Y", "quote": ""}], "quote": None}
+    # None/빈 quote는 수집 안 됨 → 플래그 없음, 크래시 없음
+    assert verify_telegram_quotes(q, "아무 원문") == []
+    assert _all_quotes(q) == []
