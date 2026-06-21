@@ -95,6 +95,10 @@ def main():
          "--all", "--limit", "40"],
         "STEP3.8 news")
 
+    # 3.9단계: 채널간 이벤트 병합 (비파괴 — mention_count 표시)
+    run([PYTHON, "-m", "pipeline.atoms.event_merge", "--date", today],
+        "STEP3.9 event_merge")
+
     # 4단계: 수급 오실레이터 (xlsm 파일 있을 때만)
     osc_xlsm = list(ROOT.glob("raw/매일 엑셀넣을것/외국인기관수급오실레이터*.xlsm"))
     if osc_xlsm:
