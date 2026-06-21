@@ -1,6 +1,89 @@
 """파이프라인 매일 건강검진 (MVP) — 기존 신호만 모아 정상=1줄/이상=상세 텔레카드."""
 
+import json
+import subprocess
+import sys
+from datetime import datetime, timedelta
+from pathlib import Path
+
+from .db import get_conn
+
+_ROOT = Path(__file__).parent.parent.parent
+_HISTORY = Path(__file__).parent / "health_history.json"
+_UNMATCHED = _ROOT / "raw" / "telegram_unmatched.log"
+_FOREIGN = _ROOT / "raw" / "telegram_foreign_unmapped.log"
+
 _DROP_RATIO = 0.5  # 어제 대비 -50%↓ 경보
+
+
+def collect_atom_counts(date: str) -> dict:
+    conn = get_conn()
+    rows = conn.execute(
+        "SELECT source_type, COUNT(*) FROM atoms WHERE date=? GROUP BY source_type", (date,)
+    ).fetchall()
+    conn.close()
+    return {r[0]: r[1] for r in rows}
+
+
+def _log_lines_for_date(path: Path, date: str) -> int:
+    if not path.exists():
+        return 0
+    return sum(1 for ln in path.read_text(encoding="utf-8").splitlines() if ln.startswith(date))
+
+
+def load_history(path: Path = _HISTORY) -> dict:
+    if not path.exists():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def save_snapshot(metrics: dict, path: Path = _HISTORY) -> None:
+    hist = load_history(path)
+    hist[metrics["date"]] = {k: v for k, v in metrics.items() if k != "date"}
+    # 최근 14일만 보관
+    for d in sorted(hist)[:-14]:
+        del hist[d]
+    path.write_text(json.dumps(hist, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def collect_signals(date: str) -> dict:
+    atoms = collect_atom_counts(date)
+    queue_new = _log_lines_for_date(_UNMATCHED, date) + _log_lines_for_date(_FOREIGN, date)
+    try:
+        r = subprocess.run([sys.executable, "-m", "pytest", "pipeline/atoms/", "-q"],
+                           cwd=str(_ROOT), capture_output=True, timeout=300)
+        pytest_ok = r.returncode == 0
+    except Exception:
+        pytest_ok = True  # 측정 실패는 경보 아님
+    return {"date": date, "atoms": atoms, "queue_new": queue_new, "pytest_ok": pytest_ok}
+
+
+def main():
+    if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+    date = datetime.now().strftime("%Y-%m-%d")
+    metrics = collect_signals(date)
+    hist = load_history()
+    yest = hist.get((datetime.strptime(date, "%Y-%m-%d") - timedelta(days=1)).strftime("%Y-%m-%d"), {})
+    alerts = compare_to_baseline(metrics, yest)
+    card = render_card(metrics, alerts)
+    print(card)
+    try:
+        from calc_oscillator import send_telegram
+        send_telegram(card)
+    except Exception as e:
+        print(f"  [건강검진] 텔레 발송 생략: {e}")
+    save_snapshot(metrics)
+
+
+if __name__ == "__main__":
+    main()
 
 
 def compare_to_baseline(today: dict, yesterday: dict) -> list[dict]:

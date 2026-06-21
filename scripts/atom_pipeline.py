@@ -118,6 +118,9 @@ def main():
     # 5단계: wiki 자동 반영
     run([PYTHON, "-m", "pipeline.atoms.wiki_update"], "STEP5 wiki_update")
 
+    # 6단계: 매일 건강검진 (정상=1줄/이상=상세 텔레카드)
+    run([PYTHON, "-m", "pipeline.atoms.daily_health"], "STEP6 health")
+
     # 최종 현황 출력
     print(f"\n{'='*50}")
     print("[atom_pipeline] 완료 — 현황:")
