@@ -1,3 +1,5 @@
+- 2026-06-21 — Plan B 3단 자동 검증 구현: verify_questionnaire.py(㉠인용대조·㉡wisereport정답지·㉢구조룰), trust_score→strength_score 조정, report_ingest 연결. 20 tests pass.
+- 2026-06-21 — report_ingest --all 모드 + atom_pipeline.py STEP3 교체(pdf_ingest→report_ingest). 미처리 MD 자동탐색 가능.
 - 2026-06-21 — codemap KRX 통합: KRX KOSPI+KOSDAQ 2605종목 HTTP 연동(krx_codes.json 7일 TTL). 두산로보틱스·HD현대중공업 등 이전 누락종목 인식 가능. 6 tests pass. (LIG넥스원은 KRX 공식명 변경→LIG디펜스앤에어로스페이스, alias 별도)
 - 2026-06-21 — 리포트 질문지 추출 시스템 구축(Plan A): questionnaire.py·report_ingest.py·codemap.py 신규. fan-out 3타입(stock/sector/market). 6 tasks 완료, main merge push 완료.
 - 2026-06-21 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-06-21.md
