@@ -8,7 +8,7 @@ from google import genai
 from google.genai import types
 
 from .atomizer import _load_gemini_key
-from .stock_resolve import resolve_stock
+from .stock_resolve import resolve_stock, foreign_sectors, log_foreign_unmapped
 
 _MODEL = "gemini-3.1-flash-lite"
 
@@ -108,32 +108,57 @@ def _stock_atom(meta, name_info, content, *, ts, i, layer_tag="fact"):
     )
 
 
+def _foreign_sector_atom(meta, sector, name, comment, *, ts, i):
+    """외국주 언급 → 매핑 섹터의 컨텍스트 원자 (글로벌 동향). 약한 신호."""
+    return _base(
+        meta,
+        id=_mk_id(meta["channel"], meta["date"], "fgn", i),
+        sector=sector, asset=sector, asset_level="sector",
+        content_type="fact", msg_ts=ts,
+        strength_score=max(1, _strength(meta.get("trust", "C"), "stance", 1) - 1),
+        content=f"글로벌 {name}: {comment}".strip(),
+    )
+
+
 def questionnaire_to_atoms_tg(q: dict, meta: dict) -> list[dict]:
     ctype = meta["type"]
     atoms: list[dict] = []
     trust = meta.get("trust", "C")
 
     def add_stocks(items, key_name, key_text):
-        """공통: stocks_mentioned/stocks → 한국주만 종목원자. 외국주는 무시(섹터본문 반환)."""
-        out = []
+        """공통: stocks_mentioned/stocks 처리.
+        - 한국주(매칭) → 종목원자
+        - 외국주(매핑됨) → 매핑 섹터(들)의 컨텍스트 원자 (애플=반도체+IT면 2개)
+        - 외국주(미매핑) → foreign_unmapped 로그 (큐레이션)
+        """
         for s in items or []:
             raw = (s.get(key_name) or "").strip()
             if not raw:
                 continue
-            info = resolve_stock(raw, date=meta["date"], channel=meta["channel"])
+            # skip_log=True: 외국주 매핑을 여기서 직접 처리하므로 unmatched 로그 생략
+            info = resolve_stock(raw, date=meta["date"], channel=meta["channel"], skip_log=True)
             quote = s.get("quote") or s.get(key_text) or ""
-            if info["is_korean"] and info["matched"]:
+            comment = s.get(key_text) or quote
+            if info["matched"]:
                 atoms.append(_stock_atom(meta, info, quote,
                                          ts=s.get("ts"), i=len(atoms)))
+                continue
+            secs = foreign_sectors(info["name"])
+            if secs:
+                for sec in secs:
+                    atoms.append(_foreign_sector_atom(
+                        meta, sec, info["name"], comment, ts=s.get("ts"), i=len(atoms)))
+            elif info["is_korean"]:
+                # 한글이지만 codemap·외국매핑 둘 다 없음 → 한국주 별칭 큐레이션 대상
+                from .stock_resolve import _append_log, UNMATCHED_LOG
+                _append_log(UNMATCHED_LOG, meta["date"], meta["channel"], info["name"])
             else:
-                out.append(f"{info['name']}: {s.get(key_text) or quote}")
-        return out
+                # 영문 미매핑 외국주 → 외국 매핑 큐레이션 대상
+                log_foreign_unmapped(info["name"], meta["date"], meta["channel"])
 
     if ctype == "sector":
-        foreign = add_stocks(q.get("stocks_mentioned"), "name", "comment")
+        add_stocks(q.get("stocks_mentioned"), "name", "comment")
         body = "; ".join(q.get("points") or [])
-        if foreign:
-            body += " || 글로벌: " + " / ".join(foreign)
         atoms.append(_base(
             meta,
             id=_mk_id(meta["channel"], meta["date"], "sec", 0),

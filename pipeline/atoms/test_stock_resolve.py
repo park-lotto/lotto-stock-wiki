@@ -1,8 +1,8 @@
-"""Test stock resolution: alias → code, unmatched korean logging."""
+"""Test stock resolution: alias → code, unmatched korean logging, foreign sector map."""
 from pathlib import Path
 import pytest
 import pipeline.atoms.stock_resolve as sr
-from pipeline.atoms.stock_resolve import resolve_stock
+from pipeline.atoms.stock_resolve import resolve_stock, foreign_sectors
 
 
 @pytest.fixture(autouse=True)
@@ -10,6 +10,31 @@ def _temp_log(tmp_path, monkeypatch):
     """Isolate test unmatched log to temp path to preserve real log."""
     monkeypatch.setattr(sr, "UNMATCHED_LOG", tmp_path / "unmatched.log")
     yield
+
+
+def test_foreign_sectors_single():
+    assert foreign_sectors("마이크론") == ["반도체"]
+    assert foreign_sectors("TSMC") == ["반도체"]
+
+
+def test_foreign_sectors_multi():
+    assert foreign_sectors("애플") == ["반도체", "IT"]
+
+
+def test_foreign_sectors_paren_stripped():
+    # 비셰이(VSH) → 괄호 제거 후 비셰이 매칭
+    assert foreign_sectors("비셰이(VSH)") == ["전력"]
+
+
+def test_foreign_sectors_unknown_empty():
+    assert foreign_sectors("ZZZCorp") == []
+    assert foreign_sectors("") == []
+
+
+def test_skip_log_suppresses_unmatched(tmp_path, monkeypatch):
+    monkeypatch.setattr(sr, "UNMATCHED_LOG", tmp_path / "u.log")
+    resolve_stock("마이크론", date="2026-06-19", channel="x", skip_log=True)
+    assert not (tmp_path / "u.log").exists()  # skip_log이면 기록 안 함
 
 
 def test_alias_then_code():

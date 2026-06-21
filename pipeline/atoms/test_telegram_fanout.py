@@ -9,9 +9,10 @@ from pipeline.atoms.telegram_questionnaire import (
 
 
 @pytest.fixture(autouse=True)
-def _temp_unmatched_log(tmp_path, monkeypatch):
-    """Isolate UNMATCHED_LOG to tmp_path to prevent test pollution of raw/telegram_unmatched.log."""
+def _temp_logs(tmp_path, monkeypatch):
+    """운영 로그 격리 — UNMATCHED·FOREIGN_UNMAPPED 둘 다 tmp로."""
     monkeypatch.setattr(sr, "UNMATCHED_LOG", tmp_path / "unmatched.log")
+    monkeypatch.setattr(sr, "FOREIGN_UNMAPPED_LOG", tmp_path / "foreign_unmapped.log")
     yield
 
 
@@ -20,6 +21,43 @@ FIX = json.loads((Path(__file__).parent / "fixtures" / "tg_spike.json").read_tex
 
 def _by_channel(name):
     return next(x["result"] for x in FIX if x["channel"] == name)
+
+
+def test_foreign_stock_routed_to_mapped_sector():
+    # 마이크론(외국·DRAM) → 반도체 섹터 컨텍스트 원자 (드롭 아님)
+    q = {"stocks": [{"name": "마이크론", "signal": "bull",
+                     "reason": "슈퍼사이클", "ts": "10:00", "quote": "마이크론 10배"}]}
+    meta = {"date": "2026-06-19", "channel": "잠실개미고급수집",
+            "type": "stock_tips", "trust": "C"}
+    atoms = questionnaire_to_atoms_tg(q, meta)
+    fgn = [a for a in atoms if a["asset_level"] == "sector" and a["sector"] == "반도체"]
+    assert fgn, "마이크론이 반도체 섹터 원자로 라우팅돼야"
+    assert "마이크론" in fgn[0]["content"]
+    # 종목원자로는 안 들어감
+    assert not any(a["asset_level"] == "stock" and a["asset"] == "마이크론" for a in atoms)
+
+
+def test_apple_routed_to_two_sectors():
+    # 애플 → 반도체 + IT 둘 다
+    q = {"stocks": [{"name": "애플", "signal": "neutral",
+                     "reason": "메모리 가격압박", "ts": "11:00", "quote": "애플 인정"}]}
+    meta = {"date": "2026-06-19", "channel": "잠실개미고급수집",
+            "type": "stock_tips", "trust": "C"}
+    atoms = questionnaire_to_atoms_tg(q, meta)
+    secs = {a["sector"] for a in atoms if a["asset_level"] == "sector"}
+    assert "반도체" in secs and "IT" in secs
+
+
+def test_unmapped_foreign_english_logged(tmp_path, monkeypatch):
+    # 매핑에도 codemap에도 없는 영문 외국주 → foreign_unmapped 로그
+    monkeypatch.setattr(sr, "FOREIGN_UNMAPPED_LOG", tmp_path / "fu.log")
+    q = {"stocks": [{"name": "ZZZCorp", "signal": "neutral",
+                     "reason": "x", "ts": "09:00", "quote": "q"}]}
+    meta = {"date": "2026-06-19", "channel": "잠실개미고급수집",
+            "type": "stock_tips", "trust": "C"}
+    questionnaire_to_atoms_tg(q, meta)
+    assert (tmp_path / "fu.log").exists()
+    assert "ZZZCorp" in (tmp_path / "fu.log").read_text(encoding="utf-8")
 
 
 def test_sector_korean_stock_only():
