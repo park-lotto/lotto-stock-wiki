@@ -5,9 +5,17 @@
     python -m pipeline.atoms.telegram_ingest raw/telegram/2026-06-19_하나반도체.md
 """
 import re
+import sys
 import json
 import argparse
 from pathlib import Path
+
+# Windows cp949 콘솔에서 한글·이모지 출력 크래시 방지
+if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
 from .db import init_db, migrate_db, insert_atom, get_conn
 from .vector_db import embed_and_store
@@ -60,7 +68,7 @@ def ingest_telegram(md_path: Path) -> int:
     from .verify_telegram import verify_telegram_quotes
     flags = verify_telegram_quotes(q, md_text)
     if flags:
-        print(f"  🚩 quote 미발견 {len(flags)}건 → strength 감점")
+        print(f"  [FLAG] quote 미발견 {len(flags)}건 → strength 감점")
 
     meta = {"date": date, "channel": channel, "type": info["type"],
             "sector": info.get("sector"), "trust": info["trust"],
@@ -83,13 +91,16 @@ def ingest_telegram(md_path: Path) -> int:
 
 
 def get_done_telegram_files() -> set[str]:
-    """이미 처리된 텔레그램 raw_file 경로 집합 (정규화: 백슬래시→슬래시)."""
+    """이미 처리된 텔레그램 파일 basename 집합.
+
+    raw_file이 상대/절대 경로 어느 형태로 저장됐든 파일명만으로 비교한다
+    (텔레그램 파일은 {날짜}_{채널}.md로 유일)."""
     conn = get_conn()
     rows = conn.execute(
         "SELECT DISTINCT raw_file FROM atoms WHERE source_type='telegram'"
     ).fetchall()
     conn.close()
-    return {r[0].replace("\\", "/") for r in rows}
+    return {Path(r[0]).name for r in rows if r[0]}
 
 
 def get_pending_telegram(date_filter: str = None) -> list[Path]:
@@ -103,7 +114,7 @@ def get_pending_telegram(date_filter: str = None) -> list[Path]:
             continue
         if is_excluded(channel) or not channel_info(channel):
             continue
-        if str(f).replace("\\", "/") in done:
+        if f.name in done:
             continue
         files.append(f)
     return sorted(files, reverse=True)

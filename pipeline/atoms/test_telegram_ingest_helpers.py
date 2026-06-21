@@ -20,15 +20,9 @@ def test_image_file_skipped():
     assert _is_image_file("2026-06-19_하나반도체.md") is False
 
 
-def test_get_done_telegram_files_dedup():
-    """이미 DB에 기록된 텔레그램 raw_file은 done set에 포함되어야 한다."""
-    dbmod.init_db()
-    dbmod.migrate_db()
-
-    # 임시 atom 삽입 (source_type='telegram')
+def _insert_telegram_atom(raw_file: str):
     import uuid
     from datetime import datetime
-    raw = "raw/telegram/2026-06-19_하나반도체.md"
     conn = dbmod.get_conn()
     conn.execute(
         """
@@ -40,7 +34,7 @@ def test_get_done_telegram_files_dedup():
         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """,
         (
-            str(uuid.uuid4()), "2026-06-19", "telegram", "하나반도체", 3, raw,
+            str(uuid.uuid4()), "2026-06-19", "telegram", "하나반도체", 3, raw_file,
             "L5", "반도체", "하나반도체", "sector",
             "bullish", "analysis", "medium", "text", 70,
             "테스트 내용", "[]",
@@ -50,5 +44,24 @@ def test_get_done_telegram_files_dedup():
     conn.commit()
     conn.close()
 
+
+def test_get_done_telegram_files_dedup():
+    """이미 DB에 기록된 텔레그램 파일은 basename으로 done set에 포함되어야 한다."""
+    dbmod.init_db()
+    dbmod.migrate_db()
+    _insert_telegram_atom("raw/telegram/2026-06-19_하나반도체.md")
     done = get_done_telegram_files()
-    assert raw.replace("\\", "/") in done
+    assert "2026-06-19_하나반도체.md" in done
+
+
+def test_dedup_matches_regardless_of_path_form():
+    """상대경로로 저장돼도 절대경로 파일과 basename으로 매칭돼야 한다 (재처리 방지)."""
+    dbmod.init_db()
+    dbmod.migrate_db()
+    # 상대경로로 저장 (단일파일 인제스트 케이스)
+    _insert_telegram_atom("raw/telegram/2026-06-19_하나반도체.md")
+    done = get_done_telegram_files()
+    # 절대경로 형태의 파일도 같은 basename → done에 잡힘
+    abs_name = "C:/Users/x/raw/telegram/2026-06-19_하나반도체.md"
+    from pathlib import Path
+    assert Path(abs_name).name in done
