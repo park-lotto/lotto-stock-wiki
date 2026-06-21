@@ -54,11 +54,24 @@ def ingest_telegram(md_path: Path) -> int:
         return 0
 
     _save_artifact(q, date, channel)
+
+    # Quote 원문 대조 검증
+    md_text = md_path.read_text(encoding="utf-8")
+    from .verify_telegram import verify_telegram_quotes
+    flags = verify_telegram_quotes(q, md_text)
+    if flags:
+        print(f"  🚩 quote 미발견 {len(flags)}건 → strength 감점")
+
     meta = {"date": date, "channel": channel, "type": info["type"],
             "sector": info.get("sector"), "trust": info["trust"],
             "raw_file": str(md_path)}
     atoms = questionnaire_to_atoms_tg(q, meta)
+
+    # Flag가 있으면 strength 감점
+    penalty = 1 if flags else 0
     for a in atoms:
+        if penalty:
+            a["strength_score"] = max(1, a["strength_score"] - penalty)
         if a.get("stance_key"):
             deactivate_prior_stance(a["stance_key"], keep_id=a["id"])
         insert_atom(a)
