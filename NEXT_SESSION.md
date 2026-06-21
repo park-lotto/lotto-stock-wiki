@@ -1,29 +1,32 @@
-# NEXT_SESSION — 카카오EP1 최종 렌더 완료
+# NEXT SESSION
 
-> 2026-06-21 · 회사PC 마감
+- **날짜**: 2026-06-21
+- **세션 요약**: 크롤링봇 → SaaS 구독형 인사이트 대시보드 MVP 구현·배포 완료
 
-## ✅ 완료 항목
-- S4 Roadmap 모드C 재작성 (322f)
-- S6 MCP 모드C 재작성 (1952f) + ASR 교정 3건
-- S11 Apply 모드C 재작성 (744f)
-- 아웃트로 오디오 이음새 처리 (22.85s 가우시안 볼륨딥)
-- ColdOpen → EP1 Full에서 제거 (별도 Composition은 유지)
-- ChannelSting 모드C 전환 (21f)
-- EndSting 모드C 전환 (110f)
-- **EP1 Full 최종 렌더 완료** → `remotion-stock/out/kakao_ep1_final.mp4` (210.9MB, 11분 18초)
+## ✅ 완료 (이번 세션)
+- **뉴스 RSS 피드 5개 → 15개 확장** (config.yaml). 주식 관련성 필터(부동산/분양 제외 + 주식맥락 필수) + 한국경제 UA 패치. 뉴스 발송 포맷 "제목+1~2줄" 간결화.
+- **스탁브레인 대시보드 MVP 전체 구현** (서브에이전트 주도 13태스크, 30 테스트 통과, opus 최종리뷰 통과)
+  - 서버: `api/dashboard_server.py`(FastAPI :8080) + dash_store/auth/feed/stats/briefing
+  - 인증: JWT, 아이디/PW + 텔레그램 매직링크, 구독 만료 차단
+  - API: 피드·브리핑(AI 일간요약+캐시)·통계(수집량/키워드빈도)·설정(키워드/채널 CRUD)·관리자(구독자 관리)
+  - 프론트: 검정+골드, 5탭(브리핑/피드/통계/설정/관리자), Chart.js
+  - 배포: systemd `stockbrain-dash` 상시가동. **외부 접속 검증 완료**(Lightsail TCP 8080 인바운드 Any IP 개방)
+  - 기존 크롤링봇(main_v2) 무손상. 서버 git init(feat/dashboard→main 정리, dd9983e)
+- 임시 admin 로그인: `admin` / `stockbrain2026!` (http://3.39.179.148:8080)
 
-## ❌ 다음 할 것
-1. **썸네일 제작** — Gemini로 진행 예정
-   - 소재: `remotion-stock/out/woman_ep1.png` (아나운서 이미지)
-   - 문구: 딸깍 한번에 / 클로드+카카오톡 / 역대급 주식 브리핑 자동화
-   - CIBI: Claude 아이콘 + KakaoTalk 아이콘 중앙 크게
-2. **유튜브 업로드** — 썸네일 완성 후
-   - 파일: `remotion-stock/out/kakao_ep1_final.mp4`
-3. **S7~S10 Studio 액션줌 미세조정** — 필요 시 재렌더
-4. **ColdOpen 재활용** — 다음 EP 고려 (KKEP1-ColdOpen composition 유지됨)
+## ⏳ 다음 작업 (미완료)
+- **UI 인터페이스 변경** ← 사용자가 다음에 할 작업. 현재는 기능 MVP 수준의 기본 UI.
+- 비밀번호 변경 UI 없음(MVP 제외) — 필요 시 추가
+- 통계 "주도섹터 강도"는 후순위(데이터 누적 후)
+- 결제 자동화는 범위 밖(현재 수동 등록 B안)
 
-## 관련 파일
-- `remotion-stock/src/kakao/KK_EP1_Full.tsx` — 마스터 타임라인
-- `remotion-stock/out/kakao_ep1_final.mp4` — 최종 렌더물
-- `remotion-stock/out/woman_ep1.png` — 썸네일용 이미지
-- `remotion-stock/public/kakao/ep1/outro.mp4` — 이음새 처리된 아웃트로
+## 📁 관련 파일
+- 설계: `docs/superpowers/specs/2026-06-21-stockbrain-saas-dashboard-design.md`
+- 계획: `docs/superpowers/plans/2026-06-21-stockbrain-dashboard.md`
+- 진행원장: `.superpowers/sdd/progress.md` (태스크별 미해결 findings 포함)
+- 서버 코드: `/home/ubuntu/kmong/crawling_bot/api/dashboard_server.py` 등 (SSH only)
+
+## 🔑 서버 접속
+- SSH: `ssh -i C:\Users\TheRose\crawling_bot_client\LightsailDefaultKey-ap-northeast-2.pem ubuntu@3.39.179.148`
+- 대시보드: http://3.39.179.148:8080 / 서비스: `systemctl status stockbrain-dash`
+- 대시보드 코드 수정 후 반영: 파일 scp → `sudo systemctl restart stockbrain-dash`

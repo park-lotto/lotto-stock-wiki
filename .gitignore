@@ -63,3 +63,4 @@ productions/**/*.mkv
 productions/**/*.m4a
 productions/**/*.mp3
 productions/**/*.wav
+.superpowers/

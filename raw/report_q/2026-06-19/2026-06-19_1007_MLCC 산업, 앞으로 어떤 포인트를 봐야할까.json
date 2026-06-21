@@ -1,0 +1,61 @@
+{
+  "meta": {
+    "date": "2026-06-19",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\crawling_bot_data\\2026-06-19\\reports\\2026-06-19_1007_MLCC 산업, 앞으로 어떤 포인트를 봐야할까.md"
+  },
+  "questionnaire": {
+    "target_kind": "sector",
+    "broker": "iM증권",
+    "analyst": [
+      "고의영",
+      "박정하"
+    ],
+    "report_date": "2026.06.19",
+    "sector_name": "전기전자",
+    "sector_view": "비중확대",
+    "thesis": [
+      "3Q26 성수기를 앞두고 주요 MLCC 업체들의 판가 인상 품목 확대가 전망됨",
+      "직납 MLCC 판가 인상 가능성이 커지며 실적 추정치에 긍정적인 영향을 미칠 것으로 예상됨",
+      "AI 서버 중심의 고부가 MLCC 수요 증가와 장기공급계약(LTA) 체결로 인한 공급 리스크 관리 부각"
+    ],
+    "timeline": [
+      "3Q26 성수기 도래",
+      "2H26 타이트한 수급 환경이 범용 MLCC로 전이",
+      "2027~2028년 VPD·기판내장 등 신기술 적용에 따른 새로운 병목 발생"
+    ],
+    "top_picks": [
+      {
+        "name": "삼성전기",
+        "reason": "MLCC 매출의 80% 이상이 직납 고객이며, 직납 판가 인상이 실적 추정치에 직접적 영향을 미칠 수 있음. 서버용 MLCC 증설 기조 강화 중",
+        "tp": null
+      },
+      {
+        "name": "Taiyo Yuden",
+        "reason": "주요 MLCC 업체로서 유통 업체 대상 판가 인상 고지",
+        "tp": null
+      },
+      {
+        "name": "Yageo",
+        "reason": "주요 MLCC 업체로서 유통 업체 대상 판가 인상 고지",
+        "tp": null
+      },
+      {
+        "name": "Walsin",
+        "reason": "하반기 중 직납 가격 인상을 타진 중인 2선 업체",
+        "tp": null
+      },
+      {
+        "name": "Murata",
+        "reason": "증설 기조가 평년 대비 강해지고 있음",
+        "tp": null
+      }
+    ],
+    "risk": [
+      "공급 리드타임 장기화",
+      "장비 리드타임 장기화에 따른 병목",
+      "서버용 MLCC 제조 난이도 증가로 인한 생산 능력 확대의 어려움"
+    ],
+    "quote": "① 3Q26 성수기, ② 직납 MLCC 판가, ③ LTA, ④ 공급 병목"
+  }
+}
