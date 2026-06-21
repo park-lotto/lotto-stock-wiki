@@ -1,32 +1,71 @@
-# NEXT_SESSION — 2026-06-21 (회사PC → 집PC 인계)
+# NEXT_SESSION — 2026-06-22 (집PC · 오푸스)
 
 ## 세션 요약
-5소스 원자 파이프라인 완성 + 7AM 자동화 등록
+스탁브레인 대시보드 UI 전면 개편 — 브레인스토밍 80% 완료 (설계 거의 확정, 문서화 전)
 
-## 완료
-- ✅ 뉴스 인제스트 (post_sources news, header_label=["출처","키워드"])
-- ✅ daily_health MVP (collect_signals·compare_to_baseline·render_card·main, STEP6, 텔레 실발송 확인)
-- ✅ 리포트 섹터 통일 (questionnaire.py → resolve_sector, _guess_sector_from_stock 제거)
-- ✅ 채널간 이벤트 병합 — 비파괴 A안 (event_merge.py, STEP3.9)
-- ✅ 7AM 작업 스케줄러 등록 (로또주식_아침인제스트_7AM, 첫 실행 2026-06-22 07:00)
-- ✅ wiki_update STEP5 — sector_*.md 6개 자동 반영 (commit 541dcc8)
-- ✅ 모델 Sonnet으로 전환
+## ✅ 확정된 설계 (전부 합의됨)
 
-## 미완료 / 후속
-- 🔧 sectors.json 보강: 우주·LNG·AI소프트웨어 미포함 (필요시 추가)
-- 🔧 event_merge 의미기반 업그레이드: 현재 exact-match만 (같은사건 다른표현 안 묶임)
-- 🔧 daily_health 후속 훅: run-log·flag율 (MVP 제외됨)
-- 🔧 telegram_unmatched.log / telegram_foreign_unmapped.log 주기적 별칭 보강
-- 🔧 raw/ingest_report_2026-06-21.md 인제스트 (미처리 상태)
+### 레이아웃 — 3컬럼 (레퍼런스: Semi-Automated Blog Posting GUI 스타일)
+- **왼쪽 = 구독자 개별 등록 네비게이터**
+  - 상단: 소스 아이콘 탭 (📰뉴스 / 📝블로그 / ▶️유튭 / 💬텔레 / 📊리포트)
+  - 소스별 하위 분류 (키워드/채널이 설정탭 등록값으로 자동 생성):
+    - 뉴스 → **키워드별**
+    - 블로그 → **블로거별**
+    - 유튭 → **채널별**
+    - 텔레 → **채널별**
+    - 리포트 → **섹터별**
+  - 표시 방식: **키워드(그룹)별 대표 1개 + 드롭다운(아코디언)** 으로 나머지 펼침
+  - 부가: 안읽음 점/카운트, 신호순/시간순 정렬 토글
 
-## 내일 아침 확인
-- 2026-06-22 07:00 이후 텔레그램에 ✅ 건강검진 카드 수신 여부 확인
-- git pull 후 시작
+- **가운데 = 본문 상세 + 요약** (소스마다 본문 성격 다름)
+  - 뉴스: AI요약 + **원본을 채널별로 묶어서** 표시
+  - 블로그: 요약 + 글 전문 + 이 블로거 다른 글
+  - 유튭: 썸네일 + 자막요약 + **핵심 타임스탬프**
+  - 텔레: 채널 오늘 흐름 요약 + 메시지 스트림
+  - 리포트: **목표가 카드(전→후) + 투자의견** + 핵심
+  - 버튼: **복사만** (발행/재생성 제거 — 발행=운영자 기능, 재생성=비용모델 깨짐)
+
+- **맨오른쪽 = 5소스 섹터별 종합** (※ 다음 세션 목업 미완)
+  - 맨 위: 종합 시황 (오늘 시장 한 단락)
+  - 아래: 섹터별 카드 — 섹터명+총신호수 / 5소스 점 카운트 / 1줄 요약 / 최다 언급 종목
+  - ⚠️ 객관적 정보만 (확증/반증·과열 등 주관 판정 전부 폐기)
+
+### 핵심 아키텍처 결정
+- **위키 = 100% 백엔드.** 화면에 "위키" 노출 없음. AI 요약 품질을 높이는 재료로만 사용 → 복제 불가 경쟁우위. (확증/반증·뱃지 다 폐기 — 주관적이라 신뢰 붕괴 위험)
+- **비용 = 인제스트 시점 선생성.** 수집 직후 Gemini 건당 1회 호출 → DB insight 컬럼 캐시 → 유저 클릭은 DB읽기만 (API 0원). 월 $0.03~0.5 수준. atom_pipeline.py STEP7 insight_generate 추가.
+- **요약 프롬프트 = 액션형** (핵심): "그래서 뭘 사라는데?" — 결론부터.
+  - 출력: core(핵심결론) / stocks(종목+스탠스 매수·관망·회피) / watch(주목포인트) / risk
+  - 원칙: **우리 판단 아니라 "출처가 한 말"을 추출** → 객관성 유지 ("이 영상이 ~라고 함")
+  - 소스별 초점: 뉴스=사실+의미 / 블로그=논지압축 / 유튭=매수매도콜 / 텔레=신호포착 / 리포트=목표가+논리
+  - ⚠️ 프롬프트 날카롭게 다듬기는 **다음 작업으로 보류** (구현하며 실데이터 튜닝)
+
+### 단순함 원칙 (사용자 강조)
+- 프로그램은 단순·명쾌해야 함. 주관적 해석 들어가면 안 됨.
+- 화면엔 객관적인 것만: 출처·시간·신호점수(숫자)·소스 카운트·깔끔한 요약 1개.
+
+## ❓ 미확정 / 다음 작업
+1. **맨오른쪽 패널 목업** — 아직 못 만듦 (큰 HTML 쓸 때 출력 깨지는 버그 → 작게 나눠 제작 필요)
+2. **요약 프롬프트 디벨롭** — 보류함, 구현 단계에서
+3. **태린이 파일** — 계속 미확정. (out/morning_brief_..._태린이아빠.html 구독자 추정) 어떤 데이터인지 확인 후 연동 결정. 일단 뒤로 미룸.
+4. **설계 문서 작성** — docs/superpowers/specs/2026-06-22-dashboard-ui-redesign.md (아직 안 함)
+5. → 이후 writing-plans로 구현 계획
+
+## 비주얼 컴패니언 목업 (참고용, .superpowers/brainstorm/1314-1782049287/content/)
+- final-clean-mockup.html — 다듬은 3컬럼 전체 (단순 버전)
+- all-sources-mockup.html — 5소스별 왼쪽+가운데 (탭 전환)
+- nav-accordion-grouped.html — 키워드 드롭다운 + 채널별 묶음
+- actionable-prompt.html — 액션형 요약 프롬프트 설계
+- simple-vs-complex.html — 위키 단순화 원칙
+- structure-review.html — 전체 구조 리뷰
+
+## 서버 접속
+- SSH: `ssh -i C:\Users\CH\Desktop\LightsailDefaultKey-ap-northeast-2.pem ubuntu@3.39.179.148`
+- 대시보드: http://3.39.179.148:8080 (admin/1234)
+- 서비스: `sudo systemctl restart stockbrain-dash`
+- 서버 코드: /home/ubuntu/kmong/crawling_bot/api/dashboard_server.py (SSH only)
+- PEM 키: C:\Users\CH\Desktop\LightsailDefaultKey-ap-northeast-2.pem ✅ 집PC에 있음
 
 ## 관련 파일
-- pipeline/atoms/post_sources.py (5소스 config)
-- pipeline/atoms/daily_health.py
-- pipeline/atoms/event_merge.py
-- pipeline/atoms/questionnaire.py (섹터 통일)
-- scripts/atom_pipeline.py (STEP1~STEP6 전체)
-- pipeline/atoms/health_history.json (일일 스냅샷)
+- 기존 설계: docs/superpowers/specs/2026-06-21-stockbrain-saas-dashboard-design.md
+- 파이프라인: pipeline/atoms/ (strength_score 1~4 기존 존재, questionnaire.py)
+- ⚠️ 출력 깨짐 버그: 큰 HTML(수백줄) 한 번에 쓰면 "court court..." 반복 발생 → 작게 분할 작성
