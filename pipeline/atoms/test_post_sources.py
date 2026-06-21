@@ -18,6 +18,14 @@ def test_youtube_config():
     assert c["registry"] == "youtube_registry.json"
 
 
+def test_news_config():
+    c = source_config("news")
+    assert c["source_type"] == "news"
+    assert c["dir"] == "raw/news"
+    assert c["header_label"] == ["출처", "키워드"]
+    assert c["registry"] == "news_registry.json"
+
+
 def test_unknown_source_raises():
     with pytest.raises(KeyError):
         source_config("듣보소스")

@@ -29,14 +29,19 @@ _Q_ROOT = _ROOT / "raw" / "post_q"
 _FNAME = re.compile(r"^(\d{4}-\d{2}-\d{2})_\d+_(.+)$")
 
 
-def _parse_post_header(md_path: Path, header_label: str) -> dict:
+def _parse_post_header(md_path: Path, header_label) -> dict:
     text = md_path.read_text(encoding="utf-8", errors="replace")
     title = md_path.stem
-    name = re.search(rf"\*\*{re.escape(header_label)}\*\*[:\s]+(.+)", text)
+    labels = header_label if isinstance(header_label, list) else [header_label]
+    nm = title
+    for lab in labels:
+        m = re.search(rf"\*\*{re.escape(lab)}\*\*[:\s]+(.+)", text)
+        if m:
+            nm = m.group(1).strip()
+            break
+    nm = re.sub(r"\s*(블로그|유튜브)$", "", nm).strip()
     date = re.search(r"\*\*날짜\*\*[:\s]+(\d{4}-\d{2}-\d{2})", text)
     link = re.search(r"\*\*링크\*\*.*?(https?://[^\)\s]+)", text)
-    nm = name.group(1).strip() if name else title
-    nm = re.sub(r"\s*(블로그|유튜브)$", "", nm).strip()
     d = date.group(1) if date else ""
     if not d:
         m = re.search(r"(\d{4}-\d{2}-\d{2})", md_path.name)

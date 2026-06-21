@@ -53,6 +53,36 @@ def test_get_done_post_files_by_source_type(tmp_path):
     assert "2026-06-05_0905_주식.md" in done
 
 
+def test_parse_header_news_individual(tmp_path):
+    """개별기사: 출처 있음 → source_name = 언론사"""
+    p = tmp_path / "2026-06-21_0001_방산기사.md"
+    p.write_text(
+        "# 방산\n- **출처**: 아시아경제\n- **키워드**: 방산\n- **날짜**: 2026-06-21\n",
+        encoding="utf-8")
+    h = _parse_post_header(p, ["출처", "키워드"])
+    assert h["source_name"] == "아시아경제"
+
+
+def test_parse_header_news_bundle(tmp_path):
+    """묶음: 출처 없음, 키워드만 → source_name = 키워드"""
+    p = tmp_path / "2026-06-21_0002_호르무즈묶음.md"
+    p.write_text(
+        "# 호르무즈\n- **키워드**: 호르무즈\n- **날짜**: 2026-06-21\n",
+        encoding="utf-8")
+    h = _parse_post_header(p, ["출처", "키워드"])
+    assert h["source_name"] == "호르무즈"
+
+
+def test_parse_header_blog_str_regression(tmp_path):
+    """blog 회귀: header_label 문자열 그대로 동작"""
+    p = tmp_path / "2026-06-21_0003_블로그.md"
+    p.write_text(
+        "# 블로그\n- **출처**: pokara61 블로그\n- **날짜**: 2026-06-21\n",
+        encoding="utf-8")
+    h = _parse_post_header(p, "출처")
+    assert h["source_name"] == "pokara61"
+
+
 def test_get_pending_post_excludes_non_pattern_files(tmp_path, monkeypatch):
     """_FNAME 패턴 안 맞는 파일(스크립트 등)은 제외"""
     dbmod.init_db(); dbmod.migrate_db()

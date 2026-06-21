@@ -9,6 +9,10 @@ POST_SOURCES = {
         "source_type": "youtube", "dir": "raw/yt",
         "header_label": "채널", "registry": "youtube_registry.json",
     },
+    "news": {
+        "source_type": "news", "dir": "raw/news",
+        "header_label": ["출처", "키워드"], "registry": "news_registry.json",
+    },
 }
 
 
