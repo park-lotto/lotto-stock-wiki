@@ -156,12 +156,13 @@ def questionnaire_to_atoms_tg(q: dict, meta: dict) -> list[dict]:
                 log_foreign_unmapped(info["name"], meta["date"], meta["channel"])
 
     if ctype == "sector":
+        sec = _norm_sector(q.get("sector_name")) if q.get("sector_name") else (meta.get("sector") or "기타")
         add_stocks(q.get("stocks_mentioned"), "name", "comment")
         body = "; ".join(q.get("points") or [])
         atoms.append(_base(
             meta,
             id=_mk_id(meta["channel"], meta["date"], "sec", 0),
-            asset=meta.get("sector") or "기타",
+            sector=sec, asset=sec,
             asset_level="sector",
             signal="bullish" if q.get("sector_view") == "긍정" else "neutral",
             strength_score=_strength(trust, "fact", 1),
@@ -170,7 +171,7 @@ def questionnaire_to_atoms_tg(q: dict, meta: dict) -> list[dict]:
         for i, ev in enumerate(q.get("events") or []):
             atoms.append(_base(
                 meta, id=_mk_id(meta["channel"], meta["date"], "ev", i),
-                asset=meta.get("sector") or "기타", asset_level="sector",
+                sector=sec, asset=sec, asset_level="sector",
                 event_type="event", validity_type="event", msg_ts=ev.get("ts"),
                 content=ev.get("fact") or "", strength_score=_strength(trust, "fact", 1),
             ))

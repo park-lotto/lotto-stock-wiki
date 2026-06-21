@@ -172,3 +172,14 @@ def test_unmapped_foreign_with_hint_preserved():
     atoms = questionnaire_to_atoms_tg(q, meta)
     fgn = [a for a in atoms if a["asset_level"] == "sector" and a["sector"] == "반도체"]
     assert fgn and "ZZZChip" in fgn[0]["content"]
+
+
+def test_sector_atom_uses_sector_name_when_no_meta_sector():
+    # 블로그처럼 meta에 sector 없고 q에 sector_name 있으면 그걸로 (기타 아님)
+    q = {"sector_name": "바이오", "sector_view": "부정",
+         "points": ["코스닥 승강제"], "events": [{"fact": "10월 시행", "ts": None, "quote": "q"}]}
+    meta = {"date": "2026-06-21", "channel": "pokara61", "type": "sector",
+            "source_type": "blog", "trust": "B"}
+    atoms = questionnaire_to_atoms_tg(q, meta)
+    secs = [a for a in atoms if a["asset_level"] == "sector"]
+    assert secs and all(a["sector"] == "바이오" for a in secs)
