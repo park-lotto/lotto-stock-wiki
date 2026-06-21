@@ -44,3 +44,4 @@ def test_market_report_fans_out_sectors_and_picks():
     assert stock_assets & korean_picks_in_fixture, (
         f"한국 상장 종목이 atoms에 없음. stock_assets={stock_assets}"
     )
+    assert any(a["asset_level"] == "market" for a in atoms)

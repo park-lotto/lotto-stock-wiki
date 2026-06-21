@@ -109,14 +109,19 @@ def _norm_sector(s: str) -> str:
     return "기타"
 
 
-def _mk_id(date: str, broker: str, tag: str, i: int) -> str:
-    raw = f"{date}_{broker}_{tag}_{i}"
+def _is_bullish_view(v: str) -> bool:
+    return bool(v) and ("확대" in v or "overweight" in v.lower())
+
+
+def _mk_id(date: str, broker: str, raw_file: str, tag: str, i: int) -> str:
+    raw = f"{date}_{broker}_{raw_file}_{tag}_{i}"
     return "atom_" + hashlib.md5(raw.encode()).hexdigest()[:12]
 
 
 def _base(meta: dict, **kw) -> dict:
     """원자 공통 필드 + 기본값. kw로 덮어쓴다."""
     d = {
+        "id": "",
         "date": meta["date"],
         "source_type": "report",
         "source_name": meta["broker"],
@@ -144,7 +149,7 @@ def _base(meta: dict, **kw) -> dict:
 def _stock_atom(meta, sector, name, content, *, strong, signal, i, tag) -> dict:
     return _base(
         meta,
-        id=_mk_id(meta["date"], meta["broker"], tag, i),
+        id=_mk_id(meta["date"], meta["broker"], meta["raw_file"], tag, i),
         sector=_norm_sector(sector),
         asset=name,
         asset_level="stock",
@@ -189,9 +194,9 @@ def questionnaire_to_atoms(q: dict, meta: dict) -> list[dict]:
         thesis = "; ".join(q.get("thesis") or [])
         atoms.append(_base(
             meta,
-            id=_mk_id(meta["date"], meta["broker"], "sec", 0),
+            id=_mk_id(meta["date"], meta["broker"], meta["raw_file"], "sec", 0),
             sector=sec, asset=q.get("sector_name") or sec, asset_level="sector",
-            signal="bullish" if "확대" in (q.get("sector_view") or "") else "neutral",
+            signal="bullish" if _is_bullish_view(q.get("sector_view")) else "neutral",
             event_type="report", magnitude="major", strength_score=4,
             content=f"[{q.get('sector_view')}] {thesis}",
         ))
@@ -207,7 +212,7 @@ def questionnaire_to_atoms(q: dict, meta: dict) -> list[dict]:
     elif kind == "market":
         atoms.append(_base(
             meta,
-            id=_mk_id(meta["date"], meta["broker"], "mkt", 0),
+            id=_mk_id(meta["date"], meta["broker"], meta["raw_file"], "mkt", 0),
             sector="기타", asset="시장", asset_level="market",
             signal="neutral", event_type="macro", magnitude="major", strength_score=3,
             content=q.get("market_direction") or "; ".join(
@@ -218,9 +223,9 @@ def questionnaire_to_atoms(q: dict, meta: dict) -> list[dict]:
             sec = _norm_sector(rs.get("sector"))
             atoms.append(_base(
                 meta,
-                id=_mk_id(meta["date"], meta["broker"], "mktsec", i),
+                id=_mk_id(meta["date"], meta["broker"], meta["raw_file"], "mktsec", i),
                 sector=sec, asset=rs.get("sector") or sec, asset_level="sector",
-                signal="bullish" if "확대" in (rs.get("stance") or "") else "neutral",
+                signal="bullish" if _is_bullish_view(rs.get("stance")) else "neutral",
                 event_type="report", magnitude="minor", strength_score=2,
                 content=f"시황리포트 추천섹터: {rs.get('reason') or ''}",
             ))
