@@ -270,6 +270,10 @@ def main():
     parser.add_argument("--dry-run", action="store_true", help="목록만 출력")
     args = parser.parse_args()
 
+    print("[DEPRECATED] pdf_ingest는 '중요한 걸 골라라' 방식 — 질문지 방식 권장: "
+          "python -m pipeline.atoms.report_ingest --dir <폴더> "
+          "(일일 파이프라인 교체는 report_ingest --all 패리티 후)")
+
     init_db()
 
     if args.file:
