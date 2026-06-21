@@ -19,3 +19,8 @@ def test_prompt_has_router_and_types():
 def test_prompt_injects_sector_taxonomy():
     from pipeline.atoms.sector_classify import sectors_list
     assert sectors_list()[0] in BLOG_PROMPT  # "반도체"
+
+
+def test_extract_blog_importable():
+    from pipeline.atoms.blog_questionnaire import extract_blog
+    assert callable(extract_blog)

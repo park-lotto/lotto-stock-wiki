@@ -47,7 +47,7 @@ def extract_blog(md_path: Path) -> dict:
             model=_MODEL, contents=[text, BLOG_PROMPT],
             config=types.GenerateContentConfig(response_mime_type="application/json"),
         )
-        return json.loads(resp.text)
+        return json.loads(resp.text or "{}")
     except Exception as e:
         print(f"  [WARN] 블로그 추출 실패: {e}")
         return {}
