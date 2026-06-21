@@ -61,31 +61,6 @@ def collect_signals(date: str) -> dict:
     return {"date": date, "atoms": atoms, "queue_new": queue_new, "pytest_ok": pytest_ok}
 
 
-def main():
-    if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
-        try:
-            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-        except Exception:
-            pass
-    date = datetime.now().strftime("%Y-%m-%d")
-    metrics = collect_signals(date)
-    hist = load_history()
-    yest = hist.get((datetime.strptime(date, "%Y-%m-%d") - timedelta(days=1)).strftime("%Y-%m-%d"), {})
-    alerts = compare_to_baseline(metrics, yest)
-    card = render_card(metrics, alerts)
-    print(card)
-    try:
-        from calc_oscillator import send_telegram
-        send_telegram(card)
-    except Exception as e:
-        print(f"  [건강검진] 텔레 발송 생략: {e}")
-    save_snapshot(metrics)
-
-
-if __name__ == "__main__":
-    main()
-
-
 def compare_to_baseline(today: dict, yesterday: dict) -> list[dict]:
     """원자 수집량과 파이프라인 상태를 어제와 비교 → 경보 리스트 반환."""
     alerts = []
@@ -129,3 +104,28 @@ def render_card(metrics: dict, alerts: list) -> str:
     lines.append(f"[현황] {pytest_str}, 원자 {atom_str}")
 
     return "\n".join(lines)
+
+
+def main():
+    if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+    date = datetime.now().strftime("%Y-%m-%d")
+    metrics = collect_signals(date)
+    hist = load_history()
+    yest = hist.get((datetime.strptime(date, "%Y-%m-%d") - timedelta(days=1)).strftime("%Y-%m-%d"), {})
+    alerts = compare_to_baseline(metrics, yest)
+    card = render_card(metrics, alerts)
+    print(card)
+    try:
+        from calc_oscillator import send_telegram
+        send_telegram(card)
+    except Exception as e:
+        print(f"  [건강검진] 텔레 발송 생략: {e}")
+    save_snapshot(metrics)
+
+
+if __name__ == "__main__":
+    main()
