@@ -57,6 +57,7 @@ def main():
         subprocess.run([PYTHON, "-m", "pipeline.atoms.telegram_ingest", "--all", "--dry-run", "--limit", "5"], cwd=str(ROOT))
         subprocess.run([PYTHON, "-m", "pipeline.atoms.post_ingest", "--source", "blog", "--all", "--dry-run", "--limit", "5"], cwd=str(ROOT))
         subprocess.run([PYTHON, "-m", "pipeline.atoms.post_ingest", "--source", "youtube", "--all", "--dry-run", "--limit", "5"], cwd=str(ROOT))
+        subprocess.run([PYTHON, "-m", "pipeline.atoms.post_ingest", "--source", "news", "--all", "--dry-run", "--limit", "5"], cwd=str(ROOT))
         return
 
     # 1단계: 동기화 + 새 파일 원자화
@@ -88,6 +89,11 @@ def main():
     run([PYTHON, "-m", "pipeline.atoms.post_ingest", "--source", "youtube",
          "--all", "--limit", "30"],
         "STEP3.7 youtube")
+
+    # 3.8단계: 뉴스 인제스트 (겸용 post_ingest)
+    run([PYTHON, "-m", "pipeline.atoms.post_ingest", "--source", "news",
+         "--all", "--limit", "40"],
+        "STEP3.8 news")
 
     # 4단계: 수급 오실레이터 (xlsm 파일 있을 때만)
     osc_xlsm = list(ROOT.glob("raw/매일 엑셀넣을것/외국인기관수급오실레이터*.xlsm"))
