@@ -1,3 +1,6 @@
+- 2026-06-21 — codemap KRX 통합: KRX KOSPI+KOSDAQ 2605종목 HTTP 연동(krx_codes.json 7일 TTL). 두산로보틱스·HD현대중공업 등 이전 누락종목 인식 가능. 6 tests pass. (LIG넥스원은 KRX 공식명 변경→LIG디펜스앤에어로스페이스, alias 별도)
+- 2026-06-21 — 리포트 질문지 추출 시스템 구축(Plan A): questionnaire.py·report_ingest.py·codemap.py 신규. fan-out 3타입(stock/sector/market). 6 tasks 완료, main merge push 완료.
+- 2026-06-21 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-06-21.md
 - 2026-06-20 — 카카오EP1 튜토리얼 액션줌 완성 + 모드C 착수: S7 카톡창 중앙줌(translate+scale), S8/S9/S10 액션줌 재작성, S2 Whisper재전사(1752f·1191오류정정), shake버그({x,y}) 수정. **S3 모드C 골든레퍼런스**(FlowField·9비트 대사싱크·거대타이포). 다음(집PC): S3 톤확정 → S4/S6/S11/콜드오픈/스팅 모드C. 상세=NEXT_SESSION.md
 - 2026-06-20 — 카카오EP1 S5 버그픽스: 화면짤림(fy/SC 수치 조정) + 사인파 떨림 제거(Math.sin 삭제·damping 강화). 다음: S5 최종컨펌 → S7~S10·S2 액션줌
 - 2026-06-19 — 카카오EP1 Remotion LIFE 3.0 재설계: DESIGN.md(3씬모드)+life.tsx 신규. 인트로/아웃트로 Whisper자막+음성정렬 확정, S5 풀스크린 액션줌 v3(자막 23세그 1:1 싱크). 다음(집PC): S7~S10·S2 액션줌 적용 → S3/S6/S11 모드C. 상세=NEXT_SESSION.md
