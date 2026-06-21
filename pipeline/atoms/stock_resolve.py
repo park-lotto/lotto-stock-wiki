@@ -40,5 +40,6 @@ def resolve_stock(name: str, *, date: str, channel: str) -> dict:
         UNMATCHED_LOG.parent.mkdir(parents=True, exist_ok=True)
         with UNMATCHED_LOG.open("a", encoding="utf-8") as f:
             f.write(f"{date}\t{channel}\t{norm}\n")
+    # 한글 음차 외국주(마이크론 등)도 미매칭 로그에 들어옴 — 리뷰 큐는 노이즈 허용
     return {"name": norm, "code": None,
-            "is_korean": is_korean_stock(norm), "matched": False}
+            "is_korean": looks_korean, "matched": False}
