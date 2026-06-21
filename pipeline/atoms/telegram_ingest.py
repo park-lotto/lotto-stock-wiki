@@ -9,7 +9,7 @@ import json
 import argparse
 from pathlib import Path
 
-from .db import init_db, migrate_db, insert_atom
+from .db import init_db, migrate_db, insert_atom, get_conn
 from .vector_db import embed_and_store
 from .telegram_registry import channel_info, is_excluded
 from .telegram_questionnaire import extract_telegram, questionnaire_to_atoms_tg
@@ -69,7 +69,18 @@ def ingest_telegram(md_path: Path) -> int:
     return len(atoms)
 
 
+def get_done_telegram_files() -> set[str]:
+    """이미 처리된 텔레그램 raw_file 경로 집합 (정규화: 백슬래시→슬래시)."""
+    conn = get_conn()
+    rows = conn.execute(
+        "SELECT DISTINCT raw_file FROM atoms WHERE source_type='telegram'"
+    ).fetchall()
+    conn.close()
+    return {r[0].replace("\\", "/") for r in rows}
+
+
 def get_pending_telegram(date_filter: str = None) -> list[Path]:
+    done = get_done_telegram_files()
     files = []
     for f in sorted(_TG_DIR.glob("*.md")):
         if "_digest" in f.name:
@@ -78,6 +89,8 @@ def get_pending_telegram(date_filter: str = None) -> list[Path]:
         if date_filter and date != date_filter:
             continue
         if is_excluded(channel) or not channel_info(channel):
+            continue
+        if str(f).replace("\\", "/") in done:
             continue
         files.append(f)
     return sorted(files, reverse=True)
