@@ -9,6 +9,7 @@ from google.genai import types
 
 from .atomizer import _load_gemini_key
 from .stock_resolve import resolve_stock, foreign_sectors, log_foreign_unmapped
+from .sector_classify import sectors_list
 
 _MODEL = "gemini-3.1-flash-lite"
 
@@ -20,11 +21,17 @@ comment·reason은 재서술 허용하되 quote는 반드시 원문 축자.
 출력: 해당 칸만 채운 JSON 1개. 다른 텍스트 금지.
 """
 
+_SECTOR_RULE = (
+    "각 종목에는 sector를 붙여라. 아래 목록에서 정확히 하나만 고른다(모르면 \"기타\"): "
+    + " / ".join(sectors_list()) + "\n"
+)
+_COMMON = _COMMON + _SECTOR_RULE
+
 QUESTIONNAIRES = {
     "sector": _COMMON + """
 이 채널 타입: sector
 칸: sector_name, sector_view(긍정/중립/부정), points(코멘트 배열),
-stocks_mentioned:[{name, comment, ts, quote}],
+stocks_mentioned:[{name, comment, ts, quote, sector}],
 events:[{fact, ts, quote}], quote(핵심 한 문장)""",
 
     "market": _COMMON + """
@@ -34,7 +41,7 @@ sectors_mentioned:[{sector, stance, comment}], quote""",
 
     "stock_tips": _COMMON + """
 이 채널 타입: stock_tips
-칸: stocks:[{name, signal(bull/bear/neutral), reason, ts, quote}],
+칸: stocks:[{name, signal(bull/bear/neutral), reason, ts, quote, sector}],
 news_items:[{fact, ts, quote}], quote""",
 
     "insight": _COMMON + """
@@ -42,12 +49,12 @@ news_items:[{fact, ts, quote}], quote""",
 칸: leading_sectors(배열),
 stance:[{target(종목 또는 섹터), view(긍정/중립/부정), ts, quote}],
 methods:[{rule, quote}]  (종목 무관 매매규칙),
-stocks_mentioned:[{name, comment, ts, quote}],
+stocks_mentioned:[{name, comment, ts, quote, sector}],
 noise_ratio(0~1 추정), quote(가장 통찰력 있는 한 문장)""",
 
     "report_relay": _COMMON + """
 이 채널 타입: report_relay (증권사 리포트 중계)
-칸: reports:[{broker, stock, rating, tp, ts, quote}], quote""",
+칸: reports:[{broker, stock, rating, tp, ts, quote, sector}], quote""",
 }
 
 
