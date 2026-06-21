@@ -150,3 +150,25 @@ def test_stock_tips_quote_takes_priority_over_reason():
     # quote 우선: 인용텍스트XYZ 포함, 리즌텍스트ABC 미포함
     assert "인용텍스트XYZ" in content
     assert "리즌텍스트ABC" not in content
+
+
+def test_korean_stock_gets_hint_sector():
+    # stock_tips 한국주가 "기타" 아닌 hint 섹터를 받는다
+    q = {"stocks": [{"name": "삼성전자", "signal": "bull", "reason": "x",
+                     "ts": "10:00", "quote": "q", "sector": "반도체"}]}
+    meta = {"date": "2026-06-19", "channel": "잠실개미고급수집",
+            "type": "stock_tips", "trust": "C"}
+    atoms = questionnaire_to_atoms_tg(q, meta)
+    sams = [a for a in atoms if a["asset"] == "삼성전자" and a["asset_level"] == "stock"]
+    assert sams and sams[0]["sector"] == "반도체"
+
+
+def test_unmapped_foreign_with_hint_preserved():
+    # map에 없는 외국주라도 hint로 섹터 컨텍스트 원자 생성 (손실 X)
+    q = {"stocks": [{"name": "ZZZChip", "signal": "bull", "reason": "신규칩",
+                     "ts": "10:00", "quote": "q", "sector": "반도체"}]}
+    meta = {"date": "2026-06-19", "channel": "잠실개미고급수집",
+            "type": "stock_tips", "trust": "C"}
+    atoms = questionnaire_to_atoms_tg(q, meta)
+    fgn = [a for a in atoms if a["asset_level"] == "sector" and a["sector"] == "반도체"]
+    assert fgn and "ZZZChip" in fgn[0]["content"]

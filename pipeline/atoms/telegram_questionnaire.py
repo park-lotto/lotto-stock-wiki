@@ -9,7 +9,7 @@ from google.genai import types
 
 from .atomizer import _load_gemini_key
 from .stock_resolve import resolve_stock, foreign_sectors, log_foreign_unmapped
-from .sector_classify import sectors_list
+from .sector_classify import resolve_sector, sectors_list
 
 _MODEL = "gemini-3.1-flash-lite"
 
@@ -60,8 +60,7 @@ noise_ratio(0~1 추정), quote(가장 통찰력 있는 한 문장)""",
 
 _TRUST_BASE = {"A": 4, "B": 3, "C": 2, "D": 1}
 _LAYER_W = {"fact": 1.0, "stance": 0.8, "method": 0.7}
-_SECTOR_KEYS = ["반도체", "조선", "로봇", "방산", "바이오", "전력", "2차전지",
-                "자동차", "통신", "철강", "중국", "기타"]
+_SECTOR_KEYS = sectors_list()
 
 
 def _mk_id(channel: str, date: str, tag: str, i: int) -> str:
@@ -104,10 +103,11 @@ def _base(meta: dict, **kw) -> dict:
     return d
 
 
-def _stock_atom(meta, name_info, content, *, ts, i, layer_tag="fact"):
+def _stock_atom(meta, name_info, content, *, ts, i, sector, layer_tag="fact"):
     return _base(
         meta,
         id=_mk_id(meta["channel"], meta["date"], "stk", i),
+        sector=sector,
         asset=name_info["name"], asset_level="stock",
         content_type="fact", msg_ts=ts,
         strength_score=_strength(meta.get("trust", "C"), layer_tag, 1),
@@ -133,34 +133,26 @@ def questionnaire_to_atoms_tg(q: dict, meta: dict) -> list[dict]:
     trust = meta.get("trust", "C")
 
     def add_stocks(items, key_name, key_text):
-        """공통: stocks_mentioned/stocks 처리.
-        - 한국주(매칭) → 종목원자
-        - 외국주(매핑됨) → 매핑 섹터(들)의 컨텍스트 원자 (애플=반도체+IT면 2개)
-        - 외국주(미매핑) → foreign_unmapped 로그 (큐레이션)
-        """
+        """한국주(매칭)=종목원자(hint 섹터) / 비매칭=외국주 경로(map→hint→기타 컨텍스트원자)."""
         for s in items or []:
             raw = (s.get(key_name) or "").strip()
             if not raw:
                 continue
-            # skip_log=True: 외국주 매핑을 여기서 직접 처리하므로 unmatched 로그 생략
             info = resolve_stock(raw, date=meta["date"], channel=meta["channel"], skip_log=True)
             quote = s.get("quote") or s.get(key_text) or ""
             comment = s.get(key_text) or quote
+            hint = s.get("sector")
             if info["matched"]:
-                atoms.append(_stock_atom(meta, info, quote,
-                                         ts=s.get("ts"), i=len(atoms)))
+                secs, _ = resolve_sector(info["name"], hint, is_foreign=False)
+                atoms.append(_stock_atom(meta, info, quote, ts=s.get("ts"),
+                                         i=len(atoms), sector=secs[0]))
                 continue
-            secs = foreign_sectors(info["name"])
-            if secs:
-                for sec in secs:
-                    atoms.append(_foreign_sector_atom(
-                        meta, sec, info["name"], comment, ts=s.get("ts"), i=len(atoms)))
-            elif info["is_korean"]:
-                # 한글이지만 codemap·외국매핑 둘 다 없음 → 한국주 별칭 큐레이션 대상
-                from .stock_resolve import _append_log, UNMATCHED_LOG
-                _append_log(UNMATCHED_LOG, meta["date"], meta["channel"], info["name"])
-            else:
-                # 영문 미매핑 외국주 → 외국 매핑 큐레이션 대상
+            # 비매칭 = 외국주 경로 (codemap이 KRX 전종목이라 미매칭 한국주는 희소)
+            secs, src = resolve_sector(info["name"], hint, is_foreign=True)
+            for sec in secs:
+                atoms.append(_foreign_sector_atom(
+                    meta, sec, info["name"], comment, ts=s.get("ts"), i=len(atoms)))
+            if src == "fallback":
                 log_foreign_unmapped(info["name"], meta["date"], meta["channel"])
 
     if ctype == "sector":
@@ -245,12 +237,13 @@ def questionnaire_to_atoms_tg(q: dict, meta: dict) -> list[dict]:
             raw = (rp.get("stock") or "").strip()
             if not raw:
                 continue
-            info = resolve_stock(raw, date=meta["date"], channel=meta["channel"])
-            if info["is_korean"] and info["matched"]:
+            info = resolve_stock(raw, date=meta["date"], channel=meta["channel"], skip_log=True)
+            if info["matched"]:
+                secs, _ = resolve_sector(info["name"], rp.get("sector"), is_foreign=False)
                 atoms.append(_stock_atom(
                     meta, info,
                     f"[중계:{rp.get('broker')}] 목표가 {rp.get('tp')} {rp.get('rating')} / {rp.get('quote') or ''}",
-                    ts=rp.get("ts"), i=len(atoms)))
+                    ts=rp.get("ts"), i=len(atoms), sector=secs[0]))
 
     return atoms
 
