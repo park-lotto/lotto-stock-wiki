@@ -48,6 +48,183 @@ noise_ratio(0~1 추정), quote(가장 통찰력 있는 한 문장)""",
 }
 
 
+import hashlib
+import re as _re
+
+from .stock_resolve import resolve_stock
+
+_TRUST_BASE = {"A": 4, "B": 3, "C": 2, "D": 1}
+_LAYER_W = {"fact": 1.0, "stance": 0.8, "method": 0.7}
+_SECTOR_KEYS = ["반도체", "조선", "로봇", "방산", "바이오", "전력", "2차전지",
+                "자동차", "통신", "철강", "중국", "기타"]
+
+
+def _mk_id(channel: str, date: str, tag: str, i: int) -> str:
+    raw = f"{channel}_{date}_{tag}_{i}"
+    return "atom_tg_" + hashlib.md5(raw.encode()).hexdigest()[:12]
+
+
+def _strength(trust: str, layer_tag: str, mention_count: int) -> int:
+    base = _TRUST_BASE.get(trust, 1) * _LAYER_W.get(layer_tag, 1.0)
+    return max(1, min(4, round(base + (mention_count - 1))))
+
+
+def _event_key(fact: str) -> str:
+    norm = _re.sub(r"[^가-힣A-Za-z0-9]", "", fact or "")
+    return hashlib.md5(norm.encode()).hexdigest()[:10]
+
+
+def _norm_sector(s: str) -> str:
+    if not s:
+        return "기타"
+    for k in _SECTOR_KEYS:
+        if k in s:
+            return k
+    return "기타"
+
+
+def _base(meta: dict, **kw) -> dict:
+    d = {
+        "id": "", "date": meta["date"], "source_type": "telegram",
+        "source_name": meta["channel"], "source_trust": meta.get("trust", "C"),
+        "raw_file": meta.get("raw_file", ""), "layer": "L5",
+        "sector": meta.get("sector") or "기타", "asset": "", "asset_level": "sector",
+        "signal": "neutral", "event_type": "report", "magnitude": "minor",
+        "content_type": "fact", "strength_score": 1, "validity_type": "permanent",
+        "validity_until": None, "is_active": 1, "content": "", "relations": [],
+        "stance_key": None, "mention_channels": [meta["channel"]],
+        "mention_count": 1, "msg_ts": None,
+    }
+    d.update(kw)
+    return d
+
+
+def _stock_atom(meta, name_info, content, *, ts, i, layer_tag="fact"):
+    return _base(
+        meta,
+        id=_mk_id(meta["channel"], meta["date"], "stk", i),
+        asset=name_info["name"], asset_level="stock",
+        content_type="fact", msg_ts=ts,
+        strength_score=_strength(meta.get("trust", "C"), layer_tag, 1),
+        content=content,
+    )
+
+
+def questionnaire_to_atoms_tg(q: dict, meta: dict) -> list[dict]:
+    ctype = meta["type"]
+    atoms: list[dict] = []
+    trust = meta.get("trust", "C")
+
+    def add_stocks(items, key_name, key_text):
+        """공통: stocks_mentioned/stocks → 한국주만 종목원자. 외국주는 무시(섹터본문 반환)."""
+        out = []
+        for s in items or []:
+            raw = (s.get(key_name) or "").strip()
+            if not raw:
+                continue
+            info = resolve_stock(raw, date=meta["date"], channel=meta["channel"])
+            quote = s.get("quote") or s.get(key_text) or ""
+            if info["is_korean"] and info["matched"]:
+                atoms.append(_stock_atom(meta, info, quote,
+                                         ts=s.get("ts"), i=len(atoms)))
+            else:
+                out.append(f"{info['name']}: {s.get(key_text) or quote}")
+        return out
+
+    if ctype == "sector":
+        foreign = add_stocks(q.get("stocks_mentioned"), "name", "comment")
+        body = "; ".join(q.get("points") or [])
+        if foreign:
+            body += " || 글로벌: " + " / ".join(foreign)
+        atoms.append(_base(
+            meta,
+            id=_mk_id(meta["channel"], meta["date"], "sec", 0),
+            asset=meta.get("sector") or "기타",
+            asset_level="sector",
+            signal="bullish" if q.get("sector_view") == "긍정" else "neutral",
+            strength_score=_strength(trust, "fact", 1),
+            content=f"[{q.get('sector_view')}] {body}",
+        ))
+        for i, ev in enumerate(q.get("events") or []):
+            atoms.append(_base(
+                meta, id=_mk_id(meta["channel"], meta["date"], "ev", i),
+                asset=meta.get("sector") or "기타", asset_level="sector",
+                event_type="event", validity_type="event", msg_ts=ev.get("ts"),
+                content=ev.get("fact") or "", strength_score=_strength(trust, "fact", 1),
+            ))
+
+    elif ctype == "market":
+        atoms.append(_base(
+            meta, id=_mk_id(meta["channel"], meta["date"], "mkt", 0),
+            asset="시장", asset_level="market", event_type="macro",
+            content=q.get("market_direction") or "",
+            strength_score=_strength(trust, "fact", 1),
+        ))
+        for i, ev in enumerate(q.get("macro_events") or []):
+            fact = ev.get("fact") if isinstance(ev, dict) else str(ev)
+            atoms.append(_base(
+                meta, id=_mk_id(meta["channel"], meta["date"], "macro", i),
+                asset="시장", asset_level="market", event_type="macro",
+                validity_type="event", msg_ts=ev.get("ts") if isinstance(ev, dict) else None,
+                content=fact or "", strength_score=_strength(trust, "fact", 1),
+            ))
+        for i, sm in enumerate(q.get("sectors_mentioned") or []):
+            atoms.append(_base(
+                meta, id=_mk_id(meta["channel"], meta["date"], "mktsec", i),
+                sector=_norm_sector(sm.get("sector")), asset=sm.get("sector") or "기타",
+                asset_level="sector", content=sm.get("comment") or "",
+                strength_score=_strength(trust, "stance", 1),
+            ))
+
+    elif ctype == "stock_tips":
+        add_stocks(q.get("stocks"), "name", "reason")
+        for i, nw in enumerate(q.get("news_items") or []):
+            fact = nw.get("fact") if isinstance(nw, dict) else str(nw)
+            atoms.append(_base(
+                meta, id=_mk_id(meta["channel"], meta["date"], "news", i),
+                asset_level="market", event_type="event", validity_type="event",
+                msg_ts=nw.get("ts") if isinstance(nw, dict) else None,
+                content=fact or "",
+                strength_score=_strength(trust, "fact", 1),
+            ))
+
+    elif ctype == "insight":
+        for i, st in enumerate(q.get("stance") or []):
+            target = (st.get("target") or "").strip()
+            if not target:
+                continue
+            atoms.append(_base(
+                meta, id=_mk_id(meta["channel"], meta["date"], "stance", i),
+                asset=target, asset_level="stance",
+                stance_key=f"{meta['channel']}|{target}",
+                content_type="opinion", msg_ts=st.get("ts"),
+                signal="bullish" if st.get("view") == "긍정" else "neutral",
+                content=f"{st.get('view')}: {st.get('quote') or ''}",
+                strength_score=_strength(trust, "stance", 1),
+            ))
+        for i, m in enumerate(q.get("methods") or []):
+            atoms.append(_base(
+                meta, id=_mk_id(meta["channel"], meta["date"], "method", i),
+                asset_level="method", content_type="opinion",
+                content=m.get("rule") or "", strength_score=_strength(trust, "method", 1),
+            ))
+        add_stocks(q.get("stocks_mentioned"), "name", "comment")
+
+    elif ctype == "report_relay":
+        for i, rp in enumerate(q.get("reports") or []):
+            raw = (rp.get("stock") or "").strip()
+            if not raw:
+                continue
+            info = resolve_stock(raw, date=meta["date"], channel=meta["channel"])
+            if info["is_korean"] and info["matched"]:
+                atoms.append(_stock_atom(
+                    meta, info,
+                    f"[중계:{rp.get('broker')}] 목표가 {rp.get('tp')} {rp.get('rating')} / {rp.get('quote') or ''}",
+                    ts=rp.get("ts"), i=len(atoms)))
+
+    return atoms
+
+
 def extract_telegram(md_path: Path, ctype: str) -> dict:
     """채널 .md를 Gemini로 읽어 채워진 질문지 반환. 실패 시 {}."""
     prompt = QUESTIONNAIRES.get(ctype)
