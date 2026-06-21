@@ -15,6 +15,7 @@ from pathlib import Path
 
 from .pdf_ingest import _extract_pdf_url, _extract_meta, _download_pdf
 from .questionnaire import extract_questionnaire, questionnaire_to_atoms
+from .verify_questionnaire import run_verification, adjust_strength
 from .db import init_db, insert_atom
 from .vector_db import embed_and_store
 
@@ -43,6 +44,8 @@ def ingest_report(md_path: Path) -> int:
         if not _download_pdf(url, pdf):
             return 0
         q = extract_questionnaire(pdf)
+        # PDF가 살아있는 동안 검증 (인용 대조를 위해 pdf 경로 전달)
+        vr = run_verification(q, meta, pdf) if q else None
 
     if not q:
         print("  [WARN] 빈 질문지")
@@ -52,9 +55,23 @@ def ingest_report(md_path: Path) -> int:
     if q.get("broker"):
         meta["broker"] = q["broker"]
 
+    # 검증 결과 출력
+    trust = vr["trust_score"] if vr else 1.0
+    flags = vr["flags"] if vr else []
+    if flags:
+        flag_codes = [f["code"] for f in flags if f["code"] not in {"Q_SKIPPED", "W_NO_ANSWER_KEY"}]
+        if flag_codes:
+            print(f"  🚩 검증 플래그 {len(flag_codes)}개 (trust={trust:.0%}): {', '.join(flag_codes)}")
+        for f in flags:
+            print(f"     {f['code']}: {f['msg']}")
+    else:
+        print(f"  ✅ 검증 통과 (trust={trust:.0%})")
+
     _save_questionnaire(q, meta, md_path.stem)
     atoms = questionnaire_to_atoms(q, meta)
     for a in atoms:
+        # trust_score가 낮으면 strength_score 하향 조정
+        a["strength_score"] = adjust_strength(a["strength_score"], trust)
         insert_atom(a)
         try:
             embed_and_store(a)
