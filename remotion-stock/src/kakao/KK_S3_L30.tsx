@@ -78,7 +78,7 @@ export const KK_S3_L30: React.FC = () => {
 
   return (
     <Stage>
-      {/* <Audio src={staticFile('kakao/ep1/s03_audio.mp4')} /> */}
+      <Audio src={staticFile('kakao/ep1/s03_audio.mp4')} />
       <FlowField f={f} color={LIME} />
       <Kicker ch="CH 03" title="PHILOSOPHY" f={f} />
 

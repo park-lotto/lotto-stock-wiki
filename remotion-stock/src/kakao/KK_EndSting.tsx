@@ -1,24 +1,28 @@
 /**
- * KK_EndSting — 마무리 스팅 (110f · 3.7s)
+ * KK_EndSting — 마무리 스팅 (110f · 3.7s · life.tsx 디자인)
  *
  * 타임라인:
  *   f0~6    화이트 플래시 + sting_hit
- *   f4~28   로고 락업 펀치 인
+ *   f4~28   로고 락업 펀치 인 (ClaudeIcon + STOCKBRAIN)
  *   f30~50  "구독" CTA
  *   f44~64  "좋아요" CTA
  *   f58~80  "고정댓글 확인" CTA
  *   f90~110 페이드아웃 + end_whoosh
+ * 골든 레퍼런스: KK_S3_L30.tsx
  */
 
 import React from 'react';
-import { AbsoluteFill, useCurrentFrame } from 'remotion';
-import { LIME } from './theme';
-import { pop, flashAt, cl, riseFade, Scanlines, GlowOrb, LogoLockup, Sfx } from './fx';
+import { useCurrentFrame } from 'remotion';
+import { pop, flashAt, cl, riseFade, Sfx } from './fx';
+import { Stage, ClaudeIcon, LIME, LIME_GLOW, RED, SUB } from './life';
 
 export const KK_ENDSTING_FRAMES = 110;
 
+const MONO = "'Space Mono','Roboto Mono',monospace";
+const KFONT = "'Noto Sans KR',sans-serif";
+
 const CTAS = [
-  { icon: '🔔', label: '구독', sub: 'SUBSCRIBE', at: 30, color: '#FF4455' },
+  { icon: '🔔', label: '구독', sub: 'SUBSCRIBE', at: 30, color: RED },
   { icon: '👍', label: '좋아요', sub: 'LIKE', at: 44, color: LIME },
   { icon: '📌', label: '고정댓글 프롬프트 확인', sub: 'PINNED', at: 58, color: '#FFFFFF' },
 ];
@@ -30,29 +34,29 @@ export const KK_EndSting: React.FC = () => {
   const logoOp = cl(f, 4, 16);
   const flash = flashAt(f, 0, 6, 0.6);
   const fadeOut = cl(f, 92, 110, 1, 0);
+  const glowPulse = 1 + Math.sin(f * 0.12) * 0.03;
 
   return (
-    <AbsoluteFill
-      style={{
-        background: 'radial-gradient(circle at 50% 38%, #0d1410 0%, #000 75%)',
-        alignItems: 'center',
-        justifyContent: 'center',
-        overflow: 'hidden',
-      }}
-    >
+    <Stage>
       <Sfx at={0} file="sting_hit.mp3" vol={0.5} />
       <Sfx at={30} file="pop_appear.mp3" vol={0.4} />
       <Sfx at={44} file="pop_appear.mp3" vol={0.4} />
       <Sfx at={58} file="pop_appear.mp3" vol={0.4} />
       <Sfx at={92} file="end_whoosh.mp3" vol={0.4} />
 
-      <GlowOrb f={f} size={680} />
-      <Scanlines opacity={0.06} />
+      {/* 라임 라디얼 글로우 */}
+      <div style={{ position: 'absolute', left: '50%', top: '42%', width: 1000, height: 1000, transform: `translate(-50%,-50%) scale(${glowPulse})`, borderRadius: '50%', background: `radial-gradient(circle, ${LIME}1f 0%, transparent 60%)`, opacity: cl(f, 4, 16) * fadeOut, pointerEvents: 'none' }} />
 
-      <div style={{ opacity: fadeOut, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 46 }}>
-        {/* 로고 */}
-        <div style={{ transform: `scale(${logoScale})`, opacity: logoOp }}>
-          <LogoLockup scale={1.3} glow={0.9} />
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 46, opacity: fadeOut }}>
+        {/* 로고 락업 */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, transform: `scale(${logoScale})`, opacity: logoOp }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+            <ClaudeIcon size={88} />
+            <div style={{ fontFamily: KFONT, fontSize: 84, fontWeight: 900, letterSpacing: -2, color: '#fff', textShadow: '0 2px 24px rgba(0,0,0,0.6)' }}>
+              STOCK<span style={{ color: LIME, textShadow: `0 0 30px ${LIME_GLOW}` }}>BRAIN</span>
+            </div>
+          </div>
+          <div style={{ fontFamily: MONO, fontSize: 18, letterSpacing: 5, color: SUB }}>정보의 홍수에서 인사이트만</div>
         </div>
 
         {/* CTA 3종 */}
@@ -78,17 +82,8 @@ export const KK_EndSting: React.FC = () => {
               >
                 <span style={{ fontSize: 30 }}>{c.icon}</span>
                 <div>
-                  <div style={{ fontSize: 22, fontWeight: 900, color: '#fff' }}>{c.label}</div>
-                  <div
-                    style={{
-                      fontFamily: "'Roboto Mono', monospace",
-                      fontSize: 10,
-                      color: c.color,
-                      letterSpacing: 3,
-                    }}
-                  >
-                    {c.sub}
-                  </div>
+                  <div style={{ fontFamily: KFONT, fontSize: 22, fontWeight: 900, color: '#fff' }}>{c.label}</div>
+                  <div style={{ fontFamily: MONO, fontSize: 10, color: c.color, letterSpacing: 3 }}>{c.sub}</div>
                 </div>
               </div>
             );
@@ -97,6 +92,6 @@ export const KK_EndSting: React.FC = () => {
       </div>
 
       <div style={{ position: 'absolute', inset: 0, background: '#fff', opacity: flash, pointerEvents: 'none' }} />
-    </AbsoluteFill>
+    </Stage>
   );
 };
