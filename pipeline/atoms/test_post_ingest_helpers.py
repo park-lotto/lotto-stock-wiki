@@ -1,6 +1,7 @@
 import pytest
+from pathlib import Path
 import pipeline.atoms.db as dbmod
-from pipeline.atoms.post_ingest import _parse_post_header, get_done_post_files
+from pipeline.atoms.post_ingest import _parse_post_header, get_done_post_files, get_pending_post
 
 
 @pytest.fixture(autouse=True)
@@ -50,3 +51,30 @@ def test_get_done_post_files_by_source_type(tmp_path):
     conn.commit(); conn.close()
     done = get_done_post_files("youtube")
     assert "2026-06-05_0905_주식.md" in done
+
+
+def test_get_pending_post_excludes_non_pattern_files(tmp_path, monkeypatch):
+    """_FNAME 패턴 안 맞는 파일(스크립트 등)은 제외"""
+    dbmod.init_db(); dbmod.migrate_db()
+    import pipeline.atoms.post_ingest as pi
+    monkeypatch.setattr(pi, "_ROOT", tmp_path)
+
+    # 테스트용 소스 디렉토리 생성
+    d = tmp_path / "raw" / "yt"
+    d.mkdir(parents=True)
+
+    # 정상 파일 (YYYY-MM-DD_NNNN_제목 패턴)
+    (d / "2026-06-06_1801_real_video.md").write_text("x", encoding="utf-8")
+    # 스크립트 파일 (패턴 미매치 → 제외되어야 함)
+    (d / "script_소부장자금순환_20260604_gemini.md").write_text("x", encoding="utf-8")
+
+    cfg = {
+        "source_type": "youtube",
+        "dir": "raw/yt",
+        "header_label": "채널",
+        "registry": "youtube_registry.json"
+    }
+
+    names = [p.name for p in get_pending_post(cfg)]
+    assert "2026-06-06_1801_real_video.md" in names
+    assert "script_소부장자금순환_20260604_gemini.md" not in names

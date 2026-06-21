@@ -63,7 +63,10 @@ def get_pending_post(cfg: dict, date_filter: str = None) -> list[Path]:
         if "_analysis" in f.name:
             continue
         m = _FNAME.match(f.stem)
-        if date_filter and (not m or m.group(1) != date_filter):
+        if not m:
+            # 영상/포스트 명명규칙 아닌 파일(스크립트 등) 제외
+            continue
+        if date_filter and m.group(1) != date_filter:
             continue
         if f.name in done:
             continue
