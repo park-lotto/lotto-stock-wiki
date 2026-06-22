@@ -148,7 +148,7 @@ def update_sector_file(sector_md: Path, section: str, dry_run: bool = False) -> 
     return True
 
 
-def run(sector_filter: str = None, days: int = 7, dry_run: bool = False):
+def run(sector_filter: str = None, days: int = 7, dry_run: bool = False, limit: int = 5):
     init_db()
     today = date.today().isoformat()
     updated = 0
@@ -167,7 +167,7 @@ def run(sector_filter: str = None, days: int = 7, dry_run: bool = False):
             skipped += 1
             continue
 
-        atoms = get_sector_atoms(wiki_sector, days=days)
+        atoms = get_sector_atoms(wiki_sector, days=days, limit=limit)
         section = build_section(wiki_sector, atoms, today)
 
         for sf in sector_files:
@@ -186,6 +186,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="원자 DB 최신 신호 → wiki 섹터 파일 자동 반영")
     parser.add_argument("--sector", default=None, help="단일 섹터 (wiki 폴더명)")
     parser.add_argument("--days", type=int, default=7, help="최근 N일 원자 사용 (기본 7)")
+    parser.add_argument("--limit", type=int, default=5, help="섹터당 원자 최대 수 (기본 5)")
     parser.add_argument("--dry-run", action="store_true", help="파일 변경 없이 미리보기")
     args = parser.parse_args()
-    run(sector_filter=args.sector, days=args.days, dry_run=args.dry_run)
+    run(sector_filter=args.sector, days=args.days, dry_run=args.dry_run, limit=args.limit)

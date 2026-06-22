@@ -19,6 +19,7 @@ def _run(label, args):
 
 
 def main():
+    _run("매크로 게이트(VIX·미장)", ["scripts/fetch_macro.py"])
     _run("스냅샷 생성", ["-m", "pipeline.build_signal_snapshot"])
     _run("백테스트 갱신", ["-m", "pipeline.backtest_signal"])
     _run("서버 동기화", ["scripts/sync_signal.py"])

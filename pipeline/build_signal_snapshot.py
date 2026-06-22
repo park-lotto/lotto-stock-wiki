@@ -135,14 +135,19 @@ def build_stocks() -> list:
     return stocks
 
 
-def build_snapshot(macro: dict, lead_sectors: list, stocks: list) -> dict:
+def build_snapshot(macro: dict, lead_sectors: list, stocks: list, us_sectors: dict = None) -> dict:
     today = datetime.now().strftime("%Y-%m-%d")
+    us_sectors = us_sectors or {}
     return {
         "date": today,
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "stage1": macro,
         "stage2": {"sectors": [
-            {"name": s, "score": None, "in_us_strong": True, "in_taerini_lead": True}
+            {"name": s,
+             "score": (us_sectors.get(s) or {}).get("avg"),
+             "us_leaders": (us_sectors.get(s) or {}).get("leaders", []),
+             "in_us_strong": ((us_sectors.get(s) or {}).get("avg") or 0) >= 0.5,
+             "in_taerini_lead": True}
             for s in lead_sectors
         ]},
         "stage3": {"stocks": stocks},
@@ -167,14 +172,17 @@ def main():
     })
     lead = _read_json(sig_dir / "lead_sectors.json", None)
     stocks = build_stocks()
+    vac_cnt = Counter(s["sector"] for s in stocks if s["sector"] != "?")
+    us_sectors = macro.get("us_sectors", {}) if isinstance(macro, dict) else {}
+    us_strong = macro.get("us_strong_sectors", []) if isinstance(macro, dict) else []
     if lead is None:
-        # 빈집 종목이 많은 섹터 상위 3개로 추정
-        cnt = Counter(s["sector"] for s in stocks if s["sector"] != "?")
-        lead = [name for name, _ in cnt.most_common(3)]
-    snap = build_snapshot(macro, lead, stocks)
+        # STAGE2 = 미장 강세섹터 × 빈집 보유섹터 교집합 (강세 순). 교집합 없으면 빈집 상위.
+        inter = [s for s in us_strong if s in vac_cnt]
+        lead = inter if inter else [name for name, _ in vac_cnt.most_common(3)]
+    snap = build_snapshot(macro, lead, stocks, us_sectors)
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(snap, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"스냅샷 기록: {OUT} (종목 {len(stocks)}, 섹터 {lead})")
+    print(f"스냅샷 기록: {OUT} (종목 {len(stocks)}, 섹터교집합 {lead})")
     return snap
 
 
