@@ -1,6 +1,6 @@
 {
   "target_kind": "market",
-  "market_direction": "긍정",
+  "market_direction": "bullish",
   "macro_events": [
     {
       "fact": "KODEX 200 ETF 순자산 30조원 돌파",
@@ -12,8 +12,8 @@
     {
       "sector": "반도체",
       "stance": "긍정",
-      "comment": "반도체 대표주인 삼성전자, SK하이닉스 등에 투자하며 관련 섹터에 긍정적 영향 확대 예상"
+      "comment": "반도체 대표주인 삼성전자, SK하이닉스 등에 투자하는 KODEX 200의 성장이 해당 섹터에 긍정적인 영향을 미칠 것으로 예상됨"
     }
   ],
-  "quote": "KODEX 200 성장세는 개인 투자자 신뢰 반영 반도체·대형주 섹터에 긍정적 영향 확대 될 것으로 예상."
+  "quote": "KODEX 200 성장세는 개인 투자자 신뢰 반영, 반도체·대형주 섹터에 긍정적 영향 확대 될 것으로 예상."
 }
