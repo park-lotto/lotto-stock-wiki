@@ -23,10 +23,12 @@ if not exist "%PYTHON%" set "PYTHON=python"
 :: cmd로 디렉토리 먼저 이동 후 실행 (Start In 대체)
 set "CMD_DL=cmd /c \"cd /d %ROOT% && \"%PYTHON%\" scripts\download_daily.py\""
 set "CMD_IN=cmd /c \"cd /d %ROOT% && \"%PYTHON%\" scripts\ingest_excel.py\""
+set "CMD_SG=cmd /c \"cd /d %ROOT% && \"%PYTHON%\" scripts\run_signal_daily.py\""
 
 echo [1] 기존 태스크 삭제...
 schtasks /delete /tn "STOCKBRAIN_Daily_Download" /f 2>nul
 schtasks /delete /tn "STOCKBRAIN_Daily_Ingest"   /f 2>nul
+schtasks /delete /tn "STOCKBRAIN_Signal_Daily"   /f 2>nul
 echo     OK
 echo.
 
@@ -38,13 +40,18 @@ echo [3] Ingest+텔레그램 태스크 등록 (07:50)...
 schtasks /create /tn "STOCKBRAIN_Daily_Ingest" /tr "%CMD_IN%" /sc daily /st 07:50 /rl highest /ru "%USERNAME%" /it /f
 echo.
 
-echo [4] 등록 확인...
+echo [4] 시그널+백테스트 태스크 등록 (07:55)...
+schtasks /create /tn "STOCKBRAIN_Signal_Daily" /tr "%CMD_SG%" /sc daily /st 07:55 /rl highest /ru "%USERNAME%" /it /f
+echo.
+
+echo [5] 등록 확인...
 schtasks /query /tn "STOCKBRAIN_Daily_Download" /fo TABLE 2>&1
 schtasks /query /tn "STOCKBRAIN_Daily_Ingest"   /fo TABLE 2>&1
+schtasks /query /tn "STOCKBRAIN_Signal_Daily"   /fo TABLE 2>&1
 echo.
 
 echo ==============================================
 echo  완료! 내일부터 자동 실행됩니다.
-echo  07:30 다운로드 → 07:50 분석+텔레그램
+echo  07:30 다운로드 → 07:50 분석+텔레그램 → 07:55 시그널+백테스트
 echo ==============================================
 pause
