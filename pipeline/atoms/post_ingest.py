@@ -51,11 +51,24 @@ def _parse_post_header(md_path: Path, header_label) -> dict:
 
 def get_done_post_files(source_type: str) -> set[str]:
     conn = get_conn()
-    rows = conn.execute(
-        "SELECT DISTINCT raw_file FROM atoms WHERE source_type=?", (source_type,)
-    ).fetchall()
+    rows = conn.execute("""
+        SELECT raw_file FROM processed_files WHERE source_type=?
+        UNION
+        SELECT DISTINCT raw_file FROM atoms WHERE source_type=? AND raw_file IS NOT NULL
+    """, (source_type, source_type)).fetchall()
     conn.close()
     return {Path(r[0]).name for r in rows if r[0]}
+
+
+def _mark_processed(raw_file: str, source_type: str, atom_count: int) -> None:
+    from datetime import datetime
+    conn = get_conn()
+    conn.execute(
+        "INSERT OR REPLACE INTO processed_files (raw_file, source_type, atom_count, processed_at) VALUES (?,?,?,?)",
+        (str(raw_file), source_type, atom_count, datetime.now().isoformat())
+    )
+    conn.commit()
+    conn.close()
 
 
 def get_pending_post(cfg: dict, date_filter: str = None) -> list[Path]:
@@ -92,6 +105,7 @@ def ingest_post(md_path: Path, cfg: dict) -> int:
     q = extract_post(md_path)
     if not q or not q.get("target_kind"):
         print(f"  [WARN] 빈/미라우팅 질문지: {md_path.name}")
+        _mark_processed(md_path, cfg["source_type"], 0)
         return 0
     _save_artifact(q, cfg["source_type"], h["date"], h["title"])
     meta = {
@@ -108,6 +122,7 @@ def ingest_post(md_path: Path, cfg: dict) -> int:
             embed_and_store(a)
         except Exception as e:
             print(f"  [WARN] embed 실패: {e}")
+    _mark_processed(md_path, cfg["source_type"], len(atoms))
     return len(atoms)
 
 

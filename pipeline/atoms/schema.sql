@@ -50,3 +50,10 @@ CREATE INDEX IF NOT EXISTS idx_atoms_is_active ON atoms(is_active);
 CREATE INDEX IF NOT EXISTS idx_atoms_validity ON atoms(validity_until);
 CREATE INDEX IF NOT EXISTS idx_atoms_source_trust ON atoms(source_trust);
 CREATE INDEX IF NOT EXISTS idx_atoms_stance_key ON atoms(stance_key);
+
+CREATE TABLE IF NOT EXISTS processed_files (
+    raw_file TEXT PRIMARY KEY,
+    source_type TEXT NOT NULL,
+    atom_count INTEGER DEFAULT 0,
+    processed_at TEXT NOT NULL
+);
