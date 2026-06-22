@@ -1,7 +1,33 @@
-"""종합엔진: 종목/섹터 페이지를 신규 원자로 차분병합. 설계 §4.2/4.2b."""
+"""종합엔진: 종목/섹터 페이지를 신규 원자로 차분병합. 설계 §4.2/4.2b.
+
+⚠️ claude -p 경로(_call_sonnet)는 신뢰불가로 폐기 — 에이전트가 stdout에 잡담/요약을
+섞거나 페이지 대신 변경요약문만 반환해 골드 페이지를 파괴한 사례 발생(2026-06-22 삼성전자).
+종합은 서브에이전트가 파일을 직접 쓰는 방식으로 전환(설계 §4.2 개정). _build_prompt는 유지.
+어떤 경로든 결과를 쓰기 전 validate_synthesis() 가드를 통과해야 한다.
+"""
 from pathlib import Path
 
 _MODEL = "sonnet"
+
+# 변경요약문/잡담 오염 신호 (페이지가 아니라 설명을 반환한 경우)
+_POLLUTION = ("변경 사항 요약", "변경사항 요약", "갱신 완료", "다음과 같이 갱신", "## 변경")
+
+
+def validate_synthesis(old_md: str, new_md: str, *, min_ratio: float = 0.6) -> None:
+    """종합 결과를 페이지에 쓰기 전 안전 검증. 위반 시 예외(쓰기 금지).
+
+    - 길이가 원본의 min_ratio 미만 → 페이지 파괴 의심.
+    - 변경요약문/잡담 마커 포함 → 결과물이 아니라 설명 반환 의심.
+    """
+    if len(new_md) < len(old_md) * min_ratio:
+        raise ValueError(
+            f"종합 결과가 원본의 {min_ratio*100:.0f}% 미만 "
+            f"({len(new_md)} < {len(old_md)}) — 페이지 파괴 의심, 쓰기 거부"
+        )
+    head = new_md[:400]
+    for mark in _POLLUTION:
+        if mark in head:
+            raise ValueError(f"종합 결과 상단에 잡담/요약 마커 '{mark}' — 쓰기 거부")
 
 _RULES = """너는 주식 위키 종합 편집자다. 아래 [현재 페이지]에 [신규 원자]를 녹여 갱신본을 출력하라.
 철칙:
@@ -43,6 +69,7 @@ def synth_stock(page_path: Path, atoms: list[dict], *, dry_run: bool = False) ->
     if dry_run:
         return prompt
     updated = _call_sonnet(prompt)
+    validate_synthesis(page_md, updated)   # 파괴 방지 가드
     page_path.write_text(updated, encoding="utf-8")
     return updated
 
@@ -67,5 +94,6 @@ def synth_sector(sector_page: Path, atoms: list[dict], *, dry_run: bool = False)
     if dry_run:
         return prompt
     updated = _call_sonnet(prompt)
+    validate_synthesis(page_md, updated)   # 파괴 방지 가드
     sector_page.write_text(updated, encoding="utf-8")
     return updated

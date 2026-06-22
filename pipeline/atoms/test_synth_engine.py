@@ -20,3 +20,21 @@ def test_sector_prompt_targets_market_section():
     assert "시장 국면" in p
     assert "반도체 ETF" in p
     assert "raw/news/x.md" in p
+
+
+from pipeline.atoms.synth_engine import validate_synthesis
+import pytest
+
+def test_guard_rejects_short_output():
+    old = "x" * 1000
+    with pytest.raises(ValueError):
+        validate_synthesis(old, "x" * 100)  # 10% → 거부
+
+def test_guard_rejects_changelog():
+    old = "x" * 1000
+    with pytest.raises(ValueError):
+        validate_synthesis(old, "갱신 완료. 변경 사항 요약: ..." + "y" * 900)
+
+def test_guard_passes_normal_update():
+    old = "x" * 1000
+    validate_synthesis(old, "x" * 1050)  # 정상 갱신 → 통과(예외 없음)
