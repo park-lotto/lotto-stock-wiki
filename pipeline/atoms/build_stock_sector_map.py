@@ -1,8 +1,9 @@
 """종목 → 섹터 맵 생성기.
 
-소스:
-1. wiki/L5_섹터/{섹터}/stock/stock_*.md  — 큐레이션된 종목 분류 (고신뢰)
+소스 (우선순위 높은 순):
+1. wiki/L5_섹터/{섹터}/stock/stock_*.md  — 큐레이션된 종목 분류 (최고신뢰)
 2. atoms DB 자기학습 — 같은 종목이 비-기타 섹터로 일관 분류된 이력
+3. KRX 업종·주요제품 키워드 매칭 — 광범위 보강 (최저신뢰)
 
 폴더명이 택소노미(sectors.json)와 다른 경우 _FOLDER_ALIAS로 정렬.
 택소노미에 매핑 안 되는 폴더(LNG·우주·테마이벤트)는 제외.
@@ -81,10 +82,21 @@ def from_db(min_count: int = 2, dominance: float = 0.8) -> dict[str, str]:
     return out
 
 
+def from_krx() -> dict[str, str]:
+    """KRX 업종·주요제품 키워드 매칭 (최저신뢰 보강). 네트워크 실패 시 빈 dict."""
+    try:
+        from .krx_industry import industry_sector_map
+        return industry_sector_map()
+    except Exception as e:
+        print(f"  [WARN] KRX 업종 보강 생략: {e}")
+        return {}
+
+
 def build() -> dict[str, str]:
-    """wiki(우선) + DB 자기학습 병합."""
-    m = from_db()
-    m.update(from_wiki())  # wiki가 충돌 시 우선
+    """KRX(보강) → DB 자기학습 → wiki(최우선) 순으로 덮어쓰며 병합."""
+    m = from_krx()          # 최저 우선순위 먼저
+    m.update(from_db())     # DB 자기학습이 덮어씀
+    m.update(from_wiki())   # wiki가 최종 우선
     return dict(sorted(m.items()))
 
 

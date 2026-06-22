@@ -70,3 +70,4 @@ output/signal/
 
 # 벡터DB 생성물 (재생성됨, 대용량)
 pipeline/atoms/chroma_db/
+pipeline/atoms/krx_industry.json
