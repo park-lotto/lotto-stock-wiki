@@ -119,6 +119,12 @@ def main():
         else:
             print(f"[STEP4 oscillator] 건너뜀 (오실레이터 실행 실패 또는 빈 결과)")
 
+    # 4.5단계: 종목→섹터 맵 갱신 + '기타' 원자 재분류 (wiki stock 폴더 반영)
+    run([PYTHON, "-m", "pipeline.atoms.build_stock_sector_map"],
+        "STEP4.5 sector_map")
+    run([PYTHON, "-m", "pipeline.atoms.backfill_sector"],
+        "STEP4.6 backfill_sector")
+
     # 5단계: wiki 자동 반영
     run([PYTHON, "-m", "pipeline.atoms.wiki_update"], "STEP5 wiki_update")
 
