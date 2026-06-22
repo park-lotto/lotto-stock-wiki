@@ -72,3 +72,4 @@ output/signal/
 pipeline/atoms/chroma_db/
 pipeline/atoms/krx_industry.json
 pipeline/atoms/stock_sector_review.md
+sync_crawl.log
