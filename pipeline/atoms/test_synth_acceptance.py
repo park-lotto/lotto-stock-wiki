@@ -12,8 +12,9 @@ def test_q1_q7_structure_present():
     assert "충돌" in md or "모순" in md      # Q7 충돌
 
 def test_no_fabricated_source_merge():
-    # 날조 출처 패턴(파일 두 개를 ·로 한 .md 안에 합침) 금지
+    # 날조 = 두 파일명을 ·로 합쳐 '하나의 .md'로 만든 것 (예: 태린이아빠·하나반도체.md).
+    # 정당한 다중출처(a.md · b.md, 각자 .md)는 허용 — 각 파일이 실존하므로 추적 가능.
     md = SK.read_text(encoding="utf-8")
     import re
-    bad = re.findall(r"[가-힣A-Za-z]+\.md\s*·\s*[가-힣A-Za-z]+(?!\.md)", md)
-    assert not bad, f"날조 의심 출처: {bad}"
+    bad = re.findall(r"[가-힣A-Za-z]{2,}·[가-힣A-Za-z]{2,}\.md", md)
+    assert not bad, f"날조 의심 출처(한 .md에 합침): {bad}"
