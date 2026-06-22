@@ -7,7 +7,7 @@ _RULES = """너는 주식 위키 종합 편집자다. 아래 [현재 페이지]�
 철칙:
 1. 출처는 신규 원자의 sources에 있는 **실존 파일명만** 인용. 두 파일을 합치거나 새 파일명을 지어내지 마라.
 2. 원자에 없는 사실을 만들지 마라. 모르면 적지 마라. (할루시네이션 금지)
-3. certainty가 '관측/전망/단독설'이면 평서문 사실로 쓰지 말고 `⚠️미검증` 또는 `(설)`을 붙여라.
+3. 검증등급에 따라: '검증완료'면 확인된 사실이니 태그 없이 쓴다(증권사 리포트 등). '미검증'이면 `⚠️미검증`, '설'이면 `(설)`을 붙여라. 절대 검증완료에 미검증 태그를 붙이지 마라.
 4. 섹션 규칙: 최신 이벤트=7일 롤링 표 상단 추가 / 증권사 컨센서스=증권사당 1행 덮어쓰기 / 리포트 논거=30일 롤링 WHY보존 / 종합 스토리=최신 단락 상단 추가.
 5. 기존 골드 내용은 보존하고 신규만 추가/갱신하라.
 출력은 갱신된 마크다운 전체. 설명 문장 없이 마크다운만."""
@@ -17,8 +17,8 @@ def _build_prompt(page_md: str, atoms: list[dict]) -> str:
     lines = ["[신규 원자]"]
     for a in atoms:
         srcs = " · ".join(a.get("sources") or [a.get("raw_file", "?")])
-        cert = a.get("certainty", "불명")
-        lines.append(f"- [{a.get('date','?')}] (certainty={cert}) {a['content']}  ← {srcs}")
+        grade = (a.get("verdict") or {}).get("grade", a.get("certainty", "불명"))
+        lines.append(f"- [{a.get('date','?')}] (검증={grade}) {a['content']}  ← {srcs}")
     atoms_block = "\n".join(lines)
     return f"{_RULES}\n\n[현재 페이지]\n{page_md}\n\n{atoms_block}"
 
@@ -48,7 +48,7 @@ def synth_stock(page_path: Path, atoms: list[dict], *, dry_run: bool = False) ->
 
 
 _SECTOR_RULES = """너는 섹터 위키 편집자다. [현재 섹터페이지]의 "시장 국면·테마 코멘트" 섹션에 [신규 원자]를 녹여라.
-철칙은 종목과 동일(실존출처만·할루시네이션금지·미검증표기). 개별 종목 깊이가 아니라 섹터 전체 국면·수급·테마 흐름을 종합하라.
+철칙은 종목과 동일(실존출처만·할루시네이션금지). 검증등급 '검증완료'는 태그 없이, '미검증'은 ⚠️미검증, '설'은 (설)을 붙여라. 개별 종목 깊이가 아니라 섹터 전체 국면·수급·테마 흐름을 종합하라.
 출력은 갱신된 마크다운 전체."""
 
 
@@ -56,7 +56,8 @@ def _build_sector_prompt(page_md: str, atoms: list[dict]) -> str:
     lines = ["[신규 원자]"]
     for a in atoms:
         srcs = " · ".join(a.get("sources") or [a.get("raw_file", "?")])
-        lines.append(f"- [{a.get('date','?')}] (certainty={a.get('certainty','불명')}) {a['content']}  ← {srcs}")
+        grade = (a.get("verdict") or {}).get("grade", a.get("certainty", "불명"))
+        lines.append(f"- [{a.get('date','?')}] (검증={grade}) {a['content']}  ← {srcs}")
     return f"{_SECTOR_RULES}\n\n[현재 섹터페이지]\n{page_md}\n\n" + "\n".join(lines)
 
 
