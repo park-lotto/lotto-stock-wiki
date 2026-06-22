@@ -1222,3 +1222,4 @@ python calc_oscillator.py SK하이닉스 삼성전자 한미반도체 --tg
 - 시그널 보강: 섹터태깅(sector_map.json 515 마스터, 미상42%) + 매일 백테스팅(backtest_signal.py: picks_log 누적→사후수익률 승률/점수별). /api/signal/backtest 배포. 가격원=한국상대강도(~150종목). runner=run_signal_daily.py(스케줄 미등록).
 - STAGE1 매크로 실연동: fetch_macro.py(yfinance VIX·S&P·나스닥 → GO/경계/NO + 간밤이벤트 정량감지). 오늘 GO(미장+1.5%,VIX16.4).
 - STAGE2 미국대장주 맵핑: 한국섹터 기준 미국 대장주 2~3개(반도체=NVDA·MU·AVGO 등) 등락 → 미장강세×빈집 교집합. run_signal_daily에 fetch_macro 선행 추가.
+- [2026-06-22 회사PC] 위키 종합엔진 설계·구현(반도체 프로토타입). 원자→종목페이지 자동녹임: synth_qc/verify_gate/synth_engine/synth_rollup/synth_run (17테스트). 5종목 풍부갱신(출처+⚠️미검증 등급). 미완: 수율14%(날짜윈도우·섹터페이지실패·기타오분류 3구멍) + claude -p 페이지파괴→서브에이전트 직접쓰기 재설계 필요. 교훈: "쓸모(수율)" 먼저 검증, 과설계 금물. 상세 NEXT_SESSION.md.
