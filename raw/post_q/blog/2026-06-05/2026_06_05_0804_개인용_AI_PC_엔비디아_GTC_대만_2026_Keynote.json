@@ -1,0 +1,41 @@
+{
+  "target_kind": "sector",
+  "sector_name": "반도체",
+  "sector_view": "긍정",
+  "points": [
+    "엔비디아의 차세대 AI PC 규격 발표로 인한 상용화 가속화",
+    "DGX Station for Windows 및 RTX Spark 등 하드웨어 성능 혁신",
+    "Microsoft와의 협력을 통한 AI 에이전트 기반 새로운 PC 패러다임 구축"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "엔비디아",
+      "comment": "차세대 AI PC 규격(GB300, RTX Spark)을 통해 로컬 AI 연산 시장 선도",
+      "ts": "2026-06-05",
+      "quote": "엔비디아가 2026년 대만 GTC에서 개인용 AI PC 혁신을 선언하며, 기존 시장 예상보다 수년 앞당겨 PC 개발을 발표.",
+      "sector": "반도체"
+    },
+    {
+      "name": "Dell",
+      "comment": "엔비디아의 파트너로서 2026년 4분기부터 AI PC 판매 확대",
+      "ts": "2026-06-05",
+      "quote": "Dell과 같은 파트너를 통해 2026년 4분기부터 판매 확대 계획 중.",
+      "sector": "IT"
+    },
+    {
+      "name": "TSMC",
+      "comment": "엔비디아 GPU 파운드리 생산 관련 실적 성장 가능성",
+      "ts": null,
+      "quote": "엔비디아 GPU 관련 벤더(예: TSMC 파운드리)가 실적 성장 가능성.",
+      "sector": "반도체"
+    }
+  ],
+  "events": [
+    {
+      "fact": "엔비디아 GTC 대만 2026 개최",
+      "ts": "2026-06-05",
+      "quote": "엔비디아가 2026년 대만 GTC에서 개인용 AI PC 혁신을 선언"
+    }
+  ],
+  "quote": "엔비디아가 2026년 대만 GTC에서 개인용 AI PC 혁신을 선언하며, 기존 시장 예상보다 수년 앞당겨 PC 개발을 발표."
+}

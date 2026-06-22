@@ -68,6 +68,54 @@ TARGETS_BINGSU = [
 
 def log(msg): print(f'[{MMDD}] {msg}', flush=True)
 
+# ── 결과 추적 + 텔레그램 보고 ─────────────────────────
+# 폴더 접근이 막히면(링크 만료/권한 변경/빈 목록) 반드시 텔레그램으로 보고한다.
+RESULT = {'blocked': [], 'failed': [], 'ok': []}
+
+def _load_env() -> dict:
+    cfg = {}
+    env_path = BASE / '.env'
+    if env_path.exists():
+        for line in env_path.read_text(encoding='utf-8').splitlines():
+            if '=' in line and not line.startswith('#'):
+                k, v = line.split('=', 1)
+                cfg[k.strip()] = v.strip()
+    return cfg
+
+def send_telegram(text: str) -> bool:
+    import json as _json, urllib.request as _req, urllib.parse as _parse
+    cfg = _load_env()
+    token, chat_id = cfg.get('BOT_TOKEN', ''), cfg.get('CHAT_ID', '')
+    if not token or not chat_id:
+        log('  ⚠️ .env BOT_TOKEN/CHAT_ID 없음 — 텔레그램 보고 스킵')
+        return False
+    for chunk in [text[i:i+4000] for i in range(0, len(text), 4000)]:
+        try:
+            data = _parse.urlencode({'chat_id': chat_id, 'text': chunk,
+                                     'disable_web_page_preview': 'true'}).encode()
+            url = f'https://api.telegram.org/bot{token}/sendMessage'
+            with _req.urlopen(_req.Request(url, data=data), timeout=10) as r:
+                if not _json.loads(r.read()).get('ok'):
+                    log('  ❌ 텔레그램 응답 오류'); return False
+        except Exception as e:
+            log(f'  ❌ 텔레그램 실패: {e}'); return False
+    return True
+
+def check_access(page, url, label):
+    """폴더 접근 시도. 죽은 링크·권한만료·빈 목록이면 BLOCKED 기록 후 None 반환."""
+    try:
+        page.goto(url, wait_until='networkidle', timeout=30000)
+    except Exception as e:
+        RESULT['blocked'].append(f'{label} — 접속 실패({type(e).__name__}). 링크 만료/변경 의심\n  {url}')
+        log(f'  🚫 {label} 접속 실패: {e}')
+        return None
+    items = get_items(page)
+    if not items:
+        RESULT['blocked'].append(f'{label} — 목록 0개. 권한 만료/링크 변경 의심\n  {url}')
+        log(f'  🚫 {label} 목록 0개 — 접근 차단 의심')
+        return None
+    return items
+
 def cleanup_all():
     """폴더 내 모든 파일 삭제 (다운로드 시작 전 초기화)"""
     deleted, skipped = [], []
@@ -176,18 +224,22 @@ def download_one(page, idx, pattern, base_name, ext):
 
 def run_ame(page):
     log('▶ 아메리카노 접속...')
-    page.goto(URL['ame'], wait_until='networkidle', timeout=30000)
+    if check_access(page, URL['ame'], '아메리카노') is None:
+        return
     for idx, pat, base, ext in TARGETS_AME:
-        download_one(page, idx, pat, base, ext)
+        ok = download_one(page, idx, pat, base, ext)
+        RESULT['ok' if ok else 'failed'].append(f'아메리카노/{base}')
 
 
 def run_cafe(page):
     log('▶ 카페라떼 접속...')
-    page.goto(URL['cafe'], wait_until='networkidle', timeout=30000)
+    if check_access(page, URL['cafe'], '카페라떼') is None:
+        return
 
     # 루트 파일들
     for idx, pat, base, ext in TARGETS_CAFE_ROOT:
-        download_one(page, idx, pat, base, ext)
+        ok = download_one(page, idx, pat, base, ext)
+        RESULT['ok' if ok else 'failed'].append(f'카페라떼/{base}')
 
     # 서브폴더 진입
     for folder_name, folder_idx, targets in TARGETS_CAFE_FOLDER:
@@ -207,9 +259,11 @@ def run_cafe(page):
 
 def run_bingsu(page):
     log('▶ 눈꽃빙수 접속...')
-    page.goto(URL['bingsu'], wait_until='networkidle', timeout=30000)
+    if check_access(page, URL['bingsu'], '눈꽃빙수') is None:
+        return
     for idx, pat, base, ext in TARGETS_BINGSU:
-        download_one(page, idx, pat, base, ext)
+        ok = download_one(page, idx, pat, base, ext)
+        RESULT['ok' if ok else 'failed'].append(f'눈꽃빙수/{base}')
 
     # 서브폴더: 다양한 코드(idx 0) → 한국 개별종목 상대강도(idx 1)
     try:
@@ -316,11 +370,18 @@ def main():
         ctx.set_default_timeout(60000)
         page = ctx.new_page()
 
+        def _guard(label, fn):
+            try:
+                fn(page)
+            except Exception as e:
+                RESULT['blocked'].append(f'{label} — 예외 발생({type(e).__name__}: {e})')
+                log(f'  🚫 {label} 예외: {e}')
+
         try:
-            if run_all or args.yt:     run_youtube(page)
-            if run_all or args.ame:    run_ame(page)
-            if run_all or args.cafe:   run_cafe(page)
-            if run_all or args.bingsu: run_bingsu(page)
+            if run_all or args.yt:     _guard('유튜브', run_youtube)
+            if run_all or args.ame:    _guard('아메리카노', run_ame)
+            if run_all or args.cafe:   _guard('카페라떼', run_cafe)
+            if run_all or args.bingsu: _guard('눈꽃빙수', run_bingsu)
         finally:
             ctx.close()
             browser.close()
@@ -333,6 +394,36 @@ def main():
         if f.is_file():
             log(f'  {f.name}  ({f.stat().st_size//1024}KB)')
     log('─' * 55)
+
+    report_problems()
+
+
+def report_problems():
+    """폴더 접근 차단·다운로드 실패가 있으면 반드시 텔레그램으로 보고한다."""
+    blocked, failed = RESULT['blocked'], RESULT['failed']
+    if not blocked and not failed:
+        log('✅ 전체 정상 — 보고 없음')
+        return
+    lines = [f'🚨 [태린이 다운로드 경보] {TODAY}']
+    if blocked:
+        lines.append('')
+        lines.append(f'🚫 폴더 접근 차단 {len(blocked)}건 (월요일 주소 변경 의심 — 링크 업데이트 필요):')
+        lines += [f'  • {b}' for b in blocked]
+    if failed:
+        lines.append('')
+        lines.append(f'❌ 파일 다운로드 실패 {len(failed)}건:')
+        lines += [f'  • {f}' for f in failed]
+    if RESULT['ok']:
+        lines.append('')
+        lines.append(f'✅ 성공 {len(RESULT["ok"])}건')
+    text = '\n'.join(lines)
+    log('')
+    log('📲 문제 발생 — 텔레그램 보고 발송...')
+    if send_telegram(text):
+        log('  ✅ 보고 발송 완료')
+    else:
+        log('  ⚠️ 텔레그램 보고 실패 — 콘솔 로그로 대체:')
+        log(text)
 
 
 if __name__ == '__main__':

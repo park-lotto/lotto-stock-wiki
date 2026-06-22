@@ -1,0 +1,41 @@
+{
+  "target_kind": "sector",
+  "sector_name": "반도체",
+  "sector_view": "긍정",
+  "points": [
+    "엔비디아의 차세대 RTX Spark 칩 발표로 엣지 단계의 대형 모델 실행 가속화",
+    "Dell과 협업한 조 단위 파라미터 AI PC가 2026년 4분기 출시 예정",
+    "Rubin, Rubin Ultra, Feynman으로 이어지는 구체적인 AI 반도체 로드맵 공개"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "엔비디아",
+      "comment": "RTX Spark 칩 및 차세대 GPU 로드맵을 통해 AI PC 시장을 주도",
+      "ts": "2026-06-03",
+      "quote": "엔비디아는 2026년 GTC 대만에서 개인용 AI PC 발전을 가속화하는 전략을 발표하고, DGX Station, RTX Spark 등 기술을 통해 PC를 재정의한다고 주장.",
+      "sector": "반도체"
+    },
+    {
+      "name": "Dell",
+      "comment": "엔비디아와 협업하여 2026년 4분기 AI PC 출시 예정",
+      "ts": "2026-06-03",
+      "quote": "Dell과 협업해 2026년 4분기에 조 단위 파라미터 모델이 탑재된 AI PC를 출시하며, \"PC의 스마트폰화\"가 현시점에서 가속화된다고 강조.",
+      "sector": "IT"
+    },
+    {
+      "name": "MediaTek",
+      "comment": "반도체 공급망 수혜주로 언급",
+      "ts": null,
+      "quote": "플랫폼 확장성 강화: Dell-엔비디아 협업과 Microsoft 윈도우 통합은 AI PC 시장 확대의 가속화가 기대되며, 반도체 공급망( MediaTek·Grace CPU 등) 수혜 예상.",
+      "sector": "반도체"
+    }
+  ],
+  "events": [
+    {
+      "fact": "엔비디아 GTC 대만 2026 개최",
+      "ts": "2026-06-03",
+      "quote": "엔비디아는 2026년 GTC 대만에서 개인용 AI PC 발전을 가속화하는 전략을 발표하고"
+    }
+  ],
+  "quote": "엔비디아는 2026년 GTC 대만에서 개인용 AI PC 발전을 가속화하는 전략을 발표하고, DGX Station, RTX Spark 등 기술을 통해 PC를 재정의한다고 주장."
+}

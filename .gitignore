@@ -64,3 +64,6 @@ productions/**/*.m4a
 productions/**/*.mp3
 productions/**/*.wav
 .superpowers/
+
+# 시그널 스냅샷 (매일 build_signal_snapshot로 재생성)
+output/signal/
