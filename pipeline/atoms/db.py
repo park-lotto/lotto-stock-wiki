@@ -14,6 +14,11 @@ _TG_COLUMNS = [
     ("msg_ts", "TEXT"),
 ]
 
+_SYNTH_COLUMNS = [
+    ("source_pub", "TEXT"),
+    ("certainty", "TEXT DEFAULT '불명'"),
+]
+
 
 def get_conn() -> sqlite3.Connection:
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -33,7 +38,7 @@ def init_db():
 def migrate_db():
     """기존 DB에 텔레그램 필드 멱등 추가 (이미 있으면 무시)."""
     conn = get_conn()
-    for name, decl in _TG_COLUMNS:
+    for name, decl in _TG_COLUMNS + _SYNTH_COLUMNS:
         try:
             conn.execute(f"ALTER TABLE atoms ADD COLUMN {name} {decl}")
         except sqlite3.OperationalError:
