@@ -13,13 +13,14 @@ def grade(atom: dict) -> dict:
     content = atom.get("content", "")
     high_risk = any(k in content for k in _HIGH_RISK)
 
-    g = _GRADE_BY_CERTAINTY.get(cert, "미검증")
-    # report A + 사실 → 자동 검증완료 (단 고위험은 여전히 확인)
-    if trust == "A" and cert == "사실" and not high_risk:
-        return {"grade": "검증완료", "route": "auto", "high_risk": False}
+    # 고위험 주장은 신뢰도 무관하게 staging (교차확인 전까지)
     if high_risk:
-        return {"grade": g, "route": "staging", "high_risk": True}
-    if g == "검증완료":  # A 아닌데 사실 주장 → 신뢰도 따라
-        route = "auto" if trust in ("A", "B") else "staging"
+        return {"grade": _GRADE_BY_CERTAINTY.get(cert, "미검증"), "route": "staging", "high_risk": True}
+    # report(A)는 자동 검증완료 (스펙 §4.3) — certainty 미주입이어도 리포트는 검증된 사실
+    if trust == "A":
+        return {"grade": "검증완료", "route": "auto", "high_risk": False}
+    g = _GRADE_BY_CERTAINTY.get(cert, "미검증")
+    if g == "검증완료":  # A 아닌데 '사실' 주장 → B까지 auto
+        route = "auto" if trust == "B" else "staging"
         return {"grade": g, "route": route, "high_risk": False}
     return {"grade": g, "route": "staging", "high_risk": False}

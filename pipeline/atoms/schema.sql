@@ -27,6 +27,8 @@ CREATE TABLE IF NOT EXISTS atoms (
     is_active INTEGER DEFAULT 1,
 
     -- 내용 (원문 보존)
+    source_pub TEXT,
+    certainty TEXT DEFAULT '불명',
     content TEXT NOT NULL,
 
     -- 관계 그래프 (JSON: [{type, target_id}])

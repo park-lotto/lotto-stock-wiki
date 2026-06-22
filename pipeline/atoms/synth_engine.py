@@ -25,11 +25,12 @@ def _build_prompt(page_md: str, atoms: list[dict]) -> str:
 
 def _call_sonnet(prompt: str) -> str:
     """Claude Code 헤드리스로 종합 (Max 구독, 추가 API 과금 없음).
-    원자 anthropic SDK 직접호출 금지 — claude -p 사용."""
+    프롬프트는 stdin으로 전달(Windows argv 길이 한도 회피). anthropic SDK 금지."""
     import subprocess
     r = subprocess.run(
-        ["claude", "-p", "--model", _MODEL, prompt],
-        capture_output=True, text=True, encoding="utf-8",
+        ["claude", "-p", "--model", _MODEL],
+        input=prompt, capture_output=True, text=True, encoding="utf-8",
+        timeout=300,
     )
     if r.returncode != 0:
         raise RuntimeError(f"claude -p 실패: {r.stderr[:300]}")

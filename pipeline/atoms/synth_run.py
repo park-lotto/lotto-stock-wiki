@@ -34,7 +34,9 @@ def run_sector(sector: str = "반도체", *, days: int = 14, dry_run: bool = Fal
     for a in atoms:  # 검증등급 부여
         a["verdict"] = grade(a)
     routed = route(atoms)
-    _STAGING.mkdir(exist_ok=True)
+    if not dry_run:
+        _STAGING.mkdir(exist_ok=True)
+    staged_count = 0
 
     # 종목 종합 (auto만 페이지로, staging은 적재)
     for name, items in routed["stock"].items():
@@ -45,9 +47,10 @@ def run_sector(sector: str = "반도체", *, days: int = 14, dry_run: bool = Fal
         staged = [a for a in items if a["verdict"]["route"] == "staging"]
         if autos:
             synth_stock(page, autos, dry_run=dry_run)
-        if staged:
+        if staged and not dry_run:
             (_STAGING / f"{name}.json").write_text(
                 json.dumps(staged, ensure_ascii=False, indent=2), encoding="utf-8")
+        staged_count += len(staged)
 
     # 섹터 종합
     sector_page = _ROOT / "wiki" / "L5_섹터" / sector / f"sector_{sector}.md"
@@ -59,7 +62,7 @@ def run_sector(sector: str = "반도체", *, days: int = 14, dry_run: bool = Fal
     index = build_index(_ROOT / "wiki" / "L5_섹터" / sector)
     if not dry_run:
         (_ROOT / "wiki" / "L5_섹터" / sector / "index_auto.md").write_text(index, encoding="utf-8")
-    print(f"[synth] {sector}: 종목 {len(routed['stock'])} / 섹터원자 {len(routed['sector'])} / staging {len(list(_STAGING.glob('*.json')))}")
+    print(f"[synth] {sector}: 종목 {len(routed['stock'])} / 섹터원자 {len(routed['sector'])} / staging {staged_count}")
 
 
 if __name__ == "__main__":
