@@ -20,6 +20,9 @@ from .sector_classify import sectors_list
 _ROOT = Path(__file__).parent.parent.parent
 _WIKI_SECTOR = _ROOT / "wiki" / "L5_섹터"
 _OUT = Path(__file__).parent / "stock_sector_map.json"
+# 사람이 검수해 손으로 고치는 파일 — 최우선, 자동 생성이 절대 안 덮어씀.
+_OVERRIDE = Path(__file__).parent / "stock_sector_overrides.json"
+_REVIEW = Path(__file__).parent / "stock_sector_review.md"
 
 # wiki 폴더명 → 택소노미 섹터 (불일치 정렬)
 _FOLDER_ALIAS = {
@@ -92,12 +95,41 @@ def from_krx() -> dict[str, str]:
         return {}
 
 
+def from_override() -> dict[str, str]:
+    """사람이 검수한 수동 교정 (최우선). {종목: 섹터} 또는 {종목: ""}(=제외)."""
+    if _OVERRIDE.exists():
+        return json.loads(_OVERRIDE.read_text(encoding="utf-8"))
+    return {}
+
+
 def build() -> dict[str, str]:
-    """KRX(보강) → DB 자기학습 → wiki(최우선) 순으로 덮어쓰며 병합."""
+    """KRX(보강) → DB 자기학습 → wiki → 수동검수(override) 순으로 덮어씀."""
     m = from_krx()          # 최저 우선순위 먼저
     m.update(from_db())     # DB 자기학습이 덮어씀
-    m.update(from_wiki())   # wiki가 최종 우선
+    m.update(from_wiki())   # wiki가 그 위
+    for name, sec in from_override().items():  # 사람 검수가 최종
+        if sec:             # 섹터 지정 → 교정
+            m[name] = sec
+        else:               # 빈 문자열 → 맵에서 제외(기타로)
+            m.pop(name, None)
     return dict(sorted(m.items()))
+
+
+def write_review(m: dict[str, str]) -> None:
+    """섹터별로 묶은 검수용 markdown 생성."""
+    from collections import defaultdict
+    by_sec: dict[str, list[str]] = defaultdict(list)
+    for name, sec in m.items():
+        by_sec[sec].append(name)
+    lines = ["# 종목→섹터 맵 검수\n",
+             "잘못된 게 보이면 `stock_sector_overrides.json`에 "
+             "`\"종목명\": \"올바른섹터\"` 추가 (섹터 없애려면 빈 문자열 `\"\"`).\n",
+             f"총 {len(m)}종목 / {len(by_sec)}섹터\n"]
+    for sec in sorted(by_sec, key=lambda s: -len(by_sec[s])):
+        names = sorted(by_sec[sec])
+        lines.append(f"\n## {sec} ({len(names)})\n")
+        lines.append(", ".join(names) + "\n")
+    _REVIEW.write_text("".join(lines), encoding="utf-8")
 
 
 def load_map() -> dict[str, str]:
@@ -109,7 +141,10 @@ def load_map() -> dict[str, str]:
 if __name__ == "__main__":
     m = build()
     _OUT.write_text(json.dumps(m, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"종목→섹터 맵 생성: {len(m)}개 → {_OUT.relative_to(_ROOT)}")
+    write_review(m)
+    ov = len(from_override())
+    print(f"종목→섹터 맵 생성: {len(m)}개 (수동교정 {ov}건 반영) → {_OUT.relative_to(_ROOT)}")
+    print(f"검수파일: {_REVIEW.relative_to(_ROOT)}")
     from collections import Counter as _C
     dist = _C(m.values())
     for sec, n in dist.most_common():
