@@ -74,22 +74,29 @@ def _append_log(rows):
 
 
 def log_today(snapshot, prices, today):
-    """오늘 score>=THRESHOLD 픽을 entry_close와 함께 기록(같은 날 중복 방지)."""
-    already = {(r["pick_date"], r["name"]) for r in _read_log()}
+    """오늘 score>=THRESHOLD 픽을 방식(A/B)별로 entry_close와 함께 기록.
+    각 방식이 선택한 섹터의 종목만 그 방식 픽으로 본다. 같은 날·방식·종목 중복 방지."""
+    methods = snapshot.get("stage2", {}).get("methods", {})
+    already = {(r["pick_date"], r.get("method"), r["name"]) for r in _read_log()}
+    top = [s for s in snapshot.get("stage3", {}).get("stocks", [])
+           if s.get("score", 0) >= SCORE_THRESHOLD]
     new = []
-    for s in snapshot.get("stage3", {}).get("stocks", []):
-        if s.get("score", 0) < SCORE_THRESHOLD:
-            continue
-        if (today, s["name"]) in already:
-            continue
-        entry = prices.get(s["name"])
-        if entry is None:
-            continue  # 가격 없으면 추적 불가
-        new.append({
-            "pick_date": today, "name": s["name"], "code": s.get("code"),
-            "score": s["score"], "vacancy": s.get("vacancy"),
-            "sector": s.get("sector"), "entry_close": entry,
-        })
+    for method, sectors in methods.items():
+        secset = set(sectors)
+        for s in top:
+            if s.get("sector") not in secset:
+                continue
+            if (today, method, s["name"]) in already:
+                continue
+            entry = prices.get(s["name"])
+            if entry is None:
+                continue  # 가격 없으면 추적 불가
+            new.append({
+                "pick_date": today, "method": method, "name": s["name"],
+                "code": s.get("code"), "score": s["score"],
+                "vacancy": s.get("vacancy"), "sector": s.get("sector"),
+                "entry_close": entry,
+            })
     _append_log(new)
     return new
 
@@ -106,7 +113,7 @@ def _agg(subset):
 
 
 def evaluate(prices, today):
-    """누적 픽을 최신 종가로 평가하고 집계한다."""
+    """누적 픽을 최신 종가로 평가하고 방식(A/B)별로 비교 집계한다."""
     picks = []
     for r in _read_log():
         cur = prices.get(r["name"])
@@ -115,17 +122,23 @@ def evaluate(prices, today):
                       "return_pct": forward_return(r["entry_close"], cur),
                       "days_held": days})
     rated = [p for p in picks if p["return_pct"] is not None and p["days_held"] > 0]
-    by_score = {str(sc): _agg([p for p in rated if p["score"] == sc])
-                for sc in sorted({p["score"] for p in rated})}
-    by_vac = {v: _agg([p for p in rated if p["vacancy"] == v])
-              for v in sorted({p["vacancy"] for p in rated if p["vacancy"]})}
+    methods = sorted({p.get("method") for p in picks if p.get("method")})
+    by_method = {}
+    for m in methods:
+        sub = [p for p in rated if p.get("method") == m]
+        by_method[m] = {
+            **_agg(sub),
+            "by_score": {str(sc): _agg([p for p in sub if p["score"] == sc])
+                         for sc in sorted({p["score"] for p in sub})},
+        }
     return {
         "as_of": today,
         "overall": _agg(rated),
-        "by_score": by_score,
-        "by_vacancy": by_vac,
+        "by_method": by_method,
+        "by_vacancy": {v: _agg([p for p in rated if p["vacancy"] == v])
+                       for v in sorted({p["vacancy"] for p in rated if p["vacancy"]})},
         "picks": sorted(picks, key=lambda p: (p["return_pct"] is not None,
-                                              p["return_pct"] or -999), reverse=True),
+                                              p["return_pct"] or -999), reverse=True)[:60],
     }
 
 

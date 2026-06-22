@@ -25,15 +25,18 @@ def test_log_today_filters_and_dedups(tmp_path, monkeypatch):
     # 로그 파일을 임시경로로
     monkeypatch.setattr(bt, "PICKS_LOG", tmp_path / "picks.jsonl")
     monkeypatch.setattr(bt, "SIG_DIR", tmp_path)
-    snapshot = {"stage3": {"stocks": [
-        {"name": "A", "code": "1", "score": 4, "vacancy": "A", "sector": "반도체"},
-        {"name": "B", "code": "2", "score": 2, "vacancy": "C", "sector": "조선"},   # score<4 제외
-        {"name": "C", "code": "3", "score": 5, "vacancy": "A", "sector": "로봇"},
-    ]}}
+    snapshot = {
+        "stage2": {"methods": {"B_점수합산": ["반도체", "로봇"]}},
+        "stage3": {"stocks": [
+            {"name": "A", "code": "1", "score": 4, "vacancy": "A", "sector": "반도체"},
+            {"name": "B", "code": "2", "score": 2, "vacancy": "C", "sector": "조선"},   # score<4 제외
+            {"name": "C", "code": "3", "score": 5, "vacancy": "A", "sector": "로봇"},
+        ]},
+    }
     prices = {"A": 1000.0, "C": 2000.0}  # B는 가격 없음
     new = bt.log_today(snapshot, prices, "2026-06-22")
     names = {r["name"] for r in new}
-    assert names == {"A", "C"}              # score>=4 & 가격있음만
+    assert names == {"A", "C"}              # 방식B 섹터 & score>=4 & 가격있음만
     # 같은 날 재실행 → 중복 없음
     again = bt.log_today(snapshot, prices, "2026-06-22")
     assert again == []

@@ -59,6 +59,63 @@ def _resolve_sector(name, code, by_name, by_code, ie):
     return ie.get_stock_sector(name) or "?"
 
 
+# 소르티노 ETF/종목명 → 우리 섹터 키워드 매칭
+SECTOR_KEYWORDS = {
+    "반도체": ["반도체", "하이닉스", "삼성전자", "전공정", "후공정", "HBM"],
+    "전력": ["전력", "전선", "변압", "그리드"],
+    "신재생": ["태양광", "친환경에너지", "ESS", "신재생", "풍력"],
+    "로봇": ["로봇"],
+    "자동차": ["자동차", "모빌리티"],
+    "조선": ["조선", "중공업", "엔진"],
+    "이차전지": ["2차전지", "이차전지", "배터리"],
+    "바이오": ["바이오", "헬스케어", "제약"],
+    "방산": ["방산", "우주방산", "K방산"],
+    "원전": ["원자력", "원전", "SMR"],
+    "통신": ["네트워크", "통신"],
+    "화장품": ["화장품", "뷰티"],
+    "미용": ["미용", "에스테틱"],
+}
+
+
+def _match_sector(name):
+    for sec, kws in SECTOR_KEYWORDS.items():
+        if any(k in name for k in kws):
+            return sec
+    return None
+
+
+def sortino_strength(ie):
+    """소르티노 ETF상대강도 top20 → {섹터: norm_RS_avg(0~100)}. ETF명 키워드 매칭."""
+    parsed = ie.parse_한국ETF상대강도(True)
+    rows = parsed.get("top20", []) if isinstance(parsed, dict) else []
+    out = {}
+    for r in rows:
+        sec = _match_sector(r.get("name", ""))
+        norm = r.get("norm_RS_avg")
+        if sec and norm is not None:
+            out[sec] = max(out.get(sec, 0), norm)
+    return out
+
+
+def select_sectors_ab(us_sectors, sortino, vac_cnt):
+    """섹터 좁히기 2방식. A=교집합(미장강세∩소르티노∩빈집), B=점수합산 top6."""
+    def us_avg(s):
+        return (us_sectors.get(s) or {}).get("avg")
+    cands = [s for s in vac_cnt if vac_cnt.get(s, 0) > 0]  # 빈집 있는 섹터만
+    # A: 미장강세(≥0.5%) AND 소르티노(≥50=코스피상회) AND 빈집보유
+    a = [s for s in cands if (us_avg(s) or -99) >= 0.5 and sortino.get(s, 0) >= 50]
+    a.sort(key=lambda s: (us_avg(s) or 0) + sortino.get(s, 0) / 100, reverse=True)
+
+    def score_b(s):
+        us = max(0.0, (us_avg(s) or 0)) / 3.0          # 미장등락 ~0~3%→0~1
+        so = sortino.get(s, 0) / 100.0                  # 0~1
+        va = min(vac_cnt.get(s, 0), 10) / 10.0          # 0~1
+        return round(us + so + va, 3)
+    b = sorted(cands, key=score_b, reverse=True)
+    b = [s for s in b if score_b(s) > 0][:6]
+    return a, b
+
+
 def _names(rows):
     """행 리스트에서 종목명 집합."""
     out = set()
@@ -174,15 +231,23 @@ def main():
     stocks = build_stocks()
     vac_cnt = Counter(s["sector"] for s in stocks if s["sector"] != "?")
     us_sectors = macro.get("us_sectors", {}) if isinstance(macro, dict) else {}
-    us_strong = macro.get("us_strong_sectors", []) if isinstance(macro, dict) else []
+
+    # 소르티노 섹터강도 + A/B 두 방식
+    import sys
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import ingest_excel as ie
+    sortino = sortino_strength(ie)
+    method_a, method_b = select_sectors_ab(us_sectors, sortino, vac_cnt)
+
     if lead is None:
-        # STAGE2 = 미장 강세섹터 × 빈집 보유섹터 교집합 (강세 순). 교집합 없으면 빈집 상위.
-        inter = [s for s in us_strong if s in vac_cnt]
-        lead = inter if inter else [name for name, _ in vac_cnt.most_common(3)]
+        # 화면 기본 표시 = B(점수합산). 비면 빈집 상위.
+        lead = method_b or [name for name, _ in vac_cnt.most_common(3)]
     snap = build_snapshot(macro, lead, stocks, us_sectors)
+    snap["stage2"]["methods"] = {"A_교집합": method_a, "B_점수합산": method_b}
+    snap["stage2"]["sortino"] = sortino
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(snap, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"스냅샷 기록: {OUT} (종목 {len(stocks)}, 섹터교집합 {lead})")
+    print(f"스냅샷 기록: {OUT} (종목 {len(stocks)}, A {method_a}, B {method_b})")
     return snap
 
 
