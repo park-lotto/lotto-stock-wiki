@@ -1223,3 +1223,9 @@ python calc_oscillator.py SK하이닉스 삼성전자 한미반도체 --tg
 - STAGE1 매크로 실연동: fetch_macro.py(yfinance VIX·S&P·나스닥 → GO/경계/NO + 간밤이벤트 정량감지). 오늘 GO(미장+1.5%,VIX16.4).
 - STAGE2 미국대장주 맵핑: 한국섹터 기준 미국 대장주 2~3개(반도체=NVDA·MU·AVGO 등) 등락 → 미장강세×빈집 교집합. run_signal_daily에 fetch_macro 선행 추가.
 - [2026-06-22 회사PC] 위키 종합엔진 설계·구현(반도체 프로토타입). 원자→종목페이지 자동녹임: synth_qc/verify_gate/synth_engine/synth_rollup/synth_run (17테스트). 5종목 풍부갱신(출처+⚠️미검증 등급). 미완: 수율14%(날짜윈도우·섹터페이지실패·기타오분류 3구멍) + claude -p 페이지파괴→서브에이전트 직접쓰기 재설계 필요. 교훈: "쓸모(수율)" 먼저 검증, 과설계 금물. 상세 NEXT_SESSION.md.
+
+## 2026-06-22 (회사PC·Opus4.8) — 대시보드 세션 (서버 배포)
+- /feed 3컬럼+키워드 다이제스트 / /signal 깔때기+A/B백테스트 / 종목 통합카드(한줄판단+시그널+뉴스+리포트) / 텔레 명령봇(/go /signal) / crawling_bot_data→서버 매시간 동기화
+- 미국대장주 매핑(fetch_macro), 클릭베이트·재료필터, 구글뉴스 실시간보충
+- 전략결론: 잘만들어짐≠잘됨(외부검증0). 위키↔카드AI판단 연결=차별화 / 채널에 던져 검증 필요
+- 상세 핸드오프: docs/HANDOFF_대시보드_2026-06-22.md / 주의: 서버에 개발자 동시작업
