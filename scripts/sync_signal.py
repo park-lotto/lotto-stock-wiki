@@ -15,10 +15,15 @@ def main():
     subprocess.run(
         ["ssh", "-i", KEY, "-o", "StrictHostKeyChecking=no", HOST,
          f"mkdir -p {REMOTE_DIR}"], check=True)
-    subprocess.run(
-        ["scp", "-i", KEY, "-o", "StrictHostKeyChecking=no",
-         str(LOCAL), f"{HOST}:{REMOTE_DIR}/signal_snapshot.json"], check=True)
-    print("스냅샷 서버 동기화 완료")
+    # 스냅샷 + 백테스트 요약 둘 다 업로드 (있는 것만)
+    for fname in ("signal_snapshot.json", "backtest_summary.json"):
+        src = LOCAL.parent / fname
+        if src.exists():
+            subprocess.run(
+                ["scp", "-i", KEY, "-o", "StrictHostKeyChecking=no",
+                 str(src), f"{HOST}:{REMOTE_DIR}/{fname}"], check=True)
+            print(f"  ↑ {fname}")
+    print("서버 동기화 완료")
     return True
 
 

@@ -1219,3 +1219,4 @@ python calc_oscillator.py SK하이닉스 삼성전자 한미반도체 --tg
 - 대시보드 2서비스 분리: `/feed`(Tier1~5 소스잠금) + `/signal`(3단 깔때기, 독립권한). 설계·계획·구현·라이브검증 완료. 서버커밋 3건, 테스트 36개 통과.
 - 시그널 데이터: pipeline/build_signal_snapshot.py(태린이엑셀→스냅샷) + scripts/sync_signal.py(서버동기화). 실데이터 363종목.
 - download_daily.py: 폴더접근 차단 시 텔레그램 자동보고 추가. mybox_links.json URL 갱신(월요일 변경분).
+- 시그널 보강: 섹터태깅(sector_map.json 515 마스터, 미상42%) + 매일 백테스팅(backtest_signal.py: picks_log 누적→사후수익률 승률/점수별). /api/signal/backtest 배포. 가격원=한국상대강도(~150종목). runner=run_signal_daily.py(스케줄 미등록).

@@ -14,6 +14,14 @@
 - 서버 커밋 3건(5e9ef2c, afc3be1, signal). 테스트 36개 통과. 운영자(빅팜) Tier5+시그널 부여.
 - 시그널 데이터: 로컬 `pipeline/build_signal_snapshot.py`가 태린이 엑셀 → `signal_snapshot.json` 생성 → `scripts/sync_signal.py`로 서버 동기화 → 서버는 읽기만. **실데이터 363종목 검증.**
 
+### 1-b. 시그널 보강 (섹터 태깅 + 백테스트) — 추가
+- **섹터 태깅**: `sector_map.json`(515종목 마스터) + 컨센 파서 폴백 → 미상 42%로 감소(209/363 판별). STAGE2가 `반도체·바이오·로봇`으로 의미화.
+- **매일 백테스팅 구축**: `pipeline/backtest_signal.py` — 매일 score≥4 픽을 entry_close와 함께 `picks_log.jsonl` 누적 → 최신 종가로 사후 수익률 갱신 → 승률·평균수익을 점수/빈집등급별 집계 → `backtest_summary.json`.
+  - 서버: `/api/signal/backtest` + `/signal` 페이지 성과표. 라이브 배포됨.
+  - **가격원 한계**: 한국상대강도 엑셀(~150 대형주)만 → 픽 중 RS유니버스 교집합만 추적(현재 10개). 소형주 미추적.
+  - 일일 runner: `scripts/run_signal_daily.py` (스냅샷→백테스트→동기화). **아직 스케줄 미등록.**
+  - ⚠️ 수익률은 **픽 다음날부터** 누적(오늘 days_held=0). 내일 첫 실측 나옴.
+
 ### 2. 태린이 다운로드 자동화 보강
 - `scripts/mybox_links.json` URL 갱신(cafe·bingsu, 매주 월요일 변경). 14개 파일 다운로드 검증.
 - `scripts/download_daily.py`: **폴더접근 차단 시 반드시 텔레그램 보고** 시스템 추가(check_access·_guard·report_problems).
@@ -34,4 +42,5 @@
 - 시그널 갱신 루틴(수동): `python -m pipeline.build_signal_snapshot && python scripts/sync_signal.py`
 
 ## 미스케줄 (다음에 자동화)
-- 07:55 ingest 뒤에 `build_signal_snapshot` + `sync_signal` 잇는 스케줄 추가 (현재 수동)
+- 07:55 ingest 뒤에 `python scripts/run_signal_daily.py` 스케줄 추가 (스냅샷+백테스트+동기화 한 번에). 현재 수동.
+  - 수동 실행: `python scripts/run_signal_daily.py`

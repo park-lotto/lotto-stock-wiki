@@ -29,6 +29,36 @@ def score_stock(stock: dict) -> int:
     return 2 + sum(1 for k in _FLAG_KEYS if f.get(k, 0) >= 1)
 
 
+def _load_sector_master():
+    """루트 sector_map.json → (name→sector, code→sector). 515종목 마스터 매핑."""
+    by_name, by_code = {}, {}
+    p = ROOT / "sector_map.json"
+    if p.exists():
+        try:
+            data = json.loads(p.read_text(encoding="utf-8"))
+            for name, info in data.items():
+                sec = (info or {}).get("섹터")
+                code = (info or {}).get("코드")
+                if sec:
+                    by_name[name.strip()] = sec
+                    if code:
+                        by_code[str(code).strip().lstrip("A").zfill(6)] = sec
+        except Exception:
+            pass
+    return by_name, by_code
+
+
+def _resolve_sector(name, code, by_name, by_code, ie):
+    """종목 섹터 해석: 마스터(이름) → 마스터(코드) → wiki 페이지 → ?"""
+    if name in by_name:
+        return by_name[name]
+    if code:
+        c = str(code).strip().lstrip("A").zfill(6)
+        if c in by_code:
+            return by_code[c]
+    return ie.get_stock_sector(name) or "?"
+
+
 def _names(rows):
     """행 리스트에서 종목명 집합."""
     out = set()
@@ -67,6 +97,14 @@ def build_stocks() -> list:
         if r.get("name"):
             rs_map[r["name"].strip()] = r.get("RS_avg")
 
+    # 섹터 마스터(515) + 컨센 파서 섹터 폴백
+    by_name, by_code = _load_sector_master()
+    for bucket in (con.get("results", {}) if isinstance(con, dict) else {}).values():
+        for r in (bucket or []):
+            nm, sec = (r.get("name") or "").strip(), r.get("sector")
+            if nm and sec and sec != "—" and nm not in by_name:
+                by_name[nm] = sec
+
     stocks = []
     seen = set()
     for parsed in (osc_big, osc_sml):
@@ -87,7 +125,7 @@ def build_stocks() -> list:
                 }
                 st = {
                     "name": name, "code": r.get("code"),
-                    "sector": ie.get_stock_sector(name) or "?",
+                    "sector": _resolve_sector(name, r.get("code"), by_name, by_code, ie),
                     "vacancy": grade, "rs": rs_map.get(name),
                     "flags": flags,
                 }
