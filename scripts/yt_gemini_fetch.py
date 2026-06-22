@@ -42,21 +42,33 @@ PROMPT = """이 유튜브 영상을 분석해서 아래 형식의 JSON으로만 
 한국 주식 영상이면 종목/섹터를 정확히 뽑아줘."""
 
 
-def fetch_yt(url: str, model: str = 'gemini-3-flash-preview') -> dict:
+def fetch_yt(url: str, model: str = 'gemini-2.5-flash') -> dict:
+    import time
     from google import genai
     from google.genai import types
+    from google.genai import errors as genai_errors
 
     client = genai.Client(api_key=API_KEY)
     print(f"🎬 Gemini 영상 분석 시작 (모델: {model})")
 
-    resp = client.models.generate_content(
-        model=model,
-        contents=types.Content(parts=[
-            types.Part(file_data=types.FileData(file_uri=url, mime_type="video/*")),
-            types.Part(text=PROMPT),
-        ]),
-        config=types.GenerateContentConfig(temperature=0.2),
-    )
+    contents = types.Content(parts=[
+        types.Part(file_data=types.FileData(file_uri=url, mime_type="video/*")),
+        types.Part(text=PROMPT),
+    ])
+    cfg = types.GenerateContentConfig(temperature=0.2)
+
+    resp = None
+    for attempt in range(5):
+        try:
+            resp = client.models.generate_content(model=model, contents=contents, config=cfg)
+            break
+        except genai_errors.ServerError as e:
+            wait = 10 * (attempt + 1)
+            print(f"  ⚠️ 503/서버혼잡 — {wait}초 후 재시도 ({attempt+1}/5)")
+            time.sleep(wait)
+    if resp is None:
+        raise RuntimeError("5회 재시도 후에도 서버 응답 실패")
+
     text = resp.text.strip()
     # 코드블록 제거
     import re
