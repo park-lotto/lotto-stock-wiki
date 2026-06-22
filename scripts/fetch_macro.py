@@ -19,33 +19,53 @@ OUT = ROOT / "output" / "signal" / "macro_today.json"
 
 INDEX = {"^GSPC": "S&P500", "^IXIC": "나스닥"}
 
-# 한국 섹터(우리 기준) → 그 섹터의 미국 대장종목 2~3개.
+# 한국 섹터(위키 L5_섹터 폴더 + sector_map.json 기준) → 그 섹터의 미국 대장종목 2~3개.
 # 미국 대장주 등락으로 "그 섹터가 미국에서 강한가"를 본다(미장이 한국을 선행).
+# 키는 종목 태깅값(sector_map.json)과 위키 폴더명 둘 다 커버(별칭 포함).
 KOR_SECTOR_US_LEADERS = {
-    "반도체":   ["NVDA", "MU", "AVGO"],   # HBM/메모리·AI반도체 = 삼성·하닉 선행
-    "전력기기": ["GEV", "ETN", "VRT"],    # 전력인프라·변압기·데이터센터 전력
-    "방산":     ["LMT", "RTX", "NOC"],
-    "원전":     ["CEG", "VST", "SMR"],
-    "바이오":   ["LLY", "NVO", "VRTX"],
-    "로봇":     ["ISRG", "NVDA"],         # 수술로봇·피지컬AI
-    "2차전지":  ["TSLA", "ALB"],          # EV수요·리튬
-    "자동차":   ["TSLA", "GM"],
-    "조선":     ["HII", "GD"],            # 美 방산조선
-    "태양광":   ["FSLR", "ENPH"],
+    "반도체":     ["NVDA", "MU", "AVGO"],   # HBM/메모리·AI반도체 = 삼성·하닉 선행
+    "바이오":     ["LLY", "NVO", "VRTX"],
+    "이차전지":   ["TSLA", "ALB"],          # EV수요·리튬
+    "2차전지ESS": ["TSLA", "ALB"],          # 위키 폴더 별칭
+    "로봇":       ["ISRG", "NVDA"],         # 수술로봇·피지컬AI
+    "자동차":     ["TSLA", "GM"],
+    "화장품":     ["EL", "ELF"],            # 코스메틱
+    "미용":       ["ABBV", "ALGN"],         # 보톡스·에스테틱
+    "전력":       ["GEV", "ETN", "VRT"],    # 전력인프라·변압기·데이터센터 전력
+    "전력기기":   ["GEV", "ETN", "VRT"],    # 위키 폴더 별칭
+    "조선":       ["HII", "GD"],            # 美 방산조선
+    "원전":       ["CEG", "VST", "SMR"],
+    "신재생":     ["FSLR", "ENPH", "NEE"],  # 태양광·재생에너지
+    "방산":       ["LMT", "RTX", "NOC"],
+    "LNG":        ["LNG", "KMI"],           # Cheniere(티커 LNG)·미드스트림
+    "우주":       ["RKLB", "LMT"],          # 로켓랩·방산우주
+    "AI소프트웨어": ["PLTR", "MSFT", "GOOGL"],
+    "통신":       ["TMUS", "VZ"],
+    "엔터":       ["NFLX", "SPOT"],
+    "철강":       ["NUE", "STLD", "X"],
+    # 미국 대장주 없음(스킵): 테마이벤트(분류용)·소비내수(국내 내수)
 }
 
 
+_CHG_CACHE = {}
+
+
 def _chg(tk):
-    """(종가, 전일대비%, 날짜). 실패 시 (None,None,None)."""
+    """(종가, 전일대비%, 날짜). 실패 시 (None,None,None). 같은 티커는 1회만 fetch."""
+    if tk in _CHG_CACHE:
+        return _CHG_CACHE[tk]
     import yfinance as yf
     try:
         h = yf.Ticker(tk).history(period="7d")
+        if len(h) < 2:
+            res = (None, None, None)
+        else:
+            last, prev = float(h["Close"].iloc[-1]), float(h["Close"].iloc[-2])
+            res = (round(last, 2), round((last - prev) / prev * 100, 2), str(h.index[-1].date()))
     except Exception:
-        return None, None, None
-    if len(h) < 2:
-        return None, None, None
-    last, prev = float(h["Close"].iloc[-1]), float(h["Close"].iloc[-2])
-    return round(last, 2), round((last - prev) / prev * 100, 2), str(h.index[-1].date())
+        res = (None, None, None)
+    _CHG_CACHE[tk] = res
+    return res
 
 
 def fetch():
