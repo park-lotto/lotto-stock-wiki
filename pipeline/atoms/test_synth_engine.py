@@ -1,4 +1,4 @@
-from pipeline.atoms.synth_engine import _build_prompt
+from pipeline.atoms.synth_engine import _build_prompt, _build_sector_prompt
 
 
 def test_prompt_includes_page_atoms_and_rules():
@@ -10,3 +10,13 @@ def test_prompt_includes_page_atoms_and_rules():
     assert "raw/telegram/a.md" in p          # 실존 출처 전달
     assert "날조" in p or "실존" in p          # 출처 날조 금지 규칙
     assert "위키에 없" in p or "지어내" in p    # 정직 규칙
+
+
+def test_sector_prompt_targets_market_section():
+    page = "# 반도체 섹터\n## 시장 국면\n"
+    atoms = [{"content": "반도체 ETF 1조달러 손실", "date": "2026-06-06",
+              "sources": ["raw/news/x.md"], "certainty": "사실"}]
+    p = _build_sector_prompt(page, atoms)
+    assert "시장 국면" in p
+    assert "반도체 ETF" in p
+    assert "raw/news/x.md" in p

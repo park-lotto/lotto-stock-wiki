@@ -44,3 +44,26 @@ def synth_stock(page_path: Path, atoms: list[dict], *, dry_run: bool = False) ->
     updated = _call_sonnet(prompt)
     page_path.write_text(updated, encoding="utf-8")
     return updated
+
+
+_SECTOR_RULES = """너는 섹터 위키 편집자다. [현재 섹터페이지]의 "시장 국면·테마 코멘트" 섹션에 [신규 원자]를 녹여라.
+철칙은 종목과 동일(실존출처만·할루시네이션금지·미검증표기). 개별 종목 깊이가 아니라 섹터 전체 국면·수급·테마 흐름을 종합하라.
+출력은 갱신된 마크다운 전체."""
+
+
+def _build_sector_prompt(page_md: str, atoms: list[dict]) -> str:
+    lines = ["[신규 원자]"]
+    for a in atoms:
+        srcs = " · ".join(a.get("sources") or [a.get("raw_file", "?")])
+        lines.append(f"- [{a.get('date','?')}] (certainty={a.get('certainty','불명')}) {a['content']}  ← {srcs}")
+    return f"{_SECTOR_RULES}\n\n[현재 섹터페이지]\n{page_md}\n\n" + "\n".join(lines)
+
+
+def synth_sector(sector_page: Path, atoms: list[dict], *, dry_run: bool = False) -> str:
+    page_md = sector_page.read_text(encoding="utf-8")
+    prompt = _build_sector_prompt(page_md, atoms)
+    if dry_run:
+        return prompt
+    updated = _call_sonnet(prompt)
+    sector_page.write_text(updated, encoding="utf-8")
+    return updated
