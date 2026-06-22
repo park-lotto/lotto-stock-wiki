@@ -24,7 +24,7 @@ INDEX = {"^GSPC": "S&P500", "^IXIC": "나스닥"}
 # 키는 종목 태깅값(sector_map.json)과 위키 폴더명 둘 다 커버(별칭 포함).
 KOR_SECTOR_US_LEADERS = {
     "반도체":     ["NVDA", "MU", "AVGO"],   # HBM/메모리·AI반도체 = 삼성·하닉 선행
-    "바이오":     ["LLY", "NVO", "VRTX"],
+    "바이오":     ["LLY", "NVO", "MRK"],   # 릴리·노보노디스크·머크
     "이차전지":   ["TSLA", "ALB"],          # EV수요·리튬
     "2차전지ESS": ["TSLA", "ALB"],          # 위키 폴더 별칭
     "로봇":       ["ISRG", "NVDA"],         # 수술로봇·피지컬AI
