@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import hashlib
 from pathlib import Path
 from google import genai
@@ -35,6 +36,7 @@ _PROMPT = """다음 텍스트를 주식 시장 정보 '원자' 단위로 분해�
 - event_type: earnings/policy/supply/demand/consensus/momentum/macro/news/report/event
 - magnitude: major/minor
 - content_type: fact/data/analysis/opinion
+- content: (필수) 이 원자의 본문. 원문 해당 부분을 3~7문장 그대로 담아라. 요약·생략 금지. 비어 있으면 안 된다.
 - validity_type: permanent/date/event
 - validity_until: 만료일 YYYY-MM-DD 형식 또는 null
 
@@ -58,19 +60,27 @@ def atomize_text(
     layer: str = "L5",
 ) -> list[dict]:
     text = _sanitize(text)
-    try:
-        response = _client.models.generate_content(
-            model=_GEMINI_MODEL,
-            contents=_PROMPT.format(text=text),
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-            ),
-        )
-        raw_atoms: list[dict] = json.loads(response.text)
-    except (json.JSONDecodeError, ValueError) as e:
-        raise ValueError(f"Gemini returned invalid JSON: {e}\nResponse: {getattr(response, 'text', 'no response')[:200]}")
-    except Exception as e:
-        raise RuntimeError(f"Gemini API call failed: {e}")
+    raw_atoms = None
+    for _attempt in range(4):
+        try:
+            response = _client.models.generate_content(
+                model=_GEMINI_MODEL,
+                contents=_PROMPT.format(text=text),
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                ),
+            )
+            raw_atoms = json.loads(response.text)
+            break
+        except (json.JSONDecodeError, ValueError) as e:
+            raise ValueError(f"Gemini returned invalid JSON: {e}\nResponse: {getattr(response, 'text', 'no response')[:200]}")
+        except Exception as e:
+            _m = str(e)
+            # 503/429 등 일시 장애는 backoff 재시도
+            if _attempt < 3 and any(c in _m for c in ("503", "429", "UNAVAILABLE", "overloaded", "RESOURCE_EXHAUSTED")):
+                time.sleep((_attempt + 1) * 5)
+                continue
+            raise RuntimeError(f"Gemini API call failed: {e}")
 
     atoms = []
     for i, a in enumerate(raw_atoms):

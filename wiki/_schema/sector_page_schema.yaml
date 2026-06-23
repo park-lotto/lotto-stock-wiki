@@ -1,0 +1,40 @@
+# 섹터 페이지 스키마 — 1단계 MVP
+# 목표: B형 질문("조선 투자할만해? 어디?")에 답하는 횡단 의사결정 그릇.
+# 종목 스키마(A형 깊이)와 대칭. 빈칸 = 헤더 없음/내용 미달/오래됨.
+
+schema_version: "1.0-mvp"
+page_type: sector
+description: >
+  섹터 페이지 핵심 5칸. 종목 횡단 비교표는 sector_table.py 로 자동 생성.
+  check.type: min_lines | table_rows | header_exists
+
+cells:
+  - id: 사이클_국면
+    header_pattern: '사이클|국면|현재 상태'
+    required: true
+    stale_days: 30
+    check: { type: min_lines, min: 2 }
+
+  - id: 종목_횡단_비교표      # ← B형 핵심. sector_table.py 자동 생성
+    header_pattern: '횡단 비교|종목 비교표|한눈에'
+    required: true
+    stale_days: 7
+    check: { type: table_rows, min: 3 }
+
+  - id: 진행중_이벤트
+    header_pattern: '진행.*이벤트|이벤트 타임라인|지속 영향'
+    required: true
+    stale_days: 7
+    check: { type: min_lines, min: 3 }
+
+  - id: 탑픽
+    header_pattern: '탑픽|TOP\s*3|종목.*포지션 맵'
+    required: true
+    stale_days: 7
+    check: { type: min_lines, min: 1 }
+
+  - id: 딥리서치
+    header_pattern: '딥리서치'
+    required: false
+    stale_days: 90
+    check: { type: min_lines, min: 3 }
