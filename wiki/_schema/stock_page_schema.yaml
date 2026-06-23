@@ -1,0 +1,75 @@
+# 종목 페이지 스키마 — 1단계 MVP (핵심 칸만)
+# 빈칸 = 헤더 없음(MISSING) / 내용 미달(EMPTY) / 오래됨(STALE)
+# 이 파일은 wiki_diagnose.py 가 읽어 페이지를 대조한다. 채우진 않는다(1단계).
+# 23증권사 풀커버리지 등 빽빽한 칸은 의도적으로 제외 — 그릇 검증 후 2단계에서 확장.
+
+schema_version: "1.0-mvp"
+page_type: stock
+description: >
+  종목 페이지 핵심 9칸. header_pattern 은 정규식(섹션 헤더 매칭).
+  check.type: header_exists | block_nonempty | min_lines | table_rows | subsection_count
+
+# 등급별 요구 칸. 진단은 이 리스트의 칸만 "필수"로 보고 이슈 카운트.
+# (정적 종목에 다관점 빈 건 정상 — 일감으로 잡지 않는다)
+tier_profiles:
+  hot:    [메타, 종합_스토리, 강세론_학파, 신중_역발상, 충돌_논쟁점, 최신_이벤트, 증권사_컨센서스]
+  watch:  [메타, 종합_스토리, 최신_이벤트, 증권사_컨센서스]
+  static: [메타]
+default_tier: static
+
+cells:
+  - id: 메타
+    header_pattern: '^#\s.+\(\d{6}\)'
+    required: true
+    stale_days: 1
+    check: { type: header_exists }
+
+  - id: 탑픽_스코어   # 주관적 지표 — 진단 강제 X(선택). 콜아웃/헤더 둘 다 허용.
+    header_pattern: '탑픽 스코어'
+    required: false
+    stale_days: 3
+    check: { type: block_nonempty }
+
+  - id: 종합_스토리
+    header_pattern: '^##\s*종합 스토리'
+    required: true
+    stale_days: 7
+    check: { type: min_lines, min: 2 }
+
+  # --- 다관점 그릇 (이 엔진의 핵심 차별점) ---
+  - id: 강세론_학파
+    header_pattern: '^##\s*🟢\s*강세론'
+    required: true
+    stale_days: 30
+    check: { type: subsection_count, min: 2 }   # ### 학파 ≥ 2
+
+  - id: 신중_역발상
+    header_pattern: '^##\s*🟡\s*신중'
+    required: true
+    stale_days: 30
+    check: { type: subsection_count, min: 1 }
+
+  - id: 충돌_논쟁점
+    header_pattern: '^##\s*(⚔️|⚠️\s*충돌)'
+    required: true
+    stale_days: 30
+    check: { type: min_lines, min: 3 }
+
+  - id: 썰
+    header_pattern: '^##\s*💭'
+    required: false
+    stale_days: 30
+    check: { type: table_rows, min: 1 }
+
+  # --- 팩트 트래커 ---
+  - id: 최신_이벤트
+    header_pattern: '^##\s*(📰\s*)?최신 이벤트'
+    required: true
+    stale_days: 7
+    check: { type: table_rows, min: 3 }
+
+  - id: 증권사_컨센서스
+    header_pattern: '^##\s*(🏦\s*)?증권사 컨센서스'
+    required: true
+    stale_days: 30
+    check: { type: table_rows, min: 5 }
