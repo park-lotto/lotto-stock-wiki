@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-22",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-23_0704_2Q26 영업이익 63.7 조원 전망.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "iM증권",
+    "analyst": null,
+    "report_date": "2026.06.19",
+    "stocks": [
+      {
+        "name": "SK하이닉스",
+        "code": "000660",
+        "rating": "Buy",
+        "rating_changed": null,
+        "tp_new": "3,500,000원",
+        "tp_prev": "2,760,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "동사 2Q26 영업이익을 63.7조원으로 전망함. DRAM, NAND 출하 증가율은 9%, 18%, Blended ASP 상승률은 37%, 52%를 기록할 것으로 추정됨.",
+        "estimate_revision": null,
+        "next_catalyst": "CY26 중에 동사 ADR이 상장될 경우",
+        "thesis": [
+          "직원들에 대한 영업이익 10% 지급 조건을 반영한 동사 FY26 영업이익은 261조원으로 YoY 452% 증가할 전망",
+          "동사 2Q26 영업이익을 63.7조원으로 전망하며, 높은 HBM 판매 비중에 따라 DRAM Blended ASP 상승 기대",
+          "메모리 반도체 업황은 적어도 CY27까지는 호황이 이어질 것으로 판단됨"
+        ],
+        "valuation_basis": "CY26 중에 동사 ADR이 상장될 경우 최근 Micron의 P/B 배수가 7~10배 수준이고, 동사의 올해 예상 ROE가 96%에 달하므로 P/B 7.5배를 FY26 예상 BPS에 적용",
+        "risk": "최근 급등에 따른 단기 주가 조정 가능성",
+        "supply_comment": null,
+        "quote": "P/B 7.5배를 FY26 예상 BPS에 적용 시 350만원의 주가 가능"
+      }
+    ]
+  }
+}

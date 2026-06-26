@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "date": "2026-06-22",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-23_0711_[월간 반도체 7월] 실적 전망치 상향 조정 지...md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": "송명섭",
+    "report_date": "2026.06.22",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "삼성전자",
+        "code": "005930",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "480,000원",
+        "tp_prev": null,
+        "tp_direction": "up",
+        "earnings_outlook": "직원들에 대한 신규 보상 체계를 감안한 삼성전자의 FY26 영업이익은 340조원으로 YoY 680% 증가할 전망",
+        "estimate_revision": "실적 전망치 상향 조정 지속",
+        "next_catalyst": "CY27 메모리 가격 상승 지속 여부",
+        "thesis": [
+          "FY26 영업이익 340조원으로 YoY 680% 증가 전망",
+          "FY26 예상 ROE 47% 추정으로 P/B 4.8배 적용 가능",
+          "CY27까지 반도체 업황 호조 지속 예상"
+        ],
+        "valuation_basis": "FY26 예상 BPS 10만원에 P/B 4.8배 적용",
+        "risk": "이란 전쟁과 같은 지정학적 이슈 재발 및 장기화, 스태그플레이션 발생, 유동성 축소",
+        "supply_comment": "삼성전자는 HBM Capa를 모두 활용할 경우 16.3억 GB 생산이 가능하나 이익률이 더 높은 Conventional DRAM 생산으로 일부 HBM Capa를 전환할 수 있을 듯",
+        "quote": "직원들에 대한 신규 보상 체계를 감안한 삼성전자의 FY26 영업이익은 340조원으로 YoY 680% 증가할 전망이며 이에 기반한 FY26 예상 BPS는 10만원, ROE는 47%로 추정"
+      },
+      {
+        "name": "SK하이닉스",
+        "code": "000660",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "3,500,000원",
+        "tp_prev": null,
+        "tp_direction": "up",
+        "earnings_outlook": "직원들에 대한 영업이익 10% 지급 조건을 반영한 SK하이닉스의 FY26 영업이익은 261조원으로 YoY 452% 증가할 전망",
+        "estimate_revision": "실적 전망치 상향 조정 지속",
+        "next_catalyst": "CY26 중 ADR 상장 및 CY27 메모리 가격 상승 지속 여부",
+        "thesis": [
+          "FY26 영업이익 261조원으로 YoY 452% 증가 전망",
+          "FY26 예상 ROE 96% 도달로 P/B 7.5배 적용 가능",
+          "2Q26 영업이익 63.7조원 전망"
+        ],
+        "valuation_basis": "FY26 예상 BPS 48만원에 P/B 7.5배 적용",
+        "risk": "이란 전쟁과 같은 지정학적 이슈 재발 및 장기화, 스태그플레이션 발생, 유동성 축소",
+        "supply_comment": "SK하이닉스의 2Q26 DRAM Blended ASP 상승률은 경쟁사 대비 다소 낮을 가능성이 있음",
+        "quote": "직원들에 대한 영업이익 10% 지급 조건을 반영한 SK하이닉스의 FY26 영업이익은 261조원으로 YoY 452% 증가할 전망이며 이에 기반한 예상 FY26 BPS는 48만원"
+      }
+    ]
+  }
+}

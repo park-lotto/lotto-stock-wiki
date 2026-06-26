@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>로또의 주식 — 딸깍 대시보드</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+  :root { --gold:#d4af37; --gold-dim:#9a7d28; --bg:#0a0a0a; --card:#16161a; --line:#2a2a30; --txt:#e8e6e0; --muted:#8a8a92; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--txt); font-family:'Segoe UI','Malgun Gothic',sans-serif; min-height:100vh; }
+  header { padding:28px 32px 18px; border-bottom:1px solid var(--line); }
+  h1 { font-size:1.35rem; font-weight:700; letter-spacing:-.5px; }
+  h1 .gold { color:var(--gold); }
+  .sub { color:var(--muted); font-size:.8rem; margin-top:4px; }
+  .btn-row { display:flex; gap:14px; padding:24px 32px; flex-wrap:wrap; }
+  .btn { flex:1; min-width:200px; padding:22px 24px; background:var(--card); border:1px solid var(--line);
+    border-radius:14px; cursor:pointer; transition:.18s; text-align:left; color:var(--txt); }
+  .btn:hover { border-color:var(--gold-dim); transform:translateY(-2px); }
+  .btn.active { border-color:var(--gold); box-shadow:0 0 0 1px var(--gold); }
+  .btn .ico { font-size:1.6rem; }
+  .btn .ttl { font-size:1.05rem; font-weight:700; margin:8px 0 3px; }
+  .btn .desc { font-size:.78rem; color:var(--muted); }
+  .btn .soon { font-size:.68rem; color:var(--gold-dim); margin-top:6px; display:inline-block;
+    border:1px solid var(--gold-dim); padding:1px 7px; border-radius:10px; }
+  main { padding:8px 32px 60px; }
+  .loading { text-align:center; color:var(--muted); padding:60px; font-size:.9rem; }
+  .section { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px 22px; margin-bottom:16px; }
+  .section h2 { font-size:.82rem; color:var(--gold); text-transform:uppercase; letter-spacing:1px; margin-bottom:14px; font-weight:700; }
+  .verdict-row { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  .verdict { font-size:1.5rem; font-weight:800; padding:6px 18px; border-radius:10px; }
+  .verdict.GO { background:#0d2a14; color:#3ddc6e; border:1px solid #1a5c30; }
+  .verdict.CAUTION { background:#2a210d; color:#e0b13d; border:1px solid #5c4a1a; }
+  .verdict.NO { background:#2a0d0d; color:#e05050; border:1px solid #5c1a1a; }
+  .metric { display:inline-flex; flex-direction:column; gap:2px; margin-right:24px; }
+  .metric .v { font-size:1.3rem; font-weight:700; }
+  .metric .l { font-size:.72rem; color:var(--muted); }
+  .pos { color:#3ddc6e; } .neg { color:#e05050; }
+  .reasons { margin-top:14px; display:flex; flex-direction:column; gap:6px; }
+  .reason { font-size:.82rem; display:flex; gap:8px; align-items:center; }
+  .reason .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .reason .dot.ok { background:#3ddc6e; } .reason .dot.no { background:#e05050; }
+  .chips { display:flex; gap:8px; flex-wrap:wrap; }
+  .chip { background:#1f1f25; border:1px solid var(--line); padding:5px 13px; border-radius:20px; font-size:.84rem; }
+  .chip.gold { border-color:var(--gold-dim); color:var(--gold); }
+  .chip .n { color:var(--muted); font-size:.74rem; margin-left:5px; }
+  table { width:100%; border-collapse:collapse; font-size:.82rem; }
+  th { text-align:left; color:var(--muted); font-weight:600; padding:8px 10px; border-bottom:1px solid var(--line); font-size:.74rem; text-transform:uppercase; }
+  td { padding:9px 10px; border-bottom:1px solid #1c1c22; }
+  tr:hover td { background:#1c1c22; }
+  .stock-name { font-weight:600; }
+  .vac { font-size:.7rem; padding:1px 7px; border-radius:8px; font-weight:700; }
+  .vac.A { background:#0d2a14; color:#3ddc6e; } .vac.B { background:#2a210d; color:#e0b13d; }
+  .score-bar { display:inline-block; height:7px; border-radius:4px; background:var(--gold); vertical-align:middle; }
+  .flags { display:flex; gap:4px; flex-wrap:wrap; }
+  .flag { font-size:.66rem; background:#1f1f25; color:var(--muted); padding:1px 6px; border-radius:6px; }
+  .flag.on { background:var(--gold-dim); color:#000; font-weight:700; }
+  details { background:var(--card); border:1px solid var(--line); border-radius:14px; margin-bottom:16px; }
+  summary { padding:18px 22px; cursor:pointer; font-size:.82rem; color:var(--gold); text-transform:uppercase; letter-spacing:1px; font-weight:700; }
+  .briefing-body { padding:0 26px 24px; font-size:.86rem; line-height:1.7; color:#cfcdc7; }
+  .briefing-body h3 { color:var(--gold); margin:18px 0 8px; font-size:1rem; }
+  .briefing-body ul { margin:8px 0 8px 20px; } .briefing-body li { margin:3px 0; }
+  .briefing-body strong { color:var(--txt); }
+  .stale { color:#e0b13d; font-size:.74rem; }
+  .placeholder { text-align:center; padding:70px 20px; color:var(--muted); }
+  .placeholder .big { font-size:2.4rem; margin-bottom:14px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>로또의 주식 — <span class="gold">딸깍 대시보드</span></h1>
+  <div class="sub">버튼 하나로 오늘 시장을 정리한다 · AI가 모은 데이터를 한 화면에</div>
+</header>
+
+<div class="btn-row">
+  <button class="btn" id="b-morning" onclick="loadMorning()">
+    <div class="ico">🌅</div>
+    <div class="ttl">장 시작 전</div>
+    <div class="desc">오늘 뭐 봐야 해? · 간밤 미국장 + 신호 + 주도섹터</div>
+  </button>
+  <button class="btn" id="b-intraday" onclick="loadStub('intraday')">
+    <div class="ico">🔥</div>
+    <div class="ttl">장 중</div>
+    <div class="desc">지금 왜 이래? · 실시간 수급/프로그램/선물</div>
+    <div class="soon">2단계 · 한투 연결 예정</div>
+  </button>
+  <button class="btn" id="b-close" onclick="loadStub('close')">
+    <div class="ico">🌙</div>
+    <div class="ttl">장 마감 후</div>
+    <div class="desc">오늘 뭐였고 내일은? · 픽 결과 + 내일 일정</div>
+    <div class="soon">3단계 · 예정</div>
+  </button>
+</div>
+
+<main id="main">
+  <div class="loading">위 버튼을 눌러 시작하세요.</div>
+</main>
+
+<script>
+const F_LABELS = ['빈집','수출','컨센신고가','어닝서프','판가','미국커플링','정책','D30'];
+
+function setActive(id) {
+  document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+async function loadMorning() {
+  setActive('b-morning');
+  const main = document.getElementById('main');
+  main.innerHTML = '<div class="loading">데이터 불러오는 중…</div>';
+  try {
+    const d = await (await fetch('/api/morning')).json();
+    main.innerHTML = renderMorning(d);
+  } catch (e) {
+    main.innerHTML = '<div class="loading">오류: ' + e + '</div>';
+  }
+}
+
+function renderMorning(d) {
+  const s1 = d.stage1 || {}, s2 = d.stage2 || {};
+  let html = '';
+
+  // 1. 매크로 게이트
+  const v = s1.verdict || '—';
+  const mkt = s1.market;
+  const mktCls = mkt > 0 ? 'pos' : (mkt < 0 ? 'neg' : '');
+  html += '<div class="section"><h2>매크로 게이트 · 오늘 스탠스</h2>';
+  html += '<div class="verdict-row">';
+  html += '<span class="verdict ' + v + '">' + v + '</span>';
+  if (mkt !== undefined) html += '<span class="metric"><span class="v ' + mktCls + '">' + (mkt>0?'+':'') + mkt + '%</span><span class="l">미장(S&P)</span></span>';
+  if (s1.vix !== undefined) html += '<span class="metric"><span class="v">' + s1.vix + '</span><span class="l">VIX ' + (s1.vix_chg!==undefined?(s1.vix_chg>0?'+':'')+s1.vix_chg:'') + '</span></span>';
+  html += '</div>';
+  if (s1.reasons && s1.reasons.length) {
+    html += '<div class="reasons">';
+    s1.reasons.forEach(r => {
+      html += '<div class="reason"><span class="dot ' + (r.ok?'ok':'no') + '"></span><b>' + (r.label||'') + '</b> · ' + (r.detail||'') + '</div>';
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // 2. 주도섹터
+  const methods = s2.methods || {};
+  html += '<div class="section"><h2>주도 섹터 · Triangulation</h2>';
+  const A = methods['A_교집합'] || [], B = methods['B_점수합산'] || [];
+  if (A.length) { html += '<div style="margin-bottom:10px"><span class="l" style="color:var(--muted);font-size:.75rem">A. 교집합(가장 강함)</span><div class="chips" style="margin-top:6px">' + A.map(s=>'<span class="chip gold">'+s+'</span>').join('') + '</div></div>'; }
+  if (B.length) { html += '<div><span class="l" style="color:var(--muted);font-size:.75rem">B. 점수합산</span><div class="chips" style="margin-top:6px">' + B.map(s=>'<span class="chip">'+s+'</span>').join('') + '</div></div>'; }
+  html += '</div>';
+
+  // 3. 종목 9점표
+  html += '<div class="section"><h2>종목 9점표 · 상위 ' + (d.top_stocks?d.top_stocks.length:0) + ' / 전체 ' + (d.stock_total||0) + '</h2>';
+  html += '<table><thead><tr><th>종목</th><th>섹터</th><th>빈집</th><th>RS</th><th>점수</th><th>플래그</th></tr></thead><tbody>';
+  (d.top_stocks||[]).forEach(s => {
+    const flags = s.flags || {};
+    const flagHtml = F_LABELS.map(f => {
+      const on = (flags[f]||0) > 0;
+      return '<span class="flag' + (on?' on':'') + '">' + f + (flags[f]>1?('·'+flags[f]):'') + '</span>';
+    }).join('');
+    html += '<tr><td class="stock-name">' + (s.name||'') + '</td><td style="color:var(--muted)">' + (s.sector||'') + '</td>'
+      + '<td>' + (s.vacancy?'<span class="vac '+s.vacancy+'">'+s.vacancy+'</span>':'') + '</td>'
+      + '<td>' + (s.rs!=null?s.rs.toFixed(1):'') + '</td>'
+      + '<td><span class="score-bar" style="width:' + ((s.score||0)/9*46) + 'px"></span> <b>' + (s.score||0) + '</b></td>'
+      + '<td><div class="flags">' + flagHtml + '</div></td></tr>';
+  });
+  html += '</tbody></table></div>';
+
+  // 4. 미국증시 브리핑
+  if (d.briefing_md) {
+    html += '<details><summary>🇺🇸 간밤 미국증시 브리핑 ' + (d.briefing_date?('· '+d.briefing_date):'') + '</summary>'
+      + '<div class="briefing-body">' + marked.parse(d.briefing_md) + '</div></details>';
+  }
+
+  // 데이터 출처/신선도
+  html += '<div class="stale">데이터: signal_snapshot ' + (d.snapshot_date||'?') + ' (' + (d.snapshot_mtime||'') + ') · 브리핑 ' + (d.briefing_name||'없음') + '</div>';
+
+  return html;
+}
+
+async function loadStub(kind) {
+  setActive('b-' + kind);
+  const d = await (await fetch('/api/' + kind)).json();
+  document.getElementById('main').innerHTML =
+    '<div class="placeholder"><div class="big">' + (kind==='intraday'?'🔥':'🌙') + '</div>'
+    + '<div style="font-size:1.1rem;color:var(--txt);margin-bottom:8px">' + d.status + '</div>'
+    + '<div>' + d.message + '</div></div>';
+}
+
+// 시작 시 자동으로 장전 로드
+loadMorning();
+</script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+{
+  "meta": {
+    "date": "2026-06-22",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-23_0709_POSCO, 국내 최대 전기로와 희귀가스 공장 준...md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "하나증권",
+    "analyst": "박성봉, 김승규",
+    "report_date": "2026.06.22",
+    "market_direction": null,
+    "macro_vars": [
+      "중국 철강가격 하락",
+      "미국 기준금리 인상 시사",
+      "미달러 강세 전환",
+      "철강 수요 둔화"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "철강",
+        "stance": "축소",
+        "reason": "중국 철강 가격 하락으로 주요국 철강사들 주가 대부분 조정"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026/06/19",
+        "event": "중국, 1~5월 조강 생산 3.9% 감소"
+      },
+      {
+        "date": "2026/06/19",
+        "event": "휴스틸, 7월 1일 출고분부터 강관 전 품목 가격 인상"
+      },
+      {
+        "date": "2026/06/19",
+        "event": "튀르키예, 한국과 중국 냉연, 아연, 컬러강판 확정 반덤핑 조치 시행"
+      },
+      {
+        "date": "2026/06/18",
+        "event": "산업부, K-스틸 시행규칙 제정령 발표 및 법 시행"
+      }
+    ],
+    "top_picks": [
+      "POSCO홀딩스",
+      "현대제철",
+      "세아베스틸지주",
+      "고려아연",
+      "BAO STEEL",
+      "A. MITTAL",
+      "NSSMC",
+      "TATA STEEL",
+      "NUCOR"
+    ],
+    "risk": "중국 철강 가격 하락 및 수요 둔화, 산업용 금속 가격 하락",
+    "quote": "중국 철강 가격 하락으로 주요국 철강사들 주가 대부분 조정, 미국 철강사들도 가격 횡보로 큰 폭 하락"
+  }
+}

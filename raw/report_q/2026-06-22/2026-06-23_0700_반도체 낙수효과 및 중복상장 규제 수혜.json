@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-22",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-23_0700_반도체 낙수효과 및 중복상장 규제 수혜.md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": "이상헌, 장호",
+    "report_date": "2026.06.22",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "SK",
+        "code": "034730",
+        "rating": "Buy",
+        "rating_changed": null,
+        "tp_new": "950,000원",
+        "tp_prev": "330,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "SK에코플랜트 올해 1분기 실적의 경우 매출액 48,997억원(+99.3% YoY, +47.7% QoQ), 영업이익 9,314억원(+1,269.1% YoY, 흑자전환 QoQ)으로 어닝 서프라이즈를 기록하였다.",
+        "estimate_revision": null,
+        "next_catalyst": "중복상장을 원칙적으로 금지하는 제도 도입으로 주주간 이해상충 상황이 발생할 수 있다는 우려감 등이 해소되면서 구조적으로 할인율 축소로 이어짐에 따라 밸류에이션이 리레이팅 되면서 동사의 수혜가 예상된다",
+        "thesis": [
+          "SK하이닉스의 실적 호조 등이 SK그룹 전반의 사업 및 재무적 개선을 견인시키면서 동사 투자지분가치 상승의 기반이 마련되고 있다.",
+          "SK에코플랜트가 반도체 시설 공사 수주 확대 및 반도체 소재 사업 등과의 연계성 제고로 이익창출력이 크게 개선되고 있다.",
+          "중복상장 금지 규제 도입으로 인한 구조적인 할인율 축소 및 밸류에이션 리레이팅 수혜가 기대된다."
+        ],
+        "valuation_basis": "Sum-of-part 밸류에이션을 적용(상장회사 평균시장가격, 비상장회사 장부가액, 자체사업 2026년 예상 EBITDA에 Target EV/EBITDA 5.0배 적용)",
+        "risk": "중복상장 규제 변경으로 인한 자회사 IPO 추진 불가피 등",
+        "supply_comment": null,
+        "quote": "동사의 목표주가를 Sum-of-part 밸류에이션을 적용하여 950,000원으로 상향한다."
+      }
+    ]
+  }
+}

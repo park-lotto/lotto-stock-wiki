@@ -1,0 +1,48 @@
+{
+  "meta": {
+    "date": "2026-06-05",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_1000_[IBKS Market Comment] 반도체 기대감 vs FOMC 경계감.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "변준호",
+    "report_date": "2026년 06월 04일",
+    "target_kind": "market",
+    "market_direction": "중립",
+    "macro_vars": [
+      "5월 수출 금액 878억 달러",
+      "반도체 YoY 수출 증가율 169%",
+      "미국 CPI 3.8%",
+      "12월 금리 인상 확률 56%"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "비중확대",
+        "reason": "1분기에 이어 2분기에도 우수한 실적 발표가 예상되며, 7월까지 반도체 주가 기대감이 지속될 가능성이 높음"
+      }
+    ],
+    "style": "저가 매수",
+    "event_calendar": [
+      {
+        "date": "2026년 06월 17일",
+        "event": "6월 FOMC"
+      },
+      {
+        "date": "2026년 07월 말",
+        "event": "7월 FOMC"
+      },
+      {
+        "date": "2026년 08월 말",
+        "event": "잭슨홀 미팅"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스"
+    ],
+    "risk": "이란 사태 이후 에너지 쇼크 여파에 따른 유럽 경기 둔화와 유로화 약세, 달러 강세 연동 및 주요국 금리 인상 가능성에 따른 시중 금리 상승",
+    "quote": "FOMC 경계감에 따른 조정은 오히려 7월에 있을 2분기 실적 기대감을 겨냥한 저가 매수 요인으로 작용할 가능성이 높다고 판단된다."
+  }
+}

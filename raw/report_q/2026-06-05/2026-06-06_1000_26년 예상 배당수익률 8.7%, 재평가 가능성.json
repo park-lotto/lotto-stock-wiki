@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date": "2026-06-05",
+    "broker": "한국IR협의회",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_1000_26년 예상 배당수익률 8.7%, 재평가 가능성.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한국IR협의회",
+    "analyst": "서진경",
+    "report_date": "2026.06.05",
+    "stocks": [
+      {
+        "name": "예스24",
+        "code": "053280",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": {
+          "2026_revenue_forecast": "6,406억 원",
+          "2026_operating_profit_forecast": "32억 원",
+          "2026_net_income_forecast": "10억 원"
+        },
+        "estimate_revision": null,
+        "next_catalyst": "2026년 6월 말 파주 SFC 본가동 및 이에 따른 물류비 절감",
+        "thesis": [
+          "26년 예상 시가배당률 8.7%의 고배당주로 최소 DPS 250원 공식화 및 세제 효과(비과세 배당·고배당기업)에 따른 세후 배당 매력 부각",
+          "자체 공연장 운영(예스24라이브홀 등)과 공연 티켓 예매 플랫폼을 통한 공연사업의 이익 방어력 확보",
+          "파주 SFC 가동에 따른 물류비 절감 및 고마진 사업부 매출 확대"
+        ],
+        "valuation_basis": "2026F PBR은 0.4배로, 최근 5개년(2021~2025) 평균 0.6배 대비 약 33% 할인된 수준",
+        "risk": "도서 시장의 구조적 수요 둔화와 저마진 환경, 해킹 사고에 따른 회원 이탈 및 전자상거래 부문 실적 둔화",
+        "supply_comment": "경기도 파주에 스마트풀필먼트센터(SFC)를 건설 중이며 2026년 6월 말 본가동 목표",
+        "quote": "26년 예상 배당수익률 8.7%, 재평가 가능성"
+      }
+    ]
+  }
+}

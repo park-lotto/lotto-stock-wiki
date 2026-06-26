@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "date": "2026-06-05",
+    "broker": "DAOL투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_1000_Daily Morning Brief(2026.06.05).md"
+  },
+  "questionnaire": {
+    "broker": "DAOL투자증권",
+    "analyst": "jeehyun12@daolfn.com",
+    "report_date": "05 Jun. 2026",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "Dow (+1.73%), S&P500 (+0.41%), Nasdaq (-0.09%)",
+      "2yr 4.043%(-3.9bp), 10yr 4.473%(-2.2bp)",
+      "JPY 160.02(-0.03%), EUR 1.161(+0.12%), Dollar 99.42(-0.11%)",
+      "WTI $93.04(-3.10%), Brent $95.38(-2.48%)"
+    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "6월 4일",
+        "event": "한국 5월 외환보유액, 미국 신규 실업수당 청구건수"
+      },
+      {
+        "date": "6월 5일",
+        "event": "미국 5월 비농업고용, 미국 5월 실업률"
+      }
+    ],
+    "top_picks": [
+      "현대차",
+      "기아",
+      "아노아",
+      "미디어",
+      "엘에이치",
+      "릴리",
+      "네이버",
+      "카카오",
+      "크래프톤",
+      "엔비디아",
+      "넷마블",
+      "상하이",
+      "광저우",
+      "홍콩ELS"
+    ],
+    "risk": "반도체, AI 전망 제약 및 19 RNA 편집 기술 계약 관련 불확실성",
+    "quote": "브로드컴, 건조한 실적에도 인프라 문제 등을 이유로 기대했던 연간 AI 매출 전망 상향을 제시하지 못하자 -12.6% 하락"
+  }
+}

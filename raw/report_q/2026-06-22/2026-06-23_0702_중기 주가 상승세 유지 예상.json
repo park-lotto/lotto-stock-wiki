@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-22",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-23_0702_중기 주가 상승세 유지 예상.md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": null,
+    "report_date": null,
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "삼성전자",
+        "code": "005930",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "480,000원",
+        "tp_prev": null,
+        "tp_direction": "up",
+        "earnings_outlook": "동사 FY26 영업이익은 340조원으로 YoY 680% 증가할 전망이며 이에 기반한 FY26 예상 BPS는 10만원, ROE는 47%로 추정",
+        "estimate_revision": "직원들에 대한 신규 보상 체계를 감안한 동사 FY26 영업이익은 340조원으로 YoY 680% 증가할 전망",
+        "next_catalyst": "CY27의 메모리 가격 상승 지속 여부",
+        "thesis": [
+          "직원들에 대한 신규 보상 체계를 감안한 동사 FY26 영업이익은 340조원으로 YoY 680% 증가할 전망",
+          "메모리 반도체 업황은 적어도 CY27까지는 호황이 이어질 것으로 판단됨",
+          "업황 및 실적 호조가 지속되고 글로벌 유동성 증감률의 상승이 2H26에 재개될 전망"
+        ],
+        "valuation_basis": "동사 FY26 예상 ROE는 지난 30년간 최고점이었던 FY00의 41%를 상회하므로, 동사 주가에 FY00 당시 동사 고점 P/B 배수 4.2배를 넘는 4.8배 적용 가능. 이를 감안해 P/B 4.8배를 FY26 BPS에 적용 시 48만원의 주가 도출",
+        "risk": "최근 급등에 따른 단기 주가 조정이 나타날 수 있음",
+        "supply_comment": "CY27에는 DRAM 업계 생산 증가율이 올해의 25%에서 20% 이하로 하락하고, 빅테크 업체들이 Cash 부족에도 불구하고 유상 증자, SPV & JV 등의 방식으로 데이터센터 투자를 강하게 지속할 전망",
+        "quote": "동사 FY26 예상 ROE는 지난 30년간 최고점이었던 FY00의 41%를 상회하므로, 동사 주가에 FY00 당시 동사 고점 P/B 배수 4.2배를 넘는 4.8배 적용 가능."
+      }
+    ]
+  }
+}

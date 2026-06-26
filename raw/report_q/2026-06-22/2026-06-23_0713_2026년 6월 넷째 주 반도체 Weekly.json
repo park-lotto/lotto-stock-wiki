@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "date": "2026-06-22",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-23_0713_2026년 6월 넷째 주 반도체 Weekly.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "최보영",
+    "report_date": "2026/ 06/ 22",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "DRAM 현물가 상승",
+      "미국 2년 4.18%, 10년 4.46%",
+      "중국 5월 CPI, PPI",
+      "미국 5월 PCE"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "비중확대",
+        "reason": "삼성전자, SK하이닉스 위주의 주가 상승 이어지고 있음"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "6/24",
+        "event": "마이크론 실적 발표"
+      },
+      {
+        "date": "6/25",
+        "event": "미국 5월 PCE 발표"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스"
+    ],
+    "risk": "CXMT, YMTC 미국 정부의 중국 군사 기업 목록에 재등재. 6/30부터 공식 구매 제한, ‘27년 6월부터 간접 조달 금지",
+    "quote": "삼성전자, SK하이닉스 위주의 주가 상승 이어지고 있음. 2Q26 DRAM, NAND 충족률 각 -2.6%, -7.4%. 공급 부족 압박이 레거시 계층까지 확산"
+  }
+}

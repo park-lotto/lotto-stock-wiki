@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-22",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-23_0706_신규 장비 개발 성과 주목.md"
+  },
+  "questionnaire": {
+    "broker": "키움증권",
+    "analyst": "오현진",
+    "report_date": "2026. 6. 22",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "코셈",
+        "code": "360350",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "하반기 보수적인 산업용 부문 성과 전망을 반영한 26년 동사 실적은 매출액 145억원(YoY 9%), 영업이익 -13억원(적자지속)을 전망한다.",
+        "estimate_revision": null,
+        "next_catalyst": "이온밀러 전자현미경(IP-SEM)과 대기압 SEM ‘에어트론(Eirtron)’",
+        "thesis": [
+          "주사전자현미경(SEM) 전문 업체로 Tabletop SEM(EM 시리즈)이 주력",
+          "이온밀러 전자현미경(IP-SEM)의 차세대 반도체 장비 탑재 기대",
+          "대기압 SEM '에어트론(Eirtron)'의 반도체 후공정 및 생명과학 분야 확장"
+        ],
+        "valuation_basis": null,
+        "risk": "연구용 시장 위축 영향으로 실적 부진 지속 및 중국, 유럽, 북미 시장 성장 둔화",
+        "supply_comment": "IP-SEM 부문에서는 AP시스템 향으로 이온빔 모듈 공급을 진행함",
+        "quote": "동사의 1분기 실적은 매출액 25억원(YoY -20%), 영업이익 -11억원(적자지속)을 기록했다."
+      }
+    ]
+  }
+}

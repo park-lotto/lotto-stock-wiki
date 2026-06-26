@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-22",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-23_0704_디바이스 니치마켓 전문기업.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "IBK투자증권",
+    "analyst": "김혜빈",
+    "report_date": "2026. 6. 22",
+    "stocks": [
+      {
+        "name": "알트",
+        "code": "459550",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "1Q26 매출액 181억원(YoY -57.8%), 영업적자 8억원(YoY 적자전환)을 기록했다.",
+        "estimate_revision": null,
+        "next_catalyst": "26년 2월 일본 현지 특화형 시니어폰(MIVE Keisma) 출시 및 하반기 일본 시장 맞춤형 제품 출시, 하반기 차세대 AI 셋톱박스(AI5) 매출 증가",
+        "thesis": [
+          "모바일 사업부는 일본 시니어폰 시장 진출(MVNO 채널 및 KDDI 유통망 확보)을 통해 국내 시장 성장 한계 극복 시도",
+          "미디어 사업부는 2020년초 납품한 기존 제품(Smart3) 교체 주기(6~7년) 도래에 따른 중기 수요 증대 기대",
+          "국내 고객사의 키즈폰 사업구조 변경 및 시니어폰 시장 수요 둔화로 인한 매출 감소 및 원가 부담 지속"
+        ],
+        "valuation_basis": null,
+        "risk": "일본 시장 진출은 초기 단계로 단기 성과를 논하기 이르며, 국내 셋톱박스 시장은 외형 성장 여력이 제한적임.",
+        "supply_comment": "모바일 사업부는 자체 브랜드 ‘MIVE’를 통해 키즈폰과 시니어폰을 국내 주요 이동통신사향으로 제조/납품하고, 미디어 사업부는 IPTV 사업자인 SK브로드밴드를 주요 고객사로 셋톱박스를 개발/생산한다.",
+        "quote": "알트(All Life Technology)는 키즈 및 시니어 시장에 특화된 스마트폰과 셋톱박스를 개발/공급하는 B2B 단말 전문기업이다."
+      }
+    ]
+  }
+}

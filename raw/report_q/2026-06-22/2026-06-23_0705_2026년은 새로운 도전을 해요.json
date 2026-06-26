@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-22",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-23_0705_2026년은 새로운 도전을 해요.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "키움증권",
+    "analyst": "박상준",
+    "report_date": "2026. 6. 22",
+    "stocks": [
+      {
+        "name": "에르코스",
+        "code": "435570",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 1분기 매출액은 87.7억원(YoY +7.4%), 영업이익은 -35억원(YoY 적자전환)을 기록했다.",
+        "estimate_revision": null,
+        "next_catalyst": "성인용 건강기능식품 출시, 식약처 개별인정형 인증 승인, 백화점 입점 매장 확대",
+        "thesis": [
+          "영유아식 수요 반등 및 오프라인 채널 확장",
+          "건강기능식품 카테고리 확장을 통한 신규 사업 기반 마련",
+          "프리미엄 채널 입점 확대에 따른 믹스 개선"
+        ],
+        "valuation_basis": null,
+        "risk": "원자재 가격 상승 및 포장재 비용 증가에 따른 원가 부담 확대",
+        "supply_comment": "동사는 점유율 방어를 우선하는 전략 하에 원가 인상분의 판가 전가를 자제했음",
+        "quote": "에르코스는 1분기에 주요 원자재값 상승을 판가에 전가하지 못하며 수익성이 하락했다. 하지만 향후 오프라인 매장을 확대해 믹스 개선을 도모하고 건강기능식품 카테고리로 확장할 계획이다."
+      }
+    ]
+  }
+}

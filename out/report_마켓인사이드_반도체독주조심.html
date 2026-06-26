@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>마켓 인사이드 — 반도체 독주 리포트</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Serif+KR:wght@400;700&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #16161f;
+    --border: #222230;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --gold-dim: rgba(201,168,76,0.15);
+    --text: #e8e8f0;
+    --text-dim: #888899;
+    --red: #e05555;
+    --green: #4caf7d;
+    --blue: #5b8fe8;
+    --warn: #e09040;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* ── 헤더 ─────────────────────────── */
+  .header {
+    background: linear-gradient(135deg, #0d0d18 0%, #111128 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 36px 48px 28px;
+  }
+  .header-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+  .badge {
+    background: var(--gold-dim);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 2px 10px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .header h1 {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.35;
+    margin-bottom: 10px;
+    max-width: 720px;
+  }
+  .header h1 span { color: var(--gold); }
+  .header-sub {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .header-sub a { color: var(--gold); text-decoration: none; }
+  .header-sub a:hover { color: var(--gold-light); }
+
+  /* ── 핵심 요약 배너 ────────────────── */
+  .summary-banner {
+    background: linear-gradient(90deg, rgba(201,168,76,0.12) 0%, rgba(201,168,76,0.04) 100%);
+    border-left: 3px solid var(--gold);
+    border-top: 1px solid rgba(201,168,76,0.2);
+    border-bottom: 1px solid rgba(201,168,76,0.2);
+    padding: 20px 48px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .summary-banner .label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .summary-banner p {
+    font-size: 14px;
+    font-weight: 500;
+    color: #fff;
+    line-height: 1.5;
+  }
+
+  /* ── 본문 ─────────────────────────── */
+  .body {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 48px 80px;
+  }
+
+  /* ── 씬 카드 ──────────────────────── */
+  .scene {
+    margin-bottom: 36px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .scene-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 20px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .scene-num {
+    width: 28px; height: 28px;
+    background: var(--gold-dim);
+    border: 1px solid var(--gold);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gold);
+    flex-shrink: 0;
+  }
+  .scene-time {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: monospace;
+    background: rgba(255,255,255,0.05);
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+  .scene-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    flex: 1;
+  }
+  .scene-body { padding: 20px; }
+
+  /* ── 인용 블록 ────────────────────── */
+  .quote {
+    background: rgba(255,255,255,0.03);
+    border-left: 3px solid var(--gold);
+    padding: 12px 16px;
+    margin: 12px 0;
+    border-radius: 0 4px 4px 0;
+    font-style: italic;
+    color: var(--gold-light);
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+  .quote .source {
+    display: block;
+    margin-top: 6px;
+    font-style: normal;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  /* ── 포인트 리스트 ────────────────── */
+  .points {
+    margin: 14px 0;
+  }
+  .points li {
+    list-style: none;
+    padding: 5px 0 5px 20px;
+    position: relative;
+    color: var(--text);
+    font-size: 13.5px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .points li:last-child { border-bottom: none; }
+  .points li::before {
+    content: '›';
+    position: absolute;
+    left: 4px;
+    color: var(--gold);
+    font-weight: 700;
+  }
+  .points li strong { color: #fff; }
+
+  /* ── 데이터 테이블 ────────────────── */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 13px;
+  }
+  .data-table th {
+    background: rgba(201,168,76,0.1);
+    color: var(--gold);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 8px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .data-table td {
+    padding: 9px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    color: var(--text);
+    vertical-align: top;
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .tag-down { color: var(--red); font-weight: 600; font-size: 11px; }
+  .tag-hold { color: var(--warn); font-weight: 600; font-size: 11px; }
+  .tag-up   { color: var(--green); font-weight: 600; font-size: 11px; }
+
+  /* ── 시나리오 카드 ────────────────── */
+  .scenario-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
+  .scenario {
+    border-radius: 6px;
+    padding: 14px 16px;
+    border: 1px solid;
+  }
+  .scenario-a { background: rgba(76,175,125,0.06); border-color: rgba(76,175,125,0.3); }
+  .scenario-b { background: rgba(224,85,85,0.06); border-color: rgba(224,85,85,0.3); }
+  .scenario h4 {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+  .scenario-a h4 { color: var(--green); }
+  .scenario-b h4 { color: var(--red); }
+  .scenario p { font-size: 13px; color: var(--text); line-height: 1.55; }
+  .scenario .arrow { font-size: 11px; color: var(--text-dim); margin: 4px 0; }
+
+  /* ── 수치 강조 ────────────────────── */
+  .stat-row { display: flex; gap: 16px; margin: 14px 0; flex-wrap: wrap; }
+  .stat {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 16px;
+    min-width: 130px;
+  }
+  .stat .val { font-size: 20px; font-weight: 700; line-height: 1; }
+  .stat .lbl { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+  .val-up   { color: var(--green); }
+  .val-down { color: var(--red); }
+  .val-warn { color: var(--warn); }
+  .val-gold { color: var(--gold); }
+
+  /* ── 경고 박스 ────────────────────── */
+  .warn-box {
+    background: rgba(224,85,85,0.07);
+    border: 1px solid rgba(224,85,85,0.3);
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin: 14px 0;
+    font-size: 13.5px;
+    color: #f0b0b0;
+  }
+  .warn-box strong { color: var(--red); }
+
+  /* ── 전략 테이블 ──────────────────── */
+  .strat-table { width: 100%; border-collapse: collapse; margin: 14px 0; }
+  .strat-table th {
+    font-size: 11px; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; padding: 8px 14px;
+    color: var(--gold); text-align: left;
+    background: rgba(201,168,76,0.08);
+    border-bottom: 1px solid var(--border);
+  }
+  .strat-table td {
+    padding: 10px 14px;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .strat-table tr:last-child td { border-bottom: none; }
+  .strat-type { font-weight: 600; color: #ddd; }
+  .strat-action { color: var(--text); }
+
+  /* ── 결론 배너 ────────────────────── */
+  .conclusion {
+    background: linear-gradient(135deg, rgba(201,168,76,0.12) 0%, rgba(201,168,76,0.04) 100%);
+    border: 1px solid rgba(201,168,76,0.35);
+    border-radius: 8px;
+    padding: 24px 28px;
+    margin-top: 40px;
+    text-align: center;
+  }
+  .conclusion .cl-label {
+    font-size: 10px; font-weight: 700;
+    color: var(--gold); letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .conclusion p {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 17px;
+    color: #fff;
+    line-height: 1.6;
+    font-weight: 700;
+  }
+
+  /* ── 푸터 ─────────────────────────── */
+  .footer {
+    padding: 24px 48px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer a { color: var(--gold); text-decoration: none; }
+
+  @media (max-width: 600px) {
+    .header, .summary-banner, .body, .footer { padding-left: 20px; padding-right: 20px; }
+    .scenario-wrap { grid-template-columns: 1fr; }
+    .stat-row { gap: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── 헤더 ── -->
+<div class="header">
+  <div class="header-meta">
+    <span class="badge">마켓 인사이드</span>
+    <span>삼프로TV</span>
+    <span>·</span>
+    <span>2026.06.26</span>
+    <span>·</span>
+    <span>원본 43분 → 요약 리포트</span>
+  </div>
+  <h1>반도체 독주가 계속될수록<br><span>더 조심해야 하는 이유</span></h1>
+  <p class="header-sub">
+    진행자: 홍진채 (라쿤자산운용 대표) &nbsp;|&nbsp;
+    <a href="https://www.youtube.com/watch?v=9lZVpFREQvU" target="_blank">▶ 원본 영상 보기</a>
+  </p>
+</div>
+
+<!-- ── 핵심 요약 배너 ── -->
+<div class="summary-banner">
+  <div class="label">결론</div>
+  <p>반도체 독주 = 시장 체력 약화의 신호. <strong>보유자는 헤드앤숄더 패턴까지 보유</strong>, 비보유자는 <strong>7월 중순 순환 여부 확인 후 판단</strong>.</p>
+</div>
+
+<!-- ── 본문 ── -->
+<div class="body">
+
+  <!-- SCENE 1 -->
+  <div class="scene">
+    <div class="scene-header">
+      <div class="scene-num">1</div>
+      <span class="scene-time">00:00</span>
+      <div class="scene-title">오늘 시장 — 마이크론 급등, 반응 엇갈림</div>
+    </div>
+    <div class="scene-body">
+      <div class="stat-row">
+        <div class="stat"><div class="val val-up">+21%</div><div class="lbl">샌디스크 (어제)</div></div>
+        <div class="stat"><div class="val val-up">+15%</div><div class="lbl">마이크론 (어제)</div></div>
+        <div class="stat"><div class="val val-gold">$1,215</div><div class="lbl">마이크론 현재가</div></div>
+        <div class="stat"><div class="val val-gold">$2,000</div><div class="lbl">마이크론 목표가 (상향)</div></div>
+      </div>
+      <div class="quote">
+        "야 빨리 딴데 가서 지금 하이닉스 어떻게 되는지 보자. 요런 마음들."
+        <span class="source">— 반도체 보유자 심리 묘사</span>
+      </div>
+      <div class="quote">
+        "다른 거 갖고 계신 분들은 진짜 마음이 너무 요즘 서해."
+        <span class="source">— 비보유자 상대적 박탈감</span>
+      </div>
+      <ul class="points">
+        <li>국내 반도체(삼성·하이닉스)는 이미 <strong>선반영</strong> 구간 — 마이크론 터진 걸 보고 올라온 게 아님</li>
+        <li>마이크론 목표가 최고치 $1,500 → $2,000 상향. 현재 $1,215 = 아직 여유 있음</li>
+        <li>보유자 vs 비보유자 심리 괴리 극대화 — 지금이 가장 판단하기 힘든 구간</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SCENE 2 -->
+  <div class="scene">
+    <div class="scene-header">
+      <div class="scene-num">2</div>
+      <span class="scene-time">00:07</span>
+      <div class="scene-title">매일 팔아야 하나? — SK하이닉스 차트 심리전</div>
+    </div>
+    <div class="scene-body">
+      <div class="quote">
+        "이거 팔아야 되나요? 매일 팔아야 되는가 살아야 되는가 매일 날 고민해요. 매일. 진심입니다."
+      </div>
+      <div class="quote">
+        "고점은 외봉으로 찍지 않아요. 헤드앤 숄더를 만든다니까요. 헤드앤 숄더 만드는 걸 보고서 팔아야 되거든요."
+      </div>
+      <ul class="points">
+        <li>SK하이닉스 차트 패턴 = 오르다 2~3% 빠지다 다시 오르는 반복. <strong>매번 팔 이유 없음</strong></li>
+        <li>AI 혁신 사이클 종료 여부 = 밸류 판단의 핵심 체크포인트 — 아직 신호 없음</li>
+        <li><strong>매도 시그널(헤드앤숄더) 없으면 보유. 확인하고 파는 것</strong></li>
+        <li>매일 오르내림에 반응하면 → 심리적 소진 → 나중에 아픔</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SCENE 3 -->
+  <div class="scene">
+    <div class="scene-header">
+      <div class="scene-num">3</div>
+      <span class="scene-time">00:11</span>
+      <div class="scene-title">경고 — 미국 빅테크 차트가 다 기울었다</div>
+    </div>
+    <div class="scene-body">
+      <div class="quote">
+        "반도체 빼고는 나머지들은 이미 다 기울어져 있어요."
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr><th>빅테크</th><th>최근 흐름</th><th>판단</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>알파벳 (GOOGL)</td><td>한달 이상 횡보·하락</td><td><span class="tag-down">▼ 기울음</span></td></tr>
+          <tr><td>아마존 (AMZN)</td><td>박스권 횡보</td><td><span class="tag-hold">— 박스</span></td></tr>
+          <tr><td>메타 (META)</td><td>계속 흘러내리는 중</td><td><span class="tag-down">▼ 기울음</span></td></tr>
+          <tr><td>마이크로소프트 (MSFT)</td><td>계속 하락</td><td><span class="tag-down">▼ 기울음</span></td></tr>
+          <tr><td>엔비디아 (NVDA)</td><td>박스 하단 진입 시도</td><td><span class="tag-hold">— 위험</span></td></tr>
+          <tr><td>마이크론 / 샌디스크</td><td>강력 매수로 급등 중</td><td><span class="tag-up">▲ 강세</span></td></tr>
+        </tbody>
+      </table>
+
+      <div class="warn-box">
+        <strong>수급 충격 지표</strong> — 어제 코스닥 전체 거래대금 <strong>7조원</strong> = 하이닉스 레버리지 ETF 3개 상품 거래대금 <strong>7조원</strong>. 시장 에너지가 단 3개 상품에 쏠림.
+      </div>
+
+      <ul class="points">
+        <li>반기말 리밸런싱 매도가 빅테크 전반에서 나오는 중 → 마이크론·샌디스크는 그 매도를 받아내며 올라감</li>
+        <li>빅테크가 함께 안 올라온다 = AI 테마 전반 랠리가 아닌 <strong>반도체 단일 수급 쏠림</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SCENE 4 -->
+  <div class="scene">
+    <div class="scene-header">
+      <div class="scene-num">4</div>
+      <span class="scene-time">00:16</span>
+      <div class="scene-title">핵심 경고 — 지수 착시 현상</div>
+    </div>
+    <div class="scene-body">
+      <div class="quote">
+        "시총 상위 일부 종목이 지수를 받치면서 계속 있다가, 나머지는 다 하락하고 있어. 이미. 근데 못 느껴요. 내가 가지고 있는 종목이 올라가고 있기 때문에."
+      </div>
+      <div class="quote">
+        "그러다가 버리잖아요. 그럼 그냥 본격적으로 빠지기 시작해요."
+      </div>
+
+      <div class="stat-row">
+        <div class="stat"><div class="val val-up">+111%</div><div class="lbl">코스피 연봉</div></div>
+        <div class="stat"><div class="val val-down">-4%</div><div class="lbl">코스닥 연봉</div></div>
+      </div>
+
+      <ul class="points">
+        <li><strong>2차전지 사이클과 같은 패턴</strong> — 당시 여의도 펀드매니저는 2차전지 안 담고 반성문 제출</li>
+        <li><strong>지금은 반도체 안 담으면 반성문</strong> → 펀드매니저 강제 편입 = 인위적 수급 쏠림</li>
+        <li>올해 기업탐방·가치투자 많이 한 매니저일수록 수익률 저조 — 시장 성격이 그렇다</li>
+        <li>현대차·네이버·바이오 = 이미 다 빠져있는 상황. 코스피 지수와 체감 괴리 극대화</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SCENE 5 -->
+  <div class="scene">
+    <div class="scene-header">
+      <div class="scene-num">5</div>
+      <span class="scene-time">00:27</span>
+      <div class="scene-title">쏠림 해소 시나리오 2가지</div>
+    </div>
+    <div class="scene-body">
+      <div class="quote">
+        "자연적으로 이게 해소가 될까요? 그냥 지금 반도체가 가는 데까지 가고, 여기는 이쯤 왔으면 좀 쉴 거 같아 하는 순간까지는 계속 이렇게 될 거 같아요."
+      </div>
+
+      <div class="scenario-wrap">
+        <div class="scenario scenario-a">
+          <h4>▲ 시나리오 A — 순환매 (긍정)</h4>
+          <div class="arrow">6월 말 리밸런싱 마무리</div>
+          <div class="arrow">→ 7월 중순 빅테크·코스닥 반등</div>
+          <div class="arrow">→ 온기 확산·순환매 시작</div>
+          <p>빅테크와 코스닥이 7월 들어 함께 올라오면 이 시나리오</p>
+        </div>
+        <div class="scenario scenario-b">
+          <h4>▼ 시나리오 B — 동반 하락 (부정)</h4>
+          <div class="arrow">반도체 꺾임</div>
+          <div class="arrow">→ 순환이 아닌 전체 동반 하락</div>
+          <div class="arrow">→ 반도체 비중 정리 구간</div>
+          <p>"반도체 꺾이면 그냥 그때는 다 꺾일 거야."</p>
+        </div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat"><div class="val val-gold">12,500</div><div class="lbl">JP모건 코스피 기본 목표</div></div>
+        <div class="stat"><div class="val val-up">15,000</div><div class="lbl">낙관 시나리오</div></div>
+        <div class="stat"><div class="val val-down">8,000</div><div class="lbl">비관 시나리오</div></div>
+      </div>
+
+      <ul class="points">
+        <li>지금 6월 말 = <strong>확인 구간</strong>. 7월 중순까지 빅테크·코스닥이 살아오면 A</li>
+        <li>안 올라오면 B → 반도체 비중 단계적 축소 고려 시점</li>
+        <li>리밸런싱 기간 중 = 수급 왜곡 발생. 7월 들어 정상화 여부 확인 후 판단</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SCENE 6 -->
+  <div class="scene">
+    <div class="scene-header">
+      <div class="scene-num">6</div>
+      <span class="scene-time">00:30</span>
+      <div class="scene-title">지금 내 종목, 어떻게 해야 하나</div>
+    </div>
+    <div class="scene-body">
+      <div class="quote">
+        "엔비디아가 중간에 40% 빠진 적이 있었습니다. 두 번이나. 근데 결과론적으로 올랐잖아. 근데 그건 주식은 결과론적으로 얘기하면 안 돼요. 그 상황에서는 40%면 거의 반토막이잖아요."
+      </div>
+
+      <table class="strat-table">
+        <thead>
+          <tr><th>보유 유형</th><th>진행자 권고 전략</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="strat-type">반도체<br><small style="color:var(--text-dim)">삼성전자·SK하이닉스</small></td>
+            <td class="strat-action">헤드앤숄더 패턴 확인까지 보유. 매일 등락에 반응해 사고 팔고 X. 외부 충격(지정학·금리 급변) 오면 그때 대응.</td>
+          </tr>
+          <tr>
+            <td class="strat-type">비반도체<br><small style="color:var(--text-dim)">네이버·현대차·바이오</small></td>
+            <td class="strat-action">손절 금지. 미래 가능성 있는 종목은 들고 가기. 비중만 줄여두고 순환매 오면 재편입. 반도체 비중을 50% 이상으로 올리는 방향.</td>
+          </tr>
+          <tr>
+            <td class="strat-type">코스닥<br><small style="color:var(--text-dim)">바이오·중소형</small></td>
+            <td class="strat-action">추세 전환 확인 후 진입. 지금 박스 하단 선매수 X. 코스닥 -4% 연봉 = 추세 없음.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <ul class="points">
+        <li>수급만으로는 -40% 안 옴 — 그 수준 하락은 외부 충격(매크로 쇼크) 필요</li>
+        <li><strong>기준을 미리 정해두는 것</strong> — 40% 빠질 때 어떻게 할지 시나리오 없으면 패닉 매도</li>
+        <li>항상 시황(매크로) 체크 → 위기 아닌 일반 환경에서는 수급 주도 움직임</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 결론 -->
+  <div class="conclusion">
+    <div class="cl-label">⚡ 핵심 결론</div>
+    <p>반도체 독주는 시장 체력 약화의 신호다.<br>
+    보유자는 헤드앤숄더 패턴 나올 때까지 보유,<br>
+    비보유자는 7월 중순 빅테크·코스닥 순환 여부 확인 후 판단하라.</p>
+  </div>
+
+</div>
+
+<!-- ── 푸터 ── -->
+<div class="footer">
+  <span>삼프로TV 마켓인사이드 · 2026.06.26 · 자막 기반 요약</span>
+  <a href="https://www.youtube.com/watch?v=9lZVpFREQvU" target="_blank">▶ 원본 43분 영상</a>
+</div>
+
+</body>
+</html>

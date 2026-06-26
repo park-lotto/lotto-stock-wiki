@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "date": "2026-06-05",
+    "broker": "KB증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_1000_64 KB 리서치 장마감코멘트.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "KB증권",
+    "analyst": [
+      "임정은",
+      "태윤선",
+      "김상엽"
+    ],
+    "report_date": "2026년 6월 4일 (목)",
+    "market_direction": "KOSPI 8,639pt (-1.84%), KOSDAQ 1,049pt (+2.31%)",
+    "macro_vars": [
+      "유가 상승",
+      "국채 금리 상승",
+      "원달러 환율 상승"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "비중 확대",
+        "reason": "삼성전자와 SK하이닉스가 숨고르기에 들어간 가운데, 주성엔지니어링 (+27%대), 원익IPS (상한가) 등의 반도체 소부장 업종이 강세를 보이며 KOSDAQ 반등을 견인"
+      },
+      {
+        "sector": "소비내수",
+        "stance": "순환매 유입",
+        "reason": "그간 소외됐던 백화점, 화장품, 정유/화학 등의 비AI 업종에도 순환매가 유입되며 강세를 보였고, AI 대형주 중심의 쏠림 현상은 일부 완화되는 모습"
+      }
+    ],
+    "style": "중소형주 위주의 상승세",
+    "event_calendar": [
+      {
+        "date": "5 (금)",
+        "event": "엔비디아 CEO 젠슨 황 방한"
+      }
+    ],
+    "top_picks": [
+      "주성엔지니어링",
+      "원익IPS",
+      "신세계",
+      "삼성물산"
+    ],
+    "risk": "원달러 환율 상승은 증시 부담으로 작용할 수 있으며, 내일 젠슨 황 CEO 방한을 앞두고 관련주의 단기 변동성이 확대될 수 있음",
+    "quote": "AI 쏠림 완화와 비AI 업종으로의 순환매 확산 여부를 주목할 필요가 있음"
+  }
+}

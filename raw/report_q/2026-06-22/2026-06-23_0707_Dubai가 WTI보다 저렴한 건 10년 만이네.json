@@ -1,0 +1,58 @@
+{
+  "meta": {
+    "date": "2026-06-22",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-23_0707_Dubai가 WTI보다 저렴한 건 10년 만이네.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "윤재성",
+    "report_date": "2026.06.22",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "WTI 76.6$(-10%)",
+      "Dubai 73.6$(-12%)",
+      "정제마진 26.0$(WoW -3.3$)",
+      "유럽 디젤 선물 WoW -6%"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "정유",
+        "stance": "Overweight",
+        "reason": "글로벌 정제설비 부족 현상 지속 및 Restocking 수요, 극도로 높아진 미국 정제설비 가동률, 러시아 정제설비 대규모 피해"
+      },
+      {
+        "sector": "신재생",
+        "stance": "Overweight",
+        "reason": "Section 232 기대감 및 미국 태양광 수요 견조"
+      },
+      {
+        "sector": "화학",
+        "stance": "Overweight",
+        "reason": "MDI 등 고부가 제품의 수급 개선 및 사이클 회복"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026년 6월 말 이전",
+        "event": "미국 Section 232 조사 결과 발표 예상"
+      },
+      {
+        "date": "2026.06.21",
+        "event": "미·이란 후속 대면 협상 진행 예정"
+      }
+    ],
+    "top_picks": [
+      "OCI홀딩스",
+      "S-Oil",
+      "금호석유화학",
+      "한화솔루션",
+      "효성티앤씨",
+      "대한유화"
+    ],
+    "risk": "미국 태양광 모듈 부족 현상 및 가격 상승에 따른 설치량 둔화 리스크, 테슬라의 중국 장비 반입 이슈에 따른 증설 속도 둔화 가능성",
+    "quote": "Dubai가 WTI보다 저렴해졌다: 호르무즈 개방이 가시화되며 나타나는 가장 특징적인 원유 시장의 변화는 Dubai가 WTI보다 저렴해졌다는 사실. Dubai는 현재 73.6$로 WTI 76.6$보다 3$ 저렴해져. 이는 Shale Boom 이후 약 10년 래 최대 수준의 가격 차이."
+  }
+}

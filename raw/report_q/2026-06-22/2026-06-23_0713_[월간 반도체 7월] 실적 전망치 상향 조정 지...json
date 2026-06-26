@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "date": "2026-06-22",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-23_0713_[월간 반도체 7월] 실적 전망치 상향 조정 지...md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": "송명섭",
+    "report_date": "2026.06.22",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "삼성전자",
+        "code": "005930",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "480,000원",
+        "tp_prev": null,
+        "tp_direction": "up",
+        "earnings_outlook": "직원들에 대한 신규 보상 체계를 감안한 삼성전자의 FY26 영업이익은 340조원으로 YoY 680% 증가할 전망이며 이에 기반한 FY26 예상 BPS는 10만원, ROE는 47%로 추정. 2Q26의 동사 영업이익은 76.1조원으로 예상됨.",
+        "estimate_revision": "실적 전망치 상향 조정 지속",
+        "next_catalyst": "CY27 메모리 가격 상승 지속 여부",
+        "thesis": [
+          "FY26 영업이익은 YoY 680% 증가한 340조원으로 예상",
+          "FY26 예상 BPS 10만원, ROE 47% 추정치 기반 P/B 4.8배 적용",
+          "메모리 반도체 업황은 적어도 CY27까지 호황 지속 전망"
+        ],
+        "valuation_basis": "동사 FY26 예상 ROE는 지난 30년간 최고점이었던 FY00의 41%를 상회하므로, 동사 주가에 FY00 당시 동사 고점 P/B 배수 4.2배를 넘는 4.8배 적용",
+        "risk": "이란 전쟁과 같은 지정학적 이슈가 재발하고 장기화될 경우, 스태그플레이션이 발생하고 고금리, 유동성 축소, 경기 악화에 따라 AI 투자 및 Memory 반도체 업황도 둔화될 가능성",
+        "supply_comment": "삼성전자의 FY26 Memory Capex는 CY25 대비 30% 증가하는 45조원이며, 추가 상승 가능성도 있음",
+        "quote": "직원들에 대한 신규 보상 체계를 감안한 삼성전자의 FY26 영업이익은 340조원으로 YoY 680% 증가할 전망이며 이에 기반한 FY26 예상 BPS는 10만원, ROE는 47%로 추정"
+      },
+      {
+        "name": "SK하이닉스",
+        "code": "000660",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "3,500,000원",
+        "tp_prev": null,
+        "tp_direction": "up",
+        "earnings_outlook": "직원들에 대한 영업이익 10% 지급 조건을 반영한 SK하이닉스의 FY26 영업이익은 261조원으로 YoY 452% 증가할 전망이며, 2Q26 영업이익은 63.7조원으로 전망.",
+        "estimate_revision": "실적 전망치 상향 조정 지속",
+        "next_catalyst": "CY27 메모리 가격 상승 지속 여부",
+        "thesis": [
+          "FY26 영업이익은 YoY 452% 증가한 261조원으로 예상",
+          "FY26 예상 BPS 48만원에 P/B 7.5배 적용",
+          "강력한 AI 투자 지속에 따른 메모리 반도체 업황 호조"
+        ],
+        "valuation_basis": "올해 예상 ROE가 96%에 달하므로 P/B 7.5배를 FY26 예상 BPS에 적용",
+        "risk": "이란 전쟁과 같은 지정학적 이슈가 재발하고 장기화될 경우, 스태그플레이션이 발생하고 고금리, 유동성 축소, 경기 악화에 따라 AI 투자 및 Memory 반도체 업황도 둔화될 가능성",
+        "supply_comment": "SK하이닉스의 FY26 Capex는 40조원으로 YoY 36% 증가 예상",
+        "quote": "직원들에 대한 영업이익 10% 지급 조건을 반영한 SK하이닉스의 FY26 영업이익은 261조원으로 YoY 452% 증가할 전망이며 이에 기반한 예상 FY26 BPS는 48만원"
+      }
+    ]
+  }
+}

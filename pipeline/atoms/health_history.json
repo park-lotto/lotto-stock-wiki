@@ -12,5 +12,29 @@
     },
     "queue_new": 0,
     "pytest_ok": true
+  },
+  "2026-06-24": {
+    "atoms": {
+      "blog": 33,
+      "news": 130,
+      "report": 14,
+      "telegram": 92,
+      "youtube": 4,
+      "yt": 3
+    },
+    "queue_new": 0,
+    "pytest_ok": false
+  },
+  "2026-06-26": {
+    "atoms": {
+      "blog": 63,
+      "news": 275,
+      "report": 84,
+      "telegram": 111,
+      "youtube": 38,
+      "yt": 20
+    },
+    "queue_new": 0,
+    "pytest_ok": false
   }
 }
