@@ -1,74 +1,45 @@
-# NEXT_SESSION — 2026-06-26 (회사PC) 갱신
+# NEXT_SESSION — 2026-06-26 (회사PC) — 2차 갱신
 
-> 🔀 **이어할 작업: 딸깍 대시보드 (E 스트림 신규)**
-> 트리거: "딸깍 대시보드 이어서 하자"
+## 세션 요약
+삼프로TV 크롤러(@3protv) 구축 + 마켓 인사이드 영상 리포트 제작
 
----
+## ✅ 완료
+- `scripts/3pro_crawl.py` — 3시간 크롤러 (상태: `pipeline/3pro_state.json`)
+- `scripts/3pro_corner_test.py` — 8코너 개별 테스트 스크립트
+- `scripts/3pro_storyboard.py` — VTT → 구어체 스토리보드 변환
+- Windows Task Scheduler 등록 (`C:\Users\TheRose\AppData\Local\lotto_3pro_crawl.bat`)
+- 마켓 인사이드 영상 3종 결과물:
+  - `wiki/insights/3pro/SB_마켓인사이드_반도체독주조심.md` — 518블록 구어체 전문
+  - `wiki/insights/3pro/SB_요약_마켓인사이드_반도체독주조심.md` — 6씬 요약 마크다운
+  - `out/report_마켓인사이드_반도체독주조심.html` — 다크테마 리포트
+  - `out/report_마켓인사이드_easy.html` — 라이트 경량 리포트 ✅ 최종 완성 포맷
+- 코너별 완료: 아침N투자 ✅ / 클로징벨 ✅ / 마켓 인사이드 ✅
 
-## ⚡ 한 줄
-**버튼 하나로 오늘 시장을 정리하는 "딸깍 대시보드" 1단계(🌅 장전 버튼) 완성·실동작 확인.**
-다음 = 2단계 🔥 장중(한투 API 연결) + 멈춰있던 신호잡 자동화 점검.
+## ❌ 미완료 (집에서 이어서)
 
----
+### 1. 나머지 5코너 Gemini 분석 미완료
+- 여의도 인사이트 / 크립토 PLUS / 뉴스3 / 월가 뉴스레터 / 주린이 구조대
+- **원인**: Gemini 무료 티어 20개/일 한도 초과 (KEY_2 소진)
+- **해결**: `.env`에 `GEMINI_API_KEY_3=새키값` 추가 후 `python scripts/3pro_corner_test.py` 실행
+- 현재 `.env` 상태:
+  ```
+  GEMINI_API_KEY=... (429 초과)
+  GEMINI_API_KEY_2=... (한도 초과)
+  GEMINI_API_KEY_3=     ← 여기에 새 키 넣으면 됨
+  ```
 
-## ✅ 오늘(06-26) 완료
+### 2. 리포트 HTML 포맷 → 다른 코너에도 적용
+- `out/report_마켓인사이드_easy.html` 이 완성 포맷 (라이트·경량)
+- 다른 코너 분석 완료 후 동일 포맷으로 HTML 리포트 생성 필요
 
-### 1. 딸깍 대시보드 1단계 — 🌅 장전 버튼 (실동작 확인)
-- **위치**: `dashboard/server.py` (FastAPI, 포트 8090) + `dashboard/index.html` (검정+골드)
-- **실행**: `python dashboard/server.py` → http://localhost:8090
-- **동작**: 딸깍 → `signal_snapshot.json` + 미국증시 브리핑을 한 화면에
-  - 매크로 게이트(GO/CAUTION/NO + 미장% + VIX)
-  - 주도섹터(A 교집합 / B 점수합산 칩)
-  - 종목 9점표(498개 중 상위 40, 빈집·RS·점수·플래그)
-  - 간밤 미국증시 브리핑(접이식)
-- 브라우저 스크린샷으로 렌더 검증 완료. rs=null 가드 처리됨.
-- **설계문서**: `docs/superpowers/specs/2026-06-26-딸깍-대시보드-design.md`
+### 3. 딸깍 대시보드 미결 (이전 세션)
+- 섹터 라벨 정합성 문제: 통신 A진입했으나 미장·소르티노·빈집 라벨 불일치
+- 신호잡 6/22 이후 4일 멈춤 → 수동 복구 필요
+- 장중 2단계 (한투 API 연결) 미착수
 
-### 2. 자동화 잡 전수 조사 (서브에이전트 3개 병렬)
-- 작업 스케줄러 16개 잡의 실행 스크립트·산출물 카탈로그 작성 완료(설계문서 참조).
-- **핵심 데이터 = `output/signal/signal_snapshot.json`** (07:55 자동 생성, 3단 깔때기:
-  stage1 매크로 / stage2 섹터교집합 / stage3 종목 9점표).
-
----
-
-## 🔴 발견된 문제 (집에서 우선 처리)
-
-1. **⚠️ 신호 파이프라인 멈춤** — `signal_snapshot.json`이 6/22 이후 4일간 안 돌았음
-   (작업스케줄러 `STOCKBRAIN_Signal_Daily` Ready인데 실제 미작동).
-   오늘 수동으로 `python -m pipeline.build_signal_snapshot` 돌려서 06-26 신선본 생성함.
-   → **왜 자동 실행이 안 됐는지 점검 필요** (배치 경로/파이썬 경로/의존성).
-2. **`market_data.js` 5/24 이후 죽음** → 장중(2단계)에서 한투 API로 대체 예정.
-3. **9:30 배치가 태이버 아님** — `lotto_briefing_930.bat`이 7시와 동일한 @futuresnow
-   스크립트 중복 호출(같은 파일 덮어씀). **태이버 유튜버 시황 스크립트 별도 필요.**
-4. **★ 섹터 라벨 정합성 문제** — "통신"이 A 교집합에 들었는데 실체가 엇갈림:
-   - 미장 통신 = 코닝(GLW)·코히런트·루멘텀 = **AI 광통신 부품**
-   - 소르티노 통신 = "RISE 네트워크인프라" ETF 1개
-   - 빈집 통신 = KTcs·KT서브마린 (통신SI·해저케이블, vac B·score 2·rs없음)
-   → 같은 "통신" 라벨이지만 미장/소르티노는 광통신, 빈집은 KT 소형주로 **불일치**.
-   `_match_sector` 키워드 매핑이 광통신과 통신서비스를 뭉뚱그림.
-   **고칠 것**: 광통신/네트워크인프라를 통신서비스와 분리. (반도체는 깨끗하게 일치함)
-
----
-
-## 🔴 다음 세션 할 일 (우선순위)
-
-0. **신호잡 자동화 복구** (문제1) — 매일 신선한 signal_snapshot 보장. 대시보드 전제조건.
-1. **🔥 장중 버튼 (2단계)** — 한투 API 연결. `_kis_test.py` 기반.
-   수집 대상: 업종등락·거래대금·프로그램매매·외인/기관/개인 수급·나스닥선물·환율.
-   → 백그라운드 워커 10분 주기로 `data/intraday.json` 갱신 → 버튼은 즉시 표시.
-   → 데이터만 수집(LLM 0토큰), AI 해석은 버튼 누를 때만(토큰 폭발 방지).
-2. **섹터 라벨 분리** (문제4) — 광통신 vs 통신서비스.
-3. **🌙 마감 버튼 (3단계)** — 태린이 3종(업종osc·투자자수급·소라Top20) JSON 출력 추가 + 일정 파일화.
-
----
-
-## 📁 관련 파일
-- 대시보드: `dashboard/server.py` · `dashboard/index.html` · `dashboard/server.log`
-- 설계: `docs/superpowers/specs/2026-06-26-딸깍-대시보드-design.md`
-- 신호 산출: `pipeline/build_signal_snapshot.py` → `output/signal/signal_snapshot.json`
-- 주도섹터 로직: `build_signal_snapshot.py` `sortino_strength()` / `select_sectors_ab()` (L87~116)
-
-## 💡 명심
-- 대시보드 = 새 수집기 ❌ / 이미 도는 잡 산출물을 모으는 표시 레이어 ✅ (토큰 폭발 방지)
-- MVP 단계적 — 한 번에 다 만들면 또 막힌다. 장전→장중→마감 순.
-- 섹터 신호는 라벨만 보지 말고 **속(실제 종목)이 일치하는지** 검증해야 함.
+## 관련 파일
+- `scripts/3pro_crawl.py` — 메인 크롤러
+- `scripts/3pro_corner_test.py` — 코너 테스트 (GEMINI_API_KEY_3 읽음)
+- `pipeline/3pro_state.json` — 처리된 영상 ID 목록
+- `.env` — API 키 (KEY_3 추가 필요)
+- `out/report_마켓인사이드_easy.html` — 완성 리포트 템플릿
