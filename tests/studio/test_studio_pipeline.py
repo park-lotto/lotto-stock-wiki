@@ -77,3 +77,37 @@ def test_pipeline_png_failure_emits_error_no_done(tmp_path, monkeypatch):
     step4_err = next((e for e in events if e.get("id") == 4 and e.get("status") == "error"), None)
     assert step4_err is not None
     assert events[-1]["type"] == "error"
+
+
+def test_generate_picks_flow(tmp_path, monkeypatch):
+    studio = tmp_path / "out" / "studio"
+    monkeypatch.setattr(sp, "STUDIO_DIR", studio)
+    monkeypatch.setattr(sp.studio_picks, "get_picks",
+        lambda **k: {"date": "2026-06-27", "source": "signal_snapshot.json",
+                     "market": {"verdict": "CAUTION", "vix": 18.4, "reasons": []},
+                     "lead_sectors": [{"name": "반도체", "sortino": 98.2}],
+                     "picks": [{"name": "SK하이닉스", "sector": "반도체", "score": 4,
+                                "rs": 58.3, "vacancy": "A", "signals": ["기관 수급 빈집"], "atom": None}]})
+    monkeypatch.setattr(sp.card_picks, "render_picks_card", lambda d: "<html><div class='card'>x</div></html>")
+    monkeypatch.setattr(sp.card_picks, "save_card_html",
+        lambda html, p: (__import__("pathlib").Path(p).write_text(html, encoding="utf-8"),
+                         __import__("pathlib").Path(p))[-1])
+    monkeypatch.setattr(sp.viz_card, "save_png", lambda hp, pp: (__import__("pathlib").Path(pp).write_bytes(b"\x89PNG"), True)[-1])
+    monkeypatch.setattr(sp.viz_card, "send_telegram_photo", lambda pp, caption="": True)
+
+    events = list(sp.generate_picks("2026-06-28"))
+    done = [e["id"] for e in events if e["type"] == "step" and e["status"] == "done"]
+    assert done == [1, 2, 3, 4, 5]
+    assert events[-1]["type"] == "done" and events[-1]["sent_tg"] is True
+    import json as _j
+    idx = _j.loads((studio / "index.json").read_text(encoding="utf-8"))
+    assert idx[0]["type"] == "picks"
+
+
+def test_generate_picks_no_picks_errors(tmp_path, monkeypatch):
+    studio = tmp_path / "out" / "studio"
+    monkeypatch.setattr(sp, "STUDIO_DIR", studio)
+    monkeypatch.setattr(sp.studio_picks, "get_picks", lambda **k: {"picks": []})
+    events = list(sp.generate_picks("2026-06-28"))
+    assert events[-1]["type"] == "error"
+    assert "done" not in [e["type"] for e in events]

@@ -14,11 +14,22 @@ def test_generate_streams_events(monkeypatch):
     def fake_gen(date):
         yield {"type": "step", "id": 1, "status": "done", "message": "x"}
         yield {"type": "done", "png": "a.png", "html": "a.html", "thumb": "a.png", "sent_tg": True}
-    monkeypatch.setattr(srv, "generate_briefing", fake_gen)
+    # 기본 모드(picks) → generate_picks 사용
+    monkeypatch.setattr(srv, "generate_picks", fake_gen)
     client = TestClient(srv.app)
     with client.stream("POST", "/studio/generate?date=2026-06-28") as r:
         body = "".join(chunk for chunk in r.iter_text())
     assert "data:" in body
+    assert '"type": "done"' in body or '"type":"done"' in body
+
+
+def test_generate_briefing_mode(monkeypatch):
+    def fake_gen(date):
+        yield {"type": "done", "png": "b.png", "html": "b.html", "thumb": "b.png", "sent_tg": False}
+    monkeypatch.setattr(srv, "generate_briefing", fake_gen)
+    client = TestClient(srv.app)
+    with client.stream("POST", "/studio/generate?date=2026-06-28&mode=briefing") as r:
+        body = "".join(chunk for chunk in r.iter_text())
     assert '"type": "done"' in body or '"type":"done"' in body
 
 

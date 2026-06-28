@@ -29,9 +29,10 @@ STUDIO_DIR = os.path.join(ROOT, "out", "studio")
 
 sys.path.insert(0, os.path.join(ROOT, "scripts"))
 try:
-    from studio_pipeline import generate_briefing  # noqa: E402
+    from studio_pipeline import generate_briefing, generate_picks  # noqa: E402
 except (ImportError, SystemExit):
     generate_briefing = None  # type: ignore
+    generate_picks = None     # type: ignore
 
 # claude CLI 위치 (PATH 우선, 없으면 알려진 경로)
 CLAUDE_BIN = shutil.which("claude") or r"C:\Users\TheRose\.local\bin\claude.exe"
@@ -253,12 +254,14 @@ def studio_gallery():
 
 
 @app.post("/studio/generate")
-def studio_generate(date: str):
+def studio_generate(date: str, mode: str = "picks"):
+    gen = generate_briefing if mode == "briefing" else generate_picks
+
     def event_stream():
-        if generate_briefing is None:
+        if gen is None:
             yield 'data: {"type": "error", "message": "studio_pipeline 없음"}\n\n'
             return
-        for ev in generate_briefing(date):
+        for ev in gen(date):
             yield f"data: {json.dumps(ev, ensure_ascii=False)}\n\n"
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 
