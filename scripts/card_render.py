@@ -8,7 +8,8 @@ BG   = "#1a1a1e"
 
 def render_briefing_card(data: dict, hero_path: Path) -> str:
     hero_uri = Path(hero_path).as_uri()
-    sectors = " · ".join(html.escape(s) for s in data.get("lead_sectors", [])[:3])
+    sectors = " · ".join(html.escape(s) for s in data.get("lead_sectors", [])[:4])
+    sectors_html = f'<div class="sectors">🔴 강세 — {sectors}</div>' if sectors else ""
     lines_html = "".join(
         f'<li>{html.escape(ln)}</li>' for ln in data.get("lines", [])[:5]
     )
@@ -37,7 +38,7 @@ def render_briefing_card(data: dict, hero_path: Path) -> str:
     <div class="body">
       <div class="date">{date_s}  ·  아침 브리핑</div>
       <div class="headline">{headline_s}</div>
-      <div class="sectors">주도 섹터 — {sectors}</div>
+      {sectors_html}
       <ul>{lines_html}</ul>
       <div class="foot">로또의 주식 · STOCK BRAIN</div>
     </div>
