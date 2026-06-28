@@ -1,0 +1,317 @@
+<!doctype html><html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>섹터 히트맵 — STOCK BRAIN</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0b0e;--panel:#131318;--line:#222228;--gold:#d4af37;--up1:#c0392b;--up2:#e74c3c;--up3:#f19090;--dn1:#1a5276;--dn2:#2471a3;--dn3:#7fb3d3;--neu:#2a2a35;}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Noto Sans KR',sans-serif;}
+body{background:var(--bg);color:#eee;min-height:100vh;}
+
+/* ── 상단 바 ── */
+.topbar{height:52px;background:var(--panel);border-bottom:1px solid var(--line);
+        display:flex;align-items:center;padding:0 24px;gap:16px;}
+.topbar .logo{font-size:16px;font-weight:700;color:var(--gold);letter-spacing:1px;}
+.topbar .time{margin-left:auto;font-size:13px;color:#888;}
+.topbar .badge{font-size:12px;padding:3px 10px;border-radius:20px;background:#1e3a1e;color:#4ade80;}
+.nav{display:flex;gap:2px;margin-left:20px;}
+.nav a{padding:6px 14px;border-radius:6px;font-size:13px;color:#888;text-decoration:none;transition:background .15s;}
+.nav a:hover,.nav a.active{background:var(--line);color:#eee;}
+
+/* ── ETF 상단 바 ── */
+.etf-bar{background:var(--panel);border-bottom:1px solid var(--line);
+         overflow-x:auto;white-space:nowrap;padding:0 16px;scrollbar-width:none;}
+.etf-bar::-webkit-scrollbar{display:none;}
+.etf-chip{display:inline-flex;flex-direction:column;gap:2px;padding:8px 14px;
+          border-right:1px solid var(--line);min-width:120px;cursor:default;
+          vertical-align:top;transition:background .15s;}
+.etf-chip:hover{background:rgba(255,255,255,.04);}
+.etf-chip .etf-name{font-size:11px;color:#999;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;}
+.etf-chip .etf-rate{font-size:14px;font-weight:700;}
+.etf-chip .etf-rate.up{color:#e74c3c;} .etf-chip .etf-rate.dn{color:#3498db;} .etf-chip .etf-rate.neu{color:#888;}
+.etf-chip svg{display:block;}
+.blink-dot{animation:blink 1.4s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.15;}}
+
+/* ── 탭 바 ── */
+.tab-bar{display:flex;background:var(--bg);border-bottom:2px solid var(--line);
+         overflow-x:auto;scrollbar-width:none;padding:0 8px;}
+.tab-bar::-webkit-scrollbar{display:none;}
+.tab{background:transparent;border:none;padding:11px 18px;font-size:13px;font-weight:700;
+     color:#555;cursor:pointer;white-space:nowrap;font-family:inherit;
+     border-bottom:2px solid transparent;margin-bottom:-2px;
+     transition:color .15s,border-color .15s;}
+.tab:hover{color:#aaa;}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+
+/* ── 메인 ── */
+.main{padding:20px 24px;}
+.subbar{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.subbar h1{font-size:17px;font-weight:700;color:#fff;}
+.subbar .snap-date{font-size:12px;color:#555;}
+.tab-desc{font-size:12px;color:#666;margin-left:4px;}
+.subbar .refresh-btn{margin-left:auto;padding:6px 14px;border:1px solid var(--gold);
+  border-radius:8px;background:transparent;color:var(--gold);font-size:13px;cursor:pointer;transition:background .15s;}
+.subbar .refresh-btn:hover{background:rgba(212,175,55,.12);}
+.subbar .refresh-btn:disabled{opacity:.4;cursor:wait;}
+
+.legend{display:flex;gap:8px;margin-bottom:16px;align-items:center;font-size:12px;color:#666;}
+.legend .bar{height:12px;width:80px;border-radius:4px;
+  background:linear-gradient(to right,var(--dn1),var(--neu),var(--up1));}
+
+/* ── 히트맵 그리드 ── */
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+@media(max-width:1200px){.grid{grid-template-columns:repeat(4,1fr);}}
+@media(max-width:900px){.grid{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:600px){.grid{grid-template-columns:repeat(2,1fr);}}
+
+.tile{border-radius:12px;padding:14px;min-height:120px;display:flex;flex-direction:column;
+      gap:8px;transition:transform .15s,box-shadow .15s;cursor:default;position:relative;overflow:hidden;}
+.tile:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.5);}
+.tile .sec-name{font-size:12px;font-weight:700;color:rgba(255,255,255,.9);line-height:1.3;}
+.tile .avg-rate{font-size:24px;font-weight:900;line-height:1;}
+.tile .stocks{display:flex;flex-direction:column;gap:3px;margin-top:auto;}
+.tile .stock-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:rgba(255,255,255,.75);}
+.tile .stock-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:68%;}
+.tile .stock-rate{font-weight:700;white-space:nowrap;}
+.parent-badge{display:inline-block;font-size:10px;color:rgba(255,255,255,.45);font-weight:400;
+              background:rgba(0,0,0,.35);padding:1px 6px;border-radius:10px;
+              margin-left:4px;vertical-align:middle;}
+
+.tile.up3{background:linear-gradient(135deg,#7b1c1c,#a93226);}
+.tile.up2{background:linear-gradient(135deg,#922b21,#c0392b);}
+.tile.up1{background:linear-gradient(135deg,#6b2020,#8b2f2f);}
+.tile.neu{background:var(--panel);border:1px solid var(--line);}
+.tile.dn1{background:linear-gradient(135deg,#1b2a6b,#1a5276);}
+.tile.dn2{background:linear-gradient(135deg,#1a4066,#1f618d);}
+.tile.dn3{background:linear-gradient(135deg,#0e2440,#154360);}
+.tile.empty{background:var(--panel);border:1px dashed var(--line);opacity:.5;}
+
+.loading{text-align:center;padding:80px;color:#555;font-size:18px;grid-column:1/-1;}
+.error{text-align:center;padding:60px;color:#e74c3c;grid-column:1/-1;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="logo">⚡ STOCK BRAIN</span>
+  <nav class="nav">
+    <a href="/">장전</a>
+    <a href="/studio">스튜디오</a>
+    <a href="/market" class="active">히트맵</a>
+  </nav>
+  <span class="badge" id="mkt-status">장중</span>
+  <span class="time" id="clock"></span>
+</div>
+
+<!-- ETF 상단 바 -->
+<div class="etf-bar" id="etf-bar">
+  <span style="color:#555;font-size:12px;padding:12px 0;display:inline-block;">ETF 로딩중…</span>
+</div>
+
+<!-- 탭 바 -->
+<div class="tab-bar" id="tab-bar">
+  <button class="tab active" data-tab="all">전체</button>
+  <button class="tab" data-tab="semi">반도체</button>
+  <button class="tab" data-tab="ship">조선/LNG</button>
+  <button class="tab" data-tab="def">방산/우주</button>
+  <button class="tab" data-tab="robot">로봇</button>
+  <button class="tab" data-tab="bio">바이오</button>
+  <button class="tab" data-tab="battery">이차전지</button>
+  <button class="tab" data-tab="energy">에너지</button>
+  <button class="tab" data-tab="beauty">뷰티</button>
+  <button class="tab" data-tab="ai">AI</button>
+  <button class="tab" data-tab="auto">자동차</button>
+  <button class="tab" data-tab="theme">테마</button>
+</div>
+
+<div class="main">
+  <div class="subbar">
+    <h1 id="main-title">섹터 히트맵</h1>
+    <span class="snap-date" id="snap-date"></span>
+    <button class="refresh-btn" id="refresh-btn" onclick="refresh()">↻ 새로고침</button>
+  </div>
+  <div class="legend">
+    <div class="bar"></div>
+    <span>하락 ← 보합 → 상승</span>
+  </div>
+  <div class="grid" id="grid"><div class="loading">📡 데이터 불러오는 중…</div></div>
+</div>
+
+<script>
+// ── 유틸 ──────────────────────────────────────────────────
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function rateToBg(r){
+  if(r>=3)return"up3";if(r>=1)return"up2";if(r>=0.5)return"up1";
+  if(r<=-3)return"dn3";if(r<=-1)return"dn2";if(r<=-0.5)return"dn1";
+  return"neu";
+}
+function rateStr(r){
+  if(r==null||r===0)return"±0.00%";
+  return(r>0?"+":"")+r.toFixed(2)+"%";
+}
+
+// ── 시계 ─────────────────────────────────────────────────
+setInterval(()=>{
+  const now=new Date();
+  document.getElementById("clock").textContent=now.toLocaleTimeString("ko-KR");
+  const h=now.getHours(),m=now.getMinutes();
+  const isMarket=(h>9||(h===9&&m>=0));
+  const isClose=(h>=15&&m>=30);
+  const badge=document.getElementById("mkt-status");
+  if(isClose){badge.textContent="장마감";badge.style.background="#2a1a1a";badge.style.color="#e74c3c";}
+  else if(isMarket){badge.textContent="장중";badge.style.background="#1e3a1e";badge.style.color="#4ade80";}
+  else{badge.textContent="장전";badge.style.background="#1a1a2e";badge.style.color="#aaa";}
+},1000);
+
+// ── 탭 상태 ──────────────────────────────────────────────
+let activeTab="all";
+
+document.getElementById("tab-bar").addEventListener("click",e=>{
+  const btn=e.target.closest(".tab");
+  if(!btn)return;
+  const tab=btn.dataset.tab;
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.tab===tab));
+  activeTab=tab;
+  loadActive();
+});
+
+function refresh(){loadActive();}
+
+function loadActive(){
+  if(activeTab==="all") loadOverview();
+  else loadTab(activeTab);
+}
+
+// ── 전체 탭 ──────────────────────────────────────────────
+async function loadOverview(){
+  const btn=document.getElementById("refresh-btn");
+  btn.disabled=true; btn.textContent="로딩중…";
+  document.getElementById("main-title").textContent="섹터 히트맵 — 전체";
+  const grid=document.getElementById("grid");
+  grid.innerHTML='<div class="loading">📡 섹터 데이터 불러오는 중…</div>';
+  try{
+    const r=await fetch("/api/heatmap");
+    if(!r.ok)throw new Error(`HTTP ${r.status}`);
+    const data=await r.json();
+    if(data.error)throw new Error(data.error);
+    renderOverview(data);
+  }catch(e){
+    grid.innerHTML=`<div class="error">❌ ${esc(e.message)}<br><small>장외시간이면 한투 API가 응답하지 않을 수 있습니다</small></div>`;
+  }finally{btn.disabled=false;btn.textContent="↻ 새로고침";}
+}
+
+function renderOverview(data){
+  document.getElementById("snap-date").textContent=`업데이트 ${data.updated_at||""}`;
+  const grid=document.getElementById("grid");
+  grid.innerHTML="";
+  for(const sec of data.sectors){
+    const cls=sec.stocks.length===0?"empty":rateToBg(sec.avg_rate);
+    const avgStr=sec.stocks.length===0?"데이터없음":rateStr(sec.avg_rate);
+    const stocksHtml=sec.stocks.map(s=>
+      `<div class="stock-row">
+         <span class="stock-name">${esc(s.name)}</span>
+         <span class="stock-rate">${rateStr(s.change_rate)}</span>
+       </div>`).join("");
+    const el=document.createElement("div");
+    el.className=`tile ${cls}`;
+    el.innerHTML=`<div class="sec-name">${esc(sec.name)}</div>
+      <div class="avg-rate">${avgStr}</div>
+      <div class="stocks">${stocksHtml}</div>`;
+    grid.appendChild(el);
+  }
+}
+
+// ── 세부 탭 ──────────────────────────────────────────────
+const TAB_LABELS={
+  semi:"반도체",ship:"조선/LNG",def:"방산/우주",robot:"로봇",bio:"바이오",
+  battery:"이차전지",energy:"에너지",beauty:"뷰티",ai:"AI",auto:"자동차",theme:"테마"
+};
+
+async function loadTab(tabId){
+  const btn=document.getElementById("refresh-btn");
+  btn.disabled=true; btn.textContent="로딩중…";
+  const label=TAB_LABELS[tabId]||tabId;
+  document.getElementById("main-title").textContent=`섹터 히트맵 — ${label}`;
+  const grid=document.getElementById("grid");
+  grid.innerHTML=`<div class="loading">📡 ${label} 세부 데이터 불러오는 중…<br><small style="color:#444">병렬 조회 중 (수~십 초 소요)</small></div>`;
+  try{
+    const r=await fetch(`/api/heatmap_tab?id=${tabId}`);
+    if(!r.ok)throw new Error(`HTTP ${r.status}`);
+    const data=await r.json();
+    if(data.error)throw new Error(data.error);
+    renderTab(data);
+  }catch(e){
+    grid.innerHTML=`<div class="error">❌ ${esc(e.message)}</div>`;
+  }finally{btn.disabled=false;btn.textContent="↻ 새로고침";}
+}
+
+function renderTab(data){
+  document.getElementById("snap-date").textContent=`업데이트 ${data.updated_at||""}`;
+  const grid=document.getElementById("grid");
+  grid.innerHTML="";
+  for(const tile of data.tiles){
+    const cls=tile.stocks.length===0?"empty":rateToBg(tile.avg_rate);
+    const avgStr=tile.stocks.length===0?"데이터없음":rateStr(tile.avg_rate);
+    const parentHtml=tile.parent
+      ?`<span class="parent-badge">${esc(tile.parent)}</span>`:"";
+    const stocksHtml=tile.stocks.map(s=>
+      `<div class="stock-row">
+         <span class="stock-name">${esc(s.name)}</span>
+         <span class="stock-rate">${rateStr(s.change_rate)}</span>
+       </div>`).join("");
+    const el=document.createElement("div");
+    el.className=`tile ${cls}`;
+    el.innerHTML=`<div class="sec-name">${esc(tile.name)}${parentHtml}</div>
+      <div class="avg-rate">${avgStr}</div>
+      <div class="stocks">${stocksHtml}</div>`;
+    grid.appendChild(el);
+  }
+}
+
+// ── ETF 바 ────────────────────────────────────────────────
+function sparkline(ohlc,rate){
+  const W=64,H=28;
+  if(!ohlc||ohlc.length<2)return`<svg width="${W}" height="${H}"></svg>`;
+  const mn=Math.min(...ohlc),mx=Math.max(...ohlc);
+  const range=mx-mn||1;
+  const xs=ohlc.map((_,i)=>Math.round(i*(W-4)/(ohlc.length-1))+2);
+  const ys=ohlc.map(v=>Math.round(H-4-((v-mn)/range)*(H-8))+2);
+  const pts=xs.map((x,i)=>`${x},${ys[i]}`).join(" ");
+  const col=rate>0?"#e74c3c":rate<0?"#3498db":"#666";
+  const lx=xs[xs.length-1],ly=ys[ys.length-1];
+  return`<svg width="${W}" height="${H}" style="overflow:visible">
+    <polyline points="${pts}" fill="none" stroke="${col}" stroke-width="1.5" stroke-linejoin="round"/>
+    <circle class="blink-dot" cx="${lx}" cy="${ly}" r="2.5" fill="${col}"/>
+  </svg>`;
+}
+function shortETFName(n){
+  return n.replace("KODEX ","").replace("TIGER ","").replace("HANARO ","")
+          .replace("액티브","").replace("iSelect","").trim();
+}
+async function loadEtfBar(){
+  try{
+    const r=await fetch("/api/etf_bar");
+    const etfs=await r.json();
+    if(!Array.isArray(etfs)||etfs.length===0)return;
+    const bar=document.getElementById("etf-bar");
+    bar.innerHTML=etfs.map(e=>{
+      const rc=e.change_rate>0?"up":e.change_rate<0?"dn":"neu";
+      const rs=(e.change_rate>0?"+":"")+(e.change_rate||0).toFixed(2)+"%";
+      return`<div class="etf-chip">
+        <span class="etf-name">${esc(shortETFName(e.name))}</span>
+        <span class="etf-rate ${rc}">${rs}</span>
+        ${sparkline(e.ohlc,e.change_rate)}
+      </div>`;
+    }).join("");
+  }catch(e){
+    document.getElementById("etf-bar").innerHTML=
+      `<span style="color:#555;font-size:12px;padding:12px 0;display:inline-block;">ETF 바 오류: ${esc(e.message)}</span>`;
+  }
+}
+
+// ── 초기 로드 + 자동갱신 ──────────────────────────────────
+loadOverview();
+loadEtfBar();
+setInterval(()=>{if(activeTab==="all")loadOverview();},30000);
+setInterval(loadEtfBar,60000);
+</script>
+</body></html>

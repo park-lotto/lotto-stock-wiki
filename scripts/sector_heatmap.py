@@ -1,0 +1,453 @@
+"""섹터 히트맵 데이터 빌드.
+
+raw/내 관심종목.xlsx → 전체 계층 파싱:
+  L일봉H 이후 첫 텍스트행 = 대섹터
+  이후 텍스트행 = 서브섹터(소분류)
+  종목코드 행 = 종목
+"""
+from datetime import datetime
+from pathlib import Path
+
+ROOT = Path(__file__).parent.parent
+WATCH_FILE = ROOT / "raw" / "내 관심종목.xlsx"
+
+# ── 제외 섹터 (전체 탭용) ─────────────────────────────────
+EXCLUDE = {
+    "ETF 시장전체", "ETF시장 체크",
+    "블랙테마 원자재", "블랙테마 전쟁",  # SECTOR_EXTRACT로 일부 추출
+    "코로나 전염병", "코인/STO",         # STO만 SECTOR_EXTRACT
+    "메타버스/6G",                       # 광통신 6G만 SECTOR_EXTRACT
+    "반도체 테마별",                      # 서브탭에서만 일부 포함
+    "가구 인테리어",
+    "트럼프<재건/경협>",
+    "정책",    # [수정2] 삭제
+    "대왕고래", # [수정8] 알레스카LNG 삭제
+}
+
+RENAME = {
+    "소비재": "의류 소비재",
+    # 대왕고래→알레스카LNG 제거 (EXCLUDE로 이동)
+}
+
+MERGE = {
+    "바이오 섹터별":   "바이오",
+    "바이오 섹터별-2": "바이오",
+    "이차전지-1":     "이차전지",
+    "이차전지-2":     "이차전지",
+    "로봇-1":        "로봇",   # [수정1] 통합
+    "로봇-2":        "로봇",
+}
+
+TRUMP_SUB_MAP = {"남북경협": "남북경협", "재건": "전쟁재건"}
+
+# ── 제외된 섹터에서 특정 서브섹터 추출 → 독립 메인섹터로 ────
+# [수정3,4,5,6]
+SECTOR_EXTRACT = [
+    {"name": "광통신", "from": "메타버스/6G",   "sub": "광통신 6G"},
+    {"name": "STO",   "from": "코인/STO",      "sub": "STO"},
+    {"name": "해운",   "from": "블랙테마 전쟁",  "sub": "해운"},
+    {"name": "전쟁",   "from": "블랙테마 전쟁",  "sub": "전쟁"},
+]
+
+# ── 서브탭: 특정 (탭ID, 대섹터) 내 제외 서브섹터 ─────────────
+TAB_SUB_EXCLUDE: dict = {
+    ("semi", "반도체 디스플레이"): {"통신"},         # [서브3]
+    ("semi", "반도체 테마별"):   {"HBM", "AGI 뉴럴링크"},  # CXL·액침냉각·온디바이스만
+}
+
+# ── 서브탭: 특정 (탭ID, 대섹터)의 모든 서브섹터를 하나의 타일로 통합 ─
+TAB_TILE_MERGE: dict = {
+    ("semi",   "반도체 데이터센터"): "데이터센터",  # [서브4]
+    ("beauty", "뷰티 화장품"):     "화장품",        # [서브7]
+    ("beauty", "뷰티 미용"):       "미용",          # [서브7]
+    ("theme",  "식품"):           "식품",           # [서브8]
+}
+
+# ── 서브탭: 서브섹터명 변경 (대섹터명, 서브명) → 표시명 ─────
+SUB_RENAME: dict = {
+    ("에너지 원전", "대장"):   "원전 대장주",    # [서브5]
+    ("에너지 원전", "중소형"): "원전 중소형주",  # [서브6]
+}
+
+# ── 하드코딩 타일 (특정 탭에 고정 삽입) ──────────────────────
+HARDCODED_TILES: dict = {
+    "semi": [
+        {   # [서브2] MLCC/기판
+            "name": "MLCC/기판", "parent": "부품",
+            "stocks": [
+                {"name": "삼성전기",   "code": "009150"},
+                {"name": "LG이노텍",   "code": "011070"},
+                {"name": "삼화콘덴서", "code": "001820"},
+            ],
+        },
+    ],
+}
+
+# ── 탭 그룹 정의 ─────────────────────────────────────────
+TAB_GROUPS = [
+    {"id": "all",     "label": "전체"},
+    {"id": "semi",    "label": "반도체",   "sectors": [
+        "반도체 설계 및 파운드리", "반도체 전공정",
+        "반도체 후공정", "반도체 디스플레이", "반도체 데이터센터",
+        "반도체 테마별",  # [서브1] CXL·액침냉각·온디바이스AI
+    ]},
+    {"id": "ship",    "label": "조선/LNG", "sectors": ["조선", "LNG"]},
+    {"id": "def",     "label": "방산/우주", "sectors": ["우주방산"]},
+    {"id": "robot",   "label": "로봇",     "sectors": ["로봇-1", "로봇-2"]},
+    {"id": "bio",     "label": "바이오",   "sectors": [
+        "바이오 섹터별", "바이오 섹터별-2", "바이오 비만당뇨치매",
+    ]},
+    {"id": "battery", "label": "이차전지", "sectors": ["이차전지-1", "이차전지-2"]},
+    {"id": "energy",  "label": "에너지",   "sectors": [
+        "에너지 전선/변압기", "에너지 원전", "에너지 신재생",
+    ]},
+    {"id": "beauty",  "label": "뷰티",     "sectors": ["뷰티 화장품", "뷰티 미용"]},
+    {"id": "ai",      "label": "AI",       "sectors": [
+        "AI 소프트웨어", "AI 의료", "AI 보안/양자",
+    ]},
+    {"id": "auto",    "label": "자동차",   "sectors": ["자동차", "자동차 자율주행"]},
+    {"id": "theme",   "label": "테마",     "sectors": [
+        "트럼프<재건/경협>",
+        "식품", "여행/항공", "웹툰/게임", "엔터", "소비재",
+        "육계/수산", "원자재", "시멘트/페인트",
+        # 대왕고래·정책 제거 [서브8]
+    ]},
+]
+
+TAB_BY_ID = {t["id"]: t for t in TAB_GROUPS}
+
+PARENT_LABEL = {
+    "반도체 설계 및 파운드리": "설계/파운드리",
+    "반도체 전공정": "전공정",
+    "반도체 후공정": "후공정",
+    "반도체 디스플레이": "디스플레이",
+    "반도체 데이터센터": "데이터센터",
+    "반도체 테마별": "테마",
+    "에너지 전선/변압기": "전선/변압기",
+    "에너지 원전": "원전",
+    "에너지 신재생": "신재생",
+    "뷰티 화장품": "화장품",
+    "뷰티 미용": "미용",
+    "AI 소프트웨어": "소프트웨어",
+    "AI 의료": "AI의료",
+    "AI 보안/양자": "보안/양자",
+    "자동차 자율주행": "자율주행",
+    "바이오 섹터별": "바이오①",
+    "바이오 섹터별-2": "바이오②",
+    "바이오 비만당뇨치매": "비만/당뇨",
+    "이차전지-1": "이차전지①",
+    "이차전지-2": "이차전지②",
+    "로봇-1": "로봇①",
+    "로봇-2": "로봇②",
+    "소비재": "의류소비재",
+}
+
+
+# ── 파서 ─────────────────────────────────────────────────
+def _parse_raw_full() -> dict:
+    """xlsx → {대섹터명: [{name: 서브명, stocks: [...]}]}"""
+    import openpyxl
+    wb = openpyxl.load_workbook(str(WATCH_FILE), read_only=True, data_only=True)
+    ws = wb["Sheet1"]
+
+    result: dict = {}
+    cur_sector = None
+    cur_subsec = None
+    next_is_major = False
+
+    for row in ws.iter_rows(values_only=True):
+        c1, c2, c5 = row[0], row[1], row[4]
+
+        if c1 == "L일봉H":
+            next_is_major = True
+            cur_subsec = None
+            continue
+
+        code_str = str(c5 or "").strip()
+        is_stock = code_str.isdigit() and 1 <= len(code_str) <= 6
+
+        if is_stock:
+            name = str(c2 or "").strip()
+            code = code_str.zfill(6)
+            if cur_sector and name:
+                if cur_subsec is None:
+                    subs = result.setdefault(cur_sector, [])
+                    if not subs:
+                        subs.append({"name": "", "stocks": []})
+                    subs[0]["stocks"].append({"name": name, "code": code})
+                else:
+                    cur_subsec["stocks"].append({"name": name, "code": code})
+        elif c1:
+            label = str(c1).strip()
+            if not label or label.startswith("0 0"):
+                continue
+            if next_is_major:
+                cur_sector = label
+                next_is_major = False
+                cur_subsec = None
+                if cur_sector not in result:
+                    result[cur_sector] = []
+            else:
+                if cur_sector is not None:
+                    cur_subsec = {"name": label, "stocks": []}
+                    result[cur_sector].append(cur_subsec)
+
+    wb.close()
+    return result
+
+
+def _dedup_stocks(stocks: list) -> list:
+    seen, out = set(), []
+    for s in stocks:
+        if s["code"] not in seen:
+            seen.add(s["code"])
+            out.append(s)
+    return out
+
+
+def _shorten_sub(name: str, parent: str) -> str:
+    for prefix in [parent + " ", parent]:
+        if name.startswith(prefix):
+            return name[len(prefix):].strip(" /·-")
+    return name
+
+
+# ── 전체 탭 파싱 ─────────────────────────────────────────
+def parse_watchlist(top_n: int = 3) -> list:
+    raw = _parse_raw_full()
+    merged: dict = {}
+
+    for sec_name, subsecs in raw.items():
+        if sec_name.startswith("트럼프"):
+            for sub in subsecs:
+                key = None
+                for k, v in TRUMP_SUB_MAP.items():
+                    if k in sub["name"]:
+                        key = v
+                        break
+                if key:
+                    merged.setdefault(key, [])
+                    merged[key].extend(sub["stocks"])
+            continue
+
+        if sec_name in EXCLUDE:
+            continue
+
+        target = MERGE.get(sec_name, sec_name)
+        target = RENAME.get(target, target)
+        merged.setdefault(target, [])
+        for sub in subsecs:
+            merged[target].extend(sub["stocks"])
+
+    # 제외된 섹터에서 서브섹터 추출
+    for ext in SECTOR_EXTRACT:
+        raw_subs = raw.get(ext["from"], [])
+        stocks = []
+        for sub in raw_subs:
+            if sub["name"] == ext["sub"]:
+                stocks.extend(sub["stocks"])
+        if stocks:
+            merged.setdefault(ext["name"], [])
+            merged[ext["name"]].extend(stocks)
+
+    result = []
+    for sec_name, stocks in merged.items():
+        deduped = _dedup_stocks(stocks)
+        result.append({"sector": sec_name, "stocks": deduped[:top_n]})
+    return result
+
+
+def parse_etf_bar() -> list:
+    """ETF시장 체크 섹션 파싱 (코드/이름/OHLC)."""
+    import openpyxl
+    wb = openpyxl.load_workbook(str(WATCH_FILE), read_only=True, data_only=True)
+    ws = wb["Sheet1"]
+    in_etf = False
+    etfs = []
+    for row in ws.iter_rows(values_only=True):
+        c1, c2, c4, c5 = row[0], row[1], row[3], row[4]
+        if str(c1 or "").strip() == "ETF시장 체크":
+            in_etf = True
+            continue
+        if c1 == "L일봉H" and in_etf:
+            break
+        if in_etf:
+            code_str = str(c5 or "").strip()
+            if code_str.isdigit() and 1 <= len(code_str) <= 6:
+                try:
+                    ohlc = [float(v) for v in str(c1).split()]
+                except Exception:
+                    ohlc = []
+                etfs.append({
+                    "name": str(c2 or "").strip(),
+                    "code": code_str.zfill(6),
+                    "ohlc": ohlc,
+                    "change_rate": 0.0,  # KIS API로 실시간 조회
+                    "price": 0,
+                })
+    wb.close()
+    return etfs
+
+
+# ── 탭별 세부 히트맵 ──────────────────────────────────────
+def build_heatmap_tab(tab_id: str) -> dict:
+    import sys
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import kis_api
+
+    tab = TAB_BY_ID.get(tab_id)
+    if not tab:
+        return {"error": f"알 수 없는 탭: {tab_id}", "tiles": []}
+
+    raw = _parse_raw_full()
+    tiles_raw = []
+
+    for sec_name in (tab.get("sectors") or []):
+        subsecs = raw.get(sec_name, [])
+
+        # 트럼프 섹션 → 남북경협/전쟁재건 분리
+        if sec_name.startswith("트럼프"):
+            for sub in subsecs:
+                display = None
+                for k, v in TRUMP_SUB_MAP.items():
+                    if k in sub["name"]:
+                        display = v
+                        break
+                if display and sub["stocks"]:
+                    tiles_raw.append({
+                        "name": display, "parent": "",
+                        "stocks": _dedup_stocks(sub["stocks"]),
+                    })
+            continue
+
+        parent_label = PARENT_LABEL.get(sec_name, sec_name)
+
+        # TAB_TILE_MERGE: 서브섹터 전체를 하나의 타일로
+        merge_name = TAB_TILE_MERGE.get((tab_id, sec_name))
+        if merge_name is not None:
+            all_stocks = _dedup_stocks([s for sub in subsecs for s in sub["stocks"]])
+            if all_stocks:
+                tiles_raw.append({
+                    "name": merge_name, "parent": parent_label,
+                    "stocks": all_stocks,
+                })
+            continue
+
+        # 일반: 서브섹터별 타일
+        sub_exclude = TAB_SUB_EXCLUDE.get((tab_id, sec_name), set())
+        has_named = any(s["name"] for s in subsecs)
+
+        if has_named:
+            for sub in subsecs:
+                if not sub["stocks"]:
+                    continue
+                if sub["name"] in sub_exclude:
+                    continue
+                # 이름 변경 → 단축 → 원본 순으로
+                renamed = SUB_RENAME.get((sec_name, sub["name"]))
+                if renamed:
+                    tile_name = renamed
+                elif sub["name"]:
+                    tile_name = _shorten_sub(sub["name"], sec_name)
+                else:
+                    tile_name = parent_label
+                tiles_raw.append({
+                    "name": tile_name, "parent": parent_label,
+                    "stocks": _dedup_stocks(sub["stocks"]),
+                })
+        else:
+            all_stocks = _dedup_stocks([s for sub in subsecs for s in sub["stocks"]])
+            if all_stocks:
+                tiles_raw.append({
+                    "name": parent_label, "parent": "",
+                    "stocks": all_stocks,
+                })
+
+    # 하드코딩 타일
+    for ht in HARDCODED_TILES.get(tab_id, []):
+        tiles_raw.append({
+            "name": ht["name"], "parent": ht.get("parent", ""),
+            "stocks": list(ht["stocks"]),
+        })
+
+    # 병렬 가격 조회
+    all_codes = list({s["code"] for t in tiles_raw for s in t["stocks"]})
+    prices = kis_api.get_prices_batch_parallel(all_codes)
+
+    result = []
+    for tile in tiles_raw:
+        rates = [float((prices.get(s["code"]) or {}).get("change_rate", 0) or 0)
+                 for s in tile["stocks"]]
+        avg = round(sum(rates) / len(rates), 2) if rates else 0
+        stocks_out = []
+        for s in tile["stocks"][:3]:
+            p = prices.get(s["code"]) or {}
+            stocks_out.append({
+                "name": s["name"], "code": s["code"],
+                "change_rate": float(p.get("change_rate", 0) or 0),
+                "price": p.get("price", 0),
+            })
+        result.append({
+            "name": tile["name"],
+            "parent": tile["parent"],
+            "avg_rate": avg,
+            "stocks": stocks_out,
+        })
+
+    result.sort(key=lambda x: x["avg_rate"], reverse=True)
+
+    return {
+        "tab_id": tab_id,
+        "tab_label": tab.get("label", ""),
+        "tiles": result,
+        "updated_at": datetime.now().strftime("%H:%M:%S"),
+    }
+
+
+# ── 전체 탭 히트맵 (overview) ─────────────────────────────
+def build_heatmap(top_n: int = 3) -> dict:
+    import sys
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import kis_api
+
+    sections = parse_watchlist(top_n)
+
+    INDEX_CODES = [
+        {"name": "코스피", "code": "0001"},
+        {"name": "코스닥", "code": "1001"},
+    ]
+    index_sectors = []
+    for idx in INDEX_CODES:
+        try:
+            p = kis_api.get_index_price(idx["code"])
+        except Exception:
+            p = {}
+        rate = float(p.get("change_rate", 0) or 0)
+        index_sectors.append({
+            "name": idx["name"], "avg_rate": rate, "is_index": True,
+            "stocks": [{"name": idx["name"], "code": idx["code"],
+                        "change_rate": rate, "price": p.get("price", 0)}],
+        })
+
+    codes = list({s["code"] for sec in sections for s in sec["stocks"]})
+    prices = kis_api.get_prices_batch_parallel(codes)
+
+    sectors = []
+    for sec in sections:
+        items, rates = [], []
+        for s in sec["stocks"]:
+            p = prices.get(s["code"]) or {}
+            rate = float(p.get("change_rate", 0) or 0)
+            items.append({"name": s["name"], "code": s["code"],
+                          "change_rate": rate, "price": p.get("price", 0)})
+            rates.append(rate)
+        avg = round(sum(rates) / len(rates), 2) if rates else 0
+        sectors.append({"name": sec["sector"], "avg_rate": avg, "stocks": items})
+
+    sectors.sort(key=lambda x: x["avg_rate"], reverse=True)
+
+    return {
+        "sectors": index_sectors + sectors,
+        "updated_at": datetime.now().strftime("%H:%M:%S"),
+        "source": "내 관심종목.xlsx",
+    }

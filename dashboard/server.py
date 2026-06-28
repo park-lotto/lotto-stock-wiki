@@ -34,6 +34,14 @@ except (ImportError, SystemExit):
     generate_briefing = None  # type: ignore
     generate_picks = None     # type: ignore
 
+try:
+    from sector_heatmap import build_heatmap, parse_etf_bar, build_heatmap_tab, TAB_GROUPS  # noqa: E402
+except (ImportError, Exception):
+    build_heatmap = None        # type: ignore
+    parse_etf_bar = None        # type: ignore
+    build_heatmap_tab = None    # type: ignore
+    TAB_GROUPS = []             # type: ignore
+
 # claude CLI 위치 (PATH 우선, 없으면 알려진 경로)
 CLAUDE_BIN = shutil.which("claude") or r"C:\Users\TheRose\.local\bin\claude.exe"
 AGENT_TIMEOUT = 240  # 초
@@ -232,6 +240,61 @@ async def api_chat(req: Request):
         return JSONResponse(content={"ok": False, "error": "메시지가 비어 있음"})
     result = await run_in_threadpool(run_chat, role, message, session_id)
     return JSONResponse(content=result)
+
+
+# ── 섹터 히트맵 ───────────────────────────────────────────
+@app.get("/market", response_class=HTMLResponse)
+def market_page():
+    p = os.path.join(HERE, "market.html")
+    if not os.path.exists(p):
+        return "<h1>market.html 준비중</h1>"
+    with open(p, encoding="utf-8") as f:
+        return f.read()
+
+
+@app.get("/api/etf_bar")
+def api_etf_bar():
+    if parse_etf_bar is None:
+        return JSONResponse(content={"error": "parse_etf_bar 없음"}, status_code=503)
+    try:
+        import kis_api
+        etfs = parse_etf_bar()  # Excel에서 코드/이름/OHLC
+        codes = [e["code"] for e in etfs]
+        prices = kis_api.get_prices_batch_parallel(codes)
+        for e in etfs:
+            p = prices.get(e["code"]) or {}
+            e["change_rate"] = float(p.get("change_rate", 0) or 0)
+            e["price"] = int(p.get("price", 0) or 0)
+        return JSONResponse(content=etfs)
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+
+@app.get("/api/heatmap_tab")
+def api_heatmap_tab(id: str = "semi"):
+    if build_heatmap_tab is None:
+        return JSONResponse(content={"error": "build_heatmap_tab 없음"}, status_code=503)
+    try:
+        data = build_heatmap_tab(id)
+        return JSONResponse(content=data)
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+
+@app.get("/api/heatmap_tabs_meta")
+def api_heatmap_tabs_meta():
+    return JSONResponse(content=TAB_GROUPS)
+
+
+@app.get("/api/heatmap")
+def api_heatmap():
+    if build_heatmap is None:
+        return JSONResponse(content={"error": "sector_heatmap 로드 실패"}, status_code=503)
+    try:
+        data = build_heatmap()
+        return JSONResponse(content=data)
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
 
 
 # ── 딸깍 스튜디오 ─────────────────────────────────────────
