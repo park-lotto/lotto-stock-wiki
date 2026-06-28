@@ -5,14 +5,15 @@
 실행:  python dashboard/server.py
 접속:  http://localhost:8090
 """
-import os, sys, json, glob, re, shutil, subprocess
+import os, sys, json, glob, re, shutil, subprocess, uuid
 from datetime import datetime
 
 sys.stdout.reconfigure(encoding="utf-8")
 
 try:
     from fastapi import FastAPI, Request
-    from fastapi.responses import HTMLResponse, JSONResponse
+    from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse, FileResponse
+    from starlette.concurrency import run_in_threadpool
     import uvicorn
 except ImportError:
     print("의존성 설치 필요:  pip install fastapi uvicorn")
@@ -23,6 +24,14 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SIGNAL_DIR = os.path.join(ROOT, "output", "signal")
 OUT_DIR = os.path.join(ROOT, "out")
 AGENTS_DIR = os.path.join(HERE, "agents")
+ASSETS_DIR = os.path.join(HERE, "assets")
+STUDIO_DIR = os.path.join(ROOT, "out", "studio")
+
+sys.path.insert(0, os.path.join(ROOT, "scripts"))
+try:
+    from studio_pipeline import generate_briefing  # noqa: E402
+except (ImportError, SystemExit):
+    generate_briefing = None  # type: ignore
 
 # claude CLI 위치 (PATH 우선, 없으면 알려진 경로)
 CLAUDE_BIN = shutil.which("claude") or r"C:\Users\TheRose\.local\bin\claude.exe"
@@ -109,6 +118,15 @@ def api_close():
     return JSONResponse(content={"status": "준비중", "message": "3단계: 마감 정리 예정"})
 
 
+@app.get("/assets/{fname}")
+def asset(fname: str):
+    """캐릭터 그림 등 정적 파일 제공. 없으면 404 → 프론트는 이모지로 대체."""
+    p = os.path.normpath(os.path.join(ASSETS_DIR, fname))
+    if p.startswith(ASSETS_DIR) and os.path.exists(p):
+        return FileResponse(p)
+    return JSONResponse(content={"error": "not found"}, status_code=404)
+
+
 # ── 에이전트 (claude CLI 헤드리스) ─────────────────────────
 
 def run_agent(role: str, request_text: str) -> dict:
@@ -153,7 +171,109 @@ async def api_agent(req: Request):
         pass
     role = body.get("role", "시황부장")
     request_text = body.get("request") or "오늘 자 시황 브리핑 초안을 작성해줘."
-    return JSONResponse(content=run_agent(role, request_text))
+    result = await run_in_threadpool(run_agent, role, request_text)
+    return JSONResponse(content=result)
+
+
+def run_chat(role: str, message: str, session_id: str | None) -> dict:
+    """멀티턴 대화. 첫 턴이면 역할지침+세션생성, 이후엔 --resume 으로 기억 이어감."""
+    if not (CLAUDE_BIN and os.path.exists(CLAUDE_BIN)):
+        return {"ok": False, "error": f"claude 실행파일을 찾을 수 없음: {CLAUDE_BIN}"}
+
+    if session_id:
+        # 기존 대화 이어가기 (역할은 이미 세션 안에 있음)
+        prompt = message
+        cmd = [CLAUDE_BIN, "-p", prompt, "--resume", session_id,
+               "--permission-mode", "bypassPermissions"]
+    else:
+        # 첫 턴: 새 세션 + 역할지침 주입
+        role_path = os.path.join(AGENTS_DIR, role + ".md")
+        if not os.path.exists(role_path):
+            return {"ok": False, "error": f"역할 파일 없음: {role}.md"}
+        with open(role_path, encoding="utf-8") as f:
+            role_prompt = f.read()
+        session_id = str(uuid.uuid4())
+        prompt = role_prompt + "\n\n---\n## 사용자 메시지\n" + message
+        cmd = [CLAUDE_BIN, "-p", prompt, "--session-id", session_id,
+               "--permission-mode", "bypassPermissions"]
+
+    started = datetime.now()
+    try:
+        proc = subprocess.run(
+            cmd, cwd=ROOT, capture_output=True,
+            encoding="utf-8", errors="replace", timeout=AGENT_TIMEOUT,
+        )
+    except subprocess.TimeoutExpired:
+        return {"ok": False, "error": f"시간 초과 ({AGENT_TIMEOUT}초).", "session_id": session_id}
+    except Exception as e:
+        return {"ok": False, "error": f"실행 오류: {e}", "session_id": session_id}
+
+    out = (proc.stdout or "").strip()
+    if proc.returncode != 0 and not out:
+        return {"ok": False, "error": (proc.stderr or "알 수 없는 오류").strip()[:800],
+                "session_id": session_id}
+
+    elapsed = round((datetime.now() - started).total_seconds(), 1)
+    return {"ok": True, "reply": out, "session_id": session_id, "elapsed": elapsed}
+
+
+@app.post("/api/chat")
+async def api_chat(req: Request):
+    body = {}
+    try:
+        body = await req.json()
+    except Exception:
+        pass
+    role = body.get("role", "시황부장")
+    message = (body.get("message") or "").strip()
+    session_id = body.get("session_id") or None
+    if not message:
+        return JSONResponse(content={"ok": False, "error": "메시지가 비어 있음"})
+    result = await run_in_threadpool(run_chat, role, message, session_id)
+    return JSONResponse(content=result)
+
+
+# ── 딸깍 스튜디오 ─────────────────────────────────────────
+@app.get("/studio", response_class=HTMLResponse)
+def studio_page():
+    p = os.path.join(HERE, "studio.html")
+    if not os.path.exists(p):
+        return "<h1>studio.html 준비중</h1>"
+    with open(p, encoding="utf-8") as f:
+        return f.read()
+
+
+@app.get("/studio/gallery")
+def studio_gallery():
+    p = os.path.join(STUDIO_DIR, "index.json")
+    if not os.path.exists(p):
+        return JSONResponse(content=[])
+    with open(p, encoding="utf-8") as f:
+        return JSONResponse(content=json.load(f))
+
+
+@app.post("/studio/generate")
+def studio_generate(date: str):
+    def event_stream():
+        if generate_briefing is None:
+            yield 'data: {"type": "error", "message": "studio_pipeline 없음"}\n\n'
+            return
+        for ev in generate_briefing(date):
+            yield f"data: {json.dumps(ev, ensure_ascii=False)}\n\n"
+    return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+
+@app.get("/studio/file")
+def studio_file(path: str):
+    # out/studio 내부만 허용 (경로 탈출 차단)
+    base = os.path.abspath(STUDIO_DIR)
+    full = os.path.abspath(os.path.join(base, path))
+    # out/studio 내부만 허용 (형제 디렉토리 studio_evil 우회 차단)
+    if not (full == base or full.startswith(base + os.sep)):
+        return JSONResponse(content={"error": "허용되지 않은 경로"}, status_code=403)
+    if not os.path.exists(full):
+        return JSONResponse(content={"error": "없음"}, status_code=404)
+    return FileResponse(full)
 
 
 if __name__ == "__main__":
