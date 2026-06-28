@@ -13,6 +13,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 try:
     from fastapi import FastAPI, Request
     from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse, FileResponse
+    from starlette.concurrency import run_in_threadpool
     import uvicorn
 except ImportError:
     print("의존성 설치 필요:  pip install fastapi uvicorn")
@@ -160,7 +161,8 @@ async def api_agent(req: Request):
         pass
     role = body.get("role", "시황부장")
     request_text = body.get("request") or "오늘 자 시황 브리핑 초안을 작성해줘."
-    return JSONResponse(content=run_agent(role, request_text))
+    result = await run_in_threadpool(run_agent, role, request_text)
+    return JSONResponse(content=result)
 
 
 def run_chat(role: str, message: str, session_id: str | None) -> dict:
@@ -217,7 +219,8 @@ async def api_chat(req: Request):
     session_id = body.get("session_id") or None
     if not message:
         return JSONResponse(content={"ok": False, "error": "메시지가 비어 있음"})
-    return JSONResponse(content=run_chat(role, message, session_id))
+    result = await run_in_threadpool(run_chat, role, message, session_id)
+    return JSONResponse(content=result)
 
 
 # ── 딸깍 스튜디오 ─────────────────────────────────────────
@@ -242,6 +245,9 @@ def studio_gallery():
 @app.post("/studio/generate")
 def studio_generate(date: str):
     def event_stream():
+        if generate_briefing is None:
+            yield 'data: {"type": "error", "message": "studio_pipeline 없음"}\n\n'
+            return
         for ev in generate_briefing(date):
             yield f"data: {json.dumps(ev, ensure_ascii=False)}\n\n"
     return StreamingResponse(event_stream(), media_type="text/event-stream")
@@ -250,8 +256,10 @@ def studio_generate(date: str):
 @app.get("/studio/file")
 def studio_file(path: str):
     # out/studio 내부만 허용 (경로 탈출 차단)
-    full = os.path.abspath(path)
-    if not full.startswith(os.path.abspath(STUDIO_DIR)):
+    base = os.path.abspath(STUDIO_DIR)
+    full = os.path.abspath(os.path.join(base, path))
+    # out/studio 내부만 허용 (형제 디렉토리 studio_evil 우회 차단)
+    if not (full == base or full.startswith(base + os.sep)):
         return JSONResponse(content={"error": "허용되지 않은 경로"}, status_code=403)
     if not os.path.exists(full):
         return JSONResponse(content={"error": "없음"}, status_code=404)
