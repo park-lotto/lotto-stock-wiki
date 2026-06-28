@@ -12,7 +12,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 
 try:
     from fastapi import FastAPI, Request
-    from fastapi.responses import HTMLResponse, JSONResponse
+    from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse, FileResponse
     import uvicorn
 except ImportError:
     print("의존성 설치 필요:  pip install fastapi uvicorn")
@@ -23,6 +23,13 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SIGNAL_DIR = os.path.join(ROOT, "output", "signal")
 OUT_DIR = os.path.join(ROOT, "out")
 AGENTS_DIR = os.path.join(HERE, "agents")
+STUDIO_DIR = os.path.join(ROOT, "out", "studio")
+
+sys.path.insert(0, os.path.join(ROOT, "scripts"))
+try:
+    from studio_pipeline import generate_briefing  # noqa: E402
+except ImportError:
+    generate_briefing = None  # type: ignore
 
 # claude CLI 위치 (PATH 우선, 없으면 알려진 경로)
 CLAUDE_BIN = shutil.which("claude") or r"C:\Users\TheRose\.local\bin\claude.exe"
@@ -211,6 +218,44 @@ async def api_chat(req: Request):
     if not message:
         return JSONResponse(content={"ok": False, "error": "메시지가 비어 있음"})
     return JSONResponse(content=run_chat(role, message, session_id))
+
+
+# ── 딸깍 스튜디오 ─────────────────────────────────────────
+@app.get("/studio", response_class=HTMLResponse)
+def studio_page():
+    p = os.path.join(HERE, "studio.html")
+    if not os.path.exists(p):
+        return "<h1>studio.html 준비중</h1>"
+    with open(p, encoding="utf-8") as f:
+        return f.read()
+
+
+@app.get("/studio/gallery")
+def studio_gallery():
+    p = os.path.join(STUDIO_DIR, "index.json")
+    if not os.path.exists(p):
+        return JSONResponse(content=[])
+    with open(p, encoding="utf-8") as f:
+        return JSONResponse(content=json.load(f))
+
+
+@app.post("/studio/generate")
+def studio_generate(date: str):
+    def event_stream():
+        for ev in generate_briefing(date):
+            yield f"data: {json.dumps(ev, ensure_ascii=False)}\n\n"
+    return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+
+@app.get("/studio/file")
+def studio_file(path: str):
+    # out/studio 내부만 허용 (경로 탈출 차단)
+    full = os.path.abspath(path)
+    if not full.startswith(os.path.abspath(STUDIO_DIR)):
+        return JSONResponse(content={"error": "허용되지 않은 경로"}, status_code=403)
+    if not os.path.exists(full):
+        return JSONResponse(content={"error": "없음"}, status_code=404)
+    return FileResponse(full)
 
 
 if __name__ == "__main__":
