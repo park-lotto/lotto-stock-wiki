@@ -1,1 +1,7 @@
-{"custom_tiles": [], "extra_stocks": {}, "hidden_sectors": []}
+{
+  "custom_tiles": [],
+  "extra_stocks": {},
+  "hidden_sectors": [
+    "반도체 전공정"
+  ]
+}
