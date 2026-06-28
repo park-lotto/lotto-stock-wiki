@@ -1,4 +1,5 @@
 """브리핑 카드 HTML 합성 — 다크+골드, Instrument Serif, 캡처요소 .card(420px)."""
+import html
 from pathlib import Path
 
 GOLD = "#d4af37"
@@ -7,10 +8,12 @@ BG   = "#1a1a1e"
 
 def render_briefing_card(data: dict, hero_path: Path) -> str:
     hero_uri = Path(hero_path).as_uri()
-    sectors = " · ".join(data.get("lead_sectors", [])[:3])
+    sectors = " · ".join(html.escape(s) for s in data.get("lead_sectors", [])[:3])
     lines_html = "".join(
-        f'<li>{ln}</li>' for ln in data.get("lines", [])[:5]
+        f'<li>{html.escape(ln)}</li>' for ln in data.get("lines", [])[:5]
     )
+    date_s = html.escape(data.get('date', ''))
+    headline_s = html.escape(data.get('headline', ''))
     return f"""<!doctype html><html lang="ko"><head><meta charset="utf-8">
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -32,8 +35,8 @@ def render_briefing_card(data: dict, hero_path: Path) -> str:
   <div class="card">
     <img class="hero" src="{hero_uri}" alt="">
     <div class="body">
-      <div class="date">{data.get('date','')}  ·  아침 브리핑</div>
-      <div class="headline">{data.get('headline','')}</div>
+      <div class="date">{date_s}  ·  아침 브리핑</div>
+      <div class="headline">{headline_s}</div>
       <div class="sectors">주도 섹터 — {sectors}</div>
       <ul>{lines_html}</ul>
       <div class="foot">로또의 주식 · STOCK BRAIN</div>
