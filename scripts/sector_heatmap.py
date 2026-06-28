@@ -382,6 +382,34 @@ def build_heatmap_tab(tab_id: str) -> dict:
             "stocks": list(ht["stocks"]),
         })
 
+    # ── 커스텀 오버레이 (sector_custom.json) ─────────────────
+    _custom = _load_sector_custom()
+    _hidden_set = set(_custom.get("hidden_sectors", []))
+    _extra_map = _custom.get("extra_stocks", {})      # {타일명: [{name, code}]}
+    _custom_tile_conf = _custom.get("custom_tiles", [])
+
+    tiles_raw = [t for t in tiles_raw if t["name"] not in _hidden_set]
+
+    for _tile in tiles_raw:
+        _existing_codes = {s["code"] for s in _tile["stocks"]}
+        for _es in _extra_map.get(_tile["name"], []):
+            _c = _es.get("code", "")
+            if _c and _c not in _existing_codes:
+                _tile["stocks"].append({"name": _es.get("name", _c), "code": _c})
+                _existing_codes.add(_c)
+
+    _existing_tile_names = {t["name"] for t in tiles_raw}
+    for _ct in _custom_tile_conf:
+        _ct_name = _ct.get("name", "")
+        if _ct_name and _ct_name not in _existing_tile_names:
+            tiles_raw.append({
+                "name": _ct_name,
+                "parent": _ct.get("parent", "커스텀"),
+                "stocks": [{"name": s.get("name", ""), "code": s.get("code", "")}
+                           for s in _ct.get("stocks", []) if s.get("code")],
+            })
+    # ─────────────────────────────────────────────────────────
+
     # 병렬 가격 조회
     all_codes = list({s["code"] for t in tiles_raw for s in t["stocks"]})
     prices = kis_api.get_prices_batch_parallel(all_codes)
@@ -422,13 +450,25 @@ def build_heatmap(top_n: int = 3) -> dict:
     sys.path.insert(0, str(ROOT / "scripts"))
     import kis_api
 
+    # 커스텀 오버레이 로드
+    custom = _load_sector_custom()
+    hidden_set = set(custom.get("hidden_sectors", []))
+    extra_map = custom.get("extra_stocks", {})       # {섹터명: [{name, code}]}
+    custom_tile_conf = custom.get("custom_tiles", [])
+
     sections = parse_watchlist(top_n)
 
-    codes = list({s["code"] for sec in sections for s in sec["stocks"]})
+    # 기본 + extra + custom 코드 일괄 수집 → 단일 배치 조회
+    base_codes = {s["code"] for sec in sections for s in sec["stocks"]}
+    extra_codes = {s["code"] for lst in extra_map.values() for s in lst if s.get("code")}
+    ct_codes = {s["code"] for ct in custom_tile_conf for s in ct.get("stocks", []) if s.get("code")}
+    codes = list(base_codes | extra_codes | ct_codes)
     prices = kis_api.get_prices_batch_parallel(codes)
 
     sectors = []
     for sec in sections:
+        if sec["sector"] in hidden_set:
+            continue
         items, rates = [], []
         for s in sec["stocks"]:
             p = prices.get(s["code"]) or {}
@@ -436,8 +476,39 @@ def build_heatmap(top_n: int = 3) -> dict:
             items.append({"name": s["name"], "code": s["code"],
                           "change_rate": rate, "price": p.get("price", 0)})
             rates.append(rate)
+        # extra_stocks 추가
+        existing_codes = {s["code"] for s in items}
+        for es in extra_map.get(sec["sector"], []):
+            c = es.get("code", "")
+            if c and c not in existing_codes:
+                p = prices.get(c) or {}
+                rate = float(p.get("change_rate", 0) or 0)
+                items.append({"name": es.get("name", c), "code": c,
+                              "change_rate": rate, "price": p.get("price", 0)})
+                existing_codes.add(c)
+                rates.append(rate)
         avg = round(sum(rates) / len(rates), 2) if rates else 0
         sectors.append({"name": sec["sector"], "avg_rate": avg, "stocks": items})
+
+    # 커스텀 타일 추가
+    existing_names = {s["name"] for s in sectors}
+    for ct in custom_tile_conf:
+        ct_name = ct.get("name", "")
+        if not ct_name or ct_name in existing_names:
+            continue
+        ct_items, ct_rates = [], []
+        for s in ct.get("stocks", []):
+            c = s.get("code", "")
+            if not c:
+                continue
+            p = prices.get(c) or {}
+            rate = float(p.get("change_rate", 0) or 0)
+            ct_items.append({"name": s.get("name", c), "code": c,
+                             "change_rate": rate, "price": p.get("price", 0)})
+            ct_rates.append(rate)
+        avg = round(sum(ct_rates) / len(ct_rates), 2) if ct_rates else 0
+        sectors.append({"name": ct_name, "avg_rate": avg,
+                        "stocks": ct_items, "parent": ct.get("parent", "커스텀")})
 
     sectors.sort(key=lambda x: x["avg_rate"], reverse=True)
 

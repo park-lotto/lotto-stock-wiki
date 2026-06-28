@@ -795,6 +795,58 @@ def api_heatmap_refresh():
     return api_heatmap()
 
 
+# ── 섹터 커스텀 편집 ──────────────────────────────────────
+SECTOR_CUSTOM_PATH = os.path.join(ROOT, "pipeline", "sector_custom.json")
+KRX_CODES_PATH     = os.path.join(ATOMS_DIR, "krx_codes.json")
+
+
+@app.get("/api/sector_custom")
+def api_sector_custom_get():
+    if os.path.exists(SECTOR_CUSTOM_PATH):
+        try:
+            with open(SECTOR_CUSTOM_PATH, encoding="utf-8") as f:
+                return JSONResponse(content=json.load(f))
+        except Exception:
+            pass
+    return JSONResponse(content={"custom_tiles": [], "extra_stocks": {}, "hidden_sectors": []})
+
+
+@app.post("/api/sector_custom")
+async def api_sector_custom_post(req: Request):
+    data = await req.json()
+    with open(SECTOR_CUSTOM_PATH, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    _heatmap_cache.clear()   # 모든 캐시 무효화
+    return JSONResponse(content={"ok": True})
+
+
+@app.get("/api/stock_search")
+def api_stock_search(q: str = ""):
+    if not q.strip():
+        return JSONResponse(content=[])
+    try:
+        with open(KRX_CODES_PATH, encoding="utf-8") as f:
+            codes_data = json.load(f)
+        codes = codes_data.get("codes", {})
+        q_l = q.strip().lower()
+        results = [{"name": n, "code": c} for n, c in codes.items()
+                   if q_l in n.lower()][:20]
+        return JSONResponse(content=results)
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+
+@app.get("/api/sector_names")
+def api_sector_names():
+    """섹터 이름 목록 (가격 조회 없음, 빠름). 편집 탭 초기화용."""
+    try:
+        from sector_heatmap import parse_watchlist  # noqa: E402
+        sections = parse_watchlist(top_n=1)
+        return JSONResponse(content=[s["sector"] for s in sections])
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+
 # ── 딸깍 스튜디오 ─────────────────────────────────────────
 @app.get("/studio", response_class=HTMLResponse)
 def studio_page():
