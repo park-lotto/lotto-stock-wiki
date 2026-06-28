@@ -71,6 +71,7 @@
     border:1px solid var(--gold-dim); display:flex; align-items:center; justify-content:center; font-size:3.4rem;
     overflow:hidden; transition:box-shadow .2s; }
   .avatar .face { display:inline-block; animation:idle 3s ease-in-out infinite; }
+  .avatar img.face { width:96px; height:96px; object-fit:contain; border-radius:12px; }
   /* 평소: 천천히 둥실 */
   @keyframes idle { 0%,100%{ transform:translateY(0) rotate(0); } 50%{ transform:translateY(-6px) rotate(-2deg); } }
   /* 답할 때: 빠르게 들썩 + 테두리 빛남 */
@@ -228,7 +229,7 @@ function loadAgent() {
   document.getElementById('main').innerHTML =
     '<div class="chat-wrap">'
     + '  <div class="chat-side">'
-    + '    <div class="avatar" id="avatar"><span class="face">🧑‍💼</span></div>'
+    + '    <div class="avatar" id="avatar"><img class="face" src="/assets/시황부장.png" alt="시황부장" onerror="faceError(this)"></div>'
     + '    <div class="avatar-name">시황부장</div>'
     + '    <div class="avatar-role">스탁브레인 주식시황팀</div>'
     + '  </div>'
@@ -263,6 +264,14 @@ function addBubble(cls, html) {
 function setAvatarTalking(on) {
   const a = document.getElementById('avatar');
   if (a) a.classList.toggle('talking', on);
+}
+
+// 캐릭터 그림(/assets/시황부장.png)이 없으면 이모지로 대체
+function faceError(img) {
+  const s = document.createElement('span');
+  s.className = 'face';
+  s.textContent = '🧑‍💼';
+  img.replaceWith(s);
 }
 
 async function sendChat() {

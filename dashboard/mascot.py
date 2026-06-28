@@ -88,7 +88,22 @@ root.geometry(f"{W}x{H}+{sw - W - 50}+{sh - H - 100}")
 tk.Label(root, text="스탁브레인 시황부장", fg=GOLD, bg=BG,
          font=("Malgun Gothic", 11, "bold")).pack(pady=(16, 4))
 
-face_lbl = tk.Label(root, text=FACE, bg=BG, font=("Segoe UI Emoji", 60))
+# 캐릭터: assets/시황부장.png 있으면 그림, 없으면 이모지
+_img = None
+_png = os.path.join(ROOT, "dashboard", "assets", "시황부장.png")
+if os.path.exists(_png):
+    try:
+        _img = tk.PhotoImage(file=_png)
+        # 너무 크면 축소 (대략 130px 목표)
+        while _img.width() > 150:
+            _img = _img.subsample(2, 2)
+    except Exception:
+        _img = None
+if _img is not None:
+    face_lbl = tk.Label(root, image=_img, bg=BG)
+    face_lbl.image = _img  # GC 방지
+else:
+    face_lbl = tk.Label(root, text=FACE, bg=BG, font=("Segoe UI Emoji", 60))
 face_lbl.pack(pady=4)
 
 open_btn = tk.Button(root, text="💬 대화 열기", command=open_dashboard,

@@ -74,3 +74,6 @@ pipeline/atoms/krx_industry.json
 pipeline/atoms/stock_sector_review.md
 sync_crawl.log
 pipeline/atoms/staging/
+
+# 딸깍 스튜디오 런타임 산출물
+out/studio/
