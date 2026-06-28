@@ -1,5 +1,4 @@
 """브리핑 데이터 확보 — daily_scenario 산출물(out/scenario_{date}.md)을 파싱해 dict로."""
-import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent

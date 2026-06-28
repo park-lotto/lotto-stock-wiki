@@ -24,12 +24,13 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SIGNAL_DIR = os.path.join(ROOT, "output", "signal")
 OUT_DIR = os.path.join(ROOT, "out")
 AGENTS_DIR = os.path.join(HERE, "agents")
+ASSETS_DIR = os.path.join(HERE, "assets")
 STUDIO_DIR = os.path.join(ROOT, "out", "studio")
 
 sys.path.insert(0, os.path.join(ROOT, "scripts"))
 try:
     from studio_pipeline import generate_briefing  # noqa: E402
-except ImportError:
+except (ImportError, SystemExit):
     generate_briefing = None  # type: ignore
 
 # claude CLI 위치 (PATH 우선, 없으면 알려진 경로)
@@ -115,6 +116,15 @@ def api_intraday():
 @app.get("/api/close")
 def api_close():
     return JSONResponse(content={"status": "준비중", "message": "3단계: 마감 정리 예정"})
+
+
+@app.get("/assets/{fname}")
+def asset(fname: str):
+    """캐릭터 그림 등 정적 파일 제공. 없으면 404 → 프론트는 이모지로 대체."""
+    p = os.path.normpath(os.path.join(ASSETS_DIR, fname))
+    if p.startswith(ASSETS_DIR) and os.path.exists(p):
+        return FileResponse(p)
+    return JSONResponse(content={"error": "not found"}, status_code=404)
 
 
 # ── 에이전트 (claude CLI 헤드리스) ─────────────────────────
