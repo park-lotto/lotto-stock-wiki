@@ -5,7 +5,7 @@
 실행:  python dashboard/server.py
 접속:  http://localhost:8090
 """
-import os, sys, json, glob, re, shutil, subprocess
+import os, sys, json, glob, re, shutil, subprocess, uuid
 from datetime import datetime
 
 sys.stdout.reconfigure(encoding="utf-8")
@@ -154,6 +154,63 @@ async def api_agent(req: Request):
     role = body.get("role", "시황부장")
     request_text = body.get("request") or "오늘 자 시황 브리핑 초안을 작성해줘."
     return JSONResponse(content=run_agent(role, request_text))
+
+
+def run_chat(role: str, message: str, session_id: str | None) -> dict:
+    """멀티턴 대화. 첫 턴이면 역할지침+세션생성, 이후엔 --resume 으로 기억 이어감."""
+    if not (CLAUDE_BIN and os.path.exists(CLAUDE_BIN)):
+        return {"ok": False, "error": f"claude 실행파일을 찾을 수 없음: {CLAUDE_BIN}"}
+
+    if session_id:
+        # 기존 대화 이어가기 (역할은 이미 세션 안에 있음)
+        prompt = message
+        cmd = [CLAUDE_BIN, "-p", prompt, "--resume", session_id,
+               "--permission-mode", "bypassPermissions"]
+    else:
+        # 첫 턴: 새 세션 + 역할지침 주입
+        role_path = os.path.join(AGENTS_DIR, role + ".md")
+        if not os.path.exists(role_path):
+            return {"ok": False, "error": f"역할 파일 없음: {role}.md"}
+        with open(role_path, encoding="utf-8") as f:
+            role_prompt = f.read()
+        session_id = str(uuid.uuid4())
+        prompt = role_prompt + "\n\n---\n## 사용자 메시지\n" + message
+        cmd = [CLAUDE_BIN, "-p", prompt, "--session-id", session_id,
+               "--permission-mode", "bypassPermissions"]
+
+    started = datetime.now()
+    try:
+        proc = subprocess.run(
+            cmd, cwd=ROOT, capture_output=True,
+            encoding="utf-8", errors="replace", timeout=AGENT_TIMEOUT,
+        )
+    except subprocess.TimeoutExpired:
+        return {"ok": False, "error": f"시간 초과 ({AGENT_TIMEOUT}초).", "session_id": session_id}
+    except Exception as e:
+        return {"ok": False, "error": f"실행 오류: {e}", "session_id": session_id}
+
+    out = (proc.stdout or "").strip()
+    if proc.returncode != 0 and not out:
+        return {"ok": False, "error": (proc.stderr or "알 수 없는 오류").strip()[:800],
+                "session_id": session_id}
+
+    elapsed = round((datetime.now() - started).total_seconds(), 1)
+    return {"ok": True, "reply": out, "session_id": session_id, "elapsed": elapsed}
+
+
+@app.post("/api/chat")
+async def api_chat(req: Request):
+    body = {}
+    try:
+        body = await req.json()
+    except Exception:
+        pass
+    role = body.get("role", "시황부장")
+    message = (body.get("message") or "").strip()
+    session_id = body.get("session_id") or None
+    if not message:
+        return JSONResponse(content={"ok": False, "error": "메시지가 비어 있음"})
+    return JSONResponse(content=run_chat(role, message, session_id))
 
 
 if __name__ == "__main__":

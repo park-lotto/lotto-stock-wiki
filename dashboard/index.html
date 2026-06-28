@@ -64,6 +64,36 @@
   .stale { color:#e0b13d; font-size:.74rem; }
   .placeholder { text-align:center; padding:70px 20px; color:var(--muted); }
   .placeholder .big { font-size:2.4rem; margin-bottom:14px; }
+  /* ── 채팅창 ── */
+  .chat-wrap { display:flex; gap:18px; align-items:flex-start; }
+  .chat-side { width:130px; flex-shrink:0; text-align:center; position:sticky; top:16px; }
+  .avatar { width:110px; height:110px; margin:0 auto; border-radius:18px; background:linear-gradient(160deg,#1f1f25,#101014);
+    border:1px solid var(--gold-dim); display:flex; align-items:center; justify-content:center; font-size:3.4rem; }
+  .avatar .face { display:inline-block; }
+  .avatar-name { margin-top:10px; font-size:.82rem; font-weight:700; color:var(--gold); }
+  .avatar-role { font-size:.68rem; color:var(--muted); margin-top:2px; }
+  .chat-main { flex:1; min-width:0; }
+  .chat-msgs { display:flex; flex-direction:column; gap:12px; min-height:200px; max-height:60vh; overflow-y:auto;
+    padding:6px 4px 14px; }
+  .bubble { max-width:82%; padding:11px 15px; border-radius:14px; font-size:.88rem; line-height:1.6; white-space:pre-wrap; word-break:break-word; }
+  .bubble.user { align-self:flex-end; background:var(--gold-dim); color:#0a0a0a; border-bottom-right-radius:4px; }
+  .bubble.bot { align-self:flex-start; background:var(--card); border:1px solid var(--line); border-bottom-left-radius:4px; color:#dcdad4; }
+  .bubble.bot h3 { color:var(--gold); font-size:.98rem; margin:10px 0 6px; }
+  .bubble.bot ul { margin:6px 0 6px 18px; } .bubble.bot li { margin:2px 0; }
+  .bubble.bot strong { color:var(--txt); }
+  .bubble.sys { align-self:center; background:transparent; color:var(--muted); font-size:.76rem; }
+  .bubble.err { align-self:flex-start; background:#2a0d0d; border:1px solid #5c1a1a; color:#e88; font-size:.82rem; }
+  .chat-input { display:flex; gap:10px; margin-top:8px; }
+  .chat-input textarea { flex:1; resize:none; height:50px; background:#1a1a20; color:var(--txt); border:1px solid var(--line);
+    border-radius:12px; padding:13px 15px; font-family:inherit; font-size:.9rem; }
+  .chat-input textarea:focus { outline:none; border-color:var(--gold-dim); }
+  .chat-input button { padding:0 22px; background:var(--gold); color:#0a0a0a; border:none; border-radius:12px; font-weight:700;
+    cursor:pointer; font-size:.9rem; }
+  .chat-input button:disabled { background:#3a3a3a; color:#777; cursor:not-allowed; }
+  .typing { display:inline-flex; gap:4px; }
+  .typing i { width:7px; height:7px; border-radius:50%; background:var(--gold-dim); animation:blink 1s infinite; }
+  .typing i:nth-child(2){ animation-delay:.2s; } .typing i:nth-child(3){ animation-delay:.4s; }
+  @keyframes blink { 0%,60%,100%{opacity:.25;} 30%{opacity:1;} }
 </style>
 </head>
 <body>
@@ -182,30 +212,95 @@ function renderMorning(d) {
   return html;
 }
 
-async function loadAgent() {
+let CHAT_SESSION = null;
+let CHAT_BUSY = false;
+
+function loadAgent() {
   setActive('b-agent');
-  const main = document.getElementById('main');
-  const req = prompt('시황부장에게 시킬 일 (비우면 기본: 오늘 시황 브리핑 초안)', '오늘 자 시황 브리핑 초안을 작성해줘.');
-  if (req === null) return; // 취소
+  CHAT_SESSION = null;
+  document.getElementById('main').innerHTML =
+    '<div class="chat-wrap">'
+    + '  <div class="chat-side">'
+    + '    <div class="avatar" id="avatar"><span class="face">🧑‍💼</span></div>'
+    + '    <div class="avatar-name">시황부장</div>'
+    + '    <div class="avatar-role">스탁브레인 주식시황팀</div>'
+    + '  </div>'
+    + '  <div class="chat-main">'
+    + '    <div class="chat-msgs" id="msgs">'
+    + '      <div class="bubble bot">안녕하세요, 시황팀 부장입니다. 오늘 시장 뭐부터 볼까요? '
+    + '예: "오늘 시황 브리핑 써줘", "반도체 지금 어때?"</div>'
+    + '    </div>'
+    + '    <div class="chat-input">'
+    + '      <textarea id="chatbox" placeholder="부장에게 물어보세요…  (Enter 전송 / Shift+Enter 줄바꿈)"></textarea>'
+    + '      <button id="sendbtn" onclick="sendChat()">보내기</button>'
+    + '    </div>'
+    + '  </div>'
+    + '</div>';
+  const box = document.getElementById('chatbox');
+  box.focus();
+  box.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+  });
+}
+
+function addBubble(cls, html) {
+  const msgs = document.getElementById('msgs');
+  const div = document.createElement('div');
+  div.className = 'bubble ' + cls;
+  div.innerHTML = html;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+function setAvatarTalking(on) {
+  const a = document.getElementById('avatar');
+  if (a) a.classList.toggle('talking', on);
+}
+
+async function sendChat() {
+  if (CHAT_BUSY) return;
+  const box = document.getElementById('chatbox');
+  const msg = box.value.trim();
+  if (!msg) return;
+  box.value = '';
+  CHAT_BUSY = true;
+  document.getElementById('sendbtn').disabled = true;
+  setAvatarTalking(true);
+
+  addBubble('user', msg.replace(/</g,'&lt;'));
   const t0 = Date.now();
-  let secs = 0;
-  main.innerHTML = '<div class="loading">🧑‍💼 시황부장이 위키·데이터 분석 중… <span id="tick">0초</span><br><span style="font-size:.78rem">(보통 30초~3분 걸립니다)</span></div>';
-  const timer = setInterval(() => { secs = Math.round((Date.now()-t0)/1000); const el=document.getElementById('tick'); if(el) el.textContent = secs+'초'; }, 1000);
+  const thinking = addBubble('bot', '<span class="typing"><i></i><i></i><i></i></span> <span id="tk" style="color:var(--muted);font-size:.76rem"></span>');
+  const timer = setInterval(() => {
+    const el = document.getElementById('tk');
+    if (el) el.textContent = Math.round((Date.now()-t0)/1000) + '초';
+  }, 1000);
+
   try {
-    const d = await (await fetch('/api/agent', {
+    const d = await (await fetch('/api/chat', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ role:'시황부장', request: req || undefined })
+      body: JSON.stringify({ role:'시황부장', message: msg, session_id: CHAT_SESSION })
     })).json();
     clearInterval(timer);
+    if (d.session_id) CHAT_SESSION = d.session_id;
     if (!d.ok) {
-      main.innerHTML = '<div class="section"><h2>시황부장 · 오류</h2><pre style="white-space:pre-wrap;color:#e05050;font-size:.82rem">' + (d.error||'알 수 없는 오류') + '</pre></div>';
-      return;
+      thinking.className = 'bubble err';
+      thinking.innerHTML = '⚠ ' + (d.error || '알 수 없는 오류');
+    } else {
+      thinking.className = 'bubble bot';
+      thinking.innerHTML = marked.parse(d.reply || '(빈 응답)')
+        + '<div style="color:var(--muted);font-size:.68rem;margin-top:6px">' + (d.elapsed||'?') + '초</div>';
     }
-    main.innerHTML = '<div class="section"><h2>🧑‍💼 시황부장 브리핑 · ' + (d.ran_at||'') + ' · ' + (d.elapsed||'?') + '초</h2>'
-      + '<div class="briefing-body">' + marked.parse(d.result||'') + '</div></div>';
   } catch (e) {
     clearInterval(timer);
-    main.innerHTML = '<div class="loading">오류: ' + e + '</div>';
+    thinking.className = 'bubble err';
+    thinking.innerHTML = '⚠ 통신 오류: ' + e;
+  } finally {
+    CHAT_BUSY = false;
+    const sb = document.getElementById('sendbtn');
+    if (sb) sb.disabled = false;
+    setAvatarTalking(false);
+    document.getElementById('msgs').scrollTop = document.getElementById('msgs').scrollHeight;
   }
 }
 
