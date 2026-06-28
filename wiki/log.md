@@ -1242,3 +1242,10 @@ python calc_oscillator.py SK하이닉스 삼성전자 한미반도체 --tg
 - 상세 핸드오프: docs/HANDOFF_대시보드_2026-06-22.md / 주의: 서버에 개발자 동시작업
 
 2026-06-23 저녁 | 텔레 종합 토큰폭발(420k) 원인규명: raw 444KB를 Opus메인이 직접 추출=범인. 해결=수신워커(Gemini/Haiku 격리). NEXT_SESSION에 집작업 todo 남김(0.SK하이닉스 양면반영).
+
+##  — 딸깍 스튜디오 완성
+- 버튼 하나로 아침 브리핑 카드 자동생성: 데이터→Gemini 히로이미지(폴백 그라데이션)→카드렌더→PNG→텔레전송, SSE 5단계 애니메이션 UI(트렌디 다크+골드)
+- dashboard/server.py에 /studio 라우트 + scripts/{studio_data,gemini_image,card_render,studio_pipeline}.py, dashboard/studio.html
+- 서브에이전트 TDD 7태스크 전부 통과(17 tests), 최종 opus 리뷰 READY TO MERGE, main 머지·push 완료
+- 라이브 검증: 5단계 완주+텔레 전송 성공. Gemini 이미지는 429 쿼터소진→폴백 정상작동(예비키 GEMINI_API_KEY_2 자동전환은 후속)
+- 접속: python dashboard/server.py → http://localhost:8090/studio
