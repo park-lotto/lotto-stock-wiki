@@ -1,0 +1,107 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>딸깍 스튜디오</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --gold:#d4af37; --bg:#0e0e11; --panel:#17171c; --line:#26262e; }
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Noto Sans KR',sans-serif;}
+  body{background:#000;color:#eee;height:100vh;display:flex;align-items:center;justify-content:center;}
+  .win{width:1120px;height:680px;background:var(--bg);border-radius:18px;overflow:hidden;
+       box-shadow:0 30px 80px rgba(0,0,0,.6);display:flex;flex-direction:column;}
+  .bar{height:44px;background:#121216;display:flex;align-items:center;gap:8px;padding:0 16px;border-bottom:1px solid var(--line);}
+  .dot{width:12px;height:12px;border-radius:50%;}
+  .r{background:#ff5f56;}.y{background:#ffbd2e;}.g{background:#27c93f;}
+  .title{margin-left:12px;font-size:13px;color:#aaa;}
+  .main{flex:1;display:flex;}
+  .left{width:380px;border-right:1px solid var(--line);padding:22px;overflow:auto;}
+  .left h2{font-size:14px;color:var(--gold);letter-spacing:1px;margin-bottom:16px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .thumb{background:var(--panel);border-radius:12px;overflow:hidden;cursor:pointer;
+         transition:transform .2s, box-shadow .2s;}
+  .thumb:hover{transform:translateY(-4px);box-shadow:0 10px 24px rgba(0,0,0,.5);}
+  .thumb img{width:100%;display:block;}
+  .thumb .cap{padding:8px 10px;font-size:11px;color:#999;}
+  .thumb.new{animation:drop .5s ease;}
+  @keyframes drop{from{opacity:0;transform:translateY(-24px);}to{opacity:1;transform:none;}}
+  .right{flex:1;padding:30px;display:flex;flex-direction:column;}
+  .preview{flex:1;display:flex;align-items:center;justify-content:center;background:var(--panel);
+           border-radius:16px;overflow:hidden;}
+  .preview img{max-height:100%;border-radius:12px;}
+  .preview .empty{color:#555;font-family:'Instrument Serif',serif;font-size:24px;}
+  .steps{margin:20px 0;}
+  .step{display:flex;align-items:center;gap:12px;padding:8px 0;color:#777;font-size:15px;}
+  .step .ic{width:22px;height:22px;border-radius:50%;border:2px solid #333;display:flex;
+            align-items:center;justify-content:center;font-size:12px;}
+  .step.running{color:#fff;}.step.running .ic{border-color:var(--gold);color:var(--gold);}
+  .step.done{color:#ddd;}.step.done .ic{background:var(--gold);border-color:var(--gold);color:#000;}
+  .step.error{color:#ff6b6b;}.step.error .ic{border-color:#ff6b6b;color:#ff6b6b;}
+  .btn{padding:16px;border:none;border-radius:14px;background:var(--gold);color:#000;
+       font-size:17px;font-weight:700;cursor:pointer;transition:filter .15s;}
+  .btn:hover{filter:brightness(1.08);}.btn:disabled{opacity:.5;cursor:wait;}
+</style></head>
+<body>
+<div class="win">
+  <div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+    <span class="title">딸깍 스튜디오 — STOCK BRAIN</span></div>
+  <div class="main">
+    <div class="left"><h2>🎬 작업목록</h2><div class="grid" id="gallery"></div></div>
+    <div class="right">
+      <div class="preview" id="preview"><span class="empty">딸깍 한 번이면 끝</span></div>
+      <div class="steps" id="steps">
+        <div class="step" data-id="1"><span class="ic">1</span>수급·시황 데이터 수집</div>
+        <div class="step" data-id="2"><span class="ic">2</span>AI 히로이미지 생성</div>
+        <div class="step" data-id="3"><span class="ic">3</span>카드 디자인 렌더링</div>
+        <div class="step" data-id="4"><span class="ic">4</span>이미지 추출(PNG)</div>
+        <div class="step" data-id="5"><span class="ic">5</span>텔레그램 채널 전송</div>
+      </div>
+      <button class="btn" id="go">🟡 딸깍 생성</button>
+    </div>
+  </div>
+</div>
+<script>
+const TODAY = new Date().toISOString().slice(0,10);
+const fileUrl = p => "/studio/file?path=" + encodeURIComponent(p);
+
+async function loadGallery(highlightFirst=false){
+  const res = await fetch("/studio/gallery"); const items = await res.json();
+  const g = document.getElementById("gallery"); g.innerHTML = "";
+  items.forEach((it,i) => {
+    const d = document.createElement("div");
+    d.className = "thumb" + (highlightFirst && i===0 ? " new":"");
+    d.innerHTML = `<img src="${fileUrl(it.thumb)}"><div class="cap">${it.date} · ${it.sent_tg?"전송✓":"저장"}</div>`;
+    d.onclick = () => document.getElementById("preview").innerHTML = `<img src="${fileUrl(it.png)}">`;
+    g.appendChild(d);
+  });
+  if(items[0]) document.getElementById("preview").innerHTML = `<img src="${fileUrl(items[0].png)}">`;
+}
+
+function setStep(id,status){
+  const el = document.querySelector(`.step[data-id="${id}"]`);
+  if(!el) return; el.classList.remove("running","done","error"); el.classList.add(status);
+  if(status==="done") el.querySelector(".ic").textContent="✓";
+}
+
+document.getElementById("go").onclick = async () => {
+  const btn = document.getElementById("go"); btn.disabled = true;
+  document.querySelectorAll(".step").forEach(s=>{s.classList.remove("running","done","error");
+    s.querySelector(".ic").textContent=s.dataset.id;});
+  const resp = await fetch("/studio/generate?date="+TODAY, {method:"POST"});
+  const reader = resp.body.getReader(); const dec = new TextDecoder(); let buf="";
+  while(true){
+    const {value,done} = await reader.read(); if(done) break;
+    buf += dec.decode(value,{stream:true});
+    let idx;
+    while((idx = buf.indexOf("\n\n")) >= 0){
+      const line = buf.slice(0,idx).trim(); buf = buf.slice(idx+2);
+      if(!line.startsWith("data:")) continue;
+      const ev = JSON.parse(line.slice(5).trim());
+      if(ev.type==="step") setStep(ev.id, ev.status);
+      else if(ev.type==="done") await loadGallery(true);
+      else if(ev.type==="error") alert("오류: "+ev.message);
+    }
+  }
+  btn.disabled = false;
+};
+loadGallery();
+</script>
+</body></html>
