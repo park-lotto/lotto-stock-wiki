@@ -14,6 +14,11 @@ def test_pipeline_emits_all_steps_and_done(tmp_path, monkeypatch):
         lambda prompt, out, **k: (Path(out).parent.mkdir(parents=True, exist_ok=True),
                                    Path(out).write_bytes(b"\x89PNG"),
                                    {"ok": True, "path": str(out), "fallback": True})[-1])
+    monkeypatch.setattr(sp.card_render, "render_briefing_card",
+        lambda data, hero: "<html><div class='card'>x</div></html>")
+    monkeypatch.setattr(sp.card_render, "save_card_html",
+        lambda html, p: (__import__("pathlib").Path(p).write_text(html, encoding="utf-8"),
+                         __import__("pathlib").Path(p))[-1])
     monkeypatch.setattr(sp.viz_card, "save_png",
         lambda hp, pp: (Path(pp).write_bytes(b"\x89PNG"), True)[-1])
     monkeypatch.setattr(sp.viz_card, "send_telegram_photo", lambda pp, caption="": True)
@@ -38,9 +43,37 @@ def test_pipeline_partial_success_when_telegram_fails(tmp_path, monkeypatch):
         lambda prompt, out, **k: (Path(out).parent.mkdir(parents=True, exist_ok=True),
                                    Path(out).write_bytes(b"\x89PNG"),
                                    {"ok": True, "fallback": True})[-1])
+    monkeypatch.setattr(sp.card_render, "render_briefing_card",
+        lambda data, hero: "<html><div class='card'>x</div></html>")
+    monkeypatch.setattr(sp.card_render, "save_card_html",
+        lambda html, p: (__import__("pathlib").Path(p).write_text(html, encoding="utf-8"),
+                         __import__("pathlib").Path(p))[-1])
     monkeypatch.setattr(sp.viz_card, "save_png", lambda hp, pp: (Path(pp).write_bytes(b"\x89PNG"), True)[-1])
     monkeypatch.setattr(sp.viz_card, "send_telegram_photo", lambda pp, caption="": False)
     events = list(sp.generate_briefing("2026-06-28"))
     done = events[-1]
     assert done["type"] == "done" and done["sent_tg"] is False  # 부분 성공
     assert Path(done["png"]).exists()
+
+def test_pipeline_png_failure_emits_error_no_done(tmp_path, monkeypatch):
+    studio = tmp_path / "out" / "studio"
+    monkeypatch.setattr(sp, "STUDIO_DIR", studio)
+    monkeypatch.setattr(sp, "IMG_DIR", studio / "img")
+    monkeypatch.setattr(sp.studio_data, "get_briefing_data",
+        lambda d: {"date": d, "headline": "t", "lead_sectors": [], "lines": ["x"]})
+    monkeypatch.setattr(sp.gemini_image, "generate_hero",
+        lambda prompt, out, **k: (__import__("pathlib").Path(out).parent.mkdir(parents=True, exist_ok=True),
+                                  __import__("pathlib").Path(out).write_bytes(b"\x89PNG"),
+                                  {"ok": True, "fallback": True})[-1])
+    monkeypatch.setattr(sp.card_render, "render_briefing_card",
+        lambda data, hero: "<html><div class='card'>x</div></html>")
+    monkeypatch.setattr(sp.card_render, "save_card_html",
+        lambda html, p: (__import__("pathlib").Path(p).write_text(html, encoding="utf-8"),
+                         __import__("pathlib").Path(p))[-1])
+    monkeypatch.setattr(sp.viz_card, "save_png", lambda hp, pp: False)  # PNG 추출 실패
+    events = list(sp.generate_briefing("2026-06-28"))
+    types = [e["type"] for e in events]
+    assert "done" not in types
+    step4_err = next((e for e in events if e.get("id") == 4 and e.get("status") == "error"), None)
+    assert step4_err is not None
+    assert events[-1]["type"] == "error"

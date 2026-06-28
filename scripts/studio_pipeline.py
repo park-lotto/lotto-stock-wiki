@@ -35,9 +35,9 @@ def _step(i, status, msg=""):
 
 
 def generate_briefing(date: str):
-    STUDIO_DIR.mkdir(parents=True, exist_ok=True)
-    IMG_DIR.mkdir(parents=True, exist_ok=True)
     try:
+        STUDIO_DIR.mkdir(parents=True, exist_ok=True)
+        IMG_DIR.mkdir(parents=True, exist_ok=True)
         # ① 데이터
         yield _step(1, "running")
         data = studio_data.get_briefing_data(date)
