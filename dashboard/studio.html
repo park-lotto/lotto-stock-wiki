@@ -61,6 +61,7 @@
 <script>
 const TODAY = new Date().toISOString().slice(0,10);
 const fileUrl = p => "/studio/file?path=" + encodeURIComponent(p);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
 
 async function loadGallery(highlightFirst=false){
   const res = await fetch("/studio/gallery"); const items = await res.json();
@@ -68,7 +69,7 @@ async function loadGallery(highlightFirst=false){
   items.forEach((it,i) => {
     const d = document.createElement("div");
     d.className = "thumb" + (highlightFirst && i===0 ? " new":"");
-    d.innerHTML = `<img src="${fileUrl(it.thumb)}"><div class="cap">${it.date} · ${it.sent_tg?"전송✓":"저장"}</div>`;
+    d.innerHTML = `<img src="${fileUrl(it.thumb)}"><div class="cap">${esc(it.date)} · ${it.sent_tg?"전송✓":"저장"}</div>`;
     d.onclick = () => document.getElementById("preview").innerHTML = `<img src="${fileUrl(it.png)}">`;
     g.appendChild(d);
   });
@@ -83,24 +84,29 @@ function setStep(id,status){
 
 document.getElementById("go").onclick = async () => {
   const btn = document.getElementById("go"); btn.disabled = true;
-  document.querySelectorAll(".step").forEach(s=>{s.classList.remove("running","done","error");
-    s.querySelector(".ic").textContent=s.dataset.id;});
-  const resp = await fetch("/studio/generate?date="+TODAY, {method:"POST"});
-  const reader = resp.body.getReader(); const dec = new TextDecoder(); let buf="";
-  while(true){
-    const {value,done} = await reader.read(); if(done) break;
-    buf += dec.decode(value,{stream:true});
-    let idx;
-    while((idx = buf.indexOf("\n\n")) >= 0){
-      const line = buf.slice(0,idx).trim(); buf = buf.slice(idx+2);
-      if(!line.startsWith("data:")) continue;
-      const ev = JSON.parse(line.slice(5).trim());
-      if(ev.type==="step") setStep(ev.id, ev.status);
-      else if(ev.type==="done") await loadGallery(true);
-      else if(ev.type==="error") alert("오류: "+ev.message);
+  try {
+    document.querySelectorAll(".step").forEach(s=>{s.classList.remove("running","done","error");
+      s.querySelector(".ic").textContent=s.dataset.id;});
+    const resp = await fetch("/studio/generate?date="+TODAY, {method:"POST"});
+    const reader = resp.body.getReader(); const dec = new TextDecoder(); let buf="";
+    while(true){
+      const {value,done} = await reader.read(); if(done) break;
+      buf += dec.decode(value,{stream:true});
+      let idx;
+      while((idx = buf.indexOf("\n\n")) >= 0){
+        const line = buf.slice(0,idx).trim(); buf = buf.slice(idx+2);
+        if(!line.startsWith("data:")) continue;
+        const ev = JSON.parse(line.slice(5).trim());
+        if(ev.type==="step") setStep(ev.id, ev.status);
+        else if(ev.type==="done") await loadGallery(true);
+        else if(ev.type==="error") alert("오류: "+ev.message);
+      }
     }
+  } catch(e) {
+    alert("생성 오류: " + e.message);
+  } finally {
+    btn.disabled = false;
   }
-  btn.disabled = false;
 };
 loadGallery();
 </script>
