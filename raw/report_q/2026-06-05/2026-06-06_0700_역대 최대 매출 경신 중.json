@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-05",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_0700_역대 최대 매출 경신 중.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "박종대",
+    "report_date": "2026년 06월 05일",
+    "stocks": [
+      {
+        "name": "제닉",
+        "code": "123330",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 매출은 전년 동기대비 61% 성장한 396억원, 영업이익은 76억원(YoY 39%, OPM 19.2%)에 이를 전망이다.",
+        "estimate_revision": null,
+        "next_catalyst": "급격한 글로벌 수요 확대, 하이드로겔 전문 ODM 업체로서 높은 기술 진입 장벽, 경쟁업체 대비 우월한 수익 구조",
+        "thesis": [
+          "하이드로겔 마스크의 글로벌 수요가 예상을 뛰어넘으며 수출 실적 증대",
+          "생산 라인 확대를 통한 인건비 부담 완화 및 수율 개선",
+          "국내 하이드로겔 마스크 화장품 ODM 시장 내 높은 기술 진입 장벽 보유"
+        ],
+        "valuation_basis": "현재 주가는 12MF PER 7.1배로, 급격한 글로벌 수요 확대와 하이드로겔 전문 ODM 업체로서 높은 기술 진입 장벽 및 경쟁업체 대비 우월한 수익 구조 등을 감안하면 현저한 저평가 상태",
+        "risk": "1분기 영업이익률이 기대치에 미치지 못했던 점과 같은 수익성 저하 가능성",
+        "supply_comment": "하이드로겔 마스크를 제대로 만들 수 있는 화장품 ODM 업체는 국내에서 5~6개에 불과하며, 가장 높은 수익성으로 가장 많이 만들 수 있는 회사가 제닉이다.",
+        "quote": "현재 주가는 12MF PER 7.1배로 i) 급격한 글로벌 수요 확대와 ii) 하이드로겔 전문 ODM 업 체로서 높은 기술 진입 장벽, iii) 경쟁업체 대비 우월한 수익 구조 등을 감안하면 현저한 저평가 상태다."
+      }
+    ]
+  }
+}

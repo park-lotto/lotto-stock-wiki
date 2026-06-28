@@ -1,0 +1,53 @@
+{
+  "meta": {
+    "date": "2026-05-29",
+    "broker": "Kiwoom",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_1000_0529, Kiwoom Morning Letter.md"
+  },
+  "questionnaire": {
+    "broker": "Kiwoom",
+    "analyst": null,
+    "report_date": "2026-05-29",
+    "target_kind": "market",
+    "market_direction": "Neutral",
+    "macro_vars": [
+      "KOSPI -0.53%",
+      "KOSDAQ -2.54%",
+      "달러/원 1,493.48",
+      "미국 국채(10년) 4.447%",
+      "국제유가 88.90달러"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "Neutral",
+        "reason": "삼성전자와 SK하이닉스 등 반도체 쏠림 우려 속에 차익실현 매물이 출회"
+      }
+    ],
+    "style": "Risk-off",
+    "event_calendar": [
+      {
+        "date": "5.28",
+        "event": "한국 한국 금리 결정"
+      },
+      {
+        "date": "5.29",
+        "event": "한국 산업생산"
+      },
+      {
+        "date": "5.31",
+        "event": "중국 제조업 PMI"
+      },
+      {
+        "date": "6.01",
+        "event": "미국 제조업 PMI"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스"
+    ],
+    "risk": "중동 지정학적 불안 및 인플레이션 부담과 성장 둔화 우려",
+    "quote": "삼성전자와 SK하이닉스 등 반도체 쏠림 우려 속에 차익실현 매물이 출회되며 아시아 주요국 증시와 함께 약세를 보임."
+  }
+}

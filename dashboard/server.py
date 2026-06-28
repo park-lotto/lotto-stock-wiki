@@ -5,13 +5,13 @@
 실행:  python dashboard/server.py
 접속:  http://localhost:8090
 """
-import os, sys, json, glob, re
+import os, sys, json, glob, re, shutil, subprocess
 from datetime import datetime
 
 sys.stdout.reconfigure(encoding="utf-8")
 
 try:
-    from fastapi import FastAPI
+    from fastapi import FastAPI, Request
     from fastapi.responses import HTMLResponse, JSONResponse
     import uvicorn
 except ImportError:
@@ -22,6 +22,11 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HERE = os.path.dirname(os.path.abspath(__file__))
 SIGNAL_DIR = os.path.join(ROOT, "output", "signal")
 OUT_DIR = os.path.join(ROOT, "out")
+AGENTS_DIR = os.path.join(HERE, "agents")
+
+# claude CLI 위치 (PATH 우선, 없으면 알려진 경로)
+CLAUDE_BIN = shutil.which("claude") or r"C:\Users\TheRose\.local\bin\claude.exe"
+AGENT_TIMEOUT = 240  # 초
 
 app = FastAPI(title="딸깍 대시보드")
 
@@ -102,6 +107,53 @@ def api_intraday():
 @app.get("/api/close")
 def api_close():
     return JSONResponse(content={"status": "준비중", "message": "3단계: 마감 정리 예정"})
+
+
+# ── 에이전트 (claude CLI 헤드리스) ─────────────────────────
+
+def run_agent(role: str, request_text: str) -> dict:
+    """역할 .md를 지침으로 claude -p 를 프로젝트 루트에서 실행, 결과 텍스트 반환."""
+    role_path = os.path.join(AGENTS_DIR, role + ".md")
+    if not os.path.exists(role_path):
+        return {"ok": False, "error": f"역할 파일 없음: {role}.md"}
+    if not (CLAUDE_BIN and os.path.exists(CLAUDE_BIN)):
+        return {"ok": False, "error": f"claude 실행파일을 찾을 수 없음: {CLAUDE_BIN}"}
+
+    with open(role_path, encoding="utf-8") as f:
+        role_prompt = f.read()
+
+    prompt = role_prompt + "\n\n---\n## 지금 처리할 요청\n" + request_text
+    cmd = [CLAUDE_BIN, "-p", prompt, "--permission-mode", "bypassPermissions"]
+    started = datetime.now()
+    try:
+        proc = subprocess.run(
+            cmd, cwd=ROOT, capture_output=True,
+            encoding="utf-8", errors="replace", timeout=AGENT_TIMEOUT,
+        )
+    except subprocess.TimeoutExpired:
+        return {"ok": False, "error": f"시간 초과 ({AGENT_TIMEOUT}초). 요청을 더 좁혀보세요."}
+    except Exception as e:
+        return {"ok": False, "error": f"실행 오류: {e}"}
+
+    out = (proc.stdout or "").strip()
+    if proc.returncode != 0 and not out:
+        return {"ok": False, "error": (proc.stderr or "알 수 없는 오류").strip()[:800]}
+
+    elapsed = round((datetime.now() - started).total_seconds(), 1)
+    return {"ok": True, "result": out, "elapsed": elapsed,
+            "ran_at": started.strftime("%Y-%m-%d %H:%M")}
+
+
+@app.post("/api/agent")
+async def api_agent(req: Request):
+    body = {}
+    try:
+        body = await req.json()
+    except Exception:
+        pass
+    role = body.get("role", "시황부장")
+    request_text = body.get("request") or "오늘 자 시황 브리핑 초안을 작성해줘."
+    return JSONResponse(content=run_agent(role, request_text))
 
 
 if __name__ == "__main__":

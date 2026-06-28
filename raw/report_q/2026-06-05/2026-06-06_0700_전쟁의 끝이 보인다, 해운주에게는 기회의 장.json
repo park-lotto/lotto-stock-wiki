@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "date": "2026-06-05",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_0700_전쟁의 끝이 보인다, 해운주에게는 기회의 장.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "안도현",
+    "report_date": "2026년 6월 5일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "팬오션",
+        "code": "028670",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "9,000원",
+        "tp_prev": "7,000원",
+        "tp_direction": "up",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "탱커선 업사이드",
+        "thesis": [
+          "중동 내 재건수요라는 긍정적인 이벤트가 남아있음",
+          "BDI 상승 요인이 전쟁 이후에도 제거되지 않을 가능성이 높음",
+          "벙커유 가격 조정에 따른 조정 국면은 있겠으나, 벌크선의 경우 낙폭이 크지 않을 가능성이 높음"
+        ],
+        "valuation_basis": null,
+        "risk": "컨테이너 운임지수는 전쟁 이후 원재료 가격 하락을 기다리며 물동량이 감소할 가능성이 있음",
+        "supply_comment": "벌크 다운사이드는 제한적",
+        "quote": "따라서 탱커선 업사이드가 열려있고, 벌크 다운사이드는 제한적인 팬오션을 운송주 내 Top Pick으로 유지한다.",
+        "sector": "기타"
+      },
+      {
+        "name": "HMM",
+        "code": "011200",
+        "rating": "Neutral",
+        "rating_changed": null,
+        "tp_new": "21,500원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": null,
+        "thesis": [
+          "컨테이너 운임지수는 전쟁 이후 재고 확보 수요가 촉발되었고, 벙커유 서차지가 4월 이후 본격 부과되며 가파르게 상승함"
+        ],
+        "valuation_basis": null,
+        "risk": "전쟁 이후 원재료 가격 하락을 기다리며 물동량이 감소할 가능성이 있음",
+        "supply_comment": null,
+        "quote": "컨테이너 운임지수는 전쟁 이후 재고 확보 수요가 촉발되었고, 벙커유 서차지가 4월 이후 본격 부과되며 가파르게 상승했는데, 전쟁 이후 원재료 가격 하락을 기다리며 물동량이 감소할 가능성이 있다.",
+        "sector": "기타"
+      }
+    ]
+  }
+}

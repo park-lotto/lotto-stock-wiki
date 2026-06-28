@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-05",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_0700_케빈에 대하여.md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": "이정훈",
+    "report_date": "2026.06.04",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "연준 대차대조표 축소",
+      "인플레이션 목표 체제 변화 가능성",
+      "AI 생산성 향상과 실질금리",
+      "장단기 금리 차 및 은행 대출",
+      "정부 정책 공조 및 재무부 연계성"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026-06",
+        "event": "워시의 첫 FOMC"
+      },
+      {
+        "date": "2026-08",
+        "event": "잭슨홀 미팅"
+      }
+    ],
+    "top_picks": null,
+    "risk": "시장 적응 과정에서의 변동성, 인플레이션 재반등 및 고금리 장기화 가능성, 실물 경기 회복 시 중립금리 상승",
+    "quote": "워시는 금리 결정을 제외한 영역은 무조건적인 독립성이 요구되지 않는다고 생각한다. 청문회에서는 이미 재무부와의 공조 의지를 내비쳤다. 케빈 워시의 연준에서는 베센트 재무장관의 발언에도 귀를 기울일 필요성이 높아질 것으로 예상된다."
+  }
+}

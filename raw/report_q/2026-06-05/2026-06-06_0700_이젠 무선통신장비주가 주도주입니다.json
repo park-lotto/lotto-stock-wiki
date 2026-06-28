@@ -1,0 +1,48 @@
+{
+  "meta": {
+    "date": "2026-06-05",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_0700_이젠 무선통신장비주가 주도주입니다.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김홍식",
+    "report_date": "2026.6.5",
+    "target_kind": "market",
+    "market_direction": "통신서비스 업종 투자 매력도 SKT>LGU+>KT",
+    "macro_vars": [
+      "미국 신규 5G 주파수 경매",
+      "국내 AI RAN 사업 정책"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "통신",
+        "stance": "비중확대",
+        "reason": "신규 주파수 할당을 통한 투자 확대 예상 및 AI RAN 육성 기조"
+      }
+    ],
+    "style": "통신장비주 주도주 흐름",
+    "event_calendar": [
+      {
+        "date": "2026-06-02",
+        "event": "미국 주파수 경매 시작"
+      },
+      {
+        "date": "2026-11",
+        "event": "엔비디아 주도 AI RAN 총회 한국 개최"
+      }
+    ],
+    "top_picks": [
+      "SKT",
+      "LGU+",
+      "KT",
+      "KMW",
+      "RFHIC",
+      "HFR",
+      "LIG아큐버",
+      "쏠리드"
+    ],
+    "risk": "일부 종목의 가격 부담",
+    "quote": "이젠 무선통신장비주가 주도주입니다"
+  }
+}

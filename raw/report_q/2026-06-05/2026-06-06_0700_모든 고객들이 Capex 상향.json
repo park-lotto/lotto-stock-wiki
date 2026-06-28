@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-05",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_0700_모든 고객들이 Capex 상향.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "김록호, 김영규",
+    "report_date": "2026년 6월 5일",
+    "stocks": [
+      {
+        "name": "피에스케이",
+        "code": "319660",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "160,000원",
+        "tp_prev": "128,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "피에스케이의 26년 2분기 매출액은 1,622억원(YoY +50%, QoQ +4%), 영업이익은 502억원(YoY +144%, QoQ +6%)으로 전망한다. 2026년 매출액은 6,609억원, 영업이익은 1,836억원으로 전년대비 각각 45%, 107% 증가할 전망이다.",
+        "estimate_revision": "2026년, 2027년 EPS를 기존대비 각각 27%, 23% 상향했기 때문이다.",
+        "next_catalyst": "국내외 메모리 3사의 신규 Fab 오픈, CXMT의 증설, 삼성전자와 Intel의 신규 공장 투자",
+        "thesis": [
+          "26년 1분기 실적을 기반으로 매분기 실적이 우상향할 것으로 추정",
+          "메모리 및 파운드리 업체들의 투자가 2027년에 본격화되면서 외형 성장 가시성이 높음",
+          "26년 1분기 영업이익률 30%를 달성하며 입증된 높은 수익성"
+        ],
+        "valuation_basis": "12m forward EPS 5,988원, 적정 P/E 26.7x 적용",
+        "risk": null,
+        "supply_comment": "메모리 및 파운드리 업체들의 투자는 2026년보다 2027년에 본격화된다.",
+        "quote": "피에스케이에 대한 투자의견 ‘BUY’를 유지하고, 목표주가를 160,000원으로 상향한다."
+      }
+    ]
+  }
+}

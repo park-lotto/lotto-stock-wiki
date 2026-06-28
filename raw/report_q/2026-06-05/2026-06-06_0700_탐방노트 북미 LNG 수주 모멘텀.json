@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-05",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_0700_탐방노트 북미 LNG 수주 모멘텀.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "이상호",
+    "report_date": "2026/6/5",
+    "stocks": [
+      {
+        "name": "한텍",
+        "code": "098070",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "FY26 연간 실적 추정의 핵심 변수는 북미 LNG 수주 파이프라인의 실현 속도. 5월 말 기준 누계 수주는 약 1,100억원으로, 연간 가이던스 2,000억원 대비 달성률은 57% 수준.",
+        "estimate_revision": null,
+        "next_catalyst": "현재 6월 중으로 결과 기대할 수 있는 파이프라인은 캐나다 LNG(200~300억원) 와 텍사스 LNG (200~300억원).",
+        "thesis": [
+          "북미 LNG 수주 파이프라인 실현 및 매출 믹스 개선 기대",
+          "미국 LNG 플랜트의 최종투자결정(FID) 가속화로 인한 수주 기회 확대",
+          "삼성전자, SK하이닉스 등 반도체 기업의 CAPEX 확대에 따른 탱크 사업부 수주 및 중동 재건 물량 기대"
+        ],
+        "valuation_basis": null,
+        "risk": "중동 전쟁 등으로 인한 수주 물량 변동성",
+        "supply_comment": "한텍은 화공기기 및 초저온 탱크를 설계, 제작하는 플랜트 기자재 기업",
+        "sector": "기타",
+        "quote": "FY26 연간 실적 추정의 핵심 변수는 북미 LNG 수주 파이프라인의 실현 속도. 5월 말 기준 누계 수주는 약 1,100억원으로, 연간 가이던스 2,000억원 대비 달성률은 57% 수준."
+      }
+    ]
+  }
+}

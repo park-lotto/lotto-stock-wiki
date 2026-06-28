@@ -1,0 +1,26 @@
+{
+  "meta": {
+    "date": "2026-06-05",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_1000_0605 달러, 유가 하락 속 약보합.md"
+  },
+  "questionnaire": {
+    "broker": "키움증권",
+    "analyst": "김유미, 안예하, 심수빈",
+    "report_date": "2026. 6. 5",
+    "target_kind": "market",
+    "market_direction": "약보합",
+    "macro_vars": [
+      "Dollar Index 99.425",
+      "WTI 93.04 $/bbl",
+      "미국 국채 10년 4.473%",
+      "국고 3년 3.860%"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": null,
+    "top_picks": null,
+    "risk": "헤즈볼라가 이스라엘·레바논 정부 간 휴전 합의에 대해 부정적인 입장을 보이고 있음",
+    "quote": "달러화는 이스라엘과 레바논이 휴전 이행에 합의하면서 중동발 지정학적 불확실성이 다소 완화된 가운데, 미국 고용지표 부진으로 연준의 추가 긴축 우려가 낮아지며 소폭 하락"
+  }
+}
