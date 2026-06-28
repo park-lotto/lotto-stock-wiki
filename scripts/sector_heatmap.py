@@ -10,6 +10,18 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
 WATCH_FILE = ROOT / "raw" / "내 관심종목.xlsx"
+SECTOR_CUSTOM_PATH = ROOT / "pipeline" / "sector_custom.json"
+
+
+def _load_sector_custom() -> dict:
+    if SECTOR_CUSTOM_PATH.exists():
+        try:
+            import json as _json
+            with open(str(SECTOR_CUSTOM_PATH), encoding="utf-8") as _f:
+                return _json.load(_f)
+        except Exception:
+            pass
+    return {"custom_tiles": [], "extra_stocks": {}, "hidden_sectors": []}
 
 # ── 제외 섹터 (전체 탭용) ─────────────────────────────────
 EXCLUDE = {
@@ -412,23 +424,6 @@ def build_heatmap(top_n: int = 3) -> dict:
 
     sections = parse_watchlist(top_n)
 
-    INDEX_CODES = [
-        {"name": "코스피", "code": "0001"},
-        {"name": "코스닥", "code": "1001"},
-    ]
-    index_sectors = []
-    for idx in INDEX_CODES:
-        try:
-            p = kis_api.get_index_price(idx["code"])
-        except Exception:
-            p = {}
-        rate = float(p.get("change_rate", 0) or 0)
-        index_sectors.append({
-            "name": idx["name"], "avg_rate": rate, "is_index": True,
-            "stocks": [{"name": idx["name"], "code": idx["code"],
-                        "change_rate": rate, "price": p.get("price", 0)}],
-        })
-
     codes = list({s["code"] for sec in sections for s in sec["stocks"]})
     prices = kis_api.get_prices_batch_parallel(codes)
 
@@ -447,7 +442,7 @@ def build_heatmap(top_n: int = 3) -> dict:
     sectors.sort(key=lambda x: x["avg_rate"], reverse=True)
 
     return {
-        "sectors": index_sectors + sectors,
+        "sectors": sectors,
         "updated_at": datetime.now().strftime("%H:%M:%S"),
         "source": "내 관심종목.xlsx",
     }

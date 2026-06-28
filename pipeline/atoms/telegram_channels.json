@@ -1,19 +1,85 @@
 {
-  "하나반도체": {"type": "sector", "sector": "반도체", "trust": "B"},
-  "삼성반도체": {"type": "sector", "sector": "반도체", "trust": "B"},
-  "다올조선방산": {"type": "sector", "sector": "조선", "trust": "B"},
-  "하나차이나": {"type": "sector", "sector": "중국", "trust": "B"},
-  "한화철강": {"type": "sector", "sector": "철강", "trust": "B"},
-  "대신시황": {"type": "market", "trust": "B"},
-  "미래시황": {"type": "market", "trust": "B"},
-  "유안타시황": {"type": "market", "trust": "B"},
-  "키움시황": {"type": "market", "trust": "B"},
-  "그로스리서치": {"type": "report_relay", "trust": "B"},
-  "신한리서치": {"type": "report_relay", "trust": "B"},
-  "한투글로벌": {"type": "report_relay", "trust": "B"},
-  "요약하는 고잉": {"type": "report_relay", "trust": "C"},
-  "잠실개미고급수집": {"type": "stock_tips", "trust": "C"},
-  "주공고급수집": {"type": "stock_tips", "trust": "C"},
-  "독학주식첵터정리": {"type": "stock_tips", "trust": "C"},
-  "태린이아빠 주식투자": {"type": "insight", "trust": "B"}
+  "하나반도체": {
+    "type": "sector",
+    "sector": "반도체",
+    "trust": "B"
+  },
+  "삼성반도체": {
+    "type": "sector",
+    "sector": "반도체",
+    "trust": "B"
+  },
+  "다올조선방산": {
+    "type": "sector",
+    "sector": "조선",
+    "trust": "B"
+  },
+  "하나차이나": {
+    "type": "sector",
+    "sector": "중국",
+    "trust": "B"
+  },
+  "한화철강": {
+    "type": "sector",
+    "sector": "철강",
+    "trust": "B"
+  },
+  "대신시황": {
+    "type": "market",
+    "trust": "B"
+  },
+  "미래시황": {
+    "type": "market",
+    "trust": "B"
+  },
+  "유안타시황": {
+    "type": "market",
+    "trust": "B"
+  },
+  "키움시황": {
+    "type": "market",
+    "trust": "B"
+  },
+  "그로스리서치": {
+    "type": "report_relay",
+    "trust": "B"
+  },
+  "신한리서치": {
+    "type": "report_relay",
+    "trust": "B"
+  },
+  "한투글로벌": {
+    "type": "report_relay",
+    "trust": "B"
+  },
+  "요약하는 고잉": {
+    "type": "report_relay",
+    "trust": "C"
+  },
+  "잠실개미고급수집": {
+    "type": "stock_tips",
+    "trust": "C"
+  },
+  "주공고급수집": {
+    "type": "stock_tips",
+    "trust": "C"
+  },
+  "독학주식첵터정리": {
+    "type": "stock_tips",
+    "trust": "C"
+  },
+  "태린이아빠 주식투자": {
+    "type": "insight",
+    "trust": "B"
+  },
+  "로또": {
+    "type": "general",
+    "sector": "",
+    "trust": "B"
+  },
+  "리포트요약": {
+    "type": "general",
+    "sector": "",
+    "trust": "B"
+  }
 }

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>크롤링 소스 관리</title>
+<style>
+  :root { --gold:#d4af37; --gold-dim:#9a7d28; --bg:#0a0a0a; --card:#16161a; --line:#2a2a30; --txt:#e8e6e0; --muted:#8a8a92; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--txt); font-family:'Segoe UI','Malgun Gothic',sans-serif; min-height:100vh; }
+  header { padding:24px 32px 14px; border-bottom:1px solid var(--line); }
+  h1 { font-size:1.3rem; font-weight:700; } h1 .gold { color:var(--gold); }
+  .sub { color:var(--muted); font-size:.8rem; margin-top:4px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(330px,1fr)); gap:18px; padding:22px 32px 60px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px 20px; }
+  .card h2 { font-size:.95rem; color:var(--gold); margin-bottom:4px; }
+  .card .cnt { color:var(--muted); font-size:.72rem; margin-bottom:12px; }
+  .item { display:flex; align-items:center; gap:8px; padding:7px 9px; border:1px solid #1f1f25; border-radius:9px; margin-bottom:6px; background:#121216; }
+  .item .nm { flex:1; font-size:.85rem; font-weight:600; word-break:break-all; }
+  .item .meta { font-size:.68rem; color:var(--muted); }
+  .badge { font-size:.62rem; padding:1px 6px; border-radius:6px; border:1px solid var(--gold-dim); color:var(--gold); }
+  .del { background:#2a0d0d; color:#e07070; border:1px solid #5c1a1a; border-radius:7px; padding:3px 9px; font-size:.72rem; cursor:pointer; flex-shrink:0; }
+  .del:hover { background:#3a1010; }
+  .empty { color:var(--muted); font-size:.78rem; padding:8px 2px; }
+  .addrow { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; padding-top:12px; border-top:1px dashed var(--line); }
+  .addrow input, .addrow select { background:#1a1a20; color:var(--txt); border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-size:.8rem; font-family:inherit; }
+  .addrow input.nm { flex:1; min-width:120px; }
+  .addrow .add { background:var(--gold); color:#0a0a0a; border:none; border-radius:8px; padding:8px 14px; font-weight:700; cursor:pointer; font-size:.8rem; }
+  .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#1f1f25; border:1px solid var(--gold-dim); color:var(--gold); padding:10px 18px; border-radius:10px; font-size:.82rem; opacity:0; transition:.3s; pointer-events:none; }
+  .toast.on { opacity:1; }
+</style>
+</head>
+<body>
+<header style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+  <div>
+    <h1>크롤링 소스 관리 — <span class="gold">텔레·유튜브·블로그·뉴스</span></h1>
+    <div class="sub">소스 추가/삭제는 즉시 저장 · 신뢰도 A/B/C · <span id="lastsync" style="color:var(--gold-dim)">받아온 시각 확인 중…</span></div>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button id="pullbtn" onclick="pull()" style="background:#1f1f25;color:var(--gold);border:1px solid var(--gold-dim);border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer;font-size:.85rem;white-space:nowrap">📥 지금 받아오기</button>
+    <button id="syncbtn" onclick="sync()" style="background:var(--gold);color:#0a0a0a;border:none;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer;font-size:.85rem;white-space:nowrap">🔄 소스 동기화</button>
+  </div>
+</header>
+<div class="grid" id="grid"><div class="empty" style="padding:40px">불러오는 중…</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+let DATA = {};
+
+async function load() {
+  DATA = await (await fetch('/api/sources')).json();
+  render();
+  refreshLastSync();
+}
+
+async function refreshLastSync() {
+  try {
+    const s = await (await fetch('/api/crawl/status')).json();
+    const el = document.getElementById('lastsync');
+    if (el) el.textContent = s.last_sync ? ('마지막 받아옴: ' + s.last_sync.replace('T',' ').slice(0,16)) : '받아온 기록 없음';
+  } catch (e) {}
+}
+
+async function pull() {
+  const btn = document.getElementById('pullbtn');
+  btn.disabled = true; btn.textContent = '📥 받아오는 중…';
+  try {
+    const r = await (await fetch('/api/crawl/pull', { method:'POST' })).json();
+    if (r.ok) { toast(r.downloaded > 0 ? (r.downloaded + '개 새로 받아옴 ✓') : '새 파일 없음'); refreshLastSync(); }
+    else { toast('오류: ' + (r.error || '')); }
+  } catch (e) { toast('오류: ' + e); }
+  btn.disabled = false; btn.textContent = '📥 지금 받아오기';
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('on');
+  setTimeout(() => t.classList.remove('on'), 1800);
+}
+
+function render() {
+  const g = document.getElementById('grid');
+  g.innerHTML = '';
+  for (const cat of Object.keys(DATA)) {
+    const reg = DATA[cat];
+    const items = reg.items || {};
+    const keys = Object.keys(items);
+    let rows = keys.length ? '' : '<div class="empty">아직 없음 — 아래에서 추가하세요</div>';
+    for (const k of keys) {
+      const v = items[k];
+      // 값이 문자열(신뢰도) 또는 객체({trust,url,sector,type}) 둘 다 처리
+      let trust = '', sub = '', url = '';
+      if (v && typeof v === 'object') { trust = v.trust || ''; sub = v.sector || v.type || ''; url = v.url || ''; }
+      else { trust = v; }
+      let meta = '';
+      if (reg.rich && sub) meta += '<span class="meta">' + esc(sub) + '</span> ';
+      meta += '<span class="badge">' + esc(trust) + '</span>';
+      if (url) meta += ' <a href="' + esc(url) + '" target="_blank" title="' + esc(url) + '" style="text-decoration:none;font-size:.8rem">🔗</a>';
+      const kEsc = esc(k).replace(/'/g,"\\'");
+      const crawlBtn = (cat !== 'news')
+        ? '<button class="del" style="background:#0d2a14;color:#3ddc6e;border-color:#1a5c30" title="이 채널만 지금 크롤" onclick="crawlOne(\'' + cat + '\',\'' + kEsc + '\')">▶</button>'
+        : '';
+      rows += '<div class="item"><span class="nm">' + esc(k) + '</span>' + meta
+        + crawlBtn + '<button class="del" onclick="del(\'' + cat + '\',\'' + kEsc + '\')">삭제</button></div>';
+    }
+    // 추가 폼
+    let form = '<div class="addrow">';
+    form += '<input class="nm" id="nm-' + cat + '" placeholder="' + (cat==='news'?'키워드':'링크 또는 이름/제목') + '">';
+    if (reg.rich) {
+      form += '<input id="sec-' + cat + '" placeholder="섹터" style="width:90px">';
+    }
+    form += '<select id="tr-' + cat + '"><option>A</option><option selected>B</option><option>C</option></select>';
+    form += '<button class="add" onclick="add(\'' + cat + '\')">추가</button>';
+    form += '</div>';
+
+    g.innerHTML += '<div class="card">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">'
+      + '<h2>' + reg.label + '</h2>'
+      + '<button class="add" style="background:#0d2a14;color:#3ddc6e;padding:5px 11px;font-size:.72rem" title="이 카테고리 전체 지금 크롤" onclick="crawlCat(\'' + cat + '\')">▶ 전체 크롤</button>'
+      + '</div>'
+      + '<div class="cnt">' + keys.length + '개</div>'
+      + rows + form + '</div>';
+  }
+}
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+async function add(cat) {
+  const name = document.getElementById('nm-' + cat).value.trim();
+  if (!name) { toast('이름을 입력하세요'); return; }
+  const body = { category: cat, name, trust: document.getElementById('tr-' + cat).value };
+  const secEl = document.getElementById('sec-' + cat);
+  if (secEl) { body.sector = secEl.value.trim(); body.type = 'sector'; }
+  const r = await (await fetch('/api/sources/add', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) })).json();
+  if (r.ok) {
+    let msg = '추가됨 ✓';
+    if (r.server && r.server.ok) msg += (r.server.changed ? ' · 서버 크롤러 등록 ✓' : ' · 서버 이미 있음');
+    else if (r.server && r.server.error) msg += ' · ⚠ 서버등록 실패';
+    else if (!r.server) msg += ' · (서버 등록은 링크로 추가해야 함)';
+    toast(msg);
+    await load();
+  } else { toast('오류: ' + (r.error||'')); }
+}
+
+async function sync() {
+  const btn = document.getElementById('syncbtn');
+  btn.disabled = true; btn.textContent = '🔄 폴더 스캔 중…';
+  try {
+    const r = await (await fetch('/api/sources/sync', { method:'POST' })).json();
+    if (r.ok) {
+      let total = 0, msg = [];
+      for (const cat of Object.keys(r.report)) {
+        const a = r.report[cat].added || [];
+        total += a.length;
+        if (a.length) msg.push((DATA[cat] ? DATA[cat].label : cat) + ' +' + a.length);
+      }
+      toast(total ? ('새로 등록: ' + msg.join(', ')) : '이미 모두 등록됨 ✓');
+      await load();
+    } else { toast('오류'); }
+  } catch (e) { toast('오류: ' + e); }
+  btn.disabled = false; btn.textContent = '🔄 실제 폴더와 동기화';
+}
+
+async function crawlCat(cat) {
+  const label = DATA[cat] ? DATA[cat].label : cat;
+  toast(label + ' 전체 크롤 시작…');
+  const r = await (await fetch('/api/crawl/run', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ category:cat }) })).json();
+  toast(r.ok ? (label + ' 크롤 시작됨 — 1~3분 후 📥지금 받아오기') : ('오류: ' + (r.error||'')));
+}
+
+async function crawlOne(cat, name) {
+  toast('"' + name + '" 크롤 시작…');
+  const r = await (await fetch('/api/crawl/run', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ category:cat, only:name }) })).json();
+  toast(r.ok ? ('"' + name + '" 크롤 시작됨 — 끝나면 📥받아오기') : ('오류: ' + (r.error||'')));
+}
+
+async function del(cat, name) {
+  if (!confirm('"' + name + '" 삭제할까요? (서버 크롤러에서도 제거됩니다)')) return;
+  const r = await (await fetch('/api/sources/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ category:cat, name }) })).json();
+  if (r.ok) {
+    let m = '삭제됨 ✓';
+    if (r.server && r.server.ok) m += (r.server.changed ? ' · 서버도 제거 ✓' : ' · 서버엔 없었음');
+    else if (r.server && r.server.error) m += ' · ⚠ 서버 제거실패';
+    toast(m); await load();
+  } else { toast('오류: ' + (r.error||'')); }
+}
+
+load();
+</script>
+</body>
+</html>

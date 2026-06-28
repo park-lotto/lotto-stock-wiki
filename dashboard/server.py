@@ -5,7 +5,8 @@
 실행:  python dashboard/server.py
 접속:  http://localhost:8090
 """
-import os, sys, json, glob, re, shutil, subprocess, uuid
+import os, sys, json, glob, re, shutil, subprocess, uuid, time, threading
+from collections import deque
 from datetime import datetime
 
 sys.stdout.reconfigure(encoding="utf-8")
@@ -25,6 +26,16 @@ SIGNAL_DIR = os.path.join(ROOT, "output", "signal")
 OUT_DIR = os.path.join(ROOT, "out")
 AGENTS_DIR = os.path.join(HERE, "agents")
 ASSETS_DIR = os.path.join(HERE, "assets")
+ATOMS_DIR = os.path.join(ROOT, "pipeline", "atoms")
+
+# 크롤링 소스 레지스트리 (카테고리 → 파일·스키마)
+#  telegram: { 이름: {type, sector, trust} } / 그 외: { 이름·키워드: trust }
+SOURCE_REGISTRIES = {
+    "telegram": {"file": "telegram_channels.json", "label": "텔레그램", "rich": True},
+    "youtube":  {"file": "youtube_registry.json",  "label": "유튜브",   "rich": False},
+    "blog":     {"file": "blog_registry.json",     "label": "블로그",   "rich": False},
+    "news":     {"file": "news_registry.json",     "label": "뉴스키워드", "rich": False},
+}
 STUDIO_DIR = os.path.join(ROOT, "out", "studio")
 
 sys.path.insert(0, os.path.join(ROOT, "scripts"))
@@ -47,6 +58,35 @@ CLAUDE_BIN = shutil.which("claude") or r"C:\Users\TheRose\.local\bin\claude.exe"
 AGENT_TIMEOUT = 240  # 초
 
 app = FastAPI(title="딸깍 대시보드")
+
+# ── 투자자/프로그램 시계열 누적 (장 중 15분 폴링) ──────────────────
+_FLOW: dict = {
+    "J": {"investor": deque(maxlen=30), "program": deque(maxlen=30)},
+    "Q": {"investor": deque(maxlen=30), "program": deque(maxlen=30)},
+}
+
+def _poll_flow():
+    """장 중(09:00~16:00) 15분마다 투자자·프로그램 순매수 스냅샷 수집."""
+    while True:
+        try:
+            now = datetime.now()
+            if 9 <= now.hour < 16:
+                import kis_api as _kis
+                for mkt in ("J", "Q"):
+                    try:
+                        _FLOW[mkt]["investor"].append(_kis.get_market_investor(mkt))
+                    except Exception:
+                        pass
+                    try:
+                        _FLOW[mkt]["program"].append(_kis.get_program_trade(mkt))
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+        time.sleep(900)  # 15분
+
+_poll_thread = threading.Thread(target=_poll_flow, daemon=True)
+_poll_thread.start()
 
 
 # ── 데이터 로더 ───────────────────────────────────────────
@@ -134,6 +174,344 @@ def asset(fname: str):
     if p.startswith(ASSETS_DIR) and os.path.exists(p):
         return FileResponse(p)
     return JSONResponse(content={"error": "not found"}, status_code=404)
+
+
+# ── 크롤링 소스 관리 ───────────────────────────────────────
+
+def _registry_path(cat):
+    reg = SOURCE_REGISTRIES.get(cat)
+    if not reg:
+        return None
+    return os.path.join(ATOMS_DIR, reg["file"])
+
+
+def _load_registry(cat):
+    p = _registry_path(cat)
+    if p and os.path.exists(p):
+        try:
+            with open(p, encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    return {}
+
+
+def _save_registry(cat, data):
+    p = _registry_path(cat)
+    with open(p, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+@app.get("/sources", response_class=HTMLResponse)
+def sources_page():
+    with open(os.path.join(HERE, "sources.html"), encoding="utf-8") as f:
+        return f.read()
+
+
+@app.get("/api/sources")
+def api_sources_list():
+    out = {}
+    for cat, reg in SOURCE_REGISTRIES.items():
+        out[cat] = {"label": reg["label"], "rich": reg["rich"],
+                    "items": _load_registry(cat)}
+    return JSONResponse(content=out)
+
+
+def _normalize_source(cat, raw):
+    """입력이 링크면 카테고리에 맞는 키로 변환 + 링크 보존. 이름이면 그대로.
+    반환 (key, url)."""
+    raw = (raw or "").strip()
+    is_url = raw.startswith(("http://", "https://", "t.me/", "www.")) or "/" in raw and "." in raw
+    if not is_url:
+        return raw, ""
+    url = raw if raw.startswith("http") else "https://" + raw
+    if cat == "blog":
+        m = re.search(r"(?:rss\.)?blog\.naver\.com/([A-Za-z0-9_\-]+)", raw) \
+            or re.search(r"/([A-Za-z0-9_\-]+)\.xml", raw)
+        if m:
+            return m.group(1), f"https://blog.naver.com/{m.group(1)}"
+    elif cat == "telegram":
+        m = re.search(r"t\.me/([A-Za-z0-9_+]+)", raw)
+        if m:
+            return m.group(1), f"https://t.me/{m.group(1)}"
+    elif cat == "youtube":
+        m = re.search(r"youtube\.com/@([A-Za-z0-9_.\-]+)", raw) \
+            or re.search(r"youtube\.com/(?:channel|c|user)/([A-Za-z0-9_\-]+)", raw)
+        if m:
+            return m.group(1), url
+    # 일반: 마지막 경로조각을 키로
+    seg = raw.split("?")[0].rstrip("/").split("/")[-1]
+    return (seg or raw), url
+
+
+# 서버(크롤러) 자동 등록용
+SSH_KEY = r"C:\Users\TheRose\crawling_bot_client\LightsailDefaultKey-ap-northeast-2.pem"
+SSH_HOST = "ubuntu@3.39.179.148"
+REMOTE_ADD = "python3 /home/ubuntu/kmong/crawling_bot/add_source.py"
+
+
+def server_register(cat, name, url):
+    """서버 config.yaml에 소스 자동 등록 (add_source.py 호출). best-effort."""
+    payload = json.dumps({"category": cat, "name": name, "url": url})
+    cmd = ["ssh", "-i", SSH_KEY, "-o", "StrictHostKeyChecking=no",
+           "-o", "ConnectTimeout=20", SSH_HOST, REMOTE_ADD]
+    try:
+        r = subprocess.run(cmd, input=payload.encode("utf-8"),
+                           capture_output=True, timeout=35)
+        out = (r.stdout or b"").decode("utf-8", "replace").strip()
+        try:
+            return json.loads(out.splitlines()[-1])
+        except Exception:
+            err = out or (r.stderr or b"").decode("utf-8", "replace")
+            return {"ok": False, "error": err[:200]}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+@app.post("/api/sources/add")
+async def api_sources_add(req: Request):
+    b = await req.json()
+    cat = b.get("category")
+    raw = (b.get("name") or "").strip()
+    if cat not in SOURCE_REGISTRIES or not raw:
+        return JSONResponse(content={"ok": False, "error": "카테고리/이름 누락"})
+    key, url = _normalize_source(cat, raw)
+    if not key:
+        return JSONResponse(content={"ok": False, "error": "이름/링크 해석 실패"})
+    d = _load_registry(cat)
+    trust = b.get("trust") or "B"
+    if SOURCE_REGISTRIES[cat]["rich"]:  # telegram
+        val = {"type": (b.get("type") or "general"),
+               "sector": (b.get("sector") or "").strip(),
+               "trust": trust}
+        if url:
+            val["url"] = url
+        d[key] = val
+    else:
+        d[key] = {"trust": trust, "url": url} if url else trust
+    _save_registry(cat, d)
+    # 서버 크롤러에도 자동 등록 (뉴스는 url 불필요, 그 외는 url 있을 때만)
+    server = None
+    if cat == "news" or url:
+        server = await run_in_threadpool(server_register, cat, key, url)
+    return JSONResponse(content={"ok": True, "count": len(d), "key": key,
+                                 "url": url, "server": server})
+
+
+def server_unregister(cat, name, url):
+    """서버 config.yaml 에서 소스 제거 (del_source.py). best-effort."""
+    payload = json.dumps({"category": cat, "name": name, "url": url})
+    cmd = ["ssh", "-i", SSH_KEY, "-o", "StrictHostKeyChecking=no",
+           "-o", "ConnectTimeout=20", SSH_HOST,
+           "python3 /home/ubuntu/kmong/crawling_bot/del_source.py"]
+    try:
+        r = subprocess.run(cmd, input=payload.encode("utf-8"),
+                           capture_output=True, timeout=35)
+        out = (r.stdout or b"").decode("utf-8", "replace").strip()
+        try:
+            return json.loads(out.splitlines()[-1])
+        except Exception:
+            return {"ok": False, "error": out[:200]}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+@app.post("/api/sources/delete")
+async def api_sources_delete(req: Request):
+    b = await req.json()
+    cat = b.get("category")
+    name = b.get("name")
+    if cat not in SOURCE_REGISTRIES:
+        return JSONResponse(content={"ok": False, "error": "카테고리 오류"})
+    d = _load_registry(cat)
+    if name not in d:
+        return JSONResponse(content={"ok": False, "error": "항목 없음"})
+    v = d.get(name)
+    url = v.get("url", "") if isinstance(v, dict) else ""
+    del d[name]
+    _save_registry(cat, d)
+    server = await run_in_threadpool(server_unregister, cat, name, url)
+    return JSONResponse(content={"ok": True, "count": len(d), "server": server})
+
+
+def server_crawl(cat, only):
+    """서버에서 해당 카테고리/채널 크롤을 백그라운드로 시작 (즉시 반환)."""
+    import shlex
+    only = only or ""
+    remote = ("cd /home/ubuntu/kmong/crawling_bot && nohup python3 crawl_run.py "
+              + shlex.quote(cat) + " " + shlex.quote(only)
+              + " >> logs/manual_crawl.log 2>&1 </dev/null &")
+    cmd = ["ssh", "-i", SSH_KEY, "-o", "StrictHostKeyChecking=no",
+           "-o", "ConnectTimeout=20", SSH_HOST, remote]
+    try:
+        subprocess.run(cmd, capture_output=True, timeout=25)
+        return {"ok": True, "started": True}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+@app.post("/api/crawl/run")
+async def api_crawl_run(req: Request):
+    b = {}
+    try:
+        b = await req.json()
+    except Exception:
+        pass
+    cat = b.get("category")
+    only = (b.get("only") or "").strip()
+    if cat not in ("telegram", "youtube", "blog", "news", "market"):
+        return JSONResponse(content={"ok": False, "error": "카테고리 오류"})
+    return JSONResponse(content=await run_in_threadpool(server_crawl, cat, only))
+
+
+# 실제 크롤링 폴더 (소스 자동 감지용)
+CRAWL_DIR = r"C:\Users\TheRose\crawling_bot_data"
+
+
+def scan_actual_sources():
+    """크롤링 폴더를 훑어 실제 들어오는 소스를 카테고리별로 집계 {소스: 글수}."""
+    res = {"telegram": {}, "news": {}, "blog": {}, "youtube": {}}
+    if not os.path.isdir(CRAWL_DIR):
+        return res
+
+    def bump(cat, name):
+        name = name.strip()
+        if name:
+            res[cat][name] = res[cat].get(name, 0) + 1
+
+    for d in os.listdir(CRAWL_DIR):
+        if not re.match(r"\d{4}-\d{2}-\d{2}$", d):
+            continue
+        base = os.path.join(CRAWL_DIR, d)
+        # 텔레그램: 날짜_채널.md
+        for f in glob.glob(os.path.join(base, "telegram", "*.md")):
+            m = re.match(r"\d{4}-\d{2}-\d{2}_(.+)", os.path.basename(f)[:-3])
+            if m:
+                bump("telegram", m.group(1))
+        # 뉴스: [묶음]키워드_kw
+        for f in glob.glob(os.path.join(base, "news", "*.md")):
+            m = re.search(r"\[묶음\](.+?)_kw", os.path.basename(f))
+            if m:
+                bump("news", m.group(1))
+        # 블로그: 파일 내부 naver blog id
+        for f in glob.glob(os.path.join(base, "blog", "*.md")):
+            try:
+                t = open(f, encoding="utf-8", errors="replace").read(800)
+            except Exception:
+                continue
+            m = re.search(r"blog\.naver\.com/([A-Za-z0-9_]+)/", t)
+            if m:
+                bump("blog", m.group(1))
+        # 유튜브: 파일 내부 **채널** 필드
+        for f in glob.glob(os.path.join(base, "youtube", "*.md")):
+            try:
+                t = open(f, encoding="utf-8", errors="replace").read(400)
+            except Exception:
+                continue
+            m = re.search(r"\*\*채널\*\*\s*[:：]\s*(.+)", t)
+            if m:
+                bump("youtube", m.group(1))
+    return res
+
+
+@app.post("/api/sources/sync")
+def api_sources_sync():
+    """실제 크롤링 소스 중 등록 안 된 것을 자동 등록(신뢰도 B). 추가된 목록 반환."""
+    actual = scan_actual_sources()
+    report = {}
+    for cat, items in actual.items():
+        d = _load_registry(cat)
+        added = []
+        for name in items:
+            if name not in d:
+                d[name] = {"type": "general", "sector": "", "trust": "B"} \
+                    if SOURCE_REGISTRIES[cat]["rich"] else "B"
+                added.append(name)
+        if added:
+            _save_registry(cat, d)
+        report[cat] = {"added": added, "actual": len(items), "registered": len(d)}
+    return JSONResponse(content={"ok": True, "report": report})
+
+
+# ── 크롤 결과 수동 받아오기 (서버 → 로컬, 증분) ──────────────
+CLIENT_DIR = r"C:\Users\TheRose\crawling_bot_client"
+CLIENT_CFG = os.path.join(CLIENT_DIR, "client_config.json")
+CLIENT_STATE = os.path.join(CLIENT_DIR, "client_state.json")
+
+
+def _crawl_last_sync():
+    try:
+        with open(CLIENT_STATE, encoding="utf-8") as f:
+            return json.load(f).get("last_sync")
+    except Exception:
+        return None
+
+
+def pull_crawl() -> dict:
+    """서버에서 last_sync 이후 새 파일만 다운로드 (client.py sync_once 로직 복제, stdlib)."""
+    import urllib.request as _u, urllib.parse as _up
+    try:
+        with open(CLIENT_CFG, encoding="utf-8") as f:
+            cfg = json.load(f)
+    except Exception as e:
+        return {"ok": False, "error": f"client_config 읽기 실패: {e}"}
+    try:
+        with open(CLIENT_STATE, encoding="utf-8") as f:
+            state = json.load(f)
+    except Exception:
+        state = {"last_sync": None}
+
+    base, key, save = cfg["server_url"], cfg["api_key"], cfg["save_path"]
+    since = state.get("last_sync")
+
+    def _get(url, timeout):
+        return _u.urlopen(_u.Request(url, headers={"x-api-key": key}), timeout=timeout)
+
+    url = base + "/files" + (f"?since={_up.quote(since)}" if since else "")
+    try:
+        files = json.loads(_get(url, 15).read().decode("utf-8")).get("files", [])
+    except Exception as e:
+        return {"ok": False, "error": f"서버 연결 실패: {e}", "last_sync": since}
+
+    downloaded = 0
+    for fi in files:
+        try:
+            path = fi["path"]
+            sp = os.path.join(save, path.replace("/", os.sep))
+            os.makedirs(os.path.dirname(sp), exist_ok=True)
+            if os.path.exists(sp):
+                sm = fi.get("modified", "")
+                lm = datetime.fromtimestamp(os.path.getmtime(sp)).isoformat()
+                if sm and sm <= lm:
+                    continue
+            data = _get(base + "/download/" + _up.quote(path), 30).read()
+            if sp.lower().endswith((".jpg", ".jpeg", ".png", ".gif")):
+                with open(sp, "wb") as f:
+                    f.write(data)
+            else:
+                with open(sp, "w", encoding="utf-8") as f:
+                    f.write(data.decode("utf-8", "replace"))
+            downloaded += 1
+        except Exception:
+            continue
+
+    state["last_sync"] = datetime.now().isoformat()
+    try:
+        with open(CLIENT_STATE, "w", encoding="utf-8") as f:
+            json.dump(state, f, ensure_ascii=False)
+    except Exception:
+        pass
+    return {"ok": True, "downloaded": downloaded, "last_sync": state["last_sync"]}
+
+
+@app.get("/api/crawl/status")
+def api_crawl_status():
+    return JSONResponse(content={"last_sync": _crawl_last_sync()})
+
+
+@app.post("/api/crawl/pull")
+async def api_crawl_pull():
+    return JSONResponse(content=await run_in_threadpool(pull_crawl))
 
 
 # ── 에이전트 (claude CLI 헤드리스) ─────────────────────────
@@ -258,16 +636,122 @@ def api_etf_bar():
         return JSONResponse(content={"error": "parse_etf_bar 없음"}, status_code=503)
     try:
         import kis_api
-        etfs = parse_etf_bar()  # Excel에서 코드/이름/OHLC
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        etfs  = parse_etf_bar()
         codes = [e["code"] for e in etfs]
-        prices = kis_api.get_prices_batch_parallel(codes)
+
+        # 현재가 + 15분봉 병렬 조회
+        prices   = kis_api.get_prices_batch_parallel(codes)
+        bars_map = {c: [] for c in codes}
+        with ThreadPoolExecutor(max_workers=5) as ex:
+            futs = {ex.submit(kis_api.get_minutebar, c, 15): c for c in codes}
+            for fut in as_completed(futs):
+                c = futs[fut]
+                try:
+                    bars_map[c] = fut.result()
+                except Exception:
+                    bars_map[c] = []
+
         for e in etfs:
             p = prices.get(e["code"]) or {}
             e["change_rate"] = float(p.get("change_rate", 0) or 0)
-            e["price"] = int(p.get("price", 0) or 0)
+            e["price"]       = int(p.get("price", 0) or 0)
+            e["bars"]        = bars_map.get(e["code"], [])
         return JSONResponse(content=etfs)
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
+
+
+@app.get("/api/market_flow")
+def api_market_flow():
+    """코스피/코스닥/미국선물(SPY)/코스피야간선물 지수 15분봉 + 투자자/프로그램 시계열."""
+    try:
+        import kis_api
+        from concurrent.futures import ThreadPoolExecutor
+        result = {}
+        with ThreadPoolExecutor(max_workers=14) as ex:
+            tasks = {
+                "J_bars":     ex.submit(kis_api.get_index_minutebar, "0001", 15),
+                "Q_bars":     ex.submit(kis_api.get_index_minutebar, "1001", 15),
+                "J_price":    ex.submit(kis_api.get_index_price, "0001"),
+                "Q_price":    ex.submit(kis_api.get_index_price, "1001"),
+                "J_investor": ex.submit(kis_api.get_market_investor, "J"),
+                "Q_investor": ex.submit(kis_api.get_market_investor, "Q"),
+                "J_prog":     ex.submit(kis_api.get_program_trade, "J"),
+                "Q_prog":     ex.submit(kis_api.get_program_trade, "Q"),
+                # 글로벌 지표
+                "US_price":   ex.submit(kis_api.get_overseas_price, "SPY", "NYS"),
+                "US_bars":    ex.submit(kis_api.get_overseas_minutebar, "SPY", "NYS", 15),
+                "NF_price":   ex.submit(kis_api.get_night_futures_price),
+                "NF_bars":    ex.submit(kis_api.get_night_futures_minutebar, 15),
+                "FX_usdkrw":  ex.submit(kis_api.get_usdkrw),
+                "OIL_price":  ex.submit(kis_api.get_crude_oil),
+                # 실시간 조회순위
+                "RANK":       ex.submit(kis_api.get_inquiry_rank, 15),
+            }
+            done = {}
+            for k, f in tasks.items():
+                try:
+                    done[k] = f.result()
+                except Exception:
+                    done[k] = None
+
+        # 코스피 / 코스닥 — full (investor + program)
+        for mkt, code, label in [("J", "0001", "코스피"), ("Q", "1001", "코스닥")]:
+            price_d  = done.get(f"{mkt}_price") or {}
+            investor = done.get(f"{mkt}_investor") or {"외인": 0, "기관": 0, "개인": 0, "ts": ""}
+            prog     = done.get(f"{mkt}_prog") or {"차익": 0, "비차익": 0, "합계": 0, "ts": ""}
+            result[code] = {
+                "label":            label,
+                "price":            price_d.get("price", 0),
+                "change_rate":      price_d.get("change_rate", 0),
+                "bars":             done.get(f"{mkt}_bars") or [],
+                "investor_now":     investor,
+                "investor_history": list(_FLOW[mkt]["investor"]),
+                "program_now":      prog,
+                "program_history":  list(_FLOW[mkt]["program"]),
+            }
+
+        # 글로벌 지표 — 4종목 compact 카드
+        us  = done.get("US_price")  or {"price": 0, "change_rate": 0}
+        nf  = done.get("NF_price")  or {"price": 0, "change_rate": 0}
+        fx  = done.get("FX_usdkrw") or {"price": 0, "change_rate": 0}
+        oil = done.get("OIL_price") or {"price": 0, "change_rate": 0}
+        result["global"] = {
+            "label": "글로벌 지표",
+            "items": [
+                {"name": "미국선물(SPY)", "price": us["price"],  "change_rate": us["change_rate"],  "bars": done.get("US_bars") or []},
+                {"name": "코스피야간선물","price": nf["price"],  "change_rate": nf["change_rate"],  "bars": done.get("NF_bars") or []},
+                {"name": "원달러환율",     "price": fx["price"],  "change_rate": fx["change_rate"],  "bars": []},
+                {"name": "국제유가(WTI)", "price": oil["price"], "change_rate": oil["change_rate"], "bars": []},
+            ]
+        }
+
+        # 실시간 조회순위 카드
+        result["rank"] = {
+            "label":  "실시간 조회순위",
+            "stocks": done.get("RANK") or [],
+        }
+
+        return JSONResponse(content=result)
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+
+# ── 히트맵 캐시 (탭 전환 속도 개선) ──────────────────────────
+_heatmap_cache: dict = {}   # {key: {"data": ..., "ts": float}}
+_HEATMAP_TTL = 180          # 3분 캐시
+
+
+def _heatmap_cached(key: str, fn):
+    """캐시 hit이면 즉시 반환, miss면 fn() 호출 후 캐시 저장."""
+    now = time.time()
+    entry = _heatmap_cache.get(key)
+    if entry and now - entry["ts"] < _HEATMAP_TTL:
+        return entry["data"]
+    data = fn()
+    _heatmap_cache[key] = {"data": data, "ts": now}
+    return data
 
 
 @app.get("/api/heatmap_tab")
@@ -275,10 +759,17 @@ def api_heatmap_tab(id: str = "semi"):
     if build_heatmap_tab is None:
         return JSONResponse(content={"error": "build_heatmap_tab 없음"}, status_code=503)
     try:
-        data = build_heatmap_tab(id)
+        data = _heatmap_cached(f"tab:{id}", lambda: build_heatmap_tab(id))
         return JSONResponse(content=data)
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
+
+
+@app.get("/api/heatmap_tab/refresh")
+def api_heatmap_tab_refresh(id: str = "semi"):
+    """캐시 무효화 후 강제 재조회."""
+    _heatmap_cache.pop(f"tab:{id}", None)
+    return api_heatmap_tab(id)
 
 
 @app.get("/api/heatmap_tabs_meta")
@@ -291,10 +782,17 @@ def api_heatmap():
     if build_heatmap is None:
         return JSONResponse(content={"error": "sector_heatmap 로드 실패"}, status_code=503)
     try:
-        data = build_heatmap()
+        data = _heatmap_cached("all", build_heatmap)
         return JSONResponse(content=data)
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
+
+
+@app.get("/api/heatmap/refresh")
+def api_heatmap_refresh():
+    """캐시 무효화 후 강제 재조회."""
+    _heatmap_cache.pop("all", None)
+    return api_heatmap()
 
 
 # ── 딸깍 스튜디오 ─────────────────────────────────────────
