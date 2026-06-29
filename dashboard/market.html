@@ -422,7 +422,7 @@ async function _refreshOverviewBg(){
     const r=await fetch("/api/heatmap");
     if(!r.ok)return;
     const data=await r.json();
-    if(data.error)return;
+    if(data.error||data.loading)return;  // 빌드 중이면 캐시 오염 방지
     _toCache("all",data);
     _lsSave(_LS_ALL,data);
     if(activeTab==="all") renderOverview(data);
@@ -434,7 +434,7 @@ async function _refreshTabBg(tabId){
     const r=await fetch(`/api/heatmap_tab?id=${tabId}`);
     if(!r.ok)return;
     const data=await r.json();
-    if(data.error)return;
+    if(data.error||data.loading)return;  // 빌드 중이면 캐시 오염 방지
     _toCache(tabId,data);
     _lsSave(_LS_TAB_PFX+tabId,data);
     if(activeTab===tabId) renderTab(data);
@@ -1506,7 +1506,7 @@ initLoad();
 loadEtfBar();
 loadMarketFlowSample();   // 즉시 샘플 표시 (빈화면 방지)
 loadMarketFlow();          // 실제 API 데이터로 즉시 교체
-setInterval(loadEtfBar,   600000);
-setInterval(loadMarketFlow,900000);
+setInterval(loadEtfBar,   300000);
+setInterval(loadMarketFlow,300000);
 </script>
 </body></html>

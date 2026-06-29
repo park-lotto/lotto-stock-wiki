@@ -794,6 +794,13 @@ def api_market_flow():
         if cached and time.time() - cached["ts"] < _PREWARM_TTL:
             return JSONResponse(content=_build_market_flow_result(cached["data"]))
 
+        # 전일종가 캐시 비어있으면 먼저 채움 (서버 시작 직후 레이스컨디션 방지)
+        if global_api and not global_api._PW_PREVCLOSE:
+            try:
+                global_api.scrape_all_prevclose()
+            except Exception:
+                pass
+
         # 캐시 미스 → 직접 fetch (분봉·투자자=키움, 나머지=KIS)
         with ThreadPoolExecutor(max_workers=14) as ex:
             tasks = {
@@ -1038,7 +1045,7 @@ def studio_file(path: str):
 
 # ── 백그라운드 캐시 프리워밍 ────────────────────────────────────
 _prewarm_cache: dict = {}   # {"market_flow": {data, ts}, "etf_bar": {data, ts}, "heatmap": {data, ts}}
-_PREWARM_TTL = 300          # 5분
+_PREWARM_TTL = 60           # 1분
 
 def _prewarm_worker():
     """서버 시작 시 즉시 + 이후 5분마다 핵심 API를 미리 fetch해 캐시에 저장."""

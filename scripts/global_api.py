@@ -10,7 +10,7 @@ import re
 import time
 
 _CACHE: dict = {}
-_CACHE_TTL = 120  # 2분 캐시
+_CACHE_TTL = 15  # 15초 캐시 (esignal IP 차단 방지 최소값)
 
 # Playwright로 스크래핑한 전일종가 캐시
 # {"kospif": 1385.9, "kospif_ngt": 1385.9, "nq": 29368.25, "oil": 69.23}
