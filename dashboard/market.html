@@ -366,8 +366,9 @@ function _toCache(key,data){ _tabCache[key]={data,ts:Date.now()}; }
 function _clearCache(key){ delete _tabCache[key]; }
 
 // ── 전체 탭 ──────────────────────────────────────────────
-const _LS_ALL="__hm_all__";
-const _LS_TAB_PFX="__hm_tab_";
+const _LS_VER="v3";  // 올리면 브라우저 캐시 자동 무효화
+const _LS_ALL=`__hm_all_${_LS_VER}__`;
+const _LS_TAB_PFX=`__hm_tab_${_LS_VER}_`;
 
 function _lsSave(key,data){try{localStorage.setItem(key,JSON.stringify(data));}catch(e){}}
 function _lsLoad(key){try{const v=localStorage.getItem(key);return v?JSON.parse(v):null;}catch(e){return null;}}
@@ -589,13 +590,17 @@ function renderGrid(tiles){
       +(moreCount>0?`<div class="stock-more" data-count="${moreCount}">+${moreCount}개 더보기</div><div class="stock-extra">${extraHtml}</div>`:"")
     const el=document.createElement("div");
     el.className=`tile ${cls}`;
+    // 스파크라인: 우상단 absolute (별 버튼/더보기 왼쪽)
+    const barsRight=moreCount>0?52:28;
     const barsSvg=(tile.bars&&tile.bars.length>=2)?
-      `<div style="margin-top:4px">${sparkline(tile.bars,tile.avg_rate)}</div>`:"";
+      `<div style="position:absolute;top:6px;right:${barsRight}px;width:64px;height:28px;opacity:0.75;pointer-events:none">
+        ${sparkline(tile.bars,tile.avg_rate)}
+       </div>`:"";
     el.innerHTML=`<button class="fav-btn${isFav?" on":""}" data-sector="${esc(tile.name)}" title="즐겨찾기">★</button>
       ${moreCount>0?`<button class="top-more" data-count="${moreCount}">+ 더보기</button>`:""}
+      ${barsSvg}
       <div class="sec-name">${esc(tile.name)}${parentHtml}</div>
       <div class="avg-rate">${avgStr}</div>
-      ${barsSvg}
       <div class="stocks">${stocksHtml}</div>`;
     grid.appendChild(el);
   }
@@ -677,10 +682,24 @@ function miniLine(bars, rate, w, h){
   const pts=xs.map((x,i)=>`${x},${ys[i]}`).join(" ");
   const col=rate>0?"#e74c3c":rate<0?"#3498db":"#666";
   const fillPts=`${xs[0]},${h} ${pts} ${xs[xs.length-1]},${h}`;
-  return`<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="display:block;width:100%;height:${h}px;border-radius:4px;overflow:hidden">
-    <polygon points="${fillPts}" fill="${col}" opacity="0.07"/>
-    <polyline points="${pts}" fill="none" stroke="${col}" stroke-width="1.8" stroke-linejoin="round"/>
-  </svg>`;
+  // 시간 눈금: bars수 기반으로 09:00 시작 15분 간격 추정
+  function _barTime(idx,total){
+    const min=9*60+idx*Math.round(390/(total-1||1));
+    return`${String(Math.floor(min/60)).padStart(2,'0')}:${String(min%60).padStart(2,'0')}`;
+  }
+  const t0=_barTime(0,bars.length),tM=_barTime(Math.floor(bars.length/2),bars.length),tN=_barTime(bars.length-1,bars.length);
+  const timeRow=`<div style="display:flex;justify-content:space-between;margin-top:2px">
+    <span style="font-size:8px;color:#444">${t0}</span>
+    <span style="font-size:8px;color:#444">${tM}</span>
+    <span style="font-size:8px;color:#444">${tN}</span>
+  </div>`;
+  return`<div>
+    <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="display:block;width:100%;height:${h}px;border-radius:4px;overflow:hidden">
+      <polygon points="${fillPts}" fill="${col}" opacity="0.07"/>
+      <polyline points="${pts}" fill="none" stroke="${col}" stroke-width="1.8" stroke-linejoin="round"/>
+    </svg>
+    ${timeRow}
+  </div>`;
 }
 
 function divBar(val, maxAbs){
@@ -696,7 +715,8 @@ function divBar(val, maxAbs){
 
 function invHistoryChart(history, w, h){
   if(!history||history.length<1) return "";
-  if(history.length===1) history=[history[0],history[0]]; // 단일 포인트 → 수평선
+  const single=history.length===1;
+  if(single) history=[history[0],history[0]]; // 단일 포인트 → 수평선
   w=w||240; h=h||44;
   const keys=["외인","기관","개인"];
   const cols={"외인":"#e8a030","기관":"#2ecc71","개인":"#888"};
@@ -714,12 +734,21 @@ function invHistoryChart(history, w, h){
     <span style="display:inline-block;width:10px;height:2px;background:${cols[k]};border-radius:1px;vertical-align:middle"></span>
     <span style="font-size:9px;color:${cols[k]}">${k}</span>
   </span>`).join("");
+  // X축 시간 레이블 (첫·끝 ts)
+  const tsList=history.map(r=>r.ts||"").filter(Boolean);
+  const tFirst=tsList[0]||"";
+  const tLast=tsList[tsList.length-1]||"";
+  const timeBar=tFirst?`<div style="display:flex;justify-content:space-between;margin-top:1px">
+    <span style="font-size:8px;color:#444">${tFirst}</span>
+    <span style="font-size:8px;color:#444">${tLast}</span>
+  </div>`:"";
   return`<div>
     <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="display:block;width:100%;height:${h}px">
       <rect width="${w}" height="${h}" fill="#0e0e0e" rx="3"/>
       ${lines}
     </svg>
-    <div style="display:flex;gap:10px;margin-top:3px">${legendHtml}</div>
+    ${timeBar}
+    <div style="display:flex;gap:10px;margin-top:2px">${legendHtml}</div>
   </div>`;
 }
 
@@ -936,9 +965,17 @@ function renderMarketFlow(d){
               const mn=Math.min(...vals),mx=Math.max(...vals),rng=mx-mn||1;
               const pts=vals.map((v,i)=>`${Math.round(i/(vals.length-1)*(W-2)+1)},${Math.round((1-(v-mn)/rng)*(H-4)+2)}`).join(" ");
               const col=rate>0?"var(--up1)":rate<0?"var(--dn1)":"#888";
+              // 시간 레이블 (bars.length 기반 15분봉 추정)
+              const n=vals.length;
+              function _gt(i){const m=9*60+Math.round(i*390/(n-1||1));return`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;}
+              const gTimeRow=`<div style="display:flex;justify-content:space-between;margin-top:1px">
+                <span style="font-size:7px;color:#333">${_gt(0)}</span>
+                <span style="font-size:7px;color:#333">${_gt(Math.floor(n/2))}</span>
+                <span style="font-size:7px;color:#333">${_gt(n-1)}</span>
+              </div>`;
               return`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="display:block;width:100%;height:${H}px;overflow:visible">
                 <polyline points="${pts}" fill="none" stroke="${col}" stroke-width="1.5" stroke-linejoin="round"/>
-              </svg>`;
+              </svg>${gTimeRow}`;
             })();
             return`<div style="flex:3;min-height:0;display:flex;flex-direction:column;${borderB}padding:4px 0 3px;">
               <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px">
@@ -994,9 +1031,13 @@ function renderMarketFlow(d){
         +(invAllZero?`<span style="font-size:9px;color:#333;display:block;margin-top:2px">KIS API 미구독</span>`:"");
 
       const hist=m.investor_history||[];
-      const histSvg=hist.length>=1?`
+      const histSvg=`
         <div class="mkt-sec-label" style="margin-top:2px">누적 추이 (외인/기관/개인)</div>
-        ${invHistoryChart(hist,240,80)}`:"";
+        ${hist.length>=2
+          ? invHistoryChart(hist,240,80)
+          : hist.length===1
+            ? `<div style="font-size:9px;color:#555;padding:2px 0">아직 1포인트 (15분 후 그래프 생성)</div>${invHistoryChart(hist,240,80)}`
+            : `<div style="font-size:9px;color:#333;padding:4px 0">장 중 데이터 없음 (09:00~15:30 15분 폴링)</div>`}`;
 
       const prog=m.program_now||{합계:0,차익:0,비차익:0};
       const progAllZero=!prog.합계&&!prog.차익&&!prog.비차익;
@@ -1022,16 +1063,23 @@ function renderMarketFlow(d){
         const zeroLine=zeroY>=2&&zeroY<=H-2
           ?`<line x1="0" y1="${zeroY}" x2="${W}" y2="${zeroY}" stroke="#333" stroke-width="1" stroke-dasharray="3,3"/>`:"";
         const latestT=progSeries.length>=2?(progSeries[progSeries.length-1].t||"").replace(/(\d{2})(\d{2}).*/,"$1:$2"):"";
+        // X축 시간 레이블
+        const tsProg=progSource.map(r=>(r.t||"").replace(/(\d{2})(\d{2}).*/,"$1:$2")).filter(Boolean);
+        const tpFirst=tsProg[0]||"";
+        const tpMid=tsProg[Math.floor(tsProg.length/2)]||"";
+        const tpLast=tsProg[tsProg.length-1]||"";
+        const progTimeRow=tpFirst?`<div style="display:flex;justify-content:space-between;margin-top:2px">
+          <span style="font-size:8px;color:#444">${tpFirst}</span>
+          <span style="font-size:8px;color:#444">${tpMid}</span>
+          <span style="font-size:8px;color:#444">${tpLast}</span>
+        </div>`:"";
         progChart=`
-          <div class="mkt-sec-label" style="margin-top:2px;display:flex;justify-content:space-between;align-items:center">
-            <span>프로그램 순매수${latestT?" ("+latestT+"기준)":""}</span>
-            <span style="color:${col};font-weight:700">${ps}</span>
-          </div>
           <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="display:block;width:100%;height:${H}px;border-radius:4px;overflow:hidden">
             <rect width="${W}" height="${H}" fill="#0e0e0e" rx="3"/>
             ${zeroLine}
             <polyline points="${pts}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round"/>
-          </svg>`;
+          </svg>
+          ${progTimeRow}`;
       }
 
       return`<div class="mkt-card">
@@ -1046,9 +1094,12 @@ function renderMarketFlow(d){
           <div class="inv-grid">${invRows}</div>
           ${histSvg}
         </div>
-        <div>
-          <div class="mkt-sec-label">프로그램 순매수</div>
-          ${progChart}
+          <div>
+          <div class="mkt-sec-label" style="margin-top:2px;display:flex;justify-content:space-between">
+            <span>프로그램 순매수</span>
+            ${!progChart?"":`<span style="color:${prog.합계>=0?"#e74c3c":"#3498db"};font-weight:700">${ps}</span>`}
+          </div>
+          ${progChart||`<div style="font-size:9px;color:#333;padding:4px 0">장 중 데이터 없음</div>`}
         </div>
         <div class="mkt-ts">${ts} 기준</div>
       </div>`;

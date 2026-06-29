@@ -1,3 +1,4 @@
+- 2026-06-29 — [구현] **딸깍 대시보드 시장패널 완성**(집PC): 분봉/누적추이/프로그램/글로벌차트 X축 시간레이블 추가, 섹터카드 스파크라인 우상단 배치(KIS일봉), 더보기/접기 행동기화, localStorage stale-while-revalidate+서버논블로킹으로 로딩속도 해결, 프로그램순매수 레이블중복 제거, 투자자누적추이 빈공간 안내문구.
 - 2026-06-29 — [패치] **NotebookLM MCP 한국어 셀렉터 패치**(회사PC): selectors.js 3곳(addButton·sourceTypeText·insertConfirm) 한국어 추가("소스 추가"/"복사된 텍스트"/"삽입"/"확인"). MCP 재등록 완료. Claude Code 재시작 후 소스 자동 추가 가능. 노트북 13개 파일 로딩 대기.
 - 2026-06-29 — [구현] **크롤링 인사이트 허브(/insights) 완성**(회사PC): `dashboard/insights.html` 신규(유튜브/텔레/리포트 카테고리→채널→문서→상세 드릴다운 SPA). `doc_summary.py`(AI 요약 생성+캐시, 6~8항목+highlights). `server.py` 9개 신규 API 라우트+sys.path 수정+doc_title 추출. 딸깍/섹터맵/인사이트 3페이지 네비게이션+뒤로가기(History API). youtube_ingest.py deeplink 버그 수정. telegram_ingest.py --force-date 추가(오전→오후 2회 ingest 지원). 다음=오후재ingest 딸깍버튼+구버전 요약 일괄재생성.
 - 2026-06-29 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-06-29.md
