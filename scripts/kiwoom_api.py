@@ -189,7 +189,7 @@ def get_market_investor(market: str = "J") -> dict:
     import datetime as _dt
     ts = _dt.datetime.now().strftime("%H:%M")
     mrkt_tp = "0" if market == "J" else "1"
-    target_cd = "001" if market == "J" else "101"
+    target_cd = "001_AL" if market == "J" else "101_AL"  # 코스피/코스닥 전체(AL)
     try:
         r = requests.post(
             f"{BASE}/api/dostk/sect",

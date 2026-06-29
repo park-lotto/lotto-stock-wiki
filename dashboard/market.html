@@ -62,7 +62,10 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 
 /* ── 4카드 패널 (코스피/코스닥/미국선물/야간선물) ── */
 .mkt-card{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:10px;
-  padding:10px 12px;min-width:0;display:flex;flex-direction:column;gap:7px;}
+  padding:10px 12px;min-width:0;display:flex;flex-direction:column;gap:7px;
+  scrollbar-width:thin;scrollbar-color:#222 transparent;}
+.mkt-card::-webkit-scrollbar{width:3px;}
+.mkt-card::-webkit-scrollbar-thumb{background:#333;border-radius:2px;}
 .mkt-hdr{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
 .mkt-name{font-size:11px;font-weight:700;color:#888;white-space:nowrap;}
 .mkt-price{font-size:18px;font-weight:800;color:#fff;letter-spacing:-.5px;font-variant-numeric:tabular-nums;}
@@ -713,6 +716,8 @@ const ETF_KEYWORDS=["KODEX","TIGER","KINDEX","SOL","ARIRANG","HANARO","ACE","PLU
 let _rankVolStocks=[];
 let _rankAmtStocks=[];
 let _rankEtfFilter=true;
+let _rankVolN=5;
+let _rankAmtN=5;
 
 function _filterRank(stocks){
   return _rankEtfFilter
@@ -738,29 +743,50 @@ function _rankRows(stocks, maxN){
   }).join("");
 }
 
+function _reRenderRankCard(){
+  const btn=document.getElementById("etf-toggle");
+  if(btn) btn.closest(".mkt-card").outerHTML=renderRankCard();
+}
+
+function rankWheel(e, type){
+  e.preventDefault();
+  const delta=e.deltaY>0?5:-5;
+  if(type==="vol") _rankVolN=Math.min(20,Math.max(5,_rankVolN+delta));
+  else             _rankAmtN=Math.min(20,Math.max(5,_rankAmtN+delta));
+  _reRenderRankCard();
+}
+
 function renderRankCard(){
   const on=_rankEtfFilter;
   const btnStyle=on
     ?"background:rgba(212,175,55,.25);color:var(--gold);border:1px solid rgba(212,175,55,.5)"
     :"background:rgba(255,255,255,.05);color:#555;border:1px solid #333";
   const btnLabel=on?"ETF·ETN 제외중":"ETF·ETN 포함";
-  const secLabel=s=>`<div style="font-size:10px;font-weight:600;color:#666;letter-spacing:0.3px;margin:6px 0 3px;border-top:1px solid #1c1c1c;padding-top:5px">${s}</div>`;
+  const wheelHint="font-size:9px;color:#333;margin-left:4px";
+  const secLabel=(icon,label,n,type)=>`
+    <div onwheel="rankWheel(event,'${type}')"
+         style="display:flex;align-items:center;font-size:10px;font-weight:600;color:#666;
+                letter-spacing:0.3px;margin:6px 0 3px;border-top:1px solid #1c1c1c;
+                padding-top:5px;cursor:ns-resize;user-select:none"
+         title="휠로 개수 조절 (5~20)">
+      <span style="flex:1">${icon} ${label} ${n}</span>
+      <span style="${wheelHint}">↕</span>
+    </div>`;
   return`<div class="mkt-card">
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
       <span style="font-size:11px;font-weight:700;color:#aaa;letter-spacing:0.3px;flex:1">순위</span>
       <button id="etf-toggle" onclick="toggleEtfFilter()" style="font-size:10px;padding:2px 7px;border-radius:10px;cursor:pointer;font-family:inherit;${btnStyle}">${btnLabel}</button>
     </div>
-    ${secLabel("⚡ 거래량 상위 5")}
-    ${_rankRows(_rankVolStocks,5)}
-    ${secLabel("💰 거래대금 상위 5")}
-    ${_rankRows(_rankAmtStocks,5)}
+    ${secLabel("⚡","거래량 상위",_rankVolN,"vol")}
+    ${_rankRows(_rankVolStocks,_rankVolN)}
+    ${secLabel("💰","거래대금 상위",_rankAmtN,"amt")}
+    ${_rankRows(_rankAmtStocks,_rankAmtN)}
   </div>`;
 }
 
 function toggleEtfFilter(){
   _rankEtfFilter=!_rankEtfFilter;
-  const btn=document.getElementById("etf-toggle");
-  if(btn){btn.closest(".mkt-card").outerHTML=renderRankCard();}
+  _reRenderRankCard();
 }
 
 function renderMarketFlow(d){
@@ -856,49 +882,33 @@ function renderMarketFlow(d){
       const ps=progAllZero?"—":(prog.합계>0?"+":"")+fmtAuk(prog.합계);
       const ts=m.investor_now?.ts||"—";
 
-      // 프로그램 차트: program_series(ka90005 시간대별)를 우선, 없으면 program_history(5분 스냅샷)
+      // 프로그램 차트: program_series(ka90005 시간대별) — 합계 라인만
       const progSeries=m.program_series||[];
       const progHist=m.program_history||[];
       const progSource=progSeries.length>=2?progSeries:progHist;
       let progChart="";
       if(progSource.length>=2){
-        const W=240,H=54;
-        // 시계열: 합계/차익/비차익 3줄
-        const keysDef=[
-          {k:"합계",col:prog.합계>=0?"#e74c3c":"#3498db",w:1.8},
-          {k:"차익",col:"#f39c12",w:1.2},
-          {k:"비차익",col:"#27ae60",w:1.2},
-        ];
-        const allVals=progSource.flatMap(r=>keysDef.map(d=>Number(r[d.k]||0)));
-        const mn=Math.min(...allVals),mx=Math.max(...allVals),range=mx-mn||1;
+        const W=240,H=50;
+        const vals=progSource.map(r=>Number(r["합계"]||0));
+        const mn=Math.min(...vals),mx=Math.max(...vals),range=mx-mn||1;
         const xs=progSource.map((_,i)=>Math.round(2+i*(W-4)/(progSource.length-1)));
-        const makePolyline=(key,col,sw)=>{
-          const ys=progSource.map(r=>Math.round(2+(1-((Number(r[key]||0)-mn)/range))*(H-4)));
-          const pts=xs.map((x,i)=>`${x},${ys[i]}`).join(" ");
-          return`<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="${sw}" stroke-linejoin="round" opacity=".85"/>`;
-        };
+        const ys=vals.map(v=>Math.round(2+(1-((v-mn)/range))*(H-4)));
+        const pts=xs.map((x,i)=>`${x},${ys[i]}`).join(" ");
+        const col=prog.합계>=0?"#e74c3c":"#3498db";
         const zeroY=Math.round(2+(1-((0-mn)/range))*(H-4));
         const zeroLine=zeroY>=2&&zeroY<=H-2
           ?`<line x1="0" y1="${zeroY}" x2="${W}" y2="${zeroY}" stroke="#333" stroke-width="1" stroke-dasharray="3,3"/>`:"";
-        // 최신 시간 라벨 (시계열이면 progSource[-1].t)
         const latestT=progSeries.length>=2?(progSeries[progSeries.length-1].t||"").replace(/(\d{2})(\d{2}).*/,"$1:$2"):"";
-        const legHtml=keysDef.map(d=>`<span style="display:inline-flex;align-items:center;gap:2px">
-          <span style="display:inline-block;width:9px;height:2px;background:${d.col};border-radius:1px"></span>
-          <span style="font-size:8px;color:${d.col}">${d.k}</span>
-        </span>`).join("");
         progChart=`
           <div class="mkt-sec-label" style="margin-top:2px;display:flex;justify-content:space-between;align-items:center">
             <span>프로그램 순매수${latestT?" ("+latestT+"기준)":""}</span>
-            <span style="color:${prog.합계>=0?"#e74c3c":"#3498db"};font-weight:700">${ps}</span>
+            <span style="color:${col};font-weight:700">${ps}</span>
           </div>
           <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="display:block;width:100%;height:${H}px;border-radius:4px;overflow:hidden">
             <rect width="${W}" height="${H}" fill="#0e0e0e" rx="3"/>
             ${zeroLine}
-            ${makePolyline("비차익","#27ae60",1.2)}
-            ${makePolyline("차익","#f39c12",1.2)}
-            ${makePolyline("합계",prog.합계>=0?"#e74c3c":"#3498db",2)}
-          </svg>
-          <div style="display:flex;gap:8px;margin-top:2px">${legHtml}</div>`;
+            <polyline points="${pts}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round"/>
+          </svg>`;
       }
 
       return`<div class="mkt-card">
@@ -924,13 +934,22 @@ function renderMarketFlow(d){
         <div class="mkt-ts">${ts} 기준</div>
       </div>`;
     }).join("");
-  // 렌더 후 모든 카드 높이 균일화 (CSS stretch 미적용 보완)
+  // 렌더 후 높이 균일화: 4번(순위) 자연 높이 기준 → 나머지 space-between으로 채움
   requestAnimationFrame(()=>{
     const cards=[...document.querySelectorAll('#mkt-panel .mkt-card')];
-    if(!cards.length) return;
-    cards.forEach(c=>c.style.height=''); // 초기화
-    const maxH=Math.max(...cards.map(c=>c.offsetHeight));
-    cards.forEach(c=>{ c.style.height=maxH+'px'; });
+    if(cards.length<4) return;
+    cards.forEach(c=>{ c.style.height=''; c.style.overflowY=''; c.style.justifyContent=''; });
+    const refH=Math.max(cards[2].offsetHeight, cards[3].offsetHeight);
+    cards.forEach((c,i)=>{
+      const nat=c.offsetHeight;
+      c.style.height=refH+'px';
+      if(i<2){
+        if(nat>refH) c.style.overflowY='auto';       // 내용이 넘치면 스크롤
+        else c.style.justifyContent='space-between';  // 짧으면 균등 분산
+      } else {
+        c.style.justifyContent='space-between';
+      }
+    });
   });
   }catch(e){
     console.error("market_flow 오류",e);

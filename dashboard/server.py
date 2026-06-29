@@ -776,8 +776,8 @@ def _build_market_flow_result(done: dict) -> dict:
             {"name": "국제유가(WTI)", "price": oil["price"], "change_rate": oil["change_rate"], "bars": oil.get("bars") or []},
         ]
     }
-    result["rank_vol"] = {"label": "거래량 상위",  "stocks": done.get("RANK_VOL") or []}
-    result["rank_amt"] = {"label": "거래대금 상위", "stocks": done.get("RANK_AMT") or []}
+    result["rank_popular"] = {"label": "실시간 인기검색", "stocks": done.get("RANK_POP") or []}
+    result["rank_amt"] = {"label": "거래대금 상위",   "stocks": done.get("RANK_AMT") or []}
     return result
 
 
@@ -785,7 +785,7 @@ def _build_market_flow_result(done: dict) -> dict:
 def api_market_flow():
     """코스피/코스닥/미국선물(SPY)/코스피야간선물 지수 15분봉 + 투자자/프로그램 시계열."""
     try:
-        import kis_api, kiwoom_api
+        import kis_api, kiwoom_api, naver_api
         from concurrent.futures import ThreadPoolExecutor
 
         # 프리워밍 캐시 hit → 즉시 반환 (수십 ms)
@@ -810,7 +810,7 @@ def api_market_flow():
                 "KSF":        ex.submit(global_api.get_kospi_futures) if global_api else None,
                 "USDKRW":     ex.submit(global_api.get_usdkrw) if global_api else None,
                 "WTI":        ex.submit(global_api.get_wti) if global_api else None,
-                "RANK_VOL":   ex.submit(kiwoom_api.get_volume_rank, 30),
+                "RANK_POP":   ex.submit(naver_api.get_popular_stocks, 30),
                 "RANK_AMT":   ex.submit(kiwoom_api.get_trade_rank, 30),
             }
             done = {}
@@ -1008,7 +1008,7 @@ _PREWARM_TTL = 300          # 5분
 
 def _prewarm_worker():
     """서버 시작 시 즉시 + 이후 5분마다 핵심 API를 미리 fetch해 캐시에 저장."""
-    import kis_api, kiwoom_api
+    import kis_api, kiwoom_api, naver_api
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
     def _fetch_market_flow():
@@ -1033,7 +1033,7 @@ def _prewarm_worker():
                 "KSF":        ex.submit(global_api.get_kospi_futures) if global_api else None,
                 "USDKRW":     ex.submit(global_api.get_usdkrw) if global_api else None,
                 "WTI":        ex.submit(global_api.get_wti) if global_api else None,
-                "RANK_VOL":   ex.submit(kiwoom_api.get_volume_rank, 30),
+                "RANK_POP":   ex.submit(naver_api.get_popular_stocks, 30),
                 "RANK_AMT":   ex.submit(kiwoom_api.get_trade_rank, 30),
             }
             done = {}
