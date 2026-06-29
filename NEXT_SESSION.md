@@ -1,36 +1,46 @@
-# NEXT SESSION
+# NEXT SESSION — 2026-06-29 (집PC)
 
-날짜: 2026-06-29 (집PC)
-세션 요약: KIS WebSocket 실시간 연동 구현
+## 세션 요약
+NotebookLM MCP (notebooklm-mcp-cli, Python) 정착 완료.
+텔레그램 오늘 크롤링 12개 소스 기반 Q1~Q7 쿼리 모두 완료.
 
----
+## 완료 항목
+- notebooklm-mcp-cli (jacob-bd, PyPI) 정상 작동 확인
+  - `nlm notebook query <notebook_id> "질문"` 방식으로 사용
+  - notebook id: `2630cdd9-812d-4af5-8b94-d8636a3c852c`
+- Q1~Q7 인사이트 추출 완료 (대화창에 전부 표시됨)
+  - Q1: 섹터 수급이동 (반도체→헬스케어/소프트웨어/방어주 대순환)
+  - Q2: TP표 (SK하이닉스 330만↑, 고려아연·LS 신규커버, 에코프로비엠↓)
+  - Q3: 상승재료 TOP3 (GLP-1 메디케어, AI소프트웨어순환, 고려아연구조적이익) / 하락 TOP3 (오픈AI상장연기, CXMT, 카시카리)
+  - Q4: HBM ASP 2027년 35%↑, NAND 격상, PLP·유리기판 가속
+  - Q5: 고려아연 핵심광물플랫폼, LS전선 믹스개선, 대한조선 2028 가시성
+  - Q6: CXMT 애플타진, 반도체소재 탈일본화 14종, 중국 ESS 550GWh, 희소금속 60%↑
+  - Q7: 7/1 한국수출(반도체핵심), 7/1 메디케어GLP-1 개시, 7/3 미국 NFP, 7/7 삼성전자 잠정실적
 
-## ✅ 완료
+## 미완료 — 집에서 할 것
 
-- `scripts/kis_ws.py` 신규 생성 — KIS WebSocket 클라이언트
-  - 코스피(H0UPCNT0/0001), 코스닥(H0UPCNT0/1001), 코스피200야간선물(H0ZFCNT0/101W9) 구독
-  - 백그라운드 스레드 + 자동 재연결 + AES 복호화 지원
-- `dashboard/server.py` 수정
-  - 서버 시작 시 `kis_ws.start()` 자동 실행
-  - 코스피/코스닥/야간선물: WebSocket 실시간값 우선, esignal 폴백
-  - `/api/ws_status` 디버그 엔드포인트 추가
+### 1. NotebookLM 인사이트 HTML 브리핑 저장
+오늘 Q1~Q7 결과를 `out/nlm_briefing_20260629.html`로 저장.
+→ "nlm briefing html 만들어줘" 하면 됨 (재쿼리로 자동 생성)
 
-## 현재 상태
+### 2. 백그라운드 Python nlm 자동화 (토큰 0)
+```python
+# 아이디어: pipeline/nlm_daily.py
+import subprocess, json
+nb = "2630cdd9-812d-4af5-8b94-d8636a3c852c"
+queries = [("q1_수급","..."), ("q2_tp","..."), ...]
+for name, q in queries:
+    r = subprocess.run(["nlm","notebook","query",nb,q],
+                       capture_output=True, text=True, encoding="utf-8")
+    json.dump(json.loads(r.stdout), open(f"out/nlm/{name}.json","w",encoding="utf-8"), ensure_ascii=False)
+```
+→ Claude 토큰 소모 없이 결과 파일 저장, 나중에 선택적으로 읽기
 
-- WebSocket: connected=True, subscribed=[0001, 1001, 101W9] 확인
-- 장중(09:00~15:30): 코스피/코스닥 실시간 0.1초 이내 예정
-- 야간(22:30~ 미국 개장 후): 야간선물 실시간 예정
-- 장외: esignal 15초 폴링 폴백 유지
-
-## ⏳ 미결
-
-- 내일 09:00 장 열리고 `/api/ws_status` live 데이터 실제 확인 필요
-- 딸깍 장중 2단계 (한투 API 연동)
-- 딸깍 마감 버튼
-- NQ선물/WTI/원달러 실시간화 (Polygon.io $29/월 or KIS 해외선물 계좌 필요)
-
-## 관련 파일
-
-- `scripts/kis_ws.py` (신규)
-- `dashboard/server.py` (수정)
-- `dashboard/market.html`
+## 기술 메모 (nlm CLI)
+- 올바른 캡처 방법 (한글 정상):
+  ```powershell
+  $raw = (nlm notebook query $nb "질문" 2>&1 | Out-String)
+  ($raw | ConvertFrom-Json).answer
+  ```
+- `Set-Content -Encoding UTF8` 파이프 방식은 한글 깨짐 → 쓰지 말 것
+- NotebookLM URL: https://notebooklm.google.com/notebook/2630cdd9-812d-4af5-8b94-d8636a3c852c

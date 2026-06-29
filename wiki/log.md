@@ -1,3 +1,4 @@
+- 2026-06-29 — [분석] **NotebookLM 텔레그램 인사이트 Q1~Q7**(집PC): nlm-mcp-cli Python 정착. 12개 소스→수급이동/TP표/재료TOP3/HBM체인/비철조선방산/중국변수/이번주이벤트 전량 추출. 집에서 HTML브리핑 저장 예정.
 - 2026-06-29 — [구현] **KIS WebSocket 실시간 연동**(집PC): `scripts/kis_ws.py` 신규(코스피H0UPCNT0/코스닥/야간선물H0ZFCNT0 구독, 백그라운드 재연결, AES복호화). 서버 시작 시 자동 가동, 장중 0.1초 이내 반영, 장외 esignal 15초 폴백. `/api/ws_status` 디버그 엔드포인트 추가. connected=True·subscribed 3개 확인. 내일 09:00 live 데이터 검증 필요.
 - 2026-06-29 — [구현] **딸깍 대시보드 시장패널 완성**(집PC): 분봉/누적추이/프로그램/글로벌차트 X축 시간레이블 추가, 섹터카드 스파크라인 우상단 배치(KIS일봉), 더보기/접기 행동기화, localStorage stale-while-revalidate+서버논블로킹으로 로딩속도 해결, 프로그램순매수 레이블중복 제거, 투자자누적추이 빈공간 안내문구.
 - 2026-06-29 — [패치] **NotebookLM MCP 한국어 셀렉터 패치**(회사PC): selectors.js 3곳(addButton·sourceTypeText·insertConfirm) 한국어 추가("소스 추가"/"복사된 텍스트"/"삽입"/"확인"). MCP 재등록 완료. Claude Code 재시작 후 소스 자동 추가 가능. 노트북 13개 파일 로딩 대기.
