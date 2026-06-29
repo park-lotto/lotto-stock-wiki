@@ -55,37 +55,46 @@ def get_usdkrw() -> dict:
     return {"price": d["price"], "change_rate": d["change_rate"], "bars": d["bars"]}
 
 
+_ESIGNAL_CACHE_KEY = "__esignal_kospif__"
+
 def get_kospi_futures() -> dict:
-    """코스피200 선물 현재가.
-    KIS 주간선물(FHKIF03010100) 시도 → 실패 시 yfinance^KS11 fallback.
+    """코스피200 선물 현재가 — esignal.co.kr REST 폴링.
+    https://esignal.co.kr/data/cache/kospif_day.js
+    data: [[timestamp_ms, price, volume, change_from_open], ...]
+    주간(09:00~15:30) + 야간 모두 포함.
+    fallback: ^KS11 (yfinance)
     """
-    import os, sys, requests as _req
+    import requests as _req
+    now = time.time()
+    if _ESIGNAL_CACHE_KEY in _CACHE and now - _CACHE[_ESIGNAL_CACHE_KEY]["ts"] < _CACHE_TTL:
+        return _CACHE[_ESIGNAL_CACHE_KEY]["data"]
+
     try:
-        # KIS API로 주간선물 근월물 조회
-        sys.path.insert(0, os.path.dirname(__file__))
-        import kis_api as _kis
-        tok = _kis._token()
-        for code in ("101W6C0", "101W6B0", "101V6C0", "101V6B0",
-                     "101W6C", "101W6B", "101V9", "101V6"):
-            r = _req.get(
-                "https://openapi.koreainvestment.com:9443"
-                "/uapi/domestic-futureoption/v1/quotations/inquire-price",
-                headers={"content-type": "application/json;charset=UTF-8",
-                         "authorization": f"Bearer {tok}",
-                         "appkey": _kis._KEY, "appsecret": _kis._SECRET,
-                         "tr_id": "FHKIF03010100", "custtype": "P"},
-                params={"FID_COND_MRKT_DIV_CODE": "F", "FID_INPUT_ISCD": code},
-                timeout=5)
-            d = r.json().get("output", {})
-            price = float(d.get("stck_prpr", 0) or 0)
-            if price > 0:
-                prev  = float(d.get("stck_sdpr", price) or price)
-                change_rate = round((price - prev) / prev * 100, 2) if prev else 0.0
-                return {"price": round(price, 2), "change_rate": change_rate,
-                        "bars": [], "code": code}
+        ts = int(now * 1000)
+        r = _req.get(
+            f"https://esignal.co.kr/data/cache/kospif_day.js?_={ts}",
+            headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                "Referer": "https://esignal.co.kr/kospi200-futures/",
+            },
+            timeout=8,
+        )
+        if r.status_code == 200:
+            j = r.json()
+            open_price = float(j.get("open") or 0)
+            rows = j.get("data") or []
+            if rows and open_price > 0:
+                last = rows[-1]
+                price = float(last[1])
+                change_rate = round((price - open_price) / open_price * 100, 2)
+                bars = [float(d[1]) for d in rows[-30:]]
+                data = {"price": round(price, 2), "change_rate": change_rate,
+                        "bars": bars, "source": "esignal"}
+                _CACHE[_ESIGNAL_CACHE_KEY] = {"data": data, "ts": now}
+                return data
     except Exception:
         pass
 
-    # fallback: ^KS11 (KOSPI 지수 근사)
+    # fallback: ^KS11 (장 중만)
     d = _yf_price_bars("^KS11", "15m")
-    return {**d, "code": "^KS11"}
+    return {**d, "source": "^KS11"}

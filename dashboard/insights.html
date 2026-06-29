@@ -680,6 +680,7 @@ function renderL3(data) {
     : '';
   const srcBtn = `<button class="action-btn" onclick="actionYt('${escAttr(dk)}')">🎬 소재화</button>`;
   const wikiBtn = `<button class="action-btn" onclick="actionWiki('${escAttr(dk)}')">📚 위키</button>`;
+  const regenBtn = data.summary ? `<button class="action-btn" onclick="generateSummary('${escAttr(dk)}', true)">🔄 요약 재생성</button>` : '';
 
   // 요약 블록
   let summaryHtml;
@@ -771,7 +772,7 @@ function renderL3(data) {
         </div>
         <h2>${escHtml(data.title||'(제목 없음)')}</h2>
       </div>
-      <div class="action-row">${videoBtn}${srcBtn}${wikiBtn}</div>
+      <div class="action-row">${videoBtn}${regenBtn}${srcBtn}${wikiBtn}</div>
     </div>
     ${summaryHtml}
     ${tlSection}
@@ -779,20 +780,21 @@ function renderL3(data) {
 }
 
 // ── 요약 생성 ──
-async function generateSummary(docKey) {
+async function generateSummary(docKey, force) {
   const btn = qs('#gen-btn');
   const box = qs('#gen-box');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ 생성 중... (수십 초 소요)'; }
   if (box) {
     box.innerHTML += `<div style="margin-top:14px"><div class="spinner"></div><div style="font-size:.78rem;color:var(--muted);margin-top:8px">Claude가 발언을 분석하는 중입니다</div></div>`;
   }
+  if (force) toast('요약을 다시 생성하는 중... (수십 초 소요)');
   try {
     const res = await apiFetch('/api/insights/summarize', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ doc_key: docKey })
+      body: JSON.stringify({ doc_key: docKey, force: !!force })
     });
-    toast('AI 요약이 생성되었습니다!');
+    toast(force ? '요약을 새로 생성했습니다!' : 'AI 요약이 생성되었습니다!');
     // 페이지 다시 렌더
     const data = await apiFetch(`/api/insights/doc?doc_key=${encodeURIComponent(docKey)}`);
     renderL3(data);
