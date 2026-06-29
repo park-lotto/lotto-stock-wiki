@@ -405,6 +405,29 @@ const state = {
   docKey: null,
 };
 
+// ── 라우터 (브라우저 뒤로/앞으로 지원) ──
+let _restoring = false;   // popstate 복원 중엔 새 히스토리 push 금지
+function pushNav(viewObj) {
+  if (_restoring) return;
+  // 최초 진입은 replace, 이후는 push
+  if (history.state == null) history.replaceState(viewObj, '');
+  else history.pushState(viewObj, '');
+}
+function restoreNav(s) {
+  _restoring = true;
+  try {
+    if (!s || s.view === 'L0') showL0();
+    else if (s.view === 'L1') showL1(s.category);
+    else if (s.view === 'L2') showL2(s.category, s.source);
+    else if (s.view === 'L3') showL3(s.docKey);
+    else if (s.view === 'search') showL0();  // 검색은 메인으로 복원
+    else showL0();
+  } finally {
+    _restoring = false;
+  }
+}
+window.addEventListener('popstate', e => restoreNav(e.state));
+
 // ── 날짜 ──
 document.getElementById('date-label').textContent = new Date().toLocaleDateString('ko-KR', {month:'numeric',day:'numeric',weekday:'short'});
 
@@ -460,6 +483,7 @@ function catLabel(c) { return CAT[c] ? CAT[c].label : c; }
 // ── L0 메인 ──
 async function showL0() {
   state.breadcrumb = [];
+  pushNav({ view: 'L0' });
   loading('인사이트 라이브러리 불러오는 중...');
   let data;
   try {
@@ -528,6 +552,7 @@ async function showL0() {
 // ── L1 소스 목록 ──
 async function showL1(category) {
   state.breadcrumb = [{ label: `${catIcon(category)} ${catLabel(category)}`, fnStr: `showL1('${category}')` }];
+  pushNav({ view: 'L1', category });
   loading('소스 목록 불러오는 중...');
   let data;
   try {
@@ -569,6 +594,7 @@ async function showL2(category, source) {
     { label: `${catIcon(category)} ${catLabel(category)}`, fnStr: `showL1('${category}')` },
     { label: escHtml(source), fnStr: `showL2('${category}','${escAttr(source)}')` },
   ];
+  pushNav({ view: 'L2', category, source });
   loading('문서 목록 불러오는 중...');
   let data;
   try {
@@ -610,6 +636,7 @@ async function showL3(docKey) {
   } else {
     state.breadcrumb = [{ label: '상세', fnStr: `showL3('${escAttr(docKey)}')` }];
   }
+  pushNav({ view: 'L3', docKey });
   loading('상세 불러오는 중...');
   let data;
   try {
@@ -780,6 +807,7 @@ async function doSearch() {
   const q = (qs('#search-input') || { value: '' }).value.trim();
   if (!q) return;
   state.breadcrumb = [{ label: `🔍 "${q}"`, fnStr: `doSearch()` }];
+  pushNav({ view: 'search', q });
   loading(`"${q}" 검색 중...`);
   let data;
   try {
