@@ -3,5 +3,10 @@
   "extra_stocks": {},
   "hidden_sectors": [
     "반도체 전공정"
-  ]
+  ],
+  "removed_stocks": {
+    "이차전지": [
+      "412570"
+    ]
+  }
 }

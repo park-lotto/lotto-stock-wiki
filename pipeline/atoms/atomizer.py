@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import time
 import hashlib
@@ -114,9 +115,122 @@ def atomize_text(
     return atoms
 
 
-def _make_id(date: str, source_name: str, index: int) -> str:
+_YT_PROMPT = """아래 유튜브 발언 목록을 JSON 배열로 분류하라. content는 원문 그대로.
+
+각 항목 필드:
+- speaker: 화자 이름 (원문 그대로)
+- timestamp: mm:ss 형식
+- sector: 반도체/조선/로봇/방산/바이오/전력/2차전지/자동차/통신/AI소프트웨어/우주/소비내수/시장/기타
+- asset: 언급 종목명 또는 섹터명 또는 지표명
+- asset_level: stock/sector/market/macro
+- signal: bullish/bearish/neutral/risk/catalyst/data
+- stance: bullish/bearish/neutral (화자의 입장)
+- content_type: fact/opinion/data
+- content: 발언 원문 그대로 (요약·각색 금지)
+
+JSON 배열만 반환. 다른 텍스트 없이.
+
+발언 목록:
+{highlights}"""
+
+
+def _ts_to_seconds(ts: str) -> int:
+    parts = ts.split(":")
+    try:
+        if len(parts) == 2:
+            return int(parts[0]) * 60 + int(parts[1])
+        elif len(parts) == 3:
+            return int(parts[0]) * 3600 + int(parts[1]) * 60 + int(parts[2])
+    except ValueError:
+        pass
+    return 0
+
+
+def atomize_youtube_highlights(
+    highlights: list[str],
+    video_url: str,
+    source_name: str,
+    source_trust: str,
+    raw_file: str,
+    date: str,
+) -> list[dict]:
+    """유튜브 ## 주요 발언 리스트 → 원자 (speaker·timestamp·deeplink 포함)."""
+    if not highlights:
+        return []
+
+    highlights_text = "\n".join(f"- {h}" for h in highlights)
+    raw_atoms = None
+    for attempt in range(4):
+        try:
+            response = _client.models.generate_content(
+                model=_GEMINI_MODEL,
+                contents=_YT_PROMPT.format(highlights=highlights_text),
+                config=types.GenerateContentConfig(response_mime_type="application/json"),
+            )
+            raw_atoms = json.loads(response.text)
+            break
+        except (json.JSONDecodeError, ValueError) as e:
+            raise ValueError(f"Gemini returned invalid JSON: {e}")
+        except Exception as e:
+            _m = str(e)
+            if attempt < 3 and any(c in _m for c in ("503", "429", "UNAVAILABLE", "overloaded", "RESOURCE_EXHAUSTED")):
+                time.sleep((attempt + 1) * 5)
+                continue
+            raise RuntimeError(f"Gemini API call failed: {e}")
+
+    atoms = []
+    for i, a in enumerate(raw_atoms):
+        content = a.get("content", "")
+        if not content:
+            continue
+        ts = a.get("timestamp", "")
+        secs = _ts_to_seconds(ts)
+        deeplink = f"{video_url}&t={secs}" if secs > 0 else video_url
+        atoms.append({
+            "id": _make_id(date, source_name, f"yt_{i}"),
+            "date": date,
+            "source_type": "youtube",
+            "source_name": source_name,
+            "source_trust": source_trust,
+            "raw_file": raw_file,
+            "layer": "L5",
+            "sector": a.get("sector", "기타"),
+            "asset": a.get("asset", ""),
+            "asset_level": a.get("asset_level", "market"),
+            "signal": a.get("signal", "neutral"),
+            "event_type": "news",
+            "magnitude": "minor",
+            "content_type": a.get("content_type", "opinion"),
+            "strength_score": _calc_strength(a, source_trust),
+            "validity_type": "date",
+            "validity_until": None,
+            "is_active": 1,
+            "content": content,
+            "relations": [],
+            "speaker": a.get("speaker", ""),
+            "yt_timestamp": ts,
+            "deeplink": deeplink,
+            "stance_key": a.get("stance", "neutral"),
+        })
+    return atoms
+
+
+def _make_id(date: str, source_name: str, index) -> str:
     raw = f"{date}_{source_name}_{index}"
     return "atom_" + hashlib.md5(raw.encode()).hexdigest()[:12]
+
+
+def parse_yt_highlights(highlights: list[str]) -> list[dict]:
+    """[mm:ss] 화자: 발언 형식에서 구조 파싱."""
+    parsed = []
+    pat = re.compile(r"^\[(\d{1,2}:\d{2}(?::\d{2})?)\]\s*([^:]+):\s*(.+)$")
+    for h in highlights:
+        m = pat.match(h.strip())
+        if m:
+            parsed.append({"timestamp": m.group(1), "speaker": m.group(2).strip(), "text": m.group(3).strip()})
+        else:
+            parsed.append({"timestamp": "", "speaker": "", "text": h.strip()})
+    return parsed
 
 
 def _calc_strength(atom: dict, source_trust: str) -> int:

@@ -9,6 +9,17 @@ import os, sys, json, glob, re, shutil, subprocess, uuid, time, threading
 from collections import deque
 from datetime import datetime
 
+# ── 인사이트 허브: pipeline.atoms.doc_summary 지연 import ──────
+try:
+    from pipeline.atoms.doc_summary import (
+        get_or_build_summary, _collect_atoms, _load_summary,
+        _row_to_summary_dict, ensure_table as _ds_ensure_table,
+        _get_conn as _ds_get_conn, _source_type_to_category,
+    )
+    _DS_AVAIL = True
+except Exception:
+    _DS_AVAIL = False
+
 sys.stdout.reconfigure(encoding="utf-8")
 
 try:
@@ -71,14 +82,14 @@ def _poll_flow():
         try:
             now = datetime.now()
             if 9 <= now.hour < 16:
-                import kis_api as _kis
+                import kiwoom_api as _kiwoom
                 for mkt in ("J", "Q"):
                     try:
-                        _FLOW[mkt]["investor"].append(_kis.get_market_investor(mkt))
+                        _FLOW[mkt]["investor"].append(_kiwoom.get_market_investor(mkt))
                     except Exception:
                         pass
                     try:
-                        _FLOW[mkt]["program"].append(_kis.get_program_trade(mkt))
+                        _FLOW[mkt]["program"].append(_kiwoom.get_program_trade(mkt))
                     except Exception:
                         pass
         except Exception:
@@ -332,6 +343,35 @@ async def api_sources_delete(req: Request):
     _save_registry(cat, d)
     server = await run_in_threadpool(server_unregister, cat, name, url)
     return JSONResponse(content={"ok": True, "count": len(d), "server": server})
+
+
+@app.post("/api/sources/rename")
+async def api_sources_rename(req: Request):
+    b = await req.json()
+    cat = b.get("category")
+    old_name = b.get("old_name", "").strip()
+    new_name = b.get("new_name", "").strip()
+    new_url  = b.get("url", "").strip()
+    if cat not in SOURCE_REGISTRIES:
+        return JSONResponse(content={"ok": False, "error": "카테고리 오류"})
+    if not old_name or not new_name:
+        return JSONResponse(content={"ok": False, "error": "이름 없음"})
+    d = _load_registry(cat)
+    if old_name not in d:
+        return JSONResponse(content={"ok": False, "error": "항목 없음"})
+    if new_name in d and new_name != old_name:
+        return JSONResponse(content={"ok": False, "error": "이미 존재하는 이름"})
+    # 기존 값 보존하면서 키 교체
+    v = d.pop(old_name)
+    if isinstance(v, str):
+        v = {"trust": v}
+    if new_url:
+        v["url"] = new_url
+    elif "url" in v and not new_url:
+        pass  # 빈 문자열이면 기존 URL 유지
+    d[new_name] = v
+    _save_registry(cat, d)
+    return JSONResponse(content={"ok": True})
 
 
 def server_crawl(cat, only):
@@ -635,6 +675,11 @@ def api_etf_bar():
     if parse_etf_bar is None:
         return JSONResponse(content={"error": "parse_etf_bar 없음"}, status_code=503)
     try:
+        # 프리워밍 캐시 hit → 즉시 반환
+        cached = _prewarm_cache.get("etf_bar")
+        if cached and time.time() - cached["ts"] < _PREWARM_TTL:
+            return JSONResponse(content=cached["data"])
+
         import kis_api
         from concurrent.futures import ThreadPoolExecutor, as_completed
         etfs  = parse_etf_bar()
@@ -657,83 +702,105 @@ def api_etf_bar():
             e["change_rate"] = float(p.get("change_rate", 0) or 0)
             e["price"]       = int(p.get("price", 0) or 0)
             e["bars"]        = bars_map.get(e["code"], [])
+        _prewarm_cache["etf_bar"] = {"data": etfs, "ts": time.time()}
         return JSONResponse(content=etfs)
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
+
+
+@app.get("/api/debug_flow")
+def api_debug_flow():
+    """각 KIS API 직접 호출 진단 (서버 캐시 토큰 사용 — reload 없음)."""
+    import kis_api, traceback
+    results = {}
+    for name, fn, args in [
+        ("J_bars",    kis_api.get_index_minutebar, ("0001", 15)),
+        ("Q_bars",    kis_api.get_index_minutebar, ("1001", 15)),
+        ("J_investor",kis_api.get_market_investor, ("J",)),
+        ("J_prog",    kis_api.get_program_trade, ("J",)),
+        ("J_price",   kis_api.get_index_price, ("0001",)),
+        ("SPY",       kis_api.get_overseas_price, ("SPY","NYS")),
+        ("RANK",      kis_api.get_inquiry_rank, ()),
+    ]:
+        try:
+            v = fn(*args)
+            results[name] = {"ok": True, "val": str(v)[:300]}
+        except Exception:
+            results[name] = {"ok": False, "err": traceback.format_exc()[-200:]}
+    return JSONResponse(content=results)
+
+
+def _build_market_flow_result(done: dict) -> dict:
+    """done dict → market_flow 응답 dict 변환."""
+    result = {}
+    for mkt, code, label in [("J", "0001", "코스피"), ("Q", "1001", "코스닥")]:
+        price_d  = done.get(f"{mkt}_price") or {}
+        investor = done.get(f"{mkt}_investor") or {"외인": 0, "기관": 0, "개인": 0, "ts": ""}
+        prog     = done.get(f"{mkt}_prog") or {"차익": 0, "비차익": 0, "합계": 0, "ts": ""}
+        result[code] = {
+            "label":            label,
+            "price":            price_d.get("price", 0),
+            "change_rate":      price_d.get("change_rate", 0),
+            "bars":             done.get(f"{mkt}_bars") or [],
+            "investor_now":     investor,
+            "investor_history": list(_FLOW[mkt]["investor"]),
+            "program_now":      prog,
+            "program_history":  list(_FLOW[mkt]["program"]),
+        }
+    us  = done.get("US_price")  or {"price": 0, "change_rate": 0}
+    nf  = done.get("NF_price")  or {"price": 0, "change_rate": 0}
+    fx  = done.get("FX_usdkrw") or {"price": 0, "change_rate": 0}
+    oil = done.get("OIL_price") or {"price": 0, "change_rate": 0}
+    result["global"] = {
+        "label": "글로벌 지표",
+        "items": [
+            {"name": "미국선물(SPY)", "price": us["price"],  "change_rate": us["change_rate"],  "bars": done.get("US_bars") or []},
+            {"name": "코스피야간선물","price": nf["price"],  "change_rate": nf["change_rate"],  "bars": done.get("NF_bars") or []},
+            {"name": "원달러환율",     "price": fx["price"],  "change_rate": fx["change_rate"],  "bars": []},
+            {"name": "국제유가(WTI)", "price": oil["price"], "change_rate": oil["change_rate"], "bars": []},
+        ]
+    }
+    result["rank"] = {"label": "실시간 조회순위", "stocks": done.get("RANK") or []}
+    return result
 
 
 @app.get("/api/market_flow")
 def api_market_flow():
     """코스피/코스닥/미국선물(SPY)/코스피야간선물 지수 15분봉 + 투자자/프로그램 시계열."""
     try:
-        import kis_api
+        import kis_api, kiwoom_api
         from concurrent.futures import ThreadPoolExecutor
-        result = {}
+
+        # 프리워밍 캐시 hit → 즉시 반환 (수십 ms)
+        cached = _prewarm_cache.get("market_flow")
+        if cached and time.time() - cached["ts"] < _PREWARM_TTL:
+            return JSONResponse(content=_build_market_flow_result(cached["data"]))
+
+        # 캐시 미스 → 직접 fetch (분봉·투자자=키움, 나머지=KIS)
         with ThreadPoolExecutor(max_workers=14) as ex:
             tasks = {
-                "J_bars":     ex.submit(kis_api.get_index_minutebar, "0001", 15),
-                "Q_bars":     ex.submit(kis_api.get_index_minutebar, "1001", 15),
+                "J_bars":     ex.submit(kiwoom_api.get_index_minutebar, "0001", 15),
+                "Q_bars":     ex.submit(kiwoom_api.get_index_minutebar, "1001", 15),
                 "J_price":    ex.submit(kis_api.get_index_price, "0001"),
                 "Q_price":    ex.submit(kis_api.get_index_price, "1001"),
-                "J_investor": ex.submit(kis_api.get_market_investor, "J"),
-                "Q_investor": ex.submit(kis_api.get_market_investor, "Q"),
-                "J_prog":     ex.submit(kis_api.get_program_trade, "J"),
-                "Q_prog":     ex.submit(kis_api.get_program_trade, "Q"),
-                # 글로벌 지표
+                "J_investor": ex.submit(kiwoom_api.get_market_investor, "J"),
+                "Q_investor": ex.submit(kiwoom_api.get_market_investor, "Q"),
+                "J_prog":     ex.submit(kiwoom_api.get_program_trade, "J"),
+                "Q_prog":     ex.submit(kiwoom_api.get_program_trade, "Q"),
                 "US_price":   ex.submit(kis_api.get_overseas_price, "SPY", "NYS"),
                 "US_bars":    ex.submit(kis_api.get_overseas_minutebar, "SPY", "NYS", 15),
                 "NF_price":   ex.submit(kis_api.get_night_futures_price),
                 "NF_bars":    ex.submit(kis_api.get_night_futures_minutebar, 15),
                 "FX_usdkrw":  ex.submit(kis_api.get_usdkrw),
                 "OIL_price":  ex.submit(kis_api.get_crude_oil),
-                # 실시간 조회순위
                 "RANK":       ex.submit(kis_api.get_inquiry_rank, 15),
             }
             done = {}
             for k, f in tasks.items():
-                try:
-                    done[k] = f.result()
-                except Exception:
-                    done[k] = None
-
-        # 코스피 / 코스닥 — full (investor + program)
-        for mkt, code, label in [("J", "0001", "코스피"), ("Q", "1001", "코스닥")]:
-            price_d  = done.get(f"{mkt}_price") or {}
-            investor = done.get(f"{mkt}_investor") or {"외인": 0, "기관": 0, "개인": 0, "ts": ""}
-            prog     = done.get(f"{mkt}_prog") or {"차익": 0, "비차익": 0, "합계": 0, "ts": ""}
-            result[code] = {
-                "label":            label,
-                "price":            price_d.get("price", 0),
-                "change_rate":      price_d.get("change_rate", 0),
-                "bars":             done.get(f"{mkt}_bars") or [],
-                "investor_now":     investor,
-                "investor_history": list(_FLOW[mkt]["investor"]),
-                "program_now":      prog,
-                "program_history":  list(_FLOW[mkt]["program"]),
-            }
-
-        # 글로벌 지표 — 4종목 compact 카드
-        us  = done.get("US_price")  or {"price": 0, "change_rate": 0}
-        nf  = done.get("NF_price")  or {"price": 0, "change_rate": 0}
-        fx  = done.get("FX_usdkrw") or {"price": 0, "change_rate": 0}
-        oil = done.get("OIL_price") or {"price": 0, "change_rate": 0}
-        result["global"] = {
-            "label": "글로벌 지표",
-            "items": [
-                {"name": "미국선물(SPY)", "price": us["price"],  "change_rate": us["change_rate"],  "bars": done.get("US_bars") or []},
-                {"name": "코스피야간선물","price": nf["price"],  "change_rate": nf["change_rate"],  "bars": done.get("NF_bars") or []},
-                {"name": "원달러환율",     "price": fx["price"],  "change_rate": fx["change_rate"],  "bars": []},
-                {"name": "국제유가(WTI)", "price": oil["price"], "change_rate": oil["change_rate"], "bars": []},
-            ]
-        }
-
-        # 실시간 조회순위 카드
-        result["rank"] = {
-            "label":  "실시간 조회순위",
-            "stocks": done.get("RANK") or [],
-        }
-
-        return JSONResponse(content=result)
+                try: done[k] = f.result()
+                except Exception: done[k] = None
+        _prewarm_cache["market_flow"] = {"data": done, "ts": time.time()}
+        return JSONResponse(content=_build_market_flow_result(done))
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
@@ -808,7 +875,7 @@ def api_sector_custom_get():
                 return JSONResponse(content=json.load(f))
         except Exception:
             pass
-    return JSONResponse(content={"custom_tiles": [], "extra_stocks": {}, "hidden_sectors": []})
+    return JSONResponse(content={"custom_tiles": [], "extra_stocks": {}, "removed_stocks": {}, "hidden_sectors": []})
 
 
 @app.post("/api/sector_custom")
@@ -843,6 +910,31 @@ def api_sector_names():
         from sector_heatmap import parse_watchlist  # noqa: E402
         sections = parse_watchlist(top_n=1)
         return JSONResponse(content=[s["sector"] for s in sections])
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+
+@app.get("/api/sector_stocks")
+def api_sector_stocks(sector: str = ""):
+    """특정 섹터의 기본 종목 목록 반환 (가격 없음, 편집탭용)."""
+    if not sector.strip():
+        return JSONResponse(content={"base": [], "extra": [], "removed": []})
+    try:
+        from sector_heatmap import parse_watchlist  # noqa: E402
+        # custom 데이터는 파일에서 직접 읽기 (server.py에 _load_sector_custom 없음)
+        custom: dict = {}
+        if os.path.exists(SECTOR_CUSTOM_PATH):
+            with open(SECTOR_CUSTOM_PATH, encoding="utf-8") as f:
+                custom = json.load(f)
+        sections = parse_watchlist(top_n=999)
+        base = []
+        for sec in sections:
+            if sec["sector"] == sector:
+                base = [{"name": s["name"], "code": s["code"]} for s in sec["stocks"]]
+                break
+        extra = custom.get("extra_stocks", {}).get(sector, [])
+        removed = custom.get("removed_stocks", {}).get(sector, [])
+        return JSONResponse(content={"base": base, "extra": extra, "removed": removed})
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
@@ -891,6 +983,719 @@ def studio_file(path: str):
         return JSONResponse(content={"error": "없음"}, status_code=404)
     return FileResponse(full)
 
+
+# ── 백그라운드 캐시 프리워밍 ────────────────────────────────────
+_prewarm_cache: dict = {}   # {"market_flow": {data, ts}, "etf_bar": {data, ts}, "heatmap": {data, ts}}
+_PREWARM_TTL = 300          # 5분
+
+def _prewarm_worker():
+    """서버 시작 시 즉시 + 이후 5분마다 핵심 API를 미리 fetch해 캐시에 저장."""
+    import kis_api, kiwoom_api
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    def _fetch_market_flow():
+        try:
+            kis_api._token()
+            kiwoom_api._token()
+        except Exception:
+            pass
+        with ThreadPoolExecutor(max_workers=14) as ex:
+            tasks = {
+                "J_bars":     ex.submit(kiwoom_api.get_index_minutebar, "0001", 15),
+                "Q_bars":     ex.submit(kiwoom_api.get_index_minutebar, "1001", 15),
+                "J_price":    ex.submit(kis_api.get_index_price, "0001"),
+                "Q_price":    ex.submit(kis_api.get_index_price, "1001"),
+                "J_investor": ex.submit(kiwoom_api.get_market_investor, "J"),
+                "Q_investor": ex.submit(kiwoom_api.get_market_investor, "Q"),
+                "J_prog":     ex.submit(kiwoom_api.get_program_trade, "J"),
+                "Q_prog":     ex.submit(kiwoom_api.get_program_trade, "Q"),
+                "US_price":   ex.submit(kis_api.get_overseas_price, "SPY", "NYS"),
+                "NF_price":   ex.submit(kis_api.get_night_futures_price),
+                "FX_usdkrw":  ex.submit(kis_api.get_usdkrw),
+                "OIL_price":  ex.submit(kis_api.get_crude_oil),
+                "RANK":       ex.submit(kis_api.get_inquiry_rank, 15),
+            }
+            done = {}
+            for k, f in tasks.items():
+                try: done[k] = f.result()
+                except Exception: done[k] = None
+        return done
+
+    def _fetch_etf_bar():
+        try:
+            from sector_heatmap import parse_etf_bar
+            etfs = parse_etf_bar()
+            codes = [e["code"] for e in etfs]
+            prices = kis_api.get_prices_batch_parallel(codes)
+            for e in etfs:
+                p = prices.get(e["code"]) or {}
+                e["change_rate"] = float(p.get("change_rate", 0) or 0)
+                e["price"] = int(p.get("price", 0) or 0)
+            return etfs
+        except Exception:
+            return []
+
+    def _fetch_heatmap():
+        try:
+            from sector_heatmap import build_heatmap
+            return build_heatmap()
+        except Exception:
+            return {}
+
+    while True:
+        try:
+            now = datetime.now()
+            # 장중(08:50~15:35) 또는 첫 프리워밍(캐시 비어있을 때) 항상 실행
+            is_market_hours = (8, 50) <= (now.hour, now.minute) <= (15, 35)
+            cache_empty = "market_flow" not in _prewarm_cache
+            if is_market_hours or cache_empty:
+                mf = _fetch_market_flow()
+                # 코스피/코스닥 가격이 0이면 캐시하지 않음 (토큰 실패로 인한 빈 데이터 방지)
+                j_price = (mf.get("J_price") or {}).get("price", 0)
+                q_price = (mf.get("Q_price") or {}).get("price", 0)
+                if j_price and q_price:
+                    _prewarm_cache["market_flow"] = {"data": mf, "ts": time.time()}
+                etf = _fetch_etf_bar()
+                if etf:
+                    _prewarm_cache["etf_bar"] = {"data": etf, "ts": time.time()}
+                hm = _fetch_heatmap()
+                if hm:
+                    _heatmap_cache["all"] = {"data": hm, "ts": time.time()}
+        except Exception as e:
+            pass
+        time.sleep(_PREWARM_TTL)
+
+threading.Thread(target=_prewarm_worker, daemon=True).start()
+
+
+# ══════════════════════════════════════════════════════════════
+# 인사이트 허브 라우트 (§4.1 ~ §4.9)
+# ══════════════════════════════════════════════════════════════
+
+# ── §4.1 GET /insights → insights.html 서빙 ──────────────────
+@app.get("/insights", response_class=HTMLResponse)
+def insights_page():
+    p = os.path.join(HERE, "insights.html")
+    if not os.path.exists(p):
+        return "<h1>insights.html 준비중</h1>"
+    with open(p, encoding="utf-8") as f:
+        return f.read()
+
+
+# ── 인사이트 헬퍼 ────────────────────────────────────────────
+
+_CAT_LABEL = {
+    "youtube":  ("유튜브",       "📺"),
+    "telegram": ("텔레그램",     "💬"),
+    "report":   ("블로그·리포트", "📰"),
+}
+_CAT_TYPE_MAP = {
+    "youtube":  "source_type IN ('youtube','yt')",
+    "telegram": "source_type = 'telegram'",
+    "report":   "source_type IN ('report','blog','news')",
+}
+
+
+def _ins_conn():
+    """atoms.db 연결 (doc_summary 모듈 없어도 동작)."""
+    import sqlite3
+    from pathlib import Path
+    db_path = Path(ROOT) / "pipeline" / "atoms" / "atoms.db"
+    if not db_path.exists():
+        return None
+    conn = sqlite3.connect(str(db_path))
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def _doc_key(category: str, source_name: str, date: str, raw_file: str) -> str:
+    """재현 가능한 doc_key 생성 (스펙 §2)."""
+    if category == "telegram":
+        return f"telegram:{source_name}:{date}"
+    basename = os.path.basename(raw_file or "")
+    return f"{category}:{basename}"
+
+
+def _ts_to_seconds(ts: str) -> int:
+    """'HH:MM:SS' 또는 'MM:SS' 또는 숫자 문자열 → 초."""
+    if not ts:
+        return 0
+    ts = ts.strip()
+    if ts.isdigit():
+        return int(ts)
+    parts = ts.split(":")
+    try:
+        if len(parts) == 3:
+            return int(parts[0]) * 3600 + int(parts[1]) * 60 + int(parts[2])
+        if len(parts) == 2:
+            return int(parts[0]) * 60 + int(parts[1])
+    except Exception:
+        pass
+    return 0
+
+
+def _has_summary(doc_key: str) -> bool:
+    """doc_summaries 테이블에 해당 doc_key 캐시 존재 여부."""
+    conn = _ins_conn()
+    if not conn:
+        return False
+    try:
+        row = conn.execute(
+            "SELECT 1 FROM doc_summaries WHERE doc_key=? LIMIT 1", (doc_key,)
+        ).fetchone()
+        return row is not None
+    except Exception:
+        return False
+    finally:
+        conn.close()
+
+
+def _get_summary_row(doc_key: str) -> dict | None:
+    """doc_summaries 행 반환 (없으면 None)."""
+    conn = _ins_conn()
+    if not conn:
+        return None
+    try:
+        row = conn.execute(
+            "SELECT * FROM doc_summaries WHERE doc_key=?", (doc_key,)
+        ).fetchone()
+        if row is None:
+            return None
+        d = dict(row)
+        d["summary3"] = [l for l in (d.get("summary3") or "").split("\n") if l.strip()]
+        for k in ("stocks_json", "seeds_json"):
+            try:
+                d[k] = json.loads(d[k] or "[]")
+            except Exception:
+                d[k] = []
+        return d
+    except Exception:
+        return None
+    finally:
+        conn.close()
+
+
+def _build_doc_title(raw_file: str, source_name: str, date: str, category: str) -> str:
+    """표시용 제목 추정."""
+    if raw_file:
+        base = os.path.basename(raw_file)
+        name = os.path.splitext(base)[0]
+        return name
+    return f"{source_name} ({date})"
+
+
+# ── §4.2 GET /api/insights/overview ──────────────────────────
+@app.get("/api/insights/overview")
+def api_insights_overview():
+    today = datetime.now().strftime("%Y-%m-%d")
+    conn = _ins_conn()
+    if conn is None:
+        return JSONResponse(content={"error": "atoms.db 없음"}, status_code=503)
+
+    try:
+        categories = []
+        feed_items = []
+
+        for cat_id, type_cond in _CAT_TYPE_MAP.items():
+            label, icon = _CAT_LABEL[cat_id]
+
+            # 채널 수, 전체 원자 수
+            channels_row = conn.execute(
+                f"SELECT COUNT(DISTINCT source_name) as cnt FROM atoms WHERE {type_cond}"
+            ).fetchone()
+            channels_cnt = (channels_row["cnt"] if channels_row else 0)
+
+            atoms_row = conn.execute(
+                f"SELECT COUNT(*) as cnt FROM atoms WHERE {type_cond}"
+            ).fetchone()
+            atoms_cnt = atoms_row["cnt"] if atoms_row else 0
+
+            # 문서(L2) 목록 집계
+            if cat_id == "telegram":
+                doc_rows = conn.execute(
+                    f"""SELECT source_name, date, COUNT(*) as atom_cnt,
+                               MAX(raw_file) as raw_file
+                        FROM atoms WHERE {type_cond}
+                        GROUP BY source_name, date
+                        ORDER BY date DESC, source_name"""
+                ).fetchall()
+            else:
+                doc_rows = conn.execute(
+                    f"""SELECT source_name, date, COUNT(*) as atom_cnt,
+                               raw_file, MAX(raw_file) as raw_file
+                        FROM atoms WHERE {type_cond} AND raw_file IS NOT NULL
+                        GROUP BY raw_file
+                        ORDER BY date DESC"""
+                ).fetchall()
+
+            docs_cnt = len(doc_rows)
+
+            # 오늘 신규
+            today_new = sum(
+                1 for r in doc_rows
+                if (r["date"] or "").startswith(today[:7]) and r["date"] >= today[:8]
+            )
+            # 정확한 오늘만
+            today_new = sum(1 for r in doc_rows if r["date"] == today)
+
+            # hot 3개
+            hot = []
+            for r in doc_rows[:3]:
+                dk = _doc_key(cat_id, r["source_name"], r["date"], r["raw_file"])
+                title = _build_doc_title(r["raw_file"], r["source_name"], r["date"], cat_id)
+                hot.append({
+                    "doc_key": dk,
+                    "title": title,
+                    "source": r["source_name"],
+                    "date": r["date"],
+                    "atoms": r["atom_cnt"],
+                })
+
+            categories.append({
+                "id": cat_id,
+                "label": label,
+                "icon": icon,
+                "channels": channels_cnt,
+                "docs": docs_cnt,
+                "atoms": atoms_cnt,
+                "today_new": today_new,
+                "hot": hot,
+            })
+
+            # feed용
+            for r in doc_rows[:7]:
+                dk = _doc_key(cat_id, r["source_name"], r["date"], r["raw_file"])
+                title = _build_doc_title(r["raw_file"], r["source_name"], r["date"], cat_id)
+                feed_items.append({
+                    "category": cat_id,
+                    "doc_key": dk,
+                    "title": title,
+                    "source": r["source_name"],
+                    "date": r["date"],
+                    "atoms": r["atom_cnt"],
+                    "has_summary": _has_summary(dk),
+                })
+
+        # 통합 피드: 날짜 역순 20개
+        feed_items.sort(key=lambda x: x["date"] or "", reverse=True)
+        feed_items = feed_items[:20]
+
+        return JSONResponse(content={
+            "today": today,
+            "categories": categories,
+            "feed": feed_items,
+        })
+    finally:
+        conn.close()
+
+
+# ── §4.3 GET /api/insights/sources?category=youtube ──────────
+@app.get("/api/insights/sources")
+def api_insights_sources(category: str = "youtube"):
+    type_cond = _CAT_TYPE_MAP.get(category)
+    if type_cond is None:
+        return JSONResponse(content={"error": "unknown category"}, status_code=400)
+
+    label, icon = _CAT_LABEL.get(category, (category, ""))
+    conn = _ins_conn()
+    if conn is None:
+        return JSONResponse(content={"error": "atoms.db 없음"}, status_code=503)
+    try:
+        if category == "telegram":
+            rows = conn.execute(
+                f"""SELECT source_name, COUNT(DISTINCT date) as docs,
+                           COUNT(*) as atoms, MAX(date) as last_date
+                    FROM atoms WHERE {type_cond}
+                    GROUP BY source_name ORDER BY last_date DESC"""
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                f"""SELECT source_name, COUNT(DISTINCT raw_file) as docs,
+                           COUNT(*) as atoms, MAX(date) as last_date
+                    FROM atoms WHERE {type_cond}
+                    GROUP BY source_name ORDER BY last_date DESC"""
+            ).fetchall()
+
+        sources = [
+            {
+                "name": r["source_name"],
+                "docs": r["docs"],
+                "atoms": r["atoms"],
+                "last_date": r["last_date"],
+            }
+            for r in rows
+        ]
+        return JSONResponse(content={
+            "category": category,
+            "label": label,
+            "icon": icon,
+            "sources": sources,
+        })
+    finally:
+        conn.close()
+
+
+# ── §4.4 GET /api/insights/docs?category=youtube&source=XXX ──
+@app.get("/api/insights/docs")
+def api_insights_docs(category: str = "youtube", source: str = ""):
+    type_cond = _CAT_TYPE_MAP.get(category)
+    if type_cond is None:
+        return JSONResponse(content={"error": "unknown category"}, status_code=400)
+
+    conn = _ins_conn()
+    if conn is None:
+        return JSONResponse(content={"error": "atoms.db 없음"}, status_code=503)
+    try:
+        if category == "telegram":
+            rows = conn.execute(
+                f"""SELECT source_name, date, COUNT(*) as atom_cnt,
+                           MAX(raw_file) as raw_file
+                    FROM atoms WHERE {type_cond} AND source_name=?
+                    GROUP BY source_name, date ORDER BY date DESC""",
+                (source,),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                f"""SELECT source_name, date, COUNT(*) as atom_cnt, raw_file
+                    FROM atoms WHERE {type_cond} AND source_name=?
+                      AND raw_file IS NOT NULL
+                    GROUP BY raw_file ORDER BY date DESC""",
+                (source,),
+            ).fetchall()
+
+        docs = []
+        for r in rows:
+            dk = _doc_key(category, r["source_name"], r["date"], r["raw_file"])
+            title = _build_doc_title(r["raw_file"], r["source_name"], r["date"], category)
+            docs.append({
+                "doc_key": dk,
+                "title": title,
+                "date": r["date"],
+                "atoms": r["atom_cnt"],
+                "has_summary": _has_summary(dk),
+            })
+
+        return JSONResponse(content={
+            "category": category,
+            "source": source,
+            "docs": docs,
+        })
+    finally:
+        conn.close()
+
+
+# ── §4.5 GET /api/insights/doc?doc_key=... ───────────────────
+@app.get("/api/insights/doc")
+def api_insights_doc(doc_key: str = ""):
+    if not doc_key:
+        return JSONResponse(content={"error": "doc_key 필요"}, status_code=400)
+
+    conn = _ins_conn()
+    if conn is None:
+        return JSONResponse(content={"error": "atoms.db 없음"}, status_code=503)
+    try:
+        # doc_key 파싱
+        parts = doc_key.split(":", 2)
+        category = parts[0] if parts else ""
+        type_cond = _CAT_TYPE_MAP.get(category)
+        if type_cond is None:
+            return JSONResponse(content={"error": "unknown category"}, status_code=400)
+
+        # 원자 조회
+        if category == "telegram":
+            source_name = parts[1] if len(parts) > 1 else ""
+            date = parts[2] if len(parts) > 2 else ""
+            rows = conn.execute(
+                f"""SELECT id, date, source_type, source_name, raw_file, sector, asset,
+                           signal, content, stance_key, speaker, yt_timestamp, deeplink
+                    FROM atoms WHERE {type_cond} AND source_name=? AND date=?
+                    ORDER BY id""",
+                (source_name, date),
+            ).fetchall()
+        else:
+            raw_basename = parts[1] if len(parts) > 1 else ""
+            rows = conn.execute(
+                f"""SELECT id, date, source_type, source_name, raw_file, sector, asset,
+                           signal, content, stance_key, speaker, yt_timestamp, deeplink
+                    FROM atoms WHERE {type_cond}
+                      AND (raw_file=? OR raw_file LIKE ? OR raw_file LIKE ?)
+                    ORDER BY yt_timestamp, id""",
+                (raw_basename, f"%/{raw_basename}", f"%\\{raw_basename}"),
+            ).fetchall()
+
+        atoms_list = [dict(r) for r in rows]
+
+        # 메타
+        source_name_meta = atoms_list[0]["source_name"] if atoms_list else ""
+        date_meta = atoms_list[0]["date"] if atoms_list else ""
+        raw_file_meta = atoms_list[0]["raw_file"] if atoms_list else ""
+        title = _build_doc_title(raw_file_meta, source_name_meta, date_meta, category)
+
+        # 유튜브 video_url
+        video_url = None
+        if category == "youtube" and atoms_list:
+            dl = atoms_list[0].get("deeplink") or ""
+            if dl:
+                video_url = dl.split("&t=")[0]
+
+        # 요약 캐시
+        summary_row = _get_summary_row(doc_key)
+        summary = None
+        if summary_row:
+            summary = {
+                "tldr": summary_row.get("tldr"),
+                "summary3": summary_row.get("summary3") or [],
+                "market_view": summary_row.get("market_view"),
+                "market_reason": summary_row.get("market_reason"),
+                "stocks": summary_row.get("stocks_json") or [],
+                "seeds": summary_row.get("seeds_json") or [],
+                "generated_at": summary_row.get("generated_at"),
+            }
+
+        # 타임라인 원자
+        atoms_out = []
+        for a in atoms_list:
+            ts_raw = a.get("yt_timestamp") or ""
+            secs = _ts_to_seconds(ts_raw)
+            atoms_out.append({
+                "timestamp": ts_raw,
+                "seconds": secs,
+                "speaker": a.get("speaker"),
+                "signal": a.get("signal"),
+                "stance": a.get("stance_key"),
+                "content": a.get("content"),
+                "deeplink": a.get("deeplink"),
+                "asset": a.get("asset"),
+                "sector": a.get("sector"),
+            })
+
+        # 타임라인 정렬 (seconds 오름차순)
+        atoms_out.sort(key=lambda x: x["seconds"])
+
+        return JSONResponse(content={
+            "doc_key": doc_key,
+            "category": category,
+            "source": source_name_meta,
+            "title": title,
+            "date": date_meta,
+            "video_url": video_url,
+            "summary": summary,
+            "atoms": atoms_out,
+        })
+    finally:
+        conn.close()
+
+
+# ── §4.6 POST /api/insights/summarize ────────────────────────
+@app.post("/api/insights/summarize")
+async def api_insights_summarize(req: Request):
+    body = {}
+    try:
+        body = await req.json()
+    except Exception:
+        pass
+    doc_key = (body.get("doc_key") or "").strip()
+    force = bool(body.get("force", False))
+    if not doc_key:
+        return JSONResponse(content={"error": "doc_key 필요"}, status_code=400)
+    if not _DS_AVAIL:
+        return JSONResponse(content={"error": "doc_summary 모듈 없음"}, status_code=503)
+
+    result = await run_in_threadpool(get_or_build_summary, doc_key, force=force)
+    return JSONResponse(content={"ok": True, "summary": result})
+
+
+# ── §4.7 GET /api/insights/search?q=삼성전자 ─────────────────
+@app.get("/api/insights/search")
+def api_insights_search(q: str = ""):
+    if not q.strip():
+        return JSONResponse(content={"q": q, "total": 0, "hits": []})
+
+    conn = _ins_conn()
+    if conn is None:
+        return JSONResponse(content={"error": "atoms.db 없음"}, status_code=503)
+    try:
+        like = f"%{q}%"
+        rows = conn.execute(
+            """SELECT source_type, source_name, raw_file, date,
+                      content, asset, stance_key, yt_timestamp, deeplink
+               FROM atoms
+               WHERE content LIKE ? OR asset LIKE ?
+               ORDER BY date DESC
+               LIMIT 50""",
+            (like, like),
+        ).fetchall()
+
+        hits = []
+        for r in rows:
+            # source_type 기반 카테고리
+            st = r["source_type"] or ""
+            if st in ("youtube", "yt"):
+                cat = "youtube"
+            elif st == "telegram":
+                cat = "telegram"
+            elif st in ("report", "blog", "news"):
+                cat = "report"
+            else:
+                cat = st
+
+            raw_file = r["raw_file"] or ""
+            dk = _doc_key(cat, r["source_name"], r["date"], raw_file)
+            title = _build_doc_title(raw_file, r["source_name"], r["date"], cat)
+            hits.append({
+                "category": cat,
+                "source": r["source_name"],
+                "doc_key": dk,
+                "title": title,
+                "date": r["date"],
+                "timestamp": r["yt_timestamp"],
+                "stance": r["stance_key"],
+                "content": (r["content"] or "")[:200],
+                "deeplink": r["deeplink"],
+            })
+
+        return JSONResponse(content={"q": q, "total": len(hits), "hits": hits})
+    finally:
+        conn.close()
+
+
+# ── §4.8 POST /api/insights/to_youtube ───────────────────────
+@app.post("/api/insights/to_youtube")
+async def api_insights_to_youtube(req: Request):
+    body = {}
+    try:
+        body = await req.json()
+    except Exception:
+        pass
+    doc_key = (body.get("doc_key") or "").strip()
+    if not doc_key:
+        return JSONResponse(content={"error": "doc_key 필요"}, status_code=400)
+
+    # 문서 제목을 topic으로 사용
+    conn = _ins_conn()
+    topic = doc_key
+    if conn:
+        try:
+            parts = doc_key.split(":", 2)
+            cat = parts[0] if parts else ""
+            type_cond = _CAT_TYPE_MAP.get(cat, "source_type='youtube'")
+            if cat == "telegram":
+                source_name = parts[1] if len(parts) > 1 else ""
+                date = parts[2] if len(parts) > 2 else ""
+                r = conn.execute(
+                    f"SELECT source_name, date FROM atoms WHERE {type_cond} AND source_name=? AND date=? LIMIT 1",
+                    (source_name, date),
+                ).fetchone()
+                if r:
+                    topic = f"{r['source_name']} {r['date']} 발언 요약"
+            else:
+                raw_basename = parts[1] if len(parts) > 1 else ""
+                r = conn.execute(
+                    f"SELECT raw_file, source_name FROM atoms WHERE {type_cond} AND (raw_file=? OR raw_file LIKE ?) LIMIT 1",
+                    (raw_basename, f"%/{raw_basename}"),
+                ).fetchone()
+                if r:
+                    topic = os.path.splitext(os.path.basename(r["raw_file"] or ""))[0] or r["source_name"] or topic
+        except Exception:
+            pass
+        finally:
+            conn.close()
+
+    def _run_yt_plan(topic: str) -> str:
+        try:
+            from pipeline.atoms.yt_plan import search_yt_atoms, build_speech_card_table, build_script_skeleton
+            atoms = search_yt_atoms(topic, n=15)
+            card_md = build_speech_card_table(atoms)
+            skeleton_md = build_script_skeleton(topic, atoms)
+            return f"## 발언카드\n\n{card_md}\n\n{skeleton_md}"
+        except Exception:
+            # subprocess 폴백
+            proc = subprocess.run(
+                [sys.executable, "-m", "pipeline.atoms.yt_plan", topic],
+                cwd=ROOT, capture_output=True, encoding="utf-8",
+                errors="replace", timeout=60,
+            )
+            return (proc.stdout or "").strip() or "yt_plan 실행 실패"
+
+    markdown = await run_in_threadpool(_run_yt_plan, topic)
+    return JSONResponse(content={"ok": True, "markdown": markdown, "topic": topic})
+
+
+# ── §4.9 POST /api/insights/to_wiki ──────────────────────────
+@app.post("/api/insights/to_wiki")
+async def api_insights_to_wiki(req: Request):
+    body = {}
+    try:
+        body = await req.json()
+    except Exception:
+        pass
+    doc_key = (body.get("doc_key") or "").strip()
+    if not doc_key:
+        return JSONResponse(content={"error": "doc_key 필요"}, status_code=400)
+
+    # 요약 가져오기 (캐시 우선)
+    summary_row = _get_summary_row(doc_key)
+    if summary_row:
+        tldr = summary_row.get("tldr") or ""
+        summary3 = summary_row.get("summary3") or []
+        market_view = summary_row.get("market_view") or ""
+        market_reason = summary_row.get("market_reason") or ""
+        stocks = summary_row.get("stocks_json") or []
+        source_name = summary_row.get("source_name") or ""
+        doc_title = summary_row.get("doc_title") or doc_key
+        doc_date = summary_row.get("doc_date") or ""
+    else:
+        tldr = "요약 없음 (summarize 먼저 실행)"
+        summary3 = []
+        market_view = ""
+        market_reason = ""
+        stocks = []
+        source_name = ""
+        doc_title = doc_key
+        doc_date = ""
+
+    # 마크다운 생성
+    summary3_md = "\n".join(f"- {s}" for s in summary3)
+    stocks_md = "\n".join(f"- [{s.get('stance','')}] {s.get('name','')}: {s.get('reason','')}" for s in stocks)
+
+    md_content = f"""# {doc_title}
+
+> 출처: {source_name} | 날짜: {doc_date} | doc_key: {doc_key}
+
+## 핵심 요약
+**{tldr}**
+
+## 주린이 3줄
+{summary3_md}
+
+## 시장관: {market_view}
+{market_reason}
+
+## 언급 종목
+{stocks_md or "_(없음)_"}
+
+---
+_생성: {datetime.now().strftime('%Y-%m-%d %H:%M')} | 인사이트 허브 자동 저장_
+_위키 정식 ingest는 후속 연결 예정_
+"""
+
+    # 저장 경로
+    safe_key = re.sub(r'[\\/:*?"<>|]', '_', doc_key)
+    out_dir = os.path.join(ROOT, "out", "insights_wiki")
+    os.makedirs(out_dir, exist_ok=True)
+    save_path = os.path.join(out_dir, f"{safe_key}.md")
+    with open(save_path, "w", encoding="utf-8") as f:
+        f.write(md_content)
+
+    rel_path = os.path.relpath(save_path, ROOT)
+    return JSONResponse(content={
+        "ok": True,
+        "path": rel_path.replace("\\", "/"),
+        "note": "위키 정식 ingest는 후속 연결",
+    })
+
+
+# ══════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
     print("딸깍 대시보드 → http://localhost:8090")

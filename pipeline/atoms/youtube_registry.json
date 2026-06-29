@@ -1,10 +1,22 @@
 {
-  "UP_CYCLE_STOCK": "B",
-  "태린이아빠투자": "B",
-  "한균수의주식사용설명서": "B",
-  "GODofIT": "B",
-  "moneyinthetrap": {
+  "업사이클": {
+    "trust": "B",
+    "url": "https://www.youtube.com/@UP_CYCLE_STOCK"
+  },
+  "태린이아빠": {
+    "trust": "B",
+    "url": "https://www.youtube.com/@Taerins_Dad"
+  },
+  "머니인더트랩": {
     "trust": "B",
     "url": "https://www.youtube.com/@moneyinthetrap"
+  },
+  "한균수바이오": {
+    "trust": "B",
+    "url": "https://www.youtube.com/@한균수의주식사용설명"
+  },
+  "It의 신": {
+    "trust": "B",
+    "url": "https://www.youtube.com/@GODofIT_official"
   }
 }

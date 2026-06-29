@@ -53,5 +53,14 @@
     },
     "queue_new": 0,
     "pytest_ok": false
+  },
+  "2026-06-29": {
+    "atoms": {
+      "news": 67,
+      "report": 47,
+      "telegram": 92
+    },
+    "queue_new": 0,
+    "pytest_ok": false
   }
 }

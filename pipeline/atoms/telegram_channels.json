@@ -2,84 +2,91 @@
   "하나반도체": {
     "type": "sector",
     "sector": "반도체",
-    "trust": "B"
+    "trust": "B",
+    "url": "https://t.me/ITforYouFromHana"
   },
   "삼성반도체": {
     "type": "sector",
     "sector": "반도체",
-    "trust": "B"
+    "trust": "B",
+    "url": "https://t.me/jw_tech"
   },
   "다올조선방산": {
     "type": "sector",
     "sector": "조선",
-    "trust": "B"
+    "trust": "B",
+    "url": "https://t.me/HI_GS"
   },
   "하나차이나": {
     "type": "sector",
     "sector": "중국",
-    "trust": "B"
+    "trust": "B",
+    "url": "https://t.me/HANAchina"
   },
   "한화철강": {
     "type": "sector",
     "sector": "철강",
-    "trust": "B"
+    "trust": "B",
+    "url": "https://t.me/cheolkangtracking"
   },
   "대신시황": {
     "type": "market",
-    "trust": "B"
+    "trust": "B",
+    "url": "https://t.me/daishinstrategy"
   },
   "미래시황": {
     "type": "market",
-    "trust": "B"
+    "trust": "B",
+    "url": "https://t.me/globalmktinsight"
   },
   "유안타시황": {
     "type": "market",
-    "trust": "B"
+    "trust": "B",
+    "url": "https://t.me/yuantais"
   },
   "키움시황": {
     "type": "market",
-    "trust": "B"
+    "trust": "B",
+    "url": "https://t.me/hedgecat0301"
   },
   "그로스리서치": {
     "type": "report_relay",
-    "trust": "B"
+    "trust": "B",
+    "url": "https://t.me/growthresearch"
   },
   "신한리서치": {
     "type": "report_relay",
-    "trust": "B"
+    "trust": "B",
+    "url": "https://t.me/shinhanresearch"
   },
   "한투글로벌": {
     "type": "report_relay",
-    "trust": "B"
+    "trust": "B",
+    "url": "https://t.me/chinaitev"
   },
   "요약하는 고잉": {
     "type": "report_relay",
-    "trust": "C"
+    "trust": "C",
+    "url": "https://t.me/one_going"
   },
   "잠실개미고급수집": {
     "type": "stock_tips",
-    "trust": "C"
+    "trust": "C",
+    "url": "https://t.me/jake8lee"
   },
   "주공고급수집": {
     "type": "stock_tips",
-    "trust": "C"
+    "trust": "C",
+    "url": "https://t.me/Yzoogong"
   },
   "독학주식첵터정리": {
     "type": "stock_tips",
-    "trust": "C"
+    "trust": "C",
+    "url": "https://t.me/selfstudyview"
   },
   "태린이아빠 주식투자": {
     "type": "insight",
-    "trust": "B"
-  },
-  "로또": {
-    "type": "general",
-    "sector": "",
-    "trust": "B"
-  },
-  "리포트요약": {
-    "type": "general",
-    "sector": "",
-    "trust": "B"
+    "trust": "B",
+    "url": "https://t.me/+E9KqzA7DYVA0OGY1"
   }
 }

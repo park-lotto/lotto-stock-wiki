@@ -454,9 +454,10 @@ def build_heatmap(top_n: int = 3) -> dict:
     custom = _load_sector_custom()
     hidden_set = set(custom.get("hidden_sectors", []))
     extra_map = custom.get("extra_stocks", {})       # {섹터명: [{name, code}]}
+    removed_map = custom.get("removed_stocks", {})   # {섹터명: [code, ...]}
     custom_tile_conf = custom.get("custom_tiles", [])
 
-    sections = parse_watchlist(top_n)
+    sections = parse_watchlist(999)  # 전 종목 조회 (top_n은 표시용, 조회는 전체)
 
     # 기본 + extra + custom 코드 일괄 수집 → 단일 배치 조회
     base_codes = {s["code"] for sec in sections for s in sec["stocks"]}
@@ -469,13 +470,15 @@ def build_heatmap(top_n: int = 3) -> dict:
     for sec in sections:
         if sec["sector"] in hidden_set:
             continue
-        items, rates = [], []
+        removed_codes = set(removed_map.get(sec["sector"], []))
+        items = []
         for s in sec["stocks"]:
+            if s["code"] in removed_codes:
+                continue
             p = prices.get(s["code"]) or {}
             rate = float(p.get("change_rate", 0) or 0)
             items.append({"name": s["name"], "code": s["code"],
                           "change_rate": rate, "price": p.get("price", 0)})
-            rates.append(rate)
         # extra_stocks 추가
         existing_codes = {s["code"] for s in items}
         for es in extra_map.get(sec["sector"], []):
@@ -486,8 +489,11 @@ def build_heatmap(top_n: int = 3) -> dict:
                 items.append({"name": es.get("name", c), "code": c,
                               "change_rate": rate, "price": p.get("price", 0)})
                 existing_codes.add(c)
-                rates.append(rate)
-        avg = round(sum(rates) / len(rates), 2) if rates else 0
+        # 등락률 내림차순 정렬
+        items = sorted(items, key=lambda x: x["change_rate"], reverse=True)
+        # avg: 실제 가격 데이터 있는 종목만 (0% = 데이터 없음 제외)
+        valid_rates = [x["change_rate"] for x in items if x.get("price", 0) != 0]
+        avg = round(sum(valid_rates) / len(valid_rates), 2) if valid_rates else 0
         sectors.append({"name": sec["sector"], "avg_rate": avg, "stocks": items})
 
     # 커스텀 타일 추가

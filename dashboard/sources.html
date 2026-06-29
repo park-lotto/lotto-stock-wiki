@@ -16,8 +16,16 @@
   .card h2 { font-size:.95rem; color:var(--gold); margin-bottom:4px; }
   .card .cnt { color:var(--muted); font-size:.72rem; margin-bottom:12px; }
   .item { display:flex; align-items:center; gap:8px; padding:7px 9px; border:1px solid #1f1f25; border-radius:9px; margin-bottom:6px; background:#121216; }
-  .item .nm { flex:1; font-size:.85rem; font-weight:600; word-break:break-all; }
-  .item .meta { font-size:.68rem; color:var(--muted); }
+  .item .nm-wrap { flex:1; min-width:0; }
+  .item .nm { font-size:.85rem; font-weight:600; word-break:break-all; display:block; }
+  .item .url-link { font-size:.68rem; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; max-width:100%; text-decoration:none; }
+  .item .url-link:hover { color:var(--gold); text-decoration:underline; }
+  .item .meta { font-size:.68rem; color:var(--muted); flex-shrink:0; }
+  .ren { background:#1a1a2a; color:#8888cc; border:1px solid #333355; border-radius:7px; padding:3px 7px; font-size:.72rem; cursor:pointer; flex-shrink:0; }
+  .ren:hover { background:#22224a; }
+  .nm-edit { font-size:.85rem; font-weight:600; background:#1a1a20; color:var(--txt); border:1px solid var(--gold-dim); border-radius:6px; padding:2px 6px; width:100%; }
+  .url-edit { font-size:.7rem; background:#1a1a20; color:#8888cc; border:1px solid #333355; border-radius:6px; padding:2px 6px; width:100%; margin-top:2px; }
+  .edit-wrap { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
   .badge { font-size:.62rem; padding:1px 6px; border-radius:6px; border:1px solid var(--gold-dim); color:var(--gold); }
   .del { background:#2a0d0d; color:#e07070; border:1px solid #5c1a1a; border-radius:7px; padding:3px 9px; font-size:.72rem; cursor:pointer; flex-shrink:0; }
   .del:hover { background:#3a1010; }
@@ -95,12 +103,16 @@ function render() {
       let meta = '';
       if (reg.rich && sub) meta += '<span class="meta">' + esc(sub) + '</span> ';
       meta += '<span class="badge">' + esc(trust) + '</span>';
-      if (url) meta += ' <a href="' + esc(url) + '" target="_blank" title="' + esc(url) + '" style="text-decoration:none;font-size:.8rem">🔗</a>';
       const kEsc = esc(k).replace(/'/g,"\\'");
+      const urlLink = url
+        ? '<a class="url-link" id="url-disp-' + cat + '-' + kEsc + '" href="' + esc(url) + '" target="_blank" title="' + esc(url) + '">' + esc(url) + '</a>'
+        : '';
       const crawlBtn = (cat !== 'news')
         ? '<button class="del" style="background:#0d2a14;color:#3ddc6e;border-color:#1a5c30" title="이 채널만 지금 크롤" onclick="crawlOne(\'' + cat + '\',\'' + kEsc + '\')">▶</button>'
         : '';
-      rows += '<div class="item"><span class="nm">' + esc(k) + '</span>' + meta
+      const nmWrap = '<span class="nm-wrap"><span class="nm" id="nm-disp-' + cat + '-' + kEsc + '">' + esc(k) + '</span>' + urlLink + '</span>';
+      rows += '<div class="item">' + nmWrap + meta
+        + '<button class="ren" title="이름 변경" onclick="startRename(\'' + cat + '\',\'' + kEsc + '\')">✏️</button>'
         + crawlBtn + '<button class="del" onclick="del(\'' + cat + '\',\'' + kEsc + '\')">삭제</button></div>';
     }
     // 추가 폼
@@ -172,6 +184,53 @@ async function crawlOne(cat, name) {
   toast('"' + name + '" 크롤 시작…');
   const r = await (await fetch('/api/crawl/run', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ category:cat, only:name }) })).json();
   toast(r.ok ? ('"' + name + '" 크롤 시작됨 — 끝나면 📥받아오기') : ('오류: ' + (r.error||'')));
+}
+
+function startRename(cat, name) {
+  const nmDisp = document.getElementById('nm-disp-' + cat + '-' + name);
+  const urlDisp = document.getElementById('url-disp-' + cat + '-' + name);
+  if (!nmDisp) return;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'edit-wrap';
+
+  const nmIn = document.createElement('input');
+  nmIn.className = 'nm-edit';
+  nmIn.value = name;
+  nmIn.placeholder = '채널 이름';
+
+  const urlIn = document.createElement('input');
+  urlIn.className = 'url-edit';
+  urlIn.value = urlDisp ? urlDisp.href : '';
+  urlIn.placeholder = 'URL (예: https://www.youtube.com/@채널명)';
+
+  wrap.appendChild(nmIn);
+  wrap.appendChild(urlIn);
+
+  let done = false;
+  const finish = async () => {
+    if (done) return; done = true;
+    await confirmRename(cat, name, nmIn.value.trim(), urlIn.value.trim());
+  };
+  nmIn.onkeydown = urlIn.onkeydown = (e) => {
+    if (e.key === 'Enter') finish();
+    if (e.key === 'Escape') { done = true; load(); }
+  };
+  urlIn.onblur = () => setTimeout(() => { if (!done && !nmIn.matches(':focus')) finish(); }, 150);
+  nmIn.onblur  = () => setTimeout(() => { if (!done && !urlIn.matches(':focus')) finish(); }, 150);
+
+  const nmWrap = nmDisp.closest('.nm-wrap');
+  nmWrap.style.display = 'none';
+  nmWrap.parentNode.insertBefore(wrap, nmWrap);
+  nmIn.focus(); nmIn.select();
+}
+
+async function confirmRename(cat, oldName, newName, newUrl) {
+  if (!newName) { await load(); return; }
+  const r = await (await fetch('/api/sources/rename', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ category:cat, old_name:oldName, new_name:newName, url:newUrl }) })).json();
+  if (r.ok) { toast('"' + (oldName !== newName ? oldName + '" → "' + newName : newName) + '" 저장됨 ✓'); }
+  else { toast('오류: ' + (r.error || '')); }
+  await load();
 }
 
 async function del(cat, name) {

@@ -2,7 +2,7 @@
 
 환경변수: KIS_APP_KEY, KIS_APP_SECRET, KIS_MODE(real/paper)
 """
-import os, time, requests
+import os, time, threading, json, requests
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -15,22 +15,54 @@ BASE = "https://openapi.koreainvestment.com:9443"
 _TR  = "FHKST01010100"  # 주식 현재가 시세 (real/paper 동일)
 
 _cache: dict = {}
+_token_lock = threading.Lock()  # 동시 토큰 발급 방지
+
+# 토큰 파일 캐시 — 프로세스 재시작해도 재사용 (KIS는 하루 1회 발급 권장)
+_TOKEN_FILE = os.path.join(os.path.dirname(__file__), ".kis_token_cache.json")
+
+
+def _load_token_file():
+    """파일에서 토큰 로드 (프로세스 시작 시 1회)."""
+    try:
+        with open(_TOKEN_FILE, "r") as f:
+            d = json.load(f)
+        if d.get("exp", 0) > time.time() + 60:
+            _cache["tok"] = d["tok"]
+            _cache["exp"] = d["exp"]
+    except Exception:
+        pass
+
+
+def _save_token_file():
+    """발급한 토큰을 파일에 저장."""
+    try:
+        with open(_TOKEN_FILE, "w") as f:
+            json.dump({"tok": _cache["tok"], "exp": _cache["exp"]}, f)
+    except Exception:
+        pass
+
+
+_load_token_file()  # 시작 시 파일 캐시 로드
 
 
 def _token() -> str:
     now = time.time()
     if _cache.get("exp", 0) > now + 60:
         return _cache["tok"]
-    r = requests.post(f"{BASE}/oauth2/tokenP", json={
-        "grant_type": "client_credentials",
-        "appkey": _KEY,
-        "appsecret": _SECRET,
-    }, timeout=10)
-    r.raise_for_status()
-    d = r.json()
-    _cache["tok"] = d["access_token"]
-    _cache["exp"] = now + d.get("expires_in", 86400) - 300
-    return _cache["tok"]
+    with _token_lock:
+        if _cache.get("exp", 0) > now + 60:
+            return _cache["tok"]
+        r = requests.post(f"{BASE}/oauth2/tokenP", json={
+            "grant_type": "client_credentials",
+            "appkey": _KEY,
+            "appsecret": _SECRET,
+        }, timeout=10)
+        r.raise_for_status()
+        d = r.json()
+        _cache["tok"] = d["access_token"]
+        _cache["exp"] = time.time() + d.get("expires_in", 86400) - 300
+        _save_token_file()  # 파일에도 저장
+        return _cache["tok"]
 
 
 def get_price(code: str) -> dict:
@@ -246,9 +278,9 @@ def get_inquiry_rank(n: int = 15) -> list:
         r.raise_for_status()
         rows = r.json().get("output", []) or []
         result = []
-        for i, row in enumerate(rows[:n]):
+        for row in rows:  # n은 호출측에서 필터 후 제한 (KIS는 50개 최대 반환)
             result.append({
-                "rank":        i + 1,
+                "rank":        len(result) + 1,
                 "code":        row.get("mksc_shrn_iscd", ""),
                 "name":        row.get("hts_kor_isnm", ""),
                 "price":       int(row.get("stck_prpr", 0) or 0),
@@ -335,6 +367,7 @@ def get_minutebar(code: str, interval: int = 15) -> list:
             "custtype": "P",
         },
         params={
+            "FID_COND_MRKT_DIV_CODE": "J",
             "FID_ETC_CLS_CODE": "",
             "FID_INPUT_ISCD": code.zfill(6),
             "FID_INPUT_HOUR_1": "153000",
@@ -357,35 +390,13 @@ def get_minutebar(code: str, interval: int = 15) -> list:
 
 
 def get_index_minutebar(index_code: str, interval: int = 15) -> list:
-    """코스피(0001)/코스닥(1001) 지수 분봉 종가 배열 (오름차순)."""
-    r = requests.get(
-        f"{BASE}/uapi/domestic-stock/v1/quotations/inquire-time-indexchartprice",
-        headers={
-            "content-type": "application/json; charset=utf-8",
-            "authorization": f"Bearer {_token()}",
-            "appkey": _KEY, "appsecret": _SECRET,
-            "tr_id": "FHPUP02110000",
-            "custtype": "P",
-        },
-        params={
-            "FID_INPUT_ISCD": index_code,
-            "FID_INPUT_HOUR_1": "153000",
-            "FID_PW_DATA_INCU_YN": "Y",
-            "FID_HOUR_CLS_CODE": str(interval),
-        },
-        timeout=8,
-    )
-    r.raise_for_status()
-    rows = r.json().get("output2") or []
-    out = []
-    for row in reversed(rows):
-        try:
-            v = float(row.get("bstp_nmix_prpr", 0) or 0)
-            if v > 0:
-                out.append(v)
-        except Exception:
-            pass
-    return out
+    """코스피(0001)/코스닥(1001) 지수 분봉 종가 배열 (오름차순).
+    KIS 지수 분봉 API는 별도 구독 필요 → KODEX200/코스닥150 ETF 분봉으로 대체.
+    추세(방향) 동일, 절대값만 다름.
+    """
+    # 코스피 → KODEX 200 (069500), 코스닥 → KODEX 코스닥150 (229200)
+    proxy = "069500" if index_code == "0001" else "229200"
+    return get_minutebar(proxy, interval)
 
 
 def get_market_investor(market_div: str = "J") -> dict:

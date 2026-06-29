@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>인사이트 허브 — 로또의 주식</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+:root {
+  --gold: #d4af37; --gold-dim: #9a7d28; --bg: #0a0a0a;
+  --card: #16161a; --line: #2a2a30; --txt: #e8e6e0; --muted: #8a8a92;
+  --yt: #7c3aed; --yt-bg: #1a0e2e; --yt-line: #3d1f6b;
+  --tg: #0891b2; --tg-bg: #0c1f25; --tg-line: #1a4a55;
+  --rp: #d4af37; --rp-bg: #1a1608; --rp-line: #4a3d10;
+  --buy: #16a34a; --sell: #dc2626; --neutral: #6b7280;
+  --bull: #16a34a; --bear: #dc2626;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun Gothic',sans-serif; min-height: 100vh; }
+
+/* ── 네비 ── */
+.topbar {
+  height: 54px; background: var(--card); border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; padding: 0 28px; gap: 6px;
+  position: sticky; top: 0; z-index: 100;
+}
+.topbar .brand { font-size: .92rem; font-weight: 700; color: var(--gold); letter-spacing: .5px; margin-right: 20px; white-space: nowrap; }
+.nav-link {
+  padding: 6px 16px; border-radius: 7px; font-size: .84rem; color: var(--muted);
+  text-decoration: none; transition: color .15s, background .15s; cursor: pointer; border: none; background: transparent; font-family: inherit;
+}
+.nav-link:hover { color: var(--txt); background: #1f1f26; }
+.nav-link.active { color: var(--gold); border-bottom: 2px solid var(--gold); border-radius: 0; padding-bottom: 4px; }
+.topbar .live { margin-left: auto; font-size: .72rem; color: var(--muted); }
+
+/* ── 페이지 컨테이너 ── */
+#app { max-width: 1400px; margin: 0 auto; padding: 0 28px 80px; }
+
+/* ── 로딩/에러/빈상태 ── */
+.state-box { text-align: center; padding: 80px 20px; color: var(--muted); }
+.state-box .ico { font-size: 2.4rem; margin-bottom: 14px; }
+.state-box .msg { font-size: .9rem; line-height: 1.6; }
+.state-box .retry { margin-top: 16px; padding: 8px 20px; background: var(--card); border: 1px solid var(--line); border-radius: 8px; color: var(--txt); cursor: pointer; font-size: .84rem; }
+.spinner {
+  width: 32px; height: 32px; border: 3px solid var(--line); border-top-color: var(--gold);
+  border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto 14px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── 브레드크럼 ── */
+.breadcrumb {
+  display: flex; align-items: center; gap: 6px; padding: 18px 0 0;
+  font-size: .78rem; color: var(--muted); flex-wrap: wrap;
+}
+.breadcrumb .crumb { cursor: pointer; color: var(--muted); transition: color .15s; }
+.breadcrumb .crumb:hover { color: var(--gold); }
+.breadcrumb .sep { color: #3a3a42; }
+.breadcrumb .cur { color: var(--txt); }
+
+/* ── L0 히어로 ── */
+.hero { padding: 36px 0 28px; }
+.hero h1 { font-size: 1.7rem; font-weight: 800; letter-spacing: -.5px; margin-bottom: 5px; }
+.hero h1 .gold { color: var(--gold); }
+.hero .sub { color: var(--muted); font-size: .85rem; margin-bottom: 24px; }
+.search-wrap { position: relative; max-width: 680px; }
+.search-wrap input {
+  width: 100%; padding: 15px 50px 15px 20px; background: var(--card); border: 1px solid var(--line);
+  border-radius: 12px; color: var(--txt); font-family: inherit; font-size: .95rem;
+  transition: border-color .2s;
+}
+.search-wrap input:focus { outline: none; border-color: var(--gold-dim); }
+.search-wrap input::placeholder { color: var(--muted); }
+.search-wrap .search-btn {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  background: transparent; border: none; cursor: pointer; font-size: 1.2rem; color: var(--muted);
+  transition: color .15s;
+}
+.search-wrap .search-btn:hover { color: var(--gold); }
+
+/* ── 카테고리 3카드 ── */
+.cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 32px 0; }
+.cat-card {
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+  overflow: hidden; cursor: pointer; transition: transform .18s, border-color .18s;
+  display: flex; flex-direction: column;
+}
+.cat-card:hover { transform: translateY(-3px); border-color: var(--gold-dim); }
+.cat-card .stripe { height: 4px; }
+.cat-card.youtube .stripe { background: var(--yt); }
+.cat-card.telegram .stripe { background: var(--tg); }
+.cat-card.report .stripe { background: var(--rp); }
+.cat-card .body { padding: 18px 20px; flex: 1; }
+.cat-card .header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.cat-card .ico { font-size: 1.4rem; }
+.cat-card .ttl { font-size: 1rem; font-weight: 700; }
+.cat-card .meta { display: flex; gap: 16px; margin-bottom: 14px; }
+.cat-card .meta-item { display: flex; flex-direction: column; gap: 2px; }
+.cat-card .meta-item .v { font-size: 1.25rem; font-weight: 700; }
+.cat-card .meta-item .l { font-size: .7rem; color: var(--muted); }
+.cat-card .new-badge { display: inline-block; font-size: .68rem; padding: 1px 8px; border-radius: 10px; font-weight: 700; margin-left: 4px; }
+.cat-card.youtube .new-badge { background: var(--yt-bg); color: #a78bfa; border: 1px solid var(--yt-line); }
+.cat-card.telegram .new-badge { background: var(--tg-bg); color: #67e8f9; border: 1px solid var(--tg-line); }
+.cat-card.report .new-badge { background: var(--rp-bg); color: var(--gold); border: 1px solid var(--rp-line); }
+.cat-card .divider { border: none; border-top: 1px solid var(--line); margin: 10px 0; }
+.cat-card .hot-label { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; }
+.cat-card .hot-item { font-size: .78rem; color: var(--muted); padding: 3px 0; display: flex; align-items: flex-start; gap: 5px; transition: color .15s; }
+.cat-card .hot-item:hover { color: var(--txt); }
+.cat-card .hot-item .arrow { color: var(--gold-dim); flex-shrink: 0; }
+.cat-card .go-btn {
+  margin: 0 20px 18px; padding: 9px; border: 1px solid var(--line); border-radius: 9px;
+  background: transparent; color: var(--muted); font-size: .78rem; cursor: pointer;
+  text-align: center; transition: border-color .15s, color .15s;
+}
+.cat-card:hover .go-btn { border-color: var(--gold-dim); color: var(--gold); }
+
+/* ── 피드 ── */
+.feed-section { margin-top: 8px; }
+.feed-section .section-title {
+  font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px;
+  font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+}
+.feed-section .section-title::after {
+  content: ''; flex: 1; height: 1px; background: var(--line);
+}
+.feed-row {
+  display: flex; align-items: center; gap: 12px; padding: 11px 14px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+  cursor: pointer; transition: border-color .15s, background .15s; margin-bottom: 6px;
+}
+.feed-row:hover { border-color: var(--gold-dim); background: #1c1c22; }
+.cat-chip {
+  font-size: .68rem; padding: 2px 8px; border-radius: 6px; font-weight: 700; flex-shrink: 0; white-space: nowrap;
+}
+.cat-chip.youtube { background: var(--yt-bg); color: #a78bfa; border: 1px solid var(--yt-line); }
+.cat-chip.telegram { background: var(--tg-bg); color: #67e8f9; border: 1px solid var(--tg-line); }
+.cat-chip.report { background: var(--rp-bg); color: var(--gold); border: 1px solid var(--rp-line); }
+.feed-row .title { flex: 1; font-size: .85rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.feed-row .source { font-size: .74rem; color: var(--muted); flex-shrink: 0; white-space: nowrap; }
+.feed-row .atoms { font-size: .72rem; color: var(--muted); flex-shrink: 0; }
+.feed-row .date { font-size: .72rem; color: var(--muted); flex-shrink: 0; }
+.sum-badge { font-size: .66rem; padding: 1px 7px; border-radius: 8px; flex-shrink: 0; font-weight: 700; }
+.sum-badge.yes { background: #0d2a14; color: #3ddc6e; border: 1px solid #1a5c30; }
+.sum-badge.no { background: #1f1f25; color: var(--muted); border: 1px solid var(--line); }
+
+/* ── L1 소스 목록 ── */
+.list-header {
+  display: flex; align-items: center; gap: 12px; padding: 24px 0 18px;
+}
+.list-header h2 { font-size: 1.1rem; font-weight: 700; }
+.list-header .count { font-size: .78rem; color: var(--muted); margin-left: auto; }
+.source-table { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.source-table table { width: 100%; border-collapse: collapse; font-size: .83rem; }
+.source-table th {
+  text-align: left; color: var(--muted); font-weight: 600; padding: 10px 16px;
+  border-bottom: 1px solid var(--line); font-size: .72rem; text-transform: uppercase; letter-spacing: .6px;
+}
+.source-table td { padding: 12px 16px; border-bottom: 1px solid #1c1c22; }
+.source-table tr:last-child td { border-bottom: none; }
+.source-table tr:hover td { background: #1c1c22; cursor: pointer; }
+.source-table .name { font-weight: 600; }
+.source-table .open-btn {
+  padding: 5px 14px; background: transparent; border: 1px solid var(--line); border-radius: 7px;
+  color: var(--muted); cursor: pointer; font-size: .75rem; transition: border-color .15s, color .15s; font-family: inherit;
+}
+.source-table tr:hover .open-btn { border-color: var(--gold-dim); color: var(--gold); }
+.last-date { color: var(--muted); font-size: .78rem; }
+
+/* ── L2 문서 목록 ── */
+.doc-row {
+  display: flex; align-items: center; gap: 14px; padding: 14px 18px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+  cursor: pointer; transition: border-color .15s, background .15s; margin-bottom: 8px;
+}
+.doc-row:hover { border-color: var(--gold-dim); background: #1c1c22; }
+.doc-row .date-badge {
+  font-size: .72rem; color: var(--muted); background: #1f1f25; border: 1px solid var(--line);
+  padding: 3px 9px; border-radius: 7px; flex-shrink: 0;
+}
+.doc-row .title { flex: 1; font-size: .9rem; font-weight: 600; }
+.doc-row .atoms { font-size: .75rem; color: var(--muted); flex-shrink: 0; }
+.doc-row .view-btn {
+  padding: 5px 14px; background: transparent; border: 1px solid var(--line);
+  border-radius: 7px; color: var(--muted); cursor: pointer; font-size: .75rem;
+  transition: border-color .15s, color .15s; font-family: inherit; flex-shrink: 0;
+}
+.doc-row:hover .view-btn { border-color: var(--gold-dim); color: var(--gold); }
+
+/* ── L3 상세 ── */
+.detail-header {
+  display: flex; align-items: flex-start; gap: 14px; padding: 22px 0 16px; flex-wrap: wrap;
+}
+.detail-header .title-block { flex: 1; min-width: 0; }
+.detail-header h2 { font-size: 1.2rem; font-weight: 800; line-height: 1.4; margin-bottom: 5px; }
+.detail-header .meta-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.detail-header .action-row { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
+.action-btn {
+  padding: 8px 16px; border: 1px solid var(--line); border-radius: 9px;
+  background: var(--card); color: var(--txt); cursor: pointer; font-size: .8rem;
+  transition: border-color .18s, background .18s; font-family: inherit; white-space: nowrap;
+}
+.action-btn:hover { border-color: var(--gold-dim); background: #1f1f24; }
+.action-btn.primary { background: var(--gold-dim); border-color: var(--gold); color: #0a0a0a; font-weight: 700; }
+.action-btn.primary:hover { background: var(--gold); }
+
+.summary-card {
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+  overflow: hidden; margin-bottom: 14px;
+}
+.summary-card .tldr-block {
+  padding: 20px 24px 16px; border-bottom: 1px solid var(--line);
+  background: linear-gradient(135deg, #111118, #16161a);
+}
+.summary-card .tldr-label { font-size: .68rem; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 8px; }
+.summary-card .tldr-text { font-size: 1.18rem; font-weight: 800; line-height: 1.4; color: var(--txt); }
+.summary-card .body-grid {
+  display: grid; grid-template-columns: 1fr 280px; gap: 0;
+}
+.summary-card .summary3-block {
+  padding: 18px 24px; border-right: 1px solid var(--line);
+}
+.summary-card .summary3-label { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; font-weight: 700; margin-bottom: 10px; }
+.summary-card .summary3-item { display: flex; gap: 10px; padding: 6px 0; border-bottom: 1px solid #1c1c22; font-size: .84rem; line-height: 1.5; }
+.summary-card .summary3-item:last-child { border-bottom: none; }
+.summary-card .summary3-num { color: var(--gold); font-weight: 700; flex-shrink: 0; font-size: .9rem; }
+.summary-card .market-block { padding: 18px 20px; }
+.summary-card .market-label { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; font-weight: 700; margin-bottom: 10px; }
+.market-view-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 16px; border-radius: 10px; font-size: .9rem; font-weight: 700; margin-bottom: 10px;
+}
+.market-view-badge.bullish { background: #0d2a14; color: #3ddc6e; border: 1px solid #1a5c30; }
+.market-view-badge.bearish { background: #2a0d0d; color: #e05050; border: 1px solid #5c1a1a; }
+.market-view-badge.neutral { background: #1f1f25; color: var(--muted); border: 1px solid var(--line); }
+.market-reason { font-size: .78rem; color: var(--muted); line-height: 1.5; }
+
+.stocks-card {
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  padding: 16px 20px; margin-bottom: 14px;
+}
+.stocks-card .card-label { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; font-weight: 700; margin-bottom: 10px; }
+.stance-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.stance-chip {
+  padding: 5px 13px; border-radius: 20px; font-size: .82rem; font-weight: 600; cursor: default;
+}
+.stance-chip.buy { background: #0d2a14; color: #3ddc6e; border: 1px solid #1a5c30; }
+.stance-chip.sell { background: #2a0d0d; color: #e05050; border: 1px solid #5c1a1a; }
+.stance-chip.neutral { background: #1f1f25; color: var(--muted); border: 1px solid var(--line); }
+.stance-chip .label { color: var(--muted); font-size: .7rem; margin-left: 4px; font-weight: 400; }
+
+/* 요약 생성 버튼 */
+.gen-summary-box {
+  background: var(--card); border: 1px dashed var(--line); border-radius: 14px;
+  padding: 36px 24px; text-align: center; margin-bottom: 14px;
+}
+.gen-summary-box .msg { font-size: .88rem; color: var(--muted); margin-bottom: 16px; }
+.gen-summary-btn {
+  padding: 11px 28px; background: var(--gold-dim); border: none; border-radius: 10px;
+  color: #0a0a0a; font-weight: 700; font-size: .88rem; cursor: pointer;
+  transition: background .18s; font-family: inherit;
+}
+.gen-summary-btn:hover { background: var(--gold); }
+.gen-summary-btn:disabled { background: #3a3a3a; color: #777; cursor: not-allowed; }
+
+/* 발언 타임라인 */
+.timeline-card {
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  overflow: hidden;
+}
+.timeline-card .tl-header {
+  padding: 14px 20px; border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; gap: 10px;
+}
+.timeline-card .tl-title { font-size: .78rem; color: var(--gold); text-transform: uppercase; letter-spacing: .8px; font-weight: 700; }
+.timeline-card .tl-count { font-size: .72rem; color: var(--muted); }
+.tl-row {
+  padding: 11px 20px; border-bottom: 1px solid #1a1a20;
+  display: flex; align-items: flex-start; gap: 12px; transition: background .13s;
+}
+.tl-row:last-child { border-bottom: none; }
+.tl-row:hover { background: #1c1c22; }
+.tl-ts {
+  font-size: .76rem; color: var(--gold); font-weight: 700; flex-shrink: 0;
+  cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 4px;
+  min-width: 60px;
+}
+.tl-ts:hover { color: #f0d060; text-decoration: underline; }
+.signal-badge {
+  font-size: .65rem; padding: 1px 7px; border-radius: 8px; font-weight: 700; flex-shrink: 0; white-space: nowrap;
+}
+.signal-badge.bullish { background: #0d2a14; color: #3ddc6e; border: 1px solid #1a5c30; }
+.signal-badge.bearish { background: #2a0d0d; color: #e05050; border: 1px solid #5c1a1a; }
+.signal-badge.neutral,.signal-badge.default { background: #1f1f25; color: var(--muted); border: 1px solid var(--line); }
+.signal-badge.risk { background: #2a1500; color: #e09050; border: 1px solid #5c3a10; }
+.tl-content { flex: 1; font-size: .83rem; line-height: 1.55; color: #cfcdc7; }
+.tl-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 5px; }
+.tl-tag { font-size: .66rem; background: #1f1f25; color: var(--muted); padding: 1px 7px; border-radius: 6px; }
+
+/* 마크다운 모달 */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 500;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+  opacity: 0; transition: opacity .2s; pointer-events: none;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal-box {
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+  width: 100%; max-width: 860px; max-height: 85vh; display: flex; flex-direction: column;
+  transform: translateY(20px); transition: transform .2s;
+}
+.modal-overlay.open .modal-box { transform: translateY(0); }
+.modal-header { padding: 16px 22px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px; }
+.modal-header .title { font-size: .95rem; font-weight: 700; flex: 1; }
+.modal-header .close { background: transparent; border: none; color: var(--muted); font-size: 1.2rem; cursor: pointer; }
+.modal-header .close:hover { color: var(--txt); }
+.modal-body { overflow-y: auto; padding: 20px 24px; flex: 1; }
+.md-rendered { font-size: .86rem; line-height: 1.75; color: #cfcdc7; }
+.md-rendered h2 { color: var(--gold); font-size: 1rem; margin: 16px 0 8px; }
+.md-rendered h3 { color: var(--txt); font-size: .9rem; margin: 12px 0 6px; }
+.md-rendered ul { margin: 6px 0 6px 18px; }
+.md-rendered li { margin: 3px 0; }
+.md-rendered strong { color: var(--txt); }
+.md-rendered p { margin: 8px 0; }
+.md-rendered code { background: #1f1f25; padding: 1px 5px; border-radius: 4px; font-size: .82rem; }
+
+/* 토스트 */
+.toast {
+  position: fixed; bottom: 28px; right: 28px; z-index: 999;
+  background: #1f1f28; border: 1px solid var(--gold-dim); border-radius: 10px;
+  padding: 12px 20px; font-size: .84rem; color: var(--txt);
+  transform: translateY(80px); opacity: 0; transition: transform .25s, opacity .25s;
+  max-width: 360px;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.err { border-color: #5c1a1a; }
+
+/* 검색 결과 */
+.search-header { padding: 24px 0 16px; }
+.search-header h2 { font-size: 1.05rem; font-weight: 700; }
+.search-header .q { color: var(--gold); }
+.search-header .total { font-size: .78rem; color: var(--muted); margin-top: 4px; }
+.hit-row {
+  display: flex; align-items: flex-start; gap: 12px; padding: 13px 16px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+  cursor: pointer; transition: border-color .15s, background .15s; margin-bottom: 7px;
+}
+.hit-row:hover { border-color: var(--gold-dim); background: #1c1c22; }
+.hit-row .hit-body { flex: 1; min-width: 0; }
+.hit-row .hit-source { font-size: .73rem; color: var(--muted); margin-bottom: 3px; display: flex; align-items: center; gap: 7px; }
+.hit-row .hit-content { font-size: .84rem; line-height: 1.5; color: #cfcdc7; }
+.hit-row .hit-ts { font-size: .73rem; color: var(--gold); font-weight: 700; flex-shrink: 0; }
+
+/* 페이드 전환 */
+.page { animation: fadeIn .18s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* 반응형 */
+@media (max-width: 900px) {
+  .cat-grid { grid-template-columns: 1fr; }
+  .summary-card .body-grid { grid-template-columns: 1fr; }
+  .summary-card .summary3-block { border-right: none; border-bottom: 1px solid var(--line); }
+  .detail-header { flex-direction: column; }
+  .detail-header .action-row { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- 공통 네비 -->
+<div class="topbar">
+  <span class="brand">로또의 주식</span>
+  <a class="nav-link" href="/">딸깍</a>
+  <a class="nav-link" href="/market">섹터맵</a>
+  <a class="nav-link active" href="/insights">● 인사이트</a>
+  <span class="live" id="date-label"></span>
+</div>
+
+<!-- 앱 루트 -->
+<div id="app">
+  <div id="view" class="page"></div>
+</div>
+
+<!-- 마크다운 모달 -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="title" id="modal-title">유튜브 소재화</span>
+      <button class="close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="md-rendered" id="modal-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 토스트 -->
+<div class="toast" id="toast"></div>
+
+<script>
+marked.setOptions({ breaks: true, gfm: true });
+
+// ── 상태 ──
+const state = {
+  breadcrumb: [], // [{label, fn}]
+  currentView: null,
+  docKey: null,
+};
+
+// ── 날짜 ──
+document.getElementById('date-label').textContent = new Date().toLocaleDateString('ko-KR', {month:'numeric',day:'numeric',weekday:'short'});
+
+// ── 유틸 ──
+function qs(s) { return document.querySelector(s); }
+function render(html) { qs('#view').innerHTML = ''; qs('#view').innerHTML = html; qs('#view').className = 'page'; }
+function loading(msg) { render(`<div class="state-box"><div class="spinner"></div><div class="msg">${msg||'불러오는 중...'}</div></div>`); }
+function err(msg, retryFn) {
+  let btn = retryFn ? `<button class="retry" onclick="(${retryFn.toString()})()">다시 시도</button>` : '';
+  render(`<div class="state-box"><div class="ico">⚠️</div><div class="msg">${msg||'오류가 발생했습니다.'}</div>${btn}</div>`);
+}
+function empty(msg) { render(`<div class="state-box"><div class="ico">📭</div><div class="msg">${msg||'데이터가 없습니다.'}</div></div>`); }
+
+async function apiFetch(url, opts) {
+  const res = await fetch(url, opts);
+  if (!res.ok) { const t = await res.text().catch(()=>''); throw new Error(t || `HTTP ${res.status}`); }
+  return res.json();
+}
+
+function toast(msg, isErr) {
+  const el = qs('#toast');
+  el.textContent = msg;
+  el.className = 'toast' + (isErr ? ' err' : '') + ' show';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+function bcHtml() {
+  if (!state.breadcrumb.length) return '';
+  const parts = ['<nav class="breadcrumb"><span class="crumb" onclick="showL0()">홈</span>'];
+  state.breadcrumb.forEach((b, i) => {
+    parts.push('<span class="sep">›</span>');
+    if (i < state.breadcrumb.length - 1) {
+      parts.push(`<span class="crumb" onclick="${b.fnStr}">${b.label}</span>`);
+    } else {
+      parts.push(`<span class="cur">${b.label}</span>`);
+    }
+  });
+  parts.push('</nav>');
+  return parts.join('');
+}
+
+// 카테고리 색/아이콘
+const CAT = {
+  youtube: { icon: '📺', label: '유튜브', cls: 'youtube' },
+  telegram: { icon: '💬', label: '텔레그램', cls: 'telegram' },
+  report: { icon: '📰', label: '블로그·리포트', cls: 'report' },
+};
+function catCls(c) { return CAT[c] ? CAT[c].cls : ''; }
+function catIcon(c) { return CAT[c] ? CAT[c].icon : '📄'; }
+function catLabel(c) { return CAT[c] ? CAT[c].label : c; }
+
+// ── L0 메인 ──
+async function showL0() {
+  state.breadcrumb = [];
+  loading('인사이트 라이브러리 불러오는 중...');
+  let data;
+  try {
+    data = await apiFetch('/api/insights/overview');
+  } catch(e) {
+    err(`서버에 연결할 수 없습니다.<br><small style="color:var(--muted)">${e.message}</small>`, showL0);
+    return;
+  }
+
+  const cats = (data.categories || []);
+  const feed = (data.feed || []);
+
+  const catCards = cats.map(cat => {
+    const cls = catCls(cat.id);
+    const ico = catIcon(cat.id);
+    const hotItems = (cat.hot || []).slice(0, 3).map(h =>
+      `<div class="hot-item"><span class="arrow">▸</span>${escHtml(h.title||'')}</div>`
+    ).join('');
+    const todayBadge = (cat.today_new > 0) ? `<span class="new-badge">+${cat.today_new} 오늘</span>` : '';
+    return `
+    <div class="cat-card ${cls}" onclick="showL1('${cat.id}')">
+      <div class="stripe"></div>
+      <div class="body">
+        <div class="header">
+          <span class="ico">${ico}</span>
+          <span class="ttl">${catLabel(cat.id)}${todayBadge}</span>
+        </div>
+        <div class="meta">
+          <div class="meta-item"><span class="v">${cat.channels ?? cat.docs ?? 0}</span><span class="l">${cat.id === 'youtube' || cat.id === 'telegram' ? '채널' : '소스'}</span></div>
+          <div class="meta-item"><span class="v">${cat.docs ?? 0}</span><span class="l">문서</span></div>
+          <div class="meta-item"><span class="v">${cat.atoms ?? 0}</span><span class="l">발언</span></div>
+        </div>
+        ${hotItems ? `<hr class="divider"><div class="hot-label">최근 인사이트</div>${hotItems}` : ''}
+      </div>
+      <button class="go-btn">${catLabel(cat.id)} 전체 보기 →</button>
+    </div>`;
+  }).join('');
+
+  const feedRows = feed.length ? feed.map(f => `
+    <div class="feed-row" onclick="showL3('${escAttr(f.doc_key)}')">
+      <span class="cat-chip ${catCls(f.category)}">${catIcon(f.category)}</span>
+      <span class="title">${escHtml(f.title||'(제목 없음)')}</span>
+      <span class="source">${escHtml(f.source||'')}</span>
+      <span class="atoms">발언 ${f.atoms ?? 0}</span>
+      <span class="date">${fmtDate(f.date)}</span>
+      <span class="sum-badge ${f.has_summary ? 'yes' : 'no'}">${f.has_summary ? '요약✓' : '요약 '}</span>
+    </div>`).join('') : '<div style="color:var(--muted);font-size:.83rem;padding:20px 0;text-align:center">최근 문서가 없습니다.</div>';
+
+  render(`
+    <div class="hero">
+      <h1>📚 인사이트 <span class="gold">라이브러리</span></h1>
+      <p class="sub">크롤링된 모든 소스를, 이것만 보면 되게 · ${data.today || ''}</p>
+      <div class="search-wrap">
+        <input type="text" id="search-input" placeholder="🔍 종목으로 가로질러 찾기  (예: 삼성전자, HBM, 조선)" onkeydown="if(event.key==='Enter')doSearch()">
+        <button class="search-btn" onclick="doSearch()">⏎</button>
+      </div>
+    </div>
+    <div class="cat-grid">${catCards || '<div style="color:var(--muted)">카테고리 없음</div>'}</div>
+    <div class="feed-section">
+      <div class="section-title">최근 추가된 인사이트</div>
+      ${feedRows}
+    </div>
+  `);
+}
+
+// ── L1 소스 목록 ──
+async function showL1(category) {
+  state.breadcrumb = [{ label: `${catIcon(category)} ${catLabel(category)}`, fnStr: `showL1('${category}')` }];
+  loading('소스 목록 불러오는 중...');
+  let data;
+  try {
+    data = await apiFetch(`/api/insights/sources?category=${encodeURIComponent(category)}`);
+  } catch(e) {
+    err(`소스 목록을 불러올 수 없습니다.<br><small>${e.message}</small>`, () => showL1(category));
+    return;
+  }
+  const sources = data.sources || [];
+  if (!sources.length) { render(bcHtml() + '<div style="margin-top:24px"></div>'); empty('등록된 소스가 없습니다.'); return; }
+
+  const rows = sources.map(s => `
+    <tr onclick="showL2('${category}','${escAttr(s.name)}')">
+      <td class="name">${escHtml(s.name)}</td>
+      <td>${s.docs ?? 0}</td>
+      <td>${s.atoms ?? 0}</td>
+      <td class="last-date">${fmtDate(s.last_date)}</td>
+      <td><button class="open-btn">열기 →</button></td>
+    </tr>`).join('');
+
+  render(`
+    ${bcHtml()}
+    <div class="list-header">
+      <h2>${catIcon(category)} ${catLabel(category)} 채널/소스</h2>
+      <span class="count">총 ${sources.length}개</span>
+    </div>
+    <div class="source-table">
+      <table>
+        <thead><tr><th>이름</th><th>문서</th><th>발언</th><th>최근</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `);
+}
+
+// ── L2 문서 목록 ──
+async function showL2(category, source) {
+  state.breadcrumb = [
+    { label: `${catIcon(category)} ${catLabel(category)}`, fnStr: `showL1('${category}')` },
+    { label: escHtml(source), fnStr: `showL2('${category}','${escAttr(source)}')` },
+  ];
+  loading('문서 목록 불러오는 중...');
+  let data;
+  try {
+    data = await apiFetch(`/api/insights/docs?category=${encodeURIComponent(category)}&source=${encodeURIComponent(source)}`);
+  } catch(e) {
+    err(`문서 목록을 불러올 수 없습니다.<br><small>${e.message}</small>`, () => showL2(category, source));
+    return;
+  }
+  const docs = data.docs || [];
+  if (!docs.length) { render(bcHtml() + '<div style="margin-top:24px"></div>'); empty('문서가 없습니다.'); return; }
+
+  const rows = docs.map(d => `
+    <div class="doc-row" onclick="showL3('${escAttr(d.doc_key)}')">
+      <span class="date-badge">${fmtDate(d.date)}</span>
+      <span class="title">${escHtml(d.title||'(제목 없음)')}</span>
+      <span class="atoms">발언 ${d.atoms ?? 0}</span>
+      <span class="sum-badge ${d.has_summary ? 'yes' : 'no'}">${d.has_summary ? '요약✓' : '요약 '}</span>
+      <button class="view-btn">보기 →</button>
+    </div>`).join('');
+
+  render(`
+    ${bcHtml()}
+    <div class="list-header">
+      <h2>${escHtml(source)}</h2>
+      <span class="count">문서 ${docs.length}개</span>
+    </div>
+    ${rows}
+  `);
+}
+
+// ── L3 상세 ──
+async function showL3(docKey) {
+  state.docKey = docKey;
+  // 브레드크럼 유지(이미 있으면 마지막만 교체)
+  if (state.breadcrumb.length >= 2) {
+    state.breadcrumb[2] = { label: '상세', fnStr: `showL3('${escAttr(docKey)}')` };
+  } else if (state.breadcrumb.length === 1) {
+    state.breadcrumb[1] = { label: '상세', fnStr: `showL3('${escAttr(docKey)}')` };
+  } else {
+    state.breadcrumb = [{ label: '상세', fnStr: `showL3('${escAttr(docKey)}')` }];
+  }
+  loading('상세 불러오는 중...');
+  let data;
+  try {
+    data = await apiFetch(`/api/insights/doc?doc_key=${encodeURIComponent(docKey)}`);
+  } catch(e) {
+    err(`문서를 불러올 수 없습니다.<br><small>${e.message}</small>`, () => showL3(docKey));
+    return;
+  }
+  renderL3(data);
+}
+
+function renderL3(data) {
+  const dk = data.doc_key || '';
+  const sum = data.summary;
+  const atoms = data.atoms || [];
+  const catC = catCls(data.category);
+  const catI = catIcon(data.category);
+
+  // 액션 버튼
+  const videoBtn = data.video_url
+    ? `<a class="action-btn" href="${escAttr(data.video_url)}" target="_blank">▶ 영상</a>`
+    : '';
+  const srcBtn = `<button class="action-btn" onclick="actionYt('${escAttr(dk)}')">🎬 소재화</button>`;
+  const wikiBtn = `<button class="action-btn" onclick="actionWiki('${escAttr(dk)}')">📚 위키</button>`;
+
+  // 요약 블록
+  let summaryHtml;
+  if (sum) {
+    const mv = sum.market_view || 'neutral';
+    const mvLabel = mv === 'bullish' ? '강세 🟢' : mv === 'bearish' ? '약세 🔴' : '중립 ⚪';
+    const s3 = Array.isArray(sum.summary3) ? sum.summary3 : (sum.summary3 || '').split('\n').filter(Boolean);
+    const s3Html = s3.map((s,i) => `<div class="summary3-item"><span class="summary3-num">${i+1}.</span>${escHtml(s)}</div>`).join('');
+    const stocks = Array.isArray(sum.stocks) ? sum.stocks : [];
+    const stanceHtml = stocks.map(s => {
+      const sc = stanceCls(s.stance);
+      const stanceLabel = s.stance || '중립';
+      return `<span class="stance-chip ${sc}" title="${escAttr(s.reason||'')}">${escHtml(s.name)} <span class="label">${stanceLabel}</span></span>`;
+    }).join('');
+
+    summaryHtml = `
+    <div class="summary-card">
+      <div class="tldr-block">
+        <div class="tldr-label">🎯 핵심 요약</div>
+        <div class="tldr-text">${escHtml(sum.tldr||'')}</div>
+      </div>
+      <div class="body-grid">
+        <div class="summary3-block">
+          <div class="summary3-label">💬 주린이 3줄</div>
+          ${s3Html || '<div style="color:var(--muted);font-size:.8rem">요약 없음</div>'}
+        </div>
+        <div class="market-block">
+          <div class="market-label">📊 시장관</div>
+          <div class="market-view-badge ${mv}">${mvLabel}</div>
+          <div class="market-reason">${escHtml(sum.market_reason||'')}</div>
+        </div>
+      </div>
+    </div>
+    ${stocks.length ? `<div class="stocks-card"><div class="card-label">🏷 언급 종목</div><div class="stance-chips">${stanceHtml}</div></div>` : ''}`;
+  } else {
+    summaryHtml = `
+    <div class="gen-summary-box" id="gen-box">
+      <div class="msg">AI 요약이 아직 없습니다.<br>생성하면 이 화면에 바로 채워집니다 (수십 초 소요).</div>
+      <button class="gen-summary-btn" id="gen-btn" onclick="generateSummary('${escAttr(dk)}')">✨ AI 요약 생성하기</button>
+    </div>`;
+  }
+
+  // 타임라인
+  const tlRows = atoms.map(a => {
+    const sig = (a.signal || a.stance || 'default').toLowerCase();
+    const deeplink = a.deeplink || (data.video_url ? `${data.video_url}&t=${a.seconds||0}` : null);
+    const tsHtml = deeplink
+      ? `<a class="tl-ts" href="${escAttr(deeplink)}" target="_blank" title="영상으로 이동">▶ ${a.timestamp||''}</a>`
+      : `<span class="tl-ts" style="cursor:default">▶ ${a.timestamp||''}</span>`;
+    const tags = [a.asset, a.sector].filter(Boolean).map(t => `<span class="tl-tag">${escHtml(t)}</span>`).join('');
+    const speakerHtml = a.speaker ? `<span style="color:var(--muted);font-size:.72rem;margin-right:6px">${escHtml(a.speaker)}</span>` : '';
+    return `
+    <div class="tl-row">
+      ${tsHtml}
+      <span class="signal-badge ${sig}">${sigLabel(sig)}</span>
+      <div class="tl-content">
+        ${speakerHtml}${escHtml(a.content||'')}
+        ${tags ? `<div class="tl-tags">${tags}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  const tlSection = atoms.length
+    ? `<div class="timeline-card">
+        <div class="tl-header"><span class="tl-title">📺 발언 타임라인</span><span class="tl-count">${atoms.length}개</span></div>
+        ${tlRows}
+      </div>`
+    : `<div class="state-box"><div class="ico">📭</div><div class="msg">발언 원자가 없습니다.</div></div>`;
+
+  render(`
+    ${bcHtml()}
+    <div class="detail-header">
+      <div class="title-block">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span class="cat-chip ${catC}">${catI} ${catLabel(data.category)}</span>
+          <span style="color:var(--muted);font-size:.78rem">${escHtml(data.source||'')} · ${fmtDate(data.date)}</span>
+        </div>
+        <h2>${escHtml(data.title||'(제목 없음)')}</h2>
+      </div>
+      <div class="action-row">${videoBtn}${srcBtn}${wikiBtn}</div>
+    </div>
+    ${summaryHtml}
+    ${tlSection}
+  `);
+}
+
+// ── 요약 생성 ──
+async function generateSummary(docKey) {
+  const btn = qs('#gen-btn');
+  const box = qs('#gen-box');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ 생성 중... (수십 초 소요)'; }
+  if (box) {
+    box.innerHTML += `<div style="margin-top:14px"><div class="spinner"></div><div style="font-size:.78rem;color:var(--muted);margin-top:8px">Claude가 발언을 분석하는 중입니다</div></div>`;
+  }
+  try {
+    const res = await apiFetch('/api/insights/summarize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ doc_key: docKey })
+    });
+    toast('AI 요약이 생성되었습니다!');
+    // 페이지 다시 렌더
+    const data = await apiFetch(`/api/insights/doc?doc_key=${encodeURIComponent(docKey)}`);
+    renderL3(data);
+  } catch(e) {
+    toast(`요약 생성 실패: ${e.message}`, true);
+    if (btn) { btn.disabled = false; btn.textContent = '✨ AI 요약 생성하기'; }
+  }
+}
+
+// ── 유튜브 소재화 ──
+async function actionYt(docKey) {
+  openModal('🎬 유튜브 소재화', '<div class="state-box"><div class="spinner"></div><div class="msg">소재 기획안 생성 중...</div></div>');
+  try {
+    const res = await apiFetch('/api/insights/to_youtube', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ doc_key: docKey })
+    });
+    const title = `🎬 유튜브 소재화 — ${escHtml(res.topic || '')}`;
+    qs('#modal-title').textContent = title.replace(/<[^>]+>/g,'');
+    qs('#modal-content').innerHTML = marked.parse(res.markdown || '(내용 없음)');
+  } catch(e) {
+    qs('#modal-content').innerHTML = `<div style="color:#e88">오류: ${escHtml(e.message)}</div>`;
+  }
+}
+
+// ── 위키 저장 ──
+async function actionWiki(docKey) {
+  try {
+    const res = await apiFetch('/api/insights/to_wiki', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ doc_key: docKey })
+    });
+    toast(`📚 위키 저장 완료: ${res.path || ''}`);
+  } catch(e) {
+    toast(`위키 저장 실패: ${e.message}`, true);
+  }
+}
+
+// ── 검색 ──
+async function doSearch() {
+  const q = (qs('#search-input') || { value: '' }).value.trim();
+  if (!q) return;
+  state.breadcrumb = [{ label: `🔍 "${q}"`, fnStr: `doSearch()` }];
+  loading(`"${q}" 검색 중...`);
+  let data;
+  try {
+    data = await apiFetch(`/api/insights/search?q=${encodeURIComponent(q)}`);
+  } catch(e) {
+    err(`검색 실패: ${e.message}`, doSearch);
+    return;
+  }
+  const hits = data.hits || [];
+  const totalHtml = `<div class="search-header"><h2>🔍 "<span class="q">${escHtml(q)}</span>"</h2><div class="total">총 ${data.total ?? hits.length}건</div></div>`;
+
+  if (!hits.length) {
+    render(bcHtml() + totalHtml + '<div style="text-align:center;color:var(--muted);padding:40px 0;font-size:.85rem">검색 결과가 없습니다.</div>');
+    return;
+  }
+
+  const rows = hits.map(h => {
+    const catC = catCls(h.category);
+    const catI = catIcon(h.category);
+    const stanceC = stanceCls(h.stance);
+    return `
+    <div class="hit-row" onclick="showL3('${escAttr(h.doc_key)}')">
+      <div class="hit-body">
+        <div class="hit-source">
+          <span class="cat-chip ${catC}">${catI}</span>
+          <span>${escHtml(h.source||'')} · ${fmtDate(h.date)}</span>
+          ${h.stance ? `<span class="stance-chip ${stanceC}" style="font-size:.66rem;padding:1px 8px">${h.stance}</span>` : ''}
+        </div>
+        <div style="font-size:.78rem;color:var(--muted);margin-bottom:3px">${escHtml(h.title||'')}</div>
+        <div class="hit-content">${escHtml(h.content||'')}</div>
+      </div>
+      ${h.timestamp ? `<span class="hit-ts">▶ ${h.timestamp}</span>` : ''}
+    </div>`;
+  }).join('');
+
+  render(bcHtml() + totalHtml + rows);
+}
+
+// ── 모달 ──
+function openModal(title, html) {
+  qs('#modal-title').textContent = title;
+  qs('#modal-content').innerHTML = html;
+  qs('#modal').classList.add('open');
+}
+function closeModal() { qs('#modal').classList.remove('open'); }
+qs('#modal').addEventListener('click', e => { if (e.target === qs('#modal')) closeModal(); });
+
+// ── 헬퍼 ──
+function escHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) {
+  if (s == null) return '';
+  return String(s).replace(/'/g, "\\'").replace(/"/g,'&quot;');
+}
+function fmtDate(d) {
+  if (!d) return '';
+  const m = String(d).match(/\d{4}-(\d{2})-(\d{2})/);
+  return m ? `${parseInt(m[1])}/${parseInt(m[2])}` : d;
+}
+function stanceCls(stance) {
+  if (!stance) return 'neutral';
+  const s = stance.toLowerCase();
+  if (s === '매수' || s === 'buy' || s === 'bullish') return 'buy';
+  if (s === '매도' || s === 'sell' || s === 'bearish') return 'sell';
+  return 'neutral';
+}
+function sigLabel(sig) {
+  const map = { bullish: '강세', bearish: '약세', neutral: '중립', buy: '매수', sell: '매도', risk: '리스크', default: '-' };
+  return map[sig] || sig;
+}
+
+// ── 초기 진입 ──
+showL0();
+</script>
+</body>
+</html>

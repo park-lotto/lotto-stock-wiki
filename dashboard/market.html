@@ -129,6 +129,7 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 .tile .stock-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:rgba(255,255,255,.75);}
 .tile .stock-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:68%;}
 .tile .stock-rate{font-weight:700;white-space:nowrap;}
+.tile .stock-more{font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;}
 .parent-badge{display:inline-block;font-size:10px;color:rgba(255,255,255,.45);font-weight:400;
               background:rgba(0,0,0,.35);padding:1px 6px;border-radius:10px;
               margin-left:4px;vertical-align:middle;}
@@ -454,13 +455,16 @@ function renderGrid(tiles){
     const avgStr=tile.stocks.length===0?"데이터없음":rateStr(tile.avg_rate);
     const parentHtml=tile.parent?`<span class="parent-badge">${esc(tile.parent)}</span>`:"";
     const isFav=favs.includes(tile.name);
-    // 섹터 내 종목도 등락률 내림차순
+    // 섹터 내 종목 등락률 내림차순, 상위 3개만 표시
     const sortedStocks=[...tile.stocks].sort((a,b)=>b.change_rate-a.change_rate);
-    const stocksHtml=sortedStocks.map(s=>
+    const topStocks=sortedStocks.slice(0,3);
+    const moreCount=sortedStocks.length-3;
+    const stocksHtml=topStocks.map(s=>
       `<div class="stock-row">
          <span class="stock-name">${esc(s.name)}</span>
          <span class="stock-rate">${rateStr(s.change_rate)}</span>
-       </div>`).join("");
+       </div>`).join("")
+      +(moreCount>0?`<div class="stock-more">+${moreCount}개</div>`:"")
     const el=document.createElement("div");
     el.className=`tile ${cls}`;
     el.innerHTML=`<button class="fav-btn${isFav?" on":""}" data-sector="${esc(tile.name)}" title="즐겨찾기">★</button>
@@ -492,21 +496,32 @@ function shortETFName(n){
   return n.replace("KODEX ","").replace("TIGER ","").replace("HANARO ","")
           .replace("액티브","").replace("iSelect","").trim();
 }
+const _ETF_CACHE_KEY="etf_cache_v2";
+const _ETF_CACHE_TTL=300000;
+
+function _renderEtfBar(etfs){
+  if(!Array.isArray(etfs)||etfs.length===0)return;
+  document.getElementById("etf-bar").innerHTML=etfs.map(e=>{
+    const rc=e.change_rate>0?"up":e.change_rate<0?"dn":"neu";
+    const rs=(e.change_rate>0?"+":"")+(e.change_rate||0).toFixed(2)+"%";
+    return`<div class="etf-chip">
+      <span class="etf-name">${esc(shortETFName(e.name))}</span>
+      <span class="etf-rate ${rc}">${rs}</span>
+      ${sparkline(e.bars,e.change_rate)}
+    </div>`;
+  }).join("");
+}
 async function loadEtfBar(){
+  // B: localStorage 캐시 즉시 표시
+  try{
+    const raw=localStorage.getItem(_ETF_CACHE_KEY);
+    if(raw){const {ts,data}=JSON.parse(raw);if(Date.now()-ts<_ETF_CACHE_TTL){_renderEtfBar(data);}}
+  }catch(_){}
   try{
     const r=await fetch("/api/etf_bar");
     const etfs=await r.json();
-    if(!Array.isArray(etfs)||etfs.length===0)return;
-    const bar=document.getElementById("etf-bar");
-    bar.innerHTML=etfs.map(e=>{
-      const rc=e.change_rate>0?"up":e.change_rate<0?"dn":"neu";
-      const rs=(e.change_rate>0?"+":"")+(e.change_rate||0).toFixed(2)+"%";
-      return`<div class="etf-chip">
-        <span class="etf-name">${esc(shortETFName(e.name))}</span>
-        <span class="etf-rate ${rc}">${rs}</span>
-        ${sparkline(e.bars,e.change_rate)}
-      </div>`;
-    }).join("");
+    _renderEtfBar(etfs);
+    try{localStorage.setItem(_ETF_CACHE_KEY,JSON.stringify({ts:Date.now(),data:etfs}));}catch(_){}
   }catch(e){
     document.getElementById("etf-bar").innerHTML=
       `<span style="color:#555;font-size:12px;padding:12px 0;display:inline-block;">ETF 바 오류: ${esc(e.message)}</span>`;
@@ -641,7 +656,7 @@ function loadMarketFlowSample(){
 
   const sample={
     "0001":{
-      label:"코스피(샘플)",price:2848.11,change_rate:1.23,
+      label:"코스피",price:2848.11,change_rate:1.23,
       bars:makeBars(2814,2848),
       investor_now:{...last_kosp},
       investor_history:kosp_inv_hist,
@@ -649,7 +664,7 @@ function loadMarketFlowSample(){
       program_history:kosp_prog_hist,
     },
     "1001":{
-      label:"코스닥(샘플)",price:723.45,change_rate:-0.47,
+      label:"코스닥",price:723.45,change_rate:-0.47,
       bars:makeBars(730,723),
       investor_now:{...last_kosq},
       investor_history:kosq_inv_hist,
@@ -689,13 +704,81 @@ function loadMarketFlowSample(){
   renderMarketFlow(sample);
 }
 
+const _MF_CACHE_KEY="mf_cache_v2";
+const _MF_CACHE_TTL=300000; // 5분
+
 async function loadMarketFlow(){
+  // B: localStorage 직전 캐시 즉시 표시
+  try{
+    const raw=localStorage.getItem(_MF_CACHE_KEY);
+    if(raw){
+      const {ts,data}=JSON.parse(raw);
+      if(Date.now()-ts<_MF_CACHE_TTL){renderMarketFlow(data);}
+    }
+  }catch(_){}
+  // 서버에서 갱신 (A: 서버 캐시로 빠름)
   try{
     const r=await fetch("/api/market_flow");
     const d=await r.json();
     if(d.error)return;
     renderMarketFlow(d);
+    try{localStorage.setItem(_MF_CACHE_KEY,JSON.stringify({ts:Date.now(),data:d}));}catch(_){}
   }catch(e){console.error("market_flow 오류",e);}
+}
+
+const ETF_KEYWORDS=["KODEX","TIGER","KINDEX","SOL","ARIRANG","HANARO","ACE","PLUS","KBSTAR","TIMEFOLIO","KOSEF","TREX","RISE","ETN","인버스","레버리지","선물인버스","선물레버리지"];
+let _rankAllStocks=[];
+let _rankEtfFilter=true;  // 기본: ETF/ETN 제외
+
+function renderRankCard(){
+  const filtered=_rankEtfFilter
+    ?_rankAllStocks.filter(s=>!ETF_KEYWORDS.some(k=>s.name.toUpperCase().includes(k.toUpperCase())))
+    :_rankAllStocks;
+  const stocks=filtered.slice(0,15);  // ETF 제거 후 상위 15개
+  const rows=stocks.map((s,i)=>{
+    const rc=s.change_rate>0?"up":s.change_rate<0?"dn":"neu";
+    const rs=(s.change_rate>0?"+":"")+Number(s.change_rate).toFixed(2)+"%";
+    const ps=Number(s.price).toLocaleString("ko-KR");
+    return`<div class="us-row">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="font-size:10px;color:#444;min-width:14px;text-align:right">${i+1}</span>
+        <span class="us-sym">${esc(s.name)}</span>
+      </div>
+      <div class="us-vals">
+        <span class="us-price">${ps}</span>
+        <span class="us-rate ${rc}">${rs}</span>
+      </div>
+    </div>`;
+  }).join("");
+  const on=_rankEtfFilter;
+  const btnStyle=on
+    ?"background:rgba(212,175,55,.25);color:var(--gold);border:1px solid rgba(212,175,55,.5)"
+    :"background:rgba(255,255,255,.05);color:#555;border:1px solid #333";
+  const btnLabel=on?"ETF·ETN 제외중":"ETF·ETN 포함";
+  return`<div class="mkt-card">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+      <span style="font-size:11px;font-weight:700;color:#aaa;letter-spacing:0.3px;flex:1">실시간 조회순위</span>
+      <button id="etf-toggle" onclick="toggleEtfFilter()" style="font-size:10px;padding:2px 7px;border-radius:10px;cursor:pointer;font-family:inherit;${btnStyle}">${btnLabel}</button>
+    </div>
+    <div style="height:${9*36}px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#333 transparent">${rows}</div>
+  </div>`;
+}
+
+function toggleEtfFilter(){
+  _rankEtfFilter=!_rankEtfFilter;
+  const panel=document.getElementById("mkt-panel");
+  if(!panel)return;
+  const card=document.getElementById("etf-toggle");
+  if(card){
+    const parent=card.closest(".mkt-card");
+    if(parent)parent.outerHTML=renderRankCard();
+  } else {
+    // rank 카드 전체 재렌더 불가 → panel 전체 재렌더
+    panel.querySelectorAll(".mkt-card").forEach(c=>{
+      if(c.querySelector(".us-row")||c.textContent.includes("실시간 조회순위"))
+        c.outerHTML=renderRankCard();
+    });
+  }
 }
 
 function renderMarketFlow(d){
@@ -708,9 +791,10 @@ function renderMarketFlow(d){
       if(code==="global"){
         // 차트 있는 항목(선물)은 flex:3, 숫자만(환율/유가)은 flex:2
         const rows=(m.items||[]).map((it,idx)=>{
-          const rc=it.change_rate>0?"up":it.change_rate<0?"dn":"neu";
-          const rs=(it.change_rate>0?"▲ +":it.change_rate<0?"▼ ":"")+Number(it.change_rate).toFixed(2)+"%";
-          const ps=Number(it.price).toLocaleString("ko-KR",{maximumFractionDigits:2});
+          const noData=(!it.price&&!it.change_rate);
+          const rc=noData?"neu":it.change_rate>0?"up":it.change_rate<0?"dn":"neu";
+          const rs=noData?"—":(it.change_rate>0?"▲ +":it.change_rate<0?"▼ ":"")+Number(it.change_rate).toFixed(2)+"%";
+          const ps=noData?"—":Number(it.price).toLocaleString("ko-KR",{maximumFractionDigits:2});
           const hasChart=it.bars&&it.bars.length>=2;
           const borderB=idx<3?"border-bottom:1px solid #1a1a1a;":"";
           if(hasChart){
@@ -748,32 +832,16 @@ function renderMarketFlow(d){
 
       // ── 실시간 조회순위 카드 ──
       if(code==="rank"){
-        const rows=(m.stocks||[]).map(s=>{
-          const rc=s.change_rate>0?"up":s.change_rate<0?"dn":"neu";
-          const rs=(s.change_rate>0?"+":"")+Number(s.change_rate).toFixed(2)+"%";
-          const ps=Number(s.price).toLocaleString("ko-KR");
-          return`<div class="us-row">
-            <div style="display:flex;align-items:center;gap:6px">
-              <span style="font-size:10px;color:#444;min-width:14px;text-align:right">${s.rank}</span>
-              <span class="us-sym">${esc(s.name)}</span>
-            </div>
-            <div class="us-vals">
-              <span class="us-price">${ps}</span>
-              <span class="us-rate ${rc}">${rs}</span>
-            </div>
-          </div>`;
-        }).join("");
-        return`<div class="mkt-card">
-          <div style="font-size:11px;font-weight:700;color:#aaa;margin-bottom:4px;letter-spacing:0.3px">실시간 조회순위</div>
-          <div style="height:${9*36}px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#333 transparent">${rows}</div>
-        </div>`;
+        _rankAllStocks=m.stocks||[];
+        return renderRankCard();
       }
 
       // ── 코스피 / 코스닥 풀 카드 ──
-      const rc=m.change_rate>0?"up":m.change_rate<0?"dn":"neu";
-      const rateStr=(m.change_rate>0?"▲ +":m.change_rate<0?"▼ ":"")
+      const noIndex=(!m.price);
+      const rc=noIndex?"neu":m.change_rate>0?"up":m.change_rate<0?"dn":"neu";
+      const rateStr=noIndex?"—":(m.change_rate>0?"▲ +":m.change_rate<0?"▼ ":"")
                    +Number(m.change_rate).toFixed(2)+"%";
-      const priceStr=Number(m.price).toLocaleString("ko-KR",{maximumFractionDigits:2});
+      const priceStr=noIndex?"—":Number(m.price).toLocaleString("ko-KR",{maximumFractionDigits:2});
 
       const barSection=`<div>
         <div class="mkt-sec-label">15분봉</div>
@@ -782,15 +850,17 @@ function renderMarketFlow(d){
 
       // 코스피 / 코스닥 — 풀 카드
       const inv=m.investor_now||{외인:0,기관:0,개인:0};
+      const invAllZero=!inv.외인&&!inv.기관&&!inv.개인;
       const maxAbs=Math.max(1,Math.abs(inv.외인),Math.abs(inv.기관),Math.abs(inv.개인));
       const invRows=["외인","기관","개인"].map(k=>{
-        const v=inv[k]||0;
-        const vc=v>0?"up":v<0?"dn":"neu";
-        const vs=(v>0?"+":"")+fmtAuk(v);
-        return`<span class="inv-lbl">${k}</span>
-               ${divBar(v,maxAbs)}
-               <span class="inv-num ${vc}">${vs}</span>`;
-      }).join("");
+          const v=inv[k]||0;
+          const vc=invAllZero?"neu":(v>0?"up":v<0?"dn":"neu");
+          const vs=invAllZero?"—":(v>0?"+":"")+fmtAuk(v);
+          return`<span class="inv-lbl">${k}</span>
+                 ${invAllZero?`<span style="flex:1"></span>`:divBar(v,maxAbs)}
+                 <span class="inv-num ${vc}">${vs}</span>`;
+        }).join("")
+        +(invAllZero?`<span style="font-size:9px;color:#333;display:block;margin-top:2px">KIS API 미구독</span>`:"");
 
       const hist=m.investor_history||[];
       const histSvg=hist.length>=2?`
@@ -798,8 +868,9 @@ function renderMarketFlow(d){
         ${invHistoryChart(hist,240,44)}`:"";
 
       const prog=m.program_now||{합계:0,차익:0,비차익:0};
+      const progAllZero=!prog.합계&&!prog.차익&&!prog.비차익;
       const pc=prog.합계>0?"up":prog.합계<0?"dn":"neu";
-      const ps=(prog.합계>0?"+":"")+fmtAuk(prog.합계);
+      const ps=progAllZero?"—":(prog.합계>0?"+":"")+fmtAuk(prog.합계);
       const ts=m.investor_now?.ts||"—";
 
       const progHist=m.program_history||[];
@@ -844,7 +915,7 @@ function renderMarketFlow(d){
           <div class="mkt-sec-label">프로그램 순매수</div>
           <div class="prog-row">
             <span class="prog-total ${pc}">${ps}</span>
-            <span class="prog-detail">차익 ${fmtAuk(prog.차익||0)} / 비차익 ${fmtAuk(prog.비차익||0)}</span>
+            <span class="prog-detail">${progAllZero?"KIS API 미구독":`차익 ${fmtAuk(prog.차익||0)} / 비차익 ${fmtAuk(prog.비차익||0)}`}</span>
           </div>
           ${progChart}
         </div>
@@ -905,9 +976,10 @@ async function prefetchTabs(){
 }
 
 // ── 편집 탭 ──────────────────────────────────────────────
-let _editState={hidden_sectors:[],extra_stocks:{},custom_tiles:[]};
+let _editState={hidden_sectors:[],extra_stocks:{},removed_stocks:{},custom_tiles:[]};
 let _editSectorNames=[];   // 섹터 이름 목록 (편집 드롭다운용)
 let _editSector="";        // 현재 종목 관리 중인 섹터
+let _editSectorStocks={base:[],extra:[],removed:[]};  // 선택한 섹터의 종목 목록 (서버에서 로드)
 let _newCtStocks=[];       // 커스텀 섹터 추가 중 임시 종목
 let _stockSearchTimer=null;
 
@@ -948,12 +1020,17 @@ function renderEditUI(){
     </div>`;
   }).join("");
 
-  // 종목 관리: extra stocks 태그
-  const extraTagsHtml=_editSector
-    ?(extra[_editSector]||[]).map(s=>
+  // 종목 관리: 기본+추가 종목 통합 태그
+  const removedSet=new Set((_editState.removed_stocks||{})[_editSector]||[]);
+  const stocksHtml=_editSector?[
+    ..._editSectorStocks.base.filter(s=>!removedSet.has(s.code)).map(s=>
+      `<span class="tag" style="background:rgba(255,255,255,.06);border-color:#333">${esc(s.name)}<span class="x" onclick="removeBaseStock('${esc(_editSector)}','${esc(s.code)}')">×</span></span>`
+    ),
+    ...(_editSectorStocks.extra||[]).map(s=>
       `<span class="tag">${esc(s.name)}<span class="x" onclick="removeExtraStock('${esc(_editSector)}','${esc(s.code)}')">×</span></span>`
-    ).join("")||'<span style="font-size:11px;color:#444">추가된 종목 없음</span>'
-    :"";
+    ),
+  ].join("")||'<span style="font-size:11px;color:#444">종목 없음</span>'
+  :"";
 
   // 커스텀 섹터 목록
   const ctHtml=customTiles.map((ct,i)=>
@@ -979,24 +1056,27 @@ function renderEditUI(){
     <!-- 오른쪽: 종목 추가 + 커스텀 -->
     <div style="display:flex;flex-direction:column;gap:14px">
 
-      <!-- 종목 추가 -->
+      <!-- 섹터 종목 관리 -->
       <div class="edit-section">
-        <h2>➕ 섹터 종목 추가</h2>
+        <h2>📋 섹터 종목 관리</h2>
         <label class="edit-label" style="margin-top:0">섹터 선택</label>
         <select class="sector-select" onchange="selectEditSector(this.value)">
           <option value="">-- 섹터 선택 --</option>
           ${_editSectorNames.map(n=>`<option value="${esc(n)}"${n===_editSector?" selected":""}>${esc(n)}</option>`).join("")}
         </select>
         ${_editSector?`
-          <label class="edit-label">추가된 종목</label>
-          <div class="tag-row" id="extra-tag-row">${extraTagsHtml}</div>
-          <label class="edit-label">종목 검색</label>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0 4px">
+            <label class="edit-label" style="margin:0">등록 종목</label>
+            <span style="font-size:10px;color:#555">흰색=기본 / 금색=추가</span>
+          </div>
+          <div class="tag-row" id="stock-manage-row">${stocksHtml}</div>
+          <label class="edit-label">종목 추가 검색</label>
           <div class="autocomplete-wrap">
             <input class="edit-input" id="extra-stock-input" placeholder="종목명 입력…"
                    oninput="searchStock(this.value,'extra-stock-list','extra')" autocomplete="off">
             <div class="autocomplete-list" id="extra-stock-list" style="display:none"></div>
           </div>
-        `:`<p style="font-size:12px;color:#444;margin-top:4px">섹터를 선택하면 종목을 추가할 수 있습니다</p>`}
+        `:`<p style="font-size:12px;color:#444;margin-top:4px">섹터를 선택하면 종목을 관리할 수 있습니다</p>`}
       </div>
 
       <!-- 커스텀 섹터 -->
@@ -1050,9 +1130,40 @@ function toggleHideSector(cb,name){
   if(item)item.classList.toggle("hidden",cb.checked);
 }
 
-function selectEditSector(name){
+async function selectEditSector(name){
   _editSector=name;
+  _editSectorStocks={base:[],extra:[],removed:[]};
+  if(name){
+    try{
+      const r=await fetch(`/api/sector_stocks?sector=${encodeURIComponent(name)}`);
+      const d=await r.json();
+      _editSectorStocks={base:d.base||[],extra:d.extra||[],removed:d.removed||[]};
+    }catch(e){}
+  }
   renderEditUI();
+}
+
+function _refreshStockManageRow(){
+  const row=document.getElementById("stock-manage-row");
+  if(!row)return;
+  const removedSet=new Set((_editState.removed_stocks||{})[_editSector]||[]);
+  const html=[
+    ..._editSectorStocks.base.filter(s=>!removedSet.has(s.code)).map(s=>
+      `<span class="tag" style="background:rgba(255,255,255,.06);border-color:#333">${esc(s.name)}<span class="x" onclick="removeBaseStock('${esc(_editSector)}','${esc(s.code)}')">×</span></span>`
+    ),
+    ...(_editSectorStocks.extra||[]).map(s=>
+      `<span class="tag">${esc(s.name)}<span class="x" onclick="removeExtraStock('${esc(_editSector)}','${esc(s.code)}')">×</span></span>`
+    ),
+  ].join("")||'<span style="font-size:11px;color:#444">종목 없음</span>';
+  row.innerHTML=html;
+}
+
+function removeBaseStock(sector,code){
+  const rm=_editState.removed_stocks||{};
+  if(!rm[sector])rm[sector]=[];
+  if(!rm[sector].includes(code))rm[sector].push(code);
+  _editState.removed_stocks=rm;
+  _refreshStockManageRow();
 }
 
 function removeExtraStock(sector,code){
@@ -1061,29 +1172,24 @@ function removeExtraStock(sector,code){
   ex[sector]=ex[sector].filter(s=>s.code!==code);
   if(!ex[sector].length)delete ex[sector];
   _editState.extra_stocks=ex;
-  const row=document.getElementById("extra-tag-row");
-  if(!row)return;
-  const stocks=ex[_editSector]||[];
-  row.innerHTML=stocks.length
-    ?stocks.map(s=>`<span class="tag">${esc(s.name)}<span class="x" onclick="removeExtraStock('${esc(_editSector)}','${esc(s.code)}')">×</span></span>`).join("")
-    :'<span style="font-size:11px;color:#444">추가된 종목 없음</span>';
+  _editSectorStocks.extra=(_editSectorStocks.extra||[]).filter(s=>s.code!==code);
+  _refreshStockManageRow();
 }
 
 function addExtraStock(name,code){
   if(!_editSector)return;
   const ex=_editState.extra_stocks||{};
   if(!ex[_editSector])ex[_editSector]=[];
-  if(!ex[_editSector].find(s=>s.code===code))ex[_editSector].push({name,code});
+  if(!ex[_editSector].find(s=>s.code===code)){
+    ex[_editSector].push({name,code});
+    _editSectorStocks.extra=ex[_editSector];
+  }
   _editState.extra_stocks=ex;
   const inp=document.getElementById("extra-stock-input");
   if(inp)inp.value="";
   const lst=document.getElementById("extra-stock-list");
   if(lst)lst.style.display="none";
-  const row=document.getElementById("extra-tag-row");
-  if(row){
-    const stocks=ex[_editSector]||[];
-    row.innerHTML=stocks.map(s=>`<span class="tag">${esc(s.name)}<span class="x" onclick="removeExtraStock('${esc(_editSector)}','${esc(s.code)}')">×</span></span>`).join("");
-  }
+  _refreshStockManageRow();
 }
 
 function addNewCtStock(name,code){
@@ -1179,8 +1285,9 @@ async function saveEdit(){
 }
 
 async function resetEditState(){
-  _editState={hidden_sectors:[],extra_stocks:{},custom_tiles:[]};
+  _editState={hidden_sectors:[],extra_stocks:{},removed_stocks:{},custom_tiles:[]};
   _editSector="";
+  _editSectorStocks={base:[],extra:[],removed:[]};
   _newCtStocks=[];
   await saveEdit();
   renderEditUI();
@@ -1206,7 +1313,8 @@ async function initLoad(){
 
 initLoad();
 loadEtfBar();
-loadMarketFlowSample();   // 샘플 미리보기 (장 중엔 loadMarketFlow()로 교체됨)
+loadMarketFlowSample();   // 즉시 샘플 표시 (빈화면 방지)
+loadMarketFlow();          // 실제 API 데이터로 즉시 교체
 setInterval(loadEtfBar,   600000);
 setInterval(loadMarketFlow,900000);
 </script>

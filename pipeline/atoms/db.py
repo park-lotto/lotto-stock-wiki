@@ -19,6 +19,12 @@ _SYNTH_COLUMNS = [
     ("certainty", "TEXT DEFAULT '불명'"),
 ]
 
+_YT_COLUMNS = [
+    ("speaker", "TEXT"),
+    ("yt_timestamp", "TEXT"),
+    ("deeplink", "TEXT"),
+]
+
 
 def get_conn() -> sqlite3.Connection:
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -38,7 +44,7 @@ def init_db():
 def migrate_db():
     """기존 DB에 텔레그램 필드 멱등 추가 (이미 있으면 무시)."""
     conn = get_conn()
-    for name, decl in _TG_COLUMNS + _SYNTH_COLUMNS:
+    for name, decl in _TG_COLUMNS + _SYNTH_COLUMNS + _YT_COLUMNS:
         try:
             conn.execute(f"ALTER TABLE atoms ADD COLUMN {name} {decl}")
         except sqlite3.OperationalError:
@@ -55,6 +61,9 @@ def insert_atom(atom: dict) -> str:
     a.setdefault("stance_key", None)
     a.setdefault("mention_count", 1)
     a.setdefault("msg_ts", None)
+    a.setdefault("speaker", None)
+    a.setdefault("yt_timestamp", None)
+    a.setdefault("deeplink", None)
     mc = a.get("mention_channels")
     a["mention_channels"] = json.dumps(mc, ensure_ascii=False) if isinstance(mc, list) else mc
     conn = get_conn()
@@ -66,14 +75,16 @@ def insert_atom(atom: dict) -> str:
          signal, event_type, magnitude, content_type, strength_score,
          validity_type, validity_until, is_active,
          content, relations, created_at,
-         stance_key, mention_channels, mention_count, msg_ts)
+         stance_key, mention_channels, mention_count, msg_ts,
+         speaker, yt_timestamp, deeplink)
         VALUES
         (:id, :date, :source_type, :source_name, :source_trust, :raw_file,
          :layer, :sector, :asset, :asset_level,
          :signal, :event_type, :magnitude, :content_type, :strength_score,
          :validity_type, :validity_until, :is_active,
          :content, :relations, :created_at,
-         :stance_key, :mention_channels, :mention_count, :msg_ts)
+         :stance_key, :mention_channels, :mention_count, :msg_ts,
+         :speaker, :yt_timestamp, :deeplink)
         """,
         a,
     )

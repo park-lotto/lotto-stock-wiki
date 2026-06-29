@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "date": "2026-06-05",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_0700_가스(LNG)와 탄소중립을 위한 여정.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김승준",
+    "report_date": "2026년 6월 5일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "삼성E&A",
+        "code": "028050",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "67,000원",
+        "tp_prev": null,
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "quote": "Consensus Data (십억원, %, 배, 원) 구분 2026 2027 매출액 10,210.9 11,636.7 영업이익 879.6 1,023.3 순이익 722.5 843.0 EPS 3,600 4,206"
+        },
+        "estimate_revision": null,
+        "next_catalyst": "종전 이후의 중동 재건, 이란 개발, 지정학적 에너지 수급 변화에 따른 타대륙의 개발 수혜",
+        "thesis": [
+          "LNG액화플랜트 진출 기회 확대",
+          "미국 내 허니웰UOP와 함께하는 CCS(탄소중립) 프로젝트 수행",
+          "중장기적 수주 기회 확대 및 중동 재건 수혜"
+        ],
+        "valuation_basis": "26년 EPS 추정치에 Target P/E 20.0배를 적용",
+        "risk": "최근 미사일, 드론 등 이란 분쟁이 격화되며, 중동 재건의 시점이 뒤로 연기되는 듯한 분위기가 주가하락으로 이어짐",
+        "supply_comment": "삼성E&A는 LNG액화의 수행 역량이 있다고 보는데, 그 이유는 유사한 프로젝트(가스 전처리시설, NGL, 저장탱크, 에틸렌 액화 공정 등)가 있기 때문",
+        "quote": "삼성E&A 투자의견 Buy, 목표주가는 67,000원을 유지한다. 목표주가는 26년 EPS 추정치에 Target P/E 20.0배를 적용했다."
+      }
+    ]
+  }
+}
