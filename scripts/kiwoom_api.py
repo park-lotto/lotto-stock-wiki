@@ -189,12 +189,12 @@ def get_market_investor(market: str = "J") -> dict:
     import datetime as _dt
     ts = _dt.datetime.now().strftime("%H:%M")
     mrkt_tp = "0" if market == "J" else "1"
-    target_cd = "001_AL" if market == "J" else "101_AL"  # 코스피/코스닥 전체(AL)
+    target_cd = "001" if market == "J" else "101"  # 장내 종합지수 코드 (stex_tp=1)
     try:
         r = requests.post(
             f"{BASE}/api/dostk/sect",
             headers={**_hdrs(), "api-id": "ka10051", "cont-yn": "N", "next-key": ""},
-            json={"mrkt_tp": mrkt_tp, "amt_qty_tp": "0", "stex_tp": "3"},
+            json={"mrkt_tp": mrkt_tp, "amt_qty_tp": "0", "stex_tp": "1"},
             timeout=10,
         )
         r.raise_for_status()
@@ -231,7 +231,7 @@ def get_volume_rank(n: int = 30) -> list:
             f = float(s)
         except Exception:
             f = 0.0
-        return round(f, 2) if is_rate else int(f)
+        return round(f, 2) if is_rate else abs(int(f))  # price는 부호 제거 (키움 응답에 +/- 포함)
 
     try:
         r = requests.post(
@@ -271,7 +271,7 @@ def get_trade_rank(n: int = 30) -> list:
             f = float(s)
         except Exception:
             f = 0.0
-        return round(f, 2) if is_rate else int(f)
+        return round(f, 2) if is_rate else abs(int(f))  # price는 부호 제거
 
     try:
         r = requests.post(

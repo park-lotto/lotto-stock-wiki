@@ -118,6 +118,10 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
   font-size:14px;color:#333;line-height:1;padding:2px;transition:color .15s;z-index:2;}
 .fav-btn:hover,.fav-btn.on{color:#f5c518;}
 .tile{position:relative;}
+/* 카드 헤더 더보기 버튼 */
+.tile .top-more{position:absolute;top:5px;right:26px;background:none;border:none;cursor:pointer;
+  font-size:10px;color:rgba(255,255,255,.35);padding:2px 4px;line-height:1;transition:color .15s;z-index:2;white-space:nowrap;}
+.tile .top-more:hover{color:rgba(255,255,255,.8);}
 
 /* ── 히트맵 그리드 ── */
 .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
@@ -130,11 +134,14 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 .tile:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.5);}
 .tile .sec-name{font-size:12px;font-weight:700;color:rgba(255,255,255,.9);line-height:1.3;}
 .tile .avg-rate{font-size:24px;font-weight:900;line-height:1;}
-.tile .stocks{display:flex;flex-direction:column;gap:3px;margin-top:auto;}
+.tile .stocks{display:flex;flex-direction:column;gap:3px;margin-top:6px;}
 .tile .stock-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:rgba(255,255,255,.75);}
 .tile .stock-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:68%;}
 .tile .stock-rate{font-weight:700;white-space:nowrap;}
-.tile .stock-more{font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;}
+.tile .stock-more{font-size:10px;color:var(--gold);margin-top:2px;cursor:pointer;opacity:.65;transition:opacity .15s;user-select:none;}
+.tile .stock-more:hover{opacity:1;}
+.tile .stock-extra{display:none;flex-direction:column;gap:3px;margin-top:2px;}
+.tile .stock-extra.open{display:flex;}
 .parent-badge{display:inline-block;font-size:10px;color:rgba(255,255,255,.45);font-weight:400;
               background:rgba(0,0,0,.35);padding:1px 6px;border-radius:10px;
               margin-left:4px;vertical-align:middle;}
@@ -211,6 +218,11 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
     <a href="/insights">인사이트</a>
   </nav>
   <span class="badge" id="mkt-status">장중</span>
+  <button onclick="refresh()" id="topbar-refresh" title="새로고침"
+    style="margin-left:10px;background:none;border:1px solid #333;border-radius:6px;
+           color:#888;font-size:13px;padding:4px 10px;cursor:pointer;transition:color .15s,border-color .15s"
+    onmouseover="this.style.color='#d4af37';this.style.borderColor='#d4af37'"
+    onmouseout="this.style.color='#888';this.style.borderColor='#333'">↻</button>
   <span class="time" id="clock"></span>
 </div>
 
@@ -277,7 +289,7 @@ setInterval(()=>{
   document.getElementById("clock").textContent=now.toLocaleTimeString("ko-KR");
   const h=now.getHours(),m=now.getMinutes();
   const isMarket=(h>9||(h===9&&m>=0));
-  const isClose=(h>=15&&m>=30);
+  const isClose=(h>15||(h===15&&m>=30));
   const badge=document.getElementById("mkt-status");
   if(isClose){badge.textContent="장마감";badge.style.background="#2a1a1a";badge.style.color="#e74c3c";}
   else if(isMarket){badge.textContent="장중";badge.style.background="#1e3a1e";badge.style.color="#4ade80";}
@@ -299,13 +311,40 @@ document.getElementById("tab-bar").addEventListener("click",e=>{
 // ★ 클릭 이벤트 위임
 document.getElementById("grid").addEventListener("click",e=>{
   const btn=e.target.closest(".fav-btn");
-  if(!btn)return;
-  e.stopPropagation();
-  const name=btn.dataset.sector;
-  toggleFav(name);
-  // 즐겨찾기 탭이면 재렌더(전체 캐시 기준), 아니면 버튼만 토글
-  if(activeTab==="fav"){ renderGrid(_allTiles); }
-  else { btn.classList.toggle("on"); }
+  if(btn){
+    e.stopPropagation();
+    const name=btn.dataset.sector;
+    toggleFav(name);
+    // 즐겨찾기 탭이면 재렌더(전체 캐시 기준), 아니면 버튼만 토글
+    if(activeTab==="fav"){ renderGrid(_allTiles); }
+    else { btn.classList.toggle("on"); }
+    return;
+  }
+  // 더보기/접기 — 같은 행 카드 전체 동기화 (하단 버튼 or 상단 버튼 모두 처리)
+  const more=e.target.closest(".stock-more,.top-more");
+  if(more){
+    const thisTile=more.closest(".tile");
+    const extra=thisTile.querySelector(".stock-extra");
+    if(!extra)return;
+    const willOpen=!extra.classList.contains("open");
+    const thisTop=thisTile.getBoundingClientRect().top;
+    document.querySelectorAll(".grid .tile").forEach(tile=>{
+      if(Math.abs(tile.getBoundingClientRect().top-thisTop)>5)return;
+      const m=tile.querySelector(".stock-more");
+      const tm=tile.querySelector(".top-more");
+      const x=tile.querySelector(".stock-extra");
+      if(!x)return;
+      if(willOpen){
+        x.classList.add("open");
+        if(m)m.textContent="▲ 접기";
+        if(tm){tm.textContent="▲ 접기";tm.style.color="rgba(255,255,255,.7)";}
+      }else{
+        x.classList.remove("open");
+        if(m)m.textContent=`+${m.dataset.count}개 더보기`;
+        if(tm){tm.textContent="+ 더보기";tm.style.color="";}
+      }
+    });
+  }
 });
 
 function loadActive(){
@@ -327,27 +366,78 @@ function _toCache(key,data){ _tabCache[key]={data,ts:Date.now()}; }
 function _clearCache(key){ delete _tabCache[key]; }
 
 // ── 전체 탭 ──────────────────────────────────────────────
+const _LS_ALL="__hm_all__";
+const _LS_TAB_PFX="__hm_tab_";
+
+function _lsSave(key,data){try{localStorage.setItem(key,JSON.stringify(data));}catch(e){}}
+function _lsLoad(key){try{const v=localStorage.getItem(key);return v?JSON.parse(v):null;}catch(e){return null;}}
+
 async function loadOverview(force=false){
   if(!force){
+    // 1) 메모리 캐시
     const cached=_fromCache("all");
     if(cached){ renderOverview(cached); return; }
+    // 2) localStorage 즉시 렌더 후 백그라운드 갱신
+    const prev=_lsLoad(_LS_ALL);
+    if(prev){
+      _toCache("all",prev);
+      renderOverview(prev);
+      _refreshOverviewBg();   // 스피너 없이 조용히 갱신
+      return;
+    }
   }
+  // 3) 캐시 전혀 없을 때만 로딩 스피너
   const btn=document.getElementById("refresh-btn");
   btn.disabled=true; btn.textContent="로딩중…";
   document.getElementById("main-title").textContent="섹터 히트맵 — 전체";
   const grid=document.getElementById("grid");
-  grid.innerHTML='<div class="loading">📡 섹터 데이터 불러오는 중…</div>';
+  if(force) grid.innerHTML='<div class="loading">📡 섹터 데이터 갱신 중…</div>';
   try{
     const url=force?"/api/heatmap/refresh":"/api/heatmap";
     const r=await fetch(url);
     if(!r.ok)throw new Error(`HTTP ${r.status}`);
     const data=await r.json();
     if(data.error)throw new Error(data.error);
+    if(data.loading){
+      const sec=data.retry_after||5;
+      grid.innerHTML=`<div class="loading">⚙️ 서버 데이터 준비 중… <span id="cnt">${sec}</span>초 후 재시도</div>`;
+      btn.disabled=false; btn.textContent="↻ 새로고침";
+      let n=sec;
+      const t=setInterval(()=>{const el=document.getElementById("cnt");if(el)el.textContent=--n;},1000);
+      await new Promise(r=>setTimeout(r,sec*1000));
+      clearInterval(t);
+      return loadOverview(false);
+    }
     _toCache("all",data);
+    _lsSave(_LS_ALL,data);
     renderOverview(data);
   }catch(e){
     grid.innerHTML=`<div class="error">❌ ${esc(e.message)}<br><small>장외시간이면 한투 API가 응답하지 않을 수 있습니다</small></div>`;
   }finally{btn.disabled=false;btn.textContent="↻ 새로고침";}
+}
+
+async function _refreshOverviewBg(){
+  try{
+    const r=await fetch("/api/heatmap");
+    if(!r.ok)return;
+    const data=await r.json();
+    if(data.error)return;
+    _toCache("all",data);
+    _lsSave(_LS_ALL,data);
+    if(activeTab==="all") renderOverview(data);
+  }catch(e){}
+}
+
+async function _refreshTabBg(tabId){
+  try{
+    const r=await fetch(`/api/heatmap_tab?id=${tabId}`);
+    if(!r.ok)return;
+    const data=await r.json();
+    if(data.error)return;
+    _toCache(tabId,data);
+    _lsSave(_LS_TAB_PFX+tabId,data);
+    if(activeTab===tabId) renderTab(data);
+  }catch(e){}
 }
 
 function renderOverview(data){
@@ -367,22 +457,42 @@ const TAB_LABELS={
 
 async function loadTab(tabId,force=false){
   if(!force){
+    // 메모리 캐시
     const cached=_fromCache(tabId);
     if(cached){ renderTab(cached); return; }
+    // localStorage 즉시 렌더 후 백그라운드 갱신
+    const prev=_lsLoad(_LS_TAB_PFX+tabId);
+    if(prev){
+      _toCache(tabId,prev);
+      renderTab(prev);
+      _refreshTabBg(tabId);
+      return;
+    }
   }
   const btn=document.getElementById("refresh-btn");
   btn.disabled=true; btn.textContent="로딩중…";
   const label=TAB_LABELS[tabId]||tabId;
   document.getElementById("main-title").textContent=`섹터 히트맵 — ${label}`;
   const grid=document.getElementById("grid");
-  grid.innerHTML=`<div class="loading">📡 ${label} 세부 데이터 불러오는 중…<br><small style="color:#444">병렬 조회 중 (수~십 초 소요)</small></div>`;
+  if(force) grid.innerHTML=`<div class="loading">📡 ${label} 갱신 중…</div>`;
   try{
     const url=force?`/api/heatmap_tab/refresh?id=${tabId}`:`/api/heatmap_tab?id=${tabId}`;
     const r=await fetch(url);
     if(!r.ok)throw new Error(`HTTP ${r.status}`);
     const data=await r.json();
     if(data.error)throw new Error(data.error);
+    if(data.loading){
+      const sec=data.retry_after||5;
+      grid.innerHTML=`<div class="loading">⚙️ 서버 데이터 준비 중… <span id="cnt">${sec}</span>초 후 재시도</div>`;
+      btn.disabled=false; btn.textContent="↻ 새로고침";
+      let n=sec;
+      const t=setInterval(()=>{const el=document.getElementById("cnt");if(el)el.textContent=--n;},1000);
+      await new Promise(r=>setTimeout(r,sec*1000));
+      clearInterval(t);
+      return loadTab(tabId,false);
+    }
     _toCache(tabId,data);
+    _lsSave(_LS_TAB_PFX+tabId,data);
     renderTab(data);
   }catch(e){
     grid.innerHTML=`<div class="error">❌ ${esc(e.message)}</div>`;
@@ -464,18 +574,28 @@ function renderGrid(tiles){
     // 섹터 내 종목 등락률 내림차순, 상위 3개만 표시
     const sortedStocks=[...tile.stocks].sort((a,b)=>b.change_rate-a.change_rate);
     const topStocks=sortedStocks.slice(0,3);
-    const moreCount=sortedStocks.length-3;
+    const extraStocks=sortedStocks.slice(3);
+    const moreCount=extraStocks.length;
+    const extraHtml=extraStocks.map(s=>
+      `<div class="stock-row">
+         <span class="stock-name">${esc(s.name)}</span>
+         <span class="stock-rate">${rateStr(s.change_rate)}</span>
+       </div>`).join("");
     const stocksHtml=topStocks.map(s=>
       `<div class="stock-row">
          <span class="stock-name">${esc(s.name)}</span>
          <span class="stock-rate">${rateStr(s.change_rate)}</span>
        </div>`).join("")
-      +(moreCount>0?`<div class="stock-more">+${moreCount}개</div>`:"")
+      +(moreCount>0?`<div class="stock-more" data-count="${moreCount}">+${moreCount}개 더보기</div><div class="stock-extra">${extraHtml}</div>`:"")
     const el=document.createElement("div");
     el.className=`tile ${cls}`;
+    const barsSvg=(tile.bars&&tile.bars.length>=2)?
+      `<div style="margin-top:4px">${sparkline(tile.bars,tile.avg_rate)}</div>`:"";
     el.innerHTML=`<button class="fav-btn${isFav?" on":""}" data-sector="${esc(tile.name)}" title="즐겨찾기">★</button>
+      ${moreCount>0?`<button class="top-more" data-count="${moreCount}">+ 더보기</button>`:""}
       <div class="sec-name">${esc(tile.name)}${parentHtml}</div>
       <div class="avg-rate">${avgStr}</div>
+      ${barsSvg}
       <div class="stocks">${stocksHtml}</div>`;
     grid.appendChild(el);
   }
@@ -537,12 +657,9 @@ async function loadEtfBar(){
 // ── 초기 로드 + 자동갱신 ──────────────────────────────────
 // ── 코스피/코스닥 패널 ────────────────────────────────────
 function fmtAuk(v){
-  // v 단위: 백만원 → 억원 표시
-  const bok=v/100;  // 100백만=1억
+  const bok=v/100;  // 백만원 → 억원
   const abs=Math.abs(bok);
   if(abs>=10000) return (bok/10000).toFixed(1)+"조";
-  if(abs>=1000)  return Math.round(bok/100)*100+"억";
-  if(abs>=100)   return Math.round(bok/10)*10+"억";
   if(abs>=1)     return Math.round(bok)+"억";
   return Math.round(v)+"백만";
 }
@@ -585,9 +702,10 @@ function invHistoryChart(history, w, h){
   const cols={"외인":"#e8a030","기관":"#2ecc71","개인":"#888"};
   const lines=keys.map(key=>{
     const vals=history.map(r=>Number(r[key]||0));
-    const mn=Math.min(...vals),mx=Math.max(...vals),range=mx-mn||1;
+    const mn=Math.min(...vals),mx=Math.max(...vals),range=mx-mn;
     const xs=vals.map((_,i)=>Math.round(2+i*(w-4)/(vals.length-1)));
-    const ys=vals.map(v=>Math.round(2+(1-((v-mn)/range))*(h-4)));
+    // range=0(모두 동일값)이면 중앙에 수평선
+    const ys=vals.map(v=>range===0?Math.round(h/2):Math.round(2+(1-((v-mn)/range))*(h-4)));
     const pts=xs.map((x,i)=>`${x},${ys[i]}`).join(" ");
     return`<polyline points="${pts}" fill="none" stroke="${cols[key]}" stroke-width="1.4" opacity=".9"/>`;
   }).join("");
@@ -681,10 +799,11 @@ function loadMarketFlowSample(){
     "global":{
       label:"글로벌 지표",
       items:[
-        {name:"미국선물(SPY)",  price:587.32,  change_rate:0.34,  bars:makeBars(575,587)},
-        {name:"코스피선물", price:365.45,  change_rate:1.15,  bars:makeBars(356,365)},
-        {name:"원달러환율",     price:1384.50, change_rate:-0.12, bars:[]},
-        {name:"국제유가(WTI)", price:78.42,   change_rate:0.89,  bars:[]},
+        {name:"나스닥선물(NQ)",   price:21200,   change_rate:0.34,  bars:makeBars(21000,21200)},
+        {name:"코스피선물",      price:365.45,  change_rate:1.15,  bars:makeBars(356,365)},
+        {name:"코스피야간선물",  price:364.20,  change_rate:0.82,  bars:[]},
+        {name:"원달러환율",      price:1384.50, change_rate:-0.12, bars:[]},
+        {name:"국제유가(WTI)",   price:78.42,   change_rate:0.89,  bars:[]},
       ],
     },
     "rank_popular":{label:"실시간 인기검색",stocks:[{rank:1,name:"삼성전자",price:80400,change_rate:1.52}]},
@@ -724,15 +843,15 @@ let _rankAmtN=5;
 
 function _filterRank(stocks){
   return _rankEtfFilter
-    ?stocks.filter(s=>!ETF_KEYWORDS.some(k=>s.name.toUpperCase().includes(k.toUpperCase())))
-    :stocks;
+    ?stocks.filter(s=>s.name&&!ETF_KEYWORDS.some(k=>s.name.toUpperCase().includes(k.toUpperCase())))
+    :stocks.filter(s=>s.name);
 }
 
 function _rankRows(stocks, maxN){
   return _filterRank(stocks).slice(0,maxN).map((s,i)=>{
     const rc=s.change_rate>0?"up":s.change_rate<0?"dn":"neu";
-    const rs=(s.change_rate>0?"+":"")+Number(s.change_rate).toFixed(2)+"%";
-    const ps=Math.abs(Number(s.price)).toLocaleString("ko-KR");
+    const rs=(s.change_rate>0?"+":"")+Number(s.change_rate||0).toFixed(2)+"%";
+    const ps=Math.abs(Number(s.price||0)).toLocaleString("ko-KR");
     return`<div class="us-row">
       <div style="display:flex;align-items:center;gap:6px">
         <span style="font-size:10px;color:#444;min-width:14px;text-align:right">${i+1}</span>
@@ -961,7 +1080,7 @@ let _autoTimer=null;
 function setIntervalSec(sec){
   if(_autoTimer)clearInterval(_autoTimer);
   _autoTimer=setInterval(()=>{
-    if(activeTab==="all")loadOverview();else loadTab(activeTab);
+    loadActive();
   },sec*1000);
   // 버튼 active 상태 업데이트
   [30,300,600].forEach(s=>{

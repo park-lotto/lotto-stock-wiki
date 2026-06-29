@@ -518,6 +518,31 @@ def build_heatmap(top_n: int = 3) -> dict:
 
     sectors.sort(key=lambda x: x["avg_rate"], reverse=True)
 
+    # 각 섹터 대표 종목(가격 데이터 있는 첫 번째) 일봉 bars 병렬 조회
+    try:
+        from concurrent.futures import ThreadPoolExecutor as _TPE
+        rep = {}  # {섹터명: code}
+        for sec in sectors:
+            for s in sec["stocks"]:
+                if s.get("price", 0) > 0:
+                    rep[sec["name"]] = s["code"]
+                    break
+        bars_map = {}
+        if rep:
+            with _TPE(max_workers=10) as ex:
+                futs = {ex.submit(kis_api.get_daily_bars, code, 20): name
+                        for name, code in rep.items()}
+                for fut, name in futs.items():
+                    try:
+                        bars_map[name] = fut.result(timeout=12)
+                    except Exception:
+                        bars_map[name] = []
+        for sec in sectors:
+            sec["bars"] = bars_map.get(sec["name"], [])
+    except Exception:
+        for sec in sectors:
+            sec.setdefault("bars", [])
+
     return {
         "sectors": sectors,
         "updated_at": datetime.now().strftime("%H:%M:%S"),

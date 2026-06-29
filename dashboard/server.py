@@ -725,17 +725,16 @@ def api_etf_bar():
 @app.get("/api/debug_flow")
 def api_debug_flow():
     """각 KIS API 직접 호출 진단 (서버 캐시 토큰 사용 — reload 없음)."""
-    import kis_api, traceback
+    import kis_api, kiwoom_api as _kw, traceback
     results = {}
     for name, fn, args in [
         ("J_bars",    kis_api.get_index_minutebar, ("0001", 15)),
         ("Q_bars",    kis_api.get_index_minutebar, ("1001", 15)),
-        ("J_investor",kis_api.get_market_investor, ("J",)),
-        ("J_prog",    kis_api.get_program_trade, ("J",)),
+        ("J_investor",_kw.get_market_investor, ("J",)),
+        ("J_prog",    _kw.get_program_trade, ("J",)),
         ("J_price",   kis_api.get_index_price, ("0001",)),
-        ("SPY",       kis_api.get_overseas_price, ("SPY","NYS")),
-        ("RANK_VOL",  kiwoom_api.get_volume_rank, ()),
-        ("RANK_AMT",  kiwoom_api.get_trade_rank, ()),
+        ("RANK_VOL",  _kw.get_volume_rank, ()),
+        ("RANK_AMT",  _kw.get_trade_rank, ()),
     ]:
         try:
             v = fn(*args)
@@ -818,17 +817,23 @@ def api_market_flow():
             }
             done = {}
             for k, f in tasks.items():
-                try: done[k] = f.result()
+                try: done[k] = f.result(timeout=15)
                 except Exception: done[k] = None
-        _prewarm_cache["market_flow"] = {"data": done, "ts": time.time()}
+        # 가격 0인 빈 데이터는 캐시 오염 방지 (토큰 실패 등)
+        j_price = (done.get("J_price") or {}).get("price", 0)
+        q_price = (done.get("Q_price") or {}).get("price", 0)
+        if j_price and q_price:
+            _prewarm_cache["market_flow"] = {"data": done, "ts": time.time()}
         return JSONResponse(content=_build_market_flow_result(done))
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
 
 # ── 히트맵 캐시 (탭 전환 속도 개선) ──────────────────────────
-_heatmap_cache: dict = {}   # {key: {"data": ..., "ts": float}}
-_HEATMAP_TTL = 180          # 3분 캐시
+_heatmap_cache: dict = {}           # {key: {"data": ..., "ts": float}}
+_heatmap_building: set = set()      # 현재 빌드 중인 key 집합
+_heatmap_lock = threading.Lock()
+_HEATMAP_TTL = 180                  # 3분 캐시
 
 
 def _heatmap_cached(key: str, fn):
@@ -842,15 +847,38 @@ def _heatmap_cached(key: str, fn):
     return data
 
 
+def _heatmap_build_bg(key: str, fn):
+    """캐시 없을 때 백그라운드 스레드로 빌드. 중복 실행 방지."""
+    with _heatmap_lock:
+        if key in _heatmap_building:
+            return
+        _heatmap_building.add(key)
+
+    def _run():
+        try:
+            data = fn()
+            if data:
+                _heatmap_cache[key] = {"data": data, "ts": time.time()}
+        except Exception:
+            pass
+        finally:
+            with _heatmap_lock:
+                _heatmap_building.discard(key)
+
+    threading.Thread(target=_run, daemon=True).start()
+
+
 @app.get("/api/heatmap_tab")
 def api_heatmap_tab(id: str = "semi"):
     if build_heatmap_tab is None:
         return JSONResponse(content={"error": "build_heatmap_tab 없음"}, status_code=503)
-    try:
-        data = _heatmap_cached(f"tab:{id}", lambda: build_heatmap_tab(id))
-        return JSONResponse(content=data)
-    except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+    key = f"tab:{id}"
+    entry = _heatmap_cache.get(key)
+    if entry and time.time() - entry["ts"] < _HEATMAP_TTL:
+        return JSONResponse(content=entry["data"])
+    _heatmap_build_bg(key, lambda: build_heatmap_tab(id))
+    return JSONResponse(content={"loading": True, "retry_after": 5, "sectors": [],
+                                 "updated_at": "데이터 준비 중…"})
 
 
 @app.get("/api/heatmap_tab/refresh")
@@ -869,11 +897,14 @@ def api_heatmap_tabs_meta():
 def api_heatmap():
     if build_heatmap is None:
         return JSONResponse(content={"error": "sector_heatmap 로드 실패"}, status_code=503)
-    try:
-        data = _heatmap_cached("all", build_heatmap)
-        return JSONResponse(content=data)
-    except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+    # 캐시 hit → 즉시 반환
+    entry = _heatmap_cache.get("all")
+    if entry and time.time() - entry["ts"] < _HEATMAP_TTL:
+        return JSONResponse(content=entry["data"])
+    # 캐시 miss → 백그라운드 빌드 시작 후 "준비 중" 즉시 응답
+    _heatmap_build_bg("all", build_heatmap)
+    return JSONResponse(content={"loading": True, "retry_after": 5, "sectors": [],
+                                 "updated_at": "데이터 준비 중…"})
 
 
 @app.get("/api/heatmap/refresh")
@@ -1090,16 +1121,21 @@ def _prewarm_worker():
             is_market_hours = (8, 50) <= (now.hour, now.minute) <= (15, 35)
             cache_empty = "market_flow" not in _prewarm_cache
             if is_market_hours or cache_empty:
-                mf = _fetch_market_flow()
-                # 코스피/코스닥 가격이 0이면 캐시하지 않음 (토큰 실패로 인한 빈 데이터 방지)
+                # market_flow / heatmap / etf_bar 병렬 실행
+                from concurrent.futures import ThreadPoolExecutor as _TPE
+                with _TPE(max_workers=3) as _ex:
+                    f_mf  = _ex.submit(_fetch_market_flow)
+                    f_hm  = _ex.submit(_fetch_heatmap)
+                    f_etf = _ex.submit(_fetch_etf_bar)
+                    mf  = f_mf.result()
+                    hm  = f_hm.result()
+                    etf = f_etf.result()
                 j_price = (mf.get("J_price") or {}).get("price", 0)
                 q_price = (mf.get("Q_price") or {}).get("price", 0)
                 if j_price and q_price:
                     _prewarm_cache["market_flow"] = {"data": mf, "ts": time.time()}
-                etf = _fetch_etf_bar()
                 if etf:
                     _prewarm_cache["etf_bar"] = {"data": etf, "ts": time.time()}
-                hm = _fetch_heatmap()
                 if hm:
                     _heatmap_cache["all"] = {"data": hm, "ts": time.time()}
         except Exception as e:

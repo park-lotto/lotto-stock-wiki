@@ -104,6 +104,47 @@ def get_prices_batch(codes: list) -> dict:
     return out
 
 
+def get_daily_bars(code: str, n: int = 20) -> list:
+    """종목 최근 n일 종가 배열 (오름차순). KIS FHKST03010100."""
+    import datetime as _dt
+    today = _dt.date.today().strftime("%Y%m%d")
+    start = (_dt.date.today() - _dt.timedelta(days=n * 2)).strftime("%Y%m%d")
+    try:
+        r = requests.get(
+            f"{BASE}/uapi/domestic-stock/v1/quotations/inquire-daily-itemchartprice",
+            headers={
+                "Content-Type": "application/json; charset=utf-8",
+                "authorization": f"Bearer {_token()}",
+                "appkey": _KEY,
+                "appsecret": _SECRET,
+                "tr_id": "FHKST03010100",
+                "custtype": "P",
+            },
+            params={
+                "FID_COND_MRKT_DIV_CODE": "J",
+                "FID_INPUT_ISCD": code,
+                "FID_INPUT_DATE_1": start,
+                "FID_INPUT_DATE_2": today,
+                "FID_PERIOD_DIV_CODE": "D",
+                "FID_ORG_ADJ_PRC": "0",
+            },
+            timeout=10,
+        )
+        r.raise_for_status()
+        rows = r.json().get("output2") or []
+        closes = []
+        for row in reversed(rows):  # output2는 최신→과거 순이므로 역순
+            try:
+                v = float(str(row.get("stck_clpr", 0) or 0).replace(",", ""))
+                if v > 0:
+                    closes.append(v)
+            except Exception:
+                pass
+        return closes[-n:]
+    except Exception:
+        return []
+
+
 def get_prices_batch_parallel(codes: list, workers: int = 10) -> dict:
     """여러 종목 현재가 병렬 조회 (J마켓 = NXT 포함 통합 실시간가)."""
     from concurrent.futures import ThreadPoolExecutor, as_completed
