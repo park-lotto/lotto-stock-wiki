@@ -103,7 +103,7 @@ def get_done_telegram_files() -> set[str]:
     return {Path(r[0]).name for r in rows if r[0]}
 
 
-def get_pending_telegram(date_filter: str = None) -> list[Path]:
+def get_pending_telegram(date_filter: str = None, force_date: str = None) -> list[Path]:
     done = get_done_telegram_files()
     files = []
     for f in sorted(_TG_DIR.glob("*.md")):
@@ -114,7 +114,8 @@ def get_pending_telegram(date_filter: str = None) -> list[Path]:
             continue
         if is_excluded(channel) or not channel_info(channel):
             continue
-        if f.name in done:
+        # force_date면 해당 날짜 파일은 이미 처리됐어도 재처리
+        if f.name in done and date != force_date:
             continue
         files.append(f)
     return sorted(files, reverse=True)
@@ -125,6 +126,8 @@ def main():
     ap.add_argument("file", nargs="?")
     ap.add_argument("--all", action="store_true")
     ap.add_argument("--date", default=None)
+    ap.add_argument("--force-date", default=None,
+                    help="이 날짜의 파일은 이미 처리됐어도 재처리 (오전→오후 2회 ingest용)")
     ap.add_argument("--limit", type=int, default=30)
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
@@ -133,7 +136,7 @@ def main():
     if args.file:
         targets = [Path(args.file)]
     elif args.all:
-        targets = get_pending_telegram(args.date)[: args.limit]
+        targets = get_pending_telegram(args.date, force_date=args.force_date)[: args.limit]
         print(f"미처리 텔레그램: {len(targets)}개\n")
     else:
         print("file 또는 --all 필요")

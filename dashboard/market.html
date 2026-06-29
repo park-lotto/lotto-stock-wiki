@@ -78,10 +78,10 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 /* 투자자 발산 바 */
 .inv-grid{display:grid;grid-template-columns:26px 1fr 52px;gap:2px 5px;align-items:center;}
 .inv-lbl{font-size:10px;color:#777;}
-.div-bar{display:flex;height:6px;border-radius:4px;overflow:hidden;background:#111;}
-.div-neg{flex:1;display:flex;justify-content:flex-end;}
+.div-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;background:#1a1a1a;}
+.div-neg{flex:1;display:flex;align-items:stretch;justify-content:flex-end;}
 .div-neg-fill{border-radius:3px 0 0 3px;transition:width .5s;}
-.div-pos{flex:1;}
+.div-pos{flex:1;display:flex;align-items:stretch;}
 .div-pos-fill{border-radius:0 3px 3px 0;transition:width .5s;}
 .inv-num{font-size:10px;font-variant-numeric:tabular-nums;text-align:right;}
 .inv-num.up{color:var(--up1);}
@@ -98,6 +98,7 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 .global-name{font-size:10px;color:#888;white-space:nowrap;}
 .global-price{font-size:13px;font-weight:700;color:#ddd;font-variant-numeric:tabular-nums;text-align:right;}
 .global-rate{font-size:11px;font-weight:700;text-align:right;white-space:nowrap;}
+.global-rate.up{color:var(--up1);} .global-rate.dn{color:var(--dn1);} .global-rate.neu{color:#888;}
 /* 미국시장 카드 */
 .us-row{display:flex;justify-content:space-between;align-items:center;height:36px;padding:0 2px;border-bottom:1px solid #1a1a1a;box-sizing:border-box;}
 .us-row:last-child{border-bottom:none;}
@@ -106,6 +107,7 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 .us-vals{text-align:right;}
 .us-price{font-size:13px;font-weight:700;color:#ddd;display:block;font-variant-numeric:tabular-nums;}
 .us-rate{font-size:11px;font-weight:700;}
+.us-rate.up{color:var(--up1);} .us-rate.dn{color:var(--dn1);} .us-rate.neu{color:#888;}
 
 .legend{display:flex;gap:8px;margin-bottom:16px;align-items:center;font-size:12px;color:#666;}
 .legend .bar{height:12px;width:80px;border-radius:4px;
@@ -576,7 +578,8 @@ function divBar(val, maxAbs){
 }
 
 function invHistoryChart(history, w, h){
-  if(!history||history.length<2) return "";
+  if(!history||history.length<1) return "";
+  if(history.length===1) history=[history[0],history[0]]; // 단일 포인트 → 수평선
   w=w||240; h=h||44;
   const keys=["외인","기관","개인"];
   const cols={"외인":"#e8a030","기관":"#2ecc71","개인":"#888"};
@@ -684,8 +687,8 @@ function loadMarketFlowSample(){
         {name:"국제유가(WTI)", price:78.42,   change_rate:0.89,  bars:[]},
       ],
     },
-    "rank_vol":{label:"거래량 상위",  stocks:[{rank:1,name:"삼성전자",price:80400,change_rate:1.52}]},
-    "rank_amt":{label:"거래대금 상위",stocks:[{rank:1,name:"SK하이닉스",price:198500,change_rate:2.35}]},
+    "rank_popular":{label:"실시간 인기검색",stocks:[{rank:1,name:"삼성전자",price:80400,change_rate:1.52}]},
+    "rank_amt":{label:"거래대금 상위",    stocks:[{rank:1,name:"SK하이닉스",price:198500,change_rate:2.35}]},
   };
   renderMarketFlow(sample);
 }
@@ -713,10 +716,10 @@ async function loadMarketFlow(){
 }
 
 const ETF_KEYWORDS=["KODEX","TIGER","KINDEX","SOL","ARIRANG","HANARO","ACE","PLUS","KBSTAR","TIMEFOLIO","KOSEF","TREX","RISE","ETN","인버스","레버리지","선물인버스","선물레버리지"];
-let _rankVolStocks=[];
+let _rankPopStocks=[];
 let _rankAmtStocks=[];
 let _rankEtfFilter=true;
-let _rankVolN=5;
+let _rankPopN=5;
 let _rankAmtN=5;
 
 function _filterRank(stocks){
@@ -729,7 +732,7 @@ function _rankRows(stocks, maxN){
   return _filterRank(stocks).slice(0,maxN).map((s,i)=>{
     const rc=s.change_rate>0?"up":s.change_rate<0?"dn":"neu";
     const rs=(s.change_rate>0?"+":"")+Number(s.change_rate).toFixed(2)+"%";
-    const ps=Number(s.price).toLocaleString("ko-KR");
+    const ps=Math.abs(Number(s.price)).toLocaleString("ko-KR");
     return`<div class="us-row">
       <div style="display:flex;align-items:center;gap:6px">
         <span style="font-size:10px;color:#444;min-width:14px;text-align:right">${i+1}</span>
@@ -751,7 +754,7 @@ function _reRenderRankCard(){
 function rankWheel(e, type){
   e.preventDefault();
   const delta=e.deltaY>0?5:-5;
-  if(type==="vol") _rankVolN=Math.min(20,Math.max(5,_rankVolN+delta));
+  if(type==="pop") _rankPopN=Math.min(20,Math.max(5,_rankPopN+delta));
   else             _rankAmtN=Math.min(20,Math.max(5,_rankAmtN+delta));
   _reRenderRankCard();
 }
@@ -777,8 +780,8 @@ function renderRankCard(){
       <span style="font-size:11px;font-weight:700;color:#aaa;letter-spacing:0.3px;flex:1">순위</span>
       <button id="etf-toggle" onclick="toggleEtfFilter()" style="font-size:10px;padding:2px 7px;border-radius:10px;cursor:pointer;font-family:inherit;${btnStyle}">${btnLabel}</button>
     </div>
-    ${secLabel("⚡","거래량 상위",_rankVolN,"vol")}
-    ${_rankRows(_rankVolStocks,_rankVolN)}
+    ${secLabel("🔥","실시간 인기검색",_rankPopN,"pop")}
+    ${_rankRows(_rankPopStocks,_rankPopN)}
     ${secLabel("💰","거래대금 상위",_rankAmtN,"amt")}
     ${_rankRows(_rankAmtStocks,_rankAmtN)}
   </div>`;
@@ -792,41 +795,41 @@ function toggleEtfFilter(){
 function renderMarketFlow(d){
   try{
     const panel=document.getElementById("mkt-panel");
-    panel.innerHTML=["0001","1001","global","rank_vol"].map(code=>{
+    panel.innerHTML=["0001","1001","global","rank_popular"].map(code=>{
       const m=d[code]; if(!m)return"";
 
       // ── 글로벌 지표 카드 ──
       if(code==="global"){
-        // 차트 있는 항목(선물)은 flex:3, 숫자만(환율/유가)은 flex:2
+        // 차트 있는 항목(선물)은 flex:3, 숫자만(환율/유가)은 flex:1.5
+        const total=m.items?.length||4;
         const rows=(m.items||[]).map((it,idx)=>{
           const noData=(!it.price&&!it.change_rate);
           const rc=noData?"neu":it.change_rate>0?"up":it.change_rate<0?"dn":"neu";
           const rs=noData?"—":(it.change_rate>0?"▲ +":it.change_rate<0?"▼ ":"")+Number(it.change_rate).toFixed(2)+"%";
           const ps=noData?"—":Number(it.price).toLocaleString("ko-KR",{maximumFractionDigits:2});
           const hasChart=it.bars&&it.bars.length>=2;
-          const borderB=idx<3?"border-bottom:1px solid #1a1a1a;":"";
+          const borderB=idx<total-1?"border-bottom:1px solid #1a1a1a;":"";
           if(hasChart){
-            // SVG height:100% → flex:1 컨테이너를 채움
             const svgLine=(()=>{
               const bars=it.bars; const rate=it.change_rate;
-              const W=240,H=42;
+              const W=240,H=32;
               const vals=bars.map(b=>typeof b==="number"?b:(b.close||b.price||0));
               const mn=Math.min(...vals),mx=Math.max(...vals),rng=mx-mn||1;
               const pts=vals.map((v,i)=>`${Math.round(i/(vals.length-1)*(W-2)+1)},${Math.round((1-(v-mn)/rng)*(H-4)+2)}`).join(" ");
-              const col=rate>0?"#e05c5c":rate<0?"#5c9ee0":"#888";
-              return`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="display:block;width:100%;height:100%;overflow:visible">
+              const col=rate>0?"var(--up1)":rate<0?"var(--dn1)":"#888";
+              return`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="display:block;width:100%;height:${H}px;overflow:visible">
                 <polyline points="${pts}" fill="none" stroke="${col}" stroke-width="1.5" stroke-linejoin="round"/>
               </svg>`;
             })();
-            return`<div style="flex:3;min-height:0;display:flex;flex-direction:column;${borderB}padding:6px 0 4px;">
-              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:3px">
+            return`<div style="flex:3;min-height:0;display:flex;flex-direction:column;${borderB}padding:4px 0 3px;">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px">
                 <span class="global-name">${esc(it.name)}</span>
                 <div style="text-align:right"><div class="global-price">${ps}</div><div class="global-rate ${rc}">${rs}</div></div>
               </div>
               <div style="flex:1;min-height:0">${svgLine}</div>
             </div>`;
           } else {
-            return`<div style="flex:2;min-height:0;display:flex;align-items:center;justify-content:space-between;${borderB}padding:4px 0;">
+            return`<div style="flex:1.5;min-height:0;display:flex;align-items:center;justify-content:space-between;${borderB}padding:3px 0;">
               <span class="global-name">${esc(it.name)}</span>
               <div style="text-align:right"><div class="global-price">${ps}</div><div class="global-rate ${rc}">${rs}</div></div>
             </div>`;
@@ -838,9 +841,9 @@ function renderMarketFlow(d){
         </div>`;
       }
 
-      // ── 순위 카드 (거래량 + 거래대금 통합) ──
-      if(code==="rank_vol"){
-        _rankVolStocks=m.stocks||[];
+      // ── 순위 카드 (인기검색 + 거래대금) ──
+      if(code==="rank_popular"){
+        _rankPopStocks=m.stocks||[];
         _rankAmtStocks=(d["rank_amt"]||{}).stocks||[];
         return renderRankCard();
       }
@@ -854,7 +857,7 @@ function renderMarketFlow(d){
 
       const barSection=`<div>
         <div class="mkt-sec-label">15분봉</div>
-        ${miniLine(m.bars,m.change_rate,240,36)}
+        ${miniLine(m.bars,m.change_rate,240,70)}
       </div>`;
 
       // 코스피 / 코스닥 — 풀 카드
@@ -872,9 +875,9 @@ function renderMarketFlow(d){
         +(invAllZero?`<span style="font-size:9px;color:#333;display:block;margin-top:2px">KIS API 미구독</span>`:"");
 
       const hist=m.investor_history||[];
-      const histSvg=hist.length>=2?`
+      const histSvg=hist.length>=1?`
         <div class="mkt-sec-label" style="margin-top:2px">누적 추이 (외인/기관/개인)</div>
-        ${invHistoryChart(hist,240,44)}`:"";
+        ${invHistoryChart(hist,240,80)}`:"";
 
       const prog=m.program_now||{합계:0,차익:0,비차익:0};
       const progAllZero=!prog.합계&&!prog.차익&&!prog.비차익;
@@ -885,10 +888,11 @@ function renderMarketFlow(d){
       // 프로그램 차트: program_series(ka90005 시간대별) — 합계 라인만
       const progSeries=m.program_series||[];
       const progHist=m.program_history||[];
-      const progSource=progSeries.length>=2?progSeries:progHist;
+      let progSource=progSeries.length>=1?progSeries:progHist;
+      if(progSource.length===1) progSource=[progSource[0],progSource[0]];
       let progChart="";
       if(progSource.length>=2){
-        const W=240,H=50;
+        const W=240,H=80;
         const vals=progSource.map(r=>Number(r["합계"]||0));
         const mn=Math.min(...vals),mx=Math.max(...vals),range=mx-mn||1;
         const xs=progSource.map((_,i)=>Math.round(2+i*(W-4)/(progSource.length-1)));
@@ -925,10 +929,6 @@ function renderMarketFlow(d){
         </div>
         <div>
           <div class="mkt-sec-label">프로그램 순매수</div>
-          <div class="prog-row">
-            <span class="prog-total ${pc}">${ps}</span>
-            <span class="prog-detail">${progAllZero?"KIS API 미구독":`차익 ${fmtAuk(prog.차익||0)} / 비차익 ${fmtAuk(prog.비차익||0)}`}</span>
-          </div>
           ${progChart}
         </div>
         <div class="mkt-ts">${ts} 기준</div>

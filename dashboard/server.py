@@ -703,7 +703,7 @@ def api_etf_bar():
         prices   = kis_api.get_prices_batch_parallel(codes)
         bars_map = {c: [] for c in codes}
         with ThreadPoolExecutor(max_workers=5) as ex:
-            futs = {ex.submit(kis_api.get_minutebar, c, 15): c for c in codes}
+            futs = {ex.submit(kis_api.get_minutebar, c, 1): c for c in codes}
             for fut in as_completed(futs):
                 c = futs[fut]
                 try:
@@ -763,17 +763,19 @@ def _build_market_flow_result(done: dict) -> dict:
             "program_history":  list(_FLOW[mkt]["program"]),
             "program_series":   done.get(f"{mkt}_prog_series") or [],
         }
-    spy = done.get("SPY")   or {"price": 0, "change_rate": 0, "bars": []}
-    ksf = done.get("KSF")   or {"price": 0, "change_rate": 0, "bars": []}
-    fx  = done.get("USDKRW")or {"price": 0, "change_rate": 0, "bars": []}
-    oil = done.get("WTI")   or {"price": 0, "change_rate": 0, "bars": []}
+    nq   = done.get("NQ")       or {"price": 0, "change_rate": 0, "bars": []}
+    ksf  = done.get("KSF")      or {"price": 0, "change_rate": 0, "bars": []}
+    ksfn = done.get("KSFN")     or {"price": 0, "change_rate": 0, "bars": []}
+    fx   = done.get("USDKRW")   or {"price": 0, "change_rate": 0, "bars": []}
+    oil  = done.get("WTI")      or {"price": 0, "change_rate": 0, "bars": []}
     result["global"] = {
         "label": "글로벌 지표",
         "items": [
-            {"name": "미국선물(SPY)", "price": spy["price"], "change_rate": spy["change_rate"], "bars": spy.get("bars") or []},
-            {"name": "코스피선물",    "price": ksf["price"], "change_rate": ksf["change_rate"], "bars": ksf.get("bars") or []},
-            {"name": "원달러환율",    "price": fx["price"],  "change_rate": fx["change_rate"],  "bars": fx.get("bars") or []},
-            {"name": "국제유가(WTI)", "price": oil["price"], "change_rate": oil["change_rate"], "bars": oil.get("bars") or []},
+            {"name": "나스닥선물(NQ)",  "price": nq["price"],   "change_rate": nq["change_rate"],   "bars": nq.get("bars") or []},
+            {"name": "코스피선물",      "price": ksf["price"],  "change_rate": ksf["change_rate"],  "bars": ksf.get("bars") or []},
+            {"name": "코스피야간선물",  "price": ksfn["price"], "change_rate": ksfn["change_rate"], "bars": ksfn.get("bars") or []},
+            {"name": "원달러환율",      "price": fx["price"],   "change_rate": fx["change_rate"],   "bars": fx.get("bars") or []},
+            {"name": "국제유가(WTI)",   "price": oil["price"],  "change_rate": oil["change_rate"],  "bars": oil.get("bars") or []},
         ]
     }
     result["rank_popular"] = {"label": "실시간 인기검색", "stocks": done.get("RANK_POP") or []}
@@ -806,8 +808,9 @@ def api_market_flow():
                 "Q_prog":         ex.submit(kiwoom_api.get_program_trade, "Q"),
                 "J_prog_series":  ex.submit(kiwoom_api.get_program_trade_series, "J"),
                 "Q_prog_series":  ex.submit(kiwoom_api.get_program_trade_series, "Q"),
-                "SPY":        ex.submit(global_api.get_spy) if global_api else None,
+                "NQ":         ex.submit(global_api.get_nasdaq_futures) if global_api else None,
                 "KSF":        ex.submit(global_api.get_kospi_futures) if global_api else None,
+                "KSFN":       ex.submit(global_api.get_kospi_night_futures) if global_api else None,
                 "USDKRW":     ex.submit(global_api.get_usdkrw) if global_api else None,
                 "WTI":        ex.submit(global_api.get_wti) if global_api else None,
                 "RANK_POP":   ex.submit(naver_api.get_popular_stocks, 30),
@@ -1011,6 +1014,13 @@ def _prewarm_worker():
     import kis_api, kiwoom_api, naver_api
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
+    # 서버 시작 시 전일종가 스크래핑 (백그라운드)
+    if global_api:
+        try:
+            global_api.scrape_all_prevclose()
+        except Exception:
+            pass
+
     def _fetch_market_flow():
         try:
             kis_api._token()
@@ -1029,8 +1039,9 @@ def _prewarm_worker():
                 "Q_prog":         ex.submit(kiwoom_api.get_program_trade, "Q"),
                 "J_prog_series":  ex.submit(kiwoom_api.get_program_trade_series, "J"),
                 "Q_prog_series":  ex.submit(kiwoom_api.get_program_trade_series, "Q"),
-                "SPY":        ex.submit(global_api.get_spy) if global_api else None,
+                "NQ":         ex.submit(global_api.get_nasdaq_futures) if global_api else None,
                 "KSF":        ex.submit(global_api.get_kospi_futures) if global_api else None,
+                "KSFN":       ex.submit(global_api.get_kospi_night_futures) if global_api else None,
                 "USDKRW":     ex.submit(global_api.get_usdkrw) if global_api else None,
                 "WTI":        ex.submit(global_api.get_wti) if global_api else None,
                 "RANK_POP":   ex.submit(naver_api.get_popular_stocks, 30),
@@ -1063,9 +1074,18 @@ def _prewarm_worker():
         except Exception:
             return {}
 
+    _last_prevclose_scrape = 0.0
     while True:
         try:
             now = datetime.now()
+            # 전일종가 1시간마다 재스크래핑
+            if global_api and time.time() - _last_prevclose_scrape > 3600:
+                try:
+                    global_api.scrape_all_prevclose()
+                    _last_prevclose_scrape = time.time()
+                except Exception:
+                    pass
+
             # 장중(08:50~15:35) 또는 첫 프리워밍(캐시 비어있을 때) 항상 실행
             is_market_hours = (8, 50) <= (now.hour, now.minute) <= (15, 35)
             cache_empty = "market_flow" not in _prewarm_cache
