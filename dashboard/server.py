@@ -734,7 +734,7 @@ def api_debug_flow():
         ("J_prog",    kis_api.get_program_trade, ("J",)),
         ("J_price",   kis_api.get_index_price, ("0001",)),
         ("SPY",       kis_api.get_overseas_price, ("SPY","NYS")),
-        ("RANK",      kis_api.get_inquiry_rank, ()),
+        ("RANK",      kiwoom_api.get_trade_rank, ()),
     ]:
         try:
             v = fn(*args)
@@ -808,7 +808,7 @@ def api_market_flow():
                 "KSF":        ex.submit(global_api.get_kospi_futures) if global_api else None,
                 "USDKRW":     ex.submit(global_api.get_usdkrw) if global_api else None,
                 "WTI":        ex.submit(global_api.get_wti) if global_api else None,
-                "RANK":       ex.submit(kis_api.get_inquiry_rank, 15),
+                "RANK":       ex.submit(kiwoom_api.get_trade_rank, 30),
             }
             done = {}
             for k, f in tasks.items():
@@ -1030,7 +1030,7 @@ def _prewarm_worker():
                 "KSF":        ex.submit(global_api.get_kospi_futures) if global_api else None,
                 "USDKRW":     ex.submit(global_api.get_usdkrw) if global_api else None,
                 "WTI":        ex.submit(global_api.get_wti) if global_api else None,
-                "RANK":       ex.submit(kis_api.get_inquiry_rank, 15),
+                "RANK":       ex.submit(kiwoom_api.get_trade_rank, 30),
             }
             done = {}
             for k, f in tasks.items():
