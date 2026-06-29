@@ -67,6 +67,12 @@ except (ImportError, Exception):
     global_api = None  # type: ignore
 
 try:
+    import kis_ws  # noqa: E402
+    kis_ws.start()  # 백그라운드 WebSocket 시작
+except (ImportError, Exception):
+    kis_ws = None  # type: ignore
+
+try:
     from sector_heatmap import build_heatmap, parse_etf_bar, build_heatmap_tab, TAB_GROUPS  # noqa: E402
 except (ImportError, Exception):
     build_heatmap = None        # type: ignore
@@ -749,6 +755,11 @@ def _build_market_flow_result(done: dict) -> dict:
     result = {}
     for mkt, code, label in [("J", "0001", "코스피"), ("Q", "1001", "코스닥")]:
         price_d  = done.get(f"{mkt}_price") or {}
+        # WebSocket 실시간값 있으면 REST보다 우선 사용
+        if kis_ws:
+            ws_live = kis_ws.get(code)
+            if ws_live:
+                price_d = {"price": ws_live["price"], "change_rate": ws_live["change_rate"]}
         investor = done.get(f"{mkt}_investor") or {"외인": 0, "기관": 0, "개인": 0, "ts": ""}
         prog     = done.get(f"{mkt}_prog") or {"차익": 0, "비차익": 0, "합계": 0, "ts": ""}
         result[code] = {
@@ -767,6 +778,11 @@ def _build_market_flow_result(done: dict) -> dict:
     ksfn = done.get("KSFN")     or {"price": 0, "change_rate": 0, "bars": []}
     fx   = done.get("USDKRW")   or {"price": 0, "change_rate": 0, "bars": []}
     oil  = done.get("WTI")      or {"price": 0, "change_rate": 0, "bars": []}
+    # 야간선물 WebSocket 실시간값 우선 사용
+    if kis_ws:
+        ws_ksfn = kis_ws.get("101W9")
+        if ws_ksfn:
+            ksfn = {"price": ws_ksfn["price"], "change_rate": ws_ksfn["change_rate"], "bars": ksfn.get("bars") or []}
     result["global"] = {
         "label": "글로벌 지표",
         "items": [
@@ -971,6 +987,21 @@ def api_sector_names():
         return JSONResponse(content=[s["sector"] for s in sections])
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
+
+
+@app.get("/api/ws_status")
+def api_ws_status():
+    """WebSocket 실시간 상태 확인."""
+    if not kis_ws:
+        return JSONResponse(content={"status": "disabled"})
+    now = time.time()
+    live = {}
+    for k, v in kis_ws._LIVE.items():
+        live[k] = {"price": v["price"], "change_rate": v["change_rate"],
+                   "age_sec": round(now - v["ts"], 1)}
+    st = kis_ws.status()
+    st["live"] = live
+    return JSONResponse(content=st)
 
 
 @app.get("/api/sector_stocks")
