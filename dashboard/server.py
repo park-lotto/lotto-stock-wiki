@@ -9,6 +9,11 @@ import os, sys, json, glob, re, shutil, subprocess, uuid, time, threading
 from collections import deque
 from datetime import datetime
 
+# 프로젝트 루트를 sys.path에 추가 (python dashboard/server.py 로 실행 시 pipeline import 가능하게)
+_PROJ_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _PROJ_ROOT not in sys.path:
+    sys.path.insert(0, _PROJ_ROOT)
+
 # ── 인사이트 허브: pipeline.atoms.doc_summary 지연 import ──────
 try:
     from pipeline.atoms.doc_summary import (
@@ -57,6 +62,11 @@ except (ImportError, SystemExit):
     generate_picks = None     # type: ignore
 
 try:
+    import global_api  # noqa: E402
+except (ImportError, Exception):
+    global_api = None  # type: ignore
+
+try:
     from sector_heatmap import build_heatmap, parse_etf_bar, build_heatmap_tab, TAB_GROUPS  # noqa: E402
 except (ImportError, Exception):
     build_heatmap = None        # type: ignore
@@ -77,11 +87,14 @@ _FLOW: dict = {
 }
 
 def _poll_flow():
-    """장 중(09:00~16:00) 15분마다 투자자·프로그램 순매수 스냅샷 수집."""
+    """장 중(09:00~16:00) 5분마다 투자자·프로그램 순매수 스냅샷 수집.
+    서버 시작 즉시 첫 수집 (initial=True), 이후 5분 간격.
+    """
+    initial = True
     while True:
         try:
             now = datetime.now()
-            if 9 <= now.hour < 16:
+            if initial or (9 <= now.hour < 16):
                 import kiwoom_api as _kiwoom
                 for mkt in ("J", "Q"):
                     try:
@@ -92,9 +105,10 @@ def _poll_flow():
                         _FLOW[mkt]["program"].append(_kiwoom.get_program_trade(mkt))
                     except Exception:
                         pass
+                initial = False
         except Exception:
             pass
-        time.sleep(900)  # 15분
+        time.sleep(300)  # 5분
 
 _poll_thread = threading.Thread(target=_poll_flow, daemon=True)
 _poll_thread.start()
@@ -746,18 +760,19 @@ def _build_market_flow_result(done: dict) -> dict:
             "investor_history": list(_FLOW[mkt]["investor"]),
             "program_now":      prog,
             "program_history":  list(_FLOW[mkt]["program"]),
+            "program_series":   done.get(f"{mkt}_prog_series") or [],
         }
-    us  = done.get("US_price")  or {"price": 0, "change_rate": 0}
-    nf  = done.get("NF_price")  or {"price": 0, "change_rate": 0}
-    fx  = done.get("FX_usdkrw") or {"price": 0, "change_rate": 0}
-    oil = done.get("OIL_price") or {"price": 0, "change_rate": 0}
+    spy = done.get("SPY")   or {"price": 0, "change_rate": 0, "bars": []}
+    ksf = done.get("KSF")   or {"price": 0, "change_rate": 0, "bars": []}
+    fx  = done.get("USDKRW")or {"price": 0, "change_rate": 0, "bars": []}
+    oil = done.get("WTI")   or {"price": 0, "change_rate": 0, "bars": []}
     result["global"] = {
         "label": "글로벌 지표",
         "items": [
-            {"name": "미국선물(SPY)", "price": us["price"],  "change_rate": us["change_rate"],  "bars": done.get("US_bars") or []},
-            {"name": "코스피야간선물","price": nf["price"],  "change_rate": nf["change_rate"],  "bars": done.get("NF_bars") or []},
-            {"name": "원달러환율",     "price": fx["price"],  "change_rate": fx["change_rate"],  "bars": []},
-            {"name": "국제유가(WTI)", "price": oil["price"], "change_rate": oil["change_rate"], "bars": []},
+            {"name": "미국선물(SPY)", "price": spy["price"], "change_rate": spy["change_rate"], "bars": spy.get("bars") or []},
+            {"name": "코스피선물",    "price": ksf["price"], "change_rate": ksf["change_rate"], "bars": ksf.get("bars") or []},
+            {"name": "원달러환율",    "price": fx["price"],  "change_rate": fx["change_rate"],  "bars": fx.get("bars") or []},
+            {"name": "국제유가(WTI)", "price": oil["price"], "change_rate": oil["change_rate"], "bars": oil.get("bars") or []},
         ]
     }
     result["rank"] = {"label": "실시간 조회순위", "stocks": done.get("RANK") or []}
@@ -785,14 +800,14 @@ def api_market_flow():
                 "Q_price":    ex.submit(kis_api.get_index_price, "1001"),
                 "J_investor": ex.submit(kiwoom_api.get_market_investor, "J"),
                 "Q_investor": ex.submit(kiwoom_api.get_market_investor, "Q"),
-                "J_prog":     ex.submit(kiwoom_api.get_program_trade, "J"),
-                "Q_prog":     ex.submit(kiwoom_api.get_program_trade, "Q"),
-                "US_price":   ex.submit(kis_api.get_overseas_price, "SPY", "NYS"),
-                "US_bars":    ex.submit(kis_api.get_overseas_minutebar, "SPY", "NYS", 15),
-                "NF_price":   ex.submit(kis_api.get_night_futures_price),
-                "NF_bars":    ex.submit(kis_api.get_night_futures_minutebar, 15),
-                "FX_usdkrw":  ex.submit(kis_api.get_usdkrw),
-                "OIL_price":  ex.submit(kis_api.get_crude_oil),
+                "J_prog":         ex.submit(kiwoom_api.get_program_trade, "J"),
+                "Q_prog":         ex.submit(kiwoom_api.get_program_trade, "Q"),
+                "J_prog_series":  ex.submit(kiwoom_api.get_program_trade_series, "J"),
+                "Q_prog_series":  ex.submit(kiwoom_api.get_program_trade_series, "Q"),
+                "SPY":        ex.submit(global_api.get_spy) if global_api else None,
+                "KSF":        ex.submit(global_api.get_kospi_futures) if global_api else None,
+                "USDKRW":     ex.submit(global_api.get_usdkrw) if global_api else None,
+                "WTI":        ex.submit(global_api.get_wti) if global_api else None,
                 "RANK":       ex.submit(kis_api.get_inquiry_rank, 15),
             }
             done = {}
@@ -1005,14 +1020,16 @@ def _prewarm_worker():
                 "Q_bars":     ex.submit(kiwoom_api.get_index_minutebar, "1001", 15),
                 "J_price":    ex.submit(kis_api.get_index_price, "0001"),
                 "Q_price":    ex.submit(kis_api.get_index_price, "1001"),
-                "J_investor": ex.submit(kiwoom_api.get_market_investor, "J"),
-                "Q_investor": ex.submit(kiwoom_api.get_market_investor, "Q"),
-                "J_prog":     ex.submit(kiwoom_api.get_program_trade, "J"),
-                "Q_prog":     ex.submit(kiwoom_api.get_program_trade, "Q"),
-                "US_price":   ex.submit(kis_api.get_overseas_price, "SPY", "NYS"),
-                "NF_price":   ex.submit(kis_api.get_night_futures_price),
-                "FX_usdkrw":  ex.submit(kis_api.get_usdkrw),
-                "OIL_price":  ex.submit(kis_api.get_crude_oil),
+                "J_investor":     ex.submit(kiwoom_api.get_market_investor, "J"),
+                "Q_investor":     ex.submit(kiwoom_api.get_market_investor, "Q"),
+                "J_prog":         ex.submit(kiwoom_api.get_program_trade, "J"),
+                "Q_prog":         ex.submit(kiwoom_api.get_program_trade, "Q"),
+                "J_prog_series":  ex.submit(kiwoom_api.get_program_trade_series, "J"),
+                "Q_prog_series":  ex.submit(kiwoom_api.get_program_trade_series, "Q"),
+                "SPY":        ex.submit(global_api.get_spy) if global_api else None,
+                "KSF":        ex.submit(global_api.get_kospi_futures) if global_api else None,
+                "USDKRW":     ex.submit(global_api.get_usdkrw) if global_api else None,
+                "WTI":        ex.submit(global_api.get_wti) if global_api else None,
                 "RANK":       ex.submit(kis_api.get_inquiry_rank, 15),
             }
             done = {}
@@ -1175,12 +1192,50 @@ def _get_summary_row(doc_key: str) -> dict | None:
         conn.close()
 
 
+_TITLE_CACHE: dict = {}        # raw_file → 추출된 제목 (파일 재읽기 방지)
+_YT_LINK_RE = re.compile(r"\[유튜브 바로가기\]\(([^)]+)\)")
+_DATE_PREFIX_RE = re.compile(r"^\d{4}-\d{2}-\d{2}([_ ]\d{3,4})?[_ ]")  # 2026-06-29_1100_ 또는 2026-06-29_
+
+
+def _clean_title(name: str) -> str:
+    """파일명에서 날짜·시각 접두어 제거."""
+    name = _DATE_PREFIX_RE.sub("", name).strip()
+    return name
+
+
+def _youtube_title_from_file(raw_file: str) -> str | None:
+    """유튜브 크롤 원본에서 실제 영상 제목 추출 (서버 필드꼬임 대비).
+    [유튜브 바로가기](X) 의 X가 URL이 아니면 그게 제목."""
+    if raw_file in _TITLE_CACHE:
+        return _TITLE_CACHE[raw_file]
+    title = None
+    try:
+        if os.path.exists(raw_file):
+            head = open(raw_file, encoding="utf-8", errors="replace").read(800)
+            m = _YT_LINK_RE.search(head)
+            if m:
+                cand = m.group(1).strip()
+                if cand and not cand.startswith("http"):
+                    title = cand
+    except Exception:
+        title = None
+    _TITLE_CACHE[raw_file] = title
+    return title
+
+
 def _build_doc_title(raw_file: str, source_name: str, date: str, category: str) -> str:
-    """표시용 제목 추정."""
+    """표시용 제목 추정. 유튜브는 원본에서 실제 제목 시도, 그 외는 파일명 정리."""
     if raw_file:
-        base = os.path.basename(raw_file)
-        name = os.path.splitext(base)[0]
-        return name
+        if category == "youtube":
+            real = _youtube_title_from_file(raw_file)
+            if real:
+                return real
+        base = os.path.splitext(os.path.basename(raw_file))[0]
+        cleaned = _clean_title(base)
+        # 정리 후 남은 게 채널명뿐이거나 비면 채널+날짜로
+        if not cleaned or cleaned == source_name:
+            return f"{source_name} · {date}" if date else (source_name or base)
+        return cleaned
     return f"{source_name} ({date})"
 
 
@@ -1591,11 +1646,19 @@ async def api_insights_to_youtube(req: Request):
             else:
                 raw_basename = parts[1] if len(parts) > 1 else ""
                 r = conn.execute(
-                    f"SELECT raw_file, source_name FROM atoms WHERE {type_cond} AND (raw_file=? OR raw_file LIKE ?) LIMIT 1",
+                    f"SELECT raw_file, source_name, date FROM atoms WHERE {type_cond} AND (raw_file=? OR raw_file LIKE ?) LIMIT 1",
                     (raw_basename, f"%/{raw_basename}"),
                 ).fetchone()
                 if r:
-                    topic = os.path.splitext(os.path.basename(r["raw_file"] or ""))[0] or r["source_name"] or topic
+                    topic = _build_doc_title(r["raw_file"], r["source_name"], r["date"], cat) or topic
+            # AI 요약이 있으면 TLDR을 우선 주제로 (가장 핵심적)
+            if _DS_AVAIL:
+                try:
+                    cached = _load_summary(doc_key)
+                    if cached and cached.get("tldr"):
+                        topic = cached["tldr"]
+                except Exception:
+                    pass
         except Exception:
             pass
         finally:
@@ -1681,6 +1744,8 @@ _위키 정식 ingest는 후속 연결 예정_
 
     # 저장 경로
     safe_key = re.sub(r'[\\/:*?"<>|]', '_', doc_key)
+    if safe_key.lower().endswith(".md"):
+        safe_key = safe_key[:-3]
     out_dir = os.path.join(ROOT, "out", "insights_wiki")
     os.makedirs(out_dir, exist_ok=True)
     save_path = os.path.join(out_dir, f"{safe_key}.md")

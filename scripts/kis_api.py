@@ -356,7 +356,10 @@ def get_night_futures_minutebar(interval: int = 15) -> list:
 def get_minutebar(code: str, interval: int = 15) -> list:
     """종목/ETF 당일 분봉 종가 배열 (오름차순, 최대 30봉).
     interval: 1/5/10/15/30/60
+    FID_INPUT_HOUR_1 = 현재 시간 → 미래 빈 봉 제외
     """
+    import datetime as _dt
+    now_str = _dt.datetime.now().strftime("%H%M%S")
     r = requests.get(
         f"{BASE}/uapi/domestic-stock/v1/quotations/inquire-time-itemchartprice",
         headers={
@@ -370,16 +373,21 @@ def get_minutebar(code: str, interval: int = 15) -> list:
             "FID_COND_MRKT_DIV_CODE": "J",
             "FID_ETC_CLS_CODE": "",
             "FID_INPUT_ISCD": code.zfill(6),
-            "FID_INPUT_HOUR_1": "153000",
-            "FID_PW_DATA_INCU_YN": "Y",
+            "FID_INPUT_HOUR_1": now_str,
+            "FID_PW_DATA_INCU_YN": "N",
             "FID_HOUR_CLS_CODE": str(interval),
         },
         timeout=8,
     )
     r.raise_for_status()
     rows = r.json().get("output2") or []
+    today = _dt.datetime.now().strftime("%Y%m%d")
     out = []
     for row in reversed(rows):  # API는 역순 반환 → 뒤집어서 오름차순
+        if row.get("stck_bsop_date", today) != today:
+            continue  # 전날 데이터 제외
+        if row.get("stck_cntg_hour", "090000") < "090000":
+            continue  # 정규장(9시) 이전 시간외 데이터 제외
         try:
             v = float(row.get("stck_prpr", 0) or 0)
             if v > 0:

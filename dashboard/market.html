@@ -675,7 +675,7 @@ function loadMarketFlowSample(){
       label:"글로벌 지표",
       items:[
         {name:"미국선물(SPY)",  price:587.32,  change_rate:0.34,  bars:makeBars(575,587)},
-        {name:"코스피야간선물", price:365.45,  change_rate:1.15,  bars:makeBars(356,365)},
+        {name:"코스피선물", price:365.45,  change_rate:1.15,  bars:makeBars(356,365)},
         {name:"원달러환율",     price:1384.50, change_rate:-0.12, bars:[]},
         {name:"국제유가(WTI)", price:78.42,   change_rate:0.89,  bars:[]},
       ],
@@ -802,7 +802,7 @@ function renderMarketFlow(d){
             const svgLine=(()=>{
               const bars=it.bars; const rate=it.change_rate;
               const W=240,H=42;
-              const vals=bars.map(b=>b.close||b.price||0);
+              const vals=bars.map(b=>typeof b==="number"?b:(b.close||b.price||0));
               const mn=Math.min(...vals),mx=Math.max(...vals),rng=mx-mn||1;
               const pts=vals.map((v,i)=>`${Math.round(i/(vals.length-1)*(W-2)+1)},${Math.round((1-(v-mn)/rng)*(H-4)+2)}`).join(" ");
               const col=rate>0?"#e05c5c":rate<0?"#5c9ee0":"#888";
@@ -873,30 +873,49 @@ function renderMarketFlow(d){
       const ps=progAllZero?"—":(prog.합계>0?"+":"")+fmtAuk(prog.합계);
       const ts=m.investor_now?.ts||"—";
 
+      // 프로그램 차트: program_series(ka90005 시간대별)를 우선, 없으면 program_history(5분 스냅샷)
+      const progSeries=m.program_series||[];
       const progHist=m.program_history||[];
+      const progSource=progSeries.length>=2?progSeries:progHist;
       let progChart="";
-      if(progHist.length>=2){
-        const W=240,H=44;
-        const vals=progHist.map(r=>Number(r["합계"]||0));
-        const mn=Math.min(...vals),mx=Math.max(...vals),range=mx-mn||1;
-        const xs=vals.map((_,i)=>Math.round(2+i*(W-4)/(vals.length-1)));
-        const ys=vals.map(v=>Math.round(2+(1-((v-mn)/range))*(H-4)));
-        const pts=xs.map((x,i)=>`${x},${ys[i]}`).join(" ");
+      if(progSource.length>=2){
+        const W=240,H=54;
+        // 시계열: 합계/차익/비차익 3줄
+        const keysDef=[
+          {k:"합계",col:prog.합계>=0?"#e74c3c":"#3498db",w:1.8},
+          {k:"차익",col:"#f39c12",w:1.2},
+          {k:"비차익",col:"#27ae60",w:1.2},
+        ];
+        const allVals=progSource.flatMap(r=>keysDef.map(d=>Number(r[d.k]||0)));
+        const mn=Math.min(...allVals),mx=Math.max(...allVals),range=mx-mn||1;
+        const xs=progSource.map((_,i)=>Math.round(2+i*(W-4)/(progSource.length-1)));
+        const makePolyline=(key,col,sw)=>{
+          const ys=progSource.map(r=>Math.round(2+(1-((Number(r[key]||0)-mn)/range))*(H-4)));
+          const pts=xs.map((x,i)=>`${x},${ys[i]}`).join(" ");
+          return`<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="${sw}" stroke-linejoin="round" opacity=".85"/>`;
+        };
         const zeroY=Math.round(2+(1-((0-mn)/range))*(H-4));
         const zeroLine=zeroY>=2&&zeroY<=H-2
           ?`<line x1="0" y1="${zeroY}" x2="${W}" y2="${zeroY}" stroke="#333" stroke-width="1" stroke-dasharray="3,3"/>`:"";
-        const fillPts=`${xs[0]},${H} ${pts} ${xs[xs.length-1]},${H}`;
+        // 최신 시간 라벨 (시계열이면 progSource[-1].t)
+        const latestT=progSeries.length>=2?(progSeries[progSeries.length-1].t||"").replace(/(\d{2})(\d{2}).*/,"$1:$2"):"";
+        const legHtml=keysDef.map(d=>`<span style="display:inline-flex;align-items:center;gap:2px">
+          <span style="display:inline-block;width:9px;height:2px;background:${d.col};border-radius:1px"></span>
+          <span style="font-size:8px;color:${d.col}">${d.k}</span>
+        </span>`).join("");
         progChart=`
-          <div class="mkt-sec-label" style="margin-top:2px">
-            <span>프로그램 순매수 추이</span>
+          <div class="mkt-sec-label" style="margin-top:2px;display:flex;justify-content:space-between;align-items:center">
+            <span>프로그램 순매수${latestT?" ("+latestT+"기준)":""}</span>
             <span style="color:${prog.합계>=0?"#e74c3c":"#3498db"};font-weight:700">${ps}</span>
           </div>
           <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="display:block;width:100%;height:${H}px;border-radius:4px;overflow:hidden">
             <rect width="${W}" height="${H}" fill="#0e0e0e" rx="3"/>
             ${zeroLine}
-            <polygon points="${fillPts}" fill="#e74c3c" opacity="0.12"/>
-            <polyline points="${pts}" fill="none" stroke="#e74c3c" stroke-width="1.8" stroke-linejoin="round"/>
-          </svg>`;
+            ${makePolyline("비차익","#27ae60",1.2)}
+            ${makePolyline("차익","#f39c12",1.2)}
+            ${makePolyline("합계",prog.합계>=0?"#e74c3c":"#3498db",2)}
+          </svg>
+          <div style="display:flex;gap:8px;margin-top:2px">${legHtml}</div>`;
       }
 
       return`<div class="mkt-card">
