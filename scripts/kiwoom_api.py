@@ -223,6 +223,43 @@ def get_market_investor(market: str = "J") -> dict:
         return {"외인": 0, "기관": 0, "개인": 0, "ts": ts}
 
 
+def get_volume_rank(n: int = 30) -> list:
+    """당일 거래량 상위 종목 (ka10030) — '실시간 조회순위' 대용."""
+    def _val(v, is_rate=False):
+        s = str(v or "0").strip().replace(",", "")
+        try:
+            f = float(s)
+        except Exception:
+            f = 0.0
+        return round(f, 2) if is_rate else int(f)
+
+    try:
+        r = requests.post(
+            f"{BASE}/api/dostk/rkinfo",
+            headers={**_hdrs(), "api-id": "ka10030", "cont-yn": "N", "next-key": ""},
+            json={
+                "mrkt_tp": "2", "stex_tp": "1", "mang_stk_incls": "0",
+                "sort_tp": "1", "crd_tp": "0", "trde_qty_tp": "0",
+                "pric_tp": "0", "trde_prica_tp": "0", "mrkt_open_tp": "0",
+            },
+            timeout=10,
+        )
+        r.raise_for_status()
+        rows = r.json().get("tdy_trde_qty_upper") or []
+        result = []
+        for i, row in enumerate(rows[:n]):
+            result.append({
+                "rank":        i + 1,
+                "code":        str(row.get("stk_cd", "")).zfill(6),
+                "name":        row.get("stk_nm", ""),
+                "price":       _val(row.get("cur_prc", 0)),
+                "change_rate": _val(row.get("flu_rt", 0), is_rate=True),
+            })
+        return result
+    except Exception:
+        return []
+
+
 def get_trade_rank(n: int = 30) -> list:
     """거래대금 상위 종목 순위 (ka10032).
     mrkt_tp: 2=전체(코스피+코스닥)

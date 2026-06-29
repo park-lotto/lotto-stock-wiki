@@ -734,7 +734,8 @@ def api_debug_flow():
         ("J_prog",    kis_api.get_program_trade, ("J",)),
         ("J_price",   kis_api.get_index_price, ("0001",)),
         ("SPY",       kis_api.get_overseas_price, ("SPY","NYS")),
-        ("RANK",      kiwoom_api.get_trade_rank, ()),
+        ("RANK_VOL",  kiwoom_api.get_volume_rank, ()),
+        ("RANK_AMT",  kiwoom_api.get_trade_rank, ()),
     ]:
         try:
             v = fn(*args)
@@ -775,7 +776,8 @@ def _build_market_flow_result(done: dict) -> dict:
             {"name": "국제유가(WTI)", "price": oil["price"], "change_rate": oil["change_rate"], "bars": oil.get("bars") or []},
         ]
     }
-    result["rank"] = {"label": "실시간 조회순위", "stocks": done.get("RANK") or []}
+    result["rank_vol"] = {"label": "거래량 상위",  "stocks": done.get("RANK_VOL") or []}
+    result["rank_amt"] = {"label": "거래대금 상위", "stocks": done.get("RANK_AMT") or []}
     return result
 
 
@@ -808,7 +810,8 @@ def api_market_flow():
                 "KSF":        ex.submit(global_api.get_kospi_futures) if global_api else None,
                 "USDKRW":     ex.submit(global_api.get_usdkrw) if global_api else None,
                 "WTI":        ex.submit(global_api.get_wti) if global_api else None,
-                "RANK":       ex.submit(kiwoom_api.get_trade_rank, 30),
+                "RANK_VOL":   ex.submit(kiwoom_api.get_volume_rank, 30),
+                "RANK_AMT":   ex.submit(kiwoom_api.get_trade_rank, 30),
             }
             done = {}
             for k, f in tasks.items():
@@ -1030,7 +1033,8 @@ def _prewarm_worker():
                 "KSF":        ex.submit(global_api.get_kospi_futures) if global_api else None,
                 "USDKRW":     ex.submit(global_api.get_usdkrw) if global_api else None,
                 "WTI":        ex.submit(global_api.get_wti) if global_api else None,
-                "RANK":       ex.submit(kiwoom_api.get_trade_rank, 30),
+                "RANK_VOL":   ex.submit(kiwoom_api.get_volume_rank, 30),
+                "RANK_AMT":   ex.submit(kiwoom_api.get_trade_rank, 30),
             }
             done = {}
             for k, f in tasks.items():
@@ -1180,7 +1184,7 @@ def _get_summary_row(doc_key: str) -> dict | None:
             return None
         d = dict(row)
         d["summary3"] = [l for l in (d.get("summary3") or "").split("\n") if l.strip()]
-        for k in ("stocks_json", "seeds_json"):
+        for k in ("stocks_json", "seeds_json", "highlights_json"):
             try:
                 d[k] = json.loads(d[k] or "[]")
             except Exception:
@@ -1462,7 +1466,7 @@ def api_insights_doc(doc_key: str = ""):
             date = parts[2] if len(parts) > 2 else ""
             rows = conn.execute(
                 f"""SELECT id, date, source_type, source_name, raw_file, sector, asset,
-                           signal, content, stance_key, speaker, yt_timestamp, deeplink
+                           signal, content, stance_key, speaker, yt_timestamp, deeplink, msg_ts
                     FROM atoms WHERE {type_cond} AND source_name=? AND date=?
                     ORDER BY id""",
                 (source_name, date),
@@ -1471,7 +1475,7 @@ def api_insights_doc(doc_key: str = ""):
             raw_basename = parts[1] if len(parts) > 1 else ""
             rows = conn.execute(
                 f"""SELECT id, date, source_type, source_name, raw_file, sector, asset,
-                           signal, content, stance_key, speaker, yt_timestamp, deeplink
+                           signal, content, stance_key, speaker, yt_timestamp, deeplink, msg_ts
                     FROM atoms WHERE {type_cond}
                       AND (raw_file=? OR raw_file LIKE ? OR raw_file LIKE ?)
                     ORDER BY yt_timestamp, id""",
@@ -1504,17 +1508,27 @@ def api_insights_doc(doc_key: str = ""):
                 "market_reason": summary_row.get("market_reason"),
                 "stocks": summary_row.get("stocks_json") or [],
                 "seeds": summary_row.get("seeds_json") or [],
+                "highlights": summary_row.get("highlights_json") or [],
                 "generated_at": summary_row.get("generated_at"),
             }
 
-        # 타임라인 원자
+        # 타임라인 원자 (날짜+시간 명시)
         atoms_out = []
         for a in atoms_list:
             ts_raw = a.get("yt_timestamp") or ""
             secs = _ts_to_seconds(ts_raw)
+            a_date = a.get("date") or ""
+            msg_ts = a.get("msg_ts") or ""
+            # when: 사람이 읽는 날짜+시간. msg_ts가 HH:MM 형식이면 날짜와 결합
+            if msg_ts and re.match(r"^\d{1,2}:\d{2}$", msg_ts):
+                when = f"{a_date} {msg_ts}"
+            else:
+                when = a_date
             atoms_out.append({
                 "timestamp": ts_raw,
                 "seconds": secs,
+                "date": a_date,
+                "when": when,
                 "speaker": a.get("speaker"),
                 "signal": a.get("signal"),
                 "stance": a.get("stance_key"),
@@ -1524,8 +1538,9 @@ def api_insights_doc(doc_key: str = ""):
                 "sector": a.get("sector"),
             })
 
-        # 타임라인 정렬 (seconds 오름차순)
-        atoms_out.sort(key=lambda x: x["seconds"])
+        # 타임라인 정렬 (영상=초 오름차순, 그 외=원래 순서 유지)
+        if category == "youtube":
+            atoms_out.sort(key=lambda x: x["seconds"])
 
         return JSONResponse(content={
             "doc_key": doc_key,
@@ -1704,6 +1719,7 @@ async def api_insights_to_wiki(req: Request):
         market_view = summary_row.get("market_view") or ""
         market_reason = summary_row.get("market_reason") or ""
         stocks = summary_row.get("stocks_json") or []
+        highlights = summary_row.get("highlights_json") or []
         source_name = summary_row.get("source_name") or ""
         doc_title = summary_row.get("doc_title") or doc_key
         doc_date = summary_row.get("doc_date") or ""
@@ -1713,6 +1729,7 @@ async def api_insights_to_wiki(req: Request):
         market_view = ""
         market_reason = ""
         stocks = []
+        highlights = []
         source_name = ""
         doc_title = doc_key
         doc_date = ""
@@ -1720,16 +1737,20 @@ async def api_insights_to_wiki(req: Request):
     # 마크다운 생성
     summary3_md = "\n".join(f"- {s}" for s in summary3)
     stocks_md = "\n".join(f"- [{s.get('stance','')}] {s.get('name','')}: {s.get('reason','')}" for s in stocks)
+    highlights_md = "\n".join(f"- **{h.get('topic','')}**: {h.get('detail','')}" for h in highlights)
 
     md_content = f"""# {doc_title}
 
 > 출처: {source_name} | 날짜: {doc_date} | doc_key: {doc_key}
 
-## 핵심 요약
+## 핵심 한 줄
 **{tldr}**
 
-## 주린이 3줄
+## 핵심 요약
 {summary3_md}
+
+## 놓치면 안 되는 포인트
+{highlights_md or "_(없음)_"}
 
 ## 시장관: {market_view}
 {market_reason}

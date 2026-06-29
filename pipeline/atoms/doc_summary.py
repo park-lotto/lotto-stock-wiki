@@ -34,11 +34,17 @@ CREATE TABLE IF NOT EXISTS doc_summaries (
     market_reason TEXT,
     stocks_json   TEXT,
     seeds_json    TEXT,
+    highlights_json TEXT,
     atom_count    INTEGER,
     generated_at  TEXT,
     model         TEXT DEFAULT 'claude-cli'
 );
 """
+
+# 기존 DB 멱등 마이그레이션 (이미 테이블이 있으면 컬럼만 추가)
+_ALTER_COLS = [
+    ("highlights_json", "TEXT"),
+]
 
 _CREATE_IDX_SQL = [
     "CREATE INDEX IF NOT EXISTS idx_ds_category ON doc_summaries(category);",
@@ -55,9 +61,14 @@ def _get_conn() -> sqlite3.Connection:
 
 
 def ensure_table():
-    """doc_summaries 테이블 + 인덱스 멱등 생성."""
+    """doc_summaries 테이블 + 인덱스 멱등 생성 + 신규 컬럼 마이그레이션."""
     conn = _get_conn()
     conn.executescript(_CREATE_SQL + "\n".join(_CREATE_IDX_SQL))
+    for name, decl in _ALTER_COLS:
+        try:
+            conn.execute(f"ALTER TABLE doc_summaries ADD COLUMN {name} {decl}")
+        except sqlite3.OperationalError:
+            pass  # 이미 존재
     conn.commit()
     conn.close()
 
@@ -201,35 +212,44 @@ def _build_prompt(meta: dict, atoms: list[dict]) -> str:
     doc_title = meta["title"]
     doc_date = meta["date"] or ""
 
-    # 발언 목록 구성
+    # 발언 목록 구성 (놓치는 내용 최소화: 전체 발언, 본문도 넉넉히)
     lines = []
-    for a in atoms[:60]:  # 토큰 절약: 최대 60개
+    for i, a in enumerate(atoms[:200], 1):  # 사실상 전체
         ts = a.get("yt_timestamp") or ""
         speaker = a.get("speaker") or a.get("source_name") or "?"
         stance = a.get("stance_key") or a.get("signal") or ""
-        content = (a.get("content") or "")[:200]
-        line = f"- [{ts}] ({stance}) {speaker}: {content}"
+        content = (a.get("content") or "")[:400]
+        ts_part = f"[{ts}] " if ts else ""
+        line = f"{i}. {ts_part}({stance}) {speaker}: {content}"
         lines.append(line)
 
     atoms_text = "\n".join(lines) if lines else "(원자 없음)"
 
     prompt = f"""너는 주식 유튜브 채널 "로또의 주식"의 인사이트 분석가다.
-아래는 [{source_name}] 의 [{doc_title}] ({doc_date}) 에서 추출한 발언들이다.
-시청자가 영상을 안 보고도 핵심을 가져가게, 그리고 내가 이걸로 유튜브 콘텐츠를 만들 수 있게 요약하라.
+아래는 [{source_name}] 의 [{doc_title}] ({doc_date}) 에서 추출한 발언 전체다.
+시청자가 원문을 안 봐도 **중요한 내용을 하나도 놓치지 않게** 충실히 요약하고,
+내가 이걸로 유튜브 콘텐츠를 만들 수 있게 정리하라. 짧게 줄이려 하지 말고, 의미 있는 포인트는 다 담아라.
 
-[발언 목록]
+[발언 목록 — 총 {len(atoms)}개]
 {atoms_text}
 
 아래 JSON 스키마로만 답하라 (설명·마크다운·코드블록 금지, 순수 JSON만):
 {{
-  "tldr": "한 줄로 이 문서의 핵심 (20자 내외)",
-  "summary3": ["주린이도 이해할 쉬운 문장1", "문장2", "문장3"],
+  "tldr": "한 줄로 이 문서의 핵심 (25자 내외)",
+  "summary3": ["주린이도 이해할 쉬운 핵심 문장들. 중요한 논점 수만큼, 보통 6~8개. 절대 3개로 줄이지 마라."],
+  "highlights": [
+    {{"topic":"놓치면 안 되는 구체 포인트 제목(수치·정책·일정·기업이벤트 등)","detail":"해당 발언의 구체 내용 1~2문장. 숫자·날짜·고유명사 살려서."}}
+  ],
   "market_view": "bullish|bearish|neutral 중 하나",
-  "market_reason": "왜 그렇게 보는지 1~2문장",
-  "stocks": [{{"name":"종목명","stance":"매수|매도|중립","reason":"한줄"}}],
+  "market_reason": "왜 그렇게 보는지 2~3문장 (근거 구체적으로)",
+  "stocks": [{{"name":"종목/섹터명","stance":"매수|매도|중립","reason":"근거 한줄"}}],
   "seeds": [{{"angle":"영상 소재 앵글","hook":"썸네일/후킹 문구"}}]
 }}
-규칙: 발언에 없는 사실 지어내지 마라. 종목은 실제 언급된 것만."""
+규칙:
+- summary3는 6~8개를 기본으로, 논점이 많으면 더 많아도 된다. 핵심을 빠뜨리지 마라.
+- highlights는 구체적 사실(수치·정책·일정·기업명·실적 등)을 담은 항목을 5개 이상, 본문에 있는 만큼 충분히.
+- stocks는 실제 언급된 종목·섹터를 빠짐없이.
+- 발언에 없는 사실은 절대 지어내지 마라."""
 
     return prompt
 
@@ -339,8 +359,8 @@ def _save_summary(doc_key: str, meta: dict, result: dict, atom_count: int):
         INSERT OR REPLACE INTO doc_summaries
         (doc_key, category, source_name, doc_title, doc_date,
          tldr, summary3, market_view, market_reason,
-         stocks_json, seeds_json, atom_count, generated_at, model)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+         stocks_json, seeds_json, highlights_json, atom_count, generated_at, model)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """,
         (
             doc_key,
@@ -354,6 +374,7 @@ def _save_summary(doc_key: str, meta: dict, result: dict, atom_count: int):
             result.get("market_reason"),
             json.dumps(result.get("stocks") or [], ensure_ascii=False),
             json.dumps(result.get("seeds") or [], ensure_ascii=False),
+            json.dumps(result.get("highlights") or [], ensure_ascii=False),
             atom_count,
             datetime.now().isoformat(),
             "claude-cli",
@@ -376,7 +397,7 @@ def _load_summary(doc_key: str) -> dict | None:
     # summary3 줄바꿈 → 리스트
     d["summary3"] = [l for l in (d.get("summary3") or "").split("\n") if l.strip()]
     # JSON 파싱
-    for k in ("stocks_json", "seeds_json"):
+    for k in ("stocks_json", "seeds_json", "highlights_json"):
         try:
             d[k] = json.loads(d[k] or "[]")
         except Exception:
@@ -393,6 +414,7 @@ def _row_to_summary_dict(d: dict) -> dict:
         "market_reason": d.get("market_reason"),
         "stocks": d.get("stocks_json") or [],
         "seeds": d.get("seeds_json") or [],
+        "highlights": d.get("highlights_json") or [],
         "generated_at": d.get("generated_at"),
         "atom_count": d.get("atom_count"),
     }
@@ -438,6 +460,7 @@ def get_or_build_summary(doc_key: str, *, force: bool = False) -> dict:
         "market_reason": result.get("market_reason"),
         "stocks": result.get("stocks") or [],
         "seeds": result.get("seeds") or [],
+        "highlights": result.get("highlights") or [],
         "generated_at": datetime.now().isoformat(),
         "atom_count": atom_count,
     }

@@ -247,6 +247,19 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .stance-chip.neutral { background: #1f1f25; color: var(--muted); border: 1px solid var(--line); }
 .stance-chip .label { color: var(--muted); font-size: .7rem; margin-left: 4px; font-weight: 400; }
 
+/* 놓치면 안 되는 포인트 (highlights) */
+.highlights-card {
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  padding: 16px 20px; margin-bottom: 14px;
+}
+.highlights-card .card-label { font-size: .68rem; color: var(--gold); text-transform: uppercase; letter-spacing: .8px; font-weight: 700; margin-bottom: 12px; }
+.hl-list { display: flex; flex-direction: column; gap: 10px; }
+.hl-item {
+  border-left: 3px solid var(--gold-dim); padding: 4px 0 4px 13px;
+}
+.hl-topic { font-size: .84rem; font-weight: 700; color: var(--txt); margin-bottom: 3px; }
+.hl-detail { font-size: .82rem; line-height: 1.6; color: #cfcdc7; }
+
 /* 요약 생성 버튼 */
 .gen-summary-box {
   background: var(--card); border: 1px dashed var(--line); border-radius: 14px;
@@ -284,6 +297,12 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
   min-width: 60px;
 }
 .tl-ts:hover { color: #f0d060; text-decoration: underline; }
+.tl-left { flex-shrink: 0; min-width: 92px; display: flex; flex-direction: column; gap: 2px; }
+.tl-when {
+  font-size: .73rem; color: var(--gold-dim); font-weight: 700; white-space: nowrap;
+  background: #1a1a20; border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; text-align: center;
+}
+.tl-date-sub { font-size: .66rem; color: var(--muted); text-align: center; }
 .signal-badge {
   font-size: .65rem; padding: 1px 7px; border-radius: 8px; font-weight: 700; flex-shrink: 0; white-space: nowrap;
 }
@@ -675,16 +694,22 @@ function renderL3(data) {
       const stanceLabel = s.stance || '중립';
       return `<span class="stance-chip ${sc}" title="${escAttr(s.reason||'')}">${escHtml(s.name)} <span class="label">${stanceLabel}</span></span>`;
     }).join('');
+    const highlights = Array.isArray(sum.highlights) ? sum.highlights : [];
+    const hlHtml = highlights.map(h => `
+      <div class="hl-item">
+        <div class="hl-topic">${escHtml(h.topic||'')}</div>
+        <div class="hl-detail">${escHtml(h.detail||'')}</div>
+      </div>`).join('');
 
     summaryHtml = `
     <div class="summary-card">
       <div class="tldr-block">
-        <div class="tldr-label">🎯 핵심 요약</div>
+        <div class="tldr-label">🎯 핵심 한 줄</div>
         <div class="tldr-text">${escHtml(sum.tldr||'')}</div>
       </div>
       <div class="body-grid">
         <div class="summary3-block">
-          <div class="summary3-label">💬 주린이 3줄</div>
+          <div class="summary3-label">💬 핵심 요약 (${s3.length})</div>
           ${s3Html || '<div style="color:var(--muted);font-size:.8rem">요약 없음</div>'}
         </div>
         <div class="market-block">
@@ -694,7 +719,8 @@ function renderL3(data) {
         </div>
       </div>
     </div>
-    ${stocks.length ? `<div class="stocks-card"><div class="card-label">🏷 언급 종목</div><div class="stance-chips">${stanceHtml}</div></div>` : ''}`;
+    ${highlights.length ? `<div class="highlights-card"><div class="card-label">🔑 놓치면 안 되는 포인트 (${highlights.length})</div><div class="hl-list">${hlHtml}</div></div>` : ''}
+    ${stocks.length ? `<div class="stocks-card"><div class="card-label">🏷 언급 종목 (${stocks.length})</div><div class="stance-chips">${stanceHtml}</div></div>` : ''}`;
   } else {
     summaryHtml = `
     <div class="gen-summary-box" id="gen-box">
@@ -703,18 +729,23 @@ function renderL3(data) {
     </div>`;
   }
 
-  // 타임라인
+  // 타임라인 (날짜+시간 명시)
   const tlRows = atoms.map(a => {
     const sig = (a.signal || a.stance || 'default').toLowerCase();
-    const deeplink = a.deeplink || (data.video_url ? `${data.video_url}&t=${a.seconds||0}` : null);
-    const tsHtml = deeplink
-      ? `<a class="tl-ts" href="${escAttr(deeplink)}" target="_blank" title="영상으로 이동">▶ ${a.timestamp||''}</a>`
-      : `<span class="tl-ts" style="cursor:default">▶ ${a.timestamp||''}</span>`;
+    const hasVideoTs = a.timestamp && /\d/.test(a.timestamp);
+    const deeplink = a.deeplink || (data.video_url && hasVideoTs ? `${data.video_url}&t=${a.seconds||0}` : null);
+    // 영상이면 ▶시각(클릭→점프), 아니면 날짜/시간 칩
+    const tsHtml = hasVideoTs
+      ? (deeplink
+          ? `<a class="tl-ts" href="${escAttr(deeplink)}" target="_blank" title="영상으로 이동">▶ ${escHtml(a.timestamp)}</a>`
+          : `<span class="tl-ts" style="cursor:default">▶ ${escHtml(a.timestamp)}</span>`)
+      : `<span class="tl-when">${escHtml(a.when || a.date || '')}</span>`;
+    const whenSub = hasVideoTs && a.date ? `<span class="tl-date-sub">${escHtml(a.date)}</span>` : '';
     const tags = [a.asset, a.sector].filter(Boolean).map(t => `<span class="tl-tag">${escHtml(t)}</span>`).join('');
     const speakerHtml = a.speaker ? `<span style="color:var(--muted);font-size:.72rem;margin-right:6px">${escHtml(a.speaker)}</span>` : '';
     return `
     <div class="tl-row">
-      ${tsHtml}
+      <div class="tl-left">${tsHtml}${whenSub}</div>
       <span class="signal-badge ${sig}">${sigLabel(sig)}</span>
       <div class="tl-content">
         ${speakerHtml}${escHtml(a.content||'')}
