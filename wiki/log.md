@@ -1285,3 +1285,9 @@ python calc_oscillator.py SK하이닉스 삼성전자 한미반도체 --tg
 - 📒 버튼 → 옵션 패널: 소스 체크박스(카테고리별 건수)·기간 프리셋(전체/오늘/3일/7일+건수)·발언수·소스구성(묶음/분리)·원본링크 포함 → "노트북 만들기"
 - openNotebookOptions(preview 집계 렌더)→createNotebookFromPanel→runCreateNotebook(opts 전송)
 - 검증: 리포트+텔레+오늘 = 23건, .md에 텔레8/리포트2만(타카테고리 제외) 확인
+
+## 2026-06-30 — NotebookLM 다리 v5: 고정창 + 인포/슬라이드 허브 인라인 표시
+- 고정창: 모달 바깥 클릭으로 안 닫히게(✕로만) — 실수로 닫혀 작업 잃는 문제 해결
+- 인포그래픽/슬라이드: 생성→완료 폴링→nlm download→/api/insights/artifact 서빙→모달에 <img>/<iframe> 인라인 (노트북 이탈 불필요)
+- 오디오/영상은 시간 길어 시작→Studio 링크 유지
+- 검증: 인포그래픽 create→download→serve(200/image-png/5.4MB) 정상

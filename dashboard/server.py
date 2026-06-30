@@ -1121,6 +1121,32 @@ def api_stock_search(q: str = ""):
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
 
+# ── 종목 캔들 차트 (종목 클릭 → 차트 모달, 키움 ka10081/ka10080) ──
+_candle_cache: dict = {}      # {"code:tf": {"data": [...], "ts": float}}
+
+
+@app.get("/api/stock_candles")
+def api_stock_candles(code: str = "", tf: str = "D"):
+    """종목 OHLCV 캔들. tf='D'(일봉)/'5'·'30'·'60'(분봉). 60초 캐시."""
+    code = code.strip()
+    if not code:
+        return JSONResponse(content={"candles": []})
+    if tf not in ("D", "5", "30", "60", "15"):
+        tf = "D"
+    key = f"{code}:{tf}"
+    now = time.time()
+    ent = _candle_cache.get(key)
+    if ent and now - ent["ts"] < 60:
+        return JSONResponse(content={"tf": tf, "candles": ent["data"]})
+    try:
+        import kiwoom_api
+        data = kiwoom_api.get_stock_candles(code, tf)
+        _candle_cache[key] = {"data": data, "ts": now}
+        return JSONResponse(content={"tf": tf, "candles": data})
+    except Exception as e:
+        return JSONResponse(content={"error": str(e), "candles": []}, status_code=500)
+
+
 # ── 종목별 잠정수급 배치 (히트맵 타일 행용) ──────────────────
 _supply_cache: dict = {}      # {code: {"data": supply, "ts": float}}
 _SUPPLY_TTL = 600             # 10분 (수급은 분 단위로 천천히 변함)
@@ -2399,19 +2425,53 @@ async def api_insights_notebook_query(req: Request):
     return JSONResponse(content=result, status_code=(200 if result.get("ok") else 500))
 
 
-# 만들기 종류 → (nlm 명령, 라벨, 소요안내)
+# 만들기 종류 → 생성/다운로드/표시 정보
+# show=True 면 완료까지 폴링 후 다운로드해 허브 UI에 인라인 표시.
 _STUDIO_KINDS = {
-    "infographic": (["infographic", "create"], "인포그래픽", "~1분"),
-    "slides":      (["slides", "create"],      "슬라이드",   "~1분"),
-    "audio":       (["audio", "create"],       "오디오(팟캐스트)", "2~5분"),
-    "video":       (["video", "create"],       "영상",       "3~6분"),
-    "mindmap":     (["mindmap", "create"],      "마인드맵",   "~1분"),
+    "infographic": {"create": ["infographic", "create"], "label": "인포그래픽", "eta": "~1분",
+                    "types": ("infographic",), "dl": ["download", "infographic"], "ext": "png", "media": "image", "show": True},
+    "slides":      {"create": ["slides", "create"], "label": "슬라이드", "eta": "~1분",
+                    "types": ("slide_deck", "slides"), "dl": ["download", "slide-deck"], "ext": "pdf", "media": "pdf", "show": True},
+    "audio":       {"create": ["audio", "create"], "label": "오디오(팟캐스트)", "eta": "2~5분",
+                    "types": ("audio",), "dl": ["download", "audio"], "ext": "mp3", "media": "audio", "show": False},
+    "video":       {"create": ["video", "create"], "label": "영상", "eta": "3~6분",
+                    "types": ("video",), "dl": ["download", "video"], "ext": "mp4", "media": "video", "show": False},
+    "mindmap":     {"create": ["mindmap", "create"], "label": "마인드맵", "eta": "~1분",
+                    "types": ("mind_map",), "dl": None, "ext": None, "media": None, "show": False},
 }
+
+
+def _studio_arts(nb_id, types):
+    """해당 타입 아티팩트 (id, status) 목록."""
+    ok, out, _ = _run_nlm(["studio", "status", nb_id])
+    res = []
+    if ok:
+        try:
+            for a in json.loads(out):
+                if a.get("type") in types:
+                    res.append((a.get("id"), (a.get("status") or "")))
+        except Exception:
+            pass
+    return res
+
+
+@app.get("/api/insights/artifact")
+def api_insights_artifact(f: str = ""):
+    """생성된 아티팩트(png/pdf/mp3/mp4) 서빙 — out/insights_notebook 한정."""
+    name = os.path.basename(f or "")
+    if not name:
+        return JSONResponse(content={"error": "f 필요"}, status_code=400)
+    path = os.path.join(ROOT, "out", "insights_notebook", name)
+    if not os.path.exists(path):
+        return JSONResponse(content={"error": "not found"}, status_code=404)
+    mt = {"png": "image/png", "pdf": "application/pdf",
+          "mp3": "audio/mpeg", "mp4": "video/mp4"}.get(name.rsplit(".", 1)[-1].lower())
+    return FileResponse(path, media_type=mt)
 
 
 @app.post("/api/insights/notebook_studio")
 async def api_insights_notebook_studio(req: Request):
-    """노트북 소스로 인포그래픽/슬라이드/오디오/영상/마인드맵 생성 시작."""
+    """인포/슬라이드/오디오/영상 생성. show=True(인포·슬라이드)는 완료까지 폴링→다운로드→허브 표시."""
     body = {}
     try:
         body = await req.json()
@@ -2425,18 +2485,45 @@ async def api_insights_notebook_studio(req: Request):
     if not _nlm_exe():
         return JSONResponse(content={"error": "nlm CLI 없음"}, status_code=503)
 
-    cmd, label, eta = _STUDIO_KINDS[kind]
+    spec = _STUDIO_KINDS[kind]
 
     def _do():
-        args = list(cmd) + [nb_id, "--confirm"]
+        before = {i for i, _s in _studio_arts(nb_id, spec["types"])}
+        args = list(spec["create"]) + [nb_id, "--confirm"]
         if focus:
             args += ["--focus", focus]
-        # 생성 작업 시작(아티팩트는 비동기로 완성). 시작만 확인하고 반환.
         ok, out, errm = _run_nlm(args, timeout=120)
         if not ok:
-            return {"error": f"{label} 생성 실패: {errm[:200]}"}
-        return {"ok": True, "kind": kind, "label": label, "eta": eta,
+            return {"error": f"{spec['label']} 생성 실패: {errm[:200]}"}
+        base = {"ok": True, "kind": kind, "label": spec["label"], "eta": spec["eta"],
+                "media": spec["media"],
                 "url": f"https://notebooklm.google.com/notebook/{nb_id}"}
+        if not spec["show"] or not spec["dl"]:
+            base["pending"] = True      # 오디오/영상: 시작만 → Studio에서 확인
+            return base
+        # 인포그래픽/슬라이드: 완료까지 폴링 → 다운로드 → 서빙 URL
+        art_id = None
+        for _ in range(36):  # 최대 ~180s
+            for i, s in _studio_arts(nb_id, spec["types"]):
+                if i not in before and s.lower() in ("completed", "done", "ready", "success"):
+                    art_id = i
+                    break
+            if art_id:
+                break
+            time.sleep(5)
+        if not art_id:
+            base["pending"] = True
+            return base
+        fname = f"{kind}_{re.sub(r'[^0-9a-zA-Z-]', '', art_id)}.{spec['ext']}"
+        fpath = os.path.join(ROOT, "out", "insights_notebook", fname)
+        dargs = list(spec["dl"]) + [nb_id, "-o", fpath, "--id", art_id]
+        okd, _o, _e = _run_nlm(dargs, timeout=120)
+        if okd and os.path.exists(fpath):
+            base["ready"] = True
+            base["file_url"] = f"/api/insights/artifact?f={fname}"
+        else:
+            base["pending"] = True
+        return base
 
     result = await run_in_threadpool(_do)
     return JSONResponse(content=result, status_code=(200 if result.get("ok") else 500))

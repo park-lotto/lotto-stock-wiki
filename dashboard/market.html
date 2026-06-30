@@ -133,39 +133,40 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
   font-size:10px;color:rgba(255,255,255,.35);padding:2px 4px;line-height:1;transition:color .15s;z-index:2;white-space:nowrap;}
 .tile .top-more:hover{color:rgba(255,255,255,.8);}
 
-/* ── 히트맵 그리드 (4열로 넓혀 가독성 확보) ── */
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;}
-@media(max-width:1100px){.grid{grid-template-columns:repeat(3,1fr);}}
-@media(max-width:760px){.grid{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:520px){.grid{grid-template-columns:1fr;}}
+/* ── 히트맵 그리드 (6열·고박스·큰폰트) ── */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;}
+@media(max-width:1500px){.grid{grid-template-columns:repeat(5,1fr);}}
+@media(max-width:1200px){.grid{grid-template-columns:repeat(4,1fr);}}
+@media(max-width:900px){.grid{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:640px){.grid{grid-template-columns:repeat(2,1fr);}}
 
-.tile{border-radius:12px;padding:13px 15px;min-height:120px;display:flex;flex-direction:column;
-      gap:8px;transition:transform .15s,box-shadow .15s;cursor:default;position:relative;overflow:hidden;}
+.tile{border-radius:12px;padding:14px 14px 12px;min-height:182px;display:flex;flex-direction:column;
+      gap:7px;transition:transform .15s,box-shadow .15s;cursor:default;position:relative;overflow:hidden;}
 .tile:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.5);}
-/* 헤더: 섹터명(좌) + 등락률·차트·★(우) 한 줄 */
-.tile .tile-head{display:flex;align-items:center;justify-content:space-between;gap:10px;}
-.tile .sec-name{font-size:15.5px;font-weight:800;color:#fff;line-height:1.2;
-  text-shadow:0 1px 3px rgba(0,0,0,.5);overflow:hidden;min-width:0;}
-.tile .head-right{display:flex;align-items:center;gap:9px;flex-shrink:0;}
-.tile .avg-rate{font-size:24px;font-weight:900;line-height:1;white-space:nowrap;}
+/* 헤더: 섹터명(윗줄) → 등락률·차트·★(아랫줄) */
+.tile .sec-name{font-size:16px;font-weight:800;color:#fff;line-height:1.25;
+  text-shadow:0 1px 3px rgba(0,0,0,.5);display:flex;align-items:center;flex-wrap:wrap;gap:3px;}
+.tile .avg-row{display:flex;align-items:center;gap:9px;}
+.tile .avg-rate{font-size:27px;font-weight:900;line-height:1;white-space:nowrap;}
 .tile .avg-spark{display:inline-flex;align-items:center;flex-shrink:0;opacity:.9;}
-.tile .avg-spark.no-chart{color:rgba(255,255,255,.25);font-size:14px;}
-.tile .stocks{display:flex;flex-direction:column;gap:5px;margin-top:4px;}
-/* 종목 행: 이름(좌) + 수급(우측 인라인) + 등락률(맨 우) 한 줄 */
-.tile .stock-row{display:flex;align-items:center;gap:8px;font-size:13.5px;
-  color:rgba(255,255,255,.85);line-height:1.45;}
+.tile .avg-spark.no-chart{color:rgba(255,255,255,.25);font-size:15px;}
+.tile .stocks{display:flex;flex-direction:column;gap:6px;margin-top:5px;}
+/* 종목: 이름+등락률(윗줄) → 수급(아랫줄) */
+.tile .stock-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+  font-size:15px;color:#fff;line-height:1.35;cursor:pointer;}
+.tile .stock-row:hover .stock-name{text-decoration:underline;text-underline-offset:2px;}
 .tile .stock-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  flex:0 1 auto;max-width:44%;font-weight:600;}
+  max-width:64%;font-weight:600;}
 .tile .stock-rate{flex:0 0 auto;font-weight:800;white-space:nowrap;}
-.tile .stock-more{font-size:12px;color:var(--gold);margin-top:3px;cursor:pointer;opacity:.7;transition:opacity .15s;user-select:none;}
+.tile .stock-more{font-size:13px;color:var(--gold);margin-top:3px;cursor:pointer;opacity:.75;transition:opacity .15s;user-select:none;}
 .tile .stock-more:hover{opacity:1;}
-.tile .stock-extra{display:none;flex-direction:column;gap:5px;margin-top:3px;}
+.tile .stock-extra{display:none;flex-direction:column;gap:6px;margin-top:3px;}
 .tile .stock-extra.open{display:flex;}
-/* 종목 행 수급 — 이름 오른쪽 인라인, 등락률 바로 앞 우측 정렬 */
-.tile .stock-sup{flex:1 1 auto;display:flex;justify-content:flex-end;flex-wrap:nowrap;
-  gap:7px;overflow:hidden;font-size:10px;font-variant-numeric:tabular-nums;
-  text-shadow:0 1px 2px rgba(0,0,0,.55);}
-.tile .stock-sup:not(:empty){background:rgba(0,0,0,.2);border-radius:5px;padding:1px 6px;}
+/* 종목 행 수급 — 종목명 아래 줄, 어두운 띠 (좁은 폭이라 자동 줄바꿈) */
+.tile .stock-sup{display:flex;flex-wrap:wrap;gap:2px 9px;margin:-2px 0 1px;padding:2px 7px;
+  background:rgba(0,0,0,.24);border-radius:5px;font-size:10.5px;line-height:1.4;
+  font-variant-numeric:tabular-nums;}
+.tile .stock-sup:empty{display:none;padding:0;background:none;margin:0;}
 .tile .stock-sup .sp{white-space:nowrap;color:rgba(255,255,255,.55);}
 .tile .stock-sup .sp.su{color:#ffcaca;}
 .tile .stock-sup .sp.sd{color:#cfe6ff;}
@@ -248,6 +249,17 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
   font-size:14px;font-weight:700;color:var(--gold);}
 .modal-x{background:none;border:none;color:#777;font-size:16px;cursor:pointer;line-height:1;padding:2px 4px;}
 .modal-x:hover{color:#e74c3c;}
+/* 종목 차트 모달 (트레이딩뷰) */
+.chart-box{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  width:780px;max-width:95vw;height:580px;max-height:88vh;display:flex;flex-direction:column;
+  padding:14px 16px;box-shadow:0 16px 48px rgba(0,0,0,.6);}
+#tv_chart_container{flex:1;min-height:0;border-radius:8px;overflow:hidden;position:relative;}
+.chart-tf{display:flex;gap:6px;margin:2px 0 10px;}
+.chart-tf .tf-btn{padding:5px 13px;border:1px solid #333;border-radius:7px;background:transparent;
+  color:#888;font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s;}
+.chart-tf .tf-btn:hover{border-color:#555;color:#ccc;}
+.chart-tf .tf-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(212,175,55,.1);}
+.chart-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#666;font-size:13px;}
 
 /* ── 관심종목 패널 ── */
 .wl-panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;
@@ -271,7 +283,8 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 .wl-row::-webkit-scrollbar-thumb{background:#333;border-radius:3px;}
 .wl-empty{font-size:12px;color:#555;padding:10px 4px;}
 .wl-card{flex:0 0 auto;min-width:158px;background:#16161c;border:1px solid var(--line);
-  border-radius:10px;padding:9px 11px;position:relative;}
+  border-radius:10px;padding:9px 11px;position:relative;cursor:pointer;transition:border-color .15s;}
+.wl-card:hover{border-color:var(--gold-dim,#7a6320);}
 .wl-card .x{position:absolute;top:5px;right:6px;background:none;border:none;color:#555;
   cursor:pointer;font-size:13px;line-height:1;padding:2px;transition:color .15s;}
 .wl-card .x:hover{color:#e74c3c;}
@@ -365,6 +378,8 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
   <div class="grid" id="grid"><div class="loading">📡 데이터 불러오는 중…</div></div>
 </div>
 
+<!-- 트레이딩뷰 Lightweight Charts (오픈소스) — 키움 캔들 렌더용 -->
+<script src="https://unpkg.com/lightweight-charts@4/dist/lightweight-charts.standalone.production.js"></script>
 <script>
 // ── 유틸 ──────────────────────────────────────────────────
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
@@ -408,6 +423,11 @@ document.getElementById("grid").addEventListener("click",e=>{
   const se=e.target.closest(".sec-edit-btn");
   if(se){ e.stopPropagation(); openSectorEdit(se.dataset.secedit); return; }
   const btn=e.target.closest(".fav-btn");
+  if(!btn){
+    // 종목 행 클릭 → 차트 모달 (★/더보기/✎ 아닌 경우)
+    const row=e.target.closest(".stock-row");
+    if(row && row.dataset.code){ openStockChart(row.dataset.code, row.dataset.name); return; }
+  }
   if(btn){
     e.stopPropagation();
     const name=btn.dataset.sector;
@@ -638,11 +658,11 @@ function renderTab(data){
 
 // 종목 행 + 수급 자리(비동기 채움)
 function stockRowHtml(s){
-  return `<div class="stock-row" data-code="${esc(s.code||"")}">
+  return `<div class="stock-row" data-code="${esc(s.code||"")}" data-name="${esc(s.name||"")}">
        <span class="stock-name">${esc(s.name)}</span>
-       <span class="stock-sup" data-supcode="${esc(s.code||"")}"></span>
        <span class="stock-rate">${rateStr(s.change_rate)}</span>
-     </div>`;
+     </div>
+     <div class="stock-sup" data-supcode="${esc(s.code||"")}"></div>`;
 }
 
 // ── 타일 종목 수급 (외인/기관/개인/프로그램) ───────────────
@@ -741,12 +761,10 @@ function renderGrid(tiles){
     const barsInline=(tile.bars&&tile.bars.length>=2)?
       `<span class="avg-spark">${sparkline(tile.bars,tile.avg_rate)}</span>`
       :`<span class="avg-spark no-chart">―</span>`;
-    el.innerHTML=`<div class="tile-head">
-        <div class="sec-name">${esc(tile.name)}${parentHtml}<span class="sec-edit-btn" data-secedit="${esc(tile.name)}" title="종목 추가/삭제">✎</span></div>
-        <div class="head-right">
-          <span class="avg-rate">${avgStr}</span>${barsInline}
-          <button class="fav-btn${isFav?" on":""}" data-sector="${esc(tile.name)}" title="즐겨찾기">★</button>
-        </div>
+    el.innerHTML=`<div class="sec-name">${esc(tile.name)}${parentHtml}<span class="sec-edit-btn" data-secedit="${esc(tile.name)}" title="종목 추가/삭제">✎</span></div>
+      <div class="avg-row">
+        <span class="avg-rate">${avgStr}</span>${barsInline}
+        <button class="fav-btn${isFav?" on":""}" data-sector="${esc(tile.name)}" title="즐겨찾기" style="margin-left:auto">★</button>
       </div>
       <div class="stocks">${stocksHtml}</div>`;
     grid.appendChild(el);
@@ -1821,8 +1839,8 @@ function renderWatchlist(items){
     } else {
       supHtml=`<div class="wl-sup-na">잠정수급 집계 전</div>`;
     }
-    return`<div class="wl-card">
-      <button class="x" onclick="wlRemove('${it.code}')" title="삭제">✕</button>
+    return`<div class="wl-card" onclick="openStockChart('${it.code}','${esc(it.name)}')">
+      <button class="x" onclick="event.stopPropagation();wlRemove('${it.code}')" title="삭제">✕</button>
       <div class="wl-nm" title="${esc(it.name)}">${esc(it.name)}</div>
       <div class="wl-pr"><span class="p">${ps}</span><span class="r ${rc}">${rs}</span></div>
       ${supHtml}
@@ -1907,6 +1925,34 @@ async function _wlSave(){
       body:JSON.stringify({codes:_wlCodes})});
   }catch(e){ showToast("저장 실패","err"); }
 }
+
+// ── 종목 차트 모달 (트레이딩뷰 위젯, 1단계) ────────────────
+function openStockChart(code, name){
+  if(!code) return;
+  let m=document.getElementById("chart-modal");
+  if(!m){ m=document.createElement("div"); m.id="chart-modal"; m.className="modal-overlay";
+    m.addEventListener("click",ev=>{ if(ev.target===m) closeStockChart(); }); document.body.appendChild(m); }
+  m.innerHTML=`<div class="chart-box">
+    <div class="modal-hd">
+      <span>📈 ${esc(name||code)} <span style="color:#666;font-size:12px;font-weight:400">${esc(code)}</span></span>
+      <button class="modal-x" onclick="closeStockChart()">✕</button>
+    </div>
+    <div id="tv_chart_container"></div>
+  </div>`;
+  m.style.display="flex";
+  if(window.TradingView && window.TradingView.widget){
+    new TradingView.widget({
+      autosize:true, symbol:"KRX:"+code, interval:"D", timezone:"Asia/Seoul",
+      theme:"dark", style:"1", locale:"kr", toolbar_bg:"#0b0b0e",
+      enable_publishing:false, allow_symbol_change:true, hide_side_toolbar:false,
+      container_id:"tv_chart_container",
+    });
+  } else {
+    document.getElementById("tv_chart_container").innerHTML=
+      '<div style="padding:30px;color:#888;font-size:13px">트레이딩뷰 차트 로딩 실패 — 인터넷 연결을 확인하세요.</div>';
+  }
+}
+function closeStockChart(){ const m=document.getElementById("chart-modal"); if(m){ m.style.display="none"; m.innerHTML=""; } }
 
 async function initLoad(){
   await loadOverview();

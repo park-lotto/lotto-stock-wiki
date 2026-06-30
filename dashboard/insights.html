@@ -144,6 +144,11 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .nb-studio-msg { margin-top: 8px; }
 .nb-studio-ok { font-size: .82rem; color: var(--txt); background: var(--bl-bg); border: 1px solid var(--bl-line); border-radius: 9px; padding: 10px 14px; line-height: 1.6; }
 .nb-studio-ok a { color: #4ade80; }
+.nb-art { margin-top: 10px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--bg); }
+.nb-art-head { display: flex; align-items: center; gap: 10px; padding: 8px 12px; font-size: .82rem; font-weight: 700; color: var(--gold); border-bottom: 1px solid var(--line); }
+.nb-art-head a { font-weight: 400; }
+.nb-art-img { display: block; width: 100%; height: auto; }
+.nb-art-pdf { display: block; width: 100%; height: 60vh; border: none; background: #fff; }
 
 /* ── 카테고리 카드 ── */
 .cat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 32px 0; }
@@ -1137,19 +1142,34 @@ async function nbStudio(btn, kind) {
   const nb = window._lastNb;
   if (!nb) return;
   const orig = btn.innerHTML;
-  btn.disabled = true; btn.innerHTML = '시작 중...';
+  btn.disabled = true; btn.innerHTML = '생성 중...';
   const msg = qs('#nb-studio-msg');
+  const waitNote = (kind === 'infographic' || kind === 'slides')
+    ? '생성→완료까지 최대 2~3분, 끝나면 여기 바로 표시됩니다' : '시작 중...';
+  if (msg) msg.innerHTML = `<div class="nb-loading"><div class="spinner" style="width:18px;height:18px;margin:0"></div> ${escHtml(orig.replace(/<[^>]+>/g,'').trim())} ${waitNote}</div>`;
   try {
     const res = await apiFetch('/api/insights/notebook_studio', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ notebook_id: nb.id, kind })
     });
     if (res.error) throw new Error(res.error);
-    btn.innerHTML = `✅ ${res.label} 시작됨`;
+    btn.innerHTML = `✅ ${res.label}`;
     const link = nb.url || res.url;
-    if (msg) msg.innerHTML = `<div class="nb-studio-ok">🎨 <b>${escHtml(res.label)}</b> 생성을 시작했습니다 (${escHtml(res.eta)}). 완료되면 <a href="${link}" target="_blank">NotebookLM Studio</a>에서 확인하세요.</div>`;
+    let html = '';
+    if (res.ready && res.file_url) {
+      if (res.media === 'image') {
+        html = `<div class="nb-art"><div class="nb-art-head">🖼️ ${escHtml(res.label)} <a href="${res.file_url}" download class="nb-open-sm">↓ 저장</a> <a href="${res.file_url}" target="_blank" class="nb-open-sm">↗ 원본</a></div><img class="nb-art-img" src="${res.file_url}" alt="${escHtml(res.label)}"></div>`;
+      } else if (res.media === 'pdf') {
+        html = `<div class="nb-art"><div class="nb-art-head">📑 ${escHtml(res.label)} <a href="${res.file_url}" target="_blank" class="nb-open-sm">↗ 새 탭</a> <a href="${res.file_url}" download class="nb-open-sm">↓ 저장</a></div><iframe class="nb-art-pdf" src="${res.file_url}"></iframe></div>`;
+      }
+    }
+    if (!html) {
+      html = `<div class="nb-studio-ok">🎨 <b>${escHtml(res.label)}</b> 생성을 시작했습니다 (${escHtml(res.eta)}). 완료되면 <a href="${link}" target="_blank">NotebookLM Studio</a>에서 확인하세요.${(kind==='infographic'||kind==='slides')?' (시간이 더 걸려 표시는 못 했지만 곧 완성됩니다)':''}</div>`;
+    }
+    if (msg) msg.innerHTML = html;
   } catch(e) {
     btn.disabled = false; btn.innerHTML = orig;
+    if (msg) msg.innerHTML = '';
     toast(`실패: ${e.message}`, true);
   }
 }
@@ -1163,7 +1183,7 @@ function openModal(title, html) {
   qs('#modal').classList.add('open');
 }
 function closeModal() { qs('#modal').classList.remove('open'); }
-qs('#modal').addEventListener('click', e => { if (e.target === qs('#modal')) closeModal(); });
+// 바깥(어두운 영역) 클릭으로는 닫히지 않게 — 실수로 닫혀 작업 잃는 것 방지. ✕로만 닫음.
 
 // 모달 헤더 잡고 드래그 이동 (transition 끄고 rAF로 부드럽게)
 (function makeModalDraggable() {

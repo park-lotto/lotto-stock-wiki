@@ -315,6 +315,82 @@ def _pamt(v) -> int:
     return -n if neg else n
 
 
+def _pricenum(v) -> float:
+    """가격 문자열 → 양수 float (키움 '+338000'/'-321000'의 부호는 등락 표시일 뿐, 가격은 양수)."""
+    s = str(v).replace(",", "").strip().lstrip("+")
+    if s.startswith("-"):
+        s = s[1:]
+    try:
+        return float(s)
+    except Exception:
+        return 0.0
+
+
+def get_stock_candles(code: str, tf: str = "D", n: int = 140) -> list:
+    """종목 캔들(OHLCV). tf='D'(일봉 ka10081) / '5'·'30'·'60'(분봉 ka10080).
+
+    반환(과거→최신): [{"time", "open","high","low","close","value"(거래량)}]
+      - 일봉 time = "YYYY-MM-DD"
+      - 분봉 time = epoch초 (KST 벽시계를 UTC로 취급 → 차트 축에 KST 시각 표시)
+    """
+    import datetime as _dt
+    out = []
+    try:
+        if tf == "D":
+            today = _dt.datetime.now().strftime("%Y%m%d")
+            r = requests.post(
+                f"{BASE}/api/dostk/chart",
+                headers={**_hdrs(), "api-id": "ka10081", "cont-yn": "N", "next-key": ""},
+                json={"stk_cd": code, "base_dt": today, "upd_stkpc_tp": "1"},
+                timeout=10,
+            )
+            r.raise_for_status()
+            rows = r.json().get("stk_dt_pole_chart_qry", []) or []
+            for row in rows:
+                dt = str(row.get("dt", ""))
+                if len(dt) != 8:
+                    continue
+                out.append({
+                    "time": f"{dt[:4]}-{dt[4:6]}-{dt[6:]}",
+                    "open": _pricenum(row.get("open_pric")), "high": _pricenum(row.get("high_pric")),
+                    "low": _pricenum(row.get("low_pric")), "close": _pricenum(row.get("cur_prc")),
+                    "value": int(_pricenum(row.get("trde_qty"))),
+                })
+        else:
+            import calendar
+            tic = tf if tf in ("5", "30", "60", "1", "15") else "5"
+            r = requests.post(
+                f"{BASE}/api/dostk/chart",
+                headers={**_hdrs(), "api-id": "ka10080", "cont-yn": "N", "next-key": ""},
+                json={"stk_cd": code, "tic_scope": tic, "upd_stkpc_tp": "1"},
+                timeout=10,
+            )
+            r.raise_for_status()
+            rows = r.json().get("stk_min_pole_chart_qry", []) or []
+            for row in rows:
+                t = str(row.get("cntr_tm", ""))
+                if len(t) < 12:
+                    continue
+                epoch = calendar.timegm((int(t[:4]), int(t[4:6]), int(t[6:8]),
+                                         int(t[8:10]), int(t[10:12]), 0, 0, 0, 0))
+                out.append({
+                    "time": epoch,
+                    "open": _pricenum(row.get("open_pric")), "high": _pricenum(row.get("high_pric")),
+                    "low": _pricenum(row.get("low_pric")), "close": _pricenum(row.get("cur_prc")),
+                    "value": int(_pricenum(row.get("trde_qty"))),
+                })
+        out.reverse()  # 최신→과거 → 과거→최신 (lightweight-charts는 오름차순 필요)
+        # 시간 중복/역행 제거 (차트 라이브러리 오류 방지)
+        clean, last = [], None
+        for c in out:
+            if last is not None and c["time"] <= last:
+                continue
+            clean.append(c); last = c["time"]
+        return clean[-n:]
+    except Exception:
+        return []
+
+
 def get_stock_supply(code: str) -> dict:
     """종목별 잠정수급 — 외인/기관/개인(ka10059) + 프로그램 순매수(ka90013).
 
