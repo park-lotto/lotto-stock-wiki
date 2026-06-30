@@ -1249,14 +1249,18 @@ def insights_page():
 # ── 인사이트 헬퍼 ────────────────────────────────────────────
 
 _CAT_LABEL = {
-    "youtube":  ("유튜브",       "📺"),
-    "telegram": ("텔레그램",     "💬"),
-    "report":   ("블로그·리포트", "📰"),
+    "youtube":  ("유튜브",   "📺"),
+    "telegram": ("텔레그램", "💬"),
+    "blog":     ("블로그",   "📝"),
+    "report":   ("리포트",   "📰"),
+    "news":     ("뉴스",     "🗞️"),
 }
 _CAT_TYPE_MAP = {
     "youtube":  "source_type IN ('youtube','yt')",
     "telegram": "source_type = 'telegram'",
-    "report":   "source_type IN ('report','blog','news')",
+    "blog":     "source_type = 'blog'",
+    "report":   "source_type = 'report'",
+    "news":     "source_type = 'news'",
 }
 
 
@@ -1748,7 +1752,7 @@ def api_insights_search(q: str = ""):
             elif st == "telegram":
                 cat = "telegram"
             elif st in ("report", "blog", "news"):
-                cat = "report"
+                cat = st
             else:
                 cat = st
 

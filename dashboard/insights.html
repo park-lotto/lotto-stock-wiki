@@ -12,6 +12,8 @@
   --yt: #7c3aed; --yt-bg: #1a0e2e; --yt-line: #3d1f6b;
   --tg: #0891b2; --tg-bg: #0c1f25; --tg-line: #1a4a55;
   --rp: #d4af37; --rp-bg: #1a1608; --rp-line: #4a3d10;
+  --bl: #22c55e; --bl-bg: #0c1f12; --bl-line: #1a4a2a;
+  --nw: #f97316; --nw-bg: #1f1308; --nw-line: #4a2f10;
   --buy: #16a34a; --sell: #dc2626; --neutral: #6b7280;
   --bull: #16a34a; --bear: #dc2626;
 }
@@ -77,8 +79,8 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 }
 .search-wrap .search-btn:hover { color: var(--gold); }
 
-/* ── 카테고리 3카드 ── */
-.cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 32px 0; }
+/* ── 카테고리 카드 ── */
+.cat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 32px 0; }
 .cat-card {
   background: var(--card); border: 1px solid var(--line); border-radius: 14px;
   overflow: hidden; cursor: pointer; transition: transform .18s, border-color .18s;
@@ -89,6 +91,8 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .cat-card.youtube .stripe { background: var(--yt); }
 .cat-card.telegram .stripe { background: var(--tg); }
 .cat-card.report .stripe { background: var(--rp); }
+.cat-card.blog .stripe { background: var(--bl); }
+.cat-card.news .stripe { background: var(--nw); }
 .cat-card .body { padding: 18px 20px; flex: 1; }
 .cat-card .header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
 .cat-card .ico { font-size: 1.4rem; }
@@ -101,6 +105,8 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .cat-card.youtube .new-badge { background: var(--yt-bg); color: #a78bfa; border: 1px solid var(--yt-line); }
 .cat-card.telegram .new-badge { background: var(--tg-bg); color: #67e8f9; border: 1px solid var(--tg-line); }
 .cat-card.report .new-badge { background: var(--rp-bg); color: var(--gold); border: 1px solid var(--rp-line); }
+.cat-card.blog .new-badge { background: var(--bl-bg); color: #4ade80; border: 1px solid var(--bl-line); }
+.cat-card.news .new-badge { background: var(--nw-bg); color: #fb923c; border: 1px solid var(--nw-line); }
 .cat-card .divider { border: none; border-top: 1px solid var(--line); margin: 10px 0; }
 .cat-card .hot-label { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; }
 .cat-card .hot-item { font-size: .78rem; color: var(--muted); padding: 3px 0; display: flex; align-items: flex-start; gap: 5px; transition: color .15s; }
@@ -134,6 +140,8 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .cat-chip.youtube { background: var(--yt-bg); color: #a78bfa; border: 1px solid var(--yt-line); }
 .cat-chip.telegram { background: var(--tg-bg); color: #67e8f9; border: 1px solid var(--tg-line); }
 .cat-chip.report { background: var(--rp-bg); color: var(--gold); border: 1px solid var(--rp-line); }
+.cat-chip.blog { background: var(--bl-bg); color: #4ade80; border: 1px solid var(--bl-line); }
+.cat-chip.news { background: var(--nw-bg); color: #fb923c; border: 1px solid var(--nw-line); }
 .feed-row .title { flex: 1; font-size: .85rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .feed-row .source { font-size: .74rem; color: var(--muted); flex-shrink: 0; white-space: nowrap; }
 .feed-row .atoms { font-size: .72rem; color: var(--muted); flex-shrink: 0; }
