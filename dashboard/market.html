@@ -2032,12 +2032,13 @@ function _toggleMax(box){
 
 function _taeriniHtml(d){
   const L=t=>`<span class="tk-lab">${t}</span>`;
-  if(!d || !d.found) return `📊 ${L("태린이")}미수록${d&&d.date?` (${d.date})`:""}`;
+  const H=t=>(t+"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  if(!d || !d.found) return `📊 ${L("태린이")}미수록${d&&d.date?` (${H(d.date)})`:""}`;
   const s=d.stock||{}, parts=[];
-  const C=(t,c)=>`<span style="color:${c}">${t}</span>`;
+  const C=(t,c)=>`<span style="color:${c}">${H(t)}</span>`;
   if(s.osc) parts.push(`${L("수급")}${C(s.osc.trend||s.osc.group||"-","#e0b94a")}`
     + (s.osc.pct!=null?`(${Math.round(s.osc.pct)}%ile)`:""));
-  if(s.rs) parts.push(`${L("RS")}${s.rs.rs_avg!=null?Number(s.rs.rs_avg).toFixed(2):"-"}(${s.rs.bucket})`);
+  if(s.rs) parts.push(`${L("RS")}${s.rs.rs_avg!=null?Number(s.rs.rs_avg).toFixed(2):"-"}(${H(s.rs.bucket||"-")})`);
   if(s.tp){ const up=s.tp.dir==="상향"; const tgt=s.tp.target!=null?Math.round(s.tp.target/1000)+"천":"";
     parts.push(`${L("TP")}${C(tgt+(up?"↑":"↓"), up?"#e74c3c":"#3aa0ff")}`
       + (s.tp.change_pct!=null?`(${s.tp.change_pct>0?"+":""}${s.tp.change_pct}%)`:"")); }
@@ -2048,8 +2049,8 @@ function _taeriniHtml(d){
     parts.push(`${L("ETF")}${C(inc?"비중↑":"비중↓", inc?"#e74c3c":"#3aa0ff")}`); }
   if(s.schedule&&s.schedule.dday!=null){ const dd=s.schedule.dday;
     parts.push(`${L("실적")}D${dd<=0?dd:"+"+dd}`); }
-  if(!parts.length) return `📊 ${L("태린이")}미수록 (${d.date||""})`;
-  return `📊 ` + parts.join(" · ") + ` <span style="color:#555">(${d.date||""})</span>`;
+  if(!parts.length) return `📊 ${L("태린이")}미수록 (${H(d.date||"")})`;
+  return `📊 ` + parts.join(" · ") + ` <span style="color:#555">(${H(d.date||"")})</span>`;
 }
 
 async function _loadTaerini(code){
