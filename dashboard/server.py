@@ -2610,6 +2610,70 @@ async def api_insights_claude_chat(req: Request):
     return JSONResponse(content=result, status_code=(200 if result.get("ok") else 500))
 
 
+@app.post("/api/insights/gemini_chat")
+async def api_insights_gemini_chat(req: Request):
+    """Gemini 리서치 대화 — 구글 검색 그라운딩으로 최신 사실 + 노트북 자료 참고."""
+    body = {}
+    try:
+        body = await req.json()
+    except Exception:
+        pass
+    nb_id = (body.get("notebook_id") or "").strip()
+    messages = body.get("messages") or []
+    messages = [m for m in messages if isinstance(m, dict) and m.get("content")]
+    if not messages:
+        return JSONResponse(content={"error": "messages 필요"}, status_code=400)
+
+    def _do():
+        ctx = _NB_BUNDLES.get(nb_id, "")
+        system = (
+            "너는 한국 주식 트레이더의 리서치 보조다. 구글 검색으로 최신 사실·뉴스를 확인해 "
+            "한국어로 간결·실전적으로 답하라. 아래 '내 수집 자료'도 함께 참고하되, 최신 정보는 검색을 우선하라."
+            "\n\n[내 수집 자료]\n" + (ctx[:20000] or "(없음)")
+        )
+        convo = "\n".join(
+            (("어시스턴트: " if m.get("role") == "assistant" else "사용자: ") + str(m.get("content"))[:4000])
+            for m in messages[-8:]
+        )
+        try:
+            from google import genai
+            from google.genai import types
+        except Exception as e:
+            return {"error": f"google-genai 패키지 없음: {str(e)[:150]}"}
+        keys = [k for k in (_env_key("GEMINI_API_KEY"), _env_key("GEMINI_API_KEY_2")) if k]
+        if not keys:
+            return {"error": ".env에 GEMINI_API_KEY 없음"}
+        last = ""
+        for k in keys:
+            try:
+                client = genai.Client(api_key=k)
+                resp = client.models.generate_content(
+                    model="gemini-3-flash-preview",
+                    contents=f"{system}\n\n{convo}",
+                    config=types.GenerateContentConfig(
+                        tools=[types.Tool(google_search=types.GoogleSearch())],
+                        temperature=0,
+                    ),
+                )
+                sources = []
+                for c in (resp.candidates or []):
+                    gm = getattr(c, "grounding_metadata", None)
+                    for ch in (getattr(gm, "grounding_chunks", None) or []):
+                        w = getattr(ch, "web", None)
+                        if w:
+                            sources.append({"title": getattr(w, "title", ""), "url": getattr(w, "uri", "")})
+                return {"ok": True, "answer": (resp.text or "").strip() or "(빈 응답)", "sources": sources[:8]}
+            except Exception as e:
+                last = str(e)
+                if "429" in last or "RESOURCE_EXHAUSTED" in last:
+                    continue   # 다음(예비) 키로
+                return {"error": f"Gemini 호출 실패: {last[:300]}"}
+        return {"error": f"Gemini 쿼터 소진(키 {len(keys)}개 모두): {last[:200]}"}
+
+    result = await run_in_threadpool(_do)
+    return JSONResponse(content=result, status_code=(200 if result.get("ok") else 500))
+
+
 # ── §4.8 POST /api/insights/to_youtube ───────────────────────
 @app.post("/api/insights/to_youtube")
 async def api_insights_to_youtube(req: Request):

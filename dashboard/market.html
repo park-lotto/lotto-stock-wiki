@@ -2015,7 +2015,7 @@ function openStockChart(code, name){
   m.innerHTML=`<div class="chart-box">
     <div class="modal-hd">
       <span>📈 ${esc(name||code)} <span style="color:#666;font-size:12px;font-weight:400">${esc(code)}</span>
-        <span class="drag-hint">⠿ 이동 · 더블클릭 최대화 · 우하단 크기조절</span></span>
+        <span class="drag-hint">⠿ 이동 · 더블클릭 최대화 · 우측 가격축 드래그=상하확대</span></span>
       <button class="modal-x" onclick="closeStockChart()">✕</button>
     </div>
     <div class="chart-tf">
@@ -2065,6 +2065,9 @@ function _initChart(){
   }
   _chart=LightweightCharts.createChart(el,{autoSize:true,..._CHART_LAYOUT,
     timeScale:{borderColor:"#222",timeVisible:_isIntraday(),secondsVisible:false},
+    rightPriceScale:{borderColor:"#222",autoScale:true},
+    handleScale:{axisPressedMouseMove:{time:true,price:true}, mouseWheel:true, pinch:true},
+    handleScroll:{mouseWheel:true, pressedMouseMove:true, horzTouchDrag:true, vertTouchDrag:true},
     localization:{priceFormatter:p=>Math.round(p).toLocaleString("ko-KR")}});
   _chartCandle=_chart.addCandlestickSeries({
     upColor:"#e74c3c",downColor:"#3498db",borderUpColor:"#e74c3c",borderDownColor:"#3498db",
@@ -2272,7 +2275,7 @@ function _startNewDraw(e){
     const dist=Math.hypot(q.x-startX, q.y-startY);
     if(_drawPending && q.logical!=null && q.price!=null && dist>=5){
       _draws.push({type:_drawTool, a:_drawPending, b:{logical:q.logical,price:q.price}});
-      _drawOff();   // 한 도형 그리면 자동 해제 → 이후 자유 이동/확대
+      // 도구 유지 → 끌 때까지 계속 그리기 (도구 버튼 다시 누르면 해제)
     }
     _drawPending=null; _redrawDraws();
   };

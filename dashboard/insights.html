@@ -107,6 +107,17 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .ws-left { width: 340px; flex-shrink: 0; border-right: 1px solid var(--line); padding: 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; background: var(--card); }
 .ws-ai-box { background: var(--bg); border: 1px solid var(--line); border-radius: 11px; padding: 12px; }
 .ws-ai-claude { border-color: #3d2f6b; background: #140e22; }
+.ws-ai-gemini { border-color: #1a4a55; background: #0c1f25; }
+.ws-src { margin-top: 10px; font-size: .74rem; color: var(--muted); }
+.ws-src a { color: #67e8f9; }
+.ws-resume {
+  position: fixed; right: 24px; bottom: 24px; z-index: 550; display: none;
+  padding: 12px 20px; border-radius: 12px; border: 1px solid var(--gold); background: var(--rp-bg);
+  color: var(--gold); font-family: inherit; font-size: .88rem; font-weight: 700; cursor: pointer;
+  box-shadow: 0 6px 24px rgba(0,0,0,.5);
+}
+.ws-resume.show { display: block; }
+.ws-resume:hover { background: #221c0a; }
 .ws-ai-label { font-size: .76rem; font-weight: 700; color: var(--txt); margin-bottom: 8px; display: flex; align-items: baseline; gap: 6px; }
 .ws-ai-label small { font-weight: 400; color: var(--muted); font-size: .68rem; }
 .ws-ask { display: flex; gap: 8px; }
@@ -559,6 +570,13 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
           <button class="brief-go" onclick="wsClaude()">대화</button>
         </div>
       </div>
+      <div class="ws-ai-box ws-ai-gemini">
+        <div class="ws-ai-label">♊ Gemini 리서치 <small>구글 검색 + 출처</small></div>
+        <div class="ws-ask">
+          <input type="text" id="ws-gemini" class="ws-q-input" placeholder="웹에서 최신 사실 찾아 리서치…" onkeydown="if(event.key==='Enter')wsGemini()">
+          <button class="brief-go" onclick="wsGemini()">리서치</button>
+        </div>
+      </div>
       <div class="ws-ai-box">
         <div class="ws-ai-label">🧠 스탁브레인 질문 <small>내 자료에서 인용</small></div>
         <div class="ws-ask">
@@ -587,6 +605,9 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
     </div>
   </div>
 </div>
+
+<!-- 닫은 워크스페이스로 돌아가기 -->
+<button class="ws-resume" id="ws-resume" onclick="reopenWorkspace()">🧠 <span id="ws-resume-label">브리핑</span> 이어보기 ▸</button>
 
 <!-- 토스트 -->
 <div class="toast" id="toast"></div>
@@ -1182,8 +1203,21 @@ function startBriefing() {
 }
 
 // ── 브리핑 워크스페이스 ──
-function closeWorkspace() { qs('#nbws').classList.remove('open'); }
+function closeWorkspace() {
+  qs('#nbws').classList.remove('open');
+  // 세션은 유지 — 메인에서 "이어보기"로 복귀 가능
+  if (window._ws) {
+    const lbl = qs('#ws-resume-label'); if (lbl) lbl.textContent = (window._ws.label || '브리핑');
+    const btn = qs('#ws-resume'); if (btn) btn.classList.add('show');
+  }
+}
+function reopenWorkspace() {
+  if (!window._ws) return;
+  const btn = qs('#ws-resume'); if (btn) btn.classList.remove('show');
+  qs('#nbws').classList.add('open');
+}
 function openWorkspaceLoading(q) {
+  const btn = qs('#ws-resume'); if (btn) btn.classList.remove('show');  // 새 세션 시작
   qs('#ws-title').textContent = `🧠 ${q} 브리핑`;
   qs('#ws-meta').textContent = '노트북 만드는 중…';
   qs('#ws-canvas').innerHTML = `<div class="ws-empty"><div class="spinner"></div>"${escHtml(q)}" 발언을 모아 노트북 생성 중…<br><small>20~40초</small></div>`;
@@ -1251,6 +1285,33 @@ async function wsClaude() {
   } catch(e) {
     ws.claudeMsgs.pop();
     body.innerHTML = `<div class="nb-qa-q">나: ${escHtml(text)}</div><div style="color:#e88">Claude 대화 실패: ${escHtml(e.message)}</div>`;
+  }
+}
+
+async function wsGemini() {
+  const ws = window._ws; if (!ws) return;
+  const inp = qs('#ws-gemini'); const text = (inp.value || '').trim(); if (!text) return;
+  inp.value = '';
+  ws.gemMsgs = ws.gemMsgs || [];
+  ws.gemMsgs.push({ role: 'user', content: text });
+  const card = wsAddCard('♊ Gemini 리서치', `<div class="nb-qa-q">나: ${escHtml(text)}</div>${wsLoading('웹 검색 + 분석 중… (~20초)')}`);
+  const body = card.querySelector('.ws-card-b');
+  try {
+    const res = await apiFetch('/api/insights/gemini_chat', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notebook_id: ws.id, messages: ws.gemMsgs })
+    });
+    if (res.error) throw new Error(res.error);
+    ws.gemMsgs.push({ role: 'assistant', content: res.answer });
+    let src = '';
+    if (res.sources && res.sources.length) {
+      src = '<div class="ws-src">출처: ' + res.sources.map(s =>
+        `<a href="${s.url}" target="_blank">${escHtml((s.title || s.url || '').slice(0, 30))}</a>`).join(' · ') + '</div>';
+    }
+    body.innerHTML = `<div class="nb-qa-q">나: ${escHtml(text)}</div><div class="nb-qa-a">${marked.parse(res.answer || '(빈 응답)')}</div>${src}`;
+  } catch(e) {
+    ws.gemMsgs.pop();
+    body.innerHTML = `<div class="nb-qa-q">나: ${escHtml(text)}</div><div style="color:#e88">Gemini 리서치 실패: ${escHtml(e.message)}</div>`;
   }
 }
 

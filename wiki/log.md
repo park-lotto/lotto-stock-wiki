@@ -1304,3 +1304,8 @@ python calc_oscillator.py SK하이닉스 삼성전자 한미반도체 --tg
 - 인포/슬라이드/오디오/영상 생성에 --language ko → 결과물 한국어
 - Claude대화는 ANTHROPIC_API_KEY 필요(.env). 없으면 안내 메시지. 키 헬퍼 _env_key(.env 읽기)
 - 미검증: 인포 한글 화면확인은 nlm studio status 일시블록으로 보류(--language ko는 문서옵션, 리포트 전례)
+
+## 2026-06-30 — 다리 v8: 닫기 세션유지(이어보기) + Gemini 리서치 대화창
+- 워크스페이스 닫아도 세션 유지 → 메인 우하단 "🧠 {label} 이어보기" 플로팅 버튼으로 복귀(캔버스 그대로). 새 브리핑 시작 시만 초기화
+- 좌측 ♊ Gemini 리서치 대화창: /api/insights/gemini_chat (call_with_grounding=구글검색+출처, 노트북 자료 참고). GEMINI_API_KEY→_2 순차 폴백
+- 검증: 엔드포인트 정상연결, 단 현재 두 키 모두 429 쿼터소진(리셋 시 작동). 이어보기/Gemini박스 UI는 다음 브라우저 확인
