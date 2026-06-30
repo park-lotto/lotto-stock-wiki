@@ -1979,25 +1979,47 @@ function _dragWindow(box, handle){
   });
 }
 
+const _TFS=[["M","월봉"],["W","주봉"],["D","일봉"],["60","60분"],["30","30분"],["5","5분"]];
+function _loadChartWin(){ try{return JSON.parse(localStorage.getItem("chart_win_v1")||"{}");}catch(_){return {};} }
+function _saveChartWin(){
+  const box=document.querySelector("#chart-modal .chart-box"); if(!box)return;
+  const maxed=box.dataset.max==="1";
+  const s={tf:_chartTf,
+    w: maxed?box.dataset.rw:(box.offsetWidth+"px"),
+    h: maxed?box.dataset.rh:(box.offsetHeight+"px"),
+    left: maxed?box.dataset.rl:box.style.left,
+    top: maxed?box.dataset.rt:box.style.top};
+  try{ localStorage.setItem("chart_win_v1",JSON.stringify(s)); }catch(_){}
+}
+function _toggleMax(box){
+  if(box.dataset.max==="1"){
+    box.style.left=box.dataset.rl||"40px"; box.style.top=box.dataset.rt||"60px";
+    box.style.width=box.dataset.rw||"820px"; box.style.height=box.dataset.rh||"600px";
+    box.dataset.max="0";
+  } else {
+    box.dataset.rl=box.style.left; box.dataset.rt=box.style.top;
+    box.dataset.rw=(box.style.width||box.offsetWidth+"px"); box.dataset.rh=(box.style.height||box.offsetHeight+"px");
+    box.style.left="1vw"; box.style.top="1vh"; box.style.width="98vw"; box.style.height="96vh";
+    box.dataset.max="1";
+  }
+}
+
 function openStockChart(code, name){
   if(!code) return;
-  _chartCode=code; _chartName=name; _chartTf="D"; _chartRows=[];
+  const saved=_loadChartWin();
+  _chartCode=code; _chartName=name; _chartTf=saved.tf||"D"; _chartRows=[];
   _draws=[]; _drawTool=null; _drawPending=null; _ind={ma:true,boll:false,osc:null};
   let m=document.getElementById("chart-modal");
   if(!m){ m=document.createElement("div"); m.id="chart-modal"; document.body.appendChild(m); }
+  const tfBtns=_TFS.map(([v,l])=>`<button class="tf-btn${v===_chartTf?' active':''}" data-tf="${v}" onclick="setChartTf('${v}')">${l}</button>`).join("");
   m.innerHTML=`<div class="chart-box">
     <div class="modal-hd">
       <span>📈 ${esc(name||code)} <span style="color:#666;font-size:12px;font-weight:400">${esc(code)}</span>
-        <span class="drag-hint">⠿ 이동 · 우하단 크기조절</span></span>
+        <span class="drag-hint">⠿ 이동 · 더블클릭 최대화 · 우하단 크기조절</span></span>
       <button class="modal-x" onclick="closeStockChart()">✕</button>
     </div>
     <div class="chart-tf">
-      <button class="tf-btn" data-tf="M" onclick="setChartTf('M')">월봉</button>
-      <button class="tf-btn" data-tf="W" onclick="setChartTf('W')">주봉</button>
-      <button class="tf-btn active" data-tf="D" onclick="setChartTf('D')">일봉</button>
-      <button class="tf-btn" data-tf="60" onclick="setChartTf('60')">60분</button>
-      <button class="tf-btn" data-tf="30" onclick="setChartTf('30')">30분</button>
-      <button class="tf-btn" data-tf="5" onclick="setChartTf('5')">5분</button>
+      ${tfBtns}
       <span id="chart-legend" class="chart-legend"></span>
     </div>
     <div class="chart-tools">
@@ -2017,9 +2039,13 @@ function openStockChart(code, name){
   </div>`;
   m.classList.add("open");
   const box=m.querySelector(".chart-box");
-  box.style.left=Math.max(8,(window.innerWidth-box.offsetWidth)/2)+"px";
-  box.style.top="60px";
+  if(saved.w) box.style.width=saved.w;
+  if(saved.h) box.style.height=saved.h;
+  box.style.left=saved.left || (Math.max(8,(window.innerWidth-box.offsetWidth)/2)+"px");
+  box.style.top=saved.top || "60px";
+  box.dataset.max="0";
   _dragWindow(box, box.querySelector(".modal-hd"));
+  box.querySelector(".modal-hd").addEventListener("dblclick",()=>_toggleMax(box));
   _initChart();
   loadChartData();
 }
@@ -2053,8 +2079,13 @@ function _initChart(){
   _drawSvg=document.createElementNS("http://www.w3.org/2000/svg","svg");
   _drawSvg.setAttribute("class","draw-svg"); _drawSvg.style.pointerEvents="none";
   el.appendChild(_drawSvg);
-  // 그리기 도구 활성 시에만 capture 단계에서 mousedown 가로채 그림 (도구 없으면 차트가 팬 처리)
-  el.addEventListener("mousedown",_drawStart,true);
+  // capture 단계 mousedown: 도구 있으면 그리기 / 없으면 도형 위면 이동, 아니면 차트 팬
+  el.addEventListener("mousedown",_chartMouseDown,true);
+  // 호버 시 도형 위면 이동 커서
+  el.addEventListener("mousemove",ev=>{
+    if(_drawTool)return;
+    const p=_drawPt(ev); el.style.cursor=(_hitShape(p.x,p.y)>=0)?"move":"";
+  });
   _chart.timeScale().subscribeVisibleLogicalRangeChange(rng=>{
     _redrawDraws();
     if(_osc&&rng&&!_syncing){ _syncing=true; try{_osc.timeScale().setVisibleLogicalRange(rng);}catch(_){} _syncing=false; }
@@ -2182,8 +2213,52 @@ function _drawPt(e){
   const y=Math.max(0,Math.min(el.clientHeight, e.clientY-r.top));
   return {x,y, logical:_chart.timeScale().coordinateToLogical(x), price:_chartCandle.coordinateToPrice(y)};
 }
-function _drawStart(e){
-  if(!_drawTool||!_chart||!_chartCandle)return;   // 도구 없으면 차트가 처리(팬)
+// 거리 계산 (점→선분)
+function _distToSeg(px,py,x1,y1,x2,y2){
+  const dx=x2-x1, dy=y2-y1, L2=dx*dx+dy*dy||1;
+  let t=((px-x1)*dx+(py-y1)*dy)/L2; t=Math.max(0,Math.min(1,t));
+  return Math.hypot(px-(x1+t*dx), py-(y1+t*dy));
+}
+// (x,y) 픽셀이 어떤 도형 위인가 → 인덱스 (위에 그린 것 우선), 없으면 -1
+function _hitShape(x,y){
+  if(!_chart||!_chartCandle)return -1;
+  const ts=_chart.timeScale();
+  for(let i=_draws.length-1;i>=0;i--){
+    const d=_draws[i];
+    const ax=ts.logicalToCoordinate(d.a.logical), ay=_chartCandle.priceToCoordinate(d.a.price);
+    const bx=ts.logicalToCoordinate(d.b.logical), by=_chartCandle.priceToCoordinate(d.b.price);
+    if(ax==null||bx==null||ay==null||by==null)continue;
+    if(d.type==="line"){ if(_distToSeg(x,y,ax,ay,bx,by)<=6) return i; }
+    else { const cx=(ax+bx)/2, cy=(ay+by)/2, rx=Math.abs(bx-ax)/2||1, ry=Math.abs(by-ay)/2||1;
+      const nx=(x-cx)/rx, ny=(y-cy)/ry; if(nx*nx+ny*ny<=1.15) return i; }
+  }
+  return -1;
+}
+// 도형 통째로 이동 (logical·price 평행이동)
+function _startMove(idx,p){
+  const d=_draws[idx]; const oa={...d.a}, ob={...d.b}; const sl=p.logical, sp=p.price;
+  const mv=ev=>{ const q=_drawPt(ev); if(q.logical==null||q.price==null)return;
+    const dl=q.logical-sl, dp=q.price-sp;
+    d.a={logical:oa.logical+dl, price:oa.price+dp};
+    d.b={logical:ob.logical+dl, price:ob.price+dp};
+    _redrawDraws();
+  };
+  const up=()=>{ window.removeEventListener("mousemove",mv,true); window.removeEventListener("mouseup",up,true); };
+  window.addEventListener("mousemove",mv,true);
+  window.addEventListener("mouseup",up,true);
+}
+// capture mousedown 분기: 도구=그리기 / 도형위=이동 / 그외=차트 팬
+function _chartMouseDown(e){
+  if(!_chart||!_chartCandle)return;
+  if(_drawTool){ _startNewDraw(e); return; }
+  const p=_drawPt(e);
+  const idx=_hitShape(p.x,p.y);
+  if(idx<0) return;                       // 차트가 팬 처리
+  e.preventDefault(); e.stopPropagation();
+  _startMove(idx,p);
+}
+function _startNewDraw(e){
+  if(!_drawTool||!_chart||!_chartCandle)return;
   const p=_drawPt(e);
   if(p.logical==null||p.price==null)return;
   e.preventDefault(); e.stopPropagation();          // 그릴 때만 차트 팬 차단
@@ -2274,10 +2349,12 @@ async function loadChartData(){
 function setChartTf(tf){
   _chartTf=tf;
   document.querySelectorAll(".chart-tf .tf-btn").forEach(b=>b.classList.toggle("active",b.dataset.tf===tf));
+  _saveChartWin();   // 마지막 봉 종류 저장
   _initChart(); loadChartData();
 }
 function closeStockChart(){
   const m=document.getElementById("chart-modal");
+  _saveChartWin();   // 종료 시 봉 종류·창 크기·위치 저장
   if(_osc){ try{_osc.remove();}catch(_){} _osc=null; }
   if(_chart){ try{_chart.remove();}catch(_){} _chart=null; }
   if(_roDraw){ try{_roDraw.disconnect();}catch(_){} _roDraw=null; }

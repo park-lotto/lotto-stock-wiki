@@ -753,10 +753,10 @@ async function showL0() {
           </select>
         </div>
         <div class="brief-row">
-          <input type="text" id="brief-q" class="brief-input" placeholder="키워드 입력 (예: 삼성전자, HBM, 조선)" onkeydown="if(event.key==='Enter')startBriefing()">
+          <input type="text" id="brief-q" class="brief-input" placeholder="무엇을 정리·분석할까요?  (예: 오늘 블로그 중요내용 정리해줘 · 삼성전자 분석)" onkeydown="if(event.key==='Enter')startBriefing()">
           <button class="brief-go" onclick="startBriefing()">🧠 브리핑 시작</button>
         </div>
-        <div class="brief-hint">선택한 소스 + 키워드로 노트북을 만들고, 워크스페이스에서 질문·리포트·인포그래픽·슬라이드까지 한 번에.</div>
+        <div class="brief-hint">선택한 소스로 노트북을 만들고, 입력한 문구를 워크스페이스에서 자동으로 질문합니다. (키워드면 그 키워드로 좁히고, 요청문이면 소스 전체를 정리)</div>
       </div>
     </div>
     <div class="cat-grid">${catCards || '<div style="color:var(--muted)">카테고리 없음</div>'}</div>
@@ -1153,7 +1153,7 @@ function createNotebookFromPanel() {
   runCreateNotebook(opt.q, { cats, period, limit, split, include_urls });
 }
 
-async function runCreateNotebook(q, opts) {
+async function runCreateNotebook(q, opts, autoQ) {
   opts = opts || {};
   openWorkspaceLoading(q);
   try {
@@ -1162,7 +1162,7 @@ async function runCreateNotebook(q, opts) {
       body: JSON.stringify(Object.assign({ q }, opts))
     });
     if (res.error) throw new Error(res.error);
-    openWorkspace(res, q);
+    openWorkspace(res, q, autoQ);
   } catch(e) {
     closeWorkspace();
     toast('노트북 생성 실패: ' + e.message, true);
@@ -1173,11 +1173,12 @@ async function runCreateNotebook(q, opts) {
 function toggleBChip(b) { b.classList.toggle('on'); }
 function startBriefing() {
   const q = ((qs('#brief-q') || {}).value || '').trim();
-  if (!q) { toast('키워드를 입력하세요', true); return; }
+  if (!q) { toast('무엇을 정리·분석할지 입력하세요', true); return; }
   const cats = Array.from(document.querySelectorAll('#brief-cats .bchip.on')).map(b => b.getAttribute('data-c'));
   if (!cats.length) { toast('소스를 1개 이상 선택하세요', true); return; }
   const period = (qs('#brief-period') || {}).value || 'all';
-  runCreateNotebook(q, { cats, period, limit: 200, split: false, include_urls: true });
+  // 박스 문구를 그대로 워크스페이스 첫 질문으로 자동 실행
+  runCreateNotebook(q, { cats, period, limit: 200, split: false, include_urls: true }, q);
 }
 
 // ── 브리핑 워크스페이스 ──
@@ -1188,7 +1189,7 @@ function openWorkspaceLoading(q) {
   qs('#ws-canvas').innerHTML = `<div class="ws-empty"><div class="spinner"></div>"${escHtml(q)}" 발언을 모아 노트북 생성 중…<br><small>20~40초</small></div>`;
   qs('#nbws').classList.add('open');
 }
-function openWorkspace(res, q) {
+function openWorkspace(res, q, autoQ) {
   window._ws = { id: res.notebook_id, q, label: res.label || q, conv: '', url: res.url };
   qs('#ws-title').textContent = `🧠 ${res.label || q} 브리핑`;
   const pl = { today: '오늘', d3: '최근 3일', d7: '최근 7일' };
@@ -1196,7 +1197,12 @@ function openWorkspace(res, q) {
   qs('#ws-open').href = res.url;
   qs('#ws-canvas').innerHTML = `<div class="ws-empty">왼쪽에서 <b>질문</b>하거나 <b>만들기</b>를 누르면<br>결과가 여기에 크게 표시됩니다.</div>`;
   qs('#nbws').classList.add('open');
-  setTimeout(() => { const el = qs('#ws-q'); if (el) el.focus(); }, 60);
+  if (autoQ && autoQ.trim()) {
+    const inp = qs('#ws-q'); if (inp) inp.value = autoQ.trim();
+    setTimeout(wsAsk, 350);   // 박스 문구로 자동 질문
+  } else {
+    setTimeout(() => { const el = qs('#ws-q'); if (el) el.focus(); }, 60);
+  }
 }
 function wsAddCard(headHtml, bodyHtml) {
   const c = qs('#ws-canvas');

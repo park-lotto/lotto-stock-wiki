@@ -2112,15 +2112,28 @@ def _nb_md_for_rows(title_label, rows, today):
     return "\n".join(lines)
 
 
+def _nb_scope_label(cats, period):
+    """키워드 없을 때 소스+기간 기반 라벨."""
+    names = "·".join(_CAT_LABEL.get(c, (c,))[0] for c in (cats or [])) or "전체"
+    pl = {"today": "오늘", "d3": "최근3일", "d7": "최근7일"}.get(period, "")
+    return (names + (" " + pl if pl else "")).strip()
+
+
 def _build_notebook_bundle(q, cats=None, period="all", limit=200, split=False, include_urls=True):
-    """필터 적용 수집 → dict(label, atoms_n, md_files[(title,text)], yt_urls, web_urls)."""
+    """필터 적용 수집 → dict(label, atoms_n, md_files[(title,text)], yt_urls, web_urls).
+    키워드가 매칭 0건이면(순수 요청문) 소스+기간 전체를 담는 '정리 모드'로 폴백."""
     conn = _ins_conn()
     if conn is None:
         return None
     try:
         rows, toks, label = _nb_fetch_rows(conn, q, cats, period, limit)
+        if not rows:
+            rows, toks, _ = _nb_fetch_rows(conn, "", cats, period, limit)
+            label = _nb_scope_label(cats, period)
     finally:
         conn.close()
+    if not (label or "").strip():
+        label = _nb_scope_label(cats, period)
 
     yt_urls, web_urls = [], []
     if include_urls:
