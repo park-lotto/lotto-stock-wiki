@@ -1146,11 +1146,11 @@ _candle_cache: dict = {}      # {"code:tf": {"data": [...], "ts": float}}
 
 @app.get("/api/stock_candles")
 def api_stock_candles(code: str = "", tf: str = "D"):
-    """종목 OHLCV 캔들. tf='D'(일봉)/'5'·'30'·'60'(분봉). 60초 캐시."""
+    """종목 OHLCV 캔들. tf='D'일/'W'주/'M'월 / '5'·'30'·'60'분봉. 60초 캐시."""
     code = code.strip()
     if not code:
         return JSONResponse(content={"candles": []})
-    if tf not in ("D", "5", "30", "60", "15"):
+    if tf not in ("D", "W", "M", "1", "3", "5", "10", "15", "30", "60"):
         tf = "D"
     key = f"{code}:{tf}"
     now = time.time()

@@ -326,26 +326,36 @@ def _pricenum(v) -> float:
         return 0.0
 
 
-def get_stock_candles(code: str, tf: str = "D", n: int = 140) -> list:
-    """종목 캔들(OHLCV). tf='D'(일봉 ka10081) / '5'·'30'·'60'(분봉 ka10080).
+# tf → (api-id, 응답 list key, 종류)  /  종류 day=dt 기반, min=cntr_tm 기반
+_CANDLE_TR = {
+    "D": ("ka10081", "stk_dt_pole_chart_qry", "day"),    # 일봉
+    "W": ("ka10082", "stk_stk_pole_chart_qry", "day"),   # 주봉
+    "M": ("ka10083", "stk_mth_pole_chart_qry", "day"),   # 월봉
+}
 
-    반환(과거→최신): [{"time", "open","high","low","close","value"(거래량)}]
-      - 일봉 time = "YYYY-MM-DD"
+
+def get_stock_candles(code: str, tf: str = "D", n: int = 800) -> list:
+    """종목 캔들(OHLCV). tf='D'일/'W'주/'M'월(ka10081/82/83) / '5'·'30'·'60'분봉(ka10080).
+
+    반환(과거→최신): [{"time","open","high","low","close","value"(거래량)}]
+      - 일/주/월봉 time = "YYYY-MM-DD"
       - 분봉 time = epoch초 (KST 벽시계를 UTC로 취급 → 차트 축에 KST 시각 표시)
+    단일 요청 반환량: 일600·5분900·주300·월240 → 충분한 과거 표시.
     """
     import datetime as _dt
     out = []
     try:
-        if tf == "D":
+        if tf in _CANDLE_TR:
+            api_id, key, _ = _CANDLE_TR[tf]
             today = _dt.datetime.now().strftime("%Y%m%d")
             r = requests.post(
                 f"{BASE}/api/dostk/chart",
-                headers={**_hdrs(), "api-id": "ka10081", "cont-yn": "N", "next-key": ""},
+                headers={**_hdrs(), "api-id": api_id, "cont-yn": "N", "next-key": ""},
                 json={"stk_cd": code, "base_dt": today, "upd_stkpc_tp": "1"},
-                timeout=10,
+                timeout=12,
             )
             r.raise_for_status()
-            rows = r.json().get("stk_dt_pole_chart_qry", []) or []
+            rows = r.json().get(key, []) or []
             for row in rows:
                 dt = str(row.get("dt", ""))
                 if len(dt) != 8:
@@ -358,12 +368,12 @@ def get_stock_candles(code: str, tf: str = "D", n: int = 140) -> list:
                 })
         else:
             import calendar
-            tic = tf if tf in ("5", "30", "60", "1", "15") else "5"
+            tic = tf if tf in ("1", "3", "5", "10", "15", "30", "60") else "5"
             r = requests.post(
                 f"{BASE}/api/dostk/chart",
                 headers={**_hdrs(), "api-id": "ka10080", "cont-yn": "N", "next-key": ""},
                 json={"stk_cd": code, "tic_scope": tic, "upd_stkpc_tp": "1"},
-                timeout=10,
+                timeout=12,
             )
             r.raise_for_status()
             rows = r.json().get("stk_min_pole_chart_qry", []) or []

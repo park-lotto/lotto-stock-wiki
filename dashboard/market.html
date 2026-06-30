@@ -1956,6 +1956,8 @@ let _chartCode=null, _chartName=null, _chartTf="D", _chartRows=[];
 let _ind={ma:true, boll:false, osc:null};          // osc: null|'rsi'|'macd'
 let _drawTool=null, _draws=[], _drawPending=null, _drawSvg=null, _roDraw=null;
 let _syncing=false;
+// 분봉이면 시간축에 시:분 표시, 일/주/월봉은 날짜만
+function _isIntraday(){ return !["D","W","M"].includes(_chartTf); }
 
 function _dragWindow(box, handle){
   handle.addEventListener("mousedown",e=>{
@@ -1990,7 +1992,10 @@ function openStockChart(code, name){
       <button class="modal-x" onclick="closeStockChart()">✕</button>
     </div>
     <div class="chart-tf">
+      <button class="tf-btn" data-tf="M" onclick="setChartTf('M')">월봉</button>
+      <button class="tf-btn" data-tf="W" onclick="setChartTf('W')">주봉</button>
       <button class="tf-btn active" data-tf="D" onclick="setChartTf('D')">일봉</button>
+      <button class="tf-btn" data-tf="60" onclick="setChartTf('60')">60분</button>
       <button class="tf-btn" data-tf="30" onclick="setChartTf('30')">30분</button>
       <button class="tf-btn" data-tf="5" onclick="setChartTf('5')">5분</button>
       <span id="chart-legend" class="chart-legend"></span>
@@ -2033,7 +2038,7 @@ function _initChart(){
     el.innerHTML='<div class="chart-msg">차트 라이브러리 로딩 실패 — 인터넷 연결 확인</div>'; return;
   }
   _chart=LightweightCharts.createChart(el,{autoSize:true,..._CHART_LAYOUT,
-    timeScale:{borderColor:"#222",timeVisible:_chartTf!=="D",secondsVisible:false},
+    timeScale:{borderColor:"#222",timeVisible:_isIntraday(),secondsVisible:false},
     localization:{priceFormatter:p=>Math.round(p).toLocaleString("ko-KR")}});
   _chartCandle=_chart.addCandlestickSeries({
     upColor:"#e74c3c",downColor:"#3498db",borderUpColor:"#e74c3c",borderDownColor:"#3498db",
@@ -2124,7 +2129,7 @@ function _applyOsc(){
   oc.innerHTML=""; oc.style.height="146px"; oc.style.marginTop="6px";
   _osc=LightweightCharts.createChart(oc,{autoSize:true,..._CHART_LAYOUT,
     layout:{background:{color:"#0b0b0e"},textColor:"#777",fontFamily:"'Noto Sans KR',sans-serif"},
-    timeScale:{borderColor:"#222",timeVisible:_chartTf!=="D",secondsVisible:false}});
+    timeScale:{borderColor:"#222",timeVisible:_isIntraday(),secondsVisible:false}});
   const c=_chartRows;
   if(_ind.osc==="rsi"){
     const s=_osc.addLineSeries({color:"#d4af37",lineWidth:1,priceLineVisible:false});
@@ -2184,7 +2189,7 @@ function _drawStart(e){
   e.preventDefault(); e.stopPropagation();          // 그릴 때만 차트 팬 차단
   const startX=p.x, startY=p.y;
   _drawPending={logical:p.logical, price:p.price};
-  const mv=ev=>{ const q=_drawPt(ev); if(q.logical!=null&&q.price!=null) _drawPreview(_drawPending,{logical:q.logical,price:q.price}); };
+  const mv=ev=>{ if(!_drawPending)return; const q=_drawPt(ev); if(q.logical!=null&&q.price!=null) _drawPreview(_drawPending,{logical:q.logical,price:q.price}); };
   const up=ev=>{
     window.removeEventListener("mousemove",mv,true);
     window.removeEventListener("mouseup",up,true);
@@ -2207,6 +2212,7 @@ function _shapeSvg(type,ax,ay,bx,by,dashed){
   return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="rgba(240,192,64,.07)" stroke="#f0c040" stroke-width="2"${da}/>`;
 }
 function _drawPreview(a,b){
+  if(!a||!b)return;
   _redrawDraws();
   const ts=_chart.timeScale();
   const ax=ts.logicalToCoordinate(a.logical), ay=_chartCandle.priceToCoordinate(a.price);
