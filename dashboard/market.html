@@ -249,17 +249,29 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
   font-size:14px;font-weight:700;color:var(--gold);}
 .modal-x{background:none;border:none;color:#777;font-size:16px;cursor:pointer;line-height:1;padding:2px 4px;}
 .modal-x:hover{color:#e74c3c;}
-/* 종목 차트 모달 (트레이딩뷰) */
-.chart-box{background:var(--panel);border:1px solid var(--line);border-radius:14px;
-  width:780px;max-width:95vw;height:580px;max-height:88vh;display:flex;flex-direction:column;
-  padding:14px 16px;box-shadow:0 16px 48px rgba(0,0,0,.6);}
+/* 종목 차트 모달 — 떠 있는 창 (드래그 이동 + 크기조절) */
+#chart-modal{position:fixed;inset:0;z-index:9998;pointer-events:none;display:none;}
+#chart-modal.open{display:block;}
+.chart-box{position:absolute;pointer-events:auto;
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  width:820px;height:600px;min-width:440px;min-height:360px;max-width:98vw;max-height:95vh;
+  display:flex;flex-direction:column;padding:12px 16px 16px;
+  box-shadow:0 16px 48px rgba(0,0,0,.65);resize:both;overflow:hidden;}
+.chart-box .modal-hd{cursor:move;user-select:none;}
+.chart-box .modal-hd .drag-hint{font-size:10px;color:#555;font-weight:400;margin-left:6px;}
 #tv_chart_container{flex:1;min-height:0;border-radius:8px;overflow:hidden;position:relative;}
+/* 크기조절 그립 보강 (우하단) */
+.chart-box::after{content:"";position:absolute;right:2px;bottom:2px;width:14px;height:14px;
+  pointer-events:none;background:
+    linear-gradient(135deg,transparent 50%,rgba(212,175,55,.6) 50%,rgba(212,175,55,.6) 60%,transparent 60%,transparent 72%,rgba(212,175,55,.6) 72%,rgba(212,175,55,.6) 82%,transparent 82%);}
 .chart-tf{display:flex;gap:6px;margin:2px 0 10px;}
 .chart-tf .tf-btn{padding:5px 13px;border:1px solid #333;border-radius:7px;background:transparent;
   color:#888;font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s;}
 .chart-tf .tf-btn:hover{border-color:#555;color:#ccc;}
 .chart-tf .tf-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(212,175,55,.1);}
 .chart-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#666;font-size:13px;}
+.chart-legend{margin-left:auto;font-size:11.5px;color:#ccc;font-variant-numeric:tabular-nums;white-space:nowrap;align-self:center;}
+.chart-legend .lg{color:#777;margin-left:5px;}
 
 /* ── 관심종목 패널 ── */
 .wl-panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;
@@ -1926,33 +1938,138 @@ async function _wlSave(){
   }catch(e){ showToast("저장 실패","err"); }
 }
 
-// ── 종목 차트 모달 (트레이딩뷰 위젯, 1단계) ────────────────
+// ── 종목 차트 모달 (키움 캔들 + Lightweight Charts) — 드래그 이동·크기조절·MA·툴팁 ──
+let _chart=null, _chartCandle=null, _chartVol=null, _maSeries=null;
+let _chartCode=null, _chartName=null, _chartTf="D", _chartRows=[];
+
+function _dragWindow(box, handle){
+  handle.addEventListener("mousedown",e=>{
+    if(e.target.closest(".modal-x"))return;
+    e.preventDefault();
+    const r=box.getBoundingClientRect();
+    const ox=r.left, oy=r.top, sx=e.clientX, sy=e.clientY;
+    box.style.left=ox+"px"; box.style.top=oy+"px";
+    document.body.style.userSelect="none";
+    const mv=ev=>{
+      let nl=ox+(ev.clientX-sx), nt=oy+(ev.clientY-sy);
+      nl=Math.max(0,Math.min(window.innerWidth-100,nl));
+      nt=Math.max(0,Math.min(window.innerHeight-44,nt));
+      box.style.left=nl+"px"; box.style.top=nt+"px";
+    };
+    const up=()=>{ document.body.style.userSelect="";
+      window.removeEventListener("mousemove",mv); window.removeEventListener("mouseup",up); };
+    window.addEventListener("mousemove",mv); window.addEventListener("mouseup",up);
+  });
+}
+
 function openStockChart(code, name){
   if(!code) return;
+  _chartCode=code; _chartName=name; _chartTf="D"; _chartRows=[];
   let m=document.getElementById("chart-modal");
-  if(!m){ m=document.createElement("div"); m.id="chart-modal"; m.className="modal-overlay";
-    m.addEventListener("click",ev=>{ if(ev.target===m) closeStockChart(); }); document.body.appendChild(m); }
+  if(!m){ m=document.createElement("div"); m.id="chart-modal"; document.body.appendChild(m); }
   m.innerHTML=`<div class="chart-box">
     <div class="modal-hd">
-      <span>📈 ${esc(name||code)} <span style="color:#666;font-size:12px;font-weight:400">${esc(code)}</span></span>
+      <span>📈 ${esc(name||code)} <span style="color:#666;font-size:12px;font-weight:400">${esc(code)}</span>
+        <span class="drag-hint">⠿ 드래그 이동 · 우하단 크기조절</span></span>
       <button class="modal-x" onclick="closeStockChart()">✕</button>
+    </div>
+    <div class="chart-tf">
+      <button class="tf-btn active" data-tf="D" onclick="setChartTf('D')">일봉</button>
+      <button class="tf-btn" data-tf="30" onclick="setChartTf('30')">30분</button>
+      <button class="tf-btn" data-tf="5" onclick="setChartTf('5')">5분</button>
+      <span id="chart-legend" class="chart-legend"></span>
     </div>
     <div id="tv_chart_container"></div>
   </div>`;
-  m.style.display="flex";
-  if(window.TradingView && window.TradingView.widget){
-    new TradingView.widget({
-      autosize:true, symbol:"KRX:"+code, interval:"D", timezone:"Asia/Seoul",
-      theme:"dark", style:"1", locale:"kr", toolbar_bg:"#0b0b0e",
-      enable_publishing:false, allow_symbol_change:true, hide_side_toolbar:false,
-      container_id:"tv_chart_container",
-    });
-  } else {
-    document.getElementById("tv_chart_container").innerHTML=
-      '<div style="padding:30px;color:#888;font-size:13px">트레이딩뷰 차트 로딩 실패 — 인터넷 연결을 확인하세요.</div>';
+  m.classList.add("open");
+  const box=m.querySelector(".chart-box");
+  box.style.left=Math.max(8,(window.innerWidth-box.offsetWidth)/2)+"px";
+  box.style.top="72px";
+  _dragWindow(box, box.querySelector(".modal-hd"));
+  _initChart();
+  loadChartData();
+}
+function _initChart(){
+  const el=document.getElementById("tv_chart_container");
+  if(_chart){ try{_chart.remove();}catch(_){} _chart=null; }
+  el.innerHTML="";
+  if(!window.LightweightCharts){
+    el.innerHTML='<div class="chart-msg">차트 라이브러리 로딩 실패 — 인터넷 연결 확인</div>'; return;
+  }
+  _chart=LightweightCharts.createChart(el,{
+    autoSize:true,
+    layout:{background:{color:"#0b0b0e"},textColor:"#aaa",fontFamily:"'Noto Sans KR',sans-serif"},
+    grid:{vertLines:{color:"#17171d"},horzLines:{color:"#17171d"}},
+    rightPriceScale:{borderColor:"#222"},
+    timeScale:{borderColor:"#222",timeVisible:_chartTf!=="D",secondsVisible:false},
+    crosshair:{mode:0},
+    localization:{priceFormatter:p=>Math.round(p).toLocaleString("ko-KR")},
+  });
+  _chartCandle=_chart.addCandlestickSeries({
+    upColor:"#e74c3c",downColor:"#3498db",borderUpColor:"#e74c3c",borderDownColor:"#3498db",
+    wickUpColor:"#e74c3c",wickDownColor:"#3498db",
+  });
+  _chartVol=_chart.addHistogramSeries({priceFormat:{type:"volume"},priceScaleId:"vol",color:"#3a3a44"});
+  _chart.priceScale("vol").applyOptions({scaleMargins:{top:0.84,bottom:0}});
+  // 이동평균선 (MA5/20/60)
+  const mkLine=col=>_chart.addLineSeries({color:col,lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
+  _maSeries={5:mkLine("#f0c040"),20:mkLine("#ff7ab8"),60:mkLine("#5ad1c8")};
+  _chart.subscribeCrosshairMove(p=>_updateLegend(p));
+}
+function _ma(rows, period){
+  const out=[]; const q=[]; let sum=0;
+  for(const r of rows){
+    q.push(r.close); sum+=r.close;
+    if(q.length>period) sum-=q.shift();
+    if(q.length===period) out.push({time:r.time, value:Math.round(sum/period)});
+  }
+  return out;
+}
+function _updateLegend(param){
+  const el=document.getElementById("chart-legend");
+  if(!el||!_chartRows.length)return;
+  let row=null;
+  if(param && param.time!=null) row=_chartRows.find(r=>r.time===param.time);
+  if(!row) row=_chartRows[_chartRows.length-1];
+  if(!row){ el.textContent=""; return; }
+  const f=v=>Math.round(v).toLocaleString("ko-KR");
+  const up=row.close>=row.open;
+  el.innerHTML=`<span class="lg">시</span>${f(row.open)} <span class="lg">고</span>${f(row.high)}`+
+    ` <span class="lg">저</span>${f(row.low)} <span class="lg">종</span>`+
+    `<b style="color:${up?'#e74c3c':'#3498db'}">${f(row.close)}</b> <span class="lg">량</span>${(row.value||0).toLocaleString("ko-KR")}`;
+}
+async function loadChartData(){
+  const el=document.getElementById("tv_chart_container");
+  if(!_chartCandle)return;
+  try{
+    const r=await fetch(`/api/stock_candles?code=${encodeURIComponent(_chartCode)}&tf=${_chartTf}`);
+    const d=await r.json();
+    const c=(d.candles||[]);
+    if(!c.length){
+      const msg=document.createElement("div"); msg.className="chart-msg";
+      msg.textContent="캔들 데이터 없음 (장외/신규 상장 등)"; el.appendChild(msg); return;
+    }
+    _chartRows=c;
+    _chartCandle.setData(c.map(x=>({time:x.time,open:x.open,high:x.high,low:x.low,close:x.close})));
+    _chartVol.setData(c.map(x=>({time:x.time,value:x.value,
+      color:x.close>=x.open?"rgba(231,76,60,.45)":"rgba(52,152,219,.45)"})));
+    if(_maSeries){ _maSeries[5].setData(_ma(c,5)); _maSeries[20].setData(_ma(c,20)); _maSeries[60].setData(_ma(c,60)); }
+    _chart.timeScale().fitContent();
+    _updateLegend(null);
+  }catch(e){
+    el.insertAdjacentHTML("beforeend",`<div class="chart-msg">차트 로드 실패: ${esc(e.message)}</div>`);
   }
 }
-function closeStockChart(){ const m=document.getElementById("chart-modal"); if(m){ m.style.display="none"; m.innerHTML=""; } }
+function setChartTf(tf){
+  _chartTf=tf;
+  document.querySelectorAll(".chart-tf .tf-btn").forEach(b=>b.classList.toggle("active",b.dataset.tf===tf));
+  _initChart(); loadChartData();
+}
+function closeStockChart(){
+  const m=document.getElementById("chart-modal");
+  if(_chart){ try{_chart.remove();}catch(_){} _chart=null; }
+  if(m){ m.classList.remove("open"); m.innerHTML=""; }
+}
 
 async function initLoad(){
   await loadOverview();
