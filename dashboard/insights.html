@@ -134,6 +134,9 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .ws-act-group { display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
 .ws-act-label { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; font-weight: 700; }
 .ws-act-group .nb-act { text-align: left; }
+.ws-presets { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.ws-preset { padding: 5px 9px; border-radius: 7px; border: 1px solid var(--line); background: var(--card); color: var(--txt); font-family: inherit; font-size: .72rem; cursor: pointer; transition: border-color .15s, color .15s; }
+.ws-preset:hover { border-color: var(--gold); color: var(--gold); }
 .ws-right { flex: 1; min-width: 0; overflow-y: auto; padding: 22px 26px; }
 .ws-canvas { max-width: 920px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
 .ws-empty { text-align: center; color: var(--muted); padding: 80px 20px; font-size: .9rem; line-height: 1.9; }
@@ -590,6 +593,16 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
         <div class="ws-ask">
           <input type="text" id="ws-q" class="ws-q-input" placeholder="내 자료에 질문… (예: 오늘 핵심 이슈 3가지)" onkeydown="if(event.key==='Enter')wsAsk()">
           <button class="brief-go" onclick="wsAsk()">질문</button>
+        </div>
+        <div class="ws-presets">
+          <button class="ws-preset" onclick="wsPreset('morning')">🌅 아침브리핑</button>
+          <button class="ws-preset" onclick="wsPreset('closing')">🌆 마감브리핑</button>
+          <button class="ws-preset" onclick="wsPreset('stock')">🔬 종목심층</button>
+          <button class="ws-preset" onclick="wsPreset('sector')">🏭 섹터심층</button>
+          <button class="ws-preset" onclick="wsPreset('market')">📊 시장심층</button>
+          <button class="ws-preset" onclick="wsPreset('vacuum')">🕳️ 수급빈집</button>
+          <button class="ws-preset" onclick="wsPreset('leader')">⚔️ 대장주</button>
+          <button class="ws-preset" onclick="wsPreset('compare')">🆚 교차비교</button>
         </div>
       </div>
       <div class="ws-act-group">
@@ -1405,6 +1418,22 @@ async function wsAction(btn, kind) {
   } catch(e) { btn.disabled = false; btn.innerHTML = orig; toast('실패: ' + e.message, true); }
 }
 
+const WS_PRESETS = {
+  morning: { q: '오늘 장 시작 전 꼭 알아야 할 것만 정리해줘. ① 핵심 이슈 3~5개 ② 주목 종목과 이유 ③ 오늘 일정·이벤트·실적발표 ④ 수급 포인트(외국인·기관) ⑤ 리스크. 소제목으로 구조화하고 종목명·수치 포함.' },
+  closing: { q: '오늘 장 마감 관점에서 정리해줘. ① 오늘 주목받은 종목·섹터와 그 이유 ② 수급 변화 ③ 특징주·급등락 배경 ④ 내일 이어볼 포인트 ⑤ 체크할 일정. 소제목으로 구조화.' },
+  stock: { q: '종목 관점에서 심층 분석해줘. 종목별로 ① 펀더멘털(실적·밸류·컨센서스) ② 모멘텀·촉매 ③ 수급 ④ 리스크 ⑤ 목표가·투자의견을 자세히. (특정 종목을 원하면 종목명을 함께 적어 다시 질문)' },
+  sector: { q: '섹터 관점에서 심층 분석해줘. ① 업황·사이클 위치 ② 대장주와 후발주 ③ 밸류체인·수혜 구조 ④ 수급 흐름 ⑤ 정책·이벤트 ⑥ 리스크.' },
+  market: { q: '시장 전체 관점에서 종합 정리해줘. ① 지수 동향 ② 수급(외국인·기관·개인) ③ 주도 섹터 ④ 매크로(환율·금리·미국장) ⑤ 변동성·리스크 ⑥ 향후 일정.' },
+  vacuum: { q: '수급이 비어있다 새로 들어오는 "빈집" 관점에서 종목·섹터를 찾아 정리해줘. 수급 연속성, 거래대금 변화, 신규 진입 자금, 소외됐다 돌아서는 신호 중심으로.' },
+  leader: { q: '주도 섹터의 대장주와 따라갈 후발주를 포착해줘. RS강도, 수급 쏠림, 재료 강도, 거래대금 기준으로 1군(대장)/2군(후발)을 구분해서.' },
+  compare: { q: '끌어온 자료들 사이의 공통점, 차이, 서로 충돌하는 견해를 비교 정리해줘. 어느 소스가 무엇을 말하는지 명시하고 종합 판단도 덧붙여.' },
+};
+function wsPreset(k) {
+  const p = WS_PRESETS[k]; if (!p) return;
+  const inp = qs('#ws-q'); if (inp) inp.value = p.q;
+  wsAsk();
+}
+
 async function wsStudio(btn, kind) {
   const ws = window._ws; if (!ws) return;
   const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = '생성 중…';
@@ -1421,14 +1450,31 @@ async function wsStudio(btn, kind) {
     });
     btn.disabled = false; btn.innerHTML = orig;
     if (res.error) throw new Error(res.error);
-    if (res.ready && res.file_url && res.media === 'image') {
-      body.innerHTML = `<div class="ws-art-tools"><a href="${res.file_url}" download class="nb-open-sm">↓ 저장</a> <a href="${res.file_url}" target="_blank" class="nb-open-sm">↗ 원본</a></div><img class="nb-art-img" src="${res.file_url}">`;
-    } else if (res.ready && res.file_url && res.media === 'pdf') {
-      body.innerHTML = `<div class="ws-art-tools"><a href="${res.file_url}" target="_blank" class="nb-open-sm">↗ 새 탭</a> <a href="${res.file_url}" download class="nb-open-sm">↓ 저장</a></div><iframe class="nb-art-pdf" src="${res.file_url}"></iframe>`;
+    if (res.show && res.artifact_id) {
+      await wsStudioPoll(ws.id, res, body);   // 완료까지 폴링 → 인라인 표시
     } else {
       body.innerHTML = `<div class="nb-studio-ok">🎨 <b>${escHtml(res.label)}</b> 생성을 시작했습니다 (${escHtml(res.eta)}). 완료되면 <a href="${ws.url}" target="_blank">원본 스튜디오</a>에서 확인하세요.</div>`;
     }
   } catch(e) { btn.disabled = false; btn.innerHTML = orig; body.innerHTML = `<div style="color:#e88">실패: ${escHtml(e.message)}</div>`; }
+}
+
+async function wsStudioPoll(nbId, res, body) {
+  for (let i = 0; i < 32; i++) {   // 8s × 32 ≈ 4분
+    await new Promise(r => setTimeout(r, 8000));
+    let p;
+    try {
+      p = await apiFetch(`/api/insights/studio_poll?notebook_id=${encodeURIComponent(nbId)}&artifact_id=${encodeURIComponent(res.artifact_id)}&kind=${encodeURIComponent(res.kind)}`);
+    } catch(e) { continue; }
+    if (p && p.ready && p.file_url) {
+      if (p.media === 'image') {
+        body.innerHTML = `<div class="ws-art-tools"><a href="${p.file_url}" download class="nb-open-sm">↓ 저장</a> <a href="${p.file_url}" target="_blank" class="nb-open-sm">↗ 원본</a></div><img class="nb-art-img" src="${p.file_url}">`;
+      } else if (p.media === 'pdf') {
+        body.innerHTML = `<div class="ws-art-tools"><a href="${p.file_url}" target="_blank" class="nb-open-sm">↗ 새 탭</a> <a href="${p.file_url}" download class="nb-open-sm">↓ 저장</a></div><iframe class="nb-art-pdf" src="${p.file_url}"></iframe>`;
+      }
+      return;
+    }
+  }
+  body.innerHTML = `<div class="nb-studio-ok">🎨 생성이 예상보다 오래 걸립니다. 완료되면 <a href="${res.url}" target="_blank">원본 스튜디오</a>에서 확인하거나 잠시 후 다시 시도하세요.</div>`;
 }
 
 async function askNotebook() {

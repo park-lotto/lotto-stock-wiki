@@ -1316,3 +1316,8 @@ python calc_oscillator.py SK하이닉스 삼성전자 한미반도체 --tg
 - /api/insights/notebooks(목록)·notebook_sources(현재소스)·notebook_merge(이전.md를 현 노트북에 소스추가→교차검색)
 - 버그수정: _load_registry 이름충돌(기존 소스레지스트리 cat인자)→ _load_nb_registry/_nb_registry_add 개명
 - 검증: A(삼성전자)·B(조선) 생성→레지스트리 등록→A를 B로 끌어오기 소스 1→2 교차검색
+
+## 2026-06-30 — 다리 v10: studio 비동기 폴링(인라인 표시) + 브리핑 프리셋
+- 인포/슬라이드: notebook_studio가 artifact_id만 빠르게 반환 → studio_poll로 프론트가 8s×32 폴링 → 완료 시 다운로드·인라인 표시(긴 프롬프트로 180s 초과해도 뜸)
+- 프리셋 8종(클릭→스탁브레인 자동질문): 🌅아침/🌆마감/🔬종목/🏭섹터/📊시장/🕳️수급빈집/⚔️대장주/🆚교차비교
+- 검증: studio_poll ready+file_url 정상

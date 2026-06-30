@@ -551,8 +551,11 @@ def get_minutebar(code: str, interval: int = 15) -> list:
     for row in reversed(rows):  # API는 역순 반환 → 뒤집어서 오름차순
         if row.get("stck_bsop_date", today) != today:
             continue  # 전날 데이터 제외
-        if row.get("stck_cntg_hour", "090000") < "090000":
+        _ch = row.get("stck_cntg_hour", "090000")
+        if _ch < "090000":
             continue  # 정규장(9시) 이전 시간외 데이터 제외
+        if _ch > "153000":
+            continue  # 장 종료(15:30) 이후 동시호가·시간외 단일가 제외 → 종가 모양 유지
         try:
             v = float(row.get("stck_prpr", 0) or 0)
             if v > 0:

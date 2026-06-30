@@ -1144,15 +1144,13 @@ function toggleEtfFilter(){
 function _globalNameHtml(it){
   let badge="";
   if(it.closed){
-    let dstr="";
-    if(it.last_ts){
-      const dt=new Date(it.last_ts);
-      dstr=`${dt.getMonth()+1}/${dt.getDate()}`;
-    }
+    let dstr=it.cdate||"";
+    if(!dstr && it.last_ts){ const dt=new Date(it.last_ts); dstr=`${dt.getMonth()+1}/${dt.getDate()}`; }
+    const icon=it.night?"🌙":"📕";
     badge=`<span style="margin-left:5px;font-size:8px;font-weight:700;color:#c9a84a;
       background:rgba(201,168,74,.13);border:1px solid rgba(201,168,74,.3);
       border-radius:4px;padding:1px 5px;vertical-align:middle;white-space:nowrap">
-      🌙 ${dstr?dstr+" ":""}마감</span>`;
+      ${icon} ${dstr?dstr+" ":""}마감</span>`;
   }
   return`<span class="global-name">${esc(it.name)}</span>${badge}`;
 }

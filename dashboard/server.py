@@ -142,7 +142,9 @@ def _poll_flow():
     while True:
         try:
             now = datetime.now()
-            if initial or (9 <= now.hour < 16):
+            _mins = now.hour * 60 + now.minute
+            # 09:00~15:35만 수집 → 이후엔 동결(15:30 종가 모양 유지). 저녁엔 마지막값 그대로 표시.
+            if initial or (540 <= _mins <= 935):
                 import kiwoom_api as _kiwoom
                 for mkt in ("J", "Q"):
                     try:
@@ -829,6 +831,15 @@ def _build_market_flow_result(done: dict) -> dict:
                 price_d = {"price": ws_live["price"], "change_rate": ws_live["change_rate"]}
         investor = done.get(f"{mkt}_investor") or {"외인": 0, "기관": 0, "개인": 0, "ts": ""}
         prog     = done.get(f"{mkt}_prog") or {"차익": 0, "비차익": 0, "합계": 0, "ts": ""}
+        # 장 종료 후 키움이 0을 반환하면 마지막 장중 스냅샷(≈15:30 종가) 유지 → 저녁(~20시)까지 표시
+        if not (investor.get("외인") or investor.get("기관") or investor.get("개인")):
+            for snap in reversed(list(_FLOW[mkt]["investor"])):
+                if snap.get("외인") or snap.get("기관") or snap.get("개인"):
+                    investor = snap; break
+        if not (prog.get("차익") or prog.get("비차익") or prog.get("합계")):
+            for snap in reversed(list(_FLOW[mkt]["program"])):
+                if snap.get("차익") or snap.get("비차익") or snap.get("합계"):
+                    prog = snap; break
         result[code] = {
             "label":            label,
             "price":            price_d.get("price", 0),
@@ -847,10 +858,21 @@ def _build_market_flow_result(done: dict) -> dict:
     oil  = done.get("WTI")      or {"price": 0, "change_rate": 0, "bars": []}
     # 야간선물 마지막 체결 시각(esignal) 보존 — WS 덮어쓰기 전에 확보
     ksfn_last_ts = ksfn.get("last_ts", 0)
-    # 야간선물 개장 시간대: 18:00~익일 05:00 KST. 그 외(주간 09~18시 포함)는 '마감' 상태.
     import datetime as _dt2
-    _hh = _dt2.datetime.now().hour
-    ksfn_closed = not (_hh >= 18 or _hh < 5)
+    _now2 = _dt2.datetime.now()
+    _mins = _now2.hour * 60 + _now2.minute
+    _today_md = f"{_now2.month}/{_now2.day}"
+    # 코스피200 선물(주간) 09:00~15:45 → 그 외 시간은 '마감'
+    ksf_closed = not (540 <= _mins < 945)
+    # 야간선물(미니) 18:00~익일 05:00 → 그 외(주간 포함)는 '마감'
+    ksfn_closed = not (_now2.hour >= 18 or _now2.hour < 5)
+    # 야간선물 마감 날짜 = 마지막 체결일
+    ksfn_md = _today_md
+    if ksfn_last_ts:
+        try:
+            _d = _dt2.datetime.fromtimestamp(ksfn_last_ts / 1000); ksfn_md = f"{_d.month}/{_d.day}"
+        except Exception:
+            pass
     # 야간선물 WebSocket 실시간값 우선 사용 (개장 중일 때만 의미 있음)
     if kis_ws:
         ws_ksfn = kis_ws.get("101W9")
@@ -861,9 +883,10 @@ def _build_market_flow_result(done: dict) -> dict:
         "label": "글로벌 지표",
         "items": [
             {"name": "나스닥선물(NQ)",  "price": nq["price"],   "change_rate": nq["change_rate"],   "bars": nq.get("bars") or []},
-            {"name": "코스피선물",      "price": ksf["price"],  "change_rate": ksf["change_rate"],  "bars": ksf.get("bars") or []},
+            {"name": "코스피선물",      "price": ksf["price"],  "change_rate": ksf["change_rate"],  "bars": ksf.get("bars") or [],
+             "closed": ksf_closed, "night": False, "cdate": _today_md},
             {"name": "코스피야간선물",  "price": ksfn["price"], "change_rate": ksfn["change_rate"], "bars": ksfn.get("bars") or [],
-             "closed": ksfn_closed, "last_ts": ksfn_last_ts},
+             "closed": ksfn_closed, "night": True, "cdate": ksfn_md, "last_ts": ksfn_last_ts},
             {"name": "원달러환율",      "price": fx["price"],   "change_rate": fx["change_rate"],   "bars": fx.get("bars") or []},
             {"name": "국제유가(WTI)",   "price": oil["price"],  "change_rate": oil["change_rate"],  "bars": oil.get("bars") or []},
         ]
@@ -2563,38 +2586,51 @@ async def api_insights_notebook_studio(req: Request):
         ok, out, errm = _run_nlm(args, timeout=120)
         if not ok:
             return {"error": f"{spec['label']} 생성 실패: {errm[:200]}"}
-        base = {"ok": True, "kind": kind, "label": spec["label"], "eta": spec["eta"],
-                "media": spec["media"],
-                "url": f"https://notebooklm.google.com/notebook/{nb_id}"}
-        if not spec["show"] or not spec["dl"]:
-            base["pending"] = True      # 오디오/영상: 시작만 → Studio에서 확인
-            return base
-        # 인포그래픽/슬라이드: 완료까지 폴링 → 다운로드 → 서빙 URL
-        art_id = None
-        for _ in range(36):  # 최대 ~180s
-            for i, s in _studio_arts(nb_id, spec["types"]):
-                if i not in before and s.lower() in ("completed", "done", "ready", "success"):
+        # 시작 출력에서 artifact id 파싱
+        m = re.search(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", out or "")
+        art_id = m.group(0) if m else None
+        if not art_id:
+            # 출력에 없으면 새로 생긴 아티팩트로 추정
+            for i, _s in _studio_arts(nb_id, spec["types"]):
+                if i not in before:
                     art_id = i
                     break
-            if art_id:
-                break
-            time.sleep(5)
-        if not art_id:
-            base["pending"] = True
-            return base
-        fname = f"{kind}_{re.sub(r'[^0-9a-zA-Z-]', '', art_id)}.{spec['ext']}"
-        fpath = os.path.join(ROOT, "out", "insights_notebook", fname)
-        dargs = list(spec["dl"]) + [nb_id, "-o", fpath, "--id", art_id]
-        okd, _o, _e = _run_nlm(dargs, timeout=120)
-        if okd and os.path.exists(fpath):
-            base["ready"] = True
-            base["file_url"] = f"/api/insights/artifact?f={fname}"
-        else:
-            base["pending"] = True
-        return base
+        return {"ok": True, "kind": kind, "label": spec["label"], "eta": spec["eta"],
+                "media": spec["media"], "show": bool(spec["show"] and spec["dl"]),
+                "artifact_id": art_id,
+                "url": f"https://notebooklm.google.com/notebook/{nb_id}"}
 
     result = await run_in_threadpool(_do)
     return JSONResponse(content=result, status_code=(200 if result.get("ok") else 500))
+
+
+@app.get("/api/insights/studio_poll")
+def api_insights_studio_poll(notebook_id: str = "", artifact_id: str = "", kind: str = ""):
+    """생성 중인 아티팩트 완료 확인 → 완료 시 다운로드해 서빙 URL 반환."""
+    spec = _STUDIO_KINDS.get(kind)
+    if not notebook_id or not artifact_id or not spec or not spec.get("dl"):
+        return JSONResponse(content={"ready": False, "error": "잘못된 요청"}, status_code=400)
+    if not _nlm_exe():
+        return JSONResponse(content={"ready": False, "error": "nlm CLI 없음"}, status_code=503)
+
+    def _do():
+        status = ""
+        for i, s in _studio_arts(notebook_id, spec["types"]):
+            if i == artifact_id:
+                status = s.lower()
+                break
+        if status not in ("completed", "done", "ready", "success"):
+            return {"ready": False, "status": status or "in_progress"}
+        fname = f"{kind}_{re.sub(r'[^0-9a-zA-Z-]', '', artifact_id)}.{spec['ext']}"
+        fpath = os.path.join(ROOT, "out", "insights_notebook", fname)
+        if not os.path.exists(fpath):
+            dargs = list(spec["dl"]) + [notebook_id, "-o", fpath, "--id", artifact_id]
+            okd, _o, _e = _run_nlm(dargs, timeout=120)
+            if not (okd and os.path.exists(fpath)):
+                return {"ready": False, "status": "downloading"}
+        return {"ready": True, "media": spec["media"], "file_url": f"/api/insights/artifact?f={fname}"}
+
+    return JSONResponse(content=_do())
 
 
 @app.post("/api/insights/claude_chat")
