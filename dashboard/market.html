@@ -271,6 +271,9 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
   color:#888;font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s;}
 .chart-tf .tf-btn:hover{border-color:#555;color:#ccc;}
 .chart-tf .tf-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(212,175,55,.1);}
+.taerini-panel{font-size:12px;color:#bbb;padding:4px 10px;border-top:1px solid #1c1c1c;
+  white-space:nowrap;overflow-x:auto;line-height:1.6;}
+.taerini-panel .tk-lab{color:#777;margin-right:2px;}
 .chart-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#666;font-size:13px;}
 .chart-legend{margin-left:auto;font-size:11.5px;color:#ccc;font-variant-numeric:tabular-nums;white-space:nowrap;align-self:center;}
 .chart-legend .lg{color:#777;margin-left:5px;}
@@ -2027,6 +2030,38 @@ function _toggleMax(box){
   }
 }
 
+function _taeriniHtml(d){
+  const L=t=>`<span class="tk-lab">${t}</span>`;
+  if(!d || !d.found) return `📊 ${L("태린이")}미수록${d&&d.date?` (${d.date})`:""}`;
+  const s=d.stock||{}, parts=[];
+  const C=(t,c)=>`<span style="color:${c}">${t}</span>`;
+  if(s.osc) parts.push(`${L("수급")}${C(s.osc.trend||s.osc.group||"-","#e0b94a")}`
+    + (s.osc.pct!=null?`(${Math.round(s.osc.pct)}%ile)`:""));
+  if(s.rs) parts.push(`${L("RS")}${s.rs.rs_avg!=null?Number(s.rs.rs_avg).toFixed(2):"-"}(${s.rs.bucket})`);
+  if(s.tp){ const up=s.tp.dir==="상향"; const tgt=s.tp.target!=null?Math.round(s.tp.target/1000)+"천":"";
+    parts.push(`${L("TP")}${C(tgt+(up?"↑":"↓"), up?"#e74c3c":"#3aa0ff")}`
+      + (s.tp.change_pct!=null?`(${s.tp.change_pct>0?"+":""}${s.tp.change_pct}%)`:"")); }
+  if(s.consensus){ const t=s.consensus.type||""; const good=(t==="컨센상향"||t==="서프라이즈");
+    parts.push(`${L("컨센")}${C(t||"-", good?"#e74c3c":"#3aa0ff")}`); }
+  if(s.accel) parts.push(`${L("가속")}${s.accel.score!=null?Number(s.accel.score).toFixed(2):"-"}`);
+  if(s.etf){ const inc=s.etf.action==="비중증가";
+    parts.push(`${L("ETF")}${C(inc?"비중↑":"비중↓", inc?"#e74c3c":"#3aa0ff")}`); }
+  if(s.schedule&&s.schedule.dday!=null){ const dd=s.schedule.dday;
+    parts.push(`${L("실적")}D${dd<=0?dd:"+"+dd}`); }
+  if(!parts.length) return `📊 ${L("태린이")}미수록 (${d.date||""})`;
+  return `📊 ` + parts.join(" · ") + ` <span style="color:#555">(${d.date||""})</span>`;
+}
+
+async function _loadTaerini(code){
+  const box=document.getElementById("taerini-panel");
+  if(!box) return;
+  box.innerHTML='📊 <span class="tk-lab">태린이 지표 로딩…</span>';
+  try{
+    const r=await fetch("/api/taerini_stock?code="+encodeURIComponent(code));
+    box.innerHTML=_taeriniHtml(await r.json());
+  }catch(e){ box.innerHTML='📊 <span style="color:#a55">태린이 지표 로드 실패</span>'; }
+}
+
 function openStockChart(code, name){
   if(!code) return;
   // 이미 열려 있으면(다른 종목 전환) 현재 보기범위·창 위치/크기 먼저 저장
@@ -2074,6 +2109,7 @@ function openStockChart(code, name){
       <button class="ct-btn wbtn active" data-w="2" onclick="setDrawWidth(2,this)">보통</button>
       <button class="ct-btn wbtn" data-w="4" onclick="setDrawWidth(4,this)">굵게</button>
     </div>
+    <div id="taerini-panel" class="taerini-panel">📊 태린이 지표 로딩…</div>
     <div id="tv_chart_container"></div>
     <div id="tv_osc_container"></div>
   </div>`;
@@ -2107,6 +2143,7 @@ function openStockChart(code, name){
   }
   _initChart();
   loadChartData();
+  _loadTaerini(code);
   if(_drawRaf) cancelAnimationFrame(_drawRaf);
   _lastProj=null; _drawRaf=requestAnimationFrame(_drawTick);   // 도형 자동 재계산 루프 시작
 }
