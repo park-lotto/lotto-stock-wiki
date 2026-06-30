@@ -148,7 +148,7 @@ def _authed_get(url: str, headers: dict, params: dict, timeout: float):
 
 
 def get_price(code: str) -> dict:
-    """종목 현재가 (정규장). {code, name, price, change_rate, change}"""
+    """종목 현재가 (KRX+NXT 통합 UN → 장외 NXT 시세도 반영). {code, name, price, change_rate, change}"""
     r = _authed_get(
         f"{BASE}/uapi/domestic-stock/v1/quotations/inquire-price",
         headers={
@@ -158,7 +158,7 @@ def get_price(code: str) -> dict:
             "tr_id": _TR,
             "custtype": "P",
         },
-        params={"FID_COND_MRKT_DIV_CODE": "J", "FID_INPUT_ISCD": code.zfill(6)},
+        params={"FID_COND_MRKT_DIV_CODE": "UN", "FID_INPUT_ISCD": code.zfill(6)},
         timeout=5,
     )
     r.raise_for_status()
@@ -243,7 +243,7 @@ def get_prices_multi(codes: list, workers: int = 6) -> dict:
     def fetch_chunk(chunk):
         params = {}
         for i, c in enumerate(chunk, 1):
-            params[f"FID_COND_MRKT_DIV_CODE_{i}"] = "J"
+            params[f"FID_COND_MRKT_DIV_CODE_{i}"] = "UN"   # KRX+NXT 통합 (장외 NXT 시세 반영)
             params[f"FID_INPUT_ISCD_{i}"] = c.zfill(6)
         r = _authed_get(
             f"{BASE}/uapi/domestic-stock/v1/quotations/intstock-multprice",
@@ -525,6 +525,8 @@ def get_minutebar(code: str, interval: int = 15) -> list:
     """
     import datetime as _dt
     now_str = _dt.datetime.now().strftime("%H%M%S")
+    if now_str > "153000":
+        now_str = "153000"   # 장 종료 후엔 15:30 마감 기준 봉 조회 (시간외 단일가 꼬리 방지)
     r = requests.get(
         f"{BASE}/uapi/domestic-stock/v1/quotations/inquire-time-itemchartprice",
         headers={

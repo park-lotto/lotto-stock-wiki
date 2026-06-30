@@ -134,9 +134,10 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .ws-act-group { display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
 .ws-act-label { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; font-weight: 700; }
 .ws-act-group .nb-act { text-align: left; }
-.ws-presets { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
-.ws-preset { padding: 5px 9px; border-radius: 7px; border: 1px solid var(--line); background: var(--card); color: var(--txt); font-family: inherit; font-size: .72rem; cursor: pointer; transition: border-color .15s, color .15s; }
+.ws-presets { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 8px; }
+.ws-preset { padding: 6px 8px; border-radius: 7px; border: 1px solid var(--line); background: var(--card); color: var(--txt); font-family: inherit; font-size: .73rem; cursor: pointer; transition: border-color .15s, color .15s; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ws-preset:hover { border-color: var(--gold); color: var(--gold); }
+.ws-spresets { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin: 8px 0; }
 .ws-right { flex: 1; min-width: 0; overflow-y: auto; padding: 22px 26px; }
 .ws-canvas { max-width: 920px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
 .ws-empty { text-align: center; color: var(--muted); padding: 80px 20px; font-size: .9rem; line-height: 1.9; }
@@ -612,7 +613,15 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
       </div>
       <div class="ws-act-group">
         <div class="ws-act-label">🎨 만들기 — 스탁브레인 스튜디오</div>
-        <input type="text" id="ws-studio-prompt" class="ws-q-input" placeholder="프롬프트(선택): 예) 투자 관점 중심·초보자용·핵심 5개만">
+        <input type="text" id="ws-studio-prompt" class="ws-q-input" placeholder="프롬프트(선택): 아래 단축 프롬프트를 눌러도 됩니다">
+        <div class="ws-spresets">
+          <button class="ws-preset" onclick="wsStudioPreset('paper')">📰 한장요약(주린이)</button>
+          <button class="ws-preset" onclick="wsStudioPreset('invest')">💹 투자관점</button>
+          <button class="ws-preset" onclick="wsStudioPreset('data')">📊 데이터강조</button>
+          <button class="ws-preset" onclick="wsStudioPreset('top5')">🎯 핵심5개</button>
+          <button class="ws-preset" onclick="wsStudioPreset('easy')">🗣️ 쉽게설명</button>
+          <button class="ws-preset" onclick="wsStudioPreset('stock')">📈 종목중심</button>
+        </div>
         <button class="nb-act" onclick="wsStudio(this,'infographic')">🖼️ 인포그래픽 <small>~1분</small></button>
         <button class="nb-act" onclick="wsStudio(this,'slides')">📑 슬라이드 <small>~1분</small></button>
         <button class="nb-act" onclick="wsStudio(this,'audio')">🎧 오디오 <small>2~5분</small></button>
@@ -1432,6 +1441,19 @@ function wsPreset(k) {
   const p = WS_PRESETS[k]; if (!p) return;
   const inp = qs('#ws-q'); if (inp) inp.value = p.q;
   wsAsk();
+}
+
+const WS_STUDIO_PROMPTS = {
+  paper: '한 장으로 핵심만, 주식 초보(주린이)도 이해하게 쉬운 비유와 큰 숫자 위주로',
+  invest: '투자 관점에서 핵심 포인트·기회·리스크를 중심으로',
+  data: '수치·비교·비율을 강조해 데이터 중심으로',
+  top5: '가장 중요한 5가지만 추려 간결하게',
+  easy: '전문용어 없이 쉽게, 비유를 들어서 설명',
+  stock: '언급된 종목별로 정리하고 종목명·목표가를 강조',
+};
+function wsStudioPreset(k) {
+  const t = WS_STUDIO_PROMPTS[k]; if (!t) return;
+  const inp = qs('#ws-studio-prompt'); if (inp) { inp.value = t; inp.focus(); }
 }
 
 async function wsStudio(btn, kind) {

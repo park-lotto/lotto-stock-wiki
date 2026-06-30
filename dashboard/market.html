@@ -112,6 +112,8 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 /* 미국시장 카드 */
 .us-row{display:flex;justify-content:space-between;align-items:center;height:36px;padding:0 2px;border-bottom:1px solid #1a1a1a;box-sizing:border-box;}
 .us-row:last-child{border-bottom:none;}
+.us-row[onclick]:hover{background:rgba(255,255,255,.05);}
+.us-row[onclick]:hover .us-sym{text-decoration:underline;text-underline-offset:2px;}
 .us-label{font-size:10px;color:#888;display:block;}
 .us-sym{font-size:11px;font-weight:700;color:#ccc;}
 .us-vals{text-align:right;}
@@ -1081,7 +1083,8 @@ function _rankRows(stocks, maxN){
     const rc=s.change_rate>0?"up":s.change_rate<0?"dn":"neu";
     const rs=(s.change_rate>0?"+":"")+Number(s.change_rate||0).toFixed(2)+"%";
     const ps=Math.abs(Number(s.price||0)).toLocaleString("ko-KR");
-    return`<div class="us-row">
+    const clk=s.code?` onclick="openStockChart('${esc(s.code)}','${esc(s.name)}')" style="cursor:pointer"`:"";
+    return`<div class="us-row"${clk}>
       <div style="display:flex;align-items:center;gap:6px">
         <span style="font-size:10px;color:#444;min-width:14px;text-align:right">${i+1}</span>
         <span class="us-sym">${esc(s.name)}</span>
