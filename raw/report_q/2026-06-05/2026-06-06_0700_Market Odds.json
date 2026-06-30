@@ -1,0 +1,47 @@
+{
+  "meta": {
+    "date": "2026-06-05",
+    "broker": "SK증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_0700_Market Odds.md"
+  },
+  "questionnaire": {
+    "broker": "SK증권",
+    "analyst": "조준기",
+    "report_date": "2026-06-05",
+    "target_kind": "market",
+    "market_direction": "null",
+    "macro_vars": [
+      {
+        "name": "미국 연내 기준금리 인상 가능성",
+        "value": "40% 전후",
+        "quote": "통화정책 내러티브는 큰 변동 없는 상황으로, 주요국 중앙은행들은 인상 기조 뚜렷한 가운데 미국 연내 기준금리 인상 가능성은 예측시장에서 40% 전후로 반영되고 있음"
+      },
+      {
+        "name": "비트코인 6만불 하회 베팅 확률",
+        "value": "80%",
+        "quote": "이에 따라 비트코인 가격에 대한 하방 베팅이 급증하는 모습으로 6만불 하회 베팅은 80%, 5만불 하회는 60% 전후에서 확률 형성"
+      },
+      {
+        "name": "비트코인 5만불 하회 베팅 확률",
+        "value": "60%",
+        "quote": "이에 따라 비트코인 가격에 대한 하방 베팅이 급증하는 모습으로 6만불 하회 베팅은 80%, 5만불 하회는 60% 전후에서 확률 형성"
+      }
+    ],
+    "recommended_sectors": null,
+    "style": "null",
+    "event_calendar": null,
+    "top_picks": [
+      "Cerebras",
+      "SpaceX",
+      "Anthropic",
+      "Jersey Mike's",
+      "OpenAI",
+      "NVIDIA",
+      "Alphabet",
+      "Apple",
+      "Saudi Aramco"
+    ],
+    "risk": "중동 지정학적 리스크 지속, 가상화폐 시장 약세",
+    "quote": "중동 지정학적 리스크 등은 더 크게 악화되고 있지는 않으나 시장에서 기대했던 만큼 빠르게 해결 수순에 돌입하지는 못하며 예측 시장에서도 미국-이란 핵합의 시점, 호르무즈 해협 정상화 시점에 대한 기대치는 뒤로 밀리고 있음"
+  }
+}

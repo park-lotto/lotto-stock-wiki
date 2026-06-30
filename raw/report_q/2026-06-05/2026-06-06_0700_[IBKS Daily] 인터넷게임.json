@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "date": "2026-06-05",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_0700_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이승훈",
+    "report_date": "2026.06.05",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "16일",
+        "event": "앤스로픽 AI 기술 임원, 네이버 본사 방문"
+      }
+    ],
+    "top_picks": [
+      "NAVER",
+      "카카오",
+      "삼성에스디에스",
+      "현대오토에버",
+      "더존비즈온",
+      "한글과컴퓨터",
+      "롯데이노베이트",
+      "크래프톤",
+      "NC",
+      "넷마블",
+      "시프트업",
+      "펄어비스",
+      "카카오게임즈",
+      "더블유게임즈",
+      "웹젠",
+      "NHN",
+      "컴투스",
+      "네오위즈",
+      "데브시스터즈"
+    ],
+    "risk": "카카오 노조는 카카오엔터프라이즈 임단협 결렬의 주요 원인으로 중장기 사업 비전 부재와 고용불안 문제를 지적함",
+    "quote": "미국 AI 기업 앤스로픽은 한국 시장 공략 강화의 일환으로 네이버 본사에서 국내 개발자 대상 밋업(Meetup)을 개최할 예정임"
+  }
+}

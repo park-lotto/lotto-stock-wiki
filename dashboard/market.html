@@ -1128,10 +1128,18 @@ function renderMarketFlow(d){
 
 // ── 자동갱신 인터벌 ─────────────────────────────────────
 let _autoTimer=null;
+// 자동 새로고침 — 클라이언트 메모리 캐시(180초)를 우회해 서버를 실제로 다시 받아온다.
+// (loadActive→loadOverview(false)는 캐시 히트 시 서버를 안 쳐서 updated_at이 멈춤)
+function autoRefreshActive(){
+  if(activeTab==="all") _refreshOverviewBg();
+  else if(activeTab==="fav"){ if(_allTiles.length>0) renderGrid(_allTiles); else _refreshOverviewBg(); }
+  else if(activeTab==="edit"){ /* 편집 탭은 자동 갱신 안 함 */ }
+  else _refreshTabBg(activeTab);
+}
 function setIntervalSec(sec){
   if(_autoTimer)clearInterval(_autoTimer);
   _autoTimer=setInterval(()=>{
-    loadActive();
+    autoRefreshActive();
   },sec*1000);
   // 버튼 active 상태 업데이트
   [30,300,600].forEach(s=>{
@@ -1462,9 +1470,14 @@ async function saveEdit(){
     });
     const res=await r.json();
     if(res.ok){
-      // 클라이언트 히트맵 캐시 초기화
+      // 클라이언트 히트맵 캐시 전부 초기화 (메모리 + localStorage)
       Object.keys(_tabCache).forEach(k=>delete _tabCache[k]);
-      showToast("✅ 저장 완료. 다음 로드 시 적용됩니다");
+      try{ Object.keys(localStorage).filter(k=>k.indexOf("__hm_")===0).forEach(k=>localStorage.removeItem(k)); }catch(_){}
+      showToast("✅ 저장 완료. 히트맵 갱신 중…");
+      // 전체 탭으로 전환 후 강제 재빌드 → 추가/숨김 즉시 반영
+      document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.tab==="all"));
+      activeTab="all";
+      loadOverview(true);
     } else {
       showToast("❌ 저장 실패: "+(res.error||"오류"),"err");
     }

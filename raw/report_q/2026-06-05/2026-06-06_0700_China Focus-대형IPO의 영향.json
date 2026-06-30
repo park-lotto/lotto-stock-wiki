@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "date": "2026-06-05",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_0700_China Focus-대형IPO의 영향.md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "백은비",
+    "report_date": "2026.06.05",
+    "target_kind": "market",
+    "market_direction": "null",
+    "macro_vars": [
+      "중국 메모리 산업 기술 추격",
+      "대형 IPO 자금 흡수 효과",
+      "산업 사이클",
+      "AI 투자 사이클"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "강세",
+        "reason": "AI 투자 사이클이 진행되고 있고 CXMT의 대규모 투자, 장비 및 소재 발주 증가로 중국 반도체 산업체인 전반의 수혜 예상"
+      }
+    ],
+    "style": "null",
+    "event_calendar": [
+      {
+        "date": "2026.05",
+        "event": "CXMT 상장 예정"
+      }
+    ],
+    "top_picks": [
+      "CXMT",
+      "YMTC",
+      "SMIC",
+      "Hygon",
+      "XMC",
+      "HUAHONG"
+    ],
+    "risk": "대형 IPO가 자금 흡수 효과로 단기적으로 지수에 하방 압력을 가할 수 있으며, 심리면의 충격이 있을 수 있음",
+    "quote": "결론적으로 대형 IPO가 자금 흡수 효과로 단기적으로 지수에 하방 압력을 가할 수 있으나 중장기적으로 주가 추이에 중요한 것은 산업 사이클이라 볼 수 있음."
+  }
+}

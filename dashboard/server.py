@@ -114,7 +114,7 @@ def _poll_flow():
                 initial = False
         except Exception:
             pass
-        time.sleep(300)  # 5분
+        time.sleep(120)  # 2분 (누적추이 그래프가 더 빨리 채워지도록)
 
 _poll_thread = threading.Thread(target=_poll_flow, daemon=True)
 _poll_thread.start()
@@ -750,6 +750,31 @@ def api_debug_flow():
     return JSONResponse(content=results)
 
 
+def _enrich_rank_prices(done: dict) -> None:
+    """순위 목록(인기검색=네이버 / 거래대금=키움)의 가격·등락률을 KIS 시세로 통일.
+
+    네이버·키움·KIS가 제각각이라 같은 종목이 목록마다 다르게 보이는 문제 해결.
+    순위(어떤 종목인지)는 원본 유지, 가격만 히트맵과 같은 KIS 소스로 덮어쓴다.
+    fetch 단계에서 1회만 호출(캐시됨) → 요청마다 재조회 안 함.
+    """
+    try:
+        import kis_api
+        pop = done.get("RANK_POP") or []
+        amt = done.get("RANK_AMT") or []
+        codes = list({s["code"] for s in (pop + amt) if s.get("code")})
+        if not codes:
+            return
+        prices = kis_api.get_prices_batch_parallel(codes)
+        for lst in (pop, amt):
+            for s in lst:
+                p = prices.get(s.get("code")) or {}
+                if p.get("price"):
+                    s["price"] = p["price"]
+                    s["change_rate"] = p.get("change_rate", s.get("change_rate", 0))
+    except Exception:
+        pass
+
+
 def _build_market_flow_result(done: dict) -> dict:
     """done dict → market_flow 응답 dict 변환."""
     result = {}
@@ -793,8 +818,19 @@ def _build_market_flow_result(done: dict) -> dict:
             {"name": "국제유가(WTI)",   "price": oil["price"],  "change_rate": oil["change_rate"],  "bars": oil.get("bars") or []},
         ]
     }
-    result["rank_popular"] = {"label": "실시간 인기검색", "stocks": done.get("RANK_POP") or []}
-    result["rank_amt"] = {"label": "거래대금 상위",   "stocks": done.get("RANK_AMT") or []}
+    pop_stocks = done.get("RANK_POP") or []
+    amt_stocks = done.get("RANK_AMT") or []
+    # 결정론적 일관성: 두 목록에 동시에 있는 종목은 항상 같은 가격 표시.
+    # (인기검색=네이버/거래대금=키움이라 enrichment 타이밍에 따라 어긋날 수 있어 매 응답마다 강제 보정.
+    #  거래대금=키움 실시간을 기준값으로 사용)
+    canon = {s["code"]: s for s in amt_stocks if s.get("code") and s.get("price")}
+    for s in pop_stocks:
+        c = s.get("code")
+        if c in canon:
+            s["price"] = canon[c]["price"]
+            s["change_rate"] = canon[c].get("change_rate", s.get("change_rate", 0))
+    result["rank_popular"] = {"label": "실시간 인기검색", "stocks": pop_stocks}
+    result["rank_amt"] = {"label": "거래대금 상위",   "stocks": amt_stocks}
     return result
 
 
@@ -842,6 +878,7 @@ def api_market_flow():
             for k, f in tasks.items():
                 try: done[k] = f.result(timeout=15)
                 except Exception: done[k] = None
+        _enrich_rank_prices(done)  # 순위 목록 가격을 KIS 시세로 통일
         # 가격 0인 빈 데이터는 캐시 오염 방지 (토큰 실패 등)
         j_price = (done.get("J_price") or {}).get("price", 0)
         q_price = (done.get("Q_price") or {}).get("price", 0)
@@ -1120,6 +1157,7 @@ def _prewarm_worker():
             for k, f in tasks.items():
                 try: done[k] = f.result()
                 except Exception: done[k] = None
+        _enrich_rank_prices(done)  # 순위 목록 가격을 KIS 시세로 통일
         return done
 
     def _fetch_etf_bar():
@@ -1178,7 +1216,9 @@ def _prewarm_worker():
                     _heatmap_cache["all"] = {"data": hm, "ts": time.time()}
         except Exception as e:
             pass
-        time.sleep(_PREWARM_TTL)
+        # 한 사이클 ≈ 빌드 ~45s(레이트게이트 15건/초) + 30s = ~75s 주기로 갱신.
+        # (15s로 줄이면 거의 연속 빌드가 되어 강제 새로고침과 게이트 예산 경쟁 → 30s로 균형)
+        time.sleep(30)
 
 threading.Thread(target=_prewarm_worker, daemon=True).start()
 

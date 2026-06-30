@@ -114,7 +114,10 @@ def _parse(raw: str):
         store_key = _TR_KEY_MAP.get(raw_code, raw_code)  # 야간선물은 실제코드→101W9로 매핑
         price = float(fields[_F_PRICE])
         sign  = fields[_F_SIGN]
-        rate  = float(fields[_F_RATE])
+        # 업종지수(H0UPCNT0) 필드 배열: 2=현재가 3=부호 4=전일대비 5=누적거래량 ... 9=전일대비율(등락률)
+        # ⚠️ 등락률은 field 9 (field 5는 거래량). 다른 TR은 기존 위치 유지.
+        rate_idx = 9 if tr_id == "H0UPCNT0" else _F_RATE
+        rate = float(fields[rate_idx])
         if sign == "4":
             rate = -abs(rate)
         elif sign == "2":

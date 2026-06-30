@@ -17,6 +17,25 @@ _TR  = "FHKST01010100"  # 주식 현재가 시세 (real/paper 동일)
 _cache: dict = {}
 _token_lock = threading.Lock()  # 동시 토큰 발급 방지
 
+# ── 초당 요청 속도 제한 ──────────────────────────────────────
+# KIS 개인계정은 초당 약 20건 제한. 초과 시 EGW00201("초당 거래건수를 초과") 500.
+# 히트맵은 수백 종목을 동시에 조회하므로 전역 게이트로 ~15건/초로 페이싱한다.
+_RATE_MAX_PER_SEC = 15
+_MIN_INTERVAL = 1.0 / _RATE_MAX_PER_SEC
+_rate_lock = threading.Lock()
+_next_slot = [0.0]
+
+
+def _rate_gate():
+    """호출을 전역적으로 ~15건/초로 분산. 슬롯 예약 후 락 밖에서 대기."""
+    with _rate_lock:
+        now = time.time()
+        scheduled = max(now, _next_slot[0] + _MIN_INTERVAL)
+        _next_slot[0] = scheduled
+    wait = scheduled - now
+    if wait > 0:
+        time.sleep(wait)
+
 # 토큰 파일 캐시 — 프로세스 재시작해도 재사용 (KIS는 하루 1회 발급 권장)
 _TOKEN_FILE = os.path.join(os.path.dirname(__file__), ".kis_token_cache.json")
 
@@ -29,15 +48,17 @@ def _load_token_file():
         if d.get("exp", 0) > time.time() + 60:
             _cache["tok"] = d["tok"]
             _cache["exp"] = d["exp"]
+            _cache["issued_at"] = d.get("issued_at", 0)
     except Exception:
         pass
 
 
 def _save_token_file():
-    """발급한 토큰을 파일에 저장."""
+    """발급한 토큰을 파일에 저장 (issued_at 포함 → 같은 PC 다른 프로세스의 발급 폭주 방지)."""
     try:
         with open(_TOKEN_FILE, "w") as f:
-            json.dump({"tok": _cache["tok"], "exp": _cache["exp"]}, f)
+            json.dump({"tok": _cache["tok"], "exp": _cache["exp"],
+                       "issued_at": _cache.get("issued_at", 0)}, f)
     except Exception:
         pass
 
@@ -45,13 +66,26 @@ def _save_token_file():
 _load_token_file()  # 시작 시 파일 캐시 로드
 
 
-def _token() -> str:
+def _token(force: bool = False) -> str:
+    """KIS 접근토큰 반환. force=True면 서버가 토큰을 무효화(EGW00123)했을 때 강제 재발급.
+
+    여러 PC·프로세스가 같은 앱키를 공유하면 한 곳에서 새 토큰을 받는 순간
+    나머지 토큰이 서버 측에서 죽는다. 로컬 exp가 미래여도 죽을 수 있으므로,
+    호출이 EGW00123으로 실패하면 force=True로 다시 발급받아 복구한다.
+    """
     now = time.time()
-    if _cache.get("exp", 0) > now + 60:
+    if not force and _cache.get("exp", 0) > now + 60:
         return _cache["tok"]
     with _token_lock:
-        if _cache.get("exp", 0) > now + 60:
+        now = time.time()
+        if not force and _cache.get("exp", 0) > now + 60:
             return _cache["tok"]
+        if force:
+            # 같은 PC의 다른 프로세스가 방금 재발급했을 수 있으니 파일을 다시 읽는다
+            _load_token_file()
+            # 60초 내 발급분이면 그걸 신뢰 — KIS는 1분당 1회만 발급(초과 시 403) → 재발급 무의미
+            if _cache.get("tok") and now - _cache.get("issued_at", 0) < 60:
+                return _cache["tok"]
         r = requests.post(f"{BASE}/oauth2/tokenP", json={
             "grant_type": "client_credentials",
             "appkey": _KEY,
@@ -61,17 +95,64 @@ def _token() -> str:
         d = r.json()
         _cache["tok"] = d["access_token"]
         _cache["exp"] = time.time() + d.get("expires_in", 86400) - 300
+        _cache["issued_at"] = time.time()
         _save_token_file()  # 파일에도 저장
         return _cache["tok"]
 
 
+# 토큰 재발급이 필요한 KIS 인증 오류 코드군
+#   EGW00121 = 유효하지 않은 토큰 / EGW00122 = 토큰 누락 / EGW00123 = 기간 만료 토큰
+_TOKEN_ERR_CODES = {"EGW00121", "EGW00122", "EGW00123"}
+_RATELIMIT_CODE = "EGW00201"   # 초당 거래건수 초과
+
+
+def _resp_msg_cd(resp) -> str:
+    """KIS 응답 본문의 msg_cd 추출. HTTP 500이어도 본문으로 확인. 없으면 ""."""
+    try:
+        return resp.json().get("msg_cd", "") or ""
+    except Exception:
+        return ""
+
+
+def _is_expired_token(resp) -> bool:
+    """KIS 응답이 토큰 무효/만료 오류인지 판별."""
+    return _resp_msg_cd(resp) in _TOKEN_ERR_CODES
+
+
+def _authed_get(url: str, headers: dict, params: dict, timeout: float):
+    """KIS GET 공통 래퍼. headers에 authorization은 넣지 말 것(여기서 주입).
+
+    - 전역 레이트 게이트로 ~15건/초 페이싱
+    - 토큰 무효/만료(EGW0012x) → 강제 재발급 후 재시도
+    - 초당 한도 초과(EGW00201) → 짧은 백오프 후 재시도(토큰 재발급 아님)
+    """
+    h = dict(headers)
+    for attempt in range(3):
+        _rate_gate()
+        h["authorization"] = f"Bearer {_token()}"
+        r = requests.get(url, headers=h, params=params, timeout=timeout)
+        msg = _resp_msg_cd(r)
+        if msg in _TOKEN_ERR_CODES:
+            # 토큰 무효/만료 → 강제 재발급 후 1회 재시도. 재발급 실패 시 원응답 반환(크래시 방지).
+            try:
+                _rate_gate()
+                h["authorization"] = f"Bearer {_token(force=True)}"
+                return requests.get(url, headers=h, params=params, timeout=timeout)
+            except Exception:
+                return r
+        if msg == _RATELIMIT_CODE and attempt < 2:
+            time.sleep(0.3 * (attempt + 1))   # 0.3s, 0.6s 백오프
+            continue
+        return r
+    return r
+
+
 def get_price(code: str) -> dict:
     """종목 현재가 (정규장). {code, name, price, change_rate, change}"""
-    r = requests.get(
+    r = _authed_get(
         f"{BASE}/uapi/domestic-stock/v1/quotations/inquire-price",
         headers={
             "content-type": "application/json; charset=utf-8",
-            "authorization": f"Bearer {_token()}",
             "appkey": _KEY,
             "appsecret": _SECRET,
             "tr_id": _TR,
@@ -110,11 +191,10 @@ def get_daily_bars(code: str, n: int = 20) -> list:
     today = _dt.date.today().strftime("%Y%m%d")
     start = (_dt.date.today() - _dt.timedelta(days=n * 2)).strftime("%Y%m%d")
     try:
-        r = requests.get(
+        r = _authed_get(
             f"{BASE}/uapi/domestic-stock/v1/quotations/inquire-daily-itemchartprice",
             headers={
                 "Content-Type": "application/json; charset=utf-8",
-                "authorization": f"Bearer {_token()}",
                 "appkey": _KEY,
                 "appsecret": _SECRET,
                 "tr_id": "FHKST03010100",

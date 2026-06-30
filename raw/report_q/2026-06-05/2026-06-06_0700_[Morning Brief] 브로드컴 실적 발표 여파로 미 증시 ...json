@@ -1,0 +1,56 @@
+{
+  "meta": {
+    "date": "2026-06-05",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_0700_[Morning Brief] 브로드컴 실적 발표 여파로 미 증시 ...md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": null,
+    "report_date": "2026-06-05",
+    "target_kind": "market",
+    "market_direction": "혼조 마감",
+    "macro_vars": [
+      "한국 4월 경상수지",
+      "미국 5월 비농업고용지수",
+      "미국 5월 실업률",
+      "젠슨황 CEO 방한(6.5~6.8일)",
+      "MSCI 한국 ETF -4.42% 급락",
+      "달러-원 환율 1,529.70원 마감"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "소비내수",
+        "stance": "강세",
+        "reason": "증시 상승에 따른 소비 확대 기대감 확대"
+      },
+      {
+        "sector": "바이오",
+        "stance": "강세",
+        "reason": "BofA 투자의견 상향 조정 및 실적 개선 기대감"
+      },
+      {
+        "sector": "금융",
+        "stance": "강세",
+        "reason": "사모신용 우려 완화 및 삼성화재 등 자본 부담 완화"
+      }
+    ],
+    "style": "대형주 차익실현 및 반도체 소부장 강세",
+    "event_calendar": [
+      {
+        "date": "2026-06-05",
+        "event": "젠슨황 CEO 방한"
+      }
+    ],
+    "top_picks": [
+      "삼성화재",
+      "코리안리",
+      "원익IPS",
+      "유나이티드헬스",
+      "JP모건체이스",
+      "블랙스톤"
+    ],
+    "risk": "반도체 차익실현 매물 출회 및 피크아웃 우려, MSCI 한국 ETF 급락",
+    "quote": "브로드컴 실적 발표 여파로 미 증시 혼조 마감"
+  }
+}

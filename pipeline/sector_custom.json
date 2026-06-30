@@ -1,6 +1,17 @@
 {
   "custom_tiles": [],
-  "extra_stocks": {},
+  "extra_stocks": {
+    "광통신": [
+      {
+        "name": "RFHIC",
+        "code": "218410"
+      },
+      {
+        "name": "RF머트리얼즈",
+        "code": "327260"
+      }
+    ]
+  },
   "hidden_sectors": [
     "반도체 전공정"
   ],

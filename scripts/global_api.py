@@ -12,6 +12,9 @@ import time
 _CACHE: dict = {}
 _CACHE_TTL = 15  # 15초 캐시 (esignal IP 차단 방지 최소값)
 
+# 원달러 환율 세션 상태 (무료 FX API는 일 단위 갱신 → 세션 시초 대비 변동 누적)
+_FX_STATE: dict = {"day": "", "open": 0.0, "bars": []}
+
 # Playwright로 스크래핑한 전일종가 캐시
 # {"kospif": 1385.9, "kospif_ngt": 1385.9, "nq": 29368.25, "oil": 69.23}
 _PW_PREVCLOSE: dict = {}
@@ -189,8 +192,43 @@ def get_wti() -> dict:
 
 
 def get_usdkrw() -> dict:
-    """원달러 환율 — yfinance USDKRW=X."""
-    return _yf_price_bars("USDKRW=X", "15m")
+    """원달러 환율 — 무료 FX API(open.er-api.com).
+
+    yfinance USDKRW=X는 'possibly delisted'로 자주 막혀 값이 멈춤 → 무료 FX API로 대체.
+    무료 API는 일 단위 갱신이라 인트라데이 틱은 없지만 '현재 정확한 환율'은 제공.
+    등락률은 세션 시초가 대비(서버 가동 후 첫 값 기준)로 누적 표시.
+    """
+    import requests as _req, datetime as _dt
+    now = time.time()
+    key = "__usdkrw__"
+    if key in _CACHE and now - _CACHE[key]["ts"] < _CACHE_TTL:
+        return _CACHE[key]["data"]
+
+    rate = 0.0
+    for url in ("https://open.er-api.com/v6/latest/USD",
+                "https://api.exchangerate-api.com/v4/latest/USD"):
+        try:
+            j = _req.get(url, timeout=8).json()
+            rate = float((j.get("rates") or {}).get("KRW") or 0)
+            if rate > 0:
+                break
+        except Exception:
+            pass
+
+    if rate <= 0:
+        return _yf_price_bars("USDKRW=X", "15m")  # 최후 폴백
+
+    today = _dt.date.today().isoformat()
+    if _FX_STATE["day"] != today or _FX_STATE["open"] <= 0:
+        _FX_STATE.update({"day": today, "open": rate, "bars": []})
+    change_rate = round((rate - _FX_STATE["open"]) / _FX_STATE["open"] * 100, 2)
+    _FX_STATE["bars"].append(round(rate, 2))
+    _FX_STATE["bars"] = _FX_STATE["bars"][-30:]
+
+    data = {"price": round(rate, 2), "change_rate": change_rate,
+            "bars": list(_FX_STATE["bars"]), "source": "er-api"}
+    _CACHE[key] = {"data": data, "ts": now}
+    return data
 
 
 # ── 하위 호환용 ──────────────────────────────

@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_0700_[IBKS Economy Outlook] Peril point 이번 경기사이...md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "정용택",
+    "report_date": "Jun/Jul 2026",
+    "market_direction": "중립 내지 부정적",
+    "macro_vars": [
+      "GDP 성장률",
+      "설비투자",
+      "금리(중립/적정/추세)",
+      "물가(인플레이션)",
+      "재정적자",
+      "고용",
+      "신용위험"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": "중립",
+        "reason": "소수의 AI 관련 기업이 기록적인 이익 증가율을 보이며 전체 시장 성장을 견인하고 있으나, 신용위험과 자금 조달 여건 악화 가능성 존재"
+      }
+    ],
+    "style": "가치주 및 성장주 간 양극화 심화",
+    "event_calendar": [
+      {
+        "date": "2026년 하반기",
+        "event": "유례없는 대규모 IPO"
+      }
+    ],
+    "top_picks": [
+      "Space X",
+      "Open AI",
+      "Anthropic",
+      "엔비디아",
+      "삼성전자",
+      "SK하이닉스"
+    ],
+    "risk": "심화되는 양극화, 고금리 지속에 따른 가계 및 기업의 신용위험 현실화, AI 기업으로의 자금 쏠림에 따른 시장 유동성 경색",
+    "quote": "호황의 그늘에서 자라 경기의 발목을 잡는 신용위험"
+  }
+}

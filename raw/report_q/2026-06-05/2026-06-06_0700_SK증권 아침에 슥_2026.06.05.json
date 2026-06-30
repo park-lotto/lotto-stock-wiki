@@ -1,0 +1,51 @@
+{
+  "meta": {
+    "date": "2026-06-05",
+    "broker": "SK증권 리서치센터",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_0700_SK증권 아침에 슥_2026.06.05.md"
+  },
+  "questionnaire": {
+    "broker": "SK증권 리서치센터",
+    "analyst": null,
+    "report_date": "2026-06-05",
+    "target_kind": "market",
+    "market_direction": "혼조",
+    "macro_vars": [
+      "미국·이란 지정학 긴장",
+      "브로드컴 실적 발표",
+      "미 실업률",
+      "비농업고용지수"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": "중립",
+        "reason": "브로드컴 실적 발표 후 반도체주 하락, 전통 산업주로 매수세 유입"
+      },
+      {
+        "sector": "자동차",
+        "stance": "중립",
+        "reason": "미국·이란 군사 충돌에 투자심리 위축, 일부 반도체 저가 매수세에 강세"
+      },
+      {
+        "sector": "소비내수",
+        "stance": "중립",
+        "reason": "고환율, 중동 리스크에 따른 차익실현과 외국인 매도세에 혼조 마감"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026-06-05",
+        "event": "미- 실업률, 비농업고용지수"
+      }
+    ],
+    "top_picks": [
+      "브로드컴",
+      "KOSPI",
+      "KOSDAQ"
+    ],
+    "risk": "중동 지정학 리스크, 미국·이란 군사 충돌, 지속 가능한 휴전 여부 불확실성",
+    "quote": "미국·이란 긴장 완화, 브로드컴 실적 전망 실망에 혼조 마감"
+  }
+}

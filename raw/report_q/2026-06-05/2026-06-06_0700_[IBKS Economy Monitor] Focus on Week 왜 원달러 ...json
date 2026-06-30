@@ -1,0 +1,31 @@
+{
+  "meta": {
+    "date": "2026-06-05",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_0700_[IBKS Economy Monitor] Focus on Week 왜 원달러 ...md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": [
+      "정용택",
+      "김예슬"
+    ],
+    "report_date": "2026. 6. 5",
+    "target_kind": "market",
+    "market_direction": "원/달러 환율 상방 리스크 유지",
+    "macro_vars": [
+      "원/달러 환율",
+      "중동 리스크",
+      "외국인 주식 매도",
+      "미국 대규모 투자 약정",
+      "경상수지 흑자",
+      "경제성장률 전망치"
+    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": null,
+    "risk": "중동 사태의 불안정성 지속, 외국인 주식 매도세 당분간 지속, 대미 투자 약정에 따른 원화 수급 압박",
+    "quote": "과도한 쏠림에 대한 통화당국의 경고가 무색하게 오히려 상방 리스크가 조금 더 크게 반영되며 고점을 높여가는 모양새다."
+  }
+}

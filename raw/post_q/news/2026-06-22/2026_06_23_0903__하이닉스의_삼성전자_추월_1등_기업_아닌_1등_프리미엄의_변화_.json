@@ -1,0 +1,23 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "하이닉스",
+      "signal": null,
+      "reason": null,
+      "ts": null,
+      "quote": "하이닉스의 삼성전자 추월, 1등 기업 아닌 1등 프리미엄의 변화",
+      "sector": "반도체"
+    },
+    {
+      "name": "삼성전자",
+      "signal": null,
+      "reason": null,
+      "ts": null,
+      "quote": "하이닉스의 삼성전자 추월, 1등 기업 아닌 1등 프리미엄의 변화",
+      "sector": "반도체"
+    }
+  ],
+  "news_items": [],
+  "quote": "하이닉스의 삼성전자 추월, 1등 기업 아닌 1등 프리미엄의 변화"
+}
