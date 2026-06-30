@@ -1988,6 +1988,82 @@ async def api_insights_to_notebook(req: Request):
     return JSONResponse(content=result, status_code=(200 if result.get("ok") else 500))
 
 
+@app.post("/api/insights/notebook_research")
+async def api_insights_notebook_research(req: Request):
+    """노트북에 웹 딥리서치 소스 자동 추가 (nlm research start --auto-import)."""
+    body = {}
+    try:
+        body = await req.json()
+    except Exception:
+        pass
+    nb_id = (body.get("notebook_id") or "").strip()
+    q = (body.get("q") or "").strip()
+    mode = (body.get("mode") or "fast").strip()
+    if mode not in ("fast", "deep"):
+        mode = "fast"
+    if not nb_id or not q:
+        return JSONResponse(content={"error": "notebook_id·q 필요"}, status_code=400)
+    if not _nlm_exe():
+        return JSONResponse(content={"error": "nlm CLI 없음"}, status_code=503)
+
+    def _do():
+        before = 0
+        ok0, out0, _ = _run_nlm(["notebook", "get", nb_id])
+        if ok0:
+            try:
+                before = json.loads(out0).get("source_count", 0)
+            except Exception:
+                pass
+        # fast~30s / deep~5min. deep는 HTTP 한계 → fast만 동기, deep는 그대로 길게.
+        tmo = 120 if mode == "fast" else 360
+        ok, out, errm = _run_nlm(
+            ["research", "start", q, "-n", nb_id, "-m", mode, "--auto-import"],
+            timeout=tmo)
+        if not ok:
+            return {"error": f"리서치 실패: {errm[:200]}"}
+        after = before
+        ok1, out1, _ = _run_nlm(["notebook", "get", nb_id])
+        if ok1:
+            try:
+                after = json.loads(out1).get("source_count", before)
+            except Exception:
+                pass
+        return {"ok": True, "added": max(0, after - before), "total_sources": after, "mode": mode}
+
+    result = await run_in_threadpool(_do)
+    return JSONResponse(content=result, status_code=(200 if result.get("ok") else 500))
+
+
+@app.post("/api/insights/notebook_card")
+async def api_insights_notebook_card(req: Request):
+    """노트북 소스로 카드/인포(브리핑 리포트) 생성 (nlm report create)."""
+    body = {}
+    try:
+        body = await req.json()
+    except Exception:
+        pass
+    nb_id = (body.get("notebook_id") or "").strip()
+    fmt = (body.get("format") or "Briefing Doc").strip()
+    if fmt not in ("Briefing Doc", "Study Guide", "Blog Post"):
+        fmt = "Briefing Doc"
+    if not nb_id:
+        return JSONResponse(content={"error": "notebook_id 필요"}, status_code=400)
+    if not _nlm_exe():
+        return JSONResponse(content={"error": "nlm CLI 없음"}, status_code=503)
+
+    def _do():
+        ok, out, errm = _run_nlm(
+            ["report", "create", nb_id, "--format", fmt, "--language", "ko", "--confirm"],
+            timeout=180)
+        if not ok:
+            return {"error": f"카드 생성 실패: {errm[:200]}"}
+        return {"ok": True, "format": fmt,
+                "url": f"https://notebooklm.google.com/notebook/{nb_id}"}
+
+    result = await run_in_threadpool(_do)
+    return JSONResponse(content=result, status_code=(200 if result.get("ok") else 500))
+
+
 # ── §4.8 POST /api/insights/to_youtube ───────────────────────
 @app.post("/api/insights/to_youtube")
 async def api_insights_to_youtube(req: Request):

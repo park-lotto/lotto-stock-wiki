@@ -79,6 +79,32 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 }
 .search-wrap .search-btn:hover { color: var(--gold); }
 
+/* ── NotebookLM 다리 ── */
+.nb-bar { display: flex; align-items: center; gap: 12px; margin: 14px 0 18px; flex-wrap: wrap; }
+.nb-make-btn {
+  padding: 9px 18px; border-radius: 9px; cursor: pointer; font-family: inherit;
+  font-size: .84rem; font-weight: 700; color: #0a0a0a; background: var(--gold);
+  border: none; transition: filter .15s, transform .15s;
+}
+.nb-make-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.nb-hint { font-size: .76rem; color: var(--muted); }
+.nb-open {
+  display: inline-block; padding: 9px 16px; border-radius: 9px; text-decoration: none;
+  font-size: .84rem; font-weight: 700; color: var(--gold);
+  background: var(--rp-bg); border: 1px solid var(--rp-line); transition: background .15s;
+}
+.nb-open:hover { background: #221c0a; }
+.nb-actions { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.nb-actions-label { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 2px; }
+.nb-act {
+  padding: 8px 14px; border-radius: 8px; cursor: pointer; font-family: inherit;
+  font-size: .82rem; font-weight: 600; color: var(--txt);
+  background: var(--card); border: 1px solid var(--line); transition: border-color .15s, color .15s;
+}
+.nb-act:hover:not(:disabled) { border-color: var(--gold-dim); color: var(--gold); }
+.nb-act:disabled { opacity: .7; cursor: default; }
+.nb-act small { color: var(--muted); font-weight: 400; }
+
 /* ── 카테고리 카드 ── */
 .cat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 32px 0; }
 .cat-card {
@@ -886,7 +912,67 @@ async function doSearch() {
     </div>`;
   }).join('');
 
-  render(bcHtml() + totalHtml + rows);
+  const nbBar = `<div class="nb-bar">
+    <button class="nb-make-btn" onclick="sendToNotebook('${escAttr(q)}')">📒 이 검색을 NotebookLM 노트북으로</button>
+    <span class="nb-hint">전 소스 발언 ${data.total ?? hits.length}건 + 원본 링크를 새 노트북에 투입</span>
+  </div>`;
+  render(bcHtml() + totalHtml + nbBar + rows);
+}
+
+// ── NotebookLM 다리 ──
+async function sendToNotebook(q) {
+  openModal('📒 NotebookLM 노트북 만들기',
+    `<div class="state-box"><div class="spinner"></div><div class="msg">"${escHtml(q)}" 발언을 모아 노트북 생성 중...<br><small style="color:var(--muted)">nlm 호출 — 20~40초 소요</small></div></div>`);
+  try {
+    const res = await apiFetch('/api/insights/to_notebook', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ q })
+    });
+    if (res.error) throw new Error(res.error);
+    window._lastNb = { id: res.notebook_id, q };
+    qs('#modal-title').textContent = '📒 노트북 생성 완료';
+    qs('#modal-content').innerHTML = `
+      <div style="line-height:1.8">
+        <div style="font-size:1.05rem;font-weight:700;margin-bottom:6px">[허브] ${escHtml(q)}</div>
+        <div style="color:var(--muted);font-size:.84rem;margin-bottom:14px">
+          추출발언 <b style="color:var(--txt)">${res.atoms}</b>건 · 유튜브 ${res.yt_urls} · 웹 ${res.web_urls} · 소스 <b style="color:var(--txt)">${res.sources_added}</b>건 투입</div>
+        <a href="${res.url}" target="_blank" class="nb-open">↗ NotebookLM에서 열기</a>
+        <div class="nb-actions">
+          <div class="nb-actions-label">다음 단계 (선택)</div>
+          <button class="nb-act" onclick="nbAction(this,'research')">🔬 웹 딥리서치 추가 <small>~30초</small></button>
+          <button class="nb-act" onclick="nbAction(this,'card')">🎴 카드·브리핑 리포트 생성 <small>~1분</small></button>
+        </div>
+      </div>`;
+  } catch(e) {
+    qs('#modal-content').innerHTML = `<div style="color:#e88;padding:8px">오류: ${escHtml(e.message)}</div>`;
+  }
+}
+
+async function nbAction(btn, kind) {
+  const nb = window._lastNb;
+  if (!nb) return;
+  const orig = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = '처리 중... <small>잠시만</small>';
+  try {
+    if (kind === 'research') {
+      const res = await apiFetch('/api/insights/notebook_research', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notebook_id: nb.id, q: nb.q, mode: 'fast' })
+      });
+      if (res.error) throw new Error(res.error);
+      btn.innerHTML = `✅ 새 소스 ${res.added}건 추가 (총 ${res.total_sources})`;
+    } else {
+      const res = await apiFetch('/api/insights/notebook_card', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notebook_id: nb.id, format: 'Briefing Doc' })
+      });
+      if (res.error) throw new Error(res.error);
+      btn.innerHTML = '✅ 브리핑 리포트 생성됨 — 노트북에서 확인';
+    }
+  } catch(e) {
+    btn.disabled = false; btn.innerHTML = orig;
+    toast(`실패: ${e.message}`, true);
+  }
 }
 
 // ── 모달 ──
