@@ -1321,3 +1321,9 @@ python calc_oscillator.py SK하이닉스 삼성전자 한미반도체 --tg
 - 인포/슬라이드: notebook_studio가 artifact_id만 빠르게 반환 → studio_poll로 프론트가 8s×32 폴링 → 완료 시 다운로드·인라인 표시(긴 프롬프트로 180s 초과해도 뜸)
 - 프리셋 8종(클릭→스탁브레인 자동질문): 🌅아침/🌆마감/🔬종목/🏭섹터/📊시장/🕳️수급빈집/⚔️대장주/🆚교차비교
 - 검증: studio_poll ready+file_url 정상
+
+## 2026-06-30 — 다리 v11: 레퍼런스 이미지 첨부(자료/디자인) + 리모션 브랜드 디자인
+- 만들기 영역에 🖼️ 이미지 첨부: 📎자료로(nlm source add) / 🎨디자인참고로(Gemini 비전이 스타일 추출→_NB_DESIGN 저장→인포/슬라이드/영상 생성 focus에 주입)
+- /api/insights/upload_image (base64 JSON), _gemini_vision_style(키 폴백)
+- 시각 결과물에 리모션 브랜드(_BRAND_DESIGN: 블랙+라임그린#AAFF00+골드#C8921A HUD) + 업로드 레퍼런스 스타일 결합
+- 검증: 리모션톤 인포그래픽 실측(블랙+라임+골드 HUD), design 업로드 비전 스타일추출 정상

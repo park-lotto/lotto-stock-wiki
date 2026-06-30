@@ -138,6 +138,8 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .ws-preset { padding: 6px 8px; border-radius: 7px; border: 1px solid var(--line); background: var(--card); color: var(--txt); font-family: inherit; font-size: .73rem; cursor: pointer; transition: border-color .15s, color .15s; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ws-preset:hover { border-color: var(--gold); color: var(--gold); }
 .ws-spresets { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin: 8px 0; }
+.ws-img-attach { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+.ws-img-name { font-size: .72rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ws-right { flex: 1; min-width: 0; overflow-y: auto; padding: 22px 26px; }
 .ws-canvas { max-width: 920px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
 .ws-empty { text-align: center; color: var(--muted); padding: 80px 20px; font-size: .9rem; line-height: 1.9; }
@@ -626,6 +628,16 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
         <button class="nb-act" onclick="wsStudio(this,'slides')">📑 슬라이드 <small>~1분</small></button>
         <button class="nb-act" onclick="wsStudio(this,'audio')">🎧 오디오 <small>2~5분</small></button>
         <button class="nb-act" onclick="wsStudio(this,'video')">🎬 영상 <small>3~6분</small></button>
+        <div class="ws-img-attach">
+          <input type="file" id="ws-img-file" accept="image/*" style="display:none" onchange="wsImgPicked()">
+          <button class="ws-preset" onclick="qs('#ws-img-file').click()">🖼️ 레퍼런스 이미지 첨부…</button>
+          <span id="ws-img-name" class="ws-img-name"></span>
+          <div id="ws-img-actions" class="ws-spresets" style="display:none">
+            <button class="ws-preset" onclick="wsUploadImg('source')">📎 자료로 추가</button>
+            <button class="ws-preset" onclick="wsUploadImg('design')">🎨 디자인 참고로</button>
+          </div>
+          <div id="ws-img-msg" class="ws-studio-msg"></div>
+        </div>
       </div>
       <div class="ws-act-group ws-sources">
         <div class="ws-act-label">📚 자료 <span id="ws-src-count">(0)</span> <button class="ws-pull" onclick="openMergePicker()">+ 이전 브리핑 끌어오기</button></div>
@@ -1454,6 +1466,40 @@ const WS_STUDIO_PROMPTS = {
 function wsStudioPreset(k) {
   const t = WS_STUDIO_PROMPTS[k]; if (!t) return;
   const inp = qs('#ws-studio-prompt'); if (inp) { inp.value = t; inp.focus(); }
+}
+
+function wsImgPicked() {
+  const f = (qs('#ws-img-file') || {}).files && qs('#ws-img-file').files[0];
+  if (qs('#ws-img-name')) qs('#ws-img-name').textContent = f ? f.name : '';
+  if (qs('#ws-img-actions')) qs('#ws-img-actions').style.display = f ? 'grid' : 'none';
+}
+async function wsUploadImg(mode) {
+  const ws = window._ws; if (!ws) return;
+  const f = (qs('#ws-img-file') || {}).files && qs('#ws-img-file').files[0];
+  if (!f) { toast('이미지를 먼저 선택하세요', true); return; }
+  const msg = qs('#ws-img-msg');
+  if (msg) msg.innerHTML = wsLoading(mode === 'design' ? '스타일 분석 중…' : '자료로 추가 중…');
+  let data;
+  try {
+    data = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); });
+  } catch(e) { if (msg) msg.innerHTML = '<div style="color:#e88">파일 읽기 실패</div>'; return; }
+  try {
+    const res = await apiFetch('/api/insights/upload_image', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notebook_id: ws.id, filename: f.name, data, mode })
+    });
+    if (res.error) throw new Error(res.error);
+    if (mode === 'design') {
+      if (res.style) {
+        msg.innerHTML = `<div class="nb-studio-ok">🎨 레퍼런스 스타일 적용됨 — 이제 인포/슬라이드/영상 만들 때 이 느낌이 반영됩니다.<br><small style="color:var(--muted)">${escHtml(res.style.slice(0, 180))}…</small></div>`;
+      } else {
+        msg.innerHTML = `<div class="nb-studio-ok">${escHtml(res.warn || '스타일 추출 보류')}</div>`;
+      }
+    } else {
+      msg.innerHTML = `<div class="nb-studio-ok">📎 이미지를 자료로 추가했습니다 (총 ${res.total_sources}개 소스).</div>`;
+      loadWsSources();
+    }
+  } catch(e) { if (msg) msg.innerHTML = `<div style="color:#e88">실패: ${escHtml(e.message)}</div>`; }
 }
 
 async function wsStudio(btn, kind) {

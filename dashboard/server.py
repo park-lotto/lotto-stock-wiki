@@ -41,6 +41,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 
 # 노트북별 수집 자료(md) 메모리 캐시 — Claude 직접 대화 컨텍스트로 사용
 _NB_BUNDLES = {}
+# 노트북별 디자인 레퍼런스(업로드 이미지에서 추출한 스타일 텍스트)
+_NB_DESIGN = {}
 
 # 만든 브리핑(노트북) 영속 레지스트리 — 이전 자료 끌어오기/교차검색용
 _REGISTRY_PATH = os.path.join(ROOT, "out", "insights_notebook", "registry.json")
@@ -2621,10 +2623,14 @@ async def api_insights_notebook_studio(req: Request):
         args = list(spec["create"]) + [nb_id, "--confirm"]
         if kind != "mindmap":
             args += ["--language", "ko"]      # 결과물 한국어로
-        # 시각 결과물엔 채널(리모션) 브랜드 디자인을 기본 적용
+        # 시각 결과물엔 채널(리모션) 브랜드 디자인 + 업로드한 레퍼런스 스타일 적용
         f2 = focus
         if kind in ("infographic", "slides", "video"):
-            f2 = (focus + " / " + _BRAND_DESIGN) if focus else _BRAND_DESIGN
+            parts = ([focus] if focus else []) + [_BRAND_DESIGN]
+            ref = _NB_DESIGN.get(nb_id)
+            if ref:
+                parts.append("[레퍼런스 스타일 — 이 느낌을 반영] " + ref)
+            f2 = " / ".join(parts)
             if kind == "infographic":
                 args += ["--style", "professional"]
         if f2:
@@ -2858,6 +2864,98 @@ async def api_insights_notebook_merge(req: Request):
             except Exception:
                 pass
         return {"ok": True, "added": added, "total_sources": total}
+
+    result = await run_in_threadpool(_do)
+    return JSONResponse(content=result, status_code=(200 if result.get("ok") else 500))
+
+
+def _gemini_vision_style(img_bytes, mime):
+    """업로드 이미지의 '디자인 스타일'을 텍스트로 추출 (Gemini 비전, 키 폴백)."""
+    from google import genai
+    from google.genai import types
+    keys = [k for k in (_env_key("GEMINI_API_KEY"), _env_key("GEMINI_API_KEY_2")) if k]
+    if not keys:
+        raise RuntimeError(".env에 GEMINI_API_KEY 없음")
+    prompt = (
+        "이 이미지의 '디자인 스타일'만 분석해줘(담긴 내용·텍스트 의미는 무시). "
+        "배경색, 메인/보조 색상(hex 추정), 레이아웃 구성, 타이포 느낌, 강조 방식, 전체 분위기를 "
+        "인포그래픽/슬라이드 생성 지시문으로 바로 쓸 수 있게 한국어 2~4문장으로 요약해줘."
+    )
+    last = ""
+    for k in keys:
+        try:
+            client = genai.Client(api_key=k)
+            resp = client.models.generate_content(
+                model="gemini-3-flash-preview",
+                contents=[types.Part.from_bytes(data=img_bytes, mime_type=mime), prompt],
+            )
+            return (resp.text or "").strip()
+        except Exception as e:
+            last = str(e)
+            if "429" in last or "RESOURCE_EXHAUSTED" in last:
+                continue
+            raise
+    raise RuntimeError(f"Gemini 쿼터 소진: {last[:150]}")
+
+
+@app.post("/api/insights/upload_image")
+async def api_insights_upload_image(req: Request):
+    """이미지 첨부 — mode=source(노트북 소스로 추가) / design(스타일 추출→생성 반영)."""
+    body = {}
+    try:
+        body = await req.json()
+    except Exception:
+        pass
+    nb_id = (body.get("notebook_id") or "").strip()
+    mode = (body.get("mode") or "source").strip()
+    filename = (body.get("filename") or "image.png").strip()
+    data_b64 = body.get("data") or ""
+    if not nb_id or not data_b64:
+        return JSONResponse(content={"error": "notebook_id·data 필요"}, status_code=400)
+    import base64
+    try:
+        if "," in data_b64:           # data:URL 헤더 제거
+            data_b64 = data_b64.split(",", 1)[1]
+        raw = base64.b64decode(data_b64)
+    except Exception:
+        return JSONResponse(content={"error": "이미지 디코드 실패"}, status_code=400)
+    ext = (os.path.splitext(filename)[1] or ".png").lower()
+    mime = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+            ".gif": "image/gif", ".webp": "image/webp"}.get(ext, "image/png")
+    up_dir = os.path.join(ROOT, "out", "insights_notebook", "uploads")
+    os.makedirs(up_dir, exist_ok=True)
+    safe = re.sub(r'[\\/:*?"<>|]', "_", os.path.basename(filename))[:50] or "image.png"
+    fpath = os.path.join(up_dir, f"{re.sub(r'[^0-9a-fA-F-]', '', nb_id)[:12]}_{safe}")
+    with open(fpath, "wb") as f:
+        f.write(raw)
+
+    def _do():
+        if mode == "design":
+            if not _nlm_exe():
+                pass
+            try:
+                style = _gemini_vision_style(raw, mime)
+            except Exception as e:
+                return {"ok": True, "mode": "design", "style": "",
+                        "warn": f"스타일 추출 보류({str(e)[:120]}). 비전 키가 풀리면 자동 적용됩니다."}
+            if style:
+                _NB_DESIGN[nb_id] = style[:1200]
+            return {"ok": True, "mode": "design", "style": style}
+        # mode == source
+        if not _nlm_exe():
+            return {"error": "nlm CLI 없음"}
+        ok, _o, err = _run_nlm(["source", "add", nb_id, "--file", fpath,
+                                "--title", f"[이미지] {safe}"])
+        if not ok:
+            return {"error": f"이미지 소스 추가 실패: {_friendly_nlm_err(err)}"}
+        total = 0
+        ok2, out2, _ = _run_nlm(["notebook", "get", nb_id])
+        if ok2:
+            try:
+                total = json.loads(out2).get("source_count", 0)
+            except Exception:
+                pass
+        return {"ok": True, "mode": "source", "total_sources": total}
 
     result = await run_in_threadpool(_do)
     return JSONResponse(content=result, status_code=(200 if result.get("ok") else 500))
