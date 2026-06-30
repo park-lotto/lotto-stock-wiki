@@ -155,6 +155,15 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 .tile .stock-more:hover{opacity:1;}
 .tile .stock-extra{display:none;flex-direction:column;gap:3px;margin-top:2px;}
 .tile .stock-extra.open{display:flex;}
+/* 종목 행 수급 (외인/기관/개인/프로그램) — 타일 색 배경에서도 보이도록 어두운 띠 */
+.tile .stock-sup{display:flex;flex-wrap:wrap;gap:1px 7px;margin:0 0 3px;padding:2px 6px;
+  background:rgba(0,0,0,.24);border-radius:5px;font-size:8.5px;line-height:1.35;
+  font-variant-numeric:tabular-nums;}
+.tile .stock-sup:empty{display:none;padding:0;background:none;margin:0;}
+.tile .stock-sup .sp{color:rgba(255,255,255,.5);}
+.tile .stock-sup .sp.su{color:#ffcccc;}
+.tile .stock-sup .sp.sd{color:#cfe6ff;}
+.tile .stock-sup .sp.sn{color:rgba(255,255,255,.38);}
 .parent-badge{display:inline-block;font-size:10px;color:rgba(255,255,255,.45);font-weight:400;
               background:rgba(0,0,0,.35);padding:1px 6px;border-radius:10px;
               margin-left:4px;vertical-align:middle;}
@@ -410,6 +419,7 @@ document.getElementById("grid").addEventListener("click",e=>{
         if(tm){tm.textContent="+ 더보기";tm.style.color="";}
       }
     });
+    if(willOpen) refreshTileSupply();  // 펼쳐진 종목 수급 로드
   }
 });
 
@@ -604,6 +614,57 @@ function renderTab(data){
   renderGrid(_lastTiles);
 }
 
+// 종목 행 + 수급 자리(비동기 채움)
+function stockRowHtml(s){
+  return `<div class="stock-row" data-code="${esc(s.code||"")}">
+       <span class="stock-name">${esc(s.name)}</span>
+       <span class="stock-rate">${rateStr(s.change_rate)}</span>
+     </div>
+     <div class="stock-sup" data-supcode="${esc(s.code||"")}"></div>`;
+}
+
+// ── 타일 종목 수급 (외인/기관/개인/프로그램) ───────────────
+const _supCache={};            // {code:{data,ts}}
+const _SUP_TTL=300000;         // 5분 (클라 캐시; 서버는 10분)
+function _supLine(sup){
+  if(!sup)return"";
+  const cls=v=>v>0?"su":v<0?"sd":"sn";
+  const cell=(k,v)=>`<span class="sp ${cls(v)}">${k} ${wlAmt(v)}</span>`;
+  return cell("외",sup.외인)+cell("기",sup.기관)+cell("개",sup.개인)+cell("프",sup.프로그램);
+}
+function _applySupply(map){
+  Object.entries(map).forEach(([code,sup])=>{
+    _supCache[code]={data:sup,ts:Date.now()};
+    document.querySelectorAll(`.stock-sup[data-supcode="${code}"]`).forEach(el=>{
+      el.innerHTML=_supLine(sup);
+    });
+  });
+}
+function _visibleSupCodes(){
+  return [...document.querySelectorAll('#grid .stock-sup[data-supcode]')]
+    .filter(el=>el.dataset.supcode && el.offsetParent!==null)  // 보이는 행만
+    .map(el=>el.dataset.supcode);
+}
+async function fetchSupplyForCodes(codes){
+  codes=[...new Set(codes.filter(Boolean))];
+  for(let i=0;i<codes.length;i+=60){
+    const chunk=codes.slice(i,i+60);
+    try{
+      const r=await fetch("/api/stock_supply_batch?codes="+encodeURIComponent(chunk.join(",")));
+      const map=await r.json();
+      if(map&&!map.error) _applySupply(map);
+    }catch(e){}
+  }
+}
+function refreshTileSupply(){
+  const codes=_visibleSupCodes();
+  if(!codes.length)return;
+  const now=Date.now(), fresh={}, need=[];
+  codes.forEach(c=>{const e=_supCache[c]; if(e&&now-e.ts<_SUP_TTL)fresh[c]=e.data; else need.push(c);});
+  _applySupply(fresh);            // 캐시된 건 즉시 표시
+  if(need.length) fetchSupplyForCodes(need);
+}
+
 function renderGrid(tiles){
   const grid=document.getElementById("grid");
   const favs=getFavs();
@@ -643,16 +704,8 @@ function renderGrid(tiles){
     const topStocks=sortedStocks.slice(0,3);
     const extraStocks=sortedStocks.slice(3);
     const moreCount=extraStocks.length;
-    const extraHtml=extraStocks.map(s=>
-      `<div class="stock-row">
-         <span class="stock-name">${esc(s.name)}</span>
-         <span class="stock-rate">${rateStr(s.change_rate)}</span>
-       </div>`).join("");
-    const stocksHtml=topStocks.map(s=>
-      `<div class="stock-row">
-         <span class="stock-name">${esc(s.name)}</span>
-         <span class="stock-rate">${rateStr(s.change_rate)}</span>
-       </div>`).join("")
+    const extraHtml=extraStocks.map(stockRowHtml).join("");
+    const stocksHtml=topStocks.map(stockRowHtml).join("")
       +(moreCount>0?`<div class="stock-more" data-count="${moreCount}">+${moreCount}개 더보기</div><div class="stock-extra">${extraHtml}</div>`:"")
     const el=document.createElement("div");
     el.className=`tile ${cls}`;
@@ -667,6 +720,7 @@ function renderGrid(tiles){
       <div class="stocks">${stocksHtml}</div>`;
     grid.appendChild(el);
   }
+  refreshTileSupply();   // 보이는 종목(상위3) 수급 채우기
 }
 
 // ── ETF 바 ────────────────────────────────────────────────

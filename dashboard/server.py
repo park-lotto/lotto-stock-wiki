@@ -1086,6 +1086,15 @@ _SEARCH_ALIASES = {
     "현대중공업": "HD현대중공업", "한국전력": "한국전력공사",
 }
 
+# KRX 정식명 → 실제 통용 종목명(표시·저장용). 예: 현대자동차 → 현대차
+_DISPLAY_NAME = {
+    "현대자동차": "현대차",
+}
+
+
+def _disp_name(name: str) -> str:
+    return _DISPLAY_NAME.get(name, name)
+
 
 @app.get("/api/stock_search")
 def api_stock_search(q: str = ""):
@@ -1096,19 +1105,62 @@ def api_stock_search(q: str = ""):
             codes_data = json.load(f)
         codes = codes_data.get("codes", {})
         q_l = q.strip().lower()
-        results = [{"name": n, "code": c} for n, c in codes.items()
-                   if q_l in n.lower()]
+        results = [{"name": _disp_name(n), "code": c} for n, c in codes.items()
+                   if q_l in n.lower() or q_l in _disp_name(n).lower()]
         seen = {r["code"] for r in results}
-        # 별칭 매칭 → 정식명 종목을 상단에 보강 (예: '현대차' → 현대자동차)
+        # 별칭 매칭 → 정식명 종목을 항상 최상단으로 (예: '현대차' → 현대차[005380]가 현대차증권보다 위)
         for alias, official in _SEARCH_ALIASES.items():
             if q_l in alias.lower():
                 c = codes.get(official)
-                if c and c not in seen:
-                    results.insert(0, {"name": official, "code": c})
+                if c:
+                    results = [r for r in results if r["code"] != c]
+                    results.insert(0, {"name": _disp_name(official), "code": c})
                     seen.add(c)
         return JSONResponse(content=results[:20])
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
+
+
+# ── 종목별 잠정수급 배치 (히트맵 타일 행용) ──────────────────
+_supply_cache: dict = {}      # {code: {"data": supply, "ts": float}}
+_SUPPLY_TTL = 600             # 10분 (수급은 분 단위로 천천히 변함)
+
+
+@app.get("/api/stock_supply_batch")
+def api_stock_supply_batch(codes: str = ""):
+    """여러 종목 잠정수급(외인/기관/개인/프로그램) 일괄 조회. 종목당 10분 캐시.
+
+    codes: 콤마구분 종목코드 (최대 60). 반환: {code: {외인,기관,개인,프로그램,ts}}
+    """
+    code_list = [c.strip() for c in codes.split(",") if c.strip()][:60]
+    if not code_list:
+        return JSONResponse(content={})
+    now = time.time()
+    out: dict = {}
+    need = []
+    for c in code_list:
+        ent = _supply_cache.get(c)
+        if ent and now - ent["ts"] < _SUPPLY_TTL:
+            out[c] = ent["data"]
+        else:
+            need.append(c)
+    if need:
+        try:
+            import kiwoom_api
+            from concurrent.futures import ThreadPoolExecutor
+            with ThreadPoolExecutor(max_workers=8) as ex:
+                futs = {c: ex.submit(kiwoom_api.get_stock_supply, c) for c in need}
+                for c in need:
+                    try:
+                        d = futs[c].result(timeout=12)
+                    except Exception:
+                        d = None
+                    if d:
+                        _supply_cache[c] = {"data": d, "ts": now}
+                        out[c] = d
+        except Exception:
+            pass
+    return JSONResponse(content=out)
 
 
 @app.get("/api/sector_names")
@@ -2199,7 +2251,15 @@ async def api_insights_notebook_query(req: Request):
         return JSONResponse(content={"error": "nlm CLI 없음"}, status_code=503)
 
     def _do():
-        args = ["notebook", "query", nb_id, question, "--json"]
+        # 채팅에 "만들어줘" 류가 들어가면 NotebookLM이 문서생성 모드로 빠져
+        # 영어 사고과정만 뱉는 문제 → 답변만 하도록 제약을 덧붙인다.
+        guarded = (
+            f"{question}\n\n"
+            "[지시] 위 소스 내용만 근거로 한국어로 간결하게 '답변'만 해줘. "
+            "리포트·문서·노트 같은 새 아티팩트를 만들지 말고, "
+            "사고과정 설명 없이 핵심 결과만 정리해서 말해줘."
+        )
+        args = ["notebook", "query", nb_id, guarded, "--json"]
         if conv:
             args += ["-c", conv]
         ok, out, errm = _run_nlm(args, timeout=180)

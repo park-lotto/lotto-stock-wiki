@@ -1037,10 +1037,34 @@ async function nbAction(btn, kind) {
 function openModal(title, html) {
   qs('#modal-title').textContent = title;
   qs('#modal-content').innerHTML = html;
+  const box = qs('#modal .modal-box');
+  if (box) box.style.transform = '';   // 드래그 위치 초기화(중앙)
   qs('#modal').classList.add('open');
 }
 function closeModal() { qs('#modal').classList.remove('open'); }
 qs('#modal').addEventListener('click', e => { if (e.target === qs('#modal')) closeModal(); });
+
+// 모달 헤더 잡고 드래그 이동
+(function makeModalDraggable() {
+  const header = qs('#modal .modal-header');
+  const box = qs('#modal .modal-box');
+  if (!header || !box) return;
+  header.style.cursor = 'move';
+  let drag = false, sx = 0, sy = 0, ox = 0, oy = 0;
+  header.addEventListener('mousedown', e => {
+    if (e.target.closest('.close')) return;
+    drag = true; sx = e.clientX; sy = e.clientY;
+    const m = (box.style.transform || '').match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
+    ox = m ? parseFloat(m[1]) : 0; oy = m ? parseFloat(m[2]) : 0;
+    document.body.style.userSelect = 'none';
+    e.preventDefault();
+  });
+  window.addEventListener('mousemove', e => {
+    if (!drag) return;
+    box.style.transform = `translate(${ox + e.clientX - sx}px, ${oy + e.clientY - sy}px)`;
+  });
+  window.addEventListener('mouseup', () => { drag = false; document.body.style.userSelect = ''; });
+})();
 
 // ── 헬퍼 ──
 function escHtml(s) {

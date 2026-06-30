@@ -341,7 +341,13 @@ def get_stock_supply(code: str) -> dict:
             row = rows[0]
             out["외인"] = _pamt(row.get("frgnr_invsr", 0))
             out["기관"] = _pamt(row.get("orgn", 0))
-            out["개인"] = _pamt(row.get("ind_invsr", 0))
+            gae = _pamt(row.get("ind_invsr", 0))
+            # ka10059가 개인(ind_invsr)을 0으로 주는 경우 → 순매수 합=0 원리로 도출
+            #   개인 = -(외인 + 기관계 + 기타법인 + 내외국인)
+            if gae == 0:
+                gae = -(out["외인"] + out["기관"]
+                        + _pamt(row.get("etc_corp", 0)) + _pamt(row.get("natfor", 0)))
+            out["개인"] = gae
     except Exception:
         pass
 
