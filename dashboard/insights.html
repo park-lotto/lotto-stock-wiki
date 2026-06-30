@@ -105,6 +105,10 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .ws-close:hover { border-color: var(--gold-dim); color: var(--gold); }
 .ws-body { flex: 1; display: flex; min-height: 0; }
 .ws-left { width: 340px; flex-shrink: 0; border-right: 1px solid var(--line); padding: 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; background: var(--card); }
+.ws-ai-box { background: var(--bg); border: 1px solid var(--line); border-radius: 11px; padding: 12px; }
+.ws-ai-claude { border-color: #3d2f6b; background: #140e22; }
+.ws-ai-label { font-size: .76rem; font-weight: 700; color: var(--txt); margin-bottom: 8px; display: flex; align-items: baseline; gap: 6px; }
+.ws-ai-label small { font-weight: 400; color: var(--muted); font-size: .68rem; }
 .ws-ask { display: flex; gap: 8px; }
 .ws-q-input { flex: 1; padding: 10px 14px; border-radius: 9px; border: 1px solid var(--line); background: var(--bg); color: var(--txt); font-family: inherit; font-size: .86rem; outline: none; }
 .ws-q-input:focus { border-color: var(--gold-dim); }
@@ -548,9 +552,19 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
   </div>
   <div class="ws-body">
     <div class="ws-left">
-      <div class="ws-ask">
-        <input type="text" id="ws-q" class="ws-q-input" placeholder="이 자료에 질문… (예: 오늘 핵심 이슈 3가지 정리)" onkeydown="if(event.key==='Enter')wsAsk()">
-        <button class="brief-go" onclick="wsAsk()">질문</button>
+      <div class="ws-ai-box ws-ai-claude">
+        <div class="ws-ai-label">🤖 Claude와 직접 대화</div>
+        <div class="ws-ask">
+          <input type="text" id="ws-claude" class="ws-q-input" placeholder="Claude에게 질문·브레인스토밍…" onkeydown="if(event.key==='Enter')wsClaude()">
+          <button class="brief-go" onclick="wsClaude()">대화</button>
+        </div>
+      </div>
+      <div class="ws-ai-box">
+        <div class="ws-ai-label">🧠 스탁브레인 질문 <small>내 자료에서 인용</small></div>
+        <div class="ws-ask">
+          <input type="text" id="ws-q" class="ws-q-input" placeholder="내 자료에 질문… (예: 오늘 핵심 이슈 3가지)" onkeydown="if(event.key==='Enter')wsAsk()">
+          <button class="brief-go" onclick="wsAsk()">질문</button>
+        </div>
       </div>
       <div class="ws-act-group">
         <div class="ws-act-label">자료 보강 · 문서</div>
@@ -558,13 +572,13 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
         <button class="nb-act" onclick="wsAction(this,'card')">🎴 브리핑 리포트 <small>~1분</small></button>
       </div>
       <div class="ws-act-group">
-        <div class="ws-act-label">🎨 만들기 — NotebookLM Studio</div>
+        <div class="ws-act-label">🎨 만들기 — 스탁브레인 스튜디오</div>
         <button class="nb-act" onclick="wsStudio(this,'infographic')">🖼️ 인포그래픽 <small>~1분</small></button>
         <button class="nb-act" onclick="wsStudio(this,'slides')">📑 슬라이드 <small>~1분</small></button>
         <button class="nb-act" onclick="wsStudio(this,'audio')">🎧 오디오 <small>2~5분</small></button>
         <button class="nb-act" onclick="wsStudio(this,'video')">🎬 영상 <small>3~6분</small></button>
       </div>
-      <a id="ws-open" href="#" target="_blank" class="nb-open-sm" style="margin-top:auto">↗ NotebookLM에서 열기</a>
+      <a id="ws-open" href="#" target="_blank" class="nb-open-sm" style="margin-top:auto">↗ 원본 열기</a>
     </div>
     <div class="ws-right">
       <div class="ws-canvas" id="ws-canvas">
@@ -1212,6 +1226,28 @@ async function wsAsk() {
   } catch(e) { body.innerHTML = `<div style="color:#e88">질문 실패: ${escHtml(e.message)}</div>`; }
 }
 
+async function wsClaude() {
+  const ws = window._ws; if (!ws) return;
+  const inp = qs('#ws-claude'); const text = (inp.value || '').trim(); if (!text) return;
+  inp.value = '';
+  ws.claudeMsgs = ws.claudeMsgs || [];
+  ws.claudeMsgs.push({ role: 'user', content: text });
+  const card = wsAddCard('🤖 Claude', `<div class="nb-qa-q">나: ${escHtml(text)}</div>${wsLoading('Claude 생각 중…')}`);
+  const body = card.querySelector('.ws-card-b');
+  try {
+    const res = await apiFetch('/api/insights/claude_chat', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notebook_id: ws.id, messages: ws.claudeMsgs })
+    });
+    if (res.error) throw new Error(res.error);
+    ws.claudeMsgs.push({ role: 'assistant', content: res.answer });
+    body.innerHTML = `<div class="nb-qa-q">나: ${escHtml(text)}</div><div class="nb-qa-a">${marked.parse(res.answer || '(빈 응답)')}</div>`;
+  } catch(e) {
+    ws.claudeMsgs.pop();
+    body.innerHTML = `<div class="nb-qa-q">나: ${escHtml(text)}</div><div style="color:#e88">Claude 대화 실패: ${escHtml(e.message)}</div>`;
+  }
+}
+
 async function wsAction(btn, kind) {
   const ws = window._ws; if (!ws) return;
   const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = '처리 중…';
@@ -1257,7 +1293,7 @@ async function wsStudio(btn, kind) {
     } else if (res.ready && res.file_url && res.media === 'pdf') {
       body.innerHTML = `<div class="ws-art-tools"><a href="${res.file_url}" target="_blank" class="nb-open-sm">↗ 새 탭</a> <a href="${res.file_url}" download class="nb-open-sm">↓ 저장</a></div><iframe class="nb-art-pdf" src="${res.file_url}"></iframe>`;
     } else {
-      body.innerHTML = `<div class="nb-studio-ok">🎨 <b>${escHtml(res.label)}</b> 생성을 시작했습니다 (${escHtml(res.eta)}). 완료되면 <a href="${ws.url}" target="_blank">NotebookLM Studio</a>에서 확인하세요.</div>`;
+      body.innerHTML = `<div class="nb-studio-ok">🎨 <b>${escHtml(res.label)}</b> 생성을 시작했습니다 (${escHtml(res.eta)}). 완료되면 <a href="${ws.url}" target="_blank">원본 스튜디오</a>에서 확인하세요.</div>`;
     }
   } catch(e) { btn.disabled = false; btn.innerHTML = orig; body.innerHTML = `<div style="color:#e88">실패: ${escHtml(e.message)}</div>`; }
 }
@@ -1343,7 +1379,7 @@ async function nbStudio(btn, kind) {
       }
     }
     if (!html) {
-      html = `<div class="nb-studio-ok">🎨 <b>${escHtml(res.label)}</b> 생성을 시작했습니다 (${escHtml(res.eta)}). 완료되면 <a href="${link}" target="_blank">NotebookLM Studio</a>에서 확인하세요.${(kind==='infographic'||kind==='slides')?' (시간이 더 걸려 표시는 못 했지만 곧 완성됩니다)':''}</div>`;
+      html = `<div class="nb-studio-ok">🎨 <b>${escHtml(res.label)}</b> 생성을 시작했습니다 (${escHtml(res.eta)}). 완료되면 <a href="${link}" target="_blank">원본 스튜디오</a>에서 확인하세요.${(kind==='infographic'||kind==='slides')?' (시간이 더 걸려 표시는 못 했지만 곧 완성됩니다)':''}</div>`;
     }
     if (msg) msg.innerHTML = html;
   } catch(e) {

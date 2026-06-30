@@ -272,6 +272,17 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 .chart-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#666;font-size:13px;}
 .chart-legend{margin-left:auto;font-size:11.5px;color:#ccc;font-variant-numeric:tabular-nums;white-space:nowrap;align-self:center;}
 .chart-legend .lg{color:#777;margin-left:5px;}
+/* 지표·그리기 도구바 */
+.chart-tools{display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin:0 0 8px;}
+.chart-tools .ct-label{font-size:10px;color:#666;margin-left:2px;}
+.chart-tools .ct-sep{width:1px;height:15px;background:#2a2a30;margin:0 6px;}
+.ct-btn{padding:3px 9px;border:1px solid #2c2c33;border-radius:6px;background:transparent;
+  color:#999;font-size:11px;cursor:pointer;font-family:inherit;transition:all .12s;white-space:nowrap;}
+.ct-btn:hover{border-color:#555;color:#ccc;}
+.ct-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(212,175,55,.12);}
+#tv_chart_container.drawing{cursor:crosshair;}
+.draw-svg{position:absolute;inset:0;pointer-events:none;z-index:5;}
+#tv_osc_container{height:0;overflow:hidden;border-radius:8px;flex-shrink:0;}
 
 /* ── 관심종목 패널 ── */
 .wl-panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;
@@ -1938,9 +1949,13 @@ async function _wlSave(){
   }catch(e){ showToast("저장 실패","err"); }
 }
 
-// ── 종목 차트 모달 (키움 캔들 + Lightweight Charts) — 드래그 이동·크기조절·MA·툴팁 ──
-let _chart=null, _chartCandle=null, _chartVol=null, _maSeries=null;
+// ── 종목 차트 모달 (키움 캔들 + Lightweight Charts) — 이동·크기·지표·그리기 ──
+let _chart=null, _chartCandle=null, _chartVol=null, _maSeries=null, _bollSeries=null;
+let _osc=null;
 let _chartCode=null, _chartName=null, _chartTf="D", _chartRows=[];
+let _ind={ma:true, boll:false, osc:null};          // osc: null|'rsi'|'macd'
+let _drawTool=null, _draws=[], _drawPending=null, _drawSvg=null, _roDraw=null;
+let _syncing=false;
 
 function _dragWindow(box, handle){
   handle.addEventListener("mousedown",e=>{
@@ -1965,12 +1980,13 @@ function _dragWindow(box, handle){
 function openStockChart(code, name){
   if(!code) return;
   _chartCode=code; _chartName=name; _chartTf="D"; _chartRows=[];
+  _draws=[]; _drawTool=null; _drawPending=null; _ind={ma:true,boll:false,osc:null};
   let m=document.getElementById("chart-modal");
   if(!m){ m=document.createElement("div"); m.id="chart-modal"; document.body.appendChild(m); }
   m.innerHTML=`<div class="chart-box">
     <div class="modal-hd">
       <span>📈 ${esc(name||code)} <span style="color:#666;font-size:12px;font-weight:400">${esc(code)}</span>
-        <span class="drag-hint">⠿ 드래그 이동 · 우하단 크기조절</span></span>
+        <span class="drag-hint">⠿ 이동 · 우하단 크기조절</span></span>
       <button class="modal-x" onclick="closeStockChart()">✕</button>
     </div>
     <div class="chart-tf">
@@ -1979,52 +1995,241 @@ function openStockChart(code, name){
       <button class="tf-btn" data-tf="5" onclick="setChartTf('5')">5분</button>
       <span id="chart-legend" class="chart-legend"></span>
     </div>
+    <div class="chart-tools">
+      <span class="ct-label">지표</span>
+      <button class="ct-btn active" data-ind="ma" onclick="toggleInd('ma')">MA</button>
+      <button class="ct-btn" data-ind="boll" onclick="toggleInd('boll')">볼린저</button>
+      <button class="ct-btn" data-ind="rsi" onclick="toggleOsc('rsi')">RSI</button>
+      <button class="ct-btn" data-ind="macd" onclick="toggleOsc('macd')">MACD</button>
+      <span class="ct-sep"></span>
+      <span class="ct-label">그리기</span>
+      <button class="ct-btn" data-draw="line" onclick="setDraw('line')">／ 직선</button>
+      <button class="ct-btn" data-draw="circle" onclick="setDraw('circle')">○ 원</button>
+      <button class="ct-btn" onclick="undoDraw()">↩ 이전 삭제</button>
+    </div>
     <div id="tv_chart_container"></div>
+    <div id="tv_osc_container"></div>
   </div>`;
   m.classList.add("open");
   const box=m.querySelector(".chart-box");
   box.style.left=Math.max(8,(window.innerWidth-box.offsetWidth)/2)+"px";
-  box.style.top="72px";
+  box.style.top="60px";
   _dragWindow(box, box.querySelector(".modal-hd"));
   _initChart();
   loadChartData();
 }
+
+const _CHART_LAYOUT={layout:{background:{color:"#0b0b0e"},textColor:"#999",fontFamily:"'Noto Sans KR',sans-serif"},
+  grid:{vertLines:{color:"#161620"},horzLines:{color:"#161620"}},
+  rightPriceScale:{borderColor:"#222"}, crosshair:{mode:0}};
+
 function _initChart(){
   const el=document.getElementById("tv_chart_container");
   if(_chart){ try{_chart.remove();}catch(_){} _chart=null; }
+  if(_osc){ try{_osc.remove();}catch(_){} _osc=null; }
+  if(_roDraw){ try{_roDraw.disconnect();}catch(_){} _roDraw=null; }
   el.innerHTML="";
   if(!window.LightweightCharts){
     el.innerHTML='<div class="chart-msg">차트 라이브러리 로딩 실패 — 인터넷 연결 확인</div>'; return;
   }
-  _chart=LightweightCharts.createChart(el,{
-    autoSize:true,
-    layout:{background:{color:"#0b0b0e"},textColor:"#aaa",fontFamily:"'Noto Sans KR',sans-serif"},
-    grid:{vertLines:{color:"#17171d"},horzLines:{color:"#17171d"}},
-    rightPriceScale:{borderColor:"#222"},
+  _chart=LightweightCharts.createChart(el,{autoSize:true,..._CHART_LAYOUT,
     timeScale:{borderColor:"#222",timeVisible:_chartTf!=="D",secondsVisible:false},
-    crosshair:{mode:0},
-    localization:{priceFormatter:p=>Math.round(p).toLocaleString("ko-KR")},
-  });
+    localization:{priceFormatter:p=>Math.round(p).toLocaleString("ko-KR")}});
   _chartCandle=_chart.addCandlestickSeries({
     upColor:"#e74c3c",downColor:"#3498db",borderUpColor:"#e74c3c",borderDownColor:"#3498db",
-    wickUpColor:"#e74c3c",wickDownColor:"#3498db",
-  });
+    wickUpColor:"#e74c3c",wickDownColor:"#3498db"});
   _chartVol=_chart.addHistogramSeries({priceFormat:{type:"volume"},priceScaleId:"vol",color:"#3a3a44"});
   _chart.priceScale("vol").applyOptions({scaleMargins:{top:0.84,bottom:0}});
-  // 이동평균선 (MA5/20/60)
-  const mkLine=col=>_chart.addLineSeries({color:col,lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
+  const mkLine=(col,w)=>_chart.addLineSeries({color:col,lineWidth:w||1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
   _maSeries={5:mkLine("#f0c040"),20:mkLine("#ff7ab8"),60:mkLine("#5ad1c8")};
+  _bollSeries={u:mkLine("#8a909a"),m:mkLine("#b8951f"),l:mkLine("#8a909a")};
   _chart.subscribeCrosshairMove(p=>_updateLegend(p));
+  // 드로잉 오버레이 (항상 pointer-events:none → 휠 줌·드래그 팬은 차트로 전달)
+  _drawSvg=document.createElementNS("http://www.w3.org/2000/svg","svg");
+  _drawSvg.setAttribute("class","draw-svg"); _drawSvg.style.pointerEvents="none";
+  el.appendChild(_drawSvg);
+  // 그리기 도구 활성 시에만 capture 단계에서 mousedown 가로채 그림 (도구 없으면 차트가 팬 처리)
+  el.addEventListener("mousedown",_drawStart,true);
+  _chart.timeScale().subscribeVisibleLogicalRangeChange(rng=>{
+    _redrawDraws();
+    if(_osc&&rng&&!_syncing){ _syncing=true; try{_osc.timeScale().setVisibleLogicalRange(rng);}catch(_){} _syncing=false; }
+  });
+  _roDraw=new ResizeObserver(()=>_redrawDraws()); _roDraw.observe(el);
 }
+
+// ── 지표 계산 ──
 function _ma(rows, period){
   const out=[]; const q=[]; let sum=0;
-  for(const r of rows){
-    q.push(r.close); sum+=r.close;
+  for(const r of rows){ q.push(r.close); sum+=r.close;
     if(q.length>period) sum-=q.shift();
-    if(q.length===period) out.push({time:r.time, value:Math.round(sum/period)});
-  }
+    if(q.length===period) out.push({time:r.time, value:Math.round(sum/period)}); }
   return out;
 }
+function _bollinger(rows, period, mult){
+  const u=[],m=[],l=[]; const q=[]; let sum=0;
+  for(const r of rows){ q.push(r.close); sum+=r.close;
+    if(q.length>period) sum-=q.shift();
+    if(q.length===period){ const mean=sum/period; let v=0; for(const x of q) v+=(x-mean)*(x-mean);
+      const sd=Math.sqrt(v/period);
+      m.push({time:r.time,value:Math.round(mean)});
+      u.push({time:r.time,value:Math.round(mean+mult*sd)});
+      l.push({time:r.time,value:Math.round(mean-mult*sd)}); } }
+  return {u,m,l};
+}
+function _rsi(rows, period){
+  const out=[]; let gain=0,loss=0;
+  for(let i=1;i<rows.length;i++){
+    const ch=rows[i].close-rows[i-1].close, g=Math.max(0,ch), ls=Math.max(0,-ch);
+    if(i<period){ gain+=g; loss+=ls; }
+    else if(i===period){ gain=(gain+g)/period; loss=(loss+ls)/period;
+      const rs=loss===0?100:gain/loss; out.push({time:rows[i].time,value:loss===0?100:100-100/(1+rs)}); }
+    else { gain=(gain*(period-1)+g)/period; loss=(loss*(period-1)+ls)/period;
+      const rs=loss===0?100:gain/loss; out.push({time:rows[i].time,value:loss===0?100:100-100/(1+rs)}); }
+  }
+  return out.map(o=>({time:o.time,value:Math.round(o.value*100)/100}));
+}
+function _emaArr(vals, p){
+  const k=2/(p+1), out=new Array(vals.length).fill(null); let ema=null;
+  for(let i=0;i<vals.length;i++){ if(vals[i]==null)continue;
+    ema = ema==null ? vals[i] : vals[i]*k + ema*(1-k); out[i]=ema; }
+  return out;
+}
+function _macd(rows, fast, slow, signal){
+  const close=rows.map(r=>r.close);
+  const ef=_emaArr(close,fast), es=_emaArr(close,slow);
+  const macdArr=close.map((_,i)=> (ef[i]!=null&&es[i]!=null)? ef[i]-es[i] : null);
+  const sig=_emaArr(macdArr,signal);
+  const macd=[],signalL=[],hist=[];
+  for(let i=0;i<rows.length;i++){
+    if(macdArr[i]!=null) macd.push({time:rows[i].time,value:Math.round(macdArr[i])});
+    if(sig[i]!=null&&macdArr[i]!=null){ signalL.push({time:rows[i].time,value:Math.round(sig[i])});
+      hist.push({time:rows[i].time,value:Math.round(macdArr[i]-sig[i])}); }
+  }
+  return {macd,signal:signalL,hist};
+}
+
+function _applyIndicators(){
+  const c=_chartRows;
+  if(_maSeries){ const v=_ind.ma;
+    _maSeries[5].setData(v?_ma(c,5):[]); _maSeries[20].setData(v?_ma(c,20):[]); _maSeries[60].setData(v?_ma(c,60):[]); }
+  if(_bollSeries){ if(_ind.boll){ const b=_bollinger(c,20,2);
+      _bollSeries.u.setData(b.u); _bollSeries.m.setData(b.m); _bollSeries.l.setData(b.l); }
+    else { _bollSeries.u.setData([]); _bollSeries.m.setData([]); _bollSeries.l.setData([]); } }
+  _applyOsc();
+}
+function _applyOsc(){
+  const oc=document.getElementById("tv_osc_container");
+  if(_osc){ try{_osc.remove();}catch(_){} _osc=null; }
+  if(!_ind.osc || !_chartRows.length){ oc.style.height="0"; oc.style.marginTop="0"; oc.innerHTML=""; return; }
+  oc.innerHTML=""; oc.style.height="146px"; oc.style.marginTop="6px";
+  _osc=LightweightCharts.createChart(oc,{autoSize:true,..._CHART_LAYOUT,
+    layout:{background:{color:"#0b0b0e"},textColor:"#777",fontFamily:"'Noto Sans KR',sans-serif"},
+    timeScale:{borderColor:"#222",timeVisible:_chartTf!=="D",secondsVisible:false}});
+  const c=_chartRows;
+  if(_ind.osc==="rsi"){
+    const s=_osc.addLineSeries({color:"#d4af37",lineWidth:1,priceLineVisible:false});
+    s.setData(_rsi(c,14));
+    s.createPriceLine({price:70,color:"#664400",lineStyle:2,lineWidth:1,axisLabelVisible:true,title:"70"});
+    s.createPriceLine({price:30,color:"#004455",lineStyle:2,lineWidth:1,axisLabelVisible:true,title:"30"});
+  } else {
+    const m=_macd(c,12,26,9);
+    const h=_osc.addHistogramSeries({priceLineVisible:false});
+    h.setData(m.hist.map(x=>({time:x.time,value:x.value,color:x.value>=0?"rgba(231,76,60,.5)":"rgba(52,152,219,.5)"})));
+    _osc.addLineSeries({color:"#e0a020",lineWidth:1,priceLineVisible:false,lastValueVisible:false}).setData(m.macd);
+    _osc.addLineSeries({color:"#3aa0ff",lineWidth:1,priceLineVisible:false,lastValueVisible:false}).setData(m.signal);
+  }
+  _osc.timeScale().subscribeVisibleLogicalRangeChange(rng=>{
+    if(_chart&&rng&&!_syncing){ _syncing=true; try{_chart.timeScale().setVisibleLogicalRange(rng);}catch(_){} _syncing=false; } });
+  try{ const r=_chart.timeScale().getVisibleLogicalRange(); if(r)_osc.timeScale().setVisibleLogicalRange(r); }catch(_){}
+}
+
+function toggleInd(k){
+  _ind[k]=!_ind[k];
+  const b=document.querySelector(`.ct-btn[data-ind="${k}"]`); if(b)b.classList.toggle("active",_ind[k]);
+  _applyIndicators();
+}
+function toggleOsc(which){
+  _ind.osc=(_ind.osc===which)?null:which;
+  ["rsi","macd"].forEach(o=>{const b=document.querySelector(`.ct-btn[data-ind="${o}"]`); if(b)b.classList.toggle("active",_ind.osc===o);});
+  _applyOsc();
+}
+
+// ── 그리기 (직선·원=타원) — 누르고 끌어서 놓기 ──
+// · 좌표는 logical(가로 인덱스)·price 로 저장 → 빈 공간/축 위에서도 투영, 확대축소 시 따라붙음
+// · SVG는 항상 pointer-events:none → 휠 줌·드래그 팬은 차트로 그대로 전달
+// · 도구 활성 시에만 container의 capture 단계 mousedown을 가로채 그리기, 한 도형 그리면 자동 해제
+function setDraw(tool){
+  _drawTool=(_drawTool===tool)?null:tool; _drawPending=null;
+  document.querySelectorAll('.ct-btn[data-draw]').forEach(b=>b.classList.toggle("active",b.dataset.draw===_drawTool));
+  const el=document.getElementById("tv_chart_container");
+  if(el) el.classList.toggle("drawing",!!_drawTool);
+}
+function _drawOff(){
+  _drawTool=null; _drawPending=null;
+  document.querySelectorAll('.ct-btn[data-draw]').forEach(b=>b.classList.remove("active"));
+  const el=document.getElementById("tv_chart_container"); if(el) el.classList.remove("drawing");
+}
+function undoDraw(){ _draws.pop(); _drawPending=null; _redrawDraws(); }
+function _drawPt(e){
+  const el=document.getElementById("tv_chart_container");
+  const r=el.getBoundingClientRect();
+  const x=Math.max(0,Math.min(el.clientWidth, e.clientX-r.left));
+  const y=Math.max(0,Math.min(el.clientHeight, e.clientY-r.top));
+  return {x,y, logical:_chart.timeScale().coordinateToLogical(x), price:_chartCandle.coordinateToPrice(y)};
+}
+function _drawStart(e){
+  if(!_drawTool||!_chart||!_chartCandle)return;   // 도구 없으면 차트가 처리(팬)
+  const p=_drawPt(e);
+  if(p.logical==null||p.price==null)return;
+  e.preventDefault(); e.stopPropagation();          // 그릴 때만 차트 팬 차단
+  const startX=p.x, startY=p.y;
+  _drawPending={logical:p.logical, price:p.price};
+  const mv=ev=>{ const q=_drawPt(ev); if(q.logical!=null&&q.price!=null) _drawPreview(_drawPending,{logical:q.logical,price:q.price}); };
+  const up=ev=>{
+    window.removeEventListener("mousemove",mv,true);
+    window.removeEventListener("mouseup",up,true);
+    const q=_drawPt(ev);
+    const dist=Math.hypot(q.x-startX, q.y-startY);
+    if(_drawPending && q.logical!=null && q.price!=null && dist>=5){
+      _draws.push({type:_drawTool, a:_drawPending, b:{logical:q.logical,price:q.price}});
+      _drawOff();   // 한 도형 그리면 자동 해제 → 이후 자유 이동/확대
+    }
+    _drawPending=null; _redrawDraws();
+  };
+  window.addEventListener("mousemove",mv,true);
+  window.addEventListener("mouseup",up,true);
+}
+function _shapeSvg(type,ax,ay,bx,by,dashed){
+  const da=dashed?' stroke-dasharray="5 3"':'';
+  if(type==="line") return `<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}" stroke="#f0c040" stroke-width="2"${da}/>`;
+  // 원 = 시작점→끝점 사각형에 내접하는 타원
+  const cx=(ax+bx)/2, cy=(ay+by)/2, rx=Math.abs(bx-ax)/2, ry=Math.abs(by-ay)/2;
+  return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="rgba(240,192,64,.07)" stroke="#f0c040" stroke-width="2"${da}/>`;
+}
+function _drawPreview(a,b){
+  _redrawDraws();
+  const ts=_chart.timeScale();
+  const ax=ts.logicalToCoordinate(a.logical), ay=_chartCandle.priceToCoordinate(a.price);
+  const bx=ts.logicalToCoordinate(b.logical), by=_chartCandle.priceToCoordinate(b.price);
+  if(ax==null||bx==null||ay==null||by==null)return;
+  _drawSvg.insertAdjacentHTML("beforeend",_shapeSvg(_drawTool,ax,ay,bx,by,true));
+}
+function _redrawDraws(){
+  if(!_drawSvg||!_chart||!_chartCandle)return;
+  const el=document.getElementById("tv_chart_container");
+  const w=el.clientWidth, h=el.clientHeight;
+  _drawSvg.setAttribute("width",w); _drawSvg.setAttribute("height",h); _drawSvg.setAttribute("viewBox",`0 0 ${w} ${h}`);
+  const ts=_chart.timeScale();
+  let s="";
+  for(const d of _draws){
+    const ax=ts.logicalToCoordinate(d.a.logical), ay=_chartCandle.priceToCoordinate(d.a.price);
+    const bx=ts.logicalToCoordinate(d.b.logical), by=_chartCandle.priceToCoordinate(d.b.price);
+    if(ax==null||bx==null||ay==null||by==null) continue;
+    s+=_shapeSvg(d.type,ax,ay,bx,by,false);
+  }
+  _drawSvg.innerHTML=s;
+}
+
 function _updateLegend(param){
   const el=document.getElementById("chart-legend");
   if(!el||!_chartRows.length)return;
@@ -2053,9 +2258,9 @@ async function loadChartData(){
     _chartCandle.setData(c.map(x=>({time:x.time,open:x.open,high:x.high,low:x.low,close:x.close})));
     _chartVol.setData(c.map(x=>({time:x.time,value:x.value,
       color:x.close>=x.open?"rgba(231,76,60,.45)":"rgba(52,152,219,.45)"})));
-    if(_maSeries){ _maSeries[5].setData(_ma(c,5)); _maSeries[20].setData(_ma(c,20)); _maSeries[60].setData(_ma(c,60)); }
+    _applyIndicators();
     _chart.timeScale().fitContent();
-    _updateLegend(null);
+    _updateLegend(null); _redrawDraws();
   }catch(e){
     el.insertAdjacentHTML("beforeend",`<div class="chart-msg">차트 로드 실패: ${esc(e.message)}</div>`);
   }
@@ -2067,7 +2272,9 @@ function setChartTf(tf){
 }
 function closeStockChart(){
   const m=document.getElementById("chart-modal");
+  if(_osc){ try{_osc.remove();}catch(_){} _osc=null; }
   if(_chart){ try{_chart.remove();}catch(_){} _chart=null; }
+  if(_roDraw){ try{_roDraw.disconnect();}catch(_){} _roDraw=null; }
   if(m){ m.classList.remove("open"); m.innerHTML=""; }
 }
 

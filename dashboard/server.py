@@ -38,6 +38,25 @@ except ImportError:
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+# 노트북별 수집 자료(md) 메모리 캐시 — Claude 직접 대화 컨텍스트로 사용
+_NB_BUNDLES = {}
+
+
+def _env_key(name):
+    """환경변수 우선, 없으면 .env에서 읽기."""
+    v = os.environ.get(name)
+    if v:
+        return v.strip()
+    try:
+        with open(os.path.join(ROOT, ".env"), encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith(name + "="):
+                    return line.split("=", 1)[1].strip().strip('"').strip("'")
+    except Exception:
+        pass
+    return ""
 SIGNAL_DIR = os.path.join(ROOT, "output", "signal")
 OUT_DIR = os.path.join(ROOT, "out")
 AGENTS_DIR = os.path.join(HERE, "agents")
@@ -2276,6 +2295,9 @@ async def api_insights_to_notebook(req: Request):
         }
 
     result = await run_in_threadpool(_do)
+    # Claude 직접 대화용으로 수집 자료(md) 캐시
+    if result.get("ok") and result.get("notebook_id"):
+        _NB_BUNDLES[result["notebook_id"]] = "\n\n".join(t for _t, t in bundle["md_files"])[:60000]
     return JSONResponse(content=result, status_code=(200 if result.get("ok") else 500))
 
 
@@ -2490,6 +2512,8 @@ async def api_insights_notebook_studio(req: Request):
     def _do():
         before = {i for i, _s in _studio_arts(nb_id, spec["types"])}
         args = list(spec["create"]) + [nb_id, "--confirm"]
+        if kind != "mindmap":
+            args += ["--language", "ko"]      # 결과물 한국어로
         if focus:
             args += ["--focus", focus]
         ok, out, errm = _run_nlm(args, timeout=120)
@@ -2524,6 +2548,50 @@ async def api_insights_notebook_studio(req: Request):
         else:
             base["pending"] = True
         return base
+
+    result = await run_in_threadpool(_do)
+    return JSONResponse(content=result, status_code=(200 if result.get("ok") else 500))
+
+
+@app.post("/api/insights/claude_chat")
+async def api_insights_claude_chat(req: Request):
+    """Claude와 직접 대화 — 노트북 수집 자료를 컨텍스트로 제공(있으면)."""
+    body = {}
+    try:
+        body = await req.json()
+    except Exception:
+        pass
+    nb_id = (body.get("notebook_id") or "").strip()
+    messages = body.get("messages") or []
+    messages = [m for m in messages if isinstance(m, dict) and m.get("content")]
+    if not messages:
+        return JSONResponse(content={"error": "messages 필요"}, status_code=400)
+    key = _env_key("ANTHROPIC_API_KEY")
+    if not key:
+        return JSONResponse(content={"error": "Claude 대화는 ANTHROPIC_API_KEY가 필요합니다. .env에 ANTHROPIC_API_KEY=... 추가 후 서버 재시작하세요."}, status_code=503)
+
+    model = _env_key("ANTHROPIC_MODEL") or "claude-opus-4-8"
+
+    def _do():
+        try:
+            import anthropic
+        except Exception:
+            return {"error": "anthropic 패키지 없음 (pip install anthropic)"}
+        ctx = _NB_BUNDLES.get(nb_id, "")
+        system = (
+            "너는 한국 주식 트레이더의 리서치 보조다. 아래 '수집 자료'(텔레그램·리포트·뉴스·"
+            "유튜브·블로그에서 추출한 발언)를 1차 근거로 삼되, 일반 지식도 활용해 한국어로 "
+            "간결하고 실전적으로 답하라. 추측은 추측이라고 밝혀라.\n\n[수집 자료]\n" + (ctx[:40000] or "(자료 없음)")
+        )
+        msgs = [{"role": ("assistant" if m.get("role") == "assistant" else "user"),
+                 "content": str(m.get("content"))[:8000]} for m in messages][-12:]
+        try:
+            client = anthropic.Anthropic(api_key=key)
+            resp = client.messages.create(model=model, max_tokens=2000, system=system, messages=msgs)
+            text = "".join(getattr(b, "text", "") for b in resp.content if getattr(b, "type", "") == "text")
+            return {"ok": True, "answer": text or "(빈 응답)"}
+        except Exception as e:
+            return {"error": f"Claude 호출 실패: {str(e)[:300]}"}
 
     result = await run_in_threadpool(_do)
     return JSONResponse(content=result, status_code=(200 if result.get("ok") else 500))
