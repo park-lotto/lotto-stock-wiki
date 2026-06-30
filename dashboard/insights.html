@@ -124,6 +124,9 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .nb-act-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
 .nb-open-sm { font-size: .78rem; color: var(--gold-dim); text-decoration: none; margin-left: auto; }
 .nb-open-sm:hover { color: var(--gold); }
+.nb-studio-msg { margin-top: 8px; }
+.nb-studio-ok { font-size: .82rem; color: var(--txt); background: var(--bl-bg); border: 1px solid var(--bl-line); border-radius: 9px; padding: 10px 14px; line-height: 1.6; }
+.nb-studio-ok a { color: #4ade80; }
 
 /* ── 카테고리 카드 ── */
 .cat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 32px 0; }
@@ -949,7 +952,7 @@ async function sendToNotebook(q) {
       body: JSON.stringify({ q })
     });
     if (res.error) throw new Error(res.error);
-    window._lastNb = { id: res.notebook_id, q, conv: '' };
+    window._lastNb = { id: res.notebook_id, q, conv: '', url: res.url };
     qs('#modal-title').textContent = '📒 노트북 준비 완료 — 여기서 바로 분석';
     qs('#modal-content').innerHTML = `
       <div class="nb-result">
@@ -963,13 +966,22 @@ async function sendToNotebook(q) {
         <div id="nb-answer" class="nb-answer"></div>
 
         <div class="nb-actions">
-          <div class="nb-actions-label">다음 단계</div>
+          <div class="nb-actions-label">다음 단계 — 자료 보강·문서</div>
           <div class="nb-act-row">
             <button class="nb-act" onclick="nbAction(this,'research')">🔬 웹 딥리서치 추가 <small>~30초</small></button>
             <button class="nb-act" onclick="nbAction(this,'card')">🎴 브리핑 리포트 보기 <small>~1분</small></button>
             <a href="${res.url}" target="_blank" class="nb-open-sm">↗ NotebookLM에서 열기</a>
           </div>
           <div id="nb-card" class="nb-answer"></div>
+
+          <div class="nb-actions-label" style="margin-top:14px">🎨 만들기 — NotebookLM Studio</div>
+          <div class="nb-act-row">
+            <button class="nb-act" onclick="nbStudio(this,'infographic')">🖼️ 인포그래픽 <small>~1분</small></button>
+            <button class="nb-act" onclick="nbStudio(this,'slides')">📑 슬라이드 <small>~1분</small></button>
+            <button class="nb-act" onclick="nbStudio(this,'audio')">🎧 오디오 <small>2~5분</small></button>
+            <button class="nb-act" onclick="nbStudio(this,'video')">🎬 영상 <small>3~6분</small></button>
+          </div>
+          <div id="nb-studio-msg" class="nb-studio-msg"></div>
         </div>
       </div>`;
     setTimeout(() => { const el = qs('#nb-q'); if (el) el.focus(); }, 50);
@@ -1033,6 +1045,27 @@ async function nbAction(btn, kind) {
   }
 }
 
+async function nbStudio(btn, kind) {
+  const nb = window._lastNb;
+  if (!nb) return;
+  const orig = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = '시작 중...';
+  const msg = qs('#nb-studio-msg');
+  try {
+    const res = await apiFetch('/api/insights/notebook_studio', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notebook_id: nb.id, kind })
+    });
+    if (res.error) throw new Error(res.error);
+    btn.innerHTML = `✅ ${res.label} 시작됨`;
+    const link = nb.url || res.url;
+    if (msg) msg.innerHTML = `<div class="nb-studio-ok">🎨 <b>${escHtml(res.label)}</b> 생성을 시작했습니다 (${escHtml(res.eta)}). 완료되면 <a href="${link}" target="_blank">NotebookLM Studio</a>에서 확인하세요.</div>`;
+  } catch(e) {
+    btn.disabled = false; btn.innerHTML = orig;
+    toast(`실패: ${e.message}`, true);
+  }
+}
+
 // ── 모달 ──
 function openModal(title, html) {
   qs('#modal-title').textContent = title;
@@ -1044,26 +1077,36 @@ function openModal(title, html) {
 function closeModal() { qs('#modal').classList.remove('open'); }
 qs('#modal').addEventListener('click', e => { if (e.target === qs('#modal')) closeModal(); });
 
-// 모달 헤더 잡고 드래그 이동
+// 모달 헤더 잡고 드래그 이동 (transition 끄고 rAF로 부드럽게)
 (function makeModalDraggable() {
   const header = qs('#modal .modal-header');
   const box = qs('#modal .modal-box');
   if (!header || !box) return;
   header.style.cursor = 'move';
-  let drag = false, sx = 0, sy = 0, ox = 0, oy = 0;
+  let drag = false, sx = 0, sy = 0, ox = 0, oy = 0, tx = 0, ty = 0, raf = null;
+  function apply() { box.style.transform = `translate(${tx}px, ${ty}px)`; raf = null; }
   header.addEventListener('mousedown', e => {
     if (e.target.closest('.close')) return;
     drag = true; sx = e.clientX; sy = e.clientY;
     const m = (box.style.transform || '').match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
     ox = m ? parseFloat(m[1]) : 0; oy = m ? parseFloat(m[2]) : 0;
+    tx = ox; ty = oy;
+    box.style.transition = 'none';      // .2s 트랜지션이 드래그를 끌리게 함 → 끔
+    box.style.willChange = 'transform';
     document.body.style.userSelect = 'none';
     e.preventDefault();
   });
   window.addEventListener('mousemove', e => {
     if (!drag) return;
-    box.style.transform = `translate(${ox + e.clientX - sx}px, ${oy + e.clientY - sy}px)`;
+    tx = ox + e.clientX - sx; ty = oy + e.clientY - sy;
+    if (!raf) raf = requestAnimationFrame(apply);
   });
-  window.addEventListener('mouseup', () => { drag = false; document.body.style.userSelect = ''; });
+  window.addEventListener('mouseup', () => {
+    if (!drag) return;
+    drag = false;
+    box.style.transition = ''; box.style.willChange = '';
+    document.body.style.userSelect = '';
+  });
 })();
 
 // ── 헬퍼 ──

@@ -1273,3 +1273,10 @@ python calc_oscillator.py SK하이닉스 삼성전자 한미반도체 --tg
 - 검색/노트북 키워드 토크나이저(_tokenize_query): 자연어 문장도 핵심 키워드 추출해 동작
 - 엔드포인트 추가: /api/insights/notebook_query, notebook_card 확장(markdown 반환)
 - 검증(API): 반도체 노트북 생성·질문 답변·리서치+10·리포트 전부 정상. 브라우저 캡처는 CDP 불안정
+
+## 2026-06-30 — NotebookLM 다리 v3: 만들기(스튜디오)+드래그최적화+필터백엔드
+- 🎨 만들기: /api/insights/notebook_studio {kind} → nlm infographic/slides/audio/video/mindmap create. 모달에 버튼행 추가(시작→Studio 확인)
+- 모달 드래그 렉 해결: .modal-box transition .2s가 원인 → 드래그 중 transition:none + rAF 스로틀
+- 질문 가드: "만들어줘" 입력 시 영어 사고과정 누출 차단(답변만 하도록 제약)
+- 옵션 패널 백엔드: /notebook_preview(카테고리·기간 집계) + to_notebook 필터(cats/period/limit/split/include_urls). UI 와이어링은 다음
+- 검증(API): preview 집계·infographic 시작 정상
