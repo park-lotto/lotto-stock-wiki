@@ -599,6 +599,7 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
       </div>
       <div class="ws-act-group">
         <div class="ws-act-label">🎨 만들기 — 스탁브레인 스튜디오</div>
+        <input type="text" id="ws-studio-prompt" class="ws-q-input" placeholder="프롬프트(선택): 예) 투자 관점 중심·초보자용·핵심 5개만">
         <button class="nb-act" onclick="wsStudio(this,'infographic')">🖼️ 인포그래픽 <small>~1분</small></button>
         <button class="nb-act" onclick="wsStudio(this,'slides')">📑 슬라이드 <small>~1분</small></button>
         <button class="nb-act" onclick="wsStudio(this,'audio')">🎧 오디오 <small>2~5분</small></button>
@@ -1409,12 +1410,14 @@ async function wsStudio(btn, kind) {
   const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = '생성 중…';
   const labels = { infographic: '🖼️ 인포그래픽', slides: '📑 슬라이드', audio: '🎧 오디오', video: '🎬 영상' };
   const slow = (kind === 'infographic' || kind === 'slides');
-  const card = wsAddCard(labels[kind] || kind, wsLoading(slow ? '생성 중… 완료까지 1~3분, 끝나면 여기 표시됩니다' : '시작 중…'));
+  const focus = ((qs('#ws-studio-prompt') || {}).value || '').trim();
+  const head = (labels[kind] || kind) + (focus ? ` <small style="color:var(--muted);font-weight:400">— ${escHtml(focus)}</small>` : '');
+  const card = wsAddCard(head, wsLoading(slow ? '생성 중… 완료까지 1~3분, 끝나면 여기 표시됩니다' : '시작 중…'));
   const body = card.querySelector('.ws-card-b');
   try {
     const res = await apiFetch('/api/insights/notebook_studio', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ notebook_id: ws.id, kind })
+      body: JSON.stringify({ notebook_id: ws.id, kind, focus })
     });
     btn.disabled = false; btn.innerHTML = orig;
     if (res.error) throw new Error(res.error);

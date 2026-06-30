@@ -1956,6 +1956,7 @@ let _chartCode=null, _chartName=null, _chartTf="D", _chartRows=[];
 let _ind={ma:true, boll:false, osc:null};          // osc: null|'rsi'|'macd'
 let _drawTool=null, _draws=[], _drawPending=null, _drawSvg=null, _roDraw=null;
 let _syncing=false;
+let _drawRaf=null, _lastProj=null;   // 도형 자동 재계산 루프(시간·가격축 변경·초기 레이아웃 추적)
 // 분봉이면 시간축에 시:분 표시, 일/주/월봉은 날짜만
 function _isIntraday(){ return !["D","W","M"].includes(_chartTf); }
 
@@ -2069,6 +2070,8 @@ function openStockChart(code, name){
   });
   _initChart();
   loadChartData();
+  if(_drawRaf) cancelAnimationFrame(_drawRaf);
+  _lastProj=null; _drawRaf=requestAnimationFrame(_drawTick);   // 도형 자동 재계산 루프 시작
 }
 
 const _CHART_LAYOUT={layout:{background:{color:"#0b0b0e"},textColor:"#999",fontFamily:"'Noto Sans KR',sans-serif"},
@@ -2329,6 +2332,20 @@ function _redrawDraws(){
   }
   _drawSvg.innerHTML=s;
 }
+// 도형 투영(시간·가격축 둘 다)이 바뀌면만 재계산 — 가격축 줌·초기 레이아웃까지 자동 추적
+function _drawTick(){
+  if(_drawSvg && _chart && _chartCandle && _draws.length){
+    let sig="x";
+    try{
+      const ts=_chart.timeScale(), d=_draws[0];
+      const ax=ts.logicalToCoordinate(d.a.logical), ay=_chartCandle.priceToCoordinate(d.a.price);
+      const bx=ts.logicalToCoordinate(d.b.logical), by=_chartCandle.priceToCoordinate(d.b.price);
+      sig=`${ax},${ay},${bx},${by},${_draws.length}`;
+    }catch(_){}
+    if(sig!==_lastProj){ _lastProj=sig; _redrawDraws(); }
+  }
+  _drawRaf=requestAnimationFrame(_drawTick);
+}
 
 function _updateLegend(param){
   const el=document.getElementById("chart-legend");
@@ -2347,6 +2364,7 @@ async function loadChartData(){
   const el=document.getElementById("tv_chart_container");
   if(!_chartCandle)return;
   _draws=_loadDraws();   // 이 종목·봉종류의 저장된 그림 복원
+  _lastProj=null;        // 새 데이터 → 도형 재계산 강제
   try{
     const r=await fetch(`/api/stock_candles?code=${encodeURIComponent(_chartCode)}&tf=${_chartTf}`);
     const d=await r.json();
@@ -2378,6 +2396,7 @@ function setChartTf(tf){
 }
 function closeStockChart(){
   const m=document.getElementById("chart-modal");
+  if(_drawRaf){ cancelAnimationFrame(_drawRaf); _drawRaf=null; }
   _saveView();       // 종료 시 보기 범위 저장
   _saveChartWin();   // 종료 시 봉 종류·창 크기·위치 저장
   if(_osc){ try{_osc.remove();}catch(_){} _osc=null; }
