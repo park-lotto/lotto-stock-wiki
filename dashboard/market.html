@@ -1961,6 +1961,7 @@ let _drawTool=null, _draws=[], _drawPending=null, _drawSvg=null, _roDraw=null;
 let _syncing=false;
 let _drawRaf=null, _lastProj=null;   // 도형 자동 재계산 루프(시간·가격축 변경·초기 레이아웃 추적)
 let _drawColor="#f0c040", _drawWidth=2;   // 현재 선택 색·굵기 (새 도형에 적용)
+let _drawCancel=null;                     // 그리는 중 취소 함수 (ESC/우클릭)
 // 분봉이면 시간축에 시:분 표시, 일/주/월봉은 날짜만
 function _isIntraday(){ return !["D","W","M"].includes(_chartTf); }
 
@@ -2091,6 +2092,18 @@ function openStockChart(code, name){
     if(_drawTool)return;
     const p=_drawPt(ev); cont.style.cursor=(_hitShape(p.x,p.y)>=0)?"move":"";
   });
+  // 우클릭 = 그리던 도형 취소 + 도구 해제(원래대로)
+  cont.addEventListener("contextmenu",ev=>{
+    if(_drawTool||_drawCancel){ ev.preventDefault(); _cancelDraw(); }
+  });
+  // ESC = 취소 (전역 1회 바인딩)
+  if(!window._chartEscBound){ window._chartEscBound=true;
+    document.addEventListener("keydown",ev=>{
+      if(ev.key!=="Escape")return;
+      const m=document.getElementById("chart-modal");
+      if(m&&m.classList.contains("open")&&(_drawTool||_drawCancel)) _cancelDraw();
+    });
+  }
   _initChart();
   loadChartData();
   if(_drawRaf) cancelAnimationFrame(_drawRaf);
@@ -2304,6 +2317,7 @@ function _startMove(idx,p){
 // capture mousedown 분기: 도구=그리기 / 도형위=이동 / 그외=차트 팬
 function _chartMouseDown(e){
   if(!_chart||!_chartCandle)return;
+  if(e.button!==0)return;   // 좌클릭만 그리기/이동 (우클릭=취소용)
   if(_drawTool){ _startNewDraw(e); return; }
   const p=_drawPt(e);
   const idx=_hitShape(p.x,p.y);
@@ -2311,6 +2325,17 @@ function _chartMouseDown(e){
   e.preventDefault(); e.stopPropagation();
   _startMove(idx,p);
 }
+// Shift 시 직선을 수평/수직으로 스냅 (드래그 픽셀 델타로 판정)
+function _snapB(a, bRaw, shift){
+  if(!shift || _drawTool!=="line") return bRaw;
+  const A=_proj(a), B=_proj(bRaw);
+  if(A.x==null||B.x==null||A.y==null||B.y==null) return bRaw;
+  return (Math.abs(B.x-A.x) >= Math.abs(B.y-A.y))
+    ? {logical:bRaw.logical, price:a.price}     // 수평 (가격 고정)
+    : {logical:a.logical, price:bRaw.price};    // 수직 (시간 고정)
+}
+function _cancelDraw(){ if(_drawCancel){ try{_drawCancel();}catch(_){} _drawCancel=null; } _drawOff(); }
+
 function _startNewDraw(e){
   if(!_drawTool||!_chart||!_chartCandle)return;
   const p=_drawPt(e);
@@ -2321,28 +2346,33 @@ function _startNewDraw(e){
     const pts=[{logical:p.logical, price:p.price}];
     const mv=ev=>{ const q=_drawPt(ev); if(q.logical!=null&&q.price!=null){ pts.push({logical:q.logical,price:q.price});
       _previewDraw({type:"pen",pts,color:_drawColor,width:_drawWidth}); } };
-    const up=()=>{ window.removeEventListener("mousemove",mv,true); window.removeEventListener("mouseup",up,true);
+    const cleanup=()=>{ window.removeEventListener("mousemove",mv,true); window.removeEventListener("mouseup",up,true); };
+    function up(){ cleanup(); _drawCancel=null;
       if(pts.length>1){ _draws.push({type:"pen",pts,color:_drawColor,width:_drawWidth}); _saveDraws(); }
-      _redrawDraws(); };
+      _redrawDraws(); }
+    _drawCancel=()=>{ cleanup(); _redrawDraws(); };   // 취소 = 커밋 안 함
     window.addEventListener("mousemove",mv,true); window.addEventListener("mouseup",up,true);
     return;
   }
   // 직선/원: 시작→끝 드래그
   const startX=p.x, startY=p.y;
   _drawPending={logical:p.logical, price:p.price};
-  const mv=ev=>{ if(!_drawPending)return; const q=_drawPt(ev); if(q.logical!=null&&q.price!=null)
-    _previewDraw({type:_drawTool, a:_drawPending, b:{logical:q.logical,price:q.price}, color:_drawColor, width:_drawWidth}); };
-  const up=ev=>{
-    window.removeEventListener("mousemove",mv,true);
-    window.removeEventListener("mouseup",up,true);
+  const mv=ev=>{ if(!_drawPending)return; const q=_drawPt(ev); if(q.logical==null||q.price==null)return;
+    const b=_snapB(_drawPending,{logical:q.logical,price:q.price},ev.shiftKey);
+    _previewDraw({type:_drawTool, a:_drawPending, b, color:_drawColor, width:_drawWidth}); };
+  const cleanup=()=>{ window.removeEventListener("mousemove",mv,true); window.removeEventListener("mouseup",up,true); };
+  function up(ev){
+    cleanup(); _drawCancel=null;
     const q=_drawPt(ev);
     const dist=Math.hypot(q.x-startX, q.y-startY);
     if(_drawPending && q.logical!=null && q.price!=null && dist>=5){
-      _draws.push({type:_drawTool, a:_drawPending, b:{logical:q.logical,price:q.price}, color:_drawColor, width:_drawWidth});
+      const b=_snapB(_drawPending,{logical:q.logical,price:q.price},ev.shiftKey);
+      _draws.push({type:_drawTool, a:_drawPending, b, color:_drawColor, width:_drawWidth});
       _saveDraws();   // 종목·봉별 저장 (도구 유지 → 계속 그리기)
     }
     _drawPending=null; _redrawDraws();
-  };
+  }
+  _drawCancel=()=>{ cleanup(); _drawPending=null; _redrawDraws(); };   // 취소
   window.addEventListener("mousemove",mv,true);
   window.addEventListener("mouseup",up,true);
 }
