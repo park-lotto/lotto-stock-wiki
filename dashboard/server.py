@@ -2309,9 +2309,11 @@ async def api_insights_to_notebook(req: Request):
             status_code=503)
 
     # ── 옵션 파싱 ──
-    cats = body.get("cats")
-    if not isinstance(cats, list) or not cats:
-        cats = None  # 전체
+    cats_raw = body.get("cats")
+    research = bool(body.get("research", False))   # NotebookLM 웹 리서치 추가
+    # 리서치 ON + 소스 미선택(빈 배열) → 크롤링 없이 웹 리서치만
+    no_crawl = research and isinstance(cats_raw, list) and len(cats_raw) == 0
+    cats = cats_raw if (isinstance(cats_raw, list) and cats_raw) else None
     period = (body.get("period") or "all").strip()
     if period not in ("all", "today", "d3", "d7"):
         period = "all"
@@ -2322,31 +2324,38 @@ async def api_insights_to_notebook(req: Request):
     split = bool(body.get("split", False))
     include_urls = bool(body.get("include_urls", True))
 
-    bundle = await run_in_threadpool(
-        _build_notebook_bundle, q, cats, period, limit, split, include_urls)
-    if bundle is None:
-        return JSONResponse(content={"error": "atoms.db 없음"}, status_code=503)
-    label = bundle["label"]
-    atoms_n = bundle["atoms_n"]
-    if atoms_n == 0:
-        return JSONResponse(content={"error": f"'{q}' (필터 조건) 매칭 발언 없음"}, status_code=400)
-
     today = datetime.now().strftime("%Y-%m-%d")
-    safe_q = re.sub(r'[\\/:*?"<>|]', '_', label)[:40] or "검색"
     out_dir = os.path.join(ROOT, "out", "insights_notebook")
     os.makedirs(out_dir, exist_ok=True)
+    file_specs = []           # (source_title, path)
+    yt_urls, web_urls = [], []
+    md_for_cache = []
 
-    # md 파일들을 디스크에 기록 (split이면 카테고리별 다수)
-    file_specs = []  # (source_title, path)
-    for i, (src_title, md_text) in enumerate(bundle["md_files"]):
-        suffix = f"_{i}" if len(bundle["md_files"]) > 1 else ""
-        mp = os.path.join(out_dir, f"{safe_q}_{period}{suffix}_{today}.md")
-        with open(mp, "w", encoding="utf-8") as f:
-            f.write(md_text)
-        file_specs.append((src_title, mp))
-
-    yt_urls = bundle["yt_urls"]
-    web_urls = bundle["web_urls"]
+    if no_crawl:
+        label = re.sub(r"\s+", " ", q).strip()[:40] or "리서치"
+        atoms_n = 0
+    else:
+        bundle = await run_in_threadpool(
+            _build_notebook_bundle, q, cats, period, limit, split, include_urls)
+        if bundle is None:
+            return JSONResponse(content={"error": "atoms.db 없음"}, status_code=503)
+        label = bundle["label"]
+        atoms_n = bundle["atoms_n"]
+        if atoms_n == 0 and not research:
+            return JSONResponse(content={"error": f"'{q}' (필터 조건) 매칭 발언 없음"}, status_code=400)
+        if not (label or "").strip():
+            label = re.sub(r"\s+", " ", q).strip()[:40] or "리서치"
+        safe_q = re.sub(r'[\\/:*?"<>|]', '_', label)[:40] or "검색"
+        if atoms_n > 0:
+            for i, (src_title, md_text) in enumerate(bundle["md_files"]):
+                suffix = f"_{i}" if len(bundle["md_files"]) > 1 else ""
+                mp = os.path.join(out_dir, f"{safe_q}_{period}{suffix}_{today}.md")
+                with open(mp, "w", encoding="utf-8") as f:
+                    f.write(md_text)
+                file_specs.append((src_title, mp))
+            md_for_cache = [t for _t, t in bundle["md_files"]]
+        yt_urls = bundle["yt_urls"]
+        web_urls = bundle["web_urls"]
 
     def _do():
         title = f"[허브] {label} · {today}"
@@ -2381,6 +2390,18 @@ async def api_insights_to_notebook(req: Request):
             ok3, _o3, _e3 = _run_nlm(["source", "add", nb_id] + url_args, timeout=150)
             if ok3:
                 added += 1
+        researched = 0
+        if research:
+            okr, outr, _er = _run_nlm(
+                ["research", "start", q, "-n", nb_id, "-m", "fast", "--auto-import"],
+                timeout=150)
+            if okr:
+                ok4, out4, _ = _run_nlm(["notebook", "get", nb_id])
+                try:
+                    researched = max(0, json.loads(out4).get("source_count", added) - added)
+                except Exception:
+                    researched = 0
+                added += researched
         return {
             "ok": True,
             "notebook_id": nb_id,
@@ -2390,6 +2411,8 @@ async def api_insights_to_notebook(req: Request):
             "web_urls": len(web_urls),
             "md_sources": len(file_specs),
             "sources_added": added,
+            "researched": researched,
+            "research": research,
             "period": period,
             "label": label,
             "source_warn": ("" if added >= 1 else (last_err or "")[:160]),
@@ -2399,7 +2422,8 @@ async def api_insights_to_notebook(req: Request):
     # Claude 직접 대화용 캐시 + 레지스트리 영속(이전 자료 끌어오기용)
     if result.get("ok") and result.get("notebook_id"):
         nbid = result["notebook_id"]
-        _NB_BUNDLES[nbid] = "\n\n".join(t for _t, t in bundle["md_files"])[:60000]
+        if md_for_cache:
+            _NB_BUNDLES[nbid] = "\n\n".join(md_for_cache)[:60000]
         _nb_registry_add({
             "id": nbid, "label": label, "date": today, "url": result["url"],
             "atoms": atoms_n, "paths": [p for _t, p in file_specs],

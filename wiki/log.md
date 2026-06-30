@@ -1327,3 +1327,9 @@ python calc_oscillator.py SK하이닉스 삼성전자 한미반도체 --tg
 - /api/insights/upload_image (base64 JSON), _gemini_vision_style(키 폴백)
 - 시각 결과물에 리모션 브랜드(_BRAND_DESIGN: 블랙+라임그린#AAFF00+골드#C8921A HUD) + 업로드 레퍼런스 스타일 결합
 - 검증: 리모션톤 인포그래픽 실측(블랙+라임+골드 HUD), design 업로드 비전 스타일추출 정상
+
+## 2026-06-30 — 다리 v12: 🔎리서치 탭(웹리서치 전용 모드) + 상단바 확대
+- 소스 행에 🔎리서치 토글: 켜면 NotebookLM 웹 리서치(research start --auto-import) 추가. 소스 미선택+리서치만이면 크롤링 없이 웹자료로 노트북 생성→답변
+- to_notebook research/no_crawl 분기, 워크스페이스 meta에 웹리서치 건수 표시
+- 상단 브리핑바 max-width 880→1040, 패딩 확대
+- 검증: 리서치전용(cats=[]+research) → atoms0+웹리서치10건 노트북 생성 정상

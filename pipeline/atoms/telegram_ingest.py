@@ -66,14 +66,27 @@ def ingest_telegram(md_path: Path) -> int:
     # Quote 원문 대조 검증
     md_text = md_path.read_text(encoding="utf-8")
     from .verify_telegram import verify_telegram_quotes
-    flags = verify_telegram_quotes(q, md_text)
-    if flags:
-        print(f"  [FLAG] quote 미발견 {len(flags)}건 → strength 감점")
 
     meta = {"date": date, "channel": channel, "type": info["type"],
             "sector": info.get("sector"), "trust": info["trust"],
             "raw_file": str(md_path)}
-    atoms = questionnaire_to_atoms_tg(q, meta)
+
+    # questionnaire가 list면 한 채널이 여러 섹터 메시지를 다룬 것 → 각각 처리.
+    # 서브마다 _mk_id가 동일 ID를 내므로(INSERT OR REPLACE 덮어쓰기 방지) bi>0에 salt.
+    subs = q if isinstance(q, list) else [q]
+    atoms = []
+    flags = []
+    for bi, sub in enumerate(subs):
+        if not isinstance(sub, dict):
+            continue
+        flags.extend(verify_telegram_quotes(sub, md_text))
+        sub_atoms = questionnaire_to_atoms_tg(sub, meta)
+        if bi > 0:
+            for a in sub_atoms:
+                a["id"] = f"{a['id']}_{bi}"
+        atoms.extend(sub_atoms)
+    if flags:
+        print(f"  [FLAG] quote 미발견 {len(flags)}건 → strength 감점")
 
     # Flag가 있으면 strength 감점
     penalty = 1 if flags else 0
