@@ -1206,6 +1206,29 @@ def api_stock_candles(code: str = "", tf: str = "D"):
     try:
         import kiwoom_api
         data = kiwoom_api.get_stock_candles(code, tf)
+        # ── NXT 반영: 장외(15:30 이후·09시 이전)엔 KIS 통합(UN) 시세를 차트에 이어붙임 ──
+        try:
+            import datetime as _dt, kis_api
+            hhmm = _dt.datetime.now().strftime("%H%M")
+            afterhours = hhmm > "1530" or hhmm < "0900"
+            if afterhours and data:
+                if tf in ("1", "3", "5", "10", "15", "30", "60"):
+                    ext = kis_api.get_minute_bars_ohlc(code, tf)   # NXT 시간외 분봉 포함
+                    last_t = data[-1]["time"]
+                    add = [b for b in ext if isinstance(b.get("time"), (int, float)) and b["time"] > last_t]
+                    if add:
+                        data = data + add
+                else:
+                    # 일/주/월봉: 마지막 봉 종가를 NXT 현재가로 갱신
+                    p = kis_api.get_price(code)  # UN(통합)
+                    px = p.get("price") or 0
+                    if px > 0:
+                        b = data[-1]
+                        b["close"] = px
+                        b["high"] = max(b.get("high", px), px)
+                        b["low"] = min(b.get("low", px) or px, px)
+        except Exception:
+            pass
         _candle_cache[key] = {"data": data, "ts": now}
         return JSONResponse(content={"tf": tf, "candles": data})
     except Exception as e:
@@ -2072,6 +2095,24 @@ def _run_nlm(args, timeout=90):
         return False, "", str(e)
 
 
+def _friendly_nlm_err(msg):
+    """nlm 에러를 사용자 친화적으로 — 특히 인증 만료."""
+    m = msg or ""
+    if any(s in m for s in ("Authentication expired", "Could not retrieve notebook",
+                            "re-authenticate", "AuthenticationError")):
+        return "⚠️ NotebookLM 로그인이 만료됐습니다. 터미널에서 'nlm login' 실행 후 다시 시도하세요."
+    return m[:200]
+
+
+# 리모션(채널) 브랜드 디자인 지침 — 인포그래픽/슬라이드/영상에 기본 적용
+_BRAND_DESIGN = (
+    "[디자인 지침] 순수 블랙(#000000) 배경에 라임그린(#AAFF00)을 메인 액센트로 핵심 수치·"
+    "키워드·그래프 라인·테두리에 사용하고, 골드/앰버(#C8921A)는 고급 포인트로, 텍스트는 흰색. "
+    "미니멀하면서 데이터가 빛나는 HUD/프리미엄 금융 대시보드 느낌. 큰 숫자와 핵심을 강하게 강조하고 "
+    "정보 밀도 높게, 디테일하고 세련되게 구성."
+)
+
+
 def _nb_cat_of(st):
     st = st or ""
     if st in ("youtube", "yt"):
@@ -2310,7 +2351,7 @@ async def api_insights_to_notebook(req: Request):
         title = f"[허브] {label} · {today}"
         ok, out, err = _run_nlm(["notebook", "create", title, "--json"])
         if not ok:
-            return {"error": f"노트북 생성 실패: {err[:200]}"}
+            return {"error": f"노트북 생성 실패: {_friendly_nlm_err(err)}"}
         nb_id = None
         try:
             nb_id = json.loads(out.strip().splitlines()[-1]).get("id")
@@ -2397,7 +2438,7 @@ async def api_insights_notebook_research(req: Request):
             ["research", "start", q, "-n", nb_id, "-m", mode, "--auto-import"],
             timeout=tmo)
         if not ok:
-            return {"error": f"리서치 실패: {errm[:200]}"}
+            return {"error": f"리서치 실패: {_friendly_nlm_err(errm)}"}
         after = before
         ok1, out1, _ = _run_nlm(["notebook", "get", nb_id])
         if ok1:
@@ -2433,7 +2474,7 @@ async def api_insights_notebook_card(req: Request):
             ["report", "create", nb_id, "--format", fmt, "--language", "ko", "--confirm"],
             timeout=180)
         if not ok:
-            return {"error": f"카드 생성 실패: {errm[:200]}"}
+            return {"error": f"카드 생성 실패: {_friendly_nlm_err(errm)}"}
         # 생성 완료까지 폴링 → 마크다운 다운로드 → 인라인 반환
         art_id = None
         for _ in range(30):  # 최대 ~150s
@@ -2500,7 +2541,7 @@ async def api_insights_notebook_query(req: Request):
             args += ["-c", conv]
         ok, out, errm = _run_nlm(args, timeout=180)
         if not ok:
-            return {"error": f"질문 실패: {errm[:200]}"}
+            return {"error": f"질문 실패: {_friendly_nlm_err(errm)}"}
         answer, conv_id = out.strip(), ""
         try:
             d = json.loads(out)
@@ -2581,11 +2622,17 @@ async def api_insights_notebook_studio(req: Request):
         args = list(spec["create"]) + [nb_id, "--confirm"]
         if kind != "mindmap":
             args += ["--language", "ko"]      # 결과물 한국어로
-        if focus:
-            args += ["--focus", focus]
+        # 시각 결과물엔 채널(리모션) 브랜드 디자인을 기본 적용
+        f2 = focus
+        if kind in ("infographic", "slides", "video"):
+            f2 = (focus + " / " + _BRAND_DESIGN) if focus else _BRAND_DESIGN
+            if kind == "infographic":
+                args += ["--style", "professional"]
+        if f2:
+            args += ["--focus", f2]
         ok, out, errm = _run_nlm(args, timeout=120)
         if not ok:
-            return {"error": f"{spec['label']} 생성 실패: {errm[:200]}"}
+            return {"error": f"{spec['label']} 생성 실패: {_friendly_nlm_err(errm)}"}
         # 시작 출력에서 artifact id 파싱
         m = re.search(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", out or "")
         art_id = m.group(0) if m else None

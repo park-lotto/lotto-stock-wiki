@@ -567,6 +567,54 @@ def get_minutebar(code: str, interval: int = 15) -> list:
     return out
 
 
+def get_minute_bars_ohlc(code: str, tf: str = "5", mdiv: str = "UN") -> list:
+    """분봉 OHLCV (mdiv='UN' → KRX+NXT 통합 → 장외 NXT 시간외 봉 포함).
+    반환(과거→최신): [{"time"(epoch초·KST-as-UTC), open, high, low, close, value}]
+    """
+    import datetime as _dt, calendar
+    now = _dt.datetime.now()
+    today = now.strftime("%Y%m%d")
+    try:
+        r = requests.get(
+            f"{BASE}/uapi/domestic-stock/v1/quotations/inquire-time-itemchartprice",
+            headers={"content-type": "application/json; charset=utf-8",
+                     "authorization": f"Bearer {_token()}", "appkey": _KEY,
+                     "appsecret": _SECRET, "tr_id": "FHKST03010200", "custtype": "P"},
+            params={"FID_COND_MRKT_DIV_CODE": mdiv, "FID_ETC_CLS_CODE": "",
+                    "FID_INPUT_ISCD": code.zfill(6),
+                    "FID_INPUT_HOUR_1": now.strftime("%H%M%S"),
+                    "FID_PW_DATA_INCU_YN": "N", "FID_HOUR_CLS_CODE": str(tf)},
+            timeout=8)
+        r.raise_for_status()
+        rows = r.json().get("output2") or []
+
+        def _f(row, k):
+            try:
+                return float(str(row.get(k, 0) or 0).replace(",", ""))
+            except Exception:
+                return 0.0
+        out = []
+        for row in rows:
+            if row.get("stck_bsop_date", today) != today:
+                continue
+            t = str(row.get("stck_cntg_hour", ""))
+            if len(t) < 6:
+                continue
+            c = _f(row, "stck_prpr")
+            if c <= 0:
+                continue
+            epoch = calendar.timegm((int(today[:4]), int(today[4:6]), int(today[6:8]),
+                                     int(t[:2]), int(t[2:4]), 0, 0, 0, 0))
+            out.append({"time": epoch,
+                        "open": _f(row, "stck_oprc") or c, "high": _f(row, "stck_hgpr") or c,
+                        "low": _f(row, "stck_lwpr") or c, "close": c,
+                        "value": int(_f(row, "cntg_vol"))})
+        out.sort(key=lambda x: x["time"])
+        return out
+    except Exception:
+        return []
+
+
 def get_index_minutebar(index_code: str, interval: int = 15) -> list:
     """코스피(0001)/코스닥(1001) 지수 분봉 종가 배열 (오름차순).
     KIS 지수 분봉 API는 별도 구독 필요 → KODEX200/코스닥150 ETF 분봉으로 대체.
