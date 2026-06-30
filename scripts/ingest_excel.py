@@ -11,12 +11,7 @@ ingest_excel.py — 매일 엑셀넣을것 → wiki 자동 반영
     wiki/log.md 자동 기록
 """
 
-import sys
-import os
-import re
-import glob
-import argparse
-import subprocess
+import sys, os, re, glob, argparse, subprocess, json
 from datetime import datetime, date
 from pathlib import Path
 
@@ -175,6 +170,175 @@ def fmt_num(v, unit="") -> str:
         if abs(v) >= 1e4:  return f"{int(v):,}{unit}"
         return f"{v:.2f}{unit}"
     return str(v)
+
+# ─── 종목별 태린이 지표 집계 (대시보드 종목 카드용) ──────────────────
+_KRX_NAME2CODE = None
+
+
+def _load_name2code() -> dict:
+    """pipeline/atoms/krx_codes.json ({"codes": {종목명: 코드}}) → {종목명: '6자리코드'}."""
+    global _KRX_NAME2CODE
+    if _KRX_NAME2CODE is not None:
+        return _KRX_NAME2CODE
+    m = {}
+    try:
+        path = ROOT / "pipeline" / "atoms" / "krx_codes.json"
+        data = json.loads(path.read_text(encoding="utf-8"))
+        for name, code in (data.get("codes") or {}).items():
+            c = _norm_code(code)
+            if c:
+                m[name.strip()] = c
+    except Exception:
+        pass
+    _KRX_NAME2CODE = m
+    return m
+
+
+def _norm_code(raw) -> str | None:
+    """'A247540' / 247540 / '247540' → '247540'. 6자리 숫자 아니면 None."""
+    if raw is None:
+        return None
+    s = str(raw).strip().upper()
+    if s.startswith("A"):
+        s = s[1:]
+    if s.isdigit():
+        s = s.zfill(6)
+    return s if (s.isdigit() and len(s) == 6) else None
+
+
+def _resolve_code(item: dict, name2code: dict, unmatched: list) -> str | None:
+    """항목에서 코드 확보: code 필드 우선, 없으면 종목명(name/related)→코드 매핑."""
+    c = _norm_code(item.get("code"))
+    if c:
+        return c
+    name = (item.get("name") or item.get("related") or "").strip()
+    if name and name in name2code:
+        return name2code[name]
+    if name:
+        unmatched.append(name)
+    return None
+
+
+def build_stock_index(results: dict, dest=None) -> dict:
+    """파서 results → 종목코드별 태린이 지표 스냅샷. pipeline/taerini_stock.json 저장."""
+    name2code = _load_name2code()
+    stocks: dict = {}
+    unmatched: list = []
+
+    def slot(code: str, name: str) -> dict:
+        s = stocks.setdefault(code, {"name": name or ""})
+        if name and not s.get("name"):
+            s["name"] = name
+        return s
+
+    # 1) 오실레이터 (수급 + 중소형주) → osc
+    for key in ("수급", "중소형주수급"):
+        r = results.get(key) or {}
+        for grp in ("빈집_A", "빈집_B", "과매수_상승", "과매수_하락"):
+            for it in (r.get(grp) or []):
+                code = _resolve_code(it, name2code, unmatched)
+                if not code:
+                    continue
+                slot(code, it.get("name", ""))["osc"] = {
+                    "group": grp, "osc": it.get("osc"),
+                    "pct": it.get("pct"), "trend": it.get("trend"),
+                }
+
+    # 2) RS → rs (top30 / bottom10 만 존재)
+    r = results.get("RS") or {}
+    for bucket, tag in (("top30", "상위"), ("bottom10", "하위")):
+        for it in (r.get(bucket) or []):
+            code = _resolve_code(it, name2code, unmatched)
+            if not code:
+                continue
+            slot(code, it.get("name", ""))["rs"] = {
+                "rs_avg": it.get("RS_avg"), "norm": it.get("norm_RS_avg"),
+                "bucket": tag,
+            }
+
+    # 3) 추정이익변경 → tp (TP_Up / TP_Down)
+    r = (results.get("추정이익변경") or {}).get("results") or {}
+    for bucket, d in (("TP_Up", "상향"), ("TP_Down", "하향")):
+        for it in (r.get(bucket) or []):
+            code = _resolve_code(it, name2code, unmatched)
+            if not code:
+                continue
+            tp_new, tp_old = it.get("tp_new"), it.get("tp_old")
+            pct = None
+            if isinstance(tp_new, (int, float)) and isinstance(tp_old, (int, float)) and tp_old:
+                pct = round((tp_new - tp_old) / tp_old * 100, 1)
+            slot(code, it.get("name", ""))["tp"] = {
+                "target": tp_new, "prev": tp_old, "change_pct": pct, "dir": d,
+            }
+
+    # 4) 컨센움직임 → consensus
+    r = (results.get("컨센움직임") or {}).get("results") or {}
+    for bucket in ("컨센상향", "컨센하향", "서프라이즈", "쇼크"):
+        for it in (r.get(bucket) or []):
+            code = _resolve_code(it, name2code, unmatched)
+            if not code:
+                continue
+            slot(code, it.get("name", ""))["consensus"] = {
+                "type": bucket, "csen_chg": it.get("csen_chg"),
+                "surprise_rate": it.get("surprise_rate"),
+            }
+
+    # 5) 가속화모멘텀 → accel (그룹별, 종목명만; 점수 높은 그룹 우선)
+    r = (results.get("가속화모멘텀") or {}).get("results") or {}
+    for grp, items in r.items():
+        for it in (items or []):
+            code = _resolve_code(it, name2code, unmatched)
+            if not code:
+                continue
+            cur = slot(code, it.get("name", ""))
+            prev = cur.get("accel")
+            if prev and (prev.get("score") or 0) >= (it.get("score") or 0):
+                continue
+            cur["accel"] = {"group": grp, "score": it.get("score")}
+
+    # 6) 액티브ETF → etf
+    r = results.get("액티브ETF") or {}
+    for bucket, act in (("increase", "비중증가"), ("decrease", "비중감소")):
+        for it in (r.get(bucket) or []):
+            code = _resolve_code(it, name2code, unmatched)
+            if not code:
+                continue
+            slot(code, it.get("name", ""))["etf"] = {
+                "action": act, "diff": it.get("diff"), "rate": it.get("rate"),
+            }
+
+    # 7) 일정 → schedule (related = 종목명)
+    r = results.get("일정") or {}
+    today = date.today()
+    for bucket in ("d7", "d30"):
+        for it in (r.get(bucket) or []):
+            code = _resolve_code({"name": it.get("related")}, name2code, unmatched)
+            if not code:
+                continue
+            dday = None
+            try:
+                ev = datetime.strptime((it.get("date") or "").strip(), "%Y-%m-%d").date()
+                dday = (ev - today).days
+            except Exception:
+                pass
+            slot(code, it.get("related", ""))["schedule"] = {
+                "event": it.get("content", ""), "date": it.get("date"), "dday": dday,
+            }
+
+    out = {
+        "date": TODAY,
+        "stocks": stocks,
+        "meta": {
+            "built_at": datetime.now().isoformat(timespec="seconds"),
+            "stock_count": len(stocks),
+            "unmatched": sorted(set(unmatched)),
+        },
+    }
+    dest = Path(dest) if dest else (ROOT / "pipeline" / "taerini_stock.json")
+    tmp = dest.with_suffix(dest.suffix + ".tmp")
+    tmp.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
+    os.replace(tmp, dest)
+    return out
 
 # ─── 파서 1: 추정이익변경 (Rating/TP 상향·하향) ────────────────
 
