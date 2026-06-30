@@ -1259,3 +1259,10 @@ python calc_oscillator.py SK하이닉스 삼성전자 한미반도체 --tg
 - 서브에이전트 TDD 7태스크 전부 통과(17 tests), 최종 opus 리뷰 READY TO MERGE, main 머지·push 완료
 - 라이브 검증: 5단계 완주+텔레 전송 성공. Gemini 이미지는 429 쿼터소진→폴백 정상작동(예비키 GEMINI_API_KEY_2 자동전환은 후속)
 - 접속: python dashboard/server.py → http://localhost:8090/studio
+
+## 2026-06-30 — 인사이트 허브 → NotebookLM 다리 완성
+- 가로검색 한 번 → 전 소스 발언이 NotebookLM 노트북으로 자동 투입(추출발언 .md + 원본 URL/유튜브, ①+㉢)
+- dashboard/server.py: /api/insights/to_notebook(노트북생성+소스), /notebook_research(웹딥리서치 --auto-import), /notebook_card(report create) — nlm CLI subprocess
+- dashboard/insights.html: 검색결과에 "📒 NotebookLM 노트북으로" 버튼바 + 결과모달(🔬리서치/🎴카드 다음단계)
+- 라이브 검증: HBM(110발언→노트북, 리서치 +10소스, 브리핑리포트 생성), 조선(67발언→노트북) 실제 생성 확인
+- spec: docs/superpowers/specs/2026-06-30-insights-notebooklm-bridge-design.md
