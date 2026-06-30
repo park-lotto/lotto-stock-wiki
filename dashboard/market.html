@@ -21,6 +21,11 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 .etf-bar{background:var(--panel);border-bottom:1px solid var(--line);
          overflow-x:auto;white-space:nowrap;padding:0 16px;scrollbar-width:none;}
 .etf-bar::-webkit-scrollbar{display:none;}
+.etf-title{display:inline-flex;align-items:center;justify-content:center;
+  position:sticky;left:0;z-index:3;vertical-align:top;min-width:54px;align-self:stretch;
+  padding:8px 14px;margin-right:2px;border-right:1px solid var(--line);
+  background:linear-gradient(90deg,var(--panel) 70%,rgba(19,19,24,0));
+  font-size:13px;font-weight:900;color:var(--gold);letter-spacing:1.5px;}
 .etf-chip{display:inline-flex;flex-direction:column;gap:2px;padding:8px 14px;
           border-right:1px solid var(--line);min-width:120px;cursor:default;
           vertical-align:top;transition:background .15s;}
@@ -214,6 +219,44 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 .btn-reset:hover{border-color:#aaa;color:#ccc;}
 #toast{position:fixed;bottom:24px;right:24px;padding:11px 18px;border-radius:10px;
   font-size:13px;z-index:9999;pointer-events:none;transition:opacity .4s;}
+
+/* ── 관심종목 패널 ── */
+.wl-panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:12px 14px;margin-bottom:16px;}
+.wl-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.wl-title{font-size:13px;font-weight:900;color:var(--gold);letter-spacing:.5px;white-space:nowrap;}
+.wl-add{position:relative;flex:1;max-width:280px;}
+.wl-add input{width:100%;background:#1a1a22;border:1px solid var(--line);border-radius:8px;
+  padding:6px 11px;color:#eee;font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;}
+.wl-add input:focus{border-color:var(--gold);}
+.wl-ac{position:absolute;top:calc(100% + 3px);left:0;right:0;background:#1e1e28;
+  border:1px solid var(--line);border-radius:8px;max-height:200px;overflow-y:auto;
+  z-index:300;box-shadow:0 8px 24px rgba(0,0,0,.6);display:none;}
+.wl-ac.open{display:block;}
+.wl-ac-item{padding:7px 12px;font-size:12px;color:#ccc;cursor:pointer;display:flex;justify-content:space-between;gap:8px;}
+.wl-ac-item:hover{background:rgba(212,175,55,.1);color:var(--gold);}
+.wl-ac-item .c{color:#555;font-size:11px;}
+.wl-count{font-size:11px;color:#666;margin-left:auto;white-space:nowrap;}
+.wl-row{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin;scrollbar-color:#333 transparent;}
+.wl-row::-webkit-scrollbar{height:5px;}
+.wl-row::-webkit-scrollbar-thumb{background:#333;border-radius:3px;}
+.wl-empty{font-size:12px;color:#555;padding:10px 4px;}
+.wl-card{flex:0 0 auto;min-width:158px;background:#16161c;border:1px solid var(--line);
+  border-radius:10px;padding:9px 11px;position:relative;}
+.wl-card .x{position:absolute;top:5px;right:6px;background:none;border:none;color:#555;
+  cursor:pointer;font-size:13px;line-height:1;padding:2px;transition:color .15s;}
+.wl-card .x:hover{color:#e74c3c;}
+.wl-nm{font-size:12.5px;font-weight:700;color:#eee;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;max-width:118px;margin-bottom:3px;}
+.wl-pr{display:flex;align-items:baseline;gap:6px;margin-bottom:7px;}
+.wl-pr .p{font-size:13px;font-weight:800;color:#ddd;font-variant-numeric:tabular-nums;}
+.wl-pr .r{font-size:12px;font-weight:700;}
+.wl-pr .r.up{color:var(--up1);} .wl-pr .r.dn{color:var(--dn1);} .wl-pr .r.neu{color:#666;}
+.wl-sup{display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;}
+.wl-sup .s{display:flex;justify-content:space-between;gap:4px;font-size:10px;font-variant-numeric:tabular-nums;}
+.wl-sup .s .k{color:#888;}
+.wl-sup .s .v.up{color:var(--up1);} .wl-sup .s .v.dn{color:var(--dn1);} .wl-sup .s .v.neu{color:#555;}
+.wl-sup-na{font-size:9px;color:#444;margin-top:4px;}
 </style>
 </head>
 <body>
@@ -261,6 +304,21 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 </div>
 
 <div class="main">
+
+  <!-- 관심종목 패널 -->
+  <div class="wl-panel" id="wl-panel">
+    <div class="wl-head">
+      <span class="wl-title">⭐ 관심종목</span>
+      <div class="wl-add">
+        <input id="wl-input" placeholder="종목명 입력 후 선택…" autocomplete="off"
+               oninput="wlSearch(this.value)" onblur="setTimeout(wlCloseAc,180)">
+        <div class="wl-ac" id="wl-ac"></div>
+      </div>
+      <span class="wl-count" id="wl-count"></span>
+    </div>
+    <div class="wl-row" id="wl-row"><div class="wl-empty">관심종목을 추가하세요.</div></div>
+  </div>
+
   <div class="subbar">
     <h1 id="main-title">섹터 히트맵</h1>
     <span class="snap-date" id="snap-date"></span>
@@ -637,7 +695,10 @@ const _ETF_CACHE_TTL=300000;
 
 function _renderEtfBar(etfs){
   if(!Array.isArray(etfs)||etfs.length===0)return;
-  document.getElementById("etf-bar").innerHTML=etfs.map(e=>{
+  // 상승률 내림차순 정렬 (왼쪽=가장 강한 섹터)
+  const sorted=etfs.slice().sort((a,b)=>(Number(b.change_rate)||0)-(Number(a.change_rate)||0));
+  const title=`<div class="etf-title">ETF</div>`;
+  document.getElementById("etf-bar").innerHTML=title+sorted.map(e=>{
     const rc=e.change_rate>0?"up":e.change_rate<0?"dn":"neu";
     const rs=(e.change_rate>0?"+":"")+(e.change_rate||0).toFixed(2)+"%";
     return`<div class="etf-chip">
@@ -950,6 +1011,23 @@ function toggleEtfFilter(){
   _reRenderRankCard();
 }
 
+// 글로벌 지표 종목명 + (야간선물 마감 배지)
+function _globalNameHtml(it){
+  let badge="";
+  if(it.closed){
+    let dstr="";
+    if(it.last_ts){
+      const dt=new Date(it.last_ts);
+      dstr=`${dt.getMonth()+1}/${dt.getDate()}`;
+    }
+    badge=`<span style="margin-left:5px;font-size:8px;font-weight:700;color:#c9a84a;
+      background:rgba(201,168,74,.13);border:1px solid rgba(201,168,74,.3);
+      border-radius:4px;padding:1px 5px;vertical-align:middle;white-space:nowrap">
+      🌙 ${dstr?dstr+" ":""}마감</span>`;
+  }
+  return`<span class="global-name">${esc(it.name)}</span>${badge}`;
+}
+
 function renderMarketFlow(d){
   try{
     const panel=document.getElementById("mkt-panel");
@@ -992,14 +1070,14 @@ function renderMarketFlow(d){
             })();
             return`<div style="flex:3;min-height:0;display:flex;flex-direction:column;${borderB}padding:4px 0 3px;">
               <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px">
-                <span class="global-name">${esc(it.name)}</span>
+                ${_globalNameHtml(it)}
                 <div style="text-align:right"><div class="global-price">${ps}</div><div class="global-rate ${rc}">${rs}</div></div>
               </div>
               <div style="flex:1;min-height:0">${svgLine}</div>
             </div>`;
           } else {
             return`<div style="flex:1.5;min-height:0;display:flex;align-items:center;justify-content:space-between;${borderB}padding:3px 0;">
-              <span class="global-name">${esc(it.name)}</span>
+              ${_globalNameHtml(it)}
               <div style="text-align:right"><div class="global-price">${ps}</div><div class="global-rate ${rc}">${rs}</div></div>
             </div>`;
           }
@@ -1523,6 +1601,105 @@ function showToast(msg,type="ok"){
   el._timer=setTimeout(()=>{el.style.opacity="0";},2800);
 }
 
+// ── 관심종목 패널 ─────────────────────────────────────────
+let _wlCodes=[];            // 현재 관심종목 [{code,name}]
+let _wlSearchResults=[];    // 검색 자동완성 결과
+let _wlSearchTimer=null;
+
+// 백만원 → 억/조 (부호 포함)
+function wlAmt(v){
+  v=Number(v)||0;
+  if(v===0) return "0";
+  const bok=v/100, a=Math.abs(bok);
+  let s;
+  if(a>=10000) s=(bok/10000).toFixed(1)+"조";
+  else if(a>=1) s=Math.round(bok)+"억";
+  else s=Math.round(v)+"백만";
+  return (v>0?"+":"")+s;
+}
+
+function renderWatchlist(items){
+  const row=document.getElementById("wl-row");
+  const cnt=document.getElementById("wl-count");
+  if(!row)return;
+  if(cnt) cnt.textContent=items.length?`${items.length}종목`:"";
+  if(!items.length){ row.innerHTML='<div class="wl-empty">관심종목을 추가하세요.</div>'; return; }
+  row.innerHTML=items.map(it=>{
+    const rc=it.change_rate>0?"up":it.change_rate<0?"dn":"neu";
+    const rs=(it.change_rate>0?"+":"")+Number(it.change_rate||0).toFixed(2)+"%";
+    const ps=Number(it.price||0).toLocaleString("ko-KR");
+    const sup=it.supply;
+    let supHtml;
+    if(sup&&(sup.외인||sup.기관||sup.개인||sup.프로그램)){
+      const cell=(k,v)=>{const c=v>0?"up":v<0?"dn":"neu";
+        return`<div class="s"><span class="k">${k}</span><span class="v ${c}">${wlAmt(v)}</span></div>`;};
+      supHtml=`<div class="wl-sup">${cell("외인",sup.외인)}${cell("기관",sup.기관)}${cell("개인",sup.개인)}${cell("프로",sup.프로그램)}</div>`;
+    } else {
+      supHtml=`<div class="wl-sup-na">잠정수급 집계 전</div>`;
+    }
+    return`<div class="wl-card">
+      <button class="x" onclick="wlRemove('${it.code}')" title="삭제">✕</button>
+      <div class="wl-nm" title="${esc(it.name)}">${esc(it.name)}</div>
+      <div class="wl-pr"><span class="p">${ps}</span><span class="r ${rc}">${rs}</span></div>
+      ${supHtml}
+    </div>`;
+  }).join("");
+}
+
+async function loadWatchlist(){
+  try{
+    const r=await fetch("/api/watchlist");
+    const d=await r.json();
+    const items=d.items||[];
+    _wlCodes=items.map(it=>({code:it.code,name:it.name}));
+    renderWatchlist(items);
+  }catch(e){ /* 유지 */ }
+}
+
+function wlSearch(q){
+  clearTimeout(_wlSearchTimer);
+  if(!q.trim()){ wlCloseAc(); return; }
+  _wlSearchTimer=setTimeout(async()=>{
+    try{
+      const r=await fetch("/api/stock_search?q="+encodeURIComponent(q.trim()));
+      const list=await r.json();
+      const ac=document.getElementById("wl-ac");
+      if(!Array.isArray(list)||!list.length){ wlCloseAc(); return; }
+      _wlSearchResults=list;
+      ac.innerHTML=list.map((s,i)=>
+        `<div class="wl-ac-item" onmousedown="wlAddIdx(${i})">
+          <span>${esc(s.name)}</span><span class="c">${esc(s.code)}</span></div>`).join("");
+      ac.classList.add("open");
+    }catch(e){ wlCloseAc(); }
+  },220);
+}
+function wlCloseAc(){ const ac=document.getElementById("wl-ac"); if(ac)ac.classList.remove("open"); }
+function wlAddIdx(i){ const s=_wlSearchResults[i]; if(s) wlAdd(s.code,s.name); }
+
+async function wlAdd(code,name){
+  const inp=document.getElementById("wl-input"); if(inp)inp.value="";
+  wlCloseAc();
+  if(_wlCodes.some(c=>c.code===code)){ showToast("이미 추가된 종목"); return; }
+  _wlCodes.push({code,name});
+  await _wlSave();
+  showToast(`⭐ ${name} 추가`);
+  loadWatchlist();
+}
+async function wlRemove(code){
+  const t=_wlCodes.find(c=>c.code===code);
+  _wlCodes=_wlCodes.filter(c=>c.code!==code);
+  await _wlSave();
+  if(t) showToast(`${t.name} 삭제`);
+  loadWatchlist();
+}
+async function _wlSave(){
+  try{
+    await fetch("/api/watchlist",{method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({codes:_wlCodes})});
+  }catch(e){ showToast("저장 실패","err"); }
+}
+
 async function initLoad(){
   await loadOverview();
   prefetchTabs();
@@ -1532,7 +1709,9 @@ initLoad();
 loadEtfBar();
 loadMarketFlowSample();   // 즉시 샘플 표시 (빈화면 방지)
 loadMarketFlow();          // 실제 API 데이터로 즉시 교체
+loadWatchlist();           // 관심종목 + 잠정수급
 setInterval(loadEtfBar,    30000);
 setInterval(loadMarketFlow, 30000);
+setInterval(loadWatchlist,  60000);  // 수급 키움 콜 부하 고려 60초
 </script>
 </body></html>

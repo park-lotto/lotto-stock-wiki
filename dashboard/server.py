@@ -803,17 +803,25 @@ def _build_market_flow_result(done: dict) -> dict:
     ksfn = done.get("KSFN")     or {"price": 0, "change_rate": 0, "bars": []}
     fx   = done.get("USDKRW")   or {"price": 0, "change_rate": 0, "bars": []}
     oil  = done.get("WTI")      or {"price": 0, "change_rate": 0, "bars": []}
-    # 야간선물 WebSocket 실시간값 우선 사용
+    # 야간선물 마지막 체결 시각(esignal) 보존 — WS 덮어쓰기 전에 확보
+    ksfn_last_ts = ksfn.get("last_ts", 0)
+    # 야간선물 개장 시간대: 18:00~익일 05:00 KST. 그 외(주간 09~18시 포함)는 '마감' 상태.
+    import datetime as _dt2
+    _hh = _dt2.datetime.now().hour
+    ksfn_closed = not (_hh >= 18 or _hh < 5)
+    # 야간선물 WebSocket 실시간값 우선 사용 (개장 중일 때만 의미 있음)
     if kis_ws:
         ws_ksfn = kis_ws.get("101W9")
         if ws_ksfn:
-            ksfn = {"price": ws_ksfn["price"], "change_rate": ws_ksfn["change_rate"], "bars": ksfn.get("bars") or []}
+            ksfn = {"price": ws_ksfn["price"], "change_rate": ws_ksfn["change_rate"],
+                    "bars": ksfn.get("bars") or [], "last_ts": ksfn_last_ts}
     result["global"] = {
         "label": "글로벌 지표",
         "items": [
             {"name": "나스닥선물(NQ)",  "price": nq["price"],   "change_rate": nq["change_rate"],   "bars": nq.get("bars") or []},
             {"name": "코스피선물",      "price": ksf["price"],  "change_rate": ksf["change_rate"],  "bars": ksf.get("bars") or []},
-            {"name": "코스피야간선물",  "price": ksfn["price"], "change_rate": ksfn["change_rate"], "bars": ksfn.get("bars") or []},
+            {"name": "코스피야간선물",  "price": ksfn["price"], "change_rate": ksfn["change_rate"], "bars": ksfn.get("bars") or [],
+             "closed": ksfn_closed, "last_ts": ksfn_last_ts},
             {"name": "원달러환율",      "price": fx["price"],   "change_rate": fx["change_rate"],   "bars": fx.get("bars") or []},
             {"name": "국제유가(WTI)",   "price": oil["price"],  "change_rate": oil["change_rate"],  "bars": oil.get("bars") or []},
         ]
@@ -1014,8 +1022,12 @@ def _load_watchlist_codes():
 
 
 @app.get("/api/watchlist")
-def api_watchlist_get():
-    """관심종목 목록 + 현재가/등락률 (멀티시세 API로 빠르게)."""
+def api_watchlist_get(flow: int = 1):
+    """관심종목 목록 + 현재가/등락률 (멀티시세).
+
+    flow=1(기본): 종목별 잠정수급(외인/기관/개인/프로그램)도 키움에서 병렬로 끌어와 첨부.
+    flow=0: 가격만 빠르게.
+    """
     codes = _load_watchlist_codes()
     items = []
     if codes:
@@ -1031,6 +1043,22 @@ def api_watchlist_get():
         except Exception:
             items = [{"code": c["code"], "name": c.get("name", ""),
                       "price": 0, "change_rate": 0} for c in codes]
+
+    # 종목별 잠정수급 첨부 (키움 ka10059+ka90013, 종목당 2콜 → 종목 단위 병렬)
+    if flow and items:
+        try:
+            import kiwoom_api
+            from concurrent.futures import ThreadPoolExecutor
+            with ThreadPoolExecutor(max_workers=min(10, len(items))) as ex:
+                futs = {it["code"]: ex.submit(kiwoom_api.get_stock_supply, it["code"])
+                        for it in items}
+                for it in items:
+                    try:
+                        it["supply"] = futs[it["code"]].result(timeout=12)
+                    except Exception:
+                        it["supply"] = None
+        except Exception:
+            pass
     return JSONResponse(content={"items": items})
 
 
@@ -1767,6 +1795,27 @@ async def api_insights_summarize(req: Request):
     return JSONResponse(content={"ok": True, "summary": result})
 
 
+# ── 검색 키워드 토크나이저 (자연어 문장 → 키워드) ─────────────
+_SEARCH_STOP = {
+    "오늘", "내일", "어제", "지금", "요즘", "최근", "관련", "어떤", "무슨", "무엇",
+    "있는", "있는지", "없는", "인지", "그리고", "정리", "정리해줘", "알려줘", "알려",
+    "해줘", "보여줘", "대해", "대한", "이슈", "이슈가", "소식", "현황", "상황",
+    "어때", "어떻게", "이게", "저게", "그게", "정도", "관해",
+}
+
+
+def _tokenize_query(q):
+    """자연어 문장에서 검색 키워드 토큰 추출. 못 뽑으면 원문만."""
+    raw = re.split(r"[\s,./·…]+", (q or "").strip())
+    toks, seen = [], set()
+    for t in raw:
+        t = re.sub(r"(은|는|이|가|을|를|의|에|에서|으로|로|와|과|도|만|관련|이슈가|이슈|에대해|에대한)$", "", t.strip())
+        if len(t) >= 2 and t not in _SEARCH_STOP and t not in seen:
+            seen.add(t)
+            toks.append(t)
+    return toks or [(q or "").strip()]
+
+
 # ── §4.7 GET /api/insights/search?q=삼성전자 ─────────────────
 @app.get("/api/insights/search")
 def api_insights_search(q: str = ""):
@@ -1777,16 +1826,26 @@ def api_insights_search(q: str = ""):
     if conn is None:
         return JSONResponse(content={"error": "atoms.db 없음"}, status_code=503)
     try:
-        like = f"%{q}%"
+        toks = _tokenize_query(q)
+        where = " OR ".join(["content LIKE ? OR asset LIKE ?"] * len(toks))
+        params = []
+        for t in toks:
+            params += [f"%{t}%", f"%{t}%"]
         rows = conn.execute(
-            """SELECT source_type, source_name, raw_file, date,
-                      content, asset, stance_key, yt_timestamp, deeplink
-               FROM atoms
-               WHERE content LIKE ? OR asset LIKE ?
-               ORDER BY date DESC
-               LIMIT 50""",
-            (like, like),
+            f"""SELECT source_type, source_name, raw_file, date,
+                       content, asset, stance_key, yt_timestamp, deeplink
+                FROM atoms
+                WHERE {where}
+                ORDER BY date DESC
+                LIMIT 300""",
+            params,
         ).fetchall()
+
+        # 매칭 토큰 수로 랭킹 (많이 겹칠수록 위로), 동점은 최신순
+        def _score(r):
+            text = (r["content"] or "") + " " + (r["asset"] or "")
+            return sum(1 for t in toks if t in text)
+        rows = sorted(rows, key=lambda r: (_score(r), r["date"] or ""), reverse=True)[:50]
 
         hits = []
         for r in rows:
@@ -1859,23 +1918,33 @@ def _nb_cat_of(st):
 
 
 def _build_notebook_bundle(q):
-    """atoms.db에서 q 매칭 발언 수집 → (md_text, youtube_urls, web_urls, atoms_n)."""
+    """atoms.db에서 q(키워드/문장) 매칭 발언 수집 → (md, yt_urls, web_urls, n, label)."""
     conn = _ins_conn()
     if conn is None:
         return None
+    toks = _tokenize_query(q)
+    label = " ".join(toks)
     try:
-        like = f"%{q}%"
+        where = " OR ".join(["content LIKE ? OR asset LIKE ?"] * len(toks))
+        params = []
+        for t in toks:
+            params += [f"%{t}%", f"%{t}%"]
         rows = conn.execute(
-            """SELECT source_type, source_name, raw_file, date,
-                      content, asset, stance_key, deeplink
-               FROM atoms
-               WHERE content LIKE ? OR asset LIKE ?
-               ORDER BY date DESC
-               LIMIT 200""",
-            (like, like),
+            f"""SELECT source_type, source_name, raw_file, date,
+                       content, asset, stance_key, deeplink
+                FROM atoms
+                WHERE {where}
+                ORDER BY date DESC
+                LIMIT 200""",
+            params,
         ).fetchall()
     finally:
         conn.close()
+
+    def _score(r):
+        text = (r["content"] or "") + " " + (r["asset"] or "")
+        return sum(1 for t in toks if t in text)
+    rows = sorted(rows, key=lambda r: (_score(r), r["date"] or ""), reverse=True)
 
     groups = {}          # (cat, source) -> [row]
     yt_urls, web_urls = [], []
@@ -1893,15 +1962,15 @@ def _build_notebook_bundle(q):
     today = datetime.now().strftime("%Y-%m-%d")
     order = ["youtube", "telegram", "report", "blog", "news"]
     lines = [
-        f"# {q} — 인사이트 허브 가로검색 묶음 ({today})",
-        f"_총 {len(rows)}개 발언 · 소스 {len(groups)}개 · 로또의 주식 인사이트 허브 추출_",
+        f"# {label} — 인사이트 허브 가로검색 묶음 ({today})",
+        f"_검색어: {q} · 키워드: {label} · 총 {len(rows)}개 발언 · 소스 {len(groups)}개 · 로또의 주식 인사이트 허브 추출_",
         "",
     ]
     for key in sorted(groups.keys(),
                       key=lambda k: (order.index(k[0]) if k[0] in order else 99, k[1])):
         cat, src = key
-        label, icon = _CAT_LABEL.get(cat, (cat, "•"))
-        lines.append(f"## {icon} [{label}] {src}")
+        clabel, icon = _CAT_LABEL.get(cat, (cat, "•"))
+        lines.append(f"## {icon} [{clabel}] {src}")
         for r in groups[key]:
             stance = f" `{r['stance_key']}`" if r["stance_key"] else ""
             asset = f" ({r['asset']})" if r["asset"] else ""
@@ -1909,7 +1978,7 @@ def _build_notebook_bundle(q):
             src_tag = f" — {dl}" if dl.startswith("http") else ""
             lines.append(f"- {(r['content'] or '').strip()}{asset}{stance}  ·{r['date'] or ''}{src_tag}")
         lines.append("")
-    return "\n".join(lines), yt_urls[:20], web_urls[:20], len(rows)
+    return "\n".join(lines), yt_urls[:20], web_urls[:20], len(rows), label
 
 
 @app.post("/api/insights/to_notebook")
@@ -1930,12 +1999,12 @@ async def api_insights_to_notebook(req: Request):
     bundle = await run_in_threadpool(_build_notebook_bundle, q)
     if bundle is None:
         return JSONResponse(content={"error": "atoms.db 없음"}, status_code=503)
-    md_text, yt_urls, web_urls, atoms_n = bundle
+    md_text, yt_urls, web_urls, atoms_n, label = bundle
     if atoms_n == 0:
         return JSONResponse(content={"error": f"'{q}' 매칭 발언 없음"}, status_code=400)
 
     today = datetime.now().strftime("%Y-%m-%d")
-    safe_q = re.sub(r'[\\/:*?"<>|]', '_', q)[:40]
+    safe_q = re.sub(r'[\\/:*?"<>|]', '_', label)[:40] or "검색"
     out_dir = os.path.join(ROOT, "out", "insights_notebook")
     os.makedirs(out_dir, exist_ok=True)
     md_path = os.path.join(out_dir, f"{safe_q}_{today}.md")
@@ -1943,7 +2012,7 @@ async def api_insights_to_notebook(req: Request):
         f.write(md_text)
 
     def _do():
-        title = f"[허브] {q} · {today}"
+        title = f"[허브] {label} · {today}"
         ok, out, err = _run_nlm(["notebook", "create", title, "--json"])
         if not ok:
             return {"error": f"노트북 생성 실패: {err[:200]}"}
@@ -1960,7 +2029,7 @@ async def api_insights_to_notebook(req: Request):
 
         added = 0
         ok2, _o2, err2 = _run_nlm(["source", "add", nb_id, "--file", md_path,
-                                   "--title", f"[허브추출] {q} 발언 {atoms_n}건"])
+                                   "--title", f"[허브추출] {label} 발언 {atoms_n}건"])
         if ok2:
             added += 1
         url_args = []

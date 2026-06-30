@@ -294,3 +294,71 @@ def get_trade_rank(n: int = 30) -> list:
         return result
     except Exception:
         return []
+
+
+def _pamt(v) -> int:
+    """키움 금액 문자열 파싱 → 정수(백만원). '--7767'(이중부호)·'+88548'·콤마 처리."""
+    s = str(v).replace(",", "").replace(" ", "")
+    if not s or s in ("-", "+"):
+        return 0
+    neg = False
+    if s.startswith("--"):
+        neg, s = True, s[2:]
+    elif s.startswith("-"):
+        neg, s = True, s[1:]
+    else:
+        s = s.lstrip("+")
+    try:
+        n = int(float(s))
+    except Exception:
+        return 0
+    return -n if neg else n
+
+
+def get_stock_supply(code: str) -> dict:
+    """종목별 잠정수급 — 외인/기관/개인(ka10059) + 프로그램 순매수(ka90013).
+
+    단위: 백만원 (시장 투자자 수급과 동일, fmtAuk로 억 환산).
+    반환: {"외인","기관","개인","프로그램","ts"} — 실패 항목은 0.
+    """
+    import datetime as _dt
+    ts = _dt.datetime.now().strftime("%H:%M")
+    today = _dt.datetime.now().strftime("%Y%m%d")
+    out = {"외인": 0, "기관": 0, "개인": 0, "프로그램": 0, "ts": ts}
+
+    # ① 외인/기관/개인 — ka10059 종목별투자자기관별요청 (금액, 최신일=rows[0])
+    try:
+        r = requests.post(
+            f"{BASE}/api/dostk/stkinfo",
+            headers={**_hdrs(), "api-id": "ka10059", "cont-yn": "N", "next-key": ""},
+            json={"dt": today, "stk_cd": code, "amt_qty_tp": "1",
+                  "trde_tp": "0", "unit_tp": "1000"},
+            timeout=8,
+        )
+        r.raise_for_status()
+        rows = r.json().get("stk_invsr_orgn", []) or []
+        if rows:
+            row = rows[0]
+            out["외인"] = _pamt(row.get("frgnr_invsr", 0))
+            out["기관"] = _pamt(row.get("orgn", 0))
+            out["개인"] = _pamt(row.get("ind_invsr", 0))
+    except Exception:
+        pass
+
+    # ② 프로그램 순매수 — ka90013 종목별일별프로그램매매추이요청 (최신일=rows[0])
+    try:
+        r = requests.post(
+            f"{BASE}/api/dostk/mrkcond",
+            headers={**_hdrs(), "api-id": "ka90013", "cont-yn": "N", "next-key": ""},
+            json={"stk_cd": code, "date": today, "amt_qty_tp": "1",
+                  "mrkt_tp": "P00101", "min_tic_tp": "1", "stex_tp": "1"},
+            timeout=8,
+        )
+        r.raise_for_status()
+        rows = r.json().get("stk_daly_prm_trde_trnsn", []) or []
+        if rows:
+            out["프로그램"] = _pamt(rows[0].get("prm_netprps_amt", 0))
+    except Exception:
+        pass
+
+    return out
