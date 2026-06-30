@@ -999,6 +999,51 @@ async def api_sector_custom_post(req: Request):
     return JSONResponse(content={"ok": True})
 
 
+# ── 관심종목(워치리스트) ───────────────────────────────────
+WATCHLIST_PATH = os.path.join(ROOT, "pipeline", "watchlist.json")
+
+
+def _load_watchlist_codes():
+    if os.path.exists(WATCHLIST_PATH):
+        try:
+            with open(WATCHLIST_PATH, encoding="utf-8") as f:
+                return json.load(f).get("codes", [])
+        except Exception:
+            pass
+    return []
+
+
+@app.get("/api/watchlist")
+def api_watchlist_get():
+    """관심종목 목록 + 현재가/등락률 (멀티시세 API로 빠르게)."""
+    codes = _load_watchlist_codes()
+    items = []
+    if codes:
+        try:
+            import kis_api
+            prices = kis_api.get_prices_multi([c["code"] for c in codes])
+            for c in codes:
+                p = prices.get(c["code"]) or {}
+                items.append({"code": c["code"],
+                              "name": c.get("name") or p.get("name") or c["code"],
+                              "price": p.get("price", 0),
+                              "change_rate": p.get("change_rate", 0)})
+        except Exception:
+            items = [{"code": c["code"], "name": c.get("name", ""),
+                      "price": 0, "change_rate": 0} for c in codes]
+    return JSONResponse(content={"items": items})
+
+
+@app.post("/api/watchlist")
+async def api_watchlist_post(req: Request):
+    """관심종목 저장. body: {codes:[{code,name},...]}"""
+    data = await req.json()
+    codes = data.get("codes", [])
+    with open(WATCHLIST_PATH, "w", encoding="utf-8") as f:
+        json.dump({"codes": codes}, f, ensure_ascii=False, indent=2)
+    return JSONResponse(content={"ok": True})
+
+
 @app.get("/api/stock_search")
 def api_stock_search(q: str = ""):
     if not q.strip():
@@ -1774,6 +1819,173 @@ def api_insights_search(q: str = ""):
         return JSONResponse(content={"q": q, "total": len(hits), "hits": hits})
     finally:
         conn.close()
+
+
+# ── §4.9 NotebookLM 다리: 가로검색 묶음 → 노트북 자동 생성 ──────
+def _nlm_exe():
+    """nlm 실행 파일 경로. PATH 우선, 없으면 None."""
+    return shutil.which("nlm") or shutil.which("nlm.exe")
+
+
+def _run_nlm(args, timeout=90):
+    """nlm CLI 호출. (ok, stdout, stderr) 반환."""
+    exe = _nlm_exe()
+    if not exe:
+        return False, "", "nlm CLI를 찾을 수 없음 (PATH 확인)"
+    try:
+        p = subprocess.run(
+            [exe] + args,
+            capture_output=True, text=True, encoding="utf-8",
+            timeout=timeout, cwd=ROOT,
+        )
+        if p.returncode != 0:
+            return False, p.stdout or "", (p.stderr or p.stdout or f"exit {p.returncode}")
+        return True, p.stdout or "", p.stderr or ""
+    except subprocess.TimeoutExpired:
+        return False, "", f"nlm 타임아웃({timeout}s)"
+    except Exception as e:
+        return False, "", str(e)
+
+
+def _nb_cat_of(st):
+    st = st or ""
+    if st in ("youtube", "yt"):
+        return "youtube"
+    if st == "telegram":
+        return "telegram"
+    if st in ("blog", "report", "news"):
+        return st
+    return st
+
+
+def _build_notebook_bundle(q):
+    """atoms.db에서 q 매칭 발언 수집 → (md_text, youtube_urls, web_urls, atoms_n)."""
+    conn = _ins_conn()
+    if conn is None:
+        return None
+    try:
+        like = f"%{q}%"
+        rows = conn.execute(
+            """SELECT source_type, source_name, raw_file, date,
+                      content, asset, stance_key, deeplink
+               FROM atoms
+               WHERE content LIKE ? OR asset LIKE ?
+               ORDER BY date DESC
+               LIMIT 200""",
+            (like, like),
+        ).fetchall()
+    finally:
+        conn.close()
+
+    groups = {}          # (cat, source) -> [row]
+    yt_urls, web_urls = [], []
+    for r in rows:
+        cat = _nb_cat_of(r["source_type"])
+        groups.setdefault((cat, r["source_name"] or "?"), []).append(r)
+        dl = (r["deeplink"] or "").strip()
+        if dl.startswith("http"):
+            if cat == "youtube" or "youtu" in dl:
+                if dl not in yt_urls:
+                    yt_urls.append(dl)
+            elif dl not in web_urls:
+                web_urls.append(dl)
+
+    today = datetime.now().strftime("%Y-%m-%d")
+    order = ["youtube", "telegram", "report", "blog", "news"]
+    lines = [
+        f"# {q} — 인사이트 허브 가로검색 묶음 ({today})",
+        f"_총 {len(rows)}개 발언 · 소스 {len(groups)}개 · 로또의 주식 인사이트 허브 추출_",
+        "",
+    ]
+    for key in sorted(groups.keys(),
+                      key=lambda k: (order.index(k[0]) if k[0] in order else 99, k[1])):
+        cat, src = key
+        label, icon = _CAT_LABEL.get(cat, (cat, "•"))
+        lines.append(f"## {icon} [{label}] {src}")
+        for r in groups[key]:
+            stance = f" `{r['stance_key']}`" if r["stance_key"] else ""
+            asset = f" ({r['asset']})" if r["asset"] else ""
+            dl = (r["deeplink"] or "").strip()
+            src_tag = f" — {dl}" if dl.startswith("http") else ""
+            lines.append(f"- {(r['content'] or '').strip()}{asset}{stance}  ·{r['date'] or ''}{src_tag}")
+        lines.append("")
+    return "\n".join(lines), yt_urls[:20], web_urls[:20], len(rows)
+
+
+@app.post("/api/insights/to_notebook")
+async def api_insights_to_notebook(req: Request):
+    body = {}
+    try:
+        body = await req.json()
+    except Exception:
+        pass
+    q = (body.get("q") or "").strip()
+    if not q:
+        return JSONResponse(content={"error": "q(검색어) 필요"}, status_code=400)
+    if not _nlm_exe():
+        return JSONResponse(
+            content={"error": "nlm CLI 없음 — 터미널에서 nlm login 후 재시도"},
+            status_code=503)
+
+    bundle = await run_in_threadpool(_build_notebook_bundle, q)
+    if bundle is None:
+        return JSONResponse(content={"error": "atoms.db 없음"}, status_code=503)
+    md_text, yt_urls, web_urls, atoms_n = bundle
+    if atoms_n == 0:
+        return JSONResponse(content={"error": f"'{q}' 매칭 발언 없음"}, status_code=400)
+
+    today = datetime.now().strftime("%Y-%m-%d")
+    safe_q = re.sub(r'[\\/:*?"<>|]', '_', q)[:40]
+    out_dir = os.path.join(ROOT, "out", "insights_notebook")
+    os.makedirs(out_dir, exist_ok=True)
+    md_path = os.path.join(out_dir, f"{safe_q}_{today}.md")
+    with open(md_path, "w", encoding="utf-8") as f:
+        f.write(md_text)
+
+    def _do():
+        title = f"[허브] {q} · {today}"
+        ok, out, err = _run_nlm(["notebook", "create", title, "--json"])
+        if not ok:
+            return {"error": f"노트북 생성 실패: {err[:200]}"}
+        nb_id = None
+        try:
+            nb_id = json.loads(out.strip().splitlines()[-1]).get("id")
+        except Exception:
+            pass
+        if not nb_id:
+            m = re.search(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", out)
+            nb_id = m.group(0) if m else None
+        if not nb_id:
+            return {"error": f"노트북 ID 파싱 실패: {out[:200]}"}
+
+        added = 0
+        ok2, _o2, err2 = _run_nlm(["source", "add", nb_id, "--file", md_path,
+                                   "--title", f"[허브추출] {q} 발언 {atoms_n}건"])
+        if ok2:
+            added += 1
+        url_args = []
+        for u in yt_urls:
+            url_args += ["--youtube", u]
+        for u in web_urls:
+            url_args += ["--url", u]
+        if url_args:
+            ok3, _o3, _e3 = _run_nlm(["source", "add", nb_id] + url_args, timeout=150)
+            if ok3:
+                added += 1
+        return {
+            "ok": True,
+            "notebook_id": nb_id,
+            "url": f"https://notebooklm.google.com/notebook/{nb_id}",
+            "atoms": atoms_n,
+            "yt_urls": len(yt_urls),
+            "web_urls": len(web_urls),
+            "sources_added": added,
+            "md_path": os.path.relpath(md_path, ROOT).replace("\\", "/"),
+            "source_warn": ("" if added >= 1 else (err2 or "")[:160]),
+        }
+
+    result = await run_in_threadpool(_do)
+    return JSONResponse(content=result, status_code=(200 if result.get("ok") else 500))
 
 
 # ── §4.8 POST /api/insights/to_youtube ───────────────────────
