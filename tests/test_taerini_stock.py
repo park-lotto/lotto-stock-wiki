@@ -93,3 +93,15 @@ def test_api_taerini_stock(tmp_path, monkeypatch):
     assert r["found"] is False
     # 빈 코드
     assert c.get("/api/taerini_stock?code=").json()["found"] is False
+    # 파일 없음 → found False, date None
+    monkeypatch.setattr(server, "TAERINI_STOCK_PATH", str(tmp_path / "missing.json"))
+    r = c.get("/api/taerini_stock?code=247540").json()
+    assert r["found"] is False and r.get("date") is None
+    # zfill: 3~4자리 코드 → 6자리 패딩 후 조회
+    snap.write_text(json.dumps({
+        "date": "2026-06-30",
+        "stocks": {"005930": {"name": "삼성전자"}},
+        "meta": {"stock_count": 1, "unmatched": []},
+    }, ensure_ascii=False), encoding="utf-8")
+    monkeypatch.setattr(server, "TAERINI_STOCK_PATH", str(snap))
+    assert c.get("/api/taerini_stock?code=5930").json()["found"] is True

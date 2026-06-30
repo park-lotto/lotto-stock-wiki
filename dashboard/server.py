@@ -1243,7 +1243,7 @@ def api_taerini_stock(code: str = ""):
     if code.isdigit():
         code = code.zfill(6)
     if not code or not os.path.exists(TAERINI_STOCK_PATH):
-        return JSONResponse(content={"found": False})
+        return JSONResponse(content={"found": False, "date": None})
     try:
         with open(TAERINI_STOCK_PATH, encoding="utf-8") as f:
             data = json.load(f)
