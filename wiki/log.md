@@ -1,3 +1,4 @@
+- 2026-06-30 — [ingest] **오후 크롤+원자 ingest(블로그·유튜브·텔레)**(집PC): 서버크롤 재트리거(신규0=스케줄러가 이미 수집)→sync_crawling 140개 raw/동기화→원자ingest. 블로그8개=45생성, 유튜브3편=37생성, 텔레PM2채널=13생성(오전13채널 기처리). DB 오늘 총 268원자. **버그2건 근본수정**: ① `telegram_ingest.ingest_telegram` — 한 채널이 여러 섹터 다루면 extract_telegram이 questionnaire **list** 반환 → 단일 dict 가정 크래시(한화철강). list 정규화+서브별 ID salt(INSERT OR REPLACE 덮어쓰기 방지), 단일dict 경로 하위호환. ② `post_questionnaire.post_trust` — blog_registry가 `{trust,url}` dict인데 dict 통째 반환 → `_strength`에서 unhashable. dict면 trust필드 추출(문자열 registry 호환). **남은일: 텔레 Telethon 세션 인증만료(.telegram_session 무효화)→재로그인(폰+코드) 필요, 다음 크롤부터 영향. Gemini키·블로그·유튜브는 정상.**
 - 2026-06-30 — [디버그] **딸깍 대시보드 버그 5건 근본수정**(집PC): 캡쳐 진단으로 순차 수정. ① **히트맵 빈화면**: KIS 시세가 EGW00123(만료토큰) 500 → 583종목 전부 실패. `kis_api._token()`이 로컬 exp만 믿고 서버측 무효화 토큰(여러PC·프로세스 앱키 공유) 재사용이 원인 → `_token(force)`+`_authed_get`(EGW00121/122/123 감지→재발급→재시도)+issued_at 파일캐시+우아처리. ② **섹터 0.00% 깜빡**: KIS 초당한도 **EGW00201** 초과(583종목 동시) → 전역 레이트게이트 15건/초 추가 → 2회 연속 583/583 안정. ③ **30초 새로고침 멈춤**: 클라 180초 메모리캐시가 자동갱신 단락 → `autoRefreshActive()`로 캐시우회+prewarm sleep 60→15초(체감 ~55초). ④ **글로벌 환율 멈춤**: yfinance USDKRW=X 'delisted' → `global_api.get_usdkrw` 무료 FX API(open.er-api.com)로 교체(esignal엔 환율 없음 확인). NQ·코스피·WTI는 원래 esignal 라이브였음. ⑤ **순위 가격 불일치**(인기검색=네이버 vs 거래대금=키움): `_enrich_rank_prices`로 둘 다 KIS 시세로 통일 → 공통5종목 불일치 0. 검증=전부 실측. 변경=kis_api.py·global_api.py·market.html·server.py(미커밋). **남은일: 지수값 3중소스 스케일불일치(키움137k/KIS8.4k/WS2.8k, WS로 화면은정상=latent)·index/overseas/kiwoom 토큰 동일패치·앱키 PC별분리.**
 - 2026-06-30 — Excel ingest 완료:  → ingest_report_2026-06-30.md
 - 2026-06-29 — [분석] **NotebookLM 텔레그램 인사이트 Q1~Q7**(집PC): nlm-mcp-cli Python 정착. 12개 소스→수급이동/TP표/재료TOP3/HBM체인/비철조선방산/중국변수/이번주이벤트 전량 추출. 집에서 HTML브리핑 저장 예정.
@@ -1333,3 +1334,9 @@ python calc_oscillator.py SK하이닉스 삼성전자 한미반도체 --tg
 - to_notebook research/no_crawl 분기, 워크스페이스 meta에 웹리서치 건수 표시
 - 상단 브리핑바 max-width 880→1040, 패딩 확대
 - 검증: 리서치전용(cats=[]+research) → atoms0+웹리서치10건 노트북 생성 정상
+
+## 2026-06-30 — 다리 v13: Claude박스 삭제 + Gemini 인포그래픽(나노바나나2) + 슬라이드 폴링 연장
+- Claude 직접대화 박스 제거(API키 필요해서)
+- /api/insights/gemini_infographic: 노트북 내용 요약→이미지 프롬프트(브랜드+레퍼런스 결합)→Gemini 이미지(gemini-3-flash-preview-image=나노바나나2→2.5 폴백). 프롬프트 자유. 🍌버튼 추가
+- 슬라이드 항상 실패 원인: type=slide_deck(폴링 정상)인데 NotebookLM 생성이 10분+ 매우 느림/멈춤 → 폴링창 슬라이드/영상 ~10분으로 연장
+- 미결: Gemini 이미지생성 429 쿼터소진(두 키 모두). 코드 정상, 쿼터/유료키 필요

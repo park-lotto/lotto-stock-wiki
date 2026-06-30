@@ -578,13 +578,6 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
   </div>
   <div class="ws-body">
     <div class="ws-left">
-      <div class="ws-ai-box ws-ai-claude">
-        <div class="ws-ai-label">🤖 Claude와 직접 대화</div>
-        <div class="ws-ask">
-          <input type="text" id="ws-claude" class="ws-q-input" placeholder="Claude에게 질문·브레인스토밍…" onkeydown="if(event.key==='Enter')wsClaude()">
-          <button class="brief-go" onclick="wsClaude()">대화</button>
-        </div>
-      </div>
       <div class="ws-ai-box ws-ai-gemini">
         <div class="ws-ai-label">♊ Gemini 리서치 <small>구글 검색 + 출처</small></div>
         <div class="ws-ask">
@@ -625,8 +618,9 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
           <button class="ws-preset" onclick="wsStudioPreset('easy')">🗣️ 쉽게설명</button>
           <button class="ws-preset" onclick="wsStudioPreset('stock')">📈 종목중심</button>
         </div>
-        <button class="nb-act" onclick="wsStudio(this,'infographic')">🖼️ 인포그래픽 <small>~1분</small></button>
-        <button class="nb-act" onclick="wsStudio(this,'slides')">📑 슬라이드 <small>~1분</small></button>
+        <button class="nb-act" onclick="wsGeminiInfo(this)">🍌 Gemini 인포그래픽 <small>~20초 · 프롬프트 반영</small></button>
+        <button class="nb-act" onclick="wsStudio(this,'infographic')">🖼️ 인포그래픽(NotebookLM) <small>~1분</small></button>
+        <button class="nb-act" onclick="wsStudio(this,'slides')">📑 슬라이드 <small>~2분+</small></button>
         <button class="nb-act" onclick="wsStudio(this,'audio')">🎧 오디오 <small>2~5분</small></button>
         <button class="nb-act" onclick="wsStudio(this,'video')">🎬 영상 <small>3~6분</small></button>
         <div class="ws-img-attach">
@@ -1529,8 +1523,27 @@ async function wsStudio(btn, kind) {
   } catch(e) { btn.disabled = false; btn.innerHTML = orig; body.innerHTML = `<div style="color:#e88">실패: ${escHtml(e.message)}</div>`; }
 }
 
+async function wsGeminiInfo(btn) {
+  const ws = window._ws; if (!ws) return;
+  const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = '생성 중…';
+  const prompt = ((qs('#ws-studio-prompt') || {}).value || '').trim();
+  const head = '🍌 Gemini 인포그래픽' + (prompt ? ` <small style="color:var(--muted);font-weight:400">— ${escHtml(prompt)}</small>` : '');
+  const card = wsAddCard(head, wsLoading('나노바나나2로 생성 중… (~20초)'));
+  const body = card.querySelector('.ws-card-b');
+  try {
+    const res = await apiFetch('/api/insights/gemini_infographic', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notebook_id: ws.id, prompt })
+    });
+    btn.disabled = false; btn.innerHTML = orig;
+    if (res.error) throw new Error(res.error);
+    body.innerHTML = `<div class="ws-art-tools"><a href="${res.file_url}" download class="nb-open-sm">↓ 저장</a> <a href="${res.file_url}" target="_blank" class="nb-open-sm">↗ 원본</a></div><img class="nb-art-img" src="${res.file_url}">`;
+  } catch(e) { btn.disabled = false; btn.innerHTML = orig; body.innerHTML = `<div style="color:#e88">실패: ${escHtml(e.message)}</div>`; }
+}
+
 async function wsStudioPoll(nbId, res, body) {
-  for (let i = 0; i < 32; i++) {   // 8s × 32 ≈ 4분
+  const maxTries = (res.kind === 'slides' || res.kind === 'video') ? 75 : 32;   // 슬라이드/영상은 길게(~10분)
+  for (let i = 0; i < maxTries; i++) {   // 8s 간격
     await new Promise(r => setTimeout(r, 8000));
     let p;
     try {

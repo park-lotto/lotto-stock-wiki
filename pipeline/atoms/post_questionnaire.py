@@ -20,7 +20,11 @@ def post_trust(registry_file: str, name: str) -> str:
             _REGISTRY_CACHE[registry_file] = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             _REGISTRY_CACHE[registry_file] = {}
-    return _REGISTRY_CACHE[registry_file].get((name or "").strip(), "C")
+    entry = _REGISTRY_CACHE[registry_file].get((name or "").strip(), "C")
+    # registry 값이 {"trust","url"} dict면 trust 필드 추출, 문자열이면 그대로
+    if isinstance(entry, dict):
+        return entry.get("trust", "C")
+    return entry
 
 
 POST_PROMPT = """너는 투자 컨텐츠(블로그·유튜브 등) 요약본을 '정해진 칸'에 옮겨 적는 사람이다.

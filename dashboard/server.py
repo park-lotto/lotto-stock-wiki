@@ -2985,6 +2985,86 @@ async def api_insights_upload_image(req: Request):
     return JSONResponse(content=result, status_code=(200 if result.get("ok") else 500))
 
 
+def _gemini_image_bytes(prompt, keys):
+    """Gemini 이미지 생성(나노바나나2→2.5 폴백, 키 폴백) → PNG bytes."""
+    from google import genai
+    from google.genai import types
+    last = ""
+    for model in ("gemini-3-flash-preview-image", "gemini-2.5-flash-image"):
+        for k in keys:
+            try:
+                client = genai.Client(api_key=k)
+                resp = client.models.generate_content(
+                    model=model, contents=prompt,
+                    config=types.GenerateContentConfig(response_modalities=["IMAGE"]),
+                )
+                for part in resp.candidates[0].content.parts:
+                    if getattr(part, "inline_data", None) and part.inline_data.data:
+                        return part.inline_data.data
+                last = "응답에 이미지 없음"
+            except Exception as e:
+                last = str(e)
+                continue
+    raise RuntimeError(last[:200] or "이미지 생성 실패")
+
+
+@app.post("/api/insights/gemini_infographic")
+async def api_insights_gemini_infographic(req: Request):
+    """Gemini 이미지(나노바나나2)로 인포그래픽 생성 — 프롬프트 자유 + 노트북 내용 반영."""
+    body = {}
+    try:
+        body = await req.json()
+    except Exception:
+        pass
+    nb_id = (body.get("notebook_id") or "").strip()
+    prompt = (body.get("prompt") or "").strip()
+    if not nb_id:
+        return JSONResponse(content={"error": "notebook_id 필요"}, status_code=400)
+
+    def _do():
+        keys = [k for k in (_env_key("GEMINI_API_KEY"), _env_key("GEMINI_API_KEY_2")) if k]
+        if not keys:
+            return {"error": ".env에 GEMINI_API_KEY 없음"}
+        content = _NB_BUNDLES.get(nb_id, "")
+        ref = _NB_DESIGN.get(nb_id, "")
+        # 1) 내용 → 인포그래픽용 텍스트 브리프
+        brief = ""
+        if content:
+            try:
+                from google import genai
+                client = genai.Client(api_key=keys[0])
+                r = client.models.generate_content(
+                    model="gemini-3-flash-preview",
+                    contents=("다음 자료를 인포그래픽용으로 한국어로 요약해줘. "
+                              "제목 1개 + 핵심 섹션 4~6개(각 핵심 수치·종목·키워드 1~2줄). 간결하게.\n\n"
+                              + content[:15000]),
+                )
+                brief = (r.text or "").strip()
+            except Exception:
+                brief = content[:2500]
+        # 2) 이미지 프롬프트 (내용 + 사용자 + 브랜드 + 레퍼런스)
+        img_prompt = (
+            "Create ONE detailed Korean stock-market INFOGRAPHIC image, 16:9 landscape. "
+            "Render crisp KOREAN text labels, section titles and BIG numbers (한국어 텍스트 정확히). "
+            f"\n\n[담을 내용/데이터]\n{brief or (prompt or '한국 증시 핵심 동향')}\n\n"
+            f"[사용자 요청] {prompt or '핵심만 한 장으로, 주린이도 이해하게'}\n\n"
+            f"[디자인] {_BRAND_DESIGN}"
+            + (f"\n[레퍼런스 스타일] {ref}" if ref else "")
+        )
+        try:
+            data = _gemini_image_bytes(img_prompt, keys)
+        except Exception as e:
+            return {"error": f"Gemini 이미지 실패: {str(e)[:200]}"}
+        fname = f"gimg_{uuid.uuid4().hex[:10]}.png"
+        fpath = os.path.join(ROOT, "out", "insights_notebook", fname)
+        with open(fpath, "wb") as f:
+            f.write(data)
+        return {"ok": True, "media": "image", "file_url": f"/api/insights/artifact?f={fname}"}
+
+    result = await run_in_threadpool(_do)
+    return JSONResponse(content=result, status_code=(200 if result.get("ok") else 500))
+
+
 # ── §4.8 POST /api/insights/to_youtube ───────────────────────
 @app.post("/api/insights/to_youtube")
 async def api_insights_to_youtube(req: Request):
