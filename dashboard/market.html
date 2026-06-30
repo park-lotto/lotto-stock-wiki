@@ -234,7 +234,7 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
   z-index:300;box-shadow:0 8px 24px rgba(0,0,0,.6);display:none;}
 .wl-ac.open{display:block;}
 .wl-ac-item{padding:7px 12px;font-size:12px;color:#ccc;cursor:pointer;display:flex;justify-content:space-between;gap:8px;}
-.wl-ac-item:hover{background:rgba(212,175,55,.1);color:var(--gold);}
+.wl-ac-item:hover,.wl-ac-item.sel{background:rgba(212,175,55,.18);color:var(--gold);}
 .wl-ac-item .c{color:#555;font-size:11px;}
 .wl-count{font-size:11px;color:#666;margin-left:auto;white-space:nowrap;}
 .wl-row{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin;scrollbar-color:#333 transparent;}
@@ -310,8 +310,8 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
     <div class="wl-head">
       <span class="wl-title">⭐ 관심종목</span>
       <div class="wl-add">
-        <input id="wl-input" placeholder="종목명 입력 후 선택…" autocomplete="off"
-               oninput="wlSearch(this.value)" onblur="setTimeout(wlCloseAc,180)">
+        <input id="wl-input" placeholder="종목명 입력 → ↓/↑ 이동 → Enter 추가" autocomplete="off"
+               oninput="wlSearch(this.value)" onkeydown="wlKey(event)" onblur="setTimeout(wlCloseAc,180)">
         <div class="wl-ac" id="wl-ac"></div>
       </div>
       <span class="wl-count" id="wl-count"></span>
@@ -1605,6 +1605,7 @@ function showToast(msg,type="ok"){
 let _wlCodes=[];            // 현재 관심종목 [{code,name}]
 let _wlSearchResults=[];    // 검색 자동완성 결과
 let _wlSearchTimer=null;
+let _wlAcIndex=-1;          // 자동완성 키보드 선택 인덱스 (-1=없음)
 
 // 백만원 → 억/조 (부호 포함)
 function wlAmt(v){
@@ -1630,10 +1631,10 @@ function renderWatchlist(items){
     const ps=Number(it.price||0).toLocaleString("ko-KR");
     const sup=it.supply;
     let supHtml;
-    if(sup&&(sup.외인||sup.기관||sup.개인||sup.프로그램)){
-      const cell=(k,v)=>{const c=v>0?"up":v<0?"dn":"neu";
-        return`<div class="s"><span class="k">${k}</span><span class="v ${c}">${wlAmt(v)}</span></div>`;};
-      supHtml=`<div class="wl-sup">${cell("외인",sup.외인)}${cell("기관",sup.기관)}${cell("개인",sup.개인)}${cell("프로",sup.프로그램)}</div>`;
+    if(sup&&(sup.외인||sup.기관||sup.프로그램)){
+      const cell=(k,v,span)=>{const c=v>0?"up":v<0?"dn":"neu";
+        return`<div class="s"${span?' style="grid-column:1/-1"':''}><span class="k">${k}</span><span class="v ${c}">${wlAmt(v)}</span></div>`;};
+      supHtml=`<div class="wl-sup">${cell("외인",sup.외인)}${cell("기관",sup.기관)}${cell("프로그램",sup.프로그램,true)}</div>`;
     } else {
       supHtml=`<div class="wl-sup-na">잠정수급 집계 전</div>`;
     }
@@ -1663,17 +1664,41 @@ function wlSearch(q){
     try{
       const r=await fetch("/api/stock_search?q="+encodeURIComponent(q.trim()));
       const list=await r.json();
-      const ac=document.getElementById("wl-ac");
-      if(!Array.isArray(list)||!list.length){ wlCloseAc(); return; }
-      _wlSearchResults=list;
-      ac.innerHTML=list.map((s,i)=>
-        `<div class="wl-ac-item" onmousedown="wlAddIdx(${i})">
-          <span>${esc(s.name)}</span><span class="c">${esc(s.code)}</span></div>`).join("");
-      ac.classList.add("open");
+      if(!Array.isArray(list)||!list.length){ _wlSearchResults=[]; wlCloseAc(); return; }
+      _wlSearchResults=list; _wlAcIndex=-1; _wlRenderAc();
     }catch(e){ wlCloseAc(); }
   },220);
 }
-function wlCloseAc(){ const ac=document.getElementById("wl-ac"); if(ac)ac.classList.remove("open"); }
+function _wlRenderAc(){
+  const ac=document.getElementById("wl-ac"); if(!ac)return;
+  if(!_wlSearchResults.length){ wlCloseAc(); return; }
+  ac.innerHTML=_wlSearchResults.map((s,i)=>
+    `<div class="wl-ac-item${i===_wlAcIndex?' sel':''}" onmousedown="wlAddIdx(${i})">
+      <span>${esc(s.name)}</span><span class="c">${esc(s.code)}</span></div>`).join("");
+  ac.classList.add("open");
+}
+function _wlScrollSel(){
+  const ac=document.getElementById("wl-ac");
+  const el=ac&&ac.querySelector(".wl-ac-item.sel");
+  if(el&&el.scrollIntoView) el.scrollIntoView({block:"nearest"});
+}
+// 검색창 키보드: ↓/↑ 이동, Enter 추가, Esc 닫기
+function wlKey(e){
+  const ac=document.getElementById("wl-ac");
+  const open=ac&&ac.classList.contains("open")&&_wlSearchResults.length;
+  if(e.key==="ArrowDown"){
+    if(!open)return; e.preventDefault();
+    _wlAcIndex=Math.min(_wlSearchResults.length-1,_wlAcIndex+1); _wlRenderAc(); _wlScrollSel();
+  } else if(e.key==="ArrowUp"){
+    if(!open)return; e.preventDefault();
+    _wlAcIndex=Math.max(0,_wlAcIndex-1); _wlRenderAc(); _wlScrollSel();
+  } else if(e.key==="Enter"){
+    if(!open)return; e.preventDefault();
+    const i=_wlAcIndex>=0?_wlAcIndex:0; const s=_wlSearchResults[i];
+    if(s) wlAdd(s.code,s.name);
+  } else if(e.key==="Escape"){ wlCloseAc(); }
+}
+function wlCloseAc(){ const ac=document.getElementById("wl-ac"); if(ac)ac.classList.remove("open"); _wlAcIndex=-1; }
 function wlAddIdx(i){ const s=_wlSearchResults[i]; if(s) wlAdd(s.code,s.name); }
 
 async function wlAdd(code,name){

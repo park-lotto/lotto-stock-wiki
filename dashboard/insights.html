@@ -104,6 +104,26 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .nb-act:hover:not(:disabled) { border-color: var(--gold-dim); color: var(--gold); }
 .nb-act:disabled { opacity: .7; cursor: default; }
 .nb-act small { color: var(--muted); font-weight: 400; }
+.nb-result { line-height: 1.6; }
+.nb-sub { color: var(--muted); font-size: .84rem; margin-bottom: 16px; }
+.nb-ask-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.nb-q-input {
+  flex: 1; padding: 10px 14px; border-radius: 9px; font-family: inherit; font-size: .86rem;
+  color: var(--txt); background: var(--bg); border: 1px solid var(--line); outline: none;
+}
+.nb-q-input:focus { border-color: var(--gold-dim); }
+.nb-answer { max-height: 46vh; overflow-y: auto; }
+.nb-loading { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: .82rem; padding: 10px 2px; }
+.nb-qa { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; margin-bottom: 10px; }
+.nb-qa-q { font-size: .82rem; font-weight: 700; color: var(--gold); margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.nb-qa-a { font-size: .86rem; line-height: 1.7; color: var(--txt); }
+.nb-qa-a h1, .nb-qa-a h2, .nb-qa-a h3 { font-size: .95rem; margin: 12px 0 6px; color: var(--gold); }
+.nb-qa-a p { margin: 6px 0; }
+.nb-qa-a ul, .nb-qa-a ol { margin: 6px 0 6px 18px; }
+.nb-qa-a strong { color: #fff; }
+.nb-act-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+.nb-open-sm { font-size: .78rem; color: var(--gold-dim); text-decoration: none; margin-left: auto; }
+.nb-open-sm:hover { color: var(--gold); }
 
 /* ── 카테고리 카드 ── */
 .cat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 32px 0; }
@@ -929,22 +949,56 @@ async function sendToNotebook(q) {
       body: JSON.stringify({ q })
     });
     if (res.error) throw new Error(res.error);
-    window._lastNb = { id: res.notebook_id, q };
-    qs('#modal-title').textContent = '📒 노트북 생성 완료';
+    window._lastNb = { id: res.notebook_id, q, conv: '' };
+    qs('#modal-title').textContent = '📒 노트북 준비 완료 — 여기서 바로 분석';
     qs('#modal-content').innerHTML = `
-      <div style="line-height:1.8">
-        <div style="font-size:1.05rem;font-weight:700;margin-bottom:6px">[허브] ${escHtml(q)}</div>
-        <div style="color:var(--muted);font-size:.84rem;margin-bottom:14px">
-          추출발언 <b style="color:var(--txt)">${res.atoms}</b>건 · 유튜브 ${res.yt_urls} · 웹 ${res.web_urls} · 소스 <b style="color:var(--txt)">${res.sources_added}</b>건 투입</div>
-        <a href="${res.url}" target="_blank" class="nb-open">↗ NotebookLM에서 열기</a>
+      <div class="nb-result">
+        <div class="nb-sub">[허브] <b style="color:var(--txt)">${escHtml(q)}</b> · 추출발언 <b style="color:var(--txt)">${res.atoms}</b> · 유튜브 ${res.yt_urls} · 웹 ${res.web_urls} · 소스 ${res.sources_added}건</div>
+
+        <div class="nb-actions-label">💬 이 자료에 바로 질문 — NotebookLM이 인용과 함께 답합니다</div>
+        <div class="nb-ask-row">
+          <input id="nb-q" class="nb-q-input" placeholder="예: 오늘 반도체 핵심 이슈 3가지만 정리해줘" onkeydown="if(event.key==='Enter')askNotebook()">
+          <button class="nb-make-btn" onclick="askNotebook()">질문</button>
+        </div>
+        <div id="nb-answer" class="nb-answer"></div>
+
         <div class="nb-actions">
-          <div class="nb-actions-label">다음 단계 (선택)</div>
-          <button class="nb-act" onclick="nbAction(this,'research')">🔬 웹 딥리서치 추가 <small>~30초</small></button>
-          <button class="nb-act" onclick="nbAction(this,'card')">🎴 카드·브리핑 리포트 생성 <small>~1분</small></button>
+          <div class="nb-actions-label">다음 단계</div>
+          <div class="nb-act-row">
+            <button class="nb-act" onclick="nbAction(this,'research')">🔬 웹 딥리서치 추가 <small>~30초</small></button>
+            <button class="nb-act" onclick="nbAction(this,'card')">🎴 브리핑 리포트 보기 <small>~1분</small></button>
+            <a href="${res.url}" target="_blank" class="nb-open-sm">↗ NotebookLM에서 열기</a>
+          </div>
+          <div id="nb-card" class="nb-answer"></div>
         </div>
       </div>`;
+    setTimeout(() => { const el = qs('#nb-q'); if (el) el.focus(); }, 50);
   } catch(e) {
     qs('#modal-content').innerHTML = `<div style="color:#e88;padding:8px">오류: ${escHtml(e.message)}</div>`;
+  }
+}
+
+async function askNotebook() {
+  const nb = window._lastNb;
+  if (!nb) return;
+  const input = qs('#nb-q');
+  const question = (input.value || '').trim();
+  if (!question) return;
+  const out = qs('#nb-answer');
+  const prev = out.innerHTML;
+  out.innerHTML = '<div class="nb-loading"><div class="spinner" style="width:18px;height:18px;margin:0"></div> 답변 생성 중... (~20초)</div>' + prev;
+  input.value = '';
+  try {
+    const res = await apiFetch('/api/insights/notebook_query', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notebook_id: nb.id, question, conversation_id: nb.conv || '' })
+    });
+    if (res.error) throw new Error(res.error);
+    if (res.conversation_id) window._lastNb.conv = res.conversation_id;
+    const card = `<div class="nb-qa"><div class="nb-qa-q">Q. ${escHtml(question)}</div><div class="nb-qa-a">${marked.parse(res.answer || '(빈 응답)')}</div></div>`;
+    out.innerHTML = card + prev;
+  } catch(e) {
+    out.innerHTML = `<div style="color:#e88;padding:6px">질문 실패: ${escHtml(e.message)}</div>` + prev;
   }
 }
 
@@ -960,14 +1014,18 @@ async function nbAction(btn, kind) {
         body: JSON.stringify({ notebook_id: nb.id, q: nb.q, mode: 'fast' })
       });
       if (res.error) throw new Error(res.error);
-      btn.innerHTML = `✅ 새 소스 ${res.added}건 추가 (총 ${res.total_sources})`;
+      btn.innerHTML = `✅ 새 소스 ${res.added}건 (총 ${res.total_sources})`;
     } else {
       const res = await apiFetch('/api/insights/notebook_card', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notebook_id: nb.id, format: 'Briefing Doc' })
       });
       if (res.error) throw new Error(res.error);
-      btn.innerHTML = '✅ 브리핑 리포트 생성됨 — 노트북에서 확인';
+      btn.innerHTML = '✅ 리포트 생성됨';
+      const cardOut = qs('#nb-card');
+      cardOut.innerHTML = res.markdown
+        ? `<div class="nb-qa"><div class="nb-qa-q">🎴 브리핑 리포트</div><div class="nb-qa-a">${marked.parse(res.markdown)}</div></div>`
+        : `<div style="color:var(--muted);font-size:.8rem;padding:6px">리포트 생성됨 — 노트북에서 확인하세요.</div>`;
     }
   } catch(e) {
     btn.disabled = false; btn.innerHTML = orig;

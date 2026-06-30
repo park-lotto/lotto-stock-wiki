@@ -1266,3 +1266,10 @@ python calc_oscillator.py SK하이닉스 삼성전자 한미반도체 --tg
 - dashboard/insights.html: 검색결과에 "📒 NotebookLM 노트북으로" 버튼바 + 결과모달(🔬리서치/🎴카드 다음단계)
 - 라이브 검증: HBM(110발언→노트북, 리서치 +10소스, 브리핑리포트 생성), 조선(67발언→노트북) 실제 생성 확인
 - spec: docs/superpowers/specs/2026-06-30-insights-notebooklm-bridge-design.md
+
+## 2026-06-30 — NotebookLM 다리 v2: 허브 안에서 질문·리포트 (이탈 없이)
+- 결과 모달에 💬질문(Q&A) 박스 추가 → nlm notebook query → 인용 달린 답변을 모달에 인라인 렌더(후속질문 conversation_id 유지)
+- 🎴리포트: report create 후 폴링→download report(md)→모달에 인라인 표시
+- 검색/노트북 키워드 토크나이저(_tokenize_query): 자연어 문장도 핵심 키워드 추출해 동작
+- 엔드포인트 추가: /api/insights/notebook_query, notebook_card 확장(markdown 반환)
+- 검증(API): 반도체 노트북 생성·질문 답변·리서치+10·리포트 전부 정상. 브라우저 캡처는 CDP 불안정

@@ -1072,6 +1072,21 @@ async def api_watchlist_post(req: Request):
     return JSONResponse(content={"ok": True})
 
 
+# 흔한 약칭·구명칭 → KRX 정식 종목명 (substring 검색으로 안 잡히는 별칭 보강)
+_SEARCH_ALIASES = {
+    "현대차": "현대자동차", "현차": "현대자동차",
+    "기아차": "기아",
+    "삼전": "삼성전자", "삼성전자우": "삼성전자우",
+    "하이닉스": "SK하이닉스", "하닉": "SK하이닉스", "sk하닉": "SK하이닉스",
+    "네이버": "NAVER",
+    "엔솔": "LG에너지솔루션", "lg엔솔": "LG에너지솔루션", "엘지엔솔": "LG에너지솔루션",
+    "삼바": "삼성바이오로직스",
+    "카뱅": "카카오뱅크", "카페이": "카카오페이",
+    "포스코": "POSCO홀딩스",
+    "현대중공업": "HD현대중공업", "한국전력": "한국전력공사",
+}
+
+
 @app.get("/api/stock_search")
 def api_stock_search(q: str = ""):
     if not q.strip():
@@ -1082,8 +1097,16 @@ def api_stock_search(q: str = ""):
         codes = codes_data.get("codes", {})
         q_l = q.strip().lower()
         results = [{"name": n, "code": c} for n, c in codes.items()
-                   if q_l in n.lower()][:20]
-        return JSONResponse(content=results)
+                   if q_l in n.lower()]
+        seen = {r["code"] for r in results}
+        # 별칭 매칭 → 정식명 종목을 상단에 보강 (예: '현대차' → 현대자동차)
+        for alias, official in _SEARCH_ALIASES.items():
+            if q_l in alias.lower():
+                c = codes.get(official)
+                if c and c not in seen:
+                    results.insert(0, {"name": official, "code": c})
+                    seen.add(c)
+        return JSONResponse(content=results[:20])
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
@@ -2126,8 +2149,70 @@ async def api_insights_notebook_card(req: Request):
             timeout=180)
         if not ok:
             return {"error": f"카드 생성 실패: {errm[:200]}"}
-        return {"ok": True, "format": fmt,
+        # 생성 완료까지 폴링 → 마크다운 다운로드 → 인라인 반환
+        art_id = None
+        for _ in range(30):  # 최대 ~150s
+            ok_s, out_s, _ = _run_nlm(["studio", "status", nb_id])
+            try:
+                reps = [a for a in json.loads(out_s) if a.get("type") == "report"]
+                if reps and reps[-1].get("status") not in ("in_progress", "pending", None):
+                    art_id = reps[-1].get("id")
+                    break
+            except Exception:
+                pass
+            time.sleep(5)
+        md = ""
+        rp = os.path.join(ROOT, "out", "insights_notebook",
+                          f"report_{re.sub(r'[^0-9a-fA-F-]', '', nb_id)}.md")
+        dargs = ["download", "report", nb_id, "-o", rp]
+        if art_id:
+            dargs += ["--id", art_id]
+        ok_d, _od, _ed = _run_nlm(dargs, timeout=60)
+        if ok_d and os.path.exists(rp):
+            try:
+                with open(rp, encoding="utf-8") as f:
+                    md = f.read()
+            except Exception:
+                md = ""
+        return {"ok": True, "format": fmt, "markdown": md,
+                "ready": bool(md),
                 "url": f"https://notebooklm.google.com/notebook/{nb_id}"}
+
+    result = await run_in_threadpool(_do)
+    return JSONResponse(content=result, status_code=(200 if result.get("ok") else 500))
+
+
+@app.post("/api/insights/notebook_query")
+async def api_insights_notebook_query(req: Request):
+    """허브 안에서 노트북에 질문 → 인용 달린 답변 반환 (nlm notebook query)."""
+    body = {}
+    try:
+        body = await req.json()
+    except Exception:
+        pass
+    nb_id = (body.get("notebook_id") or "").strip()
+    question = (body.get("question") or "").strip()
+    conv = (body.get("conversation_id") or "").strip()
+    if not nb_id or not question:
+        return JSONResponse(content={"error": "notebook_id·question 필요"}, status_code=400)
+    if not _nlm_exe():
+        return JSONResponse(content={"error": "nlm CLI 없음"}, status_code=503)
+
+    def _do():
+        args = ["notebook", "query", nb_id, question, "--json"]
+        if conv:
+            args += ["-c", conv]
+        ok, out, errm = _run_nlm(args, timeout=180)
+        if not ok:
+            return {"error": f"질문 실패: {errm[:200]}"}
+        answer, conv_id = out.strip(), ""
+        try:
+            d = json.loads(out)
+            answer = d.get("answer") or answer
+            conv_id = d.get("conversation_id") or ""
+        except Exception:
+            pass
+        return {"ok": True, "answer": answer, "conversation_id": conv_id}
 
     result = await run_in_threadpool(_do)
     return JSONResponse(content=result, status_code=(200 if result.get("ok") else 500))
