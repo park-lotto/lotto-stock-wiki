@@ -42,6 +42,29 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 # 노트북별 수집 자료(md) 메모리 캐시 — Claude 직접 대화 컨텍스트로 사용
 _NB_BUNDLES = {}
 
+# 만든 브리핑(노트북) 영속 레지스트리 — 이전 자료 끌어오기/교차검색용
+_REGISTRY_PATH = os.path.join(ROOT, "out", "insights_notebook", "registry.json")
+
+
+def _load_nb_registry():
+    try:
+        with open(_REGISTRY_PATH, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+
+def _nb_registry_add(entry):
+    reg = [e for e in _load_nb_registry() if e.get("id") != entry.get("id")]
+    reg.insert(0, entry)
+    reg = reg[:100]
+    try:
+        os.makedirs(os.path.dirname(_REGISTRY_PATH), exist_ok=True)
+        with open(_REGISTRY_PATH, "w", encoding="utf-8") as f:
+            json.dump(reg, f, ensure_ascii=False, indent=1)
+    except Exception:
+        pass
+
 
 def _env_key(name):
     """환경변수 우선, 없으면 .env에서 읽기."""
@@ -2308,9 +2331,14 @@ async def api_insights_to_notebook(req: Request):
         }
 
     result = await run_in_threadpool(_do)
-    # Claude 직접 대화용으로 수집 자료(md) 캐시
+    # Claude 직접 대화용 캐시 + 레지스트리 영속(이전 자료 끌어오기용)
     if result.get("ok") and result.get("notebook_id"):
-        _NB_BUNDLES[result["notebook_id"]] = "\n\n".join(t for _t, t in bundle["md_files"])[:60000]
+        nbid = result["notebook_id"]
+        _NB_BUNDLES[nbid] = "\n\n".join(t for _t, t in bundle["md_files"])[:60000]
+        _nb_registry_add({
+            "id": nbid, "label": label, "date": today, "url": result["url"],
+            "atoms": atoms_n, "paths": [p for _t, p in file_specs],
+        })
     return JSONResponse(content=result, status_code=(200 if result.get("ok") else 500))
 
 
@@ -2669,6 +2697,80 @@ async def api_insights_gemini_chat(req: Request):
                     continue   # 다음(예비) 키로
                 return {"error": f"Gemini 호출 실패: {last[:300]}"}
         return {"error": f"Gemini 쿼터 소진(키 {len(keys)}개 모두): {last[:200]}"}
+
+    result = await run_in_threadpool(_do)
+    return JSONResponse(content=result, status_code=(200 if result.get("ok") else 500))
+
+
+@app.get("/api/insights/notebooks")
+def api_insights_notebooks():
+    """만든 브리핑(자료) 목록 — 이전 자료 끌어오기 픽커용."""
+    reg = _load_nb_registry()
+    return JSONResponse(content={"notebooks": [
+        {"id": e.get("id"), "label": e.get("label", ""), "date": e.get("date", ""),
+         "atoms": e.get("atoms", 0)} for e in reg]})
+
+
+@app.get("/api/insights/notebook_sources")
+def api_insights_notebook_sources(notebook_id: str = ""):
+    """현재 노트북에 쌓인 소스 목록(좌하단 자료 목록)."""
+    if not notebook_id or not _nlm_exe():
+        return JSONResponse(content={"sources": [], "count": 0})
+    ok, out, _ = _run_nlm(["notebook", "get", notebook_id])
+    srcs = []
+    if ok:
+        try:
+            srcs = [s.get("title", "") for s in json.loads(out).get("sources", [])]
+        except Exception:
+            pass
+    return JSONResponse(content={"sources": srcs, "count": len(srcs)})
+
+
+@app.post("/api/insights/notebook_merge")
+async def api_insights_notebook_merge(req: Request):
+    """이전 브리핑들의 자료(.md)를 현재 노트북에 소스로 추가 → 교차검색."""
+    body = {}
+    try:
+        body = await req.json()
+    except Exception:
+        pass
+    nb_id = (body.get("notebook_id") or "").strip()
+    ids = body.get("ids") or []
+    if not nb_id or not ids:
+        return JSONResponse(content={"error": "notebook_id·ids 필요"}, status_code=400)
+    if not _nlm_exe():
+        return JSONResponse(content={"error": "nlm CLI 없음"}, status_code=503)
+    byid = {e.get("id"): e for e in _load_nb_registry()}
+
+    def _do():
+        added, ctx_add = 0, []
+        for sid in ids:
+            e = byid.get(sid)
+            if not e or sid == nb_id:
+                continue
+            for p in (e.get("paths") or []):
+                if not os.path.exists(p):
+                    continue
+                ok, _o, _er = _run_nlm(["source", "add", nb_id, "--file", p,
+                                        "--title", f"[가져옴] {e.get('label', '')} {e.get('date', '')}"])
+                if ok:
+                    added += 1
+                    try:
+                        with open(p, encoding="utf-8") as f:
+                            ctx_add.append(f.read())
+                    except Exception:
+                        pass
+        if ctx_add and nb_id in _NB_BUNDLES:
+            _NB_BUNDLES[nb_id] = (_NB_BUNDLES[nb_id] + "\n\n" + "\n\n".join(ctx_add))[:90000]
+        # 갱신된 소스 수
+        total = 0
+        ok2, out2, _ = _run_nlm(["notebook", "get", nb_id])
+        if ok2:
+            try:
+                total = json.loads(out2).get("source_count", 0)
+            except Exception:
+                pass
+        return {"ok": True, "added": added, "total_sources": total}
 
     result = await run_in_threadpool(_do)
     return JSONResponse(content=result, status_code=(200 if result.get("ok") else 500))

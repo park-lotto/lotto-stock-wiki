@@ -1309,3 +1309,10 @@ python calc_oscillator.py SK하이닉스 삼성전자 한미반도체 --tg
 - 워크스페이스 닫아도 세션 유지 → 메인 우하단 "🧠 {label} 이어보기" 플로팅 버튼으로 복귀(캔버스 그대로). 새 브리핑 시작 시만 초기화
 - 좌측 ♊ Gemini 리서치 대화창: /api/insights/gemini_chat (call_with_grounding=구글검색+출처, 노트북 자료 참고). GEMINI_API_KEY→_2 순차 폴백
 - 검증: 엔드포인트 정상연결, 단 현재 두 키 모두 429 쿼터소진(리셋 시 작동). 이어보기/Gemini박스 UI는 다음 브라우저 확인
+
+## 2026-06-30 — 다리 v9: 자료 누적 + 이전 브리핑 끌어오기(교차검색)
+- 좌하단 📚 자료 목록(현재 노트북 소스 라이브) + "+ 이전 브리핑 끌어오기" 픽커
+- 브리핑 영속 레지스트리(out/insights_notebook/registry.json) — 만들 때마다 등록
+- /api/insights/notebooks(목록)·notebook_sources(현재소스)·notebook_merge(이전.md를 현 노트북에 소스추가→교차검색)
+- 버그수정: _load_registry 이름충돌(기존 소스레지스트리 cat인자)→ _load_nb_registry/_nb_registry_add 개명
+- 검증: A(삼성전자)·B(조선) 생성→레지스트리 등록→A를 B로 끌어오기 소스 1→2 교차검색
