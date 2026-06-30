@@ -1988,7 +1988,7 @@ function _dragWindow(box, handle){
   });
 }
 
-const _TFS=[["M","월봉"],["W","주봉"],["D","일봉"],["60","60분"],["30","30분"],["5","5분"]];
+const _TFS=[["M","월봉"],["W","주봉"],["D","일봉"],["60","60분"],["30","30분"],["5","5분"],["3","3분"]];
 // 그리기 내용을 종목·봉종류별로 저장/복원 (예: 005930:D, 005930:5)
 function _drawsKey(){ return (_chartCode||"")+":"+(_chartTf||"D"); }
 function _allDraws(){ try{return JSON.parse(localStorage.getItem("chart_draws_v1")||"{}");}catch(_){return {};} }

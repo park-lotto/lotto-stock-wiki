@@ -1218,15 +1218,14 @@ def api_stock_candles(code: str = "", tf: str = "D"):
                     add = [b for b in ext if isinstance(b.get("time"), (int, float)) and b["time"] > last_t]
                     if add:
                         data = data + add
-                else:
-                    # 일/주/월봉: 마지막 봉 종가를 NXT 현재가로 갱신
-                    p = kis_api.get_price(code)  # UN(통합)
-                    px = p.get("price") or 0
-                    if px > 0:
-                        b = data[-1]
-                        b["close"] = px
-                        b["high"] = max(b.get("high", px), px)
-                        b["low"] = min(b.get("low", px) or px, px)
+                # 모든 봉: 마지막 봉 종가를 NXT 실시간가(순위·현재가와 동일 소스)로 통일
+                p = kis_api.get_price(code)  # UN(통합) 현재가
+                px = p.get("price") or 0
+                if px > 0:
+                    b = data[-1]
+                    b["close"] = px
+                    b["high"] = max(b.get("high", px), px)
+                    b["low"] = min(b.get("low", px) or px, px)
         except Exception:
             pass
         _candle_cache[key] = {"data": data, "ts": now}
