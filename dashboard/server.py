@@ -1163,13 +1163,22 @@ def _prewarm_worker():
     def _fetch_etf_bar():
         try:
             from sector_heatmap import parse_etf_bar
+            from concurrent.futures import ThreadPoolExecutor as _TPE2, as_completed as _ac2
             etfs = parse_etf_bar()
             codes = [e["code"] for e in etfs]
             prices = kis_api.get_prices_batch_parallel(codes)
+            # 분봉(스파크라인)도 캐시에 포함 → 캐시 히트 시 차트 사라지는 문제 해결
+            bars_map = {c: [] for c in codes}
+            with _TPE2(max_workers=5) as _ex2:
+                _futs = {_ex2.submit(kis_api.get_minutebar, c, 1): c for c in codes}
+                for _f in _ac2(_futs):
+                    try: bars_map[_futs[_f]] = _f.result()
+                    except Exception: bars_map[_futs[_f]] = []
             for e in etfs:
                 p = prices.get(e["code"]) or {}
                 e["change_rate"] = float(p.get("change_rate", 0) or 0)
                 e["price"] = int(p.get("price", 0) or 0)
+                e["bars"] = bars_map.get(e["code"], [])
             return etfs
         except Exception:
             return []

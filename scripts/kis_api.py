@@ -225,19 +225,63 @@ def get_daily_bars(code: str, n: int = 20) -> list:
         return []
 
 
-def get_prices_batch_parallel(codes: list, workers: int = 10) -> dict:
-    """여러 종목 현재가 병렬 조회 (J마켓 = NXT 포함 통합 실시간가)."""
+_MULTI_TR = "FHKST11300006"  # 관심종목(멀티종목) 시세조회 — 1콜당 최대 30종목
+
+
+def get_prices_multi(codes: list, workers: int = 6) -> dict:
+    """여러 종목 현재가를 KIS 멀티시세 API로 일괄 조회 (1콜당 30종목).
+
+    개별 get_price(583콜)는 초당 한도 때문에 ~30초 걸리지만,
+    멀티 API는 583종목도 ~20콜이라 ~2초. 이게 근본 해결.
+    반환: {code: {"code","name","price","change_rate","change"}}  (없으면 None)
+    """
     from concurrent.futures import ThreadPoolExecutor, as_completed
     out = {c: None for c in codes}
+    code_map = {c.zfill(6): c for c in codes}        # 6자리 → 원본 코드
+    chunks = [codes[i:i + 30] for i in range(0, len(codes), 30)]
+
+    def fetch_chunk(chunk):
+        params = {}
+        for i, c in enumerate(chunk, 1):
+            params[f"FID_COND_MRKT_DIV_CODE_{i}"] = "J"
+            params[f"FID_INPUT_ISCD_{i}"] = c.zfill(6)
+        r = _authed_get(
+            f"{BASE}/uapi/domestic-stock/v1/quotations/intstock-multprice",
+            headers={"content-type": "application/json; charset=utf-8",
+                     "appkey": _KEY, "appsecret": _SECRET,
+                     "tr_id": _MULTI_TR, "custtype": "P"},
+            params=params, timeout=8)
+        r.raise_for_status()
+        res = {}
+        for row in (r.json().get("output") or []):
+            code6 = row.get("inter_shrn_iscd", "")
+            if not code6:
+                continue
+            try:    price = int(float(row.get("inter2_prpr", 0) or 0))
+            except Exception: price = 0
+            try:    rate = float(row.get("prdy_ctrt", 0) or 0)
+            except Exception: rate = 0.0
+            try:    chg = int(float(row.get("inter2_prdy_vrss", 0) or 0))
+            except Exception: chg = 0
+            res[code_map.get(code6, code6)] = {
+                "code": code6, "name": row.get("inter_kor_isnm", ""),
+                "price": price, "change_rate": rate, "change": chg}
+        return res
+
     with ThreadPoolExecutor(max_workers=workers) as ex:
-        futures = {ex.submit(get_price, c): c for c in codes}
-        for fut in as_completed(futures):
-            c = futures[fut]
+        futs = [ex.submit(fetch_chunk, ch) for ch in chunks]
+        for fut in as_completed(futs):
             try:
-                out[c] = fut.result()
+                for k, v in fut.result().items():
+                    out[k] = v
             except Exception:
-                out[c] = None
+                pass
     return out
+
+
+def get_prices_batch_parallel(codes: list, workers: int = 6) -> dict:
+    """여러 종목 현재가 일괄 조회. KIS 멀티시세 API 사용(근본적으로 빠름)."""
+    return get_prices_multi(codes, workers=workers)
 
 
 def get_overseas_price(symbol: str, excd: str = "NYS") -> dict:
