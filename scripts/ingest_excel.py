@@ -2218,6 +2218,16 @@ def main():
             print(f"    ❌ 오류: {e}")
             results[label] = {"error": str(e)}
 
+    # 종목별 태린이 지표 스냅샷 (대시보드 종목 카드용)
+    try:
+        idx = build_stock_index(results)
+        msg = f"  📦 taerini_stock.json — {idx['meta']['stock_count']}종목"
+        if idx["meta"]["unmatched"]:
+            msg += f" (미매칭 {len(idx['meta']['unmatched'])})"
+        print(msg)
+    except Exception as e:
+        print(f"  ⚠️ build_stock_index 실패: {e}")
+
     # 리포트 저장
     report = build_report(results)
     report_path = ROOT / "raw" / f"ingest_report_{TODAY}.md"
