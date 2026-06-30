@@ -1052,6 +1052,7 @@ def api_heatmap_refresh():
 # ── 섹터 커스텀 편집 ──────────────────────────────────────
 SECTOR_CUSTOM_PATH = os.path.join(ROOT, "pipeline", "sector_custom.json")
 KRX_CODES_PATH     = os.path.join(ATOMS_DIR, "krx_codes.json")
+TAERINI_STOCK_PATH = os.path.join(ROOT, "pipeline", "taerini_stock.json")
 
 
 @app.get("/api/sector_custom")
@@ -1234,6 +1235,24 @@ def api_stock_candles(code: str = "", tf: str = "D"):
         return JSONResponse(content={"tf": tf, "candles": data})
     except Exception as e:
         return JSONResponse(content={"error": str(e), "candles": []}, status_code=500)
+
+
+@app.get("/api/taerini_stock")
+def api_taerini_stock(code: str = ""):
+    code = (code or "").strip()
+    if code.isdigit():
+        code = code.zfill(6)
+    if not code or not os.path.exists(TAERINI_STOCK_PATH):
+        return JSONResponse(content={"found": False})
+    try:
+        with open(TAERINI_STOCK_PATH, encoding="utf-8") as f:
+            data = json.load(f)
+        stock = (data.get("stocks") or {}).get(code)
+        if not stock:
+            return JSONResponse(content={"found": False, "date": data.get("date")})
+        return JSONResponse(content={"found": True, "date": data.get("date"), "stock": stock})
+    except Exception as e:
+        return JSONResponse(content={"found": False, "error": str(e)})
 
 
 # ── 종목별 잠정수급 배치 (히트맵 타일 행용) ──────────────────

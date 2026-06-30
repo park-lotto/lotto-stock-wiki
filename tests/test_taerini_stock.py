@@ -68,3 +68,28 @@ def test_unmatched_names_recorded(tmp_path):
         dest=tmp_path / "x.json")
     assert "없는종목" in out["meta"]["unmatched"]
     assert out["stocks"] == {}
+
+
+def test_api_taerini_stock(tmp_path, monkeypatch):
+    sys.path.insert(0, str(ROOT / "dashboard"))
+    import server
+    from fastapi.testclient import TestClient
+
+    snap = tmp_path / "taerini_stock.json"
+    snap.write_text(json.dumps({
+        "date": "2026-06-30",
+        "stocks": {"247540": {"name": "에코프로비엠",
+                              "tp": {"target": 330000, "dir": "하향"}}},
+        "meta": {"stock_count": 1, "unmatched": []},
+    }, ensure_ascii=False), encoding="utf-8")
+    monkeypatch.setattr(server, "TAERINI_STOCK_PATH", str(snap))
+
+    c = TestClient(server.app)
+    # 존재 코드
+    r = c.get("/api/taerini_stock?code=247540").json()
+    assert r["found"] is True and r["stock"]["tp"]["dir"] == "하향"
+    # 미존재 코드
+    r = c.get("/api/taerini_stock?code=000000").json()
+    assert r["found"] is False
+    # 빈 코드
+    assert c.get("/api/taerini_stock?code=").json()["found"] is False
