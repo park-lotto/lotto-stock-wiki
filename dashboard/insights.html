@@ -124,6 +124,23 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .nb-act-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
 .nb-open-sm { font-size: .78rem; color: var(--gold-dim); text-decoration: none; margin-left: auto; }
 .nb-open-sm:hover { color: var(--gold); }
+.nb-opt-label { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; margin: 16px 0 8px; font-weight: 700; }
+.nb-opt-cats { display: flex; flex-wrap: wrap; gap: 8px; }
+.nb-cat-item { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border: 1px solid var(--line); border-radius: 9px; font-size: .84rem; cursor: pointer; background: var(--bg); }
+.nb-cat-item b { color: var(--gold); font-size: .8rem; }
+.nb-cat-item.off { opacity: .4; cursor: not-allowed; }
+.nb-cat-item input { cursor: pointer; }
+.nb-opt-period { display: flex; flex-wrap: wrap; gap: 8px; }
+.nb-pchip { padding: 7px 14px; border: 1px solid var(--line); border-radius: 9px; background: var(--bg); color: var(--txt); font-family: inherit; font-size: .84rem; cursor: pointer; transition: border-color .15s, background .15s; }
+.nb-pchip b { color: var(--muted); font-size: .78rem; font-weight: 400; }
+.nb-pchip:hover { border-color: var(--gold-dim); }
+.nb-pchip.active { background: var(--rp-bg); border-color: var(--gold); color: var(--gold); }
+.nb-pchip.active b { color: var(--gold-dim); }
+.nb-opt-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin: 18px 0 14px; font-size: .84rem; color: var(--muted); }
+.nb-opt-row label { display: inline-flex; align-items: center; gap: 6px; }
+.nb-opt-row input[type=number] { width: 70px; padding: 6px 8px; border-radius: 7px; border: 1px solid var(--line); background: var(--bg); color: var(--txt); font-family: inherit; }
+.nb-opt-row select { padding: 6px 8px; border-radius: 7px; border: 1px solid var(--line); background: var(--bg); color: var(--txt); font-family: inherit; }
+.nb-chk { cursor: pointer; }
 .nb-studio-msg { margin-top: 8px; }
 .nb-studio-ok { font-size: .82rem; color: var(--txt); background: var(--bl-bg); border: 1px solid var(--bl-line); border-radius: 9px; padding: 10px 14px; line-height: 1.6; }
 .nb-studio-ok a { color: #4ade80; }
@@ -936,27 +953,98 @@ async function doSearch() {
   }).join('');
 
   const nbBar = `<div class="nb-bar">
-    <button class="nb-make-btn" onclick="sendToNotebook('${escAttr(q)}')">📒 이 검색을 NotebookLM 노트북으로</button>
-    <span class="nb-hint">전 소스 발언 ${data.total ?? hits.length}건 + 원본 링크를 새 노트북에 투입</span>
+    <button class="nb-make-btn" onclick="openNotebookOptions('${escAttr(q)}')">📒 이 검색을 NotebookLM 노트북으로</button>
+    <span class="nb-hint">소스·기간 골라서 노트북 생성 → 바로 질문·리포트·인포그래픽</span>
   </div>`;
   render(bcHtml() + totalHtml + nbBar + rows);
 }
 
-// ── NotebookLM 다리 ──
-async function sendToNotebook(q) {
+// ── NotebookLM 다리: 옵션 패널 ──
+const NB_CATS = [
+  { id: 'youtube', icon: '📺', label: '유튜브' },
+  { id: 'telegram', icon: '💬', label: '텔레그램' },
+  { id: 'report', icon: '📰', label: '리포트' },
+  { id: 'news', icon: '🗞️', label: '뉴스' },
+  { id: 'blog', icon: '📝', label: '블로그' },
+];
+
+async function openNotebookOptions(q) {
+  openModal('📒 노트북 만들기 — 옵션 선택',
+    `<div class="state-box"><div class="spinner"></div><div class="msg">"${escHtml(q)}" 집계 중...</div></div>`);
+  let pv;
+  try {
+    pv = await apiFetch(`/api/insights/notebook_preview?q=${encodeURIComponent(q)}`);
+    if (pv.error) throw new Error(pv.error);
+  } catch(e) {
+    qs('#modal-content').innerHTML = `<div style="color:#e88;padding:8px">집계 실패: ${escHtml(e.message)}</div>`;
+    return;
+  }
+  window._nbOpt = { q, pv };
+  const catsHtml = NB_CATS.map(c => {
+    const n = (pv.cats && pv.cats[c.id]) || 0;
+    const dis = n === 0 ? 'disabled' : '';
+    const chk = n === 0 ? '' : 'checked';
+    return `<label class="nb-cat-item ${dis?'off':''}"><input type="checkbox" class="nb-cat" value="${c.id}" ${chk} ${dis}> ${c.icon} ${c.label} <b>${n}</b></label>`;
+  }).join('');
+  const per = pv.periods || {};
+  const pBtn = (p, t) => `<button type="button" class="nb-pchip ${p==='all'?'active':''}" data-p="${p}" onclick="setNbPeriod(this)">${t} <b>${per[p]??0}</b></button>`;
+  qs('#modal-title').textContent = `📒 노트북 만들기 — "${q}"`;
+  qs('#modal-content').innerHTML = `
+    <div class="nb-opt">
+      <div class="nb-sub">매칭 ${pv.total}건 · 기간 ${pv.dates?.min||'?'} ~ ${pv.dates?.max||'?'} <span style="color:var(--gold-dim)">(건수는 전체 기준)</span></div>
+
+      <div class="nb-opt-label">소스 선택</div>
+      <div class="nb-opt-cats">${catsHtml}</div>
+
+      <div class="nb-opt-label">기간</div>
+      <div class="nb-opt-period">
+        ${pBtn('all','전체')} ${pBtn('today','오늘')} ${pBtn('d3','최근 3일')} ${pBtn('d7','최근 7일')}
+      </div>
+
+      <div class="nb-opt-row">
+        <label>발언 최대 <input type="number" id="nb-limit" value="200" min="10" max="500" step="10"></label>
+        <label>소스 구성
+          <select id="nb-split"><option value="0">한 묶음(.md 1개)</option><option value="1">카테고리별 분리</option></select>
+        </label>
+        <label class="nb-chk"><input type="checkbox" id="nb-urls" checked> 원본 링크(유튜브·웹) 포함</label>
+      </div>
+
+      <button class="nb-make-btn" style="margin-top:6px" onclick="createNotebookFromPanel()">📒 노트북 만들기</button>
+    </div>`;
+}
+
+function setNbPeriod(btn) {
+  document.querySelectorAll('#modal .nb-pchip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function createNotebookFromPanel() {
+  const opt = window._nbOpt; if (!opt) return;
+  const cats = Array.from(document.querySelectorAll('#modal .nb-cat:checked')).map(c => c.value);
+  if (!cats.length) { toast('소스를 1개 이상 선택하세요', true); return; }
+  const pchip = qs('#modal .nb-pchip.active');
+  const period = pchip ? pchip.getAttribute('data-p') : 'all';
+  const limit = parseInt((qs('#nb-limit') || {}).value || '200', 10);
+  const split = (qs('#nb-split') || {}).value === '1';
+  const include_urls = !!(qs('#nb-urls') || {}).checked;
+  runCreateNotebook(opt.q, { cats, period, limit, split, include_urls });
+}
+
+async function runCreateNotebook(q, opts) {
+  opts = opts || {};
   openModal('📒 NotebookLM 노트북 만들기',
     `<div class="state-box"><div class="spinner"></div><div class="msg">"${escHtml(q)}" 발언을 모아 노트북 생성 중...<br><small style="color:var(--muted)">nlm 호출 — 20~40초 소요</small></div></div>`);
   try {
     const res = await apiFetch('/api/insights/to_notebook', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ q })
+      body: JSON.stringify(Object.assign({ q }, opts))
     });
     if (res.error) throw new Error(res.error);
     window._lastNb = { id: res.notebook_id, q, conv: '', url: res.url };
     qs('#modal-title').textContent = '📒 노트북 준비 완료 — 여기서 바로 분석';
     qs('#modal-content').innerHTML = `
       <div class="nb-result">
-        <div class="nb-sub">[허브] <b style="color:var(--txt)">${escHtml(q)}</b> · 추출발언 <b style="color:var(--txt)">${res.atoms}</b> · 유튜브 ${res.yt_urls} · 웹 ${res.web_urls} · 소스 ${res.sources_added}건</div>
+        <div class="nb-sub">[허브] <b style="color:var(--txt)">${escHtml(res.label||q)}</b> · 추출발언 <b style="color:var(--txt)">${res.atoms}</b> · 유튜브 ${res.yt_urls} · 웹 ${res.web_urls} · 소스 ${res.sources_added}건${res.period&&res.period!=='all'?` · 기간 ${({today:'오늘',d3:'최근3일',d7:'최근7일'})[res.period]||res.period}`:''}</div>
 
         <div class="nb-actions-label">💬 이 자료에 바로 질문 — NotebookLM이 인용과 함께 답합니다</div>
         <div class="nb-ask-row">

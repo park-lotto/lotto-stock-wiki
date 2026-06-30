@@ -1280,3 +1280,8 @@ python calc_oscillator.py SK하이닉스 삼성전자 한미반도체 --tg
 - 질문 가드: "만들어줘" 입력 시 영어 사고과정 누출 차단(답변만 하도록 제약)
 - 옵션 패널 백엔드: /notebook_preview(카테고리·기간 집계) + to_notebook 필터(cats/period/limit/split/include_urls). UI 와이어링은 다음
 - 검증(API): preview 집계·infographic 시작 정상
+
+## 2026-06-30 — NotebookLM 다리 v4: 옵션 패널 UI 완성
+- 📒 버튼 → 옵션 패널: 소스 체크박스(카테고리별 건수)·기간 프리셋(전체/오늘/3일/7일+건수)·발언수·소스구성(묶음/분리)·원본링크 포함 → "노트북 만들기"
+- openNotebookOptions(preview 집계 렌더)→createNotebookFromPanel→runCreateNotebook(opts 전송)
+- 검증: 리포트+텔레+오늘 = 23건, .md에 텔레8/리포트2만(타카테고리 제외) 확인
