@@ -3088,6 +3088,31 @@ async def api_insights_gemini_infographic(req: Request):
     return JSONResponse(content=result, status_code=(200 if result.get("ok") else 500))
 
 
+@app.get("/api/insights/nlm_status")
+def api_insights_nlm_status():
+    """nlm 인증 유효성 (브라우저 없이 --check)."""
+    if not _nlm_exe():
+        return JSONResponse(content={"valid": False, "error": "nlm 없음"})
+    ok, out, _ = _run_nlm(["login", "--check"], timeout=40)
+    return JSONResponse(content={"valid": bool(ok and "valid" in (out or "").lower())})
+
+
+@app.post("/api/insights/nlm_relogin")
+async def api_insights_nlm_relogin(req: Request):
+    """수동 재로그인 — nlm login(전용 크롬 프로필로 자동 완료)."""
+    if not _nlm_exe():
+        return JSONResponse(content={"error": "nlm CLI 없음"}, status_code=503)
+
+    def _do():
+        ok, _o, err = _run_nlm(["login"], timeout=320)
+        if not ok:
+            return {"error": f"재로그인 실패: {err[:150]}"}
+        return {"ok": True}
+
+    result = await run_in_threadpool(_do)
+    return JSONResponse(content=result, status_code=(200 if result.get("ok") else 500))
+
+
 # ── §4.8 POST /api/insights/to_youtube ───────────────────────
 @app.post("/api/insights/to_youtube")
 async def api_insights_to_youtube(req: Request):
@@ -3242,6 +3267,29 @@ _위키 정식 ingest는 후속 연결 예정_
 
 # ══════════════════════════════════════════════════════════════
 
+def _nlm_keepalive(interval=1500):
+    """서버 구동 중 nlm 세션 자동 유지 — 25분마다 --check, 만료 시에만 재로그인."""
+    while True:
+        try:
+            exe = _nlm_exe()
+            if exe:
+                ok, out, _ = _run_nlm(["login", "--check"], timeout=60)
+                if not ok or "valid" not in (out or "").lower():
+                    print("[nlm-keepalive] 인증 만료 감지 → 자동 재로그인 시도")
+                    ok2, _o, err = _run_nlm(["login"], timeout=320)
+                    print("[nlm-keepalive] 재로그인", "성공" if ok2 else f"실패: {err[:120]}")
+        except Exception as e:
+            print(f"[nlm-keepalive] 예외: {str(e)[:120]}")
+        time.sleep(interval)
+
+
+def _start_keepalive():
+    t = threading.Thread(target=_nlm_keepalive, daemon=True)
+    t.start()
+    print("[nlm-keepalive] 자동 세션 유지 시작 (25분 주기)")
+
+
 if __name__ == "__main__":
     print("딸깍 대시보드 → http://localhost:8090")
+    _start_keepalive()
     uvicorn.run(app, host="127.0.0.1", port=8090, log_level="warning")

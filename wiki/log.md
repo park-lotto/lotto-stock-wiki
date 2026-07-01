@@ -1341,3 +1341,9 @@ python calc_oscillator.py SK하이닉스 삼성전자 한미반도체 --tg
 - /api/insights/gemini_infographic: 노트북 내용 요약→이미지 프롬프트(브랜드+레퍼런스 결합)→Gemini 이미지(gemini-3-flash-preview-image=나노바나나2→2.5 폴백). 프롬프트 자유. 🍌버튼 추가
 - 슬라이드 항상 실패 원인: type=slide_deck(폴링 정상)인데 NotebookLM 생성이 10분+ 매우 느림/멈춤 → 폴링창 슬라이드/영상 ~10분으로 연장
 - 미결: Gemini 이미지생성 429 쿼터소진(두 키 모두). 코드 정상, 쿼터/유료키 필요
+
+## 2026-07-01 — nlm 자동 세션유지(주기적 자동 재로그인)
+- 서버 keepalive 스레드: 25분마다 nlm login --check → 만료 시에만 nlm login(전용 크롬 프로필로 무인 자동완료)
+- 수동 🔄 재로그인 버튼 + /api/insights/nlm_relogin, /nlm_status(브라우저없이 유효성)
+- 원리: nlm login이 nlm 전용 크롬 프로필(구글세션 유지) 사용 → 비번입력 없이 자동. 대시보드 켜져있으면 세션 안 끊김
+- 검증: nlm_status valid:true

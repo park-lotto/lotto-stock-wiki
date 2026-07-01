@@ -821,7 +821,7 @@ async function showL0() {
           <input type="text" id="brief-q" class="brief-input" placeholder="무엇을 정리·분석할까요?  (예: 오늘 블로그 중요내용 정리해줘 · 삼성전자 분석)" onkeydown="if(event.key==='Enter')startBriefing()">
           <button class="brief-go" onclick="startBriefing()">🧠 브리핑 시작</button>
         </div>
-        <div class="brief-hint">선택한 소스로 노트북을 만들고, 입력한 문구를 워크스페이스에서 자동으로 질문합니다. (키워드면 그 키워드로 좁히고, 요청문이면 소스 전체를 정리)</div>
+        <div class="brief-hint">선택한 소스로 노트북을 만들고, 입력한 문구를 워크스페이스에서 자동으로 질문합니다. (키워드면 그 키워드로 좁히고, 요청문이면 소스 전체를 정리) <button class="ws-pull" style="margin-left:8px" onclick="nlmRelogin(this)">🔄 nlm 재로그인</button> <span style="color:var(--gold-dim)">· 서버가 25분마다 자동 유지</span></div>
       </div>
     </div>
     <div class="cat-grid">${catCards || '<div style="color:var(--muted)">카테고리 없음</div>'}</div>
@@ -1236,6 +1236,16 @@ async function runCreateNotebook(q, opts, autoQ) {
 
 // ── 첫화면 브리핑 바 ──
 function toggleBChip(b) { b.classList.toggle('on'); }
+async function nlmRelogin(btn) {
+  const orig = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = '재로그인 중… (크롬 창)'; }
+  try {
+    const res = await apiFetch('/api/insights/nlm_relogin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    if (res.error) throw new Error(res.error);
+    toast('✅ nlm 재로그인 완료 — 이제 브리핑 됩니다');
+  } catch(e) { toast('재로그인 실패: ' + e.message, true); }
+  finally { if (btn) { btn.disabled = false; btn.innerHTML = orig; } }
+}
 function startBriefing() {
   const q = ((qs('#brief-q') || {}).value || '').trim();
   if (!q) { toast('무엇을 정리·분석할지 입력하세요', true); return; }
