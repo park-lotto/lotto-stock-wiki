@@ -1053,6 +1053,7 @@ def api_heatmap_refresh():
 SECTOR_CUSTOM_PATH = os.path.join(ROOT, "pipeline", "sector_custom.json")
 KRX_CODES_PATH     = os.path.join(ATOMS_DIR, "krx_codes.json")
 TAERINI_STOCK_PATH = os.path.join(ROOT, "pipeline", "taerini_stock.json")
+TAERINI_CONSENSUS_PATH = os.path.join(ROOT, "pipeline", "taerini_consensus.json")
 
 
 @app.get("/api/sector_custom")
@@ -1251,6 +1252,31 @@ def api_taerini_stock(code: str = ""):
         if not stock:
             return JSONResponse(content={"found": False, "date": data.get("date")})
         return JSONResponse(content={"found": True, "date": data.get("date"), "stock": stock})
+    except Exception as e:
+        return JSONResponse(content={"found": False, "error": str(e)})
+
+
+@app.get("/api/taerini_consensus")
+def api_taerini_consensus(code: str = ""):
+    """종목별 주간 컨센 시계열(12MF/FY1/FY2) — 차트 오버레이용."""
+    code = (code or "").strip()
+    if code.isdigit():
+        code = code.zfill(6)
+    if not code or not os.path.exists(TAERINI_CONSENSUS_PATH):
+        return JSONResponse(content={"found": False})
+    try:
+        with open(TAERINI_CONSENSUS_PATH, encoding="utf-8") as f:
+            data = json.load(f)
+        stock = (data.get("stocks") or {}).get(code)
+        if not stock:
+            return JSONResponse(content={"found": False, "date": data.get("date")})
+        return JSONResponse(content={
+            "found": True,
+            "date": data.get("date"),
+            "dates": data.get("dates") or [],
+            "name": stock.get("name"),
+            "series": {k: stock.get(k) for k in ("12mf", "fy1", "fy2") if stock.get(k)},
+        })
     except Exception as e:
         return JSONResponse(content={"found": False, "error": str(e)})
 
@@ -2126,7 +2152,7 @@ def api_insights_signals():
         today = datetime.now().strftime("%Y-%m-%d")
         d8 = (datetime.now() - timedelta(days=8)).strftime("%Y-%m-%d")
         rows = conn.execute(
-            "SELECT asset, source_type, date, stance_key, content FROM atoms "
+            "SELECT asset, source_type, source_name, date, stance_key, content FROM atoms "
             "WHERE asset IS NOT NULL AND asset!='' AND date>=?", (d8,)).fetchall()
     finally:
         conn.close()
@@ -2143,7 +2169,8 @@ def api_insights_signals():
     prior = {}       # asset -> {date: n}
     cats = {}        # asset -> set(category)
     stance = {}      # asset -> Counter
-    sample = {}      # asset -> snippet
+    facts = {}       # asset -> [ {content, source, cat, date, stance, hit} ]
+    srcs = {}        # asset -> {source_name: cat}
     for r in rows:
         cat = _nb_cat_of(r["source_type"])
         for a in _assets(r["asset"]):
@@ -2153,8 +2180,18 @@ def api_insights_signals():
                 sk = (r["stance_key"] or "")
                 if sk in ("bullish", "bearish", "neutral"):
                     stance.setdefault(a, Counter())[sk] += 1
-                if a not in sample and r["content"]:
-                    sample[a] = (r["content"] or "").strip()[:110]
+                content = (r["content"] or "").strip()
+                if content:
+                    srcs.setdefault(a, {})[r["source_name"] or "미상"] = cat
+                    facts.setdefault(a, []).append({
+                        "content": content[:280],
+                        "source": r["source_name"] or "미상",
+                        "cat": cat,
+                        "date": r["date"],
+                        "stance": sk,
+                        # 종목명이 본문에 실제 등장 → 그 종목 관련 팩트일 확률 ↑
+                        "hit": 1 if a in content else 0,
+                    })
             else:
                 prior.setdefault(a, {}).setdefault(r["date"], 0)
                 prior[a][r["date"]] += 1
@@ -2165,13 +2202,27 @@ def api_insights_signals():
         pavg = (sum(pdays.values()) / len(pdays)) if pdays else 0.0
         catset = cats.get(a, set())
         st = stance.get(a, Counter())
+        # 본문에 종목명 실제 등장한 팩트 먼저(지어내지 않기), 그 다음 최신순
+        flist = sorted(facts.get(a, []), key=lambda f: (f["hit"], f["date"]), reverse=True)
+        # 중복 본문 제거
+        seen_c, uniq = set(), []
+        for f in flist:
+            k = f["content"][:60]
+            if k in seen_c:
+                continue
+            seen_c.add(k)
+            uniq.append(f)
+        src_list = [{"name": (n if len(n) <= 18 else n[:17] + "…"), "cat": c}
+                    for n, c in list(srcs.get(a, {}).items())[:8]]
         signals.append({
             "asset": a, "kind": _sig_kind(a), "today": tn, "prior_avg": round(pavg, 1),
             "spike": round(tn - pavg, 1), "is_new": (pavg == 0),
             "cats": [c for c in ("youtube", "telegram", "report", "news", "blog") if c in catset],
             "n_cats": len(catset),
             "bull": st.get("bullish", 0), "bear": st.get("bearish", 0),
-            "sample": sample.get(a, ""),
+            "sample": (uniq[0]["content"][:130] if uniq else ""),
+            "facts": uniq[:6],
+            "sources": src_list,
         })
     # 랭킹: 다채널(합의) + 오늘 언급 + 스파이크
     signals.sort(key=lambda s: (s["n_cats"] * 2 + s["today"] + max(0.0, s["spike"])), reverse=True)
@@ -2936,7 +2987,52 @@ def api_insights_notebooks():
     reg = _load_nb_registry()
     return JSONResponse(content={"notebooks": [
         {"id": e.get("id"), "label": e.get("label", ""), "date": e.get("date", ""),
-         "atoms": e.get("atoms", 0)} for e in reg]})
+         "atoms": e.get("atoms", 0),
+         "url": e.get("url", "") or (f"https://notebooklm.google.com/notebook/{e.get('id')}" if e.get("id") else "")}
+        for e in reversed(reg) if e.get("id")]})
+
+
+def _history_path(nb_id):
+    safe = re.sub(r"[^0-9a-fA-F-]", "", nb_id or "")[:40]
+    return os.path.join(ROOT, "out", "insights_notebook", "history", f"{safe}.json")
+
+
+@app.post("/api/insights/history_save")
+async def api_insights_history_save(req: Request):
+    """워크스페이스 캔버스 전체 스냅샷을 노트북별로 저장(덮어쓰기) — 나중에 다시보기."""
+    body = {}
+    try:
+        body = await req.json()
+    except Exception:
+        pass
+    nb_id = (body.get("notebook_id") or "").strip()
+    html = body.get("html") or ""
+    if not nb_id or not html:
+        return JSONResponse(content={"error": "notebook_id·html 필요"}, status_code=400)
+    p = _history_path(nb_id)
+    snap = {
+        "html": str(html)[:600000],
+        "label": (body.get("label") or "")[:120],
+        "updated": datetime.now().strftime("%Y-%m-%d %H:%M"),
+    }
+    try:
+        os.makedirs(os.path.dirname(p), exist_ok=True)
+        with open(p, "w", encoding="utf-8") as f:
+            json.dump(snap, f, ensure_ascii=False)
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)[:120]}, status_code=500)
+    return JSONResponse(content={"ok": True})
+
+
+@app.get("/api/insights/history")
+def api_insights_history(notebook_id: str = ""):
+    """노트북 캔버스 스냅샷."""
+    try:
+        with open(_history_path(notebook_id), encoding="utf-8") as f:
+            snap = json.load(f)
+    except Exception:
+        snap = {}
+    return JSONResponse(content=snap or {})
 
 
 @app.get("/api/insights/notebook_sources")

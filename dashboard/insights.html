@@ -112,9 +112,9 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .sig-grp { font-size: .74rem; font-weight: 700; color: var(--muted); margin: 14px 0 7px; }
 .sig-grp small { color: var(--gold-dim); }
 .sig-list { display: flex; flex-direction: column; gap: 5px; }
-.sig-row { padding: 9px 14px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; cursor: pointer; transition: border-color .15s, background .15s; }
+.sig-row { padding: 9px 14px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; transition: border-color .15s, background .15s; }
 .sig-row:hover { border-color: var(--gold-dim); background: #1c1c22; }
-.sig-main { display: flex; align-items: center; gap: 12px; }
+.sig-main { display: flex; align-items: center; gap: 12px; cursor: pointer; }
 .sig-asset { font-size: .92rem; font-weight: 700; min-width: 120px; }
 .sig-cnt { font-size: .78rem; color: var(--muted); white-space: nowrap; }
 .sig-cnt b { color: var(--txt); }
@@ -129,6 +129,21 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .sig-go { font-size: .74rem; color: var(--gold-dim); white-space: nowrap; }
 .sig-row:hover .sig-go { color: var(--gold); }
 .sig-sample { font-size: .77rem; color: var(--muted); margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-left: 2px; }
+.sig-srcs { font-size: .7rem; color: var(--gold-dim); margin-top: 6px; display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.sig-src { background: #16161c; border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; color: #cbd5c0; }
+.sig-facts { margin-top: 7px; display: flex; flex-direction: column; gap: 7px; }
+.sig-fact { border-left: 2px solid var(--gold-dim); padding: 3px 0 3px 10px; }
+.sig-fact-txt { font-size: .8rem; color: #d7dbd0; line-height: 1.5; }
+.sig-fact-meta { font-size: .68rem; color: var(--muted); margin-top: 3px; }
+.sig-more { margin-top: 7px; background: none; border: none; color: var(--gold-dim); font-size: .72rem; cursor: pointer; padding: 2px 0; }
+.sig-more:hover { color: var(--gold); }
+/* 최근 브리핑 기록 */
+.brief-hist { display: flex; flex-direction: column; gap: 6px; }
+.bh-item { padding: 8px 11px; background: var(--card); border: 1px solid var(--line); border-radius: 9px; cursor: pointer; transition: border-color .15s, background .15s; }
+.bh-item:hover { border-color: var(--gold-dim); background: #1c1c22; }
+.bh-label { font-size: .82rem; font-weight: 600; color: var(--txt); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bh-meta { font-size: .68rem; color: var(--muted); margin-top: 3px; }
+.bh-empty { font-size: .74rem; color: var(--muted); padding: 8px 2px; }
 
 /* ── 브리핑 워크스페이스 (전체화면 2단) ── */
 .ws-overlay { position: fixed; inset: 0; z-index: 600; background: var(--bg); display: none; flex-direction: column; }
@@ -866,7 +881,9 @@ async function showL0() {
         <div id="signals-box" class="signals-box"></div>
       </div>
       <div class="main-right">
-        <div class="side-title">📚 소스 라이브러리</div>
+        <div class="side-title">📖 최근 브리핑 기록 <small style="color:var(--gold-dim);font-weight:400">클릭하면 그때 본 화면 그대로</small></div>
+        <div id="brief-history" class="brief-hist">불러오는 중…</div>
+        <div class="side-title" style="margin-top:18px">📚 소스 라이브러리</div>
         <div class="cat-grid-side">${catCards || '<div style="color:var(--muted)">카테고리 없음</div>'}</div>
       </div>
     </div>
@@ -876,28 +893,68 @@ async function showL0() {
     </div>
   `);
   loadSignals();
+  loadBriefHistory();
+}
+async function loadBriefHistory() {
+  const box = qs('#brief-history'); if (!box) return;
+  try {
+    const res = await apiFetch('/api/insights/notebooks');
+    const nbs = res.notebooks || [];
+    if (!nbs.length) { box.innerHTML = '<div class="bh-empty">아직 기록이 없습니다. 위에서 브리핑을 시작하면 여기에 쌓입니다.</div>'; return; }
+    box.innerHTML = nbs.map(n =>
+      `<div class="bh-item" onclick="openBriefFromHistory('${escAttr(n.id)}','${escAttr(n.label)}','${escAttr(n.url||'')}')">
+        <div class="bh-label">🧠 ${escHtml(n.label)}</div>
+        <div class="bh-meta">${escHtml(n.date||'')} · ${n.atoms||0}발언 · 다시보기 →</div>
+      </div>`).join('');
+  } catch(e) { box.innerHTML = '<div class="bh-empty">기록을 불러오지 못했습니다.</div>'; }
 }
 
 // ── 🔥 오늘의 시그널 ──
 const SIG_CATICON = { youtube: '📺', telegram: '💬', report: '📰', news: '🗞️', blog: '📝' };
+const SIG_CATNAME = { youtube: '유튜브', telegram: '텔레', report: '리포트', news: '뉴스', blog: '블로그' };
+const SIG_STANCE = { bullish: '🟢강세', bearish: '🔴약세', neutral: '⚪중립' };
+let _sigId = 0;
 function sigRow(s) {
-  const cats = (s.cats || []).map(c => `<span class="sig-cat">${SIG_CATICON[c] || '·'}</span>`).join('');
   const trend = s.is_new ? '<span class="sig-new">🆕</span>'
     : (s.spike > 0 ? `<span class="sig-up">▲${s.spike}</span>`
       : (s.spike < 0 ? `<span class="sig-dn">▼${Math.abs(s.spike)}</span>` : '<span class="sig-flat">=</span>'));
   const consensus = s.n_cats >= 3 ? '<span class="sig-badge red">🔴다채널</span>' : '';
   const conflict = (s.bull > 0 && s.bear > 0) ? '<span class="sig-badge warn">⚠️충돌</span>' : '';
-  return `<div class="sig-row" onclick="sigBrief('${escAttr(s.asset)}')">
-    <div class="sig-main">
+  // 어디서 언급됐는지 — 출처 이름 칩
+  const srcChips = (s.sources || []).map(x =>
+    `<span class="sig-src">${SIG_CATICON[x.cat] || '·'} ${escHtml(x.name)}</span>`).join('');
+  // 팩트 목록(지어내지 않고 원자 본문 그대로)
+  const facts = s.facts || [];
+  const fid = 'sf' + (++_sigId);
+  const factHtml = facts.map(f => `
+    <div class="sig-fact">
+      <div class="sig-fact-txt">${escHtml(f.content)}</div>
+      <div class="sig-fact-meta">${SIG_CATICON[f.cat] || '·'} ${escHtml(f.source)} · ${escHtml(f.date)}${f.stance && SIG_STANCE[f.stance] ? ' · ' + SIG_STANCE[f.stance] : ''}</div>
+    </div>`).join('');
+  const more = facts.length > 1
+    ? `<button class="sig-more" onclick="event.stopPropagation();sigToggle('${fid}',this)">▾ 언급 ${facts.length}건 펼치기</button>`
+    : '';
+  return `<div class="sig-row">
+    <div class="sig-main" onclick="sigBrief('${escAttr(s.asset)}')">
       <span class="sig-asset">${escHtml(s.asset)}</span>
       <span class="sig-cnt">오늘 <b>${s.today}</b> <small>(평균 ${s.prior_avg})</small></span>
       <span class="sig-trend">${trend}</span>
-      <span class="sig-cats">${cats}</span>
       <span class="sig-flags">${consensus}${conflict}</span>
       <span class="sig-go">브리핑 →</span>
     </div>
-    ${s.sample ? `<div class="sig-sample">${escHtml(s.sample)}</div>` : ''}
+    ${srcChips ? `<div class="sig-srcs">언급: ${srcChips}</div>` : ''}
+    ${s.sample ? `<div class="sig-sample" id="${fid}-s">${escHtml(s.sample)}${facts.length > 1 ? ' …' : ''}</div>` : ''}
+    ${facts.length ? `<div class="sig-facts" id="${fid}" style="display:none">${factHtml}</div>` : ''}
+    ${more}
   </div>`;
+}
+function sigToggle(fid, btn) {
+  const box = qs('#' + fid), prev = qs('#' + fid + '-s');
+  if (!box) return;
+  const open = box.style.display === 'none';
+  box.style.display = open ? 'block' : 'none';
+  if (prev) prev.style.display = open ? 'none' : 'block';
+  btn.textContent = open ? '▴ 접기' : `▾ 언급 ${box.children.length}건 펼치기`;
 }
 async function loadSignals() {
   const box = qs('#signals-box'); if (!box) return;
@@ -1373,12 +1430,56 @@ function openWorkspace(res, q, autoQ) {
   qs('#ws-canvas').innerHTML = `<div class="ws-empty">왼쪽에서 <b>질문</b>하거나 <b>만들기</b>를 누르면<br>결과가 여기에 크게 표시됩니다.</div>`;
   qs('#nbws').classList.add('open');
   loadWsSources();
+  wsAttachObserver();
   if (autoQ && autoQ.trim()) {
     const inp = qs('#ws-q'); if (inp) inp.value = autoQ.trim();
     setTimeout(wsAsk, 350);   // 박스 문구로 자동 질문
   } else {
     setTimeout(() => { const el = qs('#ws-q'); if (el) el.focus(); }, 60);
   }
+}
+
+// ── 캔버스 스냅샷 저장(다시보기용) ──
+function wsScheduleSave() {
+  clearTimeout(window._wsSaveTimer);
+  window._wsSaveTimer = setTimeout(() => {
+    const ws = window._ws; if (!ws) return;
+    const c = qs('#ws-canvas'); if (!c) return;
+    if (c.querySelector('.ws-empty') && c.children.length <= 1) return;  // 빈 캔버스
+    const html = c.innerHTML;
+    if (!html || html.length < 40) return;
+    apiFetch('/api/insights/history_save', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notebook_id: ws.id, label: ws.label, html })
+    }).catch(() => {});
+  }, 1600);
+}
+function wsAttachObserver() {
+  const canvas = qs('#ws-canvas'); if (!canvas) return;
+  if (!window._wsObs) window._wsObs = new MutationObserver(wsScheduleSave);
+  window._wsObs.disconnect();
+  window._wsObs.observe(canvas, { childList: true, subtree: true, characterData: true });
+}
+// ── 과거 브리핑 다시열기 (메인 기록 목록에서) ──
+async function openBriefFromHistory(id, label, url) {
+  if (window._wsObs) window._wsObs.disconnect();   // 로딩 중 저장 방지
+  window._ws = { id, q: label, label, conv: '', url };
+  qs('#ws-title').textContent = `🧠 ${label} 브리핑`;
+  qs('#ws-meta').textContent = '이전 브리핑 · 다시보기';
+  if (qs('#ws-open')) qs('#ws-open').href = url || '#';
+  const rb = qs('#ws-resume'); if (rb) rb.classList.remove('show');
+  qs('#ws-canvas').innerHTML = wsLoading('그때 본 기록 불러오는 중…');
+  qs('#nbws').classList.add('open');
+  loadWsSources();
+  try {
+    const snap = await apiFetch(`/api/insights/history?notebook_id=${encodeURIComponent(id)}`);
+    qs('#ws-canvas').innerHTML = (snap && snap.html)
+      ? snap.html
+      : `<div class="ws-empty">저장된 결과 화면이 없습니다.<br>왼쪽에서 질문하면 새로 채워지고 다시 기록됩니다.</div>`;
+  } catch(e) {
+    qs('#ws-canvas').innerHTML = `<div class="ws-empty">기록을 불러오지 못했습니다: ${escHtml(e.message)}</div>`;
+  }
+  wsAttachObserver();
 }
 
 async function loadWsSources() {
