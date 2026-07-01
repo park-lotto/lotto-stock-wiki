@@ -343,7 +343,8 @@ def build_stock_index(results: dict, dest=None) -> dict:
 # ─── 파서 1: 추정이익변경 (Rating/TP 상향·하향) ────────────────
 
 def parse_추정이익변경(dry_run: bool) -> dict:
-    path = find_excel("추정이익 변경")
+    # 크롤링본(WiseReport 요약, TP시트 없음) 말고 날짜본(Rating_Up/TP_Up 시트)을 잡는다
+    path = _find_excel_ex("추정이익 변경", exclude=["크롤링"]) or find_excel("추정이익 변경")
     if not path:
         return {"error": "추정이익 변경 파일 없음"}
 
@@ -465,9 +466,12 @@ def _update_consensus(page: Path, item: dict) -> str:
 #                    r[7]=1Q실제발표 r[11]=어닝서프율(정렬기준) r[12]=컨센변화
 
 def parse_컨센움직임(dry_run: bool) -> dict:
-    path = find_excel("컨센움직임서프쇼크")
+    # 태린이아빠 개편(2026-07): '컨센움직임서프쇼크' → '투자픽업용'(컨센상향/하향/서프라이즈/쇼크 시트)
+    path = find_excel("투자픽업용")
     if not path:
-        return {"error": "컨센움직임 파일 없음"}
+        path = find_excel("컨센움직임서프쇼크")   # 구버전 호환
+    if not path:
+        return {"error": "컨센움직임(투자픽업용) 파일 없음"}
 
     wb = load_wb(path)
     if not wb: return {"error": "열기 실패"}
@@ -605,9 +609,13 @@ def parse_수출정리(dry_run: bool) -> dict:
 # ─── 파서 4: 유동성체크 (컨센신고가 + 가속화모멘텀) ────────────────
 
 def parse_유동성체크(dry_run: bool) -> dict:
-    path = find_excel("유동성 체크")
+    # 태린이아빠 개편(2026-07): '유동성 체크' → '카페라떼 회원용 종목피킹'
+    #   (컨센신고가·가속화모멘텀·유동성컨셉 시트를 한 파일에 통합)
+    path = find_excel("카페라떼 회원용 종목피킹")
     if not path:
-        return {"error": "유동성 체크 파일 없음"}
+        path = find_excel("유동성 체크")   # 구버전 호환
+    if not path:
+        return {"error": "유동성체크(카페라떼 종목피킹) 파일 없음"}
 
     wb = load_wb(path)
     if not wb: return {"error": "열기 실패"}
@@ -946,11 +954,12 @@ def parse_중소형주오실레이터(dry_run: bool) -> dict:
 # ─── 파서 7: 가속화모멘텀 ────────────────────────────────────────
 
 def parse_가속화모멘텀(dry_run: bool) -> dict:
-    path = find_excel("유동성 체크")
+    # 태린이아빠 개편(2026-07): 가속화모멘텀 시트가 '카페라떼 회원용 종목피킹'에 포함
+    path = find_excel("카페라떼 회원용 종목피킹")
     if not path:
-        path = find_excel("가속화모멘텀")
+        path = find_excel("유동성 체크")   # 구버전 호환
     if not path:
-        return {"error": "유동성체크 파일 없음"}
+        return {"error": "가속화모멘텀(카페라떼 종목피킹) 파일 없음"}
 
     wb = load_wb(path)
     if not wb: return {"error": "열기 실패"}
@@ -992,25 +1001,11 @@ def parse_가속화모멘텀(dry_run: bool) -> dict:
 
 # ─── 파서 8: 상대강도 RS ─────────────────────────────────────────
 
-def parse_rs(dry_run: bool) -> dict:
-    path = find_excel("한국상대강도")
-    if not path:
-        return {"error": "한국상대강도 파일 없음"}
-
-    wb = load_wb(path)
-    if not wb: return {"error": "열기 실패"}
-    if "종가" not in wb.sheetnames:
-        wb.close(); return {"error": "종가 시트 없음"}
-
-    ws = wb["종가"]
-
-    # iter_rows로 일괄 읽기 (셀 단위보다 10배+ 빠름)
-    all_rows = list(ws.iter_rows(values_only=True))
-    wb.close()
-
+def _rs_sorted_from_rows(all_rows) -> tuple[list, str]:
+    """종가류 시트 rows(첫줄 헤더: DATE,코스피,종목...) → (norm_RS_avg 내림차순 리스트, 마지막날짜)"""
+    import math
     if not all_rows:
-        return {"error": "종가 데이터 없음"}
-
+        return [], TODAY
     headers = [str(v).strip() if v else None for v in all_rows[0]]
     prices = {h: [] for h in headers[1:] if h}
     dates = []
@@ -1022,14 +1017,11 @@ def parse_rs(dry_run: bool) -> dict:
             v = row[c] if c < len(row) else None
             prices[h].append(float(v) if isinstance(v, (int, float)) else None)
     if not dates:
-        return {"error": "종가 데이터 없음"}
-
-    import math
+        return [], TODAY
 
     def mansfield_rs(price_list, kospi_list, ma_period):
         """Mansfield RS: (log(stock/kospi) - rolling_mean) * 100"""
-        n = len(price_list)
-        if n < ma_period + 1:
+        if len(price_list) < ma_period + 1:
             return None
         log_rel = []
         for p, k in zip(price_list, kospi_list):
@@ -1037,7 +1029,6 @@ def parse_rs(dry_run: bool) -> dict:
                 log_rel.append(math.log(p / k))
             else:
                 log_rel.append(None)
-        # rolling mean (ma_period)
         rs_series = []
         for i in range(len(log_rel)):
             window = [v for v in log_rel[max(0, i - ma_period + 1):i + 1] if v is not None]
@@ -1046,16 +1037,12 @@ def parse_rs(dry_run: bool) -> dict:
                 rs_series.append((log_rel[i] - ma) * 100)
             else:
                 rs_series.append(None)
-        last = next((v for v in reversed(rs_series) if v is not None), None)
-        return last
+        return next((v for v in reversed(rs_series) if v is not None), None)
 
     def norm_sigmoid(x, scale=12):
         return round(100 / (1 + math.exp(-x / scale)), 2)
 
     kospi_list = prices.get("코스피", [])
-    n = len(dates)
-
-    # Mansfield RS 계산
     results = {}
     for stock, plist in prices.items():
         if stock == "코스피": continue
@@ -1068,7 +1055,6 @@ def parse_rs(dry_run: bool) -> dict:
                 row[f"norm_RS_{period}"] = norm_sigmoid(raw)
         results[stock] = row
 
-    # RS_avg, norm_RS_avg
     for v in results.values():
         rs_vals = [v[f"RS_{p}d"]      for p in [60, 120, 250] if f"RS_{p}d"      in v]
         nr_vals = [v[f"norm_RS_{p}"]  for p in [60, 120, 250] if f"norm_RS_{p}"  in v]
@@ -1079,14 +1065,61 @@ def parse_rs(dry_run: bool) -> dict:
         [v for v in results.values() if "norm_RS_avg" in v],
         key=lambda x: x["norm_RS_avg"], reverse=True
     )
-
     last_date = str(dates[-1])[:10] if dates else TODAY
+    return sorted_r, last_date
+
+
+def _find_excel_ex(pattern: str, exclude=()) -> Path | None:
+    """pattern 포함 + exclude 미포함 파일 중 이름이 가장 짧은(=기본) 것"""
+    cands = [f for f in EXCEL_DIR.iterdir()
+             if pattern in f.name and f.suffix in (".xlsx", ".xlsm")
+             and not any(x in f.name for x in exclude)]
+    return sorted(cands, key=lambda p: len(p.name))[0] if cands else None
+
+
+def _load_rs_rows(pattern: str, sheet_candidates, exclude=()):
+    path = _find_excel_ex(pattern, exclude)
+    if not path:
+        return None, None
+    wb = load_wb(path)
+    if not wb:
+        return None, path
+    sheet = next((s for s in sheet_candidates if s in wb.sheetnames), None)
+    if not sheet:
+        wb.close(); return None, path
+    rows = list(wb[sheet].iter_rows(values_only=True))
+    wb.close()
+    return rows, path
+
+
+def parse_rs(dry_run: bool) -> dict:
+    # 태린이아빠 개편(2026-07): 개별종목 RS + ETF RS(소라티노) 둘 다 활용
+    #   개별종목 → 종목상대강도데이터/종가 (per-stock 패널용)
+    #   ETF(소라티노) → etf상대강도데이터/데이터 (섹터·ETF 강도용; irp/해외포함본 제외)
+    stock_rows, stock_path = _load_rs_rows("종목상대강도데이터", ["종가"])
+    if stock_rows is None:
+        stock_rows, stock_path = _load_rs_rows("한국상대강도", ["종가"])   # 구버전 호환
+    etf_rows, etf_path = _load_rs_rows("etf상대강도데이터", ["데이터", "종가"],
+                                       exclude=["irp", "해외"])
+
+    if stock_rows is None and etf_rows is None:
+        return {"error": "상대강도(종목/ETF) 파일 없음"}
+
+    stock_sorted, stock_date = _rs_sorted_from_rows(stock_rows or [])
+    etf_sorted, etf_date = _rs_sorted_from_rows(etf_rows or [])
+
+    src = stock_path or etf_path
     return {
-        "file":    path.name,
-        "date":    last_date,
-        "total":   len(sorted_r),
-        "top30":   sorted_r[:30],
-        "bottom10": sorted_r[-10:],
+        "file":     src.name if src else "",
+        "date":     stock_date if stock_rows else etf_date,
+        "total":    len(stock_sorted),
+        "top30":    stock_sorted[:30],
+        "bottom10": stock_sorted[-10:],
+        # ETF RS(소라티노) — 섹터/ETF 강도용. 종목코드 매칭 안돼 per-stock 패널엔 미반영.
+        "etf_file":     etf_path.name if etf_path else None,
+        "etf_total":    len(etf_sorted),
+        "etf_top30":    etf_sorted[:30],
+        "etf_bottom10": etf_sorted[-10:],
     }
 
 
@@ -1164,15 +1197,18 @@ def parse_쏠림지수(dry_run: bool) -> dict:
 # ─── 파서 10: 액티브ETF 비중 변화 ────────────────────────────────
 
 SECTOR_SHEETS_ETF = [
-    "코스닥액티브", "반도체", "수급, 배당성장", "신재생, 2차전지",
-    "이노, 소비, AI인프라", "코스피, 조선, 테크", "수출, 로봇, 컬쳐",
-    "밸류업, 제조업, 바이오", "바이오"
+    "코스닥액티브", "반도체", "수급, 배당성장", "코스닥액티브2, 배당성장",
+    "신재생, 2차전지", "이노, 소비, AI인프라", "코스피, 조선, 테크",
+    "수출, 로봇, 컬쳐", "밸류업, 제조업, 바이오", "바이오"
 ]
 
 def parse_액티브ETF(dry_run: bool) -> dict:
-    path = find_excel("액티브ETF관리")
+    # 태린이아빠 개편(2026-07): '액티브ETF관리' → '액티브ETF를 관찰하자'
+    path = find_excel("액티브ETF를 관찰하자")
     if not path:
-        return {"error": "액티브ETF관리 파일 없음"}
+        path = find_excel("액티브ETF관리")   # 구버전 호환
+    if not path:
+        return {"error": "액티브ETF(관찰하자) 파일 없음"}
     wb = load_wb(path)
     if not wb: return {"error": "열기 실패"}
 
