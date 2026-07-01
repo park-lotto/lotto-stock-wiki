@@ -97,6 +97,7 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 
 /* ── 메인 2단 레이아웃 (좌: 시그널 / 우: 라이브러리) ── */
 .main-2col { display: grid; grid-template-columns: 1.7fr 1fr; gap: 22px; align-items: start; margin: 26px 0 8px; }
+.main-left, .main-right { min-width: 0; }
 .side-title { font-size: .8rem; font-weight: 700; color: var(--muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: .5px; }
 .cat-grid-side { display: grid; grid-template-columns: 1fr; gap: 10px; }
 .cat-grid-side .cat-card { border-radius: 12px; }
@@ -144,6 +145,12 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .bh-label { font-size: .82rem; font-weight: 600; color: var(--txt); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bh-meta { font-size: .68rem; color: var(--muted); margin-top: 3px; }
 .bh-empty { font-size: .74rem; color: var(--muted); padding: 8px 2px; }
+.bh-item.deletable { display: flex; align-items: center; gap: 8px; }
+.bh-main { flex: 1; min-width: 0; }
+.bh-del { flex-shrink: 0; background: #201014; border: 1px solid #4a2020; color: #e59; font-size: .78rem; cursor: pointer; padding: 4px 9px; border-radius: 7px; line-height: 1; }
+.bh-del:hover { color: #fff; background: #7a1a1a; }
+.ws-merge-row { display: flex; align-items: center; gap: 6px; }
+.ws-merge-row .ws-merge-item { flex: 1; }
 .ws-note { margin-top: 8px; font-size: .74rem; color: #fbbf24; background: #2a220e; border: 1px solid #5a4a1a; border-radius: 8px; padding: 6px 10px; line-height: 1.5; }
 .ws-cancel { margin-top: 12px; background: transparent; border: 1px solid #5a1a1a; color: #f87171; border-radius: 8px; padding: 6px 16px; font-family: inherit; font-size: .78rem; cursor: pointer; }
 .ws-cancel:hover { background: #2a0e0e; }
@@ -189,8 +196,9 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .ws-resume:hover { background: #221c0a; }
 .ws-ai-label { font-size: .76rem; font-weight: 700; color: var(--txt); margin-bottom: 8px; display: flex; align-items: baseline; gap: 6px; }
 .ws-ai-label small { font-weight: 400; color: var(--muted); font-size: .68rem; }
-.ws-ask { display: flex; gap: 8px; }
+.ws-ask { display: flex; gap: 8px; align-items: flex-start; }
 .ws-ask .brief-go { padding: 8px 14px; font-size: .8rem; border-radius: 9px; }
+.ws-q-area { resize: vertical; min-height: 40px; max-height: 220px; line-height: 1.5; font-family: inherit; }
 /* 만들기 형식 선택칩 */
 .ws-opts { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 4px; }
 .ws-opt-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
@@ -655,19 +663,13 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
         <button class="ws-pull" onclick="openMergePicker()" style="margin-top:6px">+ 이전 브리핑 자료 끌어오기</button>
         <div id="ws-merge-picker" class="ws-merge-picker" style="display:none"></div>
       </div>
-      <div class="ws-ai-box ws-ai-gemini">
-        <div class="ws-ai-label">♊ Gemini 리서치 <small>구글 검색 + 출처</small></div>
+      <div class="ws-ai-box ws-ai-main">
+        <div class="ws-ai-label">🧠 스탁브레인 질문 <small>위 소스에서 인용해 답변</small></div>
         <div class="ws-ask">
-          <input type="text" id="ws-gemini" class="ws-q-input" placeholder="웹에서 최신 사실 찾아 리서치…" onkeydown="if(event.key==='Enter')wsGemini()">
-          <button class="brief-go" onclick="wsGemini()">리서치</button>
-        </div>
-      </div>
-      <div class="ws-ai-box">
-        <div class="ws-ai-label">🧠 스탁브레인 질문 <small>내 자료에서 인용</small></div>
-        <div class="ws-ask">
-          <input type="text" id="ws-q" class="ws-q-input" placeholder="내 자료에 질문… (예: 오늘 핵심 이슈 3가지)" onkeydown="if(event.key==='Enter')wsAsk()">
+          <textarea id="ws-q" class="ws-q-input ws-q-area" rows="2" placeholder="여기에 질문하세요 (예: 오늘 핵심 이슈 3가지 / 종목명 분석) · Ctrl+Enter로 전송" onkeydown="if(event.key==='Enter'&&(event.ctrlKey||event.metaKey))wsAsk()"></textarea>
           <button class="brief-go" onclick="wsAsk()">질문</button>
         </div>
+        <div class="ws-src-hint" style="margin:2px 0 0">💡 아래 골격 버튼을 누르면 그 유형에 맞는 <b>질문 틀</b>이 채워집니다. 웹 최신자료가 필요하면 <b>🔬웹 딥리서치</b>로 소스를 먼저 추가하세요.</div>
         <div class="ws-presets">
           <button class="ws-preset" onclick="wsPreset('morning')">🌅 아침브리핑</button>
           <button class="ws-preset" onclick="wsPreset('closing')">🌆 마감브리핑</button>
@@ -964,11 +966,28 @@ async function loadBriefHistory() {
     const nbs = res.notebooks || [];
     if (!nbs.length) { box.innerHTML = '<div class="bh-empty">아직 기록이 없습니다. 위에서 브리핑을 시작하면 여기에 쌓입니다.</div>'; return; }
     box.innerHTML = nbs.map(n =>
-      `<div class="bh-item" onclick="openBriefFromHistory('${escAttr(n.id)}','${escAttr(n.label)}','${escAttr(n.url||'')}')">
-        <div class="bh-label">🧠 ${escHtml(n.label)}</div>
-        <div class="bh-meta">${escHtml(n.date||'')} · ${n.atoms||0}발언 · 다시보기 →</div>
+      `<div class="bh-item deletable" title="소스에서 뽑은 발언(문장) 수. 최대 200개까지 모읍니다">
+        <div class="bh-main" onclick="openBriefFromHistory('${escAttr(n.id)}','${escAttr(n.label)}','${escAttr(n.url||'')}')">
+          <div class="bh-label">🧠 ${escHtml(n.label)}</div>
+          <div class="bh-meta">${escHtml(n.date||'')} · 소스발언 ${n.atoms||0}개 · 다시보기 →</div>
+        </div>
+        <button class="bh-del" title="목록에서 삭제" onclick="forgetBrief(event,'${escAttr(n.id)}','${escAttr(n.label)}')">✕</button>
       </div>`).join('');
   } catch(e) { box.innerHTML = '<div class="bh-empty">기록을 불러오지 못했습니다.</div>'; }
+}
+async function forgetBrief(ev, id, label) {
+  ev.stopPropagation();
+  if (!confirm(`"${label}" 브리핑을 목록에서 삭제할까요?`)) return;
+  try {
+    await apiFetch('/api/insights/notebook_forget', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    toast('삭제했습니다');
+    if (qs('#brief-history')) loadBriefHistory();
+    const mp = qs('#ws-merge-picker');
+    if (mp && mp.style.display === 'block') { mp.style.display = 'none'; openMergePicker(); }
+  } catch(e) { toast('삭제 실패: ' + e.message, true); }
 }
 
 // ── 🔥 오늘의 시그널 ──
@@ -1597,8 +1616,12 @@ async function openMergePicker() {
     const res = await apiFetch('/api/insights/notebooks');
     const nbs = (res.notebooks || []).filter(n => n.id !== ws.id);
     if (!nbs.length) { box.innerHTML = '<div class="ws-src-item" style="color:var(--muted)">아직 다른 브리핑이 없습니다.</div>'; return; }
-    box.innerHTML = nbs.map(n =>
-      `<label class="ws-merge-item"><input type="checkbox" class="ws-merge-cb" value="${n.id}"> ${escHtml(n.label)} <small>${n.date} · ${n.atoms}발언</small></label>`
+    box.innerHTML = '<div class="ws-src-hint" style="margin-bottom:6px">체크 → 끌어오면 그 브리핑의 소스가 <b>이 노트북에 합쳐져</b> 위 스탁브레인 질문이 함께 인용합니다.</div>'
+      + nbs.map(n =>
+      `<div class="ws-merge-row">
+        <label class="ws-merge-item"><input type="checkbox" class="ws-merge-cb" value="${n.id}"> ${escHtml(n.label)} <small>${n.date} · 발언 ${n.atoms}개</small></label>
+        <button class="bh-del" title="이 브리핑 삭제" onclick="forgetBrief(event,'${escAttr(n.id)}','${escAttr(n.label)}')">✕</button>
+      </div>`
     ).join('') + `<button class="brief-go" style="margin-top:8px;width:100%" onclick="doMerge()">선택한 자료 끌어오기</button>`;
   } catch(e) { box.innerHTML = `<div class="ws-src-item" style="color:#e88">불러오기 실패: ${escHtml(e.message)}</div>`; }
 }
@@ -1740,19 +1763,19 @@ async function wsAction(btn, kind) {
 }
 
 const WS_PRESETS = {
-  morning: { q: '오늘 장 시작 전 꼭 알아야 할 것만 정리해줘. ① 핵심 이슈 3~5개 ② 주목 종목과 이유 ③ 오늘 일정·이벤트·실적발표 ④ 수급 포인트(외국인·기관) ⑤ 리스크. 소제목으로 구조화하고 종목명·수치 포함.' },
-  closing: { q: '오늘 장 마감 관점에서 정리해줘. ① 오늘 주목받은 종목·섹터와 그 이유 ② 수급 변화 ③ 특징주·급등락 배경 ④ 내일 이어볼 포인트 ⑤ 체크할 일정. 소제목으로 구조화.' },
-  stock: { q: '종목 관점에서 심층 분석해줘. 종목별로 ① 펀더멘털(실적·밸류·컨센서스) ② 모멘텀·촉매 ③ 수급 ④ 리스크 ⑤ 목표가·투자의견을 자세히. (특정 종목을 원하면 종목명을 함께 적어 다시 질문)' },
-  sector: { q: '섹터 관점에서 심층 분석해줘. ① 업황·사이클 위치 ② 대장주와 후발주 ③ 밸류체인·수혜 구조 ④ 수급 흐름 ⑤ 정책·이벤트 ⑥ 리스크.' },
-  market: { q: '시장 전체 관점에서 종합 정리해줘. ① 지수 동향 ② 수급(외국인·기관·개인) ③ 주도 섹터 ④ 매크로(환율·금리·미국장) ⑤ 변동성·리스크 ⑥ 향후 일정.' },
-  vacuum: { q: '수급이 비어있다 새로 들어오는 "빈집" 관점에서 종목·섹터를 찾아 정리해줘. 수급 연속성, 거래대금 변화, 신규 진입 자금, 소외됐다 돌아서는 신호 중심으로.' },
-  leader: { q: '주도 섹터의 대장주와 따라갈 후발주를 포착해줘. RS강도, 수급 쏠림, 재료 강도, 거래대금 기준으로 1군(대장)/2군(후발)을 구분해서.' },
-  compare: { q: '끌어온 자료들 사이의 공통점, 차이, 서로 충돌하는 견해를 비교 정리해줘. 어느 소스가 무엇을 말하는지 명시하고 종합 판단도 덧붙여.' },
+  morning: { q: '이 소스들로 [장 시작 전 브리핑]을 다음 골격으로 작성해줘.\n1) 오늘의 한 줄 — 장 전 가장 중요한 것 (출처·날짜)\n2) 핵심 이슈 3~5개 — 각 이슈: 무슨 일 / 관련 종목 / 왜 중요 (소스 직접인용+출처·날짜)\n3) 주목 종목 — 종목명 · 이유 · 오늘 확인할 포인트\n4) 오늘 일정 — 실적발표·이벤트·지표·공시\n5) 수급 — 외국인·기관 방향, 합의 vs 충돌\n6) 리스크 — 조심할 것 (조건부: A면 B)' },
+  closing: { q: '이 소스들로 [장 마감 브리핑]을 다음 골격으로 작성해줘.\n1) 오늘의 한 줄 — 마감 핵심 (출처·날짜)\n2) 주도 섹터·종목 — 오늘 움직인 것과 이유 (소스 인용+출처·날짜)\n3) 특징주 — 급등/급락 종목과 배경\n4) 수급 변화 — 오늘 들어온/빠진 곳\n5) 내일 이어볼 포인트 — 연속성 있는 재료\n6) 체크 일정 — 내일·이번주 이벤트' },
+  stock: { q: '[종목 심층분석] — 분석할 종목: (여기에 종목명 입력) ← 종목명을 적고 질문하세요.\n다음 골격으로: 1) 결론(투자의견 방향, 출처·날짜) 2) 재료·촉매(강도 상/중/하, 소스 인용) 3) 펀더멘털(실적·밸류·컨센서스 변화) 4) 수급(외국인·기관·거래대금) 5) 목표가·투자의견(증권사별, 날짜) 6) 리스크 7) 시나리오(A면 B, B면 C)' },
+  sector: { q: '[섹터 심층분석] — 분석할 섹터: (여기에 섹터명 입력) ← 섹터명을 적고 질문하세요.\n다음 골격으로: 1) 결론(업황 방향) 2) 사이클 위치(업턴/다운턴 근거) 3) 대장주 vs 후발주(1군/2군 구분+이유) 4) 밸류체인·수혜 구조 5) 수급 흐름 6) 정책·이벤트 촉매(출처·날짜) 7) 리스크. 모든 종목·수치에 출처·날짜.' },
+  market: { q: '이 소스들로 [시장 심층 브리핑]을 다음 골격으로: 1) 결론(오늘 시장 성격 한 줄) 2) 지수(코스피·코스닥·나스닥 동향, 출처·날짜) 3) 수급(외국인·기관·개인 방향) 4) 주도 섹터·소외 섹터 5) 매크로(환율·금리·유가·미국장) 6) 변동성·리스크 7) 향후 일정. 소스 직접인용+출처·날짜.' },
+  vacuum: { q: '[수급 빈집 포착] — 이 소스들에서 수급이 비었다가 새로 들어오는 종목·섹터를 찾아줘. 골격: 1) 후보 종목/섹터 리스트 2) 각 후보: 수급 연속성(며칠째) · 거래대금 변화 · 신규 진입 자금 근거(소스 인용+출처·날짜) 3) 소외됐다 돌아서는 신호 4) 우선순위(강→약)와 이유. 근거 없으면 넣지 마라.' },
+  leader: { q: '[대장주-후발주 포착] — 주도 섹터의 대장(1군)과 따라갈 후발(2군)을 구분해줘. 골격: 1) 주도 섹터 판단(근거) 2) 1군 대장주 — RS강도·수급쏠림·재료강도·거래대금 (출처·날짜) 3) 2군 후발주 — 대장 대비 갭·따라갈 이유 4) 매매 시나리오(대장 먼저면 후발 언제). 소스에 근거 있는 종목만.' },
+  compare: { q: '[소스 교차비교] — 이 노트북의 소스들 사이에서 같은 종목·이슈에 대한 견해를 비교해줘. 골격: 1) 합의(여러 소스가 같은 말, N건, 출처·날짜) 2) 충돌(엇갈리는 견해 — 각각 누가 뭐라 했는지 인용) 3) 한쪽만 말한 것(단독 정보) 4) 종합 판단(어느 쪽이 더 설득력, 이유).' },
 };
 function wsPreset(k) {
   const p = WS_PRESETS[k]; if (!p) return;
-  const inp = qs('#ws-q'); if (inp) inp.value = p.q;
-  wsAsk();
+  const inp = qs('#ws-q');
+  if (inp) { inp.value = p.q; inp.focus(); }   // 자동실행 X — 골격 확인/종목명 추가 후 질문
 }
 
 const WS_STUDIO_PROMPTS = {

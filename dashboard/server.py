@@ -56,16 +56,19 @@ def _load_nb_registry():
         return []
 
 
-def _nb_registry_add(entry):
-    reg = [e for e in _load_nb_registry() if e.get("id") != entry.get("id")]
-    reg.insert(0, entry)
-    reg = reg[:100]
+def _save_nb_registry(reg):
     try:
         os.makedirs(os.path.dirname(_REGISTRY_PATH), exist_ok=True)
         with open(_REGISTRY_PATH, "w", encoding="utf-8") as f:
-            json.dump(reg, f, ensure_ascii=False, indent=1)
+            json.dump(reg[:100], f, ensure_ascii=False, indent=1)
     except Exception:
         pass
+
+
+def _nb_registry_add(entry):
+    reg = [e for e in _load_nb_registry() if e.get("id") != entry.get("id")]
+    reg.insert(0, entry)   # 최신이 앞
+    _save_nb_registry(reg)
 
 
 def _env_key(name):
@@ -2755,12 +2758,10 @@ async def api_insights_notebook_query(req: Request):
             "3. 같은 방향 소스가 여럿이면 '합의(N건)', 엇갈리면 '⚠️충돌'로 표시하고 양쪽을 다 보여줘라.\n"
             "4. '지켜봐야 한다'식 양면론·관망으로 끝내지 마라. 수치 근거로 방향을 분명히 하되, "
             "'A면 B' 식 조건부로 써라.\n\n"
-            "[브리핑 기본 구조 — 이 순서·소제목으로 작성]\n"
-            "① 한 줄 결론 — 오늘 가장 중요한 한 가지 (핵심 출처·날짜 포함)\n"
-            "② 핵심 팩트 — 종목/이슈별로 소제목을 나누고, 각 항목은 소스 발언 직접인용 + (출처, 날짜)\n"
-            "③ 수급·모멘텀 — 목표가·투자의견 변화, 합의 vs 충돌\n"
-            "④ 최근 리포트 — 리포트 소스에서 나온 목표가·투자의견을 (증권사/리포트명, 날짜)와 함께 정리\n"
-            "⑤ 관전 포인트 — 그래서 무엇을 볼 것인가, 조건부 전략으로\n\n"
+            "[구조] 질문이 특정 구조·항목을 지정했으면 그 구조를 그대로 따르라. "
+            "지정이 없으면 이 기본 브리핑 구조로: ①한 줄 결론 ②핵심 팩트(종목/이슈별 소제목+직접인용+출처·날짜) "
+            "③수급·모멘텀(목표가·투자의견 변화, 합의 vs 충돌) ④최근 리포트(증권사/리포트명·날짜) "
+            "⑤관전 포인트(조건부 전략).\n\n"
             "[형식] 한국어. 이 노트북에 연결된 모든 소스를 교차 활용. "
             "새 리포트·문서·노트 같은 아티팩트는 만들지 말고 채팅 답변으로만, "
             "영어 사고과정 설명 없이 결과만 써라."
@@ -3049,12 +3050,43 @@ async def api_insights_gemini_chat(req: Request):
 @app.get("/api/insights/notebooks")
 def api_insights_notebooks():
     """만든 브리핑(자료) 목록 — 이전 자료 끌어오기 픽커용."""
-    reg = _load_nb_registry()
-    return JSONResponse(content={"notebooks": [
-        {"id": e.get("id"), "label": e.get("label", ""), "date": e.get("date", ""),
-         "atoms": e.get("atoms", 0),
-         "url": e.get("url", "") or (f"https://notebooklm.google.com/notebook/{e.get('id')}" if e.get("id") else "")}
-        for e in reversed(reg) if e.get("id")]})
+    reg = _load_nb_registry()   # 최신이 앞
+    out, seen = [], set()
+    for e in reg:
+        nid = e.get("id")
+        if not nid:
+            continue
+        key = (e.get("label", ""), e.get("date", ""))   # 같은 라벨+날짜는 중복 → 최신만
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append({
+            "id": nid, "label": e.get("label", ""), "date": e.get("date", ""),
+            "atoms": e.get("atoms", 0),
+            "url": e.get("url", "") or f"https://notebooklm.google.com/notebook/{nid}"})
+    return JSONResponse(content={"notebooks": out})
+
+
+@app.post("/api/insights/notebook_forget")
+async def api_insights_notebook_forget(req: Request):
+    """브리핑을 목록에서 삭제(레지스트리+스냅샷). hard=true면 NotebookLM 노트북도 삭제."""
+    body = {}
+    try:
+        body = await req.json()
+    except Exception:
+        pass
+    nid = (body.get("id") or "").strip()
+    if not nid:
+        return JSONResponse(content={"error": "id 필요"}, status_code=400)
+    reg = [e for e in _load_nb_registry() if e.get("id") != nid]
+    _save_nb_registry(reg)
+    try:
+        os.remove(_history_path(nid))
+    except Exception:
+        pass
+    if body.get("hard") and _nlm_exe():
+        _run_nlm(["notebook", "delete", nid, "--confirm"], timeout=60)
+    return JSONResponse(content={"ok": True})
 
 
 @app.get("/api/insights/recent_reports")
