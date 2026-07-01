@@ -573,6 +573,17 @@ document.getElementById("tab-bar").addEventListener("click",e=>{
 document.getElementById("grid").addEventListener("click",e=>{
   const se=e.target.closest(".sec-edit-btn");
   if(se){ e.stopPropagation(); openSectorEdit(se.dataset.secedit); return; }
+  // 섹터명 클릭 → 섹터 뉴스+빈집 팝오버
+  const sn=e.target.closest(".sec-name");
+  if(sn){
+    const tile=sn.closest(".tile");
+    const rows=[...tile.querySelectorAll(".stock-row")];
+    const codes=rows.map(r=>r.dataset.code).filter(Boolean);
+    const names=rows.map(r=>r.dataset.name);
+    const title=sn.querySelector(".sec-edit-btn")?.dataset.secedit||(sn.textContent||"").replace("✎","").trim();
+    if(codes.length) openSectorDetail({codes, names, title, anchor:tile});
+    return;
+  }
   const btn=e.target.closest(".fav-btn");
   if(!btn){
     // 종목 행 클릭 → 차트 모달 (★/더보기/✎ 아닌 경우)
@@ -647,7 +658,10 @@ function _nfStyle(){
   .nf-toggle{margin-left:auto;color:#888;font-size:11.5px;}
   .nf-stnews{display:none;flex-direction:column;gap:4px;padding:4px 0 8px 14px;}
   .nf-stock.open .nf-stnews{display:flex;}
-  .nf-stock.open .nf-toggle{color:var(--gold,#d4af37);}`;
+  .nf-stock.open .nf-toggle{color:var(--gold,#d4af37);}
+  #etf-pop{width:360px;max-width:92vw;}
+  .sec-name{cursor:pointer;}
+  .sec-name:hover{color:var(--gold,#d4af37);}`;
   document.head.appendChild(s);
 }
 async function loadNewsTab(){
@@ -1037,31 +1051,41 @@ function _etfPopClose(){
   _etfPopCode=null;
   document.querySelectorAll(".etf-chip.active").forEach(c=>c.classList.remove("active"));
 }
-function etfExpand(code, name, chip){
+function etfExpand(code, name, chip){ openSectorDetail({etf:code, title:name, anchor:chip}); }
+
+// 섹터 상세 팝오버: 섹터뉴스 + 빈집종목 + 종목뉴스(펼침). ETF칩·히트맵타일 공용
+function openSectorDetail({etf, codes, names, title, anchor}){
+  _nfStyle();
   const p=_etfPop();
-  if(_etfPopCode===code && p.classList.contains("open")){ _etfPopClose(); return; }
-  _etfPopCode=code;
+  const key = etf?("etf:"+etf):("codes:"+(codes||[]).join(","));
+  if(_etfPopCode===key && p.classList.contains("open")){ _etfPopClose(); return; }
+  _etfPopCode=key;
   document.querySelectorAll(".etf-chip.active").forEach(c=>c.classList.remove("active"));
-  if(chip) chip.classList.add("active");
-  const r=(chip||document.body).getBoundingClientRect();
-  p.style.left=Math.max(6,Math.min(r.left, window.innerWidth-320))+"px";
+  if(anchor && anchor.classList && anchor.classList.contains("etf-chip")) anchor.classList.add("active");
+  const r=(anchor||document.body).getBoundingClientRect();
+  p.style.left=Math.max(6,Math.min(r.left, window.innerWidth-372))+"px";
   p.style.top=(r.bottom+4)+"px";
-  p.innerHTML=`<div class="ep-hd">${esc(name)} 편입종목 <small>(수급빈집순)</small></div><div class="ep-empty">불러오는 중…</div>`;
+  p.innerHTML=`<div class="ep-hd">${esc(title||"")} <small>불러오는 중…</small></div>`;
   p.classList.add("open");
-  fetch("/api/etf_constituents?code="+encodeURIComponent(code)).then(r=>r.json()).then(d=>{
-    if(_etfPopCode!==code) return;
-    const st=(d&&d.stocks)||[];
-    if(!st.length){ p.innerHTML=`<div class="ep-hd">${esc(name)} 편입종목</div><div class="ep-empty">구성종목 조회 실패</div>`; return; }
-    const rows=st.map(s=>{
-      const g=(s.group||"")+""; let col="#9a9a9a";
-      if(g.indexOf("완전빈집")>=0)col="#2ecc71"; else if(g.indexOf("반빈집")>=0)col="#7bd88f";
-      else if(g.indexOf("과열")>=0)col="#e74c3c"; else if(g.indexOf("매수우위")>=0)col="#e0803c";
-      const vac=(s.pct!=null)?`<span style="color:${col}">${g} ${Math.round(s.pct)}%</span>`:`<span style="color:#666">미수록</span>`;
-      return `<div class="ep-row"><span class="ep-nm" onclick="openStockChart('${s.code}','${esc(s.name)}');_etfPopClose()">${esc(s.name)}</span>`
-        +`<span class="ep-w">${esc(s.weight||"")}</span><span class="ep-vac">${vac}</span></div>`;
+  const q = etf?("etf="+encodeURIComponent(etf)):("codes="+encodeURIComponent((codes||[]).join(",")));
+  fetch("/api/sector_detail?"+q+"&title="+encodeURIComponent(title||"")).then(r=>r.json()).then(d=>{
+    if(_etfPopCode!==key) return;
+    const nameMap={}; (codes||[]).forEach((c,i)=>{ if(names&&names[i]) nameMap[String(c).padStart(6,'0')]=names[i]; });
+    const sn=(d.sector_news||[]).map(n=>`<a class="nf-hl" href="${n.url}" target="_blank" rel="noopener">📰 ${esc(n.title)}<span class="nf-meta">${esc(n.date||"")}</span></a>`).join("");
+    const st=(d.stocks||[]).map(s=>{
+      const nm=nameMap[s.code]||s.name||s.code, nn=s.news||[], g=s.group||""; let col="#9a9a9a";
+      if(g.includes("완전빈집"))col="#2ecc71"; else if(g.includes("반빈집"))col="#7bd88f"; else if(g.includes("과열"))col="#e74c3c"; else if(g.includes("매수우위"))col="#e0803c";
+      const vac=s.pct!=null?`<span style="color:${col};font-size:11.5px">${g} ${Math.round(s.pct)}%</span>`:`<span style="color:#666;font-size:11px">미수록</span>`;
+      const news=nn.map(n=>`<a class="nf-hl sub" href="${n.url}" target="_blank" rel="noopener">· ${esc(n.title)}<span class="nf-meta">${esc(n.src||"")} ${esc(n.date||"")}</span></a>`).join("");
+      return `<div class="nf-stock"><div class="nf-strow" onclick="this.parentNode.classList.toggle('open')">`
+        +`<span class="nf-nm" onclick="event.stopPropagation();openStockChart('${s.code}','${esc(nm)}');_etfPopClose()">${esc(nm)}</span>`
+        +`${vac}<span class="nf-toggle">${nn.length?('뉴스 '+nn.length+' ▾'):''}</span></div>`
+        +`<div class="nf-stnews">${news}</div></div>`;
     }).join("");
-    p.innerHTML=`<div class="ep-hd">${esc(name)} 편입종목 <small>(수급빈집순 · 클릭=차트)</small></div>`+rows;
-  }).catch(()=>{ if(_etfPopCode===code) p.innerHTML=`<div class="ep-hd">${esc(name)}</div><div class="ep-empty">오류</div>`; });
+    p.innerHTML=`<div class="ep-hd">${esc(d.title||title||"")} <small>(빈집순 · 클릭=차트)</small></div>`
+      +(sn?`<div class="nf-secnews" style="padding:2px 12px 8px">${sn}</div>`:"")
+      +`<div style="max-height:52vh;overflow-y:auto;padding:0 8px 6px">${st||'<div class="ep-empty">종목 없음</div>'}</div>`;
+  }).catch(()=>{ if(_etfPopCode===key) p.innerHTML=`<div class="ep-hd">${esc(title||"")}</div><div class="ep-empty">오류</div>`; });
 }
 
 async function loadEtfBar(){

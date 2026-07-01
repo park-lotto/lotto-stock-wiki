@@ -1075,6 +1075,60 @@ def api_news_feed():
         return JSONResponse(content={"sectors": [], "ts": 0})
 
 
+_sd2_cache: dict = {}   # {key: {"data":..., "ts":...}}
+
+@app.get("/api/sector_detail")
+def api_sector_detail(etf: str = "", codes: str = "", title: str = ""):
+    """섹터 상세: 섹터뉴스 + 종목별(빈집 osc + 종목뉴스). etf=ETF코드 / codes=종목코드목록(콤마)."""
+    key = f"etf:{etf}" if etf else f"codes:{codes}"
+    now = time.time()
+    c = _sd2_cache.get(key)
+    if c and now - c["ts"] < 300:
+        return JSONResponse(content=c["data"])
+    import sys as _sys
+    _sd = os.path.join(ROOT, "scripts")
+    if _sd not in _sys.path:
+        _sys.path.insert(0, _sd)
+    import news_feed as nf
+    tk = {}
+    try:
+        with open(TAERINI_STOCK_PATH, encoding="utf-8") as f:
+            tk = json.load(f).get("stocks") or {}
+    except Exception:
+        pass
+    sector_news, metas = [], []
+    if etf:
+        ec = etf.zfill(6) if etf.isdigit() else etf
+        try:
+            cons = _fetch_etf_constituents(ec)
+        except Exception:
+            cons = []
+        for co in cons:
+            metas.append((str(co.get("itemCode") or "").zfill(6), co.get("itemName")))
+        for s in (_NEWS_FEED.get("data") or {}).get("sectors", []):
+            if str(s.get("code")) == ec:
+                sector_news = s.get("news", []); break
+        if not sector_news:
+            sector_news = nf.sector_news(ec, top=2)
+    else:
+        for cc in [x.strip().zfill(6) for x in codes.split(",") if x.strip()][:12]:
+            metas.append((cc, (tk.get(cc) or {}).get("name")))
+
+    from concurrent.futures import ThreadPoolExecutor
+    def _build(m):
+        cc, nm = m
+        o = (tk.get(cc) or {}).get("osc") or {}
+        return {"code": cc, "name": nm or (tk.get(cc) or {}).get("name") or cc,
+                "pct": o.get("pct"), "group": o.get("group"),
+                "news": nf.stock_news(cc, top=2)}
+    with ThreadPoolExecutor(max_workers=6) as ex:
+        stocks = list(ex.map(_build, metas))
+    stocks.sort(key=lambda s: s["pct"] if s["pct"] is not None else 999)
+    out = {"title": title or etf, "sector_news": sector_news, "stocks": stocks}
+    _sd2_cache[key] = {"data": out, "ts": now}
+    return JSONResponse(content=out)
+
+
 _etfcon_cache: dict = {}   # {code: {"data":..., "ts":...}}
 
 @app.get("/api/etf_constituents")
