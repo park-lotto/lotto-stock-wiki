@@ -121,8 +121,9 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .lib-back { margin-left: auto; background: none; border: 1px solid var(--line); color: var(--muted); font-size: .68rem; padding: 2px 8px; border-radius: 6px; cursor: pointer; font-family: inherit; font-weight: 400; }
 .lib-back:hover { color: #f87171; border-color: #5a1a1a; }
 .lib-det-head { display: flex; align-items: center; }
-.lib-browse { margin-top: 8px; max-height: 460px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
-.lb-src { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.lib-browse { margin-top: 8px; max-height: 460px; overflow-y: auto; display: block; }
+.lb-src { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-bottom: 5px; flex-shrink: 0; }
+.lb-src-head, .lb-doc-head { min-height: 30px; }
 .lb-src-head { display: flex; align-items: center; gap: 8px; padding: 7px 10px; cursor: pointer; background: var(--bg); }
 .lb-src-head:hover { background: #1c1c22; }
 .lb-src-head.open { background: #1c1c22; }
