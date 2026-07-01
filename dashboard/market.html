@@ -492,7 +492,8 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
   <button class="tab" data-tab="ai">AI</button>
   <button class="tab" data-tab="auto">자동차</button>
   <button class="tab" data-tab="theme">테마</button>
-  <button class="tab" data-tab="edit" style="margin-left:auto;color:#888">⚙️ 편집</button>
+  <button class="tab" data-tab="news" style="margin-left:auto">📰 뉴스</button>
+  <button class="tab" data-tab="edit" style="color:#888">⚙️ 편집</button>
 </div>
 
 <div class="main">
@@ -622,7 +623,63 @@ function loadActive(){
   }
   else if(activeTab==="all") loadOverview();
   else if(activeTab==="edit") loadEditTab();
+  else if(activeTab==="news") loadNewsTab();
   else loadTab(activeTab);
+}
+
+// ── 📰 뉴스 탭 (강한섹터 + 빈집종목 + 뉴스) ──────────────────
+function _nfStyle(){
+  if(document.getElementById("nf-style"))return;
+  const s=document.createElement("style"); s.id="nf-style";
+  s.textContent=`
+  .nf-card{background:#141419;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:2px;}
+  .nf-hd{font-size:15px;color:#fff;margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+  .nf-secnews{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;}
+  .nf-hl{color:#cfcfe0;text-decoration:none;font-size:13px;display:flex;gap:8px;align-items:baseline;}
+  .nf-hl:hover{color:var(--gold,#d4af37);}
+  .nf-hl.sub{color:#aaa;font-size:12.5px;}
+  .nf-meta{color:#777;font-size:11px;flex-shrink:0;margin-left:auto;}
+  .nf-stocks{display:flex;flex-direction:column;gap:4px;border-top:1px solid #1e1e26;padding-top:8px;}
+  .nf-strow{display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer;padding:4px 0;}
+  .nf-strow:hover{background:#1a1a22;}
+  .nf-nm{color:#eee;font-weight:600;cursor:pointer;}
+  .nf-nm:hover{color:var(--gold,#d4af37);text-decoration:underline;}
+  .nf-toggle{margin-left:auto;color:#888;font-size:11.5px;}
+  .nf-stnews{display:none;flex-direction:column;gap:4px;padding:4px 0 8px 14px;}
+  .nf-stock.open .nf-stnews{display:flex;}
+  .nf-stock.open .nf-toggle{color:var(--gold,#d4af37);}`;
+  document.head.appendChild(s);
+}
+async function loadNewsTab(){
+  _nfStyle();
+  const grid=document.getElementById("grid");
+  grid.innerHTML=`<div style="grid-column:1/-1;color:#888;padding:20px">뉴스 불러오는 중…</div>`;
+  let d; try{ d=await (await fetch("/api/news_feed")).json(); }catch(_){ d={sectors:[]}; }
+  const secs=d.sectors||[];
+  if(!secs.length){ grid.innerHTML=`<div style="grid-column:1/-1;color:#888;padding:24px">뉴스 준비중 (백그라운드 20분 주기 수집). 잠시 후 다시 눌러주세요.</div>`; return; }
+  grid.innerHTML=secs.map(s=>{
+    const rc=s.rate>0?"up":s.rate<0?"dn":"neu";
+    const rs=(s.rate>0?"+":"")+(Number(s.rate)||0).toFixed(2)+"%";
+    const secNews=(s.news||[]).map(n=>`<a class="nf-hl" href="${n.url}" target="_blank" rel="noopener">📰 ${esc(n.title)}<span class="nf-meta">${esc(n.date||"")}</span></a>`).join("");
+    const stocks=(s.stocks||[]).map(st=>{
+      const nn=st.news||[]; const g=st.group||""; let col="#9a9a9a";
+      if(g.includes("완전빈집"))col="#2ecc71"; else if(g.includes("반빈집"))col="#7bd88f"; else if(g.includes("과열"))col="#e74c3c"; else if(g.includes("매수우위"))col="#e0803c";
+      const vac=st.pct!=null?`<span style="color:${col};font-size:12px">${g} ${Math.round(st.pct)}%</span>`:"";
+      const news=nn.map(n=>`<a class="nf-hl sub" href="${n.url}" target="_blank" rel="noopener">· ${esc(n.title)}<span class="nf-meta">${esc(n.src||"")} ${esc(n.date||"")}</span></a>`).join("");
+      return `<div class="nf-stock">
+        <div class="nf-strow" onclick="this.parentNode.classList.toggle('open')">
+          <span class="nf-nm" onclick="event.stopPropagation();openStockChart('${st.code}','${esc(st.name)}')">${esc(st.name)}</span>
+          ${vac}<span class="nf-toggle">${nn.length?('뉴스 '+nn.length+' ▾'):'뉴스없음'}</span>
+        </div>
+        <div class="nf-stnews">${news||'<span style="color:#666;font-size:11px">뉴스 없음</span>'}</div>
+      </div>`;
+    }).join("");
+    return `<div class="nf-card" style="grid-column:1/-1">
+      <div class="nf-hd"><b>${esc(s.etf||"")}</b><span class="etf-rate ${rc}">${rs}</span></div>
+      <div class="nf-secnews">${secNews||'<span style="color:#666;font-size:12px">섹터뉴스 없음</span>'}</div>
+      <div class="nf-stocks">${stocks}</div>
+    </div>`;
+  }).join("");
 }
 
 // ── 클라이언트 탭 캐시 (세션 내 즉시 렌더) ──────────────────
