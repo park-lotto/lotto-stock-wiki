@@ -784,6 +784,116 @@ def api_etf_bar():
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
 
+_sv_cache: dict = {"data": None, "ts": 0.0}
+_SV_TTL = 600   # 10분
+
+def _fetch_etf_constituents(code: str) -> list:
+    """네이버 모바일 API로 ETF 상위10 편입종목 파싱."""
+    import urllib.request
+    url = f"https://m.stock.naver.com/api/stock/{code}/etfAnalysis"
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=8) as resp:
+        d = json.load(resp)
+    return d.get("etfTop10MajorConstituentAssets") or []
+
+
+@app.get("/api/sector_vacuum")
+def api_sector_vacuum(top: int = 5):
+    """오늘 강한 ETF섹터 상위 → 각 ETF 실제 편입종목 → 수급빈집(osc) 우선정렬."""
+    now = time.time()
+    if _sv_cache["data"] and now - _sv_cache["ts"] < _SV_TTL:
+        return JSONResponse(content=_sv_cache["data"])
+
+    # 1) 등락률 포함 etf_bar 확보 (프리워밍 캐시 우선, 없으면 즉석 계산)
+    etfs = None
+    cached = _prewarm_cache.get("etf_bar")
+    if cached and cached.get("data"):
+        etfs = cached["data"]
+    if not etfs and parse_etf_bar is not None:
+        try:
+            import kis_api
+            etfs = parse_etf_bar()
+            prices = kis_api.get_prices_batch_parallel([e["code"] for e in etfs])
+            for e in etfs:
+                p = prices.get(e["code"]) or {}
+                e["change_rate"] = float(p.get("change_rate", 0) or 0)
+        except Exception:
+            etfs = etfs or []
+
+    # 2) osc 로드
+    tk = {}
+    try:
+        with open(TAERINI_STOCK_PATH, encoding="utf-8") as f:
+            tk = json.load(f).get("stocks") or {}
+    except Exception:
+        pass
+
+    # 3) 상위 N ETF (등락률 내림차순, 양수 우선)
+    top_etfs = sorted([e for e in (etfs or []) if e.get("change_rate") is not None],
+                      key=lambda x: x.get("change_rate", 0), reverse=True)[:max(1, min(top, 8))]
+
+    from concurrent.futures import ThreadPoolExecutor
+    def _build(e):
+        try:
+            cons = _fetch_etf_constituents(e["code"])
+        except Exception:
+            cons = []
+        stocks = []
+        for c in cons:
+            cc = str(c.get("itemCode") or "").zfill(6)
+            o = (tk.get(cc) or {}).get("osc") or {}
+            stocks.append({"code": cc, "name": c.get("itemName"), "weight": c.get("etfWeight"),
+                           "pct": o.get("pct"), "group": o.get("group")})
+        stocks.sort(key=lambda s: s["pct"] if s["pct"] is not None else 999)  # 빈집(낮은 %ile) 우선
+        return {"etf": e.get("name"), "code": e.get("code"),
+                "rate": round(float(e.get("change_rate", 0) or 0), 2), "stocks": stocks}
+
+    result = []
+    with ThreadPoolExecutor(max_workers=5) as ex:
+        for r in ex.map(_build, top_etfs):
+            result.append(r)
+    result.sort(key=lambda x: x["rate"], reverse=True)
+
+    out = {"sectors": result, "ts": now}
+    _sv_cache["data"] = out
+    _sv_cache["ts"] = now
+    return JSONResponse(content=out)
+
+
+_etfcon_cache: dict = {}   # {code: {"data":..., "ts":...}}
+
+@app.get("/api/etf_constituents")
+def api_etf_constituents(code: str = ""):
+    """단일 ETF 실제 편입종목 + 수급빈집(osc) — 상단 ETF칩 클릭 펼침용."""
+    code = (code or "").strip().zfill(6) if (code or "").strip().isdigit() else (code or "").strip()
+    if not code:
+        return JSONResponse(content={"stocks": []})
+    now = time.time()
+    c = _etfcon_cache.get(code)
+    if c and now - c["ts"] < 600:
+        return JSONResponse(content=c["data"])
+    try:
+        cons = _fetch_etf_constituents(code)
+    except Exception as e:
+        return JSONResponse(content={"code": code, "stocks": [], "error": str(e)})
+    tk = {}
+    try:
+        with open(TAERINI_STOCK_PATH, encoding="utf-8") as f:
+            tk = json.load(f).get("stocks") or {}
+    except Exception:
+        pass
+    stocks = []
+    for it in cons:
+        cc = str(it.get("itemCode") or "").zfill(6)
+        o = (tk.get(cc) or {}).get("osc") or {}
+        stocks.append({"code": cc, "name": it.get("itemName"), "weight": it.get("etfWeight"),
+                       "pct": o.get("pct"), "group": o.get("group")})
+    stocks.sort(key=lambda s: s["pct"] if s["pct"] is not None else 999)   # 빈집 우선
+    out = {"code": code, "stocks": stocks}
+    _etfcon_cache[code] = {"data": out, "ts": now}
+    return JSONResponse(content=out)
+
+
 @app.get("/api/debug_flow")
 def api_debug_flow():
     """각 KIS API 직접 호출 진단 (서버 캐시 토큰 사용 — reload 없음)."""
@@ -3087,6 +3197,75 @@ async def api_insights_notebook_forget(req: Request):
     if body.get("hard") and _nlm_exe():
         _run_nlm(["notebook", "delete", nid, "--confirm"], timeout=60)
     return JSONResponse(content={"ok": True})
+
+
+@app.post("/api/insights/notebook_add_fresh")
+async def api_insights_notebook_add_fresh(req: Request):
+    """현재 노트북에 카테고리+기간 기준 '새 자료(추출발언 .md + 원본 URL)'를 소스로 추가."""
+    body = {}
+    try:
+        body = await req.json()
+    except Exception:
+        pass
+    nb_id = (body.get("notebook_id") or "").strip()
+    cats_raw = body.get("cats")
+    cats = cats_raw if (isinstance(cats_raw, list) and cats_raw) else None
+    period = (body.get("period") or "all").strip()
+    if period not in ("all", "today", "d3", "d7"):
+        period = "all"
+    if not nb_id:
+        return JSONResponse(content={"error": "notebook_id 필요"}, status_code=400)
+    if not _nlm_exe():
+        return JSONResponse(content={"error": "nlm CLI 없음"}, status_code=503)
+
+    bundle = await run_in_threadpool(
+        _build_notebook_bundle, "", cats, period, 200, False, True)
+    if bundle is None:
+        return JSONResponse(content={"error": "atoms.db 없음"}, status_code=503)
+    if bundle["atoms_n"] == 0:
+        return JSONResponse(content={"error": "해당 소스·기간에 발언이 없습니다"}, status_code=400)
+
+    today = datetime.now().strftime("%Y-%m-%d")
+    out_dir = os.path.join(ROOT, "out", "insights_notebook")
+    os.makedirs(out_dir, exist_ok=True)
+    safe = re.sub(r'[\\/:*?"<>|]', '_', _nb_scope_label(cats, period))[:40] or "추가"
+
+    def _do():
+        added = 0
+        for i, (src_title, md_text) in enumerate(bundle["md_files"]):
+            mp = os.path.join(out_dir, f"add_{safe}_{period}_{i}_{today}.md")
+            try:
+                with open(mp, "w", encoding="utf-8") as f:
+                    f.write(md_text)
+            except Exception:
+                continue
+            ok2, _o2, _e2 = _run_nlm(["source", "add", nb_id, "--file", mp, "--title", src_title])
+            if ok2:
+                added += 1
+        url_args = []
+        for u in bundle["yt_urls"]:
+            url_args += ["--youtube", u]
+        for u in bundle["web_urls"]:
+            url_args += ["--url", u]
+        if url_args:
+            ok3, _o3, _e3 = _run_nlm(["source", "add", nb_id] + url_args, timeout=150)
+            if ok3:
+                added += 1
+        total = added
+        okg, outg, _ = _run_nlm(["notebook", "get", nb_id])
+        if okg:
+            try:
+                total = json.loads(outg).get("source_count", added)
+            except Exception:
+                pass
+        if added == 0:
+            return {"error": "소스 추가 실패 (nlm 인증 확인)"}
+        return {"ok": True, "atoms": bundle["atoms_n"],
+                "yt": len(bundle["yt_urls"]), "web": len(bundle["web_urls"]),
+                "total_sources": total}
+
+    result = await run_in_threadpool(_do)
+    return JSONResponse(content=result, status_code=(200 if result.get("ok") else 500))
 
 
 @app.get("/api/insights/recent_reports")

@@ -27,9 +27,25 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
   background:linear-gradient(90deg,var(--panel) 70%,rgba(19,19,24,0));
   font-size:13px;font-weight:900;color:var(--gold);letter-spacing:1.5px;}
 .etf-chip{display:inline-flex;flex-direction:column;gap:2px;padding:8px 14px;
-          border-right:1px solid var(--line);min-width:120px;cursor:default;
+          border-right:1px solid var(--line);min-width:120px;cursor:pointer;
           vertical-align:top;transition:background .15s;}
 .etf-chip:hover{background:rgba(255,255,255,.04);}
+.etf-chip.active{background:rgba(212,175,55,.12);box-shadow:inset 0 -2px 0 var(--gold,#d4af37);}
+/* ETF 편입종목 펼침 팝오버 */
+#etf-pop{position:fixed;z-index:200;background:#16161c;border:1px solid #333;border-radius:10px;
+  box-shadow:0 12px 34px rgba(0,0,0,.65);padding:6px 0;min-width:300px;max-height:62vh;
+  overflow-y:auto;display:none;}
+#etf-pop.open{display:block;}
+#etf-pop .ep-hd{font-size:12px;font-weight:700;color:#eee;padding:4px 14px 8px;
+  border-bottom:1px solid #262626;margin-bottom:2px;}
+#etf-pop .ep-hd small{color:#888;font-weight:400;}
+#etf-pop .ep-row{display:flex;align-items:center;gap:8px;padding:6px 14px;font-size:12.5px;}
+#etf-pop .ep-row:hover{background:#222;}
+#etf-pop .ep-nm{flex:1;color:#eee;cursor:pointer;white-space:nowrap;}
+#etf-pop .ep-nm:hover{color:var(--gold,#d4af37);}
+#etf-pop .ep-w{color:#777;font-size:10.5px;width:46px;text-align:right;flex-shrink:0;}
+#etf-pop .ep-vac{width:104px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums;flex-shrink:0;}
+#etf-pop .ep-empty{padding:10px 14px;color:#888;font-size:12px;}
 .etf-chip .etf-name{font-size:11px;color:#999;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;}
 .etf-chip .etf-rate{font-size:14px;font-weight:700;}
 .etf-chip .etf-rate.up{color:#e74c3c;} .etf-chip .etf-rate.dn{color:#3498db;} .etf-chip .etf-rate.neu{color:#888;}
@@ -895,13 +911,59 @@ function _renderEtfBar(etfs){
   document.getElementById("etf-bar").innerHTML=title+sorted.map(e=>{
     const rc=e.change_rate>0?"up":e.change_rate<0?"dn":"neu";
     const rs=(e.change_rate>0?"+":"")+(e.change_rate||0).toFixed(2)+"%";
-    return`<div class="etf-chip">
+    return`<div class="etf-chip" onclick="etfExpand('${e.code}','${esc(shortETFName(e.name))}',this)" title="클릭 → 편입종목·수급빈집">
       <span class="etf-name">${esc(shortETFName(e.name))}</span>
       <span class="etf-rate ${rc}">${rs}</span>
       ${sparkline(e.bars,e.change_rate)}
     </div>`;
   }).join("");
 }
+
+// ── ETF칩 클릭 → 편입종목(수급빈집순) 펼침 ──
+let _etfPopCode=null;
+function _etfPop(){
+  let p=document.getElementById("etf-pop");
+  if(!p){
+    p=document.createElement("div"); p.id="etf-pop"; document.body.appendChild(p);
+    document.addEventListener("mousedown",ev=>{
+      if(p.classList.contains("open") && !p.contains(ev.target) && !ev.target.closest(".etf-chip")) _etfPopClose();
+    });
+    window.addEventListener("resize",_etfPopClose);
+  }
+  return p;
+}
+function _etfPopClose(){
+  const p=document.getElementById("etf-pop"); if(p)p.classList.remove("open");
+  _etfPopCode=null;
+  document.querySelectorAll(".etf-chip.active").forEach(c=>c.classList.remove("active"));
+}
+function etfExpand(code, name, chip){
+  const p=_etfPop();
+  if(_etfPopCode===code && p.classList.contains("open")){ _etfPopClose(); return; }
+  _etfPopCode=code;
+  document.querySelectorAll(".etf-chip.active").forEach(c=>c.classList.remove("active"));
+  if(chip) chip.classList.add("active");
+  const r=(chip||document.body).getBoundingClientRect();
+  p.style.left=Math.max(6,Math.min(r.left, window.innerWidth-320))+"px";
+  p.style.top=(r.bottom+4)+"px";
+  p.innerHTML=`<div class="ep-hd">${esc(name)} 편입종목 <small>(수급빈집순)</small></div><div class="ep-empty">불러오는 중…</div>`;
+  p.classList.add("open");
+  fetch("/api/etf_constituents?code="+encodeURIComponent(code)).then(r=>r.json()).then(d=>{
+    if(_etfPopCode!==code) return;
+    const st=(d&&d.stocks)||[];
+    if(!st.length){ p.innerHTML=`<div class="ep-hd">${esc(name)} 편입종목</div><div class="ep-empty">구성종목 조회 실패</div>`; return; }
+    const rows=st.map(s=>{
+      const g=(s.group||"")+""; let col="#9a9a9a";
+      if(g.indexOf("완전빈집")>=0)col="#2ecc71"; else if(g.indexOf("반빈집")>=0)col="#7bd88f";
+      else if(g.indexOf("과열")>=0)col="#e74c3c"; else if(g.indexOf("매수우위")>=0)col="#e0803c";
+      const vac=(s.pct!=null)?`<span style="color:${col}">${g} ${Math.round(s.pct)}%</span>`:`<span style="color:#666">미수록</span>`;
+      return `<div class="ep-row"><span class="ep-nm" onclick="openStockChart('${s.code}','${esc(s.name)}');_etfPopClose()">${esc(s.name)}</span>`
+        +`<span class="ep-w">${esc(s.weight||"")}</span><span class="ep-vac">${vac}</span></div>`;
+    }).join("");
+    p.innerHTML=`<div class="ep-hd">${esc(name)} 편입종목 <small>(수급빈집순 · 클릭=차트)</small></div>`+rows;
+  }).catch(()=>{ if(_etfPopCode===code) p.innerHTML=`<div class="ep-hd">${esc(name)}</div><div class="ep-empty">오류</div>`; });
+}
+
 async function loadEtfBar(){
   // B: localStorage 캐시 즉시 표시
   try{
