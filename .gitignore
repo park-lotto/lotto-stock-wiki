@@ -82,3 +82,5 @@ out/studio/
 deploy/stockbrain.env
 /etc/stockbrain.env
 pipeline/push_token.txt
+pipeline/news_feed.json
+pipeline/callouts/
