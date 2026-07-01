@@ -92,6 +92,42 @@ def _gemini_interactive_keys():
     _1·_2(기존)+_3·_4(추가계정) 순으로 failover."""
     return [k for k in (_env_key("GEMINI_API_KEY"), _env_key("GEMINI_API_KEY_2"),
                         _env_key("GEMINI_API_KEY_3"), _env_key("GEMINI_API_KEY_4")) if k]
+
+
+# 텍스트 생성 모델 폴백: 프리뷰(최고품질) → 안정모델. 프리뷰가 503 과부하일 때 안정모델로 자동 전환.
+GEMINI_TEXT_MODELS = ["gemini-3-flash-preview", "gemini-2.5-flash"]
+
+
+def _gemini_text(prompt, keys=None, models=None):
+    """텍스트 생성 공용 호출 — 모델 폴백 + 키 로테이션 + 503 백오프.
+    반환: {"ok":True,"analysis":str,"model":str} | {"error":str}"""
+    try:
+        from google import genai
+    except Exception as e:
+        return {"error": f"google-genai 없음: {str(e)[:120]}"}
+    keys = keys or _gemini_interactive_keys()
+    if not keys:
+        return {"error": ".env에 GEMINI_API_KEY 없음"}
+    models = models or GEMINI_TEXT_MODELS
+    last = ""
+    for model in models:
+        for k in keys:
+            client = genai.Client(api_key=k)   # 변수 유지 — GC가 호출 중 닫지 않게
+            try:
+                resp = client.models.generate_content(model=model, contents=prompt)
+                txt = (resp.text or "").strip()
+                if txt:
+                    return {"ok": True, "analysis": txt, "model": model}
+                last = "빈 응답"
+                continue   # 다음 키
+            except Exception as e:
+                last = str(e)
+                if any(s in last for s in ("503", "UNAVAILABLE", "overloaded")):
+                    break   # 503은 모델 전체 과부하 → 키 순회 중단, 곧장 다음 모델로 폴백
+                # 429(키 쿼터 소진)·기타 오류 → 다음 키 시도
+    return {"error": f"Gemini 호출 실패(과부하/쿼터): {last[:160]}"}
+
+
 SIGNAL_DIR = os.path.join(ROOT, "output", "signal")
 OUT_DIR = os.path.join(ROOT, "out")
 AGENTS_DIR = os.path.join(HERE, "agents")
@@ -3539,23 +3575,7 @@ async def api_insights_naver_board(req: Request):
             "⚠️ 제공된 본문·제목에 있는 내용만. 지어내지 마라. 과열/작전 의심 신호 보이면 표시.\n\n"
             + (("[상위 글 본문]\n" + "\n\n".join(body_lines) + "\n\n") if body_lines else "")
             + "[전체 제목(조회순)]\n" + title_lines)
-        last = ""
-        for k in keys:
-            client = genai.Client(api_key=k)
-            for attempt in range(3):
-                try:
-                    resp = client.models.generate_content(
-                        model="gemini-3-flash-preview", contents=prompt)
-                    return {"ok": True, "analysis": (resp.text or "").strip() or "(빈 응답)"}
-                except Exception as e:
-                    last = str(e)
-                    if "429" in last or "RESOURCE_EXHAUSTED" in last:
-                        break   # 다음 키
-                    if any(s in last for s in ("503", "UNAVAILABLE", "overloaded")) and attempt < 2:
-                        time.sleep(2 * (attempt + 1))
-                        continue   # 같은 키로 재시도
-                    return {"error": f"Gemini 분석 실패: {last[:200]}"}
-        return {"error": f"Gemini 호출 실패(쿼터/과부하): {last[:150]}"}
+        return _gemini_text(prompt)
 
     res = await run_in_threadpool(_analyze)
     if not res.get("ok"):
@@ -3629,22 +3649,7 @@ async def api_insights_naver_news(req: Request):
             "3) ⚠️ 주의할 악재/리스크 뉴스 있으면\n"
             "광고성(추천주·급등주·리딩·무료 등)은 빼라. 뉴스에 있는 내용만, 지어내지 마라.\n\n"
             "뉴스 목록:\n" + "\n".join(f"- {t}" for t in news[:25]))
-        last = ""
-        for k in keys:
-            client = genai.Client(api_key=k)
-            for attempt in range(3):
-                try:
-                    resp = client.models.generate_content(model="gemini-3-flash-preview", contents=prompt)
-                    return {"ok": True, "analysis": (resp.text or "").strip() or "(빈 응답)"}
-                except Exception as e:
-                    last = str(e)
-                    if "429" in last or "RESOURCE_EXHAUSTED" in last:
-                        break
-                    if any(s in last for s in ("503", "UNAVAILABLE", "overloaded")) and attempt < 2:
-                        time.sleep(2 * (attempt + 1))
-                        continue
-                    return {"error": f"Gemini 분석 실패: {last[:200]}"}
-        return {"error": f"Gemini 호출 실패: {last[:150]}"}
+        return _gemini_text(prompt)
 
     res = await run_in_threadpool(_analyze)
     if not res.get("ok"):
