@@ -1,0 +1,16 @@
+[Unit]
+Description=STOCK BRAIN Dashboard (FastAPI :8090)
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+# ▼ 서버의 실제 프로젝트 경로로 수정
+WorkingDirectory=/home/ubuntu/lotto-stock-wiki
+EnvironmentFile=/etc/stockbrain.env
+ExecStart=/usr/bin/python3 dashboard/server.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -29,7 +29,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 
 try:
     from fastapi import FastAPI, Request
-    from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse, FileResponse
+    from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse, FileResponse, RedirectResponse
     from starlette.concurrency import run_in_threadpool
     import uvicorn
 except ImportError:
@@ -139,6 +139,69 @@ CLAUDE_BIN = shutil.which("claude") or r"C:\Users\TheRose\.local\bin\claude.exe"
 AGENT_TIMEOUT = 240  # 초
 
 app = FastAPI(title="딸깍 대시보드")
+
+# ── 로그인 게이트 (지인 배포용) — 자격증명은 환경변수로만, repo에 안 올림 ──
+import hmac as _hmac, hashlib as _hashlib
+DASH_USER   = os.environ.get("DASH_USER", "admin")
+DASH_PASS   = os.environ.get("DASH_PASS", "")        # 비어있으면 인증 OFF(로컬 개발)
+DASH_SECRET = os.environ.get("DASH_SECRET", "stockbrain-local-secret")
+_AUTH_ON = bool(DASH_PASS)
+_AUTH_ALLOW = ("/login", "/api/login", "/favicon.ico", "/healthz")
+
+def _auth_token() -> str:
+    return _hmac.new(DASH_SECRET.encode(), f"{DASH_USER}:{DASH_PASS}".encode(), _hashlib.sha256).hexdigest()
+
+_LOGIN_HTML = """<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>STOCK BRAIN 로그인</title>
+<style>body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;
+background:#0b0b0e;font-family:system-ui,'Noto Sans KR',sans-serif}
+.box{background:#16161c;border:1px solid #2a2a30;border-radius:14px;padding:32px 28px;width:280px}
+h1{color:#d4af37;font-size:18px;margin:0 0 18px;text-align:center;letter-spacing:1px}
+input{width:100%;box-sizing:border-box;margin:6px 0;padding:11px 12px;background:#0e0e12;
+border:1px solid #333;border-radius:8px;color:#eee;font-size:14px}
+button{width:100%;margin-top:12px;padding:11px;background:#d4af37;color:#111;border:0;
+border-radius:8px;font-weight:700;font-size:14px;cursor:pointer}
+.err{color:#e74c3c;font-size:12px;text-align:center;margin-top:10px;min-height:14px}</style></head>
+<body><form class=box method=post action=/api/login>
+<h1>⚡ STOCK BRAIN</h1>
+<input name=user placeholder=아이디 autocomplete=username autofocus>
+<input name=pass type=password placeholder=비밀번호 autocomplete=current-password>
+<button>로그인</button>
+<div class=err>__ERR__</div></form></body></html>"""
+
+@app.get("/login", response_class=HTMLResponse)
+def _login_page(e: str = ""):
+    return _LOGIN_HTML.replace("__ERR__", "아이디 또는 비밀번호가 틀렸습니다" if e else "")
+
+@app.post("/api/login")
+async def _api_login(req: Request):
+    import urllib.parse as _up
+    body = (await req.body()).decode("utf-8", "ignore")
+    form = _up.parse_qs(body)
+    u = (form.get("user") or [""])[0]
+    p = (form.get("pass") or [""])[0]
+    if u == DASH_USER and p == DASH_PASS and _AUTH_ON:
+        r = RedirectResponse("/market", status_code=303)
+        r.set_cookie("dash_auth", _auth_token(), max_age=60*60*24*30, httponly=True, samesite="lax")
+        return r
+    return RedirectResponse("/login?e=1", status_code=303)
+
+@app.get("/healthz")
+def _healthz():
+    return {"ok": True}
+
+@app.middleware("http")
+async def _auth_guard(request: Request, call_next):
+    if not _AUTH_ON:
+        return await call_next(request)
+    path = request.url.path
+    if path in _AUTH_ALLOW or path.startswith("/static"):
+        return await call_next(request)
+    if request.cookies.get("dash_auth") == _auth_token():
+        return await call_next(request)
+    if path.startswith("/api/"):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    return RedirectResponse("/login")
 
 # ── 투자자/프로그램 시계열 누적 (장 중 15분 폴링) ──────────────────
 _FLOW: dict = {
