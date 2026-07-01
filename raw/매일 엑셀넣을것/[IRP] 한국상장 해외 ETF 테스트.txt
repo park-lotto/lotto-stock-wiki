@@ -1,0 +1,169 @@
+!pip install --upgrade yfinance --quiet
+import pandas as pd
+import yfinance as yf
+from datetime import datetime
+
+# pandas 출력 옵션 설정
+pd.set_option('display.max_rows', None)
+pd.set_option('display.max_columns', None)
+pd.set_option('display.width', 2000)
+pd.set_option('display.max_colwidth', None)
+
+# 1. 자산군 정의
+risky_assets = {
+    "133690.KS": "TIGER 미국나스닥100",
+    "360750.KS": "TIGER 미국S&P500",
+    "458730.KS": "TIGER 미국배당다우존스",
+    "101280.KS": "KODEX 일본TOPIX100",
+    "251350.KS": "KODEX 선진국MSCI World",
+    "474800.KS": "KOSEF 미국원유에너지기업",
+    "182480.KS": "TIGER 미국MSCI리츠(합성 H)",
+    "229200.KS": "KODEX 코스닥 150",
+    "069500.KS": "KODEX 200",
+}
+
+safe_assets = {
+    "476760.KS": "ACE 미국30년국채액티브",
+    "302190.KS": "TIGER 중장기국채",
+    "148070.KS": "KOSEF 국고채10년",
+    "329750.KS": "TIGER 미국달러단기채권액티브",
+    "130730.KS": "KOSEF 단기자금",
+    "411060.KS": "ACE KRX금현물"
+}
+
+canary_asset = {
+    "TIP": "TIP 물가연동채",
+    "QQQ": "QQQ 나스닥100"
+}
+
+fixed_assets = {
+    "360750.KS": 10,
+    "133690.KS": 10,
+    "411060.KS": 5,
+    "474800.KS": 5,
+}
+
+# 2. 데이터 다운로드
+tickers = list(set(list(risky_assets.keys()) + list(safe_assets.keys()) + list(canary_asset.keys()) + list(fixed_assets.keys())))
+start_date = (datetime.today() - pd.DateOffset(years=3)).strftime('%Y-%m-%d')
+end_date = datetime.today().strftime('%Y-%m-%d')
+
+print(f"[INFO] Downloading data from {start_date} to {end_date}...")
+data = yf.download(tickers, start=start_date, end=end_date)['Close']
+data = data.loc[:, ~data.columns.duplicated()].copy()
+
+# 3. 월말 종가로 리샘플링
+monthly_data = data.resample('M').last()
+
+# 4. 모멘텀 계산 함수
+def calculate_momentum(series):
+    df = pd.DataFrame(index=series.index)
+    df['1M']  = series.pct_change(1)
+    df['3M']  = series.pct_change(3)
+    df['6M']  = series.pct_change(6)
+    df['12M'] = series.pct_change(12)
+    return df.mean(axis=1)
+
+momentum_data = monthly_data.apply(calculate_momentum)
+
+# 5. 카나리아 모멘텀: TIP + QQQ 모두 양수여야 공격 모드
+def canary_momentum(tip_series, qqq_series):
+    tip_mom = calculate_momentum(tip_series)
+    qqq_mom = calculate_momentum(qqq_series)
+    return (tip_mom > 0) & (qqq_mom > 0)
+
+canary_signal = canary_momentum(monthly_data['TIP'], monthly_data['QQQ'])
+
+# 6. 자산 선택
+def select_safe_assets(momentum_df, bil_momentum, top_n=2):
+    safe_keys = list(safe_assets.keys())
+    safe_mom = momentum_df[safe_keys].iloc[-1]
+    top_safe = safe_mom.nlargest(top_n)
+    selected = [asset for asset in top_safe.index if top_safe[asset] > bil_momentum]
+    if not selected:
+        return ['130730.KS']
+    if '130730.KS' not in selected:
+        selected.append('130730.KS')
+    return selected[:top_n]
+
+def select_top_assets(momentum_df, canary_series, top_n=4):
+    if canary_series.iloc[-1]:
+        return momentum_df[risky_assets.keys()].iloc[-1].nlargest(top_n).index.tolist()
+    else:
+        bil_momentum = calculate_momentum(data['130730.KS']).iloc[-1] if '130730.KS' in data.columns else 0
+        return select_safe_assets(momentum_df, bil_momentum, top_n=2)
+
+def normalize_weights(weights_dict, total=100):
+    rounded = {k: round(v) for k, v in weights_dict.items()}
+    diff = total - sum(rounded.values())
+    if diff != 0:
+        max_key = max(rounded, key=rounded.get)
+        rounded[max_key] += diff
+    return rounded
+
+# 7. 백테스트 실행
+portfolio_data = []
+dates = monthly_data.index
+
+for i in range(12, len(dates) - 1):
+    decision_date = dates[i]
+    invest_date   = dates[i + 1]
+
+    decision_data = monthly_data.loc[:decision_date]
+    decision_momentum = decision_data.apply(calculate_momentum)
+    decision_canary = canary_momentum(decision_data['TIP'], decision_data['QQQ'])
+
+    top_assets = select_top_assets(decision_momentum, decision_canary, top_n=4)
+    if len(top_assets) == 0:
+        top_assets = ['130730.KS']
+
+    haa_share = 65
+    share_each = haa_share / len(top_assets)
+
+    combined_weights = dict(fixed_assets)
+    for asset in top_assets:
+        combined_weights[asset] = combined_weights.get(asset, 0) + share_each
+
+    final_weights = normalize_weights(combined_weights, 100)
+
+    monthly_return = 0
+    if invest_date in monthly_data.index:
+        for asset, w in final_weights.items():
+            if asset in monthly_data.columns:
+                ret = monthly_data[asset].pct_change().loc[invest_date]
+                monthly_return += (w / 100) * ret
+
+    asset_list_str = ", ".join([f"{k}={v}%" for k, v in final_weights.items()])
+    portfolio_data.append({
+        "Date": invest_date.strftime('%Y-%m-%d'),
+        "Assets & Weights": asset_list_str,
+        "Monthly Return": round(monthly_return * 100, 2),
+    })
+
+# 8. 결과 계산 및 출력
+portfolio = pd.DataFrame(portfolio_data)
+portfolio['Cumulative'] = (1 + portfolio['Monthly Return'] / 100).cumprod()
+
+if len(portfolio) > 1:
+    start_dt = datetime.strptime(portfolio['Date'].iloc[0], '%Y-%m-%d')
+    end_dt = datetime.strptime(portfolio['Date'].iloc[-1], '%Y-%m-%d')
+    years = (end_dt - start_dt).days / 365.25
+    cagr = portfolio['Cumulative'].iloc[-1] ** (1 / years) - 1
+
+    def calculate_mdd(cum_returns):
+        peak = cum_returns.cummax()
+        dd = cum_returns / peak - 1
+        return dd.min()
+
+    mdd = calculate_mdd(portfolio['Cumulative'])
+else:
+    cagr = 0
+    mdd = 0
+
+# 최종 출력
+print("\n📌 월별 투자 자산 및 수익률:")
+print(portfolio[['Date', 'Assets & Weights', 'Monthly Return']])
+
+print(f"\n📊 HAA + 고정자산 백테스트 결과 (최근 3년):")
+print(f"✅ CAGR (연평균 수익률): {cagr * 100:.2f}%")
+print(f"❗ MDD  (최대 낙폭): {mdd * 100:.2f}%")

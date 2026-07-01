@@ -2089,6 +2089,78 @@ def api_insights_search(q: str = ""):
         conn.close()
 
 
+# 종목 집계에서 제외할 일반어(섹터/노이즈)
+_SIGNAL_STOP = {
+    "기타", "시장", "코스피", "코스닥", "지수", "전체", "국내", "미국", "환율", "금리",
+    "반도체", "이차전지", "2차전지", "조선", "방산", "바이오", "로봇", "전력", "자동차",
+    "AI", "HBM", "관련주", "테마", "섹터",
+}
+
+
+@app.get("/api/insights/signals")
+def api_insights_signals():
+    """오늘의 시그널 — 종목 언급 버즈 스파이크 + 소스 합의/충돌."""
+    from collections import Counter
+    from datetime import timedelta
+    conn = _ins_conn()
+    if conn is None:
+        return JSONResponse(content={"error": "atoms.db 없음"}, status_code=503)
+    try:
+        today = datetime.now().strftime("%Y-%m-%d")
+        d8 = (datetime.now() - timedelta(days=8)).strftime("%Y-%m-%d")
+        rows = conn.execute(
+            "SELECT asset, source_type, date, stance_key, content FROM atoms "
+            "WHERE asset IS NOT NULL AND asset!='' AND date>=?", (d8,)).fetchall()
+    finally:
+        conn.close()
+
+    def _assets(a):
+        out = []
+        for t in re.split(r"[,/·|]", a or ""):
+            t = t.strip()
+            if 1 < len(t) < 14 and t not in _SIGNAL_STOP and not t.isdigit():
+                out.append(t)
+        return out
+
+    today_cnt = Counter()
+    prior = {}       # asset -> {date: n}
+    cats = {}        # asset -> set(category)
+    stance = {}      # asset -> Counter
+    sample = {}      # asset -> snippet
+    for r in rows:
+        cat = _nb_cat_of(r["source_type"])
+        for a in _assets(r["asset"]):
+            if r["date"] == today:
+                today_cnt[a] += 1
+                cats.setdefault(a, set()).add(cat)
+                sk = (r["stance_key"] or "")
+                if sk in ("bullish", "bearish", "neutral"):
+                    stance.setdefault(a, Counter())[sk] += 1
+                if a not in sample and r["content"]:
+                    sample[a] = (r["content"] or "").strip()[:110]
+            else:
+                prior.setdefault(a, {}).setdefault(r["date"], 0)
+                prior[a][r["date"]] += 1
+
+    signals = []
+    for a, tn in today_cnt.items():
+        pdays = prior.get(a, {})
+        pavg = (sum(pdays.values()) / len(pdays)) if pdays else 0.0
+        catset = cats.get(a, set())
+        st = stance.get(a, Counter())
+        signals.append({
+            "asset": a, "today": tn, "prior_avg": round(pavg, 1),
+            "spike": round(tn - pavg, 1), "is_new": (pavg == 0),
+            "cats": [c for c in ("youtube", "telegram", "report", "news", "blog") if c in catset],
+            "n_cats": len(catset),
+            "bull": st.get("bullish", 0), "bear": st.get("bearish", 0),
+            "sample": sample.get(a, ""),
+        })
+    # 랭킹: 다채널(합의) + 오늘 언급 + 스파이크
+    signals.sort(key=lambda s: (s["n_cats"] * 2 + s["today"] + max(0.0, s["spike"])), reverse=True)
+    return JSONResponse(content={"today": today, "signals": signals[:15]})
+
+
 # ── §4.9 NotebookLM 다리: 가로검색 묶음 → 노트북 자동 생성 ──────
 def _nlm_exe():
     """nlm 실행 파일 경로. PATH 우선, 없으면 None."""

@@ -1,0 +1,196 @@
+# =========================================================
+# 0. 설치
+# =========================================================
+!pip -q install yfinance pandas numpy matplotlib
+
+# =========================================================
+# 1. 라이브러리
+# =========================================================
+import yfinance as yf
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
+
+# =========================================================
+# 2. 입력
+# =========================================================
+START_DATE = input("시작일 (YYYY-MM-DD, 엔터=2020-01-01): ").strip()
+if START_DATE == "":
+    START_DATE = "2020-01-01"
+
+END_DATE_INPUT = input("종료일 (YYYY-MM-DD, 엔터=최신): ").strip()
+if END_DATE_INPUT == "":
+    user_end_date = datetime.now(ZoneInfo("America/New_York")).date()
+else:
+    user_end_date = pd.to_datetime(END_DATE_INPUT).date()
+
+yf_end_date = user_end_date + timedelta(days=1)
+
+TICKERS = ["QQQ", "SPY", "TIP"]
+
+# =========================================================
+# 3. 파라미터
+# =========================================================
+HAA_MA_MONTHS = 6
+VOL_WINDOWS_W = [4, 12]     # 4주, 12주
+WEEKLY_TREND_MA = 40        # 40주 (≈200일)
+BLEND_MODE = "min"          # "min" or "avg"
+
+# =========================================================
+# 4. 함수
+# =========================================================
+def vol_to_weight(v):
+    if pd.isna(v): return np.nan
+    elif v < 0.12: return 1.0
+    elif v < 0.18: return 0.85
+    elif v < 0.24: return 0.70
+    elif v < 0.30: return 0.50
+    else: return 0.30
+
+def downside_vol(x):
+    neg = np.minimum(x, 0.0)
+    return np.sqrt(np.mean(neg**2)) * np.sqrt(52)
+
+def trend_cap(q, qma, s, sma):
+    if pd.isna(qma) or pd.isna(sma): return np.nan
+    if q>qma and s>sma: return 1.0
+    elif q>qma: return 0.7
+    elif s>sma: return 0.55
+    else: return 0.35
+
+def perf(ret):
+    ret = ret.dropna()
+    eq = (1+ret).cumprod()
+    total = eq.iloc[-1]-1
+    vol = ret.std()*np.sqrt(252)
+    sharpe = (ret.mean()/ret.std())*np.sqrt(252) if ret.std()!=0 else np.nan
+    mdd = (eq/eq.cummax()-1).min()
+    return total, vol, sharpe, mdd
+
+# =========================================================
+# 5. 데이터 다운로드
+# =========================================================
+data = yf.download(TICKERS, start=START_DATE, end=str(yf_end_date), progress=False)
+
+open_ = data["Open"].ffill()
+close = data["Close"].ffill()
+
+# =========================================================
+# 6. HAA 월간 카나리아
+# =========================================================
+m = close.resample("ME").last()
+
+qqq_ma6 = m["QQQ"].rolling(HAA_MA_MONTHS).mean()
+tip_ma6 = m["TIP"].rolling(HAA_MA_MONTHS).mean()
+
+cap = pd.Series(index=m.index)
+
+cap[(m["QQQ"]>qqq_ma6) & (m["TIP"]>tip_ma6)] = 1.0
+cap[(m["QQQ"]>qqq_ma6) ^ (m["TIP"]>tip_ma6)] = 0.7
+cap[(m["QQQ"]<=qqq_ma6) & (m["TIP"]<=tip_ma6)] = 0.35
+
+cap_exec = cap.shift(1)
+cap_exec.index = cap_exec.index.to_period("M")
+
+haa_daily = pd.Series(
+    [cap_exec.get(p, np.nan) for p in close.index.to_period("M")],
+    index=close.index
+)
+
+# =========================================================
+# 7. 주간 리스크 엔진
+# =========================================================
+w_close = close.resample("W-FRI").last()
+w_ret = w_close.pct_change()
+
+dv4 = w_ret["QQQ"].rolling(4).apply(downside_vol)
+dv12 = w_ret["QQQ"].rolling(12).apply(downside_vol)
+
+w4 = dv4.apply(vol_to_weight)
+w12 = dv12.apply(vol_to_weight)
+
+if BLEND_MODE == "min":
+    vol_weight = pd.concat([w4, w12], axis=1).min(axis=1)
+else:
+    vol_weight = pd.concat([w4, w12], axis=1).mean(axis=1)
+
+ma40_q = w_close["QQQ"].rolling(WEEKLY_TREND_MA).mean()
+ma40_s = w_close["SPY"].rolling(WEEKLY_TREND_MA).mean()
+
+tcap = pd.Series(index=w_close.index)
+for i in w_close.index:
+    tcap[i] = trend_cap(w_close.loc[i,"QQQ"], ma40_q[i],
+                        w_close.loc[i,"SPY"], ma40_s[i])
+
+risk_w = pd.concat([vol_weight, tcap], axis=1).min(axis=1)
+
+# =========================================================
+# 8. 최종 주간 비중
+# =========================================================
+cap_w = pd.Series(
+    [cap_exec.get(p, np.nan) for p in w_close.index.to_period("M")],
+    index=w_close.index
+)
+
+signal_w = pd.concat([cap_w, risk_w], axis=1).min(axis=1)
+exec_w = signal_w.shift(1)
+
+# =========================================================
+# 9. 일간 매핑
+# =========================================================
+exec_map = exec_w.copy()
+exec_map.index = exec_map.index.to_period("W-FRI")
+
+daily_w = pd.Series(
+    [exec_map.get(p, np.nan) for p in close.index.to_period("W-FRI")],
+    index=close.index
+)
+
+cash_w = 1 - daily_w
+
+# =========================================================
+# 10. 수익률
+# =========================================================
+ret = open_["QQQ"].shift(-1)/open_["QQQ"] - 1
+str_ret = daily_w * ret
+
+eq = (1+str_ret.fillna(0)).cumprod()
+bh = (1+ret.fillna(0)).cumprod()
+
+# =========================================================
+# 11. 출력
+# =========================================================
+print("\n[최신 상태]")
+print(f"날짜: {close.index[-1].date()}")
+print(f"주식 비중: {daily_w.iloc[-1]*100:.1f}%")
+print(f"현금 비중: {cash_w.iloc[-1]*100:.1f}%")
+
+print("\n[최근 10일]")
+display(pd.DataFrame({
+    "QQQ": close["QQQ"],
+    "Stock%": daily_w*100,
+    "Cash%": cash_w*100
+}).tail(10).round(2))
+
+# =========================================================
+# 12. 성과
+# =========================================================
+total, vol, sharpe, mdd = perf(str_ret)
+print("\n[전략 성과]")
+print(f"Total Return: {total*100:.2f}%")
+print(f"Volatility: {vol*100:.2f}%")
+print(f"Sharpe: {sharpe:.2f}")
+print(f"MDD: {mdd*100:.2f}%")
+
+# =========================================================
+# 13. 차트
+# =========================================================
+plt.figure(figsize=(12,5))
+plt.plot(eq, label="Strategy")
+plt.plot(bh, label="QQQ B&H")
+plt.legend()
+plt.grid()
+plt.title("HAA + Weekly Risk + Cash Strategy")
+plt.show()

@@ -1,0 +1,66 @@
+import pandas as pd
+import numpy as np
+from google.colab import files
+
+# Step 1: File Upload and Load
+uploaded = files.upload()
+file_path = list(uploaded.keys())[0]
+data = pd.read_excel(file_path, sheet_name='업종')
+
+# Step 2: Clean Data
+# Drop columns with all NaN values
+data_cleaned = data.dropna(axis=1, how='all')
+
+# Remove "Unnamed" columns
+data_cleaned = data_cleaned.loc[:, ~data_cleaned.columns.str.contains('Unnamed')]
+
+# Drop "코스피" column and keep only ETF columns
+etf_data = data_cleaned.drop(columns=['코스피'])
+
+# Convert '날짜' column to datetime and set it as index
+etf_data['날짜'] = pd.to_datetime(data_cleaned['날짜'])
+etf_data = etf_data.set_index('날짜').sort_index()
+
+# Step 3: Relative Strength Calculation Function
+def calculate_relative_strength_200_days_ranked(data, period_days=200, last_n_days=10):
+    """
+    Calculate 200-day risk-adjusted relative strength and rank industries 1st to n-th for each date.
+    """
+    ranked_industries_by_date = {}
+    trading_days = data.index[-last_n_days:]
+
+    for day in trading_days:
+        end_date_index = data.index.get_loc(day)
+
+        if isinstance(end_date_index, slice):
+            end_date_index = end_date_index.start
+
+        start_date_index = max(0, end_date_index - period_days + 1)
+        returns_period_day = data.iloc[start_date_index:end_date_index + 1].pct_change().dropna()
+
+        # Calculate total returns and volatility for each industry
+        total_returns = returns_period_day.apply(lambda x: (1 + x).prod() - 1)
+        volatility = returns_period_day.std()
+
+        # Calculate risk-adjusted returns
+        risk_adjusted_returns = total_returns / volatility
+
+        # Rank all industries based on risk-adjusted returns
+        ranked_industries = risk_adjusted_returns.rank(ascending=False, method='min').sort_values().index
+        ranked_industries_by_date[day] = ranked_industries.tolist()
+
+    # Convert the result to a DataFrame with ranks 1 to n
+    ranked_df = pd.DataFrame.from_dict(ranked_industries_by_date, orient='index')
+    ranked_df.columns = [f'Rank {i + 1}' for i in range(ranked_df.shape[1])]
+    ranked_df.index.name = 'Date'
+    return ranked_df
+
+# Step 4: Calculate Rankings
+ranked_df = calculate_relative_strength_200_days_ranked(etf_data)
+
+# Step 5: Save Results to Excel
+output_file = 'relative_strength_rankings.xlsx'
+ranked_df.to_excel(output_file)
+
+# Download the result
+files.download(output_file)

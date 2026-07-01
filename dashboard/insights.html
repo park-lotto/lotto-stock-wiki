@@ -95,6 +95,28 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .brief-go:hover { filter: brightness(1.1); }
 .brief-hint { font-size: .74rem; color: var(--muted); margin-top: 10px; }
 
+/* ── 🔥 오늘의 시그널 ── */
+.signals-box { margin: 8px 0 26px; }
+.sig-title { font-size: .82rem; font-weight: 700; color: var(--gold); margin-bottom: 10px; }
+.sig-title small { color: var(--muted); font-weight: 400; font-size: .72rem; margin-left: 6px; }
+.sig-list { display: flex; flex-direction: column; gap: 5px; }
+.sig-row { display: flex; align-items: center; gap: 12px; padding: 9px 14px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; cursor: pointer; transition: border-color .15s, background .15s; }
+.sig-row:hover { border-color: var(--gold-dim); background: #1c1c22; }
+.sig-asset { font-size: .92rem; font-weight: 700; min-width: 130px; }
+.sig-cnt { font-size: .8rem; color: var(--muted); min-width: 130px; }
+.sig-cnt b { color: var(--txt); }
+.sig-trend { font-size: .78rem; min-width: 66px; }
+.sig-up { color: #4ade80; } .sig-dn { color: #f87171; } .sig-flat { color: var(--muted); } .sig-new { color: var(--gold); font-weight: 700; }
+.sig-cats { display: flex; gap: 3px; min-width: 90px; }
+.sig-cat { font-size: .82rem; }
+.sig-flags { display: flex; gap: 5px; flex: 1; }
+.sig-badge { font-size: .68rem; padding: 2px 7px; border-radius: 6px; font-weight: 700; }
+.sig-badge.red { background: #2a0e0e; color: #f87171; border: 1px solid #5a1a1a; }
+.sig-badge.warn { background: #2a220e; color: #fbbf24; border: 1px solid #5a4a1a; }
+.sig-go { font-size: .74rem; color: var(--gold-dim); white-space: nowrap; }
+.sig-row:hover .sig-go { color: var(--gold); }
+@media (max-width: 760px) { .sig-cnt, .sig-cats, .sig-flags { display: none; } }
+
 /* ── 브리핑 워크스페이스 (전체화면 2단) ── */
 .ws-overlay { position: fixed; inset: 0; z-index: 600; background: var(--bg); display: none; flex-direction: column; }
 .ws-overlay.open { display: flex; }
@@ -826,12 +848,49 @@ async function showL0() {
         <div class="brief-hint">선택한 소스로 노트북을 만들고, 입력한 문구를 워크스페이스에서 자동으로 질문합니다. (키워드면 그 키워드로 좁히고, 요청문이면 소스 전체를 정리) <button class="ws-pull" style="margin-left:8px" onclick="nlmRelogin(this)">🔄 nlm 재로그인</button> <span style="color:var(--gold-dim)">· 서버가 25분마다 자동 유지</span></div>
       </div>
     </div>
+    <div id="signals-box" class="signals-box"></div>
     <div class="cat-grid">${catCards || '<div style="color:var(--muted)">카테고리 없음</div>'}</div>
     <div class="feed-section">
       <div class="section-title">최근 추가된 인사이트</div>
       ${feedRows}
     </div>
   `);
+  loadSignals();
+}
+
+// ── 🔥 오늘의 시그널 ──
+const SIG_CATICON = { youtube: '📺', telegram: '💬', report: '📰', news: '🗞️', blog: '📝' };
+async function loadSignals() {
+  const box = qs('#signals-box'); if (!box) return;
+  box.innerHTML = '<div class="sig-title">🔥 오늘의 시그널 <small>불러오는 중…</small></div>';
+  let data;
+  try { data = await apiFetch('/api/insights/signals'); } catch(e) { box.innerHTML = ''; return; }
+  const sigs = (data.signals || []).filter(s => s.today >= 1);
+  if (!sigs.length) { box.innerHTML = '<div class="sig-title">🔥 오늘의 시그널 <small>오늘 집계된 종목 없음(크롤 대기)</small></div>'; return; }
+  const rows = sigs.map(s => {
+    const cats = (s.cats || []).map(c => `<span class="sig-cat">${SIG_CATICON[c] || '·'}</span>`).join('');
+    const trend = s.is_new ? '<span class="sig-new">🆕신규</span>'
+      : (s.spike > 0 ? `<span class="sig-up">▲ ${s.spike}</span>`
+        : (s.spike < 0 ? `<span class="sig-dn">▼ ${Math.abs(s.spike)}</span>` : '<span class="sig-flat">=</span>'));
+    const consensus = s.n_cats >= 3 ? '<span class="sig-badge red">🔴 다채널</span>' : '';
+    const conflict = (s.bull > 0 && s.bear > 0) ? '<span class="sig-badge warn">⚠️ 충돌</span>' : '';
+    return `<div class="sig-row" onclick="sigBrief('${escAttr(s.asset)}')" title="${escAttr(s.sample)}">
+      <span class="sig-asset">${escHtml(s.asset)}</span>
+      <span class="sig-cnt">오늘 <b>${s.today}</b> <small>(평균 ${s.prior_avg})</small></span>
+      <span class="sig-trend">${trend}</span>
+      <span class="sig-cats">${cats}</span>
+      <span class="sig-flags">${consensus}${conflict}</span>
+      <span class="sig-go">브리핑 →</span>
+    </div>`;
+  }).join('');
+  box.innerHTML = `<div class="sig-title">🔥 오늘의 시그널 <small>${data.today} · 언급 급증·다채널 순 · 클릭하면 그 종목 브리핑</small></div>
+    <div class="sig-list">${rows}</div>`;
+}
+function sigBrief(asset) {
+  const inp = qs('#brief-q'); if (inp) inp.value = `${asset} 오늘 핵심 정리해줘`;
+  // 소스 전체 켠 상태로 브리핑
+  document.querySelectorAll('#brief-cats .bchip').forEach(b => b.classList.add('on'));
+  startBriefing();
 }
 
 // ── L1 소스 목록 ──

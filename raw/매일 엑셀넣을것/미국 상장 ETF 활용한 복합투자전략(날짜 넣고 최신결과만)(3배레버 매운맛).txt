@@ -1,0 +1,112 @@
+!pip install --upgrade yfinance --quiet
+import pandas as pd
+import yfinance as yf
+from datetime import datetime
+
+# -------------------------
+# 사용자 입력: 기준 날짜 설정
+# -------------------------
+specific_date = input("마지막 데이터 날짜(미국 종가)를 입력하세요 (YYYY-MM-DD): ")
+
+# -------------------------
+# 데이터 다운로드 설정
+# -------------------------
+tickers = [
+    "SPXL", "TQQQ", "UWM", "EFO", "EET", "DRN",   # 공격 자산
+    "PDBC", "UST", "TMF", "TIP", "BIL",           # 안전 자산
+    "HYG", "LQD", "EMB", "BNDX", "BWX", "GLD",    # 안전 자산
+    "QYLD", "QQQ"  # 고정 자산 + 카나리아 자산
+]
+
+# 날짜 범위 설정
+end_date = specific_date
+start_date = (datetime.strptime(specific_date, '%Y-%m-%d') - pd.DateOffset(years=10)).strftime('%Y-%m-%d')
+
+# 일간 종가 데이터 다운로드
+daily_data = yf.download(tickers, start=start_date, end=end_date)['Close']
+
+# -------------------------
+# 모멘텀 계산 함수 (일간 기준)
+# -------------------------
+def calculate_momentum(series):
+    momentum = pd.DataFrame(index=series.index)
+    momentum['1M']  = series.pct_change(periods=21)
+    momentum['3M']  = series.pct_change(periods=63)
+    momentum['6M']  = series.pct_change(periods=126)
+    momentum['12M'] = series.pct_change(periods=252)
+    return momentum.mean(axis=1)
+
+# 카나리아 자산: QQQ + TIP
+def canary_momentum(qqq_data, tip_data):
+    qqq_mom = calculate_momentum(qqq_data)
+    tip_mom = calculate_momentum(tip_data)
+
+    # 공격 모드 조건: 두 자산 모두 모멘텀 > 0
+    combined_signal = (qqq_mom > 0) & (tip_mom > 0)
+    return combined_signal, qqq_mom, tip_mom
+
+# 안전 자산 선택
+def select_safe_assets(momentum_data, bil_momentum, top_n=3):
+    safe_assets = ["BIL", "TMF", "HYG", "LQD", "UST", "EMB", "TIP", "BNDX", "BWX", "GLD"]
+    safe_mom = momentum_data[safe_assets].iloc[-1]
+    top_safe = safe_mom.nlargest(top_n)
+    selected = [asset for asset in top_safe.index if top_safe[asset] > bil_momentum]
+    return selected if selected else ['BIL']
+
+# 자산 선택
+def select_top_assets(momentum_data, canary_signal, top_n=4):
+    if canary_signal.iloc[-1]:
+        return momentum_data.iloc[-1].nlargest(top_n).index.tolist()
+    else:
+        bil_mom = calculate_momentum(daily_data['BIL']).iloc[-1]
+        return select_safe_assets(momentum_data, bil_mom, top_n=3)
+
+# -------------------------
+# 고정 자산 비중 설정
+# -------------------------
+fixed_assets = {"QYLD": 0.1, "GLD": 0.05, "PDBC": 0.05}
+fixed_weight_sum = sum(fixed_assets.values())
+
+# 전체 모멘텀 계산
+momentum_data = daily_data.apply(calculate_momentum)
+
+# 카나리아 신호 계산 (QQQ + TIP)
+canary_signal, qqq_mom, tip_mom = canary_momentum(daily_data['QQQ'], daily_data['TIP'])
+
+# 자산 선택
+top_assets = select_top_assets(momentum_data, canary_signal, top_n=4)
+
+# 비중 계산
+remaining_weight = 1 - fixed_weight_sum
+haa_weights = {asset: remaining_weight / len(top_assets) for asset in top_assets}
+
+combined_weights = fixed_assets.copy()
+for asset, weight in haa_weights.items():
+    combined_weights[asset] = combined_weights.get(asset, 0) + weight
+
+# 비중 정규화
+total_weight = sum(combined_weights.values())
+for k in combined_weights:
+    combined_weights[k] /= total_weight
+
+# -------------------------
+# 결과 출력
+# -------------------------
+print(f"\n✅ 현재 투자 비중 (기준일: {specific_date}, 일간 기준 모멘텀):")
+for asset, weight in combined_weights.items():
+    print(f"{asset}: {weight:.2%}")
+
+# 공격/방어 해석 코멘트
+latest_qqq_mom = qqq_mom.iloc[-1]
+latest_tip_mom = tip_mom.iloc[-1]
+
+if canary_signal.iloc[-1]:
+    print(f"\n🚀 현재 **공격 모드**입니다.")
+    print(f"   - QQQ 모멘텀: {latest_qqq_mom:.2%} (양수)")
+    print(f"   - TIP 모멘텀: {latest_tip_mom:.2%} (양수)")
+    print("   → 공격 자산 위주로 포트폴리오가 구성됩니다.")
+else:
+    print(f"\n📉 현재 **방어 모드**입니다.")
+    print(f"   - QQQ 모멘텀: {latest_qqq_mom:.2%}")
+    print(f"   - TIP 모멘텀: {latest_tip_mom:.2%}")
+    print("   → 둘 중 하나라도 모멘텀이 음수이므로 안전 자산에 투자합니다.")

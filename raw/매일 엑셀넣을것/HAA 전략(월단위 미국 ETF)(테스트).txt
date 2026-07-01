@@ -1,0 +1,157 @@
+
+# 필요한 라이브러리 설치
+!pip install --upgrade yfinance --quiet
+import pandas as pd
+import yfinance as yf
+from datetime import datetime
+
+# 티커 설정
+tickers = [
+    "SPY", "IWM", "VEA", "VWO", "VNQ",
+    "DBC", "IEF", "TLT", "TIP", "BIL",
+    "HYG", "LQD", "EMB", "BNDX", "BWX"
+]
+
+# ==================== (1) 데이터 다운로드, 월말 데이터 ====================
+
+end_date = datetime.today().strftime('%Y-%m-%d')
+# 최근 10년으로 변경
+start_date = (datetime.today() - pd.DateOffset(years=10)).strftime('%Y-%m-%d')
+
+data = yf.download(tickers, start=start_date, end=end_date)['Close']
+
+# 월말 데이터 추출
+monthly_data = data.resample('M').last()
+
+# 모멘텀 계산 함수
+def calculate_momentum(series):
+    """
+    단일 티커 Series에 대해 1M, 3M, 6M, 12M 모멘텀 평균 계산 (월단위)
+    """
+    momentum_df = pd.DataFrame(index=series.index)
+    momentum_df['1M']  = series.pct_change(periods=1)
+    momentum_df['3M']  = series.pct_change(periods=3)
+    momentum_df['6M']  = series.pct_change(periods=6)
+    momentum_df['12M'] = series.pct_change(periods=12)
+    return momentum_df.mean(axis=1)
+
+# 전체 DataFrame에 모멘텀 적용
+momentum_data = monthly_data.apply(calculate_momentum)
+
+# TIP로 카나리아 신호 계산
+def canary_momentum(tip_series):
+    tip_mom = calculate_momentum(tip_series)
+    return (tip_mom > 0), tip_mom
+
+# 안전 자산 선택
+def select_safe_assets(momentum_df, bil_momentum, top_n=3):
+    safe_assets = ["BIL", "TLT", "HYG", "LQD", "IEF",
+                   "EMB", "TIP", "BNDX", "BWX"]
+    # 최근(마지막 행) 모멘텀만 확인
+    safe_mom = momentum_df[safe_assets].iloc[-1]
+    top_safe_assets = safe_mom.nlargest(top_n)
+
+    selected = []
+    for asset in top_safe_assets.index:
+        if top_safe_assets[asset] > bil_momentum:
+            selected.append(asset)
+
+    return selected if selected else ['BIL']
+
+# 공격 자산 선택
+def select_top_assets(momentum_df, canary_signal_series, top_n=4):
+    """
+    카나리아 신호가 True이면 공격 자산 모멘텀 상위 n개,
+    False이면 안전 자산
+    """
+    if canary_signal_series.iloc[-1]:
+        top_assets = momentum_df.iloc[-1].nlargest(top_n)
+        return top_assets.index.tolist()
+    else:
+        # BIL 모멘텀
+        bil_momentum = calculate_momentum(monthly_data['BIL']).iloc[-1]
+        return select_safe_assets(momentum_df, bil_momentum, top_n=3)
+
+# ==================== (2) "이전 달 말 모멘텀 -> 다음 달 말 수익률" 백테스트 ====================
+
+portfolio_data = []
+
+dates = monthly_data.index  # 월말 인덱스
+# 초기 12개월은 12M 모멘텀이 충분히 쌓일 때까지 스킵
+# 마지막 달은 다음 달이 없어 수익률 계산 불가하므로 -1
+for i in range(12, len(dates) - 1):
+    # (i) 이번 달 말 (모멘텀 계산 & 투자 결정 시점)
+    decision_date = dates[i]
+    # (i+1) 다음 달 말 (실제로 한 달간 보유 후 수익률을 측정할 시점)
+    invest_date = dates[i + 1]
+
+    # 1) decision_date까지의 데이터로 모멘텀 / 카나리아 시그널 계산
+    decision_data = monthly_data.loc[:decision_date]
+
+    # TIP 카나리아
+    current_canary_signal, current_tip_momentum = canary_momentum(decision_data['TIP'])
+
+    # 전체 종목에 대한 모멘텀 (decision_date 시점)
+    decision_momentum = decision_data.apply(calculate_momentum)
+
+    # 2) 자산 선정
+    top_assets = select_top_assets(decision_momentum, current_canary_signal, top_n=4)
+
+    # 균등 비중 예시
+    weight = 1 / len(top_assets)
+
+    # 3) "invest_date"에서의 월간 수익률
+    #    => (decision_date 달) ~ (invest_date 달) 한 달 사이 변동률
+    monthly_return = 0.0
+    for asset in top_assets:
+        if asset in monthly_data.columns:
+            # invest_date에 저장된 pct_change 값 ==
+            #   직전 월말 대비 invest_date 월말의 변동률
+            ret = monthly_data[asset].pct_change().loc[invest_date]
+            monthly_return += (ret * weight)
+
+    # 4) 포트폴리오 기록 (수익률은 invest_date에 실현)
+    portfolio_data.append({
+        "Date": invest_date.strftime('%Y-%m-%d'),
+        "Assets": ', '.join(top_assets),
+        "Monthly Return": round(monthly_return * 100, 2),
+        # TIP 모멘텀은 의사결정 시점(decision_date) 기준
+        "TIP Momentum": round(current_tip_momentum.loc[decision_date] * 100, 2)
+    })
+
+# DataFrame 생성
+portfolio = pd.DataFrame(portfolio_data)
+
+# ==================== (3) 성과 지표 계산 ====================
+
+# 누적수익
+portfolio['Cumulative'] = (1 + portfolio['Monthly Return'] / 100).cumprod()
+
+# CAGR(연환산수익률) 계산
+start_dt = datetime.strptime(portfolio['Date'].iloc[0], '%Y-%m-%d')
+end_dt   = datetime.strptime(portfolio['Date'].iloc[-1], '%Y-%m-%d')
+years = (end_dt - start_dt).days / 365.25
+cagr = portfolio['Cumulative'].iloc[-1] ** (1 / years) - 1
+
+# MDD 계산 함수
+def calculate_mdd(cum_returns):
+    peak = cum_returns.cummax()
+    dd = cum_returns / peak - 1
+    return dd.min()
+
+mdd = calculate_mdd(portfolio['Cumulative'])
+
+# ==================== (4) 결과 출력 ====================
+
+print("\n월별 투자 자산 및 수익률:")
+print(portfolio[['Date', 'Assets', 'Monthly Return', 'TIP Momentum']])
+
+print(f"\n최근 10년간 백테스트 결과:")
+print(f"CAGR(연평균 성장률): {cagr*100:.2f}%")
+print(f"MDD(최대 낙폭): {mdd*100:.2f}%")
+
+# 간단 점검
+if len(portfolio) > 1:
+    last_month_date = portfolio['Date'].iloc[-2]
+    current_month_date = portfolio['Date'].iloc[-1]
+    print(f"\n점검: {last_month_date} 시점 결정 → {current_month_date}까지 보유 후 수익률 기록")

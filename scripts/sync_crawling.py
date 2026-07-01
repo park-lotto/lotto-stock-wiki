@@ -33,8 +33,11 @@ TYPE_MAP = {
 }
 
 
-def sync_date(date_str: str) -> list[Path]:
-    """특정 날짜 폴더를 raw/로 복사. 복사된 파일 목록 반환."""
+def sync_date(date_str: str, overwrite: bool = False) -> list[Path]:
+    """특정 날짜 폴더를 raw/로 복사. 복사된 파일 목록 반환.
+
+    overwrite=True면 이미 있어도 덮어씀 (텔레그램처럼 채널당 1파일에
+    당일 내내 내용이 append되는 경우, 오후 슬롯에서 갱신본을 raw/로 반영)."""
     date_dir = CRAWLING_ROOT / date_str
     if not date_dir.exists():
         print(f"[SKIP] {date_str} — 폴더 없음")
@@ -53,8 +56,8 @@ def sync_date(date_str: str) -> list[Path]:
             if not src.is_file():
                 continue
             dest = dest_dir / src.name
-            if dest.exists():
-                continue  # 이미 있으면 스킵
+            if dest.exists() and not overwrite:
+                continue  # 이미 있으면 스킵 (overwrite면 갱신)
             shutil.copy2(src, dest)
             copied.append(dest)
             print(f"  [복사] {raw_type}/{src.name}")
@@ -95,6 +98,8 @@ def main():
     parser.add_argument("--date", default=None, help="특정 날짜 (YYYY-MM-DD)")
     parser.add_argument("--all", action="store_true", help="전체 날짜 동기화")
     parser.add_argument("--ingest", action="store_true", help="동기화 후 ingest 실행")
+    parser.add_argument("--overwrite", action="store_true",
+                        help="이미 있는 파일도 덮어씀 (텔레 당일 갱신본 반영용)")
     args = parser.parse_args()
 
     if args.all:
@@ -110,7 +115,7 @@ def main():
 
     all_copied = []
     for date in dates:
-        copied = sync_date(date)
+        copied = sync_date(date, overwrite=args.overwrite)
         all_copied.extend(copied)
 
     print(f"\n[OK] 총 {len(all_copied)}개 파일 복사 완료")

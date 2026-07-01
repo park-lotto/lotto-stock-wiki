@@ -1,0 +1,115 @@
+!pip install --upgrade yfinance --quiet
+
+# 라이브러리 임포트
+import pandas as pd
+import yfinance as yf
+import matplotlib.pyplot as plt
+
+# 사용자로부터 티커 입력 받기
+ticker = input("분석할 주식 티커를 입력하세요 (예: ^GSPC): ")
+
+# Yahoo Finance 데이터를 가져오기 (일 단위 데이터)
+data = yf.download(ticker, start="2000-01-01", end=None, interval="1d")
+data['Close'] = data['Adj Close']
+
+# 최신 데이터 날짜
+last_date_index = data.index[-1]
+last_date = last_date_index.strftime('%Y-%m-%d')
+print(f"가장 최신 데이터 날짜: {last_date}")
+
+# 월 단위 데이터로 변환 (최신 데이터 포함)
+data_monthly = data.resample('M').last()
+data_monthly.loc[last_date_index] = data.iloc[-1]  # 최신 일 데이터를 직접 추가
+data_monthly.sort_index(inplace=True)
+
+# 1. 수정된 코폭 지표 계산 (6개월 주기)
+data_monthly['ROC_4'] = data_monthly['Close'].pct_change(4) * 100  # 4개월 ROC
+data_monthly['ROC_6'] = data_monthly['Close'].pct_change(6) * 100  # 6개월 ROC
+data_monthly['Coppock_Adjusted'] = (data_monthly['ROC_4'] + data_monthly['ROC_6']).rolling(window=3).mean()  # 3개월 이동평균
+
+# 코폭 지표가 적용된 마지막 날짜 추출
+last_coppock_date = data_monthly['Coppock_Adjusted'].dropna().index[-1]
+last_coppock_date_str = last_coppock_date.strftime('%Y-%m-%d')
+print(f"코폭 지표가 적용된 마지막 날짜: {last_coppock_date_str}")
+
+# 2. 수정된 RSI 계산 (6개월 주기에 맞춤)
+delta = data_monthly['Coppock_Adjusted'].diff()
+gain = (delta.where(delta > 0, 0)).rolling(window=3).mean()  # 3개월 기준
+loss = (-delta.where(delta < 0, 0)).rolling(window=3).mean()
+rs = gain / loss
+data_monthly['RSI_Adjusted'] = 100 - (100 / (1 + rs))
+
+# 3. 수정된 스토케스틱 오실레이터 계산 (6개월 주기)
+low_6 = data_monthly['Coppock_Adjusted'].rolling(window=6).min()
+high_6 = data_monthly['Coppock_Adjusted'].rolling(window=6).max()
+data_monthly['Stochastic_Adjusted'] = 100 * (data_monthly['Coppock_Adjusted'] - low_6) / (high_6 - low_6)
+
+# 4. 수정된 MACD 계산 (6개월 주기)
+data_monthly['MACD'] = data_monthly['Coppock_Adjusted'].ewm(span=6).mean() - data_monthly['Coppock_Adjusted'].ewm(span=12).mean()
+data_monthly['MACD_Signal'] = data_monthly['MACD'].ewm(span=6).mean()
+data_monthly['MACD_Oscillator'] = data_monthly['MACD'] - data_monthly['MACD_Signal']
+
+# 그래프 그리기
+fig, axs = plt.subplots(4, 1, figsize=(14, 24), sharex=True)
+
+# 1. 수정된 코폭 지표와 인덱스
+ax1 = axs[0]
+ax2 = ax1.twinx()
+ax1.plot(data_monthly.index, data_monthly['Close'], label=f'{ticker} Close Price', color='green', alpha=0.7)
+ax2.plot(data_monthly.index, data_monthly['Coppock_Adjusted'], label='Coppock Curve (Adjusted)', color='purple')
+ax1.set_ylabel('Close Price', fontsize=12)
+ax2.set_ylabel('Coppock Value (Adjusted)', fontsize=12)
+ax1.set_title('Adjusted Coppock Curve and Index')
+ax1.legend(loc='upper left', fontsize=10)
+ax2.legend(loc='upper left', bbox_to_anchor=(0.3, 1), fontsize=10)
+ax1.grid()
+
+# 2. 수정된 RSI와 인덱스
+ax1 = axs[1]
+ax2 = ax1.twinx()
+ax1.plot(data_monthly.index, data_monthly['Close'], label=f'{ticker} Close Price', color='green', alpha=0.7)
+ax2.plot(data_monthly.index, data_monthly['RSI_Adjusted'], label='RSI (Adjusted)', color='orange')
+ax1.set_ylabel('Close Price', fontsize=12)
+ax2.set_ylabel('RSI Value', fontsize=12)
+ax2.axhline(30, color='red', linestyle='--', label='Oversold (30)')
+ax2.axhline(70, color='red', linestyle='--', label='Overbought (70)')
+ax1.set_title('Adjusted RSI and Index')
+ax1.legend(loc='upper left', fontsize=10)
+ax2.legend(loc='upper left', bbox_to_anchor=(0.3, 1), fontsize=10)
+ax1.grid()
+
+# 3. 수정된 스토케스틱과 인덱스
+ax1 = axs[2]
+ax2 = ax1.twinx()
+ax1.plot(data_monthly.index, data_monthly['Close'], label=f'{ticker} Close Price', color='green', alpha=0.7)
+ax2.plot(data_monthly.index, data_monthly['Stochastic_Adjusted'], label='Stochastic Oscillator (Adjusted)', color='brown')
+ax1.set_ylabel('Close Price', fontsize=12)
+ax2.set_ylabel('Stochastic Value', fontsize=12)
+ax2.axhline(20, color='red', linestyle='--', label='Oversold (20)')
+ax2.axhline(80, color='red', linestyle='--', label='Overbought (80)')
+ax1.set_title('Adjusted Stochastic Oscillator and Index')
+ax1.legend(loc='upper left', fontsize=10)
+ax2.legend(loc='upper left', bbox_to_anchor=(0.3, 1), fontsize=10)
+ax1.grid()
+
+# 4. 수정된 MACD와 인덱스
+ax1 = axs[3]
+ax2 = ax1.twinx()
+ax1.plot(data_monthly.index, data_monthly['Close'], label=f'{ticker} Close Price', color='green', alpha=0.7)
+ax2.plot(data_monthly.index, data_monthly['MACD_Oscillator'], label='MACD Oscillator (Adjusted)', color='blue')
+ax1.set_ylabel('Close Price', fontsize=12)
+ax2.set_ylabel('MACD Oscillator Value', fontsize=12)
+ax1.set_title('Adjusted MACD Oscillator and Index')
+ax1.legend(loc='upper left', fontsize=10)
+ax2.legend(loc='upper left', bbox_to_anchor=(0.3, 1), fontsize=10)
+ax1.grid()
+
+# X축에 날짜 추가
+for ax in axs:
+    ax.tick_params(axis='x', labelrotation=45)
+    ax.set_xticks(data_monthly.index[::12])  # 매 12개월 간격으로 주요 날짜 표시
+    ax.set_xticklabels([date.strftime('%Y-%m') for date in data_monthly.index[::12]], fontsize=10)
+
+plt.tight_layout()
+plt.figtext(0.5, 0.02, f'Last Data Date: {last_date}, Coppock Applied: {last_coppock_date_str}', ha='center', fontsize=12, color='blue')
+plt.show()

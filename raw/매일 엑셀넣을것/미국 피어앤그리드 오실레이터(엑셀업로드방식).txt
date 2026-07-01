@@ -1,0 +1,99 @@
+# 📌 1. 라이브러리 설치 및 임포트
+!pip install openpyxl --quiet
+
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler
+from google.colab import files
+import io
+
+# 📌 2. 엑셀 파일 업로드
+uploaded = files.upload()
+file = list(uploaded.values())[0]
+df = pd.read_excel(io.BytesIO(file), sheet_name='최종정리')
+
+# 📌 3. 컬럼명 정리 및 전처리
+df.columns = ['DATE', 'S&P500', 'NASDAQ', 'VIX', '10Y', '5Y', 'HYG', 'IEF']
+df['DATE'] = pd.to_datetime(df['DATE'])
+df = df.set_index('DATE').sort_index()
+df['Risk_Appetite'] = df['HYG'] / df['IEF']
+
+# 📌 4. RSI 함수
+def calculate_rsi(df, column, window=10):
+    delta = df[column].diff()
+    gain = (delta.where(delta > 0, 0)).rolling(window).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window).mean()
+    rs = gain / loss
+    rsi = 100 - (100 / (1 + rs))
+    return rsi
+
+# 📌 5. MACD 오실레이터 함수
+def calculate_macd(df, column):
+    short_ema = df[column].ewm(span=12, adjust=False).mean()
+    long_ema = df[column].ewm(span=26, adjust=False).mean()
+    macd = short_ema - long_ema
+    signal = macd.ewm(span=9, adjust=False).mean()
+    return macd - signal
+
+# 📌 6. Fear & Greed 계산 함수
+def calculate_fear_greed(df, index_col, label):
+    df[f'{label}_125MA'] = df[index_col].rolling(125).mean()
+    df[f'{label}_Momentum'] = (df[index_col] - df[f'{label}_125MA']) / df[f'{label}_125MA'] * 100
+    df[f'{label}_RSI'] = calculate_rsi(df, index_col)
+    df[f'{label}_BondSpread'] = df['10Y'] - df['5Y']
+    df[f'{label}_VIX'] = df['VIX']
+    df[f'{label}_RiskAppetite'] = df['Risk_Appetite']
+
+    scaler = MinMaxScaler()
+    cols = [f'{label}_Momentum', f'{label}_RSI', f'{label}_BondSpread', f'{label}_VIX', f'{label}_RiskAppetite']
+    df[cols] = scaler.fit_transform(df[cols])
+
+    df[f'{label}_FGI'] = (
+        df[f'{label}_Momentum'] * 0.2 +
+        df[f'{label}_RiskAppetite'] * 0.2 +
+        (1 - df[f'{label}_VIX']) * 0.2 +
+        df[f'{label}_BondSpread'] * 0.2 +
+        df[f'{label}_RSI'] * 0.2
+    )
+
+    df[f'{label}_Oscillator'] = calculate_macd(df, f'{label}_FGI')
+    return df
+
+# 📌 7. Oscillator 계산
+df = calculate_fear_greed(df, 'S&P500', 'SPX')
+df = calculate_fear_greed(df, 'NASDAQ', 'NDX')
+
+# 📌 8. 최근 6개월 필터링
+recent = df[df.index >= (df.index.max() - pd.DateOffset(months=6))]
+
+# 📌 9. 시각화 - S&P500
+fig, ax1 = plt.subplots(figsize=(14, 7))
+line1, = ax1.plot(recent.index, recent['SPX_Oscillator'], label='Fear & Greed Oscillator (S&P500)', color='b')
+ax1.set_ylabel('Oscillator', color='b')
+ax1.tick_params(axis='y', labelcolor='b')
+ax1.grid(True)
+
+ax2 = ax1.twinx()
+line2, = ax2.plot(recent.index, recent['S&P500'], label='S&P500 Index', color='g')
+ax2.set_ylabel('S&P500 Index', color='g')
+ax2.tick_params(axis='y', labelcolor='g')
+
+ax1.legend([line1, line2], ['FG Oscillator', 'S&P500'], loc='upper left')
+plt.title('Fear & Greed Oscillator and S&P500 Index (Last 6 Months)')
+plt.show()
+
+# 📌 10. 시각화 - NASDAQ
+fig, ax1 = plt.subplots(figsize=(14, 7))
+line1, = ax1.plot(recent.index, recent['NDX_Oscillator'], label='Fear & Greed Oscillator (NASDAQ)', color='b')
+ax1.set_ylabel('Oscillator', color='b')
+ax1.tick_params(axis='y', labelcolor='b')
+ax1.grid(True)
+
+ax2 = ax1.twinx()
+line2, = ax2.plot(recent.index, recent['NASDAQ'], label='NASDAQ Index', color='g')
+ax2.set_ylabel('NASDAQ Index', color='g')
+ax2.tick_params(axis='y', labelcolor='g')
+
+ax1.legend([line1, line2], ['FG Oscillator', 'NASDAQ'], loc='upper left')
+plt.title('Fear & Greed Oscillator and NASDAQ Index (Last 6 Months)')
+plt.show()
