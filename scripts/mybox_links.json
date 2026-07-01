@@ -1,8 +1,10 @@
 {
-  "ame":    "https://naver.me/G0pfbTjL",
-  "cafe":   "https://naver.me/5bCNcF0L",
-  "bingsu": "https://naver.me/xB7RAywH",
-  "bingsu_sub": "https://mybox.naver.com/share/list?shareKey=ChSUOIdlgte24uds4mPeCuHKcsrlopnv-fHZGzpVkCkD&resourceKey=aGVuYm5hZXwzNDcyNTk5MzY2MzM2NjcxMzEyfER8MTkzNzYzOTQ",
-  "_note_bingsu_sub": "눈꽃빙수 서브폴더 — 소라티노ETF상대강도·한국상대강도·한국ETF상대강도 포함. cafe(2번) shareKey의 하위 경로.",
-  "updated": "2026-06-22"
+  "ame":    "https://naver.me/FhuseZsb",
+  "cafe":   "https://naver.me/GxrZl99j",
+  "bingsu": "https://naver.me/FkaRy3Cx",
+  "_note_ame":    "추정이익 변경·투자종목관리샘플·탐방용기업개요",
+  "_note_cafe":   "카페라떼: 확정실적분석·종목피킹·수출정리·일정및수주잔고·시장데이터 + [컨센관련데이터] 서브폴더",
+  "_note_bingsu": "오실레이터/전략: 수급오실레이터(700·700-1400·업종)·특정업종쏠림·액티브ETF·투자아이디어정리 + [자산배분]·[다양한코드] 서브폴더(상대강도 데이터 포함)",
+  "_note": "매주 변경되는 naver.me 공유링크. 이 3개만 갱신하면 됨. download_mybox.mjs가 전체 내려받기(하위폴더 포함)로 받음.",
+  "updated": "2026-07-01"
 }

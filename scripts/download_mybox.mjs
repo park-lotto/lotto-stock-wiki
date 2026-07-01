@@ -11,13 +11,13 @@ import { fileURLToPath } from 'url';
 
 const __dirname   = path.dirname(fileURLToPath(import.meta.url));
 const DOWNLOAD_DIR = path.resolve(__dirname, '..', 'raw', '매일 엑셀넣을것');
-const MYBOX_URLS  = [
-  'https://mybox.naver.com/share/list?shareKey=ChSUOIdlgte24uds4mPeCk-GIpDpaRSRnHZWzFxoYdoD',
-  'https://mybox.naver.com/share/list?shareKey=ChSUOIdlgte24uds4mPeCuHKcsrlopnv-fHZGzpVkCkD',
-  // 눈꽃빙수 서브폴더: 소라티노ETF상대강도·한국상대강도·한국ETF상대강도 포함
-  'https://mybox.naver.com/share/list?shareKey=ChSUOIdlgte24uds4mPeCuHKcsrlopnv-fHZGzpVkCkD&resourceKey=aGVuYm5hZXwzNDcyNTk5MzY2MzM2NjcxMzEyfER8MTkzNzYzOTQ',
-  'https://mybox.naver.com/share/list?shareKey=ChSUOIdlgte24uds4mPeCr7bquxYxsdU3c-mlUY1dYsD',
-];
+// 링크는 scripts/mybox_links.json에서 읽음 (매주 변경 시 JSON만 갱신).
+// naver.me 단축링크는 puppeteer goto가 자동 리다이렉트로 따라감.
+const LINKS = JSON.parse(fs.readFileSync(path.join(__dirname, 'mybox_links.json'), 'utf-8'));
+const MYBOX_URLS = ['ame', 'cafe', 'bingsu']
+  .map(k => LINKS[k])
+  .filter(Boolean);
+if (MYBOX_URLS.length === 0) throw new Error('mybox_links.json에 유효한 링크(ame/cafe/bingsu)가 없습니다.');
 
 // 오늘 날짜 MMDD
 const now = new Date();
@@ -49,7 +49,7 @@ for (let idx = 0; idx < MYBOX_URLS.length; idx++) {
   let suggestedName = '';
   client.on('Browser.downloadWillBegin', (e) => {
     suggestedName = e.suggestedFilename;
-    process.stdout.write(`[${idx+1}/3] 다운로드 시작: ${suggestedName}\n`);
+    process.stdout.write(`[${idx+1}/${MYBOX_URLS.length}] 다운로드 시작: ${suggestedName}\n`);
   });
   client.on('Browser.downloadProgress', (e) => {
     if (e.state === 'completed') downloadDone = true;
