@@ -2716,12 +2716,23 @@ async def api_insights_notebook_query(req: Request):
         # 영어 사고과정만 뱉는 문제 → 답변만 하도록 제약을 덧붙인다.
         guarded = (
             f"{question}\n\n"
-            "[작성 지침] 이 노트북에 연결된 '모든 소스'를 빠짐없이 활용해 한국어로 "
-            "충실하고 구체적으로 정리해줘. 종목명·수치·날짜·핵심 주장과 그 근거를 최대한 담고, "
-            "주제별(종목/수급/이슈/일정/리스크 등)로 소제목을 나눠 구조화해줘. 소스가 여러 개면 "
-            "교차해서 종합하고, 한두 줄로 끝내지 말고 의미 있는 내용은 모두 포함해줘. "
-            "단, 새 리포트·문서·노트 같은 아티팩트는 만들지 말고 채팅 답변으로만, "
-            "영어 사고과정 설명 없이 결과만 써줘."
+            "[답변 규칙 — 반드시 지켜라]\n"
+            "1. 모든 주장·수치·목표가·투자의견에는 반드시 (출처명, 날짜)를 괄호로 붙여라. "
+            "출처·날짜를 못 붙이는 문장은 쓰지 마라.\n"
+            "2. 소스가 실제로 한 말만 직접 인용·요약하라. 네 추측·일반지식·시황 창작은 금지. "
+            "소스에 없는 내용은 '자료 없음'이라고 명시하라.\n"
+            "3. 같은 방향 소스가 여럿이면 '합의(N건)', 엇갈리면 '⚠️충돌'로 표시하고 양쪽을 다 보여줘라.\n"
+            "4. '지켜봐야 한다'식 양면론·관망으로 끝내지 마라. 수치 근거로 방향을 분명히 하되, "
+            "'A면 B' 식 조건부로 써라.\n\n"
+            "[브리핑 기본 구조 — 이 순서·소제목으로 작성]\n"
+            "① 한 줄 결론 — 오늘 가장 중요한 한 가지 (핵심 출처·날짜 포함)\n"
+            "② 핵심 팩트 — 종목/이슈별로 소제목을 나누고, 각 항목은 소스 발언 직접인용 + (출처, 날짜)\n"
+            "③ 수급·모멘텀 — 목표가·투자의견 변화, 합의 vs 충돌\n"
+            "④ 최근 리포트 — 리포트 소스에서 나온 목표가·투자의견을 (증권사/리포트명, 날짜)와 함께 정리\n"
+            "⑤ 관전 포인트 — 그래서 무엇을 볼 것인가, 조건부 전략으로\n\n"
+            "[형식] 한국어. 이 노트북에 연결된 모든 소스를 교차 활용. "
+            "새 리포트·문서·노트 같은 아티팩트는 만들지 말고 채팅 답변으로만, "
+            "영어 사고과정 설명 없이 결과만 써라."
         )
         args = ["notebook", "query", nb_id, guarded, "--json"]
         if conv:
@@ -2819,6 +2830,16 @@ async def api_insights_notebook_studio(req: Request):
             f2 = " / ".join(parts)
             if kind == "infographic":
                 args += ["--style", "professional"]
+                orient = (body.get("orientation") or "").strip()
+                if orient in ("landscape", "portrait", "square"):
+                    args += ["--orientation", orient]
+                detail = (body.get("detail") or "").strip()
+                if detail in ("concise", "standard", "detailed"):
+                    args += ["--detail", detail]
+        if kind == "slides":
+            length = (body.get("length") or "").strip()
+            if length in ("short", "default"):
+                args += ["--length", length]
         if f2:
             args += ["--focus", f2]
         ok, out, errm = _run_nlm(args, timeout=120)
@@ -2990,6 +3011,38 @@ def api_insights_notebooks():
          "atoms": e.get("atoms", 0),
          "url": e.get("url", "") or (f"https://notebooklm.google.com/notebook/{e.get('id')}" if e.get("id") else "")}
         for e in reversed(reg) if e.get("id")]})
+
+
+@app.get("/api/insights/recent_reports")
+def api_insights_recent_reports():
+    """최근 증권사 리포트 — 종목·목표가/의견 스니펫 (메인 목록용)."""
+    conn = _ins_conn()
+    if conn is None:
+        return JSONResponse(content={"reports": []})
+    try:
+        rows = conn.execute(
+            "SELECT asset, source_name, date, stance_key, content FROM atoms "
+            "WHERE source_type='report' AND date IS NOT NULL AND date!='' "
+            "ORDER BY date DESC, rowid DESC LIMIT 200").fetchall()
+    finally:
+        conn.close()
+    out, seen = [], set()
+    for r in rows:
+        asset = re.split(r"[,/·|]", r["asset"] or "")[0].strip()
+        key = (asset, r["date"], r["source_name"])
+        if not asset or key in seen:
+            continue
+        seen.add(key)
+        out.append({
+            "asset": asset,
+            "source": (r["source_name"] or "리포트")[:20],
+            "date": r["date"],
+            "stance": r["stance_key"] or "",
+            "snippet": (r["content"] or "").strip()[:100],
+        })
+        if len(out) >= 14:
+            break
+    return JSONResponse(content={"reports": out})
 
 
 def _history_path(nb_id):

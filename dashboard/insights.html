@@ -183,6 +183,15 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .ws-ai-label small { font-weight: 400; color: var(--muted); font-size: .68rem; }
 .ws-ask { display: flex; gap: 8px; }
 .ws-ask .brief-go { padding: 8px 14px; font-size: .8rem; border-radius: 9px; }
+/* 만들기 형식 선택칩 */
+.ws-opts { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 4px; }
+.ws-opt-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ws-opt-lbl { font-size: .7rem; color: var(--muted); min-width: 72px; }
+.ws-opt-grp { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.sopt { padding: 4px 9px; background: var(--bg); color: var(--muted); border: none; border-right: 1px solid var(--line); font-family: inherit; font-size: .72rem; cursor: pointer; white-space: nowrap; }
+.sopt:last-child { border-right: none; }
+.sopt:hover { color: var(--txt); }
+.sopt.on { background: var(--gold); color: #0a0a0a; font-weight: 700; }
 .ws-q-input { flex: 1; padding: 10px 14px; border-radius: 9px; border: 1px solid var(--line); background: var(--bg); color: var(--txt); font-family: inherit; font-size: .86rem; outline: none; }
 .ws-q-input:focus { border-color: var(--gold-dim); }
 .ws-act-group { display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
@@ -671,6 +680,28 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
           <button class="ws-preset" onclick="wsStudioPreset('easy')">🗣️ 쉽게설명</button>
           <button class="ws-preset" onclick="wsStudioPreset('stock')">📈 종목중심</button>
         </div>
+        <div class="ws-opts">
+          <div class="ws-opt-row">
+            <span class="ws-opt-lbl">🖼️ 인포 방향</span>
+            <span class="ws-opt-grp" data-opt="orientation">
+              <button class="sopt on" data-v="landscape" onclick="wsOpt(this)">가로</button>
+              <button class="sopt" data-v="portrait" onclick="wsOpt(this)">세로</button>
+              <button class="sopt" data-v="square" onclick="wsOpt(this)">정사각</button>
+            </span>
+            <span class="ws-opt-grp" data-opt="detail">
+              <button class="sopt" data-v="concise" onclick="wsOpt(this)">간결</button>
+              <button class="sopt on" data-v="standard" onclick="wsOpt(this)">보통</button>
+              <button class="sopt" data-v="detailed" onclick="wsOpt(this)">자세히</button>
+            </span>
+          </div>
+          <div class="ws-opt-row">
+            <span class="ws-opt-lbl">📑 슬라이드 분량</span>
+            <span class="ws-opt-grp" data-opt="length">
+              <button class="sopt" data-v="short" onclick="wsOpt(this)">짧게(적은 장)</button>
+              <button class="sopt on" data-v="default" onclick="wsOpt(this)">기본(많은 장)</button>
+            </span>
+          </div>
+        </div>
         <button class="nb-act" onclick="wsGeminiInfo(this)">🍌 Gemini 인포그래픽 <small>~20초 · 프롬프트 반영</small></button>
         <button class="nb-act" onclick="wsStudio(this,'infographic')">🖼️ 인포그래픽(NotebookLM) <small>~1분</small></button>
         <button class="nb-act" onclick="wsStudio(this,'slides')">📑 슬라이드 <small>~2분+</small></button>
@@ -881,7 +912,9 @@ async function showL0() {
         <div id="signals-box" class="signals-box"></div>
       </div>
       <div class="main-right">
-        <div class="side-title">📖 최근 브리핑 기록 <small style="color:var(--gold-dim);font-weight:400">클릭하면 그때 본 화면 그대로</small></div>
+        <div class="side-title">📰 최근 리포트 <small style="color:var(--gold-dim);font-weight:400">클릭하면 그 종목 브리핑</small></div>
+        <div id="recent-reports" class="brief-hist">불러오는 중…</div>
+        <div class="side-title" style="margin-top:18px">📖 최근 브리핑 기록 <small style="color:var(--gold-dim);font-weight:400">클릭하면 그때 본 화면 그대로</small></div>
         <div id="brief-history" class="brief-hist">불러오는 중…</div>
         <div class="side-title" style="margin-top:18px">📚 소스 라이브러리</div>
         <div class="cat-grid-side">${catCards || '<div style="color:var(--muted)">카테고리 없음</div>'}</div>
@@ -894,6 +927,21 @@ async function showL0() {
   `);
   loadSignals();
   loadBriefHistory();
+  loadRecentReports();
+}
+async function loadRecentReports() {
+  const box = qs('#recent-reports'); if (!box) return;
+  const STANCE = { bullish: '🟢', bearish: '🔴', neutral: '⚪' };
+  try {
+    const res = await apiFetch('/api/insights/recent_reports');
+    const rs = res.reports || [];
+    if (!rs.length) { box.innerHTML = '<div class="bh-empty">최근 리포트 없음 (크롤 대기)</div>'; return; }
+    box.innerHTML = rs.map(r =>
+      `<div class="bh-item" onclick="sigBrief('${escAttr(r.asset)}')">
+        <div class="bh-label">${STANCE[r.stance] || '📄'} ${escHtml(r.asset)} <small style="color:var(--muted);font-weight:400">${escHtml(r.source)} · ${escHtml(r.date)}</small></div>
+        <div class="bh-meta" style="white-space:normal">${escHtml(r.snippet)}</div>
+      </div>`).join('');
+  } catch(e) { box.innerHTML = '<div class="bh-empty">리포트를 불러오지 못했습니다.</div>'; }
 }
 async function loadBriefHistory() {
   const box = qs('#brief-history'); if (!box) return;
@@ -1704,19 +1752,42 @@ async function wsUploadImg(mode) {
   } catch(e) { if (msg) msg.innerHTML = `<div style="color:#e88">실패: ${escHtml(e.message)}</div>`; }
 }
 
+// 형식 선택칩(방향·밀도·분량)
+function wsOpt(btn) {
+  const grp = btn.closest('.ws-opt-grp'); if (!grp) return;
+  grp.querySelectorAll('.sopt').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+}
+function wsGetOpt(name) {
+  const grp = document.querySelector(`.ws-opt-grp[data-opt="${name}"]`);
+  const on = grp && grp.querySelector('.sopt.on');
+  return on ? on.getAttribute('data-v') : '';
+}
+const OPT_KO = { landscape: '가로', portrait: '세로', square: '정사각', concise: '간결', standard: '보통', detailed: '자세히', short: '짧게', default: '기본' };
 async function wsStudio(btn, kind) {
   const ws = window._ws; if (!ws) return;
   const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = '생성 중…';
   const labels = { infographic: '🖼️ 인포그래픽', slides: '📑 슬라이드', audio: '🎧 오디오', video: '🎬 영상' };
   const slow = (kind === 'infographic' || kind === 'slides');
   const focus = ((qs('#ws-studio-prompt') || {}).value || '').trim();
-  const head = (labels[kind] || kind) + (focus ? ` <small style="color:var(--muted);font-weight:400">— ${escHtml(focus)}</small>` : '');
+  // 형식 옵션 수집
+  const payload = { notebook_id: ws.id, kind, focus };
+  let optTxt = '';
+  if (kind === 'infographic') {
+    payload.orientation = wsGetOpt('orientation'); payload.detail = wsGetOpt('detail');
+    optTxt = `${OPT_KO[payload.orientation] || ''}·${OPT_KO[payload.detail] || ''}`;
+  } else if (kind === 'slides') {
+    payload.length = wsGetOpt('length');
+    optTxt = OPT_KO[payload.length] || '';
+  }
+  const metaBits = [optTxt, focus].filter(Boolean).join(' · ');
+  const head = (labels[kind] || kind) + (metaBits ? ` <small style="color:var(--muted);font-weight:400">— ${escHtml(metaBits)}</small>` : '');
   const card = wsAddCard(head, wsLoading(slow ? '생성 중… 완료까지 1~3분, 끝나면 여기 표시됩니다' : '시작 중…'));
   const body = card.querySelector('.ws-card-b');
   try {
     const res = await apiFetch('/api/insights/notebook_studio', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ notebook_id: ws.id, kind, focus })
+      body: JSON.stringify(payload)
     });
     btn.disabled = false; btn.innerHTML = orig;
     if (res.error) throw new Error(res.error);
