@@ -11,7 +11,7 @@ ingest_excel.py — 매일 엑셀넣을것 → wiki 자동 반영
     wiki/log.md 자동 기록
 """
 
-import sys, os, re, glob, argparse, subprocess, json
+import sys, os, re, glob, argparse, subprocess, json, bisect
 from datetime import datetime, date
 from pathlib import Path
 
@@ -882,11 +882,8 @@ def _run_osc_com(path: Path) -> dict:
     if p90 is None: p90 = all_sorted[int(n * 0.90)]
 
     def pct(v):
-        if v <= p10: return 10 * (v / p10) if p10 else 5
-        if v <= p25: return 10 + (v - p10) / (p25 - p10) * 15
-        if v <= p75: return 25 + (v - p25) / (p75 - p25) * 50
-        if v <= p90: return 75 + (v - p75) / (p90 - p75) * 15
-        return min(90 + (v - p90) / abs(p90) * 5 if p90 else 95, 100)
+        # 실제 백분위(rank 기반): osc 낮을수록 0(완전빈집)·높을수록 100(과열). 단조·역전없음
+        return round(bisect.bisect_right(all_sorted, v) / n * 100, 2) if n else 50
 
     빈집_A    = sorted([r for r in results if r["osc"] <= p10], key=lambda x: x["osc"])
     빈집_B    = sorted([r for r in results if p10 < r["osc"] <= p25], key=lambda x: x["osc"])
@@ -1023,11 +1020,8 @@ def _run_osc_openpyxl(path: Path) -> dict:
     if p90 is None: p90 = all_sorted[int(n * 0.90)]
 
     def pct(v):
-        if v <= p10: return 10 * (v / p10) if p10 else 5
-        if v <= p25: return 10 + (v - p10) / (p25 - p10) * 15
-        if v <= p75: return 25 + (v - p25) / (p75 - p25) * 50
-        if v <= p90: return 75 + (v - p75) / (p90 - p75) * 15
-        return min(90 + (v - p90) / abs(p90) * 5 if p90 else 95, 100)
+        # 실제 백분위(rank 기반): osc 낮을수록 0(완전빈집)·높을수록 100(과열). 단조·역전없음
+        return round(bisect.bisect_right(all_sorted, v) / n * 100, 2) if n else 50
 
     빈집_A    = sorted([r for r in results if r["osc"] <= p10], key=lambda x: x["osc"])
     빈집_B    = sorted([r for r in results if p10 < r["osc"] <= p25], key=lambda x: x["osc"])
