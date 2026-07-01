@@ -266,7 +266,12 @@ def extract_telegram(md_path: Path, ctype: str) -> dict:
         except Exception as e:
             _m = str(e)
             if any(c in _m for c in ("429", "RESOURCE_EXHAUSTED")):
-                if _rotate_key():
+                if "PerDay" in _m or "limit: 500" in _m:
+                    if _rotate_key():
+                        continue
+                else:
+                    import time
+                    time.sleep(62)
                     continue
             print(f"  [WARN] 추출 실패({ctype}): {e}")
             return {}

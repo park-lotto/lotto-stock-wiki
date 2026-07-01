@@ -62,7 +62,14 @@ def extract_post(md_path: Path) -> dict:
         except Exception as e:
             _m = str(e)
             if any(c in _m for c in ("429", "RESOURCE_EXHAUSTED")):
-                if _rotate_key():
+                if "PerDay" in _m or "limit: 500" in _m:
+                    # 일일 한도 초과 → 다른 프로젝트 키로 rotation
+                    if _rotate_key():
+                        continue
+                else:
+                    # 분당 한도(15건/분) → 60초 대기 후 재시도 (키 교체 소용없음)
+                    import time
+                    time.sleep(62)
                     continue
             print(f"  [WARN] 포스트 추출 실패: {e}")
             return {}

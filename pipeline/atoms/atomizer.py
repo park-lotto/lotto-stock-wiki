@@ -119,8 +119,13 @@ def atomize_text(
         except Exception as e:
             _m = str(e)
             if any(c in _m for c in ("429", "RESOURCE_EXHAUSTED")):
-                # 일일/분당 한도 초과 → 다음 키로 교체 후 즉시 재시도
-                if _rotate_key():
+                if "PerDay" in _m or "limit: 500" in _m:
+                    # 일일 한도 초과 → 다른 프로젝트 키로 rotation
+                    if _rotate_key():
+                        continue
+                else:
+                    # 분당 한도(15건/분) → 62초 대기 (같은 프로젝트 키 교체 무의미)
+                    time.sleep(62)
                     continue
             if _attempt < 5 and any(c in _m for c in ("503", "UNAVAILABLE", "overloaded")):
                 time.sleep((_attempt + 1) * 5)
