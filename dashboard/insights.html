@@ -764,6 +764,7 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
           </select>
           <button class="ws-web-btn" onclick="wsNaverBoard()">🗣️ 여론 분석</button>
         </div>
+        <button class="nb-act" onclick="wsNaverNews()" style="margin-top:8px">📰 종목 뉴스(상승원인) <small>광고성 제외 · 이유있는 뉴스만</small></button>
       </div>
       <div class="ws-act-group">
         <div class="ws-act-label">🎨 만들기 — 스탁브레인 스튜디오</div>
@@ -1950,6 +1951,29 @@ async function wsNaverBoard() {
     body.innerHTML = e.name === 'AbortError'
       ? `<div class="nb-qa-q">종목: ${escHtml(stock)}</div><div style="color:var(--muted)">취소됨</div>`
       : `<div class="nb-qa-q">종목: ${escHtml(stock)}</div><div style="color:#e88">종토방 분석 실패: ${escHtml(e.message)}</div>`;
+  }
+}
+async function wsNaverNews() {
+  const ws = window._ws; if (!ws) return;
+  const stock = (((qs('#nb-stock') || {}).value || '').trim()) || (((qs('#ws-q') || {}).value || '').trim()) || ws.label || '';
+  if (!stock) { toast('종목명을 입력하세요 (예: 대우건설)', true); return; }
+  const card = wsAddCard('📰 종목 뉴스', `<div class="nb-qa-q">종목: ${escHtml(stock)}</div>${wsLoading('네이버 종목뉴스 렌더링 + 상승원인 분석 중… (~20초)', true)}`);
+  card._abort = new AbortController();
+  const body = card.querySelector('.ws-card-b');
+  try {
+    const res = await apiFetch('/api/insights/naver_news', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stock }), signal: card._abort.signal
+    });
+    if (res.error) throw new Error(res.error);
+    const list = (res.news || []).map(t => `<div class="sig-fact" style="border-left-color:#fb923c"><div class="sig-fact-txt">${escHtml(t)}</div></div>`).join('');
+    body.innerHTML = `<div class="nb-qa-q">📰 <b>${escHtml(res.stock)}</b>(${res.code}) 종목뉴스 · ${res.count}건(광고 제외) <a href="${res.url}" target="_blank" style="font-size:.72rem;color:#67e8f9">↗ 네이버뉴스</a></div>
+      <div class="nb-qa-a">${marked.parse(res.analysis || '')}</div>
+      <details style="margin-top:8px"><summary style="cursor:pointer;color:var(--gold-dim);font-size:.76rem">📰 수집 뉴스 ${(res.news || []).length}건</summary><div style="margin-top:6px;display:flex;flex-direction:column;gap:6px">${list}</div></details>`;
+  } catch(e) {
+    body.innerHTML = e.name === 'AbortError'
+      ? `<div class="nb-qa-q">종목: ${escHtml(stock)}</div><div style="color:var(--muted)">취소됨</div>`
+      : `<div class="nb-qa-q">종목: ${escHtml(stock)}</div><div style="color:#e88">뉴스 분석 실패: ${escHtml(e.message)}</div>`;
   }
 }
 async function wsAsk() {
