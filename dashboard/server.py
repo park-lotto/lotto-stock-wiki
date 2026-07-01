@@ -3277,6 +3277,102 @@ async def api_insights_claude_chat(req: Request):
     return JSONResponse(content=result, status_code=(200 if result.get("ok") else 500))
 
 
+def _naver_board_titles(code, pages=2):
+    """네이버 종목토론방 최근 게시글 제목 수집 (UTF-8)."""
+    import urllib.request
+    titles = []
+    for p in range(1, pages + 1):
+        url = f"https://finance.naver.com/item/board.naver?code={code}&page={p}"
+        try:
+            req = urllib.request.Request(url, headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+                "Accept-Encoding": "identity"})
+            d = urllib.request.urlopen(req, timeout=10).read().decode("utf-8", "replace")
+        except Exception:
+            break
+        ts = re.findall(r'<td class="title">\s*<a [^>]*title="([^"]+)"', d)
+        if not ts:
+            ts = re.findall(r'class="title"[^>]*>\s*<a[^>]*title="([^"]+)"', d)
+        titles += ts
+    seen, out = set(), []
+    for t in titles:
+        t = re.sub(r"\s+", " ", t).strip()
+        if t and t not in seen:
+            seen.add(t)
+            out.append(t)
+    return out
+
+
+@app.post("/api/insights/naver_board")
+async def api_insights_naver_board(req: Request):
+    """네이버 종목토론방 크롤링 → 개인투자자 여론·상승이유 댓글분석 (Gemini)."""
+    body = {}
+    try:
+        body = await req.json()
+    except Exception:
+        pass
+    stock = (body.get("stock") or "").strip()
+    if not stock:
+        return JSONResponse(content={"error": "종목명 필요"}, status_code=400)
+    try:
+        from pipeline.atoms.codemap import code_for
+    except Exception:
+        return JSONResponse(content={"error": "codemap 없음"}, status_code=500)
+
+    code, tried = code_for(stock), stock
+    if not code:
+        for tok in re.split(r"[\s,·/]+", stock):
+            tok = tok.strip()
+            if tok and code_for(tok):
+                code, tried = code_for(tok), tok
+                break
+    if not code:
+        return JSONResponse(content={"error": f"'{stock}' 종목코드를 못 찾음 — 정확한 종목명으로 다시 시도"}, status_code=400)
+
+    titles = await run_in_threadpool(_naver_board_titles, code, 2)
+    if not titles:
+        return JSONResponse(content={"error": "종토방 글을 가져오지 못했습니다(네이버 접근 실패)"}, status_code=502)
+
+    def _analyze():
+        try:
+            from google import genai
+        except Exception as e:
+            return {"error": f"google-genai 없음: {str(e)[:120]}"}
+        keys = _gemini_interactive_keys()
+        if not keys:
+            return {"error": ".env에 GEMINI_API_KEY 없음"}
+        prompt = (
+            f"아래는 네이버 종목토론방 '{tried}'({code}) 최근 게시글 제목 {len(titles)}개다. "
+            "개인투자자(개미) 여론을 분석해 한국어로 정리하라:\n"
+            "1) 전반 분위기 — 긍정/부정/혼조 + 강도(예: 강한 낙관, 불안 등)\n"
+            "2) 주가 상승/하락 이유로 언급되는 것 — 실제 제목에 나온 근거만\n"
+            "3) 자주 나오는 키워드·이슈 (예: 대차해지, 원전, 국회 등)\n"
+            "4) 대표 목소리 2~3개 (제목 인용, 짧게)\n"
+            "⚠️ 제목에 있는 내용만. 없는 건 지어내지 마라. 과열/작전 의심 신호가 보이면 표시.\n\n"
+            "게시글 제목들:\n" + "\n".join(f"- {t}" for t in titles[:40]))
+        last = ""
+        for k in keys:
+            try:
+                client = genai.Client(api_key=k)
+                resp = client.models.generate_content(
+                    model="gemini-3-flash-preview", contents=prompt)
+                return {"ok": True, "analysis": (resp.text or "").strip() or "(빈 응답)"}
+            except Exception as e:
+                last = str(e)
+                if "429" in last or "RESOURCE_EXHAUSTED" in last:
+                    continue
+                return {"error": f"Gemini 분석 실패: {last[:200]}"}
+        return {"error": f"Gemini 쿼터 소진: {last[:150]}"}
+
+    res = await run_in_threadpool(_analyze)
+    if not res.get("ok"):
+        return JSONResponse(content=res, status_code=500)
+    return JSONResponse(content={
+        "ok": True, "stock": tried, "code": code, "count": len(titles),
+        "analysis": res["analysis"], "titles": titles[:12],
+        "url": f"https://finance.naver.com/item/board.naver?code={code}"})
+
+
 @app.post("/api/insights/gemini_chat")
 async def api_insights_gemini_chat(req: Request):
     """Gemini 리서치 대화 — 구글 검색 그라운딩으로 최신 사실 + 노트북 자료 참고."""
