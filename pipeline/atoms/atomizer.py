@@ -11,7 +11,8 @@ _GEMINI_MODEL = "gemini-3.1-flash-lite"
 
 
 def _load_gemini_keys() -> list[str]:
-    """GEMINI_API_KEY, GEMINI_API_KEY_2, ... 순서로 모든 키 반환."""
+    """인제스트용 Gemini 키. 전용키(_3)가 있으면 그것만 사용해 대화형 리서치/이미지 키(_1·_2)와
+    쿼터를 분리한다(대화형이 백그라운드 인제스트에 안 막히게). 없으면 _1·_2 폴백."""
     env_path = Path(__file__).parent.parent.parent / ".env"
     env_vals: dict[str, str] = {}
     if env_path.exists():
@@ -20,13 +21,13 @@ def _load_gemini_keys() -> list[str]:
                 k, v = line.split("=", 1)
                 env_vals[k.strip()] = v.strip()
 
-    keys = []
-    for suffix in ["", "_2", "_3", "_4", "_5"]:
-        k = f"GEMINI_API_KEY{suffix}"
-        val = os.environ.get(k) or env_vals.get(k, "")
-        if val:
-            keys.append(val)
-    return keys
+    def _v(name: str) -> str:
+        return os.environ.get(name) or env_vals.get(name, "")
+
+    dedicated = _v("GEMINI_API_KEY_3")
+    if dedicated:
+        return [dedicated]   # 인제스트 전용
+    return [k for k in (_v("GEMINI_API_KEY"), _v("GEMINI_API_KEY_2")) if k]
 
 
 def _load_gemini_key() -> str:
