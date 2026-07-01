@@ -2015,6 +2015,7 @@ function wlAmt(v){
 }
 
 let _wlItems=[];            // 마지막 렌더된 종목 전체데이터 (드래그 재정렬용)
+const _IS_TOUCH=(window.matchMedia&&window.matchMedia("(hover:none)").matches)||("ontouchstart" in window);
 function renderWatchlist(items){
   const row=document.getElementById("wl-row");
   const cnt=document.getElementById("wl-count");
@@ -2035,7 +2036,7 @@ function renderWatchlist(items){
     } else {
       supHtml=`<div class="wl-sup-na">잠정수급 집계 전</div>`;
     }
-    return`<div class="wl-card" draggable="true" data-code="${it.code}"
+    return`<div class="wl-card" draggable="${_IS_TOUCH?'false':'true'}" data-code="${it.code}"
       ondragstart="wlDragStart(event,'${it.code}')" ondragover="wlDragOver(event,'${it.code}')"
       ondragleave="wlDragLeave(event)" ondrop="wlDrop(event,'${it.code}')" ondragend="wlDragEnd(event)"
       onclick="wlCardClick('${it.code}','${esc(it.name)}')">
@@ -2391,6 +2392,7 @@ function _toggleTaerini(){
 }
 function _applyTaeriniCollapse(){
   let c=false; try{ c=localStorage.getItem("taerini_collapsed")==="1"; }catch(_){}
+  if(_IS_TOUCH) c=false;   // 모바일: 토글 숨김이라 항상 펼침
   const p=document.getElementById("taerini-panel"), b=document.getElementById("tk-toggle");
   if(p) p.classList.toggle("collapsed", c);
   if(b) b.textContent = c ? "▶" : "◀";
