@@ -81,3 +81,4 @@ out/studio/
 # 서버 배포 자격증명 (커밋 금지)
 deploy/stockbrain.env
 /etc/stockbrain.env
+pipeline/push_token.txt

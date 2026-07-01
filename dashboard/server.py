@@ -146,7 +146,7 @@ DASH_USER   = os.environ.get("DASH_USER", "admin")
 DASH_PASS   = os.environ.get("DASH_PASS", "")        # 비어있으면 인증 OFF(로컬 개발)
 DASH_SECRET = os.environ.get("DASH_SECRET", "stockbrain-local-secret")
 _AUTH_ON = bool(DASH_PASS)
-_AUTH_ALLOW = ("/login", "/api/login", "/favicon.ico", "/healthz")
+_AUTH_ALLOW = ("/login", "/api/login", "/favicon.ico", "/healthz", "/api/push_market_flow")
 
 def _auth_token() -> str:
     return _hmac.new(DASH_SECRET.encode(), f"{DASH_USER}:{DASH_PASS}".encode(), _hashlib.sha256).hexdigest()
@@ -1092,9 +1092,28 @@ def _build_market_flow_result(done: dict) -> dict:
     return result
 
 
+# ── 로컬(키움 보유 PC)이 보낸 market_flow 수신·서빙 (서버는 키움 없음) ──
+_pushed_flow = {"data": None, "ts": 0.0}
+PUSH_TOKEN = os.environ.get("PUSH_TOKEN", "")
+
+@app.post("/api/push_market_flow")
+async def _push_market_flow(req: Request):
+    if not PUSH_TOKEN or req.headers.get("x-push-token") != PUSH_TOKEN:
+        return JSONResponse({"error": "forbidden"}, status_code=403)
+    try:
+        _pushed_flow["data"] = await req.json()
+        _pushed_flow["ts"] = time.time()
+        return {"ok": True, "ts": _pushed_flow["ts"]}
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=400)
+
+
 @app.get("/api/market_flow")
 def api_market_flow():
     """코스피/코스닥/미국선물(SPY)/코스피야간선물 지수 15분봉 + 투자자/프로그램 시계열."""
+    # 릴레이 서버(키움 없음): 로컬이 보낸 데이터를 우선 서빙 (장 마감 후엔 마지막 전송분 유지)
+    if os.environ.get("SERVE_PUSHED") and _pushed_flow["data"]:
+        return JSONResponse(content=_pushed_flow["data"])
     try:
         import kis_api, kiwoom_api, naver_api
         from concurrent.futures import ThreadPoolExecutor
