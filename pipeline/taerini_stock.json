@@ -25,7 +25,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.015140290767663721,
-        "surprise_rate": 0.04692341744134567
+        "surprise_rate": 0.04692341744134567,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -43,7 +44,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 2.4642857142857144
+        "surprise_rate": 2.4642857142857144,
+        "date": "2026-06-26"
       }
     },
     "204320": {
@@ -58,12 +60,15 @@
         "target": 95000,
         "prev": 80000,
         "change_pct": 18.8,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "삼성증권",
+        "date": "2026-06-15"
       },
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.032497472692753424,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -82,12 +87,15 @@
         "target": 7000,
         "prev": 8000,
         "change_pct": -12.5,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "BNK투자증권",
+        "date": "2026-06-05"
       },
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.01256328520532534,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "475150": {
@@ -145,7 +153,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.21666666666666665
+        "surprise_rate": -0.21666666666666665,
+        "date": "2026-06-26"
       }
     },
     "030000": {
@@ -159,7 +168,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.03054134760370174,
-        "surprise_rate": -0.33363752509582045
+        "surprise_rate": -0.33363752509582045,
+        "date": "2026-06-26"
       }
     },
     "445090": {
@@ -191,7 +201,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.02104791759964169
+        "surprise_rate": -0.02104791759964169,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -210,12 +221,15 @@
         "target": 140000,
         "prev": 96000,
         "change_pct": 45.8,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "다올투자증권",
+        "date": "2026-06-12"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.07987220447284345,
-        "surprise_rate": 0.2506224066390041
+        "surprise_rate": 0.2506224066390041,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "시총상위300",
@@ -242,7 +256,8 @@
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.09346567411083549,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "010170": {
@@ -270,12 +285,15 @@
         "target": 107000,
         "prev": 147684,
         "change_pct": -27.5,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "한국투자증권",
+        "date": "2026-06-26"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.16149068322981353,
-        "surprise_rate": 0.6000000000000001
+        "surprise_rate": 0.6000000000000001,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "주당순이익1개+",
@@ -293,7 +311,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.037433155080213866,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "주당순이익1개+",
@@ -312,12 +331,15 @@
         "target": 350000,
         "prev": 180000,
         "change_pct": 94.4,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "교보증권",
+        "date": "2026-06-23"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.16867578381299134,
-        "surprise_rate": 0.21403702199268837
+        "surprise_rate": 0.21403702199268837,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -353,7 +375,8 @@
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -34,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "454910": {
@@ -376,7 +399,8 @@
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.040767386091127164,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "시총상위300",
@@ -467,7 +491,8 @@
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.22499999999999995,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -513,12 +538,15 @@
         "target": 170000,
         "prev": 160000,
         "change_pct": 6.2,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "메리츠증권",
+        "date": "2026-06-10"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.029112592072956696,
-        "surprise_rate": -0.10916442048517515
+        "surprise_rate": -0.10916442048517515,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "시총상위300",
@@ -599,7 +627,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.9074626865671641
+        "surprise_rate": -0.9074626865671641,
+        "date": "2026-06-26"
       }
     },
     "004100": {
@@ -644,7 +673,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.03722084367245658,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       },
       "etf": {
         "action": "비중감소",
@@ -763,7 +793,9 @@
         "target": 41000,
         "prev": 34000,
         "change_pct": 20.6,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "DS투자증권",
+        "date": "2026-07-01"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -912,7 +944,9 @@
         "target": 47000,
         "prev": 44000,
         "change_pct": 6.8,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "현대차증권",
+        "date": "2026-06-19"
       }
     },
     "011330": {
@@ -999,12 +1033,15 @@
         "target": 17000,
         "prev": 14000,
         "change_pct": 21.4,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "신한투자증권",
+        "date": "2026-06-17"
       },
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.04530744336569575,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "290670": {
@@ -1091,12 +1128,15 @@
         "target": 57000,
         "prev": 43000,
         "change_pct": 32.6,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "DB증권",
+        "date": "2026-06-26"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.03289473684210526
+        "surprise_rate": 0.03289473684210526,
+        "date": "2026-06-26"
       }
     },
     "362320": {
@@ -1245,7 +1285,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.40555555555555556
+        "surprise_rate": -0.40555555555555556,
+        "date": "2026-06-26"
       }
     },
     "004360": {
@@ -1448,7 +1489,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.9888888888888889
+        "surprise_rate": 0.9888888888888889,
+        "date": "2026-06-26"
       }
     },
     "040300": {
@@ -1574,7 +1616,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.3982808022922636,
-        "surprise_rate": -0.2481012658227848
+        "surprise_rate": -0.2481012658227848,
+        "date": "2026-06-26"
       }
     },
     "478560": {
@@ -1615,7 +1658,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.5142857142857143
+        "surprise_rate": -0.5142857142857143,
+        "date": "2026-06-26"
       }
     },
     "033790": {
@@ -1917,7 +1961,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.04045307443365696,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "373160": {
@@ -1950,12 +1995,15 @@
         "target": 12000,
         "prev": 15000,
         "change_pct": -20.0,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "대신증권",
+        "date": "2026-06-18"
       },
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.20146520146520147,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "046440": {
@@ -2077,7 +2125,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.036206896551724134
+        "surprise_rate": 0.036206896551724134,
+        "date": "2026-06-26"
       }
     },
     "232680": {
@@ -2127,7 +2176,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.9041666666666669
+        "surprise_rate": 0.9041666666666669,
+        "date": "2026-06-26"
       }
     },
     "017550": {
@@ -2258,7 +2308,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.04265402843601901,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "441270": {
@@ -2343,12 +2394,15 @@
         "target": 2400000,
         "prev": 2100000,
         "change_pct": 14.3,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "메리츠증권",
+        "date": "2026-06-10"
       },
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.01792326876086342,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -2383,12 +2437,15 @@
         "target": 2950000,
         "prev": 2000000,
         "change_pct": 47.5,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "메리츠증권",
+        "date": "2026-06-10"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.036848671801807335,
-        "surprise_rate": 0.20638258562333675
+        "surprise_rate": 0.20638258562333675,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -2416,12 +2473,15 @@
         "target": 950000,
         "prev": 330000,
         "change_pct": 187.9,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "iM증권",
+        "date": "2026-06-22"
       },
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.46347384156814275,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -2439,7 +2499,9 @@
         "target": 190000,
         "prev": 120000,
         "change_pct": 58.3,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "BNK투자증권",
+        "date": "2026-06-29"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -2457,12 +2519,15 @@
         "target": 850000,
         "prev": 630000,
         "change_pct": 34.9,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "키움증권",
+        "date": "2026-06-10"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.06297881621636349,
-        "surprise_rate": 0.3397900440230273
+        "surprise_rate": 0.3397900440230273,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -2485,12 +2550,15 @@
         "target": 1400000,
         "prev": 1300000,
         "change_pct": 7.7,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "메리츠증권",
+        "date": "2026-06-10"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.03730883023320254,
-        "surprise_rate": 0.5433498824144238
+        "surprise_rate": 0.5433498824144238,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -2512,7 +2580,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.0468146718146719,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -2530,12 +2599,15 @@
         "target": 440000,
         "prev": 340000,
         "change_pct": 29.4,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "현대차증권",
+        "date": "2026-06-10"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.04905115356341537,
-        "surprise_rate": 0.5514364248499604
+        "surprise_rate": 0.5514364248499604,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -2557,7 +2629,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.03398058252427184,
-        "surprise_rate": 0.23999999999999996
+        "surprise_rate": 0.23999999999999996,
+        "date": "2026-06-26"
       }
     },
     "032830": {
@@ -2571,12 +2644,15 @@
         "target": 420000,
         "prev": 360000,
         "change_pct": 16.7,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "LS증권",
+        "date": "2026-06-10"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.03849986411812664,
-        "surprise_rate": 0.5473618233618233
+        "surprise_rate": 0.5473618233618233,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -2594,12 +2670,15 @@
         "target": 230000,
         "prev": 200000,
         "change_pct": 15.0,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "키움증권",
+        "date": "2026-06-10"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.04345631655983452,
-        "surprise_rate": 0.2959565417926511
+        "surprise_rate": 0.2959565417926511,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -2617,12 +2696,15 @@
         "target": 550000,
         "prev": 425000,
         "change_pct": 29.4,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "NH투자증권",
+        "date": "2026-06-11"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.004028742949699863,
-        "surprise_rate": -0.19499357434206852
+        "surprise_rate": -0.19499357434206852,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -2645,12 +2727,15 @@
         "target": 36000,
         "prev": 50000,
         "change_pct": -28.0,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "NH투자증권",
+        "date": "2026-06-26"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.07455578677765326,
-        "surprise_rate": 1.0929261503193057
+        "surprise_rate": 1.0929261503193057,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -2667,7 +2752,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.10253521126760565
+        "surprise_rate": -0.10253521126760565,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "시총상위300",
@@ -2701,7 +2787,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.44999999999999984,
-        "surprise_rate": 1.8000000000000003
+        "surprise_rate": 1.8000000000000003,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -2719,12 +2806,15 @@
         "target": 20000,
         "prev": 19000,
         "change_pct": 5.3,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "흥국증권",
+        "date": "2026-06-23"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.014778325123152709,
-        "surprise_rate": 0.07290145985401468
+        "surprise_rate": 0.07290145985401468,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -2742,12 +2832,15 @@
         "target": 2600000,
         "prev": 2400000,
         "change_pct": 8.3,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "메리츠증권",
+        "date": "2026-06-23"
       },
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.02388876990489641,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -2782,12 +2875,15 @@
         "target": 73000,
         "prev": 35000,
         "change_pct": 108.6,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "대신증권",
+        "date": "2026-06-16"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.016020245743011908,
-        "surprise_rate": -0.04053227286631992
+        "surprise_rate": -0.04053227286631992,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -2813,12 +2909,15 @@
         "target": 44000,
         "prev": 51000,
         "change_pct": -13.7,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "삼성증권",
+        "date": "2026-06-26"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.12853748109742927,
-        "surprise_rate": -0.8722416741307711
+        "surprise_rate": -0.8722416741307711,
+        "date": "2026-06-26"
       }
     },
     "002030": {
@@ -2848,12 +2947,15 @@
         "target": 185000,
         "prev": 213000,
         "change_pct": -13.1,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "키움증권",
+        "date": "2026-06-10"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.025043759256765847,
-        "surprise_rate": 0.7083839611178615
+        "surprise_rate": 0.7083839611178615,
+        "date": "2026-06-26"
       }
     },
     "047050": {
@@ -2866,7 +2968,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.009306600792784538,
-        "surprise_rate": 0.13650379883650698
+        "surprise_rate": 0.13650379883650698,
+        "date": "2026-06-26"
       }
     },
     "003570": {
@@ -2895,7 +2998,8 @@
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.04223433242506812,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "003030": {
@@ -2909,12 +3013,15 @@
         "target": 205000,
         "prev": 250000,
         "change_pct": -18.0,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "상상인증권",
+        "date": "2026-06-22"
       },
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.24185667752443,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "000250": {
@@ -2931,12 +3038,15 @@
         "target": 41000,
         "prev": 50000,
         "change_pct": -18.0,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "한화투자증권",
+        "date": "2026-06-12"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.001701222753854357,
-        "surprise_rate": -0.30949248120300754
+        "surprise_rate": -0.30949248120300754,
+        "date": "2026-06-26"
       }
     },
     "105560": {
@@ -2945,12 +3055,15 @@
         "target": 220000,
         "prev": 200000,
         "change_pct": 10.0,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "하나증권",
+        "date": "2026-06-12"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.01785749697582646,
-        "surprise_rate": 0.11643356214005919
+        "surprise_rate": 0.11643356214005919,
+        "date": "2026-06-26"
       }
     },
     "222800": {
@@ -2959,12 +3072,15 @@
         "target": 160000,
         "prev": 105000,
         "change_pct": 52.4,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "대신증권",
+        "date": "2026-06-16"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.006197881451431115,
-        "surprise_rate": 0.21327433628318584
+        "surprise_rate": 0.21327433628318584,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "시총상위300",
@@ -2982,12 +3098,15 @@
         "target": 130000,
         "prev": 78696,
         "change_pct": 65.2,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "현대차증권",
+        "date": "2026-06-12"
       },
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.04716471647164712,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -3000,12 +3119,15 @@
         "target": 40000,
         "prev": 34000,
         "change_pct": 17.6,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "iM증권",
+        "date": "2026-06-19"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.36007038525024143,
-        "surprise_rate": 0.2777654293546713
+        "surprise_rate": 0.2777654293546713,
+        "date": "2026-06-26"
       }
     },
     "005880": {
@@ -3014,12 +3136,15 @@
         "target": 2400,
         "prev": 2200,
         "change_pct": 9.1,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "삼성증권",
+        "date": "2026-06-30"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.48900000000000005
+        "surprise_rate": 0.48900000000000005,
+        "date": "2026-06-26"
       }
     },
     "007070": {
@@ -3028,12 +3153,15 @@
         "target": 32000,
         "prev": 30000,
         "change_pct": 6.7,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "키움증권",
+        "date": "2026-06-30"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.013635044966637623,
-        "surprise_rate": 0.13786369849638747
+        "surprise_rate": 0.13786369849638747,
+        "date": "2026-06-26"
       }
     },
     "011200": {
@@ -3042,12 +3170,15 @@
         "target": 24000,
         "prev": 23000,
         "change_pct": 4.3,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "삼성증권",
+        "date": "2026-06-30"
       },
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.03853603734480017,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "036570": {
@@ -3056,12 +3187,15 @@
         "target": 300000,
         "prev": 280000,
         "change_pct": 7.1,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "부국증권",
+        "date": "2026-06-29"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.034878492248137855,
-        "surprise_rate": 0.26470916601540706
+        "surprise_rate": 0.26470916601540706,
+        "date": "2026-06-26"
       }
     },
     "069960": {
@@ -3070,12 +3204,15 @@
         "target": 250000,
         "prev": 130000,
         "change_pct": 92.3,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "IBK투자증권",
+        "date": "2026-06-17"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.05838509316770179,
-        "surprise_rate": -0.014073260804471471
+        "surprise_rate": -0.014073260804471471,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -3088,12 +3225,15 @@
         "target": 84000,
         "prev": 78000,
         "change_pct": 7.7,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "유안타증권",
+        "date": "2026-06-30"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.012934322768569312,
-        "surprise_rate": 0.06917551530293554
+        "surprise_rate": 0.06917551530293554,
+        "date": "2026-06-26"
       }
     },
     "259960": {
@@ -3102,12 +3242,15 @@
         "target": 380000,
         "prev": 350000,
         "change_pct": 8.6,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "유안타증권",
+        "date": "2026-06-30"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.06031318984547466,
-        "surprise_rate": 0.49761314238472387
+        "surprise_rate": 0.49761314238472387,
+        "date": "2026-06-26"
       }
     },
     "281820": {
@@ -3116,7 +3259,9 @@
         "target": 127000,
         "prev": 50000,
         "change_pct": 154.0,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "DB증권",
+        "date": "2026-06-30"
       },
       "accel": {
         "group": "시총상위300",
@@ -3129,12 +3274,15 @@
         "target": 731000,
         "prev": 652000,
         "change_pct": 12.1,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "LS증권",
+        "date": "2026-06-29"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.00930738547080871,
-        "surprise_rate": -0.2278103916586349
+        "surprise_rate": -0.2278103916586349,
+        "date": "2026-06-26"
       }
     },
     "006260": {
@@ -3143,12 +3291,15 @@
         "target": 570000,
         "prev": 250000,
         "change_pct": 128.0,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "iM증권",
+        "date": "2026-06-22"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.04608659141989189,
-        "surprise_rate": 0.3085726862550896
+        "surprise_rate": 0.3085726862550896,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -3161,12 +3312,15 @@
         "target": 133000,
         "prev": 127000,
         "change_pct": 4.7,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "LS증권",
+        "date": "2026-06-29"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.029530744336569617,
-        "surprise_rate": 1.1908066841065614
+        "surprise_rate": 1.1908066841065614,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -3179,12 +3333,15 @@
         "target": 5000,
         "prev": 4000,
         "change_pct": 25.0,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "삼성증권",
+        "date": "2026-06-29"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.03288307982603498,
-        "surprise_rate": 0.05779906389463375
+        "surprise_rate": 0.05779906389463375,
+        "date": "2026-06-26"
       }
     },
     "131970": {
@@ -3193,12 +3350,15 @@
         "target": 150000,
         "prev": 54000,
         "change_pct": 177.8,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "DB증권",
+        "date": "2026-06-29"
       },
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.16045508042369558,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "시총상위300",
@@ -3216,12 +3376,15 @@
         "target": 110000,
         "prev": 130000,
         "change_pct": -15.4,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "하나증권",
+        "date": "2026-06-09"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.002447980416156825,
-        "surprise_rate": 0.2018586227909811
+        "surprise_rate": 0.2018586227909811,
+        "date": "2026-06-26"
       }
     },
     "240810": {
@@ -3230,12 +3393,15 @@
         "target": 207000,
         "prev": 161000,
         "change_pct": 28.6,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "NH투자증권",
+        "date": "2026-06-29"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.6507692307692309
+        "surprise_rate": 0.6507692307692309,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -3253,12 +3419,15 @@
         "target": 270000,
         "prev": 230000,
         "change_pct": 17.4,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "KB증권",
+        "date": "2026-06-11"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.018765133171912834,
-        "surprise_rate": -0.6813633775319288
+        "surprise_rate": -0.6813633775319288,
+        "date": "2026-06-26"
       }
     },
     "064400": {
@@ -3267,7 +3436,9 @@
         "target": 111000,
         "prev": 93000,
         "change_pct": 19.4,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "유진투자증권",
+        "date": "2026-06-25"
       }
     },
     "214450": {
@@ -3276,12 +3447,15 @@
         "target": 400000,
         "prev": 500000,
         "change_pct": -20.0,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "삼성증권",
+        "date": "2026-06-24"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.004878781055317915,
-        "surprise_rate": -0.05974068603315281
+        "surprise_rate": -0.05974068603315281,
+        "date": "2026-06-26"
       },
       "etf": {
         "action": "비중증가",
@@ -3295,12 +3469,15 @@
         "target": 59000,
         "prev": 55651,
         "change_pct": 6.0,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "교보증권",
+        "date": "2026-06-24"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.27157523844237896,
-        "surprise_rate": 22.86855670103093
+        "surprise_rate": 22.86855670103093,
+        "date": "2026-06-26"
       }
     },
     "012330": {
@@ -3309,12 +3486,15 @@
         "target": 850000,
         "prev": 570000,
         "change_pct": 49.1,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "흥국증권",
+        "date": "2026-06-12"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.0066236449215171704,
-        "surprise_rate": -0.06265327572112575
+        "surprise_rate": -0.06265327572112575,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -3327,12 +3507,15 @@
         "target": 250000,
         "prev": 180000,
         "change_pct": 38.9,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "하나증권",
+        "date": "2026-06-24"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.008322725937530683,
-        "surprise_rate": 0.1733730750124194
+        "surprise_rate": 0.1733730750124194,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -3345,12 +3528,15 @@
         "target": 234000,
         "prev": 156000,
         "change_pct": 50.0,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "현대차증권",
+        "date": "2026-06-24"
       },
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.0689798462497403,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "시총상위300",
@@ -3368,12 +3554,15 @@
         "target": 510000,
         "prev": 500000,
         "change_pct": 2.0,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "삼성증권",
+        "date": "2026-06-24"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.019585882082651256,
-        "surprise_rate": 0.18609956815774456
+        "surprise_rate": 0.18609956815774456,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -3386,12 +3575,15 @@
         "target": 6300,
         "prev": 6800,
         "change_pct": -7.4,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "삼성증권",
+        "date": "2026-06-30"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.02764610221099619,
-        "surprise_rate": 0.08283387121561397
+        "surprise_rate": 0.08283387121561397,
+        "date": "2026-06-26"
       }
     },
     "122640": {
@@ -3400,7 +3592,9 @@
         "target": 50000,
         "prev": 35000,
         "change_pct": 42.9,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "리딩투자증권",
+        "date": "2026-06-23"
       }
     },
     "267250": {
@@ -3409,12 +3603,15 @@
         "target": 350000,
         "prev": 210000,
         "change_pct": 66.7,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "BNK투자증권",
+        "date": "2026-06-23"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.14776242467776926,
-        "surprise_rate": 0.5439869281045753
+        "surprise_rate": 0.5439869281045753,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -3427,12 +3624,15 @@
         "target": 114000,
         "prev": 93000,
         "change_pct": 22.6,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "한국투자증권",
+        "date": "2026-06-15"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.010183299389002037,
-        "surprise_rate": 0.13874113475177316
+        "surprise_rate": 0.13874113475177316,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -3445,12 +3645,15 @@
         "target": 900000,
         "prev": 800000,
         "change_pct": 12.5,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "KB증권",
+        "date": "2026-06-18"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.01229031171191398,
-        "surprise_rate": 0.17915423987080464
+        "surprise_rate": 0.17915423987080464,
+        "date": "2026-06-26"
       }
     },
     "402340": {
@@ -3459,12 +3662,15 @@
         "target": 1850000,
         "prev": 1450000,
         "change_pct": 27.6,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "SK증권",
+        "date": "2026-06-17"
       },
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.04628207377747865,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -3482,12 +3688,15 @@
         "target": 190000,
         "prev": 170000,
         "change_pct": 11.8,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "메리츠증권",
+        "date": "2026-06-22"
       },
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.44565217391304335,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "시총상위300",
@@ -3505,12 +3714,15 @@
         "target": 310000,
         "prev": 240000,
         "change_pct": 29.2,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "KB증권",
+        "date": "2026-06-16"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.02180871888169857,
-        "surprise_rate": -0.10184650894402773
+        "surprise_rate": -0.10184650894402773,
+        "date": "2026-06-26"
       }
     },
     "000810": {
@@ -3519,12 +3731,15 @@
         "target": 750000,
         "prev": 650000,
         "change_pct": 15.4,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "LS증권",
+        "date": "2026-06-10"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.06088194784882226,
-        "surprise_rate": 0.028878321544637688
+        "surprise_rate": 0.028878321544637688,
+        "date": "2026-06-26"
       }
     },
     "012450": {
@@ -3533,12 +3748,15 @@
         "target": 1780000,
         "prev": 1000000,
         "change_pct": 78.0,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "현대차증권",
+        "date": "2026-06-19"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.008388183357806524,
-        "surprise_rate": -0.22861730899256258
+        "surprise_rate": -0.22861730899256258,
+        "date": "2026-06-26"
       },
       "etf": {
         "action": "비중증가",
@@ -3552,12 +3770,15 @@
         "target": 240000,
         "prev": 210000,
         "change_pct": 14.3,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "DS투자증권",
+        "date": "2026-06-19"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.0020714828086908364,
-        "surprise_rate": 0.11062364805167109
+        "surprise_rate": 0.11062364805167109,
+        "date": "2026-06-26"
       }
     },
     "034220": {
@@ -3566,12 +3787,15 @@
         "target": 20000,
         "prev": 15000,
         "change_pct": 33.3,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "SK증권",
+        "date": "2026-06-11"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.04638144742103147,
-        "surprise_rate": -0.008648648648648656
+        "surprise_rate": -0.008648648648648656,
+        "date": "2026-06-26"
       }
     },
     "047810": {
@@ -3580,12 +3804,15 @@
         "target": 202000,
         "prev": 150000,
         "change_pct": 34.7,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "현대차증권",
+        "date": "2026-06-19"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.03285170777583039,
-        "surprise_rate": -0.2398097826086956
+        "surprise_rate": -0.2398097826086956,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -3598,12 +3825,15 @@
         "target": 284000,
         "prev": 250000,
         "change_pct": 13.6,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "현대차증권",
+        "date": "2026-06-19"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.021904589901700276,
-        "surprise_rate": -0.010067114093959738
+        "surprise_rate": -0.010067114093959738,
+        "date": "2026-06-26"
       }
     },
     "079550": {
@@ -3612,12 +3842,15 @@
         "target": 1350000,
         "prev": 1250000,
         "change_pct": 8.0,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "키움증권",
+        "date": "2026-06-17"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.020631850419084528,
-        "surprise_rate": 0.5516459599165684
+        "surprise_rate": 0.5516459599165684,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -3630,12 +3863,15 @@
         "target": 76000,
         "prev": 65000,
         "change_pct": 16.9,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "IBK투자증권",
+        "date": "2026-06-19"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.14186450492182978,
-        "surprise_rate": 0.20865904990980172
+        "surprise_rate": 0.20865904990980172,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -3648,12 +3884,15 @@
         "target": 19000,
         "prev": 13000,
         "change_pct": 46.2,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "현대차증권",
+        "date": "2026-06-19"
       },
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.006445672191528572,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "298040": {
@@ -3662,12 +3901,15 @@
         "target": 5000000,
         "prev": 4700000,
         "change_pct": 6.4,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "LS증권",
+        "date": "2026-06-16"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.022546123155743388,
-        "surprise_rate": -0.14402922169148635
+        "surprise_rate": -0.14402922169148635,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -3680,12 +3922,15 @@
         "target": 260000,
         "prev": 240000,
         "change_pct": 8.3,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "한국투자증권",
+        "date": "2026-06-16"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.03345982587490117,
-        "surprise_rate": -0.0935068138373312
+        "surprise_rate": -0.0935068138373312,
+        "date": "2026-06-26"
       }
     },
     "000720": {
@@ -3694,12 +3939,15 @@
         "target": 200000,
         "prev": 210000,
         "change_pct": -4.8,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "LS증권",
+        "date": "2026-06-10"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.0077359338377275605,
-        "surprise_rate": 0.11743266617247339
+        "surprise_rate": 0.11743266617247339,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -3712,12 +3960,15 @@
         "target": 900000,
         "prev": 700000,
         "change_pct": 28.6,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "흥국증권",
+        "date": "2026-06-12"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.0029296344888464208,
-        "surprise_rate": -0.15299502849521038
+        "surprise_rate": -0.15299502849521038,
+        "date": "2026-06-26"
       }
     },
     "008770": {
@@ -3726,12 +3977,15 @@
         "target": 65000,
         "prev": 80000,
         "change_pct": -18.8,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "흥국증권",
+        "date": "2026-07-01"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.05122016626441411,
-        "surprise_rate": 18.447619047619046
+        "surprise_rate": 18.447619047619046,
+        "date": "2026-06-26"
       }
     },
     "161390": {
@@ -3740,12 +3994,15 @@
         "target": 95000,
         "prev": 85000,
         "change_pct": 11.8,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "삼성증권",
+        "date": "2026-06-18"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.010834582332959,
-        "surprise_rate": 0.030427447712351816
+        "surprise_rate": 0.030427447712351816,
+        "date": "2026-06-26"
       }
     },
     "353200": {
@@ -3754,12 +4011,15 @@
         "target": 250000,
         "prev": 170000,
         "change_pct": 47.1,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "하나증권",
+        "date": "2026-06-15"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.026849037487335418,
-        "surprise_rate": 0.2260994263862331
+        "surprise_rate": 0.2260994263862331,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -3772,12 +4032,15 @@
         "target": 112000,
         "prev": 126000,
         "change_pct": -11.1,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "현대차증권",
+        "date": "2026-05-28"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.011519852545887412,
-        "surprise_rate": 0.45906351414000945
+        "surprise_rate": 0.45906351414000945,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -3790,12 +4053,15 @@
         "target": 46000,
         "prev": 38000,
         "change_pct": 21.1,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "현대차증권",
+        "date": "2026-06-17"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.046594982078852945,
-        "surprise_rate": -0.3321428571428572
+        "surprise_rate": -0.3321428571428572,
+        "date": "2026-06-26"
       }
     },
     "069260": {
@@ -3804,12 +4070,15 @@
         "target": 30000,
         "prev": 28000,
         "change_pct": 7.1,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "유안타증권",
+        "date": "2026-06-17"
       },
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.3807631160572336,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "089860": {
@@ -3818,12 +4087,15 @@
         "target": 46000,
         "prev": 36000,
         "change_pct": 27.8,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "대신증권",
+        "date": "2026-06-17"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.016348018841784367,
-        "surprise_rate": 0.10242552069601893
+        "surprise_rate": 0.10242552069601893,
+        "date": "2026-06-26"
       }
     },
     "456040": {
@@ -3832,7 +4104,9 @@
         "target": 160000,
         "prev": 155000,
         "change_pct": 3.2,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "삼성증권",
+        "date": "2026-06-17"
       }
     },
     "015760": {
@@ -3841,12 +4115,15 @@
         "target": 63000,
         "prev": 68000,
         "change_pct": -7.4,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "NH투자증권",
+        "date": "2026-05-21"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.005372529352217347,
-        "surprise_rate": -0.1346037742752861
+        "surprise_rate": -0.1346037742752861,
+        "date": "2026-06-26"
       }
     },
     "098460": {
@@ -3855,12 +4132,15 @@
         "target": 50000,
         "prev": 22000,
         "change_pct": 127.3,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "리딩투자증권",
+        "date": "2026-06-16"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.04404761904761908,
-        "surprise_rate": 0.6694915254237287
+        "surprise_rate": 0.6694915254237287,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -3873,12 +4153,15 @@
         "target": 135000,
         "prev": 126000,
         "change_pct": 7.1,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "하나증권",
+        "date": "2026-06-15"
       },
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.017865469959184144,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "068270": {
@@ -3887,12 +4170,15 @@
         "target": 260000,
         "prev": 247823,
         "change_pct": 4.9,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "미래에셋증권",
+        "date": "2026-06-15"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.03087410690060589,
-        "surprise_rate": -0.052515380765947355
+        "surprise_rate": -0.052515380765947355,
+        "date": "2026-06-26"
       }
     },
     "096770": {
@@ -3901,12 +4187,15 @@
         "target": 91000,
         "prev": 102000,
         "change_pct": -10.8,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "LS증권",
+        "date": "2026-06-29"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.07234858920552704,
-        "surprise_rate": 3.63883940500579
+        "surprise_rate": 3.63883940500579,
+        "date": "2026-06-26"
       }
     },
     "058430": {
@@ -3915,12 +4204,15 @@
         "target": 6180,
         "prev": 5660,
         "change_pct": 9.2,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "현대차증권",
+        "date": "2026-06-12"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.10142857142857142
+        "surprise_rate": -0.10142857142857142,
+        "date": "2026-06-26"
       }
     },
     "082920": {
@@ -3929,12 +4221,15 @@
         "target": 53000,
         "prev": 42000,
         "change_pct": 26.2,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "삼성증권",
+        "date": "2026-06-12"
       },
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.004371584699453614,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -3947,12 +4242,15 @@
         "target": 300000,
         "prev": 260000,
         "change_pct": 15.4,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "유안타증권",
+        "date": "2026-06-11"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.0192708333333334,
-        "surprise_rate": -0.05318671454219041
+        "surprise_rate": -0.05318671454219041,
+        "date": "2026-06-26"
       }
     },
     "017670": {
@@ -3961,12 +4259,15 @@
         "target": 150000,
         "prev": 130000,
         "change_pct": 15.4,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "KB증권",
+        "date": "2026-06-11"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.003957990029411109,
-        "surprise_rate": 0.06056540866854751
+        "surprise_rate": 0.06056540866854751,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -3979,12 +4280,15 @@
         "target": 280000,
         "prev": 400000,
         "change_pct": -30.0,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "미래에셋증권",
+        "date": "2026-05-21"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.0021763866189460513,
-        "surprise_rate": -0.06477005938406295
+        "surprise_rate": -0.06477005938406295,
+        "date": "2026-06-26"
       }
     },
     "001450": {
@@ -3993,12 +4297,15 @@
         "target": 43000,
         "prev": 42000,
         "change_pct": 2.4,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "LS증권",
+        "date": "2026-06-10"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.04645809845922568,
-        "surprise_rate": 0.10007797403125734
+        "surprise_rate": 0.10007797403125734,
+        "date": "2026-06-26"
       }
     },
     "004370": {
@@ -4007,12 +4314,15 @@
         "target": 550000,
         "prev": 540000,
         "change_pct": 1.9,
-        "dir": "상향"
+        "dir": "상향",
+        "brokerage": "현대차증권",
+        "date": "2026-06-10"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.006842573932605371,
-        "surprise_rate": 0.1197475502408238
+        "surprise_rate": 0.1197475502408238,
+        "date": "2026-06-26"
       }
     },
     "257720": {
@@ -4021,7 +4331,9 @@
         "target": 50000,
         "prev": 63000,
         "change_pct": -20.6,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "삼성증권",
+        "date": "2026-06-24"
       }
     },
     "318060": {
@@ -4030,7 +4342,9 @@
         "target": 40000,
         "prev": 62000,
         "change_pct": -35.5,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "상상인증권",
+        "date": "2026-07-01"
       }
     },
     "006400": {
@@ -4039,12 +4353,15 @@
         "target": 531000,
         "prev": 593000,
         "change_pct": -10.5,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "LS증권",
+        "date": "2026-06-05"
       },
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.015376984126984064,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -4057,12 +4374,15 @@
         "target": 18000,
         "prev": 23000,
         "change_pct": -21.7,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "다올투자증권",
+        "date": "2026-05-28"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.005846994535519089,
-        "surprise_rate": -0.3148420279206466
+        "surprise_rate": -0.3148420279206466,
+        "date": "2026-06-26"
       }
     },
     "079160": {
@@ -4071,12 +4391,15 @@
         "target": 5000,
         "prev": 6500,
         "change_pct": -23.1,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "KB증권",
+        "date": "2026-06-30"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.4515723270440251
+        "surprise_rate": -0.4515723270440251,
+        "date": "2026-06-26"
       }
     },
     "088980": {
@@ -4085,7 +4408,9 @@
         "target": 13000,
         "prev": 15000,
         "change_pct": -13.3,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "KB증권",
+        "date": "2026-06-30"
       }
     },
     "089600": {
@@ -4094,7 +4419,9 @@
         "target": 14000,
         "prev": 19000,
         "change_pct": -26.3,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "DB증권",
+        "date": "2026-06-30"
       }
     },
     "207940": {
@@ -4103,12 +4430,15 @@
         "target": 1900000,
         "prev": 2207615,
         "change_pct": -13.9,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "KB증권",
+        "date": "2026-05-27"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.10072777949829663
+        "surprise_rate": -0.10072777949829663,
+        "date": "2026-06-26"
       }
     },
     "251270": {
@@ -4117,12 +4447,15 @@
         "target": 59000,
         "prev": 70000,
         "change_pct": -15.7,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "유안타증권",
+        "date": "2026-06-30"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.14419485506865168,
-        "surprise_rate": -0.32754468246926105
+        "surprise_rate": -0.32754468246926105,
+        "date": "2026-06-26"
       }
     },
     "462870": {
@@ -4131,7 +4464,9 @@
         "target": 47000,
         "prev": 90000,
         "change_pct": -47.8,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "유안타증권",
+        "date": "2026-06-30"
       }
     },
     "011780": {
@@ -4140,12 +4475,15 @@
         "target": 127000,
         "prev": 145000,
         "change_pct": -12.4,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "LS증권",
+        "date": "2026-06-29"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.08340702210663198,
-        "surprise_rate": -0.24943138741470813
+        "surprise_rate": -0.24943138741470813,
+        "date": "2026-06-26"
       }
     },
     "034120": {
@@ -4154,12 +4492,15 @@
         "target": 20000,
         "prev": 34000,
         "change_pct": -41.2,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "DS투자증권",
+        "date": "2026-05-27"
       },
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.4927853082641015,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "051910": {
@@ -4168,12 +4509,15 @@
         "target": 470000,
         "prev": 500000,
         "change_pct": -6.0,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "NH투자증권",
+        "date": "2026-06-29"
       },
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.024623250807319693,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "090460": {
@@ -4182,12 +4526,15 @@
         "target": 32000,
         "prev": 38000,
         "change_pct": -15.8,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "메리츠증권",
+        "date": "2026-06-29"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.01195840554592717,
-        "surprise_rate": 0.924187725631769
+        "surprise_rate": 0.924187725631769,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -4200,7 +4547,9 @@
         "target": 141000,
         "prev": 163000,
         "change_pct": -13.5,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "IBK투자증권",
+        "date": "2026-06-29"
       }
     },
     "192400": {
@@ -4209,7 +4558,9 @@
         "target": 35000,
         "prev": 40000,
         "change_pct": -12.5,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "NH투자증권",
+        "date": "2026-06-29"
       }
     },
     "200670": {
@@ -4218,7 +4569,9 @@
         "target": 50000,
         "prev": 73000,
         "change_pct": -31.5,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "상상인증권",
+        "date": "2026-06-15"
       }
     },
     "241710": {
@@ -4227,12 +4580,15 @@
         "target": 90000,
         "prev": 125000,
         "change_pct": -28.0,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "삼성증권",
+        "date": "2026-06-24"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.01173242501655781,
-        "surprise_rate": 0.04739109621828619
+        "surprise_rate": 0.04739109621828619,
+        "date": "2026-06-26"
       }
     },
     "267270": {
@@ -4241,12 +4597,15 @@
         "target": 180000,
         "prev": 245000,
         "change_pct": -26.5,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "KB증권",
+        "date": "2026-06-29"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.12496639927563917,
-        "surprise_rate": 0.41889880952380937
+        "surprise_rate": 0.41889880952380937,
+        "date": "2026-06-26"
       }
     },
     "298050": {
@@ -4255,12 +4614,15 @@
         "target": 260000,
         "prev": 320000,
         "change_pct": -18.8,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "NH투자증권",
+        "date": "2026-06-29"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0,
-        "surprise_rate": -0.020216400911161756
+        "surprise_rate": -0.020216400911161756,
+        "date": "2026-06-26"
       }
     },
     "439260": {
@@ -4269,12 +4631,15 @@
         "target": 120000,
         "prev": 121000,
         "change_pct": -0.8,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "다올투자증권",
+        "date": "2026-06-16"
       },
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.028315585672797603,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "001430": {
@@ -4283,12 +4648,15 @@
         "target": 54000,
         "prev": 74000,
         "change_pct": -27.0,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "BNK투자증권",
+        "date": "2026-06-25"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.10248226950354612
+        "surprise_rate": 0.10248226950354612,
+        "date": "2026-06-26"
       }
     },
     "003670": {
@@ -4297,12 +4665,15 @@
         "target": 260000,
         "prev": 320000,
         "change_pct": -18.8,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "삼성증권",
+        "date": "2026-06-15"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.08532129808725551,
-        "surprise_rate": 1.8365384615384612
+        "surprise_rate": 1.8365384615384612,
+        "date": "2026-06-26"
       }
     },
     "005490": {
@@ -4311,12 +4682,15 @@
         "target": 480000,
         "prev": 540000,
         "change_pct": -11.1,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "iM증권",
+        "date": "2026-06-15"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.06061538177601283,
-        "surprise_rate": 0.16986097318768617
+        "surprise_rate": 0.16986097318768617,
+        "date": "2026-06-26"
       }
     },
     "016380": {
@@ -4325,12 +4699,15 @@
         "target": 7400,
         "prev": 7600,
         "change_pct": -2.6,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "현대차증권",
+        "date": "2026-06-12"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.15670232850849594,
-        "surprise_rate": -0.34520547945205476
+        "surprise_rate": -0.34520547945205476,
+        "date": "2026-06-26"
       }
     },
     "039130": {
@@ -4339,12 +4716,15 @@
         "target": 42000,
         "prev": 70000,
         "change_pct": -40.0,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "다올투자증권",
+        "date": "2026-06-26"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.04880817253121449
+        "surprise_rate": -0.04880817253121449,
+        "date": "2026-06-26"
       }
     },
     "089590": {
@@ -4353,12 +4733,15 @@
         "target": 5300,
         "prev": 6000,
         "change_pct": -11.7,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "LS증권",
+        "date": "2026-05-27"
       },
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.4578431372549019,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "091810": {
@@ -4367,12 +4750,15 @@
         "target": 900,
         "prev": 1428,
         "change_pct": -37.0,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "삼성증권",
+        "date": "2026-06-26"
       },
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.05056179775280899,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "103140": {
@@ -4381,7 +4767,9 @@
         "target": 120000,
         "prev": 160000,
         "change_pct": -25.0,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "신영증권",
+        "date": "2026-06-25"
       }
     },
     "105630": {
@@ -4390,7 +4778,9 @@
         "target": 11500,
         "prev": 14000,
         "change_pct": -17.9,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "NH투자증권",
+        "date": "2026-06-26"
       }
     },
     "272450": {
@@ -4399,12 +4789,15 @@
         "target": 8000,
         "prev": 8500,
         "change_pct": -5.9,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "신한투자증권",
+        "date": "2026-05-26"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.35906313645621185,
-        "surprise_rate": 0.38252939764818805
+        "surprise_rate": 0.38252939764818805,
+        "date": "2026-06-26"
       }
     },
     "020150": {
@@ -4413,12 +4806,15 @@
         "target": 69000,
         "prev": 95000,
         "change_pct": -27.4,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "NH투자증권",
+        "date": "2026-06-25"
       },
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.13580591187953145,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -4431,12 +4827,15 @@
         "target": 210000,
         "prev": 250000,
         "change_pct": -16.0,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "삼성증권",
+        "date": "2026-06-18"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.06089405139035548,
-        "surprise_rate": 1.2301255230125525
+        "surprise_rate": 1.2301255230125525,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -4449,12 +4848,15 @@
         "target": 240000,
         "prev": 280000,
         "change_pct": -14.3,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "NH투자증권",
+        "date": "2026-06-25"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.09563037249283673,
-        "surprise_rate": 2.7061946902654865
+        "surprise_rate": 2.7061946902654865,
+        "date": "2026-06-26"
       }
     },
     "373220": {
@@ -4463,12 +4865,15 @@
         "target": 397000,
         "prev": 416000,
         "change_pct": -4.6,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "LS증권",
+        "date": "2026-06-02"
       },
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.05541593900413167,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "090430": {
@@ -4477,7 +4882,9 @@
         "target": 150000,
         "prev": 160000,
         "change_pct": -6.2,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "유진투자증권",
+        "date": "2026-05-29"
       }
     },
     "192820": {
@@ -4486,12 +4893,15 @@
         "target": 240000,
         "prev": 300000,
         "change_pct": -20.0,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "하나증권",
+        "date": "2026-06-09"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.001936733376371804,
-        "surprise_rate": -0.07095304835318846
+        "surprise_rate": -0.07095304835318846,
+        "date": "2026-06-26"
       }
     },
     "483650": {
@@ -4500,7 +4910,9 @@
         "target": 270000,
         "prev": 280000,
         "change_pct": -3.6,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "삼성증권",
+        "date": "2026-06-24"
       }
     },
     "192650": {
@@ -4509,7 +4921,9 @@
         "target": 7000,
         "prev": 8000,
         "change_pct": -12.5,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "키움증권",
+        "date": "2026-06-05"
       }
     },
     "010780": {
@@ -4518,12 +4932,15 @@
         "target": 31000,
         "prev": 48000,
         "change_pct": -35.4,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "현대차증권",
+        "date": "2026-06-19"
       },
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.15501755345825924,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "053690": {
@@ -4532,7 +4949,9 @@
         "target": 36000,
         "prev": 46000,
         "change_pct": -21.7,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "한화투자증권",
+        "date": "2026-06-12"
       }
     },
     "100840": {
@@ -4541,12 +4960,15 @@
         "target": 52000,
         "prev": 62000,
         "change_pct": -16.1,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "현대차증권",
+        "date": "2026-06-19"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.014814814814814815,
-        "surprise_rate": -0.2875
+        "surprise_rate": -0.2875,
+        "date": "2026-06-26"
       }
     },
     "108320": {
@@ -4555,12 +4977,15 @@
         "target": 60000,
         "prev": 62000,
         "change_pct": -3.2,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "현대차증권",
+        "date": "2026-06-19"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.2374074074074074
+        "surprise_rate": -0.2374074074074074,
+        "date": "2026-06-26"
       }
     },
     "108380": {
@@ -4569,7 +4994,9 @@
         "target": 35000,
         "prev": 40000,
         "change_pct": -12.5,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "LS증권",
+        "date": "2026-06-19"
       }
     },
     "239890": {
@@ -4578,7 +5005,9 @@
         "target": 4400,
         "prev": 5500,
         "change_pct": -20.0,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "현대차증권",
+        "date": "2026-06-19"
       }
     },
     "267260": {
@@ -4587,12 +5016,15 @@
         "target": 1510000,
         "prev": 1630000,
         "change_pct": -7.4,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "LS증권",
+        "date": "2026-06-19"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.033679521669367565,
-        "surprise_rate": -0.08515461726470908
+        "surprise_rate": -0.08515461726470908,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -4605,7 +5037,9 @@
         "target": 19000,
         "prev": 21000,
         "change_pct": -9.5,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "현대차증권",
+        "date": "2026-06-19"
       }
     },
     "298020": {
@@ -4614,12 +5048,15 @@
         "target": 700000,
         "prev": 850000,
         "change_pct": -17.6,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "신한투자증권",
+        "date": "2026-06-02"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.11162670791441089
+        "surprise_rate": 0.11162670791441089,
+        "date": "2026-06-26"
       }
     },
     "010130": {
@@ -4628,12 +5065,15 @@
         "target": 1865000,
         "prev": 2010000,
         "change_pct": -7.2,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "현대차증권",
+        "date": "2026-05-21"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.04812741771659495,
-        "surprise_rate": 0.420560569709433
+        "surprise_rate": 0.420560569709433,
+        "date": "2026-06-26"
       }
     },
     "365340": {
@@ -4642,12 +5082,15 @@
         "target": 74000,
         "prev": 92000,
         "change_pct": -19.6,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "삼성증권",
+        "date": "2026-06-15"
       },
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.1761363636363635,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "000080": {
@@ -4656,12 +5099,15 @@
         "target": 20000,
         "prev": 22000,
         "change_pct": -9.1,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "현대차증권",
+        "date": "2026-06-09"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.050760408875592154,
-        "surprise_rate": -0.009034543844109922
+        "surprise_rate": -0.009034543844109922,
+        "date": "2026-06-26"
       }
     },
     "005810": {
@@ -4670,12 +5116,15 @@
         "target": 50500,
         "prev": 53300,
         "change_pct": -5.3,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "현대차증권",
+        "date": "2026-06-12"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 1.190062111801242
+        "surprise_rate": 1.190062111801242,
+        "date": "2026-06-26"
       }
     },
     "035900": {
@@ -4684,12 +5133,15 @@
         "target": 79000,
         "prev": 90000,
         "change_pct": -12.2,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "하나증권",
+        "date": "2026-06-10"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.020763601293470223,
-        "surprise_rate": 0.16759972008397478
+        "surprise_rate": 0.16759972008397478,
+        "date": "2026-06-26"
       }
     },
     "041510": {
@@ -4698,12 +5150,15 @@
         "target": 124000,
         "prev": 140000,
         "change_pct": -11.4,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "하나증권",
+        "date": "2026-06-10"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.00571997015667733,
-        "surprise_rate": 0.04663774403470712
+        "surprise_rate": 0.04663774403470712,
+        "date": "2026-06-26"
       }
     },
     "122870": {
@@ -4712,12 +5167,15 @@
         "target": 65000,
         "prev": 97000,
         "change_pct": -33.0,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "신한투자증권",
+        "date": "2026-05-29"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.017834714895754857,
-        "surprise_rate": -0.13079150579150567
+        "surprise_rate": -0.13079150579150567,
+        "date": "2026-06-26"
       }
     },
     "352820": {
@@ -4726,12 +5184,15 @@
         "target": 350000,
         "prev": 400000,
         "change_pct": -12.5,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "하나증권",
+        "date": "2026-06-10"
       },
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.10728010631038323,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "005300": {
@@ -4740,12 +5201,15 @@
         "target": 150000,
         "prev": 160000,
         "change_pct": -6.2,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "LS증권",
+        "date": "2026-06-10"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.01210983337244784,
-        "surprise_rate": 0.32080685272174636
+        "surprise_rate": 0.32080685272174636,
+        "date": "2026-06-26"
       }
     },
     "005830": {
@@ -4754,12 +5218,15 @@
         "target": 180000,
         "prev": 200000,
         "change_pct": -10.0,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "LS증권",
+        "date": "2026-06-10"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.028012198396563003,
-        "surprise_rate": -0.3357617278589923
+        "surprise_rate": -0.3357617278589923,
+        "date": "2026-06-26"
       }
     },
     "005940": {
@@ -4768,12 +5235,15 @@
         "target": 34000,
         "prev": 40000,
         "change_pct": -15.0,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "LS증권",
+        "date": "2026-06-10"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.035099825190909796,
-        "surprise_rate": 0.37585357420693244
+        "surprise_rate": 0.37585357420693244,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -4786,12 +5256,15 @@
         "target": 53000,
         "prev": 62000,
         "change_pct": -14.5,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "대신증권",
+        "date": "2026-05-22"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.11139553312618611,
-        "surprise_rate": 0.2352803780297176
+        "surprise_rate": 0.2352803780297176,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -4804,12 +5277,15 @@
         "target": 127000,
         "prev": 148000,
         "change_pct": -14.2,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "대신증권",
+        "date": "2026-05-22"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.07721752782010437,
-        "surprise_rate": 0.4446235157490578
+        "surprise_rate": 0.4446235157490578,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -4827,12 +5303,15 @@
         "target": 24000,
         "prev": 25000,
         "change_pct": -4.0,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "LS증권",
+        "date": "2026-06-10"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.007636767564565399,
-        "surprise_rate": -0.05602793805040999
+        "surprise_rate": -0.05602793805040999,
+        "date": "2026-06-26"
       }
     },
     "034020": {
@@ -4841,12 +5320,15 @@
         "target": 130000,
         "prev": 158000,
         "change_pct": -17.7,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "키움증권",
+        "date": "2026-06-10"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.04095849669992042,
-        "surprise_rate": 0.1885880077369438
+        "surprise_rate": 0.1885880077369438,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -4859,12 +5341,15 @@
         "target": 420000,
         "prev": 520000,
         "change_pct": -19.2,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "LS증권",
+        "date": "2026-06-10"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.11060825222486462,
-        "surprise_rate": 0.24913536555939844
+        "surprise_rate": 0.24913536555939844,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -4877,12 +5362,15 @@
         "target": 300000,
         "prev": 320000,
         "change_pct": -6.2,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "LS증권",
+        "date": "2026-06-10"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.051545254850064545,
-        "surprise_rate": 0.5177802167649883
+        "surprise_rate": 0.5177802167649883,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -4895,12 +5383,15 @@
         "target": 21000,
         "prev": 22000,
         "change_pct": -4.5,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "신한투자증권",
+        "date": "2026-05-27"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.019298261442272212,
-        "surprise_rate": -0.11918613695050245
+        "surprise_rate": -0.11918613695050245,
+        "date": "2026-06-26"
       }
     },
     "139130": {
@@ -4909,12 +5400,15 @@
         "target": 22000,
         "prev": 23000,
         "change_pct": -4.3,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "LS증권",
+        "date": "2026-06-10"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.030528251824157266,
-        "surprise_rate": -0.10151508131399724
+        "surprise_rate": -0.10151508131399724,
+        "date": "2026-06-26"
       }
     },
     "175330": {
@@ -4923,12 +5417,15 @@
         "target": 33000,
         "prev": 35000,
         "change_pct": -5.7,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "신한투자증권",
+        "date": "2026-05-27"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.007480754597650085,
-        "surprise_rate": -0.16738148984198647
+        "surprise_rate": -0.16738148984198647,
+        "date": "2026-06-26"
       }
     },
     "322000": {
@@ -4937,12 +5434,15 @@
         "target": 260000,
         "prev": 334000,
         "change_pct": -22.2,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "DS투자증권",
+        "date": "2026-06-10"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.07665952890792294,
-        "surprise_rate": 1.2725137039937353
+        "surprise_rate": 1.2725137039937353,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -4955,12 +5455,15 @@
         "target": 30000,
         "prev": 32000,
         "change_pct": -6.2,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "LS증권",
+        "date": "2026-06-10"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.12536071032186447
+        "surprise_rate": -0.12536071032186447,
+        "date": "2026-06-26"
       }
     },
     "017810": {
@@ -4969,12 +5472,15 @@
         "target": 13000,
         "prev": 16000,
         "change_pct": -18.8,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "현대차증권",
+        "date": "2026-06-09"
       },
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.03416856492027335,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "030200": {
@@ -4983,12 +5489,15 @@
         "target": 70000,
         "prev": 75000,
         "change_pct": -6.7,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "BNK투자증권",
+        "date": "2026-06-09"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.052983615335701624,
-        "surprise_rate": -0.13875854193801637
+        "surprise_rate": -0.13875854193801637,
+        "date": "2026-06-26"
       }
     },
     "051900": {
@@ -4997,12 +5506,15 @@
         "target": 290000,
         "prev": 310000,
         "change_pct": -6.5,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "유진투자증권",
+        "date": "2026-05-29"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.01992219733584814,
-        "surprise_rate": 1.1138992354440307
+        "surprise_rate": 1.1138992354440307,
+        "date": "2026-06-26"
       }
     },
     "145020": {
@@ -5011,12 +5523,15 @@
         "target": 350000,
         "prev": 400000,
         "change_pct": -12.5,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "신한투자증권",
+        "date": "2026-06-09"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.0069946159863789525,
-        "surprise_rate": 0.06199821587867961
+        "surprise_rate": 0.06199821587867961,
+        "date": "2026-06-26"
       }
     },
     "251970": {
@@ -5025,12 +5540,15 @@
         "target": 47000,
         "prev": 65000,
         "change_pct": -27.7,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "현대차증권",
+        "date": "2026-06-09"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.04641616671929278,
-        "surprise_rate": -0.03714710252600297
+        "surprise_rate": -0.03714710252600297,
+        "date": "2026-06-26"
       }
     },
     "237880": {
@@ -5039,12 +5557,15 @@
         "target": 14000,
         "prev": 16000,
         "change_pct": -12.5,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "현대차증권",
+        "date": "2026-06-05"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.004524886877828118,
-        "surprise_rate": 0.2866666666666667
+        "surprise_rate": 0.2866666666666667,
+        "date": "2026-06-26"
       }
     },
     "450950": {
@@ -5053,7 +5574,9 @@
         "target": 13000,
         "prev": 16000,
         "change_pct": -18.8,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "상상인증권",
+        "date": "2026-06-05"
       }
     },
     "002350": {
@@ -5062,12 +5585,15 @@
         "target": 10000,
         "prev": 12000,
         "change_pct": -16.7,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "BNK투자증권",
+        "date": "2026-06-04"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.005739828313099992,
-        "surprise_rate": -0.024824608742579645
+        "surprise_rate": -0.024824608742579645,
+        "date": "2026-06-26"
       }
     },
     "298380": {
@@ -5076,12 +5602,15 @@
         "target": 240000,
         "prev": 260000,
         "change_pct": -7.7,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "다올투자증권",
+        "date": "2026-06-02"
       },
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.5447991761071062,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "114090": {
@@ -5090,12 +5619,15 @@
         "target": 15000,
         "prev": 16000,
         "change_pct": -6.2,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "다올투자증권",
+        "date": "2026-05-28"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.008424960731115285,
-        "surprise_rate": 0.20198675496688734
+        "surprise_rate": 0.20198675496688734,
+        "date": "2026-06-26"
       }
     },
     "226400": {
@@ -5104,7 +5636,9 @@
         "target": 10000,
         "prev": 13000,
         "change_pct": -23.1,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "상상인증권",
+        "date": "2026-06-01"
       }
     },
     "053030": {
@@ -5113,12 +5647,15 @@
         "target": 18000,
         "prev": 22000,
         "change_pct": -18.2,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "상상인증권",
+        "date": "2026-05-28"
       },
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.35294117647058815,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "058970": {
@@ -5127,7 +5664,9 @@
         "target": 43000,
         "prev": 50000,
         "change_pct": -14.0,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "신영증권",
+        "date": "2026-05-29"
       }
     },
     "095660": {
@@ -5136,12 +5675,15 @@
         "target": 23000,
         "prev": 34000,
         "change_pct": -32.4,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "신한투자증권",
+        "date": "2026-05-29"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.04246794871794862,
-        "surprise_rate": -0.444888178913738
+        "surprise_rate": -0.444888178913738,
+        "date": "2026-06-26"
       }
     },
     "100130": {
@@ -5150,7 +5692,9 @@
         "target": 2000,
         "prev": 2300,
         "change_pct": -13.0,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "KB증권",
+        "date": "2026-05-29"
       }
     },
     "381970": {
@@ -5159,12 +5703,15 @@
         "target": 14000,
         "prev": 20000,
         "change_pct": -30.0,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "흥국증권",
+        "date": "2026-05-29"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.03457446808510631,
-        "surprise_rate": -0.3619218679838347
+        "surprise_rate": -0.3619218679838347,
+        "date": "2026-06-26"
       }
     },
     "000520": {
@@ -5173,7 +5720,9 @@
         "target": 10000,
         "prev": 13000,
         "change_pct": -23.1,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "흥국증권",
+        "date": "2026-05-28"
       }
     },
     "033270": {
@@ -5182,7 +5731,9 @@
         "target": 27000,
         "prev": 30000,
         "change_pct": -10.0,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "유안타증권",
+        "date": "2026-05-28"
       }
     },
     "035720": {
@@ -5191,12 +5742,15 @@
         "target": 60000,
         "prev": 70000,
         "change_pct": -14.3,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "다올투자증권",
+        "date": "2026-05-28"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.006686885280427985,
-        "surprise_rate": 0.22111829944547134
+        "surprise_rate": 0.22111829944547134,
+        "date": "2026-06-26"
       }
     },
     "053450": {
@@ -5205,7 +5759,9 @@
         "target": 6000,
         "prev": 6500,
         "change_pct": -7.7,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "메리츠증권",
+        "date": "2026-05-28"
       }
     },
     "084010": {
@@ -5214,12 +5770,15 @@
         "target": 13800,
         "prev": 17100,
         "change_pct": -19.3,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "현대차증권",
+        "date": "2026-05-28"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0,
-        "surprise_rate": -0.980327868852459
+        "surprise_rate": -0.980327868852459,
+        "date": "2026-06-26"
       }
     },
     "104700": {
@@ -5228,7 +5787,9 @@
         "target": 12000,
         "prev": 12700,
         "change_pct": -5.5,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "현대차증권",
+        "date": "2026-05-28"
       }
     },
     "108670": {
@@ -5237,12 +5798,15 @@
         "target": 50000,
         "prev": 58000,
         "change_pct": -13.8,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "현대차증권",
+        "date": "2026-05-28"
       },
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.053113553113553084,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "214420": {
@@ -5251,7 +5815,9 @@
         "target": 9000,
         "prev": 10500,
         "change_pct": -14.3,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "흥국증권",
+        "date": "2026-05-28"
       }
     },
     "241590": {
@@ -5260,12 +5826,15 @@
         "target": 5000,
         "prev": 7000,
         "change_pct": -28.6,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "DS투자증권",
+        "date": "2026-05-28"
       },
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.15966386554621848,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "249420": {
@@ -5274,12 +5843,15 @@
         "target": 40000,
         "prev": 45000,
         "change_pct": -11.1,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "SK증권",
+        "date": "2026-05-28"
       },
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.04627249357326471,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "000100": {
@@ -5288,12 +5860,15 @@
         "target": 125000,
         "prev": 165000,
         "change_pct": -24.2,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "KB증권",
+        "date": "2026-05-27"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.06109276493545492,
-        "surprise_rate": -0.7160334835801674
+        "surprise_rate": -0.7160334835801674,
+        "date": "2026-06-26"
       }
     },
     "070960": {
@@ -5302,7 +5877,9 @@
         "target": 4600,
         "prev": 5200,
         "change_pct": -11.5,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "DS투자증권",
+        "date": "2026-05-27"
       }
     },
     "086900": {
@@ -5311,12 +5888,15 @@
         "target": 120000,
         "prev": 170000,
         "change_pct": -29.4,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "DB증권",
+        "date": "2026-05-27"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.13173652694610774,
-        "surprise_rate": 0.11666666666666674
+        "surprise_rate": 0.11666666666666674,
+        "date": "2026-06-26"
       }
     },
     "139480": {
@@ -5325,12 +5905,15 @@
         "target": 120000,
         "prev": 167000,
         "change_pct": -28.1,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "흥국증권",
+        "date": "2026-05-27"
       },
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.08246752135289195,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "293490": {
@@ -5339,12 +5922,15 @@
         "target": 10000,
         "prev": 13000,
         "change_pct": -23.1,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "삼성증권",
+        "date": "2026-05-27"
       },
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.3342019543973942,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "326030": {
@@ -5353,12 +5939,15 @@
         "target": 145000,
         "prev": 160000,
         "change_pct": -9.4,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "DS투자증권",
+        "date": "2026-05-26"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.012643235720842038,
-        "surprise_rate": 0.28739423490606614
+        "surprise_rate": 0.28739423490606614,
+        "date": "2026-06-26"
       }
     },
     "111380": {
@@ -5367,12 +5956,15 @@
         "target": 19000,
         "prev": 22000,
         "change_pct": -13.6,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "흥국증권",
+        "date": "2026-05-26"
       },
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.05696400625978092,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "145720": {
@@ -5381,12 +5973,15 @@
         "target": 70000,
         "prev": 80000,
         "change_pct": -12.5,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "DS투자증권",
+        "date": "2026-05-26"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.0809932699002089,
-        "surprise_rate": 0.43050541516245483
+        "surprise_rate": 0.43050541516245483,
+        "date": "2026-06-26"
       }
     },
     "009240": {
@@ -5395,12 +5990,15 @@
         "target": 36000,
         "prev": 45000,
         "change_pct": -20.0,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "BNK투자증권",
+        "date": "2026-05-22"
       },
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.6427406199021208
+        "surprise_rate": 0.6427406199021208,
+        "date": "2026-06-26"
       }
     },
     "069620": {
@@ -5409,12 +6007,15 @@
         "target": 190000,
         "prev": 210000,
         "change_pct": -9.5,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "DS투자증권",
+        "date": "2026-05-22"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.5355499790882475
+        "surprise_rate": -0.5355499790882475,
+        "date": "2026-06-26"
       }
     },
     "293940": {
@@ -5423,7 +6024,9 @@
         "target": 7400,
         "prev": 8000,
         "change_pct": -7.5,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "NH투자증권",
+        "date": "2026-05-22"
       }
     },
     "365550": {
@@ -5432,7 +6035,9 @@
         "target": 5400,
         "prev": 6500,
         "change_pct": -16.9,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "NH투자증권",
+        "date": "2026-05-22"
       }
     },
     "475960": {
@@ -5441,7 +6046,9 @@
         "target": 76000,
         "prev": 80000,
         "change_pct": -5.0,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "키움증권",
+        "date": "2026-05-22"
       }
     },
     "004990": {
@@ -5450,12 +6057,15 @@
         "target": 33000,
         "prev": 44000,
         "change_pct": -25.0,
-        "dir": "하향"
+        "dir": "하향",
+        "brokerage": "흥국증권",
+        "date": "2026-05-21"
       },
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.12372717178160514,
-        "surprise_rate": -0.5733333333333334
+        "surprise_rate": -0.5733333333333334,
+        "date": "2026-06-26"
       }
     },
     "061090": {
@@ -5463,7 +6073,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 1.4468085106382977,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "285130": {
@@ -5471,7 +6082,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 1.3285714285714285,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "011170": {
@@ -5479,7 +6091,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.8454855954855954,
-        "surprise_rate": 1.3386331167334902
+        "surprise_rate": 1.3386331167334902,
+        "date": "2026-06-26"
       }
     },
     "306200": {
@@ -5487,7 +6100,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.41620581870641965,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "056190": {
@@ -5495,7 +6109,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.35365307037203053,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "077360": {
@@ -5503,7 +6118,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.2446043165467626,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "002990": {
@@ -5511,7 +6127,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.2077294685990338,
-        "surprise_rate": -0.2401253918495298
+        "surprise_rate": -0.2401253918495298,
+        "date": "2026-06-26"
       }
     },
     "079430": {
@@ -5519,7 +6136,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.17171717171717166,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "060980": {
@@ -5527,7 +6145,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.17066014669926652,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "077970": {
@@ -5535,7 +6154,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.14356929212362918,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "035250": {
@@ -5543,7 +6163,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.1361095045305572,
-        "surprise_rate": 0.027434024153869144
+        "surprise_rate": 0.027434024153869144,
+        "date": "2026-06-26"
       }
     },
     "131290": {
@@ -5551,7 +6172,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.13089700996677733,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "시총상위300",
@@ -5563,7 +6185,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.12226320799619218,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -5580,7 +6203,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.095816464237517,
-        "surprise_rate": 0.83984375
+        "surprise_rate": 0.83984375,
+        "date": "2026-06-26"
       }
     },
     "092730": {
@@ -5588,7 +6212,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.09119496855345918,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "003540": {
@@ -5596,7 +6221,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.08423913043478261,
-        "surprise_rate": 0.06176165803108802
+        "surprise_rate": 0.06176165803108802,
+        "date": "2026-06-26"
       }
     },
     "213420": {
@@ -5604,7 +6230,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.08275462962962953,
-        "surprise_rate": 0.11190631099544572
+        "surprise_rate": 0.11190631099544572,
+        "date": "2026-06-26"
       }
     },
     "294870": {
@@ -5612,7 +6239,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.0764251409480059,
-        "surprise_rate": -0.19530073300532183
+        "surprise_rate": -0.19530073300532183,
+        "date": "2026-06-26"
       }
     },
     "059210": {
@@ -5620,7 +6248,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.07511737089201867,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "336370": {
@@ -5628,7 +6257,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.07495354119347518,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "237690": {
@@ -5636,7 +6266,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.07126407369498475,
-        "surprise_rate": 0.8389154704944178
+        "surprise_rate": 0.8389154704944178,
+        "date": "2026-06-26"
       }
     },
     "098070": {
@@ -5644,7 +6275,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.0682926829268292,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "042660": {
@@ -5652,7 +6284,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.06188936267635857,
-        "surprise_rate": 0.1527022789044533
+        "surprise_rate": 0.1527022789044533,
+        "date": "2026-06-26"
       }
     },
     "091580": {
@@ -5660,7 +6293,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.05894811154253448,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "290650": {
@@ -5668,7 +6302,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.05581395348837215,
-        "surprise_rate": 1.222222222222222
+        "surprise_rate": 1.222222222222222,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "시총상위300",
@@ -5685,7 +6320,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.05555555555555552,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "004800": {
@@ -5693,7 +6329,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.05411255411255411,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "시총상위300",
@@ -5705,7 +6342,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.05180325382077449,
-        "surprise_rate": -0.21056503825779865
+        "surprise_rate": -0.21056503825779865,
+        "date": "2026-06-26"
       }
     },
     "014620": {
@@ -5713,7 +6351,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.05042016806722686,
-        "surprise_rate": -0.49461538461538457
+        "surprise_rate": -0.49461538461538457,
+        "date": "2026-06-26"
       }
     },
     "000210": {
@@ -5721,7 +6360,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.04919172605597092,
-        "surprise_rate": -0.07491803278688525
+        "surprise_rate": -0.07491803278688525,
+        "date": "2026-06-26"
       }
     },
     "083650": {
@@ -5729,7 +6369,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.04852671882803394,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "005850": {
@@ -5737,7 +6378,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.04752970606629148,
-        "surprise_rate": 0.20796237191332093
+        "surprise_rate": 0.20796237191332093,
+        "date": "2026-06-26"
       }
     },
     "010060": {
@@ -5745,7 +6387,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.043897909221374966,
-        "surprise_rate": -0.7830603276068717
+        "surprise_rate": -0.7830603276068717,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -5757,7 +6400,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.04217243531941467,
-        "surprise_rate": 0.34190140845070427
+        "surprise_rate": 0.34190140845070427,
+        "date": "2026-06-26"
       }
     },
     "010690": {
@@ -5765,7 +6409,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.038541666666666696,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "083500": {
@@ -5773,7 +6418,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.0378378378378378,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "089010": {
@@ -5781,7 +6427,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.03640256959314766,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "001040": {
@@ -5789,7 +6436,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.03614819039680011,
-        "surprise_rate": -0.2061347578838531
+        "surprise_rate": -0.2061347578838531,
+        "date": "2026-06-26"
       }
     },
     "006650": {
@@ -5797,7 +6445,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.03436185133239833,
-        "surprise_rate": 0.800734394124847
+        "surprise_rate": 0.800734394124847,
+        "date": "2026-06-26"
       }
     },
     "071970": {
@@ -5805,7 +6454,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.033825944170771796,
-        "surprise_rate": 0.09814502529510974
+        "surprise_rate": 0.09814502529510974,
+        "date": "2026-06-26"
       }
     },
     "067310": {
@@ -5813,7 +6463,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.03303892705266609,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "시총상위300",
@@ -5830,7 +6481,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.03182931094788396,
-        "surprise_rate": -0.4766977363515313
+        "surprise_rate": -0.4766977363515313,
+        "date": "2026-06-26"
       },
       "etf": {
         "action": "비중증가",
@@ -5843,7 +6495,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.02941176470588241,
-        "surprise_rate": 0.153457530786233
+        "surprise_rate": 0.153457530786233,
+        "date": "2026-06-26"
       }
     },
     "006040": {
@@ -5851,7 +6504,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.026430123099203517,
-        "surprise_rate": 0.08427299703264084
+        "surprise_rate": 0.08427299703264084,
+        "date": "2026-06-26"
       }
     },
     "316140": {
@@ -5859,7 +6513,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.02411702944693416,
-        "surprise_rate": -0.26664246823956445
+        "surprise_rate": -0.26664246823956445,
+        "date": "2026-06-26"
       }
     },
     "000120": {
@@ -5867,7 +6522,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.02119908537766937,
-        "surprise_rate": -0.2469135802469136
+        "surprise_rate": -0.2469135802469136,
+        "date": "2026-06-26"
       }
     },
     "181710": {
@@ -5875,7 +6531,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.019214024496430036,
-        "surprise_rate": -0.22429078014184406
+        "surprise_rate": -0.22429078014184406,
+        "date": "2026-06-26"
       }
     },
     "263750": {
@@ -5883,7 +6540,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.018342291845314,
-        "surprise_rate": 0.6469948749805869
+        "surprise_rate": 0.6469948749805869,
+        "date": "2026-06-26"
       }
     },
     "138040": {
@@ -5891,7 +6549,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.017687027289736198,
-        "surprise_rate": -0.12576191450194305
+        "surprise_rate": -0.12576191450194305,
+        "date": "2026-06-26"
       }
     },
     "111770": {
@@ -5899,7 +6558,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.01717076244486467,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "064960": {
@@ -5907,7 +6567,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.016768431604848165,
-        "surprise_rate": -0.13771016813450765
+        "surprise_rate": -0.13771016813450765,
+        "date": "2026-06-26"
       }
     },
     "307950": {
@@ -5915,7 +6576,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.01612322752465256,
-        "surprise_rate": -0.5668711656441717
+        "surprise_rate": -0.5668711656441717,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -5927,7 +6589,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.015822784810126583,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -5939,7 +6602,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.01359547865518135,
-        "surprise_rate": 0.0650041541344908
+        "surprise_rate": 0.0650041541344908,
+        "date": "2026-06-26"
       }
     },
     "013030": {
@@ -5947,7 +6611,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.012908124525436729,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "280360": {
@@ -5955,7 +6620,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.010043271542283218,
-        "surprise_rate": 0.47405271828665557
+        "surprise_rate": 0.47405271828665557,
+        "date": "2026-06-26"
       }
     },
     "086280": {
@@ -5963,7 +6629,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.008115155749795629,
-        "surprise_rate": -0.02113720410730039
+        "surprise_rate": -0.02113720410730039,
+        "date": "2026-06-26"
       }
     },
     "081660": {
@@ -5971,7 +6638,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.007919756093161048,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "003230": {
@@ -5979,7 +6647,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.007898200965335661,
-        "surprise_rate": 0.09481426540577294
+        "surprise_rate": 0.09481426540577294,
+        "date": "2026-06-26"
       },
       "etf": {
         "action": "비중감소",
@@ -5992,7 +6661,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.007565011820330969,
-        "surprise_rate": 0.1450313339301701
+        "surprise_rate": 0.1450313339301701,
+        "date": "2026-06-26"
       }
     },
     "042520": {
@@ -6000,7 +6670,8 @@
       "consensus": {
         "type": "컨센상향",
         "csen_chg": 0.007474639615589993,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "주당순이익1개+",
@@ -6012,7 +6683,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.006974056509783604,
-        "surprise_rate": -0.0046645138141371565
+        "surprise_rate": -0.0046645138141371565,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -6024,7 +6696,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.006622370367100064,
-        "surprise_rate": 0.14801872153607434
+        "surprise_rate": 0.14801872153607434,
+        "date": "2026-06-26"
       }
     },
     "003070": {
@@ -6032,7 +6705,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.005042016806722642,
-        "surprise_rate": -0.07907949790794967
+        "surprise_rate": -0.07907949790794967,
+        "date": "2026-06-26"
       }
     },
     "214320": {
@@ -6040,7 +6714,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.00420261004202605,
-        "surprise_rate": 0.18740674425544618
+        "surprise_rate": 0.18740674425544618,
+        "date": "2026-06-26"
       }
     },
     "007660": {
@@ -6048,7 +6723,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.0030039329844228123,
-        "surprise_rate": -0.01465845793022574
+        "surprise_rate": -0.01465845793022574,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -6060,7 +6736,8 @@
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.9053627760252366,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "394420": {
@@ -6068,7 +6745,8 @@
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.7241379310344828,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "108490": {
@@ -6076,7 +6754,8 @@
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.7234042553191489,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -6088,7 +6767,8 @@
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.36742424242424243,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "107640": {
@@ -6096,7 +6776,8 @@
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.35874439461883406,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "446840": {
@@ -6104,7 +6785,8 @@
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.2592592592592593,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "126700": {
@@ -6112,7 +6794,8 @@
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.2468354430379747,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "091700": {
@@ -6120,7 +6803,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.2181425485961122,
-        "surprise_rate": -0.2919075144508671
+        "surprise_rate": -0.2919075144508671,
+        "date": "2026-06-26"
       }
     },
     "328130": {
@@ -6128,7 +6812,8 @@
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.20068610634648376,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "049070": {
@@ -6136,7 +6821,8 @@
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.1902439024390243,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "085910": {
@@ -6144,7 +6830,8 @@
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.15238095238095234,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "주당순이익1개+",
@@ -6156,7 +6843,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.12037663474250662,
-        "surprise_rate": -0.3382637478612662
+        "surprise_rate": -0.3382637478612662,
+        "date": "2026-06-26"
       }
     },
     "272210": {
@@ -6164,7 +6852,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.1109308666689678,
-        "surprise_rate": -0.49758170892569253
+        "surprise_rate": -0.49758170892569253,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -6176,7 +6865,8 @@
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.10255708262607452,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "시총상위300",
@@ -6188,7 +6878,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.07950724942214761,
-        "surprise_rate": 0.3325822442541685
+        "surprise_rate": 0.3325822442541685,
+        "date": "2026-06-26"
       }
     },
     "140860": {
@@ -6196,7 +6887,8 @@
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.07807137954701449,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "011210": {
@@ -6204,7 +6896,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.07096774193548387,
-        "surprise_rate": -0.026613816534541274
+        "surprise_rate": -0.026613816534541274,
+        "date": "2026-06-26"
       }
     },
     "003220": {
@@ -6212,7 +6905,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.07090464547677258,
-        "surprise_rate": -0.54375
+        "surprise_rate": -0.54375,
+        "date": "2026-06-26"
       }
     },
     "039840": {
@@ -6220,7 +6914,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.06340579710144927,
-        "surprise_rate": 0.8
+        "surprise_rate": 0.8,
+        "date": "2026-06-26"
       }
     },
     "185750": {
@@ -6228,7 +6923,8 @@
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.06216183720091381,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "393890": {
@@ -6236,7 +6932,8 @@
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.05904852976332773,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "052710": {
@@ -6244,7 +6941,8 @@
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.05445026178010485,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "주당순이익1개+",
@@ -6256,7 +6954,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.05230303603518397,
-        "surprise_rate": -0.1643939393939394
+        "surprise_rate": -0.1643939393939394,
+        "date": "2026-06-26"
       }
     },
     "304360": {
@@ -6264,7 +6963,8 @@
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.050000000000000044,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "014790": {
@@ -6272,7 +6972,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.048672566371681415,
-        "surprise_rate": -0.201514514093395
+        "surprise_rate": -0.201514514093395,
+        "date": "2026-06-26"
       }
     },
     "001680": {
@@ -6280,7 +6981,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.04810192407696308,
-        "surprise_rate": 0.32581395348837205
+        "surprise_rate": 0.32581395348837205,
+        "date": "2026-06-26"
       }
     },
     "000880": {
@@ -6288,7 +6990,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.0397176028533266,
-        "surprise_rate": 0.0699467860461187
+        "surprise_rate": 0.0699467860461187,
+        "date": "2026-06-26"
       }
     },
     "030520": {
@@ -6296,7 +6999,8 @@
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.03718592964824124,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "119610": {
@@ -6304,7 +7008,8 @@
       "consensus": {
         "type": "컨센하향",
         "csen_chg": -0.03323262839879158,
-        "surprise_rate": null
+        "surprise_rate": null,
+        "date": "2026-06-26"
       }
     },
     "009450": {
@@ -6312,7 +7017,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.029665474437197605,
-        "surprise_rate": 0.6073047858942064
+        "surprise_rate": 0.6073047858942064,
+        "date": "2026-06-26"
       }
     },
     "252990": {
@@ -6320,7 +7026,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.027470792548152857,
-        "surprise_rate": 0.2907563025210083
+        "surprise_rate": 0.2907563025210083,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익1개+",
@@ -6332,7 +7039,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.02745077054794518,
-        "surprise_rate": -0.03234175640615568
+        "surprise_rate": -0.03234175640615568,
+        "date": "2026-06-26"
       }
     },
     "064760": {
@@ -6340,7 +7048,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.026151444184231026,
-        "surprise_rate": 0.03705049037413729
+        "surprise_rate": 0.03705049037413729,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "시총상위300",
@@ -6352,7 +7061,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.02413411208272976,
-        "surprise_rate": 0.1398058252427184
+        "surprise_rate": 0.1398058252427184,
+        "date": "2026-06-26"
       }
     },
     "054450": {
@@ -6360,7 +7070,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 5.12
+        "surprise_rate": 5.12,
+        "date": "2026-06-26"
       }
     },
     "046890": {
@@ -6368,7 +7079,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 2.6181818181818177
+        "surprise_rate": 2.6181818181818177,
+        "date": "2026-06-26"
       }
     },
     "112040": {
@@ -6376,7 +7088,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 1.3032142857142859
+        "surprise_rate": 1.3032142857142859,
+        "date": "2026-06-26"
       }
     },
     "222040": {
@@ -6384,7 +7097,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 1.1851063829787232
+        "surprise_rate": 1.1851063829787232,
+        "date": "2026-06-26"
       }
     },
     "078930": {
@@ -6392,7 +7106,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.7047557126796429
+        "surprise_rate": 0.7047557126796429,
+        "date": "2026-06-26"
       }
     },
     "085620": {
@@ -6400,7 +7115,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.6091764705882353
+        "surprise_rate": 0.6091764705882353,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익1개+",
@@ -6412,7 +7128,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.015002586652871214,
-        "surprise_rate": 0.5341463414634147
+        "surprise_rate": 0.5341463414634147,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익1개+",
@@ -6424,7 +7141,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.49830508474576257
+        "surprise_rate": 0.49830508474576257,
+        "date": "2026-06-26"
       }
     },
     "001740": {
@@ -6432,7 +7150,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.3838174273858921
+        "surprise_rate": 0.3838174273858921,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -6444,7 +7163,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.24999023933158954
+        "surprise_rate": 0.24999023933158954,
+        "date": "2026-06-26"
       }
     },
     "057050": {
@@ -6452,7 +7172,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.21000000000000008
+        "surprise_rate": 0.21000000000000008,
+        "date": "2026-06-26"
       }
     },
     "000640": {
@@ -6460,7 +7181,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0,
-        "surprise_rate": 0.19625000000000004
+        "surprise_rate": 0.19625000000000004,
+        "date": "2026-06-26"
       }
     },
     "001800": {
@@ -6468,7 +7190,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.18478409869773824
+        "surprise_rate": 0.18478409869773824,
+        "date": "2026-06-26"
       }
     },
     "004090": {
@@ -6476,7 +7199,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.18285714285714277
+        "surprise_rate": 0.18285714285714277,
+        "date": "2026-06-26"
       }
     },
     "286940": {
@@ -6484,7 +7208,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.1595238095238095
+        "surprise_rate": 0.1595238095238095,
+        "date": "2026-06-26"
       }
     },
     "317400": {
@@ -6492,7 +7217,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.13399999999999998
+        "surprise_rate": 0.13399999999999998,
+        "date": "2026-06-26"
       }
     },
     "069080": {
@@ -6500,7 +7226,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.12083333333333335
+        "surprise_rate": 0.12083333333333335,
+        "date": "2026-06-26"
       }
     },
     "099190": {
@@ -6508,7 +7235,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.25333333333333324
+        "surprise_rate": 0.25333333333333324,
+        "date": "2026-06-26"
       }
     },
     "214180": {
@@ -6516,7 +7244,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.07851851851851856
+        "surprise_rate": 0.07851851851851856,
+        "date": "2026-06-26"
       }
     },
     "031430": {
@@ -6524,7 +7253,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.016551473263004667,
-        "surprise_rate": 0.6606942889137739
+        "surprise_rate": 0.6606942889137739,
+        "date": "2026-06-26"
       }
     },
     "016580": {
@@ -6532,7 +7262,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 1.1813953488372095
+        "surprise_rate": 1.1813953488372095,
+        "date": "2026-06-26"
       }
     },
     "377300": {
@@ -6540,7 +7271,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.6340598073998986
+        "surprise_rate": 0.6340598073998986,
+        "date": "2026-06-26"
       }
     },
     "178920": {
@@ -6548,7 +7280,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.3734115347018573
+        "surprise_rate": 0.3734115347018573,
+        "date": "2026-06-26"
       }
     },
     "068930": {
@@ -6556,7 +7289,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.5393939393939395
+        "surprise_rate": 0.5393939393939395,
+        "date": "2026-06-26"
       }
     },
     "005090": {
@@ -6564,7 +7298,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.007825600894354419,
-        "surprise_rate": 0.16797385620915034
+        "surprise_rate": 0.16797385620915034,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -6576,7 +7311,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.9464777327935222
+        "surprise_rate": 0.9464777327935222,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -6588,7 +7324,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.4742857142857143
+        "surprise_rate": 0.4742857142857143,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -6600,7 +7337,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.30456852791878164
+        "surprise_rate": 0.30456852791878164,
+        "date": "2026-06-26"
       }
     },
     "001440": {
@@ -6608,7 +7346,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0.001268096798055633,
-        "surprise_rate": 0.7016901408450703
+        "surprise_rate": 0.7016901408450703,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -6620,7 +7359,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.2742879438158407
+        "surprise_rate": 0.2742879438158407,
+        "date": "2026-06-26"
       }
     },
     "060250": {
@@ -6628,7 +7368,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.018181818181818226,
-        "surprise_rate": 0.1203252032520324
+        "surprise_rate": 0.1203252032520324,
+        "date": "2026-06-26"
       }
     },
     "001120": {
@@ -6636,7 +7377,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.16112177436553635
+        "surprise_rate": 0.16112177436553635,
+        "date": "2026-06-26"
       }
     },
     "054950": {
@@ -6644,7 +7386,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.037988826815642446
+        "surprise_rate": 0.037988826815642446,
+        "date": "2026-06-26"
       }
     },
     "195940": {
@@ -6652,7 +7395,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.003433860853986324,
-        "surprise_rate": 0.13547724940129993
+        "surprise_rate": 0.13547724940129993,
+        "date": "2026-06-26"
       }
     },
     "005180": {
@@ -6660,7 +7404,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": 0,
-        "surprise_rate": 0.1495405179615705
+        "surprise_rate": 0.1495405179615705,
+        "date": "2026-06-26"
       }
     },
     "021240": {
@@ -6668,7 +7413,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.07533747589457901
+        "surprise_rate": 0.07533747589457901,
+        "date": "2026-06-26"
       }
     },
     "011760": {
@@ -6676,7 +7422,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": -0.004124926340600994,
-        "surprise_rate": 0.24486486486486492
+        "surprise_rate": 0.24486486486486492,
+        "date": "2026-06-26"
       }
     },
     "100090": {
@@ -6684,7 +7431,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.11877903118779025
+        "surprise_rate": 0.11877903118779025,
+        "date": "2026-06-26"
       }
     },
     "012630": {
@@ -6692,7 +7440,8 @@
       "consensus": {
         "type": "서프라이즈",
         "csen_chg": null,
-        "surprise_rate": 0.036494252873563185
+        "surprise_rate": 0.036494252873563185,
+        "date": "2026-06-26"
       }
     },
     "012750": {
@@ -6700,7 +7449,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.6486532271726242
+        "surprise_rate": -0.6486532271726242,
+        "date": "2026-06-26"
       }
     },
     "215000": {
@@ -6708,7 +7458,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.4868613138686131
+        "surprise_rate": -0.4868613138686131,
+        "date": "2026-06-26"
       }
     },
     "094360": {
@@ -6716,7 +7467,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.4
+        "surprise_rate": -0.4,
+        "date": "2026-06-26"
       }
     },
     "352480": {
@@ -6724,7 +7476,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.38762886597938134
+        "surprise_rate": -0.38762886597938134,
+        "date": "2026-06-26"
       }
     },
     "002320": {
@@ -6732,7 +7485,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0,
-        "surprise_rate": -0.38
+        "surprise_rate": -0.38,
+        "date": "2026-06-26"
       }
     },
     "009180": {
@@ -6740,7 +7494,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.35714285714285715
+        "surprise_rate": -0.35714285714285715,
+        "date": "2026-06-26"
       }
     },
     "001230": {
@@ -6748,7 +7503,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0,
-        "surprise_rate": -0.22250000000000003
+        "surprise_rate": -0.22250000000000003,
+        "date": "2026-06-26"
       }
     },
     "043150": {
@@ -6756,7 +7512,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.19604974396488659
+        "surprise_rate": -0.19604974396488659,
+        "date": "2026-06-26"
       }
     },
     "383800": {
@@ -6764,7 +7521,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.18431372549019606
+        "surprise_rate": -0.18431372549019606,
+        "date": "2026-06-26"
       }
     },
     "000240": {
@@ -6772,7 +7530,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.09126213592233008
+        "surprise_rate": -0.09126213592233008,
+        "date": "2026-06-26"
       }
     },
     "027410": {
@@ -6780,7 +7539,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.057777777777777733
+        "surprise_rate": -0.057777777777777733,
+        "date": "2026-06-26"
       }
     },
     "298690": {
@@ -6788,7 +7548,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.04874999999999996
+        "surprise_rate": -0.04874999999999996,
+        "date": "2026-06-26"
       }
     },
     "007310": {
@@ -6796,7 +7557,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.018512396694214835
+        "surprise_rate": -0.018512396694214835,
+        "date": "2026-06-26"
       }
     },
     "058610": {
@@ -6804,7 +7566,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.33382789317507416
+        "surprise_rate": -0.33382789317507416,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "시총상위300",
@@ -6816,7 +7579,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.015356820234869041,
-        "surprise_rate": -0.09999999999999994
+        "surprise_rate": -0.09999999999999994,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -6828,7 +7592,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.0086311530681052,
-        "surprise_rate": -0.07272727272727272
+        "surprise_rate": -0.07272727272727272,
+        "date": "2026-06-26"
       }
     },
     "002020": {
@@ -6836,7 +7601,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.009227683049147459
+        "surprise_rate": -0.009227683049147459,
+        "date": "2026-06-26"
       }
     },
     "112610": {
@@ -6844,7 +7610,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.0033672256701440598,
-        "surprise_rate": -0.026726057906458694
+        "surprise_rate": -0.026726057906458694,
+        "date": "2026-06-26"
       }
     },
     "000370": {
@@ -6852,7 +7619,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.00123412556232335,
-        "surprise_rate": -0.18214651176789257
+        "surprise_rate": -0.18214651176789257,
+        "date": "2026-06-26"
       }
     },
     "014830": {
@@ -6860,7 +7628,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0,
-        "surprise_rate": -0.03773584905660377
+        "surprise_rate": -0.03773584905660377,
+        "date": "2026-06-26"
       }
     },
     "035760": {
@@ -6868,7 +7637,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.9554334554334554
+        "surprise_rate": -0.9554334554334554,
+        "date": "2026-06-26"
       }
     },
     "388210": {
@@ -6876,7 +7646,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.09933333333333334
+        "surprise_rate": -0.09933333333333334,
+        "date": "2026-06-26"
       }
     },
     "214150": {
@@ -6884,7 +7655,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.005974641977560897,
-        "surprise_rate": -0.2098555649957518
+        "surprise_rate": -0.2098555649957518,
+        "date": "2026-06-26"
       },
       "etf": {
         "action": "비중증가",
@@ -6897,7 +7669,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.00958315877670723,
-        "surprise_rate": -0.18993435448577678
+        "surprise_rate": -0.18993435448577678,
+        "date": "2026-06-26"
       }
     },
     "272290": {
@@ -6905,7 +7678,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0,
-        "surprise_rate": -0.22165898617511515
+        "surprise_rate": -0.22165898617511515,
+        "date": "2026-06-26"
       }
     },
     "097950": {
@@ -6913,7 +7687,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": 0.0010924271390114245,
-        "surprise_rate": -0.15604621491352433
+        "surprise_rate": -0.15604621491352433,
+        "date": "2026-06-26"
       }
     },
     "376300": {
@@ -6921,7 +7696,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.07442748091603064
+        "surprise_rate": -0.07442748091603064,
+        "date": "2026-06-26"
       }
     },
     "195870": {
@@ -6929,7 +7705,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.004001778568252551,
-        "surprise_rate": -0.5511038430089943
+        "surprise_rate": -0.5511038430089943,
+        "date": "2026-06-26"
       },
       "accel": {
         "group": "추정이익3개+",
@@ -6941,7 +7718,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.13
+        "surprise_rate": -0.13,
+        "date": "2026-06-26"
       }
     },
     "010140": {
@@ -6949,7 +7727,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": -0.012229526521704488,
-        "surprise_rate": -0.21724177461882382
+        "surprise_rate": -0.21724177461882382,
+        "date": "2026-06-26"
       }
     },
     "253450": {
@@ -6957,7 +7736,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.37218413320274246
+        "surprise_rate": -0.37218413320274246,
+        "date": "2026-06-26"
       }
     },
     "029780": {
@@ -6965,7 +7745,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.08686956521739125
+        "surprise_rate": -0.08686956521739125,
+        "date": "2026-06-26"
       }
     },
     "215200": {
@@ -6973,7 +7754,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.062093862815884436
+        "surprise_rate": -0.062093862815884436,
+        "date": "2026-06-26"
       }
     },
     "067160": {
@@ -6981,7 +7763,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.2794567062818336
+        "surprise_rate": -0.2794567062818336,
+        "date": "2026-06-26"
       }
     },
     "339770": {
@@ -6989,7 +7772,8 @@
       "consensus": {
         "type": "쇼크",
         "csen_chg": null,
-        "surprise_rate": -0.5478632478632478
+        "surprise_rate": -0.5478632478632478,
+        "date": "2026-06-26"
       }
     },
     "448900": {
@@ -7258,7 +8042,7 @@
     }
   },
   "meta": {
-    "built_at": "2026-07-01T10:25:44",
+    "built_at": "2026-07-01T11:42:17",
     "stock_count": 645,
     "unmatched": [
       "ASML, 모건스탠리",

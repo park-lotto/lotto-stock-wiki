@@ -529,6 +529,72 @@ def parse_컨센움직임(dry_run: bool) -> dict:
     return {"file": path.name, "last_update": last_update, "results": sheets}
 
 
+# ─── 파서 2-B: 컨센흐름 시계열 (차트 오버레이용) ──────────────────
+
+def parse_컨센흐름(dry_run: bool) -> dict:
+    """컨센흐름 그래프 → 종목별 주간 컨센 시계열(12MF/FY1/FY2) → pipeline/taerini_consensus.json
+    시트: 영업이익(=Fwd.12M), 영업이익fy1(당해), 영업이익fy2(차년).
+    레이아웃: r8=코드(A######), r9=종목명, r15+=[A열 날짜, 이후 열별 값]"""
+    path = find_excel("컨센흐름")
+    if not path:
+        return {"error": "컨센흐름 파일 없음"}
+    wb = load_wb(path)
+    if not wb:
+        return {"error": "열기 실패"}
+
+    SHEETS = {"12mf": "영업이익", "fy1": "영업이익fy1", "fy2": "영업이익fy2"}
+    CODE_ROW, NAME_ROW, DATA_START = 8, 9, 15   # 1-indexed
+
+    stocks: dict = {}
+    global_dates = None
+
+    for skey, sname in SHEETS.items():
+        if sname not in wb.sheetnames:
+            continue
+        rows = list(wb[sname].iter_rows(values_only=True))
+        if len(rows) < DATA_START:
+            continue
+        code_row = rows[CODE_ROW - 1]
+        name_row = rows[NAME_ROW - 1]
+        col_code = {}
+        for c in range(1, len(code_row)):
+            cv = code_row[c]
+            if isinstance(cv, str) and cv.startswith("A"):
+                col_code[c] = str(cv).replace("A", "").strip().zfill(6)
+
+        these_dates, col_vals = [], {c: [] for c in col_code}
+        for r in rows[DATA_START - 1:]:
+            d = r[0] if r else None
+            # 연속 시계열 블록만 — 날짜가 아니면(빈행·다른블록) 종료
+            if not isinstance(d, (datetime, date)):
+                break
+            these_dates.append(str(d)[:10])
+            for c in col_code:
+                v = r[c] if c < len(r) else None
+                col_vals[c].append(round(float(v), 2) if isinstance(v, (int, float)) else None)
+        if global_dates is None:
+            global_dates = these_dates
+        for c, code in col_code.items():
+            nm = name_row[c] if c < len(name_row) else None
+            st = stocks.setdefault(code, {"name": str(nm or "").strip()})
+            st[skey] = col_vals[c]
+
+    wb.close()
+
+    out = {
+        "date": TODAY,
+        "dates": global_dates or [],
+        "stocks": stocks,
+        "meta": {"built_at": datetime.now().isoformat(timespec="seconds"),
+                 "stock_count": len(stocks), "file": path.name},
+    }
+    dest = ROOT / "pipeline" / "taerini_consensus.json"
+    tmp = dest.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(out, ensure_ascii=False), encoding="utf-8")
+    os.replace(tmp, dest)
+    return {"file": path.name, "stock_count": len(stocks)}
+
+
 # ─── 파서 3: 핵심 수출 데이터 ────────────────────────────────────
 
 # (섹터 키, 관련 종목) — 섹터 키는 SECTOR_FOLDER_MAP 키와 동일
@@ -2231,6 +2297,7 @@ def main():
     parsers = {
         "추정이익": ("추정이익변경", lambda: parse_추정이익변경(dry_run)),
         "컨센":     ("컨센움직임",   lambda: parse_컨센움직임(dry_run)),
+        "컨센흐름":  ("컨센흐름",     lambda: parse_컨센흐름(dry_run)),
         "수출":     ("수출",         lambda: parse_수출정리(dry_run)),
         "유동성":   ("유동성",       lambda: parse_유동성체크(dry_run)),
         "수급":     ("수급",         lambda: parse_수급오실레이터(dry_run)),

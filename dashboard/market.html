@@ -271,21 +271,36 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
   color:#888;font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s;}
 .chart-tf .tf-btn:hover{border-color:#555;color:#ccc;}
 .chart-tf .tf-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(212,175,55,.1);}
-/* 차트 + 태린이 세로 패널 가로 배치 */
-.chart-main-row{display:flex;flex:1;min-height:0;gap:10px;}
+/* 차트 + 투자참고지표 세로 패널 가로 배치 */
+.chart-main-row{display:flex;flex:1;min-height:0;gap:0;}
 .chart-col{flex:1;min-width:0;display:flex;flex-direction:column;}
-.taerini-panel{flex-shrink:0;width:210px;font-size:12px;color:#bbb;
-  border-left:1px solid #1c1c1c;padding:2px 0 2px 12px;
-  overflow-y:auto;line-height:1.5;}
-.taerini-panel .tk-hd{font-size:11px;color:#888;font-weight:600;margin-bottom:6px;
-  letter-spacing:.3px;position:sticky;top:0;background:var(--panel);padding-bottom:4px;}
-.taerini-panel .tk-row{display:flex;justify-content:space-between;align-items:baseline;
-  gap:8px;padding:5px 0;border-bottom:1px solid #161616;}
+.tk-toggle{flex-shrink:0;align-self:stretch;width:15px;display:flex;align-items:center;
+  justify-content:center;cursor:pointer;color:#666;background:#101014;
+  border:none;border-left:1px solid #1c1c1c;font-size:11px;padding:0;}
+.tk-toggle:hover{color:var(--gold,#d4af37);background:#17171c;}
+.taerini-panel{flex-shrink:0;width:270px;font-size:12.5px;color:#ccc;
+  padding:2px 2px 2px 14px;overflow-y:auto;line-height:1.55;transition:width .12s;}
+.taerini-panel.collapsed{width:0;padding:0;overflow:hidden;}
+.taerini-panel .tk-hd{font-size:12px;color:#9a9a9a;font-weight:700;margin-bottom:8px;
+  letter-spacing:.3px;position:sticky;top:0;background:var(--panel);
+  padding-bottom:6px;border-bottom:1px solid #222;}
+.taerini-panel .tk-row{padding:7px 1px;border-bottom:1px solid #171717;}
 .taerini-panel .tk-row:last-child{border-bottom:none;}
-.taerini-panel .tk-lab{color:#777;flex-shrink:0;}
-.taerini-panel .tk-val{text-align:right;color:#ddd;font-variant-numeric:tabular-nums;}
-.taerini-panel .tk-empty{color:#666;font-size:11px;padding-top:6px;}
-.taerini-panel .tk-date{color:#555;font-size:10px;margin-top:8px;text-align:right;}
+.taerini-panel .tk-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;}
+.taerini-panel .tk-lab{color:#8a8a8a;flex-shrink:0;}
+.taerini-panel .tk-lab.hint{border-bottom:1px dotted #5a5a5a;cursor:help;}
+.taerini-panel .tk-val{text-align:right;color:#eee;font-weight:600;font-variant-numeric:tabular-nums;}
+.taerini-panel .tk-sub{color:#777;font-size:10.5px;margin-top:2px;text-align:right;}
+.taerini-panel .tk-empty{color:#666;font-size:11.5px;padding-top:6px;}
+.taerini-panel .tk-date{color:#555;font-size:10px;margin-top:10px;text-align:right;}
+/* 컨센흐름 오버레이 컨트롤 */
+.cf-ctl{display:flex;align-items:center;gap:4px;margin-left:8px;}
+.cf-ctl .cf-btn{padding:2px 7px;border:1px solid #2c2c33;border-radius:5px;background:transparent;
+  color:#999;font-size:10.5px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.cf-ctl .cf-btn:hover{border-color:#555;color:#ccc;}
+.cf-ctl .cf-btn.active{border-color:#5b8def;color:#5b8def;background:rgba(91,141,239,.12);}
+.cf-ctl .cf-seg{display:none;gap:3px;}
+.cf-ctl.on .cf-seg{display:flex;}
 .chart-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#666;font-size:13px;}
 .chart-legend{margin-left:auto;font-size:11.5px;color:#ccc;font-variant-numeric:tabular-nums;white-space:nowrap;align-self:center;}
 .chart-legend .lg{color:#777;margin-left:5px;}
@@ -2106,20 +2121,62 @@ function _taeriniHtml(d){
   if(!d || !d.found) return HD+`<div class="tk-empty">미수록${d&&d.date?` (${H(d.date)})`:""}</div>`;
   const s=d.stock||{}, rows=[];
   const C=(t,c)=>`<span style="color:${c}">${H(t)}</span>`;
-  const R=(lab,val)=>`<div class="tk-row"><span class="tk-lab">${lab}</span><span class="tk-val">${val}</span></div>`;
-  if(s.osc) rows.push(R("수급", C(s.osc.trend||s.osc.group||"-","#e0b94a")
-    + (s.osc.pct!=null?` <span style="color:#888">${Math.round(s.osc.pct)}%ile</span>`:"")));
-  if(s.rs) rows.push(R("RS", `${s.rs.rs_avg!=null?Number(s.rs.rs_avg).toFixed(2):"-"} <span style="color:#888">${H(s.rs.bucket||"-")}</span>`));
-  if(s.tp){ const up=s.tp.dir==="상향"; const tgt=s.tp.target!=null?Math.round(s.tp.target/1000)+"천":"";
-    rows.push(R("TP", C(tgt+(up?"↑":"↓"), up?"#e74c3c":"#3aa0ff")
-      + (s.tp.change_pct!=null?` <span style="color:#888">${s.tp.change_pct>0?"+":""}${s.tp.change_pct}%</span>`:""))); }
-  if(s.consensus){ const t=s.consensus.type||""; const good=(t==="컨센상향"||t==="서프라이즈");
-    rows.push(R("컨센", C(t||"-", good?"#e74c3c":"#3aa0ff"))); }
-  if(s.accel) rows.push(R("가속", s.accel.score!=null?Number(s.accel.score).toFixed(2):"-"));
-  if(s.etf){ const inc=s.etf.action==="비중증가";
-    rows.push(R("ETF", C(inc?"비중↑":"비중↓", inc?"#e74c3c":"#3aa0ff"))); }
+  const R=(lab,val,sub,tip)=>`<div class="tk-row"><div class="tk-top">`
+    +`<span class="tk-lab${tip?' hint':''}"${tip?` title="${H(tip)}"`:''}>${lab}</span>`
+    +`<span class="tk-val">${val}</span></div>`
+    +(sub?`<div class="tk-sub">${H(sub)}</div>`:'')+`</div>`;
+
+  // 수급빈집
+  if(s.osc){
+    const g=(s.osc.group||"")+""; let lab2=g.replace(/_/g," "), col="#e0b94a";
+    if(g.indexOf("빈집_A")>=0){col="#2ecc71";lab2="완전빈집";}
+    else if(g.indexOf("빈집_B")>=0){col="#7bd88f";lab2="반빈집";}
+    else if(g.indexOf("과매수")>=0){col="#e74c3c";lab2="과매수"+(g.indexOf("상승")>=0?"↑":g.indexOf("하락")>=0?"↓":"");}
+    const pct=s.osc.pct!=null?` <span style="color:#888">${Math.round(s.osc.pct)}%ile</span>`:"";
+    rows.push(R("수급빈집",C(lab2,col)+pct,null,
+      "수급 오실레이터. 하위=빈집(매수유입 공백 → 반등 여지), 상위=과매수. %ile은 전체 종목 중 백분위 위치"));
+  }
+  // RS
+  if(s.rs){
+    const up=s.rs.bucket==="상위";
+    rows.push(R("RS",`${s.rs.rs_avg!=null?Number(s.rs.rs_avg).toFixed(1):"-"} ${C(s.rs.bucket||"",up?"#e74c3c":"#3aa0ff")}`,
+      s.rs.norm!=null?`정규화 ${s.rs.norm} / 100`:null,
+      "상대강도(Mansfield RS). 코스피 대비 초과수익률. 60·120·250일 평균. 상위=코스피보다 강함, 하위=약함"));
+  }
+  // TP
+  if(s.tp){
+    const up=s.tp.dir==="상향"; const tgt=s.tp.target!=null?Math.round(s.tp.target/1000).toLocaleString()+"천":"-";
+    const pc=s.tp.change_pct!=null?` <span style="color:#888">${s.tp.change_pct>0?"+":""}${s.tp.change_pct}%</span>`:"";
+    const who=[s.tp.brokerage,(s.tp.date||"").slice(5)].filter(Boolean).join(" · ");
+    rows.push(R("TP",C(tgt+(up?" ↑":" ↓"),up?"#e74c3c":"#3aa0ff")+pc, who||null,
+      "목표주가 상/하향. 옆 %는 직전 대비 변동폭. 아래=최근 상/하향한 증권사·발표일"));
+  }
+  // 컨센
+  if(s.consensus){
+    const t=s.consensus.type||""; const good=(t==="컨센상향"||t==="서프라이즈");
+    const chg=s.consensus.csen_chg!=null?` <span style="color:#888">${(s.consensus.csen_chg*100).toFixed(1)}%</span>`:"";
+    rows.push(R("컨센",C(t||"-",good?"#e74c3c":"#3aa0ff")+chg,
+      s.consensus.date?`${s.consensus.date} 기준`:null,
+      "컨센서스 방향: 상향/하향, 어닝 서프라이즈/쇼크. 옆 %는 컨센 변화율. 아래=집계 기준일"));
+  }
+  // 가속
+  if(s.accel){
+    const sc=s.accel.score!=null?Number(s.accel.score).toFixed(2):"-";
+    rows.push(R("가속",`${sc}`, s.accel.group||null,
+      "가속화모멘텀 점수(0~1). 1.0=최고 등급(이익추정 상향이 가속되는 주도 군집). 아래=속한 그룹"));
+  }
+  // ETF 비중
+  if(s.etf){
+    const inc=s.etf.action==="비중증가";
+    const diff=s.etf.diff!=null?` <span style="color:#888">${s.etf.diff>0?"+":""}${s.etf.diff}%p</span>`:"";
+    rows.push(R("ETF비중",C(inc?"증가↑":"감소↓",inc?"#e74c3c":"#3aa0ff")+diff, null,
+      "액티브ETF들의 이 종목 편입비중 변화. 증가=매집(포지션 확대) / 감소=차익·축소. '현재 포지션과 변화 방향'을 판단하는 용도"));
+  }
+  // 실적일정
   if(s.schedule&&s.schedule.dday!=null){ const dd=s.schedule.dday;
-    rows.push(R("실적", `D${dd<=0?dd:"+"+dd}`)); }
+    rows.push(R("실적",`D${dd<=0?dd:"+"+dd}`, s.schedule.date||null,
+      "다가오는 실적발표·수주 이벤트까지 남은 일수(D-day)")); }
+
   if(!rows.length) return HD+`<div class="tk-empty">미수록 (${H(d.date||"")})</div>`;
   return HD + rows.join("") + dateLine;
 }
@@ -2132,6 +2189,70 @@ async function _loadTaerini(code){
     const r=await fetch("/api/taerini_stock?code="+encodeURIComponent(code));
     box.innerHTML=_taeriniHtml(await r.json());
   }catch(e){ box.innerHTML='📊 <span style="color:#a55">투자 참고지표 로드 실패</span>'; }
+}
+
+// ── 지표 패널 접기/펼치기 ──
+function _toggleTaerini(){
+  const p=document.getElementById("taerini-panel"), b=document.getElementById("tk-toggle");
+  if(!p) return;
+  const collapsed=!p.classList.contains("collapsed");
+  p.classList.toggle("collapsed", collapsed);
+  if(b) b.textContent = collapsed ? "▶" : "◀";
+  try{ localStorage.setItem("taerini_collapsed", collapsed?"1":"0"); }catch(_){}
+}
+function _applyTaeriniCollapse(){
+  let c=false; try{ c=localStorage.getItem("taerini_collapsed")==="1"; }catch(_){}
+  const p=document.getElementById("taerini-panel"), b=document.getElementById("tk-toggle");
+  if(p) p.classList.toggle("collapsed", c);
+  if(b) b.textContent = c ? "▶" : "◀";
+}
+
+// ── 컨센흐름 차트 오버레이 (주가 × 영업이익 컨센) ──
+let _cfSeries=null, _cfData=null, _cfMode="12mf", _cfOn=false;
+function _cfInitState(){
+  try{ _cfOn=localStorage.getItem("cf_on")==="1"; _cfMode=localStorage.getItem("cf_mode")||"12mf"; }catch(_){}
+  const ctl=document.getElementById("cf-ctl"), tg=document.getElementById("cf-toggle");
+  if(ctl) ctl.classList.toggle("on", _cfOn);
+  if(tg) tg.classList.toggle("active", _cfOn);
+  document.querySelectorAll("#cf-ctl .cf-btn[data-cf]").forEach(b=>b.classList.toggle("active", b.dataset.cf===_cfMode));
+}
+async function _loadConsensus(code){
+  _cfData=null;
+  try{
+    const r=await fetch("/api/taerini_consensus?code="+encodeURIComponent(code));
+    const j=await r.json();
+    if(j&&j.found) _cfData=j;
+  }catch(_){}
+  _cfRender();
+}
+function _cfRender(){
+  if(_cfSeries){ try{_chart.removeSeries(_cfSeries);}catch(_){} _cfSeries=null; }
+  if(!_cfOn || !_cfData || !_chart || _isIntraday()) return;   // 분봉에선 컨센(주간) 오버레이 생략
+  const dates=_cfData.dates||[], arr=(_cfData.series||{})[_cfMode];
+  if(!arr || !arr.length) return;
+  const data=[];
+  for(let i=0;i<dates.length && i<arr.length;i++){ if(arr[i]!=null) data.push({time:dates[i], value:arr[i]}); }
+  if(!data.length) return;
+  try{
+    _cfSeries=_chart.addLineSeries({priceScaleId:"cf", color:"#5b8def", lineWidth:2,
+      priceLineVisible:false, lastValueVisible:true, crosshairMarkerVisible:true});
+    _chart.priceScale("cf").applyOptions({scaleMargins:{top:0.12,bottom:0.28}, visible:false});
+    _cfSeries.setData(data);
+  }catch(_){ _cfSeries=null; }
+}
+function _cfToggle(){
+  _cfOn=!_cfOn;
+  try{ localStorage.setItem("cf_on", _cfOn?"1":"0"); }catch(_){}
+  const ctl=document.getElementById("cf-ctl"), tg=document.getElementById("cf-toggle");
+  if(ctl) ctl.classList.toggle("on", _cfOn);
+  if(tg) tg.classList.toggle("active", _cfOn);
+  if(_cfOn && !_cfData && _chartCode) _loadConsensus(_chartCode); else _cfRender();
+}
+function _cfSel(mode){
+  _cfMode=mode;
+  try{ localStorage.setItem("cf_mode", mode); }catch(_){}
+  document.querySelectorAll("#cf-ctl .cf-btn[data-cf]").forEach(b=>b.classList.toggle("active", b.dataset.cf===mode));
+  _cfRender();
 }
 
 function openStockChart(code, name){
@@ -2180,12 +2301,22 @@ function openStockChart(code, name){
       <button class="ct-btn wbtn" data-w="1" onclick="setDrawWidth(1,this)">얇게</button>
       <button class="ct-btn wbtn active" data-w="2" onclick="setDrawWidth(2,this)">보통</button>
       <button class="ct-btn wbtn" data-w="4" onclick="setDrawWidth(4,this)">굵게</button>
+      <span class="ct-sep"></span>
+      <span class="cf-ctl" id="cf-ctl">
+        <button class="cf-btn" id="cf-toggle" onclick="_cfToggle()" title="영업이익 컨센 추정치를 주가에 겹쳐 표시">📈 컨센</button>
+        <span class="cf-seg">
+          <button class="cf-btn active" data-cf="12mf" onclick="_cfSel('12mf')" title="12개월 선행 컨센">12MF</button>
+          <button class="cf-btn" data-cf="fy1" onclick="_cfSel('fy1')" title="당해 연도(FY1)">FY1</button>
+          <button class="cf-btn" data-cf="fy2" onclick="_cfSel('fy2')" title="차년(FY2)">FY2</button>
+        </span>
+      </span>
     </div>
     <div class="chart-main-row">
       <div class="chart-col">
         <div id="tv_chart_container"></div>
         <div id="tv_osc_container"></div>
       </div>
+      <button class="tk-toggle" id="tk-toggle" onclick="_toggleTaerini()" title="지표 패널 접기/펼치기">◀</button>
       <div id="taerini-panel" class="taerini-panel">📊 투자 참고지표 로딩…</div>
     </div>
   </div>`;
@@ -2220,6 +2351,9 @@ function openStockChart(code, name){
   _initChart();
   loadChartData();
   _loadTaerini(code);
+  _applyTaeriniCollapse();
+  _cfInitState();
+  if(_cfOn) _loadConsensus(code); else _cfRender();
   if(_drawRaf) cancelAnimationFrame(_drawRaf);
   _lastProj=null; _drawRaf=requestAnimationFrame(_drawTick);   // 도형 자동 재계산 루프 시작
 }
@@ -2573,6 +2707,7 @@ function setChartTf(tf){
   document.querySelectorAll(".chart-tf .tf-btn").forEach(b=>b.classList.toggle("active",b.dataset.tf===tf));
   _saveChartWin();   // 마지막 봉 종류 저장
   _initChart(); loadChartData();
+  if(_cfOn) _cfRender();   // 봉 전환 후 컨센 오버레이 재적용(일봉+만)
 }
 function closeStockChart(){
   const m=document.getElementById("chart-modal");
