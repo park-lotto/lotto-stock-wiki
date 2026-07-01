@@ -3597,10 +3597,15 @@ _NEWS_AD_KW = ("추천주", "급등주", "상한가", "무료", "리딩", "세�
 
 
 def _naver_news(code, limit=25):
-    """네이버 종목뉴스 (제목+요약) — Playwright subprocess 격리 크롤 + 광고성 1차 필터."""
+    """네이버 종목뉴스 [{title,summary,press,date,url}] — subprocess 격리 크롤 + 광고성 1차 필터."""
     res = _naver_crawl({"mode": "news", "code": code}, timeout=45)
-    items = res if isinstance(res, list) else []
-    clean = [x for x in items if not any(k in x for k in _NEWS_AD_KW)]
+    items = [x for x in (res if isinstance(res, list) else []) if isinstance(x, dict)]
+
+    def _is_ad(x):
+        blob = (x.get("title") or "") + " " + (x.get("summary") or "")
+        return any(k in blob for k in _NEWS_AD_KW)
+
+    clean = [x for x in items if not _is_ad(x)]
     return (clean or items)[:limit]
 
 
@@ -3648,7 +3653,9 @@ async def api_insights_naver_news(req: Request):
             "2) 📰 핵심 뉴스 3~5개 — 각 (제목 요약 + 왜 중요한지 한 줄)\n"
             "3) ⚠️ 주의할 악재/리스크 뉴스 있으면\n"
             "광고성(추천주·급등주·리딩·무료 등)은 빼라. 뉴스에 있는 내용만, 지어내지 마라.\n\n"
-            "뉴스 목록:\n" + "\n".join(f"- {t}" for t in news[:25]))
+            "뉴스 목록:\n" + "\n".join(
+                f"- {n.get('title','')} — {n.get('summary','')} ({n.get('press','')}·{n.get('date','')})"
+                for n in news[:25]))
         return _gemini_text(prompt)
 
     res = await run_in_threadpool(_analyze)

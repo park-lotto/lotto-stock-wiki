@@ -752,19 +752,12 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
         <button class="nb-act" onclick="wsAction(this,'card')">🎴 브리핑 리포트 <small>~1분</small></button>
       </div>
       <div class="ws-act-group ws-naver">
-        <div class="ws-act-label">🗣️ 네이버 종토방 분석 <small>개미 여론·상승이유</small></div>
-        <input type="text" id="nb-stock" class="ws-q-input" placeholder="종목명 입력 (예: 대우건설)" onkeydown="if(event.key==='Enter')wsNaverBoard()">
+        <div class="ws-act-label">🗣️ 네이버 종목 분석 <small>종목이슈 · 종토방 여론</small></div>
+        <input type="text" id="nb-stock" class="ws-q-input" placeholder="종목명 입력 (예: 가온전선)" onkeydown="if(event.key==='Enter')wsNaverNews()">
         <div class="ws-ask-btns">
-          <select id="nb-period" class="brief-sel" style="flex:1">
-            <option value="today">오늘</option>
-            <option value="d1">최근 -1일</option>
-            <option value="d3" selected>최근 -3일</option>
-            <option value="d7">최근 -7일</option>
-            <option value="d30">최근 -30일</option>
-          </select>
-          <button class="ws-web-btn" onclick="wsNaverBoard()">🗣️ 여론 분석</button>
+          <button class="ws-web-btn" onclick="wsNaverNews()" style="flex:1">📰 종목이슈 <small>상승원인·뉴스</small></button>
+          <button class="ws-web-btn" onclick="wsNaverBoard()" style="flex:1">🗣️ 종토방분석 <small>개미 여론</small></button>
         </div>
-        <button class="nb-act" onclick="wsNaverNews()" style="margin-top:8px">📰 종목 뉴스(상승원인) <small>광고성 제외 · 이유있는 뉴스만</small></button>
       </div>
       <div class="ws-act-group">
         <div class="ws-act-label">🎨 만들기 — 스탁브레인 스튜디오</div>
@@ -1957,7 +1950,7 @@ async function wsNaverNews() {
   const ws = window._ws; if (!ws) return;
   const stock = (((qs('#nb-stock') || {}).value || '').trim()) || (((qs('#ws-q') || {}).value || '').trim()) || ws.label || '';
   if (!stock) { toast('종목명을 입력하세요 (예: 대우건설)', true); return; }
-  const card = wsAddCard('📰 종목 뉴스', `<div class="nb-qa-q">종목: ${escHtml(stock)}</div>${wsLoading('네이버 종목뉴스 렌더링 + 상승원인 분석 중… (~20초)', true)}`);
+  const card = wsAddCard('📰 종목이슈', `<div class="nb-qa-q">종목: ${escHtml(stock)}</div>${wsLoading('네이버 종목뉴스 수집 + 상승원인 분석 중… (~40초)', true)}`);
   card._abort = new AbortController();
   const body = card.querySelector('.ws-card-b');
   try {
@@ -1966,10 +1959,21 @@ async function wsNaverNews() {
       body: JSON.stringify({ stock }), signal: card._abort.signal
     });
     if (res.error) throw new Error(res.error);
-    const list = (res.news || []).map(t => `<div class="sig-fact" style="border-left-color:#fb923c"><div class="sig-fact-txt">${escHtml(t)}</div></div>`).join('');
-    body.innerHTML = `<div class="nb-qa-q">📰 <b>${escHtml(res.stock)}</b>(${res.code}) 종목뉴스 · ${res.count}건(광고 제외) <a href="${res.url}" target="_blank" style="font-size:.72rem;color:#67e8f9">↗ 네이버뉴스</a></div>
+    const list = (res.news || []).map(n => {
+      const meta = [n.press, n.date].filter(Boolean).map(escHtml).join(' · ');
+      const t = escHtml(n.title || '');
+      const titleHtml = n.url
+        ? `<a href="${escAttr(n.url)}" target="_blank" rel="noopener" style="color:#fcd34d;text-decoration:none">${t} ↗</a>`
+        : t;
+      return `<div class="sig-fact" style="border-left-color:#fb923c">
+        <div class="sig-fact-txt">${titleHtml}</div>
+        ${n.summary ? `<div style="font-size:.73rem;color:#cfd3c8;margin-top:3px;line-height:1.5">${escHtml(n.summary)}</div>` : ''}
+        ${meta ? `<div class="sig-fact-meta">📰 ${meta}</div>` : ''}
+      </div>`;
+    }).join('');
+    body.innerHTML = `<div class="nb-qa-q">📰 <b>${escHtml(res.stock)}</b>(${res.code}) 종목이슈 · ${res.count}건(광고 제외) <a href="${res.url}" target="_blank" style="font-size:.72rem;color:#67e8f9">↗ 네이버뉴스</a></div>
       <div class="nb-qa-a">${marked.parse(res.analysis || '')}</div>
-      <details style="margin-top:8px"><summary style="cursor:pointer;color:var(--gold-dim);font-size:.76rem">📰 수집 뉴스 ${(res.news || []).length}건</summary><div style="margin-top:6px;display:flex;flex-direction:column;gap:6px">${list}</div></details>`;
+      <details style="margin-top:8px" open><summary style="cursor:pointer;color:var(--gold-dim);font-size:.76rem">📰 원문 뉴스 ${(res.news || []).length}건 (제목 클릭 → 원문)</summary><div style="margin-top:6px;display:flex;flex-direction:column;gap:6px">${list}</div></details>`;
   } catch(e) {
     body.innerHTML = e.name === 'AbortError'
       ? `<div class="nb-qa-q">종목: ${escHtml(stock)}</div><div style="color:var(--muted)">취소됨</div>`

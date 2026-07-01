@@ -52,6 +52,54 @@ async def _render(urls, selector):
     return out
 
 
+async def _news(code):
+    """종목 뉴스 구조화 추출 → [{url,title,summary,press,date}]."""
+    from playwright.async_api import async_playwright
+    url = f"https://m.stock.naver.com/domestic/stock/{code}/news"
+    async with async_playwright() as pw:
+        br = await pw.chromium.launch(headless=True)
+        ctx = await br.new_context(user_agent=_UA)
+
+        async def _block(route):
+            if route.request.resource_type in ("image", "media", "font", "stylesheet"):
+                await route.abort()
+            else:
+                await route.continue_()
+        await ctx.route("**/*", _block)
+        pg = await ctx.new_page()
+        rows = []
+        try:
+            await pg.goto(url, wait_until="domcontentloaded", timeout=15000)
+            await pg.wait_for_selector('[class*="NewsList"] a', timeout=8000)
+            rows = await pg.eval_on_selector_all('[class*="NewsList"] a', """els => els.map(a => {
+                const q = s => { const e = a.querySelector(s); return e ? e.textContent.trim() : ''; };
+                return { url: a.href,
+                         title: q('[class*="title"]'),
+                         summary: q('[class*="text"]'),
+                         press: q('cite'),
+                         date: q('time') };
+            })""")
+        except Exception:
+            pass
+        await br.close()
+    items, seen = [], set()
+    for r in rows or []:
+        t = re.sub(r"\s+", " ", (r.get("title") or "")).strip()
+        if len(t) < 8:
+            continue
+        if t[:24] in seen:
+            continue
+        seen.add(t[:24])
+        items.append({
+            "title": t,
+            "summary": re.sub(r"\s+", " ", (r.get("summary") or "")).strip()[:220],
+            "press": (r.get("press") or "").strip()[:20],
+            "date": (r.get("date") or "").strip()[:20],
+            "url": (r.get("url") or "").strip(),
+        })
+    return items
+
+
 def main():
     req = json.loads(sys.argv[1])
     mode, code = req["mode"], req["code"]
@@ -69,18 +117,7 @@ def main():
                 out[nid] = best[:700]
         print(json.dumps(out, ensure_ascii=False))
     elif mode == "news":
-        res = asyncio.run(_render(
-            [("news", f"https://m.stock.naver.com/domestic/stock/{code}/news")],
-            '[class*="NewsList"] a'))
-        items, seen = [], set()
-        for t in res.get("news", []):
-            if len(t) < 12:
-                continue
-            k = t[:20]
-            if k in seen:
-                continue
-            seen.add(k)
-            items.append(t[:200])
+        items = asyncio.run(_news(code))
         print(json.dumps(items, ensure_ascii=False))
     else:
         print("{}")
