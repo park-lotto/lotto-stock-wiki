@@ -160,10 +160,23 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 
 /* ══ 모바일(≤768px) 반응형 ══ */
 @media(max-width:768px){
-  .topbar{padding:0 12px;gap:10px;height:48px;}
-  .topbar .logo{font-size:14px;}
+  html,body{overflow-x:hidden;}          /* 페이지 가로 넘침 방지 */
+  /* 상단바: 겹침 방지 — 폰트·간격 축소, 시계 숨김, 넘치면 가로스크롤 */
+  .topbar{padding:0 8px;gap:4px;height:46px;overflow-x:auto;overflow-y:hidden;
+    white-space:nowrap;scrollbar-width:none;}
+  .topbar::-webkit-scrollbar{display:none;}
+  .topbar .logo{font-size:12px;letter-spacing:0;flex-shrink:0;}
+  .nav{margin-left:4px;gap:0;flex-shrink:0;}
+  .nav a{padding:5px 7px;font-size:12px;}
+  .topbar .badge{font-size:10px;padding:2px 7px;flex-shrink:0;}
+  .topbar .time{display:none;}           /* 시계 숨김 */
+  #topbar-refresh{flex-shrink:0;}
   .main{padding:10px 8px;}
+  /* 서브바: 줄바꿈 허용, 버튼 안 찌부 */
+  .subbar{flex-wrap:wrap;gap:6px 8px;}
   .subbar h1{font-size:15px;}
+  .subbar .right{margin-left:0;flex-wrap:wrap;}
+  .interval-btn,.subbar .refresh-btn{flex-shrink:0;white-space:nowrap;}
   .etf-bar{padding:0 8px;}
   /* 상단 4패널: 가로 스와이프 (카드당 화면폭 85%) */
   #mkt-panel{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:8px 8px 0 !important;
