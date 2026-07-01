@@ -3596,6 +3596,64 @@ _NEWS_AD_KW = ("추천주", "급등주", "상한가", "무료", "리딩", "세�
                "인증", "회원모집", "1:1", "VIP", "적중", "포착주")
 
 
+_KRX_CODES_CACHE = None
+
+
+def _krx_codes():
+    """krx_codes.json → {종목명: 코드} (약 2600종목). 1회 로드 캐시."""
+    global _KRX_CODES_CACHE
+    if _KRX_CODES_CACHE is None:
+        try:
+            p = os.path.join(ROOT, "pipeline", "atoms", "krx_codes.json")
+            d = json.load(open(p, encoding="utf-8"))
+            _KRX_CODES_CACHE = d.get("codes", {}) if isinstance(d, dict) else {}
+        except Exception:
+            _KRX_CODES_CACHE = {}
+    return _KRX_CODES_CACHE
+
+
+# 대기업 영문약자 ↔ 한글음역 (KRX가 회사마다 제각각 등록: SK하이닉스=영문 / 엘에스일렉트릭=한글)
+_BRAND_ALIASES = {
+    "ls": "엘에스", "sk": "에스케이", "lg": "엘지", "kt": "케이티", "gs": "지에스",
+    "cj": "씨제이", "kb": "케이비", "db": "디비", "dl": "디엘", "hd": "에이치디",
+    "hl": "에이치엘", "nh": "엔에이치", "jb": "제이비", "bnk": "비엔케이",
+    "dgb": "디지비", "sga": "에스지에이", "hmm": "에이치엠엠", "kcc": "케이씨씨",
+}
+
+
+def _query_variants(ql):
+    """쿼리 변형: 영문약자→한글음역, 한글음역→영문약자 (양방향)."""
+    vs = {ql}
+    for en, ko in _BRAND_ALIASES.items():
+        if ql.startswith(en):
+            vs.add(ko + ql[len(en):])
+        if ql.startswith(ko):
+            vs.add(en + ql[len(ko):])
+    return vs
+
+
+@app.get("/api/insights/stock_suggest")
+def api_stock_suggest(q: str = ""):
+    """종목명 자동완성 — 앞글자 우선, 부분일치 보조, 코드일치·약자별칭 포함. 최대 12개."""
+    q = (q or "").strip()
+    if not q:
+        return JSONResponse(content={"items": []})
+    variants = _query_variants(q.lower())
+    codes = _krx_codes()
+    starts, contains, seen = [], [], set()
+    for name, code in codes.items():
+        if code in seen:
+            continue
+        nl = name.lower()
+        if any(nl.startswith(v) for v in variants) or code.startswith(q):
+            starts.append({"name": name, "code": code}); seen.add(code)
+        elif any(v in nl for v in variants):
+            contains.append({"name": name, "code": code}); seen.add(code)
+    starts.sort(key=lambda x: len(x["name"]))
+    items = (starts + contains)[:12]
+    return JSONResponse(content={"items": items})
+
+
 def _naver_news(code, limit=25):
     """네이버 종목뉴스 [{title,summary,press,date,url}] — subprocess 격리 크롤 + 광고성 1차 필터."""
     res = _naver_crawl({"mode": "news", "code": code}, timeout=45)

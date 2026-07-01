@@ -274,9 +274,20 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .sopt.on { background: var(--gold); color: #0a0a0a; font-weight: 700; }
 .ws-q-input { flex: 1; padding: 10px 14px; border-radius: 9px; border: 1px solid var(--line); background: var(--bg); color: var(--txt); font-family: inherit; font-size: .86rem; outline: none; }
 .ws-q-input:focus { border-color: var(--gold-dim); }
-.ws-act-group { display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
-.ws-act-label { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; font-weight: 700; }
+.ws-act-group { display: flex; flex-direction: column; gap: 8px; align-items: stretch; padding-top: 14px; border-top: 1px solid var(--line); }
+.ws-act-group:first-child { padding-top: 0; border-top: none; }
+.ws-act-label { font-size: .72rem; color: var(--gold-dim); letter-spacing: .3px; font-weight: 800; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.ws-act-label small { font-size: .68rem; color: var(--muted); font-weight: 500; letter-spacing: 0; text-transform: none; }
 .ws-act-group .nb-act { text-align: left; }
+/* 종목 자동완성 드롭다운 */
+.nb-ac-wrap { position: relative; }
+.nb-ac { position: absolute; top: calc(100% + 3px); left: 0; right: 0; z-index: 60; background: #12140f; border: 1px solid var(--gold-dim); border-radius: 9px; max-height: 250px; overflow-y: auto; display: none; box-shadow: 0 8px 22px rgba(0,0,0,.5); }
+.nb-ac.on { display: block; }
+.nb-ac-item { padding: 8px 11px; cursor: pointer; font-size: .84rem; display: flex; justify-content: space-between; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,.04); }
+.nb-ac-item:last-child { border-bottom: none; }
+.nb-ac-item:hover, .nb-ac-item.sel { background: rgba(212,175,55,.16); }
+.nb-ac-item .nm { color: var(--txt); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nb-ac-item .cd { color: var(--muted); font-size: .73rem; font-variant-numeric: tabular-nums; flex-shrink: 0; }
 .ws-presets { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 8px; }
 .ws-preset { padding: 6px 8px; border-radius: 7px; border: 1px solid var(--line); background: var(--card); color: var(--txt); font-family: inherit; font-size: .73rem; cursor: pointer; transition: border-color .15s, color .15s; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ws-preset:hover { border-color: var(--gold); color: var(--gold); }
@@ -746,18 +757,21 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
           <button class="ws-preset" onclick="wsPreset('compare')">🆚 교차비교</button>
         </div>
       </div>
-      <div class="ws-act-group">
-        <div class="ws-act-label">자료 보강 · 문서</div>
-        <button class="nb-act" onclick="wsAction(this,'research')">🔬 웹 딥리서치 <small>~30초</small></button>
-        <button class="nb-act" onclick="wsAction(this,'card')">🎴 브리핑 리포트 <small>~1분</small></button>
-      </div>
       <div class="ws-act-group ws-naver">
-        <div class="ws-act-label">🗣️ 네이버 종목 분석 <small>종목이슈 · 종토방 여론</small></div>
-        <input type="text" id="nb-stock" class="ws-q-input" placeholder="종목명 입력 (예: 가온전선)" onkeydown="if(event.key==='Enter')wsNaverNews()">
+        <div class="ws-act-label">🔍 종목 빠른 분석 <small>이슈 · 종토방 여론</small></div>
+        <div class="nb-ac-wrap">
+          <input type="text" id="nb-stock" class="ws-q-input" placeholder="종목명 입력 (예: LS일렉트릭)" autocomplete="off" oninput="stockSuggest(this)" onkeydown="stockKey(event)" onblur="setTimeout(hideStockAC,160)">
+          <div id="nb-ac" class="nb-ac"></div>
+        </div>
         <div class="ws-ask-btns">
           <button class="ws-web-btn" onclick="wsNaverNews()" style="flex:1">📰 종목이슈 <small>상승원인·뉴스</small></button>
           <button class="ws-web-btn" onclick="wsNaverBoard()" style="flex:1">🗣️ 종토방분석 <small>개미 여론</small></button>
         </div>
+      </div>
+      <div class="ws-act-group">
+        <div class="ws-act-label">📎 자료 보강 <small>웹리서치 · 리포트</small></div>
+        <button class="nb-act" onclick="wsAction(this,'research')">🔬 웹 딥리서치 <small>~30초</small></button>
+        <button class="nb-act" onclick="wsAction(this,'card')">🎴 브리핑 리포트 <small>~1분</small></button>
       </div>
       <div class="ws-act-group">
         <div class="ws-act-label">🎨 만들기 — 스탁브레인 스튜디오</div>
@@ -1921,10 +1935,43 @@ async function wsWebResearch() {
       : `<div class="nb-qa-q">주제: ${escHtml(q)}</div><div style="color:#e88">웹리서치 실패: ${escHtml(e.message)}</div>`;
   }
 }
+// ── 종목명 자동완성 ──
+let _acTimer = null, _acItems = [], _acSel = -1;
+function stockSuggest(inp) {
+  const q = (inp.value || '').trim();
+  clearTimeout(_acTimer);
+  if (q.length < 1) { hideStockAC(); return; }
+  _acTimer = setTimeout(async () => {
+    try {
+      const res = await apiFetch('/api/insights/stock_suggest?q=' + encodeURIComponent(q));
+      _acItems = res.items || []; _acSel = -1; renderStockAC();
+    } catch (e) { hideStockAC(); }
+  }, 160);
+}
+function renderStockAC() {
+  const box = qs('#nb-ac'); if (!box) return;
+  if (!_acItems.length) { hideStockAC(); return; }
+  box.innerHTML = _acItems.map((it, i) =>
+    `<div class="nb-ac-item${i === _acSel ? ' sel' : ''}" onmousedown="event.preventDefault();pickStock(${i})"><span class="nm">${escHtml(it.name)}</span><span class="cd">${escHtml(it.code)}</span></div>`).join('');
+  box.classList.add('on');
+}
+function hideStockAC() { const box = qs('#nb-ac'); if (box) { box.classList.remove('on'); box.innerHTML = ''; } _acItems = []; _acSel = -1; }
+function pickStock(i) { const it = _acItems[i]; if (!it) return; const inp = qs('#nb-stock'); if (inp) inp.value = it.name; hideStockAC(); }
+function stockKey(e) {
+  const box = qs('#nb-ac');
+  const open = box && box.classList.contains('on') && _acItems.length;
+  if (open && e.key === 'ArrowDown') { e.preventDefault(); _acSel = Math.min(_acSel + 1, _acItems.length - 1); renderStockAC(); return; }
+  if (open && e.key === 'ArrowUp') { e.preventDefault(); _acSel = Math.max(_acSel - 1, 0); renderStockAC(); return; }
+  if (e.key === 'Escape') { hideStockAC(); return; }
+  if (e.key === 'Enter') {
+    if (open && _acSel >= 0) { e.preventDefault(); pickStock(_acSel); return; }
+    hideStockAC(); wsNaverNews();
+  }
+}
 async function wsNaverBoard() {
   const ws = window._ws; if (!ws) return;
   const stock = (((qs('#nb-stock') || {}).value || '').trim()) || (((qs('#ws-q') || {}).value || '').trim()) || ws.label || '';
-  if (!stock) { toast('종목명을 입력하세요 (예: 대우건설)', true); return; }
+  if (!stock) { toast('종목명을 입력하세요 (예: LS일렉트릭)', true); return; }
   const period = (qs('#nb-period') || {}).value || 'd3';
   const perKo = { today: '오늘', d1: '-1일', d3: '-3일', d7: '-7일', d30: '-30일' }[period] || period;
   const card = wsAddCard('🗣️ 종토방 여론', `<div class="nb-qa-q">종목: ${escHtml(stock)} · 기간 ${perKo}</div>${wsLoading('종토방 크롤링 + 상위글 본문 렌더링 + 여론분석 중… (~30초)', true)}`);
