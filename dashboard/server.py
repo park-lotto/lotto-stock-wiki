@@ -2238,8 +2238,24 @@ def _nlm_exe():
     return shutil.which("nlm") or shutil.which("nlm.exe")
 
 
-def _run_nlm(args, timeout=90):
-    """nlm CLI 호출. (ok, stdout, stderr) 반환."""
+_NLM_AUTH_SIGNS = ("Authentication expired", "AuthenticationError", "Authentication Error",
+                   "re-authenticate", "Could not retrieve notebook")
+_NLM_LOGIN_LOCK = threading.Lock()
+
+
+def _nlm_relogin_locked():
+    """nlm 재로그인 — 락으로 직렬화(동시 Chrome 프로필 충돌 방지). 이미 유효하면 스킵."""
+    with _NLM_LOGIN_LOCK:
+        cok, cout, _ = _run_nlm(["login", "--check"], timeout=40, _auth_retry=False)
+        if cok and "valid" in (cout or "").lower():
+            return True   # 다른 스레드가 이미 복구함
+        lok, _o, _e = _run_nlm(["login"], timeout=320, _auth_retry=False)
+        return lok
+
+
+def _run_nlm(args, timeout=90, _auth_retry=True):
+    """nlm CLI 호출. (ok, stdout, stderr) 반환.
+    인증 만료로 실패하면 자동 재로그인 후 1회 재시도(self-healing)."""
     exe = _nlm_exe()
     if not exe:
         return False, "", "nlm CLI를 찾을 수 없음 (PATH 확인)"
@@ -2249,13 +2265,19 @@ def _run_nlm(args, timeout=90):
             capture_output=True, text=True, encoding="utf-8",
             timeout=timeout, cwd=ROOT,
         )
-        if p.returncode != 0:
-            return False, p.stdout or "", (p.stderr or p.stdout or f"exit {p.returncode}")
-        return True, p.stdout or "", p.stderr or ""
+        ok, out, err = (p.returncode == 0), (p.stdout or ""), (p.stderr or "")
     except subprocess.TimeoutExpired:
         return False, "", f"nlm 타임아웃({timeout}s)"
     except Exception as e:
         return False, "", str(e)
+    # 인증 만료 자동 복구 — login 계열이 아니고 만료 신호가 보이면 재로그인 후 재시도
+    is_login = bool(args) and args[0] == "login"
+    if _auth_retry and not is_login and any(s in (out + " " + err) for s in _NLM_AUTH_SIGNS):
+        if _nlm_relogin_locked():
+            return _run_nlm(args, timeout=timeout, _auth_retry=False)
+    if not ok:
+        return False, out, (err or out or f"exit {p.returncode}")
+    return True, out, err
 
 
 def _friendly_nlm_err(msg):
@@ -3508,17 +3530,17 @@ _위키 정식 ingest는 후속 연결 예정_
 
 # ══════════════════════════════════════════════════════════════
 
-def _nlm_keepalive(interval=1500):
-    """서버 구동 중 nlm 세션 자동 유지 — 25분마다 --check, 만료 시에만 재로그인."""
+def _nlm_keepalive(interval=900):
+    """서버 구동 중 nlm 세션 선제 유지 — 15분마다 --check, 만료 시 재로그인.
+    (작업 실패 시엔 _run_nlm이 그 자리에서 self-heal하므로 이건 선제 유지용.)"""
     while True:
         try:
-            exe = _nlm_exe()
-            if exe:
-                ok, out, _ = _run_nlm(["login", "--check"], timeout=60)
+            if _nlm_exe():
+                ok, out, _ = _run_nlm(["login", "--check"], timeout=60, _auth_retry=False)
                 if not ok or "valid" not in (out or "").lower():
                     print("[nlm-keepalive] 인증 만료 감지 → 자동 재로그인 시도")
-                    ok2, _o, err = _run_nlm(["login"], timeout=320)
-                    print("[nlm-keepalive] 재로그인", "성공" if ok2 else f"실패: {err[:120]}")
+                    ok2 = _nlm_relogin_locked()
+                    print("[nlm-keepalive] 재로그인", "성공" if ok2 else "실패")
         except Exception as e:
             print(f"[nlm-keepalive] 예외: {str(e)[:120]}")
         time.sleep(interval)
