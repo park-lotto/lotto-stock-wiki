@@ -2126,15 +2126,16 @@ function _taeriniHtml(d){
     +`<span class="tk-val">${val}</span></div>`
     +(sub?`<div class="tk-sub">${H(sub)}</div>`:'')+`</div>`;
 
-  // 수급빈집
+  // 수급빈집 — 전 종목 %ile
   if(s.osc){
-    const g=(s.osc.group||"")+""; let lab2=g.replace(/_/g," "), col="#e0b94a";
-    if(g.indexOf("빈집_A")>=0){col="#2ecc71";lab2="완전빈집";}
-    else if(g.indexOf("빈집_B")>=0){col="#7bd88f";lab2="반빈집";}
-    else if(g.indexOf("과매수")>=0){col="#e74c3c";lab2="과매수"+(g.indexOf("상승")>=0?"↑":g.indexOf("하락")>=0?"↓":"");}
+    const g=(s.osc.group||"")+""; let col="#9a9a9a";
+    if(g.indexOf("완전빈집")>=0)col="#2ecc71";
+    else if(g.indexOf("반빈집")>=0)col="#7bd88f";
+    else if(g.indexOf("과열")>=0)col="#e74c3c";
+    else if(g.indexOf("매수우위")>=0)col="#e0803c";
     const pct=s.osc.pct!=null?` <span style="color:#888">${Math.round(s.osc.pct)}%ile</span>`:"";
-    rows.push(R("수급빈집",C(lab2,col)+pct,null,
-      "수급 오실레이터. 하위=빈집(매수유입 공백 → 반등 여지), 상위=과매수. %ile은 전체 종목 중 백분위 위치"));
+    rows.push(R("수급빈집",C(g||"-",col)+pct,null,
+      "수급 오실레이터 백분위(0~100). 낮을수록 빈집=외국인·기관 매수 유입 공백(반등 여지 큼). 완전빈집≤10 · 반빈집≤25 · 중립 · 매수우위≥75 · 과열≥90"));
   }
   // RS
   if(s.rs){
@@ -2143,34 +2144,43 @@ function _taeriniHtml(d){
       s.rs.norm!=null?`정규화 ${s.rs.norm} / 100`:null,
       "상대강도(Mansfield RS). 코스피 대비 초과수익률. 60·120·250일 평균. 상위=코스피보다 강함, 하위=약함"));
   }
-  // TP
+  // TP — 증권사 집계
   if(s.tp){
-    const up=s.tp.dir==="상향"; const tgt=s.tp.target!=null?Math.round(s.tp.target/1000).toLocaleString()+"천":"-";
-    const pc=s.tp.change_pct!=null?` <span style="color:#888">${s.tp.change_pct>0?"+":""}${s.tp.change_pct}%</span>`:"";
-    const who=[s.tp.brokerage,(s.tp.date||"").slice(5)].filter(Boolean).join(" · ");
-    rows.push(R("TP",C(tgt+(up?" ↑":" ↓"),up?"#e74c3c":"#3aa0ff")+pc, who||null,
-      "목표주가 상/하향. 옆 %는 직전 대비 변동폭. 아래=최근 상/하향한 증권사·발표일"));
+    const up=s.tp.dir==="상향"; const cnt=s.tp.count||0;
+    const high=s.tp.high!=null?Math.round(s.tp.high/1000).toLocaleString()+"천":null;
+    const head=C((up?"상향":"하향")+" "+cnt+"곳", up?"#e74c3c":"#3aa0ff");
+    const sub=[high?`최고 ${high}`:null, s.tp.brokerage, (s.tp.date||"").slice(5)].filter(Boolean).join(" · ");
+    rows.push(R("TP", head, sub||null,
+      "출처: 태린이 '추정이익 변경' 파일(증권사 목표주가 리비전). 값=목표가를 상/하향한 증권사 수. 아래=최고 목표가·가장 최근 증권사·발표일"));
   }
-  // 컨센
+  // 컨센 — 직관적 라벨
   if(s.consensus){
     const t=s.consensus.type||""; const good=(t==="컨센상향"||t==="서프라이즈");
-    const chg=s.consensus.csen_chg!=null?` <span style="color:#888">${(s.consensus.csen_chg*100).toFixed(1)}%</span>`:"";
-    rows.push(R("컨센",C(t||"-",good?"#e74c3c":"#3aa0ff")+chg,
-      s.consensus.date?`${s.consensus.date} 기준`:null,
-      "컨센서스 방향: 상향/하향, 어닝 서프라이즈/쇼크. 옆 %는 컨센 변화율. 아래=집계 기준일"));
+    const label={"컨센상향":"이익전망 ↑","컨센하향":"이익전망 ↓","서프라이즈":"어닝 서프라이즈","쇼크":"어닝 쇼크"}[t]||t;
+    let sub="";
+    if((t==="서프라이즈"||t==="쇼크")&&s.consensus.surprise_rate!=null){
+      const sr=Math.round(s.consensus.surprise_rate*100);
+      sub=`실적이 예상 대비 ${sr>0?"+":""}${sr}% ${t==="서프라이즈"?"상회":"하회"}`;
+    } else if(s.consensus.csen_chg!=null){
+      sub=`이익전망 ${(s.consensus.csen_chg*100).toFixed(1)}% ${s.consensus.csen_chg>=0?"상향":"하향"}`;
+    }
+    if(s.consensus.date) sub=(sub?sub+" · ":"")+`${s.consensus.date} 기준`;
+    rows.push(R("컨센",C(label,good?"#e74c3c":"#3aa0ff"), sub||null,
+      "애널리스트 이익 전망의 방향. '어닝 서프라이즈/쇼크'=실제 실적이 예상을 상회/하회. 아래=정도(%)와 기준일"));
   }
-  // 가속
-  if(s.accel){
-    const sc=s.accel.score!=null?Number(s.accel.score).toFixed(2):"-";
-    rows.push(R("가속",`${sc}`, s.accel.group||null,
-      "가속화모멘텀 점수(0~1). 1.0=최고 등급(이익추정 상향이 가속되는 주도 군집). 아래=속한 그룹"));
+  // 가속 — 등급으로
+  if(s.accel && s.accel.score!=null){
+    const sc=Number(s.accel.score);
+    const lvl=sc>=0.95?"최상위":sc>=0.8?"상위":sc>=0.5?"중상":"보통";
+    rows.push(R("가속",C(lvl,sc>=0.8?"#e74c3c":"#e0b94a")+` <span style="color:#888">${sc.toFixed(2)}</span>`, s.accel.group||null,
+      "가속화모멘텀 점수(0~1). 이익추정 상향이 '가속'되는 강도. 1.0=최상위(주도주 후보). 아래=속한 태린이 분류 그룹"));
   }
   // ETF 비중
   if(s.etf){
     const inc=s.etf.action==="비중증가";
     const diff=s.etf.diff!=null?` <span style="color:#888">${s.etf.diff>0?"+":""}${s.etf.diff}%p</span>`:"";
-    rows.push(R("ETF비중",C(inc?"증가↑":"감소↓",inc?"#e74c3c":"#3aa0ff")+diff, null,
-      "액티브ETF들의 이 종목 편입비중 변화. 증가=매집(포지션 확대) / 감소=차익·축소. '현재 포지션과 변화 방향'을 판단하는 용도"));
+    rows.push(R("ETF비중",C(inc?"편입확대↑":"축소·편출↓",inc?"#e74c3c":"#3aa0ff")+diff, null,
+      "액티브ETF들의 이 종목 편입비중 변화(직전 스냅샷 대비). 확대=매집 / 축소·편출=차익·이탈. 편출 '시점'은 일별 추적 예정"));
   }
   // 실적일정
   if(s.schedule&&s.schedule.dday!=null){ const dd=s.schedule.dday;

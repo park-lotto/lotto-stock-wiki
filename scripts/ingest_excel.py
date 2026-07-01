@@ -231,18 +231,25 @@ def build_stock_index(results: dict, dest=None) -> dict:
             s["name"] = name
         return s
 
-    # 1) 오실레이터 (수급 + 중소형주) → osc
+    # 1) 오실레이터 (수급 + 중소형주) → osc : 전 종목 %ile 저장 (중립 포함)
     for key in ("수급", "중소형주수급"):
         r = results.get(key) or {}
-        for grp in ("빈집_A", "빈집_B", "과매수_상승", "과매수_하락"):
-            for it in (r.get(grp) or []):
-                code = _resolve_code(it, name2code, unmatched)
-                if not code:
-                    continue
-                slot(code, it.get("name", ""))["osc"] = {
-                    "group": grp, "osc": it.get("osc"),
-                    "pct": it.get("pct"), "trend": it.get("trend"),
-                }
+        for it in (r.get("all") or []):
+            code = _resolve_code(it, name2code, unmatched)
+            if not code:
+                continue
+            p = it.get("pct")
+            # pct 기반 버킷 라벨 (완전빈집≤10 / 반빈집≤25 / 중립 / 과열≥90)
+            if p is None:      grp = None
+            elif p <= 10:      grp = "완전빈집"
+            elif p <= 25:      grp = "반빈집"
+            elif p >= 90:      grp = "과열"
+            elif p >= 75:      grp = "매수우위"
+            else:              grp = "중립"
+            slot(code, it.get("name", ""))["osc"] = {
+                "group": grp, "osc": it.get("osc"),
+                "pct": p, "trend": it.get("trend"),
+            }
 
     # 2) RS → rs (top30 / bottom10 만 존재)
     r = results.get("RS") or {}
@@ -256,21 +263,33 @@ def build_stock_index(results: dict, dest=None) -> dict:
                 "bucket": tag,
             }
 
-    # 3) 추정이익변경 → tp (TP_Up / TP_Down)
+    # 3) 추정이익변경 → tp : 종목별 증권사 전체 집계 (몇 곳이 상/하향, 최고/최근)
     r = (results.get("추정이익변경") or {}).get("results") or {}
+    tp_by_code: dict = {}
     for bucket, d in (("TP_Up", "상향"), ("TP_Down", "하향")):
         for it in (r.get(bucket) or []):
             code = _resolve_code(it, name2code, unmatched)
             if not code:
                 continue
-            tp_new, tp_old = it.get("tp_new"), it.get("tp_old")
-            pct = None
-            if isinstance(tp_new, (int, float)) and isinstance(tp_old, (int, float)) and tp_old:
-                pct = round((tp_new - tp_old) / tp_old * 100, 1)
-            slot(code, it.get("name", ""))["tp"] = {
-                "target": tp_new, "prev": tp_old, "change_pct": pct, "dir": d,
-                "brokerage": it.get("brokerage"), "date": it.get("date"),
-            }
+            agg = tp_by_code.setdefault(code, {"name": it.get("name", ""), "상향": [], "하향": []})
+            agg[d].append(it)
+    for code, agg in tp_by_code.items():
+        ups, downs = agg["상향"], agg["하향"]
+        items = ups if ups else downs
+        d = "상향" if ups else "하향"
+        latest = max(items, key=lambda x: (x.get("date") or ""))
+        tgts = [x.get("tp_new") for x in items if isinstance(x.get("tp_new"), (int, float))]
+        tp_new, tp_old = latest.get("tp_new"), latest.get("tp_old")
+        cpct = None
+        if isinstance(tp_new, (int, float)) and isinstance(tp_old, (int, float)) and tp_old:
+            cpct = round((tp_new - tp_old) / tp_old * 100, 1)
+        slot(code, agg["name"])["tp"] = {
+            "dir": d, "count": len(items),
+            "up_count": len(ups), "down_count": len(downs),
+            "target": tp_new, "change_pct": cpct,
+            "high": max(tgts) if tgts else None, "low": min(tgts) if tgts else None,
+            "brokerage": latest.get("brokerage"), "date": latest.get("date"),
+        }
 
     # 4) 컨센움직임 → consensus (집계 기준일 last_update 포함)
     cm = results.get("컨센움직임") or {}
@@ -849,6 +868,7 @@ def _run_osc_com(path: Path) -> dict:
         "빈집_A":     [_row(r) for r in 빈집_A],
         "빈집_B":     [_row(r) for r in 빈집_B],
         "과매수_하락": [_row(r) for r in 과매수_하락],
+        "all":        [_row(r) for r in results],   # 전 종목(패널 %ile 표시용)
         "note": f"전체 {len(results)}종목 | 빈집A: {len(빈집_A)}개 | 빈집B: {len(빈집_B)}개 | 기준A≤{p10:.6f} B≤{p25:.6f}",
     }
 
