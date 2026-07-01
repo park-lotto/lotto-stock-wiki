@@ -321,8 +321,8 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 .cf-ctl.on .cf-seg{display:flex;}
 /* 컨센 끝점 — 펄스 점 + '컨센' 라벨 (메인 ETF 방식, 라인은 고정) */
 @keyframes cfpulse{0%{transform:scale(1);opacity:.9}70%{transform:scale(2.6);opacity:0}100%{opacity:0}}
-.cf-end{position:absolute;transform:translate(-50%,-50%);z-index:6;pointer-events:none;
-  display:flex;align-items:center;gap:4px;}
+.cf-end{position:absolute;transform:translate(-3.5px,-50%);z-index:6;pointer-events:none;
+  display:flex;align-items:center;gap:7px;}
 .cf-end .cf-dot{width:7px;height:7px;border-radius:50%;background:#e74c3c;position:relative;
   box-shadow:0 0 6px 2px rgba(231,76,60,.6);flex-shrink:0;}
 .cf-end .cf-dot::after{content:"";position:absolute;inset:0;border-radius:50%;
@@ -2168,9 +2168,13 @@ function _sparkSvg(series){
   // 0 기준선 (범위 안일 때)
   let zero=""; if(mn<0&&mx>0){ const zy=Y(0).toFixed(1); zero=`<line x1="${pad}" y1="${zy}" x2="${w-pad}" y2="${zy}" stroke="#333" stroke-width="1" stroke-dasharray="2 2"/>`; }
   const cx=X(lastI).toFixed(1), cy=Y(lastV).toFixed(1);
-  return `<svg width="100%" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="display:block">`
+  return `<svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="display:block;overflow:visible">`
     +zero+`<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="1.6"/>`
-    +`<circle cx="${cx}" cy="${cy}" r="2.6" fill="${col}"/></svg>`;
+    +`<circle cx="${cx}" cy="${cy}" r="3" fill="${col}"/>`
+    +`<circle cx="${cx}" cy="${cy}" r="3" fill="${col}" opacity="0.55">`
+    +`<animate attributeName="r" values="3;8" dur="1.3s" repeatCount="indefinite"/>`
+    +`<animate attributeName="opacity" values="0.55;0" dur="1.3s" repeatCount="indefinite"/>`
+    +`</circle></svg>`;
 }
 
 function _taeriniHtml(d){
@@ -2307,7 +2311,7 @@ function _cfPositionArrow(){
 function _cfMakeArrow(){
   const cont=document.getElementById("tv_chart_container"); if(!cont||!_cfSeries||!_cfLast) return;
   _cfArrowEl=document.createElement("div"); _cfArrowEl.className="cf-end";
-  _cfArrowEl.innerHTML='<span class="cf-dot"></span><span class="cf-lab">컨센</span>';
+  _cfArrowEl.innerHTML='<span class="cf-dot"></span><span class="cf-lab">컨센추이</span>';
   cont.appendChild(_cfArrowEl);
   _cfPositionArrow();
   _cfArrowTimer=setInterval(_cfPositionArrow, 200);   // 팬·줌·시세변화 시 위치만 갱신(라인 불변)
