@@ -1021,6 +1021,60 @@ def api_callout_history(days: int = 10):
     return JSONResponse(content={"items": items})
 
 
+# ── 뉴스 매칭 (백그라운드 스레드, 토큰0) ────────────────────────────
+_NEWS_FEED = {"data": None, "ts": 0.0}
+NEWS_FEED_PATH = os.path.join(ROOT, "pipeline", "news_feed.json")
+
+def _refresh_news(top_sectors: int = 8, per_stock: int = 3):
+    """상위 섹터 → 섹터 테마뉴스 + 종목뉴스 매칭 → 메모리·파일 저장."""
+    try:
+        import sys as _sys
+        _sd = os.path.join(ROOT, "scripts")
+        if _sd not in _sys.path:
+            _sys.path.insert(0, _sd)
+        import news_feed as nf
+        kw = nf.load_keywords()
+        sv = _compute_sector_vacuum(top_sectors)
+        out_sectors = []
+        for s in sv.get("sectors", []):
+            stocks = []
+            for st in (s.get("stocks") or [])[:per_stock]:
+                stocks.append({"code": st.get("code"), "name": st.get("name"),
+                               "pct": st.get("pct"), "group": st.get("group"),
+                               "news": nf.stock_news(st.get("code"), top=2)})
+            out_sectors.append({"etf": s.get("etf"), "code": s.get("code"),
+                                "rate": s.get("rate"),
+                                "news": nf.sector_news(s.get("code"), kw, top=2),
+                                "stocks": stocks})
+        data = {"sectors": out_sectors, "ts": time.time()}
+        _NEWS_FEED["data"] = data
+        _NEWS_FEED["ts"] = time.time()
+        try:
+            with open(NEWS_FEED_PATH, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False)
+        except Exception:
+            pass
+    except Exception:
+        pass
+
+def _news_loop():
+    while True:
+        _refresh_news()
+        time.sleep(1200)   # 20분 간격
+
+threading.Thread(target=_news_loop, daemon=True).start()
+
+@app.get("/api/news_feed")
+def api_news_feed():
+    if _NEWS_FEED["data"]:
+        return JSONResponse(content=_NEWS_FEED["data"])
+    try:
+        with open(NEWS_FEED_PATH, encoding="utf-8") as f:
+            return JSONResponse(content=json.load(f))
+    except Exception:
+        return JSONResponse(content={"sectors": [], "ts": 0})
+
+
 _etfcon_cache: dict = {}   # {code: {"data":..., "ts":...}}
 
 @app.get("/api/etf_constituents")
@@ -3341,56 +3395,29 @@ def _naver_board_posts(code, period="d3", max_pages=15):
     return out
 
 
-async def _naver_post_bodies(code, items, top_n=6):
-    """Playwright(비동기 병렬)로 상위 글(조회수순) 본문 렌더링 추출 {nid: 본문}.
-    네이버가 본문을 SPA 인증API로 가려 단순 HTTP 불가 → 헤드리스 브라우저로 렌더링.
-    이미지·CSS·폰트 차단 + 동시 렌더링으로 속도 최적화. 엔드포인트 이벤트루프에서 직접 await."""
-    import asyncio
+def _naver_crawl(payload, timeout=60):
+    """scripts/naver_crawl.py를 subprocess로 실행 → JSON.
+    Playwright를 별도 프로세스로 격리(uvicorn 이벤트루프 반복실행 불안정 회피)+하드 타임아웃."""
+    script = os.path.join(ROOT, "scripts", "naver_crawl.py")
+    if not os.path.exists(script):
+        return None
     try:
-        from playwright.async_api import async_playwright
+        p = subprocess.run(
+            [sys.executable, script, json.dumps(payload, ensure_ascii=False)],
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+            timeout=timeout, cwd=ROOT)
+        return json.loads((p.stdout or "").strip() or "null")
     except Exception:
-        return {}
-    ua = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-          "(KHTML, like Gecko) Chrome/120 Safari/537.36")
-    targets = [it for it in items[:top_n] if it.get("nid")]
-    if not targets:
-        return {}
-    bodies = {}
-    try:
-        async with async_playwright() as pw:
-            br = await pw.chromium.launch(headless=True)
-            ctx = await br.new_context(user_agent=ua)
+        return None
 
-            async def _block(route):
-                if route.request.resource_type in ("image", "media", "font", "stylesheet"):
-                    await route.abort()
-                else:
-                    await route.continue_()
-            await ctx.route("**/*", _block)
 
-            async def one(it):
-                nid = it["nid"]
-                url = f"https://m.stock.naver.com/pc/domestic/stock/{code}/discussion/{nid}"
-                try:
-                    pg = await ctx.new_page()
-                    await pg.goto(url, wait_until="domcontentloaded", timeout=15000)
-                    await pg.wait_for_selector('[class*="content"]', timeout=7000)
-                    els = await pg.query_selector_all('[class*="content"]')
-                    best = ""
-                    for el in els:
-                        t = ((await el.inner_text()) or "").strip()
-                        if 15 <= len(t) <= 1200 and (not best or len(t) < len(best)):
-                            best = t
-                    if best:
-                        bodies[nid] = re.sub(r"\s+", " ", best)[:700]
-                    await pg.close()
-                except Exception:
-                    pass
-            await asyncio.gather(*[one(it) for it in targets])
-            await br.close()
-    except Exception:
-        pass
-    return bodies
+def _naver_post_bodies(code, items, top_n=6):
+    """상위 글(조회수순) 본문 {nid: 본문} — Playwright subprocess 격리 크롤."""
+    nids = [it["nid"] for it in items[:top_n] if it.get("nid")]
+    if not nids:
+        return {}
+    res = _naver_crawl({"mode": "bodies", "code": code, "nids": nids}, timeout=55)
+    return res if isinstance(res, dict) else {}
 
 
 @app.post("/api/insights/naver_board")
@@ -3429,7 +3456,7 @@ async def api_insights_naver_board(req: Request):
     top = sorted(posts, key=lambda x: (x["views"], x["up"]), reverse=True)
     total_views = sum(x["views"] for x in posts)
     # 상위 글 본문을 Playwright로 렌더링해 실제 내용까지 분석
-    bodies = await _naver_post_bodies(code, top, 6)
+    bodies = await run_in_threadpool(_naver_post_bodies, code, top, 6)
     for x in top:
         x["body"] = bodies.get(x.get("nid"), "")
 
@@ -3487,6 +3514,91 @@ async def api_insights_naver_board(req: Request):
         "top": [{"title": x["title"], "views": x["views"], "up": x["up"], "date": x["date"],
                  "body": x.get("body", "")} for x in top[:12]],
         "url": f"https://finance.naver.com/item/board.naver?code={code}"})
+
+
+# 광고·홍보성 뉴스 제외 키워드
+_NEWS_AD_KW = ("추천주", "급등주", "상한가", "무료", "리딩", "세력", "카톡", "문자", "단톡",
+               "세미나", "지금매수", "매수타이밍", "수익인증", "종목문의", "무료추천", "급등임박",
+               "인증", "회원모집", "1:1", "VIP", "적중", "포착주")
+
+
+def _naver_news(code, limit=25):
+    """네이버 종목뉴스 (제목+요약) — Playwright subprocess 격리 크롤 + 광고성 1차 필터."""
+    res = _naver_crawl({"mode": "news", "code": code}, timeout=45)
+    items = res if isinstance(res, list) else []
+    clean = [x for x in items if not any(k in x for k in _NEWS_AD_KW)]
+    return (clean or items)[:limit]
+
+
+@app.post("/api/insights/naver_news")
+async def api_insights_naver_news(req: Request):
+    """네이버 종목뉴스 → 주가 상승/하락 원인 + 핵심뉴스 (광고성 제외, Gemini)."""
+    body = {}
+    try:
+        body = await req.json()
+    except Exception:
+        pass
+    stock = (body.get("stock") or "").strip()
+    if not stock:
+        return JSONResponse(content={"error": "종목명 필요"}, status_code=400)
+    try:
+        from pipeline.atoms.codemap import code_for
+    except Exception:
+        return JSONResponse(content={"error": "codemap 없음"}, status_code=500)
+    code, tried = code_for(stock), stock
+    if not code:
+        for tok in re.split(r"[\s,·/]+", stock):
+            tok = tok.strip()
+            if tok and code_for(tok):
+                code, tried = code_for(tok), tok
+                break
+    if not code:
+        return JSONResponse(content={"error": f"'{stock}' 종목코드를 못 찾음"}, status_code=400)
+
+    news = await run_in_threadpool(_naver_news, code, 25)
+    if not news:
+        return JSONResponse(content={"error": "종목뉴스를 가져오지 못했습니다"}, status_code=502)
+
+    def _analyze():
+        try:
+            from google import genai
+        except Exception as e:
+            return {"error": f"google-genai 없음: {str(e)[:120]}"}
+        keys = _gemini_interactive_keys()
+        if not keys:
+            return {"error": ".env에 GEMINI_API_KEY 없음"}
+        prompt = (
+            f"아래는 '{tried}'({code}) 네이버 종목뉴스 {len(news)}건(제목+요약)이다. "
+            "광고·홍보·리딩방성 뉴스는 제외하고, 주가에 실제 영향 주는 '이유 있는 뉴스'만 골라 한국어로 정리하라:\n"
+            "1) 📈 주가 상승/하락 원인 — 뉴스에 나온 구체적 이유(수주·실적·정책·이벤트 등)를 근거와 함께\n"
+            "2) 📰 핵심 뉴스 3~5개 — 각 (제목 요약 + 왜 중요한지 한 줄)\n"
+            "3) ⚠️ 주의할 악재/리스크 뉴스 있으면\n"
+            "광고성(추천주·급등주·리딩·무료 등)은 빼라. 뉴스에 있는 내용만, 지어내지 마라.\n\n"
+            "뉴스 목록:\n" + "\n".join(f"- {t}" for t in news[:25]))
+        last = ""
+        for k in keys:
+            client = genai.Client(api_key=k)
+            for attempt in range(3):
+                try:
+                    resp = client.models.generate_content(model="gemini-3-flash-preview", contents=prompt)
+                    return {"ok": True, "analysis": (resp.text or "").strip() or "(빈 응답)"}
+                except Exception as e:
+                    last = str(e)
+                    if "429" in last or "RESOURCE_EXHAUSTED" in last:
+                        break
+                    if any(s in last for s in ("503", "UNAVAILABLE", "overloaded")) and attempt < 2:
+                        time.sleep(2 * (attempt + 1))
+                        continue
+                    return {"error": f"Gemini 분석 실패: {last[:200]}"}
+        return {"error": f"Gemini 호출 실패: {last[:150]}"}
+
+    res = await run_in_threadpool(_analyze)
+    if not res.get("ok"):
+        return JSONResponse(content=res, status_code=500)
+    return JSONResponse(content={
+        "ok": True, "stock": tried, "code": code, "count": len(news),
+        "analysis": res["analysis"], "news": news[:12],
+        "url": f"https://finance.naver.com/item/news_news.naver?code={code}"})
 
 
 @app.post("/api/insights/gemini_chat")
