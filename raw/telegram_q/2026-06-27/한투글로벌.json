@@ -1,0 +1,13 @@
+{
+  "reports": [
+    {
+      "broker": "한투글로벌",
+      "stock": "Anthropic",
+      "rating": null,
+      "tp": null,
+      "ts": "09:48",
+      "quote": "미국 정부는 국가안보 우려로 중단했던 Mythos 5의 배포를 일부 재개하도록 승인했음.",
+      "sector": "IT"
+    }
+  ]
+}

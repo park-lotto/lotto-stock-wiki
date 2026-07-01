@@ -1,0 +1,22 @@
+{
+  "reports": [
+    {
+      "broker": "한투글로벌",
+      "stock": "오픈AI",
+      "rating": null,
+      "tp": null,
+      "ts": "06:29",
+      "quote": "오픈AI가 미국 증권거래위원회(SEC)에 비공개 IPO(기업공개) 신청서를 제출한 것으로 알려짐.",
+      "sector": "IT"
+    },
+    {
+      "broker": "한투글로벌",
+      "stock": "애플",
+      "rating": null,
+      "tp": null,
+      "ts": "06:46",
+      "quote": "애플이 WWDC 2026에서 차세대 AI 플랫폼과 새로워진 ‘Siri AI’를 공개.",
+      "sector": "IT"
+    }
+  ]
+}

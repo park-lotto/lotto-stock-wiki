@@ -1,0 +1,112 @@
+{
+  "reports": [
+    {
+      "broker": "그로쓰리서치",
+      "stock": "SK하이닉스",
+      "rating": null,
+      "tp": null,
+      "ts": "23:48",
+      "quote": "용인 1기 팹 페이즈1 클린룸 오픈 기존: 2027년 5월 변경: 2027년 2월 (3개월 조기)",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "앤트로픽",
+      "rating": null,
+      "tp": null,
+      "ts": "00:33",
+      "quote": "미국 소비자가 앤트로픽을 상대로 구독료 환급 소송 제기 클로드 Max 5x·20x의 실제 사용 한도가 광고와 다르다는 주장",
+      "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "우시앱텍, BGI",
+      "rating": null,
+      "tp": null,
+      "ts": "08:01",
+      "quote": "미 국방부가 중국 군사기업(1260H) 명단에 우시앱텍·BGI·MGI·Novogene 등을 추가",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "셀트리온",
+      "rating": null,
+      "tp": null,
+      "ts": "08:37",
+      "quote": "타임이 첫 발표한 ‘세계에서 가장 영향력 있는 기업’ 순위에서 셀트리온이 99위에 진입",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "이엔셀",
+      "rating": null,
+      "tp": null,
+      "ts": "09:00",
+      "quote": "이엔셀은 네덜란드 마스트리흐트에서 열린 '2026 PNS 연례학술대회'에서 샤르코-마리-투스병(CMT) 치료제 EN001의 임상 결과를 공개",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "프레스티지바이오로직스",
+      "rating": null,
+      "tp": null,
+      "ts": "09:30",
+      "quote": "프레스티지바이오로직스의 CDMO 수주잔고가 지난해 약 300억원 수준에서 현재 약 700억원까지 증가",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "지투지바이오",
+      "rating": null,
+      "tp": null,
+      "ts": "09:30",
+      "quote": "지투지바이오가 CPHI China 2026에서 장기지속형 주사제 플랫폼을 소개",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "케이씨텍",
+      "rating": null,
+      "tp": null,
+      "ts": "09:42",
+      "quote": "케이씨텍이 SK하이닉스 초임계 세정장비 평가를 통과한 것이 주요 배경으로 보입니다.",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "대한광통신",
+      "rating": null,
+      "tp": null,
+      "ts": "10:07",
+      "quote": "대한광통신, 美 하이퍼스케일 AI 데이터센터향 광케이블 2차 공급물량 확보",
+      "sector": "통신"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "가온전선",
+      "rating": null,
+      "tp": null,
+      "ts": "11:17",
+      "quote": "가온전선 미국 법인 LSCUS 5,000만달러(약 760억원) 투자 AI 데이터센터용 송전 케이블 생산능력 2배 확대",
+      "sector": "전력"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "알테오젠",
+      "rating": null,
+      "tp": null,
+      "ts": "13:17",
+      "quote": "사노피, 알테오젠의 SC 전환 플랫폼(ALT-B4) 적용 블록버스터 치료제 '듀피젠트' SC 제형 임상 1상 개시",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "IMBiologics",
+      "rating": null,
+      "tp": null,
+      "ts": "18:17",
+      "quote": "Proprietary Antibody Engineering Platform OX40L: Sanofi’s KRW 7tn Bet on Autoimmune Disease",
+      "sector": "바이오"
+    }
+  ]
+}

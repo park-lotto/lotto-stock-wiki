@@ -1,0 +1,67 @@
+{
+  "sector_name": "기타",
+  "sector_view": "중립",
+  "points": [
+    "미국 육군 기지 내 핵심광물 가공 시설 건설 계약으로 공급망 자립화 가속",
+    "철광석 가격 7주 연속 하락 및 중국 공업이익 증가율 둔화 등 원자재 및 중국 경기 우려 지속",
+    "유럽과 영국 내 폭염으로 인한 전력 수급 불안정 및 에너지 정책 변화",
+    "중국발 항공기 수주전 격화(Airbus vs Boeing)",
+    "국내 철강 산업 지원을 위한 'K-스틸법 2.0' 발의"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "Airbus",
+      "comment": "China Eastern Airlines로부터 93억 5,000만 달러 규모의 A330neo 25대 수주 확보",
+      "ts": "14:54",
+      "quote": "Airbus wins $9.35 billion China Eastern deal for widebody jets",
+      "sector": "기타"
+    },
+    {
+      "name": "Boeing",
+      "comment": "China Southern Airlines로부터 36억 2,000만 달러 규모의 화물기 7대 수주 확보",
+      "ts": "14:55",
+      "quote": "Boeing wins jet deal from China Southern valued at $3.62 billion",
+      "sector": "기타"
+    },
+    {
+      "name": "China Three Gorges",
+      "comment": "유럽 재생에너지 시장 확대를 위해 독일 육상풍력 자산 인수 논의 중",
+      "ts": "14:58",
+      "quote": "China Three Gorges is said in talks to buy German wind assets",
+      "sector": "신재생"
+    }
+  ],
+  "events": [
+    {
+      "fact": "미국 육군, 군사기지 내 민간 핵심광물 가공 공장 건설 계약 체결",
+      "ts": "14:06",
+      "quote": "US Army Bases to Host Critical Minerals Processing Plants"
+    },
+    {
+      "fact": "철광석 가격 7주 연속 하락",
+      "ts": "14:31",
+      "quote": "Iron Ore Set for Seventh Straight Weekly Loss as Market Softens"
+    },
+    {
+      "fact": "세계은행과 아프리카개발은행, 아프리카 전력 공급 '미션 300' 가속화",
+      "ts": "14:41",
+      "quote": "World Bank, AfDB to Boost African Power Plan This Year"
+    },
+    {
+      "fact": "영국 전력망 운영자, 폭염으로 인한 전력 공급 경보 발령",
+      "ts": "14:50",
+      "quote": "UK Grid Issues Another Supply Warning as Heat Tests Network"
+    },
+    {
+      "fact": "중국 5월 공업이익 증가율 둔화",
+      "ts": "14:59",
+      "quote": "China’s Industrial Profit Gains Dip in Sign of Weakness"
+    },
+    {
+      "fact": "국회, 'K-스틸법 2.0' 발의",
+      "ts": "15:35",
+      "quote": "철강協, 국회 ‘K-스틸법 2.0’ 발의에 \"적극 환영\"…업계 숨통 트이나"
+    }
+  ],
+  "quote": "글로벌 공급망 재편과 기후 변화에 따른 에너지 수급 불안이 지속되는 가운데 주요 산업별 정책 변화와 수주 소식이 이어지고 있습니다."
+}

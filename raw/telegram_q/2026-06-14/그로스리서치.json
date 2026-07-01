@@ -1,0 +1,94 @@
+{
+  "reports": [
+    {
+      "broker": "그로스리서치",
+      "stock": "알테오젠",
+      "rating": null,
+      "tp": null,
+      "ts": "23:41",
+      "quote": "알테오젠, ADC 피하주사 제형에서 약물 흡수율 개선과 독성 완화 가능성 확인",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로스리서치",
+      "stock": "올릭스",
+      "rating": null,
+      "tp": null,
+      "ts": "23:41",
+      "quote": "올릭스, BBB 셔틀 결합 siRNA의 전신 투여를 통한 뇌 전달·표적 유전자 억제 전임상 성과 확보",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로스리서치",
+      "stock": "아델",
+      "rating": null,
+      "tp": null,
+      "ts": "23:41",
+      "quote": "아델, 퇴행성 뇌질환 R&D 정부과제 2건 선정…총 37억원 연구비 확보",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로스리서치",
+      "stock": "로킷헬스케어",
+      "rating": null,
+      "tp": null,
+      "ts": "23:41",
+      "quote": "로킷헬스케어, 자가 오멘텀 세포 기반 신장재생술 임상 승인…오는 7월 인체 적용 착수 예정",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로스리서치",
+      "stock": "삼성전기",
+      "rating": null,
+      "tp": null,
+      "ts": "13:27",
+      "quote": "삼성전기, 차세대 실리콘 캐패시터(Si-Cap) 양산 본격화",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로스리서치",
+      "stock": "효성중공업",
+      "rating": null,
+      "tp": null,
+      "ts": "13:54",
+      "quote": "효성중공업 자회사 효성 HICO, 미국 인프라 기업 콴타(Quanta) 자회사와 합작법인 설립",
+      "sector": "전력"
+    },
+    {
+      "broker": "그로스리서치",
+      "stock": "SK하이닉스",
+      "rating": null,
+      "tp": null,
+      "ts": "14:18",
+      "quote": "SK하이닉스, 장비 협력사들의 납품단가 3~4% 인상 요청 검토 착수",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로스리서치",
+      "stock": "한미반도체",
+      "rating": null,
+      "tp": null,
+      "ts": "14:18",
+      "quote": "한미반도체, SK하이닉스향 HBM4 TC 본더 442억원 수주",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로스리서치",
+      "stock": "한화세미텍",
+      "rating": null,
+      "tp": null,
+      "ts": "14:18",
+      "quote": "한화세미텍, SK하이닉스에 하이브리드 본딩 통합 클러스터 공급",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로스리서치",
+      "stock": "릴리",
+      "rating": null,
+      "tp": null,
+      "ts": "21:51",
+      "quote": "릴리는 올해 10건의 바이오텍 인수에 252.7억달러 투입",
+      "sector": "바이오"
+    }
+  ]
+}

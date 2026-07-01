@@ -1,0 +1,31 @@
+{
+  "reports": [
+    {
+      "broker": "그로쓰리서치",
+      "stock": "아이엠바이오로직스",
+      "rating": null,
+      "tp": null,
+      "ts": "08:02",
+      "quote": "최적 항체 모달리티 제작 기술 기반 항체신약 개발 전문기업, 사노피가 7조 원에 베팅한 OX40L, 차세대 자가면역 치료 기전 부각, IMB-101·102, 사노피 대비 차별화로 Best-in-Class 가능성 확보",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "000000000",
+      "rating": null,
+      "tp": null,
+      "ts": "14:33",
+      "quote": "자가면역 치료제 시장에서 가장 주목받는 기전이 바로 000000000의 기전입니다. 사노피도 관련 파이프라인 확보에 총 7조 원 규모를 베팅하면서 차세대 자가면역 치료 타깃으로 주목받고 있습니다.",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "Sunic System",
+      "rating": null,
+      "tp": null,
+      "ts": "18:20",
+      "quote": "Leading Perovskite Commercialization via World's First Gen-8 Deposition Tool, Canon Tokki's OLED monopoly is cracking as the industry moves to Gen 8.6. World's first Gen 8-class perovskite ETL equipment — 20–30% less material",
+      "sector": "IT"
+    }
+  ]
+}

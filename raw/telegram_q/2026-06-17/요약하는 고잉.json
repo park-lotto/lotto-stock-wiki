@@ -1,0 +1,76 @@
+{
+  "reports": [
+    {
+      "broker": null,
+      "stock": "대한항공",
+      "rating": null,
+      "tp": null,
+      "ts": "23:56",
+      "quote": "항공유는 항공사 영업비용에서 30% 수준",
+      "sector": "기타"
+    },
+    {
+      "broker": null,
+      "stock": "한국전력",
+      "rating": null,
+      "tp": null,
+      "ts": "23:56",
+      "quote": "전력 구입비 감소로 실적개선 (시차를 두고 반응)",
+      "sector": "전력"
+    },
+    {
+      "broker": null,
+      "stock": "HMM",
+      "rating": null,
+      "tp": null,
+      "ts": "23:56",
+      "quote": "선박 운항에 들어가는 연료비 감소 (운임 지수가 더 중요. 요즘 상승중)",
+      "sector": "기타"
+    },
+    {
+      "broker": null,
+      "stock": "대한유화",
+      "rating": null,
+      "tp": null,
+      "ts": "23:56",
+      "quote": "나프타 가격이 하락하여 원가 부담 줄어듬 (단, 전방산업 수요가 더 중요)",
+      "sector": "기타"
+    },
+    {
+      "broker": null,
+      "stock": "롯데케미칼",
+      "rating": null,
+      "tp": null,
+      "ts": "23:56",
+      "quote": "나프타 가격이 하락하여 원가 부담 줄어듬 (단, 전방산업 수요가 더 중요)",
+      "sector": "기타"
+    },
+    {
+      "broker": null,
+      "stock": "금호석유화학",
+      "rating": null,
+      "tp": null,
+      "ts": "23:56",
+      "quote": "나프타 가격이 하락하여 원가 부담 줄어듬 (단, 전방산업 수요가 더 중요)",
+      "sector": "기타"
+    },
+    {
+      "broker": null,
+      "stock": "효성티앤씨",
+      "rating": null,
+      "tp": null,
+      "ts": "23:56",
+      "quote": "나프타 가격이 하락하여 원가 부담 줄어듬 (단, 전방산업 수요가 더 중요)",
+      "sector": "기타"
+    },
+    {
+      "broker": null,
+      "stock": "하이닉스",
+      "rating": null,
+      "tp": null,
+      "ts": "15:38",
+      "quote": "후반 : 하이닉스 상승 구경하다보니 끝😉",
+      "sector": "반도체"
+    }
+  ]
+}

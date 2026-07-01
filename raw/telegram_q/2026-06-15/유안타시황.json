@@ -1,0 +1,63 @@
+{
+  "market_direction": "bullish",
+  "macro_events": [
+    {
+      "fact": "6월 FOMC 개최 예정",
+      "ts": "07:36",
+      "quote": "6/18일(한국 시간 기준, 새벽 3시 금리 결정 및 성명서 발표) 케빈 워시의 데뷔전이 될 6월 FOMC가 개최 예정"
+    },
+    {
+      "fact": "미국-이란 전쟁 종료 합의 및 호르무즈 해협 통항 재개 예정",
+      "ts": "11:12",
+      "quote": "미국·이란, 전쟁 종료 및 호르무즈 해협 통항 재개 위한 합의 도달."
+    },
+    {
+      "fact": "스페이스X 상장 이벤트 종료",
+      "ts": "11:12",
+      "quote": "스페이스X 상장 이후 19% 급등하며 시가총액 2조 달러 돌파."
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "반도체",
+      "stance": "bullish",
+      "comment": "시장금리 하향 안정화와 함께 주도주 리더십이 강화될 것"
+    },
+    {
+      "sector": "IT",
+      "stance": "bullish",
+      "comment": "IT하드웨어는 실질 성장주로서 리더십이 강화될 것으로 판단"
+    },
+    {
+      "sector": "조선",
+      "stance": "bullish",
+      "comment": "확실한 호실적을 바탕으로 낙폭 과대 후 반등세가 온기 확산"
+    },
+    {
+      "sector": "방산",
+      "stance": "bullish",
+      "comment": "이익 모멘텀이 견고한 호실적주로 분류되어 2분기 실적장세 참여"
+    },
+    {
+      "sector": "전력",
+      "stance": "bullish",
+      "comment": "낙폭 과대 호실적 산업재 섹터로 온기 확산 확인"
+    },
+    {
+      "sector": "원전",
+      "stance": "bullish",
+      "comment": "실적장세 랠리 전개 시 상승 흐름 기대"
+    },
+    {
+      "sector": "2차전지",
+      "stance": "bullish",
+      "comment": "2분기 실적장세 랠리 시 주요 관심 종목"
+    },
+    {
+      "sector": "기타",
+      "stance": "bullish",
+      "comment": "증권업종 또한 실적장세 랠리 전개 시 수혜 예상"
+    }
+  ],
+  "quote": "시장금리 하향 안정화와 금리 변동성 완화는 가치주 대비 성장주의 전술적 유용성을 배가시키는 명징한 긍정요인에 해당."
+}

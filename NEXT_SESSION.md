@@ -1,46 +1,37 @@
-# NEXT SESSION — 2026-06-29 (집PC)
+# NEXT SESSION
+
+**날짜**: 2026-07-01 | **PC**: 집PC
 
 ## 세션 요약
-NotebookLM MCP (notebooklm-mcp-cli, Python) 정착 완료.
-텔레그램 오늘 크롤링 12개 소스 기반 Q1~Q7 쿼리 모두 완료.
+- API 에러 텔레 알림 추가 (atomizer._tg_alert)
+- 뉴스 키워드 크롤 v2 설계+구현 (pipeline/news_keywords.json + keyword_news_server.py)
+  - 교차키워드(A×B) 방식, 중복제거, 광고필터, 하루 2회 텔레 다이제스트
+  - 서버 cron 08:20 / 15:40 등록 완료
+- 텔레 6월 백로그 복구: 60파일 → 339원자
+  - report_relay 외국주 드롭 버그 수정 (telegram_questionnaire.py)
+  - 요약하는고잉 타입 report_relay→insight 수정
+- Google Flow/$400 크레딧 vs Gemini API 구조 정리
+- Gemini Omni 오디오 I/O 활용 방향 논의 (유튜브 자막없이 오디오 직접 처리)
 
 ## 완료 항목
-- notebooklm-mcp-cli (jacob-bd, PyPI) 정상 작동 확인
-  - `nlm notebook query <notebook_id> "질문"` 방식으로 사용
-  - notebook id: `2630cdd9-812d-4af5-8b94-d8636a3c852c`
-- Q1~Q7 인사이트 추출 완료 (대화창에 전부 표시됨)
-  - Q1: 섹터 수급이동 (반도체→헬스케어/소프트웨어/방어주 대순환)
-  - Q2: TP표 (SK하이닉스 330만↑, 고려아연·LS 신규커버, 에코프로비엠↓)
-  - Q3: 상승재료 TOP3 (GLP-1 메디케어, AI소프트웨어순환, 고려아연구조적이익) / 하락 TOP3 (오픈AI상장연기, CXMT, 카시카리)
-  - Q4: HBM ASP 2027년 35%↑, NAND 격상, PLP·유리기판 가속
-  - Q5: 고려아연 핵심광물플랫폼, LS전선 믹스개선, 대한조선 2028 가시성
-  - Q6: CXMT 애플타진, 반도체소재 탈일본화 14종, 중국 ESS 550GWh, 희소금속 60%↑
-  - Q7: 7/1 한국수출(반도체핵심), 7/1 메디케어GLP-1 개시, 7/3 미국 NFP, 7/7 삼성전자 잠정실적
+- ✅ atomizer.py: _tg_alert (키로테이션⚠️/전소진🚨/RuntimeError❌ 텔레 발송)
+- ✅ pipeline/news_keywords.json: 교차키워드 뉴스 크롤 설정
+- ✅ pipeline/keyword_news_server.py: 서버 keyword_news.py 로컬 백업
+- ✅ telegram_questionnaire.py: report_relay 외국주 → _foreign_sector_atom 분기
+- ✅ telegram_channels.json: 요약하는고잉 insight 수정
+- ✅ scripts/test_omni.py: Omni/Veo 영상생성 양경로 테스트 스크립트
 
-## 미완료 — 집에서 할 것
+## 미완료 / 다음 할 것
+1. **텔레봇 언블록**: bot 8943764573 블락됨 → 텔레에서 언블락+/start 필요해야 뉴스 다이제스트 수신
+2. **Omni 오디오 테스트**: test_omni.py에 --audio 경로 추가 (yt-dlp 봇차단 대체용)
+3. **Veo 영상생성**: 무료쿼터=0 → paid billing 활성화 후 테스트 가능
+4. **딸깍 market_flow**: 14워커 thundering-herd 버스트 미수정 (사용자 보류)
+5. **Google Flow 웹**: $400 크레딧으로 첫 클립 제작 → Remotion 삽입 테스트
 
-### 1. NotebookLM 인사이트 HTML 브리핑 저장
-오늘 Q1~Q7 결과를 `out/nlm_briefing_20260629.html`로 저장.
-→ "nlm briefing html 만들어줘" 하면 됨 (재쿼리로 자동 생성)
-
-### 2. 백그라운드 Python nlm 자동화 (토큰 0)
-```python
-# 아이디어: pipeline/nlm_daily.py
-import subprocess, json
-nb = "2630cdd9-812d-4af5-8b94-d8636a3c852c"
-queries = [("q1_수급","..."), ("q2_tp","..."), ...]
-for name, q in queries:
-    r = subprocess.run(["nlm","notebook","query",nb,q],
-                       capture_output=True, text=True, encoding="utf-8")
-    json.dump(json.loads(r.stdout), open(f"out/nlm/{name}.json","w",encoding="utf-8"), ensure_ascii=False)
-```
-→ Claude 토큰 소모 없이 결과 파일 저장, 나중에 선택적으로 읽기
-
-## 기술 메모 (nlm CLI)
-- 올바른 캡처 방법 (한글 정상):
-  ```powershell
-  $raw = (nlm notebook query $nb "질문" 2>&1 | Out-String)
-  ($raw | ConvertFrom-Json).answer
-  ```
-- `Set-Content -Encoding UTF8` 파이프 방식은 한글 깨짐 → 쓰지 말 것
-- NotebookLM URL: https://notebooklm.google.com/notebook/2630cdd9-812d-4af5-8b94-d8636a3c852c
+## 관련 파일
+- `pipeline/atoms/atomizer.py` — _tg_alert
+- `pipeline/news_keywords.json` — 교차키워드 설정
+- `pipeline/keyword_news_server.py` — 서버 뉴스 크롤러
+- `pipeline/atoms/telegram_questionnaire.py` — report_relay 외국주 처리
+- `pipeline/atoms/telegram_channels.json` — 채널 타입맵
+- `scripts/test_omni.py` — Omni/Veo 테스트

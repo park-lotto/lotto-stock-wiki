@@ -1,0 +1,76 @@
+{
+  "reports": [
+    {
+      "broker": "그로쓰리서치",
+      "stock": "효성중공업",
+      "rating": null,
+      "tp": null,
+      "ts": "09:58",
+      "quote": "효성중공업과 STT GDC 합작법인 효성-STT GDC 설립",
+      "sector": "전력"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "알테오젠",
+      "rating": null,
+      "tp": null,
+      "ts": "10:05",
+      "quote": "알테오젠, 첫 SC 플랫폼 기술수출 파트너가 사노피였음을 공개",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "코오롱생명과학",
+      "rating": null,
+      "tp": null,
+      "ts": "10:05",
+      "quote": "코오롱생명과학, 골관절염 치료제 TG-C 핵심 제조 특허 싱가포르 등록",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "에이프릴바이오",
+      "rating": null,
+      "tp": null,
+      "ts": "10:05",
+      "quote": "에이프릴바이오, 기술수출 자산 APB-A1의 갑상선안병증 임상1b상에서 안구돌출 감소·자가항체 저하 등 초기 효능 신호 확인",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "셀트리온",
+      "rating": null,
+      "tp": null,
+      "ts": "10:05",
+      "quote": "미국, 바이오시밀러 ‘인터체인저블’ 제도 폐지 추진…셀트리온·삼성바이오에피스 등 국내 기업의 미국 시장 진입 부담 완화 기대",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "디앤디파마텍",
+      "rating": null,
+      "tp": null,
+      "ts": "10:05",
+      "quote": "디앤디파마텍, MASH 치료제 DD01의 항섬유화 효과를 AI 병리 분석으로 독립 재검증",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "TSMC",
+      "rating": null,
+      "tp": null,
+      "ts": "13:31",
+      "quote": "TSMC가 앰코테크놀로지와 첨단 패키징 분야 10년 협력 계약 체결",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "인텔",
+      "rating": null,
+      "tp": null,
+      "ts": "16:15",
+      "quote": "인텔 CEO 립부 탄, 머스크 테라팹 협력 언급…“AI 반도체 인프라 부족”",
+      "sector": "반도체"
+    }
+  ]
+}

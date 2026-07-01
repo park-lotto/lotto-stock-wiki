@@ -1,0 +1,397 @@
+{
+  "stocks": [
+    {
+      "name": "삼성전자",
+      "signal": "neutral",
+      "reason": "반도체 관련주",
+      "ts": "23:01",
+      "quote": "삼성전자",
+      "sector": "반도체"
+    },
+    {
+      "name": "SK하이닉스",
+      "signal": "neutral",
+      "reason": "반도체 관련주",
+      "ts": "23:01",
+      "quote": "SK하이닉스",
+      "sector": "반도체"
+    },
+    {
+      "name": "SK스퀘어",
+      "signal": "neutral",
+      "reason": "반도체 관련주",
+      "ts": "23:01",
+      "quote": "SK스퀘어",
+      "sector": "반도체"
+    },
+    {
+      "name": "이수페타시스",
+      "signal": "neutral",
+      "reason": "반도체 관련주",
+      "ts": "23:01",
+      "quote": "이수페타시스",
+      "sector": "반도체"
+    },
+    {
+      "name": "DB하이텍",
+      "signal": "neutral",
+      "reason": "반도체 관련주",
+      "ts": "23:01",
+      "quote": "DB하이텍",
+      "sector": "반도체"
+    },
+    {
+      "name": "제주반도체",
+      "signal": "neutral",
+      "reason": "반도체 관련주",
+      "ts": "23:01",
+      "quote": "제주반도체",
+      "sector": "반도체"
+    },
+    {
+      "name": "파두",
+      "signal": "neutral",
+      "reason": "반도체 관련주",
+      "ts": "23:01",
+      "quote": "파두",
+      "sector": "반도체"
+    },
+    {
+      "name": "하나마이크론",
+      "signal": "neutral",
+      "reason": "반도체소부장 관련주",
+      "ts": "23:01",
+      "quote": "하나마이크론",
+      "sector": "반도체"
+    },
+    {
+      "name": "피에스케이",
+      "signal": "neutral",
+      "reason": "반도체소부장 관련주",
+      "ts": "23:01",
+      "quote": "피에스케이",
+      "sector": "반도체"
+    },
+    {
+      "name": "원익ips",
+      "signal": "neutral",
+      "reason": "반도체소부장 관련주",
+      "ts": "23:01",
+      "quote": "원익ips",
+      "sector": "반도체"
+    },
+    {
+      "name": "유진테크",
+      "signal": "neutral",
+      "reason": "반도체소부장 관련주",
+      "ts": "23:01",
+      "quote": "유진테크",
+      "sector": "반도체"
+    },
+    {
+      "name": "기가비스",
+      "signal": "neutral",
+      "reason": "반도체소부장 관련주",
+      "ts": "23:01",
+      "quote": "기가비스",
+      "sector": "반도체"
+    },
+    {
+      "name": "예스티",
+      "signal": "neutral",
+      "reason": "반도체소부장 관련주",
+      "ts": "23:01",
+      "quote": "예스티",
+      "sector": "반도체"
+    },
+    {
+      "name": "해성디에스",
+      "signal": "neutral",
+      "reason": "반도체소부장 관련주",
+      "ts": "23:01",
+      "quote": "해성디에스",
+      "sector": "반도체"
+    },
+    {
+      "name": "브이엠",
+      "signal": "neutral",
+      "reason": "반도체소부장 관련주",
+      "ts": "23:01",
+      "quote": "브이엠",
+      "sector": "반도체"
+    },
+    {
+      "name": "테스",
+      "signal": "neutral",
+      "reason": "반도체소부장 관련주",
+      "ts": "23:01",
+      "quote": "테스",
+      "sector": "반도체"
+    },
+    {
+      "name": "SK이터닉스",
+      "signal": "neutral",
+      "reason": "신재생에너지 관련주",
+      "ts": "23:01",
+      "quote": "SK이터닉스",
+      "sector": "신재생"
+    },
+    {
+      "name": "SK오션플랜트",
+      "signal": "neutral",
+      "reason": "신재생에너지 관련주",
+      "ts": "23:01",
+      "quote": "SK오션플랜트",
+      "sector": "신재생"
+    },
+    {
+      "name": "파루",
+      "signal": "neutral",
+      "reason": "신재생에너지 관련주",
+      "ts": "23:01",
+      "quote": "파루",
+      "sector": "신재생"
+    },
+    {
+      "name": "다스코",
+      "signal": "neutral",
+      "reason": "신재생에너지 관련주",
+      "ts": "23:01",
+      "quote": "다스코",
+      "sector": "신재생"
+    },
+    {
+      "name": "대명에너지",
+      "signal": "neutral",
+      "reason": "신재생에너지 관련주",
+      "ts": "23:01",
+      "quote": "대명에너지",
+      "sector": "신재생"
+    },
+    {
+      "name": "삼익제약",
+      "signal": "neutral",
+      "reason": "탈모 관련주",
+      "ts": "23:01",
+      "quote": "삼익제약",
+      "sector": "바이오"
+    },
+    {
+      "name": "JW신약",
+      "signal": "neutral",
+      "reason": "탈모 관련주",
+      "ts": "23:01",
+      "quote": "JW신약",
+      "sector": "바이오"
+    },
+    {
+      "name": "위더스제약",
+      "signal": "neutral",
+      "reason": "탈모 관련주",
+      "ts": "23:01",
+      "quote": "위더스제약",
+      "sector": "바이오"
+    },
+    {
+      "name": "현대약품",
+      "signal": "neutral",
+      "reason": "탈모 관련주",
+      "ts": "23:01",
+      "quote": "현대약품",
+      "sector": "바이오"
+    },
+    {
+      "name": "금호전기",
+      "signal": "neutral",
+      "reason": "호남 반도체공장 테마",
+      "ts": "23:01",
+      "quote": "금호전기",
+      "sector": "기타"
+    },
+    {
+      "name": "금호건설",
+      "signal": "neutral",
+      "reason": "호남 반도체공장 테마",
+      "ts": "23:01",
+      "quote": "금호건설",
+      "sector": "기타"
+    },
+    {
+      "name": "금호타이어",
+      "signal": "neutral",
+      "reason": "호남 반도체공장 테마",
+      "ts": "23:01",
+      "quote": "금호타이어",
+      "sector": "기타"
+    },
+    {
+      "name": "남화토건",
+      "signal": "neutral",
+      "reason": "호남 반도체공장 테마",
+      "ts": "23:01",
+      "quote": "남화토건",
+      "sector": "기타"
+    },
+    {
+      "name": "남화산업",
+      "signal": "neutral",
+      "reason": "호남 반도체공장 테마",
+      "ts": "23:01",
+      "quote": "남화산업",
+      "sector": "기타"
+    },
+    {
+      "name": "광주신세계",
+      "signal": "neutral",
+      "reason": "호남 반도체공장 테마",
+      "ts": "23:01",
+      "quote": "광주신세계",
+      "sector": "소비내수"
+    },
+    {
+      "name": "서산",
+      "signal": "neutral",
+      "reason": "호남 반도체공장 테마",
+      "ts": "23:01",
+      "quote": "서산",
+      "sector": "기타"
+    },
+    {
+      "name": "모헨즈",
+      "signal": "neutral",
+      "reason": "호남 반도체공장 테마",
+      "ts": "23:01",
+      "quote": "모헨즈",
+      "sector": "기타"
+    },
+    {
+      "name": "보해양조",
+      "signal": "neutral",
+      "reason": "호남 반도체공장 테마",
+      "ts": "23:01",
+      "quote": "보해양조",
+      "sector": "소비내수"
+    },
+    {
+      "name": "부국철강",
+      "signal": "neutral",
+      "reason": "호남 반도체공장 테마",
+      "ts": "23:01",
+      "quote": "부국철강",
+      "sector": "철강"
+    },
+    {
+      "name": "강동씨앤엘",
+      "signal": "neutral",
+      "reason": "호남 반도체공장 테마",
+      "ts": "23:01",
+      "quote": "강동씨앤엘",
+      "sector": "기타"
+    },
+    {
+      "name": "동양파일",
+      "signal": "neutral",
+      "reason": "호남 반도체공장 테마",
+      "ts": "23:01",
+      "quote": "동양파일",
+      "sector": "기타"
+    },
+    {
+      "name": "서암기계공업",
+      "signal": "neutral",
+      "reason": "호남 반도체공장 테마",
+      "ts": "23:01",
+      "quote": "서암기계공업",
+      "sector": "기타"
+    },
+    {
+      "name": "로킷헬스케어",
+      "signal": "neutral",
+      "reason": "제약바이오 관련주",
+      "ts": "23:01",
+      "quote": "로킷헬스케어",
+      "sector": "바이오"
+    },
+    {
+      "name": "알테오젠",
+      "signal": "neutral",
+      "reason": "제약바이오 관련주",
+      "ts": "23:01",
+      "quote": "알테오젠",
+      "sector": "바이오"
+    },
+    {
+      "name": "에이프릴바이오",
+      "signal": "neutral",
+      "reason": "제약바이오 관련주",
+      "ts": "23:01",
+      "quote": "에이프릴바이오",
+      "sector": "바이오"
+    },
+    {
+      "name": "한올바이오",
+      "signal": "neutral",
+      "reason": "제약바이오 관련주",
+      "ts": "23:01",
+      "quote": "한올바이오",
+      "sector": "바이오"
+    },
+    {
+      "name": "올릭스",
+      "signal": "neutral",
+      "reason": "제약바이오 관련주",
+      "ts": "23:01",
+      "quote": "올릭스",
+      "sector": "바이오"
+    },
+    {
+      "name": "펩트론",
+      "signal": "neutral",
+      "reason": "제약바이오 관련주",
+      "ts": "23:01",
+      "quote": "펩트론",
+      "sector": "바이오"
+    },
+    {
+      "name": "소룩스",
+      "signal": "neutral",
+      "reason": "제약바이오 관련주",
+      "ts": "23:01",
+      "quote": "소룩스",
+      "sector": "기타"
+    },
+    {
+      "name": "한미약품",
+      "signal": "neutral",
+      "reason": "제약바이오 관련주",
+      "ts": "23:01",
+      "quote": "한미약품",
+      "sector": "바이오"
+    },
+    {
+      "name": "셀트리온",
+      "signal": "neutral",
+      "reason": "제약바이오 관련주",
+      "ts": "23:01",
+      "quote": "셀트리온",
+      "sector": "바이오"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "져스텍 신규 상장 (공모가 12500원)",
+      "ts": "23:01",
+      "quote": "져스텍 신규 상장 (공모가 12500원)"
+    },
+    {
+      "fact": "내일 삼전닉스와 '메가투자' 공개…4개부처 합동발표",
+      "ts": "23:01",
+      "quote": "내일 삼전닉스와 '메가투자' 공개…4개부처 합동발표"
+    },
+    {
+      "fact": "靑-대기업 총수 간담회/국토공간 대전환 민관합동회의",
+      "ts": "23:01",
+      "quote": "靑-대기업 총수 간담회/국토공간 대전환 민관합동회의"
+    }
+  ]
+}

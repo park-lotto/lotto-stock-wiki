@@ -1,0 +1,13 @@
+{
+  "reports": [
+    {
+      "broker": "한국투자증권",
+      "stock": null,
+      "rating": null,
+      "tp": null,
+      "ts": "07:09",
+      "quote": "https://n.news.naver.com/article/015/0005298617?cds=news_edit",
+      "sector": "기타"
+    }
+  ]
+}

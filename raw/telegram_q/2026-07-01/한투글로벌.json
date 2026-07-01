@@ -1,0 +1,22 @@
+{
+  "reports": [
+    {
+      "broker": "한투글로벌",
+      "stock": "앤트로픽",
+      "rating": null,
+      "tp": null,
+      "ts": "06:51",
+      "quote": "앤트로픽, 연구자 전용 AI 플랫폼 Claude Science 출시. 논문 분석, 데이터 해석, 실험 설계, 신약개발 등 연구 자동화 지원. 제약사·연구기관과 협력을 확대하며 AI 기반 과학 연구 사업 강화.",
+      "sector": "IT"
+    },
+    {
+      "broker": "한투글로벌",
+      "stock": "앤트로픽",
+      "rating": null,
+      "tp": null,
+      "ts": "09:02",
+      "quote": "트럼프 행정부, 앤트로픽 Mythos 5와 Fable 5 수출 통제 해제",
+      "sector": "IT"
+    }
+  ]
+}

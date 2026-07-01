@@ -54,10 +54,13 @@ def _get_client() -> genai.Client:
 def _rotate_key() -> bool:
     """다음 키로 교체. 교체 성공 시 True, 더 이상 키 없으면 False."""
     global _key_idx
+    old = _key_idx + 1
     if _key_idx + 1 < len(_GEMINI_KEYS):
         _key_idx += 1
         print(f"  [KEY] Gemini 키 #{_key_idx + 1}로 교체")
+        _tg_alert(f"⚠️ <b>[인제스트] Gemini 키 #{old} 일일 한도 소진</b>\n→ #{_key_idx + 1}번 키로 교체 (잔여 {len(_GEMINI_KEYS) - _key_idx}개)")
         return True
+    _tg_alert(f"🚨 <b>[인제스트] Gemini 키 전체 소진</b>\n총 {len(_GEMINI_KEYS)}개 모두 일일 한도 초과 — 인제스트 중단됨")
     return False
 
 
@@ -65,6 +68,28 @@ def _reset_key_idx():
     """인제스트 세션 시작 시 키 인덱스 초기화."""
     global _key_idx
     _key_idx = 0
+
+
+def _tg_alert(text: str) -> None:
+    """API 에러·키 소진 등을 텔레그램으로 즉시 발송. 실패해도 인제스트 중단 없음."""
+    import urllib.request, urllib.parse as _up
+    env_path = Path(__file__).parent.parent.parent / ".env"
+    ev: dict[str, str] = {}
+    if env_path.exists():
+        for line in env_path.read_text(encoding="utf-8").splitlines():
+            if "=" in line and not line.startswith("#"):
+                k, v = line.split("=", 1)
+                ev[k.strip()] = v.strip()
+    token = os.environ.get("BOT_TOKEN") or ev.get("BOT_TOKEN", "")
+    chat_id = os.environ.get("CHAT_ID") or ev.get("CHAT_ID", "")
+    if not token or not chat_id:
+        return
+    try:
+        url = f"https://api.telegram.org/bot{token}/sendMessage"
+        data = _up.urlencode({"chat_id": chat_id, "text": text, "parse_mode": "HTML"}).encode()
+        urllib.request.urlopen(urllib.request.Request(url, data=data), timeout=10)
+    except Exception:
+        pass
 
 _PROMPT = """다음 텍스트를 주식 시장 정보 '원자' 단위로 분해하라.
 
@@ -131,6 +156,7 @@ def atomize_text(
             if _attempt < 5 and any(c in _m for c in ("503", "UNAVAILABLE", "overloaded")):
                 time.sleep((_attempt + 1) * 5)
                 continue
+            _tg_alert(f"❌ <b>[인제스트] Gemini API 에러</b>\n소스: {source_name}\n에러: {_m[:200]}")
             raise RuntimeError(f"Gemini API call failed: {e}")
 
     atoms = []
@@ -229,6 +255,7 @@ def atomize_youtube_highlights(
             if attempt < 5 and any(c in _m for c in ("503", "UNAVAILABLE", "overloaded")):
                 time.sleep((attempt + 1) * 5)
                 continue
+            _tg_alert(f"❌ <b>[인제스트] Gemini API 에러 (YT)</b>\n소스: {source_name}\n에러: {_m[:200]}")
             raise RuntimeError(f"Gemini API call failed: {e}")
 
     atoms = []

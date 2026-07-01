@@ -1,0 +1,94 @@
+{
+  "reports": [
+    {
+      "broker": "그로쓰리서치",
+      "stock": "피에스케이홀딩스",
+      "rating": null,
+      "tp": null,
+      "ts": "09:09",
+      "quote": "이번 주 월요일에 발간드린 반도체 소부장 탑픽 피에스케이홀딩스와 브이엠이 금일도 상승 중이네요.",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "브이엠",
+      "rating": null,
+      "tp": null,
+      "ts": "09:09",
+      "quote": "이번 주 월요일에 발간드린 반도체 소부장 탑픽 피에스케이홀딩스와 브이엠이 금일도 상승 중이네요.",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "아이씨티케이",
+      "rating": null,
+      "tp": null,
+      "ts": "09:13",
+      "quote": "아이씨티케이, 양자 보안칩 국책과제 주관…글로벌 통신사 진출 기대",
+      "sector": "양자보안"
+    },
+    {
+      "broker": "오펜하이머",
+      "stock": "스페이스X",
+      "rating": "Outperform",
+      "tp": "190",
+      "ts": "09:16",
+      "quote": "오펜하이머, 스페이스X($SPCX) Outperform 등급으로 커버리지 신규 개시",
+      "sector": "통신"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "디앤디파마텍",
+      "rating": null,
+      "tp": null,
+      "ts": "09:34",
+      "quote": "디앤디파마텍 DD01, 기술수출 기대 넘어 몸값에 시선",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "HPSP",
+      "rating": null,
+      "tp": null,
+      "ts": "11:22",
+      "quote": "관심 종목으로 소개드렸던 HPSP가 오늘 상한가를 기록했습니다.",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "HD현대중공업",
+      "rating": null,
+      "tp": null,
+      "ts": "13:37",
+      "quote": "HD현대중공업이 KDDX 상세설계·선도함 건조 사업 관련 보안감점 적용에 불복",
+      "sector": "조선"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "한화오션",
+      "rating": null,
+      "tp": null,
+      "ts": "13:37",
+      "quote": "HD현대중공업은 기술능력평가에서 한화오션보다 약 0.6점 우위",
+      "sector": "조선"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "올릭스",
+      "rating": null,
+      "tp": null,
+      "ts": "13:50",
+      "quote": "올릭스, 벡트-호러스 BBB 셔틀 적용 TfR 타깃 siRNA 전임상 성과 확보",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "에스트래픽",
+      "rating": null,
+      "tp": null,
+      "ts": "15:08",
+      "quote": "에스트래픽 미국 메가 이벤트(월드컵/슈퍼볼/올림픽) 임박!",
+      "sector": "IT"
+    }
+  ]
+}

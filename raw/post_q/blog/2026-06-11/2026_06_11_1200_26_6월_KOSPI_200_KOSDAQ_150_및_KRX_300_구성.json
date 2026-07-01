@@ -1,0 +1,29 @@
+{
+  "target_kind": "market",
+  "market_direction": "neutral",
+  "macro_events": [
+    {
+      "fact": "2026년 6월 KOSPI 200, KOSDAQ 150, KRX 300 구성종목 정기변경",
+      "ts": "2026-06-11",
+      "quote": "2026년 6월 KOSPI 200 및 KOSDAQ 150, KRX 300 구성종목 변경으로 대한광통신(010170)·파두(440110) 등 16~45종목이 편출되며, DB하이텍·삼표시멘트 등 신규 종목이 편입됨."
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "통신",
+      "stance": "neutral",
+      "comment": "대한광통신 편출"
+    },
+    {
+      "sector": "반도체",
+      "stance": "neutral",
+      "comment": "파두 편출, DB하이텍 편입"
+    },
+    {
+      "sector": "기타",
+      "stance": "neutral",
+      "comment": "삼표시멘트 편입, GS건설·GKL 편출, OCI 편입"
+    }
+  ],
+  "quote": "패시브 펀드의 매수/매도 시점에 따라 지수 구성종목의 유동성과 주가가 급변할 수 있으므로, 구성종목 변경 전후로 유동성 관리에 주의할 필요가 있음."
+}

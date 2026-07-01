@@ -1,0 +1,112 @@
+{
+  "reports": [
+    {
+      "broker": null,
+      "stock": "SK하이닉스",
+      "rating": null,
+      "tp": null,
+      "ts": "13:54",
+      "quote": "SK하이닉스 : HBM 글로벌 1위, 낸드 글로벌 2위",
+      "sector": "반도체"
+    },
+    {
+      "broker": null,
+      "stock": "SK",
+      "rating": null,
+      "tp": null,
+      "ts": "13:54",
+      "quote": "SK : 그룹 지주사, 컨트롤 타워",
+      "sector": "기타"
+    },
+    {
+      "broker": null,
+      "stock": "SK텔레콤",
+      "rating": null,
+      "tp": null,
+      "ts": "13:54",
+      "quote": "SK텔레콤 : AI 데이터센터 인프라 구축",
+      "sector": "통신"
+    },
+    {
+      "broker": null,
+      "stock": "SK이터닉스",
+      "rating": null,
+      "tp": null,
+      "ts": "13:54",
+      "quote": "SK이터닉스 : 재생에너지(ESS, 태양광, 풍력) 개발·운영",
+      "sector": "신재생"
+    },
+    {
+      "broker": null,
+      "stock": "SK오션플랜트",
+      "rating": null,
+      "tp": null,
+      "ts": "13:54",
+      "quote": "SK오션플랜트 : 해상풍력 하부구조물 제조",
+      "sector": "신재생"
+    },
+    {
+      "broker": null,
+      "stock": "SK스퀘어",
+      "rating": null,
+      "tp": null,
+      "ts": "13:54",
+      "quote": "SK스퀘어 : SK하이닉스의 최대주주, 투자전문회사",
+      "sector": "기타"
+    },
+    {
+      "broker": null,
+      "stock": "SKC",
+      "rating": null,
+      "tp": null,
+      "ts": "13:54",
+      "quote": "SKC : 유리기판",
+      "sector": "반도체"
+    },
+    {
+      "broker": null,
+      "stock": "SK네트웍스",
+      "rating": null,
+      "tp": null,
+      "ts": "13:54",
+      "quote": "SK네트웍스 : AI 중심 사업지주사",
+      "sector": "기타"
+    },
+    {
+      "broker": null,
+      "stock": "SK이노베이션",
+      "rating": null,
+      "tp": null,
+      "ts": "13:54",
+      "quote": "SK이노베이션 : 종합 에너지 기업(배터리, ESS, 정유)",
+      "sector": "2차전지"
+    },
+    {
+      "broker": null,
+      "stock": "SK가스",
+      "rating": null,
+      "tp": null,
+      "ts": "13:54",
+      "quote": "SK가스 : 에너지기업(LPG, LNG, 수소)",
+      "sector": "기타"
+    },
+    {
+      "broker": null,
+      "stock": "SK케미칼",
+      "rating": null,
+      "tp": null,
+      "ts": "13:54",
+      "quote": "SK케미칼 : 친환경 화학 기업",
+      "sector": "기타"
+    },
+    {
+      "broker": null,
+      "stock": "SK아이이테크놀로지",
+      "rating": null,
+      "tp": null,
+      "ts": "13:54",
+      "quote": "SK아이이테크놀로지 : 배터리 분리막 제조사",
+      "sector": "2차전지"
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "reports": [
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성바이오로직스",
+      "rating": null,
+      "tp": null,
+      "ts": "17:54",
+      "quote": "삼성바이오로직스 → 환자 유래 종양 오가노이드 기반 항암제 평가 플랫폼 운영",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "HLB",
+      "rating": null,
+      "tp": null,
+      "ts": "17:54",
+      "quote": "HLB → AI+동물대체시험 결합 비임상 서비스 개발",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "오가노이드사이언스",
+      "rating": null,
+      "tp": null,
+      "ts": "17:54",
+      "quote": "오가노이드사이언스·티앤알바이오팹·넥셀 → 오가노이드·장기칩 플랫폼 상용화 추진",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "티앤알바이오팹",
+      "rating": null,
+      "tp": null,
+      "ts": "17:54",
+      "quote": "오가노이드사이언스·티앤알바이오팹·넥셀 → 오가노이드·장기칩 플랫폼 상용화 추진",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "넥셀",
+      "rating": null,
+      "tp": null,
+      "ts": "17:54",
+      "quote": "오가노이드사이언스·티앤알바이오팹·넥셀 → 오가노이드·장기칩 플랫폼 상용화 추진",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "스페이스X",
+      "rating": null,
+      "tp": null,
+      "ts": "18:00",
+      "quote": "스페이스X, 美 시총 6위…머스크 포트폴리오 내 최대 기업 등극",
+      "sector": "기타"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "테슬라",
+      "rating": null,
+      "tp": null,
+      "ts": "18:00",
+      "quote": "그동안 머스크 투자 = 테슬라가 사실상 유일한 선택지",
+      "sector": "자동차"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "엔비디아",
+      "rating": null,
+      "tp": null,
+      "ts": "20:59",
+      "quote": "OpenAI의 성장... GPT-5 등장과 함께 정확도 20% 돌파.",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "Anthropic",
+      "rating": null,
+      "tp": null,
+      "ts": "20:59",
+      "quote": "Anthropic의 반격... 최신 모델 Fable 5는 약 85% 기록.",
+      "sector": "IT"
+    }
+  ]
+}

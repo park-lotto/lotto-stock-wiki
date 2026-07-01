@@ -1,0 +1,31 @@
+{
+  "reports": [
+    {
+      "broker": "신한투자증권",
+      "stock": "KCC",
+      "rating": "매수",
+      "tp": "75만원",
+      "ts": "07:38",
+      "quote": "투자의견 매수, 목표주가 75만원으로 커버리지 개시",
+      "sector": "기타"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "SK하이닉스",
+      "rating": null,
+      "tp": null,
+      "ts": "07:44",
+      "quote": "SK하이닉스(000660.KS); 미국 나스닥 상장, 신주DR 발행 공식화",
+      "sector": "반도체"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "성호전자",
+      "rating": "Not Rated",
+      "tp": null,
+      "ts": "08:35",
+      "quote": "선입견 속에 가려진 진짜 CPO 기업",
+      "sector": "반도체"
+    }
+  ]
+}

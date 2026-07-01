@@ -1,146 +1,22 @@
 [
  {
-  "id": "1759a101-f172-4fce-8640-9c63ee7a3d75",
-  "label": "삼성전기 핵심",
+  "id": "b10e2f90-83f1-4c0d-810f-b33bec1609e0",
+  "label": "반도체 공급망",
   "date": "2026-07-01",
-  "url": "https://notebooklm.google.com/notebook/1759a101-f172-4fce-8640-9c63ee7a3d75",
+  "url": "https://notebooklm.google.com/notebook/b10e2f90-83f1-4c0d-810f-b33bec1609e0",
   "atoms": 200,
   "paths": [
-   "C:\\Users\\TheRose\\Desktop\\로또의 주식\\out\\insights_notebook\\삼성전기 핵심_all_2026-07-01.md"
+   "C:\\Users\\TheRose\\Desktop\\로또의 주식\\out\\insights_notebook\\반도체 공급망_all_2026-07-01.md"
   ]
  },
  {
-  "id": "696cc3a7-a9bf-437d-b9f7-3c89d9beac0f",
-  "label": "반도체 클러스터 내용 정리하고 주식시장 도움될만한 깊게 분석",
+  "id": "d6648c82-4183-4768-973f-d8db6b846354",
+  "label": "텔레·유튜브·리포트·뉴스·블로그",
   "date": "2026-07-01",
-  "url": "https://notebooklm.google.com/notebook/696cc3a7-a9bf-437d-b9f7-3c89d9beac0f",
-  "atoms": 200,
+  "url": "https://notebooklm.google.com/notebook/d6648c82-4183-4768-973f-d8db6b846354",
+  "atoms": 27,
   "paths": [
-   "C:\\Users\\TheRose\\Desktop\\로또의 주식\\out\\insights_notebook\\반도체 클러스터 내용 정리하고 주식시장 도움될만한 깊게 분석_all_2026-07-01.md"
-  ]
- },
- {
-  "id": "c5c6d075-dc5a-42aa-88c1-261993c490ef",
-  "label": "오전 주식시장 볼내용들 모두",
-  "date": "2026-07-01",
-  "url": "https://notebooklm.google.com/notebook/c5c6d075-dc5a-42aa-88c1-261993c490ef",
-  "atoms": 47,
-  "paths": [
-   "C:\\Users\\TheRose\\Desktop\\로또의 주식\\out\\insights_notebook\\오전 주식시장 볼내용들 모두_all_2026-07-01.md"
-  ]
- },
- {
-  "id": "318ac094-f148-4781-a28f-11d0d44f19e7",
-  "label": "아침 봐야할 중요한 내용들",
-  "date": "2026-07-01",
-  "url": "https://notebooklm.google.com/notebook/318ac094-f148-4781-a28f-11d0d44f19e7",
-  "atoms": 19,
-  "paths": [
-   "C:\\Users\\TheRose\\Desktop\\로또의 주식\\out\\insights_notebook\\아침 봐야할 중요한 내용들_all_2026-07-01.md"
-  ]
- },
- {
-  "id": "92ebde4f-e57a-4d76-8b2f-e072cd89814e",
-  "label": "오늘 에코프로비엠 유증관련 리서치해줘",
-  "date": "2026-06-30",
-  "url": "https://notebooklm.google.com/notebook/92ebde4f-e57a-4d76-8b2f-e072cd89814e",
-  "atoms": 0,
-  "paths": []
- },
- {
-  "id": "52f40642-8192-4071-bcb8-d1e62020db86",
-  "label": "오늘 시장 반도체에 대한 이슈들 나온것 자세하게 정리해줘",
-  "date": "2026-06-30",
-  "url": "https://notebooklm.google.com/notebook/52f40642-8192-4071-bcb8-d1e62020db86",
-  "atoms": 0,
-  "paths": []
- },
- {
-  "id": "ee1be843-e478-4995-8384-472c1715e39f",
-  "label": "오늘 2차전지 시장 어땠는지",
-  "date": "2026-06-30",
-  "url": "https://notebooklm.google.com/notebook/ee1be843-e478-4995-8384-472c1715e39f",
-  "atoms": 0,
-  "paths": []
- },
- {
-  "id": "84d036c0-6d71-4d49-9fc8-fb625f507dbe",
-  "label": "반도체",
-  "date": "2026-06-30",
-  "url": "https://notebooklm.google.com/notebook/84d036c0-6d71-4d49-9fc8-fb625f507dbe",
-  "atoms": 200,
-  "paths": [
-   "C:\\Users\\TheRose\\Desktop\\로또의 주식\\out\\insights_notebook\\반도체_all_2026-06-30.md"
-  ]
- },
- {
-  "id": "e5e1f6f0-af6b-4f70-82d8-17976c659b88",
-  "label": "반도체 대해서 브리핑 자료 만들어줘",
-  "date": "2026-06-30",
-  "url": "https://notebooklm.google.com/notebook/e5e1f6f0-af6b-4f70-82d8-17976c659b88",
-  "atoms": 200,
-  "paths": [
-   "C:\\Users\\TheRose\\Desktop\\로또의 주식\\out\\insights_notebook\\반도체 대해서 브리핑 자료 만들어줘_all_2026-06-30.md"
-  ]
- },
- {
-  "id": "f1c2285e-9676-45f9-83a3-b2d97d496cab",
-  "label": "반도체 내용들 정리하고 출처 명시해줘 (텔레 리포트 뉴스 블로그등등 어딘지)",
-  "date": "2026-06-30",
-  "url": "https://notebooklm.google.com/notebook/f1c2285e-9676-45f9-83a3-b2d97d496cab",
-  "atoms": 200,
-  "paths": [
-   "C:\\Users\\TheRose\\Desktop\\로또의 주식\\out\\insights_notebook\\반도체 내용들 정리하고 출처 명시해줘 (텔레 리포트 뉴스 블로그등등 어딘_all_2026-06-30.md"
-  ]
- },
- {
-  "id": "f959ce03-2e9e-47bc-8eb0-d2bedb0e7818",
-  "label": "삼성전기 내용들",
-  "date": "2026-06-30",
-  "url": "https://notebooklm.google.com/notebook/f959ce03-2e9e-47bc-8eb0-d2bedb0e7818",
-  "atoms": 26,
-  "paths": [
-   "C:\\Users\\TheRose\\Desktop\\로또의 주식\\out\\insights_notebook\\삼성전기 내용들_all_2026-06-30.md"
-  ]
- },
- {
-  "id": "498f0e1b-56d8-47df-9b4f-58f24d3ee0b6",
-  "label": "블로그 내용들",
-  "date": "2026-06-30",
-  "url": "https://notebooklm.google.com/notebook/498f0e1b-56d8-47df-9b4f-58f24d3ee0b6",
-  "atoms": 2,
-  "paths": [
-   "C:\\Users\\TheRose\\Desktop\\로또의 주식\\out\\insights_notebook\\블로그 내용들_all_2026-06-30.md"
-  ]
- },
- {
-  "id": "e5c8c001-3b16-40b5-a209-10b8fe9648fd",
-  "label": "블로그 나온 내용들",
-  "date": "2026-06-30",
-  "url": "https://notebooklm.google.com/notebook/e5c8c001-3b16-40b5-a209-10b8fe9648fd",
-  "atoms": 1,
-  "paths": [
-   "C:\\Users\\TheRose\\Desktop\\로또의 주식\\out\\insights_notebook\\블로그 나온 내용들_all_2026-06-30.md"
-  ]
- },
- {
-  "id": "fa10bbed-cf05-492e-841d-81b33d249ae3",
-  "label": "조선",
-  "date": "2026-06-30",
-  "url": "https://notebooklm.google.com/notebook/fa10bbed-cf05-492e-841d-81b33d249ae3",
-  "atoms": 12,
-  "paths": [
-   "C:\\Users\\TheRose\\Desktop\\로또의 주식\\out\\insights_notebook\\조선_all_2026-06-30.md"
-  ]
- },
- {
-  "id": "2aed81e9-9741-4ded-832f-f5eef9b1c842",
-  "label": "삼성전자",
-  "date": "2026-06-30",
-  "url": "https://notebooklm.google.com/notebook/2aed81e9-9741-4ded-832f-f5eef9b1c842",
-  "atoms": 46,
-  "paths": [
-   "C:\\Users\\TheRose\\Desktop\\로또의 주식\\out\\insights_notebook\\삼성전자_all_2026-06-30.md"
+   "C:\\Users\\TheRose\\Desktop\\로또의 주식\\out\\insights_notebook\\텔레·유튜브·리포트·뉴스·블로그_all_2026-07-01.md"
   ]
  }
 ]

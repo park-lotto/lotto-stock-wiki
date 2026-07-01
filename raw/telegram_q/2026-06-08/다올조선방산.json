@@ -1,0 +1,53 @@
+{
+  "sector_name": "조선",
+  "sector_view": "긍정",
+  "points": [
+    "파나막스 컨테이너선 운임 4주 연속 상승 및 신조선가 보합 유지",
+    "LNG선, VLGC, 탱커, FLNG 등 주요 선종 전반에 걸친 수주 모멘텀 지속",
+    "FLNG 수주 가속화 및 연내 추가 수주 기대감 유효",
+    "친환경 및 신기술(풍력 보조, SMR 추진 등) 도입 활발"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "HD현대중공업",
+      "comment": "영국 BAR Technologies와 협약, BW LPG로부터 VLGC 8척 수주 및 추가 2척 수주, 중형 MR 탱커 3척 수주 성공",
+      "ts": "17:15",
+      "quote": "HD현대중공업은 영국 BAR Technologies와 풍력 보조 추진 장치 협약 체결",
+      "sector": "조선"
+    },
+    {
+      "name": "삼성중공업",
+      "comment": "Delfin FLNG 1호선 2.9십억달러 수주 성공 및 추가 프로젝트 추진",
+      "ts": "17:15",
+      "quote": "삼성중공업 Delfin FLNG 1호선. 2.9십억달러 수주",
+      "sector": "조선"
+    },
+    {
+      "name": "한화오션",
+      "comment": "DHT Holdings로부터 VLCC 1척 수주",
+      "ts": "17:15",
+      "quote": "한화오션, DHT Holdings로부터 2028년 단납기 VLCC 1척 수주",
+      "sector": "조선"
+    },
+    {
+      "name": "대한조선",
+      "comment": "SMC로부터 수에즈막스 탱커 2척 수주",
+      "ts": "17:15",
+      "quote": "대한조선, 투자회사 SMC로부터 수에즈막스 탱커 2척. 신고가 94백만달러",
+      "sector": "조선"
+    }
+  ],
+  "events": [
+    {
+      "fact": "삼성중공업 Delfin FLNG 1호선 2.9십억달러 수주",
+      "ts": "17:15",
+      "quote": "삼성중공업 Delfin FLNG 1호선. 2.9십억달러 수주"
+    },
+    {
+      "fact": "코랄2(Coral Norte) 최종 계약 완결",
+      "ts": "16:30",
+      "quote": "coral norte. 코랄2 최종 계약완결"
+    }
+  ],
+  "quote": "VLGC, 탱커, FLNG 다 좋은데... 수주 모멘텀이 지속되고 있음"
+}

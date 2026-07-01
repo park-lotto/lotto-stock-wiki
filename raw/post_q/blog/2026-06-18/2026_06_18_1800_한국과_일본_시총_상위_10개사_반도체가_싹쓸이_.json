@@ -1,0 +1,19 @@
+{
+  "target_kind": "market",
+  "market_direction": "bullish",
+  "macro_events": [
+    {
+      "fact": "한국 증시 9000포인트 돌파",
+      "ts": "2026-06-18",
+      "quote": "미국 증시가 어제 하락했지만 한국 증시는 9000포인트를 넘어서는 축포를 쐈다."
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "반도체",
+      "stance": "긍정",
+      "comment": "한국과 일본 증시 모두 시총 상위권을 장악하며 상승세를 주도함"
+    }
+  ],
+  "quote": "반도체 쏠림 장세가 한국과 일본 증시를 장악하고 있다."
+}

@@ -1,0 +1,22 @@
+{
+  "reports": [
+    {
+      "broker": "한투글로벌",
+      "stock": "애플",
+      "rating": null,
+      "tp": null,
+      "ts": "17:02",
+      "quote": "애플이 CXMT로부터 DRAM을 구매하는 건 여러 가지 이유로 쉽지 않아 보입니다.",
+      "sector": "IT"
+    },
+    {
+      "broker": "한투글로벌",
+      "stock": "CXMT",
+      "rating": null,
+      "tp": null,
+      "ts": "17:02",
+      "quote": "중국 입장에서는 자국 데이터센터를 지원하기 위해 CXMT Capa 대부분을 LPDDR이 아닌 DDR로 전환했고, 이 때문에 중국 스마트폰 업체들은 더욱 DRAM 기근에 시달리고 있는 상황입니다.",
+      "sector": "반도체"
+    }
+  ]
+}

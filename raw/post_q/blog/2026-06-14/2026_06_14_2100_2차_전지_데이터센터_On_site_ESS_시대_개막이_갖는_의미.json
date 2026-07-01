@@ -1,0 +1,34 @@
+{
+  "target_kind": "sector",
+  "sector_name": "2차전지",
+  "sector_view": "긍정",
+  "points": [
+    "데이터센터의 전력망 의존도 탈피를 위한 On-site ESS 수요 증가",
+    "FERC의 Co-location 제한으로 인한 BYOP(Bring Your Own Power) 모델 확산",
+    "전력 확보가 AI 산업의 병목 현상으로 부상함에 따라 자체 전력 조달의 중요성 증대"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "Microsoft",
+      "comment": "AI 산업의 전력 공급을 핵심 병목으로 지목하며 자체 전력 조달 추진",
+      "ts": null,
+      "quote": "Microsoft와 Meta의 CEO가 공개적으로 \"AI 산업의 진정한 병목은 전력 공급\"이라고 언급했을 정도다.",
+      "sector": "IT"
+    },
+    {
+      "name": "Meta",
+      "comment": "데이터센터 전력 공급 부족 문제로 인해 자체 전력 조달 방식 모색",
+      "ts": null,
+      "quote": "Microsoft와 Meta의 CEO가 공개적으로 \"AI 산업의 진정한 병목은 전력 공급\"이라고 언급했을 정도다.",
+      "sector": "IT"
+    }
+  ],
+  "events": [
+    {
+      "fact": "미국 연방 에너지 규제 위원회(FERC)의 데이터센터 Co-location 제한",
+      "ts": "2024",
+      "quote": "2024년 미국 연방 에너지 규제 위원회(FERC)는 하이퍼스케일러들이 발전소 인근에 데이터센터를 설치해 송배전망 연결 대기 시간을 줄이려는 Co-location 방식에 제동을 걸었다."
+    }
+  ],
+  "quote": "FERC 규제 → 납세자 보호 서약 → On-site 전력 전환의 거대한 흐름."
+}

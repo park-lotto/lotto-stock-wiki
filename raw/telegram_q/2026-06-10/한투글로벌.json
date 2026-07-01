@@ -1,0 +1,49 @@
+{
+  "reports": [
+    {
+      "broker": "한투증권",
+      "stock": "LITE",
+      "rating": null,
+      "tp": null,
+      "ts": "09:20",
+      "quote": "Semianalysis가 기관 투자자 대상으로 CPO 출시 지연 가능성을 제기하는 보고서를 배포하며 광 네트워크 관련 주식이 일제히 하락(LITE -9.0%, GLW -8.5%, COHR -12.4% 등)",
+      "sector": "통신"
+    },
+    {
+      "broker": "한투증권",
+      "stock": "GLW",
+      "rating": null,
+      "tp": null,
+      "ts": "09:20",
+      "quote": "Semianalysis가 기관 투자자 대상으로 CPO 출시 지연 가능성을 제기하는 보고서를 배포하며 광 네트워크 관련 주식이 일제히 하락(LITE -9.0%, GLW -8.5%, COHR -12.4% 등)",
+      "sector": "통신"
+    },
+    {
+      "broker": "한투증권",
+      "stock": "COHR",
+      "rating": null,
+      "tp": null,
+      "ts": "09:20",
+      "quote": "Semianalysis가 기관 투자자 대상으로 CPO 출시 지연 가능성을 제기하는 보고서를 배포하며 광 네트워크 관련 주식이 일제히 하락(LITE -9.0%, GLW -8.5%, COHR -12.4% 등)",
+      "sector": "통신"
+    },
+    {
+      "broker": "한투증권",
+      "stock": "Credo Technology",
+      "rating": null,
+      "tp": null,
+      "ts": "09:20",
+      "quote": "실제로 전일 미국 증시에서 광 네트워크 주식 대부분이 하락한 반면, 구리 기반 AEC 케이블을 주력으로 하는 Credo Technology(+3.9%)만 상승한 점도 이를 뒷받침",
+      "sector": "반도체"
+    },
+    {
+      "broker": null,
+      "stock": "TSMC",
+      "rating": null,
+      "tp": null,
+      "ts": "14:33",
+      "quote": "TSMC 5월 매출: 416,975NTD mn (+1.5% MoM, +30.1% YoY)",
+      "sector": "반도체"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "target_kind": "sector",
+  "sector_name": "광통신/CPO",
+  "sector_view": "중립",
+  "points": [
+    "CPO 대규모 양산 시점이 2029년 이후로 연기 전망",
+    "단기적으로는 기존 광모듈 및 구리선 수요 유지",
+    "장기적으로는 데이터센터 고도화에 따른 광통신 수요 확대 불가피",
+    "CPO 수율 개선을 위한 광정렬 및 검사 장비 중요성 부각"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "성호전자",
+      "comment": "CPO 수율 문제 해결에 필요한 광정렬 장비 노출도가 높아 수혜 기대",
+      "ts": null,
+      "quote": "성호전자는 CPO 수율 문제 해결에 필요한 광정렬 장비 노출이 높아, SemiAnalysis가 언급한 Lumentum과 AXT 주가 상승처럼 시장 재평가 가능성이 언급됨.",
+      "sector": "통신"
+    },
+    {
+      "name": "Lumentum",
+      "comment": "트랜시버 관련 종목으로 시장 재평가 대상",
+      "ts": null,
+      "quote": "SemiAnalysis가 언급한 Lumentum과 AXT 주가 상승처럼 시장 재평가 가능성이 언급됨.",
+      "sector": "통신"
+    },
+    {
+      "name": "AXT",
+      "comment": "외부광원 관련 종목으로 중장기 수혜 구조 가짐",
+      "ts": null,
+      "quote": "이를 해결할 장비(성호전자)와 광소자(AXT, Lumentum)는 중장기 수혜 구조를 가짐.",
+      "sector": "통신"
+    }
+  ],
+  "events": [
+    {
+      "fact": "SemiAnalysis 보고서에서 CPO 양산 시점 2029년 이후 가능성 제기",
+      "ts": "2026-06-11",
+      "quote": "SemiAnalysis 보고서는 CPO 대규모 양산이 2027년이 아닌 2029년 이후일 가능성이 있다고 지적했다."
+    }
+  ],
+  "quote": "CPO 도입 시기 연기로 트랜시버·NPO 시장의 성장 속도가 빠르지 않을 수 있으나, 광 통신 전체 수요는 AI 클러스터 투자 확대에 연동해 지속 증가할 것으로 예상됨."
+}

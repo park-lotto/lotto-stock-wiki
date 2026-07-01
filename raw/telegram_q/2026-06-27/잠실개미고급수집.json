@@ -1,0 +1,35 @@
+{
+  "stocks": [
+    {
+      "name": "TSMC",
+      "signal": "bull",
+      "reason": "AI 관련 매출 CAGR 60% 전망 및 CoWoS 공정 내 CPU/ASIC 다변화로 인한 주문 폭증 확인",
+      "ts": "15:50",
+      "quote": "tsmc의 ai 관련 매출 cagr 60% 전망. 그 큰 회사에서 ai 매출의 cagr이 60%라는 점이 압도적.",
+      "sector": "반도체"
+    },
+    {
+      "name": "삼성전자",
+      "signal": "bull",
+      "reason": "노무라 리포트 기준 2026년 2분기 DRAM 및 NAND ASP의 높은 QoQ 성장률 전망",
+      "ts": "16:02",
+      "quote": "삼성전자 DRAM ASP QoQ +42%, NAND ASP QoQ +60%",
+      "sector": "반도체"
+    },
+    {
+      "name": "SK하이닉스",
+      "signal": "bull",
+      "reason": "노무라 리포트 기준 2026년 2분기 DRAM 및 NAND ASP의 높은 QoQ 성장률 전망",
+      "ts": "16:02",
+      "quote": "하이닉스 DRAM ASP QoQ +32% NAND ASP QoQ +50%",
+      "sector": "반도체"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "앤스로픽의 AI 모델 '페이블 5'에 대한 미국 정부의 접근 제한이 곧 해제될 예정임",
+      "ts": "22:16",
+      "quote": "미국 트럼프 행정부가 앤스로픽(Anthropic)의 강력한 AI 모델인 '페이블 5'에 대한 접근 제한을 곧 해제할 것으로 보입니다."
+    }
+  ]
+}

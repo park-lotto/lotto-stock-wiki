@@ -1,0 +1,76 @@
+{
+  "reports": [
+    {
+      "broker": "그로쓰리서치",
+      "stock": "선익시스템",
+      "rating": null,
+      "tp": null,
+      "ts": "08:01",
+      "quote": "8.6세대 전환 흐름 속 Canon-Tokki 독점 구조 붕괴, 수주 확대 중",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "한미약품",
+      "rating": null,
+      "tp": null,
+      "ts": "08:10",
+      "quote": "단장증후군 신약 '소네페글루타이드' 기술이전",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "오스코텍",
+      "rating": null,
+      "tp": null,
+      "ts": "08:10",
+      "quote": "'세비도플레닙' (면역혈소판감소증·류머티즘관절염 타깃) 기술수출",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "디앤디파마텍",
+      "rating": null,
+      "tp": null,
+      "ts": "08:46",
+      "quote": "DD01(자보페그두타이드) MASH 임상 2상 조직생검 결과 발표 완료",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성중공업",
+      "rating": null,
+      "tp": null,
+      "ts": "10:15",
+      "quote": "삼성중공업, 미국 루이지애나 해상 델핀 LNG 프로젝트의 첫 번째 FLNG 수주",
+      "sector": "조선"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "이엔셀",
+      "rating": null,
+      "tp": null,
+      "ts": "12:22",
+      "quote": "이엔셀, 인게니움테라퓨틱스와 NK세포치료제 ‘젠글루셀(IGNK001)’ 미국 임상시험용 의약품 CMO 계약 체결",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "네오티스",
+      "rating": null,
+      "tp": null,
+      "ts": "13:23",
+      "quote": "2026년 고객사 서버용 FC-BGA Full-CAPA 진입 예상",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "씨이랩",
+      "rating": null,
+      "tp": null,
+      "ts": "13:49",
+      "quote": "NPN(NVIDIA Partner Network) 'Enterprise Software Competency' 부문 엘리트(Elite) 등급 승격",
+      "sector": "반도체"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "sector_name": "기타",
+  "sector_view": "중립",
+  "points": [
+    "리오틴토는 리튬 부문을 핵심 성장 동력으로 지목하며 생산량 확대 계획을 발표했습니다.",
+    "중국은 2030년 비화석 에너지 비중 50% 목표를 제시했으나 시장 기대치에는 미치지 못했습니다.",
+    "구리 가격 상승에도 불구하고 중국 제련소들의 공급 과잉으로 인한 수수료 급락 문제가 부각되고 있습니다.",
+    "미국 환경보호청(EPA)의 석탄발전 규제 완화 시도가 법원에 의해 기각되었습니다.",
+    "미국 내 원유·가스 리그 수가 2022년 이후 최대 폭으로 증가하며 생산량 사상 최대 전망이 나오고 있습니다."
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "Rio Tinto",
+      "comment": "리오틴토는 리튬 사업이 구리·철광석 등 다른 부문보다 빠르게 성장할 것으로 예상하며 생산능력을 대폭 확대할 계획입니다.",
+      "ts": "16:44",
+      "quote": "Rio Tinto sees lithium as fastest-growing division, executive says",
+      "sector": "기타"
+    }
+  ],
+  "events": [
+    {
+      "fact": "중국, 2030년까지 비화석 에너지 발전 비중 50% 확대 목표 설정",
+      "ts": "17:37",
+      "quote": "China targeting half of power from non-fossil sources by 2030"
+    },
+    {
+      "fact": "미 연방항소법원, EPA의 석탄발전소 규제 완화 요청 기각",
+      "ts": "17:41",
+      "quote": "US court rejects EPA bid to ease regulations for coal-fired power plants"
+    },
+    {
+      "fact": "미국 석유·가스 리그 수 한 주간 10기 증가하여 573기 기록",
+      "ts": "17:43",
+      "quote": "US energy firms add most rigs in a week since June 2022, Baker Hughes says"
+    }
+  ],
+  "quote": "글로벌 원자재 공급망 및 에너지 정책의 변화가 가속화되고 있습니다."
+}

@@ -1,0 +1,121 @@
+{
+  "reports": [
+    {
+      "broker": "그로쓰리서치",
+      "stock": "인터로조",
+      "rating": null,
+      "tp": null,
+      "ts": "08:01",
+      "quote": "수율 30%p가 영업이익을 5배로 키웠다",
+      "sector": "화장품미용"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "SK하이닉스",
+      "rating": null,
+      "tp": null,
+      "ts": "09:04",
+      "quote": "SK하이닉스가 7세대 HBM인 HBM4E 12단 제품 샘플 출하 시작",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성전기",
+      "rating": null,
+      "tp": null,
+      "ts": "09:49",
+      "quote": "AI 서버 BOM 내 MLCC 채용량이 구조적으로 증가",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "지아이에스",
+      "rating": null,
+      "tp": null,
+      "ts": "10:06",
+      "quote": "지아이에스는 삼성전기 증설 사이클의 장비 수혜주로 부각.",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "SKC",
+      "rating": null,
+      "tp": null,
+      "ts": "10:31",
+      "quote": "앱솔릭스는 기존 1.2만㎡ 생산능력 유지, 6만㎡ 규모 2라인 증설 계획 중단",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "가온전선",
+      "rating": null,
+      "tp": null,
+      "ts": "10:59",
+      "quote": "가온전선이 미국 태양광 발전단지 전력망 구축 사업에 수백억원 규모 송전용 케이블 공급",
+      "sector": "전력"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "월덱스",
+      "rating": null,
+      "tp": null,
+      "ts": "13:18",
+      "quote": "ISS, 6월 29일 임시주총의 이사 보수 관련 2개 안건 모두 반대 권고",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "예스티",
+      "rating": null,
+      "tp": null,
+      "ts": "15:02",
+      "quote": "예스티가 HPSP와의 고압어닐링장비 잠금장치 특허분쟁에서 2심 승소",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "에스트래픽",
+      "rating": null,
+      "tp": null,
+      "ts": "08:49",
+      "quote": "국토교통부 AI 특화 시범도시 사업 강원권 대표기관으로 최종 선정",
+      "sector": "기타"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "지슨",
+      "rating": null,
+      "tp": null,
+      "ts": "09:26",
+      "quote": "RF(전파) 기반 무선 백도어 차단 솔루션 ‘알파H(Alpha-H)’ 공급 확대",
+      "sector": "양자보안"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "이엔셀",
+      "rating": null,
+      "tp": null,
+      "ts": "09:58",
+      "quote": "다수 고객사와 AAV 기반 CDMO 계약 논의 진행 중",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼현",
+      "rating": null,
+      "tp": null,
+      "ts": "14:49",
+      "quote": "삼현이 글로벌 휴머노이드 기업에 관절 코어 부품 시제품을 판매",
+      "sector": "로봇"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "한화오션",
+      "rating": null,
+      "tp": null,
+      "ts": "17:40",
+      "quote": "특히 한화오션은 미국 내 유일한 한국계 조선소인 필리조선소 보유",
+      "sector": "조선"
+    }
+  ]
+}

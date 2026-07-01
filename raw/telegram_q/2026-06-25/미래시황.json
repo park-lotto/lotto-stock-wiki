@@ -1,0 +1,42 @@
+{
+  "market_direction": "Positive, highlighted by Micron's earnings surprise and cooling inflation indicators.",
+  "macro_events": [
+    {
+      "fact": "Micron Technology reports record Q4 2026 guidance with revenue of $50B and gross margin of 86%.",
+      "ts": "07:48",
+      "quote": "Q4 26 가이던스 - 매출: $50B ±$1B (사상 최대 예상) - EPS: $31 ±$1(사상 최대 예상) - Gross Margin: 약 86%"
+    },
+    {
+      "fact": "WTI crude oil falls below $70, and 10-year Treasury yields drop 10bp.",
+      "ts": "07:52",
+      "quote": "WTI 선물이 배럴당 70달러를 하회하며, 미 국채 10년물 금리가 10bp나 하락함."
+    },
+    {
+      "fact": "US 5월 PCE inflation data aligns with market expectations.",
+      "ts": "21:50",
+      "quote": "헤드라인 PCE YoY: +4.1% (부합), 코어 PCE YoY: +3.4% (부합)"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "반도체",
+      "stance": "Positive",
+      "comment": "마이크론의 실적 서프라이즈와 AI 수요 가시화로 인해 업황 개선 기대감이 상승함."
+    },
+    {
+      "sector": "신재생",
+      "stance": "Positive",
+      "comment": "SK그룹의 대규모 신재생에너지 투자 계획 발표 기대감으로 관련주가 강세를 보임."
+    },
+    {
+      "sector": "소비내수",
+      "stance": "Negative",
+      "comment": "트립닷컴의 가이던스 하향과 고유가 부담 등으로 인한 단기 수익성 우려가 존재함."
+    },
+    {
+      "sector": "중국",
+      "stance": "Positive",
+      "comment": "과창50지수가 사상 첫 2000선을 돌파하는 등 AI 인프라 중심으로 강세를 보임."
+    }
+  ]
+}

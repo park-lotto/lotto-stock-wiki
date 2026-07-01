@@ -1,0 +1,45 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "SK텔레콤",
+      "signal": "bull",
+      "reason": "GPUaaS 사업 추진 및 2026년 NVIDIA GPU 수입 확대 정책에 따른 수혜",
+      "ts": null,
+      "quote": "SK텔레콤, 네이버, 삼성SDS의 GPUaaS 사업이 구조적 성장 기회로 작용할 수 있음. 2025 APEC 5만 GPU 계획, 2026 NVIDIA 26만 GPU 수입 확대 정책으로 수혜가능.",
+      "sector": "통신"
+    },
+    {
+      "name": "네이버",
+      "signal": "bull",
+      "reason": "데이터센터 운영을 통한 GPUaaS 사업 경쟁력 확보",
+      "ts": null,
+      "quote": "SK텔레콤, 네이버, 삼성SDS는 데이터센터를 운영해 AI 추론 시 소모되는 토큰을 생산하고, 일부는 자체 사용해 남은 토큰을 판매하는 GPUaaS(전용 GPU 대여) 사업을 추진 중이다.",
+      "sector": "IT"
+    },
+    {
+      "name": "삼성SDS",
+      "signal": "bull",
+      "reason": "데이터센터 인프라를 활용한 GPUaaS 사업 추진",
+      "ts": null,
+      "quote": "SK텔레콤, 네이버, 삼성SDS는 데이터센터를 운영해 AI 추론 시 소모되는 토큰을 생산하고, 일부는 자체 사용해 남은 토큰을 판매하는 GPUaaS(전용 GPU 대여) 사업을 추진 중이다.",
+      "sector": "IT"
+    },
+    {
+      "name": "NVIDIA",
+      "signal": "bull",
+      "reason": "Blackwell·Vera Rubin 플랫폼 기반 토큰 생산성 및 수익성 개선 기술 보유",
+      "ts": null,
+      "quote": "NVIDIA의 Blackwell·Vera Rubin 플랫폼이 토큰 생산성·수익성 개선 기술로, 관련 GPU 수요 및 가격 인상 가능성이 반영될 여지.",
+      "sector": "반도체"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "CoreWeave 2026년 1분기 GPUaaS 매출 20.78억 달러 기록",
+      "ts": "2026-06-11",
+      "quote": "CoreWeave 사례: 2026년 1분기 GPUaaS 매출 20.78억 달러(YoY +112%)로, 3.5GW 이상 장기계약을 체결해 전력 인프라 구축 속도와 계약 규모가 경쟁력으로 작용."
+    }
+  ],
+  "quote": "토큰은 AI 경제의 핵심 단위로, OpenAI와 앤트로픽의 토큰 가격이 각각 $5/1M 토큰(입력) ~ $30/1M 토큰(출력) 범위로 설정되어 있으며, 이는 NVIDIA GPU와 전력 수요 증가로 이어진다."
+}

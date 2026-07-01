@@ -1,3 +1,76 @@
 {
-  "reports": []
+  "reports": [
+    {
+      "broker": null,
+      "stock": "삼성전자",
+      "rating": null,
+      "tp": null,
+      "ts": "17:11",
+      "quote": "삼성전자와 삼성전자 본주의 괴리율은 무려 34%",
+      "sector": "반도체"
+    },
+    {
+      "broker": null,
+      "stock": "삼성전기",
+      "rating": null,
+      "tp": null,
+      "ts": "19:55",
+      "quote": "삼성전기도 조정주더라도 계속 팔로잉은 해보고요",
+      "sector": "반도체"
+    },
+    {
+      "broker": null,
+      "stock": "도쿄일렉트론",
+      "rating": null,
+      "tp": null,
+      "ts": "19:55",
+      "quote": "오늘 반도체장비주 도쿄일렉트론이 13% 상승.",
+      "sector": "반도체"
+    },
+    {
+      "broker": null,
+      "stock": "원익IPS",
+      "rating": null,
+      "tp": null,
+      "ts": "10:35",
+      "quote": "증착장비쪽 원익ips, 유진테크, 테스 세종목은 상한가가고",
+      "sector": "반도체"
+    },
+    {
+      "broker": null,
+      "stock": "유진테크",
+      "rating": null,
+      "tp": null,
+      "ts": "10:35",
+      "quote": "증착장비쪽 원익ips, 유진테크, 테스 세종목은 상한가가고",
+      "sector": "반도체"
+    },
+    {
+      "broker": null,
+      "stock": "테스",
+      "rating": null,
+      "tp": null,
+      "ts": "10:35",
+      "quote": "증착장비쪽 원익ips, 유진테크, 테스 세종목은 상한가가고",
+      "sector": "반도체"
+    },
+    {
+      "broker": null,
+      "stock": "주성엔지니어링",
+      "rating": null,
+      "tp": null,
+      "ts": "10:35",
+      "quote": "주성도 강하고",
+      "sector": "반도체"
+    },
+    {
+      "broker": null,
+      "stock": "피에스케이",
+      "rating": null,
+      "tp": null,
+      "ts": "11:09",
+      "quote": "테스, 피에스케이는 제기준 반도체 톱픽이었는데 저도 몬샀네여",
+      "sector": "반도체"
+    }
+  ]
 }

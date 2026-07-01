@@ -1,0 +1,40 @@
+{
+  "reports": [
+    {
+      "broker": null,
+      "stock": "삼성E&A",
+      "rating": null,
+      "tp": null,
+      "ts": "20:02",
+      "quote": "삼성 에너지 TF 구성 뉴스 (12년만에 에너지 사업 재시동) -삼성E&A 등",
+      "sector": "기타"
+    },
+    {
+      "broker": null,
+      "stock": "네이버",
+      "rating": null,
+      "tp": null,
+      "ts": "20:02",
+      "quote": "앤트로픽 페이블 차단 이슈로 소버린AI 부각 -네이버, 삼성에스디에스, LG씨엔에스 등",
+      "sector": "IT"
+    },
+    {
+      "broker": null,
+      "stock": "삼성에스디에스",
+      "rating": null,
+      "tp": null,
+      "ts": "20:02",
+      "quote": "앤트로픽 페이블 차단 이슈로 소버린AI 부각 -네이버, 삼성에스디에스, LG씨엔에스 등",
+      "sector": "IT"
+    },
+    {
+      "broker": null,
+      "stock": "LG씨엔에스",
+      "rating": null,
+      "tp": null,
+      "ts": "20:02",
+      "quote": "앤트로픽 페이블 차단 이슈로 소버린AI 부각 -네이버, 삼성에스디에스, LG씨엔에스 등",
+      "sector": "IT"
+    }
+  ]
+}

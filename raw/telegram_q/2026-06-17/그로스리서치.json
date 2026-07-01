@@ -1,0 +1,139 @@
+{
+  "reports": [
+    {
+      "broker": "그로쓰리서치",
+      "stock": "롯데에너지머티리얼즈",
+      "rating": null,
+      "tp": null,
+      "ts": "07:40",
+      "quote": "AI용 회로박 생산능력 3,700톤 → 1만6,000톤 확대 계획",
+      "sector": "2차전지"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성전기",
+      "rating": null,
+      "tp": null,
+      "ts": "07:40",
+      "quote": "삼성전기: AI 서버용 MLCC 점유율 약 40%",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "스페이스X",
+      "rating": null,
+      "tp": null,
+      "ts": "07:55",
+      "quote": "스페이스X 주가, 상장 이후 급등세 지속 시가총액 : 약 2.8조달러",
+      "sector": "기타"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "애플",
+      "rating": null,
+      "tp": null,
+      "ts": "08:55",
+      "quote": "애플은 2028년 플래그십 아이폰에 1.4나노급 A22 프로 칩을 탑재할 계획",
+      "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "모더나",
+      "rating": null,
+      "tp": null,
+      "ts": "09:13",
+      "quote": "Moderna의 mFlusiva는 미국 최초 mRNA 독감백신 승인 가능성이 높아지는 상황",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "아이온큐",
+      "rating": null,
+      "tp": null,
+      "ts": "09:20",
+      "quote": "아이온큐의 스카이워터(SkyWater) $18억 인수 진행 중",
+      "sector": "양자보안"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "에이비엘바이오",
+      "rating": null,
+      "tp": null,
+      "ts": "09:27",
+      "quote": "에이비엘바이오의 CLDN18.2x4-1BB 이중항체 지바스토미그가 미국 FDA 패스트트랙 지정을 받음",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "올릭스",
+      "rating": null,
+      "tp": null,
+      "ts": "09:38",
+      "quote": "로레알의 지분투자 의미와 올릭스의 Dual siRNA·CNS 확장 가능성을 중심으로 정리하였습니다.",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "디앤디파마텍",
+      "rating": null,
+      "tp": null,
+      "ts": "10:11",
+      "quote": "LG AI연구원-디앤디파마텍, 차세대 펩타이드 신약 공동 개발 본계약 체결",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "퀄컴",
+      "rating": null,
+      "tp": null,
+      "ts": "10:30",
+      "quote": "퀄컴은 AWE 2026에서 ‘스냅드래곤 리얼리티 엘리트’를 공개",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "바이오솔루션",
+      "rating": null,
+      "tp": null,
+      "ts": "10:46",
+      "quote": "바이오솔루션은 국립환경과학원과 피부·호흡기 동물대체시험법 개발을 논의",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "에스트래픽",
+      "rating": null,
+      "tp": null,
+      "ts": "11:13",
+      "quote": "에스트래픽 미국법인이 수행한 BART 차세대 게이트 사업이 'CMAA 2026 프로젝트 어치브먼트 어워드' 인프라 부문 최우수상 수상",
+      "sector": "기타"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "코히런트",
+      "rating": null,
+      "tp": null,
+      "ts": "14:59",
+      "quote": "해당 공장은 세계 최초의 6인치(InP, 인듐인화물) 웨이퍼 생산시설",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "0000",
+      "rating": null,
+      "tp": null,
+      "ts": "15:15",
+      "quote": "0000는 이미 매출의 83.3%를 해외에서 만드는 글로벌 콘택트렌즈 OEM·ODM 업체입니다.",
+      "sector": "화장품미용"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "LIG D&A",
+      "rating": null,
+      "tp": null,
+      "ts": "16:19",
+      "quote": "라인메탈이 우크라이나 전쟁 이후 3년간 LIG D&A에 협력 제안",
+      "sector": "방산"
+    }
+  ]
+}

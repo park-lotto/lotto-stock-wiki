@@ -1,0 +1,22 @@
+{
+  "reports": [
+    {
+      "broker": "한투증권",
+      "stock": "오라클",
+      "rating": null,
+      "tp": null,
+      "ts": "19:33",
+      "quote": "FY4Q26(3~5월) 매출 192억달러(+21% YoY), 조정 영업이익 86억달러(+22% YoY, 영업이익률 44.8%), 조정 EPS 2.11달러(+24% YoY) 기록. 매출액은 컨센서스에 부합, 조정 영업이익과 EPS는 기대치를 각각 4%, 7% 상회.",
+      "sector": "IT"
+    },
+    {
+      "broker": null,
+      "stock": "TSMC",
+      "rating": null,
+      "tp": null,
+      "ts": "14:33",
+      "quote": "TSMC 5월 매출: 416,975NTD mn (+1.5% MoM, +30.1% YoY)",
+      "sector": "반도체"
+    }
+  ]
+}

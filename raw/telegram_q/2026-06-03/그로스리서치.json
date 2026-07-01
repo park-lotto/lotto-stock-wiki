@@ -1,0 +1,40 @@
+{
+  "reports": [
+    {
+      "broker": "Growth Research",
+      "stock": "ENCell",
+      "rating": null,
+      "tp": null,
+      "ts": "09:50",
+      "quote": "Korea-based CGT CDMO with end-to-end cell and gene therapy manufacturing capabilities. Operates the only hospital-based GMP facility in Korea, enabling integrated autologous cell therapy production. Expanding into high-margin Japanese regenerative medicine and aesthetics markets. Key pipeline: EN001 for Charcot-Marie-Tooth (CMT) disease entering Phase 2a; potential conditional approval could accelerate commercialization",
+      "sector": "바이오"
+    },
+    {
+      "broker": "Growth Research",
+      "stock": "Broadcom",
+      "rating": null,
+      "tp": null,
+      "ts": "10:42",
+      "quote": "Broadcom — ASIC 설계",
+      "sector": "반도체"
+    },
+    {
+      "broker": "Growth Research",
+      "stock": "Marvell",
+      "rating": null,
+      "tp": null,
+      "ts": "10:42",
+      "quote": "Marvell — 커스텀 실리콘 + 광 DSP",
+      "sector": "반도체"
+    },
+    {
+      "broker": "Growth Research",
+      "stock": "AAOI",
+      "rating": null,
+      "tp": null,
+      "ts": "10:42",
+      "quote": "AAOI — InP 레이저",
+      "sector": "반도체"
+    }
+  ]
+}

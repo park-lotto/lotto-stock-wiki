@@ -1,0 +1,94 @@
+{
+  "reports": [
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성전기",
+      "rating": null,
+      "tp": null,
+      "ts": "07:30",
+      "quote": "삼성전기, 빅테크에 ‘실리콘 캡’ 묶어 판다",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼양엔씨켐",
+      "rating": null,
+      "tp": null,
+      "ts": "08:00",
+      "quote": "삼양엔씨켐 (482630) NAND 고단화에 필수적인 Thick KrF PR용 폴리머·PAG 공급 확대 기대",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "티씨케이",
+      "rating": null,
+      "tp": null,
+      "ts": "08:00",
+      "quote": "티씨케이 (064760) NAND 적층 수 증가와 멀티스택 공정 확대로 SiC 포커스링의 마모와 교체 수요 증가 전망",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "파미셀",
+      "rating": null,
+      "tp": null,
+      "ts": "09:19",
+      "quote": "파미셀, 엔비디아 AI 서버용 CCL 핵심 소재 '두산에 독점 공급’",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "지슨",
+      "rating": null,
+      "tp": null,
+      "ts": "09:58",
+      "quote": "지슨, 반도체 대기업과 무선 백도어 해킹 탐지 시스템 계약",
+      "sector": "양자보안"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "씨이랩",
+      "rating": null,
+      "tp": null,
+      "ts": "10:12",
+      "quote": "씨이랩·위시켓, 인공지능 전환 지원 업무 협약",
+      "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "이엔셀",
+      "rating": null,
+      "tp": null,
+      "ts": "10:30",
+      "quote": "이엔셀, GLP-1 비만치료제 근손실 방지 신약 개발…특허 출원",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "현대제철",
+      "rating": null,
+      "tp": null,
+      "ts": "17:49",
+      "quote": "Hyundai Steel (004020.KS)",
+      "sector": "철강"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "동국제강",
+      "rating": null,
+      "tp": null,
+      "ts": "17:49",
+      "quote": "DONGKUK STEEL MILL (460860.KQ)",
+      "sector": "철강"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "디앤디파마텍",
+      "rating": null,
+      "tp": null,
+      "ts": "19:09",
+      "quote": "디앤디파마텍 \"지방간 신약 연내 기술수출\"",
+      "sector": "바이오"
+    }
+  ]
+}

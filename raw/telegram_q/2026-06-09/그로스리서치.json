@@ -1,0 +1,31 @@
+{
+  "reports": [
+    {
+      "broker": "그로쓰리서치",
+      "stock": "피에스케이홀딩스",
+      "rating": null,
+      "tp": null,
+      "ts": "09:41",
+      "quote": "DRAM·HBM 미세화 수혜 스트립·세정 장비 업체",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "브이엠",
+      "rating": null,
+      "tp": null,
+      "ts": "09:41",
+      "quote": "국내 건식 식각장비 유일 업체",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "에프엔에스테크",
+      "rating": null,
+      "tp": null,
+      "ts": "11:32",
+      "quote": "디스플레이 장비 중심에서 반도체 소모품 중심으로 사업 무게중심 이동",
+      "sector": "반도체"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "target_kind": "market",
+  "market_direction": "혼조세",
+  "macro_events": [
+    {
+      "fact": "미국 5월 CPI 발표",
+      "ts": "2026-06-10 21:30",
+      "quote": "미국 5월 CPI 발표(한국시간 오후 9시 반) 앞두고 혼조세"
+    }
+  ],
+  "sectors_mentioned": [],
+  "quote": "미국 5월 CPI 발표(한국시간 오후 9시 반) 앞두고 혼조세"
+}

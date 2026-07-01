@@ -1,0 +1,67 @@
+{
+  "reports": [
+    {
+      "broker": "신한투자증권",
+      "stock": "비에이치",
+      "rating": "매수",
+      "tp": "46,000원",
+      "ts": "07:32",
+      "quote": "목표주가 46,000원(상향), 투자의견 '매수' 제시",
+      "sector": "IT"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "메리츠금융지주",
+      "rating": "매수",
+      "tp": null,
+      "ts": "08:17",
+      "quote": "메리츠금융지주 (138040/매수) 현 시점에서는 가장 매력적인 방어주",
+      "sector": "기타"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "시에나(CIEN.US)",
+      "rating": null,
+      "tp": null,
+      "ts": "08:07",
+      "quote": "3Q26 Review: 멀티플 부담이 높았을 뿐",
+      "sector": "기타"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "테이크투 인터랙티브(TTWO)",
+      "rating": null,
+      "tp": null,
+      "ts": "08:05",
+      "quote": "테이크투 인터랙티브 (TTWO) 방아쇠를 당길 시간",
+      "sector": "기타"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "캡콤(9697.JP)",
+      "rating": null,
+      "tp": null,
+      "ts": "08:05",
+      "quote": "캡콤 (9697.JP) <레퀴엠>으로 확인한 IP 영향력",
+      "sector": "기타"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "스퀘어에닉스(9684.JP)",
+      "rating": null,
+      "tp": null,
+      "ts": "08:05",
+      "quote": "스퀘어에닉스 (9684.JP) 여전히 성장 동력 부족",
+      "sector": "기타"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "플래닛 랩스(PL.US)",
+      "rating": null,
+      "tp": null,
+      "ts": "13:14",
+      "quote": "플래닛 랩스(PL.US); 증자는 이벤트, 본질은 성장",
+      "sector": "기타"
+    }
+  ]
+}

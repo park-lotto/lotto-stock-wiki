@@ -1,0 +1,112 @@
+{
+  "reports": [
+    {
+      "broker": "JP모건",
+      "stock": "인피니온",
+      "rating": null,
+      "tp": null,
+      "ts": "14:05",
+      "quote": "인피니온: 2030년 SST 시장 $10억+, SSCB 시장 $8억+ 전망",
+      "sector": "반도체"
+    },
+    {
+      "broker": "JP모건",
+      "stock": "Navitas",
+      "rating": null,
+      "tp": null,
+      "ts": "14:05",
+      "quote": "Navitas 10kW GaN 플랫폼: 800V→50V 변환 효율 98.5%",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "효성중공업",
+      "rating": null,
+      "tp": null,
+      "ts": "17:00",
+      "quote": "전력기기: 효성중공업, HD현대일렉트릭, LS일렉트릭",
+      "sector": "전력"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "HD현대일렉트릭",
+      "rating": null,
+      "tp": null,
+      "ts": "17:00",
+      "quote": "전력기기: 효성중공업, HD현대일렉트릭, LS일렉트릭",
+      "sector": "전력"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "LS일렉트릭",
+      "rating": null,
+      "tp": null,
+      "ts": "17:00",
+      "quote": "전력기기: 효성중공업, HD현대일렉트릭, LS일렉트릭",
+      "sector": "전력"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "SK이노베이션 E&S",
+      "rating": null,
+      "tp": null,
+      "ts": "17:00",
+      "quote": "발전: SK이노베이션 E&S, GS EPS, 두산에너빌리티(SMR)",
+      "sector": "전력"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "GS EPS",
+      "rating": null,
+      "tp": null,
+      "ts": "17:00",
+      "quote": "발전: SK이노베이션 E&S, GS EPS, 두산에너빌리티(SMR)",
+      "sector": "전력"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "두산에너빌리티",
+      "rating": null,
+      "tp": null,
+      "ts": "17:00",
+      "quote": "발전: SK이노베이션 E&S, GS EPS, 두산에너빌리티(SMR)",
+      "sector": "원전"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "LG에너지솔루션",
+      "rating": null,
+      "tp": null,
+      "ts": "17:00",
+      "quote": "ESS: LG에너지솔루션, 삼성SDI, SK온",
+      "sector": "2차전지"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성SDI",
+      "rating": null,
+      "tp": null,
+      "ts": "17:00",
+      "quote": "ESS: LG에너지솔루션, 삼성SDI, SK온",
+      "sector": "2차전지"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "SK온",
+      "rating": null,
+      "tp": null,
+      "ts": "17:00",
+      "quote": "ESS: LG에너지솔루션, 삼성SDI, SK온",
+      "sector": "2차전지"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "스페이스X",
+      "rating": null,
+      "tp": null,
+      "ts": "17:25",
+      "quote": "스페이스X, 7월 7일부터 나스닥100 지수 편입",
+      "sector": "기타"
+    }
+  ]
+}

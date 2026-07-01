@@ -1,0 +1,49 @@
+{
+  "reports": [
+    {
+      "broker": "한투글로벌",
+      "stock": "앤트로픽",
+      "rating": null,
+      "tp": null,
+      "ts": "05:53",
+      "quote": "앤트로픽이 엔터프라이즈 AI 모델 시장의 선두로 부상하면서 고객사에 대한 협상력을 행사",
+      "sector": "IT"
+    },
+    {
+      "broker": "한투글로벌",
+      "stock": "아마존",
+      "rating": null,
+      "tp": null,
+      "ts": "05:53",
+      "quote": "아마존이 앤트로픽 모델에 크게 의존해왔기 때문",
+      "sector": "IT"
+    },
+    {
+      "broker": "한투글로벌",
+      "stock": "OpenAI",
+      "rating": null,
+      "tp": null,
+      "ts": "05:53",
+      "quote": "아마존은 올해 초 OpenAI에 500억 달러를 약정. 아마존이 인프라를 제공하고 OpenAI가 모델 접근권을 제공하는 구조",
+      "sector": "IT"
+    },
+    {
+      "broker": "한투글로벌",
+      "stock": "Rocket Lab",
+      "rating": null,
+      "tp": null,
+      "ts": "06:22",
+      "quote": "Rocket Lab이 위성통신업체 Iridium을 현금+주식 방식, 기업가치 약 80억달러(주당 54달러)에 인수하기로 발표.",
+      "sector": "통신"
+    },
+    {
+      "broker": "한투글로벌",
+      "stock": "Iridium",
+      "rating": null,
+      "tp": null,
+      "ts": "06:22",
+      "quote": "이번 인수로 Rocket Lab은 Iridium의 저궤도(LEO) 위성 66기, 글로벌 주파수(Spectrum) 권리, 수익성 있는 위성통신 사업을 확보하게 됨.",
+      "sector": "통신"
+    }
+  ]
+}

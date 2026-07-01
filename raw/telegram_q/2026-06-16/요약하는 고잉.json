@@ -1,0 +1,49 @@
+{
+  "reports": [
+    {
+      "broker": null,
+      "stock": "알지노믹스",
+      "rating": null,
+      "tp": null,
+      "ts": "15:40",
+      "quote": "알지노믹스는 어제 무증 뉴스로 반등했는데요. 일정 체킹해두시면 될거 같습니다.",
+      "sector": "바이오"
+    },
+    {
+      "broker": null,
+      "stock": "넥스원",
+      "rating": null,
+      "tp": null,
+      "ts": "15:41",
+      "quote": "(방산)넥스원 - 라인메탈",
+      "sector": "방산"
+    },
+    {
+      "broker": null,
+      "stock": "삼성전자",
+      "rating": null,
+      "tp": null,
+      "ts": "15:41",
+      "quote": "(로봇) 삼성전자 보스턴다이나믹스 지분인수 검토",
+      "sector": "로봇"
+    },
+    {
+      "broker": null,
+      "stock": "SK하이닉스",
+      "rating": null,
+      "tp": null,
+      "ts": "21:08",
+      "quote": "SK하닉, SK스퀘어, SK 다 좋은흐름",
+      "sector": "반도체"
+    },
+    {
+      "broker": null,
+      "stock": "스페이스X",
+      "rating": null,
+      "tp": null,
+      "ts": "23:00",
+      "quote": "스페이스X 는 상장날 시초가에만 삿어도 지금 45%네여.",
+      "sector": "기타"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "삼성전자",
+      "signal": "bull",
+      "reason": "HBM·DRAM·플래시 등 메모리 전체 부문 생산 및 AI 인프라 확대 수혜",
+      "ts": null,
+      "quote": "삼성전자·SK하이닉스는 HBM·DRAM·플래시 등 메모리 전체 부문을 생산하며 AI 인프라 확대 수혜를 입는 구조다.",
+      "sector": "반도체"
+    },
+    {
+      "name": "SK하이닉스",
+      "signal": "bull",
+      "reason": "HBM·DRAM·플래시 등 메모리 전체 부문 생산 및 AI 인프라 확대 수혜",
+      "ts": null,
+      "quote": "삼성전자·SK하이닉스는 HBM·DRAM·플래시 등 메모리 전체 부문을 생산하며 AI 인프라 확대 수혜를 입는 구조다.",
+      "sector": "반도체"
+    },
+    {
+      "name": "삼성전기",
+      "signal": "neutral",
+      "reason": null,
+      "ts": null,
+      "quote": null,
+      "sector": "기타"
+    },
+    {
+      "name": "LG전자",
+      "signal": "bull",
+      "reason": "AI 인프라의 랙 단위 열 관리·전력 솔루션 시장 성장 잠재력",
+      "ts": null,
+      "quote": "LG전자 등은 AI 인프라의 랙 단위 열 관리·전력 솔루션 시장에서 성장 잠재력을 가진다.",
+      "sector": "IT"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "빅테크 AI 인프라 투자(2026~2027년 합산 8,000억 달러 예상)",
+      "ts": "2026-06-08",
+      "quote": "빅테크의 AI 인프라 CapEx가 2026~2027년 기준 8,000억 달러로 급증할 전망이다."
+    },
+    {
+      "fact": "NVIDIA RTX Spark 및 DGX Spark 등 AI 장비 메모리 탑재량 증가",
+      "ts": "2026-06-08",
+      "quote": "NVIDIA의 RTX Spark 및 DGX Spark 제품은 기존 AI PC 대비 4~8배 더 많은 메모리(RAM)를 사용하며, DGX Spark는 128GB 통합 메모리를 탑재한다."
+    }
+  ],
+  "quote": "AI 인프라는 메모리 + 전력 + 냉각으로 통한다."
+}
