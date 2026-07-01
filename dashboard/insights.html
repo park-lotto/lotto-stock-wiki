@@ -126,14 +126,16 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .lb-src-head { display: flex; align-items: center; gap: 8px; padding: 7px 10px; cursor: pointer; background: var(--bg); }
 .lb-src-head:hover { background: #1c1c22; }
 .lb-src-head.open { background: #1c1c22; }
-.lb-src-name { font-size: .8rem; font-weight: 600; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-src-name { font-size: .8rem; font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lb-src-meta { font-size: .68rem; color: var(--muted); white-space: nowrap; }
 .lb-docs { padding: 4px 8px 8px; display: flex; flex-direction: column; gap: 4px; }
 .lb-doc { border-left: 2px solid var(--line); }
 .lb-doc-head { display: flex; align-items: center; gap: 7px; padding: 5px 8px; cursor: pointer; }
 .lb-doc-head:hover { background: #17171c; }
 .lb-doc-date { font-size: .66rem; color: var(--gold-dim); white-space: nowrap; }
-.lb-doc-title { font-size: .74rem; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-doc-title { font-size: .74rem; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-browse, .lb-src, .lb-docs { min-width: 0; max-width: 100%; }
+.lb-src-head, .lb-doc-head { min-width: 0; }
 .lb-doc-n { font-size: .64rem; color: var(--muted); white-space: nowrap; }
 .lb-doc-body { padding: 6px 10px 8px; font-size: .76rem; color: #cfd3c8; line-height: 1.55; }
 .lb-sum { background: var(--rp-bg); border-radius: 7px; padding: 8px 10px; margin-bottom: 6px; }
@@ -1085,17 +1087,20 @@ async function libViewAll(id) {
   box.innerHTML = `<div class="lib-det-head">${catIcon(id)} ${catLabel(id)} 전체 <button class="lib-back" onclick="libShow('${id}')">✕ 닫기</button></div><div id="lib-browse" class="lib-browse"><div class="bh-empty">소스 불러오는 중…</div></div>`;
   try {
     const res = await apiFetch(`/api/insights/sources?category=${encodeURIComponent(id)}`);
-    const srcs = res.sources || [];
+    const all = res.sources || [];
+    const CAP = 30;
+    const srcs = all.slice(0, CAP);        // 렌더 과부하 방지 (리포트·뉴스는 소스가 수백개)
     const el = qs('#lib-browse'); if (!el) return;
-    el.innerHTML = srcs.length ? srcs.map((s, i) => `
+    const more = all.length > CAP ? `<div class="bh-empty">최근 ${CAP}개 표시 · 총 ${all.length}개 — 더 찾으려면 위 브리핑바에서 검색하세요</div>` : '';
+    el.innerHTML = (srcs.length ? srcs.map((s, i) => `
       <div class="lb-src">
         <div class="lb-src-head" onclick="libSrcToggle('${escAttr(id)}','${escAttr(s.name)}','lbs${i}',this)">
-          <span class="lb-src-name">${escHtml(s.name)}</span>
+          <span class="lb-src-name">${escHtml(s.name || '(이름 없음)')}</span>
           <span class="lb-src-meta">문서 ${s.docs ?? 0} · 발언 ${s.atoms ?? 0}</span>
           <span class="sig-caret">▾</span>
         </div>
         <div class="lb-docs" id="lbs${i}" style="display:none"></div>
-      </div>`).join('') : '<div class="bh-empty">소스 없음</div>';
+      </div>`).join('') : '<div class="bh-empty">소스 없음</div>') + more;
   } catch(e) { const el = qs('#lib-browse'); if (el) el.innerHTML = '<div class="bh-empty">불러오기 실패</div>'; }
 }
 async function libSrcToggle(cat, source, did, head) {
