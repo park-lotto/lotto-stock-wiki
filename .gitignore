@@ -84,3 +84,5 @@ deploy/stockbrain.env
 pipeline/push_token.txt
 pipeline/news_feed.json
 pipeline/callouts/
+scratch_pw.txt
+scripts/.kiwoom_token_cache.json

@@ -1362,3 +1362,9 @@ python calc_oscillator.py SK하이닉스 삼성전자 한미반도체 --tg
 - A: 오늘분 인제스트 완료(07-01: 50→105, 뉴스·리포트 반영). ingest_pending(Gemini gemini-3.1-flash-lite)
 - C: dashboard 서버에 _ingest_worker 스레드 내장 — 10분마다 미처리 60개 자동추출(단일워커=중복없음). 백로그 서서히 소화 + 최신 유지
 - 미결: 07-01 telegram/blog/yt가 pending에 안 잡힘(다른 경로?) — 후속 확인
+
+## 2026-07-01 (2) — 대시보드 지인배포 + 뉴스매칭 시스템
+- 배포: stockbrain1.duckdns.org (Lightsail+Apache프록시+SSL+로그인 admin/1234, 서버전용KIS키). 모바일 반응형·차트탭·캔들KIS폴백
+- 릴레이: 서버 키움없음 → push_flow.py로 로컬 market_flow 전송(/api/push_market_flow)
+- 뉴스: news_feed.py(섹터=네이버검색+must필수어, 종목=네이버증권API) + 백그라운드20분 + 뉴스탭/섹터클릭팝오버. 오매칭 must로 제거
+- 콜아웃 백엔드(/api/callout·성과추적) 완료, 프론트 미연결. 장전예측엔진·기준봉 보류
