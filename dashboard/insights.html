@@ -118,6 +118,28 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .lib-det-nums b { color: var(--gold); font-size: 1rem; }
 .lib-det-hot { margin-top: 10px; font-size: .72rem; color: var(--muted); }
 .lib-hot { color: #cbd5c0; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lib-back { margin-left: auto; background: none; border: 1px solid var(--line); color: var(--muted); font-size: .68rem; padding: 2px 8px; border-radius: 6px; cursor: pointer; font-family: inherit; font-weight: 400; }
+.lib-back:hover { color: #f87171; border-color: #5a1a1a; }
+.lib-det-head { display: flex; align-items: center; }
+.lib-browse { margin-top: 8px; max-height: 460px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
+.lb-src { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.lb-src-head { display: flex; align-items: center; gap: 8px; padding: 7px 10px; cursor: pointer; background: var(--bg); }
+.lb-src-head:hover { background: #1c1c22; }
+.lb-src-head.open { background: #1c1c22; }
+.lb-src-name { font-size: .8rem; font-weight: 600; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-src-meta { font-size: .68rem; color: var(--muted); white-space: nowrap; }
+.lb-docs { padding: 4px 8px 8px; display: flex; flex-direction: column; gap: 4px; }
+.lb-doc { border-left: 2px solid var(--line); }
+.lb-doc-head { display: flex; align-items: center; gap: 7px; padding: 5px 8px; cursor: pointer; }
+.lb-doc-head:hover { background: #17171c; }
+.lb-doc-date { font-size: .66rem; color: var(--gold-dim); white-space: nowrap; }
+.lb-doc-title { font-size: .74rem; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-doc-n { font-size: .64rem; color: var(--muted); white-space: nowrap; }
+.lb-doc-body { padding: 6px 10px 8px; font-size: .76rem; color: #cfd3c8; line-height: 1.55; }
+.lb-sum { background: var(--rp-bg); border-radius: 7px; padding: 8px 10px; margin-bottom: 6px; }
+.lb-sum p { margin: 0 0 5px; } .lb-sum ul { margin: 4px 0; padding-left: 16px; }
+.lb-atoms { display: flex; flex-direction: column; gap: 5px; }
+.lb-atom { color: #c3c8ba; } .lb-atom-d { color: var(--muted); font-size: .68rem; }
 .cat-grid-side { display: grid; grid-template-columns: 1fr; gap: 10px; }
 .cat-grid-side .cat-card { border-radius: 12px; }
 .cat-grid-side .cat-card .body { padding: 12px 16px; }
@@ -1053,8 +1075,65 @@ function libShow(id) {
       <span><b>${c.atoms ?? 0}</b> 발언</span>
     </div>
     ${hot ? `<div class="lib-det-hot">최근 인사이트<br>${hot}</div>` : ''}
-    <button class="sig-brief-btn" onclick="showL1('${id}')">${catLabel(id)} 전체 보기 →</button>`;
+    <button class="sig-brief-btn" onclick="libViewAll('${id}')">${catLabel(id)} 전체 보기 (여기서 펼침) ↓</button>`;
   box.style.display = 'block';
+}
+// 전체 보기 = 페이지 이동 없이 이 자리에서 아코디언으로 펼침 (소스→문서→내용)
+async function libViewAll(id) {
+  const box = qs('#lib-detail'); if (!box) return;
+  box.style.display = 'block';
+  box.innerHTML = `<div class="lib-det-head">${catIcon(id)} ${catLabel(id)} 전체 <button class="lib-back" onclick="libShow('${id}')">✕ 닫기</button></div><div id="lib-browse" class="lib-browse"><div class="bh-empty">소스 불러오는 중…</div></div>`;
+  try {
+    const res = await apiFetch(`/api/insights/sources?category=${encodeURIComponent(id)}`);
+    const srcs = res.sources || [];
+    const el = qs('#lib-browse'); if (!el) return;
+    el.innerHTML = srcs.length ? srcs.map((s, i) => `
+      <div class="lb-src">
+        <div class="lb-src-head" onclick="libSrcToggle('${escAttr(id)}','${escAttr(s.name)}','lbs${i}',this)">
+          <span class="lb-src-name">${escHtml(s.name)}</span>
+          <span class="lb-src-meta">문서 ${s.docs ?? 0} · 발언 ${s.atoms ?? 0}</span>
+          <span class="sig-caret">▾</span>
+        </div>
+        <div class="lb-docs" id="lbs${i}" style="display:none"></div>
+      </div>`).join('') : '<div class="bh-empty">소스 없음</div>';
+  } catch(e) { const el = qs('#lib-browse'); if (el) el.innerHTML = '<div class="bh-empty">불러오기 실패</div>'; }
+}
+async function libSrcToggle(cat, source, did, head) {
+  const box = qs('#' + did); if (!box) return;
+  if (box.style.display !== 'none') { box.style.display = 'none'; head.classList.remove('open'); return; }
+  head.classList.add('open'); box.style.display = 'block';
+  if (box._loaded) return;
+  box.innerHTML = '<div class="bh-empty">문서 불러오는 중…</div>';
+  try {
+    const res = await apiFetch(`/api/insights/docs?category=${encodeURIComponent(cat)}&source=${encodeURIComponent(source)}`);
+    const docs = res.docs || [];
+    box.innerHTML = docs.length ? docs.map((d, i) => `
+      <div class="lb-doc">
+        <div class="lb-doc-head" onclick="libDocToggle('${escAttr(d.doc_key)}','${did}d${i}',this)">
+          <span class="lb-doc-date">${fmtDate(d.date)}</span>
+          <span class="lb-doc-title">${escHtml(d.title || '(제목없음)')}</span>
+          <span class="lb-doc-n">발언 ${d.atoms ?? 0}</span>
+          <span class="sig-caret">▾</span>
+        </div>
+        <div class="lb-doc-body" id="${did}d${i}" style="display:none"></div>
+      </div>`).join('') : '<div class="bh-empty">문서 없음</div>';
+    box._loaded = true;
+  } catch(e) { box.innerHTML = '<div class="bh-empty">문서 불러오기 실패</div>'; }
+}
+async function libDocToggle(docKey, did, head) {
+  const box = qs('#' + did); if (!box) return;
+  if (box.style.display !== 'none') { box.style.display = 'none'; head.classList.remove('open'); return; }
+  head.classList.add('open'); box.style.display = 'block';
+  if (box._loaded) return;
+  box.innerHTML = '<div class="bh-empty">내용 불러오는 중…</div>';
+  try {
+    const d = await apiFetch(`/api/insights/doc?doc_key=${encodeURIComponent(docKey)}`);
+    const sum = d.summary ? `<div class="lb-sum">${marked.parse(String(d.summary).slice(0, 1800))}</div>` : '';
+    const atoms = (d.atoms || []).slice(0, 8).map(a =>
+      `<div class="lb-atom">· ${escHtml((a.content || '').slice(0, 240))}${a.date ? ` <span class="lb-atom-d">(${escHtml(a.date)})</span>` : ''}</div>`).join('');
+    box.innerHTML = (sum || atoms) ? sum + (atoms ? `<div class="lb-atoms">${atoms}</div>` : '') : '<div class="bh-empty">내용 없음</div>';
+    box._loaded = true;
+  } catch(e) { box.innerHTML = '<div class="bh-empty">내용 불러오기 실패</div>'; }
 }
 async function openLatestBrief() {
   if (window._ws && window._ws.id) { reopenWorkspace(); return; }   // 세션 이어보기
