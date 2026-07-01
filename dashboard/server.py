@@ -3311,17 +3311,20 @@ def _naver_board_posts(code, period="d3", max_pages=15):
         soup = BeautifulSoup(d, "html.parser")
         page_posts = []
         for a in soup.select('td.title a[title]'):
-            if "board_read" not in (a.get("href") or ""):
+            href = a.get("href") or ""
+            if "board_read" not in href:
                 continue
+            nm = re.search(r"nid=(\d+)", href)
             tr = a.find_parent("tr")
             tds = tr.find_all("td", recursive=False) if tr else []
-            if len(tds) < 4:
+            if len(tds) < 4 or not nm:
                 continue
             page_posts.append({
                 "date": tds[0].get_text(strip=True),
                 "title": re.sub(r"\s+", " ", a["title"]).strip(),
                 "views": _num(tds[3]),
                 "up": _num(tds[4]) if len(tds) > 4 else 0,
+                "nid": nm.group(1),
             })
         if not page_posts:
             break
@@ -3336,6 +3339,58 @@ def _naver_board_posts(code, period="d3", max_pages=15):
             seen.add(x["title"])
             out.append(x)
     return out
+
+
+async def _naver_post_bodies(code, items, top_n=6):
+    """Playwright(비동기 병렬)로 상위 글(조회수순) 본문 렌더링 추출 {nid: 본문}.
+    네이버가 본문을 SPA 인증API로 가려 단순 HTTP 불가 → 헤드리스 브라우저로 렌더링.
+    이미지·CSS·폰트 차단 + 동시 렌더링으로 속도 최적화. 엔드포인트 이벤트루프에서 직접 await."""
+    import asyncio
+    try:
+        from playwright.async_api import async_playwright
+    except Exception:
+        return {}
+    ua = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+          "(KHTML, like Gecko) Chrome/120 Safari/537.36")
+    targets = [it for it in items[:top_n] if it.get("nid")]
+    if not targets:
+        return {}
+    bodies = {}
+    try:
+        async with async_playwright() as pw:
+            br = await pw.chromium.launch(headless=True)
+            ctx = await br.new_context(user_agent=ua)
+
+            async def _block(route):
+                if route.request.resource_type in ("image", "media", "font", "stylesheet"):
+                    await route.abort()
+                else:
+                    await route.continue_()
+            await ctx.route("**/*", _block)
+
+            async def one(it):
+                nid = it["nid"]
+                url = f"https://m.stock.naver.com/pc/domestic/stock/{code}/discussion/{nid}"
+                try:
+                    pg = await ctx.new_page()
+                    await pg.goto(url, wait_until="domcontentloaded", timeout=15000)
+                    await pg.wait_for_selector('[class*="content"]', timeout=7000)
+                    els = await pg.query_selector_all('[class*="content"]')
+                    best = ""
+                    for el in els:
+                        t = ((await el.inner_text()) or "").strip()
+                        if 15 <= len(t) <= 1200 and (not best or len(t) < len(best)):
+                            best = t
+                    if best:
+                        bodies[nid] = re.sub(r"\s+", " ", best)[:700]
+                    await pg.close()
+                except Exception:
+                    pass
+            await asyncio.gather(*[one(it) for it in targets])
+            await br.close()
+    except Exception:
+        pass
+    return bodies
 
 
 @app.post("/api/insights/naver_board")
@@ -3373,6 +3428,10 @@ async def api_insights_naver_board(req: Request):
     # 조회수 높은 순 = 개미들이 많이 본 글(여론 무게)
     top = sorted(posts, key=lambda x: (x["views"], x["up"]), reverse=True)
     total_views = sum(x["views"] for x in posts)
+    # 상위 글 본문을 Playwright로 렌더링해 실제 내용까지 분석
+    bodies = await _naver_post_bodies(code, top, 6)
+    for x in top:
+        x["body"] = bodies.get(x.get("nid"), "")
 
     def _analyze():
         try:
@@ -3382,17 +3441,23 @@ async def api_insights_naver_board(req: Request):
         keys = _gemini_interactive_keys()
         if not keys:
             return {"error": ".env에 GEMINI_API_KEY 없음"}
-        lines = "\n".join(f"- (조회{x['views']}·추천{x['up']}) {x['title']}" for x in top[:60])
+        # 상위 글은 본문까지, 나머지는 제목만
+        body_lines = []
+        for x in top[:8]:
+            if x.get("body"):
+                body_lines.append(f"[조회{x['views']}·추천{x['up']}] 제목: {x['title']}\n  본문: {x['body']}")
+        title_lines = "\n".join(f"- (조회{x['views']}·추천{x['up']}) {x['title']}" for x in top[:50])
         prompt = (
-            f"아래는 네이버 종목토론방 '{tried}'({code}) {date_lo}~{date_hi} 기간 게시글 {len(posts)}개다. "
-            "각 줄 앞의 (조회N·추천M)은 참여도 — 조회·추천 높은 글일수록 여론의 무게가 크다. "
-            "이 가중치를 반영해 개인투자자(개미) 여론을 한국어로 분석하라:\n"
-            "1) 전반 분위기 — 긍정/부정/혼조 + 강도 (조회/추천 많은 글 위주로 판단)\n"
-            "2) 주가 상승/하락 이유로 언급되는 것 — 실제 제목에 나온 근거만\n"
+            f"아래는 네이버 종목토론방 '{tried}'({code}) {date_lo}~{date_hi} 기간 게시글이다(총 {len(posts)}개). "
+            "조회·추천 높은 글일수록 여론의 무게가 크다. 상위 글은 본문까지 제공한다. "
+            "이를 반영해 개인투자자(개미) 여론을 한국어로 분석하라:\n"
+            "1) 전반 분위기 — 긍정/부정/혼조 + 강도 (조회/추천·본문 근거로 판단)\n"
+            "2) 주가 상승/하락 이유 — 본문·제목에 실제 나온 근거만 (구체적으로)\n"
             "3) 자주 나오는 키워드·이슈\n"
-            "4) 가장 많이 읽히거나 공감받은 글 2~3개 (제목 인용 + 조회/추천 수)\n"
-            "⚠️ 제목에 있는 내용만. 지어내지 마라. 과열/작전 의심 신호 보이면 표시.\n\n"
-            "게시글(조회수 높은 순):\n" + lines)
+            "4) 가장 많이 읽히거나 공감받은 글 2~3개 (내용 요약 + 조회/추천 수)\n"
+            "⚠️ 제공된 본문·제목에 있는 내용만. 지어내지 마라. 과열/작전 의심 신호 보이면 표시.\n\n"
+            + (("[상위 글 본문]\n" + "\n\n".join(body_lines) + "\n\n") if body_lines else "")
+            + "[전체 제목(조회순)]\n" + title_lines)
         last = ""
         for k in keys:
             client = genai.Client(api_key=k)
@@ -3417,9 +3482,10 @@ async def api_insights_naver_board(req: Request):
     return JSONResponse(content={
         "ok": True, "stock": tried, "code": code, "count": len(posts),
         "period": period, "date_from": date_lo, "date_to": date_hi,
-        "total_views": total_views,
+        "total_views": total_views, "bodies_read": sum(1 for x in top[:6] if x.get("body")),
         "analysis": res["analysis"],
-        "top": [{"title": x["title"], "views": x["views"], "up": x["up"], "date": x["date"]} for x in top[:12]],
+        "top": [{"title": x["title"], "views": x["views"], "up": x["up"], "date": x["date"],
+                 "body": x.get("body", "")} for x in top[:12]],
         "url": f"https://finance.naver.com/item/board.naver?code={code}"})
 
 

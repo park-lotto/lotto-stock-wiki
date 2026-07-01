@@ -1933,7 +1933,7 @@ async function wsNaverBoard() {
   if (!stock) { toast('종목명을 입력하세요 (예: 대우건설)', true); return; }
   const period = (qs('#nb-period') || {}).value || 'd3';
   const perKo = { today: '오늘', d1: '-1일', d3: '-3일', d7: '-7일', d30: '-30일' }[period] || period;
-  const card = wsAddCard('🗣️ 종토방 여론', `<div class="nb-qa-q">종목: ${escHtml(stock)} · 기간 ${perKo}</div>${wsLoading('네이버 종토방 크롤링 + 개미 여론분석 중… (~20초)', true)}`);
+  const card = wsAddCard('🗣️ 종토방 여론', `<div class="nb-qa-q">종목: ${escHtml(stock)} · 기간 ${perKo}</div>${wsLoading('종토방 크롤링 + 상위글 본문 렌더링 + 여론분석 중… (~30초)', true)}`);
   card._abort = new AbortController();
   const body = card.querySelector('.ws-card-b');
   try {
@@ -1942,10 +1942,10 @@ async function wsNaverBoard() {
       body: JSON.stringify({ stock, period }), signal: card._abort.signal
     });
     if (res.error) throw new Error(res.error);
-    const top = (res.top || []).map(x => `<div class="sig-fact" style="border-left-color:#67e8f9"><div class="sig-fact-txt">${escHtml(x.title)}</div><div class="sig-fact-meta">👁 조회 ${x.views} · 👍 추천 ${x.up} · ${escHtml(x.date)}</div></div>`).join('');
-    body.innerHTML = `<div class="nb-qa-q">🗣️ <b>${escHtml(res.stock)}</b>(${res.code}) 종토방 여론 · ${escHtml(res.date_from)}~${escHtml(res.date_to)} · 글 ${res.count}개 · 총조회 ${res.total_views || 0} <a href="${res.url}" target="_blank" style="font-size:.72rem;color:#67e8f9">↗ 종토방 열기</a></div>
+    const top = (res.top || []).map(x => `<div class="sig-fact" style="border-left-color:#67e8f9"><div class="sig-fact-txt">${escHtml(x.title)}</div>${x.body ? `<div style="font-size:.74rem;color:#cfd3c8;margin-top:3px;line-height:1.5">${escHtml(x.body)}</div>` : ''}<div class="sig-fact-meta">👁 조회 ${x.views} · 👍 추천 ${x.up} · ${escHtml(x.date)}</div></div>`).join('');
+    body.innerHTML = `<div class="nb-qa-q">🗣️ <b>${escHtml(res.stock)}</b>(${res.code}) 종토방 여론 · ${escHtml(res.date_from)}~${escHtml(res.date_to)} · 글 ${res.count}개 · 총조회 ${res.total_views || 0} · 본문 ${res.bodies_read || 0}개 <a href="${res.url}" target="_blank" style="font-size:.72rem;color:#67e8f9">↗ 종토방 열기</a></div>
       <div class="nb-qa-a">${marked.parse(res.analysis || '')}</div>
-      <details style="margin-top:8px"><summary style="cursor:pointer;color:var(--gold-dim);font-size:.76rem">👁 많이 읽힌 글 ${(res.top || []).length}개 (조회수 순)</summary><div style="margin-top:6px;display:flex;flex-direction:column;gap:6px">${top}</div></details>`;
+      <details style="margin-top:8px"><summary style="cursor:pointer;color:var(--gold-dim);font-size:.76rem">👁 많이 읽힌 글 ${(res.top || []).length}개 (조회수 순, 본문 포함)</summary><div style="margin-top:6px;display:flex;flex-direction:column;gap:6px">${top}</div></details>`;
   } catch(e) {
     body.innerHTML = e.name === 'AbortError'
       ? `<div class="nb-qa-q">종목: ${escHtml(stock)}</div><div style="color:var(--muted)">취소됨</div>`
