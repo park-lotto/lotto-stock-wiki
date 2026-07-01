@@ -104,6 +104,8 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .ws-meta b { color: var(--txt); }
 .ws-close { padding: 7px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--txt); font-family: inherit; font-size: .82rem; cursor: pointer; white-space: nowrap; }
 .ws-close:hover { border-color: var(--gold-dim); color: var(--gold); }
+.ws-home { padding: 8px 16px; border-radius: 9px; border: 1px solid var(--gold-dim); background: var(--rp-bg); color: var(--gold); font-family: inherit; font-size: .84rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: background .15s; }
+.ws-home:hover { background: #221c0a; }
 .ws-body { flex: 1; display: flex; min-height: 0; }
 .ws-left { width: 340px; flex-shrink: 0; border-right: 1px solid var(--line); padding: 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; background: var(--card); }
 .ws-ai-box { background: var(--bg); border: 1px solid var(--line); border-radius: 11px; padding: 12px; }
@@ -572,9 +574,9 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 <!-- 브리핑 워크스페이스 (전체화면 2단) -->
 <div class="ws-overlay" id="nbws">
   <div class="ws-top">
+    <button class="ws-home" onclick="closeWorkspace()">🏠 메인화면</button>
     <div class="ws-title" id="ws-title">🧠 브리핑 워크스페이스</div>
     <div class="ws-meta" id="ws-meta"></div>
-    <button class="ws-close" onclick="closeWorkspace()">✕ 닫기</button>
   </div>
   <div class="ws-body">
     <div class="ws-left">
