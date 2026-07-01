@@ -24,9 +24,11 @@ def _load_gemini_keys() -> list[str]:
     def _v(name: str) -> str:
         return os.environ.get(name) or env_vals.get(name, "")
 
-    dedicated = _v("GEMINI_API_KEY_3")
-    if dedicated:
-        return [dedicated]   # 인제스트 전용
+    # 인제스트 전용 키(별도 구글계정) 우선 — 있으면 그것들만 rotation
+    ingest = [k for k in (_v("GEMINI_INGEST_KEY"), _v("GEMINI_INGEST_KEY_2"),
+                          _v("GEMINI_INGEST_KEY_3")) if k]
+    if ingest:
+        return ingest
     return [k for k in (_v("GEMINI_API_KEY"), _v("GEMINI_API_KEY_2")) if k]
 
 

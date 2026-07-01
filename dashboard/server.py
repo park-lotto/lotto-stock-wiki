@@ -82,6 +82,13 @@ def _env_key(name):
     except Exception:
         pass
     return ""
+
+
+def _gemini_interactive_keys():
+    """대화형(리서치·이미지·비전) Gemini 키 — 인제스트 전용키(GEMINI_INGEST_KEY*)와 분리.
+    _1·_2(기존)+_3·_4(추가계정) 순으로 failover."""
+    return [k for k in (_env_key("GEMINI_API_KEY"), _env_key("GEMINI_API_KEY_2"),
+                        _env_key("GEMINI_API_KEY_3"), _env_key("GEMINI_API_KEY_4")) if k]
 SIGNAL_DIR = os.path.join(ROOT, "output", "signal")
 OUT_DIR = os.path.join(ROOT, "out")
 AGENTS_DIR = os.path.join(HERE, "agents")
@@ -2992,22 +2999,22 @@ async def api_insights_gemini_chat(req: Request):
             from google.genai import types
         except Exception as e:
             return {"error": f"google-genai 패키지 없음: {str(e)[:150]}"}
-        # 인터랙티브(대화형)는 _2 키를 먼저 — 인제스트 워커(1번 키 우선)와 쿼터 분리
-        keys = [k for k in (_env_key("GEMINI_API_KEY_2"), _env_key("GEMINI_API_KEY")) if k]
+        keys = _gemini_interactive_keys()
         if not keys:
             return {"error": ".env에 GEMINI_API_KEY 없음"}
-        last = ""
+        def _gen(k, grounded):
+            cfg = types.GenerateContentConfig(temperature=0)
+            if grounded:
+                cfg.tools = [types.Tool(google_search=types.GoogleSearch())]
+            client = genai.Client(api_key=k)   # 변수 유지 — GC가 호출 중 닫지 않게
+            return client.models.generate_content(
+                model="gemini-3-flash-preview", contents=f"{system}\n\n{convo}", config=cfg)
+
+        last, grounding_out = "", False
+        # 1차: 구글 검색 그라운딩(실시간 웹) 시도
         for k in keys:
             try:
-                client = genai.Client(api_key=k)
-                resp = client.models.generate_content(
-                    model="gemini-3-flash-preview",
-                    contents=f"{system}\n\n{convo}",
-                    config=types.GenerateContentConfig(
-                        tools=[types.Tool(google_search=types.GoogleSearch())],
-                        temperature=0,
-                    ),
-                )
+                resp = _gen(k, True)
                 sources = []
                 for c in (resp.candidates or []):
                     gm = getattr(c, "grounding_metadata", None)
@@ -3019,8 +3026,20 @@ async def api_insights_gemini_chat(req: Request):
             except Exception as e:
                 last = str(e)
                 if "429" in last or "RESOURCE_EXHAUSTED" in last:
+                    grounding_out = True
                     continue   # 다음(예비) 키로
                 return {"error": f"Gemini 호출 실패: {last[:300]}"}
+        # 2차: 그라운딩 쿼터 소진(무료티어=구글검색 0) → 웹검색 없이 답변
+        if grounding_out:
+            for k in keys:
+                try:
+                    resp = _gen(k, False)
+                    return {"ok": True, "answer": (resp.text or "").strip() or "(빈 응답)",
+                            "sources": [],
+                            "note": "무료 티어는 구글 검색(그라운딩) 쿼터가 없어 웹검색 없이 모델 지식·내 수집자료로 답했습니다. 실시간 웹리서치는 🔎리서치(NotebookLM)를 쓰세요."}
+                except Exception as e:
+                    last = str(e)
+                    continue
         return {"error": f"Gemini 쿼터 소진(키 {len(keys)}개 모두): {last[:200]}"}
 
     result = await run_in_threadpool(_do)
@@ -3182,7 +3201,7 @@ def _gemini_vision_style(img_bytes, mime):
     """업로드 이미지의 '디자인 스타일'을 텍스트로 추출 (Gemini 비전, 키 폴백)."""
     from google import genai
     from google.genai import types
-    keys = [k for k in (_env_key("GEMINI_API_KEY_2"), _env_key("GEMINI_API_KEY")) if k]
+    keys = _gemini_interactive_keys()
     if not keys:
         raise RuntimeError(".env에 GEMINI_API_KEY 없음")
     prompt = (
@@ -3311,8 +3330,7 @@ async def api_insights_gemini_infographic(req: Request):
         return JSONResponse(content={"error": "notebook_id 필요"}, status_code=400)
 
     def _do():
-        # 인터랙티브(대화형)는 _2 키를 먼저 — 인제스트 워커(1번 키 우선)와 쿼터 분리
-        keys = [k for k in (_env_key("GEMINI_API_KEY_2"), _env_key("GEMINI_API_KEY")) if k]
+        keys = _gemini_interactive_keys()
         if not keys:
             return {"error": ".env에 GEMINI_API_KEY 없음"}
         content = _NB_BUNDLES.get(nb_id, "")

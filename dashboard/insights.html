@@ -144,6 +144,7 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .bh-label { font-size: .82rem; font-weight: 600; color: var(--txt); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bh-meta { font-size: .68rem; color: var(--muted); margin-top: 3px; }
 .bh-empty { font-size: .74rem; color: var(--muted); padding: 8px 2px; }
+.ws-note { margin-top: 8px; font-size: .74rem; color: #fbbf24; background: #2a220e; border: 1px solid #5a4a1a; border-radius: 8px; padding: 6px 10px; line-height: 1.5; }
 
 /* ── 브리핑 워크스페이스 (전체화면 2단) ── */
 .ws-overlay { position: fixed; inset: 0; z-index: 600; background: var(--bg); display: none; flex-direction: column; }
@@ -1667,7 +1668,8 @@ async function wsGemini() {
       src = '<div class="ws-src">출처: ' + res.sources.map(s =>
         `<a href="${s.url}" target="_blank">${escHtml((s.title || s.url || '').slice(0, 30))}</a>`).join(' · ') + '</div>';
     }
-    body.innerHTML = `<div class="nb-qa-q">나: ${escHtml(text)}</div><div class="nb-qa-a">${marked.parse(res.answer || '(빈 응답)')}</div>${src}`;
+    const note = res.note ? `<div class="ws-note">⚠️ ${escHtml(res.note)}</div>` : '';
+    body.innerHTML = `<div class="nb-qa-q">나: ${escHtml(text)}</div><div class="nb-qa-a">${marked.parse(res.answer || '(빈 응답)')}</div>${src}${note}`;
   } catch(e) {
     ws.gemMsgs.pop();
     body.innerHTML = `<div class="nb-qa-q">나: ${escHtml(text)}</div><div style="color:#e88">Gemini 리서치 실패: ${escHtml(e.message)}</div>`;
