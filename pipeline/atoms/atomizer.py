@@ -39,11 +39,15 @@ def _load_gemini_key() -> str:
 
 _GEMINI_KEYS = _load_gemini_keys()
 _key_idx = 0
+_client_cache: dict[str, genai.Client] = {}  # 키별 클라이언트 캐시 (GC 방지)
 
 
 def _get_client() -> genai.Client:
-    """현재 활성 키로 클라이언트 반환."""
-    return genai.Client(api_key=_GEMINI_KEYS[_key_idx] if _GEMINI_KEYS else "")
+    """현재 활성 키로 클라이언트 반환. 키당 1개 인스턴스를 캐시해 GC로 인한 커넥션 닫힘 방지."""
+    key = _GEMINI_KEYS[_key_idx] if _GEMINI_KEYS else ""
+    if key not in _client_cache:
+        _client_cache[key] = genai.Client(api_key=key)
+    return _client_cache[key]
 
 
 def _rotate_key() -> bool:
@@ -60,9 +64,6 @@ def _reset_key_idx():
     """인제스트 세션 시작 시 키 인덱스 초기화."""
     global _key_idx
     _key_idx = 0
-
-
-_client = _get_client()
 
 _PROMPT = """다음 텍스트를 주식 시장 정보 '원자' 단위로 분해하라.
 
