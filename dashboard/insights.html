@@ -112,6 +112,12 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .lib-name { font-size: .8rem; font-weight: 600; color: var(--txt); }
 .lib-cnt { font-size: .78rem; font-weight: 700; color: var(--gold); }
 .lib-new { font-size: .62rem; font-weight: 700; background: #14320f; color: #7dd957; border: 1px solid #2a5a1e; border-radius: 5px; padding: 1px 5px; }
+.lib-detail { margin-top: 9px; padding: 12px; background: var(--card); border: 1px solid var(--gold-dim); border-radius: 10px; }
+.lib-det-head { font-size: .9rem; font-weight: 700; color: var(--txt); margin-bottom: 8px; }
+.lib-det-nums { display: flex; gap: 16px; font-size: .78rem; color: var(--muted); }
+.lib-det-nums b { color: var(--gold); font-size: 1rem; }
+.lib-det-hot { margin-top: 10px; font-size: .72rem; color: var(--muted); }
+.lib-hot { color: #cbd5c0; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cat-grid-side { display: grid; grid-template-columns: 1fr; gap: 10px; }
 .cat-grid-side .cat-card { border-radius: 12px; }
 .cat-grid-side .cat-card .body { padding: 12px 16px; }
@@ -125,24 +131,26 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .sig-title small { color: var(--muted); font-weight: 400; font-size: .72rem; margin-left: 6px; }
 .sig-grp { font-size: .74rem; font-weight: 700; color: var(--muted); margin: 14px 0 7px; }
 .sig-grp small { color: var(--gold-dim); }
-.sig-list { display: flex; flex-direction: column; gap: 5px; }
-.sig-row { padding: 9px 14px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; transition: border-color .15s, background .15s; }
-.sig-row:hover { border-color: var(--gold-dim); background: #1c1c22; }
-.sig-main { display: flex; align-items: center; gap: 12px; cursor: pointer; }
-.sig-asset { font-size: .92rem; font-weight: 700; min-width: 120px; }
-.sig-cnt { font-size: .78rem; color: var(--muted); white-space: nowrap; }
-.sig-cnt b { color: var(--txt); }
-.sig-trend { font-size: .78rem; min-width: 56px; }
+.sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; align-items: start; }
+.sig-block { background: var(--card); border: 1px solid var(--line); border-radius: 9px; overflow: hidden; }
+.sig-block:hover { border-color: var(--gold-dim); }
+.sig-head { display: flex; align-items: center; gap: 8px; padding: 8px 11px; cursor: pointer; }
+.sig-head:hover { background: #1c1c22; }
+.sig-asset { font-size: .84rem; font-weight: 700; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sig-cnt { font-size: .8rem; color: var(--muted); white-space: nowrap; }
+.sig-cnt b { color: var(--gold); }
+.sig-trend { font-size: .74rem; white-space: nowrap; }
 .sig-up { color: #4ade80; } .sig-dn { color: #f87171; } .sig-flat { color: var(--muted); } .sig-new { color: var(--gold); font-weight: 700; }
-.sig-cats { display: flex; gap: 3px; }
-.sig-cat { font-size: .82rem; }
-.sig-flags { display: flex; gap: 5px; flex: 1; }
-.sig-badge { font-size: .66rem; padding: 2px 6px; border-radius: 6px; font-weight: 700; white-space: nowrap; }
-.sig-badge.red { background: #2a0e0e; color: #f87171; border: 1px solid #5a1a1a; }
-.sig-badge.warn { background: #2a220e; color: #fbbf24; border: 1px solid #5a4a1a; }
-.sig-go { font-size: .74rem; color: var(--gold-dim); white-space: nowrap; }
-.sig-row:hover .sig-go { color: var(--gold); }
-.sig-sample { font-size: .77rem; color: var(--muted); margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-left: 2px; }
+.sig-caret { font-size: .62rem; color: var(--muted); transition: transform .15s; }
+.sig-head.open .sig-caret { transform: rotate(180deg); }
+.sig-badge { font-size: .64rem; padding: 1px 4px; border-radius: 5px; font-weight: 700; white-space: nowrap; }
+.sig-badge.red { background: #2a0e0e; border: 1px solid #5a1a1a; }
+.sig-badge.warn { background: #2a220e; border: 1px solid #5a4a1a; }
+.sig-detail { padding: 4px 11px 11px; border-top: 1px solid var(--line); }
+.sig-detail-meta { font-size: .7rem; color: var(--muted); margin: 6px 0; }
+.sig-brief-btn { margin-top: 9px; width: 100%; padding: 7px; border-radius: 8px; border: 1px solid var(--gold-dim); background: var(--rp-bg); color: var(--gold); font-family: inherit; font-size: .78rem; font-weight: 700; cursor: pointer; }
+.sig-brief-btn:hover { background: #221c0a; }
+.sig-sample { font-size: .77rem; color: var(--muted); margin-top: 5px; padding-left: 2px; }
 .sig-srcs { font-size: .7rem; color: var(--gold-dim); margin-top: 6px; display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
 .sig-src { background: #16161c; border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; color: #cbd5c0; }
 .sig-facts { margin-top: 7px; display: flex; flex-direction: column; gap: 7px; }
@@ -916,10 +924,12 @@ async function showL0() {
     </div>`;
   }).join('');
 
-  // 접힌 소스 라이브러리 = 카테고리 키워드 블럭
+  // 접힌 소스 라이브러리 = 카테고리 키워드 블럭 (클릭 → 인라인 세부)
+  window._libCats = {};
   const libChips = cats.map(cat => {
+    window._libCats[cat.id] = cat;
     const badge = (cat.today_new > 0) ? `<span class="lib-new">+${cat.today_new}</span>` : '';
-    return `<div class="lib-chip ${catCls(cat.id)}" onclick="showL1('${cat.id}')" title="${catLabel(cat.id)} 전체 보기">
+    return `<div class="lib-chip ${catCls(cat.id)}" onclick="libShow('${cat.id}')" title="누르면 세부내역">
       <span class="lib-ico">${catIcon(cat.id)}</span>
       <span class="lib-name">${catLabel(cat.id)}</span>
       <span class="lib-cnt">${cat.atoms ?? 0}</span>${badge}
@@ -980,6 +990,7 @@ async function showL0() {
       <div class="main-right">
         <div class="side-title">📚 소스 라이브러리 <button class="lib-toggle" onclick="toggleLib(this)">펼치기 ▾</button></div>
         <div id="lib-chips" class="lib-chips">${libChips || '<div style="color:var(--muted)">카테고리 없음</div>'}</div>
+        <div id="lib-detail" class="lib-detail" style="display:none"></div>
         <div id="lib-cards" class="cat-grid-side" style="display:none">${catCards}</div>
         <div class="side-title" style="margin-top:18px">📰 최근 리포트 <small style="color:var(--gold-dim);font-weight:400">클릭하면 그 종목 브리핑</small></div>
         <div id="recent-reports" class="brief-hist">불러오는 중…</div>
@@ -1003,19 +1014,47 @@ async function loadRecentReports() {
     const res = await apiFetch('/api/insights/recent_reports');
     const rs = res.reports || [];
     if (!rs.length) { box.innerHTML = '<div class="bh-empty">최근 리포트 없음 (크롤 대기)</div>'; return; }
-    box.innerHTML = rs.map(r =>
-      `<div class="bh-item" onclick="sigBrief('${escAttr(r.asset)}')">
-        <div class="bh-label">${STANCE[r.stance] || '📄'} ${escHtml(r.asset)} <small style="color:var(--muted);font-weight:400">${escHtml(r.source)} · ${escHtml(r.date)}</small></div>
-        <div class="bh-meta" style="white-space:normal">${escHtml(r.snippet)}</div>
-      </div>`).join('');
+    box.innerHTML = rs.map((r, i) => {
+      const fid = 'rf' + i;
+      return `<div class="sig-block">
+        <div class="sig-head" onclick="sigExpand('${fid}',this)">
+          <span class="sig-asset">${STANCE[r.stance] || '📄'} ${escHtml(r.asset)}</span>
+          <span class="sig-cnt" style="font-size:.68rem">${escHtml(r.source)}</span>
+          <span class="sig-caret">▾</span>
+        </div>
+        <div class="sig-detail" id="${fid}" style="display:none">
+          <div class="sig-detail-meta">${escHtml(r.source)} · ${escHtml(r.date)}</div>
+          <div class="sig-sample" style="white-space:normal">${escHtml(r.snippet)}</div>
+          <button class="sig-brief-btn" onclick="sigBrief('${escAttr(r.asset)}')">🧠 이 종목 브리핑 →</button>
+        </div>
+      </div>`;
+    }).join('');
   } catch(e) { box.innerHTML = '<div class="bh-empty">리포트를 불러오지 못했습니다.</div>'; }
 }
 function toggleLib(btn) {
-  const chips = qs('#lib-chips'), cards = qs('#lib-cards'); if (!chips || !cards) return;
+  const chips = qs('#lib-chips'), cards = qs('#lib-cards'), det = qs('#lib-detail'); if (!chips || !cards) return;
   const open = cards.style.display === 'none';
   cards.style.display = open ? 'grid' : 'none';
   chips.style.display = open ? 'none' : 'flex';
+  if (det) det.style.display = 'none';
   btn.textContent = open ? '접기 ▴' : '펼치기 ▾';
+}
+function libShow(id) {
+  const c = (window._libCats || {})[id]; const box = qs('#lib-detail'); if (!c || !box) return;
+  if (box.style.display !== 'none' && box._cur === id) { box.style.display = 'none'; box._cur = null; return; }
+  box._cur = id;
+  const unit = (id === 'youtube' || id === 'telegram') ? '채널' : '소스';
+  const hot = (c.hot || []).slice(0, 4).map(h => `<div class="lib-hot">▸ ${escHtml(h.title || '')}</div>`).join('');
+  box.innerHTML = `
+    <div class="lib-det-head">${catIcon(id)} ${catLabel(id)}${c.today_new > 0 ? ` <span class="lib-new">+${c.today_new} 오늘</span>` : ''}</div>
+    <div class="lib-det-nums">
+      <span><b>${c.channels ?? c.docs ?? 0}</b> ${unit}</span>
+      <span><b>${c.docs ?? 0}</b> 문서</span>
+      <span><b>${c.atoms ?? 0}</b> 발언</span>
+    </div>
+    ${hot ? `<div class="lib-det-hot">최근 인사이트<br>${hot}</div>` : ''}
+    <button class="sig-brief-btn" onclick="showL1('${id}')">${catLabel(id)} 전체 보기 →</button>`;
+  box.style.display = 'block';
 }
 async function openLatestBrief() {
   if (window._ws && window._ws.id) { reopenWorkspace(); return; }   // 세션 이어보기
@@ -1067,12 +1106,10 @@ function sigRow(s) {
   const trend = s.is_new ? '<span class="sig-new">🆕</span>'
     : (s.spike > 0 ? `<span class="sig-up">▲${s.spike}</span>`
       : (s.spike < 0 ? `<span class="sig-dn">▼${Math.abs(s.spike)}</span>` : '<span class="sig-flat">=</span>'));
-  const consensus = s.n_cats >= 3 ? '<span class="sig-badge red">🔴다채널</span>' : '';
-  const conflict = (s.bull > 0 && s.bear > 0) ? '<span class="sig-badge warn">⚠️충돌</span>' : '';
-  // 어디서 언급됐는지 — 출처 이름 칩
+  const consensus = s.n_cats >= 3 ? '<span class="sig-badge red">🔴</span>' : '';
+  const conflict = (s.bull > 0 && s.bear > 0) ? '<span class="sig-badge warn">⚠️</span>' : '';
   const srcChips = (s.sources || []).map(x =>
     `<span class="sig-src">${SIG_CATICON[x.cat] || '·'} ${escHtml(x.name)}</span>`).join('');
-  // 팩트 목록(지어내지 않고 원자 본문 그대로)
   const facts = s.facts || [];
   const fid = 'sf' + (++_sigId);
   const factHtml = facts.map(f => `
@@ -1080,30 +1117,27 @@ function sigRow(s) {
       <div class="sig-fact-txt">${escHtml(f.content)}</div>
       <div class="sig-fact-meta">${SIG_CATICON[f.cat] || '·'} ${escHtml(f.source)} · ${escHtml(f.date)}${f.stance && SIG_STANCE[f.stance] ? ' · ' + SIG_STANCE[f.stance] : ''}</div>
     </div>`).join('');
-  const more = facts.length > 1
-    ? `<button class="sig-more" onclick="event.stopPropagation();sigToggle('${fid}',this)">▾ 언급 ${facts.length}건 펼치기</button>`
-    : '';
-  return `<div class="sig-row">
-    <div class="sig-main" onclick="sigBrief('${escAttr(s.asset)}')">
+  return `<div class="sig-block">
+    <div class="sig-head" onclick="sigExpand('${fid}',this)">
       <span class="sig-asset">${escHtml(s.asset)}</span>
-      <span class="sig-cnt">오늘 <b>${s.today}</b> <small>(평균 ${s.prior_avg})</small></span>
+      <span class="sig-cnt"><b>${s.today}</b></span>
       <span class="sig-trend">${trend}</span>
-      <span class="sig-flags">${consensus}${conflict}</span>
-      <span class="sig-go">브리핑 →</span>
+      ${consensus}${conflict}
+      <span class="sig-caret">▾</span>
     </div>
-    ${srcChips ? `<div class="sig-srcs">언급: ${srcChips}</div>` : ''}
-    ${s.sample ? `<div class="sig-sample" id="${fid}-s">${escHtml(s.sample)}${facts.length > 1 ? ' …' : ''}</div>` : ''}
-    ${facts.length ? `<div class="sig-facts" id="${fid}" style="display:none">${factHtml}</div>` : ''}
-    ${more}
+    <div class="sig-detail" id="${fid}" style="display:none">
+      <div class="sig-detail-meta">오늘 ${s.today}건 (평균 ${s.prior_avg})</div>
+      ${srcChips ? `<div class="sig-srcs">언급: ${srcChips}</div>` : ''}
+      ${factHtml || (s.sample ? `<div class="sig-sample" style="white-space:normal">${escHtml(s.sample)}</div>` : '')}
+      <button class="sig-brief-btn" onclick="sigBrief('${escAttr(s.asset)}')">🧠 이 종목 브리핑 →</button>
+    </div>
   </div>`;
 }
-function sigToggle(fid, btn) {
-  const box = qs('#' + fid), prev = qs('#' + fid + '-s');
-  if (!box) return;
-  const open = box.style.display === 'none';
-  box.style.display = open ? 'block' : 'none';
-  if (prev) prev.style.display = open ? 'none' : 'block';
-  btn.textContent = open ? '▴ 접기' : `▾ 언급 ${box.children.length}건 펼치기`;
+function sigExpand(fid, head) {
+  const d = qs('#' + fid); if (!d) return;
+  const open = d.style.display === 'none';
+  d.style.display = open ? 'block' : 'none';
+  head.classList.toggle('open', open);
 }
 async function loadSignals() {
   const box = qs('#signals-box'); if (!box) return;
@@ -1112,8 +1146,8 @@ async function loadSignals() {
   try { data = await apiFetch('/api/insights/signals'); } catch(e) { box.innerHTML = ''; return; }
   const stocks = data.stocks || [], macro = data.macro || [];
   if (!stocks.length && !macro.length) { box.innerHTML = '<div class="sig-title">🔥 오늘의 시그널 <small>오늘 집계 없음(크롤 대기)</small></div>'; return; }
-  const grp = (t, arr) => arr.length ? `<div class="sig-grp">${t} <small>${arr.length}</small></div><div class="sig-list">${arr.map(sigRow).join('')}</div>` : '';
-  box.innerHTML = `<div class="sig-title">🔥 오늘의 시그널 <small>${data.today} · 클릭하면 그 종목 브리핑</small></div>
+  const grp = (t, arr) => arr.length ? `<div class="sig-grp">${t} <small>${arr.length}</small></div><div class="sig-grid">${arr.map(sigRow).join('')}</div>` : '';
+  box.innerHTML = `<div class="sig-title">🔥 오늘의 시그널 <small>${data.today} · 블럭 클릭하면 펼쳐짐</small></div>
     ${grp('📈 종목', stocks)}
     ${grp('🌐 매크로·이슈', macro)}`;
 }
