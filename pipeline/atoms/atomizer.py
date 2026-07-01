@@ -10,19 +10,56 @@ from google.genai import types
 _GEMINI_MODEL = "gemini-3.1-flash-lite"
 
 
+def _load_gemini_keys() -> list[str]:
+    """GEMINI_API_KEY, GEMINI_API_KEY_2, ... 순서로 모든 키 반환."""
+    env_path = Path(__file__).parent.parent.parent / ".env"
+    env_vals: dict[str, str] = {}
+    if env_path.exists():
+        for line in env_path.read_text(encoding="utf-8").splitlines():
+            if "=" in line and not line.startswith("#"):
+                k, v = line.split("=", 1)
+                env_vals[k.strip()] = v.strip()
+
+    keys = []
+    for suffix in ["", "_2", "_3", "_4", "_5"]:
+        k = f"GEMINI_API_KEY{suffix}"
+        val = os.environ.get(k) or env_vals.get(k, "")
+        if val:
+            keys.append(val)
+    return keys
+
+
 def _load_gemini_key() -> str:
-    key = os.environ.get("GEMINI_API_KEY", "")
-    if not key:
-        env_path = Path(__file__).parent.parent.parent / ".env"
-        if env_path.exists():
-            for line in env_path.read_text(encoding="utf-8").splitlines():
-                if line.startswith("GEMINI_API_KEY=") and not line.startswith("#"):
-                    key = line.split("=", 1)[1].strip()
-                    break
-    return key
+    keys = _load_gemini_keys()
+    return keys[0] if keys else ""
 
 
-_client = genai.Client(api_key=_load_gemini_key())
+_GEMINI_KEYS = _load_gemini_keys()
+_key_idx = 0
+
+
+def _get_client() -> genai.Client:
+    """현재 활성 키로 클라이언트 반환."""
+    return genai.Client(api_key=_GEMINI_KEYS[_key_idx] if _GEMINI_KEYS else "")
+
+
+def _rotate_key() -> bool:
+    """다음 키로 교체. 교체 성공 시 True, 더 이상 키 없으면 False."""
+    global _key_idx
+    if _key_idx + 1 < len(_GEMINI_KEYS):
+        _key_idx += 1
+        print(f"  [KEY] Gemini 키 #{_key_idx + 1}로 교체")
+        return True
+    return False
+
+
+def _reset_key_idx():
+    """인제스트 세션 시작 시 키 인덱스 초기화."""
+    global _key_idx
+    _key_idx = 0
+
+
+_client = _get_client()
 
 _PROMPT = """다음 텍스트를 주식 시장 정보 '원자' 단위로 분해하라.
 
@@ -62,9 +99,9 @@ def atomize_text(
 ) -> list[dict]:
     text = _sanitize(text)
     raw_atoms = None
-    for _attempt in range(4):
+    for _attempt in range(6):
         try:
-            response = _client.models.generate_content(
+            response = _get_client().models.generate_content(
                 model=_GEMINI_MODEL,
                 contents=_PROMPT.format(text=text),
                 config=types.GenerateContentConfig(
@@ -77,8 +114,11 @@ def atomize_text(
             raise ValueError(f"Gemini returned invalid JSON: {e}\nResponse: {getattr(response, 'text', 'no response')[:200]}")
         except Exception as e:
             _m = str(e)
-            # 503/429 등 일시 장애는 backoff 재시도
-            if _attempt < 3 and any(c in _m for c in ("503", "429", "UNAVAILABLE", "overloaded", "RESOURCE_EXHAUSTED")):
+            if any(c in _m for c in ("429", "RESOURCE_EXHAUSTED")):
+                # 일일/분당 한도 초과 → 다음 키로 교체 후 즉시 재시도
+                if _rotate_key():
+                    continue
+            if _attempt < 5 and any(c in _m for c in ("503", "UNAVAILABLE", "overloaded")):
                 time.sleep((_attempt + 1) * 5)
                 continue
             raise RuntimeError(f"Gemini API call failed: {e}")
@@ -160,9 +200,9 @@ def atomize_youtube_highlights(
 
     highlights_text = "\n".join(f"- {h}" for h in highlights)
     raw_atoms = None
-    for attempt in range(4):
+    for attempt in range(6):
         try:
-            response = _client.models.generate_content(
+            response = _get_client().models.generate_content(
                 model=_GEMINI_MODEL,
                 contents=_YT_PROMPT.format(highlights=highlights_text),
                 config=types.GenerateContentConfig(response_mime_type="application/json"),
@@ -173,7 +213,10 @@ def atomize_youtube_highlights(
             raise ValueError(f"Gemini returned invalid JSON: {e}")
         except Exception as e:
             _m = str(e)
-            if attempt < 3 and any(c in _m for c in ("503", "429", "UNAVAILABLE", "overloaded", "RESOURCE_EXHAUSTED")):
+            if any(c in _m for c in ("429", "RESOURCE_EXHAUSTED")):
+                if _rotate_key():
+                    continue
+            if attempt < 5 and any(c in _m for c in ("503", "UNAVAILABLE", "overloaded")):
                 time.sleep((attempt + 1) * 5)
                 continue
             raise RuntimeError(f"Gemini API call failed: {e}")

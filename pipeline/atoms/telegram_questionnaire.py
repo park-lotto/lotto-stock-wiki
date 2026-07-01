@@ -255,13 +255,19 @@ def extract_telegram(md_path: Path, ctype: str) -> dict:
     if not prompt:
         return {}
     text = md_path.read_text(encoding="utf-8")
-    client = genai.Client(api_key=_load_gemini_key())
-    try:
-        resp = client.models.generate_content(
-            model=_MODEL, contents=[text, prompt],
-            config=types.GenerateContentConfig(response_mime_type="application/json"),
-        )
-        return json.loads(resp.text)
-    except Exception as e:
-        print(f"  [WARN] 추출 실패({ctype}): {e}")
-        return {}
+    from .atomizer import _get_client, _rotate_key
+    for _attempt in range(4):
+        try:
+            resp = _get_client().models.generate_content(
+                model=_MODEL, contents=[text, prompt],
+                config=types.GenerateContentConfig(response_mime_type="application/json"),
+            )
+            return json.loads(resp.text)
+        except Exception as e:
+            _m = str(e)
+            if any(c in _m for c in ("429", "RESOURCE_EXHAUSTED")):
+                if _rotate_key():
+                    continue
+            print(f"  [WARN] 추출 실패({ctype}): {e}")
+            return {}
+    return {}

@@ -51,13 +51,19 @@ target_kind + 해당 타입 칸만 채운 JSON 1개. 다른 텍스트 금지."""
 def extract_post(md_path: Path) -> dict:
     """포스트 .md를 Gemini로 읽어 채워진 질문지(target_kind+슬롯) 반환. 실패 시 {}."""
     text = md_path.read_text(encoding="utf-8")
-    client = genai.Client(api_key=_load_gemini_key())
-    try:
-        resp = client.models.generate_content(
-            model=_MODEL, contents=[text, POST_PROMPT],
-            config=types.GenerateContentConfig(response_mime_type="application/json"),
-        )
-        return json.loads(resp.text or "{}")
-    except Exception as e:
-        print(f"  [WARN] 포스트 추출 실패: {e}")
-        return {}
+    from .atomizer import _get_client, _rotate_key
+    for _attempt in range(4):
+        try:
+            resp = _get_client().models.generate_content(
+                model=_MODEL, contents=[text, POST_PROMPT],
+                config=types.GenerateContentConfig(response_mime_type="application/json"),
+            )
+            return json.loads(resp.text or "{}")
+        except Exception as e:
+            _m = str(e)
+            if any(c in _m for c in ("429", "RESOURCE_EXHAUSTED")):
+                if _rotate_key():
+                    continue
+            print(f"  [WARN] 포스트 추출 실패: {e}")
+            return {}
+    return {}
