@@ -1942,10 +1942,10 @@ async function wsNaverBoard() {
       body: JSON.stringify({ stock, period }), signal: card._abort.signal
     });
     if (res.error) throw new Error(res.error);
-    const titles = (res.titles || []).map(t => `<div class="sig-fact-txt" style="margin-top:2px">· ${escHtml(t)}</div>`).join('');
-    body.innerHTML = `<div class="nb-qa-q">🗣️ <b>${escHtml(res.stock)}</b>(${res.code}) 종토방 여론 · ${escHtml(res.date_from)}~${escHtml(res.date_to)} · 글 ${res.count}개 <a href="${res.url}" target="_blank" style="font-size:.72rem;color:#67e8f9">↗ 종토방 열기</a></div>
+    const top = (res.top || []).map(x => `<div class="sig-fact" style="border-left-color:#67e8f9"><div class="sig-fact-txt">${escHtml(x.title)}</div><div class="sig-fact-meta">👁 조회 ${x.views} · 👍 추천 ${x.up} · ${escHtml(x.date)}</div></div>`).join('');
+    body.innerHTML = `<div class="nb-qa-q">🗣️ <b>${escHtml(res.stock)}</b>(${res.code}) 종토방 여론 · ${escHtml(res.date_from)}~${escHtml(res.date_to)} · 글 ${res.count}개 · 총조회 ${res.total_views || 0} <a href="${res.url}" target="_blank" style="font-size:.72rem;color:#67e8f9">↗ 종토방 열기</a></div>
       <div class="nb-qa-a">${marked.parse(res.analysis || '')}</div>
-      <details style="margin-top:8px"><summary style="cursor:pointer;color:var(--gold-dim);font-size:.76rem">크롤한 제목 ${(res.titles || []).length}개 보기</summary><div style="margin-top:5px">${titles}</div></details>`;
+      <details style="margin-top:8px"><summary style="cursor:pointer;color:var(--gold-dim);font-size:.76rem">👁 많이 읽힌 글 ${(res.top || []).length}개 (조회수 순)</summary><div style="margin-top:6px;display:flex;flex-direction:column;gap:6px">${top}</div></details>`;
   } catch(e) {
     body.innerHTML = e.name === 'AbortError'
       ? `<div class="nb-qa-q">종목: ${escHtml(stock)}</div><div style="color:var(--muted)">취소됨</div>`

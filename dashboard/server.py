@@ -3278,10 +3278,11 @@ async def api_insights_claude_chat(req: Request):
 
 
 def _naver_board_posts(code, period="d3", max_pages=15):
-    """네이버 종목토론방 게시글(제목+날짜) 수집. period로 기간 필터.
-    (네이버 read페이지 구조 변경으로 본문·조회수는 현재 미수집 — 제목+날짜 기반)"""
+    """네이버 종목토론방 게시글 수집(bs4) — 제목·날짜·조회수·추천. period로 기간 필터.
+    ※ 본문 텍스트는 네이버가 인증 API(mobilestock)로 가려 단순크롤 불가 → 제목+참여도 기반."""
     import urllib.request
     from datetime import timedelta
+    from bs4 import BeautifulSoup
     cut = None
     p = (period or "all").strip()
     if p == "today":
@@ -3290,6 +3291,12 @@ def _naver_board_posts(code, period="d3", max_pages=15):
         m = re.match(r"^d(\d+)$", p)
         if m:
             cut = (datetime.now() - timedelta(days=int(m.group(1)))).strftime("%Y.%m.%d")
+
+    def _num(td):
+        try:
+            return int(td.get_text(strip=True).replace(",", ""))
+        except Exception:
+            return 0
 
     posts = []
     for pg in range(1, max_pages + 1):
@@ -3301,12 +3308,23 @@ def _naver_board_posts(code, period="d3", max_pages=15):
             d = urllib.request.urlopen(req, timeout=10).read().decode("utf-8", "replace")
         except Exception:
             break
-        titles = re.findall(r'nid=(\d+)&page=\d+"[^>]*title="([^"]+)"', d)
-        dates = re.findall(r'class="tah p10 gray03[^"]*">\s*(\d{4}\.\d{2}\.\d{2}\s[\d:]+)', d)
-        if not titles:
+        soup = BeautifulSoup(d, "html.parser")
+        page_posts = []
+        for a in soup.select('td.title a[title]'):
+            if "board_read" not in (a.get("href") or ""):
+                continue
+            tr = a.find_parent("tr")
+            tds = tr.find_all("td", recursive=False) if tr else []
+            if len(tds) < 4:
+                continue
+            page_posts.append({
+                "date": tds[0].get_text(strip=True),
+                "title": re.sub(r"\s+", " ", a["title"]).strip(),
+                "views": _num(tds[3]),
+                "up": _num(tds[4]) if len(tds) > 4 else 0,
+            })
+        if not page_posts:
             break
-        page_posts = [{"title": re.sub(r"\s+", " ", t).strip(), "date": dt}
-                      for (nid, t), dt in zip(titles, dates)]
         posts += page_posts
         if cut and page_posts and page_posts[-1]["date"][:10] < cut:
             break
@@ -3350,9 +3368,11 @@ async def api_insights_naver_board(req: Request):
     posts = await run_in_threadpool(_naver_board_posts, code, period)
     if not posts:
         return JSONResponse(content={"error": "해당 기간 종토방 글이 없습니다(또는 네이버 접근 실패)"}, status_code=502)
-    titles = [x["title"] for x in posts]
-    date_lo = posts[-1]["date"][:10] if posts else ""
-    date_hi = posts[0]["date"][:10] if posts else ""
+    dates = [x["date"][:10] for x in posts]
+    date_lo, date_hi = min(dates), max(dates)
+    # 조회수 높은 순 = 개미들이 많이 본 글(여론 무게)
+    top = sorted(posts, key=lambda x: (x["views"], x["up"]), reverse=True)
+    total_views = sum(x["views"] for x in posts)
 
     def _analyze():
         try:
@@ -3362,36 +3382,44 @@ async def api_insights_naver_board(req: Request):
         keys = _gemini_interactive_keys()
         if not keys:
             return {"error": ".env에 GEMINI_API_KEY 없음"}
+        lines = "\n".join(f"- (조회{x['views']}·추천{x['up']}) {x['title']}" for x in top[:60])
         prompt = (
-            f"아래는 네이버 종목토론방 '{tried}'({code}) {date_lo}~{date_hi} 기간 게시글 제목 {len(titles)}개다. "
-            "개인투자자(개미) 여론을 분석해 한국어로 정리하라:\n"
-            "1) 전반 분위기 — 긍정/부정/혼조 + 강도(예: 강한 낙관, 불안 등)\n"
+            f"아래는 네이버 종목토론방 '{tried}'({code}) {date_lo}~{date_hi} 기간 게시글 {len(posts)}개다. "
+            "각 줄 앞의 (조회N·추천M)은 참여도 — 조회·추천 높은 글일수록 여론의 무게가 크다. "
+            "이 가중치를 반영해 개인투자자(개미) 여론을 한국어로 분석하라:\n"
+            "1) 전반 분위기 — 긍정/부정/혼조 + 강도 (조회/추천 많은 글 위주로 판단)\n"
             "2) 주가 상승/하락 이유로 언급되는 것 — 실제 제목에 나온 근거만\n"
-            "3) 자주 나오는 키워드·이슈 (예: 대차해지, 원전, 국회 등)\n"
-            "4) 대표 목소리 2~3개 (제목 인용, 짧게)\n"
-            "⚠️ 제목에 있는 내용만. 없는 건 지어내지 마라. 과열/작전 의심 신호가 보이면 표시.\n\n"
-            "게시글 제목들:\n" + "\n".join(f"- {t}" for t in titles[:60]))
+            "3) 자주 나오는 키워드·이슈\n"
+            "4) 가장 많이 읽히거나 공감받은 글 2~3개 (제목 인용 + 조회/추천 수)\n"
+            "⚠️ 제목에 있는 내용만. 지어내지 마라. 과열/작전 의심 신호 보이면 표시.\n\n"
+            "게시글(조회수 높은 순):\n" + lines)
         last = ""
         for k in keys:
-            try:
-                client = genai.Client(api_key=k)
-                resp = client.models.generate_content(
-                    model="gemini-3-flash-preview", contents=prompt)
-                return {"ok": True, "analysis": (resp.text or "").strip() or "(빈 응답)"}
-            except Exception as e:
-                last = str(e)
-                if "429" in last or "RESOURCE_EXHAUSTED" in last:
-                    continue
-                return {"error": f"Gemini 분석 실패: {last[:200]}"}
-        return {"error": f"Gemini 쿼터 소진: {last[:150]}"}
+            client = genai.Client(api_key=k)
+            for attempt in range(3):
+                try:
+                    resp = client.models.generate_content(
+                        model="gemini-3-flash-preview", contents=prompt)
+                    return {"ok": True, "analysis": (resp.text or "").strip() or "(빈 응답)"}
+                except Exception as e:
+                    last = str(e)
+                    if "429" in last or "RESOURCE_EXHAUSTED" in last:
+                        break   # 다음 키
+                    if any(s in last for s in ("503", "UNAVAILABLE", "overloaded")) and attempt < 2:
+                        time.sleep(2 * (attempt + 1))
+                        continue   # 같은 키로 재시도
+                    return {"error": f"Gemini 분석 실패: {last[:200]}"}
+        return {"error": f"Gemini 호출 실패(쿼터/과부하): {last[:150]}"}
 
     res = await run_in_threadpool(_analyze)
     if not res.get("ok"):
         return JSONResponse(content=res, status_code=500)
     return JSONResponse(content={
-        "ok": True, "stock": tried, "code": code, "count": len(titles),
+        "ok": True, "stock": tried, "code": code, "count": len(posts),
         "period": period, "date_from": date_lo, "date_to": date_hi,
-        "analysis": res["analysis"], "titles": titles[:15],
+        "total_views": total_views,
+        "analysis": res["analysis"],
+        "top": [{"title": x["title"], "views": x["views"], "up": x["up"], "date": x["date"]} for x in top[:12]],
         "url": f"https://finance.naver.com/item/board.naver?code={code}"})
 
 
