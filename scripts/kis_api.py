@@ -225,51 +225,66 @@ def get_daily_bars(code: str, n: int = 20) -> list:
         return []
 
 
-def get_daily_ohlc(code: str, tf: str = "D", n: int = 100) -> list:
+def get_daily_ohlc(code: str, tf: str = "D", n: int = 500) -> list:
     """일/주/월 OHLCV 캔들 (KIS FHKST03010100, 키움 부재 서버 폴백용).
     tf=D/W/M. 반환(과거→최신): [{"time":"YYYY-MM-DD", open, high, low, close, value}]
-    (KIS 일봉차트 API는 1콜 ~100봉 반환 → 약 5개월(일)/충분(주·월))
+    KIS 일봉차트 API는 1콜 ~100봉 → 과거로 페이지네이션해 n봉까지 수집.
     """
     import datetime as _dt
     period = tf if tf in ("D", "W", "M") else "D"
-    span = {"D": 200, "W": 1000, "M": 4000}.get(period, 200)
-    today = _dt.date.today().strftime("%Y%m%d")
-    start = (_dt.date.today() - _dt.timedelta(days=span)).strftime("%Y%m%d")
-    try:
-        r = _authed_get(
-            f"{BASE}/uapi/domestic-stock/v1/quotations/inquire-daily-itemchartprice",
-            headers={"Content-Type": "application/json; charset=utf-8",
-                     "appkey": _KEY, "appsecret": _SECRET,
-                     "tr_id": "FHKST03010100", "custtype": "P"},
-            params={"FID_COND_MRKT_DIV_CODE": "J", "FID_INPUT_ISCD": code.zfill(6),
-                    "FID_INPUT_DATE_1": start, "FID_INPUT_DATE_2": today,
-                    "FID_PERIOD_DIV_CODE": period, "FID_ORG_ADJ_PRC": "0"},
-            timeout=10,
-        )
-        r.raise_for_status()
-        rows = r.json().get("output2") or []
+    code = code.zfill(6)
+    win = {"D": 150, "W": 900, "M": 4000}.get(period, 150)  # 1콜당 창(≈100봉)
 
-        def _f(row, k):
-            try:
-                return float(str(row.get(k, 0) or 0).replace(",", ""))
-            except Exception:
-                return 0.0
-        out = []
+    def _f(row, k):
+        try:
+            return float(str(row.get(k, 0) or 0).replace(",", ""))
+        except Exception:
+            return 0.0
+
+    def _batch(date2: str) -> list:
+        d1 = (_dt.datetime.strptime(date2, "%Y%m%d").date() - _dt.timedelta(days=win)).strftime("%Y%m%d")
+        try:
+            r = _authed_get(
+                f"{BASE}/uapi/domestic-stock/v1/quotations/inquire-daily-itemchartprice",
+                headers={"Content-Type": "application/json; charset=utf-8",
+                         "appkey": _KEY, "appsecret": _SECRET,
+                         "tr_id": "FHKST03010100", "custtype": "P"},
+                params={"FID_COND_MRKT_DIV_CODE": "J", "FID_INPUT_ISCD": code,
+                        "FID_INPUT_DATE_1": d1, "FID_INPUT_DATE_2": date2,
+                        "FID_PERIOD_DIV_CODE": period, "FID_ORG_ADJ_PRC": "0"},
+                timeout=10,
+            )
+            r.raise_for_status()
+            return r.json().get("output2") or []
+        except Exception:
+            return []
+
+    seen, acc = set(), {}
+    date2 = _dt.date.today().strftime("%Y%m%d")
+    for _ in range(8):
+        rows = _batch(date2)
+        if not rows:
+            break
+        oldest = None
         for row in rows:
             d = str(row.get("stck_bsop_date", ""))
-            if len(d) != 8:
+            if len(d) != 8 or d in seen:
                 continue
+            seen.add(d)
             c = _f(row, "stck_clpr")
             if c <= 0:
                 continue
-            out.append({"time": f"{d[:4]}-{d[4:6]}-{d[6:]}",
-                        "open": _f(row, "stck_oprc") or c, "high": _f(row, "stck_hgpr") or c,
-                        "low": _f(row, "stck_lwpr") or c, "close": c,
-                        "value": int(_f(row, "acml_vol"))})
-        out.sort(key=lambda x: x["time"])
-        return out[-n:]
-    except Exception:
-        return []
+            acc[d] = {"time": f"{d[:4]}-{d[4:6]}-{d[6:]}",
+                      "open": _f(row, "stck_oprc") or c, "high": _f(row, "stck_hgpr") or c,
+                      "low": _f(row, "stck_lwpr") or c, "close": c,
+                      "value": int(_f(row, "acml_vol"))}
+            if oldest is None or d < oldest:
+                oldest = d
+        if len(acc) >= n or not oldest:
+            break
+        date2 = (_dt.datetime.strptime(oldest, "%Y%m%d").date() - _dt.timedelta(days=1)).strftime("%Y%m%d")
+    out = [acc[d] for d in sorted(acc)]
+    return out[-n:]
 
 
 _MULTI_TR = "FHKST11300006"  # 관심종목(멀티종목) 시세조회 — 1콜당 최대 30종목

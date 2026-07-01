@@ -192,9 +192,10 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
   /* 차트+지표 세로 스택 */
   .chart-main-row{flex-direction:column;}
   .tk-toggle{display:none;}
-  .taerini-panel{width:auto !important;max-height:34vh;border-left:none;
-    border-top:1px solid #1c1c1c;padding:6px 4px 4px;margin-left:0;}
-  .taerini-panel.collapsed{max-height:0;}
+  .taerini-panel{width:auto !important;max-height:42vh;border-left:none;
+    border-top:1px solid #1c1c1c;padding:6px 4px 10px;margin-left:0;
+    overflow-y:auto;-webkit-overflow-scrolling:touch;}   /* 아래 잘림 방지: 내부 스크롤 */
+  .taerini-panel.collapsed{max-height:0;overflow:hidden;}
   /* 종목 검색창 조금 넓게 */
   .cs-input{width:120px;}
   .cs-input:focus{width:150px;}
