@@ -1368,3 +1368,5 @@ python calc_oscillator.py SK하이닉스 삼성전자 한미반도체 --tg
 - 릴레이: 서버 키움없음 → push_flow.py로 로컬 market_flow 전송(/api/push_market_flow)
 - 뉴스: news_feed.py(섹터=네이버검색+must필수어, 종목=네이버증권API) + 백그라운드20분 + 뉴스탭/섹터클릭팝오버. 오매칭 must로 제거
 - 콜아웃 백엔드(/api/callout·성과추적) 완료, 프론트 미연결. 장전예측엔진·기준봉 보류
+- 2026-07-01 인사이트허브: 종목이슈(뉴스 상승원인+출처·날짜·원문링크)·종토방 subprocess격리·Gemini503폴백(_gemini_text 안정모델 자동전환)
+- 2026-07-01 종목명 자동완성(2605종, 오타·약자별칭 ls일렉→엘에스일렉트릭)·표시명 브랜드교정(_DISPLAY_ALIAS)·코드기반조회·좌측패널 정리
