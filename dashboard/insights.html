@@ -182,6 +182,7 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .ws-ai-label { font-size: .76rem; font-weight: 700; color: var(--txt); margin-bottom: 8px; display: flex; align-items: baseline; gap: 6px; }
 .ws-ai-label small { font-weight: 400; color: var(--muted); font-size: .68rem; }
 .ws-ask { display: flex; gap: 8px; }
+.ws-ask .brief-go { padding: 8px 14px; font-size: .8rem; border-radius: 9px; }
 .ws-q-input { flex: 1; padding: 10px 14px; border-radius: 9px; border: 1px solid var(--line); background: var(--bg); color: var(--txt); font-family: inherit; font-size: .86rem; outline: none; }
 .ws-q-input:focus { border-color: var(--gold-dim); }
 .ws-act-group { display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
@@ -873,7 +874,6 @@ async function showL0() {
           <input type="text" id="brief-q" class="brief-input" placeholder="무엇을 정리·분석할까요?  (예: 오늘 블로그 중요내용 정리해줘 · 삼성전자 분석)" onkeydown="if(event.key==='Enter')startBriefing()">
           <button class="brief-go" onclick="startBriefing()">🧠 브리핑 시작</button>
         </div>
-        <div class="brief-hint">선택한 소스로 노트북을 만들고, 입력한 문구를 워크스페이스에서 자동으로 질문합니다. (키워드면 그 키워드로 좁히고, 요청문이면 소스 전체를 정리) <button class="ws-pull" style="margin-left:8px" onclick="nlmRelogin(this)">🔄 nlm 재로그인</button> <span style="color:var(--gold-dim)">· 서버가 25분마다 자동 유지</span></div>
       </div>
     </div>
     <div class="main-2col">
@@ -1403,10 +1403,15 @@ function startBriefing() {
 // ── 브리핑 워크스페이스 ──
 function closeWorkspace() {
   qs('#nbws').classList.remove('open');
-  // 세션은 유지 — 메인에서 "이어보기"로 복귀 가능
-  if (window._ws) {
+  // 실제 결과 카드가 있을 때만 "이어보기" 노출 — 빈 브리핑으로 되돌아가 빈 화면 뜨는 것 방지
+  const c = qs('#ws-canvas');
+  const hasContent = !!(c && c.querySelector('.ws-card'));
+  const btn = qs('#ws-resume');
+  if (window._ws && hasContent) {
     const lbl = qs('#ws-resume-label'); if (lbl) lbl.textContent = (window._ws.label || '브리핑');
-    const btn = qs('#ws-resume'); if (btn) btn.classList.add('show');
+    if (btn) btn.classList.add('show');
+  } else if (btn) {
+    btn.classList.remove('show');
   }
 }
 function reopenWorkspace() {
@@ -1473,9 +1478,12 @@ async function openBriefFromHistory(id, label, url) {
   loadWsSources();
   try {
     const snap = await apiFetch(`/api/insights/history?notebook_id=${encodeURIComponent(id)}`);
-    qs('#ws-canvas').innerHTML = (snap && snap.html)
-      ? snap.html
-      : `<div class="ws-empty">저장된 결과 화면이 없습니다.<br>왼쪽에서 질문하면 새로 채워지고 다시 기록됩니다.</div>`;
+    if (snap && snap.html) {
+      qs('#ws-canvas').innerHTML = snap.html;
+    } else {
+      qs('#ws-canvas').innerHTML = `<div class="ws-empty">저장된 결과 화면이 없습니다.<br>왼쪽에서 질문하면 새로 채워지고 다시 기록됩니다.</div>`;
+      setTimeout(() => { const el = qs('#ws-q'); if (el) el.focus(); }, 80);
+    }
   } catch(e) {
     qs('#ws-canvas').innerHTML = `<div class="ws-empty">기록을 불러오지 못했습니다: ${escHtml(e.message)}</div>`;
   }
