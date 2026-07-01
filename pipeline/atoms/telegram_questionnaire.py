@@ -239,12 +239,19 @@ def questionnaire_to_atoms_tg(q: dict, meta: dict) -> list[dict]:
             if not raw:
                 continue
             info = resolve_stock(raw, date=meta["date"], channel=meta["channel"], skip_log=True)
+            quote = f"[중계:{rp.get('broker')}] 목표가 {rp.get('tp')} {rp.get('rating')} / {rp.get('quote') or ''}"
             if info["matched"]:
                 secs, _ = resolve_sector(info["name"], rp.get("sector"), is_foreign=False)
                 atoms.append(_stock_atom(
-                    meta, info,
-                    f"[중계:{rp.get('broker')}] 목표가 {rp.get('tp')} {rp.get('rating')} / {rp.get('quote') or ''}",
-                    ts=rp.get("ts"), i=len(atoms), sector=secs[0]))
+                    meta, info, quote, ts=rp.get("ts"), i=len(atoms), sector=secs[0]))
+                continue
+            # 외국주 리포트 중계 → 섹터 컨텍스트 원자 (드롭 방지: 한투글로벌 등 글로벌 채널)
+            secs, src = resolve_sector(info["name"], rp.get("sector"), is_foreign=True)
+            for sec in secs:
+                atoms.append(_foreign_sector_atom(
+                    meta, sec, info["name"], quote, ts=rp.get("ts"), i=len(atoms)))
+            if src == "fallback":
+                log_foreign_unmapped(info["name"], meta["date"], meta["channel"])
 
     return atoms
 
