@@ -19,7 +19,7 @@ import json
 import subprocess
 import argparse
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 sys.stderr.reconfigure(encoding="utf-8", errors="replace")
@@ -35,20 +35,27 @@ def run(cmd: list[str], label: str) -> int:
     return r.returncode
 
 
-def ingest_cat(cat: str, date: str) -> None:
-    """카테고리별 인제스트. 텔레는 당일 append 파일이라 --force-date로 재처리."""
+def ingest_cat(cat: str, date: str, extra_date: str | None = None) -> None:
+    """카테고리별 인제스트.
+    - 텔레는 날짜 단위 파일이라 date + extra_date(전날) 모두 --force-date 처리
+    - 유튜브/블로그는 sync 후 파일 목록 기반이라 자동으로 전날분 포함
+    """
     if cat == "telegram":
+        # 전날 먼저 처리(공백 보완) → 당일 처리
+        if extra_date:
+            run([PY, "-m", "pipeline.atoms.telegram_ingest",
+                 "--all", "--force-date", extra_date, "--limit", "40"], f"telegram-{extra_date[5:]}")
         run([PY, "-m", "pipeline.atoms.telegram_ingest",
-             "--all", "--force-date", date, "--limit", "40"], "telegram")
+             "--all", "--force-date", date, "--limit", "40"], f"telegram-{date[5:]}")
     elif cat == "youtube":
         run([PY, "-m", "pipeline.atoms.post_ingest", "--source", "youtube",
-             "--all", "--limit", "40"], "youtube")
+             "--all", "--limit", "60"], "youtube")
     elif cat == "blog":
         run([PY, "-m", "pipeline.atoms.post_ingest", "--source", "blog",
-             "--all", "--limit", "40"], "blog")
+             "--all", "--limit", "60"], "blog")
     elif cat == "report":
         run([PY, "-m", "pipeline.atoms.report_ingest",
-             "--all", "--limit", "30"], "report")
+             "--all", "--limit", "40"], "report")
     else:
         print(f"[skip] 알 수 없는 카테고리: {cat}")
 
@@ -127,16 +134,19 @@ def main():
     args = ap.parse_args()
 
     date = args.date or datetime.now().strftime("%Y-%m-%d")
+    yesterday = (datetime.strptime(date, "%Y-%m-%d") - timedelta(days=1)).strftime("%Y-%m-%d")
     cats = [c.strip() for c in args.cats.split(",") if c.strip()]
     since_iso = datetime.now().isoformat()  # 이번 실행 이후 생성된 원자만 집계
-    print(f"[slot_ingest] {date} | cats={cats}")
+    print(f"[slot_ingest] {date} (전날보완: {yesterday}) | cats={cats}")
 
-    # 1) 다운로드된 크롤(crawling_bot_data) → raw/ 동기화 (--overwrite: 텔레 갱신본 반영)
-    run([PY, "scripts/sync_crawling.py", "--date", date, "--overwrite"], "sync")
+    # 1) 동기화: 전날 + 오늘 모두 overwrite
+    #    → 전날 21시처럼 슬롯 사이 공백이 생겨도 다음 슬롯에서 자동 회수
+    run([PY, "scripts/sync_crawling.py", "--date", yesterday, "--overwrite"], "sync-yesterday")
+    run([PY, "scripts/sync_crawling.py", "--date", date, "--overwrite"], "sync-today")
 
-    # 2) 카테고리별 원자화
+    # 2) 카테고리별 원자화 (텔레는 전날 날짜도 함께 처리)
     for c in cats:
-        ingest_cat(c, date)
+        ingest_cat(c, date, extra_date=yesterday)
 
     # 3) 텔레 보고
     if not args.no_report:
