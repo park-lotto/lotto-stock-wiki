@@ -1,0 +1,40 @@
+{
+  "reports": [
+    {
+      "broker": "신한투자증권",
+      "stock": "에이피알",
+      "rating": "Not Rated",
+      "tp": null,
+      "ts": "07:35",
+      "quote": "브랜드사 중에서는 에이피알의 주가가 바닥을 잡은 것으로 판단",
+      "sector": "화장품미용"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "오스코텍",
+      "rating": "Not Rated",
+      "tp": null,
+      "ts": "07:59",
+      "quote": "글로벌 기술이전 계약 규모 대비 가장 저평가된 바이오텍으로 중장기 상승 여력 매우 크다 판단",
+      "sector": "바이오"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "키움증권",
+      "rating": "Not Rated",
+      "tp": null,
+      "ts": "10:06",
+      "quote": "최선호주 키움증권, 한국금융지주",
+      "sector": "기타"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "한국금융지주",
+      "rating": "Not Rated",
+      "tp": null,
+      "ts": "10:06",
+      "quote": "최선호주 키움증권, 한국금융지주",
+      "sector": "기타"
+    }
+  ]
+}

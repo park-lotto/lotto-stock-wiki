@@ -1,6 +1,118 @@
 {
-  "updated": "2026-06-22",
+  "updated": "2026-07-01",
   "stocks": [
+    {
+      "name": "금호건설",
+      "code": "002990",
+      "des_date": "2026-07-01",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "동양파일",
+      "code": "228340",
+      "des_date": "2026-07-01",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "비엘팜텍",
+      "code": "065170",
+      "des_date": "2026-07-01",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "앱튼",
+      "code": "270520",
+      "des_date": "2026-07-01",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "에프앤가이드",
+      "code": "064850",
+      "des_date": "2026-07-01",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "제이에스링크",
+      "code": "127120",
+      "des_date": "2026-07-01",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "금호건설우",
+      "code": "002995",
+      "des_date": "2026-06-30",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "금호전기",
+      "code": "001210",
+      "des_date": "2026-06-30",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "남화토건",
+      "code": "091590",
+      "des_date": "2026-06-30",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "삼기",
+      "code": "122350",
+      "des_date": "2026-06-30",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "씨어스",
+      "code": "458870",
+      "des_date": "2026-06-30",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "JW신약",
+      "code": "067290",
+      "des_date": "2026-06-24",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "보해양조",
+      "code": "000890",
+      "des_date": "2026-06-24",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
+    {
+      "name": "한울반도체",
+      "code": "320000",
+      "des_date": "2026-06-24",
+      "reason": "",
+      "warn_type": "surge",
+      "type": "warning"
+    },
     {
       "name": "강동씨앤엘",
       "code": "198440",
@@ -45,102 +157,6 @@
       "name": "듀오백",
       "code": "073190",
       "des_date": "2026-06-18",
-      "reason": "",
-      "warn_type": "surge",
-      "type": "warning"
-    },
-    {
-      "name": "서산",
-      "code": "079650",
-      "des_date": "2026-06-17",
-      "reason": "",
-      "warn_type": "surge",
-      "type": "warning"
-    },
-    {
-      "name": "메카로",
-      "code": "241770",
-      "des_date": "2026-06-16",
-      "reason": "",
-      "warn_type": "surge",
-      "type": "warning"
-    },
-    {
-      "name": "후성",
-      "code": "093370",
-      "des_date": "2026-06-16",
-      "reason": "",
-      "warn_type": "surge",
-      "type": "warning"
-    },
-    {
-      "name": "아스플로",
-      "code": "159010",
-      "des_date": "2026-06-15",
-      "reason": "",
-      "warn_type": "surge",
-      "type": "warning"
-    },
-    {
-      "name": "피에스케이홀딩스",
-      "code": "031980",
-      "des_date": "2026-06-15",
-      "reason": "",
-      "warn_type": "surge",
-      "type": "warning"
-    },
-    {
-      "name": "라이콤",
-      "code": "388790",
-      "des_date": "2026-06-12",
-      "reason": "",
-      "warn_type": "surge",
-      "type": "warning"
-    },
-    {
-      "name": "오션스바이오",
-      "code": "332190",
-      "des_date": "2026-06-12",
-      "reason": "",
-      "warn_type": "surge",
-      "type": "warning"
-    },
-    {
-      "name": "가이아코퍼레이션",
-      "code": "296520",
-      "des_date": "2026-06-11",
-      "reason": "",
-      "warn_type": "surge",
-      "type": "warning"
-    },
-    {
-      "name": "피델릭스",
-      "code": "032580",
-      "des_date": "2026-06-11",
-      "reason": "",
-      "warn_type": "surge",
-      "type": "warning"
-    },
-    {
-      "name": "화신정공",
-      "code": "126640",
-      "des_date": "2026-06-11",
-      "reason": "",
-      "warn_type": "surge",
-      "type": "warning"
-    },
-    {
-      "name": "팸텍",
-      "code": "271830",
-      "des_date": "2026-06-09",
-      "reason": "",
-      "warn_type": "surge",
-      "type": "warning"
-    },
-    {
-      "name": "크레오에스지",
-      "code": "040350",
-      "des_date": "2026-06-08",
       "reason": "",
       "warn_type": "surge",
       "type": "warning"

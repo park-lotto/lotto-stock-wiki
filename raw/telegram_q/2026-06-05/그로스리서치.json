@@ -1,0 +1,229 @@
+{
+  "reports": [
+    {
+      "broker": "그로쓰리서치",
+      "stock": "선익시스템",
+      "rating": null,
+      "tp": null,
+      "ts": "08:01",
+      "quote": "8.6세대 전환 흐름 속 Canon-Tokki 독점 구조 붕괴, 수주 확대 중",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "한미약품",
+      "rating": null,
+      "tp": null,
+      "ts": "08:10",
+      "quote": "단장증후군 신약 '소네페글루타이드' 기술이전",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "오스코텍",
+      "rating": null,
+      "tp": null,
+      "ts": "08:10",
+      "quote": "'세비도플레닙' (면역혈소판감소증·류머티즘관절염 타깃) 기술수출",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "큐라클",
+      "rating": null,
+      "tp": null,
+      "ts": "08:10",
+      "quote": "망막질환 이중항체 'MT-103' 기술수출",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "GC녹십자",
+      "rating": null,
+      "tp": null,
+      "ts": "08:10",
+      "quote": "차세대 대상포진 백신 후보 '아메조스바테인' 가치 인정",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "디앤디파마텍",
+      "rating": null,
+      "tp": null,
+      "ts": "08:10",
+      "quote": "MASH 치료제 두 가지 복합지표 동시 충족",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "올릭스",
+      "rating": null,
+      "tp": null,
+      "ts": "08:10",
+      "quote": "약 1,100억원 해외 투자 유치",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "브로드컴",
+      "rating": null,
+      "tp": null,
+      "ts": "09:06",
+      "quote": "브로드컴은 2026 회계연도 2분기 매출 222억 달러 기록, 전년 대비 48% 성장",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "헬릭스미스",
+      "rating": null,
+      "tp": null,
+      "ts": "09:25",
+      "quote": "헬릭스미스는 6월 22~25일 미국 샌디에이고에서 열리는 바이오 USA 2026에 참석",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성전자",
+      "rating": null,
+      "tp": null,
+      "ts": "09:35",
+      "quote": "삼성전자 29% 점유율로 1위",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "SCL헬스케어",
+      "rating": null,
+      "tp": null,
+      "ts": "10:12",
+      "quote": "SCL헬스케어, 미국 시카고에서 열린 세계 3대 암학회 ASCO 2026 참가",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성중공업",
+      "rating": null,
+      "tp": null,
+      "ts": "10:15",
+      "quote": "삼성중공업, 미국 루이지애나 해상 델핀 LNG 프로젝트의 첫 번째 FLNG 수주",
+      "sector": "조선"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "이엔셀",
+      "rating": null,
+      "tp": null,
+      "ts": "12:22",
+      "quote": "이엔셀, 인게니움테라퓨틱스와 NK세포치료제 ‘젠글루셀(IGNK001)’ 미국 임상시험용 의약품 CMO 계약 체결",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "리벨리온",
+      "rating": null,
+      "tp": null,
+      "ts": "12:22",
+      "quote": "에코피스, 과기정통부 주최 ‘K-AI 반도체 성장 포럼’에서 리벨리온 NPU 적용 수질정화 로봇 성과 공개",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "네오티스",
+      "rating": null,
+      "tp": null,
+      "ts": "13:23",
+      "quote": "2026년 고객사 서버용 FC-BGA Full-CAPA 진입 예상",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "씨이랩",
+      "rating": null,
+      "tp": null,
+      "ts": "13:49",
+      "quote": "NPN(NVIDIA Partner Network) 'Enterprise Software Competency' 부문 엘리트(Elite) 등급 승격 (2026년 4월)",
+      "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "LIG D&A",
+      "rating": null,
+      "tp": null,
+      "ts": "15:13",
+      "quote": "젠슨 황, 방산 및 피지컬 AI 관련 협력 방안 논의를 위해 LIG D&A와 회동 조율 중",
+      "sector": "방산"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "오스코텍",
+      "rating": null,
+      "tp": null,
+      "ts": "17:26",
+      "quote": "세비도플레닙 LO 이후 오스코텍은 내부 R&D 방향을 항암 내성과 섬유화 중심으로 전환",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "LG전자",
+      "rating": null,
+      "tp": null,
+      "ts": "18:16",
+      "quote": "LG그룹이 엔비디아 블랙웰 GPU 1만장을 도입할 것으로 알려짐",
+      "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "SK하이닉스",
+      "rating": null,
+      "tp": null,
+      "ts": "21:08",
+      "quote": "HBM5용 iHBM(Integrated HBM) 기술 공개",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "한화오션",
+      "rating": null,
+      "tp": null,
+      "ts": "08:12",
+      "quote": "장보고-Ⅲ(KSS-Ⅲ) 잠수함 제안",
+      "sector": "조선"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "아이엘",
+      "rating": null,
+      "tp": null,
+      "ts": "09:07",
+      "quote": "아이엘, 휴머노이드 ‘아이엘봇(ILBOT)’ 운영을 통해 누적 데이터 43만7,403건 확보",
+      "sector": "로봇"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "아이엠바이오로직스",
+      "rating": null,
+      "tp": null,
+      "ts": "09:25",
+      "quote": "아이엠바이오로직스, 자가면역질환 치료제 후보물질 임상 결과가 2027년 기업가치 반영의 핵심 변수로 부각",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "셀트리온",
+      "rating": null,
+      "tp": null,
+      "ts": "12:17",
+      "quote": "총 2,700억원 규모의 주식 취득·매입 계획 진행",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "앨라일람",
+      "rating": null,
+      "tp": null,
+      "ts": "13:38",
+      "quote": "앨라일람 파마슈티컬스, 인셉티브 뉴클레익스의 생성형 머신러닝 모델을 활용해 RNA간섭(RNAi) 치료제 개발 가속화",
+      "sector": "바이오"
+    }
+  ]
+}

@@ -71,5 +71,13 @@
     },
     "queue_new": 0,
     "pytest_ok": false
+  },
+  "2026-07-01": {
+    "atoms": {
+      "news": 46,
+      "telegram": 1
+    },
+    "queue_new": 0,
+    "pytest_ok": false
   }
 }

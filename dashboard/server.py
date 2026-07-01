@@ -3005,11 +3005,11 @@ async def api_insights_upload_image(req: Request):
 
 
 def _gemini_image_bytes(prompt, keys):
-    """Gemini 이미지 생성(나노바나나2→2.5 폴백, 키 폴백) → PNG bytes."""
+    """Gemini 이미지 생성(나노바나나Pro→3Pro→2.5, 키 폴백) → PNG bytes."""
     from google import genai
     from google.genai import types
-    last = ""
-    for model in ("gemini-3-flash-preview-image", "gemini-2.5-flash-image"):
+    last, had_429 = "", False
+    for model in ("nano-banana-pro-preview", "gemini-3-pro-image", "gemini-2.5-flash-image"):
         for k in keys:
             try:
                 client = genai.Client(api_key=k)
@@ -3023,7 +3023,11 @@ def _gemini_image_bytes(prompt, keys):
                 last = "응답에 이미지 없음"
             except Exception as e:
                 last = str(e)
+                if "429" in last or "RESOURCE_EXHAUSTED" in last:
+                    had_429 = True
                 continue
+    if had_429:
+        raise RuntimeError("Gemini 이미지 무료 쿼터 소진(하루 소량 제한). 내일 재시도하거나 유료 전환 필요.")
     raise RuntimeError(last[:200] or "이미지 생성 실패")
 
 
