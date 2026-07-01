@@ -1412,8 +1412,17 @@ def api_stock_candles(code: str = "", tf: str = "D"):
     if ent and now - ent["ts"] < 60:
         return JSONResponse(content={"tf": tf, "candles": ent["data"]})
     try:
-        import kiwoom_api
-        data = kiwoom_api.get_stock_candles(code, tf)
+        import kiwoom_api, kis_api
+        try:
+            data = kiwoom_api.get_stock_candles(code, tf)
+        except Exception:
+            data = []
+        # ── 키움 부재/실패(예: 서버) → KIS 폴백 ──
+        if not data:
+            if tf in ("D", "W", "M"):
+                data = kis_api.get_daily_ohlc(code, tf)
+            else:
+                data = kis_api.get_minute_bars_ohlc(code, tf)
         # ── NXT 반영: 장외(15:30 이후·09시 이전)엔 KIS 통합(UN) 시세를 차트에 이어붙임 ──
         try:
             import datetime as _dt, kis_api
