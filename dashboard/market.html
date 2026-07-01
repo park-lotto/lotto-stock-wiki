@@ -2101,7 +2101,7 @@ function _toggleMax(box){
 
 function _taeriniHtml(d){
   const H=t=>(t+"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-  const HD=`<div class="tk-hd">📊 태린이 지표</div>`;
+  const HD=`<div class="tk-hd">📊 투자 참고지표</div>`;
   const dateLine=d&&d.date?`<div class="tk-date">${H(d.date)}</div>`:"";
   if(!d || !d.found) return HD+`<div class="tk-empty">미수록${d&&d.date?` (${H(d.date)})`:""}</div>`;
   const s=d.stock||{}, rows=[];
@@ -2127,11 +2127,11 @@ function _taeriniHtml(d){
 async function _loadTaerini(code){
   const box=document.getElementById("taerini-panel");
   if(!box) return;
-  box.innerHTML='📊 <span class="tk-lab">태린이 지표 로딩…</span>';
+  box.innerHTML='📊 <span class="tk-lab">투자 참고지표 로딩…</span>';
   try{
     const r=await fetch("/api/taerini_stock?code="+encodeURIComponent(code));
     box.innerHTML=_taeriniHtml(await r.json());
-  }catch(e){ box.innerHTML='📊 <span style="color:#a55">태린이 지표 로드 실패</span>'; }
+  }catch(e){ box.innerHTML='📊 <span style="color:#a55">투자 참고지표 로드 실패</span>'; }
 }
 
 function openStockChart(code, name){
@@ -2186,7 +2186,7 @@ function openStockChart(code, name){
         <div id="tv_chart_container"></div>
         <div id="tv_osc_container"></div>
       </div>
-      <div id="taerini-panel" class="taerini-panel">📊 태린이 지표 로딩…</div>
+      <div id="taerini-panel" class="taerini-panel">📊 투자 참고지표 로딩…</div>
     </div>
   </div>`;
   m.classList.add("open");
