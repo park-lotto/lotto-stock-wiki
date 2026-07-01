@@ -2801,7 +2801,7 @@ async def api_insights_to_notebook(req: Request):
         researched = 0
         if research:
             okr, outr, _er = _run_nlm(
-                ["research", "start", q, "-n", nb_id, "-m", "fast", "--auto-import"],
+                ["research", "start", q, "-n", nb_id, "-m", "fast", "--force", "--auto-import"],
                 timeout=150)
             if okr:
                 ok4, out4, _ = _run_nlm(["notebook", "get", nb_id])
@@ -2868,7 +2868,7 @@ async def api_insights_notebook_research(req: Request):
         # fast~30s / deep~5min. deep는 HTTP 한계 → fast만 동기, deep는 그대로 길게.
         tmo = 120 if mode == "fast" else 360
         ok, out, errm = _run_nlm(
-            ["research", "start", q, "-n", nb_id, "-m", mode, "--auto-import"],
+            ["research", "start", q, "-n", nb_id, "-m", mode, "--force", "--auto-import"],
             timeout=tmo)
         if not ok:
             return {"error": f"리서치 실패: {_friendly_nlm_err(errm)}"}
