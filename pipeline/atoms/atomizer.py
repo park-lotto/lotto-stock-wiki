@@ -26,7 +26,8 @@ def _load_gemini_keys() -> list[str]:
 
     # 인제스트 전용 키 우선 → 소진 시 API 키로 폴백 (전체 4개 rotation)
     ingest = [k for k in (_v("GEMINI_INGEST_KEY"), _v("GEMINI_INGEST_KEY_2"),
-                          _v("GEMINI_INGEST_KEY_3")) if k]
+                          _v("GEMINI_INGEST_KEY_3"), _v("GEMINI_INGEST_KEY_4"),
+                          _v("GEMINI_INGEST_KEY_5")) if k]
     api = [k for k in (_v("GEMINI_API_KEY"), _v("GEMINI_API_KEY_2"),
                        _v("GEMINI_API_KEY_3")) if k]
     return ingest + [k for k in api if k not in ingest]
