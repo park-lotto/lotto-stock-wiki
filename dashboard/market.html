@@ -293,6 +293,11 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 .taerini-panel .tk-sub{color:#777;font-size:10.5px;margin-top:2px;text-align:right;}
 .taerini-panel .tk-empty{color:#666;font-size:11.5px;padding-top:6px;}
 .taerini-panel .tk-date{color:#555;font-size:10px;margin-top:10px;text-align:right;}
+/* 수급빈집 스파크라인 */
+.taerini-panel .tk-osc-row{cursor:pointer;}
+.taerini-panel .tk-spk-cap{font-size:9.5px;color:#666;display:flex;justify-content:space-between;margin-top:4px;}
+.taerini-panel .tk-spk{margin-top:3px;background:#0d0d10;border:1px solid #191919;border-radius:5px;padding:3px;}
+.taerini-panel .tk-caret{color:#666;font-size:9px;margin-left:4px;}
 /* 컨센흐름 오버레이 컨트롤 */
 .cf-ctl{display:flex;align-items:center;gap:4px;margin-left:8px;}
 .cf-ctl .cf-btn{padding:2px 7px;border:1px solid #2c2c33;border-radius:5px;background:transparent;
@@ -2044,7 +2049,10 @@ async function _wlSave(){
 let _chart=null, _chartCandle=null, _chartVol=null, _maSeries=null, _bollSeries=null;
 let _osc=null;
 let _chartCode=null, _chartName=null, _chartTf="D", _chartRows=[];
-let _ind={ma:true, boll:false, osc:null};          // osc: null|'rsi'|'macd'
+let _ind={boll:false, osc:null};                    // osc: null|'rsi'|'macd'
+const _MA_PERIODS=[5,10,20,60,120];
+const _MA_COLORS={5:"#f0c040",10:"#ff9f40",20:"#ff7ab8",60:"#5ad1c8",120:"#8f7bff"};
+let _maSel=(()=>{ try{const v=JSON.parse(localStorage.getItem("ma_sel")||"null"); if(Array.isArray(v)) return new Set(v);}catch(_){} return new Set([5,20,60]); })();
 let _drawTool=null, _draws=[], _drawPending=null, _drawSvg=null, _roDraw=null;
 let _syncing=false;
 let _drawRaf=null, _lastProj=null;   // 도형 자동 재계산 루프(시간·가격축 변경·초기 레이아웃 추적)
@@ -2114,6 +2122,34 @@ function _toggleMax(box){
   }
 }
 
+// 수급빈집 스파크라인 (osc 시계열) — 접기/펼치기
+let _oscSpkOpen=(()=>{ try{ return localStorage.getItem("osc_spk")!=="0"; }catch(_){ return true; } })();
+function _toggleSpark(){
+  _oscSpkOpen=!_oscSpkOpen;
+  try{ localStorage.setItem("osc_spk", _oscSpkOpen?"1":"0"); }catch(_){}
+  const wrap=document.getElementById("tk-spk-wrap"); if(wrap) wrap.style.display=_oscSpkOpen?"":"none";
+  const car=document.getElementById("tk-spk-caret"); if(car) car.textContent=_oscSpkOpen?"▾":"▸";
+}
+function _sparkSvg(series){
+  const w=238, h=46, pad=3;
+  const vals=(series||[]).filter(v=>typeof v==="number");
+  if(vals.length<2) return '<div style="color:#555;font-size:10px">추세 데이터 없음</div>';
+  let mn=Math.min(...vals), mx=Math.max(...vals); if(mn===mx){mn-=1;mx+=1;}
+  const X=i=>pad+i*(w-2*pad)/(series.length-1);
+  const Y=v=>pad+(h-2*pad)*(1-(v-mn)/(mx-mn));
+  const pts=series.map((v,i)=>(typeof v==="number")?`${X(i).toFixed(1)},${Y(v).toFixed(1)}`:null).filter(Boolean).join(" ");
+  const lastI=series.length-1, lastV=series[lastI];
+  const prevV=series[lastI-1];
+  const up=(typeof lastV==="number"&&typeof prevV==="number")?lastV>=prevV:true;
+  const col=up?"#2ecc71":"#e74c3c";
+  // 0 기준선 (범위 안일 때)
+  let zero=""; if(mn<0&&mx>0){ const zy=Y(0).toFixed(1); zero=`<line x1="${pad}" y1="${zy}" x2="${w-pad}" y2="${zy}" stroke="#333" stroke-width="1" stroke-dasharray="2 2"/>`; }
+  const cx=X(lastI).toFixed(1), cy=Y(lastV).toFixed(1);
+  return `<svg width="100%" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="display:block">`
+    +zero+`<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="1.6"/>`
+    +`<circle cx="${cx}" cy="${cy}" r="2.6" fill="${col}"/></svg>`;
+}
+
 function _taeriniHtml(d){
   const H=t=>(t+"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
   const HD=`<div class="tk-hd">📊 투자 참고지표</div>`;
@@ -2126,7 +2162,7 @@ function _taeriniHtml(d){
     +`<span class="tk-val">${val}</span></div>`
     +(sub?`<div class="tk-sub">${H(sub)}</div>`:'')+`</div>`;
 
-  // 수급빈집 — 전 종목 %ile
+  // 수급빈집 — 전 종목 %ile + 추세 스파크라인(접기/펼치기)
   if(s.osc){
     const g=(s.osc.group||"")+""; let col="#9a9a9a";
     if(g.indexOf("완전빈집")>=0)col="#2ecc71";
@@ -2134,8 +2170,18 @@ function _taeriniHtml(d){
     else if(g.indexOf("과열")>=0)col="#e74c3c";
     else if(g.indexOf("매수우위")>=0)col="#e0803c";
     const pct=s.osc.pct!=null?` <span style="color:#888">${Math.round(s.osc.pct)}%ile</span>`:"";
-    rows.push(R("수급빈집",C(g||"-",col)+pct,null,
-      "수급 오실레이터 백분위(0~100). 낮을수록 빈집=외국인·기관 매수 유입 공백(반등 여지 큼). 완전빈집≤10 · 반빈집≤25 · 중립 · 매수우위≥75 · 과열≥90"));
+    const tr=s.osc.trend||"";  // ↑ 재진입 / ↓ 빈집심화 / → 횡보
+    const trCol=tr.indexOf("↑")>=0?"#2ecc71":tr.indexOf("↓")>=0?"#e74c3c":"#888";
+    const car=`<span class="tk-caret" id="tk-spk-caret">${_oscSpkOpen?"▾":"▸"}</span>`;
+    const tip="수급 오실레이터 백분위(0~100). 낮을수록 빈집=외국인·기관 매수 유입 공백(반등 여지 큼). 완전빈집≤10 · 반빈집≤25 · 중립 · 매수우위≥75 · 과열≥90. 아래 그래프=최근 수급 추세(상승=유입, 하락=이탈)";
+    const spk=s.osc.series&&s.osc.series.length>1
+      ? `<div id="tk-spk-wrap" style="display:${_oscSpkOpen?"":"none"}">`
+        +`<div class="tk-spk">${_sparkSvg(s.osc.series)}</div>`
+        +`<div class="tk-spk-cap"><span>← 30주</span><span style="color:${trCol}">${H(tr)}</span></div></div>`
+      : "";
+    rows.push(`<div class="tk-row tk-osc-row" onclick="_toggleSpark()"><div class="tk-top">`
+      +`<span class="tk-lab hint" title="${H(tip)}">수급빈집${car}</span>`
+      +`<span class="tk-val">${C(g||"-",col)}${pct}</span></div>${spk}</div>`);
   }
   // RS
   if(s.rs){
@@ -2218,7 +2264,8 @@ function _applyTaeriniCollapse(){
 }
 
 // ── 컨센흐름 차트 오버레이 (주가 × 영업이익 컨센) ──
-let _cfSeries=null, _cfData=null, _cfMode="12mf", _cfOn=false;
+let _cfSeries=null, _cfData=null, _cfMode="12mf", _cfOn=false, _cfBlinkTimer=null;
+function _cfStopBlink(){ if(_cfBlinkTimer){ clearInterval(_cfBlinkTimer); _cfBlinkTimer=null; } }
 function _cfInitState(){
   try{ _cfOn=localStorage.getItem("cf_on")==="1"; _cfMode=localStorage.getItem("cf_mode")||"12mf"; }catch(_){}
   const ctl=document.getElementById("cf-ctl"), tg=document.getElementById("cf-toggle");
@@ -2236,6 +2283,7 @@ async function _loadConsensus(code){
   _cfRender();
 }
 function _cfRender(){
+  _cfStopBlink();
   if(_cfSeries){ try{_chart.removeSeries(_cfSeries);}catch(_){} _cfSeries=null; }
   if(!_cfOn || !_cfData || !_chart || _isIntraday()) return;   // 분봉에선 컨센(주간) 오버레이 생략
   const dates=_cfData.dates||[], arr=(_cfData.series||{})[_cfMode];
@@ -2244,10 +2292,18 @@ function _cfRender(){
   for(let i=0;i<dates.length && i<arr.length;i++){ if(arr[i]!=null) data.push({time:dates[i], value:arr[i]}); }
   if(!data.length) return;
   try{
-    _cfSeries=_chart.addLineSeries({priceScaleId:"cf", color:"#5b8def", lineWidth:2,
+    _cfSeries=_chart.addLineSeries({priceScaleId:"cf", color:"#e74c3c", lineWidth:2,
       priceLineVisible:false, lastValueVisible:true, crosshairMarkerVisible:true});
     _chart.priceScale("cf").applyOptions({scaleMargins:{top:0.12,bottom:0.28}, visible:false});
     _cfSeries.setData(data);
+    // 끝점 진행방향 화살표 깜빡임
+    const last=data[data.length-1], prev=data.length>1?data[data.length-2]:null;
+    const up=!prev || last.value>=prev.value;
+    const marker={time:last.time, position:up?"aboveBar":"belowBar", color:"#e74c3c",
+      shape:up?"arrowUp":"arrowDown", text:up?"컨센▲":"컨센▼"};
+    let on=true; _cfSeries.setMarkers([marker]);
+    _cfBlinkTimer=setInterval(()=>{ if(!_cfSeries){_cfStopBlink();return;} on=!on;
+      try{_cfSeries.setMarkers(on?[marker]:[]);}catch(_){} }, 550);
   }catch(_){ _cfSeries=null; }
 }
 function _cfToggle(){
@@ -2289,8 +2345,12 @@ function openStockChart(code, name){
       <span id="chart-legend" class="chart-legend"></span>
     </div>
     <div class="chart-tools">
-      <span class="ct-label">지표</span>
-      <button class="ct-btn active" data-ind="ma" onclick="toggleInd('ma')">MA</button>
+      <span class="ct-label">이평선</span>
+      <button class="ct-btn" data-ma="5" onclick="toggleMA(5)">5</button>
+      <button class="ct-btn" data-ma="10" onclick="toggleMA(10)">10</button>
+      <button class="ct-btn" data-ma="20" onclick="toggleMA(20)">20</button>
+      <button class="ct-btn" data-ma="60" onclick="toggleMA(60)">60</button>
+      <button class="ct-btn" data-ma="120" onclick="toggleMA(120)">120</button>
       <button class="ct-btn" data-ind="boll" onclick="toggleInd('boll')">볼린저</button>
       <button class="ct-btn" data-ind="rsi" onclick="toggleOsc('rsi')">RSI</button>
       <button class="ct-btn" data-ind="macd" onclick="toggleOsc('macd')">MACD</button>
@@ -2362,6 +2422,7 @@ function openStockChart(code, name){
   loadChartData();
   _loadTaerini(code);
   _applyTaeriniCollapse();
+  _applyMAButtons();
   _cfInitState();
   if(_cfOn) _loadConsensus(code); else _cfRender();
   if(_drawRaf) cancelAnimationFrame(_drawRaf);
@@ -2393,7 +2454,7 @@ function _initChart(){
   _chartVol=_chart.addHistogramSeries({priceFormat:{type:"volume"},priceScaleId:"vol",color:"#3a3a44"});
   _chart.priceScale("vol").applyOptions({scaleMargins:{top:0.84,bottom:0}});
   const mkLine=(col,w)=>_chart.addLineSeries({color:col,lineWidth:w||1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
-  _maSeries={5:mkLine("#f0c040"),20:mkLine("#ff7ab8"),60:mkLine("#5ad1c8")};
+  _maSeries={}; _MA_PERIODS.forEach(p=>{ _maSeries[p]=mkLine(_MA_COLORS[p]); });
   _bollSeries={u:mkLine("#8a909a"),m:mkLine("#b8951f"),l:mkLine("#8a909a")};
   _chart.subscribeCrosshairMove(p=>_updateLegend(p));
   // 드로잉 오버레이 (항상 pointer-events:none → 휠 줌·드래그 팬은 차트로 전달)
@@ -2461,8 +2522,7 @@ function _macd(rows, fast, slow, signal){
 
 function _applyIndicators(){
   const c=_chartRows;
-  if(_maSeries){ const v=_ind.ma;
-    _maSeries[5].setData(v?_ma(c,5):[]); _maSeries[20].setData(v?_ma(c,20):[]); _maSeries[60].setData(v?_ma(c,60):[]); }
+  if(_maSeries){ _MA_PERIODS.forEach(p=>{ _maSeries[p].setData(_maSel.has(p)?_ma(c,p):[]); }); }
   if(_bollSeries){ if(_ind.boll){ const b=_bollinger(c,20,2);
       _bollSeries.u.setData(b.u); _bollSeries.m.setData(b.m); _bollSeries.l.setData(b.l); }
     else { _bollSeries.u.setData([]); _bollSeries.m.setData([]); _bollSeries.l.setData([]); } }
@@ -2503,6 +2563,15 @@ function toggleOsc(which){
   _ind.osc=(_ind.osc===which)?null:which;
   ["rsi","macd"].forEach(o=>{const b=document.querySelector(`.ct-btn[data-ind="${o}"]`); if(b)b.classList.toggle("active",_ind.osc===o);});
   _applyOsc();
+}
+function toggleMA(p){
+  if(_maSel.has(p)) _maSel.delete(p); else _maSel.add(p);
+  try{ localStorage.setItem("ma_sel", JSON.stringify([..._maSel])); }catch(_){}
+  const b=document.querySelector(`.ct-btn[data-ma="${p}"]`); if(b)b.classList.toggle("active",_maSel.has(p));
+  _applyIndicators();
+}
+function _applyMAButtons(){   // 모달 열 때 저장된 선택 상태를 버튼에 반영
+  _MA_PERIODS.forEach(p=>{ const b=document.querySelector(`.ct-btn[data-ma="${p}"]`); if(b)b.classList.toggle("active",_maSel.has(p)); });
 }
 
 // ── 그리기 (직선·원=타원) — 누르고 끌어서 놓기 ──
@@ -2721,6 +2790,7 @@ function setChartTf(tf){
 }
 function closeStockChart(){
   const m=document.getElementById("chart-modal");
+  _cfStopBlink(); _cfSeries=null;
   if(_drawRaf){ cancelAnimationFrame(_drawRaf); _drawRaf=null; }
   _saveView();       // 종료 시 보기 범위 저장
   _saveChartWin();   // 종료 시 봉 종류·창 크기·위치 저장

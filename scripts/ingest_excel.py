@@ -248,7 +248,7 @@ def build_stock_index(results: dict, dest=None) -> dict:
             else:              grp = "중립"
             slot(code, it.get("name", ""))["osc"] = {
                 "group": grp, "osc": it.get("osc"),
-                "pct": p, "trend": it.get("trend"),
+                "pct": p, "trend": it.get("trend"), "series": it.get("series"),
             }
 
     # 2) RS → rs (top30 / bottom10 만 존재)
@@ -318,7 +318,7 @@ def build_stock_index(results: dict, dest=None) -> dict:
                 continue
             cur["accel"] = {"group": grp, "score": it.get("score")}
 
-    # 6) 액티브ETF → etf
+    # 6) 액티브ETF → etf (비중 증가/감소)
     r = results.get("액티브ETF") or {}
     for bucket, act in (("increase", "비중증가"), ("decrease", "비중감소")):
         for it in (r.get(bucket) or []):
@@ -328,6 +328,47 @@ def build_stock_index(results: dict, dest=None) -> dict:
             slot(code, it.get("name", ""))["etf"] = {
                 "action": act, "diff": it.get("diff"), "rate": it.get("rate"),
             }
+
+    # 6-B) ETF 편출/편입 감지 — 전일 보유목록과 비교 → 이벤트 영속 저장
+    held_names = r.get("held")
+    if held_names:
+        today_codes = set()
+        for nm in held_names:
+            c = _resolve_code({"name": nm}, name2code, unmatched)
+            if c:
+                today_codes.add(c)
+        HOLD_PATH = ROOT / "pipeline" / "etf_holdings.json"
+        EVENT_PATH = ROOT / "pipeline" / "etf_events.json"
+        try:
+            prev = json.loads(HOLD_PATH.read_text(encoding="utf-8")).get("codes") or []
+        except Exception:
+            prev = []
+        prev_codes = set(prev)
+        try:
+            events = json.loads(EVENT_PATH.read_text(encoding="utf-8"))
+        except Exception:
+            events = {}
+        if prev_codes:   # 최초 실행이면 baseline만 저장, 이벤트 없음
+            for c in (prev_codes - today_codes):   # 편출
+                events[c] = {"event": "편출", "date": TODAY}
+            for c in (today_codes - prev_codes):   # 편입
+                events[c] = {"event": "편입", "date": TODAY}
+        # 이벤트를 stock에 부착 (편출은 slot 신규 생성해서라도 표시)
+        for c, ev in events.items():
+            st = slot(c, "")
+            et = st.get("etf") or {}
+            et["event"] = ev["event"]
+            et["event_date"] = ev["date"]
+            if "action" not in et:   # 완전 편출(비중행 없음)
+                et["action"] = "편출" if ev["event"] == "편출" else "편입"
+            st["etf"] = et
+        # 스냅샷·이벤트 저장 (dry_run이어도 상태추적 위해 기록)
+        try:
+            HOLD_PATH.write_text(json.dumps({"date": TODAY, "codes": sorted(today_codes)},
+                                            ensure_ascii=False), encoding="utf-8")
+            EVENT_PATH.write_text(json.dumps(events, ensure_ascii=False, indent=2), encoding="utf-8")
+        except Exception:
+            pass
 
     # 7) 일정 → schedule (related = 종목명)
     r = results.get("일정") or {}
@@ -826,7 +867,8 @@ def _run_osc_com(path: Path) -> dict:
         osc = series[-1]
         trend = "↑ 재진입" if len(series) >= 5 and osc > sum(series[-5:-1])/4 * 1.05 else \
                 "↓ 빈집심화" if len(series) >= 5 and osc < sum(series[-5:-1])/4 * 0.95 else "→ 횡보"
-        results.append({"name": name, "code": info["code"], "osc": osc, "trend": trend})
+        results.append({"name": name, "code": info["code"], "osc": osc, "trend": trend,
+                        "series": [round(x, 6) for x in series[-30:]]})
 
     if not results:
         return {"file": path.name, "error": "계산 가능 종목 없음"}
@@ -860,7 +902,7 @@ def _run_osc_com(path: Path) -> dict:
     else:
         last_date_str = TODAY
 
-    def _row(r): return {"name": r["name"], "code": r["code"], "osc": r["osc"], "pct": r["pct"], "trend": r["trend"]}
+    def _row(r): return {"name": r["name"], "code": r["code"], "osc": r["osc"], "pct": r["pct"], "trend": r["trend"], "series": r.get("series")}
     return {
         "file":       path.name,
         "date":       last_date_str,
@@ -967,7 +1009,8 @@ def _run_osc_openpyxl(path: Path) -> dict:
         osc = series[-1]
         trend = "↑ 재진입" if len(series) >= 5 and osc > sum(series[-5:-1])/4 * 1.05 else \
                 "↓ 빈집심화" if len(series) >= 5 and osc < sum(series[-5:-1])/4 * 0.95 else "→ 횡보"
-        results.append({"name": name, "code": info["code"], "osc": osc, "trend": trend})
+        results.append({"name": name, "code": info["code"], "osc": osc, "trend": trend,
+                        "series": [round(x, 6) for x in series[-30:]]})
 
     if not results:
         return {"file": path.name, "error": "계산 가능 종목 없음"}
@@ -999,7 +1042,7 @@ def _run_osc_openpyxl(path: Path) -> dict:
     for r in results:
         r["pct"] = pct(r["osc"])
 
-    def _row(r): return {"name": r["name"], "code": r["code"], "osc": r["osc"], "pct": r["pct"], "trend": r["trend"]}
+    def _row(r): return {"name": r["name"], "code": r["code"], "osc": r["osc"], "pct": r["pct"], "trend": r["trend"], "series": r.get("series")}
     return {
         "file":       path.name,
         "date":       last_date_str,
@@ -1302,6 +1345,7 @@ def parse_액티브ETF(dry_run: bool) -> dict:
     if not wb: return {"error": "열기 실패"}
 
     increase, decrease = [], []
+    held = set()   # 현재 어떤 ETF든 보유 중인 종목명 전체(편출 감지용)
 
     for sname in SECTOR_SHEETS_ETF:
         if sname not in wb.sheetnames: continue
@@ -1333,6 +1377,7 @@ def parse_액티브ETF(dry_run: bool) -> dict:
                 name = row[blk_start + 1] if blk_start + 1 < len(row) else None
                 diff = row[blk_start + 4] if blk_start + 4 < len(row) else None
                 rate = row[blk_start + 5] if blk_start + 5 < len(row) else None
+                if name and isinstance(name, str): held.add(name.strip())
                 if not name or not isinstance(diff, (int, float)): continue
                 if diff > 0.3:
                     increase.append({"etf": etf_name, "name": str(name), "diff": round(diff, 2), "rate": round(float(rate)*100, 1) if isinstance(rate, float) else 0})
@@ -1354,6 +1399,7 @@ def parse_액티브ETF(dry_run: bool) -> dict:
         "file": path.name,
         "increase": sorted(inc_map.values(), key=lambda x: x["diff"], reverse=True)[:20],
         "decrease": sorted(dec_map.values(), key=lambda x: x["diff"])[:10],
+        "held": sorted(held),   # 전체 보유 종목명 (편출/편입 감지용)
     }
 
 
