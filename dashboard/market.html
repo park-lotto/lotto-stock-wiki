@@ -306,6 +306,11 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 .cf-ctl .cf-btn.active{border-color:#5b8def;color:#5b8def;background:rgba(91,141,239,.12);}
 .cf-ctl .cf-seg{display:none;gap:3px;}
 .cf-ctl.on .cf-seg{display:flex;}
+/* 컨센 끝점 화살표 (라인 고정, 화살표만 CSS 깜빡임) */
+@keyframes cfblink{0%,49%{opacity:1}50%,100%{opacity:0}}
+.cf-arrow{position:absolute;transform:translate(-50%,-135%);color:#e74c3c;font-weight:800;
+  font-size:12px;pointer-events:none;z-index:6;white-space:nowrap;
+  text-shadow:0 0 4px rgba(0,0,0,.9);animation:cfblink 1s steps(1,end) infinite;}
 .chart-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#666;font-size:13px;}
 .chart-legend{margin-left:auto;font-size:11.5px;color:#ccc;font-variant-numeric:tabular-nums;white-space:nowrap;align-self:center;}
 .chart-legend .lg{color:#777;margin-left:5px;}
@@ -2264,8 +2269,29 @@ function _applyTaeriniCollapse(){
 }
 
 // ── 컨센흐름 차트 오버레이 (주가 × 영업이익 컨센) ──
-let _cfSeries=null, _cfData=null, _cfMode="12mf", _cfOn=false, _cfBlinkTimer=null;
-function _cfStopBlink(){ if(_cfBlinkTimer){ clearInterval(_cfBlinkTimer); _cfBlinkTimer=null; } }
+let _cfSeries=null, _cfData=null, _cfMode="12mf", _cfOn=false;
+let _cfArrowEl=null, _cfArrowTimer=null, _cfLast=null, _cfUp=true;
+function _cfClearArrow(){
+  if(_cfArrowTimer){ clearInterval(_cfArrowTimer); _cfArrowTimer=null; }
+  if(_cfArrowEl){ try{_cfArrowEl.remove();}catch(_){} _cfArrowEl=null; }
+}
+function _cfPositionArrow(){
+  if(!_cfArrowEl||!_cfSeries||!_cfLast||!_chart) return;
+  try{
+    const x=_chart.timeScale().timeToCoordinate(_cfLast.time);
+    const y=_cfSeries.priceToCoordinate(_cfLast.value);
+    if(x==null||y==null){ _cfArrowEl.style.display="none"; return; }
+    _cfArrowEl.style.display=""; _cfArrowEl.style.left=x+"px"; _cfArrowEl.style.top=y+"px";
+  }catch(_){}
+}
+function _cfMakeArrow(){
+  const cont=document.getElementById("tv_chart_container"); if(!cont||!_cfSeries||!_cfLast) return;
+  _cfArrowEl=document.createElement("div"); _cfArrowEl.className="cf-arrow";
+  _cfArrowEl.textContent="컨센 "+(_cfUp?"▲":"▼");
+  cont.appendChild(_cfArrowEl);
+  _cfPositionArrow();
+  _cfArrowTimer=setInterval(_cfPositionArrow, 200);   // 팬·줌·시세변화 시 위치만 갱신(라인 불변)
+}
 function _cfInitState(){
   try{ _cfOn=localStorage.getItem("cf_on")==="1"; _cfMode=localStorage.getItem("cf_mode")||"12mf"; }catch(_){}
   const ctl=document.getElementById("cf-ctl"), tg=document.getElementById("cf-toggle");
@@ -2283,7 +2309,7 @@ async function _loadConsensus(code){
   _cfRender();
 }
 function _cfRender(){
-  _cfStopBlink();
+  _cfClearArrow();
   if(_cfSeries){ try{_chart.removeSeries(_cfSeries);}catch(_){} _cfSeries=null; }
   if(!_cfOn || !_cfData || !_chart || _isIntraday()) return;   // 분봉에선 컨센(주간) 오버레이 생략
   const dates=_cfData.dates||[], arr=(_cfData.series||{})[_cfMode];
@@ -2293,17 +2319,13 @@ function _cfRender(){
   if(!data.length) return;
   try{
     _cfSeries=_chart.addLineSeries({priceScaleId:"cf", color:"#e74c3c", lineWidth:2,
-      priceLineVisible:false, lastValueVisible:true, crosshairMarkerVisible:true});
+      priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:true});  // 값라벨 숨김
     _chart.priceScale("cf").applyOptions({scaleMargins:{top:0.12,bottom:0.28}, visible:false});
     _cfSeries.setData(data);
-    // 끝점 진행방향 화살표 깜빡임
-    const last=data[data.length-1], prev=data.length>1?data[data.length-2]:null;
-    const up=!prev || last.value>=prev.value;
-    const marker={time:last.time, position:up?"aboveBar":"belowBar", color:"#e74c3c",
-      shape:up?"arrowUp":"arrowDown", text:up?"컨센▲":"컨센▼"};
-    let on=true; _cfSeries.setMarkers([marker]);
-    _cfBlinkTimer=setInterval(()=>{ if(!_cfSeries){_cfStopBlink();return;} on=!on;
-      try{_cfSeries.setMarkers(on?[marker]:[]);}catch(_){} }, 550);
+    // 라인은 고정 — 끝점에 HTML 화살표만 CSS로 깜빡임
+    _cfLast=data[data.length-1]; const prev=data.length>1?data[data.length-2]:null;
+    _cfUp=!prev || _cfLast.value>=prev.value;
+    _cfMakeArrow();
   }catch(_){ _cfSeries=null; }
 }
 function _cfToggle(){
@@ -2790,7 +2812,7 @@ function setChartTf(tf){
 }
 function closeStockChart(){
   const m=document.getElementById("chart-modal");
-  _cfStopBlink(); _cfSeries=null;
+  _cfClearArrow(); _cfSeries=null;
   if(_drawRaf){ cancelAnimationFrame(_drawRaf); _drawRaf=null; }
   _saveView();       // 종료 시 보기 범위 저장
   _saveChartWin();   // 종료 시 봉 종류·창 크기·위치 저장
