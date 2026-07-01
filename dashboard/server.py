@@ -2091,10 +2091,27 @@ def api_insights_search(q: str = ""):
 
 # 종목 집계에서 제외할 일반어(섹터/노이즈)
 _SIGNAL_STOP = {
-    "기타", "시장", "코스피", "코스닥", "지수", "전체", "국내", "미국", "환율", "금리",
-    "반도체", "이차전지", "2차전지", "조선", "방산", "바이오", "로봇", "전력", "자동차",
-    "AI", "HBM", "관련주", "테마", "섹터",
+    "기타", "전체", "국내", "관련주", "테마", "섹터",
 }
+
+# 매크로/이슈(종목 아님) 판별 힌트
+_MACRO_HINT = (
+    "실업", "경제", "은행", "지수", "부동산", "금리", "환율", "물가", "증시", "국채",
+    "유가", "달러", "엔화", "위안", "정책", "프로젝트", "실적발표", "고용", "무역",
+    "관세", "gdp", "pmi", "pce", "cpi", "fomc", "나스닥", "코스피", "코스닥", "다우",
+    "s&p", "필라델피아", "연방", "시장", "펀드", "경고", "투경", "정부", "규제",
+    "반도체", "이차전지", "2차전지", "조선", "방산", "바이오", "로봇", "전력", "자동차",
+    "통신", "제약", "화학", "철강", "건설", "AI", "HBM",
+)
+_MACRO_SOLO = {"미국", "중국", "일본", "독일", "유럽", "한국", "캐나다", "인도", "대만",
+               "영국", "프랑스", "러시아", "대장주", "후발주"}
+
+
+def _sig_kind(a):
+    al = (a or "").lower()
+    if a in _MACRO_SOLO or any(h.lower() in al for h in _MACRO_HINT):
+        return "macro"
+    return "stock"
 
 
 @app.get("/api/insights/signals")
@@ -2149,7 +2166,7 @@ def api_insights_signals():
         catset = cats.get(a, set())
         st = stance.get(a, Counter())
         signals.append({
-            "asset": a, "today": tn, "prior_avg": round(pavg, 1),
+            "asset": a, "kind": _sig_kind(a), "today": tn, "prior_avg": round(pavg, 1),
             "spike": round(tn - pavg, 1), "is_new": (pavg == 0),
             "cats": [c for c in ("youtube", "telegram", "report", "news", "blog") if c in catset],
             "n_cats": len(catset),
@@ -2158,7 +2175,10 @@ def api_insights_signals():
         })
     # 랭킹: 다채널(합의) + 오늘 언급 + 스파이크
     signals.sort(key=lambda s: (s["n_cats"] * 2 + s["today"] + max(0.0, s["spike"])), reverse=True)
-    return JSONResponse(content={"today": today, "signals": signals[:15]})
+    stocks = [s for s in signals if s["kind"] == "stock"][:15]
+    macro = [s for s in signals if s["kind"] == "macro"][:10]
+    return JSONResponse(content={"today": today, "stocks": stocks, "macro": macro,
+                                 "signals": (stocks + macro)})
 
 
 # ── §4.9 NotebookLM 다리: 가로검색 묶음 → 노트북 자동 생성 ──────
