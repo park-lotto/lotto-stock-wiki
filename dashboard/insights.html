@@ -1018,9 +1018,9 @@ async function loadSignals() {
 }
 function sigBrief(asset) {
   const inp = qs('#brief-q'); if (inp) inp.value = `${asset} 오늘 핵심 정리해줘`;
-  // 소스 전체 켠 상태로 브리핑
+  // 소스 전체 켠 상태로 브리핑 — 이름은 종목명으로
   document.querySelectorAll('#brief-cats .bchip').forEach(b => b.classList.add('on'));
-  startBriefing();
+  startBriefing(asset);
 }
 
 // ── L1 소스 목록 ──
@@ -1411,7 +1411,7 @@ function createNotebookFromPanel() {
 
 async function runCreateNotebook(q, opts, autoQ) {
   opts = opts || {};
-  openWorkspaceLoading(q);
+  openWorkspaceLoading(opts.label || q);
   try {
     const res = await apiFetch('/api/insights/to_notebook', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1437,15 +1437,26 @@ async function nlmRelogin(btn) {
   } catch(e) { toast('재로그인 실패: ' + e.message, true); }
   finally { if (btn) { btn.disabled = false; btn.innerHTML = orig; } }
 }
-function startBriefing() {
+const CAT_KO = { telegram: '텔레', news: '뉴스', report: '리포트', blog: '블로그', youtube: '유튜브' };
+const PER_KO = { today: '오늘', d3: '최근3일', d7: '최근7일' };
+function briefLabel(cats, research, period) {
+  // 카테고리 기반 깔끔한 이름 (요청문을 이름으로 쓰지 않음)
+  let base = (cats || []).map(c => CAT_KO[c] || c).join('·');
+  if (!base) base = research ? '웹리서치' : '전체';
+  else if (research) base += '·웹리서치';
+  const per = PER_KO[period] || '';
+  return (base + (per ? ' ' + per : '')).slice(0, 40);
+}
+function startBriefing(titleOverride) {
   const q = ((qs('#brief-q') || {}).value || '').trim();
   if (!q) { toast('무엇을 정리·분석할지 입력하세요', true); return; }
   const cats = Array.from(document.querySelectorAll('#brief-cats .bchip.on')).map(b => b.getAttribute('data-c'));
   const research = !!(qs('#brief-research') && qs('#brief-research').classList.contains('on'));
   if (!cats.length && !research) { toast('소스를 1개 이상 고르거나 🔎리서치를 켜세요', true); return; }
   const period = (qs('#brief-period') || {}).value || 'all';
-  // 박스 문구를 그대로 워크스페이스 첫 질문으로 자동 실행
-  runCreateNotebook(q, { cats, period, limit: 200, split: false, include_urls: true, research }, q);
+  const label = titleOverride || briefLabel(cats, research, period);
+  // 박스 문구는 첫 질문으로 쓰되, 노트북 이름은 카테고리(또는 종목)로 깔끔하게
+  runCreateNotebook(q, { cats, period, limit: 200, split: false, include_urls: true, research, label }, q);
 }
 
 // ── 브리핑 워크스페이스 ──
@@ -1467,11 +1478,11 @@ function reopenWorkspace() {
   const btn = qs('#ws-resume'); if (btn) btn.classList.remove('show');
   qs('#nbws').classList.add('open');
 }
-function openWorkspaceLoading(q) {
+function openWorkspaceLoading(label) {
   const btn = qs('#ws-resume'); if (btn) btn.classList.remove('show');  // 새 세션 시작
-  qs('#ws-title').textContent = `🧠 ${q} 브리핑`;
+  qs('#ws-title').textContent = `🧠 ${label} 브리핑`;
   qs('#ws-meta').textContent = '노트북 만드는 중…';
-  qs('#ws-canvas').innerHTML = `<div class="ws-empty"><div class="spinner"></div>"${escHtml(q)}" 발언을 모아 노트북 생성 중…<br><small>20~40초</small></div>`;
+  qs('#ws-canvas').innerHTML = `<div class="ws-empty"><div class="spinner"></div>브리핑을 생성 중입니다…<br><small style="color:var(--muted)">${escHtml(label)} · 소스를 모아 노트북 만드는 중 · 20~40초</small></div>`;
   qs('#nbws').classList.add('open');
 }
 function openWorkspace(res, q, autoQ) {

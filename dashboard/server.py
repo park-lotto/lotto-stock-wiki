@@ -2507,6 +2507,8 @@ async def api_insights_to_notebook(req: Request):
         limit = 200
     split = bool(body.get("split", False))
     include_urls = bool(body.get("include_urls", True))
+    # 프론트가 넘긴 깔끔한 이름(카테고리/종목) — 있으면 토큰라벨 대신 이걸로 명명
+    label_override = re.sub(r"\s+", " ", (body.get("label") or "")).strip()[:40]
 
     today = datetime.now().strftime("%Y-%m-%d")
     out_dir = os.path.join(ROOT, "out", "insights_notebook")
@@ -2516,14 +2518,14 @@ async def api_insights_to_notebook(req: Request):
     md_for_cache = []
 
     if no_crawl:
-        label = re.sub(r"\s+", " ", q).strip()[:40] or "리서치"
+        label = label_override or re.sub(r"\s+", " ", q).strip()[:40] or "리서치"
         atoms_n = 0
     else:
         bundle = await run_in_threadpool(
             _build_notebook_bundle, q, cats, period, limit, split, include_urls)
         if bundle is None:
             return JSONResponse(content={"error": "atoms.db 없음"}, status_code=503)
-        label = bundle["label"]
+        label = label_override or bundle["label"]
         atoms_n = bundle["atoms_n"]
         if atoms_n == 0 and not research:
             return JSONResponse(content={"error": f"'{q}' (필터 조건) 매칭 발언 없음"}, status_code=400)
@@ -2990,7 +2992,8 @@ async def api_insights_gemini_chat(req: Request):
             from google.genai import types
         except Exception as e:
             return {"error": f"google-genai 패키지 없음: {str(e)[:150]}"}
-        keys = [k for k in (_env_key("GEMINI_API_KEY"), _env_key("GEMINI_API_KEY_2")) if k]
+        # 인터랙티브(대화형)는 _2 키를 먼저 — 인제스트 워커(1번 키 우선)와 쿼터 분리
+        keys = [k for k in (_env_key("GEMINI_API_KEY_2"), _env_key("GEMINI_API_KEY")) if k]
         if not keys:
             return {"error": ".env에 GEMINI_API_KEY 없음"}
         last = ""
@@ -3179,7 +3182,7 @@ def _gemini_vision_style(img_bytes, mime):
     """업로드 이미지의 '디자인 스타일'을 텍스트로 추출 (Gemini 비전, 키 폴백)."""
     from google import genai
     from google.genai import types
-    keys = [k for k in (_env_key("GEMINI_API_KEY"), _env_key("GEMINI_API_KEY_2")) if k]
+    keys = [k for k in (_env_key("GEMINI_API_KEY_2"), _env_key("GEMINI_API_KEY")) if k]
     if not keys:
         raise RuntimeError(".env에 GEMINI_API_KEY 없음")
     prompt = (
@@ -3308,7 +3311,8 @@ async def api_insights_gemini_infographic(req: Request):
         return JSONResponse(content={"error": "notebook_id 필요"}, status_code=400)
 
     def _do():
-        keys = [k for k in (_env_key("GEMINI_API_KEY"), _env_key("GEMINI_API_KEY_2")) if k]
+        # 인터랙티브(대화형)는 _2 키를 먼저 — 인제스트 워커(1번 키 우선)와 쿼터 분리
+        keys = [k for k in (_env_key("GEMINI_API_KEY_2"), _env_key("GEMINI_API_KEY")) if k]
         if not keys:
             return {"error": ".env에 GEMINI_API_KEY 없음"}
         content = _NB_BUNDLES.get(nb_id, "")
@@ -3546,9 +3550,10 @@ def _nlm_keepalive(interval=900):
         time.sleep(interval)
 
 
-def _ingest_worker(interval=600, limit=60, warmup=120):
+def _ingest_worker(interval=1800, limit=40, warmup=180):
     """atoms.db 자동 채우기 — 미처리 파일을 주기적으로 원자추출(백로그 소화 + 최신 유지).
-    단일 워커라 중복 없음. Gemini(gemini-3.1-flash-lite) 사용."""
+    단일 워커라 중복 없음. Gemini(gemini-3.1-flash-lite) 사용.
+    ⚠️ Gemini 무료 쿼터 공유 — 대화형 리서치를 막지 않게 30분/40개로 스로틀."""
     time.sleep(warmup)  # 부팅 직후·수동 실행과 겹치지 않게 잠깐 대기
     while True:
         try:
