@@ -2430,12 +2430,23 @@ def _nb_cat_of(st):
 
 
 def _nb_period_min(period):
-    """기간 프리셋 → 시작 날짜(YYYY-MM-DD) 또는 None(전체)."""
-    n = {"today": 0, "d3": 2, "d7": 6}.get(period)
-    if n is None:
-        return None
+    """기간 프리셋 → 시작 날짜(YYYY-MM-DD) 또는 None(전체).
+    today=오늘, dN=N일 전(오늘 포함 N+1일 창)."""
     from datetime import timedelta
-    return (datetime.now() - timedelta(days=n)).strftime("%Y-%m-%d")
+    p = (period or "all").strip()
+    if p in ("", "all"):
+        return None
+    if p == "today":
+        return datetime.now().strftime("%Y-%m-%d")
+    m = re.match(r"^d(\d+)$", p)
+    if m:
+        return (datetime.now() - timedelta(days=int(m.group(1)))).strftime("%Y-%m-%d")
+    return None
+
+
+def _valid_period(period):
+    p = (period or "all").strip()
+    return p if (p in ("all", "today") or re.match(r"^d(\d+)$", p)) else "all"
 
 
 def _nb_cats_types(cats):
@@ -2618,9 +2629,7 @@ async def api_insights_to_notebook(req: Request):
     # 리서치 ON + 소스 미선택(빈 배열) → 크롤링 없이 웹 리서치만
     no_crawl = research and isinstance(cats_raw, list) and len(cats_raw) == 0
     cats = cats_raw if (isinstance(cats_raw, list) and cats_raw) else None
-    period = (body.get("period") or "all").strip()
-    if period not in ("all", "today", "d3", "d7"):
-        period = "all"
+    period = _valid_period(body.get("period"))
     try:
         limit = int(body.get("limit") or 200)
     except Exception:
@@ -3210,9 +3219,7 @@ async def api_insights_notebook_add_fresh(req: Request):
     nb_id = (body.get("notebook_id") or "").strip()
     cats_raw = body.get("cats")
     cats = cats_raw if (isinstance(cats_raw, list) and cats_raw) else None
-    period = (body.get("period") or "all").strip()
-    if period not in ("all", "today", "d3", "d7"):
-        period = "all"
+    period = _valid_period(body.get("period"))
     if not nb_id:
         return JSONResponse(content={"error": "notebook_id 필요"}, status_code=400)
     if not _nlm_exe():
