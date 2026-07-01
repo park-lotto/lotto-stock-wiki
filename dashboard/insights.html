@@ -168,8 +168,13 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .ws-home { padding: 8px 16px; border-radius: 9px; border: 1px solid var(--gold-dim); background: var(--rp-bg); color: var(--gold); font-family: inherit; font-size: .84rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: background .15s; }
 .ws-home:hover { background: #221c0a; }
 .ws-body { flex: 1; display: flex; min-height: 0; }
-.ws-left { width: 340px; flex-shrink: 0; border-right: 1px solid var(--line); padding: 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; background: var(--card); }
+.ws-left { width: 430px; flex-shrink: 0; border-right: 1px solid var(--line); padding: 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; background: var(--card); }
 .ws-ai-box { background: var(--bg); border: 1px solid var(--line); border-radius: 11px; padding: 12px; }
+.ws-ai-main { border-color: var(--gold-dim); }
+.ws-ask-btns { display: flex; gap: 8px; margin-top: 8px; }
+.ws-ask-btns .brief-go { flex: 1; padding: 10px; font-size: .84rem; }
+.ws-web-btn { flex: 1; padding: 10px; border-radius: 9px; border: 1px solid #1a4a55; background: #0c1f25; color: #67e8f9; font-family: inherit; font-size: .84rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.ws-web-btn:hover { background: #103038; }
 .ws-ai-claude { border-color: #3d2f6b; background: #140e22; }
 .ws-ai-gemini { border-color: #1a4a55; background: #0c1f25; }
 .ws-src { margin-top: 10px; font-size: .74rem; color: var(--muted); }
@@ -183,7 +188,20 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .ws-pull:hover { background: var(--rp-bg); }
 .ws-src-list { display: flex; flex-direction: column; gap: 3px; max-height: 130px; overflow-y: auto; }
 .ws-src-item { font-size: .76rem; color: var(--txt); line-height: 1.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ws-merge-picker { margin-top: 8px; padding: 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--bg); max-height: 220px; overflow-y: auto; }
+.ws-merge-picker { margin-top: 8px; padding: 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--bg); max-height: 340px; overflow-y: auto; }
+.ws-merge-sec { margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.ws-merge-sec:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.ws-merge-h { font-size: .78rem; font-weight: 700; color: var(--gold); margin-bottom: 7px; display: flex; align-items: center; }
+.ws-merge-h small { color: var(--muted); font-weight: 400; margin-left: 5px; }
+.ws-merge-allbtns { margin-left: auto; display: flex; gap: 5px; }
+.ws-merge-allbtns button { background: none; border: 1px solid var(--line); color: var(--muted); font-size: .66rem; padding: 2px 7px; border-radius: 6px; cursor: pointer; font-family: inherit; }
+.ws-merge-allbtns button:hover { color: var(--gold); border-color: var(--gold-dim); }
+.ws-merge-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 7px; }
+.mchip { padding: 4px 10px; border-radius: 7px; border: 1px solid var(--line); background: var(--card); color: var(--muted); font-family: inherit; font-size: .72rem; cursor: pointer; }
+.mchip.on { border-color: var(--gold-dim); background: var(--rp-bg); color: var(--gold); font-weight: 700; }
+.ws-merge-daterow { display: flex; gap: 8px; }
+.ws-merge-daterow .brief-sel { flex: 1; }
+.ws-merge-daterow .brief-go { padding: 7px 12px; font-size: .78rem; }
 .ws-merge-item { display: flex; align-items: center; gap: 6px; font-size: .78rem; padding: 4px 0; cursor: pointer; }
 .ws-merge-item small { color: var(--muted); font-size: .68rem; }
 .ws-resume {
@@ -664,12 +682,13 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
         <div id="ws-merge-picker" class="ws-merge-picker" style="display:none"></div>
       </div>
       <div class="ws-ai-box ws-ai-main">
-        <div class="ws-ai-label">🧠 스탁브레인 질문 <small>위 소스에서 인용해 답변</small></div>
-        <div class="ws-ask">
-          <textarea id="ws-q" class="ws-q-input ws-q-area" rows="2" placeholder="여기에 질문하세요 (예: 오늘 핵심 이슈 3가지 / 종목명 분석) · Ctrl+Enter로 전송" onkeydown="if(event.key==='Enter'&&(event.ctrlKey||event.metaKey))wsAsk()"></textarea>
-          <button class="brief-go" onclick="wsAsk()">질문</button>
+        <div class="ws-ai-label">🧠 스탁브레인 질문</div>
+        <textarea id="ws-q" class="ws-q-input ws-q-area" rows="4" placeholder="여기에 질문하세요 (예: 오늘 핵심 이슈 3가지 / 종목명 분석) · Ctrl+Enter로 전송" onkeydown="if(event.key==='Enter'&&(event.ctrlKey||event.metaKey))wsAsk()"></textarea>
+        <div class="ws-ask-btns">
+          <button class="brief-go" onclick="wsAsk()">💬 내 소스에 질문</button>
+          <button class="ws-web-btn" onclick="wsWebResearch()">🌐 웹리서치 후 답변</button>
         </div>
-        <div class="ws-src-hint" style="margin:2px 0 0">💡 아래 골격 버튼을 누르면 그 유형에 맞는 <b>질문 틀</b>이 채워집니다. 웹 최신자료가 필요하면 <b>🔬웹 딥리서치</b>로 소스를 먼저 추가하세요.</div>
+        <div class="ws-src-hint" style="margin:2px 0 0">💬 <b>내 소스에 질문</b> = 위 소스에서만 인용 / 🌐 <b>웹리서치</b> = 웹에서 최신자료를 찾아 소스로 추가한 뒤 답변. 아래 골격 버튼은 질문 틀을 채워줍니다.</div>
         <div class="ws-presets">
           <button class="ws-preset" onclick="wsPreset('morning')">🌅 아침브리핑</button>
           <button class="ws-preset" onclick="wsPreset('closing')">🌆 마감브리핑</button>
@@ -1606,24 +1625,68 @@ async function loadWsSources() {
   } catch(e) { if (list) list.innerHTML = ''; }
 }
 
+const MERGE_CATS = [['telegram','💬 텔레'],['youtube','📺 유튜브'],['report','📰 리포트'],['news','🗞️ 뉴스'],['blog','📝 블로그']];
 async function openMergePicker() {
   const ws = window._ws; if (!ws) return;
   const box = qs('#ws-merge-picker');
   if (box.style.display === 'block') { box.style.display = 'none'; return; }
   box.style.display = 'block';
-  box.innerHTML = '<div class="ws-src-item" style="color:var(--muted)">이전 브리핑 불러오는 중…</div>';
+  box.innerHTML = '<div class="ws-src-item" style="color:var(--muted)">불러오는 중…</div>';
+  // ① 카테고리+날짜로 새 자료 끌어오기 (메인과 동일한 소스풀)
+  const freshUI = `
+    <div class="ws-merge-sec">
+      <div class="ws-merge-h">➕ 새 자료 끌어오기 <small>(소스 종류 + 기간)</small></div>
+      <div class="ws-merge-chips" id="ws-fresh-cats">
+        ${MERGE_CATS.map(([c,l]) => `<button type="button" class="mchip on" data-c="${c}" onclick="this.classList.toggle('on')">${l}</button>`).join('')}
+      </div>
+      <div class="ws-merge-daterow">
+        <select id="ws-fresh-period" class="brief-sel">
+          <option value="all">전체 기간</option><option value="today">오늘</option>
+          <option value="d3">최근 3일</option><option value="d7">최근 7일</option>
+        </select>
+        <button class="brief-go" onclick="addFreshSources(this)">이 조건으로 추가</button>
+      </div>
+    </div>`;
   try {
     const res = await apiFetch('/api/insights/notebooks');
     const nbs = (res.notebooks || []).filter(n => n.id !== ws.id);
-    if (!nbs.length) { box.innerHTML = '<div class="ws-src-item" style="color:var(--muted)">아직 다른 브리핑이 없습니다.</div>'; return; }
-    box.innerHTML = '<div class="ws-src-hint" style="margin-bottom:6px">체크 → 끌어오면 그 브리핑의 소스가 <b>이 노트북에 합쳐져</b> 위 스탁브레인 질문이 함께 인용합니다.</div>'
-      + nbs.map(n =>
-      `<div class="ws-merge-row">
-        <label class="ws-merge-item"><input type="checkbox" class="ws-merge-cb" value="${n.id}"> ${escHtml(n.label)} <small>${n.date} · 발언 ${n.atoms}개</small></label>
-        <button class="bh-del" title="이 브리핑 삭제" onclick="forgetBrief(event,'${escAttr(n.id)}','${escAttr(n.label)}')">✕</button>
-      </div>`
-    ).join('') + `<button class="brief-go" style="margin-top:8px;width:100%" onclick="doMerge()">선택한 자료 끌어오기</button>`;
-  } catch(e) { box.innerHTML = `<div class="ws-src-item" style="color:#e88">불러오기 실패: ${escHtml(e.message)}</div>`; }
+    const listUI = !nbs.length
+      ? '<div class="ws-src-item" style="color:var(--muted)">아직 다른 브리핑이 없습니다.</div>'
+      : `<div class="ws-merge-sec">
+          <div class="ws-merge-h">📚 이전 브리핑에서 끌어오기
+            <span class="ws-merge-allbtns"><button onclick="mergeSelectAll(true)">모두선택</button><button onclick="mergeSelectAll(false)">해제</button></span>
+          </div>
+          ${nbs.map(n =>
+            `<div class="ws-merge-row">
+              <label class="ws-merge-item"><input type="checkbox" class="ws-merge-cb" value="${n.id}"> ${escHtml(n.label)} <small>${n.date} · 발언 ${n.atoms}개</small></label>
+              <button class="bh-del" title="이 브리핑 삭제" onclick="forgetBrief(event,'${escAttr(n.id)}','${escAttr(n.label)}')">✕</button>
+            </div>`).join('')}
+          <button class="brief-go" style="margin-top:8px;width:100%" onclick="doMerge()">선택한 브리핑 자료 끌어오기</button>
+        </div>`;
+    box.innerHTML = freshUI + listUI;
+  } catch(e) { box.innerHTML = freshUI + `<div class="ws-src-item" style="color:#e88">이전 브리핑 불러오기 실패: ${escHtml(e.message)}</div>`; }
+}
+function mergeSelectAll(on) {
+  document.querySelectorAll('#ws-merge-picker .ws-merge-cb').forEach(c => c.checked = on);
+}
+async function addFreshSources(btn) {
+  const ws = window._ws; if (!ws) return;
+  const cats = Array.from(document.querySelectorAll('#ws-fresh-cats .mchip.on')).map(b => b.getAttribute('data-c'));
+  if (!cats.length) { toast('소스 종류를 1개 이상 고르세요', true); return; }
+  const period = (qs('#ws-fresh-period') || {}).value || 'all';
+  const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = '추가 중…';
+  try {
+    const res = await apiFetch('/api/insights/notebook_add_fresh', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notebook_id: ws.id, cats, period })
+    });
+    if (res.error) throw new Error(res.error);
+    toast(`✅ 새 자료 추가 — 발언 ${res.atoms}개 (총 소스 ${res.total_sources}개)`);
+    wsAddCard('➕ 새 자료 끌어오기', `${cats.join('·')} · ${period} 조건으로 <b>발언 ${res.atoms}개</b>(유튜브 ${res.yt}·웹 ${res.web})를 소스로 추가했습니다. 총 <b>${res.total_sources}개</b> 소스. 이제 질문하면 함께 인용합니다.`);
+    qs('#ws-merge-picker').style.display = 'none';
+    loadWsSources();
+  } catch(e) { toast('추가 실패: ' + e.message, true); }
+  finally { btn.disabled = false; btn.innerHTML = orig; }
 }
 
 async function doMerge() {
@@ -1659,6 +1722,28 @@ function wsCancelCard(btn) {
   if (card && card._abort) card._abort.abort();
 }
 
+async function wsWebResearch() {
+  const ws = window._ws; if (!ws) return;
+  const q = ((qs('#ws-q') || {}).value || '').trim();
+  if (!q) { toast('질문·주제를 입력하세요', true); return; }
+  const card = wsAddCard('🌐 웹리서치', `<div class="nb-qa-q">주제: ${escHtml(q)}</div>${wsLoading('웹에서 최신 자료 찾아 소스로 추가 중… (~30초)', true)}`);
+  card._abort = new AbortController();
+  const body = card.querySelector('.ws-card-b');
+  try {
+    const res = await apiFetch('/api/insights/notebook_research', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notebook_id: ws.id, q, mode: 'fast' }), signal: card._abort.signal
+    });
+    if (res.error) throw new Error(res.error);
+    body.innerHTML = `<div class="nb-qa-q">주제: ${escHtml(q)}</div><div class="nb-studio-ok">🌐 웹 소스 <b>${res.added}</b>건 추가 (총 ${res.total_sources}개). 이어서 답변을 생성합니다…</div>`;
+    loadWsSources();
+    setTimeout(wsAsk, 300);   // 웹소스 포함해 자동 질문
+  } catch(e) {
+    body.innerHTML = e.name === 'AbortError'
+      ? `<div class="nb-qa-q">주제: ${escHtml(q)}</div><div style="color:var(--muted)">취소됨</div>`
+      : `<div class="nb-qa-q">주제: ${escHtml(q)}</div><div style="color:#e88">웹리서치 실패: ${escHtml(e.message)}</div>`;
+  }
+}
 async function wsAsk() {
   const ws = window._ws; if (!ws) return;
   const inp = qs('#ws-q'); const question = (inp.value || '').trim(); if (!question) return;
