@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-30",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-01_0703_실행력 검증이 중장기 수익성의 관건.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유안타증권",
+    "analyst": "이안나",
+    "report_date": "2026.06.30",
+    "stocks": [
+      {
+        "name": "율촌",
+        "code": "146060",
+        "rating": "NOT RATED",
+        "rating_changed": null,
+        "tp_new": "-원",
+        "tp_prev": "-원",
+        "tp_direction": null,
+        "earnings_outlook": "1Q26 연결기준 매출액은 198억원(YoY 보합, QoQ +1.1%), 영업이익은 9억원(YoY -55.7%, QoQ +43.3%) 기록.",
+        "estimate_revision": null,
+        "next_catalyst": "폴란드 법인 가동이 계획대로 진행될 경우, 본격 매출 발생은 '27년부터 가시화될 것으로 예상",
+        "thesis": [
+          "자동차 부품 매출 믹스 개선 및 포트폴리오 다변화",
+          "폴란드 법인 양산 계획을 통한 중장기 외형 성장",
+          "고사양 산업재 시장으로의 제품군 확장"
+        ],
+        "valuation_basis": null,
+        "risk": "초기 고정비 흡수 시점에 따른 단기적 현금흐름 부담, CB 전환 시 발행주식 대비 최대 약 28%의 주식 희석 가능성",
+        "supply_comment": null,
+        "quote": "완충용장치 단가가 약 8% 하락하는 동시, 전사 매출이 완만한 성장세(726억원→793억원)를 유지한 배경에는 매출 믹스 개선으로부터 기인."
+      }
+    ]
+  }
+}

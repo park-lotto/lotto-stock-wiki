@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "date": "2026-06-30",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-01_0702_낮아진 눈높이, 하반기가 관건.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유안타증권",
+    "analyst": "최지운",
+    "report_date": "2026.06.30",
+    "stocks": [
+      {
+        "name": "넷마블",
+        "code": "251270",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "59,000원",
+        "tp_prev": "-원",
+        "tp_direction": null,
+        "earnings_outlook": {
+          "2026_revenue_forecast": "2조 8,764억원",
+          "2026_op_forecast": "3,702억원",
+          "2Q26_revenue_forecast": "739억원",
+          "2Q26_op_forecast": "98억원"
+        },
+        "estimate_revision": "단기 실적 눈높이는 낮아졌지만, 하반기 신작 흥행 여부와 단계적으로 적용될 구글 앱마켓 수수료 인하 효과가 더해질 경우 이익률 개선 여지는 남아 있다고 판단.",
+        "next_catalyst": "향후 출시될 〈나 혼자만 레벨업: KARMA〉, 〈샹그릴라 프론티어〉, 〈프로젝트 옥토퍼스〉, 〈이블베인〉, 〈프로젝트 이지스〉 등 신작 라인업의 흥행 성과와 마케팅 효율",
+        "thesis": [
+          "2026년 매출액 2조 8,764억원(YoY +2%), 영업이익 3,702억원(YoY +5%, OPM 13%) 전망",
+          "하반기 신작 흥행 여부와 단계적으로 적용될 구글 앱마켓 수수료 인하 효과에 따른 이익률 개선 기대",
+          "지급수수료율 하락 및 자체 런처 확대에 따른 이익 구조 개선"
+        ],
+        "valuation_basis": "12M Fwd EPS 4,358원에 Target PER 13.5배를 적용해 산출. Target PER은 글로벌 라이브서비스 게임사와 검증된 IP 포트폴리오를 보유한 게임사 Peer 평균에 10% 디스카운트를 적용.",
+        "risk": "상반기 신작 성과가 기대치를 하회했고, 하반기 신작 출시에 따른 마케팅비 부담 우려",
+        "supply_comment": "PC 결제·자체 런처 활용 등에 따른 지급수수료율 하락은 확인됐으나, 외부 퍼블리싱 타이틀 비중 및 향후 마케팅 효율 확인 필요",
+        "quote": "동사에 대해 투자의견 BUY, 목표주가 59,000원으로 커버리지 개시. 목표주가는 12M Fwd EPS 4,358원에 Target PER 13.5배를 적용해 산출."
+      }
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-30",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-01_0702_레거시 IP, 다시 실적을 만들다.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유안타증권",
+    "analyst": "최지운",
+    "report_date": "2026.06.30",
+    "stocks": [
+      {
+        "name": "NC",
+        "code": "036570",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "370,000원",
+        "tp_prev": "-원",
+        "tp_direction": "null",
+        "earnings_outlook": "동사 2026년 연결 매출액 2조 6,763억원(YoY +78%), 영업이익 5,242억원(YoY +3,160%, OPM 20%) 전망. 1Q26 매출액은 5,574억원(YoY +55%), 영업이익은 1,133억원(YoY +2,070%)을 기록하며 연간 실적 개선 가능성을 확인.",
+        "estimate_revision": null,
+        "next_catalyst": "올해 9월 예정된 <아이온2> 글로벌 출시 이후 초기 리텐션과 서구권 흥행 지표가 확인될 경우, 실적 추정치와 멀티플의 동반 상향 가능성이 높다는 판단.",
+        "thesis": [
+          "레거시 IP 재활성화와 자체결제 확대를 통해 실적 지속성에 대한 신뢰가 높아지고 있음.",
+          "저스트플레이 연결 편입과 캐주얼 게임사 인수를 통해 非MMORPG 성장 옵션도 확보.",
+          "<리니지2M> 중국 출시를 통한 지역 확장 및 2027년 <호라이즌 스틸 프론티어스> 출시 예정."
+        ],
+        "valuation_basis": "목표주가는 12M Fwd EPS 23,581원에 Target PER 15.7배를 적용해 산출. Target PER은 글로벌 라이브 서비스 게임사와 검증된 IP 포트폴리오를 보유한 게임사 Peer 평균을 적용.",
+        "risk": "리워드 기반 모바일 캐주얼 플랫폼인 저스트플레이는 2Q26부터 연결 편입될 예정이며, 초기에는 UA 비용 부담에 따른 마진 변동성을 감안할 필요.",
+        "supply_comment": null,
+        "quote": "동사에 대해 투자의견 BUY, 목표주가 370,000원으로 커버리지 개시. 목표주가는 12M Fwd EPS 23,581원에 Target PER 15.7배를 적용해 산출."
+      }
+    ]
+  }
+}

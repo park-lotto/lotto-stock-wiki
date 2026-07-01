@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-01",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-01_1100_가이던스 반영 시 유상증자 희석 영향 제한...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "DS투자증권",
+    "analyst": "최태용",
+    "report_date": "2026.07.01",
+    "stocks": [
+      {
+        "name": "에코프로비엠",
+        "code": "247540",
+        "rating": "매수",
+        "rating_changed": false,
+        "tp_new": "300,000원",
+        "tp_prev": "300,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "BNSI의 27F 매출액은 1.5조원($19/kg, 5.4만톤으로 램프업 단계), 영업이익 1,500억원(OPM 10%로 보수적 가정 시)으로 추정된다.",
+        "estimate_revision": null,
+        "next_catalyst": "2Q27 가동을 시작으로 실적 가시성과 연동되어 주가 하방 압력이 점차 해소될 전망",
+        "thesis": [
+          "1.2조원 규모의 유상증자를 통해 인도네시아 BNSI(니켈 제련소) 지분 취득 및 탈중국 밸류체인 확보",
+          "BNSI의 연결 인식 토대 마련 및 이를 통한 안정적인 적격 니켈 공급망 구축",
+          "BNSI의 27F 실적 반영 시 EPS 희석 효과를 상쇄하는 이익 증가(+10% yoy) 기대"
+        ],
+        "valuation_basis": null,
+        "risk": "과거 투자했던 인니 니켈 제련소들과 달리 BNSI는 적격 제련소를 직접 보유할 수 있는 구조이나, 2Q27 가동이라는 실적 가시성 궤적 확인 필요",
+        "supply_comment": "조달 자금 중 7,650억원이 인도네시아 IGIP 산단 BNSI(니켈 제련소) 지분 취득에 투입된다.",
+        "quote": "사업적 시너지는 분명하나 가시화 궤적에 따라 주가에 반영될 전망"
+      }
+    ]
+  }
+}

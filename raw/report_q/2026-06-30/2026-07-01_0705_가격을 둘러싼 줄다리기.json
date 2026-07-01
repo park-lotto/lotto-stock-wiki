@@ -1,0 +1,47 @@
+{
+  "meta": {
+    "date": "2026-06-30",
+    "broker": "Daishin 증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-01_0705_가격을 둘러싼 줄다리기.md"
+  },
+  "questionnaire": {
+    "broker": "Daishin 증권",
+    "analyst": "류형근",
+    "report_date": "2026.06.30",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "메모리반도체 가격 담합 의혹",
+      "Big Tech 기업들의 중국 반도체 대체 활용 검토",
+      "중국 반도체 규제",
+      "클라우드 중심의 메모리반도체 구매 경쟁",
+      "AI 시장 투자 상향"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "긍정",
+        "reason": "강력한 Upcycle이 전개 중이며 메모리반도체 수요-공급 괴리 극대화로 가격 상승 폭 추가 확대 예상"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026-2027년",
+        "event": "메모리반도체 산업 현실적 위협 테스트 구간"
+      },
+      {
+        "date": "3Q26",
+        "event": "안정적 공급망 확보를 위한 장기 계약의 확대 예상"
+      }
+    ],
+    "top_picks": [
+      "Tencent",
+      "CXMT",
+      "애플",
+      "샤오미"
+    ],
+    "risk": "중국 반도체 규제 완화가 단기 고민을 해소할 수 있으나 장기 위협의 강도를 높일 수 있음. 메모리반도체 산업에 대한 고점 논란.",
+    "quote": "강력한 Upcycle이 전개되고 있는 만큼, 외부 압력 또한 거세질 수 있는 환경. 다만, 적어도 2년 (2026-2027년)의 구간에서 메모리반도체 산업이 마주할 현실적 위협으로 거듭나진 않을 것이라는 판단."
+  }
+}

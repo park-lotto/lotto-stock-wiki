@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-30",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-01_0708_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이상훈",
+    "report_date": "2026.06.30",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": "중립",
+        "reason": "네이버는 임직원 464명 증가 등 AI 시대 공격적 채용 기조를 보이나 카카오는 비핵심 사업 정리 및 조직 슬림화로 수익성 개선에 집중"
+      },
+      {
+        "sector": "IT",
+        "stance": "중립",
+        "reason": "더블유게임즈는 구글 플레이 수수료 인하(30%→25%) 수혜 및 자체 DTC 채널 매출 비중 확대(38.7%)를 통해 수익성 개선 기대"
+      }
+    ],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": [
+      "NAVER",
+      "카카오",
+      "더블유게임즈"
+    ],
+    "risk": null,
+    "quote": "네이버는 늘고 카카오는 줄고…AI 시대 엇갈린 인력 전략 / 더블유게임즈 \"구글 플레이 수수료 인하 수혜 기대…DTC 확대와 시너지\""
+  }
+}

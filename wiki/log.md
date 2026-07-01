@@ -1355,3 +1355,9 @@ python calc_oscillator.py SK하이닉스 삼성전자 한미반도체 --tg
 - /api/insights/signals: asset(종목) 오늘 언급수 vs 최근8일 평균 → 스파이크·신규·추세, 소스 다채널(합의)/stance 충돌 플래그, 랭킹(다채널*2+오늘+스파이크)
 - 메인 상단 "🔥 오늘의 시그널" 섹션: 종목·오늘N·평균대비추세·소스칩·배지·클릭시 그 종목 브리핑(sigBrief)
 - 데이터: asset 96% 채워짐(깨끗). 미결: 종목 vs 매크로 구분(현재 asset 전부 표시)
+
+## 2026-07-01 — 인제스트 백로그 연결 + 자동 원자추출 워커
+- 진단: 크롤(원본)은 정상이나 raw→atoms.db 추출 백로그 1712개. 허브/시그널 얇았던 원인
+- A: 오늘분 인제스트 완료(07-01: 50→105, 뉴스·리포트 반영). ingest_pending(Gemini gemini-3.1-flash-lite)
+- C: dashboard 서버에 _ingest_worker 스레드 내장 — 10분마다 미처리 60개 자동추출(단일워커=중복없음). 백로그 서서히 소화 + 최신 유지
+- 미결: 07-01 telegram/blog/yt가 pending에 안 잡힘(다른 경로?) — 후속 확인

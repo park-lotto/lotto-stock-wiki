@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-30",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-01_0704_2026년 예상 매출 성장률 51%.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유안타증권",
+    "analyst": "고선영",
+    "report_date": "2026.06.29",
+    "stocks": [
+      {
+        "name": "아이엠티",
+        "code": "451220",
+        "rating": "Not Rated",
+        "rating_changed": false,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "동사 2026년 예상 매출액은 497억원(YoY +50.7%)으로, 1)본업 장비 예상 매출액은 206억원(YoY +78.6%)으로 연결 실적 성장을 재차 견인하고, 2)자회사 아이엠텍플러스(IMTP)가 219억원(YoY +38.5%)으로 HTCC MLC 판매 호조를 기반으로 견조한 성장세를 이어갈 것으로 추정하기 때문이다.",
+        "estimate_revision": null,
+        "next_catalyst": "2026년 1월 체결된 동일 고객사향 17.8억원 규모의 추가 계약을 고려하면, 하반기는 동사 장비 매출 확대의 기점이 될 것으로 기대한다.",
+        "thesis": [
+          "CO2 건식 세정장비 수요 증가 전망 (HBM 고단화에 따른 파티클 이슈 및 수율 개선 필요성)",
+          "자회사 아이엠텍플러스의 HTCC MLC 판매 호조 (HBM 세대 전환에 따른 수요 확대)",
+          "중국 내 HTCC 세라믹 기판 구조적 쇼티지로 인한 실적 성장 기대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "반도체",
+        "quote": "동사 2026년 예상 매출액은 497억원(YoY +50.7%)으로, 1)본업 장비 예상 매출액은 206억원(YoY +78.6%)으로 연결 실적 성장을 재차 견인하고, 2)자회사 아이엠텍플러스(IMTP)가 219억원(YoY +38.5%)으로 HTCC MLC 판매 호조를 기반으로 견조한 성장세를 이어갈 것으로 추정하기 때문이다."
+      }
+    ]
+  }
+}

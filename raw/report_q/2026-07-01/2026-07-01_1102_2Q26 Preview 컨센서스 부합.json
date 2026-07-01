@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-01",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-01_1102_2Q26 Preview 컨센서스 부합.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "최보영",
+    "report_date": "2026-07-01",
+    "stocks": [
+      {
+        "name": "SK하이닉스",
+        "code": "000660",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "4,000,000 원",
+        "tp_prev": null,
+        "tp_direction": "up",
+        "earnings_outlook": "2026년 2분기 매출액은 83.5조원(YoY +275.7%, QoQ +58.8%), 영업이익은 63.5조원(YoY +589.0%, QoQ +68.8%, OPM 76.0%)으로 컨센서스 영업이익(약 63조원)에 부합하는 실적을 시현할 전망.",
+        "estimate_revision": "아울러 2027년 HBM 가격 협상이 진행되고 있어, 협상 결과에 따라 추가적인 전망치 상향 여지도 상존함.",
+        "next_catalyst": "7월 10일 예정된 ADR 상장을 통한 글로벌 투자자 저변 확대",
+        "thesis": [
+          "에이전틱 AI 확산으로 DRAM·NAND 전방위 수요가 확대되고 구조적 공급 부족이 2028년까지 지속",
+          "HBM3E 사실상 독점 및 HBM4 60% 이상 점유율 기반의 고부가 제품 믹스 개선",
+          "다년 LTA 확대를 통한 실적 변동성 축소와 사이클 장기화 가시성 확보"
+        ],
+        "valuation_basis": "26~30F ROE 58.6%, 5년 평균 COE 10.85% 기반 Target P/B 5.4배 적용",
+        "risk": null,
+        "supply_comment": "에이전틱 AI 확산으로 DRAM·NAND 전방위 수요가 확대되고 구조적 공급 부족이 2028년까지 지속되며",
+        "quote": "동종업계 최고 수준의 Pure Player 지위를 핵심 투자포인트로, 동사의 목표주가를 4,000,000원으로 상향 조정함."
+      }
+    ]
+  }
+}

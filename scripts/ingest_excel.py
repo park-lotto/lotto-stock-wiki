@@ -269,10 +269,13 @@ def build_stock_index(results: dict, dest=None) -> dict:
                 pct = round((tp_new - tp_old) / tp_old * 100, 1)
             slot(code, it.get("name", ""))["tp"] = {
                 "target": tp_new, "prev": tp_old, "change_pct": pct, "dir": d,
+                "brokerage": it.get("brokerage"), "date": it.get("date"),
             }
 
-    # 4) 컨센움직임 → consensus
-    r = (results.get("컨센움직임") or {}).get("results") or {}
+    # 4) 컨센움직임 → consensus (집계 기준일 last_update 포함)
+    cm = results.get("컨센움직임") or {}
+    cm_date = cm.get("last_update")
+    r = cm.get("results") or {}
     for bucket in ("컨센상향", "컨센하향", "서프라이즈", "쇼크"):
         for it in (r.get(bucket) or []):
             code = _resolve_code(it, name2code, unmatched)
@@ -280,7 +283,7 @@ def build_stock_index(results: dict, dest=None) -> dict:
                 continue
             slot(code, it.get("name", ""))["consensus"] = {
                 "type": bucket, "csen_chg": it.get("csen_chg"),
-                "surprise_rate": it.get("surprise_rate"),
+                "surprise_rate": it.get("surprise_rate"), "date": cm_date,
             }
 
     # 5) 가속화모멘텀 → accel (그룹별, 종목명만; 점수 높은 그룹 우선)

@@ -3375,10 +3375,29 @@ def _nlm_keepalive(interval=1500):
         time.sleep(interval)
 
 
+def _ingest_worker(interval=600, limit=60, warmup=120):
+    """atoms.db 자동 채우기 — 미처리 파일을 주기적으로 원자추출(백로그 소화 + 최신 유지).
+    단일 워커라 중복 없음. Gemini(gemini-3.1-flash-lite) 사용."""
+    time.sleep(warmup)  # 부팅 직후·수동 실행과 겹치지 않게 잠깐 대기
+    while True:
+        try:
+            p = subprocess.run(
+                [sys.executable, "-m", "pipeline.atoms.ingest_pending", "--limit", str(limit)],
+                cwd=ROOT, capture_output=True, text=True, encoding="utf-8",
+                errors="replace", timeout=900,
+            )
+            tail = (p.stdout or "").strip().splitlines()[-1:] or [""]
+            print(f"[ingest-worker] {tail[0][:100]}")
+        except Exception as e:
+            print(f"[ingest-worker] 예외: {str(e)[:120]}")
+        time.sleep(interval)
+
+
 def _start_keepalive():
-    t = threading.Thread(target=_nlm_keepalive, daemon=True)
-    t.start()
+    threading.Thread(target=_nlm_keepalive, daemon=True).start()
     print("[nlm-keepalive] 자동 세션 유지 시작 (25분 주기)")
+    threading.Thread(target=_ingest_worker, daemon=True).start()
+    print("[ingest-worker] 자동 원자추출 시작 (10분마다 60개)")
 
 
 if __name__ == "__main__":
