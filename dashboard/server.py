@@ -862,14 +862,8 @@ def _fetch_etf_constituents(code: str) -> list:
     return d.get("etfTop10MajorConstituentAssets") or []
 
 
-@app.get("/api/sector_vacuum")
-def api_sector_vacuum(top: int = 5):
-    """오늘 강한 ETF섹터 상위 → 각 ETF 실제 편입종목 → 수급빈집(osc) 우선정렬."""
-    now = time.time()
-    if _sv_cache["data"] and now - _sv_cache["ts"] < _SV_TTL:
-        return JSONResponse(content=_sv_cache["data"])
-
-    # 1) 등락률 포함 etf_bar 확보 (프리워밍 캐시 우선, 없으면 즉석 계산)
+def _compute_sector_vacuum(top: int = 5) -> dict:
+    """강한 ETF섹터 상위 → 편입종목 → 빈집(osc pct) 정렬. (순수 계산, 캐시 없음)"""
     etfs = None
     cached = _prewarm_cache.get("etf_bar")
     if cached and cached.get("data"):
@@ -885,7 +879,6 @@ def api_sector_vacuum(top: int = 5):
         except Exception:
             etfs = etfs or []
 
-    # 2) osc 로드
     tk = {}
     try:
         with open(TAERINI_STOCK_PATH, encoding="utf-8") as f:
@@ -893,7 +886,6 @@ def api_sector_vacuum(top: int = 5):
     except Exception:
         pass
 
-    # 3) 상위 N ETF (등락률 내림차순, 양수 우선)
     top_etfs = sorted([e for e in (etfs or []) if e.get("change_rate") is not None],
                       key=lambda x: x.get("change_rate", 0), reverse=True)[:max(1, min(top, 8))]
 
@@ -909,7 +901,7 @@ def api_sector_vacuum(top: int = 5):
             o = (tk.get(cc) or {}).get("osc") or {}
             stocks.append({"code": cc, "name": c.get("itemName"), "weight": c.get("etfWeight"),
                            "pct": o.get("pct"), "group": o.get("group")})
-        stocks.sort(key=lambda s: s["pct"] if s["pct"] is not None else 999)  # 빈집(낮은 %ile) 우선
+        stocks.sort(key=lambda s: s["pct"] if s["pct"] is not None else 999)
         return {"etf": e.get("name"), "code": e.get("code"),
                 "rate": round(float(e.get("change_rate", 0) or 0), 2), "stocks": stocks}
 
@@ -918,11 +910,115 @@ def api_sector_vacuum(top: int = 5):
         for r in ex.map(_build, top_etfs):
             result.append(r)
     result.sort(key=lambda x: x["rate"], reverse=True)
+    return {"sectors": result, "ts": time.time()}
 
-    out = {"sectors": result, "ts": now}
+
+@app.get("/api/sector_vacuum")
+def api_sector_vacuum(top: int = 5):
+    """오늘 강한 ETF섹터 상위 → 각 ETF 실제 편입종목 → 수급빈집(osc) 우선정렬."""
+    now = time.time()
+    if _sv_cache["data"] and now - _sv_cache["ts"] < _SV_TTL:
+        return JSONResponse(content=_sv_cache["data"])
+    out = _compute_sector_vacuum(top)
     _sv_cache["data"] = out
     _sv_cache["ts"] = now
     return JSONResponse(content=out)
+
+
+# ── 오늘의 빈집 포착 (자동 콜아웃) + 성과 추적 ──────────────────────
+CALLOUT_DIR = os.path.join(ROOT, "pipeline", "callouts")
+
+def _callout_score(rate, pct, chg) -> float:
+    vac     = max(0.0, 100.0 - (pct if pct is not None else 100.0))  # 빈집 깊이
+    strong  = max(0.0, rate or 0.0)                                  # 섹터 강도
+    not_run = max(0.0, 5.0 - max(0.0, chg or 0.0))                   # 아직 안 오름
+    return round(vac * 1.0 + strong * 3.0 + not_run * 2.0, 1)
+
+def _generate_callout(top_sectors: int = 5, n: int = 3) -> dict:
+    """강한섹터×빈집 통합 랭킹 Top n → 기준가 기록 → 당일 파일 동결."""
+    sv = _compute_sector_vacuum(top_sectors)
+    codes = [st["code"] for s in sv["sectors"] for st in s["stocks"] if st.get("code")]
+    prices = {}
+    try:
+        import kis_api
+        prices = kis_api.get_prices_multi(list(dict.fromkeys(codes)))
+    except Exception:
+        pass
+    best = {}
+    for s in sv["sectors"]:
+        for st in s["stocks"]:
+            cc = st.get("code")
+            if not cc or st.get("pct") is None:
+                continue
+            pr  = prices.get(cc) or {}
+            chg = float(pr.get("change_rate") or 0)
+            sc  = _callout_score(s["rate"], st["pct"], chg)
+            cand = {"code": cc, "name": st.get("name"), "sector": s["etf"],
+                    "sector_rate": s["rate"], "pct": st["pct"], "group": st.get("group"),
+                    "entry": int(pr.get("price") or 0), "change_at_gen": round(chg, 2),
+                    "score": sc,
+                    "reason": f"{s['etf']} 강세 · {st.get('group') or '빈집'} {st['pct']}%"}
+            if cc not in best or sc > best[cc]["score"]:
+                best[cc] = cand
+    picks = sorted(best.values(), key=lambda x: x["score"], reverse=True)[:n]
+    date = datetime.now().strftime("%Y-%m-%d")
+    out = {"date": date, "generated_ts": time.time(), "picks": picks}
+    try:
+        os.makedirs(CALLOUT_DIR, exist_ok=True)
+        with open(os.path.join(CALLOUT_DIR, f"{date}.json"), "w", encoding="utf-8") as f:
+            json.dump(out, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+    return out
+
+@app.get("/api/callout")
+def api_callout(refresh: int = 0):
+    """오늘의 빈집 포착 Top3 — 그날 최초 요청 시 생성·동결, 이후 동일값."""
+    date = datetime.now().strftime("%Y-%m-%d")
+    p = os.path.join(CALLOUT_DIR, f"{date}.json")
+    if not refresh and os.path.exists(p):
+        try:
+            with open(p, encoding="utf-8") as f:
+                return JSONResponse(content=json.load(f))
+        except Exception:
+            pass
+    return JSONResponse(content=_generate_callout())
+
+@app.get("/api/callout_history")
+def api_callout_history(days: int = 10):
+    """과거 콜아웃 + 현재가 기준 수익률·적중률."""
+    import glob
+    files = sorted(glob.glob(os.path.join(CALLOUT_DIR, "*.json")), reverse=True)[:max(1, days)]
+    loaded, codes = [], set()
+    for fp in files:
+        try:
+            with open(fp, encoding="utf-8") as f:
+                d = json.load(f)
+            loaded.append(d)
+            for pk in d.get("picks", []):
+                if pk.get("code"):
+                    codes.add(pk["code"])
+        except Exception:
+            pass
+    prices = {}
+    try:
+        import kis_api
+        prices = kis_api.get_prices_multi(list(codes))
+    except Exception:
+        pass
+    items = []
+    for d in loaded:
+        picks = []
+        for pk in d.get("picks", []):
+            cur   = int((prices.get(pk["code"]) or {}).get("price") or 0)
+            entry = pk.get("entry") or 0
+            ret   = round((cur - entry) / entry * 100, 2) if entry and cur else None
+            picks.append({**pk, "cur": cur, "ret": ret})
+        rets = [p["ret"] for p in picks if p["ret"] is not None]
+        items.append({"date": d.get("date"), "picks": picks,
+                      "avg_ret": round(sum(rets) / len(rets), 2) if rets else None,
+                      "hit": round(sum(1 for r in rets if r > 0) / len(rets) * 100) if rets else None})
+    return JSONResponse(content={"items": items})
 
 
 _etfcon_cache: dict = {}   # {code: {"data":..., "ts":...}}
