@@ -2036,10 +2036,9 @@ function renderWatchlist(items){
     } else {
       supHtml=`<div class="wl-sup-na">잠정수급 집계 전</div>`;
     }
-    return`<div class="wl-card" draggable="${_IS_TOUCH?'false':'true'}" data-code="${it.code}"
+    return`<div class="wl-card" draggable="${_IS_TOUCH?'false':'true'}" data-code="${it.code}" data-name="${esc(it.name)}"
       ondragstart="wlDragStart(event,'${it.code}')" ondragover="wlDragOver(event,'${it.code}')"
-      ondragleave="wlDragLeave(event)" ondrop="wlDrop(event,'${it.code}')" ondragend="wlDragEnd(event)"
-      onclick="wlCardClick('${it.code}','${esc(it.name)}')">
+      ondragleave="wlDragLeave(event)" ondrop="wlDrop(event,'${it.code}')" ondragend="wlDragEnd(event)">
       <button class="x" onclick="event.stopPropagation();wlRemove('${it.code}')" title="삭제">✕</button>
       <div class="wl-nm" title="${esc(it.name)}">${esc(it.name)}</div>
       <div class="wl-pr"><span class="p">${ps}</span><span class="r ${rc}">${rs}</span></div>
@@ -2999,6 +2998,16 @@ async function initLoad(){
   await loadOverview();
   prefetchTabs();
 }
+
+// 관심종목 카드: 위임 클릭 → 차트 오픈 (터치에서도 확실히 동작, 드래그/삭제 제외)
+(function(){ const row=document.getElementById("wl-row"); if(row){
+  row.addEventListener("click",ev=>{
+    if(ev.target.closest(".x")) return;
+    const card=ev.target.closest(".wl-card"); if(!card) return;
+    if(_wlJustDragged) return;
+    openStockChart(card.dataset.code, card.dataset.name);
+  });
+}})();
 
 // 터치기기: 지표 라벨(점선) 탭 → 설명 툴팁을 토스트로 (hover 대체)
 if(window.matchMedia&&window.matchMedia("(hover:none)").matches){

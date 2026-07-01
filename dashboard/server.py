@@ -806,7 +806,9 @@ def market_page():
     if not os.path.exists(p):
         return "<h1>market.html 준비중</h1>"
     with open(p, encoding="utf-8") as f:
-        return f.read()
+        html = f.read()
+    # 폰 캐시로 옛 버전 남는 것 방지 (매번 최신 서빙)
+    return HTMLResponse(content=html, headers={"Cache-Control": "no-cache, must-revalidate"})
 
 
 @app.get("/api/etf_bar")
