@@ -1043,6 +1043,7 @@ function _etfPop(){
       if(p.classList.contains("open") && !p.contains(ev.target) && !ev.target.closest(".etf-chip")) _etfPopClose();
     });
     window.addEventListener("resize",_etfPopClose);
+    window.addEventListener("scroll",_etfPopClose,{passive:true});   // 페이지 스크롤 시 닫기
   }
   return p;
 }
@@ -1063,8 +1064,11 @@ function openSectorDetail({etf, codes, names, title, anchor}){
   document.querySelectorAll(".etf-chip.active").forEach(c=>c.classList.remove("active"));
   if(anchor && anchor.classList && anchor.classList.contains("etf-chip")) anchor.classList.add("active");
   const r=(anchor||document.body).getBoundingClientRect();
+  const top=Math.min(r.bottom+4, Math.round(window.innerHeight*0.5));
   p.style.left=Math.max(6,Math.min(r.left, window.innerWidth-372))+"px";
-  p.style.top=(r.bottom+4)+"px";
+  p.style.top=top+"px";
+  p.style.maxHeight=(window.innerHeight-top-12)+"px";
+  p.style.overflowY="auto";
   p.innerHTML=`<div class="ep-hd">${esc(title||"")} <small>불러오는 중…</small></div>`;
   p.classList.add("open");
   const q = etf?("etf="+encodeURIComponent(etf)):("codes="+encodeURIComponent((codes||[]).join(",")));
@@ -1084,7 +1088,7 @@ function openSectorDetail({etf, codes, names, title, anchor}){
     }).join("");
     p.innerHTML=`<div class="ep-hd">${esc(d.title||title||"")} <small>(빈집순 · 클릭=차트)</small></div>`
       +(sn?`<div class="nf-secnews" style="padding:2px 12px 8px">${sn}</div>`:"")
-      +`<div style="max-height:52vh;overflow-y:auto;padding:0 8px 6px">${st||'<div class="ep-empty">종목 없음</div>'}</div>`;
+      +`<div style="padding:0 8px 6px">${st||'<div class="ep-empty">종목 없음</div>'}</div>`;
   }).catch(()=>{ if(_etfPopCode===key) p.innerHTML=`<div class="ep-hd">${esc(title||"")}</div><div class="ep-empty">오류</div>`; });
 }
 

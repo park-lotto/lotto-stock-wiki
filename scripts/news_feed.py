@@ -62,11 +62,14 @@ def sector_news(code, kw_map=None, top: int = 2) -> list:
     q = m.get("q")
     if not q:
         return []
+    must = m.get("must") or []
     ranked = []
-    for it in _search(q, display=15):
+    for it in _search(q, display=20):
         t = _clean(it.get("title", ""))
         if not t or any(w in t for w in NOISE):
             continue
+        if must and not any(w in t for w in must):
+            continue   # 테마 필수어 제목 미포함 → 오매칭 제외
         score = sum(1 for w in HOJAE if w in t)
         pub = it.get("pubDate", "")
         ranked.append((score, t, pub, it.get("originallink") or it.get("link")))
