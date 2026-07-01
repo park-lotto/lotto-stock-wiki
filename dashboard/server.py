@@ -3518,24 +3518,10 @@ async def api_insights_naver_board(req: Request):
         body = await req.json()
     except Exception:
         pass
-    stock = (body.get("stock") or "").strip()
     period = _valid_period(body.get("period") or "d3")
-    if not stock:
-        return JSONResponse(content={"error": "종목명 필요"}, status_code=400)
-    try:
-        from pipeline.atoms.codemap import code_for
-    except Exception:
-        return JSONResponse(content={"error": "codemap 없음"}, status_code=500)
-
-    code, tried = code_for(stock), stock
-    if not code:
-        for tok in re.split(r"[\s,·/]+", stock):
-            tok = tok.strip()
-            if tok and code_for(tok):
-                code, tried = code_for(tok), tok
-                break
-    if not code:
-        return JSONResponse(content={"error": f"'{stock}' 종목코드를 못 찾음 — 정확한 종목명으로 다시 시도"}, status_code=400)
+    code, tried, err = _resolve_stock(body)
+    if err:
+        return err
 
     posts = await run_in_threadpool(_naver_board_posts, code, period)
     if not posts:
@@ -3632,9 +3618,56 @@ def _query_variants(ql):
     return vs
 
 
+# KRX 원명이 한글음역이지만 브랜드명이 확실한 종목만 표시명 교정(검증된 것만; 애매한 지에스이·KT&G 계열 등은 제외)
+_DISPLAY_ALIAS = {
+    "엘에스일렉트릭": "LS일렉트릭",
+    "에스케이바이오팜": "SK바이오팜",
+    "에이치엘사이언스": "HL사이언스",
+    "케이씨씨": "KCC",
+    "케이씨씨글라스": "KCC글라스",
+    "케이티": "KT",
+    "케이티스카이라이프": "KT스카이라이프",
+    "케이티알파": "KT알파",
+    "케이티앤지": "KT&G",
+    "케이비아이동국실업": "KBI동국실업",
+}
+
+
+def _disp(name):
+    return _DISPLAY_ALIAS.get(name, name)
+
+
+def _resolve_stock(body):
+    """body에서 종목코드 해석. code(자동완성 선택) 우선 → 없으면 stock명 code_for.
+    반환: (code, 표시명, error_JSONResponse|None)."""
+    given = (body.get("code") or "").strip()
+    stock = (body.get("stock") or "").strip()
+    if given.isdigit() and len(given) == 6:
+        name = _disp(stock) if stock else ({v: k for k, v in _krx_codes().items()}.get(given, given))
+        return given, name, None
+    if not stock:
+        return None, None, JSONResponse(content={"error": "종목명 필요"}, status_code=400)
+    try:
+        from pipeline.atoms.codemap import code_for
+    except Exception:
+        return None, None, JSONResponse(content={"error": "codemap 없음"}, status_code=500)
+    code, tried = code_for(stock), stock
+    if not code:
+        for tok in re.split(r"[\s,·/]+", stock):
+            tok = tok.strip()
+            if tok and code_for(tok):
+                code, tried = code_for(tok), tok
+                break
+    if not code:
+        return None, None, JSONResponse(
+            content={"error": f"'{stock}' 종목코드를 못 찾음 — 정확한 종목명으로 다시 시도"}, status_code=400)
+    return code, _disp(tried), None
+
+
 @app.get("/api/insights/stock_suggest")
 def api_stock_suggest(q: str = ""):
-    """종목명 자동완성 — 앞글자 우선, 부분일치 보조, 코드일치·약자별칭 포함. 최대 12개."""
+    """종목명 자동완성 — 앞글자 우선, 부분일치 보조, 코드일치·약자별칭 포함. 최대 12개.
+    name=KRX원명(코드조회용) / display=브랜드 표시명."""
     q = (q or "").strip()
     if not q:
         return JSONResponse(content={"items": []})
@@ -3645,10 +3678,12 @@ def api_stock_suggest(q: str = ""):
         if code in seen:
             continue
         nl = name.lower()
-        if any(nl.startswith(v) for v in variants) or code.startswith(q):
-            starts.append({"name": name, "code": code}); seen.add(code)
-        elif any(v in nl for v in variants):
-            contains.append({"name": name, "code": code}); seen.add(code)
+        dl = _disp(name).lower()
+        row = {"name": name, "display": _disp(name), "code": code}
+        if any(nl.startswith(v) or dl.startswith(v) for v in variants) or code.startswith(q):
+            starts.append(row); seen.add(code)
+        elif any(v in nl or v in dl for v in variants):
+            contains.append(row); seen.add(code)
     starts.sort(key=lambda x: len(x["name"]))
     items = (starts + contains)[:12]
     return JSONResponse(content={"items": items})
@@ -3675,22 +3710,9 @@ async def api_insights_naver_news(req: Request):
         body = await req.json()
     except Exception:
         pass
-    stock = (body.get("stock") or "").strip()
-    if not stock:
-        return JSONResponse(content={"error": "종목명 필요"}, status_code=400)
-    try:
-        from pipeline.atoms.codemap import code_for
-    except Exception:
-        return JSONResponse(content={"error": "codemap 없음"}, status_code=500)
-    code, tried = code_for(stock), stock
-    if not code:
-        for tok in re.split(r"[\s,·/]+", stock):
-            tok = tok.strip()
-            if tok and code_for(tok):
-                code, tried = code_for(tok), tok
-                break
-    if not code:
-        return JSONResponse(content={"error": f"'{stock}' 종목코드를 못 찾음"}, status_code=400)
+    code, tried, err = _resolve_stock(body)
+    if err:
+        return err
 
     news = await run_in_threadpool(_naver_news, code, 25)
     if not news:

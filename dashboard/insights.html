@@ -280,7 +280,8 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .ws-act-label small { font-size: .68rem; color: var(--muted); font-weight: 500; letter-spacing: 0; text-transform: none; }
 .ws-act-group .nb-act { text-align: left; }
 /* 종목 자동완성 드롭다운 */
-.nb-ac-wrap { position: relative; }
+.nb-ac-wrap { position: relative; width: 100%; }
+.nb-ac-wrap #nb-stock { width: 100%; box-sizing: border-box; }
 .nb-ac { position: absolute; top: calc(100% + 3px); left: 0; right: 0; z-index: 60; background: #12140f; border: 1px solid var(--gold-dim); border-radius: 9px; max-height: 250px; overflow-y: auto; display: none; box-shadow: 0 8px 22px rgba(0,0,0,.5); }
 .nb-ac.on { display: block; }
 .nb-ac-item { padding: 8px 11px; cursor: pointer; font-size: .84rem; display: flex; justify-content: space-between; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,.04); }
@@ -1939,6 +1940,7 @@ async function wsWebResearch() {
 let _acTimer = null, _acItems = [], _acSel = -1;
 function stockSuggest(inp) {
   const q = (inp.value || '').trim();
+  delete inp.dataset.code;   // 직접 타이핑하면 이전 선택 코드 무효화
   clearTimeout(_acTimer);
   if (q.length < 1) { hideStockAC(); return; }
   _acTimer = setTimeout(async () => {
@@ -1952,11 +1954,11 @@ function renderStockAC() {
   const box = qs('#nb-ac'); if (!box) return;
   if (!_acItems.length) { hideStockAC(); return; }
   box.innerHTML = _acItems.map((it, i) =>
-    `<div class="nb-ac-item${i === _acSel ? ' sel' : ''}" onmousedown="event.preventDefault();pickStock(${i})"><span class="nm">${escHtml(it.name)}</span><span class="cd">${escHtml(it.code)}</span></div>`).join('');
+    `<div class="nb-ac-item${i === _acSel ? ' sel' : ''}" onmousedown="event.preventDefault();pickStock(${i})"><span class="nm">${escHtml(it.display || it.name)}</span><span class="cd">${escHtml(it.code)}</span></div>`).join('');
   box.classList.add('on');
 }
 function hideStockAC() { const box = qs('#nb-ac'); if (box) { box.classList.remove('on'); box.innerHTML = ''; } _acItems = []; _acSel = -1; }
-function pickStock(i) { const it = _acItems[i]; if (!it) return; const inp = qs('#nb-stock'); if (inp) inp.value = it.name; hideStockAC(); }
+function pickStock(i) { const it = _acItems[i]; if (!it) return; const inp = qs('#nb-stock'); if (inp) { inp.value = it.display || it.name; inp.dataset.code = it.code || ''; } hideStockAC(); }
 function stockKey(e) {
   const box = qs('#nb-ac');
   const open = box && box.classList.contains('on') && _acItems.length;
@@ -1970,9 +1972,11 @@ function stockKey(e) {
 }
 async function wsNaverBoard() {
   const ws = window._ws; if (!ws) return;
-  const stock = (((qs('#nb-stock') || {}).value || '').trim()) || (((qs('#ws-q') || {}).value || '').trim()) || ws.label || '';
+  const inp = qs('#nb-stock');
+  const stock = (((inp || {}).value || '').trim()) || (((qs('#ws-q') || {}).value || '').trim()) || ws.label || '';
   if (!stock) { toast('종목명을 입력하세요 (예: LS일렉트릭)', true); return; }
-  const period = (qs('#nb-period') || {}).value || 'd3';
+  const nbCode = (inp && inp.dataset.code) || '';
+  const period = 'd3';
   const perKo = { today: '오늘', d1: '-1일', d3: '-3일', d7: '-7일', d30: '-30일' }[period] || period;
   const card = wsAddCard('🗣️ 종토방 여론', `<div class="nb-qa-q">종목: ${escHtml(stock)} · 기간 ${perKo}</div>${wsLoading('종토방 크롤링 + 상위글 본문 렌더링 + 여론분석 중… (~30초)', true)}`);
   card._abort = new AbortController();
@@ -1980,7 +1984,7 @@ async function wsNaverBoard() {
   try {
     const res = await apiFetch('/api/insights/naver_board', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ stock, period }), signal: card._abort.signal
+      body: JSON.stringify({ stock, period, code: nbCode }), signal: card._abort.signal
     });
     if (res.error) throw new Error(res.error);
     const top = (res.top || []).map(x => `<div class="sig-fact" style="border-left-color:#67e8f9"><div class="sig-fact-txt">${escHtml(x.title)}</div>${x.body ? `<div style="font-size:.74rem;color:#cfd3c8;margin-top:3px;line-height:1.5">${escHtml(x.body)}</div>` : ''}<div class="sig-fact-meta">👁 조회 ${x.views} · 👍 추천 ${x.up} · ${escHtml(x.date)}</div></div>`).join('');
@@ -1995,15 +1999,17 @@ async function wsNaverBoard() {
 }
 async function wsNaverNews() {
   const ws = window._ws; if (!ws) return;
-  const stock = (((qs('#nb-stock') || {}).value || '').trim()) || (((qs('#ws-q') || {}).value || '').trim()) || ws.label || '';
-  if (!stock) { toast('종목명을 입력하세요 (예: 대우건설)', true); return; }
+  const inp = qs('#nb-stock');
+  const stock = (((inp || {}).value || '').trim()) || (((qs('#ws-q') || {}).value || '').trim()) || ws.label || '';
+  if (!stock) { toast('종목명을 입력하세요 (예: LS일렉트릭)', true); return; }
+  const nbCode = (inp && inp.dataset.code) || '';
   const card = wsAddCard('📰 종목이슈', `<div class="nb-qa-q">종목: ${escHtml(stock)}</div>${wsLoading('네이버 종목뉴스 수집 + 상승원인 분석 중… (~40초)', true)}`);
   card._abort = new AbortController();
   const body = card.querySelector('.ws-card-b');
   try {
     const res = await apiFetch('/api/insights/naver_news', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ stock }), signal: card._abort.signal
+      body: JSON.stringify({ stock, code: nbCode }), signal: card._abort.signal
     });
     if (res.error) throw new Error(res.error);
     const list = (res.news || []).map(n => {
