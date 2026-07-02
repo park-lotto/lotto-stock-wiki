@@ -177,6 +177,16 @@ def _stock_atom(meta, sector, name, content, *, strong, signal, i, tag) -> dict:
     )
 
 
+def _s(v) -> str:
+    """Gemini가 문자열 슬롯에 dict/list를 채워 넣는 경우까지 방어적으로 문자열화.
+    (예: earnings_outlook이 문자열 대신 {'summary': ...} 구조로 오는 경우)"""
+    if isinstance(v, dict):
+        return " ".join(_s(x) for x in v.values() if x)
+    if isinstance(v, list):
+        return "; ".join(_s(x) for x in v if x)
+    return str(v) if v else ""
+
+
 def questionnaire_to_atoms(q: dict, meta: dict) -> list[dict]:
     """채워진 질문지 dict + meta → 원자 dict 리스트."""
     kind = q.get("target_kind")
@@ -191,8 +201,8 @@ def questionnaire_to_atoms(q: dict, meta: dict) -> list[dict]:
             parts = [
                 f"투자의견 {s.get('rating')}({s.get('rating_changed') or ''})",
                 f"목표가 {s.get('tp_prev')}→{s.get('tp_new')}" if s.get("tp_new") else "",
-                s.get("earnings_outlook") or "",
-                "; ".join(s.get("thesis") or []),
+                _s(s.get("earnings_outlook")),
+                "; ".join(_s(t) for t in (s.get("thesis") or [])),
                 f"리스크: {s.get('risk')}" if s.get("risk") else "",
             ]
             content = " / ".join(p for p in parts if p)
@@ -204,7 +214,7 @@ def questionnaire_to_atoms(q: dict, meta: dict) -> list[dict]:
 
     elif kind == "sector":
         sec = _norm_sector(q.get("sector_name"))
-        thesis = "; ".join(q.get("thesis") or [])
+        thesis = "; ".join(_s(t) for t in (q.get("thesis") or []))
         atoms.append(_base(
             meta,
             id=_mk_id(meta["date"], meta["broker"], meta["raw_file"], "sec", 0),
@@ -229,7 +239,7 @@ def questionnaire_to_atoms(q: dict, meta: dict) -> list[dict]:
             sector="기타", asset="시장", asset_level="market",
             signal="neutral", event_type="macro", magnitude="major", strength_score=3,
             content=q.get("market_direction") or "; ".join(
-                rs.get("reason", "") for rs in q.get("recommended_sectors") or []
+                _s(rs.get("reason")) for rs in q.get("recommended_sectors") or []
             ),
         ))
         for i, rs in enumerate(q.get("recommended_sectors") or []):

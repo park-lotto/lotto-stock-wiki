@@ -8,10 +8,17 @@
     python -m pipeline.atoms.report_ingest --all --dry-run     # 목록만 출력
     python -m pipeline.atoms.report_ingest --all --limit 20    # N개만
 """
+import sys
 import json
 import argparse
 import tempfile
 from pathlib import Path
+
+if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
 from .pdf_ingest import _extract_pdf_url, _extract_meta, _download_pdf
 from .questionnaire import extract_questionnaire, questionnaire_to_atoms

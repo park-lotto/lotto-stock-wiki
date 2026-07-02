@@ -65,3 +65,20 @@ def test_market_report_fans_out_sectors_and_picks():
         f"한국 상장 종목이 atoms에 없음. stock_assets={stock_assets}"
     )
     assert any(a["asset_level"] == "market" for a in atoms)
+
+
+def test_stock_report_survives_dict_shaped_earnings_outlook():
+    """Gemini가 earnings_outlook/thesis 슬롯에 문자열 대신 dict/list-of-dict를
+    채워 넣어도(2026-07-02 실제 발생) TypeError 없이 content로 합쳐져야 한다."""
+    q = {"target_kind": "stock", "stocks": [
+        {"name": "삼성전자", "rating": "BUY", "tp_new": "100000",
+         "tp_direction": "up", "quote": "q",
+         "earnings_outlook": {"summary": "실적 개선", "detail": "메모리 가격 상승"},
+         "thesis": ["단순 문자열", {"point": "구조화된 항목"}]}]}
+    meta = {"date": "2026-07-02", "broker": "테스트", "raw_file": "x.md"}
+    atoms = questionnaire_to_atoms(q, meta)
+    sams = [a for a in atoms if a["asset"] == "삼성전자"]
+    assert sams
+    content = sams[0]["content"]
+    assert "실적 개선" in content
+    assert "구조화된 항목" in content
