@@ -2,25 +2,18 @@
 import sys, re, time
 from datetime import date
 from pathlib import Path
-from google import genai
-from google.genai import types
 import io
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 ROOT  = Path(__file__).parent.parent
-ENV   = ROOT / '.env'
+sys.path.insert(0, str(ROOT / "scripts"))
+import gemini_q10_lib as lib
+
 TODAY = date.today().strftime('%Y-%m-%d')
-
-env = {}
-for line in ENV.read_text(encoding='utf-8').splitlines():
-    if '=' in line and not line.startswith('#'):
-        k, v = line.split('=', 1)
-        env[k.strip()] = v.strip()
-
-API_KEY = env.get('GEMINI_API_KEY', '')
-client  = genai.Client(api_key=API_KEY)
+env = lib.load_env(ROOT)
+client = lib.get_client(env)
 
 BASE_CTX = f"""오늘 날짜는 {TODAY}이야.
 너는 한국 주식시장 방산 섹터 전문 애널리스트야.
@@ -78,48 +71,17 @@ Q10 = """방산 섹터 꼬리에 꼬리를 무는 연쇄 구조.
 
 REMAINING = [("Q9", "지금 주도 종목", Q9), ("Q10", "꼬리에 꼬리 연쇄", Q10)]
 
+PRIOR_Q = ['Q1','Q2','Q3','Q4','Q5','Q6','Q7','Q8']
+
 # 기존 Q1~Q8 요약 읽기
 raw_file = ROOT / 'raw' / 'L5_섹터' / f'{TODAY}_방산_Q10리서치.md'
-summaries = {}
-if raw_file.exists():
-    raw_text = raw_file.read_text(encoding='utf-8')
-    for qn in ['Q1','Q2','Q3','Q4','Q5','Q6','Q7','Q8']:
-        m = re.search(rf'## {qn} — .*?\n\n\*\*질문:\*\*.*?\n\*\*답변:\*\*\n(.*?)(?=\n---\n|\Z)', raw_text, re.DOTALL)
-        if m:
-            summaries[qn] = m.group(1).strip()[:600]
+summaries = lib.load_prior_summaries(raw_file, PRIOR_Q)
+if summaries:
     print(f"✅ Q1~Q8 요약 로드: {list(summaries.keys())}")
 
-def extract_retry_seconds(err: str) -> float:
-    m = re.search(r"retryDelay.*?(\d+(?:\.\d+)?)s", err)
-    return float(m.group(1)) + 8 if m else 70.0
-
 def call_gemini(qtext: str, context: dict) -> str:
-    ctx = BASE_CTX + "\n\n이전 Q 요약:\n"
-    for qn in ['Q1','Q2','Q3','Q4','Q5','Q6','Q7','Q8']:
-        if qn in context:
-            ctx += f"[{qn}] {context[qn]}\n\n"
-    ctx += "---\n다음 질문에 답해줘:\n\n"
-    for attempt in range(5):
-        try:
-            resp = client.models.generate_content(
-                model='gemini-3-flash-preview',
-                contents=ctx + qtext,
-                config=types.GenerateContentConfig(
-                    tools=[types.Tool(google_search=types.GoogleSearch())],
-                    temperature=0.3,
-                )
-            )
-            text = resp.text
-            return text if text is not None else "[오류: 응답 없음]"
-        except Exception as e:
-            err = str(e)
-            if '429' in err or 'RESOURCE_EXHAUSTED' in err:
-                wait = extract_retry_seconds(err)
-                print(f"  ⏳ 429 — {wait:.0f}초 대기 (시도 {attempt+1}/5)")
-                time.sleep(wait)
-            else:
-                return f"[오류: {e}]"
-    return "[오류: 최대 재시도 초과]"
+    ctx = lib.build_context(BASE_CTX, context, PRIOR_Q)
+    return lib.call_gemini(client, ctx + qtext, retry_wait_margin=8)
 
 print(f"{'='*60}\n  방산 Q9~Q10 재실행\n{'='*60}\n")
 
@@ -136,38 +98,20 @@ for qnum, qtitle, qtext in REMAINING:
         print(f"  ❌ 실패: {answer}\n")
     time.sleep(5)
 
-# 원본 파일 업데이트
-if raw_file.exists():
-    raw_content = raw_file.read_text(encoding='utf-8')
-else:
-    raw_content = f"# 방산 섹터 Q1~Q10 리서치 ({TODAY})\n\n---\n\n"
-
-for qnum, data in new_results.items():
-    block = f"## {qnum} — {data['title']}\n\n**답변:**\n{data['answer']}\n\n---\n\n"
-    if f"## {qnum} —" in raw_content:
-        raw_content = re.sub(rf'## {qnum} —.*?(?=\n## |\Z)', block, raw_content, flags=re.DOTALL)
-    else:
-        raw_content += block
-raw_file.write_text(raw_content, encoding='utf-8')
+# 원본 파일 업데이트 (질문 텍스트는 이미 REMAINING에 있으니 채워서 넘김)
+for qnum, qtitle, qtext in REMAINING:
+    if qnum in new_results:
+        new_results[qnum]["question"] = qtext
+lib.update_raw_file(raw_file, new_results, f"# 방산 섹터 Q1~Q10 리서치 ({TODAY})\n\n---\n\n")
 print(f"✅ 원본 업데이트")
 
 # sector_방산.md Q9~Q10 추가
 sector_file = ROOT / 'wiki' / 'L5_섹터' / '방산' / 'sector_방산.md'
 if sector_file.exists():
-    sector = sector_file.read_text(encoding='utf-8')
-    for qnum, data in new_results.items():
-        titles = {'Q9': '지금 주도 종목 × 왜 강한가', 'Q10': '꼬리에 꼬리 연쇄 구조'}
-        new_sec = f"\n### {qnum} — {titles[qnum]}\n\n{data['answer']}\n\n---\n"
-        if f"### {qnum} —" in sector:
-            sector = re.sub(rf'### {qnum} —.*?(?=\n### |\Z)', new_sec.strip()+'\n', sector, flags=re.DOTALL)
-        else:
-            sector += new_sec
-    sector_file.write_text(sector, encoding='utf-8')
+    titles = {'Q9': '지금 주도 종목 × 왜 강한가', 'Q10': '꼬리에 꼬리 연쇄 구조'}
+    lib.update_sector_wiki(sector_file, new_results, titles, f"# 방산 섹터 — 현재 상태\n\n")
     print(f"✅ 위키 업데이트")
 
-log_file = ROOT / 'wiki' / 'log.md'
-if log_file.exists():
-    log = log_file.read_text(encoding='utf-8')
-    completed = [q for q,d in new_results.items() if not d['answer'].startswith('[오류')]
-    log_file.write_text(f"- {TODAY} — 방산 Q9~Q10 재실행: 성공 {completed}\n" + log, encoding='utf-8')
+completed = [q for q, d in new_results.items() if not d['answer'].startswith('[오류')]
+lib.log_completion(ROOT / 'wiki' / 'log.md', f"- {TODAY} — 방산 Q9~Q10 재실행: 성공 {completed}\n")
 print(f"✅ log.md 기록\n완료: {list(new_results.keys())}")

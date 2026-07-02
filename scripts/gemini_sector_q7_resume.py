@@ -6,33 +6,22 @@
 - 429 에러 시 retry_delay 파싱 후 자동 대기 재시도
 사용: python scripts/gemini_sector_q7_resume.py
 """
-import sys, os, re, time, json
+import sys, re, time
 from datetime import date
 from pathlib import Path
-from google import genai
-from google.genai import types
 import io
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 ROOT   = Path(__file__).parent.parent
-ENV    = ROOT / '.env'
+sys.path.insert(0, str(ROOT / "scripts"))
+import gemini_q10_lib as lib
+
 TODAY  = date.today().strftime('%Y-%m-%d')
 SECTOR = '반도체'
-
-# .env 로드
-env = {}
-for line in ENV.read_text(encoding='utf-8').splitlines():
-    if '=' in line and not line.startswith('#'):
-        k, v = line.split('=', 1)
-        env[k.strip()] = v.strip()
-
-API_KEY = env.get('GEMINI_API_KEY', '')
-if not API_KEY:
-    print('❌ GEMINI_API_KEY 없음'); sys.exit(1)
-
-client = genai.Client(api_key=API_KEY)
+env = lib.load_env(ROOT)
+client = lib.get_client(env)
 
 # ─── Q4~Q7 프롬프트 ───────────────────────────────────────────────────────────
 
@@ -113,73 +102,25 @@ REMAINING = [
 # ─── 기존 Q1~Q3 결과 읽기 ───────────────────────────────────────────────────
 
 raw_file = ROOT / 'raw' / 'L5_섹터' / f'{TODAY}_반도체_Q7리서치.md'
+PRIOR_Q = ['Q1', 'Q2', 'Q3']
 
-existing_summaries = {}
-if raw_file.exists():
-    raw_text = raw_file.read_text(encoding='utf-8')
-    # Q1~Q3 답변 추출 (첫 800자만 요약으로 사용)
-    for qn in ['Q1', 'Q2', 'Q3']:
-        pattern = rf'## {qn} — .*?\n\n\*\*질문:\*\*.*?\n\*\*답변:\*\*\n(.*?)(?=\n---\n|\Z)'
-        m = re.search(pattern, raw_text, re.DOTALL)
-        if m:
-            answer_text = m.group(1).strip()
-            existing_summaries[qn] = answer_text[:800]  # 800자 요약
+existing_summaries = lib.load_prior_summaries(raw_file, PRIOR_Q, char_limit=800)
+if existing_summaries:
     print(f"✅ 기존 Q1~Q3 답변 로드 (Q1:{len(existing_summaries.get('Q1',''))}자, Q2:{len(existing_summaries.get('Q2',''))}자, Q3:{len(existing_summaries.get('Q3',''))}자)")
 else:
     print(f"⚠️ 기존 파일 없음: {raw_file.name}")
     print("  Q4~Q7을 컨텍스트 없이 독립 실행합니다.")
 
-# ─── 독립 호출 함수 (retry 포함) ─────────────────────────────────────────────
-
-def extract_retry_seconds(error_msg: str) -> float:
-    """오류 메시지에서 retryDelay 초 추출"""
-    m = re.search(r"retryDelay.*?(\d+(?:\.\d+)?)s", str(error_msg))
-    if m:
-        return float(m.group(1)) + 5  # 여유 5초 추가
-    return 65.0  # 기본값 65초
+_BASE_CTX = (f"오늘 날짜는 {TODAY}이야.\n너는 한국 주식시장 반도체 섹터 전문 애널리스트야.\n"
+             "이전 질문들에서 아래 내용을 이미 논의했어 (요약):")
 
 def call_gemini_independent(qnum: str, qtitle: str, qtext: str,
                              context_summaries: dict) -> str:
     """독립 API 호출 — 이전 답변 요약 첨부 (chat 세션 아님)"""
-
-    # 컨텍스트 구성: 이전 Q&A 요약 (각 800자 이하)
-    context_block = ""
-    if context_summaries:
-        context_block = f"오늘 날짜는 {TODAY}이야.\n"
-        context_block += "너는 한국 주식시장 반도체 섹터 전문 애널리스트야.\n"
-        context_block += "이전 질문들에서 아래 내용을 이미 논의했어 (요약):\n\n"
-        for qn in ['Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6']:
-            if qn in context_summaries:
-                context_block += f"[{qn} 요약] {context_summaries[qn][:600]}\n\n"
-        context_block += "---\n이걸 배경으로 다음 질문에 답해줘:\n\n"
-
-    full_prompt = context_block + qtext
-
-    max_retries = 4
-    for attempt in range(max_retries):
-        try:
-            response = client.models.generate_content(
-                model='gemini-3-flash-preview',
-                contents=full_prompt,
-                config=types.GenerateContentConfig(
-                    tools=[types.Tool(google_search=types.GoogleSearch())],
-                    temperature=0.3,
-                )
-            )
-            return response.text
-
-        except Exception as e:
-            err_str = str(e)
-            if '429' in err_str or 'RESOURCE_EXHAUSTED' in err_str:
-                wait_secs = extract_retry_seconds(err_str)
-                print(f"  ⏳ 429 Rate Limit — {wait_secs:.0f}초 대기 후 재시도 (시도 {attempt+1}/{max_retries})")
-                time.sleep(wait_secs)
-                continue
-            else:
-                print(f"  ❌ 오류: {e}")
-                return f"[오류: {e}]"
-
-    return "[오류: 최대 재시도 초과]"
+    if not context_summaries:
+        return lib.call_gemini(client, qtext)
+    ctx = lib.build_context(_BASE_CTX, context_summaries, ['Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6'])
+    return lib.call_gemini(client, ctx + qtext)
 
 # ─── 실행 ──────────────────────────────────────────────────────────────────────
 
@@ -221,77 +162,26 @@ print(f"  저장 중...")
 print(f"{'='*60}")
 
 # 1. 원본 파일에 Q4~Q7 추가
-if raw_file.exists():
-    raw_content = raw_file.read_text(encoding='utf-8')
-else:
-    raw_content = f"# 반도체 섹터 Q1~Q7 리서치 ({TODAY})\n> Gemini Flash 연속 대화 세션\n\n---\n\n"
-
-for qnum, data in new_results.items():
-    block = f"""## {qnum} — {data['title']}
-
-**질문:**
-{data['question']}
-
-**답변:**
-{data['answer']}
-
----
-
-"""
-    if f"## {qnum} —" in raw_content:
-        # 기존 섹션 교체
-        raw_content = re.sub(
-            rf'## {qnum} —.*?(?=\n## |\Z)',
-            block,
-            raw_content,
-            flags=re.DOTALL
-        )
-    else:
-        raw_content += block
-
-raw_file.write_text(raw_content, encoding='utf-8')
+lib.update_raw_file(raw_file, new_results,
+                     f"# 반도체 섹터 Q1~Q7 리서치 ({TODAY})\n> Gemini Flash 연속 대화 세션\n\n---\n\n")
 print(f"✅ 원본 업데이트: {raw_file.name}")
 
 # 2. sector_반도체.md 전체 재구성
 sector_file = ROOT / 'wiki' / 'L5_섹터' / '반도체' / 'sector_반도체.md'
-if sector_file.exists():
-    existing_sector = sector_file.read_text(encoding='utf-8')
-else:
-    existing_sector = f'# 반도체 섹터 — 현재 상태\n\n'
-
-# Q4~Q7 섹션 추가/교체
-for qnum, data in new_results.items():
-    title_map = {
-        'Q4': '미국-중국 패권 전쟁이 한국에 미치는 영향',
-        'Q5': '소부장 밸류체인',
-        'Q6': '미래 재료 총정리',
-        'Q7': '전체 스토리 종합 + 콘텐츠 소재',
-    }
-    section_title = title_map.get(qnum, data['title'])
-    new_section = f"\n### {qnum} — {section_title}\n\n{data['answer']}\n\n---\n"
-
-    if f"### {qnum} —" in existing_sector:
-        existing_sector = re.sub(
-            rf'### {qnum} —.*?(?=\n### |\Z)',
-            new_section.strip() + '\n',
-            existing_sector,
-            flags=re.DOTALL
-        )
-    else:
-        existing_sector += new_section
-
-sector_file.write_text(existing_sector, encoding='utf-8')
+title_map = {
+    'Q4': '미국-중국 패권 전쟁이 한국에 미치는 영향',
+    'Q5': '소부장 밸류체인',
+    'Q6': '미래 재료 총정리',
+    'Q7': '전체 스토리 종합 + 콘텐츠 소재',
+}
+lib.update_sector_wiki(sector_file, new_results, title_map, f'# 반도체 섹터 — 현재 상태\n\n')
 print(f"✅ 위키 업데이트: sector_반도체.md")
 
 # 3. log.md 기록
-log_file = ROOT / 'wiki' / 'log.md'
-if log_file.exists():
-    log = log_file.read_text(encoding='utf-8')
-    completed = [q for q, d in new_results.items() if not d['answer'].startswith('[오류')]
-    failed    = [q for q, d in new_results.items() if d['answer'].startswith('[오류')]
-    entry = f"- {TODAY} — 반도체 Q4~Q7 재실행 완료: 성공 {completed} / 실패 {failed}\n"
-    log_file.write_text(entry + log, encoding='utf-8')
-
+completed = [q for q, d in new_results.items() if not d['answer'].startswith('[오류')]
+failed    = [q for q, d in new_results.items() if d['answer'].startswith('[오류')]
+lib.log_completion(ROOT / 'wiki' / 'log.md',
+                    f"- {TODAY} — 반도체 Q4~Q7 재실행 완료: 성공 {completed} / 실패 {failed}\n")
 print(f"✅ log.md 기록 완료")
 
 print(f"\n{'='*60}")

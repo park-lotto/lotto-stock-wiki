@@ -6,31 +6,21 @@
 - 429 에러 시 retry_delay 파싱 후 자동 대기 재시도
 사용: python scripts/gemini_robot_q5to10_resume.py
 """
-import sys, os, re, time
+import sys, re, time
 from datetime import date
 from pathlib import Path
-from google import genai
-from google.genai import types
 import io
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 ROOT  = Path(__file__).parent.parent
-ENV   = ROOT / '.env'
+sys.path.insert(0, str(ROOT / "scripts"))
+import gemini_q10_lib as lib
+
 TODAY = date.today().strftime('%Y-%m-%d')
-
-env = {}
-for line in ENV.read_text(encoding='utf-8').splitlines():
-    if '=' in line and not line.startswith('#'):
-        k, v = line.split('=', 1)
-        env[k.strip()] = v.strip()
-
-API_KEY = env.get('GEMINI_API_KEY', '')
-if not API_KEY:
-    print('❌ GEMINI_API_KEY 없음'); sys.exit(1)
-
-client = genai.Client(api_key=API_KEY)
+env = lib.load_env(ROOT)
+client = lib.get_client(env)
 
 # ── Q5~Q10 프롬프트 ──────────────────────────────────────────────────────────
 
@@ -190,62 +180,20 @@ REMAINING = [
 # ── 기존 Q1~Q4 결과 읽기 ─────────────────────────────────────────────────────
 
 raw_file = ROOT / 'raw' / 'L5_섹터' / f'{TODAY}_로봇_Q10리서치.md'
+PRIOR_Q = ['Q1', 'Q2', 'Q3', 'Q4']
 
-existing_summaries = {}
-if raw_file.exists():
-    raw_text = raw_file.read_text(encoding='utf-8')
-    for qn in ['Q1', 'Q2', 'Q3', 'Q4']:
-        pattern = rf'## {qn} — .*?\n\n\*\*질문:\*\*.*?\n\*\*답변:\*\*\n(.*?)(?=\n---\n|\Z)'
-        m = re.search(pattern, raw_text, re.DOTALL)
-        if m:
-            existing_summaries[qn] = m.group(1).strip()[:600]
+existing_summaries = lib.load_prior_summaries(raw_file, PRIOR_Q)
+if existing_summaries:
     print(f"✅ 기존 Q1~Q4 로드: {list(existing_summaries.keys())}")
 else:
     print(f"⚠️ 기존 파일 없음 — 컨텍스트 없이 독립 실행")
 
-# ── 독립 호출 함수 (429 자동 대기) ──────────────────────────────────────────
-
-def extract_retry_seconds(error_msg: str) -> float:
-    m = re.search(r"retryDelay.*?(\d+(?:\.\d+)?)s", str(error_msg))
-    if m:
-        return float(m.group(1)) + 8
-    return 70.0
+_BASE_CTX = (f"오늘 날짜는 {TODAY}이야.\n너는 한국 주식시장 로봇·피지컬AI 섹터 전문 애널리스트야.\n"
+             "이전 질문들에서 아래 내용을 논의했어 (요약):")
 
 def call_gemini(qnum: str, qtext: str, context: dict) -> str:
-    context_block = (
-        f"오늘 날짜는 {TODAY}이야.\n"
-        "너는 한국 주식시장 로봇·피지컬AI 섹터 전문 애널리스트야.\n"
-        "이전 질문들에서 아래 내용을 논의했어 (요약):\n\n"
-    )
-    for qn in ['Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6', 'Q7', 'Q8', 'Q9']:
-        if qn in context:
-            context_block += f"[{qn} 요약] {context[qn]}\n\n"
-    context_block += "---\n이걸 배경으로 다음 질문에 답해줘:\n\n"
-
-    full_prompt = context_block + qtext
-
-    for attempt in range(5):
-        try:
-            resp = client.models.generate_content(
-                model='gemini-3-flash-preview',
-                contents=full_prompt,
-                config=types.GenerateContentConfig(
-                    tools=[types.Tool(google_search=types.GoogleSearch())],
-                    temperature=0.3,
-                )
-            )
-            return resp.text
-        except Exception as e:
-            err = str(e)
-            if '429' in err or 'RESOURCE_EXHAUSTED' in err:
-                wait = extract_retry_seconds(err)
-                print(f"  ⏳ 429 — {wait:.0f}초 대기 (시도 {attempt+1}/5)")
-                time.sleep(wait)
-            else:
-                print(f"  ❌ 오류: {e}")
-                return f"[오류: {e}]"
-
-    return "[오류: 최대 재시도 초과]"
+    ctx = lib.build_context(_BASE_CTX, context, ['Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6', 'Q7', 'Q8', 'Q9'])
+    return lib.call_gemini(client, ctx + qtext, retry_wait_margin=8)
 
 # ── 실행 ─────────────────────────────────────────────────────────────────────
 
@@ -284,69 +232,28 @@ print(f"  저장 중...")
 print(f"{'='*60}")
 
 # 1. 원본 파일 업데이트
-if raw_file.exists():
-    raw_content = raw_file.read_text(encoding='utf-8')
-else:
-    raw_content = f"# 로봇·피지컬AI 섹터 Q1~Q10 리서치 ({TODAY})\n> Gemini Flash + Google Search\n\n---\n\n"
-
-for qnum, data in new_results.items():
-    block = f"## {qnum} — {data['title']}\n\n**질문:**\n{data['question']}\n\n**답변:**\n{data['answer']}\n\n---\n\n"
-    if f"## {qnum} —" in raw_content:
-        raw_content = re.sub(
-            rf'## {qnum} —.*?(?=\n## |\Z)',
-            block,
-            raw_content,
-            flags=re.DOTALL
-        )
-    else:
-        raw_content += block
-
-raw_file.write_text(raw_content, encoding='utf-8')
+lib.update_raw_file(raw_file, new_results,
+                     f"# 로봇·피지컬AI 섹터 Q1~Q10 리서치 ({TODAY})\n> Gemini Flash + Google Search\n\n---\n\n")
 print(f"✅ 원본 업데이트: {raw_file.name}")
 
 # 2. sector_로봇.md 업데이트
 sector_file = ROOT / 'wiki' / 'L5_섹터' / '로봇' / 'sector_로봇.md'
-
-def get(q):
-    return new_results.get(q, {}).get('answer', '[미완료]')
-
-if sector_file.exists():
-    sector_content = sector_file.read_text(encoding='utf-8')
-else:
-    sector_content = f"# 로봇·피지컬AI 섹터 — 현재 상태\n\n"
-
-section_map = {
-    'Q5':  ('협동로봇·물류로봇·의료로봇 응용 분야', get('Q5')),
-    'Q6':  ('미중 패권 경쟁 × 이벤트 타임라인',    get('Q6')),
-    'Q7':  ('전체 스토리 종합 + 콘텐츠 기회',       get('Q7')),
-    'Q8':  ('뉴스 트리거 × 주가 반응 패턴',         get('Q8')),
-    'Q9':  ('지금 국내 주도 종목 × 왜 강한가',      get('Q9')),
-    'Q10': ('꼬리에 꼬리를 물고 (연쇄 구조)',        get('Q10')),
+title_map = {
+    'Q5':  '협동로봇·물류로봇·의료로봇 응용 분야',
+    'Q6':  '미중 패권 경쟁 × 이벤트 타임라인',
+    'Q7':  '전체 스토리 종합 + 콘텐츠 기회',
+    'Q8':  '뉴스 트리거 × 주가 반응 패턴',
+    'Q9':  '지금 국내 주도 종목 × 왜 강한가',
+    'Q10': '꼬리에 꼬리를 물고 (연쇄 구조)',
 }
-
-for qnum, (title, content) in section_map.items():
-    new_section = f"\n### {qnum} — {title}\n\n{content}\n\n---\n"
-    if f"### {qnum} —" in sector_content:
-        sector_content = re.sub(
-            rf'### {qnum} —.*?(?=\n### |\Z)',
-            new_section.strip() + '\n',
-            sector_content,
-            flags=re.DOTALL
-        )
-    else:
-        sector_content += new_section
-
-sector_file.write_text(sector_content, encoding='utf-8')
+lib.update_sector_wiki(sector_file, new_results, title_map, f"# 로봇·피지컬AI 섹터 — 현재 상태\n\n")
 print(f"✅ 위키: wiki/L5_섹터/로봇/sector_로봇.md")
 
 # 3. log.md
-log_file = ROOT / 'wiki' / 'log.md'
-if log_file.exists():
-    log = log_file.read_text(encoding='utf-8')
-    completed = [q for q, d in new_results.items() if not d['answer'].startswith('[오류')]
-    failed    = [q for q, d in new_results.items() if d['answer'].startswith('[오류')]
-    entry = f"- {TODAY} — 로봇 Q5~Q10 재실행: 성공 {completed} / 실패 {failed}\n"
-    log_file.write_text(entry + log, encoding='utf-8')
+completed = [q for q, d in new_results.items() if not d['answer'].startswith('[오류')]
+failed    = [q for q, d in new_results.items() if d['answer'].startswith('[오류')]
+lib.log_completion(ROOT / 'wiki' / 'log.md',
+                    f"- {TODAY} — 로봇 Q5~Q10 재실행: 성공 {completed} / 실패 {failed}\n")
 print(f"✅ log.md 기록")
 
 completed_list = [q for q, d in new_results.items() if not d['answer'].startswith('[오류')]
