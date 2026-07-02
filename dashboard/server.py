@@ -229,15 +229,28 @@ def _healthz():
 @app.middleware("http")
 async def _auth_guard(request: Request, call_next):
     if not _AUTH_ON:
-        return await call_next(request)
+        response = await call_next(request)
+        _no_store(request, response)
+        return response
     path = request.url.path
     if path in _AUTH_ALLOW or path.startswith("/static"):
         return await call_next(request)
     if request.cookies.get("dash_auth") == _auth_token():
-        return await call_next(request)
+        response = await call_next(request)
+        _no_store(request, response)
+        return response
     if path.startswith("/api/"):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
     return RedirectResponse("/login")
+
+
+def _no_store(request: Request, response):
+    """API·HTML 응답 브라우저 캐싱 방지 — 새로고침해도 옛날 데이터 뜨는 문제 재발 방지 (2026-07-02)."""
+    path = request.url.path
+    if path.startswith("/static"):
+        return
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
 
 # ── 부팅 시 데이터소스 가용성 점검 (재발 방지: 조용히 0값만 나오던 문제 재현 시 즉시 로그로 드러나게) ──
 def _check_datasource_availability():
@@ -266,8 +279,8 @@ _check_datasource_availability()
 
 # ── 투자자/프로그램 시계열 누적 (장 중 15분 폴링) ──────────────────
 _FLOW: dict = {
-    "J": {"investor": deque(maxlen=30), "program": deque(maxlen=30)},
-    "Q": {"investor": deque(maxlen=30), "program": deque(maxlen=30)},
+    "J": {"investor": deque(maxlen=400), "program": deque(maxlen=400)},  # 1분×400 ≈ 장중 09:00~15:30 풀커버
+    "Q": {"investor": deque(maxlen=400), "program": deque(maxlen=400)},
 }
 
 def _poll_flow():

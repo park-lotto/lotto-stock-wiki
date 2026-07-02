@@ -1536,8 +1536,8 @@ function renderMarketFlow(d){
         ${hist.length>=2
           ? invHistoryChart(hist,240,80)
           : hist.length===1
-            ? `<div style="font-size:9px;color:#999;padding:2px 0">아직 1포인트 (2분 후 그래프 생성)</div>${invHistoryChart(hist,240,80)}`
-            : `<div style="font-size:9px;color:#999;padding:4px 0">장 중 데이터 없음 (09:00~15:30 2분 폴링)</div>`}`;
+            ? `<div style="font-size:9px;color:#999;padding:2px 0">아직 1포인트 (1분 후 그래프 생성)</div>${invHistoryChart(hist,240,80)}`
+            : `<div style="font-size:9px;color:#999;padding:4px 0">장 중 데이터 없음 (09:00~15:30 1분 폴링, 최대 3시간+ 누적)</div>`}`;
 
       const prog=m.program_now||{합계:0,차익:0,비차익:0};
       const progAllZero=!prog.합계&&!prog.차익&&!prog.비차익;
@@ -1545,10 +1545,11 @@ function renderMarketFlow(d){
       const ps=progAllZero?"—":(prog.합계>0?"+":"")+fmtAuk(prog.합계);
       const ts=m.investor_now?.ts||"—";
 
-      // 프로그램 차트: program_series(ka90005 시간대별) — 합계 라인만
+      // 프로그램 차트: program_series(KIS 최근 30분 즉시조회) vs program_history(서버 1분폴링 누적, 최대 3시간+)
+      // — 둘 중 더 긴(더 큰그림을 보여주는) 쪽 사용. 재시작 직후엔 series, 시간 지나면 history가 앞지름.
       const progSeries=m.program_series||[];
       const progHist=m.program_history||[];
-      let progSource=progSeries.length>=1?progSeries:progHist;
+      let progSource=progHist.length>progSeries.length?progHist:progSeries;
       if(progSource.length===1) progSource=[progSource[0],progSource[0]];
       let progChart="";
       if(progSource.length>=2){
