@@ -163,3 +163,41 @@ def test_ingest_post_falls_back_to_general_when_daytrading_finds_no_trades(monke
     n = post_ingest.ingest_post(md, cfg)
     assert n == 1
     assert called["inserted"][0]["asset_level"] == "market"
+
+
+def test_ingest_post_non_daytrading_profile_falls_through_to_general(monkeypatch, tmp_path):
+    """게이트 협소화 회귀 테스트: YOUTUBE_PROFILES에 존재하지만 '데이트레이딩'이
+    아닌 프로필(미래에 추가될 신규 프로필 시뮬레이션)은 데이트레이딩 추출 경로를
+    타지 않고 일반 extract_post 경로로 빠져야 한다."""
+    from pipeline.atoms import post_ingest, profiles
+
+    monkeypatch.setattr(post_ingest, "YOUTUBE_PROFILES",
+                         {**post_ingest.YOUTUBE_PROFILES, "가짜프로필": {"prompt": "x"}})
+    monkeypatch.setattr(profiles, "youtube_channel_profile", lambda name: "가짜프로필")
+
+    def boom(md_path):
+        raise AssertionError("_extract_daytrading should NOT be called for non-daytrading profile")
+
+    monkeypatch.setattr(post_ingest, "_extract_daytrading", boom)
+
+    called = {}
+
+    def fake_extract_post(md_path):
+        called["extract_post"] = True
+        return {"target_kind": "market", "market_direction": "혼조"}
+
+    monkeypatch.setattr(post_ingest, "extract_post", fake_extract_post)
+    monkeypatch.setattr(post_ingest, "insert_atom", lambda a: called.setdefault("inserted", []).append(a))
+    monkeypatch.setattr(post_ingest, "embed_and_store", lambda a: None)
+    monkeypatch.setattr(post_ingest, "_mark_processed", lambda *a, **k: None)
+    monkeypatch.setattr(post_ingest, "_save_artifact", lambda *a, **k: None)
+
+    md = tmp_path / "2026-07-02_1_테스트채널.md"
+    md.write_text("**채널**: 테스트채널\n**날짜**: 2026-07-02\n", encoding="utf-8")
+    cfg = {"source_type": "youtube", "dir": "raw/yt", "header_label": "채널",
+           "registry": "youtube_registry.json"}
+
+    n = post_ingest.ingest_post(md, cfg)
+    assert n == 1
+    assert called.get("extract_post") is True
+    assert called["inserted"][0]["asset_level"] == "market"

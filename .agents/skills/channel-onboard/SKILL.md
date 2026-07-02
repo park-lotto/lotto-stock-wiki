@@ -62,3 +62,8 @@ Gemini 결과를 원문과 대조:
 만들었다면 `pipeline/atoms/profiles.py`(유튜브) 또는
 `pipeline/atoms/telegram_questionnaire.py`의 `QUESTIONNAIRES`(텔레그램)에 코드로
 반영하고 `pipeline/atoms/test_slot_coverage.py`에 슬롯 커버리지 체크를 추가한다.
+**유튜브 신규 프로필**은 `YOUTUBE_PROFILES`에 등록하고 registry에 프로필명을 태그하는
+것만으로는 동작하지 않는다 — `pipeline/atoms/post_ingest.py`의 `ingest_post()`는
+프로필명을 `YOUTUBE_PROFILES`에서 조회하는 범용 라우팅이 아니라 `"데이트레이딩"`만
+명시적으로 매치하는 전용 분기이므로, 신규 프로필용 분기(추출 함수 + 원자 변환 함수
+호출)를 `ingest_post()`에 직접 추가해야 한다.
