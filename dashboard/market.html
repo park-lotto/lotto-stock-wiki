@@ -158,6 +158,27 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 @media(max-width:900px){.grid{grid-template-columns:repeat(3,1fr);}}
 @media(max-width:640px){.grid{grid-template-columns:repeat(2,1fr);}}
 
+/* ── 카드 크기 토글 (1=크게 기본 / 2=보통 / 3=작게) ── */
+.grid.density-2{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:7px;}
+.grid.density-2 .tile{min-height:112px;padding:10px 10px 8px;gap:4px;}
+.grid.density-2 .tile .sec-name{font-size:13px;}
+.grid.density-2 .tile .avg-rate{font-size:19px;}
+.grid.density-2 .tile .avg-row{gap:6px;}
+.grid.density-2 .tile .stocks{gap:4px;margin-top:3px;}
+.grid.density-2 .tile .stock-row{font-size:12px;}
+.grid.density-2 .tile .stock-sup{font-size:9px;padding:1px 5px;gap:1px 6px;margin:-1px 0 0;}
+.grid.density-2 .tile .stock-more{font-size:11px;}
+.grid.density-2 .tile .stock-extra{gap:4px;margin-top:1px;}
+
+.grid.density-3{grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:5px;}
+.grid.density-3 .tile{min-height:60px;padding:7px 8px 6px;gap:2px;}
+.grid.density-3 .tile .sec-name{font-size:11px;}
+.grid.density-3 .tile .avg-row{gap:5px;}
+.grid.density-3 .tile .avg-rate{font-size:14px;}
+.grid.density-3 .tile .avg-spark{display:none;}
+.grid.density-3 .tile .stocks{display:none;}
+.grid.density-3 .tile .top-more{display:none;}
+
 /* ══ 모바일(≤768px) 반응형 ══ */
 @media(max-width:768px){
   html,body{overflow-x:hidden;}          /* 페이지 가로 넘침 방지 */
@@ -459,6 +480,7 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
     <a href="/studio">스튜디오</a>
     <a href="/market" class="active">히트맵</a>
     <a href="/insights">인사이트</a>
+    <a href="/sources">소스</a>
   </nav>
   <span class="badge" id="mkt-status">장중</span>
   <button onclick="refresh()" id="topbar-refresh" title="새로고침"
@@ -519,6 +541,10 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
       <button class="interval-btn active" id="iv-600" onclick="setIntervalSec(600)">10분</button>
       <button class="interval-btn" id="iv-300" onclick="setIntervalSec(300)">5분</button>
       <button class="interval-btn" id="iv-30"  onclick="setIntervalSec(30)">30초</button>
+      <span style="width:1px;height:16px;background:var(--line);margin:0 2px"></span>
+      <button class="interval-btn active" id="ds-1" onclick="setDensity(1)" title="카드 크게(기본)">크게</button>
+      <button class="interval-btn" id="ds-2" onclick="setDensity(2)" title="카드 보통">보통</button>
+      <button class="interval-btn" id="ds-3" onclick="setDensity(3)" title="카드 작게(섹터명·등락률만)">작게</button>
       <button class="refresh-btn" id="refresh-btn" onclick="refresh()">↻ 새로고침</button>
     </div>
   </div>
@@ -1628,7 +1654,22 @@ function refresh(){
   else loadTab(activeTab,true);
   if(activeTab!=="edit"){loadEtfBar();loadMarketFlow();}
 }
+function setDensity(d){
+  const grid=document.getElementById("grid");
+  if(grid) grid.classList.remove("density-2","density-3");
+  if(grid && d===2) grid.classList.add("density-2");
+  if(grid && d===3) grid.classList.add("density-3");
+  [1,2,3].forEach(n=>{
+    const el=document.getElementById(`ds-${n}`);
+    if(el) el.classList.toggle("active",n===d);
+  });
+  try{localStorage.setItem("mkt_density",d);}catch(_){}
+}
 setIntervalSec(600); // 기본 10분
+(()=>{ try{
+  const d=parseInt(localStorage.getItem("mkt_density")||"1",10);
+  if(d===2||d===3) setDensity(d);
+}catch(_){} })();
 
 // 세부 탭 백그라운드 프리패치 (전체 로드 완료 후 순차 실행)
 async function prefetchTabs(){
