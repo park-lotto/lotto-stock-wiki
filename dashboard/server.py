@@ -940,6 +940,8 @@ def market_page():
     return HTMLResponse(content=html, headers={"Cache-Control": "no-cache, must-revalidate"})
 
 
+_last_good_etf: dict = {"data": None}   # ETF바 마지막 정상 응답(KIS 순간실패 시 유지)
+
 @app.get("/api/etf_bar")
 def api_etf_bar():
     if parse_etf_bar is None:
@@ -972,9 +974,17 @@ def api_etf_bar():
             e["change_rate"] = float(p.get("change_rate", 0) or 0)
             e["price"]       = int(p.get("price", 0) or 0)
             e["bars"]        = bars_map.get(e["code"], [])
-        _prewarm_cache["etf_bar"] = {"data": etfs, "ts": time.time()}
+        # 정상(가격 있는 ETF 존재)일 때만 캐시·last-good 갱신, 열화면 직전 정상 서빙(그래프 유지)
+        if any((e.get("price") or 0) > 0 for e in etfs):
+            _prewarm_cache["etf_bar"] = {"data": etfs, "ts": time.time()}
+            _last_good_etf["data"] = etfs
+            return JSONResponse(content=etfs)
+        if _last_good_etf["data"]:
+            return JSONResponse(content=_last_good_etf["data"])
         return JSONResponse(content=etfs)
     except Exception as e:
+        if _last_good_etf["data"]:
+            return JSONResponse(content=_last_good_etf["data"])
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
 
@@ -1466,6 +1476,32 @@ async def _push_market_flow(req: Request):
         return JSONResponse({"error": str(e)}, status_code=400)
 
 
+# ── 마지막 정상 응답 유지(last-good): KIS 순간 실패로 그래프가 사라졌다 복구되는 현상 방지 ──
+_last_good_mf: dict = {"result": None}
+
+def _mf_is_good(result: dict) -> bool:
+    """코스피·코스닥 둘 다 15분봉 bars + 현재가가 있어야 '정상'."""
+    for code in ("0001", "1001"):
+        m = result.get(code) or {}
+        if not (m.get("bars") and (m.get("price") or 0) > 0):
+            return False
+    return True
+
+def _serve_mf(result: dict):
+    """정상이면 last-good 갱신 후 서빙, 열화면 직전 정상 결과 서빙(그래프 유지)."""
+    if _mf_is_good(result):
+        _last_good_mf["result"] = result
+        return JSONResponse(content=result)
+    if _last_good_mf["result"]:
+        # 열화분에서도 실시간성 있는 순위/글로벌은 갱신본으로 덮어써 최신 유지
+        merged = dict(_last_good_mf["result"])
+        for k in ("global", "rank_popular", "rank_amt"):
+            if result.get(k):
+                merged[k] = result[k]
+        return JSONResponse(content=merged)
+    return JSONResponse(content=result)
+
+
 @app.get("/api/market_flow")
 def api_market_flow():
     """코스피/코스닥/미국선물(SPY)/코스피야간선물 지수 15분봉 + 투자자/프로그램 시계열."""
@@ -1479,7 +1515,7 @@ def api_market_flow():
         # 프리워밍 캐시 hit → 즉시 반환 (수십 ms)
         cached = _prewarm_cache.get("market_flow")
         if cached and time.time() - cached["ts"] < _PREWARM_TTL:
-            return JSONResponse(content=_build_market_flow_result(cached["data"]))
+            return _serve_mf(_build_market_flow_result(cached["data"]))
 
         # 전일종가 캐시 비어있으면 먼저 채움 (서버 시작 직후 레이스컨디션 방지)
         if global_api and not global_api._PW_PREVCLOSE:
@@ -1514,13 +1550,15 @@ def api_market_flow():
                 try: done[k] = f.result(timeout=15)
                 except Exception: done[k] = None
         _enrich_rank_prices(done)  # 순위 목록 가격을 KIS 시세로 통일
-        # 가격 0인 빈 데이터는 캐시 오염 방지 (토큰 실패 등)
-        j_price = (done.get("J_price") or {}).get("price", 0)
-        q_price = (done.get("Q_price") or {}).get("price", 0)
-        if j_price and q_price:
+        result = _build_market_flow_result(done)
+        # 정상일 때만 캐시 저장(열화 캐시 오염 방지) — bars+가격 있어야 정상
+        if _mf_is_good(result):
             _prewarm_cache["market_flow"] = {"data": done, "ts": time.time()}
-        return JSONResponse(content=_build_market_flow_result(done))
+        return _serve_mf(result)   # 열화면 직전 정상 그래프 유지
     except Exception as e:
+        # 예외 시에도 직전 정상 그래프 유지 (그래프 사라짐 방지)
+        if _last_good_mf["result"]:
+            return JSONResponse(content=_last_good_mf["result"])
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
 
@@ -3344,7 +3382,10 @@ async def api_insights_notebook_query(req: Request):
             "'A면 B' 식 조건부로 써라.\n\n"
             "[구조] 질문이 특정 구조·항목을 지정했으면 그 구조를 그대로 따르라. "
             "지정이 없으면 이 기본 브리핑 구조로: ①한 줄 결론 ②핵심 팩트(종목/이슈별 소제목+직접인용+출처·날짜) "
-            "③수급·모멘텀(목표가·투자의견 변화, 합의 vs 충돌) ④최근 리포트(증권사/리포트명·날짜) "
+            "③수급·모멘텀(목표가·투자의견 변화, 합의 vs 충돌) ④최근 리포트(증권사별로 실제 언급된 종목마다 "
+            "목표가·투자의견·핵심 근거를 ③과 동일한 수준으로 각각 직접인용하라 — 이미 ③에서 다룬 종목이라도 "
+            "생략하지 말고 반복 기재. 종목명만 나열하거나 '자료 없음'이라고 뭉뚱그리지 마라 — "
+            "소스에 있는 내용을 안 찾은 것과 진짜 없는 것을 구분해서, 안 찾았으면 다시 찾아라) "
             "⑤관전 포인트(조건부 전략).\n\n"
             "[형식] 한국어. 이 노트북에 연결된 모든 소스를 교차 활용. "
             "새 리포트·문서·노트 같은 아티팩트는 만들지 말고 채팅 답변으로만, "

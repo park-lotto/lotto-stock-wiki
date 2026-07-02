@@ -1127,12 +1127,10 @@ async function loadEtfBar(){
   try{
     const r=await fetch("/api/etf_bar");
     const etfs=await r.json();
+    if(!Array.isArray(etfs) || !etfs.length) return;  // 빈/오류 응답 → 직전 렌더 유지(그래프 사라짐 방지)
     _renderEtfBar(etfs);
     try{localStorage.setItem(_ETF_CACHE_KEY,JSON.stringify({ts:Date.now(),data:etfs}));}catch(_){}
-  }catch(e){
-    document.getElementById("etf-bar").innerHTML=
-      `<span style="color:#555;font-size:12px;padding:12px 0;display:inline-block;">ETF 바 오류: ${esc(e.message)}</span>`;
-  }
+  }catch(e){ /* 네트워크 오류 시 직전 렌더 유지 */ }
 }
 
 // ── 초기 로드 + 자동갱신 ──────────────────────────────────
@@ -1366,6 +1364,9 @@ async function loadMarketFlow(){
     const r=await fetch("/api/market_flow");
     const d=await r.json();
     if(d.error)return;
+    // 빈/열화 방어: 코스피·코스닥 둘 다 15분봉 없으면 렌더 스킵(직전 그래프 유지)
+    const _j=d["0001"]||{}, _q=d["1001"]||{};
+    if(!(_j.bars&&_j.bars.length) && !(_q.bars&&_q.bars.length)) return;
     renderMarketFlow(d);
     try{localStorage.setItem(_MF_CACHE_KEY,JSON.stringify({ts:Date.now(),data:d}));}catch(_){}
   }catch(e){console.error("market_flow 오류",e);}
