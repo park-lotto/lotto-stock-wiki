@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-01",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-02_0804_수익성 정상화와 함께 수요 강세 감지.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "박희철",
+    "report_date": "2026/7/1",
+    "stocks": [
+      {
+        "name": "해성디에스",
+        "code": "195870",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "100,000원",
+        "tp_prev": "100,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 2분기 실적을 매출액 2,080억원(YoY +32.2%), 영업이익 203억원(YoY +87.1%, OPM 9.8%)으로 추정",
+        "estimate_revision": "동사의 2026년 매출액은 8,717억원(YoY +33.4%), 영업이익 973억원(YoY +109.2%, OPM 11.2%)으로 추정",
+        "next_catalyst": "리드프레임 호조세와 패키지기판 부문의 이익 기여가 더해지는 하반기 강한 수익성 기대",
+        "thesis": [
+          "리드프레임 부문의 호조세가 적기 수요 대응 및 재고 확충 수요 등으로 전장용/IT를 가리지 않고 이어지는 구간",
+          "판가 반영 정상화와 리드프레임 주도의 실적 개선 및 창사 이래 최대 분기 실적 예상",
+          "하반기 핵심 고객사의 High-Volume Fab 바탕의 본격적인 매출 성장세와 수익성 턴어라운드 예상"
+        ],
+        "valuation_basis": "12MF EPS 5,031원에 Peer 12MF P/E 평균인 Target P/E 20을 적용",
+        "risk": "패키지기판 부문은 하반기까지 기대감 이연 필요",
+        "supply_comment": "리드프레임도 적기 수요 대응 및 재고 확충 추세에 따라 수요처에 무관한 강한 전방 수요 감지",
+        "quote": "해성디에스의 2026년 2분기 실적을 매출액 2,080억원(YoY +32.2%), 영업이익 203억원(YoY +87.1%, OPM 9.8%)으로 추정."
+      }
+    ],
+    "sector": "IT"
+  }
+}

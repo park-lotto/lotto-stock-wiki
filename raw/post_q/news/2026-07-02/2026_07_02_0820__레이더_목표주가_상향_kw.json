@@ -1,0 +1,133 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "Hims & Hers",
+      "signal": "bull",
+      "reason": "FDA 펩타이드 검토 및 체중 감량 약물 영향",
+      "ts": null,
+      "quote": "BofA, FDA 펩타이드 검토에 Hims & Hers 목표주가 상향 조정",
+      "sector": "바이오"
+    },
+    {
+      "name": "마이어스 인더스트리스",
+      "signal": "bull",
+      "reason": "키뱅크 목표주가 37달러 상향",
+      "ts": null,
+      "quote": "마이어스 인더스트리스(MYE), 키뱅크 목표주가 37달러 상향에 주가 14.42%↑",
+      "sector": "기타"
+    },
+    {
+      "name": "삼성전자",
+      "signal": "bull",
+      "reason": "실적 대비 저평가 및 HBM 수요 강세",
+      "ts": null,
+      "quote": "바클레이즈, 강한 HBM 수요에 삼성·SK하이닉스 목표주가 상향",
+      "sector": "반도체"
+    },
+    {
+      "name": "삼성화재",
+      "signal": "bull",
+      "reason": "삼성전자 지분 가치 반영",
+      "ts": null,
+      "quote": "삼성화재, 삼성전자 지분 가치 반영해 목표주가 '상향'",
+      "sector": "기타"
+    },
+    {
+      "name": "GS건설",
+      "signal": "bull",
+      "reason": "데이터센터 추가 수주 기대",
+      "ts": null,
+      "quote": "하나증권 \"GS건설 데이터센터 추가 수주 기대…목표주가 상향\"",
+      "sector": "기타"
+    },
+    {
+      "name": "팔로 알토 네트웍스",
+      "signal": "bull",
+      "reason": "강력한 실적 기반",
+      "ts": null,
+      "quote": "FBN 증권, 팔로 알토 네트웍스 목표주가 상향…강력한 실적에 기반",
+      "sector": "IT"
+    },
+    {
+      "name": "SK하이닉스",
+      "signal": "bull",
+      "reason": "HBM 수요 강세",
+      "ts": null,
+      "quote": "바클레이즈, 강한 HBM 수요에 삼성·SK하이닉스 목표주가 상향",
+      "sector": "반도체"
+    },
+    {
+      "name": "MSC 인더스트리얼",
+      "signal": "bull",
+      "reason": "수요 회복 및 비용 절감",
+      "ts": null,
+      "quote": "제프리스, 수요 회복에 MSC 인더스트리얼 목표주가 상향",
+      "sector": "기타"
+    },
+    {
+      "name": "팩트셋",
+      "signal": "bull",
+      "reason": "매출 강세",
+      "ts": null,
+      "quote": "울프 리서치, 팩트셋 매출 강세에 목표주가 상향 조정",
+      "sector": "IT"
+    },
+    {
+      "name": "일루미나",
+      "signal": "bull",
+      "reason": "임상 사업 강점 부각",
+      "ts": null,
+      "quote": "파이퍼 샌들러, 일루미나 목표 주가 상향... 임상 사업 강점 부각",
+      "sector": "바이오"
+    },
+    {
+      "name": "문레이크",
+      "signal": "bull",
+      "reason": "HS 치료제 데이터",
+      "ts": null,
+      "quote": "리어링크, HS 치료제 데이터에 문레이크 목표주가 상향",
+      "sector": "바이오"
+    },
+    {
+      "name": "Abivax",
+      "signal": "bull",
+      "reason": "안전성 우려 완화",
+      "ts": null,
+      "quote": "제프리스, 안전성 우려 완화로 Abivax 목표주가 상향",
+      "sector": "바이오"
+    },
+    {
+      "name": "AMD",
+      "signal": "bull",
+      "reason": "서버 CPU 강점",
+      "ts": null,
+      "quote": "웰스파고, 서버 CPU 강점에 AMD 목표주가 상향 조정",
+      "sector": "반도체"
+    },
+    {
+      "name": "그라인더",
+      "signal": "bull",
+      "reason": "신제품 출시",
+      "ts": null,
+      "quote": "모건 스탠리, 신제품 출시 앞두고 그라인더 목표 주가 상향 조정",
+      "sector": "IT"
+    },
+    {
+      "name": "마이크론",
+      "signal": "bull",
+      "reason": "AI 관련 애널리스트 동향",
+      "ts": null,
+      "quote": "5대 AI 애널리스트 동향: 마이크론 목표주가 상향",
+      "sector": "반도체"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "주요 증권사들의 목표주가 상향 리포트 다수 발표",
+      "ts": "2026-07-02",
+      "quote": "레이더 목표주가 상향 리스트"
+    }
+  ],
+  "quote": "목표주가 상향 관련 시장 리포트 모음"
+}

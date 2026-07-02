@@ -74,13 +74,34 @@ def get_all_dates() -> list[str]:
 
 
 def run_ingest(files: list[Path]) -> None:
-    """복사된 파일들을 ingest."""
+    """복사된 파일들을 ingest.
+
+    ⚠️ report/telegram/blog/news/yt 는 전용 파이프라인
+    (report_ingest / telegram_ingest / post_ingest)이 질문지+레지스트리 경로로
+    처리한다. 여기 제네릭 경로(pipeline.atoms.ingest)로 처리하면 신뢰도가 D로
+    뭉개지므로 스킵한다. atom_pipeline.py의 STEP3~3.8이 뒤이어 담당한다.
+    """
     if not files:
         return
-    # MD, JSON만 ingest (이미지·Excel은 별도 처리)
-    ingest_targets = [f for f in files if f.suffix.lower() in {".md", ".json"}]
+    # 전용 STEP이 담당하는 유형 — ingest_pending.EXCLUDED_TYPES와 동일
+    try:
+        from pipeline.atoms.ingest_pending import EXCLUDED_TYPES
+    except Exception:
+        EXCLUDED_TYPES = {"report", "telegram", "blog", "news", "yt"}
+    # MD, JSON만 ingest (이미지·Excel은 별도 처리) + 전용 STEP 유형 제외
+    ingest_targets = []
+    for f in files:
+        if f.suffix.lower() not in {".md", ".json"}:
+            continue
+        try:
+            ftype = f.relative_to(RAW_ROOT).parts[0]
+        except Exception:
+            ftype = ""
+        if ftype in EXCLUDED_TYPES:
+            continue
+        ingest_targets.append(f)
     if not ingest_targets:
-        print("[INGEST] ingest 대상 파일 없음 (MD/JSON만 지원)")
+        print("[INGEST] ingest 대상 파일 없음 (전용 STEP 유형 제외 후 남은 MD/JSON 없음)")
         return
 
     import subprocess

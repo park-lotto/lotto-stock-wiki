@@ -1,0 +1,29 @@
+{
+  "target_kind": "market",
+  "market_direction": "neutral",
+  "macro_events": [
+    {
+      "fact": "코스닥 액티브 ETF에 1조 자금 유입",
+      "ts": "03-14 07:00",
+      "quote": "코스닥 액티브 ETF에 1조…\"단기 급등주 투자 경계\""
+    },
+    {
+      "fact": "AI·로봇 급등주 공매도 증가",
+      "ts": "06-12 07:00",
+      "quote": "AI·로봇 급등주에 공매도 몰렸다…변동성 장세 수급 경고"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "IT",
+      "stance": "중립",
+      "comment": "AI 관련 급등주에 공매도가 몰려 변동성 주의 필요"
+    },
+    {
+      "sector": "로봇",
+      "stance": "중립",
+      "comment": "로봇 급등주에 공매도가 몰려 변동성 주의 필요"
+    }
+  ],
+  "quote": "단기 급등주 투자 경계 및 변동성 장세 수급 경고"
+}

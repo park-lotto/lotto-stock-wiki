@@ -11,7 +11,15 @@ _EXCLUDED = {"리포트요약", "투경현황"}
 
 
 def channel_info(name: str) -> dict | None:
-    return _CHANNELS.get((name or "").strip())
+    """채널 정보 조회. 편집페이지에서 표시명이 줄여지는 경우(예: 독학주식첵터정리→독학주식)를
+    대비해 접두 매칭 폴백을 둔다."""
+    name = (name or "").strip()
+    if name in _CHANNELS:
+        return _CHANNELS[name]
+    for k, v in _CHANNELS.items():
+        if k and (name.startswith(k) or k.startswith(name)):
+            return v
+    return None
 
 
 def is_excluded(name: str) -> bool:

@@ -1,0 +1,144 @@
+{
+  "meta": {
+    "date": "2026-07-01",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-02_0805_로봇 상용화 기대를 증명할 시간 - 양산성 확...md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": [
+      "김성래",
+      "김예인"
+    ],
+    "report_date": "2026.07.01",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "현대차",
+        "code": "005380",
+        "rating": "Buy(유지)",
+        "rating_changed": false,
+        "tp_new": "760,000원",
+        "tp_prev": null,
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 판매량은 100.1만대(-6.1% 이하 YoY) 전망. 2Q 매출액 48.5조원(+0.4%), 수익성은 3.0조원(-15.7%) 전망",
+        "estimate_revision": null,
+        "next_catalyst": "3Q 아반떼, 투싼 FMC 출시로 HEV 중심 물량 증가 예상 및 아이오닉3의 유럽 현지 생산/판매",
+        "thesis": [
+          "하반기 신차 효과로 본업 실적 회복세 기대",
+          "8월 RMAC 가동에 따라 데이터 수집/학습 및 양산 성능 개선 속도 가시화",
+          "보스턴다이내믹스(BD) 지분 추가 투자에 따른 지분 확대 가능성"
+        ],
+        "valuation_basis": "본업 영업가치는 Target PER 12.1배/PBR 1.2배 적용, BD 지분가치는 추정 BD Value $993억 중 간접지분 27.9% 반영하여 산정",
+        "risk": "관세 영향(9,600억원), 원자재 상승분, R&D 투자 규모 증액(+20%)에 따른 개발비 증가",
+        "supply_comment": null,
+        "quote": "본업 실적은 2Q까지 부진, 그러나 하반기부터 신차 효과로 회복세 기대"
+      },
+      {
+        "name": "기아",
+        "code": "000270",
+        "rating": "Buy(유지)",
+        "rating_changed": false,
+        "tp_new": "290,000원",
+        "tp_prev": null,
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 판매량 82.8만대(+1.7% 이하 YoY) 예상, 2Q 매출액 전년 동기 대비 10.1% 증가한 32.3조원 전망",
+        "estimate_revision": null,
+        "next_catalyst": "하반기 북미 텔루라이드 물량 확대, 스포티지 HEV의 HMGMA 양산, 유럽 EV2 경제형EV 물량 확대",
+        "thesis": [
+          "친환경차 중심 물량/믹스 개선 효과로 영업이익 증가세 전환",
+          "8월 RMAC 가동에 따른 로봇 도입/운영 효과 기대",
+          "보스턴다이내믹스 추가 투자에 따른 지분 확대 가능성"
+        ],
+        "valuation_basis": "본업 영업가치는 Target PER 9.9배/PBR 1.3배 적용, BD 지분가치는 추정 BD Value $993억 중 간접지분 17.2% 반영하여 산정",
+        "risk": "관세영향(8,400억원), 원자재 상승 영향, R&D 투자 규모 증액(+20%)",
+        "supply_comment": null,
+        "quote": "본업 실적은 이미 회복, 로보틱스 가치 재평가 기대"
+      },
+      {
+        "name": "현대모비스",
+        "code": "012330",
+        "rating": "Buy(유지)",
+        "rating_changed": false,
+        "tp_new": "810,000원",
+        "tp_prev": null,
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q 매출액 16.8조원(+5.2% 이하 YoY), 전동화 매출 성장세(+10.4%) 부각",
+        "estimate_revision": null,
+        "next_catalyst": "Captive 신차효과와 비용 회수, 2028년부터 5년간 총 2.7조원 이상의 액추에이터 매출 전망",
+        "thesis": [
+          "고부가 전장부품 비중 확대로 매출 성장 지속",
+          "보스턴다이내믹스 메커니즘에 대한 대량 양산 및 원가 최적화 담당",
+          "북미 35만개 수준의 액추에이터 양산 공장 설립 계획"
+        ],
+        "valuation_basis": null,
+        "risk": "북미 AMPC 감소(-180억원)와 원자재 가격 상승 영향",
+        "supply_comment": "북미 35만개 수준의 액추에이터 양산 공장 설립 계획",
+        "quote": "그룹 로봇사업 성패를 결정하는 critical chain"
+      },
+      {
+        "name": "현대글로비스",
+        "code": "086280",
+        "rating": "Buy(유지)",
+        "rating_changed": false,
+        "tp_new": "370,000원",
+        "tp_prev": null,
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 매출액 8.0조원(+7.2% 이하 YoY), 영업이익 4,990억원(-7.4% YoY)",
+        "estimate_revision": null,
+        "next_catalyst": "SCFI 지수 3,000 돌파 등 컨테이너 시황 강세전환",
+        "thesis": [
+          "PCTC 비계열 비중 확대에 따른 물동량 증가",
+          "8월 RMAC 가동 및 로봇 지분가치에 대한 재조명",
+          "보스턴다이내믹스 지분 투자 확대 가능성"
+        ],
+        "valuation_basis": "본업 영업가치는 Target PER 6.0배/PBR 1.02배 적용, BD 지분가치는 추정 BD Value $993억 중 간접지분 11.2% 반영",
+        "risk": "중동 전쟁에 따른 유가 상승분 반영으로 해운부문 수익성 OPM 2.7%p 감소 예상",
+        "supply_comment": null,
+        "quote": "내재된 로보틱스 가치 재조명"
+      },
+      {
+        "name": "HL만도",
+        "code": "204320",
+        "rating": "Buy(유지)",
+        "rating_changed": false,
+        "tp_new": "88,000원",
+        "tp_prev": null,
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q 매출액 2.4조원(+1.6% 이하 YoY), 2Q 영업이익 1,080억원(+3.5%) 전망",
+        "estimate_revision": null,
+        "next_catalyst": "2026년 제품 검증 및 사양 확정, 2028~2029년경 북미 현지 대량 양산 예정",
+        "thesis": [
+          "북미 IDB2 ramp-up 지속 및 SDV 중심 로컬 고객사 물량 증가",
+          "현지 인프라 활용한 로봇 액추에이터 부품 공급 역량 부각",
+          "대규모 양산 준비를 위한 파트너십 가시화"
+        ],
+        "valuation_basis": null,
+        "risk": "원자재 가격 영향",
+        "supply_comment": "미국 앨라배마 공장 활용 로봇 사업 가속화",
+        "quote": "로봇사업에서의 양산 역량 부각"
+      },
+      {
+        "name": "로보티즈",
+        "code": "108490",
+        "rating": "Buy(유지)",
+        "rating_changed": false,
+        "tp_new": "320,000원",
+        "tp_prev": null,
+        "tp_direction": "flat",
+        "earnings_outlook": "1Q26 영업손실 118억원",
+        "estimate_revision": null,
+        "next_catalyst": "우즈벡 액추에이터 생산 공장 10월 부분 가동 예정",
+        "thesis": [
+          "LG전자와 우즈벡 액추에이터 생산 공장 지분투자 MOU 체결",
+          "올해 액추에이터 판매 목표 67% 상향(50만개)",
+          "대규모 양산 라인 운영 역량 확보"
+        ],
+        "valuation_basis": null,
+        "risk": "모터 영구자석 등 주요 부품 수급 문제",
+        "supply_comment": "우즈벡 공장 총 500만개 CAPA 건설 중",
+        "quote": "대규모 양산체제 구축/운영 선도"
+      }
+    ]
+  }
+}

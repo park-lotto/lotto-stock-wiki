@@ -1,6 +1,18 @@
 {
-  "pokara61": {"trust": "B", "url": "https://blog.naver.com/pokara61"},
-  "timegem": {"trust": "B", "url": "https://blog.naver.com/timegem"},
-  "freekyj72": {"trust": "B", "url": "https://blog.naver.com/freekyj72"},
-  "gunbaram": {"trust": "B", "url": "https://blog.naver.com/gunbaram"}
+  "포카라님": {
+    "trust": "B",
+    "url": "https://blog.naver.com/pokara61"
+  },
+  "티피님": {
+    "trust": "B",
+    "url": "https://blog.naver.com/timegem"
+  },
+  "raykim님": {
+    "trust": "B",
+    "url": "https://blog.naver.com/freekyj72"
+  },
+  "탐험가 GUN님": {
+    "trust": "B",
+    "url": "https://blog.naver.com/gunbaram"
+  }
 }

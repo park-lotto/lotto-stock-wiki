@@ -1,5 +1,6 @@
 import sys
 import subprocess
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -197,15 +198,19 @@ def test_build_report_with_warning_only_no_critical_header():
 
 def test_pipeline_importable_when_run_as_script():
     """Task Scheduler와 동일한 방식(python scripts/slot_ingest.py)으로 실행했을 때
-    diagnose()가 의존하는 pipeline 패키지가 import 가능해야 한다.
-
-    fix: slot_ingest.py 파일이 ROOT를 sys.path에 등록하는 코드를 포함해야 한다.
-    """
-    # slot_ingest.py 파일을 읽어서 sys.path 등록 코드가 있는지 확인
-    slot_ingest_path = ROOT / 'scripts' / 'slot_ingest.py'
-    content = slot_ingest_path.read_text(encoding='utf-8')
-
-    # ROOT 변수 정의 이후 sys.path에 등록하는 코드가 있어야 함
-    assert "ROOT = Path(__file__).parent.parent" in content, "ROOT 정의가 없음"
-    assert 'if str(ROOT) not in sys.path' in content, "sys.path 체크 로직이 없음"
-    assert 'sys.path.insert(0, str(ROOT))' in content, "sys.path에 ROOT를 등록하는 코드가 없음"
+    diagnose()가 의존하는 pipeline 패키지가 import 가능해야 한다."""
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+        out_file = f.name
+    try:
+        code = (
+            f"import sys; sys.path.insert(0, r'{str(ROOT / 'scripts')}'); "
+            f"import slot_ingest; from pipeline.atoms.db import get_conn; "
+            f"open(r'{out_file}', 'w').write('OK')"
+        )
+        r = subprocess.run(
+            [sys.executable, "-c", code],
+            cwd=str(ROOT), capture_output=True, text=True, timeout=10)
+        result = Path(out_file).read_text().strip() if Path(out_file).exists() else ""
+        assert result == "OK", f"Expected 'OK', got {result!r}. stderr={r.stderr!r}"
+    finally:
+        Path(out_file).unlink(missing_ok=True)

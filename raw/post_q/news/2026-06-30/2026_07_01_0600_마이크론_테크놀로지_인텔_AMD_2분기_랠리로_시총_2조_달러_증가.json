@@ -1,0 +1,19 @@
+{
+  "target_kind": "market",
+  "market_direction": "bull",
+  "macro_events": [
+    {
+      "fact": "마이크론 테크놀로지, 인텔, AMD가 2분기 랠리로 시가총액 2조 달러 증가",
+      "ts": "2026-06-30",
+      "quote": "마이크론 테크놀로지·인텔·AMD, 2분기 랠리로 시총 2조 달러 증가"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "반도체",
+      "stance": "긍정",
+      "comment": "주요 반도체 기업들의 주가 상승으로 인한 시가총액 급증"
+    }
+  ],
+  "quote": "마이크론 테크놀로지·인텔·AMD, 2분기 랠리로 시총 2조 달러 증가"
+}

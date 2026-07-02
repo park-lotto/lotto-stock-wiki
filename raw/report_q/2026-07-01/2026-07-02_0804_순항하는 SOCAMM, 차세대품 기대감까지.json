@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-01",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-02_0804_순항하는 SOCAMM, 차세대품 기대감까지.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "박희철",
+    "report_date": "2026/7/1",
+    "stocks": [
+      {
+        "name": "티엘비",
+        "code": "356860",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "120,000원",
+        "tp_prev": "120,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 2분기 매출액 870억원(YoY +35.9%), 영업이익 123억원(YoY +32.4%, OPM 14.2%)",
+        "estimate_revision": null,
+        "next_catalyst": "SOCAMM 양산 및 차세대품 사업 확장",
+        "thesis": [
+          "SOCAMM 수율 정상화에 따른 본격적인 양산 물량 출하와 수익성 개선",
+          "유리기판, MLB 등 기판 제조 역량을 활용한 차세대품 사업 확장성",
+          "2028년 베트남 2공장 완공을 통한 차세대 기판 전문 제조 업체로의 도약"
+        ],
+        "valuation_basis": "2027년 추정 EPS 5,567원에 Target P/E 21배 적용",
+        "risk": "원자재 수급에 따른 영향(현재는 미미하나 향후 벤더 다변화 등 대응 예정)",
+        "supply_comment": "원자재 수급에 따른 영향은 아직 미미하며, 향후 원자재에 따른 영향을 최소화하기 위해 벤더 다변화 등을 추진해 대응할 전망.",
+        "quote": "티엘비에 대한 투자의견과 목표주가를 유지. 2026년 매출액은 3,614억원(YoY +39.8%), 영업이익 546억원(YoY +110.1%, OPM 15.1%)으로 추정. 결론적으로 SOCAMM이 올해 하반기 실적을 견인할 전망."
+      }
+    ],
+    "sector": "IT"
+  }
+}

@@ -6,7 +6,6 @@ from pathlib import Path
 from google import genai
 from google.genai import types
 
-from .atomizer import _load_gemini_key
 from .codemap import is_korean_stock
 from .sector_classify import sectors_list, resolve_sector
 
@@ -69,31 +68,46 @@ QUESTIONNAIRE_PROMPT = QUESTIONNAIRE_PROMPT + "\n" + _SECTOR_RULE
 
 
 def extract_questionnaire(pdf_path: Path) -> dict:
-    """PDF를 Gemini로 읽어 채워진 질문지 dict 반환. 실패 시 {}."""
-    client = genai.Client(api_key=_load_gemini_key())
-    try:
-        with open(pdf_path, "rb") as fh:
-            fobj = client.files.upload(
-                file=fh, config=types.UploadFileConfig(mime_type="application/pdf")
-            )
-    except Exception as e:
-        print(f"  [WARN] 업로드 실패: {e}")
-        return {}
-    try:
-        resp = client.models.generate_content(
-            model=_MODEL,
-            contents=[fobj, QUESTIONNAIRE_PROMPT],
-            config=types.GenerateContentConfig(response_mime_type="application/json"),
-        )
-        return json.loads(resp.text)
-    except Exception as e:
-        print(f"  [WARN] 추출 실패: {e}")
-        return {}
-    finally:
+    """PDF를 Gemini로 읽어 채워진 질문지 dict 반환. 실패 시 {}.
+    429(일일 한도) 시 다음 키로 교체 후 재시도 (telegram_questionnaire.extract_telegram과 동일 패턴)."""
+    from .atomizer import _get_client, _rotate_key
+    for _attempt in range(4):
+        client = _get_client()
+        fobj = None
         try:
-            client.files.delete(name=fobj.name)
-        except Exception:
-            pass
+            with open(pdf_path, "rb") as fh:
+                fobj = client.files.upload(
+                    file=fh, config=types.UploadFileConfig(mime_type="application/pdf")
+                )
+            resp = client.models.generate_content(
+                model=_MODEL,
+                contents=[fobj, QUESTIONNAIRE_PROMPT],
+                config=types.GenerateContentConfig(response_mime_type="application/json"),
+            )
+            parsed = json.loads(resp.text)
+            if not isinstance(parsed, dict):
+                print(f"  [WARN] 질문지 형식 오류(dict 아님: {type(parsed).__name__})")
+                return {}
+            return parsed
+        except Exception as e:
+            _m = str(e)
+            if any(c in _m for c in ("429", "RESOURCE_EXHAUSTED")):
+                if "PerDay" in _m or "limit: 500" in _m:
+                    if _rotate_key():
+                        continue
+                else:
+                    import time
+                    time.sleep(62)
+                    continue
+            print(f"  [WARN] 추출 실패: {e}")
+            return {}
+        finally:
+            if fobj is not None:
+                try:
+                    client.files.delete(name=fobj.name)
+                except Exception:
+                    pass
+    return {}
 
 
 # ─────────────────────────────────────────────────────────────────

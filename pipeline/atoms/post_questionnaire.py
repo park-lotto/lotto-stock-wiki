@@ -20,7 +20,20 @@ def post_trust(registry_file: str, name: str) -> str:
             _REGISTRY_CACHE[registry_file] = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             _REGISTRY_CACHE[registry_file] = {}
-    entry = _REGISTRY_CACHE[registry_file].get((name or "").strip(), "C")
+    reg = _REGISTRY_CACHE[registry_file]
+    key = (name or "").strip()
+    entry = reg.get(key)
+    if entry is None:
+        # 편집페이지에서 표시명이 바뀐 경우("pokara61 블로그" → 등록명 "포카라님") URL slug로 폴백 매칭
+        slug = key.split()[0] if key else ""
+        if slug:
+            for v in reg.values():
+                url = v.get("url", "") if isinstance(v, dict) else ""
+                if url and slug in url:
+                    entry = v
+                    break
+    if entry is None:
+        entry = "C"
     # registry 값이 {"trust","url"} dict면 trust 필드 추출, 문자열이면 그대로
     if isinstance(entry, dict):
         return entry.get("trust", "C")

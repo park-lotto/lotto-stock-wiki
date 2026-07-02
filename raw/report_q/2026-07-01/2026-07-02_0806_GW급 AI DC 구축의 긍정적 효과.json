@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-01",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-02_0806_GW급 AI DC 구축의 긍정적 효과.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "유재선",
+    "report_date": "2026년 7월 1일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "한국전력",
+        "code": "015760",
+        "rating": "Neutral",
+        "rating_changed": null,
+        "tp_new": "45,000원",
+        "tp_prev": "55,000원",
+        "tp_direction": "down",
+        "earnings_outlook": "경북, 충남, 강원권 AI DC 용량을 5.4GW로 가정할 경우 일반용 전력판매량은 2025년 대비 24%, 전체 판매량은 6% 증가한다.",
+        "estimate_revision": null,
+        "next_catalyst": "AI DC 준공 및 전력판매량 증가",
+        "thesis": [
+          "경북, 충남, 강원은 기저전원 중심 전력 Mix를 갖추고 있어 AI 데이터센터 구축을 위한 전력 공급 적시성이 높음",
+          "동해안 민자 석탄발전소는 송전제약으로 이용률이 낮았으나 AI DC 등 전력수요 증가로 이용률 제고 가능",
+          "AI DC 전력수요 대응을 통한 일반용 전력판매량 증가 및 발전 Mix 개선으로 실적 성장 가능"
+        ],
+        "valuation_basis": null,
+        "risk": "AI 전용 요금제 출범 시 일반용 전기요금 대비 할인으로 귀결될 가능성",
+        "supply_comment": "동해안 소재 발전설비 용량은 약 18GW로 765kV와 345kV 선로의 송전가능 용량 11GW 대비 부족하며 송전제약이 발생하고 있음",
+        "quote": "한국전력은 발전 Mix 개선 및 일반용 전력판매량 증가로 실적 성장이 가능하다."
+      }
+    ]
+  }
+}

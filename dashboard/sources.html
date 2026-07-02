@@ -8,6 +8,11 @@
   :root { --gold:#d4af37; --gold-dim:#9a7d28; --bg:#0a0a0a; --card:#16161a; --line:#2a2a30; --txt:#e8e6e0; --muted:#8a8a92; }
   * { box-sizing:border-box; margin:0; padding:0; }
   body { background:var(--bg); color:var(--txt); font-family:'Segoe UI','Malgun Gothic',sans-serif; min-height:100vh; }
+  .topbar { height:52px; background:var(--card); border-bottom:1px solid var(--line); display:flex; align-items:center; padding:0 24px; gap:16px; }
+  .topbar .logo { font-size:16px; font-weight:700; color:var(--gold); letter-spacing:1px; }
+  .nav { display:flex; gap:2px; margin-left:20px; }
+  .nav a { padding:6px 14px; border-radius:6px; font-size:13px; color:#888; text-decoration:none; transition:background .15s; }
+  .nav a:hover, .nav a.active { background:var(--line); color:#eee; }
   header { padding:24px 32px 14px; border-bottom:1px solid var(--line); }
   h1 { font-size:1.3rem; font-weight:700; } h1 .gold { color:var(--gold); }
   .sub { color:var(--muted); font-size:.8rem; margin-top:4px; }
@@ -39,6 +44,16 @@
 </style>
 </head>
 <body>
+<div class="topbar">
+  <span class="logo">⚡ STOCK BRAIN</span>
+  <nav class="nav">
+    <a href="/">장전</a>
+    <a href="/studio">스튜디오</a>
+    <a href="/market">히트맵</a>
+    <a href="/insights">인사이트</a>
+    <a href="/sources" class="active">소스</a>
+  </nav>
+</div>
 <header style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
   <div>
     <h1>크롤링 소스 관리 — <span class="gold">텔레·유튜브·블로그·뉴스</span></h1>
@@ -228,7 +243,12 @@ function startRename(cat, name) {
 async function confirmRename(cat, oldName, newName, newUrl) {
   if (!newName) { await load(); return; }
   const r = await (await fetch('/api/sources/rename', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ category:cat, old_name:oldName, new_name:newName, url:newUrl }) })).json();
-  if (r.ok) { toast('"' + (oldName !== newName ? oldName + '" → "' + newName : newName) + '" 저장됨 ✓'); }
+  if (r.ok) {
+    let msg = '"' + (oldName !== newName ? oldName + '" → "' + newName : newName) + '" 저장됨 ✓';
+    if (r.server && r.server.ok) msg += (r.server.changed ? ' · 서버 크롤러 반영 ✓' : ' · 서버 이미 동일');
+    else if (r.server && r.server.error) msg += ' · ⚠ 서버반영 실패';
+    toast(msg);
+  }
   else { toast('오류: ' + (r.error || '')); }
   await load();
 }

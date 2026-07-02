@@ -39,8 +39,50 @@ def _load_gemini_key() -> str:
 
 
 _GEMINI_KEYS = _load_gemini_keys()
-_key_idx = 0
 _client_cache: dict[str, genai.Client] = {}  # 키별 클라이언트 캐시 (GC 방지)
+
+_KEY_STATE_PATH = Path(__file__).parent / ".gemini_key_state.json"
+
+
+def _today_str() -> str:
+    from datetime import datetime
+    return datetime.now().strftime("%Y-%m-%d")
+
+
+def _load_key_state() -> dict:
+    """당일 소진된 키 인덱스 기록. 날짜 바뀌면(쿼터 리셋) 자동 초기화."""
+    try:
+        with open(_KEY_STATE_PATH, encoding="utf-8") as f:
+            state = json.load(f)
+        if state.get("date") == _today_str():
+            return state
+    except Exception:
+        pass
+    return {"date": _today_str(), "exhausted": []}
+
+
+def _mark_key_exhausted(idx: int) -> None:
+    """키를 당일 소진으로 기록 — 이후 프로세스는 이 키를 다시 시도하지 않는다(알림 반복 방지)."""
+    state = _load_key_state()
+    if idx not in state["exhausted"]:
+        state["exhausted"].append(idx)
+        try:
+            with open(_KEY_STATE_PATH, "w", encoding="utf-8") as f:
+                json.dump(state, f)
+        except Exception:
+            pass
+
+
+def _first_live_key_idx() -> int:
+    """당일 소진 기록된 키를 건너뛴 첫 인덱스(모듈 로드 시 + 세션 리셋 시 공용)."""
+    exhausted = set(_load_key_state()["exhausted"])
+    for i in range(len(_GEMINI_KEYS)):
+        if i not in exhausted:
+            return i
+    return max(0, len(_GEMINI_KEYS) - 1)
+
+
+_key_idx = _first_live_key_idx()  # 프로세스 시작 시점부터 이미 소진된 키는 건너뜀
 
 
 def _get_client() -> genai.Client:
@@ -52,11 +94,16 @@ def _get_client() -> genai.Client:
 
 
 def _rotate_key() -> bool:
-    """다음 키로 교체. 교체 성공 시 True, 더 이상 키 없으면 False."""
+    """다음 키로 교체(당일 소진 기록된 키는 건너뜀). 교체 성공 시 True, 더 이상 키 없으면 False."""
     global _key_idx
     old = _key_idx + 1
-    if _key_idx + 1 < len(_GEMINI_KEYS):
-        _key_idx += 1
+    _mark_key_exhausted(_key_idx)
+    exhausted = set(_load_key_state()["exhausted"])
+    nxt = _key_idx + 1
+    while nxt < len(_GEMINI_KEYS) and nxt in exhausted:
+        nxt += 1
+    if nxt < len(_GEMINI_KEYS):
+        _key_idx = nxt
         print(f"  [KEY] Gemini 키 #{_key_idx + 1}로 교체")
         _tg_alert(f"⚠️ <b>[인제스트] Gemini 키 #{old} 일일 한도 소진</b>\n→ #{_key_idx + 1}번 키로 교체 (잔여 {len(_GEMINI_KEYS) - _key_idx}개)")
         return True
@@ -65,9 +112,10 @@ def _rotate_key() -> bool:
 
 
 def _reset_key_idx():
-    """인제스트 세션 시작 시 키 인덱스 초기화."""
+    """인제스트 세션 시작 시 키 인덱스 초기화 — 당일 이미 소진 기록된 키는 건너뛰고
+    살아있는 첫 키에서 바로 시작한다(매 프로세스마다 소진된 키 재시도+중복알림 방지)."""
     global _key_idx
-    _key_idx = 0
+    _key_idx = _first_live_key_idx()
 
 
 def _tg_alert(text: str) -> None:

@@ -1,0 +1,52 @@
+{
+  "meta": {
+    "date": "2026-07-01",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-02_0806_2026년 7월 첫째 주 전기전자 Weekly.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": [
+      "박희철",
+      "최보영"
+    ],
+    "report_date": "2026/ 7/ 1",
+    "target_kind": "market",
+    "market_direction": "중립",
+    "macro_vars": [
+      "IT 인플레이션",
+      "금 선물",
+      "은 선물",
+      "구리 선물",
+      "원/달러 환율"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": "비중확대",
+        "reason": "가격 전가 여력과 강한 업황이 뒷받침되는 MLCC, 기판 등은 주가 되돌림 시현 및 실적 기대감 형성"
+      }
+    ],
+    "event_calendar": [
+      {
+        "date": "2026-06-24",
+        "event": "티엘비 유리기판 기술 개발 추진 및 MOU 체결"
+      },
+      {
+        "date": "2026-06-29",
+        "event": "아이폰18 프로 최대 30만원 인상 루머"
+      },
+      {
+        "date": "2026-06-30",
+        "event": "삼성전기 AI 서버용 MLCC 공급 발표"
+      }
+    ],
+    "top_picks": [
+      "삼성전기",
+      "TDK",
+      "티엘비"
+    ],
+    "risk": "Apple발 가격 인상 여파가 IT 인플레이션을 부각해 B2C 수요의 큰 우려로 연결",
+    "quote": "실적 시즌에 도입함에 따라 실적 기대감 형성이 핵심, IT부품 내 주도 품목 중심 강세 기대"
+  }
+}

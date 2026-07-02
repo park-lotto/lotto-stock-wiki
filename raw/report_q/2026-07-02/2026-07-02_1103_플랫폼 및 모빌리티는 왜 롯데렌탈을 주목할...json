@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-02",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-02_1103_플랫폼 및 모빌리티는 왜 롯데렌탈을 주목할...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "박강호",
+    "report_date": "2026.07.02",
+    "stocks": [
+      {
+        "name": "롯데렌탈",
+        "code": "089860",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": 46000,
+        "tp_prev": 46000,
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 매출 3.16조원, 영업이익 3,551억원 추정",
+        "estimate_revision": null,
+        "next_catalyst": "TPG의 롯데렌탈 지분 인수 협상 가능성",
+        "thesis": [
+          "TPG(카카오모빌리티 2대주주)가 인수 추진 가능성의 부각",
+          "차별화된 모빌리티 기업으로 성장, 경쟁력이 부각",
+          "안정적인 현금 창출 + 렌탈의 종합솔루션 경쟁력, 저평가로 판단"
+        ],
+        "valuation_basis": "어피니티에쿼티 파트너스가 제시한 가격은 지분 56.2% 1.57조원에 인수 제시. 현재(7/1) 시가총액은 1.2조원. 현 주가보다 프리미엄을 부여한 가격을 예상",
+        "risk": null,
+        "supply_comment": "기타",
+        "quote": "TPG가 롯데렌탈을 최종적으로 인수하면, 롯데렌탈은 추가적인 경쟁력을 확보, 차별화된 모빌리티 기업으로 성장을 예상. 투자자 입장에서 보면 추가적인 매출과 수익성의 확대, 그리고 밸류에이션의 재평가를 통해서 주가의 상승을 기대"
+      }
+    ]
+  }
+}

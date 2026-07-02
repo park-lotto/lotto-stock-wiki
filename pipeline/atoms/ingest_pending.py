@@ -22,15 +22,20 @@ from .ingest import ingest_file
 
 RAW_ROOT = Path(__file__).parent.parent.parent / "raw"
 
-# 유형별 우선순위 (낮을수록 먼저)
+# 전용 파이프라인 STEP이 이미 담당하는 유형 — 여기서는 절대 건드리지 않는다.
+#   report    → report_ingest.py (PDF 질문지 경로)
+#   telegram  → telegram_ingest.py (텔레 질문지 경로)
+#   blog/news → post_ingest.py --source blog|news (질문지+레지스트리 경로)
+#   yt        → post_ingest.py --source youtube
+# 이 제네릭 경로(ingest.ingest_file)로 처리하면 신뢰도가 D로 뭉개지고
+# 얕은 추출이 되므로, 전용 STEP이 처리하도록 스캔 대상에서 제외한다.
+# raw/ 하위 폴더명 기준. (youtube 원본 폴더명은 raw/yt)
+EXCLUDED_TYPES = {"report", "telegram", "blog", "news", "yt"}
+
+# 유형별 우선순위 (낮을수록 먼저) — 전용 STEP 없는 유형만 남김
 TYPE_PRIORITY = {
-    "telegram":   1,
-    "yt":         2,
     "wisereport": 3,
-    "blog":       4,
-    "news":       5,
     "market":     6,
-    "report":     7,
     "L5_섹터":    8,
     "L2_미국시장": 9,
     "L1_글로벌유동성": 10,
@@ -52,6 +57,12 @@ SKIP_PATTERNS = [
     r"supply/",
     r"yt_trend/",
     r"\.obsidian",
+    # 질문지 OUTPUT 산출물 폴더 — 전용 파이프라인이 이미 만든 결과물이므로
+    # fresh input으로 재스캔하면 안 됨 (Gemini 호출 낭비 + 중복)
+    r"/telegram_q/",
+    r"/report_q/",
+    r"/post_q/",
+    r"/blog_q/",
 ]
 
 
@@ -104,6 +115,11 @@ def get_pending_files(
         # 유형 = raw/ 바로 아래 폴더명
         parts = f.relative_to(RAW_ROOT).parts
         file_type = parts[0] if parts else "기타"
+
+        # 전용 STEP이 담당하는 유형은 여기서 건드리지 않는다.
+        # 단, --type으로 명시적으로 지정하면 수동 처리 허용.
+        if file_type in EXCLUDED_TYPES and file_type != type_filter:
+            continue
 
         if type_filter and file_type != type_filter:
             continue

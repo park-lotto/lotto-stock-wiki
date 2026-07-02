@@ -63,8 +63,11 @@ _LAYER_W = {"fact": 1.0, "stance": 0.8, "method": 0.7}
 _SECTOR_KEYS = sectors_list()
 
 
-def _mk_id(channel: str, date: str, tag: str, i: int) -> str:
-    raw = f"{channel}_{date}_{tag}_{i}"
+def _mk_id(meta: dict, tag: str, i: int) -> str:
+    """원자 ID. raw_file을 반드시 섞어 같은 채널·날짜에 파일이 여러 개일 때(예: 뉴스는
+    channel이 '구글뉴스' 같은 공용 출처라 서로 다른 기사끼리도 겹침) ID 충돌로 인한
+    INSERT OR REPLACE 무음 덮어쓰기를 막는다."""
+    raw = f"{meta.get('channel', '')}_{meta.get('date', '')}_{meta.get('raw_file', '')}_{tag}_{i}"
     return "atom_tg_" + hashlib.md5(raw.encode()).hexdigest()[:12]
 
 
@@ -106,7 +109,7 @@ def _base(meta: dict, **kw) -> dict:
 def _stock_atom(meta, name_info, content, *, ts, i, sector, layer_tag="fact"):
     return _base(
         meta,
-        id=_mk_id(meta["channel"], meta["date"], "stk", i),
+        id=_mk_id(meta, "stk", i),
         sector=sector,
         asset=name_info["name"], asset_level="stock",
         content_type="fact", msg_ts=ts,
@@ -119,7 +122,7 @@ def _foreign_sector_atom(meta, sector, name, comment, *, ts, i):
     """외국주 언급 → 매핑 섹터의 컨텍스트 원자 (글로벌 동향). 약한 신호."""
     return _base(
         meta,
-        id=_mk_id(meta["channel"], meta["date"], "fgn", i),
+        id=_mk_id(meta, "fgn", i),
         sector=sector, asset=sector, asset_level="sector",
         content_type="fact", msg_ts=ts,
         strength_score=max(1, _strength(meta.get("trust", "C"), "stance", 1) - 1),
@@ -161,7 +164,7 @@ def questionnaire_to_atoms_tg(q: dict, meta: dict) -> list[dict]:
         body = "; ".join(q.get("points") or [])
         atoms.append(_base(
             meta,
-            id=_mk_id(meta["channel"], meta["date"], "sec", 0),
+            id=_mk_id(meta, "sec", 0),
             sector=sec, asset=sec,
             asset_level="sector",
             signal="bullish" if q.get("sector_view") == "긍정" else "neutral",
@@ -170,7 +173,7 @@ def questionnaire_to_atoms_tg(q: dict, meta: dict) -> list[dict]:
         ))
         for i, ev in enumerate(q.get("events") or []):
             atoms.append(_base(
-                meta, id=_mk_id(meta["channel"], meta["date"], "ev", i),
+                meta, id=_mk_id(meta, "ev", i),
                 sector=sec, asset=sec, asset_level="sector",
                 event_type="event", validity_type="event", msg_ts=ev.get("ts"),
                 content=ev.get("fact") or "", strength_score=_strength(trust, "fact", 1),
@@ -178,7 +181,7 @@ def questionnaire_to_atoms_tg(q: dict, meta: dict) -> list[dict]:
 
     elif ctype == "market":
         atoms.append(_base(
-            meta, id=_mk_id(meta["channel"], meta["date"], "mkt", 0),
+            meta, id=_mk_id(meta, "mkt", 0),
             asset="시장", asset_level="market", event_type="macro",
             content=q.get("market_direction") or "",
             strength_score=_strength(trust, "fact", 1),
@@ -186,14 +189,14 @@ def questionnaire_to_atoms_tg(q: dict, meta: dict) -> list[dict]:
         for i, ev in enumerate(q.get("macro_events") or []):
             fact = ev.get("fact") if isinstance(ev, dict) else str(ev)
             atoms.append(_base(
-                meta, id=_mk_id(meta["channel"], meta["date"], "macro", i),
+                meta, id=_mk_id(meta, "macro", i),
                 asset="시장", asset_level="market", event_type="macro",
                 validity_type="event", msg_ts=ev.get("ts") if isinstance(ev, dict) else None,
                 content=fact or "", strength_score=_strength(trust, "fact", 1),
             ))
         for i, sm in enumerate(q.get("sectors_mentioned") or []):
             atoms.append(_base(
-                meta, id=_mk_id(meta["channel"], meta["date"], "mktsec", i),
+                meta, id=_mk_id(meta, "mktsec", i),
                 sector=_norm_sector(sm.get("sector")), asset=sm.get("sector") or "기타",
                 asset_level="sector", content=sm.get("comment") or "",
                 strength_score=_strength(trust, "stance", 1),
@@ -204,7 +207,7 @@ def questionnaire_to_atoms_tg(q: dict, meta: dict) -> list[dict]:
         for i, nw in enumerate(q.get("news_items") or []):
             fact = nw.get("fact") if isinstance(nw, dict) else str(nw)
             atoms.append(_base(
-                meta, id=_mk_id(meta["channel"], meta["date"], "news", i),
+                meta, id=_mk_id(meta, "news", i),
                 asset_level="market", event_type="event", validity_type="event",
                 msg_ts=nw.get("ts") if isinstance(nw, dict) else None,
                 content=fact or "",
@@ -217,7 +220,7 @@ def questionnaire_to_atoms_tg(q: dict, meta: dict) -> list[dict]:
             if not target:
                 continue
             atoms.append(_base(
-                meta, id=_mk_id(meta["channel"], meta["date"], "stance", i),
+                meta, id=_mk_id(meta, "stance", i),
                 asset=target, asset_level="stance",
                 stance_key=f"{meta['channel']}|{target}",
                 content_type="opinion", msg_ts=st.get("ts"),
@@ -227,7 +230,7 @@ def questionnaire_to_atoms_tg(q: dict, meta: dict) -> list[dict]:
             ))
         for i, m in enumerate(q.get("methods") or []):
             atoms.append(_base(
-                meta, id=_mk_id(meta["channel"], meta["date"], "method", i),
+                meta, id=_mk_id(meta, "method", i),
                 asset_level="method", content_type="opinion",
                 content=m.get("rule") or "", strength_score=_strength(trust, "method", 1),
             ))

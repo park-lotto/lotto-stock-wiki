@@ -1,0 +1,13 @@
+{
+  "target_kind": "market",
+  "market_direction": "neutral",
+  "macro_events": [
+    {
+      "fact": "대만 6월 제조업 PMI 55.2 기록",
+      "ts": "2026-07-01",
+      "quote": "대만의 6월 제조업 구매관리자지수(PMI)는 전월 대비 0.9포인트 하락한 55.2를 기록했다"
+    }
+  ],
+  "sectors_mentioned": [],
+  "quote": "대만의 6월 제조업 구매관리자지수(PMI)는 전월 대비 0.9포인트 하락한 55.2를 기록했다"
+}

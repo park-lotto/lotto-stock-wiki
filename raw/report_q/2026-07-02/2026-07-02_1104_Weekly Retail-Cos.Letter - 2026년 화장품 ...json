@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "date": "2026-07-02",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-02_1104_Weekly Retail-Cos.Letter - 2026년 화장품 ...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "박종대",
+    "report_date": "2026.7.2",
+    "target_kind": "sector",
+    "sector_name": "화장품",
+    "sector_view": null,
+    "thesis": [
+      "6월 화장품 수출 1.1억 달러(YoY 42%) 증가하며 서프라이즈 시현",
+      "미국 수출 강한 리바운드와 유럽 지역의 고신장 지속",
+      "중국 수출의 YoY (+) 전환 및 마스크팩 등 기초 품목의 수요 증가"
+    ],
+    "timeline": [
+      "2026년 상반기 화장품 수출 증가율 YoY 26%",
+      "2026년 화장품 실적과 주가는 '상저하고'가 될 가능성이 큼"
+    ],
+    "top_picks": [
+      {
+        "name": "제닉",
+        "reason": "하이드로겔 마스크 생산 ODM 업체로 실적 개선 가능성",
+        "tp": null
+      },
+      {
+        "name": "코스맥스",
+        "reason": "하이드로겔 마스크 생산 ODM 업체로 실적 개선 가능성",
+        "tp": null
+      },
+      {
+        "name": "코스메카코리아",
+        "reason": "하이드로겔 마스크 생산 ODM 업체로 실적 개선 가능성",
+        "tp": null
+      }
+    ],
+    "risk": "까다로운 생산 공정과 비용 부담으로 인한 높은 진입장벽",
+    "quote": "이런 높은 수출 모멘텀이 화장품 산업 계절성을 무너뜨리면서 QoQ 성장을 견인하고 있다. 용기/ODM/브랜드 매출이 모두 1Q보다 2Q, 2Q보다 3Q가 커지고 있다."
+  }
+}

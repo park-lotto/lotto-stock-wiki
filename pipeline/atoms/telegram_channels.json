@@ -79,14 +79,14 @@
     "trust": "C",
     "url": "https://t.me/Yzoogong"
   },
-  "독학주식첵터정리": {
-    "type": "stock_tips",
-    "trust": "C",
-    "url": "https://t.me/selfstudyview"
-  },
   "태린이아빠 주식투자": {
     "type": "insight",
     "trust": "B",
     "url": "https://t.me/+E9KqzA7DYVA0OGY1"
+  },
+  "독학주식": {
+    "type": "stock_tips",
+    "trust": "C",
+    "url": "https://t.me/selfstudyview"
   }
 }

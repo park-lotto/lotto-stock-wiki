@@ -1,0 +1,157 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "STM마이크로일렉트로닉스",
+      "signal": "bull",
+      "reason": "바클레이즈 투자의견 상향",
+      "ts": "06-29",
+      "quote": "STM마이크로일렉트로닉스, 바클레이즈 투자의견 상향에 4% 급등",
+      "sector": "반도체"
+    },
+    {
+      "name": "세일즈포스",
+      "signal": "bull",
+      "reason": "구겐하임 '매수' 투자의견 및 AI 수혜 기대감",
+      "ts": "07-01",
+      "quote": "세일즈포스·서비스나우, 구겐하임 '매수' 투자의견·AI 수혜 기대감에 주가 4%·6...",
+      "sector": "IT"
+    },
+    {
+      "name": "서비스나우",
+      "signal": "bull",
+      "reason": "구겐하임 '매수' 투자의견 및 AI 수혜 기대감",
+      "ts": "07-01",
+      "quote": "세일즈포스·서비스나우, 구겐하임 '매수' 투자의견·AI 수혜 기대감에 주가 4%·6...",
+      "sector": "IT"
+    },
+    {
+      "name": "루모 홈스",
+      "signal": "bull",
+      "reason": "점유율 반등에 따른 골드만삭스 투자의견 상향",
+      "ts": "07-01",
+      "quote": "골드만삭스, 루모 홈스 점유율 반등에 투자의견 상향",
+      "sector": "기타"
+    },
+    {
+      "name": "그라인더",
+      "signal": "bull",
+      "reason": "신제품 통한 수익성 개선 기대감 및 월가 투자의견 상향",
+      "ts": "07-01",
+      "quote": "그라인더, 신제품 통한 수익성 개선 기대감·월가 투자의견 상향…주가 급등",
+      "sector": "기타"
+    },
+    {
+      "name": "AMD",
+      "signal": "bull",
+      "reason": "씨티 투자의견 및 목표가 상향",
+      "ts": "06-15",
+      "quote": "씨티, AMD 투자의견·목표가 상향",
+      "sector": "반도체"
+    },
+    {
+      "name": "RS그룹",
+      "signal": "bull",
+      "reason": "도이체 누미스 투자의견 상향",
+      "ts": "07-01",
+      "quote": "RS그룹, 도이체 누미스 투자의견 상향에 주가 상승",
+      "sector": "기타"
+    },
+    {
+      "name": "록히드마틴",
+      "signal": "bull",
+      "reason": "시티은행 투자의견 '매수' 상향",
+      "ts": "07-01",
+      "quote": "록히드마틴, 시티은행 투자의견 '매수' 상향에 주가 강세",
+      "sector": "방산"
+    },
+    {
+      "name": "Circle Internet",
+      "signal": "bull",
+      "reason": "Compass Point 투자의견 상향",
+      "ts": "06-30",
+      "quote": "Compass Point, Circle Internet 주식 투자의견 가치평가로 상향 조정",
+      "sector": "기타"
+    },
+    {
+      "name": "바르질라",
+      "signal": "bull",
+      "reason": "JP모건 중기 전망 개선으로 투자의견 상향",
+      "ts": "07-01",
+      "quote": "JP모건, 바르질라 중기 전망 개선으로 투자의견 상향…밸류에이션 상승 여력은 제한적",
+      "sector": "기타"
+    },
+    {
+      "name": "머피 USA",
+      "signal": "bull",
+      "reason": "연료 마진 개선 본격화",
+      "ts": "07-01",
+      "quote": "머피 USA, 연료 마진 개선 본격화...투자의견 '매수' 상향 - 제프리스",
+      "sector": "소비내수"
+    },
+    {
+      "name": "Old Dominion Freight Line",
+      "signal": "bull",
+      "reason": "Evercore ISI, 사이클 전망 낙관에 따른 투자의견 상향",
+      "ts": "07-01",
+      "quote": "Evercore ISI, Old Dominion Freight Line 투자의견 상향…사이클 전망 낙관",
+      "sector": "기타"
+    },
+    {
+      "name": "Cytokinetics",
+      "signal": "bull",
+      "reason": "Myqorzo 출시 호조",
+      "ts": "06-29",
+      "quote": "UBS, Cytokinetics 투자의견 상향... Myqorzo 출시 호조 덕분",
+      "sector": "바이오"
+    },
+    {
+      "name": "와츠워터테크놀로지스",
+      "signal": "bull",
+      "reason": "월가 투자의견 '매수' 상향",
+      "ts": "06-30",
+      "quote": "와츠워터테크놀로지스, 월가 투자의견 ‘매수’ 상향 소식에 주가 급등",
+      "sector": "기타"
+    },
+    {
+      "name": "컴캐스트",
+      "signal": "bull",
+      "reason": "분사 계획에 따른 도이치뱅크 투자의견 '매수' 상향",
+      "ts": "06-30",
+      "quote": "도이치뱅크, 컴캐스트 분사 계획에 주식 투자의견 ’매수’ 상향",
+      "sector": "통신"
+    },
+    {
+      "name": "블록",
+      "signal": "bull",
+      "reason": "이익 성장 및 수익성 확대 기대",
+      "ts": "06-30",
+      "quote": "블록, 이익 성장·수익성 확대 기대…투자의견 두단계 상향-파이퍼샌들러",
+      "sector": "기타"
+    },
+    {
+      "name": "가던트 헬스",
+      "signal": "bull",
+      "reason": "FDA 승인에 따른 번스타인 투자의견 상향",
+      "ts": "06-26",
+      "quote": "번스타인, 가던트 헬스 FDA 승인에 투자의견 상향",
+      "sector": "바이오"
+    },
+    {
+      "name": "아비백스",
+      "signal": "bull",
+      "reason": "월가 투자은행 긍정적 전망 및 인수합병 가능성",
+      "ts": "07-01",
+      "quote": "아비백스 ② 월가 투자은행 긍정적 전망과 인수합병 가능성",
+      "sector": "바이오"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "최근 다수 종목에 대한 월가 투자은행들의 투자의견 상향 소식 이어짐",
+      "ts": "2026-07-02",
+      "quote": "투자의견 상향 관련 종목 리스트"
+    }
+  ],
+  "quote": "투자의견 상향 소식 전반"
+}

@@ -1,0 +1,135 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "루모 홈스",
+      "signal": "bull",
+      "reason": "점유율 반등",
+      "ts": "2026-07-01",
+      "quote": "골드만삭스, 루모 홈스 점유율 반등에 투자의견 상향",
+      "sector": "기타"
+    },
+    {
+      "name": "와츠워터테크놀로지스",
+      "signal": "bull",
+      "reason": "월가 투자의견 매수 상향",
+      "ts": "2026-06-30",
+      "quote": "와츠워터테크놀로지스, 월가 투자의견 ‘매수’ 상향 소식에 주가 급등",
+      "sector": "기타"
+    },
+    {
+      "name": "RS그룹",
+      "signal": "bull",
+      "reason": "도이체 누미스 투자의견 상향",
+      "ts": "2026-07-01",
+      "quote": "RS그룹, 도이체 누미스 투자의견 상향에 주가 상승",
+      "sector": "기타"
+    },
+    {
+      "name": "AMD",
+      "signal": "bull",
+      "reason": "씨티 투자의견 및 목표가 상향",
+      "ts": "2026-06-15",
+      "quote": "씨티, AMD 투자의견·목표가 상향",
+      "sector": "반도체"
+    },
+    {
+      "name": "원익IPS",
+      "signal": "bull",
+      "reason": "주요 고객사 메모리 투자 반영",
+      "ts": "2026-06-28",
+      "quote": "\"원익IPS 목표가 상향…주요 고객사 메모리 투자 반영\"",
+      "sector": "반도체"
+    },
+    {
+      "name": "블록",
+      "signal": "bull",
+      "reason": "이익 성장 및 수익성 확대 기대",
+      "ts": "2026-06-30",
+      "quote": "블록, 이익 성장·수익성 확대 기대…투자의견 두단계 상향-파이퍼샌들러",
+      "sector": "IT"
+    },
+    {
+      "name": "STM마이크로일렉트로닉스",
+      "signal": "bull",
+      "reason": "바클레이즈 투자의견 상향",
+      "ts": "2026-06-29",
+      "quote": "STM마이크로일렉트로닉스, 바클레이즈 투자의견 상향에 4% 급등",
+      "sector": "반도체"
+    },
+    {
+      "name": "얼리전트",
+      "signal": "bull",
+      "reason": "선컨트리 인수 효과",
+      "ts": "2026-06-21",
+      "quote": "골드만삭스 \"얼리전트, 선컨트리 인수로 '날개'…투자의견 상향",
+      "sector": "기타"
+    },
+    {
+      "name": "DLocal",
+      "signal": "bull",
+      "reason": "성장 전망",
+      "ts": "2026-07-01",
+      "quote": "UBS, 성장 전망에 DLocal 주식 투자의견 ’매수’로 상향",
+      "sector": "IT"
+    },
+    {
+      "name": "HB풀러",
+      "signal": "bull",
+      "reason": "EBITDA 성장 전망",
+      "ts": "2026-06-26",
+      "quote": "JP모건, EBITDA 성장 전망에 HB 풀러 투자의견 상향",
+      "sector": "기타"
+    },
+    {
+      "name": "Circle Internet",
+      "signal": "bull",
+      "reason": "가치평가 조정",
+      "ts": "2026-06-30",
+      "quote": "Compass Point, Circle Internet 주식 투자의견 가치평가로 상향 조정",
+      "sector": "기타"
+    },
+    {
+      "name": "Cytokinetics",
+      "signal": "bull",
+      "reason": "Myqorzo 출시 호조",
+      "ts": "2026-06-29",
+      "quote": "UBS, Cytokinetics 투자의견 상향... Myqorzo 출시 호조 덕분",
+      "sector": "바이오"
+    },
+    {
+      "name": "큐리그닥터페퍼",
+      "signal": "bull",
+      "reason": "바클레이즈 투자의견·목표가 상향",
+      "ts": "2026-06-25",
+      "quote": "큐리그닥터페퍼, 상승…바클레이즈 투자의견·목표가 상향",
+      "sector": "소비내수"
+    },
+    {
+      "name": "컴캐스트",
+      "signal": "bull",
+      "reason": "분사 계획 발표",
+      "ts": "2026-06-30",
+      "quote": "도이치뱅크, 컴캐스트 분사 계획에 주식 투자의견 ’매수’ 상향",
+      "sector": "통신"
+    },
+    {
+      "name": "가던트 헬스",
+      "signal": "bull",
+      "reason": "FDA 승인",
+      "ts": "2026-06-26",
+      "quote": "번스타인, 가던트 헬스 FDA 승인에 투자의견 상향",
+      "sector": "바이오"
+    },
+    {
+      "name": "워너 브러더스 디스커버리",
+      "signal": "bull",
+      "reason": "딜 전망",
+      "ts": "2026-06-29",
+      "quote": "시포트, 딜 전망에 워너 브러더스 디스커버리 투자의견 상향",
+      "sector": "기타"
+    }
+  ],
+  "news_items": [],
+  "quote": "주요 글로벌 증권사의 투자의견 상향 조정 리포트 모음"
+}
