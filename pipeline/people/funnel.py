@@ -22,12 +22,28 @@ _STOCK_PATH = _ROOT / "pipeline" / "taerini_stock.json"
 
 # 조정 가능한 임계값 (그의 규칙을 수치화 — 관찰로 튜닝)
 THRESHOLDS = {
+    "mode": "his",            # "his"=주도(RS or 소라티노) 필수 + 빈집/컨센 (그의 루틴) / "strict"=빈집 AND 컨센
     "vacuum_pct_max": 35.0,   # 수급빈집: osc 백분위 이 값 이하 (낮을수록 빈집)
     "min_up_count": 1,        # 컨센/TP 상향: up_count 최소
-    "require_up_gt_down": True,  # up_count > down_count 필요
-    "require_leader": False,  # True면 주도주찾기 리스트 종목만 (23개, 강한 필터)
+    "require_up_gt_down": True,  # up_count > down_count 필요 (strict 경로에서)
+    "require_leader": False,  # True면 주도주찾기(RS) 리스트 종목만
     "top_n": 20,
 }
+
+_SECTOR_MAP = None
+
+
+def _sector_map():
+    """{종목명: 섹터} — 소라티노 섹터매칭 폭 확대용. 1회 로드."""
+    global _SECTOR_MAP
+    if _SECTOR_MAP is None:
+        import json
+        p = _ROOT / "pipeline" / "atoms" / "stock_sector_map.json"
+        try:
+            _SECTOR_MAP = json.loads(p.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            _SECTOR_MAP = {}
+    return _SECTOR_MAP
 
 
 def _load():
@@ -54,69 +70,70 @@ def select(data=None, th=None, rs=None, sortino=None) -> dict:
         sortino = load_sortino_top()
     s_names = set(sortino.get("names") or [])
     s_sectors = [kw for kw in (sortino.get("sectors") or []) if kw]
+    smap = _sector_map()
     stocks = data.get("stocks", {})
     total = len(stocks)
+    mode = th.get("mode", "his")
 
-    # 1단계 — 수급빈집: osc 백분위가 낮은(수급 안 들어온) 종목
-    vacuum = []
-    for code, s in stocks.items():
-        pct = _osc_pct(s)
-        if pct is not None and pct <= th["vacuum_pct_max"]:
-            vacuum.append((code, s))
-
-    # 2단계 — 컨센/TP 상향(재료): 목표주가 상향 종목
-    materialed = []
-    for code, s in vacuum:
-        tp = s.get("tp") or {}
-        up, down = tp.get("up_count", 0) or 0, tp.get("down_count", 0) or 0
-        if up < th["min_up_count"]:
-            continue
-        if th["require_up_gt_down"] and not (up > down):
-            continue
-        materialed.append((code, s))
-
-    # 3단계 — 주도(RS): '주도주찾기' 리스트 매칭 (종목명 기준)
-    leaders = 0
-    if th["require_leader"]:
-        materialed = [(c, s) for c, s in materialed if (s.get("name") or "") in rs]
-
-    # 4단계 — 정렬: 주도주 우선(3M 수익률), 그다음 빈집강도+컨센
     def _sortino_match(name, sector):
         if name in s_names:
             return True
         sec = sector or ""
         return any(kw and kw in sec for kw in s_sectors)
 
-    def _score(item):
-        _, s = item
-        pct = _osc_pct(s) or 100
-        up = (s.get("tp") or {}).get("up_count", 0) or 0
+    # 종목별 4신호 계산 → 게이트 → 점수
+    scored = []
+    n_vac = n_material = n_leading = 0
+    for code, s in stocks.items():
+        pct = _osc_pct(s)
+        tp = s.get("tp") or {}
+        up, down = tp.get("up_count", 0) or 0, tp.get("down_count", 0) or 0
         nm = s.get("name") or ""
         rsinfo = rs.get(nm)
+        sector = smap.get(nm) or (rsinfo or {}).get("sector")
+        vac_ok = pct is not None and pct <= th["vacuum_pct_max"]
+        up_ok = up >= th["min_up_count"] and (up > down if th["require_up_gt_down"] else True)
+        is_leader = rsinfo is not None
+        s_match = _sortino_match(nm, sector)
+        leading = is_leader or s_match          # 주도 = RS주도주 or 소라티노섹터
+        if vac_ok: n_vac += 1
+        if up_ok: n_material += 1
+        if leading: n_leading += 1
+
+        # 게이트: his=주도 필수 + (빈집 or 컨센) / strict=빈집 AND 컨센
+        if mode == "strict":
+            keep = vac_ok and up_ok
+        else:
+            keep = leading and (vac_ok or up_ok)
+        if not keep:
+            continue
+        if th["require_leader"] and not is_leader:
+            continue
+
         m3 = (rsinfo or {}).get("m3") or 0
-        is_leader = 1 if rsinfo else 0
-        sm = 1 if _sortino_match(nm, (rsinfo or {}).get("sector")) else 0
-        # 주도주 + 소라티노주도 큰 가중, 그 안에서 3M 모멘텀 + 빈집 + 컨센
-        return (is_leader * 1000) + (sm * 500) + m3 + (th["vacuum_pct_max"] - pct) + up * 2
+        score = (is_leader * 1000) + (s_match * 500) + m3 \
+            + (th["vacuum_pct_max"] - (pct if pct is not None else 100)) + up * 2
+        scored.append((score, code, s, sector, is_leader, s_match))
 
-    materialed.sort(key=_score, reverse=True)
-    top = materialed[: th["top_n"]]
+    scored.sort(key=lambda x: x[0], reverse=True)
+    top = scored[: th["top_n"]]
 
+    leaders = 0
     candidates = []
-    for code, s in top:
+    for score, code, s, sector, is_leader, s_match in top:
         osc = s.get("osc") or {}
         tp = s.get("tp") or {}
-        nm = s.get("name") or ""
-        rsinfo = rs.get(nm)
-        is_leader = rsinfo is not None
+        rsinfo = rs.get(s.get("name") or "")
         if is_leader:
             leaders += 1
-        s_match = _sortino_match(nm, (rsinfo or {}).get("sector"))
-        lead_txt = f" · 🔥주도주(3M {rsinfo.get('m3')}%)" if is_leader else ""
-        sortino_txt = " · 📊소라티노주도" if s_match else ""
+        parts = [f"빈집(pct {osc.get('pct')})" if (osc.get('pct') is not None and osc.get('pct') <= th['vacuum_pct_max']) else None,
+                 f"컨센↑{tp.get('up_count')}/↓{tp.get('down_count')}" if (tp.get('up_count') or 0) else None,
+                 f"🔥주도주(3M {rsinfo.get('m3')}%)" if is_leader else None,
+                 "📊소라티노주도" if s_match else None]
         candidates.append({
             "code": code,
             "name": s.get("name", code),
+            "sector": sector,
             "vacuum_pct": osc.get("pct"),
             "vacuum_trend": osc.get("trend"),
             "tp_dir": tp.get("dir"),
@@ -127,9 +144,11 @@ def select(data=None, th=None, rs=None, sortino=None) -> dict:
             "sortino_match": s_match,
             "rs_m3": (rsinfo or {}).get("m3"),
             "rs_m1": (rsinfo or {}).get("m1"),
-            "reason": f"수급빈집(pct {osc.get('pct')}) × 컨센상향(↑{tp.get('up_count')}/↓{tp.get('down_count')}){lead_txt}{sortino_txt}",
+            "reason": " · ".join(p for p in parts if p),
         })
 
+    gate_txt = ("주도(RS or 소라티노) 필수 + 빈집/컨센" if mode == "his"
+                else "빈집 AND 컨센")
     return {
         "date": data.get("date"),
         "thresholds": th,
@@ -140,15 +159,15 @@ def select(data=None, th=None, rs=None, sortino=None) -> dict:
         "sortino_sectors": s_sectors,
         "funnel": [
             {"step": "전체 종목", "count": total},
-            {"step": f"① 수급빈집 (osc pct ≤ {th['vacuum_pct_max']})", "count": len(vacuum)},
-            {"step": "② 컨센/TP 상향 (재료)", "count": len(materialed)},
-            {"step": f"③ 상위 {th['top_n']} (주도주·소라티노 우선)", "count": len(top)},
-            {"step": "  └ 주도주(RS)", "count": leaders},
-            {"step": "  └ 소라티노 주도섹터", "count": sum(1 for c in candidates if c["sortino_match"])},
+            {"step": "주도섹터풀 (RS주도주 ∪ 소라티노섹터)", "count": n_leading},
+            {"step": f"빈집(pct≤{th['vacuum_pct_max']})", "count": n_vac},
+            {"step": "컨센/TP 상향(재료)", "count": n_material},
+            {"step": f"→ 게이트[{gate_txt}] 통과", "count": len(scored)},
+            {"step": f"→ 상위 {th['top_n']} 선정 (그중 🔥주도주 {leaders})", "count": len(top)},
         ],
         "candidates": candidates,
-        "note": (f"수급빈집 × 컨센상향 × 주도주(RS {len(rs)}) × 소라티노(주도섹터). "
-                 "🔥=주도주, 📊=소라티노 주도섹터. 매수추천 아님."),
+        "note": (f"[{mode}모드] {gate_txt}. 🔥=주도주(RS), 📊=소라티노 주도섹터. "
+                 "빈집·컨센은 그 안에서 가점. 매수추천 아님."),
     }
 
 
