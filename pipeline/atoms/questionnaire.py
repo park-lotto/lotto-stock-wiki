@@ -158,12 +158,17 @@ def _base(meta: dict, **kw) -> dict:
         "is_active": 1,
         "content": "",
         "relations": [],
+        "structured_fields": None,
     }
     d.update(kw)
+    sf = d.get("structured_fields")
+    if isinstance(sf, dict):
+        d["structured_fields"] = json.dumps(sf, ensure_ascii=False)
     return d
 
 
-def _stock_atom(meta, sector, name, content, *, strong, signal, i, tag) -> dict:
+def _stock_atom(meta, sector, name, content, *, strong, signal, i, tag,
+                 structured_fields=None) -> dict:
     return _base(
         meta,
         id=_mk_id(meta["date"], meta["broker"], meta["raw_file"], tag, i),
@@ -174,6 +179,7 @@ def _stock_atom(meta, sector, name, content, *, strong, signal, i, tag) -> dict:
         magnitude="major" if strong else "minor",
         strength_score=4 if strong else 2,
         content=content,
+        structured_fields=structured_fields,
     )
 
 
@@ -206,10 +212,23 @@ def questionnaire_to_atoms(q: dict, meta: dict) -> list[dict]:
                 f"리스크: {s.get('risk')}" if s.get("risk") else "",
             ]
             content = " / ".join(p for p in parts if p)
+            structured = {
+                "code": s.get("code"), "rating": s.get("rating"),
+                "rating_changed": s.get("rating_changed"),
+                "tp_new": s.get("tp_new"), "tp_prev": s.get("tp_prev"),
+                "tp_direction": s.get("tp_direction"),
+                "earnings_outlook": s.get("earnings_outlook"),
+                "estimate_revision": s.get("estimate_revision"),
+                "next_catalyst": s.get("next_catalyst"),
+                "thesis": s.get("thesis"), "valuation_basis": s.get("valuation_basis"),
+                "risk": s.get("risk"), "supply_comment": s.get("supply_comment"),
+                "quote": s.get("quote"),
+            }
             sec = resolve_sector(name, s.get("sector"), is_foreign=False)[0][0]
             atoms.append(_stock_atom(
                 meta, sec, name, content,
                 strong=bool(s.get("tp_new")), signal=sig, i=i, tag="stk",
+                structured_fields=structured,
             ))
 
     elif kind == "sector":
@@ -222,6 +241,11 @@ def questionnaire_to_atoms(q: dict, meta: dict) -> list[dict]:
             signal="bullish" if _is_bullish_view(q.get("sector_view")) else "neutral",
             event_type="report", magnitude="major", strength_score=4,
             content=f"[{q.get('sector_view')}] {thesis}",
+            structured_fields={
+                "sector_view": q.get("sector_view"), "thesis": q.get("thesis"),
+                "timeline": q.get("timeline"), "top_picks": q.get("top_picks"),
+                "risk": q.get("risk"), "quote": q.get("quote"),
+            },
         ))
         for i, p in enumerate(q.get("top_picks") or []):
             name = (p.get("name") or "").strip()
@@ -241,6 +265,14 @@ def questionnaire_to_atoms(q: dict, meta: dict) -> list[dict]:
             content=q.get("market_direction") or "; ".join(
                 _s(rs.get("reason")) for rs in q.get("recommended_sectors") or []
             ),
+            structured_fields={
+                "market_direction": q.get("market_direction"),
+                "macro_vars": q.get("macro_vars"),
+                "recommended_sectors": q.get("recommended_sectors"),
+                "style": q.get("style"), "event_calendar": q.get("event_calendar"),
+                "top_picks": q.get("top_picks"), "risk": q.get("risk"),
+                "quote": q.get("quote"),
+            },
         ))
         for i, rs in enumerate(q.get("recommended_sectors") or []):
             sec = _norm_sector(rs.get("sector"))
