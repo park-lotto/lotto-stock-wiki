@@ -1205,6 +1205,15 @@ function _sessionX(hhmm, w){
   const clamped=Math.max(_SESSION_OPEN_MIN,Math.min(_SESSION_CLOSE_MIN,mins));
   return 2+((clamped-_SESSION_OPEN_MIN)/(_SESSION_CLOSE_MIN-_SESSION_OPEN_MIN))*(w-4);
 }
+function _sessionMins(t){const d=String(t||"").replace(/[^0-9]/g,"");return d.length<4?null:parseInt(d.slice(0,2),10)*60+parseInt(d.slice(2,4),10);}
+// 누적 순매수/프로그램은 장시작 09:00에 값이 0(아직 거래 전). 첫 실데이터가 09:05 이후면
+// 09:00=0 기준점을 앞에 붙여 그래프를 왼쪽(09:00)에 앵커한다(서버가 장중 재시작돼 앞부분이
+// 비어도 '09:00부터 현재까지' 큰그림이 그려짐). 정상 가동(09:00부터 폴링) 시엔 seed가 안 붙는다.
+function _seedOpen(arr, zeroObj){
+  if(!arr||!arr.length) return arr;
+  const m=_sessionMins(arr[0].ts||arr[0].t);
+  return (m!==null && m>545) ? [zeroObj, ...arr] : arr;
+}
 
 function invHistoryChart(history, w, h){
   if(!history||history.length<1) return "";
@@ -1544,14 +1553,14 @@ function renderMarketFlow(d){
         }).join("")
         +(invAllZero?`<span style="font-size:9px;color:#333;display:block;margin-top:2px">KIS API 미구독</span>`:"");
 
-      const hist=m.investor_history||[];
+      const hist=_seedOpen(m.investor_history||[],{외인:0,기관:0,개인:0,ts:"0900"});
       const histSvg=`
         <div class="mkt-sec-label" style="margin-top:2px">누적 추이 (외인/기관/개인)</div>
         ${hist.length>=2
           ? invHistoryChart(hist,240,80)
           : hist.length===1
             ? `<div style="font-size:9px;color:#999;padding:2px 0">아직 1포인트 (1분 후 그래프 생성)</div>${invHistoryChart(hist,240,80)}`
-            : `<div style="font-size:9px;color:#999;padding:4px 0">장 중 데이터 없음 (09:00~15:30 1분 폴링, 최대 3시간+ 누적)</div>`}`;
+            : `<div style="font-size:9px;color:#999;padding:4px 0">장 중 데이터 없음 (09:00~15:30 1분 폴링)</div>`}`;
 
       const prog=m.program_now||{합계:0,차익:0,비차익:0};
       const progAllZero=!prog.합계&&!prog.차익&&!prog.비차익;
@@ -1564,6 +1573,7 @@ function renderMarketFlow(d){
       const progSeries=m.program_series||[];
       const progHist=m.program_history||[];
       let progSource=progHist.length>progSeries.length?progHist:progSeries;
+      progSource=_seedOpen(progSource,{차익:0,비차익:0,합계:0,ts:"0900"});
       if(progSource.length===1) progSource=[progSource[0],progSource[0]];
       let progChart="";
       if(progSource.length>=2){
