@@ -1,0 +1,10 @@
+{
+  "태린이아빠": {
+    "display": "태린이아빠",
+    "sources": ["태린이아빠 주식투자", "태린이아빠"],
+    "trust": "B",
+    "tracking_since": "2026-05-01",
+    "data_files": ["taerini_stock.json", "taerini_consensus.json"],
+    "brain_page": "wiki/people/태린이아빠.md"
+  }
+}
