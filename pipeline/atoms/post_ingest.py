@@ -136,7 +136,7 @@ def ingest_post(md_path: Path, cfg: dict) -> int:
     profile = profiles.youtube_channel_profile(h["source_name"]) if cfg["source_type"] == "youtube" else None
 
     atoms = None
-    if profile and profile in YOUTUBE_PROFILES:
+    if profile == "데이트레이딩":
         q = _extract_daytrading(md_path)
         if q and q.get("trades"):
             _save_artifact(q, cfg["source_type"], h["date"], h["title"])
