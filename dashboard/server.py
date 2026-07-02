@@ -546,7 +546,12 @@ async def api_sources_rename(req: Request):
         pass  # 빈 문자열이면 기존 URL 유지
     d[new_name] = v
     _save_registry(cat, d)
-    return JSONResponse(content={"ok": True})
+    # 서버 크롤러에도 새 이름/URL 반영 (add_source.py가 upsert)
+    server = None
+    final_url = v.get("url", "") if isinstance(v, dict) else ""
+    if cat == "news" or final_url:
+        server = await run_in_threadpool(server_register, cat, new_name, final_url)
+    return JSONResponse(content={"ok": True, "server": server})
 
 
 def server_crawl(cat, only):
@@ -889,13 +894,19 @@ _sv_cache: dict = {"data": None, "ts": 0.0}
 _SV_TTL = 600   # 10분
 
 def _fetch_etf_constituents(code: str) -> list:
-    """네이버 모바일 API로 ETF 상위10 편입종목 파싱."""
+    """네이버 모바일 API로 ETF 상위10 편입종목 파싱. 일시적 타임아웃 대비 1회 재시도."""
     import urllib.request
     url = f"https://m.stock.naver.com/api/stock/{code}/etfAnalysis"
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, timeout=8) as resp:
-        d = json.load(resp)
-    return d.get("etfTop10MajorConstituentAssets") or []
+    last_err = None
+    for _ in range(2):
+        try:
+            with urllib.request.urlopen(req, timeout=8) as resp:
+                d = json.load(resp)
+            return d.get("etfTop10MajorConstituentAssets") or []
+        except Exception as e:
+            last_err = e
+    raise last_err
 
 
 def _compute_sector_vacuum(top: int = 5) -> dict:
@@ -1133,12 +1144,13 @@ def api_sector_detail(etf: str = "", codes: str = "", title: str = ""):
     except Exception:
         pass
     sector_news, metas = [], []
+    cons_failed = False
     if etf:
         ec = etf.zfill(6) if etf.isdigit() else etf
         try:
             cons = _fetch_etf_constituents(ec)
         except Exception:
-            cons = []
+            cons, cons_failed = [], True   # 일시적 실패 — 아래에서 캐시하지 않음(다음 클릭 때 재시도)
         for co in cons:
             metas.append((str(co.get("itemCode") or "").zfill(6), co.get("itemName")))
         for s in (_NEWS_FEED.get("data") or {}).get("sectors", []):
@@ -1160,8 +1172,19 @@ def api_sector_detail(etf: str = "", codes: str = "", title: str = ""):
     with ThreadPoolExecutor(max_workers=6) as ex:
         stocks = list(ex.map(_build, metas))
     stocks.sort(key=lambda s: s["pct"] if s["pct"] is not None else 999)
+    if not sector_news:
+        # 섹터 테마뉴스가 없으면 편입종목 개별뉴스로 대체(빈 화면 방지)
+        for s in stocks:
+            for n in (s.get("news") or []):
+                sector_news.append({"title": f"[{s['name']}] {n['title']}", "date": n.get("date", ""),
+                                     "url": n.get("url", ""), "score": 0})
+                if len(sector_news) >= 2:
+                    break
+            if len(sector_news) >= 2:
+                break
     out = {"title": title or etf, "sector_news": sector_news, "stocks": stocks}
-    _sd2_cache[key] = {"data": out, "ts": now}
+    if not (cons_failed and not stocks):   # 종목 조회 자체가 실패한 경우만 캐시 스킵
+        _sd2_cache[key] = {"data": out, "ts": now}
     return JSONResponse(content=out)
 
 

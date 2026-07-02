@@ -69,8 +69,17 @@ def sector_news(code, kw_map=None, top: int = 2) -> list:
         return []
     must = m.get("must") or []
     now = datetime.now(timezone.utc)
+    # sort=date만 쓰면 그날 시황 헤드라인(반도체·매크로 등)에 밀려 관련기사가 0건인 섹터가 생김
+    # → sort=sim(연관도)도 함께 조회해 후보 풀을 넓힌 뒤 must필터로 걸러낸다.
+    seen_urls, items = set(), []
+    for it in _search(q, display=20, sort="date") + _search(q, display=20, sort="sim"):
+        u = it.get("originallink") or it.get("link") or it.get("title")
+        if u in seen_urls:
+            continue
+        seen_urls.add(u)
+        items.append(it)
     ranked = []
-    for it in _search(q, display=20):
+    for it in items:
         t = _clean(it.get("title", ""))
         if not t or any(w in t for w in NOISE):
             continue
