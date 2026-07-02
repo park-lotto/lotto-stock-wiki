@@ -198,11 +198,11 @@ def get_wti() -> dict:
 
 
 def get_usdkrw() -> dict:
-    """원달러 환율 — 무료 FX API(open.er-api.com).
+    """원달러 환율 — 네이버 marketindex(하나은행 고시, 인트라데이 갱신) 우선.
 
-    yfinance USDKRW=X는 'possibly delisted'로 자주 막혀 값이 멈춤 → 무료 FX API로 대체.
-    무료 API는 일 단위 갱신이라 인트라데이 틱은 없지만 '현재 정확한 환율'은 제공.
-    등락률은 세션 시초가 대비(서버 가동 후 첫 값 기준)로 누적 표시.
+    기존 open.er-api.com은 '일 단위' 갱신이라 종일 값이 고정(1553.24/0.00%)됐음.
+    네이버는 하루에도 여러 번 고시가 갱신돼 실시간에 가깝고, 전일종가 대비 등락률을 직접 제공.
+    폴 때마다 값을 bars에 누적(장중 스텝 라인). 실패 시 무료 FX API로 폴백.
     """
     import requests as _req, datetime as _dt
     now = time.time()
@@ -211,28 +211,55 @@ def get_usdkrw() -> dict:
         return _CACHE[key]["data"]
 
     rate = 0.0
-    for url in ("https://open.er-api.com/v6/latest/USD",
-                "https://api.exchangerate-api.com/v4/latest/USD"):
-        try:
-            j = _req.get(url, timeout=8).json()
-            rate = float((j.get("rates") or {}).get("KRW") or 0)
-            if rate > 0:
-                break
-        except Exception:
-            pass
+    change_rate = 0.0
+    source = ""
+    # 1순위: 네이버 하나은행 고시 (인트라데이 갱신)
+    try:
+        j = _req.get("https://m.stock.naver.com/front-api/marketIndex/prices"
+                     "?category=exchange&reutersCode=FX_USDKRW&page=1&pageSize=2",
+                     headers={"User-Agent": "Mozilla/5.0",
+                              "Referer": "https://m.stock.naver.com/"}, timeout=8).json()
+        rows = (j.get("result") or [])
+        if rows:
+            r0 = rows[0]
+            rate = float(str(r0.get("closePrice", "0")).replace(",", "") or 0)
+            fr = float(str(r0.get("fluctuationsRatio", "0")).replace(",", "") or 0)
+            nm = (r0.get("fluctuationsType") or {}).get("name", "")
+            change_rate = round(-fr if nm == "FALLING" else fr, 2)
+            source = "naver"
+    except Exception:
+        pass
+
+    # 2순위: 무료 FX API (일 단위) — 네이버 실패 시
+    if rate <= 0:
+        for url in ("https://open.er-api.com/v6/latest/USD",
+                    "https://api.exchangerate-api.com/v4/latest/USD"):
+            try:
+                j = _req.get(url, timeout=8).json()
+                rate = float((j.get("rates") or {}).get("KRW") or 0)
+                if rate > 0:
+                    source = "er-api"
+                    break
+            except Exception:
+                pass
+        if rate > 0:
+            today0 = _dt.date.today().isoformat()
+            if _FX_STATE["day"] != today0 or _FX_STATE["open"] <= 0:
+                _FX_STATE.update({"day": today0, "open": rate, "bars": []})
+            change_rate = round((rate - _FX_STATE["open"]) / _FX_STATE["open"] * 100, 2)
 
     if rate <= 0:
-        return _yf_price_bars("USDKRW=X", "15m")  # 최후 폴백
+        return {"price": 0, "change_rate": 0.0, "bars": [], "source": "err"}
 
+    # bars 누적 (장중 스텝 라인). 날짜 바뀌면 리셋.
     today = _dt.date.today().isoformat()
-    if _FX_STATE["day"] != today or _FX_STATE["open"] <= 0:
+    if _FX_STATE["day"] != today:
         _FX_STATE.update({"day": today, "open": rate, "bars": []})
-    change_rate = round((rate - _FX_STATE["open"]) / _FX_STATE["open"] * 100, 2)
     _FX_STATE["bars"].append(round(rate, 2))
     _FX_STATE["bars"] = _FX_STATE["bars"][-30:]
 
     data = {"price": round(rate, 2), "change_rate": change_rate,
-            "bars": list(_FX_STATE["bars"]), "source": "er-api"}
+            "bars": list(_FX_STATE["bars"]), "source": source}
     _CACHE[key] = {"data": data, "ts": now}
     return data
 
