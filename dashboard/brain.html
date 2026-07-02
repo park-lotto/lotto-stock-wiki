@@ -92,6 +92,13 @@
   .rtoday{color:#7fd8a0;font-size:.8rem;margin-top:4px;font-weight:600}
   .mtbox{border:1px solid #2a4a38;background:#0e1712;border-radius:9px;padding:9px 13px;margin-bottom:12px}
   .mtlbl{font-size:.8rem;color:#7fd8a0;font-weight:600;margin-bottom:5px} .mtlbl b{color:var(--gold)}
+  /* 질의 엔진 */
+  .askbox{border:1px solid var(--gold-dim);border-radius:12px;padding:13px 16px;margin:14px 0 6px;background:#14120c}
+  .asklbl{font-size:.9rem;color:var(--gold);margin-bottom:8px} .asklbl b{color:var(--txt)}
+  .answer{margin-top:11px;padding-top:11px;border-top:1px solid var(--line)}
+  .verdict{display:inline-block;font-size:1rem;font-weight:700;padding:4px 14px;border:1.5px solid;border-radius:8px;margin-bottom:8px}
+  .rzn{font-size:.84rem;line-height:1.55;padding:3px 0;color:#cfcdc7}
+  .rzn.data{color:#a8c8f0} .rzn.infer{color:#c9a3e8} .rzn.quote{color:#7fd8a0}
   /* 오늘의 종목선정 */
   .funnel{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0 12px;font-size:.78rem;color:var(--muted)}
   .funnel .fstep{background:var(--panel2);border:1px solid var(--line);border-radius:20px;padding:3px 11px}
@@ -333,6 +340,15 @@ function render(v){
       <h1>${esc(v.display)}</h1>
       <span class="sub">신뢰 ${esc(v.trust)} · 추적 ${esc(v.tracking_since||'')} · 소스 ${v.sources.map(esc).join(', ')}</span>
     </div>
+    <div class="askbox">
+      <div class="asklbl">💬 이 종목 <b>${esc(v.display)}</b>라면 어떻게 볼까?</div>
+      <div style="display:flex;gap:7px">
+        <input id="askq" placeholder="종목명 입력 (예: 삼성전자, 티에스이, 파마리서치)" onkeydown="if(event.key==='Enter')askPersona()"
+          style="flex:1;padding:9px 12px;background:#0b0b0d;border:1px solid var(--gold-dim);border-radius:8px;color:var(--txt);font-size:.9rem">
+        <button onclick="askPersona()" style="padding:9px 20px;border-radius:8px;border:1px solid var(--gold-dim);background:var(--gold);color:#000;font-weight:700;cursor:pointer">물어보기</button>
+      </div>
+      <div id="askanswer"></div>
+    </div>
     <div class="axesmap">두 축이 <b>종목선정</b>에서 만난다 &nbsp;→&nbsp;
       <span class="ax b">🧠 인사이트·사고 추적·복제</span> <span style="color:var(--gold)">＋</span>
       <span class="ax a">📊 데이터·통계</span></div>
@@ -385,6 +401,28 @@ function render(v){
         <div class="md">${v.skeleton_md? mdToHtml(v.skeleton_md) : "<p class='cnt'>골격 미작성 — build_brain 시드 또는 직접 작성</p>"}</div>
       </details>
     </div>`;
+}
+
+const VERDICT_COLOR = {"탑픽 후보":"#e05a5a","관심":"#e0a24a","관망":"#9a9aa2"};
+async function askPersona(){
+  if(!SELECTED) return;
+  const q = document.getElementById("askq").value.trim(); if(!q) return;
+  const box = document.getElementById("askanswer");
+  box.innerHTML = "<div class='cnt' style='margin-top:8px'>생각 중…</div>";
+  const r = await fetch("/api/brain/"+encodeURIComponent(SELECTED)+"/ask?q="+encodeURIComponent(q));
+  const v = await r.json();
+  if(v.error){ box.innerHTML=`<div class='cnt'>${esc(v.error)}</div>`; return; }
+  const vc = Object.keys(VERDICT_COLOR).find(k=>(v.verdict||"").startsWith(k));
+  const color = VERDICT_COLOR[vc] || "var(--muted)";
+  const reasons = (v.reason||[]).map(rs=>{
+    let cls="rzn"; if(rs.startsWith("[발언]")) cls="rzn quote"; else if(rs.startsWith("[추론]")) cls="rzn infer"; else if(rs.startsWith("[데이터]")) cls="rzn data";
+    return `<div class="${cls}">${esc(rs)}</div>`;
+  }).join("");
+  box.innerHTML = `<div class="answer">
+    <div class="verdict" style="color:${color};border-color:${color}">${esc(v.stock||q)} → ${esc(v.verdict)}</div>
+    ${reasons}
+    ${(v.quotes&&v.quotes.length>1)?`<div class="cnt" style="margin-top:6px">그의 관련 발언 ${v.quotes.length}건 (재료 검색에서 더 보기)</div>`:""}
+  </div>`;
 }
 
 function toggleAdd(){document.getElementById("addform").classList.toggle("open");}

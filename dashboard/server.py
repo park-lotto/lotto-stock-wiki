@@ -645,6 +645,15 @@ def api_brain_routine_today(person: str):
     return JSONResponse(content={"available": True, **r})
 
 
+@app.get("/api/brain/{person}/ask")
+def api_brain_ask(person: str, q: str = ""):
+    """질의 엔진: '이 종목 태린이라면 어떻게 볼까?'"""
+    from pipeline.people.persona import stock_verdict
+    if not q.strip():
+        return JSONResponse(content={"error": "종목명을 입력하세요"}, status_code=400)
+    return JSONResponse(content=stock_verdict(person, q.strip()))
+
+
 @app.get("/api/brain/{person}/selection")
 def api_brain_selection(person: str):
     """복사: 그의 규칙으로 오늘의 종목선정 재현."""
