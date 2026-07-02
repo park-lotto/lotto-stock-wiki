@@ -76,6 +76,19 @@
   .md b{color:var(--gold)} .md li{margin:3px 0;color:#cfcdc7;font-size:.85rem;line-height:1.5}
   .md p{color:#cfcdc7;font-size:.85rem}
   .cnt{color:var(--muted);font-size:.78rem;font-weight:400}
+  /* 사고 루틴 */
+  .philo{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--gold);
+    border-radius:9px;padding:11px 15px;margin-bottom:14px}
+  .philo li{font-size:.83rem;color:#d4d2cc;margin:4px 0;line-height:1.5}
+  .phase{margin-bottom:12px}
+  .phase .ph{font-size:.86rem;color:var(--gold);font-weight:600;margin:12px 0 7px}
+  .rstep{display:grid;grid-template-columns:180px 1fr;gap:10px;padding:8px 12px;border:1px solid var(--line);
+    border-radius:8px;margin-bottom:6px;background:var(--panel);align-items:start}
+  .rstep .snm{font-size:.84rem;font-weight:600;color:var(--txt)}
+  .rstep .dtag{display:inline-block;font-size:.62rem;color:#000;background:var(--gold);border-radius:10px;
+    padding:1px 7px;margin-top:5px}
+  .rstep .rbody{font-size:.8rem;color:#c4c2bc;line-height:1.5}
+  .rstep .rq{color:var(--gold-dim)} .rstep .rr{color:#d88}
 </style>
 </head>
 <body>
@@ -166,6 +179,35 @@ function stanceCard(a){
     <div class="txt">${esc(a.content)}</div></div>`;
 }
 
+const DATA_LABEL = {osc:"수급빈집",rs:"소라티노/RS",consensus:"컨센",tp:"TP신고가",accel:"가속화",etf:"액티브ETF"};
+
+function routineHtml(rt){
+  if(!rt) return "";
+  const philo = (rt.philosophy||[]).map(p=>`<li>${esc(p)}</li>`).join("");
+  const phases = (rt.routine||[]).map(ph=>`
+    <div class="phase">
+      <div class="ph">${esc(ph.phase)}</div>
+      ${(ph.steps||[]).map(s=>{
+        const dk = (s.data_key||"").split(",").map(x=>x.trim()).filter(Boolean);
+        const tags = dk.map(k=>`<span class="dtag">📊 ${DATA_LABEL[k]||k} 자동</span>`).join(" ");
+        return `<div class="rstep">
+          <div><div class="snm">${esc(s.step)}</div>${tags}${s.data?`<div class="cnt">${esc(s.data)}</div>`:""}</div>
+          <div class="rbody">
+            ${s.checks?`<div>👁 ${esc(s.checks)}</div>`:""}
+            ${s.question?`<div class="rq">❓ ${esc(s.question)}</div>`:""}
+            ${s.rule?`<div class="rr">⚙ ${esc(s.rule)}</div>`:""}
+          </div></div>`;
+      }).join("")}
+    </div>`).join("");
+  return `
+    <div class="sec">
+      <div class="lbl">🔄 일일 사고 루틴 <span class="cnt">— 그가 매일 '어떻게' 사고하는가 (${esc(rt.extracted_from||'')})</span></div>
+      ${philo?`<ul class="philo">${philo}</ul>`:""}
+      ${phases}
+      <div class="cnt" style="margin-top:6px">📊 배지 = taerini_stock.json에서 오늘 수치로 자동 채울 수 있는 단계 (다음 단계: 오늘의 루틴 재구성)</div>
+    </div>`;
+}
+
 function render(v){
   const main = document.getElementById("main");
   const stances = v.live_stance||[], log = v.speech_log||[];
@@ -174,6 +216,7 @@ function render(v){
       <h1>${esc(v.display)}</h1>
       <span class="sub">신뢰 ${esc(v.trust)} · 추적 ${esc(v.tracking_since||'')} · 소스 ${v.sources.map(esc).join(', ')}</span>
     </div>
+    ${routineHtml(v.routine)}
 
     <div class="sec">
       <div class="lbl">🔴 지금 포지션 <b>${stances.length}</b> <span class="cnt">— 그가 지금 뭘 어떻게 보나 (stance_key 기반)</span></div>

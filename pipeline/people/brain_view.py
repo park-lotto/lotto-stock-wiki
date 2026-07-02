@@ -20,6 +20,7 @@ from pipeline.people.registry import load_registry, get_person
 from pipeline.people.people_query import atoms_for
 
 _ROOT = Path(__file__).parent.parent.parent
+_ROUTINE_DIR = Path(__file__).parent / "routines"
 
 # 뷰로 내보낼 원자 필드(원문 보존, 노이즈 제거)
 _ATOM_FIELDS = ("date", "sector", "asset", "signal", "content_type",
@@ -43,6 +44,17 @@ def _skeleton_md(person_cfg: dict) -> str:
     return text[:marker].rstrip() if marker != -1 else text.rstrip()
 
 
+def _routine(name: str) -> dict | None:
+    """사람의 일일 사고 루틴(있으면). routines/{name}.json."""
+    path = _ROUTINE_DIR / f"{name}.json"
+    if not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+
+
 def list_people() -> list[dict]:
     """추적 중인 모든 사람 요약 카드용 목록."""
     out = []
@@ -57,6 +69,7 @@ def list_people() -> list[dict]:
             "stance_count": len(stances),
             "latest_date": recent[0]["date"] if recent else None,
             "has_skeleton": bool(_skeleton_md(cfg)),
+            "has_routine": _routine(name) is not None,
         })
     # 최근 발언 있는 사람 우선, 그다음 이름순
     out.sort(key=lambda p: (p["latest_date"] or "", p["name"]), reverse=True)
@@ -72,6 +85,7 @@ def person_view(name: str) -> dict:
         "trust": cfg.get("trust", ""),
         "tracking_since": cfg.get("tracking_since", ""),
         "sources": cfg.get("sources", []),
+        "routine": _routine(name),
         "skeleton_md": _skeleton_md(cfg),
         "live_stance": [_slim(a) for a in
                         atoms_for(name, stance_only=True, days=60, limit=60)],
