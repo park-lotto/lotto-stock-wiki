@@ -99,6 +99,36 @@ def _trailing_avg(source_type: str, before_date: str, days: int = 7) -> float:
         conn.close()
 
 
+def diagnose(cat: str, date: str, extra_date: str, since_iso: str, output: str) -> dict:
+    """카테고리 1개 진단. 문제로 판정되면 ingest_cat()을 1회만 재호출해 재시도한다."""
+    source_type = cat
+    pending = _extract_pending(output)
+    error = _extract_error(output)
+    delta = _atoms_count_since(source_type, since_iso)
+    retried = False
+
+    if error or (pending > 0 and delta == 0):
+        retried = True
+        retry_output = ingest_cat(cat, date, extra_date)
+        retry_error = _extract_error(retry_output)
+        delta = _atoms_count_since(source_type, since_iso)
+        if delta > 0 and not retry_error:
+            icon, note = "✅", "재시도로 해결"
+        else:
+            summary = retry_error or error or "원인 미상"
+            icon, note = "🔴", f"확인필요 — {summary}"
+    else:
+        avg = _trailing_avg(source_type, date)
+        if delta > 0 and avg > 0 and delta < avg * 0.3:
+            icon, note = "⚠️", f"급감(평균 {avg:.0f} 대비 {delta})"
+        else:
+            icon, note = "✅", "정상"
+
+    total_today = _atoms_count_today(source_type, date)
+    return {"cat": cat, "delta": delta, "total_today": total_today,
+            "icon": icon, "note": note, "retried": retried}
+
+
 def run(cmd: list[str], label: str) -> tuple[int, str]:
     """서브프로세스 실행. 출력은 화면에 그대로 찍고(기존 가시성 유지), 진단용으로도 반환.
     subprocess 자체 실행 실패(예: 인터프리터 경로 문제)도 예외를 던지지 않고
