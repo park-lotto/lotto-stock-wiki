@@ -1986,8 +1986,14 @@ def _heatmap_merge_keep(key: str, data: dict) -> dict:
         prev = (_heatmap_cache.get(key) or {}).get("data")
         if prev and prev.get("sectors"):
             new_names = {s.get("name") for s in data["sectors"]}
+            # 사용자가 숨긴 섹터(hidden_sectors)는 되살리지 않음 — 큐레이션 존중
+            try:
+                from sector_heatmap import _load_sector_custom as _lsc
+                _hidden = set(_lsc().get("hidden_sectors", []))
+            except Exception:
+                _hidden = set()
             for ps in prev["sectors"]:
-                if ps.get("name") not in new_names:
+                if ps.get("name") not in new_names and ps.get("name") not in _hidden:
                     data["sectors"].append(ps)
             data["sectors"].sort(key=lambda x: x.get("avg_rate", 0) or 0, reverse=True)
     except Exception:
