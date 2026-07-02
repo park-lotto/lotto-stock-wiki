@@ -1189,7 +1189,7 @@ def _refresh_news(top_sectors: int = 8, per_stock: int = 3):
                                "news": nf.stock_news(st.get("code"), top=2)})
             out_sectors.append({"etf": s.get("etf"), "code": s.get("code"),
                                 "rate": s.get("rate"),
-                                "news": nf.sector_news(s.get("code"), kw, top=2),
+                                "news": nf.sector_news(s.get("code"), kw, top=3),
                                 "stocks": stocks})
         data = {"sectors": out_sectors, "ts": time.time()}
         _NEWS_FEED["data"] = data
@@ -1255,7 +1255,7 @@ def api_sector_detail(etf: str = "", codes: str = "", title: str = ""):
             if str(s.get("code")) == ec:
                 sector_news = s.get("news", []); break
         if not sector_news:
-            sector_news = nf.sector_news(ec, top=2)
+            sector_news = nf.sector_news(ec, top=3)
     else:
         for cc in [x.strip().zfill(6) for x in codes.split(",") if x.strip()][:12]:
             metas.append((cc, (tk.get(cc) or {}).get("name")))
