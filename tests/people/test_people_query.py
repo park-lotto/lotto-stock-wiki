@@ -54,3 +54,10 @@ def test_atoms_for_ordered_newest_first():
     insert_atom(_atom({"id": "new", "date": "2026-06-30"}))
     got = atoms_for("태린이아빠", days=3650)
     assert got[0]["id"] == "new"
+
+
+def test_atoms_for_stance_only_filters_by_stance_key():
+    insert_atom(_atom({"id": "s1", "stance_key": "태린이아빠 주식투자|반도체"}))
+    insert_atom(_atom({"id": "s2", "stance_key": None}))
+    got = atoms_for("태린이아빠", stance_only=True)
+    assert [a["id"] for a in got] == ["s1"]

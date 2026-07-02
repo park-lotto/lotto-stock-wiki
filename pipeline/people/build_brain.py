@@ -53,7 +53,7 @@ def build(person):
     cfg = get_person(person)
     page_path = _ROOT / cfg["brain_page"]
     text = page_path.read_text(encoding="utf-8")
-    stance = atoms_for(person, content_type="stance", days=30)
+    stance = atoms_for(person, stance_only=True, days=30)
     log = atoms_for(person, days=14, limit=40)
     updated = update_markers(text, {
         "live_stance": render_live_stance(stance),
