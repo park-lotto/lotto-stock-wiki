@@ -1022,7 +1022,7 @@ function renderGrid(tiles){
     const barsInline=(tile.bars&&tile.bars.length>=2)?
       `<span class="avg-spark">${sparkline(tile.bars,tile.avg_rate)}</span>`
       :`<span class="avg-spark no-chart">―</span>`;
-    el.innerHTML=`<div class="sec-name">${esc(tile.name)}${parentHtml}<span class="sec-edit-btn" data-secedit="${esc(tile.name)}" title="종목 추가/삭제">✎</span><span class="sec-del-btn" data-secdel="${esc(tile.name)}" title="전체에서 삭제(편집탭서 복원)">✕</span></div>
+    el.innerHTML=`<div class="sec-name">${esc(tile.disp||tile.name)}${parentHtml}<span class="sec-edit-btn" data-secedit="${esc(tile.name)}" title="종목 추가/삭제·이름변경">✎</span><span class="sec-del-btn" data-secdel="${esc(tile.name)}" title="전체에서 삭제(편집탭서 복원)">✕</span></div>
       <div class="avg-row">
         <span class="avg-rate">${avgStr}</span>${barsInline}
         <button class="fav-btn${isFav?" on":""}" data-sector="${esc(tile.name)}" title="즐겨찾기" style="margin-left:auto">★</button>
@@ -2078,9 +2078,13 @@ function _renderSecEditModal(){
   let m=document.getElementById("sec-edit-modal");
   if(!m){ m=document.createElement("div"); m.id="sec-edit-modal"; m.className="modal-overlay";
     m.addEventListener("click",ev=>{ if(ev.target===m) closeSectorEdit(); }); document.body.appendChild(m); }
+  const curDisp=(_secEditState.sector_rename||{})[_secEditSector]||_secEditSector;
   m.innerHTML=`<div class="modal-box">
-    <div class="modal-hd"><span>📋 ${esc(_secEditSector)} — 종목 편집</span>
+    <div class="modal-hd"><span>📋 ${esc(_secEditSector)} — 편집</span>
       <button class="modal-x" onclick="closeSectorEdit()">✕</button></div>
+    <label class="edit-label" style="margin-top:0">✏️ 표시 이름 변경</label>
+    <input class="edit-input" id="sec-edit-rename" placeholder="${esc(_secEditSector)}"
+           value="${esc(curDisp)}" autocomplete="off" style="margin-bottom:10px">
     <div style="font-size:11px;color:#666;margin-bottom:6px">흰색=기본 · 금색=추가 · ×로 삭제</div>
     <div class="tag-row" id="sec-edit-tags">${_secEditTagsHtml()}</div>
     <label class="edit-label">종목 추가 검색</label>
@@ -2127,6 +2131,14 @@ function secEditAdd(name,code){
 function closeSectorEdit(){ const m=document.getElementById("sec-edit-modal"); if(m)m.style.display="none"; }
 async function saveSectorEdit(){
   const btn=document.getElementById("sec-edit-save"); if(btn){btn.disabled=true;btn.textContent="저장 중…";}
+  // 표시 이름 변경 반영 (원본명 키 유지)
+  const rn=document.getElementById("sec-edit-rename");
+  if(rn){
+    const nv=rn.value.trim();
+    const sr=_secEditState.sector_rename||{};
+    if(nv && nv!==_secEditSector) sr[_secEditSector]=nv; else delete sr[_secEditSector];
+    _secEditState.sector_rename=sr;
+  }
   try{
     const r=await fetch("/api/sector_custom",{method:"POST",
       headers:{"Content-Type":"application/json"},body:JSON.stringify(_secEditState)});

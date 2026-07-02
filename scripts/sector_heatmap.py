@@ -656,6 +656,11 @@ def build_heatmap(top_n: int = 3) -> dict:
         for sec in sectors:
             sec.setdefault("bars", [])
 
+    # 표시이름 변경(편집탭): disp에만 반영, name은 원본 유지(숨김·추가·삭제 키 일관성)
+    rename_map = custom.get("sector_rename", {})
+    for sec in sectors:
+        sec["disp"] = rename_map.get(sec["name"], sec["name"])
+
     return {
         "sectors": sectors,
         "updated_at": datetime.now().strftime("%H:%M:%S"),
