@@ -1395,19 +1395,17 @@ def api_market_flow():
             except Exception:
                 pass
 
-        # 캐시 미스 → 직접 fetch (분봉·투자자=키움, 나머지=KIS)
+        # 캐시 미스 → 직접 fetch (분봉·투자자·프로그램매매=KIS로 통일, 키움 서버키 미등록)
         with ThreadPoolExecutor(max_workers=14) as ex:
             tasks = {
-                "J_bars":     ex.submit(kiwoom_api.get_index_minutebar, "0001", 15),
-                "Q_bars":     ex.submit(kiwoom_api.get_index_minutebar, "1001", 15),
+                "J_bars":     ex.submit(kis_api.get_index_minutebar, "0001", 15),
+                "Q_bars":     ex.submit(kis_api.get_index_minutebar, "1001", 15),
                 "J_price":    ex.submit(kis_api.get_index_price, "0001"),
                 "Q_price":    ex.submit(kis_api.get_index_price, "1001"),
-                "J_investor": ex.submit(kiwoom_api.get_market_investor, "J"),
-                "Q_investor": ex.submit(kiwoom_api.get_market_investor, "Q"),
-                "J_prog":         ex.submit(kiwoom_api.get_program_trade, "J"),
-                "Q_prog":         ex.submit(kiwoom_api.get_program_trade, "Q"),
-                "J_prog_series":  ex.submit(kiwoom_api.get_program_trade_series, "J"),
-                "Q_prog_series":  ex.submit(kiwoom_api.get_program_trade_series, "Q"),
+                "J_investor": ex.submit(kis_api.get_market_investor, "J"),
+                "Q_investor": ex.submit(kis_api.get_market_investor, "Q"),
+                "J_prog":         ex.submit(kis_api.get_program_trade, "J"),
+                "Q_prog":         ex.submit(kis_api.get_program_trade, "Q"),
                 "NQ":         ex.submit(global_api.get_nasdaq_futures) if global_api else None,
                 "KSF":        ex.submit(global_api.get_kospi_futures) if global_api else None,
                 "KSFN":       ex.submit(global_api.get_kospi_night_futures) if global_api else None,
@@ -1919,16 +1917,14 @@ def _prewarm_worker():
             pass
         with ThreadPoolExecutor(max_workers=14) as ex:
             tasks = {
-                "J_bars":     ex.submit(kiwoom_api.get_index_minutebar, "0001", 15),
-                "Q_bars":     ex.submit(kiwoom_api.get_index_minutebar, "1001", 15),
+                "J_bars":     ex.submit(kis_api.get_index_minutebar, "0001", 15),
+                "Q_bars":     ex.submit(kis_api.get_index_minutebar, "1001", 15),
                 "J_price":    ex.submit(kis_api.get_index_price, "0001"),
                 "Q_price":    ex.submit(kis_api.get_index_price, "1001"),
-                "J_investor":     ex.submit(kiwoom_api.get_market_investor, "J"),
-                "Q_investor":     ex.submit(kiwoom_api.get_market_investor, "Q"),
-                "J_prog":         ex.submit(kiwoom_api.get_program_trade, "J"),
-                "Q_prog":         ex.submit(kiwoom_api.get_program_trade, "Q"),
-                "J_prog_series":  ex.submit(kiwoom_api.get_program_trade_series, "J"),
-                "Q_prog_series":  ex.submit(kiwoom_api.get_program_trade_series, "Q"),
+                "J_investor":     ex.submit(kis_api.get_market_investor, "J"),
+                "Q_investor":     ex.submit(kis_api.get_market_investor, "Q"),
+                "J_prog":         ex.submit(kis_api.get_program_trade, "J"),
+                "Q_prog":         ex.submit(kis_api.get_program_trade, "Q"),
                 "NQ":         ex.submit(global_api.get_nasdaq_futures) if global_api else None,
                 "KSF":        ex.submit(global_api.get_kospi_futures) if global_api else None,
                 "KSFN":       ex.submit(global_api.get_kospi_night_futures) if global_api else None,
