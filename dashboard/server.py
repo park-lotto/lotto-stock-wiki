@@ -1290,17 +1290,26 @@ _sector_summary_cache: dict = {}   # {key: {"data":..., "ts":...}}
 
 @app.get("/api/sector_summary")
 def api_sector_summary(etf: str = "", codes: str = "", title: str = ""):
-    """섹터 뉴스 헤드라인 → Gemini로 '오늘 이 섹터 왜 움직이나' 요약(시청자용, 흥미롭게). 15분 캐시."""
+    return JSONResponse(content=_gen_sector_summary(etf, codes, title))
+
+def _gen_sector_summary(etf: str = "", codes: str = "", title: str = "") -> dict:
+    """섹터 뉴스 헤드라인(오늘자만) → Gemini로 '오늘 이 섹터 왜 움직이나' 요약. 15분 캐시.
+    엔드포인트+백그라운드 프리워밍 공용."""
     key = f"etf:{etf}" if etf else f"codes:{codes}"
     now = time.time()
     c = _sector_summary_cache.get(key)
     if c and now - c["ts"] < 900:
-        return JSONResponse(content=c["data"])
+        return c["data"]
     import sys as _sys
     _sd = os.path.join(ROOT, "scripts")
     if _sd not in _sys.path:
         _sys.path.insert(0, _sd)
     import news_feed as nf
+
+    # ⚠️ 오늘 날짜 뉴스만 요약(어제 호재로 요약했는데 오늘 폭락장이면 오류) — 날짜 "MM/DD" 매칭
+    today_md = datetime.now().strftime("%m/%d")
+    def _is_today(dstr):
+        return str(dstr or "").strip().startswith(today_md)
 
     # 1) 섹터 테마뉴스
     headlines = []
@@ -1312,27 +1321,30 @@ def api_sector_summary(etf: str = "", codes: str = "", title: str = ""):
             if str(s.get("code")) == ec:
                 snews = s.get("news", []); break
         if not snews:
-            snews = nf.sector_news(ec, top=5)
-        for n in snews[:5]:
-            headlines.append(f"- [{n.get('date','')}] {n.get('title','')}")
+            snews = nf.sector_news(ec, top=8)
+        for n in snews:
+            if _is_today(n.get("date")):
+                headlines.append(f"- [{n.get('date','')}] {n.get('title','')}")
         # 2) 상위 편입종목 종목뉴스(신선·큐레이션)
         try:
             cons = _fetch_etf_constituents(ec)
         except Exception:
             cons = []
         from concurrent.futures import ThreadPoolExecutor
-        metas = [(str(co.get("itemCode") or "").zfill(6), co.get("itemName")) for co in cons[:5]]
+        metas = [(str(co.get("itemCode") or "").zfill(6), co.get("itemName")) for co in cons[:6]]
         def _sn(m):
             cc, nm = m
-            return [(nm, n.get("title", ""), n.get("date", "")) for n in nf.stock_news(cc, top=2)]
-        with ThreadPoolExecutor(max_workers=5) as ex:
+            return [(nm, n.get("title", ""), n.get("date", "")) for n in nf.stock_news(cc, top=3)]
+        with ThreadPoolExecutor(max_workers=6) as ex:
             for group in ex.map(_sn, metas):
                 for nm, t, dt in group:
-                    headlines.append(f"- [{nm} {dt}] {t}")
+                    if _is_today(dt):
+                        headlines.append(f"- [{nm} {dt}] {t}")
     else:
         for cc in [x.strip().zfill(6) for x in codes.split(",") if x.strip()][:6]:
-            for n in nf.stock_news(cc, top=2):
-                headlines.append(f"- {n.get('title','')}")
+            for n in nf.stock_news(cc, top=3):
+                if _is_today(n.get("date")):
+                    headlines.append(f"- {n.get('title','')}")
 
     # 중복 제거
     seen, uniq = set(), []
@@ -1341,14 +1353,15 @@ def api_sector_summary(etf: str = "", codes: str = "", title: str = ""):
             continue
         seen.add(h); uniq.append(h)
     if len(uniq) < 2:
-        out = {"summary": "", "error": "요약할 뉴스가 부족합니다."}
-        return JSONResponse(content=out)
+        # 오늘 뉴스가 거의 없으면 억지 요약 안 함(어제 것으로 오도 방지)
+        return {"summary": "", "error": "오늘 새 뉴스가 적어 요약을 건너뜁니다."}
 
     sector = title or etf or "이 섹터"
     prompt = (
-        f"너는 주식 유튜브 채널의 시장 인사이트 애널리스트다. 아래는 '{sector}' 섹터의 오늘 뉴스 헤드라인이다.\n"
-        f"시청자가 흥미롭게 읽고 '여러 정보를 한 번에 얻었다'고 느끼도록 정리하라.\n\n"
-        f"[뉴스 헤드라인]\n" + "\n".join(uniq[:14]) + "\n\n"
+        f"너는 주식 유튜브 채널의 시장 인사이트 애널리스트다. 아래는 '{sector}' 섹터의 **오늘({today_md}) 뉴스 헤드라인만** 모은 것이다.\n"
+        f"시청자가 흥미롭게 읽고 '여러 정보를 한 번에 얻었다'고 느끼도록 정리하라.\n"
+        f"오직 아래 오늘자 헤드라인 사실만 반영하라(과거 호재로 낙관 금지).\n\n"
+        f"[오늘 뉴스 헤드라인]\n" + "\n".join(uniq[:16]) + "\n\n"
         "[출력 형식 · 마크다운, 짧게]\n"
         "**🔑 한 줄**: 이 섹터가 지금 왜 주목받는지 한 문장 (구체적·흥미롭게)\n"
         "**📌 핵심 이슈**\n"
@@ -1361,7 +1374,34 @@ def api_sector_summary(etf: str = "", codes: str = "", title: str = ""):
            "error": res.get("error", ""), "sources": len(uniq)}
     if out["summary"]:
         _sector_summary_cache[key] = {"data": out, "ts": now}
-    return JSONResponse(content=out)
+    return out
+
+
+def _summary_prewarm():
+    """장중 ETF 섹터 요약을 백그라운드로 미리 생성해 캐시 → 사용자가 클릭하면 즉시 표시.
+    _gen_sector_summary는 15분 캐시라 대부분 즉시 반환, 만료분만 Gemini 재생성."""
+    time.sleep(20)   # 서버 기동 후 다른 프리워밍과 겹치지 않게 약간 대기
+    while True:
+        try:
+            nowdt = datetime.now()
+            mins = nowdt.hour * 60 + nowdt.minute
+            if 540 <= mins <= 960:   # 09:00~16:00 장중만
+                try:
+                    from sector_heatmap import parse_etf_bar as _peb
+                    etfs = _peb() or []
+                except Exception:
+                    etfs = []
+                for e in etfs:
+                    try:
+                        _gen_sector_summary(etf=e.get("code", ""), title=e.get("name", ""))
+                    except Exception:
+                        pass
+                    time.sleep(8)    # Gemini 부하 분산 (캐시 hit이면 즉시 지나감)
+            time.sleep(180)
+        except Exception:
+            time.sleep(180)
+
+threading.Thread(target=_summary_prewarm, daemon=True).start()
 
 
 _etfcon_cache: dict = {}   # {code: {"data":..., "ts":...}}
