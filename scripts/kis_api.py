@@ -632,6 +632,80 @@ def get_minutebar(code: str, interval: int = 15, with_time: bool = False) -> lis
     return out
 
 
+def _minutebar_page(code: str, end_hhmmss: str) -> list:
+    """분봉 1페이지(최근 30개, end_hhmmss 이전으로) 원시 rows 반환."""
+    r = requests.get(
+        f"{BASE}/uapi/domestic-stock/v1/quotations/inquire-time-itemchartprice",
+        headers={
+            "content-type": "application/json; charset=utf-8",
+            "authorization": f"Bearer {_token()}",
+            "appkey": _KEY, "appsecret": _SECRET,
+            "tr_id": "FHKST03010200",
+            "custtype": "P",
+        },
+        params={
+            "FID_COND_MRKT_DIV_CODE": "J",
+            "FID_ETC_CLS_CODE": "",
+            "FID_INPUT_ISCD": code.zfill(6),
+            "FID_INPUT_HOUR_1": end_hhmmss,
+            "FID_PW_DATA_INCU_YN": "N",
+            "FID_HOUR_CLS_CODE": "1",
+        },
+        timeout=8,
+    )
+    r.raise_for_status()
+    return r.json().get("output2") or []
+
+
+def get_intraday_series(code: str, resample_min: int = 15, max_pages: int = 15) -> list:
+    """당일 09:00~현재 분봉 시계열을 페이지네이션으로 전부 수집 후 resample_min 간격으로 리샘플.
+    KIS 분봉 API는 1콜당 30개(1분봉)만 주므로, 가장 오래된 시각으로 되짚어가며 09:00까지 수집한다.
+    반환: [{"t":"HHMMSS","price":...}] (오름차순, 각 버킷의 마지막=종가).
+    """
+    import datetime as _dt
+    now_str = _dt.datetime.now().strftime("%H%M%S")
+    if now_str > "153000":
+        now_str = "153000"
+    collected = {}   # "HHMMSS" -> price (중복 제거)
+    cursor = now_str
+    prev_oldest = None
+    for _ in range(max_pages):
+        try:
+            rows = _minutebar_page(code, cursor)
+        except Exception:
+            break
+        if not rows:
+            break
+        oldest = None
+        for row in rows:
+            ch = row.get("stck_cntg_hour", "")
+            if not ch or ch < "090000" or ch > "153000":
+                continue
+            try:
+                v = float(row.get("stck_prpr", 0) or 0)
+                if v > 0:
+                    collected[ch] = v
+            except Exception:
+                pass
+            if oldest is None or ch < oldest:
+                oldest = ch
+        # 09:00 도달했거나 더 이상 안 내려가면 종료 (무한루프 방지)
+        if oldest is None or oldest <= "090000" or oldest == prev_oldest:
+            break
+        prev_oldest = oldest
+        cursor = oldest
+    # 오름차순 정렬 후 resample_min 버킷으로 리샘플 (버킷 마지막 체결가=종가)
+    buckets = {}
+    for ch in sorted(collected):
+        mins = int(ch[:2]) * 60 + int(ch[2:4])
+        bucket = (mins // resample_min) * resample_min
+        buckets[bucket] = collected[ch]
+    out = []
+    for b in sorted(buckets):
+        out.append({"t": f"{b // 60:02d}{b % 60:02d}00", "price": buckets[b]})
+    return out
+
+
 def get_minute_bars_ohlc(code: str, tf: str = "5", mdiv: str = "UN") -> list:
     """분봉 OHLCV (mdiv='UN' → KRX+NXT 통합 → 장외 NXT 시간외 봉 포함).
     반환(과거→최신): [{"time"(epoch초·KST-as-UTC), open, high, low, close, value}]
@@ -681,13 +755,13 @@ def get_minute_bars_ohlc(code: str, tf: str = "5", mdiv: str = "UN") -> list:
 
 
 def get_index_minutebar(index_code: str, interval: int = 15) -> list:
-    """코스피(0001)/코스닥(1001) 지수 분봉 [{"t":"HHMMSS","price":...}] (오름차순, 실제 체결시각 포함).
+    """코스피(0001)/코스닥(1001) 지수 분봉 [{"t":"HHMMSS","price":...}] (09:00~현재 전체, 15분 리샘플).
     KIS 지수 분봉 API는 별도 구독 필요 → KODEX200/코스닥150 ETF 분봉으로 대체.
-    추세(방향) 동일, 절대값만 다름.
+    추세(방향) 동일, 절대값만 다름. 페이지네이션으로 장시작부터 전부 수집 → 그래프가 09:00부터 채워짐.
     """
     # 코스피 → KODEX 200 (069500), 코스닥 → KODEX 코스닥150 (229200)
     proxy = "069500" if index_code == "0001" else "229200"
-    return get_minutebar(proxy, interval, with_time=True)
+    return get_intraday_series(proxy, resample_min=interval)
 
 
 def get_market_investor(market_div: str = "J") -> dict:
