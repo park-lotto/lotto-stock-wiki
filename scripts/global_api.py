@@ -215,11 +215,11 @@ def get_usdkrw() -> dict:
     source = ""
     # 1순위: 네이버 하나은행 고시 (인트라데이 갱신)
     try:
-        j = _req.get("https://m.stock.naver.com/front-api/marketIndex/prices"
-                     "?category=exchange&reutersCode=FX_USDKRW&page=1&pageSize=2",
+        j = _req.get("https://api.stock.naver.com/marketindex/exchange/FX_USDKRW/prices"
+                     "?page=1&pageSize=3&category=exchange",
                      headers={"User-Agent": "Mozilla/5.0",
                               "Referer": "https://m.stock.naver.com/"}, timeout=8).json()
-        rows = (j.get("result") or [])
+        rows = j if isinstance(j, list) else (j.get("result") or [])
         if rows:
             r0 = rows[0]
             rate = float(str(r0.get("closePrice", "0")).replace(",", "") or 0)
