@@ -66,3 +66,18 @@ def test_daytrading_atoms_skips_entry_without_name():
             "trust": "B", "raw_file": "x.md"}
     from pipeline.atoms.profiles import daytrading_atoms
     assert daytrading_atoms(q, meta) == []
+
+
+def test_daytrading_atoms_preserves_quote_in_structured_fields():
+    q = {
+        "trades": [
+            {"name": "삼성전자", "entry_price": "71000", "quote": "71000원 부근에서 분할매수 진입"}
+        ]
+    }
+    meta = {"date": "2026-07-02", "channel": "테스트채널", "source_type": "youtube",
+            "trust": "B", "raw_file": "x.md"}
+    from pipeline.atoms.profiles import daytrading_atoms
+    atoms = daytrading_atoms(q, meta)
+    import json
+    sf = json.loads(atoms[0]["structured_fields"])
+    assert sf["quote"] == "71000원 부근에서 분할매수 진입"

@@ -69,7 +69,7 @@ def daytrading_atoms(q: dict, meta: dict) -> list[dict]:
         structured = {
             "entry_price": t.get("entry_price"), "stop_loss": t.get("stop_loss"),
             "target_price": t.get("target_price"), "hold_period": t.get("hold_period"),
-            "chart_pattern": t.get("chart_pattern"),
+            "chart_pattern": t.get("chart_pattern"), "quote": t.get("quote"),
         }
         content = (
             f"진입 {t.get('entry_price')} / 손절 {t.get('stop_loss')} / "
