@@ -32,6 +32,15 @@
   블로그/리포트) 단위까지만
 - 텔레그램 메시지 편집(edit) 방식 — 매번 새 메시지 발송
 
+## 발송 채널
+
+기존 브리핑·알림용 봇(`BOT_TOKEN`/`CHAT_ID`)과 분리된 **업무보고 전용 봇**으로 발송.
+`.env`에 `OPS_BOT_TOKEN`/`OPS_CHAT_ID` 추가 완료(t.me/parklotto13bot, chat_id는 기존과
+동일한 개인 계정 2121641255). `_send_tg()`를 그대로 재사용하지 않고, 이 리포트 전용
+발송 함수(`_send_ops_tg()`)를 새로 만들어 `OPS_BOT_TOKEN`/`OPS_CHAT_ID`를 읽도록 한다
+(기존 `_send_tg()`는 다른 스크립트에서 계속 `BOT_TOKEN`/`CHAT_ID`로 쓰이므로 건드리지
+않음).
+
 ## 아키텍처
 
 `scripts/slot_ingest.py` 내부에서 처리, 새 파일 추가 없음.
