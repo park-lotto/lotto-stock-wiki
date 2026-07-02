@@ -1166,10 +1166,10 @@ function miniLine(bars, rate, w, h){
   const pts=xs.map((x,i)=>`${x},${ys[i]}`).join(" ");
   const col=rate>0?"#e74c3c":rate<0?"#3498db":"#666";
   const fillPts=`${xs[0]},${h} ${pts} ${xs[xs.length-1]},${h}`;
-  // 시간 눈금: 09:00 고정 ~ 15:30 고정 (장중 전체 프레임)
+  // 시간 눈금: 왼쪽 09:00 고정, 오른쪽 현재시각(동적, 15:30까지 진행)
   const timeRow=`<div style="display:flex;justify-content:space-between;margin-top:2px">
     <span style="font-size:9px;color:#999">09:00</span>
-    <span style="font-size:9px;color:#999">15:30</span>
+    <span style="font-size:9px;color:#999">${_fmtMin(_sessionEndMin)}</span>
   </div>`;
   // 종가 깜빡임: 마지막 점 위치(%)에 HTML 점 오버레이 (SVG 늘어남 무관하게 원형 유지)
   const lxp=(xs[xs.length-1]/w*100).toFixed(1), lyp=(ys[ys.length-1]/h*100).toFixed(1);
@@ -1196,14 +1196,18 @@ function divBar(val, maxAbs){
   </div>`;
 }
 
-// 장중 09:00~15:30 고정축 위에 시각(hh:mm 또는 hhmmss)을 x좌표로 매핑 (범위밖은 clamp)
-const _SESSION_OPEN_MIN=9*60, _SESSION_CLOSE_MIN=15*60+30;
+// 축: 왼쪽=09:00 고정, 오른쪽=현재(마지막 데이터) 시각(동적, 15:30 상한).
+// 시간이 지날수록 _sessionEndMin이 커져 그래프가 오른쪽으로 늘어나며 항상 폭을 꽉 채운다.
+const _SESSION_OPEN_MIN=9*60, _SESSION_MAX_MIN=15*60+30;
+let _sessionEndMin=_SESSION_MAX_MIN;   // renderMarketFlow에서 매 렌더마다 실데이터 최신시각으로 갱신
+function _fmtMin(m){return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;}
 function _sessionX(hhmm, w){
   const digits=String(hhmm||"").replace(/[^0-9]/g,"");
   if(digits.length<4) return null;
   const mins=parseInt(digits.slice(0,2),10)*60+parseInt(digits.slice(2,4),10);
-  const clamped=Math.max(_SESSION_OPEN_MIN,Math.min(_SESSION_CLOSE_MIN,mins));
-  return 2+((clamped-_SESSION_OPEN_MIN)/(_SESSION_CLOSE_MIN-_SESSION_OPEN_MIN))*(w-4);
+  const span=Math.max(1,_sessionEndMin-_SESSION_OPEN_MIN);
+  const clamped=Math.max(_SESSION_OPEN_MIN,Math.min(_sessionEndMin,mins));
+  return 2+((clamped-_SESSION_OPEN_MIN)/span)*(w-4);
 }
 function _sessionMins(t){const d=String(t||"").replace(/[^0-9]/g,"");return d.length<4?null:parseInt(d.slice(0,2),10)*60+parseInt(d.slice(2,4),10);}
 // 누적 순매수/프로그램은 장시작 09:00에 값이 0(아직 거래 전). 첫 실데이터가 09:05 이후면
@@ -1241,10 +1245,10 @@ function invHistoryChart(history, w, h){
     <span style="display:inline-block;width:10px;height:2px;background:${cols[k]};border-radius:1px;vertical-align:middle"></span>
     <span style="font-size:9px;color:${cols[k]}">${k}</span>
   </span>`).join("");
-  // X축 시간 레이블: 09:00 고정 ~ 15:30 고정 (장중 전체 프레임)
+  // X축 시간 레이블: 왼쪽 09:00 고정, 오른쪽 현재시각(동적)
   const timeBar=`<div style="display:flex;justify-content:space-between;margin-top:1px">
     <span style="font-size:8px;color:#444">09:00</span>
-    <span style="font-size:8px;color:#444">15:30</span>
+    <span style="font-size:8px;color:#444">${_fmtMin(_sessionEndMin)}</span>
   </div>`;
   return`<div>
     <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="display:block;width:100%;height:${h}px">
@@ -1463,6 +1467,19 @@ function _globalNameHtml(it){
 function renderMarketFlow(d){
   try{
     const panel=document.getElementById("mkt-panel");
+    // 오른쪽 끝 = 코스피/코스닥 데이터의 마지막(현재) 시각. 시간 지날수록 커져 15:30까지 진행.
+    (function(){
+      let mx=_SESSION_OPEN_MIN+30;   // 최소 09:30 폭(초반 너무 좁지 않게)
+      const grab=t=>{const g=String(t||"").replace(/[^0-9]/g,"");
+        if(g.length>=4){const mm=parseInt(g.slice(0,2),10)*60+parseInt(g.slice(2,4),10);
+          if(mm>=_SESSION_OPEN_MIN&&mm<=_SESSION_MAX_MIN&&mm>mx)mx=mm;}};
+      ["0001","1001"].forEach(c=>{const m=d[c];if(!m)return;
+        (m.bars||[]).forEach(b=>grab(b&&b.t));
+        (m.investor_history||[]).forEach(x=>grab(x&&x.ts));
+        (m.program_history||[]).forEach(x=>grab(x&&x.ts));
+        (m.program_series||[]).forEach(x=>grab(x&&x.t));});
+      _sessionEndMin=Math.min(_SESSION_MAX_MIN,mx);
+    })();
     panel.innerHTML=["0001","1001","global","rank_popular"].map(code=>{
       const m=d[code]; if(!m)return"";
 
@@ -1592,10 +1609,10 @@ function renderMarketFlow(d){
         const zeroY=Math.round(2+(1-((0-mn)/range))*(H-4));
         const zeroLine=zeroY>=2&&zeroY<=H-2
           ?`<line x1="0" y1="${zeroY}" x2="${W}" y2="${zeroY}" stroke="#333" stroke-width="1" stroke-dasharray="3,3"/>`:"";
-        // X축 시간 레이블: 09:00 고정 ~ 15:30 고정 (장중 전체 프레임)
+        // X축 시간 레이블: 왼쪽 09:00 고정, 오른쪽 현재시각(동적)
         const progTimeRow=`<div style="display:flex;justify-content:space-between;margin-top:2px">
           <span style="font-size:8px;color:#444">09:00</span>
-          <span style="font-size:8px;color:#444">15:30</span>
+          <span style="font-size:8px;color:#444">${_fmtMin(_sessionEndMin)}</span>
         </div>`;
         progChart=`
           <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="display:block;width:100%;height:${H}px;border-radius:4px;overflow:hidden">
