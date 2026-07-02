@@ -5,6 +5,7 @@ raw/내 관심종목.xlsx → 전체 계층 파싱:
   이후 텍스트행 = 서브섹터(소분류)
   종목코드 행 = 종목
 """
+import re
 from datetime import datetime
 from pathlib import Path
 
@@ -475,6 +476,8 @@ def build_heatmap(top_n: int = 3) -> dict:
         for sub in raw_full.get(parent, []):
             nm = (sub.get("name") or "").strip() or parent
             if nm in _seen_sub or nm in _extract_subs:
+                continue
+            if re.sub(r"[\d\s]", "", nm) == "":   # 이름이 숫자·코드뿐(깨진 서브) → 제외
                 continue
             sts = _dedup_stocks(sub.get("stocks") or [])
             if not sts:
