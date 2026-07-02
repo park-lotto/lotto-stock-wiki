@@ -31,6 +31,16 @@ SURFACE_THEME_PARENTS = [
     "코로나 전염병", "가구 인테리어", "정책", "대왕고래",
 ]
 
+# 전체 탭에서 대섹터를 서브섹터 타일로 '분할'(사용자 요청). 뭉친 타일 대신 서브별 타일.
+# key=표시(대섹터)명, value=raw 부모명 리스트(MERGE 전 원본, 예: 로봇=로봇-1+로봇-2).
+SPLIT_SECTORS = {
+    "에너지 신재생":     ["에너지 신재생"],       # 수소·SOFC·태양광·풍력
+    "에너지 전선/변압기": ["에너지 전선/변압기"],   # 변압기·전선
+    "AI 보안/양자":      ["AI 보안/양자"],         # 보안·양자컴퓨터
+    "우주방산":          ["우주방산"],             # 방산·우주
+    "로봇":              ["로봇-1", "로봇-2"],      # 삼성향·현대향… + 의료용·방산용·엑츄에이터…
+}
+
 # ── 제외 섹터 (전체 탭용) ─────────────────────────────────
 EXCLUDE = {
     "ETF 시장전체", "ETF시장 체크",
@@ -473,10 +483,33 @@ def _collect_surfaced_subs(raw_full: dict) -> list:
     return out
 
 
+def _collect_split_subs(raw_full: dict) -> list:
+    """분할 대상 대섹터(SPLIT_SECTORS)의 서브섹터 목록 → [(표시명, 대섹터, [stocks])].
+    무명 서브는 대섹터명 사용. 이름이 코드뿐이면 제외."""
+    out, seen = [], set()
+    for disp, parents in SPLIT_SECTORS.items():
+        for parent in parents:
+            for sub in raw_full.get(parent, []):
+                nm = (sub.get("name") or "").strip() or disp
+                if nm in seen:
+                    continue
+                if re.sub(r"[\d\s]", "", nm) == "":
+                    continue
+                sts = _dedup_stocks(sub.get("stocks") or [])
+                if not sts:
+                    continue
+                seen.add(nm)
+                out.append((nm, disp, sts))
+    return out
+
+
 def surfaced_sub_names() -> list:
-    """전체 탭에 꺼낸 세부테마 이름들(편집탭 목록·복원용). 가격조회 없이 빠름."""
+    """전체 탭에 꺼낸 세부테마+분할 서브 이름들(편집탭 목록·복원용). 가격조회 없이 빠름."""
     try:
-        return [nm for nm, _, _ in _collect_surfaced_subs(_parse_raw_full())]
+        raw = _parse_raw_full()
+        names = [nm for nm, _, _ in _collect_surfaced_subs(raw)]
+        names += [nm for nm, _, _ in _collect_split_subs(raw) if nm not in names]
+        return names
     except Exception:
         return []
 
@@ -495,20 +528,23 @@ def build_heatmap(top_n: int = 3) -> dict:
 
     sections = parse_watchlist(999)  # 전 종목 조회 (top_n은 표시용, 조회는 전체)
 
+    raw_full = _parse_raw_full()
     # ── 제외됐던 테마의 세부섹터를 전체 탭에도 별도 타일로 '다 꺼내기'(사용자가 편집탭에서 숨김) ──
-    surfaced_subs = _collect_surfaced_subs(_parse_raw_full())   # [(표시명, parent, [stocks])]
+    surfaced_subs = _collect_surfaced_subs(raw_full)   # [(표시명, parent, [stocks])]
+    # ── 특정 대섹터를 서브섹터 타일로 분할(에너지신재생·로봇·전선변압기·AI보안양자·우주방산) ──
+    split_subs = _collect_split_subs(raw_full)
 
     # 기본 + extra + custom + 세부테마 코드 일괄 수집 → 단일 배치 조회
     base_codes = {s["code"] for sec in sections for s in sec["stocks"]}
     extra_codes = {s["code"] for lst in extra_map.values() for s in lst if s.get("code")}
     ct_codes = {s["code"] for ct in custom_tile_conf for s in ct.get("stocks", []) if s.get("code")}
-    sub_codes = {s["code"] for _, _, sts in surfaced_subs for s in sts if s.get("code")}
+    sub_codes = {s["code"] for _, _, sts in (surfaced_subs + split_subs) for s in sts if s.get("code")}
     codes = list(base_codes | extra_codes | ct_codes | sub_codes)
     prices = kis_api.get_prices_batch_parallel(codes)
 
     sectors = []
     for sec in sections:
-        if sec["sector"] in hidden_set:
+        if sec["sector"] in hidden_set or sec["sector"] in SPLIT_SECTORS:  # 분할대상은 뭉친타일 생략
             continue
         removed_codes = set(removed_map.get(sec["sector"], []))
         items = []
@@ -556,39 +592,42 @@ def build_heatmap(top_n: int = 3) -> dict:
         sectors.append({"name": ct_name, "avg_rate": avg,
                         "stocks": ct_items, "parent": ct.get("parent", "커스텀")})
 
-    # 제외 테마 세부섹터 타일 추가(다 꺼내기). 이미 있는 이름은 skip.
+    # 세부섹터 타일(꺼낸 테마 + 분할 대섹터) 추가. 이미 있는 이름은 skip. extra/removed 오버레이 반영.
     existing_names = {s["name"] for s in sectors}
-    hidden_set2 = hidden_set   # 편집탭에서 숨긴 세부테마도 존중
-    for nm, parent, sts in surfaced_subs:
-        if nm in existing_names or nm in hidden_set2:
-            continue
-        removed_c = set(removed_map.get(nm, []))   # 편집탭서 삭제한 종목
-        s_items = []
-        for s in sts:
-            c = s.get("code", "")
-            if not c or c in removed_c:
+
+    def _emit_sub_tiles(sub_list):
+        for nm, parent, sts in sub_list:
+            if nm in existing_names or nm in hidden_set:
                 continue
-            p = prices.get(c) or {}
-            s_items.append({"name": s.get("name", c), "code": c,
-                            "change_rate": float(p.get("change_rate", 0) or 0),
-                            "price": p.get("price", 0)})
-        # extra_stocks 추가(편집탭서 추가한 종목) — 세부섹터도 추가 반영
-        exist_c = {x["code"] for x in s_items}
-        for es in extra_map.get(nm, []):
-            c = es.get("code", "")
-            if c and c not in exist_c and c not in removed_c:
+            removed_c = set(removed_map.get(nm, []))
+            s_items = []
+            for s in sts:
+                c = s.get("code", "")
+                if not c or c in removed_c:
+                    continue
                 p = prices.get(c) or {}
-                s_items.append({"name": es.get("name", c), "code": c,
+                s_items.append({"name": s.get("name", c), "code": c,
                                 "change_rate": float(p.get("change_rate", 0) or 0),
                                 "price": p.get("price", 0)})
-                exist_c.add(c)
-        if not s_items:
-            continue
-        s_items.sort(key=lambda x: x["change_rate"], reverse=True)
-        valid = [x["change_rate"] for x in s_items if x.get("price", 0) != 0]
-        avg = round(sum(valid) / len(valid), 2) if valid else 0
-        sectors.append({"name": nm, "avg_rate": avg, "stocks": s_items, "parent": parent})
-        existing_names.add(nm)
+            exist_c = {x["code"] for x in s_items}
+            for es in extra_map.get(nm, []):
+                c = es.get("code", "")
+                if c and c not in exist_c and c not in removed_c:
+                    p = prices.get(c) or {}
+                    s_items.append({"name": es.get("name", c), "code": c,
+                                    "change_rate": float(p.get("change_rate", 0) or 0),
+                                    "price": p.get("price", 0)})
+                    exist_c.add(c)
+            if not s_items:
+                continue
+            s_items.sort(key=lambda x: x["change_rate"], reverse=True)
+            valid = [x["change_rate"] for x in s_items if x.get("price", 0) != 0]
+            avg = round(sum(valid) / len(valid), 2) if valid else 0
+            sectors.append({"name": nm, "avg_rate": avg, "stocks": s_items, "parent": parent})
+            existing_names.add(nm)
+
+    _emit_sub_tiles(surfaced_subs)
+    _emit_sub_tiles(split_subs)
 
     sectors.sort(key=lambda x: x["avg_rate"], reverse=True)
 
