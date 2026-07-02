@@ -109,6 +109,17 @@
   .tbars{display:flex;align-items:flex-end;gap:3px;height:48px;margin-top:5px}
   .tbar{display:inline-flex;align-items:flex-end;height:48px}
   .tbar i{display:block;width:9px;background:linear-gradient(var(--gold),var(--gold-dim));border-radius:2px}
+  /* 두 축 구조 */
+  .axesmap{font-size:.82rem;color:var(--muted);margin:2px 0 16px}
+  .axesmap b{color:var(--gold)}
+  .axesmap .ax{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.78rem;border:1px solid var(--line)}
+  .axesmap .ax.a{color:#7fb0e8;border-color:#2a3a4a;background:#0e141c}
+  .axesmap .ax.b{color:#c9a3e8;border-color:#3a2a4a;background:#150e1c}
+  .band{margin:26px 0 12px;padding:9px 15px;border-radius:10px;font-size:.98rem;font-weight:700;
+    display:flex;align-items:baseline;gap:10px}
+  .band .bsub{font-size:.76rem;font-weight:400;color:var(--muted)}
+  .band.a{background:linear-gradient(90deg,#0e141c,transparent);border-left:4px solid #4a86e8;color:#a8c8f0}
+  .band.b{background:linear-gradient(90deg,#150e1c,transparent);border-left:4px solid #a06ad0;color:#d0b0ec}
 </style>
 </head>
 <body>
@@ -303,15 +314,23 @@ function render(v){
       <h1>${esc(v.display)}</h1>
       <span class="sub">신뢰 ${esc(v.trust)} · 추적 ${esc(v.tracking_since||'')} · 소스 ${v.sources.map(esc).join(', ')}</span>
     </div>
-    ${routineHtml(v.routine)}
+    <div class="axesmap">두 축이 <b>종목선정</b>에서 만난다 &nbsp;→&nbsp;
+      <span class="ax b">🧠 인사이트·사고 추적·복제</span> <span style="color:var(--gold)">＋</span>
+      <span class="ax a">📊 데이터·통계</span></div>
+
+    <div class="band a">📊 축① 데이터 → 통계 → 종목선정 결과 <span class="bsub">osc빈집·RS·소라티노·컨센을 통계내 후보 산출 + 적중률 검증</span></div>
 
     <div class="sec" id="selection-sec">
-      <div class="lbl">🎯 오늘의 종목선정 <span class="cnt">— 그의 규칙(수급빈집×컨센상향)을 오늘 데이터로 재현 = "시스템 복사"</span></div>
+      <div class="lbl">🎯 오늘의 종목선정 <span class="cnt">— 그의 규칙을 오늘 데이터로 재현 = "시스템 복사"</span></div>
       <div id="selection"><div class="cnt">불러오는 중…</div></div>
     </div>
 
+    <div class="band b">🧠 축② 인사이트·사고 추적·복제 <span class="bsub">그의 사고를 추적·복제 → 종목선정 관점의 근거</span></div>
+
+    ${routineHtml(v.routine)}
+
     <div class="sec">
-      <div class="lbl">📈 1. 시장 인사이트 <b>${(v.market_insight||[]).length}</b> <span class="cnt">— 그의 시장·매크로 생각 (쌓임)</span></div>
+      <div class="lbl">📈 시장 인사이트 <b>${(v.market_insight||[]).length}</b> <span class="cnt">— 그의 시장·매크로 생각 (쌓임)</span></div>
       ${logList(v.market_insight)}
     </div>
 
@@ -321,12 +340,12 @@ function render(v){
     </div>
 
     <div class="sec">
-      <div class="lbl">🧭 2. 종목선정·매매 방법 <b>${(v.methods||[]).length}</b> <span class="cnt">— 그가 말한 방법론·규칙 (method 원자)</span></div>
+      <div class="lbl">🧭 종목선정·매매 방법 <b>${(v.methods||[]).length}</b> <span class="cnt">— 그가 말한 방법론·규칙 (method 원자)</span></div>
       ${logList(v.methods)}
     </div>
 
     <div class="sec">
-      <div class="lbl">🧩 3. 섹터·종목 재료 <span class="cnt">— 종목/섹터 검색해서 그 재료 히스토리 꺼내기</span></div>
+      <div class="lbl">🧩 섹터·종목 재료 <span class="cnt">— 종목/섹터 검색해서 그 재료 히스토리 꺼내기</span></div>
       <div style="display:flex;gap:7px;margin-bottom:10px">
         <input id="matq" placeholder="종목·섹터 검색 (예: 삼성전자, 반도체)" onkeydown="if(event.key==='Enter')searchMat()"
           style="flex:1;padding:8px 11px;background:#0b0b0d;border:1px solid var(--line);border-radius:8px;color:var(--txt);font-size:.84rem">
@@ -342,7 +361,7 @@ function render(v){
 
     <div class="sec">
       <div class="lbl">📐 사고 골격 <span class="cnt">— 철학·프레임워크·판단규칙 (Obsidian에서 수정)</span></div>
-      <details class="skel" open>
+      <details class="skel">
         <summary>펼치기 / 접기</summary>
         <div class="md">${v.skeleton_md? mdToHtml(v.skeleton_md) : "<p class='cnt'>골격 미작성 — build_brain 시드 또는 직접 작성</p>"}</div>
       </details>
