@@ -6,5 +6,12 @@
     "tracking_since": "2026-05-01",
     "data_files": ["taerini_stock.json", "taerini_consensus.json"],
     "brain_page": "wiki/people/태린이아빠.md"
+  },
+  "pokara61": {
+    "display": "pokara61",
+    "sources": ["pokara61"],
+    "trust": "C",
+    "tracking_since": "2026-06-01",
+    "brain_page": "wiki/people/pokara61.md"
   }
 }

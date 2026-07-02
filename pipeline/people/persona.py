@@ -24,11 +24,32 @@ def decide_verdict(leading: bool, vac: bool, up_ok: bool) -> str:
 
 
 def stock_verdict(person: str, stock: str) -> dict:
-    """종목 하나에 대한 '그라면' 판정."""
+    """종목 하나에 대한 '그라면' 판정. 데이터파일 없는 채널은 발언 기반만."""
+    from pipeline.people.registry import get_person
+    from pipeline.people.people_query import atoms_for
+
+    quotes = [{"date": a["date"], "content": a["content"],
+               "signal": a.get("signal"), "stance": a.get("stance_key") is not None}
+              for a in atoms_for(person, asset=stock, days=45, limit=8)]
+
+    # 데이터파일(taerini) 없는 채널 → 발언 기반 판정만
+    if not get_person(person).get("data_files"):
+        if quotes:
+            q0 = quotes[0]
+            sig = q0.get("signal") or ""
+            verdict = ("긍정적" if sig == "bullish" else "부정적" if sig in ("bearish", "risk")
+                       else "언급함 (중립/관찰)")
+            return {"stock": stock, "found_in_data": False, "verdict": verdict,
+                    "data": None, "quotes": quotes,
+                    "reason": [f"[발언] {q0['date']}: {q0['content'][:90]}",
+                               f"[추론] 이 채널은 데이터 지표 없음 — 발언 기반. 최근 신호={sig or '중립'}"]}
+        return {"stock": stock, "found_in_data": False, "verdict": "자료 없음",
+                "data": None, "quotes": [],
+                "reason": ["이 채널의 원자에 이 종목 언급 없음 — 모름"]}
+
     from pipeline.people import funnel as _f
     from pipeline.people.rs_data import load_rs
     from pipeline.people.sortino_data import load_sortino_top
-    from pipeline.people.people_query import atoms_for
 
     data = _f._load()
     stocks = data.get("stocks", {})
@@ -52,11 +73,6 @@ def stock_verdict(person: str, stock: str) -> dict:
     sortino = load_sortino_top()
     s_names = set(sortino.get("names") or [])
     s_sectors = [k for k in (sortino.get("sectors") or []) if k]
-
-    # 그의 실제 발언 (해당 종목)
-    quotes = [{"date": a["date"], "content": a["content"],
-               "signal": a.get("signal"), "stance": a.get("stance_key") is not None}
-              for a in atoms_for(person, asset=stock, days=45, limit=8)]
 
     if not match:
         # taerini에 없어도 발언은 있을 수 있음
