@@ -23,6 +23,13 @@ def _load_sector_custom() -> dict:
             pass
     return {"custom_tiles": [], "extra_stocks": {}, "hidden_sectors": []}
 
+# 전체 탭에 세부섹터를 '다 꺼낼' 테마 부모들(사용자 요청). 메타(ETF*)는 제외 유지.
+# 각 부모의 서브섹터(예: 반도체 테마별→HBM·CXL·액침냉각·온디바이스AI)를 독립 타일로 표시.
+SURFACE_THEME_PARENTS = [
+    "반도체 테마별", "블랙테마 원자재", "코인/STO", "메타버스/6G",
+    "코로나 전염병", "가구 인테리어", "정책", "대왕고래",
+]
+
 # ── 제외 섹터 (전체 탭용) ─────────────────────────────────
 EXCLUDE = {
     "ETF 시장전체", "ETF시장 체크",
@@ -459,11 +466,28 @@ def build_heatmap(top_n: int = 3) -> dict:
 
     sections = parse_watchlist(999)  # 전 종목 조회 (top_n은 표시용, 조회는 전체)
 
-    # 기본 + extra + custom 코드 일괄 수집 → 단일 배치 조회
+    # ── 제외됐던 테마의 세부섹터를 전체 탭에도 별도 타일로 '다 꺼내기'(사용자가 편집탭에서 숨김) ──
+    raw_full = _parse_raw_full()
+    _extract_subs = {e["sub"] for e in SECTOR_EXTRACT}   # 이미 메인으로 추출된 서브(광통신6G·STO·해운·전쟁) 중복 방지
+    surfaced_subs = []   # [(표시명, parent, [stocks])]
+    _seen_sub = set()
+    for parent in SURFACE_THEME_PARENTS:
+        for sub in raw_full.get(parent, []):
+            nm = (sub.get("name") or "").strip() or parent
+            if nm in _seen_sub or nm in _extract_subs:
+                continue
+            sts = _dedup_stocks(sub.get("stocks") or [])
+            if not sts:
+                continue
+            _seen_sub.add(nm)
+            surfaced_subs.append((nm, parent, sts))
+
+    # 기본 + extra + custom + 세부테마 코드 일괄 수집 → 단일 배치 조회
     base_codes = {s["code"] for sec in sections for s in sec["stocks"]}
     extra_codes = {s["code"] for lst in extra_map.values() for s in lst if s.get("code")}
     ct_codes = {s["code"] for ct in custom_tile_conf for s in ct.get("stocks", []) if s.get("code")}
-    codes = list(base_codes | extra_codes | ct_codes)
+    sub_codes = {s["code"] for _, _, sts in surfaced_subs for s in sts if s.get("code")}
+    codes = list(base_codes | extra_codes | ct_codes | sub_codes)
     prices = kis_api.get_prices_batch_parallel(codes)
 
     sectors = []
@@ -515,6 +539,29 @@ def build_heatmap(top_n: int = 3) -> dict:
         avg = round(sum(ct_rates) / len(ct_rates), 2) if ct_rates else 0
         sectors.append({"name": ct_name, "avg_rate": avg,
                         "stocks": ct_items, "parent": ct.get("parent", "커스텀")})
+
+    # 제외 테마 세부섹터 타일 추가(다 꺼내기). 이미 있는 이름은 skip.
+    existing_names = {s["name"] for s in sectors}
+    hidden_set2 = hidden_set   # 편집탭에서 숨긴 세부테마도 존중
+    for nm, parent, sts in surfaced_subs:
+        if nm in existing_names or nm in hidden_set2:
+            continue
+        s_items = []
+        for s in sts:
+            c = s.get("code", "")
+            if not c:
+                continue
+            p = prices.get(c) or {}
+            s_items.append({"name": s.get("name", c), "code": c,
+                            "change_rate": float(p.get("change_rate", 0) or 0),
+                            "price": p.get("price", 0)})
+        if not s_items:
+            continue
+        s_items.sort(key=lambda x: x["change_rate"], reverse=True)
+        valid = [x["change_rate"] for x in s_items if x.get("price", 0) != 0]
+        avg = round(sum(valid) / len(valid), 2) if valid else 0
+        sectors.append({"name": nm, "avg_rate": avg, "stocks": s_items, "parent": parent})
+        existing_names.add(nm)
 
     sectors.sort(key=lambda x: x["avg_rate"], reverse=True)
 
