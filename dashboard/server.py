@@ -1695,15 +1695,36 @@ _heatmap_lock = threading.Lock()
 _HEATMAP_TTL = 180                  # 3분 캐시
 
 
+def _heatmap_merge_keep(key: str, data: dict) -> dict:
+    """새 빌드에서 빠진 섹터가 직전 캐시에 있으면 이어붙여 '섹터 사라짐(테마 등 간헐 누락)' 방지.
+    섹터 집합은 원래 고정이므로, 일시적으로 일부가 빠져도 이전 데이터로 채워 항상 전부 표시."""
+    try:
+        if not (data and data.get("sectors")):
+            return data
+        prev = (_heatmap_cache.get(key) or {}).get("data")
+        if prev and prev.get("sectors"):
+            new_names = {s.get("name") for s in data["sectors"]}
+            for ps in prev["sectors"]:
+                if ps.get("name") not in new_names:
+                    data["sectors"].append(ps)
+            data["sectors"].sort(key=lambda x: x.get("avg_rate", 0) or 0, reverse=True)
+    except Exception:
+        pass
+    return data
+
+
 def _heatmap_cached(key: str, fn):
-    """캐시 hit이면 즉시 반환, miss면 fn() 호출 후 캐시 저장."""
+    """캐시 hit이면 즉시 반환, miss면 fn() 호출 후 캐시 저장. 빈 결과면 이전 캐시 유지."""
     now = time.time()
     entry = _heatmap_cache.get(key)
     if entry and now - entry["ts"] < _HEATMAP_TTL:
         return entry["data"]
     data = fn()
-    _heatmap_cache[key] = {"data": data, "ts": now}
-    return data
+    if data and data.get("sectors"):
+        data = _heatmap_merge_keep(key, data)
+        _heatmap_cache[key] = {"data": data, "ts": now}
+        return data
+    return entry["data"] if entry else data   # 빌드 실패/빈 결과 → 직전 캐시 유지
 
 
 def _heatmap_build_bg(key: str, fn):
@@ -1716,7 +1737,8 @@ def _heatmap_build_bg(key: str, fn):
     def _run():
         try:
             data = fn()
-            if data:
+            if data and data.get("sectors"):   # 빈 빌드는 캐시 오염 방지(직전 캐시 유지)
+                data = _heatmap_merge_keep(key, data)
                 _heatmap_cache[key] = {"data": data, "ts": time.time()}
         except Exception:
             pass
