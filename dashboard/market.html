@@ -1158,9 +1158,10 @@ function miniLine(bars, rate, w, h){
   const pts=xs.map((x,i)=>`${x},${ys[i]}`).join(" ");
   const col=rate>0?"#e74c3c":rate<0?"#3498db":"#666";
   const fillPts=`${xs[0]},${h} ${pts} ${xs[xs.length-1]},${h}`;
-  // 시간 눈금: bars수 기반으로 09:00 시작 15분 간격 추정
+  // 시간 눈금: 15분봉 고정 간격(09:00부터) — bars 개수로 전체 장시간에 억지로 늘리지 않음
+  // (예전엔 total로 나눠서 봉 6개뿐이어도 15:30까지 늘어난 것처럼 표시되는 버그가 있었음)
   function _barTime(idx,total){
-    const min=9*60+idx*Math.round(390/(total-1||1));
+    const min=9*60+idx*15;
     return`${String(Math.floor(min/60)).padStart(2,'0')}:${String(min%60).padStart(2,'0')}`;
   }
   const t0=_barTime(0,bars.length),tM=_barTime(Math.floor(bars.length/2),bars.length),tN=_barTime(bars.length-1,bars.length);

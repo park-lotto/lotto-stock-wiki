@@ -283,15 +283,25 @@ _FLOW: dict = {
     "Q": {"investor": deque(maxlen=400), "program": deque(maxlen=400)},
 }
 
+_flow_day = {"date": None}  # 마지막으로 데이터를 쌓은 거래일 (자정 넘어 서버가 계속 떠있어도 매일 09:00에 새로 시작하도록)
+
 def _poll_flow():
-    """장 중(09:00~16:00) 5분마다 투자자·프로그램 순매수 스냅샷 수집.
-    서버 시작 즉시 첫 수집 (initial=True), 이후 5분 간격.
+    """장 중(09:00~16:00) 1분마다 투자자·프로그램 순매수 스냅샷 수집.
+    서버 시작 즉시 첫 수집 (initial=True), 이후 1분 간격.
+    매일 09:00 첫 수집 시 전날 데이터를 지워 항상 '오늘 09:00부터'로 시작한다
+    (서버 재시작 없이 자정을 넘겨도 그래프가 어제 데이터와 섞이지 않게).
     """
     initial = True
     while True:
         try:
             now = datetime.now()
             _mins = now.hour * 60 + now.minute
+            today_str = now.strftime("%Y-%m-%d")
+            if _mins >= 540 and _flow_day["date"] != today_str:
+                for mkt in ("J", "Q"):
+                    _FLOW[mkt]["investor"].clear()
+                    _FLOW[mkt]["program"].clear()
+                _flow_day["date"] = today_str
             # 09:00~15:35만 수집 → 이후엔 동결(15:30 종가 모양 유지). 저녁엔 마지막값 그대로 표시.
             if initial or (540 <= _mins <= 935):
                 import kis_api as _kis
