@@ -1896,9 +1896,43 @@ def api_heatmap_refresh():
 
 # ── 섹터 커스텀 편집 ──────────────────────────────────────
 SECTOR_CUSTOM_PATH = os.path.join(ROOT, "pipeline", "sector_custom.json")
+SECTOR_SNAP_DIR    = os.path.join(ROOT, "pipeline", "sector_custom_snapshots")
 KRX_CODES_PATH     = os.path.join(ATOMS_DIR, "krx_codes.json")
 TAERINI_STOCK_PATH = os.path.join(ROOT, "pipeline", "taerini_stock.json")
 TAERINI_CONSENSUS_PATH = os.path.join(ROOT, "pipeline", "taerini_consensus.json")
+
+
+def _snapshot_sector_custom(label="auto", keep=60):
+    """편집 저장 직전 현재 sector_custom.json을 타임스탬프 백업. 최근 keep개만 유지."""
+    try:
+        if not os.path.exists(SECTOR_CUSTOM_PATH):
+            return None
+        os.makedirs(SECTOR_SNAP_DIR, exist_ok=True)
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        dst = os.path.join(SECTOR_SNAP_DIR, f"sc_{ts}_{label}.json")
+        if not os.path.exists(dst):
+            shutil.copy2(SECTOR_CUSTOM_PATH, dst)
+        snaps = sorted(glob.glob(os.path.join(SECTOR_SNAP_DIR, "sc_*.json")))
+        for old in snaps[:-keep]:
+            try:
+                os.remove(old)
+            except Exception:
+                pass
+        return os.path.basename(dst)
+    except Exception:
+        return None
+
+
+def _snap_summary(path):
+    try:
+        with open(path, encoding="utf-8") as f:
+            d = json.load(f)
+        return {"hidden": len(d.get("hidden_sectors", [])),
+                "rename": len(d.get("sector_rename", {})),
+                "extra": len(d.get("extra_stocks", {})),
+                "removed": len(d.get("removed_stocks", {}))}
+    except Exception:
+        return {}
 
 
 @app.get("/api/sector_custom")
@@ -1915,10 +1949,49 @@ def api_sector_custom_get():
 @app.post("/api/sector_custom")
 async def api_sector_custom_post(req: Request):
     data = await req.json()
+    _snapshot_sector_custom("auto")   # 덮어쓰기 전 이전 상태 자동 백업(중간마다)
     with open(SECTOR_CUSTOM_PATH, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     _heatmap_cache.clear()   # 모든 캐시 무효화
     return JSONResponse(content={"ok": True})
+
+
+@app.get("/api/sector_custom/snapshots")
+def api_sector_custom_snapshots():
+    """스냅샷 목록(최신순): [{file, ts, label, 요약}]."""
+    out = []
+    for p in sorted(glob.glob(os.path.join(SECTOR_SNAP_DIR, "sc_*.json")), reverse=True):
+        fn = os.path.basename(p)
+        parts = fn[3:-5].split("_")   # sc_YYYYMMDD_HHMMSS_label
+        ts = (parts[0] + "_" + parts[1]) if len(parts) >= 2 else fn
+        label = parts[2] if len(parts) >= 3 else ""
+        try:
+            disp = datetime.strptime(ts, "%Y%m%d_%H%M%S").strftime("%m/%d %H:%M:%S")
+        except Exception:
+            disp = ts
+        out.append({"file": fn, "ts": disp, "label": label, "summary": _snap_summary(p)})
+    return JSONResponse(content=out)
+
+
+@app.post("/api/sector_custom/snapshot")
+def api_sector_custom_snapshot_now():
+    """현재 상태를 수동 스냅샷."""
+    fn = _snapshot_sector_custom("manual")
+    return JSONResponse(content={"ok": bool(fn), "file": fn})
+
+
+@app.post("/api/sector_custom/restore")
+async def api_sector_custom_restore(req: Request):
+    """스냅샷으로 복원(복원 전 현재 상태도 백업)."""
+    body = await req.json()
+    fn = (body or {}).get("file", "")
+    src = os.path.join(SECTOR_SNAP_DIR, os.path.basename(fn))
+    if not fn or not os.path.exists(src) or not os.path.basename(fn).startswith("sc_"):
+        return JSONResponse(content={"ok": False, "error": "스냅샷 없음"}, status_code=404)
+    _snapshot_sector_custom("prerestore")   # 되돌리기 전 현재도 백업
+    shutil.copy2(src, SECTOR_CUSTOM_PATH)
+    _heatmap_cache.clear()
+    return JSONResponse(content={"ok": True, "file": os.path.basename(fn)})
 
 
 # ── 관심종목(워치리스트) ───────────────────────────────────

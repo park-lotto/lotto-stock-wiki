@@ -1887,6 +1887,18 @@ function renderEditUI(){
           </div>`:""}
       </div>
 
+      <!-- 백업/복원 스냅샷 -->
+      <div class="edit-section">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <h2 style="margin:0">🕐 백업 · 복원</h2>
+          <button onclick="snapshotNow()" style="padding:6px 12px;background:rgba(212,175,55,.15);
+            border:1px solid rgba(212,175,55,.4);border-radius:8px;color:var(--gold);font-size:11px;
+            cursor:pointer;font-family:inherit">📸 지금 백업</button>
+        </div>
+        <p style="font-size:11px;color:#555;margin:6px 0 8px">저장할 때마다 자동 백업됨. 클릭하면 그 시점으로 복원(복원 전 현재상태도 백업).</p>
+        <div id="snap-list" style="max-height:220px;overflow-y:auto"><span style="font-size:11px;color:#444">불러오는 중…</span></div>
+      </div>
+
     </div>
   </div>
   <div class="save-bar">
@@ -1896,6 +1908,7 @@ function renderEditUI(){
 
   // 커스텀 섹터 추가 임시 태그 복원
   _renderNewCtTags();
+  loadSnapshots();
 }
 
 function filterSectorList(q){
@@ -1904,6 +1917,49 @@ function filterSectorList(q){
     const lbl=el.querySelector("label");
     el.style.display=(!q||lbl.textContent.toLowerCase().includes(q))?"":"none";
   });
+}
+
+// ── 백업/복원 스냅샷 ──────────────────────────────────────
+async function loadSnapshots(){
+  const box=document.getElementById("snap-list"); if(!box)return;
+  try{
+    const snaps=await (await fetch("/api/sector_custom/snapshots")).json();
+    if(!snaps.length){ box.innerHTML='<span style="font-size:11px;color:#444">백업 없음 (편집 저장 시 자동 생성)</span>'; return; }
+    box.innerHTML=snaps.map(s=>{
+      const su=s.summary||{};
+      const tag=s.label==="manual"?"📸수동":s.label==="prerestore"?"↩️복원전":"자동";
+      return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;
+        padding:6px 8px;border:1px solid var(--line);border-radius:7px;margin-bottom:5px">
+        <div style="font-size:11px;color:#bbb;line-height:1.4">
+          <b style="color:#ddd">${esc(s.ts)}</b> <span style="color:#666">${tag}</span><br>
+          <span style="color:#777">숨김${su.hidden||0}·이름${su.rename||0}·추가${su.extra||0}·삭제${su.removed||0}</span>
+        </div>
+        <button onclick="restoreSnapshot('${esc(s.file)}','${esc(s.ts)}')" style="flex-shrink:0;padding:5px 10px;
+          background:rgba(255,255,255,.06);border:1px solid #444;border-radius:6px;color:#f5d97a;
+          font-size:11px;cursor:pointer;font-family:inherit">복원</button>
+      </div>`;
+    }).join("");
+  }catch(e){ box.innerHTML='<span style="font-size:11px;color:#f87171">목록 로드 실패</span>'; }
+}
+async function snapshotNow(){
+  try{
+    const r=await (await fetch("/api/sector_custom/snapshot",{method:"POST"})).json();
+    showToast(r.ok?"📸 백업 완료":"백업할 상태 없음", r.ok?"ok":"err");
+    loadSnapshots();
+  }catch(e){ showToast("백업 실패: "+e.message,"err"); }
+}
+async function restoreSnapshot(file,ts){
+  if(!confirm(`${ts} 시점으로 복원할까요?\n(현재 상태도 자동 백업됩니다)`))return;
+  try{
+    const r=await (await fetch("/api/sector_custom/restore",{method:"POST",
+      headers:{"Content-Type":"application/json"},body:JSON.stringify({file})})).json();
+    if(r.ok){
+      Object.keys(_tabCache||{}).forEach(k=>delete _tabCache[k]);
+      try{ Object.keys(localStorage).filter(k=>k.indexOf("__hm_")===0).forEach(k=>localStorage.removeItem(k)); }catch(_){}
+      showToast("↩️ 복원 완료. 갱신 중…");
+      loadEditTab();   // 편집탭 새로고침(복원된 상태 반영)
+    } else showToast("복원 실패: "+(r.error||""),"err");
+  }catch(e){ showToast("복원 실패: "+e.message,"err"); }
 }
 
 function toggleHideSector(cb,name){

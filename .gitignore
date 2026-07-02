@@ -89,3 +89,7 @@ scratch_pw.txt
 scripts/.kiwoom_token_cache.json
 scripts/.kis_token_cache.json
 scripts/.*_token_cache.json
+
+# 사용자 런타임 편집/백업 (배포로 덮이면 안 됨)
+pipeline/sector_custom.json
+pipeline/sector_custom_snapshots/
