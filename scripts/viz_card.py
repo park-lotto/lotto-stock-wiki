@@ -362,7 +362,7 @@ def save_png(html_path: Path, png_path: Path):
         return False
 
 
-def send_telegram_photo(png_path: Path, caption: str = ""):
+def send_telegram_photo(png_path: Path, caption: str = "", chat_id=None):
     import json
     env = {}
     ep = ROOT / ".env"
@@ -372,7 +372,7 @@ def send_telegram_photo(png_path: Path, caption: str = ""):
                 k, v = line.split("=", 1)
                 env[k.strip()] = v.strip()
     token   = env.get("BOT_TOKEN", "")
-    chat_id = env.get("CHAT_ID", "")
+    chat_id = chat_id or env.get("CHAT_ID", "")
     if not token or not chat_id:
         print("  ⚠️  .env BOT_TOKEN/CHAT_ID 없음"); return False
 
