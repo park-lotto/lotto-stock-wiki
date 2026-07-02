@@ -40,6 +40,25 @@ def _pad(s: str, width: int) -> str:
     return s + " " * max(0, width - _disp_width(s))
 
 
+def _extract_pending(text: str) -> int:
+    """서브프로세스 출력에서 '미처리 {라벨}: N개' 패턴의 N을 추출. 못 찾으면 0."""
+    m = re.search(r"미처리[^:：]*[:：]\s*(\d+)개", text)
+    return int(m.group(1)) if m else 0
+
+
+_ERROR_SIGNS = ("Traceback", "RESOURCE_EXHAUSTED", "429", "quota",
+                "Authentication", "invalid_api_key", "invalid api key",
+                "ConnectionError", "run 오류")
+
+
+def _extract_error(text: str) -> str | None:
+    """서브프로세스 출력에서 에러 시그니처가 포함된 첫 줄을 찾아 반환. 없으면 None."""
+    for line in text.splitlines():
+        if any(sign in line for sign in _ERROR_SIGNS):
+            return line.strip()[:200]
+    return None
+
+
 def run(cmd: list[str], label: str) -> int:
     print(f"\n{'='*50}\n[{label}] {' '.join(str(c) for c in cmd)}\n{'='*50}")
     r = subprocess.run(cmd, cwd=str(ROOT))
