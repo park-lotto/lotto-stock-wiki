@@ -62,6 +62,11 @@ log.md에 `투경 해제 예측 검증` / `종가배팅 시스템` 키워드 있
 
 > **1%라도 겹치면 무조건 실행. 스킬 라우팅 전체: `wiki/rules/skill_routing.md`**
 
+**fablize (2026-07-02, 글로벌 always-on 설치됨)** — 위 트리거들과 별개로 매 세션 자동 작동하는
+검증 절차 레이어. "완료" 주장 전 실행증거 요구(멀티스토리 작업), 디버깅 시 재현→가설→인과사슬
+강제, HTML/차트 등 렌더 산출물은 실제 구동 확인 없이 완료 처리 금지. `verification-before-completion`과
+겹치는 영역은 fablize가 상시 보강. 설정: `C:\Users\TheRose\.claude\CLAUDE.md`(FABLIZE 블록).
+
 ---
 
 ## 🎯 스킬 활용 원칙
