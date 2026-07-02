@@ -239,6 +239,31 @@ async def _auth_guard(request: Request, call_next):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
     return RedirectResponse("/login")
 
+# ── 부팅 시 데이터소스 가용성 점검 (재발 방지: 조용히 0값만 나오던 문제 재현 시 즉시 로그로 드러나게) ──
+def _check_datasource_availability():
+    import sys as _sys
+    _sd = os.path.join(ROOT, "scripts")
+    if _sd not in _sys.path:
+        _sys.path.insert(0, _sd)
+    try:
+        import kiwoom_api as _kw
+        _kw._token()
+        print("[boot] kiwoom_api: OK (서버에 키움 키 등록됨)", flush=True)
+    except Exception as e:
+        print("=" * 70, flush=True)
+        print("[boot][WARN] kiwoom_api 인증 실패 — 서버에 키움 API 키 미등록 상태로 보임.", flush=True)
+        print(f"  사유: {e}", flush=True)
+        print("  아래 기능은 kiwoom_api를 직접 호출하면 항상 빈값/0을 반환한다 (2026-07-02 확인됨):", flush=True)
+        print("    - 관심종목 개별 잠정수급 (get_stock_supply, /api/watchlist·/api/stock_supply_batch)", flush=True)
+        print("  → 위 endpoint를 만지거나 새 기능을 kiwoom_api로 연결할 때는 반드시 서버에서", flush=True)
+        print("    실데이터 응답을 확인할 것. 이미 KIS로 이관된 것: 지수분봉/투자자매매동향/", flush=True)
+        print("    프로그램매매/거래대금순위(kis_api.get_index_minutebar/get_market_investor/", flush=True)
+        print("    get_program_trade/get_inquiry_rank). 종목분봉(get_stock_candles)은 이미 KIS 폴백 있음.", flush=True)
+        print("=" * 70, flush=True)
+
+_check_datasource_availability()
+
+
 # ── 투자자/프로그램 시계열 누적 (장 중 15분 폴링) ──────────────────
 _FLOW: dict = {
     "J": {"investor": deque(maxlen=30), "program": deque(maxlen=30)},
