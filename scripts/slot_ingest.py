@@ -59,6 +59,46 @@ def _extract_error(text: str) -> str | None:
     return None
 
 
+def _atoms_count_today(source_type: str, date: str) -> int:
+    from pipeline.atoms.db import get_conn
+    conn = get_conn()
+    try:
+        row = conn.execute(
+            "SELECT COUNT(*) FROM atoms WHERE source_type=? AND date=?",
+            (source_type, date)).fetchone()
+        return row[0] if row else 0
+    finally:
+        conn.close()
+
+
+def _atoms_count_since(source_type: str, since_iso: str) -> int:
+    from pipeline.atoms.db import get_conn
+    conn = get_conn()
+    try:
+        row = conn.execute(
+            "SELECT COUNT(*) FROM atoms WHERE source_type=? AND created_at>=?",
+            (source_type, since_iso)).fetchone()
+        return row[0] if row else 0
+    finally:
+        conn.close()
+
+
+def _trailing_avg(source_type: str, before_date: str, days: int = 7) -> float:
+    """before_date 이전 최근 N일간 source_type 일평균 원자 수. 데이터 없으면 0.0."""
+    from pipeline.atoms.db import get_conn
+    conn = get_conn()
+    try:
+        rows = conn.execute(
+            "SELECT date, COUNT(*) c FROM atoms WHERE source_type=? AND date<? "
+            "GROUP BY date ORDER BY date DESC LIMIT ?",
+            (source_type, before_date, days)).fetchall()
+        if not rows:
+            return 0.0
+        return sum(r[1] for r in rows) / len(rows)
+    finally:
+        conn.close()
+
+
 def run(cmd: list[str], label: str) -> tuple[int, str]:
     """서브프로세스 실행. 출력은 화면에 그대로 찍고(기존 가시성 유지), 진단용으로도 반환.
     subprocess 자체 실행 실패(예: 인터프리터 경로 문제)도 예외를 던지지 않고

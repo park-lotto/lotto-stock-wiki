@@ -56,3 +56,26 @@ def test_extract_error_traceback():
 def test_extract_error_none_on_clean_log():
     text = "[15/19] 2026-07-01_미래시황.md\n  → 13개 원자\n완료: 19개 채널, 124개 원자"
     assert si._extract_error(text) is None
+
+
+def test_atoms_count_today_smoke():
+    n = si._atoms_count_today("report", "2026-07-02")
+    assert isinstance(n, int)
+    assert n >= 0
+
+
+def test_atoms_count_since_smoke():
+    n = si._atoms_count_since("report", "2026-07-02T00:00:00")
+    assert isinstance(n, int)
+    assert n >= 0
+
+
+def test_trailing_avg_smoke():
+    avg = si._trailing_avg("report", "2026-07-02")
+    assert isinstance(avg, float)
+    assert avg >= 0.0
+
+
+def test_trailing_avg_unknown_source_type_is_zero():
+    avg = si._trailing_avg("존재하지않는소스타입", "2026-07-02")
+    assert avg == 0.0
