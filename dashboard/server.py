@@ -294,7 +294,7 @@ def _poll_flow():
                 initial = False
         except Exception:
             pass
-        time.sleep(120)  # 2분 (누적추이 그래프가 더 빨리 채워지도록)
+        time.sleep(60)  # 1분 (투자자매매동향은 KIS에 시계열 단건조회 API가 없어 폴링으로만 누적 가능 — 재시작마다 리셋되니 최대한 빨리 채움)
 
 _poll_thread = threading.Thread(target=_poll_flow, daemon=True)
 _poll_thread.start()
@@ -1431,6 +1431,8 @@ def api_market_flow():
                 "Q_investor": ex.submit(kis_api.get_market_investor, "Q"),
                 "J_prog":         ex.submit(kis_api.get_program_trade, "J"),
                 "Q_prog":         ex.submit(kis_api.get_program_trade, "Q"),
+                "J_prog_series":  ex.submit(kis_api.get_program_trade_series, "J"),
+                "Q_prog_series":  ex.submit(kis_api.get_program_trade_series, "Q"),
                 "NQ":         ex.submit(global_api.get_nasdaq_futures) if global_api else None,
                 "KSF":        ex.submit(global_api.get_kospi_futures) if global_api else None,
                 "KSFN":       ex.submit(global_api.get_kospi_night_futures) if global_api else None,
@@ -1950,6 +1952,8 @@ def _prewarm_worker():
                 "Q_investor":     ex.submit(kis_api.get_market_investor, "Q"),
                 "J_prog":         ex.submit(kis_api.get_program_trade, "J"),
                 "Q_prog":         ex.submit(kis_api.get_program_trade, "Q"),
+                "J_prog_series":  ex.submit(kis_api.get_program_trade_series, "J"),
+                "Q_prog_series":  ex.submit(kis_api.get_program_trade_series, "Q"),
                 "NQ":         ex.submit(global_api.get_nasdaq_futures) if global_api else None,
                 "KSF":        ex.submit(global_api.get_kospi_futures) if global_api else None,
                 "KSFN":       ex.submit(global_api.get_kospi_night_futures) if global_api else None,

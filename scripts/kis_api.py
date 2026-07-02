@@ -770,6 +770,44 @@ def get_program_trade(market_div: str = "J") -> dict:
         return {"차익": 0, "비차익": 0, "합계": 0, "ts": ts}
 
 
+def get_program_trade_series(market_div: str = "J") -> list:
+    """코스피(J)/코스닥(Q) 프로그램매매 최근 30분 시계열 (한 번 호출로 즉시 그래프용 데이터 확보).
+    TR_ID: FHPPG04600101 (comp-program-trade-today). API가 최신순으로 주므로 오래된순으로 뒤집어 반환.
+    Returns [{"t":"094300","차익":...,"비차익":...,"합계":...}, ...] (과거→최신 순)
+    """
+    mkt = "K" if market_div == "J" else "Q"
+    try:
+        r = requests.get(
+            f"{BASE}/uapi/domestic-stock/v1/quotations/comp-program-trade-today",
+            headers={
+                "content-type": "application/json; charset=utf-8",
+                "authorization": f"Bearer {_token()}",
+                "appkey": _KEY, "appsecret": _SECRET,
+                "tr_id": "FHPPG04600101",
+                "custtype": "P",
+            },
+            params={
+                "FID_COND_MRKT_DIV_CODE": "J",
+                "FID_MRKT_CLS_CODE": mkt,
+                "FID_SCTN_CLS_CODE": "",
+                "FID_INPUT_ISCD": "",
+                "FID_COND_MRKT_DIV_CODE1": "",
+                "FID_INPUT_HOUR_1": "",
+            },
+            timeout=8,
+        )
+        r.raise_for_status()
+        out = r.json().get("output", []) or []
+        result = []
+        for o in reversed(out):
+            arb   = int(float(o.get("arbt_smtn_ntby_tr_pbmn", 0) or 0))
+            noarb = int(float(o.get("nabt_smtn_ntby_tr_pbmn", 0) or 0))
+            result.append({"t": o.get("bsop_hour", ""), "차익": arb, "비차익": noarb, "합계": arb + noarb})
+        return result
+    except Exception:
+        return []
+
+
 def get_index_price(index_code: str) -> dict:
     """코스피(0001)/코스닥(1001) 지수 현재가.
     TR_ID: FHPUP02100000 (업종/지수 현재가)
