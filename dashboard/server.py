@@ -1577,11 +1577,28 @@ def _gen_stock_summary(code: str = "", name: str = "") -> dict:
         _sys.path.insert(0, _sd)
     import news_feed as nf
     try:
-        news = nf.stock_news(code, top=8)
+        news = nf.stock_news(code, top=12)   # 여유있게 받아 필터
     except Exception:
         news = []
     if not news:
         return {"news": [], "summary": "", "error": "관련 뉴스가 없습니다."}
+
+    # 관련성 필터: 제목에 종목명(전달명+KRX 공식명)이 있는 기사만.
+    # 네이버 종목뉴스는 종목이 스쳐 언급된 시황 기사(예 '국민연금 소외주')도 관련그룹으로 줌 → 제거.
+    cands = set()
+    if name and name.strip():
+        cands.add(name.strip())
+    try:
+        for _nm, _cc in _krx_codes().items():
+            if str(_cc).zfill(6) == code:
+                cands.add(_nm)
+                break
+    except Exception:
+        pass
+    if cands:
+        rel = [n for n in news if any(c and c in (n.get("title") or "") for c in cands)]
+        news = rel if rel else news   # 하나도 안 맞으면 과필터 방지로 원본 유지
+    news = news[:8]
 
     nm = name or code
     headlines = [f"- [{n.get('date','')}] {n.get('title','')}" for n in news]
