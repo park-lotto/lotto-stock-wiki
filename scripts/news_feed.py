@@ -5,6 +5,8 @@
 """
 import os, json, re, urllib.request, urllib.parse
 from pathlib import Path
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -56,13 +58,17 @@ def _search(query: str, display: int = 15, sort: str = "date") -> list:
         return []
 
 
+MAX_AGE_DAYS = 3   # 이보다 오래된 뉴스는 점수와 무관하게 후순위(신선한 게 없을 때만 노출)
+
+
 def sector_news(code, kw_map=None, top: int = 2) -> list:
-    """섹터 테마뉴스: 호재키워드 랭킹 + 정치/날씨 노이즈컷."""
+    """섹터 테마뉴스: 최근 MAX_AGE_DAYS 이내 우선 + 그 안에서 호재키워드 랭킹. 정치/날씨 노이즈컷."""
     m = (kw_map or load_keywords()).get(str(code)) or {}
     q = m.get("q")
     if not q:
         return []
     must = m.get("must") or []
+    now = datetime.now(timezone.utc)
     ranked = []
     for it in _search(q, display=20):
         t = _clean(it.get("title", ""))
@@ -72,9 +78,22 @@ def sector_news(code, kw_map=None, top: int = 2) -> list:
             continue   # 테마 필수어 제목 미포함 → 오매칭 제외
         score = sum(1 for w in HOJAE if w in t)
         pub = it.get("pubDate", "")
-        ranked.append((score, t, pub, it.get("originallink") or it.get("link")))
-    ranked.sort(key=lambda x: -x[0])
-    return [{"title": t, "date": _fmt_rss(p), "url": u, "score": s} for s, t, p, u in ranked[:top]]
+        age_days = _age_days(pub, now)
+        ranked.append((age_days, score, t, pub, it.get("originallink") or it.get("link")))
+    fresh = [r for r in ranked if r[0] <= MAX_AGE_DAYS]
+    pool = fresh if fresh else ranked   # 최근 뉴스가 아예 없으면 전체 중 최신순으로 대체
+    pool.sort(key=lambda x: (-x[1], x[0]) if fresh else x[0])
+    return [{"title": t, "date": _fmt_rss(p), "url": u, "score": s} for age, s, t, p, u in pool[:top]]
+
+
+def _age_days(pub: str, now: datetime) -> float:
+    try:
+        d = parsedate_to_datetime(pub)
+        if d.tzinfo is None:
+            d = d.replace(tzinfo=timezone.utc)
+        return (now - d).total_seconds() / 86400
+    except Exception:
+        return 999.0
 
 
 def stock_news(code, top: int = 3) -> list:
