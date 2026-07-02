@@ -17,6 +17,7 @@ crawling_bot_data 로 자동 다운로드 → 이 스크립트가 raw/ 동기화
 import sys
 import re
 import json
+import html
 import unicodedata
 import subprocess
 import argparse
@@ -142,9 +143,9 @@ def build_report(cats: list[str], date: str, results: list[dict]) -> str:
     for r in results:
         label = CAT_LABEL.get(r["cat"], r["cat"])
         value = f"{r['total_today']}(+{r['delta']})"
-        lines.append(f"{_pad(label, 10)}{_pad(value, 10)}{r['icon']} {r['note']}")
-        if r["icon"] in ("🔴", "⚠️"):
-            issues.append(f"· {label}: {r['note']}")
+        lines.append(f"{_pad(label, 10)}{_pad(value, 10)}{r['icon']} {html.escape(r['note'])}")
+        if r["icon"] in ("🔴", "⚠️", "❔"):
+            issues.append(f"· {html.escape(label)}: {html.escape(r['note'])}")
 
     table = "\n".join(lines)
     msg = f"📥 크롤 인제스트  {date[5:]} {hhmm}\n<pre>{table}</pre>"

@@ -222,3 +222,29 @@ def test_pipeline_importable_when_run_as_script():
         assert result == "OK", f"Expected 'OK', got {result!r}"
     finally:
         Path(out_file).unlink(missing_ok=True)
+
+
+def test_build_report_escapes_html_special_chars_in_note():
+    """r['note']에 <, >, & 등의 특수문자가 있으면 이스케이프되어야 한다."""
+    results = [
+        {"cat": "report", "delta": 0, "total_today": 5, "icon": "🔴",
+         "note": "확인필요 — <module> object at 0x123 & broken", "retried": True},
+    ]
+    text = si.build_report(["report"], "2026-07-02", results)
+    assert "<module>" not in text  # 이스케이프되지 않은 태그가 없어야 함
+    assert "&lt;module&gt;" in text
+    assert "&amp;" in text
+
+
+def test_build_report_escalates_unknown_icon_to_issues():
+    """❔ 아이콘도 issues 섹션에 나타나야 한다."""
+    results = [
+        {"cat": "youtube", "delta": 0, "total_today": 9, "icon": "❔",
+         "note": "확인불가 — DB locked", "retried": False},
+    ]
+    text = si.build_report(["youtube"], "2026-07-02", results)
+    # 표에는 나타남
+    assert "확인불가" in text
+    # 요약 섹션에도 나타나야 함 (</pre> 이후)
+    after_pre = text.split("</pre>")[1] if "</pre>" in text else ""
+    assert "확인불가" in after_pre, f"❔ 결과가 요약 섹션에 없음: {text!r}"
