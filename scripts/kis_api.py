@@ -689,32 +689,42 @@ def get_index_minutebar(index_code: str, interval: int = 15) -> list:
 
 def get_market_investor(market_div: str = "J") -> dict:
     """코스피(J)/코스닥(Q) 투자자별 오늘 누적 순매수 (백만원).
+    TR_ID: FHPTJ04040000 (시장별 투자자매매동향-일별). output[0]=오늘.
+    (구버전 FHKST01010900은 종목전용 TR이라 지수코드 입력시 빈값만 나오던 버그 수정)
     Returns {외인, 기관, 개인, ts}
     """
     import datetime as _dt
     ts = _dt.datetime.now().strftime("%H:%M")
+    iscd = "0001" if market_div == "J" else "1001"
+    iscd1 = "KSP" if market_div == "J" else "KSQ"
+    today = _dt.datetime.now().strftime("%Y%m%d")
     try:
         r = requests.get(
-            f"{BASE}/uapi/domestic-stock/v1/quotations/inquire-investor",
+            f"{BASE}/uapi/domestic-stock/v1/quotations/inquire-investor-daily-by-market",
             headers={
                 "content-type": "application/json; charset=utf-8",
                 "authorization": f"Bearer {_token()}",
                 "appkey": _KEY, "appsecret": _SECRET,
-                "tr_id": "FHKST01010900",
+                "tr_id": "FHPTJ04040000",
                 "custtype": "P",
             },
             params={
-                "FID_COND_MRKT_DIV_CODE": market_div,
-                "FID_INPUT_ISCD": "0001" if market_div == "J" else "Q001",
+                "FID_COND_MRKT_DIV_CODE": "U",
+                "FID_INPUT_ISCD": iscd,
+                "FID_INPUT_DATE_1": today,
+                "FID_INPUT_ISCD_1": iscd1,
+                "FID_INPUT_DATE_2": today,
+                "FID_INPUT_ISCD_2": iscd,
             },
             timeout=8,
         )
         r.raise_for_status()
-        o = r.json().get("output", {}) or {}
+        out = r.json().get("output", []) or []
+        o = out[0] if out else {}
         return {
-            "외인": int(o.get("frgn_ntby_tr_pbmn", 0) or 0),
-            "기관": int(o.get("orgn_ntby_tr_pbmn", 0) or 0),
-            "개인": int(o.get("prsn_ntby_tr_pbmn", 0) or 0),
+            "외인": int(float(o.get("frgn_ntby_tr_pbmn", 0) or 0)),
+            "기관": int(float(o.get("orgn_ntby_tr_pbmn", 0) or 0)),
+            "개인": int(float(o.get("prsn_ntby_tr_pbmn", 0) or 0)),
             "ts": ts,
         }
     except Exception:
@@ -723,32 +733,38 @@ def get_market_investor(market_div: str = "J") -> dict:
 
 def get_program_trade(market_div: str = "J") -> dict:
     """코스피(J)/코스닥(Q) 프로그램매매 순매수 (백만원).
-    TR_ID: FHPPG04650200
+    TR_ID: FHPPG04600101 (프로그램매매 종합현황-시간, 최근 30분 시계열). output[0]=최신.
+    (구버전 FHPPG04650200은 종목전용 TR이라 지수코드 입력시 빈값만 나오던 버그 수정)
     Returns {차익, 비차익, 합계, ts}
     """
     import datetime as _dt
     ts = _dt.datetime.now().strftime("%H:%M")
+    mkt = "K" if market_div == "J" else "Q"
     try:
         r = requests.get(
-            f"{BASE}/uapi/domestic-stock/v1/quotations/program-trade-by-stock",
+            f"{BASE}/uapi/domestic-stock/v1/quotations/comp-program-trade-today",
             headers={
                 "content-type": "application/json; charset=utf-8",
                 "authorization": f"Bearer {_token()}",
                 "appkey": _KEY, "appsecret": _SECRET,
-                "tr_id": "FHPPG04650200",
+                "tr_id": "FHPPG04600101",
                 "custtype": "P",
             },
             params={
-                "FID_COND_MRKT_DIV_CODE": market_div,
-                "FID_INPUT_ISCD": "0001" if market_div == "J" else "Q001",
-                "FID_INPUT_DATE_1": "",
+                "FID_COND_MRKT_DIV_CODE": "J",
+                "FID_MRKT_CLS_CODE": mkt,
+                "FID_SCTN_CLS_CODE": "",
+                "FID_INPUT_ISCD": "",
+                "FID_COND_MRKT_DIV_CODE1": "",
+                "FID_INPUT_HOUR_1": "",
             },
             timeout=8,
         )
         r.raise_for_status()
-        o = r.json().get("output1", {}) or {}
-        arb   = int(o.get("pgtr_ntby_tr_pbmn", 0) or 0)    # 차익
-        noarb = int(o.get("napr_ntby_tr_pbmn", 0) or 0)    # 비차익
+        out = r.json().get("output", []) or []
+        o = out[0] if out else {}
+        arb   = int(float(o.get("arbt_smtn_ntby_tr_pbmn", 0) or 0))    # 차익
+        noarb = int(float(o.get("nabt_smtn_ntby_tr_pbmn", 0) or 0))    # 비차익
         return {"차익": arb, "비차익": noarb, "합계": arb + noarb, "ts": ts}
     except Exception:
         return {"차익": 0, "비차익": 0, "합계": 0, "ts": ts}
