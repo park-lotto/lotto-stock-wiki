@@ -2381,13 +2381,14 @@ function _allDraws(){ try{return JSON.parse(localStorage.getItem("chart_draws_v1
 function _loadDraws(){ return _allDraws()[_drawsKey()] || []; }
 function _saveDraws(){ const a=_allDraws(); a[_drawsKey()]=_draws; try{localStorage.setItem("chart_draws_v1",JSON.stringify(a));}catch(_){} }
 // 보이는 캔들 범위(줌/스크롤 위치)도 종목·봉별로 저장/복원
-function _allViews(){ try{return JSON.parse(localStorage.getItem("chart_view_v1")||"{}");}catch(_){return {};} }
+// v2: 분봉이 다일치(네이버 fchart)로 바뀌며 옛 v1 좁은 범위가 무의미해져 키 갱신
+function _allViews(){ try{return JSON.parse(localStorage.getItem("chart_view_v2")||"{}");}catch(_){return {};} }
 function _loadView(){ return _allViews()[_drawsKey()] || null; }
 function _saveView(){
   if(!_chart)return; let r; try{ r=_chart.timeScale().getVisibleLogicalRange(); }catch(_){ return; }
   if(!r || r.from==null)return;
   const a=_allViews(); a[_drawsKey()]={from:r.from, to:r.to};
-  try{ localStorage.setItem("chart_view_v1",JSON.stringify(a)); }catch(_){}
+  try{ localStorage.setItem("chart_view_v2",JSON.stringify(a)); }catch(_){}
 }
 function _loadChartWin(){ try{return JSON.parse(localStorage.getItem("chart_win_v2")||"{}");}catch(_){return {};} }
 function _saveChartWin(){
@@ -3129,9 +3130,13 @@ async function loadChartData(){
     _chartVol.setData(c.map(x=>({time:x.time,value:x.value,
       color:x.close>=x.open?"rgba(231,76,60,.45)":"rgba(52,152,219,.45)"})));
     _applyIndicators();
-    // 저장된 보기 범위(줌/스크롤) 복원, 없으면 전체 맞춤
+    // 저장된 보기 범위(줌/스크롤) 복원, 없으면: 분봉=최근 다일치(~180봉), 일/주/월=전체
     const v=_loadView();
     if(v && v.from!=null){ try{ _chart.timeScale().setVisibleLogicalRange(v); }catch(_){ _chart.timeScale().fitContent(); } }
+    else if(_isIntraday() && c.length>180){
+      try{ _chart.timeScale().setVisibleLogicalRange({from:c.length-180, to:c.length+2}); }
+      catch(_){ _chart.timeScale().fitContent(); }
+    }
     else _chart.timeScale().fitContent();
     _updateLegend(null); _redrawDraws();
   }catch(e){
