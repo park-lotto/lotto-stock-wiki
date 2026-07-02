@@ -67,6 +67,33 @@ def test_market_report_fans_out_sectors_and_picks():
     assert any(a["asset_level"] == "market" for a in atoms)
 
 
+def test_stock_report_populates_structured_fields():
+    import json
+    atoms = questionnaire_to_atoms(_result_for(0), META)  # 현대차/기아
+    stock_atoms = [a for a in atoms if a["asset_level"] == "stock"]
+    assert stock_atoms
+    sf = json.loads(stock_atoms[0]["structured_fields"])
+    assert "rating" in sf and "tp_new" in sf and "thesis" in sf
+
+
+def test_sector_report_populates_structured_fields():
+    import json
+    atoms = questionnaire_to_atoms(_result_for(1), META)  # MLCC
+    sec_atoms = [a for a in atoms if a["asset_level"] == "sector"]
+    assert sec_atoms
+    sf = json.loads(sec_atoms[0]["structured_fields"])
+    assert "sector_view" in sf and "top_picks" in sf
+
+
+def test_market_report_populates_structured_fields():
+    import json
+    atoms = questionnaire_to_atoms(_result_for(2), META)  # 로봇/방산/조선 데일리
+    mkt_atoms = [a for a in atoms if a["asset_level"] == "market"]
+    assert mkt_atoms
+    sf = json.loads(mkt_atoms[0]["structured_fields"])
+    assert "market_direction" in sf and "recommended_sectors" in sf
+
+
 def test_stock_report_survives_dict_shaped_earnings_outlook():
     """Gemini가 earnings_outlook/thesis 슬롯에 문자열 대신 dict/list-of-dict를
     채워 넣어도(2026-07-02 실제 발생) TypeError 없이 content로 합쳐져야 한다."""
