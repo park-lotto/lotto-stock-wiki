@@ -87,3 +87,5 @@ pipeline/news_feed.json
 pipeline/callouts/
 scratch_pw.txt
 scripts/.kiwoom_token_cache.json
+scripts/.kis_token_cache.json
+scripts/.*_token_cache.json
