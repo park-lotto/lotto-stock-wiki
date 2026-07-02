@@ -256,14 +256,14 @@ def _poll_flow():
             _mins = now.hour * 60 + now.minute
             # 09:00~15:35만 수집 → 이후엔 동결(15:30 종가 모양 유지). 저녁엔 마지막값 그대로 표시.
             if initial or (540 <= _mins <= 935):
-                import kiwoom_api as _kiwoom
+                import kis_api as _kis
                 for mkt in ("J", "Q"):
                     try:
-                        _FLOW[mkt]["investor"].append(_kiwoom.get_market_investor(mkt))
+                        _FLOW[mkt]["investor"].append(_kis.get_market_investor(mkt))
                     except Exception:
                         pass
                     try:
-                        _FLOW[mkt]["program"].append(_kiwoom.get_program_trade(mkt))
+                        _FLOW[mkt]["program"].append(_kis.get_program_trade(mkt))
                     except Exception:
                         pass
                 initial = False
