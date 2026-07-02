@@ -97,6 +97,11 @@ def test_match_substring():
     assert not bv._match("삼성전자", "SK하이닉스")
 
 
+def test_routine_today_none_when_no_routine():
+    # 루틴 파일 없는 채널이면 None (무거운 로드 전에 반환)
+    assert bv.routine_today("루틴없는채널") is None
+
+
 def test_person_view_unknown_raises():
     with pytest.raises(KeyError):
         bv.person_view("없는채널")

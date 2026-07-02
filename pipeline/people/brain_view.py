@@ -110,6 +110,47 @@ def _match(a: str, b: str) -> bool:
     return a in b or b in a
 
 
+def routine_today(name: str) -> dict | None:
+    """오늘의 루틴 재구성 — 그의 정적 루틴을 오늘 실제 데이터/발언으로 채움.
+    data_key 스텝은 오늘 지표로, 시장판단은 오늘 그의 market/macro 원자로."""
+    rt = _routine(name)
+    if not rt:
+        return None
+    from pipeline.people.sortino_data import load_sortino_top
+    from pipeline.people import funnel as _f
+
+    sortino = load_sortino_top()
+    data = _f._load()
+    stocks = data.get("stocks", {})
+    n_vac = sum(1 for s in stocks.values()
+                if (s.get("osc") or {}).get("pct") is not None
+                and s["osc"]["pct"] <= _f.THRESHOLDS["vacuum_pct_max"])
+    n_up = sum(1 for s in stocks.values()
+               if ((s.get("tp") or {}).get("up_count") or 0)
+               > ((s.get("tp") or {}).get("down_count") or 0))
+    sectors = ", ".join((sortino.get("sectors") or [])[:6]) or "—"
+    metrics = {
+        "osc": f"오늘 수급빈집 {n_vac}종목 (osc pct≤{_f.THRESHOLDS['vacuum_pct_max']})",
+        "rs": f"오늘 소라티노 주도섹터: {sectors}",
+        "consensus": f"오늘 컨센 상향 {n_up}종목",
+        "tp": f"오늘 컨센 상향 {n_up}종목",
+    }
+    # data_key 스텝에 오늘 지표 부착
+    for phase in rt["routine"]:
+        for step in phase["steps"]:
+            dk = [k.strip() for k in (step.get("data_key") or "").split(",") if k.strip()]
+            step["today"] = list(dict.fromkeys(metrics[k] for k in dk if k in metrics))
+
+    market = atoms_for(name, asset_levels=["market", "macro"], days=1, limit=20)
+    return {
+        "date": data.get("date"),
+        "philosophy": rt.get("philosophy", []),
+        "routine": rt["routine"],
+        "market_today": [_slim(a) for a in market],
+        "extracted_from": rt.get("extracted_from", ""),
+    }
+
+
 def today_selection(name: str, mention_days: int = 3) -> dict:
     """복사: 그의 규칙을 오늘 데이터에 적용한 종목선정 재현 + 검증(그의 실제 언급 대조).
     데이터 파일(taerini_stock.json 등) 연결된 채널만 가능."""

@@ -89,6 +89,7 @@
     padding:1px 7px;margin-top:5px}
   .rstep .rbody{font-size:.8rem;color:#c4c2bc;line-height:1.5}
   .rstep .rq{color:var(--gold-dim)} .rstep .rr{color:#d88}
+  .rtoday{color:#7fd8a0;font-size:.8rem;margin-top:4px;font-weight:600}
   /* 오늘의 종목선정 */
   .funnel{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0 12px;font-size:.78rem;color:var(--muted)}
   .funnel .fstep{background:var(--panel2);border:1px solid var(--line);border-radius:20px;padding:3px 11px}
@@ -199,6 +200,16 @@ async function selectPerson(enc){
   const v = await r.json();
   render(v);
   loadSelection(enc);
+  loadRoutineToday(enc);
+}
+
+async function loadRoutineToday(enc){
+  const box = document.getElementById("routine-box"); if(!box) return;
+  try{
+    const rt = await (await fetch("/api/brain/"+enc+"/routine_today")).json();
+    if(!rt.available) return;
+    box.innerHTML = routineHtml(rt);   // 오늘 데이터 채워진 루틴으로 교체
+  }catch(e){ /* 정적 루틴 유지 */ }
 }
 
 async function loadSelection(enc){
@@ -257,12 +268,14 @@ function routineHtml(rt){
       ${(ph.steps||[]).map(s=>{
         const dk = (s.data_key||"").split(",").map(x=>x.trim()).filter(Boolean);
         const tags = dk.map(k=>`<span class="dtag">📊 ${DATA_LABEL[k]||k} 자동</span>`).join(" ");
+        const today = (s.today||[]).map(t=>`<div class="rtoday">🟢 ${esc(t)}</div>`).join("");
         return `<div class="rstep">
           <div><div class="snm">${esc(s.step)}</div>${tags}${s.data?`<div class="cnt">${esc(s.data)}</div>`:""}</div>
           <div class="rbody">
             ${s.checks?`<div>👁 ${esc(s.checks)}</div>`:""}
             ${s.question?`<div class="rq">❓ ${esc(s.question)}</div>`:""}
             ${s.rule?`<div class="rr">⚙ ${esc(s.rule)}</div>`:""}
+            ${today}
           </div></div>`;
       }).join("")}
     </div>`).join("");
@@ -327,7 +340,7 @@ function render(v){
 
     <div class="band b">🧠 축② 인사이트·사고 추적·복제 <span class="bsub">그의 사고를 추적·복제 → 종목선정 관점의 근거</span></div>
 
-    ${routineHtml(v.routine)}
+    <div id="routine-box">${routineHtml(v.routine)}</div>
 
     <div class="sec">
       <div class="lbl">📈 시장 인사이트 <b>${(v.market_insight||[]).length}</b> <span class="cnt">— 그의 시장·매크로 생각 (쌓임)</span></div>

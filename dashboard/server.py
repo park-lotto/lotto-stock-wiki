@@ -635,6 +635,16 @@ def api_brain_trend(person: str):
     return JSONResponse(content=trend(person))
 
 
+@app.get("/api/brain/{person}/routine_today")
+def api_brain_routine_today(person: str):
+    """오늘의 루틴 재구성 — 정적 루틴을 오늘 데이터로 채움."""
+    from pipeline.people.brain_view import routine_today
+    r = routine_today(person)
+    if r is None:
+        return JSONResponse(content={"available": False})
+    return JSONResponse(content={"available": True, **r})
+
+
 @app.get("/api/brain/{person}/selection")
 def api_brain_selection(person: str):
     """복사: 그의 규칙으로 오늘의 종목선정 재현."""
