@@ -1412,7 +1412,7 @@ def api_market_flow():
                 "USDKRW":     ex.submit(global_api.get_usdkrw) if global_api else None,
                 "WTI":        ex.submit(global_api.get_wti) if global_api else None,
                 "RANK_POP":   ex.submit(naver_api.get_popular_stocks, 30),
-                "RANK_AMT":   ex.submit(kiwoom_api.get_trade_rank, 30),
+                "RANK_AMT":   ex.submit(kis_api.get_inquiry_rank, 30),
             }
             done = {}
             for k, f in tasks.items():
@@ -1931,7 +1931,7 @@ def _prewarm_worker():
                 "USDKRW":     ex.submit(global_api.get_usdkrw) if global_api else None,
                 "WTI":        ex.submit(global_api.get_wti) if global_api else None,
                 "RANK_POP":   ex.submit(naver_api.get_popular_stocks, 30),
-                "RANK_AMT":   ex.submit(kiwoom_api.get_trade_rank, 30),
+                "RANK_AMT":   ex.submit(kis_api.get_inquiry_rank, 30),
             }
             done = {}
             for k, f in tasks.items():
