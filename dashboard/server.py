@@ -342,11 +342,15 @@ def _poll_flow():
                 import kis_api as _kis
                 for mkt in ("J", "Q"):
                     try:
-                        _FLOW[mkt]["investor"].append(_kis.get_market_investor(mkt))
+                        iv = _kis.get_market_investor(mkt)
+                        if iv.get("외인") or iv.get("기관") or iv.get("개인"):  # all-zero=조회실패 → 스킵(스파이크 방지)
+                            _FLOW[mkt]["investor"].append(iv)
                     except Exception:
                         pass
                     try:
-                        _FLOW[mkt]["program"].append(_kis.get_program_trade(mkt))
+                        pg = _kis.get_program_trade(mkt)
+                        if pg.get("차익") or pg.get("비차익") or pg.get("합계"):  # all-zero=조회실패 → 스킵
+                            _FLOW[mkt]["program"].append(pg)
                     except Exception:
                         pass
                 initial = False
@@ -1374,15 +1378,20 @@ def _build_market_flow_result(done: dict) -> dict:
             for snap in reversed(list(_FLOW[mkt]["program"])):
                 if snap.get("차익") or snap.get("비차익") or snap.get("합계"):
                     prog = snap; break
+        # 실패해서 all-zero로 찍힌 스냅샷은 스파이크 유발 → 서빙 시 제거
+        inv_hist = [s for s in _FLOW[mkt]["investor"]
+                    if (s.get("외인") or s.get("기관") or s.get("개인"))]
+        prog_hist = [s for s in _FLOW[mkt]["program"]
+                     if (s.get("차익") or s.get("비차익") or s.get("합계"))]
         result[code] = {
             "label":            label,
             "price":            price_d.get("price", 0),
             "change_rate":      price_d.get("change_rate", 0),
             "bars":             done.get(f"{mkt}_bars") or [],
             "investor_now":     investor,
-            "investor_history": list(_FLOW[mkt]["investor"]),
+            "investor_history": inv_hist,
             "program_now":      prog,
-            "program_history":  list(_FLOW[mkt]["program"]),
+            "program_history":  prog_hist,
             "program_series":   done.get(f"{mkt}_prog_series") or [],
         }
     nq   = done.get("NQ")       or {"price": 0, "change_rate": 0, "bars": []}
