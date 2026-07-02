@@ -16,7 +16,8 @@ from pipeline.atoms.db import get_conn
 from pipeline.people.registry import source_names
 
 
-def atoms_for(person, content_type=None, days=30, limit=50, active_only=True, stance_only=False):
+def atoms_for(person, content_type=None, days=30, limit=50, active_only=True,
+              stance_only=False, asset_levels=None, asset=None):
     sources = source_names(person)
     if not sources:
         return []
@@ -32,6 +33,13 @@ def atoms_for(person, content_type=None, days=30, limit=50, active_only=True, st
         params.append(content_type)
     if stance_only:
         conds.append("stance_key IS NOT NULL")
+    if asset_levels:
+        ph = ",".join("?" * len(asset_levels))
+        conds.append(f"asset_level IN ({ph})")
+        params.extend(asset_levels)
+    if asset:
+        conds.append("(asset LIKE ? OR sector LIKE ? OR content LIKE ?)")
+        params.extend([f"%{asset}%", f"%{asset}%", f"%{asset}%"])
     sql = (
         f"SELECT * FROM atoms WHERE {' AND '.join(conds)} "
         f"ORDER BY date DESC, strength_score DESC LIMIT ?"

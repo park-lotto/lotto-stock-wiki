@@ -64,6 +64,25 @@ def test_person_view_splits_stance_and_log():
     assert "AUTO:live_stance" not in v["skeleton_md"]  # 자동 섹션은 제외
 
 
+def test_three_buckets_by_asset_level():
+    insert_atom(_atom(id="mk", asset_level="market", content="시장 조정 우려"))
+    insert_atom(_atom(id="mc", asset_level="macro", content="달러 강세"))
+    insert_atom(_atom(id="me", asset_level="method", content="이평선 이탈 시 축소"))
+    insert_atom(_atom(id="st", asset_level="stock", asset="삼성전자", content="삼전 비중 축소"))
+    insert_atom(_atom(id="se", asset_level="sector", sector="반도체", content="반도체 빈집"))
+    assert len(bv.market_insight("테스트채널")) == 2       # market + macro
+    assert len(bv.methods("테스트채널")) == 1              # method
+    assert len(bv.materials("테스트채널")) == 2            # stock + sector
+
+
+def test_materials_query_filters_by_stock():
+    insert_atom(_atom(id="s1", asset_level="stock", asset="삼성전자", content="삼전 얘기"))
+    insert_atom(_atom(id="s2", asset_level="stock", asset="SK하이닉스", content="하닉 얘기"))
+    got = bv.materials("테스트채널", query="삼성전자")
+    assert len(got) == 1
+    assert got[0]["asset"] == "삼성전자"
+
+
 def test_person_view_unknown_raises():
     with pytest.raises(KeyError):
         bv.person_view("없는채널")

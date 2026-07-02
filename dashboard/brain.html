@@ -208,6 +208,23 @@ function routineHtml(rt){
     </div>`;
 }
 
+function logList(atoms){
+  atoms = atoms||[];
+  if(!atoms.length) return "<div class='cnt'>없음</div>";
+  return atoms.map(a=>`<div class="log"><span class="ldt">${a.date}</span>
+    <span class="lct">[${a.content_type||''}]</span> ${esc((a.sector||'')+'/'+(a.asset||''))}: ${esc(a.content)}</div>`).join("");
+}
+
+async function searchMat(){
+  if(!SELECTED) return;
+  const q = document.getElementById("matq").value.trim();
+  const box = document.getElementById("matresult");
+  box.innerHTML = "<div class='cnt'>검색 중…</div>";
+  const r = await fetch("/api/brain/"+encodeURIComponent(SELECTED)+"/materials"+(q?("?q="+encodeURIComponent(q)):""));
+  const atoms = await r.json();
+  box.innerHTML = `<div class="cnt" style="margin-bottom:6px">${q?('"'+esc(q)+'" '):''}재료 ${atoms.length}개</div>` + logList(atoms);
+}
+
 function render(v){
   const main = document.getElementById("main");
   const stances = v.live_stance||[], log = v.speech_log||[];
@@ -219,14 +236,33 @@ function render(v){
     ${routineHtml(v.routine)}
 
     <div class="sec">
+      <div class="lbl">📈 1. 시장 인사이트 <b>${(v.market_insight||[]).length}</b> <span class="cnt">— 그의 시장·매크로 생각 (쌓임)</span></div>
+      ${logList(v.market_insight)}
+    </div>
+
+    <div class="sec">
       <div class="lbl">🔴 지금 포지션 <b>${stances.length}</b> <span class="cnt">— 그가 지금 뭘 어떻게 보나 (stance_key 기반)</span></div>
       ${stances.length? stances.map(stanceCard).join("") : "<div class='cnt'>활성 스탠스 없음</div>"}
     </div>
 
     <div class="sec">
-      <div class="lbl">💬 최근 발언 <b>${log.length}</b> <span class="cnt">— 최근 14일</span></div>
-      ${log.map(a=>`<div class="log"><span class="ldt">${a.date}</span>
-        <span class="lct">[${a.content_type||''}]</span> ${esc((a.sector||'')+'/'+(a.asset||''))}: ${esc(a.content)}</div>`).join("")}
+      <div class="lbl">🧭 2. 종목선정·매매 방법 <b>${(v.methods||[]).length}</b> <span class="cnt">— 그가 말한 방법론·규칙 (method 원자)</span></div>
+      ${logList(v.methods)}
+    </div>
+
+    <div class="sec">
+      <div class="lbl">🧩 3. 섹터·종목 재료 <span class="cnt">— 종목/섹터 검색해서 그 재료 히스토리 꺼내기</span></div>
+      <div style="display:flex;gap:7px;margin-bottom:10px">
+        <input id="matq" placeholder="종목·섹터 검색 (예: 삼성전자, 반도체)" onkeydown="if(event.key==='Enter')searchMat()"
+          style="flex:1;padding:8px 11px;background:#0b0b0d;border:1px solid var(--line);border-radius:8px;color:var(--txt);font-size:.84rem">
+        <button onclick="searchMat()" style="padding:8px 16px;border-radius:8px;border:1px solid var(--gold-dim);background:var(--gold);color:#000;font-weight:600;cursor:pointer">검색</button>
+      </div>
+      <div id="matresult">${logList(v.materials)}</div>
+    </div>
+
+    <div class="sec">
+      <div class="lbl">💬 최근 발언 <b>${log.length}</b> <span class="cnt">— 최근 14일 전체</span></div>
+      ${logList(log)}
     </div>
 
     <div class="sec">

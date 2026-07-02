@@ -621,6 +621,13 @@ async def api_brain_add(request: Request):
     return JSONResponse(content={"ok": True, "name": name})
 
 
+@app.get("/api/brain/{person}/materials")
+def api_brain_materials(person: str, q: str = None):
+    """3. 섹터·종목 재료 꺼내쓰기 — q로 종목/섹터 검색."""
+    from pipeline.people.brain_view import materials
+    return JSONResponse(content=materials(person, query=q, days=180, limit=80))
+
+
 @app.get("/api/brain/{person}")
 def api_brain_person(person: str):
     from pipeline.people.brain_view import person_view
@@ -4087,18 +4094,21 @@ async def api_insights_naver_board(req: Request):
     if err:
         return err
 
-    posts = await run_in_threadpool(_naver_board_posts, code, period)
-    if not posts:
-        return JSONResponse(content={"error": "해당 기간 종토방 글이 없습니다(또는 네이버 접근 실패)"}, status_code=502)
-    dates = [x["date"][:10] for x in posts]
-    date_lo, date_hi = min(dates), max(dates)
-    # 조회수 높은 순 = 개미들이 많이 본 글(여론 무게)
-    top = sorted(posts, key=lambda x: (x["views"], x["up"]), reverse=True)
-    total_views = sum(x["views"] for x in posts)
-    # 상위 글 본문을 Playwright로 렌더링해 실제 내용까지 분석
-    bodies = await run_in_threadpool(_naver_post_bodies, code, top, 6)
-    for x in top:
-        x["body"] = bodies.get(x.get("nid"), "")
+    try:
+        posts = await run_in_threadpool(_naver_board_posts, code, period)
+        if not posts:
+            return JSONResponse(content={"error": "해당 기간 종토방 글이 없습니다(또는 네이버 접근 실패)"}, status_code=502)
+        dates = [x["date"][:10] for x in posts]
+        date_lo, date_hi = min(dates), max(dates)
+        # 조회수 높은 순 = 개미들이 많이 본 글(여론 무게)
+        top = sorted(posts, key=lambda x: (x["views"], x["up"]), reverse=True)
+        total_views = sum(x["views"] for x in posts)
+        # 상위 글 본문을 Playwright로 렌더링해 실제 내용까지 분석
+        bodies = await run_in_threadpool(_naver_post_bodies, code, top, 6)
+        for x in top:
+            x["body"] = bodies.get(x.get("nid"), "")
+    except Exception as e:
+        return JSONResponse(content={"error": f"종토방 분석 실패(크롤링): {str(e)[:160]}"}, status_code=500)
 
     def _analyze():
         try:

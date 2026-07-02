@@ -76,6 +76,25 @@ def list_people() -> list[dict]:
     return out
 
 
+# ── 3버킷 (사용자 정의: 시장인사이트 · 종목선정방법 · 섹터종목재료) ──
+def market_insight(name: str, days: int = 30, limit: int = 40) -> list[dict]:
+    """1. 시장 생각 인사이트 — market/macro 레벨 원자 타임라인."""
+    return [_slim(a) for a in atoms_for(
+        name, asset_levels=["market", "macro"], days=days, limit=limit)]
+
+
+def methods(name: str, days: int = 120, limit: int = 60) -> list[dict]:
+    """2. 종목선정·매매 방법론 — method 레벨 원자."""
+    return [_slim(a) for a in atoms_for(
+        name, asset_levels=["method"], days=days, limit=limit)]
+
+
+def materials(name: str, query: str = None, days: int = 90, limit: int = 60) -> list[dict]:
+    """3. 섹터·종목 재료 — stock/sector 레벨 원자. query로 종목/섹터 검색(꺼내쓰기)."""
+    return [_slim(a) for a in atoms_for(
+        name, asset_levels=["stock", "sector"], asset=query, days=days, limit=limit)]
+
+
 def person_view(name: str) -> dict:
     """한 사람의 브레인 전체 뷰."""
     cfg = get_person(name)  # 없으면 KeyError
@@ -89,6 +108,9 @@ def person_view(name: str) -> dict:
         "skeleton_md": _skeleton_md(cfg),
         "live_stance": [_slim(a) for a in
                         atoms_for(name, stance_only=True, days=60, limit=60)],
+        "market_insight": market_insight(name),   # 1. 시장 인사이트
+        "methods": methods(name),                 # 2. 종목선정 방법
+        "materials": materials(name, limit=40),    # 3. 섹터·종목 재료 (기본)
         "speech_log": [_slim(a) for a in
                        atoms_for(name, days=14, limit=50)],
     }
