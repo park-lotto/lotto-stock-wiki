@@ -83,6 +83,20 @@ def test_materials_query_filters_by_stock():
     assert got[0]["asset"] == "삼성전자"
 
 
+def test_recent_mentioned_assets_tokenizes():
+    insert_atom(_atom(id="m1", asset_level="stock", asset="삼성전자"))
+    insert_atom(_atom(id="m2", asset_level="stance", asset="삼성전자, 하이닉스"))
+    insert_atom(_atom(id="m3", asset_level="stock", asset="티에스이"))
+    got = bv._recent_mentioned_assets("테스트채널", days=7)
+    assert "삼성전자" in got and "하이닉스" in got and "티에스이" in got
+
+
+def test_match_substring():
+    assert bv._match("삼성전자", "삼성전자")
+    assert bv._match("삼성전자", "삼성전자, 하이닉스")
+    assert not bv._match("삼성전자", "SK하이닉스")
+
+
 def test_person_view_unknown_raises():
     with pytest.raises(KeyError):
         bv.person_view("없는채널")

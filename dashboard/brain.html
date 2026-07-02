@@ -99,6 +99,9 @@
   .cand .ccode{font-size:.68rem;color:var(--muted);font-weight:400}
   .cand .crsn{font-size:.74rem;color:#c4b98a;margin-top:3px;line-height:1.4}
   .cand.leader{border-left-color:#e05a5a;background:#1a1315}
+  .valbox{border:1px solid var(--gold-dim);border-radius:9px;padding:9px 13px;margin:6px 0 12px;
+    font-size:.8rem;color:#d4d2cc;background:#14130e}
+  .valbox b{color:var(--gold)}
 </style>
 </head>
 <body>
@@ -190,12 +193,21 @@ async function loadSelection(enc){
     const funnel = (s.funnel||[]).map(f=>`<span class="fstep">${esc(f.step)} <b>${f.count}</b></span>`).join(" → ");
     const cards = (s.candidates||[]).map(c=>`
       <div class="cand${c.is_leader?' leader':''}">
-        <div class="cnm">${c.is_leader?'🔥 ':''}${esc(c.name)} <span class="ccode">${esc(c.code)}</span></div>
+        <div class="cnm">${c.he_mentioned?'✓ ':''}${c.is_leader?'🔥 ':''}${esc(c.name)} <span class="ccode">${esc(c.code)}</span></div>
         <div class="crsn">${esc(c.reason)}${c.tp_target?` · 목표 ${Number(c.tp_target).toLocaleString()}`:""}</div>
       </div>`).join("");
+    const val = s.validation;
+    const valHtml = val ? `
+      <div class="valbox">
+        ✓ 검증 — 그가 최근 ${val.mention_days}일 언급 ${val.mentioned_count}종목 중 퍼널 일치
+        <b>${(val.matched||[]).length}개</b> (${(val.matched||[]).map(esc).join(', ')||'—'})
+        · 적중률 ${val.hit_rate!=null?Math.round(val.hit_rate*100)+'%':'—'}
+        <div class="cnt" style="margin-top:4px">그는 언급했으나 퍼널이 놓침(튜닝힌트): ${(val.missed||[]).map(esc).join(', ')||'—'}</div>
+      </div>` : "";
     box.innerHTML = `
       <div class="cnt">${esc(s.date||'')} · ${esc(s.note||'')}</div>
       <div class="funnel">${funnel}</div>
+      ${valHtml}
       <div class="cands">${cards}</div>`;
   }catch(e){ box.innerHTML = "<div class='cnt'>선정 불러오기 실패</div>"; }
 }

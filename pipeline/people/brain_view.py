@@ -95,15 +95,47 @@ def materials(name: str, query: str = None, days: int = 90, limit: int = 60) -> 
         name, asset_levels=["stock", "sector"], asset=query, days=days, limit=limit)]
 
 
-def today_selection(name: str) -> dict:
-    """복사: 그의 규칙을 오늘 데이터에 적용한 종목선정 재현.
+def _recent_mentioned_assets(name: str, days: int = 3) -> set:
+    """그가 최근 실제 언급/스탠스한 종목명 집합 (검증용)."""
+    out = set()
+    for a in atoms_for(name, asset_levels=["stock", "stance"], days=days, limit=200):
+        for tok in (a.get("asset") or "").replace("/", ",").split(","):
+            tok = tok.strip()
+            if tok and len(tok) >= 2:
+                out.add(tok)
+    return out
+
+
+def _match(a: str, b: str) -> bool:
+    return a in b or b in a
+
+
+def today_selection(name: str, mention_days: int = 3) -> dict:
+    """복사: 그의 규칙을 오늘 데이터에 적용한 종목선정 재현 + 검증(그의 실제 언급 대조).
     데이터 파일(taerini_stock.json 등) 연결된 채널만 가능."""
     cfg = get_person(name)
     if not cfg.get("data_files"):
         return {"available": False,
                 "note": "이 채널은 데이터 파일 연결이 없어(발언만) 종목선정 재현 불가"}
     from pipeline.people.funnel import select
-    return {"available": True, **select()}
+    sel = select()
+
+    # 검증 — 퍼널 후보가 그가 실제 최근 언급한 종목과 얼마나 겹치나
+    mentioned = _recent_mentioned_assets(name, days=mention_days)
+    cand_names = [c["name"] for c in sel["candidates"]]
+    for c in sel["candidates"]:
+        c["he_mentioned"] = any(_match(c["name"], m) for m in mentioned)
+    matched = [n for n in cand_names if any(_match(n, m) for m in mentioned)]
+    missed = sorted(m for m in mentioned
+                    if not any(_match(m, n) for n in cand_names))
+    sel["validation"] = {
+        "mention_days": mention_days,
+        "mentioned_count": len(mentioned),
+        "matched": matched,          # 퍼널이 뽑았고 그도 언급 (일치)
+        "missed": missed[:25],       # 그는 언급했으나 퍼널이 놓침 (튜닝 힌트)
+        "hit_rate": (round(len(matched) / len(cand_names), 2) if cand_names else None),
+    }
+    return {"available": True, **sel}
 
 
 def person_view(name: str) -> dict:
