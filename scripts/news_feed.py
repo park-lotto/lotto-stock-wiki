@@ -69,15 +69,21 @@ def sector_news(code, kw_map=None, top: int = 2) -> list:
         return []
     must = m.get("must") or []
     now = datetime.now(timezone.utc)
-    # sort=date만 쓰면 그날 시황 헤드라인(반도체·매크로 등)에 밀려 관련기사가 0건인 섹터가 생김
-    # → sort=sim(연관도)도 함께 조회해 후보 풀을 넓힌 뒤 must필터로 걸러낸다.
+    # "OO 관련주" 단일쿼리는 약해서 일반 시황만 잡힘(자동차 사례). must의 구체적 종목명
+    # (현대차·기아 등)으로 만든 보조쿼리를 추가해 신선한 섹터기사를 확보한다.
+    queries = [q]
+    named = [w for w in must[1:] if len(w) >= 2][:3]   # must[0]=섹터 일반어라 제외, 이후=종목/고유명
+    if named:
+        queries.append(" ".join(named[:2]))
+    # sort=date + sim 둘 다 조회해 후보 풀 확대 후 must필터로 걸러낸다.
     seen_urls, items = set(), []
-    for it in _search(q, display=20, sort="date") + _search(q, display=20, sort="sim"):
-        u = it.get("originallink") or it.get("link") or it.get("title")
-        if u in seen_urls:
-            continue
-        seen_urls.add(u)
-        items.append(it)
+    for qq in queries:
+        for it in _search(qq, display=15, sort="date") + _search(qq, display=15, sort="sim"):
+            u = it.get("originallink") or it.get("link") or it.get("title")
+            if u in seen_urls:
+                continue
+            seen_urls.add(u)
+            items.append(it)
     ranked = []
     for it in items:
         t = _clean(it.get("title", ""))
