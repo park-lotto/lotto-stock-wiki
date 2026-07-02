@@ -654,6 +654,13 @@ def api_brain_ask(person: str, q: str = ""):
     return JSONResponse(content=stock_verdict(person, q.strip()))
 
 
+@app.get("/api/brain/{person}/market_verdict")
+def api_brain_market_verdict(person: str):
+    """질의 엔진: '지금 시장 비중 높일까/낮출까?'"""
+    from pipeline.people.persona import market_verdict
+    return JSONResponse(content=market_verdict(person))
+
+
 @app.get("/api/brain/{person}/selection")
 def api_brain_selection(person: str):
     """복사: 그의 규칙으로 오늘의 종목선정 재현."""

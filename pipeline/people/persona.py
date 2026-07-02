@@ -121,6 +121,50 @@ def stock_verdict(person: str, stock: str) -> dict:
     }
 
 
+def decide_posture(bull: int, bear: int, has_cash: bool, has_defensive: bool) -> str:
+    """비중/현금 자세 판정 — 순수 함수."""
+    if bear > bull and (has_cash or has_defensive):
+        return "방어 (비중 축소·현금 확대 성향)"
+    if bull > bear and not has_defensive:
+        return "공격 (비중 유지·확대 성향)"
+    return "중립·선별 (섹터 갈아타기)"
+
+
+def market_verdict(person: str) -> dict:
+    """지금 시장 자세 — 비중 높일까 낮출까?"""
+    from collections import Counter
+    from pipeline.people.brain_view import market_insight
+    from pipeline.people.people_query import atoms_for
+
+    mkt = market_insight(person, days=10, limit=20)
+    recent = atoms_for(person, days=7, limit=300)
+    sig = Counter((a.get("signal") or "neutral") for a in recent)
+    bull = sig.get("bullish", 0)
+    bear = sig.get("bearish", 0) + sig.get("risk", 0)
+    cash = [a for a in recent if "현금" in (a.get("content") or "")]
+    defensive = [a for a in recent if "이탈" in (a.get("content") or "")
+                 and ("축소" in a["content"] or "줄" in a["content"])]
+
+    posture = decide_posture(bull, bear, bool(cash), bool(defensive))
+    reason = [
+        f"[데이터] 최근7일 신호 — 긍정 {bull} · 부정/리스크 {bear} · "
+        f"현금언급 {len(cash)} · 이평선이탈축소 {len(defensive)}",
+    ]
+    reason.append(f"[추론] 그의 규칙(이평선 이탈→현금, 가속구간→비중확대)상 현재 → {posture}")
+    if cash:
+        reason.append(f"[발언] 현금 관련({cash[0]['date']}): {cash[0]['content'][:80]}")
+    elif mkt:
+        reason.append(f"[발언] 시장({mkt[0]['date']}): {mkt[0]['content'][:80]}")
+    return {
+        "query": "지금 시장 (비중 높일까/낮출까)",
+        "verdict": posture,
+        "data": {"bullish": bull, "bearish_risk": bear,
+                 "cash_mentions": len(cash), "defensive": len(defensive)},
+        "quotes": [{"date": a["date"], "content": a["content"]} for a in mkt[:5]],
+        "reason": reason,
+    }
+
+
 if __name__ == "__main__":
     if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")

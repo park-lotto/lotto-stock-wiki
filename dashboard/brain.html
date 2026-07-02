@@ -346,6 +346,7 @@ function render(v){
         <input id="askq" placeholder="종목명 입력 (예: 삼성전자, 티에스이, 파마리서치)" onkeydown="if(event.key==='Enter')askPersona()"
           style="flex:1;padding:9px 12px;background:#0b0b0d;border:1px solid var(--gold-dim);border-radius:8px;color:var(--txt);font-size:.9rem">
         <button onclick="askPersona()" style="padding:9px 20px;border-radius:8px;border:1px solid var(--gold-dim);background:var(--gold);color:#000;font-weight:700;cursor:pointer">물어보기</button>
+        <button onclick="askMarket()" style="padding:9px 16px;border-radius:8px;border:1px solid var(--gold-dim);background:transparent;color:var(--gold);font-weight:600;cursor:pointer;white-space:nowrap">지금 시장은?</button>
       </div>
       <div id="askanswer"></div>
     </div>
@@ -403,14 +404,9 @@ function render(v){
     </div>`;
 }
 
-const VERDICT_COLOR = {"탑픽 후보":"#e05a5a","관심":"#e0a24a","관망":"#9a9aa2"};
-async function askPersona(){
-  if(!SELECTED) return;
-  const q = document.getElementById("askq").value.trim(); if(!q) return;
+const VERDICT_COLOR = {"탑픽 후보":"#e05a5a","관심":"#e0a24a","관망":"#9a9aa2","방어":"#4a86e8","공격":"#e05a5a","중립":"#e0a24a"};
+function renderAnswer(v, title){
   const box = document.getElementById("askanswer");
-  box.innerHTML = "<div class='cnt' style='margin-top:8px'>생각 중…</div>";
-  const r = await fetch("/api/brain/"+encodeURIComponent(SELECTED)+"/ask?q="+encodeURIComponent(q));
-  const v = await r.json();
   if(v.error){ box.innerHTML=`<div class='cnt'>${esc(v.error)}</div>`; return; }
   const vc = Object.keys(VERDICT_COLOR).find(k=>(v.verdict||"").startsWith(k));
   const color = VERDICT_COLOR[vc] || "var(--muted)";
@@ -419,10 +415,23 @@ async function askPersona(){
     return `<div class="${cls}">${esc(rs)}</div>`;
   }).join("");
   box.innerHTML = `<div class="answer">
-    <div class="verdict" style="color:${color};border-color:${color}">${esc(v.stock||q)} → ${esc(v.verdict)}</div>
+    <div class="verdict" style="color:${color};border-color:${color}">${esc(title)} → ${esc(v.verdict)}</div>
     ${reasons}
-    ${(v.quotes&&v.quotes.length>1)?`<div class="cnt" style="margin-top:6px">그의 관련 발언 ${v.quotes.length}건 (재료 검색에서 더 보기)</div>`:""}
+    ${(v.quotes&&v.quotes.length>1)?`<div class="cnt" style="margin-top:6px">그의 관련 발언 ${v.quotes.length}건</div>`:""}
   </div>`;
+}
+async function askPersona(){
+  if(!SELECTED) return;
+  const q = document.getElementById("askq").value.trim(); if(!q) return;
+  document.getElementById("askanswer").innerHTML = "<div class='cnt' style='margin-top:8px'>생각 중…</div>";
+  const v = await (await fetch("/api/brain/"+encodeURIComponent(SELECTED)+"/ask?q="+encodeURIComponent(q))).json();
+  renderAnswer(v, v.stock||q);
+}
+async function askMarket(){
+  if(!SELECTED) return;
+  document.getElementById("askanswer").innerHTML = "<div class='cnt' style='margin-top:8px'>생각 중…</div>";
+  const v = await (await fetch("/api/brain/"+encodeURIComponent(SELECTED)+"/market_verdict")).json();
+  renderAnswer(v, "지금 시장 (비중)");
 }
 
 function toggleAdd(){document.getElementById("addform").classList.toggle("open");}
