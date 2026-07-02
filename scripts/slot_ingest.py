@@ -77,29 +77,38 @@ def run(cmd: list[str], label: str) -> tuple[int, str]:
     return code, output
 
 
-def ingest_cat(cat: str, date: str, extra_date: str | None = None) -> None:
+def ingest_cat(cat: str, date: str, extra_date: str | None = None) -> str:
     """카테고리별 인제스트.
     - 텔레는 날짜 단위 파일이라 date + extra_date(전날) 모두 --force-date 처리
     - 유튜브/블로그는 sync 후 파일 목록 기반이라 자동으로 전날분 포함
+    반환값: 이번 호출에서 실행된 서브프로세스 출력을 모두 이어붙인 문자열(진단용).
     """
+    parts: list[str] = []
     if cat == "telegram":
-        # 전날 먼저 처리(공백 보완) → 당일 처리
         if extra_date:
-            run([PY, "-m", "pipeline.atoms.telegram_ingest",
-                 "--all", "--force-date", extra_date, "--limit", "40"], f"telegram-{extra_date[5:]}")
-        run([PY, "-m", "pipeline.atoms.telegram_ingest",
-             "--all", "--force-date", date, "--limit", "40"], f"telegram-{date[5:]}")
+            _, out = run([PY, "-m", "pipeline.atoms.telegram_ingest",
+                          "--all", "--force-date", extra_date, "--limit", "40"],
+                         f"telegram-{extra_date[5:]}")
+            parts.append(out)
+        _, out = run([PY, "-m", "pipeline.atoms.telegram_ingest",
+                      "--all", "--force-date", date, "--limit", "40"],
+                     f"telegram-{date[5:]}")
+        parts.append(out)
     elif cat == "youtube":
-        run([PY, "-m", "pipeline.atoms.post_ingest", "--source", "youtube",
-             "--all", "--limit", "60"], "youtube")
+        _, out = run([PY, "-m", "pipeline.atoms.post_ingest", "--source", "youtube",
+                      "--all", "--limit", "60"], "youtube")
+        parts.append(out)
     elif cat == "blog":
-        run([PY, "-m", "pipeline.atoms.post_ingest", "--source", "blog",
-             "--all", "--limit", "60"], "blog")
+        _, out = run([PY, "-m", "pipeline.atoms.post_ingest", "--source", "blog",
+                      "--all", "--limit", "60"], "blog")
+        parts.append(out)
     elif cat == "report":
-        run([PY, "-m", "pipeline.atoms.report_ingest",
-             "--all", "--limit", "40"], "report")
+        _, out = run([PY, "-m", "pipeline.atoms.report_ingest",
+                      "--all", "--limit", "40"], "report")
+        parts.append(out)
     else:
         print(f"[skip] 알 수 없는 카테고리: {cat}")
+    return "\n".join(parts)
 
 
 def _send_tg(text: str) -> None:
