@@ -580,10 +580,13 @@ def get_night_futures_minutebar(interval: int = 15) -> list:
         return []
 
 
-def get_minutebar(code: str, interval: int = 15) -> list:
+def get_minutebar(code: str, interval: int = 15, with_time: bool = False) -> list:
     """종목/ETF 당일 분봉 종가 배열 (오름차순, 최대 30봉).
     interval: 1/5/10/15/30/60
     FID_INPUT_HOUR_1 = 현재 시간 → 미래 빈 봉 제외
+    with_time=True면 [{"t":"HHMMSS","price":...}] 형태로 실제 체결시각 포함 반환
+    (KIS가 요청 interval을 그대로 안 지키고 봉 개수가 들쭉날쭉할 때가 있어,
+     프론트에서 09:00 기준 등간격으로 추정하면 시간축이 틀어짐 — 실제 시각 사용 권장)
     """
     import datetime as _dt
     now_str = _dt.datetime.now().strftime("%H%M%S")
@@ -623,7 +626,7 @@ def get_minutebar(code: str, interval: int = 15) -> list:
         try:
             v = float(row.get("stck_prpr", 0) or 0)
             if v > 0:
-                out.append(v)
+                out.append({"t": _ch, "price": v} if with_time else v)
         except Exception:
             pass
     return out
@@ -678,13 +681,13 @@ def get_minute_bars_ohlc(code: str, tf: str = "5", mdiv: str = "UN") -> list:
 
 
 def get_index_minutebar(index_code: str, interval: int = 15) -> list:
-    """코스피(0001)/코스닥(1001) 지수 분봉 종가 배열 (오름차순).
+    """코스피(0001)/코스닥(1001) 지수 분봉 [{"t":"HHMMSS","price":...}] (오름차순, 실제 체결시각 포함).
     KIS 지수 분봉 API는 별도 구독 필요 → KODEX200/코스닥150 ETF 분봉으로 대체.
     추세(방향) 동일, 절대값만 다름.
     """
     # 코스피 → KODEX 200 (069500), 코스닥 → KODEX 코스닥150 (229200)
     proxy = "069500" if index_code == "0001" else "229200"
-    return get_minutebar(proxy, interval)
+    return get_minutebar(proxy, interval, with_time=True)
 
 
 def get_market_investor(market_div: str = "J") -> dict:

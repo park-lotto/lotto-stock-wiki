@@ -1152,23 +1152,24 @@ function miniLine(bars, rate, w, h){
       <text x="${w/2}" y="${h/2+4}" fill="#333" font-size="10" text-anchor="middle">장 외 시간</text>
     </svg>`;
   }
-  const mn=Math.min(...bars),mx=Math.max(...bars),range=mx-mn||1;
-  const xs=bars.map((_,i)=>Math.round(2+i*(w-4)/(bars.length-1)));
-  const ys=bars.map(v=>Math.round(2+(1-((v-mn)/range))*(h-4)));
+  // bars: [{"t":"HHMMSS","price":...}] (실제 체결시각 포함) 또는 구형 숫자배열 — 둘 다 지원
+  const vals=bars.map(b=>typeof b==="number"?b:Number(b.price||0));
+  const times=bars.map(b=>typeof b==="object"?b.t:null);
+  const mn=Math.min(...vals),mx=Math.max(...vals),range=mx-mn||1;
+  // x좌표: 실제 체결시각을 09:00~15:30 고정축에 매핑 (시각 없으면 인덱스 균등분할로 폴백)
+  const xsRaw=times.map(t=>_sessionX(t,w));
+  const hasTimeB=xsRaw.some(x=>x!==null);
+  const xs=hasTimeB
+    ? xsRaw.map((x,i)=>x!==null?x:Math.round(2+i*(w-4)/(vals.length-1)))
+    : vals.map((_,i)=>Math.round(2+i*(w-4)/(vals.length-1)));
+  const ys=vals.map(v=>Math.round(2+(1-((v-mn)/range))*(h-4)));
   const pts=xs.map((x,i)=>`${x},${ys[i]}`).join(" ");
   const col=rate>0?"#e74c3c":rate<0?"#3498db":"#666";
   const fillPts=`${xs[0]},${h} ${pts} ${xs[xs.length-1]},${h}`;
-  // 시간 눈금: 15분봉 고정 간격(09:00부터) — bars 개수로 전체 장시간에 억지로 늘리지 않음
-  // (예전엔 total로 나눠서 봉 6개뿐이어도 15:30까지 늘어난 것처럼 표시되는 버그가 있었음)
-  function _barTime(idx,total){
-    const min=9*60+idx*15;
-    return`${String(Math.floor(min/60)).padStart(2,'0')}:${String(min%60).padStart(2,'0')}`;
-  }
-  const t0=_barTime(0,bars.length),tM=_barTime(Math.floor(bars.length/2),bars.length),tN=_barTime(bars.length-1,bars.length);
+  // 시간 눈금: 09:00 고정 ~ 15:30 고정 (장중 전체 프레임)
   const timeRow=`<div style="display:flex;justify-content:space-between;margin-top:2px">
-    <span style="font-size:9px;color:#999">${t0}</span>
-    <span style="font-size:9px;color:#999">${tM}</span>
-    <span style="font-size:9px;color:#999">${tN}</span>
+    <span style="font-size:9px;color:#999">09:00</span>
+    <span style="font-size:9px;color:#999">15:30</span>
   </div>`;
   // 종가 깜빡임: 마지막 점 위치(%)에 HTML 점 오버레이 (SVG 늘어남 무관하게 원형 유지)
   const lxp=(xs[xs.length-1]/w*100).toFixed(1), lyp=(ys[ys.length-1]/h*100).toFixed(1);
