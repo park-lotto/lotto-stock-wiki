@@ -13,6 +13,60 @@ _HDR = {
 }
 
 
+def minute_candles(code: str, tf_min: int = 5, count: int = 3000) -> list:
+    """네이버 fchart 분봉(다일치, 1분 종가) → tf_min OHLC 리샘플.
+    fchart는 여러 날치 1분봉을 주지만 종가만(OHLC null) → 버킷 내 1분 종가들로 OHLC 근사
+    (open=첫종가, high=최대, low=최소, close=마지막종가). 시각적으로 실제 캔들과 거의 동일.
+    반환(과거→최신): [{"time"(epoch초·KST-as-UTC), open, high, low, close, value}]
+    """
+    import calendar
+    try:
+        url = (f"https://fchart.stock.naver.com/sise.nhn?symbol={code}"
+               f"&timeframe=minute&count={count}&requestType=0")
+        r = requests.get(url, headers={"User-Agent": _HDR["User-Agent"]}, timeout=12)
+        r.encoding = "euc-kr"
+        items = re.findall(r'data="([^"]+)"', r.text)
+    except Exception:
+        return []
+    tf = tf_min if tf_min and tf_min > 0 else 5
+    buckets = {}
+    for it in items:
+        p = it.split("|")
+        if len(p) < 6 or len(p[0]) < 12:
+            continue
+        try:
+            close = float(p[4])
+        except Exception:
+            continue
+        if close <= 0:
+            continue
+        try:
+            vol = int(float(p[5]))
+        except Exception:
+            vol = 0
+        dt = p[0]
+        Y, Mo, D = int(dt[:4]), int(dt[4:6]), int(dt[6:8])
+        hh, mm = int(dt[8:10]), int(dt[10:12])
+        bmm = (mm // tf) * tf
+        key = (Y, Mo, D, hh, bmm)
+        b = buckets.get(key)
+        if b is None:
+            buckets[key] = {"open": close, "high": close, "low": close, "close": close, "value": vol}
+        else:
+            b["high"] = max(b["high"], close)
+            b["low"] = min(b["low"], close)
+            b["close"] = close
+            b["value"] += vol
+    out = []
+    for key in sorted(buckets):
+        Y, Mo, D, hh, bmm = key
+        epoch = calendar.timegm((Y, Mo, D, hh, bmm, 0, 0, 0, 0))
+        b = buckets[key]
+        out.append({"time": epoch, "open": b["open"], "high": b["high"],
+                    "low": b["low"], "close": b["close"], "value": b["value"]})
+    return out
+
+
 def get_popular_stocks(n: int = 10) -> list:
     """네이버 금융 메인 '인기 검색 종목' 상위 n개.
     반환: [{"rank":1,"code":"005930","name":"삼성전자","price":70000,"change_rate":-1.5}, ...]

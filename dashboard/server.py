@@ -1778,7 +1778,23 @@ def api_stock_candles(code: str = "", tf: str = "D"):
             if tf in ("D", "W", "M"):
                 data = kis_api.get_daily_ohlc(code, tf)
             else:
-                data = kis_api.get_minute_bars_ohlc(code, tf)
+                # 분봉: 네이버 fchart로 '다일치' 캔들 확보(사용자 요청) + 오늘치는 KIS 정밀 OHLC로 덮어씀
+                try:
+                    import naver_api as _nv
+                    data = _nv.minute_candles(code, int(tf))
+                except Exception:
+                    data = []
+                try:
+                    kis_today = kis_api.get_minute_bars_ohlc(code, tf)
+                except Exception:
+                    kis_today = []
+                if data and kis_today:
+                    by_t = {b["time"]: b for b in data}
+                    for b in kis_today:
+                        by_t[b["time"]] = b   # 오늘 버킷을 KIS 정밀값으로 교체
+                    data = [by_t[t] for t in sorted(by_t)]
+                elif not data:
+                    data = kis_today   # fchart 실패 시 오늘치라도
         # ── NXT 반영: 장외(15:30 이후·09시 이전)엔 KIS 통합(UN) 시세를 차트에 이어붙임 ──
         try:
             import datetime as _dt, kis_api
