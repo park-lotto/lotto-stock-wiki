@@ -105,6 +105,10 @@
   .sortino{margin:4px 0 10px;font-size:.8rem;color:var(--muted)}
   .sortino .stag{display:inline-block;background:#132018;border:1px solid #2a4a38;color:#7fd8a0;
     border-radius:20px;padding:2px 10px;margin:2px 3px;font-size:.76rem}
+  .trend{font-size:.8rem;color:var(--muted);margin:2px 0 10px} .trend b{color:var(--gold)}
+  .tbars{display:flex;align-items:flex-end;gap:3px;height:48px;margin-top:5px}
+  .tbar{display:inline-flex;align-items:flex-end;height:48px}
+  .tbar i{display:block;width:9px;background:linear-gradient(var(--gold),var(--gold-dim));border-radius:2px}
 </style>
 </head>
 <body>
@@ -213,9 +217,11 @@ async function loadSelection(enc){
     box.innerHTML = `
       <div class="cnt">${esc(s.date||'')} · ${esc(s.note||'')}</div>
       <div class="funnel">${funnel}</div>
+      <div id="trend"></div>
       ${sortinoHtml}
       ${valHtml}
       <div class="cands">${cards}</div>`;
+    loadTrend(SELECTED);
   }catch(e){ box.innerHTML = "<div class='cnt'>선정 불러오기 실패</div>"; }
 }
 
@@ -256,6 +262,20 @@ function routineHtml(rt){
       ${phases}
       <div class="cnt" style="margin-top:6px">📊 배지 = taerini_stock.json에서 오늘 수치로 자동 채울 수 있는 단계 (다음 단계: 오늘의 루틴 재구성)</div>
     </div>`;
+}
+
+async function loadTrend(name){
+  const el = document.getElementById("trend"); if(!el) return;
+  try{
+    const t = await (await fetch("/api/brain/"+encodeURIComponent(name)+"/trend")).json();
+    if(!t.series || !t.series.length){ el.innerHTML=""; return; }
+    const bars = t.series.slice(-14).map(([d,r])=>{
+      const h = Math.max(3, Math.round((r||0)*44));
+      return `<span class="tbar" title="${esc(d)} ${Math.round((r||0)*100)}%"><i style="height:${h}px"></i></span>`;
+    }).join("");
+    el.innerHTML = `<div class="trend">📈 적중률 추세 <b>${t.days}일</b> · 평균 ${Math.round((t.avg||0)*100)}% · 최근 ${Math.round((t.latest||0)*100)}%
+      <span class="cnt">(높아질수록 그에게 수렴)</span><div class="tbars">${bars}</div></div>`;
+  }catch(e){ el.innerHTML=""; }
 }
 
 function logList(atoms){

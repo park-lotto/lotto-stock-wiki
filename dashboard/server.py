@@ -628,6 +628,13 @@ def api_brain_materials(person: str, q: str = None):
     return JSONResponse(content=materials(person, query=q, days=180, limit=80))
 
 
+@app.get("/api/brain/{person}/trend")
+def api_brain_trend(person: str):
+    """퍼널 적중률 추세 (자동 수렴 확인)."""
+    from pipeline.people.track import trend
+    return JSONResponse(content=trend(person))
+
+
 @app.get("/api/brain/{person}/selection")
 def api_brain_selection(person: str):
     """복사: 그의 규칙으로 오늘의 종목선정 재현."""
