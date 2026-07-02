@@ -852,3 +852,81 @@ Expected: 두 번째 메시지의 "오늘누적" 값이 **1차 메시지보다 �
 대화로 보고한다. 문제 있으면(예: 값이 줄어들거나 리셋됨) Task 6/7 로직을 재검토한다.
 
 ---
+
+### Task 11 (검증 중 발견된 버그 수정): `pipeline` 패키지 import 실패
+
+**배경:** Task 10 1차 실행에서 리포트 카테고리가 실제로는 `Traceback`(report_ingest.py
+자체의 별개 버그, 아래 참고)을 발생시켰는데도 재시도가 전혀 일어나지 않았다. 원인을
+추적한 결과 — `diagnose()`가 내부에서 쓰는 `_atoms_count_today`/`_atoms_count_since`/
+`_trailing_avg`는 각각 `from pipeline.atoms.db import get_conn`을 호출하는데, Task
+Scheduler·사용자 모두 이 스크립트를 `python scripts\slot_ingest.py`(스크립트 모드)로
+실행한다. 스크립트 모드에서는 `sys.path[0]`이 `scripts/` 디렉터리 자신이 되고
+저장소 루트(`pipeline/`이 있는 위치)는 sys.path에 없다. 그 결과 DB 헬퍼 호출 시점에
+`ModuleNotFoundError: No module named 'pipeline'`이 발생하고, 이게 Task 9에서 만든
+카테고리별 `try/except`에 걸려 조용히 `icon="❔"`로만 남는다 — 재시도도, 진짜 판정도
+전혀 일어나지 않는 상태였다. (참고: 이 import 문제는 이번에 새로 만든 코드뿐 아니라
+Task 9에서 삭제한 옛 `send_report()`도 동일하게 갖고 있던 기존 버그로 보이며, 이번
+스펙 범위에서 함께 고친다.)
+
+**Files:**
+- Modify: `scripts/slot_ingest.py` (상단, `ROOT = Path(__file__).parent.parent` 바로 아래)
+- Test: `tests/test_slot_ingest_report.py`
+
+**Interfaces:** 없음(순수 부작용 — sys.path 등록)
+
+- [ ] **Step 1: 실패하는 테스트 작성 — 실제 서브프로세스로 "스크립트 모드" 재현**
+
+`tests/test_slot_ingest_report.py`에 추가:
+
+```python
+import subprocess
+
+
+def test_pipeline_importable_when_run_as_script():
+    """Task Scheduler와 동일한 방식(python scripts/slot_ingest.py)으로 실행했을 때
+    diagnose()가 의존하는 pipeline 패키지가 import 가능해야 한다."""
+    r = subprocess.run(
+        [sys.executable, "-c",
+         "import sys; sys.path.insert(0, r'" + str(ROOT / 'scripts') + "'); "
+         "import slot_ingest; from pipeline.atoms.db import get_conn; print('OK')"],
+        cwd=str(ROOT), capture_output=True, text=True)
+    assert "OK" in r.stdout, f"stdout={r.stdout!r} stderr={r.stderr!r}"
+```
+
+- [ ] **Step 2: 테스트 실패 확인**
+
+Run: `"C:\Users\TheRose\AppData\Local\Python\bin\python.exe" -m pytest tests/test_slot_ingest_report.py::test_pipeline_importable_when_run_as_script -v`
+Expected: FAIL — stderr에 `ModuleNotFoundError: No module named 'pipeline'`
+
+- [ ] **Step 3: 최소 구현 작성**
+
+`scripts/slot_ingest.py`의 `ROOT = Path(__file__).parent.parent` 바로 아래(다른 어떤
+헬퍼보다도 먼저, import 블록 바로 다음)에 추가:
+
+```python
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+```
+
+- [ ] **Step 4: 테스트 통과 확인**
+
+Run: `"C:\Users\TheRose\AppData\Local\Python\bin\python.exe" -m pytest tests/test_slot_ingest_report.py -v`
+Expected: 24 passed (기존 23 + 신규 1)
+
+- [ ] **Step 5: 실제 스크립트 모드로 최종 검증**
+
+Run: `cd "C:\Users\TheRose\Desktop\로또의 주식" && "C:\Users\TheRose\AppData\Local\Python\pythoncore-3.14-64\python.exe" scripts/slot_ingest.py --cats report`
+Expected: 콘솔에 `ModuleNotFoundError` 없음. report_ingest.py 자체의 별개 유니코드
+버그(UnicodeEncodeError, 이 스펙 범위 밖)로 exit=1이 나더라도, 이번엔 `diagnose()`가
+Traceback을 감지해 **재시도(`[report] ... 완료 (exit=1)` 블록이 두 번)** 하는 게
+콘솔에 보여야 한다. 텔레그램 메시지도 "❔"가 아니라 정상적으로 🔴/✅ 상태가 표시돼야
+한다.
+
+- [ ] **Step 6: 커밋**
+
+```bash
+git add scripts/slot_ingest.py tests/test_slot_ingest_report.py
+git commit -m "fix(slot_ingest): 스크립트모드 실행 시 pipeline 패키지 import 실패 수정"
+```
+
+---
