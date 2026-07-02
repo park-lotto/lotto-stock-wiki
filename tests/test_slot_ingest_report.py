@@ -198,7 +198,11 @@ def test_build_report_with_warning_only_no_critical_header():
 
 def test_pipeline_importable_when_run_as_script():
     """Task Scheduler와 동일한 방식(python scripts/slot_ingest.py)으로 실행했을 때
-    diagnose()가 의존하는 pipeline 패키지가 import 가능해야 한다."""
+    diagnose()가 의존하는 pipeline 패키지가 import 가능해야 한다.
+    cwd는 반드시 scripts/ 여야 한다 — cwd=ROOT로 두면 `python -c`가 빈 문자열
+    sys.path[0](=cwd)로 ROOT를 암묵적으로 sys.path에 넣어버려서, slot_ingest.py의
+    실제 수정(sys.path.insert) 없이도 이 테스트가 통과해버리는(가짜 GREEN) 문제가
+    있었다 — 재발 방지를 위해 cwd를 scripts/로 고정한다."""
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
         out_file = f.name
     try:
@@ -207,10 +211,14 @@ def test_pipeline_importable_when_run_as_script():
             f"import slot_ingest; from pipeline.atoms.db import get_conn; "
             f"open(r'{out_file}', 'w').write('OK')"
         )
-        r = subprocess.run(
+        # capture_output=True는 pytest의 stdout 캡처와 충돌해 Windows에서
+        # OSError([WinError 6])를 낼 수 있어(핸들 상속 문제) 쓰지 않는다 —
+        # 결과는 out_file 사이드채널로만 받는다.
+        subprocess.run(
             [sys.executable, "-c", code],
-            cwd=str(ROOT), capture_output=True, text=True, timeout=10)
+            cwd=str(ROOT / "scripts"), stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10)
         result = Path(out_file).read_text().strip() if Path(out_file).exists() else ""
-        assert result == "OK", f"Expected 'OK', got {result!r}. stderr={r.stderr!r}"
+        assert result == "OK", f"Expected 'OK', got {result!r}"
     finally:
         Path(out_file).unlink(missing_ok=True)
