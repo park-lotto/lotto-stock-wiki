@@ -1732,6 +1732,7 @@ function reopenWorkspace() {
   const btn = qs('#ws-resume'); if (btn) btn.classList.remove('show');
   qs('#nbws').classList.add('open');
   loadBriefHistory('ws-brief-history');
+  checkStudioJobs();
 }
 function openWorkspaceLoading(label) {
   const btn = qs('#ws-resume'); if (btn) btn.classList.remove('show');  // 새 세션 시작
@@ -1751,6 +1752,7 @@ function openWorkspace(res, q, autoQ) {
   qs('#nbws').classList.add('open');
   loadWsSources();
   loadBriefHistory('ws-brief-history');
+  checkStudioJobs();
   wsAttachObserver();
   if (autoQ && autoQ.trim()) {
     const inp = qs('#ws-q'); if (inp) inp.value = autoQ.trim();
@@ -1795,6 +1797,7 @@ async function openBriefFromHistory(id, label, url) {
   qs('#nbws').classList.add('open');
   loadWsSources();
   loadBriefHistory('ws-brief-history');
+  checkStudioJobs();
   try {
     const snap = await apiFetch(`/api/insights/history?notebook_id=${encodeURIComponent(id)}`);
     if (snap && snap.html) {
@@ -2355,6 +2358,23 @@ async function wsStudioPoll(nbId, res, body, signal) {
     }
   }
   body.innerHTML = `<div class="nb-studio-ok">🎨 생성이 예상보다 오래 걸립니다. 완료되면 <a href="${res.url}" target="_blank">원본 스튜디오</a>에서 확인하거나 잠시 후 다시 시도하세요.</div>`;
+}
+// ── 워크스페이스 열 때 '생성 중이던 게 있는지' NotebookLM 실제 상태로 재확인 ──
+// (탭을 닫았다 열어도 서버가 아니라 NotebookLM 쪽 상태를 조회하므로 서버 재시작에도 안 끊김)
+async function checkStudioJobs() {
+  const ws = window._ws; if (!ws) return;
+  try {
+    const r = await apiFetch(`/api/insights/studio_jobs?notebook_id=${encodeURIComponent(ws.id)}`);
+    const jobs = (r.jobs || []).filter(j => j.kind === 'infographic' || j.kind === 'slides');
+    for (const j of jobs) {
+      const labels = { infographic: '🖼️ 인포그래픽', slides: '📑 슬라이드' };
+      const head = `${labels[j.kind] || j.kind} <small style="color:var(--muted);font-weight:400">— 이어보는 중</small>`;
+      const card = wsAddCard(head, wsLoading('생성 중… (재접속 — 이어서 확인 중)', true));
+      card._abort = new AbortController();
+      const body = card.querySelector('.ws-card-b');
+      wsStudioPoll(ws.id, { kind: j.kind, artifact_id: j.artifact_id, url: ws.url }, body, card._abort.signal);
+    }
+  } catch(e) {}
 }
 
 async function askNotebook() {

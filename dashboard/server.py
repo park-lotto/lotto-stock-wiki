@@ -3924,6 +3924,46 @@ def _studio_arts(nb_id, types):
     return res
 
 
+_STUDIO_DONE_STATUSES = ("completed", "done", "ready", "success")
+
+
+def _in_progress_studio_jobs(nb_id: str) -> list[dict]:
+    """이 노트북에서 아직 안 끝난(생성 중) 아티팩트를 kind별로 조회.
+    NotebookLM 자체 studio status를 진실의 원천으로 써서, 브라우저 탭을 닫았다 열어도
+    재접속 시 '진행 중이던 게 있었다'를 알 수 있게 한다(서버 프로세스 재시작에도 안 끊김 —
+    로컬 상태를 따로 안 두고 NotebookLM 쪽 상태를 그대로 조회)."""
+    ok, out, _ = _run_nlm(["studio", "status", nb_id])
+    if not ok:
+        return []
+    try:
+        arts = json.loads(out)
+    except Exception:
+        return []
+    type_to_kind = {}
+    for kind, spec in _STUDIO_KINDS.items():
+        for t in spec["types"]:
+            type_to_kind[t] = kind
+    jobs = []
+    for a in arts:
+        status = (a.get("status") or "").lower()
+        kind = type_to_kind.get(a.get("type"))
+        if not kind or status in _STUDIO_DONE_STATUSES or not status:
+            continue
+        jobs.append({"kind": kind, "artifact_id": a.get("id"), "status": status,
+                     "label": _STUDIO_KINDS[kind]["label"]})
+    return jobs
+
+
+@app.get("/api/insights/studio_jobs")
+def api_insights_studio_jobs(notebook_id: str = ""):
+    """워크스페이스 재접속 시 '이미 생성 중이던 게 있는지' 확인용.
+    있으면 프론트가 로딩카드를 다시 붙여서 폴링을 이어간다."""
+    if not notebook_id or not _nlm_exe():
+        return JSONResponse(content={"jobs": []})
+    jobs = _in_progress_studio_jobs(notebook_id)
+    return JSONResponse(content={"jobs": jobs})
+
+
 @app.get("/api/insights/artifact")
 def api_insights_artifact(f: str = ""):
     """생성된 아티팩트(png/pdf/mp3/mp4) 서빙 — out/insights_notebook 한정."""
