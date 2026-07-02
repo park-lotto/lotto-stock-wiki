@@ -174,6 +174,9 @@ def main():
     # 6단계: 매일 건강검진 (정상=1줄/이상=상세 텔레카드)
     r([PYTHON, "-m", "pipeline.atoms.daily_health"], "STEP6 health")
 
+    # 7단계: 사람 브레인 적중률 스냅샷 (퍼널 vs 실제픽 → 이력 누적 → 자동수렴)
+    r([PYTHON, "-m", "pipeline.people.track", "태린이아빠"], "STEP7 brain_snapshot")
+
     # 최종 현황 출력
     print(f"\n{'='*50}")
     print("[atom_pipeline] 완료 — 현황:")
