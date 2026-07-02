@@ -1194,6 +1194,16 @@ function divBar(val, maxAbs){
   </div>`;
 }
 
+// 장중 09:00~15:30 고정축 위에 시각(hh:mm 또는 hhmmss)을 x좌표로 매핑 (범위밖은 clamp)
+const _SESSION_OPEN_MIN=9*60, _SESSION_CLOSE_MIN=15*60+30;
+function _sessionX(hhmm, w){
+  const digits=String(hhmm||"").replace(/[^0-9]/g,"");
+  if(digits.length<4) return null;
+  const mins=parseInt(digits.slice(0,2),10)*60+parseInt(digits.slice(2,4),10);
+  const clamped=Math.max(_SESSION_OPEN_MIN,Math.min(_SESSION_CLOSE_MIN,mins));
+  return 2+((clamped-_SESSION_OPEN_MIN)/(_SESSION_CLOSE_MIN-_SESSION_OPEN_MIN))*(w-4);
+}
+
 function invHistoryChart(history, w, h){
   if(!history||history.length<1) return "";
   const single=history.length===1;
@@ -1201,13 +1211,18 @@ function invHistoryChart(history, w, h){
   w=w||240; h=h||44;
   const keys=["외인","기관","개인"];
   const cols={"외인":"#e8a030","기관":"#2ecc71","개인":"#888"};
+  // x좌표: 인덱스 균등분할이 아니라 09:00~15:30 고정 장중축 위의 실제 시각으로 매핑 (큰그림 고정)
+  const xs=history.map(r=>_sessionX(r.ts,w));
+  const hasTime=xs.some(x=>x!==null);
+  const xsFinal=hasTime
+    ? xs.map((x,i)=>x!==null?x:Math.round(2+i*(w-4)/(history.length-1)))
+    : history.map((_,i)=>Math.round(2+i*(w-4)/(history.length-1)));
   const lines=keys.map(key=>{
     const vals=history.map(r=>Number(r[key]||0));
     const mn=Math.min(...vals),mx=Math.max(...vals),range=mx-mn;
-    const xs=vals.map((_,i)=>Math.round(2+i*(w-4)/(vals.length-1)));
     // range=0(모두 동일값)이면 중앙에 수평선
     const ys=vals.map(v=>range===0?Math.round(h/2):Math.round(2+(1-((v-mn)/range))*(h-4)));
-    const pts=xs.map((x,i)=>`${x},${ys[i]}`).join(" ");
+    const pts=xsFinal.map((x,i)=>`${x},${ys[i]}`).join(" ");
     return`<polyline points="${pts}" fill="none" stroke="${cols[key]}" stroke-width="1.4" opacity=".9"/>`;
   }).join("");
   // 레전드는 SVG 밖 HTML로 (SVG stretch 시 텍스트 찌그러짐 방지)
@@ -1215,14 +1230,11 @@ function invHistoryChart(history, w, h){
     <span style="display:inline-block;width:10px;height:2px;background:${cols[k]};border-radius:1px;vertical-align:middle"></span>
     <span style="font-size:9px;color:${cols[k]}">${k}</span>
   </span>`).join("");
-  // X축 시간 레이블 (첫·끝 ts)
-  const tsList=history.map(r=>r.ts||"").filter(Boolean);
-  const tFirst=tsList[0]||"";
-  const tLast=tsList[tsList.length-1]||"";
-  const timeBar=tFirst?`<div style="display:flex;justify-content:space-between;margin-top:1px">
-    <span style="font-size:8px;color:#444">${tFirst}</span>
-    <span style="font-size:8px;color:#444">${tLast}</span>
-  </div>`:"";
+  // X축 시간 레이블: 09:00 고정 ~ 15:30 고정 (장중 전체 프레임)
+  const timeBar=`<div style="display:flex;justify-content:space-between;margin-top:1px">
+    <span style="font-size:8px;color:#444">09:00</span>
+    <span style="font-size:8px;color:#444">15:30</span>
+  </div>`;
   return`<div>
     <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="display:block;width:100%;height:${h}px">
       <rect width="${w}" height="${h}" fill="#0e0e0e" rx="3"/>
@@ -1556,24 +1568,23 @@ function renderMarketFlow(d){
         const W=240,H=80;
         const vals=progSource.map(r=>Number(r["합계"]||0));
         const mn=Math.min(...vals),mx=Math.max(...vals),range=mx-mn||1;
-        const xs=progSource.map((_,i)=>Math.round(2+i*(W-4)/(progSource.length-1)));
+        // x좌표: 09:00~15:30 고정 장중축 (progSeries는 "t"=HHMMSS, progHist는 "ts"=HH:MM 둘 다 지원)
+        const xsRaw=progSource.map(r=>_sessionX(r.t||r.ts,W));
+        const hasTimeP=xsRaw.some(x=>x!==null);
+        const xs=hasTimeP
+          ? xsRaw.map((x,i)=>x!==null?x:Math.round(2+i*(W-4)/(progSource.length-1)))
+          : progSource.map((_,i)=>Math.round(2+i*(W-4)/(progSource.length-1)));
         const ys=vals.map(v=>Math.round(2+(1-((v-mn)/range))*(H-4)));
         const pts=xs.map((x,i)=>`${x},${ys[i]}`).join(" ");
         const col=prog.합계>=0?"#e74c3c":"#3498db";
         const zeroY=Math.round(2+(1-((0-mn)/range))*(H-4));
         const zeroLine=zeroY>=2&&zeroY<=H-2
           ?`<line x1="0" y1="${zeroY}" x2="${W}" y2="${zeroY}" stroke="#333" stroke-width="1" stroke-dasharray="3,3"/>`:"";
-        const latestT=progSeries.length>=2?(progSeries[progSeries.length-1].t||"").replace(/(\d{2})(\d{2}).*/,"$1:$2"):"";
-        // X축 시간 레이블
-        const tsProg=progSource.map(r=>(r.t||"").replace(/(\d{2})(\d{2}).*/,"$1:$2")).filter(Boolean);
-        const tpFirst=tsProg[0]||"";
-        const tpMid=tsProg[Math.floor(tsProg.length/2)]||"";
-        const tpLast=tsProg[tsProg.length-1]||"";
-        const progTimeRow=tpFirst?`<div style="display:flex;justify-content:space-between;margin-top:2px">
-          <span style="font-size:8px;color:#444">${tpFirst}</span>
-          <span style="font-size:8px;color:#444">${tpMid}</span>
-          <span style="font-size:8px;color:#444">${tpLast}</span>
-        </div>`:"";
+        // X축 시간 레이블: 09:00 고정 ~ 15:30 고정 (장중 전체 프레임)
+        const progTimeRow=`<div style="display:flex;justify-content:space-between;margin-top:2px">
+          <span style="font-size:8px;color:#444">09:00</span>
+          <span style="font-size:8px;color:#444">15:30</span>
+        </div>`;
         progChart=`
           <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="display:block;width:100%;height:${H}px;border-radius:4px;overflow:hidden">
             <rect width="${W}" height="${H}" fill="#0e0e0e" rx="3"/>
