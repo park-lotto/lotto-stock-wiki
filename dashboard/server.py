@@ -628,6 +628,16 @@ def api_brain_materials(person: str, q: str = None):
     return JSONResponse(content=materials(person, query=q, days=180, limit=80))
 
 
+@app.get("/api/brain/{person}/selection")
+def api_brain_selection(person: str):
+    """복사: 그의 규칙으로 오늘의 종목선정 재현."""
+    from pipeline.people.brain_view import today_selection
+    try:
+        return JSONResponse(content=today_selection(person))
+    except KeyError:
+        return JSONResponse(content={"error": "unknown person"}, status_code=404)
+
+
 @app.get("/api/brain/{person}")
 def api_brain_person(person: str):
     from pipeline.people.brain_view import person_view

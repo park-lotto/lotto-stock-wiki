@@ -95,6 +95,17 @@ def materials(name: str, query: str = None, days: int = 90, limit: int = 60) -> 
         name, asset_levels=["stock", "sector"], asset=query, days=days, limit=limit)]
 
 
+def today_selection(name: str) -> dict:
+    """복사: 그의 규칙을 오늘 데이터에 적용한 종목선정 재현.
+    데이터 파일(taerini_stock.json 등) 연결된 채널만 가능."""
+    cfg = get_person(name)
+    if not cfg.get("data_files"):
+        return {"available": False,
+                "note": "이 채널은 데이터 파일 연결이 없어(발언만) 종목선정 재현 불가"}
+    from pipeline.people.funnel import select
+    return {"available": True, **select()}
+
+
 def person_view(name: str) -> dict:
     """한 사람의 브레인 전체 뷰."""
     cfg = get_person(name)  # 없으면 KeyError

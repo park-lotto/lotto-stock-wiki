@@ -89,6 +89,15 @@
     padding:1px 7px;margin-top:5px}
   .rstep .rbody{font-size:.8rem;color:#c4c2bc;line-height:1.5}
   .rstep .rq{color:var(--gold-dim)} .rstep .rr{color:#d88}
+  /* 오늘의 종목선정 */
+  .funnel{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0 12px;font-size:.78rem;color:var(--muted)}
+  .funnel .fstep{background:var(--panel2);border:1px solid var(--line);border-radius:20px;padding:3px 11px}
+  .funnel .fstep b{color:var(--gold)}
+  .cands{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+  .cand{border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:9px;padding:9px 12px;background:var(--panel)}
+  .cand .cnm{font-size:.9rem;font-weight:600;color:var(--txt)}
+  .cand .ccode{font-size:.68rem;color:var(--muted);font-weight:400}
+  .cand .crsn{font-size:.74rem;color:#c4b98a;margin-top:3px;line-height:1.4}
 </style>
 </head>
 <body>
@@ -167,6 +176,27 @@ async function selectPerson(enc){
   if(!r.ok){main.innerHTML="<div class='empty'>불러오기 실패</div>";return;}
   const v = await r.json();
   render(v);
+  loadSelection(enc);
+}
+
+async function loadSelection(enc){
+  const box = document.getElementById("selection");
+  if(!box) return;
+  try{
+    const r = await fetch("/api/brain/"+enc+"/selection");
+    const s = await r.json();
+    if(!s.available){ box.innerHTML = `<div class="cnt">${esc(s.note||'데이터 없음')}</div>`; return; }
+    const funnel = (s.funnel||[]).map(f=>`<span class="fstep">${esc(f.step)} <b>${f.count}</b></span>`).join(" → ");
+    const cards = (s.candidates||[]).map(c=>`
+      <div class="cand">
+        <div class="cnm">${esc(c.name)} <span class="ccode">${esc(c.code)}</span></div>
+        <div class="crsn">${esc(c.reason)}${c.tp_target?` · 목표 ${Number(c.tp_target).toLocaleString()}`:""}</div>
+      </div>`).join("");
+    box.innerHTML = `
+      <div class="cnt">${esc(s.date||'')} · ${esc(s.note||'')}</div>
+      <div class="funnel">${funnel}</div>
+      <div class="cands">${cards}</div>`;
+  }catch(e){ box.innerHTML = "<div class='cnt'>선정 불러오기 실패</div>"; }
 }
 
 function stanceCard(a){
@@ -234,6 +264,11 @@ function render(v){
       <span class="sub">신뢰 ${esc(v.trust)} · 추적 ${esc(v.tracking_since||'')} · 소스 ${v.sources.map(esc).join(', ')}</span>
     </div>
     ${routineHtml(v.routine)}
+
+    <div class="sec" id="selection-sec">
+      <div class="lbl">🎯 오늘의 종목선정 <span class="cnt">— 그의 규칙(수급빈집×컨센상향)을 오늘 데이터로 재현 = "시스템 복사"</span></div>
+      <div id="selection"><div class="cnt">불러오는 중…</div></div>
+    </div>
 
     <div class="sec">
       <div class="lbl">📈 1. 시장 인사이트 <b>${(v.market_insight||[]).length}</b> <span class="cnt">— 그의 시장·매크로 생각 (쌓임)</span></div>
