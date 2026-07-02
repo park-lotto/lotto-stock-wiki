@@ -71,6 +71,35 @@ def _nb_registry_add(entry):
     _save_nb_registry(reg)
 
 
+# 스탁브레인 스튜디오 — 사용자 커스텀 프롬프트 버튼 (추가/삭제/수정 가능)
+_STUDIO_PRESETS_PATH = os.path.join(HERE, "studio_presets.json")
+_DEFAULT_STUDIO_PRESETS = [
+    {"id": "paper", "icon": "📰", "label": "한장요약(주린이)", "prompt": "한 장으로 핵심만, 주식 초보(주린이)도 이해하게 쉬운 비유와 큰 숫자 위주로"},
+    {"id": "invest", "icon": "💹", "label": "투자관점", "prompt": "투자 관점에서 핵심 포인트·기회·리스크를 중심으로"},
+    {"id": "data", "icon": "📊", "label": "데이터강조", "prompt": "수치·비교·비율을 강조해 데이터 중심으로"},
+    {"id": "top5", "icon": "🎯", "label": "핵심5개", "prompt": "가장 중요한 5가지만 추려 간결하게"},
+    {"id": "easy", "icon": "🗣️", "label": "쉽게설명", "prompt": "전문용어 없이 쉽게, 비유를 들어서 설명"},
+    {"id": "stock", "icon": "📈", "label": "종목중심", "prompt": "언급된 종목별로 정리하고 종목명·목표가를 강조"},
+]
+
+
+def _load_studio_presets():
+    try:
+        with open(_STUDIO_PRESETS_PATH, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        _save_studio_presets(_DEFAULT_STUDIO_PRESETS)
+        return list(_DEFAULT_STUDIO_PRESETS)
+
+
+def _save_studio_presets(presets):
+    try:
+        with open(_STUDIO_PRESETS_PATH, "w", encoding="utf-8") as f:
+            json.dump(presets, f, ensure_ascii=False, indent=1)
+    except Exception:
+        pass
+
+
 def _env_key(name):
     """환경변수 우선, 없으면 .env에서 읽기."""
     v = os.environ.get(name)
@@ -92,6 +121,19 @@ def _gemini_interactive_keys():
     _1·_2(기존)+_3·_4(추가계정) 순으로 failover."""
     return [k for k in (_env_key("GEMINI_API_KEY"), _env_key("GEMINI_API_KEY_2"),
                         _env_key("GEMINI_API_KEY_3"), _env_key("GEMINI_API_KEY_4")) if k]
+
+
+def _summary_keys():
+    """뉴스요약용 키 풀 — 대화형 키 + 인제스트 키(GEMINI_INGEST_KEY*)까지 총동원해 429 쿼터 여유 확보.
+    프리워밍이 여러 섹터를 도는 만큼 키가 많아야 무료 쿼터가 안 터진다."""
+    ks = _gemini_interactive_keys() + [
+        _env_key("GEMINI_INGEST_KEY"), _env_key("GEMINI_INGEST_KEY_2"),
+        _env_key("GEMINI_INGEST_KEY_3"), _env_key("GEMINI_INGEST_KEY_4")]
+    seen, out = set(), []
+    for k in ks:
+        if k and k not in seen:
+            seen.add(k); out.append(k)
+    return out
 
 
 # 텍스트 생성 모델 폴백: 프리뷰(최고품질) → 안정모델. 프리뷰가 503 과부하일 때 안정모델로 자동 전환.
@@ -175,6 +217,57 @@ CLAUDE_BIN = shutil.which("claude") or r"C:\Users\TheRose\.local\bin\claude.exe"
 AGENT_TIMEOUT = 240  # 초
 
 app = FastAPI(title="딸깍 대시보드")
+
+
+@app.get("/api/insights/studio_presets")
+def api_studio_presets_list():
+    return JSONResponse(content={"presets": _load_studio_presets()})
+
+
+@app.post("/api/insights/studio_presets/add")
+async def api_studio_presets_add(req: Request):
+    b = await req.json()
+    icon = (b.get("icon") or "✨").strip()[:4] or "✨"
+    label = (b.get("label") or "").strip()[:20]
+    prompt_text = (b.get("prompt") or "").strip()
+    if not label or not prompt_text:
+        return JSONResponse(content={"ok": False, "error": "제목/프롬프트 필요"}, status_code=400)
+    presets = _load_studio_presets()
+    presets.append({"id": "custom_" + uuid.uuid4().hex[:10], "icon": icon, "label": label, "prompt": prompt_text})
+    _save_studio_presets(presets)
+    return JSONResponse(content={"ok": True, "presets": presets})
+
+
+@app.post("/api/insights/studio_presets/update")
+async def api_studio_presets_update(req: Request):
+    b = await req.json()
+    pid = (b.get("id") or "").strip()
+    presets = _load_studio_presets()
+    found = False
+    for p in presets:
+        if p.get("id") == pid:
+            if b.get("icon"):
+                p["icon"] = b["icon"].strip()[:4]
+            if b.get("label"):
+                p["label"] = b["label"].strip()[:20]
+            if b.get("prompt"):
+                p["prompt"] = b["prompt"].strip()
+            found = True
+            break
+    if not found:
+        return JSONResponse(content={"ok": False, "error": "항목 없음"}, status_code=404)
+    _save_studio_presets(presets)
+    return JSONResponse(content={"ok": True, "presets": presets})
+
+
+@app.post("/api/insights/studio_presets/delete")
+async def api_studio_presets_delete(req: Request):
+    b = await req.json()
+    pid = (b.get("id") or "").strip()
+    presets = [p for p in _load_studio_presets() if p.get("id") != pid]
+    _save_studio_presets(presets)
+    return JSONResponse(content={"ok": True, "presets": presets})
+
 
 # ── 로그인 게이트 (지인 배포용) — 자격증명은 환경변수로만, repo에 안 올림 ──
 import hmac as _hmac, hashlib as _hashlib
@@ -1298,7 +1391,7 @@ def _gen_sector_summary(etf: str = "", codes: str = "", title: str = "") -> dict
     key = f"etf:{etf}" if etf else f"codes:{codes}"
     now = time.time()
     c = _sector_summary_cache.get(key)
-    if c and now - c["ts"] < 900:
+    if c and now - c["ts"] < 1800:  # 30분 캐시(쿼터 절약)
         return c["data"]
     import sys as _sys
     _sd = os.path.join(ROOT, "scripts")
@@ -1369,7 +1462,9 @@ def _gen_sector_summary(etf: str = "", codes: str = "", title: str = "") -> dict
         "**👀 관전 포인트**: 투자자가 뭘 봐야 하는지 한 줄\n\n"
         "규칙: 헤드라인에 있는 사실만 사용. 양면론·'관망하라' 금지. 과장·추천 금지. 존댓말로 간결하게."
     )
-    res = _gemini_text(prompt)
+    # 쿼터 여유: 키 6개 총동원 + 무료쿼터 넉넉한 gemini-2.5-flash 우선(프리뷰는 폴백)
+    res = _gemini_text(prompt, keys=_summary_keys(),
+                       models=["gemini-2.5-flash", "gemini-3-flash-preview"])
     out = {"summary": res.get("analysis", ""), "model": res.get("model", ""),
            "error": res.get("error", ""), "sources": len(uniq)}
     if out["summary"]:
@@ -1393,13 +1488,17 @@ def _summary_prewarm():
                     etfs = []
                 for e in etfs:
                     try:
-                        _gen_sector_summary(etf=e.get("code", ""), title=e.get("name", ""))
+                        r = _gen_sector_summary(etf=e.get("code", ""), title=e.get("name", ""))
+                        # 429(쿼터소진) 뜨면 이번 사이클 중단 — 계속 때리면 쿼터 더 막힘
+                        if r and "429" in str(r.get("error", "")):
+                            time.sleep(120)
+                            break
                     except Exception:
                         pass
-                    time.sleep(8)    # Gemini 부하 분산 (캐시 hit이면 즉시 지나감)
-            time.sleep(180)
+                    time.sleep(12)   # Gemini 부하 분산(캐시 hit이면 즉시 지나감). 30분 캐시라 대부분 hit
+            time.sleep(300)          # 사이클 간 5분(쿼터 절약)
         except Exception:
-            time.sleep(180)
+            time.sleep(300)
 
 threading.Thread(target=_summary_prewarm, daemon=True).start()
 
