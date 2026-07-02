@@ -98,6 +98,7 @@
   .cand .cnm{font-size:.9rem;font-weight:600;color:var(--txt)}
   .cand .ccode{font-size:.68rem;color:var(--muted);font-weight:400}
   .cand .crsn{font-size:.74rem;color:#c4b98a;margin-top:3px;line-height:1.4}
+  .cand.leader{border-left-color:#e05a5a;background:#1a1315}
 </style>
 </head>
 <body>
@@ -188,8 +189,8 @@ async function loadSelection(enc){
     if(!s.available){ box.innerHTML = `<div class="cnt">${esc(s.note||'데이터 없음')}</div>`; return; }
     const funnel = (s.funnel||[]).map(f=>`<span class="fstep">${esc(f.step)} <b>${f.count}</b></span>`).join(" → ");
     const cards = (s.candidates||[]).map(c=>`
-      <div class="cand">
-        <div class="cnm">${esc(c.name)} <span class="ccode">${esc(c.code)}</span></div>
+      <div class="cand${c.is_leader?' leader':''}">
+        <div class="cnm">${c.is_leader?'🔥 ':''}${esc(c.name)} <span class="ccode">${esc(c.code)}</span></div>
         <div class="crsn">${esc(c.reason)}${c.tp_target?` · 목표 ${Number(c.tp_target).toLocaleString()}`:""}</div>
       </div>`).join("");
     box.innerHTML = `

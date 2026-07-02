@@ -25,6 +25,7 @@ THRESHOLDS = {
     "vacuum_pct_max": 35.0,   # 수급빈집: osc 백분위 이 값 이하 (낮을수록 빈집)
     "min_up_count": 1,        # 컨센/TP 상향: up_count 최소
     "require_up_gt_down": True,  # up_count > down_count 필요
+    "require_leader": False,  # True면 주도주찾기 리스트 종목만 (23개, 강한 필터)
     "top_n": 20,
 }
 
@@ -40,10 +41,14 @@ def _osc_pct(s):
     return o.get("pct")
 
 
-def select(data=None, th=None) -> dict:
-    """오늘의 종목선정 재현. 퍼널 단계별 카운트 + 후보 리스트 반환."""
+def select(data=None, th=None, rs=None) -> dict:
+    """오늘의 종목선정 재현. 퍼널 단계별 카운트 + 후보 리스트 반환.
+    rs=None이면 주도주찾기 시트 로드; 테스트는 rs={} 주입해 파일 I/O 회피."""
     th = {**THRESHOLDS, **(th or {})}
     data = data or _load()
+    if rs is None:
+        from pipeline.people.rs_data import load_rs
+        rs = load_rs()
     stocks = data.get("stocks", {})
     total = len(stocks)
 
@@ -65,12 +70,21 @@ def select(data=None, th=None) -> dict:
             continue
         materialed.append((code, s))
 
-    # 3단계 — 정렬: 빈집 강도(낮은 pct) + 컨센 강도(up_count)
+    # 3단계 — 주도(RS): '주도주찾기' 리스트 매칭 (종목명 기준)
+    leaders = 0
+    if th["require_leader"]:
+        materialed = [(c, s) for c, s in materialed if (s.get("name") or "") in rs]
+
+    # 4단계 — 정렬: 주도주 우선(3M 수익률), 그다음 빈집강도+컨센
     def _score(item):
         _, s = item
         pct = _osc_pct(s) or 100
         up = (s.get("tp") or {}).get("up_count", 0) or 0
-        return (th["vacuum_pct_max"] - pct) + up * 2  # 빈집강도 + 컨센가중
+        rsinfo = rs.get(s.get("name") or "")
+        m3 = (rsinfo or {}).get("m3") or 0
+        is_leader = 1 if rsinfo else 0
+        # 주도주면 큰 가중, 그 안에서 3M 모멘텀 + 빈집 + 컨센
+        return (is_leader * 1000) + m3 + (th["vacuum_pct_max"] - pct) + up * 2
 
     materialed.sort(key=_score, reverse=True)
     top = materialed[: th["top_n"]]
@@ -79,6 +93,11 @@ def select(data=None, th=None) -> dict:
     for code, s in top:
         osc = s.get("osc") or {}
         tp = s.get("tp") or {}
+        rsinfo = rs.get(s.get("name") or "")
+        is_leader = rsinfo is not None
+        if is_leader:
+            leaders += 1
+        lead_txt = f" · 🔥주도주(3M {rsinfo.get('m3')}%)" if is_leader else ""
         candidates.append({
             "code": code,
             "name": s.get("name", code),
@@ -88,20 +107,26 @@ def select(data=None, th=None) -> dict:
             "tp_up": tp.get("up_count"),
             "tp_down": tp.get("down_count"),
             "tp_target": tp.get("target"),
-            "reason": f"수급빈집(pct {osc.get('pct')}) × 컨센상향(↑{tp.get('up_count')}/↓{tp.get('down_count')})",
+            "is_leader": is_leader,
+            "rs_m3": (rsinfo or {}).get("m3"),
+            "rs_m1": (rsinfo or {}).get("m1"),
+            "reason": f"수급빈집(pct {osc.get('pct')}) × 컨센상향(↑{tp.get('up_count')}/↓{tp.get('down_count')}){lead_txt}",
         })
 
     return {
         "date": data.get("date"),
         "thresholds": th,
+        "rs_universe": len(rs),
         "funnel": [
             {"step": "전체 종목", "count": total},
             {"step": f"① 수급빈집 (osc pct ≤ {th['vacuum_pct_max']})", "count": len(vacuum)},
             {"step": "② 컨센/TP 상향 (재료)", "count": len(materialed)},
-            {"step": f"③ 상위 {th['top_n']} 선정", "count": len(top)},
+            {"step": f"③ 상위 {th['top_n']} (주도주 우선 정렬)", "count": len(top)},
+            {"step": "  └ 그중 주도주(RS)", "count": leaders},
         ],
         "candidates": candidates,
-        "note": "그의 규칙(수급빈집×컨센상향) 재현. RS/소라티노(주도섹터) 미반영. 매수추천 아님.",
+        "note": (f"수급빈집 × 컨센상향 × 주도주(RS {len(rs)}종목, 주도주찾기 시트). "
+                 "🔥=주도주 매칭. 소라티노 ETF는 파일 미도착으로 미반영. 매수추천 아님."),
     }
 
 
