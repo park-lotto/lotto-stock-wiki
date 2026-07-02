@@ -90,6 +90,8 @@
   .rstep .rbody{font-size:.8rem;color:#c4c2bc;line-height:1.5}
   .rstep .rq{color:var(--gold-dim)} .rstep .rr{color:#d88}
   .rtoday{color:#7fd8a0;font-size:.8rem;margin-top:4px;font-weight:600}
+  .mtbox{border:1px solid #2a4a38;background:#0e1712;border-radius:9px;padding:9px 13px;margin-bottom:12px}
+  .mtlbl{font-size:.8rem;color:#7fd8a0;font-weight:600;margin-bottom:5px} .mtlbl b{color:var(--gold)}
   /* 오늘의 종목선정 */
   .funnel{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0 12px;font-size:.78rem;color:var(--muted)}
   .funnel .fstep{background:var(--panel2);border:1px solid var(--line);border-radius:20px;padding:3px 11px}
@@ -279,10 +281,14 @@ function routineHtml(rt){
           </div></div>`;
       }).join("")}
     </div>`).join("");
+  const mt = (rt.market_today||[]);
+  const mtHtml = mt.length ? `<div class="mtbox"><div class="mtlbl">🟢 오늘 그의 시장판단 <b>${mt.length}</b></div>
+    ${mt.map(a=>`<div class="log"><span class="ldt">${a.date}</span> ${esc(a.content)}</div>`).join("")}</div>` : "";
   return `
     <div class="sec">
       <div class="lbl">🔄 일일 사고 루틴 <span class="cnt">— 그가 매일 '어떻게' 사고하는가 (${esc(rt.extracted_from||'')})</span></div>
       ${philo?`<ul class="philo">${philo}</ul>`:""}
+      ${mtHtml}
       ${phases}
       <div class="cnt" style="margin-top:6px">📊 배지 = taerini_stock.json에서 오늘 수치로 자동 채울 수 있는 단계 (다음 단계: 오늘의 루틴 재구성)</div>
     </div>`;

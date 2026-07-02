@@ -67,9 +67,10 @@ def test_person_view_splits_stance_and_log():
 def test_three_buckets_by_asset_level():
     insert_atom(_atom(id="mk", asset_level="market", content="시장 조정 우려"))
     insert_atom(_atom(id="mc", asset_level="macro", content="달러 강세"))
-    insert_atom(_atom(id="me", asset_level="method", content="이평선 이탈 시 축소"))
-    insert_atom(_atom(id="st", asset_level="stock", asset="삼성전자", content="삼전 비중 축소"))
-    insert_atom(_atom(id="se", asset_level="sector", sector="반도체", content="반도체 빈집"))
+    insert_atom(_atom(id="me", asset_level="method", content="손절 규칙 준수"))
+    insert_atom(_atom(id="st", asset_level="stock", asset="삼성전자", content="삼성전자 실적 개선"))
+    insert_atom(_atom(id="se", asset_level="sector", sector="반도체", content="반도체 업황 회복"))
+    # market_insight = market/macro 레벨 + 시장키워드 (여기선 mk,mc만; 나머진 키워드 없음)
     assert len(bv.market_insight("테스트채널")) == 2       # market + macro
     assert len(bv.methods("테스트채널")) == 1              # method
     assert len(bv.materials("테스트채널")) == 2            # stock + sector

@@ -77,10 +77,33 @@ def list_people() -> list[dict]:
 
 
 # ── 3버킷 (사용자 정의: 시장인사이트 · 종목선정방법 · 섹터종목재료) ──
+# 시장·매크로 스코프 키워드 (그의 시장판단이 method/stance/sector에 흩어져 있어 내용 기반으로 수집)
+_MARKET_KW = ("주도업종", "현금", "지수", "코스피", "코스닥", "나스닥", "달러", "금리",
+              "환율", "매크로", "시스템 리스크", "시장", "비중 축소", "비중 확대",
+              "이평선", "소라티노", "피어앤그리드", "오실레이터")
+
+
 def market_insight(name: str, days: int = 30, limit: int = 40) -> list[dict]:
-    """1. 시장 생각 인사이트 — market/macro 레벨 원자 타임라인."""
-    return [_slim(a) for a in atoms_for(
-        name, asset_levels=["market", "macro"], days=days, limit=limit)]
+    """1. 시장 생각 인사이트 — market/macro 레벨 + 시장키워드 내용 원자 (흩어진 시장판단 수집)."""
+    seen, out = set(), []
+    # 우선 순수 market/macro
+    pool = atoms_for(name, asset_levels=["market", "macro"], days=days, limit=limit)
+    # + 시장 키워드 포함 원자 (method/stance/sector에 흩어진 시장판단)
+    pool += atoms_for(name, days=days, limit=200)
+    for a in pool:
+        content = a.get("content") or ""
+        lvl = a.get("asset_level")
+        is_market = lvl in ("market", "macro") or any(k in content for k in _MARKET_KW)
+        if not is_market:
+            continue
+        key = content[:50]
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(_slim(a))
+        if len(out) >= limit:
+            break
+    return out
 
 
 def methods(name: str, days: int = 120, limit: int = 60) -> list[dict]:
@@ -141,12 +164,11 @@ def routine_today(name: str) -> dict | None:
             dk = [k.strip() for k in (step.get("data_key") or "").split(",") if k.strip()]
             step["today"] = list(dict.fromkeys(metrics[k] for k in dk if k in metrics))
 
-    market = atoms_for(name, asset_levels=["market", "macro"], days=1, limit=20)
     return {
         "date": data.get("date"),
         "philosophy": rt.get("philosophy", []),
         "routine": rt["routine"],
-        "market_today": [_slim(a) for a in market],
+        "market_today": market_insight(name, days=2, limit=12),
         "extracted_from": rt.get("extracted_from", ""),
     }
 
