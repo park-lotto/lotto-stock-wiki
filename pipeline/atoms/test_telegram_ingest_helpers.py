@@ -65,3 +65,32 @@ def test_dedup_matches_regardless_of_path_form():
     abs_name = "C:/Users/x/raw/telegram/2026-06-19_하나반도체.md"
     from pathlib import Path
     assert Path(abs_name).name in done
+
+
+def test_insight_leading_sectors_and_noise_ratio_preserved():
+    import json
+    from pipeline.atoms.telegram_questionnaire import questionnaire_to_atoms_tg
+    q = {
+        "leading_sectors": ["반도체", "2차전지"],
+        "stance": [], "methods": [], "stocks_mentioned": [],
+        "noise_ratio": 0.4,
+        "quote": "지금은 반도체 순환매가 핵심이다",
+    }
+    meta = {"date": "2026-07-02", "channel": "요약하는 고잉", "type": "insight",
+            "source_type": "telegram", "trust": "C", "raw_file": "x.md"}
+    atoms = questionnaire_to_atoms_tg(q, meta)
+    summary = [a for a in atoms if a["asset_level"] == "insight_summary"]
+    assert len(summary) == 1, f"insight_summary 원자가 안 만들어짐: {[a['id'] for a in atoms]}"
+    sf = json.loads(summary[0]["structured_fields"])
+    assert sf["leading_sectors"] == ["반도체", "2차전지"]
+    assert sf["noise_ratio"] == 0.4
+    assert sf["quote"] == "지금은 반도체 순환매가 핵심이다"
+
+
+def test_insight_summary_skipped_when_all_empty():
+    from pipeline.atoms.telegram_questionnaire import questionnaire_to_atoms_tg
+    q = {"stance": [], "methods": [], "stocks_mentioned": []}
+    meta = {"date": "2026-07-02", "channel": "요약하는 고잉", "type": "insight",
+            "source_type": "telegram", "trust": "C", "raw_file": "x.md"}
+    atoms = questionnaire_to_atoms_tg(q, meta)
+    assert not any(a["asset_level"] == "insight_summary" for a in atoms)
