@@ -331,6 +331,9 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 .tile .sec-edit-btn{display:inline-block;margin-left:6px;font-size:12px;color:rgba(255,255,255,.45);
   cursor:pointer;vertical-align:middle;transition:color .15s;user-select:none;}
 .tile .sec-edit-btn:hover{color:#fff;}
+.tile .sec-del-btn{display:inline-block;margin-left:5px;font-size:11px;color:rgba(255,255,255,.35);
+  cursor:pointer;vertical-align:middle;transition:color .15s;user-select:none;}
+.tile .sec-del-btn:hover{color:#e74c3c;}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9998;
   display:none;align-items:flex-start;justify-content:center;padding-top:90px;}
 .modal-box{background:var(--panel);border:1px solid var(--line);border-radius:14px;
@@ -606,6 +609,8 @@ document.getElementById("tab-bar").addEventListener("click",e=>{
 
 // ★ 클릭 이벤트 위임
 document.getElementById("grid").addEventListener("click",e=>{
+  const sd=e.target.closest(".sec-del-btn");
+  if(sd){ e.stopPropagation(); hideSectorQuick(sd.dataset.secdel); return; }
   const se=e.target.closest(".sec-edit-btn");
   if(se){ e.stopPropagation(); openSectorEdit(se.dataset.secedit); return; }
   // 섹터명 클릭 → 섹터 뉴스+빈집 팝오버
@@ -1017,7 +1022,7 @@ function renderGrid(tiles){
     const barsInline=(tile.bars&&tile.bars.length>=2)?
       `<span class="avg-spark">${sparkline(tile.bars,tile.avg_rate)}</span>`
       :`<span class="avg-spark no-chart">―</span>`;
-    el.innerHTML=`<div class="sec-name">${esc(tile.name)}${parentHtml}<span class="sec-edit-btn" data-secedit="${esc(tile.name)}" title="종목 추가/삭제">✎</span></div>
+    el.innerHTML=`<div class="sec-name">${esc(tile.name)}${parentHtml}<span class="sec-edit-btn" data-secedit="${esc(tile.name)}" title="종목 추가/삭제">✎</span><span class="sec-del-btn" data-secdel="${esc(tile.name)}" title="전체에서 삭제(편집탭서 복원)">✕</span></div>
       <div class="avg-row">
         <span class="avg-rate">${avgStr}</span>${barsInline}
         <button class="fav-btn${isFav?" on":""}" data-sector="${esc(tile.name)}" title="즐겨찾기" style="margin-left:auto">★</button>
@@ -2175,6 +2180,51 @@ async function resetEditState(){
   _newCtStocks=[];
   await saveEdit();
   renderEditUI();
+}
+
+// ── 타일 원클릭 삭제(숨김) + 복원 ──────────────────────────
+async function _setSectorHidden(name, hide){
+  const cur=await (await fetch("/api/sector_custom")).json();
+  const st=(cur&&!cur.error)?cur:{hidden_sectors:[],extra_stocks:{},removed_stocks:{},custom_tiles:[]};
+  const h=st.hidden_sectors||[];
+  const i=h.indexOf(name);
+  if(hide){ if(i<0)h.push(name); } else { if(i>=0)h.splice(i,1); }
+  st.hidden_sectors=h;
+  const res=await (await fetch("/api/sector_custom",{method:"POST",
+    headers:{"Content-Type":"application/json"},body:JSON.stringify(st)})).json();
+  if(!res.ok) throw new Error(res.error||"저장 실패");
+  try{ Object.keys(_tabCache||{}).forEach(k=>delete _tabCache[k]); }catch(_){}
+  try{ Object.keys(localStorage).filter(k=>k.indexOf("__hm_")===0).forEach(k=>localStorage.removeItem(k)); }catch(_){}
+  try{ localStorage.removeItem(_LS_ALL); }catch(_){}
+}
+async function hideSectorQuick(name){
+  try{
+    await _setSectorHidden(name,true);
+    document.querySelectorAll('#grid .tile').forEach(t=>{
+      if(t.querySelector('.sec-del-btn')?.dataset.secdel===name) t.remove();
+    });
+    _allTiles=(_allTiles||[]).filter(s=>s.name!==name);
+    _lastTiles=(_lastTiles||[]).filter(s=>s.name!==name);
+    showUndoToast(name);
+  }catch(e){ showToast("❌ 삭제 실패: "+e.message,"err"); }
+}
+async function restoreSectorQuick(name){
+  try{
+    await _setSectorHidden(name,false);
+    showToast("↩️ "+name+" 복원됨. 갱신 중…");
+    if(activeTab==="all") loadOverview(true);
+  }catch(e){ showToast("❌ 복원 실패: "+e.message,"err"); }
+}
+function showUndoToast(name){
+  let el=document.getElementById("undo-toast");
+  if(!el){el=document.createElement("div");el.id="undo-toast";document.body.appendChild(el);}
+  el.innerHTML=`🗑 <b>${esc(name)}</b> 삭제됨 <span class="undo-x">↩️ 복원</span>`;
+  el.style.cssText=`position:fixed;bottom:24px;right:24px;padding:11px 16px;border-radius:10px;
+    font-size:13px;z-index:9999;background:#262626;color:#ddd;border:1px solid #444;box-shadow:0 4px 16px rgba(0,0,0,.5)`;
+  const x=el.querySelector(".undo-x");
+  x.style.cssText="margin-left:12px;color:#f5d97a;cursor:pointer;font-weight:700;";
+  x.onclick=()=>{ el.remove(); restoreSectorQuick(name); };
+  clearTimeout(el._t); el._t=setTimeout(()=>{ if(el)el.remove(); },6000);
 }
 
 function showToast(msg,type="ok"){

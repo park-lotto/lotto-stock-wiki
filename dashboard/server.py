@@ -2195,11 +2195,15 @@ def api_stock_supply_batch(codes: str = ""):
 
 @app.get("/api/sector_names")
 def api_sector_names():
-    """섹터 이름 목록 (가격 조회 없음, 빠름). 편집 탭 초기화용."""
+    """섹터 이름 목록 (가격 조회 없음, 빠름). 편집 탭 초기화용. 꺼낸 세부테마(CXL 등)도 포함해 복원 가능."""
     try:
-        from sector_heatmap import parse_watchlist  # noqa: E402
+        from sector_heatmap import parse_watchlist, surfaced_sub_names  # noqa: E402
         sections = parse_watchlist(top_n=1)
-        return JSONResponse(content=[s["sector"] for s in sections])
+        names = [s["sector"] for s in sections]
+        for n in surfaced_sub_names():
+            if n not in names:
+                names.append(n)
+        return JSONResponse(content=names)
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
 

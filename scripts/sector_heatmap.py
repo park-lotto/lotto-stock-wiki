@@ -453,6 +453,34 @@ def build_heatmap_tab(tab_id: str) -> dict:
 
 
 # ── 전체 탭 히트맵 (overview) ─────────────────────────────
+def _collect_surfaced_subs(raw_full: dict) -> list:
+    """제외 테마 부모들의 세부섹터 목록 → [(표시명, parent, [stocks])].
+    build_heatmap(타일생성)과 surfaced_sub_names(편집목록)가 같은 결과를 쓰도록 공용화."""
+    extract_subs = {e["sub"] for e in SECTOR_EXTRACT}   # 이미 메인추출(광통신6G·STO·해운·전쟁) 중복방지
+    out, seen = [], set()
+    for parent in SURFACE_THEME_PARENTS:
+        for sub in raw_full.get(parent, []):
+            nm = (sub.get("name") or "").strip() or parent
+            if nm in seen or nm in extract_subs:
+                continue
+            if re.sub(r"[\d\s]", "", nm) == "":   # 이름이 숫자·코드뿐(깨진 서브) → 제외
+                continue
+            sts = _dedup_stocks(sub.get("stocks") or [])
+            if not sts:
+                continue
+            seen.add(nm)
+            out.append((nm, parent, sts))
+    return out
+
+
+def surfaced_sub_names() -> list:
+    """전체 탭에 꺼낸 세부테마 이름들(편집탭 목록·복원용). 가격조회 없이 빠름."""
+    try:
+        return [nm for nm, _, _ in _collect_surfaced_subs(_parse_raw_full())]
+    except Exception:
+        return []
+
+
 def build_heatmap(top_n: int = 3) -> dict:
     import sys
     sys.path.insert(0, str(ROOT / "scripts"))
@@ -468,22 +496,7 @@ def build_heatmap(top_n: int = 3) -> dict:
     sections = parse_watchlist(999)  # 전 종목 조회 (top_n은 표시용, 조회는 전체)
 
     # ── 제외됐던 테마의 세부섹터를 전체 탭에도 별도 타일로 '다 꺼내기'(사용자가 편집탭에서 숨김) ──
-    raw_full = _parse_raw_full()
-    _extract_subs = {e["sub"] for e in SECTOR_EXTRACT}   # 이미 메인으로 추출된 서브(광통신6G·STO·해운·전쟁) 중복 방지
-    surfaced_subs = []   # [(표시명, parent, [stocks])]
-    _seen_sub = set()
-    for parent in SURFACE_THEME_PARENTS:
-        for sub in raw_full.get(parent, []):
-            nm = (sub.get("name") or "").strip() or parent
-            if nm in _seen_sub or nm in _extract_subs:
-                continue
-            if re.sub(r"[\d\s]", "", nm) == "":   # 이름이 숫자·코드뿐(깨진 서브) → 제외
-                continue
-            sts = _dedup_stocks(sub.get("stocks") or [])
-            if not sts:
-                continue
-            _seen_sub.add(nm)
-            surfaced_subs.append((nm, parent, sts))
+    surfaced_subs = _collect_surfaced_subs(_parse_raw_full())   # [(표시명, parent, [stocks])]
 
     # 기본 + extra + custom + 세부테마 코드 일괄 수집 → 단일 배치 조회
     base_codes = {s["code"] for sec in sections for s in sec["stocks"]}
