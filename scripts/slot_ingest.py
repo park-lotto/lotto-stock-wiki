@@ -231,6 +231,34 @@ def _send_tg(text: str) -> None:
         print(f"[report] 텔레 전송 오류: {e}")
 
 
+def _send_ops_tg(text: str) -> None:
+    """업무보고 전용 봇으로 발송 (.env OPS_BOT_TOKEN/OPS_CHAT_ID, t.me/parklotto13bot).
+    기존 _send_tg()(BOT_TOKEN/CHAT_ID)는 다른 스크립트 브리핑용이라 건드리지 않는다."""
+    import urllib.request
+    import urllib.parse
+    cfg = {}
+    envp = ROOT / ".env"
+    if envp.exists():
+        for line in envp.read_text(encoding="utf-8").splitlines():
+            if "=" in line and not line.startswith("#"):
+                k, v = line.split("=", 1)
+                cfg[k.strip()] = v.strip()
+    token, chat = cfg.get("OPS_BOT_TOKEN", ""), cfg.get("OPS_CHAT_ID", "")
+    if not token or not chat:
+        print("[report] 업무보고 봇 설정 없음 (.env OPS_BOT_TOKEN/OPS_CHAT_ID)")
+        return
+    data = urllib.parse.urlencode(
+        {"chat_id": chat, "text": text, "parse_mode": "HTML"}).encode()
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+    try:
+        with urllib.request.urlopen(
+                urllib.request.Request(url, data=data), timeout=10) as r:
+            ok = json.loads(r.read()).get("ok")
+        print("[report] 업무보고 텔레 전송 " + ("완료" if ok else "실패"))
+    except Exception as e:
+        print(f"[report] 업무보고 텔레 전송 오류: {e}")
+
+
 def send_report(cats: list[str], since_iso: str, date: str) -> None:
     """이번 슬롯에서 새로 적재된 원자를 요약해 텔레로 보고."""
     try:
