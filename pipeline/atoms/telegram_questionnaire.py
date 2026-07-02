@@ -103,6 +103,9 @@ def _base(meta: dict, **kw) -> dict:
         "mention_count": 1, "msg_ts": None,
     }
     d.update(kw)
+    sf = d.get("structured_fields")
+    if isinstance(sf, dict):
+        d["structured_fields"] = json.dumps(sf, ensure_ascii=False)
     return d
 
 
@@ -235,6 +238,21 @@ def questionnaire_to_atoms_tg(q: dict, meta: dict) -> list[dict]:
                 content=m.get("rule") or "", strength_score=_strength(trust, "method", 1),
             ))
         add_stocks(q.get("stocks_mentioned"), "name", "comment")
+        leading_sectors = q.get("leading_sectors") or []
+        noise_ratio = q.get("noise_ratio")
+        top_quote = q.get("quote")
+        if leading_sectors or noise_ratio is not None or top_quote:
+            atoms.append(_base(
+                meta, id=_mk_id(meta, "insightsum", 0),
+                asset_level="insight_summary", content_type="opinion",
+                content=top_quote or "",
+                strength_score=_strength(trust, "stance", 1),
+                structured_fields={
+                    "leading_sectors": leading_sectors,
+                    "noise_ratio": noise_ratio,
+                    "quote": top_quote,
+                },
+            ))
 
     elif ctype == "report_relay":
         for i, rp in enumerate(q.get("reports") or []):
