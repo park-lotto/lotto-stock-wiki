@@ -154,10 +154,28 @@ for fname in saved:
         print('EXTRACTED:' + fname)
 `;
 
+// Windows에서 `python3`/`python`이 Microsoft Store 스텁(exit 49)일 수 있어 실제 인터프리터 우선.
+const PY_CANDIDATES = [
+  process.env.MYBOX_PYTHON,
+  'C:/Users/TheRose/AppData/Local/Python/bin/python.exe',
+  'python3', 'python',
+].filter(Boolean);
+function resolvePython() {
+  for (const py of PY_CANDIDATES) {
+    try {
+      const v = execSync(`"${py}" -c "import zipfile"`, { stdio: 'pipe' });
+      return py;
+    } catch { /* 다음 후보 */ }
+  }
+  return 'python3';
+}
+const PYTHON = resolvePython();
+process.stdout.write(`[압축해제] 인터프리터: ${PYTHON}\n`);
+
 for (const zipFile of downloadedZips) {
   try {
     const result = execSync(
-      `python3 - "${zipFile}" "${DOWNLOAD_DIR}" "${MMDD}"`,
+      `"${PYTHON}" - "${zipFile}" "${DOWNLOAD_DIR}" "${MMDD}"`,
       { input: pyCode, encoding: 'utf8' }
     );
     process.stdout.write(result);

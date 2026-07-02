@@ -41,14 +41,19 @@ def _osc_pct(s):
     return o.get("pct")
 
 
-def select(data=None, th=None, rs=None) -> dict:
+def select(data=None, th=None, rs=None, sortino=None) -> dict:
     """오늘의 종목선정 재현. 퍼널 단계별 카운트 + 후보 리스트 반환.
-    rs=None이면 주도주찾기 시트 로드; 테스트는 rs={} 주입해 파일 I/O 회피."""
+    rs/sortino=None이면 파일 로드; 테스트는 rs={}, sortino={'names':[],'sectors':[]} 주입해 I/O 회피."""
     th = {**THRESHOLDS, **(th or {})}
     data = data or _load()
     if rs is None:
         from pipeline.people.rs_data import load_rs
         rs = load_rs()
+    if sortino is None:
+        from pipeline.people.sortino_data import load_sortino_top
+        sortino = load_sortino_top()
+    s_names = set(sortino.get("names") or [])
+    s_sectors = [kw for kw in (sortino.get("sectors") or []) if kw]
     stocks = data.get("stocks", {})
     total = len(stocks)
 
@@ -76,15 +81,23 @@ def select(data=None, th=None, rs=None) -> dict:
         materialed = [(c, s) for c, s in materialed if (s.get("name") or "") in rs]
 
     # 4단계 — 정렬: 주도주 우선(3M 수익률), 그다음 빈집강도+컨센
+    def _sortino_match(name, sector):
+        if name in s_names:
+            return True
+        sec = sector or ""
+        return any(kw and kw in sec for kw in s_sectors)
+
     def _score(item):
         _, s = item
         pct = _osc_pct(s) or 100
         up = (s.get("tp") or {}).get("up_count", 0) or 0
-        rsinfo = rs.get(s.get("name") or "")
+        nm = s.get("name") or ""
+        rsinfo = rs.get(nm)
         m3 = (rsinfo or {}).get("m3") or 0
         is_leader = 1 if rsinfo else 0
-        # 주도주면 큰 가중, 그 안에서 3M 모멘텀 + 빈집 + 컨센
-        return (is_leader * 1000) + m3 + (th["vacuum_pct_max"] - pct) + up * 2
+        sm = 1 if _sortino_match(nm, (rsinfo or {}).get("sector")) else 0
+        # 주도주 + 소라티노주도 큰 가중, 그 안에서 3M 모멘텀 + 빈집 + 컨센
+        return (is_leader * 1000) + (sm * 500) + m3 + (th["vacuum_pct_max"] - pct) + up * 2
 
     materialed.sort(key=_score, reverse=True)
     top = materialed[: th["top_n"]]
@@ -93,11 +106,14 @@ def select(data=None, th=None, rs=None) -> dict:
     for code, s in top:
         osc = s.get("osc") or {}
         tp = s.get("tp") or {}
-        rsinfo = rs.get(s.get("name") or "")
+        nm = s.get("name") or ""
+        rsinfo = rs.get(nm)
         is_leader = rsinfo is not None
         if is_leader:
             leaders += 1
+        s_match = _sortino_match(nm, (rsinfo or {}).get("sector"))
         lead_txt = f" · 🔥주도주(3M {rsinfo.get('m3')}%)" if is_leader else ""
+        sortino_txt = " · 📊소라티노주도" if s_match else ""
         candidates.append({
             "code": code,
             "name": s.get("name", code),
@@ -108,25 +124,31 @@ def select(data=None, th=None, rs=None) -> dict:
             "tp_down": tp.get("down_count"),
             "tp_target": tp.get("target"),
             "is_leader": is_leader,
+            "sortino_match": s_match,
             "rs_m3": (rsinfo or {}).get("m3"),
             "rs_m1": (rsinfo or {}).get("m1"),
-            "reason": f"수급빈집(pct {osc.get('pct')}) × 컨센상향(↑{tp.get('up_count')}/↓{tp.get('down_count')}){lead_txt}",
+            "reason": f"수급빈집(pct {osc.get('pct')}) × 컨센상향(↑{tp.get('up_count')}/↓{tp.get('down_count')}){lead_txt}{sortino_txt}",
         })
 
     return {
         "date": data.get("date"),
         "thresholds": th,
         "rs_universe": len(rs),
+        "sortino_available": sortino.get("available", False),
+        "sortino_date": sortino.get("date"),
+        "sortino_top": sortino.get("names") or [],
+        "sortino_sectors": s_sectors,
         "funnel": [
             {"step": "전체 종목", "count": total},
             {"step": f"① 수급빈집 (osc pct ≤ {th['vacuum_pct_max']})", "count": len(vacuum)},
             {"step": "② 컨센/TP 상향 (재료)", "count": len(materialed)},
-            {"step": f"③ 상위 {th['top_n']} (주도주 우선 정렬)", "count": len(top)},
-            {"step": "  └ 그중 주도주(RS)", "count": leaders},
+            {"step": f"③ 상위 {th['top_n']} (주도주·소라티노 우선)", "count": len(top)},
+            {"step": "  └ 주도주(RS)", "count": leaders},
+            {"step": "  └ 소라티노 주도섹터", "count": sum(1 for c in candidates if c["sortino_match"])},
         ],
         "candidates": candidates,
-        "note": (f"수급빈집 × 컨센상향 × 주도주(RS {len(rs)}종목, 주도주찾기 시트). "
-                 "🔥=주도주 매칭. 소라티노 ETF는 파일 미도착으로 미반영. 매수추천 아님."),
+        "note": (f"수급빈집 × 컨센상향 × 주도주(RS {len(rs)}) × 소라티노(주도섹터). "
+                 "🔥=주도주, 📊=소라티노 주도섹터. 매수추천 아님."),
     }
 
 

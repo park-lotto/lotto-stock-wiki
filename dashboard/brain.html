@@ -102,6 +102,9 @@
   .valbox{border:1px solid var(--gold-dim);border-radius:9px;padding:9px 13px;margin:6px 0 12px;
     font-size:.8rem;color:#d4d2cc;background:#14130e}
   .valbox b{color:var(--gold)}
+  .sortino{margin:4px 0 10px;font-size:.8rem;color:var(--muted)}
+  .sortino .stag{display:inline-block;background:#132018;border:1px solid #2a4a38;color:#7fd8a0;
+    border-radius:20px;padding:2px 10px;margin:2px 3px;font-size:.76rem}
 </style>
 </head>
 <body>
@@ -204,9 +207,13 @@ async function loadSelection(enc){
         · 적중률 ${val.hit_rate!=null?Math.round(val.hit_rate*100)+'%':'—'}
         <div class="cnt" style="margin-top:4px">그는 언급했으나 퍼널이 놓침(튜닝힌트): ${(val.missed||[]).map(esc).join(', ')||'—'}</div>
       </div>` : "";
+    const sortinoHtml = s.sortino_available ? `
+      <div class="sortino">📊 소라티노 주도섹터 (${esc(s.sortino_date||'')}):
+        ${(s.sortino_sectors||[]).map(x=>`<span class="stag">${esc(x)}</span>`).join(' ')}</div>` : "";
     box.innerHTML = `
       <div class="cnt">${esc(s.date||'')} · ${esc(s.note||'')}</div>
       <div class="funnel">${funnel}</div>
+      ${sortinoHtml}
       ${valHtml}
       <div class="cands">${cards}</div>`;
   }catch(e){ box.innerHTML = "<div class='cnt'>선정 불러오기 실패</div>"; }
