@@ -1502,14 +1502,10 @@ function renderMarketFlow(d){
               const mn=Math.min(...vals),mx=Math.max(...vals),rng=mx-mn||1;
               const pts=vals.map((v,i)=>`${Math.round(i/(vals.length-1)*(W-2)+1)},${Math.round((1-(v-mn)/rng)*(H-4)+2)}`).join(" ");
               const col=rate>0?"var(--up1)":rate<0?"var(--dn1)":"#888";
-              // 시간 레이블 (bars.length 기반 15분봉 추정)
               const n=vals.length;
-              function _gt(i){const m=9*60+Math.round(i*390/(n-1||1));return`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;}
-              const gTimeRow=`<div style="display:flex;justify-content:space-between;margin-top:1px">
-                <span style="font-size:8px;color:#999">${_gt(0)}</span>
-                <span style="font-size:8px;color:#999">${_gt(Math.floor(n/2))}</span>
-                <span style="font-size:8px;color:#999">${_gt(n-1)}</span>
-              </div>`;
+              // 글로벌 지표(나스닥선물·유가·환율 등)는 각기 다른 시간대(24시간 등)에 거래되고
+              // bars에 실제 체결시각이 없어, 09:00~15:30 시간 레이블은 근거 없는 추정이라 표시 안 함.
+              const gTimeRow="";
               const _lx=((Math.round((n-1)/(n-1||1)*(W-2)+1))/W*100).toFixed(1);
               const _ly=(((1-(vals[n-1]-mn)/rng)*(H-4)+2)/H*100).toFixed(1);
               const _dotcol=rate>0?"#e74c3c":rate<0?"#3498db":"#888";
