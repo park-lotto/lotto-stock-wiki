@@ -222,6 +222,8 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
   /* 차트+지표 세로 스택 */
   .chart-main-row{flex-direction:column;}
   .tk-toggle{display:none;}
+  .chart-right{width:auto !important;border-left:none;border-top:1px solid #1c1c1c;}
+  .chart-news{max-height:38vh;}
   .taerini-panel{width:auto !important;max-height:42vh;border-left:none;
     border-top:1px solid #1c1c1c;padding:6px 4px 10px;margin-left:0;
     overflow-y:auto;-webkit-overflow-scrolling:touch;}   /* 아래 잘림 방지: 내부 스크롤 */
@@ -383,9 +385,27 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
   justify-content:center;cursor:pointer;color:#666;background:#101014;
   border:none;border-left:1px solid #1c1c1c;font-size:11px;padding:0;}
 .tk-toggle:hover{color:var(--gold,#d4af37);background:#17171c;}
-.taerini-panel{flex-shrink:0;width:270px;font-size:12.5px;color:#ccc;
-  padding:2px 2px 2px 14px;overflow-y:auto;line-height:1.55;transition:width .12s;}
-.taerini-panel.collapsed{width:0;padding:0;overflow:hidden;}
+.chart-right{flex-shrink:0;width:310px;display:flex;flex-direction:column;min-height:0;
+  border-left:1px solid #1c1c1c;transition:width .12s;}
+.chart-right.collapsed{width:0;overflow:hidden;border-left:none;}
+.chart-news{flex:0 0 auto;max-height:48%;overflow-y:auto;padding:9px 11px 10px;
+  border-bottom:1px solid #1c1c1c;font-size:12px;color:#ccc;}
+.chart-news .cn-load{color:#666;font-size:11.5px;padding:6px 0;}
+.chart-news .cn-hd{font-size:12px;color:#9a9a9a;font-weight:700;margin-bottom:7px;letter-spacing:.3px;}
+.chart-news .cn-sum{padding:9px 11px;border-radius:8px;margin-bottom:9px;
+  background:linear-gradient(180deg,rgba(212,175,55,.10),rgba(212,175,55,.03));
+  border:1px solid rgba(212,175,55,.25);font-size:11.5px;line-height:1.5;color:#e8e2d0;}
+.chart-news .cn-sum b{color:#f5d97a;font-weight:700;}
+.chart-news .cn-sum ul{margin:2px 0;padding-left:15px;}
+.chart-news .cn-sum li{margin:1px 0;color:#ddd;}
+.chart-news .cn-sum .cn-line{margin:3px 0;}
+.chart-news .cn-sum .cn-src{margin-top:6px;font-size:9.5px;color:#8a7f5e;text-align:right;}
+.chart-news .cn-item{display:block;padding:6px 2px;border-bottom:1px solid #17171c;
+  color:#cfcfcf;text-decoration:none;line-height:1.4;}
+.chart-news .cn-item:hover{color:#fff;}
+.chart-news .cn-item .cn-meta{font-size:10px;color:#777;margin-top:2px;}
+.taerini-panel{flex:1;min-height:0;font-size:12.5px;color:#ccc;
+  padding:2px 2px 2px 14px;overflow-y:auto;line-height:1.55;}
 .taerini-panel .tk-hd{font-size:12px;color:#9a9a9a;font-weight:700;margin-bottom:8px;
   letter-spacing:.3px;position:sticky;top:0;background:var(--panel);
   padding-bottom:6px;border-bottom:1px solid #222;}
@@ -2698,6 +2718,35 @@ function _taeriniHtml(d){
   return HD + rows.join("") + dateLine;
 }
 
+async function loadStockNews(code, name){
+  const box=document.getElementById("chart-news");
+  if(!box) return;
+  box.innerHTML='<div class="cn-load">📰 뉴스 불러오는 중…</div>';
+  try{
+    const d=await (await fetch("/api/stock_summary?code="+encodeURIComponent(code)
+      +"&name="+encodeURIComponent(name||""))).json();
+    // 다른 종목으로 바뀌었으면 무시
+    if(_chartCode!==code) return;
+    const news=d.news||[];
+    let html='<div class="cn-hd">📰 '+esc(name||code)+' 뉴스</div>';
+    if(d.summary){
+      html+='<div class="cn-sum">'+_mdSum(d.summary)
+        +'<div class="cn-src">🤖 Gemini · 뉴스 '+(d.sources||news.length)+'건 종합</div></div>';
+    }else if(d.error){
+      html+='<div class="cn-load" style="margin-bottom:8px">🤖 '+esc(d.error)+'</div>';
+    }
+    if(news.length){
+      html+=news.map(n=>`<a class="cn-item" href="${esc(n.url||'#')}" target="_blank" rel="noopener">
+        ${esc(n.title||'')}<div class="cn-meta">${esc(n.src||'')} · ${esc(n.date||'')}${n.related>1?' · 관련'+n.related:''}</div></a>`).join("");
+    }else if(!d.summary){
+      html+='<div class="cn-load">관련 뉴스가 없습니다.</div>';
+    }
+    box.innerHTML=html;
+  }catch(e){ box.innerHTML='<div class="cn-load">뉴스 로드 실패</div>'; }
+}
+// 요약 마크다운 렌더(chart-news용): _mdMini 재사용하되 클래스만 cn-line
+function _mdSum(s){ return _mdMini(s).replace(/ep-sum-line/g,"cn-line"); }
+
 async function _loadTaerini(code){
   const box=document.getElementById("taerini-panel");
   if(!box) return;
@@ -2710,7 +2759,7 @@ async function _loadTaerini(code){
 
 // ── 지표 패널 접기/펼치기 ──
 function _toggleTaerini(){
-  const p=document.getElementById("taerini-panel"), b=document.getElementById("tk-toggle");
+  const p=document.getElementById("chart-right"), b=document.getElementById("tk-toggle");
   if(!p) return;
   const collapsed=!p.classList.contains("collapsed");
   p.classList.toggle("collapsed", collapsed);
@@ -2720,7 +2769,7 @@ function _toggleTaerini(){
 function _applyTaeriniCollapse(){
   let c=false; try{ c=localStorage.getItem("taerini_collapsed")==="1"; }catch(_){}
   if(_IS_TOUCH) c=false;   // 모바일: 토글 숨김이라 항상 펼침
-  const p=document.getElementById("taerini-panel"), b=document.getElementById("tk-toggle");
+  const p=document.getElementById("chart-right"), b=document.getElementById("tk-toggle");
   if(p) p.classList.toggle("collapsed", c);
   if(b) b.textContent = c ? "▶" : "◀";
 }
@@ -2908,8 +2957,11 @@ function openStockChart(code, name){
         <div id="tv_chart_container"></div>
         <div id="tv_osc_container"></div>
       </div>
-      <button class="tk-toggle" id="tk-toggle" onclick="_toggleTaerini()" title="지표 패널 접기/펼치기">◀</button>
-      <div id="taerini-panel" class="taerini-panel">📊 투자 참고지표 로딩…</div>
+      <button class="tk-toggle" id="tk-toggle" onclick="_toggleTaerini()" title="뉴스·지표 패널 접기/펼치기">◀</button>
+      <div id="chart-right" class="chart-right">
+        <div id="chart-news" class="chart-news"><div class="cn-load">📰 뉴스 불러오는 중…</div></div>
+        <div id="taerini-panel" class="taerini-panel">📊 투자 참고지표 로딩…</div>
+      </div>
     </div>
   </div>`;
   m.classList.add("open");
@@ -2943,6 +2995,7 @@ function openStockChart(code, name){
   _initChart();
   loadChartData();
   _loadTaerini(code);
+  loadStockNews(code, name);
   _applyTaeriniCollapse();
   _applyMAButtons();
   _cfInitState();

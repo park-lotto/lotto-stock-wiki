@@ -1543,6 +1543,58 @@ def _gen_sector_summary(etf: str = "", codes: str = "", title: str = "") -> dict
     return out
 
 
+_stock_summary_cache: dict = {}
+
+
+@app.get("/api/stock_summary")
+def api_stock_summary(code: str = "", name: str = ""):
+    return JSONResponse(content=_gen_stock_summary(code, name))
+
+
+def _gen_stock_summary(code: str = "", name: str = "") -> dict:
+    """종목 뉴스(네이버 증권 큐레이션) + Gemini 요약. 차트 우측 패널용. 30분 캐시.
+    요약 실패해도 뉴스 리스트는 항상 반환."""
+    code = (code or "").strip().zfill(6)
+    if not code.strip("0"):
+        return {"news": [], "summary": "", "error": "코드 없음"}
+    now = time.time()
+    c = _stock_summary_cache.get(code)
+    if c and now - c["ts"] < 1800:
+        return c["data"]
+    import sys as _sys
+    _sd = os.path.join(ROOT, "scripts")
+    if _sd not in _sys.path:
+        _sys.path.insert(0, _sd)
+    import news_feed as nf
+    try:
+        news = nf.stock_news(code, top=8)
+    except Exception:
+        news = []
+    if not news:
+        return {"news": [], "summary": "", "error": "관련 뉴스가 없습니다."}
+
+    nm = name or code
+    headlines = [f"- [{n.get('date','')}] {n.get('title','')}" for n in news]
+    prompt = (
+        f"너는 주식 유튜브 채널의 애널리스트다. 아래는 '{nm}' 종목의 최근 뉴스 헤드라인이다.\n"
+        f"시청자가 이 종목의 현재 상황을 빠르게 파악하도록 정리하라. 아래 헤드라인 사실만 사용.\n\n"
+        f"[최근 뉴스 헤드라인]\n" + "\n".join(headlines[:12]) + "\n\n"
+        "[출력 형식 · 마크다운, 짧게]\n"
+        "**🔑 한 줄**: 이 종목이 지금 왜 주목받는지 한 문장 (구체적)\n"
+        "**📌 핵심 이슈**\n- 이슈 2~3개, 각 한 줄. 수치·계약·실적 등 구체 팩트 포함\n"
+        "**👀 관전 포인트**: 투자자가 뭘 봐야 하는지 한 줄\n\n"
+        "규칙: 헤드라인 사실만 사용. 양면론·'관망하라' 금지. 과장·추천 금지. 존댓말로 간결하게."
+    )
+    res = _gemini_text(prompt, keys=_summary_keys(),
+                       models=["gemini-2.5-flash", "gemini-3-flash-preview"])
+    out = {"news": news, "summary": res.get("analysis", ""),
+           "model": res.get("model", ""), "error": res.get("error", ""),
+           "sources": len(news)}
+    if out["summary"]:
+        _stock_summary_cache[code] = {"data": out, "ts": now}
+    return out
+
+
 def _summary_prewarm():
     """장중 ETF 섹터 요약을 백그라운드로 미리 생성해 캐시 → 사용자가 클릭하면 즉시 표시.
     _gen_sector_summary는 15분 캐시라 대부분 즉시 반환, 만료분만 Gemini 재생성."""
