@@ -129,6 +129,29 @@ def diagnose(cat: str, date: str, extra_date: str, since_iso: str, output: str) 
             "icon": icon, "note": note, "retried": retried}
 
 
+CAT_LABEL = {"telegram": "텔레그램", "youtube": "유튜브", "blog": "블로그", "report": "리포트"}
+
+
+def build_report(cats: list[str], date: str, results: list[dict]) -> str:
+    """오늘누적(+이번슬롯신규) 표 + 문제/경고 섹션을 텔레그램 HTML 메시지로 조립."""
+    hhmm = datetime.now().strftime("%H:%M")
+    lines = [f"{_pad('카테고리', 10)}{_pad('오늘누적', 10)}상태", "─" * 28]
+    issues = []
+    for r in results:
+        label = CAT_LABEL.get(r["cat"], r["cat"])
+        value = f"{r['total_today']}(+{r['delta']})"
+        lines.append(f"{_pad(label, 10)}{_pad(value, 10)}{r['icon']} {r['note']}")
+        if r["icon"] in ("🔴", "⚠️"):
+            issues.append(f"· {label}: {r['note']}")
+
+    table = "\n".join(lines)
+    msg = f"📥 크롤 인제스트  {date[5:]} {hhmm}\n<pre>{table}</pre>"
+    if issues:
+        head = "🔴 확인 필요" if any(r["icon"] == "🔴" for r in results) else "⚠️ 참고"
+        msg += f"\n\n{head} {len(issues)}건\n" + "\n".join(issues)
+    return msg
+
+
 def run(cmd: list[str], label: str) -> tuple[int, str]:
     """서브프로세스 실행. 출력은 화면에 그대로 찍고(기존 가시성 유지), 진단용으로도 반환.
     subprocess 자체 실행 실패(예: 인터프리터 경로 문제)도 예외를 던지지 않고

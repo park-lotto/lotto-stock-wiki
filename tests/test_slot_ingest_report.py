@@ -159,3 +159,36 @@ def test_diagnose_sharp_drop_warning_no_retry(monkeypatch):
     assert r["icon"] == "⚠️"
     assert "급감" in r["note"]
     assert r["retried"] is False
+
+
+def test_build_report_all_normal_no_issue_section():
+    results = [
+        {"cat": "telegram", "delta": 12, "total_today": 45, "icon": "✅", "note": "정상", "retried": False},
+        {"cat": "youtube", "delta": 0, "total_today": 9, "icon": "✅", "note": "정상", "retried": False},
+    ]
+    text = si.build_report(["telegram", "youtube"], "2026-07-02", results)
+    assert "45(+12)" in text
+    assert "9(+0)" in text
+    assert "확인 필요" not in text
+    assert "<pre>" in text and "</pre>" in text
+
+
+def test_build_report_with_critical_issue():
+    results = [
+        {"cat": "report", "delta": 0, "total_today": 46, "icon": "🔴",
+         "note": "확인필요 — RESOURCE_EXHAUSTED 429", "retried": True},
+    ]
+    text = si.build_report(["report"], "2026-07-02", results)
+    assert "🔴 확인 필요" in text
+    assert "RESOURCE_EXHAUSTED" in text
+    assert "46(+0)" in text
+
+
+def test_build_report_with_warning_only_no_critical_header():
+    results = [
+        {"cat": "telegram", "delta": 3, "total_today": 3, "icon": "⚠️",
+         "note": "급감(평균 40 대비 3)", "retried": False},
+    ]
+    text = si.build_report(["telegram"], "2026-07-02", results)
+    assert "⚠️ 참고" in text
+    assert "🔴 확인 필요" not in text
