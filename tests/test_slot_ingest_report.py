@@ -1,4 +1,5 @@
 import sys
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -192,3 +193,19 @@ def test_build_report_with_warning_only_no_critical_header():
     text = si.build_report(["telegram"], "2026-07-02", results)
     assert "⚠️ 참고" in text
     assert "🔴 확인 필요" not in text
+
+
+def test_pipeline_importable_when_run_as_script():
+    """Task Scheduler와 동일한 방식(python scripts/slot_ingest.py)으로 실행했을 때
+    diagnose()가 의존하는 pipeline 패키지가 import 가능해야 한다.
+
+    fix: slot_ingest.py 파일이 ROOT를 sys.path에 등록하는 코드를 포함해야 한다.
+    """
+    # slot_ingest.py 파일을 읽어서 sys.path 등록 코드가 있는지 확인
+    slot_ingest_path = ROOT / 'scripts' / 'slot_ingest.py'
+    content = slot_ingest_path.read_text(encoding='utf-8')
+
+    # ROOT 변수 정의 이후 sys.path에 등록하는 코드가 있어야 함
+    assert "ROOT = Path(__file__).parent.parent" in content, "ROOT 정의가 없음"
+    assert 'if str(ROOT) not in sys.path' in content, "sys.path 체크 로직이 없음"
+    assert 'sys.path.insert(0, str(ROOT))' in content, "sys.path에 ROOT를 등록하는 코드가 없음"
