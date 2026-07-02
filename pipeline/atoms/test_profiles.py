@@ -81,3 +81,14 @@ def test_daytrading_atoms_preserves_quote_in_structured_fields():
     import json
     sf = json.loads(atoms[0]["structured_fields"])
     assert sf["quote"] == "71000원 부근에서 분할매수 진입"
+
+
+def test_real_youtube_registry_entries_have_profile_key():
+    """모든 채널이 profile 키를 명시적으로 갖고 있어야 한다(null이어도 됨) —
+    온보딩 스킬이 값을 채우기 전까지는 null로 '아직 검토 안 됨'을 표시."""
+    import json
+    from pathlib import Path
+    reg_path = Path(__file__).parent / "youtube_registry.json"
+    reg = json.loads(reg_path.read_text(encoding="utf-8"))
+    missing = [name for name, v in reg.items() if "profile" not in v]
+    assert missing == [], f"profile 키 없는 채널: {missing}"
