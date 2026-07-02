@@ -632,8 +632,8 @@ def get_minutebar(code: str, interval: int = 15, with_time: bool = False) -> lis
     return out
 
 
-def _minutebar_page(code: str, end_hhmmss: str) -> list:
-    """분봉 1페이지(최근 30개, end_hhmmss 이전으로) 원시 rows 반환."""
+def _minutebar_page(code: str, end_hhmmss: str, mdiv: str = "J") -> list:
+    """분봉 1페이지(최근 30개, end_hhmmss 이전으로) 원시 rows 반환. mdiv='UN'이면 KRX+NXT 통합."""
     r = requests.get(
         f"{BASE}/uapi/domestic-stock/v1/quotations/inquire-time-itemchartprice",
         headers={
@@ -644,7 +644,7 @@ def _minutebar_page(code: str, end_hhmmss: str) -> list:
             "custtype": "P",
         },
         params={
-            "FID_COND_MRKT_DIV_CODE": "J",
+            "FID_COND_MRKT_DIV_CODE": mdiv,
             "FID_ETC_CLS_CODE": "",
             "FID_INPUT_ISCD": code.zfill(6),
             "FID_INPUT_HOUR_1": end_hhmmss,
@@ -706,33 +706,38 @@ def get_intraday_series(code: str, resample_min: int = 15, max_pages: int = 15) 
     return out
 
 
-def get_minute_bars_ohlc(code: str, tf: str = "5", mdiv: str = "UN") -> list:
+def get_minute_bars_ohlc(code: str, tf: str = "5", mdiv: str = "UN", max_pages: int = 16) -> list:
     """분봉 OHLCV (mdiv='UN' → KRX+NXT 통합 → 장외 NXT 시간외 봉 포함).
+    KIS 분봉 API는 1콜당 30개(1분봉)만 주고 tf 간격도 안 지킴 → 09:00까지 페이지네이션으로
+    1분봉 전부 수집한 뒤 tf분(5/10/15/30/60)으로 OHLC 리샘플. 그래서 분봉 개수가 하루치로 충분.
     반환(과거→최신): [{"time"(epoch초·KST-as-UTC), open, high, low, close, value}]
     """
     import datetime as _dt, calendar
     now = _dt.datetime.now()
     today = now.strftime("%Y%m%d")
     try:
-        r = requests.get(
-            f"{BASE}/uapi/domestic-stock/v1/quotations/inquire-time-itemchartprice",
-            headers={"content-type": "application/json; charset=utf-8",
-                     "authorization": f"Bearer {_token()}", "appkey": _KEY,
-                     "appsecret": _SECRET, "tr_id": "FHKST03010200", "custtype": "P"},
-            params={"FID_COND_MRKT_DIV_CODE": mdiv, "FID_ETC_CLS_CODE": "",
-                    "FID_INPUT_ISCD": code.zfill(6),
-                    "FID_INPUT_HOUR_1": now.strftime("%H%M%S"),
-                    "FID_PW_DATA_INCU_YN": "N", "FID_HOUR_CLS_CODE": str(tf)},
-            timeout=8)
-        r.raise_for_status()
-        rows = r.json().get("output2") or []
+        tf_min = int(tf) if str(tf).isdigit() and int(tf) > 0 else 5
+    except Exception:
+        tf_min = 5
 
-        def _f(row, k):
-            try:
-                return float(str(row.get(k, 0) or 0).replace(",", ""))
-            except Exception:
-                return 0.0
-        out = []
+    def _f(row, k):
+        try:
+            return float(str(row.get(k, 0) or 0).replace(",", ""))
+        except Exception:
+            return 0.0
+
+    # ── 1분봉 페이지네이션 수집 (now → 09:00) ──
+    raw = {}   # "HHMM" -> {o,h,l,c,v}
+    cursor = now.strftime("%H%M%S")
+    prev_oldest = None
+    for _ in range(max_pages):
+        try:
+            rows = _minutebar_page(code, cursor, mdiv=mdiv)
+        except Exception:
+            break
+        if not rows:
+            break
+        oldest = None
         for row in rows:
             if row.get("stck_bsop_date", today) != today:
                 continue
@@ -742,16 +747,37 @@ def get_minute_bars_ohlc(code: str, tf: str = "5", mdiv: str = "UN") -> list:
             c = _f(row, "stck_prpr")
             if c <= 0:
                 continue
-            epoch = calendar.timegm((int(today[:4]), int(today[4:6]), int(today[6:8]),
-                                     int(t[:2]), int(t[2:4]), 0, 0, 0, 0))
-            out.append({"time": epoch,
-                        "open": _f(row, "stck_oprc") or c, "high": _f(row, "stck_hgpr") or c,
-                        "low": _f(row, "stck_lwpr") or c, "close": c,
-                        "value": int(_f(row, "cntg_vol"))})
-        out.sort(key=lambda x: x["time"])
-        return out
-    except Exception:
-        return []
+            raw[t[:4]] = {"o": _f(row, "stck_oprc") or c, "h": _f(row, "stck_hgpr") or c,
+                          "l": _f(row, "stck_lwpr") or c, "c": c, "v": int(_f(row, "cntg_vol"))}
+            if oldest is None or t < oldest:
+                oldest = t
+        if oldest is None or oldest[:4] <= "0900" or oldest == prev_oldest:
+            break
+        prev_oldest = oldest
+        cursor = oldest
+
+    # ── 1분봉 → tf분 OHLC 리샘플 ──
+    buckets = {}
+    for hm in sorted(raw):
+        mins = int(hm[:2]) * 60 + int(hm[2:4])
+        bk = (mins // tf_min) * tf_min
+        b = raw[hm]
+        if bk not in buckets:
+            buckets[bk] = {"open": b["o"], "high": b["h"], "low": b["l"], "close": b["c"], "value": b["v"]}
+        else:
+            agg = buckets[bk]
+            agg["high"] = max(agg["high"], b["h"])
+            agg["low"] = min(agg["low"], b["l"])
+            agg["close"] = b["c"]
+            agg["value"] += b["v"]
+    out = []
+    for bk in sorted(buckets):
+        epoch = calendar.timegm((int(today[:4]), int(today[4:6]), int(today[6:8]),
+                                 bk // 60, bk % 60, 0, 0, 0, 0))
+        agg = buckets[bk]
+        out.append({"time": epoch, "open": agg["open"], "high": agg["high"],
+                    "low": agg["low"], "close": agg["close"], "value": agg["value"]})
+    return out
 
 
 def get_index_minutebar(index_code: str, interval: int = 15) -> list:
