@@ -2121,13 +2121,19 @@ async function openSectorEdit(name){
   if(!_secEditState||_secEditState.error) _secEditState={hidden_sectors:[],extra_stocks:{},removed_stocks:{},custom_tiles:[]};
   _renderSecEditModal();
 }
+function _secDispName(code,orig){ return (_secEditState.stock_rename||{})[code]||orig; }
 function _secEditTagsHtml(){
   const removed=new Set((_secEditState.removed_stocks||{})[_secEditSector]||[]);
   const extra=(_secEditState.extra_stocks||{})[_secEditSector]||[];
-  const baseTags=(_secEditStocks.base||[]).filter(s=>!removed.has(s.code)).map(s=>
-    `<span class="tag" style="background:rgba(255,255,255,.06);border-color:#333">${esc(s.name)}<span class="x" onclick="secEditRemoveBase('${esc(s.code)}')">×</span></span>`);
-  const extraTags=extra.map(s=>
-    `<span class="tag">${esc(s.name)}<span class="x" onclick="secEditRemoveExtra('${esc(s.code)}')">×</span></span>`);
+  const tag=(s,isBase)=>{
+    const dn=_secDispName(s.code,s.name);
+    const renamed=dn!==s.name;
+    const st=isBase?' style="background:rgba(255,255,255,.06);border-color:#333"':'';
+    return `<span class="tag"${st}><span class="tnm" title="클릭→이름변경" style="cursor:pointer;border-bottom:1px dashed rgba(245,217,122,.4)"
+      onclick="secEditRenameStock('${esc(s.code)}','${esc(s.name)}')">${esc(dn)}${renamed?' ✏️':''}</span><span class="x" onclick="secEditRemove${isBase?'Base':'Extra'}('${esc(s.code)}')">×</span></span>`;
+  };
+  const baseTags=(_secEditStocks.base||[]).filter(s=>!removed.has(s.code)).map(s=>tag(s,true));
+  const extraTags=extra.map(s=>tag(s,false));
   return [...baseTags,...extraTags].join("")||'<span style="font-size:11px;color:#444">종목 없음</span>';
 }
 function _renderSecEditModal(){
@@ -2157,6 +2163,15 @@ function _renderSecEditModal(){
   m.style.display="flex";
 }
 function _refreshSecEditTags(){ const r=document.getElementById("sec-edit-tags"); if(r)r.innerHTML=_secEditTagsHtml(); }
+function secEditRenameStock(code, orig){
+  const sr=_secEditState.stock_rename||{};
+  const cur=sr[code]||orig;
+  const nv=prompt(`종목 표시 이름 변경\n(원래: ${orig})`, cur);
+  if(nv===null)return;
+  const t=nv.trim();
+  if(t && t!==orig) sr[code]=t; else delete sr[code];   // 원래이름과 같거나 빈값 → 변경 해제
+  _secEditState.stock_rename=sr; _refreshSecEditTags();
+}
 function secEditRemoveBase(code){
   const rm=_secEditState.removed_stocks||{};
   if(!rm[_secEditSector])rm[_secEditSector]=[];

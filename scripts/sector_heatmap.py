@@ -661,6 +661,15 @@ def build_heatmap(top_n: int = 3) -> dict:
     for sec in sectors:
         sec["disp"] = rename_map.get(sec["name"], sec["name"])
 
+    # 종목 표시명 변경(코드 기준): 어느 섹터에 있든 동일 적용 (예: 삼화콘덴서공업→삼화콘덴서)
+    stock_rename = custom.get("stock_rename", {})
+    if stock_rename:
+        for sec in sectors:
+            for st in sec.get("stocks", []):
+                nn = stock_rename.get(st.get("code"))
+                if nn:
+                    st["name"] = nn
+
     return {
         "sectors": sectors,
         "updated_at": datetime.now().strftime("%H:%M:%S"),
