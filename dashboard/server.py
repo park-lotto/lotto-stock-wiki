@@ -1490,6 +1490,14 @@ def _mf_is_good(result: dict) -> bool:
 def _serve_mf(result: dict):
     """정상이면 last-good 갱신 후 서빙, 열화면 직전 정상 결과 서빙(그래프 유지)."""
     if _mf_is_good(result):
+        prev = _last_good_mf["result"]
+        if prev:
+            # bars 급감 방어: 새 15분봉이 직전의 절반 미만이면(페이지네이션 순간실패 등) 직전 bars 유지
+            for c in ("0001", "1001"):
+                nb = len((result.get(c) or {}).get("bars") or [])
+                pb = len((prev.get(c) or {}).get("bars") or [])
+                if pb >= 6 and nb < pb // 2 and result.get(c):
+                    result[c]["bars"] = prev[c]["bars"]
         _last_good_mf["result"] = result
         return JSONResponse(content=result)
     if _last_good_mf["result"]:

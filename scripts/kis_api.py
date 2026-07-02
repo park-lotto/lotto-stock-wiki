@@ -781,12 +781,27 @@ def get_minute_bars_ohlc(code: str, tf: str = "5", mdiv: str = "UN", max_pages: 
 
 
 def get_index_minutebar(index_code: str, interval: int = 15) -> list:
-    """코스피(0001)/코스닥(1001) 지수 분봉 [{"t":"HHMMSS","price":...}] (09:00~현재 전체, 15분 리샘플).
+    """코스피(0001)/코스닥(1001) 지수 분봉 [{"t":"HHMMSS","price":...}] (오늘 09:00~현재, 15분 리샘플).
     KIS 지수 분봉 API는 별도 구독 필요 → KODEX200/코스닥150 ETF 분봉으로 대체.
-    추세(방향) 동일, 절대값만 다름. 페이지네이션으로 장시작부터 전부 수집 → 그래프가 09:00부터 채워짐.
+    1순위=네이버 fchart 단일호출(오늘치 안정적). KIS 페이지네이션(15콜)은 중간 순간실패로
+    최근 3개만 오는 일이 잦아 그래프가 짧아졌다 복구됐다 하던 문제 → 단일호출로 근본 차단.
     """
     # 코스피 → KODEX 200 (069500), 코스닥 → KODEX 코스닥150 (229200)
     proxy = "069500" if index_code == "0001" else "229200"
+    try:
+        import naver_api as _nv, time as _t, datetime as _dt
+        allc = _nv.minute_candles(proxy, interval, count=500)  # fchart 단일호출(오늘+며칠)
+        today = _dt.datetime.now().strftime("%Y%m%d")
+        out = []
+        for x in allc:
+            g = _t.gmtime(x["time"])   # epoch=KST벽시계-as-UTC로 생성됨 → gmtime이 KST 복원
+            if f"{g.tm_year}{g.tm_mon:02d}{g.tm_mday:02d}" == today:
+                out.append({"t": f"{g.tm_hour:02d}{g.tm_min:02d}00", "price": x["close"]})
+        if len(out) >= 2:
+            return out
+    except Exception:
+        pass
+    # 폴백: KIS 페이지네이션
     return get_intraday_series(proxy, resample_min=interval)
 
 
