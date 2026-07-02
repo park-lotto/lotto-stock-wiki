@@ -259,43 +259,6 @@ def _send_ops_tg(text: str) -> None:
         print(f"[report] 업무보고 텔레 전송 오류: {e}")
 
 
-def send_report(cats: list[str], since_iso: str, date: str) -> None:
-    """이번 슬롯에서 새로 적재된 원자를 요약해 텔레로 보고."""
-    try:
-        from pipeline.atoms.db import get_conn
-        conn = get_conn()
-        by_src = conn.execute(
-            "SELECT source_type, COUNT(*) FROM atoms WHERE created_at >= ? "
-            "GROUP BY source_type ORDER BY 2 DESC", (since_iso,)).fetchall()
-        secs = conn.execute(
-            "SELECT sector, COUNT(*) FROM atoms WHERE created_at >= ? "
-            "AND sector IS NOT NULL AND sector NOT IN ('기타','') "
-            "GROUP BY sector ORDER BY 2 DESC LIMIT 5", (since_iso,)).fetchall()
-        assets = conn.execute(
-            "SELECT asset, COUNT(*) FROM atoms WHERE created_at >= ? "
-            "AND asset_level='stock' AND asset IS NOT NULL AND asset != '' "
-            "GROUP BY asset ORDER BY 2 DESC LIMIT 6", (since_iso,)).fetchall()
-        conn.close()
-    except Exception as e:
-        print(f"[report] DB 조회 실패: {e}")
-        return
-
-    total = sum(n for _, n in by_src)
-    hhmm = datetime.now().strftime("%H:%M")
-    lines = [f"📥 <b>크롤 인제스트 완료</b> {date[5:]} {hhmm}",
-             f"카테고리: {', '.join(cats)}", ""]
-    if total == 0:
-        lines.append("신규 원자 없음")
-    else:
-        lines.append(f"<b>신규 원자 {total}개</b>")
-        lines += [f"• {st} {n}" for st, n in by_src]
-        if secs:
-            lines.append("")
-            lines.append("🏭 섹터: " + " ".join(f"{s}({n})" for s, n in secs))
-        if assets:
-            lines.append("📈 종목: " + " ".join(f"{a}({n})" for a, n in assets))
-    _send_tg("\n".join(lines))
-
 
 def main():
     ap = argparse.ArgumentParser(description="슬롯별 크롤 인제스트")
@@ -316,13 +279,19 @@ def main():
     run([PY, "scripts/sync_crawling.py", "--date", yesterday, "--overwrite"], "sync-yesterday")
     run([PY, "scripts/sync_crawling.py", "--date", date, "--overwrite"], "sync-today")
 
-    # 2) 카테고리별 원자화 (텔레는 전날 날짜도 함께 처리)
+    # 2) 카테고리별 원자화 + 진단 (텔레는 전날 날짜도 함께 처리)
+    results = []
     for c in cats:
-        ingest_cat(c, date, extra_date=yesterday)
+        output = ingest_cat(c, date, extra_date=yesterday)
+        try:
+            results.append(diagnose(c, date, yesterday, since_iso, output))
+        except Exception as e:
+            results.append({"cat": c, "delta": 0, "total_today": 0,
+                             "icon": "❔", "note": f"확인불가 — {e}", "retried": False})
 
-    # 3) 텔레 보고
+    # 3) 업무보고 텔레 발송
     if not args.no_report:
-        send_report(cats, since_iso, date)
+        _send_ops_tg(build_report(cats, date, results))
 
     print(f"\n[slot_ingest] 완료 — {date} {cats}")
 
