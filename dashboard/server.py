@@ -584,6 +584,52 @@ def api_sources_list():
     return JSONResponse(content=out)
 
 
+# ── 🧠 브레인 (채널 사고 복제) ─────────────────────────────
+PEOPLE_JSON = os.path.join(ROOT, "pipeline", "people", "people.json")
+
+
+@app.get("/brain", response_class=HTMLResponse)
+def brain_page():
+    with open(os.path.join(HERE, "brain.html"), encoding="utf-8") as f:
+        return f.read()
+
+
+@app.get("/api/brain/people")
+def api_brain_people():
+    from pipeline.people.brain_view import list_people
+    return JSONResponse(content=list_people())
+
+
+@app.post("/api/brain/people/add")
+async def api_brain_add(request: Request):
+    b = await request.json()
+    name = (b.get("name") or "").strip()
+    sources = [s.strip() for s in (b.get("sources") or []) if s.strip()]
+    trust = (b.get("trust") or "B").strip() or "B"
+    if not name or not sources:
+        return JSONResponse(content={"ok": False, "error": "이름과 source_name 필요"}, status_code=400)
+    with open(PEOPLE_JSON, encoding="utf-8") as f:
+        reg = json.load(f)
+    if name in reg:
+        return JSONResponse(content={"ok": False, "error": "이미 존재하는 채널"}, status_code=400)
+    reg[name] = {
+        "display": name, "sources": sources, "trust": trust,
+        "brain_page": f"wiki/people/{name}.md",
+    }
+    with open(PEOPLE_JSON, "w", encoding="utf-8") as f:
+        json.dump(reg, f, ensure_ascii=False, indent=2)
+    return JSONResponse(content={"ok": True, "name": name})
+
+
+@app.get("/api/brain/{person}")
+def api_brain_person(person: str):
+    from pipeline.people.brain_view import person_view
+    try:
+        return JSONResponse(content=person_view(person))
+    except KeyError:
+        return JSONResponse(content={"error": "unknown person"}, status_code=404)
+
+
 def _normalize_source(cat, raw):
     """입력이 링크면 카테고리에 맞는 키로 변환 + 링크 보존. 이름이면 그대로.
     반환 (key, url)."""
