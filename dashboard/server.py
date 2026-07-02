@@ -1286,6 +1286,84 @@ def api_sector_detail(etf: str = "", codes: str = "", title: str = ""):
     return JSONResponse(content=out)
 
 
+_sector_summary_cache: dict = {}   # {key: {"data":..., "ts":...}}
+
+@app.get("/api/sector_summary")
+def api_sector_summary(etf: str = "", codes: str = "", title: str = ""):
+    """섹터 뉴스 헤드라인 → Gemini로 '오늘 이 섹터 왜 움직이나' 요약(시청자용, 흥미롭게). 15분 캐시."""
+    key = f"etf:{etf}" if etf else f"codes:{codes}"
+    now = time.time()
+    c = _sector_summary_cache.get(key)
+    if c and now - c["ts"] < 900:
+        return JSONResponse(content=c["data"])
+    import sys as _sys
+    _sd = os.path.join(ROOT, "scripts")
+    if _sd not in _sys.path:
+        _sys.path.insert(0, _sd)
+    import news_feed as nf
+
+    # 1) 섹터 테마뉴스
+    headlines = []
+    if etf:
+        ec = etf.zfill(6) if etf.isdigit() else etf
+        # 캐시된 뉴스피드 먼저, 없으면 라이브
+        snews = []
+        for s in (_NEWS_FEED.get("data") or {}).get("sectors", []):
+            if str(s.get("code")) == ec:
+                snews = s.get("news", []); break
+        if not snews:
+            snews = nf.sector_news(ec, top=5)
+        for n in snews[:5]:
+            headlines.append(f"- [{n.get('date','')}] {n.get('title','')}")
+        # 2) 상위 편입종목 종목뉴스(신선·큐레이션)
+        try:
+            cons = _fetch_etf_constituents(ec)
+        except Exception:
+            cons = []
+        from concurrent.futures import ThreadPoolExecutor
+        metas = [(str(co.get("itemCode") or "").zfill(6), co.get("itemName")) for co in cons[:5]]
+        def _sn(m):
+            cc, nm = m
+            return [(nm, n.get("title", ""), n.get("date", "")) for n in nf.stock_news(cc, top=2)]
+        with ThreadPoolExecutor(max_workers=5) as ex:
+            for group in ex.map(_sn, metas):
+                for nm, t, dt in group:
+                    headlines.append(f"- [{nm} {dt}] {t}")
+    else:
+        for cc in [x.strip().zfill(6) for x in codes.split(",") if x.strip()][:6]:
+            for n in nf.stock_news(cc, top=2):
+                headlines.append(f"- {n.get('title','')}")
+
+    # 중복 제거
+    seen, uniq = set(), []
+    for h in headlines:
+        if h in seen:
+            continue
+        seen.add(h); uniq.append(h)
+    if len(uniq) < 2:
+        out = {"summary": "", "error": "요약할 뉴스가 부족합니다."}
+        return JSONResponse(content=out)
+
+    sector = title or etf or "이 섹터"
+    prompt = (
+        f"너는 주식 유튜브 채널의 시장 인사이트 애널리스트다. 아래는 '{sector}' 섹터의 오늘 뉴스 헤드라인이다.\n"
+        f"시청자가 흥미롭게 읽고 '여러 정보를 한 번에 얻었다'고 느끼도록 정리하라.\n\n"
+        f"[뉴스 헤드라인]\n" + "\n".join(uniq[:14]) + "\n\n"
+        "[출력 형식 · 마크다운, 짧게]\n"
+        "**🔑 한 줄**: 이 섹터가 지금 왜 주목받는지 한 문장 (구체적·흥미롭게)\n"
+        "**📌 핵심 이슈**\n"
+        "- 이슈 2~3개, 각 한 줄. 종목명·수치·계약/실적 등 구체 팩트 포함\n"
+        "**👀 관전 포인트**: 투자자가 뭘 봐야 하는지 한 줄\n\n"
+        "규칙: 헤드라인에 있는 사실만 사용. 양면론·'관망하라' 금지. 과장·추천 금지. 존댓말로 간결하게."
+    )
+    res = _gemini_text(prompt)
+    out = {"summary": res.get("analysis", ""), "model": res.get("model", ""),
+           "error": res.get("error", ""), "sources": len(uniq)}
+    if out["summary"]:
+        _sector_summary_cache[key] = {"data": out, "ts": now}
+    return JSONResponse(content=out)
+
+
 _etfcon_cache: dict = {}   # {code: {"data":..., "ts":...}}
 
 @app.get("/api/etf_constituents")
@@ -3035,14 +3113,17 @@ def _nb_scope_label(cats, period):
 
 def _build_notebook_bundle(q, cats=None, period="all", limit=200, split=False, include_urls=True):
     """필터 적용 수집 → dict(label, atoms_n, md_files[(title,text)], yt_urls, web_urls).
-    키워드가 매칭 0건이면(순수 요청문) 소스+기간 전체를 담는 '정리 모드'로 폴백."""
+    키워드 매칭이 그 소스+기간 범위 전체 대비 너무 빈약하면(순수 요청문의 조사·어미가 우연히
+    한두 개 원자에만 걸린 경우) 매칭을 버리고 소스+기간 전체를 담는 '정리 모드'로 폴백.
+    "정리해줘"류 문장은 토큰이 실제 검색어가 아니라 지시문이라 이런 우연한 협소매칭이 잦다."""
     conn = _ins_conn()
     if conn is None:
         return None
     try:
         rows, toks, label = _nb_fetch_rows(conn, q, cats, period, limit)
-        if not rows:
-            rows, toks, _ = _nb_fetch_rows(conn, "", cats, period, limit)
+        full_rows, _, _ = _nb_fetch_rows(conn, "", cats, period, limit)
+        if len(rows) < min(15, max(1, len(full_rows) * 0.3)):
+            rows = full_rows
             label = _nb_scope_label(cats, period)
     finally:
         conn.close()
@@ -4013,12 +4094,9 @@ def api_insights_notebooks():
     out, seen = [], set()
     for e in reg:
         nid = e.get("id")
-        if not nid:
+        if not nid or nid in seen:   # id 자체는 _nb_registry_add에서 이미 유일 보장됨
             continue
-        key = (e.get("label", ""), e.get("date", ""))   # 같은 라벨+날짜는 중복 → 최신만
-        if key in seen:
-            continue
-        seen.add(key)
+        seen.add(nid)
         out.append({
             "id": nid, "label": e.get("label", ""), "date": e.get("date", ""),
             "atoms": e.get("atoms", 0),

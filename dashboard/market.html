@@ -39,6 +39,15 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 #etf-pop .ep-hd{font-size:12px;font-weight:700;color:#eee;padding:4px 14px 8px;
   border-bottom:1px solid #262626;margin-bottom:2px;}
 #etf-pop .ep-hd small{color:#888;font-weight:400;}
+#etf-pop .ep-summary{margin:2px 10px 8px;padding:9px 11px;border-radius:8px;
+  background:linear-gradient(135deg,rgba(212,175,55,.08),rgba(212,175,55,.03));
+  border:1px solid rgba(212,175,55,.25);font-size:12px;color:#e8e2d0;line-height:1.5;}
+#etf-pop .ep-summary b{color:#f5d97a;font-weight:700;}
+#etf-pop .ep-summary ul{margin:2px 0 2px;padding-left:16px;}
+#etf-pop .ep-summary li{margin:1px 0;color:#ddd;}
+#etf-pop .ep-summary .ep-sum-line{margin:3px 0;}
+#etf-pop .ep-summary .ep-sum-src{margin-top:6px;font-size:9.5px;color:#8a7f5e;text-align:right;}
+#etf-pop .ep-sum-load{color:#b8a24d;font-style:italic;}
 #etf-pop .ep-row{display:flex;align-items:center;gap:8px;padding:6px 14px;font-size:12.5px;}
 #etf-pop .ep-row:hover{background:#222;}
 #etf-pop .ep-nm{flex:1;color:#eee;cursor:pointer;white-space:nowrap;}
@@ -1113,9 +1122,29 @@ function openSectorDetail({etf, codes, names, title, anchor}){
         +`<div class="nf-stnews">${news}</div></div>`;
     }).join("");
     p.innerHTML=`<div class="ep-hd">${esc(d.title||title||"")} <small>(빈집순 · 클릭=차트)</small></div>`
+      +`<div id="ep-summary" class="ep-summary">🤖 <span class="ep-sum-load">AI가 오늘 이 섹터 뉴스를 요약 중…</span></div>`
       +(sn?`<div class="nf-secnews" style="padding:2px 12px 8px">${sn}</div>`:"")
       +`<div style="padding:0 8px 6px">${st||'<div class="ep-empty">종목 없음</div>'}</div>`;
+    // AI 요약 비동기 로드 (뉴스는 이미 보이고, 요약만 나중에 채움)
+    fetch("/api/sector_summary?"+q+"&title="+encodeURIComponent(title||"")).then(r=>r.json()).then(sd=>{
+      if(_etfPopCode!==key) return;
+      const box=document.getElementById("ep-summary"); if(!box)return;
+      if(sd.summary){ box.innerHTML=_mdMini(sd.summary)+`<div class="ep-sum-src">🤖 Gemini · 뉴스 ${sd.sources||0}건 종합</div>`; }
+      else { box.style.display="none"; }
+    }).catch(()=>{ const box=document.getElementById("ep-summary"); if(box)box.style.display="none"; });
   }).catch(()=>{ if(_etfPopCode===key) p.innerHTML=`<div class="ep-hd">${esc(title||"")}</div><div class="ep-empty">오류</div>`; });
+}
+// 초경량 마크다운(**굵게**, - 불릿, 줄바꿈) → HTML
+function _mdMini(s){
+  const lines=String(s||"").split(/\n/).map(l=>l.trim()).filter(Boolean);
+  let html="", inList=false;
+  for(let ln of lines){
+    ln=esc(ln).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+    if(/^[-•]\s*/.test(ln)){ if(!inList){html+="<ul>";inList=true;} html+="<li>"+ln.replace(/^[-•]\s*/,"")+"</li>"; }
+    else { if(inList){html+="</ul>";inList=false;} html+="<div class='ep-sum-line'>"+ln+"</div>"; }
+  }
+  if(inList)html+="</ul>";
+  return html;
 }
 
 async function loadEtfBar(){
