@@ -108,3 +108,58 @@ def test_get_pending_post_excludes_non_pattern_files(tmp_path, monkeypatch):
     names = [p.name for p in get_pending_post(cfg)]
     assert "2026-06-06_1801_real_video.md" in names
     assert "script_소부장자금순환_20260604_gemini.md" not in names
+
+
+def test_ingest_post_routes_youtube_daytrading_profile(monkeypatch, tmp_path):
+    import json
+    from pipeline.atoms import post_ingest, profiles
+
+    monkeypatch.setattr(profiles, "youtube_channel_profile", lambda name: "데이트레이딩")
+
+    called = {}
+
+    def fake_extract_daytrading(md_path):
+        called["path"] = md_path
+        return {"trades": [{"name": "삼성전자", "entry_price": "71000",
+                             "stop_loss": "69500", "quote": "진입"}]}
+
+    monkeypatch.setattr(post_ingest, "_extract_daytrading", fake_extract_daytrading)
+    monkeypatch.setattr(post_ingest, "insert_atom", lambda a: called.setdefault("inserted", []).append(a))
+    monkeypatch.setattr(post_ingest, "embed_and_store", lambda a: None)
+    monkeypatch.setattr(post_ingest, "_mark_processed", lambda *a, **k: None)
+    monkeypatch.setattr(post_ingest, "_save_artifact", lambda *a, **k: None)
+
+    md = tmp_path / "2026-07-02_1_테스트채널.md"
+    md.write_text("**채널**: 테스트채널\n**날짜**: 2026-07-02\n", encoding="utf-8")
+    cfg = {"source_type": "youtube", "dir": "raw/yt", "header_label": "채널",
+           "registry": "youtube_registry.json"}
+
+    n = post_ingest.ingest_post(md, cfg)
+    assert n == 1
+    assert called["inserted"][0]["asset"] == "삼성전자"
+    assert json.loads(called["inserted"][0]["structured_fields"])["entry_price"] == "71000"
+
+
+def test_ingest_post_falls_back_to_general_when_daytrading_finds_no_trades(monkeypatch, tmp_path):
+    """하이브리드 오버라이드: 채널은 데이트레이딩 프로필이지만 이 영상은 매매
+    언급이 없으면(trades 빈 배열) 일반 POST_PROMPT 경로로 폴백해야 한다."""
+    from pipeline.atoms import post_ingest, profiles
+
+    monkeypatch.setattr(profiles, "youtube_channel_profile", lambda name: "데이트레이딩")
+    monkeypatch.setattr(post_ingest, "_extract_daytrading", lambda p: {"trades": []})
+    monkeypatch.setattr(post_ingest, "extract_post",
+                         lambda p: {"target_kind": "market", "market_direction": "혼조"})
+    called = {}
+    monkeypatch.setattr(post_ingest, "insert_atom", lambda a: called.setdefault("inserted", []).append(a))
+    monkeypatch.setattr(post_ingest, "embed_and_store", lambda a: None)
+    monkeypatch.setattr(post_ingest, "_mark_processed", lambda *a, **k: None)
+    monkeypatch.setattr(post_ingest, "_save_artifact", lambda *a, **k: None)
+
+    md = tmp_path / "2026-07-02_1_테스트채널.md"
+    md.write_text("**채널**: 테스트채널\n**날짜**: 2026-07-02\n", encoding="utf-8")
+    cfg = {"source_type": "youtube", "dir": "raw/yt", "header_label": "채널",
+           "registry": "youtube_registry.json"}
+
+    n = post_ingest.ingest_post(md, cfg)
+    assert n == 1
+    assert called["inserted"][0]["asset_level"] == "market"

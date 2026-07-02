@@ -23,6 +23,8 @@ from .post_sources import source_config
 from .post_questionnaire import extract_post, post_trust
 from .telegram_questionnaire import questionnaire_to_atoms_tg
 from .telegram_stance import deactivate_prior_stance
+from . import profiles
+from .profiles import daytrading_atoms, YOUTUBE_PROFILES
 
 _ROOT = Path(__file__).parent.parent.parent
 _Q_ROOT = _ROOT / "raw" / "post_q"
@@ -100,20 +102,69 @@ def _save_artifact(q: dict, source_type: str, date: str, title: str) -> None:
         json.dumps(q, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+def _extract_daytrading(md_path: Path) -> dict:
+    """유튜브 데이트레이딩 프로필 전용 질문지 추출."""
+    text = md_path.read_text(encoding="utf-8", errors="replace")
+    from .atomizer import _get_client, _rotate_key
+    from google.genai import types
+    import json as _json
+    prompt = YOUTUBE_PROFILES["데이트레이딩"]["prompt"]
+    for _attempt in range(4):
+        try:
+            resp = _get_client().models.generate_content(
+                model="gemini-3.1-flash-lite", contents=[text, prompt],
+                config=types.GenerateContentConfig(response_mime_type="application/json"),
+            )
+            return _json.loads(resp.text or "{}")
+        except Exception as e:
+            _m = str(e)
+            if any(c in _m for c in ("429", "RESOURCE_EXHAUSTED")):
+                if "PerDay" in _m or "limit: 500" in _m:
+                    if _rotate_key():
+                        continue
+                else:
+                    import time
+                    time.sleep(62)
+                    continue
+            print(f"  [WARN] 데이트레이딩 추출 실패: {e}")
+            return {}
+    return {}
+
+
 def ingest_post(md_path: Path, cfg: dict) -> int:
     h = _parse_post_header(md_path, cfg["header_label"])
-    q = extract_post(md_path)
-    if not q or not q.get("target_kind"):
-        print(f"  [WARN] 빈/미라우팅 질문지: {md_path.name}")
-        _mark_processed(md_path, cfg["source_type"], 0)
-        return 0
-    _save_artifact(q, cfg["source_type"], h["date"], h["title"])
-    meta = {
-        "date": h["date"], "channel": h["source_name"], "type": q["target_kind"],
-        "source_type": cfg["source_type"], "trust": post_trust(cfg["registry"], h["source_name"]),
-        "raw_file": str(md_path),
-    }
-    atoms = questionnaire_to_atoms_tg(q, meta)
+    profile = profiles.youtube_channel_profile(h["source_name"]) if cfg["source_type"] == "youtube" else None
+
+    atoms = None
+    if profile and profile in YOUTUBE_PROFILES:
+        q = _extract_daytrading(md_path)
+        if q and q.get("trades"):
+            _save_artifact(q, cfg["source_type"], h["date"], h["title"])
+            meta = {
+                "date": h["date"], "channel": h["source_name"],
+                "source_type": cfg["source_type"], "trust": post_trust(cfg["registry"], h["source_name"]),
+                "raw_file": str(md_path),
+            }
+            atoms = daytrading_atoms(q, meta)
+        # else: 채널은 데이트레이딩 프로필이지만 이 영상은 매매 언급이 없음(예: 시황
+        # 잡담 영상) — 하이브리드 오버라이드: 일반 POST_PROMPT 경로로 폴백한다.
+        # (반대 방향 — 프로필 없는 채널인데 이 영상만 데이트레이딩 — 은 이번 스펙
+        # 범위 밖. 대부분 채널이 profile=null이라 항상 일반 경로를 타므로 영향 없음.)
+
+    if atoms is None:
+        q = extract_post(md_path)
+        if not q or not q.get("target_kind"):
+            print(f"  [WARN] 빈/미라우팅 질문지: {md_path.name}")
+            _mark_processed(md_path, cfg["source_type"], 0)
+            return 0
+        _save_artifact(q, cfg["source_type"], h["date"], h["title"])
+        meta = {
+            "date": h["date"], "channel": h["source_name"], "type": q["target_kind"],
+            "source_type": cfg["source_type"], "trust": post_trust(cfg["registry"], h["source_name"]),
+            "raw_file": str(md_path),
+        }
+        atoms = questionnaire_to_atoms_tg(q, meta)
+
     for a in atoms:
         if a.get("stance_key"):
             deactivate_prior_stance(a["stance_key"], keep_id=a["id"])
