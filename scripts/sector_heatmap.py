@@ -562,15 +562,26 @@ def build_heatmap(top_n: int = 3) -> dict:
     for nm, parent, sts in surfaced_subs:
         if nm in existing_names or nm in hidden_set2:
             continue
+        removed_c = set(removed_map.get(nm, []))   # 편집탭서 삭제한 종목
         s_items = []
         for s in sts:
             c = s.get("code", "")
-            if not c:
+            if not c or c in removed_c:
                 continue
             p = prices.get(c) or {}
             s_items.append({"name": s.get("name", c), "code": c,
                             "change_rate": float(p.get("change_rate", 0) or 0),
                             "price": p.get("price", 0)})
+        # extra_stocks 추가(편집탭서 추가한 종목) — 세부섹터도 추가 반영
+        exist_c = {x["code"] for x in s_items}
+        for es in extra_map.get(nm, []):
+            c = es.get("code", "")
+            if c and c not in exist_c and c not in removed_c:
+                p = prices.get(c) or {}
+                s_items.append({"name": es.get("name", c), "code": c,
+                                "change_rate": float(p.get("change_rate", 0) or 0),
+                                "price": p.get("price", 0)})
+                exist_c.add(c)
         if not s_items:
             continue
         s_items.sort(key=lambda x: x["change_rate"], reverse=True)
