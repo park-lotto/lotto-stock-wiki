@@ -663,11 +663,24 @@ SSH_HOST = "ubuntu@3.39.179.148"
 REMOTE_ADD = "python3 /home/ubuntu/kmong/crawling_bot/add_source.py"
 
 
+# 크롤봇 스크립트(대시보드와 같은 서버에 존재). 있으면 SSH 없이 직접 실행.
+LOCAL_ADD = "/home/ubuntu/kmong/crawling_bot/add_source.py"
+LOCAL_DEL = "/home/ubuntu/kmong/crawling_bot/del_source.py"
+
+
+def _crawlbot_cmd(local_script, remote_cmd):
+    """서버(리눅스)면 로컬 직접 실행, 로컬 PC면 SSH.
+    크롤봇이 대시보드와 같은 머신에 있어 SSH가 불필요·불가(Windows 키경로)라 매번 실패하던 문제 해결."""
+    if os.path.exists(local_script):
+        return ["python3", local_script]
+    return ["ssh", "-i", SSH_KEY, "-o", "StrictHostKeyChecking=no",
+            "-o", "ConnectTimeout=20", SSH_HOST, remote_cmd]
+
+
 def server_register(cat, name, url):
     """서버 config.yaml에 소스 자동 등록 (add_source.py 호출). best-effort."""
     payload = json.dumps({"category": cat, "name": name, "url": url})
-    cmd = ["ssh", "-i", SSH_KEY, "-o", "StrictHostKeyChecking=no",
-           "-o", "ConnectTimeout=20", SSH_HOST, REMOTE_ADD]
+    cmd = _crawlbot_cmd(LOCAL_ADD, REMOTE_ADD)
     try:
         r = subprocess.run(cmd, input=payload.encode("utf-8"),
                            capture_output=True, timeout=35)
@@ -714,9 +727,7 @@ async def api_sources_add(req: Request):
 def server_unregister(cat, name, url):
     """서버 config.yaml 에서 소스 제거 (del_source.py). best-effort."""
     payload = json.dumps({"category": cat, "name": name, "url": url})
-    cmd = ["ssh", "-i", SSH_KEY, "-o", "StrictHostKeyChecking=no",
-           "-o", "ConnectTimeout=20", SSH_HOST,
-           "python3 /home/ubuntu/kmong/crawling_bot/del_source.py"]
+    cmd = _crawlbot_cmd(LOCAL_DEL, "python3 /home/ubuntu/kmong/crawling_bot/del_source.py")
     try:
         r = subprocess.run(cmd, input=payload.encode("utf-8"),
                            capture_output=True, timeout=35)
@@ -781,15 +792,22 @@ async def api_sources_rename(req: Request):
     return JSONResponse(content={"ok": True, "server": server})
 
 
+CRAWL_DIR = "/home/ubuntu/kmong/crawling_bot"
+
+
 def server_crawl(cat, only):
     """서버에서 해당 카테고리/채널 크롤을 백그라운드로 시작 (즉시 반환)."""
     import shlex
     only = only or ""
-    remote = ("cd /home/ubuntu/kmong/crawling_bot && nohup python3 crawl_run.py "
+    remote = ("cd " + CRAWL_DIR + " && nohup python3 crawl_run.py "
               + shlex.quote(cat) + " " + shlex.quote(only)
               + " >> logs/manual_crawl.log 2>&1 </dev/null &")
-    cmd = ["ssh", "-i", SSH_KEY, "-o", "StrictHostKeyChecking=no",
-           "-o", "ConnectTimeout=20", SSH_HOST, remote]
+    # 서버(리눅스)면 직접 실행, 로컬 PC면 SSH
+    if os.path.exists(os.path.join(CRAWL_DIR, "crawl_run.py")):
+        cmd = ["bash", "-c", remote]
+    else:
+        cmd = ["ssh", "-i", SSH_KEY, "-o", "StrictHostKeyChecking=no",
+               "-o", "ConnectTimeout=20", SSH_HOST, remote]
     try:
         subprocess.run(cmd, capture_output=True, timeout=25)
         return {"ok": True, "started": True}
