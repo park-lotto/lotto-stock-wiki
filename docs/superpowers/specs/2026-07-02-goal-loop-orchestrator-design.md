@@ -31,7 +31,9 @@
 | 첫 골 | 아침 시장 브리핑 (데이터 스킬이 이미 원자적이라 최단 증명) |
 | 자율성 경계 | **하이브리드 게이트** — 평소 자동 발행, 이상징후 시에만 멈추고 사장님 확인 |
 | 루프 의미 | **품질루프 + 복원력** — 자기검증→미달이면 개선 반복 + 단계 실패 시 재시도·우회 |
-| 실행 방식 | **A+C 하이브리드**: Cron→Workflow. 무거운 데이터수집·1차생성은 Python/Gemini(토큰0), 검증·품질·게이트 판정만 Claude |
+| 실행 방식 | **서버 파이썬 오케스트레이터 데몬 + Gemini 품질루프** (2026-07-02 수정) — 무인 08:00 잡은 Claude 세션 의존 불가라 항상 켜진 Lightsail 서버에서 기존 데몬패턴(_summary_prewarm)으로 실행. 브리핑 생성은 이미 있는 `studio_pipeline.generate_briefing` 재사용. Claude는 설계·구현만, 매일 실행은 서버가 자율 |
+
+> **런타임 변경 사유(2026-07-02)**: 초안은 "Cron→Claude Workflow"였으나, 무인 아침 잡은 그 시각 Claude 세션이 켜져 있어야만 동작해 신뢰성 부족. Lightsail 서버는 24h 가동 + 이미 `_news_loop`·`_summary_prewarm`·`_ingest_worker` 데몬 스레드 패턴 보유 → 서버 파이썬 오케스트레이터로 결정. 품질 자기검증은 Gemini가 담당(Claude 토큰 0). 조사 결과 브리핑 생성기가 이미 3개(generate_briefing·morning_briefing.py·daily_scenario.py) 존재 → v1은 "생성"이 아니라 그 위의 **오케스트레이션 껍데기**(검증·품질루프·게이트·스케줄·수동발행)만 구현.
 
 ---
 
