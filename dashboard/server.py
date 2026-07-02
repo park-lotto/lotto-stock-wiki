@@ -284,10 +284,45 @@ _FLOW: dict = {
 }
 
 _flow_day = {"date": None}  # 마지막으로 데이터를 쌓은 거래일 (자정 넘어 서버가 계속 떠있어도 매일 09:00에 새로 시작하도록)
+_FLOW_PERSIST = os.path.join(ROOT, "output", "flow_history.json")
+
+def _save_flow():
+    """투자자·프로그램 누적 이력을 디스크에 저장 (서버 재시작해도 09:00부터의 데이터 보존).
+    KIS엔 투자자매매동향 시계열 단건조회 API가 없어 폴링 누적이 유일한 방법이라, 재시작 손실을 막으려면 영속화 필수."""
+    try:
+        os.makedirs(os.path.dirname(_FLOW_PERSIST), exist_ok=True)
+        data = {"date": _flow_day["date"], "flow": {
+            mkt: {"investor": list(_FLOW[mkt]["investor"]), "program": list(_FLOW[mkt]["program"])}
+            for mkt in ("J", "Q")}}
+        tmp = _FLOW_PERSIST + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False)
+        os.replace(tmp, _FLOW_PERSIST)   # 원자적 교체 (쓰다 죽어도 기존 파일 안 깨짐)
+    except Exception:
+        pass
+
+def _load_flow():
+    """저장된 이력이 '오늘' 것이면 복원 (서버 재시작 후에도 그래프가 09:00부터 이어짐)."""
+    try:
+        with open(_FLOW_PERSIST, encoding="utf-8") as f:
+            data = json.load(f)
+        today = datetime.now().strftime("%Y-%m-%d")
+        if data.get("date") != today:
+            return   # 다른 날 데이터 → 무시 (매일 새로 시작)
+        for mkt in ("J", "Q"):
+            for snap in (data.get("flow", {}).get(mkt, {}).get("investor") or []):
+                _FLOW[mkt]["investor"].append(snap)
+            for snap in (data.get("flow", {}).get(mkt, {}).get("program") or []):
+                _FLOW[mkt]["program"].append(snap)
+        _flow_day["date"] = today
+    except Exception:
+        pass
+
+_load_flow()   # 부팅 시 오늘자 이력 복원 (재시작 후 그래프 이어짐)
 
 def _poll_flow():
     """장 중(09:00~16:00) 1분마다 투자자·프로그램 순매수 스냅샷 수집.
-    서버 시작 즉시 첫 수집 (initial=True), 이후 1분 간격.
+    서버 시작 즉시 첫 수집 (initial=True), 이후 1분 간격. 매 수집마다 디스크에 영속화.
     매일 09:00 첫 수집 시 전날 데이터를 지워 항상 '오늘 09:00부터'로 시작한다
     (서버 재시작 없이 자정을 넘겨도 그래프가 어제 데이터와 섞이지 않게).
     """
@@ -315,9 +350,10 @@ def _poll_flow():
                     except Exception:
                         pass
                 initial = False
+                _save_flow()   # 매 수집마다 영속화 → 재시작해도 이력 유지
         except Exception:
             pass
-        time.sleep(60)  # 1분 (투자자매매동향은 KIS에 시계열 단건조회 API가 없어 폴링으로만 누적 가능 — 재시작마다 리셋되니 최대한 빨리 채움)
+        time.sleep(60)  # 1분 (투자자매매동향은 KIS에 시계열 단건조회 API가 없어 폴링으로만 누적 가능)
 
 _poll_thread = threading.Thread(target=_poll_flow, daemon=True)
 _poll_thread.start()
