@@ -59,11 +59,22 @@ def _extract_error(text: str) -> str | None:
     return None
 
 
-def run(cmd: list[str], label: str) -> int:
+def run(cmd: list[str], label: str) -> tuple[int, str]:
+    """서브프로세스 실행. 출력은 화면에 그대로 찍고(기존 가시성 유지), 진단용으로도 반환.
+    subprocess 자체 실행 실패(예: 인터프리터 경로 문제)도 예외를 던지지 않고
+    에러 텍스트로 반환해 파이프라인이 죽지 않게 한다."""
     print(f"\n{'='*50}\n[{label}] {' '.join(str(c) for c in cmd)}\n{'='*50}")
-    r = subprocess.run(cmd, cwd=str(ROOT))
-    print(f"[{label}] 완료 (exit={r.returncode})")
-    return r.returncode
+    try:
+        r = subprocess.run(cmd, cwd=str(ROOT), capture_output=True, text=True,
+                            encoding="utf-8", errors="replace")
+        output = (r.stdout or "") + (r.stderr or "")
+        code = r.returncode
+    except Exception as e:
+        output = f"[run 오류] {e}"
+        code = -1
+    print(output)
+    print(f"[{label}] 완료 (exit={code})")
+    return code, output
 
 
 def ingest_cat(cat: str, date: str, extra_date: str | None = None) -> None:
