@@ -1,0 +1,30 @@
+{
+  "meta": {
+    "date": "2026-06-24",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-24_1009_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이승훈",
+    "report_date": "2026.06.24",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": "neutral",
+        "reason": "AI 투자에 팔 걷어붙인 게임사들…"
+      }
+    ],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": [
+      "크래프톤",
+      "넥슨"
+    ],
+    "risk": null,
+    "quote": "AI 투자에 팔 걷어붙인 게임사들…"
+  }
+}

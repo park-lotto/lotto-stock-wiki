@@ -1,0 +1,516 @@
+# ============================================
+# Colab Full Script (가격 데이터만 사용) - FULL CODE
+# - RS/Momentum: '종가' (일간)
+# - Weekly Vol Top30: 변동성 시트 우선(없으면 주간 OHLC W4로 fallback)
+# - Pullback Rebound Top30: "후보 없음" 방지(점수형, 가격만)
+# - 출력 + 엑셀 저장
+# ============================================
+
+import pandas as pd
+import numpy as np
+from google.colab import files
+import io
+from IPython.display import display
+from datetime import datetime
+
+pd.set_option("display.max_colwidth", None)
+
+# ----------------------------
+# Parameters
+# ----------------------------
+RS_WINDOWS = [60, 120, 250]     # for Mansfield RS
+LAST_N_MOMENTUM_DAYS = 10       # momentum span
+WEEK_ROWS = (2, 5)              # Excel 1-based rows 2~5 inclusive
+
+# Pullback Rebound (가격만, 점수형)
+RS_CUT = 65.0                   # 70 -> 65 (후보 없으면 60)
+MA_MID = 60
+MA_SHORT = 20
+RSI_SOFT = 55.0                 # 낮을수록 가점(탈락 아님)
+PULLBACK_LOOKBACK = 20
+PULLBACK_MAX = 0.30             # 최대 30% 눌림까지 허용
+PULLBACK_CENTER = 10.0          # 10% 눌림 근처가 가장 좋게
+VOL_QUANTILE_CUT = 0.95         # 변동성 상위 5%만 제외(더 완화는 1.0)
+TOP_N_PULLBACK = 30
+
+# ----------------------------
+# Upload Excel
+# ----------------------------
+uploaded = files.upload()
+filename = list(uploaded.keys())[0]
+
+# ----------------------------
+# Helpers
+# ----------------------------
+def _find_sheet_name(xls, candidates):
+    for original in xls.sheet_names:
+        low = original.lower().replace(" ", "")
+        for cand in candidates:
+            if cand in low:
+                return original
+    return None
+
+def _normalize_numeric_frame(df):
+    """Remove commas/spaces/units from object dtype cells -> float."""
+    obj_cols = [c for c in df.columns if df[c].dtype == "O"]
+    if obj_cols:
+        cleaned = df[obj_cols].astype(str)\
+            .replace(r"[,\s]", "", regex=True)\
+            .replace(r"[^\-\d\.]", "", regex=True)
+        df[obj_cols] = cleaned.apply(pd.to_numeric, errors="coerce")
+    return df
+
+def _read_sheet_any(filename, sheet_name):
+    df = pd.read_excel(io.BytesIO(uploaded[filename]), sheet_name=sheet_name)
+    # Normalize DATE column name if present
+    if "DATE" not in df.columns:
+        date_like = [c for c in df.columns if "date" in c.lower() or "날짜" in c.lower() or "일자" in c.lower()]
+        if date_like:
+            df.rename(columns={date_like[0]: "DATE"}, inplace=True)
+    return df
+
+def _read_daily_close(filename, sheet_name="종가"):
+    """For RS/Momentum only; does NOT create weekly OHLC."""
+    df = _read_sheet_any(filename, sheet_name)
+    if "DATE" not in df.columns:
+        raise ValueError("❌ '종가' 시트에 DATE/날짜 컬럼이 필요합니다.")
+    df = df.dropna(subset=["DATE"]).copy()
+    df["DATE"] = pd.to_datetime(df["DATE"], errors="coerce")
+    df = df.dropna(subset=["DATE"]).set_index("DATE").sort_index()
+    df = _normalize_numeric_frame(df)
+    return df
+
+def _read_weekly_rows_fixed(filename, sheet_name, row_start=2, row_end=5):
+    """
+    Excel 1-based rows 2~5를 위치 기반으로 잘라 4행 확보.
+    날짜 불일치/빈행 영향 제거. 인덱스는 W1~W4로 고정.
+    """
+    df = _read_sheet_any(filename, sheet_name)
+    df = _normalize_numeric_frame(df)
+    df = df.iloc[row_start-1:row_end].copy()  # 2~5행 -> iloc[1:5]
+
+    # 예외: 4행 미만일 때 tail에서 4행 보강 시도
+    if len(df) < 4:
+        tail = _read_sheet_any(filename, sheet_name)
+        tail = _normalize_numeric_frame(tail).tail(10)
+        num_cols = [c for c in tail.columns if c.lower() not in ["date", "날짜", "일자"]]
+        tail = tail[~tail[num_cols].isna().all(axis=1)]
+        if len(tail) >= 4:
+            df = tail.tail(4).copy()
+
+    if len(df) != 4:
+        raise ValueError(f"'{sheet_name}'에서 4개 주간 행(2~5행)을 확보하지 못했습니다. 실제 확보 행 수: {len(df)}")
+
+    # 날짜 컬럼은 사용하지 않고 인덱스를 고정
+    if "DATE" in df.columns:
+        df = df.drop(columns=["DATE"])
+    df.index = ["W1", "W2", "W3", "W4"]
+
+    # 완전 NaN 열 제거
+    df = df.loc[:, ~df.isna().all()]
+    return df
+
+# ----------------------------
+# Detect sheets
+# ----------------------------
+xls = pd.ExcelFile(io.BytesIO(uploaded[filename]))
+
+sheet_daily_close = _find_sheet_name(xls, ["종가", "close"])
+sheet_w_close     = _find_sheet_name(xls, ["주간종가", "weeklyclose"])
+sheet_w_open      = _find_sheet_name(xls, ["주간시가", "weeklyopen"])
+sheet_w_high      = _find_sheet_name(xls, ["주간고가", "weeklyhigh"])
+sheet_w_low       = _find_sheet_name(xls, ["주간저가", "weeklylow"])
+
+# dedicated volatility sheet (one-week values)
+sheet_volatility  = _find_sheet_name(xls, ["변동성", "주간변동성", "weeklyvolatility", "weeklyrange", "volatility"])
+
+if not sheet_daily_close:
+    raise ValueError("❌ '종가' 시트를 찾지 못했습니다.")
+if not all([sheet_w_close, sheet_w_open, sheet_w_high, sheet_w_low]):
+    raise ValueError(f"❌ 주간 OHLC 시트를 찾지 못했습니다. 감지된 시트: {xls.sheet_names}")
+
+# ----------------------------
+# RS / Momentum from '종가' (daily close only)
+# ----------------------------
+daily_close = _read_daily_close(filename, sheet_daily_close)
+if "코스피" not in daily_close.columns:
+    raise ValueError("❌ '종가' 시트에 '코스피' 컬럼이 없습니다.")
+
+kospi = daily_close["코스피"].dropna()
+assets_daily = daily_close.drop(columns=["코스피"])
+
+def compute_mansfield_rs_log(etf, benchmark, ma_period=52):
+    etf = etf.where(etf > 0, np.nan)
+    benchmark = benchmark.where(benchmark > 0, np.nan)
+    rel = (etf / benchmark).replace([np.inf, -np.inf], np.nan)
+    log_rel = np.log(rel)
+    ma = log_rel.rolling(window=ma_period, min_periods=ma_period).mean()
+    return (log_rel - ma) * 100
+
+def normalize_to_100_scale(x, scale=12):
+    return 100 * (1 / (1 + np.exp(-x / scale)))
+
+# Mansfield RS
+mansfield_rows = []
+for col in assets_daily.columns:
+    s = assets_daily[col].dropna()
+    idx = s.index.intersection(kospi.index)
+    if len(idx) < 63:
+        continue
+    s = s.loc[idx]
+    k = kospi.loc[idx]
+
+    latest = {}
+    for win in RS_WINDOWS:
+        if len(s) >= win:
+            rs_series = compute_mansfield_rs_log(s, k, ma_period=win).dropna()
+            if not rs_series.empty:
+                raw = float(rs_series.iloc[-1])
+                latest[f"RS_{win}d"] = round(raw, 2)
+                latest[f"Norm_RS_{win}d"] = round(normalize_to_100_scale(raw), 2)
+
+    if not latest:
+        continue
+
+    raw_vals = [v for key, v in latest.items() if key.startswith("RS_") and key.endswith("d")]
+    if not raw_vals:
+        continue
+
+    rs_avg = round(sum(raw_vals) / len(raw_vals), 2)
+    norm_rs_avg = round(normalize_to_100_scale(rs_avg), 2)
+
+    row = {
+        "ETF": col,
+        "RS_60d": np.nan, "RS_120d": np.nan, "RS_250d": np.nan, "RS_avg": rs_avg,
+        "Norm_RS_60d": np.nan, "Norm_RS_120d": np.nan, "Norm_RS_250d": np.nan, "Norm_RS_avg": norm_rs_avg
+    }
+    for win in RS_WINDOWS:
+        if f"RS_{win}d" in latest:
+            row[f"RS_{win}d"] = latest[f"RS_{win}d"]
+            row[f"Norm_RS_{win}d"] = latest[f"Norm_RS_{win}d"]
+
+    mansfield_rows.append(row)
+
+mansfield_df = pd.DataFrame(mansfield_rows).sort_values(by="Norm_RS_avg", ascending=False)
+mansfield_df.reset_index(drop=True, inplace=True)
+mansfield_df_70 = mansfield_df[mansfield_df["Norm_RS_avg"] >= 70].copy() if not mansfield_df.empty else pd.DataFrame()
+
+# Momentum
+def calculate_risk_adjusted_momentum(data, last_n_days=10):
+    daily_top = {}
+    clean = data.dropna(how="all")
+    if clean.empty:
+        return pd.DataFrame()
+    dates = clean.index[-last_n_days:] if len(clean.index) >= last_n_days else clean.index
+
+    for day in dates:
+        end_idx = data.index.get_indexer_for([day])[0]
+        s3 = data.iloc[max(0, end_idx-62): end_idx+1]
+        s6 = data.iloc[max(0, end_idx-125): end_idx+1]
+        s12 = data.iloc[max(0, end_idx-251): end_idx+1]
+
+        r3 = s3.pct_change(fill_method=None).mean(skipna=True)
+        r6 = s6.pct_change(fill_method=None).mean(skipna=True)
+        r12 = s12.pct_change(fill_method=None).mean(skipna=True)
+
+        v3 = s3.pct_change(fill_method=None).std(skipna=True)
+        v6 = s6.pct_change(fill_method=None).std(skipna=True)
+        v12 = s12.pct_change(fill_method=None).std(skipna=True)
+
+        valid = (v3 > 0) & (v6 > 0) & (v12 > 0)
+        if valid.sum() == 0:
+            daily_top[day] = [np.nan] * 20
+            continue
+
+        risk_adj = (r3[valid]/v3[valid] + r6[valid]/v6[valid] + r12[valid]/v12[valid]) / 3
+        top_20 = risk_adj.nlargest(min(20, risk_adj.shape[0])).index.tolist()
+        top_20 += [np.nan] * (20 - len(top_20))
+        daily_top[day] = top_20
+
+    out = pd.DataFrame.from_dict(daily_top, orient="index", columns=[f"Top {i+1}" for i in range(20)])
+    out.index.name = "Date"
+    return out
+
+momentum_df = calculate_risk_adjusted_momentum(assets_daily, LAST_N_MOMENTUM_DAYS)
+
+# ----------------------------
+# Weekly OHLC (for fallback)
+# ----------------------------
+w_close = _read_weekly_rows_fixed(filename, sheet_w_close, row_start=WEEK_ROWS[0], row_end=WEEK_ROWS[1])
+w_open  = _read_weekly_rows_fixed(filename, sheet_w_open,  row_start=WEEK_ROWS[0], row_end=WEEK_ROWS[1])
+w_high  = _read_weekly_rows_fixed(filename, sheet_w_high,  row_start=WEEK_ROWS[0], row_end=WEEK_ROWS[1])
+w_low   = _read_weekly_rows_fixed(filename, sheet_w_low,   row_start=WEEK_ROWS[0], row_end=WEEK_ROWS[1])
+
+tickers_weekly = sorted(set(w_close.columns) & set(w_open.columns) & set(w_high.columns) & set(w_low.columns))
+if "코스피" in tickers_weekly:
+    tickers_weekly.remove("코스피")
+
+WIDX = ["W1", "W2", "W3", "W4"]
+wc = w_close.loc[WIDX, tickers_weekly].astype(float)
+wh = w_high.loc[WIDX, tickers_weekly].astype(float)
+wl = w_low.loc[WIDX, tickers_weekly].astype(float)
+
+weekly_range_pct = (wh - wl) / wc * 100.0
+oneweek_vol_from_ohlc = weekly_range_pct.iloc[-1, :].rename("Vol_1W_%")
+
+# ----------------------------
+# One-Week Volatility from dedicated sheet (preferred)
+# ----------------------------
+def _read_oneweek_volatility_from_sheet(filename, sheet_name):
+    df = _read_sheet_any(filename, sheet_name)
+    df = _normalize_numeric_frame(df)
+
+    ticker_col = None
+    vol_col = None
+    for c in df.columns:
+        cl = c.lower()
+        if any(k in cl for k in ["ticker", "종목"]):
+            ticker_col = c
+        if any(k in cl for k in ["변동성", "vol"]):
+            vol_col = c
+
+    # 롱형
+    if ticker_col and vol_col:
+        sub = df[[ticker_col, vol_col]].dropna()
+        sub.columns = ["Ticker", "Vol"]
+        ser = sub.set_index("Ticker")["Vol"].astype(float)
+        ser.name = "Vol_1W_%"
+        return ser
+
+    # 와이드형
+    date_col = None
+    if "DATE" in df.columns:
+        date_col = "DATE"
+    else:
+        for c in df.columns:
+            if any(k in c.lower() for k in ["date", "날짜", "일자"]):
+                df.rename(columns={c: "DATE"}, inplace=True)
+                date_col = "DATE"
+                break
+
+    if date_col:
+        df["DATE"] = pd.to_datetime(df["DATE"], errors="coerce")
+        df = df.dropna(subset=["DATE"]).sort_values("DATE")
+        last_row = df.iloc[-1]
+        numeric_cols = [c for c in df.columns if c != "DATE" and np.issubdtype(df[c].dtype, np.number)]
+        ser = last_row[numeric_cols].astype(float)
+        ser.name = "Vol_1W_%"
+        return ser
+
+    # 날짜 없으면 숫자 가장 많은 행
+    numeric_count = df.apply(lambda r: pd.to_numeric(r, errors="coerce")).notna().sum(axis=1)
+    idx = numeric_count.idxmax()
+    last_row = df.loc[idx]
+    ser = pd.to_numeric(last_row, errors="coerce").dropna().astype(float)
+    ser.name = "Vol_1W_%"
+    return ser
+
+if sheet_volatility:
+    oneweek_vol = _read_oneweek_volatility_from_sheet(filename, sheet_volatility)
+else:
+    oneweek_vol = None
+
+if (oneweek_vol is None) or (oneweek_vol.dropna().empty):
+    oneweek_vol = oneweek_vol_from_ohlc
+
+# 주간 OHLC에 존재하는 티커만
+if len(tickers_weekly) > 0:
+    oneweek_vol = oneweek_vol.reindex(tickers_weekly).dropna()
+
+top30_oneweek = oneweek_vol.sort_values(ascending=False).head(30)
+
+# ============================================================
+# ✅ Pullback Rebound (가격만, 점수형 / 후보 0개 방지)
+# ============================================================
+def _rsi(series: pd.Series, period: int = 14) -> pd.Series:
+    delta = series.diff()
+    up = delta.clip(lower=0)
+    down = -delta.clip(upper=0)
+    roll_up = up.ewm(alpha=1/period, adjust=False).mean()
+    roll_down = down.ewm(alpha=1/period, adjust=False).mean()
+    rs = roll_up / roll_down
+    return 100 - (100 / (1 + rs))
+
+def build_pullback_rebound_candidates_soft(
+    price_df: pd.DataFrame,
+    mansfield_df: pd.DataFrame,
+    oneweek_vol: pd.Series = None,
+    rs_cut: float = 65.0,
+    ma_mid: int = 60,
+    ma_short: int = 20,
+    pullback_lookback: int = 20,
+    pullback_max: float = 0.30,
+    pullback_center: float = 10.0,
+    rsi_soft: float = 55.0,
+    vol_quantile_cut: float = 0.95,
+    top_n: int = 30,
+):
+    if mansfield_df is None or mansfield_df.empty:
+        return pd.DataFrame()
+
+    strong = mansfield_df[mansfield_df["Norm_RS_avg"] >= rs_cut].copy()
+    if strong.empty:
+        return pd.DataFrame()
+
+    universe = [t for t in strong["ETF"].tolist() if t in price_df.columns]
+    if len(universe) == 0:
+        return pd.DataFrame()
+
+    rows = []
+    for t in universe:
+        s = price_df[t].dropna()
+        if len(s) < max(ma_mid, ma_short, pullback_lookback) + 5:
+            continue
+
+        last = float(s.iloc[-1])
+        ma_mid_v = float(s.rolling(ma_mid).mean().iloc[-1])
+        ma_short_v = float(s.rolling(ma_short).mean().iloc[-1])
+
+        hh = float(s.tail(pullback_lookback).max())
+        pullback = (hh - last) / hh
+        pullback_pct = pullback * 100.0
+
+        rsi14 = float(_rsi(s, 14).iloc[-1])
+        dist60 = (last / ma_mid_v - 1.0) * 100.0
+
+        vol = np.nan
+        if oneweek_vol is not None and isinstance(oneweek_vol, pd.Series) and t in oneweek_vol.index:
+            vol = float(oneweek_vol.loc[t])
+
+        rows.append({
+            "Ticker": t,
+            "Last": last,
+            f"MA{ma_short}": ma_short_v,
+            f"MA{ma_mid}": ma_mid_v,
+            "Dist_to_MA60_%": dist60,
+            "Pullback_20D_%": pullback_pct,
+            "RSI14": rsi14,
+            "Vol_1W_%": vol,
+            "Norm_RS_avg": float(strong.loc[strong["ETF"] == t, "Norm_RS_avg"].iloc[0]),
+        })
+
+    cand = pd.DataFrame(rows)
+    if cand.empty:
+        return cand
+
+    # 변동성 상위 일부만 제외
+    if cand["Vol_1W_%"].notna().sum() >= 10:
+        vol_cut = float(cand["Vol_1W_%"].quantile(vol_quantile_cut))
+        cand = cand[cand["Vol_1W_%"].isna() | (cand["Vol_1W_%"] <= vol_cut)].copy()
+        cand["VolCut_q"] = vol_cut
+    else:
+        cand["VolCut_q"] = np.nan
+
+    if cand.empty:
+        return cand
+
+    # 점수화
+    rs_score = (cand["Norm_RS_avg"] / 100.0).clip(0, 1)
+
+    pb = cand["Pullback_20D_%"].clip(lower=0, upper=pullback_max * 100)
+    pb_score = (1 - (np.abs(pb - pullback_center) / pullback_center)).clip(lower=0)
+
+    rsi = cand["RSI14"].clip(0, 100)
+    rsi_score = ((rsi_soft - rsi) / rsi_soft).clip(lower=0).clip(upper=1)
+
+    d = cand["Dist_to_MA60_%"]
+    ma_score = (1 - (np.abs(d - 2.0) / 8.0)).clip(lower=0)
+
+    if cand["Vol_1W_%"].notna().sum() > 0:
+        vmax = cand["Vol_1W_%"].max()
+        vmin = cand["Vol_1W_%"].min()
+        if vmax > vmin:
+            vol_score = (1 - (cand["Vol_1W_%"] - vmin) / (vmax - vmin)).fillna(0.5)
+        else:
+            vol_score = pd.Series(0.5, index=cand.index)
+    else:
+        vol_score = pd.Series(0.5, index=cand.index)
+
+    cand["Score"] = (
+        0.45 * rs_score +
+        0.20 * pb_score +
+        0.15 * rsi_score +
+        0.15 * ma_score +
+        0.05 * vol_score
+    ) * 100.0
+
+    cand["Pullback_OK"] = cand["Pullback_20D_%"].between(3, pullback_max * 100)
+    cand["RSI_low(<=55)"] = cand["RSI14"] <= rsi_soft
+    cand["MA60_up(>=0)"] = cand["Dist_to_MA60_%"] >= 0
+
+    cand = cand.sort_values("Score", ascending=False).head(top_n).reset_index(drop=True)
+    return cand
+
+pullback_candidates = build_pullback_rebound_candidates_soft(
+    price_df=assets_daily,
+    mansfield_df=mansfield_df,
+    oneweek_vol=oneweek_vol,
+    rs_cut=RS_CUT,
+    ma_mid=MA_MID,
+    ma_short=MA_SHORT,
+    pullback_lookback=PULLBACK_LOOKBACK,
+    pullback_max=PULLBACK_MAX,
+    pullback_center=PULLBACK_CENTER,
+    rsi_soft=RSI_SOFT,
+    vol_quantile_cut=VOL_QUANTILE_CUT,
+    top_n=TOP_N_PULLBACK
+)
+
+# ----------------------------
+# Display
+# ----------------------------
+print("📌 Mansfield RS (sorted by Norm_RS_avg desc)")
+display(mansfield_df if not mansfield_df.empty else mansfield_df)
+
+print("\n📌 Normalized Mansfield RS ≥ 70")
+display(mansfield_df_70 if not mansfield_df_70.empty else mansfield_df_70)
+
+print("\n📌 Volatility-adjusted Momentum (last 10 days)")
+display(momentum_df if not momentum_df.empty else momentum_df)
+
+print("\n🚀 Top30_WeeklyVol_1W — 이번 주 한 주치 변동성 상위 30개")
+display(top30_oneweek.to_frame("Vol_%").round(3))
+
+print("\n🟢 Pullback Rebound 후보 Top30 (가격만, 점수형)")
+if pullback_candidates.empty:
+    print("⚠️ 후보가 없습니다. RS_CUT=60 또는 VOL_QUANTILE_CUT=1.0(변동성 컷 제거)로 완화해보세요.")
+else:
+    display(pullback_candidates)
+
+# ----------------------------
+# Save to Excel
+# ----------------------------
+outname = f"RS_LarryVol_Pullback_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
+with pd.ExcelWriter(outname, engine="openpyxl") as writer:
+    meta = pd.DataFrame({
+        "Key": [
+            "GeneratedAt", "RS_WINDOWS", "Weekly_Rows_Used", "Volatility_Sheet_Used",
+            "Pullback_RS_CUT", "Pullback_MA_MID", "Pullback_MA_SHORT", "Pullback_RSI_SOFT",
+            "Pullback_Max%", "Pullback_Center%", "Vol_Quantile_Cut", "TopN_Pullback"
+        ],
+        "Value": [
+            datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            str(RS_WINDOWS),
+            f"{WEEK_ROWS[0]}~{WEEK_ROWS[1]} (Excel rows)",
+            sheet_volatility if sheet_volatility else "(fallback: from weekly OHLC W4)",
+            RS_CUT, MA_MID, MA_SHORT, RSI_SOFT,
+            PULLBACK_MAX * 100, PULLBACK_CENTER, VOL_QUANTILE_CUT, TOP_N_PULLBACK
+        ]
+    })
+    meta.to_excel(writer, sheet_name="Meta", index=False)
+
+    if not mansfield_df.empty:
+        mansfield_df.to_excel(writer, sheet_name="Mansfield_RS_All", index=False)
+    if not mansfield_df_70.empty:
+        mansfield_df_70.to_excel(writer, sheet_name="Mansfield_RS_70", index=False)
+    if not momentum_df.empty:
+        momentum_df.reset_index().to_excel(writer, sheet_name="Top20_Momentum_Last10", index=False)
+
+    top30_oneweek.to_frame("Vol_%").round(4).to_excel(writer, sheet_name="Top30_WeeklyVol_1W")
+
+    if not pullback_candidates.empty:
+        pullback_candidates.to_excel(writer, sheet_name="Pullback_Rebound_Top30", index=False)
+
+from google.colab import files as colab_files
+print(f"✅ Saved: {outname}")
+colab_files.download(outname)

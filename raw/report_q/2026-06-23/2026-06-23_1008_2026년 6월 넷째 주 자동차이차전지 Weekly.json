@@ -1,0 +1,61 @@
+{
+  "meta": {
+    "date": "2026-06-23",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-23_1008_2026년 6월 넷째 주 자동차이차전지 Weekly.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "김광식, 최보영",
+    "report_date": "2026/06/23",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "맨하임 중고차 지수 213.pt(+0.6% q-q)",
+      "중국 EV 보조금 축소-중량 기반 세금 도입 논의",
+      "코발트 가격(2026.06.19 기준 MoM +0.0%)",
+      "리튬 가격(2026.06.19 기준 MoM -11.6%)",
+      "니켈 가격(2026.06.19 기준 MoM -6.5%)"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "자동차",
+        "stance": null,
+        "reason": "전기차-소형차 등 TCO/가성비 고려 수요 확대 관측"
+      },
+      {
+        "sector": "2차전지",
+        "stance": null,
+        "reason": "전기차 회복, ESS 성장 가속에 따른 실적 반등 시동"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026/06/23",
+        "event": "ESS 유럽 2026 개최"
+      }
+    ],
+    "top_picks": [
+      "현대차",
+      "기아",
+      "현대모비스",
+      "한온시스템",
+      "TESLA",
+      "TOYOTA",
+      "BYD",
+      "GM",
+      "FORD",
+      "LG에너지솔루션",
+      "삼성SDI",
+      "에코프로비엠",
+      "포스코퓨처엠",
+      "엘앤에프",
+      "CATL",
+      "PANASONIC",
+      "ALBEMARLE"
+    ],
+    "risk": "EU 중국산 전기차 관세 플러그인 하이브리드 모델까지 확대 검토",
+    "quote": "2분기 프리뷰 시작. LG에너지솔루션, 삼성SDI 영업이익 컨센서스 각 2,075억원, -734억원으로 상향"
+  }
+}

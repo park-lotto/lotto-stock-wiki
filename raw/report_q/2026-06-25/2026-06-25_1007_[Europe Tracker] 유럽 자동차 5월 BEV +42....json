@@ -1,0 +1,48 @@
+{
+  "meta": {
+    "date": "2026-06-25",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-25_1007_[Europe Tracker] 유럽 자동차 5월 BEV +42....md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이현욱",
+    "report_date": "2026년 6월 25일",
+    "target_kind": "sector",
+    "sector_name": "자동차/2차전지",
+    "sector_view": null,
+    "thesis": [
+      "2026년 5월 EU 신차 등록은 YoY +3.2% 증가한 95.5만대를 기록하며 1~5월 누적 기준 +4.0%의 성장세를 이어갔다.",
+      "시장 성장은 전동화 차량이 견인했으며, 5월 BEV 판매는 YoY +42.9% 급증하며 유럽 시장 내 내연기관 수요 축소가 뚜렷하게 나타났다.",
+      "5월 시장의 핵심은 테슬라와 중국 OEM의 점유율 확대다."
+    ],
+    "timeline": [
+      "2026년 5월: EU 신차 등록 YoY +3.2% 증가",
+      "2026년 1~5월 누적 기준: +4.0% 성장"
+    ],
+    "top_picks": [
+      {
+        "name": "Tesla",
+        "reason": "Model Y 부분변경 이후 인도 정상화와 가격 경쟁력 강화가 회복의 배경으로 판단됨. EU 기준 등록대수가 2.2만대로 YoY +152.4% 증가.",
+        "tp": null
+      },
+      {
+        "name": "BYD",
+        "reason": "+158.8% 증가한 2.6만대를 기록. Seal U DM-i를 중심으로 한 PHEV 라인업이 판매 증가를 뒷받침.",
+        "tp": null
+      },
+      {
+        "name": "Chery",
+        "reason": "+239.6%의 높은 성장률 기록.",
+        "tp": null
+      },
+      {
+        "name": "Leapmotor",
+        "reason": "+447.3%의 높은 성장률 기록.",
+        "tp": null
+      }
+    ],
+    "risk": "Volkswagen Group(-3.6%), Stellantis(-2.6%), Renault Group(-1.3%), Hyundai Group(-1.3%) 등 주요 완성차 그룹은 전동화 전환 과정에서 실적 차이가 나타남.",
+    "quote": "5월 시장의 핵심은 테슬라와 중국 OEM의 점유율 확대다. 테슬라는 EU 기준 등록대수가 2.2만대로 YoY +152.4% 증가했는데, Model Y 부분변경 이후 인도 정상화와 가격 경쟁력 강화가 회복의 배경으로 판단된다."
+  }
+}

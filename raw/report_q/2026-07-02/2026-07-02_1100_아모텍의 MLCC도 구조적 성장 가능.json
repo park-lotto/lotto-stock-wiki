@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-02",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-02_1100_아모텍의 MLCC도 구조적 성장 가능.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "키움증권",
+    "analyst": "오현진",
+    "report_date": "2026. 7. 2",
+    "stocks": [
+      {
+        "name": "아모텍",
+        "code": "052710",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "26년, 27년 동사의 영업이익은 각각 95억원(YoY 73%), 277억원(YoY 190%)을 전망한다.",
+        "estimate_revision": null,
+        "next_catalyst": "1) MLCC 사업의 전방 시장이 개화 단계인 점, 2) 다양한 시행착오를 통한 수율 및 신뢰성 회복, 3) 협업 중인 고객사들의 시장 내 높은 입지",
+        "thesis": [
+          "MLCC 사업의 전방 시장이 개화 단계 진입",
+          "다양한 시행착오를 통한 수율 및 신뢰성 회복",
+          "협업 중인 고객사들의 시장 내 높은 입지"
+        ],
+        "valuation_basis": null,
+        "risk": "유상증자 발표로 인한 수급 부담 및 단기 실적 부진",
+        "supply_comment": "유상증자 발표로 인한 일부 수급적인 부담이 있으나, 선제적인 생산 능력 확대로 인해 향후 시장 성장 수혜의 강도를 높일 수 있다는 점을 주목한다.",
+        "quote": "동사의 주가는 유상증자 발표로 인한 수급 부담 및 단기 실적 부진, MLCC 사업의 기대감이 혼재하면서 높은 변동성을 보임.",
+        "sector": "IT"
+      }
+    ]
+  }
+}

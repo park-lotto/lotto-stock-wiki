@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-25",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-25_1003_ADR(American Depositary Receipts) 발행을 ...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "IBK투자증권",
+    "analyst": "김운호",
+    "report_date": "2026. 6. 25",
+    "stocks": [
+      {
+        "name": "SK하이닉스",
+        "code": null,
+        "rating": "매수",
+        "rating_changed": null,
+        "tp_new": "1,800,000",
+        "tp_prev": "1,800,000",
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "나스닥시장 상장 및 거래 시작",
+        "thesis": [
+          "ADR 발행을 통한 주주환원 강화",
+          "미국 시장 상장을 통한 밸류에이션 격차 해소",
+          "필라델피아 반도체 지수 편입 가능성 및 마이크론과의 직접 비교를 통한 가치 상승"
+        ],
+        "valuation_basis": "미국 나스닥 상장을 통한 마이크론 대비 낮았던 밸류에이션 극복 및 국내 주식 밸류에이션 차별화 기대",
+        "risk": null,
+        "supply_comment": "유상증자를 통해서 확보하게 될 45.4조원은 시설 투자에 사용될 것으로 밝힘",
+        "quote": "미국 나스닥 시장에 직접 상장함으로써 필라델피아 반도체 지수 편입 가능성이 높아지고, 마이크론과 직접 비교 대상이 되면서 한국에서 보다 높은 밸류에이션을 적용 받을 수 있을 것으로 기대"
+      }
+    ],
+    "sector": "반도체"
+  }
+}

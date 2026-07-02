@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-29",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-29_1005_유럽 사업 영토 확장 중.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "박종대",
+    "report_date": "2026년 06월 29일",
+    "stocks": [
+      {
+        "name": "에이피알",
+        "code": "278470",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "510,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 연결 매출과 영업이익은 각각 전년 동기 대비 112%, 109% 성장한 6,951억원과 1,766억원 규모가 가능할 전망이다.",
+        "estimate_revision": null,
+        "next_catalyst": "부스터프로X2 미국 론칭, EBD 인허가",
+        "thesis": [
+          "미국 및 유럽 시장 중심의 대규모 외형 성장",
+          "신규 사업(EBD/스킨부스터) 예정대로 진행",
+          "한국 화장품 ODM 인프라를 활용한 패스트 팔로우 전략"
+        ],
+        "valuation_basis": "현재 주가는 12MF PER 21.6배로, 2025년~28년 CAGR EPS 45%의 고신장을 감안하면 여유있는 밸류에이션 수준이다.",
+        "risk": null,
+        "supply_comment": "국내 최대 화장품 무역벤더 실리콘투와 긴밀한 협업.",
+        "quote": "에이피알은 전년도 높은 베이스에도 불구하고 2026년 연간 매출은 YoY 84% 성장한 2.8조원에 이를 것으로 추정한다."
+      }
+    ]
+  }
+}

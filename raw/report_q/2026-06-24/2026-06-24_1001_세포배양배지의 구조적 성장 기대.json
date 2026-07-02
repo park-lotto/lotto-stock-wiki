@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-24",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-24_1001_세포배양배지의 구조적 성장 기대.md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": "김진형",
+    "report_date": "2026.06.24",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "엑셀세라퓨틱스",
+        "code": "373110",
+        "rating": "N/R",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "1Q26 매출액 10억원(+210% YoY), 영업적자 29억원(적자지속 YoY, OPM -285%)",
+        "estimate_revision": null,
+        "next_catalyst": "동사의 3세대 배지가 글로벌 파이프라인에 안착하여 Lock-in 매출로 전환되는 속도와 규모",
+        "thesis": [
+          "세포 및 유전자 치료제용 3세대 화학조성배지의 국산화 선도",
+          "구조적 성장이 기대되는 3세대 배지로 중장기 성장 동력 확보",
+          "유통 사업으로 외형 성장은 시현했으나 결국 중요한 건 배지 매출"
+        ],
+        "valuation_basis": null,
+        "risk": "상대적으로 저마진의 사업 영역인 상품 매출이 견인한 실적이며, 전년 대비 적자 폭 확대됨",
+        "supply_comment": null,
+        "quote": "결국 주가의 향방을 결정하는 요인은 동사의 3세대 배지가 글로벌 파이프라인에 안착하여 Lock-in 매출로 전환되는 속도와 규모일 것으로 판단"
+      }
+    ]
+  }
+}

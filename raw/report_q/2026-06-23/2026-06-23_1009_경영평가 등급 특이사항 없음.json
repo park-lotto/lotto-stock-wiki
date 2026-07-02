@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-23",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-23_1009_경영평가 등급 특이사항 없음.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "유재선",
+    "report_date": "2026년 6월 23일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "한전KPS",
+        "code": "051600",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "68,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "2026년 노무비 증가 리스크는 거의 없을 것으로 보인다.",
+        "thesis": [
+          "2025년 공공기관 경영평가 결과 B등급 유지",
+          "최근 3년 경영평가 등급 A, B, B로 성과급 지급 관련 리스크 제한적",
+          "인건비 비중이 높아 경영평가 등급 변화에 따른 영업비용 변동 영향이 큼"
+        ],
+        "valuation_basis": null,
+        "risk": "2025년 공공기관 경영평가편람에서 산재예방 분야 배점이 기존 0.5점에서 2.5점으로 크게 상향된 영향으로 2025년과 2026년 연이은 중대재해 발생에 따른 등급 하락 가능성 존재",
+        "supply_comment": null,
+        "quote": "상세 성과급 지급률 차이는 존재할 수 있으나 기존 3년 등급 B, A, B와 동일하기 때문에 2026년 노무비 증가 리스크는 거의 없을 것으로 보인다."
+      }
+    ],
+    "sector_name": "유틸리티"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "meta": {
+    "date": "2026-06-30",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-30_1007_Medicare GLP-1 브릿지 71 시작.md"
+  },
+  "questionnaire": {
+    "target_kind": "sector",
+    "broker": "DS투자증권",
+    "analyst": "김민정",
+    "report_date": "2026.06.30",
+    "sector_name": "제약·바이오",
+    "sector_view": null,
+    "thesis": [
+      "2026년 7월 1일부터 2027년 12월 31일까지 CMS가 Medicare GLP-1 브릿지 시범 운영",
+      "용량 무관 월 $50에 약물이 제공되어 정체된 저용량 사용자를 고용량으로 유도할 것으로 전망",
+      "약 300만명 이상의 GLP-1 치료제 시장 확대 및 메디케어 수혜자 대상 경구제 혜택 가능성"
+    ],
+    "timeline": [
+      "2026년 7월 1일: Medicare GLP-1 브릿지 시작",
+      "2027년 12월 31일: Medicare GLP-1 브릿지 시범 운영 종료"
+    ],
+    "top_picks": [
+      {
+        "name": "일라이 릴리",
+        "reason": "파운다요 매출이 확대될 것으로 전망",
+        "tp": null
+      }
+    ],
+    "risk": "프로그램의 낮은 수혜자 인지도와 향후 공격적 마케팅 여부가 성공의 열쇠",
+    "quote": "이번 시범 프로그램은 용량에 무관하게 월 $50에 약물이 제공된다는 점에서 정체된 저용량 사용자를 고용량으로 유도시킬 것으로 전망한다."
+  }
+}

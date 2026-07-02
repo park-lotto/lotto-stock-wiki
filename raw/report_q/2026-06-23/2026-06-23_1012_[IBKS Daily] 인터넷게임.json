@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "date": "2026-06-23",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-23_1012_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이승훈",
+    "report_date": "2026.06.23",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "코스피 0.7%",
+      "코스닥 0.2%",
+      "DOW 0.3%",
+      "NASDAQ -1.3%"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "가상자산 한파에 게임사들의 보유 코인 처분 손실 또는 장부가치 급락 직격탄"
+      },
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "국민연금공단과 카카오엔터프라이즈가 AI 인프라 협력 MOU를 체결하며 공공 AI 서비스 개발 본격화"
+      }
+    ],
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "넷마블",
+      "네오위즈",
+      "엔씨",
+      "카카오",
+      "국민연금공단",
+      "카카오엔터프라이즈"
+    ],
+    "risk": "가상자산 시장 급격히 위축",
+    "quote": "올해 들어 가상자산 시장이 급격히 위축되면서 넷마블·네오위즈·엔씨 등 주요 게임사들이 보유 코인 처분 손실 또는 장부가치 급락의 직격탄을 맞음"
+  }
+}

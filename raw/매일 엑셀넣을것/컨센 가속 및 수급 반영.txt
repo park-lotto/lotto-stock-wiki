@@ -1,0 +1,77 @@
+# ============================
+# 0) 라이브러리
+# ============================
+import pandas as pd
+from google.colab import files
+
+# ============================
+# 1) 엑셀 업로드 & 로드
+# ============================
+uploaded = files.upload()  # '데이터 정리.xlsx' 선택
+filename = list(uploaded.keys())[0]
+
+# 시트명: db  (파일에 맞게 사용)
+df = pd.read_excel(filename, sheet_name="db")
+
+# ============================
+# 2) 컬럼 이름 (파일에 맞춰 고정)
+# ============================
+COL_EPS_1M = "EPS(Fwd.12M)(1개월, 지배)"
+COL_EPS_3M = "EPS(Fwd.12M)(3개월, 지배)"
+COL_MKT_CAP = "유동시가총액"
+
+COL_F_6M = "120일누적 외국인총합계순매수대금(일간)"
+COL_F_1M = "20일누적 외국인총합계순매수대금(일간)"
+COL_I_6M = "120일누적 기관 순매수대금(일간)"
+COL_I_1M = "20일누적 기관 순매수대금(일간)"
+
+COL_NAME = "종목명"
+
+# ============================
+# 3) EPS 필터 (뉴스 제외)
+# ✅ EPS 1M > 0, EPS 3M > 0, EPS 1M > EPS 3M
+# ============================
+mask_eps = (
+    df[COL_EPS_1M].notna() & df[COL_EPS_3M].notna() &
+    (df[COL_EPS_1M] > 0) & (df[COL_EPS_3M] > 0) &
+    (df[COL_EPS_1M] > df[COL_EPS_3M])
+)
+base = df[mask_eps].copy()
+
+# ============================
+# 4) 수급 강도 계산 (시총 표준화)
+# ============================
+base["외국인수급강도_6M"] = base[COL_F_6M] / base[COL_MKT_CAP]
+base["외국인수급강도_1M"] = base[COL_F_1M] / base[COL_MKT_CAP]
+base["기관수급강도_6M"]  = base[COL_I_6M] / base[COL_MKT_CAP]
+base["기관수급강도_1M"]  = base[COL_I_1M] / base[COL_MKT_CAP]
+
+# ============================
+# 5) 강도 > 0 필터 (유입만 반영)
+#    ※ 필요시 6M만 >0, 1M은 허용으로 바꿔도 됨
+# ============================
+foreign_pool = base[(base["외국인수급강도_6M"] > 0) & (base["외국인수급강도_1M"] > 0)].copy()
+inst_pool    = base[(base["기관수급강도_6M"]  > 0) & (base["기관수급강도_1M"]  > 0)].copy()
+
+# ============================
+# 6) 상위 20 추출 (1M 강도 기준)
+# ============================
+foreign_top20 = foreign_pool.sort_values("외국인수급강도_1M", ascending=False).head(20)
+inst_top20    = inst_pool.sort_values("기관수급강도_1M",  ascending=False).head(20)
+
+# ============================
+# 7) 결과 출력 (세로 표 + 교집합)
+# ============================
+from IPython.display import display
+
+print("✅ 외국인 수급강도 TOP20")
+display(foreign_top20[[COL_NAME]].reset_index(drop=True))
+
+print("✅ 기관 수급강도 TOP20")
+display(inst_top20[[COL_NAME]].reset_index(drop=True))
+
+common_names = sorted(list(set(foreign_top20[COL_NAME]) & set(inst_top20[COL_NAME])))
+common_df = pd.DataFrame(common_names, columns=["겹치는 종목"])
+
+print("✅ 외국인 & 기관 공통 TOP (교집합)")
+display(common_df.reset_index(drop=True))

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-29",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-29_1004_방산도 Up-Cycle, 뚜렷한 온기 확산.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "박희철",
+    "report_date": "2026/6/29",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "RF시스템즈",
+        "code": "474610",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "올해 약 450억원, 내년 약 600억원 이상의 매출 시현이 기대되는 시점.",
+        "estimate_revision": null,
+        "next_catalyst": "향후 초고주파 대응을 위한 접합 공정 기술 신규 설비 투자도 진행하며, 방산 시장 성장과 비례하는 중장기 성장 여력을 확보.",
+        "thesis": [
+          "금속 접합 기술을 기반으로 국내 Top-Tier 체계 기업인 LIG D&A를 핵심 고객사로 두고 있는 기업",
+          "방산 Up-Cycle 속에서 뚜렷한 수혜를 받고 있으며, 신규 아이템 대응 역량을 확보하며 부체계 업체로의 입지를 다져 나가고 있는 단계",
+          "현재 약 900억원을 상회하는 수주 잔고를 확보해 이미 2년치 이상 매출 기반을 마련한 상황"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "최근 동사는 천궁-Ⅲ의 송신경로조립체 공급사로도 등록. 즉, 핵심 고객사의 유도무기 라인업 전반에 참여하는 입지를 확보했으며, 개발되는 신규 무기 체계에도 참여할 수 있을 전망.",
+        "quote": "금속 접합 기술을 기반으로 국내 Top-Tier 체계 기업인 LIG D&A를 핵심 고객사로 두고 있는 기업. 방산 또한 연달아 이어진 지정학적 리스크로 인해 강한 Up-Cycle 시기가 도래하며 방산 밸류체인 단에도 뚜렷한 수주 확대가 감지."
+      }
+    ]
+  }
+}

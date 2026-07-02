@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "date": "2026-06-24",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-24_1007_미국 태양광 정책 지연 우려 과도.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "조혜빈",
+    "report_date": "2026.06.24",
+    "stocks": [
+      {
+        "name": "OCI홀딩스",
+        "code": null,
+        "rating": "매수",
+        "rating_changed": false,
+        "tp_new": "430,000",
+        "tp_prev": "430,000",
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "Section 232 발표 및 45X 세액공제 연장 입법",
+        "thesis": [
+          "비중국산 폴리실리콘을 생산하여 Section 232 관세 정책의 핵심 수혜주로 부상",
+          "중국산 의존도가 높은 경쟁사 대비 비중국 공급망을 통한 가격 경쟁력 확보",
+          "미국 내 수요 충족을 위한 외부 조달 불가피성 및 비중국 물량 예외 가능성"
+        ],
+        "valuation_basis": null,
+        "risk": "Section 232 발표 지연 및 관세 부과 방식/대상 확정의 불확실성",
+        "supply_comment": "비중국산 폴리실리콘 자체 수요 충족이 불가피함",
+        "quote": "비중국산 폴리실리콘을 생산하는 OCI 홀딩스가 232 수혜의 중심이며, 한화솔루션도 미국 내 셀 가동이 본격화됐고 연내 모듈 가동을 앞두고 있어, 232로 모듈 ASP가 오를수록 수혜가 커진다."
+      },
+      {
+        "name": "한화솔루션",
+        "code": null,
+        "rating": "매수",
+        "rating_changed": false,
+        "tp_new": "59,000",
+        "tp_prev": "59,000",
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "미국 내 모듈 가동 본격화 및 Section 232 정책 수혜",
+        "thesis": [
+          "미국 내 셀 가동 본격화 및 연내 모듈 가동 예정",
+          "Section 232 관세 정책으로 인한 모듈 ASP 상승 수혜 기대",
+          "비중국 공급망을 갖춘 국내 업체로서 가격 경쟁력 보유"
+        ],
+        "valuation_basis": null,
+        "risk": "Section 232 발표 지연 및 정책 실행의 불확실성",
+        "supply_comment": "미국 내 셀 가동 및 연내 모듈 가동 준비 중",
+        "quote": "한화솔루션도 미국 내 셀 가동이 본격화됐고 연내 모듈 가동을 앞두고 있어, 232로 모듈 ASP가 오를수록 수혜가 커진다."
+      }
+    ]
+  }
+}

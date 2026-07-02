@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-24",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-25_0702_2Q26 Pre 계절적 비수기 불구하고 견조한 탑...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "심은주, 고찬결",
+    "report_date": "2026년 6월 24일",
+    "stocks": [
+      {
+        "name": "오리온",
+        "code": "271560",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "220,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 연결 매출액 및 영업이익을 각각 8,643억원(YoY 11.2%), 1,390억원(YoY 14.4%)으로 추정한다.",
+        "estimate_revision": null,
+        "next_catalyst": "중국 매출의 역사적 매출 경신 및 간식 채널 점포 수 확장",
+        "thesis": [
+          "중국은 올해 매출 1.4조원을 상회하여 역사적 매출을 경신할 것으로 전망한다.",
+          "고성장 중인 간식 및 온라인 채널에서의 보폭 확대가 고무적이다.",
+          "중국 및 러시아는 상대적으로 전쟁 기인한 부정적 영향(유틸리티, 부자재 등 비용 상승)이 제한적인 것으로 파악된다."
+        ],
+        "valuation_basis": null,
+        "risk": "국내 일부 유통처 납품 제한 이슈, 이란 전쟁에 따른 원자재 및 유틸리티 비용 상승",
+        "supply_comment": "국내 편의점, 균일가 매장 및 이커머스 채널의 고성장에도 불구하고 일부 유통처 납품 제한 이슈가 지속되었다.",
+        "quote": "오리온의 올해 실적 개선 Key는 중국이다. 중국은 올해 매출 1.4조원을 상회하여 역사적 매출을 경신할 것으로 전망한다."
+      }
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-23",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-23_1007_7월 전략 - 실적과 AI RAN이 주가 올릴 것.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "김홍식, 이상훈",
+    "report_date": "2026년 06월 23일",
+    "stocks": [
+      {
+        "name": "SK텔레콤",
+        "code": "017670",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "140,000원",
+        "tp_prev": null,
+        "tp_direction": "null",
+        "earnings_outlook": "2분기 연결 영업이익 5,378억원(+59% YoY, +0% QoQ)으로 예상",
+        "estimate_revision": "프리뷰 시즌을 거치면서 SKT 컨센서스가 상향 조정될 가능성이 높음",
+        "next_catalyst": "올 여름 국책 AI 사업자 선정, AI RAN 투자 개시, 새로운 5G 요금제 출시 논의",
+        "thesis": [
+          "프리뷰 시즌을 맞이해서 우수한 실적 기록 전망",
+          "AI RAN 분야에서 3사 중 가장 빨리 가시적인 성과 전망",
+          "2027년 이후 ARPU 성장 기대감에 따른 Multiple 확장 국면"
+        ],
+        "valuation_basis": "현재 3%대의 기대배당수익률, 1배가 넘는 PBR이 충분히 정당화됨",
+        "risk": null,
+        "supply_comment": "SKT 컨센서스가 상향 조정될 가능성이 높고 이를 추종하는 패시브 자금들이 매수에 가담할 것",
+        "quote": "SKT에 대한 투자의견 매수, 12개월 목표주가 14만원을 유지한다. 더불어 국내 통신서비스 업종 12개월/7월 Top Pick으로 제시한다.",
+        "sector": "통신"
+      }
+    ]
+  }
+}

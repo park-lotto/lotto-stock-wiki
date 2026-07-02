@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-30",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-30_1006_이익 확대 구간 진입.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "최지운",
+    "report_date": "2026.06.30",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "더블유게임즈",
+        "code": "192080",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "84,000원",
+        "tp_prev": "-원",
+        "tp_direction": null,
+        "earnings_outlook": "2026년 매출액 8,416억원(YoY +17%), 영업이익 2,857억원(YoY +23%, OPM 34%) 전망.",
+        "estimate_revision": "DTC 비중 확대에 따른 앱마켓 수수료 부담 완화로 이익률 개선이 가시화되고 있음.",
+        "next_catalyst": "DDI 완전 자회사화로 지배순이익 확대 및 자본 활용 여력 강화",
+        "thesis": [
+          "소셜카지노 외형 성장률은 제한적이나, DTC 비중 확대에 따른 앱마켓 수수료 부담 완화로 이익률 개선이 가시화되고 있음.",
+          "팍시게임즈와 슈퍼네이션이 각각 캐주얼·iGaming 부문에서 흑자 전환하며, 이익 기반이 소셜카지노에서 신규 사업으로 확장되는 구간에 진입.",
+          "DDI 완전 자회사화 거래가 완료될 경우 비지배지분에 귀속되던 DDI 이익이 지배주주순이익으로 전환되며 연결 EPS 개선 요인으로 작용할 전망."
+        ],
+        "valuation_basis": "12M Fwd EPS 10,728원에 Target PER 7.8배(동사 과거 3개년 PER 밸류에이션 상단 평균)을 적용해 산출.",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "동사에 대해 투자의견 BUY, 목표주가 84,000원으로 커버리지 개시. 목표주가는 12M Fwd EPS 10,728원에 Target PER 7.8배(동사 과거 3개년 PER 밸류에이션 상단 평균)을 적용해 산출."
+      }
+    ]
+  }
+}

@@ -1,0 +1,172 @@
+# 1) 기본 설정
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+mpl.rcParams.update(mpl.rcParamsDefault)
+mpl.rcParams['axes.unicode_minus'] = False
+
+import pandas as pd
+import numpy as np
+from google.colab import files
+import io
+
+# 2) 파일 업로드 & 읽기
+uploaded = files.upload()
+filename = list(uploaded.keys())[0]
+df = pd.read_excel(io.BytesIO(uploaded[filename]))
+
+# 3) 데이터 전처리
+df.columns = df.columns.str.strip()
+df['Date'] = pd.to_datetime(df['날짜'])
+df = df.set_index('Date').sort_index()
+df = df.rename(columns={'시가': 'Open', '고가': 'High', '저가': 'Low', '종가': 'Close', '거래량': 'Volume'})
+df = df[['Open', 'High', 'Low', 'Close', 'Volume']].dropna()
+df = df[df[['Open', 'High', 'Low', 'Close']].ne(0).all(axis=1)]
+
+# 4) 주간 리샘플링 (금요일 기준)
+weekly = df.resample('W-FRI').agg({
+    'Open': 'first',
+    'High': 'max',
+    'Low': 'min',
+    'Close': 'last',
+    'Volume': 'sum'
+}).dropna()
+
+weekly['Prev_High'] = weekly['High'].shift(1)
+weekly['Prev_Low'] = weekly['Low'].shift(1)
+weekly['MA10'] = weekly['Close'].rolling(window=10).mean()
+
+# 5) CMF 계산
+mf_multiplier = ((weekly['Close'] - weekly['Low']) - (weekly['High'] - weekly['Close'])) / (weekly['High'] - weekly['Low'])
+mf_volume = mf_multiplier * weekly['Volume']
+weekly['CMF'] = mf_volume.rolling(window=4).sum() / weekly['Volume'].rolling(window=4).sum()
+
+# 6) 매매 시그널 생성
+weekly['BuySignal'] = 0
+weekly['SellSignal'] = 0
+weekly['ActualSellSignal'] = 0
+
+weekly.loc[(weekly['High'] > weekly['Prev_High']) & (weekly['Close'] > weekly['MA10']) & (weekly['CMF'] > 0), 'BuySignal'] = 1
+weekly.loc[(weekly['Low'] < weekly['Prev_Low']) & (weekly['Close'] < weekly['MA10']) & (weekly['CMF'] < 0), 'SellSignal'] = 1
+
+position = False
+for i in range(1, len(weekly)):
+    row = weekly.iloc[i]
+    if not position and row['BuySignal'] == 1:
+        position = True
+    elif position and row['SellSignal'] == 1:
+        weekly.loc[weekly.index[i], 'ActualSellSignal'] = 1
+        position = False
+
+# 7) 백테스트 (Actual Buy / Sell)
+position = False
+entries, exits = [], []
+for i in range(1, len(weekly)):
+    row = weekly.iloc[i]
+    if not position and row['BuySignal'] == 1:
+        entry_date = row.name
+        entry_price = row['Open']
+        position = True
+    elif position and row['SellSignal'] == 1:
+        exit_date = row.name
+        exit_price = row['Close']
+        entries.append((entry_date, entry_price))
+        exits.append((exit_date, exit_price))
+        position = False
+
+if position:
+    last_row = weekly.iloc[-1]
+    exit_date = last_row.name
+    exit_price = last_row['Close']
+    entries.append((entry_date, entry_price))
+    exits.append((exit_date, exit_price))
+    holding_open = True
+else:
+    holding_open = False
+
+bt_df = pd.DataFrame(entries, columns=['EntryDate', 'EntryPrice'])
+if entries:
+    bt_df['ExitDate'], bt_df['ExitPrice'] = zip(*exits)
+    bt_df['Return'] = (bt_df['ExitPrice'] - bt_df['EntryPrice']) / bt_df['EntryPrice']
+    bt_df['CumulativeReturn'] = (1 + bt_df['Return']).cumprod()
+
+# 8) Fear & Greed 지수 계산
+weekly['Momentum5'] = (np.log(weekly['Close']) - np.log(weekly['Close'].shift(5))) * 100
+rolling_low = weekly['Close'].rolling(window=52, min_periods=1).min()
+rolling_high = weekly['Close'].rolling(window=52, min_periods=1).max()
+weekly['Position52W'] = ((weekly['Close'] - rolling_low) / (rolling_high - rolling_low)).clip(0, 1)
+
+recent_vol_avg = weekly['Volume'].rolling(window=5, min_periods=1).mean()
+past_vol_avg = weekly['Volume'].rolling(window=20, min_periods=1).mean()
+weekly['VolumeSurge'] = (recent_vol_avg / past_vol_avg).clip(0, 3)
+
+weekly_return = weekly['Close'].pct_change()
+recent_vol = weekly_return.rolling(window=5, min_periods=1).std()
+past_vol = weekly_return.rolling(window=20, min_periods=1).std()
+weekly['VolatilitySpike'] = (recent_vol / past_vol).clip(0, 3)
+
+momentum_score = (weekly['Momentum5'].rolling(window=7, min_periods=1).mean() / 10).clip(-1, 1.5)
+position_score = (2 * weekly['Position52W'].rolling(window=7, min_periods=1).mean() - 1).clip(-1, 1.5)
+volume_score = (weekly['VolumeSurge'].rolling(window=10, min_periods=1).mean() - 1).clip(-0.5, 1.2)
+volatility_score = -(weekly['VolatilitySpike'].rolling(window=10, min_periods=1).mean() - 1).clip(-0.5, 1.2)
+
+weekly['FearGreedScore'] = (
+    0.45 * momentum_score +
+    0.45 * position_score +
+    0.05 * volume_score +
+    0.05 * volatility_score
+)
+
+# 9) 전략 + Fear & Greed 지수 통합 그래프
+fig, ax1 = plt.subplots(figsize=(16, 6))
+
+line1, = ax1.plot(weekly.index, weekly['Close'], label='주간 종가', color='black')
+line2, = ax1.plot(weekly.index, weekly['MA10'], label='MA10', linestyle='--', color='gray')
+
+ax1.scatter(weekly[weekly['BuySignal'] == 1].index, weekly[weekly['BuySignal'] == 1]['Close'],
+            color='lightcoral', marker='^', s=70, alpha=0.5, label='Buy Signal (all)')
+
+if not bt_df.empty:
+    ax1.scatter(bt_df['EntryDate'] + pd.Timedelta(days=1), bt_df['EntryPrice'],
+                color='darkred', marker='^', s=100, alpha=1.0, label='Actual Buy')
+
+ax1.scatter(weekly[weekly['ActualSellSignal'] == 1].index, weekly[weekly['ActualSellSignal'] == 1]['Close'],
+            color='darkblue', marker='v', s=100, alpha=1.0, label='Actual Sell')
+
+ax1.set_xlabel('날짜')
+ax1.set_ylabel('종가', color='black')
+ax1.tick_params(axis='y', labelcolor='black')
+ax1.grid(True)
+
+ax2 = ax1.twinx()
+line3, = ax2.plot(weekly.index, weekly['FearGreedScore'], label='Fear & Greed 지수', color='b')
+ax2.axhline(0.5, color='r', linestyle='--', linewidth=0.8, label='과열기준 0.5')
+ax2.axhline(-0.5, color='g', linestyle='--', linewidth=0.8, label='과매도기준 -0.5')
+ax2.set_ylabel('Fear & Greed 지수', color='b')
+ax2.tick_params(axis='y', labelcolor='b')
+
+lines = [line1, line2, line3]
+labels = [line.get_label() for line in lines]
+ax1.legend(lines + [ax2.lines[1], ax2.lines[2]], labels + ['과열기준 0.5', '과매도기준 -0.5'], loc='upper left')
+
+plt.title('주간 전략 + Fear & Greed 지수 통합 그래프')
+plt.tight_layout()
+plt.show()
+plt.close('all')
+
+# 10) 백테스트 결과 출력
+if not bt_df.empty:
+    print("\n==== 벡테스트 결과 내역 ====")
+    print(bt_df)
+
+    total_trades = len(bt_df)
+    avg_return = bt_df['Return'].mean()
+    cum_return = bt_df['CumulativeReturn'].iloc[-1] - 1
+    win_rate = (bt_df['Return'] > 0).mean()
+
+    print("\n==== 성과 요약 ====")
+    print(f"총 트레이드 수: {total_trades}")
+    print(f"평균 트레이드 수익률: {avg_return:.2%}")
+    print(f"누적 수익률: {cum_return:.2%}")
+    print(f"승률: {win_rate:.2%}")
+else:
+    print("\n트레이드가 발생하지 않았습니다.")

@@ -1,0 +1,62 @@
+{
+  "meta": {
+    "date": "2026-06-30",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-30_1008_[ESG & Transition] 통키[通 Keys] Transitio...md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "한화투자증권",
+    "analyst": "박세연, 김예인",
+    "report_date": "2026 년 6 월 30 일",
+    "market_direction": "박스권 내 상방 재시도",
+    "macro_vars": [
+      "미-이란 리스크 완화",
+      "유가·TTF 조정",
+      "글로벌 위험선호 회복",
+      "달러 약세",
+      "유럽 경기 기대"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.06.24",
+        "event": "연기금·보험사, 100조 달러 운용 및 기후 회복력 인프라 투자"
+      },
+      {
+        "date": "2026.06.25",
+        "event": "호남 태양광-풍력 반도체 단지 공급 구상"
+      },
+      {
+        "date": "2026.06.24",
+        "event": "EU, SFDR 전환 펀드 분류 기준 완화"
+      },
+      {
+        "date": "2026.06.25",
+        "event": "워싱턴주, 캘리포니아·퀘벡과 탄소시장 통합 합의"
+      },
+      {
+        "date": "2026.06.25",
+        "event": "상반기 녹색채권 3.8조 발행"
+      },
+      {
+        "date": "2026.06.29",
+        "event": "유럽 역대급 폭염으로 인한 초과사망자 발생"
+      },
+      {
+        "date": "2026.06.27",
+        "event": "Microsoft, 2025년 물 사용 환원 목표 달성 주장"
+      }
+    ],
+    "top_picks": [
+      "SK",
+      "한화",
+      "LG에너지솔루션",
+      "주택금융공사",
+      "Microsoft"
+    ],
+    "risk": "ETS·CBAM 완화 논의와 추가 경매 물량이 하방을 누르는 요인",
+    "quote": "이번주에도 글로벌 위험선호 회복과 정책 리스크 완화에 힘입어 유럽, 국내 배출권 모두 박스권 내 상방 재시도를 모색할 것입니다."
+  }
+}

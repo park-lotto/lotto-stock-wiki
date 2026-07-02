@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-02",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-02_1106_Open USD 출범과 영향, 원화 스테이블코인 예...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "이준호",
+    "report_date": "2026년 7월 2일",
+    "stocks": [
+      {
+        "name": "NAVER",
+        "code": "035420",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "400,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "두나무 합병",
+        "thesis": [
+          "국내 간편결제 1위, 온라인 광고 1위, 온라인 커머스 2위 사업자 NAVER와 국내 디지털자산 1위 거래소 두나무의 경쟁력은 압도적이다.",
+          "디지털자산기본법에 대한 논의가 재개되고 있기에 제도화에 대한 기대감을 가질 시점이다.",
+          "유통 경쟁력과 사업 확장성을 갖춘 기업들이 부각 받을 것으로 예상, NAVER의 기업 가치 상승을 전망한다."
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "인터넷 산업에서는 NAVER를 Top Pick으로 유지한다."
+      }
+    ]
+  }
+}

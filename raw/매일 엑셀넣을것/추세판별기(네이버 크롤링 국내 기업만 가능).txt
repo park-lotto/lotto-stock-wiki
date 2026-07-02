@@ -1,0 +1,156 @@
+# 1. 필수 라이브러리 설치 (최초 1회만 실행 필요)
+!pip install lxml beautifulsoup4 --quiet
+
+# 2. 라이브러리 임포트
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import requests
+from bs4 import BeautifulSoup
+
+# 3. 사용자 입력: 종목 코드
+code = input("🔢 네이버 종목 코드를 입력하세요 (예: 삼성전자 005930): ").strip()
+
+# 4. 일봉 데이터 크롤링 함수
+def get_naver_daily_price(code, pages=10):
+    base_url = f"https://finance.naver.com/item/sise_day.nhn?code={code}"
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    all_data = []
+
+    for page in range(1, pages + 1):
+        url = f"{base_url}&page={page}"
+        res = requests.get(url, headers=headers)
+        soup = BeautifulSoup(res.text, 'lxml')
+        table = soup.select("table.type2")[0]
+        df = pd.read_html(str(table), header=0)[0]
+        df = df.dropna()
+        all_data.append(df)
+
+    df = pd.concat(all_data)
+    df.columns = ['Date', 'Close', 'Diff', 'Open', 'High', 'Low', 'Volume']
+    df['Date'] = pd.to_datetime(df['Date'])
+    df = df.sort_values('Date')
+    df = df[['Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
+    df = df[df[['Open', 'High', 'Low', 'Close']].ne(0).all(axis=1)]
+    df.set_index('Date', inplace=True)
+    return df
+
+# 5. 일봉 → 주간 리샘플링
+df = get_naver_daily_price(code, pages=30)
+weekly = df.resample('W-FRI').agg({
+    'Open': 'first',
+    'High': 'max',
+    'Low': 'min',
+    'Close': 'last',
+    'Volume': 'sum'
+}).dropna()
+
+# 6. 보조지표 계산
+weekly['Prev_High'] = weekly['High'].shift(1)
+weekly['Prev_Low'] = weekly['Low'].shift(1)
+weekly['MA10'] = weekly['Close'].rolling(window=10).mean()
+
+mf_multiplier = ((weekly['Close'] - weekly['Low']) - (weekly['High'] - weekly['Close'])) / (weekly['High'] - weekly['Low'])
+mf_volume = mf_multiplier * weekly['Volume']
+weekly['CMF'] = mf_volume.rolling(window=4).sum() / weekly['Volume'].rolling(window=4).sum()
+
+# 7. 시그널 생성
+weekly['BuySignal'] = 0
+weekly['SellSignal'] = 0
+weekly['ActualSellSignal'] = 0
+
+weekly.loc[(weekly['High'] > weekly['Prev_High']) &
+           (weekly['Close'] > weekly['MA10']) &
+           (weekly['CMF'] > 0), 'BuySignal'] = 1
+
+weekly.loc[(weekly['Low'] < weekly['Prev_Low']) &
+           (weekly['Close'] < weekly['MA10']) &
+           (weekly['CMF'] < 0), 'SellSignal'] = 1
+
+# 8. 실제 매도 시그널 (포지션 있을 때만 유효)
+position = False
+for i in range(1, len(weekly)):
+    row = weekly.iloc[i]
+    if not position and row['BuySignal'] == 1:
+        position = True
+    elif position and row['SellSignal'] == 1:
+        weekly.loc[weekly.index[i], 'ActualSellSignal'] = 1
+        position = False
+
+# 9. 백테스트
+position = False
+entries, exits = [], []
+
+for i in range(1, len(weekly)):
+    row = weekly.iloc[i]
+    if not position and row['BuySignal'] == 1:
+        entry_date = row.name
+        entry_price = row['Open']
+        position = True
+    elif position and row['SellSignal'] == 1:
+        exit_date = row.name
+        exit_price = row['Close']
+        entries.append((entry_date, entry_price))
+        exits.append((exit_date, exit_price))
+        position = False
+
+if position:
+    last_row = weekly.iloc[-1]
+    exit_date = last_row.name
+    exit_price = last_row['Close']
+    entries.append((entry_date, entry_price))
+    exits.append((exit_date, exit_price))
+    holding_open = True
+else:
+    holding_open = False
+
+# 10. 결과 정리
+bt_df = pd.DataFrame(entries, columns=['EntryDate', 'EntryPrice'])
+bt_df['ExitDate'], bt_df['ExitPrice'] = zip(*exits)
+bt_df['Return'] = (bt_df['ExitPrice'] - bt_df['EntryPrice']) / bt_df['EntryPrice']
+bt_df['CumulativeReturn'] = (1 + bt_df['Return']).cumprod()
+
+# 11. 시각화
+plt.figure(figsize=(16, 6))
+plt.plot(weekly['Close'], label='Close', color='black')
+plt.plot(weekly['MA10'], label='MA10', linestyle='--', color='gray')
+
+plt.scatter(weekly[weekly['BuySignal'] == 1].index,
+            weekly[weekly['BuySignal'] == 1]['Close'],
+            color='red', marker='^', s=70, alpha=0.3, label='Buy Signal (all)')
+
+plt.scatter(bt_df['EntryDate'] + pd.Timedelta(days=1),
+            bt_df['EntryPrice'],
+            color='red', marker='^', s=100, alpha=1.0, label='Actual Buy')
+
+plt.scatter(weekly[weekly['ActualSellSignal'] == 1].index,
+            weekly[weekly['ActualSellSignal'] == 1]['Close'],
+            color='blue', marker='v', s=100, alpha=1.0, label='Actual Sell')
+
+plt.title(f'{code} CMF + MA10 전략 시그널')
+plt.xlabel('Date')
+plt.ylabel('Price')
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+# 12. 성과 출력
+print("📊 Performance Summary:")
+print(f"Total Closed Trades: {len(bt_df) - int(holding_open)}")
+if not bt_df.empty:
+    print(f"Average Return: {bt_df['Return'].mean():.2%}")
+    print(f"Cumulative Return: {bt_df['CumulativeReturn'].iloc[-1] - 1:.2%}")
+
+# 13. 거래 로그 출력
+print("\n📄 Trade Log:")
+print(bt_df)
+
+# 14. 미청산 포지션
+if holding_open:
+    unrealized_return = (exit_price - entry_price) / entry_price
+    print("\n📌 현재 포지션 보유 중:")
+    print(f"Entry Date: {entry_date.strftime('%Y-%m-%d')}")
+    print(f"Entry Price: {entry_price:,.2f}")
+    print(f"Current Price (as of {exit_date.strftime('%Y-%m-%d')}): {exit_price:,.2f}")
+    print(f"Unrealized Return: {unrealized_return:.2%}")

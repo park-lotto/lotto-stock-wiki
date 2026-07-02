@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-24",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-25_0703_사우디의 무리한 과세 통보, 현실화 가능성은...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "iM증권",
+    "analyst": "배세호",
+    "report_date": "2026.06.24",
+    "stocks": [
+      {
+        "name": "DL이앤씨",
+        "code": "375500",
+        "rating": "Buy",
+        "rating_changed": "Maintain",
+        "tp_new": "120,000원",
+        "tp_prev": "120,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "사우디 당국과의 합의, 조세 심판 과정",
+        "thesis": [
+          "한국과 사우디 간 조세 조약상 이중 과세 가능성",
+          "사우디 세법상 제척 기간(10년) 경과에 따른 과세 취소 가능성",
+          "과세 산출 근거 부족에 따른 과세 처분 취소 사유 존재"
+        ],
+        "valuation_basis": null,
+        "risk": "사우디 당국의 과세 처분 관련 최종 확정 가능성과 금액 추정에 대한 불확실성",
+        "supply_comment": null,
+        "quote": "DL이앤씨의 주장은 한국과 사우디의 조세 협약, 그리고 사우디의 소득세법을 근거할 시 충분히 납득 가능하다.",
+        "sector": "기타"
+      }
+    ]
+  }
+}

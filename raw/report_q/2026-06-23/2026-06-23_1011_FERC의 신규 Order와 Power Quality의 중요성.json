@@ -1,0 +1,48 @@
+{
+  "meta": {
+    "date": "2026-06-23",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-23_1011_FERC의 신규 Order와 Power Quality의 중요성.md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "허준서",
+    "report_date": "2026.06.23",
+    "target_kind": "sector",
+    "sector_name": "전력",
+    "sector_view": "비중확대",
+    "thesis": [
+      "FERC의 신규 오더(Order 206)를 통해 고부하 수용가의 망 접속 프로세스 표준화 및 대형 부하로 인한 비용 부담을 명확히 귀속시키는 방향으로 규제 강화",
+      "데이터센터 등 고부하 수용가 급증으로 인한 전력망 보강 및 신설 CAPEX 투하 비중 지속 상향 전망",
+      "칩 및 아키텍처 단위당 전력소모 증가로 인한 'Power Quality(전력 품질)' 제어 이슈가 대두되며, 이를 해결하는 핵심 솔루션 보유 기업들의 밸류에이션 프리미엄 정당화"
+    ],
+    "timeline": [
+      "30일 요구: 대형 부하를 감당할 충분한 발전원 확보 방안 보고",
+      "60일 요구: 현행 Tariff(망 접속 관련 규제 가이드) 정당화 및 대형 부하 맞춤 Tariff 개정안 제출"
+    ],
+    "top_picks": [
+      {
+        "name": "효성중공업",
+        "reason": "SST 사업 진출로 가시성 높아짐",
+        "tp": null
+      },
+      {
+        "name": "LS ELECTRIC",
+        "reason": "배전 솔루션 보유",
+        "tp": null
+      },
+      {
+        "name": "산일전기",
+        "reason": "다양한 주파수 대응 레퍼런스와 BTM 시장 진출",
+        "tp": null
+      },
+      {
+        "name": "서진시스템",
+        "reason": "BTM 시장 레퍼런스 확보할 ESS ‘SI’ 업체들(Fluence Energy)의 밸류체인에 포함",
+        "tp": null
+      }
+    ],
+    "risk": null,
+    "quote": "국내 전력기기 기업들도 밸류에이션 프리미엄을 정당화할 수 있는 솔루션 보유 여부에 주목 필요, 가시성 높아지는 효성중공업의 SST 사업 진출이나 LS ELECTRIC의 배전 솔루션, 산일전기의 다양한 주파수 대응 레퍼런스와 BTM 시장 진출 및 BTM 시장 레퍼런스 확보할 ESS ‘SI’ 업체들(Fluence Energy)의 밸류체인에 포함된 서진시스템 등이 이에 해당"
+  }
+}

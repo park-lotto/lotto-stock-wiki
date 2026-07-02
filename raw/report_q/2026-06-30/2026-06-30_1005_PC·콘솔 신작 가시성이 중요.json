@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-30",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-30_1005_PC·콘솔 신작 가시성이 중요.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "최지운",
+    "report_date": "2026.06.30",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "네오위즈",
+        "code": "095660",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "24,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 연결 매출액 4,203억원(YoY -3%), 영업이익 364억원(YoY -39%, OPM 9%) 전망. 2Q26E 매출액 106억원, 영업이익 11억원.",
+        "estimate_revision": "2026년은 〈P의 거짓〉 본편·DLC 판매 하향 안정화와 대형 신작 부재로 감익이 예상되나, 동사는 〈P의 거짓〉을 통해 글로벌 PC·콘솔 시장에서 자체 개발 IP의 흥행 가능성과 개발 역량을 입증.",
+        "next_catalyst": "2027년부터 주요 신작의 트레일러 공개, 게임쇼 출품, 플랫폼 확정 등 구체적인 정보가 순차적으로 가시화될 전망.",
+        "thesis": [
+          "글로벌 PC·콘솔 시장에서 자체 개발 IP의 흥행 가능성과 개발 역량 입증",
+          "PC·콘솔 신작 6종 개발 단계 공개 및 향후 실적 지속 가능성",
+          "웹보드 매출 기반을 통한 신작 공백기 매출 변동성 방어"
+        ],
+        "valuation_basis": "12M Fwd EPS 2,098원에 Target PER 11.5배를 적용해 산출. Target PER은 대형 신작 공백을 감안해 글로벌 라이브서비스 게임사와 검증된 IP 포트폴리오를 보유한 게임사 Peer 평균 대비 20% 디스카운트 적용.",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "동사에 대해 투자의견 BUY, 목표주가 24,000원으로 커버리지를 개시. 목표주가는 12M Fwd EPS 2,098원에 Target PER 11.5배를 적용해 산출.",
+        "sector": "IT"
+      }
+    ]
+  }
+}

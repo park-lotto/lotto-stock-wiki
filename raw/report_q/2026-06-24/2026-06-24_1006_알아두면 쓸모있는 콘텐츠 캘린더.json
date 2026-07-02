@@ -1,0 +1,87 @@
+{
+  "meta": {
+    "date": "2026-06-24",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-24_1006_알아두면 쓸모있는 콘텐츠 캘린더.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "이기훈, 김현수",
+    "report_date": "2026.6.23",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "6.22",
+        "event": "하츠투하츠 컴백 (SM)"
+      },
+      {
+        "date": "6.24",
+        "event": "NEXZ(일본) 컴백 (JYP)"
+      },
+      {
+        "date": "6.26",
+        "event": "<김부장> 방영 (SBS)"
+      },
+      {
+        "date": "6.29",
+        "event": "세븐틴 디에잇X버논 데뷔 (HYBE)"
+      },
+      {
+        "date": "7.10",
+        "event": "TXT 연준 컴백 (HYBE)"
+      },
+      {
+        "date": "7.11",
+        "event": "<아파트> 방영 (SBS)"
+      },
+      {
+        "date": "7.13",
+        "event": "NCT WISH(일본) 컴백 (SM)"
+      },
+      {
+        "date": "7.15",
+        "event": "<호프> 개봉 (콘텐트리중앙)"
+      },
+      {
+        "date": "7.18",
+        "event": "<오싹한 연애> 방영 (tvN, 스튜디오드래곤)"
+      },
+      {
+        "date": "7.24",
+        "event": "에스파(일본) 컴백 (SM)"
+      },
+      {
+        "date": "8.3",
+        "event": "<최애의 사원> 방영 (tvN, 스튜디오드래곤)"
+      },
+      {
+        "date": "8.7",
+        "event": "스트레이키즈 컴백 (JYP), <재벌X형사2> 방영 (SBS)"
+      }
+    ],
+    "top_picks": [
+      "빅뱅",
+      "라이즈",
+      "하츠투하츠",
+      "NEXZ",
+      "김부장",
+      "세븐틴 디에잇",
+      "세븐틴 버논",
+      "TXT 연준",
+      "아파트",
+      "NCT WISH",
+      "에스파",
+      "스트레이키즈",
+      "오싹한 연애",
+      "최애의 사원",
+      "재벌X형사2",
+      "호프"
+    ],
+    "risk": null,
+    "quote": "알아두면 쓸모있는 콘텐츠 캘린더"
+  }
+}

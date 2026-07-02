@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "date": "2026-06-24",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-24_1007_통신 Weekly - 안정화 흐름 지속.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "유안타증권",
+    "analyst": "이승웅",
+    "report_date": "2026.06.24",
+    "market_direction": "통신업종은 -9.8%(vs KOSPI -6.0%)로 시장 수익률을 하회",
+    "macro_vars": [
+      "5월 이동전화 전체 번호이동 건수는 58.4만건(+3.1% MoM)",
+      "삼성전자 '갤럭시 S26' 시리즈의 공시지원금 인상"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "통신",
+        "stance": "중립",
+        "reason": "특정 테크 종목으로의 수급 편중으로 인한 통신업종 하락 불가피"
+      }
+    ],
+    "top_picks": [
+      "SK텔레콤",
+      "KT",
+      "LG유플러스"
+    ],
+    "risk": "특정 테크 종목으로의 수급 편중",
+    "quote": "지난 한주간 통신업종은 -9.8%(vs KOSPI -6.0%)로 시장 수익률을 하회. 특정 테크 종목으로의 수급 편중으로 인한 통신업종 하락 불가피."
+  }
+}

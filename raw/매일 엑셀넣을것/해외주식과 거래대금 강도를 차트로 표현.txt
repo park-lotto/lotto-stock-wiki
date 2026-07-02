@@ -1,0 +1,193 @@
+# ============================
+# Google Colab setup
+# ============================
+!pip install yfinance --quiet
+
+import yfinance as yf
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
+
+# Matplotlib config: avoid font warnings
+import matplotlib
+matplotlib.rcParams["font.family"] = "DejaVu Sans"
+matplotlib.rcParams["axes.unicode_minus"] = False
+
+# ----------------------------
+# 0) User input
+# ----------------------------
+raw = input("Enter tickers (comma-separated, e.g., NVDA,TSLA or 005930.KS): ").strip()
+TICKERS = [t.strip().upper() for t in raw.split(",") if t.strip()]
+
+# ----------------------------
+# 1) Global params
+# ----------------------------
+# 일봉은 최근 6개월(거래일 약 126) 뷰, 주봉은 최근 1년(52주) 뷰
+PLOT_DAYS_D   = 126      # Daily plot window
+PLOT_WEEKS_W  = 52       # Weekly plot window
+BUFFER_DAYS   = 120      # indicator warmup for daily window
+# 주봉을 안정적으로 만들기 위해 일봉을 최소 500일 확보 (≈ 1.5년)
+LOOKBACK_ALL  = 500
+
+VOL_MA        = 20       # volume moving average for spike
+ZSCORE_WIN    = 60       # z-score lookback
+ACC_WIN       = 7        # 7-day rolling sum (oscillator core)
+
+# Component weights for TI_raw
+W_VOL_SPIKE   = 0.50
+W_TURNOVER    = 0.30
+W_GAP_TREND   = 0.20
+
+# ----------------------------
+# 2) Helper functions
+# ----------------------------
+def rolling_zscore(series, window=60, min_periods=20):
+    mean = series.rolling(window, min_periods=min_periods).mean()
+    std  = series.rolling(window, min_periods=min_periods).std(ddof=0)
+    return (series - mean) / (std.replace(0, np.nan))
+
+def minmax_0_100(series: pd.Series):
+    s = series.dropna()
+    if s.empty: return series * np.nan
+    vmin, vmax = s.min(), s.max()
+    if vmin == vmax: return series * np.nan
+    return (series - vmin) * 100.0 / (vmax - vmin)
+
+def get_float_or_outstanding_shares(tk: yf.Ticker):
+    info = {}
+    try:
+        info = tk.info
+    except Exception:
+        info = {}
+    for k in ["floatShares", "sharesFloat"]:
+        v = info.get(k)
+        if isinstance(v, (int, float)) and v and v > 0:
+            return float(v)
+    for k in ["sharesOutstanding", "impliedSharesOutstanding"]:
+        v = info.get(k)
+        if isinstance(v, (int, float)) and v and v > 0:
+            return float(v)
+    return None
+
+def build_trading_intensity(df_ohlcv: pd.DataFrame, shares_hint: float|None, tk: yf.Ticker):
+    """Compute 7D trading-intensity oscillator and components from OHLCV (daily)."""
+    df = df_ohlcv.copy()
+    df["PrevClose"] = df["Close"].shift(1)
+
+    # Volume spike vs 20D MA
+    df["VolMA"] = df["Volume"].rolling(VOL_MA, min_periods=max(5, VOL_MA//2)).mean()
+    df["VolSpike"] = df["Volume"] / df["VolMA"]
+
+    # Turnover (prefer float/outstanding; else market_cap/price; final fallback to vol/volMA)
+    if shares_hint and shares_hint > 0:
+        df["Turnover"] = df["Volume"] / shares_hint
+    else:
+        mcap = None
+        try:
+            mcap = tk.fast_info.get("market_cap", None)
+        except Exception:
+            mcap = None
+        if (mcap is not None) and (mcap > 0):
+            safe_close = df["Close"].replace(0, np.nan)
+            df["Turnover"] = df["Volume"] / (mcap / safe_close)
+        else:
+            # 마지막 안전장치: 유통주식수 정보가 전혀 없을 때도 동작하도록
+            df["Turnover"] = df["Volume"] / df["Volume"].rolling(60, min_periods=20).mean()
+
+    # Gap + intraday trend
+    df["Gap"] = (df["Open"] / df["PrevClose"] - 1.0)
+    df["IntradayTrend"] = (df["Close"] / df["Open"] - 1.0)
+    df["GapTrend"] = df["Gap"] + df["IntradayTrend"]
+
+    # Z-scores
+    df["z_VolSpike"] = rolling_zscore(df["VolSpike"], window=ZSCORE_WIN)
+    df["z_Turnover"] = rolling_zscore(df["Turnover"],  window=ZSCORE_WIN)
+    df["z_GapTrend"] = rolling_zscore(df["GapTrend"],  window=ZSCORE_WIN)
+
+    # Composite daily score
+    df["TI_raw"] = (
+        W_VOL_SPIKE * df["z_VolSpike"].fillna(0) +
+        W_TURNOVER  * df["z_Turnover"].fillna(0) +
+        W_GAP_TREND * df["z_GapTrend"].fillna(0)
+    )
+
+    # 7D rolling sum -> normalize to 0-100
+    df["TI_acc7"] = df["TI_raw"].rolling(ACC_WIN, min_periods=ACC_WIN).sum()
+    df["TI_acc7_0_100"] = minmax_0_100(df["TI_acc7"])
+    return df
+
+def plot_price_and_osc(close_s, osc_s, ticker, title_suffix):
+    """Draw price + raw osc + SMA3/EMA5/Signal EMA7 on shared axes."""
+    plot_close = close_s.copy()
+    plot_osc   = osc_s.copy()
+
+    sma3 = plot_osc.rolling(3, min_periods=1).mean()
+    ema5 = plot_osc.ewm(span=5, adjust=False).mean()
+    sig7 = plot_osc.ewm(span=7, adjust=False).mean()
+
+    fig, ax1 = plt.subplots(figsize=(12, 5))
+    ax1.plot(plot_close.index, plot_close.values, lw=1.6, color="black", label="Price")
+    ax1.set_xlabel("Date")
+    ax1.set_ylabel("Price", color="black")
+    ax1.tick_params(axis="y", labelcolor="black")
+
+    ax2 = ax1.twinx()
+    ax2.plot(plot_osc.index, plot_osc.values, ls="--", lw=1.3, color="black", label="7D Osc (raw)")
+    ax2.plot(sma3.index,    sma3.values,      ls="-.", lw=1.5, color="tab:blue",   label="SMA(3)")
+    ax2.plot(ema5.index,    ema5.values,      ls="-",  lw=1.6, color="tab:orange", label="EMA(5)")
+    ax2.plot(sig7.index,    sig7.values,      ls=":",  lw=1.6, color="tab:green",  label="Signal EMA(7)")
+    ax2.axhline(50, ls="--", lw=1, alpha=0.4, color="gray")
+    ax2.set_ylabel("Oscillator (0-100)")
+
+    l1, lb1 = ax1.get_legend_handles_labels()
+    l2, lb2 = ax2.get_legend_handles_labels()
+    ax1.legend(l1 + l2, lb1 + lb2, loc="upper left")
+
+    plt.title(f"{ticker} - Price & 7D Oscillator ({title_suffix})")
+    plt.tight_layout()
+    plt.show()
+
+# ----------------------------
+# 3) Main loop
+# ----------------------------
+end = datetime.today()
+start_all = end - timedelta(days=LOOKBACK_ALL)   # 한 번만 크게 받아서 일/주 뷰 모두 생성
+
+for ticker in TICKERS:
+    print(f"\n=== Processing {ticker} ===")
+    tk = yf.Ticker(ticker)
+
+    # 일봉 다운로드 (충분히 긴 구간)
+    df_all = tk.history(start=start_all.strftime("%Y-%m-%d"),
+                        end=end.strftime("%Y-%m-%d"),
+                        interval="1d", auto_adjust=False)
+
+    if df_all.empty:
+        print(f"[Skip] {ticker}: no data from Yahoo.")
+        continue
+
+    df_all = df_all.rename(columns=str.title)[["Open","High","Low","Close","Volume"]].copy()
+
+    # 일봉 기반으로 오실레이터 계산 (철학 유지)
+    shares_hint = get_float_or_outstanding_shares(tk)
+    feat_full = build_trading_intensity(df_all, shares_hint, tk)
+
+    # ---------- DAILY view (최근 6M) ----------
+    daily_view = feat_full.tail(PLOT_DAYS_D + BUFFER_DAYS).copy()  # 충분한 버퍼 포함
+    daily_close = daily_view["Close"].tail(PLOT_DAYS_D)
+    daily_osc   = daily_view["TI_acc7_0_100"].tail(PLOT_DAYS_D)
+    plot_price_and_osc(daily_close, daily_osc, ticker, "Daily (6M)")
+
+    # ---------- WEEKLY view (최근 1Y) ----------
+    # 일봉 계산값을 주별 마지막 값으로 리샘플링
+    wk = pd.DataFrame({
+        "Close": feat_full["Close"],
+        "Osc":   feat_full["TI_acc7_0_100"]
+    }).resample("W-FRI").last().dropna()
+
+    weekly_close = wk["Close"].tail(PLOT_WEEKS_W)
+    weekly_osc   = wk["Osc"].tail(PLOT_WEEKS_W)
+    plot_price_and_osc(weekly_close, weekly_osc, ticker, "Weekly (1Y)")
+
+print("\nDone.")

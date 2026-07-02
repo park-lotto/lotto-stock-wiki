@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-02",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-02_1100_유상증자 관련 코멘트 단기 주주가치 희석 ...md"
+  },
+  "questionnaire": {
+    "broker": "키움증권",
+    "analyst": "권준수",
+    "report_date": "2026. 7. 2",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "에코프로비엠",
+        "code": "247540",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "에코프로비엠의 대주주 지분 인정 및 연결 편입으로 확정 시 2028년 이후 연간 매출액 2.1조원/영업이익 4,250억원의 연결 효과를 기대해 볼 수 있을 전망",
+        "estimate_revision": null,
+        "next_catalyst": "2028년부터 본격적인 실적 개선 기대",
+        "thesis": [
+          "인도네시아 니켈 제련소 투자 강화 및 오프테이크 물량 확보를 통한 원재료 수급 안정",
+          "헝가리 양극재 공장 역량 확대 및 유럽 현지화 정책 대응",
+          "Upstream 투자 확대를 통한 수익성 제고 및 실적 가시성 확보"
+        ],
+        "valuation_basis": null,
+        "risk": "단기 주주가치 희석 우려",
+        "supply_comment": "연간 9만 톤의 니켈 MHP 생산능력을 보유",
+        "quote": "금번 대규모 유상증자는 단기적으로 주주가치 희석 우려를 불러일으킬 수 있으나 장기적인 관점에서 Upstream에 대한 투자는 수익성 제고 및 실적 가시성을 높이기 위해 필요한 투자라고 판단."
+      }
+    ]
+  }
+}

@@ -1,0 +1,162 @@
+# 라이브러리 설치
+!pip install --upgrade yfinance --quiet
+!pip install googletrans==4.0.0-rc1 beautifulsoup4 lxml --quiet
+
+# 라이브러리 불러오기
+import yfinance as yf
+import pandas as pd
+import numpy as np
+import time, re, logging, requests
+from bs4 import BeautifulSoup
+from googletrans import Translator
+
+# 로그 억제(불필요한 경고 줄이기)
+logging.getLogger("yfinance").setLevel(logging.CRITICAL)
+logging.getLogger("urllib3").setLevel(logging.CRITICAL)
+
+# Translator 객체 생성
+translator = Translator()
+
+# =============== [NEW] 한경 → Yahoo 티커 추출/검증 ===============
+HK_URL = "https://www.hankyung.com/globalmarket/usa-stock-sp500"
+HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; ColabScraper/1.0)"}
+
+def clean_to_yahoo_symbol(sym: str) -> str:
+    s = sym.strip().upper().replace(".", "-")  # BRK.B -> BRK-B
+    if sym.upper() == "BRK.B": return "BRK-B"
+    if sym.upper() == "BF.B" : return "BF-B"
+    return s
+
+def has_history(ticker: str, period="5d") -> bool:
+    try:
+        df = yf.download(ticker, period=period, interval="1d", progress=False)
+        if df is None or df.empty:
+            return False
+        ser = df.get("Adj Close", df.get("Close", pd.Series(dtype=float))).dropna()
+        return not ser.empty
+    except Exception:
+        return False
+
+def extract_sp500_from_hankyung_valid() -> list:
+    """한경 페이지에서 (한글명+티커) 패턴을 추출 → 야후형식 정규화 → yfinance로 실제 수신되는 심볼만 반환"""
+    html = requests.get(HK_URL, headers=HEADERS, timeout=30).text
+    soup = BeautifulSoup(html, "lxml")
+
+    # 1) '이름(티커)' 패턴 우선
+    tickers = []
+    pat_pair = re.compile(r"\(([A-Z]{1,6}(?:-[A-Z]{1,2})?)\)")
+    has_hangul = re.compile(r"[가-힣]")
+
+    for node in soup.find_all(string=True):
+        txt = str(node)
+        if not has_hangul.search(txt):
+            continue
+        for m in pat_pair.finditer(txt):
+            tickers.append(m.group(1))
+
+    # 2) 보조: 한글 포함 링크 텍스트에서 대문자 티커 토큰
+    ticker_pat = re.compile(r"\b[A-Z]{1,5}(?:-[A-Z]{1,2})?\b")
+    blacklist = {
+        # 메뉴/배너 등 노이즈
+        "USA","US","USD","S","P","SP","SNP","CPI","PPI","EPS","PE","YOY","QOQ",
+        "ETF","AI","EV","GDP","FOMC","FED","ECB","BOJ","SEC","IRS","NY","EU",
+        "BOOK","POLL","MAP","TESAT","AT","DR","WR","SBA","CH","JM","AO","JB","BF","RSS"
+    }
+    for a in soup.find_all("a"):
+        text = a.get_text(" ", strip=True)
+        if not text or len(text) > 300:
+            continue
+        if not has_hangul.search(text):
+            continue
+        for c in ticker_pat.findall(text):
+            if c not in blacklist:
+                tickers.append(c)
+
+    # 정규화 + 필터 + 중복 제거(순서 보존)
+    cleaned = []
+    for t in (clean_to_yahoo_symbol(x) for x in tickers):
+        if 1 <= len(t) <= 6 and re.fullmatch(r"[A-Z\-]+", t):
+            if t not in cleaned:
+                cleaned.append(t)
+
+    # 실제 yfinance에서 최근 5영업일 데이터가 존재하는 심볼만 남김
+    valid = []
+    for t in cleaned:
+        if has_history(t, period="5d"):
+            valid.append(t)
+
+    # 이론상 500개(± 페이지 업데이트에 따라 수 개 차이 가능)
+    return valid[:500]
+
+# =============== 네가 쓰던 로직(52주 신고가/번역)은 그대로 사용 ===============
+
+# 52주 신고가 종목 찾기 (종가 기준, 경고 제거)
+def find_52_week_high(ticker):
+    try:
+        # auto_adjust=False 명시하여 경고 제거
+        stock_data = yf.download(ticker, period='1y', interval='1d', auto_adjust=False)['Close']
+        if len(stock_data) == 0:
+            return False  # 데이터가 없으면 제외
+
+        highest_price_52_weeks = stock_data.max()
+        current_price = stock_data.iloc[-1]
+
+        return np.isclose(current_price, highest_price_52_weeks)
+    except Exception as e:
+        print(f"Error fetching price data for {ticker}: {e}")
+        return False
+
+# 회사 사업내용 한국어 번역
+def get_company_profile(ticker):
+    try:
+        # yfinance 신규 버전에선 .get_info() 사용 권장이나, .info도 함께 시도
+        try:
+            stock_info = yf.Ticker(ticker).get_info()
+        except Exception:
+            stock_info = yf.Ticker(ticker).info
+        description = stock_info.get('longBusinessSummary', 'No description available')
+
+        translated_description = translator.translate(description, src='en', dest='ko').text
+        return translated_description
+    except Exception as e:
+        print(f"Error fetching or translating profile for {ticker}: {e}")
+        return 'Error fetching or translating profile'
+
+# ---------- 여기 핵심 변경: 고정 리스트 → 한경에서 동적 수집 ----------
+print("한경 S&P500 페이지에서 티커를 수집/검증 중입니다...")
+sp500_tickers = extract_sp500_from_hankyung_valid()
+print(f"가용 티커 수: {len(sp500_tickers)} (예시: {sp500_tickers[:12]})")
+
+# 결과 저장 리스트
+high_52_week_stocks = []
+
+# 종목 순회하며 52주 신고가 여부 확인 및 사업내용 번역
+for ticker in sp500_tickers:
+    try:
+        if find_52_week_high(ticker):
+            # 회사 정보/섹터
+            try:
+                info = yf.Ticker(ticker).get_info()
+            except Exception:
+                info = yf.Ticker(ticker).info
+            sector = info.get('sector', 'No sector information')
+
+            business_profile = get_company_profile(ticker)
+            high_52_week_stocks.append((ticker, sector, business_profile))
+
+        time.sleep(2)  # 과도한 요청 방지(번역/야후 요청 모두 고려)
+    except Exception as e:
+        print(f"Error processing {ticker}: {e}")
+
+# 결과 출력
+if len(high_52_week_stocks) == 0:
+    print("\n52주 신고가 종목이 없습니다.")
+else:
+    high_52_week_df = pd.DataFrame(high_52_week_stocks, columns=['Ticker', 'Sector', 'Business Profile'])
+    grouped_by_sector = high_52_week_df.groupby('Sector')
+
+    print("\nS&P 500 52주 신고가 종목 (업종별 분류 및 한국어 사업내용):")
+    for sector, group in grouped_by_sector:
+        print(f"\n업종: {sector}")
+        for idx, row in group.iterrows():
+            print(f"티커: {row['Ticker']}\n사업내용: {row['Business Profile']}\n")

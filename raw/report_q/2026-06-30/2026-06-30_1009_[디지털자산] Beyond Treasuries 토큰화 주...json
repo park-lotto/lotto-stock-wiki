@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "date": "2026-06-30",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-30_1009_[디지털자산] Beyond Treasuries 토큰화 주...md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "최윤영",
+    "report_date": "2026.06.30",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "토큰화 주식 시장 성장",
+      "미국 클래리티법안",
+      "SEC 토큰 증권 규제",
+      "국내 토큰증권 제도화"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "기타",
+        "stance": "수혜 기대",
+        "reason": "토큰화 증권 발행·거버넌스 표준 구축 및 온체인 금융 인프라 확장"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.07",
+        "event": "DTCC 토큰화 서비스 제한적 실거래"
+      },
+      {
+        "date": "2026.10",
+        "event": "DTCC 토큰화 서비스 정식 출시"
+      },
+      {
+        "date": "2027.02",
+        "event": "국내 토큰증권 제도화법 시행"
+      }
+    ],
+    "top_picks": [
+      "Coinbase",
+      "Securitize",
+      "Ondo Finance",
+      "xStocks",
+      "Broadridge Financial Solutions",
+      "Chainlink"
+    ],
+    "risk": [
+      "연계증권형 모델의 주주권 부재 및 비상장주 양도 제한",
+      "규제 적합성 및 가격 괴리 위험",
+      "국내 제도와 글로벌 모델 간의 구조적 차이",
+      "발행사 유인 및 인프라 부족"
+    ],
+    "quote": "토큰화 주식은 RWA 시장의 가장 큰 잠재시장"
+  }
+}

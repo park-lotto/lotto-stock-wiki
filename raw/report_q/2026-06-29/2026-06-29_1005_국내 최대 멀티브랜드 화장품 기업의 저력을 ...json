@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-29",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-29_1005_국내 최대 멀티브랜드 화장품 기업의 저력을 ...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "박종대",
+    "report_date": "2026년 06월 29일",
+    "stocks": [
+      {
+        "name": "아모레퍼시픽",
+        "code": "090430",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "150,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 연결 매출은 전년 동기대비 10% 성장한 1조 1,091억원, 영업이익은 46% 증가한 1,073억원으로 추정한다.",
+        "estimate_revision": null,
+        "next_catalyst": "북미 지역 아마존 채널 확장 및 유럽 시장 진출 가속화, 코스알엑스 매출 회복",
+        "thesis": [
+          "국내외 사업이 YoY 10% 내외로 고르게 성장하며 실적 회복세가 뚜렷함",
+          "북미 및 EMEA 지역 매출 성장이 글로벌 확장을 견인 중",
+          "브랜드 및 채널 다각화 전략으로 수익성 제고 및 중장기 성장 여력 확보"
+        ],
+        "valuation_basis": "12MF PER 14.2배 수준으로 12MF 20배 이상의 밸류에이션 가능",
+        "risk": "중국 매출 부진(설화수 점포수 축소)",
+        "supply_comment": null,
+        "quote": "아모레퍼시픽은 긴 시간 해외 지역 진출의 다양한 실패와 성공의 경험을 축적해왔으며, 이를 기반으로 각 지역과 브랜드, 카테고리 특성에 맞는 가장 합리적인 영업/마케팅 전략을 만들어가고 있다.",
+        "sector": "화장품미용"
+      }
+    ]
+  }
+}

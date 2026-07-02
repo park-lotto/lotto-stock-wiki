@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-02",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-02_1102_2분기 낮은 기저 영향으로 증익 전망.md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": "유정현",
+    "report_date": "2026.07.01",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "한세실업",
+        "code": "105630",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "12,000",
+        "tp_prev": "null",
+        "tp_direction": "down",
+        "earnings_outlook": "2분기 매출액과 영업이익은 각각 5,446억원(+15%, yoy), 202억원(+64%, yoy)으로 전망.",
+        "estimate_revision": "투자의견 BUY를 유지하며 목표주가를 12,000원(12개월 FWD 예상 P/E 8배)으로 하향(-14%). 목표주가 하향은 실적 하향 조정에 따름",
+        "next_catalyst": "26-28F 최소 배당 600원 제시 및 높은 배당수익률",
+        "thesis": [
+          "2분기 OEM 달러 매출 성장률 +MSD% 예상",
+          "전년동기 부진한 실적 영향으로 2분기 영업이익 증가 전망",
+          "주가 하락으로 배당 수익률 7% 상회"
+        ],
+        "valuation_basis": "12개월 FWD 예상 P/E 8배 적용",
+        "risk": "관세 영향으로 동사가 제조하는 중저가 의류 제품은 수주가 의미 있게 증가하지 못하는 상황이 올해 당분간 지속될 것으로 전망",
+        "supply_comment": "OEM 달러 기준 매출 성장률은 yoy +5% 전망. 환율 효과(yoy +7%)로 원화 기준 매출액은 12% 성장이 예상됨.",
+        "quote": "투자의견 BUY를 유지하며 목표주가를 12,000원(12개월 FWD 예상 P/E 8배)으로 하향(-14%)."
+      }
+    ],
+    "sector": "소비내수"
+  }
+}

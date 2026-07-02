@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-30",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-30_1000_2Q26 Preview  제자리를 찾았다.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "이진협",
+    "report_date": "2026년 6월 30일",
+    "stocks": [
+      {
+        "name": "현대백화점",
+        "code": "069960",
+        "rating": "Buy(유지)",
+        "rating_changed": false,
+        "tp_new": "240,000원",
+        "tp_prev": "190,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "현대백화점은 2Q26 영업이익 922억원(+6% YoY)을 기록하며, 컨센서스 828억원을 상회할 것으로 추정한다. 백화점은 기존점성장률 +16% YoY를 기록해, 영업이익 1,184억원(+71% YoY)이 예상된다. 면세점 영업이익은 71억원(+84억원 YoY)을 기록하겠다. 지누스는 영업적자 -233억원(-524억원 YoY)을 기록하며 부진이 지속되겠다.",
+        "estimate_revision": "목표주가 상향은 백화점 목표 P/E를 16배로 상향한 것에 따른다.",
+        "next_catalyst": "DF2 신규 오픈에 따른 면세점 사업장 간 시너지 효과, 하반기 지누스 실적 기저가 낮아진다는 점 등도 긍정적이다.",
+        "thesis": [
+          "백화점 부문의 기존점 성장 및 밸류에이션 확장",
+          "면세점 DF2 진출에 따른 시내점 바잉파워 확대 및 시너지 효과",
+          "지누스 적자 폭 축소 및 실적 기저효과"
+        ],
+        "valuation_basis": "백화점 목표 P/E를 16배(신세계 목표 P/E 20배에 20% 할인 적용)로 상향, 면세점 목표 P/E는 13배를 적용.",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "현대백화점에 대해 투자의견 BUY를 유지하며, 목표주가를 24만원으로 상향한다."
+      }
+    ]
+  }
+}

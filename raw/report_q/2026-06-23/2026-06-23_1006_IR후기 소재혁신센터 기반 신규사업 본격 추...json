@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-23",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-23_1006_IR후기 소재혁신센터 기반 신규사업 본격 추...md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "박종선",
+    "report_date": "2026.06.23",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "메타바이오메드",
+        "code": "059210",
+        "rating": "NR",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 예상 실적: 매출액 270억 원, 영업이익 54억 원으로 전년동기 대비 매출액은 6.2% 증가하지만, 영업이익은 30.6% 감소할 것으로 예상함.",
+        "estimate_revision": "2Q26 예상 실적: 매출액 +6.2%yoy, 영업이익 -30.8%yoy",
+        "next_catalyst": "소재혁신센터를 기반으로 기존사업 확대 및 신규사업 본격 추진",
+        "thesis": [
+          "덴탈 사업부, 37년간 세계 110개국에 제품을 판매하며 안정적인 성장 지속",
+          "봉합사 사업부, 글로벌 7개 기업만의 제조기술을 바탕으로 연평균 18%의 성장세 지속",
+          "소재혁신센터 기반의 신규사업(PDO 스킨부스터, PDO 필러, 의료기기, Cosmetic 등) 추진"
+        ],
+        "valuation_basis": "2026년 실적 기준 PER 5.2배로, 국내 유사업체 및 동종업체(한스바이오메드, 파마리서치, 클래시스) 평균 PER 18.2배 대비 Valuation 매력을 보유함.",
+        "risk": "지난 1분기 중동지역 등 일부 지역의 매출 감소 사례 발생",
+        "supply_comment": "기타",
+        "quote": "2026년 가이던스는 매출액 1,200억원을 제시하면서 매출 성장을 이어갈 것으로 전망함."
+      }
+    ]
+  }
+}

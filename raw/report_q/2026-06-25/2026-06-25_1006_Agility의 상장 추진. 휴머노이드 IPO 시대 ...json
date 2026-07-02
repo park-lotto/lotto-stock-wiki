@@ -1,0 +1,28 @@
+{
+  "meta": {
+    "date": "2026-06-25",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-25_1006_Agility의 상장 추진. 휴머노이드 IPO 시대 ...md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "양승윤",
+    "report_date": "2026.06.25",
+    "target_kind": "sector",
+    "sector_name": "로봇",
+    "sector_view": "비중확대",
+    "thesis": [
+      "휴머노이드 산업이 기술 시연 중심의 초기 단계를 지나, 상용화 국면에 진입하고 있음을 시사.",
+      "상장 시장 진입으로, 기술력뿐 아니라 고객 ROI, 양산 인프라, 상용화 및 실적 창출 가능성을 입증해야 하는 요구가 강화될 것.",
+      "로봇 기업 간 기술 개발 및 상용화 ‘속도 경쟁’ 심화될 전망.",
+      "순수 휴머노이드 피어 확보로 밸류에이션 벤치마크가 만들어질 수 있음.",
+      "어질리티 관련 부품 공급 가능한 밸류체인에 관심 집중 가능성."
+    ],
+    "timeline": [
+      "4Q26 어질리티, Churchill Capital XI(NASDAQ: CCXI)와의 합병을 통해 SPAC 상장 예정"
+    ],
+    "top_picks": null,
+    "risk": null,
+    "quote": "중국 유니트리를 비롯해, 본격적인 휴머노이드 IPO 시대에 진입. 국내 로봇 산업에 미치는 영향은 다음과 같음."
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-29",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-29_1010_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이승훈",
+    "report_date": "2026.06.29",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [
+      {
+        "sector": "중국",
+        "stance": null,
+        "reason": "중국 정부가 올해 한국 게임 6종에 판호를 발급했으며, 국내 게임사들은 K-게임의 중국 시장 진출에 속도를 내고 있음"
+      },
+      {
+        "sector": "방산",
+        "stance": null,
+        "reason": "국내 플랫폼·AI 기업들이 국방 AI 시장을 미래 먹거리로 보고 특화 모델 개발과 방산기업과의 협력을 통해 '한국판 패트리엇 테크' 구축에 속도를 내고 있음"
+      }
+    ],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": [
+      "NAVER",
+      "SK텔레콤",
+      "NC",
+      "크래프톤"
+    ],
+    "risk": null,
+    "quote": "국내 플랫폼·AI 기업들이 국방 AI 시장을 미래 먹거리로 보고 특화 모델 개발과 방산기업과의 협력을 통해 '한국판 패트리엇 테크' 구축에 속도를 내고 있음"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-24",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-25_0700_사우디 과세에 대한 과도한 우려.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "김승준",
+    "report_date": "2026년 6월 24일",
+    "stocks": [
+      {
+        "name": "DL이앤씨",
+        "code": "375500",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "120,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 매출액 6,983.3십억원, 영업이익 505.4십억원, 순이익 421.9십억원, EPS 9,798원 / 2027년 매출액 7,375.2십억원, 영업이익 563.6십억원, 순이익 435.9십억원, EPS 10,120원",
+        "estimate_revision": null,
+        "next_catalyst": "이란과 미국간 종전이 확정된 후",
+        "thesis": [
+          "사우디 법인세 추징금 부과 관련 불복 절차 진행 시 세액 납부 의무 발생하지 않으며 통상 5년 이상 소요되어 손익에 미치는 영향은 없음",
+          "현재 주가 수준은 26년 추정치 기준 PER 5.8배까지 내려오며 저평가 구간 진입",
+          "종전 이후 이란 수주 기대감, 영국 엑스에너지(SMR) 파트너쉽, 국내 데이터센터 등 상승 매력도 보유"
+        ],
+        "valuation_basis": "26년 EPS 추정치에 Target P/E 11.0배를 적용",
+        "risk": "매크로 환경의 불확실성",
+        "supply_comment": null,
+        "quote": "손익에 영향을 주지 않는 이벤트로 주가가 15% 이상 하락한 것은 과도하다고 판단한다."
+      }
+    ]
+  }
+}

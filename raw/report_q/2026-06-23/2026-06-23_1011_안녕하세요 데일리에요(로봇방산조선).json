@@ -1,0 +1,54 @@
+{
+  "meta": {
+    "date": "2026-06-23",
+    "broker": "eugene",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-23_1011_안녕하세요 데일리에요(로봇방산조선).md"
+  },
+  "questionnaire": {
+    "broker": "eugene",
+    "analyst": "양승윤",
+    "report_date": "06/22",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [
+      {
+        "sector": "로봇",
+        "stance": null,
+        "reason": "LG전자, 로보티즈 우즈벡 공장 지분투자, 두산로보 오토메이트 AI 팔레타이징 로봇 첫선, 씨메스-레인보우로보틱스 양팔로봇 협력 등 주요 뉴스 발생"
+      },
+      {
+        "sector": "방산",
+        "stance": null,
+        "reason": "한화에어로스페이스 S&P 신용등급 A- 획득, 한화 스위스 방공시스템 수주 관련 현지 생산 언급 등"
+      },
+      {
+        "sector": "조선",
+        "stance": null,
+        "reason": "HD현대중공업 한국형 차기구축함 이의신청, CPSP 사업 관련 한화-TKMS 광고전 신경전 등"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "06/22",
+        "event": "로봇, 방산, 조선 주요 뉴스 업데이트"
+      }
+    ],
+    "top_picks": [
+      "LG전자",
+      "로보티즈",
+      "두산로보틱스",
+      "씨메스",
+      "레인보우로보틱스",
+      "베어로보틱스",
+      "리얼월드",
+      "한화에어로스페이스",
+      "HD현대중공업",
+      "한화오션",
+      "TKMS"
+    ],
+    "risk": null,
+    "quote": "CPSP 사업에서 한화의 적극적인 광고전략에 대해 TKMS 올리버 부르크하르트 CEO는 “솔직히 말해 미친 일”이라며 이례적이라고 평가."
+  }
+}

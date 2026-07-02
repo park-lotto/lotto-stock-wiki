@@ -1,0 +1,65 @@
+{
+  "meta": {
+    "date": "2026-06-23",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-23_1010_[ESG & Transition] 통키[通 Keys] Transitio...md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": [
+      "박세연",
+      "김예인"
+    ],
+    "report_date": "2026년 6월 23일",
+    "target_kind": "market",
+    "market_direction": "null",
+    "macro_vars": [
+      "EUA 가격 추이",
+      "국내 KAU25 가격 추이",
+      "EU ETS 정책",
+      "미·이란 합의",
+      "에너지 가격(TTF, 브렌트)"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "기타",
+        "stance": "중립",
+        "reason": "EU ETS 정책 불확실성은 일부 완화됐지만, 경매 물량 확대·할인 낙찰과 ETS 완화·EPP 개혁, ETS·CBAM 재원화 논의가 상승 탄력을 제약함"
+      }
+    ],
+    "style": "null",
+    "event_calendar": [
+      {
+        "date": "2026.06.15",
+        "event": "뉴욕시 연기금, 블랙록 재선정 절차 개시"
+      },
+      {
+        "date": "2026.06.15",
+        "event": "EU 회원국들, CBAM 적용 범위 확대안 합의"
+      },
+      {
+        "date": "2026.06.16",
+        "event": "영국, 저탄소연료 기금 조성"
+      },
+      {
+        "date": "2026.06.16",
+        "event": "에퀴노르, 2030년 재생에너지 설비용량 목표 폐기"
+      },
+      {
+        "date": "2026.06.17",
+        "event": "빅테크 주도 탄소제거 연합 Frontier 9억 1,500만달러 추가 투자"
+      },
+      {
+        "date": "2026.06.18",
+        "event": "트럼프 행정부, 해상풍력 임대권 4건 추가 매입"
+      },
+      {
+        "date": "2026.06.22",
+        "event": "미 최대 청정에너지 프로젝트 '선지아' 완전 가동"
+      }
+    ],
+    "top_picks": null,
+    "risk": "EEX 경매 물량 확대와 일부 할인 낙찰, ETS 완화·EPP 개혁 논의 등",
+    "quote": "이번주 EUA는 위험자산 선호·정책 기대에 따른 완만한 상승 기조, KAU25 는 2 만 원 지지와 2 만 2 천 원대 저항 사이 박스권 흐름이 이어질 가능성 높습니다."
+  }
+}

@@ -1,0 +1,147 @@
+# 필요한 라이브러리 설치
+!pip install --upgrade yfinance --quiet
+
+# 라이브러리 불러오기
+import pandas as pd
+import yfinance as yf
+from datetime import datetime
+
+# 출력 옵션 설정
+pd.set_option('display.max_columns', None)
+pd.set_option('display.max_colwidth', None)
+pd.set_option('display.width', 2000)
+
+# 티커 설정 (HAA 전략에서 SSO, QLD 사용)
+tickers = ["SSO", "QLD", "IWM", "VEA", "VWO", "VNQ", "DBC", "IEF", "TLT", "TIP", "BIL", "HYG", "LQD", "EMB", "BNDX", "BWX"]
+
+# 데이터 다운로드 (최근 10년간)
+end_date = datetime.today().strftime('%Y-%m-%d')
+start_date = (datetime.today() - pd.DateOffset(years=10)).strftime('%Y-%m-%d')
+
+data = yf.download(tickers, start=start_date, end=end_date)['Close']
+
+# 월말 데이터 추출
+monthly_data = data.resample('M').last()
+
+# 모멘텀 계산 함수
+def calculate_momentum(data):
+    momentum = pd.DataFrame(index=data.index)
+    momentum['1M'] = data.pct_change(periods=1)
+    momentum['3M'] = data.pct_change(periods=3)
+    momentum['6M'] = data.pct_change(periods=6)
+    momentum['12M'] = data.pct_change(periods=12)
+    return momentum.mean(axis=1)
+
+momentum_data = monthly_data.apply(calculate_momentum)
+
+# TIP로 카나리아 신호 계산
+def canary_momentum(tip_data):
+    tip_momentum = calculate_momentum(tip_data)
+    return tip_momentum > 0
+
+canary_signal = canary_momentum(monthly_data['TIP'])
+
+# 안전 자산 선택
+def select_safe_assets(momentum_data, bil_momentum, top_n=3):
+    safe_assets = ["BIL", "TLT", "IEF", "HYG", "LQD", "EMB", "BNDX", "BWX"]
+    safe_momentum = momentum_data[safe_assets].iloc[-1]
+    top_safe_assets = safe_momentum.nlargest(top_n)
+    selected_assets = []
+    for asset in top_safe_assets.index:
+        if top_safe_assets[asset] > bil_momentum:
+            selected_assets.append(asset)
+    return selected_assets if selected_assets else ['BIL']
+
+# 공격 자산 선택 (HAA 전략에서 SSO, QLD 사용)
+def select_top_assets(momentum_data, canary_signal, top_n=4):
+    if canary_signal.iloc[-1]:
+        top_assets = momentum_data.iloc[-1].nlargest(top_n)
+        return top_assets.index.tolist()
+    else:
+        bil_momentum = calculate_momentum(monthly_data['BIL']).iloc[-1]
+        return select_safe_assets(momentum_data, bil_momentum, top_n=3)
+
+# 고정 자산 비중 설정
+fixed_assets = {"SPY": 0.10, "QLD": 0.10, "GLD": 0.075, "PDBC": 0.075, "BIL": 0.05}
+fixed_weight_sum = sum(fixed_assets.values())
+
+# 백테스트 실행 및 결과 저장
+portfolio_data = []
+for date in momentum_data.index[12:]:
+    current_momentum = momentum_data.loc[:date]
+    current_canary_signal = canary_momentum(monthly_data['TIP'].loc[:date])
+    top_assets = select_top_assets(current_momentum, current_canary_signal, top_n=4)
+
+    # HAA 전략 비중 계산 (20%)
+    remaining_weight = 1 - fixed_weight_sum
+    haa_weights = {asset: remaining_weight / len(top_assets) for asset in top_assets}
+
+    # 고정 자산 + HAA 전략 통합 비중
+    combined_weights = fixed_assets.copy()
+    for asset, weight in haa_weights.items():
+        combined_weights[asset] = combined_weights.get(asset, 0) + weight
+
+    # 비중 정규화
+    combined_weights = {k: v / sum(combined_weights.values()) for k, v in combined_weights.items()}
+
+    # 투자 자산과 비중 정렬
+    sorted_weights = sorted(combined_weights.items(), key=lambda x: x[1], reverse=True)
+    sorted_assets = [f"{k}: {v:.2%}" for k, v in sorted_weights]
+
+    # 가중 평균 수익률 계산
+    monthly_return = sum(
+        combined_weights[asset] * monthly_data[asset].pct_change().loc[date]
+        for asset in combined_weights.keys()
+        if asset in monthly_data.columns
+    )
+
+    # 포트폴리오 기록
+    portfolio_data.append({
+        "Date": date.strftime('%Y-%m-%d'),
+        "Assets": ', '.join([k for k, _ in sorted_weights]),
+        "Weights": ', '.join(sorted_assets),
+        "Monthly Return": round(monthly_return * 100, 2),
+    })
+
+# 포트폴리오 DataFrame 생성
+portfolio = pd.DataFrame(portfolio_data)
+
+# CAGR 및 MDD 계산
+portfolio['Cumulative'] = (1 + portfolio['Monthly Return'] / 100).cumprod()
+years = (datetime.strptime(portfolio['Date'].iloc[-1], '%Y-%m-%d') - datetime.strptime(portfolio['Date'].iloc[0], '%Y-%m-%d')).days / 365.25
+cagr = (portfolio['Cumulative'].iloc[-1])**(1/years) - 1
+
+def calculate_mdd(cumulative_returns):
+    cumulative_max = cumulative_returns.cummax()
+    drawdown = cumulative_returns / cumulative_max - 1
+    return drawdown.min()
+
+mdd = calculate_mdd(portfolio['Cumulative'])
+
+# 최신 자산 비중 추천 계산
+latest_date = momentum_data.index[-1]
+latest_momentum = momentum_data.loc[:latest_date]
+latest_canary_signal = canary_momentum(monthly_data['TIP'].loc[:latest_date])
+latest_top_assets = select_top_assets(latest_momentum, latest_canary_signal, top_n=4)
+
+latest_haa_weights = {asset: (1 - fixed_weight_sum) / len(latest_top_assets) for asset in latest_top_assets}
+latest_combined_weights = fixed_assets.copy()
+for asset, weight in latest_haa_weights.items():
+    latest_combined_weights[asset] = latest_combined_weights.get(asset, 0) + weight
+
+latest_combined_weights = {k: v / sum(latest_combined_weights.values()) for k, v in latest_combined_weights.items()}
+
+# 결과 출력
+print("\n월별 투자 자산 및 수익률:")
+print(portfolio[['Date', 'Assets', 'Monthly Return']])
+
+print("\n월별 투자 비중:")
+print(portfolio[['Date', 'Weights']])
+
+print(f"\nHAA 전략에서 SSO와 QLD 사용 결과 백테스트 (10년치):")
+print(f"CAGR(연평균 성장률): {cagr*100:.2f}%")
+print(f"MDD(최대 낙폭): {mdd*100:.2f}%")
+
+print("\n최신 자산 배분 포트폴리오 추천:")
+for asset, weight in latest_combined_weights.items():
+    print(f"{asset}: {weight:.2%}")

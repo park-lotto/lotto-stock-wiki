@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-30",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-30_1005_매력적인 가격대, 매수 기회.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "이준호",
+    "report_date": "2026년 6월 30일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "크래프톤",
+        "code": "259960",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "460,000원",
+        "tp_prev": "460,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "크래프톤은 2분기 연결 기준 매출액 1조 2,927억원(+95.3%YoY, -5.7%QoQ), 영업이익 4,337억원(+76.2%YoY, -22.8%QoQ, OPM 33.6%)으로 컨센서스를 대폭 상회할 전망이다.",
+        "estimate_revision": "컨센서스 대폭 상회",
+        "next_catalyst": "8월 게임스컴에서 [NO LAW], [프로젝트 제타], [에이지 트위스터], [타래: 언바운드]와 PUBG 스튜디오 미공개 신작까지 총 5개의 신작 정보 공개",
+        "thesis": [
+          "PUBG IP의 플랫폼화 및 UGC 플랫폼으로의 진화",
+          "서브노티카2 등 신작의 성과 및 하반기 신작 기대감",
+          "구조적 성장 대비 과도한 저평가 구간"
+        ],
+        "valuation_basis": "크래프톤은 12MF P/E 기준 8.7배 에서 거래 중이다.",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "PUBG는 출시 9주년에 접어들며 보수적인 시선을 받고 있지만 매년 트래픽과 매출 모두 동반 성장하며 증명하고 있다.",
+        "sector": "기타"
+      }
+    ]
+  }
+}

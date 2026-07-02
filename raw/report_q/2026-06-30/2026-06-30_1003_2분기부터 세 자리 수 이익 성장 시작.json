@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-30",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-30_1003_2분기부터 세 자리 수 이익 성장 시작.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "유재선",
+    "report_date": "2026년 6월 30일",
+    "stocks": [
+      {
+        "name": "LX인터내셔널",
+        "code": "001120",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "66,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 영업이익은 1,199억원으로 전년대비 118.0% 증가할 전망이다.",
+        "estimate_revision": null,
+        "next_catalyst": "하반기 중 투자 계획이 가시화될 경우 중장기적인 실적 눈높이 상향이 가능할 전망이다.",
+        "thesis": [
+          "2분기부터 세 자리 수 이익 성장 시작",
+          "자원 부문 실적 개선 및 트레이딩/신성장 부문 수익성 개선",
+          "저평가된 고배당주"
+        ],
+        "valuation_basis": "2026년 기준 PER 4.3배, PBR 0.4배다.",
+        "risk": "인도네시아 정부의 주요 원자재 수출 통제 정책은 향후 시행 여부를 확인해야 하며 현재 시점에서는 특별한 우려 요소가 아닐 것으로 판단된다.",
+        "supply_comment": "기타",
+        "quote": "2Q26 영업이익 1,199억원(YoY +118.0%) 컨센서스 부합 전망"
+      }
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-29",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-29_1000_탐방 노트.md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "한유정",
+    "report_date": "2026년 6월 26일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "달바글로벌",
+        "code": "483650",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 가이던스 매출액 7,000억원, 영업이익률 21% 달성에 대한 자신감을 유지했다.",
+        "estimate_revision": null,
+        "next_catalyst": "하반기에는 북미·유럽 B2B 확대, 글로벌 리테일 리오더, 틱톡샵 성장, 신규 SKU 성과가 반영될 전망이다.",
+        "thesis": [
+          "연초에 제시했던 2026년 가이던스 매출액 7,000억원, 영업이익률 21% 달성에 대한 자신감을 유지했다.",
+          "국내에서 올리브영 중심의 성장에 더해 면세점, 백화점, 코스트코, 시코르 등 신규 오프라인 채널을 확장하며 브랜드 접점을 넓혀왔다. 현재는 이러한 전략을 일본, 러시아, 북미, 유럽 등 해외 시장에 적용 중이다.",
+          "2026년에도 외형 성장과 수익성 개선이 병행될 가능성이 높다. 달바글로벌은 미스트세럼 중심의 단일 히어로 제품 기업에서 글로벌 다제품·다채널 브랜드로 전환되는 구간에 진입하고 있다."
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "화장품미용",
+        "quote": "연초에 제시했던 2026년 가이던스 매출액 7,000억원, 영업이익률 21% 달성에 대한 자신감을 유지했다."
+      }
+    ]
+  }
+}

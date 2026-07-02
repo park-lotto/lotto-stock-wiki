@@ -1,0 +1,11 @@
+[1/3] 다운로드 시작: 아메리카노.zip
+[2/3] 다운로드 시작: 20260626.zip
+[3/3] 다운로드 시작: 20260626.zip
+[압축해제] 3개 zip 처리 중...
+Python ⚠️  압축해제 실패 (아메리카노_1.zip): Command failed: python3 - "C:\Users\TheRose\Desktop\로또의 주식\raw\매일 엑셀넣을것\아메리카노_1.zip" "C:\Users\TheRose\Desktop\로또의 주식\raw\매일 엑셀넣을것" "0702"
+Python 
+Python ⚠️  압축해제 실패 (아메리카노_2.zip): Command failed: python3 - "C:\Users\TheRose\Desktop\로또의 주식\raw\매일 엑셀넣을것\아메리카노_2.zip" "C:\Users\TheRose\Desktop\로또의 주식\raw\매일 엑셀넣을것" "0702"
+Python 
+Python ⚠️  압축해제 실패 (아메리카노_3.zip): Command failed: python3 - "C:\Users\TheRose\Desktop\로또의 주식\raw\매일 엑셀넣을것\아메리카노_3.zip" "C:\Users\TheRose\Desktop\로또의 주식\raw\매일 엑셀넣을것" "0702"
+Python 
+[4/4] 완료 — raw/매일 엑셀넣을것/ 파일 목록:

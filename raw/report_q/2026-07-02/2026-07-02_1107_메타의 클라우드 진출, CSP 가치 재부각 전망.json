@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "date": "2026-07-02",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-02_1107_메타의 클라우드 진출, CSP 가치 재부각 전망.md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "김소혜, 김나우",
+    "report_date": "2026년 7월 2일",
+    "target_kind": "sector",
+    "sector_name": "인터넷/SW",
+    "sector_view": "Positive",
+    "thesis": [
+      "메타가 자체 GPU·데이터센터 자산을 외부 고객에게 임대해 CAPEX를 직접 수익원으로 전환하려는 구상을 검토 중임",
+      "메타의 AI 컴퓨팅 판매 시도는 AI 클라우드가 수익성 있는 비즈니스임을 확인해주며, 기존 CSP 기업의 우위를 부각시키는 결과로 이어짐",
+      "국내 SW기업(네이버, 삼성SDS) 역시 AI CAPEX의 ROIC 회수 가능성 및 B2B 수요 기반 매출 기대감으로 가치 부각 가능성이 충분함"
+    ],
+    "timeline": [
+      "단기: 네오클라우드 기업에 부정적 영향 예상(가격 경쟁 압박)",
+      "중장기: 기존 CSP(AWS·Azure·GCP)의 시장 지배력 강화 및 CAPEX 회수 모델 안착 예상"
+    ],
+    "top_picks": [
+      {
+        "name": "네이버",
+        "reason": "광고·서비스 비용으로 여겨져 온 AI CAPEX가 B2B향 소버린 AI·공공 클라우드 수요를 기반으로 한 회수 매출로 돌아올 수 있다는 기대감",
+        "tp": null
+      },
+      {
+        "name": "삼성SDS",
+        "reason": "글로벌 CSP 향 클라우드 수요가 견조하게 유지됨에 따른 MSP 매출 호조세 예상",
+        "tp": null
+      }
+    ],
+    "risk": "메타의 인프라 임대 사업 본격화 시 기존 네오클라우드 기업의 임대 단가 하락 및 가격 경쟁 압박 불가피",
+    "quote": "메타의 클라우드 진출, CSP 가치 재부각 전망"
+  }
+}

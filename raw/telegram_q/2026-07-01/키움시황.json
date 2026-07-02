@@ -1,13 +1,8 @@
 {
-  "market_direction": "bullish",
+  "market_direction": "상승",
   "macro_events": [
     {
-      "fact": "미국과 이란의 협상 재개 관련 뉴스플로우 및 연준 위원들의 매파적 발언",
-      "ts": "07:45",
-      "quote": "미국과 이란의 협상 재개를 둘러싼 엇갈린 뉴스플로우, 일부 연준 위원들의 매파적인 발언에도"
-    },
-    {
-      "fact": "한국 6월 수출 및 품목별 수출 실적 발표",
+      "fact": "한국 6월 수출 및 반도체 수출 실적 발표",
       "ts": "07:45",
       "quote": "장 시작 전 발표되는 한국의 6월 수출(컨센 +60.7%, YoY) 및 반도체(5월 +169%YOY) 등 품목별 수출 실적이 장중 관련 업종의 주가 상승 탄력에 차별성을 부여할 듯합니다."
     }
@@ -15,33 +10,21 @@
   "sectors_mentioned": [
     {
       "sector": "반도체",
-      "stance": "bullish",
-      "comment": "실적 모멘텀이 유효하며 하반기 증시 상승의 주도 업종으로 기대됨."
-    },
-    {
-      "sector": "IT",
-      "stance": "bullish",
-      "comment": "IT H/W 등은 이익모멘텀에 기반하여 양호한 흐름이 기대됨."
-    },
-    {
-      "sector": "방산",
-      "stance": "bullish",
-      "comment": "7월 추천 업종으로 선정됨."
-    },
-    {
-      "sector": "바이오",
-      "stance": "bullish",
-      "comment": "7월 추천 업종으로 선정됨."
-    },
-    {
-      "sector": "철강",
-      "stance": "neutral",
-      "comment": "트레이딩 관점의 시클리컬 업종으로 분류됨."
+      "stance": "긍정",
+      "comment": "코어 추천 업종이자 이익 모멘텀이 유효함",
+      "quote": "추천 업종: 반도체+MLCC(코어)"
     },
     {
       "sector": "기타",
-      "stance": "bullish",
-      "comment": "증권, 유통 등은 이익모멘텀 및 추천 업종으로 언급됨."
+      "stance": "긍정",
+      "comment": "증권, 유통, 방산, 바이오 추천",
+      "quote": "증권, 유통, 방산, 바이오"
+    },
+    {
+      "sector": "철강",
+      "stance": "중립",
+      "comment": "시클리컬 업종으로 트레이딩 추천",
+      "quote": "화학, 철강 등 시클리컬 업종"
     }
   ]
 }

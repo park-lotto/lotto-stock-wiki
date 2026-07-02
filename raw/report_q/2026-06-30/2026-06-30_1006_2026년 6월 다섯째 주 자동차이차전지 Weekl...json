@@ -1,0 +1,54 @@
+{
+  "meta": {
+    "date": "2026-06-30",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-30_1006_2026년 6월 다섯째 주 자동차이차전지 Weekl...md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "김광식, 최보영",
+    "report_date": "2026/ 06/ 30",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "미국 신차판매 6월 1.5M(+4.2% YoY)",
+      "연간 전망치 15.8M(-2.9% YoY)",
+      "금리 부담 완화"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "2차전지",
+        "stance": "긍정",
+        "reason": "금리 부담 완화, 반도체 주가 하락으로 성장주 내 업종 순환매 전개. 2차전지 주가 상승 트리거"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026/07/03",
+        "event": "코스닥 30주년 행사로 2차전지 산업의 2차 도약 세션 진행"
+      }
+    ],
+    "top_picks": [
+      "현대차",
+      "기아",
+      "현대모비스",
+      "한온시스템",
+      "TESLA",
+      "TOYOTA",
+      "BYD",
+      "GM",
+      "FORD",
+      "LG 에너지솔루션",
+      "삼성 SDI",
+      "에코프로비엠",
+      "포스코퓨처엠",
+      "엘앤에프",
+      "CATL",
+      "PANASONIC",
+      "ALBEMARLE"
+    ],
+    "risk": "폭스바겐 독일 4개 공장 생산 중단-최대 10만명 인력 감축 검토, 중국 내 경쟁력 약화 주요인",
+    "quote": "금리 부담 완화, 반도체 주가 하락으로 성장주 내 업종 순환매 전개. 2차전지 주가 상승 트리거"
+  }
+}

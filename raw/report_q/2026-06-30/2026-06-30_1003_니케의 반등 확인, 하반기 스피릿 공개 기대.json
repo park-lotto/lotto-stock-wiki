@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-30",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-30_1003_니케의 반등 확인, 하반기 스피릿 공개 기대.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "이준호",
+    "report_date": "2026년 6월 30일",
+    "stocks": [
+      {
+        "name": "시프트업",
+        "code": "462870",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "45,000원",
+        "tp_prev": null,
+        "tp_direction": "flat",
+        "earnings_outlook": "2분기 영업수익 577억원(-48.7%YoY, +22.0%QoQ), 영업이익 331억원(-51.5%YoY, +53.8%QoQ, OPM 57.3%)으로 컨센서스를 상회하는 실적을 기록할 전망이다.",
+        "estimate_revision": null,
+        "next_catalyst": "올해 [프로젝트 스피릿]에 대한 정보 공개 및 [승리의 여신: 니케]의 성장, 이후 신작 출시 사이클",
+        "thesis": [
+          "승리의 여신: 니케의 3.5주년 업데이트를 기점으로 한 반등 성공",
+          "스텔라 블레이드 2주년이 지났음에도 안정적인 판매량 유지 및 정식 후속작 [스텔라 블레이드: 블러드 레인] 개발",
+          "글로벌 메가 IP 보유와 완성도 높은 게임사로서의 강점"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "시프트업은 [승리의 여신: 니케], [스텔라 블레이드]라는 글로벌 메가 IP 2종을 보유했으며 발전시켜 나가고 있다.",
+        "sector": "IT"
+      }
+    ]
+  }
+}

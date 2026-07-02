@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-24",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-24_1000_흔들림 없는 실적 호조! 2Q 좋고, 3Q 더 좋다...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "박강호",
+    "report_date": "2026.06.24",
+    "stocks": [
+      {
+        "name": "롯데렌탈",
+        "code": "089860",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "46,000",
+        "tp_prev": "46,000",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 영업이익은 891억원(2.9% yoy)으로 컨센서스 상회. 3Q26 매출(8,203억원), 영업이익(948억원)은 최고를 경신 추정",
+        "estimate_revision": "2026년 2Q 매출(7,707억원)과 영업이익은 891억원으로 각각 2.9%(yoy/5.4% qoq), 15.4%(yoy/6.5% qoq) 증가 등 실적 호조를 예상.",
+        "next_catalyst": "2026년 3Q 성수기 효과 및 외국인 입국자 수 증가, 추석 연휴 및 제주 렌탈 이용 일 수 증가",
+        "thesis": [
+          "국내 렌탈 시장 내 확고한 1위 점유율을 바탕으로 한 장기/단기 렌탈 점유율 확대 및 평균이용가격 상승",
+          "외국인 입국자 증가 및 제주도 방문 횟수 확대로 인한 단기 렌탈 실적 호조",
+          "저수익 사업 축소와 장/단기 렌탈 시장의 경쟁력 강화를 통한 매출 및 영업이익의 차별적 성장"
+        ],
+        "valuation_basis": "2026년 BPS X 목표 P/B 1배 적용",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "2Q26 영업이익은 891억원(2.9% yoy)으로 컨센서스 상회. 호실적 전망"
+      }
+    ]
+  }
+}

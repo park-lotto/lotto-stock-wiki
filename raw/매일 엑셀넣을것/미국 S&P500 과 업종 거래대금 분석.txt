@@ -1,0 +1,443 @@
+# ============================
+# Colab FULL CODE
+# 1) 한경에서 S&P500 티커를 수집/검증
+# 2) (S&P500) 최근일 달러거래대금 - 직전 5거래일 평균 달러거래대금  Top 30
+# 3) (ETF)    최근일 달러거래대금 - 직전 5거래일 평균 달러거래대금  Top 30
+# * 달러거래대금 근사: Close * Volume
+# ============================
+
+# ----------------------------
+# 라이브러리 설치
+# ----------------------------
+!pip install --upgrade yfinance --quiet
+!pip install beautifulsoup4 lxml --quiet
+
+# ----------------------------
+# 라이브러리 불러오기
+# ----------------------------
+import yfinance as yf
+import pandas as pd
+import numpy as np
+import time, re, logging, requests
+from bs4 import BeautifulSoup
+
+logging.getLogger("yfinance").setLevel(logging.CRITICAL)
+logging.getLogger("urllib3").setLevel(logging.CRITICAL)
+
+# ============================
+# [0] 사용자 ETF 리스트 입력
+# ============================
+ETF_RAW = """
+QCLN
+PBW
+URA
+NLR
+PSI
+SOXX
+TAN
+XTL
+XAR
+QTEC
+CARZ
+XSD
+ITA
+IXN
+AIRR
+IGM
+IYW
+SOCL
+XLK
+XLY
+FXL
+FDIS
+VCR
+IGV
+FTEC
+VGT
+PKB
+ECON
+SKYY
+XME
+PSCT
+IXP
+FDN
+EMIF
+ICLN
+IYZ
+RXI
+SEA
+FAN
+PNQI
+VOX
+FCOM
+VPU
+FUTY
+PBD
+GRID
+XLU
+EXI
+XTN
+IDU
+IDU
+XSW
+JXI
+TDIV
+PEJ
+FIDU
+IYC
+VIS
+FXR
+XLU
+XHB
+PSP
+IYJ
+KIE
+IYT
+CUT
+QABA
+EUFN
+FXU
+INCO
+PSCI
+PICK
+PSCD
+FXZ
+EVX
+KWT
+PSCM
+FIW
+XLI
+CHIQ
+ICLN
+IXG
+CGW
+PSCF
+XLV
+PEX
+KBE
+MXI
+FXD
+FXO
+WOOD
+IHE
+SGDM
+VAW
+GII
+PBJ
+FMAT
+XHS
+KRE
+IYM
+IHI
+IXJ
+XRT
+FHLC
+PJP
+XLF
+VFH
+XHE
+GUNR
+VHT
+XLB
+IYH
+IAK
+IAT
+PSCU
+IYG
+KCE
+FNCL
+LIT
+EMLP
+GNR
+IYF
+XPH
+MLPA
+HAP
+MLPI
+REMX
+FBT
+KXI
+MOO
+PBE
+BIZD
+SLX
+ITB
+GDXJ
+XLP
+IAI
+TOLZ
+FXG
+IHF
+PSCH
+FXH
+VEGI
+AMLP
+MLPX
+GDX
+IYK
+VDC
+FSTA
+IGE
+XBI
+IBB
+ENFR
+SLVP
+PSCC
+ATMP
+VDE
+XES
+SIL
+PSCE
+SILJ
+IXC
+IEZ
+XLE
+IYE
+FENY
+OIH
+XOP
+PXJ
+FXN
+IEO
+FCG
+PXE
+""".strip()
+
+def parse_ticker_lines(raw: str):
+    tickers = []
+    for line in raw.splitlines():
+        t = line.strip().upper()
+        if not t:
+            continue
+        t = t.replace(".", "-")
+        if t not in tickers:
+            tickers.append(t)
+    return tickers
+
+ETF_TICKERS = parse_ticker_lines(ETF_RAW)
+
+# ============================
+# [1] 한경 → S&P500 티커 추출/검증
+# ============================
+HK_URL = "https://www.hankyung.com/globalmarket/usa-stock-sp500"
+HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; ColabScraper/1.0)"}
+
+def clean_to_yahoo_symbol(sym: str) -> str:
+    s = sym.strip().upper().replace(".", "-")
+    if sym.upper() == "BRK.B": return "BRK-B"
+    if sym.upper() == "BF.B" : return "BF-B"
+    return s
+
+def has_history(ticker: str, period="5d") -> bool:
+    try:
+        df = yf.download(ticker, period=period, interval="1d", progress=False)
+        if df is None or df.empty:
+            return False
+        ser = df.get("Adj Close", df.get("Close", pd.Series(dtype=float))).dropna()
+        return not ser.empty
+    except Exception:
+        return False
+
+def extract_sp500_from_hankyung_valid() -> list:
+    html = requests.get(HK_URL, headers=HEADERS, timeout=30).text
+    soup = BeautifulSoup(html, "lxml")
+
+    tickers = []
+    pat_pair = re.compile(r"\(([A-Z]{1,6}(?:-[A-Z]{1,2})?)\)")
+    has_hangul = re.compile(r"[가-힣]")
+
+    # 1) '이름(티커)' 패턴
+    for node in soup.find_all(string=True):
+        txt = str(node)
+        if not has_hangul.search(txt):
+            continue
+        for m in pat_pair.finditer(txt):
+            tickers.append(m.group(1))
+
+    # 2) 보조: 한글 포함 링크 텍스트에서 대문자 티커 토큰
+    ticker_pat = re.compile(r"\b[A-Z]{1,5}(?:-[A-Z]{1,2})?\b")
+    blacklist = {
+        "USA","US","USD","S","P","SP","SNP","CPI","PPI","EPS","PE","YOY","QOQ",
+        "ETF","AI","EV","GDP","FOMC","FED","ECB","BOJ","SEC","IRS","NY","EU",
+        "BOOK","POLL","MAP","TESAT","AT","DR","WR","SBA","CH","JM","AO","JB","BF","RSS"
+    }
+    for a in soup.find_all("a"):
+        text = a.get_text(" ", strip=True)
+        if not text or len(text) > 300:
+            continue
+        if not has_hangul.search(text):
+            continue
+        for c in ticker_pat.findall(text):
+            if c not in blacklist:
+                tickers.append(c)
+
+    # 정규화 + 중복 제거(순서 보존)
+    cleaned = []
+    for t in (clean_to_yahoo_symbol(x) for x in tickers):
+        if 1 <= len(t) <= 8 and re.fullmatch(r"[A-Z\-]+", t):
+            if t not in cleaned:
+                cleaned.append(t)
+
+    # yfinance로 실제 데이터 존재하는 심볼만
+    valid = []
+    for t in cleaned:
+        if has_history(t, period="5d"):
+            valid.append(t)
+
+    return valid[:500]
+
+# ============================
+# [2] 공통: 달러 거래대금 스파이크 계산
+# ============================
+def fetch_prices_in_chunks(tickers, period="15d", interval="1d", chunk_size=120, pause=0.8):
+    frames = []
+    for i in range(0, len(tickers), chunk_size):
+        batch = tickers[i:i+chunk_size]
+        df = yf.download(
+            tickers=batch,
+            period=period,
+            interval=interval,
+            group_by="ticker",
+            auto_adjust=False,
+            progress=False,
+            threads=True,
+        )
+        frames.append(df)
+        time.sleep(pause)
+    return frames
+
+def _pick_subframe_from_chunks(chunks, ticker):
+    for df in chunks:
+        if df is None or df.empty:
+            continue
+        if isinstance(df.columns, pd.MultiIndex):
+            if ticker in df.columns.get_level_values(0):
+                return df[ticker].copy()
+        else:
+            return df.copy()
+    return None
+
+def get_dollar_volume_spike(tickers, label, period="15d"):
+    """
+    종목별 달러 거래대금 = Close * Volume
+    스파이크 = (가장 최근 거래일 거래대금) - (직전 5거래일 평균 거래대금)
+    """
+    chunks = fetch_prices_in_chunks(tickers, period=period, chunk_size=120, pause=0.8)
+
+    rows = []
+    for t in tickers:
+        sub = _pick_subframe_from_chunks(chunks, t)
+        if sub is None or sub.empty:
+            continue
+        if "Close" not in sub.columns or "Volume" not in sub.columns:
+            continue
+
+        sub = sub.dropna(subset=["Close","Volume"]).copy()
+        if len(sub) < 6:
+            continue
+
+        dv = (sub["Close"] * sub["Volume"]).dropna()
+        if len(dv) < 6:
+            continue
+
+        dv6 = dv.iloc[-6:]
+        latest = float(dv6.iloc[-1])
+        avg_prev5 = float(dv6.iloc[:-1].mean())
+        spike = latest - avg_prev5
+        spike_pct = (spike / avg_prev5) if avg_prev5 != 0 else np.nan
+
+        rows.append({
+            "Group": label,
+            "Ticker": t,
+            "Latest_DollarVolume": latest,
+            "Prev5Avg_DollarVolume": avg_prev5,
+            "Spike": spike,
+            "SpikePct": spike_pct
+        })
+
+    out = pd.DataFrame(rows)
+    if out.empty:
+        return out
+    out = out.sort_values("Spike", ascending=False).reset_index(drop=True)
+    return out
+
+# ============================
+# [3] Top30 포맷 + 기본정보(이름/섹터or카테고리)
+# ============================
+def get_basic_info(ticker: str):
+    info = {"Name": "", "Sector_or_Category": ""}
+    try:
+        d = yf.Ticker(ticker).get_info()
+        info["Name"] = d.get("longName") or d.get("shortName") or ""
+        info["Sector_or_Category"] = d.get("sector") or d.get("category") or d.get("quoteType") or ""
+    except Exception:
+        pass
+    return info
+
+def format_top(df_already_topn, add_info=True, sleep_each=0.35):
+    out = df_already_topn.copy()
+    if out.empty:
+        return out
+
+    if add_info:
+        names, cats = [], []
+        for t in out["Ticker"].tolist():
+            meta = get_basic_info(t)
+            names.append(meta.get("Name",""))
+            cats.append(meta.get("Sector_or_Category",""))
+            time.sleep(sleep_each)
+        out.insert(2, "Name", names)
+        out.insert(3, "Sector/Category", cats)
+
+    def fmt_money(x):
+        if pd.isna(x): return ""
+        return f"${x:,.0f}"
+
+    out["Latest_DollarVolume"] = out["Latest_DollarVolume"].map(fmt_money)
+    out["Prev5Avg_DollarVolume"] = out["Prev5Avg_DollarVolume"].map(fmt_money)
+    out["Spike"] = out["Spike"].map(fmt_money)
+    out["SpikePct"] = (out["SpikePct"] * 100).round(2).astype(str) + "%"
+
+    return out
+
+# ============================
+# 실행
+# ============================
+print("한경 S&P500 페이지에서 티커를 수집/검증 중입니다...")
+sp500_tickers = extract_sp500_from_hankyung_valid()
+print(f"S&P500 가용 티커 수: {len(sp500_tickers)} (예시: {sp500_tickers[:12]})")
+
+print(f"\n[ETF] 입력 ETF 수(중복 제거 후): {len(ETF_TICKERS)} (예시: {ETF_TICKERS[:12]})")
+
+# 1) S&P500 거래대금 분석
+print("\n[S&P500] 거래대금 스파이크 계산 중...")
+sp500_spike = get_dollar_volume_spike(sp500_tickers, label="S&P500", period="15d")
+
+# 2) ETF 거래대금 분석
+print("\n[ETF] 거래대금 스파이크 계산 중...")
+etf_spike = get_dollar_volume_spike(ETF_TICKERS, label="ETF", period="15d")
+
+# ============================
+# 결과 출력: 각각 Top 30
+# ============================
+print("\n==============================")
+print("[S&P500] 거래대금 스파이크 Top 30")
+print("==============================")
+
+if sp500_spike.empty:
+    print("S&P500: 계산 가능한 종목이 없습니다(데이터 수신 실패/거래일 부족).")
+else:
+    sp500_top30_raw = sp500_spike.sort_values("Spike", ascending=False).head(30).reset_index(drop=True)
+    sp500_top30 = format_top(sp500_top30_raw, add_info=True)
+    display(sp500_top30)
+
+print("\n==============================")
+print("[ETF] 거래대금 스파이크 Top 30")
+print("==============================")
+
+if etf_spike.empty:
+    print("ETF: 계산 가능한 종목이 없습니다(데이터 수신 실패/거래일 부족).")
+else:
+    etf_top30_raw = etf_spike.sort_values("Spike", ascending=False).head(30).reset_index(drop=True)
+    etf_top30 = format_top(etf_top30_raw, add_info=True)
+    display(etf_top30)

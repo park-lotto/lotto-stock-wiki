@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-29",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-29_1000_서초동 부지 매각 결정.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "송유림, 김예인",
+    "report_date": "2026년 6월 29일",
+    "stocks": [
+      {
+        "name": "자이에스앤디",
+        "code": "317400",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 6800,
+        "tp_prev": 6800,
+        "tp_direction": "flat",
+        "earnings_outlook": "자이에스앤디의 2분기 매출액은 3233억 원, 영업이익은 92억 원으로 전년동기 대비 각각 -4.1%, 흑자전환을 기록할 것으로 예상한다.",
+        "estimate_revision": null,
+        "next_catalyst": "서초동 토지 및 건물 매각에 따른 대규모 현금 확보 및 이를 활용한 신규 및 핵심사업 투자",
+        "thesis": [
+          "서초동 부지 매각 결정으로 대규모 현금 확보",
+          "상반기 중 4개 현장 착공에 이어 하반기 추가 4개 현장 착공 예정",
+          "실적 턴어라운드 극초기 국면 및 저평가 상태"
+        ],
+        "valuation_basis": "12개월 예상 BPS에 목표배수 0.5배(예상 ROE 11%, PER 환산시 3.8배)를 적용해 산출",
+        "risk": null,
+        "supply_comment": "주택 부문 상반기 중 4개 현장(총 7천억 원) 착공 및 하반기 중 적어도 4개 현장의 추가 착공 예정",
+        "quote": "자산 양도를 통해 확보한 현금은 부동산관련 블라인드펀드, 정비 및 자체사업, 시니어·FM(Facilities Management) 등 신규 및 핵심사업 투자 재원으로 활용될 계획이다."
+      }
+    ]
+  }
+}

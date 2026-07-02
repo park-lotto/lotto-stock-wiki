@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-24",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-25_0702_사우디 법인세 과세 이슈 점검.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유진투자증권",
+    "analyst": "류태환",
+    "report_date": "2026.06.24",
+    "stocks": [
+      {
+        "name": "DL 이앤씨",
+        "code": "375500",
+        "sector": "기타",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": 144000,
+        "tp_prev": 144000,
+        "tp_direction": "flat",
+        "earnings_outlook": "2026E 매출액 7,128억원, 영업이익 546억원 / 2027E 매출액 7,509억원, 영업이익 623억원",
+        "estimate_revision": null,
+        "next_catalyst": "이란 재건 수혜 및 SMR 시장 확대",
+        "thesis": [
+          "사우디 법인세 이슈는 본업 경쟁력 훼손이 아닌 과거 EPC 프로젝트에 대한 세무 분쟁임",
+          "제척기간 및 이중과세 이슈로 인해 공시된 과세 규모와 실질적인 불확실성 범위에는 차이가 존재함",
+          "견고한 수익성과 업종 내 최상위 수준의 재무구조 등 기존 투자포인트는 여전히 유효함"
+        ],
+        "valuation_basis": "공시된 과세 금액 대비 실제 부담이 크게 축소될 가능성을 고려함",
+        "risk": "사우디 국세청의 법인세 과세 통보로 인한 재무적 불확실성",
+        "supply_comment": null,
+        "quote": "공시된 과세 금액 대비 실제 부담이 크게 축소될 가능성을 고려할 때, 이번 주가 조정은 과도한 측면이 있으며 중장기 관점에서 매수 기회로 판단."
+      }
+    ]
+  }
+}

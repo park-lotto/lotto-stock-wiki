@@ -293,6 +293,13 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
 .ws-preset { padding: 6px 8px; border-radius: 7px; border: 1px solid var(--line); background: var(--card); color: var(--txt); font-family: inherit; font-size: .73rem; cursor: pointer; transition: border-color .15s, color .15s; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ws-preset:hover { border-color: var(--gold); color: var(--gold); }
 .ws-spresets { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin: 8px 0; }
+.ws-preset-wrap { position: relative; }
+.ws-preset-wrap .ws-preset { width: 100%; padding-right: 20px; }
+.ws-preset-del { position: absolute; top: 2px; right: 2px; width: 15px; height: 15px; line-height: 13px; padding: 0;
+  border: none; border-radius: 50%; background: #201014; color: #a55; font-size: .62rem; cursor: pointer;
+  opacity: 0; transition: opacity .15s, color .15s, background .15s; }
+.ws-preset-wrap:hover .ws-preset-del { opacity: 1; }
+.ws-preset-del:hover { color: #fff; background: #7a1a1a; }
 .ws-img-attach { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
 .ws-img-name { font-size: .72rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ws-right { flex: 1; min-width: 0; overflow-y: auto; padding: 22px 26px; }
@@ -778,14 +785,8 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
       <div class="ws-act-group">
         <div class="ws-act-label">🎨 만들기 — 스탁브레인 스튜디오</div>
         <input type="text" id="ws-studio-prompt" class="ws-q-input" placeholder="프롬프트(선택): 아래 단축 프롬프트를 눌러도 됩니다">
-        <div class="ws-spresets">
-          <button class="ws-preset" onclick="wsStudioPreset('paper')">📰 한장요약(주린이)</button>
-          <button class="ws-preset" onclick="wsStudioPreset('invest')">💹 투자관점</button>
-          <button class="ws-preset" onclick="wsStudioPreset('data')">📊 데이터강조</button>
-          <button class="ws-preset" onclick="wsStudioPreset('top5')">🎯 핵심5개</button>
-          <button class="ws-preset" onclick="wsStudioPreset('easy')">🗣️ 쉽게설명</button>
-          <button class="ws-preset" onclick="wsStudioPreset('stock')">📈 종목중심</button>
-        </div>
+        <div class="ws-spresets" id="ws-spresets"><div class="bh-empty">불러오는 중…</div></div>
+        <button class="ws-preset" onclick="openPresetAdd()" style="border-style:dashed;width:100%;margin-bottom:8px">+ 내 프롬프트 추가</button>
         <div class="ws-opts">
           <div class="ws-opt-row">
             <span class="ws-opt-lbl">🖼️ 인포 방향</span>
@@ -828,7 +829,11 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
           <div id="ws-img-msg" class="ws-studio-msg"></div>
         </div>
       </div>
-      <a id="ws-open" href="#" target="_blank" class="nb-open-sm" style="margin-top:auto">↗ 원본 열기</a>
+      <div class="ws-act-group" style="margin-top:auto">
+        <div class="ws-act-label">🕘 이전 브리핑 기록</div>
+        <div id="ws-brief-history" class="brief-hist" style="max-height:220px;overflow-y:auto">불러오는 중…</div>
+      </div>
+      <a id="ws-open" href="#" target="_blank" class="nb-open-sm">↗ 원본 열기</a>
     </div>
     <div class="ws-right">
       <div class="ws-canvas" id="ws-canvas">
@@ -1175,8 +1180,8 @@ async function openLatestBrief() {
     openBriefFromHistory(n.id, n.label, n.url || '');
   } catch(e) { toast('브리핑 열기 실패: ' + e.message, true); }
 }
-async function loadBriefHistory() {
-  const box = qs('#brief-history'); if (!box) return;
+async function loadBriefHistory(containerId) {
+  const box = qs('#' + (containerId || 'brief-history')); if (!box) return;
   try {
     const res = await apiFetch('/api/insights/notebooks');
     const nbs = res.notebooks || [];
@@ -1200,7 +1205,8 @@ async function forgetBrief(ev, id, label) {
       body: JSON.stringify({ id })
     });
     toast('삭제했습니다');
-    if (qs('#brief-history')) loadBriefHistory();
+    if (qs('#brief-history')) loadBriefHistory('brief-history');
+    if (qs('#ws-brief-history')) loadBriefHistory('ws-brief-history');
     const mp = qs('#ws-merge-picker');
     if (mp && mp.style.display === 'block') { mp.style.display = 'none'; openMergePicker(); }
   } catch(e) { toast('삭제 실패: ' + e.message, true); }
@@ -1725,6 +1731,7 @@ function reopenWorkspace() {
   if (!window._ws) return;
   const btn = qs('#ws-resume'); if (btn) btn.classList.remove('show');
   qs('#nbws').classList.add('open');
+  loadBriefHistory('ws-brief-history');
 }
 function openWorkspaceLoading(label) {
   const btn = qs('#ws-resume'); if (btn) btn.classList.remove('show');  // 새 세션 시작
@@ -1732,6 +1739,7 @@ function openWorkspaceLoading(label) {
   qs('#ws-meta').textContent = '노트북 만드는 중…';
   qs('#ws-canvas').innerHTML = `<div class="ws-empty"><div class="spinner"></div>브리핑을 생성 중입니다…<br><small style="color:var(--muted)">${escHtml(label)} · 소스를 모아 노트북 만드는 중 · 20~40초</small><br><button class="ws-cancel" onclick="cancelCreate()">✕ 취소</button></div>`;
   qs('#nbws').classList.add('open');
+  loadBriefHistory('ws-brief-history');
 }
 function openWorkspace(res, q, autoQ) {
   window._ws = { id: res.notebook_id, q, label: res.label || q, conv: '', url: res.url };
@@ -1742,6 +1750,7 @@ function openWorkspace(res, q, autoQ) {
   qs('#ws-canvas').innerHTML = `<div class="ws-empty">왼쪽에서 <b>질문</b>하거나 <b>만들기</b>를 누르면<br>결과가 여기에 크게 표시됩니다.</div>`;
   qs('#nbws').classList.add('open');
   loadWsSources();
+  loadBriefHistory('ws-brief-history');
   wsAttachObserver();
   if (autoQ && autoQ.trim()) {
     const inp = qs('#ws-q'); if (inp) inp.value = autoQ.trim();
@@ -1758,6 +1767,8 @@ function wsScheduleSave() {
     const ws = window._ws; if (!ws) return;
     const c = qs('#ws-canvas'); if (!c) return;
     if (c.querySelector('.ws-empty') && c.children.length <= 1) return;  // 빈 캔버스
+    if (c.querySelector('.spinner')) return;  // 생성 중(로딩) 상태는 저장 안 함 — 나중에 다시 열었을 때
+                                               // "생성 중..."이 살아있는 프로세스 없이 영원히 고정 표시되는 것 방지
     const html = c.innerHTML;
     if (!html || html.length < 40) return;
     apiFetch('/api/insights/history_save', {
@@ -1783,6 +1794,7 @@ async function openBriefFromHistory(id, label, url) {
   qs('#ws-canvas').innerHTML = wsLoading('그때 본 기록 불러오는 중…');
   qs('#nbws').classList.add('open');
   loadWsSources();
+  loadBriefHistory('ws-brief-history');
   try {
     const snap = await apiFetch(`/api/insights/history?notebook_id=${encodeURIComponent(id)}`);
     if (snap && snap.html) {
@@ -2153,17 +2165,66 @@ function wsPreset(k) {
   if (inp) { inp.value = p.q; inp.focus(); }   // 자동실행 X — 골격 확인/종목명 추가 후 질문
 }
 
-const WS_STUDIO_PROMPTS = {
-  paper: '한 장으로 핵심만, 주식 초보(주린이)도 이해하게 쉬운 비유와 큰 숫자 위주로',
-  invest: '투자 관점에서 핵심 포인트·기회·리스크를 중심으로',
-  data: '수치·비교·비율을 강조해 데이터 중심으로',
-  top5: '가장 중요한 5가지만 추려 간결하게',
-  easy: '전문용어 없이 쉽게, 비유를 들어서 설명',
-  stock: '언급된 종목별로 정리하고 종목명·목표가를 강조',
-};
-function wsStudioPreset(k) {
-  const t = WS_STUDIO_PROMPTS[k]; if (!t) return;
-  const inp = qs('#ws-studio-prompt'); if (inp) { inp.value = t; inp.focus(); }
+let WS_STUDIO_LIST = [];
+async function loadStudioPresets() {
+  try {
+    const res = await apiFetch('/api/insights/studio_presets');
+    WS_STUDIO_LIST = res.presets || [];
+  } catch(e) { WS_STUDIO_LIST = []; }
+  renderStudioPresets();
+}
+function renderStudioPresets() {
+  const box = qs('#ws-spresets'); if (!box) return;
+  if (!WS_STUDIO_LIST.length) { box.innerHTML = '<div class="bh-empty">프롬프트 버튼이 없습니다. 아래에서 추가하세요.</div>'; return; }
+  box.innerHTML = WS_STUDIO_LIST.map(p =>
+    `<div class="ws-preset-wrap">
+      <button class="ws-preset" onclick="wsStudioPreset('${escAttr(p.id)}')" ondblclick="editPreset(event,'${escAttr(p.id)}')" title="${escAttr(p.prompt)}\n(더블클릭하면 수정)">${escHtml(p.icon||'')} ${escHtml(p.label)}</button>
+      <button class="ws-preset-del" title="삭제" onclick="deletePreset(event,'${escAttr(p.id)}','${escAttr(p.label)}')">✕</button>
+    </div>`).join('');
+}
+function wsStudioPreset(id) {
+  const p = WS_STUDIO_LIST.find(x => x.id === id); if (!p) return;
+  const inp = qs('#ws-studio-prompt'); if (inp) { inp.value = p.prompt; inp.focus(); }
+}
+function openPresetAdd() {
+  const icon = (prompt('아이콘(이모지 1개, 비워두면 ✨):', '✨') || '✨').trim() || '✨';
+  const label = (prompt('버튼 제목 (예: 리포트중심):', '') || '').trim();
+  if (!label) return;
+  const promptText = (prompt('실제 프롬프트 내용 (질문 텍스트에 붙일 지시문):', '') || '').trim();
+  if (!promptText) return;
+  savePreset({ icon, label, prompt: promptText });
+}
+function editPreset(ev, id) {
+  ev.stopPropagation();
+  const p = WS_STUDIO_LIST.find(x => x.id === id); if (!p) return;
+  const icon = (prompt('아이콘 수정:', p.icon || '✨') || p.icon).trim();
+  const label = (prompt('버튼 제목 수정:', p.label) || p.label).trim();
+  const promptText = (prompt('프롬프트 내용 수정:', p.prompt) || p.prompt).trim();
+  savePreset({ id, icon, label, prompt: promptText });
+}
+async function savePreset(data) {
+  try {
+    const url = data.id ? '/api/insights/studio_presets/update' : '/api/insights/studio_presets/add';
+    const res = await apiFetch(url, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+    });
+    if (!res.ok) { toast('저장 실패: ' + (res.error || ''), true); return; }
+    WS_STUDIO_LIST = res.presets || [];
+    renderStudioPresets();
+    toast(data.id ? '수정됨 ✓' : '추가됨 ✓');
+  } catch(e) { toast('저장 실패: ' + e.message, true); }
+}
+async function deletePreset(ev, id, label) {
+  ev.stopPropagation();
+  if (!confirm(`"${label}" 프롬프트 버튼을 삭제할까요?`)) return;
+  try {
+    const res = await apiFetch('/api/insights/studio_presets/delete', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id })
+    });
+    WS_STUDIO_LIST = res.presets || [];
+    renderStudioPresets();
+    toast('삭제됨 ✓');
+  } catch(e) { toast('삭제 실패: ' + e.message, true); }
 }
 
 function wsImgPicked() {
@@ -2230,7 +2291,7 @@ async function wsStudio(btn, kind) {
   }
   const metaBits = [optTxt, focus].filter(Boolean).join(' · ');
   const head = (labels[kind] || kind) + (metaBits ? ` <small style="color:var(--muted);font-weight:400">— ${escHtml(metaBits)}</small>` : '');
-  const card = wsAddCard(head, wsLoading(slow ? '생성 중… 완료까지 1~3분, 끝나면 여기 표시됩니다' : '시작 중…', true));
+  const card = wsAddCard(head, wsLoading(slow ? '생성 중… 보통 1~3분, 밀리면 최대 10분까지 걸릴 수 있습니다' : '시작 중…', true));
   card._abort = new AbortController();
   const body = card.querySelector('.ws-card-b');
   try {
@@ -2276,7 +2337,7 @@ async function wsGeminiInfo(btn) {
 }
 
 async function wsStudioPoll(nbId, res, body, signal) {
-  const maxTries = (res.kind === 'slides' || res.kind === 'video') ? 75 : 32;   // 슬라이드/영상은 길게(~10분)
+  const maxTries = (res.kind === 'slides' || res.kind === 'video' || res.kind === 'infographic') ? 75 : 32;   // NotebookLM이 종종 느려서(~10분) 길게 잡음
   for (let i = 0; i < maxTries; i++) {   // 8s 간격
     if (signal && signal.aborted) { body.innerHTML = '<div style="color:var(--muted)">취소됨 (원본 스튜디오에선 계속 생성될 수 있음)</div>'; return; }
     await new Promise(r => setTimeout(r, 8000));
@@ -2458,6 +2519,7 @@ function sigLabel(sig) {
 
 // ── 초기 진입 ──
 showL0();
+loadStudioPresets();
 </script>
 </body>
 </html>
