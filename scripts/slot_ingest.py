@@ -15,7 +15,9 @@ crawling_bot_data 로 자동 다운로드 → 이 스크립트가 raw/ 동기화
     python scripts/slot_ingest.py --cats telegram,youtube,blog --date 2026-07-01
 """
 import sys
+import re
 import json
+import unicodedata
 import subprocess
 import argparse
 from pathlib import Path
@@ -26,6 +28,16 @@ sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 ROOT = Path(__file__).parent.parent
 PY = sys.executable
+
+
+def _disp_width(s: str) -> int:
+    """동아시아 넓은 문자(한글 등)를 폭 2로 계산 — 텔레그램 모노스페이스 표 정렬용."""
+    return sum(2 if unicodedata.east_asian_width(ch) in ("W", "F") else 1 for ch in s)
+
+
+def _pad(s: str, width: int) -> str:
+    """오른쪽 공백 패딩(한글 폭 보정). 이미 목표폭 이상이면 그대로 반환."""
+    return s + " " * max(0, width - _disp_width(s))
 
 
 def run(cmd: list[str], label: str) -> int:
