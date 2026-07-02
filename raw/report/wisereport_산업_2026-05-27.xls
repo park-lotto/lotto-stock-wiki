@@ -72,7 +72,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
   gtag('config', 'G-C8B2QNTM16');
 </script>
 
-		<form method="post" action="./summaryexcel.aspx?cn=&amp;fmt=2&amp;ee=20260626&amp;sortCol=&amp;sortTyp=" id="Form1">
+		<form method="post" action="./summaryexcel.aspx?cn=&amp;fmt=2&amp;ee=20260702&amp;sortCol=&amp;sortTyp=" id="Form1">
 <div class="aspNetHidden">
 <input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwULLTE5ODc1MjczMzhkZK1uVmb2cGLVvIQ+lHb37TlJRESJ" />
 </div>
@@ -114,7 +114,7 @@ function __doPostBack(eventTarget, eventArgument) {
 					<col style='mso-width-source:userset;width:275px'>
                      <col style='mso-width-source:userset;width:450px'>
 				    <tr>
-					    <td colspan="7" height="30" align="center" class="title">산업리포트 요약(2026.06.26)</td>
+					    <td colspan="7" height="30" align="center" class="title">산업리포트 요약(2026.07.02)</td>
 				    </tr>
                     <tr>
                         <td class="hd">기관명/작성자</td>
@@ -126,6 +126,18 @@ function __doPostBack(eventTarget, eventArgument) {
                     </tr>
                     <tr>
                         <td colspan="7" style="height: 1px;border-bottom:1px solid rgb(209,209,209)"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">상상인증권</font><br/>김진범</td>
+                        <td class="ind"><font color="rgb(53,91,157)">철강</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">비중확대</td>
+                        
+                        <td class="pre_recomm">비중확대</td>
+						<td class="rpt_title">유럽 철강제품 가격 점진적 상승 전망</td>
+                        <td class="comment2"><span class="comment_text">▶</span> EU 국가별 철강 세이프가드 TRQ 발표, 주요 수출국 대비 감소 폭 적어<br/><span class="comment_text">▶</span> EU 현지 제강사 가동률 확대. 철강제품 가격 점진적 상승 전망</td>
                     </tr>
                     
                     <tr style="mso-height-source:auto;">
@@ -141,27 +153,39 @@ function __doPostBack(eventTarget, eventArgument) {
                     </tr>
                     
                     <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">유진투자증권</font><br/>정의훈</td>
-                        <td class="ind"><font color="rgb(53,91,157)">우주항공과국방</font></td>                        
-                        
-                            <td class="img0">&nbsp;</td>
-                            <td class="recomm"></td>
-                        
-                        <td class="pre_recomm">Overweight</td>
-						<td class="rpt_title">스페이스X, 첫 재진입 캡슐 Starfall 시험비행</td>
-                        <td class="comment2"><span class="comment_text">▶</span> 스페이스X, 첫 재진입 캡슐 Starfall 시험비행</td>
-                    </tr>
-                    
-                    <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>채운샘</td>
-                        <td class="ind"><font color="rgb(53,91,157)">우주항공과국방</font></td>                        
+                        <td class="brk"><font color="rgb(53,91,157)">다올투자증권</font><br/>박영도</td>
+                        <td class="ind"><font color="rgb(53,91,157)">건설</font></td>                        
                         
                             <td class="img2">=</td>
                             <td class="recomm">Overweight</td>
                         
                         <td class="pre_recomm">Overweight</td>
-						<td class="rpt_title">미국 자주포 현대화 사업: 가능성과 변수 점검</td>
-                        <td class="comment2"><span class="comment_text">▶</span> 미 육군 자주포 현대화 사업의 배경<br/><span class="comment_text">▶</span> M777 견인포를 차륜형 자주포로 대체하는 사업으로 구체화<br/><span class="comment_text">▶</span> 한화에어로스페이스의 가능성은 충분. 다만 예측하기 어려운 변수도 존재</td>
+						<td class="rpt_title">Cycle is Back</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 돌아온 주거용 부동산 사이클<br/><span class="comment_text">▶</span> 사이클 재개로 인한 업종 밸류에이션 상향</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">한화투자증권</font><br/>김소혜,송유림,김성래,이진협,박준영</td>
+                        <td class="ind"><font color="rgb(53,91,157)">복합기업</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm">Positive</td>
+						<td class="rpt_title">3대 메가프로젝트 발표: 섹터별 수혜와 리스크</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 대한민국 대도약 3 대 메가프로젝트 발표</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">NH투자증권</font><br/>리서치센터</td>
+                        <td class="ind"><font color="rgb(53,91,157)">복합기업</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">한 권으로 읽는 2Q26 프리뷰 (상)</td>
+                        <td class="comment2"></td>
                     </tr>
                     
                     <tr style="mso-height-source:auto;">
@@ -183,21 +207,45 @@ function __doPostBack(eventTarget, eventArgument) {
                             <td class="img0">&nbsp;</td>
                             <td class="recomm"></td>
                         
-                        <td class="pre_recomm">Overweight</td>
-						<td class="rpt_title">커져가는 디스카운트, DC향 수주가 핵심</td>
-                        <td class="comment2"><span class="comment_text">▶</span> 글로벌 엔진업체 멀티플을 못 따라가는 국내 엔진업체<br/><span class="comment_text">▶</span> 보여줘야 한다. DC향 엔진 수주를</td>
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">항해일지</td>
+                        <td class="comment2"></td>
                     </tr>
                     
                     <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">메리츠증권</font><br/>배기연,김현비</td>
-                        <td class="ind"><font color="rgb(53,91,157)">조선</font></td>                        
+                        <td class="brk"><font color="rgb(53,91,157)">NH투자증권</font><br/>하늘</td>
+                        <td class="ind"><font color="rgb(53,91,157)">자동차</font></td>                        
                         
                             <td class="img0">&nbsp;</td>
                             <td class="recomm"></td>
                         
+                        <td class="pre_recomm">Positive</td>
+						<td class="rpt_title">6월 미국 자동차 판매, 인센티브, 재고</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 하이브리드 강세 지속과 내연기관의 반등</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">미래에셋증권</font><br/>김진석</td>
+                        <td class="ind"><font color="rgb(53,91,157)">자동차</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm">비중확대</td>
+                        
+                        <td class="pre_recomm">비중확대</td>
+						<td class="rpt_title">6월 자동차 도매/미국: 3Q 생산회복과 모멘텀</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 2Q 판매는 아쉽지만 3Q 회복. 8월 이후 로봇/자율주행 모멘텀 주목<br/><span class="comment_text">▶</span> 6월 도매판매: 내수 안전공업 영향과 전기차 효과, 인도/유럽 차이<br/><span class="comment_text">▶</span> 6월 미국 수요 +8%(+3%), HEV 증가율 확대, BEV 역성장 확대</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">한국투자증권</font><br/>김창호,전유나</td>
+                        <td class="ind"><font color="rgb(53,91,157)">자동차</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm">비중확대</td>
+                        
                         <td class="pre_recomm"></td>
-						<td class="rpt_title">항해일지</td>
-                        <td class="comment2"></td>
+						<td class="rpt_title">6월 도매판매 해석: EV 전환 속도 차이로 엇갈린 성과</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 부품 차질 해소되며 내수 판매 회복세<br/><span class="comment_text">▶</span> EV 전환 속도 차이에 따른 전망<br/><span class="comment_text">▶</span> Top-Picks 현대모비스 및 기아 유지</td>
                     </tr>
                     
                     <tr style="mso-height-source:auto;">
@@ -213,27 +261,111 @@ function __doPostBack(eventTarget, eventArgument) {
                     </tr>
                     
                     <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">신한투자증권</font><br/>지인해</td>
-                        <td class="ind"><font color="rgb(53,91,157)">호텔,레스토랑,레저</font></td>                        
+                        <td class="brk"><font color="rgb(53,91,157)">LS증권</font><br/>이병근</td>
+                        <td class="ind"><font color="rgb(53,91,157)">자동차</font></td>                        
                         
-                            <td class="img2">=</td>
-                            <td class="recomm">비중확대</td>
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
                         
-                        <td class="pre_recomm">비중확대</td>
-						<td class="rpt_title">우호적인 산업 환경</td>
-                        <td class="comment2"><span class="comment_text">▶</span> 하반기에도 인바운드 호황 지속<br/><span class="comment_text">▶</span> 1~5월 인바운드 21% 증가<br/><span class="comment_text">▶</span> 인바운드 수혜 소비재에 대한 관심 지속 요망</td>
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">6월 판매량: 하반기 반등 기대</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 6월 글로벌 도매 판매 현대차 33.8만대(-5.9% YoY)/기아 29.6만대(+9.5% YoY)<br/><span class="comment_text">▶</span> 기대되는 하반기 실적</td>
                     </tr>
                     
                     <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">한국투자증권</font><br/>김명주</td>
-                        <td class="ind"><font color="rgb(53,91,157)">판매업체</font></td>                        
+                        <td class="brk"><font color="rgb(53,91,157)">신영증권</font><br/>문용권</td>
+                        <td class="ind"><font color="rgb(53,91,157)">자동차</font></td>                        
                         
                             <td class="img0">&nbsp;</td>
-                            <td class="recomm">비중확대</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm">비중확대</td>
+						<td class="rpt_title">현대차/기아 도매 판매 - 기아, 역대 최대 상반기 글로벌 판매 기록</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 기아, 6월에도 역대 최대 6월 도매 판매 신기록 경신. 현대차는 컨센서스 대비 아쉬운 판매 흐름 지속<br/><span class="comment_text">▶</span> 현대차 6월 글로벌 도매 33.7만대(전년 동월 대비 6% 감소): 9개월 연속 글로벌 도매 판매 감소<br/><span class="comment_text">▶</span> 기아 6월 글로벌 도매 29.5만대(전년 동월 대비 10% 증가): 역대 최대 상반기 판매 신기록</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">다올투자증권</font><br/>유지웅</td>
+                        <td class="ind"><font color="rgb(53,91,157)">자동차</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">6월 판매: 분기말 정상화 기조</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 현대차와 기아의 6월 글로벌 도매판매 증가세는 YoY -5.9%, +9.5% 기록<br/><span class="comment_text">▶</span> 안전공업 부품차질 이슈로 인한 공급차질은 일단락 기조가 시현. 한국의 6월 대미 자동차 수출액은 25년 4월 이후 최대치 기록(YoY +10%)<br/><span class="comment_text">▶</span> 2Q26보다는 3Q26 실적 눈높이 향상을 위한 근거들이 확인되기 시작. 기아의 2026년 기준 P/E 6.3배로 현대차 대비 50% 가량 밸류에이션 할인 존재해, 저가매수 메리트 존재</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">삼성증권</font><br/>임은영,김현지</td>
+                        <td class="ind"><font color="rgb(53,91,157)">자동차</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm">OVERWEIGHT</td>
+                        
+                        <td class="pre_recomm">OVERWEIGHT</td>
+						<td class="rpt_title">6월 글로벌 판매: 기아가 있어 다행이다</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 현대차, 글로벌 도매 판매 33.8만 대(+3.8%MoM, -5.9%YoY)<br/><span class="comment_text">▶</span> 기아, 글로벌 도매 판매 29.6만 대(+6.3%MoM, +9.5%YoY)<br/><span class="comment_text">▶</span> 해외 도매 판매, 24.1만 대(+3.1%MoM, +7.6%YoY) 기록</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">IBK투자증권</font><br/>이현욱</td>
+                        <td class="ind"><font color="rgb(53,91,157)">자동차</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
                         
                         <td class="pre_recomm"></td>
-						<td class="rpt_title">유통 Bi-weekly: Charts of week: 하반기에도 양호한 인바운드 흐름을 예상</td>
+						<td class="rpt_title">자동차/2차전지 - Monthly</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 글로벌 자동차 출하량 : -2.8%(MoM), -5.2%(YoY)<br/><span class="comment_text">▶</span> 글로벌 전기차 출하량 : +7.0%(MoM), +7.2%(YoY)<br/><span class="comment_text">▶</span> 글로벌 배터리 출하량 : +8.1%(MoM), +23.3%(YoY)</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>송선재,박태웅</td>
+                        <td class="ind"><font color="rgb(53,91,157)">자동차</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">완성차 도매판매 동향(2026년 6월)-자동차 실적은 하회할 전망. 로봇과 자율주행 모멘텀의 진행에 맞춰 주가는 상승</td>
+                        <td class="comment2"><span class="comment_text">▶</span> Key Insight: 2분기 완성차 실적은 기존 추정치를 하회할 것으로 예상. 주가는 로봇/자율주행 모멘텀들이 진행되면서 상승동력 찾을 것<br/><span class="comment_text">▶</span> 현대차: 6월 도매판매 -5.9% (YoY). 내수/해외 -6%/-6%<br/><span class="comment_text">▶</span> 기아: 6월 도매판매 +9.5% (YoY). 내수/해외 +18%/+8%</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">삼성증권</font><br/>정동희</td>
+                        <td class="ind"><font color="rgb(53,91,157)">화장품</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm">OVERWEIGHT</td>
+						<td class="rpt_title">화장품 수출 데이터북 - 6월 1-30일 잠정치</td>
                         <td class="comment2"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">NH투자증권</font><br/>정지윤</td>
+                        <td class="ind"><font color="rgb(53,91,157)">화장품</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm">Positive</td>
+                        
+                        <td class="pre_recomm">Positive</td>
+						<td class="rpt_title">업황과 실적의 콜라보</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 6월 화장품 수출액 11억달러, 역대 최대치 경신<br/><span class="comment_text">▶</span> 7월 관심 기업: 기대되는 실적 시즌</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>이기훈,김현수</td>
+                        <td class="ind"><font color="rgb(53,91,157)">호텔,레스토랑,레저</font></td>                        
+                        
+                            <td class="img3">▼</td>
+                            <td class="recomm">Neutral</td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">또 한번의 호실적에도 황당한 수준의 저평가</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 인바운드, 2분기 실적, 글로벌 피어 모두 좋지만 주가는 신저가<br/><span class="comment_text">▶</span> GS피앤엘: 2Q 예상 OP 240억원(+107% YoY)<br/><span class="comment_text">▶</span> 서부T&D: 2Q 예상 OP 198억원(+77% YoY)</td>
                     </tr>
                     
                     <tr style="mso-height-source:auto;">
@@ -244,8 +376,8 @@ function __doPostBack(eventTarget, eventArgument) {
                             <td class="recomm"></td>
                         
                         <td class="pre_recomm">Overweight</td>
-						<td class="rpt_title">Weekly Retail-Cos. Letter- 2026년 상고하저는 없다</td>
-                        <td class="comment2"><span class="comment_text">▶</span> 화장품 ODM: 2분기는 예상보다 좋고, 3분기는 2분기보다 더 크다<br/><span class="comment_text">▶</span> 하이드로겔 높은 진입장벽</td>
+						<td class="rpt_title">Weekly Retail-Cos.Letter - 2026년 화장품 역대 최대 수출 모멘텀 시현 중</td>
+                        <td class="comment2"></td>
                     </tr>
                     
                     <tr style="mso-height-source:auto;">
@@ -273,6 +405,30 @@ function __doPostBack(eventTarget, eventArgument) {
                     </tr>
                     
                     <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>최정욱,정소영</td>
+                        <td class="ind"><font color="rgb(53,91,157)">은행</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">금리모멘텀과 실적모멘텀 동반 부각 예상. 비중확대 권고</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 2분기 은행지주사 추정 순익은 QoQ 9.7% 증가한 7.3조원. 핵심이익 추가 개선 예상<br/><span class="comment_text">▶</span> 은행별로는 KB금융과 신한지주 실적이 가장 양호. 그 외 은행들은 컨센서스 부합<br/><span class="comment_text">▶</span> 환율 상승에도 2분기 CET 1 비율 상승 예상. 자본비율 관련 우려 다시 약화될 전망</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">유안타증권</font><br/>우도형</td>
+                        <td class="ind"><font color="rgb(53,91,157)">증권</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">증권업종 6월 Monthly</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 6월 국내 일평균거래대금 99.4조원, MoM -6.4%<br/><span class="comment_text">▶</span> 5월에 이어 6월 역시 KRX증권 지수와 코스피 지수의 괴리는 확대되고 있는 상황<br/><span class="comment_text">▶</span> Top pick: 삼성증권</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
                         <td class="brk"><font color="rgb(53,91,157)">메리츠증권</font><br/>김선우,우서현</td>
                         <td class="ind"><font color="rgb(53,91,157)">IT서비스</font></td>                        
                         
@@ -285,39 +441,99 @@ function __doPostBack(eventTarget, eventArgument) {
                     </tr>
                     
                     <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">메리츠증권</font><br/>양승수</td>
+                        <td class="brk"><font color="rgb(53,91,157)">LS증권</font><br/>정경희</td>
                         <td class="ind"><font color="rgb(53,91,157)">전자장비와기기</font></td>                        
                         
                             <td class="img0">&nbsp;</td>
                             <td class="recomm"></td>
                         
-                        <td class="pre_recomm">Neutral</td>
-						<td class="rpt_title">국내 PCB, 다시 열린 밸류에이션 기회</td>
-                        <td class="comment2"><span class="comment_text">▶</span> 판가 전가와 원가 레버리지, 기울기는 더 좋다<br/><span class="comment_text">▶</span> 증설 랠리 동참이 추가적인 리레이팅 트리거</td>
+                        <td class="pre_recomm">Underweight</td>
+						<td class="rpt_title">2차전지 Weekly</td>
+                        <td class="comment2"></td>
                     </tr>
                     
                     <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>김현수,홍지원</td>
-                        <td class="ind"><font color="rgb(53,91,157)">전자장비와기기</font></td>                        
+                        <td class="brk"><font color="rgb(53,91,157)">미래에셋증권</font><br/>김영건</td>
+                        <td class="ind"><font color="rgb(53,91,157)">반도체와반도체장비</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">비중확대</td>
+                        
+                        <td class="pre_recomm">비중확대</td>
+						<td class="rpt_title">AI 인프라 축소 우려는 기우다</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 우려가 과도한 상황. 더 큰 그림(수주잔고)를 보자</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">BNK투자증권</font><br/>이민희</td>
+                        <td class="ind"><font color="rgb(53,91,157)">반도체와반도체장비</font></td>                        
                         
                             <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm">비중확대</td>
+						<td class="rpt_title">메타의 외부 클라우드 사업 진출은 과잉투자 신호일 수도</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 메타는 남는 AI 컴퓨팅 자원의 외부 판매 결정, 클라우드 사업 진출<br/><span class="comment_text">▶</span> 코멘트: AI 과잉 인프라 투자 신호일 수도, 하반기 자본조달 리스크도 주시</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">다올투자증권</font><br/>고영민</td>
+                        <td class="ind"><font color="rgb(53,91,157)">반도체와반도체장비</font></td>                        
+                        
+                            <td class="img2">=</td>
                             <td class="recomm">Overweight</td>
                         
                         <td class="pre_recomm">Overweight</td>
-						<td class="rpt_title">5월 ESS Battery : 태양광 연계 설치 증가</td>
-                        <td class="comment2"><span class="comment_text">▶</span> 5월 글로벌 ESS 신규 설치량(Grid+BTM)은 19.7GWh로, 전년 대비 -26% 감소<br/><span class="comment_text">▶</span> 신규 설치량의 74%를 차지하는 전력망(Grid) ESS의 경우, 5월 14.6GWh(YoY -32%) 규모가 신규 설치<br/><span class="comment_text">▶</span> 설치량 중 26%를 차지하는 BTM(Behind The Meter) 시장에서는 5월에 글로벌 5.1GWh(YoY Flat)의 ESS가 신규 설치돼 가동을 시작</td>
+						<td class="rpt_title">메타, 과도기의 오해는 기회</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 메타의 클라우드 사업 준비 관련 언론보도<br/><span class="comment_text">▶</span> AI 산업 방향성: 연산의 다다익선, 생태계가 막대한 AI 투자를 분담한다</td>
                     </tr>
                     
                     <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">메리츠증권</font><br/>김선우,우서현</td>
-                        <td class="ind"><font color="rgb(53,91,157)">디스플레이패널</font></td>                        
+                        <td class="brk"><font color="rgb(53,91,157)">SK증권</font><br/>이동주</td>
+                        <td class="ind"><font color="rgb(53,91,157)">반도체와반도체장비</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm">비중확대</td>
+						<td class="rpt_title">구체화된 계획, 시선의 이동</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 이제는 150K 증설이 놀랍지 않다<br/><span class="comment_text">▶</span> 공급 제약 조건에 따른 명목 CAPA 확대 요구<br/><span class="comment_text">▶</span> 소부장에 대한 시선은 2028 년과 2029 년으로 이동</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>이기훈,김현수</td>
+                        <td class="ind"><font color="rgb(53,91,157)">방송과엔터테인먼트</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">말도 안되는 저평가 구간</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 예상했던 기간 조정보다 더 가파른 가격 조정으로 강한 비중확대를 추천<br/><span class="comment_text">▶</span> 2분기 실적은 하이브/SM 부합, JYP/YG 하회<br/><span class="comment_text">▶</span> 하이브 실적에 대한 우려 해소는 매우 긍정적</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">IBK투자증권</font><br/>이승훈</td>
+                        <td class="ind"><font color="rgb(53,91,157)">양방향미디어와서비스</font></td>                        
                         
                             <td class="img0">&nbsp;</td>
                             <td class="recomm"></td>
                         
                         <td class="pre_recomm"></td>
-						<td class="rpt_title">6월 하반월 LCD 패널가</td>
-                        <td class="comment2"><span class="comment_text">▶</span> TV 패널: 상반월에 이어 모든 사이즈, 전 제품군에서 보합세 지속<br/><span class="comment_text">▶</span> IT 패널: 모니터 판가는 일부 품목에서 1% 내 상승세 확인</td>
+						<td class="rpt_title">메타버스 대신, 메타클라우드로</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 증가하는 Capex에 대한 시장의 우려<br/><span class="comment_text">▶</span> 클라우드 시장으로의 확장</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">한화투자증권</font><br/>김소혜,김나우</td>
+                        <td class="ind"><font color="rgb(53,91,157)">양방향미디어와서비스</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">Positive</td>
+                        
+                        <td class="pre_recomm">Positive</td>
+						<td class="rpt_title">메타의 클라우드 진출, CSP 가치 재부각 전망</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 메타가 클라우드 사업을 하려는 이유 <br/><span class="comment_text">▶</span> 네오클라우드에는 단기 부정적 이슈 <br/><span class="comment_text">▶</span> CSP사들에게 미치는 영향</td>
                     </tr>
                     
                     <tr style="mso-height-source:auto;">
@@ -333,15 +549,15 @@ function __doPostBack(eventTarget, eventArgument) {
                     </tr>
                     
                     <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>유재선</td>
-                        <td class="ind"><font color="rgb(53,91,157)">복합유틸리티</font></td>                        
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>이준호</td>
+                        <td class="ind"><font color="rgb(53,91,157)">양방향미디어와서비스</font></td>                        
                         
-                            <td class="img0">&nbsp;</td>
-                            <td class="recomm">Neutral</td>
+                            <td class="img2">=</td>
+                            <td class="recomm">Overweight</td>
                         
-                        <td class="pre_recomm"></td>
-						<td class="rpt_title">유틸리티 Weekly-12차 전기본과 신규 원전 반영 가능성</td>
-                        <td class="comment2"><span class="comment_text">▶</span> 주간 커버리지 합산 수익률은 시장을 8.5% 하회<br/><span class="comment_text">▶</span> 2025년 공공기관 경영실적 평가 등급이 발표<br/><span class="comment_text">▶</span> 2026년 7~9월 적용되는 3분기 연료비 조정단가 산정내역이 6월 22일 공개</td>
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">Open USD 출범과 영향, 원화 스테이블코인 예상</td>
+                        <td class="comment2"><span class="comment_text">▶</span> Open USD, 스테이블코인 시장 게임 체인저 후보<br/><span class="comment_text">▶</span> 원화 스테이블코인의 구조 예상<br/><span class="comment_text">▶</span> 인터넷 산업에서는 NAVER를 Top Pick으로 유지</td>
                     </tr>
                     
                     <!--tr style="height:5px; border:0px;">
