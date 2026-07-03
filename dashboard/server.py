@@ -176,7 +176,16 @@ def _gemini_text(prompt, keys=None, models=None):
                 if any(s in last for s in ("503", "UNAVAILABLE", "overloaded")):
                     break   # 503은 모델 전체 과부하 → 키 순회 중단, 곧장 다음 모델로 폴백
                 # 429(키 쿼터 소진)·기타 오류 → 다음 키 시도
-    return {"error": f"Gemini 호출 실패(과부하/쿼터): {last[:160]}"}
+    # 사용자에게는 원본 API 에러(JSON 뭉치)를 그대로 보여주지 않고 짧은 안내문으로 변환
+    if "429" in last or "RESOURCE_EXHAUSTED" in last:
+        friendly = "오늘 AI 요약 무료 쿼터를 다 써서 잠시 쉬어갑니다(자동 복구)"
+    elif any(s in last for s in ("503", "UNAVAILABLE", "overloaded")):
+        friendly = "AI 서버가 잠시 붐빕니다. 잠시 후 다시 시도해주세요"
+    elif last == "빈 응답":
+        friendly = "AI가 빈 응답을 반환했습니다"
+    else:
+        friendly = "AI 요약을 만들지 못했습니다"
+    return {"error": friendly}
 
 
 SIGNAL_DIR = os.path.join(ROOT, "output", "signal")
@@ -1678,8 +1687,10 @@ def _gen_stock_summary(code: str = "", name: str = "") -> dict:
         pass
     if cands:
         rel = [n for n in news if any(c and c in (n.get("title") or "") for c in cands)]
-        news = rel if rel else news   # 하나도 안 맞으면 과필터 방지로 원본 유지
+        news = rel   # 제목에 종목명 없으면(=네이버가 시황 잡뉴스로 채운 것) 관련 뉴스 없음으로 처리
     news = news[:8]
+    if not news:
+        return {"news": [], "summary": "", "error": "관련 뉴스가 없습니다."}
 
     nm = name or code
     headlines = [f"- [{n.get('date','')}] {n.get('title','')}" for n in news]
