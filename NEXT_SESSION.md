@@ -50,6 +50,11 @@ BRAIN_INDEX.md 6개 레이어 링크 전부 깨져있던 것 수정 / `raw/캡�
   텔레그램 전용 경량 동기화 스크립트 신설(`scripts/sync_telegram_only.py`, 크론 15분)
 - 섹터 키워드 오탐 2건 실사례 발견·수정: "증권"(→증권주 등 구체화), "엔씨"(→엔씨소프트,
   "지엔씨에너지" 종목명 부분매칭 오탐 원인) — `pipeline/sector_news_keywords.json`
+- **[마지막 발견·수정]** 텔레그램 뉴스아이템에 `date` 필드가 없어서(ts만 있음) AI 섹터요약의
+  "오늘자만" 필터(`_is_today`)에서 텔레그램발 뉴스가 통째로 제외되던 버그. 히트맵엔 텔레그램
+  뉴스가 잔뜩 보이는데 AI요약 배지엔 "N건 종합"이 소수만 나오는 걸로 발견됨. `group_by_
+  sector_and_stock(matched, date_str)`에 필수 파라미터 추가해 `news_feed._fmt_rss`와 같은
+  "MM/DD HH:MM" 포맷으로 date 채움. 배포·테스트(17개) 통과 완료.
 
 ### ✅ 일일 검증 에이전트 신설·배포 (사용자 요청: 매일 자동 오류검사+보고 시스템)
 - 스펙: `docs/superpowers/specs/2026-07-03-daily-verify-agent-design.md`
