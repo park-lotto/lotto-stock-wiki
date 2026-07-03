@@ -1657,15 +1657,14 @@ def api_stock_summary(code: str = "", name: str = ""):
 
 
 def _gen_stock_summary(code: str = "", name: str = "") -> dict:
-    """종목 뉴스(네이버 증권 큐레이션) + Gemini 요약. 차트 우측 패널용. 30분 캐시.
+    """종목 뉴스(네이버 증권 큐레이션) + Gemini 요약. 차트 우측 패널용.
+    헤드라인이 바뀌거나 등락률이 크게 움직였을 때만 Gemini 재호출(쿼터 절약 + 사실상 실시간).
     요약 실패해도 뉴스 리스트는 항상 반환."""
     code = (code or "").strip().zfill(6)
     if not code.strip("0"):
         return {"news": [], "summary": "", "error": "코드 없음"}
     now = time.time()
     c = _stock_summary_cache.get(code)
-    if c and now - c["ts"] < 1800:
-        return c["data"]
     import sys as _sys
     _sd = os.path.join(ROOT, "scripts")
     if _sd not in _sys.path:
@@ -1699,6 +1698,24 @@ def _gen_stock_summary(code: str = "", name: str = "") -> dict:
 
     nm = name or code
     headlines = [f"- [{n.get('date','')}] {n.get('title','')}" for n in news]
+
+    # 등락률 2%p 단위 버켓 — 헤드라인이 그대로여도 주가가 크게 움직였으면 요약을 다시 만든다
+    # (뉴스가 "6% 급등"이라 써놓고 실제론 9%까지 간 채 방치되는 것 방지)
+    rate_bucket = None
+    try:
+        import kis_api
+        rate = (kis_api.get_price(code) or {}).get("change_rate")
+        if rate is not None:
+            rate_bucket = round(float(rate) / 2) * 2
+    except Exception:
+        pass
+
+    # 헤드라인+등락률 버켓이 지난번과 동일하면 Gemini 호출 없이 캐시 그대로 반환
+    hkey = _hashlib.md5(
+        ("\n".join(sorted(headlines)) + f"|rate:{rate_bucket}").encode("utf-8")).hexdigest()
+    if c and c.get("hkey") == hkey:
+        return c["data"]
+
     prompt = (
         f"너는 주식 유튜브 채널의 애널리스트다. 아래는 '{nm}' 종목의 최근 뉴스 헤드라인이다.\n"
         f"시청자가 이 종목의 현재 상황을 빠르게 파악하도록 정리하라. 아래 헤드라인 사실만 사용.\n\n"
@@ -1715,7 +1732,7 @@ def _gen_stock_summary(code: str = "", name: str = "") -> dict:
            "model": res.get("model", ""), "error": res.get("error", ""),
            "sources": len(news)}
     if out["summary"]:
-        _stock_summary_cache[code] = {"data": out, "ts": now}
+        _stock_summary_cache[code] = {"data": out, "ts": now, "hkey": hkey}
     return out
 
 
@@ -2368,6 +2385,7 @@ def api_stock_search(q: str = ""):
 
 # ── 종목 캔들 차트 (종목 클릭 → 차트 모달, 키움 ka10081/ka10080) ──
 _candle_cache: dict = {}      # {"code:tf": {"data": [...], "ts": float}}
+_last_good_candles: dict = {}  # {"code:tf": [...]} — 분봉 다일치 급감 방어용(네이버 fchart 일시실패 대비)
 
 
 @app.get("/api/stock_candles")
@@ -2433,6 +2451,15 @@ def api_stock_candles(code: str = "", tf: str = "D"):
                     b["low"] = min(b.get("low", px) or px, px)
         except Exception:
             pass
+        # ── 분봉 다일치 급감 방어: 네이버 fchart 일시 실패로 캔들 수가 확 줄면 직전 정상 데이터 유지 ──
+        # (일봉/주봉/월봉은 매번 전체 재계산이라 대상 아님. 분봉은 여러 날 누적이라 과거 봉이
+        #  줄어드는 건 항상 비정상 — market_flow bars 급감방어(47df85c0)와 같은 패턴, 분봉판)
+        if tf not in ("D", "W", "M"):
+            prev_good = _last_good_candles.get(key)
+            if data and prev_good and len(data) < len(prev_good) * 0.7:
+                data = prev_good
+            elif data:
+                _last_good_candles[key] = data
         _candle_cache[key] = {"data": data, "ts": now}
         return JSONResponse(content={"tf": tf, "candles": data})
     except Exception as e:
