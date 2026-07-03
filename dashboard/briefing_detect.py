@@ -48,3 +48,25 @@ def detect_alerts(prev: dict | None, curr: dict) -> list[dict]:
                         "label": _LABELS[metric]})
 
     return out
+
+
+def compute_index_shape(bars: list[dict]) -> dict | None:
+    """지수 15분봉에서 시가/저점/고점/현재가를 계산 — Gemini에게 넘길 실측 재료.
+    AI가 차트를 직접 해석하게 두지 않고, 계산된 사실만 근거로 쓰게 해서 환각을 막는다."""
+    if not bars or len(bars) < 2:
+        return None
+
+    def _fmt(t: str) -> str:
+        t = str(t or "").zfill(6)
+        return f"{t[:2]}:{t[2:4]}"
+
+    open_bar = bars[0]
+    current_bar = bars[-1]
+    low_bar = min(bars, key=lambda b: b["price"])
+    high_bar = max(bars, key=lambda b: b["price"])
+    return {
+        "open": open_bar["price"],
+        "low": low_bar["price"], "low_t": _fmt(low_bar["t"]),
+        "high": high_bar["price"], "high_t": _fmt(high_bar["t"]),
+        "current": current_bar["price"],
+    }

@@ -4,7 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "dashboard"))
 
-from briefing_detect import detect_alerts
+from briefing_detect import detect_alerts, compute_index_shape
 
 
 def _mk(j_rate=0.0, q_rate=0.0, j_foreign=0, j_org=0, j_prog=0):
@@ -63,3 +63,29 @@ def test_program_trade_under_500eok_no_alert():
     prev = _mk(j_prog=0)
     curr = _mk(j_prog=30000)   # 300억 < 500억
     assert not any(a["metric"] == "J_prog_합계" for a in detect_alerts(prev, curr))
+
+
+def test_compute_index_shape_returns_none_for_insufficient_bars():
+    assert compute_index_shape([]) is None
+    assert compute_index_shape([{"t": "090000", "price": 100.0}]) is None
+
+
+def test_compute_index_shape_finds_open_low_high_current():
+    bars = [
+        {"t": "090000", "price": 100.0},
+        {"t": "093000", "price": 90.0},
+        {"t": "103000", "price": 85.0},
+        {"t": "113000", "price": 105.0},
+        {"t": "120000", "price": 98.0},
+    ]
+    shape = compute_index_shape(bars)
+    assert shape["open"] == 100.0
+    assert shape["low"] == 85.0 and shape["low_t"] == "10:30"
+    assert shape["high"] == 105.0 and shape["high_t"] == "11:30"
+    assert shape["current"] == 98.0
+
+
+def test_compute_index_shape_handles_flat_series():
+    bars = [{"t": "090000", "price": 100.0}, {"t": "093000", "price": 100.0}]
+    shape = compute_index_shape(bars)
+    assert shape["open"] == shape["low"] == shape["high"] == shape["current"] == 100.0
