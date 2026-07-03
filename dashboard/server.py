@@ -5212,11 +5212,31 @@ def _ingest_worker(interval=1800, limit=40, warmup=180):
         time.sleep(interval)
 
 
+def _morning_brief_loop():
+    """골-루프: 평일 08:00~08:14 창에 아침 브리핑 1회 자율 실행(품질루프+게이트+에스컬레이션)."""
+    from datetime import datetime as _dt
+    last = None
+    time.sleep(60)   # 기동 직후 안정화
+    while True:
+        try:
+            from scripts.goal_loop import morning_brief as _mb
+            now = _dt.now()
+            if _mb.should_run_now(now, last):
+                r = _mb.run_morning_brief(now.strftime("%Y-%m-%d"))
+                last = now.strftime("%Y-%m-%d")
+                print(f"[morning-brief] {r.get('status')} — {r.get('reasons')}")
+        except Exception as e:
+            print(f"[morning-brief] 예외: {str(e)[:120]}")
+        time.sleep(180)   # 3분 간격 점검
+
+
 def _start_keepalive():
     threading.Thread(target=_nlm_keepalive, daemon=True).start()
     print("[nlm-keepalive] 자동 세션 유지 시작 (25분 주기)")
     threading.Thread(target=_ingest_worker, daemon=True).start()
     print("[ingest-worker] 자동 원자추출 시작 (10분마다 60개)")
+    threading.Thread(target=_morning_brief_loop, daemon=True).start()
+    print("[morning-brief] 아침 브리핑 데몬 시작 (평일 08:00)")
 
 
 if __name__ == "__main__":

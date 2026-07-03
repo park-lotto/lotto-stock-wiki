@@ -85,3 +85,13 @@ def run_morning_brief(date: str, gemini_fn=None, max_iter: int = 3) -> dict:
         return {"status": "sent", "reasons": [], "png": png}
     except Exception as e:
         return {"status": "error", "reasons": [str(e)], "png": ""}
+
+
+def should_run_now(now_dt, last_run_date) -> bool:
+    """평일 & 08:00~08:14 & 오늘 미실행이면 True. (서버 데몬 게이트, 순수 함수라 테스트 용이)"""
+    if now_dt.weekday() >= 5:            # 토(5)·일(6) 제외
+        return False
+    mins = now_dt.hour * 60 + now_dt.minute
+    if not (480 <= mins <= 494):         # 08:00~08:14
+        return False
+    return last_run_date != now_dt.strftime("%Y-%m-%d")
