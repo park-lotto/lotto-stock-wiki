@@ -2720,8 +2720,8 @@ def _briefing_run_synthesis(alerts: list) -> None:
         atoms_db_path = os.path.join(ROOT, "pipeline", "atoms", "atoms.db")
         atoms_content = _briefing_atoms(atoms_db_path, limit=5)
         stored = _briefing_load(BRIEFING_PATH)
-        prior_headlines = [f"{it['headline']}" for it in (stored.get("items") or [])[:2]
-                           if it.get("kind") == "ai_brief"]
+        prior_headlines = [f"{it['headline']}" for it in (stored.get("items") or [])
+                           if it.get("kind") == "ai_brief"][:2]
         prompt = _briefing_build_prompt(alerts, headlines, atoms_content, prior_headlines)
         if not prompt:
             return
