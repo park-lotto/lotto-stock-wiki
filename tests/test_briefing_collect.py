@@ -61,3 +61,22 @@ def test_recent_market_atoms_respects_limit(tmp_path):
     db_path = _mk_atoms_db(tmp_path)
     out = recent_market_atoms(db_path, limit=1)
     assert len(out) == 1
+
+
+def test_recent_market_atoms_closes_connection_on_query_failure(tmp_path):
+    """쿼리가 실패해도(테이블 없음 등) 커넥션이 닫혀야 함 — 안 닫히면 파일이 잠겨서
+    바로 다음 접속이 막힌다. 이 테스트는 그 재접속이 성공하는지로 간접 검증한다."""
+    db_path = str(tmp_path / "broken.db")
+    conn = sqlite3.connect(db_path)
+    conn.execute("CREATE TABLE not_atoms (x TEXT)")
+    conn.commit()
+    conn.close()
+
+    out = recent_market_atoms(db_path, limit=5)
+    assert out == []
+
+    # 커넥션이 안 닫혔다면(누수) 아래 재접속에서 락/에러가 날 수 있음
+    conn2 = sqlite3.connect(db_path)
+    result = conn2.execute("SELECT 1").fetchone()
+    conn2.close()
+    assert result == (1,)

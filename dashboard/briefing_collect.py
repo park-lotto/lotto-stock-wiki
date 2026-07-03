@@ -22,6 +22,9 @@ def recent_market_atoms(db_path: str, limit: int = 5) -> list[str]:
     today = datetime.now().strftime("%Y-%m-%d")
     try:
         conn = sqlite3.connect(db_path)
+    except Exception:
+        return []
+    try:
         conn.row_factory = sqlite3.Row
         rows = conn.execute(
             """SELECT content FROM atoms
@@ -30,7 +33,8 @@ def recent_market_atoms(db_path: str, limit: int = 5) -> list[str]:
                ORDER BY created_at DESC LIMIT ?""",
             (today, limit),
         ).fetchall()
-        conn.close()
         return [r["content"] for r in rows]
     except Exception:
         return []
+    finally:
+        conn.close()
