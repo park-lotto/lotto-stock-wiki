@@ -4,6 +4,8 @@
 원리적으로 감지 불가 — 2026-07-03 원격서버 네트워크 장애로 실증됨)."""
 import glob
 import os
+import re
+import subprocess
 from datetime import datetime
 
 
@@ -45,3 +47,32 @@ def check_crawl_freshness(raw_root: str, sources: list[str], history: dict,
             alerts.append({"source": source, "today": today_count, "avg": avg,
                             "level": "orange"})
     return alerts
+
+
+def run_pytest_check(root: str, timeout: int = 300) -> dict:
+    try:
+        r = subprocess.run(["python", "-m", "pytest", "-q"], cwd=root,
+                            capture_output=True, timeout=timeout)
+    except Exception as e:
+        return {"ok": True, "failed_tests": [], "error": f"측정 실패: {e}"}
+    if r.returncode == 0:
+        return {"ok": True, "failed_tests": []}
+    out = r.stdout.decode("utf-8", errors="replace")
+    failed = re.findall(r"^FAILED (\S+)", out, re.MULTILINE)
+    return {"ok": False, "failed_tests": failed}
+
+
+def check_service_health(service_name: str = "stockbrain") -> dict:
+    try:
+        r = subprocess.run(["systemctl", "is-active", service_name],
+                            capture_output=True, timeout=15)
+        active = r.stdout.decode().strip() == "active"
+        if active:
+            return {"active": True, "restarted": False}
+        subprocess.run(["sudo", "systemctl", "restart", service_name],
+                        capture_output=True, timeout=15)
+        r2 = subprocess.run(["systemctl", "is-active", service_name],
+                             capture_output=True, timeout=15)
+        return {"active": r2.stdout.decode().strip() == "active", "restarted": True}
+    except Exception as e:
+        return {"active": None, "restarted": False, "error": str(e)}

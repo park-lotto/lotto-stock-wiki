@@ -4,7 +4,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from daily_verify import count_today_files, weekday_average, check_crawl_freshness
+from unittest.mock import patch, MagicMock
+
+from daily_verify import (
+    count_today_files, weekday_average, check_crawl_freshness,
+    run_pytest_check, check_service_health,
+)
 
 
 def test_count_today_files_flat_pattern(tmp_path):
@@ -59,3 +64,55 @@ def test_check_crawl_freshness_skips_when_no_history_yet(tmp_path):
     d.mkdir()
     alerts = check_crawl_freshness(str(tmp_path), ["telegram"], {}, "2026-07-03")
     assert alerts == []
+
+
+def test_run_pytest_check_parses_failed_test_names():
+    fake_output = (
+        b"===== FAILURES =====\n"
+        b"FAILED tests/test_a.py::test_one - AssertionError\n"
+        b"FAILED tests/test_b.py::test_two - ValueError\n"
+    )
+    with patch("daily_verify.subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(returncode=1, stdout=fake_output, stderr=b"")
+        result = run_pytest_check("/fake/root")
+    assert result["ok"] is False
+    assert result["failed_tests"] == [
+        "tests/test_a.py::test_one", "tests/test_b.py::test_two"]
+
+
+def test_run_pytest_check_ok_when_returncode_zero():
+    with patch("daily_verify.subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(returncode=0, stdout=b"", stderr=b"")
+        result = run_pytest_check("/fake/root")
+    assert result == {"ok": True, "failed_tests": []}
+
+
+def test_run_pytest_check_exception_is_not_an_alert():
+    with patch("daily_verify.subprocess.run", side_effect=Exception("timeout")):
+        result = run_pytest_check("/fake/root")
+    assert result["ok"] is True
+    assert "측정 실패" in result["error"]
+
+
+def test_check_service_health_active_no_restart():
+    with patch("daily_verify.subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(returncode=0, stdout=b"active\n", stderr=b"")
+        result = check_service_health("stockbrain")
+    assert result == {"active": True, "restarted": False}
+    assert mock_run.call_count == 1   # is-active만 호출, restart는 안 함
+
+
+def test_check_service_health_inactive_triggers_restart_attempt():
+    calls = []
+    def fake_run(cmd, **kwargs):
+        calls.append(cmd)
+        if "is-active" in cmd and len(calls) == 1:
+            return MagicMock(returncode=3, stdout=b"inactive\n", stderr=b"")
+        if "restart" in cmd:
+            return MagicMock(returncode=0, stdout=b"", stderr=b"")
+        return MagicMock(returncode=0, stdout=b"active\n", stderr=b"")  # 재확인
+    with patch("daily_verify.subprocess.run", side_effect=fake_run):
+        result = check_service_health("stockbrain")
+    assert result == {"active": True, "restarted": True}
+    assert calls[0] == ["systemctl", "is-active", "stockbrain"]
+    assert calls[1] == ["sudo", "systemctl", "restart", "stockbrain"]
