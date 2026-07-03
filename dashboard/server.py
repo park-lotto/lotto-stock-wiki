@@ -1650,6 +1650,23 @@ def _gen_sector_summary(etf: str = "", codes: str = "", title: str = "") -> dict
 
 _stock_summary_cache: dict = {}
 
+# 종목 뉴스 관련성 필터용 언론 관용 약칭(정식명만으로는 "삼전"·"하닉" 등 기사가 다 걸러짐)
+_STOCK_ABBREV = {
+    "삼성전자": ["삼전"],
+    "SK하이닉스": ["하이닉스", "하닉", "SK닉스"],
+    "LG에너지솔루션": ["LG엔솔", "엔솔"],
+    "삼성바이오로직스": ["삼바"],
+    "현대차": ["현차"],
+    "기아": ["기아차"],
+    "POSCO홀딩스": ["포스코"],
+    "한화에어로스페이스": ["한화에어로"],
+    "두산에너빌리티": ["두산에너"],
+    "SK이노베이션": ["SK이노"],
+    "HD현대중공업": ["현대중공업"],
+    "HD한국조선해양": ["한국조선해양"],
+    "NAVER": ["네이버"],
+}
+
 
 @app.get("/api/stock_summary")
 def api_stock_summary(code: str = "", name: str = ""):
@@ -1677,15 +1694,19 @@ def _gen_stock_summary(code: str = "", name: str = "") -> dict:
     if not news:
         return {"news": [], "summary": "", "error": "관련 뉴스가 없습니다."}
 
-    # 관련성 필터: 제목에 종목명(전달명+KRX 공식명)이 있는 기사만.
+    # 관련성 필터: 제목에 종목명(전달명+KRX 공식명+언론 관용 약칭)이 있는 기사만.
     # 네이버 종목뉴스는 종목이 스쳐 언급된 시황 기사(예 '국민연금 소외주')도 관련그룹으로 줌 → 제거.
+    # 단, 정식명만 보면 "삼전"·"하닉" 같은 언론 관용 약칭 기사가 전부 걸러지는 문제가 있어
+    # 흔한 대형주 약칭을 별도로 보강한다.
     cands = set()
     if name and name.strip():
         cands.add(name.strip())
+        cands |= set(_STOCK_ABBREV.get(name.strip(), []))
     try:
         for _nm, _cc in _krx_codes().items():
             if str(_cc).zfill(6) == code:
                 cands.add(_nm)
+                cands |= set(_STOCK_ABBREV.get(_nm, []))
                 break
     except Exception:
         pass
