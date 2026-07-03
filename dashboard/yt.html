@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>영상제작 스튜디오 — 로또의 주식</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+:root {
+  --gold: #d4af37; --gold-dim: #9a7d28; --bg: #0a0a0a;
+  --card: #16161a; --line: #2a2a30; --txt: #e8e6e0; --muted: #8a8a92;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun Gothic',sans-serif; }
+.topbar { height: 54px; background: var(--card); border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; padding: 0 28px; justify-content: space-between; }
+.topbar .brand { font-size: .92rem; font-weight: 700; color: var(--gold); }
+#app { max-width: 900px; margin: 0 auto; padding: 28px; }
+.label { font-size: .74rem; color: var(--muted); font-weight: 700; text-transform: uppercase;
+  letter-spacing: .6px; margin: 18px 0 8px; }
+.mock-input, input[type=text] { width: 100%; padding: 12px 16px; background: var(--card);
+  border: 1px solid var(--line); border-radius: 10px; color: var(--txt); font-family: inherit;
+  font-size: .9rem; }
+.btn { padding: 10px 18px; border-radius: 9px; cursor: pointer; font-family: inherit;
+  font-size: .84rem; font-weight: 700; color: #0a0a0a; background: var(--gold);
+  border: none; }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn.secondary { color: var(--txt); background: var(--card); border: 1px solid var(--line); }
+table { width: 100%; border-collapse: collapse; font-size: .82rem; margin-top: 10px; }
+th, td { padding: 8px 6px; text-align: left; border-bottom: 1px solid var(--line); }
+th { color: var(--muted); font-weight: 600; font-size: .74rem; }
+.grade-great { color: var(--gold); font-weight: 700; }
+.grade-good { color: #22c55e; font-weight: 700; }
+.grade-normal { color: var(--muted); }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  padding: 16px; margin-top: 10px; }
+.qc-line { font-size: .82rem; color: var(--muted); padding: 4px 0; }
+.qc-line.pass { color: var(--gold); }
+.plan-box h1 { font-size: 1.1rem; color: var(--gold); margin-bottom: 8px; }
+.plan-box { font-size: .88rem; line-height: 1.7; }
+.action-row { display: flex; gap: 8px; margin-top: 14px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="brand">🎬 영상제작 스튜디오</span>
+  <a href="/" style="color:var(--muted);font-size:.8rem;text-decoration:none">← 메인으로</a>
+</div>
+
+<div id="app">
+  <div class="label">① 아이디어</div>
+  <input type="text" id="idea-input" placeholder="예: 어젯밤 메타발 반도체 조정, 오늘 아침 리포트는 정반대였다">
+
+  <div class="label">② 터진 영상 (선택사항)</div>
+  <div style="display:flex;gap:8px">
+    <input type="text" id="hotclip-query" placeholder="검색어: 반도체 조정" style="flex:1">
+    <button class="btn secondary" onclick="searchHotClips()">🔥 실시간 탐지</button>
+  </div>
+  <div id="hotclip-results"></div>
+  <div id="hotclip-picked" style="font-size:.78rem;color:var(--muted);margin-top:6px"></div>
+
+  <div class="label">③ 생성</div>
+  <button class="btn" id="generate-btn" onclick="generatePlan()">🎬 기획서 생성</button>
+
+  <div id="progress-area"></div>
+  <div id="plan-area"></div>
+</div>
+
+<script>
+let pickedRefs = [];
+
+async function searchHotClips() {
+  const q = document.getElementById('hotclip-query').value.trim();
+  if (!q) return;
+  const box = document.getElementById('hotclip-results');
+  box.innerHTML = '<p style="color:var(--muted);font-size:.82rem">검색 중…</p>';
+  try {
+    const res = await fetch('/yt/hot_clips', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({q})
+    });
+    const data = await res.json();
+    if (data.error) { box.innerHTML = `<p style="color:#e88">${data.error}</p>`; return; }
+    renderHotClips(data.results);
+  } catch (e) {
+    box.innerHTML = `<p style="color:#e88">검색 실패: ${e.message}</p>`;
+  }
+}
+
+function gradeClass(g) {
+  if (g === 'Great') return 'grade-great';
+  if (g === 'Good') return 'grade-good';
+  return 'grade-normal';
+}
+
+function renderHotClips(results) {
+  const box = document.getElementById('hotclip-results');
+  if (!results.length) { box.innerHTML = '<p style="color:var(--muted);font-size:.82rem">결과 없음</p>'; return; }
+  let html = '<table><tr><th></th><th>제목</th><th>채널</th><th>조회수</th><th>기여도</th><th>성과도</th></tr>';
+  results.forEach((r, i) => {
+    const payload = encodeURIComponent(JSON.stringify(r));
+    html += `<tr>
+      <td><button class="btn secondary" style="font-size:.75rem;padding:4px 10px" onclick='pickRefEncoded("${payload}")'>담기</button></td>
+      <td>${r.title}</td><td>${r.channel_title}</td>
+      <td>${r.view_count.toLocaleString()}<br><span style="font-size:.75rem;color:var(--muted)">(${r.view_pct_above_avg >= 0 ? '+' : ''}${r.view_pct_above_avg}%)</span></td>
+      <td class="${gradeClass(r.contribution_grade)}">${r.contribution_grade}</td>
+      <td class="${gradeClass(r.performance_grade)}">${r.performance_grade}</td>
+    </tr>`;
+  });
+  html += '</table>';
+  box.innerHTML = html;
+}
+
+function pickRefEncoded(encoded) {
+  const r = JSON.parse(decodeURIComponent(encoded));
+  if (pickedRefs.find(x => x.video_id === r.video_id)) return;
+  pickedRefs.push(r);
+  document.getElementById('hotclip-picked').textContent =
+    `📥 ${pickedRefs.length}건 담김: ` + pickedRefs.map(x => x.title).join(' · ');
+}
+
+async function generatePlan() {
+  const idea = document.getElementById('idea-input').value.trim();
+  if (!idea) { alert('아이디어를 입력하세요'); return; }
+  const btn = document.getElementById('generate-btn');
+  btn.disabled = true; btn.textContent = '생성 중…';
+
+  const progressBox = document.getElementById('progress-area');
+  const planBox = document.getElementById('plan-area');
+  progressBox.innerHTML = '<div class="card" id="progress-card"></div>';
+  planBox.innerHTML = '';
+  const progressCard = document.getElementById('progress-card');
+
+  try {
+    const resp = await fetch('/yt/generate_plan', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({idea, references: pickedRefs})
+    });
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, {stream: true});
+      const parts = buf.split('\n\n');
+      buf = parts.pop();
+      for (const part of parts) {
+        if (!part.startsWith('data: ')) continue;
+        const event = JSON.parse(part.slice(6));
+        handleEvent(event, progressCard, planBox);
+      }
+    }
+  } catch (e) {
+    progressCard.innerHTML += `<div class="qc-line" style="color:#e88">실패: ${e.message}</div>`;
+  } finally {
+    btn.disabled = false; btn.textContent = '🎬 기획서 생성';
+  }
+}
+
+function handleEvent(event, progressCard, planBox) {
+  if (event.type === 'step') {
+    const passed = event.qc_score !== undefined && event.qc_score >= 7;
+    const line = document.createElement('div');
+    line.className = 'qc-line' + (passed ? ' pass' : '');
+    line.textContent = event.qc_score !== undefined
+      ? `시도 ${event.attempt}/${event.max_attempt} · 점수 ${event.qc_score}/9${passed ? ' → 통과' : ''}`
+      : `생성 중… (시도 ${event.attempt}/${event.max_attempt})`;
+    progressCard.appendChild(line);
+  } else if (event.type === 'done') {
+    planBox.innerHTML = `
+      <div class="label">④ 완성된 기획서 (QC ${event.qc_score}/9)</div>
+      <div class="card plan-box">${marked.parse(event.plan_text)}</div>
+      <div class="action-row">
+        <button class="btn">✅ 이 기획으로 대본 진행 →</button>
+        <button class="btn secondary" onclick="generatePlan()">🔁 다시 생성</button>
+      </div>`;
+  } else if (event.type === 'error') {
+    progressCard.innerHTML += `<div class="qc-line" style="color:#e88">오류: ${event.message}</div>`;
+  }
+}
+</script>
+</body>
+</html>
