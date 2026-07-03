@@ -100,7 +100,7 @@ def test_group_by_sector_and_stock_buckets_correctly():
         {"ts": "16:10", "headline": "제목2", "urls": [],
          "sectors": ["로봇", "AI"], "stocks": []},
     ]
-    by_sector, by_stock = group_by_sector_and_stock(matched)
+    by_sector, by_stock = group_by_sector_and_stock(matched, date_str="2026-07-03")
     assert len(by_sector["로봇"]) == 2
     assert by_sector["로봇"][0]["title"] == "제목1"
     assert by_sector["로봇"][0]["url"] == "https://a.com"
@@ -183,3 +183,17 @@ def test_match_stocks_no_false_positive_on_generic_word_after_cleaning():
     names = clean_stock_names({"삼성전자": "반도체", "시장": "시장"})
     out = match_stocks("정부, 312조원 기업 영남 투자 뒷받침…세계 1위 첨단 시장 육성", names)
     assert out == []
+
+
+def test_group_by_sector_and_stock_includes_date_field_for_today_filter():
+    """실사용 발견: 텔레그램 뉴스에 date 필드가 없어서 dashboard/server.py의
+    AI요약 "오늘자만" 필터(_is_today, date.startswith(MM/DD))에서 전부 걸러지고
+    있었음 — 화면엔 텔레그램 뉴스가 잔뜩 보이는데 AI요약엔 네이버발 소수만
+    반영되던 버그의 원인. date_str(YYYY-MM-DD)을 받아 "MM/DD HH:MM" 포맷으로 채운다."""
+    matched = [
+        {"ts": "16:03", "headline": "제목1", "urls": ["https://a.com"],
+         "sectors": ["로봇"], "stocks": ["조인"]},
+    ]
+    by_sector, by_stock = group_by_sector_and_stock(matched, date_str="2026-07-03")
+    assert by_sector["로봇"][0]["date"] == "07/03 16:03"
+    assert by_stock["조인"][0]["date"] == "07/03 16:03"

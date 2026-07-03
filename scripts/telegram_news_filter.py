@@ -142,17 +142,21 @@ def filter_and_match(messages: list[dict], stock_names: set[str],
     return out
 
 
-def group_by_sector_and_stock(matched: list[dict]) -> tuple[dict, dict]:
+def group_by_sector_and_stock(matched: list[dict], date_str: str) -> tuple[dict, dict]:
     """filter_and_match() 결과를 {섹터명: [뉴스아이템]} / {종목명: [뉴스아이템]}
     로 묶는다. 히트맵의 sector_news/stock_news 병합 지점에서 바로 쓸 수 있는
-    {title, url, ts} 형태로 각 아이템을 변환한다(sector_news_keywords 매칭
-    결과와 같은 필드명을 맞춰서 프론트가 소스 구분 없이 렌더링 가능)."""
+    {title, url, ts, date} 형태로 각 아이템을 변환한다(sector_news_keywords
+    매칭 결과와 같은 필드명을 맞춰서 프론트가 소스 구분 없이 렌더링 가능).
+    date는 news_feed._fmt_rss와 같은 "MM/DD HH:MM" 포맷 — dashboard/server.py의
+    AI요약 "오늘자만" 필터(date.startswith(MM/DD))가 이 포맷을 기대하므로, 없으면
+    텔레그램 뉴스가 전부 그 필터에서 누락된다(실사용 발견 버그)."""
+    mmdd = f"{date_str[5:7]}/{date_str[8:10]}"
     by_sector: dict[str, list] = {}
     by_stock: dict[str, list] = {}
     for item in matched:
         url = item["urls"][0] if item["urls"] else None
         news_item = {"title": item["headline"], "url": url, "ts": item["ts"],
-                     "source": "telegram"}
+                     "date": f"{mmdd} {item['ts']}", "source": "telegram"}
         for sector in item["sectors"]:
             by_sector.setdefault(sector, []).append(news_item)
         for stock in item["stocks"]:
@@ -182,4 +186,4 @@ def load_today_news_relay(raw_telegram_dir: str, channels: dict,
             continue
         messages = parse_telegram_md(text)
         all_matched.extend(filter_and_match(messages, stock_names, sector_keywords))
-    return group_by_sector_and_stock(all_matched)
+    return group_by_sector_and_stock(all_matched, date_str)
