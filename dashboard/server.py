@@ -217,7 +217,9 @@ try:
     from studio_pipeline import generate_briefing, generate_picks  # noqa: E402
 except (ImportError, SystemExit):
     generate_briefing = None  # type: ignore
-    generate_picks = None     # type: ignore
+
+sys.path.insert(0, os.path.join(ROOT, "scripts", "yt_agents"))
+from hot_clips import find_hot_clips
 
 try:
     import global_api  # noqa: E402
@@ -5118,6 +5120,21 @@ _위키 정식 ingest는 후속 연결 예정_
         "path": rel_path.replace("\\", "/"),
         "note": "위키 정식 ingest는 후속 연결",
     })
+
+
+# ── §5 유튜브 영상제작 대시보드 (/yt) ──────────────────────────
+@app.post("/yt/hot_clips")
+async def api_yt_hot_clips(req: Request):
+    body = await req.json()
+    q = (body.get("q") or "").strip()
+    if not q:
+        return JSONResponse(content={"error": "검색어 필요"}, status_code=400)
+
+    def _do():
+        return find_hot_clips(q)
+
+    results = await run_in_threadpool(_do)
+    return JSONResponse(content={"results": results})
 
 
 # ══════════════════════════════════════════════════════════════
