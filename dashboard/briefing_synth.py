@@ -73,8 +73,10 @@ _INSIGHT_PROMPT_TEMPLATE = """너는 오늘 시장 상황을 한눈에 설명하
 {atoms_text}
 
 ## 출력 형식 (정확히 이렇게)
-코멘트: <오늘 지수가 왜 이렇게 움직였는지 2~4문장. 특징종목 이유가 있으면 코멘트
-안에 자연스럽게 녹여서 언급해라>
+헤드라인: <오늘 시장을 한 줄로 요약한 강한 제목, 12자 내외>
+본문:
+<짧은 문단 2~3개로 나눠서 써라(문단 사이 빈 줄 하나). 각 문단 앞에 어울리는
+이모지 하나씩. 특징종목 이유가 있으면 자연스럽게 문단 안에 녹여서 언급해라>
 """
 
 
@@ -93,14 +95,28 @@ def build_insight_prompt(index_shape: dict | None, movers: list[dict],
 
 
 def parse_insight_response(text: str) -> dict | None:
+    """헤드라인은 한 줄, 본문은 '본문:' 다음 줄부터 끝까지 전부(문단 구분용
+    빈 줄 포함) 캡처 — 기존 parse_briefing_response와 달리 본문이 여러 줄이라
+    single-line 캡처로는 문단이 다 잘려나간다."""
     text = (text or "").strip()
     if not text:
         return None
-    comment = None
-    for line in text.splitlines():
-        line = line.strip()
-        if line.startswith("코멘트:"):
-            comment = line.split("코멘트:", 1)[1].strip()
-    if not comment:
+    lines = text.splitlines()
+    headline = None
+    body_start = None
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if headline is None and stripped.startswith("헤드라인:"):
+            headline = stripped.split("헤드라인:", 1)[1].strip()
+        elif stripped.startswith("본문:"):
+            after = stripped.split("본문:", 1)[1].strip()
+            body_start = i
+            first_line = after
+            break
+    if headline is None or body_start is None:
         return None
-    return {"comment": comment}
+    rest = lines[body_start + 1:]
+    body = "\n".join(([first_line] if first_line else []) + rest).strip()
+    if not body:
+        return None
+    return {"headline": headline, "body": body}

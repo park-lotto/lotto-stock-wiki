@@ -162,8 +162,11 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 
 .mkt-insight{padding:12px 14px;margin-bottom:8px;border-radius:6px;
   background:linear-gradient(135deg,#2a2410,#1a1a1a);border:1px solid #d4af37;}
-.mkt-insight .mi-comment{font-size:15px;font-weight:700;color:#f0d97a;line-height:1.6;margin-bottom:8px;}
-.mkt-insight .mi-topick{font-size:11px;color:#ccc;line-height:1.5;}
+.mkt-insight .mi-headline{font-size:17px;font-weight:800;color:#f0d97a;line-height:1.4;margin-bottom:8px;}
+.mkt-insight .mi-body{font-size:12.5px;font-weight:400;color:#ddd;line-height:1.7;}
+.mkt-insight .mi-body .mi-para{margin-bottom:8px;}
+.mkt-insight .mi-body .mi-para:last-child{margin-bottom:0;}
+.mkt-insight .mi-topick{font-size:11px;color:#ccc;line-height:1.5;margin-top:8px;}
 .mkt-insight .mi-topick div{margin-bottom:2px;}
 .briefing-feed{max-height:520px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;}
 .briefing-item{padding:8px 10px;border-radius:6px;background:#1a1a1a;border-left:3px solid #444;}
@@ -1581,12 +1584,19 @@ function renderMarketFlow(d){
           ?`<div class="mi-topick">${topickList.map(t=>
               `<div>🎯 ${esc(t.asset)}: ${esc(t.content)}</div>`).join("")}</div>`
           :"";
-        const insightHtml=_marketInsight
-          ?`<div class="mkt-insight">
-              <div class="mi-comment">${esc(_marketInsight.comment)}</div>
+        const insightHtml=(()=>{
+          if(!_marketInsight)return"";
+          const headline=_marketInsight.headline||"";
+          const bodyRaw=_marketInsight.body||_marketInsight.comment||"";
+          const paragraphs=bodyRaw.split(/\n\s*\n/).map(p=>p.trim()).filter(Boolean);
+          const bodyHtml=paragraphs.map(p=>`<div class="mi-para">${esc(p)}</div>`).join("");
+          const headlineHtml=headline?`<div class="mi-headline">${esc(headline)}</div>`:"";
+          return `<div class="mkt-insight">
+              ${headlineHtml}
+              <div class="mi-body">${bodyHtml}</div>
               ${topickHtml}
-            </div>`
-          :"";
+            </div>`;
+        })();
         const items=_briefingItems||[];
         const rows=items.length
           ?items.map(it=>{

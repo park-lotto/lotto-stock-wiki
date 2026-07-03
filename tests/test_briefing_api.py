@@ -104,13 +104,14 @@ def test_api_market_briefing_includes_insight_field(tmp_path, monkeypatch):
     from datetime import datetime
     p.write_text(json.dumps({"date": datetime.now().strftime("%Y-%m-%d"),
                               "items": [], "insight": {"ts": "11:50",
-                              "comment": "테스트 코멘트",
+                              "headline": "테스트 헤드라인", "body": "테스트 본문",
                               "topick": [{"asset": "삼성SDI", "content": "탑픽 거론"}]}}),
                  encoding="utf-8")
     monkeypatch.setattr(server, "BRIEFING_PATH", str(p))
     c = TestClient(server.app)
     r = c.get("/api/market_briefing").json()
-    assert r["insight"]["comment"] == "테스트 코멘트"
+    assert r["insight"]["headline"] == "테스트 헤드라인"
+    assert r["insight"]["body"] == "테스트 본문"
 
 
 def test_insight_run_synthesis_calls_gemini_with_built_prompt(tmp_path, monkeypatch):
@@ -130,7 +131,7 @@ def test_insight_run_synthesis_calls_gemini_with_built_prompt(tmp_path, monkeypa
     captured = {}
     def _fake_gemini_text(prompt, keys=None, models=None):
         captured["prompt"] = prompt
-        return {"ok": True, "analysis": "코멘트: 테스트 설명입니다."}
+        return {"ok": True, "analysis": "헤드라인: 테스트 헤드라인\n본문:\n테스트 설명입니다."}
     monkeypatch.setattr(server, "_gemini_text", _fake_gemini_text)
     monkeypatch.setattr(server, "_recent_topick_mentions",
                          lambda db_path, limit=2: [{"asset": "삼성SDI", "content": "탑픽 거론"}])
@@ -140,7 +141,8 @@ def test_insight_run_synthesis_calls_gemini_with_built_prompt(tmp_path, monkeypa
     assert "prompt" in captured, "Gemini가 호출되지 않음"
     assert "100.0" in captured["prompt"] and "삼성전자" in captured["prompt"]
     d = server._briefing_load(str(p))
-    assert d["insight"]["comment"] == "테스트 설명입니다."
+    assert d["insight"]["headline"] == "테스트 헤드라인"
+    assert d["insight"]["body"] == "테스트 설명입니다."
     assert d["insight"]["topick"] == [{"asset": "삼성SDI", "content": "탑픽 거론"}]
 
 
