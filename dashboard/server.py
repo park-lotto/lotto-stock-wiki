@@ -5143,6 +5143,15 @@ _위키 정식 ingest는 후속 연결 예정_
 
 
 # ── §5 유튜브 영상제작 대시보드 (/yt) ──────────────────────────
+@app.get("/yt", response_class=HTMLResponse)
+def yt_page():
+    p = os.path.join(HERE, "yt.html")
+    if not os.path.exists(p):
+        return "<h1>yt.html 준비중</h1>"
+    with open(p, encoding="utf-8") as f:
+        return f.read()
+
+
 @app.post("/yt/hot_clips")
 async def api_yt_hot_clips(req: Request):
     body = await req.json()
