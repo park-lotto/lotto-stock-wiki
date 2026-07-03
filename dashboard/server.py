@@ -211,6 +211,7 @@ from nlm_bridge import (
     _nb_period_min, _nb_fetch_rows, _nb_scope_label, _nlm_relogin_locked,
     create_notebook, add_source_file, add_source_urls, notebook_query as nlm_notebook_query,
     create_report as nlm_create_report,
+    _BRAND_DESIGN,
 )
 try:
     from studio_pipeline import generate_briefing, generate_picks  # noqa: E402
@@ -1451,7 +1452,7 @@ def _refresh_news(top_sectors: int = 8, per_stock: int = 3):
             for st in (s.get("stocks") or [])[:per_stock]:
                 stocks.append({"code": st.get("code"), "name": st.get("name"),
                                "pct": st.get("pct"), "group": st.get("group"),
-                               "news": nf.stock_news(st.get("code"), top=2)})
+                               "news": nf.stock_news(st.get("code"), name=st.get("name"), top=2)})
             out_sectors.append({"etf": s.get("etf"), "code": s.get("code"),
                                 "rate": s.get("rate"),
                                 "news": nf.sector_news(s.get("code"), kw, top=3),
@@ -1529,9 +1530,10 @@ def api_sector_detail(etf: str = "", codes: str = "", title: str = ""):
     def _build(m):
         cc, nm = m
         o = (tk.get(cc) or {}).get("osc") or {}
-        return {"code": cc, "name": nm or (tk.get(cc) or {}).get("name") or cc,
+        resolved_name = nm or (tk.get(cc) or {}).get("name") or cc
+        return {"code": cc, "name": resolved_name,
                 "pct": o.get("pct"), "group": o.get("group"),
-                "news": nf.stock_news(cc, top=2)}
+                "news": nf.stock_news(cc, name=resolved_name, top=2)}
     with ThreadPoolExecutor(max_workers=6) as ex:
         stocks = list(ex.map(_build, metas))
     stocks.sort(key=lambda s: s["pct"] if s["pct"] is not None else 999)
@@ -1598,15 +1600,16 @@ def _gen_sector_summary(etf: str = "", codes: str = "", title: str = "") -> dict
         metas = [(str(co.get("itemCode") or "").zfill(6), co.get("itemName")) for co in cons[:6]]
         def _sn(m):
             cc, nm = m
-            return [(nm, n.get("title", ""), n.get("date", "")) for n in nf.stock_news(cc, top=3)]
+            return [(nm, n.get("title", ""), n.get("date", "")) for n in nf.stock_news(cc, name=nm, top=3)]
         with ThreadPoolExecutor(max_workers=6) as ex:
             for group in ex.map(_sn, metas):
                 for nm, t, dt in group:
                     if _is_today(dt):
                         headlines.append(f"- [{nm} {dt}] {t}")
     else:
+        _code2name = {str(_cc).zfill(6): _nm for _nm, _cc in _krx_codes().items()}
         for cc in [x.strip().zfill(6) for x in codes.split(",") if x.strip()][:6]:
-            for n in nf.stock_news(cc, top=3):
+            for n in nf.stock_news(cc, name=_code2name.get(cc, ""), top=3):
                 if _is_today(n.get("date")):
                     headlines.append(f"- {n.get('title','')}")
 
@@ -1650,23 +1653,6 @@ def _gen_sector_summary(etf: str = "", codes: str = "", title: str = "") -> dict
 
 _stock_summary_cache: dict = {}
 
-# 종목 뉴스 관련성 필터용 언론 관용 약칭(정식명만으로는 "삼전"·"하닉" 등 기사가 다 걸러짐)
-_STOCK_ABBREV = {
-    "삼성전자": ["삼전"],
-    "SK하이닉스": ["하이닉스", "하닉", "SK닉스"],
-    "LG에너지솔루션": ["LG엔솔", "엔솔"],
-    "삼성바이오로직스": ["삼바"],
-    "현대차": ["현차"],
-    "기아": ["기아차"],
-    "POSCO홀딩스": ["포스코"],
-    "한화에어로스페이스": ["한화에어로"],
-    "두산에너빌리티": ["두산에너"],
-    "SK이노베이션": ["SK이노"],
-    "HD현대중공업": ["현대중공업"],
-    "HD한국조선해양": ["한국조선해양"],
-    "NAVER": ["네이버"],
-}
-
 
 @app.get("/api/stock_summary")
 def api_stock_summary(code: str = "", name: str = ""):
@@ -1688,34 +1674,15 @@ def _gen_stock_summary(code: str = "", name: str = "") -> dict:
         _sys.path.insert(0, _sd)
     import news_feed as nf
     try:
-        news = nf.stock_news(code, top=12)   # 여유있게 받아 필터
+        news = nf.stock_news(code, name=name, top=12)   # 여유있게 받아 필터
     except Exception:
         news = []
     if not news:
         return {"news": [], "summary": "", "error": "관련 뉴스가 없습니다."}
 
-    # 관련성 필터: 제목에 종목명(전달명+KRX 공식명+언론 관용 약칭)이 있는 기사만.
-    # 네이버 종목뉴스는 종목이 스쳐 언급된 시황 기사(예 '국민연금 소외주')도 관련그룹으로 줌 → 제거.
-    # 단, 정식명만 보면 "삼전"·"하닉" 같은 언론 관용 약칭 기사가 전부 걸러지는 문제가 있어
-    # 흔한 대형주 약칭을 별도로 보강한다.
-    cands = set()
-    if name and name.strip():
-        cands.add(name.strip())
-        cands |= set(_STOCK_ABBREV.get(name.strip(), []))
-    try:
-        for _nm, _cc in _krx_codes().items():
-            if str(_cc).zfill(6) == code:
-                cands.add(_nm)
-                cands |= set(_STOCK_ABBREV.get(_nm, []))
-                break
-    except Exception:
-        pass
-    if cands:
-        rel = [n for n in news if any(c and c in (n.get("title") or "") for c in cands)]
-        news = rel   # 제목에 종목명 없으면(=네이버가 시황 잡뉴스로 채운 것) 관련 뉴스 없음으로 처리
+    # nf.stock_news가 이제 종목명으로 네이버 검색 → 노이즈컷+약칭포함 관련성필터+호재랭킹까지
+    # 마친 결과라 여기서 다시 거르지 않는다.
     news = news[:8]
-    if not news:
-        return {"news": [], "summary": "", "error": "관련 뉴스가 없습니다."}
 
     nm = name or code
     headlines = [f"- [{n.get('date','')}] {n.get('title','')}" for n in news]
@@ -3571,12 +3538,6 @@ def api_insights_signals():
 
 
 # 리모션(채널) 브랜드 디자인 지침 — 인포그래픽/슬라이드/영상에 기본 적용
-_BRAND_DESIGN = (
-    "[디자인 지침] 순수 블랙(#000000) 배경에 라임그린(#AAFF00)을 메인 액센트로 핵심 수치·"
-    "키워드·그래프 라인·테두리에 사용하고, 골드/앰버(#C8921A)는 고급 포인트로, 텍스트는 흰색. "
-    "미니멀하면서 데이터가 빛나는 HUD/프리미엄 금융 대시보드 느낌. 큰 숫자와 핵심을 강하게 강조하고 "
-    "정보 밀도 높게, 디테일하고 세련되게 구성."
-)
 
 
 

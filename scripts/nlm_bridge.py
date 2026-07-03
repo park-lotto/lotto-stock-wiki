@@ -387,3 +387,50 @@ def create_report(nb_id: str, fmt: str = "Briefing Doc", language: str = "ko", o
             md = ""
     return {"ok": True, "markdown": md, "ready": bool(md),
             "url": f"https://notebooklm.google.com/notebook/{nb_id}", "error": ""}
+
+
+# 리모션(채널) 브랜드 디자인 지침 — 인포그래픽 등 시각 결과물에 적용(dashboard/server.py와 공유)
+_BRAND_DESIGN = (
+    "[디자인 지침] 순수 블랙(#000000) 배경에 라임그린(#AAFF00)을 메인 액센트로 핵심 수치·"
+    "키워드·그래프 라인·테두리에 사용하고, 골드/앰버(#C8921A)는 고급 포인트로, 텍스트는 흰색. "
+    "미니멀하면서 데이터가 빛나는 HUD/프리미엄 금융 대시보드 느낌. 큰 숫자와 핵심을 강하게 강조하고 "
+    "정보 밀도 높게, 디테일하고 세련되게 구성."
+)
+
+
+def create_infographic(nb_id: str, out_dir: str = None, focus: str = "") -> dict:
+    """노트북 소스로 NotebookLM 인포그래픽(PNG) 생성(동기 폴링, 최대 ~150초).
+    {"ok","path","error"}. 다운로드된 파일이 실제 존재해야 ok=True(카드 발행 필수조건이라 엄격 판정).
+    저장 위치: out_dir/infographic_{nb_id}.png."""
+    import json as _json
+    parts = ([focus] if focus else []) + [_BRAND_DESIGN]
+    focus_text = " / ".join(parts)
+    ok, out, errm = _run_nlm(
+        ["infographic", "create", nb_id, "--confirm", "--language", "ko",
+         "--style", "professional", "--focus", focus_text],
+        timeout=180)
+    if not ok:
+        return {"ok": False, "path": "", "error": _friendly_nlm_err(errm)}
+
+    art_id = None
+    for _ in range(30):
+        ok_s, out_s, _ = _run_nlm(["studio", "status", nb_id])
+        try:
+            arts = [a for a in _json.loads(out_s) if a.get("type") == "infographic"]
+            if arts and arts[-1].get("status") not in ("in_progress", "pending", None):
+                art_id = arts[-1].get("id")
+                break
+        except Exception:
+            pass
+        time.sleep(5)
+
+    base_dir = Path(out_dir) if out_dir else (ROOT / "out" / "insights_notebook")
+    base_dir.mkdir(parents=True, exist_ok=True)
+    ip = base_dir / f"infographic_{re.sub(r'[^0-9a-fA-F-]', '', nb_id)}.png"
+    dargs = ["download", "infographic", nb_id, "-o", str(ip)]
+    if art_id:
+        dargs += ["--id", art_id]
+    ok_d, _od, _ed = _run_nlm(dargs, timeout=60)
+    if ok_d and ip.exists():
+        return {"ok": True, "path": str(ip), "error": ""}
+    return {"ok": False, "path": "", "error": "다운로드 실패"}

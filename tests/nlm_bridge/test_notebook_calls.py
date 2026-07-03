@@ -1,5 +1,6 @@
 # tests/nlm_bridge/test_notebook_calls.py
 import json
+from pathlib import Path
 from scripts import nlm_bridge as nb
 
 
@@ -78,3 +79,51 @@ def test_create_report_no_artifact_returns_ready_false(monkeypatch, tmp_path):
     monkeypatch.setattr(nb.time, "sleep", lambda s: None)   # 폴링 대기 skip
     r = nb.create_report("nb1", out_dir=str(tmp_path))
     assert r["ok"] is True and r["ready"] is False and r["markdown"] == ""
+
+
+def test_brand_design_constant_exists():
+    assert "라임그린" in nb._BRAND_DESIGN
+    assert "블랙" in nb._BRAND_DESIGN
+
+
+def test_create_infographic_success(monkeypatch, tmp_path):
+    import json
+    def fake(args, timeout=90, _auth_retry=True):
+        if args[0] == "infographic":
+            return True, "", ""
+        if args[0] == "studio":
+            return True, json.dumps([{"type": "infographic", "id": "art-1", "status": "completed"}]), ""
+        if args[0] == "download":
+            # 다운로드 성공 시늉: 실제 파일 생성
+            out_idx = args.index("-o") + 1
+            Path(args[out_idx]).write_bytes(b"\x89PNG")
+            return True, "", ""
+        return True, "", ""
+    monkeypatch.setattr(nb, "_run_nlm", fake)
+    monkeypatch.setattr(nb.time, "sleep", lambda s: None)
+    r = nb.create_infographic("nb1", out_dir=str(tmp_path))
+    assert r["ok"] is True
+    assert r["path"].endswith(".png")
+    assert Path(r["path"]).exists()
+
+
+def test_create_infographic_create_fails(monkeypatch, tmp_path):
+    monkeypatch.setattr(nb, "_run_nlm", lambda args, timeout=90, _auth_retry=True: (False, "", "실패"))
+    r = nb.create_infographic("nb1", out_dir=str(tmp_path))
+    assert r["ok"] is False and r["path"] == ""
+
+
+def test_create_infographic_download_fails_no_file(monkeypatch, tmp_path):
+    import json
+    def fake(args, timeout=90, _auth_retry=True):
+        if args[0] == "infographic":
+            return True, "", ""
+        if args[0] == "studio":
+            return True, json.dumps([]), ""   # 상태 계속 안 나옴 → art_id 못 찾음
+        if args[0] == "download":
+            return False, "", "no artifact"   # 다운로드 자체 실패, 파일 안 생김
+        return True, "", ""
+    monkeypatch.setattr(nb, "_run_nlm", fake)
+    monkeypatch.setattr(nb.time, "sleep", lambda s: None)
+    r = nb.create_infographic("nb1", out_dir=str(tmp_path))
+    assert r["ok"] is False and r["path"] == ""

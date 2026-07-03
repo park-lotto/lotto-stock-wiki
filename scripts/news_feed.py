@@ -111,8 +111,71 @@ def _age_days(pub: str, now: datetime) -> float:
         return 999.0
 
 
-def stock_news(code, top: int = 3) -> list:
-    """종목뉴스: 네이버 증권 종목뉴스 API (큐레이션·관련뉴스 그룹)."""
+def _domain(url: str) -> str:
+    try:
+        net = urllib.parse.urlparse(url).netloc
+        return net[4:] if net.startswith("www.") else net
+    except Exception:
+        return ""
+
+
+# 언론 관용 약칭(정식명만 요구하면 "삼전"·"하닉" 같은 축약 표기 기사가 다 걸러짐)
+_STOCK_ABBREV = {
+    "삼성전자": ["삼전"],
+    "SK하이닉스": ["하이닉스", "하닉", "SK닉스"],
+    "LG에너지솔루션": ["LG엔솔", "엔솔"],
+    "삼성바이오로직스": ["삼바"],
+    "현대차": ["현차"],
+    "기아": ["기아차"],
+    "POSCO홀딩스": ["포스코"],
+    "한화에어로스페이스": ["한화에어로"],
+    "두산에너빌리티": ["두산에너"],
+    "SK이노베이션": ["SK이노"],
+    "HD현대중공업": ["현대중공업"],
+    "HD한국조선해양": ["한국조선해양"],
+    "NAVER": ["네이버"],
+}
+
+
+def stock_news(code, name: str = "", top: int = 3) -> list:
+    """종목뉴스: 종목명으로 네이버 뉴스검색(최신+정확도 합산, 호재랭킹, 노이즈컷+관련성필터).
+    네이버증권 '종목뉴스' 탭은 커버리지 적은 종목엔 무관한 시황 잡뉴스로 채우는 경우가
+    많아(예: SK스퀘어 → 코스피 지수 기사만) 검색 기반으로 전환. 검색만으로는 "코스피" 같은
+    고빈도 시황 기사가 여전히 섞여들어와 제목에 종목명(+약칭)이 있는 것만 남긴다.
+    name 없으면(구버전 호출부 호환) 예전 네이버증권 종목뉴스 API로 폴백."""
+    if not name or not name.strip():
+        return _stock_news_by_code(code, top)
+    name = name.strip()
+    cands = {name} | set(_STOCK_ABBREV.get(name, []))
+    now = datetime.now(timezone.utc)
+    seen_urls, items = set(), []
+    for it in _search(name, display=20, sort="date") + _search(name, display=20, sort="sim"):
+        u = it.get("originallink") or it.get("link") or it.get("title")
+        if u in seen_urls:
+            continue
+        seen_urls.add(u)
+        items.append(it)
+    ranked = []
+    for it in items:
+        t = _clean(it.get("title", ""))
+        if not t or any(w in t for w in NOISE):
+            continue
+        if not any(c in t for c in cands):
+            continue   # 제목에 종목명(+약칭) 없음 → 시황 잡뉴스로 판단, 제외
+        score = sum(1 for w in HOJAE if w in t)
+        pub = it.get("pubDate", "")
+        age_days = _age_days(pub, now)
+        link = it.get("originallink") or it.get("link") or ""
+        ranked.append((age_days, score, t, pub, link))
+    fresh = [r for r in ranked if r[0] <= MAX_AGE_DAYS]
+    pool = fresh if fresh else ranked   # 최근 뉴스가 아예 없으면 전체 중 최신순으로 대체
+    pool.sort(key=lambda x: (-x[1], x[0]) if fresh else x[0])
+    return [{"title": t, "src": _domain(u), "date": _fmt_rss(p), "related": 1, "url": u}
+            for age, s, t, p, u in pool[:top]]
+
+
+def _stock_news_by_code(code, top: int = 3) -> list:
+    """(구) 네이버증권 종목뉴스 API — 종목명을 모를 때만 쓰는 폴백(큐레이션·관련뉴스 그룹)."""
     cc = str(code).zfill(6)
     url = f"https://m.stock.naver.com/api/news/stock/{cc}?pageSize={top + 3}&page=1"
     req = urllib.request.Request(url, headers={
