@@ -57,10 +57,12 @@ _NLM_LOGIN_LOCK = threading.Lock()
 
 
 def _nlm_relogin_locked():
-    """nlm 재로그인 — 락으로 직렬화(동시 Chrome 프로필 충돌 방지). 이미 유효하면 스킵."""
+    """nlm 재로그인 — 락으로 직렬화(동시 Chrome 프로필 충돌 방지). 이미 유효하면 스킵.
+    `nlm login --check`는 실제 로그인 직후에도 만료라고 오탐하는 버그가 있어(2026-07-03 확인)
+    실제 API 호출(notebook list)로 유효성을 판단한다."""
     with _NLM_LOGIN_LOCK:
-        cok, cout, _ = _run_nlm(["login", "--check"], timeout=40, _auth_retry=False)
-        if cok and "valid" in (cout or "").lower():
+        cok, _o, _ = _run_nlm(["notebook", "list", "--quiet"], timeout=40, _auth_retry=False)
+        if cok:
             return True
         lok, _o, _e = _run_nlm(["login"], timeout=320, _auth_retry=False)
         return lok
@@ -90,6 +92,97 @@ def _run_nlm(args, timeout=90, _auth_retry=True):
     if not ok:
         return False, out, (err or out or f"exit {p.returncode}")
     return True, out, err
+
+
+# ── nlm 수동 로그인(VNC) — 자동 재로그인이 안 먹힐 때 사람이 직접 구글 로그인 ──
+# 원격(Linux) 전용. Xvfb 가상 디스플레이 위에 Chrome을 띄우고 x11vnc+websockify로
+# 브라우저 화면을 노출, nlm login --cdp-url로 그 Chrome의 로그인 상태를 그대로 채간다.
+_LOGIN_DISPLAY = ":99"
+_LOGIN_CDP_PORT = 9333
+_LOGIN_VNC_PORT = 5901
+_LOGIN_WS_PORT = 6081
+_LOGIN_VNC_PASSWORD = "nlmlogin2026"
+_LOGIN_PROFILE_DIR = "/tmp/nlm-login-chrome-profile"
+_MANUAL_LOGIN_PROC = {"proc": None}
+
+
+def _port_open(port, host="127.0.0.1"):
+    import socket
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.settimeout(1)
+        return s.connect_ex((host, port)) == 0
+
+
+def _ensure_login_browser():
+    """Xvfb+Chrome(CDP)+x11vnc+websockify가 안 떠있으면 띄운다. 이미 떠있으면 그대로 재사용."""
+    import time as _time
+    if not _port_open(_LOGIN_CDP_PORT):
+        subprocess.Popen(
+            ["Xvfb", _LOGIN_DISPLAY, "-screen", "0", "1280x800x24"],
+            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+        _time.sleep(2)
+        env = dict(os.environ, DISPLAY=_LOGIN_DISPLAY)
+        subprocess.Popen(
+            ["google-chrome", f"--remote-debugging-port={_LOGIN_CDP_PORT}",
+             "--no-first-run", "--no-default-browser-check",
+             f"--user-data-dir={_LOGIN_PROFILE_DIR}", "https://accounts.google.com"],
+            env=env, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+        _time.sleep(3)
+    if not _port_open(_LOGIN_VNC_PORT):
+        subprocess.Popen(
+            ["x11vnc", "-display", _LOGIN_DISPLAY, "-forever", "-shared",
+             "-rfbport", str(_LOGIN_VNC_PORT), "-passwd", _LOGIN_VNC_PASSWORD],
+            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+        _time.sleep(1)
+    if not _port_open(_LOGIN_WS_PORT):
+        subprocess.Popen(
+            ["websockify", "--web=/usr/share/novnc", f"127.0.0.1:{_LOGIN_WS_PORT}",
+             f"127.0.0.1:{_LOGIN_VNC_PORT}"],
+            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+        _time.sleep(1)
+
+
+def start_manual_login():
+    """수동 로그인 시작 — 브라우저 인프라 기동 + 백그라운드로 nlm login 실행(사람 대기).
+    반환: 사용자가 열어야 할 노트북LM 로그인 화면 URL."""
+    exe = _nlm_exe()
+    if not exe:
+        return {"error": "nlm CLI를 찾을 수 없음"}
+    _ensure_login_browser()
+    if _MANUAL_LOGIN_PROC["proc"] is None or _MANUAL_LOGIN_PROC["proc"].poll() is not None:
+        _MANUAL_LOGIN_PROC["proc"] = subprocess.Popen(
+            [exe, "login", "--provider", "openclaw",
+             "--cdp-url", f"http://127.0.0.1:{_LOGIN_CDP_PORT}", "--force"],
+            cwd=str(ROOT), stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+    return {
+        "ok": True,
+        "vnc_url": (f"/vnc-login/vnc.html?path=vnc-login/websockify"
+                    f"&password={_LOGIN_VNC_PASSWORD}&autoconnect=true"),
+    }
+
+
+def manual_login_status():
+    """수동 로그인 진행 상태 확인. proc가 없으면 아직 시작 안 함."""
+    proc = _MANUAL_LOGIN_PROC["proc"]
+    if proc is None:
+        return {"state": "idle"}
+    rc = proc.poll()
+    if rc is None:
+        return {"state": "waiting"}
+    if rc == 0:
+        return {"state": "done"}
+    return {"state": "failed", "code": rc}
 
 
 def _friendly_nlm_err(msg):

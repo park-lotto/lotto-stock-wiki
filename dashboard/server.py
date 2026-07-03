@@ -211,7 +211,7 @@ from nlm_bridge import (
     _nb_period_min, _nb_fetch_rows, _nb_scope_label, _nlm_relogin_locked,
     create_notebook, add_source_file, add_source_urls, notebook_query as nlm_notebook_query,
     create_report as nlm_create_report,
-    _BRAND_DESIGN,
+    _BRAND_DESIGN, start_manual_login, manual_login_status,
 )
 try:
     from studio_pipeline import generate_briefing, generate_picks  # noqa: E402
@@ -4927,11 +4927,12 @@ async def api_insights_gemini_infographic(req: Request):
 
 @app.get("/api/insights/nlm_status")
 def api_insights_nlm_status():
-    """nlm 인증 유효성 (브라우저 없이 --check)."""
+    """nlm 인증 유효성. `login --check`는 로그인 직후에도 오탐하는 버그가 있어(2026-07-03
+    확인) 실제 API 호출로 판단한다."""
     if not _nlm_exe():
         return JSONResponse(content={"valid": False, "error": "nlm 없음"})
-    ok, out, _ = _run_nlm(["login", "--check"], timeout=40)
-    return JSONResponse(content={"valid": bool(ok and "valid" in (out or "").lower())})
+    ok, _out, _err = _run_nlm(["notebook", "list", "--quiet"], timeout=40, _auth_retry=False)
+    return JSONResponse(content={"valid": bool(ok)})
 
 
 @app.post("/api/insights/nlm_relogin")
@@ -4948,6 +4949,21 @@ async def api_insights_nlm_relogin(req: Request):
 
     result = await run_in_threadpool(_do)
     return JSONResponse(content=result, status_code=(200 if result.get("ok") else 500))
+
+
+@app.post("/api/insights/nlm_manual_login_start")
+async def api_insights_nlm_manual_login_start():
+    """수동 로그인(VNC) 시작 — 사용자가 직접 구글 로그인할 브라우저 화면 URL 반환.
+    자동 재로그인이 안 될 때의 진짜 폴백(2026-07-03 추가)."""
+    result = await run_in_threadpool(start_manual_login)
+    return JSONResponse(content=result, status_code=(200 if result.get("ok") else 500))
+
+
+@app.get("/api/insights/nlm_manual_login_status")
+async def api_insights_nlm_manual_login_status():
+    """수동 로그인 진행 상태: idle | waiting | done | failed."""
+    result = await run_in_threadpool(manual_login_status)
+    return JSONResponse(content=result)
 
 
 # ── §4.8 POST /api/insights/to_youtube ───────────────────────

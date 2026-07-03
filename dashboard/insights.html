@@ -737,6 +737,7 @@ body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun
     <button class="ws-home" onclick="closeWorkspace()">🏠 메인화면</button>
     <div class="ws-title" id="ws-title">🧠 브리핑 워크스페이스</div>
     <div class="ws-meta" id="ws-meta"></div>
+    <button class="ws-home" style="margin-left:auto" onclick="nlmManualLogin(this)" title="자동 로그인이 안 될 때 직접 구글 로그인">🔐 노트북 수동 로그인</button>
   </div>
   <div class="ws-body">
     <div class="ws-left">
@@ -1689,6 +1690,24 @@ async function nlmRelogin(btn) {
     if (res.error) throw new Error(res.error);
     toast('✅ nlm 재로그인 완료 — 이제 브리핑 됩니다');
   } catch(e) { toast('재로그인 실패: ' + e.message, true); }
+  finally { if (btn) { btn.disabled = false; btn.innerHTML = orig; } }
+}
+async function nlmManualLogin(btn) {
+  const orig = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = '브라우저 준비 중…'; }
+  try {
+    const res = await apiFetch('/api/insights/nlm_manual_login_start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    if (res.error) throw new Error(res.error);
+    window.open(res.vnc_url, '_blank');
+    toast('새 탭에서 구글 로그인 완료해주세요…');
+    if (btn) btn.innerHTML = '로그인 대기 중…';
+    for (let i = 0; i < 60; i++) {
+      await new Promise(r => setTimeout(r, 5000));
+      const st = await apiFetch('/api/insights/nlm_manual_login_status');
+      if (st.state === 'done') { toast('✅ 노트북LM 로그인 완료'); break; }
+      if (st.state === 'failed') { toast('로그인 실패 — 다시 시도해주세요', true); break; }
+    }
+  } catch(e) { toast('수동 로그인 실패: ' + e.message, true); }
   finally { if (btn) { btn.disabled = false; btn.innerHTML = orig; } }
 }
 const CAT_KO = { telegram: '텔레', news: '뉴스', report: '리포트', blog: '블로그', youtube: '유튜브' };
