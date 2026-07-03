@@ -97,54 +97,54 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 
 /* ── 4카드 패널 (코스피/코스닥/미국선물/야간선물) ── */
 .mkt-card{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:10px;
-  padding:10px 12px;min-width:0;display:flex;flex-direction:column;gap:7px;
+  padding:14px 16px;min-width:0;display:flex;flex-direction:column;gap:9px;
   scrollbar-width:thin;scrollbar-color:#222 transparent;}
 .mkt-card::-webkit-scrollbar{width:3px;}
 .mkt-card::-webkit-scrollbar-thumb{background:#333;border-radius:2px;}
 .mkt-hdr{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
-.mkt-name{font-size:11px;font-weight:700;color:#888;white-space:nowrap;}
-.mkt-price{font-size:18px;font-weight:800;color:#fff;letter-spacing:-.5px;font-variant-numeric:tabular-nums;}
-.mkt-rate{font-size:12px;font-weight:700;}
+.mkt-name{font-size:14px;font-weight:700;color:#bbb;white-space:nowrap;}
+.mkt-price{font-size:26px;font-weight:800;color:#fff;letter-spacing:-.5px;font-variant-numeric:tabular-nums;}
+.mkt-rate{font-size:16px;font-weight:700;}
 .mkt-rate.up{color:var(--up1);}
 .mkt-rate.dn{color:var(--dn1);}
-.mkt-rate.neu{color:#666;}
-.mkt-sec-label{font-size:9px;color:#999;letter-spacing:.5px;margin-bottom:2px;
+.mkt-rate.neu{color:#999;}
+.mkt-sec-label{font-size:11px;color:#bbb;letter-spacing:.5px;margin-bottom:2px;
   display:flex;justify-content:space-between;align-items:center;}
 /* 투자자 발산 바 */
-.inv-grid{display:grid;grid-template-columns:26px 1fr 52px;gap:2px 5px;align-items:center;}
-.inv-lbl{font-size:10px;color:#aaa;}
-.div-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;background:#1a1a1a;}
+.inv-grid{display:grid;grid-template-columns:30px 1fr 64px;gap:3px 6px;align-items:center;}
+.inv-lbl{font-size:12px;color:#ccc;}
+.div-bar{display:flex;height:9px;border-radius:4px;overflow:hidden;background:#1a1a1a;}
 .div-neg{flex:1;display:flex;align-items:stretch;justify-content:flex-end;}
 .div-neg-fill{border-radius:3px 0 0 3px;transition:width .5s;}
 .div-pos{flex:1;display:flex;align-items:stretch;}
 .div-pos-fill{border-radius:0 3px 3px 0;transition:width .5s;}
-.inv-num{font-size:10px;font-variant-numeric:tabular-nums;text-align:right;}
+.inv-num{font-size:12px;font-variant-numeric:tabular-nums;text-align:right;}
 .inv-num.up{color:var(--up1);}
 .inv-num.dn{color:var(--dn1);}
 /* 프로그램 */
 .prog-row{display:flex;align-items:center;gap:8px;}
-.prog-total{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;}
+.prog-total{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;}
 .prog-total.up{color:var(--up1);}
 .prog-total.dn{color:var(--dn1);}
-.prog-detail{font-size:9px;color:#999;line-height:1.5;}
-.mkt-ts{font-size:9px;color:#888;text-align:right;}
+.prog-detail{font-size:11px;color:#bbb;line-height:1.5;}
+.mkt-ts{font-size:10px;color:#999;text-align:right;}
 /* 글로벌 지표 카드 */
-.global-row{display:grid;grid-template-columns:90px 1fr auto;gap:4px 8px;align-items:center;margin-bottom:3px;}
-.global-name{font-size:10px;color:#888;white-space:nowrap;}
-.global-price{font-size:13px;font-weight:700;color:#ddd;font-variant-numeric:tabular-nums;text-align:right;}
-.global-rate{font-size:11px;font-weight:700;text-align:right;white-space:nowrap;}
-.global-rate.up{color:var(--up1);} .global-rate.dn{color:var(--dn1);} .global-rate.neu{color:#888;}
-/* 미국시장 카드 */
-.us-row{display:flex;justify-content:space-between;align-items:center;height:36px;padding:0 2px;border-bottom:1px solid #1a1a1a;box-sizing:border-box;}
+.global-row{display:grid;grid-template-columns:100px 1fr auto;gap:5px 8px;align-items:center;margin-bottom:6px;}
+.global-name{font-size:12px;color:#aaa;white-space:nowrap;}
+.global-price{font-size:16px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;text-align:right;}
+.global-rate{font-size:14px;font-weight:700;text-align:right;white-space:nowrap;}
+.global-rate.up{color:var(--up1);} .global-rate.dn{color:var(--dn1);} .global-rate.neu{color:#aaa;}
+/* 미국시장 카드 / 순위 카드 공용 */
+.us-row{display:flex;justify-content:space-between;align-items:center;height:44px;padding:0 2px;border-bottom:1px solid #1a1a1a;box-sizing:border-box;}
 .us-row:last-child{border-bottom:none;}
 .us-row[onclick]:hover{background:rgba(255,255,255,.05);}
 .us-row[onclick]:hover .us-sym{text-decoration:underline;text-underline-offset:2px;}
-.us-label{font-size:10px;color:#888;display:block;}
-.us-sym{font-size:11px;font-weight:700;color:#ccc;}
+.us-label{font-size:12px;color:#aaa;display:block;}
+.us-sym{font-size:14px;font-weight:700;color:#eee;}
 .us-vals{text-align:right;}
-.us-price{font-size:13px;font-weight:700;color:#ddd;display:block;font-variant-numeric:tabular-nums;}
-.us-rate{font-size:11px;font-weight:700;}
-.us-rate.up{color:var(--up1);} .us-rate.dn{color:var(--dn1);} .us-rate.neu{color:#888;}
+.us-price{font-size:16px;font-weight:700;color:#fff;display:block;font-variant-numeric:tabular-nums;}
+.us-rate{font-size:13px;font-weight:700;}
+.us-rate.up{color:var(--up1);} .us-rate.dn{color:var(--dn1);} .us-rate.neu{color:#aaa;}
 
 .legend{display:flex;gap:8px;margin-bottom:16px;align-items:center;font-size:12px;color:#999;}
 .legend .bar{height:12px;width:80px;border-radius:4px;
@@ -160,22 +160,30 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
   font-size:10px;color:rgba(255,255,255,.35);padding:2px 4px;line-height:1;transition:color .15s;z-index:2;white-space:nowrap;}
 .tile .top-more:hover{color:rgba(255,255,255,.8);}
 
-.mkt-insight{padding:12px 14px;margin-bottom:8px;border-radius:6px;
+.mkt-insight{padding:14px 16px;margin-bottom:8px;border-radius:6px;
   background:linear-gradient(135deg,#2a2410,#1a1a1a);border:1px solid #d4af37;}
-.mkt-insight .mi-headline{font-size:17px;font-weight:800;color:#f0d97a;line-height:1.4;margin-bottom:8px;}
-.mkt-insight .mi-body{font-size:12.5px;font-weight:400;color:#ddd;line-height:1.7;}
-.mkt-insight .mi-body .mi-para{margin-bottom:8px;}
+.mkt-insight .mi-headline{font-size:19px;font-weight:800;color:#f5d576;line-height:1.4;margin-bottom:8px;}
+.mkt-insight .mi-body{font-size:14px;font-weight:400;color:#eee;line-height:1.75;}
+.mkt-insight .mi-body .mi-para{margin-bottom:9px;}
 .mkt-insight .mi-body .mi-para:last-child{margin-bottom:0;}
-.mkt-insight .mi-topick{font-size:11px;color:#ccc;line-height:1.5;margin-top:8px;}
-.mkt-insight .mi-topick div{margin-bottom:2px;}
+/* 오늘의 리포트 탑픽 — 브리핑 코멘트와 분리된 별도 박스 */
+.mkt-topick{padding:10px 14px;margin-bottom:8px;border-radius:6px;
+  background:rgba(90,160,255,.08);border:1px solid rgba(90,160,255,.35);}
+.mkt-topick .mt-title{font-size:13px;font-weight:700;color:#8ab4ff;margin-bottom:6px;}
+.mkt-topick .mt-item{font-size:12.5px;color:#dde;line-height:1.6;margin-bottom:3px;}
+.mkt-topick .mt-item:last-child{margin-bottom:0;}
 .briefing-feed{max-height:520px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;}
-.briefing-item{padding:8px 10px;border-radius:6px;background:#1a1a1a;border-left:3px solid #444;}
+.briefing-item{padding:9px 11px;border-radius:6px;background:#1a1a1a;border-left:3px solid #444;}
 .briefing-item.sev-red{border-left-color:#e05252;}
 .briefing-item.sev-yellow{border-left-color:#d4af37;}
 .briefing-item.sev-gray{border-left-color:#555;opacity:0.7;}
-.briefing-item .bi-ts{font-size:10px;color:#888;}
-.briefing-item .bi-headline{font-size:13px;font-weight:700;margin:2px 0;}
-.briefing-item .bi-body{font-size:11px;color:#aaa;line-height:1.4;}
+.briefing-item .bi-ts{font-size:11px;color:#999;}
+.briefing-item .bi-headline{font-size:14px;font-weight:700;margin:3px 0;color:#eee;}
+.briefing-item .bi-body{font-size:12.5px;color:#bbb;line-height:1.5;}
+.briefing-toggle{width:100%;margin-top:8px;padding:7px;border-radius:6px;cursor:pointer;
+  background:rgba(255,255,255,.05);border:1px solid #333;color:#aaa;font-size:12px;
+  font-family:inherit;transition:background .15s;}
+.briefing-toggle:hover{background:rgba(255,255,255,.1);color:#ddd;}
 
 /* ── 히트맵 그리드 (6열·고박스·큰폰트) ── */
 .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;}
@@ -1421,6 +1429,14 @@ function loadMarketFlowSample(){
 let _briefingItems=[];
 let _marketInsight=null;
 let _briefingLoaded=false;
+let _briefingExpanded=false;
+function toggleBriefingExpand(){
+  _briefingExpanded=!_briefingExpanded;
+  try{
+    const raw=localStorage.getItem(_MF_CACHE_KEY);
+    if(raw){const {data}=JSON.parse(raw); if(data) renderMarketFlow(data);}
+  }catch(_){}
+}
 
 async function loadMarketBriefing(){
   try{
@@ -1486,7 +1502,7 @@ function _rankRows(stocks, maxN){
     const clk=s.code?` onclick="openStockChart('${esc(s.code)}','${esc(s.name)}')" style="cursor:pointer"`:"";
     return`<div class="us-row"${clk}>
       <div style="display:flex;align-items:center;gap:6px">
-        <span style="font-size:10px;color:#444;min-width:14px;text-align:right">${i+1}</span>
+        <span style="font-size:12px;color:#777;min-width:16px;text-align:right">${i+1}</span>
         <span class="us-sym">${esc(s.name)}</span>
       </div>
       <div class="us-vals">
@@ -1516,10 +1532,10 @@ function renderRankCard(){
     ?"background:rgba(212,175,55,.25);color:var(--gold);border:1px solid rgba(212,175,55,.5)"
     :"background:rgba(255,255,255,.05);color:#555;border:1px solid #333";
   const btnLabel=on?"ETF·ETN 제외중":"ETF·ETN 포함";
-  const wheelHint="font-size:9px;color:#333;margin-left:4px";
+  const wheelHint="font-size:10px;color:#555;margin-left:4px";
   const secLabel=(icon,label,n,type)=>`
     <div onwheel="rankWheel(event,'${type}')"
-         style="display:flex;align-items:center;font-size:10px;font-weight:600;color:#666;
+         style="display:flex;align-items:center;font-size:12px;font-weight:600;color:#999;
                 letter-spacing:0.3px;margin:6px 0 3px;border-top:1px solid #1c1c1c;
                 padding-top:5px;cursor:ns-resize;user-select:none"
          title="휠로 개수 조절 (5~20)">
@@ -1528,8 +1544,8 @@ function renderRankCard(){
     </div>`;
   return`<div class="mkt-card">
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
-      <span style="font-size:11px;font-weight:700;color:#aaa;letter-spacing:0.3px;flex:1">순위</span>
-      <button id="etf-toggle" onclick="toggleEtfFilter()" style="font-size:10px;padding:2px 7px;border-radius:10px;cursor:pointer;font-family:inherit;${btnStyle}">${btnLabel}</button>
+      <span style="font-size:14px;font-weight:700;color:#ccc;letter-spacing:0.3px;flex:1">순위</span>
+      <button id="etf-toggle" onclick="toggleEtfFilter()" style="font-size:11px;padding:3px 8px;border-radius:10px;cursor:pointer;font-family:inherit;${btnStyle}">${btnLabel}</button>
     </div>
     ${secLabel("🔥","실시간 인기검색",_rankPopN,"pop")}
     ${_rankRows(_rankPopStocks,_rankPopN)}
@@ -1580,9 +1596,11 @@ function renderMarketFlow(d){
       // ── 실시간 시장 브리핑 카드 ──
       if(code==="briefing"){
         const topickList=(_marketInsight&&_marketInsight.topick)||[];
-        const topickHtml=topickList.length
-          ?`<div class="mi-topick">${topickList.map(t=>
-              `<div>🎯 ${esc(t.asset)}: ${esc(t.content)}</div>`).join("")}</div>`
+        const topickBoxHtml=topickList.length
+          ?`<div class="mkt-topick">
+              <div class="mt-title">📈 오늘의 리포트 탑픽</div>
+              ${topickList.map(t=>`<div class="mt-item">🎯 <b>${esc(t.asset)}</b>: ${esc(t.content)}</div>`).join("")}
+            </div>`
           :"";
         const insightHtml=(()=>{
           if(!_marketInsight)return"";
@@ -1594,12 +1612,12 @@ function renderMarketFlow(d){
           return `<div class="mkt-insight">
               ${headlineHtml}
               <div class="mi-body">${bodyHtml}</div>
-              ${topickHtml}
             </div>`;
         })();
         const items=_briefingItems||[];
-        const rows=items.length
-          ?items.map(it=>{
+        const visibleItems=_briefingExpanded?items:items.slice(0,3);
+        const rows=visibleItems.length
+          ?visibleItems.map(it=>{
             const sev=it.severity==="red"?"sev-red":it.severity==="yellow"?"sev-yellow":"sev-gray";
             const icon=it.severity==="red"?"🔴":it.severity==="yellow"?"🟡":"⚪";
             const body=it.body?`<div class="bi-body">${esc(it.body)}</div>`:"";
@@ -1610,12 +1628,17 @@ function renderMarketFlow(d){
             </div>`;
           }).join("")
           :_briefingLoaded
-            ?`<div style="color:#666;font-size:12px;padding:8px;">아직 브리핑 없음</div>`
-            :`<div style="color:#666;font-size:12px;padding:8px;">불러오는 중...</div>`;
+            ?`<div style="color:#888;font-size:13px;padding:8px;">아직 브리핑 없음</div>`
+            :`<div style="color:#888;font-size:13px;padding:8px;">불러오는 중...</div>`;
+        const toggleHtml=items.length>3
+          ?`<button class="briefing-toggle" onclick="toggleBriefingExpand()">${_briefingExpanded?"▲ 접기":`▼ 더보기 (${items.length-3}개)`}</button>`
+          :"";
         return `<div class="mkt-card" style="flex:1;min-width:0;">
-          <div style="font-size:13px;color:#ccc;margin-bottom:6px;">📡 실시간 브리핑</div>
+          <div style="font-size:15px;font-weight:700;color:#ddd;margin-bottom:6px;">📡 실시간 브리핑</div>
           ${insightHtml}
+          ${topickBoxHtml}
           <div class="briefing-feed">${rows}</div>
+          ${toggleHtml}
         </div>`;
       }
 
