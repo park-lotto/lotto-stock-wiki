@@ -1,55 +1,62 @@
-# NEXT_SESSION — 골루프 인포그래픽 카드 + 서버 인프라 정비
+# NEXT_SESSION — 영상제작 대시보드 ①기획단계 (Task 1-4 완료, Task 5 남음)
 
-**날짜**: 2026-07-03 · **주제**: 골루프 아침브리핑 카드에서 클로드식 그라데이션 이미지 제거 +
-NotebookLM 인포그래픽 병행발송 기능 완성. 서버 인프라 문제 다수 발견·해결.
+**날짜**: 2026-07-03 · **주제**: 유튜브 영상제작(기획→대본→리모션→녹음→자막→렌더) 통합 대시보드의
+첫 단계인 "①기획" 페이지를 Subagent-Driven Development로 구현 중. main에 직접 커밋(사용자 동의 확인됨).
 
 ## 이번 세션 요약
 
-### ✅ 완료: 인포그래픽 카드 기능 (설계→구현→테스트56개→리뷰→병합→서버배포)
+### ✅ 완료: 브레인스토밍 → 설계 → 계획 → Task 1~4 구현
 
-사용자 피드백("클로드식 그라데이션 이미지 안받으려고 노트북 연동한건데 안됨") → 실제로는
-텍스트만 NotebookLM으로 바꿨을 뿐 히어로이미지는 Gemini 나노바나나 그대로였음이 원인.
+- 스펙: `docs/superpowers/specs/2026-07-03-yt-기획단계-대시보드-design.md`
+- 계획: `docs/superpowers/plans/2026-07-03-yt-기획단계-대시보드.md` (5 task, 전체 코드 포함)
+- 핵심 결정: `/yt` **완전 독립 페이지**(STOCK BRAIN 네비 탭 아님), 기존 `scripts/yt_agents/pipeline.py`
+  6단계 CLI를 재사용(체크포인트/QC재작업 로직 그대로), `studio.html`의 SSE 패턴 재사용.
+  "터진 영상" 위젯은 ViewTrap 실제화면 근거로 **채널 자체 평균 대비 %** 방식 확정(구독자 비율 아님),
+  범위는 영상검색(기여도·성과도)만으로 명시적 축소.
 
-- **나노바나나 실측**: 등록된 Gemini 키 8개 전부 429(쿼터0, 무료티어 구조적 제한) 확인
-- **결정**: 히어로 이미지 슬롯 완전 제거(텍스트만) + NotebookLM 인포그래픽 병행발송(별도 사진)
-- **필수조건 변경**: 인포그래픽 생성 성공이 "정상 발행" 조건에 포함 — 실패시 텍스트카드도
-  보류하고 기존 안전장치(C1/I1/I2)로 에스컬레이션
-- 스펙: `docs/superpowers/specs/2026-07-03-goal-loop-infographic-design.md`
-- 계획: `docs/superpowers/plans/2026-07-03-goal-loop-infographic.md` (5태스크 전부 완료)
-- 5개 파일 수정(card_render.py/nlm_bridge.py/server.py/notebook_stage0.py/morning_brief.py)
-  → **main 병합 완료**(5aa88d8e) → 서버 배포 완료 → **실전 검증 성공**(라임그린 HUD 스타일
-  인포그래픽 실제 생성+텔레그램 전송 확인됨, 151초 소요)
+**Task 1** (`scripts/yt_agents/hot_clips.py`, 유튜브 Data API 기반 기여도·성과도 계산) — 3라운드 리뷰
+끝에 완성. 자기영상 제외 평균 계산 버그를 2번 재발견해서 근본구조(raw fetch 캐시 + Python에서
+영상별 exclusion 계산 분리)로 수정. 12/12 테스트, 네트워크 호출 없음 확인.
 
-### 🚨 발견·해결: 서버 인프라 문제 (오늘 처음 실측으로 드러남)
+**Task 2** (`POST /yt/hot_clips`) — 무관한 기존 코드(`generate_picks = None` 폴백) 실수로 삭제된 것을
+리뷰가 발견·복구, defensive import 패턴 적용.
 
-1. **`nlm` CLI가 서버에 아예 설치돼 있지 않았음** — `uv tool install notebooklm-mcp-cli`로 설치
-2. **`nlm login --check` 명령어 자체가 버그** — 로그인 성공해도 항상 "만료"로 오답. 실제
-   검증은 `nlm notebook list`(진짜 API 호출)로 해야 함. (다른 세션이 발견)
-3. **서버 스왑(가상메모리) 0바이트**였음 — 무거운 작업(Chrome+nlm) 시 서버가 멎는 원인.
-   **2GB 스왑 추가 완료**(재부팅해도 유지, `/etc/fstab` 등록됨). 오늘 밤 이 문제로 서버
-   2번 다운 → 사용자가 Lightsail 콘솔에서 Stop→Start로 복구
-4. **`nlm` 실행파일이 재부팅시 PATH에서 사라짐** — `/usr/local/bin/nlm`, `/usr/local/bin/
-   notebooklm-mcp` 심볼릭 링크로 영구 해결
-5. **NotebookLM "인포그래픽 생성"(Studio 기능)만 이 서버에서 rate limit 걸린 것으로 추정**
-   — 노트북 4개·스타일 2종·계정 2개(parklotto12/parklotto20) 전부 시도했지만 전부 7분+
-   "in_progress"에서 멈춤. 일반 기능(노트북생성/질문)은 정상. 시간 지나면 풀릴 가능성 높음.
-6. **다른 세션이 `stockbrain1.duckdns.org/vnc-login/`이라는 영구 VNC로그인 페이지를
-   이미 만들어둔 것 발견** — 오늘 밤 두 세션이 같은 nlm 인증 문제를 동시에 풀고 있었을
-   가능성 높음(서버 다운 원인 중 하나였을 수도). **다음 세션: 이 중복 작업 정리/조율 필요**
+**Task 3** (`scripts/yt_agents/plan_stage.py`, 기획 QC재작업 루프를 SSE이벤트로 감싸는 러너) — 계획서에
+적힌 import 패턴 자체가 깨지는 코드였음을 리뷰 실행검증으로 발견(agent_plan.py가 상대import를 씀),
+구현자가 올바르게 패키지import로 우회했으나 문서화 안 해서 주석 보강.
+
+**Task 4** (`POST /yt/generate_plan` SSE 엔드포인트) — 완료했지만 특이사항 있음: 실제 코드가 이 태스크의
+SDD 디스패치가 아니라 **커밋 `c0e426f9`(제목="섹터상세 팝오버에 종목 등락률 추가", 무관함)에 이미
+섞여 들어와 있었음**. 다른 세션(PC)이 같은 계획서를 보고 독립적으로 같은 기능을 구현해 무관한 커밋에
+합쳐 넣은 것으로 추정. 구현자가 중복구현 대신 테스트만 추가, 리뷰가 실코드는 브리핑과 정확히 일치함을
+확인(Spec ✅/Approved). 코드결함은 아니지만 **동시세션 조율 문제**로 기록.
+
+### 🚨 동시세션 충돌 패턴 (반복 발생 — 다음 세션 주의)
+
+오늘 같은 날 다른 세션(골루프 인포그래픽 작업)에서도 "다른 세션이 `/vnc-login/` 영구페이지 이미
+구축"을 발견한 바 있음. 오늘 여러 PC/세션이 같은 저장소에서 겹치는 작업을 동시에 진행 중이었을
+가능성이 높음. **Task 5 시작 전 `git log --oneline -10 -- dashboard/`로 새 무관 커밋이 없는지
+먼저 확인할 것.**
 
 ## 미완료 / 다음 할 것
 
-- [ ] **인포그래픽 rate limit 풀렸는지 재확인** — `PATH=$HOME/.local/bin:$PATH nlm notebook list`로
-      인증 확인 → `notebook_stage0.build_notebook`+`generate_infographic`로 실전 테스트
-- [ ] `stockbrain1.duckdns.org/vnc-login/` 페이지(다른 세션 작업)와 오늘 만든 임시 VNC
-      인프라 정리·통합 — 중복 작업 여부 확인
-- [ ] `GOAL_LOOP_ENABLED`는 여전히 OFF — 위 rate limit 문제 해소 확인 후 사용자 최종 GO 대기
-- [ ] 클로드/테라코타 스타일(에디토리얼) 인포그래픽 실험은 미완료 — rate limit 풀리면 재시도
-- [ ] 오늘 만든 테스트 노트북들은 전부 삭제 완료(정리됨)
+- [ ] **Task 5** (`dashboard/yt.html` + `GET /yt` 라우트): 미시작. 전체 HTML/CSS/JS는 계획서에
+      이미 작성돼 있어 구현자는 transcription+테스트만 하면 됨. **render 산출물이라 verification-
+      grounding-pack 규칙대로 실제 브라우저 구동 확인 필수**(자동테스트만으로 완료 처리 금지).
+- [ ] Task 5 리뷰 → 전체 브랜치 최종 리뷰(가장 강력한 모델) → `superpowers:finishing-a-development-branch`
+- [ ] 이번 계획 범위 밖: ②대본 ③리모션 ④녹음 ⑤자막 ⑥렌더 — ①기획 실동작 확인 후 각각 별도
+      스펙+계획+구현 사이클로 확장 예정
 
 ## 관련 파일
 
-- 인포그래픽 스펙/계획: `docs/superpowers/specs/2026-07-03-goal-loop-infographic-design.md`,
-  `docs/superpowers/plans/2026-07-03-goal-loop-infographic.md`
-- 오케스트레이터: `scripts/goal_loop/morning_brief.py`, `notebook_stage0.py`, `scripts/nlm_bridge.py`
-- 메모리: `project_goal_loop_orchestrator.md`(전체 히스토리), `feedback_simple_before_complex.md`
+- 스펙: `docs/superpowers/specs/2026-07-03-yt-기획단계-대시보드-design.md`
+- 계획: `docs/superpowers/plans/2026-07-03-yt-기획단계-대시보드.md`
+- 원장: `.superpowers/sdd/progress.md` (Task 1-4 상세 기록)
+- 구현: `scripts/yt_agents/hot_clips.py`, `scripts/yt_agents/plan_stage.py`, `dashboard/server.py`
+  (`/yt/hot_clips`, `/yt/generate_plan`), `tests/yt_agents/`, `tests/test_yt_dashboard.py`
+
+## 배포 관련
+
+`git push`만 완료 — Lightsail 서버(stockbrain1.duckdns.org) 배포는 **안 함**. 이 작업은 아직
+미완성 기능(Task 5 남음)이라 로컬/다른PC에서 이어서 개발하는 용도로 git push만으로 충분함.
+서버 배포는 ①기획 페이지가 실제로 브라우저에서 동작 확인된 뒤, 완성된 기능만 별도로 진행.
