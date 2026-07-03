@@ -38,23 +38,67 @@ def _get_index_moves() -> dict:
 
 
 def _default_gemini():
-    """gemini_fn 미주입 시 기본 구현. google-genai 직접 호출(gemini_image._load_env 재사용)."""
+    """gemini_fn 미주입 시 기본 구현. gemini-2.5-flash 우선, 429 등 실패 시 gemini-3-flash-preview 폴백."""
     from google import genai
     key = gemini_image._load_env().get("GEMINI_API_KEY", "")
     client = genai.Client(api_key=key)
 
     def fn(prompt):
-        r = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
-        return getattr(r, "text", "") or ""
+        for model in ("gemini-2.5-flash", "gemini-3-flash-preview"):
+            try:
+                r = client.models.generate_content(model=model, contents=prompt)
+                txt = getattr(r, "text", "") or ""
+                if txt:
+                    return txt
+            except Exception:
+                continue
+        return ""
 
     return fn
+
+
+def _ensure_scenario(date: str) -> None:
+    """Stage 0: daily_scenario로 out/scenario_{date}.md 생성(없을 때만). best-effort."""
+    scen = ROOT / "out" / f"scenario_{date}.md"
+    if scen.exists():
+        return
+    try:
+        import subprocess
+        subprocess.run([sys.executable, str(ROOT / "daily_scenario.py"), "--date", date],
+                       cwd=str(ROOT), capture_output=True, timeout=300)
+    except Exception:
+        pass
+
+
+def _escalate(png, reasons: list, date: str) -> dict:
+    """이상/실패 시: 대기 저장 + (OWNER_CHAT_ID 있을 때만) 사장님 개인 텔레 알림. 채널로는 절대 안 보냄(fail-closed)."""
+    pending.write({"date": date, "png": png or "", "reasons": reasons,
+                   "created_at": datetime.now().strftime("%Y-%m-%d %H:%M")})
+    owner = (os.environ.get("OWNER_CHAT_ID") or "").strip()
+    if owner:
+        try:
+            if png:
+                viz_card.send_telegram_photo(png, "⚠️ 확인 필요: " + " / ".join(reasons), chat_id=owner)
+            else:
+                viz_card.send_telegram_message("⚠️ 아침 브리핑 보류: " + " / ".join(reasons), chat_id=owner)
+        except Exception:
+            pass
+    return {"status": "escalated", "reasons": reasons, "png": png or ""}
 
 
 def run_morning_brief(date: str, gemini_fn=None, max_iter: int = 3) -> dict:
     try:
         gfn = gemini_fn or _default_gemini()
+
+        _ensure_scenario(date)                       # Stage 0: 데이터·1차 드래프트 생성
         data = studio_data.get_briefing_data(date)
         data.setdefault("date", date)
+
+        # ── 빈 데이터 가드: 헛소리 생성·발행 원천 차단 ──
+        # 콘텐츠(headline/lines)가 비면 quality.revise가 근거 없이 지어낼 수 있으므로
+        # 개선 루프에 절대 넣지 않고 즉시 에스컬레이션(채널 발행 안 함).
+        if not (str(data.get("headline") or "").strip() or data.get("lines")):
+            return _escalate(None, ["브리핑 데이터 없음(Stage0 실패) — 발행 중단, 수동 확인 필요"], date)
 
         quality_ok = False
         for _ in range(max_iter):
@@ -70,21 +114,14 @@ def run_morning_brief(date: str, gemini_fn=None, max_iter: int = 3) -> dict:
         if not quality_ok:
             flags.append("품질 기준 미달(3회 개선 후에도)")
 
-        caption = f"📊 {date} 아침 브리핑\n{data.get('headline', '')}"
+        if flags:                                    # fail-closed: 채널 발행 안 하고 에스컬레이션
+            return _escalate(png, flags, date)
 
-        if flags:
-            pending.write({
-                "date": date, "png": png, "reasons": flags,
-                "created_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
-            })
-            owner = os.environ.get("OWNER_CHAT_ID") or ""
-            viz_card.send_telegram_photo(png, "⚠️ 확인 필요: " + " / ".join(flags), chat_id=owner or None)
-            return {"status": "escalated", "reasons": flags, "png": png}
-
-        viz_card.send_telegram_photo(png, caption)
+        viz_card.send_telegram_photo(png, f"📊 {date} 아침 브리핑\n{data.get('headline', '')}")
         return {"status": "sent", "reasons": [], "png": png}
     except Exception as e:
-        return {"status": "error", "reasons": [str(e)], "png": ""}
+        # 침묵 금지: 실패해도 대기 저장 + 사장님 알림(가능하면)
+        return _escalate(None, [f"브리핑 실패: {str(e)[:200]}"], date)
 
 
 def should_run_now(now_dt, last_run_date) -> bool:

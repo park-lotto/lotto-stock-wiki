@@ -362,6 +362,40 @@ def save_png(html_path: Path, png_path: Path):
         return False
 
 
+def _tg_env():
+    env = {}
+    ep = ROOT / ".env"
+    if ep.exists():
+        for line in ep.read_text(encoding="utf-8").splitlines():
+            if "=" in line and not line.startswith("#"):
+                k, v = line.split("=", 1)
+                env[k.strip()] = v.strip()
+    return env
+
+
+def send_telegram_message(text: str, chat_id=None) -> bool:
+    """텍스트 텔레 메시지(sendMessage). 실패/오류 알림용. chat_id 없으면 CHAT_ID."""
+    env = _tg_env()
+    token = env.get("BOT_TOKEN", "")
+    chat_id = chat_id or env.get("CHAT_ID", "")
+    if not token or not chat_id:
+        return False
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+    try:
+        import requests as _req
+        res = _req.post(url, data={"chat_id": chat_id, "text": text}, timeout=15).json()
+        return bool(res.get("ok"))
+    except Exception:
+        try:
+            import urllib.request, urllib.parse
+            data = urllib.parse.urlencode({"chat_id": chat_id, "text": text}).encode()
+            with urllib.request.urlopen(urllib.request.Request(url, data=data), timeout=15) as r:
+                import json as _json
+                return bool(_json.loads(r.read().decode()).get("ok"))
+        except Exception:
+            return False
+
+
 def send_telegram_photo(png_path: Path, caption: str = "", chat_id=None):
     import json
     env = {}

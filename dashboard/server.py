@@ -5235,8 +5235,12 @@ def _start_keepalive():
     print("[nlm-keepalive] 자동 세션 유지 시작 (25분 주기)")
     threading.Thread(target=_ingest_worker, daemon=True).start()
     print("[ingest-worker] 자동 원자추출 시작 (10분마다 60개)")
-    threading.Thread(target=_morning_brief_loop, daemon=True).start()
-    print("[morning-brief] 아침 브리핑 데몬 시작 (평일 08:00)")
+    # 자율 공개발행이라 기본 OFF — GOAL_LOOP_ENABLED=1일 때만 가동(사장님 명시적 활성화)
+    if os.environ.get("GOAL_LOOP_ENABLED") == "1":
+        threading.Thread(target=_morning_brief_loop, daemon=True).start()
+        print("[morning-brief] 아침 브리핑 데몬 시작 (평일 08:00)")
+    else:
+        print("[morning-brief] 데몬 비활성 — 활성화하려면 GOAL_LOOP_ENABLED=1")
 
 
 if __name__ == "__main__":
