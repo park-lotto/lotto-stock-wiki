@@ -2,6 +2,8 @@ import sys, sqlite3
 from pathlib import Path
 from datetime import datetime
 
+import pytest
+
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "dashboard"))
 
@@ -63,20 +65,33 @@ def test_recent_market_atoms_respects_limit(tmp_path):
     assert len(out) == 1
 
 
-def test_recent_market_atoms_closes_connection_on_query_failure(tmp_path):
-    """쿼리가 실패해도(테이블 없음 등) 커넥션이 닫혀야 함 — 안 닫히면 파일이 잠겨서
-    바로 다음 접속이 막힌다. 이 테스트는 그 재접속이 성공하는지로 간접 검증한다."""
+def test_recent_market_atoms_closes_connection_on_query_failure(tmp_path, monkeypatch):
+    """쿼리가 실패해도(테이블 없음 등) conn.close()가 실제로 호출됐는지 검증.
+    파일락 방식은 SQLite SELECT가 기본적으로 락을 안 잡아서 버그 있는 코드에서도
+    통과해버려 신뢰 불가 — sqlite3.connect를 가로채서 진짜 커넥션 객체가
+    닫혔는지(닫힌 커넥션에 쿼리하면 ProgrammingError) 직접 확인한다."""
+    import sqlite3 as _sqlite3
+    import briefing_collect
+
     db_path = str(tmp_path / "broken.db")
-    conn = sqlite3.connect(db_path)
+    conn = _sqlite3.connect(db_path)
     conn.execute("CREATE TABLE not_atoms (x TEXT)")
     conn.commit()
     conn.close()
 
-    out = recent_market_atoms(db_path, limit=5)
+    captured = {}
+    real_connect = _sqlite3.connect
+
+    def _spy_connect(*args, **kwargs):
+        c = real_connect(*args, **kwargs)
+        captured["conn"] = c
+        return c
+
+    monkeypatch.setattr(briefing_collect.sqlite3, "connect", _spy_connect)
+
+    out = briefing_collect.recent_market_atoms(db_path, limit=5)
     assert out == []
 
-    # 커넥션이 안 닫혔다면(누수) 아래 재접속에서 락/에러가 날 수 있음
-    conn2 = sqlite3.connect(db_path)
-    result = conn2.execute("SELECT 1").fetchone()
-    conn2.close()
-    assert result == (1,)
+    assert "conn" in captured, "recent_market_atoms가 sqlite3.connect를 호출하지 않음"
+    with pytest.raises(_sqlite3.ProgrammingError):
+        captured["conn"].execute("SELECT 1")
