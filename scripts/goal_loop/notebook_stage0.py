@@ -1,7 +1,6 @@
 """골루프 Stage0 — NotebookLM 기반 아침 브리핑 콘텐츠 생성.
 A(구조화 카드용 텍스트)와 B(심층 리포트)를 각각 만든다. B는 비차단(실패해도 A 발행에 영향 없음)."""
 import sys
-from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent
