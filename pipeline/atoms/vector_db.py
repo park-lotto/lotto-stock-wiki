@@ -9,28 +9,14 @@ from typing import Optional
 import chromadb
 from google import genai
 
-from pipeline.atoms.atomizer import _load_gemini_key
+from pipeline.atoms.atomizer import _load_gemini_key, _load_gemini_keys
 
 _CHROMA_PATH = Path(__file__).parent.parent.parent / "pipeline" / "atoms" / "chroma_db"
 _COLLECTION_NAME = "atoms"
 
 _client: Optional[chromadb.ClientAPI] = None
 _collection: Optional[chromadb.Collection] = None
-_embed_client: Optional[genai.Client] = None
-_embed_client_2: Optional[genai.Client] = None
-
-
-def _load_gemini_key_2() -> str:
-    from pipeline.atoms.atomizer import _load_gemini_key as _load_key1
-    import os, re
-    key = os.environ.get("GEMINI_API_KEY_2", "")
-    if not key:
-        env_file = Path(__file__).parent.parent.parent / ".env"
-        if env_file.exists():
-            for line in env_file.read_text(encoding="utf-8").splitlines():
-                if line.startswith("GEMINI_API_KEY_2=") and not line.startswith("#"):
-                    key = line.split("=", 1)[1].strip()
-    return key or _load_key1()
+_embed_clients: dict[str, genai.Client] = {}  # 키별 클라이언트 캐시
 
 
 def _heal_hnsw_if_corrupt() -> None:
@@ -74,18 +60,10 @@ def _get_client() -> chromadb.ClientAPI:
     return _client
 
 
-def _get_embed_client() -> genai.Client:
-    global _embed_client
-    if _embed_client is None:
-        _embed_client = genai.Client(api_key=_load_gemini_key())
-    return _embed_client
-
-
-def _get_embed_client_2() -> genai.Client:
-    global _embed_client_2
-    if _embed_client_2 is None:
-        _embed_client_2 = genai.Client(api_key=_load_gemini_key_2())
-    return _embed_client_2
+def _get_embed_client_for(key: str) -> genai.Client:
+    if key not in _embed_clients:
+        _embed_clients[key] = genai.Client(api_key=key)
+    return _embed_clients[key]
 
 
 def get_collection() -> chromadb.Collection:
@@ -99,19 +77,28 @@ def get_collection() -> chromadb.Collection:
 
 
 def embed_text(text: str) -> list[float]:
-    """텍스트를 gemini-embedding-001로 임베딩 (3072차원). 429 시 예비 키로 자동 전환."""
-    for get_client in (_get_embed_client, _get_embed_client_2):
-        try:
-            resp = get_client().models.embed_content(
-                model="gemini-embedding-001",
-                contents=text,
-            )
-            return list(resp.embeddings[0].values)
-        except Exception as e:
-            if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
-                continue
-            raise
-    raise RuntimeError("모든 Gemini 임베딩 키 한도 초과")
+    """텍스트를 gemini-embedding-001로 임베딩 (3072차원).
+    429는 대부분 분당 요청수(RPM) 제한이라 짧으면 1분 내 회복된다 — 일일 소진이 아니다.
+    전체 키 풀(인제스트4+대화형2, atomizer._load_gemini_keys 공용)을 한 바퀴 돌고,
+    그래도 다 막히면 20초 대기 후 한 번 더 전체를 재시도한다."""
+    import time as _time
+
+    keys = _load_gemini_keys()
+    for attempt in range(2):
+        for key in keys:
+            try:
+                resp = _get_embed_client_for(key).models.embed_content(
+                    model="gemini-embedding-001",
+                    contents=text,
+                )
+                return list(resp.embeddings[0].values)
+            except Exception as e:
+                if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
+                    continue
+                raise
+        if attempt == 0:
+            _time.sleep(20)
+    raise RuntimeError("모든 Gemini 임베딩 키 한도 초과(RPM) — 20초 재시도 후에도 실패")
 
 
 def embed_and_store(atom: dict) -> None:

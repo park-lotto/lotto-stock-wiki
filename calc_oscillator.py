@@ -18,7 +18,8 @@ import os
 from pathlib import Path
 from datetime import date
 
-sys.stdout.reconfigure(encoding="utf-8")
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 # ── 경로 설정 ───────────────────────────────────────────────────
 BASE       = Path(__file__).parent
@@ -161,11 +162,11 @@ def trend_str(series: list[float]) -> str:
 # ── 섹터 스캔 텔레그램 메시지 생성 ──────────────────────────────
 def make_sector_message(sector: str, sector_data: dict, xl_stocks: dict,
                         mat_size, mat_forn, mat_inst,
-                        p10, p25, p75, p90) -> str:
+                        p10, p25, p75, p90) -> tuple[str, list[dict]]:
     """
     sector_data: {서브섹터: [{name, code}]}
     xl_stocks:   {종목명: {"col": int, "code": str}}  — xlsm 내 컬럼
-    반환: Telegram HTML 메시지 (4000자 이내 보장용으로 sub-sector 없는 섹터 생략)
+    반환: (Telegram HTML 메시지, osc_ingest.py용 전종목 JSON 리스트)
     """
     today  = date.today().strftime("%Y-%m-%d")
     header = f"<b>[ {sector} ] 수급오실레이터 {today}</b>\n"
@@ -175,6 +176,8 @@ def make_sector_message(sector: str, sector_data: dict, xl_stocks: dict,
     total = 0
     cnt_a = cnt_b = 0
     seen_names: set[str] = set()
+
+    json_results: list[dict] = []
 
     for sub, stock_list in sector_data.items():
         sub_results = []
@@ -196,6 +199,11 @@ def make_sector_message(sector: str, sector_data: dict, xl_stocks: dict,
             elif g == "B 반빈집":  cnt_b += 1
             sub_results.append({"name": name, "code": info["code"],
                                  "osc": osc, "pct": pct, "grade": g, "trend": tr})
+            json_results.append({
+                "name": name, "code": info["code"], "sector": sector,
+                "osc": osc, "macd": r["macd_latest"], "signal_line": r["signal_latest"],
+                "pct": pct, "grade": g, "trend": tr,
+            })
 
         empties = sorted(
             [r for r in sub_results if r["grade"] in ("A 완전빈집", "B 반빈집")],
@@ -206,7 +214,7 @@ def make_sector_message(sector: str, sector_data: dict, xl_stocks: dict,
 
     # 요약 줄
     if total == 0:
-        return header + "xlsm 내 종목 없음\n"
+        return header + "xlsm 내 종목 없음\n", json_results
 
     summary = f"총 {total}종목 | 🔴A:{cnt_a} 🟠B:{cnt_b} 빈집{cnt_a+cnt_b}"
     if cnt_a + cnt_b == 0:
@@ -229,7 +237,7 @@ def make_sector_message(sector: str, sector_data: dict, xl_stocks: dict,
     # Telegram 4096자 제한 — 초과 시 끝에 안내
     if len(msg) > 3900:
         msg = msg[:3890] + "\n...(이하 생략)"
-    return msg
+    return msg, json_results
 
 
 # ── main ─────────────────────────────────────────────────────────
@@ -259,6 +267,12 @@ def main():
 
     sector_mode = bool(sectors_to_scan)
     queries = [q.strip() for q in raw_args if q.strip()]
+
+    # --json 모드에서는 진행 로그가 stdout(=osc_ingest.py 파이프)을 오염시키면 안 되므로
+    # 계산 끝나고 최종 JSON을 찍기 전까지 전부 stderr로 돌린다.
+    _real_stdout = sys.stdout
+    if send_json:
+        sys.stdout = sys.stderr
 
     # ── Excel 열기 ─────────────────────────────────────────────
     xlsm_path = find_xlsm()
@@ -311,6 +325,7 @@ def main():
     if sector_mode:
         watchlist = load_watchlist()
         tg_messages = []
+        all_json_results: list[dict] = []
 
         for sector in sectors_to_scan:
             if sector not in watchlist:
@@ -323,16 +338,25 @@ def main():
             total_s = sum(len(v) for v in sector_data.values())
             print(f"▶ {sector} ({total_s}종목 처리 중)...")
 
-            msg = make_sector_message(
+            msg, sector_json = make_sector_message(
                 sector, sector_data, xl_stocks,
                 mat_size, mat_forn, mat_inst,
                 p10, p25, p75, p90,
             )
-            print(msg.replace("<b>", "").replace("</b>", "").replace("<code>", "").replace("</code>", ""))
-            print()
+            all_json_results.extend(sector_json)
+
+            if not send_json:
+                print(msg.replace("<b>", "").replace("</b>", "").replace("<code>", "").replace("</code>", ""))
+                print()
 
             if send_tg:
                 tg_messages.append(msg)
+
+        if send_json:
+            import json as _json
+            sys.stdout = _real_stdout
+            print(_json.dumps(all_json_results, ensure_ascii=False))
+            return
 
         if send_tg:
             print(f"텔레그램 전송 ({len(tg_messages)}개 메시지)...")
@@ -445,6 +469,7 @@ def main():
     # JSON 출력 (osc_ingest.py 파이프용)
     if send_json:
         import json as _json
+        sys.stdout = _real_stdout
         output = []
         for r in results:
             # sector 정보가 있으면 포함, 없으면 기타

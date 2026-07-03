@@ -1653,23 +1653,6 @@ def _gen_sector_summary(etf: str = "", codes: str = "", title: str = "") -> dict
 
 _stock_summary_cache: dict = {}
 
-# 종목 뉴스 관련성 필터용 언론 관용 약칭(정식명만으로는 "삼전"·"하닉" 등 기사가 다 걸러짐)
-_STOCK_ABBREV = {
-    "삼성전자": ["삼전"],
-    "SK하이닉스": ["하이닉스", "하닉", "SK닉스"],
-    "LG에너지솔루션": ["LG엔솔", "엔솔"],
-    "삼성바이오로직스": ["삼바"],
-    "현대차": ["현차"],
-    "기아": ["기아차"],
-    "POSCO홀딩스": ["포스코"],
-    "한화에어로스페이스": ["한화에어로"],
-    "두산에너빌리티": ["두산에너"],
-    "SK이노베이션": ["SK이노"],
-    "HD현대중공업": ["현대중공업"],
-    "HD한국조선해양": ["한국조선해양"],
-    "NAVER": ["네이버"],
-}
-
 
 @app.get("/api/stock_summary")
 def api_stock_summary(code: str = "", name: str = ""):

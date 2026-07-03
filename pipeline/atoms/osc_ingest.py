@@ -20,6 +20,18 @@ import argparse
 from pathlib import Path
 from datetime import datetime, date
 
+if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+if sys.stdin.encoding and sys.stdin.encoding.lower() not in ("utf-8", "utf8"):
+    try:
+        sys.stdin.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 from .atomizer import _make_id, _load_gemini_key
 from .db import init_db, insert_atom, get_conn
 from .vector_db import embed_and_store
@@ -102,29 +114,34 @@ def ingest_osc_results(results: list[dict], date_str: str = None) -> int:
     today = date_str or date.today().strftime("%Y-%m-%d")
     count = 0
     for r in results:
-        atom = make_osc_atom(
-            name=r["name"],
-            sector=r["sector"],
-            osc_value=r["osc"],
-            trend=r.get("trend", "→ 횡보"),
-            date_str=today,
-            macd=r.get("macd"),
-            signal_line=r.get("signal_line"),
-        )
-        # 같은 날짜 같은 종목 중복 방지
-        conn = get_conn()
-        exists = conn.execute(
-            "SELECT 1 FROM atoms WHERE date=? AND asset=? AND source_type='oscillator'",
-            (today, r["name"])
-        ).fetchone()
-        conn.close()
-        if exists:
-            continue
+        try:
+            atom = make_osc_atom(
+                name=r["name"],
+                sector=r["sector"],
+                osc_value=r["osc"],
+                trend=r.get("trend", "→ 횡보"),
+                date_str=today,
+                macd=r.get("macd"),
+                signal_line=r.get("signal_line"),
+            )
+            # 같은 날짜 같은 종목 중복 방지
+            conn = get_conn()
+            exists = conn.execute(
+                "SELECT 1 FROM atoms WHERE date=? AND asset=? AND source_type='oscillator'",
+                (today, r["name"])
+            ).fetchone()
+            conn.close()
+            if exists:
+                continue
 
-        insert_atom(atom)
-        embed_and_store(atom)
-        count += 1
-        print(f"  [OSC] {r['name']} | {r['sector']} | osc={r['osc']:.4f} | {r.get('trend','')}")
+            insert_atom(atom)
+            embed_and_store(atom)
+            count += 1
+            print(f"  [OSC] {r['name']} | {r['sector']} | osc={r['osc']:.4f} | {r.get('trend','')}")
+        except Exception as e:
+            # Excel COM에서 종목명이 손상돼 넘어오는 경우가 있음(예: 깨진 서로게이트 문자) —
+            # 종목 하나 때문에 전체 배치가 죽지 않도록 건너뛰고 계속한다.
+            print(f"  [OSC][SKIP] {r.get('name', '?')!r} 처리 실패: {e}")
 
     return count
 
