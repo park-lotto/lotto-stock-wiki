@@ -29,7 +29,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 
 try:
     from fastapi import FastAPI, Request
-    from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse, FileResponse, RedirectResponse
+    from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse, FileResponse, RedirectResponse, PlainTextResponse
     from starlette.concurrency import run_in_threadpool
     import uvicorn
 except ImportError:
@@ -412,6 +412,7 @@ from briefing_synth import build_insight_prompt as _build_insight_prompt, parse_
 from briefing_store import set_insight as _briefing_set_insight
 
 BRIEFING_PATH = os.path.join(ROOT, "output", "market_briefing.json")
+ATOMS_DB_PATH = os.path.join(ROOT, "pipeline", "atoms", "atoms.db")
 _briefing_last_metrics = {"data": None}   # 직전 폴링의 market_flow 스냅샷 (임계치 비교 기준선)
 _briefing_last_ai_call = {"ts": 0.0}      # 마지막 Gemini 호출 시각 (쿨다운용)
 _insight_last_run = {"ts": 0.0}   # 마지막 인사이트 갱신 시각(15분 독립 타이머)
@@ -2868,6 +2869,34 @@ def _insight_run_synthesis(curr: dict) -> None:
 @app.get("/api/market_briefing")
 def api_market_briefing():
     return JSONResponse(content=_briefing_load(BRIEFING_PATH))
+
+
+@app.get("/api/atom_raw/{atom_id}")
+def api_atom_raw(atom_id: str):
+    """리포트 탑픽 '원본보기' — atoms.db에서 atom_id의 raw_file 경로를 찾아 원문
+    반환. raw/ 디렉터리 밖은 절대 못 읽도록 경로를 검증(디렉터리 탈출 방지)."""
+    import sqlite3
+    try:
+        conn = sqlite3.connect(ATOMS_DB_PATH)
+        conn.row_factory = sqlite3.Row
+        row = conn.execute("SELECT raw_file FROM atoms WHERE id = ?", (atom_id,)).fetchone()
+        conn.close()
+    except Exception:
+        return PlainTextResponse("원본을 불러올 수 없습니다.", status_code=500)
+    if not row or not row["raw_file"]:
+        return PlainTextResponse("원본 파일 정보가 없습니다.", status_code=404)
+    raw_dir = os.path.realpath(os.path.join(ROOT, "raw"))
+    target = os.path.realpath(row["raw_file"])
+    if os.path.commonpath([raw_dir, target]) != raw_dir:
+        return PlainTextResponse("잘못된 경로입니다.", status_code=403)
+    if not os.path.isfile(target):
+        return PlainTextResponse("원본 파일을 찾을 수 없습니다.", status_code=404)
+    try:
+        with open(target, encoding="utf-8") as f:
+            content = f.read()
+    except Exception:
+        return PlainTextResponse("원본 파일을 읽을 수 없습니다.", status_code=500)
+    return PlainTextResponse(content)
 
 
 # ══════════════════════════════════════════════════════════════

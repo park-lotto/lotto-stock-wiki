@@ -163,3 +163,52 @@ def test_insight_run_synthesis_skips_when_bars_insufficient(tmp_path, monkeypatc
     server._insight_run_synthesis({"J_bars": [], "RANK_POP": [], "RANK_AMT": []})
 
     assert called["n"] == 0, "bars 부족한데 Gemini가 호출됨"
+
+
+def _make_atoms_db(tmp_path, rows):
+    import sqlite3
+    db_path = str(tmp_path / "atoms.db")
+    conn = sqlite3.connect(db_path)
+    conn.execute("CREATE TABLE atoms (id TEXT PRIMARY KEY, raw_file TEXT)")
+    conn.executemany("INSERT INTO atoms VALUES (?,?)", rows)
+    conn.commit(); conn.close()
+    return db_path
+
+
+def test_api_atom_raw_returns_file_content(tmp_path, monkeypatch):
+    report_dir = tmp_path / "raw" / "report"
+    report_dir.mkdir(parents=True)
+    report_file = report_dir / "test.md"
+    report_file.write_text("리포트 원문 내용입니다", encoding="utf-8")
+    db_path = _make_atoms_db(tmp_path, [("a1", str(report_file))])
+    monkeypatch.setattr(server, "ROOT", str(tmp_path))
+    monkeypatch.setattr(server, "ATOMS_DB_PATH", db_path)
+
+    c = TestClient(server.app)
+    r = c.get("/api/atom_raw/a1")
+    assert r.status_code == 200
+    assert "리포트 원문 내용입니다" in r.text
+
+
+def test_api_atom_raw_blocks_path_outside_raw_dir(tmp_path, monkeypatch):
+    """raw_file이 raw/ 디렉터리 밖을 가리키면(디렉터리 탈출 시도) 403 — 보안 필수."""
+    secret_file = tmp_path / "secret.txt"
+    secret_file.write_text("민감한 서버 파일", encoding="utf-8")
+    db_path = _make_atoms_db(tmp_path, [("a1", str(secret_file))])
+    monkeypatch.setattr(server, "ROOT", str(tmp_path))
+    monkeypatch.setattr(server, "ATOMS_DB_PATH", db_path)
+
+    c = TestClient(server.app)
+    r = c.get("/api/atom_raw/a1")
+    assert r.status_code == 403
+    assert "민감한 서버 파일" not in r.text
+
+
+def test_api_atom_raw_missing_atom_id_returns_404(tmp_path, monkeypatch):
+    db_path = _make_atoms_db(tmp_path, [])
+    monkeypatch.setattr(server, "ROOT", str(tmp_path))
+    monkeypatch.setattr(server, "ATOMS_DB_PATH", db_path)
+
+    c = TestClient(server.app)
+    r = c.get("/api/atom_raw/does-not-exist")
+    assert r.status_code == 404

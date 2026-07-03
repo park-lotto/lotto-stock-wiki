@@ -175,8 +175,8 @@ def test_recent_topick_mentions_filters_by_keyword_and_source_type(tmp_path):
 
     out = recent_topick_mentions(db_path, limit=2)
     assert out == [
-        {"asset": "한국전력", "content": "시황리포트 탑픽 거론"},
-        {"asset": "삼성SDI", "content": "2차전지 섹터리포트 탑픽 거론"},
+        {"id": "a2", "asset": "한국전력", "content": "시황리포트 탑픽 거론"},
+        {"id": "a1", "asset": "삼성SDI", "content": "2차전지 섹터리포트 탑픽 거론"},
     ]
 
 
