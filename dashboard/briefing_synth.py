@@ -73,8 +73,8 @@ _INSIGHT_PROMPT_TEMPLATE = """너는 오늘 시장 상황을 한눈에 설명하
 {atoms_text}
 
 ## 출력 형식 (정확히 이렇게)
-코멘트: <오늘 지수가 왜 이렇게 움직였는지 2~4문장>
-특징종목: <종목명(간단한 이유) 형식으로 쉼표 나열, 이유 없으면 종목명만>
+코멘트: <오늘 지수가 왜 이렇게 움직였는지 2~4문장. 특징종목 이유가 있으면 코멘트
+안에 자연스럽게 녹여서 언급해라>
 """
 
 
@@ -96,13 +96,11 @@ def parse_insight_response(text: str) -> dict | None:
     text = (text or "").strip()
     if not text:
         return None
-    comment, movers = None, None
+    comment = None
     for line in text.splitlines():
         line = line.strip()
         if line.startswith("코멘트:"):
             comment = line.split("코멘트:", 1)[1].strip()
-        elif line.startswith("특징종목:"):
-            movers = line.split("특징종목:", 1)[1].strip()
-    if not comment or not movers:
+    if not comment:
         return None
-    return {"comment": comment, "movers": movers}
+    return {"comment": comment}

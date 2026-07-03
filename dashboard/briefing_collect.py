@@ -90,3 +90,28 @@ def recent_atoms_for_stock(db_path: str, stock_name: str, limit: int = 1) -> lis
         return []
     finally:
         conn.close()
+
+
+def recent_topick_mentions(db_path: str, limit: int = 2) -> list[dict]:
+    """오늘자 리포트/뉴스 원자 중 '탑픽' 언급된 것 — 종목명+내용. 없으면 빈 리스트.
+    recent_market_atoms/recent_atoms_for_stock과 같은 연결관리 패턴."""
+    today = datetime.now().strftime("%Y-%m-%d")
+    try:
+        conn = sqlite3.connect(db_path)
+    except Exception:
+        return []
+    try:
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(
+            """SELECT asset, content FROM atoms
+               WHERE date = ? AND content LIKE '%탑픽%'
+                     AND source_type IN ('report', 'news')
+                     AND asset IS NOT NULL AND asset != ''
+               ORDER BY created_at DESC LIMIT ?""",
+            (today, limit),
+        ).fetchall()
+        return [{"asset": r["asset"], "content": r["content"]} for r in rows]
+    except Exception:
+        return []
+    finally:
+        conn.close()

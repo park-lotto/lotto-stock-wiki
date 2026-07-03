@@ -406,7 +406,7 @@ from briefing_store import load_briefing as _briefing_load, append_briefing_item
 from briefing_collect import recent_news_headlines as _briefing_news, recent_market_atoms as _briefing_atoms
 from briefing_synth import build_briefing_prompt as _briefing_build_prompt, parse_briefing_response as _briefing_parse
 from briefing_detect import compute_index_shape as _compute_index_shape
-from briefing_collect import pick_notable_movers as _pick_notable_movers, recent_atoms_for_stock as _recent_atoms_for_stock
+from briefing_collect import pick_notable_movers as _pick_notable_movers, recent_atoms_for_stock as _recent_atoms_for_stock, recent_topick_mentions as _recent_topick_mentions
 from briefing_synth import build_insight_prompt as _build_insight_prompt, parse_insight_response as _parse_insight_response
 from briefing_store import set_insight as _briefing_set_insight
 
@@ -2890,9 +2890,10 @@ def _insight_run_synthesis(curr: dict) -> None:
         parsed = _parse_insight_response(res.get("analysis", ""))
         if not parsed:
             return
+        topick = _recent_topick_mentions(atoms_db_path, limit=2)
         _briefing_set_insight(BRIEFING_PATH, {
             "ts": datetime.now().strftime("%H:%M"),
-            "comment": parsed["comment"], "movers": parsed["movers"]})
+            "comment": parsed["comment"], "topick": topick})
     except Exception:
         pass
 
