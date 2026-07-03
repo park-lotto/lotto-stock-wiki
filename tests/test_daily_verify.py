@@ -81,6 +81,23 @@ def test_run_pytest_check_parses_failed_test_names():
         "tests/test_a.py::test_one", "tests/test_b.py::test_two"]
 
 
+def test_run_pytest_check_parses_collection_errors_too():
+    """실제 실행에서 발견: 테스트 실패(FAILED)가 아니라 임포트 실패 같은
+    수집단계 에러(ERROR collecting)는 별도 포맷이라 FAILED 정규식만으로는
+    놓치고 failed_tests가 빈 리스트로 나옴 — ok=False인데 상세가 없어서
+    보고가 무의미해지는 실버그였음."""
+    fake_output = (
+        b"===== ERRORS =====\n"
+        b"ERROR collecting tests/studio/test_server_routes.py\n"
+        b"ModuleNotFoundError: No module named 'briefing_detect'\n"
+    )
+    with patch("daily_verify.subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(returncode=2, stdout=fake_output, stderr=b"")
+        result = run_pytest_check("/fake/root")
+    assert result["ok"] is False
+    assert result["failed_tests"] == ["tests/studio/test_server_routes.py"]
+
+
 def test_run_pytest_check_ok_when_returncode_zero():
     with patch("daily_verify.subprocess.run") as mock_run:
         mock_run.return_value = MagicMock(returncode=0, stdout=b"", stderr=b"")

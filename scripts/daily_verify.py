@@ -60,6 +60,7 @@ def run_pytest_check(root: str, timeout: int = 300) -> dict:
         return {"ok": True, "failed_tests": []}
     out = r.stdout.decode("utf-8", errors="replace")
     failed = re.findall(r"^FAILED (\S+)", out, re.MULTILINE)
+    failed += re.findall(r"^ERROR collecting (\S+)", out, re.MULTILINE)
     return {"ok": False, "failed_tests": failed}
 
 
@@ -122,6 +123,12 @@ def save_verify_counts(path: str, date_str: str, counts: dict) -> None:
 
 
 def main():
+    import sys
+    if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     history_path = os.path.join(root, "pipeline", "atoms", "daily_verify_history.json")
     raw_root = os.path.join(root, "raw")
@@ -136,8 +143,7 @@ def main():
     card = render_verify_card(today, freshness_alerts, pytest_result, service_result)
     print(card)
     try:
-        import sys as _sys
-        _sys.path.insert(0, root)
+        sys.path.insert(0, root)
         from calc_oscillator import send_telegram
         send_telegram(card)
     except Exception as e:
