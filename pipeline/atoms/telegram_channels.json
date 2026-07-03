@@ -88,5 +88,25 @@
     "type": "stock_tips",
     "trust": "C",
     "url": "https://t.me/selfstudyview"
+  },
+  "주식픽": {
+    "type": "news_relay",
+    "trust": "C",
+    "url": "https://t.me/stockinfo7"
+  },
+  "실시간속보단독뉴스": {
+    "type": "news_relay",
+    "trust": "D",
+    "url": "https://t.me/news_kor"
+  },
+  "실시간주식뉴스": {
+    "type": "news_relay",
+    "trust": "C",
+    "url": "https://t.me/realtime_stock_news"
+  },
+  "그로쓰리서치특징주": {
+    "type": "news_relay",
+    "trust": "C",
+    "url": "https://t.me/rocket_news1"
   }
 }
