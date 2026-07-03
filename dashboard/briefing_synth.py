@@ -52,3 +52,57 @@ def parse_briefing_response(text: str) -> dict | None:
     if not headline or not body:
         return None
     return {"headline": headline, "body": body}
+
+
+_INSIGHT_PROMPT_TEMPLATE = """너는 오늘 시장 상황을 한눈에 설명하는 헤드라인
+작성자다.
+
+철칙:
+- 전문용어 최소화, 쉬운 말투
+- 아래 재료에 있는 사실만 써라. 이유 데이터가 없으면 "~로 보임"이라고 명시하며
+  수급 관점으로 설명해라(지어내지 마라)
+- 섹터 나열은 하지 마라 — 지수 흐름과 특징종목 이유에만 집중해라
+
+## 오늘 지수 흐름 (실측)
+시가 {open}, 저점 {low}({low_t}), 고점 {high}({high_t}), 현재 {current}
+
+## 오늘 특징종목
+{movers_text}
+
+## 오늘 시장 관련 코멘트(텔레그램/리포트)
+{atoms_text}
+
+## 출력 형식 (정확히 이렇게)
+코멘트: <오늘 지수가 왜 이렇게 움직였는지 2~4문장>
+특징종목: <종목명을 쉼표로 나열>
+"""
+
+
+def build_insight_prompt(index_shape: dict | None, movers: list[dict],
+                           market_atoms: list[str]) -> str | None:
+    if not index_shape:
+        return None
+    movers_text = "\n".join(
+        f"- {m['name']} {m['change_rate']}%: {m['news_reason'] or '이유 데이터 없음'}"
+        for m in movers) or "(없음)"
+    atoms_text = "\n".join(f"- {c}" for c in market_atoms) or "(없음)"
+    return _INSIGHT_PROMPT_TEMPLATE.format(
+        open=index_shape["open"], low=index_shape["low"], low_t=index_shape["low_t"],
+        high=index_shape["high"], high_t=index_shape["high_t"], current=index_shape["current"],
+        movers_text=movers_text, atoms_text=atoms_text)
+
+
+def parse_insight_response(text: str) -> dict | None:
+    text = (text or "").strip()
+    if not text:
+        return None
+    comment, movers = None, None
+    for line in text.splitlines():
+        line = line.strip()
+        if line.startswith("코멘트:"):
+            comment = line.split("코멘트:", 1)[1].strip()
+        elif line.startswith("특징종목:"):
+            movers = line.split("특징종목:", 1)[1].strip()
+    if not comment or not movers:
+        return None
+    return {"comment": comment, "movers": movers}
