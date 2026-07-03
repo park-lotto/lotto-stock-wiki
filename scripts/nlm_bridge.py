@@ -510,8 +510,11 @@ def create_infographic(nb_id: str, out_dir: str = None, focus: str = "") -> dict
         ok_s, out_s, _ = _run_nlm(["studio", "status", nb_id])
         try:
             arts = [a for a in _json.loads(out_s) if a.get("type") == "infographic"]
-            if arts and arts[-1].get("status") not in ("in_progress", "pending", None):
-                art_id = arts[-1].get("id")
+            # studio status는 최신순(0번=방금 만든 것)으로 옴 — arts[-1](최고참)을 보면
+            # 그 노트북에 예전 완료본이 하나라도 있을 때 새로 만든 게 아직 in_progress여도
+            # 즉시 "완료"로 오판해 옛날 이미지를 재다운로드하게 됨.
+            if arts and arts[0].get("status") not in ("in_progress", "pending", None):
+                art_id = arts[0].get("id")
                 break
         except Exception:
             pass
