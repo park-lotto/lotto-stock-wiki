@@ -61,18 +61,29 @@ def test_build_insight_prompt_includes_shape_and_movers():
     assert "오늘 시장 코멘트" in prompt
 
 
-def test_parse_insight_response_valid():
-    text = "코멘트: 오늘 코스피가 급락 후 반도체 대형주 중심으로 반등했습니다."
+def test_parse_insight_response_valid_multi_paragraph_body():
+    text = (
+        "헤드라인: 반도체 반등 마감\n"
+        "본문:\n"
+        "📉 오늘 지수는 오전 한때 저점을 찍었습니다.\n"
+        "\n"
+        "📈 삼성전자와 SK하이닉스가 반등을 이끌며 최고가로 마감했습니다."
+    )
     d = parse_insight_response(text)
-    assert "급락 후" in d["comment"]
-    assert "movers" not in d
+    assert d["headline"] == "반도체 반등 마감"
+    assert "📉 오늘 지수는" in d["body"]
+    assert "📈 삼성전자와" in d["body"]
+    assert "\n\n" in d["body"]  # 문단 사이 빈 줄이 유지돼야 프론트가 문단 분리 가능
 
 
-def test_parse_insight_response_no_longer_requires_movers_marker():
-    """특징종목 마커는 더 이상 파싱 대상이 아니다 — 코멘트만 있으면 통과."""
-    text = "코멘트: 오늘 코스피가 급락 후 반등했습니다.\n특징종목: 삼성전자, SK하이닉스"
-    d = parse_insight_response(text)
-    assert d["comment"] == "오늘 코스피가 급락 후 반등했습니다."
+def test_parse_insight_response_missing_headline_returns_none():
+    text = "본문:\n오늘 지수가 반등했습니다."
+    assert parse_insight_response(text) is None
+
+
+def test_parse_insight_response_missing_body_marker_returns_none():
+    text = "헤드라인: 반도체 반등 마감"
+    assert parse_insight_response(text) is None
 
 
 def test_parse_insight_response_missing_marker_returns_none():

@@ -2894,7 +2894,7 @@ def _insight_run_synthesis(curr: dict) -> None:
         topick = _recent_topick_mentions(atoms_db_path, limit=2)
         _briefing_set_insight(BRIEFING_PATH, {
             "ts": datetime.now().strftime("%H:%M"),
-            "comment": parsed["comment"], "topick": topick})
+            "headline": parsed["headline"], "body": parsed["body"], "topick": topick})
     except Exception:
         pass
 
