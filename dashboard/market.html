@@ -625,6 +625,8 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 <script>
 // ── 유틸 ──────────────────────────────────────────────────
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+// 뉴스 아이템 출처 아이콘 — 텔레그램발이면 종이비행기, 아니면 기존 아이콘 유지
+function newsSrcIcon(n,fallback){return (n&&n.source==="telegram")?"✈️":fallback;}
 function rateToBg(r){
   if(r>=3)return"up3";if(r>=1)return"up2";if(r>=0.5)return"up1";
   if(r<=-3)return"dn3";if(r<=-1)return"dn2";if(r<=-0.5)return"dn1";
@@ -767,12 +769,12 @@ async function loadNewsTab(){
   grid.innerHTML=secs.map(s=>{
     const rc=s.rate>0?"up":s.rate<0?"dn":"neu";
     const rs=(s.rate>0?"+":"")+(Number(s.rate)||0).toFixed(2)+"%";
-    const secNews=(s.news||[]).map(n=>`<a class="nf-hl" href="${n.url}" target="_blank" rel="noopener">📰 ${esc(n.title)}<span class="nf-meta">${esc(n.date||"")}</span></a>`).join("");
+    const secNews=(s.news||[]).map(n=>`<a class="nf-hl" href="${n.url}" target="_blank" rel="noopener">${newsSrcIcon(n,"📰")} ${esc(n.title)}<span class="nf-meta">${esc(n.date||"")}</span></a>`).join("");
     const stocks=(s.stocks||[]).map(st=>{
       const nn=st.news||[]; const g=st.group||""; let col="#9a9a9a";
       if(g.includes("완전빈집"))col="#2ecc71"; else if(g.includes("반빈집"))col="#7bd88f"; else if(g.includes("과열"))col="#e74c3c"; else if(g.includes("매수우위"))col="#e0803c";
       const vac=st.pct!=null?`<span style="color:${col};font-size:12px">${g} ${Math.round(st.pct)}%</span>`:"";
-      const news=nn.map(n=>`<a class="nf-hl sub" href="${n.url}" target="_blank" rel="noopener">· ${esc(n.title)}<span class="nf-meta">${esc(n.src||"")} ${esc(n.date||"")}</span></a>`).join("");
+      const news=nn.map(n=>`<a class="nf-hl sub" href="${n.url}" target="_blank" rel="noopener">${newsSrcIcon(n,"·")} ${esc(n.title)}<span class="nf-meta">${esc(n.src||"")} ${esc(n.date||"")}</span></a>`).join("");
       return `<div class="nf-stock">
         <div class="nf-strow" onclick="this.parentNode.classList.toggle('open')">
           <span class="nf-nm" onclick="event.stopPropagation();openStockChart('${st.code}','${esc(st.name)}')">${esc(st.name)}</span>
@@ -1168,12 +1170,12 @@ function openSectorDetail({etf, codes, names, title, anchor}){
   fetch("/api/sector_detail?"+q+"&title="+encodeURIComponent(title||"")).then(r=>r.json()).then(d=>{
     if(_etfPopCode!==key) return;
     const nameMap={}; (codes||[]).forEach((c,i)=>{ if(names&&names[i]) nameMap[String(c).padStart(6,'0')]=names[i]; });
-    const sn=(d.sector_news||[]).map(n=>`<a class="nf-hl" href="${n.url}" target="_blank" rel="noopener">📰 ${esc(n.title)}<span class="nf-meta">${esc(n.date||"")}</span></a>`).join("");
+    const sn=(d.sector_news||[]).map(n=>`<a class="nf-hl" href="${n.url}" target="_blank" rel="noopener">${newsSrcIcon(n,"📰")} ${esc(n.title)}<span class="nf-meta">${esc(n.date||"")}</span></a>`).join("");
     const st=(d.stocks||[]).map(s=>{
       const nm=nameMap[s.code]||s.name||s.code, nn=s.news||[], g=s.group||""; let col="#9a9a9a";
       if(g.includes("완전빈집"))col="#2ecc71"; else if(g.includes("반빈집"))col="#7bd88f"; else if(g.includes("과열"))col="#e74c3c"; else if(g.includes("매수우위"))col="#e0803c";
       const vac=s.pct!=null?`<span style="color:${col};font-size:11.5px">${g} ${Math.round(s.pct)}%</span>`:`<span style="color:#666;font-size:11px">미수록</span>`;
-      const news=nn.map(n=>`<a class="nf-hl sub" href="${n.url}" target="_blank" rel="noopener">· ${esc(n.title)}<span class="nf-meta">${esc(n.src||"")} ${esc(n.date||"")}</span></a>`).join("");
+      const news=nn.map(n=>`<a class="nf-hl sub" href="${n.url}" target="_blank" rel="noopener">${newsSrcIcon(n,"·")} ${esc(n.title)}<span class="nf-meta">${esc(n.src||"")} ${esc(n.date||"")}</span></a>`).join("");
       return `<div class="nf-stock"><div class="nf-strow" onclick="this.parentNode.classList.toggle('open')">`
         +`<span class="nf-nm" onclick="event.stopPropagation();openStockChart('${s.code}','${esc(nm)}');_etfPopClose()">${esc(nm)}</span>`
         +`${vac}<span class="nf-toggle">${nn.length?('뉴스 '+nn.length+' ▾'):''}</span></div>`
@@ -2879,7 +2881,7 @@ async function loadStockNews(code, name){
     }
     if(news.length){
       html+=news.map(n=>`<a class="cn-item" href="${esc(n.url||'#')}" target="_blank" rel="noopener">
-        ${esc(n.title||'')}<div class="cn-meta">${esc(n.src||'')} · ${esc(n.date||'')}${n.related>1?' · 관련'+n.related:''}</div></a>`).join("");
+        ${n.source==="telegram"?"✈️ ":""}${esc(n.title||'')}<div class="cn-meta">${esc(n.src||'')} · ${esc(n.date||'')}${n.related>1?' · 관련'+n.related:''}</div></a>`).join("");
     }else if(!d.summary){
       html+='<div class="cn-load">관련 뉴스가 없습니다.</div>';
     }
