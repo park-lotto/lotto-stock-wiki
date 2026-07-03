@@ -95,3 +95,61 @@ def test_recent_market_atoms_closes_connection_on_query_failure(tmp_path, monkey
     assert "conn" in captured, "recent_market_atoms가 sqlite3.connect를 호출하지 않음"
     with pytest.raises(_sqlite3.ProgrammingError):
         captured["conn"].execute("SELECT 1")
+
+
+from briefing_collect import pick_notable_movers, recent_atoms_for_stock
+
+
+def test_pick_notable_movers_sorts_by_abs_change_rate():
+    rank_pop = [{"code": "005930", "name": "삼성전자", "price": 70000, "change_rate": 6.8}]
+    rank_amt = [{"code": "000660", "name": "SK하이닉스", "price": 200000, "change_rate": -4.7},
+                {"code": "005380", "name": "현대차", "price": 200000, "change_rate": 0.5}]
+    out = pick_notable_movers(rank_pop, rank_amt, None, n=4)
+    assert [m["name"] for m in out] == ["삼성전자", "SK하이닉스", "현대차"]
+
+
+def test_pick_notable_movers_dedups_by_name():
+    rank_pop = [{"code": "005930", "name": "삼성전자", "price": 70000, "change_rate": 6.8}]
+    rank_amt = [{"code": "005930", "name": "삼성전자", "price": 70000, "change_rate": 6.8}]
+    out = pick_notable_movers(rank_pop, rank_amt, None, n=4)
+    assert len(out) == 1
+
+
+def test_pick_notable_movers_respects_limit_n():
+    rank_pop = [{"code": str(i), "name": f"종목{i}", "price": 1000, "change_rate": float(i)}
+                for i in range(10)]
+    out = pick_notable_movers(rank_pop, [], None, n=3)
+    assert len(out) == 3
+
+
+def test_pick_notable_movers_attaches_matching_news_reason():
+    rank_pop = [{"code": "005930", "name": "삼성전자", "price": 70000, "change_rate": 6.8}]
+    news_feed_data = {"sectors": [{"news": [], "stocks": [
+        {"code": "005930", "name": "삼성전자", "news": [{"title": "메모리 가격 반등 소식"}]}]}]}
+    out = pick_notable_movers(rank_pop, [], news_feed_data, n=4)
+    assert out[0]["news_reason"] == "메모리 가격 반등 소식"
+
+
+def test_pick_notable_movers_no_match_leaves_reason_none():
+    rank_pop = [{"code": "005930", "name": "삼성전자", "price": 70000, "change_rate": 6.8}]
+    out = pick_notable_movers(rank_pop, [], None, n=4)
+    assert out[0]["news_reason"] is None
+
+
+def test_recent_atoms_for_stock_filters_by_asset_name(tmp_path):
+    import sqlite3
+    from datetime import datetime
+    db_path = str(tmp_path / "atoms.db")
+    conn = sqlite3.connect(db_path)
+    conn.execute("""CREATE TABLE atoms (
+        id TEXT PRIMARY KEY, date TEXT, asset TEXT, content TEXT, created_at TEXT)""")
+    today = datetime.now().strftime("%Y-%m-%d")
+    conn.executemany("INSERT INTO atoms VALUES (?,?,?,?,?)", [
+        ("a1", today, "삼성전자", "메모리 가격 반등", "2026-07-03T09:10:00"),
+        ("a2", today, "SK하이닉스", "무관한 원자", "2026-07-03T09:11:00"),
+        ("a3", "2020-01-01", "삼성전자", "옛날 원자", "2020-01-01T09:00:00"),
+    ])
+    conn.commit(); conn.close()
+
+    out = recent_atoms_for_stock(db_path, "삼성전자", limit=5)
+    assert out == ["메모리 가격 반등"]

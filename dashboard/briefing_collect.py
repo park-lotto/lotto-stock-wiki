@@ -38,3 +38,55 @@ def recent_market_atoms(db_path: str, limit: int = 5) -> list[str]:
         return []
     finally:
         conn.close()
+
+
+def pick_notable_movers(rank_pop: list, rank_amt: list, news_feed_data: dict | None,
+                          n: int = 4) -> list[dict]:
+    """market_flow 순위 데이터에서 오늘 특징적으로 움직인 종목 상위 n개.
+    news_feed_data가 있으면 같은 종목명의 뉴스 제목을 이유로 붙인다(없으면 None —
+    종합층 프롬프트가 이유 없다고 명시하거나 수급 관점으로 설명하게 됨)."""
+    stock_news: dict[str, str] = {}
+    if news_feed_data:
+        for sector in news_feed_data.get("sectors") or []:
+            for stock in sector.get("stocks") or []:
+                name = stock.get("name")
+                news_list = stock.get("news") or []
+                if name and news_list and news_list[0].get("title"):
+                    stock_news[name] = news_list[0]["title"]
+
+    seen: dict[str, dict] = {}
+    for item in (rank_pop or []) + (rank_amt or []):
+        name = item.get("name")
+        if not name or name in seen:
+            continue
+        seen[name] = {
+            "name": name,
+            "change_rate": item.get("change_rate", 0.0),
+            "news_reason": stock_news.get(name),
+        }
+
+    ranked = sorted(seen.values(), key=lambda m: abs(m["change_rate"]), reverse=True)
+    return ranked[:n]
+
+
+def recent_atoms_for_stock(db_path: str, stock_name: str, limit: int = 1) -> list[str]:
+    """특정 종목명을 오늘자 원자(asset 컬럼)에서 매칭 — 텔레그램/리포트/유튜브에서
+    그 종목을 언급한 최신 원자. recent_market_atoms와 같은 연결관리 패턴."""
+    today = datetime.now().strftime("%Y-%m-%d")
+    try:
+        conn = sqlite3.connect(db_path)
+    except Exception:
+        return []
+    try:
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(
+            """SELECT content FROM atoms
+               WHERE date = ? AND asset = ?
+               ORDER BY created_at DESC LIMIT ?""",
+            (today, stock_name, limit),
+        ).fetchall()
+        return [r["content"] for r in rows]
+    except Exception:
+        return []
+    finally:
+        conn.close()
