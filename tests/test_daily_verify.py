@@ -9,6 +9,7 @@ from unittest.mock import patch, MagicMock
 from daily_verify import (
     count_today_files, weekday_average, check_crawl_freshness,
     run_pytest_check, check_service_health,
+    render_verify_card, load_verify_history, save_verify_counts,
 )
 
 
@@ -116,3 +117,49 @@ def test_check_service_health_inactive_triggers_restart_attempt():
     assert result == {"active": True, "restarted": True}
     assert calls[0] == ["systemctl", "is-active", "stockbrain"]
     assert calls[1] == ["sudo", "systemctl", "restart", "stockbrain"]
+
+
+def test_render_verify_card_all_ok_is_one_line():
+    card = render_verify_card("2026-07-03", [], {"ok": True, "failed_tests": []},
+                               {"active": True, "restarted": False})
+    assert card.startswith("✅")
+    assert "\n" not in card
+
+
+def test_render_verify_card_shows_freshness_alert():
+    card = render_verify_card(
+        "2026-07-03",
+        [{"source": "telegram", "today": 1, "avg": 10.0, "level": "orange"}],
+        {"ok": True, "failed_tests": []}, {"active": True, "restarted": False})
+    assert "⚠️" in card
+    assert "telegram" in card
+
+
+def test_render_verify_card_shows_pytest_failures():
+    card = render_verify_card(
+        "2026-07-03", [],
+        {"ok": False, "failed_tests": ["tests/test_a.py::test_one"]},
+        {"active": True, "restarted": False})
+    assert "test_one" in card
+
+
+def test_render_verify_card_shows_service_restart():
+    card = render_verify_card(
+        "2026-07-03", [], {"ok": True, "failed_tests": []},
+        {"active": True, "restarted": True})
+    assert "재시작" in card
+
+
+def test_save_and_load_verify_history_roundtrip(tmp_path):
+    path = str(tmp_path / "hist.json")
+    save_verify_counts(path, "2026-07-03", {"telegram": 5, "news": 10})
+    hist = load_verify_history(path)
+    assert hist["2026-07-03"] == {"telegram": 5, "news": 10}
+
+
+def test_save_verify_counts_keeps_only_14_days(tmp_path):
+    path = str(tmp_path / "hist.json")
+    for i in range(1, 20):
+        save_verify_counts(path, f"2026-06-{i:02d}", {"telegram": i})
+    hist = load_verify_history(path)
+    assert len(hist) == 14

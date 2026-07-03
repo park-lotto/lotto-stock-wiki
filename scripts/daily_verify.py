@@ -3,6 +3,7 @@
 텔레그램으로 통합 보고. 서버 외부 도달성 체크는 범위 밖(온서버 체커로는
 원리적으로 감지 불가 — 2026-07-03 원격서버 네트워크 장애로 실증됨)."""
 import glob
+import json
 import os
 import re
 import subprocess
@@ -76,3 +77,75 @@ def check_service_health(service_name: str = "stockbrain") -> dict:
         return {"active": r2.stdout.decode().strip() == "active", "restarted": True}
     except Exception as e:
         return {"active": None, "restarted": False, "error": str(e)}
+
+
+def render_verify_card(date_str: str, freshness_alerts: list[dict],
+                         pytest_result: dict, service_result: dict) -> str:
+    problems = bool(freshness_alerts) or not pytest_result.get("ok", True) \
+        or service_result.get("restarted") or service_result.get("active") is False
+
+    if not problems:
+        return f"✅ 일일검증 {date_str} 정상 — pytest ok, stockbrain active"
+
+    lines = [f"⚠️ 일일검증 {date_str} — 확인 필요"]
+    for a in freshness_alerts:
+        lines.append(f"🟠 {a['source']} 신선도 저하: 오늘 {a['today']}건"
+                      f"(평균 {a['avg']:.1f}건)")
+    if not pytest_result.get("ok", True):
+        lines.append(f"🔴 pytest 실패: {', '.join(pytest_result['failed_tests'])}")
+    if service_result.get("restarted"):
+        status = "복구됨" if service_result.get("active") else "재시작해도 실패"
+        lines.append(f"🟡 stockbrain 서비스 재시작 시도됨 — {status}")
+    elif service_result.get("active") is False:
+        lines.append("🔴 stockbrain 서비스 비활성 상태(재시작 시도 안 됨)")
+    return "\n".join(lines)
+
+
+def load_verify_history(path: str) -> dict:
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def save_verify_counts(path: str, date_str: str, counts: dict) -> None:
+    hist = load_verify_history(path)
+    hist[date_str] = counts
+    for d in sorted(hist)[:-14]:
+        del hist[d]
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(hist, f, ensure_ascii=False, indent=2)
+
+
+def main():
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    history_path = os.path.join(root, "pipeline", "atoms", "daily_verify_history.json")
+    raw_root = os.path.join(root, "raw")
+    sources = ["telegram", "news", "report"]
+    today = datetime.now().strftime("%Y-%m-%d")
+
+    history = load_verify_history(history_path)
+    freshness_alerts = check_crawl_freshness(raw_root, sources, history, today)
+    pytest_result = run_pytest_check(root)
+    service_result = check_service_health("stockbrain")
+
+    card = render_verify_card(today, freshness_alerts, pytest_result, service_result)
+    print(card)
+    try:
+        import sys as _sys
+        _sys.path.insert(0, root)
+        from calc_oscillator import send_telegram
+        send_telegram(card)
+    except Exception as e:
+        print(f"  [일일검증] 텔레 발송 생략: {e}")
+
+    today_counts = {s: count_today_files(raw_root, s, today) for s in sources}
+    save_verify_counts(history_path, today, today_counts)
+
+
+if __name__ == "__main__":
+    main()
