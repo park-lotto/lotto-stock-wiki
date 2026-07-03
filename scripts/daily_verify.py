@@ -7,6 +7,7 @@ import json
 import os
 import re
 import subprocess
+import sys
 from datetime import datetime
 
 
@@ -52,7 +53,7 @@ def check_crawl_freshness(raw_root: str, sources: list[str], history: dict,
 
 def run_pytest_check(root: str, timeout: int = 300) -> dict:
     try:
-        r = subprocess.run(["python", "-m", "pytest", "-q"], cwd=root,
+        r = subprocess.run([sys.executable, "-m", "pytest", "-q"], cwd=root,
                             capture_output=True, timeout=timeout)
     except Exception as e:
         return {"ok": True, "failed_tests": [], "error": f"측정 실패: {e}"}
@@ -123,7 +124,6 @@ def save_verify_counts(path: str, date_str: str, counts: dict) -> None:
 
 
 def main():
-    import sys
     if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
         try:
             sys.stdout.reconfigure(encoding="utf-8", errors="replace")

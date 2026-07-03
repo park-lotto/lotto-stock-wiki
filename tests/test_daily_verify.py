@@ -105,6 +105,21 @@ def test_run_pytest_check_ok_when_returncode_zero():
     assert result == {"ok": True, "failed_tests": []}
 
 
+def test_run_pytest_check_uses_sys_executable_not_bare_python():
+    """실제 원격서버 실행에서 발견: "python"이라는 명령어 자체가 없는 환경(원격
+    서버는 python3/venv만 있음)에서 하드코딩된 "python"을 호출하면
+    FileNotFoundError가 나고, 그게 "측정 실패=경보아님"으로 조용히 삼켜져서
+    체커가 아예 안 돌고 있는데도 매일 "정상"으로 보고되는 최악의 버그였음.
+    sys.executable(지금 daily_verify.py를 실행 중인 바로 그 인터프리터)을
+    써야 어떤 환경에서도 항상 존재가 보장됨."""
+    import sys as _sys
+    with patch("daily_verify.subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(returncode=0, stdout=b"", stderr=b"")
+        run_pytest_check("/fake/root")
+    called_cmd = mock_run.call_args[0][0]
+    assert called_cmd[0] == _sys.executable
+
+
 def test_run_pytest_check_exception_is_not_an_alert():
     with patch("daily_verify.subprocess.run", side_effect=Exception("timeout")):
         result = run_pytest_check("/fake/root")
