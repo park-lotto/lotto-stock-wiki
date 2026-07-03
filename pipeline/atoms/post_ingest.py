@@ -41,6 +41,14 @@ def _parse_post_header(md_path: Path, header_label) -> dict:
         if m:
             nm = m.group(1).strip()
             break
+    # 채널 핸들이 URL 인코딩된 채로 저장되는 경우(예: @%EC%9D%B4...) 사람이 읽을 수
+    # 있게 디코딩 — 크롤러가 URL에서 그대로 잘라온 값이라 % 이스케이프가 남아있다.
+    if "%" in nm and re.search(r"%[0-9A-Fa-f]{2}", nm):
+        import urllib.parse as _up
+        try:
+            nm = _up.unquote(nm)
+        except Exception:
+            pass
     nm = re.sub(r"\s*(블로그|유튜브)$", "", nm).strip()
     date = re.search(r"\*\*날짜\*\*[:\s]+(\d{4}-\d{2}-\d{2})", text)
     link = re.search(r"\*\*링크\*\*.*?(https?://[^\)\s]+)", text)

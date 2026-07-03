@@ -79,7 +79,8 @@ def test_embed_text_returns_3072_floats():
     mock_resp.embeddings = [MagicMock(values=[0.1] * 3072)]
     mock_client.models.embed_content.return_value = mock_resp
 
-    with patch("pipeline.atoms.vector_db._get_embed_client", return_value=mock_client):
+    with patch("pipeline.atoms.vector_db._load_gemini_keys", return_value=["fake-key"]), \
+         patch("pipeline.atoms.vector_db._get_embed_client_for", return_value=mock_client):
         result = vdb_module.embed_text("테스트 텍스트")
 
     assert len(result) == 3072
@@ -93,7 +94,8 @@ def test_embed_text_calls_correct_model():
     mock_resp.embeddings = [MagicMock(values=[0.0] * 3072)]
     mock_client.models.embed_content.return_value = mock_resp
 
-    with patch("pipeline.atoms.vector_db._get_embed_client", return_value=mock_client):
+    with patch("pipeline.atoms.vector_db._load_gemini_keys", return_value=["fake-key"]), \
+         patch("pipeline.atoms.vector_db._get_embed_client_for", return_value=mock_client):
         vdb_module.embed_text("hello")
         mock_client.models.embed_content.assert_called_once_with(
             model="gemini-embedding-001",
