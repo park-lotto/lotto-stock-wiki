@@ -6,8 +6,8 @@ GOLD = "#d4af37"
 BG   = "#1a1a1e"
 
 
-def render_briefing_card(data: dict, hero_path: Path) -> str:
-    hero_uri = Path(hero_path).as_uri()
+def render_briefing_card(data: dict, hero_path: Path = None) -> str:
+    hero_html = f'<img class="hero" src="{Path(hero_path).as_uri()}" alt="">' if hero_path else ""
     sectors = " · ".join(html.escape(s) for s in data.get("lead_sectors", [])[:4])
     sectors_html = f'<div class="sectors">🔴 강세 — {sectors}</div>' if sectors else ""
     lines_html = "".join(
@@ -34,7 +34,7 @@ def render_briefing_card(data: dict, hero_path: Path) -> str:
   .foot {{ margin-top:22px; font-size:12px; color:#888; }}
 </style></head><body>
   <div class="card">
-    <img class="hero" src="{hero_uri}" alt="">
+    {hero_html}
     <div class="body">
       <div class="date">{date_s}  ·  아침 브리핑</div>
       <div class="headline">{headline_s}</div>

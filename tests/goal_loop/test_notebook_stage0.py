@@ -62,3 +62,30 @@ def test_generate_deep_report_failure_returns_none(monkeypatch):
                         lambda nb_id, fmt="Briefing Doc", language="ko", out_dir=None:
                         (_ for _ in ()).throw(RuntimeError("nlm down")))
     assert ns.generate_deep_report("nb-1", "2026-07-03") is None
+
+
+def test_generate_infographic_success(monkeypatch):
+    monkeypatch.setattr(ns.nlm_bridge, "create_infographic",
+                        lambda nb_id, out_dir=None, focus="": {"ok": True, "path": "/x/info.png", "error": ""})
+    p = ns.generate_infographic("nb-1", "2026-07-03")
+    assert p == "/x/info.png"
+
+
+def test_generate_infographic_failure_returns_none(monkeypatch):
+    monkeypatch.setattr(ns.nlm_bridge, "create_infographic",
+                        lambda nb_id, out_dir=None, focus="": {"ok": False, "path": "", "error": "실패"})
+    assert ns.generate_infographic("nb-1", "2026-07-03") is None
+
+
+def test_generate_infographic_no_notebook_id_returns_none_without_calling(monkeypatch):
+    called = {"n": 0}
+    monkeypatch.setattr(ns.nlm_bridge, "create_infographic",
+                        lambda nb_id, out_dir=None, focus="": called.__setitem__("n", called["n"] + 1) or {"ok": True, "path": "x", "error": ""})
+    assert ns.generate_infographic(None, "2026-07-03") is None
+    assert called["n"] == 0
+
+
+def test_generate_infographic_exception_returns_none(monkeypatch):
+    monkeypatch.setattr(ns.nlm_bridge, "create_infographic",
+                        lambda nb_id, out_dir=None, focus="": (_ for _ in ()).throw(RuntimeError("nlm down")))
+    assert ns.generate_infographic("nb-1", "2026-07-03") is None

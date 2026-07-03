@@ -6,20 +6,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 import studio_data, card_render, viz_card, gemini_image  # noqa: E402
-from scripts.goal_loop import verify, quality, pending  # noqa: E402
+from scripts.goal_loop import verify, quality, pending, notebook_stage0  # noqa: E402
 
 STUDIO_DIR = ROOT / "out" / "studio"
 
 
 def _render_card(data: dict, date: str) -> str:
     STUDIO_DIR.mkdir(parents=True, exist_ok=True)
-    hero = STUDIO_DIR / "img" / f"{date}_hero.png"
-    hero.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        gemini_image.generate_hero(gemini_image.build_prompt(data), hero)
-    except Exception:
-        pass
-    html = card_render.render_briefing_card(data, hero)
+    html = card_render.render_briefing_card(data)   # 히어로 없이 텍스트만
     html_path = STUDIO_DIR / f"{date}_브리핑.html"
     card_render.save_card_html(html, html_path)
     png_path = STUDIO_DIR / f"{date}_브리핑.png"
@@ -59,9 +53,9 @@ def _default_gemini():
 
 def _ensure_scenario(date: str) -> dict:
     """Stage 0: NotebookLM으로 out/scenario_{date}.md 생성(없을 때만) + 심층리포트 시도(비차단).
-    반환: {"notebook_url": str|None, "report_url": str|None}. 실패해도 예외 없이 빈 값 반환."""
-    from scripts.goal_loop import notebook_stage0
-    links = {"notebook_url": None, "report_url": None}
+    반환: {"notebook_id": str|None, "notebook_url": str|None, "report_url": str|None}.
+    실패해도 예외 없이 빈 값 반환."""
+    links = {"notebook_id": None, "notebook_url": None, "report_url": None}
     scen = ROOT / "out" / f"scenario_{date}.md"
     if scen.exists():
         return links
@@ -69,6 +63,7 @@ def _ensure_scenario(date: str) -> dict:
         nb = notebook_stage0.build_notebook(date)
         if not nb or not nb.get("notebook_id"):
             return links
+        links["notebook_id"] = nb.get("notebook_id")
         links["notebook_url"] = nb.get("url")
         text = notebook_stage0.query_card_content(nb["notebook_id"], date)
         if not text:
@@ -130,6 +125,10 @@ def run_morning_brief(date: str, gemini_fn=None, max_iter: int = 3) -> dict:
         if not quality_ok:
             flags.append("품질 기준 미달(3회 개선 후에도)")
 
+        infographic_path = notebook_stage0.generate_infographic(links.get("notebook_id"), date)
+        if not infographic_path:
+            flags.append("인포그래픽 생성 실패")
+
         if flags:                                    # fail-closed: 채널 발행 안 하고 에스컬레이션
             return _escalate(png, flags, date, links)
 
@@ -137,6 +136,7 @@ def run_morning_brief(date: str, gemini_fn=None, max_iter: int = 3) -> dict:
         if links.get("notebook_url"):
             caption += f"\n🔗 더 깊게 보기: {links['notebook_url']}"
         viz_card.send_telegram_photo(png, caption)
+        viz_card.send_telegram_photo(infographic_path, "")
         return {"status": "sent", "reasons": [], "png": png}
     except Exception as e:
         # 침묵 금지: 실패해도 대기 저장 + 사장님 알림(가능하면)
