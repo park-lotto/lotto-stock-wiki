@@ -29,3 +29,9 @@ def test_render_escapes_special_chars(tmp_path):
     html_output = cr.render_briefing_card(data, hero)
     assert "&gt;" in html_output and "&amp;" in html_output and "&lt;" in html_output
     assert "> 3000 &" not in html_output  # raw unescaped must not appear
+
+def test_render_without_hero_omits_img_tag():
+    html = cr.render_briefing_card(DATA)   # hero_path 생략
+    assert 'class="hero"' not in html
+    assert 'class="card"' in html
+    assert "반도체 강세 지속" in html   # 텍스트는 정상 렌더
