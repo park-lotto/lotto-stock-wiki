@@ -1,5 +1,15 @@
 [
  {
+  "id": "80a2c815-3d93-4a7c-a520-df713d673298",
+  "label": "삼성전자",
+  "date": "2026-07-03",
+  "url": "https://notebooklm.google.com/notebook/80a2c815-3d93-4a7c-a520-df713d673298",
+  "atoms": 200,
+  "paths": [
+   "/home/ubuntu/lotto-stock-wiki/out/insights_notebook/삼성전자_all_2026-07-03.md"
+  ]
+ },
+ {
   "id": "962ca32e-1b7a-4545-8327-cf02f5a0be04",
   "label": "유튜브",
   "date": "2026-07-02",
