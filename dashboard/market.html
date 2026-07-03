@@ -160,6 +160,10 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
   font-size:10px;color:rgba(255,255,255,.35);padding:2px 4px;line-height:1;transition:color .15s;z-index:2;white-space:nowrap;}
 .tile .top-more:hover{color:rgba(255,255,255,.8);}
 
+.mkt-insight{padding:10px 12px;margin-bottom:8px;border-radius:6px;
+  background:linear-gradient(135deg,#2a2410,#1a1a1a);border:1px solid #d4af37;}
+.mkt-insight .mi-comment{font-size:13px;font-weight:700;color:#f0d97a;line-height:1.5;margin-bottom:6px;}
+.mkt-insight .mi-movers{font-size:11px;color:#ccc;}
 .briefing-feed{max-height:520px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;}
 .briefing-item{padding:8px 10px;border-radius:6px;background:#1a1a1a;border-left:3px solid #444;}
 .briefing-item.sev-red{border-left-color:#e05252;}
@@ -1411,6 +1415,7 @@ function loadMarketFlowSample(){
 }
 
 let _briefingItems=[];
+let _marketInsight=null;
 
 async function loadMarketBriefing(){
   try{
@@ -1418,6 +1423,7 @@ async function loadMarketBriefing(){
     const d=await r.json();
     if(Array.isArray(d.items)){
       _briefingItems=d.items;
+      _marketInsight=d.insight||null;
     }
   }catch(e){console.error("market_briefing 오류",e);}
 }
@@ -1561,6 +1567,12 @@ function renderMarketFlow(d){
 
       // ── 실시간 시장 브리핑 카드 ──
       if(code==="briefing"){
+        const insightHtml=_marketInsight
+          ?`<div class="mkt-insight">
+              <div class="mi-comment">${esc(_marketInsight.comment)}</div>
+              <div class="mi-movers">📌 ${esc(_marketInsight.movers)}</div>
+            </div>`
+          :"";
         const items=_briefingItems||[];
         const rows=items.length
           ?items.map(it=>{
@@ -1576,6 +1588,7 @@ function renderMarketFlow(d){
           :`<div style="color:#666;font-size:12px;padding:8px;">아직 브리핑 없음</div>`;
         return `<div class="mkt-card" style="flex:1;min-width:0;">
           <div style="font-size:13px;color:#ccc;margin-bottom:6px;">📡 실시간 브리핑</div>
+          ${insightHtml}
           <div class="briefing-feed">${rows}</div>
         </div>`;
       }
