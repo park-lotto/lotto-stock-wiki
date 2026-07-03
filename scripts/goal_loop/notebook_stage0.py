@@ -101,3 +101,15 @@ def generate_deep_report(notebook_id: str, date: str) -> str:
         return None
     except Exception:
         return None
+
+
+def generate_infographic(notebook_id: str, date: str) -> str:
+    """카드용 인포그래픽 PNG(NotebookLM 생성). notebook_id 없거나 실패 시 None(예외 전파 안 함)."""
+    if not notebook_id:
+        return None
+    try:
+        r = nlm_bridge.create_infographic(notebook_id,
+                                          out_dir=str(OUT_DIR / "insights_notebook"))
+        return r.get("path") or None if r.get("ok") else None
+    except Exception:
+        return None

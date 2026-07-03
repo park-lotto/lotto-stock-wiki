@@ -211,6 +211,7 @@ from nlm_bridge import (
     _nb_period_min, _nb_fetch_rows, _nb_scope_label, _nlm_relogin_locked,
     create_notebook, add_source_file, add_source_urls, notebook_query as nlm_notebook_query,
     create_report as nlm_create_report,
+    _BRAND_DESIGN,
 )
 try:
     from studio_pipeline import generate_briefing, generate_picks  # noqa: E402
@@ -3571,12 +3572,6 @@ def api_insights_signals():
 
 
 # 리모션(채널) 브랜드 디자인 지침 — 인포그래픽/슬라이드/영상에 기본 적용
-_BRAND_DESIGN = (
-    "[디자인 지침] 순수 블랙(#000000) 배경에 라임그린(#AAFF00)을 메인 액센트로 핵심 수치·"
-    "키워드·그래프 라인·테두리에 사용하고, 골드/앰버(#C8921A)는 고급 포인트로, 텍스트는 흰색. "
-    "미니멀하면서 데이터가 빛나는 HUD/프리미엄 금융 대시보드 느낌. 큰 숫자와 핵심을 강하게 강조하고 "
-    "정보 밀도 높게, 디테일하고 세련되게 구성."
-)
 
 
 
