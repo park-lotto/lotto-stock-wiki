@@ -376,6 +376,15 @@ _FLOW: dict = {
     "Q": {"investor": deque(maxlen=400), "program": deque(maxlen=400)},
 }
 
+from briefing_detect import detect_alerts as _briefing_detect_alerts
+from briefing_store import load_briefing as _briefing_load, append_briefing_item as _briefing_append
+from briefing_collect import recent_news_headlines as _briefing_news, recent_market_atoms as _briefing_atoms
+from briefing_synth import build_briefing_prompt as _briefing_build_prompt, parse_briefing_response as _briefing_parse
+
+BRIEFING_PATH = os.path.join(ROOT, "output", "market_briefing.json")
+_briefing_last_metrics = {"data": None}   # 직전 폴링의 market_flow 스냅샷 (임계치 비교 기준선)
+_briefing_last_ai_call = {"ts": 0.0}      # 마지막 Gemini 호출 시각 (쿨다운용)
+
 _flow_day = {"date": None}  # 마지막으로 데이터를 쌓은 거래일 (자정 넘어 서버가 계속 떠있어도 매일 09:00에 새로 시작하도록)
 _FLOW_PERSIST = os.path.join(ROOT, "output", "flow_history.json")
 
@@ -2698,6 +2707,68 @@ def _prewarm_worker():
         time.sleep(30)
 
 threading.Thread(target=_prewarm_worker, daemon=True).start()
+
+
+def _briefing_run_synthesis(alerts: list) -> None:
+    """쿨다운 체크 후 종합층 실행 — 성공하면 ai_brief 항목 저장, 실패/생성없음이면 아무것도 안 함."""
+    if time.time() - _briefing_last_ai_call["ts"] < 60:
+        return
+    _briefing_last_ai_call["ts"] = time.time()
+    try:
+        news_data = _NEWS_FEED.get("data")
+        headlines = _briefing_news(news_data, limit=5)
+        atoms_db_path = os.path.join(ROOT, "pipeline", "atoms", "atoms.db")
+        atoms_content = _briefing_atoms(atoms_db_path, limit=5)
+        stored = _briefing_load(BRIEFING_PATH)
+        prior_headlines = [f"{it['headline']}" for it in (stored.get("items") or [])
+                           if it.get("kind") == "ai_brief"][:2]
+        prompt = _briefing_build_prompt(alerts, headlines, atoms_content, prior_headlines)
+        if not prompt:
+            return
+        res = _gemini_text(prompt, keys=_summary_keys(), models=GEMINI_TEXT_MODELS)
+        if not res.get("ok"):
+            return
+        parsed = _briefing_parse(res.get("analysis", ""))
+        if not parsed:
+            return
+        severity = "red" if alerts else "yellow"
+        _briefing_append(BRIEFING_PATH, {
+            "ts": datetime.now().strftime("%H:%M"), "severity": severity,
+            "headline": parsed["headline"], "body": parsed["body"], "kind": "ai_brief"})
+    except Exception:
+        pass
+
+
+def _poll_briefing():
+    """30초 주기 — market_flow 임계치 감지 + 12분 고정주기 종합. 감지 즉시 종합도 트리거."""
+    _last_fixed_synth = 0.0
+    while True:
+        try:
+            mf_cached = _prewarm_cache.get("market_flow") or {}
+            curr = mf_cached.get("data")
+            if curr:
+                prev = _briefing_last_metrics["data"]
+                alerts = _briefing_detect_alerts(prev, curr)
+                _briefing_last_metrics["data"] = curr
+                for a in alerts:
+                    _briefing_append(BRIEFING_PATH, {
+                        "ts": a["ts"], "severity": "gray",
+                        "headline": f"{a['label']} 변동", "body": None, "kind": "raw_alert"})
+                if alerts:
+                    _briefing_run_synthesis(alerts)
+                elif time.time() - _last_fixed_synth >= 720:
+                    _last_fixed_synth = time.time()
+                    _briefing_run_synthesis([])
+        except Exception:
+            pass
+        time.sleep(30)
+
+threading.Thread(target=_poll_briefing, daemon=True).start()
+
+
+@app.get("/api/market_briefing")
+def api_market_briefing():
+    return JSONResponse(content=_briefing_load(BRIEFING_PATH))
 
 
 # ══════════════════════════════════════════════════════════════
