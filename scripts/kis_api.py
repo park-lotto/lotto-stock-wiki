@@ -926,6 +926,59 @@ def get_program_trade_series(market_div: str = "J") -> list:
         return []
 
 
+def get_stock_supply(code: str) -> dict:
+    """종목별 잠정수급(외인/기관/개인 순매수대금 + 프로그램 순매수대금).
+    kiwoom_api.get_stock_supply와 동일 반환 형태 — 서버에 키움 키 미등록이라
+    kiwoom 실패 시 이걸로 폴백(2026-07-03).
+    TR_ID: FHKST01010900(종목 투자자매매동향) + FHPPG04650200(종목 프로그램매매,
+    market_investor/program_trade가 쓰는 시장전용 TR과는 다른 종목전용 TR). output[0]=오늘.
+    Returns {"외인","기관","개인","프로그램","ts"} — 실패 항목은 0.
+    """
+    import datetime as _dt
+    ts = _dt.datetime.now().strftime("%H:%M")
+    today = _dt.datetime.now().strftime("%Y%m%d")
+    out = {"외인": 0, "기관": 0, "개인": 0, "프로그램": 0, "ts": ts}
+
+    try:
+        r = _authed_get(
+            f"{BASE}/uapi/domestic-stock/v1/quotations/inquire-investor",
+            headers={"content-type": "application/json; charset=utf-8",
+                     "appkey": _KEY, "appsecret": _SECRET,
+                     "tr_id": "FHKST01010900", "custtype": "P"},
+            params={"FID_COND_MRKT_DIV_CODE": "J", "FID_INPUT_ISCD": code.zfill(6)},
+            timeout=8,
+        )
+        r.raise_for_status()
+        rows = r.json().get("output", []) or []
+        if rows:
+            o = rows[0]
+            out["외인"] = int(float(o.get("frgn_ntby_tr_pbmn", 0) or 0))
+            out["기관"] = int(float(o.get("orgn_ntby_tr_pbmn", 0) or 0))
+            out["개인"] = int(float(o.get("prsn_ntby_tr_pbmn", 0) or 0))
+    except Exception:
+        pass
+
+    try:
+        r = _authed_get(
+            f"{BASE}/uapi/domestic-stock/v1/quotations/program-trade-by-stock",
+            headers={"content-type": "application/json; charset=utf-8",
+                     "appkey": _KEY, "appsecret": _SECRET,
+                     "tr_id": "FHPPG04650200", "custtype": "P"},
+            params={"FID_COND_MRKT_DIV_CODE": "J", "FID_INPUT_ISCD": code.zfill(6),
+                    "FID_INPUT_DATE_1": today},
+            timeout=8,
+        )
+        r.raise_for_status()
+        rows = r.json().get("output", []) or []
+        if rows:
+            # 이 TR의 pbmn은 원단위 그대로 옴(투자자매매동향 TR은 이미 백만원 단위) → 환산
+            out["프로그램"] = int(float(rows[0].get("whol_smtn_ntby_tr_pbmn", 0) or 0) / 1_000_000)
+    except Exception:
+        pass
+
+    return out
+
+
 def get_index_price(index_code: str) -> dict:
     """코스피(0001)/코스닥(1001) 지수 현재가.
     TR_ID: FHPUP02100000 (업종/지수 현재가)

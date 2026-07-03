@@ -2310,13 +2310,26 @@ def api_watchlist_get(flow: int = 1):
                       "price": 0, "change_rate": 0} for c in codes]
 
     # 종목별 잠정수급 첨부 (키움 ka10059+ka90013, 종목당 2콜 → 종목 단위 병렬)
+    # 키움 실패/전부 0(서버에 키움 키 미등록) → KIS(FHKST01010900+FHPPG04650200) 폴백
     if flow and items:
         try:
-            import kiwoom_api
+            import kiwoom_api, kis_api
             from concurrent.futures import ThreadPoolExecutor
+
+            def _fetch(code):
+                try:
+                    d = kiwoom_api.get_stock_supply(code)
+                except Exception:
+                    d = None
+                if not d or not any(d.get(k) for k in ("외인", "기관", "개인", "프로그램")):
+                    try:
+                        d = kis_api.get_stock_supply(code)
+                    except Exception:
+                        pass
+                return d
+
             with ThreadPoolExecutor(max_workers=min(10, len(items))) as ex:
-                futs = {it["code"]: ex.submit(kiwoom_api.get_stock_supply, it["code"])
-                        for it in items}
+                futs = {it["code"]: ex.submit(_fetch, it["code"]) for it in items}
                 for it in items:
                     try:
                         it["supply"] = futs[it["code"]].result(timeout=12)
@@ -2537,10 +2550,24 @@ def api_stock_supply_batch(codes: str = ""):
             need.append(c)
     if need:
         try:
-            import kiwoom_api
+            import kiwoom_api, kis_api
             from concurrent.futures import ThreadPoolExecutor
+
+            def _fetch(c):
+                try:
+                    d = kiwoom_api.get_stock_supply(c)
+                except Exception:
+                    d = None
+                # 키움 실패/전부 0(서버에 키움 키 미등록) → KIS 폴백
+                if not d or not any(d.get(k) for k in ("외인", "기관", "개인", "프로그램")):
+                    try:
+                        d = kis_api.get_stock_supply(c)
+                    except Exception:
+                        pass
+                return d
+
             with ThreadPoolExecutor(max_workers=8) as ex:
-                futs = {c: ex.submit(kiwoom_api.get_stock_supply, c) for c in need}
+                futs = {c: ex.submit(_fetch, c) for c in need}
                 for c in need:
                     try:
                         d = futs[c].result(timeout=12)
