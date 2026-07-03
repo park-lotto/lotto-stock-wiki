@@ -1478,10 +1478,12 @@ def _refresh_news(top_sectors: int = 8, per_stock: int = 3):
         try:
             with open(NEWS_FEED_PATH, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False)
-        except Exception:
-            pass
-    except Exception:
-        pass
+        except Exception as e:
+            print(f"[_refresh_news] 파일저장 실패: {e}", flush=True)
+    except Exception as e:
+        import traceback
+        print(f"[_refresh_news] 실패: {e}", flush=True)
+        traceback.print_exc()
 
 def _news_loop():
     while True:
