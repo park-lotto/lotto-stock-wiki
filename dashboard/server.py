@@ -136,6 +136,15 @@ def _summary_keys():
     return out
 
 
+def _briefing_keys():
+    """실시간 시장 브리핑 종합 전용 키 풀 — 섹터뉴스 요약 등 다른 작업과 쿼터를
+    분리해서 한쪽이 소진돼도 브리핑은 계속 돌게 한다. GEMINI_BRIEFING_KEY(전용)가
+    있으면 그것만 쓰고, 없으면 기존 _summary_keys()로 자동 폴백(로컬 개발환경 등
+    전용키 미설정 시에도 브리핑 기능 자체는 계속 동작하도록)."""
+    dedicated = [k for k in (_env_key("GEMINI_BRIEFING_KEY"), _env_key("GEMINI_BRIEFING_KEY_2")) if k]
+    return dedicated or _summary_keys()
+
+
 # 텍스트 생성 모델 폴백: 프리뷰(최고품질) → 안정모델. 프리뷰가 503 과부하일 때 안정모델로 자동 전환.
 GEMINI_TEXT_MODELS = ["gemini-3-flash-preview", "gemini-2.5-flash"]
 
@@ -1528,13 +1537,12 @@ def api_sector_summary(etf: str = "", codes: str = "", title: str = ""):
     return JSONResponse(content=_gen_sector_summary(etf, codes, title))
 
 def _gen_sector_summary(etf: str = "", codes: str = "", title: str = "") -> dict:
-    """섹터 뉴스 헤드라인(오늘자만) → Gemini로 '오늘 이 섹터 왜 움직이나' 요약. 15분 캐시.
+    """섹터 뉴스 헤드라인(오늘자만) → Gemini로 '오늘 이 섹터 왜 움직이나' 요약.
+    헤드라인 내용이 실제로 바뀌었을 때만 Gemini 재호출(쿼터 절약 + 사실상 실시간).
     엔드포인트+백그라운드 프리워밍 공용."""
     key = f"etf:{etf}" if etf else f"codes:{codes}"
     now = time.time()
     c = _sector_summary_cache.get(key)
-    if c and now - c["ts"] < 1800:  # 30분 캐시(쿼터 절약)
-        return c["data"]
     import sys as _sys
     _sd = os.path.join(ROOT, "scripts")
     if _sd not in _sys.path:
@@ -1591,6 +1599,11 @@ def _gen_sector_summary(etf: str = "", codes: str = "", title: str = "") -> dict
         # 오늘 뉴스가 거의 없으면 억지 요약 안 함(어제 것으로 오도 방지)
         return {"summary": "", "error": "오늘 새 뉴스가 적어 요약을 건너뜁니다."}
 
+    # 헤드라인 내용이 지난번과 동일하면 Gemini 호출 없이 캐시 그대로 반환
+    hkey = _hashlib.md5("\n".join(sorted(uniq)).encode("utf-8")).hexdigest()
+    if c and c.get("hkey") == hkey:
+        return c["data"]
+
     sector = title or etf or "이 섹터"
     prompt = (
         f"너는 주식 유튜브 채널의 시장 인사이트 애널리스트다. 아래는 '{sector}' 섹터의 **오늘({today_md}) 뉴스 헤드라인만** 모은 것이다.\n"
@@ -1610,7 +1623,7 @@ def _gen_sector_summary(etf: str = "", codes: str = "", title: str = "") -> dict
     out = {"summary": res.get("analysis", ""), "model": res.get("model", ""),
            "error": res.get("error", ""), "sources": len(uniq)}
     if out["summary"]:
-        _sector_summary_cache[key] = {"data": out, "ts": now}
+        _sector_summary_cache[key] = {"data": out, "ts": now, "hkey": hkey}
     return out
 
 
@@ -2524,7 +2537,9 @@ def api_sector_stocks(sector: str = ""):
     if not sector.strip():
         return JSONResponse(content={"base": [], "extra": [], "removed": []})
     try:
-        from sector_heatmap import parse_watchlist  # noqa: E402
+        from sector_heatmap import (  # noqa: E402
+            parse_watchlist, _parse_raw_full, _collect_split_subs, _collect_surfaced_subs,
+        )
         # custom 데이터는 파일에서 직접 읽기 (server.py에 _load_sector_custom 없음)
         custom: dict = {}
         if os.path.exists(SECTOR_CUSTOM_PATH):
@@ -2536,6 +2551,14 @@ def api_sector_stocks(sector: str = ""):
             if sec["sector"] == sector:
                 base = [{"name": s["name"], "code": s["code"]} for s in sec["stocks"]]
                 break
+        if not base:
+            # 분할/서브 타일(전선·변압기·HBM 등)은 parse_watchlist 상위 섹션에 없음 —
+            # 히트맵 타일 생성과 같은 소스(split/surfaced subs)에서 폴백 검색
+            raw_full = _parse_raw_full()
+            for nm, _parent, sts in _collect_split_subs(raw_full) + _collect_surfaced_subs(raw_full):
+                if nm == sector:
+                    base = [{"name": s["name"], "code": s["code"]} for s in sts]
+                    break
         extra = custom.get("extra_stocks", {}).get(sector, [])
         removed = custom.get("removed_stocks", {}).get(sector, [])
         return JSONResponse(content={"base": base, "extra": extra, "removed": removed})
@@ -2725,7 +2748,7 @@ def _briefing_run_synthesis(alerts: list) -> None:
         prompt = _briefing_build_prompt(alerts, headlines, atoms_content, prior_headlines)
         if not prompt:
             return
-        res = _gemini_text(prompt, keys=_summary_keys(), models=GEMINI_TEXT_MODELS)
+        res = _gemini_text(prompt, keys=_briefing_keys(), models=GEMINI_TEXT_MODELS)
         if not res.get("ok"):
             return
         parsed = _briefing_parse(res.get("analysis", ""))
