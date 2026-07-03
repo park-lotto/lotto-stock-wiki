@@ -7,7 +7,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from telegram_news_filter import (
     parse_telegram_md, extract_headline, is_market_relevant,
     match_sectors, match_stocks, filter_and_match,
-    group_by_sector_and_stock, load_today_news_relay,
+    group_by_sector_and_stock, load_today_news_relay, clean_stock_names,
 )
 
 
@@ -122,3 +122,64 @@ def test_load_today_news_relay_skips_channels_with_no_file_and_wrong_type(tmp_pa
         raw_dir, channels, {"조인"}, kw, date_str="2026-07-03")
     assert "로봇" in by_sector   # 주식픽 파일만 있고, market 타입/파일없는 채널은 무시됨
     assert "조인" in by_stock
+
+
+def test_match_stocks_recognizes_press_abbreviations():
+    """실채널 검증에서 발견: "삼전"/"하닉" 같은 언론 관용 약칭도 정식명으로 매칭돼야 함
+    (news_feed._STOCK_ABBREV 재사용)."""
+    out = match_stocks("오늘 삼전이 강세, 하닉도 동반 상승", {"삼성전자", "SK하이닉스"})
+    assert set(out) == {"삼성전자", "SK하이닉스"}
+
+
+def test_is_market_relevant_true_for_abbreviation_only_mention():
+    assert is_market_relevant("삼전 목표가 상향 소식", set()) is True
+
+
+def test_filter_and_match_dedupes_reposted_identical_headline():
+    """실채널 검증에서 발견: 같은 속보가 몇 분 뒤 그대로 재게시되는 경우가 실제로
+    있었음(URL은 다름) — 헤드라인 기준으로 첫 게시만 남기고 중복 제거."""
+    md = """# 텔레그램 - 주식픽 - 2026-07-03
+
+
+---
+
+
+**18:14**
+
+[단독]백악관까지 '이재명 정부, 쿠팡 표적' 주장
+
+https://stockinfo7.com/news/pick/url/1111
+
+코스피 시장에도 영향을 줄 수 있는 소식입니다.
+
+---
+
+**18:18**
+
+[단독]백악관까지 '이재명 정부, 쿠팡 표적' 주장
+
+https://stockinfo7.com/news/pick/url/2222
+
+코스피 시장에도 영향을 줄 수 있는 소식입니다.
+
+---
+"""
+    messages = parse_telegram_md(md)
+    out = filter_and_match(messages, set(), {})
+    assert len(out) == 1
+    assert out[0]["ts"] == "18:14"   # 먼저 올라온 것만 남음
+
+
+def test_clean_stock_names_excludes_self_mapped_sector_labels():
+    """실채널 검증에서 발견: "시장"->"시장", "자동차"->"자동차"처럼 키==값인
+    섹터 카테고리 라벨이 stock_sector_map.json에 섞여있어 흔한 단어가
+    아무 뉴스에나 종목으로 오탐되던 문제."""
+    raw_map = {"삼성전자": "반도체", "시장": "시장", "자동차": "자동차", "종목": "바이오"}
+    out = clean_stock_names(raw_map)
+    assert out == {"삼성전자"}
+
+
+def test_match_stocks_no_false_positive_on_generic_word_after_cleaning():
+    names = clean_stock_names({"삼성전자": "반도체", "시장": "시장"})
+    out = match_stocks("정부, 312조원 기업 영남 투자 뒷받침…세계 1위 첨단 시장 육성", names)
+    assert out == []

@@ -1452,7 +1452,7 @@ def _refresh_news(top_sectors: int = 8, per_stock: int = 3):
             tg_channels = json.load(f)
         with open(os.path.join(ROOT, "pipeline", "atoms", "stock_sector_map.json"),
                   encoding="utf-8") as f:
-            stock_names = set(json.load(f).keys())
+            stock_names = tnf.clean_stock_names(json.load(f))
         tg_by_sector, tg_by_stock = tnf.load_today_news_relay(
             os.path.join(ROOT, "raw", "telegram"), tg_channels, stock_names, kw)
         sv = _compute_sector_vacuum(top_sectors)
