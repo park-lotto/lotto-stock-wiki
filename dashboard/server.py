@@ -217,9 +217,13 @@ try:
     from studio_pipeline import generate_briefing, generate_picks  # noqa: E402
 except (ImportError, SystemExit):
     generate_briefing = None  # type: ignore
+    generate_picks = None  # type: ignore
 
 sys.path.insert(0, os.path.join(ROOT, "scripts", "yt_agents"))
-from hot_clips import find_hot_clips
+try:
+    from hot_clips import find_hot_clips  # noqa: E402
+except (ImportError, SystemExit):
+    find_hot_clips = None  # type: ignore
 
 try:
     import global_api  # noqa: E402
@@ -5129,6 +5133,8 @@ async def api_yt_hot_clips(req: Request):
     q = (body.get("q") or "").strip()
     if not q:
         return JSONResponse(content={"error": "검색어 필요"}, status_code=400)
+    if find_hot_clips is None:
+        return JSONResponse(content={"error": "hot_clips 모듈을 불러올 수 없음"}, status_code=503)
 
     def _do():
         return find_hot_clips(q)
