@@ -1191,7 +1191,7 @@ function openSectorDetail({etf, codes, names, title, anchor}){
     fetch("/api/sector_summary?"+q+"&title="+encodeURIComponent(title||"")).then(r=>r.json()).then(sd=>{
       if(_etfPopCode!==key) return;
       const box=document.getElementById("ep-summary"); if(!box)return;
-      if(sd.summary){ box.innerHTML=_mdMini(sd.summary)+`<div class="ep-sum-src">🤖 Gemini · 뉴스 ${sd.sources||0}건 종합</div>`; }
+      if(sd.summary){ box.innerHTML=_mdMini(sd.summary)+`<div class="ep-sum-src">🤖 STOCK BRAIN · 뉴스 ${sd.sources||0}건 종합</div>`; }
       else { box.style.display="none"; }
     }).catch(()=>{ const box=document.getElementById("ep-summary"); if(box)box.style.display="none"; });
   }).catch(()=>{ if(_etfPopCode===key) p.innerHTML=`<div class="ep-hd">${esc(title||"")}</div><div class="ep-empty">오류</div>`; });
@@ -2877,7 +2877,7 @@ async function loadStockNews(code, name){
     let html='<div class="cn-hd">📰 '+esc(name||code)+' 뉴스</div>';
     if(d.summary){
       html+='<div class="cn-sum">'+_mdSum(d.summary)
-        +'<div class="cn-src">🤖 Gemini · 뉴스 '+(d.sources||news.length)+'건 종합</div></div>';
+        +'<div class="cn-src">🤖 STOCK BRAIN · 뉴스 '+(d.sources||news.length)+'건 종합</div></div>';
     }else if(d.error){
       html+='<div class="cn-load" style="margin-bottom:8px">🤖 '+esc(d.error)+'</div>';
     }
