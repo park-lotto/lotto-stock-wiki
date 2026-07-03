@@ -879,6 +879,25 @@ async def api_crawl_run(req: Request):
     return JSONResponse(content=await run_in_threadpool(server_crawl, cat, only))
 
 
+# ── 골-루프: 대기 브리핑(이상징후 에스컬레이션) 조회·수동 발행 ──
+@app.get("/api/briefing/pending")
+def api_briefing_pending():
+    """이상징후로 대기 중인 아침 브리핑 메타(날짜·사유). 없으면 빈 객체."""
+    try:
+        from scripts.goal_loop import pending as _gl_pending
+        p = _gl_pending.read() or {}
+    except Exception:
+        p = {}
+    return JSONResponse(content={"date": p.get("date"), "reasons": p.get("reasons", [])} if p else {})
+
+
+@app.post("/api/briefing/publish_pending")
+async def api_briefing_publish():
+    """대기 브리핑을 채널로 수동 발행."""
+    from scripts.goal_loop import publish as _gl_publish
+    return JSONResponse(content=await run_in_threadpool(_gl_publish.publish_pending))
+
+
 # 실제 크롤링 폴더 (소스 자동 감지용)
 CRAWL_DIR = r"C:\Users\TheRose\crawling_bot_data"
 

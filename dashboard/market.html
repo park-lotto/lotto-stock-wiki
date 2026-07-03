@@ -3382,6 +3382,29 @@ function closeStockChart(){
 async function initLoad(){
   await loadOverview();
   prefetchTabs();
+  checkPendingBriefing();
+}
+
+// 골-루프: 이상징후로 대기 중인 아침 브리핑 있으면 상단 배너 + 수동 발행 버튼
+async function checkPendingBriefing(){
+  let p; try{ p=await (await fetch("/api/briefing/pending")).json(); }catch(_){ return; }
+  if(!p || !p.date) return;
+  let el=document.getElementById("pending-briefing-banner");
+  if(!el){ el=document.createElement("div"); el.id="pending-briefing-banner"; document.body.appendChild(el); }
+  el.style.cssText="position:fixed;left:50%;transform:translateX(-50%);top:10px;z-index:9999;"
+    +"background:#2a2216;border:1px solid rgba(240,168,72,.5);border-radius:10px;padding:10px 16px;"
+    +"box-shadow:0 6px 24px rgba(0,0,0,.5);font-size:13px;color:#f0d98a;display:flex;align-items:center;gap:14px;max-width:92vw";
+  el.innerHTML=`<span>⚠️ <b>${esc(p.date)} 아침 브리핑</b>이 이상징후로 대기 중 — ${esc((p.reasons||[]).join(" / "))}</span>`
+    +`<button id="pb-send" style="flex-shrink:0;padding:6px 14px;background:rgba(240,168,72,.15);border:1px solid rgba(240,168,72,.5);border-radius:8px;color:#f0d98a;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600">채널 발행</button>`
+    +`<span id="pb-x" style="cursor:pointer;color:#8a7a3f">✕</span>`;
+  el.querySelector("#pb-x").onclick=()=>el.remove();
+  el.querySelector("#pb-send").onclick=async()=>{
+    const b=el.querySelector("#pb-send"); b.disabled=true; b.textContent="발행 중…";
+    try{ const r=await (await fetch("/api/briefing/publish_pending",{method:"POST"})).json();
+      if(r.ok&&r.sent){ el.innerHTML="<span>✅ 채널 발행 완료</span>"; setTimeout(()=>el.remove(),2500); }
+      else { b.disabled=false; b.textContent="채널 발행"; showToast&&showToast("발행 실패: "+(r.error||"전송 실패"),"err"); }
+    }catch(e){ b.disabled=false; b.textContent="채널 발행"; }
+  };
 }
 
 // 관심종목 카드: 위임 클릭 → 차트 오픈 (터치에서도 확실히 동작, 드래그/삭제 제외)
