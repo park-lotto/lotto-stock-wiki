@@ -42,6 +42,29 @@ def test_notebook_query_fails(monkeypatch):
     assert r["ok"] is False and r["answer"] == ""
 
 
+def test_add_source_urls_empty_lists_short_circuits(monkeypatch):
+    def fail_if_called(args, timeout=90, _auth_retry=True):
+        raise AssertionError("_run_nlm must not be called when both url lists are empty")
+    monkeypatch.setattr(nb, "_run_nlm", fail_if_called)
+    r = nb.add_source_urls("nb1", [], [])
+    assert r == {"ok": True, "error": ""}
+
+
+def test_add_source_urls_builds_args_and_returns_ok(monkeypatch):
+    calls = {}
+    def fake(args, timeout=90, _auth_retry=True):
+        calls["args"] = args
+        return True, "", ""
+    monkeypatch.setattr(nb, "_run_nlm", fake)
+    r = nb.add_source_urls("nb1", ["https://youtu.be/abc"], ["https://example.com/x"])
+    assert calls["args"] == [
+        "source", "add", "nb1",
+        "--youtube", "https://youtu.be/abc",
+        "--url", "https://example.com/x",
+    ]
+    assert r == {"ok": True, "error": ""}
+
+
 def test_create_report_no_artifact_returns_ready_false(monkeypatch, tmp_path):
     def fake(args, timeout=90, _auth_retry=True):
         if args[0] == "report":
