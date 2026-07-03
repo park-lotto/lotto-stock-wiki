@@ -25,3 +25,18 @@ def test_hot_clips_endpoint_returns_results(client):
 
     assert resp.status_code == 200
     assert resp.json()["results"] == fake_results
+
+
+def test_generate_plan_streams_sse_events(client):
+    def fake_events(idea, references, pipeline_id):
+        yield {"type": "step", "id": "plan", "status": "running", "attempt": 1}
+        yield {"type": "done", "pid": "test789", "plan_text": "# 완성", "qc_score": 8}
+
+    with patch("server.run_plan_stage", side_effect=fake_events):
+        resp = client.post("/yt/generate_plan", json={"idea": "반도체 조정", "references": []})
+
+    assert resp.status_code == 200
+    assert "text/event-stream" in resp.headers["content-type"]
+    body = resp.text
+    assert '"type": "step"' in body or '"type":"step"' in body
+    assert '"type": "done"' in body or '"type":"done"' in body
