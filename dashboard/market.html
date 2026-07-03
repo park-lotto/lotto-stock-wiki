@@ -1847,11 +1847,12 @@ function renderMarketFlow(d){
     const cards=[...document.querySelectorAll('#mkt-panel .mkt-card')];
     if(cards.length<4) return;
     cards.forEach(c=>{ c.style.height=''; c.style.overflowY=''; c.style.justifyContent=''; });
-    cards.forEach(c=>{
+    cards.forEach((c,i)=>{
       const nat=c.offsetHeight;
       c.style.height=MKT_CARD_HEIGHT+'px';
       if(nat>MKT_CARD_HEIGHT) c.style.overflowY='auto';       // 내용이 넘치면 스크롤
-      else c.style.justifyContent='space-between';             // 짧으면 균등 분산
+      else if(i===4) c.style.justifyContent='flex-start';     // 브리핑 카드: 짧으면 위 정렬(늘리지 않음)
+      else c.style.justifyContent='space-between';             // 나머지: 짧으면 균등 분산
     });
   });
   }catch(e){

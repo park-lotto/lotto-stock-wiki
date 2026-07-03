@@ -1445,18 +1445,32 @@ def _refresh_news(top_sectors: int = 8, per_stock: int = 3):
         if _sd not in _sys.path:
             _sys.path.insert(0, _sd)
         import news_feed as nf
+        import telegram_news_filter as tnf
         kw = nf.load_keywords()
+        with open(os.path.join(ROOT, "pipeline", "atoms", "telegram_channels.json"),
+                  encoding="utf-8") as f:
+            tg_channels = json.load(f)
+        with open(os.path.join(ROOT, "pipeline", "atoms", "stock_sector_map.json"),
+                  encoding="utf-8") as f:
+            stock_names = set(json.load(f).keys())
+        tg_by_sector, tg_by_stock = tnf.load_today_news_relay(
+            os.path.join(ROOT, "raw", "telegram"), tg_channels, stock_names, kw)
         sv = _compute_sector_vacuum(top_sectors)
         out_sectors = []
         for s in sv.get("sectors", []):
             stocks = []
             for st in (s.get("stocks") or [])[:per_stock]:
+                stock_news = nf.stock_news(st.get("code"), name=st.get("name"), top=2)
+                stock_news = stock_news + tg_by_stock.get(st.get("name"), [])
                 stocks.append({"code": st.get("code"), "name": st.get("name"),
                                "pct": st.get("pct"), "group": st.get("group"),
-                               "news": nf.stock_news(st.get("code"), name=st.get("name"), top=2)})
+                               "news": stock_news})
+            sector_news = nf.sector_news(s.get("code"), kw, top=3)
+            sector_label = (kw.get(s.get("code")) or {}).get("sector")
+            sector_news = sector_news + tg_by_sector.get(sector_label, [])
             out_sectors.append({"etf": s.get("etf"), "code": s.get("code"),
                                 "rate": s.get("rate"),
-                                "news": nf.sector_news(s.get("code"), kw, top=3),
+                                "news": sector_news,
                                 "stocks": stocks})
         data = {"sectors": out_sectors, "ts": time.time()}
         _NEWS_FEED["data"] = data

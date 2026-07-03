@@ -3,7 +3,9 @@ raw/telegram/{date}_{채널}.md 표준 포맷을 읽어 시장 관련 뉴스만 
 섹터/종목에 매칭한다. 실제 크롤링(원본 md 생성)은 이 모듈 밖(외부 크롤봇)에서
 일어난다 — 이 모듈은 그 결과를 소비만 한다.
 """
+import os
 import re
+from datetime import datetime
 
 
 def parse_telegram_md(text: str) -> list[dict]:
@@ -94,3 +96,46 @@ def filter_and_match(messages: list[dict], stock_names: set[str],
             "stocks": match_stocks(text, stock_names),
         })
     return out
+
+
+def group_by_sector_and_stock(matched: list[dict]) -> tuple[dict, dict]:
+    """filter_and_match() 결과를 {섹터명: [뉴스아이템]} / {종목명: [뉴스아이템]}
+    로 묶는다. 히트맵의 sector_news/stock_news 병합 지점에서 바로 쓸 수 있는
+    {title, url, ts} 형태로 각 아이템을 변환한다(sector_news_keywords 매칭
+    결과와 같은 필드명을 맞춰서 프론트가 소스 구분 없이 렌더링 가능)."""
+    by_sector: dict[str, list] = {}
+    by_stock: dict[str, list] = {}
+    for item in matched:
+        url = item["urls"][0] if item["urls"] else None
+        news_item = {"title": item["headline"], "url": url, "ts": item["ts"],
+                     "source": "telegram"}
+        for sector in item["sectors"]:
+            by_sector.setdefault(sector, []).append(news_item)
+        for stock in item["stocks"]:
+            by_stock.setdefault(stock, []).append(news_item)
+    return by_sector, by_stock
+
+
+def load_today_news_relay(raw_telegram_dir: str, channels: dict,
+                           stock_names: set[str], sector_keywords: dict,
+                           date_str: str | None = None) -> tuple[dict, dict]:
+    """channels(telegram_channels.json 로드결과)에서 type=='news_relay'인
+    채널들의 오늘자 raw/telegram/{date}_{채널}.md를 전부 읽어 필터+매칭한
+    뒤 섹터/종목별로 합쳐서 반환. 파일이 없는 채널(아직 크롤 안 됨)은
+    조용히 건너뛴다 — 없다고 에러 내지 않는다."""
+    date_str = date_str or datetime.now().strftime("%Y-%m-%d")
+    all_matched = []
+    for name, info in channels.items():
+        if not isinstance(info, dict) or info.get("type") != "news_relay":
+            continue
+        path = os.path.join(raw_telegram_dir, f"{date_str}_{name}.md")
+        if not os.path.isfile(path):
+            continue
+        try:
+            with open(path, encoding="utf-8") as f:
+                text = f.read()
+        except Exception:
+            continue
+        messages = parse_telegram_md(text)
+        all_matched.extend(filter_and_match(messages, stock_names, sector_keywords))
+    return group_by_sector_and_stock(all_matched)

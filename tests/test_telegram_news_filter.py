@@ -7,6 +7,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from telegram_news_filter import (
     parse_telegram_md, extract_headline, is_market_relevant,
     match_sectors, match_stocks, filter_and_match,
+    group_by_sector_and_stock, load_today_news_relay,
 )
 
 
@@ -90,3 +91,34 @@ def test_filter_and_match_drops_noise_and_enriches_relevant():
     assert "로봇" in out[0]["sectors"]
     assert "조인" in out[0]["stocks"]
     assert out[0]["urls"] == ["https://www.newspim.com/news/view/20260703000817"]
+
+
+def test_group_by_sector_and_stock_buckets_correctly():
+    matched = [
+        {"ts": "16:03", "headline": "제목1", "urls": ["https://a.com"],
+         "sectors": ["로봇"], "stocks": ["조인"]},
+        {"ts": "16:10", "headline": "제목2", "urls": [],
+         "sectors": ["로봇", "AI"], "stocks": []},
+    ]
+    by_sector, by_stock = group_by_sector_and_stock(matched)
+    assert len(by_sector["로봇"]) == 2
+    assert by_sector["로봇"][0]["title"] == "제목1"
+    assert by_sector["로봇"][0]["url"] == "https://a.com"
+    assert by_sector["로봇"][0]["source"] == "telegram"
+    assert by_sector["AI"][0]["title"] == "제목2"
+    assert by_stock["조인"][0]["title"] == "제목1"
+
+
+def test_load_today_news_relay_skips_channels_with_no_file_and_wrong_type(tmp_path):
+    raw_dir = str(tmp_path)
+    (tmp_path / "2026-07-03_주식픽.md").write_text(_SAMPLE_MD, encoding="utf-8")
+    channels = {
+        "주식픽": {"type": "news_relay", "url": "https://t.me/stockinfo7"},
+        "대신시황": {"type": "market", "url": "https://t.me/daishinstrategy"},
+        "실시간주식뉴스": {"type": "news_relay", "url": "https://t.me/realtime_stock_news"},
+    }
+    kw = {"445290": {"sector": "로봇", "must": ["로봇"]}}
+    by_sector, by_stock = load_today_news_relay(
+        raw_dir, channels, {"조인"}, kw, date_str="2026-07-03")
+    assert "로봇" in by_sector   # 주식픽 파일만 있고, market 타입/파일없는 채널은 무시됨
+    assert "조인" in by_stock
