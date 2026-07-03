@@ -5121,16 +5121,19 @@ _위키 정식 ingest는 후속 연결 예정_
 # ══════════════════════════════════════════════════════════════
 
 def _nlm_keepalive(interval=900):
-    """서버 구동 중 nlm 세션 선제 유지 — 15분마다 --check, 만료 시 재로그인.
-    (작업 실패 시엔 _run_nlm이 그 자리에서 self-heal하므로 이건 선제 유지용.)"""
+    """서버 구동 중 nlm 세션 선제 유지 — 15분마다 실제 API 호출로 점검, 만료 시 재로그인 시도.
+    `login --check`는 로그인 직후에도 오탐하는 버그가 있어(2026-07-03 확인) 쓰지 않는다.
+    (작업 실패 시엔 _run_nlm이 그 자리에서 self-heal하므로 이건 선제 유지용.)
+    ⚠️ 진짜 만료(구글이 재인증 요구) 시엔 bare `nlm login`이 사람 개입 없이는 못 뚫는다 —
+    이땐 인사이트 대시보드의 "🔐 노트북 수동 로그인" 버튼으로 직접 로그인해야 한다."""
     while True:
         try:
             if _nlm_exe():
-                ok, out, _ = _run_nlm(["login", "--check"], timeout=60, _auth_retry=False)
-                if not ok or "valid" not in (out or "").lower():
+                ok, _out, _ = _run_nlm(["notebook", "list", "--quiet"], timeout=60, _auth_retry=False)
+                if not ok:
                     print("[nlm-keepalive] 인증 만료 감지 → 자동 재로그인 시도")
                     ok2 = _nlm_relogin_locked()
-                    print("[nlm-keepalive] 재로그인", "성공" if ok2 else "실패")
+                    print("[nlm-keepalive] 재로그인", "성공" if ok2 else "실패(수동 로그인 버튼 필요)")
         except Exception as e:
             print(f"[nlm-keepalive] 예외: {str(e)[:120]}")
         time.sleep(interval)
