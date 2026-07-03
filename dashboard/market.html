@@ -1566,10 +1566,10 @@ function renderMarketFlow(d){
           ?items.map(it=>{
             const sev=it.severity==="red"?"sev-red":it.severity==="yellow"?"sev-yellow":"sev-gray";
             const icon=it.severity==="red"?"🔴":it.severity==="yellow"?"🟡":"⚪";
-            const body=it.body?`<div class="bi-body">${it.body}</div>`:"";
+            const body=it.body?`<div class="bi-body">${esc(it.body)}</div>`:"";
             return `<div class="briefing-item ${sev}">
-              <div class="bi-ts">${icon} ${it.ts}</div>
-              <div class="bi-headline">${it.headline}</div>
+              <div class="bi-ts">${icon} ${esc(it.ts)}</div>
+              <div class="bi-headline">${esc(it.headline)}</div>
               ${body}
             </div>`;
           }).join("")
