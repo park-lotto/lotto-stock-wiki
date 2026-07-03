@@ -405,10 +405,15 @@ from briefing_detect import detect_alerts as _briefing_detect_alerts
 from briefing_store import load_briefing as _briefing_load, append_briefing_item as _briefing_append
 from briefing_collect import recent_news_headlines as _briefing_news, recent_market_atoms as _briefing_atoms
 from briefing_synth import build_briefing_prompt as _briefing_build_prompt, parse_briefing_response as _briefing_parse
+from briefing_detect import compute_index_shape as _compute_index_shape
+from briefing_collect import pick_notable_movers as _pick_notable_movers, recent_atoms_for_stock as _recent_atoms_for_stock
+from briefing_synth import build_insight_prompt as _build_insight_prompt, parse_insight_response as _parse_insight_response
+from briefing_store import set_insight as _briefing_set_insight
 
 BRIEFING_PATH = os.path.join(ROOT, "output", "market_briefing.json")
 _briefing_last_metrics = {"data": None}   # 직전 폴링의 market_flow 스냅샷 (임계치 비교 기준선)
 _briefing_last_ai_call = {"ts": 0.0}      # 마지막 Gemini 호출 시각 (쿨다운용)
+_insight_last_run = {"ts": 0.0}   # 마지막 인사이트 갱신 시각(15분 독립 타이머)
 
 _flow_day = {"date": None}  # 마지막으로 데이터를 쌓은 거래일 (자정 넘어 서버가 계속 떠있어도 매일 09:00에 새로 시작하도록)
 _FLOW_PERSIST = os.path.join(ROOT, "output", "flow_history.json")
@@ -2800,11 +2805,48 @@ def _poll_briefing():
                 elif time.time() - _last_fixed_synth >= 720:
                     _last_fixed_synth = time.time()
                     _briefing_run_synthesis([])
+
+                if time.time() - _insight_last_run["ts"] >= 900:
+                    _insight_last_run["ts"] = time.time()
+                    _insight_run_synthesis(curr)
         except Exception:
             pass
         time.sleep(30)
 
 threading.Thread(target=_poll_briefing, daemon=True).start()
+
+
+def _insight_run_synthesis(curr: dict) -> None:
+    """지수 흐름+특징종목 종합 — 15분 독립 타이머로 _poll_briefing에서 호출."""
+    try:
+        bars = curr.get("J_bars") or curr.get("Q_bars") or []
+        shape = _compute_index_shape(bars)
+        if not shape:
+            return
+        news_data = _NEWS_FEED.get("data")
+        movers = _pick_notable_movers(curr.get("RANK_POP") or [], curr.get("RANK_AMT") or [],
+                                       news_data, n=4)
+        atoms_db_path = os.path.join(ROOT, "pipeline", "atoms", "atoms.db")
+        for m in movers:
+            if not m.get("news_reason"):
+                found = _recent_atoms_for_stock(atoms_db_path, m["name"], limit=1)
+                if found:
+                    m["news_reason"] = found[0]
+        market_atoms = _briefing_atoms(atoms_db_path, limit=5)
+        prompt = _build_insight_prompt(shape, movers, market_atoms)
+        if not prompt:
+            return
+        res = _gemini_text(prompt, keys=_briefing_keys(), models=GEMINI_TEXT_MODELS)
+        if not res.get("ok"):
+            return
+        parsed = _parse_insight_response(res.get("analysis", ""))
+        if not parsed:
+            return
+        _briefing_set_insight(BRIEFING_PATH, {
+            "ts": datetime.now().strftime("%H:%M"),
+            "comment": parsed["comment"], "movers": parsed["movers"]})
+    except Exception:
+        pass
 
 
 @app.get("/api/market_briefing")

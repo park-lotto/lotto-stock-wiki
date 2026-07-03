@@ -97,3 +97,63 @@ def test_briefing_run_synthesis_uses_briefing_keys_not_summary_keys(tmp_path, mo
 
     assert captured.get("keys") == ["dedicated-only"], (
         "브리핑 종합이 _briefing_keys()가 아니라 다른 키풀을 쓰고 있음")
+
+
+def test_api_market_briefing_includes_insight_field(tmp_path, monkeypatch):
+    p = tmp_path / "market_briefing.json"
+    from datetime import datetime
+    p.write_text(json.dumps({"date": datetime.now().strftime("%Y-%m-%d"),
+                              "items": [], "insight": {"ts": "11:50",
+                              "comment": "테스트 코멘트", "movers": "삼성전자"}}),
+                 encoding="utf-8")
+    monkeypatch.setattr(server, "BRIEFING_PATH", str(p))
+    c = TestClient(server.app)
+    r = c.get("/api/market_briefing").json()
+    assert r["insight"]["comment"] == "테스트 코멘트"
+
+
+def test_insight_run_synthesis_calls_gemini_with_built_prompt(tmp_path, monkeypatch):
+    p = tmp_path / "market_briefing.json"
+    from datetime import datetime
+    p.write_text(json.dumps({"date": datetime.now().strftime("%Y-%m-%d"),
+                              "items": [], "insight": None}), encoding="utf-8")
+    monkeypatch.setattr(server, "BRIEFING_PATH", str(p))
+    monkeypatch.setattr(server, "_NEWS_FEED", {"data": None})
+
+    fake_curr = {
+        "J_bars": [{"t": "090000", "price": 100.0}, {"t": "093000", "price": 90.0}],
+        "RANK_POP": [{"code": "005930", "name": "삼성전자", "price": 70000, "change_rate": 6.8}],
+        "RANK_AMT": [],
+    }
+
+    captured = {}
+    def _fake_gemini_text(prompt, keys=None, models=None):
+        captured["prompt"] = prompt
+        return {"ok": True, "analysis": "코멘트: 테스트 설명입니다.\n특징종목: 삼성전자"}
+    monkeypatch.setattr(server, "_gemini_text", _fake_gemini_text)
+
+    server._insight_run_synthesis(fake_curr)
+
+    assert "prompt" in captured, "Gemini가 호출되지 않음"
+    assert "100.0" in captured["prompt"] and "삼성전자" in captured["prompt"]
+    d = server._briefing_load(str(p))
+    assert d["insight"]["comment"] == "테스트 설명입니다."
+
+
+def test_insight_run_synthesis_skips_when_bars_insufficient(tmp_path, monkeypatch):
+    p = tmp_path / "market_briefing.json"
+    from datetime import datetime
+    p.write_text(json.dumps({"date": datetime.now().strftime("%Y-%m-%d"),
+                              "items": [], "insight": None}), encoding="utf-8")
+    monkeypatch.setattr(server, "BRIEFING_PATH", str(p))
+    monkeypatch.setattr(server, "_NEWS_FEED", {"data": None})
+
+    called = {"n": 0}
+    def _fake_gemini_text(prompt, keys=None, models=None):
+        called["n"] += 1
+        return {"ok": True, "analysis": ""}
+    monkeypatch.setattr(server, "_gemini_text", _fake_gemini_text)
+
+    server._insight_run_synthesis({"J_bars": [], "RANK_POP": [], "RANK_AMT": []})
+
+    assert called["n"] == 0, "bars 부족한데 Gemini가 호출됨"
