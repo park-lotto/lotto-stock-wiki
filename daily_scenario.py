@@ -85,17 +85,59 @@ PROMPT = """\
 (행동 지침 포함, 20자 이내)
 """
 
-def get_gemini():
-    from google import genai
-    env = BASE / '.env'
-    cfg = {}
-    if env.exists():
-        for line in env.read_text(encoding='utf-8').splitlines():
+def _load_env_file():
+    env = {}
+    ep = BASE / '.env'
+    if ep.exists():
+        for line in ep.read_text(encoding='utf-8').splitlines():
             if '=' in line and not line.startswith('#'):
                 k, v = line.split('=', 1)
-                cfg[k.strip()] = v.strip()
-    api_key = cfg.get('GEMINI_API_KEY') or os.environ.get('GEMINI_API_KEY', '')
+                env[k.strip()] = v.strip()
+    return env
+
+
+def _gemini_keys():
+    """등록된 모든 Gemini 키(우선순위: GEMINI_API_KEY→_2, GEMINI_INGEST_KEY→_2~_4).
+    쿼터(모델당 일일 20회 등)를 키 여러 개로 분산해 429를 줄인다."""
+    cfg = _load_env_file()
+    names = ['GEMINI_API_KEY', 'GEMINI_API_KEY_2',
+             'GEMINI_INGEST_KEY', 'GEMINI_INGEST_KEY_2', 'GEMINI_INGEST_KEY_3', 'GEMINI_INGEST_KEY_4']
+    keys, seen = [], set()
+    for n in names:
+        v = (cfg.get(n) or os.environ.get(n, '')).strip()
+        if v and v not in seen:
+            seen.add(v)
+            keys.append(v)
+    return keys
+
+
+def get_gemini():
+    """하위호환: 첫 번째 키로 클라이언트 생성(단발 호출용)."""
+    from google import genai
+    keys = _gemini_keys()
+    api_key = keys[0] if keys else os.environ.get('GEMINI_API_KEY', '')
     return genai.Client(api_key=api_key)
+
+
+def generate_with_rotation(prompt: str, models=('gemini-3-flash-preview', 'gemini-2.5-flash')) -> str:
+    """등록된 키 × 모델을 순회하며 시도 — 429(쿼터초과) 등 실패 시 다음 키/모델로 자동 전환."""
+    from google import genai
+    keys = _gemini_keys() or [os.environ.get('GEMINI_API_KEY', '')]
+    last_err = None
+    for key in keys:
+        if not key:
+            continue
+        client = genai.Client(api_key=key)
+        for model in models:
+            try:
+                resp = client.models.generate_content(model=model, contents=prompt)
+                text = getattr(resp, 'text', '') or ''
+                if text:
+                    return text
+            except Exception as e:
+                last_err = e
+                continue
+    raise RuntimeError(f"모든 Gemini 키/모델 실패: {last_err}")
 
 def load_wisereport(date_str):
     f = BASE / "raw" / "wisereport" / f"{date_str}_parsed.json"
@@ -169,15 +211,13 @@ def main():
 
     print("\n🤖 Gemini 시나리오 생성 중...\n")
 
-    client = get_gemini()
     prompt = (PROMPT
         .replace('{date}',      date_str)
         .replace('{wisereport}', wr[:3500])
         .replace('{blogs}',      bl[:9000])
         .replace('{telegram}',   tg[:3500]))
 
-    resp     = client.models.generate_content(model='gemini-3-flash-preview', contents=prompt)
-    scenario = resp.text
+    scenario = generate_with_rotation(prompt)
 
     OUT_DIR.mkdir(exist_ok=True)
     out_file = OUT_DIR / f"scenario_{date_str}.md"
