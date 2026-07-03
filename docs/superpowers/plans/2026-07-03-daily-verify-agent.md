@@ -488,7 +488,7 @@ Expected: `active` 출력, 비밀번호 프롬프트 없이 성공(ubuntu 유저
 
 Run(원격서버 SSH): `crontab -e`로 기존 7줄 유지한 채 아래 한 줄 추가(21시 인제스트 직후):
 ```
-30 21 * * * cd /home/ubuntu/lotto-stock-wiki && /home/ubuntu/venv/bin/python scripts/daily_verify.py >> /tmp/daily_verify.log 2>&1
+45 21 * * * cd /home/ubuntu/lotto-stock-wiki && /home/ubuntu/venv/bin/python scripts/daily_verify.py >> /tmp/daily_verify.log 2>&1
 ```
 Run: `crontab -l`로 8줄 모두 있는지 확인.
 
