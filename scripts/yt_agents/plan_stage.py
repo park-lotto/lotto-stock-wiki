@@ -9,14 +9,16 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-# Task 4(dashboard/server.py)에서 flat import를 지원하기 위해 sys.path 기반 절대import를 사용한다.
-# agent_plan.py의 상대import가 작동하도록 먼저 scripts/ 디렉터리를 sys.path에 추가해
-# scripts.yt_agents를 정상적인 패키지로 인식되게 한다.
+# IMPORT STRATEGY: Task brief originally specified `sys.path.insert(parent) + import agent_plan`
+# (flat module loading), but that pattern is broken: agent_plan.py has `from . import gemini_client`,
+# a relative import that only works when agent_plan is loaded as part of scripts.yt_agents package.
+# FIX: sys.path → scripts/ directory, then use package-qualified import `from scripts.yt_agents import agent_plan`.
+# This is verified compatible with Task 4's import (dashboard/server.py adds scripts/yt_agents to sys.path
+# and imports plan_stage as flat module; Python resolves scripts.yt_agents correctly either way).
 _root_scripts = str(Path(__file__).parent.parent)
 if _root_scripts not in sys.path:
     sys.path.insert(0, _root_scripts)
 
-# sys.path 기반 절대import (pipeline.py의 상대import와 다르게)
 from scripts.yt_agents import agent_plan
 
 ROOT = Path(__file__).parent.parent.parent
@@ -56,8 +58,6 @@ def run_plan_stage(idea: str, references: list[dict] = None, pipeline_id: str = 
     pid = pipeline_id or datetime.now().strftime("%Y%m%d_%H%M%S")
     idea_with_refs = idea + _format_references(references or [])
     state = _load_state(pid, idea)
-
-    yield {"type": "step", "id": "plan", "status": "running", "attempt": 1, "max_attempt": MAX_RETRY}
 
     plan_dir = OUT / f"yt_pipeline_{pid}"
     plan_dir.mkdir(parents=True, exist_ok=True)
