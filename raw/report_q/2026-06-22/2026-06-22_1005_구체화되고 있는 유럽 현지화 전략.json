@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "date": "2026-06-22",
+    "broker": "Daishin 증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-22_1005_구체화되고 있는 유럽 현지화 전략.md"
+  },
+  "questionnaire": {
+    "target_kind": "sector",
+    "broker": "Daishin 증권",
+    "analyst": "최정환",
+    "report_date": "2026.06.22",
+    "sector_name": "방산",
+    "sector_view": "비중확대",
+    "thesis": [
+      "유럽 역내 핵심 사업에서 소외된 유럽 방위산업체들이 국내 방위산업체와 협력을 통해 수출 시장 내 경쟁력을 확보하려는 움직임을 보이고 있음",
+      "국내 방위산업체는 유럽 내 경쟁 구도를 적극 활용하여 유럽 방위산업 블록화에 대응하고 있음"
+    ],
+    "timeline": [
+      "2026 유로사토리에서 한화에어로스페이스-Thales MOU 체결",
+      "Thundart 2026년 첫 시험 발사 성공 및 2030년 이후 본격 전력화 전망",
+      "LIG D&A-Rheinmetall JV 설립을 통한 유럽 및 NATO 회원국 방공체계 시장 진출"
+    ],
+    "top_picks": [
+      {
+        "name": "한화에어로스페이스",
+        "reason": "Thales X-FIRE 플랫폼에 천무 탄종(80km, 160km, 290km 로켓 및 미사일)을 통합하는 파트너십 체결을 통해 유럽 방위산업 블록화에 대응하고 폴란드 내 유도탄 현지 생산 시설 활용 기회 확보",
+        "tp": "1,750,000"
+      },
+      {
+        "name": "LIG D&A",
+        "reason": "Rheinmetall과의 JV 설립을 통해 유럽 내 영업망을 확보하고 중고고도(MRAD/LRAD) 방공체계 현지화 및 저고도 방공체계 미사일 공동개발 추진",
+        "tp": "1,100,000"
+      }
+    ],
+    "risk": "본 자료에 수록된 내용은 당사 Research Center의 추정치로서 오차가 발생할 수 있음",
+    "quote": "국내 방위산업체는 유럽 내 경쟁 구도를 적극 활용, 유럽 방위산업 블록화에 대응"
+  }
+}

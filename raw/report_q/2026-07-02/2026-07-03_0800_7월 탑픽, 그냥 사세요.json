@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-02",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-03_0800_7월 탑픽, 그냥 사세요.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "DS투자증권",
+    "analyst": "이수림",
+    "report_date": "2026.07.02",
+    "stocks": [
+      {
+        "name": "티에스이",
+        "code": "131290",
+        "rating": "매수",
+        "rating_changed": null,
+        "tp_new": "360,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 연결 영업이익은 440억원(+4% QoQ, OPM 29%)으로 1분기에 이어 호실적을 전망한다.",
+        "estimate_revision": null,
+        "next_catalyst": "DRAM 프로브카드 사업 확대 및 메모리 투자 확대에 따른 보드 매출 증가",
+        "thesis": [
+          "NAND 중심의 프로브카드 사업이 DRAM으로 본격 확대되고 있다.",
+          "메모리 투자 확대에 따른 보드 매출 증가가 지속될 전망이다.",
+          "연결 자회사 타이거일렉과 메가터치의 이익 역시 크게 증가할 전망이다."
+        ],
+        "valuation_basis": "2027F 추정 EPS 17,637원에 Target P/E 20.4배를 적용하여 목표주가를 36만원으로 제시한다.",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "2026년 연결 영업이익 1,753억원(+256% YoY) 전망",
+        "sector": "반도체"
+      }
+    ]
+  }
+}

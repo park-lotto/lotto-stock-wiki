@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-19",
+    "broker": "나이스평가정보(주)",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-22_0703_친환경 기술, 세제에서 뷰티까지 - K-Clean &...md"
+  },
+  "questionnaire": {
+    "broker": "나이스평가정보(주)",
+    "analyst": "류치선 연구원",
+    "report_date": "2026.06.18.",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "한국미라클피플사",
+        "code": "331660",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 매출은 전년 대비 0.1% 성장한 304억 원이 전망된다(제품 299억 원, 상품 4억 원, 기타 1억 원).",
+        "estimate_revision": null,
+        "next_catalyst": "K-BPR 살생물제 승인 절차 마무리 및 해외 등록 프로젝트, 차세대 하이드로겔 마스크팩 출시, 캡슐세제 미국·일본 진출",
+        "thesis": [
+          "글로벌 살생물제 시장 선점을 위한 K-BPR 인증 추진 및 해외 규제 인증 프로젝트 본격화",
+          "제이엠솔루션 누적 2억 장 제조 역량을 바탕으로 한 차세대 하이드로겔 마스크팩 출시 및 고부가가치화",
+          "국내 최대 배합 CAPA를 활용한 캡슐세제 시장 내 점유율 확대 및 공모자금 활용 스마트팩토리 고도화"
+        ],
+        "valuation_basis": null,
+        "risk": "대형 소비재사와의 경쟁 심화 및 원자재 가격 변동성",
+        "supply_comment": null,
+        "quote": "동사는 글로벌 32조 살생물제 시장 선점을 위한 K-BPR 인증 추진, 제이엠솔루션 누적 2억 장 제조 역량을 기반으로 한 차세대 하이드로겔 마스크팩 출시, 그리고 국내 최대 배합 CAPA를 활용한 캡슐세제 시장 고도화라는 세 가지 모멘텀이 동시에 작동하는 구간에 진입한 것으로 평가된다.",
+        "sector": "화장품미용"
+      }
+    ]
+  }
+}

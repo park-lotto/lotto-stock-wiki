@@ -1,0 +1,19 @@
+{
+  "target_kind": "market",
+  "market_direction": "null",
+  "macro_events": [
+    {
+      "fact": "엄민용 신한투자증권 연구원, 코스닥 바이오 시장 신뢰 회복의 핵심 조건으로 FDA 허가 및 빅파마 투자를 제시",
+      "ts": "2026-07-02",
+      "quote": "엄민용 신한투자증권 연구원 \"코스닥 바이오 신뢰, FDA 허가·빅파마 투자에 달려\""
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "바이오",
+      "stance": "중립",
+      "comment": "FDA 허가와 빅파마의 투자가 신뢰 회복의 관건"
+    }
+  ],
+  "quote": "엄민용 신한투자증권 연구원 \"코스닥 바이오 신뢰, FDA 허가·빅파마 투자에 달려\""
+}

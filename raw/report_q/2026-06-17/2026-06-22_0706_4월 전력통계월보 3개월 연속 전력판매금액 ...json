@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-17",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-22_0706_4월 전력통계월보 3개월 연속 전력판매금액 ...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "유재선",
+    "report_date": "2026년 6월 17일",
+    "stocks": [
+      {
+        "name": "한국전력",
+        "code": "051600",
+        "rating": "Neutral",
+        "rating_changed": null,
+        "tp_new": "45,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "4월 전력판매량은 42.7TWh로 전년대비 0.9% 감소, 전력판매금액은 6.8조원으로 전년대비 0.8% 감소했다.",
+        "estimate_revision": null,
+        "next_catalyst": "5월 이후 수치 확인 및 6월 통계 확인",
+        "thesis": [
+          "4월 전력판매량 및 전력판매금액 3개월 연속 감소",
+          "원전 이용률 회복으로 기저발전 비중 소폭 상승 및 구입단가 하락",
+          "비용 증가 속도는 완화되나 원자재 가격과 환율 고려 시 추세 전환은 아직 이르다고 판단"
+        ],
+        "valuation_basis": null,
+        "risk": "호르무즈 해협 물류 정상화 지연 및 협상 과정 돌발상황",
+        "supply_comment": "고리 2호기 가동 재개 이후 원전 이용률은 70% 초반으로 회복되는 모습이다.",
+        "quote": "현재 수준의 원자재 가격과 환율을 적용하면 하반기 SMP에 대한 눈높이가 더 상향될 공간이 남아있기 때문에 비용 증가에서 비용 절감으로의 추세 전환을 아직은 기대하기 이르다고 판단된다."
+      }
+    ],
+    "sector": "전력"
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "meta": {
+    "date": "2026-06-22",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-22_1006_Next Energy(Power & Battery Weekly) - 미국...md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "황성현",
+    "report_date": "2026.06.22.",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "PJM 용량시장 가격",
+      "데이터센터 수요 증가",
+      "송변전 설비 수요",
+      "국제유가",
+      "천연가스 가격",
+      "원/달러 환율"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "전력",
+        "stance": "수혜",
+        "reason": "AI 데이터센터 확장에 따른 전력망 인프라 수요 증가 및 대형 부하의 전력망 접속 규칙 완화"
+      },
+      {
+        "sector": "원전",
+        "stance": "수혜",
+        "reason": "전력망 인프라 전반의 모멘텀 확산으로 인한 원전, SMR 관련 수요 증대"
+      },
+      {
+        "sector": "2차전지",
+        "stance": "수혜",
+        "reason": "전력 인프라 밸류체인 확산에 따른 BESS 등 관련 설비 모멘텀"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2035년",
+        "event": "i-SMR 1기 준공 목표"
+      },
+      {
+        "date": "2029년",
+        "event": "오만 두큼 가스복합발전소 준공 목표"
+      }
+    ],
+    "top_picks": [
+      "삼성SDI",
+      "포스코퓨처엠",
+      "LG화학",
+      "LG에너지솔루션",
+      "Nuscale",
+      "Centrus",
+      "두산에너빌리티",
+      "Cameco",
+      "Tesla",
+      "CATL",
+      "BYD",
+      "Fluence",
+      "SK이노베이션"
+    ],
+    "risk": "제도 개선이 곧바로 전력 공급 확대로 이어지지는 않으며, 접속 규칙 완화 시 변압기, 개폐기, 송전선, 변전소, 전력 EPC, 가스터빈, 원전, BESS 등으로 병목이 옮겨갈 가능성이 높음.",
+    "quote": "접속 규칙이 완화될수록 대형 전력수요자는 더 빠르게 전력망에 들어오려 할 것이고, 이를 감당하기 위한 송변전 설비와 발전원 확보 수요는 더 커질 수밖에 없다. 이 과정에서 초고압 변압기, 개폐기, 전력 EPC, BESS, 가스터빈, 원전, SMR, 재생에너지까지 전력 인프라 전반으로 모멘텀이 확산될 가능성이 크다."
+  }
+}

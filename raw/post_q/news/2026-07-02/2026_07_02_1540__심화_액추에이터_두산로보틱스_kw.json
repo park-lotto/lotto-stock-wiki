@@ -1,0 +1,26 @@
+{
+  "target_kind": "sector",
+  "sector_name": "로봇",
+  "sector_view": "긍정",
+  "points": [
+    "AI 기술이 하드웨어 분야로 확장",
+    "국내 휴머노이드 밸류체인 ETF 상장"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "두산로보틱스",
+      "comment": "액추에이터 관련 기술 및 휴머노이드 밸류체인 내 언급",
+      "ts": null,
+      "quote": "하드웨어로 확장하는 AI…국내 휴머노이드 밸류체인 ETF 상장",
+      "sector": "로봇"
+    }
+  ],
+  "events": [
+    {
+      "fact": "국내 휴머노이드 밸류체인 ETF 상장",
+      "ts": "2026-07-02 15:40",
+      "quote": "하드웨어로 확장하는 AI…국내 휴머노이드 밸류체인 ETF 상장"
+    }
+  ],
+  "quote": "하드웨어로 확장하는 AI…국내 휴머노이드 밸류체인 ETF 상장"
+}

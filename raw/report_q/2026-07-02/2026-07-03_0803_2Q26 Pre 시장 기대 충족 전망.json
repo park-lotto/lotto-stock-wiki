@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-02",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-03_0803_2Q26 Pre 시장 기대 충족 전망.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "심은주, 고찬결",
+    "report_date": "2026년 7월 2일",
+    "stocks": [
+      {
+        "name": "삼양식품",
+        "code": "003230",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "1,800,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 연결 매출액 및 영업이익을 각각 7,169억원(YoY 29.6%), 1,776억원(YoY 47.9%, OPM 24.8%)으로 추정한다.",
+        "estimate_revision": null,
+        "next_catalyst": "연말~내년 초 중국 공장 가동",
+        "thesis": [
+          "2분기 연결 매출액 및 영업이익이 시장 기대에 부합할 것으로 예상",
+          "밀양2공장 가동 속도가 가팔라지면서 실적 기여도 확대",
+          "연말~내년 초 중국 공장 가동에 따른 Level-up 가능"
+        ],
+        "valuation_basis": "글로벌 Peer 밸류에이션 밴드 하단이 15배인 점 감안",
+        "risk": "하반기 베이스 부담 및 해외 성장률 둔화 우려",
+        "supply_comment": "밀양2공장 가동 속도가 가팔라지면서 실적 기여도가 커지고 있다. 밀양은 유연근무제를 통해 2교대 교체 이후 부족한 일손을 상쇄 중이다.",
+        "quote": "2분기 연결 매출액 및 영업이익을 각각 7,169억원(YoY 29.6%), 1,776억원(YoY 47.9%, OPM 24.8%)으로 추정한다."
+      }
+    ]
+  }
+}

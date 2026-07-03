@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-19",
+    "broker": "한국IR협의회 기업리서치센터",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-19_1004_조급할 필요 없는 시기, Sublicense는 이제부...md"
+  },
+  "questionnaire": {
+    "broker": "한국IR협의회 기업리서치센터",
+    "analyst": "김승준, 이금민",
+    "report_date": "2026.06.19",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "리가켐바이오",
+        "code": "141080",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 연결 매출액은 1,571억원(+11.0% YoY)으로 전년 대비 증가할 것으로 전망되며, 이 중 기술이전 매출은 1,408억원(+16.2% YoY)으로 매출 성장을 견인할 것으로 예상",
+        "estimate_revision": null,
+        "next_catalyst": "2026년 하반기 임상 3상 종료(LCB14), 2027년 중국 허가 신청(LCB14), J&J의 LCB84 단독개발 옵션 행사 여부, 2026년 하반기 임상 데이터 발표(LCB73, LNCB74)",
+        "thesis": [
+          "ConjuALL 플랫폼을 기반으로 고형암과 혈액암을 아우르는 ADC 파이프라인 확장",
+          "12건, 누적 83억 달러 이상의 기술이전 계약 체결 및 기존 계약의 후속 마일스톤 수령 가시화",
+          "2026~2027년 HER2, TROP2, ROR1, CD19, B7-H4 등 주요 파이프라인의 임상 데이터 발표 집중으로 인한 플랫폼 재현성 검증"
+        ],
+        "valuation_basis": "2026년 예상 실적 기준 PBR 12.4x, PSR 34.3x 수준이며, 동사의 플랫폼 가치와 글로벌 파트너십 레퍼런스, 다수의 임상 단계 파이프라인 가치를 반영",
+        "risk": "ADC 신약 개발 경쟁 심화 및 후발 파이프라인의 차별화 요구, 기술이전 중심 사업구조에 따른 실적 변동성",
+        "supply_comment": "ADC 관련 기술이전 계약 총 12건(Product deal 6건, Platform deal 6건)",
+        "quote": "2026~2027년에는 HER2 ADC 허가 진전, TROP2 ADC 옵션 행사 여부, ROR1, CD19, B7-H4 등 주요 파이프라인의 임상 데이터 발표가 집중됨에 따라 파트너사의 신규 Sub-License 잠재력도 기대"
+      }
+    ],
+    "sector": "바이오"
+  }
+}

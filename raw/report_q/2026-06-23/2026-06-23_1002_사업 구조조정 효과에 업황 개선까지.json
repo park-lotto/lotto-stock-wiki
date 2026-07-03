@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-23",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-23_1002_사업 구조조정 효과에 업황 개선까지.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "박종대",
+    "report_date": "2026년 06월 23일",
+    "stocks": [
+      {
+        "name": "GS리테일",
+        "code": "007070",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 2분기 매출과 영업이익은 전년 동기 대비 4%, 19% 증가한 3조 880억원과 1,000억원으로 추정한다.",
+        "estimate_revision": null,
+        "next_catalyst": "업황 개선과 사업구조 개선으로 추세적인 실적 턴어라운드 국면을 이어갈 것으로 예상한다.",
+        "thesis": [
+          "편의점 사업은 2025년 1분기부터 수익성 위주 전략으로 선회하며 영업레버리지 구간에 진입했다.",
+          "홈쇼핑 부문은 송출수수료 부담 완화와 고마진 상품 편성 증가로 매출과 이익이 증가하고 있다.",
+          "기타 부진 계열사 정리와 일회성 비용 반영 마무리로 실적 턴어라운드가 예상된다."
+        ],
+        "valuation_basis": "현재 주가는 12MF PER 9.3배로 부담없는 수준이다.",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "업황 개선과 사업구조 개선으로 추세적인 실적 턴어라운드 국면을 이어갈 것으로 예상한다. 현재 주가는 12MF PER 9.3배로 부담없는 수준이다."
+      }
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-19",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-19_1003_이번 분기는 다를 것.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "최정욱, 정소영",
+    "report_date": "2026년 6월 19일",
+    "stocks": [
+      {
+        "name": "BNK금융",
+        "code": "138930",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "24,500원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 추정 순이익은 QoQ 28.9% 증가한 2,725억원으로 컨센서스 상회 예상.",
+        "estimate_revision": null,
+        "next_catalyst": "하반기 최소 700억원 이상의 추가 자사주 매입 및 미국과 이란의 종전 MOU 체결에 따른 유가 하락",
+        "thesis": [
+          "양행 합산 원화대출의 2분기 중 3%에 육박하는 고성장에 따른 순이자이익 큰 폭 증가",
+          "그룹 대손비용이 1,700억원대로 1분기에 이어 2분기에도 안정화될 것으로 기대",
+          "1분기 대비 유가증권관련이익의 상당폭 증가 가능성"
+        ],
+        "valuation_basis": "투자의견 매수와 목표주가 24,500원을 유지",
+        "risk": "시중금리 추가 상승에 따른 일정규모의 유가증권관련손실 발생 우려",
+        "supply_comment": null,
+        "quote": "금번 2분기 실적은 최소한 시장의 낮아진 기대치를 상당폭 웃도는 호실적을 시현할 수 있을 것으로 전망. 2분기 추정 순이익은 QoQ 28.9% 증가한 2,725억원으로 컨센서스 상회 예상."
+      }
+    ]
+  }
+}

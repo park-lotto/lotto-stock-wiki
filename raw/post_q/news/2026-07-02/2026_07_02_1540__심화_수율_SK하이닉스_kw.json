@@ -1,0 +1,33 @@
+{
+  "target_kind": "sector",
+  "sector_name": "반도체",
+  "sector_view": "중립",
+  "points": [
+    "삼성전자의 1c D램 기술 확보를 통한 경쟁력 강화",
+    "HBM4E 시장 선점을 둘러싼 삼성전자와 SK하이닉스 간의 기술 경쟁 심화"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "삼성전자",
+      "comment": "1c D램 개발을 통해 HBM4E 시장에서 SK하이닉스에 대한 기선제압 시도",
+      "ts": "2026-05-30",
+      "quote": "‘1c D램’ 날개 단 삼성, SK하이닉스에 HBM4E 기선제압",
+      "sector": "반도체"
+    },
+    {
+      "name": "SK하이닉스",
+      "comment": "삼성전자의 1c D램 기술 추격 속에서 HBM4E 시장 주도권 경쟁 중",
+      "ts": "2026-05-30",
+      "quote": "‘1c D램’ 날개 단 삼성, SK하이닉스에 HBM4E 기선제압",
+      "sector": "반도체"
+    }
+  ],
+  "events": [
+    {
+      "fact": "삼성전자의 1c D램 개발 성공 및 HBM4E 시장 경쟁 구도 형성",
+      "ts": "2026-05-30",
+      "quote": "‘1c D램’ 날개 단 삼성, SK하이닉스에 HBM4E 기선제압"
+    }
+  ],
+  "quote": "‘1c D램’ 날개 단 삼성, SK하이닉스에 HBM4E 기선제압 (IT조선, 05-30 07:00)"
+}

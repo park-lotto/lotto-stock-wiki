@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-19",
+    "broker": "미래에셋증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-22_0703_좋은 논문 발표된거 맞습니다.md"
+  },
+  "questionnaire": {
+    "broker": "미래에셋증권",
+    "analyst": "김충현",
+    "report_date": "2026.6.18",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "넥스트바이오메디컬",
+        "code": "389650",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "넥스트바이오메디컬의 FDA 허가를 위한 확증임상시험인 RESORB(15개병원, 126명, RCT) 결과발표는 2027년 예정",
+        "thesis": [
+          "그동안 발표된 넥스트바이오메디컬 논문 중 최대 규모로 최상위 저널에 게재",
+          "넥스트바이오메디컬의 근거수준 상향 및 골관절계 통증 치료 플랫폼 확장 가능성 확인",
+          "향후 독일에서 4개 기관(베를린·라이프치히·크레펠트·프라이부르크)·500명·7개 골관절계 적응증을 포괄하는 GEMINI 레지스트리가 12개월 일정으로 진행될 예정"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "Charité 연구팀이 GRACE 임상시험(무릎 골관절염 환자 194명의 넥스트바이오메디컬 F 색전술)의 12개월 추적데이터를 영상의학 최상위 저널인 Radiology(Impact Factor 15.2)에 게재."
+      }
+    ],
+    "sector": "바이오"
+  }
+}

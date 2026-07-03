@@ -1,0 +1,33 @@
+{
+  "meta": {
+    "date": "2026-07-02",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-03_0807_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이승훈",
+    "report_date": "2026.07.02",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "구글 제재 착수에 따른 게임업계 수수료 조기 인하 및 DTC 전환 가속화 기대감"
+      },
+      {
+        "sector": "기타",
+        "stance": null,
+        "reason": "중견 게임사 해외 매각 및 K-게임 IP·개발 역량 해외 유출 심화"
+      }
+    ],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": null,
+    "risk": "글로벌 경쟁 심화와 개발비 급증, 신작 부진 등이 맞물리며 중견 게임사의 독자 생존이 어려워진 가운데, 텐센트가 지분을 보유한 시프트업·넷마블 등의 추가 매각 가능성이 제기되고 있음",
+    "quote": "구글 제재 착수에 게임업계 \"환영\"…소비자 환원 요구 확산",
+    "market_summary": "본 보고서는 인터넷/SW/게임 업종의 시장 동향과 주요 이슈를 다루고 있습니다."
+  }
+}

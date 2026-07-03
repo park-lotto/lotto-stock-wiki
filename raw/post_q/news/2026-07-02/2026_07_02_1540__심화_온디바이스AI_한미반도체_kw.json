@@ -1,0 +1,18 @@
+{
+  "target_kind": "sector",
+  "sector_name": "반도체",
+  "sector_view": "긍정",
+  "points": [
+    "일반인들까지 AI 반도체 및 HBM에 대한 높은 관심 확인",
+    "AI 반도체 시장의 열기가 대중적으로 확산 중"
+  ],
+  "stocks_mentioned": [],
+  "events": [
+    {
+      "fact": "일반인들이 AI 반도체 행사에 참여하며 HBM에 대한 높은 관심을 보임",
+      "ts": "2026-07-02 15:40",
+      "quote": "“HBM 보러 왔어요”…일반인도 ‘AI반도체 열기’"
+    }
+  ],
+  "quote": "“HBM 보러 왔어요”…일반인도 ‘AI반도체 열기’"
+}

@@ -1,0 +1,48 @@
+{
+  "meta": {
+    "date": "2026-07-03",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-03_1106_Bio-USA 2026 참관후기 중국과 AI로 격화된 ...md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "하나증권",
+    "analyst": "김선아",
+    "report_date": "2026.07.03",
+    "market_direction": "중립",
+    "macro_vars": [
+      "미국 정부의 정책과 규제 급변",
+      "국가 안보 기반 중국 바이오 규제",
+      "미국 IRA 법안",
+      "미국 NIH 예산 40% 삭감"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "바이오",
+        "stance": "중립",
+        "reason": "AI 및 공급망 변화에 따른 파트너십 구축 중요성 증대"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.06.22-25",
+        "event": "Bio-USA 2026"
+      }
+    ],
+    "top_picks": [
+      "삼성바이오로직스",
+      "셀트리온",
+      "SK팜테코",
+      "에스티팜",
+      "비티젠",
+      "프레스티지바이오파마",
+      "롯데바이오사이언스",
+      "바이넥스",
+      "일동제약",
+      "에이비엘바이오"
+    ],
+    "risk": "미국 정부의 정책 및 규제 불확실성, NIH 예산 삭감, 글로벌 공급망 내 중국 기업 배제 정책",
+    "quote": "미국은 완전한 onshoring는 불가능함을 인지해야 하고, 중국의 발전을 저지하려고 노력할 게 아니라, “성공하지 못할 미국”을 만들고 있는 것이 문제임을 인식해야 한다는 지적"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "date": "2026-06-18",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-19_1009_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "IBK투자증권",
+    "analyst": "이승훈",
+    "report_date": "2026.06.18",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": "neutral",
+        "reason": "두나무·네이버 결합심사 장기화 및 독과점 우려"
+      },
+      {
+        "sector": "IT",
+        "stance": "positive",
+        "reason": "국내 게임사들의 주주환원 정책 강화 및 밸류업 노력"
+      }
+    ],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": [
+      "두나무",
+      "네이버",
+      "펄어비스",
+      "위메이드",
+      "웹젠"
+    ],
+    "risk": "두나무와 네이버파이낸셜 기업결합 심사 장기화 및 신작 불확실성",
+    "quote": "두나무·네이버 결합심사 난항…독과점 우려로 장기화 조짐, 국내 게임사들이 신작 불확실성과 주가 저평가 문제를 타개하기 위해 주주환원 정책을 잇따라 강화하며 현금창출형 기업으로 체질을 전환하고 있음"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "date": "2026-06-19",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-19_1008_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이상훈",
+    "report_date": "2026.06.19",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "AX(AI 전환)에 속도를 내고 있으며, 창의성과 사람의 역할을 재정의하는 방향으로 가야 한다고 강조함"
+      },
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "7월 첫 AI 광고인 'AI 브리핑 광고'를 정식 출시하며 AI 서비스 수익화를 본격적으로 진행할 예정임"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "7월",
+        "event": "네이버 'AI 브리핑 광고' 정식 출시"
+      }
+    ],
+    "top_picks": [
+      "넥슨",
+      "크래프톤",
+      "네이버"
+    ],
+    "risk": null,
+    "quote": "AX도 게임답게···넥슨·크래프톤이 찾는 '재미 중심 AI 전환' 네이버, AI 수익화 본궤도 올린다…7월 AI 브리핑 광고 출시"
+  }
+}

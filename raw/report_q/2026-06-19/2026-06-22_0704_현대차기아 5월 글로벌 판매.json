@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "date": "2026-06-19",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-22_0704_현대차기아 5월 글로벌 판매.md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "이재일",
+    "report_date": "2026.06.19",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "현대차",
+        "code": "005380",
+        "rating": "Buy",
+        "rating_changed": null,
+        "tp_new": "1,000,000",
+        "tp_prev": "600,000",
+        "tp_direction": "up",
+        "earnings_outlook": "현대차의 5월 글로벌 도매 판매는 32.5만대(-7.7%yoy)를 기록. 내수 4.5만대(-23.1%yoy), 해외 28.0만대(-4.6%yoy) 기록. 생산 대수는 31.3만대(-11.5%yoy)를 기록.",
+        "estimate_revision": null,
+        "next_catalyst": "7월부터 본격 판매 증가에 기여할 전망. 하반기 아이오닉 3 유럽 시장 출시.",
+        "thesis": [
+          "신형 그랜져 출시되었으나 하이브리드 모델 미출시로 판매량 증가 효과 미미하였음",
+          "인도 지역 판매는 전년비 7.4% 증가하였으나 5월 말 현대모비스 인도 공장 화재 발생함에 따라 일부 생산 차질 발생할 가능성 있음",
+          "EV 신차 부재로 인해 유럽 시장 부진 지속됨"
+        ],
+        "valuation_basis": null,
+        "risk": "안전공업 화재로 인한 부품 수급 차질, 중동 전쟁으로 인한 수출 급감, EV 신차 부재",
+        "supply_comment": "안전공업 화재로 인한 부품 수급 차질 발생",
+        "quote": "현대차의 5월 글로벌 도매 판매는 32.5만대(-7.7%yoy)를 기록. 내수 4.5만대(-23.1%yoy), 해외 28.0만대(-4.6%yoy) 기록."
+      },
+      {
+        "name": "기아",
+        "code": "000270",
+        "rating": "Buy",
+        "rating_changed": null,
+        "tp_new": "300,000",
+        "tp_prev": "170,000",
+        "tp_direction": "up",
+        "earnings_outlook": "기아의 5월 글로벌 도매 판매는 27.8만대(+2.7%yoy)를 기록. 생산 대수는 27.7만대(+0.5%yoy)를 기록.",
+        "estimate_revision": null,
+        "next_catalyst": "PB5, EV3 등 EV 신차 효과",
+        "thesis": [
+          "주요 지역에서 현대차 대비 판매 강세 지속",
+          "내수 전기차 판매는 전년비 113% 증가한 1.2만대를 기록",
+          "전체 EV 판매는 3.6만대로 전년비 67.3% 증가"
+        ],
+        "valuation_basis": null,
+        "risk": "중동 부진 영향",
+        "supply_comment": null,
+        "quote": "기아의 5월 글로벌 도매 판매는 27.8만대(+2.7%yoy)를 기록. 조업일수 2일 감소에도 불구하고 내수 판매 0.6% 감소에 그쳤으며 유럽(+10.9%yoy), 인도(+21.4%yoy) 시장에서도 양호한 판매 증가를 기록."
+      }
+    ]
+  }
+}

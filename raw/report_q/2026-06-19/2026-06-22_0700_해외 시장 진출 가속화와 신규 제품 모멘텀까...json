@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-19",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-22_0700_해외 시장 진출 가속화와 신규 제품 모멘텀까...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "키움증권",
+    "analyst": "김학준",
+    "report_date": "2026. 06. 19",
+    "stocks": [
+      {
+        "name": "피앤에스로보틱스",
+        "code": "460940",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "26년 매출액 90억원(+17% YoY), 영업이익 15억원(+50% YoY, 영업이익률 17%)을 전망한다.",
+        "estimate_revision": null,
+        "next_catalyst": "2026년 하반기부터는 신규 제품인 상반신/어깨 재활 로봇인 ‘힐로봇’ 매출이 발생하면서 TAM 확장이 가능할 것으로 기대된다.",
+        "thesis": [
+          "해외 시장 진출 가속화와 신규 제품 모멘텀",
+          "멕시코 및 북미 시장 점유율 확대",
+          "상반신/어깨 재활 로봇 출시를 통한 TAM 확장"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "2026년 하반기부터는 신규 제품인 상반신/어깨 재활 로봇인 ‘힐로봇’ 매출이 발생하면서 TAM 확장이 가능할 것으로 기대된다.",
+        "sector": "로봇"
+      }
+    ]
+  }
+}

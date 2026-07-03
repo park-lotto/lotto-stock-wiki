@@ -1,0 +1,25 @@
+{
+  "meta": {
+    "date": "2026-07-01",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-03_0809_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이승훈",
+    "report_date": "2026.07.01",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": [
+      "위메이드",
+      "카카오게임즈"
+    ],
+    "risk": "게임 IP의 권리와 경영권이 사실상 중국 자본으로 넘어가게 됨",
+    "quote": "게임 '미르' 일군 위메이드, 사실상 中자본에 넘어간다",
+    "sector": "기타"
+  }
+}

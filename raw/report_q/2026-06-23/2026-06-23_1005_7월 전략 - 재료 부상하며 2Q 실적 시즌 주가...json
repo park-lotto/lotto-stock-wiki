@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-23",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-23_1005_7월 전략 - 재료 부상하며 2Q 실적 시즌 주가...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "김홍식",
+    "report_date": "2026년 06월 23일",
+    "stocks": [
+      {
+        "name": "LG유플러스",
+        "code": "032640",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "20,000원",
+        "tp_prev": "20,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 2분기 연결 영업이익 3,140억원(+3% YoY, +15% QoQ)",
+        "estimate_revision": null,
+        "next_catalyst": "8월 2분기 실적 발표 전후 자사주 매입/소각 결정",
+        "thesis": [
+          "2분기 실적 시즌을 맞이하여 다시 이익 성장/주주환원 증대 기대감 생겨날 전망",
+          "기대배당수익률, PBR 수준으로 보면 저평가 상황",
+          "5G SA 시대 돌입, 규제 리스크 제거 국면으로 Multiple 확장 가능성"
+        ],
+        "valuation_basis": "기대배당수익률 및 PBR 수준에 기반한 저평가 상황 고려",
+        "risk": "2026년 주주 환원 정체 또는 감소 우려",
+        "supply_comment": null,
+        "quote": "LGU+에 대한 투자의견 매수, 12개월 목표주가를 20,000원을 유지한다. 1) 2분기 실적 시즌을 맞이해서 다시 이익 성장/주주환원 증대 기대감이 생겨날 전망이고, 2) 기대배당수익률, PBR 수준으로 보면 저평가 상황이며, 3) 5G SA 시대 돌입, 규제 리스크 제거 국면임을 감안하면 Multiple 확장 국면이 나타날 가능성이 높기 때문이다."
+      }
+    ]
+  }
+}

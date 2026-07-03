@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date": "2026-06-22",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-22_1001_2Q26 Pre 좋아질 일만 남았다.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "심은주, 고찬결",
+    "report_date": "2026년 6월 22일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "CJ제일제당",
+        "code": "097950",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "370,000원",
+        "tp_prev": "370,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "2Q26_revenue": "6조 9,520억원(YoY -3.9%)",
+          "2Q26_operating_profit": "2,707억원(YoY -23.4%)",
+          "bio_segment_outlook": "매출은 YoY 5% 내외 증가할 것으로 추정하며 손익 기여는 600억원 내외를 예상한다. 바이오 손익은 1Q 55억원→2Q 600억원 내외→2H26 800억원 내외로 증가할 것으로 기대한다."
+        },
+        "estimate_revision": "시장 기대치에 부합하는 실적이 전망된다.",
+        "next_catalyst": "바이오 부문 손익 회복 및 기저효과",
+        "thesis": [
+          "국내 가공 매출은 YoY 5% 증가할 것으로 추정된다. 비비고 냉장 및 햇반 등 판매 호조가 이어지고있는 것으로 파악된다.",
+          "해외 가공 매출은 YoY 9% 증가할 것으로 추정한다.",
+          "바이오 손익 개선 속도는 기존 당사 예상보다 빠르게 진행 중이다."
+        ],
+        "valuation_basis": "현 주가는 12개월 Fwd PER 6.5배에 불과하다.",
+        "risk": null,
+        "supply_comment": "경쟁사 메치오닌 공급망 이슈 따른 CJ제일제당의 중단기 반사수혜도 긍정적이다.",
+        "quote": "전쟁 기인해 시황이 급변하면서 CJ제일제당의 바이오 부문 손익이 빠르게 회복 중이다. 현 주가는 12개월 Fwd PER 6.5배에 불과하다. 실적 우상향 기조 감안시 매수로 대응할 것을 권고한다."
+      }
+    ]
+  }
+}

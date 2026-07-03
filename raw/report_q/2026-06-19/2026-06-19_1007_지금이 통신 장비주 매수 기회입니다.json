@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "date": "2026-06-19",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-19_1007_지금이 통신 장비주 매수 기회입니다.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "하나증권",
+    "analyst": "김홍식",
+    "report_date": "2026.6.19",
+    "market_direction": null,
+    "macro_vars": [
+      "미국 주파수 경매",
+      "국내 신규 주파수 투자",
+      "AI RAN 로드 맵",
+      "하이퍼 AI 네트워크 전략"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "통신",
+        "stance": "비중확대",
+        "reason": "통신서비스 업종에 긍정적 영향 예상, 통신장비 업종에 AI RAN 관련주 집중 투자 권고"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.06.16",
+        "event": "엔비디아 손잡은 SK텔레콤, AI 데이터센터 운영 두뇌 만든다"
+      },
+      {
+        "date": "2026.06.17",
+        "event": "SKT-KT, 하이퍼 AI 네트워크 첫 실증사업 따냈다"
+      },
+      {
+        "date": "2026.06.18",
+        "event": "미니 데이터센터로…6G 시대 기지국의 변신"
+      }
+    ],
+    "top_picks": [
+      "SKT",
+      "RFHIC",
+      "KMW",
+      "HFR"
+    ],
+    "risk": "상반기 높은 주가 상승과 미국/유럽 통신장비주 하락 영향으로 인한 통신장비주 부진",
+    "quote": "지금이 통신 장비주 매수 기회입니다"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-19",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-19_1005_긴 호흡으로 봐야할 로봇 부품사.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "IBK투자증권",
+    "analyst": "강민구",
+    "report_date": "2026. 6. 19",
+    "stocks": [
+      {
+        "name": "한국피아이엠",
+        "code": "448900",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "1Q26 실적은 매출액 83.1억 원(YoY, -3.7%), 영업적자 -7.4억 원(적자전환)을 기록했다. 금년 하반기부터는 투자를 마친 IT와 차량용 제품 중심의 성장이 예상되고",
+        "estimate_revision": null,
+        "next_catalyst": "금년 하반기 중 미국 E사 향 냉각 부품 초도 물량 납품이 예상되고, 향후 대형 전력관리 업체 공급망 편입 시 또 하나의 캐시카우 사업부가 탄생할 것으로 기대한다.",
+        "thesis": [
+          "MIM(Metal Injection Molding) 공법을 통한 초소형·초정밀 부품 대량 생산",
+          "차량용 부품 중심에서 휴머노이드, EV 및 데이터센터로 전방 시장 다각화",
+          "데이터센터 냉각 부품 및 휴머노이드용 초소형 감속기 등 신사업 성과 본격화"
+        ],
+        "valuation_basis": null,
+        "risk": "실적 부진의 주요 원인은 신사업 진출을 위한 개발 및 집행비 때문",
+        "supply_comment": null,
+        "quote": "한국피아이엠은 'MIM(Metal Injection Molding)' 공법을 적용한 금속 부품 생산업을 영위한다. 동사는 초소형 금속 부품 제조 역량을 통해 전방 시장의 다각화를 진행 중이다. 2027년에는 데이터센터 냉각 부품이, 2028년에는 휴머노이드 초소형 감속기 시장이 차례로 개화할 것으로 전망한다."
+      }
+    ]
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "meta": {
+    "date": "2026-07-02",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-03_0807_[IBKS Monthly] 자동차2차전지.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이현욱",
+    "report_date": "2026년 6월 2일",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "글로벌 자동차 출하량 : -2.8%(MoM), -5.2%(YoY)",
+      "글로벌 전기차 출하량 : +7.0%(MoM), +7.2%(YoY)",
+      "글로벌 배터리 출하량 : +8.1%(MoM), +23.3%(YoY)"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "자동차",
+        "stance": "중립",
+        "reason": "글로벌 자동차 출하량은 전월비 -2.8%, 전년비 -5.2% 감소했으나, 전기차 출하량은 전월비 +7.0%, 전년비 +7.2% 증가함"
+      },
+      {
+        "sector": "2차전지",
+        "stance": "중립",
+        "reason": "글로벌 배터리 출하량은 전월비 +8.1%, 전년비 +23.3% 성장"
+      }
+    ],
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "BYD Auto",
+      "Geely Group",
+      "TESLA",
+      "SAIC Group",
+      "Hyundai Kia Automotive Group",
+      "VW Group",
+      "Stellantis Group",
+      "BMW Group",
+      "Changan Group",
+      "Chery Automobile",
+      "Renault-Nissan Alliance",
+      "Daimler Group",
+      "LeapMotor",
+      "XIAOMI",
+      "Toyota Group",
+      "Ford Group",
+      "Renault Group"
+    ],
+    "risk": "전기차 시장의 지역별 차별화(중국, 유럽, 미국 성장률 상이) 및 기업별 판매량 변동성",
+    "quote": "글로벌 자동차 출하량 : -2.8%(MoM), -5.2%(YoY) 글로벌 전기차 출하량 : +7.0%(MoM), +7.2%(YoY) 글로벌 배터리 출하량 : +8.1%(MoM), +23.3%(YoY)"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "meta": {
+    "date": "2026-07-02",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-03_0804_2Q26 Pre 원가 부담 가시화.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "심은주",
+    "report_date": "2026년 7월 2일",
+    "stocks": [
+      {
+        "name": "농심",
+        "code": "004370",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "540,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": {
+          "2Q26": {
+            "sales": "9,324억원(YoY 7.4%)",
+            "operating_profit": "463억원(YoY 15.2%)"
+          },
+          "2026_FullYear": {
+            "sales": "3조 7,870억원(YoY 7.8%)",
+            "operating_profit": "1,994억원(YoY 8.4%)"
+          }
+        },
+        "estimate_revision": "부자재 단가 인상이 반영되기 시작하면서 연결 손익은 시장 기대를 소폭 하회할 것으로 추정한다.",
+        "next_catalyst": "해외 사업 성과 및 북미 영업마진 개선",
+        "thesis": [
+          "해외 사업의 견조한 성장세 지속(북미, 중국, 일본 시장 확대)",
+          "부자재 단가 인상에 따른 원가 부담 가시화",
+          "단기 실적 모멘텀은 다소 제한적이나 밸류에이션 부담은 제한적"
+        ],
+        "valuation_basis": "현 주가는 12개월 Fwd PBR 0.7배에 거래 중이며, 역사적 밴드 하단임.",
+        "risk": "부자재 단가 인상으로 인한 별도 손익 감소 및 비용 부담 발생",
+        "supply_comment": "2025년 농심의 부자재 매입액은 4,658억원으로 일부 단가 인상 약 10% 가정시 월 20억원 이상 비용 부담이 발생할 것으로 추정한다.",
+        "quote": "부자재 단가 인상이 반영되기 시작하면서 연결 손익은 시장 기대를 소폭 하회할 것으로 추정한다."
+      }
+    ]
+  }
+}

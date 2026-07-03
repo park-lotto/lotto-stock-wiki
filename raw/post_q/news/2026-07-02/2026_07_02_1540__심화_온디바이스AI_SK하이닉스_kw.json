@@ -1,0 +1,33 @@
+{
+  "target_kind": "sector",
+  "sector_name": "온디바이스AI",
+  "sector_view": "긍정",
+  "points": [
+    "온디바이스 AI 시장 확대에 따른 수혜주 찾기 활발",
+    "강세장 주도주로서의 전략적 가치 부각"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "HPSP",
+      "comment": "온디바이스 AI 수혜주로 언급",
+      "ts": null,
+      "quote": "HPSP·리노공업 주가 신바람... 온디바이스 AI 수혜주 찾아라",
+      "sector": "반도체"
+    },
+    {
+      "name": "리노공업",
+      "comment": "온디바이스 AI 수혜주로 언급",
+      "ts": null,
+      "quote": "HPSP·리노공업 주가 신바람... 온디바이스 AI 수혜주 찾아라",
+      "sector": "반도체"
+    }
+  ],
+  "events": [
+    {
+      "fact": "온디바이스 AI 관련 수혜주 분석 및 강세장 주도주 전략 논의",
+      "ts": null,
+      "quote": "강세장 주도주 집중 전략, 온디바이스 AI 수혜주 공략"
+    }
+  ],
+  "quote": "HPSP·리노공업 주가 신바람... 온디바이스 AI 수혜주 찾아라"
+}

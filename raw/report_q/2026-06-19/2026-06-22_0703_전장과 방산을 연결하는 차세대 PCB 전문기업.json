@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-19",
+    "broker": "나이스평가정보㈜",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-22_0703_전장과 방산을 연결하는 차세대 PCB 전문기업.md"
+  },
+  "questionnaire": {
+    "broker": "나이스평가정보㈜",
+    "analyst": "주예령",
+    "report_date": "2026.06.18.",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "블루탑",
+        "code": "191600",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 매출은 전장 PCB 시장의 구조적 성장과 방산 PCB 사업 확대를 고려하여 전년 대비 5.2% 성장한 461억 원이 전망되며, 부문별로는 전장 412억 원, 통신 25억 원, 기타 18억 원, MOBILE 6억 원으로 추정된다.",
+        "estimate_revision": null,
+        "next_catalyst": "L사 전장 신규 고객사 향 신차 양산, 미국향 5G 통신 모듈 4분기 양산, 방산 H사 2분기 양산",
+        "thesis": [
+          "전기차·K-방산·5G 등 구조적 성장 산업을 주요 수요 기반으로 확보",
+          "비대칭 다층 Heavy Copper PCB 및 RF 내장형 고신뢰성 방산·통신 다층 PCB 기술 경쟁력",
+          "L사 전장 신규 고객사 승인 및 방산 H사 양산 승인을 통한 사업 다각화 및 매출 성장 모멘텀 가시화"
+        ],
+        "valuation_basis": null,
+        "risk": "중국산 저가 PCB 침투 및 전방산업 경기 변동에 따른 외부 리스크 상존",
+        "supply_comment": "에스엘전자, 모베이스전자, 유라코퍼레이션 등 국내 주요 1차 부품사 멀티 공급 체계 구축",
+        "quote": "800V 전기차 파워모듈 국책과제 수행, 방산 H社 2분기 본격 양산, L사 전장 신규 고객사 매출 개시, 미국향 5G 모듈 4분기 양산이라는 네 가지 신규 성장 동력이 2026년 동시에 가동되는 것으로 파악된다."
+      }
+    ],
+    "sector": "자동차/방산/통신"
+  }
+}

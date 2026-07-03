@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-03",
+    "broker": "미래에셋증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-03_1104_강한 거래대금 증가의 수혜주.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "미래에셋증권",
+    "analyst": "정태준, CFA",
+    "report_date": "2026.7.3",
+    "stocks": [
+      {
+        "name": "삼성증권",
+        "code": "016360",
+        "sector": "기타",
+        "rating": "매수",
+        "rating_changed": false,
+        "tp_new": "178,000원",
+        "tp_prev": "178,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2분기 지배주주순이익은 5,198억원으로, 컨센서스 4,324억원을 20.2% 상회할 전망이다. 이는 1) 일평균 거래대금이 전분기대비 35.1% 증가했고 2) IBKR로부터의 수수료수익 역시 가산되기 때문이다.",
+        "estimate_revision": "2분기 순이익 15.3% 증가할 전망",
+        "next_catalyst": "거래대금 증가 및 IBKR을 통한 거래",
+        "thesis": [
+          "강한 거래대금 증가의 수혜",
+          "2분기 지배주주순이익 컨센서스 상회 전망",
+          "올해 배당수익률 7.0% 예상 및 중장기적 배당성향 50% 상향 계획"
+        ],
+        "valuation_basis": "목표주가가 산출에 적용한 목표 배당수익률은 기존 4.2%를 유지함",
+        "risk": "반도체를 제외한 증시가 약세로 돌아서면서 동반 약세를 보임",
+        "supply_comment": null,
+        "quote": "삼성증권에 대한 투자의견 매수, 목표주가가 178,000원을 유지한다. 목표주가가 산출에 적용한 목표 배당수익률은 기존 4.2%를 유지했다."
+      }
+    ]
+  }
+}

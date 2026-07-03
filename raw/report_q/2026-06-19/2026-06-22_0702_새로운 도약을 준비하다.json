@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-19",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-22_0702_새로운 도약을 준비하다.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "키움증권",
+    "analyst": "조재원",
+    "report_date": "2026. 06. 19",
+    "stocks": [
+      {
+        "name": "LS머트리얼즈",
+        "code": "417200",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 매출액 1,780억원(+16%YoY), 영업이익 33억원(흑자전환)을 전망한다. 2027년 매출액 1,960억원(+10%YoY), 영업이익 103억원(+216%YoY)을 전망한다.",
+        "estimate_revision": null,
+        "next_catalyst": "독일 전력 인프라 프로젝트 수주 및 북미 연료전지 기업향 매출 발생",
+        "thesis": [
+          "신규 수요처로 전력망 및 AI 데이터센터 등 적용처 다변화 기대",
+          "2026년 영업이익 흑자 전환 및 2027년부터 본격적인 실적 개선 전망",
+          "UC 수요 증가에 대비한 생산능력(CAPA) 증설 계획"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "향후 UC 수요 증가에 대비하기 위해, 동사는 UC 생산능력 확대를 계획 중이다. IPO 당시 고려했던 증설 규모(기존 CAPA의 2배) 대비 훨씬 큰 규모의 증설도 검토 중인 것으로 파악된다.",
+        "quote": "울트라커패시터(이하 UC)의 적용처 다변화 성과가 향후 동사 실적과 주가 향방을 결정지을 전망이다.",
+        "sector": "전력"
+      }
+    ]
+  }
+}

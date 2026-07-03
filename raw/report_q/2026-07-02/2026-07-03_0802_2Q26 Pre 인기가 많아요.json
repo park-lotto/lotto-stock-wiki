@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-02",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-03_0802_2Q26 Pre 인기가 많아요.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "안도현",
+    "report_date": "2026년 7월 2일",
+    "stocks": [
+      {
+        "name": "롯데렌탈",
+        "code": "089860",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "42,000원",
+        "tp_prev": "42,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2분기 롯데렌탈 매출액은 2% (YoY) 증가한 7,629억원, 영업이익은 6% 증가한 821억원(영업이익률 10.8%(+0.4%p))로 전망한다.",
+        "estimate_revision": "2026년의 중고차 시장 위축 영향으로 연간 영업이익 추정치를 3,450억원(+10%, 영업이익률 11.4%)으로 소폭 하향한다.",
+        "next_catalyst": "사모펀드 인수 시 배당성향 제고",
+        "thesis": [
+          "본업인 렌터카 호조가 지속되고 있고, 단기/카쉐어링도 국내 여행 수요 증가로 양호한 성장 흐름을 보이고 있음",
+          "사모펀드가 신규 대주주가 된다면 자본/차입금을 늘리지 않아도 영업이 유지되고 현금이 축적되는 사업 구조를 바탕으로 배당성향 제고 가능성 높음",
+          "2대 주주인 VIP자산운용이 밸류업 및 주주환원 확대를 촉구하고 있음"
+        ],
+        "valuation_basis": "12MF EPS(4,130원)에 Target P/E 10배를 적용",
+        "risk": "중동 전쟁 이후 중고차 수출 수요가 위축되고 전기차 수요가 증가하는 등 요인이 중고차 가격에 부정적으로 작용",
+        "supply_comment": null,
+        "quote": "12MF EPS(4,130원)에 Target P/E 10배를 적용하여 목표주가는 42,000원을 유지하고 투자의견 BUY도 유지한다.",
+        "sector": "소비내수"
+      }
+    ]
+  }
+}

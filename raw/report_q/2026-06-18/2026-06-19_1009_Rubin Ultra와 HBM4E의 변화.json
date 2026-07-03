@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "date": "2026-06-18",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-19_1009_Rubin Ultra와 HBM4E의 변화.md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": "송명섭, 박정하",
+    "report_date": "2026.06.18",
+    "target_kind": "sector",
+    "sector_name": "반도체",
+    "sector_view": "비중확대",
+    "thesis": [
+      "NVIDIA의 차세대 AI 가속기 Rubin Ultra의 HBM4E 탑재량이 패키징 레티클 한계 및 HBM 적층 수율 문제로 인해 1TB에서 384GB로 축소될 가능성이 제기됨.",
+      "HBM4E 16단 적층 시 발생하는 열, 신호 마진 및 수율 문제로 인해 초기에는 12단 제품이 주력이 될 전망.",
+      "삼성전자와 SK하이닉스는 16단 HBM4E 공정에서 각각 하이브리드 본딩과 Advanced MR-MUF라는 상반된 공정 노선을 취하고 있음."
+    ],
+    "timeline": [
+      "CY27: Rubin Ultra 양산 및 HBM4E 시장 본격 진입",
+      "2H26: 삼성전자 16단 HBM4 MR-MUF 기반 양산 계획",
+      "2027: 마이크론 HBM4E 양산 목표"
+    ],
+    "top_picks": [
+      {
+        "name": "삼성전자",
+        "reason": "세계 최초 12단 48GB HBM4E 샘플 출하 완료, 16단 공정으로 하이브리드 본딩 도입 추진",
+        "tp": null
+      },
+      {
+        "name": "SK하이닉스",
+        "reason": "검증된 MR-MUF 공정 연장을 통해 16단 HBM4E 수율 리스크 최소화 전략",
+        "tp": null
+      },
+      {
+        "name": "마이크론",
+        "reason": "1γ 공정 및 TSMC 외주를 통한 HBM4E 시장 진입 추진",
+        "tp": null
+      }
+    ],
+    "risk": "인터포저 면적 확대에 따른 워피지 현상, 범프 피로도 증가, 박리 리스크 및 16단 적층 공정의 신뢰성 확보 문제",
+    "quote": "NVIDIA의 CY27 차세대 AI 가속기 Rubin Ultra는 당초 GPU 패키지당 HBM4E 1TB(1,024GB)의 용량을 목표로 발표되었으나, 두 가지 제조 병목 (패키징 레티클 한계, HBM 적층 수율)으로 인해 384GB 축소안이 거론되고 있는 것으로 보인다."
+  }
+}

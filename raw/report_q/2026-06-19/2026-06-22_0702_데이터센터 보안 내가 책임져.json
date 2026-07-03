@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-19",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-22_0702_데이터센터 보안 내가 책임져.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "키움증권",
+    "analyst": "김학준",
+    "report_date": "2026. 6. 19",
+    "stocks": [
+      {
+        "name": "지슨",
+        "code": "446840",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "1Q25 실적은 매출액 25억원(YoY+12%), 영업적자 19억원(적자지속)을 기록했다. 2026 실적은 매출액 252억원(YoY+123.0%), 영업이익 40억원(YoY 흑자전환)을 전망한다.",
+        "estimate_revision": null,
+        "next_catalyst": "2Q부터 빠른 실적 개선, 데이터센터 전체에 대한 수주 발생 시 볼륨업 기대, 해외시장 개척 및 로봇 분야 국책과제",
+        "thesis": [
+          "무선백도어에 대한 보안으로 전파에 대한 완전 차단을 진행하고 있으며 서버 및 데이터센터 확대에 따른 중장기 성장성 확보",
+          "무선백도어 보안 제품 'Alpha-H'의 금융권 및 반도체향 매출 확대 및 데이터센터 수주 기대",
+          "매출원가율이 20~25% 수준으로 BEP 레벨을 넘어서면 본격적인 레버리지가 발생하는 구조"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "도청/무선 백도어 해킹/불법촬영 관련 보안 제품 판매를 주력으로 하고 있으며 제품은 거리 12M에 한 개가 들어가며 바둑판 형식으로 설치됨",
+        "quote": "지슨은 RF(전파)를 기반으로 한 보안솔루션을 제공하는 업체이다. 최근 보안부문에서의 가장 큰 문제 중 하나는 무선백도어에 대한 대책이 쉽지 않다는 점이다. 동사는 무선백도어에 대한 보안으로 전파에 대한 완전 차단을 진행하고 있다."
+      }
+    ]
+  }
+}

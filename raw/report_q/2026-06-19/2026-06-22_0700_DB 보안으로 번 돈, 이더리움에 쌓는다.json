@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-19",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-22_0700_DB 보안으로 번 돈, 이더리움에 쌓는다.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "IBK투자증권",
+    "analyst": "유창근",
+    "report_date": "2026. 6. 19",
+    "stocks": [
+      {
+        "name": "파라택시스이더리움",
+        "code": "290560",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "1Q26 매출액은 27.0억원(YoY +35.9%, QoQ -54.0%), 영업손실은 3.1억원(YoY 적자지속, QoQ 적자전환)을 기록했다.",
+        "estimate_revision": null,
+        "next_catalyst": "공공·금융권의 데이터 연계 시스템 구축과 개인정보보호 규제 대응 수요",
+        "thesis": [
+          "기존 DB 보안 솔루션 사업의 안정적인 수익 유지",
+          "이더리움 중심 DAT(디지털자산 트레저리)사업 본격 추진",
+          "공공·금융권의 데이터 연계 시스템 구축 및 개인정보보호 규제 대응 수요 증가에 따른 DB 암호화 매출 성장"
+        ],
+        "valuation_basis": null,
+        "risk": "이더리움 가격 하락에 따른 자산가치 및 주가 변동성, 단기 실적 변동성",
+        "supply_comment": null,
+        "quote": "DB 보안 사업에서 발생하는 안정적인 영업현금흐름은 이더리움 추가 매입 과정에서 외부 조달 및 주주가치 희석 부담을 낮추는 요인이다.",
+        "sector": "기타"
+      }
+    ]
+  }
+}

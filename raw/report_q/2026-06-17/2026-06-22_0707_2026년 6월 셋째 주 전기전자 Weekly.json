@@ -1,0 +1,49 @@
+{
+  "meta": {
+    "date": "2026-06-17",
+    "broker": "교보증권 리서치센터",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-22_0707_2026년 6월 셋째 주 전기전자 Weekly.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권 리서치센터",
+    "analyst": "박희철, 최보영",
+    "report_date": "2026/ 6/ 17",
+    "target_kind": "market",
+    "market_direction": "완만한 반등 추세",
+    "macro_vars": [
+      "매크로 리스크 완화",
+      "원자재 가격",
+      "가격 인상"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": "강세",
+        "reason": "핵심 병목 부품 등으로 지목되며 공격적인 가격 전략이 가능한 기업의 뚜렷한 강세"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026-06-14",
+        "event": "내년 AI 노트북 비중 50% 돌파…PC 기업 '총공세'"
+      },
+      {
+        "date": "2026-06-14",
+        "event": "삼성전기, 턴키로 실리콘 커패시터 판매 확대"
+      },
+      {
+        "date": "2026-06-16",
+        "event": "애플, 올해 아이폰 못 접나…‘아이폰 울트라’ 내년 출시설"
+      }
+    ],
+    "top_picks": [
+      "삼성전기",
+      "Kingboard Lami",
+      "Shengyi",
+      "Largan"
+    ],
+    "risk": "불확실성 및 원자재 가격 전가 여부",
+    "quote": "매크로 리스크가 완화됨에 따라 전기전자 섹터는 완만한 반등 추세 시현"
+  }
+}
