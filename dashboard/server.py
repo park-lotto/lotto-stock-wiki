@@ -226,6 +226,11 @@ except (ImportError, SystemExit):
     find_hot_clips = None  # type: ignore
 
 try:
+    from plan_stage import run_plan_stage  # noqa: E402
+except (ImportError, SystemExit):
+    run_plan_stage = None  # type: ignore
+
+try:
     import global_api  # noqa: E402
 except (ImportError, Exception):
     global_api = None  # type: ignore
@@ -1554,8 +1559,14 @@ def api_sector_detail(etf: str = "", codes: str = "", title: str = ""):
         cc, nm = m
         o = (tk.get(cc) or {}).get("osc") or {}
         resolved_name = nm or (tk.get(cc) or {}).get("name") or cc
+        chg = None
+        try:
+            import kis_api
+            chg = kis_api.get_price(cc).get("change_rate")
+        except Exception:
+            pass
         return {"code": cc, "name": resolved_name,
-                "pct": o.get("pct"), "group": o.get("group"),
+                "pct": o.get("pct"), "group": o.get("group"), "chg": chg,
                 "news": nf.stock_news(cc, name=resolved_name, top=2)}
     with ThreadPoolExecutor(max_workers=6) as ex:
         stocks = list(ex.map(_build, metas))
@@ -5141,6 +5152,26 @@ async def api_yt_hot_clips(req: Request):
 
     results = await run_in_threadpool(_do)
     return JSONResponse(content={"results": results})
+
+
+@app.post("/yt/generate_plan")
+async def api_yt_generate_plan(req: Request):
+    body = await req.json()
+    idea = (body.get("idea") or "").strip()
+    references = body.get("references") or []
+    if not idea:
+        return JSONResponse(content={"error": "아이디어 필요"}, status_code=400)
+    if run_plan_stage is None:
+        return JSONResponse(content={"error": "plan_stage 모듈을 불러올 수 없음"}, status_code=503)
+
+    def _stream():
+        try:
+            for event in run_plan_stage(idea, references=references, pipeline_id=None):
+                yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)[:200]}, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(_stream(), media_type="text/event-stream")
 
 
 # ══════════════════════════════════════════════════════════════

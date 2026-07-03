@@ -33,7 +33,7 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 .etf-chip.active{background:rgba(212,175,55,.12);box-shadow:inset 0 -2px 0 var(--gold,#d4af37);}
 /* ETF 편입종목 펼침 팝오버 */
 #etf-pop{position:fixed;z-index:200;background:#16161c;border:1px solid #333;border-radius:10px;
-  box-shadow:0 12px 34px rgba(0,0,0,.65);padding:6px 0;min-width:300px;max-height:62vh;
+  box-shadow:0 12px 34px rgba(0,0,0,.65);padding:6px 0;min-width:420px;max-height:62vh;
   overflow-y:auto;display:none;}
 #etf-pop.open{display:block;}
 #etf-pop .ep-hd{font-size:12px;font-weight:700;color:#eee;padding:4px 14px 8px;
@@ -1160,7 +1160,7 @@ function openSectorDetail({etf, codes, names, title, anchor}){
   if(anchor && anchor.classList && anchor.classList.contains("etf-chip")) anchor.classList.add("active");
   const r=(anchor||document.body).getBoundingClientRect();
   const top=Math.min(r.bottom+4, Math.round(window.innerHeight*0.5));
-  p.style.left=Math.max(6,Math.min(r.left, window.innerWidth-372))+"px";
+  p.style.left=Math.max(6,Math.min(r.left, window.innerWidth-432))+"px";
   p.style.top=top+"px";
   p.style.maxHeight=(window.innerHeight-top-12)+"px";
   p.style.overflowY="auto";
@@ -1175,10 +1175,12 @@ function openSectorDetail({etf, codes, names, title, anchor}){
       const nm=nameMap[s.code]||s.name||s.code, nn=s.news||[], g=s.group||""; let col="#9a9a9a";
       if(g.includes("완전빈집"))col="#2ecc71"; else if(g.includes("반빈집"))col="#7bd88f"; else if(g.includes("과열"))col="#e74c3c"; else if(g.includes("매수우위"))col="#e0803c";
       const vac=s.pct!=null?`<span style="color:${col};font-size:11.5px">${g} ${Math.round(s.pct)}%</span>`:`<span style="color:#666;font-size:11px">미수록</span>`;
+      const chgCol=s.chg>0?"#e74c3c":s.chg<0?"#4a90e2":"#888";
+      const chg=s.chg!=null?`<span style="color:${chgCol};font-size:11.5px;min-width:48px;text-align:right">${s.chg>0?"+":""}${Number(s.chg).toFixed(2)}%</span>`:"";
       const news=nn.map(n=>`<a class="nf-hl sub" href="${n.url}" target="_blank" rel="noopener">${newsSrcIcon(n,"·")} ${esc(n.title)}<span class="nf-meta">${esc(n.src||"")} ${esc(n.date||"")}</span></a>`).join("");
       return `<div class="nf-stock"><div class="nf-strow" onclick="this.parentNode.classList.toggle('open')">`
         +`<span class="nf-nm" onclick="event.stopPropagation();openStockChart('${s.code}','${esc(nm)}');_etfPopClose()">${esc(nm)}</span>`
-        +`${vac}<span class="nf-toggle">${nn.length?('뉴스 '+nn.length+' ▾'):''}</span></div>`
+        +`${chg}${vac}<span class="nf-toggle">${nn.length?('뉴스 '+nn.length+' ▾'):''}</span></div>`
         +`<div class="nf-stnews">${news}</div></div>`;
     }).join("");
     p.innerHTML=`<div class="ep-hd">${esc(d.title||title||"")} <small>(빈집순 · 클릭=차트)</small></div>`
