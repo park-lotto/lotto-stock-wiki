@@ -1560,11 +1560,14 @@ def api_sector_detail(etf: str = "", codes: str = "", title: str = ""):
         o = (tk.get(cc) or {}).get("osc") or {}
         resolved_name = nm or (tk.get(cc) or {}).get("name") or cc
         chg = None
-        try:
-            import kis_api
-            chg = kis_api.get_price(cc).get("change_rate")
-        except Exception:
-            pass
+        import kis_api
+        for _attempt in range(2):   # KIS API 일시적 500 대응 1회 재시도(5분 캐시라 실패시 오래 굳음)
+            try:
+                chg = kis_api.get_price(cc).get("change_rate")
+                break
+            except Exception:
+                if _attempt == 0:
+                    time.sleep(0.5)
         return {"code": cc, "name": resolved_name,
                 "pct": o.get("pct"), "group": o.get("group"), "chg": chg,
                 "news": nf.stock_news(cc, name=resolved_name, top=2)}
