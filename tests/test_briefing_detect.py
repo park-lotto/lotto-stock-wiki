@@ -83,9 +83,11 @@ def test_compute_index_shape_finds_open_low_high_current():
     assert shape["low"] == 85.0 and shape["low_t"] == "10:30"
     assert shape["high"] == 105.0 and shape["high_t"] == "11:30"
     assert shape["current"] == 98.0
+    assert shape["change_pct"] == -2.0
 
 
 def test_compute_index_shape_handles_flat_series():
     bars = [{"t": "090000", "price": 100.0}, {"t": "093000", "price": 100.0}]
     shape = compute_index_shape(bars)
     assert shape["open"] == shape["low"] == shape["high"] == shape["current"] == 100.0
+    assert shape["change_pct"] == 0.0

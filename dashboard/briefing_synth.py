@@ -65,6 +65,8 @@ _INSIGHT_PROMPT_TEMPLATE = """너는 오늘 시장 상황을 한눈에 설명하
 
 ## 오늘 지수 흐름 (실측)
 시가 {open}, 저점 {low}({low_t}), 고점 {high}({high_t}), 현재 {current}
+시가 대비 현재 등락률: {change_pct}% ← 상승/하락/보합 판단은 반드시 이 숫자를 그대로 써라.
+직접 가격을 비교해서 계산하지 마라(계산 실수로 오판하는 사례 있었음). ±0.5% 이내일 때만 "보합"이라고 써라.
 
 ## 오늘 특징종목
 {movers_text}
@@ -88,10 +90,14 @@ def build_insight_prompt(index_shape: dict | None, movers: list[dict],
         f"- {m['name']} {m['change_rate']}%: {m['news_reason'] or '이유 데이터 없음'}"
         for m in movers) or "(없음)"
     atoms_text = "\n".join(f"- {c}" for c in market_atoms) or "(없음)"
+    change_pct = index_shape.get("change_pct")
+    if change_pct is None:
+        open_p = index_shape["open"]
+        change_pct = round((index_shape["current"] - open_p) / open_p * 100, 2) if open_p else 0.0
     return _INSIGHT_PROMPT_TEMPLATE.format(
         open=index_shape["open"], low=index_shape["low"], low_t=index_shape["low_t"],
         high=index_shape["high"], high_t=index_shape["high_t"], current=index_shape["current"],
-        movers_text=movers_text, atoms_text=atoms_text)
+        change_pct=change_pct, movers_text=movers_text, atoms_text=atoms_text)
 
 
 def parse_insight_response(text: str) -> dict | None:

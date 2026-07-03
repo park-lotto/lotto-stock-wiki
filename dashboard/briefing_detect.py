@@ -64,9 +64,13 @@ def compute_index_shape(bars: list[dict]) -> dict | None:
     current_bar = bars[-1]
     low_bar = min(bars, key=lambda b: b["price"])
     high_bar = max(bars, key=lambda b: b["price"])
+    open_p = open_bar["price"]
+    current_p = current_bar["price"]
+    change_pct = round((current_p - open_p) / open_p * 100, 2) if open_p else 0.0
     return {
-        "open": open_bar["price"],
+        "open": open_p,
         "low": low_bar["price"], "low_t": _fmt(low_bar["t"]),
         "high": high_bar["price"], "high_t": _fmt(high_bar["t"]),
-        "current": current_bar["price"],
+        "current": current_p,
+        "change_pct": change_pct,
     }

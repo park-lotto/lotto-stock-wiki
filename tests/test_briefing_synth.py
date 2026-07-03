@@ -51,14 +51,23 @@ def test_build_insight_prompt_returns_none_without_index_shape():
 
 def test_build_insight_prompt_includes_shape_and_movers():
     shape = {"open": 7650.0, "low": 7550.0, "low_t": "10:30",
-              "high": 7890.0, "high_t": "11:50", "current": 7877.0}
+              "high": 7890.0, "high_t": "11:50", "current": 7877.0, "change_pct": 2.97}
     movers = [{"name": "삼성전자", "change_rate": 6.8, "news_reason": "메모리 가격 반등"},
               {"name": "SK하이닉스", "change_rate": 4.7, "news_reason": None}]
     prompt = build_insight_prompt(shape, movers, ["오늘 시장 코멘트"])
     assert "7550.0" in prompt and "10:30" in prompt
+    assert "2.97%" in prompt
     assert "삼성전자" in prompt and "메모리 가격 반등" in prompt
     assert "SK하이닉스" in prompt and "이유 데이터 없음" in prompt
     assert "오늘 시장 코멘트" in prompt
+
+
+def test_build_insight_prompt_computes_change_pct_when_missing():
+    """change_pct가 없는 구버전 shape가 들어와도 open/current로 폴백 계산한다."""
+    shape = {"open": 100.0, "low": 90.0, "low_t": "10:30",
+              "high": 110.0, "high_t": "11:50", "current": 105.0}
+    prompt = build_insight_prompt(shape, [], [])
+    assert "5.0%" in prompt
 
 
 def test_parse_insight_response_valid_multi_paragraph_body():
