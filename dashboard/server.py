@@ -1877,7 +1877,7 @@ async def _push_market_flow(req: Request):
 
 
 # ── 마지막 정상 응답 유지(last-good): KIS 순간 실패로 그래프가 사라졌다 복구되는 현상 방지 ──
-_last_good_mf: dict = {"result": None}
+_last_good_mf: dict = {"result": None, "date": None}
 
 def _mf_is_good(result: dict) -> bool:
     """코스피·코스닥 둘 다 15분봉 bars + 현재가가 있어야 '정상'."""
@@ -1889,16 +1889,21 @@ def _mf_is_good(result: dict) -> bool:
 
 def _serve_mf(result: dict):
     """정상이면 last-good 갱신 후 서빙, 열화면 직전 정상 결과 서빙(그래프 유지)."""
+    today = datetime.now().strftime("%Y%m%d")
     if _mf_is_good(result):
         prev = _last_good_mf["result"]
-        if prev:
-            # bars 급감 방어: 새 15분봉이 직전의 절반 미만이면(페이지네이션 순간실패 등) 직전 bars 유지
+        # bars 급감 방어: 같은 날 안에서 새 15분봉이 직전의 절반 미만이면(페이지네이션
+        # 순간실패 등) 직전 bars 유지. prev가 오늘 것이 아니면(장 시작 직후라 오늘 봉수가
+        # 아직 적을 뿐인 경우) 어제 스냅샷과 비교하는 게 의미 없으므로 건너뛴다 — 안 그러면
+        # 매일 09:00~13:15경까지 어제 마감 스냅샷이 오늘 데이터를 계속 덮어써 버린다.
+        if prev and _last_good_mf.get("date") == today:
             for c in ("0001", "1001"):
                 nb = len((result.get(c) or {}).get("bars") or [])
                 pb = len((prev.get(c) or {}).get("bars") or [])
                 if pb >= 6 and nb < pb // 2 and result.get(c):
                     result[c]["bars"] = prev[c]["bars"]
         _last_good_mf["result"] = result
+        _last_good_mf["date"] = today
         return JSONResponse(content=result)
     if _last_good_mf["result"]:
         # 열화분에서도 실시간성 있는 순위/글로벌은 갱신본으로 덮어써 최신 유지
