@@ -62,10 +62,17 @@ def test_build_insight_prompt_includes_shape_and_movers():
 
 
 def test_parse_insight_response_valid():
-    text = "코멘트: 오늘 코스피가 급락 후 반도체 대형주 중심으로 반등했습니다.\n특징종목: 삼성전자, SK하이닉스"
+    text = "코멘트: 오늘 코스피가 급락 후 반도체 대형주 중심으로 반등했습니다."
     d = parse_insight_response(text)
     assert "급락 후" in d["comment"]
-    assert d["movers"] == "삼성전자, SK하이닉스"
+    assert "movers" not in d
+
+
+def test_parse_insight_response_no_longer_requires_movers_marker():
+    """특징종목 마커는 더 이상 파싱 대상이 아니다 — 코멘트만 있으면 통과."""
+    text = "코멘트: 오늘 코스피가 급락 후 반등했습니다.\n특징종목: 삼성전자, SK하이닉스"
+    d = parse_insight_response(text)
+    assert d["comment"] == "오늘 코스피가 급락 후 반등했습니다."
 
 
 def test_parse_insight_response_missing_marker_returns_none():
