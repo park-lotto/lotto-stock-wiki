@@ -82,20 +82,24 @@ def test_run_pytest_check_parses_failed_test_names():
 
 
 def test_run_pytest_check_parses_collection_errors_too():
-    """실제 실행에서 발견: 테스트 실패(FAILED)가 아니라 임포트 실패 같은
-    수집단계 에러(ERROR collecting)는 별도 포맷이라 FAILED 정규식만으로는
-    놓치고 failed_tests가 빈 리스트로 나옴 — ok=False인데 상세가 없어서
-    보고가 무의미해지는 실버그였음."""
+    """실제 원격서버 실행에서 발견(-q 모드 실제 출력 그대로): 테스트 실패
+    (FAILED)가 아니라 임포트 실패 같은 수집단계 에러는 "short test summary
+    info" 섹션에 "ERROR <path>"(collecting이라는 단어 없음) 형태로 나옴 —
+    처음엔 "ERROR collecting <path>"로 잘못 가정해서 못 잡았던 실버그."""
     fake_output = (
-        b"===== ERRORS =====\n"
-        b"ERROR collecting tests/studio/test_server_routes.py\n"
-        b"ModuleNotFoundError: No module named 'briefing_detect'\n"
+        b"=========================== short test summary info ===========================\n"
+        b"ERROR scripts/_c2_test.py\n"
+        b"ERROR scripts/_kis_test.py - KeyError: 'KIS_APP_KEY'\n"
+        b"ERROR tests/studio/test_server_routes.py\n"
+        b"!!!!!!!!!!!!!!!!!!! Interrupted: 3 errors during collection !!!!!!!!!!!!!!!!!!!!\n"
     )
     with patch("daily_verify.subprocess.run") as mock_run:
         mock_run.return_value = MagicMock(returncode=2, stdout=fake_output, stderr=b"")
         result = run_pytest_check("/fake/root")
     assert result["ok"] is False
-    assert result["failed_tests"] == ["tests/studio/test_server_routes.py"]
+    assert result["failed_tests"] == [
+        "scripts/_c2_test.py", "scripts/_kis_test.py",
+        "tests/studio/test_server_routes.py"]
 
 
 def test_run_pytest_check_ok_when_returncode_zero():

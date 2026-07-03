@@ -61,7 +61,7 @@ def run_pytest_check(root: str, timeout: int = 300) -> dict:
         return {"ok": True, "failed_tests": []}
     out = r.stdout.decode("utf-8", errors="replace")
     failed = re.findall(r"^FAILED (\S+)", out, re.MULTILINE)
-    failed += re.findall(r"^ERROR collecting (\S+)", out, re.MULTILINE)
+    failed += re.findall(r"^ERROR (\S+)", out, re.MULTILINE)
     return {"ok": False, "failed_tests": failed}
 
 
