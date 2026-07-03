@@ -2858,7 +2858,7 @@ def _insight_run_synthesis(curr: dict) -> None:
         parsed = _parse_insight_response(res.get("analysis", ""))
         if not parsed:
             return
-        topick = _recent_topick_mentions(atoms_db_path, limit=2)
+        topick = _recent_topick_mentions(atoms_db_path, limit=3)
         _briefing_set_insight(BRIEFING_PATH, {
             "ts": datetime.now().strftime("%H:%M"),
             "headline": parsed["headline"], "body": parsed["body"], "topick": topick})

@@ -162,21 +162,23 @@ def test_recent_topick_mentions_filters_by_keyword_and_source_type(tmp_path):
     conn = sqlite3.connect(db_path)
     conn.execute("""CREATE TABLE atoms (
         id TEXT PRIMARY KEY, date TEXT, asset TEXT, content TEXT,
-        source_type TEXT, created_at TEXT)""")
+        source_type TEXT, source_name TEXT, created_at TEXT)""")
     today = datetime.now().strftime("%Y-%m-%d")
-    conn.executemany("INSERT INTO atoms VALUES (?,?,?,?,?,?)", [
-        ("a1", today, "삼성SDI", "2차전지 섹터리포트 탑픽 거론", "report", "2026-07-03T08:10:00"),
-        ("a2", today, "한국전력", "시황리포트 탑픽 거론", "news", "2026-07-03T08:11:00"),
-        ("a3", today, "SK하이닉스", "탑픽 아닌 그냥 코멘트", "telegram", "2026-07-03T08:12:00"),
-        ("a4", today, "삼성전자", "무관한 원자", "report", "2026-07-03T08:13:00"),
-        ("a5", "2020-01-01", "카카오", "옛날 탑픽 거론", "report", "2020-01-01T08:00:00"),
+    conn.executemany("INSERT INTO atoms VALUES (?,?,?,?,?,?,?)", [
+        ("a1", today, "삼성SDI", "2차전지 섹터리포트 탑픽 거론", "report", "하나증권", "2026-07-03T08:10:00"),
+        ("a2", today, "한국전력", "시황리포트 탑픽 거론", "news", "네이버뉴스", "2026-07-03T08:11:00"),
+        ("a3", today, "SK하이닉스", "탑픽 아닌 그냥 코멘트", "telegram", "채널", "2026-07-03T08:12:00"),
+        ("a4", today, "삼성전자", "무관한 원자", "report", "하나증권", "2026-07-03T08:13:00"),
+        ("a5", "2020-01-01", "카카오", "옛날 탑픽 거론", "report", "하나증권", "2020-01-01T08:00:00"),
     ])
     conn.commit(); conn.close()
 
     out = recent_topick_mentions(db_path, limit=2)
     assert out == [
-        {"id": "a2", "asset": "한국전력", "content": "시황리포트 탑픽 거론"},
-        {"id": "a1", "asset": "삼성SDI", "content": "2차전지 섹터리포트 탑픽 거론"},
+        {"id": "a2", "asset": "한국전력", "content": "시황리포트 탑픽 거론",
+         "source_name": "네이버뉴스", "date": today},
+        {"id": "a1", "asset": "삼성SDI", "content": "2차전지 섹터리포트 탑픽 거론",
+         "source_name": "하나증권", "date": today},
     ]
 
 
@@ -187,10 +189,10 @@ def test_recent_topick_mentions_empty_when_none_match(tmp_path):
     conn = sqlite3.connect(db_path)
     conn.execute("""CREATE TABLE atoms (
         id TEXT PRIMARY KEY, date TEXT, asset TEXT, content TEXT,
-        source_type TEXT, created_at TEXT)""")
+        source_type TEXT, source_name TEXT, created_at TEXT)""")
     today = datetime.now().strftime("%Y-%m-%d")
-    conn.execute("INSERT INTO atoms VALUES (?,?,?,?,?,?)",
-                 ("a1", today, "삼성전자", "무관한 원자", "report", "2026-07-03T08:10:00"))
+    conn.execute("INSERT INTO atoms VALUES (?,?,?,?,?,?,?)",
+                 ("a1", today, "삼성전자", "무관한 원자", "report", "하나증권", "2026-07-03T08:10:00"))
     conn.commit(); conn.close()
 
     assert recent_topick_mentions(db_path, limit=2) == []

@@ -168,8 +168,17 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 .mkt-insight .mi-body .mi-para:last-child{margin-bottom:0;}
 /* 오늘의 리포트 탑픽 — mkt-below-panel의 독립 카드 */
 .mt-title{font-size:15px;font-weight:700;color:#8ab4ff;margin-bottom:8px;}
-.mt-item{font-size:13px;color:#ddd;line-height:1.7;margin-bottom:6px;}
+.mt-item{padding:7px 9px;border-radius:6px;margin-bottom:6px;background:#1a1a1a;
+  transition:background .15s;}
+.mt-item:hover{background:#222;}
 .mt-item:last-child{margin-bottom:0;}
+.mt-src{font-size:12px;font-weight:700;color:#9dc0ff;}
+.mt-summary-line{font-size:12.5px;color:#bbb;line-height:1.4;margin-top:3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mt-detail{margin-top:6px;}
+.mt-detail-full{font-size:12.5px;color:#ddd;line-height:1.6;font-weight:400;}
+.mt-link{display:inline-block;margin-top:5px;font-size:11px;color:#8ab4ff;text-decoration:none;}
+.mt-link:hover{text-decoration:underline;}
 .briefing-feed{display:flex;flex-direction:column;gap:6px;}
 .briefing-item{padding:7px 11px;border-radius:6px;background:#1a1a1a;border-left:3px solid #444;
   transition:background .15s;}
@@ -180,9 +189,6 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 .briefing-item .bi-ts{font-size:11px;color:#999;}
 .briefing-item .bi-headline{font-size:14px;font-weight:700;margin:3px 0 0;color:#eee;}
 .briefing-item .bi-body{font-size:12.5px;color:#bbb;line-height:1.5;margin-top:5px;}
-.mt-detail{font-size:12.5px;color:#ddd;line-height:1.6;margin-top:6px;font-weight:400;}
-.mt-link{display:inline-block;margin-left:8px;font-size:11px;color:#8ab4ff;text-decoration:none;}
-.mt-link:hover{text-decoration:underline;}
 
 /* ── 히트맵 그리드 (6열·고박스·큰폰트) ── */
 .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;}
@@ -1435,7 +1441,8 @@ let _briefingLoaded=false;
 // 뉴스속보(3개+더보기) / 리포트탑픽 — 5개 박스 아래 별도 가로줄(mkt-below-panel)
 const _expandedNews=new Set();
 const _expandedTopick=new Set();
-const _NEWS_HEADLINE_COUNT=4;   // 헤드라인만 보여줄 개수(한 화면에 다 들어오게 압축)
+const _NEWS_HEADLINE_COUNT=3;   // 헤드라인만 보여줄 개수
+const _TOPICK_COUNT=3;
 
 function renderBelowPanel(){
   const container=document.getElementById("mkt-below-panel");
@@ -1457,17 +1464,22 @@ function renderBelowPanel(){
       ?`<div style="color:#888;font-size:13px;padding:8px;">아직 브리핑 없음</div>`
       :`<div style="color:#888;font-size:13px;padding:8px;">불러오는 중...</div>`;
 
-  const topickList=(_marketInsight&&_marketInsight.topick)||[];
+  const topickList=((_marketInsight&&_marketInsight.topick)||[]).slice(0,_TOPICK_COUNT);
   const topickHtml=topickList.length
     ?topickList.map((t,i)=>{
       const open=_expandedTopick.has(i);
+      const dateStr=(t.date||"").slice(5).replace("-","/");   // YYYY-MM-DD → MM/DD
+      const srcLine=`${esc(t.source_name||"출처미상")} · ${esc(dateStr)} · ${esc(t.asset)}`;
+      const summaryOneLine=`<div class="mt-summary-line">${esc(t.content)}</div>`;
       const detail=open
-        ?`<div class="mt-detail">${esc(t.content)}
-            ${t.id?`<a href="/api/atom_raw/${encodeURIComponent(t.id)}" target="_blank" class="mt-link" onclick="event.stopPropagation()">📄 원본보기</a>`:""}
+        ?`<div class="mt-detail">
+            <div class="mt-detail-full">${esc(t.content)}</div>
+            ${t.id?`<a href="/api/atom_raw/${encodeURIComponent(t.id)}" target="_blank" class="mt-link" onclick="event.stopPropagation()">📄 원문보기</a>`:""}
           </div>`
         :"";
       return `<div class="mt-item" onclick="toggleTopickExpand(${i})" style="cursor:pointer">
-        🎯 <b>${esc(t.asset)}</b> ${open?"▲":"▼"}
+        <div class="mt-src">${srcLine} ${open?"▲":"▼"}</div>
+        ${open?"":summaryOneLine}
         ${detail}
       </div>`;
     }).join("")
@@ -1479,7 +1491,7 @@ function renderBelowPanel(){
       <div class="briefing-feed briefing-feed-compact">${rows}</div>
     </div>
     <div class="mkt-card" style="flex:1;min-width:0;">
-      <div class="mt-title" style="font-size:15px;">📈 오늘의 리포트 탑픽 (제목 클릭시 펼침)</div>
+      <div class="mt-title" style="font-size:15px;">📈 오늘의 리포트 탑픽 (제목 클릭시 요약+원문)</div>
       ${topickHtml}
     </div>`;
 }
@@ -1512,8 +1524,8 @@ async function loadMarketBriefing(){
   renderBelowPanel();
 }
 
-const MKT_CARD_HEIGHT=520;   // 5개 박스(코스피/코스닥/글로벌지표/순위/브리핑) 고정 높이(px)
-                              // — 압축해서 아래 뉴스속보/탑픽 줄까지 한 화면에 들어오게
+const MKT_CARD_HEIGHT=600;   // 5개 박스(코스피/코스닥/글로벌지표/순위/브리핑) 고정 높이(px)
+                              // — 순위·브리핑 카드 내용이 잘리지 않을 만큼 확보
 const _MF_CACHE_KEY="mf_cache_v2";
 const _MF_CACHE_TTL=300000; // 5분
 

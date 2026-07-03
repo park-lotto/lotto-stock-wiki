@@ -103,14 +103,15 @@ def recent_topick_mentions(db_path: str, limit: int = 2) -> list[dict]:
     try:
         conn.row_factory = sqlite3.Row
         rows = conn.execute(
-            """SELECT id, asset, content FROM atoms
+            """SELECT id, asset, content, source_name, date FROM atoms
                WHERE date = ? AND content LIKE '%탑픽%'
                      AND source_type IN ('report', 'news')
                      AND asset IS NOT NULL AND asset != ''
                ORDER BY created_at DESC LIMIT ?""",
             (today, limit),
         ).fetchall()
-        return [{"id": r["id"], "asset": r["asset"], "content": r["content"]} for r in rows]
+        return [{"id": r["id"], "asset": r["asset"], "content": r["content"],
+                 "source_name": r["source_name"], "date": r["date"]} for r in rows]
     except Exception:
         return []
     finally:
