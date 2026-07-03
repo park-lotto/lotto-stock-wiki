@@ -879,6 +879,25 @@ async def api_crawl_run(req: Request):
     return JSONResponse(content=await run_in_threadpool(server_crawl, cat, only))
 
 
+# ── 골-루프: 대기 브리핑(이상징후 에스컬레이션) 조회·수동 발행 ──
+@app.get("/api/briefing/pending")
+def api_briefing_pending():
+    """이상징후로 대기 중인 아침 브리핑 메타(날짜·사유). 없으면 빈 객체."""
+    try:
+        from scripts.goal_loop import pending as _gl_pending
+        p = _gl_pending.read() or {}
+    except Exception:
+        p = {}
+    return JSONResponse(content={"date": p.get("date"), "reasons": p.get("reasons", [])} if p else {})
+
+
+@app.post("/api/briefing/publish_pending")
+async def api_briefing_publish():
+    """대기 브리핑을 채널로 수동 발행."""
+    from scripts.goal_loop import publish as _gl_publish
+    return JSONResponse(content=await run_in_threadpool(_gl_publish.publish_pending))
+
+
 # 실제 크롤링 폴더 (소스 자동 감지용)
 CRAWL_DIR = r"C:\Users\TheRose\crawling_bot_data"
 
@@ -5198,11 +5217,35 @@ def _ingest_worker(interval=1800, limit=40, warmup=180):
         time.sleep(interval)
 
 
+def _morning_brief_loop():
+    """골-루프: 평일 08:00~08:14 창에 아침 브리핑 1회 자율 실행(품질루프+게이트+에스컬레이션)."""
+    from datetime import datetime as _dt
+    last = None
+    time.sleep(60)   # 기동 직후 안정화
+    while True:
+        try:
+            from scripts.goal_loop import morning_brief as _mb
+            now = _dt.now()
+            if _mb.should_run_now(now, last):
+                r = _mb.run_morning_brief(now.strftime("%Y-%m-%d"))
+                last = now.strftime("%Y-%m-%d")
+                print(f"[morning-brief] {r.get('status')} — {r.get('reasons')}")
+        except Exception as e:
+            print(f"[morning-brief] 예외: {str(e)[:120]}")
+        time.sleep(180)   # 3분 간격 점검
+
+
 def _start_keepalive():
     threading.Thread(target=_nlm_keepalive, daemon=True).start()
     print("[nlm-keepalive] 자동 세션 유지 시작 (25분 주기)")
     threading.Thread(target=_ingest_worker, daemon=True).start()
     print("[ingest-worker] 자동 원자추출 시작 (10분마다 60개)")
+    # 자율 공개발행이라 기본 OFF — GOAL_LOOP_ENABLED=1일 때만 가동(사장님 명시적 활성화)
+    if os.environ.get("GOAL_LOOP_ENABLED") == "1":
+        threading.Thread(target=_morning_brief_loop, daemon=True).start()
+        print("[morning-brief] 아침 브리핑 데몬 시작 (평일 08:00)")
+    else:
+        print("[morning-brief] 데몬 비활성 — 활성화하려면 GOAL_LOOP_ENABLED=1")
 
 
 if __name__ == "__main__":
