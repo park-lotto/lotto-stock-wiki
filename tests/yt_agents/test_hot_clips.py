@@ -178,22 +178,46 @@ def test_find_hot_clips_computes_grades():
 
 
 def test_find_hot_clips_includes_subscriber_count():
-    """find_hot_clips 결과에 subscriber_count가 포함되어야 함."""
+    """find_hot_clips 결과에 subscriber_count가 포함되어야 함.
+
+    또한 view_pct_above_avg와 contribution_grade도 검증하여
+    평균 계산 로직이 올바르게 실행되고 있음을 확인.
+    """
     with patch("scripts.yt_agents.hot_clips.search_videos") as m_search, \
          patch("scripts.yt_agents.hot_clips.get_video_stats") as m_vstats, \
          patch("scripts.yt_agents.hot_clips.get_channel_stats") as m_chstats, \
-         patch("scripts.yt_agents.hot_clips.get_channel_recent_avg_views") as m_avg:
+         patch("scripts.yt_agents.hot_clips._get_channel_raw_videos") as m_raw:
         m_search.return_value = [
             {"video_id": "v1", "title": "Test Video", "channel_id": "UCch1",
              "channel_title": "채널1", "published_at": "2026-06-28T00:00:00Z", "thumbnail": "t1"},
         ]
         m_vstats.return_value = {"v1": {"view_count": 1000, "like_count": 100, "comment_count": 10}}
         m_chstats.return_value = {"UCch1": {"subscriber_count": 100000, "video_count": 50}}
-        m_avg.return_value = (500.0, 50.0)
+        # 채널의 최근 영상: v1과 2개의 다른 영상 (평균 계산용)
+        m_raw.return_value = [
+            {"video_id": "v1", "view_count": 1000, "like_count": 100},
+            {"video_id": "v_old1", "view_count": 500, "like_count": 50},
+            {"video_id": "v_old2", "view_count": 500, "like_count": 50},
+        ]
 
         results = hot_clips.find_hot_clips("test query")
 
-    assert results[0]["subscriber_count"] == 100000
+    assert len(results) == 1
+    r = results[0]
+
+    # 구독자 수 검증
+    assert r["subscriber_count"] == 100000
+
+    # 평균 계산 검증: v1을 제외한 (v_old1 + v_old2)/2 = 500
+    # view_pct_above_avg = (1000 - 500) / 500 * 100 = 100.0%
+    expected_avg_view = (500 + 500) / 2
+    expected_pct = round((1000 - expected_avg_view) / expected_avg_view * 100, 1)
+    assert r["view_pct_above_avg"] == pytest.approx(expected_pct, rel=0.01)
+    assert r["view_pct_above_avg"] == 100.0  # 정확히 100%
+
+    # contribution_grade 검증: 100% >= 200% ? No → "Normal"
+    # (100은 200 미만이므로)
+    assert r["contribution_grade"] == "Normal"
 
 
 def test_find_hot_clips_caches_channel_averages():
