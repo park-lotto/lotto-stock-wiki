@@ -103,25 +103,14 @@ def test_get_channel_recent_avg_views_returns_zero_when_no_videos():
 
 def test_get_channel_recent_avg_views_excludes_specified_video():
     """exclude_video_id 파라미터가 제공되면, 그 영상을 평균 계산에서 제외해야 함."""
-    search_response = {
-        "items": [
-            {"id": {"videoId": "v_hot"}, "snippet": {"title": "hot", "channelId": "UCxyz", "channelTitle": "c",
-                                                       "publishedAt": "2026-07-02T00:00:00Z", "thumbnails": {}}},
-            {"id": {"videoId": "v1"}, "snippet": {"title": "a", "channelId": "UCxyz", "channelTitle": "c",
-                                                    "publishedAt": "2026-06-01T00:00:00Z", "thumbnails": {}}},
-            {"id": {"videoId": "v2"}, "snippet": {"title": "b", "channelId": "UCxyz", "channelTitle": "c",
-                                                    "publishedAt": "2026-06-02T00:00:00Z", "thumbnails": {}}},
+    # _get_channel_raw_videos를 직접 테스트 (이미 내부에서 get_video_stats를 호출)
+    with patch("scripts.yt_agents.hot_clips._get_channel_raw_videos") as m_raw:
+        # 채널에 v_hot, v1, v2 있음 (raw 데이터)
+        m_raw.return_value = [
+            {"video_id": "v_hot", "view_count": 5000, "like_count": 50},
+            {"video_id": "v1", "view_count": 1000, "like_count": 10},
+            {"video_id": "v2", "view_count": 3000, "like_count": 30},
         ]
-    }
-    # v_hot이 제외되므로, get_video_stats는 [v1, v2]에 대해서만 호출됨
-    stats_response = {
-        "items": [
-            {"id": "v1", "statistics": {"viewCount": "1000", "likeCount": "10"}},
-            {"id": "v2", "statistics": {"viewCount": "3000", "likeCount": "30"}},
-        ]
-    }
-    with patch("scripts.yt_agents.hot_clips.requests.get") as mock_get:
-        mock_get.side_effect = [_mock_response(search_response), _mock_response(stats_response)]
         # v_hot을 제외하면 (v1+v2)/2만 계산되어야 함
         avg_view, avg_like = hot_clips.get_channel_recent_avg_views("UCxyz", n=10, exclude_video_id="v_hot")
 
@@ -160,14 +149,19 @@ def test_find_hot_clips_computes_grades():
     with patch("scripts.yt_agents.hot_clips.search_videos") as m_search, \
          patch("scripts.yt_agents.hot_clips.get_video_stats") as m_vstats, \
          patch("scripts.yt_agents.hot_clips.get_channel_stats") as m_chstats, \
-         patch("scripts.yt_agents.hot_clips.get_channel_recent_avg_views") as m_avg:
+         patch("scripts.yt_agents.hot_clips._get_channel_raw_videos") as m_raw:
         m_search.return_value = [
             {"video_id": "v1", "title": "이거 놓치면 후회", "channel_id": "UCsmall",
              "channel_title": "소형채널", "published_at": "2026-06-28T00:00:00Z", "thumbnail": "t1"},
         ]
         m_vstats.return_value = {"v1": {"view_count": 41000, "like_count": 2000, "comment_count": 50}}
         m_chstats.return_value = {"UCsmall": {"subscriber_count": 5000, "video_count": 100}}
-        m_avg.return_value = (500.0, 100.0)  # 평소 대비 크게 튐
+        # 채널의 최근 영상 데이터 (v1과 다른 영상들)
+        m_raw.return_value = [
+            {"video_id": "v1", "view_count": 41000, "like_count": 2000},
+            {"video_id": "v_old1", "view_count": 500, "like_count": 100},
+            {"video_id": "v_old2", "view_count": 500, "like_count": 100},
+        ]
 
         results = hot_clips.find_hot_clips("반도체 조정")
 
@@ -175,12 +169,12 @@ def test_find_hot_clips_computes_grades():
     r = results[0]
     assert r["video_id"] == "v1"
     assert r["view_count"] == 41000
+    # v1을 제외한 평균: (500 + 500) / 2 = 500
+    # 다만 검색 결과에는 v1만 있으므로, 평균은 (500+500)/2 = 500
     assert r["view_pct_above_avg"] == pytest.approx((41000 - 500) / 500 * 100, rel=0.01)
     assert r["contribution_grade"] == "Great"  # >=700%
     assert r["performance_grade"] == "Great"  # (2000-100)/100*100 = 1900% >=700
     assert r["subscriber_count"] == 5000
-    # exclude_video_id 파라미터로 호출되었는지 검증
-    m_avg.assert_called_once_with("UCsmall", exclude_video_id="v1")
 
 
 def test_find_hot_clips_includes_subscriber_count():
@@ -203,11 +197,11 @@ def test_find_hot_clips_includes_subscriber_count():
 
 
 def test_find_hot_clips_caches_channel_averages():
-    """같은 채널의 여러 영상에 대해 get_channel_recent_avg_views를 중복 호출하지 않음."""
+    """같은 채널의 여러 영상에 대해 _get_channel_raw_videos를 중복 호출하지 않음."""
     with patch("scripts.yt_agents.hot_clips.search_videos") as m_search, \
          patch("scripts.yt_agents.hot_clips.get_video_stats") as m_vstats, \
          patch("scripts.yt_agents.hot_clips.get_channel_stats") as m_chstats, \
-         patch("scripts.yt_agents.hot_clips.get_channel_recent_avg_views") as m_avg:
+         patch("scripts.yt_agents.hot_clips._get_channel_raw_videos") as m_raw:
         # 같은 채널에서 2개 영상 반환
         m_search.return_value = [
             {"video_id": "v1", "title": "Video 1", "channel_id": "UCch1",
@@ -220,13 +214,16 @@ def test_find_hot_clips_caches_channel_averages():
             "v2": {"view_count": 8000, "like_count": 400, "comment_count": 40},
         }
         m_chstats.return_value = {"UCch1": {"subscriber_count": 50000, "video_count": 200}}
-        m_avg.return_value = (5000.0, 250.0)
+        m_raw.return_value = [
+            {"video_id": "v1", "view_count": 10000, "like_count": 500},
+            {"video_id": "v2", "view_count": 8000, "like_count": 400},
+        ]
 
         results = hot_clips.find_hot_clips("같은채널")
 
-    # 2개 영상이 있지만 get_channel_recent_avg_views는 1번만 호출되어야 함 (채널 1개)
+    # 2개 영상이 있지만 _get_channel_raw_videos는 1번만 호출되어야 함 (채널 1개)
     assert len(results) == 2
-    assert m_avg.call_count == 1  # 중복 호출 방지
+    assert m_raw.call_count == 1  # 중복 호출 방지
 
 
 def test_find_hot_clips_caches_per_channel_not_per_video():
@@ -234,7 +231,7 @@ def test_find_hot_clips_caches_per_channel_not_per_video():
     with patch("scripts.yt_agents.hot_clips.search_videos") as m_search, \
          patch("scripts.yt_agents.hot_clips.get_video_stats") as m_vstats, \
          patch("scripts.yt_agents.hot_clips.get_channel_stats") as m_chstats, \
-         patch("scripts.yt_agents.hot_clips.get_channel_recent_avg_views") as m_avg:
+         patch("scripts.yt_agents.hot_clips._get_channel_raw_videos") as m_raw:
         # 3개 영상: 채널A, 채널B, 채널A
         m_search.return_value = [
             {"video_id": "v1", "title": "Video 1", "channel_id": "UCchA",
@@ -253,38 +250,93 @@ def test_find_hot_clips_caches_per_channel_not_per_video():
             "UCchA": {"subscriber_count": 10000, "video_count": 100},
             "UCchB": {"subscriber_count": 20000, "video_count": 200},
         }
-        m_avg.return_value = (500.0, 50.0)
+        # 채널별 raw 비디오 데이터
+        def raw_side_effect(ch_id, n=10):
+            if ch_id == "UCchA":
+                return [
+                    {"video_id": "v1", "view_count": 1000, "like_count": 100},
+                    {"video_id": "v3", "view_count": 900, "like_count": 90},
+                ]
+            elif ch_id == "UCchB":
+                return [
+                    {"video_id": "v2", "view_count": 2000, "like_count": 200},
+                ]
+            return []
+
+        m_raw.side_effect = raw_side_effect
 
         results = hot_clips.find_hot_clips("멀티채널")
 
-    # 3개 영상이지만 채널은 2개 → get_channel_recent_avg_views 2회만 호출
+    # 3개 영상이지만 채널은 2개 → _get_channel_raw_videos 2회만 호출
     assert len(results) == 3
-    assert m_avg.call_count == 2  # UCchA 1회, UCchB 1회
+    assert m_raw.call_count == 2  # UCchA 1회, UCchB 1회
 
 
 def test_find_hot_clips_excludes_self_video_from_average():
-    """각 영상의 exclude_video_id가 그 영상 자신이어야 함 (자기 포함 편향 방지)."""
+    """같은 채널의 여러 영상에서 각 영상이 정확히 '자신을 제외한' 평균을 사용해야 함.
+
+    Scenario: 채널 UCch에 3개 영상
+    - v1: 50000 views
+    - v2: 40000 views
+    - v3: 1000 views
+
+    Expected:
+    - v1의 평균 = (v2+v3)/2 = (40000+1000)/2 = 20500 (v1 제외)
+    - v2의 평균 = (v1+v3)/2 = (50000+1000)/2 = 25500 (v2 제외)
+    - v3의 평균 = (v1+v2)/2 = (50000+40000)/2 = 45000 (v3 제외)
+
+    v1, v2는 다른 평균을 사용해야 함 (버그: 기존 코드는 같은 캐시값을 재사용했음).
+    """
     with patch("scripts.yt_agents.hot_clips.search_videos") as m_search, \
          patch("scripts.yt_agents.hot_clips.get_video_stats") as m_vstats, \
          patch("scripts.yt_agents.hot_clips.get_channel_stats") as m_chstats, \
-         patch("scripts.yt_agents.hot_clips.get_channel_recent_avg_views") as m_avg:
+         patch("scripts.yt_agents.hot_clips._get_channel_raw_videos") as m_raw:
+
+        # 검색 결과: v1과 v2 (v3는 검색 결과에 없음, 하지만 채널의 최근 10개에는 포함)
         m_search.return_value = [
             {"video_id": "v1", "title": "Video 1", "channel_id": "UCch",
              "channel_title": "채널", "published_at": "2026-06-28T00:00:00Z", "thumbnail": "t1"},
             {"video_id": "v2", "title": "Video 2", "channel_id": "UCch",
              "channel_title": "채널", "published_at": "2026-06-27T00:00:00Z", "thumbnail": "t2"},
         ]
+
+        # 검색된 영상의 통계
         m_vstats.return_value = {
-            "v1": {"view_count": 1000, "like_count": 100, "comment_count": 10},
-            "v2": {"view_count": 2000, "like_count": 200, "comment_count": 20},
+            "v1": {"view_count": 50000, "like_count": 1000, "comment_count": 50},
+            "v2": {"view_count": 40000, "like_count": 800, "comment_count": 40},
         }
+
         m_chstats.return_value = {"UCch": {"subscriber_count": 5000, "video_count": 50}}
-        m_avg.return_value = (500.0, 50.0)
+
+        # 채널 UCch의 최근 영상 데이터 (v1, v2, v3 모두 포함)
+        m_raw.return_value = [
+            {"video_id": "v1", "view_count": 50000, "like_count": 1000},
+            {"video_id": "v2", "view_count": 40000, "like_count": 800},
+            {"video_id": "v3", "view_count": 1000, "like_count": 20},
+        ]
 
         results = hot_clips.find_hot_clips("셀프테스트")
 
-    # v1일 때 exclude_video_id='v1', v2일 때 exclude_video_id='v2' 검증
-    calls = m_avg.call_args_list
-    assert len(calls) == 1  # 캐시로 인해 1회만 호출
-    # 첫 번째 영상 처리 때 exclude_video_id='v1'로 호출되었는지 확인
-    assert calls[0].kwargs.get("exclude_video_id") == "v1" or calls[0].kwargs.get("exclude_video_id") == "v2"
+    # 2개 영상 결과 (v1, v2)
+    assert len(results) == 2
+
+    # v1 검증
+    r1 = next(r for r in results if r["video_id"] == "v1")
+    # v1의 평균 = (40000 + 1000) / 2 = 20500 (v1 자신 제외)
+    expected_v1_avg = (40000 + 1000) / 2  # 20500
+    expected_v1_pct = round((50000 - expected_v1_avg) / expected_v1_avg * 100, 1)  # (50000-20500)/20500*100 ≈ 143.9%
+    assert r1["view_pct_above_avg"] == pytest.approx(expected_v1_pct, rel=0.01)
+
+    # v2 검증
+    r2 = next(r for r in results if r["video_id"] == "v2")
+    # v2의 평균 = (50000 + 1000) / 2 = 25500 (v2 자신 제외)
+    expected_v2_avg = (50000 + 1000) / 2  # 25500
+    expected_v2_pct = round((40000 - expected_v2_avg) / expected_v2_avg * 100, 1)  # (40000-25500)/25500*100 ≈ 56.9%
+    assert r2["view_pct_above_avg"] == pytest.approx(expected_v2_pct, rel=0.01)
+
+    # 핵심: v1과 v2가 서로 다른 평균을 사용했음을 확인
+    # v1_pct != v2_pct 이어야 함 (버그 있으면 같았을 것)
+    assert abs(r1["view_pct_above_avg"] - r2["view_pct_above_avg"]) > 1  # 차이가 1% 이상 (143.9% vs 56.9%)
+
+    # _get_channel_raw_videos는 채널당 1회만 호출되어야 함 (캐시 확인)
+    assert m_raw.call_count == 1

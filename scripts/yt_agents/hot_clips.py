@@ -83,25 +83,46 @@ def get_channel_stats(channel_ids: list[str]) -> dict[str, dict]:
     return out
 
 
-def get_channel_recent_avg_views(channel_id: str, n: int = 10, exclude_video_id: str | None = None) -> tuple[float, float]:
-    """그 채널 최근 n개 영상의 평균 조회수·평균 좋아요. exclude_video_id면 그 영상 제외.
-    영상 없으면 (0.0, 0.0)."""
+def _get_channel_raw_videos(channel_id: str, n: int = 10) -> list[dict]:
+    """그 채널 최근 n개 영상의 raw 데이터 (ID, 조회수, 좋아요).
+    일반 공개 캐싱용 헬퍼 (find_hot_clips에서 호출함)."""
     params = {
         "part": "snippet", "channelId": channel_id, "type": "video",
         "order": "date", "maxResults": n, "key": _api_key(),
     }
     r = requests.get(f"{API_BASE}/search", params=params)
     r.raise_for_status()
-    all_video_ids = [item["id"]["videoId"] for item in r.json().get("items", [])]
-
-    # exclude_video_id가 있으면 목록에서 제거 (필요하면 API 호출)
-    video_ids = [vid for vid in all_video_ids if vid != exclude_video_id] if exclude_video_id else all_video_ids
+    video_ids = [item["id"]["videoId"] for item in r.json().get("items", [])]
 
     if not video_ids:
-        return 0.0, 0.0
+        return []
     stats = get_video_stats(video_ids)
-    views = [s["view_count"] for s in stats.values()]
-    likes = [s["like_count"] for s in stats.values()]
+    # 각 영상의 ID, 조회수, 좋아요를 dict 리스트로 반환
+    return [
+        {
+            "video_id": vid,
+            "view_count": stats[vid]["view_count"],
+            "like_count": stats[vid]["like_count"],
+        }
+        for vid in video_ids
+    ]
+
+
+def get_channel_recent_avg_views(channel_id: str, n: int = 10, exclude_video_id: str | None = None) -> tuple[float, float]:
+    """그 채널 최근 n개 영상의 평균 조회수·평균 좋아요. exclude_video_id면 그 영상 제외.
+    영상 없으면 (0.0, 0.0)."""
+    videos = _get_channel_raw_videos(channel_id, n=n)
+
+    if not videos:
+        return 0.0, 0.0
+
+    # Python에서 exclusion 적용
+    filtered = [v for v in videos if v["video_id"] != exclude_video_id] if exclude_video_id else videos
+
+    if not filtered:
+        return 0.0, 0.0
+    views = [v["view_count"] for v in filtered]
+    likes = [v["like_count"] for v in filtered]
     return (sum(views) / len(views), sum(likes) / len(likes))
 
 
@@ -126,19 +147,29 @@ def find_hot_clips(query: str) -> list[dict]:
     # 채널 통계 배치 조회
     channel_stats = get_channel_stats(unique_channel_ids)
 
-    # 채널 평균 조회수·좋아요 캐시 (API 호출 줄이기)
-    channel_avg_cache = {}
+    # 채널별 raw 영상 데이터 캐시 (API 호출 최소화)
+    # 각 채널의 최근 영상 리스트를 한 번만 fetch하고, 각 영상별로 exclusion 적용
+    channel_raw_videos_cache = {}
 
     results = []
     for v in videos:
         st = stats.get(v["video_id"], {"view_count": 0, "like_count": 0, "comment_count": 0})
         ch_id = v["channel_id"]
 
-        # 캐시에서 조회, 없으면 API 호출하여 캐시에 저장
-        if ch_id not in channel_avg_cache:
-            channel_avg_cache[ch_id] = get_channel_recent_avg_views(ch_id, exclude_video_id=v["video_id"])
+        # 채널별 raw 데이터를 캐시에서 조회, 없으면 API 호출하여 캐시에 저장
+        if ch_id not in channel_raw_videos_cache:
+            channel_raw_videos_cache[ch_id] = _get_channel_raw_videos(ch_id, n=10)
 
-        avg_view, avg_like = channel_avg_cache[ch_id]
+        # 이 영상 자신을 제외한 평균 계산 (Python에서 각 영상별로 개별 적용)
+        raw_videos = channel_raw_videos_cache[ch_id]
+        filtered = [rv for rv in raw_videos if rv["video_id"] != v["video_id"]]
+
+        if filtered:
+            avg_view = sum(rv["view_count"] for rv in filtered) / len(filtered)
+            avg_like = sum(rv["like_count"] for rv in filtered) / len(filtered)
+        else:
+            avg_view = 0.0
+            avg_like = 0.0
 
         view_pct = round((st["view_count"] - avg_view) / avg_view * 100, 1) if avg_view else 0.0
         like_pct = round((st["like_count"] - avg_like) / avg_like * 100, 1) if avg_like else 0.0
