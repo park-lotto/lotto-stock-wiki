@@ -7,11 +7,11 @@ def _patch(monkeypatch, index_moves, critique_pass=True, data=None):
                         lambda d: (data if data is not None else {"headline": "h", "date": d}))
     monkeypatch.setattr(mb, "_render_card", lambda data, date: "x.png")   # 렌더 우회
     monkeypatch.setattr(mb, "_get_index_moves", lambda: index_moves)
-    sent = {"photo": [], "msg": []}
+    sent = {"photo": [], "msg": [], "captions": []}
     monkeypatch.setattr(mb.viz_card, "send_telegram_photo",
-                        lambda png, caption="", chat_id=None: sent["photo"].append(chat_id) or True)
+                        lambda png, caption="", chat_id=None: sent["photo"].append(chat_id) or sent["captions"].append(caption) or True)
     monkeypatch.setattr(mb.viz_card, "send_telegram_message",
-                        lambda text, chat_id=None: sent["msg"].append(chat_id) or True)
+                        lambda text, chat_id=None: sent["msg"].append(chat_id) or sent["captions"].append(text) or True)
     monkeypatch.setattr(mb.quality, "critique", lambda data, fn: {"pass": critique_pass, "issues": []})
     return sent
 
@@ -70,3 +70,24 @@ def test_error_escalates_not_silent(monkeypatch, tmp_path):
     assert r["status"] == "escalated"
     assert any("실패" in x for x in r["reasons"])
     assert mb.pending.read() is not None
+
+
+def test_stage0_links_appended_to_caption_on_send(monkeypatch, tmp_path):
+    monkeypatch.setattr(mb.pending, "PENDING_PATH", tmp_path / "p.json")
+    sent = _patch(monkeypatch, {"kospi": -0.5, "kosdaq": 0.3})
+    # _patch()가 _ensure_scenario를 lambda date: None으로 고정하므로, 링크 반환 동작을 검증하려면
+    # _patch() 호출 이후에 다시 override해야 한다(monkeypatch는 나중 setattr가 이긴다).
+    monkeypatch.setattr(mb, "_ensure_scenario",
+                        lambda date: {"notebook_url": "https://notebooklm.google.com/notebook/nb1",
+                                      "report_url": "https://notebooklm.google.com/notebook/nb1"})
+    r = mb.run_morning_brief("2026-07-02", gemini_fn=lambda p: "{}")
+    assert r["status"] == "sent"
+    assert "captions" in sent and "notebooklm.google.com/notebook/nb1" in sent["captions"][0]
+
+
+def test_stage0_returns_none_no_crash(monkeypatch, tmp_path):
+    """하위호환: _ensure_scenario가 None을 리턴해도(기존 테스트 monkeypatch 방식) 죽지 않음."""
+    monkeypatch.setattr(mb.pending, "PENDING_PATH", tmp_path / "p.json")
+    sent = _patch(monkeypatch, {"kospi": -0.5, "kosdaq": 0.3})   # _patch가 _ensure_scenario→None으로 설정
+    r = mb.run_morning_brief("2026-07-02", gemini_fn=lambda p: "{}")
+    assert r["status"] == "sent"
