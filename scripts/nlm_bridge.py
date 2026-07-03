@@ -490,13 +490,32 @@ _BRAND_DESIGN = (
     "정보 밀도 높게, 디테일하고 세련되게 구성."
 )
 
+# 대안 브랜드 스타일 실험용 — brand= 키를 주면 _BRAND_DESIGN(라임그린 HUD)을 완전히
+# 대체한다(섞이지 않음). getdesign.md 등 실제 브랜드 CI/BI를 참고해 텍스트로 요약.
+# 새 스타일 추가 시 여기 dict에 항목만 늘리면 됨(애플/구글 등 후속 실험 대비).
+BRAND_STYLE_PRESETS = {
+    "claude": (
+        "[디자인 지침] Anthropic의 Claude AI 공식 브랜드 아이덴티티(CI/BI)를 그대로 참고해서 "
+        "디자인해라 — 실제 Anthropic/Claude 공식 웹사이트·브랜드 자료에서 쓰는 것과 동일한 "
+        "룩앤필로 재현해라. Claude 특유의 따뜻한 크림색(#faf9f5) 배경, 코랄/테라코타(#cc785c) "
+        "포인트 컬러, 세리프 디스플레이 타이포그래피, 미니멀하고 에디토리얼한 레이아웃을 "
+        "실제 Anthropic 브랜드처럼 정확하게 구현해라. 라임그린이나 네온 계열 색은 절대 쓰지 마라."
+    ),
+}
 
-def create_infographic(nb_id: str, out_dir: str = None, focus: str = "") -> dict:
+
+def create_infographic(nb_id: str, out_dir: str = None, focus: str = "", brand: str = None) -> dict:
     """노트북 소스로 NotebookLM 인포그래픽(PNG) 생성(동기 폴링, 최대 ~150초).
     {"ok","path","error"}. 다운로드된 파일이 실제 존재해야 ok=True(카드 발행 필수조건이라 엄격 판정).
-    저장 위치: out_dir/infographic_{nb_id}.png."""
+    brand=None(기본): 기존 라임그린 HUD(_BRAND_DESIGN) 적용, focus는 보조 지침으로 덧붙음(기존 동작 그대로).
+    brand="claude" 등: BRAND_STYLE_PRESETS[brand]가 _BRAND_DESIGN을 완전히 대체(안 섞임).
+    저장 위치: out_dir/infographic_{nb_id}.png (brand 지정 시 infographic_{nb_id}_{brand}.png)."""
     import json as _json
-    parts = ([focus] if focus else []) + [_BRAND_DESIGN]
+    if brand:
+        base_design = BRAND_STYLE_PRESETS[brand]
+    else:
+        base_design = _BRAND_DESIGN
+    parts = ([focus] if focus else []) + [base_design]
     focus_text = " / ".join(parts)
     ok, out, errm = _run_nlm(
         ["infographic", "create", nb_id, "--confirm", "--language", "ko",
@@ -522,7 +541,8 @@ def create_infographic(nb_id: str, out_dir: str = None, focus: str = "") -> dict
 
     base_dir = Path(out_dir) if out_dir else (ROOT / "out" / "insights_notebook")
     base_dir.mkdir(parents=True, exist_ok=True)
-    ip = base_dir / f"infographic_{re.sub(r'[^0-9a-fA-F-]', '', nb_id)}.png"
+    suffix = f"_{brand}" if brand else ""
+    ip = base_dir / f"infographic_{re.sub(r'[^0-9a-fA-F-]', '', nb_id)}{suffix}.png"
     dargs = ["download", "infographic", nb_id, "-o", str(ip)]
     if art_id:
         dargs += ["--id", art_id]
