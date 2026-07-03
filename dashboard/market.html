@@ -166,12 +166,10 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 .mkt-insight .mi-body{font-size:14px;font-weight:400;color:#eee;line-height:1.75;}
 .mkt-insight .mi-body .mi-para{margin-bottom:9px;}
 .mkt-insight .mi-body .mi-para:last-child{margin-bottom:0;}
-/* 오늘의 리포트 탑픽 — 브리핑 코멘트와 분리된 별도 박스 */
-.mkt-topick{padding:10px 14px;margin-bottom:8px;border-radius:6px;
-  background:rgba(90,160,255,.08);border:1px solid rgba(90,160,255,.35);}
-.mkt-topick .mt-title{font-size:13px;font-weight:700;color:#8ab4ff;margin-bottom:6px;}
-.mkt-topick .mt-item{font-size:12.5px;color:#dde;line-height:1.6;margin-bottom:3px;}
-.mkt-topick .mt-item:last-child{margin-bottom:0;}
+/* 오늘의 리포트 탑픽 — mkt-below-panel의 독립 카드 */
+.mt-title{font-size:15px;font-weight:700;color:#8ab4ff;margin-bottom:8px;}
+.mt-item{font-size:13px;color:#ddd;line-height:1.7;margin-bottom:6px;}
+.mt-item:last-child{margin-bottom:0;}
 .briefing-feed{max-height:520px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;}
 .briefing-item{padding:9px 11px;border-radius:6px;background:#1a1a1a;border-left:3px solid #444;}
 .briefing-item.sev-red{border-left-color:#e05252;}
@@ -555,6 +553,9 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 
 <!-- 코스피/코스닥 패널 -->
 <div id="mkt-panel" style="display:flex;gap:12px;padding:12px 24px 0;align-items:stretch;"></div>
+
+<!-- 뉴스속보 / 리포트탑픽 (브리핑 카드 아래 별도 가로줄) -->
+<div id="mkt-below-panel" style="display:flex;gap:12px;padding:12px 24px 0;align-items:stretch;"></div>
 
 <!-- 탭 바 -->
 <div class="tab-bar" id="tab-bar">
@@ -1430,12 +1431,51 @@ let _briefingItems=[];
 let _marketInsight=null;
 let _briefingLoaded=false;
 let _briefingExpanded=false;
+
+// 뉴스속보(3개+더보기) / 리포트탑픽 — 5개 박스 아래 별도 가로줄(mkt-below-panel)
+function renderBelowPanel(){
+  const container=document.getElementById("mkt-below-panel");
+  if(!container)return;
+  const items=_briefingItems||[];
+  const visibleItems=_briefingExpanded?items:items.slice(0,3);
+  const rows=visibleItems.length
+    ?visibleItems.map(it=>{
+      const sev=it.severity==="red"?"sev-red":it.severity==="yellow"?"sev-yellow":"sev-gray";
+      const icon=it.severity==="red"?"🔴":it.severity==="yellow"?"🟡":"⚪";
+      const body=it.body?`<div class="bi-body">${esc(it.body)}</div>`:"";
+      return `<div class="briefing-item ${sev}">
+        <div class="bi-ts">${icon} ${esc(it.ts)}</div>
+        <div class="bi-headline">${esc(it.headline)}</div>
+        ${body}
+      </div>`;
+    }).join("")
+    :_briefingLoaded
+      ?`<div style="color:#888;font-size:13px;padding:8px;">아직 브리핑 없음</div>`
+      :`<div style="color:#888;font-size:13px;padding:8px;">불러오는 중...</div>`;
+  const toggleHtml=items.length>3
+    ?`<button class="briefing-toggle" onclick="toggleBriefingExpand()">${_briefingExpanded?"▲ 접기":`▼ 더보기 (${items.length-3}개)`}</button>`
+    :"";
+
+  const topickList=(_marketInsight&&_marketInsight.topick)||[];
+  const topickHtml=topickList.length
+    ?topickList.map(t=>`<div class="mt-item">🎯 <b>${esc(t.asset)}</b>: ${esc(t.content)}</div>`).join("")
+    :`<div style="color:#888;font-size:13px;padding:8px;">오늘자 탑픽 언급 없음</div>`;
+
+  container.innerHTML=`
+    <div class="mkt-card" style="flex:1;min-width:0;">
+      <div style="font-size:15px;font-weight:700;color:#ddd;margin-bottom:6px;">📰 뉴스속보</div>
+      <div class="briefing-feed">${rows}</div>
+      ${toggleHtml}
+    </div>
+    <div class="mkt-card" style="flex:1;min-width:0;">
+      <div class="mt-title" style="font-size:15px;">📈 오늘의 리포트 탑픽</div>
+      ${topickHtml}
+    </div>`;
+}
+
 function toggleBriefingExpand(){
   _briefingExpanded=!_briefingExpanded;
-  try{
-    const raw=localStorage.getItem(_MF_CACHE_KEY);
-    if(raw){const {data}=JSON.parse(raw); if(data) renderMarketFlow(data);}
-  }catch(_){}
+  renderBelowPanel();
 }
 
 async function loadMarketBriefing(){
@@ -1454,8 +1494,10 @@ async function loadMarketBriefing(){
     const raw=localStorage.getItem(_MF_CACHE_KEY);
     if(raw){const {data}=JSON.parse(raw); if(data) renderMarketFlow(data);}
   }catch(_){}
+  renderBelowPanel();
 }
 
+const MKT_CARD_HEIGHT=610;   // 5개 박스(코스피/코스닥/글로벌지표/순위/브리핑) 고정 높이(px)
 const _MF_CACHE_KEY="mf_cache_v2";
 const _MF_CACHE_TTL=300000; // 5분
 
@@ -1593,15 +1635,8 @@ function renderMarketFlow(d){
     panel.innerHTML=["0001","1001","global","rank_popular","briefing"].map(code=>{
       const m=d[code]; if(code!=="briefing" && !m)return"";
 
-      // ── 실시간 시장 브리핑 카드 ──
+      // ── 실시간 시장 브리핑 카드 (헤드라인+본문만, 뉴스/탑픽은 mkt-below-panel로 분리) ──
       if(code==="briefing"){
-        const topickList=(_marketInsight&&_marketInsight.topick)||[];
-        const topickBoxHtml=topickList.length
-          ?`<div class="mkt-topick">
-              <div class="mt-title">📈 오늘의 리포트 탑픽</div>
-              ${topickList.map(t=>`<div class="mt-item">🎯 <b>${esc(t.asset)}</b>: ${esc(t.content)}</div>`).join("")}
-            </div>`
-          :"";
         const insightHtml=(()=>{
           if(!_marketInsight)return"";
           const headline=_marketInsight.headline||"";
@@ -1609,36 +1644,14 @@ function renderMarketFlow(d){
           const paragraphs=bodyRaw.split(/\n\s*\n/).map(p=>p.trim()).filter(Boolean);
           const bodyHtml=paragraphs.map(p=>`<div class="mi-para">${esc(p)}</div>`).join("");
           const headlineHtml=headline?`<div class="mi-headline">${esc(headline)}</div>`:"";
-          return `<div class="mkt-insight">
+          return `<div class="mkt-insight" style="margin-bottom:0;">
               ${headlineHtml}
               <div class="mi-body">${bodyHtml}</div>
             </div>`;
         })();
-        const items=_briefingItems||[];
-        const visibleItems=_briefingExpanded?items:items.slice(0,3);
-        const rows=visibleItems.length
-          ?visibleItems.map(it=>{
-            const sev=it.severity==="red"?"sev-red":it.severity==="yellow"?"sev-yellow":"sev-gray";
-            const icon=it.severity==="red"?"🔴":it.severity==="yellow"?"🟡":"⚪";
-            const body=it.body?`<div class="bi-body">${esc(it.body)}</div>`:"";
-            return `<div class="briefing-item ${sev}">
-              <div class="bi-ts">${icon} ${esc(it.ts)}</div>
-              <div class="bi-headline">${esc(it.headline)}</div>
-              ${body}
-            </div>`;
-          }).join("")
-          :_briefingLoaded
-            ?`<div style="color:#888;font-size:13px;padding:8px;">아직 브리핑 없음</div>`
-            :`<div style="color:#888;font-size:13px;padding:8px;">불러오는 중...</div>`;
-        const toggleHtml=items.length>3
-          ?`<button class="briefing-toggle" onclick="toggleBriefingExpand()">${_briefingExpanded?"▲ 접기":`▼ 더보기 (${items.length-3}개)`}</button>`
-          :"";
         return `<div class="mkt-card" style="flex:1;min-width:0;">
           <div style="font-size:15px;font-weight:700;color:#ddd;margin-bottom:6px;">📡 실시간 브리핑</div>
-          ${insightHtml}
-          ${topickBoxHtml}
-          <div class="briefing-feed">${rows}</div>
-          ${toggleHtml}
+          ${insightHtml||`<div style="color:#888;font-size:13px;padding:8px;">${_briefingLoaded?"아직 브리핑 없음":"불러오는 중..."}</div>`}
         </div>`;
       }
 
@@ -1800,21 +1813,17 @@ function renderMarketFlow(d){
         <div class="mkt-ts">${ts} 기준</div>
       </div>`;
     }).join("");
-  // 렌더 후 높이 균일화: 4번(순위) 자연 높이 기준 → 나머지 space-between으로 채움
+  // 렌더 후 높이 고정: 5개 박스 전부 MKT_CARD_HEIGHT로 고정, 내용이 넘치면 카드별로 스크롤
+  // (콘텐츠양에 따라 계속 늘어나던 것 방지 — 뉴스/탑픽은 mkt-below-panel로 분리해서 나감)
   requestAnimationFrame(()=>{
     const cards=[...document.querySelectorAll('#mkt-panel .mkt-card')];
     if(cards.length<4) return;
     cards.forEach(c=>{ c.style.height=''; c.style.overflowY=''; c.style.justifyContent=''; });
-    const refH=Math.max(cards[2].offsetHeight, cards[3].offsetHeight);
-    cards.forEach((c,i)=>{
+    cards.forEach(c=>{
       const nat=c.offsetHeight;
-      c.style.height=refH+'px';
-      if(i<2){
-        if(nat>refH) c.style.overflowY='auto';       // 내용이 넘치면 스크롤
-        else c.style.justifyContent='space-between';  // 짧으면 균등 분산
-      } else {
-        c.style.justifyContent='space-between';
-      }
+      c.style.height=MKT_CARD_HEIGHT+'px';
+      if(nat>MKT_CARD_HEIGHT) c.style.overflowY='auto';       // 내용이 넘치면 스크롤
+      else c.style.justifyContent='space-between';             // 짧으면 균등 분산
     });
   });
   }catch(e){
@@ -3536,6 +3545,7 @@ loadMarketFlow();          // 실제 API 데이터로 즉시 교체
 loadWatchlist();           // 관심종목 + 잠정수급
 setInterval(loadEtfBar,    30000);
 setInterval(loadMarketFlow, 30000);
+renderBelowPanel();         // 즉시 "불러오는 중" 표시 (빈화면 방지)
 loadMarketBriefing();
 setInterval(loadMarketBriefing, 30000);
 setInterval(loadWatchlist,  60000);  // 수급 키움 콜 부하 고려 60초
