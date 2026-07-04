@@ -13,7 +13,7 @@ def _dday(today: str, event_date: str) -> int:
     return (_date(y2, m2, d2) - _date(y1, m1, d1)).days
 
 
-def select_future_events(today: str, watchlist=None, sector=None) -> list[dict]:
+def select_future_events(today: str, watchlist=None, sector=None, days=None) -> list[dict]:
     conn = get_conn()
     rows = conn.execute(
         "SELECT * FROM atoms WHERE event_type='event' AND is_active=1 "
@@ -29,6 +29,8 @@ def select_future_events(today: str, watchlist=None, sector=None) -> list[dict]:
         except (json.JSONDecodeError, TypeError):
             d["structured_fields"] = {}
         d["dday"] = _dday(today, d["event_date"])
+        if days is not None and d["dday"] > days:
+            continue
         affected = d["structured_fields"].get("affected_stocks", [])
         if watchlist and not (set(watchlist) & set(affected)):
             continue
@@ -36,6 +38,23 @@ def select_future_events(today: str, watchlist=None, sector=None) -> list[dict]:
             continue
         out.append(d)
     return out
+
+
+def to_api_dict(e: dict) -> dict:
+    """프론트 바인딩용 평면 dict."""
+    sf = e.get("structured_fields", {})
+    return {
+        "event_date": e.get("event_date"),
+        "dday": e.get("dday"),
+        "asset": e.get("asset"),
+        "sector": e.get("sector"),
+        "content": e.get("content"),
+        "event_kind": sf.get("event_kind"),
+        "entity_scope": sf.get("entity_scope"),
+        "confidence": sf.get("confidence"),
+        "confirmed": sf.get("confirmed"),
+        "affected_stocks": sf.get("affected_stocks", []),
+    }
 
 
 _CONF_LABEL = {1: "● 확정", 2: "◐ 높음", 3: "○ 관측", 4: "· 추정"}
