@@ -32,7 +32,7 @@ if sys.stdin.encoding and sys.stdin.encoding.lower() not in ("utf-8", "utf8"):
     except Exception:
         pass
 
-from .atomizer import _make_id, _load_gemini_key
+from .atomizer import _make_id
 from .db import init_db, insert_atom, get_conn
 from .vector_db import embed_and_store
 
