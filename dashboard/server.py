@@ -227,6 +227,13 @@ except (ImportError, SystemExit):
     run_plan_stage = None  # type: ignore
 
 try:
+    import hot_clips as _hotclips  # noqa: E402  (find_and_rank/classify)
+    import clip_teardown as _teardown  # noqa: E402  (teardown/mix)
+except (ImportError, SystemExit):
+    _hotclips = None  # type: ignore
+    _teardown = None  # type: ignore
+
+try:
     import global_api  # noqa: E402
 except (ImportError, Exception):
     global_api = None  # type: ignore
@@ -3035,6 +3042,152 @@ def _briefing_run_synthesis(alerts: list) -> None:
         pass
 
 
+import briefing_phase
+import briefing_events as _bev
+import briefing_weather as _bw
+import briefing_digest as _bdig
+import briefing_state as _bstate
+
+_WEATHER_STATE_PATH = os.path.join(ROOT, "output", "weather_state.json")
+_WEATHER_CALIB_DIR = os.path.join(ROOT, "output", "weather_calib")
+_BRIEFING_AGENT_CWD = os.environ.get("BRIEFING_AGENT_CWD", "/home/ubuntu/briefing_agent")
+_WEATHER_MIN_INTERVAL_S = 90
+_WEATHER_DAILY_CAP = 60
+_weather = {"detect": {"cooldown": {}, "leg": {}}, "state": None,
+            "batcher": _bdig.DigestBatcher(900), "model_toggle": 0,
+            "calib_today": [], "synth_count": 0, "last_synth_ts": 0.0}
+
+
+def _weather_tg(text: str):
+    """텔레그램 전송 (BOT_TOKEN + CHAT_ID/OWNER_CHAT_ID). 실패 무시."""
+    import urllib.request, urllib.parse
+    token = os.environ.get("BOT_TOKEN", "")
+    chat = os.environ.get("CHAT_ID", "") or os.environ.get("OWNER_CHAT_ID", "")
+    if not token or not chat:
+        return
+    try:
+        data = urllib.parse.urlencode({"chat_id": chat, "text": text}).encode()
+        urllib.request.urlopen(f"https://api.telegram.org/bot{token}/sendMessage",
+                               data=data, timeout=8)
+    except Exception:
+        pass
+
+
+def _weather_calib_append(date_str, row, results):
+    try:
+        os.makedirs(_WEATHER_CALIB_DIR, exist_ok=True)
+        rec = dict(row)
+        rec["outputs"] = {m: {"verdict": r.get("verdict"), "latency_ms": r.get("_latency_ms"),
+                              "model": r.get("_model")} for m, r in results.items()}
+        with open(os.path.join(_WEATHER_CALIB_DIR, f"{date_str}.jsonl"), "a", encoding="utf-8") as f:
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
+
+
+def _weather_tick():
+    """30초 틱: 스냅샷→디텍터→(발동 시)종합→스토리·insight·다이제스트. Phase0 관측."""
+    now = datetime.now()
+    phase = briefing_phase.session_phase(now)
+    date_str = now.strftime("%Y-%m-%d")
+
+    st = _weather["state"] or _bstate.load_state(_WEATHER_STATE_PATH)
+    if _bstate.is_new_day(st or {}, date_str):
+        st = _bstate.reset_state(date_str)
+        _weather["detect"] = {"cooldown": {}, "leg": {}}
+        _weather["calib_today"] = []
+        _weather["synth_count"] = 0
+    _weather["state"] = st
+
+    mf = (_prewarm_cache.get("market_flow") or {}).get("data") or {}
+    hm = (_heatmap_cache.get("all") or {}).get("data") or {}
+    sectors = hm.get("sectors", []) if isinstance(hm, dict) else []
+    j_bars = mf.get("J_bars") or []
+    nq_bars = (mf.get("NQ") or {}).get("bars") or []
+    curr = _bev.build_snapshot(mf, sectors, j_bars, mf.get("Q_bars") or [],
+                               ts=now.strftime("%H:%M"))
+    prev = st.get("baseline")
+    live_ok = curr["idx"]["J"]["price"] > 0
+
+    events = []
+    if live_ok:
+        events = _bev.detect_all(prev, curr, sectors, j_bars, nq_bars, phase, _weather["detect"])
+
+    news = []
+    try:
+        atoms_db = os.path.join(ROOT, "pipeline", "atoms", "atoms.db")
+        news = [t.get("content", "")[:120] for t in _recent_topick_mentions(atoms_db, limit=8)]
+    except Exception:
+        pass
+
+    phase_changed = st.get("session_phase") != phase
+    if phase == "closed" and st.get("session_phase") == "intraday":
+        try:
+            _weather_tg(_bdig.format_daily(_weather.get("calib_today", [])))
+        except Exception:
+            pass
+    heartbeat = time.time() - _weather["last_synth_ts"] >= 1800
+    fire = bool(events) or phase_changed or (heartbeat and (live_ok or news))
+
+    if fire and (time.time() - _weather["last_synth_ts"] < _WEATHER_MIN_INTERVAL_S):
+        fire = False
+    if fire and _weather["synth_count"] >= _WEATHER_DAILY_CAP and not events:
+        fire = False
+
+    if fire:
+        has_major = any(e.get("major") for e in events)
+        facts = {"phase": phase, "J": curr["idx"]["J"], "Q": curr["idx"]["Q"],
+                 "inv": curr["inv"], "prog": curr["prog"], "nq": curr["nq"]}
+        models = ["opus", "sonnet"] if has_major else \
+                 (["opus"] if _weather["model_toggle"] % 2 == 0 else ["sonnet"])
+        _weather["model_toggle"] += 1
+        results = {}
+        for m in models:
+            r = _bw.synthesize(facts, events, st, news, phase, model=m,
+                               gemini_fn=_gemini_text, cwd=_BRIEFING_AGENT_CWD,
+                               claude_bin=CLAUDE_BIN or "claude")
+            if r:
+                results[m] = r
+        _weather["last_synth_ts"] = time.time()
+        _weather["synth_count"] += 1
+
+        primary = results.get("opus") or (results.get("sonnet") if results else None)
+        if primary:
+            st["verdict"] = {**primary["verdict"], "ts": now.strftime("%H:%M")}
+            st["narrative"] = primary.get("narrative", "")
+            for tp in primary.get("new_turning_points", []):
+                st["turning_points"].append(tp)
+            st["session_phase"] = phase
+            st["baseline"] = curr
+            st["updated_at"] = now.strftime("%H:%M")
+            _bstate.save_state(_WEATHER_STATE_PATH, st)
+            _briefing_set_insight(BRIEFING_PATH, {
+                "ts": now.strftime("%H:%M"),
+                "verdict": st["verdict"], "narrative": st["narrative"],
+                "turning_points": st["turning_points"][-6:],
+                "session_phase": phase})
+            row = {"ts": now.strftime("%H:%M"), "fired_events": events,
+                   "models": list(results.keys()), "noise_flag": False,
+                   "verdict": st["verdict"]}
+            _weather["calib_today"].append(row)
+            _weather_calib_append(date_str, row, results)
+            digest_result = results.get("opus") or primary
+            if has_major and "sonnet" in results:
+                digest_result = {**digest_result,
+                                 "narrative": digest_result.get("narrative", "") +
+                                 f"\n---[sonnet] {results['sonnet']['verdict'].get('line','')}"}
+            msg = _weather["batcher"].add(events, digest_result, time.time())
+            if msg:
+                _weather_tg(msg)
+        else:
+            st["session_phase"] = phase
+    else:
+        if live_ok and prev is not None:
+            st["baseline"] = curr
+        st["session_phase"] = phase
+    _weather["state"] = st
+
+
 def _poll_briefing():
     """30초 주기 — market_flow 임계치 감지 + 12분 고정주기 종합. 감지 즉시 종합도 트리거."""
     _last_fixed_synth = 0.0
@@ -3056,9 +3209,7 @@ def _poll_briefing():
                     _last_fixed_synth = time.time()
                     _briefing_run_synthesis([])
 
-                if time.time() - _insight_last_run["ts"] >= 900:
-                    _insight_last_run["ts"] = time.time()
-                    _insight_run_synthesis(curr)
+                _weather_tick()
         except Exception:
             pass
         time.sleep(30)
@@ -5365,6 +5516,84 @@ async def api_yt_generate_plan(req: Request):
                 yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
         except Exception as e:
             yield f"data: {json.dumps({'type': 'error', 'message': str(e)[:200]}, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(_stream(), media_type="text/event-stream")
+
+
+# ── §5-B 레퍼런스 창고: 카테고리→검색→해체→믹스 ───────────────
+_YT_CATS_PATH = os.path.join(ROOT, "scripts", "yt_agents", "yt_categories.json")
+
+
+@app.get("/yt/categories")
+def api_yt_categories():
+    try:
+        with open(_YT_CATS_PATH, encoding="utf-8") as f:
+            return JSONResponse(content=json.load(f))
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+
+@app.post("/yt/category_search")
+async def api_yt_category_search(req: Request):
+    """카테고리 id → 그 카테고리 검색어들로 검색 + 검증순위(금맥/채널빨 판정)."""
+    if _hotclips is None:
+        return JSONResponse(content={"error": "hot_clips 모듈 없음"}, status_code=503)
+    body = await req.json()
+    cat_id = (body.get("category_id") or "").strip()
+    with open(_YT_CATS_PATH, encoding="utf-8") as f:
+        cats = json.load(f)["categories"]
+    cat = next((c for c in cats if c["id"] == cat_id), None)
+    if not cat:
+        return JSONResponse(content={"error": "알 수 없는 카테고리"}, status_code=400)
+    queries = cat["queries"][: int(body.get("max_queries", 2))]
+
+    def _do():
+        return _hotclips.find_and_rank(queries)
+
+    rows = await run_in_threadpool(_do)
+    return JSONResponse(content={"category": cat["name"], "results": rows})
+
+
+@app.post("/yt/teardown")
+async def api_yt_teardown(req: Request):
+    """영상 1개 완전 해체(제미니 시청) — SSE. ~1~2분 소요."""
+    if _teardown is None:
+        return JSONResponse(content={"error": "clip_teardown 모듈 없음"}, status_code=503)
+    body = await req.json()
+    vid = (body.get("video_id") or "").strip()
+    if not vid:
+        return JSONResponse(content={"error": "video_id 필요"}, status_code=400)
+    title, channel, stats = body.get("title", ""), body.get("channel", ""), body.get("stats") or {}
+
+    def _stream():
+        yield f"data: {json.dumps({'type':'running','video_id':vid}, ensure_ascii=False)}\n\n"
+        try:
+            card = _teardown.teardown(vid, title, channel, stats)
+            yield f"data: {json.dumps({'type':'done','card':card}, ensure_ascii=False)}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'type':'error','message':str(e)[:200]}, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(_stream(), media_type="text/event-stream")
+
+
+@app.post("/yt/mix")
+async def api_yt_mix(req: Request):
+    """해체카드 여러 개 → 우리 채널 대본 초안 믹스(제미니) — SSE."""
+    if _teardown is None:
+        return JSONResponse(content={"error": "clip_teardown 모듈 없음"}, status_code=503)
+    body = await req.json()
+    cards = body.get("cards") or []
+    category = body.get("category", "")
+    if not cards:
+        return JSONResponse(content={"error": "해체카드 필요"}, status_code=400)
+
+    def _stream():
+        yield f"data: {json.dumps({'type':'running'}, ensure_ascii=False)}\n\n"
+        try:
+            draft = _teardown.mix(cards, category)
+            yield f"data: {json.dumps({'type':'done','draft':draft}, ensure_ascii=False)}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'type':'error','message':str(e)[:200]}, ensure_ascii=False)}\n\n"
 
     return StreamingResponse(_stream(), media_type="text/event-stream")
 
