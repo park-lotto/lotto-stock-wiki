@@ -39,20 +39,41 @@ th { color: var(--muted); font-weight: 600; font-size: .74rem; }
 .plan-box h1 { font-size: 1.1rem; color: var(--gold); margin-bottom: 8px; }
 .plan-box { font-size: .88rem; line-height: 1.7; }
 .action-row { display: flex; gap: 8px; margin-top: 14px; }
+.guide-box { max-width: 900px; margin: 16px auto 0; padding: 16px 28px 0; }
+.guide-box .card { font-size: .82rem; line-height: 1.7; color: var(--txt); position: relative; }
+.guide-box .card b { color: var(--gold); }
+.guide-close { position: absolute; top: 10px; right: 12px; background: none; border: none;
+  color: var(--muted); cursor: pointer; font-size: .8rem; }
+.hint { font-size: .74rem; color: var(--muted); margin: 2px 0 4px; }
 </style>
 </head>
 <body>
 
 <div class="topbar">
   <span class="brand">🎬 영상제작 스튜디오</span>
-  <a href="/" style="color:var(--muted);font-size:.8rem;text-decoration:none">← 메인으로</a>
+  <div style="display:flex;align-items:center;gap:14px">
+    <button class="btn secondary" style="font-size:.78rem;padding:6px 12px" onclick="toggleGuide()">❓ 사용법</button>
+    <a href="/" style="color:var(--muted);font-size:.8rem;text-decoration:none">← 메인으로</a>
+  </div>
+</div>
+
+<div class="guide-box" id="guide-box" style="display:none">
+  <div class="card">
+    <button class="guide-close" onclick="closeGuide()">✕ 닫기</button>
+    📖 <b>이렇게 쓰세요</b><br>
+    <b>① 아이디어</b> — 오늘 다룰 소재를 한 문장으로 적으세요. (예: "메타발 반도체 조정, 오늘 아침 리포트는 정반대였다")<br>
+    <b>② 터진 영상</b> (선택) — 관련 키워드로 검색하면 그 채널 자체 평균조회수 대비 얼마나 잘 나왔는지(기여도·성과도: Great/Good/Normal)를 보여줍니다. 참고할 영상은 "담기"로 추가하면 기획서 생성 시 레퍼런스로 같이 들어갑니다.<br>
+    <b>③ 생성</b> — "기획서 생성"을 누르면 AI가 초안을 쓰고 자체 QC(품질검사, 9점 만점 중 7점 이상)를 통과할 때까지 최대 3번까지 자동으로 다시 씁니다. 진행 상황이 실시간으로 표시되고, 완성되면 마크다운 기획서가 아래에 뜹니다.
+  </div>
 </div>
 
 <div id="app">
   <div class="label">① 아이디어</div>
+  <div class="hint">오늘 다룰 소재를 한 문장으로</div>
   <input type="text" id="idea-input" placeholder="예: 어젯밤 메타발 반도체 조정, 오늘 아침 리포트는 정반대였다">
 
   <div class="label">② 터진 영상 (선택사항)</div>
+  <div class="hint">키워드로 검색 → 채널 평균 대비 잘 나온 영상을 "담기"로 참고자료 추가</div>
   <div style="display:flex;gap:8px">
     <input type="text" id="hotclip-query" placeholder="검색어: 반도체 조정" style="flex:1">
     <button class="btn secondary" onclick="searchHotClips()">🔥 실시간 탐지</button>
@@ -61,6 +82,7 @@ th { color: var(--muted); font-weight: 600; font-size: .74rem; }
   <div id="hotclip-picked" style="font-size:.78rem;color:var(--muted);margin-top:6px"></div>
 
   <div class="label">③ 생성</div>
+  <div class="hint">QC 통과할 때까지 최대 3회 자동 재작성 (진행상황 실시간 표시)</div>
   <button class="btn" id="generate-btn" onclick="generatePlan()">🎬 기획서 생성</button>
 
   <div id="progress-area"></div>
@@ -71,6 +93,19 @@ th { color: var(--muted); font-weight: 600; font-size: .74rem; }
 let pickedRefs = [];
 let lastHotClipResults = [];
 function esc(s){return String(s == null ? '' : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+const GUIDE_KEY = 'yt_guide_dismissed';
+function toggleGuide() {
+  const box = document.getElementById('guide-box');
+  box.style.display = box.style.display === 'none' ? 'block' : 'none';
+}
+function closeGuide() {
+  document.getElementById('guide-box').style.display = 'none';
+  localStorage.setItem(GUIDE_KEY, '1');
+}
+if (!localStorage.getItem(GUIDE_KEY)) {
+  document.addEventListener('DOMContentLoaded', () => { document.getElementById('guide-box').style.display = 'block'; });
+}
 
 async function searchHotClips() {
   const q = document.getElementById('hotclip-query').value.trim();
