@@ -111,17 +111,29 @@ async function searchHotClips() {
   const q = document.getElementById('hotclip-query').value.trim();
   if (!q) return;
   const box = document.getElementById('hotclip-results');
-  box.innerHTML = '<p style="color:var(--muted);font-size:.82rem">검색 중…</p>';
+  box.innerHTML = '<p style="color:var(--muted);font-size:.82rem">검색 중… (유튜브 실시간 조회라 5~15초 걸릴 수 있어요)</p>';
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
   try {
     const res = await fetch('/yt/hot_clips', {
       method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({q})
+      body: JSON.stringify({q}), signal: controller.signal
     });
-    const data = await res.json();
-    if (data.error) { box.innerHTML = `<p style="color:#e88">${data.error}</p>`; return; }
+    clearTimeout(timeoutId);
+    let data = null;
+    try { data = await res.json(); } catch (_) { /* 비JSON 응답, 아래에서 처리 */ }
+    if (!res.ok || (data && data.error)) {
+      const msg = (data && data.error) || `검색 실패 (HTTP ${res.status})`;
+      box.innerHTML = `<p style="color:#e88">${esc(msg)} ` +
+        `<button class="btn secondary" style="font-size:.75rem;padding:3px 10px" onclick="searchHotClips()">🔁 재시도</button></p>`;
+      return;
+    }
     renderHotClips(data.results);
   } catch (e) {
-    box.innerHTML = `<p style="color:#e88">검색 실패: ${e.message}</p>`;
+    clearTimeout(timeoutId);
+    const msg = e.name === 'AbortError' ? '시간 초과 (30초) — 네트워크가 느리거나 유튜브 API가 지연 중일 수 있어요' : `네트워크 오류: ${e.message}`;
+    box.innerHTML = `<p style="color:#e88">검색 실패 — ${msg} ` +
+      `<button class="btn secondary" style="font-size:.75rem;padding:3px 10px" onclick="searchHotClips()">🔁 재시도</button></p>`;
   }
 }
 
@@ -190,7 +202,8 @@ async function generatePlan() {
       }
     }
   } catch (e) {
-    progressCard.innerHTML += `<div class="qc-line" style="color:#e88">실패: ${e.message}</div>`;
+    progressCard.innerHTML += `<div class="qc-line" style="color:#e88">실패: ${e.message} ` +
+      `<button class="btn secondary" style="font-size:.75rem;padding:3px 10px" onclick="generatePlan()">🔁 재시도</button></div>`;
   } finally {
     btn.disabled = false; btn.textContent = '🎬 기획서 생성';
   }

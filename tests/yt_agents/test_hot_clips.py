@@ -83,22 +83,40 @@ def test_get_video_stats_returns_dict_by_id():
 def test_get_channel_stats_returns_dict_by_id():
     api_response = {
         "items": [
-            {"id": "UCxyz", "statistics": {"subscriberCount": "82000", "videoCount": "420"}},
+            {
+                "id": "UCxyz",
+                "statistics": {"subscriberCount": "82000", "videoCount": "420"},
+                "contentDetails": {"relatedPlaylists": {"uploads": "UUxyz"}},
+            },
+        ]
+    }
+    with patch("scripts.yt_agents.hot_clips.requests.get", return_value=_mock_response(api_response)) as mock_get:
+        stats = hot_clips.get_channel_stats(["UCxyz"])
+
+    assert stats["UCxyz"] == {"subscriber_count": 82000, "video_count": 420, "uploads_playlist_id": "UUxyz"}
+    called_params = mock_get.call_args.kwargs["params"]
+    assert "contentDetails" in called_params["part"]
+
+
+def test_get_channel_stats_handles_missing_content_details():
+    """일부 채널엔 contentDetails가 없을 수도 있음(비공개·삭제된 채널 등) — 빈 문자열로 처리."""
+    api_response = {
+        "items": [
+            {"id": "UCxyz", "statistics": {"subscriberCount": "1000", "videoCount": "10"}},
         ]
     }
     with patch("scripts.yt_agents.hot_clips.requests.get", return_value=_mock_response(api_response)):
         stats = hot_clips.get_channel_stats(["UCxyz"])
 
-    assert stats["UCxyz"] == {"subscriber_count": 82000, "video_count": 420}
+    assert stats["UCxyz"]["uploads_playlist_id"] == ""
 
 
-def test_get_channel_recent_avg_views_computes_average():
-    search_response = {
+def test_get_channel_raw_videos_uses_playlist_items_not_search():
+    """search.list(100 unit) 대신 playlistItems.list(1 unit)를 써야 할당량을 안 태움."""
+    playlist_response = {
         "items": [
-            {"id": {"videoId": "v1"}, "snippet": {"title": "a", "channelId": "UCxyz", "channelTitle": "c",
-                                                     "publishedAt": "2026-06-01T00:00:00Z", "thumbnails": {}}},
-            {"id": {"videoId": "v2"}, "snippet": {"title": "b", "channelId": "UCxyz", "channelTitle": "c",
-                                                     "publishedAt": "2026-06-02T00:00:00Z", "thumbnails": {}}},
+            {"contentDetails": {"videoId": "v1"}},
+            {"contentDetails": {"videoId": "v2"}},
         ]
     }
     stats_response = {
@@ -108,63 +126,33 @@ def test_get_channel_recent_avg_views_computes_average():
         ]
     }
     with patch("scripts.yt_agents.hot_clips.requests.get") as mock_get:
-        mock_get.side_effect = [_mock_response(search_response), _mock_response(stats_response)]
-        avg_view, avg_like = hot_clips.get_channel_recent_avg_views("UCxyz", n=10)
+        mock_get.side_effect = [_mock_response(playlist_response), _mock_response(stats_response)]
+        raw = hot_clips._get_channel_raw_videos("UUxyz", n=10)
 
-    assert avg_view == 2000.0
-    assert avg_like == 20.0
+    assert raw == [
+        {"video_id": "v1", "view_count": 1000, "like_count": 10},
+        {"video_id": "v2", "view_count": 3000, "like_count": 30},
+    ]
+    first_call_url = mock_get.call_args_list[0].args[0]
+    assert "playlistItems" in first_call_url
+    first_call_params = mock_get.call_args_list[0].kwargs["params"]
+    assert first_call_params["playlistId"] == "UUxyz"
 
 
-def test_get_channel_recent_avg_views_returns_zero_when_no_videos():
+def test_get_channel_raw_videos_returns_empty_when_no_playlist_id():
+    """uploads_playlist_id가 없으면(채널 조회 실패 등) API 호출 없이 빈 리스트."""
+    with patch("scripts.yt_agents.hot_clips.requests.get") as mock_get:
+        raw = hot_clips._get_channel_raw_videos("", n=10)
+
+    assert raw == []
+    mock_get.assert_not_called()
+
+
+def test_get_channel_raw_videos_returns_empty_when_playlist_empty():
     with patch("scripts.yt_agents.hot_clips.requests.get", return_value=_mock_response({"items": []})):
-        avg_view, avg_like = hot_clips.get_channel_recent_avg_views("UCempty", n=10)
+        raw = hot_clips._get_channel_raw_videos("UUempty", n=10)
 
-    assert avg_view == 0.0
-    assert avg_like == 0.0
-
-
-def test_get_channel_recent_avg_views_excludes_specified_video():
-    """exclude_video_id 파라미터가 제공되면, 그 영상을 평균 계산에서 제외해야 함."""
-    # _get_channel_raw_videos를 직접 테스트 (이미 내부에서 get_video_stats를 호출)
-    with patch("scripts.yt_agents.hot_clips._get_channel_raw_videos") as m_raw:
-        # 채널에 v_hot, v1, v2 있음 (raw 데이터)
-        m_raw.return_value = [
-            {"video_id": "v_hot", "view_count": 5000, "like_count": 50},
-            {"video_id": "v1", "view_count": 1000, "like_count": 10},
-            {"video_id": "v2", "view_count": 3000, "like_count": 30},
-        ]
-        # v_hot을 제외하면 (v1+v2)/2만 계산되어야 함
-        avg_view, avg_like = hot_clips.get_channel_recent_avg_views("UCxyz", n=10, exclude_video_id="v_hot")
-
-    # 제외 시: (1000 + 3000) / 2 = 2000, (10 + 30) / 2 = 20
-    assert avg_view == 2000.0
-    assert avg_like == 20.0
-
-
-def test_get_channel_recent_avg_views_ignores_missing_exclude_video():
-    """exclude_video_id가 검색 결과에 없으면, 그냥 무시하고 전체 평균 계산."""
-    search_response = {
-        "items": [
-            {"id": {"videoId": "v1"}, "snippet": {"title": "a", "channelId": "UCxyz", "channelTitle": "c",
-                                                    "publishedAt": "2026-06-01T00:00:00Z", "thumbnails": {}}},
-            {"id": {"videoId": "v2"}, "snippet": {"title": "b", "channelId": "UCxyz", "channelTitle": "c",
-                                                    "publishedAt": "2026-06-02T00:00:00Z", "thumbnails": {}}},
-        ]
-    }
-    stats_response = {
-        "items": [
-            {"id": "v1", "statistics": {"viewCount": "1000", "likeCount": "10"}},
-            {"id": "v2", "statistics": {"viewCount": "3000", "likeCount": "30"}},
-        ]
-    }
-    with patch("scripts.yt_agents.hot_clips.requests.get") as mock_get:
-        mock_get.side_effect = [_mock_response(search_response), _mock_response(stats_response)]
-        # v_nonexist는 검색 결과에 없으므로 무시됨
-        avg_view, avg_like = hot_clips.get_channel_recent_avg_views("UCxyz", n=10, exclude_video_id="v_nonexist")
-
-    # 전체 계산: (1000 + 3000) / 2 = 2000, (10 + 30) / 2 = 20
-    assert avg_view == 2000.0
-    assert avg_like == 20.0
+    assert raw == []
 
 
 def test_find_hot_clips_computes_grades():
@@ -177,7 +165,7 @@ def test_find_hot_clips_computes_grades():
              "channel_title": "소형채널", "published_at": "2026-06-28T00:00:00Z", "thumbnail": "t1"},
         ]
         m_vstats.return_value = {"v1": {"view_count": 41000, "like_count": 2000, "comment_count": 50}}
-        m_chstats.return_value = {"UCsmall": {"subscriber_count": 5000, "video_count": 100}}
+        m_chstats.return_value = {"UCsmall": {"subscriber_count": 5000, "video_count": 100, "uploads_playlist_id": "UUsmall"}}
         # 채널의 최근 영상 데이터 (v1과 다른 영상들)
         m_raw.return_value = [
             {"video_id": "v1", "view_count": 41000, "like_count": 2000},
@@ -192,11 +180,11 @@ def test_find_hot_clips_computes_grades():
     assert r["video_id"] == "v1"
     assert r["view_count"] == 41000
     # v1을 제외한 평균: (500 + 500) / 2 = 500
-    # 다만 검색 결과에는 v1만 있으므로, 평균은 (500+500)/2 = 500
     assert r["view_pct_above_avg"] == pytest.approx((41000 - 500) / 500 * 100, rel=0.01)
     assert r["contribution_grade"] == "Great"  # >=700%
     assert r["performance_grade"] == "Great"  # (2000-100)/100*100 = 1900% >=700
     assert r["subscriber_count"] == 5000
+    m_raw.assert_called_once_with("UUsmall", n=10)
 
 
 def test_find_hot_clips_includes_subscriber_count():
@@ -214,7 +202,7 @@ def test_find_hot_clips_includes_subscriber_count():
              "channel_title": "채널1", "published_at": "2026-06-28T00:00:00Z", "thumbnail": "t1"},
         ]
         m_vstats.return_value = {"v1": {"view_count": 1000, "like_count": 100, "comment_count": 10}}
-        m_chstats.return_value = {"UCch1": {"subscriber_count": 100000, "video_count": 50}}
+        m_chstats.return_value = {"UCch1": {"subscriber_count": 100000, "video_count": 50, "uploads_playlist_id": "UUch1"}}
         # 채널의 최근 영상: v1과 2개의 다른 영상 (평균 계산용)
         m_raw.return_value = [
             {"video_id": "v1", "view_count": 1000, "like_count": 100},
@@ -238,7 +226,6 @@ def test_find_hot_clips_includes_subscriber_count():
     assert r["view_pct_above_avg"] == 100.0  # 정확히 100%
 
     # contribution_grade 검증: 100% >= 200% ? No → "Normal"
-    # (100은 200 미만이므로)
     assert r["contribution_grade"] == "Normal"
 
 
@@ -259,7 +246,7 @@ def test_find_hot_clips_caches_channel_averages():
             "v1": {"view_count": 10000, "like_count": 500, "comment_count": 50},
             "v2": {"view_count": 8000, "like_count": 400, "comment_count": 40},
         }
-        m_chstats.return_value = {"UCch1": {"subscriber_count": 50000, "video_count": 200}}
+        m_chstats.return_value = {"UCch1": {"subscriber_count": 50000, "video_count": 200, "uploads_playlist_id": "UUch1"}}
         m_raw.return_value = [
             {"video_id": "v1", "view_count": 10000, "like_count": 500},
             {"video_id": "v2", "view_count": 8000, "like_count": 400},
@@ -293,17 +280,18 @@ def test_find_hot_clips_caches_per_channel_not_per_video():
             "v3": {"view_count": 900, "like_count": 90, "comment_count": 9},
         }
         m_chstats.return_value = {
-            "UCchA": {"subscriber_count": 10000, "video_count": 100},
-            "UCchB": {"subscriber_count": 20000, "video_count": 200},
+            "UCchA": {"subscriber_count": 10000, "video_count": 100, "uploads_playlist_id": "UUchA"},
+            "UCchB": {"subscriber_count": 20000, "video_count": 200, "uploads_playlist_id": "UUchB"},
         }
-        # 채널별 raw 비디오 데이터
-        def raw_side_effect(ch_id, n=10):
-            if ch_id == "UCchA":
+
+        # 채널별 raw 비디오 데이터 (playlist_id로 분기)
+        def raw_side_effect(playlist_id, n=10):
+            if playlist_id == "UUchA":
                 return [
                     {"video_id": "v1", "view_count": 1000, "like_count": 100},
                     {"video_id": "v3", "view_count": 900, "like_count": 90},
                 ]
-            elif ch_id == "UCchB":
+            elif playlist_id == "UUchB":
                 return [
                     {"video_id": "v2", "view_count": 2000, "like_count": 200},
                 ]
@@ -329,7 +317,6 @@ def test_find_hot_clips_excludes_self_video_from_average():
     Expected:
     - v1의 평균 = (v2+v3)/2 = (40000+1000)/2 = 20500 (v1 제외)
     - v2의 평균 = (v1+v3)/2 = (50000+1000)/2 = 25500 (v2 제외)
-    - v3의 평균 = (v1+v2)/2 = (50000+40000)/2 = 45000 (v3 제외)
 
     v1, v2는 다른 평균을 사용해야 함 (버그: 기존 코드는 같은 캐시값을 재사용했음).
     """
@@ -352,7 +339,7 @@ def test_find_hot_clips_excludes_self_video_from_average():
             "v2": {"view_count": 40000, "like_count": 800, "comment_count": 40},
         }
 
-        m_chstats.return_value = {"UCch": {"subscriber_count": 5000, "video_count": 50}}
+        m_chstats.return_value = {"UCch": {"subscriber_count": 5000, "video_count": 50, "uploads_playlist_id": "UUch"}}
 
         # 채널 UCch의 최근 영상 데이터 (v1, v2, v3 모두 포함)
         m_raw.return_value = [
@@ -368,21 +355,18 @@ def test_find_hot_clips_excludes_self_video_from_average():
 
     # v1 검증
     r1 = next(r for r in results if r["video_id"] == "v1")
-    # v1의 평균 = (40000 + 1000) / 2 = 20500 (v1 자신 제외)
     expected_v1_avg = (40000 + 1000) / 2  # 20500
-    expected_v1_pct = round((50000 - expected_v1_avg) / expected_v1_avg * 100, 1)  # (50000-20500)/20500*100 ≈ 143.9%
+    expected_v1_pct = round((50000 - expected_v1_avg) / expected_v1_avg * 100, 1)  # ≈ 143.9%
     assert r1["view_pct_above_avg"] == pytest.approx(expected_v1_pct, rel=0.01)
 
     # v2 검증
     r2 = next(r for r in results if r["video_id"] == "v2")
-    # v2의 평균 = (50000 + 1000) / 2 = 25500 (v2 자신 제외)
     expected_v2_avg = (50000 + 1000) / 2  # 25500
-    expected_v2_pct = round((40000 - expected_v2_avg) / expected_v2_avg * 100, 1)  # (40000-25500)/25500*100 ≈ 56.9%
+    expected_v2_pct = round((40000 - expected_v2_avg) / expected_v2_avg * 100, 1)  # ≈ 56.9%
     assert r2["view_pct_above_avg"] == pytest.approx(expected_v2_pct, rel=0.01)
 
     # 핵심: v1과 v2가 서로 다른 평균을 사용했음을 확인
-    # v1_pct != v2_pct 이어야 함 (버그 있으면 같았을 것)
-    assert abs(r1["view_pct_above_avg"] - r2["view_pct_above_avg"]) > 1  # 차이가 1% 이상 (143.9% vs 56.9%)
+    assert abs(r1["view_pct_above_avg"] - r2["view_pct_above_avg"]) > 1
 
     # _get_channel_raw_videos는 채널당 1회만 호출되어야 함 (캐시 확인)
     assert m_raw.call_count == 1

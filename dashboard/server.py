@@ -8,6 +8,7 @@
 import os, sys, json, glob, re, shutil, subprocess, uuid, time, threading
 from collections import deque
 from datetime import datetime
+import requests
 
 # 프로젝트 루트를 sys.path에 추가 (python dashboard/server.py 로 실행 시 pipeline import 가능하게)
 _PROJ_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -5166,7 +5167,17 @@ async def api_yt_hot_clips(req: Request):
     def _do():
         return find_hot_clips(q)
 
-    results = await run_in_threadpool(_do)
+    try:
+        results = await run_in_threadpool(_do)
+    except requests.exceptions.HTTPError as e:
+        status = e.response.status_code if e.response is not None else 502
+        if status == 429:
+            msg = "유튜브 API 일일 할당량 초과 — 태평양시간 기준 자정에 초기화됩니다. 잠시 후 다시 시도해주세요."
+        else:
+            msg = f"유튜브 API 오류 (HTTP {status})"
+        return JSONResponse(content={"error": msg}, status_code=502)
+    except requests.exceptions.RequestException as e:
+        return JSONResponse(content={"error": f"유튜브 API 연결 실패: {e}"}, status_code=502)
     return JSONResponse(content={"results": results})
 
 
