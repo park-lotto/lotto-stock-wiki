@@ -24,3 +24,15 @@ def test_board_written(tmp_path):
     assert "실적발표" in text
     assert "● 확정" in text
     assert path.endswith("캘린더_index.md")
+
+
+def test_board_escapes_pipe_in_content(tmp_path):
+    # content에 파이프가 들어와도 표가 깨지지 않아야 한다
+    insert_atom(event_to_atom(
+        {"date": "2026-07-09", "company": "테스트종목", "event": "A | B 이벤트",
+         "type": "실적발표", "importance": "[LOW]", "desc": "", "confirmed": False},
+        sector="반도체", gen_date="2026-07-04"))
+    path = build_calendar_board("2026-07-04", str(tmp_path))
+    row = [ln for ln in open(path, encoding="utf-8") if "테스트종목" in ln][0]
+    assert "A \\| B 이벤트" in row          # 파이프가 이스케이프됨
+    assert "A | B 이벤트" not in row        # 이스케이프 안 된 원본은 없음

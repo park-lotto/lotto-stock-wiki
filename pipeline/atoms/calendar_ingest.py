@@ -40,8 +40,8 @@ def _confidence(confirmed: bool, mention_count: int, has_date: bool) -> int:
     return 3
 
 
-def _evid(event_date: str, event: str, company) -> str:
-    raw = f"{event_date}|{event}|{company or ''}"
+def _evid(event_date: str, event: str, company, ev_type: str = "") -> str:
+    raw = f"{event_date}|{event}|{company or ''}|{ev_type}"
     norm = re.sub(r"\s+", "", raw)
     return "cal_" + hashlib.md5(norm.encode()).hexdigest()[:12]
 
@@ -59,7 +59,7 @@ def event_to_atom(ev: dict, sector: str, gen_date: str) -> dict:
     conf = _confidence(confirmed, 1, has_date)
     affected = [company] if company else []
     return {
-        "id": _evid(event_date, event, company),
+        "id": _evid(event_date, event, company, ev_type),
         "date": gen_date,
         "source_type": "calendar",
         "source_name": "sector_calendar",
@@ -78,7 +78,7 @@ def event_to_atom(ev: dict, sector: str, gen_date: str) -> dict:
         "validity_type": "date",
         "validity_until": event_date,
         "is_active": 1,
-        "content": f"{event} — {ev.get('desc', '')}".strip(" —"),
+        "content": f"{event} — {ev.get('desc', '')}" if ev.get("desc") else event,
         "event_date": event_date,
         "structured_fields": {
             "event_date": event_date,

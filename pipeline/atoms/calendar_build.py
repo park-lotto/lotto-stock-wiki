@@ -41,6 +41,11 @@ def select_future_events(today: str, watchlist=None, sector=None) -> list[dict]:
 _CONF_LABEL = {1: "● 확정", 2: "◐ 높음", 3: "○ 관측", 4: "· 추정"}
 
 
+def _esc(s) -> str:
+    """마크다운 표 셀 안전화: 파이프·개행 이스케이프."""
+    return str(s).replace("|", "\\|").replace("\n", " ")
+
+
 def build_calendar_board(today: str, out_dir: str) -> str:
     events = select_future_events(today)
     lines = [
@@ -53,8 +58,8 @@ def build_calendar_board(today: str, out_dir: str) -> str:
         sf = e["structured_fields"]
         conf = _CONF_LABEL.get(sf.get("confidence", 4), "· 추정")
         lines.append(
-            f"| {e['event_date']} | D-{e['dday']} | {e['asset']} | "
-            f"{e['content']} | {sf.get('event_kind', '')} | {conf} |"
+            f"| {e['event_date']} | D-{e['dday']} | {_esc(e['asset'])} | "
+            f"{_esc(e['content'])} | {_esc(sf.get('event_kind', ''))} | {conf} |"
         )
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)

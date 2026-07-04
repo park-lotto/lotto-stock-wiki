@@ -50,7 +50,7 @@ def init_db():
 
 
 def migrate_db():
-    """기존 DB에 텔레그램 필드 멱등 추가 (이미 있으면 무시)."""
+    """기존 DB에 추가 컬럼(텔레그램/합성/유튜브/구조화/이벤트) + 인덱스 멱등 추가."""
     conn = get_conn()
     for name, decl in _TG_COLUMNS + _SYNTH_COLUMNS + _YT_COLUMNS + _STRUCTURED_COLUMNS + _EVENT_COLUMNS:
         try:
