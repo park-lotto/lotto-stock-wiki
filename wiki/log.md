@@ -1387,3 +1387,9 @@ python calc_oscillator.py SK하이닉스 삼성전자 한미반도체 --tg
 - 콜아웃 백엔드(/api/callout·성과추적) 완료, 프론트 미연결. 장전예측엔진·기준봉 보류
 - 2026-07-01 인사이트허브: 종목이슈(뉴스 상승원인+출처·날짜·원문링크)·종토방 subprocess격리·Gemini503폴백(_gemini_text 안정모델 자동전환)
 - 2026-07-01 종목명 자동완성(2605종, 오타·약자별칭 ls일렉→엘에스일렉트릭)·표시명 브랜드교정(_DISPLAY_ALIAS)·코드기반조회·좌측패널 정리
+
+## 2026-07-04 (세션 F) 이벤트·트리거 캘린더 Phase0·1a·1b1
+- Phase0: pipeline/atoms {event_date컬럼, calendar_ingest, calendar_build} — 섹터캘린더→이벤트원자→D정렬 위키보드. 16 pytest+e2e.
+- Phase1a: GET /api/catalysts (내종목/섹터/D호라이즌 필터, 기존 watchlist 재사용).
+- Phase1b1: dashboard/catalysts.html + GET /catalysts 전용 촉매페이지(라이트 애플, 브라우저 검증).
+- 블로커: Gemini429 쿼터소진으로 실이벤트0건(배선정상). 다음: Phase1b2(insights.html 촉매섹션), Phase3(사가·트리거). 상세 NEXT_SESSION 세션F.

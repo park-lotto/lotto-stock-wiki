@@ -1,5 +1,34 @@
 # NEXT_SESSION — 여러 병렬 세션(아래 최신순)
 
+## [세션 F, 2026-07-04] 이벤트·트리거 캘린더 (인사이트 리디자인 + 촉매 시스템) — Phase0·1a·1b1 완료
+
+**브랜치: `feat/briefing-engine`** (세션 E와 공유, 원격 push됨). 커밋 전 `git branch --show-current` 필수.
+
+### 배경 / 목표
+"내 종목·섹터에 앞으로 어떤 일정·트리거가 있나"를 누적 원자(atoms)로 차려주는 시스템 + 인사이트 페이지 애플-라이트 리디자인.
+- 스펙: `docs/specs/2026-07-04-인사이트-이벤트캘린더-설계.md`
+- 계획: `docs/superpowers/plans/2026-07-04-event-calendar-phase0.md`, `...-phase1-api.md`
+- 원장: `.superpowers/sdd/progress.md` 맨아래(로컬전용/gitignore — 이 파일이 크로스PC 인수인계 정본)
+- 시안(보존): `docs/mockups/insights-apple-light-v5.html`(인사이트 홈, 미빌드), `insights-catalyst-v6.html`(촉매)
+
+### ✅ 완료 (전부 커밋+push)
+- **Phase 0** (95626536,52613a43,47cb204d,31749dc3): 이벤트 캘린더 데이터 파이프. `pipeline/atoms/db.py`에 `event_date`컬럼+idx, `calendar_ingest.py`(섹터캘린더JSON→이벤트원자, 확정도/entity_scope/event_form매핑), `calendar_build.py`(select_future_events D-day필터 + build_calendar_board 위키보드). 16 pytest. 임시DB e2e 실증(4건→보드, TSMC foreign감지).
+- **Phase 1-a** (d10ee9c6,3253e315): `select_future_events(...,days)` 호라이즌 + `to_api_dict`, **`GET /api/catalysts?mine=&sector=&days=&today=`** (기존 watchlist 재사용). TestClient 3.
+- **Phase 1-b-1** (dd75e2dd): **`dashboard/catalysts.html` + `GET /catalysts` 라우트**. 라이트 애플 디자인, 내종목필터·섹터탭·D배지·확정도(●◐○)·해외플래그(🌏). 브라우저 목렌더 실측. watchlist=읽기+필터전용(편집은 시세페이지). 사가=Phase3 placeholder. TestClient 1.
+
+### 🚨 블로커 / 주의
+1. **Gemini 429 쿼터소진** — `fetch_sector_calendar.py`가 오늘 실이벤트 0건. 파이프배선은 정상(빈 파일도 ingest→board 정상). 쿼터리셋/데일리크론 후 실데이터 채워짐. (`fetch_sector_calendar`는 key_vault 안 씀 — 단일키 소진. Phase3에서 볼트연결 검토)
+2. **8090 실행서버(PID 8272, 세션E배포)는 구코드** → `/catalysts` 404. 그 서버 재시작/재배포돼야 라이브. 내 코드는 push됨.
+3. 공유브랜치: 세션E 시황엔진 커밋(deeb5605)과 내 커밋 교차. 세션E 리스크2가 내 calendar커밋 인지함.
+
+### 다음 할 일
+- **Phase 1-b-2**: 인사이트 홈(`dashboard/insights.html`, 154KB 대형 라이브파일)에 촉매 요약섹션+내비링크 그래프트 + 라이트디자인 이식(`docs/mockups/insights-apple-light-v5.html` 참조). 고위험 수술 — 조심.
+- **Phase 3**: 진행형 사가 추적(테마이벤트 구조 확장), 예상 트리거 추출(atomizer catalyst→event_date), 락업/옵션/배당락 크롤, event_merge로 확정도 tier2 부스트, 텔레 푸시.
+- 실데이터: Gemini쿼터 회복 후 `py fetch_sector_calendar.py` → `py -m pipeline.atoms.calendar_ingest` → `py -m pipeline.atoms.calendar_build`.
+- [방식메모] 이 프로젝트 서브에이전트는 python스텁으로 pytest 자체실행 불가 → 컨트롤러 직접구현+`py -m pytest` 실측이 검증된 방식.
+
+---
+
 ## [세션 E, 2026-07-04 밤] 장중 시황 브리핑 엔진 설계·구현·서버배포 + KIS장애 대응 — 월요일 실전검증
 
 **브랜치: `feat/briefing-engine`** (원격 push됨). 브리핑 작업은 이 브랜치에서 이어가라.
