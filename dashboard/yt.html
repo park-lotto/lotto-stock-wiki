@@ -107,11 +107,13 @@ if (!localStorage.getItem(GUIDE_KEY)) {
   document.addEventListener('DOMContentLoaded', () => { document.getElementById('guide-box').style.display = 'block'; });
 }
 
-async function searchHotClips() {
+async function searchHotClips(_isAutoRetry) {
   const q = document.getElementById('hotclip-query').value.trim();
   if (!q) return;
   const box = document.getElementById('hotclip-results');
-  box.innerHTML = '<p style="color:var(--muted);font-size:.82rem">검색 중… (유튜브 실시간 조회라 5~15초 걸릴 수 있어요)</p>';
+  box.innerHTML = _isAutoRetry
+    ? '<p style="color:var(--muted);font-size:.82rem">네트워크 오류 감지 — 자동 재시도 중…</p>'
+    : '<p style="color:var(--muted);font-size:.82rem">검색 중… (유튜브 실시간 조회라 5~15초 걸릴 수 있어요)</p>';
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
   try {
@@ -131,6 +133,12 @@ async function searchHotClips() {
     renderHotClips(data.results);
   } catch (e) {
     clearTimeout(timeoutId);
+    // 순수 네트워크 단절(TypeError "Failed to fetch")은 한 번은 자동으로 재시도 —
+    // 타임아웃(AbortError)이나 이미 한 번 재시도한 경우는 바로 수동 재시도 버튼 노출
+    if (!_isAutoRetry && e.name !== 'AbortError') {
+      setTimeout(() => searchHotClips(true), 1200);
+      return;
+    }
     const msg = e.name === 'AbortError' ? '시간 초과 (30초) — 네트워크가 느리거나 유튜브 API가 지연 중일 수 있어요' : `네트워크 오류: ${e.message}`;
     box.innerHTML = `<p style="color:#e88">검색 실패 — ${msg} ` +
       `<button class="btn secondary" style="font-size:.75rem;padding:3px 10px" onclick="searchHotClips()">🔁 재시도</button></p>`;
