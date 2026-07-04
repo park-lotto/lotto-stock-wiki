@@ -7,7 +7,9 @@
 import os, base64, json, urllib.request, urllib.error
 from pathlib import Path
 
-API_KEY = os.environ.get("GEMINI_API_KEY") or "AIzaSyBnXfHkFh5YCOZdHYmKwqWXwVh7mrtF7U0"
+API_KEY = os.environ.get("GEMINI_API_KEY")
+if not API_KEY:
+    raise RuntimeError(".env에 GEMINI_API_KEY 없음")
 BASE = Path(__file__).parent.parent / "remotion-stock/public/images/jh"
 BASE.mkdir(parents=True, exist_ok=True)
 

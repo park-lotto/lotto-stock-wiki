@@ -17,6 +17,8 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 ROOT = Path(__file__).parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 TODAY = datetime.now().strftime("%Y-%m-%d")
 
 _FIXED_BUGS_TODAY = """## 오늘(07-02) 고친 버그 목록
@@ -68,47 +70,40 @@ def section_ingest_counts():
 
 
 def section_key_status():
-    lines = ["## 2. Gemini API 키 상태 (21시 시점)\n"]
-    ev = _env_vals()
-    names = ["GEMINI_INGEST_KEY", "GEMINI_INGEST_KEY_2", "GEMINI_INGEST_KEY_3", "GEMINI_INGEST_KEY_4",
-             "GEMINI_API_KEY", "GEMINI_API_KEY_2"]
-    roles = ["인제스트전용"] * 4 + ["대화형(공유위험)"] * 2
+    lines = ["## 2. Gemini API 키 상태 (그룹별, key_vault 기준)\n"]
+    from pipeline.atoms import key_vault
 
-    state_path = ROOT / "pipeline" / "atoms" / ".gemini_key_state.json"
-    persisted_exhausted = set()
-    if state_path.exists():
-        try:
-            st = json.loads(state_path.read_text(encoding="utf-8"))
-            if st.get("date") == TODAY:
-                persisted_exhausted = set(st.get("exhausted", []))
-        except Exception:
-            pass
-
-    lines.append("| # | 역할 | 당일 소진 기록(무비용 확인) | 실시간 재확인 |")
+    lines.append("| 그룹 | 총 키 수 | 당일 소진(무비용 확인) | 실시간 재확인 |")
     lines.append("|---|---|---|---|")
     try:
         from google import genai
     except Exception:
         genai = None
-    for i, (name, role) in enumerate(zip(names, roles)):
-        key = ev.get(name, "")
-        if not key:
-            lines.append(f"| {i} {name} | {role} | (미설정) | - |")
+
+    any_group_fully_exhausted = []
+    for group in ("general", "ingest", "embed", "briefing"):
+        all_keys = key_vault.get_keys(group)
+        live_keys = key_vault.get_live_keys(group)
+        exhausted_count = len(all_keys) - len(live_keys)
+        if not all_keys:
+            lines.append(f"| {group} | 0 | (미설정) | - |")
             continue
-        marked = "🔴 소진" if i in persisted_exhausted else "🟢 정상"
         live = "-"
-        if genai:
+        if genai and live_keys:
             try:
-                client = genai.Client(api_key=key)
+                client = key_vault.get_client_for_key(live_keys[0])
                 resp = client.models.generate_content(model="gemini-3.1-flash-lite", contents="hi")
                 live = "🟢 OK" if (resp.text or "").strip() else "⚠️빈응답"
             except Exception as e:
                 m = str(e)
                 live = "🔴 429소진" if ("429" in m or "RESOURCE_EXHAUSTED" in m) else f"⚠️{m[:40]}"
-        lines.append(f"| {i} {name} | {role} | {marked} | {live} |")
+        elif not live_keys:
+            live = "🔴 그룹 전체 소진"
+            any_group_fully_exhausted.append(group)
+        lines.append(f"| {group} | {len(all_keys)} | {exhausted_count}/{len(all_keys)} | {live} |")
 
-    if len(persisted_exhausted & {0, 1, 2, 3}) == 4:
-        lines.append("\n⚠️ **인제스트전용 4개 키 전부 소진 상태** — 이후 인제스트는 대화형 키(4,5)로 자동 폴백됨.")
+    if any_group_fully_exhausted:
+        lines.append(f"\n⚠️ **다음 그룹이 오늘 전부 소진됨: {', '.join(any_group_fully_exhausted)}**")
     return "\n".join(lines)
 
 

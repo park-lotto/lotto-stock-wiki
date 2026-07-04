@@ -15,6 +15,8 @@ _PROJ_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _PROJ_ROOT not in sys.path:
     sys.path.insert(0, _PROJ_ROOT)
 
+from pipeline.atoms import key_vault
+
 # ── 인사이트 허브: pipeline.atoms.doc_summary 지연 import ──────
 try:
     from pipeline.atoms.doc_summary import (
@@ -118,31 +120,24 @@ def _env_key(name):
 
 
 def _gemini_interactive_keys():
-    """대화형(리서치·이미지·비전) Gemini 키 — 인제스트 전용키(GEMINI_INGEST_KEY*)와 분리.
-    _1·_2(기존)+_3·_4(추가계정) 순으로 failover."""
-    return [k for k in (_env_key("GEMINI_API_KEY"), _env_key("GEMINI_API_KEY_2"),
-                        _env_key("GEMINI_API_KEY_3"), _env_key("GEMINI_API_KEY_4")) if k]
+    """대화형(리서치·이미지·비전) Gemini 키 — key_vault 'general' 그룹."""
+    return key_vault.get_keys("general")
 
 
 def _summary_keys():
-    """뉴스요약용 키 풀 — 대화형 키 + 인제스트 키(GEMINI_INGEST_KEY*)까지 총동원해 429 쿼터 여유 확보.
+    """뉴스요약용 키 풀 — 대화형(general) + 인제스트(ingest) 키까지 총동원해 429 쿼터 여유 확보.
     프리워밍이 여러 섹터를 도는 만큼 키가 많아야 무료 쿼터가 안 터진다."""
-    ks = _gemini_interactive_keys() + [
-        _env_key("GEMINI_INGEST_KEY"), _env_key("GEMINI_INGEST_KEY_2"),
-        _env_key("GEMINI_INGEST_KEY_3"), _env_key("GEMINI_INGEST_KEY_4")]
     seen, out = set(), []
-    for k in ks:
+    for k in key_vault.get_keys("general") + key_vault.get_keys("ingest"):
         if k and k not in seen:
-            seen.add(k); out.append(k)
+            seen.add(k)
+            out.append(k)
     return out
 
 
 def _briefing_keys():
-    """실시간 시장 브리핑 종합 전용 키 풀 — 섹터뉴스 요약 등 다른 작업과 쿼터를
-    분리해서 한쪽이 소진돼도 브리핑은 계속 돌게 한다. GEMINI_BRIEFING_KEY(전용)가
-    있으면 그것만 쓰고, 없으면 기존 _summary_keys()로 자동 폴백(로컬 개발환경 등
-    전용키 미설정 시에도 브리핑 기능 자체는 계속 동작하도록)."""
-    dedicated = [k for k in (_env_key("GEMINI_BRIEFING_KEY"), _env_key("GEMINI_BRIEFING_KEY_2")) if k]
+    """실시간 시장 브리핑 종합 전용 키 풀 — key_vault 'briefing' 그룹, 없으면 요약 풀로 폴백."""
+    dedicated = key_vault.get_keys("briefing")
     return dedicated or _summary_keys()
 
 
@@ -164,7 +159,7 @@ def _gemini_text(prompt, keys=None, models=None):
     last = ""
     for model in models:
         for k in keys:
-            client = genai.Client(api_key=k)   # 변수 유지 — GC가 호출 중 닫지 않게
+            client = key_vault.get_client_for_key(k)  # key_vault 캐시 재사용, 매 호출 새 클라이언트 생성 안 함
             try:
                 resp = client.models.generate_content(model=model, contents=prompt)
                 txt = (resp.text or "").strip()

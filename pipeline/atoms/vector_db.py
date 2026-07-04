@@ -3,20 +3,19 @@ vector_db.py — ChromaDB 벡터 인덱스.
 
 SQLite가 단일 진실 소스. ChromaDB는 벡터 검색 인덱스만 담당.
 """
+import time
 from pathlib import Path
 from typing import Optional
 
 import chromadb
-from google import genai
 
-from pipeline.atoms.atomizer import _load_gemini_key, _load_gemini_keys
+from pipeline.atoms import key_vault
 
 _CHROMA_PATH = Path(__file__).parent.parent.parent / "pipeline" / "atoms" / "chroma_db"
 _COLLECTION_NAME = "atoms"
 
 _client: Optional[chromadb.ClientAPI] = None
 _collection: Optional[chromadb.Collection] = None
-_embed_clients: dict[str, genai.Client] = {}  # 키별 클라이언트 캐시
 
 
 def _heal_hnsw_if_corrupt() -> None:
@@ -60,12 +59,6 @@ def _get_client() -> chromadb.ClientAPI:
     return _client
 
 
-def _get_embed_client_for(key: str) -> genai.Client:
-    if key not in _embed_clients:
-        _embed_clients[key] = genai.Client(api_key=key)
-    return _embed_clients[key]
-
-
 def get_collection() -> chromadb.Collection:
     global _collection
     if _collection is None:
@@ -79,25 +72,27 @@ def get_collection() -> chromadb.Collection:
 def embed_text(text: str) -> list[float]:
     """텍스트를 gemini-embedding-001로 임베딩 (3072차원).
     429는 대부분 분당 요청수(RPM) 제한이라 짧으면 1분 내 회복된다 — 일일 소진이 아니다.
-    전체 키 풀(인제스트4+대화형2, atomizer._load_gemini_keys 공용)을 한 바퀴 돌고,
+    embed 전용 키 풀(key_vault 'embed' 그룹)을 한 바퀴 돌고,
     그래도 다 막히면 20초 대기 후 한 번 더 전체를 재시도한다."""
-    import time as _time
-
-    keys = _load_gemini_keys()
     for attempt in range(2):
+        keys = key_vault.get_live_keys("embed")
         for key in keys:
             try:
-                resp = _get_embed_client_for(key).models.embed_content(
+                resp = key_vault.get_client_for_key(key).models.embed_content(
                     model="gemini-embedding-001",
                     contents=text,
                 )
                 return list(resp.embeddings[0].values)
             except Exception as e:
-                if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
+                if key_vault.is_daily_exhausted_error(e):
+                    key_vault.mark_exhausted("embed", key)
+                    continue
+                if key_vault.is_quota_error(e):
                     continue
                 raise
         if attempt == 0:
-            _time.sleep(20)
+            time.sleep(20)
+    key_vault._tg_alert("🚨 <b>[embed] Gemini 임베딩 키 전체 소진(RPM)</b> — 20초 재시도 후에도 실패")
     raise RuntimeError("모든 Gemini 임베딩 키 한도 초과(RPM) — 20초 재시도 후에도 실패")
 
 

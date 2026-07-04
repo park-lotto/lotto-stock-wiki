@@ -1,4 +1,3 @@
-import os
 import re
 import json
 import time
@@ -7,30 +6,14 @@ from pathlib import Path
 from google import genai
 from google.genai import types
 
+from pipeline.atoms import key_vault
+
 _GEMINI_MODEL = "gemini-3.1-flash-lite"
+_GROUP = "ingest"
 
 
 def _load_gemini_keys() -> list[str]:
-    """인제스트용 Gemini 키. 전용키(_3)가 있으면 그것만 사용해 대화형 리서치/이미지 키(_1·_2)와
-    쿼터를 분리한다(대화형이 백그라운드 인제스트에 안 막히게). 없으면 _1·_2 폴백."""
-    env_path = Path(__file__).parent.parent.parent / ".env"
-    env_vals: dict[str, str] = {}
-    if env_path.exists():
-        for line in env_path.read_text(encoding="utf-8").splitlines():
-            if "=" in line and not line.startswith("#"):
-                k, v = line.split("=", 1)
-                env_vals[k.strip()] = v.strip()
-
-    def _v(name: str) -> str:
-        return os.environ.get(name) or env_vals.get(name, "")
-
-    # 인제스트 전용 키 우선 → 소진 시 API 키로 폴백 (전체 4개 rotation)
-    ingest = [k for k in (_v("GEMINI_INGEST_KEY"), _v("GEMINI_INGEST_KEY_2"),
-                          _v("GEMINI_INGEST_KEY_3"), _v("GEMINI_INGEST_KEY_4"),
-                          _v("GEMINI_INGEST_KEY_5")) if k]
-    api = [k for k in (_v("GEMINI_API_KEY"), _v("GEMINI_API_KEY_2"),
-                       _v("GEMINI_API_KEY_3")) if k]
-    return ingest + [k for k in api if k not in ingest]
+    return key_vault.get_keys(_GROUP)
 
 
 def _load_gemini_key() -> str:
@@ -38,106 +21,16 @@ def _load_gemini_key() -> str:
     return keys[0] if keys else ""
 
 
-_GEMINI_KEYS = _load_gemini_keys()
-_client_cache: dict[str, genai.Client] = {}  # 키별 클라이언트 캐시 (GC 방지)
-
-_KEY_STATE_PATH = Path(__file__).parent / ".gemini_key_state.json"
-
-
-def _today_str() -> str:
-    from datetime import datetime
-    return datetime.now().strftime("%Y-%m-%d")
-
-
-def _load_key_state() -> dict:
-    """당일 소진된 키 인덱스 기록. 날짜 바뀌면(쿼터 리셋) 자동 초기화."""
-    try:
-        with open(_KEY_STATE_PATH, encoding="utf-8") as f:
-            state = json.load(f)
-        if state.get("date") == _today_str():
-            return state
-    except Exception:
-        pass
-    return {"date": _today_str(), "exhausted": []}
-
-
-def _mark_key_exhausted(idx: int) -> None:
-    """키를 당일 소진으로 기록 — 이후 프로세스는 이 키를 다시 시도하지 않는다(알림 반복 방지)."""
-    state = _load_key_state()
-    if idx not in state["exhausted"]:
-        state["exhausted"].append(idx)
-        try:
-            with open(_KEY_STATE_PATH, "w", encoding="utf-8") as f:
-                json.dump(state, f)
-        except Exception:
-            pass
-
-
-def _first_live_key_idx() -> int:
-    """당일 소진 기록된 키를 건너뛴 첫 인덱스(모듈 로드 시 + 세션 리셋 시 공용)."""
-    exhausted = set(_load_key_state()["exhausted"])
-    for i in range(len(_GEMINI_KEYS)):
-        if i not in exhausted:
-            return i
-    return max(0, len(_GEMINI_KEYS) - 1)
-
-
-_key_idx = _first_live_key_idx()  # 프로세스 시작 시점부터 이미 소진된 키는 건너뜀
-
-
 def _get_client() -> genai.Client:
-    """현재 활성 키로 클라이언트 반환. 키당 1개 인스턴스를 캐시해 GC로 인한 커넥션 닫힘 방지."""
-    key = _GEMINI_KEYS[_key_idx] if _GEMINI_KEYS else ""
-    if key not in _client_cache:
-        _client_cache[key] = genai.Client(api_key=key)
-    return _client_cache[key]
+    return key_vault.get_client(_GROUP)
 
 
 def _rotate_key() -> bool:
-    """다음 키로 교체(당일 소진 기록된 키는 건너뜀). 교체 성공 시 True, 더 이상 키 없으면 False."""
-    global _key_idx
-    old = _key_idx + 1
-    _mark_key_exhausted(_key_idx)
-    exhausted = set(_load_key_state()["exhausted"])
-    nxt = _key_idx + 1
-    while nxt < len(_GEMINI_KEYS) and nxt in exhausted:
-        nxt += 1
-    if nxt < len(_GEMINI_KEYS):
-        _key_idx = nxt
-        print(f"  [KEY] Gemini 키 #{_key_idx + 1}로 교체")
-        _tg_alert(f"⚠️ <b>[인제스트] Gemini 키 #{old} 일일 한도 소진</b>\n→ #{_key_idx + 1}번 키로 교체 (잔여 {len(_GEMINI_KEYS) - _key_idx}개)")
-        return True
-    _tg_alert(f"🚨 <b>[인제스트] Gemini 키 전체 소진</b>\n총 {len(_GEMINI_KEYS)}개 모두 일일 한도 초과 — 인제스트 중단됨")
-    return False
-
-
-def _reset_key_idx():
-    """인제스트 세션 시작 시 키 인덱스 초기화 — 당일 이미 소진 기록된 키는 건너뛰고
-    살아있는 첫 키에서 바로 시작한다(매 프로세스마다 소진된 키 재시도+중복알림 방지)."""
-    global _key_idx
-    _key_idx = _first_live_key_idx()
+    return key_vault.rotate(_GROUP)
 
 
 def _tg_alert(text: str) -> None:
-    """API 에러·키 소진 등을 텔레그램으로 즉시 발송. 실패해도 인제스트 중단 없음."""
-    import urllib.request, urllib.parse as _up
-    env_path = Path(__file__).parent.parent.parent / ".env"
-    ev: dict[str, str] = {}
-    if env_path.exists():
-        for line in env_path.read_text(encoding="utf-8").splitlines():
-            if "=" in line and not line.startswith("#"):
-                k, v = line.split("=", 1)
-                ev[k.strip()] = v.strip()
-    token = os.environ.get("BOT_TOKEN") or ev.get("BOT_TOKEN", "")
-    chat_id = os.environ.get("CHAT_ID") or ev.get("CHAT_ID", "")
-    if not token or not chat_id:
-        return
-    try:
-        url = f"https://api.telegram.org/bot{token}/sendMessage"
-        data = _up.urlencode({"chat_id": chat_id, "text": text, "parse_mode": "HTML"}).encode()
-        urllib.request.urlopen(urllib.request.Request(url, data=data), timeout=10)
-    except Exception:
-        pass
+    key_vault._tg_alert(text)
 
 _PROMPT = """다음 텍스트를 주식 시장 정보 '원자' 단위로 분해하라.
 

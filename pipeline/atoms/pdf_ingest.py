@@ -24,7 +24,8 @@ import requests
 from google import genai
 from google.genai import types
 
-from .atomizer import _load_gemini_key, _make_id, _calc_strength
+from pipeline.atoms import key_vault
+from .atomizer import _make_id, _calc_strength
 from .db import init_db, insert_atom, get_conn
 from .vector_db import embed_and_store
 
@@ -136,38 +137,45 @@ def _download_pdf(url: str, dest: Path) -> bool:
 def _pdf_to_atoms(pdf_path: Path, meta: dict) -> list[dict]:
     """Gemini로 PDF 읽어 원자 리스트 반환."""
     import json as _json
+    import time as _time
 
-    client = genai.Client(api_key=_load_gemini_key())
-
-    # Gemini Files API에 업로드
-    try:
-        with open(pdf_path, "rb") as fh:
-            file_obj = client.files.upload(
-                file=fh,
-                config=types.UploadFileConfig(mime_type="application/pdf"),
-            )
-    except Exception as e:
-        print(f"  [WARN] Gemini 파일 업로드 실패: {e}")
-        return []
-
-    try:
-        response = client.models.generate_content(
-            model=_MODEL,
-            contents=[file_obj, _PROMPT],
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-            ),
-        )
-        raw_atoms: list[dict] = _json.loads(response.text)
-    except Exception as e:
-        print(f"  [WARN] Gemini 분석 실패: {e}")
-        return []
-    finally:
-        # 업로드 파일 삭제 (Gemini 저장소 정리)
+    raw_atoms = None
+    for _attempt in range(4):
+        client = key_vault.get_client("ingest")
+        file_obj = None
         try:
-            client.files.delete(name=file_obj.name)
-        except Exception:
-            pass
+            with open(pdf_path, "rb") as fh:
+                file_obj = client.files.upload(
+                    file=fh,
+                    config=types.UploadFileConfig(mime_type="application/pdf"),
+                )
+            response = client.models.generate_content(
+                model=_MODEL,
+                contents=[file_obj, _PROMPT],
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                ),
+            )
+            raw_atoms = _json.loads(response.text)
+            break
+        except Exception as e:
+            if key_vault.is_daily_exhausted_error(e) and key_vault.rotate("ingest"):
+                continue
+            if key_vault.is_quota_error(e):
+                _time.sleep(62)
+                continue
+            print(f"  [WARN] Gemini PDF 처리 실패: {e}")
+            return []
+        finally:
+            if file_obj is not None:
+                try:
+                    client.files.delete(name=file_obj.name)
+                except Exception:
+                    pass
+
+    if raw_atoms is None:
+        print("  [WARN] Gemini PDF 처리 실패: 재시도 소진")
+        return []
 
     atoms = []
     for i, a in enumerate(raw_atoms):
