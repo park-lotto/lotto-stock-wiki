@@ -1222,6 +1222,16 @@ def market_page():
     return HTMLResponse(content=html, headers={"Cache-Control": "no-cache, must-revalidate"})
 
 
+@app.get("/catalysts", response_class=HTMLResponse)
+def catalysts_page():
+    p = os.path.join(HERE, "catalysts.html")
+    if not os.path.exists(p):
+        return "<h1>catalysts.html 준비중</h1>"
+    with open(p, encoding="utf-8") as f:
+        html = f.read()
+    return HTMLResponse(content=html, headers={"Cache-Control": "no-cache, must-revalidate"})
+
+
 _last_good_etf: dict = {"data": None, "ts": 0.0}   # ETF바 마지막 정상 응답(KIS 순간실패 시 유지)
 _ETF_PERSIST = os.path.join(ROOT, "output", "etf_bar_last_good.json")
 
@@ -5578,9 +5588,10 @@ async def api_yt_category_search(req: Request):
         return JSONResponse(content={"error": "알 수 없는 카테고리"}, status_code=400)
     queries = cat["queries"][: int(body.get("max_queries", 2))]
     days = int(body.get("days", 0) or 0)
+    excl = bool(body.get("exclude_shorts", False))
 
     def _do():
-        return _hotclips.find_and_rank(queries, days=days)
+        return _hotclips.find_and_rank(queries, days=days, exclude_shorts=excl)
 
     rows = await run_in_threadpool(_do)
     return JSONResponse(content={"category": cat["name"], "results": rows})
@@ -5596,9 +5607,10 @@ async def api_yt_keyword_search(req: Request):
     if not q:
         return JSONResponse(content={"error": "검색어 필요"}, status_code=400)
     days = int(body.get("days", 0) or 0)
+    excl = bool(body.get("exclude_shorts", False))
 
     def _do():
-        return _hotclips.find_and_rank([q], days=days)
+        return _hotclips.find_and_rank([q], days=days, exclude_shorts=excl)
 
     rows = await run_in_threadpool(_do)
     return JSONResponse(content={"category": q, "results": rows})
