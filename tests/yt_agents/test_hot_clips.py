@@ -44,6 +44,28 @@ def test_search_videos_returns_parsed_list():
     assert called_params["order"] == "viewCount"
 
 
+def test_search_videos_decodes_html_entities_in_title():
+    api_response = {
+        "items": [
+            {
+                "id": {"videoId": "abc123"},
+                "snippet": {
+                    "title": "&#39;이 때&#39; 파세요 &amp; 지금",
+                    "channelId": "UCxyz",
+                    "channelTitle": "3pro&#39;tv",
+                    "publishedAt": "2026-07-01T00:00:00Z",
+                    "thumbnails": {},
+                },
+            }
+        ]
+    }
+    with patch("scripts.yt_agents.hot_clips.requests.get", return_value=_mock_response(api_response)):
+        results = hot_clips.search_videos("반도체 조정")
+
+    assert results[0]["title"] == "'이 때' 파세요 & 지금"
+    assert results[0]["channel_title"] == "3pro'tv"
+
+
 def test_get_video_stats_returns_dict_by_id():
     api_response = {
         "items": [

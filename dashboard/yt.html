@@ -69,6 +69,8 @@ th { color: var(--muted); font-weight: 600; font-size: .74rem; }
 
 <script>
 let pickedRefs = [];
+let lastHotClipResults = [];
+function esc(s){return String(s == null ? '' : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
 
 async function searchHotClips() {
   const q = document.getElementById('hotclip-query').value.trim();
@@ -95,14 +97,14 @@ function gradeClass(g) {
 }
 
 function renderHotClips(results) {
+  lastHotClipResults = results;
   const box = document.getElementById('hotclip-results');
   if (!results.length) { box.innerHTML = '<p style="color:var(--muted);font-size:.82rem">결과 없음</p>'; return; }
   let html = '<table><tr><th></th><th>제목</th><th>채널</th><th>조회수</th><th>기여도</th><th>성과도</th></tr>';
   results.forEach((r, i) => {
-    const payload = encodeURIComponent(JSON.stringify(r));
     html += `<tr>
-      <td><button class="btn secondary" style="font-size:.75rem;padding:4px 10px" onclick='pickRefEncoded("${payload}")'>담기</button></td>
-      <td>${r.title}</td><td>${r.channel_title}</td>
+      <td><button class="btn secondary" style="font-size:.75rem;padding:4px 10px" onclick="pickRef(${i})">담기</button></td>
+      <td>${esc(r.title)}</td><td>${esc(r.channel_title)}</td>
       <td>${r.view_count.toLocaleString()}<br><span style="font-size:.75rem;color:var(--muted)">(${r.view_pct_above_avg >= 0 ? '+' : ''}${r.view_pct_above_avg}%)</span></td>
       <td class="${gradeClass(r.contribution_grade)}">${r.contribution_grade}</td>
       <td class="${gradeClass(r.performance_grade)}">${r.performance_grade}</td>
@@ -112,9 +114,9 @@ function renderHotClips(results) {
   box.innerHTML = html;
 }
 
-function pickRefEncoded(encoded) {
-  const r = JSON.parse(decodeURIComponent(encoded));
-  if (pickedRefs.find(x => x.video_id === r.video_id)) return;
+function pickRef(i) {
+  const r = lastHotClipResults[i];
+  if (!r || pickedRefs.find(x => x.video_id === r.video_id)) return;
   pickedRefs.push(r);
   document.getElementById('hotclip-picked').textContent =
     `📥 ${pickedRefs.length}건 담김: ` + pickedRefs.map(x => x.title).join(' · ');

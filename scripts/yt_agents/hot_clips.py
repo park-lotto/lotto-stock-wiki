@@ -1,6 +1,7 @@
 """유튜브 Data API 기반 터진 영상 탐지 — 채널 자체 평균 대비 % 계산.
 2026-07-03: agent_plan.search_hot_clips()(Google검색+Gemini 추정)는 숫자가 부정확해서
 실제 API 수치로 교체."""
+import html
 import os
 from pathlib import Path
 
@@ -41,9 +42,9 @@ def search_videos(query: str, max_results: int = 10) -> list[dict]:
         sn = item["snippet"]
         out.append({
             "video_id": item["id"]["videoId"],
-            "title": sn["title"],
+            "title": html.unescape(sn["title"]),
             "channel_id": sn["channelId"],
-            "channel_title": sn["channelTitle"],
+            "channel_title": html.unescape(sn["channelTitle"]),
             "published_at": sn["publishedAt"],
             "thumbnail": sn.get("thumbnails", {}).get("default", {}).get("url", ""),
         })
