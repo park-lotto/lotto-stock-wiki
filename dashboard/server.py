@@ -3209,7 +3209,9 @@ def _poll_briefing():
                     _last_fixed_synth = time.time()
                     _briefing_run_synthesis([])
 
-                _weather_tick()
+            # 시황 브리핑 엔진: market_flow 캐시 유무와 무관하게 매 틱 실행
+            # (주말·KIS다운으로 캐시 비어도 자체 가드로 heartbeat+뉴스 기반 갱신)
+            _weather_tick()
         except Exception:
             pass
         time.sleep(30)
@@ -5471,6 +5473,16 @@ def yt_page():
     with open(p, encoding="utf-8") as f:
         html = f.read()
     # 브라우저 캐시로 옛 버전 남는 것 방지 (계속 수정할 페이지라 매번 최신 서빙)
+    return HTMLResponse(content=html, headers={"Cache-Control": "no-cache, must-revalidate"})
+
+
+@app.get("/yt/refs", response_class=HTMLResponse)
+def yt_refs_page():
+    p = os.path.join(HERE, "yt_refs.html")
+    if not os.path.exists(p):
+        return "<h1>yt_refs.html 준비중</h1>"
+    with open(p, encoding="utf-8") as f:
+        html = f.read()
     return HTMLResponse(content=html, headers={"Cache-Control": "no-cache, must-revalidate"})
 
 
