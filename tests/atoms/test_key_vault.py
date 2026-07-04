@@ -108,3 +108,51 @@ def test_mark_exhausted_survives_concurrent_writers(monkeypatch, tmp_path):
     # to interleaved read-modify-write, and no reader should observe a
     # torn/partial state file mid-write.
     assert kv.get_live_keys("embed") == []
+
+
+def test_get_client_for_key_caches_by_key():
+    from unittest.mock import patch, MagicMock
+
+    with patch("pipeline.atoms.key_vault.genai.Client") as MockClient:
+        MockClient.return_value = MagicMock()
+        c1 = kv.get_client_for_key("same-key")
+        c2 = kv.get_client_for_key("same-key")
+        assert c1 is c2
+        MockClient.assert_called_once_with(api_key="same-key")
+
+
+def test_rotate_marks_current_key_exhausted_and_advances(monkeypatch, tmp_path):
+    env_file = tmp_path / ".env"
+    env_file.write_text(
+        "GEMINI_EMBED_KEY=e1\nGEMINI_EMBED_KEY_2=e2\n", encoding="utf-8"
+    )
+    monkeypatch.setattr(kv, "_ENV_PATH", env_file)
+    monkeypatch.setattr(kv, "_STATE_PATH", tmp_path / "state.json")
+    monkeypatch.setattr(kv, "_LOCK_PATH", tmp_path / "state.lock")
+    monkeypatch.setattr(kv, "_tg_alert", lambda text: None)
+    kv.reset("embed")
+
+    assert kv.rotate("embed") is True
+    assert kv.get_live_keys("embed") == ["e2"]
+
+
+def test_rotate_returns_false_and_alerts_when_all_exhausted(monkeypatch, tmp_path):
+    env_file = tmp_path / ".env"
+    env_file.write_text("GEMINI_EMBED_KEY=e1\n", encoding="utf-8")
+    monkeypatch.setattr(kv, "_ENV_PATH", env_file)
+    monkeypatch.setattr(kv, "_STATE_PATH", tmp_path / "state.json")
+    monkeypatch.setattr(kv, "_LOCK_PATH", tmp_path / "state.lock")
+    alerts = []
+    monkeypatch.setattr(kv, "_tg_alert", lambda text: alerts.append(text))
+    kv.reset("embed")
+
+    assert kv.rotate("embed") is False
+    assert any("전체 소진" in a for a in alerts)
+
+
+def test_is_daily_exhausted_error_vs_rpm_error():
+    daily = Exception("429 RESOURCE_EXHAUSTED PerDay limit: 500")
+    rpm = Exception("429 RESOURCE_EXHAUSTED PerMinute limit: 15")
+    assert kv.is_daily_exhausted_error(daily) is True
+    assert kv.is_daily_exhausted_error(rpm) is False
+    assert kv.is_quota_error(rpm) is True

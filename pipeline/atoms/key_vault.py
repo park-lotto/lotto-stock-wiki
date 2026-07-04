@@ -2,8 +2,11 @@
 import json
 import os
 import time
+import urllib.request
+import urllib.parse
 from datetime import datetime
 from pathlib import Path
+from google import genai
 
 _ENV_PATH = Path(__file__).parent.parent.parent / ".env"
 _STATE_PATH = Path(__file__).parent / ".gemini_key_state.json"
@@ -115,3 +118,83 @@ def get_live_keys(group: str) -> list[str]:
     state = _load_state()
     exhausted = set(state["exhausted"].get(group, []))
     return [k for i, k in enumerate(get_keys(group)) if i not in exhausted]
+
+
+_client_cache: dict[str, genai.Client] = {}
+_active_idx: dict[str, int] = {}
+
+
+def get_client_for_key(key: str) -> genai.Client:
+    # 키마다 클라이언트를 캐시 — 중복 생성 방지
+    if key not in _client_cache:
+        _client_cache[key] = genai.Client(api_key=key)
+    return _client_cache[key]
+
+
+def get_client(group: str) -> genai.Client:
+    """그룹의 현재 활성(인덱스 기반) 키로 클라이언트 반환."""
+    live = get_live_keys(group)
+    if not live:
+        all_keys = get_keys(group)
+        live = all_keys[-1:] if all_keys else []
+    idx = min(_active_idx.get(group, 0), len(live) - 1) if live else 0
+    key = live[idx] if live else ""
+    return get_client_for_key(key)
+
+
+client = get_client  # 드롭인 헬퍼 별칭 — genai.Client(api_key=...) 대체용
+
+
+def reset(group: str) -> None:
+    """세션 시작 시 인덱스 초기화(당일 소진 기록 자체는 유지)."""
+    _active_idx[group] = 0
+
+
+def rotate(group: str) -> bool:
+    """현재 활성 키를 소진 처리하고 다음 살아있는 키로 교체.
+    교체 성공 시 True, 그룹 전체 소진이면 알림 발송 후 False."""
+    live_before = get_live_keys(group)
+    if not live_before:
+        _tg_alert(f"🚨 <b>[{group}] Gemini 키 전체 소진</b>\n총 {len(get_keys(group))}개 모두 일일 한도 초과")
+        return False
+
+    idx = min(_active_idx.get(group, 0), len(live_before) - 1)
+    old_key = live_before[idx]
+    old_num = get_keys(group).index(old_key) + 1
+    mark_exhausted(group, old_key)
+
+    live_after = get_live_keys(group)
+    if live_after:
+        _active_idx[group] = 0
+        _tg_alert(
+            f"⚠️ <b>[{group}] Gemini 키 #{old_num} 일일 한도 소진</b>\n"
+            f"→ 다음 키로 교체 (잔여 {len(live_after)}개)"
+        )
+        return True
+    _tg_alert(f"🚨 <b>[{group}] Gemini 키 전체 소진</b>\n총 {len(get_keys(group))}개 모두 일일 한도 초과")
+    return False
+
+
+def is_daily_exhausted_error(exc: Exception) -> bool:
+    m = str(exc)
+    return ("429" in m or "RESOURCE_EXHAUSTED" in m) and ("PerDay" in m or "limit: 500" in m)
+
+
+def is_quota_error(exc: Exception) -> bool:
+    m = str(exc)
+    return "429" in m or "RESOURCE_EXHAUSTED" in m
+
+
+def _tg_alert(text: str) -> None:
+    """API 에러·키 소진 등을 텔레그램으로 즉시 발송. 실패해도 호출부 중단 없음."""
+    env_vals = _read_env_file()
+    token = _env("BOT_TOKEN", env_vals)
+    chat_id = _env("CHAT_ID", env_vals)
+    if not token or not chat_id:
+        return
+    try:
+        url = f"https://api.telegram.org/bot{token}/sendMessage"
+        data = urllib.parse.urlencode({"chat_id": chat_id, "text": text, "parse_mode": "HTML"}).encode()
+        urllib.request.urlopen(urllib.request.Request(url, data=data), timeout=10)
+    except Exception:
+        pass
