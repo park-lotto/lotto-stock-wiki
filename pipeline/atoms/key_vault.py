@@ -104,8 +104,10 @@ def mark_exhausted(group: str, key: str) -> None:
         bucket = state["exhausted"].setdefault(group, [])
         if idx not in bucket:
             bucket.append(idx)
-            with open(_STATE_PATH, "w", encoding="utf-8") as f:
+            tmp_path = _STATE_PATH.with_suffix(".json.tmp")
+            with open(tmp_path, "w", encoding="utf-8") as f:
                 json.dump(state, f)
+            os.replace(tmp_path, _STATE_PATH)
 
 
 def get_live_keys(group: str) -> list[str]:

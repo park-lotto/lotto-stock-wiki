@@ -1,3 +1,5 @@
+from concurrent.futures import ThreadPoolExecutor
+
 import pytest
 import pipeline.atoms.key_vault as kv
 
@@ -82,3 +84,27 @@ def test_state_resets_on_new_day(monkeypatch, tmp_path):
     monkeypatch.setattr(kv, "_LOCK_PATH", tmp_path / "state.lock")
 
     assert kv.get_live_keys("embed") == ["e1"]  # 어제자 소진 기록은 무시됨
+
+
+def test_mark_exhausted_survives_concurrent_writers(monkeypatch, tmp_path):
+    keys = [f"e{i}" for i in range(1, 9)]  # 8 distinct embed keys
+    env_lines = [f"GEMINI_EMBED_KEY={keys[0]}\n"]
+    env_lines += [f"GEMINI_EMBED_KEY_{i}={keys[i - 1]}\n" for i in range(2, 9)]
+    env_file = tmp_path / ".env"
+    env_file.write_text("".join(env_lines), encoding="utf-8")
+
+    monkeypatch.setattr(kv, "_ENV_PATH", env_file)
+    monkeypatch.setattr(kv, "_STATE_PATH", tmp_path / "state.json")
+    monkeypatch.setattr(kv, "_LOCK_PATH", tmp_path / "state.lock")
+
+    assert kv.get_live_keys("embed") == keys
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        futures = [pool.submit(kv.mark_exhausted, "embed", key) for key in keys]
+        for f in futures:
+            f.result()
+
+    # All 8 keys marked exhausted concurrently -- no update should be lost
+    # to interleaved read-modify-write, and no reader should observe a
+    # torn/partial state file mid-write.
+    assert kv.get_live_keys("embed") == []
