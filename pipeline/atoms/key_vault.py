@@ -1,10 +1,4 @@
-"""
-key_vault.py — Gemini API 키 중앙 관리.
-
-그룹별로 .env의 GEMINI_<GROUP>_KEY, _2, _3... 넘버링을 동적으로 읽어들이고,
-일일소진(daily)과 분당(RPM) 두 실패 모델을 그룹 단위 공유 상태에서 추적한다.
-키를 .env에 한 줄 추가하면 코드 수정 없이 풀에 편입된다.
-"""
+"""Dynamically load Gemini API keys from .env by scanning numbered suffixes (_2, _3, ...)."""
 import os
 from pathlib import Path
 

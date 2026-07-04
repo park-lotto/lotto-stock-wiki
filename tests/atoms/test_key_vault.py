@@ -1,3 +1,4 @@
+import pytest
 import pipeline.atoms.key_vault as kv
 
 
@@ -29,3 +30,11 @@ def test_get_keys_prefers_os_environ_over_env_file(monkeypatch, tmp_path):
     monkeypatch.setattr(kv, "_ENV_PATH", env_file)
     monkeypatch.setenv("GEMINI_API_KEY", "from_environ")
     assert kv.get_keys("general") == ["from_environ"]
+
+
+def test_get_keys_raises_keyerror_for_unknown_group(monkeypatch, tmp_path):
+    env_file = tmp_path / ".env"
+    env_file.write_text("GEMINI_API_KEY=key1\n", encoding="utf-8")
+    monkeypatch.setattr(kv, "_ENV_PATH", env_file)
+    with pytest.raises(KeyError):
+        kv.get_keys("nonexistent_group")
