@@ -49,23 +49,35 @@ def _is_quota_error(e: Exception) -> bool:
     return '429' in msg or 'RESOURCE_EXHAUSTED' in msg
 
 
+def _is_transient_error(e: Exception) -> bool:
+    """Gemini 서버측 일시 장애(모델 과부하 등) — 키 문제 아님, 잠깐 뒤 재시도하면 됨."""
+    msg = str(e)
+    return any(x in msg for x in ('503', 'UNAVAILABLE', '500', 'INTERNAL', 'high demand', 'overloaded'))
+
+
 def _generate(model: str, contents, config):
-    """할당량 초과(429) 시 GEMINI_KEYS의 다음 키로 자동 전환해 재시도."""
+    """할당량 초과(429)면 다음 키로, 일시 과부하(503/500)면 짧게 쉬고 재시도.
+    18키를 순회하며, 각 키에서 일시장애는 최대 2번까지 백오프 재시도."""
     if not GEMINI_KEYS:
         raise RuntimeError('.env에 GEMINI_API_KEY 없음')
 
+    import time as _t
     from google import genai
 
     last_err = None
     for key in GEMINI_KEYS:
-        try:
-            client = genai.Client(api_key=key)
-            return client.models.generate_content(model=model, contents=contents, config=config)
-        except Exception as e:
-            if _is_quota_error(e):
+        client = genai.Client(api_key=key)
+        for attempt in range(3):
+            try:
+                return client.models.generate_content(model=model, contents=contents, config=config)
+            except Exception as e:
                 last_err = e
-                continue
-            raise
+                if _is_quota_error(e):
+                    break            # 이 키는 소진 → 다음 키로
+                if _is_transient_error(e):
+                    _t.sleep(2 * (attempt + 1))   # 2s,4s 백오프 후 같은 키 재시도
+                    continue
+                raise                # 그 외(코드/인증 오류)는 즉시 전파
     raise last_err
 
 
@@ -121,6 +133,32 @@ def call_with_grounding(prompt: str, system: str = '', model: str = 'gemini-3-fl
                             })
 
     return resp.text.strip(), sources
+
+
+def call_video(youtube_url: str, prompt: str, model: str = 'gemini-3-flash-preview', temperature: float = 0.4) -> str:
+    """유튜브 URL을 Gemini가 직접 시청하고 분석 → 텍스트 반환.
+    자막+화면+썸네일을 한 번에 봄. 18키 폴백(할당량 초과 시 다음 키) 그대로 적용.
+    2026-07-04: yt-dlp(로컬전용·시각불가) 대신 이걸로 서버단독 해체 가능함을 검증."""
+    from google.genai import types
+    contents = types.Content(parts=[
+        types.Part(file_data=types.FileData(file_uri=youtube_url, mime_type='video/*')),
+        types.Part(text=prompt),
+    ])
+    resp = _generate(model, contents, types.GenerateContentConfig(temperature=temperature))
+    return resp.text.strip()
+
+
+def _parse_json_text(text: str) -> dict:
+    """```json 블록/잡텍스트 섞인 응답에서 JSON만 뽑아 파싱."""
+    import json, re
+    text = re.sub(r'```(?:json)?\s*', '', text).strip('`').strip()
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        m = re.search(r'\{[\s\S]+\}', text)
+        if m:
+            return json.loads(m.group())
+        raise
 
 
 def call_json(prompt: str, system: str = '') -> dict:

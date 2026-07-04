@@ -5589,9 +5589,10 @@ async def api_yt_category_search(req: Request):
     queries = cat["queries"][: int(body.get("max_queries", 2))]
     days = int(body.get("days", 0) or 0)
     excl = bool(body.get("exclude_shorts", False))
+    excl_news = bool(body.get("exclude_news", True))
 
     def _do():
-        return _hotclips.find_and_rank(queries, days=days, exclude_shorts=excl)
+        return _hotclips.find_and_rank(queries, days=days, exclude_shorts=excl, exclude_news=excl_news)
 
     rows = await run_in_threadpool(_do)
     return JSONResponse(content={"category": cat["name"], "results": rows})
@@ -5608,9 +5609,10 @@ async def api_yt_keyword_search(req: Request):
         return JSONResponse(content={"error": "검색어 필요"}, status_code=400)
     days = int(body.get("days", 0) or 0)
     excl = bool(body.get("exclude_shorts", False))
+    excl_news = bool(body.get("exclude_news", True))
 
     def _do():
-        return _hotclips.find_and_rank([q], days=days, exclude_shorts=excl)
+        return _hotclips.find_and_rank([q], days=days, exclude_shorts=excl, exclude_news=excl_news)
 
     rows = await run_in_threadpool(_do)
     return JSONResponse(content={"category": q, "results": rows})

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>레퍼런스 창고 — 로또의 주식</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+:root{--gold:#d4af37;--bg:#0a0a0a;--card:#16161a;--card2:#1d1d22;--line:#2a2a30;--txt:#e8e6e0;--muted:#8a8a92}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:'Segoe UI','Malgun Gothic',sans-serif;font-size:14px}
+.topbar{height:52px;background:var(--card);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 24px}
+.topbar .brand{font-weight:700;color:var(--gold);font-size:.95rem}
+.topbar a{color:var(--muted);text-decoration:none;font-size:.82rem;margin-left:16px}
+#app{max-width:1100px;margin:0 auto;padding:22px}
+.label{font-size:.72rem;color:var(--muted);font-weight:700;letter-spacing:.5px;margin:20px 0 8px;text-transform:uppercase}
+.cats{display:flex;flex-wrap:wrap;gap:8px}
+.cat{padding:9px 16px;border-radius:20px;background:var(--card);border:1px solid var(--line);color:var(--txt);cursor:pointer;font-size:.85rem;font-weight:600}
+.cat:hover{border-color:var(--gold)}
+.cat.on{background:var(--gold);color:#0a0a0a;border-color:var(--gold)}
+.btn{padding:8px 15px;border-radius:8px;border:none;background:var(--gold);color:#0a0a0a;font-weight:700;cursor:pointer;font-size:.82rem;font-family:inherit}
+.btn.sec{background:var(--card);color:var(--txt);border:1px solid var(--line)}
+.btn:disabled{opacity:.5;cursor:default}
+table{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:8px}
+th,td{padding:8px 6px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-size:.72rem;font-weight:600}
+.v-금맥{color:#ffcf40;font-weight:700}.v-기여{color:#22c55e}.v-채널빨{color:var(--muted)}.v-애매{color:#666}
+.card{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:16px;margin-top:12px}
+.card h3{color:var(--gold);font-size:.95rem;margin-bottom:10px}
+.dim{margin:9px 0}.dim .k{color:var(--gold);font-size:.76rem;font-weight:700}
+.dim .val{font-size:.86rem;line-height:1.6;margin-top:2px}
+.dim ul{margin:2px 0 0 16px}.dim li{font-size:.84rem;line-height:1.55;margin:2px 0}
+.script-seg{border-left:2px solid var(--line);padding:4px 0 4px 10px;margin:4px 0}
+.script-seg .t{color:var(--gold);font-size:.74rem}
+.muted{color:var(--muted)}.mini{font-size:.75rem}
+.plan{background:var(--card2);border:1px solid var(--gold);border-radius:11px;padding:18px;margin-top:12px;line-height:1.7}
+.spin{color:var(--gold);font-size:.85rem}
+input[type=text]{padding:9px 13px;background:var(--card);border:1px solid var(--line);border-radius:8px;color:var(--txt);font-family:inherit;font-size:.85rem}
+.gr-높음{color:#ffcf40;font-weight:700}.gr-보통{color:#22c55e}.gr-낮음{color:var(--muted)}
+.del{position:absolute;top:12px;right:14px;background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;cursor:pointer;font-size:.72rem;padding:3px 8px}
+.card{position:relative}
+.factor{background:var(--card2);border-radius:8px;padding:9px 12px;margin-bottom:10px;font-size:.82rem;line-height:1.6}
+.factor b{color:var(--gold)}
+</style></head>
+<body>
+<div class="topbar">
+  <span class="brand">🗄️ 레퍼런스 창고 — 터진 영상 해체·믹스</span>
+  <span><a href="/yt">🎬 기획 스튜디오</a><a href="/">← 메인</a></span>
+</div>
+<div id="app">
+  <div class="label">① 카테고리 (주식 소재)</div>
+  <div class="cats" id="cats"><span class="muted mini">불러오는 중…</span></div>
+
+  <div class="label">또는 직접 검색 / 영상 해체</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <input type="text" id="kw" placeholder="키워드 검색 (예: 종가베팅 성공사례)" style="flex:1;min-width:220px"
+      onkeydown="if(event.key==='Enter')kwSearch()">
+    <select id="period" title="게시 기간 (트렌드는 최근으로)"
+      style="padding:9px 10px;background:var(--card);border:1px solid var(--line);border-radius:8px;color:var(--txt);font-family:inherit;font-size:.82rem">
+      <option value="0" selected>전체 기간</option>
+      <option value="30">최근 1개월</option>
+      <option value="90">최근 3개월</option>
+      <option value="180">최근 6개월</option>
+      <option value="365">최근 1년</option>
+    </select>
+    <label class="mini" style="display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--txt)">
+      <input type="checkbox" id="noshorts" checked style="cursor:pointer"> 쇼츠 제외</label>
+    <label class="mini" style="display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--txt)">
+      <input type="checkbox" id="nonews" checked style="cursor:pointer"> 뉴스 제외</label>
+    <button class="btn" onclick="kwSearch()">🔍 검색</button>
+    <input type="text" id="url" placeholder="유튜브 URL/ID 붙여넣기 → 바로 해체" style="flex:1;min-width:220px"
+      onkeydown="if(event.key==='Enter')urlTeardown()">
+    <button class="btn sec" onclick="urlTeardown()">🔬 URL 해체</button>
+  </div>
+  <div class="mini muted" style="margin-top:5px">기간은 카테고리·키워드 검색에 모두 적용 — 트렌드는 최근으로, 매매법 등 정석은 전체 기간 추천</div>
+
+  <div id="search-area"></div>
+  <div id="teardown-area"></div>
+  <div id="mix-area"></div>
+</div>
+
+<script>
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+let curCat={id:'',name:''};
+const cards={};   // video_id -> teardown card (해체 완료된 것)
+
+// ── 카테고리 로드
+fetch('/yt/categories').then(r=>r.json()).then(d=>{
+  const box=document.getElementById('cats');
+  if(!d.categories){box.innerHTML='<span class="muted">카테고리 로드 실패</span>';return;}
+  box.innerHTML='';
+  d.categories.forEach(c=>{
+    const b=document.createElement('button');b.className='cat';b.textContent=c.name;
+    b.onclick=()=>selectCat(c,b);box.appendChild(b);
+  });
+});
+
+const getDays=()=>parseInt(document.getElementById('period').value||'0',10);
+const getNoShorts=()=>document.getElementById('noshorts').checked;
+const getNoNews=()=>document.getElementById('nonews').checked;
+
+function selectCat(c,btn){
+  curCat={id:c.id,name:c.name};
+  document.querySelectorAll('.cat').forEach(x=>x.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('teardown-area').innerHTML='';
+  document.getElementById('mix-area').innerHTML='';
+  const sa=document.getElementById('search-area');
+  sa.innerHTML=`<div class="label">② "${esc(c.name)}" 검증된 터진 영상</div><div class="spin">🔍 검색·검증 중… (20~40초, 넓게 훑는 중)</div>`;
+  fetch('/yt/category_search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({category_id:c.id,days:getDays(),exclude_shorts:getNoShorts(),exclude_news:getNoNews()})})
+    .then(r=>r.json()).then(renderResults).catch(e=>sa.innerHTML=`<p style="color:#e88">검색 실패: ${esc(e.message)}</p>`);
+}
+
+function verdictCell(v){return `<span class="v-${v}">${v==='금맥'?'🔥금맥':v}</span>`;}
+function durCell(sec,isShort){if(!sec)return '';
+  const m=Math.floor(sec/60),s=sec%60;const t=`${m}:${String(s).padStart(2,'0')}`;
+  return isShort?`<span style="color:#e879f9">🩳쇼츠 ${t}</span>`:`<span class="muted">🎬 ${t}</span>`;}
+function fmtDate(iso){if(!iso)return '';const d=new Date(iso);if(isNaN(d))return '';
+  const now=new Date();const days=Math.floor((now-d)/86400000);
+  const ymd=`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}`;
+  if(days<30)return `${days}일전`;if(days<365)return `${Math.floor(days/30)}개월전`;return ymd;}
+
+let lastRows=[], lastCat='';
+let sortStack=[{key:'star',asc:false},{key:'view_per_sub',asc:false}];  // 기본: 추천도→배수
+
+function renderResults(d){
+  const sa=document.getElementById('search-area');
+  if(d.error){sa.innerHTML=`<p style="color:#e88">${esc(d.error)}</p>`;return;}
+  lastRows=(d.results||[]).map(withStar);
+  lastCat=d.category||'';
+  sortStack=[{key:'star',asc:false},{key:'view_per_sub',asc:false}];
+  drawTable();
+}
+
+// ⭐추천도: 정말 좋은 레퍼런스 = 소재가 터지고(배수/기여도) + 내용도 좋음(참여율) 겹칠수록 높음
+const GR={Great:3,Good:2,Normal:1,'':0};
+function withStar(r){
+  let s=0;
+  if(r.verdict==='금맥')s+=2; else if(r.verdict==='기여')s+=1;
+  s+=GR[r.contribution_grade]||0;                 // 기여도(채널평균 대비)
+  if(r.content_grade==='높음')s+=2; else if(r.content_grade==='보통')s+=1;  // 참여율
+  r.star=s;   // 0~7
+  return r;
+}
+function starCell(s){const n=s>=5?3:s>=3?2:s>=1?1:0;return '★'.repeat(n)+'<span style="color:var(--line)">'+'★'.repeat(3-n)+'</span>';}
+
+// 다단계 정렬: 헤더 클릭 = 우선순위 순서대로 추가(1·2·3차). 3단계 토글:
+//   1클릭 ▼내림차순(번호표시) → 2클릭 ▲오름차순 → 3클릭 해제(사라짐)
+function sortBy(key){
+  const i=sortStack.findIndex(s=>s.key===key);
+  if(i<0){sortStack.push({key,asc:false}); if(sortStack.length>4)sortStack.shift();}
+  else if(sortStack[i].asc===false){sortStack[i].asc=true;}   // ▼ → ▲
+  else{sortStack.splice(i,1);}                                 // ▲ → 해제
+  drawTable();
+}
+function resetSort(){sortStack=[{key:'star',asc:false},{key:'view_per_sub',asc:false}];drawTable();}
+
+function cmp1(a,b,key,asc){
+  let x=a[key],y=b[key];
+  if(key==='published_at'){x=x||'';y=y||'';}
+  let c=(typeof x==='string')?String(x).localeCompare(String(y)):((x||0)-(y||0));
+  return asc?c:-c;
+}
+
+function drawTable(){
+  const sa=document.getElementById('search-area');
+  const rows=[...lastRows].sort((a,b)=>{
+    for(const s of sortStack){const c=cmp1(a,b,s.key,s.asc);if(c)return c;}
+    return 0;
+  });
+  const badge=k=>{const i=sortStack.findIndex(s=>s.key===k);if(i<0)return '';
+    return `<span style="color:var(--gold)"> ${'①②③④'[i]}${sortStack[i].asc?'▲':'▼'}</span>`;};
+  const th=(k,label)=>`<th style="cursor:pointer" onclick="sortBy('${k}')">${label}${badge(k)}</th>`;
+  let h=`<div class="label" style="display:flex;justify-content:space-between;align-items:center">
+      <span>② "${esc(lastCat)}" 검증된 터진 영상 (${rows.length}개) — 헤더 클릭 = 다단계 정렬(1·2·3차)</span>
+      <button class="btn sec" style="padding:3px 10px;font-size:.72rem" onclick="resetSort()">정렬 초기화</button></div>
+    <table><tr><th>추천</th><th>판정</th>${th('title','제목')}${th('channel_title','채널')}${th('subscriber_count','구독자')}${th('view_count','조회수')}${th('views_per_day','일조회수<br>(속도)')}${th('view_per_sub','배수')}${th('contribution_grade','기여도<br>(채널대비)')}${th('comment_count','댓글')}${th('duration_sec','길이')}${th('published_at','게시')}${th('engage_pct','콘텐츠<br>(참여율)')}<th></th></tr>`;
+  const grKo={Great:'<span class="gr-높음">높음🔥</span>',Good:'<span class="gr-보통">양호</span>',Normal:'<span class="muted">평범</span>','':'<span class="muted">-</span>'};
+  rows.forEach(r=>{
+    const cg=r.content_grade||'';
+    const vurl=`https://www.youtube.com/watch?v=${r.video_id}`;
+    const curl=r.channel_id?`https://www.youtube.com/channel/${r.channel_id}`:'';
+    h+=`<tr>
+      <td class="mini" style="color:#ffcf40" title="추천도 ${r.star}/7">${starCell(r.star)}</td>
+      <td>${verdictCell(r.verdict)}</td>
+      <td><a href="${vurl}" target="_blank" style="color:var(--txt);text-decoration:none">${esc(r.title)} <span class="mini muted">↗</span></a></td>
+      <td class="mini">${curl?`<a href="${curl}" target="_blank" style="color:var(--muted)">${esc(r.channel_title)} ↗</a>`:esc(r.channel_title)}</td>
+      <td class="mini">${r.subscriber_count.toLocaleString()}</td>
+      <td class="mini">${r.view_count.toLocaleString()}</td>
+      <td class="mini" style="color:#ffcf40">${(r.views_per_day||0).toLocaleString()}/일</td>
+      <td class="mini" style="color:var(--gold)">${r.view_per_sub}x</td>
+      <td class="mini" title="성과도(좋아요 채널대비): ${r.performance_grade||'-'}">${grKo[r.contribution_grade]||grKo['']}</td>
+      <td class="mini">💬${(r.comment_count||0).toLocaleString()}</td>
+      <td class="mini">${durCell(r.duration_sec,r.is_short)}</td>
+      <td class="mini muted">${fmtDate(r.published_at)}</td>
+      <td class="mini"><span class="gr-${cg}">${cg}</span> <span class="muted">${r.engage_pct!=null?r.engage_pct+'%':''}</span></td>
+      <td><button class="btn sec" style="padding:4px 10px;font-size:.75rem"
+        onclick='doTeardown(${JSON.stringify(r).replace(/'/g,"&#39;")})'>🔬 해체</button></td>
+    </tr>`;
+  });
+  h+=`</table><div class="mini muted" style="margin-top:6px">
+    <b>⭐추천</b> = 아래 셋이 겹칠수록 높음 = "정말 좋은 레퍼런스" ·
+    <b>판정 금맥</b>=작은 채널이 구독자 대비 터뜨림(소재가 캐리) ·
+    <b>기여도</b>=그 채널 평균 대비 이 영상이 유난히 터짐(제목·훅이 통함) ·
+    <b>콘텐츠(참여율)</b>=썸네일 클릭이 아니라 내용이 좋아 반응(대본 배울 값). 낮음=썸네일빨.</div>`;
+  sa.innerHTML=h;
+}
+
+// ── 자유 키워드 검색
+function kwSearch(){
+  const q=document.getElementById('kw').value.trim();if(!q)return;
+  document.querySelectorAll('.cat').forEach(x=>x.classList.remove('on'));
+  curCat={id:'',name:q};
+  document.getElementById('teardown-area').innerHTML='';document.getElementById('mix-area').innerHTML='';
+  const sa=document.getElementById('search-area');
+  sa.innerHTML=`<div class="label">② "${esc(q)}" 검색 중…</div><div class="spin">🔍 검색·검증 중… (20~40초, 넓게 훑는 중)</div>`;
+  fetch('/yt/keyword_search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q,days:getDays(),exclude_shorts:getNoShorts(),exclude_news:getNoNews()})})
+    .then(r=>r.json()).then(renderResults).catch(e=>sa.innerHTML=`<p style="color:#e88">검색 실패: ${esc(e.message)}</p>`);
+}
+
+// ── URL/ID 직접 해체
+function extractVid(s){s=s.trim();
+  let m=s.match(/[?&]v=([\w-]{11})/)||s.match(/youtu\.be\/([\w-]{11})/)||s.match(/shorts\/([\w-]{11})/)||s.match(/^([\w-]{11})$/);
+  return m?m[1]:'';}
+function urlTeardown(){
+  const raw=document.getElementById('url').value;const vid=extractVid(raw);
+  if(!vid){alert('유효한 유튜브 URL 또는 11자리 영상ID를 넣어주세요');return;}
+  doTeardown({video_id:vid,title:'(직접 입력 영상)',channel_title:'',verdict:'직접',
+    view_count:0,view_pct_above_avg:0,contribution_grade:'',subscriber_count:0});
+}
+
+function doTeardown(r){
+  const area=document.getElementById('teardown-area');
+  let box=document.getElementById('td-'+r.video_id);
+  if(box){box.scrollIntoView({behavior:'smooth'});return;}
+  box=document.createElement('div');box.className='card';box.id='td-'+r.video_id;
+  box.innerHTML=`<h3>🔬 해체 중: ${esc(r.title)}</h3><div class="spin">제미니가 영상 시청 중… (1~2분)</div>`;
+  area.appendChild(box);box.scrollIntoView({behavior:'smooth'});
+
+  const stats={view_count:r.view_count,view_pct_above_avg:r.view_pct_above_avg,
+    contribution_grade:r.contribution_grade,subscriber_count:r.subscriber_count};
+  sse('/yt/teardown',{video_id:r.video_id,title:r.title,channel:r.channel_title,stats},ev=>{
+    if(ev.type==='done'){cards[r.video_id]=ev.card;renderCard(box,r,ev.card);refreshMixBar();}
+    else if(ev.type==='error'){box.innerHTML=`<h3>${esc(r.title)}</h3><p style="color:#e88">해체 실패: ${esc(ev.message)}</p>`;}
+  });
+}
+
+function dimList(arr){return '<ul>'+(arr||[]).map(x=>`<li>${esc(x)}</li>`).join('')+'</ul>';}
+
+function renderCard(box,r,c){
+  const scriptSegs=(c['대본_전체분석']||[]).map(s=>
+    `<div class="script-seg"><span class="t">${esc(s['구간'])}</span> — ${esc(s['무슨말'])}
+     <span class="mini muted">[${esc(s['기법'])}]</span>${s['핵심대사']?`<br><span class="mini">💬 "${esc(s['핵심대사'])}"</span>`:''}</div>`).join('');
+  const grade=c['대본_등급']||'';
+  box.innerHTML=`
+    <button class="del" onclick="deleteCard('${r.video_id}')">✕ 삭제</button>
+    <h3>🔬 ${esc(r.title)} <span class="mini muted">(${esc(r.channel_title)} · ${verdictCell(r.verdict)})</span></h3>
+    <div class="factor">
+      <b>성공요인:</b> ${esc(c['성공요인'])} &nbsp;|&nbsp; <b>대본 등급:</b> ${esc(grade)}<br>
+      <b>학습가치:</b> ${esc(c['학습가치'])}</div>
+    <div class="dim"><span class="k">소재</span><div class="val">${esc(c['소재'])}</div></div>
+    <div class="dim"><span class="k">왜 터졌나</span><div class="val">${esc(c['왜_터졌나'])}</div></div>
+    <div class="dim"><span class="k">썸네일</span><div class="val">${esc(c['썸네일'])}</div></div>
+    <div class="dim"><span class="k">훅 (첫10초)</span><div class="val">${esc(c['훅_첫10초'])}</div></div>
+    <div class="dim"><span class="k">구성</span>${dimList(c['구성'])}</div>
+    <div class="dim"><span class="k">📜 대본 전체분석</span><div class="val">${scriptSegs||'<span class="muted">없음</span>'}</div></div>
+    <div class="dim"><span class="k">내러티브</span><div class="val">${esc(c['내러티브'])}</div></div>
+    <div class="dim"><span class="k">훔칠 문장</span>${dimList(c['대본_훔칠문장'])}</div>
+    <div class="dim"><span class="k">댓글 페인포인트(빈틈)</span><div class="val">${esc(c['댓글_페인포인트'])}</div></div>
+    <div class="dim"><span class="k">🎯 우리 채널 이식</span>${Array.isArray(c['우리채널_이식'])?dimList(c['우리채널_이식']):`<div class="val">${esc(c['우리채널_이식'])}</div>`}</div>`;
+}
+
+function deleteCard(vid){
+  delete cards[vid];
+  const el=document.getElementById('td-'+vid);
+  if(el)el.remove();
+  refreshMixBar();
+}
+
+function refreshMixBar(){
+  const ids=Object.keys(cards);const area=document.getElementById('mix-area');
+  if(ids.length<1){area.innerHTML='';return;}
+  area.innerHTML=`<div class="label">③ 믹스 — 해체한 ${ids.length}개를 우리 채널 대본으로 합치기</div>
+    <button class="btn" onclick="doMix()" ${ids.length<2?'':''}>🧬 ${ids.length}개 믹스해서 대본 초안 만들기</button>
+    <div class="mini muted" style="margin-top:5px">${ids.length===1?'2개 이상 해체하면 여러 영상의 강점을 섞습니다 (1개도 가능)':''}</div>
+    <div id="draft"></div>`;
+}
+
+function doMix(){
+  const arr=Object.values(cards);const dbox=document.getElementById('draft');
+  dbox.innerHTML='<div class="spin" style="margin-top:10px">🧬 제미니가 믹스 중…</div>';
+  sse('/yt/mix',{cards:arr,category:curCat.name},ev=>{
+    if(ev.type==='done')renderDraft(dbox,ev.draft);
+    else if(ev.type==='error')dbox.innerHTML=`<p style="color:#e88">믹스 실패: ${esc(ev.message)}</p>`;
+  });
+}
+
+function renderDraft(box,d){
+  const seg=(k,arr)=>arr&&arr.length?`<div class="dim"><span class="k">${k}</span>${dimList(arr)}</div>`:'';
+  box.innerHTML=`<div class="plan">
+    <div class="dim"><span class="k">제목 후보</span>${dimList(d['제목후보'])}</div>
+    <div class="dim"><span class="k">훅 (첫20초)</span><div class="val">${esc(d['훅_첫20초'])}</div></div>
+    ${seg('구성',d['구성'])}
+    ${seg('핵심 대본 포인트',d['핵심대본_포인트'])}
+    <div class="dim"><span class="k">차별화 (빈틈 공략)</span><div class="val">${esc(d['차별화_빈틈공략'])}</div></div>
+    <div class="dim"><span class="k">CTA</span><div class="val">${esc(d['CTA'])}</div></div>
+    <div class="dim"><span class="k mini">믹스 근거</span><div class="val mini muted">${esc(d['믹스_근거'])}</div></div>
+  </div>`;
+  box.scrollIntoView({behavior:'smooth'});
+}
+
+// ── SSE 헬퍼 (POST + 스트림 파싱)
+async function sse(url,body,onEvent){
+  try{
+    const resp=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const rd=resp.body.getReader();const dec=new TextDecoder();let buf='';
+    while(true){const{done,value}=await rd.read();if(done)break;
+      buf+=dec.decode(value,{stream:true});const parts=buf.split('\n\n');buf=parts.pop();
+      for(const p of parts){if(p.startsWith('data: ')){try{onEvent(JSON.parse(p.slice(6)));}catch(_){}}}}
+  }catch(e){onEvent({type:'error',message:e.message});}
+}
+</script>
+</body>
+</html>

@@ -1393,3 +1393,8 @@ python calc_oscillator.py SK하이닉스 삼성전자 한미반도체 --tg
 - Phase1a: GET /api/catalysts (내종목/섹터/D호라이즌 필터, 기존 watchlist 재사용).
 - Phase1b1: dashboard/catalysts.html + GET /catalysts 전용 촉매페이지(라이트 애플, 브라우저 검증).
 - 블로커: Gemini429 쿼터소진으로 실이벤트0건(배선정상). 다음: Phase1b2(insights.html 촉매섹션), Phase3(사가·트리거). 상세 NEXT_SESSION 세션F.
+
+## 2026-07-04 (세션G) — YT 레퍼런스 창고 /yt/refs 로컬완성
+- 터진영상 검색→검증→해체(Gemini 대본전체분석)→믹스 파이프라인. dashboard/yt_refs.html + scripts/yt_agents/*.
+- 사용자 실검색 반복피드백으로 개선: 검증하한(3만뷰)·쇼츠판별(/shorts 리다이렉트)·뉴스제외·기여도복원(병렬)·다단계정렬·⭐추천(배수+기여도+참여율 교집합).
+- 서버 미배포(feat/briefing-engine 공유트리 얹힘, main 정리후). 내일 회사서 이어감. 메모리 project_yt_reference_warehouse.
