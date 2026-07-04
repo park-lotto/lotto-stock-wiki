@@ -1,4 +1,5 @@
 import pytest
+import time
 import chromadb
 from unittest.mock import patch, MagicMock
 import pipeline.atoms.vector_db as vdb_module
@@ -79,8 +80,8 @@ def test_embed_text_returns_3072_floats():
     mock_resp.embeddings = [MagicMock(values=[0.1] * 3072)]
     mock_client.models.embed_content.return_value = mock_resp
 
-    with patch("pipeline.atoms.vector_db._load_gemini_keys", return_value=["fake-key"]), \
-         patch("pipeline.atoms.vector_db._get_embed_client_for", return_value=mock_client):
+    with patch("pipeline.atoms.vector_db.key_vault.get_live_keys", return_value=["fake-key"]), \
+         patch("pipeline.atoms.vector_db.key_vault.get_client_for_key", return_value=mock_client):
         result = vdb_module.embed_text("테스트 텍스트")
 
     assert len(result) == 3072
@@ -94,13 +95,52 @@ def test_embed_text_calls_correct_model():
     mock_resp.embeddings = [MagicMock(values=[0.0] * 3072)]
     mock_client.models.embed_content.return_value = mock_resp
 
-    with patch("pipeline.atoms.vector_db._load_gemini_keys", return_value=["fake-key"]), \
-         patch("pipeline.atoms.vector_db._get_embed_client_for", return_value=mock_client):
+    with patch("pipeline.atoms.vector_db.key_vault.get_live_keys", return_value=["fake-key"]), \
+         patch("pipeline.atoms.vector_db.key_vault.get_client_for_key", return_value=mock_client):
         vdb_module.embed_text("hello")
         mock_client.models.embed_content.assert_called_once_with(
             model="gemini-embedding-001",
             contents="hello",
         )
+
+
+def test_embed_text_marks_key_exhausted_on_daily_limit_and_tries_next(monkeypatch):
+    """일일 한도(429+PerDay) 키는 mark_exhausted 후 다음 키로 넘어간다."""
+    daily_exceeded = Exception("429 RESOURCE_EXHAUSTED PerDay limit: 500")
+    ok_client = MagicMock()
+    ok_resp = MagicMock()
+    ok_resp.embeddings = [MagicMock(values=[0.2] * 3072)]
+    ok_client.models.embed_content.return_value = ok_resp
+    bad_client = MagicMock()
+    bad_client.models.embed_content.side_effect = daily_exceeded
+
+    marked = []
+    monkeypatch.setattr(vdb_module.key_vault, "get_live_keys", lambda g: ["bad-key", "ok-key"])
+    monkeypatch.setattr(vdb_module.key_vault, "mark_exhausted", lambda g, k: marked.append((g, k)))
+    monkeypatch.setattr(
+        vdb_module.key_vault, "get_client_for_key",
+        lambda k: bad_client if k == "bad-key" else ok_client,
+    )
+
+    result = vdb_module.embed_text("hello")
+    assert len(result) == 3072
+    assert marked == [("embed", "bad-key")]
+
+
+def test_embed_text_raises_after_both_attempts_fail(monkeypatch):
+    """RPM성 429가 두 번의 전체 순회(20초 간격) 후에도 실패하면 명확한 예외를 낸다."""
+    rpm_exceeded = Exception("429 RESOURCE_EXHAUSTED PerMinute limit: 15")
+    bad_client = MagicMock()
+    bad_client.models.embed_content.side_effect = rpm_exceeded
+
+    monkeypatch.setattr(vdb_module.key_vault, "get_live_keys", lambda g: ["k1"])
+    monkeypatch.setattr(vdb_module.key_vault, "get_client_for_key", lambda k: bad_client)
+    monkeypatch.setattr(vdb_module.key_vault, "mark_exhausted", lambda g, k: None)
+    monkeypatch.setattr(vdb_module.key_vault, "_tg_alert", lambda text: None)
+    monkeypatch.setattr(vdb_module.time, "sleep", lambda s: None)
+
+    with pytest.raises(RuntimeError, match="RPM"):
+        vdb_module.embed_text("hello")
 
 
 # ---------------------------------------------------------------------------
