@@ -156,3 +156,37 @@ def test_is_daily_exhausted_error_vs_rpm_error():
     assert kv.is_daily_exhausted_error(daily) is True
     assert kv.is_daily_exhausted_error(rpm) is False
     assert kv.is_quota_error(rpm) is True
+
+
+def test_get_client_raises_when_group_has_zero_configured_keys(monkeypatch, tmp_path):
+    """그룹이 전혀 설정되지 않은 경우(키 0개) RuntimeError 발생해야 함."""
+    env_file = tmp_path / ".env"
+    env_file.write_text("GEMINI_EMBED_KEY=e1\n", encoding="utf-8")  # briefing 그룹은 설정하지 않음
+    monkeypatch.setattr(kv, "_ENV_PATH", env_file)
+    monkeypatch.setattr(kv, "_STATE_PATH", tmp_path / "state.json")
+    monkeypatch.setattr(kv, "_LOCK_PATH", tmp_path / "state.lock")
+
+    with pytest.raises(RuntimeError, match="briefing"):
+        kv.get_client("briefing")
+
+
+def test_get_client_returns_client_when_all_keys_exhausted_but_configured(monkeypatch, tmp_path):
+    """모든 키가 소진되었지만 구성된 경우(키 1개 이상), 마지막 키로 클라이언트 반환해야 함."""
+    env_file = tmp_path / ".env"
+    env_file.write_text(
+        "GEMINI_EMBED_KEY=e1\nGEMINI_EMBED_KEY_2=e2\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(kv, "_ENV_PATH", env_file)
+    monkeypatch.setattr(kv, "_STATE_PATH", tmp_path / "state.json")
+    monkeypatch.setattr(kv, "_LOCK_PATH", tmp_path / "state.lock")
+    kv.reset("embed")
+
+    # 모든 키를 소진 처리
+    kv.mark_exhausted("embed", "e1")
+    kv.mark_exhausted("embed", "e2")
+    assert kv.get_live_keys("embed") == []  # 확인: 모든 키 소진됨
+
+    # RuntimeError 발생하지 않고 클라이언트 반환해야 함
+    client = kv.get_client("embed")
+    assert client is not None

@@ -133,10 +133,12 @@ def get_client_for_key(key: str) -> genai.Client:
 
 def get_client(group: str) -> genai.Client:
     """그룹의 현재 활성(인덱스 기반) 키로 클라이언트 반환."""
+    all_keys = get_keys(group)
+    if not all_keys:
+        raise RuntimeError(f"key_vault: '{group}' 그룹에 설정된 Gemini 키가 없습니다 (.env 확인)")
     live = get_live_keys(group)
     if not live:
-        all_keys = get_keys(group)
-        live = all_keys[-1:] if all_keys else []
+        live = all_keys[-1:]
     idx = min(_active_idx.get(group, 0), len(live) - 1) if live else 0
     key = live[idx] if live else ""
     return get_client_for_key(key)
