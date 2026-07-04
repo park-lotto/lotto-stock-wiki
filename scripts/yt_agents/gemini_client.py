@@ -15,88 +15,81 @@ def _load_env():
     return env
 
 _env = _load_env()
-GEMINI_KEY = _env.get('GEMINI_API_KEY', os.environ.get('GEMINI_API_KEY', ''))
 
-def call(prompt: str, system: str = '', model: str = 'gemini-3-flash-preview', temperature: float = 0.7) -> str:
-    """Gemini 단일 호출 → 텍스트 반환"""
-    if not GEMINI_KEY:
+def _key(name):
+    return _env.get(name, os.environ.get(name, ''))
+
+# 일반/대화형 풀(계정1,3,16,17) — 하나가 할당량 초과되면 다음 키로 자동 전환
+GEMINI_KEYS = [k for k in [
+    _key('GEMINI_API_KEY'),
+    _key('GEMINI_API_KEY_2'),
+    _key('GEMINI_API_KEY_3'),
+    _key('GEMINI_API_KEY_4'),
+] if k]
+GEMINI_KEY = GEMINI_KEYS[0] if GEMINI_KEYS else ''  # 기존 코드 하위호환용
+
+
+def _is_quota_error(e: Exception) -> bool:
+    msg = str(e)
+    return '429' in msg or 'RESOURCE_EXHAUSTED' in msg
+
+
+def _generate(model: str, contents, config):
+    """할당량 초과(429) 시 GEMINI_KEYS의 다음 키로 자동 전환해 재시도."""
+    if not GEMINI_KEYS:
         raise RuntimeError('.env에 GEMINI_API_KEY 없음')
 
     from google import genai
+
+    last_err = None
+    for key in GEMINI_KEYS:
+        try:
+            client = genai.Client(api_key=key)
+            return client.models.generate_content(model=model, contents=contents, config=config)
+        except Exception as e:
+            if _is_quota_error(e):
+                last_err = e
+                continue
+            raise
+    raise last_err
+
+
+def call(prompt: str, system: str = '', model: str = 'gemini-3-flash-preview', temperature: float = 0.7) -> str:
+    """Gemini 단일 호출 → 텍스트 반환"""
     from google.genai import types
-
-    client = genai.Client(api_key=GEMINI_KEY)
     full_prompt = f"{system}\n\n{prompt}" if system else prompt
-
-    resp = client.models.generate_content(
-        model=model,
-        contents=full_prompt,
-        config=types.GenerateContentConfig(temperature=temperature),
-    )
+    resp = _generate(model, full_prompt, types.GenerateContentConfig(temperature=temperature))
     return resp.text.strip()
 
 
 def search(query: str, model: str = 'gemini-3-flash-preview') -> str:
     """실제 Google Search grounding — 실시간 웹 검색"""
-    if not GEMINI_KEY:
-        raise RuntimeError('.env에 GEMINI_API_KEY 없음')
-
-    from google import genai
     from google.genai import types
-
-    client = genai.Client(api_key=GEMINI_KEY)
-
-    resp = client.models.generate_content(
-        model=model,
-        contents=query,
-        config=types.GenerateContentConfig(
-            tools=[types.Tool(google_search=types.GoogleSearch())],
-            temperature=0,
-        ),
-    )
+    resp = _generate(model, query, types.GenerateContentConfig(
+        tools=[types.Tool(google_search=types.GoogleSearch())],
+        temperature=0,
+    ))
     return resp.text.strip()
 
 
 def fetch_url(url: str, prompt: str, model: str = 'gemini-3-flash-preview') -> str:
     """URL을 Gemini가 직접 읽고 분석 — Naver 블로그 등 WebFetch 차단 사이트 우회"""
-    if not GEMINI_KEY:
-        raise RuntimeError('.env에 GEMINI_API_KEY 없음')
-
-    from google import genai
     from google.genai import types
-
-    client = genai.Client(api_key=GEMINI_KEY)
-
-    resp = client.models.generate_content(
-        model=model,
-        contents=f"{prompt}\n\nURL: {url}",
-        config=types.GenerateContentConfig(
-            tools=[types.Tool(url_context=types.UrlContext())],
-            temperature=0,
-        ),
-    )
+    resp = _generate(model, f"{prompt}\n\nURL: {url}", types.GenerateContentConfig(
+        tools=[types.Tool(url_context=types.UrlContext())],
+        temperature=0,
+    ))
     return resp.text.strip()
 
 
 def call_with_grounding(prompt: str, system: str = '', model: str = 'gemini-3-flash-preview', temperature: float = 0.7) -> tuple[str, list]:
     """Google Search grounding 활성화 호출 → (텍스트, 검색출처목록) 반환"""
-    if not GEMINI_KEY:
-        raise RuntimeError('.env에 GEMINI_API_KEY 없음')
-
-    from google import genai
     from google.genai import types
-
-    client = genai.Client(api_key=GEMINI_KEY)
     full_prompt = f"{system}\n\n{prompt}" if system else prompt
-
-    resp = client.models.generate_content(
-        model=model,
-        contents=full_prompt,
-        config=types.GenerateContentConfig(
-            tools=[types.Tool(google_search=types.GoogleSearch())],
-            temperature=temperature,
-        ),
-    )
+    resp = _generate(model, full_prompt, types.GenerateContentConfig(
+        tools=[types.Tool(google_search=types.GoogleSearch())],
+        temperature=temperature,
+    ))
 
     # 실제 검색 사용 여부 확인
     sources = []
