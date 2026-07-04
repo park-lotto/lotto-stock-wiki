@@ -238,12 +238,13 @@ except (ImportError, Exception):
     kis_ws = None  # type: ignore
 
 try:
-    from sector_heatmap import build_heatmap, parse_etf_bar, build_heatmap_tab, TAB_GROUPS  # noqa: E402
+    from sector_heatmap import build_heatmap, parse_etf_bar, build_heatmap_tab, TAB_GROUPS, WATCH_FILE  # noqa: E402
 except (ImportError, Exception):
     build_heatmap = None        # type: ignore
     parse_etf_bar = None        # type: ignore
     build_heatmap_tab = None    # type: ignore
     TAB_GROUPS = []             # type: ignore
+    WATCH_FILE = None           # type: ignore
 
 # claude CLI 위치 (PATH 우선, 없으면 알려진 경로)
 CLAUDE_BIN = shutil.which("claude") or r"C:\Users\TheRose\.local\bin\claude.exe"
@@ -1214,7 +1215,105 @@ def market_page():
     return HTMLResponse(content=html, headers={"Cache-Control": "no-cache, must-revalidate"})
 
 
-_last_good_etf: dict = {"data": None}   # ETF바 마지막 정상 응답(KIS 순간실패 시 유지)
+_last_good_etf: dict = {"data": None, "ts": 0.0}   # ETF바 마지막 정상 응답(KIS 순간실패 시 유지)
+_ETF_PERSIST = os.path.join(ROOT, "output", "etf_bar_last_good.json")
+
+def _save_etf_persist():
+    """ETF바 마지막 정상 데이터를 디스크에 저장. 장마감·주말처럼 KIS가 응답 안 하는 동안
+    서비스가 재시작되면 인메모리 _last_good_etf가 비어 폴백조차 못 하는 문제 방지."""
+    try:
+        os.makedirs(os.path.dirname(_ETF_PERSIST), exist_ok=True)
+        tmp = _ETF_PERSIST + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump({"data": _last_good_etf["data"], "ts": _last_good_etf["ts"]}, f, ensure_ascii=False)
+        os.replace(tmp, _ETF_PERSIST)
+    except Exception:
+        pass
+
+def _load_etf_persist():
+    """부팅 시 디스크에 저장된 마지막 정상 ETF 데이터 복원 (날짜 무관 — 어제/금요일 것이라도 복원해서
+    KIS 완전불통 상황에도 '마지막으로 알려진 값'을 바로 보여줄 수 있게 함)."""
+    try:
+        with open(_ETF_PERSIST, encoding="utf-8") as f:
+            data = json.load(f)
+        if data.get("data"):
+            _last_good_etf["data"] = data["data"]
+            _last_good_etf["ts"] = data.get("ts", 0.0)
+    except Exception:
+        pass
+
+_load_etf_persist()   # 부팅 시 복원 (재시작·KIS 불통 겹쳐도 직전 값 유지)
+
+_etf_kis_down = {"ts": 0.0}      # 마지막으로 KIS 라이브 조회가 전멸(전종목 price=0)한 시각
+_ETF_DOWN_COOLDOWN = 60           # 이 시간 안엔 재시도 없이 바로 last-good 서빙 (요청마다 수십초 대기 방지)
+
+def _kis_reachable(timeout=2.5) -> bool:
+    """KIS 서버 포트에 빠르게(수 초 내) 붙는지만 확인하는 저비용 프로브.
+    2026-07-04 KIS 서버 완전장애 때 개별 시세/분봉 콜(8초 타임아웃 × 19개 ETF)이 누적되어
+    /api/etf_bar 응답이 2분+ 걸리던 문제 발견 — 라이브 시도 전에 먼저 이걸로 죽었는지 확인하고,
+    죽었으면 바로 폴백으로 넘어가 응답을 즉시 준다."""
+    import socket
+    try:
+        with socket.create_connection(("openapi.koreainvestment.com", 9443), timeout=timeout):
+            return True
+    except Exception:
+        return False
+
+def _etf_static_fallback(etfs: list) -> list:
+    """최후 폴백(3순위): 로컬 감시종목 엑셀(parse_etf_bar의 ohlc)에 이미 들어있는 종가.
+    이 엑셀은 수동/일별 갱신이라 며칠씩 밀려있을 수 있음(2026-07-04 KIS 장애 때 실제로 7/1치였음) —
+    네이버 폴백(_etf_naver_fallback)이 실패한 개별 종목에 대해서만 최후 수단으로 쓴다."""
+    out = []
+    for e in etfs:
+        ohlc = e.get("ohlc") or []
+        close = ohlc[-1] if ohlc else 0
+        out.append({**e, "price": int(close), "change_rate": 0.0, "bars": []})
+    return out
+
+def _watch_file_asof_ts() -> float:
+    """감시종목 엑셀(WATCH_FILE)의 수정시각 — 정적 폴백(_etf_static_fallback)이 '몇 일자 종가'인지
+    프론트에 표시하기 위한 근거 시각. 파일이 없으면 현재시각으로 대체(라벨 생략보단 나음)."""
+    try:
+        return os.path.getmtime(WATCH_FILE)
+    except Exception:
+        return time.time()
+
+def _naver_last_session(code: str, tf_min: int = 15, count: int = 120):
+    """naver_api.last_session 얇은 래퍼(기존 호출부 이름 유지용) — 실제 구현은
+    scripts/naver_api.py에 있어 히트맵(sector_heatmap.build_heatmap)과도 공유한다."""
+    import naver_api
+    return naver_api.last_session(code, tf_min=tf_min, count=count)
+
+def _naver_sessions_batch(codes: list, workers: int = 8) -> dict:
+    """naver_api.last_session_batch 얇은 래퍼(기존 호출부 이름 유지용)."""
+    import naver_api
+    return naver_api.last_session_batch(codes, workers=workers)
+
+def _etf_naver_fallback(etfs: list):
+    """ETF바용 래퍼: last-good 캐시도 없을 때 네이버로 등락률·스파크라인 재구성.
+    개별 종목 실패 시에만 그 종목을 엑셀 종가로 메꾼다. 반환: (etfs, asof_epoch)."""
+    got = _naver_sessions_batch([e["code"] for e in etfs])
+    out, max_ts = [], 0
+    for e in etfs:
+        r = got.get(e["code"])
+        if r:
+            out.append({**e, "price": r["price"], "change_rate": r["change_rate"], "bars": r["bars"]})
+            max_ts = max(max_ts, r["asof"])
+        else:
+            ohlc = e.get("ohlc") or []
+            close = ohlc[-1] if ohlc else 0
+            out.append({**e, "price": int(close), "change_rate": 0.0, "bars": []})
+    return out, (max_ts or _watch_file_asof_ts())
+
+def _etf_fallback_response(etfs: list) -> JSONResponse:
+    """last-good 캐시도 없을 때 쓰는 공용 폴백: 네이버(신선, 1순위) 시도 후 실패하면 로컬 엑셀(최후)."""
+    try:
+        data, asof = _etf_naver_fallback(etfs)
+        return JSONResponse(content=data,
+                             headers={"X-Etf-Stale": "1", "X-Etf-Static": "1", "X-Etf-Asof": str(asof)})
+    except Exception:
+        return JSONResponse(content=_etf_static_fallback(etfs),
+                             headers={"X-Etf-Stale": "1", "X-Etf-Static": "1", "X-Etf-Asof": str(_watch_file_asof_ts())})
 
 @app.get("/api/etf_bar")
 def api_etf_bar():
@@ -1226,9 +1325,20 @@ def api_etf_bar():
         if cached and time.time() - cached["ts"] < _PREWARM_TTL:
             return JSONResponse(content=cached["data"])
 
+        etfs = parse_etf_bar()   # 로컬 엑셀 파싱(네트워크 불필요) — 폴백용 종가도 여기 이미 들어있음
+
+        # 최근에 KIS 라이브 조회가 전멸했거나(쿨다운) 지금 붙지도 않으면(프로브) —
+        # 매 요청마다 8초×종목수 만큼 기다리지 않고 바로 폴백.
+        recently_down = time.time() - _etf_kis_down["ts"] < _ETF_DOWN_COOLDOWN
+        if recently_down or not _kis_reachable():
+            _etf_kis_down["ts"] = time.time()
+            if _last_good_etf["data"]:
+                return JSONResponse(content=_last_good_etf["data"],
+                                     headers={"X-Etf-Stale": "1", "X-Etf-Asof": str(_last_good_etf["ts"])})
+            return _etf_fallback_response(etfs)
+
         import kis_api
         from concurrent.futures import ThreadPoolExecutor, as_completed
-        etfs  = parse_etf_bar()
         codes = [e["code"] for e in etfs]
 
         # 현재가 + 15분봉 병렬 조회
@@ -1252,14 +1362,23 @@ def api_etf_bar():
         if any((e.get("price") or 0) > 0 for e in etfs):
             _prewarm_cache["etf_bar"] = {"data": etfs, "ts": time.time()}
             _last_good_etf["data"] = etfs
+            _last_good_etf["ts"] = time.time()
+            _save_etf_persist()
             return JSONResponse(content=etfs)
+        _etf_kis_down["ts"] = time.time()
         if _last_good_etf["data"]:
-            return JSONResponse(content=_last_good_etf["data"])
-        return JSONResponse(content=etfs)
+            return JSONResponse(content=_last_good_etf["data"],
+                                 headers={"X-Etf-Stale": "1", "X-Etf-Asof": str(_last_good_etf["ts"])})
+        return _etf_fallback_response(etfs)
     except Exception as e:
+        _etf_kis_down["ts"] = time.time()
         if _last_good_etf["data"]:
-            return JSONResponse(content=_last_good_etf["data"])
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+            return JSONResponse(content=_last_good_etf["data"],
+                                 headers={"X-Etf-Stale": "1", "X-Etf-Asof": str(_last_good_etf["ts"])})
+        try:
+            return _etf_fallback_response(parse_etf_bar())
+        except Exception:
+            return JSONResponse(content={"error": str(e)}, status_code=500)
 
 
 _sv_cache: dict = {"data": None, "ts": 0.0}
@@ -2316,21 +2435,40 @@ def api_watchlist_get(flow: int = 1):
     codes = _load_watchlist_codes()
     items = []
     if codes:
-        try:
-            import kis_api
-            prices = kis_api.get_prices_multi([c["code"] for c in codes])
+        # ETF바와 동일한 KIS-다운 감지(쿨다운/프로브) — 장마감·주말·KIS 장애 시 라이브 시도를
+        # 건너뛰고 네이버로 마지막 거래일 종가·등락률 폴백(0/0.00%로 비는 것 방지).
+        skip_live = (time.time() - _etf_kis_down["ts"] < _ETF_DOWN_COOLDOWN) or not _kis_reachable()
+        prices = {}
+        if not skip_live:
+            try:
+                import kis_api
+                prices = kis_api.get_prices_multi([c["code"] for c in codes])
+                if not any((p or {}).get("price") for p in prices.values()):
+                    skip_live = True
+                    _etf_kis_down["ts"] = time.time()
+            except Exception:
+                skip_live = True
+                _etf_kis_down["ts"] = time.time()
+        if skip_live:
+            naver = _naver_sessions_batch([c["code"] for c in codes])
+            for c in codes:
+                r = naver.get(c["code"]) or {}
+                items.append({"code": c["code"], "name": c.get("name", ""),
+                              "price": r.get("price", 0),
+                              "change_rate": r.get("change_rate", 0)})
+        else:
             for c in codes:
                 p = prices.get(c["code"]) or {}
                 items.append({"code": c["code"],
                               "name": c.get("name") or p.get("name") or c["code"],
                               "price": p.get("price", 0),
                               "change_rate": p.get("change_rate", 0)})
-        except Exception:
-            items = [{"code": c["code"], "name": c.get("name", ""),
-                      "price": 0, "change_rate": 0} for c in codes]
 
     # 종목별 잠정수급 첨부 (키움 ka10059+ka90013, 종목당 2콜 → 종목 단위 병렬)
     # 키움 실패/전부 0(서버에 키움 키 미등록) → KIS(FHKST01010900+FHPPG04650200) 폴백
+    # KIS가 죽어있으면(쿨다운/프로브) 이 KIS 폴백도 종목당 타임아웃까지 기다리게 되어 전체
+    # /api/watchlist 응답이 통째로 멈추는 문제 발견(2026-07-04) — ETF바와 동일한 가드로 건너뛴다.
+    kis_down_for_supply = (time.time() - _etf_kis_down["ts"] < _ETF_DOWN_COOLDOWN) or not _kis_reachable()
     if flow and items:
         try:
             import kiwoom_api, kis_api
@@ -2341,7 +2479,7 @@ def api_watchlist_get(flow: int = 1):
                     d = kiwoom_api.get_stock_supply(code)
                 except Exception:
                     d = None
-                if not d or not any(d.get(k) for k in ("외인", "기관", "개인", "프로그램")):
+                if (not d or not any(d.get(k) for k in ("외인", "기관", "개인", "프로그램"))) and not kis_down_for_supply:
                     try:
                         d = kis_api.get_stock_supply(code)
                     except Exception:
@@ -2362,9 +2500,21 @@ def api_watchlist_get(flow: int = 1):
 
 @app.post("/api/watchlist")
 async def api_watchlist_post(req: Request):
-    """관심종목 저장. body: {codes:[{code,name},...]}"""
+    """관심종목 저장. body: {codes:[{code,name},...]}.
+    프론트가 항상 클라이언트 로컬상태(_wlCodes) 전체로 덮어쓰는 구조라, 그 로컬상태가
+    (서버 재시작 타이밍 등으로) 비어있는 채로 저장을 호출하면 실수로 전체 목록이 사라질 수
+    있다(2026-07-04 실제 발생). 덮어쓰기 전에 직전 파일을 .bak으로 한 벌 남겨 항상 복구 가능하게 함."""
     data = await req.json()
     codes = data.get("codes", [])
+    try:
+        if os.path.exists(WATCHLIST_PATH):
+            with open(WATCHLIST_PATH, encoding="utf-8") as f:
+                prev = json.load(f)
+            if prev.get("codes"):
+                with open(WATCHLIST_PATH + ".bak", "w", encoding="utf-8") as f:
+                    json.dump(prev, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
     with open(WATCHLIST_PATH, "w", encoding="utf-8") as f:
         json.dump({"codes": codes}, f, ensure_ascii=False, indent=2)
     return JSONResponse(content={"ok": True})
@@ -2447,6 +2597,13 @@ def api_stock_candles(code: str = "", tf: str = "D"):
         if not data:
             if tf in ("D", "W", "M"):
                 data = kis_api.get_daily_ohlc(code, tf)
+                # KIS도 죽어있으면(2026-07-04 KIS 장애처럼) 네이버 공개 일봉으로 최종 폴백
+                if not data and tf == "D":
+                    try:
+                        import naver_api as _nv
+                        data = _nv.daily_candles(code)
+                    except Exception:
+                        data = []
             else:
                 # 분봉: 네이버 fchart로 '다일치' 캔들 확보(사용자 요청) + 오늘치는 KIS 정밀 OHLC로 덮어씀
                 try:
@@ -2765,6 +2922,12 @@ def _prewarm_worker():
             from sector_heatmap import parse_etf_bar
             from concurrent.futures import ThreadPoolExecutor as _TPE2, as_completed as _ac2
             etfs = parse_etf_bar()
+            # KIS가 죽어있으면(쿨다운 중이거나 프로브 실패) 이 사이클은 라이브 시도를 건너뛴다.
+            # 안 건너뛰면 종목당 8초 타임아웃이 누적되어(19종목=최대 수십초~분) 다음 프리워밍
+            # 사이클(market_flow·heatmap 포함)까지 통째로 지연시킴.
+            if (time.time() - _etf_kis_down["ts"] < _ETF_DOWN_COOLDOWN) or not _kis_reachable():
+                _etf_kis_down["ts"] = time.time()
+                return []
             codes = [e["code"] for e in etfs]
             prices = kis_api.get_prices_batch_parallel(codes)
             # 분봉(스파크라인)도 캐시에 포함 → 캐시 히트 시 차트 사라지는 문제 해결
@@ -2779,8 +2942,18 @@ def _prewarm_worker():
                 e["change_rate"] = float(p.get("change_rate", 0) or 0)
                 e["price"] = int(p.get("price", 0) or 0)
                 e["bars"] = bars_map.get(e["code"], [])
+            # 백그라운드 프리워밍에서 얻은 정상 데이터도 last-good에 반영(디스크 영속)
+            # — 장마감·주말·KIS 장애로 요청 핸들러 쪽 재시도가 쿨다운 중이어도 이 갱신은 계속 도니
+            # KIS가 복구되면 여기서 먼저 잡아낸다.
+            if any((e.get("price") or 0) > 0 for e in etfs):
+                _last_good_etf["data"] = etfs
+                _last_good_etf["ts"] = time.time()
+                _save_etf_persist()
+            else:
+                _etf_kis_down["ts"] = time.time()
             return etfs
         except Exception:
+            _etf_kis_down["ts"] = time.time()
             return []
 
     def _fetch_heatmap():

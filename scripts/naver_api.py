@@ -13,6 +13,73 @@ _HDR = {
 }
 
 
+def daily_candles(code: str, count: int = 300) -> list:
+    """네이버 fchart 일봉(인증 불필요) — KIS·키움 둘 다 죽었을 때 종목차트 폴백용.
+    반환(과거→최신): [{"time":"YYYY-MM-DD", open, high, low, close, value}]"""
+    try:
+        url = (f"https://fchart.stock.naver.com/sise.nhn?symbol={code}"
+               f"&timeframe=day&count={count}&requestType=0")
+        r = requests.get(url, headers={"User-Agent": _HDR["User-Agent"]}, timeout=10)
+        r.encoding = "euc-kr"
+        items = re.findall(r'data="([^"]+)"', r.text)
+    except Exception:
+        return []
+    out = []
+    for it in items:
+        p = it.split("|")
+        if len(p) < 6 or len(p[0]) != 8:
+            continue
+        try:
+            o, h, l, c = float(p[1]), float(p[2]), float(p[3]), float(p[4])
+            v = int(float(p[5]))
+        except Exception:
+            continue
+        if c <= 0:
+            continue
+        d = p[0]
+        out.append({"time": f"{d[:4]}-{d[4:6]}-{d[6:]}", "open": o, "high": h,
+                    "low": l, "close": c, "value": v})
+    return out
+
+
+def last_session(code: str, tf_min: int = 15, count: int = 120):
+    """마지막 거래일 세션을 등락률+스파크라인 형태로 재구성 (인증 불필요).
+    KIS가 죽어있을 때(장마감·주말·서버 장애) 히트맵·ETF바·관심종목 등 어디서든 재사용하는
+    공용 폴백 단위. 직전 거래일 종가 대비 등락률을 계산하고, 마지막 거래일의 봉을 그대로
+    스파크라인으로 써서 장중 화면과 시각적으로 동일하게 보이게 한다. 실패 시 None."""
+    import datetime as _dt
+    try:
+        bars = minute_candles(code, tf_min=tf_min, count=count)
+        if not bars:
+            return None
+        by_day: dict = {}
+        for b in bars:
+            d = _dt.datetime.utcfromtimestamp(b["time"]).date()
+            by_day.setdefault(d, []).append(b)
+        days = sorted(by_day.keys())
+        if not days:
+            return None
+        last_bars = by_day[days[-1]]
+        close = last_bars[-1]["close"]
+        prev_close = by_day[days[-2]][-1]["close"] if len(days) >= 2 else None
+        change_rate = round((close - prev_close) / prev_close * 100, 2) if prev_close else 0.0
+        return {"price": int(close), "change_rate": change_rate,
+                "bars": [b["close"] for b in last_bars], "asof": last_bars[-1]["time"]}
+    except Exception:
+        return None
+
+
+def last_session_batch(codes: list, workers: int = 12) -> dict:
+    """여러 종목을 병렬로 last_session 조회. 반환: {code: result_or_None}."""
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    out = {}
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        futs = {ex.submit(last_session, c): c for c in codes}
+        for fut in as_completed(futs):
+            out[futs[fut]] = fut.result()
+    return out
+
+
 def minute_candles(code: str, tf_min: int = 5, count: int = 3000) -> list:
     """네이버 fchart 분봉(다일치, 1분 종가) → tf_min OHLC 리샘플.
     fchart는 여러 날치 1분봉을 주지만 종가만(OHLC null) → 버킷 내 1분 종가들로 OHLC 근사

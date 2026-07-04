@@ -93,7 +93,8 @@ def recent_atoms_for_stock(db_path: str, stock_name: str, limit: int = 1) -> lis
 
 
 def recent_topick_mentions(db_path: str, limit: int = 2) -> list[dict]:
-    """오늘자 리포트/뉴스 원자 중 '탑픽' 언급된 것 — 종목명+내용. 없으면 빈 리스트.
+    """오늘자 리포트/뉴스 원자 중 '탑픽' 언급된 것 — 종목명+내용. 오늘자가 없으면(주말·휴장일)
+    가장 최근 거래일 것으로 폴백 — 각 항목의 date 필드로 프론트에 "몇 일자"인지 그대로 드러남.
     recent_market_atoms/recent_atoms_for_stock과 같은 연결관리 패턴."""
     today = datetime.now().strftime("%Y-%m-%d")
     try:
@@ -102,14 +103,20 @@ def recent_topick_mentions(db_path: str, limit: int = 2) -> list[dict]:
         return []
     try:
         conn.row_factory = sqlite3.Row
-        rows = conn.execute(
-            """SELECT id, asset, content, source_name, date FROM atoms
-               WHERE date = ? AND content LIKE '%탑픽%'
+        base_sql = """SELECT id, asset, content, source_name, date FROM atoms
+               WHERE {date_cond} AND content LIKE '%탑픽%'
                      AND source_type IN ('report', 'news')
                      AND asset IS NOT NULL AND asset != ''
-               ORDER BY created_at DESC LIMIT ?""",
+               ORDER BY {order} LIMIT ?"""
+        rows = conn.execute(
+            base_sql.format(date_cond="date = ?", order="created_at DESC"),
             (today, limit),
         ).fetchall()
+        if not rows:
+            rows = conn.execute(
+                base_sql.format(date_cond="date < ?", order="date DESC, created_at DESC"),
+                (today, limit),
+            ).fetchall()
         return [{"id": r["id"], "asset": r["asset"], "content": r["content"],
                  "source_name": r["source_name"], "date": r["date"]} for r in rows]
     except Exception:

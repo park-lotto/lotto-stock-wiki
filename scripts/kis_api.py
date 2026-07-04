@@ -86,11 +86,16 @@ def _token(force: bool = False) -> str:
             # 60초 내 발급분이면 그걸 신뢰 — KIS는 1분당 1회만 발급(초과 시 403) → 재발급 무의미
             if _cache.get("tok") and now - _cache.get("issued_at", 0) < 60:
                 return _cache["tok"]
-        r = requests.post(f"{BASE}/oauth2/tokenP", json={
-            "grant_type": "client_credentials",
-            "appkey": _KEY,
-            "appsecret": _SECRET,
-        }, timeout=10)
+        _raise_if_down()
+        try:
+            r = requests.post(f"{BASE}/oauth2/tokenP", json={
+                "grant_type": "client_credentials",
+                "appkey": _KEY,
+                "appsecret": _SECRET,
+            }, timeout=10)
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+            _mark_down()
+            raise
         r.raise_for_status()
         d = r.json()
         _cache["tok"] = d["access_token"]
@@ -104,6 +109,40 @@ def _token(force: bool = False) -> str:
 #   EGW00121 = 유효하지 않은 토큰 / EGW00122 = 토큰 누락 / EGW00123 = 기간 만료 토큰
 _TOKEN_ERR_CODES = {"EGW00121", "EGW00122", "EGW00123"}
 _RATELIMIT_CODE = "EGW00201"   # 초당 거래건수 초과
+
+
+# ── KIS 서버 자체 불통 서킷브레이커 ──────────────────────────
+# 2026-07-04 KIS 오픈API 서버 장애 때, 이 모듈의 함수 하나하나가 개별 요청
+# 타임아웃(5~10초)을 그대로 다 기다리는 바람에 그걸 호출하는 대시보드 API가 통째로
+# 멎어버리는 문제가 여러 엔드포인트(관심종목 잠정수급·종목차트 등)에서 반복 발견됨.
+# 한 번 연결실패가 확인되면 쿨다운 동안은 재시도 없이 즉시 예외를 던져
+# 호출부의 기존 try/except가 그대로 빈 값 처리하게 한다(호출부 수정 불필요).
+_down_until: dict = {"ts": 0.0}
+_DOWN_COOLDOWN = 20  # 초
+
+
+class KISUnavailable(Exception):
+    """최근 KIS 연결실패가 확인되어 쿨다운 중 — 재시도 없이 즉시 발생."""
+
+
+def _raise_if_down():
+    if time.time() < _down_until["ts"]:
+        raise KISUnavailable("KIS 서버 연결실패 쿨다운 중")
+
+
+def _mark_down():
+    _down_until["ts"] = time.time() + _DOWN_COOLDOWN
+
+
+def _guarded_get(url, **kwargs):
+    """requests.get을 서킷브레이커로 감싼 공용 래퍼. 연결실패(타임아웃·거부)만 쿨다운을
+    발동시키고, 정상 HTTP 응답(4xx/5xx 포함)은 그대로 반환해 기존 로직에 영향 없음."""
+    _raise_if_down()
+    try:
+        return requests.get(url, **kwargs)
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+        _mark_down()
+        raise
 
 
 def _resp_msg_cd(resp) -> str:
@@ -130,14 +169,14 @@ def _authed_get(url: str, headers: dict, params: dict, timeout: float):
     for attempt in range(3):
         _rate_gate()
         h["authorization"] = f"Bearer {_token()}"
-        r = requests.get(url, headers=h, params=params, timeout=timeout)
+        r = _guarded_get(url, headers=h, params=params, timeout=timeout)
         msg = _resp_msg_cd(r)
         if msg in _TOKEN_ERR_CODES:
             # 토큰 무효/만료 → 강제 재발급 후 1회 재시도. 재발급 실패 시 원응답 반환(크래시 방지).
             try:
                 _rate_gate()
                 h["authorization"] = f"Bearer {_token(force=True)}"
-                return requests.get(url, headers=h, params=params, timeout=timeout)
+                return _guarded_get(url, headers=h, params=params, timeout=timeout)
             except Exception:
                 return r
         if msg == _RATELIMIT_CODE and attempt < 2:
@@ -352,7 +391,7 @@ def get_overseas_price(symbol: str, excd: str = "NYS") -> dict:
     나스닥100 ETF → SYMB=QQQ EXCD=NAS
     """
     try:
-        r = requests.get(
+        r = _guarded_get(
             f"{BASE}/uapi/overseas-stock/v1/quotations/price",
             headers={
                 "content-type": "application/json; charset=utf-8",
@@ -380,7 +419,7 @@ def get_overseas_price(symbol: str, excd: str = "NYS") -> dict:
 def get_overseas_minutebar(symbol: str, excd: str = "NYS", interval: int = 15) -> list:
     """해외주식 당일 분봉 종가 배열."""
     try:
-        r = requests.get(
+        r = _guarded_get(
             f"{BASE}/uapi/overseas-stock/v1/quotations/inquire-time-itemchartprice",
             headers={
                 "content-type": "application/json; charset=utf-8",
@@ -417,7 +456,7 @@ def get_night_futures_price() -> dict:
     종목코드: 101W9 → 현재 최근월물 자동 조회
     """
     try:
-        r = requests.get(
+        r = _guarded_get(
             f"{BASE}/uapi/domestic-futu/v1/quotations/inquire-price",
             headers={
                 "content-type": "application/json; charset=utf-8",
@@ -445,7 +484,7 @@ def get_night_futures_price() -> dict:
 def get_usdkrw() -> dict:
     """원달러 환율 현재가. KIS FOREX 시도, 실패시 0."""
     try:
-        r = requests.get(
+        r = _guarded_get(
             f"{BASE}/uapi/domestic-stock/v1/quotations/inquire-price",
             headers={
                 "content-type": "application/json; charset=utf-8",
@@ -480,7 +519,7 @@ def get_inquiry_rank(n: int = 15) -> list:
     TR_ID: FHPST01710000 (거래대금 순위)
     """
     try:
-        r = requests.get(
+        r = _guarded_get(
             f"{BASE}/uapi/domestic-stock/v1/quotations/volume-rank",
             headers={
                 "content-type": "application/json; charset=utf-8",
@@ -547,7 +586,7 @@ def get_us_market_stocks() -> list:
 def get_night_futures_minutebar(interval: int = 15) -> list:
     """코스피200 야간선물 분봉."""
     try:
-        r = requests.get(
+        r = _guarded_get(
             f"{BASE}/uapi/domestic-futu/v1/quotations/inquire-time-itemchartprice",
             headers={
                 "content-type": "application/json; charset=utf-8",
@@ -592,7 +631,7 @@ def get_minutebar(code: str, interval: int = 15, with_time: bool = False) -> lis
     now_str = _dt.datetime.now().strftime("%H%M%S")
     if now_str > "153000":
         now_str = "153000"   # 장 종료 후엔 15:30 마감 기준 봉 조회 (시간외 단일가 꼬리 방지)
-    r = requests.get(
+    r = _guarded_get(
         f"{BASE}/uapi/domestic-stock/v1/quotations/inquire-time-itemchartprice",
         headers={
             "content-type": "application/json; charset=utf-8",
@@ -634,7 +673,7 @@ def get_minutebar(code: str, interval: int = 15, with_time: bool = False) -> lis
 
 def _minutebar_page(code: str, end_hhmmss: str, mdiv: str = "J") -> list:
     """분봉 1페이지(최근 30개, end_hhmmss 이전으로) 원시 rows 반환. mdiv='UN'이면 KRX+NXT 통합."""
-    r = requests.get(
+    r = _guarded_get(
         f"{BASE}/uapi/domestic-stock/v1/quotations/inquire-time-itemchartprice",
         headers={
             "content-type": "application/json; charset=utf-8",
@@ -817,7 +856,7 @@ def get_market_investor(market_div: str = "J") -> dict:
     iscd1 = "KSP" if market_div == "J" else "KSQ"
     today = _dt.datetime.now().strftime("%Y%m%d")
     try:
-        r = requests.get(
+        r = _guarded_get(
             f"{BASE}/uapi/domestic-stock/v1/quotations/inquire-investor-daily-by-market",
             headers={
                 "content-type": "application/json; charset=utf-8",
@@ -859,7 +898,7 @@ def get_program_trade(market_div: str = "J") -> dict:
     ts = _dt.datetime.now().strftime("%H:%M")
     mkt = "K" if market_div == "J" else "Q"
     try:
-        r = requests.get(
+        r = _guarded_get(
             f"{BASE}/uapi/domestic-stock/v1/quotations/comp-program-trade-today",
             headers={
                 "content-type": "application/json; charset=utf-8",
@@ -895,7 +934,7 @@ def get_program_trade_series(market_div: str = "J") -> list:
     """
     mkt = "K" if market_div == "J" else "Q"
     try:
-        r = requests.get(
+        r = _guarded_get(
             f"{BASE}/uapi/domestic-stock/v1/quotations/comp-program-trade-today",
             headers={
                 "content-type": "application/json; charset=utf-8",
@@ -983,7 +1022,7 @@ def get_index_price(index_code: str) -> dict:
     """코스피(0001)/코스닥(1001) 지수 현재가.
     TR_ID: FHPUP02100000 (업종/지수 현재가)
     """
-    r = requests.get(
+    r = _guarded_get(
         f"{BASE}/uapi/domestic-stock/v1/quotations/inquire-index-price",
         headers={
             "content-type": "application/json; charset=utf-8",

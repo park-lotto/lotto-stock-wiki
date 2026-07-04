@@ -541,6 +541,13 @@ def build_heatmap(top_n: int = 3) -> dict:
     sub_codes = {s["code"] for _, _, sts in (surfaced_subs + split_subs) for s in sts if s.get("code")}
     codes = list(base_codes | extra_codes | ct_codes | sub_codes)
     prices = kis_api.get_prices_batch_parallel(codes)
+    # KIS가 완전히 죽어있으면(2026-07-04 KIS 서버 장애처럼) 전종목이 price=0으로 돌아온다 —
+    # 그럴 땐 네이버 공개 API(인증불필요)로 마지막 거래일 종가·등락률을 대신 채운다.
+    if not any((p or {}).get("price") for p in prices.values()):
+        import naver_api
+        naver = naver_api.last_session_batch(codes)
+        prices = {c: (r and {"price": r["price"], "change_rate": r["change_rate"]}) or {}
+                  for c, r in naver.items()}
 
     sectors = []
     for sec in sections:

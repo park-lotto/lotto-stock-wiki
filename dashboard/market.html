@@ -1112,11 +1112,19 @@ function shortETFName(n){
 const _ETF_CACHE_KEY="etf_cache_v2";
 const _ETF_CACHE_TTL=300000;
 
-function _renderEtfBar(etfs){
+function _fmtAsof(ts){
+  if(!ts)return"";
+  const d=new Date(ts*1000);
+  const mm=d.getMonth()+1,dd=d.getDate();
+  const hh=String(d.getHours()).padStart(2,"0"),mi=String(d.getMinutes()).padStart(2,"0");
+  return`${mm}/${dd} ${hh}:${mi} 종가`;
+}
+function _renderEtfBar(etfs,staleInfo){
   if(!Array.isArray(etfs)||etfs.length===0)return;
   // 상승률 내림차순 정렬 (왼쪽=가장 강한 섹터)
   const sorted=etfs.slice().sort((a,b)=>(Number(b.change_rate)||0)-(Number(a.change_rate)||0));
-  const title=`<div class="etf-title">ETF</div>`;
+  const asofLabel=(staleInfo&&staleInfo.stale&&staleInfo.asof)?` <span style="color:#888;font-size:10px;font-weight:400;">(${_fmtAsof(staleInfo.asof)})</span>`:"";
+  const title=`<div class="etf-title">ETF${asofLabel}</div>`;
   document.getElementById("etf-bar").innerHTML=title+sorted.map(e=>{
     const rc=e.change_rate>0?"up":e.change_rate<0?"dn":"neu";
     const rs=(e.change_rate>0?"+":"")+(e.change_rate||0).toFixed(2)+"%";
@@ -1210,18 +1218,31 @@ function _mdMini(s){
 }
 
 async function loadEtfBar(){
-  // B: localStorage 캐시 즉시 표시
+  // B: localStorage 캐시 즉시 표시 (신선하면 정상표기, 오래됐어도 일단 보여주고 라이브 fetch로 갱신 시도)
+  let hadCache=false;
   try{
     const raw=localStorage.getItem(_ETF_CACHE_KEY);
-    if(raw){const {ts,data}=JSON.parse(raw);if(Date.now()-ts<_ETF_CACHE_TTL){_renderEtfBar(data);}}
+    if(raw){
+      const {ts,data,stale,asof}=JSON.parse(raw);
+      const fresh=Date.now()-ts<_ETF_CACHE_TTL;
+      _renderEtfBar(data, fresh?null:{stale:true, asof:asof||ts/1000});
+      hadCache=true;
+    }
   }catch(_){}
   try{
     const r=await fetch("/api/etf_bar");
+    const stale=r.headers.get("X-Etf-Stale")==="1";
+    const asof=parseFloat(r.headers.get("X-Etf-Asof")||"0")||null;
     const etfs=await r.json();
     if(!Array.isArray(etfs) || !etfs.length) return;  // 빈/오류 응답 → 직전 렌더 유지(그래프 사라짐 방지)
-    _renderEtfBar(etfs);
-    try{localStorage.setItem(_ETF_CACHE_KEY,JSON.stringify({ts:Date.now(),data:etfs}));}catch(_){}
-  }catch(e){ /* 네트워크 오류 시 직전 렌더 유지 */ }
+    _renderEtfBar(etfs, stale?{stale:true, asof}:null);
+    try{localStorage.setItem(_ETF_CACHE_KEY,JSON.stringify({ts:Date.now(),data:etfs,stale,asof}));}catch(_){}
+  }catch(e){
+    // 네트워크 오류(타임아웃 등) — 위에서 이미 캐시를 못 그렸다면(hadCache=false) 최소한의 안내라도 표시
+    if(!hadCache){
+      document.getElementById("etf-bar").innerHTML=`<div class="etf-title">ETF</div><span style="color:#666;font-size:12px;padding:12px 0;display:inline-block;">데이터 없음 (KIS 연결 실패)</span>`;
+    }
+  }
 }
 
 // ── 초기 로드 + 자동갱신 ──────────────────────────────────
