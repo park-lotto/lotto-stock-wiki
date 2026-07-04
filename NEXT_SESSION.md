@@ -1,5 +1,30 @@
 # NEXT_SESSION — 여러 병렬 세션(아래 최신순)
 
+## [세션 E, 2026-07-04 밤] 장중 시황 브리핑 엔진 설계·구현·서버배포 + KIS장애 대응 — 월요일 실전검증
+
+**브랜치: `feat/briefing-engine`** (원격 push됨). 브리핑 작업은 이 브랜치에서 이어가라.
+
+### ✅ 완성·배포 — 장중 시황 브리핑 엔진 (Phase 0 관측·보정)
+"실시간 브리핑" 패널을 **이벤트 감지 기반 + Opus/Sonnet(Max 구독, API 아님) 종합**으로 전면 재설계·구현·서버배포 완료.
+- 스펙 `docs/superpowers/specs/2026-07-04-시황-브리핑-엔진-design.md` / 계획 `docs/superpowers/plans/2026-07-04-시황-브리핑-엔진.md`(14 task) / 원장 `.superpowers/sdd/progress.md` 맨아래.
+- 신규 dashboard 모듈: `briefing_phase`·`briefing_events`(디텍터6종:수급·프로그램·지수분기점·미선물·디커플링·섹터급등)·`briefing_weather`(claude -p 호출+Gemini폴백)·`briefing_digest`·`briefing_state`. **32 pytest 통과.**
+- server.py `_poll_briefing`에 `_weather_tick()` 배선. market.html 패널=판정배지+내러티브+전환점.
+- **서버 라이브 E2E 검증**: 이벤트 주입 → 디텍터 5개 감지 → Opus 21초 "🟢 반등, 외인 매수전환+반도체 급등" 판단형 브리핑(아침→지금 흐름·뉴스결합·다음분기점). weather_state·calib log·insight API 정상.
+
+### 월요일(07-06) 장중 할 일
+1. **실장중 관측**: 폰 텔레 다이제스트(major즉시/minor15분)로 잡힘·노이즈 확인. `output/weather_calib/*.jsonl` 기록.
+2. **브라우저 렌더 확인**: `/market` 새로고침(오늘 browsermcp 미연결로 시각확인만 미완, API·로직은 검증).
+3. **임계 튜닝**: 섹터+2%p / 투자자전환300억 / 지수반등·되돌림0.6% / 미선물0.4%p → 관측 보고 조정.
+4. **최종 통합리뷰 + main 머지**(아래 브랜치 정리 후).
+
+### 🚨 리스크1 — Max 토큰 유지(실발생): 서버 복사 토큰이 로컬 Claude Code 갱신으로 무효화("Not logged in", 20:36만료후 실발생)→재복사 복구. 월요일 calib `models`필드로 Opus유지 vs Gemini폴백 추적. 스테일돼도 Gemini 우아폴백(기능유지). 재복사: 로컬 `~/.claude/.credentials.json`→서버 `/home/ubuntu/.claude/.credentials.json`(chmod600).
+### 🚨 리스크2 — 동시세션 섞임(또): `feat/briefing-engine`에 다른PC(park-lotto) calendar/atoms 커밋4개(95626536~31749dc3)+미커밋 server.py·yt_refs.html WIP 얹힘. main 머지 전 분리/포함 결정. 서버 배포 server.py=내 브리핑버전(라이브검증). 커밋전 `git branch --show-current` 필수.
+
+### 별개 마감(main push됨) — KIS 서버장애 대응(commit b41cb803)
+서킷브레이커(kis_api)+네이버폴백(naver_api·sector_heatmap·server·market.html·briefing_collect). 2026-07-04 KIS 오픈API 자체장애(금15:47~) 실증대응, 히트맵·ETF·관심종목·차트·탑픽 폴백확보, 서버검증완료. 메모리 `project_kis_outage_2026_07_04`.
+
+---
+
 ## [세션 D, 2026-07-04] YT 대시보드 ①기획단계 Task 5 완료 + 실브라우저 버그 2건 발견·수정 — 완료
 
 **주제**: 어제 중단된 YT 대시보드(①기획단계) Task 5 이어가기.
