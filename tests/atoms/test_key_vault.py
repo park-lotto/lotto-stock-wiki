@@ -1,7 +1,21 @@
+import os
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 import pipeline.atoms.key_vault as kv
+
+
+@pytest.fixture(autouse=True)
+def _isolate_gemini_env(monkeypatch):
+    """Prevent real GEMINI_* env vars (loaded via sibling modules' load_dotenv()
+    at import time during full-suite collection) from leaking into these tests,
+    and reset key_vault's module-level client cache / rotation index between
+    tests so no state leaks across tests either."""
+    for name in list(os.environ.keys()):
+        if name.startswith("GEMINI_"):
+            monkeypatch.delenv(name, raising=False)
+    monkeypatch.setattr(kv, "_client_cache", {})
+    monkeypatch.setattr(kv, "_active_idx", {})
 
 
 def test_get_keys_reads_numbered_env_vars(monkeypatch, tmp_path):
