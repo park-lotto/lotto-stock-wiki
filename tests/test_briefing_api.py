@@ -62,13 +62,13 @@ def test_briefing_run_synthesis_finds_prior_ai_brief_past_recent_raw_alerts(tmp_
 
 
 def test_briefing_keys_uses_dedicated_key_when_set(monkeypatch):
-    monkeypatch.setattr(server, "_env_key", lambda name: (
-        "dedicated-key-1" if name == "GEMINI_BRIEFING_KEY" else ""))
+    monkeypatch.setattr(server.key_vault, "get_keys", lambda group: (
+        ["dedicated-key-1"] if group == "briefing" else []))
     assert server._briefing_keys() == ["dedicated-key-1"]
 
 
 def test_briefing_keys_falls_back_to_summary_keys_when_no_dedicated_key(monkeypatch):
-    monkeypatch.setattr(server, "_env_key", lambda name: "")
+    monkeypatch.setattr(server.key_vault, "get_keys", lambda group: [])
     monkeypatch.setattr(server, "_summary_keys", lambda: ["shared-key-1", "shared-key-2"])
     assert server._briefing_keys() == ["shared-key-1", "shared-key-2"]
 
