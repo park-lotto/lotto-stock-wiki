@@ -19,13 +19,28 @@ _env = _load_env()
 def _key(name):
     return _env.get(name, os.environ.get(name, ''))
 
-# 일반/대화형 풀(계정1,3,16,17) — 하나가 할당량 초과되면 다음 키로 자동 전환
-GEMINI_KEYS = [k for k in [
-    _key('GEMINI_API_KEY'),
-    _key('GEMINI_API_KEY_2'),
-    _key('GEMINI_API_KEY_3'),
-    _key('GEMINI_API_KEY_4'),
-] if k]
+# 키 우선순위: 일반풀(GEMINI_API_KEY/_2/_3/_4) 먼저 → 소진되면 나머지 모든 Gemini 키
+# (인제스트/임베딩/브리핑 풀)로 최후 폴백. 무료티어 할당량이 자주 바닥나서, YT 기획서
+# 생성이 통째로 막히는 것보다 다른 풀 키를 빌려서라도 돌아가게 하는 게 낫다는 판단.
+def _gemini_keys() -> list[str]:
+    primary_names = ['GEMINI_API_KEY', 'GEMINI_API_KEY_2', 'GEMINI_API_KEY_3', 'GEMINI_API_KEY_4']
+    keys = []
+    for n in primary_names:
+        v = _key(n)
+        if v and v not in keys:
+            keys.append(v)
+    # 나머지 GEMINI_*KEY* 전부 (인제스트/임베딩/브리핑 풀) — 폴백용
+    all_names = set()
+    all_names.update(_env.keys())
+    all_names.update(os.environ.keys())
+    for n in sorted(all_names):
+        if n.startswith('GEMINI_') and 'KEY' in n and n not in primary_names:
+            v = _key(n)
+            if v and v not in keys:
+                keys.append(v)
+    return keys
+
+GEMINI_KEYS = _gemini_keys()
 GEMINI_KEY = GEMINI_KEYS[0] if GEMINI_KEYS else ''  # 기존 코드 하위호환용
 
 

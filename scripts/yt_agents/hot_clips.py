@@ -11,16 +11,64 @@ ROOT = Path(__file__).parent.parent.parent
 API_BASE = "https://www.googleapis.com/youtube/v3"
 
 
-def _api_key() -> str:
-    key = os.environ.get("YOUTUBE_API_KEY", "")
-    if key:
-        return key
+def _load_keys() -> list[str]:
+    """YOUTUBE_API_KEY, YOUTUBE_API_KEY_2..10 을 순서대로 로드 (환경변수 우선, 없으면 .env).
+    할당량(하루 10,000 unit/프로젝트) 초과 시 다음 키로 자동 전환하기 위한 풀."""
+    names = ["YOUTUBE_API_KEY"] + [f"YOUTUBE_API_KEY_{i}" for i in range(2, 11)]
+    env_file_vals = {}
     env_file = ROOT / ".env"
     if env_file.exists():
         for line in env_file.read_text(encoding="utf-8").splitlines():
-            if line.startswith("YOUTUBE_API_KEY=") and not line.startswith("#"):
-                return line.split("=", 1)[1].strip()
-    return ""
+            if "=" in line and not line.startswith("#"):
+                k, v = line.split("=", 1)
+                env_file_vals[k.strip()] = v.strip()
+    keys = []
+    for n in names:
+        v = os.environ.get(n, "") or env_file_vals.get(n, "")
+        if v and v not in keys:
+            keys.append(v)
+    return keys
+
+
+_KEYS = _load_keys()
+
+
+def _api_key() -> str:
+    """하위호환용 — 첫 키 반환."""
+    return _KEYS[0] if _KEYS else ""
+
+
+def _is_quota_error(r: "requests.Response") -> bool:
+    """YouTube 할당량 초과 판정. 초과 시 403(reason=quotaExceeded) 또는 드물게 429."""
+    if r.status_code == 429:
+        return True
+    if r.status_code == 403:
+        try:
+            reason = r.json().get("error", {}).get("errors", [{}])[0].get("reason", "")
+            return reason in ("quotaExceeded", "dailyLimitExceeded", "rateLimitExceeded")
+        except Exception:
+            return True
+    return False
+
+
+def _api_get(endpoint: str, params: dict) -> dict:
+    """YouTube Data API GET — 현재 키가 할당량 초과면 다음 키로 자동 전환해 재시도.
+    모든 키가 소진되면 마지막 응답으로 raise_for_status()."""
+    if not _KEYS:
+        raise RuntimeError(".env에 YOUTUBE_API_KEY 없음")
+    last = None
+    for key in _KEYS:
+        p = dict(params, key=key)
+        r = requests.get(f"{API_BASE}/{endpoint}", params=p, timeout=15)
+        if _is_quota_error(r):
+            last = r
+            continue
+        r.raise_for_status()
+        return r.json()
+    # 전 키 소진
+    if last is not None:
+        last.raise_for_status()
+    raise RuntimeError("YouTube API 키 전부 소진")
 
 
 def search_videos(query: str, max_results: int = 10) -> list[dict]:
@@ -33,12 +81,10 @@ def search_videos(query: str, max_results: int = 10) -> list[dict]:
         "relevanceLanguage": "ko",
         "order": "viewCount",
         "maxResults": max_results,
-        "key": _api_key(),
     }
-    r = requests.get(f"{API_BASE}/search", params=params)
-    r.raise_for_status()
+    data = _api_get("search", params)
     out = []
-    for item in r.json().get("items", []):
+    for item in data.get("items", []):
         sn = item["snippet"]
         out.append({
             "video_id": item["id"]["videoId"],
@@ -54,11 +100,10 @@ def search_videos(query: str, max_results: int = 10) -> list[dict]:
 def get_video_stats(video_ids: list[str]) -> dict[str, dict]:
     if not video_ids:
         return {}
-    params = {"part": "statistics", "id": ",".join(video_ids), "key": _api_key()}
-    r = requests.get(f"{API_BASE}/videos", params=params)
-    r.raise_for_status()
+    params = {"part": "statistics", "id": ",".join(video_ids)}
+    data = _api_get("videos", params)
     out = {}
-    for item in r.json().get("items", []):
+    for item in data.get("items", []):
         st = item["statistics"]
         out[item["id"]] = {
             "view_count": int(st.get("viewCount", 0)),
@@ -72,11 +117,10 @@ def get_channel_stats(channel_ids: list[str]) -> dict[str, dict]:
     """구독자·영상수 + 업로드 재생목록ID(contentDetails, 같은 호출에 묶어서 추가비용 없음)."""
     if not channel_ids:
         return {}
-    params = {"part": "statistics,contentDetails", "id": ",".join(channel_ids), "key": _api_key()}
-    r = requests.get(f"{API_BASE}/channels", params=params)
-    r.raise_for_status()
+    params = {"part": "statistics,contentDetails", "id": ",".join(channel_ids)}
+    data = _api_get("channels", params)
     out = {}
-    for item in r.json().get("items", []):
+    for item in data.get("items", []):
         st = item["statistics"]
         uploads_playlist_id = item.get("contentDetails", {}).get("relatedPlaylists", {}).get("uploads", "")
         out[item["id"]] = {
@@ -97,11 +141,10 @@ def _get_channel_raw_videos(uploads_playlist_id: str, n: int = 10) -> list[dict]
         return []
     params = {
         "part": "contentDetails", "playlistId": uploads_playlist_id,
-        "maxResults": n, "key": _api_key(),
+        "maxResults": n,
     }
-    r = requests.get(f"{API_BASE}/playlistItems", params=params)
-    r.raise_for_status()
-    video_ids = [item["contentDetails"]["videoId"] for item in r.json().get("items", [])]
+    data = _api_get("playlistItems", params)
+    video_ids = [item["contentDetails"]["videoId"] for item in data.get("items", [])]
 
     if not video_ids:
         return []
