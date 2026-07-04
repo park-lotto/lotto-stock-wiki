@@ -2505,6 +2505,25 @@ def api_watchlist_get(flow: int = 1):
     return JSONResponse(content={"items": items})
 
 
+@app.get("/api/catalysts")
+def api_catalysts(sector: str = "", days: int = 30, mine: int = 1, today: str = ""):
+    """다가오는 촉매(이벤트 원자) — 내 종목/섹터 필터. 프론트 바인딩용."""
+    from datetime import datetime
+    from pipeline.atoms.calendar_build import select_future_events, to_api_dict
+    day = (today or "").strip() or datetime.now().strftime("%Y-%m-%d")
+    watch = None
+    if mine:
+        names = [c.get("name") for c in _load_watchlist_codes()
+                 if isinstance(c, dict) and c.get("name")]
+        watch = names or None
+    events = select_future_events(day, watchlist=watch,
+                                  sector=(sector.strip() or None), days=days)
+    return JSONResponse(content={
+        "today": day, "count": len(events),
+        "events": [to_api_dict(e) for e in events],
+    })
+
+
 @app.post("/api/watchlist")
 async def api_watchlist_post(req: Request):
     """관심종목 저장. body: {codes:[{code,name},...]}.
@@ -5558,12 +5577,31 @@ async def api_yt_category_search(req: Request):
     if not cat:
         return JSONResponse(content={"error": "알 수 없는 카테고리"}, status_code=400)
     queries = cat["queries"][: int(body.get("max_queries", 2))]
+    days = int(body.get("days", 0) or 0)
 
     def _do():
-        return _hotclips.find_and_rank(queries)
+        return _hotclips.find_and_rank(queries, days=days)
 
     rows = await run_in_threadpool(_do)
     return JSONResponse(content={"category": cat["name"], "results": rows})
+
+
+@app.post("/yt/keyword_search")
+async def api_yt_keyword_search(req: Request):
+    """사용자 자유 키워드 검색 → 검증순위. (카테고리 없이 직접 검색)"""
+    if _hotclips is None:
+        return JSONResponse(content={"error": "hot_clips 모듈 없음"}, status_code=503)
+    body = await req.json()
+    q = (body.get("query") or "").strip()
+    if not q:
+        return JSONResponse(content={"error": "검색어 필요"}, status_code=400)
+    days = int(body.get("days", 0) or 0)
+
+    def _do():
+        return _hotclips.find_and_rank([q], days=days)
+
+    rows = await run_in_threadpool(_do)
+    return JSONResponse(content={"category": q, "results": rows})
 
 
 @app.post("/yt/teardown")
@@ -5576,6 +5614,14 @@ async def api_yt_teardown(req: Request):
     if not vid:
         return JSONResponse(content={"error": "video_id 필요"}, status_code=400)
     title, channel, stats = body.get("title", ""), body.get("channel", ""), body.get("stats") or {}
+    # 직접 URL 입력 등 제목이 없으면 메타 자동 조회
+    if not title and _hotclips is not None:
+        try:
+            meta = _hotclips.get_video_meta(vid)
+            title = meta.get("title", "")
+            channel = channel or meta.get("channel_title", "")
+        except Exception:
+            pass
 
     def _stream():
         yield f"data: {json.dumps({'type':'running','video_id':vid}, ensure_ascii=False)}\n\n"
