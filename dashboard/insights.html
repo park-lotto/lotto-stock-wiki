@@ -97,15 +97,14 @@ body { background: #ffffff; color: var(--txt); font-family: 'Pretendard','Segoe 
 .brief-hint { font-size: .74rem; color: var(--muted); margin-top: 10px; }
 
 /* ── 메인 2단 레이아웃 (좌: 시그널 / 우: 라이브러리) ── */
-.main-2col { display: grid; grid-template-columns: 1.7fr 1fr; gap: 26px; align-items: start; margin: 34px 0 8px; }
-.main-left, .main-right { min-width: 0; }
-.side-title { font-size: .78rem; font-weight: 700; color: var(--muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: .04em; display: flex; align-items: center; }
+.main-2col { display: flex; flex-direction: column; margin: 40px 0 8px; }
+.side-title { font-size: .8rem; font-weight: 700; color: var(--muted); margin-bottom: 14px; text-transform: uppercase; letter-spacing: .04em; display: flex; align-items: center; gap: 8px; }
 .hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .brief-open { flex-shrink: 0; margin-top: 6px; padding: 10px 18px; border-radius: 10px; border: 1px solid var(--gold-dim); background: var(--rp-bg); color: var(--gold); font-family: inherit; font-size: .88rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: background .15s; }
 .brief-open:hover { background: #f5f5f7; }
 .lib-toggle { margin-left: auto; background: none; border: none; color: var(--gold-dim); font-size: .68rem; cursor: pointer; font-family: inherit; text-transform: none; letter-spacing: 0; }
 .lib-toggle:hover { color: var(--gold); }
-.lib-chips { display: flex; flex-wrap: wrap; gap: 14px; justify-content: flex-start; }
+.lib-chips { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; }
 .lib-chip { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px 10px 10px; background: #fff; border: 1px solid var(--line); border-radius: 16px; cursor: pointer; transition: transform .15s, box-shadow .15s; min-width: 76px; text-align: center; }
 .lib-chip:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.06); }
 .lib-ico { font-size: 1.4rem; }
@@ -143,12 +142,12 @@ body { background: #ffffff; color: var(--txt); font-family: 'Pretendard','Segoe 
 .lb-sum p { margin: 0 0 5px; } .lb-sum ul { margin: 4px 0; padding-left: 16px; }
 .lb-atoms { display: flex; flex-direction: column; gap: 5px; }
 .lb-atom { color: var(--txt); } .lb-atom-d { color: var(--muted); font-size: .68rem; }
-.cat-grid-side { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.cat-grid-side { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
 .cat-grid-side .cat-card { border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,.05); }
 .cat-grid-side .cat-card .body { padding: 14px 18px; }
 .cat-grid-side .cat-card .divider, .cat-grid-side .cat-card .hot-label, .cat-grid-side .cat-card .hot-item, .cat-grid-side .cat-card .go-btn { display: none; }
 .cat-grid-side .cat-card .meta { margin-bottom: 0; }
-@media (max-width: 900px) { .main-2col { grid-template-columns: 1fr; } .cat-grid-side { grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); } }
+@media (max-width: 900px) { .cat-grid-side { grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); } }
 
 /* ── 🔥 오늘의 시그널 ── */
 .signals-box { margin: 0; }
@@ -185,7 +184,7 @@ body { background: #ffffff; color: var(--txt); font-family: 'Pretendard','Segoe 
 .sig-more { margin-top: 7px; background: none; border: none; color: var(--gold-dim); font-size: .72rem; cursor: pointer; padding: 2px 0; }
 .sig-more:hover { color: var(--gold); }
 /* 최근 브리핑 기록 */
-.brief-hist { display: flex; flex-direction: column; gap: 6px; }
+.brief-hist { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px; }
 .bh-item { padding: 8px 11px; background: var(--card); border: 1px solid var(--line); border-radius: 9px; cursor: pointer; transition: border-color .15s, background .15s; }
 .bh-item:hover { border-color: var(--gold-dim); background: #f5f5f7; }
 .bh-label { font-size: .82rem; font-weight: 600; color: var(--txt); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1050,21 +1049,21 @@ async function showL0() {
       </div>
     </div>
     <div class="main-2col">
-      <div class="main-left">
-        <div id="signals-box" class="signals-box"></div>
-      </div>
-      <div class="main-right">
-        <div class="side-title">📚 소스 라이브러리 <button class="lib-toggle" onclick="toggleLib(this)">펼치기 ▾</button></div>
-        <div id="lib-chips" class="lib-chips">${libChips || '<div style="color:var(--muted)">카테고리 없음</div>'}</div>
-        <div id="lib-detail" class="lib-detail" style="display:none"></div>
-        <div id="lib-cards" class="cat-grid-side" style="display:none">${catCards}</div>
-        <div class="side-title" style="margin-top:18px">📅 다가오는 촉매 <small style="color:var(--gold-dim);font-weight:400">클릭하면 그 종목/섹터 브리핑</small></div>
-        <div id="catalyst-summary" class="brief-hist">불러오는 중…</div>
-        <div class="side-title" style="margin-top:18px">📰 최근 리포트 <small style="color:var(--gold-dim);font-weight:400">클릭하면 그 종목 브리핑</small></div>
-        <div id="recent-reports" class="brief-hist">불러오는 중…</div>
-        <div class="side-title" style="margin-top:18px">📖 최근 브리핑 기록 <small style="color:var(--gold-dim);font-weight:400">클릭하면 그때 본 화면 그대로</small></div>
-        <div id="brief-history" class="brief-hist">불러오는 중…</div>
-      </div>
+      <div class="side-title">📚 소스 라이브러리 <button class="lib-toggle" onclick="toggleLib(this)">펼치기 ▾</button></div>
+      <div id="lib-chips" class="lib-chips">${libChips || '<div style="color:var(--muted)">카테고리 없음</div>'}</div>
+      <div id="lib-detail" class="lib-detail" style="display:none"></div>
+      <div id="lib-cards" class="cat-grid-side" style="display:none">${catCards}</div>
+
+      <div id="signals-box" class="signals-box"></div>
+
+      <div class="side-title" style="margin-top:48px">📅 다가오는 촉매 <small style="color:var(--gold-dim);font-weight:400">클릭하면 그 종목/섹터 브리핑</small></div>
+      <div id="catalyst-summary" class="brief-hist">불러오는 중…</div>
+
+      <div class="side-title" style="margin-top:48px">📰 최근 리포트 <small style="color:var(--gold-dim);font-weight:400">클릭하면 그 종목 브리핑</small></div>
+      <div id="recent-reports" class="brief-hist">불러오는 중…</div>
+
+      <div class="side-title" style="margin-top:48px">📖 최근 브리핑 기록 <small style="color:var(--gold-dim);font-weight:400">클릭하면 그때 본 화면 그대로</small></div>
+      <div id="brief-history" class="brief-hist">불러오는 중…</div>
     </div>
     <div class="feed-section">
       <div class="section-title">최근 추가된 인사이트</div>
