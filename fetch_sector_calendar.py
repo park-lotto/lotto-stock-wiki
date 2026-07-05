@@ -12,7 +12,7 @@ Usage:
 
 import os, json, re, time, argparse, sys, io
 import requests
-from datetime import date
+from datetime import date, timedelta
 
 # Windows 터미널 한글 출력
 if sys.stdout.encoding != "utf-8":
@@ -30,6 +30,13 @@ BOT_TOKEN   = os.getenv("BOT_TOKEN")
 CHAT_ID     = os.getenv("CHAT_ID")
 TODAY       = date.today().strftime("%Y-%m-%d")
 TODAY_LABEL = date.today().strftime("%Y%m%d")
+
+# 검색 대상 기간: 오늘 ~ 오늘+30일 (롤링 윈도우 — 하드코딩된 고정 날짜 쓰지 말 것,
+# 과거 버전은 리터럴 날짜 문자열이라 스크립트를 나중에 돌리면 이미 지난 기간을 검색하는 버그가 있었음)
+WINDOW_DAYS = 30
+_today_kr = date.today().strftime("%Y년 %m월 %d일")
+_end_kr = (date.today() + timedelta(days=WINDOW_DAYS)).strftime("%Y년 %m월 %d일")
+DATE_RANGE_KR = f"{_today_kr} ~ {_end_kr}"
 
 BASE   = Path(__file__).parent
 CAL_DIR = BASE / "raw" / "캘린더"
@@ -102,7 +109,7 @@ def extract_json(text: str) -> list:
 # ─── 프롬프트 ─────────────────────────────────────────────────────────────────
 MACRO_PROMPT = f"""
 오늘은 {TODAY}입니다. 한국 주식시장 투자자 관점에서
-2026년 5월 27일 ~ 2026년 6월 30일 기간의 주요 매크로·정책 일정을 검색해서 정리해줘.
+{DATE_RANGE_KR} 기간의 주요 매크로·정책 일정을 검색해서 정리해줘.
 
 포함 항목 (인터넷 검색으로 최신 정보 확인):
 - 미국 FOMC 회의 일정 및 의사록 발표
@@ -125,7 +132,7 @@ def make_sector_prompt(sector: str, stocks: list[str]) -> str:
     stocks_str = "·".join(stocks[:MAX_STOCKS_PER_QUERY])
     return f"""
 오늘은 {TODAY}입니다. 한국 주식 투자자 관점에서
-{sector} 섹터의 2026년 5월 27일 ~ 2026년 6월 30일 주요 일정을 인터넷에서 검색해서 정리해줘.
+{sector} 섹터의 {DATE_RANGE_KR} 주요 일정을 인터넷에서 검색해서 정리해줘.
 
 주요 관련 종목: {stocks_str}
 
