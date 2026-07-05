@@ -1,0 +1,26 @@
+{
+  "date": "2026-07-05",
+  "hit_rate": null,
+  "mentioned_count": 9,
+  "matched": [],
+  "missed": [
+    "AI 인프라",
+    "SK하이닉스",
+    "금융",
+    "반도체",
+    "삼성전자",
+    "소비내수",
+    "엘앤씨바이오",
+    "티에스이",
+    "화장품미용"
+  ],
+  "candidates": [],
+  "thresholds": {
+    "mode": "his",
+    "vacuum_pct_max": 35.0,
+    "min_up_count": 1,
+    "require_up_gt_down": true,
+    "require_leader": false,
+    "top_n": 20
+  }
+}

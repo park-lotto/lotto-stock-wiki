@@ -55,6 +55,10 @@ noise_ratio(0~1 추정), quote(가장 통찰력 있는 한 문장)""",
     "report_relay": _COMMON + """
 이 채널 타입: report_relay (증권사 리포트 중계)
 칸: reports:[{broker, stock, rating, tp, ts, quote, sector}], quote""",
+
+    "news_relay": _COMMON + """
+이 채널 타입: news_relay (속보·특징주 뉴스 중계)
+칸: news:[{stock(종목명, 없으면 null), fact, ts, quote, sector}], quote""",
 }
 
 
@@ -274,6 +278,32 @@ def questionnaire_to_atoms_tg(q: dict, meta: dict) -> list[dict]:
             if src == "fallback":
                 log_foreign_unmapped(info["name"], meta["date"], meta["channel"])
 
+    elif ctype == "news_relay":
+        for i, nw in enumerate(q.get("news") or []):
+            fact = nw.get("fact") or ""
+            quote = nw.get("quote") or fact
+            stock_name = (nw.get("stock") or "").strip()
+            if stock_name:
+                info = resolve_stock(stock_name, date=meta["date"], channel=meta["channel"], skip_log=True)
+                if info["matched"]:
+                    secs, _ = resolve_sector(info["name"], nw.get("sector"), is_foreign=False)
+                    atoms.append(_stock_atom(
+                        meta, info, quote, ts=nw.get("ts"), i=len(atoms), sector=secs[0]))
+                    continue
+                secs, src = resolve_sector(info["name"], nw.get("sector"), is_foreign=True)
+                for sec in secs:
+                    atoms.append(_foreign_sector_atom(
+                        meta, sec, info["name"], quote, ts=nw.get("ts"), i=len(atoms)))
+                if src == "fallback":
+                    log_foreign_unmapped(info["name"], meta["date"], meta["channel"])
+                continue
+            atoms.append(_base(
+                meta, id=_mk_id(meta, "news", i),
+                asset_level="market", event_type="event", validity_type="event",
+                msg_ts=nw.get("ts"), content=fact,
+                strength_score=_strength(trust, "fact", 1),
+            ))
+
     return atoms
 
 
@@ -290,7 +320,13 @@ def extract_telegram(md_path: Path, ctype: str) -> dict:
                 model=_MODEL, contents=[text, prompt],
                 config=types.GenerateContentConfig(response_mime_type="application/json"),
             )
-            return json.loads(resp.text)
+            try:
+                return json.loads(resp.text)
+            except json.JSONDecodeError:
+                # Gemini가 유효한 JSON 뒤에 잉여 문자(중복 닫는 괄호 등)를 붙이는 경우 →
+                # 앞부분의 유효한 JSON만 살려서 사용한다.
+                obj, _ = json.JSONDecoder().raw_decode(resp.text)
+                return obj
         except Exception as e:
             _m = str(e)
             if any(c in _m for c in ("429", "RESOURCE_EXHAUSTED")):
