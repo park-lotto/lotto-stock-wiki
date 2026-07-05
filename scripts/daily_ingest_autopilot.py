@@ -87,6 +87,8 @@ def process_channel(channel, anomaly, state, slot_label, today_str):
         changed = diagnosis["target_files"]
 
     if not fix_mod.within_file_cap(changed, cap=FILE_CAP):
+        if diagnosis["target"] == "remote_crawler":
+            deploy_mod.rollback_remote_crawler(CRAWLER_ROOT, backups)
         state_mod.mark_diagnosed(state, channel, today_str, "escalated")
         alerts.append(report_mod.render_slot_alert(
             slot_label, channel, "escalated", root_cause=diagnosis["root_cause"],
