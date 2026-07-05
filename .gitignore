@@ -100,3 +100,11 @@ out/goal_loop/
 
 # 인용 스튜디오 저장 산출물(픽한 quotes.json)
 out/quote_studio/
+
+# 런타임 자동생성 데이터 (추적 제외 — 매 실행마다 바뀌어 dirty/충돌 유발)
+pipeline/atoms/atoms.db
+pipeline/atoms/daily_verify_history.json
+output/etf_bar_last_good.json
+output/flow_history.json
+output/market_briefing.json
+output/weather_state.json
