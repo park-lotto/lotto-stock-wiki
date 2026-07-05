@@ -10,6 +10,8 @@ import sys
 import tempfile
 from dataclasses import dataclass, field
 
+import gemini_client
+
 
 @dataclass
 class Segment:
@@ -95,6 +97,13 @@ def parse_heatmap(info: dict) -> list[dict]:
 
 HEAT_THRESHOLD = 0.7
 CAPTURE_FALLBACK_CAP = 8
+
+_VID = re.compile(r"(?:v=|youtu\.be/|/live/|/shorts/|/embed/)([A-Za-z0-9_-]{11})")
+
+
+def parse_video_id(url: str) -> str:
+    m = _VID.search(url or "")
+    return m.group(1) if m else ""
 
 
 def apply_heatmap(cands: list[QuoteCandidate], heatmap: list[dict]) -> None:
@@ -301,6 +310,40 @@ def candidate_to_dict(c: QuoteCandidate) -> dict:
         "heat": c.heat, "stance": c.stance, "evidence": c.evidence,
         "score": c.score, "reasons": c.reasons, "media": c.media,
     }
+
+
+def extract_stream(url, topic, max_segments=None):
+    """스트리밍 오케스트레이터 — 진행이벤트 + 최종 결과를 yield.
+    capture는 하지 않음(MVP 픽전용). CLI용 extract()와 별개."""
+    yield {"type": "progress", "phase": "메타"}
+    info = fetch_info(url)
+    source = f"{info['channel']} / {info['webpage_url']}"
+
+    yield {"type": "progress", "phase": "자막"}
+    segments = get_transcript(url)
+    if max_segments:
+        yield {"type": "progress", "phase": "bound",
+               "used": max_segments, "total": len(segments)}
+        segments = segments[:max_segments]
+
+    chunks = chunk_segments(segments)
+    cands = []
+    for i, ch in enumerate(chunks):
+        yield {"type": "progress", "phase": "채점", "done": i, "total": len(chunks)}
+        try:
+            reply = gemini_client.call_json(build_score_prompt(topic, ch))
+            cands.extend(parse_score_reply(reply, source))
+        except Exception as e:
+            print(f"[extract_stream] 청크 {i} 실패: {e}", file=sys.stderr)
+            yield {"type": "progress", "phase": "청크실패",
+                   "done": i, "total": len(chunks)}
+
+    apply_heatmap(cands, parse_heatmap(info))
+    assign_tiers(cands)
+    cands.sort(key=lambda c: (c.tier, -c.score, -c.heat))
+    doc = {"topic": topic, "source": source,
+           "quotes": [candidate_to_dict(c) for c in cands]}
+    yield {"type": "result", "doc": doc}
 
 
 def extract(url: str, topic: str, capture: bool = False,

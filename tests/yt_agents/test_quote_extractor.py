@@ -217,6 +217,44 @@ def test_candidate_to_dict_shape():
     assert d["stance"] == "약세" and d["source"] == "채널/URL"
 
 
+def test_parse_video_id_forms():
+    assert qe.parse_video_id("https://www.youtube.com/watch?v=6fehifjxOcs") == "6fehifjxOcs"
+    assert qe.parse_video_id("https://youtu.be/6fehifjxOcs?si=x") == "6fehifjxOcs"
+    assert qe.parse_video_id("https://www.youtube.com/live/6fehifjxOcs") == "6fehifjxOcs"
+    assert qe.parse_video_id("not a url") == ""
+
+
+def test_extract_stream_emits_progress_and_result(monkeypatch):
+    # 각 세그먼트를 ~4500자로 만들어 chunk_segments 기본값(max_chars=8000)에서
+    # 실제로 세그먼트별 1청크씩(총 6청크)로 쪼개지도록 함(원래 짧은 발언 텍스트로는
+    # 전체 54자가 8000자 미만이라 청크가 1개만 나와 2번째 청크 실패 분기가 검증되지 않았음)
+    segs = [qe.Segment(10.0 * i, f"발언{i} " + "근거있음 " * 900) for i in range(6)]
+    monkeypatch.setattr(qe, "fetch_info", lambda url: {
+        "title": "t", "channel": "채널A", "duration": 100,
+        "webpage_url": url, "heatmap": None})
+    monkeypatch.setattr(qe, "get_transcript", lambda url: segs)
+    calls = {"n": 0}
+    def fake_call_json(prompt):
+        calls["n"] += 1
+        if calls["n"] == 2:
+            raise RuntimeError("chunk boom")     # 2번째 청크 실패
+        return {"quotes": [{"ts": 12.0, "text": "HBM 부족 내년까지",
+                            "golden": True, "stance": "강세", "evidence": "수급",
+                            "specific": True, "reasons": ["r"]}]}
+    monkeypatch.setattr(qe.gemini_client, "call_json", fake_call_json)
+
+    events = list(qe.extract_stream("https://youtu.be/6fehifjxOcs", "반도체 고점인가",
+                                    max_segments=None))
+    kinds = [e["type"] for e in events]
+    assert kinds[-1] == "result"                       # 마지막은 결과
+    assert any(e["type"] == "progress" and e.get("phase") == "채점" for e in events)
+    assert any(e.get("phase") == "청크실패" for e in events)   # 실패청크 이벤트 나옴
+    doc = events[-1]["doc"]
+    assert doc["source"].startswith("채널A")
+    assert len(doc["quotes"]) >= 1                      # 성공청크 골든 살아있음
+    assert doc["quotes"][0]["stance"] == "강세"
+
+
 def test_extract_orchestration(monkeypatch):
     """extract() 실제 오케스트레이션(heat 적용→tier 배정→정렬→dict 변환)을
     fetch_info/get_transcript/score_quotes 3개 I/O 씸만 몽키패치해서 검증. 네트워크 없음."""
