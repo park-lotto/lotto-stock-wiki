@@ -137,3 +137,34 @@ def test_run_slot_sends_healed_alert_when_channel_recovers():
         alerts = auto.run_slot(slot_label="15:10")
     assert any("해결됨" in a for a in alerts)
     mock_send.assert_called()
+
+
+def test_run_daily_summary_includes_open_escalations_and_sends_telegram():
+    state = {
+        "ch1": {"first_detected": "2026-07-03", "latest_outcome": "escalated"},
+        "_daily_stats": {"date": "2026-07-05", "detected": 2, "auto_fixed": 1, "escalated": 1},
+    }
+    with patch("daily_ingest_autopilot.state_mod.load_state", return_value=state), \
+         patch("daily_ingest_autopilot.run_pytest_check",
+               return_value={"ok": True, "failed_tests": []}), \
+         patch("daily_ingest_autopilot.check_service_health",
+               return_value={"active": True, "restarted": False}), \
+         patch("daily_ingest_autopilot.send_telegram") as mock_send:
+        card = auto.run_daily_summary()
+    assert "ch1" in card
+    assert "1건 자동수정" in card
+    mock_send.assert_called_once_with(card)
+
+
+def test_main_dispatches_slot_flag():
+    with patch("daily_ingest_autopilot.run_slot") as mock_slot:
+        with patch("sys.argv", ["daily_ingest_autopilot.py", "--slot"]):
+            auto.main()
+    mock_slot.assert_called_once()
+
+
+def test_main_dispatches_daily_summary_flag():
+    with patch("daily_ingest_autopilot.run_daily_summary") as mock_summary:
+        with patch("sys.argv", ["daily_ingest_autopilot.py", "--daily-summary"]):
+            auto.main()
+    mock_summary.assert_called_once()
