@@ -46,3 +46,11 @@ def test_quote_extract_requires_url(monkeypatch):
     c = TestClient(server.app)
     r = c.post("/yt/quote_extract", json={"topic": "x"})
     assert r.status_code == 400
+
+
+def test_quote_extract_url_check_precedes_module_guard(monkeypatch):
+    # url 누락은 _qe 유무보다 먼저 판정돼야 함 → 모듈이 없어도(503) url 없으면 400
+    monkeypatch.setattr(server, "_qe", None)
+    c = TestClient(server.app)
+    r = c.post("/yt/quote_extract", json={"topic": "x"})
+    assert r.status_code == 400

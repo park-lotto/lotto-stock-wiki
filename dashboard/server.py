@@ -5728,13 +5728,13 @@ def yt_quote_studio_page():
 @app.post("/yt/quote_extract")
 async def api_yt_quote_extract(req: Request):
     """URL → 골든 발언 후보 추출(엔진 extract_stream) — SSE. 4.5h 영상은 수분 소요."""
-    if _qe is None:
-        return JSONResponse(content={"error": "quote_extractor 모듈 없음"}, status_code=503)
     body = await req.json()
     url = (body.get("url") or "").strip()
     topic = (body.get("topic") or "").strip()
     if not url:
         return JSONResponse(content={"error": "url 필요"}, status_code=400)
+    if _qe is None:
+        return JSONResponse(content={"error": "quote_extractor 모듈 없음"}, status_code=503)
     ms = body.get("max_segments")
     max_segments = int(ms) if ms else None
 
