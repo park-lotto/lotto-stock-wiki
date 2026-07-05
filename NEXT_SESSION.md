@@ -1,130 +1,57 @@
-# NEXT_SESSION — 여러 병렬 세션(아래 최신순)
+# NEXT_SESSION — 전문가 인용 몽타주 (2026-07-05, 집PC)
 
-## [세션 D, 2026-07-04] YT 대시보드 ①기획단계 Task 5 완료 + 실브라우저 버그 2건 발견·수정 — 완료
+## 한 줄
+전문가 유튜브 영상 → 골든 발언+장면 자동 수집 → (앞으로) 스토리로 엮어 몽타주 영상.
+채널 20%(방법론 데모=관점 종합) 콘텐츠. 리딩 아님, "나는 이렇게 본다" 시각 판매.
 
-**주제**: 어제 중단된 YT 대시보드(①기획단계) Task 5 이어가기.
+## 지금 어디까지 됐나 (✅ 라이브)
 
-### ✅ 완료 — Task 5 검증 + 실버그 2건 수정
-- `dashboard/yt.html`+`GET /yt`는 이미 다른/자동 세션이 커밋해둔 상태(b2f6c702)로 발견 —
-  계획서와 코드 대조 확인, 19/19 테스트 통과 확인.
-- **verification-grounding-pack 규칙대로 실브라우저+실YouTube API로 검증하다 진짜 버그 2건
-  발견·수정(commit 5b8d5744)**:
-  1. `hot_clips.search_videos`가 YouTube API 제목의 HTML엔티티(`&#39;` 등)를 방치 →
-     "담김" 표시에 엔티티가 그대로 노출되고, 더 심각하게는 이 원문이 Gemini 프롬프트에까지
-     그대로 흘러들어가고 있었음. `html.unescape()`로 소스 단일지점 수정.
-  2. ①을 고치자 표면화된 2차버그: 디코딩된 실제 apostrophe가 `encodeURIComponent`에서
-     이스케이프 안 돼 `onclick='...'` 속성을 깨뜨려 "담기" 클릭이 SyntaxError로 조용히
-     죽음(엔티티가 살아있던 이전엔 가려져 있었음). 인덱스기반 조회로 근본수정 +
-     `esc()` 헬퍼(다른 대시보드 페이지 기존 관례) 적용.
-- 실제 검증: YouTube 검색(반도체 조정 검색 결과 실측)·"담기"(따옴표 포함 제목으로 재현)·
-  SSE 기획생성(Gemini 429 quota로 에러경로까지 확인, 에러이벤트 UI 정상 표시) 전부 확인.
-- 전체 5개 태스크 완료, main 반영·push 완료(5b8d5744). **Lightsail 서버 배포는 안 함**
-  (사용자 확인 후 별도 진행). 상세=`.superpowers/sdd/progress.md`.
-- 다음: ②대본③리모션④녹음⑤자막⑥렌더는 다음 사이클(범위 밖).
+**설계**: `docs/superpowers/specs/2026-07-05-전문가인용몽타주-design.md` (8단계, 골든루브릭, T1>T2>T3, 억지금지)
 
----
+**stage 1 — 수집·해체 엔진** ✅ (`scripts/yt_agents/quote_extractor.py`)
+- URL+주제 → 골든 발언 후보(스탠스·근거·tier·화면근거). 29테스트.
+- 골든 규칙: 필수3(주장·근거·입장) + 가점(구체성·화면근거).
 
-## [세션 C, 2026-07-03] pytest 수집버그 수정 + 브랜드 스타일 인포그래픽 실험 — 완료
+**stage 1 웹 — 인용 스튜디오** ✅ **서버 라이브**
+- https://stockbrain1.duckdns.org/yt/quote-studio (admin/1234, /market 로그인과 동일)
+- URL→진행률(SSE)→골든카드(tier순·스탠스뱃지)→체크픽→저장
+- 저장시 `<vid>.json` 브라우저 자동다운로드 + collect_scenes 명령 안내
 
-**주제**: (1) 일일검증(daily_verify.py) 텔레알림이 fail/ok를 오가던 원인 진단·수정,
-(2) 골루프 인포그래픽에 실제 브랜드(클로드/클레이) CI/BI 스타일 입히기 실험.
+**서버 봇차단 해결** ✅ (핵심)
+- 서버(데이터센터IP)는 yt-dlp/youtube_transcript_api 다 봇차단. YouTube Data API키로도 남영상 자막 불가.
+- → **Gemini `call_video`(영상 직접시청) 폴백**. 로컬=yt-dlp, 서버=call_video 자동전환.
+- **모델 = `gemini-2.5-flash` 필수** (gemini-3-flash-preview/flash-latest는 영상입력시 503 지속).
+- E2E검증: 현대차영상→골든8개(약세/자료구동 T1) 실제추출.
 
-### ✅ 완료 — pytest 수집 에러 4건
-- 원인 3가지: `scripts/_c2_test.py`·`_kis_test.py`(이름만 test패턴, 실제론 수동스크립트)가
-  자동수집돼 win32com/KIS_APP_KEY 참조로 항상 에러 / `pandas` 서버venv 미설치 /
-  `dashboard.server`를 pytest가 root에서 import할 때 `dashboard/` sys.path 누락.
-- 수정: `conftest.py`에 `collect_ignore_glob`+`dashboard/` sys.path 추가, venv에 pandas 설치.
-- 결과: 수집에러 0건, "7 failed, 446 passed"로 정상화(남은 7개는 atoms/ingest 파이프라인
-  기존 test-source 드리프트, 오늘 작업과 무관 — 미해결로 남김, 사용자가 여기까지만 하기로 함).
+**stage 1.5 — 장면 수집** ✅ (`scripts/yt_agents/collect_scenes.py`, 로컬전용)
+- `python scripts/yt_agents/collect_scenes.py <vid>.json` → 발언 ts마다 프레임PNG(배경)+클립MP4(핵심).
+- yt-dlp --download-sections로 구간만 받음(긴영상 효율). 실측 2/2 생성확인.
+- 서버는 봇차단+ffmpeg없어 로컬 전용(로컬은 둘다 OK).
 
-### ✅ 완료 — 브랜드 스타일 인포그래픽 (`scripts/nlm_bridge.py`)
-- `create_infographic()`에 `brand=` 파라미터 추가 — 기존엔 커스텀 focus를 줘도 항상
-  `_BRAND_DESIGN`(라임그린 HUD)이 같이 붙어 스타일이 섞이는 버그였음(예: 클로드 실험 시
-  크림+라임그린 혼합) → `BRAND_STYLE_PRESETS` dict로 완전 대체 가능하게 고침.
-- 등록된 프리셋 3종(전부 텔레그램 전송·사용자 확인 완료): `claude`(크림+코랄 에디토리얼),
-  `claude_terminal`(다크+픽셀아웃라인폰트+터미널창, 이미지소스 없이도 재현됨), `clay`
-  (3D클레이메이션+채도색카드순환, clay.com 실이미지 3장을 노트북소스로 추가해서 성공).
-- 부수 발견: `studio status` 폴링이 `arts[-1]`(최고참)을 봐서 예전 완료본을 오판하던 버그 수정
-  (`arts[0]`으로, API가 최신순 응답). `nlm download infographic` CLI가 `--profile` 옵션
-  자체를 미지원(create/status는 지원) — 다른 계정 다운로드 시 `nlm login switch`로 임시전환 후
-  즉시 원복하는 우회 필요. 계정 2개(default=parklotto12, secondary=parklotto20) 운용 중,
-  하나가 rate limit 걸리면 다른 계정으로 전환.
-- 참고: `scripts/goal_loop/design_refs/{claude,clay}_design.md`, `clay_images/`(원본 3장).
-  메모리: `project_brand_style_infographics.md`, `feedback_brand_style_workflow.md`.
-- **다음**: 애플/구글 등 추가 스타일 원하면 질문지 먼저 드리고 컨펌 후 진행(사용자 요청 절차).
+**git 위생** ✅: atoms.db·상태json·pyc 추적해제+gitignore (dirty트리·바이너리충돌 해소).
 
-### ✅ 완료 — wiki 건강검진 후속조치 3건(별개 작업, 같은 세션)
-BRAIN_INDEX.md 6개 레이어 링크 전부 깨져있던 것 수정 / `raw/캡처본`(오타폴더) 정리 /
-`wiki/stock_현대백화점_20260507.md`(루트 고아파일) → `L5_섹터/소비내수/stock/`로 정식 이전.
+## 미완료 (다음 — 사장님이 "차례대로" 하자 함)
 
----
+**② stage 2 — 스토리 발생** ⬜ (설계 시작, 결정 대기)
+- 여러 영상 인용풀 → stance/근거 클러스터 → 관점지도 → 내러티브 뼈대 → 나레이션 브릿지.
+- **미결 질문(사장님 답 대기)**: stage 2 산출물이 A(설계도만)/B(설계도+나레이션대본, 추천)/C(설계도+관점지도 시각화)?
+- 억지금지: 대본도 인용에서 발생한 것만.
+- 참고: story_builder.py(다른세션 작업)는 커밋안돼 사라짐 → 새로 만들기.
 
-## [세션 B] 텔레그램 뉴스릴레이 파이프라인 + 일일검증 에이전트 (완료)
+**③ stage 3 — 씬 빌드** ⬜: quotes.json+장면 → hyperframes/Remotion 영상.
 
-**날짜**: 2026-07-03 · **PC**: DESKTOP-T8CB1GG
+**UX 정리** ⬜: 세그먼트제한 칸 자동기본값/숨김, 주제 선택사항 (지금은 수동입력).
 
-## 이번 세션(텔레그램+검증에이전트+대시보드UI) 요약 — 전부 완료·배포됨
+**브랜치 정리** ⬜ (⚠️): main(배포)과 feat/briefing-engine이 646파일 갈라짐. 동시세션이 main에 계속 커밋중이라 통합은 조용한때 조율해서. atoms.db 추적해제는 이미 함.
 
-### ✅ 텔레그램 뉴스릴레이 → 히트맵 파이프라인 실전검증·버그수정
-- 4개 채널(주식픽/실시간속보단독뉴스/실시간주식뉴스/그로쓰리서치특징주) 실채널 데이터로
-  검증 → 진짜 버그 3개 발견·수정: 중복재게시 필터, 언론 관용약칭(삼전/하닉) 매칭,
-  `stock_sector_map.json` 자기참조 항목(시장/자동차 등 18개) 종목 오탐
-  (`scripts/telegram_news_filter.py`, `tests/test_telegram_news_filter.py`)
-- 크롤 주기 하루5번→**15분마다(7~23시)**로 상향, "주식픽" 타임아웃 40s→90s,
-  텔레그램 전용 경량 동기화 스크립트 신설(`scripts/sync_telegram_only.py`, 크론 15분)
-- 섹터 키워드 오탐 2건 실사례 발견·수정: "증권"(→증권주 등 구체화), "엔씨"(→엔씨소프트,
-  "지엔씨에너지" 종목명 부분매칭 오탐 원인) — `pipeline/sector_news_keywords.json`
-- **[마지막 발견·수정]** 텔레그램 뉴스아이템에 `date` 필드가 없어서(ts만 있음) AI 섹터요약의
-  "오늘자만" 필터(`_is_today`)에서 텔레그램발 뉴스가 통째로 제외되던 버그. 히트맵엔 텔레그램
-  뉴스가 잔뜩 보이는데 AI요약 배지엔 "N건 종합"이 소수만 나오는 걸로 발견됨. `group_by_
-  sector_and_stock(matched, date_str)`에 필수 파라미터 추가해 `news_feed._fmt_rss`와 같은
-  "MM/DD HH:MM" 포맷으로 date 채움. 배포·테스트(17개) 통과 완료.
+## 이어가는 법 (호출)
+- 새 세션: 이 파일 자동으로 읽힘. 또는 "인용 몽타주 이어서" 라고 말하면 됨.
+- 메모리 `project_quote_montage_engine.md`에 상세(모델·봇차단·배포 다 기록됨).
+- 서버접속: `ssh -i "C:/Users/TheRose/crawling_bot_client/LightsailDefaultKey-ap-northeast-2.pem" ubuntu@3.39.179.148`
+- 배포: worktree(main)에서 수정→push→서버 `git pull [&& sudo systemctl restart stockbrain]`. 서버 venv=`/home/ubuntu/venv`.
+- 로컬 테스트: `python -m pytest tests/yt_agents/test_quote_extractor.py -v` (29 passed 기준).
 
-### ✅ 일일 검증 에이전트 신설·배포 (사용자 요청: 매일 자동 오류검사+보고 시스템)
-- 스펙: `docs/superpowers/specs/2026-07-03-daily-verify-agent-design.md`
-- 계획: `docs/superpowers/plans/2026-07-03-daily-verify-agent.md`
-- 구현: `scripts/daily_verify.py` + `tests/test_daily_verify.py`(20 테스트) — 크롤신선도(요일별
-  4주평균)+pytest회귀+stockbrain서비스상태(재시작1회시도) → 텔레그램 통합보고
-- 원격서버 크론 등록: `45 21 * * *`(마지막 인제스트 21:35 이후로 — 최초 21:30 오타 수정함)
-- **실행검증 중 실버그 2개 추가 발견·수정**: (1) cp949 콘솔 print 크래시, (2) 원격서버엔
-  `python` 명령어가 없는데(`python3`만 존재) 하드코딩 호출→FileNotFoundError가 "측정
-  실패=경보아님"으로 조용히 삼켜져 체커가 매일 "정상"으로 오보고할 뻔함 → `sys.executable`
-  사용으로 수정. **교훈: 이런 유형의 "체커 자체가 무력화되는 버그"가 제일 위험 — 로컬
-  개발환경과 배포환경 차이를 항상 실배포 후 재검증할 것.**
-- 외부 도달성(서버 자체 네트워크 장애) 체크는 명시적으로 범위 밖 — 같은 날 실제로 서버가
-  2번 다운됐는데(AWS 네트워크단 장애, 원인불명) 온서버 체커로는 원리적으로 감지 불가함이
-  실증됨. 필요시 UptimeRobot 등 외부서비스 가입 권장(안내만 함, 계정 필요해 대신 못 함).
-
-### ✅ 대시보드 UI 개선 3건
-- 섹터상세 팝오버: 종목 등락률(`kis_api.get_price`) 추가 + 폭 300→420px 확장.
-  KIS API 500 일시장애 대응 1회 재시도 추가(5분 캐시라 실패시 오래 굳는 문제 발견·수정)
-- AI 요약 출처 표기 "Gemini"→"STOCK BRAIN" (2곳)
-- AI 요약 프롬프트에서 "유튜브 채널 애널리스트/시청자" 프레이밍 제거 → 대시보드에
-  "안녕하세요 시청자 여러분" 같은 영상 인트로가 섞여 나오던 문제 수정(섹터+종목 요약 2곳)
-
-### 배포 상태
-전부 `git push` + 원격서버(stockbrain1.duckdns.org) pull+재시작 완료, 브라우저로 실제
-렌더링 확인 완료. 남은 작업 없음.
-
-### 🚨 동시세션 충돌 패턴 (이번 세션에도 반복 발생 — 계속 주의)
-원격서버 배포 시 `git pull`이 여러 번 다른 세션의 커밋(YT 대시보드/클레이 프리셋/기타)과
-충돌 — 매번 `git stash push -u` → pull → `stash pop` → (충돌시 `atoms.db`/캐시성 JSON 등
-데이터파일은 `--ours` 유지, 코드파일은 없었음) 패턴으로 안전 처리함. **다음 세션도 배포 전
-항상 이 패턴 사용.**
-
----
-
-## [다른 세션 기록, 미완료] YT 대시보드 ①기획단계 — Task 5 남음
-
-**주제**: 유튜브 영상제작(기획→대본→리모션→녹음→자막→렌더) 통합 대시보드 첫 단계.
-Task 1-4 완료(hot_clips.py, /yt/hot_clips, plan_stage.py, /yt/generate_plan SSE),
-**Task 5**(`dashboard/yt.html` + `GET /yt` 라우트)만 미시작 — HTML/CSS/JS는 계획서에
-이미 작성돼 있어 transcription+테스트만 하면 됨. **render 산출물이라 실제 브라우저
-구동 확인 필수(자동테스트만으로 완료 처리 금지).**
-
-- 스펙: `docs/superpowers/specs/2026-07-03-yt-기획단계-대시보드-design.md`
-- 계획: `docs/superpowers/plans/2026-07-03-yt-기획단계-대시보드.md`
-- 원장: `.superpowers/sdd/progress.md`
-- Task 5 리뷰 → 전체 브랜치 최종 리뷰 → `superpowers:finishing-a-development-branch`
-- 배포: git push만 완료, Lightsail 서버 배포는 Task5 완성 후 별도 진행
-- ②대본 ③리모션 ④녹음 ⑤자막 ⑥렌더는 범위 밖(①기획 확인 후 별도 사이클)
+## 바로 써보기
+1. https://stockbrain1.duckdns.org/yt/quote-studio (admin/1234)
+2. 전문가영상 URL + 주제 → 추출 → 픽 → 저장(json 다운로드됨)
+3. 로컬: `python scripts/yt_agents/collect_scenes.py <다운로드된 vid.json>` → 장면 수집

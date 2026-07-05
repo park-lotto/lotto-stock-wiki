@@ -1385,3 +1385,6 @@ python calc_oscillator.py SK하이닉스 삼성전자 한미반도체 --tg
 - 콜아웃 백엔드(/api/callout·성과추적) 완료, 프론트 미연결. 장전예측엔진·기준봉 보류
 - 2026-07-01 인사이트허브: 종목이슈(뉴스 상승원인+출처·날짜·원문링크)·종토방 subprocess격리·Gemini503폴백(_gemini_text 안정모델 자동전환)
 - 2026-07-01 종목명 자동완성(2605종, 오타·약자별칭 ls일렉→엘에스일렉트릭)·표시명 브랜드교정(_DISPLAY_ALIAS)·코드기반조회·좌측패널 정리
+
+## 2026-07-05 (집PC) — 전문가 인용 몽타주
+stage1 엔진+스튜디오 서버배포(stockbrain1/yt/quote-studio). 서버 봇차단→Gemini call_video(gemini-2.5-flash) 폴백 해결. 장면수집 collect_scenes.py(로컬). 저장시 json다운로드 연결. git위생(atoms.db추적해제). 다음: stage2 스토리(산출물 A/B/C 결정 대기).
