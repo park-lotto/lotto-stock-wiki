@@ -1,0 +1,10 @@
+{
+  "title": "반도체 고점 논쟁",
+  "channel": "전문가채널",
+  "duration": 600,
+  "webpage_url": "https://youtu.be/xxxx",
+  "heatmap": [
+    {"start_time": 0.0, "end_time": 30.0, "value": 0.2},
+    {"start_time": 200.0, "end_time": 230.0, "value": 0.95}
+  ]
+}

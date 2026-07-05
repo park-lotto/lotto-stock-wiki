@@ -1,7 +1,9 @@
 """인용 엔진 스파이크 — URL → 골든 발언 후보(quotes_candidates.json).
 전문가 인용 몽타주 영상용. 기존 gemini_client(18키 폴백) 재활용."""
 from __future__ import annotations
+import json
 import re
+import subprocess
 from dataclasses import dataclass, field
 
 
@@ -41,3 +43,36 @@ def parse_vtt(vtt_text: str) -> list[Segment]:
         if text:
             segs.append(Segment(start=start, text=text))
     return segs
+
+
+def fetch_info(url: str) -> dict:
+    """yt-dlp 단일 JSON 메타 (다운로드 없이). heatmap 포함."""
+    cmd = ["python", "-m", "yt_dlp", "--skip-download",
+           "--dump-single-json", "--no-warnings", url]
+    out = subprocess.run(cmd, capture_output=True, text=True,
+                         encoding="utf-8", errors="replace", timeout=90)
+    if out.returncode != 0:
+        raise RuntimeError(f"yt-dlp 메타 실패: {out.stderr[:300]}")
+    raw = json.loads(out.stdout)
+    return {
+        "title": raw.get("title", ""),
+        "channel": raw.get("channel") or raw.get("uploader", ""),
+        "duration": raw.get("duration", 0),
+        "webpage_url": raw.get("webpage_url", url),
+        "heatmap": raw.get("heatmap"),
+    }
+
+
+def parse_heatmap(info: dict) -> list[dict]:
+    """info.heatmap → [{start,end,value}]. 없으면 []."""
+    hm = info.get("heatmap")
+    if not hm:
+        return []
+    out = []
+    for b in hm:
+        out.append({
+            "start": float(b.get("start_time", 0.0)),
+            "end": float(b.get("end_time", 0.0)),
+            "value": float(b.get("value", 0.0)),
+        })
+    return out

@@ -2,6 +2,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts" / "yt_agents"))
 import quote_extractor as qe
+import json
 
 FIX = Path(__file__).parent / "fixtures"
 
@@ -16,3 +17,12 @@ def test_parse_vtt_basic():
 def test_to_mmss():
     assert qe.to_mmss(73.4) == "01:13"
     assert qe.to_mmss(220.5) == "03:40"
+
+def test_parse_heatmap_present():
+    info = json.loads((FIX / "info_with_heatmap.json").read_text(encoding="utf-8"))
+    hm = qe.parse_heatmap(info)
+    assert len(hm) == 2
+    assert hm[1]["start"] == 200.0 and hm[1]["value"] == 0.95
+
+def test_parse_heatmap_absent():
+    assert qe.parse_heatmap({"title": "x"}) == []
