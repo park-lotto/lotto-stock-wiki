@@ -20,6 +20,10 @@ def test_to_mmss():
     assert qe.to_mmss(73.4) == "01:13"
     assert qe.to_mmss(220.5) == "03:40"
 
+def test_to_mmss_hours():
+    assert qe.to_mmss(16200) == "04:30:00"
+    assert qe.to_mmss(3661) == "01:01:01"
+
 def test_parse_heatmap_present():
     info = json.loads((FIX / "info_with_heatmap.json").read_text(encoding="utf-8"))
     hm = qe.parse_heatmap(info)
@@ -211,3 +215,62 @@ def test_candidate_to_dict_shape():
     assert d["ts"] == "03:40" and d["ts_sec"] == 220.5
     assert d["tier"] == 1 and d["has_visual"] is True
     assert d["stance"] == "약세" and d["source"] == "채널/URL"
+
+
+def test_extract_orchestration(monkeypatch):
+    """extract() 실제 오케스트레이션(heat 적용→tier 배정→정렬→dict 변환)을
+    fetch_info/get_transcript/score_quotes 3개 I/O 씸만 몽키패치해서 검증. 네트워크 없음."""
+
+    def fake_fetch_info(url):
+        return {
+            "title": "반도체 전망", "channel": "채널A",
+            "webpage_url": "https://youtu.be/x", "duration": 300,
+            "heatmap": [
+                {"start_time": 0.0, "end_time": 100.0, "value": 0.1},
+                {"start_time": 100.0, "end_time": 120.0, "value": 0.95},  # 히트버킷
+                {"start_time": 120.0, "end_time": 300.0, "value": 0.05},
+            ],
+        }
+
+    def fake_get_transcript(url):
+        return [qe.Segment(10.0, "a"), qe.Segment(110.0, "b"), qe.Segment(250.0, "c")]
+
+    def fake_score_quotes(topic, segments, source):
+        return [
+            qe.QuoteCandidate(source=source, ts=110.0, text="버킷안", stance="강세",
+                              evidence="수급", score=5),   # 히트버킷(100-120) 안
+            qe.QuoteCandidate(source=source, ts=50.0, text="버킷밖 고득점", stance="약세",
+                              evidence="밸류", score=8),
+            qe.QuoteCandidate(source=source, ts=200.0, text="버킷밖 저득점", stance="중립",
+                              evidence="기타", score=3),
+        ]
+
+    monkeypatch.setattr(qe, "fetch_info", fake_fetch_info)
+    monkeypatch.setattr(qe, "get_transcript", fake_get_transcript)
+    monkeypatch.setattr(qe, "score_quotes", fake_score_quotes)
+
+    doc = qe.extract("https://youtu.be/x", "반도체 고점인가", capture=False)
+
+    # (a) 히트버킷 heat 적용 확인
+    in_bucket = next(q for q in doc["quotes"] if q["ts_sec"] == 110.0)
+    assert in_bucket["heat"] == 0.95
+    out_low = next(q for q in doc["quotes"] if q["ts_sec"] == 50.0)
+    assert out_low["heat"] == 0.1
+    out_low2 = next(q for q in doc["quotes"] if q["ts_sec"] == 200.0)
+    assert out_low2["heat"] == 0.05
+
+    # (b) tier 배정 확인 (heat>=0.7 → tier2, 그 외 tier3, has_visual 없음)
+    assert in_bucket["tier"] == 2
+    assert out_low["tier"] == 3 and out_low2["tier"] == 3
+
+    # (c) 정렬 확인: (tier, -score, -heat) → tier2가 먼저, 동tier 내 score 내림차순
+    ts_order = [q["ts_sec"] for q in doc["quotes"]]
+    assert ts_order == [110.0, 50.0, 200.0]
+
+    # (d) 출력 스키마 확인
+    assert set(["topic", "source", "quotes"]).issubset(doc.keys())
+    assert doc["topic"] == "반도체 고점인가"
+    assert doc["source"] == "채널A / https://youtu.be/x"
+    for q in doc["quotes"]:
+        for key in ("ts", "ts_sec", "tier", "stance", "has_visual"):
+            assert key in q

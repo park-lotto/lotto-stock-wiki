@@ -18,7 +18,12 @@ class Segment:
 
 
 def to_mmss(sec: float) -> str:
-    m, s = divmod(int(sec), 60)
+    total = int(sec)
+    if total >= 3600:
+        h, rem = divmod(total, 3600)
+        m, s = divmod(rem, 60)
+        return f"{h:02d}:{m:02d}:{s:02d}"
+    m, s = divmod(total, 60)
     return f"{m:02d}:{s:02d}"
 
 
@@ -89,6 +94,7 @@ def parse_heatmap(info: dict) -> list[dict]:
 
 
 HEAT_THRESHOLD = 0.7
+CAPTURE_FALLBACK_CAP = 8
 
 
 def apply_heatmap(cands: list[QuoteCandidate], heatmap: list[dict]) -> None:
@@ -318,7 +324,11 @@ def extract(url: str, topic: str, capture: bool = False,
         import shutil
         wd = tempfile.mkdtemp(prefix="qe_cap_")
         try:
-            targets = [c for c in cands if c.tier <= 2] or cands
+            targets = [c for c in cands if c.tier <= 2]
+            if not targets:
+                targets = sorted(cands, key=lambda c: -c.score)[:CAPTURE_FALLBACK_CAP]
+                print(f"[extract] tier<=2 후보 없음, 상위 {len(targets)}개만 캡처 "
+                      f"(cap={CAPTURE_FALLBACK_CAP})", file=sys.stderr)
             paths = []
             for i, c in enumerate(targets):
                 fp = os.path.join(wd, f"cap_{i:03d}.png")
@@ -327,10 +337,13 @@ def extract(url: str, topic: str, capture: bool = False,
                 except Exception:
                     pass
             if paths:
-                flags = detect_visuals([p for _, p in paths])
-                for (c, _), v in zip(paths, flags):
-                    c.has_visual = c.has_visual or v
-                assign_tiers(cands)   # 화면근거 반영 재-tier
+                try:
+                    flags = detect_visuals([p for _, p in paths])
+                    for (c, _), v in zip(paths, flags):
+                        c.has_visual = c.has_visual or v
+                    assign_tiers(cands)   # 화면근거 반영 재-tier
+                except Exception as e:
+                    print(f"[extract] 비전 판정 실패, 캡처 스킵: {e}", file=sys.stderr)
         finally:
             shutil.rmtree(wd, ignore_errors=True)
 
