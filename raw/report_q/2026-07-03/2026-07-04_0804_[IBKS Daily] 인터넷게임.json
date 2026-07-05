@@ -1,0 +1,24 @@
+{
+  "meta": {
+    "date": "2026-07-03",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-04_0804_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이상훈",
+    "report_date": "2026.07.03",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "삼성·두나무 올라탄 '오픈USD'",
+      "NC 노조, 카카오 파업 연대 성명"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": null,
+    "top_picks": null,
+    "risk": "카카오 노사는 성과급 규모, 계열사 고용 안정 등을 놓고 여전히 이견을 좁히지 못하고 있는 상황임",
+    "quote": "글로벌 기업 140여곳이 참여하는 신규 달러 스테이블코인 '오픈 USD(OUSD)'가 올해 하반기 출시를 예고하며, 기존 USDT와 USDC가 양분해온 스테이블코인 시장의 판도 변화가 주목받고 있음"
+  }
+}

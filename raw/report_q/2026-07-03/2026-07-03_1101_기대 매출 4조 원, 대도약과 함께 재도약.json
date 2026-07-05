@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-03",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-03_1101_기대 매출 4조 원, 대도약과 함께 재도약.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "박희철",
+    "report_date": "Jul 3 2026",
+    "stocks": [
+      {
+        "name": "지엔씨에너지",
+        "code": "119850",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "동사의 2026년 매출액은 2,986억원(YoY +13.7%), 영업이익 413억원(YoY -16.4%, OPM 13.8%)으로 전망. 2027년에는 매출액 3,795억원(YoY +27.1%), 영업이익 742억원(YoY +79.8%, OPM 19.6%)를 기록할 것으로 추정",
+        "estimate_revision": null,
+        "next_catalyst": "대도약 3대 메가 프로젝트 민간 투자 및 7월 2일 공시된 약 300억원의 수주",
+        "thesis": [
+          "국내 데이터센터 비상발전기 과점 기업",
+          "정부 발표 대도약 3대 메가 프로젝트 수혜",
+          "8.4GW 목표 기준 도달 가능 매출 총 4조 원 이상 기대"
+        ],
+        "valuation_basis": null,
+        "risk": "올해 환영향으로 영업이익 훼손은 불가피",
+        "supply_comment": "글로벌 Top-Tier 엔진 확보에 있어서 다변화된 루트를 가지고 있는 동사만이 크게 증가하는 데이터센터에 대응 가능한 기업",
+        "quote": "지엔씨에너지는 비상 및 상용 발전기 사업을 전문으로 영위하고 있으며, 특히 AI 데이터센터에 필수적인 대형 비상 발전기 부문을 국내에서 과점."
+      }
+    ]
+  }
+}

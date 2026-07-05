@@ -1,0 +1,120 @@
+{
+  "meta": {
+    "date": "2026-06-24",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-24_1006_2차전지 2H26 Outlook.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "이안나",
+    "report_date": "24 Jun, 2026",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "LG에너지솔루션",
+        "code": "373220",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "574,000원",
+        "tp_prev": "574,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 2분기 매출액 7.3조원(+31% YoY, +11% QoQ), 영업이익 1,300억원(-74% YoY, 흑전 QoQ, OPM 2%)",
+        "estimate_revision": null,
+        "next_catalyst": "2026년 하반기 GM non-Bolt Ultium 모델 회복과 연말부터는 Rivian R2 초기 공급 효과",
+        "thesis": [
+          "미국 ESS 현지화의 최대 수혜",
+          "EV향 개선 + BESS 중심 2H26 실적 우상향 기대",
+          "2027년 46시리즈 차세대 라인 가동 본격화"
+        ],
+        "valuation_basis": null,
+        "risk": "미국 EV 시장 내 보조금 폐지 후 수요 둔화 지속",
+        "supply_comment": "애리조나 신규 4695 원통형 및 Rivian R2 효과, 유럽 Mid-Ni 중심 가동률 회복 기대",
+        "quote": "동사는 2분기에 이어 3분기에는 ESS 출하 확대, 이연 보상금 반영, 4분기에는 북미 BESS 가동률 확대, 유럽 EV 중심 개선폭 확대가 기대."
+      },
+      {
+        "name": "삼성SDI",
+        "code": "006400",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "913,000원",
+        "tp_prev": "913,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 2분기 매출액 3.7조원(+17% YoY, +4% QoQ), 영업손실 750억원 예상",
+        "estimate_revision": null,
+        "next_catalyst": "전자재료, 데이터센터용 BBU·UPS, 유럽 EV 출하 회복, 미국 LFP ESS 초기 양산",
+        "thesis": [
+          "ESS 전 라인업 중심으로 외형성장 지속",
+          "4분기 미국 LFP ESS 초기 양산 및 StarPlus Energy 라인 전환",
+          "AMPC 증가가 동시에 반영될 가능성"
+        ],
+        "valuation_basis": null,
+        "risk": "미국 EV향 물량의 프리미엄·니치 성격 및 볼륨 모델 부족",
+        "supply_comment": "미국 EV향은 볼륨모델 부재로 대부분 ESS 라인으로 전환할 예정",
+        "quote": "동사 실적 흑자전환은 4분기로 예상되나 전자재료, 데이터센터용 BBU·UPS, 유럽 EV 출하 회복, 기존 ESS 손익 개선으로 3분기 흑자전환 가능성도 높음."
+      },
+      {
+        "name": "에코프로비엠",
+        "code": "247540",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "270,000원",
+        "tp_prev": "270,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 2분기 매출액 6,500억원(-17% YoY, +7% QoQ), 영업이익 270억원(-45% YoY, +29% QoQ, OPM 4%)",
+        "estimate_revision": null,
+        "next_catalyst": "헝가리 공장 1개 라인 가동 후 9월 추가 라인 가동",
+        "thesis": [
+          "2H26 북미 ESS + 유럽 정책 모멘텀",
+          "헝가리 공장 가동 본격화",
+          "유럽 EV 수요 확대와 역내 생산 정책 수혜"
+        ],
+        "valuation_basis": null,
+        "risk": "2027년부터 주요 고객사의 LFP ESS 양산 확대로 일부 수요 감소 가능성",
+        "supply_comment": "유럽 고객사의 재고조정 완화 및 일부 모델 출하 회복",
+        "quote": "헝가리 공장 1개 라인 가동 후 9월 추가 라인이 가동되며 연간 출하량 전망을 68,000톤에서 79,845톤으로 상향."
+      },
+      {
+        "name": "엘앤에프",
+        "code": "365340",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "235,000원",
+        "tp_prev": "235,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 2분기 매출액 9,624억원(+85% YoY, +30% QoQ), 영업이익 467억원(OPM 4.9%)",
+        "estimate_revision": null,
+        "next_catalyst": "2H26 LFP 초기 출하, 2027년 6만톤 체제, 2028년 가동률 상승",
+        "thesis": [
+          "안정적 가동률 및 LFP 실적 본격화",
+          "미국 ESS용 비중국 LFP 양극재 공급망 수혜",
+          "메탈가 래깅 효과로 인한 ASP 상승"
+        ],
+        "valuation_basis": null,
+        "risk": "초기 고정비 부담",
+        "supply_comment": "주력 공급 고객사향 모델은 글로벌 수요 둔화에도 긍정적 수요 지속",
+        "quote": "동사는 2026년 하반기 LFP 초기 출하, 2027년 6만톤 체제, 2028년 가동률 상승으로 이어질 경우 미국 ESS용 비중국 LFP 양극재 공급망 측면에서 수혜 클 것"
+      },
+      {
+        "name": "한중엔시에스",
+        "code": "107640",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "97,000원",
+        "tp_prev": "97,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 2분기 매출액 650억원(+78.6% YoY, +18.8% QoQ), 영업이익 37억원(+390% YoY, +39.3% QoQ)",
+        "estimate_revision": null,
+        "next_catalyst": "2027년 6월 미국 플랜트 가동 시작",
+        "thesis": [
+          "미국 TRPP 규제 개정판 수혜주",
+          "AI 데이터센터 냉각시스템 경쟁력",
+          "고객사 다변화 및 자동화 미국 공장 가동 효과"
+        ],
+        "valuation_basis": null,
+        "risk": "내연기관차 물량 공급으로 인한 일부 적자 가능성",
+        "supply_comment": "SBB 플랫폼 플랫폼 연동형 수냉식 냉각·TRPP 솔루션",
+        "quote": "동사는 여전히 AI 데이터센터 냉각시스템 핵심 경쟁력으로 외형성장 지속. 이에 따라 하반기 고객사 다변화에 이어 2027년에도 미국 내 고객사 확대가 지속될 것."
+      }
+    ]
+  }
+}

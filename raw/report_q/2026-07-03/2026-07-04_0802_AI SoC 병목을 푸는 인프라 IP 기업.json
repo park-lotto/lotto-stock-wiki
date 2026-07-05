@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date": "2026-07-03",
+    "broker": "한국IR협의회",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-04_0802_AI SoC 병목을 푸는 인프라 IP 기업.md"
+  },
+  "questionnaire": {
+    "broker": "한국IR협의회",
+    "analyst": [
+      "오정하",
+      "권지승"
+    ],
+    "report_date": "2026.07.03",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "오픈엣지테크놀로지",
+        "code": "394280",
+        "sector": "반도체",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 매출액은 179억원(+11.4% YoY), 영업적자 231억원으로 적자폭 축소가 예상됨.",
+        "estimate_revision": null,
+        "next_catalyst": "K-온디바이스 AI 반도체 사업 관련 국내 수주와 해외 수주",
+        "thesis": [
+          "AI SoC 병목을 푸는 연산-이동-저장 연결 전반을 지원할 수 있는 IP 포트폴리오 보유",
+          "K-온디바이스 AI 반도체 정책과 삼성 파운드리 생태계 확대에 따른 중장기 수혜",
+          "하반기 수주 확대와 북미법인 정리, 정부보조금 확대에 따른 비용 효율화로 적자폭 축소"
+        ],
+        "valuation_basis": "반도체 IP 업체의 특성상 매출 성장성과 기술 확장성을 반영한 PSR 접근이 적절함.",
+        "risk": "K-온디바이스 AI 반도체 기술개발 사업에서 예상보다 낮은 규모의 국내 수주를 확보할 가능성",
+        "supply_comment": "삼성 파운드리 8nm 이하 첨단 공정에서 LPDDR5X 이상 메모리 IP 수요 확대가 예상됨.",
+        "quote": "2026년 매출액은 179억원(+11.4% YoY), 영업적자 231억원으로 적자폭 축소가 예상됨."
+      }
+    ]
+  }
+}

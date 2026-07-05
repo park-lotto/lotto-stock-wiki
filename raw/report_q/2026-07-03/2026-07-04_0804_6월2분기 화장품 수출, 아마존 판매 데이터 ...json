@@ -1,0 +1,55 @@
+{
+  "meta": {
+    "date": "2026-07-03",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-04_0804_6월2분기 화장품 수출, 아마존 판매 데이터 ...md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "권우정",
+    "report_date": "2026/07/03",
+    "target_kind": "sector",
+    "sector_name": "화장품미용",
+    "sector_view": null,
+    "thesis": [
+      "6월 화장품 수출액 11.0억달러(yy 42%, mm 11%)를 기록하며 사상 최대치 기록.",
+      "미국 수출은 오프라인 침투 확대 등으로 성장률이 재가속화.",
+      "유럽 주요 5국은 영국향 수출액이 YoY 113% 증가하며 고성장 중."
+    ],
+    "timeline": null,
+    "top_picks": [
+      {
+        "name": "메디큐브",
+        "reason": "2분기 주요 sku 합산 판매량 qq 32% 증가하며 사상 최대치 기록",
+        "tp": null
+      },
+      {
+        "name": "COSRX",
+        "reason": "1분기부터 미주에서 매출액이 YoY 반등한 이후 2분기에도 긍정적인 흐름",
+        "tp": null
+      },
+      {
+        "name": "라네즈",
+        "reason": "6월 행사 시즌에 제품 상위권 랭크인 진입 수 증가",
+        "tp": null
+      },
+      {
+        "name": "일리윤",
+        "reason": "2분기 미국 아마존 판매량 qq 141%/yy 662% 기록",
+        "tp": null
+      },
+      {
+        "name": "달바",
+        "reason": "SKU 다변화(톤업선크림, 멀티밤 등)가 이루어지고 있음",
+        "tp": null
+      },
+      {
+        "name": "닥터멜락신",
+        "reason": "멀티밤 판매량이 필샷 판매량을 상회하는 호실적",
+        "tp": null
+      }
+    ],
+    "risk": null,
+    "quote": "6월 화장품 수출액 11.0억달러(yy 42%, mm 11%)를 기록하며 사상 최대치 기록. 미국이 yy 45%, 유럽 5국이 yy 87% 증가하며 수출 호실적을 견인."
+  }
+}

@@ -1,0 +1,449 @@
+<meta charset="UTF-8">
+<title>크롤링 · 인제스트 · 대시보드 반영 스케줄 리포트</title>
+<style>
+  :root {
+    --page: #f9f9f7;
+    --surface: #fcfcfb;
+    --surface-2: #f2f1ee;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --ink-muted: #898781;
+    --grid: #e1e0d9;
+    --baseline: #c3c2b7;
+    --border: rgba(11,11,11,0.10);
+    --accent: #256abf;
+    --accent-soft: #e8f0fb;
+
+    --cat-ingest: #2a78d6;
+    --cat-brief:  #1baf7a;
+    --cat-market: #eda100;
+    --cat-crawl:  #008300;
+    --cat-misc:   #4a3aa7;
+
+    --good: #0ca30c;
+    --warn: #fab219;
+    --serious: #ec835a;
+    --crit: #d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --page: #0d0d0d;
+      --surface: #1a1a19;
+      --surface-2: #211f1d;
+      --ink: #ffffff;
+      --ink-2: #c3c2b7;
+      --ink-muted: #898781;
+      --grid: #2c2c2a;
+      --baseline: #383835;
+      --border: rgba(255,255,255,0.10);
+      --accent: #6da7ec;
+      --accent-soft: #1c2733;
+
+      --cat-ingest: #3987e5;
+      --cat-brief:  #199e70;
+      --cat-market: #c98500;
+      --cat-crawl:  #1bbf1b;
+      --cat-misc:   #9085e9;
+
+      --good: #0ca30c;
+      --warn: #fab219;
+      --serious: #ec835a;
+      --crit: #e66767;
+    }
+  }
+  :root[data-theme="dark"] {
+    --page: #0d0d0d; --surface: #1a1a19; --surface-2: #211f1d;
+    --ink: #ffffff; --ink-2: #c3c2b7; --ink-muted: #898781;
+    --grid: #2c2c2a; --baseline: #383835; --border: rgba(255,255,255,0.10);
+    --accent: #6da7ec; --accent-soft: #1c2733;
+    --cat-ingest: #3987e5; --cat-brief: #199e70; --cat-market: #c98500;
+    --cat-crawl: #1bbf1b; --cat-misc: #9085e9;
+    --good: #0ca30c; --warn: #fab219; --serious: #ec835a; --crit: #e66767;
+  }
+  :root[data-theme="light"] {
+    --page: #f9f9f7; --surface: #fcfcfb; --surface-2: #f2f1ee;
+    --ink: #0b0b0b; --ink-2: #52514e; --ink-muted: #898781;
+    --grid: #e1e0d9; --baseline: #c3c2b7; --border: rgba(11,11,11,0.10);
+    --accent: #256abf; --accent-soft: #e8f0fb;
+    --cat-ingest: #2a78d6; --cat-brief: #1baf7a; --cat-market: #eda100;
+    --cat-crawl: #008300; --cat-misc: #4a3aa7;
+    --good: #0ca30c; --warn: #fab219; --serious: #ec835a; --crit: #d03b3b;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--page);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 40px 20px 80px;
+  }
+  .mono {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", "Consolas", monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
+
+  /* header */
+  header { display: flex; flex-direction: column; gap: 10px; }
+  .eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--accent);
+  }
+  h1 { font-size: 26px; font-weight: 800; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+  .subtitle { color: var(--ink-2); font-size: 14px; max-width: 640px; }
+  .gen-ts { color: var(--ink-muted); font-size: 12px; }
+
+  /* stat strip */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .stat { background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
+  .stat .value { font-size: 26px; font-weight: 800; }
+  .stat .label { font-size: 11.5px; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+  section { display: flex; flex-direction: column; gap: 14px; }
+  h2 { font-size: 16px; font-weight: 700; margin: 0; display: flex; align-items: baseline; gap: 8px; }
+  h2 .count { font-size: 12px; font-weight: 600; color: var(--ink-muted); }
+  .section-note { font-size: 12.5px; color: var(--ink-muted); margin-top: -8px; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+
+  /* timeline */
+  .scroller { overflow-x: auto; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; font-size: 12px; color: var(--ink-2); }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .swatch { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+
+  /* table */
+  table { border-collapse: collapse; width: 100%; min-width: 640px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-muted); font-weight: 700; }
+  td { font-size: 13px; }
+  tr:last-child td { border-bottom: none; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+  .chip .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+
+  /* channel cards */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+  .card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .card-title { font-weight: 700; font-size: 14px; }
+  .card-count { font-size: 22px; font-weight: 800; }
+  .bars { display: flex; flex-direction: column; gap: 5px; }
+  .bar-row { display: grid; grid-template-columns: 68px 1fr 24px; align-items: center; gap: 8px; font-size: 11.5px; color: var(--ink-2); }
+  .bar-track { height: 6px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; }
+  .card-sched { font-size: 11.5px; color: var(--ink-muted); border-top: 1px solid var(--grid); padding-top: 8px; }
+  .card-flag { font-size: 11.5px; color: var(--serious); font-weight: 600; }
+
+  /* issues */
+  .issues { display: flex; flex-direction: column; gap: 10px; }
+  .issue { display: flex; gap: 12px; padding: 14px 16px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); }
+  .issue .stripe { width: 3px; border-radius: 3px; flex: none; align-self: stretch; }
+  .issue-body { display: flex; flex-direction: column; gap: 3px; }
+  .issue-title { font-weight: 700; font-size: 13.5px; display: flex; align-items: center; gap: 7px; }
+  .issue-desc { font-size: 12.5px; color: var(--ink-2); }
+
+  footer { border-top: 1px solid var(--grid); padding-top: 16px; font-size: 12px; color: var(--ink-muted); display: flex; flex-direction: column; gap: 4px; }
+
+  a { color: var(--accent); }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Ops · Schedule Report</div>
+    <h1>크롤링 · 인제스트 · 대시보드 반영 스케줄</h1>
+    <p class="subtitle">채널/소스별로 언제 크롤링되고, 언제 원자화(인제스트)되고, 대시보드엔 언제 반영되는지를 한 장으로 정리했습니다.</p>
+    <p class="gen-ts mono">생성 2026-07-04 · Windows 작업 스케줄러 실측 기준</p>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><div class="value mono">16</div><div class="label">예약 작업</div></div>
+    <div class="stat"><div class="value mono">7<span style="font-size:14px;font-weight:600;"> 회/일</span></div><div class="label">인제스트 실행</div></div>
+    <div class="stat"><div class="value mono">55</div><div class="label">등록 채널/소스</div></div>
+    <div class="stat"><div class="value mono">4</div><div class="label">대시보드 내부 워커</div></div>
+    <div class="stat"><div class="value mono" style="color:var(--serious)">5</div><div class="label">발견된 이슈</div></div>
+  </div>
+
+  <section>
+    <h2>하루 타임라인 <span class="count">05:00 – 22:00, 카테고리별</span></h2>
+    <p class="section-note">점 하나 = 실행 1회 (마우스 올리면 작업명 표시) · 옅은 띠 = 정확한 시각 미확인, 범위만 확인됨</p>
+    <div class="panel scroller">
+      <svg id="timeline-svg" viewBox="0 0 920 230" width="920" height="230" role="img" aria-label="일일 스케줄 타임라인">
+        <!-- filled by inline script below via data, but authored directly as static SVG for reliability -->
+      </svg>
+      <div class="legend" id="timeline-legend"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>예약 작업 전체 목록 <span class="count">Windows Task Scheduler, 16건</span></h2>
+    <div class="panel scroller">
+      <table>
+        <thead>
+          <tr><th>작업</th><th>시각</th><th>실행 내용</th><th>범주</th></tr>
+        </thead>
+        <tbody id="task-table-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>채널/소스별 현황</h2>
+    <div class="cards" id="channel-cards"></div>
+  </section>
+
+  <section>
+    <h2>대시보드 내부 갱신 워커 <span class="count">작업 스케줄러와 별개 · 서버 프로세스 살아있는 동안만 동작</span></h2>
+    <div class="panel scroller">
+      <table>
+        <thead><tr><th>워커</th><th>주기</th><th>대상</th></tr></thead>
+        <tbody>
+          <tr><td>_prewarm_worker</td><td class="mono">30초 tick<br><span style="color:var(--ink-muted)">(실갱신은 장중 08:50–15:35만)</span></td><td>시장 데이터만 (KIS/Kiwoom 시세·지수·ETF바·수급) — 원자/크롤 콘텐츠 아님</td></tr>
+          <tr><td>_ingest_worker</td><td class="mono">30분</td><td>백로그 원자화, 회당 ≤40파일 — <span style="color:var(--serious); font-weight:600;">Task Scheduler와 별개로 ingest 키 그룹을 추가로 사용</span></td></tr>
+          <tr><td>_nlm_keepalive</td><td class="mono">15분</td><td>NotebookLM 세션 유지 (크롤/인제스트 무관)</td></tr>
+          <tr><td>_morning_brief_loop</td><td class="mono">3분 polling</td><td>골루프 아침브리핑 — 기본 OFF (GOAL_LOOP_ENABLED=1일 때만)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>발견된 이슈 <span class="count">겹침·중복·소진된 작업 포함</span></h2>
+    <div class="issues">
+      <div class="issue">
+        <div class="stripe" style="background:var(--serious)"></div>
+        <div class="issue-body">
+          <div class="issue-title"><span>⚠</span> ingest 키 그룹, 3중으로 겹쳐서 쓰일 수 있음</div>
+          <div class="issue-desc">하루 5회 슬롯(08:10~21:10) + 07:00 전체 파이프라인 + 대시보드가 켜져 있는 동안 도는 30분 주기 <span class="mono">_ingest_worker</span>까지, 전부 같은 <span class="mono">ingest</span> 키 풀을 나눠 쓰고 있습니다. 스모크테스트에서 ingest 키가 rate-limit에 걸린 것도 이 3중 경합과 무관하지 않아 보입니다.</div>
+        </div>
+      </div>
+      <div class="issue">
+        <div class="stripe" style="background:var(--serious)"></div>
+        <div class="issue-body">
+          <div class="issue-title"><span>⚠</span> 삼프로TV, 두 파이프라인이 같은 영상을 이중 처리</div>
+          <div class="issue-desc">유튜브 레지스트리에 등록돼 있어 하루 5회 일반 인제스트로도 처리되는데, <span class="mono">LottoStock_3ProTV_3H</span>가 3시간마다 같은 채널(<span class="mono">@3protv</span>)을 따로 크롤링해서 코너별 심층분석 후 <span class="mono">wiki/insights/3pro/</span>에 별도 저장합니다. 결과물 용도는 다르지만(범용 원자화 vs 코너별 심층분석), 같은 영상에 Gemini 호출이 두 번 나가는 건 맞습니다.</div>
+        </div>
+      </div>
+      <div class="issue">
+        <div class="stripe" style="background:var(--serious)"></div>
+        <div class="issue-body">
+          <div class="issue-title"><span>⚠</span> DailyBriefing_7AM · 930AM, 완전히 같은 스크립트 중복 실행</div>
+          <div class="issue-desc">두 작업의 .bat이 인자 하나 다르지 않고 <span class="mono">scripts/yt_daily_briefing.py</span>를 그대로 두 번(07:00, 09:30) 실행합니다. 의도된 재실행이 아니라면 하나는 정리 대상입니다.</div>
+        </div>
+      </div>
+      <div class="issue">
+        <div class="stripe" style="background:var(--warn)"></div>
+        <div class="issue-body">
+          <div class="issue-title"><span>⚠</span> GeminiReport_2100_ONCE, 이미 다 쓰고 재실행 안 됨</div>
+          <div class="issue-desc">이름 그대로 1회성 트리거라 2026-07-02 21:00에 이미 실행되고 끝났습니다(NextRunTime 없음). Gemini 키 상태를 계속 매일 받고 싶으면 반복 스케줄로 다시 등록해야 합니다.</div>
+        </div>
+      </div>
+      <div class="issue">
+        <div class="stripe" style="background:var(--ink-muted)"></div>
+        <div class="issue-body">
+          <div class="issue-title" style="color:var(--ink-2)">ℹ update_market_data.js, 대시보드엔 안 나오지만 위키엔 연결됨</div>
+          <div class="issue-desc">라이브 대시보드(<span class="mono">dashboard/server.py</span>)는 이 출력을 전혀 참조하지 않지만, 결과 위키 페이지(L1_글로벌유동성/L2_미국시장)는 <span class="mono">BRAIN_INDEX.md</span>와 여러 섹터 페이지에서 링크되고 있어 완전히 죽은 건 아닙니다 — 실시간 대시보드용이 아니라 Claude 세션이 참고하는 지식베이스용으로 봐야 합니다. 다만 <span class="mono">wiki/dashboard.md</span> 자체는 어디서도 참조되지 않아 진짜 안 쓰이는 것으로 보입니다.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div><b style="color:var(--ink-2)">뉴스가 하루 1회만 도는 이유</b>: 텔레그램/유튜브/블로그/리포트는 별도 크롤링 서버(<span class="mono">crawlingbot.service</span>)가 <span class="mono">config.yaml</span> 스케줄대로 하루 5번 크롤링해서 로컬로 내려주고 그 10분 뒤 <span class="mono">slot_ingest.py</span>가 도는 구조인데, 뉴스는 이 크롤링 서버 시스템에 아예 편입돼 있지 않고 <span class="mono">NaverNews_로또의주식</span>이라는 완전히 별개 태스크(07:00 1회)로 크롤링됩니다. <span class="mono">slot_ingest.py</span> 자체는 카테고리 제한이 없어서 뉴스를 못 받을 이유는 없음 — 편입시키거나 별도 태스크에 트리거를 추가하면 늘릴 수 있습니다.</div>
+    <div>확인 못 한 부분: STOCKBRAIN_* 7개 작업이 atoms.db에 실제로 반영되는지(레거시/병렬 시스템일 가능성 — 오늘도 다 실행은 됐지만 그게 곧 "필요하다"는 뜻은 아님), 유튜브 레지스트리 20건의 세부 유형/신뢰도(원본이 "rich: false"라 이름만 있음).</div>
+    <div>사소한 것: <span class="mono">_ingest_worker</span> 코드의 로그 문구가 "10분마다 60개"라고 남아있지만 실제 동작은 30분마다 40개 — 로그만 옛날 값.</div>
+    <div>출처: Windows 작업 스케줄러 실측, telegram_channels.json / blog_registry.json / news_registry.json, dashboard/server.py 워커 코드, scripts/slot_ingest.py, 각 스크립트 소스.</div>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  var cats = {
+    ingest: { label: '인제스트 (크롤→원자화)', varName: '--cat-ingest' },
+    brief:  { label: '브리핑/리포트 생성',      varName: '--cat-brief'  },
+    market: { label: '시황/시장 데이터',        varName: '--cat-market' },
+    crawl:  { label: '크롤링 전용(원자화 아님)', varName: '--cat-crawl'  },
+    misc:   { label: '기타/레거시',             varName: '--cat-misc'   }
+  };
+
+  // rows: category -> list of {t: "HH:MM", label, kind: 'dot'|'diamond'}
+  var rows = [
+    { cat: 'ingest', points: [
+        { t: '07:00', label: '로또주식_아침인제스트_7AM (atom_pipeline.py, 전체 파이프라인)', kind: 'diamond' },
+        { t: '08:10', label: 'LottoStock_SlotIngest_Main (telegram+youtube+blog)' },
+        { t: '08:40', label: 'LottoStock_SlotIngest_Report (report)' },
+        { t: '11:10', label: 'LottoStock_SlotIngest_Report (report)' },
+        { t: '12:10', label: 'LottoStock_SlotIngest_Main (telegram+youtube+blog)' },
+        { t: '15:10', label: 'LottoStock_SlotIngest_Main (telegram+youtube+blog)' },
+        { t: '18:10', label: 'LottoStock_SlotIngest_Main (telegram+youtube+blog)' },
+        { t: '21:10', label: 'LottoStock_SlotIngest_Main (telegram+youtube+blog)' }
+    ]},
+    { cat: 'brief', points: [
+        { t: '07:00', label: 'LottoStock_DailyBriefing_7AM' },
+        { t: '09:30', label: 'LottoStock_DailyBriefing_930AM' },
+        { t: '21:00', label: 'LottoStock_GeminiReport_2100_ONCE (1회성)' }
+    ]},
+    { cat: 'market', points: [
+        { t: '07:00', label: 'LottoStock_MarketUpdate (update_market_data.js)' }
+    ]},
+    { cat: 'crawl', points: [
+        { t: '07:00', label: 'NaverNews_로또의주식 (뉴스 크롤링만, 원자화 아님)' },
+        { t: '06:00', label: 'LottoStock_3ProTV_3H' },
+        { t: '09:00', label: 'LottoStock_3ProTV_3H' },
+        { t: '12:00', label: 'LottoStock_3ProTV_3H' },
+        { t: '15:00', label: 'LottoStock_3ProTV_3H' },
+        { t: '18:00', label: 'LottoStock_3ProTV_3H' },
+        { t: '21:00', label: 'LottoStock_3ProTV_3H' }
+    ]},
+    { cat: 'misc', points: [
+    ], band: { from: '07:30', to: '20:15', label: 'STOCKBRAIN_* (5개 작업, 정확한 개별 시각 미확인)' } }
+  ];
+
+  var svg = document.getElementById('timeline-svg');
+  var ns = 'http://www.w3.org/2000/svg';
+  var W = 920, H = 230;
+  var padL = 8, padR = 8, padT = 10, rowH = 36, axisY = H - 34;
+  var dayStartMin = 5 * 60, dayEndMin = 22 * 60;
+  var plotW = W - padL - padR;
+
+  function xFor(hhmm) {
+    var parts = hhmm.split(':');
+    var mins = (+parts[0]) * 60 + (+parts[1]);
+    var frac = (mins - dayStartMin) / (dayEndMin - dayStartMin);
+    return padL + frac * plotW;
+  }
+  function el(tag, attrs) {
+    var e = document.createElementNS(ns, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  // hour gridlines + axis labels
+  for (var h = 5; h <= 22; h += 2) {
+    var x = xFor(h < 10 ? '0' + h + ':00' : h + ':00');
+    svg.appendChild(el('line', { x1: x, x2: x, y1: padT, y2: axisY, stroke: 'var(--grid)', 'stroke-width': 1 }));
+    var t = el('text', { x: x, y: axisY + 16, 'text-anchor': 'middle', 'font-size': 10.5, fill: 'var(--ink-muted)', class: 'mono' });
+    t.textContent = (h < 10 ? '0' + h : h) + '시';
+    svg.appendChild(t);
+  }
+  svg.appendChild(el('line', { x1: padL, x2: W - padR, y1: axisY, y2: axisY, stroke: 'var(--baseline)', 'stroke-width': 1 }));
+
+  rows.forEach(function (row, i) {
+    var cy = padT + i * rowH + rowH / 2;
+    var colorVar = 'var(' + cats[row.cat].varName + ')';
+
+    // row label
+    var lbl = el('text', { x: padL, y: cy - rowH / 2 + 12, 'font-size': 11.5, 'font-weight': 700, fill: 'var(--ink-2)' });
+    lbl.textContent = cats[row.cat].label;
+    svg.appendChild(lbl);
+
+    // baseline for row
+    svg.appendChild(el('line', { x1: padL, x2: W - padR, y1: cy, y2: cy, stroke: 'var(--grid)', 'stroke-width': 1 }));
+
+    if (row.band) {
+      var x1 = xFor(row.band.from), x2 = xFor(row.band.to);
+      var band = el('rect', { x: x1, y: cy - 5, width: (x2 - x1), height: 10, rx: 5, fill: colorVar, opacity: 0.22 });
+      var bt = el('title'); bt.textContent = row.band.label + ' · ' + row.band.from + '–' + row.band.to;
+      band.appendChild(bt);
+      svg.appendChild(band);
+    }
+
+    row.points.forEach(function (p) {
+      var x = xFor(p.t);
+      var shape;
+      if (p.kind === 'diamond') {
+        shape = el('rect', { x: x - 6, y: cy - 6, width: 12, height: 12, rx: 2, transform: 'rotate(45 ' + x + ' ' + cy + ')', fill: colorVar, stroke: 'var(--surface)', 'stroke-width': 2 });
+      } else {
+        shape = el('circle', { cx: x, cy: cy, r: 6, fill: colorVar, stroke: 'var(--surface)', 'stroke-width': 2 });
+      }
+      var tt = el('title'); tt.textContent = p.t + ' · ' + p.label;
+      shape.appendChild(tt);
+      svg.appendChild(shape);
+    });
+  });
+
+  // legend
+  var legend = document.getElementById('timeline-legend');
+  Object.keys(cats).forEach(function (k) {
+    var item = document.createElement('div');
+    item.className = 'legend-item';
+    var sw = document.createElement('span');
+    sw.className = 'swatch';
+    sw.style.background = 'var(' + cats[k].varName + ')';
+    item.appendChild(sw);
+    var txt = document.createElement('span');
+    txt.textContent = cats[k].label;
+    item.appendChild(txt);
+    legend.appendChild(item);
+  });
+
+  // task table
+  var tasks = [
+    { name: 'LottoStock_SlotIngest_Main', time: '08:10 · 12:10 · 15:10 · 18:10 · 21:10', what: 'slot_ingest.py --cats telegram,youtube,blog', cat: 'ingest' },
+    { name: 'LottoStock_SlotIngest_Report', time: '08:40 · 11:10', what: 'slot_ingest.py --cats report', cat: 'ingest' },
+    { name: '로또주식_아침인제스트_7AM', time: '07:00', what: 'atom_pipeline.py (전체 파이프라인: news 포함 11단계)', cat: 'ingest' },
+    { name: 'NaverNews_로또의주식', time: '07:00', what: 'pipeline.naver_news (뉴스 크롤링만)', cat: 'crawl' },
+    { name: 'LottoStock_3ProTV_3H', time: '06시부터 3시간마다', what: '3Pro TV 크롤링 (.bat)', cat: 'crawl' },
+    { name: 'LottoStock_DailyBriefing_7AM', time: '07:00', what: '아침 브리핑 생성 (.bat)', cat: 'brief' },
+    { name: 'LottoStock_DailyBriefing_930AM', time: '09:30', what: '브리핑 생성 (.bat)', cat: 'brief' },
+    { name: 'LottoStock_GeminiReport_2100_ONCE', time: '21:00 (1회성)', what: 'daily_gemini_report.py — Gemini 키 상태 보고', cat: 'brief' },
+    { name: 'LottoStock_MarketUpdate', time: '07:00', what: 'update_market_data.js (Node)', cat: 'market' },
+    { name: 'STOCKBRAIN_* (7개)', time: '07:30~20:15 범위', what: 'WiseReport/KIND 크롤링, Excel 인제스트, 시그널 계산 — atoms.db 연동 여부 미확인, 레거시/병렬 시스템 추정', cat: 'misc' }
+  ];
+  var tbody = document.getElementById('task-table-body');
+  tasks.forEach(function (t) {
+    var tr = document.createElement('tr');
+    var c = cats[t.cat];
+    tr.innerHTML =
+      '<td>' + t.name + '</td>' +
+      '<td class="mono">' + t.time + '</td>' +
+      '<td>' + t.what + '</td>' +
+      '<td><span class="chip" style="background:var(--surface-2);color:var(--ink-2)"><span class="dot" style="background:var(' + c.varName + ')"></span>' + c.label + '</span></td>';
+    tbody.appendChild(tr);
+  });
+
+  // channel cards
+  var channels = [
+    {
+      title: '텔레그램', count: 21, sched: 'SlotIngest_Main 5회/일 (08:10~21:10) + 아침인제스트_7AM(백필 포함)',
+      bars: [ ['sector', 5], ['market', 4], ['report_relay', 3], ['insight', 2], ['stock_tips', 3], ['news_relay', 4] ],
+      trust: '신뢰도 B 13 · C 7 · D 1'
+    },
+    {
+      title: '유튜브', count: 20, sched: 'SlotIngest_Main 5회/일 (08:10~21:10)',
+      note: '레지스트리가 "rich: false" — 유형/신뢰도 세부 데이터 없음, 이름 목록만'
+    },
+    {
+      title: '블로그', count: 4, sched: 'SlotIngest_Main 5회/일 (08:10~21:10)'
+    },
+    {
+      title: '뉴스', count: 10, sched: '아침인제스트_7AM 1회/일만 (슬롯 인제스트엔 news 없음)',
+      note: '키워드 기반 등록, 개별 매체 아님'
+    }
+  ];
+  var maxBarCount = 5;
+  var cardsEl = document.getElementById('channel-cards');
+  channels.forEach(function (ch) {
+    var card = document.createElement('div');
+    card.className = 'card';
+    var html = '<div class="card-head"><span class="card-title">' + ch.title + '</span><span class="card-count">' + ch.count + '</span></div>';
+    if (ch.bars) {
+      html += '<div class="bars">';
+      ch.bars.forEach(function (b) {
+        var pct = Math.round((b[1] / maxBarCount) * 100);
+        html += '<div class="bar-row"><span>' + b[0] + '</span><span class="bar-track"><span class="bar-fill" style="width:' + pct + '%;background:var(--cat-ingest)"></span></span><span class="mono">' + b[1] + '</span></div>';
+      });
+      html += '</div><div class="card-sched">' + ch.trust + '</div>';
+    }
+    if (ch.note) html += '<div class="card-sched">' + ch.note + '</div>';
+    html += '<div class="card-sched">' + ch.sched + '</div>';
+    if (ch.flag) html += '<div class="card-flag">' + ch.flag + '</div>';
+    card.innerHTML = html;
+    cardsEl.appendChild(card);
+  });
+})();
+</script>

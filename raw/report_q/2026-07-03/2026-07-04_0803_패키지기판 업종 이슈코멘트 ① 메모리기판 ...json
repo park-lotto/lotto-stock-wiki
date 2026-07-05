@@ -1,0 +1,47 @@
+{
+  "meta": {
+    "date": "2026-07-03",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-04_0803_패키지기판 업종 이슈코멘트 ① 메모리기판 ...md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": "고의영, 박정하",
+    "report_date": "2026.07.03",
+    "target_kind": "sector",
+    "sector_name": "전기전자",
+    "sector_view": "비중확대",
+    "thesis": [
+      "메모리 패키지기판 판가 인하 요구는 없었으며, 선단 메모리 제품 양산 본격화로 ASP 및 수익성 개선 가능성 높음",
+      "선단 기판 수요 확대 및 선두권 ABF 업체의 BT 라인 투자 중단/축소로 수급 타이트 전망",
+      "삼성전기의 대규모 패키지기판 투자 공시는 전방 FC-BGA 수요의 강한 발생을 방증"
+    ],
+    "timeline": [
+      "하반기부터 SOCAMM 모듈 및 LPDDR용 MCP 기판 등 선단 메모리 제품 대량 양산 본격화"
+    ],
+    "top_picks": [
+      {
+        "name": "대덕전자",
+        "reason": "메모리 PCB 업체 판가 인하 가능성 관련 언급",
+        "tp": null
+      },
+      {
+        "name": "심텍",
+        "reason": "메모리 PCB 업체 판가 인하 가능성 관련 언급",
+        "tp": null
+      },
+      {
+        "name": "해성디에스",
+        "reason": "메모리 PCB 업체 판가 인하 가능성 관련 언급",
+        "tp": null
+      },
+      {
+        "name": "삼성전기",
+        "reason": "패키지기판 투자 공시 및 FC-BGA 수요 증명",
+        "tp": null
+      }
+    ],
+    "risk": "전일 메타發 인프라 투자 지속성 우려로 인한 PCB 업종 주가 하락",
+    "quote": "결론적으로 메모리 기판에 대한 판가 인하 가능성은 높지 않은 것으로 파악된다."
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "sector_name": "기타",
+  "sector_view": "중립",
+  "points": [
+    "비철금속 시장은 지정학적 불확실성으로 품목별 차별화가 지속됨",
+    "미국 전력망은 극심한 폭염으로 인해 수급 압박 및 정전 위험 증대",
+    "에너지 패러다임 전환에 따라 천연가스가 미국 내 핵심 에너지원으로 부상 중",
+    "공급망 차질과 전쟁 이슈가 원자재 및 산업 생산 전반에 변동성 확대"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "SQM",
+      "comment": "SQM과 Codelco의 합작사는 생산 효율화 및 기술 전환을 통해 리튬 생산량을 70% 이상 증대할 계획임",
+      "ts": "19:12",
+      "quote": "SQM-Codelco Venture Maps Path to Higher Lithium Output in Chile",
+      "sector": "2차전지"
+    },
+    {
+      "name": "Codelco",
+      "comment": "SQM과 합작하여 연간 리튬 생산 목표를 47만 톤으로 대폭 상향 설정함",
+      "ts": "19:12",
+      "quote": "SQM-Codelco Venture Maps Path to Higher Lithium Output in Chile",
+      "sector": "기타"
+    },
+    {
+      "name": "에어버스",
+      "comment": "공급망 문제로 상반기 인도량이 제한적이었으나 하반기 생산 속도를 높이고 있음",
+      "ts": "19:33",
+      "quote": "Airbus Delivered 350 Planes in First Half Amid Supply Chain Woes",
+      "sector": "기타"
+    },
+    {
+      "name": "보잉",
+      "comment": "트럼프 행정부의 지원을 바탕으로 생산량을 회복하며 경쟁사를 추격 중",
+      "ts": "19:33",
+      "quote": "Airbus Delivered 350 Planes in First Half Amid Supply Chain Woes",
+      "sector": "기타"
+    }
+  ],
+  "events": [
+    {
+      "fact": "JPMorgan이 연말 금 가격 전망치를 기존 6,000달러에서 4,500달러로 하향 조정함",
+      "ts": "18:51",
+      "quote": "JPMorgan sees $4,500 gold price in fourth quarter, says risks to downside"
+    },
+    {
+      "fact": "독일 송전망 운영사 앰프리온이 석탄 발전소 폐쇄 중단을 권고함",
+      "ts": "19:31",
+      "quote": "Germany Should Stop Shutting Off Coal Plants, Grid Operator Says"
+    }
+  ]
+}

@@ -11,74 +11,29 @@
     },
     {
       "broker": "그로쓰리서치",
-      "stock": "알칩(Alchip)",
+      "stock": "삼성전기",
       "rating": null,
       "tp": null,
-      "ts": "13:44",
-      "quote": "Amazon, 20년 만에 소비자기기 칩 전략 바꾼다… Alchip 최대 수혜 가능성",
+      "ts": "16:49",
+      "quote": "삼성전기, 동우화인켐과 유리기판용 글라스 코어 합작법인 설립",
       "sector": "반도체"
-    },
-    {
-      "broker": "그로쓰리서치",
-      "stock": "셀트리온",
-      "rating": null,
-      "tp": null,
-      "ts": "14:26",
-      "quote": "셀트리온, 2조 투자에…李 \"서정진 있어 충청 잠재력 무궁무진\"",
-      "sector": "바이오"
-    },
-    {
-      "broker": "그로쓰리서치",
-      "stock": "삼성물산",
-      "rating": null,
-      "tp": null,
-      "ts": "14:39",
-      "quote": "삼성물산, 72조 규모 英 SMR 14기 건설 프로젝트 참여",
-      "sector": "원전"
     },
     {
       "broker": "그로쓰리서치",
       "stock": "한미반도체",
       "rating": null,
       "tp": null,
-      "ts": "14:45",
-      "quote": "곽동신 한미반도체 회장, 자사주 50억 추가 취득",
+      "ts": "17:46",
+      "quote": "한미반도체 TC본더의 독주는 끝나지 않았다!",
       "sector": "반도체"
     },
     {
       "broker": "그로쓰리서치",
-      "stock": "삼성전기, LG디스플레이",
+      "stock": "삼성전자",
       "rating": null,
       "tp": null,
-      "ts": "15:59",
-      "quote": "애플 OLED 승인 마무리…삼성D·LGD, 패널 양산 본격화",
-      "sector": "IT"
-    },
-    {
-      "broker": "그로쓰리서치",
-      "stock": "SK실트론",
-      "rating": null,
-      "tp": null,
-      "ts": "16:18",
-      "quote": "SK실트론 매각 놓고 경영진 막판 고심…이달 중 최종 결정",
-      "sector": "반도체"
-    },
-    {
-      "broker": "그로쓰리서치",
-      "stock": "삼성전기",
-      "rating": null,
-      "tp": null,
-      "ts": "16:49",
-      "quote": "삼성전기, 유리기판 핵심소재 직접 만든다...日 합작사 설립",
-      "sector": "반도체"
-    },
-    {
-      "broker": "그로쓰리서치",
-      "stock": "마이크론",
-      "rating": null,
-      "tp": null,
-      "ts": "17:10",
-      "quote": "마이크론 컨퍼런스 콜로 읽는 메모리 산업의 구조적 변화",
+      "ts": "18:34",
+      "quote": "AI·빅테크 주문 몰린 삼성 파운드리… 신규 고객 '선별 수주' 돌입",
       "sector": "반도체"
     },
     {
@@ -87,7 +42,34 @@
       "rating": null,
       "tp": null,
       "ts": "08:55",
-      "quote": "셀트리온, 2분기 영업익 4300억원 '역대 최대'",
+      "quote": "\"고수익 매출 확대\" 셀트리온, 2분기 영업익 4300억원 '역대 최대'",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "유니트리",
+      "rating": null,
+      "tp": null,
+      "ts": "14:45",
+      "quote": "中휴머노이드 유니트리 상장 승인…신청 넉 달도 안 돼 마무리",
+      "sector": "로봇"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성SDI",
+      "rating": null,
+      "tp": null,
+      "ts": "16:21",
+      "quote": "삼성SDI, AI 데이터센터용 배터리 2조 '잭팟'",
+      "sector": "2차전지"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "바이오솔루션",
+      "rating": null,
+      "tp": null,
+      "ts": "17:45",
+      "quote": "바이오솔루션, 카티라이프 中 상업화 성공…글로벌 확장 시작했다",
       "sector": "바이오"
     }
   ]

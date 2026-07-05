@@ -5,10 +5,10 @@
     "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-03_0805_2분기 중동 실적은 양호할 전망.md"
   },
   "questionnaire": {
+    "target_kind": "stock",
     "broker": "하나증권",
     "analyst": "김승준",
     "report_date": "2026년 7월 2일",
-    "target_kind": "stock",
     "stocks": [
       {
         "name": "삼성E&A",
@@ -17,17 +17,17 @@
         "rating_changed": false,
         "tp_new": "67,000원",
         "tp_prev": null,
-        "tp_direction": "null",
+        "tp_direction": "flat",
         "earnings_outlook": "삼성E&A 2Q26 매출액 2.4조원(+8.6%yoy), 영업이익 1,992억원(+10.1%yoy)으로 추정한다.",
         "estimate_revision": null,
         "next_catalyst": "3분기에 사우디 SAN6(35억달러)의 수주 결과를 기다리고 있다. 멕시코 멕시놀, 사우디 카프지, 카타르 비료는 하반기 결과를 예상하고 있다.",
         "thesis": [
-          "첨단산업 부문 매출액 증가",
-          "화공부문 사우디 파딜리 프로젝트 매출 기여",
-          "이란 종전 이후 제2의 중동투자붐과 북미 친환경 수주 등 실적 우상향 가능성"
+          "전 분기 대비 첨단산업에서의 매출액 증가를 전망",
+          "평택에 이어 용인, 호남 반도체 CAPEX 사이클의 수혜종목",
+          "이란 종전 이후의 제2의 중동투자붐과 북미에서의 친환경 수주 등으로 실적 우상향 가능성"
         ],
         "valuation_basis": "목표주가는 26년 EPS 추정치에 Target P/E 20배를 적용했다.",
-        "risk": null,
+        "risk": "중동 재건과 관련해서는 진행하려고 하는 프로젝트들은 존재하나, 금액 규모나 어떻게 재건해야 할지에 대한 스터디 수준이다.",
         "supply_comment": "2분기 수주는 2.6조원으로 추정(첨단산업 1조원, 뉴에너지 1.5조원)했다. 중동 수처리 8억달러 수주를 반영했다(6/30 계약).",
         "quote": "삼성E&A 투자의견 Buy, 목표주가 67,000원을 유지한다. 목표주가는 26년 EPS 추정치에 Target P/E 20배를 적용했다.",
         "sector": "기타"

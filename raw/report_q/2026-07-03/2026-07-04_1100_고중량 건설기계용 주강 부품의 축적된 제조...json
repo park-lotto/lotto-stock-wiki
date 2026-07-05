@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date": "2026-07-03",
+    "broker": "서울평가정보(주)",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-04_1100_고중량 건설기계용 주강 부품의 축적된 제조...md"
+  },
+  "questionnaire": {
+    "broker": "서울평가정보(주)",
+    "analyst": "박진희",
+    "report_date": "2026.07.02.",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "동일금속",
+        "code": "109860",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": {
+          "quote": "동사의 매출은 2023년 1,105.1억 원에서 2025년 621.0억 원으로 감소한 이후, 2026년에는 768.6억 원으로 회복될 것으로 예상된다.",
+          "forecast": "2026년 매출 768.6억 원 예상"
+        },
+        "estimate_revision": null,
+        "next_catalyst": "전방 건설기계 및 광산장비 수요 회복",
+        "thesis": [
+          "고중량 건설기계용 주강 부품의 축적된 제조기술과 글로벌 고객사 공급 이력 보유",
+          "건설기계용 하부주행체 부품 중심의 제품 포트폴리오 및 기술 경쟁력 확보",
+          "배당 유지, 자사주 소각 검토 등 주주환원 정책을 통한 기업가치 제고 추진"
+        ],
+        "valuation_basis": null,
+        "risk": "건설경기 및 완성장비 생산계획 변동, 원재료 가격 및 환율 변동에 따른 실적 불확실성",
+        "supply_comment": "국내 본사 주강 생산 기반과 해외 주강 생산 거점(PT.DONGIL CASTING), 제관 부품 생산(현대티엠씨) 기능이 결합된 생산 구조를 보유함",
+        "quote": "동사는 고중량 건설기계용 부품 분야에서 축적한 제조기술과 고객사 공급 이력을 기반으로 전방 건설기계 및 광산장비 수요 회복 시 수혜를 기대할 수 있다.",
+        "sector": "기타"
+      }
+    ]
+  }
+}

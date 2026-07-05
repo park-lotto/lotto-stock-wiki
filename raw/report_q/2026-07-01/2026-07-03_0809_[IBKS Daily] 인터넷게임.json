@@ -11,15 +11,17 @@
     "target_kind": "market",
     "market_direction": null,
     "macro_vars": [],
-    "recommended_sectors": [],
+    "recommended_sectors": [
+      {
+        "sector": "인터넷/SW/게임",
+        "stance": null,
+        "reason": "업종지수 및 개별 종목 주가 동향 분석"
+      }
+    ],
     "style": null,
     "event_calendar": [],
-    "top_picks": [
-      "위메이드",
-      "카카오게임즈"
-    ],
-    "risk": "게임 IP의 권리와 경영권이 사실상 중국 자본으로 넘어가게 됨",
-    "quote": "게임 '미르' 일군 위메이드, 사실상 中자본에 넘어간다",
-    "sector": "기타"
+    "top_picks": null,
+    "risk": null,
+    "quote": "IBK투자증권 인터넷/게임 업종지수(전일 종가 기준)"
   }
 }

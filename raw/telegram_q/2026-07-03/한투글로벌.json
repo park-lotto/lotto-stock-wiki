@@ -1,7 +1,7 @@
 {
   "reports": [
     {
-      "broker": "한투증권",
+      "broker": "한국투자증권",
       "stock": "메타",
       "rating": null,
       "tp": null,
@@ -10,7 +10,7 @@
       "sector": "IT"
     },
     {
-      "broker": "한투증권",
+      "broker": "한국투자증권",
       "stock": "메모리 반도체",
       "rating": null,
       "tp": null,

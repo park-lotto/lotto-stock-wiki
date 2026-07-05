@@ -8,29 +8,45 @@
     "broker": "유진투자증권",
     "analyst": "이재일",
     "report_date": "2026.06.22",
-    "target_kind": "stock",
-    "stocks": [
+    "target_kind": "sector",
+    "sector_name": "자동차",
+    "sector_view": "OVERWEIGHT",
+    "thesis": [
+      "지분 100% 보유로 BD의 의사 결정 과정 빨라질 것으로 기대",
+      "RAI 지분 매각으로 로봇 AI 관련 새로운 파트너십 구축 필요",
+      "글로벌 빅테크 기업과의 AI 파트너십 강화가 주가 상승의 트리거가 될 것"
+    ],
+    "timeline": [
+      "2028년: 아틀라스의 본격 상용화 및 BD 상장 시점 예상"
+    ],
+    "top_picks": [
       {
         "name": "현대차",
-        "code": "005380",
-        "rating": "Buy",
-        "rating_changed": null,
-        "tp_new": "1,000,000",
-        "tp_prev": "1,000,000",
-        "tp_direction": "flat",
-        "earnings_outlook": null,
-        "estimate_revision": null,
-        "next_catalyst": "글로벌 빅테크 기업과의 AI 파트너십 강화",
-        "thesis": [
-          "지분 100% 보유로 BD의 의사 결정 과정 빨라질 것으로 기대",
-          "RAI 지분 매각으로 로봇 AI 관련 새로운 파트너십 구축 필요",
-          "현대차/기아, 현대모비스, 현대글로비스, 현대오토에버 등 로봇 관련 핵심 계열사의 수혜 예상"
-        ],
-        "valuation_basis": null,
-        "risk": null,
-        "supply_comment": null,
-        "quote": "BD 지분 정리 시점이 예상보다 빨랐던 것 긍정적이지만, 진정한 주가 상승의 트리거는 구글/엔비디아 등 글로벌 빅테크 기업과의 AI 파트너십 강화가 될 것."
+        "reason": "로봇 관련 핵심 계열사의 수혜가 예상됨",
+        "tp": null
+      },
+      {
+        "name": "기아",
+        "reason": "로봇 관련 핵심 계열사의 수혜가 예상됨",
+        "tp": null
+      },
+      {
+        "name": "현대모비스",
+        "reason": "로봇 관련 핵심 계열사의 수혜가 예상됨",
+        "tp": null
+      },
+      {
+        "name": "현대글로비스",
+        "reason": "로봇 관련 핵심 계열사의 수혜가 예상됨",
+        "tp": null
+      },
+      {
+        "name": "현대오토에버",
+        "reason": "로봇 관련 핵심 계열사의 수혜가 예상됨",
+        "tp": null
       }
-    ]
+    ],
+    "risk": null,
+    "quote": "동 시나리오 현실화 시, 현대차/기아, 현대모비스, 현대글로비스, 현대오토에버 등 로봇 관련 핵심 계열사의 수혜가 예상됨"
   }
 }

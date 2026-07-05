@@ -1,3 +1,4 @@
+- 2026-07-05 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-07-05.md
 - 2026-07-04 — [구현/배포] **장중 시황 브리핑 엔진(Phase0) 설계·구현·서버배포**(브랜치 feat/briefing-engine): "실시간 브리핑" 패널을 이벤트감지(디텍터6종:수급·프로그램·지수분기점·미선물·디커플링·섹터급등)+Opus/Sonnet(Max구독, API아님) 종합으로 전면 재설계. 5모듈 32테스트, server.py `_weather_tick` 배선, 패널=판정배지+내러티브+전환점. **서버 E2E검증**: 이벤트주입→디텍터5개감지→Opus21초 판단형 브리핑("🟢반등, 외인매수전환+반도체급등", 아침→지금 흐름·뉴스결합·다음분기점). Max토큰 서버복사(claude CLI설치)—로컬갱신으로 스테일되는 리스크 실발생(재복사복구, Gemini우아폴백). 월요일 실장중 관측·튜닝. 스펙/계획=docs/superpowers/{specs,plans}/2026-07-04-시황-브리핑-엔진*.
 - 2026-07-04 — [구현/배포] **KIS 서버장애 대응**(main b41cb803): 2026-07-04 KIS 오픈API 자체장애(금15:47~) 실증. 서킷브레이커(kis_api `_guarded_get` 20초쿨다운)+네이버폴백(naver_api·sector_heatmap·server·market.html·briefing_collect)으로 히트맵·ETF바·관심종목·차트·리포트탑픽 전부 폴백확보. 서버배포·검증완료. 메모리 project_kis_outage_2026_07_04.
 - 2026-07-04 — Excel ingest 완료: 추정이익변경·컨센움직임·수출·유동성·수급·중소형주수급·가속화모멘텀·쏠림지수·액티브ETF·일정·투자아이디어 → ingest_report_2026-07-04.md
