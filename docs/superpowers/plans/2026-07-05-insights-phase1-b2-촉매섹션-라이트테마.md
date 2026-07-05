@@ -221,7 +221,124 @@ git commit -m "style(insights): port Apple-light design tokens from v5 mockup"
 
 ---
 
+---
+
+### Task 3: L0 레이아웃 실제 v5 이식 (히어로·검색바·소스라이브러리·시그널레일)
+
+**배경 — 왜 이 태스크가 필요한가:** 사용자가 Task 2 색상 전용 패스만으로는 부족하고 **v5 목업의 실제 레이아웃(비율·모양·배치)까지** 원한다고 명확히 확인함 (2026-07-05). Task 2(색상 토큰)는 계속 유효하고 먼저 진행 — 이 Task 3가 그 위에서 L0 뷰의 시각 구조를 v5에 맞게 재작업한다.
+
+**범위 원칙(위험 최소화):** JS가 참조하는 기존 `id`/클래스명(`#signals-box`, `#lib-chips`, `#lib-cards`, `#lib-detail`, `.bchip`, `.sig-block`, `.sig-head`, `.sig-asset`, `.sig-caret`, `#catalyst-summary` 등)은 **그대로 유지** — CSS 값과 마크업의 시각적 배치만 바꾼다. 함수 재바인딩(`onclick` 대상 변경) 없이 순수 CSS 재작성 + 최소 마크업 조정으로 v5의 "느낌"을 재현한다. L1~L6 드릴다운, 브리핑 워크스페이스(`#nbws`) 모달, 종목 자동완성, 스튜디오 프리셋은 이 태스크의 범위 밖(구조 변경 없음, Task 2의 토큰만 적용된 상태 유지).
+
+**정직성 제약 — 스파크라인:** v5 목업의 시그널 카드는 장식용 스파크라인(가짜 시계열)을 쓴다. 실제 `/api/insights/signals` 응답(`stocks`/`macro` 배열, 필드: `asset`,`today`,`spike`,`is_new`)에는 시계열 값이 없다 — **지어낸 스파크라인을 그리지 말 것**. 대신 기존 `sigRow()`가 이미 만드는 실데이터 배지(🆕/▲spike/▼spike/=)를 카드 안에 그대로 유지해 v5의 "카드 하단 시각 요소" 자리를 대신한다.
+
+**Files:**
+- Modify: `dashboard/insights.html`
+  - CSS: `.hero`(63-66), `.brief-bar`/`.brief-row`/`.bchip`/`.brief-input`/`.brief-go`(83-96), `.main-2col`/`.side-title`(99-101), `.lib-chips`/`.lib-chip`(107-114), `.cat-grid-side`(146-150), `.sig-title`/`.sig-grp`/`.sig-grid`/`.sig-block`(155-161) — restyle values/layout, do not rename selectors
+  - HTML: `showL0()` template (~line 1004 이후) — minor structural wrapper adjustments only (e.g. wrapping the existing `<h1>`/`<p class="sub">` in a flex row for the tagline, matching v5's `.hero` layout) — **do not change any `id=` or `onclick=` attribute value**
+
+**Interfaces:**
+- Consumes: Task 2's re-tinted `:root` tokens (`--gold`→light blue, `--bg`→white, `--card`→white, `--line`→light hairline, `--txt`/`--muted` light-ink values) and Task 1's `.cat-sum-*` classes (already re-tinted by Task 2 Step 3).
+- Produces: nothing consumed later — this is the plan's terminal task.
+
+- [ ] **Step 1: Hero + 브리핑바(ask bar) — v5 비율로 재작성**
+
+Replace CSS lines 63-66:
+```css
+.hero { padding: 36px 0 28px; }
+.hero h1 { font-size: 1.7rem; font-weight: 800; letter-spacing: -.5px; margin-bottom: 5px; }
+.hero h1 .gold { color: var(--gold); }
+.hero .sub { color: var(--muted); font-size: .85rem; margin-bottom: 24px; }
+```
+with:
+```css
+.hero { padding: 56px 0 28px; }
+.hero h1 { font-size: clamp(34px, 5vw, 52px); font-weight: 800; letter-spacing: -.03em; line-height: 1.05; margin-bottom: 8px; }
+.hero h1 .gold { color: var(--gold); }
+.hero .sub { color: var(--muted); font-size: .92rem; margin-bottom: 28px; }
+```
+(v5 자체는 clamp(44px,7vw,76px)까지 가지만, 이 페이지 `<h1>`엔 이모지+긴 한글 타이틀이 들어가 있어 그대로 쓰면 줄바꿈이 깨짐 — 실측 후 필요하면 낮춘 값으로 조정해도 됨, 다만 최소 30px 이상으로 기존 1.7rem(27px)보다는 뚜렷하게 커야 함.)
+
+Replace CSS lines 83-96 (`.brief-bar` through `.brief-go:hover`):
+```css
+.brief-bar { width: 100%; background: var(--bg-2, #f5f5f7); border-radius: 28px; padding: 30px 30px 24px; }
+.brief-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.brief-row:last-of-type { margin-bottom: 0; }
+.bchip { padding: 7px 14px; border-radius: 980px; border: 1px solid var(--line); background: #fff; color: var(--muted); font-family: inherit; font-size: .82rem; cursor: pointer; transition: all .15s; }
+.bchip.on { background: var(--txt); border-color: var(--txt); color: #fff; }
+.brief-input { flex: 1; min-width: 200px; padding: 15px 18px; border-radius: 16px; border: 1px solid var(--line); background: #fff; color: var(--txt); font-family: inherit; font-size: .95rem; outline: none; transition: border-color .15s; }
+.brief-input:focus { border-color: var(--muted); }
+.brief-go { padding: 15px 26px; border-radius: 16px; border: none; background: var(--txt); color: #fff; font-family: inherit; font-size: .9rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: transform .15s, filter .15s; }
+.brief-go:hover { filter: brightness(1.3); transform: translateY(-1px); }
+```
+(`var(--bg-2, #f5f5f7)` — insights.html has no `--bg-2` variable; the fallback value covers it without requiring you to also edit Task 2's `:root` block. If Task 2 already added `--bg-2`, the fallback is simply unused — either is fine, do not treat this as a conflict.)
+
+Note: `.brief-research.on` (line 84 of the original file) already exists as a separate rule for the 🔎리서치 toggle — leave it untouched, it inherits fine from the new `.bchip` base.
+
+- [ ] **Step 2: 소스 라이브러리 — 아이콘 타일 행으로 재작성**
+
+Replace CSS lines 99-101 (`.main-2col` through `.side-title`):
+```css
+.main-2col { display: grid; grid-template-columns: 1.7fr 1fr; gap: 26px; align-items: start; margin: 34px 0 8px; }
+.main-left, .main-right { min-width: 0; }
+.side-title { font-size: .78rem; font-weight: 700; color: var(--muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: .04em; display: flex; align-items: center; }
+```
+
+Replace CSS lines 107-114 (`.lib-chips` through `.lib-chip.report{...}` line, i.e. the `.lib-chip` block and its category color-accent siblings) — find the full `.lib-chip` rule set (starts `.lib-chips { display: flex...`, ends at the `.lib-new` rule before `.lib-detail`) and replace with:
+```css
+.lib-chips { display: flex; flex-wrap: wrap; gap: 14px; justify-content: flex-start; }
+.lib-chip { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px 10px 10px; background: #fff; border: 1px solid var(--line); border-left: 1px solid var(--line); border-radius: 16px; cursor: pointer; transition: transform .15s, box-shadow .15s; min-width: 76px; text-align: center; }
+.lib-chip:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.06); }
+.lib-ico { font-size: 1.4rem; }
+.lib-name { font-size: .74rem; font-weight: 600; color: var(--txt); }
+.lib-cnt { font-size: .7rem; font-weight: 700; color: var(--gold); }
+.lib-new { font-size: .6rem; font-weight: 700; background: var(--bl-bg); color: var(--bl); border: 1px solid var(--bl-line); border-radius: 5px; padding: 1px 5px; }
+```
+(원래 `.lib-chip.youtube{border-left-color:...}` 같은 카테고리별 accent-color 규칙들은 `border-left`가 이제 `1px solid var(--line)`로 통일되므로 **삭제**해도 되고, 남겨둬도 무해함(덮어써짐) — 삭제가 더 깔끔하지만 필수는 아님, 실측 후 판단.)
+
+Replace CSS lines 146-150 (`.cat-grid-side` block):
+```css
+.cat-grid-side { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.cat-grid-side .cat-card { border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,.05); }
+.cat-grid-side .cat-card .body { padding: 14px 18px; }
+.cat-grid-side .cat-card .divider, .cat-grid-side .cat-card .hot-label, .cat-grid-side .cat-card .hot-item, .cat-grid-side .cat-card .go-btn { display: none; }
+.cat-grid-side .cat-card .meta { margin-bottom: 0; }
+```
+
+- [ ] **Step 3: 시그널 — 세로 그리드 → 가로 스크롤 레일(카드)로 재작성**
+
+Replace CSS lines 155-161 (`.sig-title` through `.sig-block:hover`):
+```css
+.sig-title { font-size: .95rem; font-weight: 700; color: var(--txt); margin-bottom: 14px; }
+.sig-title small { color: var(--muted); font-weight: 400; font-size: .74rem; margin-left: 6px; }
+.sig-grp { font-size: .76rem; font-weight: 700; color: var(--muted); margin: 16px 0 8px; }
+.sig-grp small { color: var(--gold); }
+.sig-grid { display: flex; gap: 14px; overflow-x: auto; padding: 4px 2px 14px; scroll-snap-type: x mandatory; scrollbar-width: thin; }
+.sig-block { flex: 0 0 220px; scroll-snap-align: start; background: #fff; border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 4px 20px rgba(0,0,0,.05); overflow: hidden; transition: transform .15s, box-shadow .15s; }
+.sig-block:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,.09); border-color: var(--line); }
+```
+(`sig-detail`/`sig-asset`/`sig-cnt`/`sig-caret`/`sig-sample`/`sig-brief-btn` 등 나머지 `.sig-*` 규칙은 카드 내부 컨텐츠라 그대로 두어도 새 카드 쉐잎 안에서 자연스럽게 맞음 — 실측에서 padding이 어색하면 `.sig-head`/`.sig-detail`의 `padding`만 소폭 조정, 구조는 변경하지 말 것.)
+
+- [ ] **Step 4: 브라우저로 L0 전체 레이아웃 실측**
+
+`mcp__claude-in-chrome__*` 사용 (미로드시 `ToolSearch query:"select:mcp__claude-in-chrome__tabs_context_mcp,mcp__claude-in-chrome__navigate,mcp__claude-in-chrome__computer,mcp__claude-in-chrome__read_page,mcp__claude-in-chrome__tabs_create_mcp"`):
+1. `http://localhost:8090/insights` 로드 (서버 미기동시 `"C:\Users\TheRose\AppData\Local\Python\bin\python.exe" dashboard/server.py`).
+2. 스크린샷으로 확인: 히어로가 뚜렷하게 커짐, 브리핑바가 라운드 카드+필형 인풋, 소스 라이브러리가 아이콘 타일 행, 시그널이 가로 스크롤 레일. v5와 "동일한 구조 언어"인지 — 픽셀 완전 동일까지는 아니어도 됨, 비율·모양·배치가 명확히 v5 계열인지가 기준.
+3. 소스 라이브러리 아이콘 하나 클릭 → 기존 `libShow`/`toggleLib` 동작(펼침/접힘) 여전히 작동하는지 확인.
+4. 시그널 카드(있으면) 클릭 → `sigExpand` 아코디언 여전히 작동하는지 확인. 데이터 없으면(크롤 대기) 빈 상태 문구가 새 레일 안에서도 깨지지 않고 보이는지 확인.
+5. 콘솔 에러 없는지 확인.
+정직하게 보고: 실측 못한 부분(예: 시그널 데이터 없어 카드 클릭 미확인)은 그렇게 명시.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git branch --show-current
+git add dashboard/insights.html
+git commit -m "style(insights): rebuild L0 layout to match v5 mockup structure (hero/ask-bar/library/signal-rail)"
+```
+
+---
+
 ## Post-plan (not in scope here, for NEXT_SESSION.md)
 
-- Full component-level redesign (searchbar pill shape, source-library accordion visual rework, signal-card spark-line visual from v6) — only the *token layer* ships in this plan; component-shape changes are a separate follow-up if the user wants pixel-parity with the mockup rather than just a re-tinted existing layout.
-- Server deployment / Lightsail push — per this repo's established pattern, do only after explicit user confirmation (`feedback_server_dashboard_only`, `project_hosting`).
+- L1~L6 드릴다운·브리핑 워크스페이스(`#nbws`) 모달의 구조적 재설계(현재는 Task 2 토큰만 적용, 레이아웃은 기존 유지) — 원하면 별도 후속 작업.
+- 서버 배포 / Lightsail push — 이 저장소의 확립된 패턴에 따라, 명시적인 사용자 확인 후에만 진행(`feedback_server_dashboard_only`, `project_hosting`).

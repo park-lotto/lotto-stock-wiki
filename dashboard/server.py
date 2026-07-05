@@ -229,9 +229,11 @@ except (ImportError, SystemExit):
 try:
     import hot_clips as _hotclips  # noqa: E402  (find_and_rank/classify)
     import clip_teardown as _teardown  # noqa: E402  (teardown/mix)
+    import ai_search as _ai_search  # noqa: E402  (자연어 검색)
 except (ImportError, SystemExit):
     _hotclips = None  # type: ignore
     _teardown = None  # type: ignore
+    _ai_search = None  # type: ignore
 
 try:
     import global_api  # noqa: E402

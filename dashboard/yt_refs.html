@@ -148,7 +148,7 @@ function starCell(s){const n=s>=5?3:s>=3?2:s>=1?1:0;return '★'.repeat(n)+'<spa
 //   1클릭 ▼내림차순(번호표시) → 2클릭 ▲오름차순 → 3클릭 해제(사라짐)
 function sortBy(key){
   const i=sortStack.findIndex(s=>s.key===key);
-  if(i<0){sortStack.push({key,asc:false}); if(sortStack.length>4)sortStack.shift();}
+  if(i<0){sortStack.unshift({key,asc:false}); if(sortStack.length>4)sortStack.pop();}  // 새 컬럼 = 최우선①
   else if(sortStack[i].asc===false){sortStack[i].asc=true;}   // ▼ → ▲
   else{sortStack.splice(i,1);}                                 // ▲ → 해제
   drawTable();
