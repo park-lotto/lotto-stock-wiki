@@ -1,6 +1,7 @@
 """Dynamically load Gemini API keys from .env by scanning numbered suffixes (_2, _3, ...)."""
 import json
 import os
+import sys
 import time
 import urllib.request
 import urllib.parse
@@ -65,7 +66,10 @@ def _load_state() -> dict:
 
 
 class _FileLock:
-    """Windows msvcrt 기반 간단 파일 락 — 상태 파일 read-modify-write 동시성 보호."""
+    """파일 락(Windows=msvcrt, POSIX=fcntl) — 상태 파일 read-modify-write 동시성 보호.
+    이전엔 msvcrt만 써서 리눅스 서버에서 키 로테이션마다 ModuleNotFoundError로 죽었었다
+    (2026-07-05 실서버 인제스트 크래시로 발견 — 원격 서버 pytest 회귀에 이미 잡혀있었으나
+    v1 daily_verify가 "발견만" 하고 고치지 않아 며칠간 방치됨)."""
 
     def __init__(self, path: Path, timeout: float = 5.0):
         self._path = path
@@ -73,13 +77,17 @@ class _FileLock:
         self._fh = None
 
     def __enter__(self):
-        import msvcrt
         self._path.parent.mkdir(parents=True, exist_ok=True)
         self._fh = open(self._path, "a+")
         deadline = time.monotonic() + self._timeout
         while True:
             try:
-                msvcrt.locking(self._fh.fileno(), msvcrt.LK_NBLCK, 1)
+                if sys.platform == "win32":
+                    import msvcrt
+                    msvcrt.locking(self._fh.fileno(), msvcrt.LK_NBLCK, 1)
+                else:
+                    import fcntl
+                    fcntl.flock(self._fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
                 return self
             except OSError:
                 if time.monotonic() > deadline:
@@ -87,10 +95,14 @@ class _FileLock:
                 time.sleep(0.05)
 
     def __exit__(self, *exc):
-        import msvcrt
         try:
-            self._fh.seek(0)
-            msvcrt.locking(self._fh.fileno(), msvcrt.LK_UNLCK, 1)
+            if sys.platform == "win32":
+                import msvcrt
+                self._fh.seek(0)
+                msvcrt.locking(self._fh.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                import fcntl
+                fcntl.flock(self._fh.fileno(), fcntl.LOCK_UN)
         except OSError:
             pass
         self._fh.close()
