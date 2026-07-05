@@ -148,3 +148,26 @@ def test_score_quotes_skips_failed_chunk_and_concats(monkeypatch):
     assert all(isinstance(c, qe.QuoteCandidate) for c in result)
     assert result[0].stance == "강세"
     assert result[0].score == 4
+
+
+def _c(ts, has_visual=False):
+    return qe.QuoteCandidate(source="s", ts=ts, text="t", stance="강세",
+                             evidence="수급", score=3, has_visual=has_visual)
+
+
+def test_apply_heatmap_sets_heat():
+    cands = [_c(210.0), _c(5.0)]
+    hm = [{"start":0.0,"end":30.0,"value":0.2},{"start":200.0,"end":230.0,"value":0.95}]
+    qe.apply_heatmap(cands, hm)
+    assert cands[0].heat == 0.95
+    assert cands[1].heat == 0.2
+
+
+def test_assign_tiers_priority():
+    c_vis = _c(210.0, has_visual=True); c_vis.heat = 0.95
+    c_hot = _c(210.0); c_hot.heat = 0.9
+    c_plain = _c(5.0); c_plain.heat = 0.1
+    qe.assign_tiers([c_vis, c_hot, c_plain])
+    assert c_vis.tier == 1     # 자료구동 최우선(heat 높아도)
+    assert c_hot.tier == 2     # 스파이크
+    assert c_plain.tier == 3   # 루브릭만

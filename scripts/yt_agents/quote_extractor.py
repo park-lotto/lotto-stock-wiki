@@ -88,6 +88,27 @@ def parse_heatmap(info: dict) -> list[dict]:
     return out
 
 
+HEAT_THRESHOLD = 0.7
+
+
+def apply_heatmap(cands: list[QuoteCandidate], heatmap: list[dict]) -> None:
+    for c in cands:
+        for b in heatmap:
+            if b["start"] <= c.ts < b["end"]:
+                c.heat = b["value"]
+                break
+
+
+def assign_tiers(cands: list[QuoteCandidate]) -> None:
+    for c in cands:
+        if c.has_visual:
+            c.tier = 1
+        elif c.heat >= HEAT_THRESHOLD:
+            c.tier = 2
+        else:
+            c.tier = 3
+
+
 class TranscriptUnavailable(Exception):
     pass
 
