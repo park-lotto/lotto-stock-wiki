@@ -104,6 +104,25 @@ def test_process_channel_escalates_when_fix_diff_exceeds_cap():
     assert "캡" in alerts[0]
 
 
+def test_process_channel_restores_remote_crawler_backup_when_cap_exceeded():
+    state = {}
+    with patch("daily_ingest_autopilot.diagnose_mod.read_log_tail", return_value=""), \
+         patch("daily_ingest_autopilot.diagnose_mod.diagnose") as mock_diagnose, \
+         patch("daily_ingest_autopilot.deploy_mod.backup_remote_files", return_value={"crawlers/telegram_crawler.py": "/backup/path"}), \
+         patch("daily_ingest_autopilot.fix_mod.apply_fix") as mock_apply, \
+         patch("daily_ingest_autopilot.deploy_mod.rollback_remote_crawler") as mock_rollback:
+        mock_diagnose.return_value = {
+            "root_cause": "r", "target": "remote_crawler",
+            "target_files": ["a.py", "b.py", "c.py", "d.py"],
+            "fix_plan": "p", "requires_destructive_action": False,
+        }
+        mock_apply.return_value = {"done": True, "summary": "s"}
+        alerts = auto.process_channel("ch1", {"status": "stale"}, state, "12:10", "2026-07-05")
+    mock_rollback.assert_called_once_with(auto.CRAWLER_ROOT, {"crawlers/telegram_crawler.py": "/backup/path"})
+    assert state["ch1"]["latest_outcome"] == "escalated"
+    assert "캡" in alerts[0]
+
+
 def test_run_slot_sends_healed_alert_when_channel_recovers():
     state = {"ch1": {"first_detected": "2026-07-03", "last_seen": "2026-07-04",
                       "diagnosed_dates": ["2026-07-03"], "latest_outcome": "escalated"}}
