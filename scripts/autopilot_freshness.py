@@ -8,7 +8,7 @@ import re
 from datetime import datetime
 
 FNAME_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})_(.+)\.md$")
-DEFAULT_FRESHNESS_DAYS = 1
+DEFAULT_FRESHNESS_DAYS = 2
 
 
 def latest_dates_by_channel(raw_telegram_dir, resolve_channel_key_fn):
@@ -30,14 +30,16 @@ def latest_dates_by_channel(raw_telegram_dir, resolve_channel_key_fn):
 
 
 def classify_channel(channel, latest_date, today_str, freshness_days=DEFAULT_FRESHNESS_DAYS):
-    """단일 채널 판정. status: never_synced|stale|ok."""
+    """단일 채널 판정. status: never_synced|stale|ok.
+    gap이 freshness_days 이상이면(경계값 포함) stale — 기본 임계치는 2일이므로
+    2일치 공백이 나면 그 시점에 바로 알람이 떠야 하고, 3일째까지 미뤄지면 안 된다."""
     if latest_date is None:
         return {"channel": channel, "status": "never_synced", "days_stale": None,
                 "latest_date": None}
     today = datetime.strptime(today_str, "%Y-%m-%d")
     last = datetime.strptime(latest_date, "%Y-%m-%d")
     gap = (today - last).days
-    status = "stale" if gap > freshness_days else "ok"
+    status = "stale" if gap >= freshness_days else "ok"
     return {"channel": channel, "status": status, "days_stale": gap, "latest_date": latest_date}
 
 
