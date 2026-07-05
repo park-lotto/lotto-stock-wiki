@@ -94,9 +94,20 @@ async function save(){
   if(!$('#url').value.trim()){$('#savemsg').textContent='URL이 없습니다';return;}
   const picked=[...document.querySelectorAll('#cards input:checked')].map(c=>CANDS[+c.dataset.i]);
   if(!picked.length){$('#savemsg').textContent='선택된 인용이 없습니다';return;}
-  const r=await fetch('/yt/quote_save',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({url:$('#url').value.trim(),topic:$('#topic').value.trim(),quotes:picked})}).then(r=>r.json());
-  $('#savemsg').textContent = r.ok ? `저장됨 (${r.count}건) → ${r.path}` : ('저장 실패: '+(r.error||''));
+  const url=$('#url').value.trim(), topic=$('#topic').value.trim();
+  const doc={topic, source:url, quotes:picked};
+  let r={};
+  try{
+    r=await fetch('/yt/quote_save',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({url,topic,quotes:picked})}).then(r=>r.json());
+  }catch(e){ r={ok:false,error:String(e.message||e)}; }
+  // 로컬 장면수집용 json을 브라우저로 다운로드 (서버 저장과 별개)
+  const vid=(url.match(/(?:v=|youtu\.be\/|\/live\/|\/shorts\/)([A-Za-z0-9_-]{11})/)||[])[1]||'quotes';
+  const blob=new Blob([JSON.stringify(doc,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=vid+'.json';
+  a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  const head = r.ok ? `저장됨 (${r.count}건) · ${vid}.json 다운로드됨` : ('저장 실패: '+(r.error||'')+` · ${vid}.json은 다운로드됨`);
+  $('#savemsg').innerHTML = `${head}<br>로컬 장면수집: <code style="color:#d4af37">python scripts/yt_agents/collect_scenes.py ${vid}.json</code>`;
 }
 $('#run').onclick=run; $('#save').onclick=save;
 </script>
