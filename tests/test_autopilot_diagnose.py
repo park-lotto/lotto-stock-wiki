@@ -28,6 +28,12 @@ def test_parse_diagnosis_extracts_json_with_defaults():
     assert d["target_files"] == []
 
 
+def test_parse_diagnosis_preserves_explicit_true_destructive_flag():
+    raw = '{"root_cause": "x", "target": "local", "requires_destructive_action": true}'
+    d = parse_diagnosis(raw)
+    assert d["requires_destructive_action"] is True
+
+
 def test_parse_diagnosis_rejects_invalid_target():
     raw = '{"root_cause": "x", "target": "something_else"}'
     assert parse_diagnosis(raw) is None
