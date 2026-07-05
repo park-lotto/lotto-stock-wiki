@@ -1,4 +1,6 @@
 import os
+import sys
+import types
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
@@ -122,6 +124,23 @@ def test_mark_exhausted_survives_concurrent_writers(monkeypatch, tmp_path):
     # to interleaved read-modify-write, and no reader should observe a
     # torn/partial state file mid-write.
     assert kv.get_live_keys("embed") == []
+
+
+def test_file_lock_uses_fcntl_on_posix_not_msvcrt(monkeypatch, tmp_path):
+    """리눅스 서버에서 실제로 겪은 크래시 재현 방지: sys.platform이 win32가 아니면
+    msvcrt를 아예 import하지 않고 fcntl.flock으로 락을 걸고 풀어야 한다."""
+    calls = []
+    fake_fcntl = types.SimpleNamespace(
+        LOCK_EX=2, LOCK_NB=4, LOCK_UN=8,
+        flock=lambda fd, op: calls.append(op),
+    )
+    monkeypatch.setitem(sys.modules, "fcntl", fake_fcntl)
+    monkeypatch.setattr(kv.sys, "platform", "linux")
+
+    with kv._FileLock(tmp_path / "posix.lock"):
+        pass
+
+    assert calls == [fake_fcntl.LOCK_EX | fake_fcntl.LOCK_NB, fake_fcntl.LOCK_UN]
 
 
 def test_get_client_for_key_caches_by_key():
