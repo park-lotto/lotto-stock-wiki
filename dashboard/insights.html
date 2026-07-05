@@ -107,7 +107,8 @@ body { background: #ffffff; color: var(--txt); font-family: 'Pretendard','Segoe 
 .lib-chips { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; }
 .lib-chip { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px 10px 10px; background: #fff; border: 1px solid var(--line); border-radius: 16px; cursor: pointer; transition: transform .15s, box-shadow .15s; min-width: 76px; text-align: center; }
 .lib-chip:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.06); }
-.lib-ico { font-size: 1.4rem; }
+.lib-ico { width: 54px; height: 54px; border-radius: 14px; overflow: hidden; box-shadow: 0 3px 10px rgba(0,0,0,.12); flex: 0 0 auto; }
+.lib-ico svg { width: 100%; height: 100%; display: block; }
 .lib-name { font-size: .74rem; font-weight: 600; color: var(--txt); }
 .lib-cnt { font-size: .7rem; font-weight: 700; color: var(--gold); }
 .lib-new { font-size: .6rem; font-weight: 700; background: var(--bl-bg); color: var(--bl); border: 1px solid var(--bl-line); border-radius: 5px; padding: 1px 5px; }
@@ -947,6 +948,17 @@ function catCls(c) { return CAT[c] ? CAT[c].cls : ''; }
 function catIcon(c) { return CAT[c] ? CAT[c].icon : '📄'; }
 function catLabel(c) { return CAT[c] ? CAT[c].label : c; }
 
+// 소스 라이브러리 아이콘 타일 전용 브랜드 SVG(v5 시안 IC 재사용) — catIcon()의 이모지는
+// 브레드크럼·칩처럼 작은 인라인 맥락에 계속 쓰이므로 그대로 두고, 이 큰 타일 맥락만 별도 함수로 분리.
+const CAT_SVG = {
+  telegram: '<svg viewBox="0 0 40 40"><rect width="40" height="40" fill="#2AABEE"/><path fill="#fff" d="M16.3 28.2l.4-6 11-9.9c.5-.44-.1-.66-.76-.27L13.3 20.9l-5.9-1.85c-1.28-.4-1.3-1.28.28-1.9l22.9-8.83c1.06-.4 2 .26 1.6 1.9l-3.9 18.4c-.27 1.3-1.06 1.62-2.15 1.02l-5.85-4.32-2.83 2.75c-.32.32-.6.6-1.2.6z"/></svg>',
+  news: '<svg viewBox="0 0 40 40"><rect width="40" height="40" fill="#5E6AD2"/><path fill="#fff" d="M11 12h14v16a2 2 0 0 1-2 2H12a1 1 0 0 1-1-1V12zm3 4v2h8v-2h-8zm0 4v1.6h8V20h-8zm0 3.6v1.6h5v-1.6h-5zM26 15h2v13a2 2 0 0 1-2 2V15z"/></svg>',
+  report: '<svg viewBox="0 0 40 40"><rect width="40" height="40" fill="#E5B84B"/><path fill="#4a3a00" d="M15 11h8l5 5v13H15V11zm7 1.6V16h3.4L22 12.6zM17 20h8v1.6h-8V20zm0 3.4h8V25h-8v-1.6zm0 3.4h5v1.6h-5v-1.6z"/></svg>',
+  blog: '<svg viewBox="0 0 40 40"><rect width="40" height="40" fill="#03C75A"/><path fill="#fff" d="M13 14h14v9a2 2 0 0 1-2 2h-6l-4 3v-3h-2V14zm4 3.4V19h6v-1.6h-6zm0 3.2v1.6h4v-1.6h-4z"/></svg>',
+  youtube: '<svg viewBox="0 0 40 40"><rect width="40" height="40" fill="#FF0000"/><path fill="#fff" d="M17 15l8 5-8 5z"/></svg>',
+};
+function catIconTile(c) { return CAT_SVG[c] || `<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:var(--muted);color:#fff;font-size:1.3rem">${catIcon(c)}</div>`; }
+
 // ── L0 메인 ──
 async function showL0() {
   state.breadcrumb = [];
@@ -995,7 +1007,7 @@ async function showL0() {
     window._libCats[cat.id] = cat;
     const badge = (cat.today_new > 0) ? `<span class="lib-new">+${cat.today_new}</span>` : '';
     return `<div class="lib-chip ${catCls(cat.id)}" onclick="libShow('${cat.id}')" title="누르면 세부내역">
-      <span class="lib-ico">${catIcon(cat.id)}</span>
+      <span class="lib-ico">${catIconTile(cat.id)}</span>
       <span class="lib-name">${catLabel(cat.id)}</span>
       <span class="lib-cnt">${cat.atoms ?? 0}</span>${badge}
     </div>`;
