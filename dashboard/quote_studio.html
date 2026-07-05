@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>인용 스튜디오</title>
+<style>
+  :root{--bg:#0d0d0f;--card:#17171b;--gold:#d4af37;--txt:#e8e8ea;--dim:#8a8a90;
+        --g1:#2ecc71;--r1:#e74c3c;--y1:#f1c40f}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--txt);
+    font-family:system-ui,'Malgun Gothic',sans-serif;padding:24px;max-width:900px;margin:0 auto}
+  h1{font-size:20px;color:var(--gold)} .row{display:flex;gap:8px;margin:12px 0;flex-wrap:wrap}
+  input,button{padding:10px 12px;border-radius:8px;border:1px solid #333;background:#111;color:var(--txt)}
+  input{flex:1;min-width:200px} button{background:var(--gold);color:#000;font-weight:600;cursor:pointer;border:none}
+  button:disabled{opacity:.5;cursor:default}
+  #prog{color:var(--dim);font-size:13px;min-height:18px;margin:8px 0}
+  .card{background:var(--card);border:1px solid #26262c;border-radius:10px;padding:12px;margin:8px 0;
+        display:flex;gap:10px;align-items:flex-start}
+  .card .ts{color:var(--gold);font-variant-numeric:tabular-nums;font-size:13px;min-width:64px}
+  .card .txt{flex:1} .badge{font-size:11px;padding:2px 7px;border-radius:20px;margin-right:5px}
+  .b-강세{background:rgba(46,204,113,.18);color:var(--g1)} .b-약세{background:rgba(231,76,60,.18);color:var(--r1)}
+  .b-중립,.b-전환{background:rgba(241,196,15,.15);color:var(--y1)}
+  .tier{font-size:11px;color:var(--dim)} .meta{font-size:12px;color:var(--dim);margin-top:4px}
+  #save{background:#1f6feb;color:#fff}
+</style></head>
+<body>
+  <h1>🎬 인용 스튜디오</h1>
+  <div class="row">
+    <input id="url" placeholder="유튜브 URL (전문가 영상)">
+  </div>
+  <div class="row">
+    <input id="topic" placeholder="주제 (예: 반도체 고점인가)">
+    <input id="bound" type="number" placeholder="세그먼트 제한(선택, 예 400)" style="max-width:200px">
+    <button id="run">추출</button>
+  </div>
+  <div id="prog"></div>
+  <div id="cards"></div>
+  <div class="row"><button id="save" disabled>선택 인용 저장</button>
+    <span id="savemsg" class="meta"></span></div>
+
+<script>
+const $=s=>document.querySelector(s);
+let CANDS=[];
+function esc(s){return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+function render(){
+  const box=$('#cards'); box.innerHTML='';
+  CANDS.forEach((q,i)=>{
+    const d=document.createElement('div'); d.className='card';
+    d.innerHTML=`<input type="checkbox" data-i="${i}">
+      <div class="ts">${esc(q.ts)}<div class="tier">T${q.tier}</div></div>
+      <div class="txt"><span class="badge b-${esc(q.stance)}">${esc(q.stance)}</span>
+        <span class="badge" style="background:#222;color:#aaa">${esc(q.evidence)}</span>
+        ${esc(q.text)}
+        <div class="meta">score ${q.score}${q.has_visual?' · 📄자료':''}${q.heat?' · 🔥'+q.heat.toFixed(2):''} · ${esc(q.source||'')}</div>
+      </div>`;
+    box.appendChild(d);
+  });
+  $('#save').disabled = CANDS.length===0;
+}
+async function run(){
+  const url=$('#url').value.trim(), topic=$('#topic').value.trim();
+  if(!url){$('#prog').textContent='URL을 입력하세요';return;}
+  const bound=$('#bound').value.trim();
+  CANDS=[]; render(); $('#run').disabled=true; $('#save').disabled=true;
+  $('#prog').textContent='시작...';
+  const body={url,topic}; if(bound) body.max_segments=parseInt(bound);
+  const resp=await fetch('/yt/quote_extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const reader=resp.body.getReader(); const dec=new TextDecoder(); let buf='';
+  while(true){
+    const {value,done}=await reader.read(); if(done)break;
+    buf+=dec.decode(value,{stream:true});
+    let idx; while((idx=buf.indexOf('\n\n'))>=0){
+      const line=buf.slice(0,idx).trim(); buf=buf.slice(idx+2);
+      if(!line.startsWith('data:'))continue;
+      const ev=JSON.parse(line.slice(5).trim());
+      if(ev.type==='progress'){
+        if(ev.phase==='채점') $('#prog').textContent=`채점 ${ev.done+1}/${ev.total} 청크...`;
+        else if(ev.phase==='bound') $('#prog').textContent=`${ev.used}/${ev.total} 세그먼트만 채점(제한)`;
+        else if(ev.phase==='청크실패') $('#prog').textContent=`청크 ${ev.done+1} 실패(스킵)`;
+        else $('#prog').textContent=ev.phase+'...';
+      } else if(ev.type==='result'){
+        CANDS=ev.doc.quotes; render();
+        $('#prog').textContent=`완료 — 후보 ${CANDS.length}건 (T1 ${CANDS.filter(q=>q.tier===1).length}·T2 ${CANDS.filter(q=>q.tier===2).length}·T3 ${CANDS.filter(q=>q.tier===3).length})`;
+      } else if(ev.type==='error'){ $('#prog').textContent='오류: '+ev.message; }
+    }
+  }
+  $('#run').disabled=false;
+}
+async function save(){
+  const picked=[...document.querySelectorAll('#cards input:checked')].map(c=>CANDS[+c.dataset.i]);
+  if(!picked.length){$('#savemsg').textContent='선택된 인용이 없습니다';return;}
+  const r=await fetch('/yt/quote_save',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({url:$('#url').value.trim(),topic:$('#topic').value.trim(),quotes:picked})}).then(r=>r.json());
+  $('#savemsg').textContent = r.ok ? `저장됨 (${r.count}건) → ${r.path}` : ('저장 실패: '+(r.error||''));
+}
+$('#run').onclick=run; $('#save').onclick=save;
+</script>
+</body></html>
