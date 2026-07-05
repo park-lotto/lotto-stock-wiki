@@ -87,8 +87,10 @@ body { background: #ffffff; color: var(--txt); font-family: 'Pretendard','Segoe 
 .brief-row:last-of-type { margin-bottom: 0; }
 .brief-lbl { font-size: .74rem; color: var(--muted); font-weight: 700; }
 .brief-chips { display: flex; gap: 6px; flex-wrap: wrap; }
-.bchip { padding: 7px 14px; border-radius: 980px; border: 1px solid var(--line); background: #fff; color: var(--muted); font-family: inherit; font-size: .82rem; cursor: pointer; transition: all .15s; }
+.bchip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px 6px 6px; border-radius: 980px; border: 1px solid var(--line); background: #fff; color: var(--muted); font-family: inherit; font-size: .82rem; cursor: pointer; transition: all .15s; }
 .bchip.on { background: var(--txt); border-color: var(--txt); color: #fff; }
+.bchip-ico { display: inline-flex; width: 20px; height: 20px; border-radius: 6px; overflow: hidden; flex: 0 0 auto; }
+.bchip-ico svg { width: 100%; height: 100%; display: block; }
 .brief-sel { padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--txt); font-family: inherit; font-size: .82rem; }
 .brief-input { flex: 1; min-width: 200px; padding: 15px 18px; border-radius: 16px; border: 1px solid var(--line); background: #fff; color: var(--txt); font-family: inherit; font-size: .95rem; outline: none; transition: border-color .15s; }
 .brief-input:focus { border-color: var(--muted); }
@@ -1055,11 +1057,11 @@ async function showL0() {
         <div class="brief-row">
           <span class="brief-lbl">소스</span>
           <div class="brief-chips" id="brief-cats">
-            <button type="button" class="bchip" data-c="telegram" onclick="toggleBChip(this)">💬 텔레</button>
-            <button type="button" class="bchip" data-c="youtube" onclick="toggleBChip(this)">📺 유튜브</button>
-            <button type="button" class="bchip" data-c="report" onclick="toggleBChip(this)">📰 리포트</button>
-            <button type="button" class="bchip" data-c="news" onclick="toggleBChip(this)">🗞️ 뉴스</button>
-            <button type="button" class="bchip" data-c="blog" onclick="toggleBChip(this)">📝 블로그</button>
+            <button type="button" class="bchip" data-c="telegram" onclick="toggleBChip(this)"><span class="bchip-ico">${CAT_SVG.telegram}</span> 텔레</button>
+            <button type="button" class="bchip" data-c="youtube" onclick="toggleBChip(this)"><span class="bchip-ico">${CAT_SVG.youtube}</span> 유튜브</button>
+            <button type="button" class="bchip" data-c="report" onclick="toggleBChip(this)"><span class="bchip-ico">${CAT_SVG.report}</span> 리포트</button>
+            <button type="button" class="bchip" data-c="news" onclick="toggleBChip(this)"><span class="bchip-ico">${CAT_SVG.news}</span> 뉴스</button>
+            <button type="button" class="bchip" data-c="blog" onclick="toggleBChip(this)"><span class="bchip-ico">${CAT_SVG.blog}</span> 블로그</button>
           </div>
           <button type="button" class="bchip brief-research" id="brief-research" onclick="this.classList.toggle('on')" title="웹 리서치: NotebookLM이 웹에서 자료를 찾아 답합니다 (내 소스 없어도 됨)">🔎 리서치</button>
           <span class="brief-lbl">기간</span>
