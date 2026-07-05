@@ -46,8 +46,16 @@ def _evid(event_date: str, event: str, company, ev_type: str = "") -> str:
     return "cal_" + hashlib.md5(norm.encode()).hexdigest()[:12]
 
 
+_NULL_LIKE = {"null", "none", "n/a", ""}
+
+
 def event_to_atom(ev: dict, sector: str, gen_date: str) -> dict:
     company = ev.get("company")
+    # Gemini가 스키마 예시("회사명 또는 null")를 따라 JSON null 대신 문자열 "null"을
+    # 그대로 출력하는 경우가 있음 — 이러면 company or sector 폴백이 "null" 문자열을
+    # truthy로 잘못 인식해 asset="null"로 저장되는 버그가 있었음(2026-07-05 실데이터에서 발견).
+    if isinstance(company, str) and company.strip().lower() in _NULL_LIKE:
+        company = None
     event = ev.get("event", "")
     event_date = ev.get("date")
     ev_type = ev.get("type", "기타")
