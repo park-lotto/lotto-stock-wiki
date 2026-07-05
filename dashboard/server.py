@@ -208,6 +208,7 @@ from nlm_bridge import (
     create_notebook, add_source_file, add_source_urls, notebook_query as nlm_notebook_query,
     create_report as nlm_create_report,
     _BRAND_DESIGN, start_manual_login, manual_login_status,
+    BRAND_STYLE_PRESETS,
 )
 try:
     from studio_pipeline import generate_briefing, generate_picks  # noqa: E402
@@ -4429,9 +4430,13 @@ async def api_insights_notebook_studio(req: Request):
         if kind != "mindmap":
             args += ["--language", "ko"]      # 결과물 한국어로
         # 시각 결과물엔 채널(리모션) 브랜드 디자인 + 업로드한 레퍼런스 스타일 적용
+        # brand 지정 시(claude/claude_terminal/clay) 기본 라임그린 HUD 대신 그 프리셋으로 완전히 대체
+        # (섞이지 않음 — BRAND_STYLE_PRESETS 자체가 "라임그린류 색 금지" 지침을 포함함).
+        brand = (body.get("brand") or "").strip()
+        brand_design = BRAND_STYLE_PRESETS.get(brand, _BRAND_DESIGN)
         f2 = focus
         if kind in ("infographic", "slides", "video"):
-            parts = ([focus] if focus else []) + [_BRAND_DESIGN]
+            parts = ([focus] if focus else []) + [brand_design]
             ref = _NB_DESIGN.get(nb_id)
             if ref:
                 parts.append("[레퍼런스 스타일 — 이 느낌을 반영] " + ref)

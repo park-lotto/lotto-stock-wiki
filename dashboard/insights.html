@@ -844,6 +844,15 @@ body { background: #ffffff; color: var(--txt); font-family: 'Pretendard','Segoe 
               <button class="sopt on" data-v="default" onclick="wsOpt(this)">기본</button>
             </span>
           </div>
+          <div class="ws-opt-row">
+            <span class="ws-opt-lbl">🎨 브랜드 스타일</span>
+            <span class="ws-opt-grp" data-opt="brand" title="클로드터미널·clay는 레퍼런스 이미지를 먼저 첨부해야 효과가 잘 남(아래 🖼️ 레퍼런스 이미지 첨부 → 🎨 디자인 참고로)">
+              <button class="sopt on" data-v="" onclick="wsOpt(this)">기본</button>
+              <button class="sopt" data-v="claude" onclick="wsOpt(this)">클로드</button>
+              <button class="sopt" data-v="claude_terminal" onclick="wsOpt(this)">클로드터미널</button>
+              <button class="sopt" data-v="clay" onclick="wsOpt(this)">Clay</button>
+            </span>
+          </div>
         </div>
         <button class="nb-act" onclick="wsGeminiInfo(this)">🍌 Gemini 인포그래픽 <small>~20초 · 프롬프트 반영</small></button>
         <button class="nb-act" onclick="wsStudio(this,'infographic')">🖼️ 인포그래픽(NotebookLM) <small>~1분</small></button>
@@ -2415,7 +2424,7 @@ async function wsStudio(btn, kind) {
   const slow = (kind === 'infographic' || kind === 'slides');
   const focus = ((qs('#ws-studio-prompt') || {}).value || '').trim();
   // 형식 옵션 수집
-  const payload = { notebook_id: ws.id, kind, focus };
+  const payload = { notebook_id: ws.id, kind, focus, brand: wsGetOpt('brand') };
   let optTxt = '';
   if (kind === 'infographic') {
     payload.orientation = wsGetOpt('orientation'); payload.detail = wsGetOpt('detail');
