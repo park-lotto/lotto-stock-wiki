@@ -2,12 +2,26 @@
 claude -p(Opus/Sonnet, Max 구독) 호출 + Gemini 폴백. briefing_weather와 동일 방식.
 """
 import sys
+import re
 import json
 import subprocess
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 import gemini_client as G
+
+
+def _parse_json_lenient(raw: str) -> dict:
+    """LLM JSON 관용 파싱 — 코드펜스·잡텍스트·trailing comma 처리.
+    Opus/Gemini가 긴 배열 끝에 쉼표를 남기는 경우가 잦아 gemini_client 기본 파서보다 관대하게."""
+    if not raw or not raw.strip():
+        raise ValueError("빈 응답")
+    s = re.sub(r"```(?:json)?\s*", "", raw).strip().strip("`").strip()
+    m = re.search(r"\{[\s\S]*\}", s)
+    if m:
+        s = m.group(0)
+    s = re.sub(r",(\s*[}\]])", r"\1", s)   # ,} 또는 ,] 의 후행 쉼표 제거
+    return json.loads(s)
 
 # 채널 정체성 — 두 단계 프롬프트 모두에 주입 (clip_teardown._CHANNEL과 동일 취지)
 _CHANNEL = """우리 채널 = "로또의 주식/스탁브레인".
@@ -38,10 +52,17 @@ def _gen(prompt: str, claude_bin: str, cwd: str, model: str = "opus",
     """claude(Opus) 시도 → 실패 시 Gemini 폴백. 파싱된 dict + _model 메타 반환."""
     raw = _claude(prompt, model, claude_bin, cwd, timeout)
     used = f"claude:{model}"
-    if not raw:
+    # claude가 응답했지만 파싱 불가(잘린 JSON 등)면 Gemini로 재시도
+    d = None
+    if raw:
+        try:
+            d = _parse_json_lenient(raw)
+        except Exception:
+            d = None
+    if d is None:
         raw = G.call(prompt, temperature=0.7)
         used = "gemini"
-    d = G._parse_json_text(raw)
+        d = _parse_json_lenient(raw)   # 여기서도 실패하면 엔드포인트가 error로 잡음
     d["_model"] = used
     return d
 
