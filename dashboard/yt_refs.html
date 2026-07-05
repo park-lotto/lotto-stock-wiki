@@ -351,72 +351,69 @@ function renderDraft(box,d){
     <div class="dim"><span class="k">CTA</span><div class="val">${esc(d['CTA'])}</div></div>
     <div class="dim"><span class="k mini">믹스 근거</span><div class="val mini muted">${esc(d['믹스_근거'])}</div></div>
   </div>
-  <div class="label">④ 리서치 — 오늘 시점 사실로 검증 (종목·시황일 때만)</div>
-  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-    <button class="btn sec" onclick="doResearch()">🔍 리서치</button>
-    <label class="mini" style="display:flex;align-items:center;gap:4px;color:var(--txt)">기사 범위
-      <select id="rsc-days" style="padding:5px 8px;background:var(--card);border:1px solid var(--line);border-radius:6px;color:var(--txt);font-size:.78rem">
-        <option value="3" selected>최근 3일</option><option value="5">최근 5일</option><option value="7">최근 7일</option>
-      </select></label>
-    <label class="mini" style="display:flex;align-items:center;gap:4px;color:var(--txt)">강제
-      <select id="rsc-force" style="padding:5px 8px;background:var(--card);border:1px solid var(--line);border-radius:6px;color:var(--txt);font-size:.78rem">
-        <option value="auto" selected>자동 판정</option><option value="on">항상 ON</option><option value="off">항상 OFF</option>
-      </select></label>
-  </div>
-  <div class="mini muted" style="margin-top:4px">리서치를 돌리면 그 팩트팩이 스토리라인·대본에 주입됩니다 (안 돌리면 초안만으로).</div>
-  <div id="research"></div>
-  <div class="label">⑤ 스토리라인 — 초안을 탄탄한 서사로 (Opus, ~1분)</div>
+  <div class="label">④ 스토리라인 — 초안을 탄탄한 서사로 (Opus, ~1분)</div>
   <button class="btn" onclick="doStoryline()">🎬 스토리라인 설계도 만들기</button>
   <div id="storyline"></div>`;
   box.scrollIntoView({behavior:'smooth'});
 }
 
-// ── ④ 리서치 (믹스 초안 → 원자DB+최근기사+주가 검증 팩트팩)
-let lastFactpack='';   // 스토리라인·대본에 주입할 검증된 사실
-function doResearch(){
+let lastFactpack='';   // 대본에 주입할 주장별 근거 팩트팩
+
+// ── ④a 서사 설계도 (믹스 초안 → Opus). 리서치는 이 뒤에서 설계도 주장을 검증.
+function doStoryline(){
   if(!lastDraft)return;
+  const sbox=document.getElementById('storyline');
+  lastFactpack='';   // 새 설계도가 나오면 이전 근거 무효화
+  sbox.innerHTML=`<div class="spin" style="margin-top:10px">🎬 Opus가 서사 설계 중… (~1분)</div>`;
+  sse('/yt/storyline',{draft:lastDraft,category:curCat.name,factpack:''},ev=>{
+    if(ev.type==='done')renderStoryline(sbox,ev.storyline);
+    else if(ev.type==='error')sbox.innerHTML=`<p style="color:#e88">설계도 실패: ${esc(ev.message)}</p>`;
+  });
+}
+
+// ── ⑤ 리서치 (편집된 설계도 → 주장 추출 → 주장별 근거 검증)
+function doResearch(){
+  const sl=document.getElementById('sl-edit');
+  if(!sl||!sl.value.trim())return;
   const rbox=document.getElementById('research');
   const days=parseInt(document.getElementById('rsc-days').value||'3',10);
   const fv=document.getElementById('rsc-force').value;
   const force=fv==='on'?true:(fv==='off'?false:null);
-  rbox.innerHTML='<div class="spin" style="margin-top:10px">🔍 소재 판정 + 원자DB·최근기사·주가 검증 중…</div>';
-  sse('/yt/research',{draft:lastDraft,days,force},ev=>{
+  rbox.innerHTML='<div class="spin" style="margin-top:10px">🔎 설계도 주장 추출 + 주장별 근거(최근기사·원자·주가) 검증 중…</div>';
+  sse('/yt/research',{storyline:sl.value,days,force},ev=>{
     if(ev.type==='done')renderResearch(rbox,ev.research);
     else if(ev.type==='error')rbox.innerHTML=`<p style="color:#e88">리서치 실패: ${esc(ev.message)}</p>`;
   });
 }
 
+const VMARK={충분:'✅',약함:'△',없음:'⚠️'};
 function renderResearch(box,r){
-  const t=r.topic||{};
+  const plan=r.plan||{};
   if(r.skipped){
     lastFactpack='';
     box.innerHTML=`<div class="card" style="padding:11px 15px">
-      <span class="mini muted">🚫 리서치 스킵 — ${esc(t.reason||'방법론 소재라 최신 사실 검증 불필요')} (강제 ON으로 돌릴 수 있음)</span></div>`;
+      <span class="mini muted">🚫 리서치 스킵 — ${esc(plan.reason||'방법론 소재라 사실 검증 불필요')} (강제 ON으로 돌릴 수 있음)</span></div>`;
     return;
   }
   const fp=r.factpack||{};
   lastFactpack=fp.text||'';
-  const warns=(fp.warnings||[]).map(w=>`<li>${esc(w)}</li>`).join('');
+  const prices=(fp.prices||[]).map(p=>`${esc(p.name)} ${p.change_rate>0?'+':''}${p.change_rate}% ${esc(p.dir)}`).join(' · ');
+  const ces=(fp.claim_evidence||[]).map(ce=>{
+    const mark=VMARK[ce.verdict]||'';
+    const evs=[...(ce.news||[]).map(n=>`<li>(${esc(n.date)}) ${esc(n.title)}${n.desc?`<br><span class="muted">→ ${esc(n.desc)}</span>`:''}</li>`),
+               ...(ce.atoms||[]).map(a=>`<li><span class="muted">[원자 ${esc(a.date||'')}]</span> ${esc(a.content)}</li>`)].join('');
+    const color=ce.verdict==='없음'?'#e8b84a':(ce.verdict==='충분'?'#22c55e':'var(--line)');
+    return `<div class="factor" style="border-left:3px solid ${color}">
+      <b>◆ ${esc(ce.claim)}</b> <span class="mini">— 근거 ${esc(ce.verdict)} ${mark}</span>
+      ${evs?`<ul style="margin:4px 0 0 16px">${evs}</ul>`:'<div class="mini muted" style="margin-top:3px">근거 못 찾음 — 대본에서 단정 말고 약화·질문형으로</div>'}</div>`;
+  }).join('');
   box.innerHTML=`<div class="card">
-    <div class="mini muted" style="margin-bottom:6px">소재: ${esc((t.keywords||[]).join(', '))}${(t.entities||[]).length?' · 종목: '+esc(t.entities.join(', ')):''}
-      &nbsp;|&nbsp; 주가 ${fp.prices?fp.prices.length:0} · 기사 ${fp.news_n||0} · 원자 ${fp.atoms_n||0}</div>
-    ${warns?`<div class="factor" style="border-left:3px solid #e8b84a"><b>⚠️ 정합성 경고(대본이 어기면 안 됨)</b><ul style="margin:4px 0 0 16px">${warns}</ul></div>`:''}
-    <pre style="white-space:pre-wrap;font-family:inherit;font-size:.82rem;line-height:1.55;color:var(--txt);margin:0">${esc(fp.text||'(수집된 사실 없음 — 최근 기사/주가 미확보)')}</pre>
-    <div class="mini muted" style="margin-top:6px">✅ 이 팩트팩이 아래 스토리라인·대본에 자동 주입됩니다</div>
+    ${prices?`<div class="mini" style="color:var(--gold);margin-bottom:6px">현재 주가: ${prices} <span class="muted">(대본이 이 방향과 모순되면 안 됨)</span></div>`:''}
+    ${(fp.weak_claims||[]).length?`<div class="factor" style="border-left:3px solid #e8b84a"><b>⚠️ 근거 부족 ${fp.weak_claims.length}건</b> — 대본이 단정하면 안 되는 주장이 있습니다</div>`:''}
+    ${ces||'<span class="mini muted">추출된 주장 없음</span>'}
+    <div class="mini muted" style="margin-top:6px">✅ 이 근거 매핑이 완성 대본에 주입됩니다 (근거 탄탄한 주장만 단정)</div>
   </div>`;
   box.scrollIntoView({behavior:'smooth'});
-}
-
-// ── ⑤a 서사 설계도 (믹스 초안 + 팩트팩 → Opus)
-function doStoryline(){
-  if(!lastDraft)return;
-  const sbox=document.getElementById('storyline');
-  const note=lastFactpack?' + 리서치 팩트팩':'';
-  sbox.innerHTML=`<div class="spin" style="margin-top:10px">🎬 Opus가 서사 설계 중${note}… (~1분)</div>`;
-  sse('/yt/storyline',{draft:lastDraft,category:curCat.name,factpack:lastFactpack},ev=>{
-    if(ev.type==='done')renderStoryline(sbox,ev.storyline);
-    else if(ev.type==='error')sbox.innerHTML=`<p style="color:#e88">설계도 실패: ${esc(ev.message)}</p>`;
-  });
 }
 
 // 설계도 dict → 사람이 읽고 편집하기 좋은 텍스트
@@ -445,9 +442,25 @@ function renderStoryline(box,sl){
   const model=(sl['_model']||'').startsWith('claude')?'🅾️ Opus':'♊ Gemini(폴백)';
   const txt=storylineToText(sl);
   box.innerHTML=`<div class="plan">
-    <div class="mini muted" style="margin-bottom:6px">설계도 생성: ${model} · 아래에서 직접 고친 뒤 대본화하세요</div>
+    <div class="mini muted" style="margin-bottom:6px">설계도 생성: ${model} · 아래에서 직접 고친 뒤, 리서치로 주장을 검증하고 대본화하세요</div>
     <textarea id="sl-edit" style="width:100%;min-height:340px;background:var(--card);border:1px solid var(--line);border-radius:8px;color:var(--txt);font-family:inherit;font-size:.84rem;line-height:1.6;padding:12px;resize:vertical">${esc(txt)}</textarea>
-    <div style="margin-top:10px"><button class="btn" onclick="doScript()">✍️ 이 설계도로 완성 대본 만들기</button></div>
+
+    <div class="label" style="margin-top:14px">⑤ 리서치 — 이 설계도의 주장을 근거로 검증 (종목·시황일 때)</div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="btn sec" onclick="doResearch()">🔎 주장 근거 리서치</button>
+      <label class="mini" style="display:flex;align-items:center;gap:4px;color:var(--txt)">기사 범위
+        <select id="rsc-days" style="padding:5px 8px;background:var(--card);border:1px solid var(--line);border-radius:6px;color:var(--txt);font-size:.78rem">
+          <option value="3" selected>최근 3일</option><option value="5">최근 5일</option><option value="7">최근 7일</option>
+        </select></label>
+      <label class="mini" style="display:flex;align-items:center;gap:4px;color:var(--txt)">강제
+        <select id="rsc-force" style="padding:5px 8px;background:var(--card);border:1px solid var(--line);border-radius:6px;color:var(--txt);font-size:.78rem">
+          <option value="auto" selected>자동 판정</option><option value="on">항상 ON</option><option value="off">항상 OFF</option>
+        </select></label>
+    </div>
+    <div class="mini muted" style="margin-top:4px">설계도의 핵심 주장을 뽑아 근거를 찾습니다. 근거 없는 주장은 대본에서 단정하지 않게 표시됩니다.</div>
+    <div id="research"></div>
+
+    <div style="margin-top:12px"><button class="btn" onclick="doScript()">✍️ 이 설계도로 완성 대본 만들기</button></div>
     <div id="script"></div>
   </div>`;
   box.scrollIntoView({behavior:'smooth'});

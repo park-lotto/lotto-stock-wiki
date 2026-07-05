@@ -144,7 +144,18 @@ def call_video(youtube_url: str, prompt: str, model: str = 'gemini-3-flash-previ
         types.Part(file_data=types.FileData(file_uri=youtube_url, mime_type='video/*')),
         types.Part(text=prompt),
     ])
-    resp = _generate(model, contents, types.GenerateContentConfig(temperature=temperature))
+    try:
+        resp = _generate(model, contents, types.GenerateContentConfig(temperature=temperature))
+    except Exception as e:
+        # INVALID_ARGUMENT = Gemini가 이 영상을 가져오지 못함(임베드/지역/연령 제한, 멤버십,
+        # 비공개 등 영상 소유자·유튜브 측 제약). 영상 길이·해상도 무관하게 발생 — 모델을 바꿔도
+        # 동일. 날것의 400 대신 원인을 알려준다.
+        if "INVALID_ARGUMENT" in str(e):
+            raise RuntimeError(
+                "이 영상은 Gemini가 가져올 수 없습니다 — 임베드/지역/연령 제한, 멤버십·비공개 영상일 수 있어요. "
+                "다른 영상으로 해체를 시도해보세요."
+            ) from e
+        raise
     return resp.text.strip()
 
 

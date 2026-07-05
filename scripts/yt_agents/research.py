@@ -38,34 +38,45 @@ def _from_pipeline(dotted: str, attr: str = None):
         sys.path[:] = saved
 
 
-# ── 소재 판정 ────────────────────────────────────────────────
-def detect_topic(draft: dict) -> dict:
-    """믹스 초안 → 소재 키워드·종목·리서치 필요 여부. 실패 시 보수적(리서치 OFF)."""
-    titles = " / ".join(draft.get("제목후보", []) or [])
-    gu = " · ".join(draft.get("구성") or [])
-    prompt = f"""아래는 새 유튜브 영상의 대본 초안이다. 이 영상이 다루는 '소재'를 분석하라.
+# ── 주장 추출 (스토리라인 → 이 대본이 사실로 내세울 핵심 주장 + 검증 계획) ──
+def extract_claims(storyline_text: str) -> dict:
+    """서사 설계도 → 대본이 주장할 핵심 클레임 + 각 주장의 검증 질문·검색어·관련 종목.
+    실패/방법론이면 needs_research=False."""
+    prompt = f"""아래는 유튜브 영상의 서사 설계도다. 이 대본이 시청자에게 '사실'로 내세울
+핵심 주장(claim)들을 뽑아라. 그리고 각 주장이 진짜인지 검증할 계획을 세워라.
 
-제목후보: {titles}
-구성: {gu}
-핵심포인트: {' · '.join(draft.get('핵심대본_포인트') or [])}
+=== 서사 설계도 ===
+{storyline_text}
 
-판정:
-- 특정 종목·섹터·시장 상황(시황)을 다루면 needs_research=true (최신 사실·주가 확인이 필요).
-- 순수 방법론(매매기법·AI 활용법·도구 사용법 등 시점 무관 콘텐츠)이면 needs_research=false.
+규칙:
+- 검증이 필요한 '사실 주장'만 뽑아라(예: "메타 투자 축소로 반도체가 폭락했다"). 감상·의견·방법론은 제외.
+- 각 주장마다: 그것을 검증할 질문 + 뉴스/데이터에서 찾을 짧은 검색어 2개.
+- 특정 종목이 걸려 있으면 entities에 종목명.
+- 순수 방법론 영상(매매기법·도구사용법 등 시점 무관)이면 needs_research=false, claims 빈 배열.
 
 JSON만 출력:
-{{"keywords": ["뉴스·원자 검색용 키워드 2~3개"], "entities": ["구체적 상장 종목명(있으면, 없으면 빈 배열)"], "needs_research": true, "reason": "판정 근거 한 문장"}}"""
+{{"claims": [{{"claim": "대본이 사실로 주장하는 것", "question": "이게 사실인지 검증할 질문", "keywords": ["검색어1", "검색어2"]}}], "entities": ["관련 상장 종목명"], "needs_research": true, "reason": "판정 근거 한 문장"}}"""
     try:
         d = G.call_json(prompt)
+        claims = []
+        for c in (d.get("claims") or []):
+            claim = str(c.get("claim", "")).strip()
+            if not claim:
+                continue
+            claims.append({
+                "claim": claim,
+                "question": str(c.get("question", "")).strip(),
+                "keywords": [str(k).strip() for k in (c.get("keywords") or []) if str(k).strip()][:2],
+            })
         return {
-            "keywords": [str(k).strip() for k in (d.get("keywords") or []) if str(k).strip()][:3],
+            "claims": claims[:5],
             "entities": [str(e).strip() for e in (d.get("entities") or []) if str(e).strip()][:5],
-            "needs_research": bool(d.get("needs_research", False)),
+            "needs_research": bool(d.get("needs_research", False)) and bool(claims),
             "reason": str(d.get("reason", "")).strip(),
         }
     except Exception:
-        return {"keywords": [], "entities": [], "needs_research": False,
-                "reason": "소재 판정 실패 — 리서치 생략"}
+        return {"claims": [], "entities": [], "needs_research": False,
+                "reason": "주장 추출 실패 — 리서치 생략"}
 
 
 # ── 수집 ─────────────────────────────────────────────────────
@@ -138,7 +149,10 @@ def _prices(entities: list) -> list:
 
 
 def _our_atoms(keywords: list, days: int = 14) -> list:
-    """원자 DB(검증된 크롤) 최근 맥락. 뉴스보다 넓게(2주) — 흐름·히스토리용."""
+    """원자 DB(검증된 크롤) 최근 맥락. 뉴스보다 넓게(2주) — 흐름·히스토리용.
+    run_query는 CLI용 print를 대량 뱉으므로 stdout을 억제해 서버 로그 오염을 막는다."""
+    import io
+    import contextlib
     try:
         run_query = _from_pipeline("pipeline.atoms.query", "run_query")
     except Exception:
@@ -146,7 +160,9 @@ def _our_atoms(keywords: list, days: int = 14) -> list:
     seen, out = set(), []
     for kw in keywords:
         try:
-            for a in run_query(kw, n=4, days=days, mode="hybrid"):
+            with contextlib.redirect_stdout(io.StringIO()):
+                atoms = run_query(kw, n=4, days=days, mode="hybrid")
+            for a in atoms:
                 c = (a.get("content") or "").strip()
                 key = c[:40]
                 if c and key not in seen:
@@ -158,12 +174,28 @@ def _our_atoms(keywords: list, days: int = 14) -> list:
     return out[:8]
 
 
-# ── 팩트팩 조립 + 정합성 경고 ────────────────────────────────
-def build_factpack(topic: dict, days: int) -> dict:
-    """수집 → 오염검증 팩트팩. 반환 {text, warnings, has_data, prices, news_n, atoms_n}."""
-    news = _recent_news(topic["keywords"], days)
-    prices = _prices(topic["entities"])
-    atoms = _our_atoms(topic["keywords"])
+# ── 주장별 근거 검증 ─────────────────────────────────────────
+def _verify_claim(c: dict, days: int) -> dict:
+    """주장 1개 → 그 검증 검색어로 최근기사·원자 수집 → 근거 강도 판정.
+    verdict: 충분(뉴스+원자 합 3+) / 약함(1~2) / 없음(0)."""
+    kws = c.get("keywords") or [c.get("claim", "")]
+    news = _recent_news(kws, days)
+    atoms = _our_atoms(kws)
+    total = len(news) + len(atoms)
+    verdict = "충분" if total >= 3 else ("약함" if total >= 1 else "없음")
+    return {"claim": c["claim"], "question": c.get("question", ""),
+            "news": news[:4], "atoms": atoms[:4], "verdict": verdict}
+
+
+_VMARK = {"충분": "✅", "약함": "△", "없음": "⚠️"}
+
+
+# ── 팩트팩 조립 (주장별 근거 + 정합성 경고) ──────────────────
+def build_factpack(ex: dict, days: int) -> dict:
+    """주장 추출 결과 → 주장별 타겟 리서치 → 근거 매핑 팩트팩.
+    반환 {text, warnings, has_data, prices, claim_evidence, weak_claims}."""
+    prices = _prices(ex["entities"])
+    claim_ev = [_verify_claim(c, days) for c in ex["claims"]]
 
     lines, warnings = [], []
 
@@ -177,33 +209,40 @@ def build_factpack(topic: dict, days: int) -> dict:
                 warnings.append(f"{p['name']} 현재 {p['change_rate']:+.1f}% 하락중 — 급등·강세 서술 금지")
         lines.append("")
 
-    if news:
-        lines.append(f"[최근 {days}일 기사 — 시점 검증됨. 제목+요약, 여기 없는 내용은 추측 금지]")
-        for n in news:
-            lines.append(f"- ({n['date']}) {n['title']}")
-            if n.get("desc"):
-                lines.append(f"    → {n['desc']}")
+    lines.append(f"[주장별 근거 검증 — 최근 {days}일 기사 + 우리 원자DB]")
+    weak = []
+    for ce in claim_ev:
+        mark = _VMARK.get(ce["verdict"], "")
+        lines.append(f"◆ 주장: {ce['claim']}")
+        lines.append(f"  검증: {ce['verdict']} {mark}")
+        if ce["news"]:
+            for n in ce["news"]:
+                d = f"({n['date']}) {n['title']}"
+                lines.append(f"  - {d}")
+                if n.get("desc"):
+                    lines.append(f"      → {n['desc']}")
+        for a in ce["atoms"]:
+            lines.append(f"  - [원자 {a.get('date','')}] {a['content']}")
+        if ce["verdict"] == "없음":
+            weak.append(ce["claim"])
+            lines.append("  ※ 근거 못 찾음 — 대본에서 단정 금지. 약화하거나 질문형으로.")
         lines.append("")
 
-    if atoms:
-        lines.append("[우리 자료 — 원자 DB(검증된 크롤, 최근 2주)]")
-        for a in atoms:
-            src = f" [{a['source']}]" if a.get("source") else ""
-            lines.append(f"- ({a.get('date','')}){src} {a['content']}")
-        lines.append("")
+    if weak:
+        warnings.append(f"근거 부족 주장 {len(weak)}개 — 단정하지 말 것: " + " / ".join(weak))
 
     text = "\n".join(lines).strip()
-    return {"text": text, "warnings": warnings, "has_data": bool(text),
-            "prices": prices, "news_n": len(news), "atoms_n": len(atoms)}
+    return {"text": text, "warnings": warnings, "has_data": bool(claim_ev),
+            "prices": prices, "claim_evidence": claim_ev, "weak_claims": weak}
 
 
 # ── 오케스트레이터 ───────────────────────────────────────────
-def research(draft: dict, days: int = 3, force: "bool | None" = None) -> dict:
-    """force: None=자동판정 / True=강제ON / False=강제OFF.
-    반환 {skipped, topic, factpack}. skipped면 factpack None."""
-    topic = detect_topic(draft)
-    run_it = topic["needs_research"] if force is None else force
+def research(storyline_text: str, days: int = 3, force: "bool | None" = None) -> dict:
+    """스토리라인 설계도 → 주장 추출 → 주장별 타겟 리서치 → 근거 팩트팩.
+    force: None=자동판정 / True=강제ON / False=강제OFF. 반환 {skipped, plan, factpack}."""
+    ex = extract_claims(storyline_text)
+    run_it = ex["needs_research"] if force is None else (force and bool(ex["claims"]))
     if not run_it:
-        return {"skipped": True, "topic": topic, "factpack": None}
-    fp = build_factpack(topic, days)
-    return {"skipped": False, "topic": topic, "factpack": fp}
+        return {"skipped": True, "plan": ex, "factpack": None}
+    fp = build_factpack(ex, days)
+    return {"skipped": False, "plan": ex, "factpack": fp}

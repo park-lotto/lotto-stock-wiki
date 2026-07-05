@@ -5825,21 +5825,21 @@ async def api_yt_quote_save(req: Request):
 
 @app.post("/yt/research")
 async def api_yt_research(req: Request):
-    """믹스 초안 → 리서치 팩트팩(원자DB+최근기사+주가 검증) — SSE.
+    """스토리라인 설계도 → 주장 추출 → 주장별 타겟 리서치(근거 검증) — SSE.
     force: null=자동판정 / true=강제ON / false=강제OFF. days=기사 신선도(기본 3)."""
     if _research is None:
         return JSONResponse(content={"error": "research 모듈 없음"}, status_code=503)
     body = await req.json()
-    draft = body.get("draft") or {}
-    if not draft:
-        return JSONResponse(content={"error": "믹스 초안 필요"}, status_code=400)
+    storyline = (body.get("storyline") or "").strip()
+    if not storyline:
+        return JSONResponse(content={"error": "스토리라인 설계도 필요"}, status_code=400)
     days = int(body.get("days", 3) or 3)
     force = body.get("force", None)   # None | True | False
 
     def _stream():
         yield f"data: {json.dumps({'type':'running'}, ensure_ascii=False)}\n\n"
         try:
-            r = _research.research(draft, days=days, force=force)
+            r = _research.research(storyline, days=days, force=force)
             yield f"data: {json.dumps({'type':'done','research':r}, ensure_ascii=False)}\n\n"
         except Exception as e:
             yield f"data: {json.dumps({'type':'error','message':str(e)[:200]}, ensure_ascii=False)}\n\n"
