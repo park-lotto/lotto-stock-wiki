@@ -105,3 +105,9 @@ def test_append_wiki_log_creates_file_if_missing(tmp_path):
     append_wiki_log(str(tmp_path), "- first entry")
     content = (tmp_path / "wiki" / "log.md").read_text(encoding="utf-8")
     assert content == "- first entry\n"
+
+
+def test_append_wiki_log_creates_wiki_dir_if_missing(tmp_path):
+    append_wiki_log(str(tmp_path), "- entry with no pre-existing wiki dir")
+    content = (tmp_path / "wiki" / "log.md").read_text(encoding="utf-8")
+    assert content == "- entry with no pre-existing wiki dir\n"
