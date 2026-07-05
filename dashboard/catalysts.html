@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>다가오는 촉매 · 로또의 주식</title>
+<title>다가오는 이벤트 · 로또의 주식</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
   :root{
@@ -74,12 +74,12 @@
   <nav class="nav">
     <span class="brand"><span class="dot"></span>로또의 주식</span>
     <a class="lnk" href="/">딸깍</a><a class="lnk" href="/market">섹터맵</a>
-    <a class="lnk" href="/">인사이트</a><a class="lnk on" href="/catalysts">촉매</a>
+    <a class="lnk" href="/">인사이트</a><a class="lnk on" href="/catalysts">이벤트</a>
   </nav>
 
   <div class="wrap">
     <section class="hero">
-      <h1>다가오는 촉매.</h1>
+      <h1>다가오는 이벤트.</h1>
       <div class="tag">내 종목·섹터의 일정과 트리거를, <b>열자마자 차려놓게.</b></div>
     </section>
 
@@ -90,7 +90,7 @@
     </section>
 
     <section class="sec">
-      <div class="sec-head"><h2>📅 다가오는 촉매</h2><span class="cnt" id="catCount"></span></div>
+      <div class="sec-head"><h2>📅 다가오는 이벤트</h2><span class="cnt" id="catCount"></span></div>
       <div class="sec-sub">국내·해외·정책 일정을 종목에 연결해 D-정렬로 정리했어요. 향후 30일.</div>
       <div class="tabs" id="tabs"></div>
       <div class="grid">
@@ -107,7 +107,7 @@
       </div>
     </section>
   </div>
-  <div class="foot">로또의 주식 · 다가오는 촉매</div>
+  <div class="foot">로또의 주식 · 다가오는 이벤트</div>
 
 <script>
   const TABS = [["내 종목", {mine:1}], ["반도체", {mine:0, sector:"반도체"}], ["조선", {mine:0, sector:"조선"}],
@@ -145,7 +145,7 @@
       document.getElementById("catCount").textContent =
         (cur===0?"내 종목 기준 · ":TABS[cur][0]+" · ") + j.count + "건";
       if(!j.events || !j.events.length){
-        el.innerHTML = `<div class="empty">예정된 촉매가 없어요.<br><span style="font-size:12px">(오늘 캘린더 수집분이 비어있어요 — 데일리 수집 후 채워져요)</span></div>`;
+        el.innerHTML = `<div class="empty">예정된 이벤트가 없어요.<br><span style="font-size:12px">(오늘 캘린더 수집분이 비어있어요 — 데일리 수집 후 채워져요)</span></div>`;
         return;
       }
       el.innerHTML = j.events.map(e=>{
