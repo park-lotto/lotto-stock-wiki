@@ -87,7 +87,10 @@ def _recent_news(keywords: list, days: int) -> list:
             if age > days:        # ② 오래된 기사 배제(오염 방지)
                 continue
             seen.add(url)
-            out.append({"title": title, "date": NF._fmt_rss(it.get("pubDate", "")),
+            # description = 네이버 제공 기사 요약(첫 1~2문장). 제목만으론 대본이 추측하므로 함께.
+            desc = NF._clean(it.get("description", ""))
+            out.append({"title": title, "desc": desc,
+                        "date": NF._fmt_rss(it.get("pubDate", "")),
                         "url": url, "age": round(age, 1)})
     out.sort(key=lambda x: x["age"])
     return out[:8]
@@ -175,9 +178,11 @@ def build_factpack(topic: dict, days: int) -> dict:
         lines.append("")
 
     if news:
-        lines.append(f"[최근 {days}일 기사 — 시점 검증됨]")
+        lines.append(f"[최근 {days}일 기사 — 시점 검증됨. 제목+요약, 여기 없는 내용은 추측 금지]")
         for n in news:
             lines.append(f"- ({n['date']}) {n['title']}")
+            if n.get("desc"):
+                lines.append(f"    → {n['desc']}")
         lines.append("")
 
     if atoms:
