@@ -179,29 +179,32 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 .mt-detail-full{font-size:12.5px;color:#ddd;line-height:1.6;font-weight:400;}
 .mt-link{display:inline-block;margin-top:5px;font-size:11px;color:#8ab4ff;text-decoration:none;}
 .mt-link:hover{text-decoration:underline;}
-.timeline-feed{position:relative;display:flex;flex-direction:column;gap:2px;
-  max-height:420px;overflow-y:auto;padding-left:22px;margin-left:4px;}
-.timeline-feed::before{content:"";position:absolute;left:9px;top:8px;bottom:8px;
-  width:2px;background:#333;}
-.timeline-item{position:relative;padding:6px 10px 6px 12px;border-radius:6px;
-  transition:background .15s;}
-.timeline-item:hover{background:#1e1e1e;}
-.timeline-dot{position:absolute;left:-17px;top:12px;width:8px;height:8px;
-  border-radius:50%;background:#555;border:2px solid #141414;z-index:1;}
-.timeline-item.sev-red .timeline-dot{background:#e05252;}
-.timeline-item.sev-yellow .timeline-dot{background:#d4af37;}
-.timeline-item.sev-gray .timeline-dot{background:#555;}
-.timeline-item.sev-event .timeline-dot{background:#6a9fd4;width:11px;height:11px;left:-19px;top:10px;}
+.timeline-strip{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;}
+.timeline-strip::-webkit-scrollbar{height:5px;}
+.timeline-strip::-webkit-scrollbar-thumb{background:#333;border-radius:3px;}
+.tl-card{position:relative;flex:0 0 172px;background:#1a1a1a;border-radius:8px;
+  padding:8px 10px;border-left:3px solid #555;cursor:default;transition:background .15s;}
+.tl-card[onclick]{cursor:pointer;}
+.tl-card[onclick]:hover{background:#222;}
+.tl-card.sev-red{border-left-color:#e05252;}
+.tl-card.sev-yellow{border-left-color:#d4af37;}
+.tl-card.sev-gray{border-left-color:#555;}
+.tl-card.sev-event{border-left-color:#6a9fd4;}
+.tl-card.tl-selected{background:#242424;outline:1px solid #444;}
+.tl-card.tl-latest{background:rgba(106,159,212,.12);}
 @keyframes tl-dot-blink{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.55);}50%{box-shadow:0 0 0 5px rgba(255,255,255,0);}}
-.timeline-dot.tl-dot-pulse{animation:tl-dot-blink 1.4s ease-in-out infinite;}
-.timeline-item.tl-news .bi-ts{font-size:10.5px;color:#999;}
-.timeline-item.tl-news .bi-headline{font-size:13px;font-weight:600;margin:2px 0 0;color:#e6e6e6;}
-.timeline-item.tl-event .bi-ts{font-size:11px;color:#8ab4dd;font-weight:700;}
-.timeline-item.tl-event .bi-headline{font-size:14.5px;font-weight:800;margin:3px 0 0;color:#fff;}
-.timeline-item.tl-latest .bi-headline{color:#fff;}
-.timeline-item.tl-latest{background:rgba(106,159,212,.07);}
-.timeline-item .bi-body{font-size:12.5px;color:#bbb;line-height:1.5;margin-top:5px;}
-.tl-extra{margin-left:6px;font-size:10.5px;font-weight:500;color:#777;}
+.tl-dot-pulse{display:inline-block;width:6px;height:6px;border-radius:50%;background:#fff;
+  margin-right:4px;vertical-align:middle;animation:tl-dot-blink 1.4s ease-in-out infinite;}
+.tl-card .tl-ts{font-size:10.5px;color:#999;}
+.tl-card .tl-head{font-size:12px;font-weight:600;color:#e6e6e6;margin-top:3px;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.tl-card.tl-event .tl-ts{color:#8ab4dd;font-weight:700;}
+.tl-card.tl-event .tl-head{font-size:13px;font-weight:800;color:#fff;-webkit-line-clamp:4;}
+.tl-detail{margin-top:2px;padding:8px 10px;background:#161616;border-radius:8px;
+  font-size:12.5px;color:#ddd;line-height:1.5;}
+.tl-detail .tl-detail-ts{color:#8ab4dd;font-weight:700;margin-right:6px;}
+.tl-detail .bi-body{color:#bbb;margin-top:4px;}
+.tl-extra{display:block;margin-top:2px;font-size:9.5px;font-weight:500;color:#777;}
 .card-fold-btn{position:absolute;top:10px;right:12px;z-index:2;font-size:11px;font-weight:500;
   color:#888;cursor:pointer;padding:2px 6px;border-radius:4px;white-space:nowrap;
   background:var(--panel);}
@@ -1481,10 +1484,15 @@ let _marketInsight=null;
 let _briefingLoaded=false;
 
 // 오늘의 타임라인(뉴스+시장이벤트 병합) / 리포트탑픽 — 5개 박스 아래 별도 가로줄(mkt-below-panel)
-const _expandedNews=new Set();
+let _selectedTimelineIdx=null;   // 가로 카드스트립에서 선택된 카드(상세 표시용)
 const _expandedTopick=new Set();
 const _collapsedCards=new Set();  // 'timeline'|'topick' — 세션 전용(새로고침 시 초기화)
 const _TOPICK_COUNT=3;
+
+function toggleTimelineSelect(i){
+  _selectedTimelineIdx=(_selectedTimelineIdx===i)?null:i;
+  renderBelowPanel();
+}
 
 // 위 5개 박스(코스피/코스닥/글로벌지표/순위/실시간브리핑) — 기본 미리보기(축소), 펼치면 전체
 const _topPreviewExpanded=new Set();
@@ -1551,33 +1559,36 @@ function renderBelowPanel(){
   const container=document.getElementById("mkt-below-panel");
   if(!container)return;
   const items=_buildTimeline();
-  const _TIMELINE_PREVIEW_N=2;
-  const rowsArr=items.map((it,i)=>{
+  const _TIMELINE_PREVIEW_N=3;
+  const cardsArr=items.map((it,i)=>{
       const isEvent=it.type==="event";
       const sev=isEvent?"sev-event":it.severity==="red"?"sev-red":it.severity==="yellow"?"sev-yellow":"sev-gray";
-      const open=_expandedNews.has(i);
       const expandable=!!it.body;
-      const body=(open&&it.body)?`<div class="bi-body">${esc(it.body)}</div>`:"";
+      const selected=_selectedTimelineIdx===i;
       const extraTag=it.extra?`<span class="tl-extra">+${it.extra}번 더</span>`:"";
       const emoji=isEvent?(it.major?"⭐":"📍"):(it.severity==="red"?"🔴":it.severity==="yellow"?"🟡":"⚪");
       const isLatest=i===0;   // items는 최신순 정렬 → 맨 앞이 가장 최근
-      return `<div class="timeline-item ${sev} ${isEvent?"tl-event":"tl-news"}${isLatest?" tl-latest":""}" ${expandable?`onclick="toggleNewsExpand(${i})" style="cursor:pointer"`:""}>
-        <span class="timeline-dot${isLatest?" tl-dot-pulse":""}"></span>
-        <div class="bi-ts">${esc(it.ts)} ${expandable?(open?"▲":"▼"):""}</div>
-        <div class="bi-headline">${emoji} ${esc(it.text)}${extraTag}</div>
-        ${body}
+      return `<div class="tl-card ${sev} ${isEvent?"tl-event":"tl-news"}${isLatest?" tl-latest":""}${selected?" tl-selected":""}"
+        ${expandable?`onclick="toggleTimelineSelect(${i})"`:""}>
+        <div class="tl-ts">${isLatest?`<span class="tl-dot-pulse"></span>`:""}${esc(it.ts)}</div>
+        <div class="tl-head">${emoji} ${esc(it.text)}${extraTag}</div>
       </div>`;
     });
-  const rows=rowsArr.length
-    ? rowsArr.join("")
+  const cardsHtml=cardsArr.length
+    ? cardsArr.join("")
     :_briefingLoaded
       ?`<div style="color:#888;font-size:13px;padding:8px;">아직 타임라인 없음</div>`
       :`<div style="color:#888;font-size:13px;padding:8px;">불러오는 중...</div>`;
   // 미리보기(접힘): 가장 최근 N개만 — 오래된 항목보다 지금 무슨 일이 있었는지가 더 유용
   // (items는 최신순으로 정렬돼 있으므로 앞에서부터 N개 = 가장 최근)
-  const rowsPreview=rowsArr.length
-    ? rowsArr.slice(0,_TIMELINE_PREVIEW_N).join("")
-    : rows;
+  const cardsPreview=cardsArr.length
+    ? cardsArr.slice(0,_TIMELINE_PREVIEW_N).join("")
+    : cardsHtml;
+  const selectedItem=(_selectedTimelineIdx!=null)?items[_selectedTimelineIdx]:null;
+  const timelineDetail=(selectedItem&&selectedItem.body)
+    ?`<div class="tl-detail"><span class="tl-detail-ts">${esc(selectedItem.ts)}</span> ${esc(selectedItem.text)}
+      <div class="bi-body">${esc(selectedItem.body)}</div></div>`
+    :"";
 
   const topickList=((_marketInsight&&_marketInsight.topick)||[]).slice(0,_TOPICK_COUNT);
   const topickHtml=topickList.length
@@ -1603,12 +1614,13 @@ function renderBelowPanel(){
   const tlCollapsed=_collapsedCards.has("timeline");
   const tpCollapsed=_collapsedCards.has("topick");
   container.innerHTML=`
-    <div class="mkt-card" style="flex:1;min-width:0;">
+    <div class="mkt-card" style="flex:1.8;min-width:0;">
       <div class="card-hd" style="font-size:15px;font-weight:700;color:#ddd;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
-        <span>🕐 오늘의 타임라인 (07:30~, 제목 클릭시 펼침)</span>
+        <span>🕐 오늘의 타임라인 (07:30~, 클릭시 상세)</span>
         <span class="card-fold-btn" onclick="toggleCardCollapse('timeline')">${tlCollapsed?`▶ +${Math.max(0,items.length-_TIMELINE_PREVIEW_N)}개 더`:"▼ 접기"}</span>
       </div>
-      <div class="timeline-feed">${tlCollapsed?rowsPreview:rows}</div>
+      <div class="timeline-strip">${tlCollapsed?cardsPreview:cardsHtml}</div>
+      ${timelineDetail}
     </div>
     <div class="mkt-card" style="flex:1;min-width:0;">
       <div class="mt-title card-hd" style="font-size:15px;display:flex;align-items:center;justify-content:space-between;">
@@ -1624,10 +1636,6 @@ function toggleCardCollapse(id){
   renderBelowPanel();
 }
 
-function toggleNewsExpand(i){
-  if(_expandedNews.has(i)) _expandedNews.delete(i); else _expandedNews.add(i);
-  renderBelowPanel();
-}
 function toggleTopickExpand(i){
   if(_expandedTopick.has(i)) _expandedTopick.delete(i); else _expandedTopick.add(i);
   renderBelowPanel();
