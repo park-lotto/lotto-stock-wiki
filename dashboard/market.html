@@ -179,16 +179,30 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 .mt-detail-full{font-size:12.5px;color:#ddd;line-height:1.6;font-weight:400;}
 .mt-link{display:inline-block;margin-top:5px;font-size:11px;color:#8ab4ff;text-decoration:none;}
 .mt-link:hover{text-decoration:underline;}
-.briefing-feed{display:flex;flex-direction:column;gap:6px;}
-.briefing-item{padding:7px 11px;border-radius:6px;background:#1a1a1a;border-left:3px solid #444;
+.timeline-feed{position:relative;display:flex;flex-direction:column;gap:2px;
+  max-height:420px;overflow-y:auto;padding-left:22px;margin-left:4px;}
+.timeline-feed::before{content:"";position:absolute;left:9px;top:8px;bottom:8px;
+  width:2px;background:#333;}
+.timeline-item{position:relative;padding:6px 10px 6px 12px;border-radius:6px;
   transition:background .15s;}
-.briefing-item:hover{background:#222;}
-.briefing-item.sev-red{border-left-color:#e05252;}
-.briefing-item.sev-yellow{border-left-color:#d4af37;}
-.briefing-item.sev-gray{border-left-color:#555;opacity:0.7;}
-.briefing-item .bi-ts{font-size:11px;color:#999;}
-.briefing-item .bi-headline{font-size:14px;font-weight:700;margin:3px 0 0;color:#eee;}
-.briefing-item .bi-body{font-size:12.5px;color:#bbb;line-height:1.5;margin-top:5px;}
+.timeline-item:hover{background:#1e1e1e;}
+.timeline-dot{position:absolute;left:-17px;top:12px;width:8px;height:8px;
+  border-radius:50%;background:#555;border:2px solid #141414;z-index:1;}
+.timeline-item.sev-red .timeline-dot{background:#e05252;}
+.timeline-item.sev-yellow .timeline-dot{background:#d4af37;}
+.timeline-item.sev-gray .timeline-dot{background:#555;}
+.timeline-item.sev-event .timeline-dot{background:#6a9fd4;width:11px;height:11px;left:-19px;top:10px;}
+.timeline-item.tl-news{opacity:0.88;}
+.timeline-item.tl-news .bi-ts{font-size:10.5px;color:#888;}
+.timeline-item.tl-news .bi-headline{font-size:12.5px;font-weight:500;margin:2px 0 0;color:#ccc;}
+.timeline-item.tl-event{opacity:1;}
+.timeline-item.tl-event .bi-ts{font-size:11px;color:#8ab4dd;font-weight:700;}
+.timeline-item.tl-event .bi-headline{font-size:14.5px;font-weight:800;margin:3px 0 0;color:#fff;}
+.timeline-item .bi-body{font-size:12.5px;color:#bbb;line-height:1.5;margin-top:5px;}
+.tl-extra{margin-left:6px;font-size:10.5px;font-weight:500;color:#777;}
+.card-fold-btn{font-size:11px;font-weight:500;color:#888;cursor:pointer;padding:2px 6px;
+  border-radius:4px;white-space:nowrap;}
+.card-fold-btn:hover{background:#262626;color:#ccc;}
 
 /* ── 히트맵 그리드 (6열·고박스·큰폰트) ── */
 .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;}
@@ -1463,30 +1477,94 @@ let _briefingItems=[];
 let _marketInsight=null;
 let _briefingLoaded=false;
 
-// 뉴스속보(3개+더보기) / 리포트탑픽 — 5개 박스 아래 별도 가로줄(mkt-below-panel)
+// 오늘의 타임라인(뉴스+시장이벤트 병합) / 리포트탑픽 — 5개 박스 아래 별도 가로줄(mkt-below-panel)
 const _expandedNews=new Set();
 const _expandedTopick=new Set();
-const _NEWS_HEADLINE_COUNT=3;   // 헤드라인만 보여줄 개수
+const _collapsedCards=new Set();  // 'timeline'|'topick' — 세션 전용(새로고침 시 초기화)
 const _TOPICK_COUNT=3;
+
+// 위 5개 박스(코스피/코스닥/글로벌지표/순위/실시간브리핑) — 기본 미리보기(축소), 펼치면 전체
+const _topPreviewExpanded=new Set();
+let _lastMarketFlowData=null;
+function toggleTopPreview(id){
+  if(_topPreviewExpanded.has(id)) _topPreviewExpanded.delete(id); else _topPreviewExpanded.add(id);
+  if(_lastMarketFlowData) renderMarketFlow(_lastMarketFlowData);
+}
+function _foldBtn(id){
+  const on=_topPreviewExpanded.has(id);
+  return `<span class="card-fold-btn" onclick="event.stopPropagation();toggleTopPreview('${id}')">${on?"▲ 접기":"▼ 더보기"}</span>`;
+}
+
+function _charBigrams(s){
+  const set=new Set();
+  const t=(s||"").replace(/\s+/g,"");
+  for(let i=0;i<t.length-1;i++) set.add(t.slice(i,i+2));
+  return set;
+}
+function _bigramSim(a,b){
+  const A=_charBigrams(a), B=_charBigrams(b);
+  if(!A.size||!B.size) return 0;
+  let inter=0;
+  for(const g of A) if(B.has(g)) inter++;
+  return inter/(A.size+B.size-inter);
+}
+const _TIMELINE_START="07:30";
+const _TIMELINE_DUP_SIM=0.32;    // 이 이상이면 사실상 같은 문장 → 제거
+const _TIMELINE_THEME_SIM=0.16;  // 이 이상이면 같은 테마(다른 각도) → 최대 2개까지만 노출
+const _TIMELINE_THEME_CAP=2;
+function _buildTimeline(){
+  const news=(_briefingItems||[]).filter(it=>it.ts>=_TIMELINE_START)
+    .map(it=>({ts:it.ts, text:it.headline, body:it.body||"", type:"news", severity:it.severity}));
+  const tps=((_marketInsight&&_marketInsight.turning_points)||[]).filter(t=>t.ts>=_TIMELINE_START)
+    .map(t=>({ts:t.ts, text:t.label, body:"", type:"event", major:t.major}));
+  const merged=[...news,...tps].sort((a,b)=>a.ts.localeCompare(b.ts));
+
+  // 1단계: 사실상 동일 문장 제거
+  const kept=[];
+  for(const item of merged){
+    if(kept.some(k=>_bigramSim(k.text,item.text)>=_TIMELINE_DUP_SIM))continue;
+    kept.push(item);
+  }
+
+  // 2단계: 같은 테마(다른 각도) 클러스터링 → 테마당 최대 2개만, 나머지는 "+N번 더"로 접음
+  const clusters=[];
+  for(const item of kept){
+    const cl=clusters.find(c=>c.items.some(it=>_bigramSim(it.text,item.text)>=_TIMELINE_THEME_SIM));
+    if(cl) cl.items.push(item); else clusters.push({items:[item]});
+  }
+  const capped=[];
+  for(const cl of clusters){
+    const shown=cl.items.slice(0,_TIMELINE_THEME_CAP);
+    const extra=cl.items.length-shown.length;
+    shown.forEach((it,idx)=>{
+      capped.push(idx===shown.length-1&&extra>0?{...it, extra}:it);
+    });
+  }
+  capped.sort((a,b)=>a.ts.localeCompare(b.ts));
+  return capped;
+}
 
 function renderBelowPanel(){
   const container=document.getElementById("mkt-below-panel");
   if(!container)return;
-  const items=(_briefingItems||[]).slice(0,_NEWS_HEADLINE_COUNT);
+  const items=_buildTimeline();
   const rows=items.length
     ?items.map((it,i)=>{
-      const sev=it.severity==="red"?"sev-red":it.severity==="yellow"?"sev-yellow":"sev-gray";
-      const icon=it.severity==="red"?"🔴":it.severity==="yellow"?"🟡":"⚪";
+      const isEvent=it.type==="event";
+      const sev=isEvent?"sev-event":it.severity==="red"?"sev-red":it.severity==="yellow"?"sev-yellow":"sev-gray";
       const open=_expandedNews.has(i);
+      const expandable=!!it.body;
       const body=(open&&it.body)?`<div class="bi-body">${esc(it.body)}</div>`:"";
-      return `<div class="briefing-item ${sev}" onclick="toggleNewsExpand(${i})" style="cursor:pointer">
-        <div class="bi-ts">${icon} ${esc(it.ts)} ${open?"▲":"▼"}</div>
-        <div class="bi-headline">${esc(it.headline)}</div>
+      const extraTag=it.extra?`<span class="tl-extra">+${it.extra}번 더</span>`:"";
+      return `<div class="timeline-item ${sev} ${isEvent?"tl-event":"tl-news"}" ${expandable?`onclick="toggleNewsExpand(${i})" style="cursor:pointer"`:""}>
+        <span class="timeline-dot"></span>
+        <div class="bi-ts">${esc(it.ts)}${isEvent&&it.major?" ⭐":""} ${expandable?(open?"▲":"▼"):""}</div>
+        <div class="bi-headline">${esc(it.text)}${extraTag}</div>
         ${body}
       </div>`;
     }).join("")
     :_briefingLoaded
-      ?`<div style="color:#888;font-size:13px;padding:8px;">아직 브리핑 없음</div>`
+      ?`<div style="color:#888;font-size:13px;padding:8px;">아직 타임라인 없음</div>`
       :`<div style="color:#888;font-size:13px;padding:8px;">불러오는 중...</div>`;
 
   const topickList=((_marketInsight&&_marketInsight.topick)||[]).slice(0,_TOPICK_COUNT);
@@ -1510,15 +1588,28 @@ function renderBelowPanel(){
     }).join("")
     :`<div style="color:#888;font-size:13px;padding:8px;">오늘자 탑픽 언급 없음</div>`;
 
+  const tlCollapsed=_collapsedCards.has("timeline");
+  const tpCollapsed=_collapsedCards.has("topick");
   container.innerHTML=`
     <div class="mkt-card" style="flex:1;min-width:0;">
-      <div style="font-size:15px;font-weight:700;color:#ddd;margin-bottom:6px;">📰 뉴스속보 (제목 클릭시 펼침)</div>
-      <div class="briefing-feed briefing-feed-compact">${rows}</div>
+      <div class="card-hd" style="font-size:15px;font-weight:700;color:#ddd;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
+        <span>🕐 오늘의 타임라인 (07:30~, 제목 클릭시 펼침)</span>
+        <span class="card-fold-btn" onclick="toggleCardCollapse('timeline')">${tlCollapsed?`▶ ${items.length}개`:"▼ 접기"}</span>
+      </div>
+      ${tlCollapsed?"":`<div class="timeline-feed">${rows}</div>`}
     </div>
     <div class="mkt-card" style="flex:1;min-width:0;">
-      <div class="mt-title" style="font-size:15px;">📈 오늘의 리포트 탑픽 (제목 클릭시 요약+원문)</div>
-      ${topickHtml}
+      <div class="mt-title card-hd" style="font-size:15px;display:flex;align-items:center;justify-content:space-between;">
+        <span>📈 오늘의 리포트 탑픽 (제목 클릭시 요약+원문)</span>
+        <span class="card-fold-btn" onclick="toggleCardCollapse('topick')">${tpCollapsed?`▶ ${topickList.length}개`:"▼ 접기"}</span>
+      </div>
+      ${tpCollapsed?"":topickHtml}
     </div>`;
+}
+
+function toggleCardCollapse(id){
+  if(_collapsedCards.has(id)) _collapsedCards.delete(id); else _collapsedCards.add(id);
+  renderBelowPanel();
 }
 
 function toggleNewsExpand(i){
@@ -1637,15 +1728,16 @@ function renderRankCard(){
       <span style="flex:1">${icon} ${label} ${n}</span>
       <span style="${wheelHint}">↕</span>
     </div>`;
+  const rankExpanded=_topPreviewExpanded.has("rank");
   return`<div class="mkt-card">
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
       <span style="font-size:14px;font-weight:700;color:#ccc;letter-spacing:0.3px;flex:1">순위</span>
       <button id="etf-toggle" onclick="toggleEtfFilter()" style="font-size:11px;padding:3px 8px;border-radius:10px;cursor:pointer;font-family:inherit;${btnStyle}">${btnLabel}</button>
+      ${_foldBtn("rank")}
     </div>
     ${secLabel("🔥","실시간 인기검색",_rankPopN,"pop")}
     ${_rankRows(_rankPopStocks,_rankPopN)}
-    ${secLabel("💰","거래대금 상위",_rankAmtN,"amt")}
-    ${_rankRows(_rankAmtStocks,_rankAmtN)}
+    ${rankExpanded?`${secLabel("💰","거래대금 상위",_rankAmtN,"amt")}${_rankRows(_rankAmtStocks,_rankAmtN)}`:""}
   </div>`;
 }
 
@@ -1671,6 +1763,7 @@ function _globalNameHtml(it){
 
 function renderMarketFlow(d){
   try{
+    _lastMarketFlowData=d;
     const panel=document.getElementById("mkt-panel");
     // 오른쪽 끝 = 코스피/코스닥 데이터의 마지막(현재) 시각. 시간 지날수록 커져 15:30까지 진행.
     (function(){
@@ -1690,9 +1783,10 @@ function renderMarketFlow(d){
 
       // ── 실시간 시장 브리핑 카드 (헤드라인+본문만, 뉴스/탑픽은 mkt-below-panel로 분리) ──
       if(code==="briefing"){
-        const insightHtml=(()=>{
+        const briefingExpanded=_topPreviewExpanded.has("briefing");
+        const insightParts=(()=>{
           const ins=_marketInsight;
-          if(!ins)return"";
+          if(!ins)return null;
           // 신규 shape(verdict/narrative/turning_points) 우선
           if(ins.verdict){
             const v=ins.verdict||{};
@@ -1702,34 +1796,38 @@ function renderMarketFlow(d){
             const tps=(ins.turning_points||[]).map(t=>
               `<div style="color:#999;font-size:12px;padding:1px 0;"><span style="color:#ccc;">${esc(t.ts||"")}</span> ${esc(t.label||"")}${t.major?' <span style="color:#d4af37;">★</span>':''}</div>`
             ).join("");
-            return `<div class="mkt-insight" style="margin-bottom:0;">
-              <div style="font-size:15px;font-weight:700;color:#e8c96a;margin-bottom:6px;">${esc(v.tone||"")} · ${esc(v.line||"")}<span style="color:#888;font-size:11px;font-weight:400;margin-left:6px;">${esc(v.ts||"")}${staleTag}</span></div>
-              <div class="mi-body">${narrHtml}</div>
-              ${tps?`<div style="color:#aaa;font-size:12px;font-weight:600;margin:8px 0 4px;">오늘의 전환점</div>${tps}`:""}
-            </div>`;
+            const preview=`<div style="font-size:15px;font-weight:700;color:#e8c96a;margin-bottom:6px;">${esc(v.tone||"")} · ${esc(v.line||"")}<span style="color:#888;font-size:11px;font-weight:400;margin-left:6px;">${esc(v.ts||"")}${staleTag}</span></div>`;
+            const extra=`<div class="mi-body">${narrHtml}</div>
+              ${tps?`<div style="color:#aaa;font-size:12px;font-weight:600;margin:8px 0 4px;">오늘의 전환점</div>${tps}`:""}`;
+            return {preview, extra};
           }
           // 구 shape 폴백(headline/body)
           const headline=ins.headline||"";
           const bodyRaw=ins.body||ins.comment||"";
           const paragraphs=bodyRaw.split(/\n\s*\n/).map(p=>p.trim()).filter(Boolean);
           const bodyHtml=paragraphs.map(p=>`<div class="mi-para">${esc(p)}</div>`).join("");
-          const headlineHtml=headline?`<div class="mi-headline">${esc(headline)}</div>`:"";
-          return `<div class="mkt-insight" style="margin-bottom:0;">
-              ${headlineHtml}
-              <div class="mi-body">${bodyHtml}</div>
-            </div>`;
+          const preview=headline?`<div class="mi-headline">${esc(headline)}</div>`:"";
+          return {preview, extra:`<div class="mi-body">${bodyHtml}</div>`};
         })();
+        const bodyHtml=insightParts
+          ? `<div class="mkt-insight" style="margin-bottom:0;">${insightParts.preview}${briefingExpanded?insightParts.extra:""}</div>`
+          : `<div style="color:#888;font-size:13px;padding:8px;">${_briefingLoaded?"아직 브리핑 없음":"불러오는 중..."}</div>`;
         return `<div class="mkt-card" style="flex:1;min-width:0;">
-          <div style="font-size:15px;font-weight:700;color:#ddd;margin-bottom:6px;">📡 실시간 브리핑</div>
-          ${insightHtml||`<div style="color:#888;font-size:13px;padding:8px;">${_briefingLoaded?"아직 브리핑 없음":"불러오는 중..."}</div>`}
+          <div style="font-size:15px;font-weight:700;color:#ddd;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
+            <span>📡 실시간 브리핑</span>${insightParts&&insightParts.extra?_foldBtn("briefing"):""}
+          </div>
+          ${bodyHtml}
         </div>`;
       }
 
       // ── 글로벌 지표 카드 ──
       if(code==="global"){
-        // 차트 있는 항목(선물)은 flex:3, 숫자만(환율/유가)은 flex:1.5
-        const total=m.items?.length||4;
-        const rows=(m.items||[]).map((it,idx)=>{
+        const globalExpanded=_topPreviewExpanded.has("global");
+        const allItems=m.items||[];
+        const _GLOBAL_PREVIEW_N=3;   // 차트 있는 선물 3종만 미리보기, 환율·유가는 더보기
+        const visibleItems=globalExpanded?allItems:allItems.slice(0,_GLOBAL_PREVIEW_N);
+        const total=visibleItems.length;
+        const rows=visibleItems.map((it,idx)=>{
           const noData=(!it.price&&!it.change_rate);
           const rc=noData?"neu":it.change_rate>0?"up":it.change_rate<0?"dn":"neu";
           const rs=noData?"—":(it.change_rate>0?"▲ +":it.change_rate<0?"▼ ":"")+Number(it.change_rate).toFixed(2)+"%";
@@ -1770,7 +1868,9 @@ function renderMarketFlow(d){
           }
         }).join("");
         return`<div class="mkt-card">
-          <div style="font-size:11px;font-weight:700;color:#aaa;margin-bottom:4px;letter-spacing:0.3px">글로벌 지표</div>
+          <div style="font-size:11px;font-weight:700;color:#aaa;margin-bottom:4px;letter-spacing:0.3px;display:flex;justify-content:space-between;align-items:center;">
+            <span>글로벌 지표</span>${allItems.length>_GLOBAL_PREVIEW_N?_foldBtn("global"):""}
+          </div>
           <div style="flex:1;min-height:0;display:flex;flex-direction:column">${rows}</div>
         </div>`;
       }
@@ -1783,6 +1883,8 @@ function renderMarketFlow(d){
       }
 
       // ── 코스피 / 코스닥 풀 카드 ──
+      const idxCardId=code==="0001"?"kospi":"kosdaq";
+      const idxExpanded=_topPreviewExpanded.has(idxCardId);
       const noIndex=(!m.price);
       const rc=noIndex?"neu":m.change_rate>0?"up":m.change_rate<0?"dn":"neu";
       const rateStr=noIndex?"—":(m.change_rate>0?"▲ +":m.change_rate<0?"▼ ":"")
@@ -1866,9 +1968,10 @@ function renderMarketFlow(d){
           <span class="mkt-name">${esc(m.label)}</span>
           <span class="mkt-price">${priceStr}</span>
           <span class="mkt-rate ${rc}">${rateStr}</span>
+          <span style="flex:1"></span>${_foldBtn(idxCardId)}
         </div>
         ${barSection}
-        <div>
+        ${idxExpanded?`<div>
           <div class="mkt-sec-label">투자자 순매수 (오늘 누적)</div>
           <div class="inv-grid">${invRows}</div>
           ${histSvg}
@@ -1879,7 +1982,7 @@ function renderMarketFlow(d){
             ${!progChart?"":`<span style="color:${prog.합계>=0?"#e74c3c":"#3498db"};font-weight:700">${ps}</span>`}
           </div>
           ${progChart||`<div style="font-size:9px;color:#333;padding:4px 0">장 중 데이터 없음</div>`}
-        </div>
+        </div>`:""}
         <div class="mkt-ts">${ts} 기준</div>
       </div>`;
     }).join("");
@@ -1888,11 +1991,14 @@ function renderMarketFlow(d){
   requestAnimationFrame(()=>{
     const cards=[...document.querySelectorAll('#mkt-panel .mkt-card')];
     if(cards.length<4) return;
+    const cardIds=["kospi","kosdaq","global","rank","briefing"];
     cards.forEach(c=>{ c.style.height=''; c.style.overflowY=''; c.style.justifyContent=''; });
     cards.forEach((c,i)=>{
+      const isPreview=!_topPreviewExpanded.has(cardIds[i]);
+      const targetH=isPreview?Math.round(MKT_CARD_HEIGHT/2):MKT_CARD_HEIGHT;
       const nat=c.offsetHeight;
-      c.style.height=MKT_CARD_HEIGHT+'px';
-      if(nat>MKT_CARD_HEIGHT) c.style.overflowY='auto';       // 내용이 넘치면 스크롤
+      c.style.height=targetH+'px';
+      if(nat>targetH) c.style.overflowY='auto';                // 내용이 넘치면 스크롤
       else if(i===4) c.style.justifyContent='flex-start';     // 브리핑 카드: 짧으면 위 정렬(늘리지 않음)
       else c.style.justifyContent='space-between';             // 나머지: 짧으면 균등 분산
     });
