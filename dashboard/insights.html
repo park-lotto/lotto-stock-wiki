@@ -8,7 +8,7 @@
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
 :root {
-  --gold: #0066cc; --gold-dim: #0055aa; --bg: #ffffff;
+  --gold: #0066cc; --gold-dim: #0055aa; --bg: #ffffff; --bg-2: #f5f5f7;
   --card: #ffffff; --line: #e5e5e7; --txt: #1d1d1f; --muted: #86868b;
   --yt: #af52de; --yt-bg: #f5eefc; --yt-line: #e3cef7;
   --tg: #2AABEE; --tg-bg: #eaf6fd; --tg-line: #cdeaf9;
@@ -19,7 +19,7 @@
   --bull: #1d8a3f; --bear: #d70015;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: #f5f5f7; color: var(--txt); font-family: 'Pretendard','Segoe UI','Malgun Gothic',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; }
+body { background: #ffffff; color: var(--txt); font-family: 'Pretendard','Segoe UI','Malgun Gothic',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; }
 
 /* ── 네비 ── */
 .topbar {
@@ -106,7 +106,7 @@ body { background: #f5f5f7; color: var(--txt); font-family: 'Pretendard','Segoe 
 .lib-toggle { margin-left: auto; background: none; border: none; color: var(--gold-dim); font-size: .68rem; cursor: pointer; font-family: inherit; text-transform: none; letter-spacing: 0; }
 .lib-toggle:hover { color: var(--gold); }
 .lib-chips { display: flex; flex-wrap: wrap; gap: 14px; justify-content: flex-start; }
-.lib-chip { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px 10px 10px; background: #fff; border: 1px solid var(--line); border-left: 1px solid var(--line); border-radius: 16px; cursor: pointer; transition: transform .15s, box-shadow .15s; min-width: 76px; text-align: center; }
+.lib-chip { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px 10px 10px; background: #fff; border: 1px solid var(--line); border-radius: 16px; cursor: pointer; transition: transform .15s, box-shadow .15s; min-width: 76px; text-align: center; }
 .lib-chip:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.06); }
 .lib-ico { font-size: 1.4rem; }
 .lib-name { font-size: .74rem; font-weight: 600; color: var(--txt); }
@@ -2094,7 +2094,7 @@ async function wsNaverNews() {
       const titleHtml = n.url
         ? `<a href="${escAttr(n.url)}" target="_blank" rel="noopener" style="color:var(--nw);text-decoration:none">${t} ↗</a>`
         : t;
-      return `<div class="sig-fact" style="border-left-color:#fb923c">
+      return `<div class="sig-fact" style="border-left-color:var(--gold)">
         <div class="sig-fact-txt">${titleHtml}</div>
         ${n.summary ? `<div style="font-size:.73rem;color:var(--muted);margin-top:3px;line-height:1.5">${escHtml(n.summary)}</div>` : ''}
         ${meta ? `<div class="sig-fact-meta">📰 ${meta}</div>` : ''}
