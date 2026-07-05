@@ -1,0 +1,101 @@
+[
+  {
+    "date": "2026-07-07",
+    "company": "삼성전자",
+    "event": "2026년 2분기 잠정 실적 발표",
+    "type": "실적발표",
+    "importance": "HIGH",
+    "desc": "AI 반도체 수요 및 메모리 가격 상승에 따른 실적 기대감 확인.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-07",
+    "company": "null",
+    "event": "제27회 한국반도체테스트학회 학술대회",
+    "type": "전시",
+    "importance": "LOW",
+    "desc": "반도체 테스트 기술 동향 및 연구 성과 공유.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-08",
+    "company": "null",
+    "event": "5월 경상수지 발표 (반도체 수출 데이터 포함)",
+    "type": "수출",
+    "importance": "HIGH",
+    "desc": "한국 경제 및 반도체 섹터의 수출 실적 확인.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-08",
+    "company": "null",
+    "event": "ISS Japan 2026 (Industry Strategy Symposium)",
+    "type": "컨퍼런스",
+    "importance": "MID",
+    "desc": "반도체 산업 전략 및 시장 동향 논의.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-09",
+    "company": "null",
+    "event": "SEMI Webinar: AI Driving the Semiconductor Supercycle",
+    "type": "컨퍼런스",
+    "importance": "MID",
+    "desc": "AI가 주도하는 반도체 슈퍼사이클 관련 인사이트 확보.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-10",
+    "company": "SK하이닉스",
+    "event": "나스닥 주식예탁증서(ADR) 상장",
+    "type": "IR",
+    "importance": "HIGH",
+    "desc": "글로벌 자금 조달 및 기업 가치 재평가 기대.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-14",
+    "company": "null",
+    "event": "2026년 반도체공학회 하계종합학술대회",
+    "type": "컨퍼런스",
+    "importance": "MID",
+    "desc": "반도체 기술 연구 및 산업 동향 교류.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-15",
+    "company": "null",
+    "event": "제7회 반도체 AI 제조경영 아카데미",
+    "type": "컨퍼런스",
+    "importance": "LOW",
+    "desc": "반도체 제조 분야의 AI 적용 및 경영 전략 학습.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-23",
+    "company": "삼성전자",
+    "event": "2026년 2분기 확정 실적 발표 및 컨퍼런스콜",
+    "type": "실적발표",
+    "importance": "HIGH",
+    "desc": "잠정 실적에 대한 상세 내용 및 향후 전망 발표.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-29",
+    "company": "SK하이닉스",
+    "event": "2026년 2분기 실적 발표",
+    "type": "실적발표",
+    "importance": "HIGH",
+    "desc": "HBM 및 메모리 반도체 시장 호황에 따른 실적 기대감 확인.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-01",
+    "company": "null",
+    "event": "반도체 대기업 '초과이익' 공론화 시작",
+    "type": "정책",
+    "importance": "HIGH",
+    "desc": "정부 주도 반도체 기업 초과이익 관련 사회적 논의 본격화.",
+    "confirmed": true
+  }
+]

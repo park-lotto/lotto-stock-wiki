@@ -1,0 +1,38 @@
+[
+  {
+    "date": "2026-07-08",
+    "company": null,
+    "event": "PV Insight Korea 2026",
+    "type": "전시",
+    "importance": "MID",
+    "desc": "분산에너지 전환을 위한 지붕형·주차장 태양광 활용 RE100·PPA 대응전략 컨퍼런스 개최.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-08",
+    "company": null,
+    "event": "2026 뉴에너지 페어 오송 (New Energy Fair Osong)",
+    "type": "전시",
+    "importance": "MID",
+    "desc": "비즈니스 중심의 에너지 산업 전시회로, 7월 8일부터 4일간 개최.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-23",
+    "company": "한화솔루션",
+    "event": "2026년 2분기 실적 발표",
+    "type": "실적발표",
+    "importance": "HIGH",
+    "desc": "한화솔루션의 2026년 2분기 실적 보고서 발표 예정.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-29",
+    "company": "HD현대에너지솔루션",
+    "event": "2026년 2분기 실적 발표",
+    "type": "실적발표",
+    "importance": "HIGH",
+    "desc": "HD현대에너지솔루션의 2026년 2분기 실적 보고서 발표 예정.",
+    "confirmed": true
+  }
+]

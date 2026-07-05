@@ -338,6 +338,115 @@ git commit -m "style(insights): rebuild L0 layout to match v5 mockup structure (
 
 ---
 
+---
+
+### Task 4: L0을 v5처럼 1단(좌우분할 없는) 구조로 재배치
+
+**배경:** Task 3는 기존 2단(`main-2col`: 왼쪽 시그널 / 오른쪽 사이드바) 뼈대 안에서 색·비율만 v5식으로 바꿨다. 사용자가 실제 렌더링(스크린샷)을 보고 "레이아웃까지 v5대로"는 이 뼈대(1단 vs 2단) 자체가 달라야 한다는 걸 확인 — v5 목업은 좌우분할이 없는 1단 중앙정렬 구조다. 이 태스크는 실제 DOM 순서를 세로 1단으로 재배치한다.
+
+**배치 순서 확정(2026-07-05 사용자 확인):** 히어로 → 브리핑바(기존, 변경없음) → **소스라이브러리**(전체폭 아이콘줄) → **오늘의 시그널** → **다가오는 촉매**(v5엔 없는 이 앱만의 기능) → **최근 리포트**(v5엔 없음) → **최근 브리핑 기록**(v5엔 없음). 뒤의 세 섹션은 v5 목업에 대응물이 없는 이 앱 고유 기능이지만, 시그널 레일 아래 같은 시각 언어(섹션 제목+여백)로 순차 배치해 자연스럽게 포함시킨다.
+
+**범위 원칙 — Task 3와 동일:** 이동/재배치되는 모든 요소의 `id`/`class`/`onclick` 값은 **정확히 그대로 유지** — `#signals-box`, `#lib-chips`, `#lib-detail`, `#lib-cards`, `#catalyst-summary`, `#recent-reports`, `#brief-history`, `toggleLib(this)` 전부 이름 불변, 위치만 이동. `.main-left`/`.main-right` 래퍼 div는 JS에서 참조되지 않음(grep으로 확인됨) — 삭제해도 안전.
+
+**Files:**
+- Modify: `dashboard/insights.html`
+  - HTML: `showL0()` 템플릿 내 `<div class="main-2col">`로 시작하는 블록(2단 마크업) — 아래 새 마크업으로 교체
+  - CSS: `.main-2col`/`.main-left`/`.main-right`/`.side-title`(현재 100-102행), `.lib-chips`(108행), `.cat-grid-side`(146-150행), 900px 미디어쿼리(151행)
+
+**Interfaces:**
+- Consumes: Task 1-3의 모든 데이터 로더(`loadSignals`, `loadCatalystSummary`, `loadRecentReports`, `loadBriefHistory`, `libShow`/`toggleLib`/`libViewAll`)와 CSS 토큰 — 전부 무변경으로 재사용.
+- Produces: 없음 — 이 계획의 최종 태스크.
+
+- [ ] **Step 1: 마크업 재배치**
+
+`showL0()` 템플릿에서 현재 이런 모양의 블록(대략 1052-1067행, 정확한 줄번호는 실제 파일에서 `<div class="main-2col">`로 찾을 것):
+```html
+    <div class="main-2col">
+      <div class="main-left">
+        <div id="signals-box" class="signals-box"></div>
+      </div>
+      <div class="main-right">
+        <div class="side-title">📚 소스 라이브러리 <button class="lib-toggle" onclick="toggleLib(this)">펼치기 ▾</button></div>
+        <div id="lib-chips" class="lib-chips">${libChips || '<div style="color:var(--muted)">카테고리 없음</div>'}</div>
+        <div id="lib-detail" class="lib-detail" style="display:none"></div>
+        <div id="lib-cards" class="cat-grid-side" style="display:none">${catCards}</div>
+        <div class="side-title" style="margin-top:18px">📅 다가오는 촉매 <small style="color:var(--gold-dim);font-weight:400">클릭하면 그 종목/섹터 브리핑</small></div>
+        <div id="catalyst-summary" class="brief-hist">불러오는 중…</div>
+        <div class="side-title" style="margin-top:18px">📰 최근 리포트 <small style="color:var(--gold-dim);font-weight:400">클릭하면 그 종목 브리핑</small></div>
+        <div id="recent-reports" class="brief-hist">불러오는 중…</div>
+        <div class="side-title" style="margin-top:18px">📖 최근 브리핑 기록 <small style="color:var(--gold-dim);font-weight:400">클릭하면 그때 본 화면 그대로</small></div>
+        <div id="brief-history" class="brief-hist">불러오는 중…</div>
+      </div>
+    </div>
+```
+를 다음으로 교체(같은 `id`/`onclick` 값 전부 유지, 순서만 재배치, `main-left`/`main-right` 래퍼 제거):
+```html
+    <div class="main-2col">
+      <div class="side-title">📚 소스 라이브러리 <button class="lib-toggle" onclick="toggleLib(this)">펼치기 ▾</button></div>
+      <div id="lib-chips" class="lib-chips">${libChips || '<div style="color:var(--muted)">카테고리 없음</div>'}</div>
+      <div id="lib-detail" class="lib-detail" style="display:none"></div>
+      <div id="lib-cards" class="cat-grid-side" style="display:none">${catCards}</div>
+
+      <div id="signals-box" class="signals-box"></div>
+
+      <div class="side-title" style="margin-top:48px">📅 다가오는 촉매 <small style="color:var(--gold-dim);font-weight:400">클릭하면 그 종목/섹터 브리핑</small></div>
+      <div id="catalyst-summary" class="brief-hist">불러오는 중…</div>
+
+      <div class="side-title" style="margin-top:48px">📰 최근 리포트 <small style="color:var(--gold-dim);font-weight:400">클릭하면 그 종목 브리핑</small></div>
+      <div id="recent-reports" class="brief-hist">불러오는 중…</div>
+
+      <div class="side-title" style="margin-top:48px">📖 최근 브리핑 기록 <small style="color:var(--gold-dim);font-weight:400">클릭하면 그때 본 화면 그대로</small></div>
+      <div id="brief-history" class="brief-hist">불러오는 중…</div>
+    </div>
+```
+(첫 섹션인 소스라이브러리 제목은 `style="margin-top:48px"`를 붙이지 않음 — 파일의 기존 관례대로 첫 항목만 인라인 margin-top 생략, 나머지는 48px로 통일. 시그널 박스 앞뒤 여백은 `.side-title`/`.signals-box` 자체 CSS로 충분하니 별도 wrapper 불필요.)
+
+- [ ] **Step 2: CSS — 2단 그리드 → 1단 세로 스택**
+
+현재 100-102행:
+```css
+.main-2col { display: grid; grid-template-columns: 1.7fr 1fr; gap: 22px; align-items: start; margin: 26px 0 8px; }
+.main-left, .main-right { min-width: 0; }
+.side-title { font-size: .78rem; font-weight: 700; color: var(--muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: .04em; display: flex; align-items: center; }
+```
+(정확한 값은 Task2/3에서 이미 바뀌었을 수 있으니 셀렉터 이름으로 찾을 것 — `grid-template-columns` 있는 `.main-2col`, `.main-left, .main-right` 규칙, `.side-title` 규칙) 을:
+```css
+.main-2col { display: flex; flex-direction: column; margin: 40px 0 8px; }
+.side-title { font-size: .8rem; font-weight: 700; color: var(--muted); margin-bottom: 14px; text-transform: uppercase; letter-spacing: .04em; display: flex; align-items: center; gap: 8px; }
+```
+로 교체(`.main-left, .main-right` 규칙은 완전히 삭제 — 더 이상 그 클래스를 쓰는 요소가 없음).
+
+- [ ] **Step 3: CSS — 라이브러리 아이콘줄을 전체폭 가운데정렬로**
+
+`.lib-chips` 규칙(현재 108행 근처, `justify-content: flex-start`)을 `justify-content: center`로 변경 — v5 목업의 `.cats{justify-content:center}`와 같은 느낌(이제 사이드바가 아니라 전체폭이므로 가운데 정렬이 훨씬 자연스러움).
+
+- [ ] **Step 4: CSS — 확장 카드 그리드·최근기록 리스트를 전체폭에 맞게 반응형으로**
+
+`.cat-grid-side` 규칙(146-150행 근처)의 `grid-template-columns: 1fr;`을 `grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));`로 변경(전체폭에서 1열로 좁게 나열되던 걸 여러 열로 자연스럽게 펼침).
+
+`.brief-hist` 규칙(188행 근처, 현재 `display:flex;flex-direction:column;gap:6px`)을 `display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px;`로 변경 — 촉매/최근리포트/브리핑기록 세 섹션이 전체폭에서 좁은 세로 리스트로 늘어지지 않고 카드형으로 자연스럽게 배치되게 함(`.cat-sum-item`/`.bh-item` 내부 마크업·클래스는 무변경, 그냥 부모 컨테이너 레이아웃만 바뀜).
+
+900px 미디어쿼리(151행 근처, `@media (max-width: 900px) { .main-2col { grid-template-columns: 1fr; } .cat-grid-side { grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); } }`)에서 `.main-2col { grid-template-columns: 1fr; }` 부분은 이제 의미 없음(더 이상 grid가 아님) — 삭제하고 `.cat-grid-side`만 남기거나(좁은 화면용 minmax 값 조정), 전체 미디어쿼리를 삭제해도 무방(Step 4의 `auto-fit`이 이미 반응형이라 중복).
+
+- [ ] **Step 5: 브라우저 실측**
+
+`mcp__claude-in-chrome__*` 사용, `http://localhost:8090/insights` 로드:
+1. 스크린샷으로 확인: 좌우 2단 분할이 사라지고, 히어로→브리핑바→소스라이브러리(가운데 아이콘줄)→시그널레일→촉매→최근리포트→브리핑기록이 세로로 순서대로 쌓여있는지.
+2. 소스라이브러리 아이콘 클릭 → `libShow`/`toggleLib` 펼침/접힘 정상 동작 확인.
+3. 시그널 카드(있으면) 클릭 → `sigExpand` 아코디언 정상 동작 확인.
+4. 콘솔 에러 없는지 확인.
+5. `docs/mockups/insights-apple-light-v5.html`을 나란히 열어 전체적인 "1단 중앙정렬" 구조가 실제로 같은 계열인지 육안 비교.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git branch --show-current
+git add dashboard/insights.html
+git commit -m "style(insights): flatten L0 to single-column layout matching v5 structure"
+```
+
+---
+
 ## Post-plan (not in scope here, for NEXT_SESSION.md)
 
 - L1~L6 드릴다운·브리핑 워크스페이스(`#nbws`) 모달의 구조적 재설계(현재는 Task 2 토큰만 적용, 레이아웃은 기존 유지) — 원하면 별도 후속 작업.

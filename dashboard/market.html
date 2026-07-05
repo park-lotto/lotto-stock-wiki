@@ -97,7 +97,7 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 
 /* ── 4카드 패널 (코스피/코스닥/미국선물/야간선물) ── */
 .mkt-card{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:10px;
-  padding:12px 14px;min-width:0;display:flex;flex-direction:column;gap:7px;
+  padding:12px 14px;min-width:0;display:flex;flex-direction:column;gap:7px;position:relative;
   scrollbar-width:thin;scrollbar-color:#222 transparent;}
 .mkt-card::-webkit-scrollbar{width:3px;}
 .mkt-card::-webkit-scrollbar-thumb{background:#333;border-radius:2px;}
@@ -200,8 +200,9 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 .timeline-item.tl-event .bi-headline{font-size:14.5px;font-weight:800;margin:3px 0 0;color:#fff;}
 .timeline-item .bi-body{font-size:12.5px;color:#bbb;line-height:1.5;margin-top:5px;}
 .tl-extra{margin-left:6px;font-size:10.5px;font-weight:500;color:#777;}
-.card-fold-btn{font-size:11px;font-weight:500;color:#888;cursor:pointer;padding:2px 6px;
-  border-radius:4px;white-space:nowrap;}
+.card-fold-btn{position:absolute;top:10px;right:12px;z-index:2;font-size:11px;font-weight:500;
+  color:#888;cursor:pointer;padding:2px 6px;border-radius:4px;white-space:nowrap;
+  background:var(--panel);}
 .card-fold-btn:hover{background:#262626;color:#ccc;}
 
 /* ── 히트맵 그리드 (6열·고박스·큰폰트) ── */
@@ -1964,11 +1965,11 @@ function renderMarketFlow(d){
       }
 
       return`<div class="mkt-card">
+        ${_foldBtn(idxCardId)}
         <div class="mkt-hdr">
           <span class="mkt-name">${esc(m.label)}</span>
           <span class="mkt-price">${priceStr}</span>
           <span class="mkt-rate ${rc}">${rateStr}</span>
-          <span style="flex:1"></span>${_foldBtn(idxCardId)}
         </div>
         ${barSection}
         ${idxExpanded?`<div>
@@ -1986,9 +1987,13 @@ function renderMarketFlow(d){
         <div class="mkt-ts">${ts} 기준</div>
       </div>`;
     }).join("");
-  // 렌더 후 높이 고정: 5개 박스 전부 MKT_CARD_HEIGHT로 고정, 내용이 넘치면 카드별로 스크롤
+  // 렌더 후 높이 고정: 5개 박스 전부 MKT_CARD_HEIGHT(미리보기는 절반)로 고정, 내용이 넘치면 카드별로 스크롤
   // (콘텐츠양에 따라 계속 늘어나던 것 방지 — 뉴스/탑픽은 mkt-below-panel로 분리해서 나감)
-  requestAnimationFrame(()=>{
+  // innerHTML 대입 직후 동기 실행 — requestAnimationFrame은 백그라운드(비활성) 탭에서
+  // 아예 콜백이 안 불려 높이고정이 통째로 안 먹히는 버그가 있었음(대시보드는 백그라운드 탭에
+  // 켜두는 경우가 많아 실사용에서 재현됨). offsetHeight 읽기 자체가 동기 리플로우를 강제하므로
+  // rAF로 다음 페인트를 기다릴 필요가 없다.
+  (()=>{
     const cards=[...document.querySelectorAll('#mkt-panel .mkt-card')];
     if(cards.length<4) return;
     const cardIds=["kospi","kosdaq","global","rank","briefing"];
@@ -2002,7 +2007,7 @@ function renderMarketFlow(d){
       else if(i===4) c.style.justifyContent='flex-start';     // 브리핑 카드: 짧으면 위 정렬(늘리지 않음)
       else c.style.justifyContent='space-between';             // 나머지: 짧으면 균등 분산
     });
-  });
+  })();
   }catch(e){
     console.error("market_flow 오류",e);
   }

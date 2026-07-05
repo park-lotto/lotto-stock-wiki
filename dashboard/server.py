@@ -230,11 +230,13 @@ try:
     import hot_clips as _hotclips  # noqa: E402  (find_and_rank/classify)
     import clip_teardown as _teardown  # noqa: E402  (teardown/mix)
     import ai_search as _ai_search  # noqa: E402  (자연어 검색)
+    import story_builder as _story  # noqa: E402  (스토리라인 설계도/대본)
     import quote_extractor as _qe  # noqa: E402  (extract_stream/parse_video_id)
 except (ImportError, SystemExit):
     _hotclips = None  # type: ignore
     _teardown = None  # type: ignore
     _ai_search = None  # type: ignore
+    _story = None  # type: ignore
     _qe = None  # type: ignore
 
 try:
@@ -5767,6 +5769,52 @@ async def api_yt_quote_save(req: Request):
     return JSONResponse(content={"ok": True,
                                  "path": os.path.relpath(save_path, ROOT).replace("\\", "/"),
                                  "count": len(quotes)})
+
+
+@app.post("/yt/storyline")
+async def api_yt_storyline(req: Request):
+    """믹스 초안 → 서사 설계도(claude Opus, Gemini 폴백) — SSE."""
+    if _story is None:
+        return JSONResponse(content={"error": "story_builder 모듈 없음"}, status_code=503)
+    body = await req.json()
+    draft = body.get("draft") or {}
+    category = body.get("category", "")
+    if not draft:
+        return JSONResponse(content={"error": "믹스 초안 필요"}, status_code=400)
+
+    def _stream():
+        yield f"data: {json.dumps({'type':'running'}, ensure_ascii=False)}\n\n"
+        try:
+            sl = _story.build_storyline(draft, category,
+                                        claude_bin=CLAUDE_BIN or "claude", cwd=ROOT)
+            yield f"data: {json.dumps({'type':'done','storyline':sl}, ensure_ascii=False)}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'type':'error','message':str(e)[:200]}, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(_stream(), media_type="text/event-stream")
+
+
+@app.post("/yt/script")
+async def api_yt_script(req: Request):
+    """(편집된) 설계도 텍스트 → 완성 대본(claude Opus, Gemini 폴백) — SSE."""
+    if _story is None:
+        return JSONResponse(content={"error": "story_builder 모듈 없음"}, status_code=503)
+    body = await req.json()
+    storyline_text = (body.get("storyline") or "").strip()
+    category = body.get("category", "")
+    if not storyline_text:
+        return JSONResponse(content={"error": "설계도 텍스트 필요"}, status_code=400)
+
+    def _stream():
+        yield f"data: {json.dumps({'type':'running'}, ensure_ascii=False)}\n\n"
+        try:
+            sc = _story.build_script(storyline_text, category,
+                                     claude_bin=CLAUDE_BIN or "claude", cwd=ROOT)
+            yield f"data: {json.dumps({'type':'done','script':sc}, ensure_ascii=False)}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'type':'error','message':str(e)[:200]}, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(_stream(), media_type="text/event-stream")
 
 
 # ══════════════════════════════════════════════════════════════

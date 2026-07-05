@@ -1,0 +1,130 @@
+[
+  {
+    "date": "2026-07-05",
+    "event": "한국 수출입 동향 발표 (2026년 6월 데이터)",
+    "type": "수출지표",
+    "importance": "MID",
+    "desc": "한국 경제의 주요 동력인 수출 실적 발표로 시장 심리에 영향.",
+    "confirmed": false
+  },
+  {
+    "date": "2026-07-05",
+    "event": "한국 소비자물가지수(CPI) 발표 (2026년 6월 데이터)",
+    "type": "경제지표",
+    "importance": "HIGH",
+    "desc": "인플레이션 압력 확인 및 한국은행의 통화정책 방향 예측에 중요.",
+    "confirmed": false
+  },
+  {
+    "date": "2026-07-08",
+    "event": "미국 FOMC 의사록 발표 (2026년 6월 회의)",
+    "type": "FOMC",
+    "importance": "HIGH",
+    "desc": "미국 통화정책 방향에 대한 추가 단서 제공, 글로벌 금융시장 변동성 확대 가능.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-14",
+    "event": "미국 소비자물가지수(CPI) 발표 (2026년 6월 데이터)",
+    "type": "경제지표",
+    "importance": "HIGH",
+    "desc": "미국 인플레이션 추이 확인 및 연준의 금리 인상/인하 기대감에 영향.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-15",
+    "event": "미국 생산자물가지수(PPI) 발표 (2026년 6월 데이터)",
+    "type": "경제지표",
+    "importance": "HIGH",
+    "desc": "생산자 물가 동향을 통해 향후 소비자 물가 및 기업 실적 전망에 영향.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-15",
+    "event": "대한민국 정부 부처 업무보고 (일반 정책 논의)",
+    "type": "정책",
+    "importance": "MID",
+    "desc": "하반기 정부 정책 방향 및 주요 과제 발표, 특정 산업에 대한 기대감 형성 가능.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-21",
+    "event": "대한민국 정부 부처 업무보고 종료 (일반 정책 논의)",
+    "type": "정책",
+    "importance": "MID",
+    "desc": "하반기 정부 정책 방향 및 주요 과제 발표, 특정 산업에 대한 기대감 형성 가능.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-22",
+    "event": "한국 생산자물가지수(PPI) 발표 (2026년 6월 데이터)",
+    "type": "경제지표",
+    "importance": "HIGH",
+    "desc": "생산자 물가 동향을 통해 향후 소비자 물가 및 기업 실적 전망에 영향.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-23",
+    "event": "한국 2분기 실질 국내총생산(GDP) 속보치 발표",
+    "type": "경제지표",
+    "importance": "HIGH",
+    "desc": "한국 경제 성장률 확인 및 경기 판단에 중요, 투자 심리에 영향.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-25",
+    "event": "한국은행 금융통화위원회 기준금리 결정 (7월 회의)",
+    "type": "금통위",
+    "importance": "HIGH",
+    "desc": "한국 기준금리 결정으로 채권, 주식, 외환 시장에 직접적인 영향.",
+    "confirmed": false
+  },
+  {
+    "date": "2026-07-28",
+    "event": "미국 2분기 GDP (속보치) 발표",
+    "type": "경제지표",
+    "importance": "HIGH",
+    "desc": "미국 경제 성장률 확인 및 글로벌 경기 전망에 영향.",
+    "confirmed": false
+  },
+  {
+    "date": "2026-07-28",
+    "event": "미국 FOMC 회의 시작",
+    "type": "FOMC",
+    "importance": "HIGH",
+    "desc": "미국 통화정책 방향 논의 시작, 시장의 경계감 고조.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-29",
+    "event": "미국 FOMC 회의 종료 및 정책 성명 발표",
+    "type": "FOMC",
+    "importance": "HIGH",
+    "desc": "미국 기준금리 결정 및 향후 통화정책 방향 제시, 글로벌 금융시장에 즉각적인 영향.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-08-01",
+    "event": "한국 수출입 동향 발표 (2026년 7월 데이터)",
+    "type": "수출지표",
+    "importance": "MID",
+    "desc": "한국 경제의 주요 동력인 수출 실적 발표로 시장 심리에 영향.",
+    "confirmed": false
+  },
+  {
+    "date": "2026-08-01",
+    "event": "한국 소비자물가지수(CPI) 발표 (2026년 7월 데이터)",
+    "type": "경제지표",
+    "importance": "HIGH",
+    "desc": "인플레이션 압력 확인 및 한국은행의 통화정책 방향 예측에 중요.",
+    "confirmed": false
+  },
+  {
+    "date": "2026-08-04",
+    "event": "한국은행 금융통화위원회 기준금리 결정 (8월 회의)",
+    "type": "금통위",
+    "importance": "HIGH",
+    "desc": "한국 기준금리 결정으로 채권, 주식, 외환 시장에 직접적인 영향.",
+    "confirmed": false
+  }
+]

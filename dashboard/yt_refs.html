@@ -89,6 +89,7 @@ input[type=text]{padding:9px 13px;background:var(--card);border:1px solid var(--
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 let curCat={id:'',name:''};
 const cards={};   // video_id -> teardown card (해체 완료된 것)
+let lastDraft=null;   // 마지막 믹스 초안 (스토리라인 단계 입력)
 
 // ── 카테고리 로드
 fetch('/yt/categories').then(r=>r.json()).then(d=>{
@@ -157,17 +158,21 @@ function aiBadge(){
   </div>`;
 }
 
-// ⭐추천도: 정말 좋은 레퍼런스 = 소재가 터지고(배수/기여도) + 내용도 좋음(참여율) 겹칠수록 높음
+// ⭐추천도: 정말 좋은 레퍼런스 = 소재가 터지고(배수+판정+기여도) + 내용도 좋음(참여율) 겹칠수록 높음
 const GR={Great:3,Good:2,Normal:1,'':0};
+// 배수(구독자 대비 조회수) 크기 = 소재가 얼마나 캐리했나. 판정(금맥/기여)이 이분법이라
+// 못 잡는 "18x vs 3x"의 강도 차이를 구간 점수로 반영.
+function ratioScore(vps){vps=vps||0;return vps>=10?3:vps>=5?2:vps>=3?1:0;}
 function withStar(r){
   let s=0;
-  if(r.verdict==='금맥')s+=2; else if(r.verdict==='기여')s+=1;
+  if(r.verdict==='금맥')s+=2; else if(r.verdict==='기여')s+=1;  // 판정(작은채널 터짐 여부)
+  s+=ratioScore(r.view_per_sub);                  // 배수 강도(소재 캐리력)
   s+=GR[r.contribution_grade]||0;                 // 기여도(채널평균 대비)
-  if(r.content_grade==='높음')s+=2; else if(r.content_grade==='보통')s+=1;  // 참여율
-  r.star=s;   // 0~7
+  if(r.content_grade==='높음')s+=2; else if(r.content_grade==='보통')s+=1;  // 참여율(내용빨)
+  r.star=s;   // 0~10
   return r;
 }
-function starCell(s){const n=s>=5?3:s>=3?2:s>=1?1:0;return '★'.repeat(n)+'<span style="color:var(--line)">'+'★'.repeat(3-n)+'</span>';}
+function starCell(s){const n=s>=7?3:s>=4?2:s>=1?1:0;return '★'.repeat(n)+'<span style="color:var(--line)">'+'★'.repeat(3-n)+'</span>';}
 
 // 다단계 정렬: 헤더 클릭 = 우선순위 순서대로 추가(1·2·3차). 3단계 토글:
 //   1클릭 ▼내림차순(번호표시) → 2클릭 ▲오름차순 → 3클릭 해제(사라짐)
@@ -207,7 +212,7 @@ function drawTable(){
     const vurl=`https://www.youtube.com/watch?v=${r.video_id}`;
     const curl=r.channel_id?`https://www.youtube.com/channel/${r.channel_id}`:'';
     h+=`<tr>
-      <td class="mini" style="color:#ffcf40" title="추천도 ${r.star}/7">${starCell(r.star)}</td>
+      <td class="mini" style="color:#ffcf40" title="추천도 ${r.star}/10 (판정+배수+기여도+참여율)">${starCell(r.star)}</td>
       <td>${verdictCell(r.verdict)}</td>
       <td><a href="${vurl}" target="_blank" style="color:var(--txt);text-decoration:none">${esc(r.title)} <span class="mini muted">↗</span></a></td>
       <td class="mini">${curl?`<a href="${curl}" target="_blank" style="color:var(--muted)">${esc(r.channel_title)} ↗</a>`:esc(r.channel_title)}</td>
@@ -225,8 +230,9 @@ function drawTable(){
     </tr>`;
   });
   h+=`</table><div class="mini muted" style="margin-top:6px">
-    <b>⭐추천</b> = 아래 셋이 겹칠수록 높음 = "정말 좋은 레퍼런스" ·
+    <b>⭐추천(0~10)</b> = 아래 넷이 겹칠수록 높음 = "정말 좋은 레퍼런스" ·
     <b>판정 금맥</b>=작은 채널이 구독자 대비 터뜨림(소재가 캐리) ·
+    <b>배수</b>=구독자 대비 조회 강도(10x↑ 폭발·5x↑·3x↑ 가점 — 소재 캐리력) ·
     <b>기여도</b>=그 채널 평균 대비 이 영상이 유난히 터짐(제목·훅이 통함) ·
     <b>콘텐츠(참여율)</b>=썸네일 클릭이 아니라 내용이 좋아 반응(대본 배울 값). 낮음=썸네일빨.</div>`;
   sa.innerHTML=h;
@@ -334,6 +340,7 @@ function doMix(){
 }
 
 function renderDraft(box,d){
+  lastDraft=d;
   const seg=(k,arr)=>arr&&arr.length?`<div class="dim"><span class="k">${k}</span>${dimList(arr)}</div>`:'';
   box.innerHTML=`<div class="plan">
     <div class="dim"><span class="k">제목 후보</span>${dimList(d['제목후보'])}</div>
@@ -343,8 +350,111 @@ function renderDraft(box,d){
     <div class="dim"><span class="k">차별화 (빈틈 공략)</span><div class="val">${esc(d['차별화_빈틈공략'])}</div></div>
     <div class="dim"><span class="k">CTA</span><div class="val">${esc(d['CTA'])}</div></div>
     <div class="dim"><span class="k mini">믹스 근거</span><div class="val mini muted">${esc(d['믹스_근거'])}</div></div>
+  </div>
+  <div class="label">④ 스토리라인 — 초안을 탄탄한 서사로 (Opus, ~1분)</div>
+  <button class="btn" onclick="doStoryline()">🎬 스토리라인 설계도 만들기</button>
+  <div id="storyline"></div>`;
+  box.scrollIntoView({behavior:'smooth'});
+}
+
+// ── ④a 서사 설계도 (믹스 초안 → Opus)
+function doStoryline(){
+  if(!lastDraft)return;
+  const sbox=document.getElementById('storyline');
+  sbox.innerHTML='<div class="spin" style="margin-top:10px">🎬 Opus가 서사 설계 중… (~1분)</div>';
+  sse('/yt/storyline',{draft:lastDraft,category:curCat.name},ev=>{
+    if(ev.type==='done')renderStoryline(sbox,ev.storyline);
+    else if(ev.type==='error')sbox.innerHTML=`<p style="color:#e88">설계도 실패: ${esc(ev.message)}</p>`;
+  });
+}
+
+// 설계도 dict → 사람이 읽고 편집하기 좋은 텍스트
+function storylineToText(sl){
+  const L=[];
+  L.push(`제목: ${sl['제목확정']||''}`);
+  L.push(`로그라인: ${sl['로그라인']||''}`);
+  L.push(`타겟 후킹: ${sl['타겟_후킹']||''}`);
+  L.push('');
+  L.push('[씬]');
+  (sl['씬']||[]).forEach((s,i)=>{
+    L.push(`${i+1}. ${s['구간']||''} (${s['역할']||''})`);
+    if(s['목표'])L.push(`   목표: ${s['목표']}`);
+    if(s['핵심'])L.push(`   핵심: ${s['핵심']}`);
+    if(s['긴장'])L.push(`   긴장: ${s['긴장']}`);
+    if(s['연결'])L.push(`   → 연결: ${s['연결']}`);
+  });
+  L.push('');
+  L.push(`긴장곡선: ${sl['긴장곡선']||''}`);
+  L.push(`차별화: ${sl['차별화']||''}`);
+  L.push(`CTA: ${sl['cta']||''}`);
+  return L.join('\n');
+}
+
+function renderStoryline(box,sl){
+  const model=(sl['_model']||'').startsWith('claude')?'🅾️ Opus':'♊ Gemini(폴백)';
+  const txt=storylineToText(sl);
+  box.innerHTML=`<div class="plan">
+    <div class="mini muted" style="margin-bottom:6px">설계도 생성: ${model} · 아래에서 직접 고친 뒤 대본화하세요</div>
+    <textarea id="sl-edit" style="width:100%;min-height:340px;background:var(--card);border:1px solid var(--line);border-radius:8px;color:var(--txt);font-family:inherit;font-size:.84rem;line-height:1.6;padding:12px;resize:vertical">${esc(txt)}</textarea>
+    <div style="margin-top:10px"><button class="btn" onclick="doScript()">✍️ 이 설계도로 완성 대본 만들기</button></div>
+    <div id="script"></div>
   </div>`;
   box.scrollIntoView({behavior:'smooth'});
+}
+
+// ── ④b 완성 대본 (편집된 설계도 → Opus)
+function doScript(){
+  const txt=(document.getElementById('sl-edit').value||'').trim();
+  if(!txt)return;
+  const scbox=document.getElementById('script');
+  scbox.innerHTML='<div class="spin" style="margin-top:10px">✍️ Opus가 완성 대본 집필 중… (1~2분)</div>';
+  sse('/yt/script',{storyline:txt,category:curCat.name},ev=>{
+    if(ev.type==='done')renderScript(scbox,ev.script);
+    else if(ev.type==='error')scbox.innerHTML=`<p style="color:#e88">대본 실패: ${esc(ev.message)}</p>`;
+  });
+}
+
+function scriptToText(sc){
+  const L=[];
+  L.push(`제목: ${sc['제목']||''}`);
+  L.push(`썸네일: ${sc['썸네일_문구']||''}`);
+  L.push(`예상길이: ${sc['예상길이']||''}`);
+  L.push('');
+  (sc['대본']||[]).forEach(s=>{
+    L.push(`[${s['구간']||''}] ${s['역할']||''}`);
+    L.push(s['나레이션']||'');
+    if(s['화면지시'])L.push(`(화면: ${s['화면지시']})`);
+    L.push('');
+  });
+  if(sc['제작메모'])L.push(`제작메모: ${sc['제작메모']}`);
+  return L.join('\n');
+}
+
+function renderScript(box,sc){
+  const model=(sc['_model']||'').startsWith('claude')?'🅾️ Opus':'♊ Gemini(폴백)';
+  const segs=(sc['대본']||[]).map(s=>`
+    <div class="script-seg"><span class="t">${esc(s['구간']||'')} · ${esc(s['역할']||'')}</span>
+     <div class="val" style="margin-top:3px">${esc(s['나레이션']||'')}</div>
+     ${s['화면지시']?`<div class="mini muted" style="margin-top:2px">🎥 ${esc(s['화면지시'])}</div>`:''}</div>`).join('');
+  box.innerHTML=`<div class="plan" style="border-color:#22c55e">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="dim"><span class="k">🎬 완성 대본</span> <span class="mini muted">${model}</span></div>
+      <button class="btn sec" style="padding:4px 11px;font-size:.72rem" onclick="copyScript()">📋 대본 복사</button></div>
+    <div class="dim"><span class="k">제목</span><div class="val">${esc(sc['제목']||'')}</div></div>
+    <div class="dim"><span class="k">썸네일 문구</span><div class="val">${esc(sc['썸네일_문구']||'')} <span class="mini muted">· ${esc(sc['예상길이']||'')}</span></div></div>
+    <div class="dim"><span class="k">📜 나레이션</span>${segs}</div>
+    ${sc['제작메모']?`<div class="dim"><span class="k mini">제작 메모</span><div class="val mini muted">${esc(sc['제작메모'])}</div></div>`:''}
+  </div>`;
+  window._lastScriptText=scriptToText(sc);
+  box.scrollIntoView({behavior:'smooth'});
+}
+
+function copyScript(){
+  const t=window._lastScriptText||'';
+  navigator.clipboard.writeText(t).then(()=>alert('대본을 클립보드에 복사했습니다')).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();
+    document.execCommand('copy');ta.remove();alert('대본을 복사했습니다');
+  });
 }
 
 // ── SSE 헬퍼 (POST + 스트림 파싱)

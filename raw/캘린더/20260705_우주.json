@@ -1,0 +1,56 @@
+[
+  {
+    "date": "2026-07-03",
+    "company": null,
+    "event": "대한민국 우주항공 산업육성 전략 발표",
+    "type": "정책",
+    "importance": "HIGH",
+    "desc": "우주항공 산업 민간 주도 전환, 2030년 민간 달 착륙선 발사, 2035년 한국형 저궤도 위성통신망 구축 등 주요 정책 발표.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-24",
+    "company": null,
+    "event": "국제 항공우주공학 및 시스템 심포지엄 (ISAES) 시작",
+    "type": "전시",
+    "importance": "MID",
+    "desc": "중국 구이양에서 개최되는 항공우주 공학 및 시스템 관련 국제 심포지엄.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-XX",
+    "company": null,
+    "event": "중국 톈원-2 소행성 카모오알레와 도착 예정",
+    "type": "기타",
+    "importance": "MID",
+    "desc": "중국의 소행성 탐사선 톈원-2의 소행성 카모오알레와 도착 예정.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-08-02",
+    "company": null,
+    "event": "IAA SPACEAI 2026 최종 논문 제출 마감",
+    "type": "전시",
+    "importance": "LOW",
+    "desc": "제주에서 개최될 IAA SPACEAI 2026 국제학술대회의 최종 논문 제출 마감일.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-08-XX",
+    "company": null,
+    "event": "IAA SPACEAI 2026 (제3회 IAA Conference on AI for Space) 개최",
+    "type": "전시",
+    "importance": "MID",
+    "desc": "제주에서 개최되는 항공우주 분야와 인공지능(AI) 기술 융합을 주제로 한 국제학술대회.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-08-07",
+    "company": "인텔리안테크",
+    "event": "2026년 2분기 실적 발표 예정",
+    "type": "실적발표",
+    "importance": "MID",
+    "desc": "인텔리안테크의 2026년 2분기 실적 발표 예정일.",
+    "confirmed": true
+  }
+]

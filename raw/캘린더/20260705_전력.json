@@ -1,0 +1,92 @@
+[
+  {
+    "date": "2026-07-01",
+    "company": null,
+    "event": "2026년 6월 수출입 동향 발표",
+    "type": "기타",
+    "importance": "HIGH",
+    "desc": "관세청 및 산업통상자원부 발표, 6월 수출액 사상 첫 1000억 달러 돌파, 전기기기 수출액 역대 최대 기록 (16억 5천만 달러)",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-02",
+    "company": "한국전력공사, LS ELECTRIC, HD현대일렉트릭, 효성중공업",
+    "event": "K-DC 산업 확산 2026 행사 개최 및 MOU 체결",
+    "type": "정책",
+    "importance": "HIGH",
+    "desc": "한국전력공사가 LS일렉트릭 천안사업장에서 K-DC 산업 전환 본격화 선언, 글로벌 DC 기술 특화 연구단지 조성 및 기술협력 MOU 체결 (참여: 한국에너지공과대, LS일렉트릭, LS전선, HD현대일렉트릭, 효성중공업, LG전자)",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-04",
+    "company": null,
+    "event": "1차 재생에너지 기본계획 및 12차 전력수급기본계획 수요 전망(안) 발표",
+    "type": "정책",
+    "importance": "HIGH",
+    "desc": "재생에너지가 주요 에너지원으로 자리매김하고 전기화 및 에너지 전환을 추진할 것임을 표명",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-05",
+    "company": null,
+    "event": "ICEE 국제학술대회 2026",
+    "type": "전시",
+    "importance": "MID",
+    "desc": "대한전기학회 주최 국제학술대회, 7월 5일~9일 한국상공회의소에서 개최",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-08",
+    "company": null,
+    "event": "PV Insight Korea 2026",
+    "type": "전시",
+    "importance": "MID",
+    "desc": "분산에너지와 RE100 대응 전략을 공유하는 전문 컨퍼런스, 서울 코엑스에서 개최",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-08",
+    "company": null,
+    "event": "MNGA 연례 컨퍼런스",
+    "type": "전시",
+    "importance": "LOW",
+    "desc": "미국 앨라배마주 오렌지 비치에서 7월 8일~10일 개최되는 전력 및 에너지 컨퍼런스",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-19",
+    "company": null,
+    "event": "IEEE PES General Meeting 2026",
+    "type": "전시",
+    "importance": "HIGH",
+    "desc": "전력 공학 전문가들이 모여 전력 시스템 및 관련 기술에 대한 최신 이슈와 개발 사항을 논의하는 국제 컨퍼런스, 7월 19일~23일 캐나다 몬트리올에서 개최",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-22",
+    "company": null,
+    "event": "2026년 2분기 주요 상장사 실적 발표 시즌 시작",
+    "type": "실적발표",
+    "importance": "HIGH",
+    "desc": "일반적으로 7월 말부터 8월 중순까지 국내 주요 상장사들의 2분기 실적 발표가 진행될 예정. 삼성전자의 2분기 잠정실적 발표는 7월 7일로 예상되며, 이는 실적 시즌의 첫 분수령이 될 것임.",
+    "confirmed": false
+  },
+  {
+    "date": "2026-07-XX",
+    "company": null,
+    "event": "전력망 투자 및 전기요금 현실화 관련 정부 정책 논의",
+    "type": "정책",
+    "importance": "HIGH",
+    "desc": "2026년 전력망 확충 및 안정화에 필요한 비용을 반영하여 전기요금을 현실화하고 합리적인 수준으로 인상하는 정책적 결정이 예상됨",
+    "confirmed": false
+  },
+  {
+    "date": "2026-07-XX",
+    "company": null,
+    "event": "AI 기반 분산 전력망 산업 육성 정책 추진",
+    "type": "정책",
+    "importance": "HIGH",
+    "desc": "정부는 2026년부터 ESS를 중심으로 한 AI 기반 분산 전력망 산업 육성 정책을 추진하며 대규모 예산을 투입할 계획",
+    "confirmed": false
+  }
+]

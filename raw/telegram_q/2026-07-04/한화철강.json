@@ -2,52 +2,61 @@
   "sector_name": "기타",
   "sector_view": "중립",
   "points": [
-    "비철금속 시장은 지정학적 불확실성에 따라 품목별 차별화된 흐름을 보임",
-    "미국 전역의 극심한 폭염으로 전력망 수급 압박 및 행사 취소 발생",
-    "미국 셰일 기업들의 시추 확대 및 유전 서비스 임금 상승 지속",
-    "미국 에너지 시장에서 천연가스의 비중이 점진적으로 확대되는 추세"
+    "비철금속 시장은 지정학적 불확실성으로 인해 품목별 차별화된 흐름을 보임.",
+    "금 가격은 연준의 금리 인상 리스크로 단기 전망이 하향 조정됨.",
+    "폭염으로 인한 전력망 부하 및 에너지 수급 불안정 심화.",
+    "에너지 전환 및 생산 설비 확충을 위한 광산 및 인프라 투자 지속."
   ],
   "stocks_mentioned": [
     {
       "name": "SQM",
-      "comment": "SQM과 Codelco의 합작사는 리튬 생산 목표를 올해 대비 70% 이상 상향 조정한 47만 톤으로 제시함",
+      "comment": "Codelco와의 합작사를 통해 향후 리튬 생산 목표를 47만 톤으로 대폭 상향함.",
       "ts": "19:12",
       "quote": "SQM-Codelco Venture Maps Path to Higher Lithium Output in Chile",
       "sector": "2차전지"
     },
     {
       "name": "Codelco",
-      "comment": "SQM과 리튬 생산 확대를 위한 합작 프로젝트 추진 중",
+      "comment": "SQM과 협력하여 칠레 내 리튬 생산량 확대를 추진함.",
       "ts": "19:12",
       "quote": "SQM-Codelco Venture Maps Path to Higher Lithium Output in Chile",
       "sector": "기타"
     },
     {
       "name": "Airbus",
-      "comment": "상반기 350대 항공기 인도하며 생산 속도를 올리고 있으나 공급망 차질 지속",
+      "comment": "공급망 차질에도 상반기 350대 항공기 인도 기록.",
       "ts": "19:33",
       "quote": "Airbus Delivered 350 Planes in First Half Amid Supply Chain Woes",
       "sector": "기타"
     },
     {
       "name": "Boeing",
-      "comment": "트럼프 행정부 지원을 바탕으로 생산량을 회복하며 에어버스 추격 중",
+      "comment": "에어버스의 경쟁사로 트럼프 행정부 지원 하에 생산량 회복 중.",
       "ts": "19:33",
-      "quote": "Airbus Delivered 350 Planes in First Half Amid Supply Chain Woes",
+      "quote": "한편 경쟁사인 보잉은 트럼프 행정부의 지원을 바탕으로 생산량을 회복하며 에어버스를 추격하고 있습니다.",
       "sector": "기타"
     }
   ],
   "events": [
     {
-      "fact": "JPMorgan이 연말 금 가격 전망치를 기존 온스당 6,000달러에서 4,500달러로 하향 조정함",
-      "ts": "18:51",
-      "quote": "JPMorgan sees $4,500 gold price in fourth quarter, says risks to downside"
+      "fact": "미국 내 극심한 폭염으로 전력망 수급 비상 및 독립기념일 행사 취소",
+      "ts": "18:52",
+      "quote": "Heat wave disrupts Fourth of July events across US, strains power grids"
     },
     {
-      "fact": "독일 송전망 운영사 앰프리온이 신규 가스 발전 확보 전까지 석탄 발전소 폐쇄 중단을 촉구함",
+      "fact": "유전 서비스 근로자 임금 사상 최고치 기록",
+      "ts": "19:17",
+      "quote": "Oilfield-Contractor Pay Hits Fresh Record as War Spurs Drilling"
+    },
+    {
+      "fact": "독일 송전망 운영사, 가스 발전 확충 전 석탄 발전소 폐쇄 중단 촉구",
       "ts": "19:31",
       "quote": "Germany Should Stop Shutting Off Coal Plants, Grid Operator Says"
+    },
+    {
+      "fact": "미국 내 에너지원 변화로 천연가스가 2030년 석유 추월 전망",
+      "ts": "19:34",
+      "quote": "America Runs on Natural Gas: Fuel Set to Surpass Oil as US Top Energy Source by 2030"
     }
-  ],
-  "quote": "지정학적 리스크와 기후 변화로 인한 에너지 및 원자재 시장의 변동성 확대"
+  ]
 }

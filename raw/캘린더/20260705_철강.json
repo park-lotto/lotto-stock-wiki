@@ -1,0 +1,65 @@
+[
+  {
+    "date": "2026-07-01",
+    "company": null,
+    "event": "EU 신 철강 수입 관리 제도 시행",
+    "type": "정책",
+    "importance": "HIGH",
+    "desc": "EU의 철강 수입 규제 강화 (무관세 물량 46% 축소, 초과 물량 관세 50% 인상) 및 한국산 철강 쿼터 확정 (전용 쿼터 207.3만 톤).",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-01",
+    "company": null,
+    "event": "2026년 6월 및 상반기 수출입 동향 발표",
+    "type": "기타",
+    "importance": "MID",
+    "desc": "산업통상부에서 2026년 6월 및 상반기 한국의 수출입 동향 발표.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-08",
+    "company": null,
+    "event": "상해 금속 재활용 박람회 (Metal Recycling 2026) 개최",
+    "type": "전시",
+    "importance": "LOW",
+    "desc": "중국 상하이에서 7월 8일부터 10일까지 금속 재활용 산업의 최신 기술 및 시장 동향을 조망하는 국제 전시회 개최.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-15",
+    "company": null,
+    "event": "2026 아시아스틸포럼 (ASF 2026) 개최",
+    "type": "전시",
+    "importance": "MID",
+    "desc": "중국 베이징에서 7월 15일부터 17일까지 탈탄소화, 무역 환경 변화, AI 등 철강 산업의 미래를 논의하는 아시아 최대 규모 국제 컨퍼런스 개최.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-24",
+    "company": "현대제철",
+    "event": "2026년 2분기 실적 발표 (예정)",
+    "type": "실적발표",
+    "importance": "HIGH",
+    "desc": "현대제철의 2026년 2분기 경영실적 발표 예상. (과거 발표일정 및 시장 전망 기반)",
+    "confirmed": false
+  },
+  {
+    "date": "2026-07-29",
+    "company": "조일알미늄",
+    "event": "2026년 2분기 실적 발표 (예정)",
+    "type": "실적발표",
+    "importance": "MID",
+    "desc": "조일알미늄의 2026년 2분기 실적 발표 예상. (과거 발표일정 기반)",
+    "confirmed": false
+  },
+  {
+    "date": "2026-08-01",
+    "company": null,
+    "event": "2026년 7월 수출입 동향 발표 (예정)",
+    "type": "기타",
+    "importance": "MID",
+    "desc": "산업통상부에서 2026년 7월 한국의 수출입 동향 발표 예상. (과거 발표일정 기반)",
+    "confirmed": false
+  }
+]

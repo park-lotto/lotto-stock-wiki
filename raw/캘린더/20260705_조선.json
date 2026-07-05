@@ -1,0 +1,29 @@
+[
+  {
+    "date": "2026-07-07",
+    "company": null,
+    "event": "한미 조선협력 관련 정책 논의",
+    "type": "정책",
+    "importance": "HIGH",
+    "desc": "미국 조선업 재건 정책(MASGA) 및 미 해군 함정 건조 관련 한미 협력 방안 논의 예정, 국내 조선사들의 대미 사업 기회에 영향 예상.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-28",
+    "company": null,
+    "event": "인도네시아 국제 조선, 해양 산업 박람회 (INAMARINE 2026)",
+    "type": "전시",
+    "importance": "MID",
+    "desc": "인도네시아 자카르타에서 개최되는 조선 및 해양 산업 박람회로, 동남아 시장 진출 및 기술 트렌드 파악 기회.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-08-01",
+    "company": null,
+    "event": "2026년 7월 수출입 동향 발표",
+    "type": "기타",
+    "importance": "HIGH",
+    "desc": "산업통상자원부에서 발표하는 월간 수출입 동향으로, 조선 섹터의 수출 실적 및 전반적인 경제 상황 파악에 중요.",
+    "confirmed": true
+  }
+]

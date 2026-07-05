@@ -1,0 +1,56 @@
+[
+  {
+    "date": "2026-07-09",
+    "company": null,
+    "event": "제2회 바이오차이나 글로벌 포럼 (BIOCHINA Global Forum @ Korea 2026)",
+    "type": "전시",
+    "importance": "HIGH",
+    "desc": "CAR-T 및 ADC 분야 심층 분석, 한·중 바이오 기업 및 글로벌 제약사 참여, 기술 쇼케이스 및 비즈니스 개발 기회 제공.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-10",
+    "company": null,
+    "event": "제2회 바이오차이나 글로벌 포럼 (BIOCHINA Global Forum @ Korea 2026)",
+    "type": "전시",
+    "importance": "HIGH",
+    "desc": "CAR-T 및 ADC 분야 심층 분석, 한·중 바이오 기업 및 글로벌 제약사 참여, 기술 쇼케이스 및 비즈니스 개발 기회 제공.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-15",
+    "company": null,
+    "event": "BIO Asia-Taiwan",
+    "type": "전시",
+    "importance": "MID",
+    "desc": "국내 중소형 바이오 기업들에게 관련성이 높은 주요 글로벌 바이오 컨퍼런스.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-19",
+    "company": null,
+    "event": "BIO Asia-Taiwan",
+    "type": "전시",
+    "importance": "MID",
+    "desc": "국내 중소형 바이오 기업들에게 관련성이 높은 주요 글로벌 바이오 컨퍼런스.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-23",
+    "company": "한올바이오파마",
+    "event": "2026년 2분기 실적 발표",
+    "type": "실적발표",
+    "importance": "HIGH",
+    "desc": "한올바이오파마의 2026년 2분기 실적 발표 예정.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-29",
+    "company": "삼성바이오로직스",
+    "event": "2026년 2분기 실적 발표",
+    "type": "실적발표",
+    "importance": "HIGH",
+    "desc": "삼성바이오로직스의 2026년 2분기 실적 발표 예정.",
+    "confirmed": true
+  }
+]

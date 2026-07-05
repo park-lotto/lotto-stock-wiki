@@ -1,0 +1,83 @@
+[
+  {
+    "date": "2026-07-06",
+    "company": "한전KPS",
+    "event": "IR 미팅 (신청자 접수)",
+    "type": "IR",
+    "importance": "MID",
+    "desc": "투자자 대상 주요 경영현황 설명 및 질의응답 진행 예정.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-31",
+    "company": null,
+    "event": "SMR 국가전략기술 지정 검토 (2027년 세제 개편안 포함 예정)",
+    "type": "정책",
+    "importance": "HIGH",
+    "desc": "정부가 소형모듈원자로(SMR)를 국가전략기술로 지정하여 연구개발(R&D) 및 시설투자 세액공제율을 높이는 방안을 검토 중이며, 이달 말 발표될 2027년 세제 개편안에 포함될 것으로 예상됨.",
+    "confirmed": false
+  },
+  {
+    "date": "2026-08-14",
+    "company": "한전KPS",
+    "event": "2026년 2분기 잠정영업실적 발표",
+    "type": "실적발표",
+    "importance": "HIGH",
+    "desc": "2026년 2분기 잠정 영업실적을 전자공시를 통해 발표할 예정.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-08-14",
+    "company": "한전KPS",
+    "event": "2026년 2분기 기업설명회 (온라인)",
+    "type": "IR",
+    "importance": "MID",
+    "desc": "2026년 2분기 잠정영업실적 발표 후 온라인 기업설명회 개최 예정.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-08-17",
+    "company": "우진",
+    "event": "2026년 2분기 실적 발표 예정",
+    "type": "실적발표",
+    "importance": "HIGH",
+    "desc": "2026년 2분기 실적 보고서 발표 예정.",
+    "confirmed": false
+  },
+  {
+    "date": "2026-08-17",
+    "company": "한전기술",
+    "event": "2026년 2분기 실적 발표 예정",
+    "type": "실적발표",
+    "importance": "HIGH",
+    "desc": "2026년 2분기 실적 보고서 발표 예정.",
+    "confirmed": false
+  },
+  {
+    "date": "2026-08-18",
+    "company": "현대건설",
+    "event": "2026년 2분기 실적 발표 예정",
+    "type": "실적발표",
+    "importance": "HIGH",
+    "desc": "2026년 2분기 실적 보고서 발표 예정.",
+    "confirmed": false
+  },
+  {
+    "date": "2026-08-21",
+    "company": "한전KPS",
+    "event": "2026년 2분기 기업설명회 (온라인)",
+    "type": "IR",
+    "importance": "LOW",
+    "desc": "2026년 2분기 잠정영업실적 발표 후 온라인 기업설명회 추가 개최 예정.",
+    "confirmed": true
+  },
+  {
+    "date": "2026-07-XX",
+    "company": null,
+    "event": "12차 전력수급기본계획(전기본) 원전 추가 건설 검토",
+    "type": "정책",
+    "importance": "HIGH",
+    "desc": "정부가 반도체 클러스터 및 AI 데이터센터 전력 수요 급증에 대응하여 12차 전기본에 원전 추가 건설 계획을 포함할지 검토 중이며, 올해 정기국회 전 제시될 전망.",
+    "confirmed": false
+  }
+]
