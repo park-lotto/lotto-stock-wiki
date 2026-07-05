@@ -235,3 +235,54 @@ def score_quotes(topic: str, segments: list[Segment], source: str,
     if failed:
         print(f"[score_quotes] 총 {len(chunks)}개 청크 중 {failed}개 실패", file=sys.stderr)
     return all_candidates
+
+
+def _capture_cmd(stream_url: str, ts: float, out_path: str) -> list[str]:
+    # -ss 를 -i 앞에 두면 키프레임 기준 빠른 seek (전체 디코드 안 함)
+    return ["ffmpeg", "-y", "-ss", f"{ts}", "-i", stream_url,
+            "-frames:v", "1", "-q:v", "2", out_path]
+
+
+def _stream_url(url: str) -> str:
+    try:
+        out = subprocess.run(["python", "-m", "yt_dlp", "-g", "-f",
+                              "best[height<=720]", "--no-warnings", url],
+                             capture_output=True, text=True,
+                             encoding="utf-8", errors="replace", timeout=90)
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(f"스트림 URL 타임아웃: {url}")
+    if out.returncode != 0 or not out.stdout.strip():
+        raise RuntimeError(f"스트림 URL 실패: {out.stderr[:200]}")
+    return out.stdout.strip().splitlines()[0]
+
+
+def capture_frame(url: str, ts: float, out_path: str) -> str:
+    stream = _stream_url(url)
+    try:
+        r = subprocess.run(_capture_cmd(stream, ts, out_path),
+                           capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=90)
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(f"프레임 캡처 타임아웃 @ {ts}s")
+    if r.returncode != 0 or not os.path.exists(out_path):
+        raise RuntimeError(f"프레임 캡처 실패 @ {ts}s: {r.stderr[:200]}")
+    return out_path
+
+
+def detect_visuals(frame_paths: list[str]) -> list[bool]:
+    """각 프레임에 리포트/차트/슬라이드가 있는지 Gemini 비전 판정."""
+    from google.genai import types
+    import gemini_client
+    results: list[bool] = []
+    for p in frame_paths:
+        data = open(p, "rb").read()
+        contents = types.Content(parts=[
+            types.Part(inline_data=types.Blob(mime_type="image/png", data=data)),
+            types.Part(text='이 화면에 리포트·표·차트·슬라이드 같은 "자료"가 '
+                            '떠 있으면 {"visual":true}, 사람 얼굴/배경만이면 '
+                            '{"visual":false} JSON만 출력.'),
+        ])
+        resp = gemini_client._generate("gemini-3-flash-preview", contents,
+                                       types.GenerateContentConfig(temperature=0))
+        results.append(bool(gemini_client._parse_json_text(resp.text).get("visual")))
+    return results

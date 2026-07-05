@@ -171,3 +171,33 @@ def test_assign_tiers_priority():
     assert c_vis.tier == 1     # 자료구동 최우선(heat 높아도)
     assert c_hot.tier == 2     # 스파이크
     assert c_plain.tier == 3   # 루브릭만
+
+
+def test_capture_cmd_seeks_before_input():
+    cmd = qe._capture_cmd("http://stream", 210.0, "/tmp/f.png")
+    assert cmd[0] == "ffmpeg"
+    i_ss = cmd.index("-ss"); i_i = cmd.index("-i")
+    assert i_ss < i_i                      # 빠른 seek: -ss 가 -i 앞
+    assert "210.0" in cmd and "/tmp/f.png" in cmd
+    assert "-frames:v" in cmd
+
+
+def test_stream_url_timeout_raises_runtimeerror(monkeypatch):
+    def fake_run(*args, **kwargs):
+        raise subprocess.TimeoutExpired(cmd=["python", "-m", "yt_dlp", "-g"], timeout=90)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    with pytest.raises(RuntimeError):
+        qe._stream_url("https://example.com/watch?v=x")
+
+
+def test_capture_frame_timeout_raises_runtimeerror(monkeypatch, tmp_path):
+    monkeypatch.setattr(qe, "_stream_url", lambda url: "http://stream")
+
+    def fake_run(*args, **kwargs):
+        raise subprocess.TimeoutExpired(cmd=["ffmpeg"], timeout=90)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    with pytest.raises(RuntimeError):
+        qe.capture_frame("https://example.com/watch?v=x", 60.0,
+                          str(tmp_path / "f.png"))
