@@ -116,3 +116,35 @@ def test_chunk_segments_single_segment_exceeds_max_chars():
     assert len(chunks) == 1
     assert len(chunks[0]) == 1
     assert chunks[0][0].text == "x" * 50
+
+
+def test_score_quotes_skips_failed_chunk_and_concats(monkeypatch):
+    import gemini_client
+
+    # 세그먼트 2개, 각 20자 -> max_chars=20이면 청크가 2개로 쪼개짐 (세그먼트별 1청크)
+    segs = [qe.Segment(0.0, "a" * 20), qe.Segment(5.0, "b" * 20)]
+    chunks = qe.chunk_segments(segs, max_chars=20)
+    assert len(chunks) == 2   # 사전 검증: 실제로 2청크로 쪼개지는지 확인
+
+    calls = {"n": 0}
+
+    def fake(prompt):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            return {"quotes": [{
+                "ts": 12.0, "text": "HBM 공급부족 내년까지", "golden": True,
+                "stance": "강세", "evidence": "수급", "specific": True,
+                "reasons": ["r"],
+            }]}
+        raise RuntimeError("chunk boom")
+
+    monkeypatch.setattr(gemini_client, "call_json", fake)
+
+    result = qe.score_quotes("반도체 고점인가", segs, source="채널/URL", max_chars=20)
+
+    assert calls["n"] == 2   # 청크 2개 모두 호출 시도됨 (실패해도 예외 전파 안 됨)
+    assert isinstance(result, list)
+    assert len(result) == 1
+    assert all(isinstance(c, qe.QuoteCandidate) for c in result)
+    assert result[0].stance == "강세"
+    assert result[0].score == 4
