@@ -62,3 +62,18 @@ def test_fetch_info_malformed_json_raises_runtimeerror(monkeypatch):
     monkeypatch.setattr(subprocess, "run", fake_run)
     with pytest.raises(RuntimeError):
         qe.fetch_info("https://example.com/watch?v=x")
+
+def test_transcript_cmd_builder():
+    # 내부 커맨드 빌더가 python -m yt_dlp + auto-sub + lang 을 쓰는지
+    cmd = qe._transcript_cmd("https://youtu.be/x", "ko", "/tmp/wd")
+    assert cmd[:3] == ["python", "-m", "yt_dlp"]
+    assert "--write-auto-sub" in cmd
+    assert "ko" in cmd
+
+def test_get_transcript_timeout_raises_transcriptunavailable(monkeypatch, tmp_path):
+    def fake_run(*args, **kwargs):
+        raise subprocess.TimeoutExpired(cmd=["python", "-m", "yt_dlp"], timeout=120)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    with pytest.raises(qe.TranscriptUnavailable):
+        qe.get_transcript("https://example.com/watch?v=x", workdir=str(tmp_path))

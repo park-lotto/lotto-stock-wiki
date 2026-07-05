@@ -1,9 +1,12 @@
 """인용 엔진 스파이크 — URL → 골든 발언 후보(quotes_candidates.json).
 전문가 인용 몽타주 영상용. 기존 gemini_client(18키 폴백) 재활용."""
 from __future__ import annotations
+import glob
 import json
+import os
 import re
 import subprocess
+import tempfile
 from dataclasses import dataclass, field
 
 
@@ -82,3 +85,37 @@ def parse_heatmap(info: dict) -> list[dict]:
             "value": float(b.get("value", 0.0)),
         })
     return out
+
+
+class TranscriptUnavailable(Exception):
+    pass
+
+
+def _transcript_cmd(url: str, lang: str, workdir: str) -> list[str]:
+    outtmpl = os.path.join(workdir, "%(id)s.%(ext)s")
+    return ["python", "-m", "yt_dlp", "--skip-download",
+            "--write-auto-sub", "--write-sub", "--sub-lang", lang,
+            "--sub-format", "vtt", "--no-warnings", "-o", outtmpl, url]
+
+
+def get_transcript(url: str, lang: str = "ko", workdir: str | None = None) -> list[Segment]:
+    """yt-dlp 자막(auto 포함) 다운로드 → Segment. 없으면 TranscriptUnavailable."""
+    own = workdir is None
+    workdir = workdir or tempfile.mkdtemp(prefix="qe_sub_")
+    try:
+        cmd = _transcript_cmd(url, lang, workdir)
+        try:
+            subprocess.run(cmd, capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=120)
+        except subprocess.TimeoutExpired:
+            raise TranscriptUnavailable(f"자막 타임아웃: {url}")
+        vtts = glob.glob(os.path.join(workdir, f"*{lang}*.vtt")) or \
+               glob.glob(os.path.join(workdir, "*.vtt"))
+        if not vtts:
+            raise TranscriptUnavailable(
+                f"{url}: {lang} 자막 없음 (후속: Whisper 폴백은 스파이크 범위 밖)")
+        return parse_vtt(open(vtts[0], encoding="utf-8").read())
+    finally:
+        if own:
+            import shutil
+            shutil.rmtree(workdir, ignore_errors=True)
