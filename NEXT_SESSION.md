@@ -1,5 +1,38 @@
 # NEXT_SESSION — 여러 병렬 세션(아래 최신순)
 
+## [세션 H, 2026-07-05] 텔레그램 news_relay 버그 수정 + python PATH 이슈 조치
+
+**브랜치: `feat/briefing-engine`**
+
+### ✅ 완료 — 텔레그램 크롤링 "아침에 안됨" 진단·수정 (커밋·푸시 완료, 동시세션 auto-commit `2911ad49`에 포함됨)
+- **원인1(고침)**: `telegram_channels.json`에 4개 채널(주식픽/실시간속보단독뉴스/실시간주식뉴스/그로쓰리서치특징주)이
+  `news_relay` 타입으로 등록돼 있는데 `telegram_questionnaire.py`엔 그 타입 구현 자체가 없어서 매일 무조건
+  0개 원자로 조용히 실패 중이었음. `QUESTIONNAIRES["news_relay"]` 템플릿 + `questionnaire_to_atoms_tg`
+  분기 추가로 수정. 실채널 파일로 검증: 주식픽 29개/실시간속보단독뉴스 31개/실시간주식뉴스 6개 원자(전부 이전 0개).
+- **원인2(고침)**: Gemini가 가끔 유효 JSON 뒤에 여분 문자(중복 `}` 등)를 붙여 반환해 `json.loads` 통째로 실패하던
+  버그 → `json.JSONDecoder().raw_decode()` 폴백 추가로 앞부분 유효 JSON 살려씀.
+- **미해결(코드 문제 아님)**: `실시간주식뉴스`·`그로쓰리서치특징주` 두 채널이 원격 크롤봇(Lightsail 3.39.179.148,
+  `crawlingbot.service`) 계정 기준 **2026-07-03 이후 새 메시지를 전혀 못 받아옴**. SSH로 직접 확인:
+  채널은 공개 프리뷰(t.me/s/...)로 오늘까지 활발히 게시 중, 계정도 정상 멤버(밴/추방 아님), Telethon raw
+  `GetHistoryRequest`로 직접 조회해도 예외 없이 07-03 데이터만 반환. 텔레그램 플랫폼 쪽 리드 제한(shadow
+  limit) 추정 — 07-03에 이 4채널 크롤 주기를 15분마다로 올린 시점과 일치. **사용자가 주기는 낮추지 말라고
+  확인** → 아직 미해결. 다음 조치 후보: 계정으로 두 채널 나갔다 재입장 / 별도 계정으로 이 2개만 크롤 / 며칠
+  더 관찰.
+- 관련 파일: `pipeline/atoms/telegram_questionnaire.py`, `pipeline/atoms/telegram_channels.json`,
+  원격 서버 `/home/ubuntu/kmong/crawling_bot/`(config.yaml, crawlers/telegram_crawler.py, logs/service.log)
+
+### ✅ 완료 — fablize 훅 실패 원인 규명 + PATH 수정 (재시작 후 확인 필요)
+- 매 프롬프트마다 뜨던 "UserPromptSubmit hook error / Failed with non-blocking status code: Python"의
+  원인: fablize `hooks.json`이 `python3 gate_prompt.py` 호출하는데, 이 PC에서 `python`/`python3` 명령이
+  둘 다 윈도우 스토어 App Execution Alias 스텁(`AppData\Local\Microsoft\WindowsApps\python3`)으로 연결돼
+  아무 것도 안 하고 "Python"만 찍고 종료됨. 진짜 인터프리터는 `AppData\Local\Python\bin\python.exe`에 있는데
+  User PATH에서 WindowsApps가 그보다 앞에 있어서 매번 스텁이 먼저 잡힘.
+- **조치**: User PATH 재정렬(`AppData\Local\Python\bin`을 `WindowsApps`보다 앞으로) — 레지스트리 반영 완료.
+- **⚠️ 다음 세션에서 확인할 것**: 이번 세션엔 미적용(구 PATH 캐시 중, 재확인함). Claude Code 재시작 후
+  `which python3`가 `AppData\Local\Python\bin\python3.exe`로 뜨는지, fablize 훅 에러가 사라졌는지 확인.
+
+---
+
 ## [세션 G, 2026-07-04 밤] YT 레퍼런스 창고 (/yt/refs) — 터진영상 검색·검증·해체·믹스 (로컬완성, 서버미배포)
 
 **브랜치: `feat/briefing-engine`** (공유 워킹트리라 여기 얹힘. 내 YT 커밋은 이 브랜치에 있음. main 정리 후 배포).
