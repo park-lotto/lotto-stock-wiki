@@ -99,6 +99,8 @@ body { background: #ffffff; color: var(--txt); font-family: 'Pretendard','Segoe 
 /* ── 메인 섹션 (1단: 라이브러리→시그널→이벤트→리포트→기록) ── */
 .main-2col { display: flex; flex-direction: column; margin: 40px 0 8px; }
 .side-title { font-size: .8rem; font-weight: 700; color: var(--muted); margin-bottom: 14px; text-transform: uppercase; letter-spacing: .04em; display: flex; align-items: center; gap: 8px; }
+.lib-title-center { position: relative; justify-content: center; }
+.lib-title-center .lib-toggle { position: absolute; right: 0; margin-left: 0; }
 .ttl-ico { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 9px; background: #f5f5f7; font-size: 14px; flex: 0 0 auto; vertical-align: middle; margin-right: 2px; }
 .hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .brief-open { flex-shrink: 0; margin-top: 6px; padding: 10px 18px; border-radius: 10px; border: 1px solid var(--gold-dim); background: var(--rp-bg); color: var(--gold); font-family: inherit; font-size: .88rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: background .15s; }
@@ -156,11 +158,12 @@ body { background: #ffffff; color: var(--txt); font-family: 'Pretendard','Segoe 
 .signals-box { margin-top: 64px; }
 .sig-title { font-size: 1.15rem; font-weight: 700; color: var(--txt); margin-bottom: 16px; letter-spacing: -.01em; }
 .sig-title small { color: var(--muted); font-weight: 400; font-size: .78rem; margin-left: 8px; }
-.sig-grp { font-size: .78rem; font-weight: 700; color: var(--muted); margin: 18px 0 10px; }
+.sig-grp { display: flex; align-items: center; gap: 8px; font-size: .78rem; font-weight: 700; color: var(--muted); margin: 18px 0 10px; }
 .sig-grp small { color: var(--gold); }
+.sig-grp .sig-more-btn { margin-left: auto; }
 .sig-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; padding: 4px 2px 14px; }
-.sig-grid-more { margin-top: -6px; }
-.sig-more-btn { display: block; margin: 2px 2px 14px; padding: 8px 16px; border-radius: 980px; border: 1px solid var(--line); background: #fff; color: var(--muted); font-family: inherit; font-size: .78rem; font-weight: 600; cursor: pointer; transition: border-color .15s, color .15s; }
+.sig-grid-more { margin-top: 4px; }
+.sig-more-btn { padding: 5px 13px; border-radius: 980px; border: 1px solid var(--line); background: #fff; color: var(--muted); font-family: inherit; font-size: .74rem; font-weight: 600; cursor: pointer; transition: border-color .15s, color .15s; white-space: nowrap; }
 .sig-more-btn:hover { border-color: var(--gold-dim); color: var(--txt); }
 .sig-block { background: #fff; border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 4px 20px rgba(0,0,0,.05); overflow: hidden; transition: transform .15s, box-shadow .15s; }
 .sig-block:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,.09); border-color: var(--line); }
@@ -1072,7 +1075,7 @@ async function showL0() {
       </div>
     </div>
     <div class="main-2col">
-      <div class="side-title"><span class="ttl-ico">📚</span> 소스 라이브러리 <button class="lib-toggle" onclick="toggleLib(this)">펼치기 ▾</button></div>
+      <div class="side-title lib-title-center"><span class="ttl-ico">📚</span> 소스 라이브러리 <button class="lib-toggle" onclick="toggleLib(this)">펼치기 ▾</button></div>
       <div id="lib-chips" class="lib-chips">${libChips || '<div style="color:var(--muted)">카테고리 없음</div>'}</div>
       <div id="lib-detail" class="lib-detail" style="display:none"></div>
       <div id="lib-cards" class="cat-grid-side" style="display:none">${catCards}</div>
@@ -1336,13 +1339,15 @@ async function loadSignals() {
     if (!arr.length) return '';
     const head = arr.slice(0, 5), rest = arr.slice(5);
     const gid = 'sg' + (++_sigGrpId);
-    const moreHtml = rest.length
-      ? `<div class="sig-grid sig-grid-more" id="${gid}" style="display:none">${rest.map(sigRow).join('')}</div>
-         <button class="sig-more-btn" onclick="toggleSigMore('${gid}',this)" data-n="${rest.length}">더보기 (${rest.length}) ▾</button>`
+    const moreBtn = rest.length
+      ? `<button class="sig-more-btn" onclick="toggleSigMore('${gid}',this)" data-n="${rest.length}">더보기 (${rest.length}) ▾</button>`
       : '';
-    return `<div class="sig-grp">${t} <small>${arr.length}</small></div>
+    const moreGrid = rest.length
+      ? `<div class="sig-grid sig-grid-more" id="${gid}" style="display:none">${rest.map(sigRow).join('')}</div>`
+      : '';
+    return `<div class="sig-grp">${t} <small>${arr.length}</small>${moreBtn}</div>
       <div class="sig-grid">${head.map(sigRow).join('')}</div>
-      ${moreHtml}`;
+      ${moreGrid}`;
   };
   box.innerHTML = `<div class="sig-title"><span class="ttl-ico">🔥</span> 오늘의 시그널 <small>${data.today} · 블럭 클릭하면 펼쳐짐</small></div>
     ${grp('📈 종목', stocks)}
