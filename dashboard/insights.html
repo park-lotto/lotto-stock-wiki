@@ -99,6 +99,7 @@ body { background: #ffffff; color: var(--txt); font-family: 'Pretendard','Segoe 
 /* ── 메인 섹션 (1단: 라이브러리→시그널→촉매→리포트→기록) ── */
 .main-2col { display: flex; flex-direction: column; margin: 40px 0 8px; }
 .side-title { font-size: .8rem; font-weight: 700; color: var(--muted); margin-bottom: 14px; text-transform: uppercase; letter-spacing: .04em; display: flex; align-items: center; gap: 8px; }
+.ttl-ico { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 9px; background: #f5f5f7; font-size: 14px; flex: 0 0 auto; vertical-align: middle; margin-right: 2px; }
 .hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .brief-open { flex-shrink: 0; margin-top: 6px; padding: 10px 18px; border-radius: 10px; border: 1px solid var(--gold-dim); background: var(--rp-bg); color: var(--gold); font-family: inherit; font-size: .88rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: background .15s; }
 .brief-open:hover { background: #f5f5f7; }
@@ -1066,20 +1067,20 @@ async function showL0() {
       </div>
     </div>
     <div class="main-2col">
-      <div class="side-title">📚 소스 라이브러리 <button class="lib-toggle" onclick="toggleLib(this)">펼치기 ▾</button></div>
+      <div class="side-title"><span class="ttl-ico">📚</span> 소스 라이브러리 <button class="lib-toggle" onclick="toggleLib(this)">펼치기 ▾</button></div>
       <div id="lib-chips" class="lib-chips">${libChips || '<div style="color:var(--muted)">카테고리 없음</div>'}</div>
       <div id="lib-detail" class="lib-detail" style="display:none"></div>
       <div id="lib-cards" class="cat-grid-side" style="display:none">${catCards}</div>
 
       <div id="signals-box" class="signals-box"></div>
 
-      <div class="side-title" style="margin-top:64px">📅 다가오는 촉매 <small style="color:var(--gold-dim);font-weight:400">클릭하면 그 종목/섹터 브리핑</small></div>
+      <div class="side-title" style="margin-top:64px"><span class="ttl-ico">📅</span> 다가오는 촉매 <small style="color:var(--gold-dim);font-weight:400">클릭하면 그 종목/섹터 브리핑</small></div>
       <div id="catalyst-summary" class="brief-hist">불러오는 중…</div>
 
-      <div class="side-title" style="margin-top:64px">📰 최근 리포트 <small style="color:var(--gold-dim);font-weight:400">클릭하면 그 종목 브리핑</small></div>
+      <div class="side-title" style="margin-top:64px"><span class="ttl-ico">📰</span> 최근 리포트 <small style="color:var(--gold-dim);font-weight:400">클릭하면 그 종목 브리핑</small></div>
       <div id="recent-reports" class="brief-hist">불러오는 중…</div>
 
-      <div class="side-title" style="margin-top:64px">📖 최근 브리핑 기록 <small style="color:var(--gold-dim);font-weight:400">클릭하면 그때 본 화면 그대로</small></div>
+      <div class="side-title" style="margin-top:64px"><span class="ttl-ico">📖</span> 최근 브리핑 기록 <small style="color:var(--gold-dim);font-weight:400">클릭하면 그때 본 화면 그대로</small></div>
       <div id="brief-history" class="brief-hist">불러오는 중…</div>
     </div>
     <div class="feed-section">
@@ -1314,13 +1315,13 @@ function sigExpand(fid, head) {
 }
 async function loadSignals() {
   const box = qs('#signals-box'); if (!box) return;
-  box.innerHTML = '<div class="sig-title">🔥 오늘의 시그널 <small>불러오는 중…</small></div>';
+  box.innerHTML = '<div class="sig-title"><span class="ttl-ico">🔥</span> 오늘의 시그널 <small>불러오는 중…</small></div>';
   let data;
   try { data = await apiFetch('/api/insights/signals'); } catch(e) { box.innerHTML = ''; return; }
   const stocks = data.stocks || [], macro = data.macro || [];
-  if (!stocks.length && !macro.length) { box.innerHTML = '<div class="sig-title">🔥 오늘의 시그널 <small>오늘 집계 없음(크롤 대기)</small></div>'; return; }
+  if (!stocks.length && !macro.length) { box.innerHTML = '<div class="sig-title"><span class="ttl-ico">🔥</span> 오늘의 시그널 <small>오늘 집계 없음(크롤 대기)</small></div>'; return; }
   const grp = (t, arr) => arr.length ? `<div class="sig-grp">${t} <small>${arr.length}</small></div><div class="sig-grid">${arr.map(sigRow).join('')}</div>` : '';
-  box.innerHTML = `<div class="sig-title">🔥 오늘의 시그널 <small>${data.today} · 블럭 클릭하면 펼쳐짐</small></div>
+  box.innerHTML = `<div class="sig-title"><span class="ttl-ico">🔥</span> 오늘의 시그널 <small>${data.today} · 블럭 클릭하면 펼쳐짐</small></div>
     ${grp('📈 종목', stocks)}
     ${grp('🌐 매크로·이슈', macro)}`;
 }
