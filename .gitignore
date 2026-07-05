@@ -97,3 +97,6 @@ pipeline/sector_custom_snapshots/
 
 # 골-루프 런타임 상태
 out/goal_loop/
+
+# 인용 스튜디오 저장 산출물(픽한 quotes.json)
+out/quote_studio/

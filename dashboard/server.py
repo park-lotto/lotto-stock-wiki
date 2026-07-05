@@ -233,6 +233,12 @@ except (ImportError, SystemExit):
     _hotclips = None  # type: ignore
     _teardown = None  # type: ignore
 
+# quote_extractor는 독립 블록 — 이웃(clip_teardown 등)이 없어도(main엔 없음) 살아있게
+try:
+    import quote_extractor as _qe  # noqa: E402  (extract_stream/parse_video_id)
+except (ImportError, SystemExit):
+    _qe = None  # type: ignore
+
 try:
     import global_api  # noqa: E402
 except (ImportError, Exception):
@@ -5629,6 +5635,61 @@ async def api_yt_mix(req: Request):
             yield f"data: {json.dumps({'type':'error','message':str(e)[:200]}, ensure_ascii=False)}\n\n"
 
     return StreamingResponse(_stream(), media_type="text/event-stream")
+
+
+# ── §5-C 인용 스튜디오: URL→골든발언 후보(SSE)→픽→저장 ───────────
+@app.get("/yt/quote-studio", response_class=HTMLResponse)
+def yt_quote_studio_page():
+    p = os.path.join(HERE, "quote_studio.html")
+    if not os.path.exists(p):
+        return "<h1>quote_studio.html 준비중</h1>"
+    with open(p, encoding="utf-8") as f:
+        html = f.read()
+    return HTMLResponse(content=html, headers={"Cache-Control": "no-cache, must-revalidate"})
+
+
+@app.post("/yt/quote_extract")
+async def api_yt_quote_extract(req: Request):
+    """URL → 골든 발언 후보 추출(엔진 extract_stream) — SSE. 4.5h 영상은 수분 소요."""
+    body = await req.json()
+    url = (body.get("url") or "").strip()
+    topic = (body.get("topic") or "").strip()
+    if not url:
+        return JSONResponse(content={"error": "url 필요"}, status_code=400)
+    if _qe is None:
+        return JSONResponse(content={"error": "quote_extractor 모듈 없음"}, status_code=503)
+    ms = body.get("max_segments")
+    max_segments = int(ms) if ms else None
+
+    def _stream():
+        yield f"data: {json.dumps({'type':'running'}, ensure_ascii=False)}\n\n"
+        try:
+            for ev in _qe.extract_stream(url, topic, max_segments=max_segments):
+                yield f"data: {json.dumps(ev, ensure_ascii=False)}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'type':'error','message':str(e)[:200]}, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(_stream(), media_type="text/event-stream")
+
+
+@app.post("/yt/quote_save")
+async def api_yt_quote_save(req: Request):
+    """픽한 인용들을 quotes.json으로 저장 → out/quote_studio/<vid>.json."""
+    if _qe is None:
+        return JSONResponse(content={"error": "quote_extractor 모듈 없음"}, status_code=503)
+    body = await req.json()
+    url = (body.get("url") or "").strip()
+    quotes = body.get("quotes") or []
+    vid = _qe.parse_video_id(url) or "unknown"
+    out_dir = os.path.join(ROOT, "out", "quote_studio")
+    os.makedirs(out_dir, exist_ok=True)
+    save_path = os.path.join(out_dir, f"{vid}.json")
+    doc = {"topic": body.get("topic", ""), "source": url, "quotes": quotes}
+    with open(save_path, "w", encoding="utf-8") as f:
+        json.dump(doc, f, ensure_ascii=False, indent=2)
+    return JSONResponse(content={"ok": True,
+                                 "path": os.path.relpath(save_path, ROOT).replace("\\", "/"),
+                                 "count": len(quotes)})
 
 
 # ══════════════════════════════════════════════════════════════

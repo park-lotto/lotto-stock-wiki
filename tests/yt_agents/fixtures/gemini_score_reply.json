@@ -1,0 +1,13 @@
+{
+  "quotes": [
+    {"ts": 12.0, "text": "HBM 공급부족은 최소 내년까지 갑니다",
+     "golden": true, "stance": "강세", "evidence": "수급",
+     "specific": true, "reasons": ["명확한 판단", "수급 근거", "기간 구체"]},
+    {"ts": 220.5, "text": "밸류 부담은 분명히 있습니다",
+     "golden": true, "stance": "약세", "evidence": "밸류",
+     "specific": false, "reasons": ["판단 명확", "밸류 근거"]},
+    {"ts": 300.0, "text": "뭐 지켜봐야죠",
+     "golden": false, "stance": "중립", "evidence": "기타",
+     "specific": false, "reasons": ["물타기 — 필수 탈락"]}
+  ]
+}
