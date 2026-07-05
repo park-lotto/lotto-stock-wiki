@@ -158,9 +158,14 @@ body { background: #ffffff; color: var(--txt); font-family: 'Pretendard','Segoe 
 .sig-title small { color: var(--muted); font-weight: 400; font-size: .78rem; margin-left: 8px; }
 .sig-grp { font-size: .78rem; font-weight: 700; color: var(--muted); margin: 18px 0 10px; }
 .sig-grp small { color: var(--gold); }
-.sig-grid { display: flex; gap: 14px; overflow-x: auto; padding: 4px 2px 14px; scroll-snap-type: x mandatory; scrollbar-width: thin; }
-.sig-block { flex: 0 0 240px; scroll-snap-align: start; background: #fff; border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 4px 20px rgba(0,0,0,.05); overflow: hidden; transition: transform .15s, box-shadow .15s; }
+.sig-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; padding: 4px 2px 14px; }
+.sig-grid-more { margin-top: -6px; }
+.sig-more-btn { display: block; margin: 2px 2px 14px; padding: 8px 16px; border-radius: 980px; border: 1px solid var(--line); background: #fff; color: var(--muted); font-family: inherit; font-size: .78rem; font-weight: 600; cursor: pointer; transition: border-color .15s, color .15s; }
+.sig-more-btn:hover { border-color: var(--gold-dim); color: var(--txt); }
+.sig-block { background: #fff; border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 4px 20px rgba(0,0,0,.05); overflow: hidden; transition: transform .15s, box-shadow .15s; }
 .sig-block:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,.09); border-color: var(--line); }
+@media (max-width: 1100px) { .sig-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 640px) { .sig-grid { grid-template-columns: repeat(2, 1fr); } }
 .sig-head { display: flex; align-items: center; gap: 10px; padding: 16px 18px; cursor: pointer; }
 .sig-head:hover { background: #f5f5f7; }
 .sig-asset { font-size: 1rem; font-weight: 700; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1276,6 +1281,13 @@ const SIG_CATICON = { youtube: '📺', telegram: '💬', report: '📰', news: '
 const SIG_CATNAME = { youtube: '유튜브', telegram: '텔레', report: '리포트', news: '뉴스', blog: '블로그' };
 const SIG_STANCE = { bullish: '🟢강세', bearish: '🔴약세', neutral: '⚪중립' };
 let _sigId = 0;
+let _sigGrpId = 0;
+function toggleSigMore(id, btn) {
+  const el = qs('#' + id); if (!el) return;
+  const open = el.style.display === 'none';
+  el.style.display = open ? 'grid' : 'none';
+  btn.textContent = open ? '접기 ▴' : `더보기 (${btn.dataset.n}) ▾`;
+}
 function sigRow(s) {
   const trend = s.is_new ? '<span class="sig-new">🆕</span>'
     : (s.spike > 0 ? `<span class="sig-up">▲${s.spike}</span>`
@@ -1320,7 +1332,18 @@ async function loadSignals() {
   try { data = await apiFetch('/api/insights/signals'); } catch(e) { box.innerHTML = ''; return; }
   const stocks = data.stocks || [], macro = data.macro || [];
   if (!stocks.length && !macro.length) { box.innerHTML = '<div class="sig-title"><span class="ttl-ico">🔥</span> 오늘의 시그널 <small>오늘 집계 없음(크롤 대기)</small></div>'; return; }
-  const grp = (t, arr) => arr.length ? `<div class="sig-grp">${t} <small>${arr.length}</small></div><div class="sig-grid">${arr.map(sigRow).join('')}</div>` : '';
+  const grp = (t, arr) => {
+    if (!arr.length) return '';
+    const head = arr.slice(0, 5), rest = arr.slice(5);
+    const gid = 'sg' + (++_sigGrpId);
+    const moreHtml = rest.length
+      ? `<div class="sig-grid sig-grid-more" id="${gid}" style="display:none">${rest.map(sigRow).join('')}</div>
+         <button class="sig-more-btn" onclick="toggleSigMore('${gid}',this)" data-n="${rest.length}">더보기 (${rest.length}) ▾</button>`
+      : '';
+    return `<div class="sig-grp">${t} <small>${arr.length}</small></div>
+      <div class="sig-grid">${head.map(sigRow).join('')}</div>
+      ${moreHtml}`;
+  };
   box.innerHTML = `<div class="sig-title"><span class="ttl-ico">🔥</span> 오늘의 시그널 <small>${data.today} · 블럭 클릭하면 펼쳐짐</small></div>
     ${grp('📈 종목', stocks)}
     ${grp('🌐 매크로·이슈', macro)}`;
