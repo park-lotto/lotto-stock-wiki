@@ -3155,8 +3155,8 @@ def _weather_tick():
             _weather_tg(_bdig.format_daily(_weather.get("calib_today", [])))
         except Exception:
             pass
-    heartbeat = time.time() - _weather["last_synth_ts"] >= 1800
-    fire = bool(events) or phase_changed or (heartbeat and (live_ok or news))
+    heartbeat = phase != "weekend" and time.time() - _weather["last_synth_ts"] >= 1800
+    fire = bool(events) or (phase_changed and phase != "weekend") or (heartbeat and (live_ok or news))
 
     if fire and (time.time() - _weather["last_synth_ts"] < _WEATHER_MIN_INTERVAL_S):
         fire = False
