@@ -3477,6 +3477,31 @@ def _youtube_title_from_file(raw_file: str) -> str | None:
     return title
 
 
+_GENERIC_DOC_TITLES = {"parsed", "raw", "output", "result", "report", "data"}
+
+
+def _doc_asset_title(raw_file: str, source_name: str) -> str | None:
+    """파일명이 무의미할 때(예: wisereport의 '{date}_parsed.json') 그 문서에 실제 담긴
+    종목·섹터명으로 대체 제목을 만든다 — 지어내지 않고 그 문서의 실제 atoms.asset만 사용."""
+    conn = _ins_conn()
+    if conn is None:
+        return None
+    try:
+        rows = conn.execute(
+            "SELECT DISTINCT asset FROM atoms WHERE raw_file=? AND source_name=? "
+            "AND asset IS NOT NULL AND asset!=''",
+            (raw_file, source_name),
+        ).fetchall()
+    finally:
+        conn.close()
+    names = [r["asset"] for r in rows if r["asset"]]
+    if not names:
+        return None
+    if len(names) <= 3:
+        return " · ".join(names)
+    return " · ".join(names[:3]) + f" 외 {len(names) - 3}종목"
+
+
 def _build_doc_title(raw_file: str, source_name: str, date: str, category: str) -> str:
     """표시용 제목 추정. 유튜브는 원본에서 실제 제목 시도, 그 외는 파일명 정리."""
     if raw_file:
@@ -3486,8 +3511,12 @@ def _build_doc_title(raw_file: str, source_name: str, date: str, category: str) 
                 return real
         base = os.path.splitext(os.path.basename(raw_file))[0]
         cleaned = _clean_title(base)
-        # 정리 후 남은 게 채널명뿐이거나 비면 채널+날짜로
-        if not cleaned or cleaned == source_name:
+        # 정리 후 남은 게 채널명뿐이거나 비거나, "parsed" 같은 파이프라인 내부 파일명이면
+        # 그 문서에 실제 담긴 종목·섹터명으로 대체(사용자 편의성 — 2026-07-05 발견)
+        if not cleaned or cleaned == source_name or cleaned.lower() in _GENERIC_DOC_TITLES:
+            asset_title = _doc_asset_title(raw_file, source_name)
+            if asset_title:
+                return asset_title
             return f"{source_name} · {date}" if date else (source_name or base)
         return cleaned
     return f"{source_name} ({date})"
