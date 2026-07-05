@@ -28,7 +28,13 @@ def select_future_events(today: str, watchlist=None, sector=None, days=None) -> 
             d["structured_fields"] = json.loads(d["structured_fields"]) if d.get("structured_fields") else {}
         except (json.JSONDecodeError, TypeError):
             d["structured_fields"] = {}
-        d["dday"] = _dday(today, d["event_date"])
+        try:
+            d["dday"] = _dday(today, d["event_date"])
+        except ValueError:
+            # 일부 원자는 event_date가 "2026-07-XX"처럼 일(day)이 불확실한 부분날짜로
+            # 들어옴(Gemini가 정확한 날짜를 못 찾은 경우) — D-정렬 불가하므로 제외.
+            # 지어낸 날짜로 채우지 않는다.
+            continue
         if days is not None and d["dday"] > days:
             continue
         affected = d["structured_fields"].get("affected_stocks", [])
