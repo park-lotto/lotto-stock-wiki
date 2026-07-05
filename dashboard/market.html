@@ -1489,11 +1489,9 @@ let _briefingItems=[];
 let _marketInsight=null;
 let _briefingLoaded=false;
 
-// 오늘의 타임라인(뉴스+시장이벤트 병합) / 리포트탑픽 — 5개 박스 아래 별도 가로줄(mkt-below-panel)
+// 오늘의 타임라인(뉴스+시장이벤트 병합) — 5개 박스 아래 별도 가로줄(mkt-below-panel)
 let _selectedTimelineIdx=null;   // 가로 카드스트립에서 선택된 카드(상세 표시용)
-const _expandedTopick=new Set();
-const _collapsedCards=new Set();  // 'timeline'|'topick' — 세션 전용(새로고침 시 초기화)
-const _TOPICK_COUNT=3;
+const _collapsedCards=new Set();  // 'timeline' — 세션 전용(새로고침 시 초기화)
 
 function toggleTimelineSelect(i){
   _selectedTimelineIdx=(_selectedTimelineIdx===i)?null:i;
@@ -1597,54 +1595,20 @@ function renderBelowPanel(){
       <div class="bi-body">${esc(selectedItem.body)}</div></div>`
     :"";
 
-  const topickList=((_marketInsight&&_marketInsight.topick)||[]).slice(0,_TOPICK_COUNT);
-  const topickHtml=topickList.length
-    ?topickList.map((t,i)=>{
-      const open=_expandedTopick.has(i);
-      const dateStr=(t.date||"").slice(5).replace("-","/");   // YYYY-MM-DD → MM/DD
-      const srcLine=`${esc(t.source_name||"출처미상")} · ${esc(dateStr)} · ${esc(t.asset)}`;
-      const summaryOneLine=`<div class="mt-summary-line">${esc(t.content)}</div>`;
-      const detail=open
-        ?`<div class="mt-detail">
-            <div class="mt-detail-full">${esc(t.content)}</div>
-            ${t.id?`<a href="/api/atom_raw/${encodeURIComponent(t.id)}" target="_blank" class="mt-link" onclick="event.stopPropagation()">📄 원문보기</a>`:""}
-          </div>`
-        :"";
-      return `<div class="mt-item" onclick="toggleTopickExpand(${i})" style="cursor:pointer">
-        <div class="mt-src">${srcLine} ${open?"▲":"▼"}</div>
-        ${open?"":summaryOneLine}
-        ${detail}
-      </div>`;
-    }).join("")
-    :`<div style="color:#888;font-size:13px;padding:8px;">오늘자 탑픽 언급 없음</div>`;
-
   const tlCollapsed=_collapsedCards.has("timeline");
-  const tpCollapsed=_collapsedCards.has("topick");
   container.innerHTML=`
-    <div class="mkt-card" style="flex:1.8;min-width:0;">
+    <div class="mkt-card" style="flex:1;min-width:0;">
       <div class="card-hd" style="font-size:15px;font-weight:700;color:#ddd;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
         <span>🕐 오늘의 타임라인 (07:30~, 클릭시 상세)</span>
         <span class="card-fold-btn" onclick="toggleCardCollapse('timeline')">${tlCollapsed?`▶ +${Math.max(0,items.length-_TIMELINE_PREVIEW_N)}개 더`:"▼ 접기"}</span>
       </div>
       <div class="timeline-strip">${tlCollapsed?cardsPreview:cardsHtml}</div>
       ${timelineDetail}
-    </div>
-    <div class="mkt-card" style="flex:1;min-width:0;">
-      <div class="mt-title card-hd" style="font-size:15px;display:flex;align-items:center;justify-content:space-between;">
-        <span>📈 오늘의 리포트 탑픽 (제목 클릭시 요약+원문)</span>
-        <span class="card-fold-btn" onclick="toggleCardCollapse('topick')">${tpCollapsed?`▶ ${topickList.length}개`:"▼ 접기"}</span>
-      </div>
-      ${tpCollapsed?"":topickHtml}
     </div>`;
 }
 
 function toggleCardCollapse(id){
   if(_collapsedCards.has(id)) _collapsedCards.delete(id); else _collapsedCards.add(id);
-  renderBelowPanel();
-}
-
-function toggleTopickExpand(i){
-  if(_expandedTopick.has(i)) _expandedTopick.delete(i); else _expandedTopick.add(i);
   renderBelowPanel();
 }
 
