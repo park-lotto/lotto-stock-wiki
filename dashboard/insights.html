@@ -105,11 +105,12 @@ body { background: #ffffff; color: var(--txt); font-family: 'Pretendard','Segoe 
 .lib-toggle { margin-left: auto; background: none; border: none; color: var(--gold-dim); font-size: .68rem; cursor: pointer; font-family: inherit; text-transform: none; letter-spacing: 0; }
 .lib-toggle:hover { color: var(--gold); }
 .lib-chips { display: flex; flex-wrap: wrap; gap: 14px; justify-content: flex-start; }
-.lib-chip { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px 10px 10px; background: #fff; border: 1px solid var(--line); border-radius: 16px; cursor: pointer; transition: transform .15s, box-shadow .15s; min-width: 76px; text-align: center; }
+.lib-chip { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 10px 9px; background: #fff; border: 1px solid var(--line); border-radius: 16px; cursor: pointer; transition: transform .15s, box-shadow .15s; min-width: 76px; text-align: center; }
 .lib-chip:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.06); }
 .lib-ico { width: 54px; height: 54px; border-radius: 14px; overflow: hidden; box-shadow: 0 3px 10px rgba(0,0,0,.12); flex: 0 0 auto; }
 .lib-ico svg { width: 100%; height: 100%; display: block; }
 .lib-name { font-size: .74rem; font-weight: 600; color: var(--txt); }
+.lib-nums { display: flex; align-items: center; gap: 5px; }
 .lib-cnt { font-size: .7rem; font-weight: 700; color: var(--gold); }
 .lib-new { font-size: .6rem; font-weight: 700; background: var(--bl-bg); color: var(--bl); border: 1px solid var(--bl-line); border-radius: 5px; padding: 1px 5px; }
 .lib-detail { margin-top: 9px; padding: 12px; background: var(--card); border: 1px solid var(--gold-dim); border-radius: 10px; }
@@ -1013,7 +1014,7 @@ async function showL0() {
     return `<div class="lib-chip ${catCls(cat.id)}" onclick="libShow('${cat.id}')" title="누르면 세부내역">
       <span class="lib-ico">${catIconTile(cat.id)}</span>
       <span class="lib-name">${catLabel(cat.id)}</span>
-      <span class="lib-cnt">${cat.atoms ?? 0}</span>${badge}
+      <span class="lib-nums"><span class="lib-cnt">${cat.atoms ?? 0}</span>${badge}</span>
     </div>`;
   }).join('');
 
