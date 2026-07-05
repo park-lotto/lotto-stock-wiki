@@ -58,7 +58,7 @@ def parse_vtt(vtt_text: str) -> list[Segment]:
 
 def fetch_info(url: str) -> dict:
     """yt-dlp 단일 JSON 메타 (다운로드 없이). heatmap 포함."""
-    cmd = ["python", "-m", "yt_dlp", "--skip-download",
+    cmd = [sys.executable, "-m", "yt_dlp", "--skip-download",
            "--dump-single-json", "--no-warnings", url]
     try:
         out = subprocess.run(cmd, capture_output=True, text=True,
@@ -130,7 +130,7 @@ class TranscriptUnavailable(Exception):
 
 def _transcript_cmd(url: str, lang: str, workdir: str) -> list[str]:
     outtmpl = os.path.join(workdir, "%(id)s.%(ext)s")
-    return ["python", "-m", "yt_dlp", "--skip-download",
+    return [sys.executable, "-m", "yt_dlp", "--skip-download",
             "--write-auto-sub", "--write-sub", "--sub-lang", lang,
             "--sub-format", "vtt", "--no-warnings", "-o", outtmpl, url]
 
@@ -260,7 +260,7 @@ def _capture_cmd(stream_url: str, ts: float, out_path: str) -> list[str]:
 
 def _stream_url(url: str) -> str:
     try:
-        out = subprocess.run(["python", "-m", "yt_dlp", "-g", "-f",
+        out = subprocess.run([sys.executable, "-m", "yt_dlp", "-g", "-f",
                               "best[height<=720]", "--no-warnings", url],
                              capture_output=True, text=True,
                              encoding="utf-8", errors="replace", timeout=90)
