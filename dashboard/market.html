@@ -636,6 +636,9 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
       <button class="interval-btn active" id="ds-1" onclick="setDensity(1)" title="카드 크게(기본)">크게</button>
       <button class="interval-btn" id="ds-2" onclick="setDensity(2)" title="카드 보통">보통</button>
       <button class="interval-btn" id="ds-3" onclick="setDensity(3)" title="카드 작게(섹터명·등락률만)">작게</button>
+      <span style="width:1px;height:16px;background:var(--line);margin:0 2px"></span>
+      <button class="interval-btn" id="nxt-toggle" onclick="toggleHeatmapMode()"
+        title="정규장 마감가(15:30) 대비 NXT 애프터아워 전용 등락률(종가베팅 후보 스크리닝용)">🌙 NXT 모드</button>
       <button class="refresh-btn" id="refresh-btn" onclick="refresh()">↻ 새로고침</button>
     </div>
   </div>
@@ -833,15 +836,30 @@ const _LS_TAB_PFX=`__hm_tab_${_LS_VER}_`;
 function _lsSave(key,data){try{localStorage.setItem(key,JSON.stringify(data));}catch(e){}}
 function _lsLoad(key){try{const v=localStorage.getItem(key);return v?JSON.parse(v):null;}catch(e){return null;}}
 
+// ── NXT(애프터아워) 모드 — 정규장 마감가 대비 등락률 토글 ──
+let _heatmapMode="regular";   // 'regular'|'nxt' — 세션 전용(새로고침 시 초기화)
+function _hmCacheKey(){ return _heatmapMode==="nxt" ? "all_nxt" : "all"; }
+function _hmLsKey(){ return _heatmapMode==="nxt" ? _LS_ALL+"_nxt" : _LS_ALL; }
+function _hmUrl(base){ return _heatmapMode==="nxt" ? base+"?mode=nxt" : base; }
+function toggleHeatmapMode(){
+  _heatmapMode=(_heatmapMode==="nxt")?"regular":"nxt";
+  const btn=document.getElementById("nxt-toggle");
+  if(btn) btn.classList.toggle("active", _heatmapMode==="nxt");
+  document.getElementById("main-title").textContent=
+    _heatmapMode==="nxt" ? "섹터 히트맵 — NXT 애프터아워(정규장 마감가 대비)" : "섹터 히트맵 — 전체";
+  loadOverview(true);
+}
+
 async function loadOverview(force=false){
+  const cacheKey=_hmCacheKey(), lsKey=_hmLsKey();
   if(!force){
     // 1) 메모리 캐시
-    const cached=_fromCache("all");
+    const cached=_fromCache(cacheKey);
     if(cached){ renderOverview(cached); return; }
     // 2) localStorage 즉시 렌더 후 백그라운드 갱신
-    const prev=_lsLoad(_LS_ALL);
+    const prev=_lsLoad(lsKey);
     if(prev){
-      _toCache("all",prev);
+      _toCache(cacheKey,prev);
       renderOverview(prev);
       _refreshOverviewBg();   // 스피너 없이 조용히 갱신
       return;
@@ -850,11 +868,12 @@ async function loadOverview(force=false){
   // 3) 캐시 전혀 없을 때만 로딩 스피너
   const btn=document.getElementById("refresh-btn");
   btn.disabled=true; btn.textContent="로딩중…";
-  document.getElementById("main-title").textContent="섹터 히트맵 — 전체";
+  document.getElementById("main-title").textContent=
+    _heatmapMode==="nxt" ? "섹터 히트맵 — NXT 애프터아워(정규장 마감가 대비)" : "섹터 히트맵 — 전체";
   const grid=document.getElementById("grid");
   if(force) grid.innerHTML='<div class="loading">📡 섹터 데이터 갱신 중…</div>';
   try{
-    const url=force?"/api/heatmap/refresh":"/api/heatmap";
+    const url=_hmUrl(force?"/api/heatmap/refresh":"/api/heatmap");
     const r=await fetch(url);
     if(!r.ok)throw new Error(`HTTP ${r.status}`);
     const data=await r.json();
@@ -869,8 +888,8 @@ async function loadOverview(force=false){
       clearInterval(t);
       return loadOverview(false);
     }
-    _toCache("all",data);
-    _lsSave(_LS_ALL,data);
+    _toCache(cacheKey,data);
+    _lsSave(lsKey,data);
     renderOverview(data);
   }catch(e){
     grid.innerHTML=`<div class="error">❌ ${esc(e.message)}<br><small>장외시간이면 한투 API가 응답하지 않을 수 있습니다</small></div>`;
@@ -878,14 +897,16 @@ async function loadOverview(force=false){
 }
 
 async function _refreshOverviewBg(){
+  const modeAtStart=_heatmapMode;
+  const cacheKey=_hmCacheKey(), lsKey=_hmLsKey();
   try{
-    const r=await fetch("/api/heatmap");
+    const r=await fetch(_hmUrl("/api/heatmap"));
     if(!r.ok)return;
     const data=await r.json();
     if(data.error||data.loading)return;  // 빌드 중이면 캐시 오염 방지
-    _toCache("all",data);
-    _lsSave(_LS_ALL,data);
-    if(activeTab==="all") renderOverview(data);
+    _toCache(cacheKey,data);
+    _lsSave(lsKey,data);
+    if(activeTab==="all"&&_heatmapMode===modeAtStart) renderOverview(data);
   }catch(e){}
 }
 

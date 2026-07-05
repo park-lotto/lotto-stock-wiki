@@ -2317,24 +2317,27 @@ def api_heatmap_tabs_meta():
 
 
 @app.get("/api/heatmap")
-def api_heatmap():
+def api_heatmap(mode: str = "regular"):
+    """mode=nxt — 정규장 마감가(15:30) 대비 등락률로 재계산한 NXT 애프터아워 전용 뷰."""
     if build_heatmap is None:
         return JSONResponse(content={"error": "sector_heatmap 로드 실패"}, status_code=503)
+    key = "all_nxt" if mode == "nxt" else "all"
     # 캐시 hit → 즉시 반환
-    entry = _heatmap_cache.get("all")
+    entry = _heatmap_cache.get(key)
     if entry and time.time() - entry["ts"] < _HEATMAP_TTL:
         return JSONResponse(content=entry["data"])
     # 캐시 miss → 백그라운드 빌드 시작 후 "준비 중" 즉시 응답
-    _heatmap_build_bg("all", build_heatmap)
+    _heatmap_build_bg(key, (lambda: build_heatmap(mode="nxt")) if mode == "nxt" else build_heatmap)
     return JSONResponse(content={"loading": True, "retry_after": 5, "sectors": [],
                                  "updated_at": "데이터 준비 중…"})
 
 
 @app.get("/api/heatmap/refresh")
-def api_heatmap_refresh():
+def api_heatmap_refresh(mode: str = "regular"):
     """캐시 무효화 후 강제 재조회."""
-    _heatmap_cache.pop("all", None)
-    return api_heatmap()
+    key = "all_nxt" if mode == "nxt" else "all"
+    _heatmap_cache.pop(key, None)
+    return api_heatmap(mode=mode)
 
 
 # ── 섹터 커스텀 편집 ──────────────────────────────────────

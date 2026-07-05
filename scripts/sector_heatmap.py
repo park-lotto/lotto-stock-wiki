@@ -13,6 +13,51 @@ ROOT = Path(__file__).parent.parent
 WATCH_FILE = ROOT / "raw" / "내 관심종목.xlsx"
 SECTOR_CUSTOM_PATH = ROOT / "pipeline" / "sector_custom.json"
 
+# ── NXT(넥스트트레이드) 애프터아워 전용 히트맵 — 정규장 마감가(15:30) 대비 등락률 ──
+_CLOSE_SNAPSHOT_PATH = ROOT / "output" / "regular_close_prices.json"
+
+
+def _load_close_snapshot() -> dict:
+    """오늘자 정규장 마감가 스냅샷 로드. 날짜 안 맞으면(장 시작 전 등) 빈 dict."""
+    try:
+        import json as _json
+        with open(str(_CLOSE_SNAPSHOT_PATH), encoding="utf-8") as f:
+            d = _json.load(f)
+        if d.get("date") == datetime.now().date().isoformat():
+            return d.get("prices", {})
+    except Exception:
+        pass
+    return {}
+
+
+def _maybe_save_close_snapshot(prices: dict) -> None:
+    """정규장 마감 직후(15:30~15:40) 히트맵 빌드 시 딱 한 번만 오늘자 종가 스냅샷 저장.
+    이 시각 안에는 여러 번 불려도 이미 저장돼 있으면 건너뛴다."""
+    now = datetime.now()
+    if now.weekday() >= 5:
+        return
+    hm = now.hour * 60 + now.minute
+    if not (15 * 60 + 30 <= hm < 15 * 60 + 40):
+        return
+    today = now.date().isoformat()
+    try:
+        import json as _json
+        with open(str(_CLOSE_SNAPSHOT_PATH), encoding="utf-8") as f:
+            existing = _json.load(f)
+        if existing.get("date") == today:
+            return
+    except Exception:
+        pass
+    snap = {c: p.get("price", 0) for c, p in prices.items() if (p or {}).get("price")}
+    if not snap:
+        return
+    try:
+        _CLOSE_SNAPSHOT_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with open(str(_CLOSE_SNAPSHOT_PATH), "w", encoding="utf-8") as f:
+            _json.dump({"date": today, "prices": snap}, f, ensure_ascii=False)
+    except Exception:
+        pass
+
 
 def _load_sector_custom() -> dict:
     if SECTOR_CUSTOM_PATH.exists():
@@ -514,7 +559,9 @@ def surfaced_sub_names() -> list:
         return []
 
 
-def build_heatmap(top_n: int = 3) -> dict:
+def build_heatmap(top_n: int = 3, mode: str = "regular") -> dict:
+    """mode='nxt' — 15:30~20:00 애프터아워 전용. 정규장 마감가(15:30) 대비 등락률로
+    재계산해 NXT 세션만의 움직임을 보여준다(종가베팅 후보 스크리닝용)."""
     import sys
     sys.path.insert(0, str(ROOT / "scripts"))
     import kis_api
@@ -549,6 +596,18 @@ def build_heatmap(top_n: int = 3) -> dict:
         prices = {c: (r and {"price": r["price"], "change_rate": r["change_rate"]}) or {}
                   for c, r in naver.items()}
 
+    _maybe_save_close_snapshot(prices)
+    close_snap = _load_close_snapshot() if mode == "nxt" else {}
+
+    def _rate_for(code: str, p: dict) -> float:
+        if mode == "nxt":
+            cp = close_snap.get(code, 0)
+            cur = (p or {}).get("price", 0)
+            if cp and cur:
+                return round((cur - cp) / cp * 100, 2)
+            return 0.0
+        return float((p or {}).get("change_rate", 0) or 0)
+
     sectors = []
     for sec in sections:
         if sec["sector"] in hidden_set or sec["sector"] in SPLIT_SECTORS:  # 분할대상은 뭉친타일 생략
@@ -559,7 +618,7 @@ def build_heatmap(top_n: int = 3) -> dict:
             if s["code"] in removed_codes:
                 continue
             p = prices.get(s["code"]) or {}
-            rate = float(p.get("change_rate", 0) or 0)
+            rate = _rate_for(s["code"], p)
             items.append({"name": s["name"], "code": s["code"],
                           "change_rate": rate, "price": p.get("price", 0)})
         # extra_stocks 추가
@@ -568,7 +627,7 @@ def build_heatmap(top_n: int = 3) -> dict:
             c = es.get("code", "")
             if c and c not in existing_codes:
                 p = prices.get(c) or {}
-                rate = float(p.get("change_rate", 0) or 0)
+                rate = _rate_for(c, p)
                 items.append({"name": es.get("name", c), "code": c,
                               "change_rate": rate, "price": p.get("price", 0)})
                 existing_codes.add(c)
@@ -591,7 +650,7 @@ def build_heatmap(top_n: int = 3) -> dict:
             if not c:
                 continue
             p = prices.get(c) or {}
-            rate = float(p.get("change_rate", 0) or 0)
+            rate = _rate_for(c, p)
             ct_items.append({"name": s.get("name", c), "code": c,
                              "change_rate": rate, "price": p.get("price", 0)})
             ct_rates.append(rate)
@@ -614,7 +673,7 @@ def build_heatmap(top_n: int = 3) -> dict:
                     continue
                 p = prices.get(c) or {}
                 s_items.append({"name": s.get("name", c), "code": c,
-                                "change_rate": float(p.get("change_rate", 0) or 0),
+                                "change_rate": _rate_for(c, p),
                                 "price": p.get("price", 0)})
             exist_c = {x["code"] for x in s_items}
             for es in extra_map.get(nm, []):
@@ -622,7 +681,7 @@ def build_heatmap(top_n: int = 3) -> dict:
                 if c and c not in exist_c and c not in removed_c:
                     p = prices.get(c) or {}
                     s_items.append({"name": es.get("name", c), "code": c,
-                                    "change_rate": float(p.get("change_rate", 0) or 0),
+                                    "change_rate": _rate_for(c, p),
                                     "price": p.get("price", 0)})
                     exist_c.add(c)
             if not s_items:
