@@ -1972,12 +1972,12 @@ function renderMarketFlow(d){
           <span class="mkt-rate ${rc}">${rateStr}</span>
         </div>
         ${barSection}
-        ${idxExpanded?`<div>
+        <div>
           <div class="mkt-sec-label">투자자 순매수 (오늘 누적)</div>
           <div class="inv-grid">${invRows}</div>
-          ${histSvg}
+          ${idxExpanded?histSvg:""}
         </div>
-          <div>
+        ${idxExpanded?`<div>
           <div class="mkt-sec-label" style="margin-top:2px;display:flex;justify-content:space-between">
             <span>프로그램 순매수</span>
             ${!progChart?"":`<span style="color:${prog.합계>=0?"#e74c3c":"#3498db"};font-weight:700">${ps}</span>`}
