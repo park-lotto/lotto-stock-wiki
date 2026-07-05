@@ -77,3 +77,42 @@ def test_get_transcript_timeout_raises_transcriptunavailable(monkeypatch, tmp_pa
     monkeypatch.setattr(subprocess, "run", fake_run)
     with pytest.raises(qe.TranscriptUnavailable):
         qe.get_transcript("https://example.com/watch?v=x", workdir=str(tmp_path))
+
+
+def test_parse_score_reply_filters_golden():
+    reply = json.loads((FIX / "gemini_score_reply.json").read_text(encoding="utf-8"))
+    cands = qe.parse_score_reply(reply, source="채널/URL")
+    assert len(cands) == 2                      # golden=false 1개 제외
+    c0 = cands[0]
+    assert c0.stance == "강세" and c0.evidence == "수급"
+    assert c0.score >= 4                         # 필수3(3) + 구체성 가점(1)
+    assert cands[1].score == 3                   # 필수3만, 구체성 없음
+
+
+def test_build_score_prompt_has_rubric():
+    p = qe.build_score_prompt("반도체 고점인가", [qe.Segment(12.0, "HBM 부족")])
+    assert "필수" in p and "강세" in p and "12" in p
+
+
+def test_chunk_segments_splits_on_max_chars():
+    segs = [qe.Segment(0.0, "1234567890"),   # 10 chars
+            qe.Segment(1.0, "1234567890"),   # 10 chars -> cumulative 20, still <= 20
+            qe.Segment(2.0, "1234567890")]   # would push to 30 -> new chunk
+    chunks = qe.chunk_segments(segs, max_chars=20)
+    assert len(chunks) == 2
+    assert len(chunks[0]) == 2
+    assert len(chunks[1]) == 1
+    assert chunks[1][0].text == "1234567890" and chunks[1][0].start == 2.0
+
+
+def test_chunk_segments_empty_input():
+    assert qe.chunk_segments([], max_chars=20) == []
+
+
+def test_chunk_segments_single_segment_exceeds_max_chars():
+    # 한 세그먼트가 max_chars보다 길어도 쪼개지 않고 그 자체로 한 청크
+    segs = [qe.Segment(0.0, "x" * 50)]
+    chunks = qe.chunk_segments(segs, max_chars=20)
+    assert len(chunks) == 1
+    assert len(chunks[0]) == 1
+    assert chunks[0][0].text == "x" * 50

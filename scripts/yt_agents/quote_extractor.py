@@ -6,6 +6,7 @@ import json
 import os
 import re
 import subprocess
+import sys
 import tempfile
 from dataclasses import dataclass, field
 
@@ -119,3 +120,97 @@ def get_transcript(url: str, lang: str = "ko", workdir: str | None = None) -> li
         if own:
             import shutil
             shutil.rmtree(workdir, ignore_errors=True)
+
+
+@dataclass
+class QuoteCandidate:
+    source: str
+    ts: float
+    text: str
+    stance: str
+    evidence: str
+    score: int
+    reasons: list[str] = field(default_factory=list)
+    has_visual: bool = False
+    heat: float = 0.0
+    tier: int = 3
+    media: dict | None = None
+
+
+def chunk_segments(segments: list[Segment], max_chars: int = 8000) -> list[list[Segment]]:
+    """긴 자막(수천~수만 세그먼트)을 Gemini 토큰 예산 안으로 잘라서 청크 리스트로.
+    세그먼트 하나를 쪼개지 않고, 누적 텍스트 길이가 max_chars를 넘기 전까지 모은다."""
+    chunks: list[list[Segment]] = []
+    current: list[Segment] = []
+    current_len = 0
+    for seg in segments:
+        seg_len = len(seg.text)
+        if current and current_len + seg_len > max_chars:
+            chunks.append(current)
+            current = []
+            current_len = 0
+        current.append(seg)
+        current_len += seg_len
+    if current:
+        chunks.append(current)
+    return chunks
+
+
+def build_score_prompt(topic: str, segments: list[Segment]) -> str:
+    lines = "\n".join(f"[{to_mmss(s.start)}|{s.start:.1f}] {s.text}" for s in segments)
+    return f"""너는 주식 영상 편집자다. 주제 "{topic}"에 대한 아래 자막에서 '골든 발언'만 골라라.
+
+골든 규칙 — 필수 3개를 모두 넘어야 golden=true:
+1) 주장 명확: 판단이 있는가 (인사말·물타기·"지켜봐야죠"는 탈락)
+2) 근거 동반: 왜인가 (근거유형=수급|실적|밸류|공급망|기타)
+3) 입장 존재: stance=강세|약세|중립|전환 중 하나로 분류 가능
+
+가점(specific): 숫자·날짜·종목·조건이 있으면 true.
+
+자막(각 줄 [MM:SS|초] 텍스트):
+{lines}
+
+JSON만 출력:
+{{"quotes":[{{"ts":<초 float>,"text":"...","golden":true|false,
+"stance":"강세|약세|중립|전환","evidence":"수급|실적|밸류|공급망|기타",
+"specific":true|false,"reasons":["..."]}}]}}"""
+
+
+def parse_score_reply(reply: dict, source: str) -> list[QuoteCandidate]:
+    out: list[QuoteCandidate] = []
+    for q in reply.get("quotes", []):
+        if not q.get("golden"):
+            continue
+        score = 3 + (1 if q.get("specific") else 0)   # 필수3 통과=3, 구체성 가점
+        out.append(QuoteCandidate(
+            source=source,
+            ts=float(q.get("ts", 0.0)),
+            text=q.get("text", ""),
+            stance=q.get("stance", "중립"),
+            evidence=q.get("evidence", "기타"),
+            score=score,
+            reasons=q.get("reasons", []),
+        ))
+    return out
+
+
+def score_quotes(topic: str, segments: list[Segment], source: str,
+                  max_chars: int = 8000) -> list[QuoteCandidate]:
+    """긴 자막을 청크로 쪼개 Gemini에 순차 채점 요청 → 골든 후보 전체를 합쳐 반환.
+    청크 하나가 실패해도(타임아웃·파싱오류 등) 전체 실행은 중단하지 않고 건너뛴다."""
+    import gemini_client
+    chunks = chunk_segments(segments, max_chars=max_chars)
+    all_candidates: list[QuoteCandidate] = []
+    failed = 0
+    for i, chunk in enumerate(chunks):
+        prompt = build_score_prompt(topic, chunk)
+        try:
+            reply = gemini_client.call_json(prompt)
+            all_candidates.extend(parse_score_reply(reply, source))
+        except Exception as e:
+            failed += 1
+            print(f"[score_quotes] 청크 {i+1}/{len(chunks)} 실패, 건너뜀: {e}",
+                  file=sys.stderr)
+    if failed:
+        print(f"[score_quotes] 총 {len(chunks)}개 청크 중 {failed}개 실패", file=sys.stderr)
+    return all_candidates
