@@ -10,16 +10,24 @@ _ALIASES = {k.lower(): v for k, v in _ALIASES_RAW.items()}
 _EXCLUDED = {"리포트요약", "투경현황"}
 
 
-def channel_info(name: str) -> dict | None:
-    """채널 정보 조회. 편집페이지에서 표시명이 줄여지는 경우(예: 독학주식첵터정리→독학주식)를
+def resolve_channel_key(name: str) -> str | None:
+    """표시명(raw 파일명에 박힌 실제 채널 타이틀 등)을 telegram_channels.json의
+    등록 키로 해석. 편집페이지에서 표시명이 줄여지는 경우(예: 독학주식첵터정리→독학주식)를
     대비해 접두 매칭 폴백을 둔다."""
     name = (name or "").strip()
     if name in _CHANNELS:
-        return _CHANNELS[name]
-    for k, v in _CHANNELS.items():
+        return name
+    for k in _CHANNELS:
         if k and (name.startswith(k) or k.startswith(name)):
-            return v
+            return k
     return None
+
+
+def channel_info(name: str) -> dict | None:
+    """채널 정보 조회. 편집페이지에서 표시명이 줄여지는 경우(예: 독학주식첵터정리→독학주식)를
+    대비해 접두 매칭 폴백을 둔다."""
+    key = resolve_channel_key(name)
+    return _CHANNELS.get(key) if key else None
 
 
 def is_excluded(name: str) -> bool:
