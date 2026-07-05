@@ -3923,6 +3923,22 @@ _SIGNAL_STOP = {
     "기타", "전체", "국내", "관련주", "테마", "섹터",
 }
 
+_FACT_LEAD_TAG_RE = re.compile(r"^\s*[\[【][^\]】]{0,10}[\]】]\s*")
+
+
+def _fact_dedup_key(content: str) -> str:
+    """같은 뉴스가 "[단독]" 태그·말줄임표 유무·소스별 미리보기 절단 길이 차이로
+    여러 채널/여러 번 크롤된 걸 같은 발언으로 인식하기 위한 정규화 키.
+    단순 content[:60] 그대로 비교하면 선행 태그 유무 차이 때문에 명백한 중복도
+    다른 문자열로 보여 놓침(2026-07-05 실사례: "[단독] "AI가..." vs ""AI가..."
+    가 같은 실시간속보단독뉴스 기사인데 다른 문자열이라 안 걸림). 길이는 24자로
+    짧게 잡는다 — 일부 소스(예: 실시간속보단독뉴스)의 미리보기 절단이 30자 안팎으로
+    짧아서, 그보다 긴 키를 쓰면 "본문 전체가 있는 소스"와 "미리보기만 있는 소스"의
+    같은 기사가 서로 다른 접두 길이에서 갈라져 매칭이 안 됨(실측 확인됨)."""
+    s = _FACT_LEAD_TAG_RE.sub("", content or "").strip()
+    s = s.rstrip(".")
+    return s[:24]
+
 # 매크로/이슈(종목 아님) 판별 힌트
 _MACRO_HINT = (
     "실업", "경제", "은행", "지수", "부동산", "금리", "환율", "물가", "증시", "국채",
@@ -4007,10 +4023,10 @@ def api_insights_signals():
         st = stance.get(a, Counter())
         # 본문에 종목명 실제 등장한 팩트 먼저(지어내지 않기), 그 다음 최신순
         flist = sorted(facts.get(a, []), key=lambda f: (f["hit"], f["date"]), reverse=True)
-        # 중복 본문 제거
+        # 중복 본문 제거(선행 "[단독]" 태그·말줄임표 차이로 같은 기사가 다르게 보이는 것 방지)
         seen_c, uniq = set(), []
         for f in flist:
-            k = f["content"][:60]
+            k = _fact_dedup_key(f["content"])
             if k in seen_c:
                 continue
             seen_c.add(k)
