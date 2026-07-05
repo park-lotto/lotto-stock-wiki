@@ -164,3 +164,42 @@ def run_slot(slot_label=None):
     for text in alerts:
         send_telegram(text)
     return alerts
+
+
+def run_daily_summary():
+    today_str = _today()
+    state = state_mod.load_state(STATE_PATH)
+    pytest_result = run_pytest_check(str(ROOT))
+    service_results = {
+        "stockbrain": check_service_health("stockbrain"),
+        "crawlingbot": check_service_health("crawlingbot"),
+    }
+    open_esc = {
+        channel: {"first_detected": entry["first_detected"],
+                  "days_open": state_mod.days_open(entry, today_str)}
+        for channel, entry in state_mod.open_escalations(state).items()
+    }
+    stats = state_mod.get_daily_stats(state, today_str)
+    slot_stats = {"checked": 5, "detected": stats["detected"],
+                  "auto_fixed": stats["auto_fixed"], "escalated": stats["escalated"]}
+    card = report_mod.render_daily_summary(
+        today_str, slot_stats, pytest_result, service_results, open_esc)
+    send_telegram(card)
+    return card
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--slot", action="store_true")
+    parser.add_argument("--daily-summary", action="store_true")
+    args = parser.parse_args()
+    if args.slot:
+        run_slot()
+    elif args.daily_summary:
+        run_daily_summary()
+    else:
+        parser.error("--slot 또는 --daily-summary 중 하나 필요")
+
+
+if __name__ == "__main__":
+    main()
