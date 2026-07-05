@@ -192,7 +192,7 @@ def detect_all(prev, curr, sectors_full, j_bars, nq_bars, phase, state) -> list[
     cooldown = state.setdefault("cooldown", {})
     leg = state.setdefault("leg", {})
     evs = []
-    if phase in ("intraday", "premarket"):
+    if phase in ("intraday", "premarket", "premarket_nxt", "afterhours", "afterhours_night"):
         if phase == "intraday":
             evs += detect_flow(prev, curr)
             evs += detect_index(prev, curr, leg)

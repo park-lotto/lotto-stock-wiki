@@ -3144,6 +3144,27 @@ def _weather_tick():
     if live_ok:
         events = _bev.detect_all(prev, curr, sectors, j_bars, nq_bars, phase, _weather["detect"])
 
+    focus = briefing_phase.phase_focus(phase)
+    extra_facts = {}
+    if phase in ("premarket", "premarket_nxt", "afterhours", "afterhours_night"):
+        ksfn = mf.get("KSFN") or {}
+        extra_facts["night_futures"] = {"price": ksfn.get("price", 0), "rate": ksfn.get("change_rate", 0)}
+    if phase == "premarket_nxt":
+        atoms_db_path = os.path.join(ROOT, "pipeline", "atoms", "atoms.db")
+        movers = _pick_notable_movers(mf.get("RANK_POP") or [], mf.get("RANK_AMT") or [],
+                                       _NEWS_FEED.get("data"), n=8)
+        for m in movers:
+            if not m.get("news_reason"):
+                found = _recent_atoms_for_stock(atoms_db_path, m["name"], limit=1)
+                if found:
+                    m["news_reason"] = found[0]
+        extra_facts["nxt_movers"] = movers
+    if phase == "afterhours_night" and global_api:
+        try:
+            extra_facts["nasdaq_movers"] = global_api.get_nasdaq_premarket_movers()
+        except Exception:
+            pass
+
     news = []
     try:
         atoms_db = os.path.join(ROOT, "pipeline", "atoms", "atoms.db")
@@ -3152,7 +3173,7 @@ def _weather_tick():
         pass
 
     phase_changed = st.get("session_phase") != phase
-    if phase == "closed" and st.get("session_phase") == "intraday":
+    if phase == "afterhours" and st.get("session_phase") == "intraday":
         try:
             _weather_tg(_bdig.format_daily(_weather.get("calib_today", [])))
         except Exception:
@@ -3168,7 +3189,7 @@ def _weather_tick():
     if fire:
         has_major = any(e.get("major") for e in events)
         facts = {"phase": phase, "J": curr["idx"]["J"], "Q": curr["idx"]["Q"],
-                 "inv": curr["inv"], "prog": curr["prog"], "nq": curr["nq"]}
+                 "inv": curr["inv"], "prog": curr["prog"], "nq": curr["nq"], **extra_facts}
         models = ["opus", "sonnet"] if has_major else \
                  (["opus"] if _weather["model_toggle"] % 2 == 0 else ["sonnet"])
         _weather["model_toggle"] += 1
@@ -3176,7 +3197,7 @@ def _weather_tick():
         for m in models:
             r = _bw.synthesize(facts, events, st, news, phase, model=m,
                                gemini_fn=_gemini_text, cwd=_BRIEFING_AGENT_CWD,
-                               claude_bin=CLAUDE_BIN or "claude")
+                               claude_bin=CLAUDE_BIN or "claude", focus=focus)
             if r:
                 results[m] = r
         _weather["last_synth_ts"] = time.time()
