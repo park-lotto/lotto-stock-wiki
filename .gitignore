@@ -108,3 +108,6 @@ output/etf_bar_last_good.json
 output/flow_history.json
 output/market_briefing.json
 output/weather_state.json
+
+# 장면 수집 산출물(프레임/클립)
+out/scenes/
