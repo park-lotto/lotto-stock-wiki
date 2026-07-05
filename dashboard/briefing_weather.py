@@ -15,16 +15,17 @@ _SYS = """너는 '로또의 스탁브레인' 장중 시황 브리핑 작성자�
 {"verdict":{"tone":"<🟢/🟡/🔴 + 한단어>","line":"<핵심 한줄>"},"narrative":"<이모지 문단 2~3개>","new_turning_points":[{"ts":"HH:MM","label":"...","major":true}],"used_news_ids":[]}"""
 
 
-def build_prompt(facts: dict, events: list, story: dict, news: list, phase: str) -> str:
+def build_prompt(facts: dict, events: list, story: dict, news: list, phase: str, focus: str = "") -> str:
     ev = "\n".join(f"- {e.get('label','')}" for e in (events or [])) or "(없음)"
     nw = "\n".join(f"- {n}" for n in (news or [])) or "(없음)"
     tp = "\n".join(f"- {t.get('ts','')} {t.get('label','')}"
                    for t in (story or {}).get("turning_points", [])) or "(없음)"
     prevv = ((story or {}).get("verdict") or {}).get("line", "(없음)")
+    focus_block = f"\n## 이 시간대 브리핑 초점\n{focus}\n" if focus else ""
     return f"""{_SYS}
 
 ## 세션: {phase}
-## 지수/수급 사실
+{focus_block}## 지수/수급 사실
 {json.dumps(facts, ensure_ascii=False)}
 ## 직전 대비 새 이벤트
 {ev}
@@ -58,9 +59,9 @@ def parse_result(raw: str):
 
 def synthesize(facts, events, story, news, phase, model="opus",
                gemini_fn=None, cwd="/home/ubuntu/briefing_agent",
-               claude_bin="claude", timeout=90) -> dict | None:
+               claude_bin="claude", timeout=90, focus="") -> dict | None:
     """claude -p(Max 구독) 호출 → 파싱. 실패 시 gemini_fn 폴백. 메타(_model,_latency_ms) 포함."""
-    prompt = build_prompt(facts, events, story, news, phase)
+    prompt = build_prompt(facts, events, story, news, phase, focus=focus)
     t0 = _time.time()
     raw = None
     try:

@@ -267,3 +267,54 @@ def get_usdkrw() -> dict:
 # ── 하위 호환용 ──────────────────────────────
 def get_spy() -> dict:
     return _yf_price_bars("SPY", "15m")
+
+
+# ── 나스닥 프리마켓 개별종목·섹터 (저녁 야간선물 브리핑용) ──
+_NASDAQ_WATCHLIST = {
+    "반도체/AI": ["NVDA", "AMD", "AVGO", "MU"],
+    "빅테크":    ["AAPL", "MSFT", "GOOGL", "AMZN", "META"],
+    "전기차":    ["TSLA", "RIVN"],
+    "바이오":    ["MRNA", "REGN"],
+}
+_NASDAQ_MOVERS_CACHE: dict = {"data": None, "ts": 0.0}
+_NASDAQ_MOVERS_TTL = 300  # 5분 (18~20시 저녁 구간에만 호출되므로 부담 적음)
+
+
+def get_nasdaq_premarket_movers() -> dict:
+    """나스닥 프리마켓 개별종목 등락률(yfinance) + 섹터별 평균으로 강한 섹터 분류.
+    프리마켓 세션 밖(preMarketChangePercent 없음)이면 정규장 등락률로 폴백.
+    반환: {"stocks": [{"ticker","name","sector","rate"}...], "sectors": [{"sector","avg_rate"}...]}"""
+    now = time.time()
+    if _NASDAQ_MOVERS_CACHE["data"] and now - _NASDAQ_MOVERS_CACHE["ts"] < _NASDAQ_MOVERS_TTL:
+        return _NASDAQ_MOVERS_CACHE["data"]
+
+    import yfinance as yf
+    all_tickers = [tk for tks in _NASDAQ_WATCHLIST.values() for tk in tks]
+    stocks = []
+    try:
+        tks = yf.Tickers(" ".join(all_tickers))
+        for sector, tickers in _NASDAQ_WATCHLIST.items():
+            for tk in tickers:
+                try:
+                    info = tks.tickers[tk].info
+                    rate = info.get("preMarketChangePercent")
+                    if rate is None:
+                        rate = info.get("regularMarketChangePercent") or 0.0
+                    stocks.append({"ticker": tk, "name": info.get("shortName") or tk,
+                                    "sector": sector, "rate": round(float(rate), 2)})
+                except Exception:
+                    continue
+    except Exception:
+        pass
+
+    sector_rates: dict = {}
+    for s in stocks:
+        sector_rates.setdefault(s["sector"], []).append(s["rate"])
+    sectors = [{"sector": k, "avg_rate": round(sum(v) / len(v), 2)}
+               for k, v in sector_rates.items() if v]
+    sectors.sort(key=lambda x: x["avg_rate"], reverse=True)
+    stocks.sort(key=lambda x: x["rate"], reverse=True)
+
+    data = {"stocks": stocks, "sectors": sectors}
+    _NASDAQ_MOVERS_CACHE.update({"data": data, "ts": now})
+    return data
