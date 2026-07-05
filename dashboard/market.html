@@ -1563,7 +1563,7 @@ function renderBelowPanel(){
   const container=document.getElementById("mkt-below-panel");
   if(!container)return;
   const items=_buildTimeline();
-  const _TIMELINE_PREVIEW_N=3;
+  const _TIMELINE_PREVIEW_N=8;
   const cardsArr=items.map((it,i)=>{
       const isEvent=it.type==="event";
       const sev=isEvent?"sev-event":it.severity==="red"?"sev-red":it.severity==="yellow"?"sev-yellow":"sev-gray";
