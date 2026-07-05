@@ -68,9 +68,11 @@ def process_channel(channel, anomaly, state, slot_label, today_str):
 
     fix_cwd = str(ROOT) if diagnosis["target"] == "local" else CRAWLER_ROOT
     backups = {}
+    before_mtimes = {}
     if diagnosis["target"] == "remote_crawler":
         backups = deploy_mod.backup_remote_files(
             CRAWLER_ROOT, diagnosis["target_files"], BACKUP_ROOT)
+        before_mtimes = fix_mod.snapshot_mtimes(CRAWLER_ROOT, diagnosis["target_files"])
 
     fix_result = fix_mod.apply_fix(channel, diagnosis, cwd=fix_cwd)
 
@@ -84,7 +86,8 @@ def process_channel(channel, anomaly, state, slot_label, today_str):
     if diagnosis["target"] == "local":
         changed = fix_mod.changed_files(str(ROOT))
     else:
-        changed = diagnosis["target_files"]
+        changed = fix_mod.changed_relative_paths(
+            CRAWLER_ROOT, diagnosis["target_files"], before_mtimes)
 
     if not fix_mod.within_file_cap(changed, cap=FILE_CAP):
         if diagnosis["target"] == "remote_crawler":

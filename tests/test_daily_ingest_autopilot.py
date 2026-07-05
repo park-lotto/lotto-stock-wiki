@@ -109,7 +109,9 @@ def test_process_channel_restores_remote_crawler_backup_when_cap_exceeded():
     with patch("daily_ingest_autopilot.diagnose_mod.read_log_tail", return_value=""), \
          patch("daily_ingest_autopilot.diagnose_mod.diagnose") as mock_diagnose, \
          patch("daily_ingest_autopilot.deploy_mod.backup_remote_files", return_value={"crawlers/telegram_crawler.py": "/backup/path"}), \
+         patch("daily_ingest_autopilot.fix_mod.snapshot_mtimes", return_value={"a.py": 1.0, "b.py": 1.0, "c.py": 1.0, "d.py": 1.0}), \
          patch("daily_ingest_autopilot.fix_mod.apply_fix") as mock_apply, \
+         patch("daily_ingest_autopilot.fix_mod.changed_relative_paths", return_value=["a.py", "b.py", "c.py", "d.py"]), \
          patch("daily_ingest_autopilot.deploy_mod.rollback_remote_crawler") as mock_rollback:
         mock_diagnose.return_value = {
             "root_cause": "r", "target": "remote_crawler",
@@ -121,6 +123,32 @@ def test_process_channel_restores_remote_crawler_backup_when_cap_exceeded():
     mock_rollback.assert_called_once_with(auto.CRAWLER_ROOT, {"crawlers/telegram_crawler.py": "/backup/path"})
     assert state["ch1"]["latest_outcome"] == "escalated"
     assert "캡" in alerts[0]
+
+
+def test_process_channel_only_counts_actually_changed_remote_crawler_files():
+    """실제로 변경 안 된 파일은 캡 계산에서 제외돼야 한다(target_files를 그대로 신뢰하지 않음)."""
+    state = {}
+    with patch("daily_ingest_autopilot.diagnose_mod.read_log_tail", return_value=""), \
+         patch("daily_ingest_autopilot.diagnose_mod.diagnose") as mock_diagnose, \
+         patch("daily_ingest_autopilot.deploy_mod.backup_remote_files", return_value={}), \
+         patch("daily_ingest_autopilot.fix_mod.snapshot_mtimes", return_value={"a.py": 1.0, "b.py": 1.0}), \
+         patch("daily_ingest_autopilot.fix_mod.apply_fix") as mock_apply, \
+         patch("daily_ingest_autopilot.fix_mod.changed_relative_paths", return_value=["a.py"]), \
+         patch("daily_ingest_autopilot.run_pytest_check", return_value={"ok": True, "failed_tests": []}), \
+         patch("daily_ingest_autopilot.deploy_mod.deploy_remote_crawler", return_value=True), \
+         patch("daily_ingest_autopilot.deploy_mod.health_check", return_value=True), \
+         patch("daily_ingest_autopilot.deploy_mod.append_wiki_log") as mock_log:
+        mock_diagnose.return_value = {
+            "root_cause": "r", "target": "remote_crawler",
+            "target_files": ["a.py", "b.py"],  # 진단은 2개를 주장하지만
+            "fix_plan": "p", "requires_destructive_action": False,
+        }
+        mock_apply.return_value = {"done": True, "summary": "s"}
+        alerts = auto.process_channel("ch1", {"status": "stale"}, state, "12:10", "2026-07-05")
+    # 실제로는 a.py 1개만 바뀌었으므로 캡(3) 이내로 정상 처리돼야 함
+    assert "ch1" not in state
+    assert "자동수정 완료" in alerts[0]
+    mock_log.assert_called_once()
 
 
 def test_run_slot_sends_healed_alert_when_channel_recovers():
