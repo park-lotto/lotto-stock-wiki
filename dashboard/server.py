@@ -5620,6 +5620,26 @@ async def api_yt_keyword_search(req: Request):
     return JSONResponse(content={"category": q, "results": rows})
 
 
+@app.post("/yt/ai_search")
+async def api_yt_ai_search(req: Request):
+    """자연어 검색 — Gemini가 문장을 분석해 검색어·정렬·필터를 짜고 결과를 재랭킹."""
+    if _ai_search is None:
+        return JSONResponse(content={"error": "ai_search 모듈 없음"}, status_code=503)
+    body = await req.json()
+    q = (body.get("query") or "").strip()
+    if not q:
+        return JSONResponse(content={"error": "검색어 필요"}, status_code=400)
+    days = int(body.get("days", 0) or 0)
+    excl = bool(body.get("exclude_shorts", False))
+    excl_news = bool(body.get("exclude_news", True))
+
+    def _do():
+        return _ai_search.ai_search(q, base_days=days, base_shorts=excl, base_news=excl_news)
+
+    out = await run_in_threadpool(_do)
+    return JSONResponse(content={"category": q, "results": out["results"], "analysis": out["analysis"]})
+
+
 @app.post("/yt/teardown")
 async def api_yt_teardown(req: Request):
     """영상 1개 완전 해체(제미니 시청) — SSE. ~1~2분 소요."""

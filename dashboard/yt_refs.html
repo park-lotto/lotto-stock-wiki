@@ -74,6 +74,12 @@ input[type=text]{padding:9px 13px;background:var(--card);border:1px solid var(--
   </div>
   <div class="mini muted" style="margin-top:5px">기간은 카테고리·키워드 검색에 모두 적용 — 트렌드는 최근으로, 매매법 등 정석은 전체 기간 추천</div>
 
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px">
+    <input type="text" id="ai-kw" placeholder="🤖 자연어로 물어보기 (예: 반도체 관련 영상 제일 반응좋은것)" style="flex:1;min-width:280px"
+      onkeydown="if(event.key==='Enter')aiSearch()">
+    <button class="btn sec" onclick="aiSearch()">🤖 AI 검색</button>
+  </div>
+
   <div id="search-area"></div>
   <div id="teardown-area"></div>
   <div id="mix-area"></div>
@@ -120,16 +126,35 @@ function fmtDate(iso){if(!iso)return '';const d=new Date(iso);if(isNaN(d))return
   const ymd=`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}`;
   if(days<30)return `${days}일전`;if(days<365)return `${Math.floor(days/30)}개월전`;return ymd;}
 
-let lastRows=[], lastCat='';
+let lastRows=[], lastCat='', lastAnalysis=null;
 let sortStack=[{key:'star',asc:false},{key:'view_per_sub',asc:false}];  // 기본: 추천도→배수
+
+const SORT_LABEL={view_per_sub:'배수(구독자 대비)',views_per_day:'일조회수(속도)',engage_pct:'참여율',view_count:'조회수',heat:'급상승(구독자대비 속도)'};
 
 function renderResults(d){
   const sa=document.getElementById('search-area');
   if(d.error){sa.innerHTML=`<p style="color:#e88">${esc(d.error)}</p>`;return;}
   lastRows=(d.results||[]).map(withStar);
   lastCat=d.category||'';
-  sortStack=[{key:'star',asc:false},{key:'view_per_sub',asc:false}];
+  lastAnalysis=d.analysis||null;
+  if(lastAnalysis&&lastAnalysis.reranked){sortStack=[{key:'ai_rank',asc:true}];}
+  else{sortStack=[{key:'star',asc:false},{key:'view_per_sub',asc:false}];}
   drawTable();
+}
+
+function aiBadge(){
+  const a=lastAnalysis;if(!a)return '';
+  if(!a.ai_ok){
+    return `<div class="card" style="padding:11px 15px;margin-top:0;margin-bottom:10px">
+      <span class="mini" style="color:#e8b84a">⚠️ AI 분석 실패 — 일반 검색으로 처리했습니다</span></div>`;
+  }
+  const filters=[`기간: ${a.days?a.days+'일 이내':'전체'}`, a.exclude_shorts?'쇼츠 제외':'쇼츠 포함', a.exclude_news?'뉴스 제외':'뉴스 포함'].join(' · ');
+  return `<div class="card" style="padding:11px 15px;margin-top:0;margin-bottom:10px">
+    <div class="mini" style="color:var(--gold);font-weight:700;margin-bottom:4px">🤖 AI 해석${a.reranked?'':' <span class="muted" style="font-weight:400">(재랭킹 생략)</span>'}</div>
+    <div class="mini">키워드: ${(a.keywords||[]).map(esc).join(' · ')} &nbsp;|&nbsp; 정렬: ${esc(SORT_LABEL[a.sort]||a.sort)}</div>
+    <div class="mini muted" style="margin-top:2px">${esc(filters)}</div>
+    ${a.reasoning?`<div class="mini muted" style="margin-top:4px">"${esc(a.reasoning)}"</div>`:''}
+  </div>`;
 }
 
 // ⭐추천도: 정말 좋은 레퍼런스 = 소재가 터지고(배수/기여도) + 내용도 좋음(참여율) 겹칠수록 높음
@@ -171,7 +196,8 @@ function drawTable(){
   const badge=k=>{const i=sortStack.findIndex(s=>s.key===k);if(i<0)return '';
     return `<span style="color:var(--gold)"> ${'①②③④'[i]}${sortStack[i].asc?'▲':'▼'}</span>`;};
   const th=(k,label)=>`<th style="cursor:pointer" onclick="sortBy('${k}')">${label}${badge(k)}</th>`;
-  let h=`<div class="label" style="display:flex;justify-content:space-between;align-items:center">
+  let h=aiBadge();
+  h+=`<div class="label" style="display:flex;justify-content:space-between;align-items:center">
       <span>② "${esc(lastCat)}" 검증된 터진 영상 (${rows.length}개) — 헤더 클릭 = 다단계 정렬(1·2·3차)</span>
       <button class="btn sec" style="padding:3px 10px;font-size:.72rem" onclick="resetSort()">정렬 초기화</button></div>
     <table><tr><th>추천</th><th>판정</th>${th('title','제목')}${th('channel_title','채널')}${th('subscriber_count','구독자')}${th('view_count','조회수')}${th('views_per_day','일조회수<br>(속도)')}${th('view_per_sub','배수')}${th('contribution_grade','기여도<br>(채널대비)')}${th('comment_count','댓글')}${th('duration_sec','길이')}${th('published_at','게시')}${th('engage_pct','콘텐츠<br>(참여율)')}<th></th></tr>`;
@@ -215,6 +241,18 @@ function kwSearch(){
   const sa=document.getElementById('search-area');
   sa.innerHTML=`<div class="label">② "${esc(q)}" 검색 중…</div><div class="spin">🔍 검색·검증 중… (20~40초, 넓게 훑는 중)</div>`;
   fetch('/yt/keyword_search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q,days:getDays(),exclude_shorts:getNoShorts(),exclude_news:getNoNews()})})
+    .then(r=>r.json()).then(renderResults).catch(e=>sa.innerHTML=`<p style="color:#e88">검색 실패: ${esc(e.message)}</p>`);
+}
+
+// ── 자연어 검색 (AI가 키워드·정렬·필터 분석 + 결과 재랭킹)
+function aiSearch(){
+  const q=document.getElementById('ai-kw').value.trim();if(!q)return;
+  document.querySelectorAll('.cat').forEach(x=>x.classList.remove('on'));
+  curCat={id:'',name:q};
+  document.getElementById('teardown-area').innerHTML='';document.getElementById('mix-area').innerHTML='';
+  const sa=document.getElementById('search-area');
+  sa.innerHTML=`<div class="label">② "${esc(q)}" AI 분석 중…</div><div class="spin">🤖 의도 분석 + 🔍 검색·검증(키워드 여러 개) + 재랭킹 중… (1~2분, 일반검색보다 오래 걸려요)</div>`;
+  fetch('/yt/ai_search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q,days:getDays(),exclude_shorts:getNoShorts(),exclude_news:getNoNews()})})
     .then(r=>r.json()).then(renderResults).catch(e=>sa.innerHTML=`<p style="color:#e88">검색 실패: ${esc(e.message)}</p>`);
 }
 
