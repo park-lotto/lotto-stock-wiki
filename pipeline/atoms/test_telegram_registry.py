@@ -1,5 +1,5 @@
 """Test telegram registry channel_info, is_excluded, resolve_alias."""
-from pipeline.atoms.telegram_registry import channel_info, is_excluded, resolve_alias
+from pipeline.atoms.telegram_registry import channel_info, is_excluded, resolve_alias, resolve_channel_key
 
 
 def test_sector_channel():
@@ -30,3 +30,15 @@ def test_alias_resolution():
     assert resolve_alias("하이닉스") == "SK하이닉스"
     assert resolve_alias("LG엔솔") == "LG에너지솔루션"  # 대소문자 무시
     assert resolve_alias("미등록종목") == "미등록종목"     # 없으면 원본
+
+
+def test_resolve_channel_key_exact_match():
+    assert resolve_channel_key("하나반도체") == "하나반도체"
+
+
+def test_resolve_channel_key_prefix_fallback():
+    assert resolve_channel_key("독학주식첵터정리") == "독학주식"
+
+
+def test_resolve_channel_key_unregistered_returns_none():
+    assert resolve_channel_key("듣보채널") is None
