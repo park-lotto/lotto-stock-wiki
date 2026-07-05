@@ -126,12 +126,14 @@ def test_process_channel_restores_remote_crawler_backup_when_cap_exceeded():
 
 
 def test_process_channel_only_counts_actually_changed_remote_crawler_files():
-    """실제로 변경 안 된 파일은 캡 계산에서 제외돼야 한다(target_files를 그대로 신뢰하지 않음)."""
+    """진단이 캡(3) 초과로 4개 파일을 주장해도, 실제로는 1개만 바뀌었으면 캡 이내로 통과해야 한다
+    (target_files 선언값을 그대로 신뢰했다면 이 케이스는 잘못 에스컬레이션됐을 것)."""
     state = {}
     with patch("daily_ingest_autopilot.diagnose_mod.read_log_tail", return_value=""), \
          patch("daily_ingest_autopilot.diagnose_mod.diagnose") as mock_diagnose, \
          patch("daily_ingest_autopilot.deploy_mod.backup_remote_files", return_value={}), \
-         patch("daily_ingest_autopilot.fix_mod.snapshot_mtimes", return_value={"a.py": 1.0, "b.py": 1.0}), \
+         patch("daily_ingest_autopilot.fix_mod.snapshot_mtimes",
+               return_value={"a.py": 1.0, "b.py": 1.0, "c.py": 1.0, "d.py": 1.0}), \
          patch("daily_ingest_autopilot.fix_mod.apply_fix") as mock_apply, \
          patch("daily_ingest_autopilot.fix_mod.changed_relative_paths", return_value=["a.py"]), \
          patch("daily_ingest_autopilot.run_pytest_check", return_value={"ok": True, "failed_tests": []}), \
@@ -140,7 +142,7 @@ def test_process_channel_only_counts_actually_changed_remote_crawler_files():
          patch("daily_ingest_autopilot.deploy_mod.append_wiki_log") as mock_log:
         mock_diagnose.return_value = {
             "root_cause": "r", "target": "remote_crawler",
-            "target_files": ["a.py", "b.py"],  # 진단은 2개를 주장하지만
+            "target_files": ["a.py", "b.py", "c.py", "d.py"],  # 진단은 캡(3) 초과인 4개를 주장하지만
             "fix_plan": "p", "requires_destructive_action": False,
         }
         mock_apply.return_value = {"done": True, "summary": "s"}
