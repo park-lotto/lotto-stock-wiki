@@ -49,11 +49,17 @@ def fetch_info(url: str) -> dict:
     """yt-dlp 단일 JSON 메타 (다운로드 없이). heatmap 포함."""
     cmd = ["python", "-m", "yt_dlp", "--skip-download",
            "--dump-single-json", "--no-warnings", url]
-    out = subprocess.run(cmd, capture_output=True, text=True,
-                         encoding="utf-8", errors="replace", timeout=90)
+    try:
+        out = subprocess.run(cmd, capture_output=True, text=True,
+                             encoding="utf-8", errors="replace", timeout=90)
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(f"yt-dlp 메타 타임아웃: {url}")
     if out.returncode != 0:
         raise RuntimeError(f"yt-dlp 메타 실패: {out.stderr[:300]}")
-    raw = json.loads(out.stdout)
+    try:
+        raw = json.loads(out.stdout)
+    except json.JSONDecodeError as e:
+        raise RuntimeError(f"yt-dlp 메타 파싱 실패: {e}")
     return {
         "title": raw.get("title", ""),
         "channel": raw.get("channel") or raw.get("uploader", ""),

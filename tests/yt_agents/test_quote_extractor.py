@@ -3,6 +3,8 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts" / "yt_agents"))
 import quote_extractor as qe
 import json
+import subprocess
+import pytest
 
 FIX = Path(__file__).parent / "fixtures"
 
@@ -26,3 +28,37 @@ def test_parse_heatmap_present():
 
 def test_parse_heatmap_absent():
     assert qe.parse_heatmap({"title": "x"}) == []
+
+def test_fetch_info_nonzero_returncode_raises_runtimeerror(monkeypatch):
+    class FakeResult:
+        returncode = 1
+        stdout = ""
+        stderr = "boom"
+
+    def fake_run(*args, **kwargs):
+        return FakeResult()
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    with pytest.raises(RuntimeError):
+        qe.fetch_info("https://example.com/watch?v=x")
+
+def test_fetch_info_timeout_raises_runtimeerror(monkeypatch):
+    def fake_run(*args, **kwargs):
+        raise subprocess.TimeoutExpired(cmd=["python", "-m", "yt_dlp"], timeout=90)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    with pytest.raises(RuntimeError):
+        qe.fetch_info("https://example.com/watch?v=x")
+
+def test_fetch_info_malformed_json_raises_runtimeerror(monkeypatch):
+    class FakeResult:
+        returncode = 0
+        stdout = "not json{{{"
+        stderr = ""
+
+    def fake_run(*args, **kwargs):
+        return FakeResult()
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    with pytest.raises(RuntimeError):
+        qe.fetch_info("https://example.com/watch?v=x")
