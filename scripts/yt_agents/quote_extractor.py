@@ -286,3 +286,78 @@ def detect_visuals(frame_paths: list[str]) -> list[bool]:
                                        types.GenerateContentConfig(temperature=0))
         results.append(bool(gemini_client._parse_json_text(resp.text).get("visual")))
     return results
+
+
+def candidate_to_dict(c: QuoteCandidate) -> dict:
+    return {
+        "source": c.source, "ts": to_mmss(c.ts), "ts_sec": c.ts,
+        "text": c.text, "tier": c.tier, "has_visual": c.has_visual,
+        "heat": c.heat, "stance": c.stance, "evidence": c.evidence,
+        "score": c.score, "reasons": c.reasons, "media": c.media,
+    }
+
+
+def extract(url: str, topic: str, capture: bool = False,
+            out_path: str | None = None,
+            max_segments: int | None = None) -> dict:
+    info = fetch_info(url)
+    source = f"{info['channel']} / {info['webpage_url']}"
+    segments = get_transcript(url)
+
+    scored_segments = segments
+    if max_segments is not None:
+        scored_segments = segments[:max_segments]
+        print(f"[extract] {max_segments}/{len(segments)} 세그먼트만 채점(bounded smoke)",
+              file=sys.stderr)
+
+    cands = score_quotes(topic, scored_segments, source)
+    apply_heatmap(cands, parse_heatmap(info))
+    assign_tiers(cands)
+
+    if capture and cands:
+        import shutil
+        wd = tempfile.mkdtemp(prefix="qe_cap_")
+        try:
+            targets = [c for c in cands if c.tier <= 2] or cands
+            paths = []
+            for i, c in enumerate(targets):
+                fp = os.path.join(wd, f"cap_{i:03d}.png")
+                try:
+                    capture_frame(url, c.ts, fp); paths.append((c, fp))
+                except Exception:
+                    pass
+            if paths:
+                flags = detect_visuals([p for _, p in paths])
+                for (c, _), v in zip(paths, flags):
+                    c.has_visual = c.has_visual or v
+                assign_tiers(cands)   # 화면근거 반영 재-tier
+        finally:
+            shutil.rmtree(wd, ignore_errors=True)
+
+    cands.sort(key=lambda c: (c.tier, -c.score, -c.heat))
+    doc = {"topic": topic, "source": source,
+           "quotes": [candidate_to_dict(c) for c in cands]}
+    if out_path:
+        import json as _j
+        open(out_path, "w", encoding="utf-8").write(
+            _j.dumps(doc, ensure_ascii=False, indent=2))
+    return doc
+
+
+if __name__ == "__main__":
+    import argparse, json as _j
+    ap = argparse.ArgumentParser()
+    ap.add_argument("url")
+    ap.add_argument("--topic", required=True)
+    ap.add_argument("--capture", action="store_true")
+    ap.add_argument("--out")
+    ap.add_argument("--max-segments", type=int, default=None,
+                     help="스모크용: 앞에서 N개 세그먼트만 채점(생략 시 전체)")
+    a = ap.parse_args()
+    doc = extract(a.url, a.topic, capture=a.capture, out_path=a.out,
+                  max_segments=a.max_segments)
+    print(_j.dumps(doc, ensure_ascii=False, indent=2)[:2000])
+    print(f"\n총 {len(doc['quotes'])}개 후보 "
+          f"(T1={sum(q['tier']==1 for q in doc['quotes'])} "
+          f"T2={sum(q['tier']==2 for q in doc['quotes'])} "
+          f"T3={sum(q['tier']==3 for q in doc['quotes'])})")

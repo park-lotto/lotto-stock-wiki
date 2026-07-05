@@ -201,3 +201,13 @@ def test_capture_frame_timeout_raises_runtimeerror(monkeypatch, tmp_path):
     with pytest.raises(RuntimeError):
         qe.capture_frame("https://example.com/watch?v=x", 60.0,
                           str(tmp_path / "f.png"))
+
+
+def test_candidate_to_dict_shape():
+    c = qe.QuoteCandidate(source="채널/URL", ts=220.5, text="밸류 부담",
+                          stance="약세", evidence="밸류", score=3,
+                          has_visual=True, heat=0.9, tier=1)
+    d = qe.candidate_to_dict(c)
+    assert d["ts"] == "03:40" and d["ts_sec"] == 220.5
+    assert d["tier"] == 1 and d["has_visual"] is True
+    assert d["stance"] == "약세" and d["source"] == "채널/URL"
