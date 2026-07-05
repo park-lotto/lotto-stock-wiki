@@ -54,3 +54,16 @@ def test_render_daily_summary_shows_pytest_failures():
         {"ok": False, "failed_tests": ["tests/test_a.py::test_x"]},
         {"stockbrain": {"active": True}}, {})
     assert "test_x" in text
+
+
+def test_render_slot_alert_escalated_shows_summary_when_given():
+    text = render_slot_alert("15:10", "실시간주식뉴스", "escalated",
+                              root_cause="pytest 실패", summary="수정 후 pytest 실패 — 커밋 안 함")
+    assert "수정 후 pytest 실패 — 커밋 안 함" in text
+    assert "코드로 해결 불가 또는 실패" not in text  # summary가 있으면 제네릭 문구 대신 표시
+
+
+def test_render_slot_alert_escalated_falls_back_to_generic_without_summary():
+    text = render_slot_alert("15:10", "그로쓰리서치특징주", "escalated",
+                              root_cause="플랫폼 리드 제한 추정")
+    assert "코드로 해결 불가 또는 실패" in text

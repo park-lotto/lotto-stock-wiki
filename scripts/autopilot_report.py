@@ -13,7 +13,10 @@ def render_slot_alert(slot_label, channel, outcome, root_cause=None, summary=Non
     lines = [f"🔴 [{slot_label}] {channel} — 사람 판단 필요"]
     if root_cause:
         lines.append(f"→ 진단: {root_cause}")
-    lines.append("→ 코드로 해결 불가 또는 실패 → 자동 skip(당일 재시도 안 함)")
+    if summary:
+        lines.append(f"→ {summary}")
+    else:
+        lines.append("→ 코드로 해결 불가 또는 실패 → 자동 skip(당일 재시도 안 함)")
     return "\n".join(lines)
 
 
