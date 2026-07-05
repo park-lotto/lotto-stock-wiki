@@ -312,15 +312,99 @@ def candidate_to_dict(c: QuoteCandidate) -> dict:
     }
 
 
+def _ts_to_sec(v) -> float:
+    """'MM:SS' / 'H:MM:SS' / 숫자 → 초(float)."""
+    if isinstance(v, (int, float)):
+        return float(v)
+    s = str(v).strip()
+    parts = s.split(":")
+    try:
+        if len(parts) == 3:
+            h, m, sec = parts
+            return int(h) * 3600 + int(m) * 60 + float(sec)
+        if len(parts) == 2:
+            m, sec = parts
+            return int(m) * 60 + float(sec)
+        return float(s)
+    except ValueError:
+        return 0.0
+
+
+def build_video_prompt(topic: str) -> str:
+    """call_video용 루브릭 프롬프트 — Gemini가 영상 보고 골든 발언 JSON 반환."""
+    t = f'주제 "{topic}"에 관한 ' if topic else ''
+    return (
+        f"너는 주식 영상 편집자다. 이 영상을 보고 {t}'골든 발언'만 골라라.\n"
+        "골든 규칙 — 필수 3개를 모두 넘어야 golden=true:\n"
+        "1) 주장 명확: 판단이 있는가 (인사말·물타기·\"지켜봐야죠\"는 탈락)\n"
+        "2) 근거 동반: 왜인가 (근거유형=수급|실적|밸류|공급망|기타)\n"
+        "3) 입장 존재: stance=강세|약세|중립|전환 중 하나\n"
+        "가점: specific(숫자·날짜·종목·조건 있으면 true), "
+        "has_visual(말할 때 화면에 리포트·차트·슬라이드 등 자료가 떠 있으면 true).\n"
+        "발언은 최대 8개. JSON만 출력:\n"
+        '{"quotes":[{"ts":"MM:SS","text":"발언 그대로","golden":true,'
+        '"stance":"강세|약세|중립|전환","evidence":"수급|실적|밸류|공급망|기타",'
+        '"specific":true,"has_visual":true,"reasons":["..."]}]}'
+    )
+
+
+def parse_video_reply(text: str, source: str) -> list[QuoteCandidate]:
+    """call_video 텍스트 응답 → 골든 QuoteCandidate 리스트 (has_visual 포함)."""
+    t = re.sub(r'```(?:json)?', '', text).strip('`').strip()
+    try:
+        reply = json.loads(t)
+    except json.JSONDecodeError:
+        m = re.search(r'\{[\s\S]+\}', t)
+        reply = json.loads(m.group()) if m else {"quotes": []}
+    out = []
+    for q in reply.get("quotes", []):
+        if not q.get("golden"):
+            continue
+        score = 3 + (1 if q.get("specific") else 0) + (1 if q.get("has_visual") else 0)
+        out.append(QuoteCandidate(
+            source=source, ts=_ts_to_sec(q.get("ts", 0)), text=q.get("text", ""),
+            stance=q.get("stance", "중립"), evidence=q.get("evidence", "기타"),
+            score=score, reasons=q.get("reasons", []),
+            has_visual=bool(q.get("has_visual"))))
+    return out
+
+
+def _extract_via_video(url, topic):
+    """Gemini가 영상을 직접 시청해 골든 발언 추출 (yt-dlp 봇차단 우회 — 서버 경로)."""
+    yield {"type": "progress", "phase": "제미니 영상 시청"}
+    source = url
+    try:
+        text = gemini_client.call_video(url, build_video_prompt(topic),
+                                        model="gemini-2.5-flash")
+        cands = parse_video_reply(text, source)
+    except Exception as e:
+        print(f"[extract_stream] call_video 실패: {e}", file=sys.stderr)
+        yield {"type": "error", "message": f"영상 분석 실패: {str(e)[:160]}"}
+        return
+    assign_tiers(cands)   # heatmap 없음 → has_visual만 T1, 나머지 T3
+    cands.sort(key=lambda c: (c.tier, -c.score, -c.heat))
+    doc = {"topic": topic, "source": source,
+           "quotes": [candidate_to_dict(c) for c in cands]}
+    yield {"type": "result", "doc": doc}
+
+
 def extract_stream(url, topic, max_segments=None):
     """스트리밍 오케스트레이터 — 진행이벤트 + 최종 결과를 yield.
-    capture는 하지 않음(MVP 픽전용). CLI용 extract()와 별개."""
+    yt-dlp 자막 경로를 먼저 시도(로컬은 됨), 봇차단 등 실패 시 Gemini
+    call_video 경로로 폴백(서버 IP는 유튜브 직접접근이 봇차단됨).
+    capture는 하지 않음(MVP 픽전용)."""
     yield {"type": "progress", "phase": "메타"}
-    info = fetch_info(url)
-    source = f"{info['channel']} / {info['webpage_url']}"
+    try:
+        info = fetch_info(url)
+        source = f"{info['channel']} / {info['webpage_url']}"
+        yield {"type": "progress", "phase": "자막"}
+        segments = get_transcript(url)
+    except Exception as e:
+        # yt-dlp 봇차단(서버) 등 → Gemini 영상 시청으로 폴백
+        print(f"[extract_stream] yt-dlp 경로 실패 → call_video 폴백: {e}", file=sys.stderr)
+        yield from _extract_via_video(url, topic)
+        return
 
-    yield {"type": "progress", "phase": "자막"}
-    segments = get_transcript(url)
     if max_segments:
         yield {"type": "progress", "phase": "bound",
                "used": max_segments, "total": len(segments)}

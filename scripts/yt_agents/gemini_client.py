@@ -137,3 +137,16 @@ def call_json(prompt: str, system: str = '') -> dict:
         if m:
             return json.loads(m.group())
         raise
+
+
+def call_video(youtube_url: str, prompt: str, model: str = 'gemini-2.5-flash', temperature: float = 0.4) -> str:
+    """유튜브 URL을 Gemini가 직접 시청하고 분석 → 텍스트 반환.
+    자막+화면+썸네일을 한 번에 봄. 18키 폴백 적용. yt-dlp 봇차단(서버 IP) 우회용.
+    기본 모델=gemini-2.5-flash (프리뷰는 503 잦아 안정 flash 사용)."""
+    from google.genai import types
+    contents = types.Content(parts=[
+        types.Part(file_data=types.FileData(file_uri=youtube_url, mime_type='video/*')),
+        types.Part(text=prompt),
+    ])
+    resp = _generate(model, contents, types.GenerateContentConfig(temperature=temperature))
+    return resp.text.strip()

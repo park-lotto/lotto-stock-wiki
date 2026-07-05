@@ -312,3 +312,23 @@ def test_extract_orchestration(monkeypatch):
     for q in doc["quotes"]:
         for key in ("ts", "ts_sec", "tier", "stance", "has_visual"):
             assert key in q
+
+
+def test_ts_to_sec_forms():
+    assert qe._ts_to_sec("03:40") == 220.0
+    assert qe._ts_to_sec("1:02:03") == 3723.0
+    assert qe._ts_to_sec(90) == 90.0
+    assert qe._ts_to_sec("bad") == 0.0
+
+
+def test_parse_video_reply_golden_and_visual():
+    text = '```json\n{"quotes":[' \
+           '{"ts":"17:49","text":"HBM 공급부족 내년까지","golden":true,"stance":"강세","evidence":"수급","specific":true,"has_visual":true,"reasons":["r"]},' \
+           '{"ts":"20:00","text":"지켜봐야죠","golden":false,"stance":"중립","evidence":"기타"}' \
+           ']}\n```'
+    cands = qe.parse_video_reply(text, source="https://youtu.be/x")
+    assert len(cands) == 1                    # golden=false 제외
+    c = cands[0]
+    assert c.ts == 1069.0 and c.stance == "강세"
+    assert c.has_visual is True
+    assert c.score == 5                        # 필수3 + specific + has_visual
