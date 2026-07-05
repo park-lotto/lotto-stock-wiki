@@ -98,7 +98,8 @@ body { background: #ffffff; color: var(--txt); font-family: 'Pretendard','Segoe 
 
 /* ── 메인 섹션 (1단: 라이브러리→시그널→이벤트→리포트→기록) ── */
 .main-2col { display: flex; flex-direction: column; margin: 40px 0 8px; }
-.side-title { font-size: .8rem; font-weight: 700; color: var(--muted); margin-bottom: 14px; text-transform: uppercase; letter-spacing: .04em; display: flex; align-items: center; gap: 8px; }
+.side-title { font-size: 1.05rem; font-weight: 700; color: var(--txt); margin-bottom: 14px; letter-spacing: -.01em; display: flex; align-items: center; gap: 8px; }
+.side-title small { font-weight: 500; }
 .lib-title-center { position: relative; justify-content: center; }
 .lib-title-center .lib-toggle { position: absolute; right: 0; margin-left: 0; }
 .ttl-ico { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 9px; background: #f5f5f7; font-size: 14px; flex: 0 0 auto; vertical-align: middle; margin-right: 2px; }
@@ -199,7 +200,11 @@ body { background: #ffffff; color: var(--txt); font-family: 'Pretendard','Segoe 
 .sig-more { margin-top: 7px; background: none; border: none; color: var(--gold-dim); font-size: .72rem; cursor: pointer; padding: 2px 0; }
 .sig-more:hover { color: var(--gold); }
 /* 최근 브리핑 기록 */
-.brief-hist { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.brief-hist { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.brief-hist-more { margin-top: 12px; }
+#ws-brief-history.brief-hist { grid-template-columns: 1fr; gap: 6px; }
+@media (max-width: 1100px) { .brief-hist { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) { .brief-hist { grid-template-columns: 1fr; } }
 .bh-item { padding: 14px 16px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.04); cursor: pointer; transition: transform .15s, box-shadow .15s, border-color .15s; }
 .bh-item:hover { border-color: var(--gold-dim); transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.07); }
 .bh-label { font-size: .88rem; font-weight: 600; color: var(--txt); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1083,13 +1088,13 @@ async function showL0() {
       <div id="signals-box" class="signals-box"></div>
 
       <div class="side-title" style="margin-top:64px"><span class="ttl-ico">📅</span> 다가오는 이벤트 <small style="color:var(--gold-dim);font-weight:400">클릭하면 그 종목/섹터 브리핑</small></div>
-      <div id="catalyst-summary" class="brief-hist">불러오는 중…</div>
+      <div id="catalyst-summary" class="brief-hist-wrap">불러오는 중…</div>
 
       <div class="side-title" style="margin-top:64px"><span class="ttl-ico">📰</span> 최근 리포트 <small style="color:var(--gold-dim);font-weight:400">클릭하면 그 종목 브리핑</small></div>
-      <div id="recent-reports" class="brief-hist">불러오는 중…</div>
+      <div id="recent-reports" class="brief-hist-wrap">불러오는 중…</div>
 
       <div class="side-title" style="margin-top:64px"><span class="ttl-ico">📖</span> 최근 브리핑 기록 <small style="color:var(--gold-dim);font-weight:400">클릭하면 그때 본 화면 그대로</small></div>
-      <div id="brief-history" class="brief-hist">불러오는 중…</div>
+      <div id="brief-history" class="brief-hist-wrap">불러오는 중…</div>
     </div>
     <div class="feed-section">
       <div class="section-title">최근 추가된 인사이트</div>
@@ -1108,7 +1113,7 @@ async function loadRecentReports() {
     const res = await apiFetch('/api/insights/recent_reports');
     const rs = res.reports || [];
     if (!rs.length) { box.innerHTML = '<div class="bh-empty">최근 리포트 없음 (크롤 대기)</div>'; return; }
-    box.innerHTML = rs.map((r, i) => {
+    box.innerHTML = renderExpandableCards(rs, (r, i) => {
       const fid = 'rf' + i;
       return `<div class="sig-block">
         <div class="sig-head" onclick="sigExpand('${fid}',this)">
@@ -1122,7 +1127,7 @@ async function loadRecentReports() {
           <button class="sig-brief-btn" onclick="sigBrief('${escAttr(r.asset)}')">🧠 이 종목 브리핑 →</button>
         </div>
       </div>`;
-    }).join('');
+    }, 4);
   } catch(e) { box.innerHTML = '<div class="bh-empty">리포트를 불러오지 못했습니다.</div>'; }
 }
 async function loadCatalystSummary() {
@@ -1132,7 +1137,7 @@ async function loadCatalystSummary() {
     const res = await apiFetch('/api/catalysts?mine=1&days=14');
     const events = res.events || [];
     if (!events.length) { box.innerHTML = '<div class="bh-empty">예정된 이벤트가 없어요 (오늘 캘린더 수집분 대기)</div>'; return; }
-    box.innerHTML = events.slice(0, 6).map(e => {
+    box.innerHTML = renderExpandableCards(events, e => {
       const dday = e.dday ?? 0;
       const ddCls = dday <= 3 ? 'soon' : dday <= 7 ? 'near' : '';
       const confCls = 'c' + (e.confidence || 4);
@@ -1149,7 +1154,7 @@ async function loadCatalystSummary() {
           </div>
         </div>
       </div>`;
-    }).join('');
+    }, 4);
   } catch (e) { box.innerHTML = '<div class="bh-empty">이벤트를 불러오지 못했습니다.</div>'; }
 }
 function toggleLib(btn) {
@@ -1253,14 +1258,19 @@ async function loadBriefHistory(containerId) {
     const res = await apiFetch('/api/insights/notebooks');
     const nbs = res.notebooks || [];
     if (!nbs.length) { box.innerHTML = '<div class="bh-empty">아직 기록이 없습니다. 위에서 브리핑을 시작하면 여기에 쌓입니다.</div>'; return; }
-    box.innerHTML = nbs.map(n =>
+    const renderNb = n =>
       `<div class="bh-item deletable" title="소스에서 뽑은 발언(문장) 수. 최대 200개까지 모읍니다">
         <div class="bh-main" onclick="openBriefFromHistory('${escAttr(n.id)}','${escAttr(n.label)}','${escAttr(n.url||'')}')">
           <div class="bh-label">🧠 ${escHtml(n.label)}</div>
           <div class="bh-meta">${escHtml(n.date||'')} · 소스발언 ${n.atoms||0}개 · 다시보기 →</div>
         </div>
         <button class="bh-del" title="목록에서 삭제" onclick="forgetBrief(event,'${escAttr(n.id)}','${escAttr(n.label)}')">✕</button>
-      </div>`).join('');
+      </div>`;
+    // 메인 L0의 브리핑기록만 한 줄+더보기(모달 사이드바 ws-brief-history는 기존처럼
+    // 세로 스크롤 리스트 유지 — 좁은 패널이라 그리드로 바꾸면 오히려 어색함).
+    box.innerHTML = (containerId === 'ws-brief-history')
+      ? nbs.map(renderNb).join('')
+      : renderExpandableCards(nbs, renderNb, 4);
   } catch(e) { box.innerHTML = '<div class="bh-empty">기록을 불러오지 못했습니다.</div>'; }
 }
 async function forgetBrief(ev, id, label) {
@@ -1285,6 +1295,21 @@ const SIG_CATNAME = { youtube: '유튜브', telegram: '텔레', report: '리포�
 const SIG_STANCE = { bullish: '🟢강세', bearish: '🔴약세', neutral: '⚪중립' };
 let _sigId = 0;
 let _sigGrpId = 0;
+let _expGrpId = 0;
+// 한 행(rowSize개)만 먼저 보여주고 나머지는 "더보기"로 펼침 — 가로스크롤 대신 세로확장.
+function renderExpandableCards(items, renderFn, rowSize) {
+  if (!items.length) return '';
+  // 전체를 먼저 렌더(원본 인덱스 유지 — sigExpand 등 id가 head/rest 슬라이스별로
+  // 0부터 다시 매겨지면 head/rest에서 id가 충돌함) 한 뒤 문자열 상태로 잘라 나눈다.
+  const rendered = items.map(renderFn);
+  const head = rendered.slice(0, rowSize), rest = rendered.slice(rowSize);
+  const headHtml = `<div class="brief-hist">${head.join('')}</div>`;
+  if (!rest.length) return headHtml;
+  const gid = 'ex' + (++_expGrpId);
+  return headHtml +
+    `<div class="brief-hist brief-hist-more" id="${gid}" style="display:none">${rest.join('')}</div>` +
+    `<button class="sig-more-btn" style="margin-top:10px" onclick="toggleSigMore('${gid}',this)" data-n="${rest.length}">더보기 (${rest.length}) ▾</button>`;
+}
 function toggleSigMore(id, btn) {
   const el = qs('#' + id); if (!el) return;
   const open = el.style.display === 'none';
