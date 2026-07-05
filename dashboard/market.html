@@ -192,12 +192,14 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
 .timeline-item.sev-yellow .timeline-dot{background:#d4af37;}
 .timeline-item.sev-gray .timeline-dot{background:#555;}
 .timeline-item.sev-event .timeline-dot{background:#6a9fd4;width:11px;height:11px;left:-19px;top:10px;}
-.timeline-item.tl-news{opacity:0.88;}
-.timeline-item.tl-news .bi-ts{font-size:10.5px;color:#888;}
-.timeline-item.tl-news .bi-headline{font-size:12.5px;font-weight:500;margin:2px 0 0;color:#ccc;}
-.timeline-item.tl-event{opacity:1;}
+@keyframes tl-dot-blink{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.55);}50%{box-shadow:0 0 0 5px rgba(255,255,255,0);}}
+.timeline-dot.tl-dot-pulse{animation:tl-dot-blink 1.4s ease-in-out infinite;}
+.timeline-item.tl-news .bi-ts{font-size:10.5px;color:#999;}
+.timeline-item.tl-news .bi-headline{font-size:13px;font-weight:600;margin:2px 0 0;color:#e6e6e6;}
 .timeline-item.tl-event .bi-ts{font-size:11px;color:#8ab4dd;font-weight:700;}
 .timeline-item.tl-event .bi-headline{font-size:14.5px;font-weight:800;margin:3px 0 0;color:#fff;}
+.timeline-item.tl-latest .bi-headline{color:#fff;}
+.timeline-item.tl-latest{background:rgba(106,159,212,.07);}
 .timeline-item .bi-body{font-size:12.5px;color:#bbb;line-height:1.5;margin-top:5px;}
 .tl-extra{margin-left:6px;font-size:10.5px;font-weight:500;color:#777;}
 .card-fold-btn{position:absolute;top:10px;right:12px;z-index:2;font-size:11px;font-weight:500;
@@ -1541,7 +1543,7 @@ function _buildTimeline(){
       capped.push(idx===shown.length-1&&extra>0?{...it, extra}:it);
     });
   }
-  capped.sort((a,b)=>a.ts.localeCompare(b.ts));
+  capped.sort((a,b)=>b.ts.localeCompare(a.ts));   // 화면 표시는 최신순(내림차순)
   return capped;
 }
 
@@ -1557,10 +1559,12 @@ function renderBelowPanel(){
       const expandable=!!it.body;
       const body=(open&&it.body)?`<div class="bi-body">${esc(it.body)}</div>`:"";
       const extraTag=it.extra?`<span class="tl-extra">+${it.extra}번 더</span>`:"";
-      return `<div class="timeline-item ${sev} ${isEvent?"tl-event":"tl-news"}" ${expandable?`onclick="toggleNewsExpand(${i})" style="cursor:pointer"`:""}>
-        <span class="timeline-dot"></span>
-        <div class="bi-ts">${esc(it.ts)}${isEvent&&it.major?" ⭐":""} ${expandable?(open?"▲":"▼"):""}</div>
-        <div class="bi-headline">${esc(it.text)}${extraTag}</div>
+      const emoji=isEvent?(it.major?"⭐":"📍"):(it.severity==="red"?"🔴":it.severity==="yellow"?"🟡":"⚪");
+      const isLatest=i===0;   // items는 최신순 정렬 → 맨 앞이 가장 최근
+      return `<div class="timeline-item ${sev} ${isEvent?"tl-event":"tl-news"}${isLatest?" tl-latest":""}" ${expandable?`onclick="toggleNewsExpand(${i})" style="cursor:pointer"`:""}>
+        <span class="timeline-dot${isLatest?" tl-dot-pulse":""}"></span>
+        <div class="bi-ts">${esc(it.ts)} ${expandable?(open?"▲":"▼"):""}</div>
+        <div class="bi-headline">${emoji} ${esc(it.text)}${extraTag}</div>
         ${body}
       </div>`;
     });
@@ -1570,8 +1574,9 @@ function renderBelowPanel(){
       ?`<div style="color:#888;font-size:13px;padding:8px;">아직 타임라인 없음</div>`
       :`<div style="color:#888;font-size:13px;padding:8px;">불러오는 중...</div>`;
   // 미리보기(접힘): 가장 최근 N개만 — 오래된 항목보다 지금 무슨 일이 있었는지가 더 유용
+  // (items는 최신순으로 정렬돼 있으므로 앞에서부터 N개 = 가장 최근)
   const rowsPreview=rowsArr.length
-    ? rowsArr.slice(-_TIMELINE_PREVIEW_N).join("")
+    ? rowsArr.slice(0,_TIMELINE_PREVIEW_N).join("")
     : rows;
 
   const topickList=((_marketInsight&&_marketInsight.topick)||[]).slice(0,_TOPICK_COUNT);
