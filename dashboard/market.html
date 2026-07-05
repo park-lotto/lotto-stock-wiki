@@ -1549,8 +1549,8 @@ function renderBelowPanel(){
   const container=document.getElementById("mkt-below-panel");
   if(!container)return;
   const items=_buildTimeline();
-  const rows=items.length
-    ?items.map((it,i)=>{
+  const _TIMELINE_PREVIEW_N=2;
+  const rowsArr=items.map((it,i)=>{
       const isEvent=it.type==="event";
       const sev=isEvent?"sev-event":it.severity==="red"?"sev-red":it.severity==="yellow"?"sev-yellow":"sev-gray";
       const open=_expandedNews.has(i);
@@ -1563,10 +1563,16 @@ function renderBelowPanel(){
         <div class="bi-headline">${esc(it.text)}${extraTag}</div>
         ${body}
       </div>`;
-    }).join("")
+    });
+  const rows=rowsArr.length
+    ? rowsArr.join("")
     :_briefingLoaded
       ?`<div style="color:#888;font-size:13px;padding:8px;">아직 타임라인 없음</div>`
       :`<div style="color:#888;font-size:13px;padding:8px;">불러오는 중...</div>`;
+  // 미리보기(접힘): 가장 최근 N개만 — 오래된 항목보다 지금 무슨 일이 있었는지가 더 유용
+  const rowsPreview=rowsArr.length
+    ? rowsArr.slice(-_TIMELINE_PREVIEW_N).join("")
+    : rows;
 
   const topickList=((_marketInsight&&_marketInsight.topick)||[]).slice(0,_TOPICK_COUNT);
   const topickHtml=topickList.length
@@ -1595,9 +1601,9 @@ function renderBelowPanel(){
     <div class="mkt-card" style="flex:1;min-width:0;">
       <div class="card-hd" style="font-size:15px;font-weight:700;color:#ddd;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
         <span>🕐 오늘의 타임라인 (07:30~, 제목 클릭시 펼침)</span>
-        <span class="card-fold-btn" onclick="toggleCardCollapse('timeline')">${tlCollapsed?`▶ ${items.length}개`:"▼ 접기"}</span>
+        <span class="card-fold-btn" onclick="toggleCardCollapse('timeline')">${tlCollapsed?`▶ +${Math.max(0,items.length-_TIMELINE_PREVIEW_N)}개 더`:"▼ 접기"}</span>
       </div>
-      ${tlCollapsed?"":`<div class="timeline-feed">${rows}</div>`}
+      <div class="timeline-feed">${tlCollapsed?rowsPreview:rows}</div>
     </div>
     <div class="mkt-card" style="flex:1;min-width:0;">
       <div class="mt-title card-hd" style="font-size:15px;display:flex;align-items:center;justify-content:space-between;">
