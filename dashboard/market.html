@@ -1691,9 +1691,26 @@ function renderMarketFlow(d){
       // ── 실시간 시장 브리핑 카드 (헤드라인+본문만, 뉴스/탑픽은 mkt-below-panel로 분리) ──
       if(code==="briefing"){
         const insightHtml=(()=>{
-          if(!_marketInsight)return"";
-          const headline=_marketInsight.headline||"";
-          const bodyRaw=_marketInsight.body||_marketInsight.comment||"";
+          const ins=_marketInsight;
+          if(!ins)return"";
+          // 신규 shape(verdict/narrative/turning_points) 우선
+          if(ins.verdict){
+            const v=ins.verdict||{};
+            const stale=(ins.session_phase==="weekend"||ins.session_phase==="closed");
+            const staleTag=stale?` <span style="color:#888;font-size:11px;font-weight:400;">(지난 장 기준)</span>`:"";
+            const narrHtml=_mdMini(ins.narrative||"");
+            const tps=(ins.turning_points||[]).map(t=>
+              `<div style="color:#999;font-size:12px;padding:1px 0;"><span style="color:#ccc;">${esc(t.ts||"")}</span> ${esc(t.label||"")}${t.major?' <span style="color:#d4af37;">★</span>':''}</div>`
+            ).join("");
+            return `<div class="mkt-insight" style="margin-bottom:0;">
+              <div style="font-size:15px;font-weight:700;color:#e8c96a;margin-bottom:6px;">${esc(v.tone||"")} · ${esc(v.line||"")}<span style="color:#888;font-size:11px;font-weight:400;margin-left:6px;">${esc(v.ts||"")}${staleTag}</span></div>
+              <div class="mi-body">${narrHtml}</div>
+              ${tps?`<div style="color:#aaa;font-size:12px;font-weight:600;margin:8px 0 4px;">오늘의 전환점</div>${tps}`:""}
+            </div>`;
+          }
+          // 구 shape 폴백(headline/body)
+          const headline=ins.headline||"";
+          const bodyRaw=ins.body||ins.comment||"";
           const paragraphs=bodyRaw.split(/\n\s*\n/).map(p=>p.trim()).filter(Boolean);
           const bodyHtml=paragraphs.map(p=>`<div class="mi-para">${esc(p)}</div>`).join("");
           const headlineHtml=headline?`<div class="mi-headline">${esc(headline)}</div>`:"";
