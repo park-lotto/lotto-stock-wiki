@@ -1565,7 +1565,7 @@ async function actionYt(docKey) {
     qs('#modal-title').textContent = title.replace(/<[^>]+>/g,'');
     qs('#modal-content').innerHTML = marked.parse(res.markdown || '(내용 없음)');
   } catch(e) {
-    qs('#modal-content').innerHTML = `<div style="color:#e88">오류: ${escHtml(e.message)}</div>`;
+    qs('#modal-content').innerHTML = `<div style="color:var(--sell)">오류: ${escHtml(e.message)}</div>`;
   }
 }
 
@@ -1648,7 +1648,7 @@ async function openNotebookOptions(q) {
     pv = await apiFetch(`/api/insights/notebook_preview?q=${encodeURIComponent(q)}`);
     if (pv.error) throw new Error(pv.error);
   } catch(e) {
-    qs('#modal-content').innerHTML = `<div style="color:#e88;padding:8px">집계 실패: ${escHtml(e.message)}</div>`;
+    qs('#modal-content').innerHTML = `<div style="color:var(--sell);padding:8px">집계 실패: ${escHtml(e.message)}</div>`;
     return;
   }
   window._nbOpt = { q, pv };
@@ -1933,7 +1933,7 @@ async function openMergePicker() {
           <button class="brief-go" style="margin-top:8px;width:100%" onclick="doMerge()">선택한 브리핑 자료 끌어오기</button>
         </div>`;
     box.innerHTML = freshUI + listUI;
-  } catch(e) { box.innerHTML = freshUI + `<div class="ws-src-item" style="color:#e88">이전 브리핑 불러오기 실패: ${escHtml(e.message)}</div>`; }
+  } catch(e) { box.innerHTML = freshUI + `<div class="ws-src-item" style="color:var(--sell)">이전 브리핑 불러오기 실패: ${escHtml(e.message)}</div>`; }
 }
 function mergeSelectAll(on) {
   document.querySelectorAll('#ws-merge-picker .ws-merge-cb').forEach(c => c.checked = on);
@@ -1974,7 +1974,7 @@ async function doMerge() {
     toast(`✅ 자료 ${res.added}건 추가 — 총 ${res.total_sources}개 소스로 교차검색`);
     wsAddCard('📚 자료 끌어오기', `이전 브리핑에서 <b>${res.added}건</b>을 현재 노트북에 추가했습니다 (총 ${res.total_sources}개 소스). 이제 질문하면 <b>합쳐진 자료 전체를 교차검색</b>합니다.`);
     loadWsSources();
-  } catch(e) { box.innerHTML = `<div class="ws-src-item" style="color:#e88">합치기 실패: ${escHtml(e.message)}</div>`; }
+  } catch(e) { box.innerHTML = `<div class="ws-src-item" style="color:var(--sell)">합치기 실패: ${escHtml(e.message)}</div>`; }
 }
 function wsAddCard(headHtml, bodyHtml) {
   const c = qs('#ws-canvas');
@@ -2010,7 +2010,7 @@ async function wsWebResearch() {
   } catch(e) {
     body.innerHTML = e.name === 'AbortError'
       ? `<div class="nb-qa-q">주제: ${escHtml(q)}</div><div style="color:var(--muted)">취소됨</div>`
-      : `<div class="nb-qa-q">주제: ${escHtml(q)}</div><div style="color:#e88">웹리서치 실패: ${escHtml(e.message)}</div>`;
+      : `<div class="nb-qa-q">주제: ${escHtml(q)}</div><div style="color:var(--sell)">웹리서치 실패: ${escHtml(e.message)}</div>`;
   }
 }
 // ── 종목명 자동완성 ──
@@ -2064,14 +2064,14 @@ async function wsNaverBoard() {
       body: JSON.stringify({ stock, period, code: nbCode }), signal: card._abort.signal
     });
     if (res.error) throw new Error(res.error);
-    const top = (res.top || []).map(x => `<div class="sig-fact" style="border-left-color:#67e8f9"><div class="sig-fact-txt">${escHtml(x.title)}</div>${x.body ? `<div style="font-size:.74rem;color:#cfd3c8;margin-top:3px;line-height:1.5">${escHtml(x.body)}</div>` : ''}<div class="sig-fact-meta">👁 조회 ${x.views} · 👍 추천 ${x.up} · ${escHtml(x.date)}</div></div>`).join('');
-    body.innerHTML = `<div class="nb-qa-q">🗣️ <b>${escHtml(res.stock)}</b>(${res.code}) 종토방 여론 · ${escHtml(res.date_from)}~${escHtml(res.date_to)} · 글 ${res.count}개 · 총조회 ${res.total_views || 0} · 본문 ${res.bodies_read || 0}개 <a href="${res.url}" target="_blank" style="font-size:.72rem;color:#67e8f9">↗ 종토방 열기</a></div>
+    const top = (res.top || []).map(x => `<div class="sig-fact" style="border-left-color:var(--gold)"><div class="sig-fact-txt">${escHtml(x.title)}</div>${x.body ? `<div style="font-size:.74rem;color:var(--muted);margin-top:3px;line-height:1.5">${escHtml(x.body)}</div>` : ''}<div class="sig-fact-meta">👁 조회 ${x.views} · 👍 추천 ${x.up} · ${escHtml(x.date)}</div></div>`).join('');
+    body.innerHTML = `<div class="nb-qa-q">🗣️ <b>${escHtml(res.stock)}</b>(${res.code}) 종토방 여론 · ${escHtml(res.date_from)}~${escHtml(res.date_to)} · 글 ${res.count}개 · 총조회 ${res.total_views || 0} · 본문 ${res.bodies_read || 0}개 <a href="${res.url}" target="_blank" style="font-size:.72rem;color:var(--gold)">↗ 종토방 열기</a></div>
       <div class="nb-qa-a">${marked.parse(res.analysis || '')}</div>
       <details style="margin-top:8px"><summary style="cursor:pointer;color:var(--gold-dim);font-size:.76rem">👁 많이 읽힌 글 ${(res.top || []).length}개 (조회수 순, 본문 포함)</summary><div style="margin-top:6px;display:flex;flex-direction:column;gap:6px">${top}</div></details>`;
   } catch(e) {
     body.innerHTML = e.name === 'AbortError'
       ? `<div class="nb-qa-q">종목: ${escHtml(stock)}</div><div style="color:var(--muted)">취소됨</div>`
-      : `<div class="nb-qa-q">종목: ${escHtml(stock)}</div><div style="color:#e88">종토방 분석 실패: ${escHtml(e.message)}</div>`;
+      : `<div class="nb-qa-q">종목: ${escHtml(stock)}</div><div style="color:var(--sell)">종토방 분석 실패: ${escHtml(e.message)}</div>`;
   }
 }
 async function wsNaverNews() {
@@ -2093,21 +2093,21 @@ async function wsNaverNews() {
       const meta = [n.press, n.date].filter(Boolean).map(escHtml).join(' · ');
       const t = escHtml(n.title || '');
       const titleHtml = n.url
-        ? `<a href="${escAttr(n.url)}" target="_blank" rel="noopener" style="color:#fcd34d;text-decoration:none">${t} ↗</a>`
+        ? `<a href="${escAttr(n.url)}" target="_blank" rel="noopener" style="color:var(--nw);text-decoration:none">${t} ↗</a>`
         : t;
       return `<div class="sig-fact" style="border-left-color:#fb923c">
         <div class="sig-fact-txt">${titleHtml}</div>
-        ${n.summary ? `<div style="font-size:.73rem;color:#cfd3c8;margin-top:3px;line-height:1.5">${escHtml(n.summary)}</div>` : ''}
+        ${n.summary ? `<div style="font-size:.73rem;color:var(--muted);margin-top:3px;line-height:1.5">${escHtml(n.summary)}</div>` : ''}
         ${meta ? `<div class="sig-fact-meta">📰 ${meta}</div>` : ''}
       </div>`;
     }).join('');
-    body.innerHTML = `<div class="nb-qa-q">📰 <b>${escHtml(res.stock)}</b>(${res.code}) 종목이슈 · ${res.count}건(광고 제외) <a href="${res.url}" target="_blank" style="font-size:.72rem;color:#67e8f9">↗ 네이버뉴스</a></div>
+    body.innerHTML = `<div class="nb-qa-q">📰 <b>${escHtml(res.stock)}</b>(${res.code}) 종목이슈 · ${res.count}건(광고 제외) <a href="${res.url}" target="_blank" style="font-size:.72rem;color:var(--gold)">↗ 네이버뉴스</a></div>
       <div class="nb-qa-a">${marked.parse(res.analysis || '')}</div>
       <details style="margin-top:8px" open><summary style="cursor:pointer;color:var(--gold-dim);font-size:.76rem">📰 원문 뉴스 ${(res.news || []).length}건 (제목 클릭 → 원문)</summary><div style="margin-top:6px;display:flex;flex-direction:column;gap:6px">${list}</div></details>`;
   } catch(e) {
     body.innerHTML = e.name === 'AbortError'
       ? `<div class="nb-qa-q">종목: ${escHtml(stock)}</div><div style="color:var(--muted)">취소됨</div>`
-      : `<div class="nb-qa-q">종목: ${escHtml(stock)}</div><div style="color:#e88">뉴스 분석 실패: ${escHtml(e.message)}</div>`;
+      : `<div class="nb-qa-q">종목: ${escHtml(stock)}</div><div style="color:var(--sell)">뉴스 분석 실패: ${escHtml(e.message)}</div>`;
   }
 }
 async function wsAsk() {
@@ -2129,7 +2129,7 @@ async function wsAsk() {
   } catch(e) {
     body.innerHTML = e.name === 'AbortError'
       ? `<div class="nb-qa-q">Q. ${escHtml(question)}</div><div style="color:var(--muted)">취소됨</div>`
-      : `<div style="color:#e88">질문 실패: ${escHtml(e.message)}</div>`;
+      : `<div style="color:var(--sell)">질문 실패: ${escHtml(e.message)}</div>`;
   }
 }
 
@@ -2151,7 +2151,7 @@ async function wsClaude() {
     body.innerHTML = `<div class="nb-qa-q">나: ${escHtml(text)}</div><div class="nb-qa-a">${marked.parse(res.answer || '(빈 응답)')}</div>`;
   } catch(e) {
     ws.claudeMsgs.pop();
-    body.innerHTML = `<div class="nb-qa-q">나: ${escHtml(text)}</div><div style="color:#e88">Claude 대화 실패: ${escHtml(e.message)}</div>`;
+    body.innerHTML = `<div class="nb-qa-q">나: ${escHtml(text)}</div><div style="color:var(--sell)">Claude 대화 실패: ${escHtml(e.message)}</div>`;
   }
 }
 
@@ -2183,7 +2183,7 @@ async function wsGemini() {
     ws.gemMsgs.pop();
     body.innerHTML = e.name === 'AbortError'
       ? `<div class="nb-qa-q">나: ${escHtml(text)}</div><div style="color:var(--muted)">취소됨</div>`
-      : `<div class="nb-qa-q">나: ${escHtml(text)}</div><div style="color:#e88">Gemini 리서치 실패: ${escHtml(e.message)}</div>`;
+      : `<div class="nb-qa-q">나: ${escHtml(text)}</div><div style="color:var(--sell)">Gemini 리서치 실패: ${escHtml(e.message)}</div>`;
   }
 }
 
@@ -2305,7 +2305,7 @@ async function wsUploadImg(mode) {
   let data;
   try {
     data = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); });
-  } catch(e) { if (msg) msg.innerHTML = '<div style="color:#e88">파일 읽기 실패</div>'; return; }
+  } catch(e) { if (msg) msg.innerHTML = '<div style="color:var(--sell)">파일 읽기 실패</div>'; return; }
   try {
     const res = await apiFetch('/api/insights/upload_image', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -2322,7 +2322,7 @@ async function wsUploadImg(mode) {
       msg.innerHTML = `<div class="nb-studio-ok">📎 이미지를 자료로 추가했습니다 (총 ${res.total_sources}개 소스).</div>`;
       loadWsSources();
     }
-  } catch(e) { if (msg) msg.innerHTML = `<div style="color:#e88">실패: ${escHtml(e.message)}</div>`; }
+  } catch(e) { if (msg) msg.innerHTML = `<div style="color:var(--sell)">실패: ${escHtml(e.message)}</div>`; }
 }
 
 // 형식 선택칩(방향·밀도·분량)
@@ -2374,7 +2374,7 @@ async function wsStudio(btn, kind) {
     btn.disabled = false; btn.innerHTML = orig;
     body.innerHTML = e.name === 'AbortError'
       ? '<div style="color:var(--muted)">취소됨 (원본 스튜디오에선 계속 생성될 수 있음)</div>'
-      : `<div style="color:#e88">실패: ${escHtml(e.message)}</div>`;
+      : `<div style="color:var(--sell)">실패: ${escHtml(e.message)}</div>`;
   }
 }
 
@@ -2396,7 +2396,7 @@ async function wsGeminiInfo(btn) {
     body.innerHTML = `<div class="ws-art-tools"><a href="${res.file_url}" download class="nb-open-sm">↓ 저장</a> <a href="${res.file_url}" target="_blank" class="nb-open-sm">↗ 원본</a></div><img class="nb-art-img" src="${res.file_url}">`;
   } catch(e) {
     btn.disabled = false; btn.innerHTML = orig;
-    body.innerHTML = e.name === 'AbortError' ? '<div style="color:var(--muted)">취소됨</div>' : `<div style="color:#e88">실패: ${escHtml(e.message)}</div>`;
+    body.innerHTML = e.name === 'AbortError' ? '<div style="color:var(--muted)">취소됨</div>' : `<div style="color:var(--sell)">실패: ${escHtml(e.message)}</div>`;
   }
 }
 
@@ -2458,7 +2458,7 @@ async function askNotebook() {
     const card = `<div class="nb-qa"><div class="nb-qa-q">Q. ${escHtml(question)}</div><div class="nb-qa-a">${marked.parse(res.answer || '(빈 응답)')}</div></div>`;
     out.innerHTML = card + prev;
   } catch(e) {
-    out.innerHTML = `<div style="color:#e88;padding:6px">질문 실패: ${escHtml(e.message)}</div>` + prev;
+    out.innerHTML = `<div style="color:var(--sell);padding:6px">질문 실패: ${escHtml(e.message)}</div>` + prev;
   }
 }
 
