@@ -39,7 +39,7 @@
 <script>
 const $=s=>document.querySelector(s);
 let CANDS=[];
-function esc(s){return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+function esc(s){return (s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function render(){
   const box=$('#cards'); box.innerHTML='';
   CANDS.forEach((q,i)=>{
@@ -60,31 +60,38 @@ async function run(){
   if(!url){$('#prog').textContent='URL을 입력하세요';return;}
   const bound=$('#bound').value.trim();
   CANDS=[]; render(); $('#run').disabled=true; $('#save').disabled=true;
-  $('#prog').textContent='시작...';
-  const body={url,topic}; if(bound) body.max_segments=parseInt(bound);
-  const resp=await fetch('/yt/quote_extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  const reader=resp.body.getReader(); const dec=new TextDecoder(); let buf='';
-  while(true){
-    const {value,done}=await reader.read(); if(done)break;
-    buf+=dec.decode(value,{stream:true});
-    let idx; while((idx=buf.indexOf('\n\n'))>=0){
-      const line=buf.slice(0,idx).trim(); buf=buf.slice(idx+2);
-      if(!line.startsWith('data:'))continue;
-      const ev=JSON.parse(line.slice(5).trim());
-      if(ev.type==='progress'){
-        if(ev.phase==='채점') $('#prog').textContent=`채점 ${ev.done+1}/${ev.total} 청크...`;
-        else if(ev.phase==='bound') $('#prog').textContent=`${ev.used}/${ev.total} 세그먼트만 채점(제한)`;
-        else if(ev.phase==='청크실패') $('#prog').textContent=`청크 ${ev.done+1} 실패(스킵)`;
-        else $('#prog').textContent=ev.phase+'...';
-      } else if(ev.type==='result'){
-        CANDS=ev.doc.quotes; render();
-        $('#prog').textContent=`완료 — 후보 ${CANDS.length}건 (T1 ${CANDS.filter(q=>q.tier===1).length}·T2 ${CANDS.filter(q=>q.tier===2).length}·T3 ${CANDS.filter(q=>q.tier===3).length})`;
-      } else if(ev.type==='error'){ $('#prog').textContent='오류: '+ev.message; }
+  try{
+    $('#prog').textContent='시작...';
+    const body={url,topic}; if(bound) body.max_segments=parseInt(bound);
+    const resp=await fetch('/yt/quote_extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!resp.ok){ let m=''; try{ m=(await resp.json()).error||''; }catch(_){} $('#prog').textContent='오류: '+(m||('HTTP '+resp.status)); return; }
+    const reader=resp.body.getReader(); const dec=new TextDecoder(); let buf='';
+    while(true){
+      const {value,done}=await reader.read(); if(done)break;
+      buf+=dec.decode(value,{stream:true});
+      let idx; while((idx=buf.indexOf('\n\n'))>=0){
+        const line=buf.slice(0,idx).trim(); buf=buf.slice(idx+2);
+        if(!line.startsWith('data:'))continue;
+        const ev=JSON.parse(line.slice(5).trim());
+        if(ev.type==='progress'){
+          if(ev.phase==='채점') $('#prog').textContent=`채점 ${ev.done+1}/${ev.total} 청크...`;
+          else if(ev.phase==='bound') $('#prog').textContent=`${ev.used}/${ev.total} 세그먼트만 채점(제한)`;
+          else if(ev.phase==='청크실패') $('#prog').textContent=`청크 ${ev.done+1} 실패(스킵)`;
+          else $('#prog').textContent=ev.phase+'...';
+        } else if(ev.type==='result'){
+          CANDS=ev.doc.quotes; render();
+          $('#prog').textContent=`완료 — 후보 ${CANDS.length}건 (T1 ${CANDS.filter(q=>q.tier===1).length}·T2 ${CANDS.filter(q=>q.tier===2).length}·T3 ${CANDS.filter(q=>q.tier===3).length})`;
+        } else if(ev.type==='error'){ $('#prog').textContent='오류: '+ev.message; }
+      }
     }
+  }catch(e){
+    $('#prog').textContent='오류: '+(e.message||e);
+  }finally{
+    $('#run').disabled=false;
   }
-  $('#run').disabled=false;
 }
 async function save(){
+  if(!$('#url').value.trim()){$('#savemsg').textContent='URL이 없습니다';return;}
   const picked=[...document.querySelectorAll('#cards input:checked')].map(c=>CANDS[+c.dataset.i]);
   if(!picked.length){$('#savemsg').textContent='선택된 인용이 없습니다';return;}
   const r=await fetch('/yt/quote_save',{method:'POST',headers:{'Content-Type':'application/json'},
