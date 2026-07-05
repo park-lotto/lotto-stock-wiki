@@ -231,12 +231,14 @@ try:
     import clip_teardown as _teardown  # noqa: E402  (teardown/mix)
     import ai_search as _ai_search  # noqa: E402  (자연어 검색)
     import story_builder as _story  # noqa: E402  (스토리라인 설계도/대본)
+    import research as _research  # noqa: E402  (리서치·검증 팩트팩)
     import quote_extractor as _qe  # noqa: E402  (extract_stream/parse_video_id)
 except (ImportError, SystemExit):
     _hotclips = None  # type: ignore
     _teardown = None  # type: ignore
     _ai_search = None  # type: ignore
     _story = None  # type: ignore
+    _research = None  # type: ignore
     _qe = None  # type: ignore
 
 try:
@@ -5816,14 +5818,39 @@ async def api_yt_quote_save(req: Request):
                                  "count": len(quotes)})
 
 
+@app.post("/yt/research")
+async def api_yt_research(req: Request):
+    """믹스 초안 → 리서치 팩트팩(원자DB+최근기사+주가 검증) — SSE.
+    force: null=자동판정 / true=강제ON / false=강제OFF. days=기사 신선도(기본 3)."""
+    if _research is None:
+        return JSONResponse(content={"error": "research 모듈 없음"}, status_code=503)
+    body = await req.json()
+    draft = body.get("draft") or {}
+    if not draft:
+        return JSONResponse(content={"error": "믹스 초안 필요"}, status_code=400)
+    days = int(body.get("days", 3) or 3)
+    force = body.get("force", None)   # None | True | False
+
+    def _stream():
+        yield f"data: {json.dumps({'type':'running'}, ensure_ascii=False)}\n\n"
+        try:
+            r = _research.research(draft, days=days, force=force)
+            yield f"data: {json.dumps({'type':'done','research':r}, ensure_ascii=False)}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'type':'error','message':str(e)[:200]}, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(_stream(), media_type="text/event-stream")
+
+
 @app.post("/yt/storyline")
 async def api_yt_storyline(req: Request):
-    """믹스 초안 → 서사 설계도(claude Opus, Gemini 폴백) — SSE."""
+    """믹스 초안 → 서사 설계도(claude Opus, Gemini 폴백) — SSE. factpack=검증된 최신 사실."""
     if _story is None:
         return JSONResponse(content={"error": "story_builder 모듈 없음"}, status_code=503)
     body = await req.json()
     draft = body.get("draft") or {}
     category = body.get("category", "")
+    factpack = (body.get("factpack") or "").strip()
     if not draft:
         return JSONResponse(content={"error": "믹스 초안 필요"}, status_code=400)
 
@@ -5831,7 +5858,8 @@ async def api_yt_storyline(req: Request):
         yield f"data: {json.dumps({'type':'running'}, ensure_ascii=False)}\n\n"
         try:
             sl = _story.build_storyline(draft, category,
-                                        claude_bin=CLAUDE_BIN or "claude", cwd=ROOT)
+                                        claude_bin=CLAUDE_BIN or "claude", cwd=ROOT,
+                                        factpack=factpack)
             yield f"data: {json.dumps({'type':'done','storyline':sl}, ensure_ascii=False)}\n\n"
         except Exception as e:
             yield f"data: {json.dumps({'type':'error','message':str(e)[:200]}, ensure_ascii=False)}\n\n"
@@ -5847,6 +5875,7 @@ async def api_yt_script(req: Request):
     body = await req.json()
     storyline_text = (body.get("storyline") or "").strip()
     category = body.get("category", "")
+    factpack = (body.get("factpack") or "").strip()
     if not storyline_text:
         return JSONResponse(content={"error": "설계도 텍스트 필요"}, status_code=400)
 
@@ -5854,7 +5883,8 @@ async def api_yt_script(req: Request):
         yield f"data: {json.dumps({'type':'running'}, ensure_ascii=False)}\n\n"
         try:
             sc = _story.build_script(storyline_text, category,
-                                     claude_bin=CLAUDE_BIN or "claude", cwd=ROOT)
+                                     claude_bin=CLAUDE_BIN or "claude", cwd=ROOT,
+                                     factpack=factpack)
             yield f"data: {json.dumps({'type':'done','script':sc}, ensure_ascii=False)}\n\n"
         except Exception as e:
             yield f"data: {json.dumps({'type':'error','message':str(e)[:200]}, ensure_ascii=False)}\n\n"

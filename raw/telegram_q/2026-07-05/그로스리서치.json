@@ -6,8 +6,89 @@
       "rating": null,
       "tp": null,
       "ts": "10:13",
-      "quote": "데이터 센터발 메모리 수요의 구조적 확대 2024년 $60bn → 2025년 $107bn → 2026년 $454bn으로 급증 전망",
+      "quote": "2024년 $60bn → 2025년 $107bn → 2026년 $454bn으로 급증 전망",
       "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성바이오에피스",
+      "rating": null,
+      "tp": null,
+      "ts": "19:06",
+      "quote": "삼성바이오에피스, 키트루다 바이오시밀러 ‘SB27’ 임상 동등성 입증",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "LG화학",
+      "rating": null,
+      "tp": null,
+      "ts": "19:06",
+      "quote": "LG화학, TP53 Y220C 변이 고형암 신약 후보물질 美 FDA 임상 1·2상 승인",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "SK바이오팜",
+      "rating": null,
+      "tp": null,
+      "ts": "19:06",
+      "quote": "SK바이오팜, 인실리코메디슨과 최대 3조 9,488억원 규모 AI 신약 공동연구 계약 체결",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "씨어스테크놀로지",
+      "rating": null,
+      "tp": null,
+      "ts": "19:06",
+      "quote": "씨어스테크놀로지, 웨어러블 심전도 검사기 ‘모비케어’ 美 FDA 510(k) 허가 획득",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "마이크론",
+      "rating": null,
+      "tp": null,
+      "ts": "19:34",
+      "quote": "마이크론이 일본 히로시마 공장에 약 14조원을 투자해 신규 생산시설 건설 착수",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성바이오로직스",
+      "rating": null,
+      "tp": null,
+      "ts": "20:59",
+      "quote": "삼성바이오로직스 : 138만L 생산체제 구축",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "롯데바이오로직스",
+      "rating": null,
+      "tp": null,
+      "ts": "20:59",
+      "quote": "롯데바이오로직스 : 송도 36만L 체제 추진",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "셀트리온",
+      "rating": null,
+      "tp": null,
+      "ts": "20:59",
+      "quote": "셀트리온 : DS 생산능력 57.1만L로 확대",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "SK텔레콤",
+      "rating": null,
+      "tp": null,
+      "ts": "16:04",
+      "quote": "SK텔레콤이 전국에 총 15GW 규모 AI 데이터센터 구축 계획 발표",
+      "sector": "통신"
     }
   ]
 }

@@ -23,14 +23,20 @@ def _parse_json_lenient(raw: str) -> dict:
     s = re.sub(r",(\s*[}\]])", r"\1", s)   # ,} 또는 ,] 의 후행 쉼표 제거
     return json.loads(s)
 
-# 채널 정체성 — 두 단계 프롬프트 모두에 주입 (clip_teardown._CHANNEL과 동일 취지)
-_CHANNEL = """우리 채널 = "로또의 주식/스탁브레인".
-- 타겟 시청자 = 주식에 관심 있는 모든 사람(초보~중급 개인투자자 포함). AI 관심층 한정 아님.
-- 파는 것: 리딩(뭘 사라) 아니라 "나는 시장을 이렇게 본다"는 시각·방법.
-- 다루는 소재: 오늘 반도체 왜 폭락했나 / 종가·시가 배팅법 / 섹터 흐름 읽기 / 정보 활용법 등 주식 실전·시황 전반.
-- 활용 도구는 여러 개(섹터 히트맵·주도섹터 강도·시황 해석·매매 원칙·차트 해석 등). '수급빈집'은 그중 하나일 뿐.
-  🚫 '수급빈집'을 제목·핵심에 억지로 넣지 말 것. 기본은 소재 자체로 승부.
-- 유튜브 70/20/10 (70 순수정보 / 20 방법노출은 "나는 이렇게 한다" 수준만 / 10 마지막 CTA 딱 한 번)."""
+# 채널 정체성 — 두 단계 프롬프트 모두에 주입.
+# 원칙: 부정 지시("~하지 마라")·유행어 강요를 빼고, 정보 자체로 승부하는 자연스러운 톤.
+_CHANNEL = """우리 채널 = "스탁브레인".
+- 타겟 시청자 = 주식에 관심 있는 개인투자자(초보~중급).
+- 채널의 관점: 시장을 중심에서 '흐름'으로 관찰하는 시각을 전한다. 특정 종목을 "사라"는
+  리딩이 아니라, "지금 시장이 이렇게 움직인다"를 스스로 읽는 눈을 길러주는 것이 목표.
+- 제공하는 것(대본 CTA는 이걸로 자연스럽게 연결):
+  · 스탁 히트맵 — 시장 전체 돈 흐름을 한눈에 (전원 무료 공개 예정)
+  · 인사이트 페이지 — 정리된 시황·종목 인사이트 (베타 무료 → 이후 유료 전환)
+  · 크롤링 도구 — 필요한 것만 개별 판매
+- 대본 톤 원칙:
+  · 정보 자체로 승부한다. 특정 유행어·말버릇을 억지로 끼워넣지 않는다.
+  · 소재에 맞는 자연스러운 구어체. 시청자에게 담백하게 말 걸듯이.
+  · 70/20/10 (70 순수 정보 / 20 "나는 이렇게 본다" 방법 / 10 마지막 CTA 딱 한 번)."""
 
 
 def _claude(prompt: str, model: str, claude_bin: str, cwd: str, timeout: int) -> "str | None":
@@ -48,7 +54,7 @@ def _claude(prompt: str, model: str, claude_bin: str, cwd: str, timeout: int) ->
 
 
 def _gen(prompt: str, claude_bin: str, cwd: str, model: str = "opus",
-         timeout: int = 180) -> dict:
+         timeout: int = 240) -> dict:
     """claude(Opus) 시도 → 실패 시 Gemini 폴백. 파싱된 dict + _model 메타 반환."""
     raw = _claude(prompt, model, claude_bin, cwd, timeout)
     used = f"claude:{model}"
@@ -68,11 +74,23 @@ def _gen(prompt: str, claude_bin: str, cwd: str, model: str = "opus",
 
 
 # ── ⑤a 서사 설계도 ──────────────────────────────────────────
-def _storyline_prompt(draft: dict, category: str) -> str:
+def _factpack_block(factpack: str) -> str:
+    """리서치 팩트팩이 있으면 프롬프트에 넣을 '검증된 사실' 블록. 없으면 빈 문자열."""
+    if not factpack or not factpack.strip():
+        return ""
+    return f"""
+=== 검증된 최신 사실(오늘 시점) — 아래와 모순되는 내용은 절대 쓰지 마라 ===
+{factpack}
+※ 위 사실만 근거로 삼아라. 여기 없는 수치·전망을 지어내지 말고, 특히 현재 주가 방향과
+   어긋나는 서술(반등중인데 하락 얘기 등)은 금지한다.
+"""
+
+
+def _storyline_prompt(draft: dict, category: str, factpack: str = "") -> str:
     titles = " / ".join(draft.get("제목후보", []) or [])
     gu = "\n".join(f"- {x}" for x in (draft.get("구성") or []))
     pts = "\n".join(f"- {x}" for x in (draft.get("핵심대본_포인트") or []))
-    return f"""너는 '로또의 주식' 채널의 수석 대본 작가다. 아래는 검증된(터진) 레퍼런스 영상들을
+    return f"""너는 '스탁브레인' 채널의 수석 대본 작가다. 아래는 검증된(터진) 레퍼런스 영상들을
 해체·믹스해서 나온 '{category}' 새 영상의 대본 초안(뼈대)이다. 이 뼈대를 받아,
 시청자가 끝까지 이탈 없이 보게 만드는 '탄탄한 서사 설계도'로 발전시켜라.
 
@@ -85,7 +103,7 @@ def _storyline_prompt(draft: dict, category: str) -> str:
 {pts}
 차별화: {draft.get('차별화_빈틈공략','')}
 CTA: {draft.get('CTA','')}
-
+{_factpack_block(factpack)}
 === {_CHANNEL} ===
 
 설계 원칙:
@@ -110,21 +128,21 @@ JSON으로만 답하라:
 
 
 def build_storyline(draft: dict, category: str = "",
-                    claude_bin: str = "claude", cwd: str = ".") -> dict:
-    """믹스 초안 → 서사 설계도(dict). claude Opus, 실패 시 Gemini."""
-    out = _gen(_storyline_prompt(draft, category), claude_bin, cwd)
+                    claude_bin: str = "claude", cwd: str = ".", factpack: str = "") -> dict:
+    """믹스 초안 → 서사 설계도(dict). claude Opus, 실패 시 Gemini. factpack=검증된 최신 사실."""
+    out = _gen(_storyline_prompt(draft, category, factpack), claude_bin, cwd)
     out["_category"] = category
     return out
 
 
 # ── ⑤b 완성 대본 ────────────────────────────────────────────
-def _script_prompt(storyline_text: str, category: str) -> str:
-    return f"""너는 '로또의 주식' 채널의 수석 대본 작가다. 아래는 사람이 검토·수정한 '{category}' 영상의
+def _script_prompt(storyline_text: str, category: str, factpack: str = "") -> str:
+    return f"""너는 '스탁브레인' 채널의 수석 대본 작가다. 아래는 사람이 검토·수정한 '{category}' 영상의
 서사 설계도다. 이 설계도를 그대로 따라, 바로 녹음 가능한 '완성 대본'을 써라.
 
 === 서사 설계도(사람 확정본) ===
 {storyline_text}
-
+{_factpack_block(factpack)}
 === {_CHANNEL} ===
 
 작성 원칙:
@@ -133,6 +151,7 @@ def _script_prompt(storyline_text: str, category: str) -> str:
 3. 70/20/10: 대부분 순수 정보, 방법 노출은 "나는 이렇게 본다" 수준만, CTA는 마지막에 딱 한 번.
 4. 리딩·"이 종목 사라" 금지. 시각·판단 근거를 보여주는 톤.
 5. 화면지시는 선택(자막 강조·차트·B롤 힌트 정도만, 없으면 생략).
+6. 검증된 최신 사실 블록이 있으면 그 사실·주가 방향과 어긋나지 않게. 없는 수치는 지어내지 마라.
 
 JSON으로만 답하라:
 {{
@@ -147,8 +166,8 @@ JSON으로만 답하라:
 
 
 def build_script(storyline_text: str, category: str = "",
-                 claude_bin: str = "claude", cwd: str = ".") -> dict:
+                 claude_bin: str = "claude", cwd: str = ".", factpack: str = "") -> dict:
     """(편집된) 설계도 텍스트 → 완성 대본(dict). claude Opus, 실패 시 Gemini."""
-    out = _gen(_script_prompt(storyline_text, category), claude_bin, cwd, timeout=240)
+    out = _gen(_script_prompt(storyline_text, category, factpack), claude_bin, cwd, timeout=420)
     out["_category"] = category
     return out
