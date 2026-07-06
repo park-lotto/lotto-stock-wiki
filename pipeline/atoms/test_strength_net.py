@@ -156,6 +156,19 @@ def test_attribute_mover_graph_hop_via_sector():
     assert "SK하이닉스" in r["issue"]
     assert r["priority"] == 1
 
+def test_graph_hop_ignores_weak_related_atom():
+    # 관련자산 원자가 약하면(strength<임계) 연계 귀속 안 함 → 미귀속 유지
+    mover = {"name": "가온칩스", "code": "1", "sector": "반도체", "rate": 10.0}
+    atoms = {"SK하이닉스": [{"id": "w", "content": "잡담", "signal": "bullish",
+             "source_type": "종토방", "source_name": "n", "source_trust": "D", "strength_score": 1}]}
+    r = sn.attribute_mover(mover, days=3, query_fn=_fake_query(atoms),
+                           related_fn=lambda name: ["SK하이닉스"], min_graph_strength=3)
+    assert r["status"] == "unattributed"  # 약한 연계는 알파를 안 묻음
+    # 임계 낮추면 연계됨
+    r2 = sn.attribute_mover(mover, days=3, query_fn=_fake_query(atoms),
+                            related_fn=lambda name: ["SK하이닉스"], min_graph_strength=1)
+    assert r2["via"] == "SK하이닉스"
+
 def test_attribute_mover_graph_hop_none_still_unattributed():
     mover = {"name": "외톨이주", "code": "9", "sector": "기타", "rate": 8.0}
     r = sn.attribute_mover(mover, days=3, query_fn=_fake_query({}),

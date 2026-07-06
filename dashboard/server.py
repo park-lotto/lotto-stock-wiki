@@ -2342,11 +2342,13 @@ def api_heatmap_refresh(mode: str = "regular"):
 
 
 @app.get("/api/net/unattributed")
-def api_net_unattributed(top_n: int = 5, days: int = 3, min_rate: float = 3.0):
-    """미귀속 강세 스캔: 이유 못 찾은 강세를 최상단에 고정한 랭킹 + 촘촘함 지표."""
+def api_net_unattributed(top_n: int = 5, days: int = 3, min_rate: float = 3.0,
+                         min_graph_strength: int = 3):
+    """미귀속 강세 스캔: 이유 못 찾은 강세를 최상단에 고정한 랭킹 + 촘촘함 지표.
+    min_graph_strength: 그래프-연계 귀속 시 관련원자 강도 임계(↑=엄격, 과잉귀속 방지)."""
     try:
         return JSONResponse(content=_strength_net.scan_heatmap(
-            top_n=top_n, days=days, min_rate=min_rate))
+            top_n=top_n, days=days, min_rate=min_rate, min_graph_strength=min_graph_strength))
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=503)
 
