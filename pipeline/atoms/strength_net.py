@@ -1,4 +1,5 @@
 """미귀속 강세 스캐너 (Phase 1). 히트맵 강세를 기존 atoms.db로 귀속 판정한다."""
+from pipeline.atoms import db as _db
 
 _TIER_BY_SOURCE = {
     "공시": "🟢", "dart": "🟢", "disclosure": "🟢",
@@ -7,6 +8,9 @@ _TIER_BY_SOURCE = {
     "종토방": "🟠", "naver_board": "🟠",
 }
 
+_BULLISH_SIGNALS = {"bullish", "positive", "상승", "호재"}
+_UNATTR_FLAG = "⚠️ 원인 미상 강세 — 추적 요망"
+
 def trust_tier(atom: dict) -> str:
     """atom의 source_type을 신뢰등급 이모지로. 미지의 소스는 🔵(추론급)."""
     st = (atom.get("source_type") or "").strip().lower()
@@ -14,3 +18,26 @@ def trust_tier(atom: dict) -> str:
         if key.lower() == st:
             return tier
     return "🔵"
+
+def attribute_mover(mover: dict, days: int = 3, query_fn=None) -> dict:
+    """한 강세 종목에 대해 기존 atom에서 귀속 이슈를 찾는다. 없으면 미귀속으로 승격."""
+    if query_fn is None:
+        query_fn = _db.query_atoms
+    name = mover.get("name")
+    atoms = query_fn(asset=name, days=days, active_only=True) or []
+    hits = [a for a in atoms if (a.get("signal") or "").strip().lower() in _BULLISH_SIGNALS
+            or (a.get("signal") or "").strip() in _BULLISH_SIGNALS]
+    base = {
+        "name": name, "code": mover.get("code"),
+        "sector": mover.get("sector"), "rate": mover.get("rate"),
+    }
+    if not hits:
+        return {**base, "attributed": False, "issue": None, "trust": None,
+                "source": None, "atom_ids": [], "status": "unattributed",
+                "priority": 0, "flag": _UNATTR_FLAG}
+    hits.sort(key=lambda a: a.get("strength_score", 1), reverse=True)
+    top = hits[0]
+    return {**base, "attributed": True, "issue": top.get("content"),
+            "trust": trust_tier(top), "source": top.get("source_name"),
+            "atom_ids": [a["id"] for a in hits], "status": "attributed",
+            "priority": 1, "flag": None}
