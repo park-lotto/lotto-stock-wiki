@@ -3309,8 +3309,8 @@ def _poll_briefing():
             # (주말·KIS다운으로 캐시 비어도 자체 가드로 heartbeat+뉴스 기반 갱신)
             _weather_tick()
         except Exception:
+            # 예전엔 조용히 삼켜서 원인 추적이 안 됐음(2026-07-06) — 트레이스백은 로그에 남긴다.
             import traceback as _tb
-            print("[poll_briefing][ERR]", flush=True)
             _tb.print_exc()
         time.sleep(30)
 
