@@ -2064,8 +2064,10 @@ function renderMarketFlow(d){
     cards.forEach(c=>{ c.style.height=''; c.style.overflowY=''; c.style.justifyContent=''; });
     cards.forEach((c,i)=>{
       const isPreview=!_topPreviewExpanded.has(cardIds[i]);
-      const targetH=isPreview?Math.round(MKT_CARD_HEIGHT/2):MKT_CARD_HEIGHT;
       const nat=c.offsetHeight;
+      // 브리핑 카드는 접혔을 때 다른 카드 높이(300px)에 맞춰 늘리지 않고 자기 콘텐츠 높이만큼만 차지
+      if(i===4 && isPreview){ c.style.height=nat+'px'; return; }
+      const targetH=isPreview?Math.round(MKT_CARD_HEIGHT/2):MKT_CARD_HEIGHT;
       c.style.height=targetH+'px';
       if(nat>targetH) c.style.overflowY='auto';                // 내용이 넘치면 스크롤
       else if(i===4) c.style.justifyContent='flex-start';     // 브리핑 카드: 짧으면 위 정렬(늘리지 않음)
