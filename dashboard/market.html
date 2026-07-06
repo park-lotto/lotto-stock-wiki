@@ -1867,7 +1867,8 @@ function renderMarketFlow(d){
         const bodyHtml=insightParts
           ? `<div class="mkt-insight" style="margin-bottom:0;">${insightParts.preview}${briefingExpanded?insightParts.extra:""}</div>`
           : `<div style="color:#888;font-size:13px;padding:8px;">${_briefingLoaded?"아직 브리핑 없음":"불러오는 중..."}</div>`;
-        return `<div class="mkt-card" style="flex:1;min-width:0;">
+        const briefingAlignSelf=briefingExpanded?"":"align-self:flex-start;";
+        return `<div class="mkt-card" style="flex:1;min-width:0;${briefingAlignSelf}">
           <div style="font-size:15px;font-weight:700;color:#ddd;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
             <span>📡 실시간 브리핑</span>${insightParts&&insightParts.extra?_foldBtn("briefing"):""}
           </div>
