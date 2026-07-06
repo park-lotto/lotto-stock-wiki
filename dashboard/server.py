@@ -1711,7 +1711,7 @@ def _surface_strong_news():
                 if not _STRONG_RE.search(t) or _EXCLUDE_RE.search(t):
                     continue
                 stock = _match_stock(t, stocks_set)
-                if not stock and not _MATERIAL_RE.search(t):   # 관심종목도 재료성도 없으면 버림
+                if not stock:   # 관심종목(내 섹터에 있는 종목) 매칭된 뉴스만 — 미추적 종목/정책일반은 제외
                     continue
                 cands.append({"t": t, "d": d, "src": n.get("src") or n.get("source") or "뉴스",
                               "sector": (smap.get(stock) or sector), "stock": stock})
@@ -1735,6 +1735,7 @@ def _surface_strong_news():
         for r in new[-20:]:
             _briefing_append(BRIEFING_PATH, {
                 "ts": (r["d"].split(" ")[-1][:5] if " " in r["d"] else datetime.now().strftime("%H:%M")),
+                "date": datetime.now().strftime("%Y-%m-%d"),
                 "severity": "red", "headline": r["t"], "body": "",
                 "sector": r["sector"], "stock": r["stock"], "source": r["src"],
                 "important": bool(r.get("important")), "kind": "raw_news"})
@@ -3223,7 +3224,8 @@ def _briefing_run_synthesis(alerts: list) -> None:
             return
         severity = "red" if alerts else "yellow"
         _briefing_append(BRIEFING_PATH, {
-            "ts": datetime.now().strftime("%H:%M"), "severity": severity,
+            "ts": datetime.now().strftime("%H:%M"), "date": datetime.now().strftime("%Y-%m-%d"),
+            "severity": severity,
             "headline": parsed["headline"], "body": parsed["body"],
             "sector": parsed.get("sector", ""), "kind": "ai_brief"})
     except Exception:
@@ -3494,7 +3496,11 @@ def _insight_run_synthesis(curr: dict) -> None:
 
 @app.get("/api/market_briefing")
 def api_market_briefing():
-    return JSONResponse(content=_briefing_load(BRIEFING_PATH))
+    # 타임라인엔 '오늘' 항목만 — date 없는 과거 누적분이 시간(HH:MM)만 맞아 섞여 뜨던 문제 차단
+    data = _briefing_load(BRIEFING_PATH)
+    today = datetime.now().strftime("%Y-%m-%d")
+    data["items"] = [it for it in (data.get("items") or []) if it.get("date") == today]
+    return JSONResponse(content=data)
 
 
 @app.get("/api/atom_raw/{atom_id}")
