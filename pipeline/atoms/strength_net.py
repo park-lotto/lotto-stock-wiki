@@ -63,3 +63,43 @@ def coverage_metrics(results: list, input_count: int = None) -> dict:
         "coverage_rate": (attributed / total) if total else 0.0,
         "silent_miss": max(0, n_in - total),
     }
+
+
+def movers_from_heatmap(heatmap: dict, min_rate: float = 3.0) -> list:
+    """build_heatmap() 반환 dict에서 min_rate 이상 강세 종목만 mover로 추출(순수).
+
+    실제 형태: {"sectors": [{"name", "avg_rate", "stocks": [{"name","code","change_rate","price"}]}]}.
+    - price==0(데이터 없음)은 제외.
+    - 한 종목이 여러 섹터 타일에 나오면 최고 등락률 1건으로 dedup.
+    """
+    best = {}  # code -> mover(최고 rate)
+    for sector in heatmap.get("sectors") or []:
+        sec_name = sector.get("name")
+        for st in sector.get("stocks") or []:
+            code = st.get("code")
+            rate = st.get("change_rate")
+            if not code or rate is None or rate < min_rate:
+                continue
+            if (st.get("price") or 0) == 0:  # 가격 데이터 없음 = 유효 강세 아님
+                continue
+            prev = best.get(code)
+            if prev is None or rate > prev["rate"]:
+                best[code] = {"name": st.get("name"), "code": code,
+                              "sector": sec_name, "rate": rate}
+    return sorted(best.values(), key=lambda m: m["rate"], reverse=True)
+
+
+def scan_heatmap(top_n: int = 5, days: int = 3, min_rate: float = 3.0) -> dict:
+    """라이브 히트맵을 스캔해 랭킹된 미귀속 강세 목록 + 촘촘함 지표를 반환(impure 엔트리)."""
+    import sys
+    import pathlib
+    scripts_dir = str(pathlib.Path(__file__).resolve().parents[2] / "scripts")
+    if scripts_dir not in sys.path:
+        sys.path.insert(0, scripts_dir)
+    import sector_heatmap
+    heatmap = sector_heatmap.build_heatmap(top_n=top_n)
+    movers = movers_from_heatmap(heatmap, min_rate=min_rate)
+    results = rank_results(scan_movers(movers, days=days))
+    metrics = coverage_metrics(results, input_count=len(movers))
+    return {"results": results, "metrics": metrics, "count": len(results),
+            "updated_at": heatmap.get("updated_at")}

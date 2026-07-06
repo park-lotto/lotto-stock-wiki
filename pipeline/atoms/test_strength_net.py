@@ -95,3 +95,49 @@ def test_coverage_metrics_detects_silent_miss():
     results = [{"status": "attributed"}]  # 입력 2개인데 결과 1개 = 누락 발생
     m = sn.coverage_metrics(results, input_count=2)
     assert m["silent_miss"] == 1  # 규칙 위반 감지
+
+# --- Task 5: movers_from_heatmap (실제 build_heatmap 중첩 형태) ---
+
+def _heatmap(sectors):
+    return {"sectors": sectors, "updated_at": "09:05:00", "source": "x"}
+
+def test_movers_from_heatmap_filters_by_min_rate():
+    hm = _heatmap([
+        {"name": "반도체", "avg_rate": 2.0, "stocks": [
+            {"name": "강세주", "code": "1", "change_rate": 8.0, "price": 1000},
+            {"name": "약세주", "code": "2", "change_rate": -1.0, "price": 500},
+            {"name": "미미주", "code": "3", "change_rate": 1.0, "price": 700},
+        ]},
+    ])
+    movers = sn.movers_from_heatmap(hm, min_rate=3.0)
+    assert [m["name"] for m in movers] == ["강세주"]
+    assert movers[0]["rate"] == 8.0
+    assert movers[0]["sector"] == "반도체"
+
+def test_movers_from_heatmap_excludes_zero_price():
+    hm = _heatmap([
+        {"name": "2차전지", "avg_rate": 5.0, "stocks": [
+            {"name": "데이터없음주", "code": "9", "change_rate": 9.0, "price": 0},
+        ]},
+    ])
+    assert sn.movers_from_heatmap(hm, min_rate=3.0) == []  # price 0 = 강세로 안 침
+
+def test_movers_from_heatmap_dedupes_across_tiles_keeping_highest():
+    hm = _heatmap([
+        {"name": "테마A", "avg_rate": 4.0, "stocks": [
+            {"name": "중복주", "code": "7", "change_rate": 5.0, "price": 100}]},
+        {"name": "테마B", "avg_rate": 6.0, "stocks": [
+            {"name": "중복주", "code": "7", "change_rate": 12.0, "price": 100}]},
+    ])
+    movers = sn.movers_from_heatmap(hm, min_rate=3.0)
+    assert len(movers) == 1
+    assert movers[0]["rate"] == 12.0  # 최고 등락률 타일 채택
+
+def test_movers_from_heatmap_sorted_desc():
+    hm = _heatmap([
+        {"name": "s", "avg_rate": 5.0, "stocks": [
+            {"name": "A", "code": "1", "change_rate": 4.0, "price": 100},
+            {"name": "B", "code": "2", "change_rate": 11.0, "price": 100}]},
+    ])
+    movers = sn.movers_from_heatmap(hm, min_rate=3.0)
+    assert [m["name"] for m in movers] == ["B", "A"]
