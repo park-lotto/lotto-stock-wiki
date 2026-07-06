@@ -16,6 +16,7 @@ if _PROJ_ROOT not in sys.path:
     sys.path.insert(0, _PROJ_ROOT)
 
 from pipeline.atoms import key_vault
+from pipeline.atoms import strength_net as _strength_net
 
 # ── 인사이트 허브: pipeline.atoms.doc_summary 지연 import ──────
 try:
@@ -2325,6 +2326,16 @@ def api_heatmap_refresh(mode: str = "regular"):
     key = "all_nxt" if mode == "nxt" else "all"
     _heatmap_cache.pop(key, None)
     return api_heatmap(mode=mode)
+
+
+@app.get("/api/net/unattributed")
+def api_net_unattributed(top_n: int = 5, days: int = 3, min_rate: float = 3.0):
+    """미귀속 강세 스캔: 이유 못 찾은 강세를 최상단에 고정한 랭킹 + 촘촘함 지표."""
+    try:
+        return JSONResponse(content=_strength_net.scan_heatmap(
+            top_n=top_n, days=days, min_rate=min_rate))
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=503)
 
 
 # ── 섹터 커스텀 편집 ──────────────────────────────────────
