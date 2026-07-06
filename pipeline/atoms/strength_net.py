@@ -41,8 +41,9 @@ def attribute_mover(mover: dict, days: int = 3, query_fn=None, related_fn=None) 
                 "atom_ids": [a["id"] for a in hits], "status": "attributed",
                 "priority": 1, "flag": None, "via": None}
     # 그래프-홉 폴백: 같은 섹터 관련자산의 호재 원자를 근거로 연계 귀속
+    # related_fn은 종목명을 받아 그래프 2홉(종목→큰섹터→관련자산)으로 관련자산을 반환한다.
     if related_fn is not None:
-        for rel in related_fn(mover.get("sector")) or []:
+        for rel in related_fn(name) or []:
             if rel == name:
                 continue
             r_hits = _bullish_hits(query_fn(asset=rel, days=days, active_only=True))
@@ -115,7 +116,7 @@ def scan_heatmap(top_n: int = 5, days: int = 3, min_rate: float = 3.0) -> dict:
     from pipeline.atoms import edges as _edges
     heatmap = sector_heatmap.build_heatmap(top_n=top_n)
     movers = movers_from_heatmap(heatmap, min_rate=min_rate)
-    results = rank_results(scan_movers(movers, days=days, related_fn=_edges.assets_in_sector))
+    results = rank_results(scan_movers(movers, days=days, related_fn=_edges.related_assets))
     metrics = coverage_metrics(results, input_count=len(movers))
     return {"results": results, "metrics": metrics, "count": len(results),
             "updated_at": heatmap.get("updated_at")}

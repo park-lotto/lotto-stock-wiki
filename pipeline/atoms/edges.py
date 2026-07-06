@@ -57,6 +57,18 @@ def sectors_of_asset(asset: str) -> list:
     return [r[0] for r in rows]
 
 
+def related_assets(asset: str) -> list:
+    """asset과 같은 (큰)섹터에 속한 다른 자산들. 그래프 2홉: asset→섹터→자산.
+    히트맵의 세부섹터명("반도체 설계 및 파운드리")에 의존하지 않고, 시드된
+    종목→큰섹터("반도체") 멤버십으로 관련자산을 찾는다."""
+    out = set()
+    for sec in sectors_of_asset(asset):
+        for a in assets_in_sector(sec):
+            if a != asset:
+                out.add(a)
+    return sorted(out)
+
+
 def _as_list(v):
     if v is None:
         return []

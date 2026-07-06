@@ -31,6 +31,17 @@ def test_insert_edge_is_idempotent(tmp_path, monkeypatch):
     assert edges.assets_in_sector("반도체") == ["가온칩스"]  # 중복 삽입 무시
 
 
+def test_related_assets_two_hop(tmp_path, monkeypatch):
+    _use_tmp(tmp_path, monkeypatch)
+    edges.insert_edge("가온칩스", "반도체", "sector_member", "sector_map")
+    edges.insert_edge("SK하이닉스", "반도체", "sector_member", "sector_map")
+    edges.insert_edge("엔비디아", "반도체", "foreign_sector", "foreign_map")
+    edges.insert_edge("에코프로", "2차전지", "sector_member", "sector_map")
+    rel = edges.related_assets("가온칩스")  # 반도체 동종, 자기 자신 제외
+    assert set(rel) == {"SK하이닉스", "엔비디아"}
+    assert edges.related_assets("고립주") == []  # 섹터 미등록 → 관련 없음
+
+
 def test_seed_sector_edges(tmp_path, monkeypatch):
     _use_tmp(tmp_path, monkeypatch)
     n = edges.seed_sector_edges(
