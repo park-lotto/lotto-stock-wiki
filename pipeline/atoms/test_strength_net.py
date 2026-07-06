@@ -78,3 +78,20 @@ def test_rank_results_unattributed_pinned_to_top():
     ranked = sn.rank_results(results)
     assert [r["name"] for r in ranked] == ["miss2", "miss1", "attr"]
     # 미귀속이 등락률 낮아도 귀속보다 위. 미귀속 내부는 rate 내림차순.
+
+def test_coverage_metrics_basic():
+    results = [
+        {"status": "attributed"}, {"status": "attributed"},
+        {"status": "unattributed"},
+    ]
+    m = sn.coverage_metrics(results, input_count=3)
+    assert m["total"] == 3
+    assert m["attributed"] == 2
+    assert m["unattributed"] == 1
+    assert abs(m["coverage_rate"] - (2/3)) < 1e-9
+    assert m["silent_miss"] == 0  # 입력=출력이면 침묵 누락 0
+
+def test_coverage_metrics_detects_silent_miss():
+    results = [{"status": "attributed"}]  # 입력 2개인데 결과 1개 = 누락 발생
+    m = sn.coverage_metrics(results, input_count=2)
+    assert m["silent_miss"] == 1  # 규칙 위반 감지

@@ -49,3 +49,17 @@ def scan_movers(movers: list, days: int = 3, query_fn=None) -> list:
 def rank_results(results: list) -> list:
     """정렬 반전: 미귀속(priority 0)을 최상단, 각 그룹 내 rate 내림차순."""
     return sorted(results, key=lambda r: (r.get("priority", 1), -(r.get("rate") or 0)))
+
+def coverage_metrics(results: list, input_count: int = None) -> dict:
+    """그물 촘촘함 지표. silent_miss>0 이면 침묵 금지 규칙 위반 신호."""
+    total = len(results)
+    attributed = sum(1 for r in results if r.get("status") == "attributed")
+    unattributed = total - attributed
+    n_in = total if input_count is None else input_count
+    return {
+        "total": total,
+        "attributed": attributed,
+        "unattributed": unattributed,
+        "coverage_rate": (attributed / total) if total else 0.0,
+        "silent_miss": max(0, n_in - total),
+    }
