@@ -3219,6 +3219,24 @@ def _weather_tick():
             extra_facts["nasdaq_movers"] = global_api.get_nasdaq_premarket_movers()
         except Exception:
             pass
+    if phase in ("intraday", "afterhours") and isinstance(hm, dict) and hm.get("sectors"):
+        # 원인추적 캐스케이드(cause_hunt/strength_net) 연동 — "왜"를 숫자 나열 대신
+        # 실제 귀속된 근거로 채운다. 이미 캐시된 히트맵을 재사용(별도 스크레이핑 없음).
+        try:
+            from pipeline.atoms import strength_net as _snet, edges as _snet_edges
+            movers = _snet.movers_from_heatmap(hm, min_rate=3.0)[:8]
+            ranked = _snet.rank_results(_snet.scan_movers(
+                movers, days=1, related_fn=_snet_edges.related_assets))
+            causes = [f"{r['name']} {r['rate']:+.1f}% — {r['issue']}"
+                      for r in ranked if r.get("attributed")][:3]
+            unattributed = [f"{r['name']} {r['rate']:+.1f}%"
+                            for r in ranked if not r.get("attributed")][:3]
+            if causes:
+                extra_facts["mover_causes"] = causes
+            if unattributed:
+                extra_facts["unattributed_movers"] = unattributed
+        except Exception:
+            pass
 
     news = []
     try:
