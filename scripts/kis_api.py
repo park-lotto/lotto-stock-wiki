@@ -845,14 +845,13 @@ def get_index_minutebar(index_code: str, interval: int = 15) -> list:
 
 
 def get_index_daily_bars(index_code: str, n: int = 30) -> list:
-    """코스피(0001)/코스닥(1001) 지수 일봉 종가 (근사: KODEX ETF 일봉, 지수 자체 일봉 API 미구독).
-    반환(과거→최신): [close, close, ...] 최근 n개.
+    """코스피(0001)/코스닥(1001) 지수 일봉 OHLC (yfinance ^KS11/^KQ11, 지수 자체 일봉 API 미구독).
+    반환(과거→최신): [{"o","h","l","c"}, ...] 최근 n개.
     """
-    proxy = "069500" if index_code == "0001" else "229200"
+    ticker = "^KS11" if index_code == "0001" else "^KQ11"
     try:
-        import naver_api as _nv
-        candles = _nv.daily_candles(proxy, count=n + 10)
-        return [c["close"] for c in candles][-n:]
+        import global_api
+        return global_api._yf_daily_ohlc(ticker, n)
     except Exception:
         return []
 

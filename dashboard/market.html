@@ -1529,6 +1529,25 @@ function setBarTF(tf){
   if(_lastMarketFlowData) renderMarketFlow(_lastMarketFlowData);
 }
 function _barTFLabel(tf){ return tf==="1d"?"일봉":tf==="15m"?"15분봉":"1분봉"; }
+function _isOhlcBars(bars){ return !!(bars && bars.length && typeof bars[0]==="object" && bars[0]!==null && "o" in bars[0]); }
+function renderCandles(bars, W, H){
+  if(!bars || bars.length<2) return `<div style="color:#666;font-size:11px;">데이터 없음</div>`;
+  const highs=bars.map(b=>b.h), lows=bars.map(b=>b.l);
+  const mn=Math.min(...lows), mx=Math.max(...highs), rng=(mx-mn)||1;
+  const n=bars.length, slot=W/n, bodyW=Math.max(1.2, slot*0.62);
+  const y=v=>((1-(v-mn)/rng)*(H-4)+2);
+  const parts=bars.map((b,i)=>{
+    const cx=i*slot+slot/2;
+    const up=b.c>=b.o;
+    const col=up?"#e74c3c":"#3498db";
+    const yh=y(b.h).toFixed(1), yl=y(b.l).toFixed(1);
+    const yo=y(b.o), yc=y(b.c);
+    const bodyTop=Math.min(yo,yc), bodyH=Math.max(1,Math.abs(yo-yc));
+    return `<line x1="${cx.toFixed(1)}" y1="${yh}" x2="${cx.toFixed(1)}" y2="${yl}" stroke="${col}" stroke-width="1"/>`+
+           `<rect x="${(cx-bodyW/2).toFixed(1)}" y="${bodyTop.toFixed(1)}" width="${bodyW.toFixed(1)}" height="${bodyH.toFixed(1)}" fill="${col}"/>`;
+  }).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="display:block;width:100%;height:${H}px;overflow:visible">${parts}</svg>`;
+}
 function _barTFButtons(){
   return ["1d","15m","1m"].map(tf=>
     `<span onclick="event.stopPropagation();setBarTF('${tf}')" style="cursor:pointer;padding:1px 6px;border-radius:8px;margin-left:3px;font-size:9.5px;font-weight:600;${
@@ -1873,6 +1892,7 @@ function renderMarketFlow(d){
             const svgLine=(()=>{
               const bars=chartBars; const rate=it.change_rate;
               const W=240,H=32;
+              if(_isOhlcBars(bars)) return renderCandles(bars,W,H);
               const vals=bars.map(b=>typeof b==="number"?b:(b.close||b.price||0));
               const mn=Math.min(...vals),mx=Math.max(...vals),rng=mx-mn||1;
               const pts=vals.map((v,i)=>`${Math.round(i/(vals.length-1)*(W-2)+1)},${Math.round((1-(v-mn)/rng)*(H-4)+2)}`).join(" ");
@@ -1931,7 +1951,7 @@ function renderMarketFlow(d){
         <div class="mkt-sec-label" style="display:flex;align-items:center;justify-content:space-between;">
           <span>${_barTFLabel(_barTF)}</span>${_barTFButtons()}
         </div>
-        ${miniLine(idxBars,m.change_rate,240,70)}
+        ${_isOhlcBars(idxBars)?renderCandles(idxBars,240,70):miniLine(idxBars,m.change_rate,240,70)}
       </div>`;
 
       // 코스피 / 코스닥 — 풀 카드

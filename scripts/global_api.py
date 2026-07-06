@@ -186,17 +186,18 @@ import sys, json
 import yfinance as yf
 ticker, days = sys.argv[1], int(sys.argv[2])
 hist = yf.download(ticker, period=f"{days+15}d", interval="1d", progress=False, auto_adjust=True)
-out = []
-for v in hist["Close"].values:
-    val = float(v) if not hasattr(v, "__iter__") else float(v[0])
-    if val > 0:
-        out.append(round(val, 4))
+def col(name):
+    v = hist[name].values
+    return [float(x) if not hasattr(x, "__iter__") else float(x[0]) for x in v]
+o, h, l, c = col("Open"), col("High"), col("Low"), col("Close")
+out = [{"o": round(o[i], 4), "h": round(h[i], 4), "l": round(l[i], 4), "c": round(c[i], 4)}
+       for i in range(len(c)) if c[i] > 0]
 print(json.dumps(out[-days:]))
 """
 
 
-def _yf_daily_bars(ticker: str, days: int = 30) -> list:
-    """yfinance 일봉 종가(과거→최신) 최근 days개. 1시간 캐시(일봉은 자주 안 바뀜).
+def _yf_daily_ohlc(ticker: str, days: int = 30) -> list:
+    """yfinance 일봉 OHLC(과거→최신, [{"o","h","l","c"}, ...]) 최근 days개. 1시간 캐시.
 
     yfinance는 서버 공용 ThreadPoolExecutor 안에서 동시호출되면 내부적으로 응답 없이
     멈추는 경우가 확인됐다(스레드 격리만으로는 GIL/내부락 때문에 완전히 못 막음 — 2026-07-06
@@ -205,7 +206,7 @@ def _yf_daily_bars(ticker: str, days: int = 30) -> list:
     — 메인 서버 프로세스의 스레드/GIL에 어떤 영향도 주지 않는다.
     """
     now = time.time()
-    key = f"__yfd_{ticker}__"
+    key = f"__yfohlc_{ticker}__"
     cached = _CACHE.get(key)
     if cached and now - cached["ts"] < 3600:
         return cached["data"]
@@ -227,27 +228,6 @@ def _yf_daily_bars(ticker: str, days: int = 30) -> list:
     return cached["data"] if cached else []
 
 
-def _naver_daily_bars(code: str, days: int = 30) -> list:
-    """네이버 fchart 일봉 종가(과거→최신) 최근 days개. 코스피선물류 일봉 소스 없어 KODEX200 근사용.
-    실패(빈 리스트)는 캐시에 저장하지 않고 예전 값을 유지."""
-    now = time.time()
-    key = f"__nvd_{code}__"
-    cached = _CACHE.get(key)
-    if cached and now - cached["ts"] < 3600:
-        return cached["data"]
-    bars = []
-    try:
-        import naver_api as _nv
-        candles = _nv.daily_candles(code, count=days + 15)
-        bars = [c["close"] for c in candles][-days:]
-    except Exception:
-        bars = []
-    if bars:
-        _CACHE[key] = {"data": bars, "ts": now}
-        return bars
-    return cached["data"] if cached else []
-
-
 # ──────────────────────────────────────────────
 # 공개 API
 # ──────────────────────────────────────────────
@@ -259,7 +239,7 @@ def get_nasdaq_futures() -> dict:
         "__esignal_nq__", "nq",
         referer="https://esignal.co.kr/nasdaq100-futures/",
     ))
-    d["bars_1d"] = _yf_daily_bars("NQ=F")
+    d["bars_1d"] = _yf_daily_ohlc("NQ=F")
     return d
 
 
@@ -270,8 +250,8 @@ def get_kospi_futures() -> dict:
         "__esignal_kospif__", "kospif",
         referer="https://esignal.co.kr/kospi200-futures/",
     ))
-    # 선물 자체 일봉 소스가 없어 KODEX200(069500, KOSPI200 추종 ETF) 일봉으로 근사
-    d["bars_1d"] = _naver_daily_bars("069500")
+    # 선물 자체 일봉 소스가 없어 KOSPI200 지수(^KS200, yfinance)로 근사 — 선물과 스케일 거의 일치
+    d["bars_1d"] = _yf_daily_ohlc("^KS200")
     return d
 
 
@@ -282,7 +262,7 @@ def get_kospi_night_futures() -> dict:
         "__esignal_kospif_ngt__", "kospif_ngt",
         referer="https://esignal.co.kr/kospi200-futures/",
     ))
-    d["bars_1d"] = _naver_daily_bars("069500")
+    d["bars_1d"] = _yf_daily_ohlc("^KS200")
     return d
 
 
