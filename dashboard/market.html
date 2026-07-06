@@ -1601,32 +1601,24 @@ function _dedupBySim(list){
   return kept;
 }
 function _buildTimeline(){
-  // 뉴스: 섹터 태깅된 것만(섹터 없는 뉴스는 의미없어 제외)
-  const news=(_briefingItems||[]).filter(it=>it.ts>=_TIMELINE_START && (it.sector||"").trim())
-    .map(it=>({ts:it.ts, text:it.headline, body:it.body||"", type:"news", severity:it.severity, sector:(it.sector||"").trim(), source:it.source||"", stock:it.stock||"", important:!!it.important}));
+  // 뉴스: 출처 있는 것만(출처 없는 AI요약=신뢰 안 감 → 타임라인서 제외). 섹터 필수.
+  const news=(_briefingItems||[]).filter(it=>it.ts>=_TIMELINE_START && (it.source||"").trim() && (it.sector||"").trim())
+    .map(it=>({ts:it.ts, text:it.headline, body:it.body||"", type:"news", severity:it.severity, sector:(it.sector||"").trim(), source:it.source||"", stock:it.stock||"", pct:it.pct||0, important:!!it.important}));
   const tps=((_marketInsight&&_marketInsight.turning_points)||[]).filter(t=>t.ts>=_TIMELINE_START)
     .map(t=>({ts:t.ts, text:t.label, body:"", type:"event", major:t.major}));
 
-  // 뉴스만 테마 클러스터링(테마당 CAP개, 나머지 "+N번 더"). 이벤트는 캡 없이 다 노출.
-  // 같은 종목 뉴스는 하나만 노출(이미 쌓인 중복도 화면에서 접기) → 최신것 유지
-  const _stockSeen=new Set();
-  const newsSorted=news.sort((a,b)=>b.ts.localeCompare(a.ts)).filter(it=>{
-    if(!it.stock) return true;
-    if(_stockSeen.has(it.stock)) return false;
-    _stockSeen.add(it.stock); return true;
-  }).sort((a,b)=>a.ts.localeCompare(b.ts));
-  const newsKept=_dedupBySim(newsSorted);
-  const clusters=[];
-  for(const item of newsKept){
-    const cl=clusters.find(c=>c.items.some(it=>_bigramSim(it.text,item.text)>=_TIMELINE_THEME_SIM));
-    if(cl) cl.items.push(item); else clusters.push({items:[item]});
+  // 같은 종목(없으면 문장키) 뉴스는 한 카드로 통합 → 최신것만 보이고 예전건 "+N번 더"(펼치면 보임)
+  const groups={};
+  for(const it of news){
+    const k=it.stock || it.text;
+    (groups[k]=groups[k]||[]).push(it);
   }
-  const newsCapped=[];
-  for(const cl of clusters){
-    const shown=cl.items.slice(0,_TIMELINE_THEME_CAP);
-    const extra=cl.items.length-shown.length;
-    shown.forEach((it,idx)=>newsCapped.push(idx===shown.length-1&&extra>0?{...it, extra}:it));
-  }
+  const newsCapped=Object.values(groups).map(arr=>{
+    arr.sort((a,b)=>b.ts.localeCompare(a.ts));   // 최신 우선
+    const rep={...arr[0]};                        // 최신 뉴스를 대표로
+    if(arr.length>1) rep.extra=arr.length-1;      // 예전건 접기
+    return rep;
+  });
   // 이벤트(시장상황): 동일문장만 제거, 테마캡 없음 → 하루 주요 순간 최대한 노출
   const eventsKept=_dedupBySim(tps.sort((a,b)=>a.ts.localeCompare(b.ts)));
 

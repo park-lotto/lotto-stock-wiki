@@ -1697,6 +1697,14 @@ def _surface_strong_news():
             stocks_set = _tnf.clean_stock_names(smap)
         except Exception:
             pass
+        # 종목명→오늘 등락률(%) 맵 — 많이 오른 종목의 뉴스가 그날 섹터를 끌어올린 '진짜 재료'
+        pct_map = {}
+        for sec in (data.get("sectors") or []):
+            for st in (sec.get("stocks") or []):
+                nm = st.get("name")
+                if nm:
+                    try: pct_map[nm] = float(st.get("pct") or 0)
+                    except Exception: pass
         cands = []
         for sec in (data.get("sectors") or []):
             sector = sec.get("sector") or "시장"
@@ -1714,7 +1722,8 @@ def _surface_strong_news():
                 if not stock:   # 관심종목(내 섹터에 있는 종목) 매칭된 뉴스만 — 미추적 종목/정책일반은 제외
                     continue
                 cands.append({"t": t, "d": d, "src": n.get("src") or n.get("source") or "뉴스",
-                              "sector": (smap.get(stock) or sector), "stock": stock})
+                              "sector": (smap.get(stock) or sector), "stock": stock,
+                              "pct": pct_map.get(stock, 0.0)})
         # 유사한 것끼리 클러스터 → 대표 1개 + 크기(=여러 채널 동시보도=중요도)
         clusters = []
         for c in cands:
@@ -1727,10 +1736,14 @@ def _surface_strong_news():
         for cl in clusters:
             it = cl["items"][0]; size = len(cl["items"])
             base = 3 if "속보" in it["t"] else 2 if "특징주" in it["t"] else 1
-            reps.append({**it, "score": base + size + (2 if it["stock"] else 0), "cluster": size})
+            gain = max((x.get("pct", 0) for x in cl["items"]), default=0)   # 오늘 상승기여
+            gain_bonus = 5 if gain >= 8 else 3 if gain >= 4 else 1 if gain >= 2 else 0
+            reps.append({**it, "score": base + size + (2 if it["stock"] else 0) + gain_bonus,
+                         "cluster": size, "pct": round(gain, 1)})
         reps.sort(key=lambda x: x["score"], reverse=True)
         for i, r in enumerate(reps):
-            r["important"] = (i < 3 and r["score"] >= 5)   # 상위 + 다채널 보도만 '중요'
+            # 상위 + (다채널 보도 or 큰 상승) → '중요' 맨앞 고정
+            r["important"] = (i < 3 and r["score"] >= 5)
         stored = _briefing_load(BRIEFING_PATH)
         seen = {_news_norm(x.get("headline", "")) for x in (stored.get("items") or [])}
         new = [r for r in reps if _news_norm(r["t"]) not in seen]
@@ -1741,6 +1754,7 @@ def _surface_strong_news():
                 "date": datetime.now().strftime("%Y-%m-%d"),
                 "severity": "red", "headline": r["t"], "body": "",
                 "sector": r["sector"], "stock": r["stock"], "source": r["src"],
+                "pct": r.get("pct", 0),
                 "important": bool(r.get("important")), "kind": "raw_news"})
     except Exception:
         pass
