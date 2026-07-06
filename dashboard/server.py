@@ -2735,10 +2735,23 @@ def api_taerini_stock(code: str = ""):
             data = json.load(f)
         stock = (data.get("stocks") or {}).get(code)
         if not stock:
+            live = _live_osc_fallback(code)  # 엑셀 미수록 종목(커스텀 추가 등) → 실시간 osc
+            if live:
+                return JSONResponse(content={"found": True, "live": True,
+                                             "date": data.get("date"), "stock": live})
             return JSONResponse(content={"found": False, "date": data.get("date")})
         return JSONResponse(content={"found": True, "date": data.get("date"), "stock": stock})
     except Exception as e:
         return JSONResponse(content={"found": False, "error": str(e)})
+
+
+def _live_osc_fallback(code: str):
+    """taerini(엑셀)에 없는 종목의 실시간 수급 osc. 실패·오류는 조용히 None."""
+    try:
+        import osc_live
+        return osc_live.live_osc_entry(code)
+    except Exception:
+        return None
 
 
 @app.get("/api/taerini_consensus")
@@ -3252,6 +3265,10 @@ def _weather_tick():
             st["verdict"] = {**primary["verdict"], "ts": now.strftime("%H:%M")}
             st["narrative"] = primary.get("narrative", "")
             for tp in primary.get("new_turning_points", []):
+                # LLM이 프롬프트 스키마의 "HH:MM" 플레이스홀더를 그대로 복사해 내는 경우가 잦다.
+                # 유효한 시각(H:MM/HH:MM)이 아니면 현재 종합 시각으로 스탬프 → 타임라인 표시·정렬 깨짐 방지.
+                if not re.match(r"^\d{1,2}:\d{2}$", str(tp.get("ts", "")).strip()):
+                    tp["ts"] = now.strftime("%H:%M")
                 st["turning_points"].append(tp)
             st["session_phase"] = phase
             st["baseline"] = curr
