@@ -3121,7 +3121,8 @@ def _briefing_run_synthesis(alerts: list) -> None:
         severity = "red" if alerts else "yellow"
         _briefing_append(BRIEFING_PATH, {
             "ts": datetime.now().strftime("%H:%M"), "severity": severity,
-            "headline": parsed["headline"], "body": parsed["body"], "kind": "ai_brief"})
+            "headline": parsed["headline"], "body": parsed["body"],
+            "sector": parsed.get("sector", ""), "kind": "ai_brief"})
     except Exception:
         pass
 

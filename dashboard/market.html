@@ -209,10 +209,12 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
   display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
 .tl-card.tl-event .tl-ts{color:#8ab4dd;font-weight:700;}
 .tl-card.tl-event .tl-head{font-size:14.5px;font-weight:800;color:#fff;-webkit-line-clamp:4;}
-.tl-detail{margin-top:2px;padding:8px 10px;background:#161616;border-radius:8px;
-  font-size:12.5px;color:#ddd;line-height:1.5;}
+.tl-detail{margin-top:2px;padding:11px 13px;background:#161616;border-radius:8px;
+  font-size:15px;color:#f0f0f0;line-height:1.6;font-weight:600;}
 .tl-detail .tl-detail-ts{color:#8ab4dd;font-weight:700;margin-right:6px;}
-.tl-detail .bi-body{color:#bbb;margin-top:4px;}
+.tl-detail .bi-body{color:#d6d6d6;margin-top:6px;font-size:14px;font-weight:400;line-height:1.65;}
+.tl-sec{display:inline-block;font-size:10px;font-weight:800;color:#8ab4dd;
+  background:rgba(138,180,221,.15);border-radius:6px;padding:1px 6px;margin-bottom:2px;}
 .tl-extra{display:block;margin-top:2px;font-size:9.5px;font-weight:500;color:#777;}
 .card-fold-btn{position:absolute;top:10px;right:12px;z-index:2;font-size:11px;font-weight:500;
   color:#888;cursor:pointer;padding:2px 6px;border-radius:4px;white-space:nowrap;
@@ -1583,10 +1585,10 @@ function _bigramSim(a,b){
 const _TIMELINE_START="07:30";
 const _TIMELINE_DUP_SIM=0.32;    // 이 이상이면 사실상 같은 문장 → 제거
 const _TIMELINE_THEME_SIM=0.16;  // 이 이상이면 같은 테마(다른 각도) → 최대 2개까지만 노출
-const _TIMELINE_THEME_CAP=2;
+const _TIMELINE_THEME_CAP=3;   // 같은 테마 최대 노출(시장상황이 너무 적게 뜨던 것 완화)
 function _buildTimeline(){
   const news=(_briefingItems||[]).filter(it=>it.ts>=_TIMELINE_START)
-    .map(it=>({ts:it.ts, text:it.headline, body:it.body||"", type:"news", severity:it.severity}));
+    .map(it=>({ts:it.ts, text:it.headline, body:it.body||"", type:"news", severity:it.severity, sector:it.sector||""}));
   const tps=((_marketInsight&&_marketInsight.turning_points)||[]).filter(t=>t.ts>=_TIMELINE_START)
     .map(t=>({ts:t.ts, text:t.label, body:"", type:"event", major:t.major}));
   const merged=[...news,...tps].sort((a,b)=>a.ts.localeCompare(b.ts));
@@ -1632,7 +1634,7 @@ function renderBelowPanel(){
       return `<div class="tl-card ${sev} ${isEvent?"tl-event":"tl-news"}${isLatest?" tl-latest":""}${selected?" tl-selected":""}"
         ${expandable?`onclick="toggleTimelineSelect(${i})"`:""}>
         ${isLatest?`<span class="tl-latest-badge">NEW</span>`:""}
-        <div class="tl-ts">${/^\d{1,2}:\d{2}$/.test(it.ts)?esc(it.ts):""}</div>
+        <div class="tl-ts">${/^\d{1,2}:\d{2}$/.test(it.ts)?esc(it.ts):""}${(!isEvent&&it.sector)?` <span class="tl-sec">${esc(it.sector)}</span>`:""}</div>
         <div class="tl-head">${emoji} ${esc(it.text)}${extraTag}</div>
       </div>`;
   };
@@ -1641,7 +1643,7 @@ function renderBelowPanel(){
   items.forEach((it,i)=>{ (it.type==="event"?mkt:nws).push({it,i}); });
   const selectedItem=(_selectedTimelineIdx!=null)?items[_selectedTimelineIdx]:null;
   const timelineDetail=(selectedItem&&selectedItem.body)
-    ?`<div class="tl-detail"><span class="tl-detail-ts">${esc(selectedItem.ts)}</span> ${esc(selectedItem.text)}
+    ?`<div class="tl-detail">${selectedItem.sector?`<span class="tl-sec">${esc(selectedItem.sector)}</span> `:""}<span class="tl-detail-ts">${esc(selectedItem.ts)}</span> ${esc(selectedItem.text)}
       <div class="bi-body">${esc(selectedItem.body)}</div></div>`
     :"";
   const strip=(title,emoji,id,list)=>{

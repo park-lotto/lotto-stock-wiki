@@ -1,14 +1,19 @@
 """브리핑 종합층 — Gemini 프롬프트 조립 + 응답 파싱. 실제 API 호출은 Task5에서
 기존 _gemini_text()로 수행(이 파일은 순수 함수만, API 의존성 없음)."""
 
-_PROMPT_TEMPLATE = """너는 일반 투자자 구독자에게 지금 시장 상황을 쉽게 설명하는
+_PROMPT_TEMPLATE = """너는 주식 초보(주린이)도 알아듣게 지금 시장 상황을 쉽게 설명하는
 브리핑 작성자다. 아래 재료를 보고, 지금 알려줄 만한 게 있으면 딱 1개만 써라.
 
 철칙:
 - 전문용어 최소화, 쉬운 말투("외국인이 오전 내내 팔다가 정오부터 매수로 돌아섬" 처럼)
 - 아래 재료에 있는 사실만 써라. 추측이면 "~로 보임"이라고 명시해라.
+- 본문은 반드시 ①무슨 일이 있었는지 ②그래서 어떤 업종·종목에 좋은지/나쁜지(그래서 뭐?)까지
+  초보도 이해하게 써라. 단순 사실 나열 금지.
 - 알려줄 만큼 중요한 게 없으면 정확히 "브리핑 없음"이라고만 답해라.
-- 있으면 정확히 이 형식으로: "헤드라인: <15자 내외 한 줄>\\n본문: <1~2문장>"
+- 있으면 정확히 이 3줄 형식으로:
+  섹터: <가장 관련된 업종 1개. 예: 자동차, 반도체, 증권, 2차전지, 방산. 시장 전체면 '시장'>
+  헤드라인: <15자 내외 한 줄>
+  본문: <2문장. 무슨 일 + 그래서 어떤 업종/종목에 어떤 영향인지>
 
 ## 지수/수급 변동
 {alerts_text}
@@ -42,16 +47,18 @@ def parse_briefing_response(text: str) -> dict | None:
     text = (text or "").strip()
     if not text or "브리핑 없음" in text:
         return None
-    headline, body = None, None
+    headline, body, sector = None, None, ""
     for line in text.splitlines():
         line = line.strip()
-        if line.startswith("헤드라인:"):
+        if line.startswith("섹터:"):
+            sector = line.split("섹터:", 1)[1].strip().strip("<>[] ")
+        elif line.startswith("헤드라인:"):
             headline = line.split("헤드라인:", 1)[1].strip()
         elif line.startswith("본문:"):
             body = line.split("본문:", 1)[1].strip()
     if not headline or not body:
         return None
-    return {"headline": headline, "body": body}
+    return {"headline": headline, "body": body, "sector": sector}
 
 
 _INSIGHT_PROMPT_TEMPLATE = """너는 오늘 시장 상황을 한눈에 설명하는 헤드라인
