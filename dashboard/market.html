@@ -1608,7 +1608,14 @@ function _buildTimeline(){
     .map(t=>({ts:t.ts, text:t.label, body:"", type:"event", major:t.major}));
 
   // 뉴스만 테마 클러스터링(테마당 CAP개, 나머지 "+N번 더"). 이벤트는 캡 없이 다 노출.
-  const newsKept=_dedupBySim(news.sort((a,b)=>a.ts.localeCompare(b.ts)));
+  // 같은 종목 뉴스는 하나만 노출(이미 쌓인 중복도 화면에서 접기) → 최신것 유지
+  const _stockSeen=new Set();
+  const newsSorted=news.sort((a,b)=>b.ts.localeCompare(a.ts)).filter(it=>{
+    if(!it.stock) return true;
+    if(_stockSeen.has(it.stock)) return false;
+    _stockSeen.add(it.stock); return true;
+  }).sort((a,b)=>a.ts.localeCompare(b.ts));
+  const newsKept=_dedupBySim(newsSorted);
   const clusters=[];
   for(const item of newsKept){
     const cl=clusters.find(c=>c.items.some(it=>_bigramSim(it.text,item.text)>=_TIMELINE_THEME_SIM));
