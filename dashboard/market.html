@@ -2072,12 +2072,15 @@ function renderMarketFlow(d){
     if(cards.length<4) return;
     const cardIds=["kospi","kosdaq","global","rank","briefing"];
     cards.forEach(c=>{ c.style.height=''; c.style.overflowY=''; c.style.justifyContent=''; });
+    // 미리보기 목표높이 = max(기본 300px, 지금 미리보기 중인 카드들의 실제 내용 높이) —
+    // 브리핑 narrative가 길어져 300px을 넘으면 나머지 카드도 그 높이에 맞춰 같이 늘어난다
+    // (반대로 브리핑이 짧으면 기본 300px 그대로, 빈 공간도 안 생김).
+    const previewNats=cards.map((c,i)=>_topPreviewExpanded.has(cardIds[i])?0:c.offsetHeight);
+    const previewTargetH=Math.max(Math.round(MKT_CARD_HEIGHT/2), ...previewNats);
     cards.forEach((c,i)=>{
       const isPreview=!_topPreviewExpanded.has(cardIds[i]);
       const nat=c.offsetHeight;
-      // 브리핑 카드는 접혔을 때 다른 카드 높이(300px)에 맞춰 늘리지 않고 자기 콘텐츠 높이만큼만 차지
-      if(i===4 && isPreview){ c.style.height=nat+'px'; return; }
-      const targetH=isPreview?Math.round(MKT_CARD_HEIGHT/2):MKT_CARD_HEIGHT;
+      const targetH=isPreview?previewTargetH:MKT_CARD_HEIGHT;
       c.style.height=targetH+'px';
       if(nat>targetH) c.style.overflowY='auto';                // 내용이 넘치면 스크롤
       else if(i===4) c.style.justifyContent='flex-start';     // 브리핑 카드: 짧으면 위 정렬(늘리지 않음)
