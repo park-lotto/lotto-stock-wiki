@@ -2223,6 +2223,10 @@ function renderEditUI(){
           ${_editSectorNames.map(n=>`<option value="${esc(n)}"${n===_editSector?" selected":""}>${esc(n)}</option>`).join("")}
         </select>
         ${_editSector?`
+          <label class="edit-label" style="margin-top:8px">✏️ 섹터 표시 이름 변경</label>
+          <input class="edit-input" id="edit-sector-rename" autocomplete="off"
+                 placeholder="${esc(_editSector)}"
+                 value="${esc((_editState.sector_rename||{})[_editSector]||_editSector)}">
           <div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0 4px">
             <label class="edit-label" style="margin:0">등록 종목</label>
             <span style="font-size:10px;color:#555">흰색=기본 / 금색=추가</span>
@@ -2602,6 +2606,16 @@ async function saveSectorEdit(){
 async function saveEdit(){
   const btn=document.getElementById("edit-save-btn");
   if(btn){btn.disabled=true;btn.textContent="저장 중…";}
+  // 섹터 표시 이름 변경 반영 (원본명 키 유지 — 숨김·추가·삭제 키 일관성)
+  if(_editSector){
+    const rn=document.getElementById("edit-sector-rename");
+    if(rn){
+      const nv=rn.value.trim();
+      const sr=_editState.sector_rename||{};
+      if(nv && nv!==_editSector) sr[_editSector]=nv; else delete sr[_editSector];
+      _editState.sector_rename=sr;
+    }
+  }
   try{
     const r=await fetch("/api/sector_custom",{
       method:"POST",
