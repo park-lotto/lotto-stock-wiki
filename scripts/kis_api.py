@@ -1030,29 +1030,57 @@ def get_stock_supply(code: str) -> dict:
     return out
 
 
-def get_index_price(index_code: str) -> dict:
-    """코스피(0001)/코스닥(1001) 지수 현재가.
-    TR_ID: FHPUP02100000 (업종/지수 현재가)
-    """
-    r = _guarded_get(
-        f"{BASE}/uapi/domestic-stock/v1/quotations/inquire-index-price",
-        headers={
-            "content-type": "application/json; charset=utf-8",
-            "authorization": f"Bearer {_token()}",
-            "appkey": _KEY,
-            "appsecret": _SECRET,
-            "tr_id": "FHPUP02100000",
-            "custtype": "P",
-        },
-        params={"FID_COND_MRKT_DIV_CODE": "U", "FID_INPUT_ISCD": index_code},
-        timeout=5,
+def _naver_index_price(index_code: str) -> dict:
+    """코스피(0001)/코스닥(1001) 지수 현재가 — 네이버 폴링 API 폴백(delayTime:0, 인증 불필요).
+    KIS inquire-index-price가 500 등으로 실패할 때만 호출(2026-07-06 KIS 지수 API 장애 대응)."""
+    sym = "KOSPI" if index_code == "0001" else "KOSDAQ"
+    r = requests.get(
+        f"https://polling.finance.naver.com/api/realtime/domestic/index/{sym}",
+        headers={"User-Agent": "Mozilla/5.0"}, timeout=5,
     )
     r.raise_for_status()
-    o = r.json().get("output", {})
+    d = (r.json().get("datas") or [{}])[0]
     return {
         "code": index_code,
-        "name": o.get("hts_kor_isnm", ""),
-        "price": float(o.get("bstp_nmix_prpr", 0) or 0),
-        "change_rate": float(o.get("bstp_nmix_prdy_ctrt", 0) or 0),
-        "change": float(o.get("bstp_nmix_prdy_vrss", 0) or 0),
+        "name": "코스피" if index_code == "0001" else "코스닥",
+        "price": float(d.get("closePriceRaw", 0) or 0),
+        "change_rate": float(d.get("fluctuationsRatioRaw", 0) or 0),
+        "change": float(d.get("compareToPreviousClosePriceRaw", 0) or 0),
     }
+
+
+def get_index_price(index_code: str) -> dict:
+    """코스피(0001)/코스닥(1001) 지수 현재가.
+    TR_ID: FHPUP02100000 (업종/지수 현재가). 실패 시 네이버 폴링 API로 폴백.
+    """
+    try:
+        r = _guarded_get(
+            f"{BASE}/uapi/domestic-stock/v1/quotations/inquire-index-price",
+            headers={
+                "content-type": "application/json; charset=utf-8",
+                "authorization": f"Bearer {_token()}",
+                "appkey": _KEY,
+                "appsecret": _SECRET,
+                "tr_id": "FHPUP02100000",
+                "custtype": "P",
+            },
+            params={"FID_COND_MRKT_DIV_CODE": "U", "FID_INPUT_ISCD": index_code},
+            timeout=5,
+        )
+        r.raise_for_status()
+        o = r.json().get("output", {})
+        price = float(o.get("bstp_nmix_prpr", 0) or 0)
+        if price <= 0:
+            raise ValueError("empty KIS index price")
+        return {
+            "code": index_code,
+            "name": o.get("hts_kor_isnm", ""),
+            "price": price,
+            "change_rate": float(o.get("bstp_nmix_prdy_ctrt", 0) or 0),
+            "change": float(o.get("bstp_nmix_prdy_vrss", 0) or 0),
+        }
+    except Exception:
+        try:
+            return _naver_index_price(index_code)
+        except Exception:
+            return {"code": index_code, "name": "", "price": 0.0, "change_rate": 0.0, "change": 0.0}
