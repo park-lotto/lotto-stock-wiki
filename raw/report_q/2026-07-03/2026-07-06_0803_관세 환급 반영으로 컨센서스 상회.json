@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-03",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-06_0803_관세 환급 반영으로 컨센서스 상회.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "김민경",
+    "report_date": "2026년 7월 3일",
+    "stocks": [
+      {
+        "name": "LG전자",
+        "code": "066570",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "260,000원",
+        "tp_prev": null,
+        "tp_direction": "up",
+        "earnings_outlook": "별도 기준 매출 18조 577억원 (YoY +6.6%, QoQ -1%), 영업이익 1조 2,489억원(YoY +100%, QoQ -9%, OPM 7%)으로 영업이익이 시장 컨센서스를 대폭 상회할 전망이다.",
+        "estimate_revision": "미국 관세 환급 효과 등으로 인한 시장 컨센서스 상회",
+        "next_catalyst": "데이터센터 쿨링 시스템, 로보틱스 등 신사업 구체화 및 실적 기여",
+        "thesis": [
+          "미국 관세 환급 효과 및 판가 인상·원가 효율화를 통한 수익성 방어",
+          "데이터센터 쿨링 시스템의 북미 하이퍼스케일러 고객사 퀄 테스트 진입 및 실적 기여 가시화",
+          "로보틱스 사업의 데이터 팩토리 구축 및 로봇 파운데이션 모델(RFM) 고도화를 통한 중장기 사업 확장"
+        ],
+        "valuation_basis": "27년 예상 BPS에 지난 5년간 PBR 밴드 평균값인 1.6배를 적용",
+        "risk": null,
+        "supply_comment": "IT",
+        "quote": "원가 효율화를 통한 이익 체력 개선으로 안정적인 실적 흐름이 지속되는 가운데 관세 환급에 따른 단기실적 호조 및 신사업 본격화가 주가 상승 요인으로 작용할 것으로 예상된다."
+      }
+    ]
+  }
+}

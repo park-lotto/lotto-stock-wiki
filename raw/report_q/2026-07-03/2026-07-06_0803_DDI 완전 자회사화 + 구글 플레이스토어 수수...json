@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-03",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-06_0803_DDI 완전 자회사화 + 구글 플레이스토어 수수...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "김동우",
+    "report_date": "2026/07/03",
+    "stocks": [
+      {
+        "name": "더블유게임즈",
+        "code": "192080",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "81,000원",
+        "tp_prev": "70,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "더블유게임즈 2Q26 매출은 2,048억원(YoY +19.1%, QoQ -0.1%), 영업이익은 673억원(YoY +23.8%, QoQ -1.8%)로 시장 예상치(매출 2,066억원, 영익 703억원) 소폭 하회 예상.",
+        "estimate_revision": "투자의견 Buy 유지, 목표주가는 81,000원으로 +15.7% 상향.",
+        "next_catalyst": "26년 내 DDI 완전 자회사화 및 구글 플레이스토어 수수료율 인하로 인한 OPM 개선",
+        "thesis": [
+          "DDI 완전 자회사화를 통한 주주환원 확대 및 대규모 M&A 가능성 확보",
+          "앱 내 제3자 결제 옵션 도입으로 인한 DTC 비중 증가와 매출 대비 플랫폼비 비율 하락",
+          "구글 플레이스토어 수수료율 인하에 따른 OPM 추가 개선 전망"
+        ],
+        "valuation_basis": "26년 내 DDI 완전 자회사화를 가정하여 산출한 2027년 지배주주순이익 2,581억원 및 target PER 6.7배를 적용하여 산출",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "투자의견 Buy 유지, 목표주가는 81,000원으로 +15.7% 상향. 목표주가 상향은 26년 내 DDI 완전 자회사화를 가정하여 산출한 2027년 지배주주순이익 2,581억원 및 target PER 6.7배를 적용하여 산출."
+      }
+    ]
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "news": [
+    {
+      "stock": null,
+      "fact": "2026-07-06 실시간 주식 뉴스 전달",
+      "ts": "07:48",
+      "quote": "https://v.daum.net/v/20260706074304653",
+      "sector": "기타"
+    },
+    {
+      "stock": null,
+      "fact": "2026-07-06 실시간 주식 뉴스 전달",
+      "ts": "07:48",
+      "quote": "https://m.inews24.com/v/1982538",
+      "sector": "기타"
+    },
+    {
+      "stock": null,
+      "fact": "2026-07-06 실시간 주식 뉴스 전달",
+      "ts": "07:48",
+      "quote": "https://v.daum.net/v/20260706073803577",
+      "sector": "기타"
+    },
+    {
+      "stock": null,
+      "fact": "2026-07-06 실시간 주식 뉴스 전달",
+      "ts": "08:21",
+      "quote": "https://n.news.naver.com/mnews/article/011/0004638385?rc=N&ntype=RANKING&sid=101",
+      "sector": "기타"
+    },
+    {
+      "stock": null,
+      "fact": "2026-07-06 실시간 주식 뉴스 전달",
+      "ts": "08:22",
+      "quote": "https://v.daum.net/v/20260706081752437",
+      "sector": "기타"
+    }
+  ]
+}

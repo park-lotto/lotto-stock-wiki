@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "date": "2026-07-06",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-06_1107_2분기 분위기 점검 + 6월 수출 Re.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "하나증권",
+    "analyst": "심은주",
+    "report_date": "2026.7.6",
+    "market_direction": null,
+    "macro_vars": [
+      "원달러 환율 상승",
+      "위안화 절상",
+      "부자재 원가 상승"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "소비내수",
+        "stance": "중립",
+        "reason": "원가 부담이 본격화되는 시점으로 이익 가시성이 낮음"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "6월 중순",
+        "event": "중국 주요 아미노산 업체 정기 보수 시작"
+      },
+      {
+        "date": "7월 초",
+        "event": "싱가포르 롯데 합작법인 설립"
+      }
+    ],
+    "top_picks": [
+      "오리온",
+      "CJ제일제당",
+      "삼양식품"
+    ],
+    "risk": "호르무즈 개방 협상 교착 및 보험료 이슈로 인한 담배 수출 단기 부정적 영향 가능성",
+    "quote": "2분기는 원가 부담이 본격화되는 시점으로 이익 가시성이 낮다."
+  }
+}

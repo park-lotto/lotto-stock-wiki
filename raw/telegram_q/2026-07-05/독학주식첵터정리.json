@@ -1,0 +1,432 @@
+{
+  "stocks": [
+    {
+      "name": "삼성전자",
+      "signal": "neutral",
+      "reason": "반도체 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "삼성전자",
+      "sector": "반도체"
+    },
+    {
+      "name": "SK하이닉스",
+      "signal": "neutral",
+      "reason": "반도체 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "SK하이닉스",
+      "sector": "반도체"
+    },
+    {
+      "name": "SK스퀘어",
+      "signal": "neutral",
+      "reason": "반도체 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "SK스퀘어",
+      "sector": "반도체"
+    },
+    {
+      "name": "이수페타시스",
+      "signal": "neutral",
+      "reason": "반도체 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "이수페타시스",
+      "sector": "반도체"
+    },
+    {
+      "name": "DB하이텍",
+      "signal": "neutral",
+      "reason": "반도체 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "DB하이텍",
+      "sector": "반도체"
+    },
+    {
+      "name": "제주반도체",
+      "signal": "neutral",
+      "reason": "반도체 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "제주반도체",
+      "sector": "반도체"
+    },
+    {
+      "name": "인텍플러스",
+      "signal": "neutral",
+      "reason": "반도체소부장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "인텍플러스",
+      "sector": "반도체"
+    },
+    {
+      "name": "주성엔지니어링",
+      "signal": "neutral",
+      "reason": "반도체소부장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "주성엔지니어링",
+      "sector": "반도체"
+    },
+    {
+      "name": "피에스케이",
+      "signal": "neutral",
+      "reason": "반도체소부장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "피에스케이",
+      "sector": "반도체"
+    },
+    {
+      "name": "원익IPS",
+      "signal": "neutral",
+      "reason": "반도체소부장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "원익IPS",
+      "sector": "반도체"
+    },
+    {
+      "name": "유진테크",
+      "signal": "neutral",
+      "reason": "반도체소부장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "유진테크",
+      "sector": "반도체"
+    },
+    {
+      "name": "기가비스",
+      "signal": "neutral",
+      "reason": "반도체소부장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "기가비스",
+      "sector": "반도체"
+    },
+    {
+      "name": "예스티",
+      "signal": "neutral",
+      "reason": "반도체소부장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "예스티",
+      "sector": "반도체"
+    },
+    {
+      "name": "해성디에스",
+      "signal": "neutral",
+      "reason": "반도체소부장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "해성디에스",
+      "sector": "반도체"
+    },
+    {
+      "name": "브이엠",
+      "signal": "neutral",
+      "reason": "반도체소부장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "브이엠",
+      "sector": "반도체"
+    },
+    {
+      "name": "테스",
+      "signal": "neutral",
+      "reason": "반도체소부장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "테스",
+      "sector": "반도체"
+    },
+    {
+      "name": "심텍",
+      "signal": "neutral",
+      "reason": "반도체소부장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "심텍",
+      "sector": "반도체"
+    },
+    {
+      "name": "kbi메탈",
+      "signal": "neutral",
+      "reason": "전기/전력 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "kbi메탈",
+      "sector": "전력"
+    },
+    {
+      "name": "대원전선",
+      "signal": "neutral",
+      "reason": "전기/전력 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "대원전선",
+      "sector": "전력"
+    },
+    {
+      "name": "가온전선",
+      "signal": "neutral",
+      "reason": "전기/전력 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "가온전선",
+      "sector": "전력"
+    },
+    {
+      "name": "대한전선",
+      "signal": "neutral",
+      "reason": "전기/전력 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "대한전선",
+      "sector": "전력"
+    },
+    {
+      "name": "세명전기",
+      "signal": "neutral",
+      "reason": "전기/전력 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "세명전기",
+      "sector": "전력"
+    },
+    {
+      "name": "LS ELECTRIC",
+      "signal": "neutral",
+      "reason": "전기/전력 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "LS ELECTRIC",
+      "sector": "전력"
+    },
+    {
+      "name": "효성중공업",
+      "signal": "neutral",
+      "reason": "전기/전력 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "효성중공업",
+      "sector": "전력"
+    },
+    {
+      "name": "HD현대일렉트릭",
+      "signal": "neutral",
+      "reason": "전기/전력 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "HD현대일렉트릭",
+      "sector": "전력"
+    },
+    {
+      "name": "일진전기",
+      "signal": "neutral",
+      "reason": "전기/전력 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "일진전기",
+      "sector": "전력"
+    },
+    {
+      "name": "산일전기",
+      "signal": "neutral",
+      "reason": "전기/전력 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "산일전기",
+      "sector": "전력"
+    },
+    {
+      "name": "제룡전기",
+      "signal": "neutral",
+      "reason": "전기/전력 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "제룡전기",
+      "sector": "전력"
+    },
+    {
+      "name": "금호전기",
+      "signal": "neutral",
+      "reason": "호남 반도체공장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "금호전기",
+      "sector": "반도체"
+    },
+    {
+      "name": "금호건설",
+      "signal": "neutral",
+      "reason": "호남 반도체공장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "금호건설",
+      "sector": "기타"
+    },
+    {
+      "name": "금호타이어",
+      "signal": "neutral",
+      "reason": "호남 반도체공장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "금호타이어",
+      "sector": "기타"
+    },
+    {
+      "name": "남화토건",
+      "signal": "neutral",
+      "reason": "호남 반도체공장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "남화토건",
+      "sector": "기타"
+    },
+    {
+      "name": "남화산업",
+      "signal": "neutral",
+      "reason": "호남 반도체공장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "남화산업",
+      "sector": "기타"
+    },
+    {
+      "name": "다스코",
+      "signal": "neutral",
+      "reason": "호남 반도체공장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "다스코",
+      "sector": "기타"
+    },
+    {
+      "name": "동양파일",
+      "signal": "neutral",
+      "reason": "호남 반도체공장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "동양파일",
+      "sector": "기타"
+    },
+    {
+      "name": "광주신세계",
+      "signal": "neutral",
+      "reason": "호남 반도체공장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "광주신세계",
+      "sector": "소비내수"
+    },
+    {
+      "name": "서산",
+      "signal": "neutral",
+      "reason": "호남 반도체공장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "서산",
+      "sector": "기타"
+    },
+    {
+      "name": "모헨즈",
+      "signal": "neutral",
+      "reason": "호남 반도체공장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "모헨즈",
+      "sector": "기타"
+    },
+    {
+      "name": "보해양조",
+      "signal": "neutral",
+      "reason": "호남 반도체공장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "보해양조",
+      "sector": "소비내수"
+    },
+    {
+      "name": "부국철강",
+      "signal": "neutral",
+      "reason": "호남 반도체공장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "부국철강",
+      "sector": "철강"
+    },
+    {
+      "name": "강동씨앤엘",
+      "signal": "neutral",
+      "reason": "호남 반도체공장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "강동씨앤엘",
+      "sector": "기타"
+    },
+    {
+      "name": "에이피알",
+      "signal": "neutral",
+      "reason": "화장품 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "에이피알",
+      "sector": "화장품미용"
+    },
+    {
+      "name": "한국콜마",
+      "signal": "neutral",
+      "reason": "화장품 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "한국콜마",
+      "sector": "화장품미용"
+    },
+    {
+      "name": "아모레퍼시픽",
+      "signal": "neutral",
+      "reason": "화장품 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "아모레퍼시픽",
+      "sector": "화장품미용"
+    },
+    {
+      "name": "달바글로벌",
+      "signal": "neutral",
+      "reason": "화장품 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "달바글로벌",
+      "sector": "화장품미용"
+    },
+    {
+      "name": "실리콘투",
+      "signal": "neutral",
+      "reason": "화장품 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "실리콘투",
+      "sector": "화장품미용"
+    },
+    {
+      "name": "저스텍",
+      "signal": "neutral",
+      "reason": "신규상장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "저스텍",
+      "sector": "기타"
+    },
+    {
+      "name": "레몬헬스케어",
+      "signal": "neutral",
+      "reason": "신규상장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "레몬헬스케어",
+      "sector": "기타"
+    },
+    {
+      "name": "매드업",
+      "signal": "neutral",
+      "reason": "신규상장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "매드업",
+      "sector": "기타"
+    },
+    {
+      "name": "스트라드비젼",
+      "signal": "neutral",
+      "reason": "신규상장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "스트라드비젼",
+      "sector": "기타"
+    },
+    {
+      "name": "마키나락스",
+      "signal": "neutral",
+      "reason": "신규상장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "마키나락스",
+      "sector": "기타"
+    },
+    {
+      "name": "세미티에스",
+      "signal": "neutral",
+      "reason": "신규상장 테마 관련 종목",
+      "ts": "21:47",
+      "quote": "세미티에스",
+      "sector": "기타"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "레몬헬스케어 신규 상장( 공모가 10000원)",
+      "ts": "21:47",
+      "quote": "레몬헬스케어 신규 상장( 공모가 10000원)"
+    },
+    {
+      "fact": "달러-원 환율 24시간 거래 개시",
+      "ts": "21:47",
+      "quote": "달러-원 환율 24시간 거래 개시"
+    }
+  ]
+}

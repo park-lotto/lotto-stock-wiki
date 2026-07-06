@@ -1,0 +1,59 @@
+{
+  "meta": {
+    "date": "2026-07-03",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-06_0804_현대차기아 6월 글로벌 판매.md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "이재일",
+    "report_date": "2026.07.03",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "현대차",
+        "code": "005380",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "280,000",
+        "tp_prev": "280,000",
+        "tp_direction": "flat",
+        "earnings_outlook": "현대차의 6월 글로벌 도매 판매는 33.9만대(-5.8%yoy)를 기록. 내수 5.9만대(-4.8%yoy), 해외 28.0만대(-5.7%yoy) 기록. 현대차의 6월 생산 대수는 33.3만대(-6.8%yoy)를 기록.",
+        "estimate_revision": null,
+        "next_catalyst": "아이오닉 3 유럽 시장 출시",
+        "thesis": [
+          "내수 시장 판매는 안전공업 화재로 인한 충격에서는 회복되었으나 주요 모델의 판매 약세 지속",
+          "해외 판매는 북미와 브라질을 제외한 전 지역에서 부진하였음",
+          "아이오닉 3 유럽 시장 출시로 하반기 반전 기대"
+        ],
+        "valuation_basis": null,
+        "risk": "7월 개별소비세 인하 종료 영향, EU 시장 경쟁 심화, 미국 EV 보조금 제거 영향, 현대모비스 인도 공장 화재로 인한 생산 차질",
+        "supply_comment": null,
+        "quote": "현대차의 6월 글로벌 도매 판매는 33.9만대(-5.8%yoy)를 기록.",
+        "sector": "자동차"
+      },
+      {
+        "name": "기아",
+        "code": "000270",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "300,000",
+        "tp_prev": "300,000",
+        "tp_direction": "flat",
+        "earnings_outlook": "기아의 6월 글로벌 도매 판매는 29.5만대(+9.6%yoy)를 기록. 내수 판매는 전년비 18.5% 증가한 5.4만대를 기록. EV 판매는 전년비 125% 증가한 1.2만대를 기록. 기아의 6월 생산 대수는 30.3만대(+6.1%yoy)를 기록.",
+        "estimate_revision": null,
+        "next_catalyst": "EV, SUV 신차 효과",
+        "thesis": [
+          "RV 하이브리드 모델 판매에서 현대차 경쟁 모델을 앞지르고 있음",
+          "EV, SUV 신차 효과가 판매 증가를 견인",
+          "RV 타입의 HEV 모델 판매 호조는 전체 이익률 개선 견인"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "기아의 6월 글로벌 도매 판매는 29.5만대(+9.6%yoy)를 기록.",
+        "sector": "자동차"
+      }
+    ]
+  }
+}

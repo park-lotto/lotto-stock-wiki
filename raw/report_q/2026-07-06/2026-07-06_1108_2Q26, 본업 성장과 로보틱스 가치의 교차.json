@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "date": "2026-07-06",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-06_1108_2Q26, 본업 성장과 로보틱스 가치의 교차.md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "김성래, 김예인",
+    "report_date": "2026년 7월 6일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "현대차",
+        "code": null,
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 760000,
+        "tp_prev": 760000,
+        "tp_direction": "flat",
+        "earnings_outlook": "현대차/기아 양사 2Q26 합산 매출액은 81.3조원(+4.7% 이하 YoY), 영업이익은 5.9조원(-7.1%) 전망. 현대차는 글로벌 수요 둔화 및 협력사 화재 영향 등으로 2Q 판매량이 감소(-7.1%)",
+        "estimate_revision": null,
+        "next_catalyst": "8월 RMAC 가동, 3Q HMG Global 통한 현대차와 기아의 로봇 사업 관련 자금 투자 집행 가능성",
+        "thesis": [
+          "하반기 아반떼, 투싼 풀체인지 모델 출시 및 유럽 아이오닉3 현지 생산/판매로 판매 확대 및 친환경차 중심 믹스 개선",
+          "피지컬AI 데이터 수집에서 학습 및 검증에 이르는 로봇 양산 개발 본격화",
+          "완성차 실적 개선 및 그룹 로봇 사업 경쟁력 확인"
+        ],
+        "valuation_basis": null,
+        "risk": "미국발 관세 영향(1.9조원)과 원자재가 상승 영향, 기말 환율 상승에 따른 판매보증비 부정적 외화환산 손익",
+        "supply_comment": "지난 3월 국내 협력사의 대형 화재에 따른 물량 차질 영향이 2Q 판매량에 반영됨",
+        "quote": "하반기 1)완성차 실적 개선, 2)그룹 로봇 사업 경쟁력 확인 및 3)BD 지분 가치 증가는 양사의 기업 가치 상승 모멘텀으로 판단."
+      },
+      {
+        "name": "기아",
+        "code": null,
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 290000,
+        "tp_prev": 290000,
+        "tp_direction": "flat",
+        "earnings_outlook": "기아 2Q 매출액은 33.2조원으로 두 자릿수 증가(+13.1%) 예상. 2Q 소매 기준 친환경차 판매량 27.1만대를 기록하며 전년 동기 대비 46.6% 급증",
+        "estimate_revision": null,
+        "next_catalyst": "북미 HEV 신차 효과와 경제형 EV 신차 출시 효과(EV3, EV4, EV5 등)",
+        "thesis": [
+          "상반기 저성장 시장 수요 대응에 있어 권역별 성장 세그먼트에서의 신차 투입 통한 물량 확대",
+          "BEV 판매 증가와 경제형 EV 신차 출시 효과",
+          "스포티지 HEV의 HMGMA 생산 및 ramp-up, 셀토스 HEV 출시"
+        ],
+        "valuation_basis": null,
+        "risk": "미국발 관세 영향(1.9조원)과 원자재가 상승 영향, 기말 환율 상승에 따른 판매보증비 부정적 외화환산 손익",
+        "supply_comment": null,
+        "quote": "기아의 2Q 친환경차 판매 증가에는 지난 ’24년 하반기 출시된 EV3를 시작으로 유럽에서 지난해 하반기 EV4, EV5 판매 본격화와 올해 2월 EV2의 슬로바키아 현지 생산 및 유럽 권역 내 판매 본격화가 기여했다."
+      }
+    ]
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "date": "2026-07-03",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-06_0808_글로벌 친환경차2차전지 Monthly (2026년 5...md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "하나증권",
+    "analyst": "송선재, 김현수",
+    "report_date": "2026.7.3",
+    "market_direction": null,
+    "macro_vars": [
+      "리튬 가격 +14% (5월 MoM)",
+      "니켈 가격 +4% (5월 MoM)",
+      "망간 가격 -2% (5월 MoM)",
+      "코발트 가격 0% (5월 MoM)",
+      "구리 가격 +5% (5월 MoM)",
+      "알루미늄 가격 +2% (5월 MoM)",
+      "LiPF6 가격 +10% (5월 MoM)"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "2차전지",
+        "stance": "Overweight",
+        "reason": "ESS 실적 개선으로 LGES와 삼성SDI 모두 연중 분기 흑자전환 가능 전망 및 셀 메이커들의 실적 개선"
+      }
+    ],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": [
+      "LGES",
+      "삼성SDI",
+      "SK on",
+      "CATL",
+      "BYD",
+      "CALB",
+      "Panasonic"
+    ],
+    "risk": "유럽 내 한국 3사 합산 시장 점유율 2개월 연속 30% 미만 기록 및 삼성SDI와 SK on의 유럽 부진 지속",
+    "quote": "셀 메이커 중심의 배터리 섹터 비중확대 의견 유지"
+  }
+}
