@@ -3366,6 +3366,7 @@ function openStockChart(code, name){
   box.style.top=saved.top || "60px";
   box.dataset.max="0";
   _dragWindow(box, box.querySelector(".modal-hd"));
+  _edgeResize(box);   // 오른쪽·아래쪽 엣지로도 크기조절
   box.querySelector(".modal-hd").addEventListener("dblclick",()=>_toggleMax(box));
   // 차트 컨테이너 마우스 핸들러는 모달당 1회만 부착 (봉 전환에도 유지)
   const cont=box.querySelector("#tv_chart_container");
@@ -3378,12 +3379,14 @@ function openStockChart(code, name){
   cont.addEventListener("contextmenu",ev=>{
     if(_drawTool||_drawCancel){ ev.preventDefault(); _cancelDraw(); }
   });
-  // ESC = 취소 (전역 1회 바인딩)
+  // ESC = 그리는 중이면 그리기 취소, 아니면 차트 창 닫기 (전역 1회 바인딩)
   if(!window._chartEscBound){ window._chartEscBound=true;
     document.addEventListener("keydown",ev=>{
       if(ev.key!=="Escape")return;
       const m=document.getElementById("chart-modal");
-      if(m&&m.classList.contains("open")&&(_drawTool||_drawCancel)) _cancelDraw();
+      if(!m||!m.classList.contains("open"))return;
+      if(_drawTool||_drawCancel) _cancelDraw();
+      else closeStockChart();
     });
   }
   _initChart();
@@ -3712,15 +3715,22 @@ function _drawTick(){
 function _updateLegend(param){
   const el=document.getElementById("chart-legend");
   if(!el||!_chartRows.length)return;
-  let row=null;
-  if(param && param.time!=null) row=_chartRows.find(r=>r.time===param.time);
-  if(!row) row=_chartRows[_chartRows.length-1];
+  let idx=-1;
+  if(param && param.time!=null) idx=_chartRows.findIndex(r=>r.time===param.time);
+  if(idx<0) idx=_chartRows.length-1;
+  const row=_chartRows[idx];
   if(!row){ el.textContent=""; return; }
   const f=v=>Math.round(v).toLocaleString("ko-KR");
   const up=row.close>=row.open;
+  // 등락률 = 직전 봉 종가 대비(없으면 당봉 시가 대비). 일·분·월·주 모두 동일 로직.
+  const prev=idx>0?_chartRows[idx-1].close:row.open;
+  const pct=prev?(row.close-prev)/prev*100:0;
+  const pcol=pct>0?'#e74c3c':pct<0?'#3498db':'#999';
   el.innerHTML=`<span class="lg">시</span>${f(row.open)} <span class="lg">고</span>${f(row.high)}`+
     ` <span class="lg">저</span>${f(row.low)} <span class="lg">종</span>`+
-    `<b style="color:${up?'#e74c3c':'#3498db'}">${f(row.close)}</b> <span class="lg">량</span>${(row.value||0).toLocaleString("ko-KR")}`;
+    `<b style="color:${up?'#e74c3c':'#3498db'}">${f(row.close)}</b>`+
+    ` <b style="color:${pcol}">${pct>0?'+':''}${pct.toFixed(2)}%</b>`+
+    ` <span class="lg">량</span>${(row.value||0).toLocaleString("ko-KR")}`;
 }
 async function loadChartData(){
   const el=document.getElementById("tv_chart_container");
@@ -3760,6 +3770,28 @@ function setChartTf(tf){
   _saveChartWin();   // 마지막 봉 종류 저장
   _initChart(); loadChartData();
   if(_cfOn) _cfRender();   // 봉 전환 후 컨센 오버레이 재적용(일봉+만)
+}
+function _edgeResize(box){
+  // 우하단 코너(resize:both)에 더해 오른쪽·아래쪽 엣지로도 크기조절 (헤더/코너와 겹치지 않게 오프셋)
+  const mk=css=>{ const h=document.createElement("div");
+    h.style.cssText="position:absolute;z-index:6;background:transparent;"+css;
+    box.appendChild(h); return h; };
+  const right =mk("top:90px;bottom:16px;right:0;width:9px;cursor:ew-resize;");
+  const bottom=mk("left:0;right:16px;bottom:0;height:9px;cursor:ns-resize;");
+  const drag=(h,axis)=>h.addEventListener("mousedown",e=>{
+    e.preventDefault(); e.stopPropagation();
+    const x0=e.clientX,y0=e.clientY,w0=box.offsetWidth,h0=box.offsetHeight;
+    const mv=ev=>{
+      if(axis!=="y") box.style.width =Math.max(440,w0+ev.clientX-x0)+"px";
+      if(axis!=="x") box.style.height=Math.max(360,h0+ev.clientY-y0)+"px";
+    };
+    const up=()=>{ document.removeEventListener("mousemove",mv);
+      document.removeEventListener("mouseup",up);
+      try{ _saveChartWin(); }catch(_){}
+    };
+    document.addEventListener("mousemove",mv); document.addEventListener("mouseup",up);
+  });
+  drag(right,"x"); drag(bottom,"y");
 }
 function closeStockChart(){
   const m=document.getElementById("chart-modal");
