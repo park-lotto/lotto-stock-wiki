@@ -85,6 +85,8 @@ def get_done_files() -> set[str]:
     conn.close()
     result = set()
     for (path,) in rows:
+        if not path:  # raw_file None(예: chroma 복구 원자) → 처리이력 아님, 건너뜀
+            continue
         norm = path.replace("\\", "/")
         result.add(norm)
         # 파일명만으로도 매칭
