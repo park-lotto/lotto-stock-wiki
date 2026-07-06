@@ -1623,7 +1623,7 @@ def _refresh_news(top_sectors: int = 8, per_stock: int = 3):
             sector_label = (kw.get(s.get("code")) or {}).get("sector")
             sector_news = sector_news + tg_by_sector.get(sector_label, [])
             out_sectors.append({"etf": s.get("etf"), "code": s.get("code"),
-                                "rate": s.get("rate"),
+                                "rate": s.get("rate"), "sector": sector_label,
                                 "news": sector_news,
                                 "stocks": stocks})
         data = {"sectors": out_sectors, "ts": time.time()}
@@ -1639,9 +1639,51 @@ def _refresh_news(top_sectors: int = 8, per_stock: int = 3):
         print(f"[_refresh_news] 실패: {e}", flush=True)
         traceback.print_exc()
 
+_STRONG_RE = re.compile(r"속보|특징주|급등|급락|확정|결정|수주|계약|사상\s*최대|최대\s*실적|부지|증자|자사주|신고가|목표주가")
+
+def _news_norm(t: str) -> str:
+    return re.sub(r"[^가-힣0-9a-zA-Z]", "", t or "")[:36]
+
+def _surface_strong_news():
+    """뉴스피드의 '강한' 원문 뉴스(속보·특징주·확정·수주 등)를 원문+출처+섹터 카드로 타임라인에 추가.
+    Gemini 요약이 5개만 순서대로 받아 중요뉴스를 통째로 놓치던 문제 보완 — 실제 스쿠프를 원문 그대로 노출."""
+    try:
+        data = _NEWS_FEED.get("data")
+        if not data:
+            return
+        today = datetime.now().strftime("%m/%d")
+        stored = _briefing_load(BRIEFING_PATH)
+        seen = {_news_norm(it.get("headline", "")) for it in (stored.get("items") or [])}
+        added = []
+        for sec in (data.get("sectors") or []):
+            sector = sec.get("sector") or "시장"
+            rows = list(sec.get("news") or [])
+            for st in (sec.get("stocks") or []):
+                rows += st.get("news") or []
+            for n in rows:
+                t = (n.get("title") or "").strip()
+                d = (n.get("date") or "")
+                if not t or not d.startswith(today) or not _STRONG_RE.search(t):
+                    continue
+                key = _news_norm(t)
+                if key in seen:
+                    continue
+                seen.add(key)
+                added.append({
+                    "ts": (d.split(" ")[-1][:5] if " " in d else datetime.now().strftime("%H:%M")),
+                    "severity": "red", "headline": t, "body": "",
+                    "sector": sector, "source": n.get("src") or n.get("source") or "뉴스",
+                    "kind": "raw_news"})
+        added.sort(key=lambda x: x["ts"])   # 오래된→최신 순으로 append(내부 prepend라 최신이 맨앞 됨)
+        for it in added[-20:]:              # 한 사이클 최대 20건
+            _briefing_append(BRIEFING_PATH, it)
+    except Exception:
+        pass
+
 def _news_loop():
     while True:
         _refresh_news()
+        _surface_strong_news()   # 강한 원문 뉴스 직접 노출
         time.sleep(1200)   # 20분 간격
 
 threading.Thread(target=_news_loop, daemon=True).start()
