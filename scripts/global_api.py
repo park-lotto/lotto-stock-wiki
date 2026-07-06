@@ -83,6 +83,23 @@ def _calc_rate(price: float, cache_key_short: str, open_price: float) -> float:
     return 0.0
 
 
+def _resample_bars(rows: list, interval_sec: int = 300, max_bars: int = 30) -> list:
+    """esignal 원본(약 6초 간격 틱)을 interval_sec 단위로 묶어 마지막 값만 채택.
+
+    기존에는 rows[-30:]로 원본 틱을 그대로 잘라 써서 30틱×6초≈3분 구간만
+    보였다(체감상 "몇분봉인지 알 수 없는" 짧은 스냅샷). 5분 버킷으로 리샘플하면
+    같은 30개 포인트로 최근 최대 2시간30분 구간을 보여줄 수 있다.
+    """
+    if not rows:
+        return []
+    buckets = {}
+    for ts, price in rows:
+        bucket = int(ts) // (interval_sec * 1000)
+        buckets[bucket] = float(price)
+    bars = [buckets[k] for k in sorted(buckets.keys())]
+    return bars[-max_bars:]
+
+
 def _esignal_cache(url: str, cache_key: str, sym_short: str, referer: str = "") -> dict:
     """esignal cache JSON → {price, change_rate, bars, source}."""
     import requests as _req
@@ -111,7 +128,7 @@ def _esignal_cache(url: str, cache_key: str, sym_short: str, referer: str = "") 
                 last = rows[-1]
                 price = float(last[1])
                 change_rate = _calc_rate(price, sym_short, open_price)
-                bars = [float(d[1]) for d in rows[-30:]]
+                bars = _resample_bars(rows, interval_sec=300, max_bars=30)
                 # 마지막 체결 시각(epoch ms) — 야간선물 '마감' 날짜 표시에 사용
                 last_ts = 0
                 try:
