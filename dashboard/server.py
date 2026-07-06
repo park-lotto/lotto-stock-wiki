@@ -1648,6 +1648,25 @@ _MATERIAL_RE = re.compile(r"수주|계약|부지|증설|투자|실적|급등|급
 def _news_norm(t: str) -> str:
     return re.sub(r"[^가-힣0-9a-zA-Z]", "", t or "")[:36]
 
+def _match_stock(t: str, stocks_set) -> str:
+    """제목에서 관심종목명을 찾되, 더 긴 단어의 일부(예: '이닉스'⊂'하이닉스')는 제외.
+    앞뒤가 한글이면 다른 단어의 일부로 보고 버리고, 'AI'·'SK' 같은 2자 영문 오탐도 제외. 가장 긴 매칭 선호."""
+    def _kr(c): return "가" <= c <= "힣"
+    best = ""
+    for s in stocks_set:
+        if not s or len(s) < 2 or (len(s) <= 2 and s.isascii()):
+            continue
+        idx = t.find(s)
+        if idx < 0:
+            continue
+        before = t[idx - 1] if idx > 0 else ""
+        after = t[idx + len(s)] if idx + len(s) < len(t) else ""
+        if _kr(before) or _kr(after):
+            continue
+        if len(s) > len(best):
+            best = s
+    return best
+
 def _news_bigrams(s: str) -> set:
     t = re.sub(r"\s+", "", s or "")
     return {t[i:i+2] for i in range(len(t) - 1)}
@@ -1691,7 +1710,7 @@ def _surface_strong_news():
                     continue
                 if not _STRONG_RE.search(t) or _EXCLUDE_RE.search(t):
                     continue
-                stock = next((s for s in stocks_set if s and s in t), "")
+                stock = _match_stock(t, stocks_set)
                 if not stock and not _MATERIAL_RE.search(t):   # 관심종목도 재료성도 없으면 버림
                     continue
                 cands.append({"t": t, "d": d, "src": n.get("src") or n.get("source") or "뉴스",
