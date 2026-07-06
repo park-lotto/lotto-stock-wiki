@@ -54,7 +54,10 @@ sudo certbot --nginx -d stockbrain.duckdns.org   # 이메일 입력, 리다이�
 ```
 
 ## 갱신·운영
-- 코드 업데이트: `git pull && sudo systemctl restart stockbrain`
+- **자동배포(권장)**: 로컬 `main`에 `git push`만 하면 서버 크론(`deploy/auto_deploy.sh`, 3분마다)이
+  새 커밋 감지 시 `git pull --ff-only` + 코드변경 시에만 `stockbrain` 재시작. 로그 `/tmp/auto_deploy.log`.
+  → **push 후 최대 3분 내 자동반영.** `feat/*` 아닌 `main`에 push해야 함(서버는 main만 추적).
+- 수동 즉시반영: `git pull --ff-only origin main && sudo systemctl restart stockbrain`
 - 비번 변경: `/etc/stockbrain.env` 수정 → `sudo systemctl restart stockbrain`
 - 로그: `journalctl -u stockbrain -f`
 
