@@ -405,14 +405,15 @@ def _check_datasource_availability():
         print("[boot] kiwoom_api: OK (서버에 키움 키 등록됨)", flush=True)
     except Exception as e:
         print("=" * 70, flush=True)
-        print("[boot][WARN] kiwoom_api 인증 실패 — 서버에 키움 API 키 미등록 상태로 보임.", flush=True)
+        print("[boot][WARN] kiwoom_api 인증 실패.", flush=True)
         print(f"  사유: {e}", flush=True)
-        print("  아래 기능은 kiwoom_api를 직접 호출하면 항상 빈값/0을 반환한다:", flush=True)
+        print("  2026-07-06: 서버 /etc/stockbrain.env에 KIWOOM_APP_KEY/SECRET을 등록했지만", flush=True)
+        print("  '지정단말기 인증 실패(8050)'로 거부됨 — 이 키는 특정 IP/단말기에 락되어 있어", flush=True)
+        print("  로컬 PC에서는 되고 이 서버(3.39.179.148)에서는 안 됨. 키움 개발자센터에서", flush=True)
+        print("  서버 IP를 지정단말기로 등록해야 풀림 — 그 전엔 kiwoom_api 직접호출은 항상 빈값/0:", flush=True)
         print("    - 관심종목 개별 잠정수급 (get_stock_supply, /api/watchlist·/api/stock_supply_batch)", flush=True)
-        print("    - 코스피/코스닥 투자자매매동향·프로그램매매 (market_flow의 J_investor/Q_investor/", flush=True)
-        print("      J_prog/Q_prog/J_prog_series/Q_prog_series — 2026-07-06부터 KIS 지수API 장애로", flush=True)
-        print("      kiwoom_api.get_market_investor/get_program_trade로 되돌림. 키움 키 다시 빠지면", flush=True)
-        print("      이 6개 값이 전부 0으로 샌다 — kis_api로 되돌리거나 키움 키를 복구할 것.", flush=True)
+        print("  투자자매매동향·프로그램매매(market_flow J/Q_investor·prog·prog_series)는 현재", flush=True)
+        print("  kis_api 사용 중(KIS 쪽도 2026-07-06 inquire-index-price 장애 있었음, 별개 이슈).", flush=True)
         print("  → 위 endpoint를 만지거나 새 기능을 kiwoom_api로 연결할 때는 반드시 서버에서", flush=True)
         print("    실데이터 응답을 확인할 것. 종목분봉(get_stock_candles)은 이미 KIS 폴백 있음.", flush=True)
         print("=" * 70, flush=True)
@@ -2203,12 +2204,12 @@ def api_market_flow():
                 "Q_bars_1d":  ex.submit(kis_api.get_index_daily_bars, "1001", 30),
                 "J_price":    ex.submit(kis_api.get_index_price, "0001"),
                 "Q_price":    ex.submit(kis_api.get_index_price, "1001"),
-                "J_investor": ex.submit(kiwoom_api.get_market_investor, "J"),
-                "Q_investor": ex.submit(kiwoom_api.get_market_investor, "Q"),
-                "J_prog":         ex.submit(kiwoom_api.get_program_trade, "J"),
-                "Q_prog":         ex.submit(kiwoom_api.get_program_trade, "Q"),
-                "J_prog_series":  ex.submit(kiwoom_api.get_program_trade_series, "J"),
-                "Q_prog_series":  ex.submit(kiwoom_api.get_program_trade_series, "Q"),
+                "J_investor": ex.submit(kis_api.get_market_investor, "J"),
+                "Q_investor": ex.submit(kis_api.get_market_investor, "Q"),
+                "J_prog":         ex.submit(kis_api.get_program_trade, "J"),
+                "Q_prog":         ex.submit(kis_api.get_program_trade, "Q"),
+                "J_prog_series":  ex.submit(kis_api.get_program_trade_series, "J"),
+                "Q_prog_series":  ex.submit(kis_api.get_program_trade_series, "Q"),
                 "NQ":         ex.submit(global_api.get_nasdaq_futures) if global_api else None,
                 "KSF":        ex.submit(global_api.get_kospi_futures) if global_api else None,
                 "KSFN":       ex.submit(global_api.get_kospi_night_futures) if global_api else None,
@@ -2969,12 +2970,12 @@ def _prewarm_worker():
                 "Q_bars_1d":  ex.submit(kis_api.get_index_daily_bars, "1001", 30),
                 "J_price":    ex.submit(kis_api.get_index_price, "0001"),
                 "Q_price":    ex.submit(kis_api.get_index_price, "1001"),
-                "J_investor":     ex.submit(kiwoom_api.get_market_investor, "J"),
-                "Q_investor":     ex.submit(kiwoom_api.get_market_investor, "Q"),
-                "J_prog":         ex.submit(kiwoom_api.get_program_trade, "J"),
-                "Q_prog":         ex.submit(kiwoom_api.get_program_trade, "Q"),
-                "J_prog_series":  ex.submit(kiwoom_api.get_program_trade_series, "J"),
-                "Q_prog_series":  ex.submit(kiwoom_api.get_program_trade_series, "Q"),
+                "J_investor":     ex.submit(kis_api.get_market_investor, "J"),
+                "Q_investor":     ex.submit(kis_api.get_market_investor, "Q"),
+                "J_prog":         ex.submit(kis_api.get_program_trade, "J"),
+                "Q_prog":         ex.submit(kis_api.get_program_trade, "Q"),
+                "J_prog_series":  ex.submit(kis_api.get_program_trade_series, "J"),
+                "Q_prog_series":  ex.submit(kis_api.get_program_trade_series, "Q"),
                 "NQ":         ex.submit(global_api.get_nasdaq_futures) if global_api else None,
                 "KSF":        ex.submit(global_api.get_kospi_futures) if global_api else None,
                 "KSFN":       ex.submit(global_api.get_kospi_night_futures) if global_api else None,
