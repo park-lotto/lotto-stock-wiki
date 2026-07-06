@@ -538,6 +538,10 @@ def _collect_split_subs(raw_full: dict) -> list:
         for parent in parents:
             for sub in raw_full.get(parent, []):
                 nm = (sub.get("name") or "").strip() or disp
+                # 이차전지 서브타일은 어느 대섹터인지 헷갈려 앞에 '이차전지 ' 접두사(사용자 요청).
+                # 무명 서브(대섹터명=disp인 경우)나 이미 접두된 경우는 중복붙임 방지.
+                if disp == "이차전지" and nm != disp and not nm.startswith(disp):
+                    nm = f"{disp} {nm}"
                 if nm in seen:
                     continue
                 if re.sub(r"[\d\s]", "", nm) == "":
