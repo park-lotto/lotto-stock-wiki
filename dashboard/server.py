@@ -3177,6 +3177,9 @@ def _weather_tick():
                                ts=now.strftime("%H:%M"))
     prev = st.get("baseline")
     live_ok = curr["idx"]["J"]["price"] > 0
+    print(f"[weather_tick] {now.strftime('%H:%M:%S')} mf_keys={sorted(mf.keys())} "
+          f"J_price_raw={mf.get('J_price')} J_investor_raw={mf.get('J_investor')} "
+          f"curr_J_price={curr['idx']['J']['price']} live_ok={live_ok}", flush=True)
 
     events = []
     if live_ok:
