@@ -128,7 +128,10 @@ def _esignal_cache(url: str, cache_key: str, sym_short: str, referer: str = "") 
                 last = rows[-1]
                 price = float(last[1])
                 change_rate = _calc_rate(price, sym_short, open_price)
-                bars = _resample_bars(rows, interval_sec=300, max_bars=30)
+                # 1분봉(방향 전환 포착용, 최근 60분) / 15분봉(큰 그림, 보유 이력 전체) 둘 다 제공
+                bars_1m = _resample_bars(rows, interval_sec=60, max_bars=60)
+                bars_15m = _resample_bars(rows, interval_sec=900, max_bars=20)
+                bars = bars_1m
                 # 마지막 체결 시각(epoch ms) — 야간선물 '마감' 날짜 표시에 사용
                 last_ts = 0
                 try:
@@ -136,7 +139,8 @@ def _esignal_cache(url: str, cache_key: str, sym_short: str, referer: str = "") 
                 except Exception:
                     last_ts = 0
                 data = {"price": round(price, 2), "change_rate": change_rate,
-                        "bars": bars, "source": "esignal", "last_ts": last_ts}
+                        "bars": bars, "bars_1m": bars_1m, "bars_15m": bars_15m,
+                        "source": "esignal", "last_ts": last_ts}
                 _CACHE[cache_key] = {"data": data, "ts": now}
                 return data
     except Exception:
