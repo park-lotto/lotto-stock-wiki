@@ -1,0 +1,28 @@
+# 줄바꿈 정규화 — CRLF/LF 오염으로 코드파일 전체가 diff로 잡히던 문제 방지.
+# 저장소 안에서는 LF로 통일하고, 체크아웃 시 각 OS에 맡긴다(text=auto).
+* text=auto
+
+# 코드/텍스트는 항상 LF (윈도우에서 편집·저장해도 저장소엔 LF로 들어감)
+*.py    text eol=lf
+*.js    text eol=lf
+*.html  text eol=lf
+*.css   text eol=lf
+*.json  text eol=lf
+*.md    text eol=lf
+*.sh    text eol=lf
+*.txt   text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+
+# 바이너리 — diff/정규화 대상에서 제외
+*.db     binary
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.pdf    binary
+*.mp4    binary
+*.xls    binary
+*.xlsx   binary
+*.xlsm   binary
+*.pyc    binary
