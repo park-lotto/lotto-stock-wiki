@@ -3309,7 +3309,9 @@ def _poll_briefing():
             # (주말·KIS다운으로 캐시 비어도 자체 가드로 heartbeat+뉴스 기반 갱신)
             _weather_tick()
         except Exception:
-            pass
+            import traceback as _tb
+            print("[poll_briefing][ERR]", flush=True)
+            _tb.print_exc()
         time.sleep(30)
 
 threading.Thread(target=_poll_briefing, daemon=True).start()
