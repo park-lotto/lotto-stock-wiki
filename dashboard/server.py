@@ -126,13 +126,18 @@ def _gemini_interactive_keys():
 
 
 def _summary_keys():
-    """뉴스요약용 키 풀 — 대화형(general) + 인제스트(ingest) 키까지 총동원해 429 쿼터 여유 확보.
-    프리워밍이 여러 섹터를 도는 만큼 키가 많아야 무료 쿼터가 안 터진다."""
+    """뉴스요약용 키 풀 — 전 그룹(general/ingest/embed/briefing) 라이브 키 총동원(cross-group).
+    소진 표시된 키는 건너뛰고, 4그룹 전부 소진일 때만 전체 키로 최후 시도.
+    (이전엔 general+ingest 9개만 써서 그 두 그룹이 마르면 embed/briefing 놀아도 요약이 죽었음)"""
+    live = key_vault.get_live_keys_cascade("general")  # 전 그룹 라이브, general 먼저
+    if live:
+        return live
     seen, out = set(), []
-    for k in key_vault.get_keys("general") + key_vault.get_keys("ingest"):
-        if k and k not in seen:
-            seen.add(k)
-            out.append(k)
+    for g in ("general", "ingest", "embed", "briefing"):
+        for k in key_vault.get_keys(g):
+            if k and k not in seen:
+                seen.add(k)
+                out.append(k)
     return out
 
 
