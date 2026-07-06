@@ -1639,22 +1639,46 @@ def _refresh_news(top_sectors: int = 8, per_stock: int = 3):
         print(f"[_refresh_news] 실패: {e}", flush=True)
         traceback.print_exc()
 
-_STRONG_RE = re.compile(r"속보|특징주|급등|급락|확정|결정|수주|계약|사상\s*최대|최대\s*실적|부지|증자|자사주|신고가|목표주가")
+_STRONG_RE   = re.compile(r"속보|특징주|급등|급락|수주|계약|부지|증설|투자|사상\s*최대|최대\s*실적|자사주|증자|신고가|목표주가|흑자|적자|인수|합병|매각|공급")
+# 거버넌스·인사 등 투자무관 뉴스 제외(예: "KB금융 차기 회장 숏리스트 확정")
+_EXCLUDE_RE  = re.compile(r"회장|대표이사|사외이사|주주총회|주총|숏리스트|연임|임원|인사|이사회|사임|선임|취임|배당락|주식담보|스톡옵션")
+# '재료성' 판단 — 관심종목 매칭이 없을 때 이 키워드라도 있어야 노출
+_MATERIAL_RE = re.compile(r"수주|계약|부지|증설|투자|실적|급등|급락|목표주가|자사주|증자|신고가|흑자|적자|인수|합병|매각|공급|사상\s*최대")
 
 def _news_norm(t: str) -> str:
     return re.sub(r"[^가-힣0-9a-zA-Z]", "", t or "")[:36]
 
+def _news_bigrams(s: str) -> set:
+    t = re.sub(r"\s+", "", s or "")
+    return {t[i:i+2] for i in range(len(t) - 1)}
+
+def _news_sim(a: str, b: str) -> float:
+    A, B = _news_bigrams(a), _news_bigrams(b)
+    if not A or not B:
+        return 0.0
+    inter = len(A & B)
+    return inter / (len(A) + len(B) - inter)
+
 def _surface_strong_news():
-    """뉴스피드의 '강한' 원문 뉴스(속보·특징주·확정·수주 등)를 원문+출처+섹터 카드로 타임라인에 추가.
-    Gemini 요약이 5개만 순서대로 받아 중요뉴스를 통째로 놓치던 문제 보완 — 실제 스쿠프를 원문 그대로 노출."""
+    """뉴스피드의 '강한' 원문 뉴스를 원문+출처+섹터+종목 카드로 타임라인에 직접 추가.
+    Gemini 요약이 5개만 순서대로 받아 중요뉴스(광주 반도체 클러스터 등)를 통째로 놓치던 문제 보완.
+    - 관심종목(stock_sector_map) 언급 or 재료성 키워드만 노출, 거버넌스·인사 뉴스는 제외
+    - 여러 채널이 동시에 쏟아낸 뉴스(클러스터 크기)를 중요도로 봐 상위는 important=맨앞 고정+뱃지"""
     try:
         data = _NEWS_FEED.get("data")
         if not data:
             return
         today = datetime.now().strftime("%m/%d")
-        stored = _briefing_load(BRIEFING_PATH)
-        seen = {_news_norm(it.get("headline", "")) for it in (stored.get("items") or [])}
-        added = []
+        smap, stocks_set = {}, set()
+        try:
+            import telegram_news_filter as _tnf
+            with open(os.path.join(ROOT, "pipeline", "atoms", "stock_sector_map.json"),
+                      encoding="utf-8") as f:
+                smap = json.load(f)
+            stocks_set = _tnf.clean_stock_names(smap)
+        except Exception:
+            pass
+        cands = []
         for sec in (data.get("sectors") or []):
             sector = sec.get("sector") or "시장"
             rows = list(sec.get("news") or [])
@@ -1663,20 +1687,38 @@ def _surface_strong_news():
             for n in rows:
                 t = (n.get("title") or "").strip()
                 d = (n.get("date") or "")
-                if not t or not d.startswith(today) or not _STRONG_RE.search(t):
+                if not t or not d.startswith(today):
                     continue
-                key = _news_norm(t)
-                if key in seen:
+                if not _STRONG_RE.search(t) or _EXCLUDE_RE.search(t):
                     continue
-                seen.add(key)
-                added.append({
-                    "ts": (d.split(" ")[-1][:5] if " " in d else datetime.now().strftime("%H:%M")),
-                    "severity": "red", "headline": t, "body": "",
-                    "sector": sector, "source": n.get("src") or n.get("source") or "뉴스",
-                    "kind": "raw_news"})
-        added.sort(key=lambda x: x["ts"])   # 오래된→최신 순으로 append(내부 prepend라 최신이 맨앞 됨)
-        for it in added[-20:]:              # 한 사이클 최대 20건
-            _briefing_append(BRIEFING_PATH, it)
+                stock = next((s for s in stocks_set if s and s in t), "")
+                if not stock and not _MATERIAL_RE.search(t):   # 관심종목도 재료성도 없으면 버림
+                    continue
+                cands.append({"t": t, "d": d, "src": n.get("src") or n.get("source") or "뉴스",
+                              "sector": (smap.get(stock) or sector), "stock": stock})
+        # 유사한 것끼리 클러스터 → 대표 1개 + 크기(=여러 채널 동시보도=중요도)
+        clusters = []
+        for c in cands:
+            cl = next((x for x in clusters if _news_sim(x["items"][0]["t"], c["t"]) >= 0.35), None)
+            (cl["items"].append(c) if cl else clusters.append({"items": [c]}))
+        reps = []
+        for cl in clusters:
+            it = cl["items"][0]; size = len(cl["items"])
+            base = 3 if "속보" in it["t"] else 2 if "특징주" in it["t"] else 1
+            reps.append({**it, "score": base + size + (2 if it["stock"] else 0), "cluster": size})
+        reps.sort(key=lambda x: x["score"], reverse=True)
+        for i, r in enumerate(reps):
+            r["important"] = (i < 3 and r["score"] >= 5)   # 상위 + 다채널 보도만 '중요'
+        stored = _briefing_load(BRIEFING_PATH)
+        seen = {_news_norm(x.get("headline", "")) for x in (stored.get("items") or [])}
+        new = [r for r in reps if _news_norm(r["t"]) not in seen]
+        new.sort(key=lambda x: x["d"])
+        for r in new[-20:]:
+            _briefing_append(BRIEFING_PATH, {
+                "ts": (r["d"].split(" ")[-1][:5] if " " in r["d"] else datetime.now().strftime("%H:%M")),
+                "severity": "red", "headline": r["t"], "body": "",
+                "sector": r["sector"], "stock": r["stock"], "source": r["src"],
+                "important": bool(r.get("important")), "kind": "raw_news"})
     except Exception:
         pass
 
