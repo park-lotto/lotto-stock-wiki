@@ -132,6 +132,32 @@ def get_live_keys(group: str) -> list[str]:
     return [k for i, k in enumerate(get_keys(group)) if i not in exhausted]
 
 
+def _cascade_groups(group: str) -> list[str]:
+    """폴백 순서: 해당 그룹 먼저 → 나머지 그룹(정의 순서)."""
+    return [group] + [g for g in _GROUP_ENV_PREFIX if g != group]
+
+
+def _owner_group(key: str) -> str | None:
+    """키가 속한 그룹을 찾는다(cross-group 소진 기록용)."""
+    for g in _GROUP_ENV_PREFIX:
+        if key in get_keys(g):
+            return g
+    return None
+
+
+def get_live_keys_cascade(group: str) -> list[str]:
+    """primary 그룹 라이브 키 우선, 소진 시 다른 그룹 라이브 키로 순차 폴백(18개 전체 풀).
+    한 작업의 그룹이 다 말라도 놀고 있는 다른 그룹 키를 빌려 쓴다."""
+    seen: set[str] = set()
+    out: list[str] = []
+    for g in _cascade_groups(group):
+        for k in get_live_keys(g):
+            if k not in seen:
+                seen.add(k)
+                out.append(k)
+    return out
+
+
 _client_cache: dict[str, genai.Client] = {}
 _active_idx: dict[str, int] = {}
 
@@ -144,13 +170,13 @@ def get_client_for_key(key: str) -> genai.Client:
 
 
 def get_client(group: str) -> genai.Client:
-    """그룹의 현재 활성(인덱스 기반) 키로 클라이언트 반환."""
+    """그룹의 현재 활성 키로 클라이언트 반환. 그룹이 다 소진되면 다른 그룹 키로 폴백."""
     all_keys = get_keys(group)
     if not all_keys:
         raise RuntimeError(f"key_vault: '{group}' 그룹에 설정된 Gemini 키가 없습니다 (.env 확인)")
-    live = get_live_keys(group)
+    live = get_live_keys_cascade(group)  # cross-group 폴백
     if not live:
-        live = all_keys[-1:]
+        live = all_keys[-1:]  # 전체 소진 시 최후로 마지막 키 시도
     idx = min(_active_idx.get(group, 0), len(live) - 1) if live else 0
     key = live[idx] if live else ""
     return get_client_for_key(key)
@@ -165,27 +191,30 @@ def reset(group: str) -> None:
 
 
 def rotate(group: str) -> bool:
-    """현재 활성 키를 소진 처리하고 다음 살아있는 키로 교체.
-    교체 성공 시 True, 그룹 전체 소진이면 알림 발송 후 False."""
-    live_before = get_live_keys(group)
+    """현재 활성 키를 소진 처리하고 다음 살아있는 키로 교체(그룹 소진 시 다른 그룹으로 폴백).
+    18개 전체 풀에 살아있는 키가 남으면 True, 전부 소진이면 알림 후 False."""
+    live_before = get_live_keys_cascade(group)
+    total = sum(len(get_keys(g)) for g in _GROUP_ENV_PREFIX)
     if not live_before:
-        _tg_alert(f"🚨 <b>[{group}] Gemini 키 전체 소진</b>\n총 {len(get_keys(group))}개 모두 일일 한도 초과")
+        _tg_alert(f"🚨 <b>[{group}] Gemini 키 전체 소진</b>\n전 그룹 총 {total}개 모두 일일 한도 초과")
         return False
 
     idx = min(_active_idx.get(group, 0), len(live_before) - 1)
     old_key = live_before[idx]
-    old_num = get_keys(group).index(old_key) + 1
-    mark_exhausted(group, old_key)
+    owner = _owner_group(old_key) or group
+    old_num = get_keys(owner).index(old_key) + 1
+    mark_exhausted(owner, old_key)  # 빌려 쓴 키는 소유 그룹에 소진 기록
 
-    live_after = get_live_keys(group)
+    live_after = get_live_keys_cascade(group)
     if live_after:
         _active_idx[group] = 0
+        note = "" if owner == group else f" [{owner} 그룹 키 차용]"
         _tg_alert(
-            f"⚠️ <b>[{group}] Gemini 키 #{old_num} 일일 한도 소진</b>\n"
-            f"→ 다음 키로 교체 (잔여 {len(live_after)}개)"
+            f"⚠️ <b>[{group}] Gemini 키 #{old_num}{note} 일일 한도 소진</b>\n"
+            f"→ 다음 키로 교체 (전체 풀 잔여 {len(live_after)}개)"
         )
         return True
-    _tg_alert(f"🚨 <b>[{group}] Gemini 키 전체 소진</b>\n총 {len(get_keys(group))}개 모두 일일 한도 초과")
+    _tg_alert(f"🚨 <b>[{group}] Gemini 키 전체 소진</b>\n전 그룹 총 {total}개 모두 일일 한도 초과")
     return False
 
 
