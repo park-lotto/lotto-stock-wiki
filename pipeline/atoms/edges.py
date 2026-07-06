@@ -42,6 +42,7 @@ def insert_edge(src, dst, relation_type, source, source_atom_id=None, confidence
 
 
 def assets_in_sector(sector: str) -> list:
+    init_edges()  # 테이블 미생성 시에도 [] 안전 반환(그래프-홉 미작동, 침묵 금지 유지)
     conn = _db.get_conn()
     rows = conn.execute("SELECT DISTINCT src FROM atom_edges WHERE dst=?", (sector,)).fetchall()
     conn.close()
@@ -49,6 +50,7 @@ def assets_in_sector(sector: str) -> list:
 
 
 def sectors_of_asset(asset: str) -> list:
+    init_edges()
     conn = _db.get_conn()
     rows = conn.execute("SELECT DISTINCT dst FROM atom_edges WHERE src=?", (asset,)).fetchall()
     conn.close()

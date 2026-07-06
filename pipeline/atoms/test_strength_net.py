@@ -141,3 +141,34 @@ def test_movers_from_heatmap_sorted_desc():
     ])
     movers = sn.movers_from_heatmap(hm, min_rate=3.0)
     assert [m["name"] for m in movers] == ["B", "A"]
+
+# --- Task 3 (Phase2): 그래프-홉 귀속 ---
+
+def test_attribute_mover_graph_hop_via_sector():
+    mover = {"name": "가온칩스", "code": "1", "sector": "반도체", "rate": 10.0}
+    atoms = {"SK하이닉스": [{"id": "h1", "content": "HBM 수급 강세", "signal": "bullish",
+             "source_type": "news", "source_name": "N", "source_trust": "B", "strength_score": 3}]}
+    r = sn.attribute_mover(mover, days=3, query_fn=_fake_query(atoms),
+                           related_fn=lambda sector: ["SK하이닉스"] if sector == "반도체" else [])
+    assert r["attributed"] is True
+    assert r["via"] == "SK하이닉스"
+    assert r["trust"] == "🔵"
+    assert "SK하이닉스" in r["issue"]
+    assert r["priority"] == 1
+
+def test_attribute_mover_graph_hop_none_still_unattributed():
+    mover = {"name": "외톨이주", "code": "9", "sector": "기타", "rate": 8.0}
+    r = sn.attribute_mover(mover, days=3, query_fn=_fake_query({}),
+                           related_fn=lambda sector: [])
+    assert r["status"] == "unattributed"
+    assert r["priority"] == 0
+
+def test_direct_attribution_still_wins_over_graph():
+    mover = {"name": "직접주", "code": "2", "sector": "반도체", "rate": 9.0}
+    atoms = {"직접주": [{"id": "d1", "content": "자체 대형수주", "signal": "bullish",
+             "source_type": "공시", "source_name": "DART", "source_trust": "A", "strength_score": 5}]}
+    r = sn.attribute_mover(mover, days=3, query_fn=_fake_query(atoms),
+                           related_fn=lambda sector: ["SK하이닉스"])
+    assert r["attributed"] is True
+    assert r.get("via") is None
+    assert r["trust"] == "🟢"
