@@ -644,16 +644,29 @@ def build_heatmap(top_n: int = 3, mode: str = "regular") -> dict:
         ct_name = ct.get("name", "")
         if not ct_name or ct_name in existing_names:
             continue
+        removed_c = set(removed_map.get(ct_name, []))   # 편집모달 × 삭제 반영
         ct_items, ct_rates = [], []
         for s in ct.get("stocks", []):
             c = s.get("code", "")
-            if not c:
+            if not c or c in removed_c:
                 continue
             p = prices.get(c) or {}
             rate = _rate_for(c, p)
             ct_items.append({"name": s.get("name", c), "code": c,
                              "change_rate": rate, "price": p.get("price", 0)})
             ct_rates.append(rate)
+        # 편집모달에서 추가한 종목(extra_stocks) 반영 — 일반섹터·서브타일과 동일 배선.
+        # 이게 빠져서 커스텀 타일은 종목 추가·저장해도 히트맵에 안 나타나던 버그 수정.
+        exist_c = {x["code"] for x in ct_items}
+        for es in extra_map.get(ct_name, []):
+            c = es.get("code", "")
+            if c and c not in exist_c and c not in removed_c:
+                p = prices.get(c) or {}
+                rate = _rate_for(c, p)
+                ct_items.append({"name": es.get("name", c), "code": c,
+                                 "change_rate": rate, "price": p.get("price", 0)})
+                ct_rates.append(rate)
+                exist_c.add(c)
         avg = round(sum(ct_rates) / len(ct_rates), 2) if ct_rates else 0
         sectors.append({"name": ct_name, "avg_rate": avg,
                         "stocks": ct_items, "parent": ct.get("parent", "커스텀")})
