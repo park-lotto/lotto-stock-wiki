@@ -181,32 +181,28 @@ def _yf_price_bars(ticker: str, interval: str = "15m") -> dict:
     return data
 
 
-def _run_with_timeout(fn, timeout: float, default=None):
-    """fn을 별도(1회용) 스레드로 실행 — timeout 내 못 끝나면 default 반환, 스레드는 방치.
-
-    yfinance는 스레드풀 동시호출 중 응답 없이 멈추는 경우가 보고돼 있다(라이브러리 내부
-    세션 공유 이슈). 이 감싸기 없이 서버의 공용 ThreadPoolExecutor(market_flow 요청마다
-    새로 만들고 with-블록 종료 시 전체 완료를 기다림) 안에서 직접 호출하면, yfinance가
-    멈출 때 그 with-블록 자체가 영원히 안 끝나 market_flow 응답 전체가 멈춘다
-    (2026-07-06 나스닥선물 일봉 공란 + 브리핑 지수·투자자·프로그램 0값 동시발생 사고 원인).
-    """
-    import concurrent.futures as _cf
-    ex = _cf.ThreadPoolExecutor(max_workers=1)
-    fut = ex.submit(fn)
-    try:
-        return fut.result(timeout=timeout)
-    except Exception:
-        return default
-    finally:
-        ex.shutdown(wait=False)
+_YF_DAILY_SCRIPT = r"""
+import sys, json
+import yfinance as yf
+ticker, days = sys.argv[1], int(sys.argv[2])
+hist = yf.download(ticker, period=f"{days+15}d", interval="1d", progress=False, auto_adjust=True)
+out = []
+for v in hist["Close"].values:
+    val = float(v) if not hasattr(v, "__iter__") else float(v[0])
+    if val > 0:
+        out.append(round(val, 4))
+print(json.dumps(out[-days:]))
+"""
 
 
 def _yf_daily_bars(ticker: str, days: int = 30) -> list:
     """yfinance 일봉 종가(과거→최신) 최근 days개. 1시간 캐시(일봉은 자주 안 바뀜).
 
-    yfinance는 스레드풀 동시호출 중 일시적으로 빈 결과를 주거나 멈추는 경우가 있어,
-    (1) 8초 하드 타임아웃으로 감싸고 (2) 실패(빈 리스트)는 캐시에 저장하지 않고
-    예전 값을 유지 — 실패가 1시간 동안 굳는 것 방지.
+    yfinance는 서버 공용 ThreadPoolExecutor 안에서 동시호출되면 내부적으로 응답 없이
+    멈추는 경우가 확인됐다(스레드 격리만으로는 GIL/내부락 때문에 완전히 못 막음 — 2026-07-06
+    나스닥선물 일봉 공란 + 브리핑 지수·투자자·프로그램 0값 동시발생 사고). scrape_all_prevclose()와
+    같은 패턴으로 완전히 별도 프로세스(subprocess)에서 실행해 타임아웃 시 OS 레벨로 강제 종료
+    — 메인 서버 프로세스의 스레드/GIL에 어떤 영향도 주지 않는다.
     """
     now = time.time()
     key = f"__yfd_{ticker}__"
@@ -214,18 +210,17 @@ def _yf_daily_bars(ticker: str, days: int = 30) -> list:
     if cached and now - cached["ts"] < 3600:
         return cached["data"]
 
-    def _dl():
-        import yfinance as yf
-        hist = yf.download(ticker, period=f"{days + 15}d", interval="1d",
-                           progress=False, auto_adjust=True)
-        out = []
-        for v in hist["Close"].values:
-            val = float(v) if not hasattr(v, "__iter__") else float(v[0])
-            if val > 0:
-                out.append(round(val, 4))
-        return out[-days:]
-
-    bars = _run_with_timeout(_dl, timeout=8, default=[]) or []
+    bars = []
+    try:
+        import subprocess, sys as _sys, json as _json
+        r = subprocess.run(
+            [_sys.executable, "-c", _YF_DAILY_SCRIPT, ticker, str(days)],
+            capture_output=True, text=True, timeout=10,
+        )
+        if r.returncode == 0 and r.stdout.strip():
+            bars = _json.loads(r.stdout.strip())
+    except Exception:
+        bars = []
     if bars:
         _CACHE[key] = {"data": bars, "ts": now}
         return bars
