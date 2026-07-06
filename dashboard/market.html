@@ -3024,10 +3024,11 @@ function _taeriniHtml(d){
     const spk=s.osc.series&&s.osc.series.length>1
       ? `<div id="tk-spk-wrap" style="display:${_oscSpkOpen?"":"none"}">`
         +`<div class="tk-spk">${_sparkSvg(s.osc.series)}</div>`
-        +`<div class="tk-spk-cap"><span>← 30주</span><span style="color:${trCol}">${H(tr)}</span></div></div>`
+        +`<div class="tk-spk-cap"><span>← ${d.live?"최근 30일":"30주"}</span><span style="color:${trCol}">${H(tr)}</span></div></div>`
       : "";
+    const liveBadge=d.live?` <span style="color:#f0a500;font-size:10px" title="엑셀 미수록 종목 — KIS 일별 외인·기관 순매수로 실시간 계산(엑셀 %ile과 다른 별도 지표)">⚡실시간</span>`:"";
     rows.push(`<div class="tk-row tk-osc-row" onclick="_toggleSpark()"><div class="tk-top">`
-      +`<span class="tk-lab hint" title="${H(tip)}">수급빈집${car}</span>`
+      +`<span class="tk-lab hint" title="${H(tip)}">수급빈집${liveBadge}${car}</span>`
       +`<span class="tk-val">${C(g||"-",col)}${pct}</span></div>${spk}</div>`);
   }
   // RS
