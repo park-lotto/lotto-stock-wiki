@@ -3298,7 +3298,7 @@ def _weather_tick():
             _briefing_set_insight(BRIEFING_PATH, {
                 "ts": now.strftime("%H:%M"),
                 "verdict": st["verdict"], "narrative": st["narrative"],
-                "turning_points": st["turning_points"][-6:],
+                "turning_points": st["turning_points"][-12:],
                 "session_phase": phase})
             row = {"ts": now.strftime("%H:%M"), "fired_events": events,
                    "models": list(results.keys()), "noise_flag": False,
