@@ -33,6 +33,21 @@ log.md에 `투경 해제 예측 검증` / `종가배팅 시스템` 키워드 있
 
 ---
 
+## 🚢 대시보드 배포 규칙 (필수 — 안 지키면 "왜 안 고쳐지나" 재발)
+
+라이브 대시보드 = **stockbrain1.duckdns.org** (서버 `ubuntu@3.39.179.148`, systemd `stockbrain`).
+
+1. **브랜치는 무조건 `main`.** 서버는 `main`만 추적한다. `feat/*` 등 다른 브랜치에 커밋하면 **서버에 영영 안 감**. 커밋 전 `git branch --show-current`로 main 확인.
+2. **서버 파일 직접수정(핫패치) 금지.** git에 안 남아 다음 pull에 덮인다. 무조건 로컬 → 커밋 → `git push origin main`.
+3. **배포는 자동.** 서버 크론(`deploy/auto_deploy.sh`, 3분)이 새 커밋 감지 시 pull+조건부재시작. 즉 **push까지만 하면 3분 내 자동반영.** 급하면 서버에서 `git pull --ff-only origin main && sudo systemctl restart stockbrain`.
+4. **세션 끝 = 반드시 커밋+푸시.** "커밋할까요?"로 방치 금지. 남기면 다른 세션·PC와 꼬인다.
+5. **동시에 여러 세션/PC가 같은 워킹트리 편집 금지** (커밋 섞임·작업 유실).
+6. CRLF/데이터 노이즈는 `.gitattributes`(eol=lf)로 봉인됨. `raw/`는 git추적 유지(PC간 공유).
+
+> 상세·SSH키 위치·트러블슈팅: memory `reference_deploy_truth_branch_ssh`
+
+---
+
 ## ⚡ 토큰 절약 규칙
 
 | 툴 | 금지 | 대신 |
