@@ -41,3 +41,11 @@ def attribute_mover(mover: dict, days: int = 3, query_fn=None) -> dict:
             "trust": trust_tier(top), "source": top.get("source_name"),
             "atom_ids": [a["id"] for a in hits], "status": "attributed",
             "priority": 1, "flag": None}
+
+def scan_movers(movers: list, days: int = 3, query_fn=None) -> list:
+    """모든 강세 종목을 귀속 판정. 입력 종목은 하나도 누락하지 않는다(침묵 금지)."""
+    return [attribute_mover(m, days=days, query_fn=query_fn) for m in movers]
+
+def rank_results(results: list) -> list:
+    """정렬 반전: 미귀속(priority 0)을 최상단, 각 그룹 내 rate 내림차순."""
+    return sorted(results, key=lambda r: (r.get("priority", 1), -(r.get("rate") or 0)))

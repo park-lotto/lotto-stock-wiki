@@ -60,3 +60,21 @@ def test_attribute_mover_picks_highest_strength_atom():
     r = sn.attribute_mover(mover, days=3, query_fn=_fake_query(atoms))
     assert r["issue"] == "강한 공시"
     assert r["atom_ids"][0] == "s"
+
+def test_scan_movers_never_drops_any_mover():
+    movers = [
+        {"name": "A", "code": "1", "sector": "s", "rate": 5.0},
+        {"name": "B", "code": "2", "sector": "s", "rate": 9.0},
+    ]
+    results = sn.scan_movers(movers, days=3, query_fn=_fake_query({}))
+    assert len(results) == len(movers)  # 침묵 금지: 하나도 누락 안 됨
+
+def test_rank_results_unattributed_pinned_to_top():
+    results = [
+        {"name": "attr", "rate": 20.0, "priority": 1},
+        {"name": "miss1", "rate": 6.0, "priority": 0},
+        {"name": "miss2", "rate": 15.0, "priority": 0},
+    ]
+    ranked = sn.rank_results(results)
+    assert [r["name"] for r in ranked] == ["miss2", "miss1", "attr"]
+    # 미귀속이 등락률 낮아도 귀속보다 위. 미귀속 내부는 rate 내림차순.
