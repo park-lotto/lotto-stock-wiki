@@ -2351,6 +2351,16 @@ def api_net_unattributed(top_n: int = 5, days: int = 3, min_rate: float = 3.0):
         return JSONResponse(content={"error": str(e)}, status_code=503)
 
 
+@app.get("/api/net/hunt")
+def api_net_hunt(name: str, days: int = 3):
+    """원인추적 캐스케이드: 미귀속 종목의 원인을 소스 신뢰등급 순으로 계단식 수색(공시→뉴스→텔레→종토방→LLM추론)."""
+    try:
+        from pipeline.atoms import cause_hunt
+        return JSONResponse(content=cause_hunt.hunt_with_llm(name, days=days))
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=503)
+
+
 # ── 섹터 커스텀 편집 ──────────────────────────────────────
 SECTOR_CUSTOM_PATH = os.path.join(ROOT, "pipeline", "sector_custom.json")
 SECTOR_SNAP_DIR    = os.path.join(ROOT, "pipeline", "sector_custom_snapshots")
@@ -2855,6 +2865,14 @@ def api_sector_stocks(sector: str = ""):
             for nm, _parent, sts in _collect_split_subs(raw_full) + _collect_surfaced_subs(raw_full):
                 if nm == sector:
                     base = [{"name": s["name"], "code": s["code"]} for s in sts]
+                    break
+        if not base:
+            # 커스텀 타일(사용자가 만든 테마)은 watchlist/서브에 없고 custom_tiles[].stocks에 있다.
+            # 이걸 안 읽어서 편집모달이 커스텀 타일을 "종목 없음"으로 표시하던 버그 수정.
+            for ct in custom.get("custom_tiles", []):
+                if ct.get("name") == sector:
+                    base = [{"name": s["name"], "code": s["code"]}
+                            for s in ct.get("stocks", []) if s.get("code")]
                     break
         extra = custom.get("extra_stocks", {}).get(sector, [])
         removed = custom.get("removed_stocks", {}).get(sector, [])
