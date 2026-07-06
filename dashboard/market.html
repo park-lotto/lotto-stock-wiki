@@ -1513,7 +1513,7 @@ let _briefingLoaded=false;
 
 // 오늘의 타임라인(뉴스+시장이벤트 병합) — 5개 박스 아래 별도 가로줄(mkt-below-panel)
 let _selectedTimelineIdx=null;   // 가로 카드스트립에서 선택된 카드(상세 표시용)
-const _collapsedCards=new Set();  // 'timeline' — 세션 전용(새로고침 시 초기화)
+const _collapsedCards=new Set(["tl_market","tl_news"]);  // 2줄 기본 접힘 — 세션 전용(새로고침 시 초기화)
 
 function toggleTimelineSelect(i){
   _selectedTimelineIdx=(_selectedTimelineIdx===i)?null:i;
@@ -1619,47 +1619,51 @@ function renderBelowPanel(){
   if(!container)return;
   const items=_buildTimeline();
   const _TIMELINE_PREVIEW_N=8;
-  const cardsArr=items.map((it,i)=>{
+  // 원본 인덱스(i) 유지 — 상세보기·선택 로직이 merged items 인덱스를 참조
+  const mkCard=(it,i,isLatest)=>{
       const isEvent=it.type==="event";
       const sev=isEvent?"sev-event":it.severity==="red"?"sev-red":it.severity==="yellow"?"sev-yellow":"sev-gray";
       const expandable=!!it.body;
       const selected=_selectedTimelineIdx===i;
       const extraTag=it.extra?`<span class="tl-extra">+${it.extra}번 더</span>`:"";
       const emoji=isEvent?(it.major?"⭐":"📍"):(it.severity==="red"?"🔴":it.severity==="yellow"?"🟡":"⚪");
-      const isLatest=i===0;   // items는 최신순 정렬 → 맨 앞이 가장 최근
       return `<div class="tl-card ${sev} ${isEvent?"tl-event":"tl-news"}${isLatest?" tl-latest":""}${selected?" tl-selected":""}"
         ${expandable?`onclick="toggleTimelineSelect(${i})"`:""}>
         ${isLatest?`<span class="tl-latest-badge">NEW</span>`:""}
         <div class="tl-ts">${/^\d{1,2}:\d{2}$/.test(it.ts)?esc(it.ts):""}</div>
         <div class="tl-head">${emoji} ${esc(it.text)}${extraTag}</div>
       </div>`;
-    });
-  const cardsHtml=cardsArr.length
-    ? cardsArr.join("")
-    :_briefingLoaded
-      ?`<div style="color:#888;font-size:13px;padding:8px;">아직 타임라인 없음</div>`
-      :`<div style="color:#888;font-size:13px;padding:8px;">불러오는 중...</div>`;
-  // 미리보기(접힘): 가장 최근 N개만 — 오래된 항목보다 지금 무슨 일이 있었는지가 더 유용
-  // (items는 최신순으로 정렬돼 있으므로 앞에서부터 N개 = 가장 최근)
-  const cardsPreview=cardsArr.length
-    ? cardsArr.slice(0,_TIMELINE_PREVIEW_N).join("")
-    : cardsHtml;
+  };
+  // 시장상황(이벤트) / 뉴스이슈 두 갈래로 분리
+  const mkt=[], nws=[];
+  items.forEach((it,i)=>{ (it.type==="event"?mkt:nws).push({it,i}); });
   const selectedItem=(_selectedTimelineIdx!=null)?items[_selectedTimelineIdx]:null;
   const timelineDetail=(selectedItem&&selectedItem.body)
     ?`<div class="tl-detail"><span class="tl-detail-ts">${esc(selectedItem.ts)}</span> ${esc(selectedItem.text)}
       <div class="bi-body">${esc(selectedItem.body)}</div></div>`
     :"";
-
-  const tlCollapsed=_collapsedCards.has("timeline");
-  container.innerHTML=`
-    <div class="mkt-card" style="flex:1;min-width:0;">
+  const strip=(title,emoji,id,list)=>{
+    const collapsed=_collapsedCards.has(id);
+    const cards=list.map((x,idx)=>mkCard(x.it,x.i,idx===0));   // 각 스트립 맨앞=최신=NEW
+    const more=Math.max(0,cards.length-_TIMELINE_PREVIEW_N);
+    const body=cards.length
+      ?(collapsed?cards.slice(0,_TIMELINE_PREVIEW_N):cards).join("")
+      :(_briefingLoaded?`<div style="color:#888;font-size:12px;padding:8px;">아직 없음</div>`
+                       :`<div style="color:#888;font-size:12px;padding:8px;">불러오는 중...</div>`);
+    return `<div class="mkt-card" style="min-width:0;">
       <div class="card-hd" style="font-size:15px;font-weight:700;color:#ddd;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
-        <span>🕐 오늘의 타임라인 (07:30~, 클릭시 상세)</span>
-        <span class="card-fold-btn" onclick="toggleCardCollapse('timeline')">${tlCollapsed?`▶ +${Math.max(0,items.length-_TIMELINE_PREVIEW_N)}개 더`:"▼ 접기"}</span>
+        <span>${emoji} ${title}</span>
+        <span class="card-fold-btn" onclick="toggleCardCollapse('${id}')">${collapsed?(more>0?`▶ 펼치기 (+${more})`:""):"▼ 접기"}</span>
       </div>
-      <div class="timeline-strip ${tlCollapsed?"tl-strip-fill":"tl-strip-wrap"}">${tlCollapsed?cardsPreview:cardsHtml}</div>
-      ${timelineDetail}
+      <div class="timeline-strip ${collapsed?"tl-strip-fill":"tl-strip-wrap"}">${body}</div>
     </div>`;
+  };
+  // 위=시장상황, 아래=뉴스이슈 (컨테이너가 flex-row라 column으로 감싸 위/아래 배치)
+  container.innerHTML=`<div style="display:flex;flex-direction:column;gap:10px;width:100%;min-width:0;">
+    ${strip("시장상황 타임라인","🕐","tl_market",mkt)}
+    ${strip("뉴스이슈 타임라인","📰","tl_news",nws)}
+    ${timelineDetail}
+  </div>`;
 }
 
 function toggleCardCollapse(id){

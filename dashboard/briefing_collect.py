@@ -4,16 +4,23 @@ from datetime import datetime
 
 
 def recent_news_headlines(news_feed_data: dict | None, limit: int = 5) -> list[str]:
+    """당일 발행 뉴스만 반환 — 며칠 전 뉴스가 현재시각으로 타임라인에 뜨던 문제 방지.
+    뉴스 date 포맷은 'MM/DD HH:MM'(news_feed._fmt_rss). date 없으면 확신 불가라 제외."""
     if not news_feed_data:
         return []
+    today = datetime.now().strftime("%m/%d")
+
+    def _is_today(n):
+        return (n.get("date") or "").strip().startswith(today)
+
     out = []
     for sector in news_feed_data.get("sectors") or []:
         for n in sector.get("news") or []:
-            if n.get("title"):
+            if n.get("title") and _is_today(n):
                 out.append(n["title"])
         for stock in sector.get("stocks") or []:
             for n in stock.get("news") or []:
-                if n.get("title"):
+                if n.get("title") and _is_today(n):
                     out.append(n["title"])
     return out[:limit]
 
