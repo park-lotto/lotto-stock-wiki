@@ -3168,6 +3168,7 @@ def _weather_tick():
         _weather["synth_count"] = 0
     _weather["state"] = st
 
+    mf_ready = _prewarm_cache.get("market_flow") is not None
     mf = (_prewarm_cache.get("market_flow") or {}).get("data") or {}
     hm = (_heatmap_cache.get("all") or {}).get("data") or {}
     sectors = hm.get("sectors", []) if isinstance(hm, dict) else []
@@ -3177,9 +3178,6 @@ def _weather_tick():
                                ts=now.strftime("%H:%M"))
     prev = st.get("baseline")
     live_ok = curr["idx"]["J"]["price"] > 0
-    print(f"[weather_tick] {now.strftime('%H:%M:%S')} mf_keys={sorted(mf.keys())} "
-          f"J_price_raw={mf.get('J_price')} J_investor_raw={mf.get('J_investor')} "
-          f"curr_J_price={curr['idx']['J']['price']} live_ok={live_ok}", flush=True)
 
     events = []
     if live_ok:
@@ -3220,7 +3218,12 @@ def _weather_tick():
         except Exception:
             pass
     heartbeat = phase != "weekend" and time.time() - _weather["last_synth_ts"] >= 1800
-    fire = bool(events) or (phase_changed and phase != "weekend") or (heartbeat and (live_ok or news))
+    # mf_ready 없으면(서버 막 재시작해 프리워밍 캐시 아직 미충전) heartbeat/phase_changed로
+    # 절대 발동시키지 않는다 — 안 그러면 빈 mf(0값)를 "실시간 지표 전부 0"으로 잘못 서술한
+    # 인사이트가 저장돼, 실제 데이터가 돌아온 뒤에도 다음 heartbeat(최대 30분)까지 안 고쳐짐
+    # (2026-07-06: 배포 중 재시작을 여러 번 하면서 이 버그가 반복 재현됨).
+    fire = bool(events) or (mf_ready and phase_changed and phase != "weekend") or \
+           (mf_ready and heartbeat and (live_ok or news))
 
     if fire and (time.time() - _weather["last_synth_ts"] < _WEATHER_MIN_INTERVAL_S):
         fire = False
