@@ -582,6 +582,13 @@ def index():
         return f.read()
 
 
+@app.get("/net", response_class=HTMLResponse)
+def net_page():
+    """촘촘한 그물 대시보드 — 미귀속 강세 랭킹 + 촘촘함 지표 + 원인추적."""
+    with open(os.path.join(HERE, "net.html"), encoding="utf-8") as f:
+        return f.read()
+
+
 @app.get("/api/morning")
 def api_morning():
     return JSONResponse(content=load_morning())

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>촘촘한 그물 — 미귀속 강세</title>
+<style>
+  :root{ --bg:#0d1117; --panel:#161b22; --line:#21262d; --ink:#e6edf3; --dim:#8b949e;
+         --red:#f85149; --grn:#3fb950; --amber:#d29922; --blue:#58a6ff; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 -apple-system,"Segoe UI",Roboto,"Noto Sans KR",sans-serif}
+  .wrap{max-width:1080px;margin:0 auto;padding:20px 16px 60px}
+  h1{font-size:20px;margin:0 0 2px} .sub{color:var(--dim);font-size:13px;margin-bottom:16px}
+  .controls{display:flex;flex-wrap:wrap;gap:14px;align-items:center;background:var(--panel);
+            border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:16px}
+  .controls label{font-size:12px;color:var(--dim);display:flex;flex-direction:column;gap:4px}
+  .controls input[type=number]{width:70px;background:var(--bg);border:1px solid var(--line);
+            color:var(--ink);border-radius:6px;padding:5px 7px}
+  .controls input[type=range]{width:130px}
+  button{background:var(--blue);color:#07101f;border:0;border-radius:7px;padding:8px 14px;
+         font-weight:600;cursor:pointer} button:hover{filter:brightness(1.1)}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:18px}
+  .tile{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+  .tile .k{color:var(--dim);font-size:12px} .tile .v{font-size:26px;font-weight:700;margin-top:2px}
+  .tile.bad .v{color:var(--red)} .tile.ok .v{color:var(--grn)}
+  .row{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);
+       border-radius:9px;padding:10px 12px;margin-bottom:7px}
+  .row.miss{border-color:#5c2a2a;background:#1b1113}
+  .rate{font-variant-numeric:tabular-nums;font-weight:700;width:66px;text-align:right}
+  .nm{font-weight:600;min-width:120px} .sec{color:var(--dim);font-size:12px}
+  .why{color:var(--dim);font-size:12.5px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .flag{color:var(--red);font-weight:600;font-size:12.5px}
+  .hunt{margin-left:auto;background:#21262d;color:var(--ink);padding:5px 10px;font-size:12px}
+  .huntbox{font-size:12.5px;color:var(--ink);background:#0b1220;border:1px solid var(--line);
+           border-radius:7px;padding:8px 10px;margin:-3px 0 8px 76px}
+  .tier{font-size:15px} .muted{color:var(--dim)}
+  .err{color:var(--red);padding:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🕸️ 촘촘한 그물 — 미귀속 강세</h1>
+  <div class="sub">이유를 못 찾은 강세가 최상단. 설명된 건 아래로. <span id="updated" class="muted"></span></div>
+
+  <div class="controls">
+    <label>최소 등락률(%)<input id="min_rate" type="number" value="5" step="0.5"></label>
+    <label>조회일수<input id="days" type="number" value="3"></label>
+    <label>연계 강도임계 <b id="mgsVal">3</b><input id="mgs" type="range" min="1" max="5" value="3"></label>
+    <button id="go">스캔</button>
+  </div>
+
+  <div class="tiles" id="tiles"></div>
+  <div id="list"></div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+$("#mgs").oninput = e => $("#mgsVal").textContent = e.target.value;
+
+function tile(k,v,cls){ return `<div class="tile ${cls||''}"><div class="k">${k}</div><div class="v">${v}</div></div>`; }
+
+async function scan(){
+  const mr=$("#min_rate").value, d=$("#days").value, mgs=$("#mgs").value;
+  $("#list").innerHTML = '<div class="muted" style="padding:10px">스캔 중… (라이브 시세 조회)</div>';
+  $("#tiles").innerHTML='';
+  let j;
+  try{
+    const r = await fetch(`/api/net/unattributed?min_rate=${mr}&days=${d}&min_graph_strength=${mgs}`);
+    j = await r.json();
+  }catch(e){ $("#list").innerHTML = `<div class="err">요청 실패: ${e}</div>`; return; }
+  if(j.error){ $("#list").innerHTML = `<div class="err">${j.error}</div>`; return; }
+  const m=j.metrics||{};
+  $("#updated").textContent = j.updated_at ? `· ${j.updated_at} 기준` : '';
+  $("#tiles").innerHTML =
+     tile("귀속률", Math.round((m.coverage_rate||0)*100)+"%")
+   + tile("총 강세", m.total||0)
+   + tile("미귀속", m.unattributed||0, "bad")
+   + tile("침묵 누락", (m.silent_miss||0), (m.silent_miss? "bad":"ok"));
+
+  const rows=(j.results||[]).map(r=>{
+    const miss = r.status==="unattributed";
+    const why = miss
+      ? `<span class="flag">${r.flag||'⚠️ 원인 미상'}</span>`
+      : `<span class="tier">${r.trust||''}</span> <span class="why">${(r.via?('연계←'+r.via+' '):'')+(r.issue||'')}</span>`;
+    const btn = miss ? `<button class="hunt" data-nm="${r.name}" data-d="${d}">원인추적</button>` : '';
+    return `<div class="row ${miss?'miss':''}">
+      <div class="rate">${(r.rate||0).toFixed(1)}%</div>
+      <div class="nm">${r.name}</div><div class="sec">${r.sector||''}</div>
+      ${why}${btn}</div>
+      <div class="huntbox" id="hb-${r.name}" style="display:none"></div>`;
+  }).join('');
+  $("#list").innerHTML = rows || '<div class="muted" style="padding:10px">강세 종목 없음(장 마감/임계 조정).</div>';
+
+  document.querySelectorAll(".hunt").forEach(b=> b.onclick = ()=>hunt(b.dataset.nm, b.dataset.d));
+}
+
+async function hunt(name, days){
+  const box=$("#hb-"+name); box.style.display="block";
+  box.innerHTML='<span class="muted">원인추적 캐스케이드 실행 중… (공시→뉴스→텔레→종토방→추론)</span>';
+  try{
+    const r=await fetch(`/api/net/hunt?name=${encodeURIComponent(name)}&days=${days}`);
+    const j=await r.json();
+    if(j.error){ box.innerHTML=`<span class="err">${j.error}</span>`; return; }
+    box.innerHTML = j.found
+      ? `<b>${j.tier||''} [${j.stage}]</b> ${j.cause||''} <span class="muted">(${j.source||''})</span>`
+      : `<span class="flag">${j.flag}</span>`;
+  }catch(e){ box.innerHTML=`<span class="err">${e}</span>`; }
+}
+
+$("#go").onclick = scan;
+scan();
+</script>
+</body>
+</html>
