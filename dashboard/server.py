@@ -1718,7 +1718,10 @@ def _surface_strong_news():
         # 유사한 것끼리 클러스터 → 대표 1개 + 크기(=여러 채널 동시보도=중요도)
         clusters = []
         for c in cands:
-            cl = next((x for x in clusters if _news_sim(x["items"][0]["t"], c["t"]) >= 0.35), None)
+            # 문장 유사 or 같은 종목(같은 이벤트일 가능성 큼)이면 한 클러스터로 병합 → 중복 카드 방지
+            cl = next((x for x in clusters
+                       if _news_sim(x["items"][0]["t"], c["t"]) >= 0.30
+                       or (c["stock"] and c["stock"] == x["items"][0]["stock"])), None)
             (cl["items"].append(c) if cl else clusters.append({"items": [c]}))
         reps = []
         for cl in clusters:
@@ -3212,7 +3215,7 @@ def _briefing_run_synthesis(alerts: list) -> None:
         atoms_content = _briefing_atoms(atoms_db_path, limit=5)
         stored = _briefing_load(BRIEFING_PATH)
         prior_headlines = [f"{it['headline']}" for it in (stored.get("items") or [])
-                           if it.get("kind") == "ai_brief"][:2]
+                           if it.get("kind") == "ai_brief"][:6]   # 최근 6개까지 넘겨 반복 억제
         prompt = _briefing_build_prompt(alerts, headlines, atoms_content, prior_headlines)
         if not prompt:
             return
@@ -3221,6 +3224,9 @@ def _briefing_run_synthesis(alerts: list) -> None:
             return
         parsed = _briefing_parse(res.get("analysis", ""))
         if not parsed:
+            return
+        # 최근 ai_brief와 너무 유사하면(같은 얘기 반복) 저장 안 함 — "중복이 계속" 방지
+        if any(_news_sim(parsed["headline"], p) >= 0.35 for p in prior_headlines):
             return
         severity = "red" if alerts else "yellow"
         _briefing_append(BRIEFING_PATH, {

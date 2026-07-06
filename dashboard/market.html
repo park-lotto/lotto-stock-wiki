@@ -1589,7 +1589,7 @@ function _bigramSim(a,b){
   return inter/(A.size+B.size-inter);
 }
 const _TIMELINE_START="07:30";
-const _TIMELINE_DUP_SIM=0.32;    // 이 이상이면 사실상 같은 문장 → 제거
+const _TIMELINE_DUP_SIM=0.28;    // 이 이상이면 사실상 같은 문장 → 제거(중복 완화 위해 하향)
 const _TIMELINE_THEME_SIM=0.16;  // 이 이상이면 같은 테마(다른 각도) → 최대 2개까지만 노출
 const _TIMELINE_THEME_CAP=3;   // 같은 테마 최대 노출(시장상황이 너무 적게 뜨던 것 완화)
 function _dedupBySim(list){
