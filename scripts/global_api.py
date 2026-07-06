@@ -181,34 +181,65 @@ def _yf_price_bars(ticker: str, interval: str = "15m") -> dict:
     return data
 
 
+def _run_with_timeout(fn, timeout: float, default=None):
+    """fn을 별도(1회용) 스레드로 실행 — timeout 내 못 끝나면 default 반환, 스레드는 방치.
+
+    yfinance는 스레드풀 동시호출 중 응답 없이 멈추는 경우가 보고돼 있다(라이브러리 내부
+    세션 공유 이슈). 이 감싸기 없이 서버의 공용 ThreadPoolExecutor(market_flow 요청마다
+    새로 만들고 with-블록 종료 시 전체 완료를 기다림) 안에서 직접 호출하면, yfinance가
+    멈출 때 그 with-블록 자체가 영원히 안 끝나 market_flow 응답 전체가 멈춘다
+    (2026-07-06 나스닥선물 일봉 공란 + 브리핑 지수·투자자·프로그램 0값 동시발생 사고 원인).
+    """
+    import concurrent.futures as _cf
+    ex = _cf.ThreadPoolExecutor(max_workers=1)
+    fut = ex.submit(fn)
+    try:
+        return fut.result(timeout=timeout)
+    except Exception:
+        return default
+    finally:
+        ex.shutdown(wait=False)
+
+
 def _yf_daily_bars(ticker: str, days: int = 30) -> list:
-    """yfinance 일봉 종가(과거→최신) 최근 days개. 1시간 캐시(일봉은 자주 안 바뀜)."""
+    """yfinance 일봉 종가(과거→최신) 최근 days개. 1시간 캐시(일봉은 자주 안 바뀜).
+
+    yfinance는 스레드풀 동시호출 중 일시적으로 빈 결과를 주거나 멈추는 경우가 있어,
+    (1) 8초 하드 타임아웃으로 감싸고 (2) 실패(빈 리스트)는 캐시에 저장하지 않고
+    예전 값을 유지 — 실패가 1시간 동안 굳는 것 방지.
+    """
     now = time.time()
     key = f"__yfd_{ticker}__"
-    if key in _CACHE and now - _CACHE[key]["ts"] < 3600:
-        return _CACHE[key]["data"]
-    bars = []
-    try:
+    cached = _CACHE.get(key)
+    if cached and now - cached["ts"] < 3600:
+        return cached["data"]
+
+    def _dl():
         import yfinance as yf
         hist = yf.download(ticker, period=f"{days + 15}d", interval="1d",
                            progress=False, auto_adjust=True)
+        out = []
         for v in hist["Close"].values:
             val = float(v) if not hasattr(v, "__iter__") else float(v[0])
             if val > 0:
-                bars.append(round(val, 4))
-        bars = bars[-days:]
-    except Exception:
-        bars = []
-    _CACHE[key] = {"data": bars, "ts": now}
-    return bars
+                out.append(round(val, 4))
+        return out[-days:]
+
+    bars = _run_with_timeout(_dl, timeout=8, default=[]) or []
+    if bars:
+        _CACHE[key] = {"data": bars, "ts": now}
+        return bars
+    return cached["data"] if cached else []
 
 
 def _naver_daily_bars(code: str, days: int = 30) -> list:
-    """네이버 fchart 일봉 종가(과거→최신) 최근 days개. 코스피선물류 일봉 소스 없어 KODEX200 근사용."""
+    """네이버 fchart 일봉 종가(과거→최신) 최근 days개. 코스피선물류 일봉 소스 없어 KODEX200 근사용.
+    실패(빈 리스트)는 캐시에 저장하지 않고 예전 값을 유지."""
     now = time.time()
     key = f"__nvd_{code}__"
-    if key in _CACHE and now - _CACHE[key]["ts"] < 3600:
-        return _CACHE[key]["data"]
+    cached = _CACHE.get(key)
+    if cached and now - cached["ts"] < 3600:
+        return cached["data"]
     bars = []
     try:
         import naver_api as _nv
@@ -216,8 +247,10 @@ def _naver_daily_bars(code: str, days: int = 30) -> list:
         bars = [c["close"] for c in candles][-days:]
     except Exception:
         bars = []
-    _CACHE[key] = {"data": bars, "ts": now}
-    return bars
+    if bars:
+        _CACHE[key] = {"data": bars, "ts": now}
+        return bars
+    return cached["data"] if cached else []
 
 
 # ──────────────────────────────────────────────

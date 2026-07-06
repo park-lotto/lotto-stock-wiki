@@ -2184,7 +2184,7 @@ def api_market_flow():
                 pass
 
         # 캐시 미스 → 직접 fetch (분봉·투자자·프로그램매매=KIS로 통일, 키움 서버키 미등록)
-        with ThreadPoolExecutor(max_workers=14) as ex:
+        with ThreadPoolExecutor(max_workers=22) as ex:
             tasks = {
                 "J_bars":     ex.submit(kis_api.get_index_minutebar, "0001", 15),
                 "Q_bars":     ex.submit(kis_api.get_index_minutebar, "1001", 15),
@@ -2930,7 +2930,7 @@ def _prewarm_worker():
             kiwoom_api._token()
         except Exception:
             pass
-        with ThreadPoolExecutor(max_workers=14) as ex:
+        with ThreadPoolExecutor(max_workers=22) as ex:
             tasks = {
                 "J_bars":     ex.submit(kis_api.get_index_minutebar, "0001", 15),
                 "Q_bars":     ex.submit(kis_api.get_index_minutebar, "1001", 15),
