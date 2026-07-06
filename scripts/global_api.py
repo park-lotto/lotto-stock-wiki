@@ -93,7 +93,10 @@ def _resample_bars(rows: list, interval_sec: int = 300, max_bars: int = 30) -> l
     if not rows:
         return []
     buckets = {}
-    for ts, price in rows:
+    for row in rows:
+        # kospif_day.js는 [ts, price, vol, ...] 4열, nq/kospif_ngt/oil은 [ts, price] 2열 —
+        # 튜플 언패킹(for ts, price in rows)은 4열에서 ValueError로 죽어 코스피선물 차트가 빈 값이 됐었다.
+        ts, price = row[0], row[1]
         bucket = int(ts) // (interval_sec * 1000)
         buckets[bucket] = float(price)
     bars = [buckets[k] for k in sorted(buckets.keys())]
@@ -178,35 +181,81 @@ def _yf_price_bars(ticker: str, interval: str = "15m") -> dict:
     return data
 
 
+def _yf_daily_bars(ticker: str, days: int = 30) -> list:
+    """yfinance 일봉 종가(과거→최신) 최근 days개. 1시간 캐시(일봉은 자주 안 바뀜)."""
+    now = time.time()
+    key = f"__yfd_{ticker}__"
+    if key in _CACHE and now - _CACHE[key]["ts"] < 3600:
+        return _CACHE[key]["data"]
+    bars = []
+    try:
+        import yfinance as yf
+        hist = yf.download(ticker, period=f"{days + 15}d", interval="1d",
+                           progress=False, auto_adjust=True)
+        for v in hist["Close"].values:
+            val = float(v) if not hasattr(v, "__iter__") else float(v[0])
+            if val > 0:
+                bars.append(round(val, 4))
+        bars = bars[-days:]
+    except Exception:
+        bars = []
+    _CACHE[key] = {"data": bars, "ts": now}
+    return bars
+
+
+def _naver_daily_bars(code: str, days: int = 30) -> list:
+    """네이버 fchart 일봉 종가(과거→최신) 최근 days개. 코스피선물류 일봉 소스 없어 KODEX200 근사용."""
+    now = time.time()
+    key = f"__nvd_{code}__"
+    if key in _CACHE and now - _CACHE[key]["ts"] < 3600:
+        return _CACHE[key]["data"]
+    bars = []
+    try:
+        import naver_api as _nv
+        candles = _nv.daily_candles(code, count=days + 15)
+        bars = [c["close"] for c in candles][-days:]
+    except Exception:
+        bars = []
+    _CACHE[key] = {"data": bars, "ts": now}
+    return bars
+
+
 # ──────────────────────────────────────────────
 # 공개 API
 # ──────────────────────────────────────────────
 
 def get_nasdaq_futures() -> dict:
     """나스닥100 선물 — esignal nq.js (실시간, 전일종가 대비 등락률)."""
-    return _esignal_cache(
+    d = dict(_esignal_cache(
         "https://esignal.co.kr/data/cache/nq.js",
         "__esignal_nq__", "nq",
         referer="https://esignal.co.kr/nasdaq100-futures/",
-    )
+    ))
+    d["bars_1d"] = _yf_daily_bars("NQ=F")
+    return d
 
 
 def get_kospi_futures() -> dict:
     """코스피200 선물(주간) — esignal kospif_day.js."""
-    return _esignal_cache(
+    d = dict(_esignal_cache(
         "https://esignal.co.kr/data/cache/kospif_day.js",
         "__esignal_kospif__", "kospif",
         referer="https://esignal.co.kr/kospi200-futures/",
-    )
+    ))
+    # 선물 자체 일봉 소스가 없어 KODEX200(069500, KOSPI200 추종 ETF) 일봉으로 근사
+    d["bars_1d"] = _naver_daily_bars("069500")
+    return d
 
 
 def get_kospi_night_futures() -> dict:
     """코스피200 야간선물 — esignal kospif_ngt.js."""
-    return _esignal_cache(
+    d = dict(_esignal_cache(
         "https://esignal.co.kr/data/cache/kospif_ngt.js",
         "__esignal_kospif_ngt__", "kospif_ngt",
         referer="https://esignal.co.kr/kospi200-futures/",
-    )
+    ))
+    d["bars_1d"] = _naver_daily_bars("069500")
+    return d
 
 
 def get_wti() -> dict:

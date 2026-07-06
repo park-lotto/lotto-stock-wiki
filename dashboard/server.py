@@ -2035,6 +2035,9 @@ def _build_market_flow_result(done: dict) -> dict:
             "price":            price_d.get("price", 0),
             "change_rate":      price_d.get("change_rate", 0),
             "bars":             done.get(f"{mkt}_bars") or [],
+            "bars_15m":         done.get(f"{mkt}_bars") or [],
+            "bars_1m":          done.get(f"{mkt}_bars_1m") or [],
+            "bars_1d":          done.get(f"{mkt}_bars_1d") or [],
             "investor_now":     investor,
             "investor_history": inv_hist,
             "program_now":      prog,
@@ -2068,17 +2071,23 @@ def _build_market_flow_result(done: dict) -> dict:
         ws_ksfn = kis_ws.get("101W9")
         if ws_ksfn:
             ksfn = {"price": ws_ksfn["price"], "change_rate": ws_ksfn["change_rate"],
-                    "bars": ksfn.get("bars") or [], "last_ts": ksfn_last_ts}
+                    "bars": ksfn.get("bars") or [], "bars_1m": ksfn.get("bars_1m") or [],
+                    "bars_15m": ksfn.get("bars_15m") or [], "bars_1d": ksfn.get("bars_1d") or [],
+                    "last_ts": ksfn_last_ts}
     result["global"] = {
         "label": "글로벌 지표",
         "items": [
-            {"name": "나스닥선물(NQ)",  "price": nq["price"],   "change_rate": nq["change_rate"],   "bars": nq.get("bars") or []},
+            {"name": "나스닥선물(NQ)",  "price": nq["price"],   "change_rate": nq["change_rate"],   "bars": nq.get("bars") or [],
+             "bars_1m": nq.get("bars_1m") or [], "bars_15m": nq.get("bars_15m") or [], "bars_1d": nq.get("bars_1d") or []},
             {"name": "코스피선물",      "price": ksf["price"],  "change_rate": ksf["change_rate"],  "bars": ksf.get("bars") or [],
+             "bars_1m": ksf.get("bars_1m") or [], "bars_15m": ksf.get("bars_15m") or [], "bars_1d": ksf.get("bars_1d") or [],
              "closed": ksf_closed, "night": False, "cdate": _today_md},
             {"name": "코스피야간선물",  "price": ksfn["price"], "change_rate": ksfn["change_rate"], "bars": ksfn.get("bars") or [],
+             "bars_1m": ksfn.get("bars_1m") or [], "bars_15m": ksfn.get("bars_15m") or [], "bars_1d": ksfn.get("bars_1d") or [],
              "closed": ksfn_closed, "night": True, "cdate": ksfn_md, "last_ts": ksfn_last_ts},
             {"name": "원달러환율",      "price": fx["price"],   "change_rate": fx["change_rate"],   "bars": fx.get("bars") or []},
-            {"name": "국제유가(WTI)",   "price": oil["price"],  "change_rate": oil["change_rate"],  "bars": oil.get("bars") or []},
+            {"name": "국제유가(WTI)",   "price": oil["price"],  "change_rate": oil["change_rate"],  "bars": oil.get("bars") or [],
+             "bars_1m": oil.get("bars_1m") or [], "bars_15m": oil.get("bars_15m") or []},
         ]
     }
     pop_stocks = done.get("RANK_POP") or []
@@ -2179,6 +2188,10 @@ def api_market_flow():
             tasks = {
                 "J_bars":     ex.submit(kis_api.get_index_minutebar, "0001", 15),
                 "Q_bars":     ex.submit(kis_api.get_index_minutebar, "1001", 15),
+                "J_bars_1m":  ex.submit(kis_api.get_index_minutebar, "0001", 1),
+                "Q_bars_1m":  ex.submit(kis_api.get_index_minutebar, "1001", 1),
+                "J_bars_1d":  ex.submit(kis_api.get_index_daily_bars, "0001", 30),
+                "Q_bars_1d":  ex.submit(kis_api.get_index_daily_bars, "1001", 30),
                 "J_price":    ex.submit(kis_api.get_index_price, "0001"),
                 "Q_price":    ex.submit(kis_api.get_index_price, "1001"),
                 "J_investor": ex.submit(kis_api.get_market_investor, "J"),
@@ -2921,6 +2934,10 @@ def _prewarm_worker():
             tasks = {
                 "J_bars":     ex.submit(kis_api.get_index_minutebar, "0001", 15),
                 "Q_bars":     ex.submit(kis_api.get_index_minutebar, "1001", 15),
+                "J_bars_1m":  ex.submit(kis_api.get_index_minutebar, "0001", 1),
+                "Q_bars_1m":  ex.submit(kis_api.get_index_minutebar, "1001", 1),
+                "J_bars_1d":  ex.submit(kis_api.get_index_daily_bars, "0001", 30),
+                "Q_bars_1d":  ex.submit(kis_api.get_index_daily_bars, "1001", 30),
                 "J_price":    ex.submit(kis_api.get_index_price, "0001"),
                 "Q_price":    ex.submit(kis_api.get_index_price, "1001"),
                 "J_investor":     ex.submit(kis_api.get_market_investor, "J"),

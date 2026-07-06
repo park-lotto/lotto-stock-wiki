@@ -844,6 +844,19 @@ def get_index_minutebar(index_code: str, interval: int = 15) -> list:
     return get_intraday_series(proxy, resample_min=interval)
 
 
+def get_index_daily_bars(index_code: str, n: int = 30) -> list:
+    """코스피(0001)/코스닥(1001) 지수 일봉 종가 (근사: KODEX ETF 일봉, 지수 자체 일봉 API 미구독).
+    반환(과거→최신): [close, close, ...] 최근 n개.
+    """
+    proxy = "069500" if index_code == "0001" else "229200"
+    try:
+        import naver_api as _nv
+        candles = _nv.daily_candles(proxy, count=n + 10)
+        return [c["close"] for c in candles][-n:]
+    except Exception:
+        return []
+
+
 def get_market_investor(market_div: str = "J") -> dict:
     """코스피(J)/코스닥(Q) 투자자별 오늘 누적 순매수 (백만원).
     TR_ID: FHPTJ04040000 (시장별 투자자매매동향-일별). output[0]=오늘.
