@@ -1388,3 +1388,6 @@ python calc_oscillator.py SK하이닉스 삼성전자 한미반도체 --tg
 
 ## 2026-07-05 (집PC) — 전문가 인용 몽타주
 stage1 엔진+스튜디오 서버배포(stockbrain1/yt/quote-studio). 서버 봇차단→Gemini call_video(gemini-2.5-flash) 폴백 해결. 장면수집 collect_scenes.py(로컬). 저장시 json다운로드 연결. git위생(atoms.db추적해제). 다음: stage2 스토리(산출물 A/B/C 결정 대기).
+
+## 2026-07-06 (DESKTOP-T8CB1GG) — 촘촘한 그물(미귀속 강세 포착)
+아침 브리핑 점검→ 미귀속 강세 시스템 전단계 배포. Phase1 스캐너(`/api/net/unattributed`, 침묵금지 silent_miss=0) / Phase2 관계그래프(edges 2홉, 귀속률 18→62%) / Phase2-2 LLM엣지(현대차→기아 실증) / Phase3 캐스케이드(`/api/net/hunt`, 신뢰등급) / Phase4 정밀도튜닝(min_graph_strength)·종토방인제스트코어(🟠)·`/net` 대시보드. 동시세션 git-hygiene가 atoms.db 유실→chroma 12,217건 복구(`rebuild_atoms_from_chroma.py`). 재인제스트로 strength 복원중(≥3 원자 0→200↑). net테스트 41통과. CLAUDE.md에 동시세션 안전커밋순서 명시. 다음: 재인제스트 잔여배치, 종토방 목록크롤 배선. 상세=NEXT_SESSION.md.
