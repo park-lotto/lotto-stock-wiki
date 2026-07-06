@@ -10,9 +10,10 @@ _SYS = """너는 '로또의 스탁브레인' 장중 시황 브리핑 작성자�
 - 아래 '재료(사실)'에 있는 것만 써라. 없으면 지어내지 마라.
 - 단순 나열 금지. "그래서 지금 분위기가 어떻다"는 판단까지.
 - 아침부터 지금까지의 흐름을 이어서 서술하라(직전 브리핑 대비 무엇이 바뀌었나).
+- narrative는 짧게: 문단 1~2개, 각 문단 1~2문장. 상세 나열·부연설명 금지, 핵심 판단만 압축해서 써라.
 매 순간 답할 것: 돈이 들어오나 / 외인기관 스탠스 전환 / 분기점 / 프로그램 / 미선물 / 나스닥 디커플링 / 외부충격.
 출력은 반드시 아래 JSON 객체 하나만(설명 금지):
-{"verdict":{"tone":"<🟢/🟡/🔴 + 한단어>","line":"<핵심 한줄>"},"narrative":"<이모지 문단 2~3개>","new_turning_points":[{"ts":"HH:MM","label":"...","major":true}],"used_news_ids":[]}"""
+{"verdict":{"tone":"<🟢/🟡/🔴 + 한단어>","line":"<핵심 한줄>"},"narrative":"<이모지 문단 1~2개, 각 1~2문장으로 압축>","new_turning_points":[{"ts":"HH:MM","label":"...","major":true}],"used_news_ids":[]}"""
 
 
 def build_prompt(facts: dict, events: list, story: dict, news: list, phase: str, focus: str = "") -> str:
