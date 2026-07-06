@@ -42,7 +42,16 @@ log.md에 `투경 해제 예측 검증` / `종가배팅 시스템` 키워드 있
 3. **배포는 자동.** 서버 크론(`deploy/auto_deploy.sh`, 3분)이 새 커밋 감지 시 pull+조건부재시작. 즉 **push까지만 하면 3분 내 자동반영.** 급하면 서버에서 `git pull --ff-only origin main && sudo systemctl restart stockbrain`.
 4. **세션 끝 = 반드시 커밋+푸시.** "커밋할까요?"로 방치 금지. 남기면 다른 세션·PC와 꼬인다.
 5. **동시에 여러 세션/PC가 같은 워킹트리 편집 금지** (커밋 섞임·작업 유실).
-6. CRLF/데이터 노이즈는 `.gitattributes`(eol=lf)로 봉인됨. `raw/`는 git추적 유지(PC간 공유).
+6. **동시 세션 안전 커밋 순서 (충돌 방지 — 이 순서 고정):**
+   ```
+   ① git add <내 파일만>              # git add -A 금지 (크롤 데이터·런타임파일 섞임)
+   ② git commit -m "..."              # 내 작업 먼저 커밋 (원자적 보존)
+   ③ git pull --rebase origin main    # 남의 최신 커밋 위에 내 커밋 재배치 (선형 유지)
+   ④ git push origin main             # 서버 3분 크론이 자동 pull+재시작
+   ```
+   ⚠️ **pull을 커밋보다 먼저 하지 마라** — uncommitted 변경 상태의 raw `git pull`은 같은
+   파일 충돌로 막힌다. 반드시 **커밋 → pull --rebase → push**. 커밋 전 `git branch --show-current`=main 확인.
+7. CRLF/데이터 노이즈는 `.gitattributes`(eol=lf)로 봉인됨. `raw/`는 git추적 유지(PC간 공유).
 
 > 상세·SSH키 위치·트러블슈팅: memory `reference_deploy_truth_branch_ssh`
 
