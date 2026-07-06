@@ -1788,6 +1788,14 @@ function renderMarketFlow(d){
         (m.investor_history||[]).forEach(x=>grab(x&&x.ts));
         (m.program_history||[]).forEach(x=>grab(x&&x.ts));
         (m.program_series||[]).forEach(x=>grab(x&&x.t));});
+      // 장중(평일 09:00~15:35)엔 오른쪽 끝을 '현재 벽시계 시각'으로 제한.
+      // grab()은 분(minute-of-day)만 비교하는데, KIS comp-program-trade-today가 장초반에
+      // 직전 세션(≈15:30) 버킷을 잠깐 돌려주면 그 값이 최댓값이 돼 오른쪽 끝이 15:30으로 튀고
+      // 오늘 데이터가 좌측 일부 구간에 뭉개지던 '장시작 차트 깨짐' 버그를 차단한다.
+      // (저녁·주말 동결 표시는 그대로 직전 세션 15:30까지 꽉 채워야 하므로 장중에만 적용)
+      const _n=new Date(),_nm=_n.getHours()*60+_n.getMinutes(),_dow=_n.getDay();
+      if(_dow>=1&&_dow<=5&&_nm>=_SESSION_OPEN_MIN&&_nm<=_SESSION_MAX_MIN+5)
+        mx=Math.min(mx,Math.max(_SESSION_OPEN_MIN+30,_nm));
       _sessionEndMin=Math.min(_SESSION_MAX_MIN,mx);
     })();
     panel.innerHTML=["0001","1001","global","rank_popular","briefing"].map(code=>{
