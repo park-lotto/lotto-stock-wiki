@@ -148,7 +148,9 @@ def _briefing_keys():
 
 
 # 텍스트 생성 모델 폴백: 프리뷰(최고품질) → 안정모델. 프리뷰가 503 과부하일 때 안정모델로 자동 전환.
-GEMINI_TEXT_MODELS = ["gemini-3-flash-preview", "gemini-2.5-flash"]
+# 모델 폴백: 쿼터 살아있는 순. lite는 아톰화용 쿼터가 별도라 마지막 생존 보루.
+# (2026-07-06: gemini-2.5-flash 무료쿼터 소진돼도 preview/lite로 요약이 살아남게)
+GEMINI_TEXT_MODELS = ["gemini-3-flash-preview", "gemini-3.1-flash-lite", "gemini-2.5-flash"]
 
 
 def _gemini_text(prompt, keys=None, models=None):
@@ -1822,7 +1824,7 @@ def _gen_sector_summary(etf: str = "", codes: str = "", title: str = "") -> dict
     )
     # 쿼터 여유: 키 6개 총동원 + 무료쿼터 넉넉한 gemini-2.5-flash 우선(프리뷰는 폴백)
     res = _gemini_text(prompt, keys=_summary_keys(),
-                       models=["gemini-2.5-flash", "gemini-3-flash-preview"])
+                       models=["gemini-3-flash-preview", "gemini-3.1-flash-lite", "gemini-2.5-flash"])
     out = {"summary": res.get("analysis", ""), "model": res.get("model", ""),
            "error": res.get("error", ""), "sources": len(uniq)}
     if out["summary"]:
@@ -1895,7 +1897,7 @@ def _gen_stock_summary(code: str = "", name: str = "") -> dict:
         "존댓말로 간결하게. 인사말·자기소개·채널/영상 언급 절대 금지 — 바로 **🔑 한 줄**부터 시작."
     )
     res = _gemini_text(prompt, keys=_summary_keys(),
-                       models=["gemini-2.5-flash", "gemini-3-flash-preview"])
+                       models=["gemini-3-flash-preview", "gemini-3.1-flash-lite", "gemini-2.5-flash"])
     out = {"news": news, "summary": res.get("analysis", ""),
            "model": res.get("model", ""), "error": res.get("error", ""),
            "sources": len(news)}
