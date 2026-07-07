@@ -3280,7 +3280,8 @@ _WEATHER_MIN_INTERVAL_S = 90
 _WEATHER_DAILY_CAP = 60
 _weather = {"detect": {"cooldown": {}, "leg": {}}, "state": None,
             "batcher": _bdig.DigestBatcher(900), "model_toggle": 0,
-            "calib_today": [], "synth_count": 0, "last_synth_ts": 0.0}
+            "calib_today": [], "synth_count": 0, "last_synth_ts": 0.0,
+            "circulation_seen": set()}   # 순환매: 오늘 (트리거섹터,mover코드) 중복카드 방지
 
 
 def _weather_tg(text: str):
@@ -3322,6 +3323,7 @@ def _weather_tick():
         _weather["detect"] = {"cooldown": {}, "leg": {}}
         _weather["calib_today"] = []
         _weather["synth_count"] = 0
+        _weather["circulation_seen"] = set()   # 날짜 바뀌면 순환매 중복셋도 초기화
     _weather["state"] = st
 
     mf_ready = _prewarm_cache.get("market_flow") is not None
@@ -3466,9 +3468,64 @@ def _weather_tick():
     _weather["state"] = st
 
 
+_CIRC_INTERVAL_S = 900   # 순환매 매칭 독립주기 15분
+
+
+def _circ_gemini(prompt: str) -> dict:
+    """순환매 매칭용 LLM 호출(1차 Gemini Flash). Sonnet 교체 시 여기만 바꾸면 됨.
+    반환: {"ok":True,"analysis":str} | {"error":str} — circulation.detect 규약."""
+    return _gemini_text(prompt, keys=_briefing_keys(), models=GEMINI_TEXT_MODELS)
+
+
+def _circulation_tick():
+    """15분 게이트: 강한 원자(트리거섹터)+타섹터 급등(히트맵+5%)이 둘 다 있을 때만
+    Gemini에게 순환매 인과 매칭을 물어 카드 생성. 억지 연결이면 빈 결과가 정상.
+    _weather_tick과 같은 스레드에서 호출 → state 동시변경 레이스 없음."""
+    from pipeline.atoms import circulation as _circ
+    hm = (_heatmap_cache.get("all") or {}).get("data") or {}
+    if not hm.get("sectors"):
+        return   # 히트맵 아직 없음(재시작 직후·장전) → 조용히 스킵
+    triggers = _circ.trigger_candidates(days=3, min_strength=3)  # 기본 db.query_atoms 사용
+    if not triggers:
+        return
+    exclude = {t["sector"] for t in triggers}
+    movers = _circ.mover_candidates(hm, exclude_sectors=exclude, min_rate=5.0)
+    if not movers:
+        return
+    now = datetime.now()
+    cards = _circ.detect(triggers, movers, llm_fn=_circ_gemini,
+                         ts=now.strftime("%H:%M"))
+    if not cards:
+        return
+    seen = _weather["circulation_seen"]
+    fresh = []
+    for c in cards:
+        key = (c.get("trigger_sector"), c.get("mover_code"))
+        if key in seen:
+            continue          # 오늘 이미 나온 조합 → 스킵
+        seen.add(key)
+        c["date"] = now.strftime("%Y-%m-%d")
+        c["major"] = True     # 순환매는 시장상황 타임라인 상단(⭐급) 대우
+        fresh.append(c)
+    if not fresh:
+        return
+    st = _weather["state"] or _bstate.load_state(_WEATHER_STATE_PATH)
+    st.setdefault("turning_points", [])
+    st["turning_points"].extend(fresh)
+    _weather["state"] = st
+    _bstate.save_state(_WEATHER_STATE_PATH, st)
+    # insight의 verdict/narrative는 보존하고 turning_points만 갱신해 재기록
+    _briefing_set_insight(BRIEFING_PATH, {
+        "ts": now.strftime("%H:%M"),
+        "verdict": st.get("verdict"), "narrative": st.get("narrative", ""),
+        "turning_points": st["turning_points"][-12:],
+        "session_phase": st.get("session_phase")})
+
+
 def _poll_briefing():
     """30초 주기 — market_flow 임계치 감지 + 12분 고정주기 종합. 감지 즉시 종합도 트리거."""
     _last_fixed_synth = 0.0
+    _last_circ = 0.0
     while True:
         try:
             mf_cached = _prewarm_cache.get("market_flow") or {}
@@ -3490,6 +3547,12 @@ def _poll_briefing():
             # 시황 브리핑 엔진: market_flow 캐시 유무와 무관하게 매 틱 실행
             # (주말·KIS다운으로 캐시 비어도 자체 가드로 heartbeat+뉴스 기반 갱신)
             _weather_tick()
+
+            # 순환매 감지기: 15분 게이트(같은 스레드 → weather state 레이스 없음).
+            # _weather_tick 직후 실행해야 st["turning_points"] 최신본에 얹는다.
+            if time.time() - _last_circ >= _CIRC_INTERVAL_S:
+                _last_circ = time.time()
+                _circulation_tick()
         except Exception:
             # 예전엔 조용히 삼켜서 원인 추적이 안 됐음(2026-07-06) — 트레이스백은 로그에 남긴다.
             import traceback as _tb

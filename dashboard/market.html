@@ -1615,7 +1615,7 @@ function _buildTimeline(){
   const news=(_briefingItems||[]).filter(it=>it.ts>=_TIMELINE_START && (it.source||"").trim() && (it.sector||"").trim())
     .map(it=>({ts:it.ts, text:it.headline, body:it.body||"", type:"news", severity:it.severity, sector:(it.sector||"").trim(), source:it.source||"", stock:it.stock||"", pct:it.pct||0, important:!!it.important}));
   const tps=((_marketInsight&&_marketInsight.turning_points)||[]).filter(t=>t.ts>=_TIMELINE_START)
-    .map(t=>({ts:t.ts, text:t.label, body:"", type:"event", major:t.major}));
+    .map(t=>({ts:t.ts, text:t.label, body:"", type:(t.type==="circulation"?"circulation":"event"), major:t.major}));
 
   // 같은 종목(없으면 문장키) 뉴스는 한 카드로 통합 → 최신것만 보이고 예전건 "+N번 더"(펼치면 보임)
   const groups={};
@@ -1662,12 +1662,13 @@ function renderBelowPanel(){
   const _TIMELINE_PREVIEW_N=8;
   // 원본 인덱스(i) 유지 — 상세보기·선택 로직이 merged items 인덱스를 참조
   const mkCard=(it,i,isLatest)=>{
-      const isEvent=it.type==="event";
+      const isCirc=it.type==="circulation";
+      const isEvent=it.type==="event"||isCirc;   // 순환매도 시장상황(이벤트) 스타일 공유
       const sev=isEvent?"sev-event":it.severity==="red"?"sev-red":it.severity==="yellow"?"sev-yellow":"sev-gray";
       const expandable=!!it.body;
       const selected=_selectedTimelineIdx===i;
       const extraTag=it.extra?`<span class="tl-extra">+${it.extra}번 더</span>`:"";
-      const emoji=isEvent?(it.major?"⭐":"📍"):(it.severity==="red"?"🔴":it.severity==="yellow"?"🟡":"⚪");
+      const emoji=isCirc?"🔄":(isEvent?(it.major?"⭐":"📍"):(it.severity==="red"?"🔴":it.severity==="yellow"?"🟡":"⚪"));
       return `<div class="tl-card ${sev} ${isEvent?"tl-event":"tl-news"}${isLatest?" tl-latest":""}${selected?" tl-selected":""}"
         ${expandable?`onclick="toggleTimelineSelect(${i})"`:""}>
         ${it.important?`<span class="tl-imp-badge">🔥 중요</span>`:(isLatest?`<span class="tl-latest-badge">NEW</span>`:"")}
@@ -1677,7 +1678,7 @@ function renderBelowPanel(){
   };
   // 시장상황(이벤트) / 뉴스이슈 두 갈래로 분리
   const mkt=[], nws=[];
-  items.forEach((it,i)=>{ (it.type==="event"?mkt:nws).push({it,i}); });
+  items.forEach((it,i)=>{ ((it.type==="event"||it.type==="circulation")?mkt:nws).push({it,i}); });
   const selectedItem=(_selectedTimelineIdx!=null)?items[_selectedTimelineIdx]:null;
   const timelineDetail=(selectedItem&&selectedItem.body)
     ?`<div class="tl-detail">${selectedItem.sector?`<span class="tl-sec">${esc(selectedItem.sector)}</span> `:""}<span class="tl-detail-ts">${esc(selectedItem.ts)}</span> ${esc(selectedItem.text)}
