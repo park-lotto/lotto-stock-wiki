@@ -298,6 +298,17 @@ body{background:var(--bg);color:#eee;min-height:100vh;}
   /* 종목 검색창 조금 넓게 */
   .cs-input{width:120px;}
   .cs-input:focus{width:150px;}
+  /* 시장상황/뉴스이슈 타임라인: 8-up 고정폭이 폰에서 뭉개짐 → 가로스와이프 + 카드 넓게 */
+  #mkt-below-panel{padding:8px 8px 0 !important;}
+  #mkt-below-panel > div{gap:8px !important;}
+  .timeline-strip{overflow-x:auto;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;}
+  .timeline-strip.tl-strip-fill .tl-card{flex:0 0 74vw !important;scroll-snap-align:start;}
+  .timeline-strip.tl-strip-wrap{flex-wrap:nowrap;}
+  .timeline-strip.tl-strip-wrap .tl-card{flex:0 0 74vw !important;scroll-snap-align:start;}
+  .tl-card{min-height:auto;}
+  .tl-detail{font-size:14px;}
+  /* 관심종목: 가로 스와이프 */
+  .watch-row,#watchlist-row{overflow-x:auto;-webkit-overflow-scrolling:touch;}
 }
 
 .tile{border-radius:12px;padding:14px 14px 12px;min-height:182px;display:flex;flex-direction:column;
