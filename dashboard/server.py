@@ -3425,10 +3425,13 @@ def _weather_tick():
         if primary:
             st["verdict"] = {**primary["verdict"], "ts": now.strftime("%H:%M")}
             st["narrative"] = primary.get("narrative", "")
+            _nowmin = now.hour * 60 + now.minute
             for tp in primary.get("new_turning_points", []):
-                # LLM이 프롬프트 스키마의 "HH:MM" 플레이스홀더를 그대로 복사해 내는 경우가 잦다.
-                # 유효한 시각(H:MM/HH:MM)이 아니면 현재 종합 시각으로 스탬프 → 타임라인 표시·정렬 깨짐 방지.
-                if not re.match(r"^\d{1,2}:\d{2}$", str(tp.get("ts", "")).strip()):
+                # LLM이 시각을 엉뚱하게(플레이스홀더 "HH:MM", 또는 미래 17:00 등) 내는 경우가 잦다.
+                # 무효 포맷이거나 '지금보다 미래'면 현재 종합 시각으로 강제 → 17:00 같은 가짜시각 차단.
+                _m = re.match(r"^(\d{1,2}):(\d{2})$", str(tp.get("ts", "")).strip())
+                _tm = (int(_m.group(1)) * 60 + int(_m.group(2))) if _m else -1
+                if _tm < 0 or _tm > _nowmin + 2:
                     tp["ts"] = now.strftime("%H:%M")
                 tp["date"] = now.strftime("%Y-%m-%d")   # 날짜 붙여 어제 이벤트가 오늘 뜨는 것 방지
                 st["turning_points"].append(tp)
