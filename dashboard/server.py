@@ -3415,6 +3415,7 @@ def _weather_tick():
                 # 유효한 시각(H:MM/HH:MM)이 아니면 현재 종합 시각으로 스탬프 → 타임라인 표시·정렬 깨짐 방지.
                 if not re.match(r"^\d{1,2}:\d{2}$", str(tp.get("ts", "")).strip()):
                     tp["ts"] = now.strftime("%H:%M")
+                tp["date"] = now.strftime("%Y-%m-%d")   # 날짜 붙여 어제 이벤트가 오늘 뜨는 것 방지
                 st["turning_points"].append(tp)
             st["session_phase"] = phase
             st["baseline"] = curr
@@ -3520,6 +3521,10 @@ def api_market_briefing():
     data = _briefing_load(BRIEFING_PATH)
     today = datetime.now().strftime("%Y-%m-%d")
     data["items"] = [it for it in (data.get("items") or []) if it.get("date") == today]
+    # 시장상황(turning_points)도 오늘것만 — 어제 오후 이벤트(16:20 등)가 오늘 뜨던 문제 차단
+    ins = data.get("insight")
+    if isinstance(ins, dict) and ins.get("turning_points"):
+        ins["turning_points"] = [t for t in ins["turning_points"] if t.get("date") == today]
     return JSONResponse(content=data)
 
 
