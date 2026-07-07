@@ -1642,6 +1642,8 @@ def _refresh_news(top_sectors: int = 8, per_stock: int = 3):
 _STRONG_RE   = re.compile(r"속보|특징주|급등|급락|수주|계약|부지|증설|투자|사상\s*최대|최대\s*실적|자사주|증자|신고가|목표주가|흑자|적자|인수|합병|매각|공급")
 # 거버넌스·인사 등 투자무관 뉴스 제외(예: "KB금융 차기 회장 숏리스트 확정")
 _EXCLUDE_RE  = re.compile(r"회장|대표이사|사외이사|주주총회|주총|숏리스트|연임|임원|인사|이사회|사임|선임|취임|배당락|주식담보|스톡옵션")
+# 알맹이 없는 클릭베이트/단순호명 제외 (예: "특징주 종목: 삼성전자(005930)", "…무슨 회사 길래?")
+_LOWINFO_RE  = re.compile(r"무슨\s*회사|어떤\s*회사|길래|왜\s*(오르|급등|뛰|내리|빠)|특징주\s*종목\s*[:：]|이\s*종목은|눈길")
 # '재료성' 판단 — 관심종목 매칭이 없을 때 이 키워드라도 있어야 노출
 _MATERIAL_RE = re.compile(r"수주|계약|부지|증설|투자|실적|급등|급락|목표주가|자사주|증자|신고가|흑자|적자|인수|합병|매각|공급|사상\s*최대")
 
@@ -1697,6 +1699,19 @@ def _surface_strong_news():
             stocks_set = _tnf.clean_stock_names(smap)
         except Exception:
             pass
+        # 매칭 대상 = 전체맵(1405종목, 잡주 포함) 대신 '내 관심종목(watchlist)'으로 좁힘.
+        # → 히트맵에 없는 소형주(동구바이오·지니너스 등) 뉴스 제외, 리가켐 등 추적종목은 유지.
+        focus_stocks = set()
+        try:
+            import sector_heatmap as _sh
+            for _sec in _sh.parse_watchlist(999):
+                for _s in (_sec.get("stocks") or []):
+                    if _s.get("name"):
+                        focus_stocks.add(_s["name"])
+        except Exception:
+            pass
+        if not focus_stocks:
+            focus_stocks = stocks_set   # 폴백
         # 종목명→오늘 등락률(%) 맵 — 많이 오른 종목의 뉴스가 그날 섹터를 끌어올린 '진짜 재료'
         pct_map = {}
         for sec in (data.get("sectors") or []):
@@ -1716,10 +1731,10 @@ def _surface_strong_news():
                 d = (n.get("date") or "")
                 if not t or not d.startswith(today):
                     continue
-                if not _STRONG_RE.search(t) or _EXCLUDE_RE.search(t):
+                if not _STRONG_RE.search(t) or _EXCLUDE_RE.search(t) or _LOWINFO_RE.search(t):
                     continue
-                stock = _match_stock(t, stocks_set)
-                if not stock:   # 관심종목(내 섹터에 있는 종목) 매칭된 뉴스만 — 미추적 종목/정책일반은 제외
+                stock = _match_stock(t, focus_stocks)
+                if not stock:   # 내 관심종목(watchlist) 매칭된 뉴스만 — 잡주/정책일반 제외
                     continue
                 cands.append({"t": t, "d": d, "src": n.get("src") or n.get("source") or "뉴스",
                               "sector": (smap.get(stock) or sector), "stock": stock,
