@@ -1,49 +1,62 @@
 {
-  "reports": [
+  "leading_sectors": [
+    "반도체",
+    "방산",
+    "신재생",
+    "바이오",
+    "건설",
+    "로봇",
+    "원전"
+  ],
+  "stance": [
     {
-      "broker": null,
-      "stock": "알지노믹스",
-      "rating": null,
-      "tp": null,
+      "target": "SK하닉",
+      "view": "긍정",
+      "ts": "21:08",
+      "quote": "SK하닉, SK스퀘어, SK 다 좋은흐름"
+    },
+    {
+      "target": "알지노믹스",
+      "view": "중립",
+      "ts": "15:40",
+      "quote": "알지노믹스는 어제 무증 뉴스로 반등했는데요. 일정 체킹해두시면 될거 같습니다. 보호예수 일정도 뒤에있어서 눈치싸움인거 같네여."
+    },
+    {
+      "target": "원전",
+      "view": "긍정",
+      "ts": "21:09",
+      "quote": "원전주 들고있는분들이 일정 참고하시면 될거 같습니다."
+    }
+  ],
+  "methods": [
+    {
+      "rule": "편견 없는 매매",
+      "quote": "편견없는 매매하기!!"
+    }
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "알지노믹스",
+      "comment": "무상증자 및 보호예수 해제 일정 확인 필요",
       "ts": "15:40",
       "quote": "알지노믹스는 어제 무증 뉴스로 반등했는데요. 일정 체킹해두시면 될거 같습니다.",
       "sector": "바이오"
     },
     {
-      "broker": null,
-      "stock": "넥스원",
-      "rating": null,
-      "tp": null,
+      "name": "넥스원",
+      "comment": "방산 관련 시장 재료",
       "ts": "15:41",
       "quote": "(방산)넥스원 - 라인메탈",
       "sector": "방산"
     },
     {
-      "broker": null,
-      "stock": "삼성전자",
-      "rating": null,
-      "tp": null,
-      "ts": "15:41",
-      "quote": "(로봇) 삼성전자 보스턴다이나믹스 지분인수 검토",
-      "sector": "로봇"
-    },
-    {
-      "broker": null,
-      "stock": "SK하이닉스",
-      "rating": null,
-      "tp": null,
-      "ts": "21:08",
-      "quote": "SK하닉, SK스퀘어, SK 다 좋은흐름",
-      "sector": "반도체"
-    },
-    {
-      "broker": null,
-      "stock": "스페이스X",
-      "rating": null,
-      "tp": null,
+      "name": "SK하닉",
+      "comment": "미국 상장 수급 기대",
       "ts": "23:00",
-      "quote": "스페이스X 는 상장날 시초가에만 삿어도 지금 45%네여.",
-      "sector": "기타"
+      "quote": "SK하닉도 미국상장때 이런 수급을 기대해보고요",
+      "sector": "반도체"
     }
-  ]
+  ],
+  "noise_ratio": 0.4,
+  "quote": "장중 순환매가 빠른 요즘"
 }

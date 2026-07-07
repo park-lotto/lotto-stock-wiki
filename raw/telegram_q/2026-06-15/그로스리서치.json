@@ -15,7 +15,7 @@
       "rating": null,
       "tp": null,
       "ts": "08:00",
-      "quote": "삼양엔씨켐 (482630) NAND 고단화에 필수적인 Thick KrF PR용 폴리머·PAG 공급 확대 기대",
+      "quote": "📈 삼양엔씨켐 (482630)",
       "sector": "반도체"
     },
     {
@@ -24,7 +24,7 @@
       "rating": null,
       "tp": null,
       "ts": "08:00",
-      "quote": "티씨케이 (064760) NAND 적층 수 증가와 멀티스택 공정 확대로 SiC 포커스링의 마모와 교체 수요 증가 전망",
+      "quote": "📈 티씨케이 (064760)",
       "sector": "반도체"
     },
     {
@@ -65,11 +65,20 @@
     },
     {
       "broker": "그로쓰리서치",
+      "stock": "제주반도체",
+      "rating": null,
+      "tp": null,
+      "ts": "16:12",
+      "quote": "제주반도체, 베트남 반도체 R&D·AI 센터 구축 검토",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
       "stock": "현대제철",
       "rating": null,
       "tp": null,
       "ts": "17:49",
-      "quote": "Hyundai Steel (004020.KS)",
+      "quote": "📈 Hyundai Steel (004020.KS)",
       "sector": "철강"
     },
     {
@@ -78,7 +87,7 @@
       "rating": null,
       "tp": null,
       "ts": "17:49",
-      "quote": "DONGKUK STEEL MILL (460860.KQ)",
+      "quote": "📈 DONGKUK STEEL MILL (460860.KQ)",
       "sector": "철강"
     },
     {

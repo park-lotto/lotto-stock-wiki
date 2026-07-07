@@ -1,40 +1,80 @@
 {
-  "reports": [
+  "leading_sectors": [
+    "반도체"
+  ],
+  "stance": [
     {
-      "broker": null,
-      "stock": "삼성전기",
-      "rating": null,
-      "tp": null,
+      "target": "코스닥",
+      "view": "긍정",
+      "ts": "12:44",
+      "quote": "하반기 정책지원과 관련한 자금이 지속해서 유입될 것으로 보여 반등의 기대감이 커진다."
+    },
+    {
+      "target": "반도체",
+      "view": "긍정",
+      "ts": "13:24",
+      "quote": "신고가 대기 종목도 반도체(음영)가 많습니다."
+    },
+    {
+      "target": "LG엔솔",
+      "view": "긍정",
+      "ts": "18:58",
+      "quote": "LG엔솔, 2분기 영업이익 흑자 전환 기대"
+    },
+    {
+      "target": "HMM",
+      "view": "중립",
+      "ts": "18:59",
+      "quote": "HMM 주가는 바닥서 놀긴하는데 요즘 운임지수 계속 상승중인건 체킹."
+    }
+  ],
+  "methods": [
+    {
+      "rule": "주도섹터 돌파매매",
+      "quote": "주도섹터에서는 돌파매매 (돌파전에 매수)"
+    },
+    {
+      "rule": "비주도섹터 눌림매매",
+      "quote": "그외섹터는 눌림매매 (눌림 분할매매)"
+    }
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "케이씨텍",
+      "comment": "반도체 장비 관련 신고가 종목",
+      "ts": "13:24",
+      "quote": "케이씨텍, 유진테크, 티에스이, 에이팩트, 샘씨엔에스, HPSP, 원익IPS, 타이거일렉, 코리아써키트, 엘티씨, 테스, 브이엠, 피에스케이",
+      "sector": "반도체"
+    },
+    {
+      "name": "삼성전기",
+      "comment": "언급된 종목",
       "ts": "18:58",
       "quote": "삼성전기",
       "sector": "IT"
     },
     {
-      "broker": null,
-      "stock": "LG이노텍",
-      "rating": null,
-      "tp": null,
+      "name": "LG이노텍",
+      "comment": "언급된 종목",
       "ts": "18:58",
       "quote": "LG이노텍",
       "sector": "IT"
     },
     {
-      "broker": null,
-      "stock": "LG엔솔",
-      "rating": null,
-      "tp": null,
+      "name": "LG엔솔",
+      "comment": "2분기 영업이익 흑자 전환 기대",
       "ts": "18:58",
       "quote": "LG엔솔, 2분기 영업이익 흑자 전환 기대",
       "sector": "2차전지"
     },
     {
-      "broker": null,
-      "stock": "HMM",
-      "rating": null,
-      "tp": null,
+      "name": "HMM",
+      "comment": "주가는 바닥권이나 운임지수 상승세 체킹 필요",
       "ts": "18:59",
       "quote": "HMM 주가는 바닥서 놀긴하는데 요즘 운임지수 계속 상승중인건 체킹.",
       "sector": "기타"
     }
-  ]
+  ],
+  "noise_ratio": 0.4,
+  "quote": "하반기 정책지원과 관련한 자금이 지속해서 유입될 것으로 보여 반등의 기대감이 커진다."
 }

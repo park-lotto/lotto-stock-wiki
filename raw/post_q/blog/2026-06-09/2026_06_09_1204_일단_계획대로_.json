@@ -1,9 +1,9 @@
 {
   "target_kind": "market",
-  "market_direction": "neutral",
+  "market_direction": "null",
   "macro_events": [
     {
-      "fact": "넥센장(NMS) 9시 개장 이후 약 1시간 동안 팀 아침조회와 기타 업무로 인해 투자 대응이 제한적임",
+      "fact": "넥센장(NMS) 9시 개장 이후 약 1시간 동안 팀 아침조회 및 업무로 인해 투자 대응 제한",
       "ts": "2026-06-09",
       "quote": "9시 개장 직후 1시간 동안은 팀 회의 등으로 대응이 어려운 점을 고려해 기존 전략을 우선 시행하기로 했습니다."
     }

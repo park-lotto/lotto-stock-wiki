@@ -11,29 +11,29 @@
     },
     {
       "broker": "그로쓰리서치",
+      "stock": "스페이스X",
+      "rating": null,
+      "tp": null,
+      "ts": "23:57",
+      "quote": "스페이스X 주관사 공모주 추가배정…조달액 857억달러로 늘어",
+      "sector": "기타"
+    },
+    {
+      "broker": "그로쓰리서치",
       "stock": "앤트로픽",
       "rating": null,
       "tp": null,
       "ts": "00:33",
-      "quote": "미국 소비자가 앤트로픽을 상대로 구독료 환급 소송 제기 클로드 Max 5x·20x의 실제 사용 한도가 광고와 다르다는 주장",
+      "quote": "미국 소비자가 앤트로픽을 상대로 구독료 환급 소송 제기",
       "sector": "IT"
     },
     {
       "broker": "그로쓰리서치",
-      "stock": "우시앱텍, BGI",
+      "stock": "우시앱텍",
       "rating": null,
       "tp": null,
       "ts": "08:01",
       "quote": "미 국방부가 중국 군사기업(1260H) 명단에 우시앱텍·BGI·MGI·Novogene 등을 추가",
-      "sector": "바이오"
-    },
-    {
-      "broker": "그로쓰리서치",
-      "stock": "셀트리온",
-      "rating": null,
-      "tp": null,
-      "ts": "08:37",
-      "quote": "타임이 첫 발표한 ‘세계에서 가장 영향력 있는 기업’ 순위에서 셀트리온이 99위에 진입",
       "sector": "바이오"
     },
     {
@@ -87,7 +87,7 @@
       "rating": null,
       "tp": null,
       "ts": "11:17",
-      "quote": "가온전선 미국 법인 LSCUS 5,000만달러(약 760억원) 투자 AI 데이터센터용 송전 케이블 생산능력 2배 확대",
+      "quote": "가온전선, 美 송전 케이블 생산능력 2배 늘린다",
       "sector": "전력"
     },
     {
@@ -96,7 +96,7 @@
       "rating": null,
       "tp": null,
       "ts": "13:17",
-      "quote": "사노피, 알테오젠의 SC 전환 플랫폼(ALT-B4) 적용 블록버스터 치료제 '듀피젠트' SC 제형 임상 1상 개시",
+      "quote": "사노피, 알테오젠의 SC 전환 플랫폼(ALT-B4) 적용…블록버스터 치료제 '듀피젠트' SC 제형 임상 1상 개시",
       "sector": "바이오"
     },
     {
@@ -105,7 +105,7 @@
       "rating": null,
       "tp": null,
       "ts": "18:17",
-      "quote": "Proprietary Antibody Engineering Platform OX40L: Sanofi’s KRW 7tn Bet on Autoimmune Disease",
+      "quote": "OX40L: Sanofi’s KRW 7tn Bet on Autoimmune Disease",
       "sector": "바이오"
     }
   ]

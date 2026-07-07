@@ -1,8 +1,8 @@
 {
-  "market_direction": "bullish",
+  "market_direction": "KOSPI 8,727pt(+2.1%), KOSDAQ 1,018pt(-1.5%)",
   "macro_events": [
     {
-      "fact": "BOJ 정책금리 25bp 인상",
+      "fact": "BOJ 정책금리 25bp 인상 (1%)",
       "ts": "16:57",
       "quote": "BOJ 예상대로 정책금리 1%로 25bp 인상."
     },
@@ -20,39 +20,44 @@
   "sectors_mentioned": [
     {
       "sector": "반도체",
-      "stance": "bullish",
-      "comment": "지정학적 리스크 해소와 미국 마이크론 급등에 힘입어 상승세 주도",
-      "quote": "지정학적 갈등 해소 모멘텀 오늘도 이어지며 반도체 업종 강세."
+      "stance": "positive",
+      "comment": "지정학적 갈등 해소와 미국 마이크론 급등 영향으로 강세, 외국인 순매수 유입"
     },
     {
       "sector": "신재생",
-      "stance": "bullish",
-      "comment": "미국 풍력 개발 금지 행정명령 취소 소식으로 급등",
-      "quote": "미국 풍력 개발 금지 행정명령 취소 소식 (씨에스윈드 상한가, SK오션플랜트 +27%)"
+      "stance": "positive",
+      "comment": "미국 풍력 개발 금지 행정명령 취소 소식에 상한가 기록"
     },
     {
       "sector": "기타",
-      "stance": "bullish",
-      "comment": "중동 종전 협의 기대감으로 건설 및 에너지 인프라 관련주 강세",
-      "quote": "미국 이란 종전 협의에 중동 재건 및 에너지 인프라 수주 기대 건설주 전반 확산"
+      "stance": "positive",
+      "comment": "미국-이란 종전 협의에 따른 중동 재건 및 에너지 인프라 수주 기대감"
     },
     {
       "sector": "소비내수",
-      "stance": "bullish",
-      "comment": "소비 회복 및 외국인 매출 비중 증가 기대",
-      "quote": "소비 회복 기대와 외국인 매출 비중 증가. 성과급을 받은 자, 주식으로 자본이득을 취한 자, 원화 약세 시대에 관광을 온 자 모두 나에게로 오라"
+      "stance": "positive",
+      "comment": "소비 회복 기대감과 외국인 매출 비중 증가로 주가 상승"
+    },
+    {
+      "sector": "기타",
+      "stance": "positive",
+      "comment": "한은 금리 인상 전망에 따른 금융주 신고가 달성"
+    },
+    {
+      "sector": "기타",
+      "stance": "positive",
+      "comment": "방산, 원자력, 전력기계 등 산업재 테마 반등 지속"
     },
     {
       "sector": "바이오",
-      "stance": "bearish",
-      "comment": "금리 인상 환경 속에서 실적 증명 필요",
-      "quote": "예정된 한국은행 금리 인상도 바이오와 2차전지 같은 성장주(KOSDAQ)에는 부정적 환경."
+      "stance": "neutral",
+      "comment": "지수 반등을 위해 실적 증명 필요, 금리 인상 환경에 부정적"
     },
     {
       "sector": "2차전지",
-      "stance": "bearish",
-      "comment": "금리 인상 환경 속에서 실적 증명 필요",
-      "quote": "예정된 한국은행 금리 인상도 바이오와 2차전지 같은 성장주(KOSDAQ)에는 부정적 환경."
+      "stance": "neutral",
+      "comment": "지수 반등을 위해 실적 증명 필요, 금리 인상 환경에 부정적"
     }
-  ]
+  ],
+  "quote": "외국인 복귀 = 대형주에 자금 유입 = KOSPI 대형주 강세 = KOSDAQ 상대적 약세의 공식."
 }
