@@ -1624,10 +1624,24 @@ function _buildTimeline(){
     const k=it.stock || it.text;
     (groups[k]=groups[k]||[]).push(it);
   }
-  const newsCapped=Object.values(groups).map(arr=>{
+  const stockReps=Object.values(groups).map(arr=>{
     arr.sort((a,b)=>b.ts.localeCompare(a.ts));   // 최신 우선
     const rep={...arr[0]};                        // 최신 뉴스를 대표로
-    if(arr.length>1) rep.extra=arr.length-1;      // 예전건 접기
+    if(arr.length>1) rep.extra=arr.length-1;      // 같은 종목 예전건 접기
+    return rep;
+  });
+  // 같은 사건(테마)이 여러 종목에 걸쳐 중복(예: 잠수함 불발 = 한화오션·한화시스템·HD현대중공업)
+  // → 테마 클러스터로 묶어 대표 1개(중요>상승률>최신)만 노출, 나머지는 "+N번 더"
+  const themeCl=[];
+  for(const it of stockReps){
+    const cl=themeCl.find(c=>c.items.some(x=>_bigramSim(x.text,it.text)>=_TIMELINE_THEME_SIM));
+    if(cl) cl.items.push(it); else themeCl.push({items:[it]});
+  }
+  const newsCapped=themeCl.map(cl=>{
+    cl.items.sort((a,b)=>((b.important?1:0)-(a.important?1:0)) || ((b.pct||0)-(a.pct||0)) || b.ts.localeCompare(a.ts));
+    const rep={...cl.items[0]};
+    const extra=(cl.items.length-1)+cl.items.reduce((s,x)=>s+(x.extra||0),0);
+    if(extra>0) rep.extra=extra;
     return rep;
   });
   // 이벤트(시장상황): 같은 테마(신저가·프로그램매도·디커플링 등 사실상 같은 상태 반복)를
