@@ -1,0 +1,22 @@
+{
+  "target_kind": "insight",
+  "leading_sectors": [
+    "IT"
+  ],
+  "stance": [
+    {
+      "target": "AI 혁명",
+      "view": "긍정",
+      "ts": "2026-06-25",
+      "quote": "AI 혁명은 역사상 네 번째로 이익 성장을 담보하는 버블이 될 가능성"
+    }
+  ],
+  "methods": [
+    {
+      "rule": "이익 증가율이 높은 기업에 주목",
+      "quote": "AI 버블시대에는 이익증가율이 높은 기업에 주목해야"
+    }
+  ],
+  "stocks_mentioned": [],
+  "quote": "현재 AI버블은 초입단계에 있으며, 본격적인 버블 진입은 3분기 조정 이후로 예상"
+}

@@ -6,17 +6,35 @@
       "rating": null,
       "tp": null,
       "ts": "08:01",
-      "quote": "“수율 개선”과 “FDA 승인”, 실적 레버리지의 두 축",
+      "quote": "수율 개선과 FDA 승인, 실적 레버리지의 두 축",
       "sector": "화장품미용"
     },
     {
       "broker": "그로쓰리서치",
-      "stock": "0000(인터로조 추정)",
+      "stock": "PSK홀딩스",
       "rating": null,
       "tp": null,
-      "ts": "15:15",
-      "quote": "현재 실적만으로도 싸고, 미국 진출은 아직 주가에 제대로 반영되지 않은 추가 업사이드라는 점에서 관심을 가져볼 만한 기업입니다.",
-      "sector": "화장품미용"
+      "ts": "18:33",
+      "quote": "PSK Holdings: Expected to benefit from growing demand for reflow and descum systems used in HBM and CoWoS packaging.",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "브이엠",
+      "rating": null,
+      "tp": null,
+      "ts": "18:33",
+      "quote": "VM: Korea’s only domestic supplier of dry etching equipment, positioned to benefit from expanding DRAM CapEx.",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "케이씨텍",
+      "rating": null,
+      "tp": null,
+      "ts": "18:33",
+      "quote": "KCTech: Korea’s only domestic mass-production supplier of CMP equipment, set to benefit from a recovery in memory investment.",
+      "sector": "반도체"
     }
   ]
 }

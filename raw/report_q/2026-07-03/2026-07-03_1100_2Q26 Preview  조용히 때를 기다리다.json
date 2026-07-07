@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-03",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-03_1100_2Q26 Preview  조용히 때를 기다리다.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "이진협",
+    "report_date": "2026년 7월 3일",
+    "stocks": [
+      {
+        "name": "BGF리테일",
+        "code": "282330",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "190,000원",
+        "tp_prev": "190,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 영업이익 712억원(+2.5% YoY)을 기록해 컨센서스 726억원에 부합할 것으로 추정한다.",
+        "estimate_revision": null,
+        "next_catalyst": "해외 사업 확장의 성과가 가시적으로 확인되거나, 담배 가격 인상 등 이벤트 등 편의점 모멘텀이 확대되는 구간 진입",
+        "thesis": [
+          "강한 기존점성장률(+4% YoY)로 인한 영업 레버리지 효과",
+          "상위권 사업자 중심의 업계 재편으로 인한 질적 성장 지속",
+          "절대적으로 우수한 업황 대비 저평가된 밸류에이션"
+        ],
+        "valuation_basis": "밸류에이션 부담이 크지 않기 때문에 현재의 본업의 개선이 지속되면 주가의 상승 탄력도는 커질 수 있을 것으로 전망",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "BGF리테일은 2Q26 영업이익 712억원(+2.5% YoY)을 기록해 컨센서스 726억원에 부합할 것으로 추정한다."
+      }
+    ]
+  }
+}

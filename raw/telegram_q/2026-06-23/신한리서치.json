@@ -1,0 +1,130 @@
+{
+  "reports": [
+    {
+      "broker": "신한투자증권",
+      "stock": "드림텍",
+      "rating": "매수",
+      "tp": "8,000원",
+      "ts": "07:33",
+      "quote": "2026년 영업이익 전년대비 +23% 전망",
+      "sector": "IT"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "레볼루션 메디신",
+      "rating": null,
+      "tp": null,
+      "ts": "07:41",
+      "quote": "KRAS 억제제로 췌장암 2L 환자의 생존기간을 약 2배 연장시킨 레볼루션 메디신을 추천한다.",
+      "sector": "바이오"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "리가켐바이오",
+      "rating": null,
+      "tp": null,
+      "ts": "07:41",
+      "quote": "TROP2 ADC 선두주자 리가켐바이오",
+      "sector": "바이오"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "지아이이노베이션",
+      "rating": null,
+      "tp": null,
+      "ts": "07:41",
+      "quote": "면역항암제(키트루다) 불응 환자 대상 핵심 병용 파트너 지아이이노베이션",
+      "sector": "바이오"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "티움바이오",
+      "rating": null,
+      "tp": null,
+      "ts": "07:41",
+      "quote": "TGF-β 에셋 가치 입증이 임박한 티움바이오에 주목 권고한다.",
+      "sector": "바이오"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "씨어스",
+      "rating": "매수",
+      "tp": null,
+      "ts": "08:26",
+      "quote": "씨어스 (458870/매수) 2030년 매출액 1조원으로 가는 길",
+      "sector": "바이오"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "코나아이",
+      "rating": "매수",
+      "tp": null,
+      "ts": "08:26",
+      "quote": "코나아이 (052400/매수) 펀더멘털은 green green",
+      "sector": "IT"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "알멕",
+      "rating": null,
+      "tp": null,
+      "ts": "08:26",
+      "quote": "알멕 (354320/Not Rated) 우주로 가는 프리미엄 알루미늄",
+      "sector": "기타"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "에이직랜드",
+      "rating": null,
+      "tp": null,
+      "ts": "08:26",
+      "quote": "에이직랜드 (445090/Not Rated) ASIC 설계를 위한 교두보",
+      "sector": "반도체"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "메쥬",
+      "rating": null,
+      "tp": null,
+      "ts": "08:26",
+      "quote": "메쥬 (0088M0/Not Rated) 멀티파라미터 제품 출시로 승부수",
+      "sector": "바이오"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "지구홀딩스",
+      "rating": null,
+      "tp": null,
+      "ts": "08:26",
+      "quote": "지구홀딩스 (221800/Not Rated) 지구력을 보유한 영구 투자 회사",
+      "sector": "기타"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "다원넥스뷰",
+      "rating": null,
+      "tp": null,
+      "ts": "08:26",
+      "quote": "다원넥스뷰 (323350/Not Rated) 하반기 호실적 기대",
+      "sector": "기타"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "신한글로벌액티브리츠",
+      "rating": null,
+      "tp": null,
+      "ts": "08:26",
+      "quote": "신한글로벌액티브리츠 (481850/Not Rated) 이제 펀더멘탈 회복만 기다리면 된다",
+      "sector": "기타"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "벡트",
+      "rating": null,
+      "tp": null,
+      "ts": "08:26",
+      "quote": "벡트 (457600/Not Rated) 성장 동력 확보 노력",
+      "sector": "기타"
+    }
+  ]
+}

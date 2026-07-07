@@ -1,0 +1,31 @@
+{
+  "reports": [
+    {
+      "broker": "신한투자증권",
+      "stock": "웨스턴디지털",
+      "rating": null,
+      "tp": null,
+      "ts": "07:59",
+      "quote": "웨스턴디지털 (WDC.US) 아직도 카드가 남았다",
+      "sector": "IT"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "시게이트",
+      "rating": null,
+      "tp": null,
+      "ts": "07:59",
+      "quote": "시게이트 (STX.US) HAMR 상용화 선점",
+      "sector": "IT"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "아로마티카",
+      "rating": null,
+      "tp": null,
+      "ts": "07:59",
+      "quote": "아로마티카 (0015N0) 북미 오프라인 채널 확장 본격화",
+      "sector": "화장품미용"
+    }
+  ]
+}

@@ -13,20 +13,24 @@
     "macro_vars": [
       "5G",
       "AIDC",
-      "데이터센터"
+      "전력 수급"
     ],
     "recommended_sectors": [
       {
         "sector": "통신",
         "stance": null,
-        "reason": "SKT의 AIDC 구축 사업 확장 및 서비스형 GPU 사업으로의 고부가가치 플랫폼 전환 주목"
+        "reason": "AIDC 구축에 따른 사업 구조 확장 가능성(서비스형 GPU) 주목"
       }
     ],
     "style": null,
     "event_calendar": [
       {
-        "date": "2026.06.29",
-        "event": "대한민국 대도약 3대 메가프로젝트 국민보고회(AIDC 구축 계획 발표)"
+        "date": "2029",
+        "event": "SKT 주축 5GW 규모 AIDC 단계적 오픈 예정"
+      },
+      {
+        "date": "2035",
+        "event": "SKT AIDC 15GW 달성 목표"
       }
     ],
     "top_picks": [
@@ -34,7 +38,7 @@
       "KT",
       "LG유플러스"
     ],
-    "risk": "통신업종 모멘텀 부재 및 전력 수급 안정성",
+    "risk": "전력 수급 안정성 확보 및 AIDC 구축 지역 선정",
     "quote": "SKT의 사업 구조가 단순 공간, 전력 임대가 아닌 고성능 AI 컴퓨팅 자원 자체를 클라우드 형태로 즉시 제공하는 '서비스형 GPU(GPUaaS)' 고부가가치 플랫폼 사업으로 확장될 가능성에 주목"
   }
 }

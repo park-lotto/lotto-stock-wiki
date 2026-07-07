@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "date": "2026-07-06",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-07_0808_2분기 분위기 점검 + 6월 수출 Re.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "하나증권",
+    "analyst": "심은주",
+    "report_date": "2026.7.6",
+    "market_direction": null,
+    "macro_vars": [
+      "원/달러",
+      "원/위안",
+      "원/백엔",
+      "동화/원",
+      "달러/유로",
+      "위안/달러"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "소비내수",
+        "stance": null,
+        "reason": "음식료 업종 대형주는 안정적인 주가 흐름 보여줬으며 중소형주에 대한 저가 매수세가 유입됨"
+      }
+    ],
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "오리온",
+      "CJ제일제당",
+      "삼양식품"
+    ],
+    "risk": "2분기는 원가 부담이 본격화되는 시점으로 이익 가시성이 낮다.",
+    "quote": "주지했던 것처럼, 2분기는 원가 부담이 본격화되는 시점으로 이익 가시성이 낮다."
+  }
+}

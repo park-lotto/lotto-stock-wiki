@@ -1,0 +1,43 @@
+{
+  "market_direction": "mixed_to_bearish_correction",
+  "macro_events": [
+    {
+      "fact": "WTI oil price fell below $70, US 10-year Treasury yield dropped 10bp",
+      "ts": "07:52",
+      "quote": "WTI 선물이 배럴당 70달러를 하회하며, 미 국채 10년물 금리가 10bp나 하락함."
+    },
+    {
+      "fact": "US 5월 PCE price index matches expectations",
+      "ts": "21:50",
+      "quote": "미국 5월 PCE 인플레 대체로 예상치 부합"
+    },
+    {
+      "fact": "Significant Asian market decline, KOSPI hit with multiple sidecars and circuit breakers",
+      "ts": "17:12",
+      "quote": "코스피: 29번의 사이드카, 5번의 서킷 브레이커"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "반도체",
+      "stance": "volatility_and_correction",
+      "comment": "Micron's earnings surprise drove initial gains, but concerns over Apple and Microsoft raising product prices due to high memory costs led to a sharp downturn in Asian tech stocks."
+    },
+    {
+      "sector": "소비내수",
+      "stance": "neutral_to_negative",
+      "comment": "Tech and consumer electronics face headwinds from component cost increases, leading to product price hikes and demand concerns."
+    },
+    {
+      "sector": "신재생",
+      "stance": "positive",
+      "comment": "China's '15.5 New Energy System Construction Plan' supported gains in the sector."
+    },
+    {
+      "sector": "기타",
+      "stance": "negative",
+      "comment": "Cryptocurrency assets faced strong downward pressure with Bitcoin falling below $60,000."
+    }
+  ],
+  "quote": "변동성의 변동성"
+}

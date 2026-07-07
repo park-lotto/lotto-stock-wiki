@@ -1,0 +1,22 @@
+{
+  "reports": [
+    {
+      "broker": "한투글로벌",
+      "stock": "Micron Technology",
+      "rating": null,
+      "tp": null,
+      "ts": "06:20",
+      "quote": "Micron Technology와 Anthropic가 차세대 AI 인프라 확장을 위한 전략적 협력 계약 체결.",
+      "sector": "반도체"
+    },
+    {
+      "broker": "한투글로벌",
+      "stock": "Qualcomm",
+      "rating": null,
+      "tp": null,
+      "ts": "06:24",
+      "quote": "퀄컴이 AI 소프트웨어 스타트업 Modular 인수에 근접.",
+      "sector": "반도체"
+    }
+  ]
+}

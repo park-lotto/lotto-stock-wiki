@@ -1,42 +1,46 @@
 {
-  "market_direction": "Positive, highlighted by Micron's earnings surprise and cooling inflation indicators.",
+  "market_direction": "Positive",
   "macro_events": [
     {
-      "fact": "Micron Technology reports record Q4 2026 guidance with revenue of $50B and gross margin of 86%.",
+      "fact": "마이크론 2026 Q4 가이던스 매출 50B달러 달성 전망",
       "ts": "07:48",
-      "quote": "Q4 26 가이던스 - 매출: $50B ±$1B (사상 최대 예상) - EPS: $31 ±$1(사상 최대 예상) - Gross Margin: 약 86%"
+      "quote": "Q4 26 가이던스 - 매출: $50B ±$1B (사상 최대 예상)"
     },
     {
-      "fact": "WTI crude oil falls below $70, and 10-year Treasury yields drop 10bp.",
+      "fact": "WTI 선물 70달러 하회 및 10년물 국채 금리 10bp 하락",
       "ts": "07:52",
       "quote": "WTI 선물이 배럴당 70달러를 하회하며, 미 국채 10년물 금리가 10bp나 하락함."
     },
     {
-      "fact": "US 5월 PCE inflation data aligns with market expectations.",
+      "fact": "미국 5월 헤드라인 PCE YoY 4.1% 기록",
       "ts": "21:50",
-      "quote": "헤드라인 PCE YoY: +4.1% (부합), 코어 PCE YoY: +3.4% (부합)"
+      "quote": "헤드라인 PCE YoY: +4.1% (부합)"
     }
   ],
   "sectors_mentioned": [
     {
       "sector": "반도체",
       "stance": "Positive",
-      "comment": "마이크론의 실적 서프라이즈와 AI 수요 가시화로 인해 업황 개선 기대감이 상승함."
+      "comment": "마이크론의 어닝 서프라이즈와 SK하이닉스 ADR 상장 모멘텀으로 강력한 상승세 기록",
+      "quote": "ADR 및 마이크론 효과에 SK하이닉스 13% 급등"
     },
     {
-      "sector": "신재생",
+      "sector": "전력",
       "stance": "Positive",
-      "comment": "SK그룹의 대규모 신재생에너지 투자 계획 발표 기대감으로 관련주가 강세를 보임."
+      "comment": "SK그룹의 대규모 투자 계획 및 신재생에너지 관련 투자 기대감으로 강세",
+      "quote": "SK그룹은 오는 30일 광주에서 대규모 투자 계획을 발표할 예정. 이때 전력공급을 확대하는 신재생에너지 투자도 검토하는 것으로 알려짐."
     },
     {
       "sector": "소비내수",
       "stance": "Negative",
-      "comment": "트립닷컴의 가이던스 하향과 고유가 부담 등으로 인한 단기 수익성 우려가 존재함."
+      "comment": "여행주 및 빅테크 종목 전반의 약세와 2분기 가이던스 하향에 따른 부진",
+      "quote": "홍콩 증시는 빅테크, 소비 하락에 약세로 본토 증시 대비 부진"
     },
     {
       "sector": "중국",
       "stance": "Positive",
-      "comment": "과창50지수가 사상 첫 2000선을 돌파하는 등 AI 인프라 중심으로 강세를 보임."
+      "comment": "AI 반도체 및 인프라 중심의 강세로 과창50지수 신고가 경신",
+      "quote": "AI 반도체 및 인프라 중심 강세 지속. 과창50지수는 사상 첫 2000선 돌파하며 신고가 경신"
     }
   ]
 }

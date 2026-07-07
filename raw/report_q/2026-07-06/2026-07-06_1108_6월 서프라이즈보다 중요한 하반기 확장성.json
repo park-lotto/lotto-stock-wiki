@@ -1,0 +1,68 @@
+{
+  "meta": {
+    "date": "2026-07-06",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-06_1108_6월 서프라이즈보다 중요한 하반기 확장성.md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "한유정",
+    "report_date": "2026년 07월 03일",
+    "target_kind": "sector",
+    "sector_name": "화장품",
+    "sector_view": "Positive",
+    "thesis": [
+      "Amazon Prime Day 내 한국 브랜드의 대규모 성과 달성",
+      "수출 지역의 유럽·미국·동남아 등으로의 다변화 및 비중 확대",
+      "특정 히트 브랜드 및 SKU 의존에서 벗어나 다수 브랜드·제품군으로 성장 분산"
+    ],
+    "timeline": [
+      "2026년 6월 23~26일: Amazon Prime Day 진행",
+      "2026년 1~6월: 누적 화장품 수출 57.82억달러 기록"
+    ],
+    "top_picks": [
+      {
+        "name": "에이피알(메디큐브)",
+        "reason": "Amazon Skin Care Top 50 내 9개 SKU 진입 등 미국 온라인에서 가장 두드러진 성과 기록",
+        "tp": null
+      },
+      {
+        "name": "바이오던스",
+        "reason": "다수 브랜드 동시 성장 국면에서 주요 성과 브랜드로 언급",
+        "tp": null
+      },
+      {
+        "name": "아누아",
+        "reason": "다수 브랜드 동시 성장 국면에서 주요 성과 브랜드로 언급",
+        "tp": null
+      },
+      {
+        "name": "라네즈",
+        "reason": "다수 브랜드 동시 성장 국면에서 주요 성과 브랜드로 언급",
+        "tp": null
+      },
+      {
+        "name": "COSRX",
+        "reason": "다수 브랜드 동시 성장 국면에서 주요 성과 브랜드로 언급",
+        "tp": null
+      },
+      {
+        "name": "Dr.Althea",
+        "reason": "다수 브랜드 동시 성장 국면에서 주요 성과 브랜드로 언급",
+        "tp": null
+      },
+      {
+        "name": "Beauty of Joseon",
+        "reason": "다수 브랜드 동시 성장 국면에서 주요 성과 브랜드로 언급",
+        "tp": null
+      },
+      {
+        "name": "d’alba",
+        "reason": "다수 브랜드 동시 성장 국면에서 주요 성과 브랜드로 언급",
+        "tp": null
+      }
+    ],
+    "risk": "Amazon Prime Day 행사 시점 변동에 따른 월별 수출 데이터의 일시적 착시 효과 발생 가능성",
+    "quote": "한국 화장품이라는 카테고리 자체가 글로벌 온라인·오프라인 채널에서 구조적으로 확장되어 하반기에도 한국 화장품의 수출 성장세는 지속될 것으로 기대한다."
+  }
+}

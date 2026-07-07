@@ -1,0 +1,34 @@
+{
+  "target_kind": "market",
+  "market_direction": "neutral",
+  "macro_events": [
+    {
+      "fact": "코스닥 액티브 ETF 1조 유입 속 단기 급등주 투자 경계",
+      "ts": "03-14",
+      "quote": "코스닥 액티브 ETF에 1조…\"단기 급등주 투자 경계\""
+    },
+    {
+      "fact": "AI·로봇 급등주 공매도 증가로 변동성 장세 수급 경고",
+      "ts": "06-12",
+      "quote": "AI·로봇 급등주에 공매도 몰렸다…변동성 장세 수급 경고"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "반도체",
+      "stance": "긍정",
+      "comment": "반도체 ETF 올해 수익률 1위, 성장주 중심의 포트폴리오 주목"
+    },
+    {
+      "sector": "로봇",
+      "stance": "중립",
+      "comment": "급등주 관련 공매도 수급 경고"
+    },
+    {
+      "sector": "IT",
+      "stance": "중립",
+      "comment": "AI 관련 급등주 공매도 수급 경고"
+    }
+  ],
+  "quote": "급등주 버린 주식 초고수들…새롭게 담은 주도주는?"
+}

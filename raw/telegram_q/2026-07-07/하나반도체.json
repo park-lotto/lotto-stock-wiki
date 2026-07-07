@@ -1,0 +1,60 @@
+{
+  "sector_name": "반도체 및 2차전지",
+  "sector_view": "중립",
+  "points": [
+    "필라델피아 반도체 지수 반등 및 AI 관련 종목 강세",
+    "LG에너지솔루션 2Q26 잠정 실적 컨센서스 하회 및 AMPC 제외 영업손실 기록"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "Credo Tech",
+      "comment": "AI 네트워킹 관련 종목으로 강한 주가 상승폭을 보임",
+      "ts": "07:30",
+      "quote": "AI 네트워킹 관련 종목들인 Credo Tech, Astera Laps의 주가 상승폭이 강한 편이었습니다.",
+      "sector": "반도체"
+    },
+    {
+      "name": "Astera Laps",
+      "comment": "AI 네트워킹 관련 종목으로 강한 주가 상승폭을 보임",
+      "ts": "07:30",
+      "quote": "AI 네트워킹 관련 종목들인 Credo Tech, Astera Laps의 주가 상승폭이 강한 편이었습니다.",
+      "sector": "반도체"
+    },
+    {
+      "name": "Nvidia",
+      "comment": "차세대 제품 지연 우려에도 강보합 마감",
+      "ts": "07:30",
+      "quote": "차세대 제품의 지연 우려가 있던 Nvidia 주가가 강보합 마감한 가운데",
+      "sector": "반도체"
+    },
+    {
+      "name": "AMD",
+      "comment": "상대적으로 강한 주가 흐름을 보임",
+      "ts": "07:30",
+      "quote": "AMD와 Qualcomm의 주가가 상대적으로 강한 편이었습니다.",
+      "sector": "반도체"
+    },
+    {
+      "name": "Qualcomm",
+      "comment": "상대적으로 강한 주가 흐름을 보임",
+      "ts": "07:30",
+      "quote": "AMD와 Qualcomm의 주가가 상대적으로 강한 편이었습니다.",
+      "sector": "반도체"
+    },
+    {
+      "name": "LG에너지솔루션",
+      "comment": "2Q26 잠정 실적 매출은 부합했으나 영업이익은 컨센서스를 하회함",
+      "ts": "09:02",
+      "quote": "- 영업이익 1,883억원 하회",
+      "sector": "2차전지"
+    }
+  ],
+  "events": [
+    {
+      "fact": "LG에너지솔루션 2Q26 잠정 실적 발표",
+      "ts": "09:02",
+      "quote": "LG에너지솔루션 2Q26 잠정 실적 발표 - 하나증권 2차전지 김현수, 홍지원"
+    }
+  ],
+  "quote": "필라델피아 반도체 지수는 2.2% 상승 반등했으나, LG에너지솔루션의 2Q26 실적은 컨센서스를 하회했습니다."
+}

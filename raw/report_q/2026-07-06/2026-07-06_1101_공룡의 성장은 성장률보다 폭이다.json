@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-06",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-06_1101_공룡의 성장은 성장률보다 폭이다.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "한유정",
+    "report_date": "2026년 07월 03일",
+    "stocks": [
+      {
+        "name": "코스맥스",
+        "code": "192820",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "250,000원",
+        "tp_prev": "250,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 2분기 코스맥스의 연결 매출액은 7,557억원(+21.2% YoY, +10.8% QoQ), 영업이익은 693억원(+14.0% YoY, +30.7% QoQ)으로 컨센서스 영업이익(694억원)에 부합할 전망이다.",
+        "estimate_revision": null,
+        "next_catalyst": "미국의 턴어라운드",
+        "thesis": [
+          "한국 법인의 안정적인 성장세가 지속되고 있는 점",
+          "수익성의 QoQ 회복이 확인되고 있는 점",
+          "해외 법인의 성장세가 두드러지는 점"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "한국, 중국 다음으로 매출 비중이 큰 미국의 턴어라운드가 인상적이다. 다수의 고객사로의 제품 출고 및 출시가 본격화되며 2분기 턴어라운드를 시작으로 하반기에도 고성장세가 지속될 가능성이 높기 때문이다.",
+        "sector": "화장품미용"
+      }
+    ]
+  }
+}

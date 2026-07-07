@@ -1,0 +1,54 @@
+{
+  "meta": {
+    "date": "2026-07-06",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-06_1105_Weekly Monitor 종전에도 정제마진, 윤활기...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "윤재성, 김형준",
+    "report_date": "2026.07.06",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "WTI 68.7$(-1%)",
+      "Dubai 63.8$(-1%)",
+      "정제마진 32.2$(WoW +3.4$)",
+      "벤젠 +6%",
+      "톨루엔 +3%",
+      "PO -9%",
+      "BD/PA -8%",
+      "PET -7%",
+      "에틸렌/PP/DOP -4%"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "정유",
+        "stance": "Overweight",
+        "reason": "정제마진 2주 상승 및 한국 정유업체 하반기 실적 호조 예상"
+      },
+      {
+        "sector": "석유화학",
+        "stance": "Overweight",
+        "reason": "윤활기유/LAB 등 연관 다운스트림 제품의 수급 타이트 및 높은 이익 창출"
+      },
+      {
+        "sector": "신재생",
+        "stance": "Overweight",
+        "reason": "Section 232 기대감 및 미국 태양광 설치 수요"
+      }
+    ],
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "S-Oil",
+      "OCI홀딩스",
+      "금호석유화학",
+      "한화솔루션",
+      "효성티앤씨",
+      "이수화학"
+    ],
+    "risk": "정제설비 타격, 이란 전쟁, 미국 태양광 설치량 둔화 리스크",
+    "quote": "종전에도 정제마진, 윤활기유, LAB는 강세"
+  }
+}

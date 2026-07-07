@@ -6,19 +6,40 @@
   },
   "questionnaire": {
     "broker": "IBK투자증권",
-    "analyst": "이승훈",
+    "analyst": "이상훈",
     "report_date": "2026.07.01",
     "target_kind": "market",
     "market_direction": null,
     "macro_vars": [],
-    "recommended_sectors": [],
+    "recommended_sectors": [
+      {
+        "sector": "인터넷",
+        "stance": null,
+        "reason": "NAVER, 카카오 등 주요 인터넷 서비스 기업 동향 포함"
+      },
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "삼성에스디에스, 현대오토에버, 더존비즈온 등 SW/IT 기업 동향 포함"
+      },
+      {
+        "sector": "게임",
+        "stance": null,
+        "reason": "크래프톤, NC, 넷마블 등 주요 게임사 동향 및 위메이드, 카카오게임즈 관련 이슈 포함"
+      }
+    ],
     "style": null,
-    "event_calendar": [],
+    "event_calendar": [
+      {
+        "date": "하반기",
+        "event": "카카오게임즈 '갓 세이브 버밍엄' 글로벌 비공개 테스트(CBT)"
+      }
+    ],
     "top_picks": [
       "위메이드",
       "카카오게임즈"
     ],
-    "risk": "게임 IP의 권리와 경영권이 사실상 중국 자본으로 넘어가게 됨",
+    "risk": "게임 IP의 권리와 경영권이 중국 자본으로 넘어갈 가능성(위메이드 사례)",
     "quote": "게임 '미르' 일군 위메이드, 사실상 中자본에 넘어간다",
     "sector": "기타"
   }

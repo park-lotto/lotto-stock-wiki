@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "date": "2026-07-01",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-01_1111_패키지기판 업종 주가상승 코멘트 한국 기판...md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": "고의영, 박정하",
+    "report_date": "2026.07.01",
+    "target_kind": "sector",
+    "sector_name": "전기전자",
+    "sector_view": "Overweight",
+    "thesis": [
+      "CPU 수요 확대에 따른 FC-BGA 업황 타이트닝",
+      "선두권 기판 업체의 FC-BGA 배분 확대에 따른 국내 BT 기판 업체들의 반사이익",
+      "국내외 기판 업체 간 밸류에이션 괴리 축소 기대"
+    ],
+    "timeline": [
+      "3Q26: 대덕전자 스위치용 FC-BGA 매출 인식 시작 전망",
+      "2027년: BT 기판 수요 가시성 확대"
+    ],
+    "top_picks": [
+      {
+        "name": "심텍",
+        "reason": "SOCAMM용 MCP 등 메모리 응용처 중심의 BT 기판 수요 확대 수혜 및 가동률 개선에 따른 영업 레버리지 효과",
+        "tp": null
+      },
+      {
+        "name": "대덕전자",
+        "reason": "대규모 BT 기판 투자 및 3Q26 스위치용 FC-BGA 매출 가시화, 대면적 FC-BGA로의 영역 확대",
+        "tp": null
+      }
+    ],
+    "risk": "Ibiden의 CPU 성장률 가정(4%)이 보수적이라는 점을 제외하면, 산업 내 판가 인상 및 증설 모멘텀은 유지됨",
+    "quote": "국내 기판 업체들을 바라보는 관점은 변함없다. 다수의 업체로부터 판가 인상, 증설 모멘텀이 확인되었고, 하반기로 갈수록 기회 요인이 많아지는데, 밸류에이션은 여전히 해외 대비 낮은 수준에 머물러 있다"
+  }
+}

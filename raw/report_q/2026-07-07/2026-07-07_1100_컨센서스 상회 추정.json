@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-07",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-07_1100_컨센서스 상회 추정.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "김소혜, 김나우",
+    "report_date": "2026년 7월 7일",
+    "stocks": [
+      {
+        "name": "삼성에스디에스",
+        "code": "018260",
+        "rating": "Buy(유지)",
+        "rating_changed": false,
+        "tp_new": "250,000원",
+        "tp_prev": "210,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "동사의 2Q26 실적은 매출액 3.69조 원, 영업이익 2,467억 원을 기록하며 매출액과 영업이익 모두 컨센서스를 각각 6%, 9% 상회한 것으로 추정된다.",
+        "estimate_revision": "컨센서스 상회 추정",
+        "next_catalyst": "연중 가시적인 성과 및 자본 활용 전략 모멘텀",
+        "thesis": [
+          "클라우드 및 물류 매출 호조로 인한 2Q26 컨센서스 상회",
+          "지연됐던 프로젝트 재개 및 MSP 사업 대외확장 가속화",
+          "AIDC 인프라 확장을 통한 가시성 높은 매출 목표 달성"
+        ],
+        "valuation_basis": "내년 예상 EPS에 P/E 목표배수 22배를 적용",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "동사의 2Q26 실적은 클라우드 및 물류 매출 호조로 컨센서스를 상회한 것으로 추정됩니다. 올해는 자본 활용 전략에 대한 모멘텀을 보다 기대해볼 수 있는 시기라고 보며, 연중 가시적인 성과가 확인된다면 멀티플 할인 요인이 해소될 것으로 예상합니다."
+      }
+    ]
+  }
+}

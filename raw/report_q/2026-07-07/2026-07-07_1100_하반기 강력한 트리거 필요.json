@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-07",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-07_1100_하반기 강력한 트리거 필요.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "김소혜, 김나우",
+    "report_date": "2026년 7월 7일",
+    "stocks": [
+      {
+        "name": "카카오",
+        "code": "035720",
+        "rating": "Buy(유지)",
+        "rating_changed": false,
+        "tp_new": "62,000원",
+        "tp_prev": "70,000원",
+        "tp_direction": "down",
+        "earnings_outlook": "동사의 2Q26 실적은 매출액 2.07조 원, 영업이익 2,237억 원을 기록하며 영업이익 기준 컨센서스에 부합한 것으로 추정한다.",
+        "estimate_revision": "글로벌 동종기업 밸류에이션 하락을 반영해 목표배수를 소폭 하향했다.",
+        "next_catalyst": "하반기 AI서비스 성과 확인",
+        "thesis": [
+          "톡비즈 내 광고 매출액 YoY 14.6% 증가 예상",
+          "플랫폼 부문 내 광고 사업의 소재 및 광고주 다변화에 따른 성장세 유지",
+          "AI에이전트 수익화 가능성 확인 시 점진적 리레이팅 전망"
+        ],
+        "valuation_basis": "글로벌 동종기업 밸류에이션 하락을 반영해 목표배수를 소폭 하향했다.",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "동사에 목표주가를 6만 2천 원으로 낮춰 제시한다. 글로벌 동종기업 밸류에이션 하락을 반영해 목표배수를 소폭 하향했다. 동사의 주가는 시장 수익률 대비 부진한 상황이 지속되고 있지만 이제 업사이드 요인이 더욱 크게 반영될 구간이라고 본다."
+      }
+    ]
+  }
+}

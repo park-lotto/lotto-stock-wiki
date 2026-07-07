@@ -2,66 +2,61 @@
   "sector_name": "기타",
   "sector_view": "중립",
   "points": [
-    "미국 육군 기지 내 핵심광물 가공 시설 건설 계약으로 공급망 자립화 가속",
-    "철광석 가격 7주 연속 하락 및 중국 공업이익 증가율 둔화 등 원자재 및 중국 경기 우려 지속",
-    "유럽과 영국 내 폭염으로 인한 전력 수급 불안정 및 에너지 정책 변화",
-    "중국발 항공기 수주전 격화(Airbus vs Boeing)",
-    "국내 철강 산업 지원을 위한 'K-스틸법 2.0' 발의"
+    "미국 육군, 민간 기업의 핵심광물 가공 공장 군사기지 유치",
+    "철광석 가격 7주 연속 하락세 기록",
+    "중국 공업이익 증가율 둔화로 인한 내수 침체 우려",
+    "중동 지역 미국-이란 간 군사적 긴장 고조",
+    "국내 철강산업 지원을 위한 'K-스틸법 2.0' 발의"
   ],
   "stocks_mentioned": [
     {
       "name": "Airbus",
-      "comment": "China Eastern Airlines로부터 93억 5,000만 달러 규모의 A330neo 25대 수주 확보",
+      "comment": "China Eastern Airlines로부터 A330neo 25대 주문을 확보하며 중국 시장 내 우위 확인",
       "ts": "14:54",
-      "quote": "Airbus wins $9.35 billion China Eastern deal for widebody jets",
+      "quote": "Airbus는 China Eastern Airlines로부터 A330neo 25대 주문을 확보했습니다.",
       "sector": "기타"
     },
     {
       "name": "Boeing",
-      "comment": "China Southern Airlines로부터 36억 2,000만 달러 규모의 화물기 7대 수주 확보",
+      "comment": "China Southern Airlines로부터 화물기 7대 및 추가 옵션 구매 계약 체결",
       "ts": "14:55",
-      "quote": "Boeing wins jet deal from China Southern valued at $3.62 billion",
+      "quote": "Boeing은 China Southern Airlines로부터 36억2,000만 달러 규모 항공기 주문을 확보했습니다.",
       "sector": "기타"
     },
     {
       "name": "China Three Gorges",
-      "comment": "유럽 재생에너지 시장 확대를 위해 독일 육상풍력 자산 인수 논의 중",
+      "comment": "유럽 재생에너지 포트폴리오 확장을 위해 독일 육상풍력 자산 인수 추진",
       "ts": "14:58",
-      "quote": "China Three Gorges is said in talks to buy German wind assets",
+      "quote": "China Three Gorges가 독일 육상풍력 자산 인수를 검토하는 것은 유럽 재생에너지 포트폴리오를 더 넓히려는 움직임입니다.",
       "sector": "신재생"
     }
   ],
   "events": [
     {
-      "fact": "미국 육군, 군사기지 내 민간 핵심광물 가공 공장 건설 계약 체결",
+      "fact": "미국 육군, 핵심광물 가공 공장 군사기지 유치 계약 체결",
       "ts": "14:06",
-      "quote": "US Army Bases to Host Critical Minerals Processing Plants"
+      "quote": "미국 육군이 국내 핵심광물 생산을 늘리기 위해 군사기지 내에 민간 기업의 가공 공장을 건설하는 전례 없는 계약을 체결했습니다."
     },
     {
       "fact": "철광석 가격 7주 연속 하락",
       "ts": "14:31",
-      "quote": "Iron Ore Set for Seventh Straight Weekly Loss as Market Softens"
-    },
-    {
-      "fact": "세계은행과 아프리카개발은행, 아프리카 전력 공급 '미션 300' 가속화",
-      "ts": "14:41",
-      "quote": "World Bank, AfDB to Boost African Power Plan This Year"
-    },
-    {
-      "fact": "영국 전력망 운영자, 폭염으로 인한 전력 공급 경보 발령",
-      "ts": "14:50",
-      "quote": "UK Grid Issues Another Supply Warning as Heat Tests Network"
+      "quote": "철광석 가격이 계절적 수요 둔화와 밀 마진 축소로 인해 2022년 이후 가장 긴 7주 연속 하락세를 기록했습니다."
     },
     {
       "fact": "중국 5월 공업이익 증가율 둔화",
       "ts": "14:59",
-      "quote": "China’s Industrial Profit Gains Dip in Sign of Weakness"
+      "quote": "중국의 5월 공업이익 증가율이 전월 대비 둔화되며 내수 침체 우려가 다시 부각되었습니다."
     },
     {
-      "fact": "국회, 'K-스틸법 2.0' 발의",
+      "fact": "미국-이란 간 상호 군사 공격 발생",
+      "ts": "15:00",
+      "quote": "미국은 이란 내 여러 목표물을 다시 공격했습니다."
+    },
+    {
+      "fact": "국회 'K-스틸법 2.0' 발의",
       "ts": "15:35",
-      "quote": "철강協, 국회 ‘K-스틸법 2.0’ 발의에 \"적극 환영\"…업계 숨통 트이나"
+      "quote": "철강산업 지원을 위한 국회철강포럼 어기구 의원 4개 법안발의에 ‘환영’"
     }
   ],
-  "quote": "글로벌 공급망 재편과 기후 변화에 따른 에너지 수급 불안이 지속되는 가운데 주요 산업별 정책 변화와 수주 소식이 이어지고 있습니다."
+  "quote": "미국 육군이 핵심광물 공급망 안정을 위해 군사기지 내 가공 공장을 유치하는 등 글로벌 공급망 전략이 급변하고 있습니다."
 }

@@ -1,0 +1,20 @@
+{
+  "target_kind": "insight",
+  "leading_sectors": [],
+  "stance": [
+    {
+      "target": "단일종목 레버리지",
+      "view": "부정",
+      "ts": null,
+      "quote": "저는 유리멘탈이라 단일종목 레버리지는 안하겠습니다."
+    }
+  ],
+  "methods": [
+    {
+      "rule": "단일종목 레버리지 투자 지양",
+      "quote": "저는 유리멘탈이라 단일종목 레버리지는 안하겠습니다."
+    }
+  ],
+  "stocks_mentioned": [],
+  "quote": "저는 유리멘탈이라 단일종목 레버리지는 안하겠습니다."
+}

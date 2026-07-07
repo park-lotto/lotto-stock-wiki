@@ -11,84 +11,39 @@
     },
     {
       "broker": "그로쓰리서치",
-      "stock": "알칩(Alchip)",
-      "rating": null,
-      "tp": null,
-      "ts": "13:44",
-      "quote": "Amazon, 20년 만에 소비자기기 칩 전략 바꾼다… Alchip 최대 수혜 가능성",
-      "sector": "반도체"
-    },
-    {
-      "broker": "그로쓰리서치",
-      "stock": "셀트리온",
-      "rating": null,
-      "tp": null,
-      "ts": "14:26",
-      "quote": "셀트리온, 2조 투자에…李 \"서정진 있어 충청 잠재력 무궁무진\"",
-      "sector": "바이오"
-    },
-    {
-      "broker": "그로쓰리서치",
-      "stock": "삼성물산",
-      "rating": null,
-      "tp": null,
-      "ts": "14:39",
-      "quote": "삼성물산, 72조 규모 英 SMR 14기 건설 프로젝트 참여",
-      "sector": "원전"
-    },
-    {
-      "broker": "그로쓰리서치",
-      "stock": "한미반도체",
-      "rating": null,
-      "tp": null,
-      "ts": "14:45",
-      "quote": "곽동신 한미반도체 회장, 자사주 50억 추가 취득",
-      "sector": "반도체"
-    },
-    {
-      "broker": "그로쓰리서치",
-      "stock": "삼성전기, LG디스플레이",
-      "rating": null,
-      "tp": null,
-      "ts": "15:59",
-      "quote": "애플 OLED 승인 마무리…삼성D·LGD, 패널 양산 본격화",
-      "sector": "IT"
-    },
-    {
-      "broker": "그로쓰리서치",
-      "stock": "SK실트론",
-      "rating": null,
-      "tp": null,
-      "ts": "16:18",
-      "quote": "SK실트론 매각 놓고 경영진 막판 고심…이달 중 최종 결정",
-      "sector": "반도체"
-    },
-    {
-      "broker": "그로쓰리서치",
       "stock": "삼성전기",
       "rating": null,
       "tp": null,
       "ts": "16:49",
-      "quote": "삼성전기, 유리기판 핵심소재 직접 만든다...日 합작사 설립",
+      "quote": "삼성전기, 동우화인켐과 유리기판용 글라스 코어 합작법인 설립",
       "sector": "반도체"
     },
     {
       "broker": "그로쓰리서치",
-      "stock": "마이크론",
+      "stock": "삼성전자",
       "rating": null,
       "tp": null,
-      "ts": "17:10",
-      "quote": "마이크론 컨퍼런스 콜로 읽는 메모리 산업의 구조적 변화",
+      "ts": "13:33",
+      "quote": "삼성전자가 고객사와 3분기 D램 가격을 최대 20% 인상하는 협상을 진행 중",
       "sector": "반도체"
     },
     {
       "broker": "그로쓰리서치",
-      "stock": "셀트리온",
+      "stock": "바이오솔루션",
       "rating": null,
       "tp": null,
-      "ts": "08:55",
-      "quote": "셀트리온, 2분기 영업익 4300억원 '역대 최대'",
+      "ts": "17:45",
+      "quote": "무릎 연골 결손 세포치료제 ‘카티라이프’의 중국 하이난 의료특구 판매 승인 확보",
       "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성SDI",
+      "rating": null,
+      "tp": null,
+      "ts": "16:21",
+      "quote": "대만 '심플로 테크놀로지(Simplo)'와 약 2조원 규모 배터리 셀 공급 계약",
+      "sector": "2차전지"
     }
   ]
 }

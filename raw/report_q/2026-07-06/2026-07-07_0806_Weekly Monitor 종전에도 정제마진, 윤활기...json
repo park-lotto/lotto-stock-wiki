@@ -1,0 +1,49 @@
+{
+  "meta": {
+    "date": "2026-07-06",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-07_0806_Weekly Monitor 종전에도 정제마진, 윤활기...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "윤재성, 김형준",
+    "report_date": "2026.07.06",
+    "target_kind": "market",
+    "market_direction": "정제마진 강세 지속 및 일부 화학 체인의 실적 호조 예상",
+    "macro_vars": [
+      "WTI 68.7$(-1%)",
+      "Dubai 63.8$(-1%)",
+      "정제마진 32.2$(WoW +3.4$)",
+      "사우디 7월 OSP(Arab Light) 9.5$/bbl(MoM -6.0$/bbl)"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "정유",
+        "stance": "Overweight",
+        "reason": "정제마진 강세 지속 및 아시아 정유사의 도입가 부담 완화"
+      },
+      {
+        "sector": "석유화학",
+        "stance": "Overweight",
+        "reason": "윤활기유/LAB 마진 강세 지속, 합성고무 사이클 회복 기대"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.06.30 (예상)",
+        "event": "미국 무역확장법 Section 232 조사 결과 발표"
+      }
+    ],
+    "top_picks": [
+      "S-Oil",
+      "OCI홀딩스",
+      "금호석유화학",
+      "한화솔루션",
+      "효성티앤씨",
+      "이수화학"
+    ],
+    "risk": "중국 공급망 규제와 무관한 OCI홀딩스, 한화솔루션 등의 수혜 가능성은 있으나, 미국 태양광 모듈 부족 현상 및 가격 상승에 따른 설치량 둔화 리스크와 테슬라의 중국 장비 반입 이슈에 따른 증설 속도 둔화 가능성 존재",
+    "quote": "러시아의 정제설비 타격과 호르무즈 사태 이후 아시아의 구매처 다변화 등에 따라 WTI보다 Dubai는 5$ 저렴하게 거래. 심지어 8월 사우디의 OSP는 큰 폭 하락할 전망이며, 이후에는 (-) 가능성도 충분. 즉, 아시아 정유사의 도입가 부담 현저하게 줄어드는 국면 진입. 반면, 정제마진은 32.2$로 강세 지속. 한국 정유업체 하반기 실적 호조 예상"
+  }
+}

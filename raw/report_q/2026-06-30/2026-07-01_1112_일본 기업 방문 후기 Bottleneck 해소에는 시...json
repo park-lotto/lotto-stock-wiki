@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "date": "2026-06-30",
+    "broker": "현대차증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-01_1112_일본 기업 방문 후기 Bottleneck 해소에는 시...md"
+  },
+  "questionnaire": {
+    "broker": "현대차증권",
+    "analyst": "노근창, 김종배, 윤동욱",
+    "report_date": "2026년 6월 24일",
+    "target_kind": "market",
+    "market_direction": "null",
+    "macro_vars": [
+      "반도체 시장은 YoY로 282.3% 증가한 USD 8,893억 예상",
+      "27년과 28년 시장 규모도 YoY로 44.2%, 22.3% 증가할 것으로 예상",
+      "공급 부족 → 가격 인상 흐름"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": "비중확대",
+        "reason": "AI GPU/HBM 수요 증가에 따른 Memory, PCB, MLCC 등 Value-Chain 전반의 공급 부족 및 가격 인상"
+      }
+    ],
+    "style": "null",
+    "event_calendar": null,
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스",
+      "삼성전기",
+      "LG이노텍",
+      "피에스케이홀딩스",
+      "테스",
+      "NVIDIA",
+      "TSMC"
+    ],
+    "risk": [
+      "병목 요인 관리 필요",
+      "공급망의 절대적 수급 불균형",
+      "리드타임 및 생산부하 확대"
+    ],
+    "quote": "결국 병목의 흐름은 AI GPU/HBM → Memory, PCB, MLCC → 장비 순으로 발생하고 있고 이는 곧 Value-Chain 전반에 걸쳐 ‘공급 부족 → 가격 인상’의 흐름으로 이어질 것"
+  }
+}

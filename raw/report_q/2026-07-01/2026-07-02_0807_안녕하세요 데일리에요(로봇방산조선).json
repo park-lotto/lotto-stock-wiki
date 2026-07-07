@@ -1,0 +1,53 @@
+{
+  "meta": {
+    "date": "2026-07-01",
+    "broker": "eugene",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-02_0807_안녕하세요 데일리에요(로봇방산조선).md"
+  },
+  "questionnaire": {
+    "broker": "eugene",
+    "analyst": "양승윤",
+    "report_date": "06/30",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "영국 2026~2029년 국방예산 2,980억 파운드",
+      "미국 AI 데이터센터향 2.92억 유로 엔진 공급"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "로봇",
+        "stance": null,
+        "reason": "Figure.AI의 BMW 공장 휴머노이드 투입 및 Apptronik의 Robot Park 데이터 수집 시작"
+      },
+      {
+        "sector": "방산",
+        "stance": null,
+        "reason": "영국의 2026~2029년 국방투자계획 발표 및 드론·자율체계, 탄약·장거리 타격 예산 배정"
+      },
+      {
+        "sector": "조선",
+        "stance": null,
+        "reason": "바르질라의 미국 AI 데이터센터향 엔진 공급 계약 및 발전 솔루션 관심 지속"
+      }
+    ],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": [
+      "LG전자",
+      "HD현대로보",
+      "레인보우로보틱스",
+      "나우로보틱스",
+      "혼다",
+      "애지봇",
+      "Figure.AI",
+      "KAI",
+      "HD현대중공업",
+      "한화엔진",
+      "바르질라",
+      "Liberty Energy"
+    ],
+    "risk": null,
+    "quote": "러-우 전쟁 이후 소모성 전력, 분산형 타격체계로 확장되고 있음을 시사."
+  }
+}

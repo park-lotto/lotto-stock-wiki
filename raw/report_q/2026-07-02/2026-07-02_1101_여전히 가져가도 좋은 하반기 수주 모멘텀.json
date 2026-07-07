@@ -5,30 +5,30 @@
     "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-02_1101_여전히 가져가도 좋은 하반기 수주 모멘텀.md"
   },
   "questionnaire": {
-    "target_kind": "stock",
     "broker": "키움증권",
     "analyst": "신대현",
     "report_date": "2026. 7. 2",
+    "target_kind": "stock",
     "stocks": [
       {
         "name": "삼성E&A",
         "code": "028050",
-        "rating": "BUY(Maintain)",
-        "rating_changed": "유지",
+        "rating": "BUY",
+        "rating_changed": false,
         "tp_new": "72,000원",
-        "tp_prev": null,
+        "tp_prev": "null",
         "tp_direction": "up",
         "earnings_outlook": "삼성E&A의 2분기 영업이익은 2,108원(YoY +16.5%)으로 시장 컨센서스(2,177억원)에 부합할 것으로 전망된다.",
-        "estimate_revision": "투자의견 Buy를 유지하고, 목표주가 72,000원으로 상향한다.",
-        "next_catalyst": "하반기 P6 수주, 중동 수처리 수주, 사우디 SAN6 그레이 암모니아, 사우디 Khafji 가스, 카타르 UREA 비료공장, Pacifico Mexinol 그린 메탄올, UAE Falcon PLA, INPEX LNG, 멕시코 우르수스 에너지 LNG FEED, 중동재건 등",
+        "estimate_revision": "삼성E&A에 대한 투자의견 Buy를 유지하고, 목표주가는 BPS 참조 기간 변경에 따라 72,000원으로 상향한다.",
+        "next_catalyst": "하반기 P6 수주가 기대되는 상황이다.",
         "thesis": [
-          "2분기 영업이익은 시장 컨센서스에 부합할 전망",
-          "정부의 팹 건설 기간 단축 계획과 삼성전자 증설 계획에 따른 하반기 P6 수주 기대",
-          "화공 및 뉴에너지 부문의 다양한 파이프라인 보유"
+          "삼성E&A 2분기 영업이익은 시장 컨센서스에 부합할 것으로 전망된다.",
+          "정부의 팹 건설 기간 단축 계획과 삼성전자 증설 계획 고려 시 하반기 P6 수주가 기대된다.",
+          "화공과 뉴에너지 부문에서도 다수의 파이프라인을 보유하고 있어 추가 주가 상승 여력이 있다."
         ],
-        "valuation_basis": "'21~'22년 반도체 투자 사이클 PBR 상단 적용하여 목표 PBR 2.50배 산정",
+        "valuation_basis": "'21~'22년 반도체 투자 사이클 PBR 상단 적용(삼성E&A 목표 PBR 2.50)",
         "risk": "중동 전쟁으로 인한 비용 상승 가능성",
-        "supply_comment": "중동 수처리 수주(7.9억불) 및 동일 현장 O&M 추가 수주",
+        "supply_comment": "삼성전자 P5 골조공사 본격화 및 P6 수주 기대, 중동 수처리 수주 등",
         "quote": "투자의견 Buy를 유지하고, 목표주가 72,000원으로 상향한다."
       }
     ]

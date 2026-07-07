@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "date": "2026-07-07",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-07_1104_본게임은 어퍼 C 밴드 아닌가요.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김홍식",
+    "report_date": "2026년 7월 7일",
+    "target_kind": "sector",
+    "sector_name": "통신 장비",
+    "sector_view": "Overweight",
+    "thesis": [
+      "AWS-3 경매가 성공적으로 마무리되면서 버라이즌의 망 투자 의지가 확인됨",
+      "버라이즌의 CAPEX 증액이 현실화될 경우 삼성전자와 국내 벤더사에 수혜로 작용할 전망",
+      "7월 중 어퍼 C 밴드 경매 계획 수립 예정으로 미국향 무선 장비 수출 가시화"
+    ],
+    "timeline": [
+      "7/22: FCC에서 어퍼 C 밴드 경매 여부 결정",
+      "올해말~내년초: 대규모 미국향 무선 장비 수출 가시화"
+    ],
+    "top_picks": [
+      {
+        "name": "KMW",
+        "reason": "과거 버라이즌 AWS향 RRH 물량의 50%를 공급한 레퍼런스가 있어 실적 개선이 기대됨",
+        "tp": "50,000원"
+      },
+      {
+        "name": "RFHIC",
+        "reason": "7월 중 매수 추천 종목으로 거론",
+        "tp": "150,000원"
+      },
+      {
+        "name": "HFR",
+        "reason": "7월 중 매수 추천 종목으로 거론",
+        "tp": null
+      }
+    ],
+    "risk": "신규 경매 흥행 가능성을 부정적으로 보는 투자가들도 존재하며, 타 업계의 이해관계 상충 가능성이 있음",
+    "quote": "7월 중에 KMW, RFHIC, HFR 매수할 것을 추천한다."
+  }
+}

@@ -6,31 +6,34 @@
   },
   "questionnaire": {
     "broker": "대신증권",
-    "analyst": "박혜진, 권용수",
+    "analyst": [
+      "박혜진",
+      "권용수"
+    ],
     "report_date": "2026.07.01",
+    "target_kind": "stock",
     "stocks": [
       {
         "name": "하나금융지주",
         "code": "086790",
         "rating": "BUY",
-        "rating_changed": "유지",
+        "rating_changed": false,
         "tp_new": "143,000",
         "tp_prev": "143,000",
         "tp_direction": "flat",
         "earnings_outlook": "2Q26 지배주주 순이익 1.22조원(QoQ +0.6% YoY +3.8%) 기록 전망",
         "estimate_revision": null,
-        "next_catalyst": "하반기 추가 환원 여력 5,000억원 전망, 자사주/배당 유연하게 결정",
+        "next_catalyst": "하반기 추가 환원 및 자사주/배당 유연 결정",
         "thesis": [
-          "총 환원율 50% 올해 조기 달성 가능성",
-          "은행 NIM 1분기 대비 3bp 상승한 1.61% 전망",
-          "비이자이익 증가 및 기업금융 경쟁력 확보로 마진 관리 양호"
+          "총 환원율 50% 조기 달성 가능성",
+          "은행 NIM 1.61% 전망(1분기 대비 3bp 상승)",
+          "기업금융 경쟁력을 통한 양호한 마진 관리"
         ],
-        "valuation_basis": "배당의 세제혜택이 시행되며 현금배당 비중을 늘릴 가능성이 높을 것으로 전망. 이를 감안하면 PBR 0.72x는 매우 저평가 수준",
-        "risk": "중앙그룹 관련 디폴트 및 워크아웃 신청한 6개사에 대한 그룹 익스포저",
+        "valuation_basis": "PBR 0.72x는 매우 저평가 수준",
+        "risk": "중앙그룹 관련 디폴트 및 워크아웃 신청에 따른 500억원 충당금 반영",
         "supply_comment": null,
-        "quote": "‘27년 달성 예정이었던 총 환원율 50%가 올해로 조기 달성될 가능성이 높아짐. 1분기 DPS 1,145원 결의하였으며 3분기까지는 배당소득 분리과세, 4분기부터 비과세 배당 시행 예정."
+        "quote": "‘27년 달성 예정이었던 총 환원율 50%가 올해로 조기 달성될 가능성이 높아짐."
       }
-    ],
-    "target_kind": "stock"
+    ]
   }
 }

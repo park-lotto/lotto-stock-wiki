@@ -1601,8 +1601,7 @@ function _bigramSim(a,b){
 }
 const _TIMELINE_START="07:30";
 const _TIMELINE_DUP_SIM=0.28;    // 이 이상이면 사실상 같은 문장 → 제거(중복 완화 위해 하향)
-const _TIMELINE_THEME_SIM=0.16;  // 이 이상이면 같은 테마(다른 각도) → 최대 2개까지만 노출
-const _TIMELINE_THEME_CAP=3;   // 같은 테마 최대 노출(시장상황이 너무 적게 뜨던 것 완화)
+const _TIMELINE_THEME_SIM=0.16;  // 이 이상이면 같은 테마(다른 각도) → 뉴스는 대표1개만 노출
 function _dedupBySim(list){
   const kept=[];
   for(const item of list){
@@ -1644,21 +1643,11 @@ function _buildTimeline(){
     if(extra>0) rep.extra=extra;
     return rep;
   });
-  // 이벤트(시장상황): 같은 테마(신저가·프로그램매도·디커플링 등 사실상 같은 상태 반복)를
-  // 클러스터링 → 테마당 최신 CAP개만 + 나머지 "+N번 더"로 접기 (중복 카드 방지)
+  // 이벤트(시장상황): 완전 동일 문장만 dedup, 테마당 카드 수는 자르지 않는다.
+  // (타임라인이라 8개는 채워야 함 — 전체 노출 개수는 아래 _TIMELINE_PREVIEW_N 8개
+  // 초과시 접기(펼치기 버튼)로만 제어)
   const evDedup=_dedupBySim(tps.sort((a,b)=>a.ts.localeCompare(b.ts)));
-  const evClusters=[];
-  for(const item of evDedup){
-    const cl=evClusters.find(c=>c.items.some(it=>_bigramSim(it.text,item.text)>=_TIMELINE_THEME_SIM));
-    if(cl) cl.items.push(item); else evClusters.push({items:[item]});
-  }
-  const eventsKept=[];
-  for(const cl of evClusters){
-    cl.items.sort((a,b)=>b.ts.localeCompare(a.ts));   // 최신 우선
-    const shown=cl.items.slice(0,_TIMELINE_THEME_CAP);
-    const extra=cl.items.length-shown.length;
-    shown.forEach((it,idx)=>eventsKept.push(idx===shown.length-1&&extra>0?{...it,extra}:it));
-  }
+  const eventsKept=evDedup.sort((a,b)=>b.ts.localeCompare(a.ts));   // 최신 우선
 
   const all=[...newsCapped, ...eventsKept];
   // 중요 뉴스는 맨앞 고정, 그 외엔 최신순(내림차순)

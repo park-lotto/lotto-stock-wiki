@@ -1,0 +1,24 @@
+{
+  "target_kind": "market",
+  "market_direction": "bear",
+  "macro_events": [
+    {
+      "fact": "AI 데이터센터 확산에 따른 메모리 가격 급등으로 인한 애플 제품 가격 인상",
+      "ts": "2026-06-26",
+      "quote": "AI 데이터센터의 급격한 확대로 메모리와 저장장치 수요가 폭발적으로 증가했다"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "IT",
+      "stance": "부정",
+      "comment": "메모리 가격 급등 및 AI 기능 확대에 따른 제품 가격 인상 압박"
+    },
+    {
+      "sector": "반도체",
+      "stance": "긍정",
+      "comment": "AI 데이터센터 확산으로 인한 메모리 및 저장장치 수요 폭발"
+    }
+  ],
+  "quote": "부품 가격 상승을 더 이상 자체적으로 흡수하기 어렵다"
+}

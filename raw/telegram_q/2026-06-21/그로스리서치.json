@@ -1,0 +1,76 @@
+{
+  "reports": [
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성전기",
+      "rating": null,
+      "tp": null,
+      "ts": "10:01",
+      "quote": "글로벌 MLCC 3위 타이요유덴, 향후 5년간 생산능력 연평균 10% 확대 계획 발표",
+      "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "HD현대",
+      "rating": null,
+      "tp": null,
+      "ts": "10:20",
+      "quote": "HD현대, 엔비디아 로봇 시뮬레이션 플랫폼 ‘아이작 심’ 기반 피지컬 AI 로봇 개발",
+      "sector": "조선"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성디스플레이",
+      "rating": null,
+      "tp": null,
+      "ts": "13:32",
+      "quote": "삼성디스플레이는 IT OLED·게이밍 OLED·차량용 OLED 확대",
+      "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "LG디스플레이",
+      "rating": null,
+      "tp": null,
+      "ts": "13:32",
+      "quote": "LG디스플레이는 2스택 OLED 기반 프리미엄 시장 지배력 강화",
+      "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "케이씨텍",
+      "rating": null,
+      "tp": null,
+      "ts": "14:09",
+      "quote": "케이씨텍, SK하이닉스 초임계 세정장비 진입",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "피에스케이",
+      "rating": null,
+      "tp": null,
+      "ts": "14:09",
+      "quote": "피에스케이, HBM 투자 확대에 드라이 스트립 장비 수요 증가",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "LG이노텍",
+      "rating": null,
+      "tp": null,
+      "ts": "14:09",
+      "quote": "LG이노텍, 2031년 패키지솔루션 영업이익 1조원 목표",
+      "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "SKC",
+      "rating": null,
+      "tp": null,
+      "ts": "14:09",
+      "quote": "SKC, 미국 글라스기판 2공장 철수설 공식 부인",
+      "sector": "반도체"
+    }
+  ]
+}

@@ -35,24 +35,6 @@
       "ts": "07:43",
       "quote": "26~28년 지배순익 추정치 상향 및 26F PER 6배 적용하여 목표주가 22,500원으로 상향",
       "sector": "소비내수"
-    },
-    {
-      "broker": "신한투자증권",
-      "stock": "에코프로비엠",
-      "rating": "Trading BUY",
-      "tp": null,
-      "ts": "08:15",
-      "quote": "니켈 Upstream 내재화를 통한 중장기 경쟁력 강화",
-      "sector": "2차전지"
-    },
-    {
-      "broker": "신한투자증권",
-      "stock": "로켓랩",
-      "rating": null,
-      "tp": null,
-      "ts": "16:58",
-      "quote": "발사+위성 제조에 저궤도 위성 통신 확보",
-      "sector": "기타"
     }
   ]
 }

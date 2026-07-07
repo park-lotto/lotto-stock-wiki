@@ -1,0 +1,22 @@
+{
+  "reports": [
+    {
+      "broker": "한투글로벌",
+      "stock": "Cerebras",
+      "rating": null,
+      "tp": null,
+      "ts": "06:27",
+      "quote": "Cerebras 상장 후 첫 분기 실적 발표. FY1Q 조정 EBITDA 기대치 하회, 컨센보다 높은 매출 가이던스를 기대했던데 대한 아쉬움에 시간외 주가 하락 중",
+      "sector": "반도체"
+    },
+    {
+      "broker": "한투글로벌",
+      "stock": "SK하이닉스",
+      "rating": null,
+      "tp": null,
+      "ts": "17:01",
+      "quote": "SK하이닉스 ADR 발행 결정 공시",
+      "sector": "반도체"
+    }
+  ]
+}

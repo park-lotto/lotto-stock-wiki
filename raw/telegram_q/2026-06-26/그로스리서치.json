@@ -1,30 +1,12 @@
 {
   "reports": [
     {
-      "broker": "그로스리서치",
-      "stock": "마이크론",
-      "rating": null,
-      "tp": null,
-      "ts": "07:33",
-      "quote": "매출 414.6억 달러 (예상 355억) — 역대 최고 / 조정 EPS 25.11달러 (예상 20.4달러) / 조정 매출총이익률 84.9% (예상 81.8%)",
-      "sector": "반도체"
-    },
-    {
-      "broker": "BofA",
-      "stock": "텍사스인스트루먼트",
-      "rating": null,
-      "tp": null,
-      "ts": "07:52",
-      "quote": "2025년 매출 $15억 5,000만 → 2030년 $56억 5,800만 (3.7배) / 시장점유율: 2025년 19.7% → 2030년 21.1%",
-      "sector": "반도체"
-    },
-    {
       "broker": "그로쓰리서치",
       "stock": "디앤디파마텍",
       "rating": null,
       "tp": null,
       "ts": "08:04",
-      "quote": "DD01, MASH 2상 조직생검 3대 지표 모두 통계적 유의성 확보 / GLP-1/GCG 11:1 설계로 섬유화 개선과 내약성 동시 입증",
+      "quote": "DD01, MASH 2상 조직생검 3대 지표 모두 통계적 유의성 확보, GLP-1/GCG 11:1 설계로 섬유화 개선과 내약성 동시 입증",
       "sector": "바이오"
     },
     {
@@ -33,17 +15,8 @@
       "rating": null,
       "tp": null,
       "ts": "09:14",
-      "quote": "카타르 수전력청(KAHRAMAA)과 계약 체결 / 사업 규모: 22억 카타르리얄(약 9,300억원)",
+      "quote": "카타르 수전력청(KAHRAMAA)과 계약 체결, 사업 규모: 22억 카타르리얄(약 9,300억원)",
       "sector": "전력"
-    },
-    {
-      "broker": "그로쓰리서치",
-      "stock": "퀄컴",
-      "rating": null,
-      "tp": null,
-      "ts": "09:18",
-      "quote": "퀄컴이 AI 인프라 스타트업 모듈러를 39억달러에 인수",
-      "sector": "반도체"
     },
     {
       "broker": "그로쓰리서치",
@@ -51,8 +24,8 @@
       "rating": null,
       "tp": null,
       "ts": "09:21",
-      "quote": "바이오비쥬 탐방노트 한번씩 읽어보시면 좋겠습니다.",
-      "sector": "바이오"
+      "quote": "ECM 스킨부스터 사업과 관려한 내용 저희가 탐방을 통해 확인을 했는데, 한번씩 읽어보시면 도움이 될 것으로 보입니다.",
+      "sector": "화장품미용"
     },
     {
       "broker": "그로쓰리서치",
@@ -60,7 +33,7 @@
       "rating": null,
       "tp": null,
       "ts": "10:41",
-      "quote": "일본 크론병 환자 60명 대상 임상 3상 결과를 앙코르 발표 / IV 제형에서 SC 제형으로 전환한 환자의 44주 유효성과 안전성 평가",
+      "quote": "램시마SC 글로벌 경쟁력 알린다, 일본 크론병 환자 60명 대상 임상 3상 결과를 앙코르 발표",
       "sector": "바이오"
     },
     {
@@ -74,7 +47,7 @@
     },
     {
       "broker": "그로쓰리서치",
-      "stock": "현대차",
+      "stock": "보스턴다이나믹스",
       "rating": null,
       "tp": null,
       "ts": "11:27",
@@ -83,47 +56,11 @@
     },
     {
       "broker": "그로쓰리서치",
-      "stock": "한화에어로스페이스",
-      "rating": null,
-      "tp": null,
-      "ts": "14:07",
-      "quote": "누리호 5호, 올해 9월 발사 예정 / 한화에어로스페이스가 발사 주관",
-      "sector": "방산"
-    },
-    {
-      "broker": "그로쓰리서치",
-      "stock": "테슬라",
-      "rating": null,
-      "tp": null,
-      "ts": "14:14",
-      "quote": "테슬라, GIGA Storage와 협력 / 벨기에에 대규모 배터리 에너지저장장치 구축",
-      "sector": "2차전지"
-    },
-    {
-      "broker": "JP모건",
-      "stock": "화웨이",
-      "rating": null,
-      "tp": null,
-      "ts": "14:46",
-      "quote": "화웨이 Ascend 910C / 엔비디아 A100·H100 대비 인터커넥트 대역폭은 경쟁력 보유",
-      "sector": "반도체"
-    },
-    {
-      "broker": "그로쓰리서치",
-      "stock": "에이비엘바이오",
-      "rating": null,
-      "tp": null,
-      "ts": "17:11",
-      "quote": "릴리와 계약금 4,000만달러 포함 총 26억6,200만달러(약 3.92조원) 기술이전 계약",
-      "sector": "바이오"
-    },
-    {
-      "broker": "그로쓰리서치",
-      "stock": "삼양엔켐",
+      "stock": "사면엔켐",
       "rating": null,
       "tp": null,
       "ts": "17:19",
-      "quote": "삼양 ENCHEM (482630) / Expected to expand its supply of polymers and PAGs used in thick KrF photoresists",
+      "quote": "Samyang ENCHEM: Expected to expand its supply of polymers and PAGs used in thick KrF photoresists, which are essential for higher-layer NAND production",
       "sector": "반도체"
     },
     {
@@ -132,17 +69,8 @@
       "rating": null,
       "tp": null,
       "ts": "17:19",
-      "quote": "TCK (064760) / Expected to benefit from increased wear and replacement demand for SiC focus rings",
+      "quote": "TCK: Expected to benefit from increased wear and replacement demand for SiC focus rings as NAND layer counts rise and multi-stack processes expand",
       "sector": "반도체"
-    },
-    {
-      "broker": "그로쓰리서치",
-      "stock": "일라이 릴리",
-      "rating": null,
-      "tp": null,
-      "ts": "19:56",
-      "quote": "적격 환자는 사전승인 후 젭바운드 또는 파운다요를 월 50달러에 이용 가능",
-      "sector": "바이오"
     },
     {
       "broker": "그로쓰리서치",
@@ -150,7 +78,7 @@
       "rating": null,
       "tp": null,
       "ts": "22:59",
-      "quote": "Manufactures and sells contact lens / Yield Improvement & FDA Approval as Dual Growth Drivers",
+      "quote": "Capturing Market Gaps through Color Lens OEM/ODM, Yield Improvement & FDA Approval as Dual Growth Drivers",
       "sector": "기타"
     },
     {
@@ -159,7 +87,7 @@
       "rating": null,
       "tp": null,
       "ts": "08:45",
-      "quote": "국민성장펀드의 바이오 상장사 대규모 직접투자 1호 / 전환우선주(CPS) 유상증자와 전환사채(CB) 발행 방식",
+      "quote": "국민성장펀드의 바이오 상장사 대규모 직접투자 1호, 전환우선주(CPS) 유상증자와 전환사채(CB) 발행 방식",
       "sector": "바이오"
     },
     {
@@ -168,17 +96,8 @@
       "rating": null,
       "tp": null,
       "ts": "08:51",
-      "quote": "계약 주체: 가온전선 미국 자회사 LSCUS / 계약 규모: 약 $4,000만(~600억원)",
+      "quote": "가온전선 미국 자회사 LSCUS, 글로벌 전기차 업체와 600억원 규모 버스덕트 공급 계약",
       "sector": "전력"
-    },
-    {
-      "broker": "모건스탠리",
-      "stock": "키옥시아",
-      "rating": "비중확대",
-      "tp": "110000",
-      "ts": "09:59",
-      "quote": "모건스탠리는 비중확대 의견과 목표가 11만엔을 유지",
-      "sector": "반도체"
     }
   ]
 }

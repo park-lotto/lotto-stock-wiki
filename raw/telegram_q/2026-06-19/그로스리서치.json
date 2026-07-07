@@ -11,11 +11,20 @@
     },
     {
       "broker": "그로쓰리서치",
+      "stock": "지투지바이오",
+      "rating": null,
+      "tp": null,
+      "ts": "08:59",
+      "quote": "바이오 USA서 글로벌 파트너십 확대 추진",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
       "stock": "SK하이닉스",
       "rating": null,
       "tp": null,
       "ts": "09:04",
-      "quote": "SK하이닉스가 7세대 HBM인 HBM4E 12단 제품 샘플 출하 시작",
+      "quote": "SK하이닉스, HBM4E 12단 샘플 전격 공급",
       "sector": "반도체"
     },
     {
@@ -24,16 +33,7 @@
       "rating": null,
       "tp": null,
       "ts": "09:49",
-      "quote": "AI 서버 BOM 내 MLCC 채용량이 구조적으로 증가",
-      "sector": "반도체"
-    },
-    {
-      "broker": "그로쓰리서치",
-      "stock": "지아이에스",
-      "rating": null,
-      "tp": null,
-      "ts": "10:06",
-      "quote": "지아이에스는 삼성전기 증설 사이클의 장비 수혜주로 부각.",
+      "quote": "AI ASIC 확산 → 고사양 MLCC 수요 집중",
       "sector": "반도체"
     },
     {
@@ -42,7 +42,7 @@
       "rating": null,
       "tp": null,
       "ts": "10:31",
-      "quote": "앱솔릭스는 기존 1.2만㎡ 생산능력 유지, 6만㎡ 규모 2라인 증설 계획 중단",
+      "quote": "SKC, 美 유리 기판 2공장 증설 '백지화'",
       "sector": "반도체"
     },
     {
@@ -51,8 +51,17 @@
       "rating": null,
       "tp": null,
       "ts": "10:59",
-      "quote": "가온전선이 미국 태양광 발전단지 전력망 구축 사업에 수백억원 규모 송전용 케이블 공급",
+      "quote": "가온전선, 美 태양광 발전단지에 송전용 케이블 공급",
       "sector": "전력"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "셀트리온",
+      "rating": null,
+      "tp": null,
+      "ts": "13:16",
+      "quote": "셀트리온, 바이오 USA서 ADC·다중항체 등 신약 앞세워 파트너링 확대",
+      "sector": "바이오"
     },
     {
       "broker": "그로쓰리서치",
@@ -60,7 +69,7 @@
       "rating": null,
       "tp": null,
       "ts": "13:18",
-      "quote": "ISS, 6월 29일 임시주총의 이사 보수 관련 2개 안건 모두 반대 권고",
+      "quote": "세계 최대 의결권 자문사 ISS, 월덱스 이사 보수안 모두 '반대'",
       "sector": "반도체"
     },
     {
@@ -69,8 +78,26 @@
       "rating": null,
       "tp": null,
       "ts": "15:02",
-      "quote": "예스티가 HPSP와의 고압어닐링장비 잠금장치 특허분쟁에서 2심 승소",
+      "quote": "예스티, HPSP 고압어닐링장비 특허분쟁 2심도 승소",
       "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "SK하이닉스",
+      "rating": null,
+      "tp": null,
+      "ts": "15:31",
+      "quote": "최태원, 이달말 머스크 美 전격 회동… 스페이스X 겨냥 '풀스택 동맹' 승부수",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "아델",
+      "rating": null,
+      "tp": null,
+      "ts": "18:24",
+      "quote": "아델, 코스닥 기술성평가 'A, BBB' 통과",
+      "sector": "바이오"
     },
     {
       "broker": "그로쓰리서치",
@@ -78,8 +105,26 @@
       "rating": null,
       "tp": null,
       "ts": "08:49",
-      "quote": "국토교통부 AI 특화 시범도시 사업 강원권 대표기관으로 최종 선정",
-      "sector": "기타"
+      "quote": "에스트래픽, 국토부 'K-AI 시티' 사업 강원권 대표기관 선정",
+      "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "아이엠바이오로직스",
+      "rating": null,
+      "tp": null,
+      "ts": "08:51",
+      "quote": "아이엠바이오로직스, '바이오 USA 2026' 참가",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "큐라클",
+      "rating": null,
+      "tp": null,
+      "ts": "09:07",
+      "quote": "큐라클·맵틱스 파트너 메멘토 메디신, 9300만 달러 시리즈A 투자유치 완료",
+      "sector": "바이오"
     },
     {
       "broker": "그로쓰리서치",
@@ -87,7 +132,7 @@
       "rating": null,
       "tp": null,
       "ts": "09:26",
-      "quote": "RF(전파) 기반 무선 백도어 차단 솔루션 ‘알파H(Alpha-H)’ 공급 확대",
+      "quote": "지슨, 데이터센터 보안 수요 확대…상반기 흑자전환 기대",
       "sector": "양자보안"
     },
     {
@@ -96,8 +141,26 @@
       "rating": null,
       "tp": null,
       "ts": "09:58",
-      "quote": "다수 고객사와 AAV 기반 CDMO 계약 논의 진행 중",
+      "quote": "이엔셀, 하반기 GCT CDMO 반등 기대",
       "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "지아이에스",
+      "rating": null,
+      "tp": null,
+      "ts": "11:07",
+      "quote": "MLCC 산업보고서 Top-Pick 지아이에스 금일 +14% 상승",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "보스턴다이내믹스",
+      "rating": null,
+      "tp": null,
+      "ts": "13:48",
+      "quote": "현대차그룹, 보스턴다이내믹스 지분 더 산다…100% 소유 자회사로",
+      "sector": "로봇"
     },
     {
       "broker": "그로쓰리서치",
@@ -105,7 +168,7 @@
       "rating": null,
       "tp": null,
       "ts": "14:49",
-      "quote": "삼현이 글로벌 휴머노이드 기업에 관절 코어 부품 시제품을 판매",
+      "quote": "삼현, 글로벌 휴머노이드 기업서 부품 시제품 수주",
       "sector": "로봇"
     },
     {
@@ -114,7 +177,7 @@
       "rating": null,
       "tp": null,
       "ts": "17:40",
-      "quote": "특히 한화오션은 미국 내 유일한 한국계 조선소인 필리조선소 보유",
+      "quote": "트럼프 '미국군함 10척 빨리 건조 가능한가'…속도 붙는 마스가",
       "sector": "조선"
     }
   ]

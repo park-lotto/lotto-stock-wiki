@@ -3,31 +3,39 @@
     {
       "name": "TSMC",
       "signal": "bull",
-      "reason": "AI 관련 매출 CAGR 60% 전망 및 CoWoS 공정 내 CPU/ASIC 다변화로 인한 주문 폭증 확인",
+      "reason": "AI 매출 CAGR 60% 전망 및 CoWoS 공급 다변화, HBM 수급 불균형에 따른 성장이 예상됨.",
       "ts": "15:50",
       "quote": "tsmc의 ai 관련 매출 cagr 60% 전망. 그 큰 회사에서 ai 매출의 cagr이 60%라는 점이 압도적.",
       "sector": "반도체"
     },
     {
-      "name": "삼성전자",
+      "name": "마이크론",
       "signal": "bull",
-      "reason": "노무라 리포트 기준 2026년 2분기 DRAM 및 NAND ASP의 높은 QoQ 성장률 전망",
+      "reason": "DRAM 및 NAND의 평균 판매 단가(ASP)가 크게 상승하며 강력한 실적 성장세를 보임.",
       "ts": "16:02",
-      "quote": "삼성전자 DRAM ASP QoQ +42%, NAND ASP QoQ +60%",
+      "quote": "DRAM ASP QoQ + low 60s, NAND ASP QoQ + mid 80s",
       "sector": "반도체"
     },
     {
-      "name": "SK하이닉스",
+      "name": "삼성전자",
       "signal": "bull",
-      "reason": "노무라 리포트 기준 2026년 2분기 DRAM 및 NAND ASP의 높은 QoQ 성장률 전망",
+      "reason": "메모리 반도체 ASP가 큰 폭으로 상승할 것으로 전망됨.",
       "ts": "16:02",
-      "quote": "하이닉스 DRAM ASP QoQ +32% NAND ASP QoQ +50%",
+      "quote": "DRAM ASP QoQ +42%, NAND ASP QoQ +60%",
+      "sector": "반도체"
+    },
+    {
+      "name": "하이닉스",
+      "signal": "bull",
+      "reason": "메모리 반도체 ASP 상승세가 지속될 것으로 예상됨.",
+      "ts": "16:02",
+      "quote": "DRAM ASP QoQ +32%, NAND ASP QoQ +50%",
       "sector": "반도체"
     }
   ],
   "news_items": [
     {
-      "fact": "앤스로픽의 AI 모델 '페이블 5'에 대한 미국 정부의 접근 제한이 곧 해제될 예정임",
+      "fact": "앤스로픽의 AI 모델 '페이블 5'에 대한 미국 정부의 접근 제한이 곧 해제될 예정임.",
       "ts": "22:16",
       "quote": "미국 트럼프 행정부가 앤스로픽(Anthropic)의 강력한 AI 모델인 '페이블 5'에 대한 접근 제한을 곧 해제할 것으로 보입니다."
     }

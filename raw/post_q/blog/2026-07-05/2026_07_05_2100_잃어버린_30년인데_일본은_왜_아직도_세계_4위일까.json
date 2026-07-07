@@ -1,9 +1,9 @@
 {
   "target_kind": "market",
-  "market_direction": "중립",
+  "market_direction": "neutral",
   "macro_events": [
     {
-      "fact": "일본의 장기 경제 침체(잃어버린 30년) 상황에서도 경제 규모가 세계 4위를 유지함",
+      "fact": "일본의 장기 경제 침체(잃어버린 30년)에도 불구하고 세계 4위의 경제 규모 유지",
       "ts": "2026-07-05",
       "quote": "잃어버린 30년인데… 일본은 왜 아직도 세계 4위일까?"
     }

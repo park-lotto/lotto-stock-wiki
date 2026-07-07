@@ -1,5 +1,7 @@
 {
-  "leading_sectors": [],
+  "leading_sectors": [
+    "기타"
+  ],
   "stance": [
     {
       "target": "코스닥",

@@ -5,56 +5,49 @@
     "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-06_0807_Bio-USA 2026 참관후기 중국과 AI로 격화된 ...md"
   },
   "questionnaire": {
+    "target_kind": "market",
     "broker": "하나증권",
     "analyst": "김선아",
     "report_date": "2026.07.03",
-    "target_kind": "market",
-    "market_direction": null,
+    "market_direction": "null",
     "macro_vars": [
-      "미국의 정책/규제",
-      "중국의 AI 및 바이오 산업 투자",
-      "제약/바이오 공급망(onshoring)",
-      "AI 기술 개발 및 데이터 수집 전쟁"
+      "미국 정부의 중국 규제",
+      "IRA 법안",
+      "NIH 예산 삭감",
+      "국가 안보",
+      "AI 인프라 투자"
     ],
     "recommended_sectors": [
       {
         "sector": "바이오",
-        "stance": null,
-        "reason": "제약/바이오 비즈니스 컨퍼런스 Bio-USA 2026 참관을 통해 AI, 중국 기술 발전, 정책 변화 등이 산업에 미치는 영향을 분석"
+        "stance": "비중확대",
+        "reason": "AI와 결합한 신약 개발 속도 가속화 및 선순환적 생태계 구축 전망"
       }
     ],
-    "style": null,
+    "style": "null",
     "event_calendar": [
       {
-        "date": "2026.06.22-25",
-        "event": "Bio-USA 2026 개최"
-      },
-      {
         "date": "2026.06",
-        "event": "중국 국가발전개혁위원회(NDRC) AI 인프라망 구축 추진"
+        "event": "중국, 전국 데이터센터를 하나로 잇는 최대 규모 AI 인프라망 구축 추진"
       }
     ],
     "top_picks": [
-      "Samsung Biologics",
-      "Celltrion",
-      "SK Pharmteco",
-      "ST Pharm",
-      "Prestige Biopharma",
-      "Lotte Biologics",
-      "Binex",
       "Novo Nordisk",
       "J&J",
       "Genentech",
-      "Merck & Co.",
-      "Insilico Medicine",
-      "MediLink Therapeutics"
+      "삼성바이오로직스",
+      "셀트리온",
+      "SK팜테코",
+      "에스티팜",
+      "비티젠",
+      "프레스티지바이오파마",
+      "롯데바이오사이언스",
+      "바이넥스",
+      "Lonza",
+      "Fujifilm",
+      "Catalent"
     ],
-    "risk": [
-      "미국의 중국 제약/바이오 규제 및 공급망 내수화 정책",
-      "기초 연구 예산 삭감",
-      "의약품 제조 및 공급망의 복잡성과 내수화의 한계",
-      "바이오시큐어법 및 중국 규제 관련 법률 리스크"
-    ],
-    "quote": "Bio-USA는 세계 최대의 제약/바이오 비즈니스 컨퍼런스로, 미국 다음 한국 기업이 가장 많이 참석함. 미국의 중국에 대한 정책적 견제 분위기로 중국 참여 기업 크게 감소 - Wuxi도 참석하지 않음."
+    "risk": "미국 정부의 중국 규제 및 바이오시큐어법 등으로 인한 생명공학 벤처의 불확실성 증대",
+    "quote": "Bio-USA 2026은 세계 최대의 제약/바이오 비즈니스 컨퍼런스로, 미국 다음 한국 기업이 가장 많이 참석함"
   }
 }

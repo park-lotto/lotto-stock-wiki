@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-06",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-07_0804_조정은 매수의 기회.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유진투자증권",
+    "analyst": "손인준",
+    "report_date": "2026.07.06",
+    "stocks": [
+      {
+        "name": "삼성전자",
+        "code": "005930",
+        "rating": "STRONG BUY",
+        "rating_changed": "유지",
+        "tp_new": "560,000원",
+        "tp_prev": "560,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "삼성전자의 2Q26 실적은 매출액 168.1조원(+26%qoq), 영업이익 83.1조원(+45%qoq)로 전망한다.",
+        "estimate_revision": "환율 가정과 범용 DRAM의 ASP 상승률을 소폭 상향 조정했으나, 1Q26에 미반영된 성과급 관련 충당금을 2Q26에 모두 반영하며 기존 추정치(영업이익 83.4조원)와 유사한 수준으로 유지한다.",
+        "next_catalyst": "3Q26에 집중된 데이터센터 고객사들과의 LTA 협상 완료 및 메모리 업체 간 주주환원 경쟁 본격화",
+        "thesis": [
+          "메모리 부문의 가격 협상력 확대와 공격적인 가격 인상 정책으로 전사 실적 성장 견인",
+          "HBM4의 선제적 출하와 주요 데이터센터 고객사 LTA 논의를 통한 우호적인 가격 조건 확보",
+          "연간 FCF의 50%를 활용한 대규모 주주환원 정책으로 주가 아웃퍼폼 기대"
+        ],
+        "valuation_basis": null,
+        "risk": "Foundry/LSI 부문의 연내 흑자 전환 어려움 및 MX/NW 부문의 원가 부담에 따른 수익성 감소",
+        "supply_comment": "고객사의 메모리 재고 확보 경쟁이 가격 협상력 확대로 이어지며, 메모리 부문 영업이익이 83.1조원을 기록한 것으로 추정한다.",
+        "quote": "삼성전자에 대해 Strong Buy 의견을 유지한다."
+      }
+    ]
+  }
+}
