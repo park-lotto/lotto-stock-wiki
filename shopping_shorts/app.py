@@ -4,6 +4,9 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from shopping_shorts.service import collect
+from shopping_shorts.outreach import build_queue
+from shopping_shorts.store import Store
+from shopping_shorts.config import DB_PATH
 
 app = FastAPI(title="쇼핑쇼츠 레퍼런스 랭킹")
 
@@ -31,6 +34,26 @@ def api_collect(limit: int | None = None):
 def api_reference():
     """마지막 수집 결과 반환 (프론트 초기 로드용)."""
     return {"ok": True, "items": _LAST["items"], "collected_at": _LAST["collected_at"]}
+
+
+@app.get("/api/outreach")
+def api_outreach(sort: str = "latest", hide_done: bool = True):
+    """소통 큐 반환 — 마지막 수집 릴스 + draft 결합, 정렬·완료필터."""
+    store = Store(DB_PATH)
+    items = _LAST["items"]
+    drafts = store.drafts_map([i["shortcode"] for i in items])
+    commented = store.commented_set()
+    queue = build_queue(items, drafts_map=drafts, commented=commented,
+                        sort=sort, hide_done=hide_done)
+    return {"ok": True, "count": len(queue), "items": queue}
+
+
+@app.post("/api/comment/done")
+def api_comment_done(shortcode: str):
+    """소통 완료 기록."""
+    store = Store(DB_PATH)
+    store.mark_commented(shortcode)
+    return {"ok": True, "shortcode": shortcode}
 
 
 # 정적 프론트 (마운트는 맨 마지막)
