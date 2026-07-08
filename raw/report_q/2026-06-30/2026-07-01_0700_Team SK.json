@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-30",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-01_0700_Team SK.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "이진협",
+    "report_date": "2026년 6월 30일",
+    "stocks": [
+      {
+        "name": "SK",
+        "code": "034730",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "970,000원",
+        "tp_prev": "810,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2026E 매출액 151,050억 원, 영업이익 8,287억 원. 2027E 매출액 144,044억 원, 영업이익 6,035억 원.",
+        "estimate_revision": "목표주가 상향은 SK스퀘어 등 자회사 가치 상승에 따른 NAV 확장에 따른 것이다.",
+        "next_catalyst": "지주사의 계열사간 역할 분담, 시너지, 자금 조달 등을 통한 포트폴리오 전반의 NAV 확장",
+        "thesis": [
+          "대규모 투자 소식과 AI 인프라 구축의 중요성 증대",
+          "SK그룹의 AI 역량 결집에 따른 지주사의 조율자 역할 부각",
+          "자회사 가치 상승에 따른 NAV 할인율 축소"
+        ],
+        "valuation_basis": "NAV Valuation을 통한 산출(상장사 지분가치 합계 921,549억 원에 50% 할인 적용)",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "SK에 대해 투자의견 BUY를 유지하며, 목표주가를 97만원으로 상향한다. 목표주가 상향은 SK스퀘어 등 자회사 가치 상승에 따른 NAV 확장에 따른 것이다."
+      }
+    ]
+  }
+}

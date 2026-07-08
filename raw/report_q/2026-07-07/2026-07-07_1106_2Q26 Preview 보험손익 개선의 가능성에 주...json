@@ -1,0 +1,99 @@
+{
+  "meta": {
+    "date": "2026-07-07",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-07_1106_2Q26 Preview 보험손익 개선의 가능성에 주...md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "김도하",
+    "report_date": "2026년 7월 7일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "삼성화재",
+        "code": "000810",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "650,000원",
+        "tp_prev": "650,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 지배주주 순이익 6,612억원(+4% YoY, +4% QoQ)",
+        "estimate_revision": "시장 컨센서스를 10% 상회하는 양호한 실적이 예상된다",
+        "next_catalyst": "본질 스프레드의 개선과 지분법손익의 증가",
+        "thesis": [
+          "예실차와 자동차 손해율이 기존 추정보다 개선",
+          "일반보험의 호조로 PAA모형이 견조한 손익을 나타낼 전망",
+          "보유이원의 꾸준한 개선과 캐노피우스로부터의 지분법이익 증가"
+        ],
+        "valuation_basis": "IFRS17 도입 이래 최대 투자손익 전망",
+        "risk": "신계약 물량의 부진",
+        "supply_comment": null,
+        "quote": "삼성화재의 2Q26 지배주주 순이익은 6,612억원(+4% YoY, +4% QoQ)으로 시장 컨센서스를 10% 상회하는 양호한 실적이 예상된다."
+      },
+      {
+        "name": "DB손해보험",
+        "code": "005830",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "256,000원",
+        "tp_prev": "256,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 당기순이익 5,009억원(+9% YoY, +87% QoQ)",
+        "estimate_revision": "시장 컨센서스를 16% 상회하는 어닝 서프라이즈가 예상된다",
+        "next_catalyst": "투자손익 호조 및 대규모 FVPL손익 반영",
+        "thesis": [
+          "일반모형 손익은 상각익 증가로 설명",
+          "고액사고 축소로 인한 PAA손익 유의한 개선",
+          "본질 스프레드의 개선과 대규모 FVPL손익 합쳐짐"
+        ],
+        "valuation_basis": null,
+        "risk": "신계약 물량의 부진",
+        "supply_comment": null,
+        "quote": "DB손해보험의 2Q26 당기순이익은 5,009억원(+9% YoY, +87% QoQ)으로 시장 컨센서스를 16% 상회하는 어닝 서프라이즈가 예상된다."
+      },
+      {
+        "name": "현대해상",
+        "code": "001450",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "43,000원",
+        "tp_prev": "43,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 당기순이익 2,648억원(+7% YoY, +19% QoQ)",
+        "estimate_revision": "시장 컨센서스를 11% 상회할 전망",
+        "next_catalyst": "일반모형 예실차 적자폭 축소 및 PAA손익 증가",
+        "thesis": [
+          "보험금 예실차의 적자폭이 최근 8개 분기 중 가장 축소될 것으로 추정",
+          "일반보험 수익성 개선 및 자동차 손해율 악화 중단",
+          "전분기 평가손실을 입었던 투자손익의 대폭 증가"
+        ],
+        "valuation_basis": null,
+        "risk": "전년 동기 환율 하락으로 발생했던 보험금융수익의 기저효과",
+        "supply_comment": null,
+        "quote": "현대해상의 2Q26 당기순이익은 2,648억원(+7% YoY, +19% QoQ)으로 시장 컨센서스를 11% 상회할 전망이다."
+      },
+      {
+        "name": "한화손해보험",
+        "code": "000370",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "9,500원",
+        "tp_prev": "9,500원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 당기순이익 923억원(+15% YoY, -7% QoQ)",
+        "estimate_revision": "시장 컨센서스를 18% 하회할 전망",
+        "next_catalyst": "4월 요율 인상에 따른 마진배수 상승",
+        "thesis": [
+          "일반모형 예실차 개선",
+          "보험금과 사업비에서 모두 예실차 개선",
+          "신계약 매출 증가세 유지"
+        ],
+        "valuation_basis": null,
+        "risk": "캐롯손해보험 합병에 따른 자동차 손익 부진 및 자동차 손해율 예상보다 부진",
+        "supply_comment": null,
+        "quote": "한화손해보험의 2Q26 당기순이익은 923억원(+15% YoY, -7% QoQ)으로 시장 컨센서스를 18% 하회할 전망이다."
+      }
+    ]
+  }
+}

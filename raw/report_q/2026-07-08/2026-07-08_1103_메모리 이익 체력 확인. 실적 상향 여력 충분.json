@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-08",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-08_1103_메모리 이익 체력 확인. 실적 상향 여력 충분.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "김록호",
+    "report_date": "2026년 7월 8일",
+    "stocks": [
+      {
+        "name": "삼성전자",
+        "code": "005930",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "480,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "삼성전자의 26년 2분기 매출액은 171조원(YoY +129%, QoQ +28%), 영업이익은 89.4조원(YoY +1,810%, QoQ +56%)을 기록했다.",
+        "estimate_revision": "하나증권은 현재 추정치를 상향할 가능성이 높다고 판단한다.",
+        "next_catalyst": "26년 하반기 메모리 공급 부족 지속 및 Nvidia의 Vera CPU 별도 판매와 Vera Rubin 출하 개시",
+        "thesis": [
+          "메모리 부문의 견조한 이익 체력 확인",
+          "26년 하반기 메모리 공급 부족 지속에 따른 강한 가격 흐름 예상",
+          "2027년 HBM 계약 가격 상향을 통한 실적 상향 가능성"
+        ],
+        "valuation_basis": "메모리 부문의 견조한 체력이 확인되었고, 하반기 및 내년 연간 실적 상향도 가능하다. 아울러 실적대비 주가가 부담스럽지 않은 구간에서 주가의 고점 논란은 시기상조라고 판단한다.",
+        "risk": "빅테크 업체들의 Capex 부담으로 인한 GPU 구매 감소 가능성(낮다고 판단됨)",
+        "supply_comment": "Nvidia의 Vera CPU 별도 판매 및 Vera Rubin 출하 개시로 인해 LPDDR 중심으로 공급 부족이 심화될 것으로 전망한다.",
+        "quote": "메모리 부문의 견조한 체력이 확인되었고, 하반기 및 내년 연간 실적 상향도 가능하다. 아울러 실적대비 주가가 부담스럽지 않은 구간에서 주가의 고점 논란은 시기상조라고 판단한다."
+      }
+    ]
+  }
+}

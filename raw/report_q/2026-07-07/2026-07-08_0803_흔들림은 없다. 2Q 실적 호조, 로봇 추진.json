@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-07",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-08_0803_흔들림은 없다. 2Q 실적 호조, 로봇 추진.md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": "박강호",
+    "report_date": "2026.07.07",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "비에이치",
+        "code": "090460",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "52,000",
+        "tp_prev": "52,000",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 2Q 매출은 4,148억원(6.4% yoy/11.6% qoq), 영업이익은 148억원(-7.7% yoy/38.8% qoq)으로 추정. 영업이익은 컨센서스(136억원)을 8.8% 상회.",
+        "estimate_revision": null,
+        "next_catalyst": "로봇(휴머노이드 포함) 사업의 추진에서 매출이 신규로 반영, 추가적인 글로벌 고객사 확보.",
+        "thesis": [
+          "2Q 실적 호조는 2026년 2Q 및 3Q에도 지속될 전망.",
+          "애플의 스마트폰 출시 전략 변화로 대면적 R/F PCB 매출 증가 및 ASP 상승.",
+          "로봇(휴머노이드) 사업의 가시화 및 미국 휴머노이드 업체향 공급 추진."
+        ],
+        "valuation_basis": "2026년 EPS X 목표 P/E 14.9배(실적 호조 상단).",
+        "risk": "아이폰18 출고가 인상이 수요 증가에 부담 요인.",
+        "supply_comment": "디케이트와 협력으로 SMT 공정을 동시에 진행, 미국 휴머노이드 업체와 협력이 강화, 진행 중으로 추정.",
+        "quote": "투자의견은 매수(BUY) 및 목표주가 52,000원(2026년 EPS X 목표 P/E 14.9배(실적 호조 상단))을 유지."
+      }
+    ]
+  }
+}

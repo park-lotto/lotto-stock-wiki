@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "date": "2026-07-07",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-08_0806_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "IBK투자증권",
+    "analyst": "이상훈",
+    "report_date": "2026.07.07",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026년 8월",
+        "event": "게임스컴 2026 개최"
+      },
+      {
+        "date": "2026년 12월 31일",
+        "event": "네이버파이낸셜 두나무 주식교환일"
+      }
+    ],
+    "top_picks": [
+      "크래프톤",
+      "엔씨",
+      "네이버파이낸셜",
+      "두나무"
+    ],
+    "risk": null,
+    "quote": "오는 8월 역대 최대 규모로 열리는 게임스컴 2026에 크래프톤·엔씨 등 국내 게임사들이 신작을 앞세워 글로벌 시장 공략에 나설 예정임"
+  }
+}

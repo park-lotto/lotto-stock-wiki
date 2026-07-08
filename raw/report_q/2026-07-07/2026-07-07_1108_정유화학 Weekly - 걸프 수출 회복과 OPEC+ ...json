@@ -1,0 +1,51 @@
+{
+  "meta": {
+    "date": "2026-07-07",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-07_1108_정유화학 Weekly - 걸프 수출 회복과 OPEC+ ...md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "유진투자증권",
+    "analyst": "황성현",
+    "report_date": "2026.07.07.",
+    "market_direction": null,
+    "macro_vars": [
+      "WTI",
+      "휘발유",
+      "등유",
+      "경유",
+      "고유황중유",
+      "HDPE",
+      "부타디엔",
+      "LDPE",
+      "PP",
+      "납사",
+      "셀",
+      "알루미늄",
+      "웨이퍼",
+      "폴리실리콘"
+    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.07.11.",
+        "event": "미-이란 파키스탄서 종전 후속 협상 재개"
+      },
+      {
+        "date": "2026.08.",
+        "event": "OPEC+, 8월 18.8b/d 추가 증산"
+      }
+    ],
+    "top_picks": [
+      "HD현대오일뱅크",
+      "SK에너지",
+      "GS칼텍스",
+      "S-Oil",
+      "Bohai Chemical"
+    ],
+    "risk": "수요는 늘어나는 공급을 충분히 흡수하지 못할 가능성이 있다.",
+    "quote": "공급 차질이 해소되는 속도가 수요 회복보다 빠르다면, 하반기 시장은 부족이 아니라 잉여를 걱정해야 할 가능성이 높다."
+  }
+}

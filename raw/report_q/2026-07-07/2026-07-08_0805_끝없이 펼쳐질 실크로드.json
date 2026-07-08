@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "date": "2026-07-07",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-08_0805_끝없이 펼쳐질 실크로드.md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": "류형근",
+    "report_date": "2026.07.07",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "삼성전자",
+        "code": "005930",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "560,000원",
+        "tp_prev": "560,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2027년 HBM ASP는 전년대비 100% 이상 상승할 것. Base Case는 전년대비 100% 상승. 당해연도 현금흐름이 구체화될 3Q26 실적발표 이후, 정책 방향성은 보다 구체화될 것으로 전망.",
+        "estimate_revision": "삼성전자의 목표주가(56만원)는 유지하나, SK하이닉스의 목표주가는 390만원으로 상향.",
+        "next_catalyst": "3Q26 실적발표",
+        "thesis": [
+          "메모리반도체 초호황에 따른 수요 증가 및 공급 부족 심화",
+          "HBM ASP 상승 사이클 재개",
+          "역대 최대 규모의 주주환원 정책 시행"
+        ],
+        "valuation_basis": null,
+        "risk": "주가의 절대 위치와 Tech 주식 쏠림 현상에 대한 시장의 우려",
+        "supply_comment": "P4L, P5L 등 신공장 스케줄을 통한 공급 운영 탄력성 확보",
+        "quote": "삼성전자의 목표주가(56만원)는 유지하나, SK하이닉스의 목표주가는 390만원으로 상향."
+      },
+      {
+        "name": "SK하이닉스",
+        "code": "00660",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "3,900,000원",
+        "tp_prev": "3,400,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2027년 HBM ASP는 전년대비 100% 이상 상승할 것. 3Q26 실적발표 이후 주주환원 정책 방향성 구체화 전망.",
+        "estimate_revision": "SK하이닉스의 목표주가는 390만원으로 상향.",
+        "next_catalyst": "3Q26 실적발표",
+        "thesis": [
+          "메모리반도체 초호황 및 수급 격차 확대",
+          "HBM 주도 ASP 상승 사이클 재개",
+          "역대 최대 규모의 주주환원 정책 가능성"
+        ],
+        "valuation_basis": null,
+        "risk": "AI Capex Rally의 지속 가능성에 대한 의문, 중국 반도체 대체 활용, 가격 담합 의혹 등 시장의 우려",
+        "supply_comment": "M15x, 용인 1기 등 신공장 가동을 통한 생산 효율화 및 Capa 확대",
+        "quote": "삼성전자의 목표주가(56만원)는 유지하나, SK하이닉스의 목표주가는 390만원으로 상향."
+      }
+    ]
+  }
+}

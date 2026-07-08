@@ -1,0 +1,77 @@
+{
+  "sector_name": "기타",
+  "sector_view": "중립",
+  "points": [
+    "중국의 희토류 수출 통제 지속으로 인한 글로벌 공급망 재편 가속화",
+    "AI 인프라 및 전력 수요 증가에 따른 핵심 광물 및 에너지원 확보 경쟁 심화",
+    "걸프 산유국의 증산 움직임으로 인한 유가 하방 압력 증대"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "Teck Resources",
+      "comment": "캐나다 정부로부터 전략금속 생산 확대를 위한 4억 캐나다달러 규모의 지분 투자를 받음",
+      "ts": "11:33",
+      "quote": "Canada agrees on a potential C$400 million Teck investment for strategic metals production",
+      "sector": "기타"
+    },
+    {
+      "name": "Peabody Energy",
+      "comment": "와이오밍 석탄 광산 내 희토류 생산 강화를 위해 미국 정부 보조금을 확보함",
+      "ts": "12:10",
+      "quote": "Peabody Gets US Grant to Boost Rare Earths at Wyoming Coal Mines",
+      "sector": "기타"
+    },
+    {
+      "name": "Codelco",
+      "comment": "부채 증가와 생산량 감소로 구조조정 압박을 받고 있음",
+      "ts": "12:12",
+      "quote": "A Once-Great Copper Miner Faces a Reckoning Just as AI Power Demand Soars",
+      "sector": "기타"
+    },
+    {
+      "name": "BHP",
+      "comment": "칠레 에스콘디다 구리 광산 프로젝트에 대한 초기 환경 승인을 획득함",
+      "ts": "12:27",
+      "quote": "BHP Wins Project Approval as Part of Chilean Copper Overhaul",
+      "sector": "기타"
+    },
+    {
+      "name": "Northern Minerals",
+      "comment": "중국계 주주들의 지분 매각 명령 미이행으로 주가 급락",
+      "ts": "12:46",
+      "quote": "Northern Minerals Shares Fall as China Investors Defy Sale Order",
+      "sector": "기타"
+    },
+    {
+      "name": "Eni",
+      "comment": "칠레 리튬 프로젝트에 2억 2,500만 달러 투자 및 생산량 지분 확보",
+      "ts": "15:22",
+      "quote": "Eni Deepens Lithium Push With $225 Million EnergyX Deal in Chile",
+      "sector": "기타"
+    },
+    {
+      "name": "South32",
+      "comment": "미국 정부로부터 애리조나 아연 및 망간 광산 프로젝트 승인 예정",
+      "ts": "15:27",
+      "quote": "South32’s Arizona Zinc and Manganese Mine to Get US Approval",
+      "sector": "기타"
+    }
+  ],
+  "events": [
+    {
+      "fact": "중국과 홍콩의 채권 및 금 거래 인프라 강화",
+      "ts": "07:56",
+      "quote": "Beijing bolsters Hong Kong bond, gold trading in global yuan push"
+    },
+    {
+      "fact": "중국의 대일 희토류 수출 통제 강화",
+      "ts": "07:59",
+      "quote": "Corporate Japan's rare-earth warnings get louder as China keeps the spigot closed"
+    },
+    {
+      "fact": "중국의 핵잠수함 장거리 탄도미사일 시험 발사",
+      "ts": "12:15",
+      "quote": "What China’s Latest Missile Test Reveals About Its Expanding Arsenal"
+    }
+  ]
+}

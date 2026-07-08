@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-07",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-07_1107_[ESG & Transition] 통키[通 Keys] Transitio...md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "박세연, 김예인",
+    "report_date": "2026년 7월 7일",
+    "target_kind": "market",
+    "market_direction": "상방 열려 있음",
+    "macro_vars": [
+      "EU 가스 저장률↓",
+      "LNG 타이트",
+      "호르무즈 리스크",
+      "중동 리스크"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "에너지",
+        "stance": "상방 지향",
+        "reason": "중동·호르무즈 리스크와 EU 가스 저장률 부족·LNG 타이트 속 에너지 리스크 프리미엄 유지"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.06.25~26",
+        "event": "중국 CCER 방법론과 15차 FYP 에너지 계획"
+      }
+    ],
+    "top_picks": null,
+    "risk": "정책 헤드라인 변동성, 잔존부하 음(-), 프랑스 원전 가동률, 공동 경매 커버",
+    "quote": "이번주는 중동·호르무즈 리스크와 EU 가스 저장률 부족·LNG 타이트 속 에너지 리스크 프리미엄이 유지되는 가운데, EU·중국·한국 모두 80€/t·CNY 80대·2.2만~2.4만원 박스권에서 정책·포지션·실수요가 맞붙는 대기 장세를 이어가되 중기 방향성은 상방이 열려 있을 것으로 판단"
+  }
+}

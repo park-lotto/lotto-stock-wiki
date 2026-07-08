@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-07",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-08_0804_자회사 적자 축소 본업도 업사이클.md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": "박장욱",
+    "report_date": "2026.07.07",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "프로텍",
+        "code": "053610",
+        "rating": "N.R",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "26년 예상 매출액 2,826억원(YoY +22.6%), 영업이익 771억원(YoY +66.4%) 전망.",
+        "estimate_revision": "자회사 피엠티 턴어라운드로 전년대비 영업이익 66.4% 개선 전망",
+        "next_catalyst": "신규 장비 포트폴리오 확장까지 고려 시, 관심 필요한 구간 위치",
+        "thesis": [
+          "자회사 피엠티 턴어라운드로 연결 자회사 적자폭 축소 전망",
+          "메타발 반도체 CAPEX 컷 우려는 과도함",
+          "자회사 적자폭 축소에 신규장비까지 더해지는 펀더멘탈"
+        ],
+        "valuation_basis": "26년 예상 P/E 13배로 (최근 3년 평균 PER 13배) HBM으로 리레이팅된 멀티플 부여받는 중.",
+        "risk": "시장 우려 (메타발 반도체 CAPEX 축소 등)",
+        "supply_comment": "동사는 25년부터 본딩 정렬과 레이저 열압착 본딩을 같이하는 LCB(Laser Compression Bonder) 장비의 글로벌 OSAT향 매출 일부 발생 중.",
+        "quote": "자회사 피엠티 턴어라운드로 전년대비 영업이익 66.4% 개선 전망"
+      }
+    ]
+  }
+}

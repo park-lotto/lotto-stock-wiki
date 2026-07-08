@@ -1,0 +1,66 @@
+{
+  "meta": {
+    "date": "2026-07-06",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-08_0807_[디지털자산] 디지털자산 Weekly 2026.07.03.md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "최윤영",
+    "report_date": "2026.07.03",
+    "target_kind": "market",
+    "market": {
+      "market_direction": null,
+      "macro_vars": [
+        "디지털자산",
+        "스테이블코인",
+        "토큰화"
+      ],
+      "recommended_sectors": null,
+      "style": null,
+      "event_calendar": [
+        {
+          "date": "2026.06.29",
+          "event": "BNY, Circle과 협력하여 기관용 USDC 서비스 출시"
+        },
+        {
+          "date": "2026.06.29",
+          "event": "Ripple, XRPL Lending Protocol 제안 및 devnet 연동"
+        },
+        {
+          "date": "2026.06.29",
+          "event": "영국 FCA, 암호화폐 규제체계 확정"
+        },
+        {
+          "date": "2026.06.30",
+          "event": "Open Standard, 스테이블코인 Open USD(OUSD) 공개"
+        },
+        {
+          "date": "2026.06.30",
+          "event": "SEC, 암호화폐·예측시장 ETF 규제 체계 의견수렴 착수"
+        },
+        {
+          "date": "2026.07.01",
+          "event": "Robinhood, Arbitrum 기반 L2 'Robinhood Chain' 메인넷 출시"
+        },
+        {
+          "date": "2026.07.01",
+          "event": "대만 의회, 가상자산서비스법 통과"
+        },
+        {
+          "date": "2026.07.02",
+          "event": "Securitize(SECZ), NYSE 상장"
+        }
+      ],
+      "top_picks": [
+        "Circle",
+        "Coinbase",
+        "Ripple",
+        "Robinhood",
+        "Securitize"
+      ],
+      "risk": "OUSD 출범으로 Circle의 핵심 수익원인 준비자산 수익 모델이 도전을 받기 시작했으며, USDC 최대 유통 파트너인 Coinbase가 컨소시엄에 참여하면서 8월 재계약 협상 과정에서 수익 배분 구조 변화 가능성이 부각됨.",
+      "quote": "OUSD 출범으로 Circle의 핵심 수익원인 준비자산 수익 모델이 도전을 받기 시작. 특히 USDC 최대 유통 파트너인 Coinbase가 컨소시엄에 참여하면서 8월 재계약 협상 과정에서 수익 배분 구조 변화 가능성이 부각"
+    }
+  }
+}

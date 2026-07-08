@@ -1,0 +1,26 @@
+{
+  "meta": {
+    "date": "2026-07-07",
+    "broker": "DS INVESTMENT & SECURITIES",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-07_1105_만년 저평가 우선주, 남은 하반기 어떻게 될...md"
+  },
+  "questionnaire": {
+    "broker": "DS INVESTMENT & SECURITIES",
+    "analyst": "김수현",
+    "report_date": "2026.07.07",
+    "target_kind": "sector",
+    "sector_name": "지주회사/거버넌스",
+    "sector_view": null,
+    "thesis": [
+      "삼성전자 보통주와 우선주 간 괴리는 파괴적인 ETF 수급으로 인해 역대 최대 수준",
+      "개정 상법으로 이사 충실 의무가 전체 주주 보호로 확대되면서 의결권 프리미엄의 가치 하락",
+      "대규모 배당 및 자사주 소각 등 주주환원 정책 강화로 우선주-보통주 괴리 축소 예상"
+    ],
+    "timeline": [
+      "2026년 하반기"
+    ],
+    "top_picks": null,
+    "risk": "본문 내 별도 명시된 리스크 요인 없음",
+    "quote": "삼성전자 또한 적극적인 대규모 주주환원이 기대되는 만큼 하반기 우선주 할인 축소 아이디어에 베팅할 자금들도 늘어날 수 있다는 판단이다."
+  }
+}

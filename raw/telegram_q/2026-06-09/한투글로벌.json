@@ -2,7 +2,7 @@
   "reports": [
     {
       "broker": "한투글로벌",
-      "stock": "오픈AI",
+      "stock": "OpenAI",
       "rating": null,
       "tp": null,
       "ts": "06:29",
@@ -11,7 +11,7 @@
     },
     {
       "broker": "한투글로벌",
-      "stock": "애플",
+      "stock": "Apple",
       "rating": null,
       "tp": null,
       "ts": "06:46",

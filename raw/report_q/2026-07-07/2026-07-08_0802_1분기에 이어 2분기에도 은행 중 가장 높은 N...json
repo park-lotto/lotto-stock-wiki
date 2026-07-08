@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-07",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-08_0802_1분기에 이어 2분기에도 은행 중 가장 높은 N...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "최정욱",
+    "report_date": "2026년 7월 7일",
+    "stocks": [
+      {
+        "name": "하나금융",
+        "code": "086790",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "166,000원",
+        "tp_prev": null,
+        "tp_direction": "up",
+        "earnings_outlook": "2분기 추정 순익은 1조 2,820억원으로 QoQ 5.9% 증가해 컨센서스를 상회할 것으로 전망",
+        "estimate_revision": "목표가 상향은 2분기 실적이 기대치를 소폭 상회함에 따른 이익추정치 상향에 기인.",
+        "next_catalyst": "2분기 실적 발표시 공시 예정인 밸류업 업그레이드 방안",
+        "thesis": [
+          "1) 2분기 은행 원화 대출 성장률이 1.5%에 달해 대형은행지주사 중 가장 높은 성장률이 기대됨",
+          "2) NIM은 QoQ 5bp 추가 상승해 1분기에 이어 2분기에도 은행 중 가장 높은 상승세가 예상됨",
+          "3) WM 영업 활성화에 힘입어 증권 브로커리지수수료도 QoQ 30% 가까이 증가할 전망"
+        ],
+        "valuation_basis": null,
+        "risk": "중앙미디어그룹 관련 추가 충당금 500억원 적립과 기업 신용위험 재평가 영향",
+        "supply_comment": null,
+        "quote": "하나금융에 대한 투자의견 매수를 유지하고, 목표주가를 166,000원으로 상향."
+      }
+    ]
+  }
+}
