@@ -3609,13 +3609,40 @@ function setDraw(tool){
 }
 function setDrawColor(c,btn){ _drawColor=c; document.querySelectorAll('.ct-sw').forEach(b=>b.classList.toggle("active",b===btn)); }
 function setDrawWidth(w,btn){ _drawWidth=w; document.querySelectorAll('.ct-btn.wbtn').forEach(b=>b.classList.toggle("active",b===btn)); }
-function _proj(p){ return {x:_chart.timeScale().logicalToCoordinate(p.logical), y:_chartCandle.priceToCoordinate(p.price)}; }
+// 저장 좌표 = 날짜(time) 우선, 데이터 밖(미래 투사 공간)만 마지막 봉 기준 상대offset
+// · 이유: logical(막대 인덱스) 그대로 저장하면 일봉 API가 매일 "최근 N봉"만 돌려줘서
+//   옛 봉이 앞에서 빠질 때마다 인덱스가 통째로 밀려 그림이 엉뚱한 자리로 어긋남(2026-07-08 버그)
+function _persistPt(p){
+  const idx=Math.round(p.logical);
+  if(_chartRows.length && idx>=0 && idx<_chartRows.length) return {t:_chartRows[idx].time, price:p.price};
+  return {ofs:p.logical-(_chartRows.length-1), price:p.price};
+}
+function _logicalOf(p){
+  if(p.logical!=null) return p.logical;              // 드래그 중 임시점(런타임 raw)
+  if(p.t!=null){ const idx=_chartRows.findIndex(r=>r.time===p.t); return idx>=0?idx:null; }
+  return (_chartRows.length-1)+(p.ofs||0);
+}
+function _proj(p){ const l=_logicalOf(p); if(l==null)return{x:null,y:null}; return {x:_chart.timeScale().logicalToCoordinate(l), y:_chartCandle.priceToCoordinate(p.price)}; }
 function _drawOff(){
   _drawTool=null; _drawPending=null;
   document.querySelectorAll('.ct-btn[data-draw]').forEach(b=>b.classList.remove("active"));
   const el=document.getElementById("tv_chart_container"); if(el) el.classList.remove("drawing");
 }
 function undoDraw(){ _draws.pop(); _drawPending=null; _saveDraws(); _redrawDraws(); }
+// 예전(logical만 저장) 도형을 time/ofs 형식으로 1회 변환 — 이후로는 데이터 앞부분이 잘려도 절대 안 밀림
+// (단, 이미 어긋난 예전 그림의 "원래 의도했던 자리"까지는 복구 불가 — 지금 보이는 자리에서 고정만 됨)
+function _migrateLegacyDraws(){
+  let changed=false;
+  for(const d of _draws){
+    if(d.type==="pen"){
+      d.pts=(d.pts||[]).map(p=>{ if(p && p.logical!=null){ changed=true; return _persistPt(p); } return p; });
+    } else if(d.a || d.b){
+      if(d.a && d.a.logical!=null){ d.a=_persistPt(d.a); changed=true; }
+      if(d.b && d.b.logical!=null){ d.b=_persistPt(d.b); changed=true; }
+    }
+  }
+  if(changed) _saveDraws();
+}
 function _drawPt(e){
   const el=document.getElementById("tv_chart_container");
   const r=el.getBoundingClientRect();
@@ -3652,12 +3679,15 @@ function _hitShape(x,y){
 // 도형 통째로 이동 (logical·price 평행이동)
 function _startMove(idx,p){
   const d=_draws[idx]; const isPen=d.type==="pen";
-  const orig=isPen?(d.pts||[]).map(q=>({...q})):[{...d.a},{...d.b}];
+  // 이동은 logical 공간에서 델타 계산 → 끝나면 다시 time/ofs로 영구화(_persistPt)
+  const _lg=q=>{ const l=_logicalOf(q); return l==null?_chartRows.length-1:l; };
+  const orig=isPen?(d.pts||[]).map(q=>({logical:_lg(q), price:q.price}))
+                  :[{logical:_lg(d.a),price:d.a.price},{logical:_lg(d.b),price:d.b.price}];
   const sl=p.logical, sp=p.price;
   const mv=ev=>{ const q=_drawPt(ev); if(q.logical==null||q.price==null)return;
     const dl=q.logical-sl, dp=q.price-sp;
-    if(isPen) d.pts=orig.map(o=>({logical:o.logical+dl, price:o.price+dp}));
-    else { d.a={logical:orig[0].logical+dl, price:orig[0].price+dp}; d.b={logical:orig[1].logical+dl, price:orig[1].price+dp}; }
+    if(isPen) d.pts=orig.map(o=>_persistPt({logical:o.logical+dl, price:o.price+dp}));
+    else { d.a=_persistPt({logical:orig[0].logical+dl, price:orig[0].price+dp}); d.b=_persistPt({logical:orig[1].logical+dl, price:orig[1].price+dp}); }
     _redrawDraws();
   };
   const up=()=>{ window.removeEventListener("mousemove",mv,true); window.removeEventListener("mouseup",up,true); _saveDraws(); };
@@ -3698,7 +3728,7 @@ function _startNewDraw(e){
       _previewDraw({type:"pen",pts,color:_drawColor,width:_drawWidth}); } };
     const cleanup=()=>{ window.removeEventListener("mousemove",mv,true); window.removeEventListener("mouseup",up,true); };
     function up(){ cleanup(); _drawCancel=null;
-      if(pts.length>1){ _draws.push({type:"pen",pts,color:_drawColor,width:_drawWidth}); _saveDraws(); }
+      if(pts.length>1){ _draws.push({type:"pen",pts:pts.map(_persistPt),color:_drawColor,width:_drawWidth}); _saveDraws(); }
       _redrawDraws(); }
     _drawCancel=()=>{ cleanup(); _redrawDraws(); };   // 취소 = 커밋 안 함
     window.addEventListener("mousemove",mv,true); window.addEventListener("mouseup",up,true);
@@ -3717,7 +3747,7 @@ function _startNewDraw(e){
     const dist=Math.hypot(q.x-startX, q.y-startY);
     if(_drawPending && q.logical!=null && q.price!=null && dist>=5){
       const b=_snapB(_drawPending,{logical:q.logical,price:q.price},ev.shiftKey);
-      _draws.push({type:_drawTool, a:_drawPending, b, color:_drawColor, width:_drawWidth});
+      _draws.push({type:_drawTool, a:_persistPt(_drawPending), b:_persistPt(b), color:_drawColor, width:_drawWidth});
       _saveDraws();   // 종목·봉별 저장 (도구 유지 → 계속 그리기)
     }
     _drawPending=null; _redrawDraws();
@@ -3797,6 +3827,7 @@ async function loadChartData(){
       msg.textContent="캔들 데이터 없음 (장외/신규 상장 등)"; el.appendChild(msg); return;
     }
     _chartRows=c;
+    _migrateLegacyDraws();   // 예전 logical-only 그림 → time/ofs 로 1회 고정(더 이상 안 밀리게)
     _chartCandle.setData(c.map(x=>({time:x.time,open:x.open,high:x.high,low:x.low,close:x.close})));
     _chartVol.setData(c.map(x=>({time:x.time,value:x.value,
       color:x.close>=x.open?"rgba(231,76,60,.45)":"rgba(52,152,219,.45)"})));
