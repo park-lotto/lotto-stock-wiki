@@ -1,3 +1,4 @@
+import json
 import sqlite3
 from shopping_shorts.store import Store
 
@@ -25,3 +26,27 @@ def test_prev_deltas_for_acceleration(tmp_path):
     s.save_run("2026-07-08", [{"shortcode": "x", "username": "u", "comments": 200, "delta": 200}])
     s.save_run("2026-07-09", [{"shortcode": "x", "username": "u", "comments": 500, "delta": 300}])
     assert s.prev_delta("x") == 300  # 직전 Δ (가속 계산용)
+
+def test_comment_drafts_roundtrip(tmp_path):
+    s = Store(tmp_path / "t.db")
+    assert s.get_drafts("sc1") == []
+    s.save_drafts("sc1", ["댓글A", "댓글B", "댓글C"])
+    assert s.get_drafts("sc1") == ["댓글A", "댓글B", "댓글C"]
+    s.save_drafts("sc1", ["새댓글"])
+    assert s.get_drafts("sc1") == ["새댓글"]
+
+def test_drafts_bulk_map(tmp_path):
+    s = Store(tmp_path / "t.db")
+    s.save_drafts("a", ["x"])
+    s.save_drafts("b", ["y", "z"])
+    m = s.drafts_map(["a", "b", "c"])
+    assert m["a"] == ["x"] and m["b"] == ["y", "z"]
+    assert m.get("c", []) == []
+
+def test_commented_mark_and_query(tmp_path):
+    s = Store(tmp_path / "t.db")
+    assert s.commented_set() == set()
+    s.mark_commented("sc1")
+    s.mark_commented("sc1")
+    s.mark_commented("sc2")
+    assert s.commented_set() == {"sc1", "sc2"}
