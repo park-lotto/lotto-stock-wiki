@@ -181,7 +181,7 @@ def get_program_trade(market: str = "J") -> dict:
 
 
 def get_market_investor(market: str = "J") -> dict:
-    """코스피(J)/코스닥(Q) 투자자별 당일 누적 순매수.
+    """코스피(J)/코스닥(Q) 투자자별 당일 누적 순매수 + 기관 세부(금투/보험/투신/사모/은행/연기금등/기타).
     API ID: ka10051 — 업종별투자자순매수요청
     mrkt_tp: 0=코스피, 1=코스닥
     응답: inds_netprps 리스트에서 inds_cd=001(코스피)/101(코스닥) 행 추출
@@ -190,6 +190,18 @@ def get_market_investor(market: str = "J") -> dict:
     ts = _dt.datetime.now().strftime("%H:%M")
     mrkt_tp = "0" if market == "J" else "1"
     target_cd = "001" if market == "J" else "101"  # 장내 종합지수 코드 (stex_tp=1)
+
+    def _int(v):
+        try: return int(float(str(v).replace(",", "")))
+        except: return 0
+
+    # 기관 세부 항목 필드 매핑 (ka10051 raw row → 한글 키)
+    _SUB = {
+        "금투": "sc_netprps", "보험": "insrnc_netprps", "투신": "invtrt_netprps",
+        "은행": "bank_netprps", "연기금": "jnsinkm_netprps", "기타금융": "endw_netprps",
+        "기타법인": "etc_corp_netprps", "국가": "natn_netprps", "사모": "samo_fund_netprps",
+    }
+    _ZERO_SUB = {k: 0 for k in _SUB}
     try:
         r = requests.post(
             f"{BASE}/api/dostk/sect",
@@ -201,10 +213,6 @@ def get_market_investor(market: str = "J") -> dict:
         data = r.json()
         rows = data.get("inds_netprps", []) or []
 
-        def _int(v):
-            try: return int(float(str(v).replace(",", "")))
-            except: return 0
-
         # 업종별 리스트에서 종합지수 행(001/101) 찾기
         for row in rows:
             if row.get("inds_cd", "") == target_cd:
@@ -212,15 +220,17 @@ def get_market_investor(market: str = "J") -> dict:
                     "외인": _int(row.get("frgnr_netprps", 0)),
                     "기관": _int(row.get("orgn_netprps", 0)),
                     "개인": _int(row.get("ind_netprps", 0)),
+                    **{k: _int(row.get(f, 0)) for k, f in _SUB.items()},
                     "ts": ts,
                 }
         # 없으면 전체 합산
         외인 = sum(_int(r.get("frgnr_netprps", 0)) for r in rows)
         기관 = sum(_int(r.get("orgn_netprps", 0)) for r in rows)
         개인 = sum(_int(r.get("ind_netprps", 0)) for r in rows)
-        return {"외인": 외인, "기관": 기관, "개인": 개인, "ts": ts}
+        sub = {k: sum(_int(r.get(f, 0)) for r in rows) for k, f in _SUB.items()}
+        return {"외인": 외인, "기관": 기관, "개인": 개인, **sub, "ts": ts}
     except Exception:
-        return {"외인": 0, "기관": 0, "개인": 0, "ts": ts}
+        return {"외인": 0, "기관": 0, "개인": 0, **_ZERO_SUB, "ts": ts}
 
 
 def get_volume_rank(n: int = 30) -> list:

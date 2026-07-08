@@ -126,8 +126,10 @@ body{background:var(--bg);color:var(--m-tx0);min-height:100vh;}
 .mkt-sec-label{font-size:11px;color:var(--m-tx1);letter-spacing:.5px;margin-bottom:2px;
   display:flex;justify-content:space-between;align-items:center;}
 /* 투자자 발산 바 */
-.inv-grid{display:grid;grid-template-columns:30px 1fr 64px;gap:3px 6px;align-items:center;}
+.inv-grid{display:grid;grid-template-columns:30px 1fr 64px 14px;gap:3px 6px;align-items:center;}
+.inv-grid.sub-grid{grid-template-columns:44px 1fr 60px;}
 .inv-lbl{font-size:12px;color:var(--m-tx1);}
+.inv-lbl.sub{font-size:11px;color:var(--m-tx2);}
 .div-bar{display:flex;height:9px;border-radius:4px;overflow:hidden;background:var(--m-elev);}
 .div-neg{flex:1;display:flex;align-items:stretch;justify-content:flex-end;}
 .div-neg-fill{border-radius:3px 0 0 3px;transition:width .5s;}
@@ -136,6 +138,10 @@ body{background:var(--bg);color:var(--m-tx0);min-height:100vh;}
 .inv-num{font-size:12px;font-variant-numeric:tabular-nums;text-align:right;}
 .inv-num.up{color:var(--up1);}
 .inv-num.dn{color:var(--dn1);}
+.inv-num.sub{font-size:11px;}
+.inv-trend{font-size:10px;text-align:center;color:var(--m-tx3);}
+.inv-trend.up{color:var(--up1);}
+.inv-trend.dn{color:var(--dn1);}
 /* 프로그램 */
 .prog-row{display:flex;align-items:center;gap:8px;}
 .prog-total{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;}
@@ -2031,15 +2037,42 @@ function renderMarketFlow(d){
       const inv=m.investor_now||{외인:0,기관:0,개인:0};
       const invAllZero=!inv.외인&&!inv.기관&&!inv.개인;
       const maxAbs=Math.max(1,Math.abs(inv.외인),Math.abs(inv.기관),Math.abs(inv.개인));
+      // 최근 방향성(직전 대비 순매수 늘고 있는지/줄고 있는지) — 오늘 누적 합계와 별개로,
+      // 1분폴링 이력의 최근~5분 델타로 지금 이 순간의 매수/매도 압력 전환을 보여줌
+      const _rawHist=m.investor_history||[];
+      const _trendArrow=(k)=>{
+        if(_rawHist.length<2) return `<span class="inv-trend"></span>`;
+        const n=Math.min(_rawHist.length,6);
+        const cur=Number(_rawHist[_rawHist.length-1][k]||0);
+        const prev=Number(_rawHist[_rawHist.length-n][k]||0);
+        const d=cur-prev;
+        if(Math.abs(d)<100) return `<span class="inv-trend">–</span>`;   // 1억 미만 변화=사실상 정체
+        return d>0?`<span class="inv-trend up" title="최근 추세: 순매수 증가">▲</span>`
+                  :`<span class="inv-trend dn" title="최근 추세: 순매도 전환/증가">▼</span>`;
+      };
       const invRows=["외인","기관","개인"].map(k=>{
           const v=inv[k]||0;
           const vc=invAllZero?"neu":(v>0?"up":v<0?"dn":"neu");
           const vs=invAllZero?"—":(v>0?"+":"")+fmtAuk(v);
           return`<span class="inv-lbl">${k}</span>
                  ${invAllZero?`<span style="flex:1"></span>`:divBar(v,maxAbs)}
-                 <span class="inv-num ${vc}">${vs}</span>`;
+                 <span class="inv-num ${vc}">${vs}</span>
+                 ${invAllZero?`<span class="inv-trend"></span>`:_trendArrow(k)}`;
         }).join("")
         +(invAllZero?`<span style="font-size:9px;color:#333;display:block;margin-top:2px">KIS API 미구독</span>`:"");
+
+      // 기관 세부 (금투/투신/사모/연기금 등) — 확장 카드에서만 표시
+      const _subKeys=["금투","투신","사모","연기금","보험","은행","기타금융","국가"];
+      const _hasSub=_subKeys.some(k=>inv[k]!==undefined);
+      const subRows=!_hasSub?"":(()=>{
+        const maxSub=Math.max(1,..._subKeys.map(k=>Math.abs(inv[k]||0)));
+        return _subKeys.map(k=>{
+          const v=inv[k]||0;
+          const vc=v>0?"up":v<0?"dn":"neu";
+          const vs=(v>0?"+":"")+fmtAuk(v);
+          return`<span class="inv-lbl sub">${k}</span>${divBar(v,maxSub)}<span class="inv-num sub ${vc}">${vs}</span>`;
+        }).join("");
+      })();
 
       const hist=_seedOpen(m.investor_history||[],{외인:0,기관:0,개인:0,ts:"0900"});
       const histSvg=`
@@ -2107,6 +2140,10 @@ function renderMarketFlow(d){
           <div class="inv-grid">${invRows}</div>
           ${idxExpanded?histSvg:""}
         </div>
+        ${idxExpanded&&_hasSub?`<div>
+          <div class="mkt-sec-label" style="margin-top:2px">기관 세부 (금투/투신/사모/연기금 등)</div>
+          <div class="inv-grid sub-grid">${subRows}</div>
+        </div>`:""}
         ${idxExpanded?`<div>
           <div class="mkt-sec-label" style="margin-top:2px;display:flex;justify-content:space-between">
             <span>프로그램 순매수</span>
