@@ -35,6 +35,28 @@
   .progress-wrap{max-width:560px;margin:0 auto}
   .progress-wrap .card img{height:220px}
   .counter{text-align:center;color:var(--sub);font-size:13px;margin-top:12px}
+  @media (max-width: 768px){
+    body{flex-direction:column;min-height:100vh}
+    .sidebar{width:100%;border-right:none;border-bottom:1px solid var(--line);padding:10px 12px;
+             display:flex;gap:6px;overflow-x:auto;align-items:center;white-space:nowrap}
+    .sidebar h1{margin:0 8px 0 0;flex-shrink:0}
+    .sidebar .menu-group{margin:0;display:flex;gap:6px;align-items:center}
+    .sidebar .menu-group .label{display:none}
+    .menu-item{margin:0;padding:6px 10px;flex-shrink:0;font-size:12px}
+    .main{padding:16px 14px}
+    .cards{grid-template-columns:repeat(2,1fr);gap:10px}
+    .head h2{font-size:20px}
+    .toolbar{gap:8px}
+    .tabs{overflow-x:auto}
+    .cats{overflow-x:auto;flex-wrap:nowrap}
+    .progress-wrap{max-width:100%}
+  }
+  @media (max-width: 420px){
+    .cards{grid-template-columns:repeat(2,1fr);gap:8px}
+    .card .body{padding:8px}
+    .stat{font-size:11px}
+    .btns button{font-size:10px;padding:6px 2px}
+  }
 </style>
 </head>
 <body>
