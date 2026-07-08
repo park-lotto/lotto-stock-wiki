@@ -29,3 +29,12 @@ def test_parse_rows_extracts_channels():
         "followers": 690934, "inpock": "https://link.inpock.co.kr/ohusalim",
     }
     assert channels[1]["username"] == "self_diy"
+
+
+def test_username_from_url_rejects_reserved_paths():
+    assert username_from_url("https://www.instagram.com/p/Cabc123/") is None
+    assert username_from_url("https://www.instagram.com/reel/Cxyz456/") is None
+    assert username_from_url("https://www.instagram.com/reels/Cxyz/") is None
+    assert username_from_url("https://www.instagram.com/stories/user/123") is None
+    assert username_from_url("https://www.instagram.com/explore/tags/x") is None
+    assert username_from_url("https://www.instagram.com/tv/Cabc/") is None

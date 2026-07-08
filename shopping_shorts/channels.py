@@ -4,16 +4,20 @@ from openpyxl import load_workbook
 from shopping_shorts.config import EXCEL_PATH
 
 _IG_RE = re.compile(r"instagram\.com/([A-Za-z0-9_.]+)")
+_RESERVED = {"p", "reel", "reels", "stories", "explore", "tv", "s", "accounts"}
 
 
 def username_from_url(url):
-    """인스타 URL에서 username 추출. 인스타 URL 아니면 None."""
+    """인스타 URL에서 username 추출. 인스타 URL 아니면 None. 예약 경로는 거부."""
     if not url:
         return None
     m = _IG_RE.search(str(url).strip())
     if not m:
         return None
-    return m.group(1).strip("/")
+    name = m.group(1).strip("/")
+    if name.lower() in _RESERVED:
+        return None
+    return name
 
 
 def parse_rows(rows):
