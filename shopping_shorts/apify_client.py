@@ -7,7 +7,7 @@ _RUN_SYNC_URL = "https://api.apify.com/v2/acts/{actor}/run-sync-get-dataset-item
 
 
 def fetch_reels(usernames, token=None, results_per_channel=RESULTS_PER_CHANNEL,
-                only_newer_than=ONLY_NEWER_THAN, timeout=300):
+                only_newer_than=ONLY_NEWER_THAN, timeout=900):
     """usernames 리스트 → reel dict 리스트. Apify가 채널별 최신 N개(48h 여유) 반환."""
     token = token or APIFY_TOKEN
     if not token:
