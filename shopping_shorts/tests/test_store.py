@@ -50,3 +50,11 @@ def test_commented_mark_and_query(tmp_path):
     s.mark_commented("sc1")
     s.mark_commented("sc2")
     assert s.commented_set() == {"sc1", "sc2"}
+
+def test_saved_mark_and_query(tmp_path):
+    s = Store(tmp_path / "t.db")
+    assert s.saved_set() == set()
+    s.mark_saved("sc1")
+    s.mark_saved("sc1")
+    s.mark_saved("sc2")
+    assert s.saved_set() == {"sc1", "sc2"}

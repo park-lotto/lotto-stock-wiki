@@ -56,6 +56,21 @@ def api_comment_done(shortcode: str):
     return {"ok": True, "shortcode": shortcode}
 
 
+@app.post("/api/save")
+def api_save(shortcode: str):
+    """제품찾기 소스로 담기 (기능 ③에서 재사용)."""
+    store = Store(DB_PATH)
+    store.mark_saved(shortcode)
+    return {"ok": True, "shortcode": shortcode}
+
+
+@app.get("/api/saved")
+def api_saved():
+    """담긴 shortcode 목록."""
+    store = Store(DB_PATH)
+    return {"ok": True, "saved": sorted(store.saved_set())}
+
+
 # 정적 프론트 (마운트는 맨 마지막)
 _STATIC = Path(__file__).parent / "static"
 app.mount("/", StaticFiles(directory=str(_STATIC), html=True), name="static")

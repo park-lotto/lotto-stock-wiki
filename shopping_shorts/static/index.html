@@ -27,9 +27,9 @@
   .cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
   .cat{padding:6px 12px;border:1px solid var(--line);border-radius:20px;font-size:12px;color:var(--sub);cursor:pointer}
   .cat.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
-  .card img{width:100%;height:160px;object-fit:cover;background:#000}
+  .card img{width:100%;height:220px;object-fit:cover;background:#000}
   .card .body{padding:12px}
   .card .rank{font-size:12px;color:var(--sub)}
   .card .ch{font-weight:600;font-size:14px;margin:4px 0}
@@ -40,6 +40,11 @@
   .links{display:flex;gap:8px;margin-top:10px}
   .links a{font-size:12px;color:var(--accent);text-decoration:none}
   .empty{color:var(--sub);text-align:center;padding:60px;grid-column:1/-1}
+  .btns{display:flex;gap:6px;margin-top:10px}
+  .btns button{flex:1;font-size:11px;padding:7px 4px;border-radius:7px;border:1px solid var(--line);background:#0d131c;color:var(--txt);cursor:pointer}
+  .btns button.view{border-color:#2f81f7;color:#7db4ff}
+  .btns button.comment{background:linear-gradient(90deg,#7b2ff7,#c22ed0);border:none;color:#fff}
+  .btns button.save.saved{background:#2ea043;border-color:#2ea043;color:#fff}
 </style>
 </head>
 <body>
@@ -111,12 +116,15 @@ function render(){
         <div class="stat"><span>속도(시간당)</span><b>${i.speed.toFixed(1)}</b></div>
         <div class="stat"><span>가속</span><b>${i.accel==null?'—':(i.accel>0?'+':'')+i.accel}</b></div>
         <div class="stat"><span>참여밀도</span><b>${(i.density*100).toFixed(2)}%</b></div>
-        <div class="links">
-          <a href="${i.url}" target="_blank">▶ 영상</a>
-          ${i.inpock?`<a href="${i.inpock}" target="_blank">🛒 판매채널</a>`:''}
+        <div class="btns">
+          <button class="view" onclick="window.open('${i.url}','_blank')">👁 보기</button>
+          <button class="comment" onclick="goComment('${i.shortcode}')">💬 댓글참여</button>
+          <button class="save" id="save_${i.shortcode}" onclick="doSave('${i.shortcode}', this)">📥 담기</button>
         </div>
+        ${i.inpock?`<div style="margin-top:6px"><a href="${i.inpock}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🛒 판매채널</a></div>`:''}
       </div>
     </div>`).join("");
+  markSavedButtons();
 }
 async function doCollect(){
   const btn=document.getElementById("collectBtn"), st=document.getElementById("status");
@@ -134,6 +142,20 @@ async function loadLast(){
   const d = await (await fetch("/api/reference")).json();
   if(d.items?.length){ STATE.items=d.items; render();
     document.getElementById("status").textContent=`마지막 수집: ${d.collected_at?.slice(0,16)||'-'}`; }
+}
+function goComment(sc){ location.href = '/outreach.html?focus=' + encodeURIComponent(sc); }
+async function doSave(sc, btn){
+  await fetch('/api/save?shortcode=' + encodeURIComponent(sc), {method:'POST'});
+  btn.textContent = '담김✓'; btn.classList.add('saved');
+}
+async function markSavedButtons(){
+  try{
+    const d = await (await fetch('/api/saved')).json();
+    (d.saved||[]).forEach(sc=>{
+      const b=document.getElementById('save_'+sc);
+      if(b){ b.textContent='담김✓'; b.classList.add('saved'); }
+    });
+  }catch(e){}
 }
 renderCats(); loadLast();
 </script>

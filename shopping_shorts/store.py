@@ -38,6 +38,12 @@ class Store:
                     commented_at TEXT
                 )
             """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS saved (
+                    shortcode TEXT PRIMARY KEY,
+                    saved_at TEXT
+                )
+            """)
 
     def prev_comments(self, shortcode):
         """가장 최근에 기록된 이 영상의 댓글수. 없으면 None."""
@@ -108,4 +114,18 @@ class Store:
         """완료된 shortcode 집합."""
         with self._conn() as c:
             rows = c.execute("SELECT shortcode FROM commented").fetchall()
+        return {r[0] for r in rows}
+
+    def mark_saved(self, shortcode):
+        """제품찾기 소스로 담기 (중복 무시)."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT OR IGNORE INTO saved(shortcode, saved_at) VALUES(?, datetime('now'))",
+                (shortcode,),
+            )
+
+    def saved_set(self):
+        """담긴 shortcode 집합."""
+        with self._conn() as c:
+            rows = c.execute("SELECT shortcode FROM saved").fetchall()
         return {r[0] for r in rows}
