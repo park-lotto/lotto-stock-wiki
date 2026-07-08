@@ -153,8 +153,15 @@ def _briefing_keys():
 GEMINI_TEXT_MODELS = ["gemini-3-flash-preview", "gemini-3.1-flash-lite", "gemini-2.5-flash"]
 
 
-def _gemini_text(prompt, keys=None, models=None):
+import concurrent.futures as _cf
+_GEMINI_EXEC = _cf.ThreadPoolExecutor(max_workers=4)  # generate_content가 응답없이 멈춰도 호출 스레드는 안 묶임
+
+
+def _gemini_text(prompt, keys=None, models=None, timeout=45):
     """텍스트 생성 공용 호출 — 모델 폴백 + 키 로테이션 + 503 백오프.
+    generate_content 자체엔 SDK 타임아웃이 없어(네트워크 hang 시 무한대기) 별도 스레드로 던지고
+    timeout초 안에 안 끝나면 포기 — 안 그러면 이 함수를 부르는 단일 백그라운드 루프
+    (_poll_briefing: 시장상황 타임라인·순환매감지 등)가 통째로 멈춘다(2026-07-08 사건).
     반환: {"ok":True,"analysis":str,"model":str} | {"error":str}"""
     try:
         from google import genai
@@ -169,12 +176,16 @@ def _gemini_text(prompt, keys=None, models=None):
         for k in keys:
             client = key_vault.get_client_for_key(k)  # key_vault 캐시 재사용, 매 호출 새 클라이언트 생성 안 함
             try:
-                resp = client.models.generate_content(model=model, contents=prompt)
+                fut = _GEMINI_EXEC.submit(client.models.generate_content, model=model, contents=prompt)
+                resp = fut.result(timeout=timeout)
                 txt = (resp.text or "").strip()
                 if txt:
                     return {"ok": True, "analysis": txt, "model": model}
                 last = "빈 응답"
                 continue   # 다음 키
+            except _cf.TimeoutError:
+                last = f"응답시간초과({timeout}s)"
+                continue   # 다음 키 (버려진 워커는 executor에 남지만 호출 스레드는 진행)
             except Exception as e:
                 last = str(e)
                 if any(s in last for s in ("503", "UNAVAILABLE", "overloaded")):
@@ -1758,7 +1769,8 @@ def _surface_strong_news():
         reps.sort(key=lambda x: x["score"], reverse=True)
         for i, r in enumerate(reps):
             # 상위 + (다채널 보도 or 큰 상승) → '중요' 맨앞 고정
-            r["important"] = (i < 3 and r["score"] >= 5)
+            # 기준 강화(2026-07-08): 상위3→2, 점수5→7 — '중요' 과다노출 완화. 더 줄이려면 이 두 값만 조정.
+            r["important"] = (i < 2 and r["score"] >= 7)
         stored = _briefing_load(BRIEFING_PATH)
         seen = {_news_norm(x.get("headline", "")) for x in (stored.get("items") or [])}
         new = [r for r in reps if _news_norm(r["t"]) not in seen]
