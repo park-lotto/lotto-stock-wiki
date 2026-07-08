@@ -7,6 +7,7 @@ from shopping_shorts.channels import load_channels
 from shopping_shorts.apify_client import fetch_reels
 from shopping_shorts.ranking import build_items, apply_grades
 from shopping_shorts.store import Store
+from shopping_shorts.comment_gen import generate as _gen_comments
 
 _CSV_FIELDS = ["name", "username", "category", "comments", "delta", "is_new",
                "speed", "accel", "density", "grade", "age_hours", "url", "inpock"]
@@ -55,6 +56,14 @@ def collect(limit_channels=None):
         all_items.extend(items)
 
     apply_grades(all_items)
+
+    # 댓글 draft 미리 생성 (기존 draft 없는 항목만 — 재수집 시 중복 호출·비용 방지)
+    for it in all_items:
+        sc = it["shortcode"]
+        if not store.get_drafts(sc):
+            drafts = _gen_comments(it.get("caption", ""), it.get("name"), it.get("category"))
+            if drafts:
+                store.save_drafts(sc, drafts)
 
     run_date = now.strftime("%Y-%m-%d %H:%M")
     store.save_run(run_date, [

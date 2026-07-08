@@ -60,6 +60,7 @@ def build_items(reels, meta, prev_comments, prev_delta, now=None, window_hours=4
             "speed": comments / age if age > 0 else float(comments),
             "density": (comments / followers) if followers else 0.0,
             "category": categorize(meta.get("name"), r.get("caption", "")),
+            "caption": r.get("caption", ""),
         })
     return items
 
