@@ -2,30 +2,129 @@
   "reports": [
     {
       "broker": "그로쓰리서치",
-      "stock": "피에스케이홀딩스",
+      "stock": "인텔",
       "rating": null,
       "tp": null,
-      "ts": "09:41",
-      "quote": "DRAM·HBM 미세화 수혜 스트립·세정 장비 업체",
+      "ts": "08:18",
+      "quote": "구글이 28년까지 인텔 공장에서 300만개 이상의 TPU를 생산할 계획",
       "sector": "반도체"
     },
     {
       "broker": "그로쓰리서치",
-      "stock": "브이엠",
+      "stock": "애플",
       "rating": null,
       "tp": null,
-      "ts": "09:41",
-      "quote": "국내 건식 식각장비 유일 업체",
+      "ts": "08:53",
+      "quote": "애플, WWDC 2026에서 AI 기능을 탑재한 차세대 시리 공개",
+      "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "선익시스템",
+      "rating": null,
+      "tp": null,
+      "ts": "09:22",
+      "quote": "선익시스템, 페로브스카이트 광소재 전문기업 에스엔디스플레이와 업무협약 체결",
       "sector": "반도체"
     },
     {
       "broker": "그로쓰리서치",
-      "stock": "에프엔에스테크",
+      "stock": "가온전선",
       "rating": null,
       "tp": null,
-      "ts": "11:32",
-      "quote": "디스플레이 장비 중심에서 반도체 소모품 중심으로 사업 무게중심 이동",
-      "sector": "반도체"
+      "ts": "09:25",
+      "quote": "가온전선 미국 자회사 LSCUS, 미국 생성형 AI 기업 데이터센터에 버스덕트 공급 계약 체결",
+      "sector": "전력"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "LG CNS",
+      "rating": null,
+      "tp": null,
+      "ts": "11:00",
+      "quote": "LG CNS, 대규모 IT 시스템 구축·운영 전 과정을 지원하는 ‘데브온 에이전틱 AIND’ 출시",
+      "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "지투지바이오",
+      "rating": null,
+      "tp": null,
+      "ts": "13:01",
+      "quote": "지투지바이오, ADA 2026에서 차세대 비만치료제 성분의 1개월 지속형 제형 전임상 결과 공개",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "이엔셀",
+      "rating": null,
+      "tp": null,
+      "ts": "09:46",
+      "quote": "이엔셀, 미국 CGT CDMO 기업 안델린 바이오사이언스와 공동 영업 착수",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "아이엘",
+      "rating": null,
+      "tp": null,
+      "ts": "09:58",
+      "quote": "아이엘, 차세대 휴머노이드 로봇 ‘아이엘봇 H2’ 공급계약 체결",
+      "sector": "로봇"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "지아이에스",
+      "rating": null,
+      "tp": null,
+      "ts": "09:58",
+      "quote": "지아이에스, 경북테크노파크 주관 ‘2026년 무인비행체 기술개발 및 사업화 지원사업’ 선정",
+      "sector": "기타"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "아이씨티케이",
+      "rating": null,
+      "tp": null,
+      "ts": "10:25",
+      "quote": "아이씨티케이, ‘국제 표준 PQC와 한국형 양자내성암호 KpqC를 모두 지원하는 보안 SoC 개발’ 국책과제 주관기관 선정",
+      "sector": "양자보안"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "알테오젠",
+      "rating": null,
+      "tp": null,
+      "ts": "11:24",
+      "quote": "알테오젠의 재조합 인간 히알루로니다제 ‘ALT-B4’ 유럽 특허청으로부터 특허 등록 허여 결정",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "HLB",
+      "rating": null,
+      "tp": null,
+      "ts": "16:00",
+      "quote": "블랙록 측 보유 지분은 6.05%로 확대",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "디앤디파마텍",
+      "rating": null,
+      "tp": null,
+      "ts": "16:10",
+      "quote": "디앤디파마텍 오랄링크의 자가면역질환 확장 가능성에 대한 내용을 정리하였습니다.",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "한미약품",
+      "rating": null,
+      "tp": null,
+      "ts": "17:01",
+      "quote": "한미약품 MASH 신약 후보물질 에포시페그트루타이드(HM15211) 임상 2상 진행 중",
+      "sector": "바이오"
     }
   ]
 }

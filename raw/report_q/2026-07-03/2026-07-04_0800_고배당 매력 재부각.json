@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date": "2026-07-03",
+    "broker": "미래에셋증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-04_0800_고배당 매력 재부각.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "미래에셋증권",
+    "analyst": "정태준",
+    "report_date": "2026.7.3",
+    "stocks": [
+      {
+        "name": "NH투자증권",
+        "code": "005940",
+        "rating": "매수",
+        "rating_changed": null,
+        "tp_new": "44,000원",
+        "tp_prev": "44,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "summary": "2분기 지배주주이익은 4,795억원으로, 컨센서스 3,986억원을 20.3% 상회할 전망.",
+          "quote": "2분기 지배주주이익은 4,795억원으로, 컨센서스 3,986억원을 20.3% 상회할 전망이다."
+        },
+        "estimate_revision": "2분기 순이익 컨센서스 20.3% 상회 예상",
+        "next_catalyst": "2026년 배당수익률 7.3% 전망",
+        "thesis": [
+          "2분기 지배주주이익 4,795억원으로 컨센서스 20.3% 상회 예상",
+          "신용공여 평잔 전분기대비 8.0% 증가에 따른 브로커리지 수익 증가",
+          "높은 배당성향 지속으로 2026년 배당수익률 7.3% 전망"
+        ],
+        "valuation_basis": "동사는 매년 50%에 근접하는 높은 배당성향을 지속하고 있는만큼, 이익에 대한 충분한 valuation을 부과할만하다고 판단한다.",
+        "risk": "금리 상승으로 인한 트레이딩 손익 감소 가능성, 연결 비시장성 자산 평가익 소폭 감소 전망",
+        "supply_comment": null,
+        "quote": "NH투자증권에 대한 투자의견 매수, 목표주가 44,000원을 유지한다.",
+        "sector": "기타"
+      }
+    ]
+  }
+}

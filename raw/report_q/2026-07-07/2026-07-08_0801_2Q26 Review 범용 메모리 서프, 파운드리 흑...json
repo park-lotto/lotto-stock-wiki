@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-07",
+    "broker": "한화투자증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-08_0801_2Q26 Review 범용 메모리 서프, 파운드리 흑...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "박준영",
+    "report_date": "2026년 7월 7일",
+    "stocks": [
+      {
+        "name": "삼성전자",
+        "code": "005930",
+        "rating": "Buy(유지)",
+        "rating_changed": false,
+        "tp_new": "580,000원",
+        "tp_prev": "330,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2Q26 잠정실적은 매출액 171조원(QoQ +28%, 컨센서스 대비 -1% 하회), 영업이익 89.4조원(QoQ +57%, 컨센서스 대비 +6% 상회)",
+        "estimate_revision": "범용 메모리 사업부는 기존 추정 대비 금분기에도 가격 서프라이즈가 발생한 것으로 추정.",
+        "next_catalyst": "11.7Gbps의 초고속 HBM4를 지속적으로 북미 팹리스향으로 납품해왔으며 하반기에는 이러한 물량이 대폭 확대될 것으로 기대됨.",
+        "thesis": [
+          "범용 메모리 사업부의 가격 서프라이즈로 DRAM 기준 영업이익률 75%~80% 수준의 초고수익성 기록",
+          "파운드리 사업부, 2022년 4분기 이후 처음으로 가동률 회복으로 인한 본질적 흑자 전환 성공",
+          "11.7Gbps의 초고속 HBM4 납품 물량 확대 및 매출액 기준 점유율 대폭 성장 예상"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "11.7Gbps의 초고속 HBM4는 현존하는 최고 속도의 HBM이며 표준 제품인 10.3Gbps 제품보다 상당 폭 높은 가격대를 형성하고 있는 것으로 추측됨",
+        "quote": "동사의 2Q26 잠정실적은 매출액 171조원(QoQ +28%, 컨센서스 대비 -1% 하회), 영업이익 89.4조원(QoQ +57%, 컨센서스 대비 +6% 상회)으로 시장 기대치 대비 높은 이익을 시현.",
+        "sector": "반도체"
+      }
+    ]
+  }
+}

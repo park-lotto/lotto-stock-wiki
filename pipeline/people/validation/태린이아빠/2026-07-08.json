@@ -1,0 +1,32 @@
+{
+  "date": "2026-07-08",
+  "hit_rate": null,
+  "mentioned_count": 15,
+  "matched": [],
+  "missed": [
+    "KOSPI",
+    "LIG디펜스앤에어로스페이스",
+    "SK이터닉스",
+    "SK하이닉스",
+    "방산",
+    "방어주",
+    "브이엠",
+    "삼성전자",
+    "유진테크",
+    "증권",
+    "피에스케이",
+    "한화에어로스페이스",
+    "현금",
+    "현대일렉",
+    "화장품"
+  ],
+  "candidates": [],
+  "thresholds": {
+    "mode": "his",
+    "vacuum_pct_max": 35.0,
+    "min_up_count": 1,
+    "require_up_gt_down": true,
+    "require_leader": false,
+    "top_n": 20
+  }
+}

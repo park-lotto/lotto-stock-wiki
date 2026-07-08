@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "HLB",
+      "signal": "bull",
+      "reason": "1월 신약 2종 FDA 동시 허가 신청 예정",
+      "ts": "2026-01-09",
+      "quote": "삼성 출신 ‘거물’ 영입 HLB…1월 신약 2종 FDA 동시 허가 신청",
+      "sector": "바이오"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "삼성 출신 인재 영입 및 HLB의 1월 신약 2종 FDA 허가 신청 소식",
+      "ts": "2026-01-09",
+      "quote": "삼성 출신 ‘거물’ 영입 HLB…1월 신약 2종 FDA 동시 허가 신청"
+    }
+  ],
+  "quote": "삼성 출신 ‘거물’ 영입 HLB…1월 신약 2종 FDA 동시 허가 신청"
+}

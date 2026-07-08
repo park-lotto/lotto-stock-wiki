@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date": "2026-07-01",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-01_1105_이번 성수기 주인공, It’s me.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "권우정",
+    "report_date": "July 1 2026",
+    "stocks": [
+      {
+        "name": "한국콜마",
+        "code": "161890",
+        "sector": "화장품미용",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "130,000원",
+        "tp_prev": "130,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "quote": "2분기 연결 매출액 및 영업이익은 각각 8.3천억원(YoY 13%), 966억원(YoY 32%)으로 시장기대치 소폭 상회 전망.",
+          "details": "2분기 연결 매출액 8.3천억원(YoY 13%), 영업이익 966억원(YoY 32%) 전망"
+        },
+        "estimate_revision": null,
+        "next_catalyst": "2분기 선케어 성수기 효과와 스킨케어 매출 확대",
+        "thesis": [
+          "한국 법인 매출액 성장률 YoY 25% 이상 증가하며 견조한 흐름",
+          "미국 오프라인 채널 확장에 따른 성장 여력",
+          "유럽 시장 진출 본격화로 인한 글로벌 K-뷰티 유통 커버리지 확대"
+        ],
+        "valuation_basis": "현재 주가는 12개월 Fwd P/E 12배로 밸류에이션 매력이 높다고 판단함",
+        "risk": null,
+        "supply_comment": "글로벌 MNC 향 물량은 유통 커버리지 확대에 힘입어 1 분기와 유사한 수준으로 전망하며, 하반기에는 추가 SKU 확대가 기대됨",
+        "quote": "2분기 연결 매출액 및 영업이익은 각각 8.3천억원(YoY 13%), 966억원(YoY 32%)으로 시장기대치 소폭 상회 전망. 특히, 한국 법인 매출액 성장률 YoY 25% 이상 증가하며 견조한 흐름을 이어갈 것으로 판단."
+      }
+    ]
+  }
+}

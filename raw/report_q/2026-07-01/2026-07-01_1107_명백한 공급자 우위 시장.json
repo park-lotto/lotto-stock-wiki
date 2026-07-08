@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-01",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-01_1107_명백한 공급자 우위 시장.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "김민경",
+    "report_date": "2026년 7월 1일",
+    "stocks": [
+      {
+        "name": "삼성전기",
+        "code": "009150",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "3,000,000원",
+        "tp_prev": null,
+        "tp_direction": "up",
+        "earnings_outlook": "2026년 매출액 13,412.2십억원, 영업이익 1,591.3십억원 / 2027년 매출액 16,201.3십억원, 영업이익 2,752.8십억원",
+        "estimate_revision": "AI 데이터센터 수요 중심으로 MLCC 및 FCBGA 공급부족이 심화되고 있으며 28년까지 가파른 실적 성장세가 지속될 것으로 예상된다.",
+        "next_catalyst": "AI 데이터센터향 초소형·고용량 MLCC 수요 급증 및 공급업체의 가격 협상력 상승",
+        "thesis": [
+          "AI 데이터센터 수요 중심의 MLCC 및 FCBGA 공급부족 심화",
+          "고수익성 제품군 매출 비중 확대로 인한 수익성 개선",
+          "AI 서버향 고부가 MLCC 기술 난이도에 따른 과점 체제 및 우호적 시장 환경 지속"
+        ],
+        "valuation_basis": "28년 예상 EPS 49,950원에 Target PER 60.73배(Ibiden 28년 예상 PER에 40% 프리미엄 적용)를 적용해 산출했다.",
+        "risk": null,
+        "supply_comment": "글로벌 MLCC 업체들의 AI 서버용 Capa 확대는 글로벌 전체 생산능력 축소를 가속화시키고 있으며 FCBGA 또한 반도체 대면적화와 고다층화로 Capa Loss가 심화되고 있음.",
+        "quote": "삼성전기에 대한 투자의견 BUY를 유지하고 목표주가를 300만원으로 상향한다."
+      }
+    ],
+    "sector": "IT"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "meta": {
+    "date": "2026-07-07",
+    "broker": "대신증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-08_0804_모든 주주의 3% 룰 - 중복상장 세부기준(안) ...md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": "이경연, 이채리",
+    "report_date": "2026.07.07",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "중복상장 원칙금지·예외허용 세부기준(안)"
+    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.07.07",
+        "event": "중복상장 원칙금지·예외허용 세부기준(안) 공식 의견 수렴 개시"
+      }
+    ],
+    "top_picks": null,
+    "risk": "중복상장 적합성에 대한 이사회 찬성 결의가 없으면 투자자 보호 기준 미충족",
+    "quote": "규율은 2 층 구조 – ①모회사 이사회에 주주충실의무를 구체화한 5 대 의무 부과, ②거래소는 일반 상장기준에 더해 중복상장 특례심사 기준(영업 및 경영 독립성, 모회사 투자자 보호) 적용."
+  }
+}

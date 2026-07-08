@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "LS일렉트릭",
+      "signal": "bull",
+      "reason": "HVDC 및 데이터센터 수요 증가에 따른 사업 확장",
+      "ts": null,
+      "quote": "LS일렉트릭, HVDC·데이터센터로 몸집 불린다",
+      "sector": "전력"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "LS일렉트릭이 HVDC와 데이터센터 사업을 중심으로 외형 성장을 추진 중임",
+      "ts": "02-08 08:00",
+      "quote": "LS일렉트릭, HVDC·데이터센터로 몸집 불린다"
+    }
+  ],
+  "quote": "LS일렉트릭, HVDC·데이터센터로 몸집 불린다 (이코노미톡뉴스, 02-08 08:00)"
+}

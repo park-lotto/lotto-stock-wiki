@@ -126,8 +126,10 @@ body{background:var(--bg);color:var(--m-tx0);min-height:100vh;}
 .mkt-sec-label{font-size:11px;color:var(--m-tx1);letter-spacing:.5px;margin-bottom:2px;
   display:flex;justify-content:space-between;align-items:center;}
 /* 투자자 발산 바 */
-.inv-grid{display:grid;grid-template-columns:30px 1fr 64px;gap:3px 6px;align-items:center;}
+.inv-grid{display:grid;grid-template-columns:30px 1fr 64px 14px;gap:3px 6px;align-items:center;}
+.inv-grid.sub-grid{grid-template-columns:44px 1fr 60px;}
 .inv-lbl{font-size:12px;color:var(--m-tx1);}
+.inv-lbl.sub{font-size:11px;color:var(--m-tx2);}
 .div-bar{display:flex;height:9px;border-radius:4px;overflow:hidden;background:var(--m-elev);}
 .div-neg{flex:1;display:flex;align-items:stretch;justify-content:flex-end;}
 .div-neg-fill{border-radius:3px 0 0 3px;transition:width .5s;}
@@ -136,6 +138,10 @@ body{background:var(--bg);color:var(--m-tx0);min-height:100vh;}
 .inv-num{font-size:12px;font-variant-numeric:tabular-nums;text-align:right;}
 .inv-num.up{color:var(--up1);}
 .inv-num.dn{color:var(--dn1);}
+.inv-num.sub{font-size:11px;}
+.inv-trend{font-size:10px;text-align:center;color:var(--m-tx3);}
+.inv-trend.up{color:var(--up1);}
+.inv-trend.dn{color:var(--dn1);}
 /* 프로그램 */
 .prog-row{display:flex;align-items:center;gap:8px;}
 .prog-total{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;}
@@ -2031,15 +2037,42 @@ function renderMarketFlow(d){
       const inv=m.investor_now||{외인:0,기관:0,개인:0};
       const invAllZero=!inv.외인&&!inv.기관&&!inv.개인;
       const maxAbs=Math.max(1,Math.abs(inv.외인),Math.abs(inv.기관),Math.abs(inv.개인));
+      // 최근 방향성(직전 대비 순매수 늘고 있는지/줄고 있는지) — 오늘 누적 합계와 별개로,
+      // 1분폴링 이력의 최근~5분 델타로 지금 이 순간의 매수/매도 압력 전환을 보여줌
+      const _rawHist=m.investor_history||[];
+      const _trendArrow=(k)=>{
+        if(_rawHist.length<2) return `<span class="inv-trend"></span>`;
+        const n=Math.min(_rawHist.length,6);
+        const cur=Number(_rawHist[_rawHist.length-1][k]||0);
+        const prev=Number(_rawHist[_rawHist.length-n][k]||0);
+        const d=cur-prev;
+        if(Math.abs(d)<100) return `<span class="inv-trend">–</span>`;   // 1억 미만 변화=사실상 정체
+        return d>0?`<span class="inv-trend up" title="최근 추세: 순매수 증가">▲</span>`
+                  :`<span class="inv-trend dn" title="최근 추세: 순매도 전환/증가">▼</span>`;
+      };
       const invRows=["외인","기관","개인"].map(k=>{
           const v=inv[k]||0;
           const vc=invAllZero?"neu":(v>0?"up":v<0?"dn":"neu");
           const vs=invAllZero?"—":(v>0?"+":"")+fmtAuk(v);
           return`<span class="inv-lbl">${k}</span>
                  ${invAllZero?`<span style="flex:1"></span>`:divBar(v,maxAbs)}
-                 <span class="inv-num ${vc}">${vs}</span>`;
+                 <span class="inv-num ${vc}">${vs}</span>
+                 ${invAllZero?`<span class="inv-trend"></span>`:_trendArrow(k)}`;
         }).join("")
         +(invAllZero?`<span style="font-size:9px;color:#333;display:block;margin-top:2px">KIS API 미구독</span>`:"");
+
+      // 기관 세부 (금투/투신/사모/연기금 등) — 확장 카드에서만 표시
+      const _subKeys=["금투","투신","사모","연기금","보험","은행","기타금융","국가"];
+      const _hasSub=_subKeys.some(k=>inv[k]!==undefined);
+      const subRows=!_hasSub?"":(()=>{
+        const maxSub=Math.max(1,..._subKeys.map(k=>Math.abs(inv[k]||0)));
+        return _subKeys.map(k=>{
+          const v=inv[k]||0;
+          const vc=v>0?"up":v<0?"dn":"neu";
+          const vs=(v>0?"+":"")+fmtAuk(v);
+          return`<span class="inv-lbl sub">${k}</span>${divBar(v,maxSub)}<span class="inv-num sub ${vc}">${vs}</span>`;
+        }).join("");
+      })();
 
       const hist=_seedOpen(m.investor_history||[],{외인:0,기관:0,개인:0,ts:"0900"});
       const histSvg=`
@@ -2107,6 +2140,10 @@ function renderMarketFlow(d){
           <div class="inv-grid">${invRows}</div>
           ${idxExpanded?histSvg:""}
         </div>
+        ${idxExpanded&&_hasSub?`<div>
+          <div class="mkt-sec-label" style="margin-top:2px">기관 세부 (금투/투신/사모/연기금 등)</div>
+          <div class="inv-grid sub-grid">${subRows}</div>
+        </div>`:""}
         ${idxExpanded?`<div>
           <div class="mkt-sec-label" style="margin-top:2px;display:flex;justify-content:space-between">
             <span>프로그램 순매수</span>
@@ -3609,13 +3646,40 @@ function setDraw(tool){
 }
 function setDrawColor(c,btn){ _drawColor=c; document.querySelectorAll('.ct-sw').forEach(b=>b.classList.toggle("active",b===btn)); }
 function setDrawWidth(w,btn){ _drawWidth=w; document.querySelectorAll('.ct-btn.wbtn').forEach(b=>b.classList.toggle("active",b===btn)); }
-function _proj(p){ return {x:_chart.timeScale().logicalToCoordinate(p.logical), y:_chartCandle.priceToCoordinate(p.price)}; }
+// 저장 좌표 = 날짜(time) 우선, 데이터 밖(미래 투사 공간)만 마지막 봉 기준 상대offset
+// · 이유: logical(막대 인덱스) 그대로 저장하면 일봉 API가 매일 "최근 N봉"만 돌려줘서
+//   옛 봉이 앞에서 빠질 때마다 인덱스가 통째로 밀려 그림이 엉뚱한 자리로 어긋남(2026-07-08 버그)
+function _persistPt(p){
+  const idx=Math.round(p.logical);
+  if(_chartRows.length && idx>=0 && idx<_chartRows.length) return {t:_chartRows[idx].time, price:p.price};
+  return {ofs:p.logical-(_chartRows.length-1), price:p.price};
+}
+function _logicalOf(p){
+  if(p.logical!=null) return p.logical;              // 드래그 중 임시점(런타임 raw)
+  if(p.t!=null){ const idx=_chartRows.findIndex(r=>r.time===p.t); return idx>=0?idx:null; }
+  return (_chartRows.length-1)+(p.ofs||0);
+}
+function _proj(p){ const l=_logicalOf(p); if(l==null)return{x:null,y:null}; return {x:_chart.timeScale().logicalToCoordinate(l), y:_chartCandle.priceToCoordinate(p.price)}; }
 function _drawOff(){
   _drawTool=null; _drawPending=null;
   document.querySelectorAll('.ct-btn[data-draw]').forEach(b=>b.classList.remove("active"));
   const el=document.getElementById("tv_chart_container"); if(el) el.classList.remove("drawing");
 }
 function undoDraw(){ _draws.pop(); _drawPending=null; _saveDraws(); _redrawDraws(); }
+// 예전(logical만 저장) 도형을 time/ofs 형식으로 1회 변환 — 이후로는 데이터 앞부분이 잘려도 절대 안 밀림
+// (단, 이미 어긋난 예전 그림의 "원래 의도했던 자리"까지는 복구 불가 — 지금 보이는 자리에서 고정만 됨)
+function _migrateLegacyDraws(){
+  let changed=false;
+  for(const d of _draws){
+    if(d.type==="pen"){
+      d.pts=(d.pts||[]).map(p=>{ if(p && p.logical!=null){ changed=true; return _persistPt(p); } return p; });
+    } else if(d.a || d.b){
+      if(d.a && d.a.logical!=null){ d.a=_persistPt(d.a); changed=true; }
+      if(d.b && d.b.logical!=null){ d.b=_persistPt(d.b); changed=true; }
+    }
+  }
+  if(changed) _saveDraws();
+}
 function _drawPt(e){
   const el=document.getElementById("tv_chart_container");
   const r=el.getBoundingClientRect();
@@ -3652,12 +3716,15 @@ function _hitShape(x,y){
 // 도형 통째로 이동 (logical·price 평행이동)
 function _startMove(idx,p){
   const d=_draws[idx]; const isPen=d.type==="pen";
-  const orig=isPen?(d.pts||[]).map(q=>({...q})):[{...d.a},{...d.b}];
+  // 이동은 logical 공간에서 델타 계산 → 끝나면 다시 time/ofs로 영구화(_persistPt)
+  const _lg=q=>{ const l=_logicalOf(q); return l==null?_chartRows.length-1:l; };
+  const orig=isPen?(d.pts||[]).map(q=>({logical:_lg(q), price:q.price}))
+                  :[{logical:_lg(d.a),price:d.a.price},{logical:_lg(d.b),price:d.b.price}];
   const sl=p.logical, sp=p.price;
   const mv=ev=>{ const q=_drawPt(ev); if(q.logical==null||q.price==null)return;
     const dl=q.logical-sl, dp=q.price-sp;
-    if(isPen) d.pts=orig.map(o=>({logical:o.logical+dl, price:o.price+dp}));
-    else { d.a={logical:orig[0].logical+dl, price:orig[0].price+dp}; d.b={logical:orig[1].logical+dl, price:orig[1].price+dp}; }
+    if(isPen) d.pts=orig.map(o=>_persistPt({logical:o.logical+dl, price:o.price+dp}));
+    else { d.a=_persistPt({logical:orig[0].logical+dl, price:orig[0].price+dp}); d.b=_persistPt({logical:orig[1].logical+dl, price:orig[1].price+dp}); }
     _redrawDraws();
   };
   const up=()=>{ window.removeEventListener("mousemove",mv,true); window.removeEventListener("mouseup",up,true); _saveDraws(); };
@@ -3698,7 +3765,7 @@ function _startNewDraw(e){
       _previewDraw({type:"pen",pts,color:_drawColor,width:_drawWidth}); } };
     const cleanup=()=>{ window.removeEventListener("mousemove",mv,true); window.removeEventListener("mouseup",up,true); };
     function up(){ cleanup(); _drawCancel=null;
-      if(pts.length>1){ _draws.push({type:"pen",pts,color:_drawColor,width:_drawWidth}); _saveDraws(); }
+      if(pts.length>1){ _draws.push({type:"pen",pts:pts.map(_persistPt),color:_drawColor,width:_drawWidth}); _saveDraws(); }
       _redrawDraws(); }
     _drawCancel=()=>{ cleanup(); _redrawDraws(); };   // 취소 = 커밋 안 함
     window.addEventListener("mousemove",mv,true); window.addEventListener("mouseup",up,true);
@@ -3717,7 +3784,7 @@ function _startNewDraw(e){
     const dist=Math.hypot(q.x-startX, q.y-startY);
     if(_drawPending && q.logical!=null && q.price!=null && dist>=5){
       const b=_snapB(_drawPending,{logical:q.logical,price:q.price},ev.shiftKey);
-      _draws.push({type:_drawTool, a:_drawPending, b, color:_drawColor, width:_drawWidth});
+      _draws.push({type:_drawTool, a:_persistPt(_drawPending), b:_persistPt(b), color:_drawColor, width:_drawWidth});
       _saveDraws();   // 종목·봉별 저장 (도구 유지 → 계속 그리기)
     }
     _drawPending=null; _redrawDraws();
@@ -3797,6 +3864,7 @@ async function loadChartData(){
       msg.textContent="캔들 데이터 없음 (장외/신규 상장 등)"; el.appendChild(msg); return;
     }
     _chartRows=c;
+    _migrateLegacyDraws();   // 예전 logical-only 그림 → time/ofs 로 1회 고정(더 이상 안 밀리게)
     _chartCandle.setData(c.map(x=>({time:x.time,open:x.open,high:x.high,low:x.low,close:x.close})));
     _chartVol.setData(c.map(x=>({time:x.time,value:x.value,
       color:x.close>=x.open?"rgba(231,76,60,.45)":"rgba(52,152,219,.45)"})));

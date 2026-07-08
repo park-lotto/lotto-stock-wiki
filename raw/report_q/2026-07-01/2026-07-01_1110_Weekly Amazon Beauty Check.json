@@ -1,0 +1,45 @@
+{
+  "meta": {
+    "date": "2026-07-01",
+    "broker": "SK증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-01_1110_Weekly Amazon Beauty Check.md"
+  },
+  "questionnaire": {
+    "broker": "SK증권",
+    "analyst": "형권훈",
+    "report_date": "2026-07-01",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [
+      {
+        "sector": "화장품미용",
+        "stance": null,
+        "reason": "아마존은 미국 뷰티 시장의 약 14.5%를 점유하고 있는 1위 B2C 채널로서, 아마존에서의 브랜드 성과를 미국 전체 시장에서의 성과로 확장시키는 데 큰 무리가 없음"
+      }
+    ],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": [
+      "medicube",
+      "ANUA",
+      "COSRX",
+      "CeraVe",
+      "BIODANCE",
+      "CLEAN SKIN CLUB",
+      "Vanicream",
+      "EQQUALBERRY",
+      "Mighty Patch",
+      "SKIN1004",
+      "PanOxyl",
+      "celimax",
+      "Dr.Althea",
+      "MEDITHERAPY",
+      "Illiyoon",
+      "Paula's Choice",
+      "L'Oreal Paris"
+    ],
+    "risk": null,
+    "quote": "본 자료는 미국 아마존의 제품별 순위 데이터를 활용해 K뷰티를 비롯한 여러 뷰티 브랜드와 제품들의 상대적인 성과를 정량화하고, 시계열 변화에 따른 성과를 추적하기 위해 작성되었습니다."
+  }
+}

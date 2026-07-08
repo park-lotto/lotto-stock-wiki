@@ -1,0 +1,29 @@
+{
+  "target_kind": "market",
+  "market_direction": "null",
+  "macro_events": [
+    {
+      "fact": "상반기 급등주 지형 바뀌었다…AI, 반도체 넘어 전력까지",
+      "ts": "2026-07-06 05:18",
+      "quote": "상반기 급등주 지형 바뀌었다…AI, 반도체 넘어 전력까지"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "AI",
+      "stance": "긍정",
+      "comment": "상반기 급등주 지형 변화의 중심"
+    },
+    {
+      "sector": "반도체",
+      "stance": "긍정",
+      "comment": "상반기 급등주 지형 변화의 중심"
+    },
+    {
+      "sector": "전력",
+      "stance": "긍정",
+      "comment": "상반기 급등주 지형 변화의 중심"
+    }
+  ],
+  "quote": "상반기 급등주 지형 바뀌었다…AI, 반도체 넘어 전력까지"
+}

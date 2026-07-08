@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "삼성SDI",
+      "signal": "bull",
+      "reason": "미국 시장 내 ESS용 배터리 수주 확대",
+      "ts": "2026-07-03",
+      "quote": "삼성SDI, 美서 'ESS용 배터리' 수주 행진",
+      "sector": "2차전지"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "삼성SDI가 미국에서 ESS용 배터리 수주를 이어가고 있음",
+      "ts": "2026-07-03",
+      "quote": "삼성SDI, 美서 'ESS용 배터리' 수주 행진"
+    }
+  ],
+  "quote": "삼성SDI, 美서 'ESS용 배터리' 수주 행진"
+}

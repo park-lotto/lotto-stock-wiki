@@ -1,0 +1,141 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "삼성전자",
+      "signal": "bull",
+      "reason": "유례없는 가격 협상력 및 메모리 펀더멘털 건재",
+      "ts": null,
+      "quote": "모닝스타, 삼전·닉스 목표주가 상향…유례없는 가격 협상력",
+      "sector": "반도체"
+    },
+    {
+      "name": "SK하이닉스",
+      "signal": "bull",
+      "reason": "유례없는 가격 협상력",
+      "ts": null,
+      "quote": "모닝스타, 삼전·닉스 목표주가 상향…유례없는 가격 협상력",
+      "sector": "반도체"
+    },
+    {
+      "name": "제너럴 밀스",
+      "signal": "bull",
+      "reason": "실적 호조",
+      "ts": null,
+      "quote": "TD 코웬, 제너럴 밀스 실적 호조에 목표주가 상향",
+      "sector": "소비내수"
+    },
+    {
+      "name": "LS일렉트릭",
+      "signal": "bull",
+      "reason": "데이터센터 수주 확대",
+      "ts": "33만원",
+      "quote": "LS일렉트릭 목표주가 33만원으로 상향…한국투자證 “데이터센터 수주 확대”",
+      "sector": "전력"
+    },
+    {
+      "name": "베이커 휴즈",
+      "signal": "bull",
+      "reason": "핵심 사업 모멘텀",
+      "ts": null,
+      "quote": "TD Cowen, 베이커 휴즈 목표주가 상향…핵심 사업 모멘텀",
+      "sector": "기타"
+    },
+    {
+      "name": "가던트헬스",
+      "signal": "bull",
+      "reason": "보험 적용 확대 및 유나이티드헬스그룹 보장 결정",
+      "ts": null,
+      "quote": "BTIG, 가던트헬스 목표주가 상향...보험 적용 확대 영향",
+      "sector": "바이오"
+    },
+    {
+      "name": "MSC 인더스트리얼",
+      "signal": "bull",
+      "reason": "거래량 증가",
+      "ts": null,
+      "quote": "DA 데이비슨, MSC 인더스트리얼 목표주가 상향…거래량 증가 덕분",
+      "sector": "기타"
+    },
+    {
+      "name": "Genmab",
+      "signal": "bull",
+      "reason": "임상 성공",
+      "ts": null,
+      "quote": "H.C. Wainwright, 임상 성공에 Genmab 목표주가 상향",
+      "sector": "바이오"
+    },
+    {
+      "name": "왓츠 워터스",
+      "signal": "bull",
+      "reason": "데이터센터 성장세",
+      "ts": null,
+      "quote": "TD 코웬, 데이터센터 성장세에 왓츠 워터스 목표주가 상향",
+      "sector": "기타"
+    },
+    {
+      "name": "도이체방크",
+      "signal": "bull",
+      "reason": "모건 스탠리 발언 및 목표주가 상향",
+      "ts": null,
+      "quote": "도이체방크 주가, 모건 스탠리 발언 및 목표주가 상향에 6% 급등",
+      "sector": "기타"
+    },
+    {
+      "name": "GE Aerospace",
+      "signal": "bull",
+      "reason": "수익 전망 상향 조정",
+      "ts": null,
+      "quote": "제프리스, GE Aerospace 목표주가 상향…수익 전망 상향 조정",
+      "sector": "기타"
+    },
+    {
+      "name": "테슬라",
+      "signal": "bull",
+      "reason": "인도량 호조",
+      "ts": "420달러",
+      "quote": "프리덤 브로커, 테슬라 목표주가 인도량 호조에 420달러로 상향",
+      "sector": "자동차"
+    },
+    {
+      "name": "레볼루션 메디신",
+      "signal": "bull",
+      "reason": "항암 임상 데이터 긍정적",
+      "ts": null,
+      "quote": "웨드부시, 레볼루션 메디신 목표주가 상향…항암 임상 데이터 긍정적",
+      "sector": "바이오"
+    },
+    {
+      "name": "팩트셋",
+      "signal": "bull",
+      "reason": "AI 발전세 및 실적 호조",
+      "ts": "210달러",
+      "quote": "BMO 캐피털, AI 발전세에 팩트셋 목표주가 상향",
+      "sector": "IT"
+    },
+    {
+      "name": "엑셀리시스",
+      "signal": "bull",
+      "reason": "파이프라인 기대",
+      "ts": "52달러",
+      "quote": "UBS, 엑셀리시스 목표주가 52달러로 상향…파이프라인 기대",
+      "sector": "바이오"
+    },
+    {
+      "name": "EPR Properties",
+      "signal": "bull",
+      "reason": "박스오피스 강세",
+      "ts": null,
+      "quote": "시티즌스, 박스오피스 강세에 EPR Properties 목표주가 상향",
+      "sector": "기타"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "주요 증권사들의 기업 목표주가 상향 리포트 다수 발표",
+      "ts": "2026-07-02",
+      "quote": "모닝스타, 삼전·닉스 목표주가 상향…유례없는 가격 협상력"
+    }
+  ],
+  "quote": "주요 글로벌 및 국내 기업들의 목표주가 상향 조정이 다수 발표되었습니다."
+}

@@ -3,7 +3,7 @@
     {
       "name": "Lilly",
       "signal": "bull",
-      "reason": "Retatrutide의 체중감소 및 비만 합병증 개선 효과 확인",
+      "reason": "Retatrutide의 3상 임상 데이터 공개로 체중 감소 및 비만 합병증 개선 효과가 확인됨",
       "ts": "13:56",
       "quote": "Lilly의 triple agonist retatrutide가 ADA 2026에서 추가 3상(TRIUMPH-1, TRANSCEND-T2D-1) 데이터 공개.",
       "sector": "바이오"
@@ -11,19 +11,14 @@
   ],
   "news_items": [
     {
-      "fact": "Retatrutide 임상 3상 데이터에서 비만 합병증(골관절염, 수면무호흡증, 콜레스테롤 등) 개선 효과 확인",
+      "fact": "Retatrutide의 체중감소 및 골관절염, 수면무호흡증 등 비만 합병증 개선 효과 발표",
       "ts": "13:56",
       "quote": "최대 28.3% 체중감소뿐 아니라 수면무호흡증, 골관절염 통증, 심혈관 위험인자 개선 효과도 확인"
     },
     {
-      "fact": "당뇨 환자 대상 임상에서 HbA1c 감소 및 목표 달성률 확인",
+      "fact": "당뇨 환자 대상 retatrutide 투여 결과 HbA1c 감소 및 목표 수치 달성 확인",
       "ts": "13:56",
-      "quote": "HbA1c 최대 2.0% 감소, 환자 90%가 HbA1c <7% 달성"
-    },
-    {
-      "fact": "Retatrutide의 안전성 측면에서 Dysesthesia 발생 및 일부 부작용 보고",
-      "ts": "13:56",
-      "quote": "Dysesthesia 발생률 최대 12.5%. 요로감염 증가 관찰. 일부 부정맥 및 심혈관 사건 보고됐으나 연구 규모가 작아 추가 평가 필요"
+      "quote": "당뇨 환자 결과 (TRANSCEND-T2D-1) HbA1c 최대 2.0% 감소 환자 90%가 HbA1c <7% 달성"
     }
   ]
 }

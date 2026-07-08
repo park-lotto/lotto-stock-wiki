@@ -153,8 +153,15 @@ def _briefing_keys():
 GEMINI_TEXT_MODELS = ["gemini-3-flash-preview", "gemini-3.1-flash-lite", "gemini-2.5-flash"]
 
 
-def _gemini_text(prompt, keys=None, models=None):
+import concurrent.futures as _cf
+_GEMINI_EXEC = _cf.ThreadPoolExecutor(max_workers=4)  # generate_content가 응답없이 멈춰도 호출 스레드는 안 묶임
+
+
+def _gemini_text(prompt, keys=None, models=None, timeout=45):
     """텍스트 생성 공용 호출 — 모델 폴백 + 키 로테이션 + 503 백오프.
+    generate_content 자체엔 SDK 타임아웃이 없어(네트워크 hang 시 무한대기) 별도 스레드로 던지고
+    timeout초 안에 안 끝나면 포기 — 안 그러면 이 함수를 부르는 단일 백그라운드 루프
+    (_poll_briefing: 시장상황 타임라인·순환매감지 등)가 통째로 멈춘다(2026-07-08 사건).
     반환: {"ok":True,"analysis":str,"model":str} | {"error":str}"""
     try:
         from google import genai
@@ -169,12 +176,16 @@ def _gemini_text(prompt, keys=None, models=None):
         for k in keys:
             client = key_vault.get_client_for_key(k)  # key_vault 캐시 재사용, 매 호출 새 클라이언트 생성 안 함
             try:
-                resp = client.models.generate_content(model=model, contents=prompt)
+                fut = _GEMINI_EXEC.submit(client.models.generate_content, model=model, contents=prompt)
+                resp = fut.result(timeout=timeout)
                 txt = (resp.text or "").strip()
                 if txt:
                     return {"ok": True, "analysis": txt, "model": model}
                 last = "빈 응답"
                 continue   # 다음 키
+            except _cf.TimeoutError:
+                last = f"응답시간초과({timeout}s)"
+                continue   # 다음 키 (버려진 워커는 executor에 남지만 호출 스레드는 진행)
             except Exception as e:
                 last = str(e)
                 if any(s in last for s in ("503", "UNAVAILABLE", "overloaded")):
@@ -1639,13 +1650,21 @@ def _refresh_news(top_sectors: int = 8, per_stock: int = 3):
         print(f"[_refresh_news] 실패: {e}", flush=True)
         traceback.print_exc()
 
-_STRONG_RE   = re.compile(r"속보|특징주|급등|급락|수주|계약|부지|증설|투자|사상\s*최대|최대\s*실적|자사주|증자|신고가|목표주가|흑자|적자|인수|합병|매각|공급")
+#  2026-07-08: ADR·상장 등 매크로/이벤트성 재료 키워드 보강(하이닉스 ADR 상장 뉴스가
+#  누락되던 문제) — 관심종목 매칭(_match_stock)은 그대로 유지해 잡주는 계속 걸러진다.
+_STRONG_RE   = re.compile(r"속보|특징주|급등|급락|수주|계약|부지|증설|투자|사상\s*최대|최대\s*실적|자사주|증자|신고가|목표주가|흑자|적자|인수|합병|매각|공급"
+                           r"|ADR|상장|IPO|스팩|관세|환율|금리|기준금리|연준|FOMC|국채|유가|반덤핑|수출규제|무역분쟁"
+                           r"|콜옵션|풋옵션|서킷브레이커|사이드카|블록딜|공매도")
 # 거버넌스·인사 등 투자무관 뉴스 제외(예: "KB금융 차기 회장 숏리스트 확정")
 _EXCLUDE_RE  = re.compile(r"회장|대표이사|사외이사|주주총회|주총|숏리스트|연임|임원|인사|이사회|사임|선임|취임|배당락|주식담보|스톡옵션")
 # 알맹이 없는 클릭베이트/단순호명 제외 (예: "특징주 종목: 삼성전자(005930)", "…무슨 회사 길래?")
 _LOWINFO_RE  = re.compile(r"무슨\s*회사|어떤\s*회사|길래|왜\s*(오르|급등|뛰|내리|빠)|특징주\s*종목\s*[:：]|이\s*종목은|눈길")
 # '재료성' 판단 — 관심종목 매칭이 없을 때 이 키워드라도 있어야 노출
-_MATERIAL_RE = re.compile(r"수주|계약|부지|증설|투자|실적|급등|급락|목표주가|자사주|증자|신고가|흑자|적자|인수|합병|매각|공급|사상\s*최대")
+_MATERIAL_RE = re.compile(r"수주|계약|부지|증설|투자|실적|급등|급락|목표주가|자사주|증자|신고가|흑자|적자|인수|합병|매각|공급|사상\s*최대"
+                           r"|ADR|상장|IPO|관세|환율|금리|연준|FOMC|국채|유가|수출규제")
+# 전쟁·지정학 등 종목 무관 매크로 이벤트 — 관심종목 매칭 없이도 노출(시장상황 타임라인용, _weather_tick news 보강)
+_MACRO_RE    = re.compile(r"전쟁|침공|공습|미사일|휴전|정전협정|계엄|쿠데타|지정학|제재|봉쇄|해협|유가\s*급등|유가\s*급락"
+                           r"|연준|FOMC|기준금리|금리\s*(인상|인하)|국채\s*금리|관세\s*(폭탄|전쟁)|환율\s*급등|환율\s*급락")
 
 def _news_norm(t: str) -> str:
     return re.sub(r"[^가-힣0-9a-zA-Z]", "", t or "")[:36]
@@ -1758,7 +1777,8 @@ def _surface_strong_news():
         reps.sort(key=lambda x: x["score"], reverse=True)
         for i, r in enumerate(reps):
             # 상위 + (다채널 보도 or 큰 상승) → '중요' 맨앞 고정
-            r["important"] = (i < 3 and r["score"] >= 5)
+            # 기준 강화(2026-07-08): 상위3→2, 점수5→7 — '중요' 과다노출 완화. 더 줄이려면 이 두 값만 조정.
+            r["important"] = (i < 2 and r["score"] >= 7)
         stored = _briefing_load(BRIEFING_PATH)
         seen = {_news_norm(x.get("headline", "")) for x in (stored.get("items") or [])}
         new = [r for r in reps if _news_norm(r["t"]) not in seen]
@@ -3386,6 +3406,31 @@ def _weather_tick():
         news = [t.get("content", "")[:120] for t in _recent_topick_mentions(atoms_db, limit=8)]
     except Exception:
         pass
+    # 전쟁·지정학·연준/금리 등 매크로 이벤트는 atoms.db 수동 ingest를 기다리지 않고
+    # 원문 뉴스피드에서 바로 뽑아 종합(_weather_tick)에 넣는다 — 안 그러면 LLM이
+    # 시황을 종목 순환매 얘기로만 채워서 정작 시장을 움직인 매크로 이슈가 빠짐(2026-07-08).
+    try:
+        macro = []
+        today_md = now.strftime("%m/%d")
+        seen_macro = set()
+        for sec in ((_NEWS_FEED.get("data") or {}).get("sectors") or []):
+            rows = list(sec.get("news") or [])
+            for st_ in (sec.get("stocks") or []):
+                rows += st_.get("news") or []
+            for n in rows:
+                t = (n.get("title") or "").strip()
+                d = n.get("date") or ""
+                if not t or not d.startswith(today_md) or not _MACRO_RE.search(t):
+                    continue
+                key = _news_norm(t)
+                if key in seen_macro:
+                    continue
+                seen_macro.add(key)
+                macro.append(f"[매크로] {t}")
+        if macro:
+            news = macro[:5] + news
+    except Exception:
+        pass
 
     phase_changed = st.get("session_phase") != phase
     if phase == "afterhours" and st.get("session_phase") == "intraday":
@@ -3509,6 +3554,10 @@ def _circulation_tick():
         fresh.append(c)
     if not fresh:
         return
+    # 한 틱(15분)에 여러 매칭이 한꺼번에 나오면 전부 major로 꽂혀 시장상황 타임라인
+    # (최근 12개 롤링)을 순환매 카드로 도배함 — 전쟁·매크로 등 다른 이벤트가 밀려남(2026-07-08).
+    # 틱당 1건(최상위 매칭)만 반영해 다른 이벤트에도 자리를 남긴다.
+    fresh = fresh[:1]
     st = _weather["state"] or _bstate.load_state(_WEATHER_STATE_PATH)
     st.setdefault("turning_points", [])
     st["turning_points"].extend(fresh)

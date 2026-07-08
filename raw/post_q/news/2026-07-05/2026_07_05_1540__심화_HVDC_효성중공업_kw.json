@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "효성중공업",
+      "signal": "bull",
+      "reason": "AI 전력망 토털 솔루션 공개 및 HVDC, SST 기술을 통한 미국 시장 확대",
+      "ts": null,
+      "quote": "효성중공업, AI 전력망 토털 설루션 공개…HVDC·SST 앞세워 美 시장 확대",
+      "sector": "전력"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "효성중공업이 AI 전력망 토털 솔루션을 공개하며 미국 시장 공략을 강화함",
+      "ts": "04-30 07:00",
+      "quote": "효성중공업, AI 전력망 토털 설루션 공개…HVDC·SST 앞세워 美 시장 확대"
+    }
+  ],
+  "quote": "효성중공업, AI 전력망 토털 설루션 공개…HVDC·SST 앞세워 美 시장 확대"
+}

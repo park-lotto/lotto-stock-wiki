@@ -1,0 +1,151 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "Healthcare Services Group",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-06 13:36",
+      "quote": "Healthcare Services Group, 52주 신고가 25.75달러 기록",
+      "sector": "기타"
+    },
+    {
+      "name": "Terreno Realty Corp",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-06 17:22",
+      "quote": "Terreno Realty Corp 주식, 67.84달러로 52주 신고가 기록",
+      "sector": "기타"
+    },
+    {
+      "name": "Middleby Corp",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-06 13:56",
+      "quote": "Middleby Corp 주가, 52주 신고가 176.9달러 기록",
+      "sector": "기타"
+    },
+    {
+      "name": "Ziff Davis",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-06 17:01",
+      "quote": "Ziff Davis 주가 53.43달러로 52주 신고가 경신",
+      "sector": "IT"
+    },
+    {
+      "name": "네오제노믹스",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-06 14:36",
+      "quote": "네오제노믹스 주가 15.56달러로 52주 신고가 기록",
+      "sector": "바이오"
+    },
+    {
+      "name": "U.S 뱅코프",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-06 13:35",
+      "quote": "U.S 뱅코프 주가 52주 신고가 62.79달러 기록",
+      "sector": "기타"
+    },
+    {
+      "name": "CoreCivic Inc",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-06 13:36",
+      "quote": "CoreCivic Inc 주가, 32.26달러로 52주 신고가 경신",
+      "sector": "기타"
+    },
+    {
+      "name": "타불라",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-06 13:49",
+      "quote": "타불라 주가, 5.26달러로 52주 신고가 경신",
+      "sector": "IT"
+    },
+    {
+      "name": "페르소날리스",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-06 14:44",
+      "quote": "페르소날리스 주가 52주 신고가 14.24달러 기록",
+      "sector": "바이오"
+    },
+    {
+      "name": "빔 테라퓨틱스",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-06 15:54",
+      "quote": "빔 테라퓨틱스 주가, 36.89달러로 52주 신고가 경신",
+      "sector": "바이오"
+    },
+    {
+      "name": "Qualys",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-06 13:38",
+      "quote": "Qualys 주가, 52주 신고가 155.52달러 경신",
+      "sector": "IT"
+    },
+    {
+      "name": "피드몬트 오피스",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-06 15:40",
+      "quote": "피드몬트 오피스 주가 52주 신고가 $9.71 달성",
+      "sector": "기타"
+    },
+    {
+      "name": "엔트라비전 커뮤니케이션즈 Corp",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-06 13:51",
+      "quote": "엔트라비전 커뮤니케이션즈 Corp 주가, 13.68달러로 52주 신고가 경신",
+      "sector": "기타"
+    },
+    {
+      "name": "애로우헤드 파마슈티컬스",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-06 13:36",
+      "quote": "애로우헤드 파마슈티컬스 주가, 52주 신고가 84.65달러 기록",
+      "sector": "바이오"
+    },
+    {
+      "name": "HF 싱클레어",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-06 14:51",
+      "quote": "HF 싱클레어 주식, 74.8달러로 52주 신고가 경신",
+      "sector": "기타"
+    },
+    {
+      "name": "LXP 인더스트리얼 트러스트",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-06 13:36",
+      "quote": "LXP 인더스트리얼 트러스트 주가, 52주 신고가 55.75달러 기록",
+      "sector": "기타"
+    },
+    {
+      "name": "젠워스",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-06 13:37",
+      "quote": "젠워스 주식, 9.67달러로 52주 신고가 기록",
+      "sector": "기타"
+    },
+    {
+      "name": "바이오에이지 랩스",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-06 13:54",
+      "quote": "바이오에이지 랩스 주가, 25.8달러로 52주 신고가 경신",
+      "sector": "바이오"
+    }
+  ],
+  "news_items": null,
+  "quote": "52주 신고가 경신 종목들"
+}

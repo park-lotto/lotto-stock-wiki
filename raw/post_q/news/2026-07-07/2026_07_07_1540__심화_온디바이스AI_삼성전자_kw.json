@@ -1,0 +1,26 @@
+{
+  "target_kind": "sector",
+  "sector_name": "온디바이스AI",
+  "sector_view": "긍정",
+  "points": [
+    "노타의 AWS 자체 AI칩 최적화 및 경량화 서비스 출시",
+    "온디바이스 AI 시장 확대에 따른 소프트웨어 경량화 기술 수요 증가"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "삼성전자",
+      "comment": null,
+      "ts": null,
+      "quote": "온디바이스AI 삼성전자",
+      "sector": "반도체"
+    }
+  ],
+  "events": [
+    {
+      "fact": "노타, AWS 자체 AI칩 ‘최적화’ 지원 및 경량화 서비스 출시",
+      "ts": "2026-07-06 23:31",
+      "quote": "노타, AWS 자체 AI칩 ‘최적화’ 지원…경량화 서비스 전격 출시"
+    }
+  ],
+  "quote": "노타, AWS 자체 AI칩 ‘최적화’ 지원…경량화 서비스 전격 출시"
+}

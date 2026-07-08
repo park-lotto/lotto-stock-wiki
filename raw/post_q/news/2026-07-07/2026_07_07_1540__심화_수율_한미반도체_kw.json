@@ -1,0 +1,33 @@
+{
+  "target_kind": "sector",
+  "sector_name": "반도체",
+  "sector_view": "긍정",
+  "points": [
+    "HBM 시장에 대한 높은 관심 집중",
+    "삼성전자 및 SK하이닉스의 차세대 HBM4 기술력 경쟁"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "삼성전자",
+      "comment": "HBM4 국내 공개",
+      "ts": null,
+      "quote": "삼성·SK, HBM4 국내 공개",
+      "sector": "반도체"
+    },
+    {
+      "name": "SK하이닉스",
+      "comment": "HBM4 국내 공개",
+      "ts": null,
+      "quote": "삼성·SK, HBM4 국내 공개",
+      "sector": "반도체"
+    }
+  ],
+  "events": [
+    {
+      "fact": "부스 및 참관객 모두 HBM에 집중하는 현상 확인",
+      "ts": "2026-10-25 07:00",
+      "quote": "부스·참관객 모두 HBM '홀릭'...삼성·SK, HBM4 국내 공개"
+    }
+  ],
+  "quote": "부스·참관객 모두 HBM '홀릭'...삼성·SK, HBM4 국내 공개"
+}

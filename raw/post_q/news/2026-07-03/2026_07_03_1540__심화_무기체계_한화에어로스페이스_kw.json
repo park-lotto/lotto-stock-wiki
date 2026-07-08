@@ -1,0 +1,47 @@
+{
+  "target_kind": "sector",
+  "sector_name": "방산",
+  "sector_view": "긍정",
+  "points": [
+    "K-방산 기업들의 수익률 비교 및 경쟁력 점검",
+    "한화에어로스페이스, LIG넥스원, 현대로템, KAI 등 주요 방산 업체들의 시장 성과 분석"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "한화에어로스페이스",
+      "comment": "K-방산 주요 기업 중 하나로 언급됨",
+      "ts": null,
+      "quote": "한화에어로·LIG·현대로템·KAI…K-방산 수익률 1등은 KAI",
+      "sector": "방산"
+    },
+    {
+      "name": "LIG넥스원",
+      "comment": "K-방산 주요 기업 중 하나로 언급됨",
+      "ts": null,
+      "quote": "한화에어로·LIG·현대로템·KAI…K-방산 수익률 1등은 KAI",
+      "sector": "방산"
+    },
+    {
+      "name": "현대로템",
+      "comment": "K-방산 주요 기업 중 하나로 언급됨",
+      "ts": null,
+      "quote": "한화에어로·LIG·현대로템·KAI…K-방산 수익률 1등은 KAI",
+      "sector": "방산"
+    },
+    {
+      "name": "KAI",
+      "comment": "K-방산 주요 기업 중 수익률 1위로 언급됨",
+      "ts": null,
+      "quote": "한화에어로·LIG·현대로템·KAI…K-방산 수익률 1등은 KAI",
+      "sector": "방산"
+    }
+  ],
+  "events": [
+    {
+      "fact": "왕좌의 게임 ④방산 기획 보도",
+      "ts": "2026-07-02 23:59",
+      "quote": "왕좌의 게임 ④방산"
+    }
+  ],
+  "quote": "한화에어로·LIG·현대로템·KAI…K-방산 수익률 1등은 KAI"
+}
