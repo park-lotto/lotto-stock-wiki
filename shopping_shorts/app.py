@@ -10,9 +10,6 @@ from shopping_shorts.config import DB_PATH
 
 app = FastAPI(title="쇼핑쇼츠 레퍼런스 랭킹")
 
-# 마지막 수집 결과 메모리 캐시 (수동 새로고침용)
-_LAST = {"items": [], "collected_at": None}
-
 
 @app.post("/api/collect")
 def api_collect(limit: int | None = None):
@@ -20,10 +17,10 @@ def api_collect(limit: int | None = None):
     try:
         items = collect(limit_channels=limit)
         from datetime import datetime, timezone
-        _LAST["items"] = items
-        _LAST["collected_at"] = datetime.now(timezone.utc).isoformat()
+        collected_at = datetime.now(timezone.utc).isoformat()
+        Store(DB_PATH).save_last_run(items, collected_at)
         return {"ok": True, "count": len(items), "items": items,
-                "collected_at": _LAST["collected_at"]}
+                "collected_at": collected_at}
     except Exception as e:
         import re
         msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
@@ -33,14 +30,15 @@ def api_collect(limit: int | None = None):
 @app.get("/api/reference")
 def api_reference():
     """마지막 수집 결과 반환 (프론트 초기 로드용)."""
-    return {"ok": True, "items": _LAST["items"], "collected_at": _LAST["collected_at"]}
+    items, collected_at = Store(DB_PATH).load_last_run()
+    return {"ok": True, "items": items, "collected_at": collected_at}
 
 
 @app.get("/api/outreach")
 def api_outreach(sort: str = "latest", hide_done: bool = True):
     """소통 큐 반환 — 마지막 수집 릴스 + draft 결합, 정렬·완료필터."""
     store = Store(DB_PATH)
-    items = _LAST["items"]
+    items, _ = store.load_last_run()
     drafts = store.drafts_map([i["shortcode"] for i in items])
     commented = store.commented_set()
     queue = build_queue(items, drafts_map=drafts, commented=commented,

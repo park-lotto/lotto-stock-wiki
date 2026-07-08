@@ -58,3 +58,25 @@ def test_saved_mark_and_query(tmp_path):
     s.mark_saved("sc1")
     s.mark_saved("sc2")
     assert s.saved_set() == {"sc1", "sc2"}
+
+def test_last_run_empty(tmp_path):
+    s = Store(tmp_path / "t.db")
+    items, collected_at = s.load_last_run()
+    assert items == []
+    assert collected_at is None
+
+def test_last_run_roundtrip(tmp_path):
+    s = Store(tmp_path / "t.db")
+    data = [{"shortcode": "a", "name": "채널", "thumbnail": "t.jpg", "comments": 5}]
+    s.save_last_run(data, "2026-07-09T10:00:00")
+    items, collected_at = s.load_last_run()
+    assert items == data
+    assert collected_at == "2026-07-09T10:00:00"
+
+def test_last_run_overwrites(tmp_path):
+    s = Store(tmp_path / "t.db")
+    s.save_last_run([{"shortcode": "a"}], "t1")
+    s.save_last_run([{"shortcode": "b"}, {"shortcode": "c"}], "t2")
+    items, collected_at = s.load_last_run()
+    assert len(items) == 2
+    assert collected_at == "t2"

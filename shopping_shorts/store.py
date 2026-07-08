@@ -44,6 +44,13 @@ class Store:
                     saved_at TEXT
                 )
             """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS last_run (
+                    id INTEGER PRIMARY KEY CHECK (id = 1),
+                    items_json TEXT NOT NULL,
+                    collected_at TEXT
+                )
+            """)
 
     def prev_comments(self, shortcode):
         """가장 최근에 기록된 이 영상의 댓글수. 없으면 None."""
@@ -129,3 +136,23 @@ class Store:
         with self._conn() as c:
             rows = c.execute("SELECT shortcode FROM saved").fetchall()
         return {r[0] for r in rows}
+
+    def save_last_run(self, items, collected_at):
+        """마지막 수집 결과 전체(items + 시각)를 저장. 단일 행 덮어쓰기."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO last_run(id, items_json, collected_at) VALUES(1, ?, ?) "
+                "ON CONFLICT(id) DO UPDATE SET items_json=excluded.items_json, "
+                "collected_at=excluded.collected_at",
+                (json.dumps(items, ensure_ascii=False), collected_at),
+            )
+
+    def load_last_run(self):
+        """마지막 수집 결과 반환 → (items, collected_at). 없으면 ([], None)."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT items_json, collected_at FROM last_run WHERE id=1"
+            ).fetchone()
+        if not row:
+            return [], None
+        return json.loads(row[0]), row[1]
