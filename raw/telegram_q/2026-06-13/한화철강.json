@@ -1,86 +1,43 @@
-[
-  {
-    "sector_name": "기타",
-    "sector_view": "중립",
-    "points": [
-      "골드만삭스가 공급 증가와 중국 수요 리스크를 반영해 2027년 브렌트유 전망치를 하향 조정함",
-      "미국 에너지 기업들의 리그 수 감소에도 불구하고 생산량은 증가 추세를 유지할 전망",
-      "중국은 에너지 안보를 위해 석탄 기반 석유 생산을 확대하는 정책을 추진 중"
-    ],
-    "stocks_mentioned": [
-      {
-        "name": "골드만삭스",
-        "comment": "골드만삭스가 2027년 브렌트유 평균 전망치를 배럴당 80달러로 낮췄습니다.",
-        "ts": "23:16",
-        "quote": "Goldman lowers 2027 Brent oil forecast on supply growth, demand risks",
-        "sector": "기타"
-      },
-      {
-        "name": "Baker Hughes",
-        "comment": "미국 에너지 기업들이 8주 만에 처음으로 리그 수를 줄였으며 전체 석유·가스 리그 수는 562개로 감소했습니다.",
-        "ts": "23:23",
-        "quote": "US energy firms cut rigs for first time in eight weeks, Baker Hughes says",
-        "sector": "기타"
-      }
-    ],
-    "events": [
-      {
-        "fact": "중국, 에너지 안보를 위해 석탄 기반 원유 생산 확대 추진",
-        "ts": "23:18",
-        "quote": "China's top coal region to expand coal-to-oil output in energy security push"
-      },
-      {
-        "fact": "미국 에너지 기업 8주 만에 리그 수 감소",
-        "ts": "23:23",
-        "quote": "US energy firms cut rigs for first time in eight weeks, Baker Hughes says"
-      }
-    ]
-  },
-  {
-    "sector_name": "기타",
-    "sector_view": "부정",
-    "points": [
-      "인도는 금 수요가 소폭 개선되었으나, 중국은 프리미엄이 축소되는 등 시장 경계감 상존",
-      "연준의 금리 인상 기대와 달러 강세로 인해 금 가격의 기술적 조정 및 ETF 자금 유출 발생"
-    ],
-    "stocks_mentioned": [],
-    "events": [
-      {
-        "fact": "금 가격 1월 고점 대비 25% 하락",
-        "ts": "23:21",
-        "quote": "Gold's record rally falters as bulls run into Fed rate expectations, stronger dollar"
-      }
-    ]
-  },
-  {
-    "sector_name": "기타",
-    "sector_view": "부정",
-    "points": [
-      "Air India가 비용 절감을 위해 항공기 인도 연기를 검토 중",
-      "지정학적 리스크와 항공기 사고 여파가 항공 수요와 공급망에 부정적 영향"
-    ],
-    "stocks_mentioned": [
-      {
-        "name": "Air India",
-        "comment": "Air India가 Airbus와 Boeing에 주문한 항공기 수백 대의 인도 연기를 검토하고 있습니다.",
-        "ts": "23:22",
-        "quote": "Air India seeks to defer hundreds of jet deliveries, sources say",
-        "sector": "기타"
-      },
-      {
-        "name": "Boeing",
-        "comment": "Air India가 인도 연기를 검토하는 가운데 Boeing 787 사고 여파가 부담으로 작용하고 있습니다.",
-        "ts": "23:22",
-        "quote": "Air India seeks to defer hundreds of jet deliveries, sources say",
-        "sector": "기타"
-      }
-    ],
-    "events": [
-      {
-        "fact": "Air India 항공기 수백 대 인도 연기 검토",
-        "ts": "23:22",
-        "quote": "Air India seeks to defer hundreds of jet deliveries, sources say"
-      }
-    ]
-  }
-]
+{
+  "sector_name": "에너지 및 원자재",
+  "sector_view": "중립",
+  "points": [
+    "골드만삭스의 브렌트유 전망치 하향 조정 및 중국의 석탄 기반 에너지 안보 강화 움직임",
+    "인도와 중국의 금 시장 수요 변화 및 연준 금리 인상 기대로 인한 금 가격의 하방 압력",
+    "미국 에너지 기업의 리그 수 감소 및 항공 산업의 인도 연기 등 경기 둔화 징후 포착"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "Air India",
+      "comment": "이란 분쟁 및 파키스탄 영공 폐쇄 등의 영향으로 주문한 항공기 수백 대의 인도 연기를 검토 중임.",
+      "ts": "23:22",
+      "quote": "Air India seeks to defer hundreds of jet deliveries, sources say",
+      "sector": "기타"
+    },
+    {
+      "name": "Boeing",
+      "comment": "Air India의 인도 연기 검토 대상이며 787 사고 여파로 인해 경영 환경에 부담을 겪고 있음.",
+      "ts": "23:22",
+      "quote": "Air India seeks to defer hundreds of jet deliveries, sources say",
+      "sector": "기타"
+    }
+  ],
+  "events": [
+    {
+      "fact": "골드만삭스가 2027년 브렌트유 전망치를 배럴당 80달러로 하향 조정함",
+      "ts": "23:16",
+      "quote": "Goldman lowers 2027 Brent oil forecast on supply growth, demand risks"
+    },
+    {
+      "fact": "중국이 석탄 기반의 원유·가스 생산을 확대함",
+      "ts": "23:18",
+      "quote": "China's top coal region to expand coal-to-oil output in energy security push"
+    },
+    {
+      "fact": "미국 에너지 기업들의 리그 수가 8주 만에 처음으로 감소함",
+      "ts": "23:23",
+      "quote": "US energy firms cut rigs for first time in eight weeks, Baker Hughes says"
+    }
+  ],
+  "quote": "이란 전쟁 이후 에너지 안보 중심의 공급망 변화와 연준의 금리 정책이 원자재 시장의 변동성을 키우고 있음"
+}

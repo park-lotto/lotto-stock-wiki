@@ -1,7 +1,8 @@
 {
   "target_kind": "insight",
   "leading_sectors": [
-    "반도체"
+    "반도체",
+    "IT"
   ],
   "stance": [
     {
@@ -24,7 +25,7 @@
   "stocks_mentioned": [
     {
       "name": "엔비디아",
-      "comment": "젠슨황의 일정에 베팅하지말고 그가 그리는 미래에 베팅할 것을 권고함.",
+      "comment": "단기적인 일정 매매가 아닌 장기적 전략과 생태계 확장에 주목해야 하는 기업",
       "ts": null,
       "quote": "엔비디아가 추구하는 장기적 전략과 미래 기술 비전에 집중해야 투자 성과가 좋다.",
       "sector": "반도체"

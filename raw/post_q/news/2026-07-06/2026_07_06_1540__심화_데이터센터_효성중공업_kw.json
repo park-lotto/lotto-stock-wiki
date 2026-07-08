@@ -1,18 +1,23 @@
 {
-  "target_kind": "stock_tips",
-  "stocks": [
+  "target_kind": "sector",
+  "sector_name": "전력",
+  "sector_view": "긍정",
+  "points": [
+    "효성그룹의 데이터센터 시장 신규 진출",
+    "데이터센터 수요 증가에 따른 전력 설비 시장 확대"
+  ],
+  "stocks_mentioned": [
     {
       "name": "효성중공업",
-      "signal": "bull",
-      "reason": "데이터센터 시장 진출 본격화",
-      "ts": "2026-07-06",
+      "comment": "데이터센터 시장 진출 본격화",
+      "ts": null,
       "quote": "효성그룹, 데이터센터 시장 진출·호국보훈 CSR 집중 추진",
       "sector": "전력"
     }
   ],
-  "news_items": [
+  "events": [
     {
-      "fact": "효성그룹이 데이터센터 시장에 신규 진출함",
+      "fact": "효성그룹, 데이터센터 시장 진출 및 호국보훈 CSR 추진",
       "ts": "2026-07-03",
       "quote": "효성그룹, 데이터센터 시장 진출·호국보훈 CSR 집중 추진"
     }

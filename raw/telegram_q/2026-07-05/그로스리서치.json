@@ -2,11 +2,11 @@
   "reports": [
     {
       "broker": "노무라",
-      "stock": null,
+      "stock": "메모리 반도체",
       "rating": null,
       "tp": null,
       "ts": "10:13",
-      "quote": "2024년 $60bn → 2025년 $107bn → 2026년 $454bn으로 급증 전망",
+      "quote": "데이터 센터발 메모리 수요의 구조적 확대 2024년 $60bn → 2025년 $107bn → 2026년 $454bn으로 급증 전망",
       "sector": "반도체"
     },
     {
@@ -60,7 +60,7 @@
       "rating": null,
       "tp": null,
       "ts": "20:48",
-      "quote": "베트남 공장은 인텔 전 세계 패키징·테스트 물량의 50% 이상 담당",
+      "quote": "인텔의 베트남 누적 투자액은 15억달러, 약 2.3조원",
       "sector": "반도체"
     },
     {
@@ -89,6 +89,51 @@
       "ts": "20:59",
       "quote": "셀트리온 : DS 생산능력 57.1만L로 확대",
       "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "SK텔레콤",
+      "rating": null,
+      "tp": null,
+      "ts": "16:04",
+      "quote": "SK텔레콤이 전국에 총 15GW 규모 AI 데이터센터 구축 계획 발표",
+      "sector": "통신"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "인텔",
+      "rating": null,
+      "tp": null,
+      "ts": "19:24",
+      "quote": "인텔, 1.4나노급 기본 공정 14A에 후면전력공급(BSPDN) 전용 기술 '파워다이렉트' 적용 예정",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "LG이노텍",
+      "rating": null,
+      "tp": null,
+      "ts": "21:10",
+      "quote": "LG이노텍, 스페이스X 저궤도(LEO) 위성용 RF-SiP 기판 공급 추진",
+      "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "코오롱티슈진",
+      "rating": null,
+      "tp": null,
+      "ts": "21:19",
+      "quote": "인보사 관련 주주 손해배상 소송 화해권고 결정 확정",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "한화에어로스페이스",
+      "rating": null,
+      "tp": null,
+      "ts": "21:25",
+      "quote": "폴란드 K9 2차 실행계약(EC2) 첫 물량 출하",
+      "sector": "방산"
     }
   ]
 }

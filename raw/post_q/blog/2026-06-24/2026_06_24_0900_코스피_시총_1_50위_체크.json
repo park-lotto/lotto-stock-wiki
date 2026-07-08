@@ -1,0 +1,61 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "SK하이닉스",
+      "signal": "neutral",
+      "reason": "개인들의 순매수로 인해 무거워진 상태이며 역대급 변동성과 하락세를 보임",
+      "ts": null,
+      "quote": "개인들이 매수 11조, 매도 6조로 순매수 5조. 무거워졌다. 역대급 변동성과 하락이라 레퍼런스를 둘만한 날이 없다.",
+      "sector": "반도체"
+    },
+    {
+      "name": "삼성전자",
+      "signal": "neutral",
+      "reason": "최근 거래가 삼성전자보다는 하이닉스로 몰리는 경향이 있음",
+      "ts": null,
+      "quote": "개인 5.6조 매수, 3.4조매도, 2.1조 순매수 최근 거래는 확실히 삼성전자보다 하이닉스로 몰린느낌이다.",
+      "sector": "반도체"
+    },
+    {
+      "name": "LG에너지솔루션",
+      "signal": "neutral",
+      "reason": "외국인과 개인의 수급 현황",
+      "ts": null,
+      "quote": "외국인, 개인 수급",
+      "sector": "2차전지"
+    },
+    {
+      "name": "HD현대중공업",
+      "signal": "bull",
+      "reason": "하락하는 동안 외국인이 연속으로 순매수함",
+      "ts": null,
+      "quote": "하락동안 외국인 연속 순매수",
+      "sector": "조선"
+    },
+    {
+      "name": "삼성바이오로직스",
+      "signal": "bull",
+      "reason": "외국인의 매수세 유입",
+      "ts": null,
+      "quote": "외국인 매수",
+      "sector": "바이오"
+    },
+    {
+      "name": "LG이노텍",
+      "signal": "bull",
+      "reason": "외국인의 매수세 유입",
+      "ts": null,
+      "quote": "외국인 매수",
+      "sector": "IT"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "기관 매매 동향",
+      "ts": null,
+      "quote": "기관: SK하이닉스, 삼성전자 매도를 제외하고는 특기할..."
+    }
+  ],
+  "quote": "1~50위 시가총액 내림차순"
+}

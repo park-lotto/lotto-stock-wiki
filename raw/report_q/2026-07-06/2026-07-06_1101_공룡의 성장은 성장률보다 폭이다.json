@@ -2,7 +2,7 @@
   "meta": {
     "date": "2026-07-06",
     "broker": "한화투자증권",
-    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-06_1101_공룡의 성장은 성장률보다 폭이다.md"
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-06_1101_공룡의 성장은 성장률보다 폭이다.md"
   },
   "questionnaire": {
     "target_kind": "stock",
@@ -20,11 +20,11 @@
         "tp_direction": "flat",
         "earnings_outlook": "2026년 2분기 코스맥스의 연결 매출액은 7,557억원(+21.2% YoY, +10.8% QoQ), 영업이익은 693억원(+14.0% YoY, +30.7% QoQ)으로 컨센서스 영업이익(694억원)에 부합할 전망이다.",
         "estimate_revision": null,
-        "next_catalyst": "미국 법인의 턴어라운드 및 하반기 고성장세 지속",
+        "next_catalyst": "미국의 턴어라운드",
         "thesis": [
-          "한국 법인 매출액 +17% YoY 성장 및 영업이익률 10.9%로 전분기 대비 회복",
-          "해외 법인(중국, 동남아, 미국)의 안정적 성장 및 수주 견인",
-          "미국 법인 예상보다 강한 매출 흐름(+53% YoY)으로 흑자전환 및 10억원 내외 이익 발생"
+          "한국 법인의 안정적인 성장세가 지속되고 있는 점",
+          "수익성의 QoQ 회복이 확인되고 있는 점",
+          "해외 법인의 성장세가 두드러지는 점"
         ],
         "valuation_basis": null,
         "risk": null,

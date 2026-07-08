@@ -1,22 +1,32 @@
 {
-  "reports": [
+  "leading_sectors": [
+    "바이오",
+    "반도체"
+  ],
+  "stance": [
     {
-      "broker": null,
-      "stock": "바이오",
-      "rating": null,
-      "tp": null,
+      "target": "바이오",
+      "view": "긍정",
       "ts": "12:21",
-      "quote": "유가하락 찐 수혜는 생각해보니 바이오기도 하네여.",
-      "sector": "바이오"
+      "quote": "수욜 오전장은 바이오 없으면.... 질서정연하게 밥무러들 가면 될거 같슴다"
     },
     {
-      "broker": null,
-      "stock": "하이닉스",
-      "rating": null,
-      "tp": null,
+      "target": "하이닉스",
+      "view": "긍정",
+      "ts": "15:38",
+      "quote": "후반 : 하이닉스 상승 구경하다보니 끝"
+    }
+  ],
+  "methods": [],
+  "stocks_mentioned": [
+    {
+      "name": "하이닉스",
+      "comment": "오후장 상승을 주도함",
       "ts": "15:38",
       "quote": "후반 : 하이닉스 상승 구경하다보니 끝",
       "sector": "반도체"
     }
-  ]
+  ],
+  "noise_ratio": 0.8,
+  "quote": "유가하락 찐 수혜는 생각해보니 바이오기도 하네여."
 }

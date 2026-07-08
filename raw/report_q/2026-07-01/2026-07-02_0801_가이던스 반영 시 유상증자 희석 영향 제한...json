@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-01",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-02_0801_가이던스 반영 시 유상증자 희석 영향 제한...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "DS투자증권",
+    "analyst": "최태용",
+    "report_date": "2026.07.01",
+    "stocks": [
+      {
+        "name": "에코프로비엠",
+        "code": "247540",
+        "rating": "매수",
+        "rating_changed": false,
+        "tp_new": "300,000원",
+        "tp_prev": "300,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "BNSI의 27F 매출액은 1.5조원($19/kg, 5.4만톤으로 램프업 단계), 영업이익 1,500억원(OPM 10%로 보수적 가정 시)으로 추정된다.",
+        "estimate_revision": null,
+        "next_catalyst": "2Q27 가동을 시작으로 실적 가시성과 연동되어 주가 하방 압력이 점차 해소될 전망",
+        "thesis": [
+          "1.2조원 규모의 유상증자를 통한 자금 조달",
+          "조달 자금의 64%를 활용한 인니 BNSI 지분 취득으로 탈중국 니켈 밸류체인 확보",
+          "BNSI를 통한 적격 니켈 공급 및 실적 가시성 확보에 따른 기업 가치 증대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "보통주 9,900,990주 발행, 증자비율 10.12%",
+        "quote": "사업적 시너지는 분명하다. 탈중국 니켈을 안정적으로 공급받을 수 있다. 3대 주주인 중국 GEM 지분은 21%에 그친다. 미국 Non-FEOC(중국 지분 25% 이하)를 충족하는 적격 니켈이 될 수 있다는 의미다."
+      }
+    ],
+    "sector": "2차전지"
+  }
+}

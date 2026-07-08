@@ -1,0 +1,13 @@
+{
+  "reports": [
+    {
+      "broker": "메리츠증권",
+      "stock": "삼성전기",
+      "rating": null,
+      "tp": null,
+      "ts": "16:23",
+      "quote": "메리츠증권은 내년 MLCC ASP 상승률 전망을 27.6%에서 31.9%로 상향",
+      "sector": "IT"
+    }
+  ]
+}

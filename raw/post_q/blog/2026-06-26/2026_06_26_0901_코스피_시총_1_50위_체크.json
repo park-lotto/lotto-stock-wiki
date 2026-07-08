@@ -1,0 +1,66 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "SK하이닉스",
+      "signal": "bear",
+      "reason": "개인 수급 과도 및 변동성 확대",
+      "ts": null,
+      "quote": "SK하이닉스는 개인 수급이 강세(순매수 5조)이며, 변동성이 과도한 것으로 보임.",
+      "sector": "반도체"
+    },
+    {
+      "name": "삼성전자",
+      "signal": "neutral",
+      "reason": "외국인과 개인 순매수 지속",
+      "ts": null,
+      "quote": "삼성전자에는 외국인과 개인이 순매수 진행 중이며",
+      "sector": "반도체"
+    },
+    {
+      "name": "HD현대중공업",
+      "signal": "bull",
+      "reason": "하락 과정에서도 외국인 순매수 지속",
+      "ts": null,
+      "quote": "HD현대중공업: 하락 과정에서도 외국인 순매수 지속.",
+      "sector": "조선"
+    },
+    {
+      "name": "LG에너지솔루션",
+      "signal": "bull",
+      "reason": "외국인 매수 흐름 유지",
+      "ts": null,
+      "quote": "LG에너지솔루션은 외국인 매수 흐름이 유지 중.",
+      "sector": "2차전지"
+    },
+    {
+      "name": "삼성바이오로직스",
+      "signal": "bull",
+      "reason": "외국인 매수 흐름 유지",
+      "ts": null,
+      "quote": "삼성바이오로직스는 외국인 매수 흐름이 유지 중.",
+      "sector": "바이오"
+    },
+    {
+      "name": "LG이노텍",
+      "signal": "bull",
+      "reason": "외국인 매수 흐름 유지",
+      "ts": null,
+      "quote": "LG이노텍은 외국인 매수 흐름이 유지 중.",
+      "sector": "IT"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "SK하이닉스 개인 순매수 5조 기록",
+      "ts": null,
+      "quote": "SK하이닉스: 개인 매수 11조, 매도 6조(순매수 5조)"
+    },
+    {
+      "fact": "삼성전자 개인 순매수 2.1조 기록",
+      "ts": null,
+      "quote": "삼성전자: 개인 매수 5.6조, 매도 3.4조(순매수 2.1조)."
+    }
+  ],
+  "quote": "향후 투자자들이 삼성전자보다 하이닉스에 집중할 가능성 있음."
+}

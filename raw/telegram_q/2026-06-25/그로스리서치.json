@@ -6,17 +6,8 @@
       "rating": null,
       "tp": null,
       "ts": "08:04",
-      "quote": "DD01, MASH 2상 조직생검 3대 지표 모두 통계적 유의성 확보 / GLP-1/GCG 11:1 설계로 섬유화 개선과 내약성 동시 입증 / 경쟁약 대비 간지방 감소·섬유화 개선 데이터 우위 확인",
+      "quote": "DD01, MASH 2상 조직생검 3대 지표 모두 통계적 유의성 확보 / GLP-1/GCG 11:1 설계로 섬유화 개선과 내약성 동시 입증",
       "sector": "바이오"
-    },
-    {
-      "broker": "그로쓰리서치",
-      "stock": "바이오비쥬",
-      "rating": null,
-      "tp": null,
-      "ts": "09:21",
-      "quote": "ECM 스킨부스터 사업과 관려한 내용 저희가 탐방을 통해 확인을 했는데, 한번씩 읽어보시면 도움이 될 것으로 보입니다.",
-      "sector": "화장품미용"
     },
     {
       "broker": "그로쓰리서치",
@@ -29,7 +20,7 @@
     },
     {
       "broker": "그로쓰리서치",
-      "stock": "TCK",
+      "stock": "티씨케이",
       "rating": null,
       "tp": null,
       "ts": "17:19",
@@ -42,7 +33,7 @@
       "rating": null,
       "tp": null,
       "ts": "22:59",
-      "quote": "30%p Yield Improvement Drives 5x Operating Profit Growth / Manufactures and sells contact lens",
+      "quote": "30%p Yield Improvement Drives 5x Operating Profit Growth",
       "sector": "화장품미용"
     }
   ]

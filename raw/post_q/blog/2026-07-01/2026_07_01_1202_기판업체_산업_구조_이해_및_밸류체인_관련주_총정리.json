@@ -1,0 +1,41 @@
+{
+  "target_kind": "sector",
+  "sector_name": "기판업체",
+  "sector_view": "긍정",
+  "points": [
+    "데이터센터 CPU 및 AI 가속기 확산에 따른 FC-BGA 수요 급증",
+    "FC-BGA의 높은 기술 진입장벽으로 인한 공급 부족 현상 심화",
+    "선두 기업의 FC-BGA 집중으로 인한 BT 기판 업체들의 반사이익 기대"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "대덕전자",
+      "comment": "FC-BGA 투자 확대 및 메모리 기판/MLB 병목 해결로 수혜 기대",
+      "ts": "2027년까지",
+      "quote": "대덕전자는 3분기부터 대면적 FC-BGA 매출 본격화 예정이며, 2027년까지 FC-BGA 누적 투자 5,400억 원 계획",
+      "sector": "반도체"
+    },
+    {
+      "name": "이수페타시스",
+      "comment": "Sequential MLB 전환으로 ASP와 영업이익률 상승",
+      "ts": null,
+      "quote": "이수페타시스는 Sequential MLB 전환으로 ASP(단가)와 영업이익률 상승 이끌어",
+      "sector": "반도체"
+    },
+    {
+      "name": "심텍",
+      "comment": "BT 기판 가동률 여유를 통한 추가 투자 없이 증수 여력 및 SOCAMM 기판 공급",
+      "ts": null,
+      "quote": "심텍은 삼성전자·SK하이닉스·마이크론 메모리 3사에 SOCAMM 기판 공급하며, BT 기판 가동률 70% 수준으로 추가 투자 없이 증수 여력 확보",
+      "sector": "반도체"
+    }
+  ],
+  "events": [
+    {
+      "fact": "데이터센터 CPU 출하량 증가 및 GPU/ASIC 비중 변화",
+      "ts": "2023년",
+      "quote": "2023년 데이터센터용 CPU 출하량 2,800만 개로 GPU(1,400만 개)와 ASIC(600만 개) 합친 것보다 2배 이상 많으며, 2025~2030년 CPU 연평균 성장률 전망치 15%"
+    }
+  ],
+  "quote": "데이터센터 CPU 수요 증가로 선단 기판인 FC-BGA 수요 급증, 특히 에이전틱 AI 확산으로 CPU/GPU 비율이 1:1~1:2 수준으로 변화하며 FC-BGA 캐파 부족 심화"
+}

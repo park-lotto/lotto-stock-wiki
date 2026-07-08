@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "date": "2026-07-01",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-02_0803_이번 성수기 주인공, It’s me.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "권우정",
+    "report_date": "July 1 2026",
+    "stocks": [
+      {
+        "name": "한국콜마",
+        "code": "161890",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "130,000원",
+        "tp_prev": "130,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "2Q26": {
+            "revenue": "8.3천억원(YoY 13%)",
+            "operating_profit": "966억원(YoY 32%)"
+          },
+          "korea_unit": {
+            "revenue": "4.1 천억원(YoY 26%)",
+            "operating_profit": "641 억원(YoY 31%)",
+            "opm": "15.5%(YoY +0.6%p)"
+          }
+        },
+        "estimate_revision": null,
+        "next_catalyst": "26년 들어 신제품 효과 등을 바탕으로 YoY 성장 중인 방판 브랜드와 하반기 추가 SKU 확대",
+        "thesis": [
+          "한국 법인 매출액 성장률 YoY 25% 이상 증가하며 견조한 흐름 유지",
+          "미국 아마존 중심에서 미국 오프라인 시장으로 확장 및 유럽 시장 진출 본격화",
+          "K-뷰티 수출의 핵심 카테고리인 기초와 선케어 경쟁력 부각"
+        ],
+        "valuation_basis": "12개월 Fwd P/E 12배로 밸류에이션 매력이 높다고 판단",
+        "risk": "기존 최대 고객사 주문 증가 제한적(미국 법인)",
+        "supply_comment": "상위 고객사를 중심으로 선/스킨케어 전반적인 오더 볼륨이 확대되고 있음",
+        "quote": "2분기 연결 매출액 및 영업이익은 각각 8.3천억원(YoY 13%), 966억원(YoY 32%)으로 시장기대치 소폭 상회 전망."
+      }
+    ]
+  }
+}

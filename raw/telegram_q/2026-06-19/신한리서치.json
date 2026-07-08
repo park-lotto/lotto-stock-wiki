@@ -3,10 +3,47 @@
     {
       "broker": "신한투자증권",
       "stock": "HEM파마",
-      "rating": "Not Rated",
+      "rating": null,
       "tp": null,
-      "ts": "07:46",
-      "quote": "My LAB 일본 런칭 본격화, 확장성 확인하는 구간 진입"
+      "ts": "07:48",
+      "quote": "My LAB 일본 런칭 본격화, 확장성 확인하는 구간 진입",
+      "sector": "바이오"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "알테오젠",
+      "rating": null,
+      "tp": null,
+      "ts": "07:48",
+      "quote": "알테오젠 코스닥 잔류도 대표주 프리미엄, 국민성장 등 정책 고려 시 합리적",
+      "sector": "바이오"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "엘앤씨바이오",
+      "rating": null,
+      "tp": null,
+      "ts": "07:49",
+      "quote": "인체유래 지방 활용 법제화, 산업 성장 기반 마련",
+      "sector": "화장품미용"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "한스바이오메드",
+      "rating": null,
+      "tp": null,
+      "ts": "07:49",
+      "quote": "인체유래 지방 활용 법제화, 산업 성장 기반 마련",
+      "sector": "화장품미용"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "오라클",
+      "rating": null,
+      "tp": null,
+      "ts": "17:22",
+      "quote": "Top-picks: 오라클 (ORCL.US), 델 테크놀로지스 (DELL.US), 인텔 (INTC.US), 테라다인 (TER.US), 루멘텀홀딩스 (LITE.US), 블룸에너지 (BE.US), 보잉 (BA.US), 서밋테라퓨틱스 (SMMT.US), 창페이광섬유 (601869.SH), 호사전자 (002463.SZ)",
+      "sector": "IT"
     }
   ]
 }

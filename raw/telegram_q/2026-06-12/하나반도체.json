@@ -3,55 +3,55 @@
   "sector_view": "긍정",
   "points": [
     "필라델피아 반도체 지수 7.9% 상승 마감",
-    "2026~2028년 파운드리 및 메모리 CAPA 증설에 따른 외형 성장 가시성 확보",
+    "2026~2028년 파운드리 및 메모리 CAPA 증설에 따른 외형 성장 가시성 확인",
     "대만 반도체 지수 3.1% 상승"
   ],
   "stocks_mentioned": [
     {
       "name": "KLA",
-      "comment": "장비주로서 12% 이상 상승",
+      "comment": "장비주로서 12% 이상 상승하며 높은 상승폭 기록",
       "ts": "07:30",
       "quote": "상승폭이 가장 높은 업체들은 12% 이상 상승한 KLA, Lam Research 등의 장비주였습니다.",
       "sector": "반도체"
     },
     {
       "name": "Lam Research",
-      "comment": "장비주로서 12% 이상 상승",
+      "comment": "장비주로서 12% 이상 상승하며 높은 상승폭 기록",
       "ts": "07:30",
       "quote": "상승폭이 가장 높은 업체들은 12% 이상 상승한 KLA, Lam Research 등의 장비주였습니다.",
       "sector": "반도체"
     },
     {
       "name": "Micron",
-      "comment": "LPDDR 우려 이후 주가 반등하며 11.7% 상승",
+      "comment": "LPDDR 탑재량 축소 우려 이후 주가 반등",
       "ts": "07:30",
       "quote": "Micron도 11.7% 상승해 상승률이 네번째로 컸는데, 지난주 목요일 Vera Rubin의 LPDDR 팁재량 축소 우려 이후에 변동성이 큰 편이었습니다.",
       "sector": "반도체"
     },
     {
       "name": "Nanya",
-      "comment": "상한가 기록",
+      "comment": "메모리 업황과 궤를 같이하며 상한가 기록",
       "ts": "16:40",
-      "quote": "Nanya와 Winbond는 상한가를 기록했습니다.",
+      "quote": "Nanya와 Winbond는 상한가를 기록했습니다. 국내외 메모리 업체들과 궤를 함께 했습니다.",
       "sector": "반도체"
     },
     {
       "name": "Winbond",
-      "comment": "상한가 기록",
+      "comment": "메모리 업황과 궤를 같이하며 상한가 기록",
       "ts": "16:40",
-      "quote": "Nanya와 Winbond는 상한가를 기록했습니다.",
+      "quote": "Nanya와 Winbond는 상한가를 기록했습니다. 국내외 메모리 업체들과 궤를 함께 했습니다.",
       "sector": "반도체"
     },
     {
       "name": "ASE",
-      "comment": "TSMC의 CoPoS 양산 보도 영향으로 약 9% 상승",
+      "comment": "TSMC의 CoPoS 양산 보도에 반응하며 9% 상승",
       "ts": "16:40",
       "quote": "ASE는 약 9% 상승했습니다. TSMC가 2028년 CoPoS (Chip-on-Panel-on-Substrate) 양산에 들어갈 것이라는 보도에 반응한 것으로 보입니다.",
       "sector": "반도체"
     },
     {
       "name": "Realtek",
-      "comment": "소비자향 부진으로 약 5.6% 하락",
+      "comment": "소비자향 부진에 따른 시장 예상치 하향으로 5.6% 하락",
       "ts": "16:40",
       "quote": "Realtek은 약 5.6% 하락했습니다. 소비자향 부진으로 인해 시장 예상치가 소폭 낮아진 영향으로 추정됩니다.",
       "sector": "반도체"

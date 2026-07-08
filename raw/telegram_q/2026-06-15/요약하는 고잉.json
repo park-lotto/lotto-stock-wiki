@@ -1,40 +1,72 @@
 {
-  "reports": [
+  "leading_sectors": [
+    "반도체",
+    "조선",
+    "원전",
+    "석유화학"
+  ],
+  "stance": [
     {
-      "broker": null,
-      "stock": "삼성E&A",
-      "rating": null,
-      "tp": null,
+      "target": "석유화학주",
+      "view": "긍정",
+      "ts": "09:12",
+      "quote": "이제는 좀 편안해지는 유가 흐름이네여."
+    },
+    {
+      "target": "바이오",
+      "view": "중립",
+      "ts": "10:53",
+      "quote": "바이오섹터가 가장 영향일테고요"
+    },
+    {
+      "target": "조선",
+      "view": "긍정",
+      "ts": "10:53",
+      "quote": "조선, 원전쪽이 미리 기대감 나오는중"
+    },
+    {
+      "target": "원전",
+      "view": "긍정",
+      "ts": "10:53",
+      "quote": "조선, 원전쪽이 미리 기대감 나오는중"
+    }
+  ],
+  "methods": [
+    {
+      "rule": "AI 도구 활용법",
+      "quote": "모든 작업을 AI로 대체하지 않음 -이미 깊게 이해하는 지식에다가 AI를 적용함 -반복적인 일만 AI로 속도를 높임"
+    }
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "삼성E&A",
+      "comment": "12년 만의 에너지 사업 재시동 이슈",
       "ts": "20:02",
-      "quote": "삼성 에너지 TF 구성 뉴스 (12년만에 에너지 사업 재시동) -삼성E&A 등",
+      "quote": "삼성 에너지 TF 구성 뉴스 (12년만에 에너지 사업 재시동)",
       "sector": "기타"
     },
     {
-      "broker": null,
-      "stock": "네이버",
-      "rating": null,
-      "tp": null,
+      "name": "네이버",
+      "comment": "소버린 AI 관련 부각",
       "ts": "20:02",
-      "quote": "앤트로픽 페이블 차단 이슈로 소버린AI 부각 -네이버, 삼성에스디에스, LG씨엔에스 등",
+      "quote": "앤트로픽 페이블 차단 이슈로 소버린AI 부각",
       "sector": "IT"
     },
     {
-      "broker": null,
-      "stock": "삼성에스디에스",
-      "rating": null,
-      "tp": null,
+      "name": "삼성에스디에스",
+      "comment": "소버린 AI 관련 부각",
       "ts": "20:02",
-      "quote": "앤트로픽 페이블 차단 이슈로 소버린AI 부각 -네이버, 삼성에스디에스, LG씨엔에스 등",
+      "quote": "앤트로픽 페이블 차단 이슈로 소버린AI 부각",
       "sector": "IT"
     },
     {
-      "broker": null,
-      "stock": "LG씨엔에스",
-      "rating": null,
-      "tp": null,
+      "name": "LG씨엔에스",
+      "comment": "소버린 AI 관련 부각",
       "ts": "20:02",
-      "quote": "앤트로픽 페이블 차단 이슈로 소버린AI 부각 -네이버, 삼성에스디에스, LG씨엔에스 등",
+      "quote": "앤트로픽 페이블 차단 이슈로 소버린AI 부각",
       "sector": "IT"
     }
-  ]
+  ],
+  "noise_ratio": 0.4,
+  "quote": "본인이 직접 할 줄도 모르고 이해도 못하는 일을 AI한테 맡기면, 조잡한 결과물만 쌓일 뿐임"
 }

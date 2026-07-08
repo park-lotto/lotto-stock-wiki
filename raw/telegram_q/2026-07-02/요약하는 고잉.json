@@ -28,14 +28,14 @@
   "stocks_mentioned": [
     {
       "name": "삼성전자",
-      "comment": "포트폴리오 비중 언급",
+      "comment": "반도체 비중 관련 언급",
       "ts": "01:03",
       "quote": "삼성전자,SK하이닉스 비율",
       "sector": "반도체"
     },
     {
       "name": "SK하이닉스",
-      "comment": "포트폴리오 비중 언급",
+      "comment": "반도체 비중 관련 언급",
       "ts": "01:03",
       "quote": "삼성전자,SK하이닉스 비율",
       "sector": "반도체"

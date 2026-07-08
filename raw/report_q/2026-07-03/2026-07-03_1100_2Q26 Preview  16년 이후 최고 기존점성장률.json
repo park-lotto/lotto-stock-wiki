@@ -2,7 +2,7 @@
   "meta": {
     "date": "2026-07-03",
     "broker": "한화투자증권",
-    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-03_1100_2Q26 Preview  16년 이후 최고 기존점성장률.md"
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-03_1100_2Q26 Preview  16년 이후 최고 기존점성장률.md"
   },
   "questionnaire": {
     "target_kind": "stock",
@@ -14,23 +14,22 @@
         "name": "GS리테일",
         "code": "007070",
         "rating": "Buy",
-        "rating_changed": "유지",
+        "rating_changed": false,
         "tp_new": "32,000원",
         "tp_prev": "32,000원",
         "tp_direction": "flat",
-        "earnings_outlook": "GS리테일의 2Q26 영업이익은 1,081억원(+28% YoY)을 기록해 컨센서스(1,012억원)를 소폭 상회할 것으로 추정된다.",
+        "earnings_outlook": "GS리테일의 2Q26 영업이익은 1,081억원(+28% YoY)을 기록해 컨센서스(1,012억원)를 소폭 상회할 것으로 추정된다. 2Q26 기존점성장률은 편의점 +6% YoY, 수퍼 +5% YoY를 추정한다. 편의점 영업이익 722억원(+22.5% YoY), 수퍼 영업이익 84억원(+55% YoY), 홈쇼핑 영업이익 315억원(+25.1% YoY)을 예상한다.",
         "estimate_revision": null,
         "next_catalyst": "본업 실적 개선에 더해 해외 사업 확장의 성과가 가시적으로 확인되거나, 담배가격 인상 등 이벤트 등 편의점 모멘텀이 확대되는 구간",
         "thesis": [
-          "상위권 사업자 중심으로 업계 재편이 나타나면서 질적 성장 중심의 실적 개선이 이어지고 있음",
+          "상위권 사업자 중심으로 업계 재편이 나타나면서 질적 성장 중심의 실적 개선이 이어짐",
           "내수 강세, 외국인 관광객 증가에 따른 수혜",
-          "16년 이후 편의점의 기존점성장률이 +6% YoY를 달성한 예가 없음"
+          "밸류에이션 부담이 크지 않은 P/E 8배 수준"
         ],
-        "valuation_basis": "동사의 P/E는 8배 수준까지 하락하였으며, 밸류에이션 부담이 크지 않음",
+        "valuation_basis": "동사의 P/E는 8배 수준까지 하락하였으며 밸류에이션 부담이 크지 않음",
         "risk": null,
-        "supply_comment": null,
-        "quote": "GS리테일에 대해 투자의견 BUY와 목표주가 3.2만원을 유지한다.",
-        "sector": "소비내수"
+        "supply_comment": "기타",
+        "quote": "GS리테일에 대해 투자의견 BUY와 목표주가 3.2만원을 유지한다."
       }
     ]
   }

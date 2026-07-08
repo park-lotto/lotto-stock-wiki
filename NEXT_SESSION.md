@@ -1,6 +1,48 @@
 # NEXT_SESSION
 
-## ⭐ 최신 세션 (2026-07-06 저녁 · DESKTOP · 대시보드 실장 튜닝)
+## ⭐ 최신 세션 (2026-07-07 · DESKTOP · 순환매 감지기 구현)
+
+어제 설계만 해뒀던 **순환매 감지기**를 구현·배포 완료. 4개 파일 main 커밋+push(post-commit 훅 자동배포).
+
+**① 순환매 감지기 신설** (커밋 69b83905, 설계 0889446d):
+- 신규 `pipeline/atoms/circulation.py` — strength_net 스타일 순수함수. `trigger_candidates`(atoms.db 강한호재 strength≥3), `mover_candidates`(히트맵+5%↑ 타섹터, 트리거섹터 제외), `detect`(게이트: **둘 다 있을 때만 LLM 호출**, 억지연결이면 빈결과 정상 — strength_net '침묵금지'와 반대). 13 유닛테스트 통과.
+- `server.py` — `_circulation_tick()`을 **별도 스레드 대신** `_poll_briefing` 루프의 15분 게이트로 통합(같은 스레드가 weather state 소유 → 레이스 회피). LLM은 `_circ_gemini`(Gemini Flash 1차) — **Sonnet 교체 시 이 함수 하나만** claude -p로 바꾸면 됨.
+- `market.html` — turning_points의 `type:"circulation"` 카드를 🔄로 기존 "시장상황 타임라인"에 노출(mkCard/routing/mapping 3줄). 예: "🔄 반도체 클러스터 착공 확정 → 성신양회 +16% → 건자재 2차수혜".
+
+**② 시장상황 타임라인 테마당 3개제한 제거** (커밋 39a807c7): 같은테마 최신3개로 자르던 `_TIMELINE_THEME_CAP` 삭제 → 실이벤트 많으면 8개까지 채움(8초과=기존 접기). 단 그날 turning_point가 3개뿐이면 여전히 3개(데이터 볼륨 한계, UI 아님).
+
+**⏳ 다음 세션 (이 작업 후속)**:
+1. **순환매 감지기 라이브 검증** — 실서버에서 순환매 카드가 실제 뜨는지, Gemini가 인과를 **보수적으로** 판단하는지(억지연결 안 만드는지) 장중 관측. 품질 부족하면 `_circ_gemini`를 Sonnet(claude -p)으로 교체. market.html JS는 브라우저 하드리프레시(Ctrl+F5) 렌더확인.
+2. **미검증 리스크**: 서버 atoms.db에서 trigger_candidates가 실제 트리거를 잡는지. 계속 0이면 min_strength=3이 서버 데이터엔 너무 높을 수 있음 → 튜닝.
+
+**⚠️ 이월 주의(아래 테마토글 세션 미해결)**: **서버 자동배포 크론 먹통** — 서버 raw/ churn이 pull과 충돌. 이번 순환매 배포도 훅으로 push는 됐으나 **서버 반영은 raw 충돌로 막혀있을 수 있음**. 다음 세션에 서버 pull 상태 먼저 확인.
+
+- 파일: `pipeline/atoms/circulation.py`·`test_circulation.py`, `dashboard/server.py`(_circulation_tick·_circ_gemini), `dashboard/market.html`. 설계 `docs/superpowers/specs/2026-07-07-순환매감지기-design.md`.
+
+---
+
+## (이전) 최신 세션 (2026-07-07 · 대시보드 다크/화이트 테마 토글 + 인사이트 애플 리디자인 배포)
+**커밋 `c4666fe7` main push·서버 수동배포 완료.** 남은 커밋은 "내일 이어서".
+
+**한 일**:
+1. **인사이트 애플 리디자인을 드디어 main에 반영** — 7/5에 완성했던 애플 화이트 리디자인이 `archive/briefing-engine` 브랜치에만 있고 main엔 없었음(그래서 라이브가 계속 옛 다크골드였던 것). 이번에 main으로 가져오면서 `err()` 재시도버튼 버그 수정(retryFn.toString()을 onclick에 직접 박아 함수소스가 화면에 새던 것 → 전역 핸들러 참조로 교체).
+2. **전 대시보드 공통 다크/화이트 토글** (insights/market/net 3페이지):
+   - `:root` 토큰 + `prefers-color-scheme` 기본 + `[data-theme]` override + `localStorage 'sb-theme'` 공유(한 곳서 바꾸면 전 페이지). 우상단 🌙/☀️ 버튼. FOUC 방지 부트스크립트.
+   - insights: 118 하드코딩색 토큰화(검은 애플 CTA버튼은 다크에서 골드로 반전되는 `--cta-bg/--cta-fg` 전용토큰). 다크팔레트는 옛 다크골드 재사용(토큰명 동일).
+   - market(213KB): 크롬 회색램프(#888/#555/#333…)만 `--m-tx*/--m-bd*/--m-elev*` 토큰화(라이트=반전), 채도높은 히트맵 셀은 양테마 공용이라 그대로. 라이트=GitHub풍.
+   - net: GitHub 라이트 팔레트.
+   - 검증: 라이트/다크 헤드리스 스크린샷으로 눈 확인(회귀 없음, CTA 반전·가독성 OK).
+3. **어제(7/6~7/7) 만든 인사이트 결과물 로컬로 회수** — 라이브 사이트에서 만든 노트북/브리핑/인포그래픽은 **서버에만** 저장되고 자동배포는 pull(단방향)이라 로컬로 안 옴. tar-over-ssh로 `out/insights_notebook/` 서버→로컬 동기(67→97개).
+
+**⏳ 내일 이어서 (미커밋 다수)**:
+- **미커밋 상태**: M 448 / ?? 148 / D 1 (대부분 out/insights_notebook 회수분 + raw 크롤 churn). `git add -A 금지`(규칙6), 필요한 것만 선별 커밋.
+- **🚨 서버 자동배포 크론 먹통** — 서버 크롤봇이 수정한 `raw/*` tracked 파일이 들어오는 커밋과 충돌해 `git pull` 막힘(Aborting). 그래서 이번엔 **3파일만 `git checkout origin/main -- dashboard/{insights,market,net}.html`** 로 수동배포함. **근본해결 필요**: 서버 raw/ churn을 git에서 정리(서버 raw를 stash/discard 하거나, raw/를 서버에서 untrack)해야 앞으로 push→자동반영 복구됨.
+- (선택) market 라이트모드 히트맵 셀 미세폴리시 — 셀은 채도라 대체로 OK지만 원하면 라이트 전용 톤 조정.
+- SSH키: `C:/Users/TheRose/crawling_bot_client/LightsailDefaultKey-ap-northeast-2.pem`, 서버 `ubuntu@3.39.179.148`.
+
+---
+
+## (이전) 최신 세션 (2026-07-06 저녁 · DESKTOP · 대시보드 실장 튜닝)
 하루 종일 대시보드 튜닝. 모든 코드 main 커밋·서버 배포 완료(local==origin).
 
 **① 배포 인프라 정비(+사고복구)**: "장시작 차트깨짐" fix가 안 먹힌 근본원인 = **fix를 feat브랜치에 커밋했는데 서버는 main만 추적**. → main 통일, `feat/briefing-engine→archive/briefing-engine` 은퇴(113커밋 보존), `.gitattributes`로 CRLF봉인, **자동배포 크론(`deploy/auto_deploy.sh`, 3분, push만하면 자동반영)**, 서버 고아커밋 복구(백업브랜치 incident-backup-20260706). 메모리 `reference_deploy_truth_branch_ssh`.

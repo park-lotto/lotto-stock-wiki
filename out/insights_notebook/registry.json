@@ -1,12 +1,22 @@
 [
  {
-  "id": "c306d8fd-060b-4c12-b308-7e9d12736a05",
-  "label": "리포트",
+  "id": "30bbbd32-d2db-48f7-ade8-01359d7b6573",
+  "label": "텔레 오늘",
   "date": "2026-07-07",
-  "url": "https://notebooklm.google.com/notebook/c306d8fd-060b-4c12-b308-7e9d12736a05",
-  "atoms": 200,
+  "url": "https://notebooklm.google.com/notebook/30bbbd32-d2db-48f7-ade8-01359d7b6573",
+  "atoms": 163,
   "paths": [
-   "/home/ubuntu/lotto-stock-wiki/out/insights_notebook/리포트_all_2026-07-07.md"
+   "C:\\Users\\TheRose\\Desktop\\로또의 주식\\out\\insights_notebook\\텔레 오늘_today_2026-07-07.md"
+  ]
+ },
+ {
+  "id": "e88e05b5-f986-4e34-b67c-446519c33ca0",
+  "label": "텔레 오늘",
+  "date": "2026-07-07",
+  "url": "https://notebooklm.google.com/notebook/e88e05b5-f986-4e34-b67c-446519c33ca0",
+  "atoms": 163,
+  "paths": [
+   "C:\\Users\\TheRose\\Desktop\\로또의 주식\\out\\insights_notebook\\텔레 오늘_today_2026-07-07.md"
   ]
  },
  {

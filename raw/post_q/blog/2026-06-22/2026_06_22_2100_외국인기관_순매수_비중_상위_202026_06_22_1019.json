@@ -1,0 +1,13 @@
+{
+  "target_kind": "market",
+  "market_direction": "null",
+  "macro_events": [
+    {
+      "fact": "외국인 및 기관 순매수 비중 상위 종목 현황 데이터",
+      "ts": "2026-06-22",
+      "quote": "외국인/기관 순매수 비중 상위 202026-06-22 10:19"
+    }
+  ],
+  "sectors_mentioned": [],
+  "quote": "외국인/기관 순매수 비중 상위 202026-06-22 10:19"
+}

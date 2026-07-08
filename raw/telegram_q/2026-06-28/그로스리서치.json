@@ -1,0 +1,58 @@
+{
+  "reports": [
+    {
+      "broker": "그로쓰리서치",
+      "stock": "한올바이오파마",
+      "rating": null,
+      "tp": null,
+      "ts": "23:37",
+      "quote": "한올바이오파마 IMVT-1402, Evaluate 글로벌 유망 R&D 프로젝트 상위권 선정",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성바이오로직스",
+      "rating": null,
+      "tp": null,
+      "ts": "23:37",
+      "quote": "삼성바이오로직스, 유럽 영업거점 신설·제3바이오캠퍼스 착공",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "리가켐바이오",
+      "rating": null,
+      "tp": null,
+      "ts": "23:37",
+      "quote": "리가켐바이오, 산업은행 등으로부터 5,000억 원 규모 투자 유치",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "로킷헬스케어",
+      "rating": null,
+      "tp": null,
+      "ts": "23:37",
+      "quote": "로킷헬스케어, 자회사 로킷아메리카 나스닥 직상장 최종 단계 돌입",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "디앤디파마텍",
+      "rating": null,
+      "tp": null,
+      "ts": "17:31",
+      "quote": "DD01 잠재 인수자 분석 — 현존 최강 MASH 데이터, 누가 가장 필요한가",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "LS일렉트릭",
+      "rating": null,
+      "tp": null,
+      "ts": "18:01",
+      "quote": "LS일렉트릭, 미국 유타 공장에 2,500억원 투자",
+      "sector": "전력"
+    }
+  ]
+}

@@ -1,9 +1,9 @@
 {
   "target_kind": "market",
-  "market_direction": "neutral",
+  "market_direction": null,
   "macro_events": [
     {
-      "fact": "Smoking Dart가 60개 이상의 무료 주식 관련 텔레그램 채널 정보를 정리하여 제공하는 '텔레그램 인텔리전스' 기능을 신설함.",
+      "fact": "Smoking Dart가 60개 이상의 주식 관련 텔레그램 채널 정보를 일일이 정리하여 제공하는 '텔레그램 인텔리전스' 기능을 신설함",
       "ts": "2026-06-11",
       "quote": "Smoking Dart는 텔레그램 정보를 일일히 정리하는 기능을 추가했으며, 60개 이상의 주식 관련 텔레그램 채널을 대상으로 운영되고 있다."
     }

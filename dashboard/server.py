@@ -153,8 +153,15 @@ def _briefing_keys():
 GEMINI_TEXT_MODELS = ["gemini-3-flash-preview", "gemini-3.1-flash-lite", "gemini-2.5-flash"]
 
 
-def _gemini_text(prompt, keys=None, models=None):
+import concurrent.futures as _cf
+_GEMINI_EXEC = _cf.ThreadPoolExecutor(max_workers=4)  # generate_content가 응답없이 멈춰도 호출 스레드는 안 묶임
+
+
+def _gemini_text(prompt, keys=None, models=None, timeout=45):
     """텍스트 생성 공용 호출 — 모델 폴백 + 키 로테이션 + 503 백오프.
+    generate_content 자체엔 SDK 타임아웃이 없어(네트워크 hang 시 무한대기) 별도 스레드로 던지고
+    timeout초 안에 안 끝나면 포기 — 안 그러면 이 함수를 부르는 단일 백그라운드 루프
+    (_poll_briefing: 시장상황 타임라인·순환매감지 등)가 통째로 멈춘다(2026-07-08 사건).
     반환: {"ok":True,"analysis":str,"model":str} | {"error":str}"""
     try:
         from google import genai
@@ -169,12 +176,16 @@ def _gemini_text(prompt, keys=None, models=None):
         for k in keys:
             client = key_vault.get_client_for_key(k)  # key_vault 캐시 재사용, 매 호출 새 클라이언트 생성 안 함
             try:
-                resp = client.models.generate_content(model=model, contents=prompt)
+                fut = _GEMINI_EXEC.submit(client.models.generate_content, model=model, contents=prompt)
+                resp = fut.result(timeout=timeout)
                 txt = (resp.text or "").strip()
                 if txt:
                     return {"ok": True, "analysis": txt, "model": model}
                 last = "빈 응답"
                 continue   # 다음 키
+            except _cf.TimeoutError:
+                last = f"응답시간초과({timeout}s)"
+                continue   # 다음 키 (버려진 워커는 executor에 남지만 호출 스레드는 진행)
             except Exception as e:
                 last = str(e)
                 if any(s in last for s in ("503", "UNAVAILABLE", "overloaded")):
@@ -1758,7 +1769,8 @@ def _surface_strong_news():
         reps.sort(key=lambda x: x["score"], reverse=True)
         for i, r in enumerate(reps):
             # 상위 + (다채널 보도 or 큰 상승) → '중요' 맨앞 고정
-            r["important"] = (i < 3 and r["score"] >= 5)
+            # 기준 강화(2026-07-08): 상위3→2, 점수5→7 — '중요' 과다노출 완화. 더 줄이려면 이 두 값만 조정.
+            r["important"] = (i < 2 and r["score"] >= 7)
         stored = _briefing_load(BRIEFING_PATH)
         seen = {_news_norm(x.get("headline", "")) for x in (stored.get("items") or [])}
         new = [r for r in reps if _news_norm(r["t"]) not in seen]
@@ -3280,7 +3292,8 @@ _WEATHER_MIN_INTERVAL_S = 90
 _WEATHER_DAILY_CAP = 60
 _weather = {"detect": {"cooldown": {}, "leg": {}}, "state": None,
             "batcher": _bdig.DigestBatcher(900), "model_toggle": 0,
-            "calib_today": [], "synth_count": 0, "last_synth_ts": 0.0}
+            "calib_today": [], "synth_count": 0, "last_synth_ts": 0.0,
+            "circulation_seen": set()}   # 순환매: 오늘 (트리거섹터,mover코드) 중복카드 방지
 
 
 def _weather_tg(text: str):
@@ -3322,6 +3335,7 @@ def _weather_tick():
         _weather["detect"] = {"cooldown": {}, "leg": {}}
         _weather["calib_today"] = []
         _weather["synth_count"] = 0
+        _weather["circulation_seen"] = set()   # 날짜 바뀌면 순환매 중복셋도 초기화
     _weather["state"] = st
 
     mf_ready = _prewarm_cache.get("market_flow") is not None
@@ -3466,9 +3480,64 @@ def _weather_tick():
     _weather["state"] = st
 
 
+_CIRC_INTERVAL_S = 900   # 순환매 매칭 독립주기 15분
+
+
+def _circ_gemini(prompt: str) -> dict:
+    """순환매 매칭용 LLM 호출(1차 Gemini Flash). Sonnet 교체 시 여기만 바꾸면 됨.
+    반환: {"ok":True,"analysis":str} | {"error":str} — circulation.detect 규약."""
+    return _gemini_text(prompt, keys=_briefing_keys(), models=GEMINI_TEXT_MODELS)
+
+
+def _circulation_tick():
+    """15분 게이트: 강한 원자(트리거섹터)+타섹터 급등(히트맵+5%)이 둘 다 있을 때만
+    Gemini에게 순환매 인과 매칭을 물어 카드 생성. 억지 연결이면 빈 결과가 정상.
+    _weather_tick과 같은 스레드에서 호출 → state 동시변경 레이스 없음."""
+    from pipeline.atoms import circulation as _circ
+    hm = (_heatmap_cache.get("all") or {}).get("data") or {}
+    if not hm.get("sectors"):
+        return   # 히트맵 아직 없음(재시작 직후·장전) → 조용히 스킵
+    triggers = _circ.trigger_candidates(days=3, min_strength=3)  # 기본 db.query_atoms 사용
+    if not triggers:
+        return
+    exclude = {t["sector"] for t in triggers}
+    movers = _circ.mover_candidates(hm, exclude_sectors=exclude, min_rate=5.0)
+    if not movers:
+        return
+    now = datetime.now()
+    cards = _circ.detect(triggers, movers, llm_fn=_circ_gemini,
+                         ts=now.strftime("%H:%M"))
+    if not cards:
+        return
+    seen = _weather["circulation_seen"]
+    fresh = []
+    for c in cards:
+        key = (c.get("trigger_sector"), c.get("mover_code"))
+        if key in seen:
+            continue          # 오늘 이미 나온 조합 → 스킵
+        seen.add(key)
+        c["date"] = now.strftime("%Y-%m-%d")
+        c["major"] = True     # 순환매는 시장상황 타임라인 상단(⭐급) 대우
+        fresh.append(c)
+    if not fresh:
+        return
+    st = _weather["state"] or _bstate.load_state(_WEATHER_STATE_PATH)
+    st.setdefault("turning_points", [])
+    st["turning_points"].extend(fresh)
+    _weather["state"] = st
+    _bstate.save_state(_WEATHER_STATE_PATH, st)
+    # insight의 verdict/narrative는 보존하고 turning_points만 갱신해 재기록
+    _briefing_set_insight(BRIEFING_PATH, {
+        "ts": now.strftime("%H:%M"),
+        "verdict": st.get("verdict"), "narrative": st.get("narrative", ""),
+        "turning_points": st["turning_points"][-12:],
+        "session_phase": st.get("session_phase")})
+
+
 def _poll_briefing():
     """30초 주기 — market_flow 임계치 감지 + 12분 고정주기 종합. 감지 즉시 종합도 트리거."""
     _last_fixed_synth = 0.0
+    _last_circ = 0.0
     while True:
         try:
             mf_cached = _prewarm_cache.get("market_flow") or {}
@@ -3490,6 +3559,12 @@ def _poll_briefing():
             # 시황 브리핑 엔진: market_flow 캐시 유무와 무관하게 매 틱 실행
             # (주말·KIS다운으로 캐시 비어도 자체 가드로 heartbeat+뉴스 기반 갱신)
             _weather_tick()
+
+            # 순환매 감지기: 15분 게이트(같은 스레드 → weather state 레이스 없음).
+            # _weather_tick 직후 실행해야 st["turning_points"] 최신본에 얹는다.
+            if time.time() - _last_circ >= _CIRC_INTERVAL_S:
+                _last_circ = time.time()
+                _circulation_tick()
         except Exception:
             # 예전엔 조용히 삼켜서 원인 추적이 안 됐음(2026-07-06) — 트레이스백은 로그에 남긴다.
             import traceback as _tb

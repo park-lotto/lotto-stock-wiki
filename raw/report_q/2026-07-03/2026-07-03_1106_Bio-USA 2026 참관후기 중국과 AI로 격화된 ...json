@@ -5,44 +5,57 @@
     "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-03_1106_Bio-USA 2026 참관후기 중국과 AI로 격화된 ...md"
   },
   "questionnaire": {
-    "target_kind": "market",
     "broker": "하나증권",
     "analyst": "김선아",
     "report_date": "2026.07.03",
-    "market_direction": "중립",
+    "target_kind": "market",
+    "market_direction": null,
     "macro_vars": [
-      "미국 정부의 정책과 규제 급변",
-      "국가 안보 기반 중국 바이오 규제",
-      "미국 IRA 법안",
-      "미국 NIH 예산 40% 삭감"
+      "미국의 대중국 정책 및 규제",
+      "IRA 법안",
+      "NIH 예산 삭감",
+      "글로벌 공급망 재편"
     ],
     "recommended_sectors": [
       {
         "sector": "바이오",
-        "stance": "중립",
-        "reason": "AI 및 공급망 변화에 따른 파트너십 구축 중요성 증대"
+        "stance": "비중확대",
+        "reason": "AI 기술 접목을 통한 개발 속도 가속화 및 선순환적 생태계 구축, 세포 및 유전자 치료제 시장의 성장"
+      },
+      {
+        "sector": "중국",
+        "stance": "비중확대",
+        "reason": "AI 인프라 투자와 신약 개발 파이프라인의 양적 확대 및 글로벌 신약 개발 환경에서의 속도전 주도"
       }
     ],
     "style": null,
     "event_calendar": [
       {
         "date": "2026.06.22-25",
-        "event": "Bio-USA 2026"
+        "event": "Bio-USA 2026 컨퍼런스 개최"
+      },
+      {
+        "date": "2026.06",
+        "event": "중국 국가발전개혁위원회(NDRC) AI 인프라망 구축 추진"
       }
     ],
     "top_picks": [
-      "삼성바이오로직스",
-      "셀트리온",
-      "SK팜테코",
-      "에스티팜",
-      "비티젠",
-      "프레스티지바이오파마",
-      "롯데바이오사이언스",
-      "바이넥스",
-      "일동제약",
-      "에이비엘바이오"
+      "Samsung Biologics",
+      "Celltrion",
+      "SK Pharmteco",
+      "ST Pharm",
+      "Prestige Biopharma",
+      "Lotte Biologics",
+      "Binex",
+      "Novo Nordisk",
+      "J&J",
+      "Genentech",
+      "Merck & Co.",
+      "Eli Lilly",
+      "Insilico Medicine",
+      "MediLink Therapeutics"
     ],
-    "risk": "미국 정부의 정책 및 규제 불확실성, NIH 예산 삭감, 글로벌 공급망 내 중국 기업 배제 정책",
+    "risk": "미국의 대중국 정책 견제로 인한 바이오시큐어법 관련 법적 리스크, NIH 예산 삭감으로 인한 기초 연구 약화 및 글로벌 경쟁력 저하 우려",
     "quote": "미국은 완전한 onshoring는 불가능함을 인지해야 하고, 중국의 발전을 저지하려고 노력할 게 아니라, “성공하지 못할 미국”을 만들고 있는 것이 문제임을 인식해야 한다는 지적"
   }
 }

@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "씨어스",
+      "signal": "bull",
+      "reason": "모비케어 FDA 510(k) 승인 획득",
+      "ts": "2026-06-29",
+      "quote": "씨어스 모비케어 FDA 승인 축",
+      "sector": "바이오"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "씨어스 모비케어 FDA 510(k) 승인",
+      "ts": "2026-06-29",
+      "quote": "씨어스 모비케어 FDA 승인 축 510(k) Premarket Notification"
+    }
+  ],
+  "quote": "씨어스 모비케어 FDA 승인 축"
+}

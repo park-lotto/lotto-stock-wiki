@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-01",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-02_0802_더 좋아졌는데 더 낮아진 밸류에이션.md"
+  },
+  "questionnaire": {
+    "broker": "DS투자증권",
+    "analyst": "조대형, 김수현",
+    "report_date": "2026.07.01",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "디케이티",
+        "code": "290550",
+        "rating": "매수",
+        "rating_changed": false,
+        "tp_new": "41,000원",
+        "tp_prev": "34,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2Q26F 매출액 1,363억원(+14.8% YoY)과 영업이익 88억원(+7.4% YoY, OPM 6.5%)을 전망한다.",
+        "estimate_revision": "목표주가 상향은 26년과 27년 연간 영업이익 추정치를 각각 48.8%와 26.6% 상향함에 기인한다.",
+        "next_catalyst": "휴머노이드 고객사 PoC 단계 이후 하반기부터 본격적인 양산",
+        "thesis": [
+          "FPCA와 충전 모듈을 포함해 동사의 부품이 휴머노이드 시장으로 전방을 다변화할 가능성이 높다는 판단이다.",
+          "기존 사업인 Auto OLED 수주 잔고와 설계까지 담당하는 ESS향 BMS의 공급 증가에 따른 호실적 흐름 지속 전망.",
+          "27F 매출액 7,384억원(+40.1% YoY)과 영업이익 591억원(+86.56 YoY) 전망 및 로봇향 매출 반영 시 리레이팅 기대."
+        ],
+        "valuation_basis": "IT기업의 통상적 PER 배수에 로봇 고려해 50% 할증한 15.0배 적용",
+        "risk": null,
+        "supply_comment": "휴머노이드 고객사와의 충전 모듈 PoC는 4월 초도 물량 납품을 시작으로 본격화 된 것으로 파악된다.",
+        "quote": "투자의견 ‘매수’를 유지하고 목표주가를 41,000원으로 상향한다."
+      }
+    ],
+    "sector": "IT"
+  }
+}

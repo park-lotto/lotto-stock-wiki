@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-01",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-02_0800_3분기까지 마진 압박 불가피.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "김소혜, 김나우",
+    "report_date": "2026년 7월 1일",
+    "stocks": [
+      {
+        "name": "NAVER",
+        "code": "035420",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "300,000원",
+        "tp_prev": "300,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "동사의 2Q26 실적은 매출액 3.39조 원, 영업이익 5,447억 원을 기록하며 영업이익 컨센서스를 6% 하회한 것으로 추정한다.",
+        "estimate_revision": "실적 추정치 변동은 없다.",
+        "next_catalyst": "AIDC 및 클라우드, 디지털자산 등 신규 사업 진행에 대한 성과들이 순차적으로 공개되기를 기대한다.",
+        "thesis": [
+          "광고 매출액은 AI기반 애드부스트 확대 및 커머스광고 호조세가 지속되며 YoY 9.6% 성장한 것으로 예상한다.",
+          "커머스 포함 서비스 매출액은 스마트스토어 거래엑 성장세가 이어지며 YoY 35.5% 증가한 것으로 추정한다.",
+          "파트너비는 월드컵 중계권 비용 반영으로 QoQ 8% 증가, 인프라비와 마케팅비도 QoQ 각각 5%, 3.6% 늘어난 것으로 추정한다."
+        ],
+        "valuation_basis": null,
+        "risk": "투자를 위한 비용 압박이 지속되며 영업이익률은 16.1%로 한차례 낮아질 것으로 예상한다.",
+        "supply_comment": null,
+        "quote": "동사의 2Q26 실적은 견조한 매출 성장세에도 향후 성장을 위한 투자가 지속되며 영업이익은 기대치를 하회한 것으로 추정합니다.",
+        "sector": "IT"
+      }
+    ]
+  }
+}

@@ -2,66 +2,63 @@
   "sector_name": "기타",
   "sector_view": "중립",
   "points": [
-    "2026년 상반기 글로벌 비철금속 시장은 지정학적 불확실성에 따른 품목별 차별화 흐름을 보임.",
-    "미국 전역 폭염으로 인한 전력 수급 불안정 및 에너지원 구조 변화 가속화.",
-    "에너지·광물 부문에서 공급망 이슈와 수요 변화에 따른 생산 목표 조정 및 임금 상승 발생."
+    "글로벌 지정학적 리스크로 인한 비철금속 시장 변동성 확대",
+    "미국 폭염 및 전력망 수급 불안 지속",
+    "에너지 산업 내 천연가스 비중 확대 및 시추 관련 임금 상승"
   ],
   "stocks_mentioned": [
     {
       "name": "SQM",
-      "comment": "Codelco와의 합작사를 통해 연간 리튬 생산 목표를 최대 47만 톤으로 대폭 상향함.",
+      "comment": "Novandino 합작사를 통해 리튬 연간 생산 목표를 47만 톤으로 대폭 상향함.",
       "ts": "19:12",
-      "quote": "SQM-Codelco Venture Maps Path to Higher Lithium Output in Chile",
+      "quote": "SQM과 Codelco의 Novandino 합작사는 리튬 연간 생산 목표를 최대 47만 톤으로 제시했습니다.",
       "sector": "2차전지"
     },
     {
       "name": "Codelco",
-      "comment": "SQM과의 합작사를 통해 리튬 생산량 확대 계획을 발표함.",
+      "comment": "SQM과의 합작을 통해 리튬 생산량 확대 추진 중.",
       "ts": "19:12",
-      "quote": "SQM-Codelco Venture Maps Path to Higher Lithium Output in Chile",
+      "quote": "SQM과 Codelco의 Novandino 합작사는 리튬 연간 생산 목표를 최대 47만 톤으로 제시했습니다.",
       "sector": "기타"
     },
     {
       "name": "Airbus",
-      "comment": "공급망 차질에도 상반기 350대를 인도했으며 생산 확장에 속도를 내고 있음.",
+      "comment": "공급망 차질에도 상반기 350대 인도 달성, 하반기 생산 가속화 필요.",
       "ts": "19:33",
-      "quote": "Airbus Delivered 350 Planes in First Half Amid Supply Chain Woes",
-      "sector": "기타"
-    },
-    {
-      "name": "Boeing",
-      "comment": "트럼프 행정부의 지원을 바탕으로 생산량을 회복하며 에어버스를 추격 중임.",
-      "ts": "19:33",
-      "quote": "한편 경쟁사인 보잉은 트럼프 행정부의 지원을 바탕으로 생산량을 회복하며 에어버스를 추격하고 있습니다.",
+      "quote": "에어버스가 공급망 차질 속에서도 상반기에 약 350대의 항공기를 인도했습니다.",
       "sector": "기타"
     }
   ],
   "events": [
     {
-      "fact": "금 가격 전망 하향 및 장기 강세 유지",
+      "fact": "비철금속 시장의 품목별 차별화",
+      "ts": "18:45",
+      "quote": "알루미늄은 중동 제련소 타격으로 공급 충격을 겪은 후 안정을 찾고 있으나 재고 고갈 문제에 직면해 있습니다."
+    },
+    {
+      "fact": "JPMorgan의 금 가격 전망 하향",
       "ts": "18:51",
-      "quote": "JPMorgan sees $4,500 gold price in fourth quarter, says risks to downside"
+      "quote": "JPMorgan은 연말 금 가격 전망을 기존 온스당 6,000달러에서 4분기 4,500달러로 낮췄습니다."
     },
     {
-      "fact": "미국 폭염으로 인한 전력망 수급 압박",
+      "fact": "미국 내 폭염으로 인한 전력망 수급 압박",
       "ts": "18:52",
-      "quote": "Heat wave disrupts Fourth of July events across US, strains power grids"
+      "quote": "열돔 현상에 따른 냉방 수요 폭증과 발전기 고장이 겹치며 주요 전력망의 수급 압박이 극에 달했습니다."
     },
     {
-      "fact": "유전 서비스 근로자 임금 사상 최고치 경신",
+      "fact": "유전 서비스 부문 임금 상승",
       "ts": "19:17",
-      "quote": "Oilfield-Contractor Pay Hits Fresh Record as War Spurs Drilling"
+      "quote": "유전 서비스 근로자 임금은 5월까지 3개월 연속 상승하며 사상 최고치를 기록했습니다."
     },
     {
       "fact": "독일 석탄 발전소 폐쇄 중단 권고",
       "ts": "19:31",
-      "quote": "Germany Should Stop Shutting Off Coal Plants, Grid Operator Says"
+      "quote": "독일 송전망 운영사 앰프리온이 신규 가스 발전 용량이 충분히 확보될 때까지 석탄 발전소의 추가 폐쇄를 중단해야 한다고 촉구했습니다."
     },
     {
-      "fact": "2030년 미국 내 천연가스 에너지 비중 원유 추월 전망",
+      "fact": "미국 내 천연가스 에너지원 1위 등극 예상",
       "ts": "19:34",
-      "quote": "America Runs on Natural Gas: Fuel Set to Surpass Oil as US Top Energy Source by 2030"
+      "quote": "천연가스는 2030년까지 미국 최대 에너지원으로 원유를 넘어설 가능성이 있습니다."
     }
-  ],
-  "quote": "2026년 상반기 지정학적 이슈와 기후 변화가 글로벌 원자재 및 에너지 시장의 공급망과 수요 구조에 변동성을 확대하고 있습니다."
+  ]
 }
