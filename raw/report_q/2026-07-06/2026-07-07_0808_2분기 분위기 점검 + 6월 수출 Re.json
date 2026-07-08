@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date": "2026-07-06",
+    "broker": "하나증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-07_0808_2분기 분위기 점검 + 6월 수출 Re.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "하나증권",
+    "analyst": "심은주, 고찬결",
+    "report_date": "2026.7.6",
+    "market_direction": null,
+    "macro_vars": [
+      "원달러",
+      "원위안",
+      "곡물가"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "소비내수",
+        "stance": "비중확대",
+        "reason": "음식료 업종 대형주는 안정적인 주가 흐름 보여줬으며 중소형주에 대한 저가 매수세가 유입됨"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.6",
+        "event": "주요 아미노산 업체 정기 보수 시작"
+      }
+    ],
+    "top_picks": [
+      "오리온",
+      "CJ제일제당",
+      "삼양식품"
+    ],
+    "risk": "음식료 업체의 매출 대비 high single~10%가 부자재 비중으로 2분기는 원가 부담이 본격화되는 시점",
+    "quote": "전주 음식료 업종지수는 코스피 대비 8.7%p 아웃퍼폼 시현, 코스피는 반도체 대형주 중심으로 큰 폭 하락했으나 상대적으로 음식료 업종 대형주는 안정적인 주가 흐름 보여줬으며 중소형주에 대한 저가 매수세가 유입됨"
+  }
+}

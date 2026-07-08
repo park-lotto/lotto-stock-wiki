@@ -1,0 +1,29 @@
+{
+  "target_kind": "market",
+  "market_direction": "neutral",
+  "macro_events": [
+    {
+      "fact": "올 52주 신고가 1천508개, 신저가도 1천763개 발생하며 시장 양극화 및 변동성 확대",
+      "ts": "2026-06-14",
+      "quote": "올 52주 신고가 1천508개, 신저가도 1천763개…양극화·변동성↑"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "바이오",
+      "stance": "긍정",
+      "comment": "버텍스 파마슈티컬, Twist Bioscience, Nutex Health, 글라우코스, 프리비아 헬스 그룹 등 52주 신고가 경신"
+    },
+    {
+      "sector": "소비내수",
+      "stance": "긍정",
+      "comment": "Credit Acceptance Corporation, T. Rowe Price Group, HSBC, 프랭클린 리소시스, 시리우스 XM, 아메란트 뱅코프, 프리메리카, 노스웨스트 뱅크셰어스 등 금융 및 서비스업 강세"
+    },
+    {
+      "sector": "IT",
+      "stance": "중립",
+      "comment": "팔란티어는 52주 신고가 대비 45% 하락, Viasat 등은 신고가 경신"
+    }
+  ],
+  "quote": "올 52주 신고가 1천508개, 신저가도 1천763개…양극화·변동성↑"
+}

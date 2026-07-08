@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "date": "2026-07-06",
+    "broker": "하나증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-06_1105_불확실할 때에는 숫자를 보자.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김록호",
+    "report_date": "2026.7.6",
+    "target_kind": "market",
+    "market_direction": "비중확대 전략 유지",
+    "macro_vars": [
+      "DRAM 수출 데이터",
+      "메모리 가격 상승",
+      "Meta발 리스크",
+      "Apple 판가 인상",
+      "Nvidia발 LPDDR 수요",
+      "삼성전자 26년 2분기 잠정 실적"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "비중확대",
+        "reason": "공급 부족에 따른 가격 상승 기조가 쉽게 꺾일 수 없는 상황이며, 3분기 메모리 가격 상승폭이 추정치를 상회할 가능성이 높음"
+      }
+    ],
+    "style": "성장 및 펀더멘털 중심",
+    "event_calendar": [
+      {
+        "date": "2026.7.7",
+        "event": "삼성전자 26년 2분기 잠정 실적 발표"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스"
+    ],
+    "risk": "메모리 반도체 수출 데이터의 월별 변동성, Meta 수익화 고민 등 불확실성 증대",
+    "quote": "실적 상향 조정이 마무리되기 전까지 주가의 우상향이 가능하다는 기존 생각에 변함이 없다."
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "date": "2026-07-03",
+    "broker": "한국IR협의회 기업리서치센터",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-04_0802_AI SoC 병목을 푸는 인프라 IP 기업.md"
+  },
+  "questionnaire": {
+    "broker": "한국IR협의회 기업리서치센터",
+    "analyst": "오정하, 권지승",
+    "report_date": "2026.07.03",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "오픈엣지테크놀로지",
+        "code": "394280",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": {
+          "2026_revenue": "179억원",
+          "2026_revenue_yoy": "+11.4%",
+          "2026_operating_loss": "231억원",
+          "1q26_revenue": "27억원",
+          "1q26_revenue_yoy": "-44.3%",
+          "1q26_operating_loss": "90억원"
+        },
+        "estimate_revision": null,
+        "next_catalyst": "하반기 K-온디바이스 AI 반도체 사업 관련 국내 수주와 해외 수주",
+        "thesis": [
+          "AI 반도체 설계에 필요한 핵심 IP(NPU, NoC Interconnect, DDR Memory Controller, DDR PHY) 포트폴리오를 보유하여 '연산-이동-저장 연결' 전반을 지원",
+          "K-온디바이스 AI 반도체 기술개발 사업 및 삼성 파운드리 생태계 확대에 따른 중장기 수혜 기대",
+          "북미 인력 축소 및 정부보조금 확대 등을 통해 비용 효율화 및 적자 폭 축소 진행"
+        ],
+        "valuation_basis": "PSR(주가매출비율) 접근",
+        "risk": "K-온디바이스 AI반도체 기술개발 사업에서 예상보다 낮은 규모의 국내 수주를 확보할 가능성",
+        "supply_comment": "삼성 파운드리 8nm 이하 첨단 공정에서 LPDDR5X 이상 메모리 IP 수요 확대가 예상됨",
+        "quote": "오픈엣지테크놀로지는 AI 반도체 설계에 필요한 핵심 IP를 제공하는 기업. 주요 IP는 AI 연산을 담당하는 NPU와 데이터 이동 및 메모리 접근을 지원하는 NoC Interconnect, DDR Memory Controller, DDR PHY 등으로 구성. AI 반도체의 성능을 좌우하는 ‘연산-이동-저장 연결’ 전반을 지원할 수 있는 IP 포트폴리오를 보유한 점이 경쟁력"
+      }
+    ]
+  }
+}

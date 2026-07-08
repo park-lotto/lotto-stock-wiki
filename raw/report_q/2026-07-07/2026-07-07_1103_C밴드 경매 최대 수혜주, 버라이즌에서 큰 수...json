@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date": "2026-07-07",
+    "broker": "하나증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-07_1103_C밴드 경매 최대 수혜주, 버라이즌에서 큰 수...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김홍식",
+    "report_date": "2026년 07월 07일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "케이엠더블유",
+        "code": "032500",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "70,000원",
+        "tp_prev": "70,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "quote": "2026년 매출액 150.7십억원, 영업이익 1.6십억원, 2027년 매출액 390.6십억원, 영업이익 111.9십억원으로 추정",
+          "details": "2026년 매출 150.7십억원, 영업이익 1.6십억원; 2027년 매출 390.6십억원, 영업이익 111.9십억원"
+        },
+        "estimate_revision": null,
+        "next_catalyst": "2026년 말 이루어질 어퍼 C밴드 경매 및 버라이즌/AT&T의 대규모 CAPEX 집행",
+        "thesis": [
+          "미국 AWS-3 밴드 낙찰 및 어퍼 C밴드 경매 추진에 따른 2027년 미국 시장 대호황 가능성",
+          "미국 버라이즌의 신규 주파수 확보 및 적극적인 네트워크 투자 계획",
+          "데이터센터와 무관함에도 동반 급락한 주가 수준과 2027~2028년 이론상 최대 매출액 대비 낮은 시가총액"
+        ],
+        "valuation_basis": "2027~2028년 이론상 달성 가능한 KMW 최대 매출액과 과거 해외 통신장비 업종 Multiple 수준을 감안",
+        "risk": null,
+        "supply_comment": "미국의 대중국 장비/부품 규제가 심해 삼성전자의 버라이즌 RU 부분을 맡게 될 KMW의 위상이 높아질 전망",
+        "quote": "KMW에 대한 투자의견 매수, 12개월 목표주가 70,000원을 유지한다.",
+        "sector": "통신"
+      }
+    ]
+  }
+}

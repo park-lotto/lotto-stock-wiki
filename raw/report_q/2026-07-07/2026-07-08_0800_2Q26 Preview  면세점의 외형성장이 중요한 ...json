@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-07",
+    "broker": "한화투자증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-08_0800_2Q26 Preview  면세점의 외형성장이 중요한 ...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "이진협",
+    "report_date": "2026년 7월 7일",
+    "stocks": [
+      {
+        "name": "호텔신라",
+        "code": "008770",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": 75000,
+        "tp_prev": 98000,
+        "tp_direction": "down",
+        "earnings_outlook": "호텔신라는 2Q26 영업이익 586억원(+573% YoY)을 기록해 영업이익 컨센서스(513억원)를 상회할 것으로 추정한다.",
+        "estimate_revision": "목표주가 하향은 면세점업에 대한 밸류에이션 하향(기존 25배 → 20배)을 반영한 것이다.",
+        "next_catalyst": "면세점의 추세적 외형성장",
+        "thesis": [
+          "2Q26 영업이익 컨센서스 상회 예상",
+          "TR부문 인천공항 DF1 철수에 따른 적자 감축 및 수익성 개선",
+          "호텔부문 제주호텔 OCC 회복 및 서울/스테이 ADR 상승에 따른 영업 레버리지 효과"
+        ],
+        "valuation_basis": "면세점업에 대한 밸류에이션 하향(기존 25배 → 20배)을 반영",
+        "risk": null,
+        "supply_comment": "호텔부문은 호텔 공급부족 상황에서 ADR 중심의 견조한 성장세가 이어질 것으로 전망한다.",
+        "quote": "호텔신라에 대해 투자의견 BUY를 유지하며, 목표주가를 7.5만원으로 하향한다.",
+        "sector": "소비내수"
+      }
+    ]
+  }
+}

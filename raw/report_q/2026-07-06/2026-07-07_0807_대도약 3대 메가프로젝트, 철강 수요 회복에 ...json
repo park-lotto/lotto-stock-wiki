@@ -1,0 +1,53 @@
+{
+  "meta": {
+    "date": "2026-07-06",
+    "broker": "하나증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-07_0807_대도약 3대 메가프로젝트, 철강 수요 회복에 ...md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "하나증권",
+    "analyst": "박성봉, 김승규",
+    "report_date": "2026.07.06",
+    "market_direction": "중립",
+    "macro_vars": [
+      "철강가격",
+      "원재료가격",
+      "비철금속가격",
+      "귀금속가격",
+      "조강생산량",
+      "중국 철강 PMI"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "철강",
+        "stance": "긍정적",
+        "reason": "대도약 3대 메가프로젝트(반도체, AI 데이터센터, 전력 인프라) 추진에 따른 철강 수요 확대 기대"
+      }
+    ],
+    "style": "가치주(낙폭 과대 아시아 주요국 철강사 중심)",
+    "event_calendar": [
+      {
+        "date": "2026.07.03",
+        "event": "동국제강, 7월 둘째 주 철근價 91만 4,000원으로 인상"
+      },
+      {
+        "date": "2026.07.02",
+        "event": "포스코, 에너지까지 코어 사업 확장…2035년 영업익 13조 목표"
+      }
+    ],
+    "top_picks": [
+      "POSCO홀딩스",
+      "현대제철",
+      "고려아연",
+      "세아베스틸지주",
+      "BAO STEEL",
+      "A. MITTAL",
+      "NSSMC",
+      "TATA STEEL",
+      "NUCOR"
+    ],
+    "risk": "중국 철강 수요 둔화 및 재고 증가, 미국 금리 인상 가능성 확대",
+    "quote": "대도약 3대 메가프로젝트, 철강 수요 회복에 긍정적"
+  }
+}

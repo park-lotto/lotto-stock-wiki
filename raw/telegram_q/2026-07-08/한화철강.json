@@ -1,0 +1,62 @@
+{
+  "sector_name": "기타",
+  "sector_view": "중립",
+  "points": [
+    "중국과 홍콩이 위안화 국제화를 위해 채권 및 금 거래 인프라를 강화하고 있습니다.",
+    "중국의 희토류 수출 통제로 인해 일본의 핵심 광물 공급망에 차질이 발생하고 있습니다.",
+    "걸프 산유국들의 증산 경쟁으로 인해 OPEC의 가격 통제력이 약화되고 유가 하방 압력이 커지고 있습니다.",
+    "미국의 재생에너지 보조금 축소가 전력 가격 상승과 공급 불안정성을 초래할 가능성이 제기됩니다."
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "금/위안화 관련주",
+      "comment": "중국과 홍콩의 채권·금 거래 활성화 조치로 위안화 유동성 및 거래 인프라가 확대되었습니다.",
+      "ts": "07:56",
+      "quote": "중국과 홍콩은 홍콩의 채권·금 거래 활성화를 위한 다양한 조치를 발표했습니다.",
+      "sector": "기타"
+    },
+    {
+      "name": "희토류 관련주",
+      "comment": "중국의 수출 통제 지속으로 일본의 자원 부족 영향이 가시화되고 있습니다.",
+      "ts": "07:59",
+      "quote": "중국의 희토류 수출 통제가 지속되면서 일본 경제 전반에 자원 부족 영향이 나타나기 시작했습니다.",
+      "sector": "기타"
+    },
+    {
+      "name": "정유 관련주",
+      "comment": "걸프 산유국들의 증산 움직임으로 OPEC의 영향력이 약화되며 유가 하방 압력이 커지고 있습니다.",
+      "ts": "08:06",
+      "quote": "걸프 산유국들이 전후 재정 회복과 점유율 확보를 위해 공격적으로 증산·가격 인하에 나서면서 유가 하방 압력이 증가하고 있습니다.",
+      "sector": "기타"
+    },
+    {
+      "name": "신재생에너지 관련주",
+      "comment": "미국의 연방 세액공제 축소로 재생에너지 프로젝트 위축 및 전력 가격 상승이 우려됩니다.",
+      "ts": "08:08",
+      "quote": "미국은 풍력·태양광 프로젝트에 대한 연방 세액공제 축소를 앞당겼습니다.",
+      "sector": "신재생"
+    }
+  ],
+  "events": [
+    {
+      "fact": "홍콩, 채권 및 금 거래 활성화 조치 발표",
+      "ts": "07:56",
+      "quote": "Beijing bolsters Hong Kong bond, gold trading in global yuan push"
+    },
+    {
+      "fact": "중국, 일본 대상 희토류 수출 차단",
+      "ts": "07:59",
+      "quote": "Corporate Japan's rare-earth warnings get louder as China keeps the spigot closed"
+    },
+    {
+      "fact": "걸프 산유국 증산 경쟁 및 유가 하방 압력",
+      "ts": "08:06",
+      "quote": "OPEC is likely loser in Gulf’s post-war race for market share"
+    },
+    {
+      "fact": "미국, 풍력·태양광 세액공제 축소",
+      "ts": "08:08",
+      "quote": "Killing wind and solar subsidies will make US electricity more expensive"
+    }
+  ]
+}

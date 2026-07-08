@@ -1,0 +1,19 @@
+{
+  "target_kind": "market",
+  "market_direction": "neutral",
+  "macro_events": [
+    {
+      "fact": "환율 하루 30원 급락",
+      "ts": "2026-07-04",
+      "quote": "환율 하루 30원 급락…SK하이닉스발 달러 매도 영향"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "반도체",
+      "stance": "긍정",
+      "comment": "SK하이닉스발 달러 매도 및 파운드리 관련 빅테크 협력 기대감"
+    }
+  ],
+  "quote": "세계 최고 몸값 AI 앤트로픽, 첫 자체 칩파트너로 삼성?…엔비디아–TSMC vs 앤트로픽-삼성전자 '솔솔', 환율 하루 30원 급락…SK하이닉스발 달러 매도 영향, 인텔, SK하이닉스 사장 출신 이석희 영입…파운드리 부활 승부수"
+}

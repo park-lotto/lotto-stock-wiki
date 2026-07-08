@@ -1,5 +1,65 @@
 [
  {
+  "id": "c306d8fd-060b-4c12-b308-7e9d12736a05",
+  "label": "리포트",
+  "date": "2026-07-07",
+  "url": "https://notebooklm.google.com/notebook/c306d8fd-060b-4c12-b308-7e9d12736a05",
+  "atoms": 200,
+  "paths": [
+   "/home/ubuntu/lotto-stock-wiki/out/insights_notebook/리포트_all_2026-07-07.md"
+  ]
+ },
+ {
+  "id": "28bfe5a8-759b-4c92-8b6b-e93499999dcb",
+  "label": "알테오젠",
+  "date": "2026-07-07",
+  "url": "https://notebooklm.google.com/notebook/28bfe5a8-759b-4c92-8b6b-e93499999dcb",
+  "atoms": 24,
+  "paths": [
+   "/home/ubuntu/lotto-stock-wiki/out/insights_notebook/알테오젠_today_2026-07-07.md"
+  ]
+ },
+ {
+  "id": "8531daef-9c1b-4040-9c46-d129dbfd5a3a",
+  "label": "리포트 오늘",
+  "date": "2026-07-07",
+  "url": "https://notebooklm.google.com/notebook/8531daef-9c1b-4040-9c46-d129dbfd5a3a",
+  "atoms": 30,
+  "paths": [
+   "/home/ubuntu/lotto-stock-wiki/out/insights_notebook/리포트 오늘_today_2026-07-07.md"
+  ]
+ },
+ {
+  "id": "34e22d6e-dbf6-4ca9-8635-7aae9d01b2bc",
+  "label": "유튜브 오늘",
+  "date": "2026-07-07",
+  "url": "https://notebooklm.google.com/notebook/34e22d6e-dbf6-4ca9-8635-7aae9d01b2bc",
+  "atoms": 7,
+  "paths": [
+   "/home/ubuntu/lotto-stock-wiki/out/insights_notebook/유튜브 오늘_today_2026-07-07.md"
+  ]
+ },
+ {
+  "id": "8db0310a-fcc7-4bd7-a294-4c1ed63dc32f",
+  "label": "유튜브 오늘",
+  "date": "2026-07-07",
+  "url": "https://notebooklm.google.com/notebook/8db0310a-fcc7-4bd7-a294-4c1ed63dc32f",
+  "atoms": 7,
+  "paths": [
+   "/home/ubuntu/lotto-stock-wiki/out/insights_notebook/유튜브 오늘_today_2026-07-07.md"
+  ]
+ },
+ {
+  "id": "d2417c62-c311-4357-9873-e735b1838bb0",
+  "label": "텔레 오늘",
+  "date": "2026-07-07",
+  "url": "https://notebooklm.google.com/notebook/d2417c62-c311-4357-9873-e735b1838bb0",
+  "atoms": 25,
+  "paths": [
+   "/home/ubuntu/lotto-stock-wiki/out/insights_notebook/텔레 오늘_today_2026-07-07.md"
+  ]
+ },
+ {
   "id": "80a2c815-3d93-4a7c-a520-df713d673298",
   "label": "삼성전자",
   "date": "2026-07-03",

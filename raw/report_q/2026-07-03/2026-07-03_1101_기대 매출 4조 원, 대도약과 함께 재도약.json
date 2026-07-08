@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-03",
+    "broker": "교보증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-03_1101_기대 매출 4조 원, 대도약과 함께 재도약.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "박희철",
+    "report_date": "2026/7/3",
+    "stocks": [
+      {
+        "name": "지엔씨에너지",
+        "code": "119850",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "동사의 2026년 매출액은 2,986억원(YoY +13.7%), 영업이익 413억원(YoY -16.4%, OPM 13.8%)으로 전망. 2027년에는 매출액 3,795억원(YoY +27.1%), 영업이익 742억원(YoY +79.8%, OPM 19.6%)를 기록할 것으로 추정.",
+        "estimate_revision": null,
+        "next_catalyst": "대도약 3대 메가 프로젝트에 따른 AI 데이터센터 투자 및 추가 수주",
+        "thesis": [
+          "국내 데이터센터 비상발전기 과점 기업으로서 글로벌 Top-Tier 엔진 소싱 및 독보적 레퍼런스 보유",
+          "정부의 '대한민국 대도약 3대 메가 프로젝트'에 따른 AI 데이터센터 투자 확대의 강력한 수혜",
+          "8.4GW 목표 달성 시 2029년까지 도달 가능 매출 합계 4조 원 상회 전망"
+        ],
+        "valuation_basis": null,
+        "risk": "올해 환영향으로 인한 영업이익 훼손 가능성",
+        "supply_comment": "비상 발전용 대형 엔진 Shortage가 발생한 상황에서 글로벌 Top-Tier 엔진 확보 루트를 다변화하여 대응 가능한 기업임",
+        "quote": "동사의 2026년 매출액은 2,986억원(YoY +13.7%), 영업이익 413억원(YoY -16.4%, OPM 13.8%)으로 전망."
+      }
+    ]
+  }
+}

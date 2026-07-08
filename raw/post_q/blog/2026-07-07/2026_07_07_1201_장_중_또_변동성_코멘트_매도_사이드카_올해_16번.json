@@ -1,0 +1,24 @@
+{
+  "target_kind": "market",
+  "market_direction": "bear",
+  "macro_events": [
+    {
+      "fact": "KOSPI 4%대 급락, 2024년 7월 7일 기준 장 중 매도 사이드카 16번 발동",
+      "ts": "2026-07-07",
+      "quote": "KOSPI가 2024년 장 중 매도 사이드카 16번 발동으로 변동성 확대되고 있음."
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "반도체",
+      "stance": "neutral",
+      "comment": "삼성전자 2분기 영업이익 87.4조원 발표 후 단기적 변동성 심화"
+    },
+    {
+      "sector": "조선",
+      "stance": "bear",
+      "comment": "한화오션 캐나다 잠수함 미선정으로 조선주 급락"
+    }
+  ],
+  "quote": "장기적으로는 매도 사이드카 일상화로 시장 참여자 피로도 증가로 인한 추가 매도 압력에 주의 필요."
+}

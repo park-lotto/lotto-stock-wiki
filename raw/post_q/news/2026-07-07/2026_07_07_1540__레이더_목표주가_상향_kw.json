@@ -1,0 +1,29 @@
+{
+  "target_kind": "market",
+  "market_direction": "긍정",
+  "macro_events": [
+    {
+      "fact": "목표주가 상향 소식에 반도체주 회복",
+      "ts": "2026-07-06 22:15",
+      "quote": "목표주가 상향 소식에 반도체주 회복…상승세 지속될까"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "반도체",
+      "stance": "긍정",
+      "comment": "목표주가 상향 소식으로 인한 주가 회복세"
+    },
+    {
+      "sector": "IT",
+      "stance": "긍정",
+      "comment": "삼성SDS AI 데이터센터 확대 및 삼성전자 어닝 서프라이즈 기대감"
+    },
+    {
+      "sector": "화장품미용",
+      "stance": "긍정",
+      "comment": "한국콜마 자외선 차단 제품 수출 확대"
+    }
+  ],
+  "quote": "목표주가 상향 소식에 반도체주 회복…상승세 지속될까"
+}

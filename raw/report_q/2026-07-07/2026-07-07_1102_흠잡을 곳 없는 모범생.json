@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-07",
+    "broker": "교보증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-07_1102_흠잡을 곳 없는 모범생.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "권우정",
+    "report_date": "2026.07.07",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "KT&G",
+        "code": "033780",
+        "sector": "소비내수",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "250,000원",
+        "tp_prev": "190,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2분기 연결 매출액 및 영업이익은 각각 1.7조원(YoY 8%), 4,025억원(YoY 15%)으로 시장 기대치 소폭 상회 전망.",
+        "estimate_revision": null,
+        "next_catalyst": "탄탄한 본업 실적 및 국내 최고 수준의 주주환원 정책",
+        "thesis": [
+          "담배(NGP+궐련) 매출 및 영업이익 성장세 지속",
+          "릴에이블 신제품 출시 효과와 NGP 시장 점유율 확대",
+          "해외 궐련 부문 유라시아 지역 ASP 상승 및 물량 성장"
+        ],
+        "valuation_basis": "12개월 Fwd EPS에 Target P/E 20배를 적용해 산출했으며, 이는 필립모리스의 밸류에이션을 적용한 수준임.",
+        "risk": "1분기 전쟁 불확실성으로 인한 재고 선매입 영향 및 일시적 물량 성장세 둔화",
+        "supply_comment": null,
+        "quote": "목표주가는 12개월 Fwd EPS에 Target P/E 20배를 적용해 산출했으며, 이는 필립모리스의 밸류에이션을 적용한 수준임."
+      }
+    ]
+  }
+}

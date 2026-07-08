@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-06",
+    "broker": "한화투자증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-06_1100_신차 경쟁력 입증, 이제는 가치 재조명.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "김성래, 김예인",
+    "report_date": "2026년 7월 6일",
+    "stocks": [
+      {
+        "name": "기아",
+        "code": "000270",
+        "rating": "Buy(유지)",
+        "rating_changed": false,
+        "tp_new": "290,000원",
+        "tp_prev": "290,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 매출액 33.2조원(+13.1%), 영업이익 2.9조원(+4.9%) 전망. 판매량은 85.0만대(-7.1% YoY)로 기존 전망치 대비 2.2만대 상회.",
+        "estimate_revision": "매출액(FY1) 125,388 -> 126,967 (1.3%), 영업이익(FY1) 10,241 -> 10,572 (3.2%)",
+        "next_catalyst": "BD(로보틱스) 지분 추가 확보 및 로봇 상용화",
+        "thesis": [
+          "친환경차(xEV) 중심 판매 확대를 통한 본업 실적 성장 및 믹스 개선",
+          "상반기 신차(텔루라이드 HEV, 스포티지 HEV, EV2, EV3, EV5)의 권역별 시장 안착 확인",
+          "그룹 로봇 사업 역할 확대에 따른 밸류 재평가(re-rating) 기대"
+        ],
+        "valuation_basis": "AVG of (Target PER * EPS + Target PBR * BPS) + BD 지분가치 반영",
+        "risk": "상반기 글로벌 수요 둔화 및 원자재가 상승",
+        "supply_comment": "관세 영향은 지난해 높은 기저와 2Q 기점 현지 생산 확대를 통한 점진적 완화 예상",
+        "quote": "투자의견 Buy와 TP 290,000원 유지. 상반기 글로벌 수요 둔화에 따른 판매 성장 우려와 이익 둔화, 그리고 그룹 로봇 사업과의 낮은 연관성으로 상대적 저평가 지속되었던 동사에 대한 하반기 가치 재조명 가시화 전망."
+      }
+    ],
+    "sector": "자동차"
+  }
+}

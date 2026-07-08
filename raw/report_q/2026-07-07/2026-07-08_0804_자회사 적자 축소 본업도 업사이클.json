@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "date": "2026-07-07",
+    "broker": "대신증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-08_0804_자회사 적자 축소 본업도 업사이클.md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": "박장욱",
+    "report_date": "2026.07.07",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "프로텍",
+        "code": "053610",
+        "rating": "N.R",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": {
+          "2026F": "매출액 2,826억원(YoY +22.6%), 영업이익 771억원(YoY +66.4%) 전망"
+        },
+        "estimate_revision": null,
+        "next_catalyst": "자회사 실적 개선 및 신규 장비(LCB) 수주",
+        "thesis": [
+          "자회사 피엠티 턴어라운드로 전년대비 영업이익 66.4% 개선 전망",
+          "메타발 반도체 CAPEX 축소 우려는 시장의 과도한 우려",
+          "신규 장비(LCB) 포트폴리오 확장 및 글로벌 OSAT향 매출 발생"
+        ],
+        "valuation_basis": "26년 예상 P/E 13배 (최근 3년 평균 PER 13배)",
+        "risk": "메타발 반도체 CAPEX 축소 우려 및 자회사 피엠티 실적 관련 리스크",
+        "supply_comment": "반도체",
+        "quote": "자회사 실적 개선, 신규 장비 수주까지 고려 시 관심 필요한 구간"
+      }
+    ]
+  }
+}

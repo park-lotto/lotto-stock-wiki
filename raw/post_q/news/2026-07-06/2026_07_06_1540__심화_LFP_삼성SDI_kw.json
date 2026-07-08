@@ -1,0 +1,33 @@
+{
+  "target_kind": "sector",
+  "sector_name": "2차전지",
+  "sector_view": "중립",
+  "points": [
+    "삼성SDI와 LG에너지솔루션 간의 전력 인프라 투자 및 기술 경쟁 심화",
+    "기술, 정책, 금융이 결합된 전력 인프라 투자 전략 중요성 증대"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "삼성SDI",
+      "comment": "LG엔솔과 전력 인프라 투자 및 기술 경쟁 구도 형성",
+      "ts": null,
+      "quote": "삼성SDI vs LG엔솔…전력 인프라투자, 기술·정책·금융이 동시에",
+      "sector": "2차전지"
+    },
+    {
+      "name": "LG엔솔",
+      "comment": "삼성SDI와 전력 인프라 투자 및 기술 경쟁 구도 형성",
+      "ts": null,
+      "quote": "삼성SDI vs LG엔솔…전력 인프라투자, 기술·정책·금융이 동시에",
+      "sector": "2차전지"
+    }
+  ],
+  "events": [
+    {
+      "fact": "삼성SDI와 LG에너지솔루션의 전력 인프라 투자 및 기술·정책·금융 대응 전략",
+      "ts": "2026-07-06",
+      "quote": "삼성SDI vs LG엔솔…전력 인프라투자, 기술·정책·금융이 동시에"
+    }
+  ],
+  "quote": "삼성SDI vs LG엔솔…전력 인프라투자, 기술·정책·금융이 동시에"
+}

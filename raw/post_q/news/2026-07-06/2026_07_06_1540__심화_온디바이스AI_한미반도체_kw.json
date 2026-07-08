@@ -1,0 +1,26 @@
+{
+  "target_kind": "sector",
+  "sector_name": "반도체",
+  "sector_view": "긍정",
+  "points": [
+    "2028년까지 PC 및 로봇 등에 '미니 HBM' 탑재 전망",
+    "온디바이스 AI 시장 확대가 메모리 산업의 구조적 변화 주도"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "한미반도체",
+      "comment": null,
+      "ts": null,
+      "quote": "온디바이스AI 한미반도체",
+      "sector": "반도체"
+    }
+  ],
+  "events": [
+    {
+      "fact": "2028년 PC·로봇에 '미니 HBM' 탑재",
+      "ts": "2028년",
+      "quote": "2028년 PC·로봇에 '미니 HBM' 탑재…“온디바이스 AI, 메모리 판 바꾼다”"
+    }
+  ],
+  "quote": "2028년 PC·로봇에 '미니 HBM' 탑재…“온디바이스 AI, 메모리 판 바꾼다”"
+}

@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "삼성SDI",
+      "signal": "bull",
+      "reason": "AI 데이터센터 수요 증가에 따른 전고체 배터리 기술력 주목",
+      "ts": null,
+      "quote": "삼성SDI는 부자회사…AI 데이터센터가 주목한 전고체 배터리",
+      "sector": "2차전지"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "삼성SDI의 전고체 배터리 기술이 AI 데이터센터 관련 분야에서 주목받고 있음",
+      "ts": "06-04 07:00",
+      "quote": "삼성SDI는 부자회사…AI 데이터센터가 주목한 전고체 배터리"
+    }
+  ],
+  "quote": "삼성SDI는 부자회사…AI 데이터센터가 주목한 전고체 배터리"
+}

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-07",
+    "broker": "대신증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-08_0803_흔들림은 없다. 2Q 실적 호조, 로봇 추진.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "박강호",
+    "report_date": "2026.07.07",
+    "stocks": [
+      {
+        "name": "비에이치",
+        "code": "090460",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "52,000",
+        "tp_prev": "52,000",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 2Q 매출은 4,148억원(6.4% yoy/11.6% qoq), 영업이익은 148억원(-7.7% yoy/38.8% qoq)으로 추정. 2026년 하반기 영업이익은 958억원으로 전년대비 51.3% 증가 추정.",
+        "estimate_revision": "영업이익은 컨센서스(136억원)을 8.8% 상회 등 일부에서 제기된 컨세서스 하회 가능성은 적다고 판단.",
+        "next_catalyst": "로봇(휴머노이드 포함) 사업의 추진, 가시화",
+        "thesis": [
+          "2Q 실적 호조 및 2026년 하반기 영업이익은 51.3%(yoy) 추정",
+          "애플의 프리미엄 모델 집중 및 폴더블폰 시장 확대로 인한 ASP 상승",
+          "로봇(휴머노이드)향 충전모듈 공급 및 미국 휴머노이드 업체향 공급 추진으로 로봇 사업 가시화"
+        ],
+        "valuation_basis": "2026년 EPS X 목표 P/E 14.9배(실적 호조 상단)",
+        "risk": "2026년 하반기에 아이폰18 출고가 인상이 수요 증가에 부담 요인으로 존재",
+        "supply_comment": "삼성 디스플레이를 통해서 R/F PCB 공급",
+        "quote": "2026년 2Q 매출은 4,148억원(6.4% yoy/11.6% qoq), 영업이익은 148억원(-7.7% yoy/38.8% qoq)으로 추정."
+      }
+    ]
+  }
+}

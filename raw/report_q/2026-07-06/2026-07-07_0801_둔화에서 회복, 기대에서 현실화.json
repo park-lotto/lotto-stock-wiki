@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-06",
+    "broker": "한화투자증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-07_0801_둔화에서 회복, 기대에서 현실화.md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "김성래, 김예인",
+    "report_date": "2026년 7월 6일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "현대차",
+        "code": "005380",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "760,000원",
+        "tp_prev": "760,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 매출액은 긍정적 환율 효과에도 글로벌 판매 감소와 xEV 중심 믹스효과 둔화로 48조원(-0.5%), 그리고 영업이익은 3조원(-16.3%) 전망.",
+        "estimate_revision": "EPS(FY1) 42,680 -> 41,418 (-3.0%), EPS(12M FWD) 46,600 -> 44,650 (-4.2%)",
+        "next_catalyst": "3Q 신차 출시(미국/유럽 등 주력시장 물량 확대, 믹스 개선), 8월 RMAC 가동(휴머노이드 상용화 가시성 확인), 3Q 내 HMG Global 통한 BD 추가 지분 확보",
+        "thesis": [
+          "하반기 신차 출시 및 상반기 물량 차질 회복 기대",
+          "’27년 이익 턴어라운드 가시화",
+          "그룹 로봇(BD) 상용화 추진으로 인한 모멘텀 지속 및 로봇 가치 증가"
+        ],
+        "valuation_basis": "주요 업체 Multiple 평균에 KOSPI 프리미엄 반영(Target PER 12.1배), BD 지분가치 반영",
+        "risk": "글로벌 시장 수요 둔화, 연간 글로벌 판매 가이던스 달성 도전적 상황, 관세 영향",
+        "supply_comment": "2Q26 판매량은 가마감 기준 99.0만대(-7.1% 이하 YoY)로 기존 전망치 대비 1.1만대 하회. 글로벌 시장 수요 둔화 영향과 지난 3월 협력사 화재 영향으로 인한 공급차질에 기인.",
+        "quote": "투자의견 Buy와 TP 760,000원 유지. ’27년 하반기 신차 사이클 및 최근 안정화 중인 원자재가 반영으로 매출/이익 턴어라운드 가시화 구간 진입 기대."
+      }
+    ]
+  }
+}

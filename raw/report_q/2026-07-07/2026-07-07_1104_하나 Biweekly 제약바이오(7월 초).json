@@ -1,0 +1,55 @@
+{
+  "meta": {
+    "date": "2026-07-07",
+    "broker": "하나증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-07_1104_하나 Biweekly 제약바이오(7월 초).md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김선아",
+    "report_date": "2026년 7월 7일",
+    "target_kind": "market",
+    "market_direction": "제약/바이오로 수급이 몰릴 것으로 전망",
+    "macro_vars": [
+      "미국 10년물 국채 금리"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "바이오",
+        "stance": "비중확대",
+        "reason": "코스닥 활성화 정책에 따른 수급 유입 및 학회 이벤트 등 기술이전/개발 업데이트 기대"
+      }
+    ],
+    "style": "액티브 방식(바이오 펀드나 ETF 접근)",
+    "event_calendar": [
+      {
+        "date": "2026년 7월 8일",
+        "event": "리가켐바이오 R&D 데이"
+      },
+      {
+        "date": "2026년 7월 14일",
+        "event": "올릭스 R&D 데이"
+      },
+      {
+        "date": "2026년 8월 4일",
+        "event": "MSD 실적 발표"
+      },
+      {
+        "date": "2026년 9월 16일-18일",
+        "event": "LBA 수령 사전 통보일"
+      },
+      {
+        "date": "2026년 10월",
+        "event": "ESMO(유럽종양학회)"
+      }
+    ],
+    "top_picks": [
+      "한미약품",
+      "알테오젠",
+      "올릭스",
+      "리가켐바이오"
+    ],
+    "risk": "종목별 매수 시기 상이 및 코스닥 활성화 정책 수혜 종목으로만 수급 쏠림 현상",
+    "quote": "주요 섹터의 상승률이 둔해지면, 베타가 크면서 올해 YTD 수익률이 하위권이었던 제약/바이오로 수급이 몰릴 것으로 보인다."
+  }
+}

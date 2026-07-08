@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "date": "2026-07-06",
+    "broker": "한화투자증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-08_0807_[디지털자산] 디지털자산 Weekly 2026.07.03.md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "최윤영",
+    "report_date": "2026.07.03",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "BNY x Circle 기관용 USDC 서비스",
+      "Open Standard 스테이블코인 Open USD 공개",
+      "Robinhood 메인넷 출시",
+      "Securitize NYSE 상장",
+      "Ripple 기관용 온체인 대출 인프라 도입",
+      "영국 FCA 암호화폐 규제체계 확정",
+      "SEC 암호화폐·예측시장 ETF 규제 의견수렴",
+      "대만 가상자산서비스법 통과"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026년 하반기",
+        "event": "OUSD 출시 예정"
+      },
+      {
+        "date": "2027년 10월 25일",
+        "event": "英 FCA 암호화폐 규제체계 정식 시행"
+      }
+    ],
+    "top_picks": [
+      "Circle",
+      "Robinhood",
+      "Securitize",
+      "Ripple"
+    ],
+    "risk": "OUSD 출범으로 Circle의 핵심 수익원인 준비자산 수익 모델이 도전을 받기 시작",
+    "quote": "OUSD는 준비자산에서 발생하는 수익을 참여 기업에 배분하는 구조를 채택하겠다고 밝히며 기존 스테이블코인 발행사 중심 수익모델에 도전"
+  }
+}

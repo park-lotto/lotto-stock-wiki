@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "브로드컴",
+      "signal": "bull",
+      "reason": "ASIC 시장 성장 및 관련 시장 주도",
+      "ts": null,
+      "quote": "브로드컴 “ASIC 시장 움직인다”",
+      "sector": "반도체"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "브로드컴이 ASIC 시장을 주도하며 움직임을 보이고 있음",
+      "ts": "04-15 07:00",
+      "quote": "브로드컴 “ASIC 시장 움직인다”"
+    }
+  ],
+  "quote": "브로드컴 “ASIC 시장 움직인다” [베스트 애널리스트 추천 종목]"
+}

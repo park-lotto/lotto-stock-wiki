@@ -1,0 +1,17 @@
+{
+  "market_direction": "bullish",
+  "macro_events": [
+    {
+      "fact": "실적 컨센서스 상회",
+      "ts": "07:47",
+      "quote": "컨센(86조원) 대비 상회 - 성과급 충당금 포함 시, 100조원 상회"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "반도체",
+      "stance": "positive",
+      "comment": "실적 컨센서스를 상회하는 우수한 성과 기록"
+    }
+  ]
+}

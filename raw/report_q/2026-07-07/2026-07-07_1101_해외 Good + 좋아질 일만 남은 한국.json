@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-07",
+    "broker": "교보증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-07_1101_해외 Good + 좋아질 일만 남은 한국.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "권우정",
+    "report_date": "2026/7/7",
+    "stocks": [
+      {
+        "name": "코스맥스",
+        "code": "192820",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "260,000원",
+        "tp_prev": "260,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2분기 연결 매출액 및 영업이익은 각각 7.3천억원(YoY 18%), 682억원(YoY 12%)으로 시장기대치 부합 전망.",
+        "estimate_revision": "사측이 제시했던 기존 2분기 가이던스 대비 미국/인니/태국 고성과 흐름임.",
+        "next_catalyst": "3분기부터 YoY 수익성 개선 흐름 전망 및 한국 법인 수주 호황",
+        "thesis": [
+          "한국 법인 매출 및 영업이익 견조, 3분기부터 수익성 YoY 개선 흐름 전망",
+          "중국 법인 매출 성장 지속 및 미국 법인 수익성 턴어라운드",
+          "동남아 법인(인니/태국) 매출 고성장 및 수익성 개선"
+        ],
+        "valuation_basis": null,
+        "risk": "한국 법인 수익성 YoY 감소 흐름 및 중국 광저우 수익성 YoY 하락",
+        "supply_comment": "현재 한국 법인 수주는 CAPA가 부족할 만큼 기초 중심으로 호황인 상황으로 판단함.",
+        "quote": "2분기 연결 매출액 및 영업이익은 각각 7.3천억원(YoY 18%), 682억원(YoY 12%)으로 시장기대치 부합 전망."
+      }
+    ]
+  }
+}

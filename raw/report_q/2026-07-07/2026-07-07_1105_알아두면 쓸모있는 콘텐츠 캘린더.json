@@ -1,0 +1,99 @@
+{
+  "meta": {
+    "date": "2026-07-07",
+    "broker": "하나증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-07_1105_알아두면 쓸모있는 콘텐츠 캘린더.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "이기훈, 김현수",
+    "report_date": "2026.7.6",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "7.10",
+        "event": "TXT 연준(HYBE), NCT 재현(SM) 컴백"
+      },
+      {
+        "date": "7.11",
+        "event": "<아파트> 방영 (SBS)"
+      },
+      {
+        "date": "7.13",
+        "event": "NCT WISH(일본) 컴백, 슈퍼주니어-83z 데뷔 (SM)"
+      },
+      {
+        "date": "7.15",
+        "event": "<호프> 개봉 (콘텐트리중앙)"
+      },
+      {
+        "date": "7.17",
+        "event": "<오싹한 연애> 방영 (tvN, 스튜디오드래곤)"
+      },
+      {
+        "date": "7.18",
+        "event": "<동궁> 공개 (Netflix)"
+      },
+      {
+        "date": "7.20",
+        "event": "유노윤호 컴백 (SM)"
+      },
+      {
+        "date": "7.24",
+        "event": "에스파(일본) 컴백 (SM)"
+      },
+      {
+        "date": "7.26",
+        "event": "아일릿(일본) 컴백 (HYBE)"
+      },
+      {
+        "date": "7.27",
+        "event": "DAY6 Young K 컴백 (JYP)"
+      },
+      {
+        "date": "7.29",
+        "event": "<스파이더맨: 브랜드 뉴 데이> 개봉"
+      },
+      {
+        "date": "8/3",
+        "event": "레드벨벳 컴백 (SM), <최애의 사원> 방영 (tvN, 스튜디오드래곤)"
+      },
+      {
+        "date": "8/4",
+        "event": "TWS(일본) 컴백 (HYBE)"
+      },
+      {
+        "date": "8/5",
+        "event": "<오디세이> 개봉"
+      },
+      {
+        "date": "8/7",
+        "event": "스트레이키즈 컴백 (JYP), <재벌X형사2> 방영 (SBS)"
+      },
+      {
+        "date": "8/14",
+        "event": "캣츠아이 컴백 (HYBE)"
+      },
+      {
+        "date": "8/21",
+        "event": "엔하이픈 컴백 (HYBE)"
+      }
+    ],
+    "top_picks": [
+      "SM",
+      "HYBE",
+      "SBS",
+      "콘텐트리중앙",
+      "tvN",
+      "스튜디오드래곤",
+      "Netflix",
+      "JYP"
+    ],
+    "risk": null,
+    "quote": "알아두면 쓸모있는 콘텐츠 캘린더"
+  }
+}

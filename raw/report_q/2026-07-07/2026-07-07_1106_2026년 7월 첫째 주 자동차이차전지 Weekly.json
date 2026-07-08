@@ -1,0 +1,62 @@
+{
+  "meta": {
+    "date": "2026-07-07",
+    "broker": "교보증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-07_1106_2026년 7월 첫째 주 자동차이차전지 Weekly.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "김광식, 최보영",
+    "report_date": "2026/07/07",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "도매 판매량",
+      "USMCA 매년 리뷰 체제",
+      "EV 판매량",
+      "코발트 가격",
+      "리튬 가격",
+      "니켈 가격"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "자동차",
+        "stance": null,
+        "reason": "현대차 아반떼, GV80 HEV 등 하반기 6종 신차 투입으로 판매량 부진 해소 기대 및 기아 어닝 모멘텀 우위"
+      },
+      {
+        "sector": "2차전지",
+        "stance": null,
+        "reason": "에코프로비엠 1.2조원 유증 및 삼성SDI 16조원 투자 등 전고체 양산 목표 유지"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026/07/01",
+        "event": "USMCA 비갱신 공식 선언"
+      }
+    ],
+    "top_picks": [
+      "현대차",
+      "기아",
+      "현대모비스",
+      "한온시스템",
+      "TESLA",
+      "TOYOTA",
+      "BYD",
+      "GM",
+      "FORD",
+      "LG 에너지솔루션",
+      "삼성 SDI",
+      "에코프로비엠",
+      "포스코퓨처엠",
+      "엘앤에프",
+      "CATL",
+      "PANASONIC",
+      "ALBEMARLE"
+    ],
+    "risk": "공급망 불확실성 가중 지속, 에코프로비엠 유증에 따른 단기 부담 및 주가 하락",
+    "quote": "도매 판매량: 현대차 -5.9% YoY기아 +9.5% YoY, 실적 시즌 앞두며 기아 어닝 모멘텀 우위"
+  }
+}

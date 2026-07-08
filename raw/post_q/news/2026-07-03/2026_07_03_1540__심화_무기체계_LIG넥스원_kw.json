@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "LIG넥스원",
+      "signal": "neutral",
+      "reason": "LIG D&A의 유도탄 창정비 사업을 통한 방위산업계 진출",
+      "ts": "2026-07-03",
+      "quote": "LIG D&A 50년-1]금성시, 유도탄 창정비로 방위산업계 진출",
+      "sector": "방산"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "LIG D&A가 유도탄 창정비 사업을 통해 방위산업계에 진출함",
+      "ts": "2026-07-03",
+      "quote": "LIG D&A 50년-1]금성시, 유도탄 창정비로 방위산업계 진출"
+    }
+  ],
+  "quote": "LIG D&A 50년-1]금성시, 유도탄 창정비로 방위산업계 진출"
+}
