@@ -22,7 +22,9 @@ def api_collect(limit: int | None = None):
         return {"ok": True, "count": len(items), "items": items,
                 "collected_at": _LAST["collected_at"]}
     except Exception as e:
-        return JSONResponse(status_code=500, content={"ok": False, "error": str(e)})
+        import re
+        msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
+        return JSONResponse(status_code=500, content={"ok": False, "error": msg})
 
 
 @app.get("/api/reference")

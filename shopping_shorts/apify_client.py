@@ -19,6 +19,7 @@ def fetch_reels(usernames, token=None, results_per_channel=RESULTS_PER_CHANNEL,
         "skipPinnedPosts": True,
     }
     url = _RUN_SYNC_URL.format(actor=APIFY_ACTOR)
-    resp = requests.post(url, params={"token": token}, json=payload, timeout=timeout)
+    headers = {"Authorization": f"Bearer {token}"}
+    resp = requests.post(url, headers=headers, json=payload, timeout=timeout)
     resp.raise_for_status()
     return resp.json()  # list of reel dicts
