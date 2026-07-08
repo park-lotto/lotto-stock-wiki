@@ -2,32 +2,33 @@
   "meta": {
     "date": "2026-07-07",
     "broker": "하나증권",
-    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-08_0801_하반기로 갈수록 좋다.md"
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-08_0801_하반기로 갈수록 좋다.md"
   },
   "questionnaire": {
+    "target_kind": "stock",
     "broker": "하나증권",
     "analyst": "이준호",
     "report_date": "2026년 7월 7일",
-    "target_kind": "stock",
     "stocks": [
       {
         "name": "삼성에스디에스",
         "code": "018260",
-        "rating": "BUY",
-        "rating_changed": "유지",
+        "sector": "IT",
+        "rating": "BUY(유지)",
+        "rating_changed": false,
         "tp_new": "240,000원",
         "tp_prev": "220,000원",
         "tp_direction": "up",
         "earnings_outlook": "2분기 매출액 3조 6,097억원(+2.8%YoY, +7.7%QoQ), 영업이익 2,296억원(-0.2%YoY, +193.1%QoQ. OPM 6.4%)으로 컨센서스에 부합할 전망이다.",
-        "estimate_revision": "상저하고가 분명하며, AI DC에 대한 가시성이 높아지기에 하반기 다시금 기대를 가져도 좋다고 판단한다.",
-        "next_catalyst": "B300 GPUaaS 시작, 하반기 공공향 생성형AI 사업 매출 인식, 삼성전자 실적 호조에 따른 IT 인프라 투자 확대",
+        "estimate_revision": "6월 초 큰 폭의 주가 등락을 겪었으나 실적은 상저하고가 분명하며, AI DC에 대한 가시성이 높아지기에 하반기 다시금 기대를 가져도 좋다고 판단한다.",
+        "next_catalyst": "B300 GPUaaS가 시작됐으며 하반기 공공향 생성형AI 사업의 매출을 본격적으로 인식할 예정",
         "thesis": [
-          "AI DC 가시성 확대 및 2028년까지 총 120MW 규모의 AI DC 확보 계획",
-          "캡티브 수요를 기반으로 한 안정적인 매출 기여 예상",
-          "풀스택 AI 서비스 경쟁력 보유 및 글로벌향 수주 기대"
+          "AI DC 가시성 확보에 따른 하반기 실적 개선",
+          "생성형AI 및 패브릭스 플랫폼을 통한 실적 성장",
+          "삼성전자 실적 호조에 따른 IT 인프라 투자 확대"
         ],
-        "valuation_basis": "12MF Forward EPS 11,035원에 Target PER Multiple 22(2018년-2020년 12M Forward PER의 평균 적용)를 적용",
-        "risk": "1분기 퇴직금 관련 일회성 비용과 물류 부문의 수익성 부진",
+        "valuation_basis": "12MF Forward EPS 11,035원, Target PER Multiple 22 적용(2018년-2020년 12M Forward PER의 평균 적용)",
+        "risk": null,
         "supply_comment": "삼성에스디에스는 올해부터 본격적으로 가동하는 동탄 DC 서관 20MW을 포함하여 2028년까지 구미 60MW, 한국 AI CC 40MW까지 총 120MW의 AI DC를 확보할 계획이다.",
         "quote": "삼성에스디에스의 투자의견 Buy를 유지하고 목표주가를 240,000원으로 상향한다."
       }

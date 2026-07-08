@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "삼성SDI",
+      "signal": "neutral",
+      "reason": "ESS 사업의 성장 기대와 전기차 시장의 역성장 우려가 공존하는 상황",
+      "ts": null,
+      "quote": "“ESS가 동아줄” vs “전기차 역성장 못 막아”…삼성SDI 바라보는 두 시선",
+      "sector": "2차전지"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "ESS 사업 성과와 전기차 시장 둔화에 대한 시장의 엇갈린 평가",
+      "ts": "2026-07-07 00:27",
+      "quote": "“ESS가 동아줄” vs “전기차 역성장 못 막아”…삼성SDI 바라보는 두 시선"
+    }
+  ],
+  "quote": "“ESS가 동아줄” vs “전기차 역성장 못 막아”…삼성SDI 바라보는 두 시선"
+}

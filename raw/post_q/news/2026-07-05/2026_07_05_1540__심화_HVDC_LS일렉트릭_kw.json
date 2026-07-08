@@ -1,0 +1,33 @@
+{
+  "target_kind": "sector",
+  "sector_name": "전력",
+  "sector_view": "긍정",
+  "points": [
+    "효성과 LS일렉트릭 간 HVDC 시장 점유율 및 수주 경쟁 심화",
+    "국내 에너지 고속도로 구축을 위한 HVDC 인프라 투자 확대"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "LS일렉트릭",
+      "comment": "HVDC 시장에서 효성과 경쟁하며 주요 수주 경쟁을 벌이고 있음",
+      "ts": "2026-07-05",
+      "quote": "효성-LS, ‘에너지 고속도로’ HVDC 경쟁 고조",
+      "sector": "전력"
+    },
+    {
+      "name": "효성중공업",
+      "comment": "LS일렉트릭과 함께 HVDC 시장 경쟁의 핵심 사업자로 언급됨",
+      "ts": "2026-07-05",
+      "quote": "효성-LS, ‘에너지 고속도로’ HVDC 경쟁 고조",
+      "sector": "전력"
+    }
+  ],
+  "events": [
+    {
+      "fact": "에너지 고속도로 구축을 위한 HVDC 기술 경쟁 고조",
+      "ts": "2026-07-05",
+      "quote": "효성-LS, ‘에너지 고속도로’ HVDC 경쟁 고조"
+    }
+  ],
+  "quote": "효성-LS, ‘에너지 고속도로’ HVDC 경쟁 고조"
+}

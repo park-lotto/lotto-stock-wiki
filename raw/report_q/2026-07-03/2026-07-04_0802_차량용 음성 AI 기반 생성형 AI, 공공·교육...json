@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-03",
+    "broker": "서울평가정보(주)",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-04_0802_차량용 음성 AI 기반 생성형 AI, 공공·교육...md"
+  },
+  "questionnaire": {
+    "broker": "서울평가정보(주)",
+    "analyst": "박진희",
+    "report_date": "2026.07.02.",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "미디어젠",
+        "code": "279600",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 매출은 286.0억 원 수준까지 확대될 것으로 예상된다.",
+        "estimate_revision": null,
+        "next_catalyst": "차량 음성 사업의 안정적 수주 유지, AI 솔루션의 상용화 확대, 하드웨어 결합형 사업의 실행력",
+        "thesis": [
+          "차량용 음성 AI 원천기술 기반의 완성차 대상 개발 및 솔루션 공급 사업 영위",
+          "생성형 AI, AICC, 에듀테크, 공공 LLM, AI 키오스크 등 비자동차 영역으로 사업 포트폴리오 확장",
+          "소프트웨어 중심 사업에서 AI 하드웨어 제조업 진출을 통한 하드웨어 결합형 솔루션 확장 추진"
+        ],
+        "valuation_basis": null,
+        "risk": "완성차 고객의 개발 일정, 차종별 적용 범위, 양산 및 품질 검증 결과에 따른 매출 변동성, 글로벌 AI 플랫폼 기업 및 완성차 자체 개발 조직과의 경쟁 심화",
+        "supply_comment": "차량용 음성 시스템 개발은 핵심 매출원으로 완성차 및 1차 벤더 대상의 차량용 음성인식·음성합성 개발 수요가 지속되고 있다.",
+        "quote": "동사는 차량용 음성 AI 원천기술을 기반으로 생성형 AI, 교육·상담·통역, AI 하드웨어까지 사업 범위를 확장하고 있다. 향후 성장성은 차량 음성 사업의 안정적 유지, AI 솔루션의 상용화 확대, 키오스크 등 하드웨어 결합형 사업의 실행력에 의해 좌우될 것으로 판단된다."
+      }
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "target_kind": "market",
+  "market_direction": "neutral",
+  "macro_events": [
+    {
+      "fact": "올 52주 신고가 1천508개, 신저가도 1천763개…양극화·변동성↑",
+      "ts": "2026-06-14 07:00",
+      "quote": "올 52주 신고가 1천508개, 신저가도 1천763개…양극화·변동성↑"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "소비내수",
+      "stance": "neutral",
+      "comment": "몬스터 베버리지 주가, 97.89달러로 52주 신고가 경신"
+    },
+    {
+      "sector": "기타",
+      "stance": "neutral",
+      "comment": "노스웨스트 뱅크셰어스 주가, 52주 신고가 15.35달러 기록"
+    },
+    {
+      "sector": "통신",
+      "stance": "neutral",
+      "comment": "Viasat 주식, 89.83달러로 52주 신고가 경신"
+    }
+  ],
+  "quote": "올 52주 신고가 1천508개, 신저가도 1천763개…양극화·변동성↑"
+}

@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "SGC에너지",
+      "signal": "bull",
+      "reason": "하나증권이 톱픽으로 제시하며 LNG 강세 기대감이 부각됨",
+      "ts": "05-25",
+      "quote": "SGC에너지, 5%대 상승…하나증권 톱픽 제시에 LNG 강세 기대 부각",
+      "sector": "기타"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "하나증권이 SGC에너지를 톱픽으로 제시함",
+      "ts": "05-25",
+      "quote": "하나증권 톱픽 제시에 LNG 강세 기대 부각"
+    }
+  ],
+  "quote": "SGC에너지, 5%대 상승…하나증권 톱픽 제시에 LNG 강세 기대 부각"
+}

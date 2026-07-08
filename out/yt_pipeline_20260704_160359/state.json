@@ -1,0 +1,15 @@
+{
+  "id": "20260704_160359",
+  "idea": "ai 주식 활용 영상",
+  "created": "2026-07-04T16:03:59.721705",
+  "steps": {
+    "plan": {
+      "status": "done",
+      "qc_score": 8,
+      "attempts": 1
+    }
+  },
+  "files": {
+    "plan": "/home/ubuntu/lotto-stock-wiki/out/yt_pipeline_20260704_160359/plan.md"
+  }
+}

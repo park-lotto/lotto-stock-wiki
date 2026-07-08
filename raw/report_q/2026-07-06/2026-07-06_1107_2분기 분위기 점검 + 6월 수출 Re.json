@@ -2,7 +2,7 @@
   "meta": {
     "date": "2026-07-06",
     "broker": "하나증권",
-    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-06_1107_2분기 분위기 점검 + 6월 수출 Re.md"
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-06_1107_2분기 분위기 점검 + 6월 수출 Re.md"
   },
   "questionnaire": {
     "target_kind": "market",
@@ -13,32 +13,24 @@
     "macro_vars": [
       "원달러 환율 상승",
       "위안화 절상",
-      "부자재 원가 상승"
+      "공급망 이슈(유틸리티 및 부자재 단가 상승)",
+      "슈퍼 엘니뇨 우려"
     ],
     "recommended_sectors": [
       {
         "sector": "소비내수",
-        "stance": "중립",
-        "reason": "원가 부담이 본격화되는 시점으로 이익 가시성이 낮음"
+        "stance": "비중확대",
+        "reason": "음식료 업종 대형주는 안정적인 주가 흐름을 보였고, 원가 부담 방어 가능 업체 중심의 수출 실적 견조"
       }
     ],
     "style": null,
-    "event_calendar": [
-      {
-        "date": "6월 중순",
-        "event": "중국 주요 아미노산 업체 정기 보수 시작"
-      },
-      {
-        "date": "7월 초",
-        "event": "싱가포르 롯데 합작법인 설립"
-      }
-    ],
+    "event_calendar": null,
     "top_picks": [
       "오리온",
       "CJ제일제당",
       "삼양식품"
     ],
-    "risk": "호르무즈 개방 협상 교착 및 보험료 이슈로 인한 담배 수출 단기 부정적 영향 가능성",
-    "quote": "2분기는 원가 부담이 본격화되는 시점으로 이익 가시성이 낮다."
+    "risk": "음식료 업체의 원가 부담 본격화 및 일부 품목(음료·주류 등) 손익 훼손 가능성",
+    "quote": "주지했던 것처럼, 2분기는 원가 부담이 본격화되는 시점으로 이익 가시성이 낮다."
   }
 }

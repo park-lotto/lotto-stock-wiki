@@ -1,24 +1,53 @@
 {
-  "target_kind": "market",
-  "market_direction": "bear",
-  "macro_events": [
+  "target_kind": "stock_tips",
+  "stocks": [
     {
-      "fact": "메타(Meta)가 GPU 임대 사업을 통한 클라우드 시장 진출을 선언함",
+      "name": "Meta",
+      "signal": "bear",
+      "reason": "클라우드 시장 진출에 대한 경쟁 우위 부족과 대형 투자자들의 매도세",
       "ts": "2026-07-07",
-      "quote": "메타가 이제 클라우드 사업을 하겠다고 하잖아요. GPU 임대 사업 하겠다고 선언한 거잖아요."
+      "quote": "메타가 클라우드 사업을 통해서 돈을 많이 벌어서 올라갈 거라고 생각을 하시면은 저는 오히려 차라리 구글, 마소, 아마존을 매수하는 게 맞다라고 생각을 하고요.",
+      "sector": "IT"
     },
     {
-      "fact": "메타 주식에 대해 대형 투자 펀드들이 매도하는 추세임",
+      "name": "Amazon",
+      "signal": "bull",
+      "reason": "클라우드 시장 지배력 및 Anthropic과의 파트너십",
       "ts": "2026-07-07",
-      "quote": "마소랑 메타는 산 곳이 거의 없고 심지어 메타는 매도한 데가 되게 많아요."
-    }
-  ],
-  "sectors_mentioned": [
+      "quote": "아마존은 Anthropic의 최대 주주이자 Anthropic에 가장 어찌보면은 이제 GPU 임대를 많이 해주는 기업이자 Anthropic의 클라우드가 지금 제일 잘 나가는 AI잖아.",
+      "sector": "IT"
+    },
     {
-      "sector": "IT",
-      "stance": "긍정",
-      "comment": "기존 클라우드 강자인 AWS, Microsoft Azure, Google Cloud는 기술적 우위를 점하고 있음"
+      "name": "Google",
+      "signal": "bull",
+      "reason": "클라우드 시장 점유율 및 자체 AI 칩(TPU) 기술 보유",
+      "ts": "2026-07-07",
+      "quote": "구글은 TPU 만들죠. 아마존도 Trainium 만들었죠. 마소도 지들이 스스로 뭔가를 이제 칩을 만든다고 하잖아.",
+      "sector": "IT"
+    },
+    {
+      "name": "Microsoft",
+      "signal": "bull",
+      "reason": "기존 클라우드 시장 강자(Azure) 및 칩 개발을 통한 기술 경쟁력 확보",
+      "ts": "2026-07-07",
+      "quote": "클라우드 2등 누구에요? Azure, 마이크로소프트.",
+      "sector": "IT"
+    },
+    {
+      "name": "Anthropic",
+      "signal": "bull",
+      "reason": "현재 가장 성과가 좋은 AI 기업으로 AWS 및 Google 클라우드 활용",
+      "ts": "2026-07-07",
+      "quote": "Anthropic은 AWS와 Google 쓰죠 지금.",
+      "sector": "IT"
     }
   ],
-  "quote": "메타가 클라우드 사업을 통해서 돈을 많이 벌어서 올라갈 거라고 생각을 하시면은 저는 오히려 차라리 구글, 마소, 아마존을 매수하는 게 맞다라고 생각을 하고요."
+  "news_items": [
+    {
+      "fact": "메타가 GPU 임대 사업을 통한 클라우드 시장 진출 선언",
+      "ts": "2026-07-07",
+      "quote": "메타가 이제 클라우드 사업을 하겠다고 하잖아요. GPU 임대 사업 하겠다고 선언한 거잖아요."
+    }
+  ],
+  "quote": "메타가 클라우드 사업에 진출했다. 그러면은 아마존과 마소와 구글과 대비해서 장점 강점을 보여줘야 돼요."
 }

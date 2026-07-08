@@ -1,0 +1,143 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "쇼트파마",
+      "signal": "bull",
+      "reason": "도이체방크 투자의견 상향",
+      "ts": "2026-07-06 07:11",
+      "quote": "도이체방크, 쇼트파마 투자의견 상향…주가 8% 급등",
+      "sector": "바이오"
+    },
+    {
+      "name": "팔란티어",
+      "signal": "bull",
+      "reason": "증권사 투자의견 상향",
+      "ts": "2026-07-03 01:12",
+      "quote": "팔란티어, 증권사 투자의견 상향에 주가 상승…목표가 175달러",
+      "sector": "IT"
+    },
+    {
+      "name": "US 뱅코프",
+      "signal": "bull",
+      "reason": "이자이익·수수료 수익 개선 기대",
+      "ts": "2026-07-06 14:15",
+      "quote": "US 뱅코프, 이자이익·수수료 수익 개선 기대...투자의견 상향-제프리스",
+      "sector": "기타"
+    },
+    {
+      "name": "Flagstar Bank",
+      "signal": "bull",
+      "reason": "실적 회복 기대",
+      "ts": "2026-07-06 08:11",
+      "quote": "TD Cowen, Flagstar Bank 실적 회복 기대에 투자의견 상향",
+      "sector": "기타"
+    },
+    {
+      "name": "T-모바일",
+      "signal": "bull",
+      "reason": "월가 투자의견 상향 및 과도한 낙폭 인식",
+      "ts": "2026-07-06 20:47",
+      "quote": "T-모바일, 월가 투자의견 매수 상향·과도한 낙폭 인식에 주가 2% 상승",
+      "sector": "통신"
+    },
+    {
+      "name": "SBO",
+      "signal": "bull",
+      "reason": "Kepler Cheuvreux 투자의견 상향",
+      "ts": "2026-07-06 08:59",
+      "quote": "Kepler Cheuvreux의 투자의견 상향 후 SBO 주가 2% 상승",
+      "sector": "기타"
+    },
+    {
+      "name": "길리어드 사이언시스",
+      "signal": "bull",
+      "reason": "HIV 사업 성장성 과소평가",
+      "ts": "2026-07-06 14:32",
+      "quote": "길리어드 사이언시스, HIV 사업 성장성 과소평가...투자의견 '매수'-HSBC",
+      "sector": "바이오"
+    },
+    {
+      "name": "컬렌/프로스트 뱅커스",
+      "signal": "bull",
+      "reason": "금리 전망에 따른 상향",
+      "ts": "2026-07-06 09:18",
+      "quote": "제프리스, 금리 전망에 따라 컬렌/프로스트 뱅커스 투자의견 상향 조정",
+      "sector": "기타"
+    },
+    {
+      "name": "GSK",
+      "signal": "bull",
+      "reason": "파이프라인 투자 강화",
+      "ts": "2026-07-06 10:31",
+      "quote": "HSBC, GSK 주식 투자의견 상향 조정: 파이프라인 투자 강화",
+      "sector": "바이오"
+    },
+    {
+      "name": "지멘스",
+      "signal": "bull",
+      "reason": "케플러 투자의견 상향",
+      "ts": "2026-07-03 10:51",
+      "quote": "케플러, 지멘스 투자의견 상향…목표주가 €280으로 제시",
+      "sector": "기타"
+    },
+    {
+      "name": "Novonesis",
+      "signal": "bull",
+      "reason": "섹터 20% 하회 후 상향",
+      "ts": "2026-07-03 10:32",
+      "quote": "BNP Paribas, 섹터 20% 하회 후 Novonesis 투자의견 상향",
+      "sector": "바이오"
+    },
+    {
+      "name": "머스크",
+      "signal": "bull",
+      "reason": "2027년 전망 반영",
+      "ts": "2026-07-03 06:55",
+      "quote": "골드만삭스, 머스크 투자의견 상향…2027년 전망 반영해 목표주가 올려",
+      "sector": "기타"
+    },
+    {
+      "name": "Unicaja Banco",
+      "signal": "bull",
+      "reason": "통합 전망",
+      "ts": "2026-07-06 11:03",
+      "quote": "케플러, 통합 전망에 따라 Unicaja Banco 투자의견 ’매수’로 상향",
+      "sector": "기타"
+    },
+    {
+      "name": "RS그룹",
+      "signal": "bull",
+      "reason": "도이체 누미스 투자의견 상향",
+      "ts": "2026-07-01 09:02",
+      "quote": "RS그룹, 도이체 누미스 투자의견 상향에 주가 상승",
+      "sector": "기타"
+    },
+    {
+      "name": "바르질라",
+      "signal": "bull",
+      "reason": "중기 전망 개선",
+      "ts": "2026-07-01 13:54",
+      "quote": "JP모건, 바르질라 중기 전망 개선으로 투자의견 상향…밸류에이션 상승 여력은 제한적",
+      "sector": "기타"
+    },
+    {
+      "name": "판도라",
+      "signal": "bull",
+      "reason": "UBS 투자의견 상향",
+      "ts": "2026-07-02 09:58",
+      "quote": "UBS, 판도라 투자의견 상향…목표주가 49% 올려",
+      "sector": "소비내수"
+    },
+    {
+      "name": "어도비 시스템즈",
+      "signal": "bull",
+      "reason": "AI 경쟁 우려 불식",
+      "ts": "2026-07-02 07:17",
+      "quote": "HSBC, 어도비 시스템즈 투자의견 상향...AI 경쟁 우려 불식",
+      "sector": "IT"
+    }
+  ],
+  "news_items": [],
+  "quote": "주요 증권사들의 투자의견 상향 조치가 다수 발생함"
+}

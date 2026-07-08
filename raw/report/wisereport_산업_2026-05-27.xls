@@ -72,7 +72,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
   gtag('config', 'G-C8B2QNTM16');
 </script>
 
-		<form method="post" action="./summaryexcel.aspx?cn=&amp;fmt=2&amp;ee=20260706&amp;sortCol=&amp;sortTyp=" id="Form1">
+		<form method="post" action="./summaryexcel.aspx?cn=&amp;fmt=2&amp;ee=20260708&amp;sortCol=&amp;sortTyp=" id="Form1">
 <div class="aspNetHidden">
 <input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwULLTE5ODc1MjczMzhkZK1uVmb2cGLVvIQ+lHb37TlJRESJ" />
 </div>
@@ -114,7 +114,7 @@ function __doPostBack(eventTarget, eventArgument) {
 					<col style='mso-width-source:userset;width:275px'>
                      <col style='mso-width-source:userset;width:450px'>
 				    <tr>
-					    <td colspan="7" height="30" align="center" class="title">산업리포트 요약(2026.07.06)</td>
+					    <td colspan="7" height="30" align="center" class="title">산업리포트 요약(2026.07.08)</td>
 				    </tr>
                     <tr>
                         <td class="hd">기관명/작성자</td>
@@ -129,15 +129,39 @@ function __doPostBack(eventTarget, eventArgument) {
                     </tr>
                     
                     <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">한국투자증권</font><br/>이충재</td>
-                        <td class="ind"><font color="rgb(53,91,157)">전자장비와기기</font></td>                        
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>안도현</td>
+                        <td class="ind"><font color="rgb(53,91,157)">운송인프라</font></td>                        
                         
-                            <td class="img0">&nbsp;</td>
-                            <td class="recomm"></td>
+                            <td class="img2">=</td>
+                            <td class="recomm">Overweight</td>
                         
-                        <td class="pre_recomm">비중확대</td>
-						<td class="rpt_title">데이터센터 전력난의 마침표: BESS</td>
-                        <td class="comment2"><span class="comment_text">▶</span> 핵심 요약: AI가 만드는 배터리 공급 부족<br/><span class="comment_text">▶</span> AI 시대, 낮은 전력 요금이 경쟁력의 기반<br/><span class="comment_text">▶</span> CATL, 글로벌 메이저 에너지 기업</td>
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">6월 인천공항 수송실적: 3분기는 맑음</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 6월 인천공항 여객수송실적 599만명(+1% (YoY))<br/><span class="comment_text">▶</span> 6월 인천공항 화물수송실적 26.2만톤(+5% (YoY))<br/><span class="comment_text">▶</span> 이제는 유류할증료 인하 구간</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>송선재,박태웅</td>
+                        <td class="ind"><font color="rgb(53,91,157)">자동차</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">어질리티 로보틱스가 SPAC 상장 추진</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 어질리티 로보틱스가 기업가치 5조원 규모로 SPAC 상장을 추진 중<br/><span class="comment_text">▶</span> 어질리티 로보틱스 및 휴머노이드 로봇인 디짓 모델에 대한 소개<br/><span class="comment_text">▶</span> 유니트리와 더불어 어질리티의 상장은 로봇 업종의 Valuation 벤치마크로 작용</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>이기훈,김현수</td>
+                        <td class="ind"><font color="rgb(53,91,157)">방송과엔터테인먼트</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">업황의 바닥이 다가오고 있다</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 목표주가 하향하나 JTBC 이슈 반사 수혜 가능성을 확인할 필요<br/><span class="comment_text">▶</span> CJ ENM: 2Q 예상 OP 313억원(+9%)<br/><span class="comment_text">▶</span> 스튜디오드래곤: 2Q 예상 OP 142억원(흑전)</td>
                     </tr>
                     
                     <!--tr style="height:5px; border:0px;">

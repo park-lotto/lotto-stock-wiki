@@ -1,0 +1,19 @@
+{
+  "target_kind": "market",
+  "market_direction": "neutral",
+  "macro_events": [
+    {
+      "fact": "美 상원의원, 선출직 공무원 밈코인 발행 금지 법안 추진",
+      "ts": "2026-07-04",
+      "quote": "美 상원의원, 선출직 공무원 밈코인 발행 금지 법안 추진"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "기타",
+      "stance": "neutral",
+      "comment": "암호화폐 규제 관련 법안 추진"
+    }
+  ],
+  "quote": "美 상원의원, 선출직 공무원 밈코인 발행 금지 법안 추진"
+}
