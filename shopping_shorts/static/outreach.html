@@ -60,12 +60,18 @@
   </main>
 <script>
 let STATE = {items:[], mode:"list", idx:0};
+let SELECTED = {};  // shortcode -> 마지막 선택한 문구
 
 function copyText(t, btn){
   navigator.clipboard.writeText(t).then(()=>{ if(btn){const o=btn.textContent;btn.textContent="복사됨✓";setTimeout(()=>btn.textContent=o,1200);} });
 }
+function pickDraft(sc, t, btn){
+  SELECTED[sc] = t;
+  copyText(t, btn);
+}
 function openAndCopy(item){
-  if(item.drafts && item.drafts[0]) navigator.clipboard.writeText(item.drafts[0]);
+  const chosen = SELECTED[item.shortcode] || (item.drafts && item.drafts[0]) || "";
+  if(chosen) navigator.clipboard.writeText(chosen);
   window.open(item.url, "_blank");
 }
 async function markDone(sc){
@@ -74,7 +80,7 @@ async function markDone(sc){
 
 function cardHtml(i, idx){
   const drafts = (i.drafts||[]).map(d=>
-    `<div class="draft"><span>${d}</span><button onclick="copyText(${JSON.stringify(d).replace(/"/g,'&quot;')}, this)">복사</button></div>`).join("")
+    `<div class="draft"><span>${d}</span><button onclick="pickDraft('${i.shortcode}', ${JSON.stringify(d).replace(/"/g,'&quot;')}, this)">복사</button></div>`).join("")
     || `<div class="draft" style="color:#c98">문구 생성 실패 — 직접 작성</div>`;
   return `<div class="card ${i.done?'done':''}" id="c_${i.shortcode}">
     <img src="${i.thumbnail||''}" onerror="this.style.display='none'">
