@@ -58,3 +58,34 @@ def test_grade_thresholds():
     assert grade_from_scores(0.6) == "🔥🔥"
     assert grade_from_scores(0.3) == "🔥"
     assert grade_from_scores(0.1) == "—"
+
+def test_hours_since_naive_timestamp_no_crash():
+    # 오프셋 없는(naive) 타임스탬프도 UTC로 간주하고 계산 (크래시 금지)
+    naive = "2026-07-08T02:00:00"   # no Z, no offset
+    result = hours_since(naive, now=NOW)  # NOW = 2026-07-08 12:00 UTC
+    assert round(result) == 10
+
+def test_build_items_survives_naive_timestamp():
+    reels = [{"shortcode": "n", "timestamp": "2026-07-08T02:00:00",
+              "commentsCount": 100, "likesCount": 0, "videoViewCount": 0,
+              "displayUrl": "", "url": "", "caption": ""}]
+    meta = {"name": "n", "followers": 100, "inpock": "", "username": "u"}
+    items = build_items(reels, meta, prev_comments=lambda sc: None,
+                        prev_delta=lambda sc: None, now=NOW, window_hours=48)
+    assert len(items) == 1  # 크래시 없이 항목 생성
+
+def test_apply_grades_negative_accel_not_worse_than_none():
+    from shopping_shorts.ranking import apply_grades
+    # A: 감속중(accel 음수) 강한 영상  B: 이력없음(accel None) 약한 영상
+    items = [
+        {"shortcode": "A", "speed": 100, "accel": -50, "density": 0.9},
+        {"shortcode": "B", "speed": 1,   "accel": None, "density": 0.01},
+    ]
+    apply_grades(items)
+    a = next(i for i in items if i["shortcode"] == "A")
+    b = next(i for i in items if i["shortcode"] == "B")
+    # 음수 가속이 0(중립)로 처리되어 score가 음수로 안 내려감
+    assert a["score"] >= 0
+    assert b["score"] >= 0
+    # 속도·밀도가 압도적인 A가 B보다 높아야 함
+    assert a["score"] > b["score"]

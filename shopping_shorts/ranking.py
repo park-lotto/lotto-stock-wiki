@@ -8,6 +8,8 @@ def hours_since(ts_iso, now=None):
     """ISO timestamp → 지금까지 경과 시간(h)."""
     now = now or datetime.now(timezone.utc)
     dt = datetime.fromisoformat(ts_iso.replace("Z", "+00:00"))
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
     return (now - dt).total_seconds() / 3600.0
 
 
@@ -68,7 +70,7 @@ def _normalize(items, key):
     hi = max(vals) if vals else 0
     if hi <= 0:
         return {i["shortcode"]: 0.0 for i in items}
-    return {i["shortcode"]: (i.get(key) or 0) / hi for i in items}
+    return {i["shortcode"]: max(0.0, (i.get(key) or 0) / hi) for i in items}
 
 
 def apply_grades(items):
