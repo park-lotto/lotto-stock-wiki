@@ -69,6 +69,27 @@ def api_saved():
     return {"ok": True, "saved": sorted(store.saved_set())}
 
 
+@app.get("/api/thumb")
+def api_thumb(url: str):
+    """인스타 CDN 썸네일 프록시 (핫링크 차단 우회). url=원본 이미지 주소."""
+    import requests
+    from fastapi.responses import Response
+    # 인스타 CDN 도메인만 허용 (SSRF 방지 — 임의 URL 프록시 금지)
+    if not any(h in url for h in ("cdninstagram.com", "fbcdn.net")):
+        return Response(status_code=400, content=b"invalid host")
+    try:
+        r = requests.get(url, timeout=15, headers={
+            "User-Agent": "Mozilla/5.0",
+            "Referer": "https://www.instagram.com/",
+        })
+        r.raise_for_status()
+        ctype = r.headers.get("Content-Type", "image/jpeg")
+        return Response(content=r.content, media_type=ctype,
+                        headers={"Cache-Control": "public, max-age=86400"})
+    except Exception:
+        return Response(status_code=404, content=b"")
+
+
 # 정적 프론트 (마운트는 맨 마지막)
 _STATIC = Path(__file__).parent / "static"
 app.mount("/", StaticFiles(directory=str(_STATIC), html=True), name="static")

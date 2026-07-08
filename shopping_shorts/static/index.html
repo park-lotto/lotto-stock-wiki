@@ -108,7 +108,7 @@ function render(){
   if(!items.length){ el.innerHTML='<div class="empty">결과 없음.</div>'; return; }
   el.innerHTML = items.map((i,idx)=>`
     <div class="card">
-      <img src="${i.thumbnail||''}" onerror="this.style.display='none'">
+      <img src="${i.thumbnail?('/api/thumb?url='+encodeURIComponent(i.thumbnail)):''}" loading="lazy" onerror="this.style.visibility='hidden'">
       <div class="body">
         <div class="rank">#${idx+1} · ${i.category} · ${Math.round(i.age_hours)}시간 전</div>
         <div class="ch">${i.name||i.username} <span class="grade">${i.grade||''}</span></div>

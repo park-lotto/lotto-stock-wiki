@@ -83,7 +83,7 @@ function cardHtml(i, idx){
     `<div class="draft"><span>${d}</span><button onclick="pickDraft('${i.shortcode}', ${JSON.stringify(d).replace(/"/g,'&quot;')}, this)">복사</button></div>`).join("")
     || `<div class="draft" style="color:#c98">문구 생성 실패 — 직접 작성</div>`;
   return `<div class="card ${i.done?'done':''}" id="c_${i.shortcode}">
-    <img src="${i.thumbnail||''}" onerror="this.style.display='none'">
+    <img src="${i.thumbnail?('/api/thumb?url='+encodeURIComponent(i.thumbnail)):''}" loading="lazy" onerror="this.style.visibility='hidden'">
     <div class="body">
       <div class="meta">#${idx+1} · ${i.category} · ${Math.round(i.age_hours)}시간 전 · 댓글 ${(i.comments||0).toLocaleString()}</div>
       <div class="ch">${i.name||i.username||''} ${i.done?'✅':''}</div>
