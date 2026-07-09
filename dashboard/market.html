@@ -2062,7 +2062,7 @@ function renderMarketFlow(d){
         +(invAllZero?`<span style="font-size:9px;color:#333;display:block;margin-top:2px">KIS API 미구독</span>`:"");
 
       // 기관 세부 (금투/투신/사모/연기금 등) — 확장 카드에서만 표시
-      const _subKeys=["금투","투신","사모","연기금","보험","은행","기타금융","국가"];
+      const _subKeys=["금투","투신","사모","연기금","기타금융"];
       const _hasSub=_subKeys.some(k=>inv[k]!==undefined);
       const subRows=!_hasSub?"":(()=>{
         const maxSub=Math.max(1,..._subKeys.map(k=>Math.abs(inv[k]||0)));
@@ -2173,7 +2173,7 @@ function renderMarketFlow(d){
     cards.forEach((c,i)=>{
       const isPreview=!_topPreviewExpanded.has(cardIds[i]);
       const nat=c.offsetHeight;
-      const targetH=isPreview?previewTargetH:MKT_CARD_HEIGHT;
+      const targetH=isPreview?previewTargetH:Math.max(MKT_CARD_HEIGHT,nat);
       c.style.height=targetH+'px';
       if(nat>targetH) c.style.overflowY='auto';                // 내용이 넘치면 스크롤
       else if(i===4) c.style.justifyContent='flex-start';     // 브리핑 카드: 짧으면 위 정렬(늘리지 않음)
