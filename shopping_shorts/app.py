@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from shopping_shorts.service import collect, generate_missing_drafts, next_draft_targets
 from shopping_shorts.outreach import build_queue
 from shopping_shorts.store import Store
-from shopping_shorts.config import DB_PATH
+from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE
 
 app = FastAPI(title="쇼핑쇼츠 레퍼런스 랭킹")
 
@@ -66,14 +66,17 @@ def api_reference():
 
 
 @app.get("/api/outreach")
-def api_outreach(sort: str = "latest", hide_done: bool = True):
-    """소통 큐 반환 — 마지막 수집 릴스 + draft 결합, 정렬·완료필터."""
+def api_outreach(sort: str = "latest", hide_done: bool = True, rank_limit: int = DRAFT_BATCH_SIZE):
+    """소통 큐 반환 — 마지막 수집 릴스 + draft 결합, 정렬·완료필터.
+
+    rank_limit: 레퍼런스랭킹(score) 상위 N개만 큐 후보로 노출(2026-07-09).
+    기본 40 — 프론트가 "댓글 더 생성" 클릭 시 40씩 늘려서 재요청한다."""
     store = Store(DB_PATH)
     items, _ = store.load_last_run()
     drafts = store.drafts_map([i["shortcode"] for i in items])
     commented = store.commented_set()
     queue = build_queue(items, drafts_map=drafts, commented=commented,
-                        sort=sort, hide_done=hide_done)
+                        sort=sort, hide_done=hide_done, rank_limit=rank_limit)
     return {"ok": True, "count": len(queue), "items": queue}
 
 

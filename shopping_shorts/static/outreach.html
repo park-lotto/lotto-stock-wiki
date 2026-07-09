@@ -81,7 +81,7 @@
       </select>
       <label class="toggle"><input type="checkbox" id="hideDone" checked onchange="reload()"> 완료 감추기</label>
       <button class="primary" id="modeBtn" onclick="toggleMode()">▶ 진행 시작</button>
-      <button id="moreDraftsBtn" onclick="generateMoreDrafts()">💬 댓글 더 생성 (상위 40개)</button>
+      <button id="moreDraftsBtn" onclick="generateMoreDrafts()">💬 댓글 더 생성 (+40)</button>
       <span id="status" style="color:var(--sub);font-size:12px"></span>
     </div>
     <div id="view"><div class="cards"><div class="empty">불러오는 중…</div></div></div>
@@ -101,7 +101,7 @@ function escapeHtml(s){
 async function generateMoreDrafts(){
   // 고정 배치번호 없음 — 매번 "draft 없고 완료 안 된 상위 40개"를 새로 계산해서
   // 생성하므로, 완료 처리로 큐가 줄거나 이전 시도가 실패했어도 항상 다음
-  // 상위권을 채운다(2026-07-09).
+  // 상위권을 채운다(2026-07-09). 큐 노출 범위(RANK_LIMIT)도 함께 40 늘린다.
   const btn = document.getElementById("moreDraftsBtn");
   btn.disabled = true;
   const prevText = btn.textContent;
@@ -111,8 +111,10 @@ async function generateMoreDrafts(){
     const d = await r.json();
     if(!d.ok){ btn.textContent = "❌ " + (d.error||"실패"); return; }
     if(d.count === 0){ btn.textContent = "더 생성할 항목 없음"; return; }
+    RANK_LIMIT += 40;
     btn.textContent = prevText;
     document.getElementById("status").textContent = `${d.count}건 백그라운드 생성 시작 — 잠시 후 새로고침하면 반영됩니다`;
+    await reload();
   }catch(e){ btn.textContent = "❌ " + e.message; }
   finally{ btn.disabled = false; }
 }
@@ -167,6 +169,16 @@ function renderList(){
 }
 async function doneCard(sc){
   await markDone(sc);
+  const it = STATE.items.find(x=>x.shortcode===sc);
+  if(it) it.done = true;
+  // 현재 노출된 상위 RANK_LIMIT개를 전부 완료하면 자동으로 다음 40개를
+  // 노출 범위에 편입한다(2026-07-09, "다 하거나 버튼 누르면 추가" 요구사항).
+  if(STATE.items.length && STATE.items.every(x=>x.done)){
+    RANK_LIMIT += 40;
+    document.getElementById("status").textContent = "상위 항목 완료 — 다음 40개 노출";
+    await reload();
+    return;
+  }
   const el=document.getElementById("c_"+sc);
   if(document.getElementById("hideDone").checked){ if(el) el.remove(); }
   else if(el){ el.classList.add("done"); }
@@ -207,16 +219,23 @@ function bringFocusToFront(sc){
   setTimeout(()=>{ if(el) el.classList.remove("focus-highlight"); }, 3200);
 }
 
+let RANK_LIMIT = 40;  // 레퍼런스랭킹(score) 상위 N개만 큐에 노출(2026-07-09) —
+// 373건 전체를 다 띄우면 draft 생성 범위와 화면 노출 범위가 어긋나 "실패"로
+// 오인하는 항목이 많았음. "댓글 더 생성" 클릭 또는 현재 노출분 전부 완료 시 +40.
+
 async function reload(isInitial){
   const sort=document.getElementById("sort").value;
-  // focus로 들어온 항목은 "완료 감추기"가 켜져있어도 반드시 보이게 함
-  const hide = (isInitial && FOCUS_SC) ? false : document.getElementById("hideDone").checked;
+  // focus로 들어온 항목은 "완료 감추기"가 켜져있어도 반드시 보이게 함. rank_limit도
+  // focus 항목이 상위 40위 밖일 수 있어 이번 요청만 무제한으로 푼다.
+  const isFocusLoad = isInitial && FOCUS_SC;
+  const hide = isFocusLoad ? false : document.getElementById("hideDone").checked;
+  const rankParam = isFocusLoad ? "" : `&rank_limit=${RANK_LIMIT}`;
   document.getElementById("status").textContent="불러오는 중…";
-  const d=await (await fetch(`/api/outreach?sort=${sort}&hide_done=${hide}`)).json();
+  const d=await (await fetch(`/api/outreach?sort=${sort}&hide_done=${hide}${rankParam}`)).json();
   STATE.items=d.items||[]; STATE.idx=0;
-  document.getElementById("status").textContent=`${d.count}건`;
+  document.getElementById("status").textContent=`${d.count}건 (상위 ${RANK_LIMIT}위 기준)`;
   render();
-  if(isInitial && FOCUS_SC) bringFocusToFront(FOCUS_SC);
+  if(isFocusLoad) bringFocusToFront(FOCUS_SC);
 }
 reload(true);
 </script>
