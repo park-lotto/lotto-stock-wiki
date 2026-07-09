@@ -177,19 +177,17 @@ function toggleMode(){
 }
 function render(){ STATE.mode==="list" ? renderList() : renderProgress(); }
 
-function scrollToFocus(sc){
-  if(STATE.mode==="progress"){
-    const list = STATE.items.filter(i=>!i.done);
-    const idx = list.findIndex(i=>i.shortcode===sc);
-    if(idx>=0){ STATE.idx=idx; renderProgress(); }
-    return;
-  }
+function bringFocusToFront(sc){
+  // 순위가 한참 뒤(예: #273)인 항목이면 스크롤을 아무리 맨위로 해도 "화면이 훅
+  // 이동해버리는" 느낌이라 체감이 안 좋았다(2026-07-09) — 스크롤 대신 포커스
+  // 항목을 리스트 맨 앞으로 재배치해서 페이지 로드 시 바로 위에서 보이게 한다.
+  const idx = STATE.items.findIndex(i=>i.shortcode===sc);
+  if(idx>0){ const [it]=STATE.items.splice(idx,1); STATE.items.unshift(it); }
+  if(STATE.mode==="progress"){ STATE.idx=0; renderProgress(); return; }
+  render();
   const el = document.getElementById("c_"+sc);
-  if(el){
-    el.scrollIntoView({behavior:"smooth", block:"start"});
-    el.classList.add("focus-highlight");
-    setTimeout(()=>el.classList.remove("focus-highlight"), 3200);
-  }
+  if(el) el.classList.add("focus-highlight");
+  setTimeout(()=>{ if(el) el.classList.remove("focus-highlight"); }, 3200);
 }
 
 async function reload(isInitial){
@@ -201,7 +199,7 @@ async function reload(isInitial){
   STATE.items=d.items||[]; STATE.idx=0;
   document.getElementById("status").textContent=`${d.count}건`;
   render();
-  if(isInitial && FOCUS_SC) scrollToFocus(FOCUS_SC);
+  if(isInitial && FOCUS_SC) bringFocusToFront(FOCUS_SC);
 }
 reload(true);
 </script>

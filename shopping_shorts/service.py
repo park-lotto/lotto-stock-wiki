@@ -2,6 +2,7 @@
 import csv
 from pathlib import Path
 from datetime import datetime, timezone
+from concurrent.futures import ThreadPoolExecutor
 from shopping_shorts.config import DB_PATH, WINDOW_HOURS, DRAFT_BATCH_SIZE
 from shopping_shorts.channels import load_channels
 from shopping_shorts.apify_client import fetch_reels
@@ -34,26 +35,38 @@ def draft_batch(items, batch, batch_size=DRAFT_BATCH_SIZE):
     return ranked[start:start + batch_size]
 
 
+_DRAFT_WORKERS = 4  # Gemini "general" 그룹 계정 풀 크기(APIFY_TOKENS와 별개)와 맞춤
+
+
+def _generate_one(it):
+    """항목 하나 처리 — 이미 draft 있으면 스킵, 생성되면 저장. 스레드풀에서 병렬 호출됨."""
+    store = Store(DB_PATH)
+    sc = it["shortcode"]
+    if store.get_drafts(sc):
+        return
+    drafts = _gen_comments(it.get("caption", ""), it.get("name"), it.get("category"))
+    if drafts:
+        store.save_drafts(sc, drafts)
+
+
 def generate_missing_drafts(items):
     """댓글 draft 미리 생성 (기존 draft 없는 항목만 — 재수집 시 중복 호출·비용 방지).
+    항목들을 스레드풀로 병렬 처리한다(2026-07-09) — 순차 처리 시 한 항목이
+    쿼터에 걸려 재시도하는 동안 나머지가 전부 대기해야 했던 문제 완화, Gemini
+    계정 풀(4개)을 동시에 활용해 처리 속도도 개선.
 
-    Gemini 호출 1건당 최대 수십 초(쿼터 걸리면 62초 재시도 대기)라 항목이
-    많으면(443채널 전체수집 시 수백 건) 통째로 몇 분~수십 분이 걸린다 — collect()의
-    HTTP 응답을 막지 않도록 app.py에서 BackgroundTasks로 분리 호출한다(2026-07-09,
-    "수집 버튼 눌렀는데 안 끝남" 사고 이후 분리).
+    Gemini 호출 1건당 최대 수십 초(쿼터 걸리면 재시도 대기)라 항목이 많으면
+    (443채널 전체수집 시 수백 건) 시간이 걸린다 — collect()의 HTTP 응답을 막지
+    않도록 app.py에서 BackgroundTasks로 분리 호출한다(2026-07-09, "수집 버튼
+    눌렀는데 안 끝남" 사고 이후 분리).
 
     알려진 한계(2026-07-09 최종 리뷰): 수집 버튼에 쿨다운이 없어(직원 테스트용이라
     의도적으로 미적용) 이 백그라운드 작업이 끝나기 전에 「지금 수집」을 다시 누르면
     같은 shortcode에 대해 두 번째 generate_missing_drafts()가 동시에 돌 수 있다.
     get_drafts() 체크가 두 호출 모두 "없음"으로 볼 수 있어 Gemini 중복호출(비용 낭비)
     가능성 있음 — 다만 idempotent라 데이터 손상은 없고, 다음 수집에서 자연 정리됨."""
-    store = Store(DB_PATH)
-    for it in items:
-        sc = it["shortcode"]
-        if not store.get_drafts(sc):
-            drafts = _gen_comments(it.get("caption", ""), it.get("name"), it.get("category"))
-            if drafts:
-                store.save_drafts(sc, drafts)
+    with ThreadPoolExecutor(max_workers=_DRAFT_WORKERS) as pool:
+        list(pool.map(_generate_one, items))
 
 
 def collect(limit_channels=None):
