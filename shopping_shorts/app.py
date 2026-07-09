@@ -143,8 +143,8 @@ def api_find_analyze(shortcode: str):
 
 @app.get("/api/find/frame/{work_id}/{filename}")
 def api_find_frame(work_id: str, filename: str):
-    path = _FIND_TMP_DIR / work_id / filename
-    if not path.exists():
+    path = (_FIND_TMP_DIR / work_id / filename).resolve()
+    if not path.is_relative_to(_FIND_TMP_DIR.resolve()) or not path.exists():
         return JSONResponse(status_code=404, content={"ok": False})
     return FileResponse(path)
 

@@ -68,10 +68,16 @@ def test_login_correct_password_sets_cookie_and_grants_access(monkeypatch):
 def test_find_analyze_downloads_extracts_analyzes_and_saves(monkeypatch, client, tmp_path):
     from shopping_shorts import app as app_module
     from shopping_shorts.store import Store
-    from shopping_shorts.config import DB_PATH
+
+    # 실제 운영 DB(shopping_shorts/data/reference.db)를 절대 건드리지 않도록
+    # app_module에 바인딩된 DB_PATH를 tmp_path 격리 DB로 교체한다.
+    # (config.DB_PATH만 monkeypatch하면 app.py가 모듈 로드 시 이미 바인딩해둔
+    #  이름은 그대로라서 실DB에 계속 쓰게 된다 — app_module.DB_PATH를 직접 바꿔야 함)
+    test_db_path = tmp_path / "test.db"
+    monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
 
     # 마지막 수집 결과에 분석 대상 아이템을 하나 심어둔다
-    store = Store(DB_PATH)
+    store = Store(test_db_path)
     store.save_last_run([{
         "shortcode": "sc1", "video_url": "https://example.com/v.mp4",
         "caption": "여름 바닥 청소", "thumbnail": "t.jpg",
@@ -100,6 +106,35 @@ def test_find_analyze_downloads_extracts_analyzes_and_saves(monkeypatch, client,
     assert saved["keywords"]["ko"] == ["바닥 청소"]
 
 
-def test_find_analyze_unknown_shortcode_404(client):
+def test_find_analyze_unknown_shortcode_404(monkeypatch, client, tmp_path):
+    from shopping_shorts import app as app_module
+
+    # 이 엔드포인트도 store.load_last_run()으로 실DB를 읽으므로 동일하게 격리한다.
+    monkeypatch.setattr(app_module, "DB_PATH", tmp_path / "test.db")
+
     r = client.post("/api/find/analyze", params={"shortcode": "nope"})
     assert r.status_code == 404
+
+
+def test_find_frame_rejects_path_traversal(client):
+    """work_id="..", filename=<실제파일명> 이면 슬래시 하나 없이도
+    _FIND_TMP_DIR(data/find_frames/)의 부모 디렉터리(data/)로 탈출해서
+    실DB(reference.db) 같은 임의 파일을 서빙할 수 있었던 취약점 회귀 테스트.
+
+    ".."을 URL에 그대로 쓰면 httpx가 요청 전송 전에 클라이언트 사이드에서
+    dot-segment를 정규화해버려(RFC 3986) "/api/find/frame/../reference.db"가
+    "/api/find/reference.db"로 바뀌고, 이는 라우트 자체가 안 맞아 애초에
+    404가 나므로 수정 여부와 무관하게 항상 통과하는 가짜 테스트가 된다.
+    그래서 %2e%2e로 퍼센트인코딩해 클라이언트 정규화를 우회하고, 서버(Starlette)가
+    이를 그대로 문자열 ".."인 path param으로 넘기게 만든다 — 실제 공격 벡터와 동일.
+    수정 전 코드였다면 이 요청은 200 + reference.db 바이트를 반환했다(수동 확인됨)."""
+    from shopping_shorts import app as app_module
+
+    # _FIND_TMP_DIR 밖(부모 디렉터리인 data/)에 실제로 존재하는 파일을 대상으로
+    # "work_id=..", filename=그 파일명" 으로 탈출을 시도한다.
+    assert app_module.DB_PATH.parent == app_module._FIND_TMP_DIR.parent
+    target_name = app_module.DB_PATH.name  # "reference.db" — data/ 바로 아래 실재하는 파일
+
+    r = client.get(f"/api/find/frame/%2e%2e/{target_name}")
+    assert r.status_code == 404
+    assert r.content != app_module.DB_PATH.read_bytes()
