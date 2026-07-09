@@ -91,6 +91,13 @@ let STATE = {items:[], mode:"list", idx:0};
 let SELECTED = {};  // shortcode -> 마지막 선택한 문구
 const FOCUS_SC = new URLSearchParams(location.search).get("focus");  // 랭킹 페이지 "댓글참여" 버튼에서 넘어온 대상
 
+function escapeHtml(s){
+  // 캡션/댓글문구/채널명은 인스타 원본 텍스트라 <, &, " 등이 그대로 들어있을 수
+  // 있다 — 마크업으로 해석돼 레이아웃이 깨지는 걸 방지(2026-07-09, onclick
+  // 속성 파손 버그 고치면서 같이 점검).
+  return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
 async function generateMoreDrafts(){
   // 고정 배치번호 없음 — 매번 "draft 없고 완료 안 된 상위 40개"를 새로 계산해서
   // 생성하므로, 완료 처리로 큐가 줄거나 이전 시도가 실패했어도 항상 다음
@@ -113,12 +120,20 @@ async function generateMoreDrafts(){
 function copyText(t, btn){
   navigator.clipboard.writeText(t).then(()=>{ if(btn){const o=btn.textContent;btn.textContent="복사됨✓";setTimeout(()=>btn.textContent=o,1200);} });
 }
-function pickDraft(sc, t, btn){
+let ITEM_MAP = {};  // shortcode -> item. 캡션/문구를 HTML 속성에 직접 박아넣지
+// 않고 shortcode(안전한 URL 형식)만 넘기고 여기서 조회한다 — 캡션에 작은따옴표(')가
+// 하나라도 있으면 onclick='...JSON...' 속성이 거기서 깨져 나머지 JSON이 화면에
+// 그대로 새어나오던 버그(2026-07-09, "score":0.001,... 텍스트 노출) 수정.
+
+function pickDraft(sc, draftIdx, btn){
+  const t = ITEM_MAP[sc]?.drafts?.[draftIdx] || "";
   SELECTED[sc] = t;
   copyText(t, btn);
 }
-function openAndCopy(item){
-  const chosen = SELECTED[item.shortcode] || (item.drafts && item.drafts[0]) || "";
+function openAndCopy(sc){
+  const item = ITEM_MAP[sc];
+  if(!item) return;
+  const chosen = SELECTED[sc] || (item.drafts && item.drafts[0]) || "";
   if(chosen) navigator.clipboard.writeText(chosen);
   window.open(item.url, "_blank");
 }
@@ -127,18 +142,19 @@ async function markDone(sc){
 }
 
 function cardHtml(i, idx){
-  const drafts = (i.drafts||[]).map(d=>
-    `<div class="draft"><span>${d}</span><button onclick="pickDraft('${i.shortcode}', ${JSON.stringify(d).replace(/"/g,'&quot;')}, this)">복사</button></div>`).join("")
+  ITEM_MAP[i.shortcode] = i;
+  const drafts = (i.drafts||[]).map((d, di)=>
+    `<div class="draft"><span>${escapeHtml(d)}</span><button onclick="pickDraft('${i.shortcode}', ${di}, this)">복사</button></div>`).join("")
     || `<div class="draft" style="color:#c98">문구 생성 실패 — 직접 작성</div>`;
   return `<div class="card ${i.done?'done':''}" id="c_${i.shortcode}">
     <img src="${i.thumbnail?('/api/thumb?url='+encodeURIComponent(i.thumbnail)):''}" loading="lazy" onerror="this.style.visibility='hidden'">
     <div class="body">
       <div class="meta">#${idx+1} · ${i.category} · ${Math.round(i.age_hours)}시간 전 · 댓글 ${(i.comments||0).toLocaleString()}</div>
-      <div class="ch">${i.name||i.username||''} ${i.done?'✅':''}</div>
-      <div class="cap">${(i.caption||'').slice(0,60)}</div>
+      <div class="ch">${escapeHtml(i.name||i.username||'')} ${i.done?'✅':''}</div>
+      <div class="cap">${escapeHtml((i.caption||'').slice(0,60))}</div>
       ${drafts}
       <div class="row">
-        <button class="primary" onclick='openAndCopy(${JSON.stringify(i)})'>🔗 게시물 열기+복사</button>
+        <button class="primary" onclick="openAndCopy('${i.shortcode}')">🔗 게시물 열기+복사</button>
         <button onclick="doneCard('${i.shortcode}')">✓ 완료</button>
       </div>
     </div></div>`;
