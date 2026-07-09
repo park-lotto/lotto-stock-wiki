@@ -1,0 +1,29 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "HPSP",
+      "signal": "bull",
+      "reason": "온디바이스 AI 수혜주",
+      "ts": null,
+      "quote": "HPSP·리노공업 주가 신바람... 온디바이스 AI 수혜주 찾아라",
+      "sector": "반도체"
+    },
+    {
+      "name": "리노공업",
+      "signal": "bull",
+      "reason": "온디바이스 AI 수혜주",
+      "ts": null,
+      "quote": "HPSP·리노공업 주가 신바람... 온디바이스 AI 수혜주 찾아라",
+      "sector": "반도체"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "온디바이스 AI 관련 수혜주로 HPSP와 리노공업이 주목받음",
+      "ts": "2026-07-04 15:40",
+      "quote": "HPSP·리노공업 주가 신바람... 온디바이스 AI 수혜주 찾아라"
+    }
+  ],
+  "quote": "HPSP·리노공업 주가 신바람... 온디바이스 AI 수혜주 찾아라"
+}

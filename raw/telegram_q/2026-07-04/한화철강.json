@@ -1,0 +1,57 @@
+{
+  "sector_name": "기타",
+  "sector_view": "중립",
+  "points": [
+    "비철금속 시장은 지정학적 불확실성으로 품목별 차별화 흐름 지속",
+    "미국 전역 폭염으로 인한 전력망 수급 압박 및 독립기념일 행사 차질",
+    "글로벌 에너지 전환 및 전쟁 이슈로 석유·가스·석탄 관련 에너지원 변동성 확대"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "SQM",
+      "comment": "합작사를 통해 리튬 연간 생산 목표를 47만 톤으로 제시하며 생산량 확대 계획 발표",
+      "ts": "19:12",
+      "quote": "SQM-Codelco Venture Maps Path to Higher Lithium Output in Chile",
+      "sector": "2차전지"
+    },
+    {
+      "name": "Codelco",
+      "comment": "SQM과 합작하여 리튬 생산 통합 시스템 전환 및 생산량 확대 추진",
+      "ts": "19:12",
+      "quote": "SQM-Codelco Venture Maps Path to Higher Lithium Output in Chile",
+      "sector": "기타"
+    },
+    {
+      "name": "에어버스",
+      "comment": "공급망 차질에도 상반기 350대 인도, 하반기 생산 가속화 필요",
+      "ts": "19:33",
+      "quote": "Airbus Delivered 350 Planes in First Half Amid Supply Chain Woes",
+      "sector": "기타"
+    },
+    {
+      "name": "보잉",
+      "comment": "트럼프 행정부 지원을 바탕으로 생산량 회복 및 에어버스 추격 중",
+      "ts": "19:33",
+      "quote": "Airbus Delivered 350 Planes in First Half Amid Supply Chain Woes",
+      "sector": "기타"
+    }
+  ],
+  "events": [
+    {
+      "fact": "금 가격 전망치 하향 조정",
+      "ts": "18:51",
+      "quote": "JPMorgan sees $4,500 gold price in fourth quarter, says risks to downside"
+    },
+    {
+      "fact": "독일 석탄 발전소 폐쇄 중단 촉구",
+      "ts": "19:31",
+      "quote": "Germany Should Stop Shutting Off Coal Plants, Grid Operator Says"
+    },
+    {
+      "fact": "미국 천연가스 에너지원 1위 전망",
+      "ts": "19:34",
+      "quote": "America Runs on Natural Gas: Fuel Set to Surpass Oil as US Top Energy Source by 2030"
+    }
+  ],
+  "quote": "지정학적 리스크와 에너지 수급 불균형이 글로벌 원자재 및 산업 시장 전반의 변동성을 키우고 있습니다."
+}

@@ -1,0 +1,26 @@
+{
+  "target_kind": "sector",
+  "sector_name": "전력",
+  "sector_view": "긍정",
+  "points": [
+    "효성중공업의 30년 기술력을 바탕으로 한 국산 HVDC 기술력 확보",
+    "글로벌 HVDC 틈새시장 공략을 통한 해외 시장 확대 기대"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "효성중공업",
+      "comment": "30년 기술력을 보유한 국산 HVDC 기술로 글로벌 시장 진출 가속화",
+      "ts": null,
+      "quote": "30년 기술로 만든 국산 HVDC 글로벌 틈새시장 도전",
+      "sector": "전력"
+    }
+  ],
+  "events": [
+    {
+      "fact": "효성중공업, 국산 HVDC 기술로 글로벌 틈새시장 진출 본격화",
+      "ts": "2026-04-08",
+      "quote": "30년 기술로 만든 국산 HVDC 글로벌 틈새시장 도전"
+    }
+  ],
+  "quote": "30년 기술로 만든 국산 HVDC 글로벌 틈새시장 도전"
+}

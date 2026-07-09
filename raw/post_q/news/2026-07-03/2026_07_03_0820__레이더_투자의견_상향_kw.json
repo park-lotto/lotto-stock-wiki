@@ -1,0 +1,151 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "판도라",
+      "signal": "bull",
+      "reason": "목표주가 49% 상향",
+      "ts": "07-02",
+      "quote": "UBS, 판도라 투자의견 상향…목표주가 49% 올려",
+      "sector": "소비내수"
+    },
+    {
+      "name": "록히드마틴",
+      "signal": "bull",
+      "reason": "시티은행 투자의견 '매수' 상향",
+      "ts": "07-01",
+      "quote": "록히드마틴, 시티은행 투자의견 '매수' 상향에 주가 강세",
+      "sector": "방산"
+    },
+    {
+      "name": "SK하이닉스",
+      "signal": "bull",
+      "reason": "목표주가 400만원 상향 및 에이전트 AI 최대 수혜",
+      "ts": "07-01",
+      "quote": "IBK투자증권, SK하이닉스 목표주가 400만원 상향…\"에이전트 AI 최대 수혜\"",
+      "sector": "반도체"
+    },
+    {
+      "name": "어도비 시스템즈",
+      "signal": "bull",
+      "reason": "AI 경쟁 우려 불식",
+      "ts": "07-02",
+      "quote": "HSBC, 어도비 시스템즈 투자의견 상향...AI 경쟁 우려 불식",
+      "sector": "IT"
+    },
+    {
+      "name": "그라인더",
+      "signal": "bull",
+      "reason": "신제품 통한 수익성 개선 기대",
+      "ts": "07-01",
+      "quote": "그라인더, 신제품 통한 수익성 개선 기대감·월가 투자의견 상향…주가 급등",
+      "sector": "기타"
+    },
+    {
+      "name": "STM마이크로일렉트로닉스",
+      "signal": "bull",
+      "reason": "바클레이즈 투자의견 상향",
+      "ts": "06-29",
+      "quote": "STM마이크로일렉트로닉스, 바클레이즈 투자의견 상향에 4% 급등",
+      "sector": "반도체"
+    },
+    {
+      "name": "와츠워터테크놀로지스",
+      "signal": "bull",
+      "reason": "월가 투자의견 ‘매수’ 상향",
+      "ts": "06-30",
+      "quote": "와츠워터테크놀로지스, 월가 투자의견 ‘매수’ 상향 소식에 주가 급등",
+      "sector": "기타"
+    },
+    {
+      "name": "RS그룹",
+      "signal": "bull",
+      "reason": "도이체 누미스 투자의견 상향",
+      "ts": "07-01",
+      "quote": "RS그룹, 도이체 누미스 투자의견 상향에 주가 상승",
+      "sector": "기타"
+    },
+    {
+      "name": "블록",
+      "signal": "bull",
+      "reason": "이익 성장 및 수익성 확대 기대",
+      "ts": "06-30",
+      "quote": "블록, 이익 성장·수익성 확대 기대…투자의견 두단계 상향-파이퍼샌들러",
+      "sector": "기타"
+    },
+    {
+      "name": "바르질라",
+      "signal": "bull",
+      "reason": "중기 전망 개선",
+      "ts": "07-01",
+      "quote": "JP모건, 바르질라 중기 전망 개선으로 투자의견 상향…밸류에이션 상승 여력은 제한적",
+      "sector": "기타"
+    },
+    {
+      "name": "세일즈포스",
+      "signal": "bull",
+      "reason": "구겐하임 '매수' 투자의견 및 AI 수혜 기대",
+      "ts": "07-01",
+      "quote": "세일즈포스·서비스나우, 구겐하임 '매수' 투자의견·AI 수혜 기대감에 주가 4%·6...",
+      "sector": "IT"
+    },
+    {
+      "name": "서비스나우",
+      "signal": "bull",
+      "reason": "구겐하임 '매수' 투자의견 및 AI 수혜 기대",
+      "ts": "07-01",
+      "quote": "세일즈포스·서비스나우, 구겐하임 '매수' 투자의견·AI 수혜 기대감에 주가 4%·6...",
+      "sector": "IT"
+    },
+    {
+      "name": "Circle Internet",
+      "signal": "bull",
+      "reason": "가치평가 상향 조정",
+      "ts": "06-30",
+      "quote": "Compass Point, Circle Internet 주식 투자의견 가치평가로 상향 조정",
+      "sector": "기타"
+    },
+    {
+      "name": "DLocal",
+      "signal": "bull",
+      "reason": "성장 전망에 따른 투자의견 '매수' 상향",
+      "ts": "07-01",
+      "quote": "UBS, 성장 전망에 DLocal 주식 투자의견 ’매수’로 상향",
+      "sector": "기타"
+    },
+    {
+      "name": "프라임 메디슨",
+      "signal": "bull",
+      "reason": "투자의견 '매수' 상향",
+      "ts": "06-29",
+      "quote": "H.C. Wainwright, 프라임 메디슨 투자의견 ’매수’로 상향",
+      "sector": "바이오"
+    },
+    {
+      "name": "Cytokinetics",
+      "signal": "bull",
+      "reason": "Myqorzo 출시 호조",
+      "ts": "06-29",
+      "quote": "UBS, Cytokinetics 투자의견 상향... Myqorzo 출시 호조 덕분",
+      "sector": "바이오"
+    },
+    {
+      "name": "컴캐스트",
+      "signal": "bull",
+      "reason": "분사 계획",
+      "ts": "06-30",
+      "quote": "도이치뱅크, 컴캐스트 분사 계획에 주식 투자의견 ’매수’ 상향",
+      "sector": "통신"
+    },
+    {
+      "name": "가던트 헬스",
+      "signal": "bull",
+      "reason": "FDA 승인",
+      "ts": "06-26",
+      "quote": "번스타인, 가던트 헬스 FDA 승인에 투자의견 상향",
+      "sector": "바이오"
+    }
+  ],
+  "news_items": [],
+  "quote": "글로벌 주요 기업들의 투자의견 상향 조정 소식 모음"
+}

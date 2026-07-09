@@ -1,0 +1,125 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "삼성전자",
+      "signal": "bull",
+      "reason": "메모리 펀더멘털 건재 및 가격 협상력 강화",
+      "ts": "59만원",
+      "quote": "모닝스타, 삼전·닉스 목표주가 상향…유례없는 가격 협상력",
+      "sector": "반도체"
+    },
+    {
+      "name": "SK하이닉스",
+      "signal": "bull",
+      "reason": "메가 프로젝트 효과 및 견고한 펀더멘털",
+      "ts": "420만원",
+      "quote": "수천조 '메가 프로젝트' 효과\" SK하이닉스 420만원·삼전 59만원 목표 주가 상향",
+      "sector": "반도체"
+    },
+    {
+      "name": "LG이노텍",
+      "signal": "bull",
+      "reason": "2분기 깜짝 실적 기대",
+      "ts": null,
+      "quote": "교보증권 \"LG이노텍 2분기 '깜짝 실적' 기대…목표주가 상향\"",
+      "sector": "IT"
+    },
+    {
+      "name": "LG전자",
+      "signal": "bull",
+      "reason": "2분기 미국 관세 환급으로 인한 실적 개선",
+      "ts": null,
+      "quote": "하나증권 \"LG전자 목표주가 상향, 2분기 미국 관세 환급으로 실적 기대 이상\"",
+      "sector": "IT"
+    },
+    {
+      "name": "제너럴 밀스",
+      "signal": "bull",
+      "reason": "실적 호조",
+      "ts": null,
+      "quote": "TD 코웬, 제너럴 밀스 실적 호조에 목표주가 상향",
+      "sector": "소비내수"
+    },
+    {
+      "name": "어플라이드 머티어리얼즈",
+      "signal": "bull",
+      "reason": "월가 목표주가 릴레이 상향",
+      "ts": null,
+      "quote": "[GAM] 어플라이드 머티어리얼즈 ② 월가의 목표주가 릴레이 상향",
+      "sector": "반도체"
+    },
+    {
+      "name": "팔란티어",
+      "signal": "bull",
+      "reason": "증권사 투자의견 상향",
+      "ts": "175달러",
+      "quote": "팔란티어, 증권사 투자의견 상향에 주가 상승…목표가 175달러",
+      "sector": "IT"
+    },
+    {
+      "name": "베이커 휴즈",
+      "signal": "bull",
+      "reason": "핵심 사업 모멘텀",
+      "ts": null,
+      "quote": "TD Cowen, 베이커 휴즈 목표주가 상향…핵심 사업 모멘텀",
+      "sector": "기타"
+    },
+    {
+      "name": "GE Aerospace",
+      "signal": "bull",
+      "reason": "수익 전망 상향",
+      "ts": null,
+      "quote": "제프리스, GE Aerospace 목표주가 상향…수익 전망 상향 조정",
+      "sector": "기타"
+    },
+    {
+      "name": "Hims & Hers",
+      "signal": "bull",
+      "reason": "FDA 펩타이드 검토",
+      "ts": null,
+      "quote": "BofA, FDA 펩타이드 검토에 Hims & Hers 목표주가 상향 조정",
+      "sector": "바이오"
+    },
+    {
+      "name": "도이체방크",
+      "signal": "bull",
+      "reason": "모건 스탠리 발언 및 목표주가 상향",
+      "ts": null,
+      "quote": "도이체방크 주가, 모건 스탠리 발언 및 목표주가 상향에 6% 급등",
+      "sector": "기타"
+    },
+    {
+      "name": "유나이티드렌탈스",
+      "signal": "bull",
+      "reason": "건설 경기 회복 기대",
+      "ts": null,
+      "quote": "UBS, 유나이티드렌탈스 목표주가 상향…건설 경기 회복 기대",
+      "sector": "기타"
+    },
+    {
+      "name": "팔로 알토 네트웍스",
+      "signal": "bull",
+      "reason": "강력한 실적 기반",
+      "ts": null,
+      "quote": "FBN 증권, 팔로 알토 네트웍스 목표주가 상향…강력한 실적에 기반",
+      "sector": "IT"
+    },
+    {
+      "name": "일루미나",
+      "signal": "bull",
+      "reason": "임상 사업 강점 부각",
+      "ts": null,
+      "quote": "파이퍼 샌들러, 일루미나 목표 주가 상향... 임상 사업 강점 부각",
+      "sector": "바이오"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "BofA, 유로존 성장 기대감에 Stoxx 600 목표주가 상향",
+      "ts": null,
+      "quote": "BofA, 유로존 성장 기대감에 Stoxx 600 목표주가 상향"
+    }
+  ],
+  "quote": "글로벌 증권가들의 주요 종목에 대한 목표주가 상향 움직임이 포착됨"
+}

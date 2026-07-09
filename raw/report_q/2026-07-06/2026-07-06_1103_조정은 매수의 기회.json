@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "date": "2026-07-06",
+    "broker": "유진투자증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-06_1103_조정은 매수의 기회.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유진투자증권",
+    "analyst": "손인준",
+    "report_date": "2026.07.06",
+    "stocks": [
+      {
+        "name": "삼성전자",
+        "code": "005930",
+        "rating": "STRONG BUY",
+        "rating_changed": false,
+        "tp_new": 560000,
+        "tp_prev": 560000,
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "2Q26": {
+            "sales": "168.1조원(+26%qoq)",
+            "operating_profit": "83.1조원(+45%qoq)"
+          },
+          "DS_2Q26": {
+            "operating_profit": "81.6조원(+52%qoq)"
+          },
+          "2026_2027": {
+            "operating_profit": "361.3조원(+726%yoy), 589.4조원(+63%YoY)"
+          }
+        },
+        "estimate_revision": {
+          "operating_profit_26E": "▲",
+          "operating_profit_27E": "▲"
+        },
+        "next_catalyst": "메모리 가격 강세 지속 및 주주환원 확대",
+        "thesis": [
+          "고객사의 메모리 재고 확보 경쟁 및 가격 협상력 확대를 통한 실적 성장",
+          "공격적인 가격 인상 정책과 HBM4 선제적 출하로 인한 우호적인 blended ASP 확보",
+          "연간 FCF의 50%를 활용한 대규모 자사주 소각 중심의 주주환원 정책"
+        ],
+        "valuation_basis": null,
+        "risk": "반도체 업종 주가의 큰 폭 하락세 및 Foundry/LSI의 연내 흑자 전환 어려움",
+        "supply_comment": "메모리 공급과 연계된 고객사 확보 전략 진행 중",
+        "quote": "삼성전자의 2026년, 2027년 영업이익은 361.3조원(+726%yoy), 589.4조원(+63%YoY)으로 전망한다. 2H26에도 메모리 가격 강세는 지속될 전망이다."
+      }
+    ]
+  }
+}

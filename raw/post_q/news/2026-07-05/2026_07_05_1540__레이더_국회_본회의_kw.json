@@ -1,0 +1,19 @@
+{
+  "target_kind": "market",
+  "market_direction": "neutral",
+  "macro_events": [
+    {
+      "fact": "반쪽 국회 운영에 따른 여당의 상임위 독식 논란 지속",
+      "ts": "2026-07-05",
+      "quote": "반쪽 국회 속 드리운 ‘與 상임위 독식’ 그림자"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "기타",
+      "stance": "neutral",
+      "comment": "국회 운영 파행에 따른 정치적 불확실성 증대"
+    }
+  ],
+  "quote": "반쪽 국회 속 드리운 ‘與 상임위 독식’ 그림자"
+}

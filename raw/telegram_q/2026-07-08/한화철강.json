@@ -2,76 +2,61 @@
   "sector_name": "기타",
   "sector_view": "중립",
   "points": [
-    "중국의 희토류 수출 통제 지속으로 인한 글로벌 공급망 재편 가속화",
-    "AI 인프라 및 전력 수요 증가에 따른 핵심 광물 및 에너지원 확보 경쟁 심화",
-    "걸프 산유국의 증산 움직임으로 인한 유가 하방 압력 증대"
+    "중국과 홍콩이 위안화 국제화를 위해 채권 및 금 거래 인프라를 강화하고 있습니다.",
+    "중국의 희토류 수출 통제로 인해 일본의 핵심 광물 공급망에 차질이 발생하고 있습니다.",
+    "걸프 산유국들의 증산 경쟁으로 인해 OPEC의 가격 통제력이 약화되고 유가 하방 압력이 커지고 있습니다.",
+    "미국의 재생에너지 보조금 축소가 전력 가격 상승과 공급 불안정성을 초래할 가능성이 제기됩니다."
   ],
   "stocks_mentioned": [
     {
-      "name": "Teck Resources",
-      "comment": "캐나다 정부로부터 전략금속 생산 확대를 위한 4억 캐나다달러 규모의 지분 투자를 받음",
-      "ts": "11:33",
-      "quote": "Canada agrees on a potential C$400 million Teck investment for strategic metals production",
+      "name": "금/위안화 관련주",
+      "comment": "중국과 홍콩의 채권·금 거래 활성화 조치로 위안화 유동성 및 거래 인프라가 확대되었습니다.",
+      "ts": "07:56",
+      "quote": "중국과 홍콩은 홍콩의 채권·금 거래 활성화를 위한 다양한 조치를 발표했습니다.",
       "sector": "기타"
     },
     {
-      "name": "Peabody Energy",
-      "comment": "와이오밍 석탄 광산 내 희토류 생산 강화를 위해 미국 정부 보조금을 확보함",
-      "ts": "12:10",
-      "quote": "Peabody Gets US Grant to Boost Rare Earths at Wyoming Coal Mines",
+      "name": "희토류 관련주",
+      "comment": "중국의 수출 통제 지속으로 일본의 자원 부족 영향이 가시화되고 있습니다.",
+      "ts": "07:59",
+      "quote": "중국의 희토류 수출 통제가 지속되면서 일본 경제 전반에 자원 부족 영향이 나타나기 시작했습니다.",
       "sector": "기타"
     },
     {
-      "name": "Codelco",
-      "comment": "부채 증가와 생산량 감소로 구조조정 압박을 받고 있음",
-      "ts": "12:12",
-      "quote": "A Once-Great Copper Miner Faces a Reckoning Just as AI Power Demand Soars",
+      "name": "정유 관련주",
+      "comment": "걸프 산유국들의 증산 움직임으로 OPEC의 영향력이 약화되며 유가 하방 압력이 커지고 있습니다.",
+      "ts": "08:06",
+      "quote": "걸프 산유국들이 전후 재정 회복과 점유율 확보를 위해 공격적으로 증산·가격 인하에 나서면서 유가 하방 압력이 증가하고 있습니다.",
       "sector": "기타"
     },
     {
-      "name": "BHP",
-      "comment": "칠레 에스콘디다 구리 광산 프로젝트에 대한 초기 환경 승인을 획득함",
-      "ts": "12:27",
-      "quote": "BHP Wins Project Approval as Part of Chilean Copper Overhaul",
-      "sector": "기타"
-    },
-    {
-      "name": "Northern Minerals",
-      "comment": "중국계 주주들의 지분 매각 명령 미이행으로 주가 급락",
-      "ts": "12:46",
-      "quote": "Northern Minerals Shares Fall as China Investors Defy Sale Order",
-      "sector": "기타"
-    },
-    {
-      "name": "Eni",
-      "comment": "칠레 리튬 프로젝트에 2억 2,500만 달러 투자 및 생산량 지분 확보",
-      "ts": "15:22",
-      "quote": "Eni Deepens Lithium Push With $225 Million EnergyX Deal in Chile",
-      "sector": "기타"
-    },
-    {
-      "name": "South32",
-      "comment": "미국 정부로부터 애리조나 아연 및 망간 광산 프로젝트 승인 예정",
-      "ts": "15:27",
-      "quote": "South32’s Arizona Zinc and Manganese Mine to Get US Approval",
-      "sector": "기타"
+      "name": "신재생에너지 관련주",
+      "comment": "미국의 연방 세액공제 축소로 재생에너지 프로젝트 위축 및 전력 가격 상승이 우려됩니다.",
+      "ts": "08:08",
+      "quote": "미국은 풍력·태양광 프로젝트에 대한 연방 세액공제 축소를 앞당겼습니다.",
+      "sector": "신재생"
     }
   ],
   "events": [
     {
-      "fact": "중국과 홍콩의 채권 및 금 거래 인프라 강화",
+      "fact": "홍콩, 채권 및 금 거래 활성화 조치 발표",
       "ts": "07:56",
       "quote": "Beijing bolsters Hong Kong bond, gold trading in global yuan push"
     },
     {
-      "fact": "중국의 대일 희토류 수출 통제 강화",
+      "fact": "중국, 일본 대상 희토류 수출 차단",
       "ts": "07:59",
       "quote": "Corporate Japan's rare-earth warnings get louder as China keeps the spigot closed"
     },
     {
-      "fact": "중국의 핵잠수함 장거리 탄도미사일 시험 발사",
-      "ts": "12:15",
-      "quote": "What China’s Latest Missile Test Reveals About Its Expanding Arsenal"
+      "fact": "걸프 산유국 증산 경쟁 및 유가 하방 압력",
+      "ts": "08:06",
+      "quote": "OPEC is likely loser in Gulf’s post-war race for market share"
+    },
+    {
+      "fact": "미국, 풍력·태양광 세액공제 축소",
+      "ts": "08:08",
+      "quote": "Killing wind and solar subsidies will make US electricity more expensive"
     }
   ]
 }

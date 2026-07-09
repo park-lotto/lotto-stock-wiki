@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "LG에너지솔루션",
+      "signal": "neutral",
+      "reason": "유럽 시장 내 AI 데이터센터용 통합 솔루션 공개",
+      "ts": null,
+      "quote": "LG엔솔, 유럽서 AI 데이터센터용 통합 솔루션 공개",
+      "sector": "2차전지"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "LG에너지솔루션이 유럽에서 AI 데이터센터용 통합 솔루션을 공개함",
+      "ts": "06-22",
+      "quote": "LG엔솔, 유럽서 AI 데이터센터용 통합 솔루션 공개"
+    }
+  ],
+  "quote": "LG엔솔, 유럽서 AI 데이터센터용 통합 솔루션 공개"
+}

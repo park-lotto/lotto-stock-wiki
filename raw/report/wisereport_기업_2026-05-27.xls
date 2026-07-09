@@ -72,7 +72,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
   gtag('config', 'G-C8B2QNTM16');
 </script>
 
-		<form method="post" action="./summaryexcel.aspx?cn=&amp;fmt=1&amp;ee=20260706&amp;sortCol=&amp;sortTyp=" id="Form1">
+		<form method="post" action="./summaryexcel.aspx?cn=&amp;fmt=1&amp;ee=20260708&amp;sortCol=&amp;sortTyp=" id="Form1">
 <div class="aspNetHidden">
 <input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwULLTE5ODc1MjczMzhkZK1uVmb2cGLVvIQ+lHb37TlJRESJ" />
 </div>
@@ -118,7 +118,7 @@ function __doPostBack(eventTarget, eventArgument) {
 					 <col style='mso-width-source:userset;width:200px'>
                      <col style='mso-width-source:userset;width:440px'>
  				    <tr>
-					    <td colspan="9" height="30" align="center" class="title">기업리포트 요약(2026.07.06)</td>
+					    <td colspan="9" height="30" align="center" class="title">기업리포트 요약(2026.07.08)</td>
 				    </tr>
                     <tr>
                         <td class="hd" style="mso-width-source:userset;width:110px;">기관명/작성자</td>
@@ -136,67 +136,115 @@ function __doPostBack(eventTarget, eventArgument) {
                     </tr>
                     
                     <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">DB증권</font><br/>나민욱</td>
-                        <td class="cmp"><font color="rgb(53,91,157)">NH투자증권</font><br/>[005940]</td>
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>김록호</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">삼성전자</font><br/>[005930]</td>
                         
                             <td class="img2">=</td>
-                            <td class="strdeg">Buy</td>
+                            <td class="strdeg">BUY</td>
                         
                             <td class="img2">=</td>
-                            <td class="strprc">43,000</td>
+                            <td class="strprc">480,000</td>
                         
                         
-                        <td class="close_prc">31,400</td>
-						<td class="rpt_title">높은 ROE에 기반한 고배당</td>
-                        <td class="comment"><span class="comment_text">▶</span> 2Q26E Preview - 기대치 상회 예상<br/><span class="comment_text">▶</span> 높은 배당 매력은 주가 하방을 지지<br/><span class="comment_text">▶</span> 투자의견 BUY, 목표주가 43,000원</td>
+                        <td class="close_prc">296,000</td>
+						<td class="rpt_title">메모리 이익 체력 확인. 실적 상향 여력 충분</td>
+                        <td class="comment"><span class="comment_text">▶</span> 2Q26 Review: 성과급 반영 감안하면 추정치 상회<br/><span class="comment_text">▶</span> 26년 하반기 및 2027년 추정치 상향 여력에 주목<br/><span class="comment_text">▶</span> 불확실성이 높아진 만큼 중요해지는 실적</td>
                     </tr>
                     
                     <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">한국투자증권</font><br/>이충재</td>
-                        <td class="cmp"><font color="rgb(53,91,157)">삼성SDI</font><br/>[006400]</td>
+                        <td class="brk"><font color="rgb(53,91,157)">한국투자증권</font><br/>채민숙,김연준</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">삼성전자</font><br/>[005930]</td>
                         
-                            <td class="img4">N</td>
+                            <td class="img2">=</td>
                             <td class="strdeg">매수</td>
                         
-                            <td class="img4">N</td>
-                            <td class="strprc">600,000</td>
+                            <td class="img2">=</td>
+                            <td class="strprc">590,000</td>
                         
                         
-                        <td class="close_prc">467,500</td>
-						<td class="rpt_title">탄탄한 수요에 더해지는 기대감</td>
-                        <td class="comment"><span class="comment_text">▶</span> 미국 BESS 생산량은 매년 증가할 전망<br/><span class="comment_text">▶</span> 로봇向 전고체 배터리의 기대감</td>
+                        <td class="close_prc">296,000</td>
+						<td class="rpt_title">성과급 충당 반영하고도 분기 89조</td>
+                        <td class="comment"><span class="comment_text">▶</span> 2분기 영업이익은 컨센서스를 5.4% 상회<br/><span class="comment_text">▶</span> 관전 포인트: Q와 P 모두 경쟁사와의 격차를 벌리기 시작</td>
                     </tr>
                     
                     <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">대신증권</font><br/>최정환</td>
-                        <td class="cmp"><font color="rgb(53,91,157)">한국항공우주</font><br/>[047810]</td>
+                        <td class="brk"><font color="rgb(53,91,157)">상상인증권</font><br/>하태기</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">유나이티드제약</font><br/>[033270]</td>
                         
                             <td class="img2">=</td>
-                            <td class="strdeg">Buy</td>
+                            <td class="strdeg">BUY</td>
                         
-                            <td class="img2">=</td>
-                            <td class="strprc">196,000</td>
+                            <td class="img3">▼</td>
+                            <td class="strprc"><font color='#3366CC'>26,000</span></td>
                         
                         
-                        <td class="close_prc">156,600</td>
-						<td class="rpt_title">2Q26 Preview: 컨센서스 하회 전망</td>
-                        <td class="comment"><span class="comment_text">▶</span> 2Q26 컨센서스 대비 매출 및 영업이익 하회 전망<br/><span class="comment_text">▶</span> 구조적으로 성장할 기업</td>
+                        <td class="close_prc">17,410</td>
+						<td class="rpt_title">실적 호조 추정, 약가 인하 영향은 제한적</td>
+                        <td class="comment"><span class="comment_text">▶</span> 2026년 2분기 영업실적은 긍정적인 수준으로 추정<br/><span class="comment_text">▶</span> 신제품 개량신약 중심으로 안정적 성장 지속 전망<br/><span class="comment_text">▶</span> 제네릭의약품 비중이 낮아 하반기 약가 인하 영향은 제한적</td>
                     </tr>
                     
                     <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">한국투자증권</font><br/>이충재</td>
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>김민경</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">LG전자</font><br/>[066570]</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strdeg">BUY</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strprc">260,000</td>
+                        
+                        
+                        <td class="close_prc">189,100</td>
+						<td class="rpt_title">하반기 신사업 모멘텀 기대</td>
+                        <td class="comment"><span class="comment_text">▶</span> 2Q26 Review: 관세 환급 효과 제외해도 호실적<br/><span class="comment_text">▶</span> 하반기 신사업 모멘텀 기대<br/><span class="comment_text">▶</span> 목표주가 26만원 유지</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>한유건,윤채리</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">인텔리안테크</font><br/>[189300]</td>
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="strdeg"></td>
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="strprc"></td>
+                        
+                        
+                        <td class="close_prc">68,500</td>
+						<td class="rpt_title">견고한 실적 성장 대비 최근 주가 조정은 과도한 수준</td>
+                        <td class="comment"><span class="comment_text">▶</span> 북미 팩토리 가동으로 완결된 밸류체인 구축<br/><span class="comment_text">▶</span> 비수기를 잊은 물량 출하 3분기에도 이어져<br/><span class="comment_text">▶</span> 기대 이상의 펀더멘털 유지</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>김현수,홍지원</td>
                         <td class="cmp"><font color="rgb(53,91,157)">LG에너지솔루션</font><br/>[373220]</td>
                         
                             <td class="img2">=</td>
+                            <td class="strdeg">BUY</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strprc">530,000</td>
+                        
+                        
+                        <td class="close_prc">332,000</td>
+						<td class="rpt_title">하반기 회복세 지속 전망</td>
+                        <td class="comment"><span class="comment_text">▶</span> 2Q26 Review : 3개 분기 만의 영업이익 흑자전환<br/><span class="comment_text">▶</span> 하반기 전기차 배터리 출하 회복 전망<br/><span class="comment_text">▶</span> 과매도 구간 진입, 비중 확대 권고</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">IBK투자증권</font><br/>남성현</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">GS피앤엘</font><br/>[499790]</td>
+                        
+                            <td class="img2">=</td>
                             <td class="strdeg">매수</td>
                         
-                            <td class="img3">▼</td>
-                            <td class="strprc"><font color='#3366CC'>500,000</span></td>
+                            <td class="img2">=</td>
+                            <td class="strprc">76,000</td>
                         
                         
-                        <td class="close_prc">362,500</td>
-						<td class="rpt_title">BESS 확대 국면에서 빛날 SI 역량</td>
-                        <td class="comment"><span class="comment_text">▶</span> 미국 데이터센터로 늘어날 판매량<br/><span class="comment_text">▶</span> 중국과의 경쟁이 심화될 위험 크지 않다</td>
+                        <td class="close_prc">41,850</td>
+						<td class="rpt_title">너무나 강해진 펀더멘탈</td>
+                        <td class="comment"><span class="comment_text">▶</span> 2분기 시장 기대치를 상회할 전망<br/><span class="comment_text">▶</span> 강력한 방한 수요</td>
                     </tr>
                     
                     <!--tr style="height:5px; border:0px;">

@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "date": "2026-07-03",
+    "broker": "IBK투자증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-04_0804_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이상훈",
+    "report_date": "2026.07.03",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "삼성·두나무 올라탄 '오픈USD'",
+      "NC 노조, 카카오 파업 연대 성명"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "NAVER",
+      "카카오",
+      "삼성에스디에스",
+      "현대오토에버",
+      "더존비즈온",
+      "한글과컴퓨터",
+      "롯데이노베이트",
+      "크래프톤",
+      "NC",
+      "넷마블",
+      "시프트업",
+      "펄어비스",
+      "카카오게임즈",
+      "더블유게임즈",
+      "웹젠",
+      "NHN",
+      "컴투스",
+      "네오위즈",
+      "데브시스터즈"
+    ],
+    "risk": "성과 배분 불균형과 고용 불안 문제",
+    "quote": "NC 노조가 카카오 노조 파업에 연대 성명을 발표하며, 성과 배분 불균형과 고용 불안 문제가 IT·게임 산업 전체의 구조적 문제라고 지적함"
+  }
+}
