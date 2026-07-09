@@ -6,7 +6,7 @@ from google import genai
 from google.genai import types
 from shopping_shorts.config import SHORTS_GEMINI_KEYS
 
-_MODEL = "gemini-3-flash"
+_MODEL = "gemini-3.5-flash"  # "gemini-3-flash"는 실존하지 않는 모델명이었음(2026-07-09 발견, video_analysis.py와 동일 이슈)
 
 _PROMPT = """첫 번째 이미지들은 원본 영상의 대표 장면이고, 마지막 이미지는 다른 곳에서 찾은
 후보 영상의 썸네일이다. 후보가 원본과 같은 제품/장면을 다루고 있는지 판단해라.

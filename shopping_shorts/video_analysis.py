@@ -11,7 +11,8 @@ from shopping_shorts.config import SHORTS_GEMINI_KEYS
 from shopping_shorts import comment_gen
 from pipeline.atoms import key_vault
 
-_MODEL = "gemini-3-flash"  # 비디오 입력 지원 모델
+_MODEL = "gemini-3.5-flash"  # 비디오 입력 지원 모델 — "gemini-3-flash"는 실존하지 않는 모델명이었음
+# (2026-07-09 배포 후 실단말 검증 중 404 NOT_FOUND로 발견, 실제 사용 가능 모델 목록에서 확인 후 교체)
 _EMPTY = {"keywords": {"ko": [], "en": [], "zh": []}, "category": ""}
 
 _PROMPT = """이 영상을 보고 어떤 제품/장면을 다루는지 파악해라.
