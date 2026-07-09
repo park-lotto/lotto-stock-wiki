@@ -15,6 +15,8 @@ from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
 from shopping_shorts.frame_extract import download_video, extract_frames
 from shopping_shorts.video_analysis import analyze_video
 from shopping_shorts.search_links import build_search_links, lens_search_url
+from shopping_shorts.youtube_search import search as youtube_search_fn
+from shopping_shorts.similarity import score_candidate
 
 app = FastAPI(title="쇼핑쇼츠 레퍼런스 랭킹")
 
@@ -139,6 +141,44 @@ def api_find_analyze(shortcode: str):
         "search_links": build_search_links(analysis["keywords"]),
         "lens_links": [lens_search_url(u) for u in frame_abs_urls],
     }
+
+
+@app.post("/api/find/collect")
+def api_find_collect(shortcode: str, platform: str):
+    """분석된 소스의 키워드로 다른 플랫폼을 실검색 → 후보 저장 → Gemini 유사도 채점."""
+    store = Store(DB_PATH)
+    analysis = store.get_source_analysis(shortcode)
+    if not analysis:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "먼저 분석이 필요합니다"})
+    if platform != "youtube":
+        return JSONResponse(status_code=400, content={"ok": False, "error": f"'{platform}' 실수집은 아직 미지원"})
+
+    keyword = (analysis["keywords"]["en"] or analysis["keywords"]["ko"] or [""])[0]
+    if not keyword:
+        return {"ok": True, "count": 0}
+    raw = youtube_search_fn(keyword, max_results=10)
+    ids = store.save_candidates(shortcode, "youtube", raw)
+
+    frame_paths = analysis["frame_paths"]
+    for cand_id, cand in zip(ids, raw):
+        score = score_candidate(frame_paths, cand["thumbnail"])
+        if score is not None:
+            store.update_candidate_score(cand_id, score)
+    return {"ok": True, "count": len(ids)}
+
+
+@app.get("/api/find/candidates")
+def api_find_candidates(shortcode: str):
+    store = Store(DB_PATH)
+    return {"ok": True, "items": store.get_candidates(shortcode)}
+
+
+@app.post("/api/find/save")
+def api_find_save(candidate_id: int, shortcode: str):
+    """확정 후보를 소스풀에 담기."""
+    store = Store(DB_PATH)
+    store.save_to_pool(shortcode, candidate_id)
+    return {"ok": True}
 
 
 @app.get("/api/find/frame/{work_id}/{filename}")

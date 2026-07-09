@@ -42,6 +42,9 @@ SHORTS_GEMINI_KEYS = [
     ) if t
 ]
 
+# YouTube Data API v3 (제품찾기 실수집용, 2026-07-09) — 무료 할당량, Google Cloud Console 발급
+YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY", "")
+
 # 수집 규칙
 WINDOW_HOURS = 48          # 48시간 이내만 랭킹
 RESULTS_PER_CHANNEL = 3    # 채널당 최신 상한

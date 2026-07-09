@@ -138,3 +138,73 @@ def test_find_frame_rejects_path_traversal(client):
     r = client.get(f"/api/find/frame/%2e%2e/{target_name}")
     assert r.status_code == 404
     assert r.content != app_module.DB_PATH.read_bytes()
+
+
+def test_find_collect_youtube_saves_candidates_and_scores(monkeypatch, client, tmp_path):
+    from shopping_shorts import app as app_module
+    from shopping_shorts.store import Store
+
+    # 실DB를 건드리지 않도록 app_module에 바인딩된 DB_PATH를 tmp_path 격리 DB로 교체.
+    test_db_path = tmp_path / "test.db"
+    monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
+
+    store = Store(test_db_path)
+    store.save_source_analysis("sc1", keywords={"ko": [], "en": ["floor cleaner"], "zh": []},
+                                frame_paths=["/tmp/f1.jpg"], analyzed_at="2026-07-09T00:00:00Z")
+
+    monkeypatch.setattr(app_module, "youtube_search_fn", lambda kw, max_results: [
+        {"url": "https://youtube.com/watch?v=x", "title": "t", "thumbnail": "th.jpg"},
+    ])
+    monkeypatch.setattr(app_module, "score_candidate", lambda frames, thumb: 0.75)
+
+    r = client.post("/api/find/collect", params={"shortcode": "sc1", "platform": "youtube"})
+    assert r.status_code == 200
+    assert r.json()["ok"] is True
+
+    r2 = client.get("/api/find/candidates", params={"shortcode": "sc1"})
+    d2 = r2.json()
+    assert d2["items"][0]["similarity_score"] == 0.75
+
+
+def test_find_collect_no_analysis_404(monkeypatch, client, tmp_path):
+    from shopping_shorts import app as app_module
+
+    # 분석 여부를 store.get_source_analysis()로 실DB에서 조회하므로 동일하게 격리한다.
+    monkeypatch.setattr(app_module, "DB_PATH", tmp_path / "test.db")
+
+    r = client.post("/api/find/collect", params={"shortcode": "never-analyzed", "platform": "youtube"})
+    assert r.status_code == 404
+
+
+def test_find_collect_unsupported_platform_400(monkeypatch, client, tmp_path):
+    from shopping_shorts import app as app_module
+    from shopping_shorts.store import Store
+
+    test_db_path = tmp_path / "test.db"
+    monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
+    store = Store(test_db_path)
+    store.save_source_analysis("sc1", keywords={"ko": [], "en": ["floor cleaner"], "zh": []},
+                                frame_paths=["/tmp/f1.jpg"], analyzed_at="2026-07-09T00:00:00Z")
+
+    r = client.post("/api/find/collect", params={"shortcode": "sc1", "platform": "tiktok"})
+    assert r.status_code == 400
+
+
+def test_find_save_adds_candidate_to_pool(monkeypatch, client, tmp_path):
+    from shopping_shorts import app as app_module
+    from shopping_shorts.store import Store
+
+    test_db_path = tmp_path / "test.db"
+    monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
+    store = Store(test_db_path)
+    ids = store.save_candidates("sc1", "youtube", [
+        {"url": "https://youtube.com/watch?v=x", "title": "t", "thumbnail": "th.jpg"},
+    ])
+
+    r = client.post("/api/find/save", params={"candidate_id": ids[0], "shortcode": "sc1"})
+    assert r.status_code == 200
+    assert r.json()["ok"] is True
+
+    pool = store.pool_items()
+    assert len(pool) == 1
+    assert pool[0]["origin_shortcode"] == "sc1"
