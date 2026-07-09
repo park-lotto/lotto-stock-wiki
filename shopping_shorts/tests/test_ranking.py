@@ -89,3 +89,13 @@ def test_apply_grades_negative_accel_not_worse_than_none():
     assert b["score"] >= 0
     # 속도·밀도가 압도적인 A가 B보다 높아야 함
     assert a["score"] > b["score"]
+
+def test_build_items_includes_video_url():
+    reels = [{"shortcode": "x", "timestamp": (NOW - timedelta(hours=1)).isoformat(),
+              "commentsCount": 10, "likesCount": 0, "videoViewCount": 0,
+              "displayUrl": "t.jpg", "url": "u", "caption": "",
+              "videoUrl": "https://scontent.cdninstagram.com/video123.mp4"}]
+    meta = {"name": "테스트", "followers": 100, "inpock": "", "username": "u"}
+    items = build_items(reels, meta, prev_comments=lambda sc: None,
+                        prev_delta=lambda sc: None, now=NOW, window_hours=48)
+    assert items[0]["video_url"] == "https://scontent.cdninstagram.com/video123.mp4"

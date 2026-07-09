@@ -50,6 +50,7 @@ def build_items(reels, meta, prev_comments, prev_delta, now=None, window_hours=4
             "inpock": meta.get("inpock", ""),
             "followers": followers,
             "thumbnail": r.get("displayUrl", ""),
+            "video_url": r.get("videoUrl", ""),
             "url": r.get("url", ""),
             "comments": comments,
             "likes": int(r.get("likesCount") or 0),

@@ -80,3 +80,52 @@ def test_last_run_overwrites(tmp_path):
     items, collected_at = s.load_last_run()
     assert len(items) == 2
     assert collected_at == "t2"
+
+
+def test_save_and_get_source_analysis(tmp_path):
+    s = Store(tmp_path / "t.db")
+    s.save_source_analysis(
+        "sc1",
+        keywords={"ko": ["바닥 청소"], "en": ["floor cleaner"], "zh": ["地板清洁剂"]},
+        frame_paths=["/tmp/f1.jpg", "/tmp/f2.jpg"],
+        analyzed_at="2026-07-09T00:00:00Z",
+    )
+    result = s.get_source_analysis("sc1")
+    assert result["keywords"]["ko"] == ["바닥 청소"]
+    assert result["frame_paths"] == ["/tmp/f1.jpg", "/tmp/f2.jpg"]
+
+
+def test_get_source_analysis_missing_returns_none(tmp_path):
+    s = Store(tmp_path / "t.db")
+    assert s.get_source_analysis("nope") is None
+
+
+def test_save_and_get_candidates(tmp_path):
+    s = Store(tmp_path / "t.db")
+    ids = s.save_candidates("sc1", "youtube", [
+        {"url": "https://youtu.be/a", "title": "제목1", "thumbnail": "t1.jpg"},
+        {"url": "https://youtu.be/b", "title": "제목2", "thumbnail": "t2.jpg"},
+    ])
+    assert len(ids) == 2
+    candidates = s.get_candidates("sc1")
+    assert len(candidates) == 2
+    assert candidates[0]["platform"] == "youtube"
+    assert candidates[0]["similarity_score"] is None
+
+
+def test_update_candidate_score(tmp_path):
+    s = Store(tmp_path / "t.db")
+    ids = s.save_candidates("sc1", "youtube", [{"url": "u", "title": "t", "thumbnail": ""}])
+    s.update_candidate_score(ids[0], 0.87)
+    candidates = s.get_candidates("sc1")
+    assert candidates[0]["similarity_score"] == 0.87
+
+
+def test_save_to_pool_and_pool_items(tmp_path):
+    s = Store(tmp_path / "t.db")
+    ids = s.save_candidates("sc1", "youtube", [{"url": "u", "title": "t", "thumbnail": ""}])
+    s.save_to_pool("sc1", ids[0])
+    pool = s.pool_items()
+    assert len(pool) == 1
+    assert pool[0]["origin_shortcode"] == "sc1"
+    assert pool[0]["url"] == "u"
