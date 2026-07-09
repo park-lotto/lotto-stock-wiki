@@ -178,6 +178,19 @@ function goComment(sc){ location.href = '/outreach.html?focus=' + encodeURICompo
 async function doSave(sc, btn){
   await fetch('/api/save?shortcode=' + encodeURIComponent(sc), {method:'POST'});
   btn.textContent = '담김✓'; btn.classList.add('saved');
+  // 제품찾기(shopping.tubefactory.kr)로 넘겨서 틱톡·인스타·유튭·더우인·샤오홍슈·
+  // 구글에서 같은 영상 소스를 찾는 다음 단계로 이어준다(2026-07-09). 이 도구는
+  // SPA라 URL 파라미터로 검색창을 미리 채우는 게 안 될 수 있어 복사+새탭 방식으로
+  // 확실하게 — 사용자가 새탭에서 Ctrl+V만 하면 됨.
+  const it = STATE.items.find(x=>x.shortcode===sc);
+  if(it?.url){
+    try{
+      await navigator.clipboard.writeText(it.url);
+      const st = document.getElementById("status");
+      if(st) st.textContent = "🔗 URL 복사됨 — 제품찾기 탭에서 Ctrl+V로 붙여넣으세요";
+    }catch(e){}
+    window.open('https://shopping.tubefactory.kr', '_blank');
+  }
 }
 async function markSavedButtons(){
   try{
