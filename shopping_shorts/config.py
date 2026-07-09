@@ -15,6 +15,15 @@ DB_PATH = Path(__file__).parent / "data" / "reference.db"
 
 # Apify
 APIFY_TOKEN = os.environ.get("APIFY_TOKEN", "")
+# 계정 하나가 사용량 소진되면 다음 계정으로 자동 로테이션(2026-07-09) — 4계정 키 풀
+APIFY_TOKENS = [
+    t for t in (
+        os.environ.get("APIFY_TOKEN", ""),
+        os.environ.get("APIFY_TOKEN_2", ""),
+        os.environ.get("APIFY_TOKEN_3", ""),
+        os.environ.get("APIFY_TOKEN_4", ""),
+    ) if t
+]
 APIFY_ACTOR = "apify~instagram-reel-scraper"  # actor id (~ 형식)
 
 # 수집 규칙
