@@ -47,6 +47,10 @@ YOUTUBE_API_KEYS = [
     if (v := os.environ.get("YOUTUBE_API_KEY" if i == 1 else f"YOUTUBE_API_KEY_{i}", ""))
 ]
 
+# SerpApi(Google Lens 엔진) — 프레임 이미지로 실제 구매처 역검색(2026-07-09).
+# 유료 API라 로테이션 풀 없이 단일 키.
+SERPAPI_KEY = os.environ.get("SERPAPI_KEY", "")
+
 # 수집 규칙
 WINDOW_HOURS = 48          # 48시간 이내만 랭킹
 RESULTS_PER_CHANNEL = 3    # 채널당 최신 상한

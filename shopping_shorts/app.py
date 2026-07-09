@@ -22,6 +22,7 @@ from shopping_shorts.youtube_search import search as youtube_search_fn
 from shopping_shorts.tiktok_search import search as tiktok_search_fn
 from shopping_shorts.instagram_search import search as instagram_search_fn
 from shopping_shorts.similarity import score_candidate
+from shopping_shorts.lens_shopping import search as lens_shopping_search
 
 app = FastAPI(title="쇼핑쇼츠 레퍼런스 랭킹")
 
@@ -260,6 +261,28 @@ def api_find_collect(shortcode: str, platform: str):
 def api_find_candidates(shortcode: str):
     store = Store(DB_PATH)
     return {"ok": True, "items": store.get_candidates(shortcode)}
+
+
+@app.post("/api/find/shop")
+def api_find_shop(shortcode: str, frame_index: int):
+    """저장된 프레임 하나로 SerpApi Google Lens 역검색 → 실제 구매처 링크
+    (2026-07-09, 짜집기 소스 수집이 아니라 "이 제품 어디서 파는지" 용도로 추가.
+    프레임마다 매칭 품질 편차가 커서 — 배경 소품을 잘못 잡는 경우 실측 확인됨 —
+    자동으로 아무 프레임이나 쓰지 않고 사용자가 프레임을 골라 요청한다)."""
+    store = Store(DB_PATH)
+    analysis = store.get_source_analysis(shortcode)
+    if not analysis:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "먼저 분석이 필요합니다"})
+    frame_paths = analysis["frame_paths"]
+    if not (0 <= frame_index < len(frame_paths)):
+        return JSONResponse(status_code=400, content={"ok": False, "error": "frame_index 범위 초과"})
+    frame_path = Path(frame_paths[frame_index])
+    image_url = f"{PUBLIC_BASE_URL}/api/find/frame/{frame_path.parent.name}/{frame_path.name}"
+    try:
+        items = lens_shopping_search(image_url)
+    except (RuntimeError, requests.RequestException) as e:
+        return JSONResponse(status_code=503, content={"ok": False, "error": str(e)})
+    return {"ok": True, "items": items}
 
 
 @app.post("/api/find/save")

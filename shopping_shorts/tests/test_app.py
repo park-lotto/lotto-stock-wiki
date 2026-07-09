@@ -469,3 +469,77 @@ def test_find_save_adds_candidate_to_pool(monkeypatch, client, tmp_path):
     pool = store.pool_items()
     assert len(pool) == 1
     assert pool[0]["origin_shortcode"] == "sc1"
+
+
+def test_find_shop_returns_lens_matches_for_chosen_frame(monkeypatch, client, tmp_path):
+    """프레임 하나를 골라 SerpApi Google Lens로 실제 구매처를 찾는다
+    (2026-07-09, 인스타 실수집 대안 기술검증 중 추가)."""
+    from shopping_shorts import app as app_module
+    from shopping_shorts.store import Store
+
+    test_db_path = tmp_path / "test.db"
+    monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
+    monkeypatch.setattr(app_module, "PUBLIC_BASE_URL", "https://shoppingshorts.duckdns.org")
+    store = Store(test_db_path)
+    store.save_source_analysis(
+        "sc1", keywords={"ko": ["무선 헤어드라이어"], "en": [], "zh": []},
+        frame_paths=["/srv/find_frames/16a7/frame_02.jpg", "/srv/find_frames/16a7/frame_03.jpg"],
+        analyzed_at="2026-07-09T00:00:00Z",
+    )
+
+    captured = {}
+    def fake_lens_search(image_url):
+        captured["image_url"] = image_url
+        return [{"source": "Amazon.com", "title": "Cordless Hair Dryer",
+                  "link": "https://amazon.com/x", "thumbnail": "https://t.jpg"}]
+    monkeypatch.setattr(app_module, "lens_shopping_search", fake_lens_search)
+
+    r = client.post("/api/find/shop", params={"shortcode": "sc1", "frame_index": 1})
+    assert r.status_code == 200
+    d = r.json()
+    assert d["ok"] is True
+    assert d["items"][0]["link"] == "https://amazon.com/x"
+    assert captured["image_url"] == "https://shoppingshorts.duckdns.org/api/find/frame/16a7/frame_03.jpg"
+
+
+def test_find_shop_no_analysis_returns_404(monkeypatch, client, tmp_path):
+    from shopping_shorts import app as app_module
+    monkeypatch.setattr(app_module, "DB_PATH", tmp_path / "test.db")
+
+    r = client.post("/api/find/shop", params={"shortcode": "unknown", "frame_index": 0})
+    assert r.status_code == 404
+    assert r.json()["ok"] is False
+
+
+def test_find_shop_frame_index_out_of_range_returns_400(monkeypatch, client, tmp_path):
+    from shopping_shorts import app as app_module
+    from shopping_shorts.store import Store
+
+    test_db_path = tmp_path / "test.db"
+    monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
+    store = Store(test_db_path)
+    store.save_source_analysis("sc1", keywords={"ko": [], "en": [], "zh": []},
+                                frame_paths=["/srv/f1.jpg"], analyzed_at="2026-07-09T00:00:00Z")
+
+    r = client.post("/api/find/shop", params={"shortcode": "sc1", "frame_index": 5})
+    assert r.status_code == 400
+    assert r.json()["ok"] is False
+
+
+def test_find_shop_no_key_returns_503(monkeypatch, client, tmp_path):
+    from shopping_shorts import app as app_module
+    from shopping_shorts.store import Store
+
+    test_db_path = tmp_path / "test.db"
+    monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
+    store = Store(test_db_path)
+    store.save_source_analysis("sc1", keywords={"ko": [], "en": [], "zh": []},
+                                frame_paths=["/srv/f1.jpg"], analyzed_at="2026-07-09T00:00:00Z")
+
+    def fake_lens_search(image_url):
+        raise RuntimeError("lens_shopping: SERPAPI_KEY가 설정되지 않았습니다")
+    monkeypatch.setattr(app_module, "lens_shopping_search", fake_lens_search)
+
+    r = client.post("/api/find/shop", params={"shortcode": "sc1", "frame_index": 0})
+    assert r.status_code == 503
+    assert r.json()["ok"] is False

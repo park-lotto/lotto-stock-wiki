@@ -22,7 +22,14 @@
   button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px}
   .frames{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .frame-item{display:flex;flex-direction:column;gap:4px;align-items:center}
   .frames img{width:100px;height:100px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:#000}
+  .frame-item button{font-size:10px;padding:3px 6px;width:100px}
+  .shop-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line);font-size:13px}
+  .shop-row:last-child{border-bottom:none}
+  .shop-row img{width:40px;height:40px;object-fit:cover;border-radius:6px;flex-shrink:0;background:#000}
+  .shop-row .src{width:90px;flex-shrink:0;color:var(--sub);font-size:12px}
+  .shop-row a{color:var(--accent);text-decoration:none;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .section-label{font-size:12px;color:var(--sub);text-transform:uppercase;margin-bottom:8px}
   .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
   .chip{background:#0d131c;border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--txt)}
@@ -108,7 +115,13 @@ async function doAnalyze(){
 }
 
 function renderResult(d){
-  const frames = d.frame_urls.map(u=>`<img src="${u}" loading="lazy">`).join("");
+  // 프레임마다 매칭 품질 편차가 커서(배경 소품 오매칭 실측 확인, 2026-07-09)
+  // 자동으로 아무 프레임이나 검색하지 않고 사용자가 프레임을 골라 요청한다.
+  const frames = d.frame_urls.map((u,i)=>
+    `<div class="frame-item"><img src="${u}" loading="lazy">
+      <button onclick="doShop(${i}, this)">🛍️ 구매처</button>
+    </div>`
+  ).join("");
   const kw = (d.keywords.ko||[]).map(k=>`<span class="chip">${k}</span>`).join("");
   const linkRows = Object.entries(d.search_links).map(([platform, urls])=>
     `<div class="link-row"><b>${platform}</b>${urls.map(u=>`<a href="${u}" target="_blank">🔗 링크</a>`).join(" ")}</div>`
@@ -116,8 +129,9 @@ function renderResult(d){
   const lensLinks = (d.lens_links||[]).map((u,i)=>`<a href="${u}" target="_blank">🔍 프레임${i+1}</a>`).join(" ");
   document.getElementById("result").innerHTML = `
     <div class="card">
-      <div class="section-label">추출 프레임</div>
+      <div class="section-label">추출 프레임 (프레임별 🛍️로 실제 구매처 검색)</div>
       <div class="frames">${frames}</div>
+      <div id="shopResult"></div>
       <div class="section-label">키워드</div>
       <div class="chips">${kw}</div>
       <div class="category">카테고리: ${d.category||'-'}</div>
@@ -133,6 +147,30 @@ function renderResult(d){
     </div>
   `;
   loadCandidates();
+}
+
+async function doShop(frameIndex, btn){
+  if(!CUR_SC) return;
+  const box = document.getElementById("shopResult");
+  if(btn){ btn.disabled = true; btn.textContent = "검색 중…"; }
+  box.innerHTML = '<div class="section-label">구매처 검색 중… (수십 초 소요)</div>';
+  try{
+    const r = await fetch(`/api/find/shop?shortcode=${encodeURIComponent(CUR_SC)}&frame_index=${frameIndex}`, {method:"POST"});
+    const d = await r.json();
+    if(btn){ btn.disabled = false; btn.textContent = "🛍️ 구매처"; }
+    if(!d.ok){ box.innerHTML = `<div class="empty">❌ ${d.error||"실패"}</div>`; return; }
+    if(!d.items.length){ box.innerHTML = '<div class="section-label">이 프레임에서 매칭된 구매처 없음</div>'; return; }
+    const rows = d.items.map(it=>`
+      <div class="shop-row">
+        <img src="${it.thumbnail||''}" loading="lazy" onerror="this.style.visibility='hidden'">
+        <div class="src">${it.source||''}</div>
+        <a href="${it.link}" target="_blank">${(it.title||it.link).slice(0,60)}</a>
+      </div>`).join("");
+    box.innerHTML = `<div class="section-label">구매처 후보</div>${rows}`;
+  }catch(e){
+    if(btn){ btn.disabled = false; btn.textContent = "🛍️ 구매처"; }
+    box.innerHTML = `<div class="empty">❌ ${e.message}</div>`;
+  }
 }
 
 async function doCollect(platform){
