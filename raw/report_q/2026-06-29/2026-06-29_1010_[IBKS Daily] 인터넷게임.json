@@ -6,21 +6,23 @@
   },
   "questionnaire": {
     "broker": "IBK투자증권",
-    "analyst": "이승훈",
+    "analyst": "이상훈",
     "report_date": "2026.06.29",
     "target_kind": "market",
     "market_direction": null,
     "macro_vars": [],
     "recommended_sectors": [
       {
-        "sector": "중국",
-        "stance": null,
-        "reason": "중국 정부가 올해 한국 게임 6종에 판호를 발급했으며, 국내 게임사들은 K-게임의 중국 시장 진출에 속도를 내고 있음"
+        "sector": "IT",
+        "stance": "중립",
+        "reason": "중국 정부가 올해 한국 게임 6종에 판호를 발급했으며, 국내 게임사들은 K-게임의 중국 시장 진출에 속도를 내고 있음",
+        "quote": "올해 들어 中 판호 6종 획득… 현지 흥행에 K-게임 실적 기대감"
       },
       {
         "sector": "방산",
-        "stance": null,
-        "reason": "국내 플랫폼·AI 기업들이 국방 AI 시장을 미래 먹거리로 보고 특화 모델 개발과 방산기업과의 협력을 통해 '한국판 패트리엇 테크' 구축에 속도를 내고 있음"
+        "stance": "중립",
+        "reason": "국내 플랫폼·AI 기업들이 국방 AI 시장을 미래 먹거리로 보고 특화 모델 개발과 방산기업과의 협력을 통해 '한국판 패트리엇 테크' 구축에 속도를 내고 있음",
+        "quote": "'AI 강자' 네이버·SKT·엔씨 \"K팰런티어 될 것\""
       }
     ],
     "style": null,

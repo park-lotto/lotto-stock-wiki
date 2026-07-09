@@ -5,35 +5,45 @@
     "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-29_1008_2026년 6월 다섯째 주 반도체 Weekly.md"
   },
   "questionnaire": {
+    "target_kind": "market",
     "broker": "교보증권",
     "analyst": "최보영",
     "report_date": "2026/ 06/ 29",
-    "target_kind": "market",
     "market_direction": null,
     "macro_vars": [
-      "미국 ISM 제조업지수",
-      "미국 고용보고서",
-      "에너지 시스템 건설 15차 5개년 계획",
-      "미국 2년, 10년 국채 수익률"
+      "DRAM, NAND 높은 메모리 가격 기조 유지 전망",
+      "미국 2년 국채 수익률 4.09%",
+      "미국 10년 국채 수익률 4.37%",
+      "미국 ISM 제조업지수, 고용보고서 공개 예정"
     ],
-    "recommended_sectors": null,
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": null,
+        "reason": "HBM, SOCAMM, RDIMM 등 고사양 제품 라인은 2027년까지 DRAM 산업을 구조적 공급 부족 상태로 지속하는 요인"
+      }
+    ],
     "style": null,
     "event_calendar": [
       {
-        "date": "2026/07/01",
+        "date": "2026/ 07/ 01",
         "event": "미국 ISM 제조업지수 공개"
       },
       {
-        "date": "2026/07/02",
+        "date": "2026/ 07/ 02",
         "event": "미국 고용보고서 공개"
+      },
+      {
+        "date": "2026/ 07/ 10",
+        "event": "SK하이닉스 ADR 나스닥 상장 예정"
       }
     ],
     "top_picks": [
       "삼성전자",
-      "SK 하이닉스",
-      "LG 전자",
+      "SK하이닉스",
+      "LG전자",
       "삼성전기",
-      "LG 이노텍",
+      "LG이노텍",
       "피에스케이",
       "원익 IPS",
       "NVIDIA",
@@ -47,7 +57,7 @@
       "ASE",
       "NANYA"
     ],
-    "risk": "주말 간 애플 CXMT 메모리 도입 위해 미국 정부 로비 소식. 메모리 가격 급등과 노이즈 지속",
-    "quote": "3Q26 마이크론 실적: 매출액 415억 달러, GPM 85%, OPM 81%로 가이던스, 컨센서스 큰 폭 상회"
+    "risk": "메모리 가격 소비자 전가에 따른 애플, 마이크로소프트 급락 및 미국 정부의 반도체 로비 등 노이즈 지속",
+    "quote": "HBM, SOCAMM, RDIMM 등 고사양 제품 라인은 2027년까지 DRAM 산업을 구조적 공급 부족 상태로 지속하는 요인"
   }
 }
