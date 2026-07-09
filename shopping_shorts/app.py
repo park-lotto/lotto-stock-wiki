@@ -142,7 +142,7 @@ async def _api_login(req: Request):
     form = urllib.parse.parse_qs(body)
     u = (form.get("user") or [""])[0]
     p = (form.get("pass") or [""])[0]
-    if _AUTH_ON and u == DASH_USER and p == DASH_PASS:
+    if _AUTH_ON and hmac.compare_digest(u, DASH_USER) and hmac.compare_digest(p, DASH_PASS):
         r = RedirectResponse("/", status_code=303)
         r.set_cookie("dash_auth", _auth_token(), max_age=60 * 60 * 24 * 30,
                      httponly=True, samesite="lax")
@@ -157,7 +157,8 @@ async def _auth_guard(request: Request, call_next):
     path = request.url.path
     if path in _AUTH_ALLOW or path.startswith("/static"):
         return await call_next(request)
-    if request.cookies.get("dash_auth") == _auth_token():
+    cookie = request.cookies.get("dash_auth")
+    if cookie and hmac.compare_digest(cookie, _auth_token()):
         return await call_next(request)
     if path.startswith("/api/"):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
