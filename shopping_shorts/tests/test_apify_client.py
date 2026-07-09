@@ -149,6 +149,38 @@ def test_fetch_reels_all_tokens_exhausted_raises(monkeypatch):
     assert apify_client._load_key_index() == 0
 
 
+def test_fetch_reels_splits_large_batch_into_chunks(monkeypatch):
+    """443채널을 한 run에 몰아넣으면 액터가 ~124번째에서 조용히 나머지를
+    누락시키는 실제 사고(2026-07-09, 443개 중 26개만 처리됨)가 있었다 —
+    chunk_size 단위로 나눠 여러 run을 순차로 돌려야 한다."""
+    monkeypatch.setattr(apify_client, "APIFY_TOKENS", ["tok1"])
+    payload_usernames_per_call = []
+
+    def fake_post(url, headers=None, json=None, timeout=None):
+        payload_usernames_per_call.append(list(json["username"]))
+        run_id = f"run{len(payload_usernames_per_call)}"
+        return FakeResponse(200, {"data": {"id": run_id, "status": "SUCCEEDED",
+                                            "defaultDatasetId": f"ds-{run_id}"}})
+
+    def fake_get(url, headers=None, timeout=None):
+        assert _is_dataset_url(url)
+        return FakeResponse(200, [{"batch": len(payload_usernames_per_call)}])
+
+    monkeypatch.setattr(apify_client.requests, "post", fake_post)
+    monkeypatch.setattr(apify_client.requests, "get", fake_get)
+
+    usernames = [f"user{i}" for i in range(95)]
+    items = apify_client.fetch_reels(usernames, poll_interval=0.01, timeout=5, chunk_size=40)
+
+    # 95개를 40 단위로 나누면 40+40+15 = 3번의 별도 run이 있어야 한다.
+    assert len(payload_usernames_per_call) == 3
+    assert [len(c) for c in payload_usernames_per_call] == [40, 40, 15]
+    # 청크가 원래 순서를 그대로, 겹치거나 빠짐없이 나눴는지 확인.
+    assert payload_usernames_per_call[0] + payload_usernames_per_call[1] + payload_usernames_per_call[2] == usernames
+    # 청크마다 결과가 합쳐져서 반환된다.
+    assert len(items) == 3
+
+
 def test_fetch_reels_explicit_token_bypasses_rotation(monkeypatch):
     # APIFY_TOKENS를 일부러 빈 리스트로 둔다 — 만약 코드가 이걸 참조하면
     # "tokens가 비어있음" RuntimeError로 즉시 실패해야 하므로, 성공한다는 것

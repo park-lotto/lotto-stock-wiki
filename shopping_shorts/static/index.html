@@ -149,6 +149,14 @@ function render(){
     </div>`).join("");
   markSavedButtons();
 }
+function fmtTime(iso){
+  // collected_at은 UTC로 저장됨 — 브라우저 로컬시간(한국이면 KST)으로 변환해 표시
+  // (그냥 슬라이스하면 UTC 그대로 떠서 실제 시각보다 9시간 늦게 보이던 문제, 2026-07-09)
+  if(!iso) return '-';
+  const d = new Date(iso);
+  if(isNaN(d)) return iso.slice(0,16);
+  return d.toLocaleString('ko-KR', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
 async function doCollect(){
   const btn=document.getElementById("collectBtn"), st=document.getElementById("status");
   btn.disabled=true; st.textContent="수집 중… (수 분 소요)";
@@ -156,7 +164,7 @@ async function doCollect(){
     const r = await fetch("/api/collect", {method:"POST"});
     const d = await r.json();
     if(!d.ok) throw new Error(d.error||"실패");
-    STATE.items = d.items; st.textContent=`✅ ${d.count}건 수집 (${d.collected_at?.slice(0,16)})`;
+    STATE.items = d.items; st.textContent=`✅ ${d.count}건 수집 (${fmtTime(d.collected_at)})`;
     render();
   }catch(e){ st.textContent="❌ "+e.message; }
   finally{ btn.disabled=false; }
@@ -164,7 +172,7 @@ async function doCollect(){
 async function loadLast(){
   const d = await (await fetch("/api/reference")).json();
   if(d.items?.length){ STATE.items=d.items; render();
-    document.getElementById("status").textContent=`마지막 수집: ${d.collected_at?.slice(0,16)||'-'}`; }
+    document.getElementById("status").textContent=`마지막 수집: ${fmtTime(d.collected_at)}`; }
 }
 function goComment(sc){ location.href = '/outreach.html?focus=' + encodeURIComponent(sc); }
 async function doSave(sc, btn){

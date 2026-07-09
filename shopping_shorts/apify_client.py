@@ -71,25 +71,18 @@ def _run_to_completion(headers, run_data, timeout, poll_interval):
     return items.json()  # list of reel dicts
 
 
-def fetch_reels(usernames, token=None, results_per_channel=RESULTS_PER_CHANNEL,
-                only_newer_than=ONLY_NEWER_THAN, timeout=900, poll_interval=5):
-    """usernames 리스트 → reel dict 리스트. Apify가 채널별 최신 N개(48h 여유) 반환.
+# 채널 하나의 run에 유저네임을 너무 많이(443개) 넣으면 액터가 인스타그램 자체
+# 차단으로 추정되는 지점(실측: ~124번째 채널)에서 나머지를 아예 시도조차 안 하고
+# 조용히 SUCCEEDED로 끝내버린다(2026-07-09 실측 — 443개 중 26개만 결과에 나타남,
+# 에러조차 없이 나머지 316개가 그냥 누락됨). 30개 단위 테스트는 항상 전체가
+# 정상 처리됐던 것에 근거해 여유있게 청크로 나눠 순차 호출한다.
+CHUNK_SIZE = 40
 
-    비동기 run 시작 → 완료까지 폴링 → 데이터셋 조회 (동기 엔드포인트의
-    서버측 타임아웃 회피). token 미지정 시 계정 풀(APIFY_TOKENS)을 순환하며,
-    시작 시점 거부(401/402/429)뿐 아니라 **실행 도중 계정이 소진돼 run 자체가
-    실패한 경우**도 다음 계정으로 전체를 이어서 재시도한다(2026-07-09,
-    443채널 전체수집 중간에 끊기는 사고 방지)."""
-    tokens = [token] if token else APIFY_TOKENS
-    if not tokens:
-        raise RuntimeError("APIFY_TOKEN 미설정 (환경변수 APIFY_TOKEN)")
-    payload = {
-        "username": usernames,
-        "resultsLimit": results_per_channel,
-        "onlyPostsNewerThan": only_newer_than,
-        "skipPinnedPosts": True,
-    }
 
+def _fetch_batch(usernames, payload_extra, tokens, timeout, poll_interval):
+    """usernames 한 묶음(청크) 처리 — 토큰 로테이션 포함. 청크 크기가
+    작아 액터의 조용한 부분처리 문제를 피한다."""
+    payload = {"username": usernames, **payload_extra}
     start = _load_key_index() % len(tokens)
     last_err = None
     for offset in range(len(tokens)):
@@ -111,3 +104,30 @@ def fetch_reels(usernames, token=None, results_per_channel=RESULTS_PER_CHANNEL,
             last_err = e
             continue
     raise RuntimeError(f"apify 토큰 {len(tokens)}개 전부 실패(마지막 오류: {last_err})")
+
+
+def fetch_reels(usernames, token=None, results_per_channel=RESULTS_PER_CHANNEL,
+                only_newer_than=ONLY_NEWER_THAN, timeout=900, poll_interval=5,
+                chunk_size=CHUNK_SIZE):
+    """usernames 리스트 → reel dict 리스트. Apify가 채널별 최신 N개(48h 여유) 반환.
+
+    usernames를 chunk_size 단위로 나눠 별도 run으로 순차 처리한다(액터의 대량
+    입력 조용한 부분처리 회피, 2026-07-09). 청크별로 비동기 run 시작 → 완료까지
+    폴링 → 데이터셋 조회 (동기 엔드포인트의 서버측 타임아웃 회피). token 미지정
+    시 계정 풀(APIFY_TOKENS)을 순환하며, 시작 시점 거부(401/402/429)뿐 아니라
+    실행 도중 계정이 소진돼 run 자체가 실패한 경우도 다음 계정으로 그 청크를
+    이어서 재시도한다."""
+    tokens = [token] if token else APIFY_TOKENS
+    if not tokens:
+        raise RuntimeError("APIFY_TOKEN 미설정 (환경변수 APIFY_TOKEN)")
+    payload_extra = {
+        "resultsLimit": results_per_channel,
+        "onlyPostsNewerThan": only_newer_than,
+        "skipPinnedPosts": True,
+    }
+
+    all_items = []
+    for i in range(0, len(usernames), chunk_size):
+        chunk = usernames[i:i + chunk_size]
+        all_items.extend(_fetch_batch(chunk, payload_extra, tokens, timeout, poll_interval))
+    return all_items
