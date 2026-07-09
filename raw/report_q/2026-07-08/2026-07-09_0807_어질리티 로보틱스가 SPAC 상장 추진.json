@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "date": "2026-07-08",
+    "broker": "하나증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-09_0807_어질리티 로보틱스가 SPAC 상장 추진.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "송선재, 박태웅",
+    "report_date": "2026년 07월 08일",
+    "target_kind": "sector",
+    "sector_name": "자동차",
+    "sector_view": "비중확대",
+    "thesis": [
+      "어질리티 로보틱스(Agility Robotics)의 나스닥 상장 추진은 로봇 업종 Valuation의 벤치마크로 작용할 전망이다.",
+      "중국 유니트리와 미국 어질리티의 상장 후 주가 흐름은 로봇 섹터의 Valuation 이벤트성 촉매가 될 것이다.",
+      "어질리티 로보틱스는 휴머노이드 로봇 '디짓(Digit)'의 상업화와 생산 효율화를 통해 로봇 산업의 규모의 경제를 실현하고자 한다."
+    ],
+    "timeline": [
+      "2026년 6월 24일: 어질리티 로보틱스-Churchill Capital Corp XI 합병 계약 체결",
+      "2026년 4분기: 어질리티 로보틱스 SPAC 합병 종료 및 나스닥 상장 예정"
+    ],
+    "top_picks": [
+      {
+        "name": "현대차",
+        "reason": "Top Picks 및 관심종목으로 선정",
+        "tp": "760,000원"
+      },
+      {
+        "name": "기아",
+        "reason": "Top Picks 및 관심종목으로 선정",
+        "tp": "220,000원"
+      }
+    ],
+    "risk": "상장 후 로봇 기업의 Valuation에 대한 시장의 압박과 프리미엄 논거 부재 시 변동성이 확대될 수 있음.",
+    "quote": "중국 유니트리의 상장(3Q, 상장 시가총액 10조원)과 미국 어질리티의 SPAC 합병(4Q, 합병 시가총액 5조원)은 글로벌 비상장 로봇 Valuation의 벤치마크가 된다."
+  }
+}

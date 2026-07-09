@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "date": "2026-07-08",
+    "broker": "하나증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-08_1105_업황의 바닥이 다가오고 있다.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "이기훈",
+    "report_date": "2026년 7월 8일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "CJ ENM",
+        "code": "035760",
+        "rating": "BUY",
+        "rating_changed": "null",
+        "tp_new": "53,000원",
+        "tp_prev": "null",
+        "tp_direction": "down",
+        "earnings_outlook": "2분기 예상 매출액/영업이익은 각각 1.3조원(+2% YoY)/313억원(+9%)으로 컨센서스(340억원)에 부합할 것이다.",
+        "estimate_revision": "넷마블과 스튜디오드래곤의 지분 가치 하락을 반영하여 SOTP 기준 목표주가를 53,000원(-24%)으로 하향한다.",
+        "next_catalyst": "JTBC 이슈로 TVN/SBS 등은 반사 수혜 가능성",
+        "thesis": [
+          "TV광고는 16개 분기 연속 하락 업황 지속 전망",
+          "미디어플랫폼은 KBO 시즌 효과와 티빙 고성장으로 선방",
+          "영화/드라마는 편성 부재로 부진하나 하반기 국내 영화 라인업 집중"
+        ],
+        "valuation_basis": "넷마블 지분가치 403십억원(16.8%, 25%할인), 미디어플랫폼 27년 NOPAT에 23X 적용 등 SOTP 방식",
+        "risk": "넷마블 지분에 대한 판단 부재와 티빙-웨이브의 해결되지 않는 합병 이슈",
+        "supply_comment": "null",
+        "quote": "넷마블과 스튜디오드래곤의 지분 가치 하락을 반영하여 SOTP 기준 목표주가를 53,000원(-24%)으로 하향한다."
+      },
+      {
+        "name": "스튜디오드래곤",
+        "code": "253450",
+        "rating": "BUY",
+        "rating_changed": "null",
+        "tp_new": "37,000원",
+        "tp_prev": "null",
+        "tp_direction": "down",
+        "earnings_outlook": "2분기 예상 매출액/영업이익은 각각 1,423억원(+24% YoY)/142억원(흑전)으로 컨센서스(136억원)에 부합할 것이다.",
+        "estimate_revision": "2027년 예상 EPS에 목표 P/E 25배(기존 33배)를 적용해 목표주가를 37,000원(-23%)으로 하향한다.",
+        "next_catalyst": "<천천히 강렬하게> 등 텐트폴 라인업",
+        "thesis": [
+          "방영 회차 77회로 전년 동기 대비 증가",
+          "해외 판매 호조와 1분기 대작 부재에 따른 제한적인 상각비 이슈",
+          "하반기 텐트폴 라인업을 통한 실적 선방 기대"
+        ],
+        "valuation_basis": "2027년 예상 EPS에 목표 P/E 25배 적용",
+        "risk": "모회사의 시가총액이 주가의 상단으로 작용",
+        "supply_comment": "null",
+        "quote": "2027년 예상 EPS에 목표 P/E 25배(기존 33배)를 적용해 목표주가를 37,000원(-23%)으로 하향한다."
+      },
+      {
+        "name": "SBS",
+        "code": "034120",
+        "rating": "BUY",
+        "rating_changed": "null",
+        "tp_new": "18,000원",
+        "tp_prev": "null",
+        "tp_direction": "down",
+        "earnings_outlook": "2분기 예상 매출액/영업이익은 각각 2,437억원(-9% YoY)/-8억원(적전)으로 컨센서스(55억원)을 하회할 것이다.",
+        "estimate_revision": "실적 하향에 따른 EPS 하향으로 목표주가를 18,000원(-10%)으로 하향한다.",
+        "next_catalyst": "4분기 지상파 총량제 확대 및 광고 규제 완화, 드라마 <김부장> 흥행",
+        "thesis": [
+          "6월 월드컵 영향으로 2분기 예상보다 부진",
+          "7월부터 광고 회복세",
+          "JTBC 이슈의 반사 수혜 가능성"
+        ],
+        "valuation_basis": "2027년 지배주주순이익 35십억원 기준 목표 P/E 10배 적용",
+        "risk": "선거 관련 비용 발생 및 콘텐츠 제작비 절감 미흡",
+        "supply_comment": "null",
+        "quote": "실적 하향에 따른 EPS 하향으로 목표주가를 18,000원(-10%)으로 하향하지만, 업황의 저점을 지나고 있는 것으로 판단한다."
+      }
+    ]
+  }
+}

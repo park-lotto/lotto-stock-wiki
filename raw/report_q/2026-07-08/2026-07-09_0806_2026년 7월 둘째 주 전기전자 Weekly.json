@@ -1,0 +1,63 @@
+{
+  "meta": {
+    "date": "2026-07-08",
+    "broker": "교보증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-09_0806_2026년 7월 둘째 주 전기전자 Weekly.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "교보증권",
+    "analyst": [
+      "박희철",
+      "최보영"
+    ],
+    "report_date": "2026/ 7/ 8",
+    "market_direction": null,
+    "macro_vars": [
+      "Meta발 AI Capex 우려",
+      "Nvidia Kyber 출시 지연",
+      "금 선물 가격",
+      "은 선물 가격",
+      "구리 선물 가격",
+      "원/달러 환율"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "여전히 전기전자 섹터의 호실적 전망은 가시적으로 판단"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "7/2",
+        "event": "삼성전기, 글래스 코어 생산 합작법인 'GlaSSEM' 설립"
+      },
+      {
+        "date": "7/2",
+        "event": "맥북 가격 인상, 글로벌 출하량 13.6% 감소"
+      },
+      {
+        "date": "7/5",
+        "event": "인텔, 일부 PC·서버용 CPU 가격 인상"
+      }
+    ],
+    "top_picks": [
+      "삼성전기",
+      "LG전자",
+      "LG이노텍",
+      "두산",
+      "이수페타시스",
+      "심텍",
+      "대덕전자",
+      "해성디에스",
+      "비에이치",
+      "티엘비",
+      "드림텍",
+      "APPLE"
+    ],
+    "risk": "무너진 테크 투심 속 빅테크 및 대표 기업들의 실적 발표 결과",
+    "quote": "Meta발 AI Capex 우려와 Nvidia Kyber 출시 지연 등 섹터 투자 심리에 큰 악영향 발생"
+  }
+}

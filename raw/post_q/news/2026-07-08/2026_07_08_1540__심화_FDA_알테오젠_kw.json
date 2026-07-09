@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "알테오젠",
+      "signal": "bull",
+      "reason": "레켐비 SC 제형 FDA 승인 및 넥스트 키트루다SC 후보 기대감",
+      "ts": "2026-07-08",
+      "quote": "레켐비 SC 제형도 FDA 승인...알테오젠, 넥스트 키트루다SC 후보는",
+      "sector": "바이오"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "레켐비 SC 제형 FDA 승인 및 알테오젠의 차기 후보 물질 기대감",
+      "ts": "2026-07-08",
+      "quote": "레켐비 SC 제형도 FDA 승인...알테오젠, 넥스트 키트루다SC 후보는"
+    }
+  ],
+  "quote": "레켐비 SC 제형도 FDA 승인...알테오젠, 넥스트 키트루다SC 후보는"
+}

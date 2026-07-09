@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-08",
+    "broker": "한화투자증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-08_1100_3분기는 비중 확대 구간.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "김소혜, 김나우",
+    "report_date": "2026년 7월 7일",
+    "stocks": [
+      {
+        "name": "NC",
+        "code": "036570",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "350,000원",
+        "tp_prev": "350,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 실적은 매출액 6,965억 원, 영업이익 1,292억 원을 기록하며 시장 기대치에 부합한 것으로 추정한다. 3분기 영업이익은 단기 마케팅 집행 규모가 커지며 부진할 수 있다.",
+        "estimate_revision": null,
+        "next_catalyst": "아이온2 글로벌 출시(9월), 리니지M 중국 출시 예정",
+        "thesis": [
+          "모바일 캐주얼 매출 성장세",
+          "아이온2 및 리니지M 등 신작 글로벌 출시 모멘텀",
+          "밸류에이션 부담 완화"
+        ],
+        "valuation_basis": "올해 예상 EPS에 P/E 목표배수 18배를 적용",
+        "risk": "신작 유무로 인한 분기 이익 변동성",
+        "supply_comment": null,
+        "quote": "3분기 영업이익은 단기 마케팅 집행 규모가 커지며 부진할 수 있지만, 글로벌 출시 모멘텀을 대비해 비중을 늘릴 수 있는 시기라고 판단합니다."
+      }
+    ]
+  }
+}

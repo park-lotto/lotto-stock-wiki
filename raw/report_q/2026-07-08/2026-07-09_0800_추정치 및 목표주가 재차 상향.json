@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-08",
+    "broker": "한화투자증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-09_0800_추정치 및 목표주가 재차 상향.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "김소혜, 김나우",
+    "report_date": "2026년 7월 8일",
+    "stocks": [
+      {
+        "name": "NHN",
+        "code": "181710",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "50,000원",
+        "tp_prev": "48,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "동사의 2Q26 실적은 매출액 7,068억 원, 영업이익 430억 원을 기록하며 영업이익 컨센서스를 소폭 상회한 것으로 추정한다. PC 매출액은 웹보드 규제 완화 효과가 반영되며 QoQ 5.7% 늘어나고, 모바일 매출 역시 일본 라인업 이벤트 효과로 인해 전분기 대비 증가한 것으로 파악된다. 결제 매출액은 QoQ 3.5% 증가한 것으로 추정하며, 기술 사업 매출은 GPUaaS 사업 성과가 인식되며 QoQ 12.3% 늘어난 것으로 추정한다.",
+        "estimate_revision": "상향",
+        "next_catalyst": "2분기 실적부터 반영되기 시작한 GPUaaS 사업 성과 및 하반기 클라우드 법인 BEP 달성",
+        "thesis": [
+          "견고한 웹보드 사업이 이익 레벨을 견인함",
+          "클라우드 법인의 외형 성장 및 턴어라운드 추세 가속화",
+          "GPUaaS 사업 성과 인식으로 인한 수익성 레벨 상향"
+        ],
+        "valuation_basis": "올해 예상 EPS에 P/E 목표배수 15배를 적용",
+        "risk": null,
+        "supply_comment": "IT",
+        "quote": "동사에 대한 목표주가를 실적 추정치 상향으로 5만 원으로 높여 제시한다."
+      }
+    ]
+  }
+}

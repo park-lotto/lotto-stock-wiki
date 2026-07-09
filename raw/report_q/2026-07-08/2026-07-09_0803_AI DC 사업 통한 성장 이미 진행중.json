@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-08",
+    "broker": "교보증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-09_0803_AI DC 사업 통한 성장 이미 진행중.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "김동우",
+    "report_date": "2026/07/08",
+    "stocks": [
+      {
+        "name": "NHN",
+        "code": "181710",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "49,000원",
+        "tp_prev": "49,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 매출은 7,121억원(YoY +17.7%), 영익은 413억원(YoY +88.2%)을 기록, 영익 기준 컨센서스(매출 6,996억원, 영익 415억원) 부합 전망.",
+        "estimate_revision": null,
+        "next_catalyst": "27년 정부 GPU 확보 사업 등 공공 사업 및 민간향 입찰",
+        "thesis": [
+          "광주 AI 데이터센터를 비롯한 AI DC 운영 역량을 기반으로 예산이 확실한 공공 사업 혹은 글로벌 고객사와의 장기 계약에 대응하는 전략",
+          "NHN 클라우드 정부 사업 점유율은 약 75%로 추산",
+          "데이터센터 병목이 존재해 공급자 우위인 시장에서 이미 AI DC를 통한 GPUaaS 및 클라우드 매출 성장을 이루고 있다는 점"
+        ],
+        "valuation_basis": "투자의견 Buy 및 목표주가 49,000원 유지",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "동사는 광주 AI 데이터센터를 비롯한 AI DC 운영 역량을 기반으로 예산이 확실한 공공 사업 혹은 글로벌 고객사와의 장기 계약에 대응하는 전략을 채택."
+      }
+    ]
+  }
+}

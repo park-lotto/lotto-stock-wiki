@@ -1,0 +1,31 @@
+{
+  "reports": [
+    {
+      "broker": "한투글로벌",
+      "stock": "메타",
+      "rating": null,
+      "tp": null,
+      "ts": "06:02",
+      "quote": "메타가 캐나다에 첫 데이터센터를 건설한다고 발표. 위치는 캐나다 앨버타주 스터전 카운티(Sturgeon County)이며, AI 컴퓨팅 수요 확대에 대응하기 위한 투자임.",
+      "sector": "IT"
+    },
+    {
+      "broker": "한투글로벌",
+      "stock": "엔비디아",
+      "rating": null,
+      "tp": null,
+      "ts": "06:08",
+      "quote": "중국이 알리바바, 바이트댄스, 딥시크 등 주요 AI 기업에 엔비디아 H200 칩 구매를 제한적으로 허용하는 방안을 검토 중임.",
+      "sector": "반도체"
+    },
+    {
+      "broker": "한투글로벌",
+      "stock": "CXMT",
+      "rating": null,
+      "tp": null,
+      "ts": "07:20",
+      "quote": "7/9 CXMT <과창판 상장 의향서> 및 <발행 일정 및 수요예측 공고> 발표. 과창판 IPO 발행 절차 공식 개시",
+      "sector": "반도체"
+    }
+  ]
+}

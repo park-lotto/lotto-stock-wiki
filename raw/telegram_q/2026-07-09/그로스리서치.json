@@ -1,0 +1,31 @@
+{
+  "reports": [
+    {
+      "broker": "UBS",
+      "stock": "스페이스X AI 사업부",
+      "rating": null,
+      "tp": null,
+      "ts": "05:48",
+      "quote": "UBS는 향후 5년간 스페이스X AI 사업부만으로 약 1.1조 달러 캐펙스 지출 전망",
+      "sector": "기타"
+    },
+    {
+      "broker": "골드만삭스",
+      "stock": "반도체 공급/수요",
+      "rating": null,
+      "tp": null,
+      "ts": "05:50",
+      "quote": "DRAM 공급 타이트 국면이 2027년 2분기까지 연장",
+      "sector": "반도체"
+    },
+    {
+      "broker": "모건스탠리",
+      "stock": "ABF 기판",
+      "rating": null,
+      "tp": null,
+      "ts": "16:34",
+      "quote": "모건스탠리는 ABF 기판 가격이 2026년 20~25%, 2027년 25% 이상 상승할 것으로 전망",
+      "sector": "반도체"
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "date": "2026-07-08",
+    "broker": "한화투자증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-08_1107_[디지털자산] 월간 디지털자산 시장 동향 기...md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "최윤영",
+    "report_date": "2026년 7월 7일",
+    "target_kind": "market",
+    "market_direction": "null",
+    "macro_vars": [
+      "디지털자산 ETP 6월 순유출",
+      "Bitcoin ETP 자금 이탈",
+      "CME 선물 OI 감소",
+      "무기한선물 레버리지 정상화",
+      "스테이블코인 공급량 감소",
+      "미국 규제형 무기한선물 시장 개화",
+      "예측시장 빅테크와 전통 금융권 참여"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "기타",
+        "stance": "중립",
+        "reason": "디지털자산 ETP는 6월 5주 연속 순유출을 기록하며 Bitcoin ETP를 중심으로 자금 이탈이 지속되었고, CME 선물 OI 감소와 무기한선물 레버리지 정상화가 이어지며 시장은 관망 국면에 진입함"
+      }
+    ],
+    "style": "null",
+    "event_calendar": [
+      {
+        "date": "2026.01.28",
+        "event": "SEC 토큰화 증권 성명서 발표"
+      },
+      {
+        "date": "2026.03.17",
+        "event": "SEC·CFTC 공동 해석발표"
+      },
+      {
+        "date": "2026.03.18",
+        "event": "Nasdaq 토큰화 증권 거래 승인"
+      },
+      {
+        "date": "2026.04.17",
+        "event": "NYSE 토큰화 증권 거래 승인"
+      },
+      {
+        "date": "2026.06.01",
+        "event": "일본 자민당 블록체인 추진 패널의 엔화 스테이블코인 활용 제안"
+      },
+      {
+        "date": "2026.06.10",
+        "event": "일본 3대 메가뱅크의 공동 스테이블코인 발행 협의체 구성"
+      }
+    ],
+    "top_picks": [
+      "Coinbase",
+      "Strategy",
+      "BitMine"
+    ],
+    "risk": "디지털자산 ETP 시장의 자금 이탈, 무기한선물 규제 및 CME와의 법적 공방, 예측시장에 대한 규제 이슈",
+    "quote": "자금 흐름은 둔화됐지만, 금융 인프라 혁신은 지속"
+  }
+}

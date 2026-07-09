@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-08",
+    "broker": "교보증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-08_1101_반전의 시간.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "정희령",
+    "report_date": "2026.07.08",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "지아이이노베이션",
+        "code": "358570",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2025.12 매출액 6십억원, 영업이익 -41십억원, 순이익 -35십억원",
+        "estimate_revision": null,
+        "next_catalyst": "GI-101A의 2상 데이터 일부 공개 및 연내 기술 이전 체결, GI-102 임상 데이터 확인",
+        "thesis": [
+          "GI-101A ASCO 구두 발표 이후 면역항암제 불응 환자 대상 우수한 임상 데이터 입증 및 기술 이전 기대감",
+          "GI-102와 J&J의 Pasritamig 병용 임상 협력 및 연내 데이터 확인을 통한 본계약 체결 가능성",
+          "GI-301의 2상 진입 이후 연내 기술 이전 체결 목표"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "GI-101A, GI-301 파이프라인의 기술 이전 체결 연내 가능할 것으로 전망",
+        "quote": "동사의 GI-101A, GI-301 파이프라인의 기술 이전 체결 연내 가능할 것으로 전망하며 딜 체결 시 시장 신뢰 회복 가능하다고 판단."
+      }
+    ],
+    "sector": "바이오"
+  }
+}

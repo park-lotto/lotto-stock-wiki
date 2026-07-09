@@ -1,0 +1,19 @@
+{
+  "target_kind": "market",
+  "market_direction": "bull",
+  "macro_events": [
+    {
+      "fact": "다양한 미국 상장 기업들이 52주 신고가를 경신하며 강세를 보임",
+      "ts": "2026-07-07",
+      "quote": "스카이워드 스페셜티, 주가 52주 신고가 $62.30 달성"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "기타",
+      "stance": "긍정",
+      "comment": "금융, 부동산, 바이오, IT 등 다수 종목이 52주 신고가를 기록함"
+    }
+  ],
+  "quote": "스카이워드 스페셜티, 캠든 프라퍼티 트러스트, 바이오크리스트, Tenable Holdings Inc, Immunovant, 브로드스톤 넷 리스, 피프스 서드 뱅코프, TG 테라퓨틱스, Scholar Rock, UDR, 릴레이 테라퓨틱스, 아치 캐피털 그룹, 미국재보험그룹(RGA), 사이먼 프로퍼티 그룹, 에섹스 프로퍼티 트러스트, 브링커 인터내셔널, First American Financial Corp, 에디슨 인터내셔널이 52주 신고가를 기록함"
+}

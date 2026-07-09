@@ -1,0 +1,58 @@
+{
+  "meta": {
+    "date": "2026-07-08",
+    "broker": "하나증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-08_1106_6월 인천공항 수송실적 3분기는 맑음.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "안도현",
+    "report_date": "2026년 7월 8일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "대한항공",
+        "code": "003490",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "38,000원",
+        "tp_prev": "32,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "FSC의 경우 3분기 증익을 예상해봐도 좋은 수준이다.",
+        "estimate_revision": "항공화물 등 요인으로 실적 추정치 상향 여지가 더 높은 대한항공 위주의 매수를 추천한다.",
+        "next_catalyst": "3분기부터는 전쟁 이후 발권된 티켓들이 매출로 반영되고, 항공 유가도 전쟁 이전 대비 상승폭이 30% 수준에 불과하다.",
+        "thesis": [
+          "항공주 전반으로 2분기 실적을 저점으로 턴어라운드 예정",
+          "항공화물 등 요인으로 실적 추정치 상향 여지가 더 높음",
+          "유류할증료 인하가 항공 수요에 긍정적으로 작용할 것으로 기대"
+        ],
+        "valuation_basis": null,
+        "risk": "항공사의 2분기 유류비는 전년 동기 대비 2배 수준으로 추정",
+        "supply_comment": null,
+        "quote": "항공주 전반으로 2분기 실적을 저점으로 턴어라운드 예정이고, 항공화물 등 요인으로 실적 추정치 상향 여지가 더 높은 대한항공 위주의 매수를 추천한다.",
+        "sector": "기타"
+      },
+      {
+        "name": "진에어",
+        "code": "272450",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "7,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "LCC도 3분기부터는 BEP에 근접할 것으로 전망하고",
+        "estimate_revision": null,
+        "next_catalyst": "3분기부터는 전쟁 이후 발권된 티켓들이 매출로 반영",
+        "thesis": [
+          "항공주 전반으로 2분기 실적을 저점으로 턴어라운드 예정",
+          "LCC도 3분기부터는 BEP에 근접할 것으로 전망"
+        ],
+        "valuation_basis": null,
+        "risk": "항공사의 2분기 유류비는 전년 동기 대비 2배 수준으로 추정",
+        "supply_comment": null,
+        "quote": "LCC도 3분기부터는 BEP에 근접할 것으로 전망하고, FSC의 경우 3분기 증익을 예상해봐도 좋은 수준이다.",
+        "sector": "기타"
+      }
+    ]
+  }
+}

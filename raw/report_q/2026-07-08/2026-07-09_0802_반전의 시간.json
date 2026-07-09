@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-08",
+    "broker": "교보증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-09_0802_반전의 시간.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "정희령",
+    "report_date": "July 08, 2026",
+    "stocks": [
+      {
+        "name": "지아이이노베이션",
+        "code": "358570",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2025.12 매출액(십억원) 6, YoY(%) 23,943.8, 영업이익(십억원) -41, OP 마진(%) -683.3, 순이익(십억원) -35, EPS(원) -587",
+        "estimate_revision": null,
+        "next_catalyst": "GI-101A 2상 데이터 일부 공개 예정, GI-102 8월 환자 투약 및 데이터 공개, GI-301 2상 진입 이후 연내 기술 이전 체결",
+        "thesis": [
+          "GI-101A ASCO 구두 발표 이후 임상 1상 데이터로 입증된 우수한 유효성 및 기술이전 기대감",
+          "J&J와 임상 협력 체결된 GI-102의 흑색종 1차 치료제 조건부 승인 가능성 및 연내 임상 데이터 확인",
+          "다중 항체 개발 플랫폼 GI-SMART를 통한 포트폴리오 다변화 및 연내 주요 파이프라인 기술이전 전망"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "연내 주요 파이프라인의 진행 상황에 대한 데이터 및 기술이전 기대감 확인 가능할 것으로 추정하며 주목 권고",
+        "sector": "바이오"
+      }
+    ]
+  }
+}

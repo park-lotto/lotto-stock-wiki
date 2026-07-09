@@ -1,0 +1,53 @@
+{
+  "sector_name": "기타",
+  "sector_view": "중립",
+  "points": [
+    "서방 국가들의 핵심광물 공급망 내 중국 의존도 축소 및 자국 생산 확대 움직임 지속",
+    "인공지능과 에너지 전환에 따른 구리 수요 폭증으로 광산 투자 및 구조조정 활발",
+    "중국의 군사력 확장과 광물 자원 관련 지정학적 갈등 심화"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "Teck Resources",
+      "comment": "캐나다 정부로부터 전략금속 생산 확대를 위한 4억 캐나다달러 규모의 투자 유치",
+      "ts": "11:33",
+      "quote": "Canada agrees on a potential C$400 million Teck investment for strategic metals production",
+      "sector": "기타"
+    },
+    {
+      "name": "Peabody Energy",
+      "comment": "미국 정부 보조금을 통해 석탄 광산 내 희토류 생산 역량 강화 시도",
+      "ts": "12:10",
+      "quote": "Peabody Gets US Grant to Boost Rare Earths at Wyoming Coal Mines",
+      "sector": "기타"
+    },
+    {
+      "name": "Codelco",
+      "comment": "막대한 부채와 생산량 저하로 인한 경영 위기 및 구조조정 압박 직면",
+      "ts": "12:12",
+      "quote": "A Once-Great Copper Miner Faces a Reckoning Just as AI Power Demand Soars",
+      "sector": "기타"
+    },
+    {
+      "name": "BHP",
+      "comment": "칠레 구리 광산 확장 프로젝트 승인 획득으로 향후 10년간 대규모 투자 진행",
+      "ts": "12:27",
+      "quote": "BHP Wins Project Approval as Part of Chilean Copper Overhaul",
+      "sector": "기타"
+    },
+    {
+      "name": "Northern Minerals",
+      "comment": "중국계 주주들의 호주 정부 지분 매각 명령 불이행으로 인한 주가 급락",
+      "ts": "12:46",
+      "quote": "Northern Minerals Shares Fall as China Investors Defy Sale Order",
+      "sector": "기타"
+    }
+  ],
+  "events": [
+    {
+      "fact": "중국 태평양 핵잠수함 장거리 탄도미사일 시험 발사",
+      "ts": "12:15",
+      "quote": "What China’s Latest Missile Test Reveals About Its Expanding Arsenal"
+    }
+  ]
+}
