@@ -190,6 +190,27 @@ def test_find_collect_unsupported_platform_400(monkeypatch, client, tmp_path):
     assert r.status_code == 400
 
 
+def test_find_collect_no_youtube_key_returns_clean_error(monkeypatch, client, tmp_path):
+    """YOUTUBE_API_KEY 미설정 시 500 대신 명확한 에러(2026-07-09, 배포 후 실단말 검증 중
+    raw 500 확인하고 수정 — youtube_search.search()의 RuntimeError가 잡히지 않았음)."""
+    from shopping_shorts import app as app_module
+    from shopping_shorts.store import Store
+
+    test_db_path = tmp_path / "test.db"
+    monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
+    store = Store(test_db_path)
+    store.save_source_analysis("sc1", keywords={"ko": [], "en": ["floor cleaner"], "zh": []},
+                                frame_paths=["/tmp/f1.jpg"], analyzed_at="2026-07-09T00:00:00Z")
+
+    def fake_search(kw, max_results):
+        raise RuntimeError("youtube_search: YOUTUBE_API_KEY가 설정되지 않았습니다")
+    monkeypatch.setattr(app_module, "youtube_search_fn", fake_search)
+
+    r = client.post("/api/find/collect", params={"shortcode": "sc1", "platform": "youtube"})
+    assert r.status_code == 503
+    assert r.json()["ok"] is False
+
+
 def test_find_save_adds_candidate_to_pool(monkeypatch, client, tmp_path):
     from shopping_shorts import app as app_module
     from shopping_shorts.store import Store

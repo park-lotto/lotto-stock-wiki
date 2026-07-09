@@ -156,7 +156,12 @@ def api_find_collect(shortcode: str, platform: str):
     keyword = (analysis["keywords"]["en"] or analysis["keywords"]["ko"] or [""])[0]
     if not keyword:
         return {"ok": True, "count": 0}
-    raw = youtube_search_fn(keyword, max_results=10)
+    try:
+        raw = youtube_search_fn(keyword, max_results=10)
+    except RuntimeError as e:
+        # YOUTUBE_API_KEY 미설정 등 — 서버 500 대신 명확한 에러로 응답
+        # (2026-07-09, 배포 후 실단말 검증 중 raw 500 확인하고 수정).
+        return JSONResponse(status_code=503, content={"ok": False, "error": str(e)})
     ids = store.save_candidates(shortcode, "youtube", raw)
 
     frame_paths = analysis["frame_paths"]
