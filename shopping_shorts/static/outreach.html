@@ -22,6 +22,7 @@
   .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
   .card.done{opacity:.45}
+  .card.focus-highlight{outline:3px solid var(--accent);box-shadow:0 0 0 5px rgba(47,129,247,.35);transition:box-shadow .3s}
   .card img{width:100%;height:150px;object-fit:cover;background:#000}
   .card .body{padding:12px}
   .meta{font-size:12px;color:var(--sub)}
@@ -83,6 +84,7 @@
 <script>
 let STATE = {items:[], mode:"list", idx:0};
 let SELECTED = {};  // shortcode -> 마지막 선택한 문구
+const FOCUS_SC = new URLSearchParams(location.search).get("focus");  // 랭킹 페이지 "댓글참여" 버튼에서 넘어온 대상
 
 function copyText(t, btn){
   navigator.clipboard.writeText(t).then(()=>{ if(btn){const o=btn.textContent;btn.textContent="복사됨✓";setTimeout(()=>btn.textContent=o,1200);} });
@@ -152,16 +154,33 @@ function toggleMode(){
 }
 function render(){ STATE.mode==="list" ? renderList() : renderProgress(); }
 
-async function reload(){
+function scrollToFocus(sc){
+  if(STATE.mode==="progress"){
+    const list = STATE.items.filter(i=>!i.done);
+    const idx = list.findIndex(i=>i.shortcode===sc);
+    if(idx>=0){ STATE.idx=idx; renderProgress(); }
+    return;
+  }
+  const el = document.getElementById("c_"+sc);
+  if(el){
+    el.scrollIntoView({behavior:"smooth", block:"center"});
+    el.classList.add("focus-highlight");
+    setTimeout(()=>el.classList.remove("focus-highlight"), 2500);
+  }
+}
+
+async function reload(isInitial){
   const sort=document.getElementById("sort").value;
-  const hide=document.getElementById("hideDone").checked;
+  // focus로 들어온 항목은 "완료 감추기"가 켜져있어도 반드시 보이게 함
+  const hide = (isInitial && FOCUS_SC) ? false : document.getElementById("hideDone").checked;
   document.getElementById("status").textContent="불러오는 중…";
   const d=await (await fetch(`/api/outreach?sort=${sort}&hide_done=${hide}`)).json();
   STATE.items=d.items||[]; STATE.idx=0;
   document.getElementById("status").textContent=`${d.count}건`;
   render();
+  if(isInitial && FOCUS_SC) scrollToFocus(FOCUS_SC);
 }
-reload();
+reload(true);
 </script>
 </body>
 </html>

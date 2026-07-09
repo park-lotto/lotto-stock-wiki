@@ -48,6 +48,7 @@ def build_items(reels, meta, prev_comments, prev_delta, now=None, window_hours=4
             "name": meta.get("name"),
             "username": meta.get("username"),
             "inpock": meta.get("inpock", ""),
+            "followers": followers,
             "thumbnail": r.get("displayUrl", ""),
             "url": r.get("url", ""),
             "comments": comments,

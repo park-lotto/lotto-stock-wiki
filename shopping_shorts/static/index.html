@@ -134,6 +134,7 @@ function render(){
       <div class="body">
         <div class="rank">#${idx+1} · ${i.category} · ${Math.round(i.age_hours)}시간 전</div>
         <div class="ch">${i.name||i.username} <span class="grade">${i.grade||''}</span></div>
+        <div class="rank" style="margin:-4px 0 4px">팔로워 ${(i.followers||0).toLocaleString()}</div>
         <div class="stat" title="댓글 수 그대로"><span>댓글</span><b>${i.comments.toLocaleString()} <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span></b></div>
         <div class="stat" title="댓글수 ÷ 경과시간(시간)"><span>속도(시간당)</span><b>${i.speed.toFixed(1)}</b></div>
         <div class="stat" title="이번 수집 Δ − 직전 수집 Δ (증가세가 빨라지는 중인지)"><span>가속</span><b>${i.accel==null?'—':(i.accel>0?'+':'')+i.accel}</b></div>
