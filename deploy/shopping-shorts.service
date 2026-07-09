@@ -10,6 +10,10 @@ EnvironmentFile=/etc/shopping-shorts.env
 ExecStart=/usr/bin/python3 -m uvicorn shopping_shorts.app:app --host 127.0.0.1 --port 8849
 Restart=always
 RestartSec=5
+# 댓글 draft 생성 BackgroundTask가 동기 sleep 중이면 graceful shutdown이 안 먹혀
+# 기본 90초까지 서비스가 죽은 채로 남는 사고가 있었다(2026-07-09) — 강제종료를
+# 앞당겨 배포 시 다운타임을 최소화.
+TimeoutStopSec=10
 
 [Install]
 WantedBy=multi-user.target

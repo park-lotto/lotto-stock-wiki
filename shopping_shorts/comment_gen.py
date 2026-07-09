@@ -58,8 +58,14 @@ def parse_response(raw):
     return []
 
 
-def generate(caption, channel, category, max_retries=4):
-    """캡션→댓글 3개. Gemini 쿼터 초과 시 key_vault 로테이션. 최종 실패 시 []."""
+def generate(caption, channel, category, max_retries=4, quota_sleep=8):
+    """캡션→댓글 3개. Gemini 쿼터 초과 시 key_vault 로테이션. 최종 실패 시 [].
+
+    quota_sleep: 분당 쿼터 초과 시 대기 시간(초). 예전엔 62초 고정이었는데,
+    이게 동기 blocking sleep이라 대량수집(443채널) 시 BackgroundTasks 안에서
+    수백 건이 걸리며 서버 graceful shutdown(systemd 재시작)까지 막아버린 사고가
+    있었다(2026-07-09) — 로테이션 가능한 계정이 있으면 먼저 로테이션(대기 없음),
+    전부 소진됐을 때만 훨씬 짧게 대기하도록 변경."""
     prompt = build_prompt(caption, channel, category)
     for attempt in range(max_retries):
         try:
@@ -76,7 +82,9 @@ def generate(caption, channel, category, max_retries=4):
                     continue
                 return []
             if key_vault.is_quota_error(e):
-                time.sleep(62)
+                if key_vault.rotate(_GROUP):
+                    continue
+                time.sleep(quota_sleep)
                 continue
             if attempt < max_retries - 1 and any(c in m for c in ("503", "UNAVAILABLE", "overloaded")):
                 time.sleep((attempt + 1) * 5)
