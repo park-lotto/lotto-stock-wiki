@@ -7,7 +7,7 @@ from pathlib import Path
 from fastapi import BackgroundTasks, FastAPI, Request
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from shopping_shorts.service import collect, generate_missing_drafts, draft_batch
+from shopping_shorts.service import collect, generate_missing_drafts, next_draft_targets
 from shopping_shorts.outreach import build_queue
 from shopping_shorts.store import Store
 from shopping_shorts.config import DB_PATH
@@ -24,14 +24,16 @@ def api_collect(background_tasks: BackgroundTasks, limit: int | None = None):
     뒤이어 채워짐(2026-07-09, 443채널 전체수집이 draft생성 때문에 응답을
     막아버리던 문제 수정).
 
-    Gemini 쿼터 절약을 위해 draft는 상위 랭킹 40개(1번째 배치)만 자동 생성한다
-    (2026-07-09). 나머지는 /api/generate_drafts?batch=2,3,... 로 필요할 때만."""
+    Gemini 쿼터 절약을 위해 draft는 랭킹 상위 40개만 자동 생성한다(2026-07-09).
+    나머지(또는 실패해서 draft 없는 상위권 항목)는 /api/generate_drafts 버튼으로
+    필요할 때만 이어서 생성."""
     try:
         items = collect(limit_channels=limit)
         from datetime import datetime, timezone
         collected_at = datetime.now(timezone.utc).isoformat()
-        Store(DB_PATH).save_last_run(items, collected_at)
-        background_tasks.add_task(generate_missing_drafts, draft_batch(items, batch=1))
+        store = Store(DB_PATH)
+        store.save_last_run(items, collected_at)
+        background_tasks.add_task(generate_missing_drafts, next_draft_targets(items, store))
         return {"ok": True, "count": len(items), "items": items,
                 "collected_at": collected_at}
     except Exception as e:
@@ -41,13 +43,15 @@ def api_collect(background_tasks: BackgroundTasks, limit: int | None = None):
 
 
 @app.post("/api/generate_drafts")
-def api_generate_drafts(background_tasks: BackgroundTasks, batch: int = 2):
-    """"댓글 더 생성" 버튼 — 마지막 수집분 중 랭킹 batch번째(1-indexed) 40개
-    구간만 댓글 draft 생성. batch=1(상위 40개)은 수집 시 이미 자동 생성됨."""
-    items, _ = Store(DB_PATH).load_last_run()
+def api_generate_drafts(background_tasks: BackgroundTasks):
+    """"댓글 더 생성" 버튼 — 랭킹 상위권 중 draft 없고 완료 처리도 안 된 항목을
+    다시 계산해서 40개 생성. 고정 페이지네이션이 아니라 매번 재계산이므로
+    실패했던 상위권 항목도 자동으로 재시도 대상에 포함된다(2026-07-09)."""
+    store = Store(DB_PATH)
+    items, _ = store.load_last_run()
     if not items:
         return JSONResponse(status_code=400, content={"ok": False, "error": "수집된 데이터 없음"})
-    targets = draft_batch(items, batch=batch)
+    targets = next_draft_targets(items, store)
     if not targets:
         return {"ok": True, "count": 0, "message": "더 이상 생성할 항목이 없습니다"}
     background_tasks.add_task(generate_missing_drafts, targets)

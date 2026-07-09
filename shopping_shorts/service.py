@@ -26,13 +26,22 @@ def _export_csv(items, run_date):
     return path
 
 
-def draft_batch(items, batch, batch_size=DRAFT_BATCH_SIZE):
-    """score(종합 랭킹) 내림차순으로 정렬 후 batch번째(1-indexed) 구간만 잘라 반환.
-    수집 직후엔 batch=1(상위 랭킹)만 자동 생성, 나머지는 "댓글 더 생성" 버튼으로
-    batch=2,3,... 을 필요할 때만 이어서 생성해 Gemini 쿼터를 아낀다(2026-07-09)."""
+def next_draft_targets(items, store, limit=DRAFT_BATCH_SIZE):
+    """랭킹 상위권 중 "아직 draft 없고 완료(댓글 단 것) 처리도 안 된" 항목을
+    score 내림차순으로 limit개 골라 반환(2026-07-09).
+
+    고정된 페이지네이션(41~80번 다음 배치 식)이 아니라 매번 다시 계산하는
+    이유: 상위 40개 중 일부가 완료 처리돼 큐에서 빠지거나, Gemini 실패로
+    draft가 안 생긴 항목이 있으면 다음 "댓글 더 생성" 클릭 때 그 자리를
+    채워야 한다 — 41~80번을 고정으로 넘어가버리면 실패한 상위권 항목이
+    영영 재시도되지 않는다."""
+    commented = store.commented_set()
     ranked = sorted(items, key=lambda i: (i.get("score") or 0), reverse=True)
-    start = (batch - 1) * batch_size
-    return ranked[start:start + batch_size]
+    pending = [
+        i for i in ranked
+        if i["shortcode"] not in commented and not store.get_drafts(i["shortcode"])
+    ]
+    return pending[:limit]
 
 
 _DRAFT_WORKERS = 4  # Gemini "general" 그룹 계정 풀 크기(APIFY_TOKENS와 별개)와 맞춤

@@ -81,7 +81,7 @@
       </select>
       <label class="toggle"><input type="checkbox" id="hideDone" checked onchange="reload()"> 완료 감추기</label>
       <button class="primary" id="modeBtn" onclick="toggleMode()">▶ 진행 시작</button>
-      <button id="moreDraftsBtn" onclick="generateMoreDrafts()">💬 댓글 더 생성 (다음 40개)</button>
+      <button id="moreDraftsBtn" onclick="generateMoreDrafts()">💬 댓글 더 생성 (상위 40개)</button>
       <span id="status" style="color:var(--sub);font-size:12px"></span>
     </div>
     <div id="view"><div class="cards"><div class="empty">불러오는 중…</div></div></div>
@@ -90,19 +90,20 @@
 let STATE = {items:[], mode:"list", idx:0};
 let SELECTED = {};  // shortcode -> 마지막 선택한 문구
 const FOCUS_SC = new URLSearchParams(location.search).get("focus");  // 랭킹 페이지 "댓글참여" 버튼에서 넘어온 대상
-let nextDraftBatch = 2;  // batch=1(상위 40개)은 수집 시 자동 생성됨 — 버튼 누를 때마다 다음 배치
 
 async function generateMoreDrafts(){
+  // 고정 배치번호 없음 — 매번 "draft 없고 완료 안 된 상위 40개"를 새로 계산해서
+  // 생성하므로, 완료 처리로 큐가 줄거나 이전 시도가 실패했어도 항상 다음
+  // 상위권을 채운다(2026-07-09).
   const btn = document.getElementById("moreDraftsBtn");
   btn.disabled = true;
   const prevText = btn.textContent;
   btn.textContent = "생성 중…";
   try{
-    const r = await fetch(`/api/generate_drafts?batch=${nextDraftBatch}`, {method:"POST"});
+    const r = await fetch(`/api/generate_drafts`, {method:"POST"});
     const d = await r.json();
     if(!d.ok){ btn.textContent = "❌ " + (d.error||"실패"); return; }
     if(d.count === 0){ btn.textContent = "더 생성할 항목 없음"; return; }
-    nextDraftBatch++;
     btn.textContent = prevText;
     document.getElementById("status").textContent = `${d.count}건 백그라운드 생성 시작 — 잠시 후 새로고침하면 반영됩니다`;
   }catch(e){ btn.textContent = "❌ " + e.message; }
