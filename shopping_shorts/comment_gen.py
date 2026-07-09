@@ -1,11 +1,60 @@
-"""Gemini로 릴스 캡션 기반 자연스러운 댓글 후보 생성. 기존 key_vault 재사용."""
+"""Gemini로 릴스 캡션 기반 자연스러운 댓글 후보 생성.
+
+전용 키 풀(SHORTS_GEMINI_KEYS)을 직접 로테이션한다 — 주식위키 본체가 쓰는
+pipeline.atoms.key_vault의 공유 풀과 분리(2026-07-09, 공유 풀이 다른 작업들과
+하루 종일 같이 소모되다 예고 없이 소진된 사고 이후). 소진 판정 로직(429/
+PerDay 문자열 매칭)만 key_vault의 순수 함수를 재사용하고, 로테이션·상태
+저장은 이 모듈 자체 상태 파일로 완전히 독립."""
 import json
 import time
+from pathlib import Path
+from datetime import datetime, timezone
+from google import genai
 from google.genai import types
 from pipeline.atoms import key_vault
+from shopping_shorts.config import SHORTS_GEMINI_KEYS
 
-_GROUP = "general"
 _MODEL = "gemini-3.1-flash-lite"
+_STATE_PATH = Path(__file__).parent / "data" / "shorts_gemini_state.json"
+_client_cache = {}
+
+
+def _today_str():
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+
+def _load_state():
+    try:
+        data = json.loads(_STATE_PATH.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError, ValueError):
+        data = {}
+    if data.get("date") != _today_str():
+        return {"date": _today_str(), "exhausted": []}
+    data.setdefault("exhausted", [])
+    return data
+
+
+def _save_state(state):
+    _STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    _STATE_PATH.write_text(json.dumps(state), encoding="utf-8")
+
+
+def _mark_key_exhausted(idx):
+    state = _load_state()
+    if idx not in state["exhausted"]:
+        state["exhausted"].append(idx)
+        _save_state(state)
+
+
+def _live_key_indices():
+    exhausted = set(_load_state()["exhausted"])
+    return [i for i in range(len(SHORTS_GEMINI_KEYS)) if i not in exhausted]
+
+
+def _client_for_key(key):
+    if key not in _client_cache:
+        _client_cache[key] = genai.Client(api_key=key)
+    return _client_cache[key]
 
 _PROMPT = """너는 인스타에서 활발히 소통하는 진짜 사람이다.
 아래 릴스를 방금 본 팔로워처럼, 영상 내용에 실제로 반응하는 한국어 댓글 3개를 만들어라.
@@ -31,8 +80,13 @@ _PROMPT = """너는 인스타에서 활발히 소통하는 진짜 사람이다.
 """
 
 
-def _get_client():
-    return key_vault.get_client(_GROUP)
+def _current_key_and_idx():
+    """전용 풀에서 아직 안 살아있는(소진 안 된) 키 중 첫 번째. 다 소진되면 (None, None)."""
+    live = _live_key_indices()
+    if not live:
+        return None, None
+    idx = live[0]
+    return SHORTS_GEMINI_KEYS[idx], idx
 
 
 def build_prompt(caption, channel, category):
@@ -59,17 +113,21 @@ def parse_response(raw):
 
 
 def generate(caption, channel, category, max_retries=4, quota_sleep=8):
-    """캡션→댓글 3개. Gemini 쿼터 초과 시 key_vault 로테이션. 최종 실패 시 [].
+    """캡션→댓글 3개. 전용 키 풀(SHORTS_GEMINI_KEYS) 내에서만 로테이션 —
+    공유 풀(key_vault)로는 폴백하지 않는다(2026-07-09, 전용 풀 분리 이유는
+    모듈 docstring 참고). 전용 풀이 다 소진되면 그냥 []. 최종 실패 시에도 [].
 
-    quota_sleep: 분당 쿼터 초과 시 대기 시간(초). 예전엔 62초 고정이었는데,
-    이게 동기 blocking sleep이라 대량수집(443채널) 시 BackgroundTasks 안에서
-    수백 건이 걸리며 서버 graceful shutdown(systemd 재시작)까지 막아버린 사고가
-    있었다(2026-07-09) — 로테이션 가능한 계정이 있으면 먼저 로테이션(대기 없음),
-    전부 소진됐을 때만 훨씬 짧게 대기하도록 변경."""
+    quota_sleep: 분당 쿼터 초과 시 대기 시간(초). 로테이션 가능한 키가 있으면
+    먼저 로테이션(대기 없음), 전부 소진됐을 때만 짧게 대기."""
+    if not SHORTS_GEMINI_KEYS:
+        raise RuntimeError("comment_gen: SHORTS_GEMINI_KEY가 설정되지 않았습니다(.env/서비스 환경변수 확인)")
     prompt = build_prompt(caption, channel, category)
     for attempt in range(max_retries):
+        key, idx = _current_key_and_idx()
+        if key is None:
+            return []  # 전용 풀 전체 소진 — 공유 풀로 넘어가지 않고 여기서 멈춤
         try:
-            resp = _get_client().models.generate_content(
+            resp = _client_for_key(key).models.generate_content(
                 model=_MODEL,
                 contents=prompt,
                 config=types.GenerateContentConfig(response_mime_type="application/json"),
@@ -78,12 +136,12 @@ def generate(caption, channel, category, max_retries=4, quota_sleep=8):
         except Exception as e:
             m = str(e)
             if key_vault.is_daily_exhausted_error(e):
-                if key_vault.rotate(_GROUP):
-                    continue
-                return []
+                _mark_key_exhausted(idx)  # 확실한 일일 한도 소진만 영구 제외
+                continue
             if key_vault.is_quota_error(e):
-                if key_vault.rotate(_GROUP):
-                    continue
+                # 분당 제한 등 "일일 소진"까지는 확인 안 되는 429 — 키를 영구
+                # 제외하면 전용 풀(3개뿐)이 금방 동나므로, 같은 키로 짧게
+                # 대기 후 재시도(2026-07-09, "잔여10개가 순식간에 소진" 사고 방지).
                 time.sleep(quota_sleep)
                 continue
             if attempt < max_retries - 1 and any(c in m for c in ("503", "UNAVAILABLE", "overloaded")):

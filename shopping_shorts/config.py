@@ -26,6 +26,18 @@ APIFY_TOKENS = [
 ]
 APIFY_ACTOR = "apify~instagram-reel-scraper"  # actor id (~ 형식)
 
+# 댓글 draft 생성 전용 Gemini 키 풀 — 주식위키 본체(pipeline.atoms.key_vault)의
+# 공유 풀과 완전히 분리(2026-07-09). 공유 풀은 인제스트·브리핑 등 다른 작업과
+# 하루 종일 같이 소모돼 예고 없이 소진되는 사고가 있었음 — 쇼핑쇼츠는 이 전용
+# 풀만 쓰고, 공유 풀로 폴백하지 않는다(소진되면 그냥 다음날까지 대기).
+SHORTS_GEMINI_KEYS = [
+    t for t in (
+        os.environ.get("SHORTS_GEMINI_KEY", ""),
+        os.environ.get("SHORTS_GEMINI_KEY_2", ""),
+        os.environ.get("SHORTS_GEMINI_KEY_3", ""),
+    ) if t
+]
+
 # 수집 규칙
 WINDOW_HOURS = 48          # 48시간 이내만 랭킹
 RESULTS_PER_CHANNEL = 3    # 채널당 최신 상한
