@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>제품 찾기 — 쇼핑쇼츠</title>
+<style>
+  :root{--bg:#0a0e14;--panel:#111722;--line:#1e2735;--txt:#e6edf3;--sub:#8b98a9;--accent:#2f81f7;--ok:#2ea043;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic',system-ui,sans-serif;display:flex;min-height:100vh}
+  .sidebar{width:230px;background:var(--panel);border-right:1px solid var(--line);padding:16px;flex-shrink:0}
+  .sidebar h1{font-size:14px;color:var(--sub);margin-bottom:16px}
+  .menu-item{padding:8px 12px;border-radius:8px;font-size:13px;margin-bottom:2px;cursor:pointer}
+  .menu-item.active{background:linear-gradient(90deg,#153a6b,#0d2340);color:#7db4ff}
+  .main{flex:1;padding:28px 36px;overflow:auto}
+  .head h2{font-size:24px;margin-bottom:6px}
+  .desc{color:var(--sub);font-size:13px;margin-bottom:18px}
+  .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+  input,select,button{background:var(--panel);color:var(--txt);border:1px solid var(--line);padding:9px 14px;border-radius:8px;font-size:13px}
+  input{flex:1;min-width:220px}
+  button{cursor:pointer}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px}
+  .frames{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .frames img{width:100px;height:100px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:#000}
+  .section-label{font-size:12px;color:var(--sub);text-transform:uppercase;margin-bottom:8px}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .chip{background:#0d131c;border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--txt)}
+  .category{font-size:13px;color:var(--sub);margin-bottom:14px}
+  .link-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .link-row:last-child{border-bottom:none}
+  .link-row b{width:90px;flex-shrink:0;text-transform:capitalize}
+  .link-row a{color:var(--accent);text-decoration:none;font-size:13px}
+  .link-row a:hover{text-decoration:underline}
+  .lens-row{margin-top:10px;font-size:13px}
+  .lens-row a{color:var(--accent);text-decoration:none;margin-right:8px}
+  .empty{color:var(--sub);text-align:center;padding:60px}
+  @media (max-width: 768px){
+    body{flex-direction:column;min-height:100vh}
+    .sidebar{width:100%;border-right:none;border-bottom:1px solid var(--line);padding:10px 12px;
+             display:flex;gap:6px;overflow-x:auto;align-items:center;white-space:nowrap}
+    .sidebar h1{margin:0 8px 0 0;flex-shrink:0}
+    .menu-item{margin:0;padding:6px 10px;flex-shrink:0;font-size:12px}
+    .main{padding:16px 14px}
+    .head h2{font-size:20px}
+    .toolbar{gap:8px}
+  }
+</style>
+</head>
+<body>
+  <aside class="sidebar">
+    <h1>🛍️ 쇼핑쇼츠</h1>
+    <div class="menu-item" onclick="location.href='/'">📊 레퍼런스 랭킹</div>
+    <div class="menu-item active">🔍 제품 찾기</div>
+    <div class="menu-item" onclick="location.href='/outreach.html'">💬 소통 큐</div>
+  </aside>
+  <main class="main">
+    <div class="head"><h2>🔍 제품 찾기</h2></div>
+    <div class="desc">레퍼런스 영상에서 실제로 파는 제품 소스를 찾습니다. 영상을 다운로드해 프레임을 추출하고 Gemini로 키워드를 분석한 뒤, 플랫폼별 검색 링크와 Google Lens 역검색 링크를 만들어줍니다.</div>
+    <div class="toolbar">
+      <input id="scInput" placeholder="분석할 항목의 shortcode 또는 레퍼런스에서 담기로 넘어옴">
+      <button class="primary" onclick="doAnalyze()">분석</button>
+    </div>
+    <div id="result"><div class="empty">shortcode를 입력하고 분석을 눌러주세요.</div></div>
+  </main>
+<script>
+const params = new URLSearchParams(location.search);
+const AUTO_SC = params.get("shortcode");
+
+async function doAnalyze(){
+  const sc = document.getElementById("scInput").value || AUTO_SC;
+  if(!sc) return;
+  document.getElementById("result").innerHTML = '<div class="empty">분석 중… (영상 다운로드+Gemini 분석, 수십 초 소요)</div>';
+  try{
+    const r = await fetch(`/api/find/analyze?shortcode=${encodeURIComponent(sc)}`, {method:"POST"});
+    const d = await r.json();
+    if(!d.ok){ document.getElementById("result").innerHTML = `<div class="empty">❌ ${d.error||"실패"}</div>`; return; }
+    renderResult(d);
+  }catch(e){
+    document.getElementById("result").innerHTML = `<div class="empty">❌ ${e.message}</div>`;
+  }
+}
+
+function renderResult(d){
+  const frames = d.frame_urls.map(u=>`<img src="${u}" loading="lazy">`).join("");
+  const kw = (d.keywords.ko||[]).map(k=>`<span class="chip">${k}</span>`).join("");
+  const linkRows = Object.entries(d.search_links).map(([platform, urls])=>
+    `<div class="link-row"><b>${platform}</b>${urls.map(u=>`<a href="${u}" target="_blank">🔗 링크</a>`).join(" ")}</div>`
+  ).join("");
+  const lensLinks = (d.lens_links||[]).map((u,i)=>`<a href="${u}" target="_blank">🔍 프레임${i+1}</a>`).join(" ");
+  document.getElementById("result").innerHTML = `
+    <div class="card">
+      <div class="section-label">추출 프레임</div>
+      <div class="frames">${frames}</div>
+      <div class="section-label">키워드</div>
+      <div class="chips">${kw}</div>
+      <div class="category">카테고리: ${d.category||'-'}</div>
+      <div class="section-label">플랫폼별 검색 링크</div>
+      ${linkRows}
+      <div class="lens-row"><b>Google Lens 역검색</b><br>${lensLinks}</div>
+    </div>
+  `;
+}
+if(AUTO_SC){ document.getElementById("scInput").value = AUTO_SC; doAnalyze(); }
+</script>
+</body>
+</html>

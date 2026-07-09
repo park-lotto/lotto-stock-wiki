@@ -3,14 +3,18 @@ import hmac
 import hashlib
 import os
 import urllib.parse
+from datetime import datetime, timezone
 from pathlib import Path
 from fastapi import BackgroundTasks, FastAPI, Request
-from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
+from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from shopping_shorts.service import collect, generate_missing_drafts, next_draft_targets
 from shopping_shorts.outreach import build_queue
 from shopping_shorts.store import Store
-from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE
+from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
+from shopping_shorts.frame_extract import download_video, extract_frames
+from shopping_shorts.video_analysis import analyze_video
+from shopping_shorts.search_links import build_search_links, lens_search_url
 
 app = FastAPI(title="쇼핑쇼츠 레퍼런스 랭킹")
 
@@ -101,6 +105,48 @@ def api_saved():
     """담긴 shortcode 목록."""
     store = Store(DB_PATH)
     return {"ok": True, "saved": sorted(store.saved_set())}
+
+
+_FIND_TMP_DIR = Path(__file__).parent / "data" / "find_frames"
+
+
+@app.post("/api/find/analyze")
+def api_find_analyze(shortcode: str):
+    """영상 다운로드 → 프레임 추출 → Gemini 분석 → 검색링크 생성, 결과 저장 후 반환."""
+    store = Store(DB_PATH)
+    items, _ = store.load_last_run()
+    item = next((i for i in items if i["shortcode"] == shortcode), None)
+    if not item:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "해당 항목 없음"})
+
+    work_dir = _FIND_TMP_DIR / hashlib.sha1(shortcode.encode()).hexdigest()[:16]
+    video_path = download_video(item["video_url"], work_dir)
+    frame_paths = extract_frames(video_path, work_dir, max_frames=6)
+    analysis = analyze_video(video_path, item.get("caption", ""))
+
+    frame_urls = [f"/api/find/frame/{work_dir.name}/{p.name}" for p in frame_paths]
+    frame_abs_urls = [f"{PUBLIC_BASE_URL}{u}" for u in frame_urls]
+    store.save_source_analysis(
+        shortcode, keywords=analysis["keywords"],
+        frame_paths=[str(p) for p in frame_paths],
+        analyzed_at=datetime.now(timezone.utc).isoformat(),
+    )
+    return {
+        "ok": True,
+        "keywords": analysis["keywords"],
+        "category": analysis["category"],
+        "frame_urls": frame_urls,
+        "search_links": build_search_links(analysis["keywords"]),
+        "lens_links": [lens_search_url(u) for u in frame_abs_urls],
+    }
+
+
+@app.get("/api/find/frame/{work_id}/{filename}")
+def api_find_frame(work_id: str, filename: str):
+    path = _FIND_TMP_DIR / work_id / filename
+    if not path.exists():
+        return JSONResponse(status_code=404, content={"ok": False})
+    return FileResponse(path)
 
 
 @app.get("/api/thumb")

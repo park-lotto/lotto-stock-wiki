@@ -13,6 +13,10 @@ EXCEL_PATH = Path(
 # 로컬 SQLite DB (수집 이력)
 DB_PATH = Path(__file__).parent / "data" / "reference.db"
 
+# 배포 도메인 — Google Lens 등 외부 서비스가 우리 프레임 이미지를 직접 fetch할 때 필요.
+# 로컬 개발 시엔 기본값(localhost)이라 Lens 링크가 실제로는 안 열리는 게 정상(배포 후 확인).
+PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "http://127.0.0.1:8848")
+
 # Apify
 APIFY_TOKEN = os.environ.get("APIFY_TOKEN", "")
 # 계정 하나가 사용량 소진되면 다음 계정으로 자동 로테이션(2026-07-09) — 4계정 키 풀
