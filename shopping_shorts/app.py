@@ -20,6 +20,7 @@ from shopping_shorts.video_analysis import analyze_video
 from shopping_shorts.search_links import build_search_links, lens_search_url
 from shopping_shorts.youtube_search import search as youtube_search_fn
 from shopping_shorts.tiktok_search import search as tiktok_search_fn
+from shopping_shorts.instagram_search import search as instagram_search_fn
 from shopping_shorts.similarity import score_candidate
 
 app = FastAPI(title="쇼핑쇼츠 레퍼런스 랭킹")
@@ -216,6 +217,7 @@ def api_find_analyze(shortcode: str):
 _COLLECT_LANG_PRIORITY = {
     "youtube": ("en", "ko"),
     "tiktok": ("ko", "en"),
+    "instagram": ("ko", "en"),
 }
 
 
@@ -228,7 +230,8 @@ def api_find_collect(shortcode: str, platform: str):
         return JSONResponse(status_code=404, content={"ok": False, "error": "먼저 분석이 필요합니다"})
     if platform not in _COLLECT_LANG_PRIORITY:
         return JSONResponse(status_code=400, content={"ok": False, "error": f"'{platform}' 실수집은 아직 미지원"})
-    search_fn = {"youtube": youtube_search_fn, "tiktok": tiktok_search_fn}[platform]
+    search_fn = {"youtube": youtube_search_fn, "tiktok": tiktok_search_fn,
+                 "instagram": instagram_search_fn}[platform]
     lang_priority = _COLLECT_LANG_PRIORITY[platform]
 
     keyword = next((analysis["keywords"][lang][0] for lang in lang_priority if analysis["keywords"][lang]), "")

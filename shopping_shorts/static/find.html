@@ -120,7 +120,7 @@ function renderResult(d){
       <div class="collect-row">
         <button class="primary" onclick="doCollect('youtube')">📡 유튜브 실수집</button>
         <button class="primary" onclick="doCollect('tiktok')">🎵 틱톡 실수집</button>
-        <button disabled title="준비중">📱 인스타 (준비중)</button>
+        <button class="primary" onclick="doCollect('instagram')">📱 인스타 실수집</button>
         <span class="platform-note" id="collectStatus"></span>
       </div>
     </div>
@@ -157,7 +157,7 @@ function renderCandidates(items){
     const score = c.similarity_score;
     const scoreLabel = score===null || score===undefined ? "미검증" : `유사도 ${Math.round(score*100)}%`;
     const scoreCls = score!==null && score!==undefined && score>=0.7 ? "score high" : "score";
-    const platformLabel = {youtube:"▶️ YouTube", tiktok:"🎵 TikTok"}[c.platform] || c.platform;
+    const platformLabel = {youtube:"▶️ YouTube", tiktok:"🎵 TikTok", instagram:"📱 Instagram"}[c.platform] || c.platform;
     return `<div class="card">
       <img src="${c.thumbnail||''}" loading="lazy" onerror="this.style.visibility='hidden'">
       <div class="body">

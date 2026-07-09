@@ -345,7 +345,7 @@ def test_find_collect_unsupported_platform_400(monkeypatch, client, tmp_path):
     store.save_source_analysis("sc1", keywords={"ko": [], "en": ["floor cleaner"], "zh": []},
                                 frame_paths=["/tmp/f1.jpg"], analyzed_at="2026-07-09T00:00:00Z")
 
-    r = client.post("/api/find/collect", params={"shortcode": "sc1", "platform": "instagram"})
+    r = client.post("/api/find/collect", params={"shortcode": "sc1", "platform": "douyin"})
     assert r.status_code == 400
 
 
@@ -375,6 +375,35 @@ def test_find_collect_tiktok_prefers_korean_keyword_saves_candidates_and_scores(
     r2 = client.get("/api/find/candidates", params={"shortcode": "sc1"})
     d2 = r2.json()
     assert d2["items"][0]["platform"] == "tiktok"
+    assert d2["items"][0]["similarity_score"] == 0.6
+
+
+def test_find_collect_instagram_prefers_korean_keyword_saves_candidates_and_scores(monkeypatch, client, tmp_path):
+    """인스타는 국내 셀러 타겟이라 ko 키워드를 우선 사용한다(2026-07-09, 인스타 실수집 추가)."""
+    from shopping_shorts import app as app_module
+    from shopping_shorts.store import Store
+
+    test_db_path = tmp_path / "test.db"
+    monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
+    store = Store(test_db_path)
+    store.save_source_analysis("sc1", keywords={"ko": ["바닥 청소"], "en": ["floor cleaner"], "zh": []},
+                                frame_paths=["/tmp/f1.jpg"], analyzed_at="2026-07-09T00:00:00Z")
+
+    captured = {}
+    def fake_instagram_search(keyword, max_results):
+        captured["keyword"] = keyword
+        return [{"url": "https://www.instagram.com/p/x/", "title": "t", "thumbnail": "th.jpg"}]
+    monkeypatch.setattr(app_module, "instagram_search_fn", fake_instagram_search)
+    monkeypatch.setattr(app_module, "score_candidate", lambda frames, thumb: 0.6)
+
+    r = client.post("/api/find/collect", params={"shortcode": "sc1", "platform": "instagram"})
+    assert r.status_code == 200
+    assert r.json() == {"ok": True, "count": 1}
+    assert captured["keyword"] == "바닥 청소"
+
+    r2 = client.get("/api/find/candidates", params={"shortcode": "sc1"})
+    d2 = r2.json()
+    assert d2["items"][0]["platform"] == "instagram"
     assert d2["items"][0]["similarity_score"] == 0.6
 
 
