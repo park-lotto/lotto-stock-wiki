@@ -32,6 +32,24 @@ TYPE_MAP = {
     "youtube":            "yt",
 }
 
+# .gitattributes(eol=lf)와 어긋나는 CRLF가 텍스트 파일에 들어오면 체크아웃마다
+# phantom modified가 떠서 git pull이 막힌다 (2026-07-09 사고). 텍스트 확장자는
+# 복사 시점에 LF로 정규화해 근본 차단한다. 이미지 등 바이너리는 그대로 byte copy.
+TEXT_EXTS = {".md", ".json", ".txt"}
+
+
+def _copy_normalized(src: Path, dest: Path) -> None:
+    """텍스트 파일은 LF로 정규화해서 복사, 그 외(이미지 등)는 바이트 그대로 복사."""
+    if src.suffix.lower() not in TEXT_EXTS:
+        shutil.copy2(src, dest)
+        return
+    try:
+        text = src.read_text(encoding="utf-8")
+    except (UnicodeDecodeError, ValueError):
+        shutil.copy2(src, dest)  # 디코딩 실패 시 안전하게 원본 그대로
+        return
+    dest.write_text(text, encoding="utf-8", newline="\n")
+
 
 def sync_date(date_str: str, overwrite: bool = False) -> list[Path]:
     """특정 날짜 폴더를 raw/로 복사. 복사된 파일 목록 반환.
@@ -58,7 +76,7 @@ def sync_date(date_str: str, overwrite: bool = False) -> list[Path]:
             dest = dest_dir / src.name
             if dest.exists() and not overwrite:
                 continue  # 이미 있으면 스킵 (overwrite면 갱신)
-            shutil.copy2(src, dest)
+            _copy_normalized(src, dest)
             copied.append(dest)
             print(f"  [복사] {raw_type}/{src.name}")
 

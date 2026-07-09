@@ -38,6 +38,17 @@ TYPE_MAP = {
 }
 
 
+def _copy_normalized(src: Path, dst: Path) -> None:
+    """.gitattributes(eol=lf)와 어긋나는 CRLF가 섞이면 체크아웃마다 phantom
+    modified가 떠서 git pull이 막힌다(2026-07-09 사고) — LF로 정규화해 복사."""
+    try:
+        text = src.read_text(encoding="utf-8")
+    except (UnicodeDecodeError, ValueError):
+        shutil.copy2(src, dst)
+        return
+    dst.write_text(text, encoding="utf-8", newline="\n")
+
+
 def sync_from_crawler(date_str: str) -> None:
     src_root = CRAWL_OUTPUT_ROOT / date_str
     if not src_root.exists():
@@ -54,7 +65,7 @@ def sync_from_crawler(date_str: str) -> None:
             dst = dst_dir / f.name
             if dst.exists():
                 continue
-            shutil.copy2(f, dst)
+            _copy_normalized(f, dst)
             total += 1
     print(f"[SYNC] {total}개 파일 복사 완료")
 
