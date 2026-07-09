@@ -19,14 +19,12 @@ PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "http://127.0.0.1:8848")
 
 # Apify
 APIFY_TOKEN = os.environ.get("APIFY_TOKEN", "")
-# 계정 하나가 사용량 소진되면 다음 계정으로 자동 로테이션(2026-07-09) — 4계정 키 풀
+# 계정 하나가 사용량 소진(월 한도 등)되면 다음 계정으로 자동 로테이션(2026-07-09).
+# _N 넘버링 동적 스캔(4개 고정→계속 추가 가능, SHORTS_GEMINI_KEYS와 동일 패턴).
+_APIFY_MAX = 30
 APIFY_TOKENS = [
-    t for t in (
-        os.environ.get("APIFY_TOKEN", ""),
-        os.environ.get("APIFY_TOKEN_2", ""),
-        os.environ.get("APIFY_TOKEN_3", ""),
-        os.environ.get("APIFY_TOKEN_4", ""),
-    ) if t
+    t for i in range(1, _APIFY_MAX + 1)
+    if (t := os.environ.get("APIFY_TOKEN" if i == 1 else f"APIFY_TOKEN_{i}", ""))
 ]
 APIFY_ACTOR = "apify~instagram-reel-scraper"  # actor id (~ 형식)
 
