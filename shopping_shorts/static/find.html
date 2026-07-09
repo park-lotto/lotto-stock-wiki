@@ -39,11 +39,18 @@
   .collect-row button{font-size:12px}
   .platform-note{font-size:12px;color:var(--sub)}
   .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:10px}
-  .cards .card{background:#0d131c;border:1px solid var(--line);border-radius:12px;overflow:hidden;padding:0;margin:0;display:flex;flex-direction:column}
+  .cards .card{background:#0d131c;border:2px solid var(--line);border-radius:12px;overflow:hidden;padding:0;margin:0;display:flex;flex-direction:column}
+  /* 유사도가 진짜 차별화 포인트라 카드 테두리로 눈에 확 띄게 — 텍스트 색만으로는
+     안 보인다는 피드백(2026-07-09). high=진짜 일치(초록 테두리+뱃지),
+     low=거의 무관(흐리게), mid/미검증=기본. */
+  .cards .card.match-high{border-color:var(--ok);box-shadow:0 0 0 1px var(--ok)}
+  .cards .card.match-low{opacity:.4}
   .cards .card img{width:100%;height:120px;object-fit:cover;background:#000}
   .cards .card .body{padding:10px}
-  .cards .score{font-size:12px;color:var(--sub);margin:4px 0}
+  .cards .score{font-size:13px;color:var(--sub);margin:4px 0;font-weight:600}
   .cards .score.high{color:var(--ok)}
+  .cards .badge-match{display:inline-block;background:var(--ok);color:#fff;font-size:11px;font-weight:700;
+    padding:2px 8px;border-radius:20px;margin-bottom:4px}
   .cards .title{font-size:12px;margin:4px 0;max-height:32px;overflow:hidden}
   .cards .row{display:flex;gap:6px;margin-top:8px}
   .cards .row a,.cards .row button{flex:1;text-align:center;font-size:11px;padding:6px 4px}
@@ -153,15 +160,22 @@ async function loadCandidates(){
 function renderCandidates(items){
   const box = document.getElementById("candidates");
   if(!items.length){ box.innerHTML = ""; return; }
+  // 유사도 내림차순(백엔드가 이미 정렬해서 줌) 그대로 두되, 화면에서 진짜
+  // 일치하는 것이 확 보이게 카드 테두리+뱃지로 강조하고 무관한 건 흐리게
+  // 뒤로 뺀다(2026-07-09, "유사도 일치하는 걸 보여줘야지" 피드백).
   const cards = items.map(c=>{
     const score = c.similarity_score;
-    const scoreLabel = score===null || score===undefined ? "미검증" : `유사도 ${Math.round(score*100)}%`;
-    const scoreCls = score!==null && score!==undefined && score>=0.7 ? "score high" : "score";
+    const hasScore = score !== null && score !== undefined;
+    const scoreLabel = hasScore ? `유사도 ${Math.round(score*100)}%` : "미검증";
+    const scoreCls = hasScore && score >= 0.7 ? "score high" : "score";
+    const cardCls = hasScore && score >= 0.7 ? "card match-high" : hasScore && score < 0.4 ? "card match-low" : "card";
+    const badge = hasScore && score >= 0.7 ? `<div class="badge-match">✅ 일치</div>` : "";
     const platformLabel = {youtube:"▶️ YouTube", tiktok:"🎵 TikTok", instagram:"📱 Instagram"}[c.platform] || c.platform;
-    return `<div class="card">
+    return `<div class="${cardCls}">
       <img src="${c.thumbnail||''}" loading="lazy" onerror="this.style.visibility='hidden'">
       <div class="body">
         <div class="section-label" style="margin-bottom:2px">${platformLabel}</div>
+        ${badge}
         <div class="${scoreCls}">${scoreLabel}</div>
         <div class="title">${(c.title||'').slice(0,50)}</div>
         <div class="row">
@@ -171,7 +185,7 @@ function renderCandidates(items){
       </div>
     </div>`;
   }).join("");
-  box.innerHTML = `<div class="section-label">수집된 후보</div><div class="cards">${cards}</div>`;
+  box.innerHTML = `<div class="section-label">수집된 후보 (유사도 높은 순)</div><div class="cards">${cards}</div>`;
 }
 
 async function doSave(candidateId, btn){
