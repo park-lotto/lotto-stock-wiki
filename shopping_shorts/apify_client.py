@@ -32,51 +32,23 @@ def _save_key_index(index: int) -> None:
     _KEY_STATE_PATH.write_text(json.dumps({"index": index}), encoding="utf-8")
 
 
-def _start_run(payload, tokens):
-    """토큰 풀을 순환하며 run 시작 시도. 사용량 소진(401/402/429)이면 다음 토큰.
-    성공한 토큰과 그 인덱스를 반환(폴링·데이터셋 조회에 같은 토큰 재사용)."""
-    start = _load_key_index() % len(tokens)
-    last_err = None
-    for offset in range(len(tokens)):
-        idx = (start + offset) % len(tokens)
-        token = tokens[idx]
-        headers = {"Authorization": f"Bearer {token}"}
-        try:
-            run = requests.post(
-                _RUNS_URL.format(actor=APIFY_ACTOR), headers=headers, json=payload, timeout=60
-            )
-            if run.status_code in _EXHAUSTED_STATUSES:
-                last_err = requests.HTTPError(
-                    f"apify 계정 {idx+1}/{len(tokens)} 사용량 소진/거부(status={run.status_code})"
-                )
-                continue
-            run.raise_for_status()
-            if idx != start:
-                _save_key_index(idx)
-            return token, headers, run.json()["data"]
-        except requests.RequestException as e:
-            last_err = e
-    raise RuntimeError(f"apify 토큰 {len(tokens)}개 전부 사용 불가: {last_err}")
+def _start_run(token, payload):
+    """지정 토큰으로 run 시작. 사용량 소진(401/402/429)이면 None 반환(호출부가 다음 토큰 시도)."""
+    headers = {"Authorization": f"Bearer {token}"}
+    run = requests.post(
+        _RUNS_URL.format(actor=APIFY_ACTOR), headers=headers, json=payload, timeout=60
+    )
+    if run.status_code in _EXHAUSTED_STATUSES:
+        return None
+    run.raise_for_status()
+    return headers, run.json()["data"]
 
 
-def fetch_reels(usernames, token=None, results_per_channel=RESULTS_PER_CHANNEL,
-                only_newer_than=ONLY_NEWER_THAN, timeout=900, poll_interval=5):
-    """usernames 리스트 → reel dict 리스트. Apify가 채널별 최신 N개(48h 여유) 반환.
-
-    비동기 run 시작 → 완료까지 폴링 → 데이터셋 조회 (동기 엔드포인트의
-    서버측 타임아웃 회피). token 미지정 시 계정 풀(APIFY_TOKENS)을 순환."""
-    tokens = [token] if token else APIFY_TOKENS
-    if not tokens:
-        raise RuntimeError("APIFY_TOKEN 미설정 (환경변수 APIFY_TOKEN)")
-    payload = {
-        "username": usernames,
-        "resultsLimit": results_per_channel,
-        "onlyPostsNewerThan": only_newer_than,
-        "skipPinnedPosts": True,
-    }
-    _, headers, run_data = _start_run(payload, tokens)
+def _run_to_completion(headers, run_data, timeout, poll_interval):
+    """폴링으로 run 완료까지 대기 → 데이터셋 아이템 반환.
+    실행 도중 실패(FAILED/ABORTED/TIMED-OUT)도 사용량 소진과 동일하게 취급해
+    호출부가 다음 토큰으로 전체 재시도할 수 있게 RuntimeError를 던진다."""
     run_id = run_data["id"]
-
     deadline = time.monotonic() + timeout
     status = run_data["status"]
     while status not in _TERMINAL_STATUSES:
@@ -97,3 +69,45 @@ def fetch_reels(usernames, token=None, results_per_channel=RESULTS_PER_CHANNEL,
     )
     items.raise_for_status()
     return items.json()  # list of reel dicts
+
+
+def fetch_reels(usernames, token=None, results_per_channel=RESULTS_PER_CHANNEL,
+                only_newer_than=ONLY_NEWER_THAN, timeout=900, poll_interval=5):
+    """usernames 리스트 → reel dict 리스트. Apify가 채널별 최신 N개(48h 여유) 반환.
+
+    비동기 run 시작 → 완료까지 폴링 → 데이터셋 조회 (동기 엔드포인트의
+    서버측 타임아웃 회피). token 미지정 시 계정 풀(APIFY_TOKENS)을 순환하며,
+    시작 시점 거부(401/402/429)뿐 아니라 **실행 도중 계정이 소진돼 run 자체가
+    실패한 경우**도 다음 계정으로 전체를 이어서 재시도한다(2026-07-09,
+    443채널 전체수집 중간에 끊기는 사고 방지)."""
+    tokens = [token] if token else APIFY_TOKENS
+    if not tokens:
+        raise RuntimeError("APIFY_TOKEN 미설정 (환경변수 APIFY_TOKEN)")
+    payload = {
+        "username": usernames,
+        "resultsLimit": results_per_channel,
+        "onlyPostsNewerThan": only_newer_than,
+        "skipPinnedPosts": True,
+    }
+
+    start = _load_key_index() % len(tokens)
+    last_err = None
+    for offset in range(len(tokens)):
+        idx = (start + offset) % len(tokens)
+        current_token = tokens[idx]
+        try:
+            started = _start_run(current_token, payload)
+            if started is None:
+                last_err = requests.HTTPError(
+                    f"apify 계정 {idx+1}/{len(tokens)} 사용량 소진/거부(시작 거부)"
+                )
+                continue
+            headers, run_data = started
+            items = _run_to_completion(headers, run_data, timeout, poll_interval)
+            if idx != start:
+                _save_key_index(idx)
+            return items
+        except (requests.RequestException, RuntimeError, TimeoutError) as e:
+            last_err = e
+            continue
+    raise RuntimeError(f"apify 토큰 {len(tokens)}개 전부 실패(마지막 오류: {last_err})")
