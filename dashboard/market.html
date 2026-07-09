@@ -201,8 +201,8 @@ body{background:var(--bg);color:var(--m-tx0);min-height:100vh;}
 .mt-detail-full{font-size:12.5px;color:var(--m-tx0);line-height:1.6;font-weight:400;}
 .mt-link{display:inline-block;margin-top:5px;font-size:11px;color:#8ab4ff;text-decoration:none;}
 .mt-link:hover{text-decoration:underline;}
-.timeline-strip{display:flex;gap:8px;}
-.timeline-strip.tl-strip-fill{overflow-x:hidden;}
+.timeline-strip{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.timeline-strip.tl-strip-fill{scrollbar-width:thin;}
 .timeline-strip.tl-strip-fill .tl-card{flex:0 0 calc((100% - 56px)/8);min-width:0;}
 .timeline-strip.tl-strip-wrap{flex-wrap:wrap;}
 .timeline-strip.tl-strip-wrap .tl-card{flex:0 0 190px;}
@@ -1723,7 +1723,7 @@ function renderBelowPanel(){
     return `<div class="mkt-card" style="min-width:0;">
       <div class="card-hd" style="font-size:15px;font-weight:700;color:#ddd;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
         <span>${emoji} ${title}</span>
-        <span class="card-fold-btn" onclick="toggleCardCollapse('${id}')">${collapsed?(more>0?`▶ 펼치기 (+${more})`:""):"▼ 접기"}</span>
+        <span class="card-fold-btn" onclick="toggleCardCollapse('${id}')">${collapsed?`▶ 펼치기${more>0?` (+${more})`:""}`:"▼ 접기"}</span>
       </div>
       <div class="timeline-strip ${collapsed?"tl-strip-fill":"tl-strip-wrap"}">${body}</div>
     </div>`;
@@ -1943,7 +1943,7 @@ function renderMarketFlow(d){
           ? `<div class="mkt-insight" style="margin-bottom:0;">${insightParts.preview}${briefingExpanded?insightParts.extra:""}</div>`
           : `<div style="color:#888;font-size:13px;padding:8px;">${_briefingLoaded?"아직 브리핑 없음":"불러오는 중..."}</div>`;
         const briefingAlignSelf=briefingExpanded?"":"align-self:flex-start;";
-        return `<div class="mkt-card" style="flex:1;min-width:0;${briefingAlignSelf}">
+        return `<div class="mkt-card" style="flex:1;${briefingAlignSelf}">
           <div style="font-size:15px;font-weight:700;color:#ddd;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
             <span>📡 실시간 브리핑</span>${insightParts&&insightParts.extra?_foldBtn("briefing"):""}
           </div>
