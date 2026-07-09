@@ -117,6 +117,44 @@ def test_find_analyze_unknown_shortcode_404(monkeypatch, client, tmp_path):
     assert r.status_code == 404
 
 
+def test_find_analyze_matches_raw_instagram_url_with_tracking_params(monkeypatch, client, tmp_path):
+    """사용자가 인스타그램 앱에서 그대로 복사한 URL(추적파라미터 포함, /reel/ 형식)을
+    붙여넣어도 저장된 shortcode(/p/ 형식, 파라미터 없음)와 같은 항목으로 매칭돼야
+    한다(2026-07-09, "해당 항목 없음" 오탐 수정) — 응답의 shortcode는 canonical
+    값으로 정규화되어야 한다."""
+    from shopping_shorts import app as app_module
+    from shopping_shorts.store import Store
+
+    test_db_path = tmp_path / "test.db"
+    monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
+    store = Store(test_db_path)
+    store.save_last_run([{
+        "shortcode": "https://www.instagram.com/p/DajcIMgh3iv/",
+        "video_url": "https://example.com/v.mp4",
+        "caption": "실링팬", "thumbnail": "t.jpg",
+    }], "2026-07-09T00:00:00Z")
+
+    monkeypatch.setattr(app_module, "download_video", lambda url, dest: tmp_path / "v.mp4")
+    (tmp_path / "v.mp4").write_bytes(b"fake")
+    monkeypatch.setattr(app_module, "extract_frames",
+                         lambda video_path, dest, max_frames: [tmp_path / "frame_01.jpg"])
+    (tmp_path / "frame_01.jpg").write_bytes(b"jpg")
+    monkeypatch.setattr(app_module, "analyze_video", lambda path, caption: {
+        "keywords": {"ko": ["실링팬"], "en": ["ceiling fan"], "zh": ["吊扇"]},
+        "category": "생활가전",
+    })
+
+    raw_url = "https://www.instagram.com/reel/DajcIMgh3iv/?utm_source=ig_web_copy_link&igsh=abc"
+    r = client.post("/api/find/analyze", params={"shortcode": raw_url})
+    assert r.status_code == 200
+    d = r.json()
+    assert d["ok"] is True
+    assert d["shortcode"] == "https://www.instagram.com/p/DajcIMgh3iv/"
+
+    saved = store.get_source_analysis("https://www.instagram.com/p/DajcIMgh3iv/")
+    assert saved["keywords"]["ko"] == ["실링팬"]
+
+
 def test_find_analyze_download_failure_returns_clean_error(monkeypatch, client, tmp_path):
     """인스타 서명URL 만료 등으로 download_video가 requests.HTTPError를 던지면
     500 스택트레이스 대신 명확한 JSON 에러(2026-07-09, 최종 리뷰 Finding 1 —

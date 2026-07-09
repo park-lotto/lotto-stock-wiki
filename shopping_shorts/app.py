@@ -22,6 +22,17 @@ from shopping_shorts.similarity import score_candidate
 
 app = FastAPI(title="쇼핑쇼츠 레퍼런스 랭킹")
 
+_MEDIA_CODE_RE = re.compile(r"/(?:p|reel|reels)/([A-Za-z0-9_-]+)")
+
+
+def _media_code(url):
+    """인스타 URL에서 미디어코드만 추출("/p/"·"/reel/"·"/reels/" 전부 대응, 쿼리
+    파라미터 무시) — 사용자가 인스타에서 그대로 복사한 URL(추적파라미터·reel
+    형식 포함)이 저장된 shortcode(우리가 만든 url 형식)와 문자열이 달라도
+    같은 항목으로 매칭되게 함(2026-07-09, "해당 항목 없음" 오탐 수정)."""
+    m = _MEDIA_CODE_RE.search(url or "")
+    return m.group(1) if m else (url or "")
+
 
 @app.post("/api/collect")
 def api_collect(background_tasks: BackgroundTasks, limit: int | None = None):
@@ -123,7 +134,9 @@ def api_find_analyze(shortcode: str):
     (2026-07-09, 최종 리뷰 Finding 1 — 무가드 상태로 raw 500이 나던 문제)."""
     store = Store(DB_PATH)
     items, _ = store.load_last_run()
-    item = next((i for i in items if i["shortcode"] == shortcode), None)
+    target_code = _media_code(shortcode)
+    item = next((i for i in items if i["shortcode"] == shortcode
+                 or _media_code(i["shortcode"]) == target_code), None)
     if not item:
         return JSONResponse(status_code=404, content={"ok": False, "error": "해당 항목 없음"})
 
@@ -132,6 +145,11 @@ def api_find_analyze(shortcode: str):
         # video_url 필드 추가 이전에 저장된 last_run row 등 — KeyError 대신 명확한 에러
         return JSONResponse(status_code=422, content={"ok": False, "error": "video_url 없음 — 재수집 필요"})
 
+    # 이후 저장·work_dir·응답은 전부 canonical shortcode(item["shortcode"]) 기준 —
+    # 사용자가 입력한 원본 문자열(추적파라미터 등 붙은)이 아니라 우리가 저장한
+    # 정식 shortcode로 통일해야 랭킹페이지 "담기"로 들어온 동일 영상과 같은
+    # source_analysis 행을 공유한다(2026-07-09, 미디어코드 매칭 수정과 함께 정리).
+    shortcode = item["shortcode"]
     work_dir = _FIND_TMP_DIR / hashlib.sha1(shortcode.encode()).hexdigest()[:16]
     try:
         video_path = download_video(video_url, work_dir)
@@ -153,6 +171,7 @@ def api_find_analyze(shortcode: str):
     )
     return {
         "ok": True,
+        "shortcode": shortcode,
         "keywords": analysis["keywords"],
         "category": analysis["category"],
         "frame_urls": frame_urls,

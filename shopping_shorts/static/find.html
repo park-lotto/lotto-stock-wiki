@@ -91,6 +91,9 @@ async function doAnalyze(){
     const r = await fetch(`/api/find/analyze?shortcode=${encodeURIComponent(sc)}`, {method:"POST"});
     const d = await r.json();
     if(!d.ok){ document.getElementById("result").innerHTML = `<div class="empty">❌ ${d.error||"실패"}</div>`; return; }
+    // 서버가 입력값(추적파라미터 등 포함 가능)을 정식 shortcode로 정규화해서
+    // 돌려준다 — 이후 수집/담기 호출은 이 정식값으로 해야 같은 분석 결과를 참조한다.
+    if(d.shortcode) CUR_SC = d.shortcode;
     renderResult(d);
   }catch(e){
     document.getElementById("result").innerHTML = `<div class="empty">❌ ${e.message}</div>`;

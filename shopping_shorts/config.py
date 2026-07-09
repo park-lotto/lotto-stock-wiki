@@ -34,16 +34,20 @@ APIFY_ACTOR = "apify~instagram-reel-scraper"  # actor id (~ 형식)
 # 공유 풀과 완전히 분리(2026-07-09). 공유 풀은 인제스트·브리핑 등 다른 작업과
 # 하루 종일 같이 소모돼 예고 없이 소진되는 사고가 있었음 — 쇼핑쇼츠는 이 전용
 # 풀만 쓰고, 공유 풀로 폴백하지 않는다(소진되면 그냥 다음날까지 대기).
+# _N 넘버링을 동적으로 스캔(2026-07-09, 3개→13개로 확장하며 고정 목록 대신 변경).
+_SHORTS_GEMINI_MAX = 30
 SHORTS_GEMINI_KEYS = [
-    t for t in (
-        os.environ.get("SHORTS_GEMINI_KEY", ""),
-        os.environ.get("SHORTS_GEMINI_KEY_2", ""),
-        os.environ.get("SHORTS_GEMINI_KEY_3", ""),
-    ) if t
+    v for i in range(1, _SHORTS_GEMINI_MAX + 1)
+    if (v := os.environ.get("SHORTS_GEMINI_KEY" if i == 1 else f"SHORTS_GEMINI_KEY_{i}", ""))
 ]
 
-# YouTube Data API v3 (제품찾기 실수집용, 2026-07-09) — 무료 할당량, Google Cloud Console 발급
-YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY", "")
+# YouTube Data API v3 키 풀(제품찾기 실수집용, 2026-07-09) — 무료 할당량 계정별
+# 소진 대비 로테이션. _N 넘버링 동적 스캔(SHORTS_GEMINI_KEYS와 동일 패턴).
+_YOUTUBE_MAX = 30
+YOUTUBE_API_KEYS = [
+    v for i in range(1, _YOUTUBE_MAX + 1)
+    if (v := os.environ.get("YOUTUBE_API_KEY" if i == 1 else f"YOUTUBE_API_KEY_{i}", ""))
+]
 
 # 수집 규칙
 WINDOW_HOURS = 48          # 48시간 이내만 랭킹
