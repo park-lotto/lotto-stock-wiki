@@ -25,10 +25,28 @@ def _export_csv(items, run_date):
     return path
 
 
+def generate_missing_drafts(items):
+    """댓글 draft 미리 생성 (기존 draft 없는 항목만 — 재수집 시 중복 호출·비용 방지).
+
+    Gemini 호출 1건당 최대 수십 초(쿼터 걸리면 62초 재시도 대기)라 항목이
+    많으면(443채널 전체수집 시 수백 건) 통째로 몇 분~수십 분이 걸린다 — collect()의
+    HTTP 응답을 막지 않도록 app.py에서 BackgroundTasks로 분리 호출한다(2026-07-09,
+    "수집 버튼 눌렀는데 안 끝남" 사고 이후 분리)."""
+    store = Store(DB_PATH)
+    for it in items:
+        sc = it["shortcode"]
+        if not store.get_drafts(sc):
+            drafts = _gen_comments(it.get("caption", ""), it.get("name"), it.get("category"))
+            if drafts:
+                store.save_drafts(sc, drafts)
+
+
 def collect(limit_channels=None):
     """1회 수집 실행 → 지표·등급 채워진 항목 리스트 반환 + DB 저장.
 
-    limit_channels: 테스트/절약용 채널 수 상한 (None=전체).
+    limit_channels: 테스트/절약용 채널 수 상한 (None=전체). 댓글 draft 생성은
+    포함하지 않음 — 호출부(app.py)가 generate_missing_drafts()를 별도로(백그라운드)
+    호출해야 한다.
     """
     channels = load_channels()
     if limit_channels:
@@ -56,14 +74,6 @@ def collect(limit_channels=None):
         all_items.extend(items)
 
     apply_grades(all_items)
-
-    # 댓글 draft 미리 생성 (기존 draft 없는 항목만 — 재수집 시 중복 호출·비용 방지)
-    for it in all_items:
-        sc = it["shortcode"]
-        if not store.get_drafts(sc):
-            drafts = _gen_comments(it.get("caption", ""), it.get("name"), it.get("category"))
-            if drafts:
-                store.save_drafts(sc, drafts)
 
     run_date = now.strftime("%Y-%m-%d %H:%M")
     store.save_run(run_date, [

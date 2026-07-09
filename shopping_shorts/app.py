@@ -4,10 +4,10 @@ import hashlib
 import os
 import urllib.parse
 from pathlib import Path
-from fastapi import FastAPI, Request
+from fastapi import BackgroundTasks, FastAPI, Request
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from shopping_shorts.service import collect
+from shopping_shorts.service import collect, generate_missing_drafts
 from shopping_shorts.outreach import build_queue
 from shopping_shorts.store import Store
 from shopping_shorts.config import DB_PATH
@@ -16,13 +16,19 @@ app = FastAPI(title="쇼핑쇼츠 레퍼런스 랭킹")
 
 
 @app.post("/api/collect")
-def api_collect(limit: int | None = None):
-    """지금 수집 버튼. limit=채널 수 상한(테스트용)."""
+def api_collect(background_tasks: BackgroundTasks, limit: int | None = None):
+    """지금 수집 버튼. limit=채널 수 상한(테스트용).
+
+    댓글 draft 생성(항목당 Gemini 호출, 쿼터 걸리면 62초 대기)은 응답 후
+    백그라운드로 넘긴다 — 랭킹 결과는 Apify 수집 즉시 반환, 소통 큐 draft는
+    뒤이어 채워짐(2026-07-09, 443채널 전체수집이 draft생성 때문에 응답을
+    막아버리던 문제 수정)."""
     try:
         items = collect(limit_channels=limit)
         from datetime import datetime, timezone
         collected_at = datetime.now(timezone.utc).isoformat()
         Store(DB_PATH).save_last_run(items, collected_at)
+        background_tasks.add_task(generate_missing_drafts, items)
         return {"ok": True, "count": len(items), "items": items,
                 "collected_at": collected_at}
     except Exception as e:
