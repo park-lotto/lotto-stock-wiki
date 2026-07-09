@@ -148,7 +148,6 @@ body{background:var(--bg);color:var(--m-tx0);min-height:100vh;}
 .prog-total.up{color:var(--up1);}
 .prog-total.dn{color:var(--dn1);}
 .prog-detail{font-size:11px;color:var(--m-tx1);line-height:1.5;}
-.mkt-ts{font-size:10px;color:var(--m-tx2);text-align:right;}
 /* 글로벌 지표 카드 */
 .global-row{display:grid;grid-template-columns:100px 1fr auto;gap:5px 8px;align-items:center;margin-bottom:3px;}
 .global-name{font-size:12px;color:var(--m-tx2);white-space:nowrap;}
@@ -1454,9 +1453,9 @@ function invHistoryChart(history, w, h){
     <span style="font-size:9px;color:${cols[k]}">${k}</span>
   </span>`).join("");
   // X축 시간 레이블: 왼쪽 09:00 고정, 오른쪽 현재시각(동적)
-  const timeBar=`<div style="display:flex;justify-content:space-between;margin-top:1px">
-    <span style="font-size:8px;color:#444">09:00</span>
-    <span style="font-size:8px;color:#444">${_fmtMin(_sessionEndMin)}</span>
+  const timeBar=`<div style="display:flex;justify-content:space-between;margin-top:2px">
+    <span style="font-size:11px;color:#888">09:00</span>
+    <span style="font-size:11px;color:#888">${_fmtMin(_sessionEndMin)}</span>
   </div>`;
   return`<div>
     <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="display:block;width:100%;height:${h}px">
@@ -2087,7 +2086,6 @@ function renderMarketFlow(d){
       const progAllZero=!prog.합계&&!prog.차익&&!prog.비차익;
       const pc=prog.합계>0?"up":prog.합계<0?"dn":"neu";
       const ps=progAllZero?"—":(prog.합계>0?"+":"")+fmtAuk(prog.합계);
-      const ts=m.investor_now?.ts||"—";
 
       // 프로그램 차트: program_series(KIS 최근 30분 즉시조회) vs program_history(서버 1분폴링 누적, 최대 3시간+)
       // — 둘 중 더 긴(더 큰그림을 보여주는) 쪽 사용. 재시작 직후엔 series, 시간 지나면 history가 앞지름.
@@ -2151,7 +2149,6 @@ function renderMarketFlow(d){
           </div>
           ${progChart||`<div style="font-size:9px;color:#333;padding:4px 0">장 중 데이터 없음</div>`}
         </div>`:""}
-        <div class="mkt-ts">${ts} 기준</div>
       </div>`;
     }).join("");
   // 렌더 후 높이 고정: 5개 박스 전부 MKT_CARD_HEIGHT(미리보기는 절반)로 고정, 내용이 넘치면 카드별로 스크롤
