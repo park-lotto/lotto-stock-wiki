@@ -2,7 +2,7 @@
 import csv
 from pathlib import Path
 from datetime import datetime, timezone
-from shopping_shorts.config import DB_PATH, WINDOW_HOURS
+from shopping_shorts.config import DB_PATH, WINDOW_HOURS, DRAFT_BATCH_SIZE
 from shopping_shorts.channels import load_channels
 from shopping_shorts.apify_client import fetch_reels
 from shopping_shorts.ranking import build_items, apply_grades
@@ -23,6 +23,15 @@ def _export_csv(items, run_date):
         w.writeheader()
         w.writerows(items)
     return path
+
+
+def draft_batch(items, batch, batch_size=DRAFT_BATCH_SIZE):
+    """score(종합 랭킹) 내림차순으로 정렬 후 batch번째(1-indexed) 구간만 잘라 반환.
+    수집 직후엔 batch=1(상위 랭킹)만 자동 생성, 나머지는 "댓글 더 생성" 버튼으로
+    batch=2,3,... 을 필요할 때만 이어서 생성해 Gemini 쿼터를 아낀다(2026-07-09)."""
+    ranked = sorted(items, key=lambda i: (i.get("score") or 0), reverse=True)
+    start = (batch - 1) * batch_size
+    return ranked[start:start + batch_size]
 
 
 def generate_missing_drafts(items):

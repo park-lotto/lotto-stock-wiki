@@ -7,7 +7,7 @@ from pathlib import Path
 from fastapi import BackgroundTasks, FastAPI, Request
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from shopping_shorts.service import collect, generate_missing_drafts
+from shopping_shorts.service import collect, generate_missing_drafts, draft_batch
 from shopping_shorts.outreach import build_queue
 from shopping_shorts.store import Store
 from shopping_shorts.config import DB_PATH
@@ -22,19 +22,36 @@ def api_collect(background_tasks: BackgroundTasks, limit: int | None = None):
     댓글 draft 생성(항목당 Gemini 호출, 쿼터 걸리면 62초 대기)은 응답 후
     백그라운드로 넘긴다 — 랭킹 결과는 Apify 수집 즉시 반환, 소통 큐 draft는
     뒤이어 채워짐(2026-07-09, 443채널 전체수집이 draft생성 때문에 응답을
-    막아버리던 문제 수정)."""
+    막아버리던 문제 수정).
+
+    Gemini 쿼터 절약을 위해 draft는 상위 랭킹 40개(1번째 배치)만 자동 생성한다
+    (2026-07-09). 나머지는 /api/generate_drafts?batch=2,3,... 로 필요할 때만."""
     try:
         items = collect(limit_channels=limit)
         from datetime import datetime, timezone
         collected_at = datetime.now(timezone.utc).isoformat()
         Store(DB_PATH).save_last_run(items, collected_at)
-        background_tasks.add_task(generate_missing_drafts, items)
+        background_tasks.add_task(generate_missing_drafts, draft_batch(items, batch=1))
         return {"ok": True, "count": len(items), "items": items,
                 "collected_at": collected_at}
     except Exception as e:
         import re
         msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
         return JSONResponse(status_code=500, content={"ok": False, "error": msg})
+
+
+@app.post("/api/generate_drafts")
+def api_generate_drafts(background_tasks: BackgroundTasks, batch: int = 2):
+    """"댓글 더 생성" 버튼 — 마지막 수집분 중 랭킹 batch번째(1-indexed) 40개
+    구간만 댓글 draft 생성. batch=1(상위 40개)은 수집 시 이미 자동 생성됨."""
+    items, _ = Store(DB_PATH).load_last_run()
+    if not items:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "수집된 데이터 없음"})
+    targets = draft_batch(items, batch=batch)
+    if not targets:
+        return {"ok": True, "count": 0, "message": "더 이상 생성할 항목이 없습니다"}
+    background_tasks.add_task(generate_missing_drafts, targets)
+    return {"ok": True, "count": len(targets)}
 
 
 @app.get("/api/reference")
