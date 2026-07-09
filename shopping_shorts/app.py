@@ -19,6 +19,7 @@ from shopping_shorts.apify_client import fetch_single_reel
 from shopping_shorts.video_analysis import analyze_video
 from shopping_shorts.search_links import build_search_links, lens_search_url
 from shopping_shorts.youtube_search import search as youtube_search_fn
+from shopping_shorts.tiktok_search import search as tiktok_search_fn
 from shopping_shorts.similarity import score_candidate
 
 app = FastAPI(title="쇼핑쇼츠 레퍼런스 랭킹")
@@ -198,6 +199,17 @@ def api_find_analyze(shortcode: str):
     }
 
 
+# 플랫폼별 우선 사용할 키워드 언어 — 유튭은 영어권 콘텐츠가 넓어 en 우선,
+# 틱톡은 국내 셀러 타겟이라 ko 우선(2026-07-09, 틱톡 실수집 추가).
+# 검색함수 자체는 여기 담지 않고 호출 시점에 전역에서 조회한다 — 미리 (함수,
+# 우선순위) 튜플로 캐싱하면 그 함수 레퍼런스가 모듈 로드 시점 값으로 고정돼
+# 테스트의 monkeypatch(app_module.xxx_search_fn 교체)가 안 먹는 버그가 있었음.
+_COLLECT_LANG_PRIORITY = {
+    "youtube": ("en", "ko"),
+    "tiktok": ("ko", "en"),
+}
+
+
 @app.post("/api/find/collect")
 def api_find_collect(shortcode: str, platform: str):
     """분석된 소스의 키워드로 다른 플랫폼을 실검색 → 후보 저장 → Gemini 유사도 채점."""
@@ -205,22 +217,24 @@ def api_find_collect(shortcode: str, platform: str):
     analysis = store.get_source_analysis(shortcode)
     if not analysis:
         return JSONResponse(status_code=404, content={"ok": False, "error": "먼저 분석이 필요합니다"})
-    if platform != "youtube":
+    if platform not in _COLLECT_LANG_PRIORITY:
         return JSONResponse(status_code=400, content={"ok": False, "error": f"'{platform}' 실수집은 아직 미지원"})
+    search_fn = {"youtube": youtube_search_fn, "tiktok": tiktok_search_fn}[platform]
+    lang_priority = _COLLECT_LANG_PRIORITY[platform]
 
-    keyword = (analysis["keywords"]["en"] or analysis["keywords"]["ko"] or [""])[0]
+    keyword = next((analysis["keywords"][lang][0] for lang in lang_priority if analysis["keywords"][lang]), "")
     if not keyword:
         return {"ok": True, "count": 0}
     try:
-        raw = youtube_search_fn(keyword, max_results=10)
+        raw = search_fn(keyword, max_results=10)
     except (RuntimeError, requests.RequestException) as e:
-        # RuntimeError: YOUTUBE_API_KEY 미설정 등 / requests.RequestException:
+        # RuntimeError: API키 미설정 등 / requests.RequestException:
         # 쿼터 소진(403)·레이트리밋(429)·일시적 API 오류 등 raise_for_status()가
         # 던지는 실제 운영 실패 — 둘 다 서버 500 대신 명확한 에러로 응답
         # (2026-07-09, 최종 리뷰 Finding 2 — RuntimeError만 잡아서 진짜 흔한
         # 실패 모드인 쿼터 소진이 raw 500으로 새던 문제).
         return JSONResponse(status_code=503, content={"ok": False, "error": str(e)})
-    ids = store.save_candidates(shortcode, "youtube", raw)
+    ids = store.save_candidates(shortcode, platform, raw)
 
     frame_paths = analysis["frame_paths"]
     for cand_id, cand in zip(ids, raw):

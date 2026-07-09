@@ -32,11 +32,13 @@ def _save_key_index(index: int) -> None:
     _KEY_STATE_PATH.write_text(json.dumps({"index": index}), encoding="utf-8")
 
 
-def _start_run(token, payload):
-    """지정 토큰으로 run 시작. 사용량 소진(401/402/429)이면 None 반환(호출부가 다음 토큰 시도)."""
+def _start_run(token, payload, actor=APIFY_ACTOR):
+    """지정 토큰·액터로 run 시작. 사용량 소진(401/402/429)이면 None 반환(호출부가
+    다음 토큰 시도). actor 기본값은 인스타 릴스 스크래퍼(기존 동작 유지) —
+    다른 플랫폼 스크래퍼(예: 틱톡)는 호출부가 명시적으로 지정한다(2026-07-09)."""
     headers = {"Authorization": f"Bearer {token}"}
     run = requests.post(
-        _RUNS_URL.format(actor=APIFY_ACTOR), headers=headers, json=payload, timeout=60
+        _RUNS_URL.format(actor=actor), headers=headers, json=payload, timeout=60
     )
     if run.status_code in _EXHAUSTED_STATUSES:
         return None
@@ -79,17 +81,19 @@ def _run_to_completion(headers, run_data, timeout, poll_interval):
 CHUNK_SIZE = 40
 
 
-def _run_with_rotation(payload, tokens, timeout, poll_interval):
+def _run_with_rotation(payload, tokens, timeout, poll_interval, actor=APIFY_ACTOR):
     """지정 payload로 run 시작 → 토큰 로테이션 포함 완료까지 실행.
     fetch_reels(채널 목록)와 fetch_single_reel(단일 URL) 둘 다 이 공통
-    로테이션 루프를 재사용한다(2026-07-09)."""
+    로테이션 루프를 재사용한다(2026-07-09). actor를 다르게 지정하면 인스타
+    외 다른 플랫폼 스크래퍼(예: tiktok_search.py)도 같은 토큰 풀·로테이션
+    로직을 그대로 재사용할 수 있다."""
     start = _load_key_index() % len(tokens)
     last_err = None
     for offset in range(len(tokens)):
         idx = (start + offset) % len(tokens)
         current_token = tokens[idx]
         try:
-            started = _start_run(current_token, payload)
+            started = _start_run(current_token, payload, actor=actor)
             if started is None:
                 last_err = requests.HTTPError(
                     f"apify 계정 {idx+1}/{len(tokens)} 사용량 소진/거부(시작 거부)"
