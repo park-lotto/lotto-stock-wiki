@@ -141,7 +141,7 @@ function render(){
         <div class="stat" title="댓글수 ÷ 팔로워수 (팔로워 대비 반응 비율)"><span>참여밀도</span><b>${(i.density*100).toFixed(2)}%</b></div>
         <div class="btns">
           <button class="view" onclick="window.open('${i.url}','_blank')">👁 보기</button>
-          <button class="comment" onclick="goComment('${i.shortcode}')">💬 댓글참여</button>
+          <button class="comment" onclick="goComment('${i.shortcode}')">💬 댓글</button>
           <button class="save" id="save_${i.shortcode}" onclick="doSave('${i.shortcode}', this)">📥 담기</button>
         </div>
         ${i.inpock?`<div style="margin-top:6px"><a href="${i.inpock}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🛒 판매채널</a></div>`:''}
