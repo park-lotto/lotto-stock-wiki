@@ -79,10 +79,10 @@ def _run_to_completion(headers, run_data, timeout, poll_interval):
 CHUNK_SIZE = 40
 
 
-def _fetch_batch(usernames, payload_extra, tokens, timeout, poll_interval):
-    """usernames 한 묶음(청크) 처리 — 토큰 로테이션 포함. 청크 크기가
-    작아 액터의 조용한 부분처리 문제를 피한다."""
-    payload = {"username": usernames, **payload_extra}
+def _run_with_rotation(payload, tokens, timeout, poll_interval):
+    """지정 payload로 run 시작 → 토큰 로테이션 포함 완료까지 실행.
+    fetch_reels(채널 목록)와 fetch_single_reel(단일 URL) 둘 다 이 공통
+    로테이션 루프를 재사용한다(2026-07-09)."""
     start = _load_key_index() % len(tokens)
     last_err = None
     for offset in range(len(tokens)):
@@ -129,5 +129,24 @@ def fetch_reels(usernames, token=None, results_per_channel=RESULTS_PER_CHANNEL,
     all_items = []
     for i in range(0, len(usernames), chunk_size):
         chunk = usernames[i:i + chunk_size]
-        all_items.extend(_fetch_batch(chunk, payload_extra, tokens, timeout, poll_interval))
+        payload = {"username": chunk, **payload_extra}
+        all_items.extend(_run_with_rotation(payload, tokens, timeout, poll_interval))
     return all_items
+
+
+def fetch_single_reel(url, token=None, timeout=180, poll_interval=5):
+    """추적 채널 목록에 없는 임의의 인스타 릴스 URL 하나를 즉시 조회(2026-07-09,
+    제품찾기에서 "우리 목록에 없는 영상"도 분석할 수 있게 추가). 채널
+    스캔(username)이 아니라 특정 게시물 URL(directUrls)로 액터를 호출 —
+    청크 분할 불필요(항목 1개), 토큰 로테이션은 fetch_reels와 동일 로직 재사용.
+    결과 없으면(비공개 계정·삭제된 게시물 등) None."""
+    tokens = [token] if token else APIFY_TOKENS
+    if not tokens:
+        raise RuntimeError("APIFY_TOKEN 미설정 (환경변수 APIFY_TOKEN)")
+    payload = {
+        "directUrls": [url],
+        "resultsLimit": 1,
+        "skipPinnedPosts": True,
+    }
+    items = _run_with_rotation(payload, tokens, timeout, poll_interval)
+    return items[0] if items else None

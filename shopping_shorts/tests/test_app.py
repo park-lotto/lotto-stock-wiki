@@ -112,9 +112,58 @@ def test_find_analyze_unknown_shortcode_404(monkeypatch, client, tmp_path):
 
     # 이 엔드포인트도 store.load_last_run()으로 실DB를 읽으므로 동일하게 격리한다.
     monkeypatch.setattr(app_module, "DB_PATH", tmp_path / "test.db")
+    # last_run에 없으면 Apify 단일조회로 폴백한다(2026-07-09) — 그것도 없으면(비공개/
+    # 삭제) 404. 실 네트워크 호출 방지를 위해 모킹.
+    monkeypatch.setattr(app_module, "fetch_single_reel", lambda url: None)
 
     r = client.post("/api/find/analyze", params={"shortcode": "nope"})
     assert r.status_code == 404
+
+
+def test_find_analyze_untracked_url_falls_back_to_apify_single_fetch(monkeypatch, client, tmp_path):
+    """추적 채널 목록(last_run)에 없는 URL이어도 Apify 단일조회로 즉시 가져와
+    분석한다(2026-07-09, "우리 목록에 없으면 분석 불가" 제약 제거)."""
+    from shopping_shorts import app as app_module
+
+    monkeypatch.setattr(app_module, "DB_PATH", tmp_path / "test.db")
+
+    def fake_fetch_single_reel(url):
+        assert url == "https://www.instagram.com/reel/newone/"
+        return {"url": "https://www.instagram.com/p/newone/",
+                "videoUrl": "https://example.com/new.mp4", "caption": "새 영상"}
+    monkeypatch.setattr(app_module, "fetch_single_reel", fake_fetch_single_reel)
+
+    monkeypatch.setattr(app_module, "download_video", lambda url, dest: tmp_path / "v.mp4")
+    (tmp_path / "v.mp4").write_bytes(b"fake")
+    monkeypatch.setattr(app_module, "extract_frames",
+                         lambda video_path, dest, max_frames: [tmp_path / "frame_01.jpg"])
+    (tmp_path / "frame_01.jpg").write_bytes(b"jpg")
+    monkeypatch.setattr(app_module, "analyze_video", lambda path, caption: {
+        "keywords": {"ko": ["새 제품"], "en": ["new product"], "zh": ["新产品"]},
+        "category": "기타",
+    })
+
+    r = client.post("/api/find/analyze", params={"shortcode": "https://www.instagram.com/reel/newone/"})
+    assert r.status_code == 200
+    d = r.json()
+    assert d["ok"] is True
+    assert d["shortcode"] == "https://www.instagram.com/p/newone/"
+    assert d["keywords"]["ko"] == ["새 제품"]
+
+
+def test_find_analyze_apify_single_fetch_failure_returns_clean_error(monkeypatch, client, tmp_path):
+    """Apify 단일조회 자체가 실패(네트워크·계정소진 등)하면 raw 500 대신 502."""
+    from shopping_shorts import app as app_module
+
+    monkeypatch.setattr(app_module, "DB_PATH", tmp_path / "test.db")
+
+    def fake_fetch_single_reel(url):
+        raise RuntimeError("apify 토큰 4개 전부 실패")
+    monkeypatch.setattr(app_module, "fetch_single_reel", fake_fetch_single_reel)
+
+    r = client.post("/api/find/analyze", params={"shortcode": "https://www.instagram.com/reel/x/"})
+    assert r.status_code == 502
+    assert r.json()["ok"] is False
 
 
 def test_find_analyze_matches_raw_instagram_url_with_tracking_params(monkeypatch, client, tmp_path):

@@ -209,3 +209,77 @@ def test_fetch_reels_explicit_token_bypasses_rotation(monkeypatch):
     assert post_calls == ["explicit-token"]
     # 명시적 토큰 경로는 persisted index를 절대 읽거나 쓰지 않는다.
     assert not apify_client._KEY_STATE_PATH.exists()
+
+
+def test_fetch_single_reel_uses_direct_urls_payload(monkeypatch):
+    monkeypatch.setattr(apify_client, "APIFY_TOKENS", ["tok1"])
+    posted_payloads = []
+
+    def fake_post(url, headers=None, json=None, timeout=None):
+        posted_payloads.append(json)
+        return FakeResponse(200, {"data": {"id": "run1", "status": "SUCCEEDED",
+                                            "defaultDatasetId": "ds1"}})
+
+    def fake_get(url, headers=None, timeout=None):
+        assert _is_dataset_url(url)
+        return FakeResponse(200, [{"shortcode": "abc123", "videoUrl": "https://cdn/v.mp4"}])
+
+    monkeypatch.setattr(apify_client.requests, "post", fake_post)
+    monkeypatch.setattr(apify_client.requests, "get", fake_get)
+
+    result = apify_client.fetch_single_reel(
+        "https://www.instagram.com/reel/abc123/", poll_interval=0.01, timeout=5
+    )
+
+    assert result == {"shortcode": "abc123", "videoUrl": "https://cdn/v.mp4"}
+    assert posted_payloads == [{
+        "directUrls": ["https://www.instagram.com/reel/abc123/"],
+        "resultsLimit": 1,
+        "skipPinnedPosts": True,
+    }]
+
+
+def test_fetch_single_reel_no_result_returns_none(monkeypatch):
+    monkeypatch.setattr(apify_client, "APIFY_TOKENS", ["tok1"])
+
+    def fake_post(url, headers=None, json=None, timeout=None):
+        return FakeResponse(200, {"data": {"id": "run1", "status": "SUCCEEDED",
+                                            "defaultDatasetId": "ds1"}})
+
+    def fake_get(url, headers=None, timeout=None):
+        return FakeResponse(200, [])  # 비공개 계정·삭제된 게시물 등
+
+    monkeypatch.setattr(apify_client.requests, "post", fake_post)
+    monkeypatch.setattr(apify_client.requests, "get", fake_get)
+
+    result = apify_client.fetch_single_reel(
+        "https://www.instagram.com/reel/gone/", poll_interval=0.01, timeout=5
+    )
+
+    assert result is None
+
+
+def test_fetch_single_reel_rotates_on_start_rejection(monkeypatch):
+    monkeypatch.setattr(apify_client, "APIFY_TOKENS", ["tok1", "tok2"])
+    post_calls = []
+
+    def fake_post(url, headers=None, json=None, timeout=None):
+        token = _token_from_headers(headers)
+        post_calls.append(token)
+        if token == "tok1":
+            return FakeResponse(402, {"error": "usage exhausted"})
+        return FakeResponse(200, {"data": {"id": "run2", "status": "SUCCEEDED",
+                                            "defaultDatasetId": "ds2"}})
+
+    def fake_get(url, headers=None, timeout=None):
+        return FakeResponse(200, [{"shortcode": "xyz"}])
+
+    monkeypatch.setattr(apify_client.requests, "post", fake_post)
+    monkeypatch.setattr(apify_client.requests, "get", fake_get)
+
+    result = apify_client.fetch_single_reel(
+        "https://www.instagram.com/reel/xyz/", poll_interval=0.01, timeout=5
+    )
+
+    assert result == {"shortcode": "xyz"}
+    assert post_calls == ["tok1", "tok2"]

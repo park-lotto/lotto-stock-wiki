@@ -15,6 +15,7 @@ from shopping_shorts.outreach import build_queue
 from shopping_shorts.store import Store
 from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
 from shopping_shorts.frame_extract import download_video, extract_frames
+from shopping_shorts.apify_client import fetch_single_reel
 from shopping_shorts.video_analysis import analyze_video
 from shopping_shorts.search_links import build_search_links, lens_search_url
 from shopping_shorts.youtube_search import search as youtube_search_fn
@@ -129,6 +130,10 @@ _FIND_TMP_DIR = Path(__file__).parent / "data" / "find_frames"
 def api_find_analyze(shortcode: str):
     """영상 다운로드 → 프레임 추출 → Gemini 분석 → 검색링크 생성, 결과 저장 후 반환.
 
+    추적 채널(443개) 목록에서 온 항목이 아니어도(사용자가 인스타에서 직접
+    발견한 URL) Apify 단일조회로 즉시 가져와 분석한다(2026-07-09, "우리
+    목록에 없으면 분석 불가" 제약 제거 — tubefactory와 동일하게 임의 URL 지원).
+
     다운로드→추출→분석 구간은 각각 실패 가능(인스타 CDN 서명URL 만료로 인한
     다운로드 403/404, ffmpeg 실패, Gemini 키 미설정)해서 통째로 감싼다
     (2026-07-09, 최종 리뷰 Finding 1 — 무가드 상태로 raw 500이 나던 문제)."""
@@ -137,8 +142,21 @@ def api_find_analyze(shortcode: str):
     target_code = _media_code(shortcode)
     item = next((i for i in items if i["shortcode"] == shortcode
                  or _media_code(i["shortcode"]) == target_code), None)
+
     if not item:
-        return JSONResponse(status_code=404, content={"ok": False, "error": "해당 항목 없음"})
+        # 추적 목록에 없는 URL — Apify 단일조회로 즉시 가져오기 시도.
+        try:
+            raw = fetch_single_reel(shortcode)
+        except (requests.RequestException, RuntimeError) as e:
+            msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
+            return JSONResponse(status_code=502, content={"ok": False, "error": msg})
+        if not raw:
+            return JSONResponse(status_code=404, content={"ok": False, "error": "해당 항목 없음(비공개 계정이거나 삭제된 게시물일 수 있음)"})
+        item = {
+            "shortcode": raw.get("url") or shortcode,
+            "video_url": raw.get("videoUrl", ""),
+            "caption": raw.get("caption", ""),
+        }
 
     video_url = item.get("video_url")
     if not video_url:
