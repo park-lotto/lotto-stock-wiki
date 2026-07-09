@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "date": "2026-06-29",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-30_0701_Everllence 인수에서 드러나는 AM의 가치.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "김용민",
+    "report_date": "2026.06.29",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "HD현대마린솔루션",
+        "code": "443060",
+        "rating": "BUY (M)",
+        "rating_changed": null,
+        "tp_new": "433,000원",
+        "tp_prev": "433,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "2Q26E_매출": "653",
+          "2Q26E_영업이익": "117",
+          "2Q26E_지배순이익": "94",
+          "2Q26E_컨센서스_매출": "607",
+          "2Q26E_컨센서스_영업이익": "108"
+        },
+        "estimate_revision": null,
+        "next_catalyst": [
+          "현대중공업 중속엔진 증설 및 DC향 엔진수주",
+          "연중 FSRU 수주",
+          "박용엔진 AM매출 상승세 확인"
+        ],
+        "thesis": [
+          "Bain의 Everllence 인수는 AM사업의 향후 이익 성장성의 방증",
+          "AI 데이터센터향 4행정 발전엔진 사업으로 인한 AM lock-in 효과 기대",
+          "글로벌 엔진 OEM 1위 점유율을 바탕으로 한 지속적 AM 사업 성장"
+        ],
+        "valuation_basis": "SOTP(Sum of The Parts) 방식 유지",
+        "risk": null,
+        "supply_comment": "데이터센터향 4행정 발전엔진 사업의 핵심은 생산 병목을 놓치지 않는 적시성이며, 이에 따라 국내 선박엔진 제작업체들은 생산능력 증설을 고려/이행하고 있음",
+        "quote": "Bain의 Everllence 인수는 AM사업의 향후 이익 성장성의 방증이며, 동사를 Sector top pick으로 유지."
+      }
+    ]
+  }
+}

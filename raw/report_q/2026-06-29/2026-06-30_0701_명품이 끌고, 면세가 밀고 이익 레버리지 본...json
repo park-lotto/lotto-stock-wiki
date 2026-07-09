@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-29",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-30_0701_명품이 끌고, 면세가 밀고 이익 레버리지 본...md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "이승은",
+    "report_date": "2026.06.29",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "신세계",
+        "code": "004170",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "910,000원",
+        "tp_prev": "425,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2026년 2분기 실적은 매출액 1조 7,430억원(+3% YoY), 영업이익 1,540억원(+104% YoY)로 영업이익 시장기대치 1,467억원에 부합할 것으로 예상된다.",
+        "estimate_revision": "2Q26E 영업이익 1,540억원(변경 전 1,020억원)",
+        "next_catalyst": "인천공항 2터미널 철수 효과 및 내국인 고소득층 소비 확대, 개별여행·백화점·명품 중심의 인바운드 소비패턴 변화",
+        "thesis": [
+          "자산가격 상승에 따른 부의 효과(Wealth Effect)로 인한 내국인 고소득층 소비 확대",
+          "외국인 인바운드 소비패턴의 개별여행·백화점·명품 중심 구조적 전환과 동사의 명품 매출 비중 업계 최고 수준(45%)",
+          "면세 부문의 불확실성 해소 (인천공항 DF2 영업 중단으로 이익 가시성 제고)"
+        ],
+        "valuation_basis": "12M Fwd EPS 에 목표 PER 20 배를 적용",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "신세계에 대해 투자의견 Buy 를 유지하고 목표주가는 910,000 원으로 상향한다."
+      }
+    ]
+  }
+}

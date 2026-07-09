@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "date": "2026-06-29",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-30_0703_하반기 불확실성 해소 기대.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "정이수",
+    "report_date": "2026. 6. 29",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "삼성바이오로직스",
+        "code": "207940",
+        "rating": "매수",
+        "rating_changed": false,
+        "tp_new": "2,090,000",
+        "tp_prev": "2,090,000",
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "2Q26_revenue": "1조 3,189억 원",
+          "2Q26_operating_profit": "6,061억 원",
+          "annual_2026_revenue": "5조 4,709억 원",
+          "annual_2026_operating_profit": "2조 4,597억 원"
+        },
+        "estimate_revision": "EPS(26) 40,866 (직전 42,068 ▼), EPS(27) 47,513 (직전 49,183 ▼)",
+        "next_catalyst": "미국 락빌 생산공장의 매출 기여와 5공장 Ramp-up 효과",
+        "thesis": [
+          "2026년 2분기 실적은 시장 컨센서스(매출액 1조 3,243억 원, 영업이익 5,926억 원)에 부합할 전망",
+          "미국 락빌 생산공장 및 5공장 Ramp-up 효과로 연간 매출 가이던스(성장률 15~20%) 달성 예상",
+          "신규 수주와 노조 리스크 해소를 계기로 한 하반기 주가 반등 기대"
+        ],
+        "valuation_basis": "PER 32.9배(2026F) 및 PBR 6.7배(2026F) 등",
+        "risk": "노조 파업에 따른 일시적 생산 차질",
+        "supply_comment": "5월 1일부터 5일간 진행된 노조의 부분 파업으로 일부 생산 차질이 발생했으나, 관련 예상 매출 약 1,500억 원은 2026년 3분기에 인식될 예정인 물량으로 파악됨",
+        "quote": "하반기 신규 수주와 노조 리스크 해소를 계기로 주가 반등이 나타날 것으로 기대한다."
+      }
+    ]
+  }
+}

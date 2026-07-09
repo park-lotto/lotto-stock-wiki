@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-29",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-30_0703_올해 실적개선 및 DBO 성장성 가시화 될 듯.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "iM증권",
+    "analyst": "이상헌, 장호",
+    "report_date": "2026.06.29",
+    "stocks": [
+      {
+        "name": "롯데이노베이트",
+        "code": "286940",
+        "rating": "Buy",
+        "rating_changed": "Maintain",
+        "tp_new": "25,500원",
+        "tp_prev": "25,500원",
+        "tp_direction": "flat",
+        "earnings_outlook": "올해 동사는 IFRS 연결기준 매출액 12,054억원(YoY +3.0%), 영업이익 423억원(YoY +34.7%)으로 예상되면서 실적 턴어라운드가 가시화 될 것이다.",
+        "estimate_revision": null,
+        "next_catalyst": "주요 자회사인 칼리버스와 EVSIS 등의 영업적자 폭이 줄어들면서 실적개선이 예상되며, 데이터센터 운영 노하우를 기반으로 DBO 사업 수주 증가가 예상됨.",
+        "thesis": [
+          "롯데그룹 실적호전으로 인한 투자 확대로 고마진 위주의 선별 수주가 가능해지면서 수익성이 개선될 전망",
+          "자회사인 칼리버스 및 EVSIS의 고정비 부담 감소 및 매출 확대를 통한 영업적자폭 축소",
+          "자산운용사 및 사모펀드(PEF) 등의 데이터센터 투자 증가에 따른 DBO 사업 수주 확대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "올해 동사는 IFRS 연결기준 매출액 12,054억원(YoY +3.0%), 영업이익 423억원(YoY +34.7%)으로 예상되면서 실적 턴어라운드가 가시화 될 것이다."
+      }
+    ]
+  }
+}

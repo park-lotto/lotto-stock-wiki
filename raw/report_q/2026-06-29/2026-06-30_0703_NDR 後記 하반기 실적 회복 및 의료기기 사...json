@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date": "2026-06-29",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-30_0703_NDR 後記 하반기 실적 회복 및 의료기기 사...md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "박종선",
+    "report_date": "2026.06.29",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "동운아나텍",
+        "code": "094170",
+        "rating": "NR",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": {
+          "quote": "당사 추정 올해 2분기 예상실적은 매출액 264억원, 영업손실 21억원으로 전년동기 대비 매출액은 12.3% 감소하고, 영업이익은 적자로 전환을 예상함.",
+          "details": "2026년 2분기 예상 매출액 264억원(YoY -12.3%), 영업손실 21억원 적자전환"
+        },
+        "estimate_revision": null,
+        "next_catalyst": "2027년 상용화 제품 출시 목표, 2026년 9월 3~4일 제1회 ASGRS(침샘학회) 국제 심포지엄 논문 발표, 글로벌 IB & L/O(Licensing-Out) 계약",
+        "thesis": [
+          "IT 부문 하반기 실적 회복 및 의료기기 사업 가속화 기대",
+          "D-SaLife(타액 당 측정시스템) 기술 고도화 및 임상 진행을 통한 2027년 상용화 추진",
+          "신규 사업인 의료기기 부문의 글로벌 라이선스 아웃 및 해외 진출 기대"
+        ],
+        "valuation_basis": "2026년 실적 PER 62.6배로 동일업종대비 할증되어 거래 중이며, 하반기 실적 회복과 의료기기 사업의 구체화로 추가 상승 모멘텀 보유",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "동사는 최근 국내 주요기관을 대상으로 NDR(Non-Deal Roadshow)를 진행함. 부진했던 IT 부문의 사업 현황 및 향후 전망은 물론, 시장에서 관심이 집중되고 있는 의료기기 사업에 대하여 사업 진행 현황 및 계획을 확인함.",
+        "sector": "IT"
+      }
+    ]
+  }
+}
