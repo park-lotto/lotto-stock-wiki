@@ -20,13 +20,16 @@ def search(keyword, max_results=10, token=None, timeout=180, poll_interval=5):
     if not tokens:
         raise RuntimeError("instagram_search: APIFY_TOKEN이 설정되지 않았습니다")
     hashtag = keyword.replace(" ", "")
-    payload = {"hashtags": [hashtag], "resultsLimit": max_results}
+    # resultsType 기본값은 "posts"(사진·캐러셀 위주) — "reels"를 명시해야 실제
+    # 영상이 나온다(2026-07-09 실측: 기본값으로는 5~20개 다 Image/Sidecar였고
+    # videoUrl이 전부 비어있었음. "짜집기" 목적상 사진은 무의미해서 필수 지정).
+    payload = {"hashtags": [hashtag], "resultsLimit": max_results, "resultsType": "reels"}
     items = _run_with_rotation(payload, tokens, timeout, poll_interval, actor=_ACTOR)
     out = []
     for item in items:
         url = item.get("url")
-        if not url:
-            continue
+        if not url or not item.get("videoUrl"):
+            continue  # resultsType=reels로도 사진이 섞여 나올 가능성 대비 이중 확인
         out.append({
             "url": url,
             "title": item.get("caption", ""),
