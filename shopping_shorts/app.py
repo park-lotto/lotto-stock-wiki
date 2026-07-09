@@ -360,7 +360,11 @@ async def _auth_guard(request: Request, call_next):
     if not _AUTH_ON:
         return await call_next(request)
     path = request.url.path
-    if path in _AUTH_ALLOW or path.startswith("/static"):
+    # /api/find/frame/*는 Google Lens·SerpApi 등 외부 이미지검색 크롤러가 인증
+    # 쿠키 없이 fetch해야 해서 예외 처리(2026-07-09, SerpApi 연동 시도 중
+    # 401로 전부 막혀있던 것을 발견 — 경로 자체는 path traversal 방어된
+    # 랜덤 work_id 해시라 노출 위험 낮음).
+    if path in _AUTH_ALLOW or path.startswith("/static") or path.startswith("/api/find/frame/"):
         return await call_next(request)
     cookie = request.cookies.get("dash_auth")
     if cookie and hmac.compare_digest(cookie, _auth_token()):
