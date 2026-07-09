@@ -1,4 +1,5 @@
 import pytest
+import requests
 from fastapi.testclient import TestClient
 from shopping_shorts.app import app
 
@@ -116,6 +117,59 @@ def test_find_analyze_unknown_shortcode_404(monkeypatch, client, tmp_path):
     assert r.status_code == 404
 
 
+def test_find_analyze_download_failure_returns_clean_error(monkeypatch, client, tmp_path):
+    """인스타 서명URL 만료 등으로 download_video가 requests.HTTPError를 던지면
+    500 스택트레이스 대신 명확한 JSON 에러(2026-07-09, 최종 리뷰 Finding 1 —
+    download→extract→analyze 구간이 무가드였던 문제)."""
+    from shopping_shorts import app as app_module
+    from shopping_shorts.store import Store
+
+    test_db_path = tmp_path / "test.db"
+    monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
+    store = Store(test_db_path)
+    store.save_last_run([{
+        "shortcode": "sc1", "video_url": "https://example.com/expired.mp4",
+        "caption": "여름 바닥 청소", "thumbnail": "t.jpg",
+    }], "2026-07-09T00:00:00Z")
+
+    def fake_download_video(url, dest):
+        raise requests.HTTPError("404 Client Error: Not Found for url")
+
+    monkeypatch.setattr(app_module, "download_video", fake_download_video)
+
+    r = client.post("/api/find/analyze", params={"shortcode": "sc1"})
+    assert r.status_code == 502
+    d = r.json()
+    assert d["ok"] is False
+    assert "error" in d
+
+
+def test_find_analyze_missing_video_url_returns_clean_error(monkeypatch, client, tmp_path):
+    """last_run 항목에 video_url 필드 자체가 없으면(기능 추가 이전에 수집된 레코드
+    등) item["video_url"]의 KeyError 대신 명확한 400계열 에러(2026-07-09, 최종
+    리뷰 Finding 1)."""
+    from shopping_shorts import app as app_module
+    from shopping_shorts.store import Store
+
+    test_db_path = tmp_path / "test.db"
+    monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
+    store = Store(test_db_path)
+    store.save_last_run([{
+        "shortcode": "sc1", "caption": "여름 바닥 청소", "thumbnail": "t.jpg",
+        # video_url 없음
+    }], "2026-07-09T00:00:00Z")
+
+    def fail(*a, **kw):
+        raise AssertionError("video_url 없이 download_video를 호출하면 안 된다")
+
+    monkeypatch.setattr(app_module, "download_video", fail)
+
+    r = client.post("/api/find/analyze", params={"shortcode": "sc1"})
+    assert r.status_code in (400, 422)
+    d = r.json()
+    assert d["ok"] is False
+
+
 def test_find_frame_rejects_path_traversal(client):
     """work_id="..", filename=<실제파일명> 이면 슬래시 하나 없이도
     _FIND_TMP_DIR(data/find_frames/)의 부모 디렉터리(data/)로 탈출해서
@@ -204,6 +258,29 @@ def test_find_collect_no_youtube_key_returns_clean_error(monkeypatch, client, tm
 
     def fake_search(kw, max_results):
         raise RuntimeError("youtube_search: YOUTUBE_API_KEY가 설정되지 않았습니다")
+    monkeypatch.setattr(app_module, "youtube_search_fn", fake_search)
+
+    r = client.post("/api/find/collect", params={"shortcode": "sc1", "platform": "youtube"})
+    assert r.status_code == 503
+    assert r.json()["ok"] is False
+
+
+def test_find_collect_youtube_quota_error_returns_clean_503(monkeypatch, client, tmp_path):
+    """YouTube Data API 쿼터 소진(403)·레이트리밋 등은 RuntimeError가 아니라
+    requests.HTTPError(=requests.RequestException)로 온다 — RuntimeError만
+    잡던 예전 except절은 이 경로를 놓쳐서 raw 500이 났다(2026-07-09, 최종
+    리뷰 Finding 2)."""
+    from shopping_shorts import app as app_module
+    from shopping_shorts.store import Store
+
+    test_db_path = tmp_path / "test.db"
+    monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
+    store = Store(test_db_path)
+    store.save_source_analysis("sc1", keywords={"ko": [], "en": ["floor cleaner"], "zh": []},
+                                frame_paths=["/tmp/f1.jpg"], analyzed_at="2026-07-09T00:00:00Z")
+
+    def fake_search(kw, max_results):
+        raise requests.HTTPError("403 Client Error: quotaExceeded")
     monkeypatch.setattr(app_module, "youtube_search_fn", fake_search)
 
     r = client.post("/api/find/collect", params={"shortcode": "sc1", "platform": "youtube"})

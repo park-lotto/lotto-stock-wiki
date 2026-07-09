@@ -2,9 +2,11 @@
 import hmac
 import hashlib
 import os
+import re
 import urllib.parse
 from datetime import datetime, timezone
 from pathlib import Path
+import requests
 from fastapi import BackgroundTasks, FastAPI, Request
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -114,17 +116,33 @@ _FIND_TMP_DIR = Path(__file__).parent / "data" / "find_frames"
 
 @app.post("/api/find/analyze")
 def api_find_analyze(shortcode: str):
-    """영상 다운로드 → 프레임 추출 → Gemini 분석 → 검색링크 생성, 결과 저장 후 반환."""
+    """영상 다운로드 → 프레임 추출 → Gemini 분석 → 검색링크 생성, 결과 저장 후 반환.
+
+    다운로드→추출→분석 구간은 각각 실패 가능(인스타 CDN 서명URL 만료로 인한
+    다운로드 403/404, ffmpeg 실패, Gemini 키 미설정)해서 통째로 감싼다
+    (2026-07-09, 최종 리뷰 Finding 1 — 무가드 상태로 raw 500이 나던 문제)."""
     store = Store(DB_PATH)
     items, _ = store.load_last_run()
     item = next((i for i in items if i["shortcode"] == shortcode), None)
     if not item:
         return JSONResponse(status_code=404, content={"ok": False, "error": "해당 항목 없음"})
 
+    video_url = item.get("video_url")
+    if not video_url:
+        # video_url 필드 추가 이전에 저장된 last_run row 등 — KeyError 대신 명확한 에러
+        return JSONResponse(status_code=422, content={"ok": False, "error": "video_url 없음 — 재수집 필요"})
+
     work_dir = _FIND_TMP_DIR / hashlib.sha1(shortcode.encode()).hexdigest()[:16]
-    video_path = download_video(item["video_url"], work_dir)
-    frame_paths = extract_frames(video_path, work_dir, max_frames=6)
-    analysis = analyze_video(video_path, item.get("caption", ""))
+    try:
+        video_path = download_video(video_url, work_dir)
+        frame_paths = extract_frames(video_path, work_dir, max_frames=6)
+        analysis = analyze_video(video_path, item.get("caption", ""))
+    except (requests.RequestException, RuntimeError) as e:
+        msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
+        return JSONResponse(status_code=502, content={"ok": False, "error": msg})
+    except Exception as e:
+        msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
+        return JSONResponse(status_code=500, content={"ok": False, "error": msg})
 
     frame_urls = [f"/api/find/frame/{work_dir.name}/{p.name}" for p in frame_paths]
     frame_abs_urls = [f"{PUBLIC_BASE_URL}{u}" for u in frame_urls]
@@ -158,9 +176,12 @@ def api_find_collect(shortcode: str, platform: str):
         return {"ok": True, "count": 0}
     try:
         raw = youtube_search_fn(keyword, max_results=10)
-    except RuntimeError as e:
-        # YOUTUBE_API_KEY 미설정 등 — 서버 500 대신 명확한 에러로 응답
-        # (2026-07-09, 배포 후 실단말 검증 중 raw 500 확인하고 수정).
+    except (RuntimeError, requests.RequestException) as e:
+        # RuntimeError: YOUTUBE_API_KEY 미설정 등 / requests.RequestException:
+        # 쿼터 소진(403)·레이트리밋(429)·일시적 API 오류 등 raise_for_status()가
+        # 던지는 실제 운영 실패 — 둘 다 서버 500 대신 명확한 에러로 응답
+        # (2026-07-09, 최종 리뷰 Finding 2 — RuntimeError만 잡아서 진짜 흔한
+        # 실패 모드인 쿼터 소진이 raw 500으로 새던 문제).
         return JSONResponse(status_code=503, content={"ok": False, "error": str(e)})
     ids = store.save_candidates(shortcode, "youtube", raw)
 
