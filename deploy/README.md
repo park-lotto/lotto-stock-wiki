@@ -65,3 +65,53 @@ sudo certbot --nginx -d stockbrain.duckdns.org   # 이메일 입력, 리다이�
 - 지인이 접속할 때마다 **당신 KIS 시세 쿼터** 소모 (인원 많으면 시세 끊길 수 있음)
 - 수급빈집·태린이 지표는 당신 자산 — 무료 공개 범위 유의
 - 폰: 로그인 후 `stockbrain.duckdns.org` → "홈 화면에 추가"로 앱처럼 사용 (반응형 적용됨)
+
+---
+
+# 쇼핑쇼츠(shopping_shorts) 배포 — 같은 서버, 별도 서비스 (2026-07-09)
+
+구성: `직원 폰/PC → https://shoppingshorts.duckdns.org → Apache(mod_proxy, SSL) → 127.0.0.1:8849`
+
+접속: **admin / (서버 `/etc/shopping-shorts.env`의 `DASH_PASS`)** — 자격증명은 git에 안 올림
+
+⚠️ **서버는 nginx가 아니라 Apache(mod_proxy)로 80/443을 담당한다** (stockbrain도 동일).
+`deploy/apache-shoppingshorts.conf`가 실제 사용하는 파일 — nginx 관련 파일은 이 서비스엔 없음.
+
+## 절차 (한 번만)
+
+```bash
+# 1) 채널 리스트 엑셀 업로드 (로컬 카톡파일, git 미추적)
+mkdir -p /home/ubuntu/lotto-stock-wiki/shopping_shorts/data
+scp -i <pem키> "벤치마킹시트 신규.xlsx" ubuntu@3.39.179.148:/home/ubuntu/lotto-stock-wiki/shopping_shorts/data/벤치마킹시트.xlsx
+
+# 2) 의존성 (fastapi/uvicorn/requests는 이미 설치돼있음 — stockbrain과 공유)
+python3 -m pip install --user --break-system-packages openpyxl google-genai
+
+# 3) 자격증명
+sudo cp deploy/shopping-shorts.env.example /etc/shopping-shorts.env
+sudo nano /etc/shopping-shorts.env   # DASH_PASS, APIFY_TOKEN~4 채우기
+openssl rand -hex 32                 # DASH_SECRET용
+sudo chmod 600 /etc/shopping-shorts.env
+
+# 4) systemd
+sudo cp deploy/shopping-shorts.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now shopping-shorts
+curl -s localhost:8849/healthz       # {"ok":true} 확인
+
+# 5) Apache
+sudo cp deploy/apache-shoppingshorts.conf /etc/apache2/sites-available/shopping-shorts.conf
+sudo a2ensite shopping-shorts.conf
+sudo apache2ctl configtest && sudo systemctl reload apache2
+
+# 6) SSL
+sudo certbot --apache -d shoppingshorts.duckdns.org --non-interactive --agree-tos -m <이메일> --redirect
+```
+
+## 갱신·운영
+- **자동배포**: `git push`만 하면 서버 크론(`deploy/auto_deploy.sh`)이 `shopping_shorts/` 변경
+  감지 시 `shopping-shorts` 서비스만 재시작(stockbrain은 안 건드림, 2026-07-09 분기 수정).
+- 수동 즉시반영: `git pull --ff-only origin main && sudo systemctl restart shopping-shorts`
+- 비번 변경: `/etc/shopping-shorts.env` 수정 → `sudo systemctl restart shopping-shorts`
+- 로그: `journalctl -u shopping-shorts -f`
+- Apify 계정 4개 로테이션 — 하나 소진되면 자동으로 다음 계정 사용(시작 거부·실행중 소진 둘 다 대응)
