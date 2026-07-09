@@ -146,6 +146,15 @@ def api_find_analyze(shortcode: str):
 
     if not item:
         # 추적 목록에 없는 URL — Apify 단일조회로 즉시 가져오기 시도.
+        # 인스타그램 URL이 아니면 Apify 호출 자체를 스킵 — 이 액터는 인스타 전용이라
+        # 다른 플랫폼(유튭 등) URL을 넣으면 계정 7개를 전부 돌면서 매번 실패하고
+        # "토큰 전부 소진"처럼 보이는 오해를 낳는다(2026-07-09, 실사용 중 발견 —
+        # 실제로는 계정 소진이 아니라 "input.username is required" 구조적 거부였음).
+        if "instagram.com" not in shortcode:
+            return JSONResponse(status_code=422, content={
+                "ok": False,
+                "error": "인스타그램 URL만 지원합니다 (다른 플랫폼 URL은 분석 불가)",
+            })
         try:
             raw = fetch_single_reel(shortcode)
         except (requests.RequestException, RuntimeError) as e:

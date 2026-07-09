@@ -116,7 +116,7 @@ def test_find_analyze_unknown_shortcode_404(monkeypatch, client, tmp_path):
     # 삭제) 404. 실 네트워크 호출 방지를 위해 모킹.
     monkeypatch.setattr(app_module, "fetch_single_reel", lambda url: None)
 
-    r = client.post("/api/find/analyze", params={"shortcode": "nope"})
+    r = client.post("/api/find/analyze", params={"shortcode": "https://www.instagram.com/reel/nope/"})
     assert r.status_code == 404
 
 
@@ -163,6 +163,24 @@ def test_find_analyze_apify_single_fetch_failure_returns_clean_error(monkeypatch
 
     r = client.post("/api/find/analyze", params={"shortcode": "https://www.instagram.com/reel/x/"})
     assert r.status_code == 502
+    assert r.json()["ok"] is False
+
+
+def test_find_analyze_non_instagram_url_returns_clean_error_without_calling_apify(monkeypatch, client, tmp_path):
+    """유튜브 등 인스타그램이 아닌 URL은 Apify 호출 자체를 스킵하고 즉시 명확한
+    에러를 반환한다(2026-07-09) — 이 액터는 인스타 전용이라, 스킵 안 하면 계정
+    7개를 전부 돌면서 매번 "input.username is required"로 실패하고 "토큰 전부
+    소진"처럼 오해를 낳는 사고가 있었음."""
+    from shopping_shorts import app as app_module
+
+    monkeypatch.setattr(app_module, "DB_PATH", tmp_path / "test.db")
+
+    def fail(*a, **kw):
+        raise AssertionError("인스타그램 URL이 아니면 fetch_single_reel을 호출하면 안 된다")
+    monkeypatch.setattr(app_module, "fetch_single_reel", fail)
+
+    r = client.post("/api/find/analyze", params={"shortcode": "https://youtu.be/ktIkVeTp76w"})
+    assert r.status_code == 422
     assert r.json()["ok"] is False
 
 
