@@ -1,10 +1,15 @@
 """Gemini에 영상 파일 자체를 입력해 제품/장면 키워드 추출 — 캡션 텍스트만 보는
-tubefactory와의 차별화 핵심(설계문서 §1 참고). 전용 키 풀(comment_gen.py와 동일 패턴)."""
+tubefactory와의 차별화 핵심(설계문서 §1 참고). 전용 키 풀(comment_gen.py와 동일 패턴).
+
+comment_gen.py와 같은 SHORTS_GEMINI_KEYS 풀을 사용하므로, 두 모듈은 같은
+shorts_gemini_state.json 상태 파일을 공유해 하루 내 키 소진 추적을 동기화한다."""
 import json
 import time
 from google import genai
 from google.genai import types
 from shopping_shorts.config import SHORTS_GEMINI_KEYS
+from shopping_shorts import comment_gen
+from pipeline.atoms import key_vault
 
 _MODEL = "gemini-3-flash"  # 비디오 입력 지원 모델
 _EMPTY = {"keywords": {"ko": [], "en": [], "zh": []}, "category": ""}
@@ -48,36 +53,65 @@ def _wait_until_active(client, file_obj, max_wait_s=60, poll_interval=2):
     return file_obj
 
 
-def analyze_video(video_path, caption):
-    """영상 파일 → {"keywords": {...}, "category": "..."}. 실패 시 빈 결과."""
+def analyze_video(video_path, caption, max_retries=3, quota_sleep=8):
+    """영상 파일 → {"keywords": {...}, "category": "..."}. 실패 시 빈 결과.
+
+    전용 키 풀(SHORTS_GEMINI_KEYS) 내에서만 로테이션 — comment_gen.py와 같은
+    shorts_gemini_state.json 상태 파일을 공유해 하루 내 소진 추적을 동기화.
+    전용 풀이 다 소진되면 그냥 {}. 최종 실패 시에도 {}.
+
+    quota_sleep: 분당 쿼터 초과 시 대기 시간(초). 로테이션 가능한 키가 있으면
+    먼저 로테이션(대기 없음), 전부 소진됐을 때만 짧게 대기."""
     if not SHORTS_GEMINI_KEYS:
         raise RuntimeError("video_analysis: SHORTS_GEMINI_KEY가 설정되지 않았습니다")
-    client = _client_for_key(SHORTS_GEMINI_KEYS[0])
-    file_obj = None
-    try:
-        with open(video_path, "rb") as fh:
-            file_obj = client.files.upload(file=fh, config=types.UploadFileConfig(mime_type="video/mp4"))
-        file_obj = _wait_until_active(client, file_obj)
-        prompt = _PROMPT.format(caption=caption or "(캡션 없음)")
-        resp = client.models.generate_content(
-            model=_MODEL,
-            contents=[file_obj, prompt],
-            config=types.GenerateContentConfig(response_mime_type="application/json"),
-        )
-        data = json.loads(resp.text)
-        return {
-            "keywords": {
-                "ko": data.get("keywords", {}).get("ko", []),
-                "en": data.get("keywords", {}).get("en", []),
-                "zh": data.get("keywords", {}).get("zh", []),
-            },
-            "category": data.get("category", ""),
-        }
-    except Exception:
-        return dict(_EMPTY)
-    finally:
-        if file_obj is not None:
-            try:
-                client.files.delete(name=file_obj.name)
-            except Exception:
-                pass
+
+    prompt = _PROMPT.format(caption=caption or "(캡션 없음)")
+
+    for attempt in range(max_retries):
+        key, idx = comment_gen._current_key_and_idx()
+        if key is None:
+            return dict(_EMPTY)  # 전용 풀 전체 소진 — 공유 풀로 넘어가지 않고 여기서 멈춤
+
+        client = _client_for_key(key)
+        file_obj = None
+        try:
+            with open(video_path, "rb") as fh:
+                file_obj = client.files.upload(file=fh, config=types.UploadFileConfig(mime_type="video/mp4"))
+            file_obj = _wait_until_active(client, file_obj)
+            resp = client.models.generate_content(
+                model=_MODEL,
+                contents=[file_obj, prompt],
+                config=types.GenerateContentConfig(response_mime_type="application/json"),
+            )
+            data = json.loads(resp.text)
+            return {
+                "keywords": {
+                    "ko": data.get("keywords", {}).get("ko", []),
+                    "en": data.get("keywords", {}).get("en", []),
+                    "zh": data.get("keywords", {}).get("zh", []),
+                },
+                "category": data.get("category", ""),
+            }
+        except Exception as e:
+            m = str(e)
+            if key_vault.is_daily_exhausted_error(e):
+                comment_gen._mark_key_exhausted(idx)  # 확실한 일일 한도 소진만 영구 제외
+                continue
+            if key_vault.is_quota_error(e):
+                # 분당 제한 등 "일일 소진"까지는 확인 안 되는 429 — 키를 영구
+                # 제외하면 전용 풀(3개뿐)이 금방 동나므로, 같은 키로 짧게
+                # 대기 후 재시도
+                time.sleep(quota_sleep)
+                continue
+            if attempt < max_retries - 1 and any(c in m for c in ("503", "UNAVAILABLE", "overloaded")):
+                time.sleep((attempt + 1) * 5)
+                continue
+            return dict(_EMPTY)
+        finally:
+            if file_obj is not None:
+                try:
+                    client.files.delete(name=file_obj.name)
+                except Exception:
+                    pass
+
+    return dict(_EMPTY)

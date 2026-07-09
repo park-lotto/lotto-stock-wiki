@@ -1,5 +1,11 @@
 import pytest
-from shopping_shorts import video_analysis
+from shopping_shorts import video_analysis, comment_gen
+
+
+@pytest.fixture(autouse=True)
+def isolate_shorts_gemini_state(monkeypatch, tmp_path):
+    """모든 테스트에서 실제 data/shorts_gemini_state.json을 절대 건드리지 않는다."""
+    monkeypatch.setattr(comment_gen, "_STATE_PATH", tmp_path / "shorts_gemini_state.json")
 
 
 class FakeFileObj:
@@ -13,6 +19,7 @@ def test_analyze_video_uploads_polls_and_parses(monkeypatch, tmp_path):
     video_path.write_bytes(b"fake")
 
     monkeypatch.setattr(video_analysis, "SHORTS_GEMINI_KEYS", ["fake-key"])
+    monkeypatch.setattr(comment_gen, "SHORTS_GEMINI_KEYS", ["fake-key"])
 
     states = iter(["PROCESSING", "ACTIVE"])  # 첫 폴링은 처리중, 두번째는 완료
     deleted = []
@@ -48,6 +55,7 @@ def test_analyze_video_no_keys_raises(monkeypatch, tmp_path):
     video_path = tmp_path / "v.mp4"
     video_path.write_bytes(b"fake")
     monkeypatch.setattr(video_analysis, "SHORTS_GEMINI_KEYS", [])
+    monkeypatch.setattr(comment_gen, "SHORTS_GEMINI_KEYS", [])
     with pytest.raises(RuntimeError, match="SHORTS_GEMINI_KEY"):
         video_analysis.analyze_video(video_path, caption="")
 
@@ -56,6 +64,7 @@ def test_analyze_video_failed_processing_returns_empty(monkeypatch, tmp_path):
     video_path = tmp_path / "v.mp4"
     video_path.write_bytes(b"fake")
     monkeypatch.setattr(video_analysis, "SHORTS_GEMINI_KEYS", ["fake-key"])
+    monkeypatch.setattr(comment_gen, "SHORTS_GEMINI_KEYS", ["fake-key"])
 
     class FakeFiles:
         def upload(self, file, config):
@@ -72,4 +81,70 @@ def test_analyze_video_failed_processing_returns_empty(monkeypatch, tmp_path):
     monkeypatch.setattr(video_analysis.time, "sleep", lambda s: None)
 
     result = video_analysis.analyze_video(video_path, caption="")
+    assert result == {"keywords": {"ko": [], "en": [], "zh": []}, "category": ""}
+
+
+def test_analyze_video_rotates_to_next_key_on_daily_exhaustion(monkeypatch, tmp_path):
+    """첫 번째 키가 일일 한도 소진 에러를 던지면 두 번째 키로 로테이션."""
+    video_path = tmp_path / "v.mp4"
+    video_path.write_bytes(b"fake")
+
+    calls = []
+
+    class FakeFiles:
+        def upload(self, file, config):
+            return FakeFileObj("files/abc", "ACTIVE")
+        def get(self, name):
+            return FakeFileObj(name, "ACTIVE")
+        def delete(self, name):
+            pass
+
+    class FakeModels:
+        def __init__(self, key):
+            self.key = key
+        def generate_content(self, **kw):
+            calls.append(self.key)
+            if self.key == "key1":
+                raise RuntimeError("429 RESOURCE_EXHAUSTED PerDay limit reached")
+            class FakeResp:
+                text = '{"keywords":{"ko":["test"],"en":["test"],"zh":["test"]},"category":"test"}'
+            return FakeResp()
+
+    class FakeClient:
+        def __init__(self, key):
+            self.files = FakeFiles()
+            self.models = FakeModels(key)
+
+    def fake_client_for_key(key):
+        return FakeClient(key)
+
+    monkeypatch.setattr(video_analysis, "SHORTS_GEMINI_KEYS", ["key1", "key2"])
+    monkeypatch.setattr(comment_gen, "SHORTS_GEMINI_KEYS", ["key1", "key2"])
+    monkeypatch.setattr(video_analysis, "_client_for_key", fake_client_for_key)
+    monkeypatch.setattr(video_analysis.time, "sleep", lambda s: None)
+
+    result = video_analysis.analyze_video(video_path, caption="test")
+
+    assert result["keywords"]["ko"] == ["test"]
+    assert calls == ["key1", "key2"]
+    # key1은 영구 소진 처리되어 다음 호출에서도 건너뛴다.
+    assert comment_gen._live_key_indices() == [1]
+
+
+def test_analyze_video_all_keys_exhausted_returns_empty(monkeypatch, tmp_path):
+    """모든 키가 소진되면 공허한 결과를 반환."""
+    video_path = tmp_path / "v.mp4"
+    video_path.write_bytes(b"fake")
+
+    monkeypatch.setattr(video_analysis, "SHORTS_GEMINI_KEYS", ["key1"])
+    monkeypatch.setattr(comment_gen, "SHORTS_GEMINI_KEYS", ["key1"])
+    # key1을 미리 소진 상태로 마킹
+    comment_gen._mark_key_exhausted(0)
+
+    def fail(*a, **kw):
+        raise AssertionError("소진된 키로는 호출하면 안 된다")
+
+    monkeypatch.setattr(video_analysis, "_client_for_key", fail)
+
+    result = video_analysis.analyze_video(video_path, caption="test")
     assert result == {"keywords": {"ko": [], "en": [], "zh": []}, "category": ""}
