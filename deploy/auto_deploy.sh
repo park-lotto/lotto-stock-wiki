@@ -14,9 +14,13 @@ LOCAL=$(git rev-parse HEAD); REMOTE=$(git rev-parse origin/main)
 echo "$(date '+%F %T') 새커밋 ${LOCAL:0:7}->${REMOTE:0:7} 배포시작" >>"$LOG"
 if git pull --ff-only origin main >>"$LOG" 2>&1; then
   CHANGED=$(git diff --name-only "$LOCAL" "$REMOTE")
-  if echo "$CHANGED" | grep -qE '\.(py|html|js|css)$|^dashboard/|^scripts/'; then
-    sudo systemctl restart stockbrain >>"$LOG" 2>&1 && echo "$(date '+%F %T') 재시작완료 $(git rev-parse --short HEAD)" >>"$LOG"
-  else
+  if echo "$CHANGED" | grep -qE '^dashboard/|^scripts/'; then
+    sudo systemctl restart stockbrain >>"$LOG" 2>&1 && echo "$(date '+%F %T') stockbrain 재시작완료 $(git rev-parse --short HEAD)" >>"$LOG"
+  fi
+  if echo "$CHANGED" | grep -qE '^shopping_shorts/'; then
+    sudo systemctl restart shopping-shorts >>"$LOG" 2>&1 && echo "$(date '+%F %T') shopping-shorts 재시작완료 $(git rev-parse --short HEAD)" >>"$LOG"
+  fi
+  if ! echo "$CHANGED" | grep -qE '^dashboard/|^scripts/|^shopping_shorts/'; then
     echo "$(date '+%F %T') 코드변경없음(데이터/문서만) 재시작생략 $(git rev-parse --short HEAD)" >>"$LOG"
   fi
 else
