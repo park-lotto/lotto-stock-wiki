@@ -11,38 +11,23 @@
     "target_kind": "market",
     "market_direction": null,
     "macro_vars": [
-      "국고채 금리",
-      "환율",
-      "국제유가",
-      "천연가스 가격",
-      "유연탄 가격",
-      "철스크랩 가격"
+      "건설업종 지수",
+      "원전 CAPEX 투자 사이클",
+      "중동 CAPEX 투자 사이클",
+      "금리 인상 가능성"
     ],
     "recommended_sectors": [
       {
         "sector": "원전",
-        "stance": "긍정적",
-        "reason": "현대건설의 Holtec SMR EPC 계약, 대우건설의 체코 두코바니 원전 본계약, DL 이앤씨의 X-energy Xe-100 NI 표준화 설계 계약 등 주요 이벤트 예상"
-      },
-      {
-        "sector": "신재생",
-        "stance": "긍정적",
-        "reason": "GS건설의 아이스퀘어드 캐피털과 사업추진 JV 설립을 통한 1.5GW 규모 에너지 전환 자산 확보 추진"
+        "stance": "수주 및 실적 현실화 기대",
+        "reason": "현대건설 Holtec SMR EPC 계약, 대우건설 체코 두코바니 원전 본계약, DL이앤씨 X-energy Xe-100 NI 표준화 설계 계약 등 주요 이벤트 예상"
       }
     ],
     "style": null,
     "event_calendar": [
       {
         "date": "하반기",
-        "event": "현대건설의 Holtec SMR EPC 계약"
-      },
-      {
-        "date": "하반기",
-        "event": "대우건설의 체코 두코바니 원전 본계약"
-      },
-      {
-        "date": "하반기",
-        "event": "DL 이앤씨의 X-energy Xe-100 NI 표준화 설계 계약"
+        "event": "현대건설의 Holtec SMR EPC 계약, 대우건설의 체코 두코바니 원전 본계약, DL 이앤씨의 X-energy Xe-100 NI(Nuclear Island) 표준화 설계 계약 등 주요 이벤트"
       }
     ],
     "top_picks": [
@@ -50,10 +35,10 @@
       "대우건설",
       "DL이앤씨",
       "삼성E&A",
-      "GS 건설",
+      "GS건설",
       "IPARK현대산업개발"
     ],
-    "risk": "건설업종의 장기 성장 스토리가 수주와 실적으로 이어지기까지 예상보다 많은 시간이 필요하다는 점",
+    "risk": "건설업종의 주가 약세 지속, 장기 성장 스토리가 수주와 실적으로 이어지기까지의 시차, 금리 인상 가능성으로 인한 재무 건전성 우려",
     "quote": "단순한 기대감을 넘어 실제 계약이 확인될 경우 업종 전반의 투자심리 개선과 밸류에이션 리레이팅이 가능할 것으로 판단한다."
   }
 }

@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-30",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-01_0700_흥행 이후를 증명할 시간.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유안타증권",
+    "analyst": "최지운",
+    "report_date": "2026.06.30",
+    "stocks": [
+      {
+        "name": "펄어비스",
+        "code": "263750",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "52,000원",
+        "tp_prev": "-원",
+        "tp_direction": null,
+        "earnings_outlook": "2026년 매출액 9,068억원(YoY +231%), 영업이익 4,702억원(YoY +1,360%, OPM 52%) 전망. 2Q26E 매출액 279억원, 영업이익 136억원 전망.",
+        "estimate_revision": null,
+        "next_catalyst": "DLC 일정 공식화, 차기작 <도깨비> 개발 진척 확인",
+        "thesis": [
+          "자체 엔진 기반 AAA 개발 역량 확인",
+          "붉은사막 흥행으로 대형 패키지 IP 매출 기반 확보",
+          "CCP 매각에 따른 적자 자회사 연결 제외 효과"
+        ],
+        "valuation_basis": "12M Fwd EPS 4,099원에 Target PER 12.7배를 적용해 산출. Target PER은 글로벌 PC·콘솔 게임사 Peer 평균 대비 30% 디스카운트 적용.",
+        "risk": "2027년 감익 가능성",
+        "supply_comment": null,
+        "quote": "동사에 대해 투자의견 BUY, 목표주가 52,000원으로 커버리지 개시. 목표주가는 12M Fwd EPS 4,099원에 Target PER 12.7배를 적용해 산출."
+      }
+    ],
+    "sector": "IT"
+  }
+}

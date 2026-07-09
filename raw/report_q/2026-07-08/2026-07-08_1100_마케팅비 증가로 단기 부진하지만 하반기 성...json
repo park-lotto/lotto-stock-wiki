@@ -2,39 +2,38 @@
   "meta": {
     "date": "2026-07-08",
     "broker": "한화투자증권",
-    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-08_1100_마케팅비 증가로 단기 부진하지만 하반기 성...md"
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-08_1100_마케팅비 증가로 단기 부진하지만 하반기 성...md"
   },
   "questionnaire": {
     "target_kind": "stock",
     "broker": "한화투자증권",
-    "analyst": "김소혜, 김나우",
+    "analyst": [
+      "김소혜",
+      "김나우"
+    ],
     "report_date": "2026년 7월 7일",
     "stocks": [
       {
         "name": "더블유게임즈",
         "code": "192080",
-        "sector": "IT",
-        "rating": "Buy(유지)",
+        "rating": "Buy",
         "rating_changed": false,
         "tp_new": "80,000원",
         "tp_prev": "80,000원",
         "tp_direction": "flat",
-        "earnings_outlook": {
-          "2Q26": "매출액 2,068억 원, 영업이익 669억 원",
-          "컨센서스": "영업이익 700억 원",
-          "기타": "소셜카지노 매출은 전분기와 유사한 수준, 아이게이밍 및 캐주얼 매출은 QoQ 각각 5.1%, 2.2% 증가한 것으로 추정된다. 마케팅비는 QoQ 4.8% 늘어난 것으로 예상한다."
-        },
-        "estimate_revision": null,
-        "next_catalyst": "DTC 전환율 확대 및 AI기반 게임 개발 효율성",
+        "earnings_outlook": "2Q26 실적은 매출액 2,068억 원, 영업이익 669억 원을 기록하며 영업이익 컨센서스 700억 원을 하회한 것으로 추정한다.",
+        "estimate_revision": "영업이익 컨센서스 하회",
+        "next_catalyst": "DDI의 완전 자회사 추진 및 추가 M&A, 주주환원 강화",
         "thesis": [
-          "캐주얼 사업의 성장과 수수료율 개선에 따른 실적 개선",
-          "AI 개발 효과를 통한 콘텐츠 효율성 극대화 및 매출 성장 가속화",
-          "DDI 완전 자회사 추진에 따른 현금 확보 및 M&A/주주환원 여력 확대"
+          "캐주얼 게임 관련 마케팅 비용 증가로 인한 단기 실적 부진",
+          "AI 기반 콘텐츠 개발 및 DTC 전환율 확대에 따른 하반기 영업이익 개선 전망",
+          "글로벌 동종기업 대비 성공적인 M&A 및 사업 확장으로 인한 실적 모멘텀 확보"
         ],
-        "valuation_basis": "내년 추정치 기준 P/E 6배는 밸류에이션 매력이 매우 크다.",
-        "risk": "캐주얼 게임 마케팅 비용 증가로 인한 단기 실적 부진",
+        "valuation_basis": "내년 추정치 기준 P/E 6배",
+        "risk": null,
         "supply_comment": null,
-        "quote": "동사의 2Q26 실적은 캐주얼 게임 마케팅 강화로 인해 영업이익 컨센서스를 하회한 것으로 추정합니다. 연결 자회사 중심의 매출 성장세는 지속될 것으로 예상합니다."
+        "quote": "동사의 2Q26 실적은 캐주얼 게임 마케팅 강화로 인해 영업이익 컨센서스를 하회한 것으로 추정합니다.",
+        "sector": "기타"
       }
     ]
   }

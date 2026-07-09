@@ -1,6 +1,34 @@
 # NEXT_SESSION
 
-## ⭐ 최신 세션 (2026-07-07 · DESKTOP · 순환매 감지기 구현)
+## ⭐ 최신 세션 (2026-07-09 · 집CH · 쇼핑쇼츠 자동화 ② 소통큐 완성)
+
+**별개 프로젝트**: 쇼핑쇼츠 영상제작 자동화 SaaS (tubefactory급 A목표). 코드 `shopping_shorts/` (주식위키 무관). 메모리 `project_쇼핑쇼츠_자동화.md`.
+
+**이번 세션 완료** (전부 main 병합·push, 유닛테스트 43개 통과):
+- **기능 ② 소통 큐 완성** — ①수집 릴스에 직접 댓글달아 계정키우기 반자동. comment_gen.py(Gemini 캡션→댓글3개, key_vault재사용) / outreach.py(정렬3옵션: 최신·갓올라온터진·골디락스) / store확장(comment_drafts·commented·saved·last_run) / app확장(/api/outreach·comment/done·save·saved·thumb) / outreach.html(리스트+진행모드, 복사·새탭·완료토글). **자동 댓글·좋아요·팔로우 절대안함** — 사람이 붙여넣기·전송.
+- **CTA 이벤트 댓글**: 캡션에 응모CTA 있으면 3중 2개 참여댓글.
+- **랭킹 UI 개선**: 8열 촘촘그리드 + 보기/댓글참여/담기 3버튼.
+- **수집결과 SQLite 영구저장**: _LAST 메모리캐시 제거 → 재시작해도 화면유지.
+- **썸네일 서버프록시** (/api/thumb): 인스타 핫링크차단 우회, 실제이미지 뜸.
+- 실전검증: 새 Apify토큰으로 10건 수집+댓글생성+썸네일 확인.
+
+**추가 완료(세션 후반)**: 모바일 반응형(사이드바 가로바+카드 2열, @media 768/420). 임시 공유는
+cloudflared 터널로 검증함 — `cloudflared tunnel --url http://localhost:8848` → *.trycloudflare.com
+임시URL(PC·세션 살아있을 때만, 인증없음, 매번 URL바뀜). stockbrain(주식용)과 별개.
+
+**⏳ 다음 (쇼핑쇼츠)**:
+1. **🔥 서버 배포 + 로그인 (다음 우선작업)** — 회사 직원들과 공유 목적. 요구: 계정/로그인(직원 여러명 접속),
+   Apify비용관리(남이 수집버튼 못 남용하게), 모바일 접속(반응형 이미 됨), 고정 도메인(임시터널 말고).
+   stockbrain서버는 주식전용이라 **별도**. **배포+인증은 브레인스토밍부터** 새로 시작할 것.
+   임시 테스트는 cloudflared 터널로 즉시 가능(위 명령).
+2. **기능 ③ 소스매칭** (설계완료·구현대기) — URL→영상분석(watch)→Gemini 멀티모달 제품·검색어 추출→플랫폼검색→유사도랭킹. 렌즈는 나중 검증용. "담기"버튼이 입구(saved테이블 준비됨).
+3. 알려진 개선: 인스타 썸네일 2주뒤 만료→필요시 로컬다운로드. Apify 무료$5한도 도달경험→테스트는 limit=5~10.
+
+**실행**: `.env`에 APIFY_TOKEN. `cd 로또의주식 && python -m uvicorn shopping_shorts.app:app --port 8848` → http://127.0.0.1:8848 (랭킹) / /outreach.html (소통큐). 스펙/플랜: docs/superpowers/*/2026-07-0[89]-쇼핑쇼츠-*.
+
+---
+
+## (이전) 2026-07-07 · DESKTOP · 순환매 감지기 구현
 
 어제 설계만 해뒀던 **순환매 감지기**를 구현·배포 완료. 4개 파일 main 커밋+push(post-commit 훅 자동배포).
 

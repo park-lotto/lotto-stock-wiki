@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-01",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-01_1107_수익성 정상화와 함께 수요 강세 감지.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "박희철",
+    "report_date": "2026/7/1",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "해성디에스",
+        "code": "195870",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "100,000원",
+        "tp_prev": "100,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 2분기 실적을 매출액 2,080억원(YoY +32.2%), 영업이익 203억원(YoY +87.1%, OPM 9.8%)으로 추정",
+        "estimate_revision": null,
+        "next_catalyst": "핵심 고객사의 High-Volume Fab 바탕의 본격적인 매출 성장세와 함께 수익성 턴어라운드 예상",
+        "thesis": [
+          "리드프레임 부문의 호조세가 적기 수요 대응 및 재고 확충 수요 등으로 전장용/IT를 가리지 않고 이어지는 구간",
+          "지난 3월, 리드프레임이 월간 기준 창사 이래 최대치를 기록하며 매출 상승을 견인",
+          "추후 패키지기판 부문의 턴어라운드가 더해지면 시장의 저평가 논리는 희석될 것으로 전망"
+        ],
+        "valuation_basis": "12MF EPS 5,031원, Peer 12MF P/E 평균 20배 적용",
+        "risk": null,
+        "supply_comment": "리드프레임 부문도 글로벌 고객사향으로 신규품을 공급 준비 중이며, 패키지기판 부문 또한 DDR6를 대응하기 위한 투자가 집행될 전망",
+        "quote": "해성디에스의 2026년 2분기 실적을 매출액 2,080억원(YoY +32.2%), 영업이익 203억원(YoY +87.1%, OPM 9.8%)으로 추정. 지난 1분기 원자재 가격 상승과 판가 반영 시점 차이로 인한 악영향을 벗어나고 있는 분기. 리드프레임 중심의 매출액 성장세를 주목할 필요 존재."
+      }
+    ]
+  }
+}

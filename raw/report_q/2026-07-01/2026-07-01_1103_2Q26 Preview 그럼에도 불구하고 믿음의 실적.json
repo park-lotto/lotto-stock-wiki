@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-01",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-01_1103_2Q26 Preview 그럼에도 불구하고 믿음의 실적.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "최보영",
+    "report_date": "Jul 1 2026",
+    "stocks": [
+      {
+        "name": "삼성전자",
+        "code": "005930",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "500,000 원",
+        "tp_prev": "330,000 원",
+        "tp_direction": "up",
+        "earnings_outlook": "2Q26 매출액은 176.2조원(YoY +136.4%, QoQ +31.6%), 영업이익은 80.3조원(YoY +1618.0%, QoQ +40.4%, OPM 45.6%)을 전망하며 충당금 반영으로 인해 시장 컨센서스 영업이익 86조원을 소폭 하회할 것.",
+        "estimate_revision": "2026년 매출액은 732.7조원(YoY +119.6%), 영업이익은 366.4조원(OPM 50.0%)으로 전망.",
+        "next_catalyst": "HBM4 첫 납품",
+        "thesis": [
+          "에이전틱 AI 확산으로 메모리 전방위 수요 확대 및 구조적 공급 부족",
+          "범용 DRAM·NAND 가격 급등 주도 및 D램·낸드 시장 점유율 1위 유지",
+          "비메모리 적자 축소로 종합 반도체 경쟁력 회복"
+        ],
+        "valuation_basis": "26~30F ROE 30.2% 5년평균COE 8.6%적용",
+        "risk": null,
+        "supply_comment": "에이전틱 AI 확산으로 메모리 전방위 수요가 확대되고 구조적 공급 부족이 2028년까지 지속되는 가운데",
+        "quote": "에이전틱 AI 확산으로 메모리 전방위 수요가 확대되고 구조적 공급 부족이 2028년까지 지속되는 가운데, 동사는 범용 DRAM·NAND 가격 급등을 주도하며 D램·낸드 시장 점유율 1위(각 38%·29%)를 유지하고, NVIDIA향 HBM4 첫 납품으로 HBM 추격을 본격화하며, 비메모리 적자 축소로 종합 반도체 경쟁력을 회복하고 있음."
+      }
+    ]
+  }
+}

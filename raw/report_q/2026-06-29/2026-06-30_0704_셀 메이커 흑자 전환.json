@@ -1,0 +1,52 @@
+{
+  "meta": {
+    "date": "2026-06-29",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-30_0704_셀 메이커 흑자 전환.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김현수",
+    "report_date": "2026.6.29",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "리튬 가격",
+      "유럽 주요 3국 전력 가격",
+      "ESS 설치량"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "2차전지",
+        "stance": "Overweight",
+        "reason": "수익성 개선 가시성이 높아지고 있으며, 실적 추정치 하향 조정이 없는 상황에서 주가만 하락하여 가격 매력이 커짐"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026년 7~8월",
+        "event": "Tesla 미국 프리몬트 공장 휴머노이드 로봇 ‘옵티머스 3’ 양산 시작"
+      },
+      {
+        "date": "2027년",
+        "event": "Tesla 텍사스 오스틴 공장 추가 가동"
+      },
+      {
+        "date": "2027년 5월",
+        "event": "한국 배터리 재생원료 생산 인증제도 시행 예정"
+      }
+    ],
+    "top_picks": [
+      "LGES",
+      "삼성SDI",
+      "에코프로비엠"
+    ],
+    "risk": [
+      "ESS 수익성 우려",
+      "리튬 가격 하락",
+      "가혹한 수급 쏠림"
+    ],
+    "quote": "수익성 개선 본격화되는 셀 메이커(LGES, 삼성SDI)와 하반기 IAA(유럽 산업가속화법안) 최대 수혜주인 에코프로비엠에 대한 매수를 권고한다."
+  }
+}

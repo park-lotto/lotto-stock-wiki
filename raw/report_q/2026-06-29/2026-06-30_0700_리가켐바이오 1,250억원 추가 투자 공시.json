@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-29",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-30_0700_리가켐바이오 1,250억원 추가 투자 공시.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "심은주",
+    "report_date": "2026년 6월 29일",
+    "stocks": [
+      {
+        "name": "오리온",
+        "code": "271560",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "220,000원",
+        "tp_prev": "200,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2분기 연결 매출액 및 영업이익을 각각 8,643억원(YoY 11.2%), 1,390억원(YoY 14.4%)으로 추정한다.",
+        "estimate_revision": null,
+        "next_catalyst": "리가켐바이오 추가 투자로 인한 주주환원 확대 기대",
+        "thesis": [
+          "리가켐바이오 1,250억원 추가 투자 공시",
+          "배당 확대 명분 강화 및 주주환원 요구 확대 가능성",
+          "2분기 중국 등 해외 법인 중심의 호실적 지속"
+        ],
+        "valuation_basis": null,
+        "risk": "음식료/담배 섹터 내 제한적 시너지 및 단기 이익 가시성 저하 우려, 전쟁 기인한 부정적 영향(유틸리티, 부자재 등 비용 상승)",
+        "supply_comment": "리가켐바이오가 국민성장펀드를 통해 총 5,000억원 규모의 자금을 유치하는 과정에서 최대주주인 오리온 그룹이 전략적 투자자로 참여한 것",
+        "quote": "2분기 연결 매출액 및 영업이익을 각각 8,643억원(YoY 11.2%), 1,390억원(YoY 14.4%)으로 추정한다."
+      }
+    ]
+  }
+}
