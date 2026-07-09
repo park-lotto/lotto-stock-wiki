@@ -90,6 +90,11 @@ def api_thumb(url: str):
         return Response(status_code=404, content=b"")
 
 
+@app.get("/healthz")
+def api_healthz():
+    return {"ok": True}
+
+
 # 정적 프론트 (마운트는 맨 마지막)
 _STATIC = Path(__file__).parent / "static"
 app.mount("/", StaticFiles(directory=str(_STATIC), html=True), name="static")
