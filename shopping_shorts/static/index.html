@@ -95,10 +95,10 @@
       <span id="status" style="color:var(--sub);font-size:12px"></span>
     </div>
     <div class="tabs" id="tabs">
-      <div class="tab active" data-tab="comments">📊 전체</div>
-      <div class="tab" data-tab="speed">⚡ 속도</div>
-      <div class="tab" data-tab="accel">📈 가속</div>
-      <div class="tab" data-tab="density">💥 참여밀도</div>
+      <div class="tab active" data-tab="comments" title="댓글 수 그대로 정렬">📊 전체</div>
+      <div class="tab" data-tab="speed" title="댓글수 ÷ 경과시간(시간) — 시간당 댓글이 얼마나 빨리 쌓이는지">⚡ 속도</div>
+      <div class="tab" data-tab="accel" title="이번 수집 Δ(댓글 증가분) − 직전 수집 Δ — 증가세 자체가 빨라지고 있는지(가속도)">📈 가속</div>
+      <div class="tab" data-tab="density" title="댓글수 ÷ 팔로워수 — 팔로워 규모 대비 반응이 얼마나 뜨거운지(작은 채널도 상위권 가능)">💥 참여밀도</div>
     </div>
     <div class="cats" id="cats"></div>
     <div class="cards" id="cards">
@@ -134,10 +134,10 @@ function render(){
       <div class="body">
         <div class="rank">#${idx+1} · ${i.category} · ${Math.round(i.age_hours)}시간 전</div>
         <div class="ch">${i.name||i.username} <span class="grade">${i.grade||''}</span></div>
-        <div class="stat"><span>댓글</span><b>${i.comments.toLocaleString()} <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span></b></div>
-        <div class="stat"><span>속도(시간당)</span><b>${i.speed.toFixed(1)}</b></div>
-        <div class="stat"><span>가속</span><b>${i.accel==null?'—':(i.accel>0?'+':'')+i.accel}</b></div>
-        <div class="stat"><span>참여밀도</span><b>${(i.density*100).toFixed(2)}%</b></div>
+        <div class="stat" title="댓글 수 그대로"><span>댓글</span><b>${i.comments.toLocaleString()} <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span></b></div>
+        <div class="stat" title="댓글수 ÷ 경과시간(시간)"><span>속도(시간당)</span><b>${i.speed.toFixed(1)}</b></div>
+        <div class="stat" title="이번 수집 Δ − 직전 수집 Δ (증가세가 빨라지는 중인지)"><span>가속</span><b>${i.accel==null?'—':(i.accel>0?'+':'')+i.accel}</b></div>
+        <div class="stat" title="댓글수 ÷ 팔로워수 (팔로워 대비 반응 비율)"><span>참여밀도</span><b>${(i.density*100).toFixed(2)}%</b></div>
         <div class="btns">
           <button class="view" onclick="window.open('${i.url}','_blank')">👁 보기</button>
           <button class="comment" onclick="goComment('${i.shortcode}')">💬 댓글참여</button>
