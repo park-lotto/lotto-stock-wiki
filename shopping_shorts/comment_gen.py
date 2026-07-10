@@ -6,6 +6,7 @@ pipeline.atoms.key_vault의 공유 풀과 분리(2026-07-09, 공유 풀이 다�
 PerDay 문자열 매칭)만 key_vault의 순수 함수를 재사용하고, 로테이션·상태
 저장은 이 모듈 자체 상태 파일로 완전히 독립."""
 import json
+import threading
 import time
 from pathlib import Path
 from datetime import datetime, timezone
@@ -17,6 +18,9 @@ from shopping_shorts.config import SHORTS_GEMINI_KEYS
 _MODEL = "gemini-3.1-flash-lite"
 _STATE_PATH = Path(__file__).parent / "data" / "shorts_gemini_state.json"
 _client_cache = {}
+# 유사도 채점을 병렬화(2026-07-10, 5개언어 순차수집이 27분+ 걸리던 지연 대응)하며
+# 여러 스레드가 이 상태파일을 동시에 읽고-고치고-쓰면 손상/유실될 수 있어 잠금 추가.
+_STATE_LOCK = threading.RLock()
 
 
 def _today_str():
@@ -24,26 +28,29 @@ def _today_str():
 
 
 def _load_state():
-    try:
-        data = json.loads(_STATE_PATH.read_text(encoding="utf-8"))
-    except (FileNotFoundError, json.JSONDecodeError, ValueError):
-        data = {}
-    if data.get("date") != _today_str():
-        return {"date": _today_str(), "exhausted": []}
-    data.setdefault("exhausted", [])
-    return data
+    with _STATE_LOCK:
+        try:
+            data = json.loads(_STATE_PATH.read_text(encoding="utf-8"))
+        except (FileNotFoundError, json.JSONDecodeError, ValueError):
+            data = {}
+        if data.get("date") != _today_str():
+            return {"date": _today_str(), "exhausted": []}
+        data.setdefault("exhausted", [])
+        return data
 
 
 def _save_state(state):
-    _STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    _STATE_PATH.write_text(json.dumps(state), encoding="utf-8")
+    with _STATE_LOCK:
+        _STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        _STATE_PATH.write_text(json.dumps(state), encoding="utf-8")
 
 
 def _mark_key_exhausted(idx):
-    state = _load_state()
-    if idx not in state["exhausted"]:
-        state["exhausted"].append(idx)
-        _save_state(state)
+    with _STATE_LOCK:
+        state = _load_state()
+        if idx not in state["exhausted"]:
+            state["exhausted"].append(idx)
+            _save_state(state)
 
 
 def _live_key_indices():

@@ -4,6 +4,7 @@ import hashlib
 import os
 import re
 import urllib.parse
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 import requests
@@ -223,10 +224,29 @@ _COLLECT_PLATFORMS = ("youtube", "tiktok", "instagram", "xiaohongshu")
 _COLLECT_LANGS = ["ko", "en", "zh", "ja", "ru"]
 
 
+def _search_one_lang(search_fn, kw_list):
+    """언어 하나의 첫 키워드로 검색. (결과, 에러메시지) 튜플 반환 — 스레드풀에서
+    호출되므로 예외를 여기서 삼켜 호출부가 밖으로 나온 결과만 취합한다."""
+    if not kw_list:
+        return [], None
+    try:
+        return search_fn(kw_list[0], max_results=10), None
+    except (RuntimeError, requests.RequestException) as e:
+        # RuntimeError: API키 미설정 등 / requests.RequestException:
+        # 쿼터 소진(403)·레이트리밋(429)·일시적 API 오류 등 raise_for_status()가
+        # 던지는 실제 운영 실패 — 한 언어가 실패해도 나머지 언어는 계속
+        # 시도하고, 전부 실패했을 때만 503으로 응답.
+        return [], str(e)
+
+
 @app.post("/api/find/collect")
 def api_find_collect(shortcode: str, platform: str):
     """분석된 소스의 키워드로 다른 플랫폼을 5개 언어 전부 실검색 → 후보
-    URL기준 중복제거 후 저장 → Gemini 유사도 채점."""
+    URL기준 중복제거 후 저장 → Gemini 유사도 채점.
+
+    언어별 검색과 후보별 채점을 각각 스레드풀로 병렬화한다(2026-07-10 —
+    순차 실행 시 실측 27분+ 걸리던 지연 발견해 개선. 둘 다 네트워크 I/O
+    대기가 대부분이라 스레드 병렬화로 안전하게 단축 가능)."""
     store = Store(DB_PATH)
     analysis = store.get_source_analysis(shortcode)
     if not analysis:
@@ -236,23 +256,14 @@ def api_find_collect(shortcode: str, platform: str):
     search_fn = {"youtube": youtube_search_fn, "tiktok": tiktok_search_fn,
                  "instagram": instagram_search_fn, "xiaohongshu": xiaohongshu_search_fn}[platform]
 
+    lang_kw_lists = [analysis["keywords"].get(lang) or [] for lang in _COLLECT_LANGS]
+    with ThreadPoolExecutor(max_workers=len(_COLLECT_LANGS)) as ex:
+        results = list(ex.map(lambda kw: _search_one_lang(search_fn, kw), lang_kw_lists))
+
     seen_urls = set()
     merged = []
-    errors = []
-    for lang in _COLLECT_LANGS:
-        kw_list = analysis["keywords"].get(lang) or []
-        if not kw_list:
-            continue
-        try:
-            raw = search_fn(kw_list[0], max_results=10)
-        except (RuntimeError, requests.RequestException) as e:
-            # RuntimeError: API키 미설정 등 / requests.RequestException:
-            # 쿼터 소진(403)·레이트리밋(429)·일시적 API 오류 등 raise_for_status()가
-            # 던지는 실제 운영 실패 — 한 언어가 실패해도 나머지 언어는 계속
-            # 시도하고, 전부 실패했을 때만 아래에서 503으로 응답(2026-07-10,
-            # 5개 언어 확장 시 한 언어 쿼터소진으로 전체가 죽지 않도록).
-            errors.append(str(e))
-            continue
+    errors = [err for _, err in results if err]
+    for raw, _ in results:
         for cand in raw:
             if cand["url"] not in seen_urls:
                 seen_urls.add(cand["url"])
@@ -264,10 +275,12 @@ def api_find_collect(shortcode: str, platform: str):
     ids = store.save_candidates(shortcode, platform, merged)
 
     frame_paths = analysis["frame_paths"]
-    for cand_id, cand in zip(ids, merged):
-        score = score_candidate(frame_paths, cand["thumbnail"])
-        if score is not None:
-            store.update_candidate_score(cand_id, score)
+    if ids:
+        with ThreadPoolExecutor(max_workers=5) as ex:
+            scores = list(ex.map(lambda cand: score_candidate(frame_paths, cand["thumbnail"]), merged))
+        for cand_id, score in zip(ids, scores):
+            if score is not None:
+                store.update_candidate_score(cand_id, score)
     return {"ok": True, "count": len(ids)}
 
 
