@@ -47,6 +47,12 @@ YOUTUBE_API_KEYS = [
     if (v := os.environ.get("YOUTUBE_API_KEY" if i == 1 else f"YOUTUBE_API_KEY_{i}", ""))
 ]
 
+# SerpApi(Google Lens 엔진) — 제품 정확 명칭 확인용(2026-07-10). 어제는 "구매처
+# 찾기"(쇼핑링크 노출)로 잘못 썼다가 삭제했는데, 오늘은 용도를 바꿔서 프레임을
+# 역검색한 결과로 정확한 제품명(브랜드+모델)을 추론해 검색 키워드 정밀도를
+# 높이는 데 재사용한다. 유료 API라 로테이션 풀 없이 단일 키.
+SERPAPI_KEY = os.environ.get("SERPAPI_KEY", "")
+
 # 수집 규칙
 WINDOW_HOURS = 48          # 48시간 이내만 랭킹
 RESULTS_PER_CHANNEL = 3    # 채널당 최신 상한

@@ -107,6 +107,74 @@ def test_find_analyze_downloads_extracts_analyzes_and_saves(monkeypatch, client,
     assert saved["keywords"]["ko"] == ["바닥 청소"]
 
 
+def test_find_analyze_prepends_identified_product_name_to_all_languages(monkeypatch, client, tmp_path):
+    """구글 렌즈로 확인한 정확한 제품명을 모든 언어 키워드 맨 앞에 추가한다
+    (2026-07-10, "제품 직접 홍보형" 검색 정밀도 개선)."""
+    from shopping_shorts import app as app_module
+    from shopping_shorts.store import Store
+
+    test_db_path = tmp_path / "test.db"
+    monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
+    store = Store(test_db_path)
+    store.save_last_run([{
+        "shortcode": "sc1", "video_url": "https://example.com/v.mp4",
+        "caption": "전자노트 리뷰", "thumbnail": "t.jpg",
+    }], "2026-07-09T00:00:00Z")
+
+    monkeypatch.setattr(app_module, "download_video", lambda url, dest: tmp_path / "v.mp4")
+    (tmp_path / "v.mp4").write_bytes(b"fake")
+    monkeypatch.setattr(app_module, "extract_frames",
+                         lambda video_path, dest, max_frames: [tmp_path / "frame_01.jpg"])
+    (tmp_path / "frame_01.jpg").write_bytes(b"jpg")
+    monkeypatch.setattr(app_module, "analyze_video", lambda path, caption: {
+        "keywords": {"ko": ["전자노트"], "en": ["digital notebook"], "zh": [], "ja": [], "ru": []},
+        "category": "가전/디지털",
+    })
+    monkeypatch.setattr(app_module, "identify_product", lambda frame_urls, category, caption: "reMarkable Paper Pro")
+
+    r = client.post("/api/find/analyze", params={"shortcode": "sc1"})
+    assert r.status_code == 200
+    d = r.json()
+    assert d["keywords"]["ko"] == ["reMarkable Paper Pro", "전자노트"]
+    assert d["keywords"]["en"] == ["reMarkable Paper Pro", "digital notebook"]
+    assert d["keywords"]["zh"] == ["reMarkable Paper Pro"]
+
+    saved = store.get_source_analysis("sc1")
+    assert saved["keywords"]["ko"] == ["reMarkable Paper Pro", "전자노트"]
+
+
+def test_find_analyze_identify_product_failure_does_not_break_analyze(monkeypatch, client, tmp_path):
+    """SerpApi/Gemini 오류로 제품명 확인이 실패해도 분석 자체는 계속 진행한다."""
+    from shopping_shorts import app as app_module
+    from shopping_shorts.store import Store
+
+    test_db_path = tmp_path / "test.db"
+    monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
+    store = Store(test_db_path)
+    store.save_last_run([{
+        "shortcode": "sc1", "video_url": "https://example.com/v.mp4",
+        "caption": "", "thumbnail": "t.jpg",
+    }], "2026-07-09T00:00:00Z")
+
+    monkeypatch.setattr(app_module, "download_video", lambda url, dest: tmp_path / "v.mp4")
+    (tmp_path / "v.mp4").write_bytes(b"fake")
+    monkeypatch.setattr(app_module, "extract_frames",
+                         lambda video_path, dest, max_frames: [tmp_path / "frame_01.jpg"])
+    (tmp_path / "frame_01.jpg").write_bytes(b"jpg")
+    monkeypatch.setattr(app_module, "analyze_video", lambda path, caption: {
+        "keywords": {"ko": ["전자노트"], "en": [], "zh": [], "ja": [], "ru": []},
+        "category": "가전/디지털",
+    })
+    def fake_identify_product(frame_urls, category, caption):
+        raise RuntimeError("SerpApi 429")
+    monkeypatch.setattr(app_module, "identify_product", fake_identify_product)
+
+    r = client.post("/api/find/analyze", params={"shortcode": "sc1"})
+    assert r.status_code == 200
+    d = r.json()
+    assert d["keywords"]["ko"] == ["전자노트"]
+
+
 def test_find_analyze_unknown_shortcode_404(monkeypatch, client, tmp_path):
     from shopping_shorts import app as app_module
 

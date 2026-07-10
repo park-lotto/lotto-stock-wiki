@@ -18,6 +18,7 @@ from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
 from shopping_shorts.frame_extract import download_video, extract_frames
 from shopping_shorts.apify_client import fetch_single_reel
 from shopping_shorts.video_analysis import analyze_video
+from shopping_shorts.product_identify import identify_product
 from shopping_shorts.search_links import build_search_links, lens_search_url
 from shopping_shorts.youtube_search import search as youtube_search_fn
 from shopping_shorts.tiktok_search import search as tiktok_search_fn
@@ -195,6 +196,22 @@ def api_find_analyze(shortcode: str):
 
     frame_urls = [f"/api/find/frame/{work_dir.name}/{p.name}" for p in frame_paths]
     frame_abs_urls = [f"{PUBLIC_BASE_URL}{u}" for u in frame_urls]
+
+    # 정확한 제품명 확인 후 키워드 최우선에 반영(2026-07-10, "제품 직접
+    # 홍보형" 검색 정밀도 개선 — Gemini의 일반적인 키워드 추측보다 구글 렌즈로
+    # 실제 브랜드/모델을 확인하면 같은 제품 영상을 더 정밀하게 찾을 수 있음).
+    # 어디까지나 정밀도 "개선 시도"라 실패해도 분석 자체는 계속 진행한다.
+    try:
+        product_name = identify_product(
+            frame_abs_urls, category=analysis["category"], caption=item.get("caption", ""),
+        )
+    except Exception:
+        product_name = ""
+    if product_name:
+        for lang, kws in analysis["keywords"].items():
+            if product_name not in kws:
+                analysis["keywords"][lang] = [product_name] + kws
+
     store.save_source_analysis(
         shortcode, keywords=analysis["keywords"],
         frame_paths=[str(p) for p in frame_paths],
