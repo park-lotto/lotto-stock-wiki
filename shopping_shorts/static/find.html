@@ -27,6 +27,11 @@
   .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
   .chip{background:#0d131c;border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--txt)}
   .category{font-size:13px;color:var(--sub);margin-bottom:14px}
+  .link-picker{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+  .link-picker select{padding:7px 10px}
+  .link-picker a{color:var(--accent);text-decoration:none;font-weight:600;padding:7px 14px;
+    border:1px solid var(--accent);border-radius:8px}
+  .link-picker a.disabled{color:var(--sub);border-color:var(--line);pointer-events:none}
   .lens-row{margin-top:10px;font-size:13px}
   .lens-row a{color:var(--accent);text-decoration:none;margin-right:8px}
   .empty{color:var(--sub);text-align:center;padding:60px}
@@ -103,10 +108,17 @@ async function doAnalyze(){
   }
 }
 
+let CUR_LINKS = {};
+const LANG_LABEL = {ko:"🇰🇷 한국어", en:"🌐 영어", zh:"🇨🇳 중국어", ja:"🇯🇵 일본어", ru:"🇷🇺 러시아어"};
+const PLATFORM_LABEL = {youtube:"▶️ YouTube", tiktok:"🎵 TikTok", instagram:"📱 Instagram", xiaohongshu:"📕 샤오홍슈", douyin:"🎬 도우인"};
+
 function renderResult(d){
   const frames = d.frame_urls.map(u=>`<img src="${u}" loading="lazy">`).join("");
   const kw = (d.keywords.ko||[]).map(k=>`<span class="chip">${k}</span>`).join("");
   const lensLinks = (d.lens_links||[]).map((u,i)=>`<a href="${u}" target="_blank">🔍 프레임${i+1}</a>`).join(" ");
+  CUR_LINKS = d.search_links || {};
+  const langOptions = Object.keys(LANG_LABEL).map(l=>`<option value="${l}">${LANG_LABEL[l]}</option>`).join("");
+  const platformOptions = Object.keys(PLATFORM_LABEL).map(p=>`<option value="${p}">${PLATFORM_LABEL[p]}</option>`).join("");
   document.getElementById("result").innerHTML = `
     <div class="card">
       <div class="section-label">추출 프레임</div>
@@ -114,6 +126,12 @@ function renderResult(d){
       <div class="section-label">키워드</div>
       <div class="chips">${kw}</div>
       <div class="category">카테고리: ${d.category||'-'}</div>
+      <div class="section-label">정확한 키워드 링크</div>
+      <div class="link-picker">
+        <select id="langSelect" onchange="updateLink()">${langOptions}</select>
+        <select id="platformSelect" onchange="updateLink()">${platformOptions}</select>
+        <a id="pickedLink" href="#" target="_blank">🔗 열기</a>
+      </div>
       <div class="lens-row"><b>Google Lens 역검색</b><br>${lensLinks}</div>
       <div class="collect-row">
         <button class="primary" onclick="doCollect('youtube')">📡 유튜브 실수집</button>
@@ -125,7 +143,24 @@ function renderResult(d){
       </div>
     </div>
   `;
+  updateLink();
   loadCandidates();
+}
+
+function updateLink(){
+  const lang = document.getElementById("langSelect").value;
+  const platform = document.getElementById("platformSelect").value;
+  const link = document.getElementById("pickedLink");
+  const url = (CUR_LINKS[platform] || {})[lang];
+  if(url){
+    link.href = url;
+    link.textContent = "🔗 열기";
+    link.classList.remove("disabled");
+  }else{
+    link.href = "#";
+    link.textContent = "❌ 이 언어 키워드 없음";
+    link.classList.add("disabled");
+  }
 }
 
 async function doCollect(platform){

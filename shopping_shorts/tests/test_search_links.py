@@ -2,26 +2,37 @@ import urllib.parse
 from shopping_shorts.search_links import build_search_links, lens_search_url
 
 
-def test_build_search_links_uses_korean_for_kr_platforms_and_translated_for_cn():
-    keywords = {"ko": ["바닥 끈적임 제거"], "en": ["floor stickiness remover"], "zh": ["地板黏腻清除剂"]}
+def test_build_search_links_returns_platform_by_lang_urls():
+    keywords = {
+        "ko": ["바닥 끈적임 제거"], "en": ["floor stickiness remover"],
+        "zh": ["地板黏腻清除剂"], "ja": ["床のべたつき除去"], "ru": ["удаление липкости пола"],
+    }
     links = build_search_links(keywords)
 
-    assert "youtube" in links and "google" in links and "tiktok" in links
-    assert "instagram" in links and "douyin" in links and "xiaohongshu" in links
+    assert set(links.keys()) == {"youtube", "tiktok", "instagram", "xiaohongshu", "douyin"}
+    for platform in links:
+        assert set(links[platform].keys()) == {"ko", "en", "zh", "ja", "ru"}
 
     kw_ko_encoded = urllib.parse.quote("바닥 끈적임 제거")
-    assert any(kw_ko_encoded in u for u in links["youtube"])
-    assert all(u.startswith("https://www.youtube.com/results?search_query=") for u in links["youtube"])
+    assert links["youtube"]["ko"] == f"https://www.youtube.com/results?search_query={kw_ko_encoded}"
 
     kw_zh_encoded = urllib.parse.quote("地板黏腻清除剂")
-    assert any(kw_zh_encoded in u for u in links["douyin"])
-    assert any(kw_zh_encoded in u for u in links["xiaohongshu"])
+    assert kw_zh_encoded in links["douyin"]["zh"]
+    assert kw_zh_encoded in links["xiaohongshu"]["zh"]
 
 
-def test_build_search_links_empty_keywords_returns_empty_lists():
-    links = build_search_links({"ko": [], "en": [], "zh": []})
-    assert links["youtube"] == []
-    assert links["douyin"] == []
+def test_build_search_links_uses_identified_product_name_first():
+    """product_identify가 확인한 제품명이 키워드 맨 앞에 있으면 그걸로 링크를 만든다."""
+    keywords = {"ko": ["reMarkable Paper Pro", "전자노트"], "en": ["reMarkable Paper Pro"],
+                "zh": [], "ja": [], "ru": []}
+    links = build_search_links(keywords)
+    assert "reMarkable%20Paper%20Pro" in links["youtube"]["ko"]
+
+
+def test_build_search_links_missing_language_omitted():
+    links = build_search_links({"ko": [], "en": [], "zh": [], "ja": [], "ru": []})
+    assert links["youtube"] == {}
+    assert links["douyin"] == {}
 
 
 def test_lens_search_url_encodes_frame_url():
