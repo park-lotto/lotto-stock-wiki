@@ -233,7 +233,7 @@ def test_fetch_single_reel_uses_direct_urls_payload(monkeypatch):
 
     assert result == {"shortcode": "abc123", "videoUrl": "https://cdn/v.mp4"}
     assert posted_payloads == [{
-        "directUrls": ["https://www.instagram.com/reel/abc123/"],
+        "username": ["https://www.instagram.com/reel/abc123/"],
         "resultsLimit": 1,
         "skipPinnedPosts": True,
     }]

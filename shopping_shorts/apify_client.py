@@ -140,15 +140,21 @@ def fetch_reels(usernames, token=None, results_per_channel=RESULTS_PER_CHANNEL,
 
 def fetch_single_reel(url, token=None, timeout=180, poll_interval=5):
     """추적 채널 목록에 없는 임의의 인스타 릴스 URL 하나를 즉시 조회(2026-07-09,
-    제품찾기에서 "우리 목록에 없는 영상"도 분석할 수 있게 추가). 채널
-    스캔(username)이 아니라 특정 게시물 URL(directUrls)로 액터를 호출 —
-    청크 분할 불필요(항목 1개), 토큰 로테이션은 fetch_reels와 동일 로직 재사용.
-    결과 없으면(비공개 계정·삭제된 게시물 등) None."""
+    제품찾기에서 "우리 목록에 없는 영상"도 분석할 수 있게 추가). "username"
+    필드 하나로 유저네임과 직접 릴스 URL을 둘 다 받는다 — 청크 분할
+    불필요(항목 1개), 토큰 로테이션은 fetch_reels와 동일 로직 재사용.
+    결과 없으면(비공개 계정·삭제된 게시물 등) None.
+
+    2026-07-10: 액터가 이날 새 빌드(0.0.468)로 "directUrls" 필드를 완전히
+    없애고 "username" 필드 하나로 통합했음(실측: directUrls로 호출하면
+    모든 계정에서 균일하게 400 "input.username is required" — 특정 URL이나
+    토큰 문제가 아니라 액터 자체의 스키마 변경이었음). "username" 필드는
+    유저네임/프로필URL/ID/릴스URL을 전부 받는다고 액터 설명에 명시됨."""
     tokens = [token] if token else APIFY_TOKENS
     if not tokens:
         raise RuntimeError("APIFY_TOKEN 미설정 (환경변수 APIFY_TOKEN)")
     payload = {
-        "directUrls": [url],
+        "username": [url],
         "resultsLimit": 1,
         "skipPinnedPosts": True,
     }
