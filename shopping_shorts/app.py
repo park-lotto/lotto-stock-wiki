@@ -263,11 +263,13 @@ def api_find_collect(shortcode: str, platform: str):
     seen_urls = set()
     merged = []
     errors = [err for _, err in results if err]
-    for raw, _ in results:
+    # 어떤 언어로 찾았는지 태깅(2026-07-10, "해외 원본 영상이 국내 재편집물보다
+    # 낫다" 피드백 — 카드에 배지로 보여줘 사용자가 직접 판단하게 함).
+    for lang, (raw, _) in zip(_COLLECT_LANGS, results):
         for cand in raw:
             if cand["url"] not in seen_urls:
                 seen_urls.add(cand["url"])
-                merged.append(cand)
+                merged.append({**cand, "source_lang": lang})
 
     if not merged and errors:
         return JSONResponse(status_code=503, content={"ok": False, "error": "; ".join(errors)})

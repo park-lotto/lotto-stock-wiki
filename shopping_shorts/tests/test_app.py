@@ -383,6 +383,10 @@ def test_find_collect_tiktok_searches_all_languages_and_dedupes_by_url(monkeypat
     assert {it["url"] for it in d2["items"]} == {
         "https://www.tiktok.com/@u/video/1", "https://www.tiktok.com/@u/video/2",
     }
+    # 어떤 언어로 찾았는지 태깅됨(2026-07-10, 해외원본/국내재편집 배지용)
+    by_url = {it["url"]: it["source_lang"] for it in d2["items"]}
+    assert by_url["https://www.tiktok.com/@u/video/1"] == "ko"
+    assert by_url["https://www.tiktok.com/@u/video/2"] == "zh"
 
 
 def test_find_collect_instagram_searches_all_languages_and_dedupes_by_url(monkeypatch, client, tmp_path):

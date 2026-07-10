@@ -72,6 +72,10 @@ class Store:
                 )
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_candidates_source ON source_candidates(source_shortcode)")
+            try:
+                c.execute("ALTER TABLE source_candidates ADD COLUMN source_lang TEXT")
+            except sqlite3.OperationalError:
+                pass  # 이미 있으면(기존 DB) 무시 — "해외원본 vs 국내" 판단 배지용(2026-07-10)
             c.execute("""
                 CREATE TABLE IF NOT EXISTS source_pool (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -210,14 +214,17 @@ class Store:
         return {"keywords": json.loads(row[0]), "frame_paths": json.loads(row[1]), "analyzed_at": row[2]}
 
     def save_candidates(self, shortcode, platform, candidates):
-        """플랫폼 검색 후보 저장. candidates: [{url,title,thumbnail}]. 저장된 id 리스트 반환."""
+        """플랫폼 검색 후보 저장. candidates: [{url,title,thumbnail,source_lang?}].
+        source_lang: 어떤 검색 언어로 찾았는지(ko/en/zh/ja/ru) — 해외 원본 영상을
+        국내 재편집물과 구분해 보여주는 배지용(2026-07-10). 저장된 id 리스트 반환."""
         ids = []
         with self._conn() as c:
             for cand in candidates:
                 cur = c.execute(
                     "INSERT INTO source_candidates(source_shortcode, platform, url, title, "
-                    "thumbnail, similarity_score, collected_at) VALUES(?,?,?,?,?,NULL,datetime('now'))",
-                    (shortcode, platform, cand["url"], cand.get("title", ""), cand.get("thumbnail", "")),
+                    "thumbnail, similarity_score, collected_at, source_lang) VALUES(?,?,?,?,?,NULL,datetime('now'),?)",
+                    (shortcode, platform, cand["url"], cand.get("title", ""), cand.get("thumbnail", ""),
+                     cand.get("source_lang")),
                 )
                 ids.append(cur.lastrowid)
         return ids
@@ -226,12 +233,12 @@ class Store:
         """이 소스에 대해 수집된 모든 후보(유사도 점수 내림차순, NULL은 뒤)."""
         with self._conn() as c:
             rows = c.execute(
-                "SELECT id, platform, url, title, thumbnail, similarity_score FROM source_candidates "
+                "SELECT id, platform, url, title, thumbnail, similarity_score, source_lang FROM source_candidates "
                 "WHERE source_shortcode=? ORDER BY (similarity_score IS NULL), similarity_score DESC",
                 (shortcode,),
             ).fetchall()
         return [{"id": r[0], "platform": r[1], "url": r[2], "title": r[3],
-                 "thumbnail": r[4], "similarity_score": r[5]} for r in rows]
+                 "thumbnail": r[4], "similarity_score": r[5], "source_lang": r[6]} for r in rows]
 
     def update_candidate_score(self, candidate_id, score):
         """Gemini 검증 후 유사도 점수 갱신."""

@@ -27,11 +27,6 @@
   .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
   .chip{background:#0d131c;border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--txt)}
   .category{font-size:13px;color:var(--sub);margin-bottom:14px}
-  .link-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
-  .link-row:last-child{border-bottom:none}
-  .link-row b{width:90px;flex-shrink:0;text-transform:capitalize}
-  .link-row a{color:var(--accent);text-decoration:none;font-size:13px}
-  .link-row a:hover{text-decoration:underline}
   .lens-row{margin-top:10px;font-size:13px}
   .lens-row a{color:var(--accent);text-decoration:none;margin-right:8px}
   .empty{color:var(--sub);text-align:center;padding:60px}
@@ -51,6 +46,7 @@
   .cards .score.high{color:var(--ok)}
   .cards .badge-match{display:inline-block;background:var(--ok);color:#fff;font-size:11px;font-weight:700;
     padding:2px 8px;border-radius:20px;margin-bottom:4px}
+  .cards .lang-badge{font-size:11px;color:var(--sub);font-weight:400;text-transform:none}
   .cards .title{font-size:12px;margin:4px 0;max-height:32px;overflow:hidden}
   .cards .row{display:flex;gap:6px;margin-top:8px}
   .cards .row a,.cards .row button{flex:1;text-align:center;font-size:11px;padding:6px 4px}
@@ -110,9 +106,6 @@ async function doAnalyze(){
 function renderResult(d){
   const frames = d.frame_urls.map(u=>`<img src="${u}" loading="lazy">`).join("");
   const kw = (d.keywords.ko||[]).map(k=>`<span class="chip">${k}</span>`).join("");
-  const linkRows = Object.entries(d.search_links).map(([platform, urls])=>
-    `<div class="link-row"><b>${platform}</b>${urls.map(u=>`<a href="${u}" target="_blank">🔗 링크</a>`).join(" ")}</div>`
-  ).join("");
   const lensLinks = (d.lens_links||[]).map((u,i)=>`<a href="${u}" target="_blank">🔍 프레임${i+1}</a>`).join(" ");
   document.getElementById("result").innerHTML = `
     <div class="card">
@@ -121,8 +114,6 @@ function renderResult(d){
       <div class="section-label">키워드</div>
       <div class="chips">${kw}</div>
       <div class="category">카테고리: ${d.category||'-'}</div>
-      <div class="section-label">플랫폼별 검색 링크</div>
-      ${linkRows}
       <div class="lens-row"><b>Google Lens 역검색</b><br>${lensLinks}</div>
       <div class="collect-row">
         <button class="primary" onclick="doCollect('youtube')">📡 유튜브 실수집</button>
@@ -172,10 +163,13 @@ function renderCandidates(items){
     const cardCls = hasScore && score >= 0.7 ? "card match-high" : hasScore && score < 0.4 ? "card match-low" : "card";
     const badge = hasScore && score >= 0.7 ? `<div class="badge-match">✅ 일치</div>` : "";
     const platformLabel = {youtube:"▶️ YouTube", tiktok:"🎵 TikTok", instagram:"📱 Instagram", xiaohongshu:"📕 샤오홍슈"}[c.platform] || c.platform;
+    // 어떤 언어로 찾았는지 배지 — 국내 재편집물보다 해외 원본이 낫다는
+    // 피드백(2026-07-10) 대응, 자동판별 대신 사용자가 보고 직접 고르게 함.
+    const langBadge = {ko:"🇰🇷", en:"🌐 EN", zh:"🇨🇳", ja:"🇯🇵", ru:"🇷🇺"}[c.source_lang] || "";
     return `<div class="${cardCls}">
       <img src="${c.thumbnail||''}" loading="lazy" onerror="this.style.visibility='hidden'">
       <div class="body">
-        <div class="section-label" style="margin-bottom:2px">${platformLabel}</div>
+        <div class="section-label" style="margin-bottom:2px">${platformLabel} ${langBadge ? `<span class="lang-badge">${langBadge}</span>` : ""}</div>
         ${badge}
         <div class="${scoreCls}">${scoreLabel}</div>
         <div class="title">${(c.title||'').slice(0,50)}</div>

@@ -111,6 +111,17 @@ def test_save_and_get_candidates(tmp_path):
     assert len(candidates) == 2
     assert candidates[0]["platform"] == "youtube"
     assert candidates[0]["similarity_score"] is None
+    assert candidates[0]["source_lang"] is None  # source_lang 안 준 경우
+
+
+def test_save_candidates_stores_source_lang(tmp_path):
+    """검색에 쓰인 언어를 저장해 해외원본/국내재편집 배지 판단에 쓴다(2026-07-10)."""
+    s = Store(tmp_path / "t.db")
+    s.save_candidates("sc1", "tiktok", [
+        {"url": "https://tiktok.com/a", "title": "t", "thumbnail": "", "source_lang": "en"},
+    ])
+    candidates = s.get_candidates("sc1")
+    assert candidates[0]["source_lang"] == "en"
 
 
 def test_update_candidate_score(tmp_path):
