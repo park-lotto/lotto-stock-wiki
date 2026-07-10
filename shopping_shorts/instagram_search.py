@@ -13,26 +13,46 @@ from shopping_shorts.config import APIFY_TOKENS
 _ACTOR = "apify~instagram-hashtag-scraper"
 
 
+def _candidate_hashtags(keyword):
+    """키워드 → 시도할 해시태그 후보 리스트(구체적인 것부터).
+
+    전체를 붙인 해시태그가 실제 존재하지 않으면(예: "무선헤어드라이어" 0건),
+    앞쪽 수식어를 하나씩 떼어 뒷부분(핵심 명사 쪽)만 남긴 해시태그로 재시도한다
+    (2026-07-09/10 실측: "무선 헤어드라이어" 전체=0건이지만 "헤어드라이어"만
+    떼면 5건 — 한국어 명사구는 핵심 명사가 보통 맨 뒤에 온다는 점 이용).
+    """
+    words = keyword.split()
+    seen = []
+    for i in range(len(words)):
+        tag = "".join(words[i:])
+        if tag and tag not in seen:
+            seen.append(tag)
+    return seen or [keyword.replace(" ", "")]
+
+
 def search(keyword, max_results=10, token=None, timeout=180, poll_interval=5):
     """키워드(해시태그) → [{url, title, thumbnail}, ...]. 해시태그는 공백을
-    포함할 수 없으므로 공백을 제거해 전달한다."""
+    포함할 수 없으므로 공백을 제거해 전달하고, 결과가 없으면 더 짧은/일반적인
+    후보로 순차 재시도한다."""
     tokens = [token] if token else APIFY_TOKENS
     if not tokens:
         raise RuntimeError("instagram_search: APIFY_TOKEN이 설정되지 않았습니다")
-    hashtag = keyword.replace(" ", "")
-    # resultsType 기본값은 "posts"(사진·캐러셀 위주) — "reels"를 명시해야 실제
-    # 영상이 나온다(2026-07-09 실측: 기본값으로는 5~20개 다 Image/Sidecar였고
-    # videoUrl이 전부 비어있었음. "짜집기" 목적상 사진은 무의미해서 필수 지정).
-    payload = {"hashtags": [hashtag], "resultsLimit": max_results, "resultsType": "reels"}
-    items = _run_with_rotation(payload, tokens, timeout, poll_interval, actor=_ACTOR)
-    out = []
-    for item in items:
-        url = item.get("url")
-        if not url or not item.get("videoUrl"):
-            continue  # resultsType=reels로도 사진이 섞여 나올 가능성 대비 이중 확인
-        out.append({
-            "url": url,
-            "title": item.get("caption", ""),
-            "thumbnail": item.get("displayUrl", ""),
-        })
-    return out
+    for hashtag in _candidate_hashtags(keyword):
+        # resultsType 기본값은 "posts"(사진·캐러셀 위주) — "reels"를 명시해야 실제
+        # 영상이 나온다(2026-07-09 실측: 기본값으로는 5~20개 다 Image/Sidecar였고
+        # videoUrl이 전부 비어있었음. "짜집기" 목적상 사진은 무의미해서 필수 지정).
+        payload = {"hashtags": [hashtag], "resultsLimit": max_results, "resultsType": "reels"}
+        items = _run_with_rotation(payload, tokens, timeout, poll_interval, actor=_ACTOR)
+        out = []
+        for item in items:
+            url = item.get("url")
+            if not url or not item.get("videoUrl"):
+                continue  # resultsType=reels로도 사진이 섞여 나올 가능성 대비 이중 확인
+            out.append({
+                "url": url,
+                "title": item.get("caption", ""),
+                "thumbnail": item.get("displayUrl", ""),
+            })
+        if out:
+            return out
+    return []

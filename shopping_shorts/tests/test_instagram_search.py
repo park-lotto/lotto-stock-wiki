@@ -74,3 +74,42 @@ def test_search_no_tokens_raises(monkeypatch):
     monkeypatch.setattr(instagram_search, "APIFY_TOKENS", [])
     with pytest.raises(RuntimeError, match="APIFY_TOKEN"):
         instagram_search.search("x")
+
+
+def test_search_falls_back_to_shorter_hashtag_when_full_phrase_empty(monkeypatch):
+    """전체 붙임 해시태그가 0건이면 앞쪽 수식어를 떼고 재시도한다(2026-07-10,
+    실측: "무선헤어드라이어"=0건이지만 "헤어드라이어"=5건 확인된 실제 버그 대응)."""
+    monkeypatch.setattr(instagram_search, "APIFY_TOKENS", ["fake-key"])
+    calls = []
+
+    def fake_run_with_rotation(payload, tokens, timeout, poll_interval, actor=None):
+        calls.append(payload["hashtags"][0])
+        if payload["hashtags"] == ["무선헤어드라이어"]:
+            return []
+        if payload["hashtags"] == ["헤어드라이어"]:
+            return [{"url": "https://www.instagram.com/p/found/", "caption": "c",
+                      "displayUrl": "d", "videoUrl": "v.mp4"}]
+        raise AssertionError(f"unexpected hashtag {payload['hashtags']}")
+
+    monkeypatch.setattr(instagram_search, "_run_with_rotation", fake_run_with_rotation)
+
+    results = instagram_search.search("무선 헤어드라이어")
+
+    assert calls == ["무선헤어드라이어", "헤어드라이어"]
+    assert len(results) == 1
+    assert results[0]["url"] == "https://www.instagram.com/p/found/"
+
+
+def test_search_returns_empty_when_all_candidates_empty(monkeypatch):
+    monkeypatch.setattr(instagram_search, "APIFY_TOKENS", ["fake-key"])
+
+    def fake_run_with_rotation(payload, tokens, timeout, poll_interval, actor=None):
+        return []
+    monkeypatch.setattr(instagram_search, "_run_with_rotation", fake_run_with_rotation)
+
+    assert instagram_search.search("무선 헤어드라이어") == []
+
+
+def test_candidate_hashtags_drops_leading_words_progressively():
+    assert instagram_search._candidate_hashtags("무선 헤어드라이어") == ["무선헤어드라이어", "헤어드라이어"]
+    assert instagram_search._candidate_hashtags("실링팬") == ["실링팬"]
