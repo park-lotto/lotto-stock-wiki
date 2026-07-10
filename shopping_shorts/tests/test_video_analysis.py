@@ -131,6 +131,58 @@ def test_analyze_video_rotates_to_next_key_on_daily_exhaustion(monkeypatch, tmp_
     assert comment_gen._live_key_indices() == [1]
 
 
+def test_analyze_video_rotates_to_next_key_on_account_disabled(monkeypatch, tmp_path):
+    """키의 서비스 계정 자체가 비활성화된 경우(401 UNAUTHENTICATED)도 일일
+    소진과 동일하게 다음 키로 로테이션한다(2026-07-10, 새 키 추가 후에도
+    계속 빈 결과가 나오던 원인 — 이 에러는 기존 분류에 안 걸려서 죽은 키만
+    계속 재시도하고 있었음)."""
+    video_path = tmp_path / "v.mp4"
+    video_path.write_bytes(b"fake")
+
+    calls = []
+
+    class FakeFiles:
+        def upload(self, file, config):
+            return FakeFileObj("files/abc", "ACTIVE")
+        def get(self, name):
+            return FakeFileObj(name, "ACTIVE")
+        def delete(self, name):
+            pass
+
+    class FakeModels:
+        def __init__(self, key):
+            self.key = key
+        def generate_content(self, **kw):
+            calls.append(self.key)
+            if self.key == "key1":
+                raise RuntimeError(
+                    "401 UNAUTHENTICATED. The bound service account is deleted "
+                    "or disabled. {'reason': 'ACCOUNT_STATE_INVALID'}"
+                )
+            class FakeResp:
+                text = '{"keywords":{"ko":["test"],"en":["test"],"zh":["test"],"ja":["test"],"ru":["test"]},"category":"test"}'
+            return FakeResp()
+
+    class FakeClient:
+        def __init__(self, key):
+            self.files = FakeFiles()
+            self.models = FakeModels(key)
+
+    def fake_client_for_key(key):
+        return FakeClient(key)
+
+    monkeypatch.setattr(video_analysis, "SHORTS_GEMINI_KEYS", ["key1", "key2"])
+    monkeypatch.setattr(comment_gen, "SHORTS_GEMINI_KEYS", ["key1", "key2"])
+    monkeypatch.setattr(video_analysis, "_client_for_key", fake_client_for_key)
+    monkeypatch.setattr(video_analysis.time, "sleep", lambda s: None)
+
+    result = video_analysis.analyze_video(video_path, caption="test")
+
+    assert result["keywords"]["ko"] == ["test"]
+    assert calls == ["key1", "key2"]
+    assert comment_gen._live_key_indices() == [1]
+
+
 def test_analyze_video_all_keys_exhausted_returns_empty(monkeypatch, tmp_path):
     """모든 키가 소진되면 공허한 결과를 반환."""
     video_path = tmp_path / "v.mp4"

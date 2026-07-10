@@ -66,8 +66,8 @@ def score_candidate(original_frame_paths, candidate_thumbnail_url, max_retries=3
             return float(data.get("score", 0.0))
         except Exception as e:
             m = str(e)
-            if key_vault.is_daily_exhausted_error(e):
-                comment_gen._mark_key_exhausted(idx)  # 확실한 일일 한도 소진만 영구 제외
+            if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
+                comment_gen._mark_key_exhausted(idx)  # 확실한 일일 한도 소진·계정비활성 영구 제외
                 continue
             if key_vault.is_quota_error(e):
                 # 분당 제한 등 "일일 소진"까지는 확인 안 되는 429 — 같은 키로

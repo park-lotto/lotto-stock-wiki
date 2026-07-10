@@ -228,6 +228,16 @@ def is_quota_error(exc: Exception) -> bool:
     return "429" in m or "RESOURCE_EXHAUSTED" in m
 
 
+def is_account_disabled_error(exc: Exception) -> bool:
+    """키의 바운드 서비스 계정 자체가 삭제/비활성화된 경우(429 쿼터가 아니라
+    401 UNAUTHENTICATED) — 재시도해도 절대 안 풀리므로 소진과 동일하게 영구
+    제외해야 한다(2026-07-10, 쇼핑쇼츠 신규 키 추가 후에도 계속 빈 결과가
+    나오던 원인 진단 중 발견 — 기존 is_daily_exhausted_error/is_quota_error
+    둘 다 이 에러를 못 잡아서 같은 죽은 키만 계속 재시도하고 있었음)."""
+    m = str(exc)
+    return "UNAUTHENTICATED" in m or "ACCOUNT_STATE_INVALID" in m
+
+
 def _tg_alert(text: str) -> None:
     """API 에러·키 소진 등을 텔레그램으로 즉시 발송. 실패해도 호출부 중단 없음."""
     env_vals = _read_env_file()

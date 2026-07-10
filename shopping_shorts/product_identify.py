@@ -86,7 +86,7 @@ def identify_product(frame_urls, category="", caption="", max_retries=3, quota_s
             return data.get("product_name") or ""
         except Exception as e:
             m = str(e)
-            if key_vault.is_daily_exhausted_error(e):
+            if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
                 comment_gen._mark_key_exhausted(idx)
                 continue
             if key_vault.is_quota_error(e):

@@ -64,7 +64,7 @@ def _wait_until_active(client, file_obj, max_wait_s=60, poll_interval=2):
     return file_obj
 
 
-def analyze_video(video_path, caption, max_retries=3, quota_sleep=8):
+def analyze_video(video_path, caption, max_retries=5, quota_sleep=8):
     """영상 파일 → {"keywords": {...}, "category": "..."}. 실패 시 빈 결과.
 
     전용 키 풀(SHORTS_GEMINI_KEYS) 내에서만 로테이션 — comment_gen.py와 같은
@@ -102,8 +102,8 @@ def analyze_video(video_path, caption, max_retries=3, quota_sleep=8):
             }
         except Exception as e:
             m = str(e)
-            if key_vault.is_daily_exhausted_error(e):
-                comment_gen._mark_key_exhausted(idx)  # 확실한 일일 한도 소진만 영구 제외
+            if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
+                comment_gen._mark_key_exhausted(idx)  # 확실한 일일 한도 소진·계정비활성 영구 제외
                 continue
             if key_vault.is_quota_error(e):
                 # 분당 제한 등 "일일 소진"까지는 확인 안 되는 429 — 키를 영구
