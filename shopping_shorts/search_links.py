@@ -24,20 +24,22 @@ _URL_BUILDERS = {
 
 def build_search_links(keywords):
     """keywords: {"ko":[...], "en":[...], "zh":[...], "ja":[...], "ru":[...]} →
-    {platform: {lang: url}} — 5개 언어 × 5개 플랫폼 전부 조합, 언어별 첫
-    키워드(product_identify가 확인한 정확한 제품명이 있으면 그게 맨 앞) 사용.
+    {platform: {lang: [{"keyword": k, "url": u}, ...]}} — 언어별 키워드 후보
+    전부에 대해 링크 생성.
 
-    2026-07-10 재설계: 이전엔 platform당 URL 리스트를 그냥 나열했는데, 실제
-    사용해보니 플랫폼 자체 자유텍스트 검색(이 링크)이 우리 해시태그 기반
-    실수집보다 훨씬 정확했음("여기 나온건 의미가 없다" 피드백) — 언어/사이트
-    드롭다운으로 사용자가 골라 링크 하나만 바로 보게 딕셔너리 구조로 변경."""
+    2026-07-10 링크전용 UI로 재설계: Apify로 결과를 직접 긁어와 임베드하는
+    방식은 액터 품질 한계(실측: 정확한 키워드로도 관련성 30~50%대, zh/ja/ru
+    키워드 자체가 비어 중국어 플랫폼에 영어 문구로 검색되는 문제)에 부딪혀
+    포기 — 대신 경쟁사(tubefactory)처럼 언어별 키워드 후보 전부를 그 플랫폼
+    자체 검색 링크로 만들어 사용자가 직접 클릭해서 확인하는 방식으로 전환.
+    이전엔 언어당 첫 키워드 하나만 썼는데, 이제 후보 전부를 보여준다."""
     result = {}
     for platform, builder in _URL_BUILDERS.items():
         result[platform] = {}
         for lang in _LANGS:
             kw_list = keywords.get(lang) or []
             if kw_list:
-                result[platform][lang] = builder(kw_list[0])
+                result[platform][lang] = [{"keyword": kw, "url": builder(kw)} for kw in kw_list]
     return result
 
 

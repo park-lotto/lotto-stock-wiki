@@ -19,11 +19,6 @@ from shopping_shorts.apify_client import fetch_single_reel
 from shopping_shorts.video_analysis import analyze_video
 from shopping_shorts.product_identify import identify_product
 from shopping_shorts.search_links import build_search_links, lens_search_url
-from shopping_shorts.youtube_search import search as youtube_search_fn
-from shopping_shorts.tiktok_search import search as tiktok_search_fn
-from shopping_shorts.instagram_search import search as instagram_search_fn
-from shopping_shorts.xiaohongshu_search import search as xiaohongshu_search_fn
-from shopping_shorts.douyin_search import search as douyin_search_fn
 
 app = FastAPI(title="쇼핑쇼츠 레퍼런스 랭킹")
 
@@ -195,6 +190,7 @@ def api_find_analyze(shortcode: str):
 
     frame_urls = [f"/api/find/frame/{work_dir.name}/{p.name}" for p in frame_paths]
     frame_abs_urls = [f"{PUBLIC_BASE_URL}{u}" for u in frame_urls]
+    served_video_url = f"/api/find/frame/{work_dir.name}/{video_path.name}"
 
     # 정확한 제품명 확인 후 키워드 최우선에 반영(2026-07-10, "제품 직접
     # 홍보형" 검색 정밀도 개선 — Gemini의 일반적인 키워드 추측보다 구글 렌즈로
@@ -227,57 +223,21 @@ def api_find_analyze(shortcode: str):
         "keywords": analysis["keywords"],
         "category": analysis["category"],
         "frame_urls": frame_urls,
+        "video_url": served_video_url,
         "search_links": build_search_links(analysis["keywords"]),
         "lens_links": [lens_search_url(u) for u in frame_abs_urls],
     }
 
 
-# 실수집(플랫폼당 5개 언어 전부 검색 + Gemini 유사도 채점) 기능은 제거함
-# (2026-07-10 — 해시태그 기반 검색이라 결과가 부정확하고("실수집 결과는
-# generic marker 콘텐츠, 인스타 자체 검색은 정확히 나옴" 피드백), Gemini
-# 채점까지 더해져 느렸음). 대신 플랫폼별 자체 키워드 검색 결과 6개를 채점
-#없이 빠르게 미리보기로 보여주는 /api/find/preview로 대체.
-_PREVIEW_PLATFORMS = ("youtube", "tiktok", "instagram", "xiaohongshu", "douyin")
-_PREVIEW_LANGS = ("ko", "en", "zh", "ja", "ru")
-_PREVIEW_COUNT = 6
-
-
-@app.get("/api/find/preview")
-def api_find_preview(shortcode: str, platform: str, lang: str = "ko", keyword_index: int = 0):
-    """플랫폼 1개 + 언어 1개로 실제 검색 결과 6개를 빠르게 가져온다(채점 없음).
-    분석 완료 직후 5개 플랫폼을 병렬로 자동 호출해 한번에 채우고, 각 줄의
-    언어 드롭다운을 바꾸면 이 엔드포인트를 그 언어로 다시 호출한다.
-
-    keyword_index: analysis["keywords"][lang]에서 몇 번째 키워드를 쓸지
-    (2026-07-10 추가). 제품명이 확실하지 않을 때 사용자가 후보 키워드 여러 개
-    중 하나를 선택할 수 있게 하기 위함 — ko/en은 index0=identify_product가 찾은
-    정밀 제품명, 이후는 Gemini의 다른 추정 키워드들. 언어별 리스트 길이가 다를
-    수 있어 범위를 벗어나면 0번으로 안전하게 폴백한다."""
-    store = Store(DB_PATH)
-    analysis = store.get_source_analysis(shortcode)
-    if not analysis:
-        return JSONResponse(status_code=404, content={"ok": False, "error": "먼저 분석이 필요합니다"})
-    if platform not in _PREVIEW_PLATFORMS:
-        return JSONResponse(status_code=400, content={"ok": False, "error": f"'{platform}' 미지원"})
-    if lang not in _PREVIEW_LANGS:
-        return JSONResponse(status_code=400, content={"ok": False, "error": f"'{lang}' 미지원 언어"})
-    search_fn = {"youtube": youtube_search_fn, "tiktok": tiktok_search_fn,
-                 "instagram": instagram_search_fn, "xiaohongshu": xiaohongshu_search_fn,
-                 "douyin": douyin_search_fn}[platform]
-
-    kw_list = analysis["keywords"].get(lang) or []
-    if not kw_list:
-        return {"ok": True, "items": []}
-    keyword = kw_list[keyword_index] if 0 <= keyword_index < len(kw_list) else kw_list[0]
-    try:
-        raw = search_fn(keyword, max_results=_PREVIEW_COUNT)
-    except (RuntimeError, requests.RequestException) as e:
-        return JSONResponse(status_code=503, content={"ok": False, "error": str(e)})
-
-    tagged = [{**cand, "source_lang": lang} for cand in raw]
-    ids = store.save_candidates(shortcode, platform, tagged)
-    items = [{**cand, "id": cand_id} for cand, cand_id in zip(tagged, ids)]
-    return {"ok": True, "items": items}
+# 실수집(플랫폼당 5개 언어 전부 검색 + Gemini 유사도 채점) → 임베드 미리보기
+# (/api/find/preview, 채점 없이 Apify로 직접 검색) 순으로 시도했으나 둘 다
+# 폐기(2026-07-10). 임베드 미리보기도 실측 결과 정확한 키워드로도 관련성이
+# 30~50%대였고("리마커블 2"로도 6개 중 2~3개만 관련), zh/ja/ru 키워드 자체가
+# 비어 있어 중국어 플랫폼을 영어 문구로 검색하던 문제까지 겹쳤음. Apify
+# 스크래퍼가 플랫폼 자체 검색 알고리즘을 완전히 복제할 수 없다는 구조적
+# 한계로 판단, 경쟁사(tubefactory)처럼 언어별 키워드 후보 전부를 그 플랫폼
+# 자체 검색 링크로 만들어 사용자가 직접 클릭하는 방식(build_search_links)
+# 으로 전환. 결과 임베드가 없으니 이 한계 자체가 사라짐.
 
 
 @app.get("/api/find/candidates")

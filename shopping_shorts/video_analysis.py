@@ -23,6 +23,27 @@ _MODEL = "gemini-3.5-flash"  # 비디오 입력 지원 모델 — "gemini-3-flas
 _LANGS = ["ko", "en", "zh", "ja", "ru"]
 _EMPTY = {"keywords": {lang: [] for lang in _LANGS}, "category": ""}
 
+# response_mime_type="application/json"만으로는 필드 생략이 허용돼 Gemini가
+# zh/ja/ru를 실제로 빈 배열([])로 돌려주는 사례가 실측 확인됨(2026-07-10,
+# 프로덕션 DB에서 zh/ja/ru가 전부 [] — 샤오홍슈/도우인이 번역 없이 영어
+# 문구로 검색되던 원인). minItems로 각 언어 배열이 최소 1개는 채워지도록
+# 스키마로 강제.
+_RESPONSE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "keywords": {
+            "type": "object",
+            "properties": {
+                lang: {"type": "array", "items": {"type": "string"}, "minItems": 1, "maxItems": 5}
+                for lang in _LANGS
+            },
+            "required": _LANGS,
+        },
+        "category": {"type": "string"},
+    },
+    "required": ["keywords", "category"],
+}
+
 _PROMPT = """이 영상을 보고 어떤 제품/장면을 다루는지 파악해라.
 
 캡션(참고용, 영상 내용이 우선): {caption}
@@ -92,7 +113,10 @@ def analyze_video(video_path, caption, max_retries=5, quota_sleep=8):
             resp = client.models.generate_content(
                 model=_MODEL,
                 contents=[file_obj, prompt],
-                config=types.GenerateContentConfig(response_mime_type="application/json"),
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=_RESPONSE_SCHEMA,
+                ),
             )
             data = json.loads(resp.text)
             got = data.get("keywords", {})

@@ -20,32 +20,40 @@
   input{flex:1;min-width:220px}
   button{cursor:pointer}
   button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px}
-  .frames{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-  .frames img{width:100px;height:100px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:#000}
-  .section-label{font-size:12px;color:var(--sub);text-transform:uppercase;margin-bottom:8px}
-  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
-  .chip{background:#0d131c;border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--txt)}
-  .chip.selectable{cursor:pointer;user-select:none}
-  .chip.selectable.active{background:var(--accent);border-color:var(--accent);color:#fff}
-  .category{font-size:13px;color:var(--sub);margin-bottom:14px}
-  .lens-row{margin-top:10px;font-size:13px}
-  .lens-row a{color:var(--accent);text-decoration:none;margin-right:8px}
   .empty{color:var(--sub);text-align:center;padding:60px}
-  .preview-row{margin-bottom:20px}
-  .preview-row-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-  .preview-row-head b{font-size:13px;min-width:110px}
-  .preview-row-head select{padding:5px 8px;font-size:12px}
-  .preview-row-head a.view-all{color:var(--accent);text-decoration:none;font-size:12px;margin-left:auto}
-  .preview-row-status{font-size:12px;color:var(--sub)}
-  .preview-thumbs{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
-  .preview-thumbs .card{background:#0d131c;border:1px solid var(--line);border-radius:10px;overflow:hidden;padding:0}
-  .preview-thumbs .card img{width:100%;height:100px;object-fit:cover;background:#000}
-  .preview-thumbs .card .body{padding:6px}
-  .preview-thumbs .card .title{font-size:11px;max-height:28px;overflow:hidden;margin-bottom:4px}
-  .preview-thumbs .card .row{display:flex;gap:4px}
-  .preview-thumbs .card .row a,.preview-thumbs .card .row button{flex:1;text-align:center;font-size:10px;padding:4px 2px}
-  @media (max-width: 900px){ .preview-thumbs{grid-template-columns:repeat(3,1fr)} }
+
+  .layout{display:flex;gap:20px;align-items:flex-start}
+  .video-panel{width:280px;flex-shrink:0;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;position:sticky;top:20px}
+  .video-panel video{width:100%;border-radius:8px;background:#000;display:block}
+  .video-panel .src-label{font-size:11px;color:var(--sub);margin-top:10px}
+  .video-panel .src-link{font-size:12px;word-break:break-all;color:var(--accent);text-decoration:none;display:block;margin-top:2px}
+
+  .info-panel{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+  .info-panel h3{font-size:18px;margin-bottom:8px}
+  .category-badge{display:inline-block;background:#0d131c;border:1px solid var(--line);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--sub);margin-bottom:14px}
+  .section-label{font-size:12px;color:var(--sub);text-transform:uppercase;margin-bottom:8px}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+  .chip{background:#0d131c;border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--txt)}
+  .hint{font-size:11px;color:var(--sub);margin-bottom:16px}
+  .lens-row{margin:14px 0;font-size:13px}
+  .lens-row a{color:var(--accent);text-decoration:none;margin-right:8px}
+
+  .grid-table{width:100%;border-collapse:separate;border-spacing:0 8px}
+  .grid-table td{vertical-align:top;padding:4px 8px 4px 0}
+  .ch-cell{width:110px;white-space:nowrap;font-size:13px;font-weight:600;padding-top:10px}
+  .link-cell{background:#0d131c;border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-width:150px}
+  .lang-row{display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0}
+  .lang-row .flag{flex-shrink:0}
+  .lang-row .kw-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:default}
+  .lang-row .kw-text.muted{color:var(--sub);font-style:italic}
+  .icon-btn{background:transparent;border:1px solid var(--line);border-radius:6px;padding:2px 6px;font-size:11px;color:var(--txt);cursor:pointer;flex-shrink:0;text-decoration:none;line-height:1.4}
+  .icon-btn:hover{border-color:var(--accent);color:var(--accent)}
+  .icon-btn.copied{border-color:var(--ok);color:var(--ok)}
+
+  @media (max-width: 900px){
+    .layout{flex-direction:column}
+    .video-panel{width:100%;position:static}
+  }
   @media (max-width: 768px){
     body{flex-direction:column;min-height:100vh}
     .sidebar{width:100%;border-right:none;border-bottom:1px solid var(--line);padding:10px 12px;
@@ -55,6 +63,8 @@
     .main{padding:16px 14px}
     .head h2{font-size:20px}
     .toolbar{gap:8px}
+    .grid-table, .grid-table tbody, .grid-table tr, .grid-table td{display:block;width:100%}
+    .ch-cell{padding-top:0}
   }
 </style>
 </head>
@@ -67,31 +77,29 @@
   </aside>
   <main class="main">
     <div class="head"><h2>🔍 제품 찾기</h2></div>
-    <div class="desc">레퍼런스 영상에서 실제로 파는 제품 소스를 찾습니다. 영상을 다운로드해 프레임을 추출하고 Gemini로 키워드를 분석한 뒤, 플랫폼별 검색 링크와 Google Lens 역검색 링크를 만들어줍니다.</div>
+    <div class="desc">레퍼런스 영상에서 실제로 파는 제품 소스를 찾습니다. 영상을 다운로드해 프레임을 추출하고 Gemini로 키워드를 분석한 뒤, 채널×언어별 검색 링크를 만들어줍니다 — 결과는 각 플랫폼 자체 검색으로 직접 이동해서 확인합니다(임베드 아님, 그래서 100% 정확).</div>
     <div class="toolbar">
       <input id="scInput" placeholder="분석할 항목의 shortcode 또는 레퍼런스에서 담기로 넘어옴">
       <button class="primary" onclick="doAnalyze()">분석</button>
     </div>
     <div id="result"><div class="empty">shortcode를 입력하고 분석을 눌러주세요.</div></div>
-    <div id="previewRows"></div>
   </main>
 <script>
 const params = new URLSearchParams(location.search);
 const AUTO_SC = params.get("shortcode");
-let CUR_SC = null;  // 마지막으로 분석 완료된 shortcode — 수집/담기 API에 사용
+let CUR_SC = null;  // 마지막으로 분석 완료된 shortcode
 
 async function doAnalyze(){
   const sc = document.getElementById("scInput").value || AUTO_SC;
   if(!sc) return;
   CUR_SC = sc;
-  document.getElementById("previewRows").innerHTML = "";
   document.getElementById("result").innerHTML = '<div class="empty">분석 중… (영상 다운로드+Gemini 분석, 수십 초 소요)</div>';
   try{
     const r = await fetch(`/api/find/analyze?shortcode=${encodeURIComponent(sc)}`, {method:"POST"});
     const d = await r.json();
     if(!d.ok){ document.getElementById("result").innerHTML = `<div class="empty">❌ ${d.error||"실패"}</div>`; return; }
     // 서버가 입력값(추적파라미터 등 포함 가능)을 정식 shortcode로 정규화해서
-    // 돌려준다 — 이후 수집/담기 호출은 이 정식값으로 해야 같은 분석 결과를 참조한다.
+    // 돌려준다 — 이후 호출은 이 정식값으로 해야 같은 분석 결과를 참조한다.
     if(d.shortcode) CUR_SC = d.shortcode;
     renderResult(d);
   }catch(e){
@@ -99,106 +107,82 @@ async function doAnalyze(){
   }
 }
 
-const LANG_LABEL = {ko:"🇰🇷 한국어", en:"🌐 영어", zh:"🇨🇳 중국어", ja:"🇯🇵 일본어", ru:"🇷🇺 러시아어"};
 const PLATFORM_LABEL = {youtube:"▶️ YouTube", tiktok:"🎵 TikTok", instagram:"📱 Instagram", xiaohongshu:"📕 샤오홍슈", douyin:"🎬 도우인"};
-let CUR_SEARCH_LINKS = {};
-let CUR_KEYWORD_INDEX = 0;  // 사용자가 고른 키워드 후보 순번(키워드 칩 클릭으로 변경)
-const ROW_LANG = {};  // 플랫폼별 현재 선택된 언어(줄마다 독립적으로 유지)
+// 플랫폼별로 기본 노출할 언어 2개(2026-07-10 링크전용 재설계 — 이전엔 전부
+// "한국어" 기본값이라 샤오홍슈/도우인(중국어권)까지 한국어(사실상 영어) 문구로
+// 검색되던 버그가 있었음. 중국어 플랫폼은 중국어를 기본으로 노출).
+const PLATFORM_LANGS = {
+  youtube: ["ko", "en"], tiktok: ["ko", "en"], instagram: ["ko", "en"],
+  xiaohongshu: ["zh", "en"], douyin: ["zh", "en"],
+};
+const LANG_FLAG = {ko:"🇰🇷", en:"🌐", zh:"🇨🇳", ja:"🇯🇵", ru:"🇷🇺"};
 
 function renderResult(d){
-  const frames = d.frame_urls.map(u=>`<img src="${u}" loading="lazy">`).join("");
-  CUR_KEYWORD_INDEX = 0;
   const kwList = d.keywords.ko || [];
-  const kw = kwList.map((k,i)=>`<span class="chip selectable${i===0?' active':''}" data-idx="${i}" onclick="selectKeyword(${i})">${k}</span>`).join("");
+  const kw = kwList.map(k=>`<span class="chip">${k}</span>`).join("");
   const lensLinks = (d.lens_links||[]).map((u,i)=>`<a href="${u}" target="_blank">🔍 프레임${i+1}</a>`).join(" ");
-  CUR_SEARCH_LINKS = d.search_links || {};
+
   document.getElementById("result").innerHTML = `
-    <div class="card">
-      <div class="section-label">추출 프레임</div>
-      <div class="frames">${frames}</div>
-      <div class="section-label">키워드 ${kwList.length>1?'(클릭해서 검색 기준 변경 — 제품이 확실하면 첫번째 그대로 둬도 됨)':''}</div>
-      <div class="chips">${kw}</div>
-      <div class="category">카테고리: ${d.category||'-'}</div>
-      <div class="lens-row"><b>Google Lens 역검색</b><br>${lensLinks}</div>
+    <div class="layout">
+      <div class="video-panel">
+        <video src="${d.video_url}" controls></video>
+        <div class="src-label">입력 영상</div>
+        <a class="src-link" href="${CUR_SC}" target="_blank">${CUR_SC}</a>
+      </div>
+      <div class="info-panel">
+        <h3>${d.category || "제품 검색"}</h3>
+        <div class="category-badge">${d.category || "-"}</div>
+        <div class="section-label">키워드</div>
+        <div class="chips">${kw}</div>
+        <div class="hint">채널·언어별 검색어를 클릭하면 해당 플랫폼 자체 검색으로 바로 이동합니다 · 📋는 복사</div>
+        ${renderLinkGrid(d.search_links)}
+        <div class="lens-row"><b>Google Lens 역검색</b><br>${lensLinks}</div>
+      </div>
     </div>
   `;
-  renderPreviewRows();
 }
 
-function selectKeyword(idx){
-  CUR_KEYWORD_INDEX = idx;
-  document.querySelectorAll('#result .chip.selectable').forEach(el=>{
-    el.classList.toggle('active', Number(el.dataset.idx) === idx);
-  });
-  Object.keys(PLATFORM_LABEL).forEach(platform => fetchPreviewRow(platform, ROW_LANG[platform] || "ko"));
-}
-
-// 실수집(플랫폼×5언어 전부 검색+Gemini 채점)은 느리고("분석 3분+수집 3분")
-// 부정확해서("실수집 결과는 의미 없다") 제거 — 대신 분석 끝나자마자 5개
-// 플랫폼을 기본 한국어로 병렬 미리보기(채점 없이 6개씩, 빠름)하고, 줄마다
-// 언어를 바꿔 그 줄만 재검색할 수 있게 한다(2026-07-10). 키워드가 여러 개면
-// 위 키워드 칩을 클릭해 검색 기준 자체를 바꿀 수 있다(2026-07-10 추가).
-function renderPreviewRows(){
-  const box = document.getElementById("previewRows");
-  Object.keys(PLATFORM_LABEL).forEach(platform => { ROW_LANG[platform] = "ko"; });
-  box.innerHTML = Object.keys(PLATFORM_LABEL).map(platform => `
-    <div class="preview-row" id="row-${platform}">
-      <div class="preview-row-head">
-        <b>${PLATFORM_LABEL[platform]}</b>
-        <select onchange="fetchPreviewRow('${platform}', this.value)">
-          ${Object.keys(LANG_LABEL).map(l=>`<option value="${l}">${LANG_LABEL[l]}</option>`).join("")}
-        </select>
-        <span class="preview-row-status" id="status-${platform}">불러오는 중…</span>
-        <a class="view-all" href="#" target="_blank" id="viewall-${platform}">전체보기 →</a>
-      </div>
-      <div class="preview-thumbs" id="thumbs-${platform}"></div>
-    </div>
-  `).join("");
-  Object.keys(PLATFORM_LABEL).forEach(platform => fetchPreviewRow(platform, "ko"));
-}
-
-async function fetchPreviewRow(platform, lang){
-  if(!CUR_SC) return;
-  ROW_LANG[platform] = lang;
-  const status = document.getElementById(`status-${platform}`);
-  const thumbs = document.getElementById(`thumbs-${platform}`);
-  const viewAll = document.getElementById(`viewall-${platform}`);
-  const viewAllUrl = (CUR_SEARCH_LINKS[platform] || {})[lang];
-  if(viewAll) viewAll.href = viewAllUrl || "#";
-  if(status) status.textContent = "불러오는 중…";
-  thumbs.innerHTML = "";
-  try{
-    const r = await fetch(`/api/find/preview?shortcode=${encodeURIComponent(CUR_SC)}&platform=${encodeURIComponent(platform)}&lang=${encodeURIComponent(lang)}&keyword_index=${CUR_KEYWORD_INDEX}`);
-    const d = await r.json();
-    if(!d.ok){ if(status) status.textContent = `❌ ${d.error||"실패"}`; return; }
-    if(!d.items.length){ if(status) status.textContent = "결과 없음"; return; }
-    status.textContent = "";
-    thumbs.innerHTML = d.items.map(it => `
-      <div class="card">
-        <img src="${it.thumbnail||''}" loading="lazy" onerror="this.style.visibility='hidden'">
-        <div class="body">
-          <div class="title">${(it.title||'').slice(0,40)}</div>
-          <div class="row">
-            <a href="${it.url}" target="_blank">열기</a>
-            <button onclick="doSave(${it.id}, this)">＋담기</button>
-          </div>
-        </div>
-      </div>
+function renderLinkGrid(searchLinks){
+  const rows = Object.keys(PLATFORM_LABEL).map(platform => {
+    const byLang = searchLinks[platform] || {};
+    const langs = PLATFORM_LANGS[platform];
+    // 채널당 컬럼 수 = 그 채널의 기본언어 중 가장 후보가 많은 쪽 기준
+    const colCount = Math.max(1, ...langs.map(l => (byLang[l] || []).length));
+    const cells = Array.from({length: colCount}, (_, col) => `
+      <td class="link-cell">
+        ${langs.map(lang => renderLangRow(byLang[lang], col, lang)).join("")}
+      </td>
     `).join("");
-  }catch(e){
-    if(status) status.textContent = `❌ ${e.message}`;
-  }
+    return `<tr><td class="ch-cell">${PLATFORM_LABEL[platform]}</td>${cells}</tr>`;
+  }).join("");
+  return `<table class="grid-table"><tbody>${rows}</tbody></table>`;
 }
 
-async function doSave(candidateId, btn){
-  if(!CUR_SC) return;
-  if(btn){ btn.disabled = true; btn.textContent = "담는 중…"; }
+function renderLangRow(items, col, lang){
+  const item = (items || [])[col];
+  if(!item){
+    return `<div class="lang-row"><span class="flag">${LANG_FLAG[lang]}</span><span class="kw-text muted">번역 없음</span></div>`;
+  }
+  const safeKw = item.keyword.replace(/'/g, "&#39;");
+  return `
+    <div class="lang-row">
+      <span class="flag">${LANG_FLAG[lang]}</span>
+      <span class="kw-text" title="${item.keyword}">${item.keyword}</span>
+      <a class="icon-btn" href="${item.url}" target="_blank" title="이 플랫폼에서 검색">🔗</a>
+      <button class="icon-btn" onclick="copyKeyword('${safeKw}', this)" title="검색어 복사">📋</button>
+    </div>
+  `;
+}
+
+async function copyKeyword(text, btn){
   try{
-    const r = await fetch(`/api/find/save?candidate_id=${candidateId}&shortcode=${encodeURIComponent(CUR_SC)}`, {method:"POST"});
-    const d = await r.json();
-    if(btn) btn.textContent = d.ok ? "담음✓" : "❌ 실패";
+    await navigator.clipboard.writeText(text);
+    btn.classList.add("copied");
+    btn.textContent = "✓";
+    setTimeout(()=>{ btn.classList.remove("copied"); btn.textContent = "📋"; }, 1200);
   }catch(e){
-    if(btn){ btn.textContent = "❌ 실패"; btn.disabled = false; }
+    btn.textContent = "❌";
+    setTimeout(()=>{ btn.textContent = "📋"; }, 1200);
   }
 }
 
