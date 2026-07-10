@@ -107,9 +107,12 @@ def test_find_analyze_downloads_extracts_analyzes_and_saves(monkeypatch, client,
     assert saved["keywords"]["ko"] == ["바닥 청소"]
 
 
-def test_find_analyze_prepends_identified_product_name_to_all_languages(monkeypatch, client, tmp_path):
-    """구글 렌즈로 확인한 정확한 제품명을 모든 언어 키워드 맨 앞에 추가한다
-    (2026-07-10, "제품 직접 홍보형" 검색 정밀도 개선)."""
+def test_find_analyze_prepends_identified_product_name_to_ko_en_only(monkeypatch, client, tmp_path):
+    """구글 렌즈로 확인한 정확한 제품명을 ko/en 키워드 맨 앞에만 추가한다.
+    zh/ja/ru까지 똑같은 문자열을 넣으면 언어 드롭다운을 바꿔도 검색어 자체가
+    안 바뀌어 매번 같은 영상만 나오는 버그가 있었음(2026-07-10 실측 피드백
+    "언어 바꿔도 다 똑같은 영상 나온다") — zh/ja/ru는 Gemini가 이미 만든 그
+    언어 고유 키워드를 그대로 둬야 언어별로 실제 다른 검색이 된다."""
     from shopping_shorts import app as app_module
     from shopping_shorts.store import Store
 
@@ -127,7 +130,8 @@ def test_find_analyze_prepends_identified_product_name_to_all_languages(monkeypa
                          lambda video_path, dest, max_frames: [tmp_path / "frame_01.jpg"])
     (tmp_path / "frame_01.jpg").write_bytes(b"jpg")
     monkeypatch.setattr(app_module, "analyze_video", lambda path, caption: {
-        "keywords": {"ko": ["전자노트"], "en": ["digital notebook"], "zh": [], "ja": [], "ru": []},
+        "keywords": {"ko": ["전자노트"], "en": ["digital notebook"], "zh": ["电子笔记本"],
+                     "ja": ["電子ノート"], "ru": ["электронный блокнот"]},
         "category": "가전/디지털",
     })
     monkeypatch.setattr(app_module, "identify_product", lambda frame_urls, category, caption: "reMarkable Paper Pro")
@@ -137,7 +141,10 @@ def test_find_analyze_prepends_identified_product_name_to_all_languages(monkeypa
     d = r.json()
     assert d["keywords"]["ko"] == ["reMarkable Paper Pro", "전자노트"]
     assert d["keywords"]["en"] == ["reMarkable Paper Pro", "digital notebook"]
-    assert d["keywords"]["zh"] == ["reMarkable Paper Pro"]
+    # zh/ja/ru는 손대지 않음 — Gemini가 만든 그 언어 고유 키워드 그대로
+    assert d["keywords"]["zh"] == ["电子笔记本"]
+    assert d["keywords"]["ja"] == ["電子ノート"]
+    assert d["keywords"]["ru"] == ["электронный блокнот"]
 
     saved = store.get_source_analysis("sc1")
     assert saved["keywords"]["ko"] == ["reMarkable Paper Pro", "전자노트"]
@@ -367,125 +374,92 @@ def test_find_frame_rejects_path_traversal(client):
     assert r.content != app_module.DB_PATH.read_bytes()
 
 
-def test_find_collect_youtube_saves_candidates_and_scores(monkeypatch, client, tmp_path):
+def test_find_preview_returns_six_items_tagged_with_lang(monkeypatch, client, tmp_path):
+    """플랫폼 1개+언어 1개로 채점 없이 빠르게 미리보기(2026-07-10, 실수집+Gemini
+    채점 섹션이 느리고 부정확해서("여기 나온건 의미가 없다") 제거하고 대체)."""
     from shopping_shorts import app as app_module
     from shopping_shorts.store import Store
 
-    # 실DB를 건드리지 않도록 app_module에 바인딩된 DB_PATH를 tmp_path 격리 DB로 교체.
     test_db_path = tmp_path / "test.db"
     monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
-
     store = Store(test_db_path)
-    store.save_source_analysis("sc1", keywords={"ko": [], "en": ["floor cleaner"], "zh": []},
+    store.save_source_analysis("sc1", keywords={"ko": ["바닥 청소"], "en": ["floor cleaner"], "zh": [], "ja": [], "ru": []},
                                 frame_paths=["/tmp/f1.jpg"], analyzed_at="2026-07-09T00:00:00Z")
 
-    monkeypatch.setattr(app_module, "youtube_search_fn", lambda kw, max_results: [
-        {"url": "https://youtube.com/watch?v=x", "title": "t", "thumbnail": "th.jpg"},
-    ])
-    monkeypatch.setattr(app_module, "score_candidate", lambda frames, thumb: 0.75)
+    captured = {}
+    def fake_youtube_search(kw, max_results):
+        captured["kw"] = kw
+        captured["max_results"] = max_results
+        return [{"url": "https://youtube.com/watch?v=x", "title": "t", "thumbnail": "th.jpg"}]
+    monkeypatch.setattr(app_module, "youtube_search_fn", fake_youtube_search)
 
-    r = client.post("/api/find/collect", params={"shortcode": "sc1", "platform": "youtube"})
+    r = client.get("/api/find/preview", params={"shortcode": "sc1", "platform": "youtube", "lang": "ko"})
     assert r.status_code == 200
-    assert r.json()["ok"] is True
+    d = r.json()
+    assert d["ok"] is True
+    assert captured["kw"] == "바닥 청소"
+    assert captured["max_results"] == 6
+    assert d["items"][0]["url"] == "https://youtube.com/watch?v=x"
+    assert d["items"][0]["source_lang"] == "ko"
+    assert isinstance(d["items"][0]["id"], int)
 
+    # 저장도 됐는지(+담기 버튼이 이 id를 참조)
     r2 = client.get("/api/find/candidates", params={"shortcode": "sc1"})
-    d2 = r2.json()
-    assert d2["items"][0]["similarity_score"] == 0.75
+    assert r2.json()["items"][0]["source_lang"] == "ko"
 
 
-def test_find_collect_no_analysis_404(monkeypatch, client, tmp_path):
+def test_find_preview_no_analysis_404(monkeypatch, client, tmp_path):
     from shopping_shorts import app as app_module
-
-    # 분석 여부를 store.get_source_analysis()로 실DB에서 조회하므로 동일하게 격리한다.
     monkeypatch.setattr(app_module, "DB_PATH", tmp_path / "test.db")
 
-    r = client.post("/api/find/collect", params={"shortcode": "never-analyzed", "platform": "youtube"})
+    r = client.get("/api/find/preview", params={"shortcode": "never-analyzed", "platform": "youtube"})
     assert r.status_code == 404
 
 
-def test_find_collect_unsupported_platform_400(monkeypatch, client, tmp_path):
+def test_find_preview_unsupported_platform_400(monkeypatch, client, tmp_path):
     from shopping_shorts import app as app_module
     from shopping_shorts.store import Store
 
     test_db_path = tmp_path / "test.db"
     monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
     store = Store(test_db_path)
-    store.save_source_analysis("sc1", keywords={"ko": [], "en": ["floor cleaner"], "zh": []},
+    store.save_source_analysis("sc1", keywords={"ko": [], "en": ["floor cleaner"], "zh": [], "ja": [], "ru": []},
                                 frame_paths=["/tmp/f1.jpg"], analyzed_at="2026-07-09T00:00:00Z")
 
-    r = client.post("/api/find/collect", params={"shortcode": "sc1", "platform": "facebook"})
+    r = client.get("/api/find/preview", params={"shortcode": "sc1", "platform": "facebook"})
     assert r.status_code == 400
 
 
-def test_find_collect_tiktok_searches_all_languages_and_dedupes_by_url(monkeypatch, client, tmp_path):
-    """5개 언어(ko/en/zh/ja/ru) 전부 검색하고 같은 URL은 중복제거한다(2026-07-10,
-    "다른 프로그램보다 정확도 떨어짐" 피드백 — 언어 하나만 검색하던 걸 확장)."""
+def test_find_preview_unsupported_lang_400(monkeypatch, client, tmp_path):
     from shopping_shorts import app as app_module
     from shopping_shorts.store import Store
 
     test_db_path = tmp_path / "test.db"
     monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
     store = Store(test_db_path)
-    store.save_source_analysis(
-        "sc1", keywords={"ko": ["바닥 청소"], "en": ["floor cleaner"], "zh": ["地板清洁"], "ja": [], "ru": []},
-        frame_paths=["/tmp/f1.jpg"], analyzed_at="2026-07-09T00:00:00Z")
-
-    calls = []
-    def fake_tiktok_search(keyword, max_results):
-        calls.append(keyword)
-        # ko/en 검색은 같은 영상을 찾고(중복제거 대상), zh 검색만 새 영상을 찾는다.
-        if keyword == "地板清洁":
-            return [{"url": "https://www.tiktok.com/@u/video/2", "title": "t2", "thumbnail": "th2.jpg"}]
-        return [{"url": "https://www.tiktok.com/@u/video/1", "title": "t", "thumbnail": "th.jpg"}]
-    monkeypatch.setattr(app_module, "tiktok_search_fn", fake_tiktok_search)
-    monkeypatch.setattr(app_module, "score_candidate", lambda frames, thumb: 0.6)
-
-    r = client.post("/api/find/collect", params={"shortcode": "sc1", "platform": "tiktok"})
-    assert r.status_code == 200
-    assert r.json() == {"ok": True, "count": 2}
-    assert calls == ["바닥 청소", "floor cleaner", "地板清洁"]
-
-    r2 = client.get("/api/find/candidates", params={"shortcode": "sc1"})
-    d2 = r2.json()
-    assert len(d2["items"]) == 2
-    assert {it["url"] for it in d2["items"]} == {
-        "https://www.tiktok.com/@u/video/1", "https://www.tiktok.com/@u/video/2",
-    }
-    # 어떤 언어로 찾았는지 태깅됨(2026-07-10, 해외원본/국내재편집 배지용)
-    by_url = {it["url"]: it["source_lang"] for it in d2["items"]}
-    assert by_url["https://www.tiktok.com/@u/video/1"] == "ko"
-    assert by_url["https://www.tiktok.com/@u/video/2"] == "zh"
-
-
-def test_find_collect_instagram_searches_all_languages_and_dedupes_by_url(monkeypatch, client, tmp_path):
-    from shopping_shorts import app as app_module
-    from shopping_shorts.store import Store
-
-    test_db_path = tmp_path / "test.db"
-    monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
-    store = Store(test_db_path)
-    store.save_source_analysis("sc1", keywords={"ko": ["바닥 청소"], "en": ["floor cleaner"], "zh": []},
+    store.save_source_analysis("sc1", keywords={"ko": ["k"], "en": [], "zh": [], "ja": [], "ru": []},
                                 frame_paths=["/tmp/f1.jpg"], analyzed_at="2026-07-09T00:00:00Z")
 
-    calls = []
-    def fake_instagram_search(keyword, max_results):
-        calls.append(keyword)
-        return [{"url": "https://www.instagram.com/p/x/", "title": "t", "thumbnail": "th.jpg"}]
-    monkeypatch.setattr(app_module, "instagram_search_fn", fake_instagram_search)
-    monkeypatch.setattr(app_module, "score_candidate", lambda frames, thumb: 0.6)
+    r = client.get("/api/find/preview", params={"shortcode": "sc1", "platform": "youtube", "lang": "fr"})
+    assert r.status_code == 400
 
-    r = client.post("/api/find/collect", params={"shortcode": "sc1", "platform": "instagram"})
+
+def test_find_preview_missing_keyword_for_lang_returns_empty(monkeypatch, client, tmp_path):
+    from shopping_shorts import app as app_module
+    from shopping_shorts.store import Store
+
+    test_db_path = tmp_path / "test.db"
+    monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
+    store = Store(test_db_path)
+    store.save_source_analysis("sc1", keywords={"ko": ["k"], "en": [], "zh": [], "ja": [], "ru": []},
+                                frame_paths=["/tmp/f1.jpg"], analyzed_at="2026-07-09T00:00:00Z")
+
+    r = client.get("/api/find/preview", params={"shortcode": "sc1", "platform": "youtube", "lang": "ja"})
     assert r.status_code == 200
-    assert r.json() == {"ok": True, "count": 1}  # ko/en 둘 다 같은 URL이라 1건으로 중복제거
-    assert calls == ["바닥 청소", "floor cleaner"]
-
-    r2 = client.get("/api/find/candidates", params={"shortcode": "sc1"})
-    d2 = r2.json()
-    assert d2["items"][0]["platform"] == "instagram"
-    assert d2["items"][0]["similarity_score"] == 0.6
+    assert r.json() == {"ok": True, "items": []}
 
 
-def test_find_collect_no_youtube_key_returns_clean_error(monkeypatch, client, tmp_path):
+def test_find_preview_no_youtube_key_returns_clean_error(monkeypatch, client, tmp_path):
     """YOUTUBE_API_KEY 미설정 시 500 대신 명확한 에러(2026-07-09, 배포 후 실단말 검증 중
     raw 500 확인하고 수정 — youtube_search.search()의 RuntimeError가 잡히지 않았음)."""
     from shopping_shorts import app as app_module
@@ -494,19 +468,19 @@ def test_find_collect_no_youtube_key_returns_clean_error(monkeypatch, client, tm
     test_db_path = tmp_path / "test.db"
     monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
     store = Store(test_db_path)
-    store.save_source_analysis("sc1", keywords={"ko": [], "en": ["floor cleaner"], "zh": []},
+    store.save_source_analysis("sc1", keywords={"ko": [], "en": ["floor cleaner"], "zh": [], "ja": [], "ru": []},
                                 frame_paths=["/tmp/f1.jpg"], analyzed_at="2026-07-09T00:00:00Z")
 
     def fake_search(kw, max_results):
         raise RuntimeError("youtube_search: YOUTUBE_API_KEY가 설정되지 않았습니다")
     monkeypatch.setattr(app_module, "youtube_search_fn", fake_search)
 
-    r = client.post("/api/find/collect", params={"shortcode": "sc1", "platform": "youtube"})
+    r = client.get("/api/find/preview", params={"shortcode": "sc1", "platform": "youtube", "lang": "en"})
     assert r.status_code == 503
     assert r.json()["ok"] is False
 
 
-def test_find_collect_youtube_quota_error_returns_clean_503(monkeypatch, client, tmp_path):
+def test_find_preview_youtube_quota_error_returns_clean_503(monkeypatch, client, tmp_path):
     """YouTube Data API 쿼터 소진(403)·레이트리밋 등은 RuntimeError가 아니라
     requests.HTTPError(=requests.RequestException)로 온다 — RuntimeError만
     잡던 예전 except절은 이 경로를 놓쳐서 raw 500이 났다(2026-07-09, 최종
@@ -517,14 +491,14 @@ def test_find_collect_youtube_quota_error_returns_clean_503(monkeypatch, client,
     test_db_path = tmp_path / "test.db"
     monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
     store = Store(test_db_path)
-    store.save_source_analysis("sc1", keywords={"ko": [], "en": ["floor cleaner"], "zh": []},
+    store.save_source_analysis("sc1", keywords={"ko": [], "en": ["floor cleaner"], "zh": [], "ja": [], "ru": []},
                                 frame_paths=["/tmp/f1.jpg"], analyzed_at="2026-07-09T00:00:00Z")
 
     def fake_search(kw, max_results):
         raise requests.HTTPError("403 Client Error: quotaExceeded")
     monkeypatch.setattr(app_module, "youtube_search_fn", fake_search)
 
-    r = client.post("/api/find/collect", params={"shortcode": "sc1", "platform": "youtube"})
+    r = client.get("/api/find/preview", params={"shortcode": "sc1", "platform": "youtube", "lang": "en"})
     assert r.status_code == 503
     assert r.json()["ok"] is False
 

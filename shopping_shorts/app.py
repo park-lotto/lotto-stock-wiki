@@ -4,7 +4,6 @@ import hashlib
 import os
 import re
 import urllib.parse
-from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 import requests
@@ -25,7 +24,6 @@ from shopping_shorts.tiktok_search import search as tiktok_search_fn
 from shopping_shorts.instagram_search import search as instagram_search_fn
 from shopping_shorts.xiaohongshu_search import search as xiaohongshu_search_fn
 from shopping_shorts.douyin_search import search as douyin_search_fn
-from shopping_shorts.similarity import score_candidate
 
 app = FastAPI(title="쇼핑쇼츠 레퍼런스 랭킹")
 
@@ -208,8 +206,13 @@ def api_find_analyze(shortcode: str):
         )
     except Exception:
         product_name = ""
+    # ko/en에만 원어 그대로 추가 — zh/ja/ru까지 똑같은 문자열을 넣으면
+    # 언어 드롭다운을 바꿔도 검색어 자체가 안 바뀌어 같은 결과만 나온다
+    # (2026-07-10 실측 "언어 바꿔도 똑같은 영상" 버그). zh/ja/ru는 Gemini가
+    # 이미 만들어둔 그 언어 고유 키워드를 그대로 첫 자리에 둔다.
     if product_name:
-        for lang, kws in analysis["keywords"].items():
+        for lang in ("ko", "en"):
+            kws = analysis["keywords"].get(lang, [])
             if product_name not in kws:
                 analysis["keywords"][lang] = [product_name] + kws
 
@@ -229,80 +232,45 @@ def api_find_analyze(shortcode: str):
     }
 
 
-# 실수집 지원 플랫폼. 검색함수 자체는 여기 담지 않고 호출 시점에 전역에서
-# 조회한다 — 미리 (함수) 튜플로 캐싱하면 그 함수 레퍼런스가 모듈 로드 시점
-# 값으로 고정돼 테스트의 monkeypatch(app_module.xxx_search_fn 교체)가 안 먹는
-# 버그가 있었음.
-_COLLECT_PLATFORMS = ("youtube", "tiktok", "instagram", "xiaohongshu", "douyin")
-
-# 5개 언어 전부 검색(2026-07-10, "다른 프로그램보다 정확도 떨어짐" 피드백 대응)
-# — 예전엔 플랫폼별로 언어 하나만 골라 검색해서 그 언어권 창작자 콘텐츠만
-# 찾고 있었음(예: zh 키워드는 Gemini가 생성만 하고 실제 검색엔 안 쓰임). 이제
-# 전부 검색해 URL기준으로 합친다.
-_COLLECT_LANGS = ["ko", "en", "zh", "ja", "ru"]
+# 실수집(플랫폼당 5개 언어 전부 검색 + Gemini 유사도 채점) 기능은 제거함
+# (2026-07-10 — 해시태그 기반 검색이라 결과가 부정확하고("실수집 결과는
+# generic marker 콘텐츠, 인스타 자체 검색은 정확히 나옴" 피드백), Gemini
+# 채점까지 더해져 느렸음). 대신 플랫폼별 자체 키워드 검색 결과 6개를 채점
+#없이 빠르게 미리보기로 보여주는 /api/find/preview로 대체.
+_PREVIEW_PLATFORMS = ("youtube", "tiktok", "instagram", "xiaohongshu", "douyin")
+_PREVIEW_LANGS = ("ko", "en", "zh", "ja", "ru")
+_PREVIEW_COUNT = 6
 
 
-def _search_one_lang(search_fn, kw_list):
-    """언어 하나의 첫 키워드로 검색. (결과, 에러메시지) 튜플 반환 — 스레드풀에서
-    호출되므로 예외를 여기서 삼켜 호출부가 밖으로 나온 결과만 취합한다."""
-    if not kw_list:
-        return [], None
-    try:
-        return search_fn(kw_list[0], max_results=10), None
-    except (RuntimeError, requests.RequestException) as e:
-        # RuntimeError: API키 미설정 등 / requests.RequestException:
-        # 쿼터 소진(403)·레이트리밋(429)·일시적 API 오류 등 raise_for_status()가
-        # 던지는 실제 운영 실패 — 한 언어가 실패해도 나머지 언어는 계속
-        # 시도하고, 전부 실패했을 때만 503으로 응답.
-        return [], str(e)
-
-
-@app.post("/api/find/collect")
-def api_find_collect(shortcode: str, platform: str):
-    """분석된 소스의 키워드로 다른 플랫폼을 5개 언어 전부 실검색 → 후보
-    URL기준 중복제거 후 저장 → Gemini 유사도 채점.
-
-    언어별 검색과 후보별 채점을 각각 스레드풀로 병렬화한다(2026-07-10 —
-    순차 실행 시 실측 27분+ 걸리던 지연 발견해 개선. 둘 다 네트워크 I/O
-    대기가 대부분이라 스레드 병렬화로 안전하게 단축 가능)."""
+@app.get("/api/find/preview")
+def api_find_preview(shortcode: str, platform: str, lang: str = "ko"):
+    """플랫폼 1개 + 언어 1개로 실제 검색 결과 6개를 빠르게 가져온다(채점 없음).
+    분석 완료 직후 5개 플랫폼을 병렬로 자동 호출해 한번에 채우고, 각 줄의
+    언어 드롭다운을 바꾸면 이 엔드포인트를 그 언어로 다시 호출한다."""
     store = Store(DB_PATH)
     analysis = store.get_source_analysis(shortcode)
     if not analysis:
         return JSONResponse(status_code=404, content={"ok": False, "error": "먼저 분석이 필요합니다"})
-    if platform not in _COLLECT_PLATFORMS:
-        return JSONResponse(status_code=400, content={"ok": False, "error": f"'{platform}' 실수집은 아직 미지원"})
+    if platform not in _PREVIEW_PLATFORMS:
+        return JSONResponse(status_code=400, content={"ok": False, "error": f"'{platform}' 미지원"})
+    if lang not in _PREVIEW_LANGS:
+        return JSONResponse(status_code=400, content={"ok": False, "error": f"'{lang}' 미지원 언어"})
     search_fn = {"youtube": youtube_search_fn, "tiktok": tiktok_search_fn,
                  "instagram": instagram_search_fn, "xiaohongshu": xiaohongshu_search_fn,
                  "douyin": douyin_search_fn}[platform]
 
-    lang_kw_lists = [analysis["keywords"].get(lang) or [] for lang in _COLLECT_LANGS]
-    with ThreadPoolExecutor(max_workers=len(_COLLECT_LANGS)) as ex:
-        results = list(ex.map(lambda kw: _search_one_lang(search_fn, kw), lang_kw_lists))
+    kw_list = analysis["keywords"].get(lang) or []
+    if not kw_list:
+        return {"ok": True, "items": []}
+    try:
+        raw = search_fn(kw_list[0], max_results=_PREVIEW_COUNT)
+    except (RuntimeError, requests.RequestException) as e:
+        return JSONResponse(status_code=503, content={"ok": False, "error": str(e)})
 
-    seen_urls = set()
-    merged = []
-    errors = [err for _, err in results if err]
-    # 어떤 언어로 찾았는지 태깅(2026-07-10, "해외 원본 영상이 국내 재편집물보다
-    # 낫다" 피드백 — 카드에 배지로 보여줘 사용자가 직접 판단하게 함).
-    for lang, (raw, _) in zip(_COLLECT_LANGS, results):
-        for cand in raw:
-            if cand["url"] not in seen_urls:
-                seen_urls.add(cand["url"])
-                merged.append({**cand, "source_lang": lang})
-
-    if not merged and errors:
-        return JSONResponse(status_code=503, content={"ok": False, "error": "; ".join(errors)})
-
-    ids = store.save_candidates(shortcode, platform, merged)
-
-    frame_paths = analysis["frame_paths"]
-    if ids:
-        with ThreadPoolExecutor(max_workers=5) as ex:
-            scores = list(ex.map(lambda cand: score_candidate(frame_paths, cand["thumbnail"]), merged))
-        for cand_id, score in zip(ids, scores):
-            if score is not None:
-                store.update_candidate_score(cand_id, score)
-    return {"ok": True, "count": len(ids)}
+    tagged = [{**cand, "source_lang": lang} for cand in raw]
+    ids = store.save_candidates(shortcode, platform, tagged)
+    items = [{**cand, "id": cand_id} for cand, cand_id in zip(tagged, ids)]
+    return {"ok": True, "items": items}
 
 
 @app.get("/api/find/candidates")

@@ -27,34 +27,23 @@
   .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
   .chip{background:#0d131c;border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--txt)}
   .category{font-size:13px;color:var(--sub);margin-bottom:14px}
-  .link-picker{display:flex;gap:8px;align-items:center;margin-bottom:10px}
-  .link-picker select{padding:7px 10px}
-  .link-picker a{color:var(--accent);text-decoration:none;font-weight:600;padding:7px 14px;
-    border:1px solid var(--accent);border-radius:8px}
-  .link-picker a.disabled{color:var(--sub);border-color:var(--line);pointer-events:none}
   .lens-row{margin-top:10px;font-size:13px}
   .lens-row a{color:var(--accent);text-decoration:none;margin-right:8px}
   .empty{color:var(--sub);text-align:center;padding:60px}
-  .collect-row{display:flex;gap:8px;align-items:center;margin:16px 0 10px}
-  .collect-row button{font-size:12px}
-  .platform-note{font-size:12px;color:var(--sub)}
-  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:10px}
-  .cards .card{background:#0d131c;border:2px solid var(--line);border-radius:12px;overflow:hidden;padding:0;margin:0;display:flex;flex-direction:column}
-  /* 유사도가 진짜 차별화 포인트라 카드 테두리로 눈에 확 띄게 — 텍스트 색만으로는
-     안 보인다는 피드백(2026-07-09). high=진짜 일치(초록 테두리+뱃지),
-     low=거의 무관(흐리게), mid/미검증=기본. */
-  .cards .card.match-high{border-color:var(--ok);box-shadow:0 0 0 1px var(--ok)}
-  .cards .card.match-low{opacity:.4}
-  .cards .card img{width:100%;height:120px;object-fit:cover;background:#000}
-  .cards .card .body{padding:10px}
-  .cards .score{font-size:13px;color:var(--sub);margin:4px 0;font-weight:600}
-  .cards .score.high{color:var(--ok)}
-  .cards .badge-match{display:inline-block;background:var(--ok);color:#fff;font-size:11px;font-weight:700;
-    padding:2px 8px;border-radius:20px;margin-bottom:4px}
-  .cards .lang-badge{font-size:11px;color:var(--sub);font-weight:400;text-transform:none}
-  .cards .title{font-size:12px;margin:4px 0;max-height:32px;overflow:hidden}
-  .cards .row{display:flex;gap:6px;margin-top:8px}
-  .cards .row a,.cards .row button{flex:1;text-align:center;font-size:11px;padding:6px 4px}
+  .preview-row{margin-bottom:20px}
+  .preview-row-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .preview-row-head b{font-size:13px;min-width:110px}
+  .preview-row-head select{padding:5px 8px;font-size:12px}
+  .preview-row-head a.view-all{color:var(--accent);text-decoration:none;font-size:12px;margin-left:auto}
+  .preview-row-status{font-size:12px;color:var(--sub)}
+  .preview-thumbs{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .preview-thumbs .card{background:#0d131c;border:1px solid var(--line);border-radius:10px;overflow:hidden;padding:0}
+  .preview-thumbs .card img{width:100%;height:100px;object-fit:cover;background:#000}
+  .preview-thumbs .card .body{padding:6px}
+  .preview-thumbs .card .title{font-size:11px;max-height:28px;overflow:hidden;margin-bottom:4px}
+  .preview-thumbs .card .row{display:flex;gap:4px}
+  .preview-thumbs .card .row a,.preview-thumbs .card .row button{flex:1;text-align:center;font-size:10px;padding:4px 2px}
+  @media (max-width: 900px){ .preview-thumbs{grid-template-columns:repeat(3,1fr)} }
   @media (max-width: 768px){
     body{flex-direction:column;min-height:100vh}
     .sidebar{width:100%;border-right:none;border-bottom:1px solid var(--line);padding:10px 12px;
@@ -82,7 +71,7 @@
       <button class="primary" onclick="doAnalyze()">분석</button>
     </div>
     <div id="result"><div class="empty">shortcode를 입력하고 분석을 눌러주세요.</div></div>
-    <div id="candidates"></div>
+    <div id="previewRows"></div>
   </main>
 <script>
 const params = new URLSearchParams(location.search);
@@ -93,7 +82,7 @@ async function doAnalyze(){
   const sc = document.getElementById("scInput").value || AUTO_SC;
   if(!sc) return;
   CUR_SC = sc;
-  document.getElementById("candidates").innerHTML = "";
+  document.getElementById("previewRows").innerHTML = "";
   document.getElementById("result").innerHTML = '<div class="empty">분석 중… (영상 다운로드+Gemini 분석, 수십 초 소요)</div>';
   try{
     const r = await fetch(`/api/find/analyze?shortcode=${encodeURIComponent(sc)}`, {method:"POST"});
@@ -108,17 +97,15 @@ async function doAnalyze(){
   }
 }
 
-let CUR_LINKS = {};
 const LANG_LABEL = {ko:"🇰🇷 한국어", en:"🌐 영어", zh:"🇨🇳 중국어", ja:"🇯🇵 일본어", ru:"🇷🇺 러시아어"};
 const PLATFORM_LABEL = {youtube:"▶️ YouTube", tiktok:"🎵 TikTok", instagram:"📱 Instagram", xiaohongshu:"📕 샤오홍슈", douyin:"🎬 도우인"};
+let CUR_SEARCH_LINKS = {};
 
 function renderResult(d){
   const frames = d.frame_urls.map(u=>`<img src="${u}" loading="lazy">`).join("");
   const kw = (d.keywords.ko||[]).map(k=>`<span class="chip">${k}</span>`).join("");
   const lensLinks = (d.lens_links||[]).map((u,i)=>`<a href="${u}" target="_blank">🔍 프레임${i+1}</a>`).join(" ");
-  CUR_LINKS = d.search_links || {};
-  const langOptions = Object.keys(LANG_LABEL).map(l=>`<option value="${l}">${LANG_LABEL[l]}</option>`).join("");
-  const platformOptions = Object.keys(PLATFORM_LABEL).map(p=>`<option value="${p}">${PLATFORM_LABEL[p]}</option>`).join("");
+  CUR_SEARCH_LINKS = d.search_links || {};
   document.getElementById("result").innerHTML = `
     <div class="card">
       <div class="section-label">추출 프레임</div>
@@ -126,97 +113,64 @@ function renderResult(d){
       <div class="section-label">키워드</div>
       <div class="chips">${kw}</div>
       <div class="category">카테고리: ${d.category||'-'}</div>
-      <div class="section-label">정확한 키워드 링크</div>
-      <div class="link-picker">
-        <select id="langSelect" onchange="updateLink()">${langOptions}</select>
-        <select id="platformSelect" onchange="updateLink()">${platformOptions}</select>
-        <a id="pickedLink" href="#" target="_blank">🔗 열기</a>
-      </div>
       <div class="lens-row"><b>Google Lens 역검색</b><br>${lensLinks}</div>
-      <div class="collect-row">
-        <button class="primary" onclick="doCollect('youtube')">📡 유튜브 실수집</button>
-        <button class="primary" onclick="doCollect('tiktok')">🎵 틱톡 실수집</button>
-        <button class="primary" onclick="doCollect('instagram')">📱 인스타 실수집</button>
-        <button class="primary" onclick="doCollect('xiaohongshu')">📕 샤오홍슈 실수집</button>
-        <button class="primary" onclick="doCollect('douyin')">🎬 도우인 실수집</button>
-        <span class="platform-note" id="collectStatus"></span>
-      </div>
     </div>
   `;
-  updateLink();
-  loadCandidates();
+  renderPreviewRows();
 }
 
-function updateLink(){
-  const lang = document.getElementById("langSelect").value;
-  const platform = document.getElementById("platformSelect").value;
-  const link = document.getElementById("pickedLink");
-  const url = (CUR_LINKS[platform] || {})[lang];
-  if(url){
-    link.href = url;
-    link.textContent = "🔗 열기";
-    link.classList.remove("disabled");
-  }else{
-    link.href = "#";
-    link.textContent = "❌ 이 언어 키워드 없음";
-    link.classList.add("disabled");
-  }
+// 실수집(플랫폼×5언어 전부 검색+Gemini 채점)은 느리고("분석 3분+수집 3분")
+// 부정확해서("실수집 결과는 의미 없다") 제거 — 대신 분석 끝나자마자 5개
+// 플랫폼을 기본 한국어로 병렬 미리보기(채점 없이 6개씩, 빠름)하고, 줄마다
+// 언어를 바꿔 그 줄만 재검색할 수 있게 한다(2026-07-10).
+function renderPreviewRows(){
+  const box = document.getElementById("previewRows");
+  box.innerHTML = Object.keys(PLATFORM_LABEL).map(platform => `
+    <div class="preview-row" id="row-${platform}">
+      <div class="preview-row-head">
+        <b>${PLATFORM_LABEL[platform]}</b>
+        <select onchange="fetchPreviewRow('${platform}', this.value)">
+          ${Object.keys(LANG_LABEL).map(l=>`<option value="${l}">${LANG_LABEL[l]}</option>`).join("")}
+        </select>
+        <span class="preview-row-status" id="status-${platform}">불러오는 중…</span>
+        <a class="view-all" href="#" target="_blank" id="viewall-${platform}">전체보기 →</a>
+      </div>
+      <div class="preview-thumbs" id="thumbs-${platform}"></div>
+    </div>
+  `).join("");
+  Object.keys(PLATFORM_LABEL).forEach(platform => fetchPreviewRow(platform, "ko"));
 }
 
-async function doCollect(platform){
+async function fetchPreviewRow(platform, lang){
   if(!CUR_SC) return;
-  const status = document.getElementById("collectStatus");
-  if(status) status.textContent = "수집 중… (검색+유사도 검증, 수십 초 소요)";
+  const status = document.getElementById(`status-${platform}`);
+  const thumbs = document.getElementById(`thumbs-${platform}`);
+  const viewAll = document.getElementById(`viewall-${platform}`);
+  const viewAllUrl = (CUR_SEARCH_LINKS[platform] || {})[lang];
+  if(viewAll) viewAll.href = viewAllUrl || "#";
+  if(status) status.textContent = "불러오는 중…";
+  thumbs.innerHTML = "";
   try{
-    const r = await fetch(`/api/find/collect?shortcode=${encodeURIComponent(CUR_SC)}&platform=${encodeURIComponent(platform)}`, {method:"POST"});
+    const r = await fetch(`/api/find/preview?shortcode=${encodeURIComponent(CUR_SC)}&platform=${encodeURIComponent(platform)}&lang=${encodeURIComponent(lang)}`);
     const d = await r.json();
     if(!d.ok){ if(status) status.textContent = `❌ ${d.error||"실패"}`; return; }
-    if(status) status.textContent = `${d.count}건 수집 완료`;
-    await loadCandidates();
+    if(!d.items.length){ if(status) status.textContent = "결과 없음"; return; }
+    status.textContent = "";
+    thumbs.innerHTML = d.items.map(it => `
+      <div class="card">
+        <img src="${it.thumbnail||''}" loading="lazy" onerror="this.style.visibility='hidden'">
+        <div class="body">
+          <div class="title">${(it.title||'').slice(0,40)}</div>
+          <div class="row">
+            <a href="${it.url}" target="_blank">열기</a>
+            <button onclick="doSave(${it.id}, this)">＋담기</button>
+          </div>
+        </div>
+      </div>
+    `).join("");
   }catch(e){
     if(status) status.textContent = `❌ ${e.message}`;
   }
-}
-
-async function loadCandidates(){
-  if(!CUR_SC) return;
-  const r = await fetch(`/api/find/candidates?shortcode=${encodeURIComponent(CUR_SC)}`);
-  const d = await r.json();
-  renderCandidates(d.items||[]);
-}
-
-function renderCandidates(items){
-  const box = document.getElementById("candidates");
-  if(!items.length){ box.innerHTML = ""; return; }
-  // 유사도 내림차순(백엔드가 이미 정렬해서 줌) 그대로 두되, 화면에서 진짜
-  // 일치하는 것이 확 보이게 카드 테두리+뱃지로 강조하고 무관한 건 흐리게
-  // 뒤로 뺀다(2026-07-09, "유사도 일치하는 걸 보여줘야지" 피드백).
-  const cards = items.map(c=>{
-    const score = c.similarity_score;
-    const hasScore = score !== null && score !== undefined;
-    const scoreLabel = hasScore ? `유사도 ${Math.round(score*100)}%` : "미검증";
-    const scoreCls = hasScore && score >= 0.7 ? "score high" : "score";
-    const cardCls = hasScore && score >= 0.7 ? "card match-high" : hasScore && score < 0.4 ? "card match-low" : "card";
-    const badge = hasScore && score >= 0.7 ? `<div class="badge-match">✅ 일치</div>` : "";
-    const platformLabel = {youtube:"▶️ YouTube", tiktok:"🎵 TikTok", instagram:"📱 Instagram", xiaohongshu:"📕 샤오홍슈", douyin:"🎬 도우인"}[c.platform] || c.platform;
-    // 어떤 언어로 찾았는지 배지 — 국내 재편집물보다 해외 원본이 낫다는
-    // 피드백(2026-07-10) 대응, 자동판별 대신 사용자가 보고 직접 고르게 함.
-    const langBadge = {ko:"🇰🇷", en:"🌐 EN", zh:"🇨🇳", ja:"🇯🇵", ru:"🇷🇺"}[c.source_lang] || "";
-    return `<div class="${cardCls}">
-      <img src="${c.thumbnail||''}" loading="lazy" onerror="this.style.visibility='hidden'">
-      <div class="body">
-        <div class="section-label" style="margin-bottom:2px">${platformLabel} ${langBadge ? `<span class="lang-badge">${langBadge}</span>` : ""}</div>
-        ${badge}
-        <div class="${scoreCls}">${scoreLabel}</div>
-        <div class="title">${(c.title||'').slice(0,50)}</div>
-        <div class="row">
-          <a href="${c.url}" target="_blank">🔗 열기</a>
-          <button onclick="doSave(${c.id}, this)">＋ 담기</button>
-        </div>
-      </div>
-    </div>`;
-  }).join("");
-  box.innerHTML = `<div class="section-label">수집된 후보 (유사도 높은 순)</div><div class="cards">${cards}</div>`;
 }
 
 async function doSave(candidateId, btn){
