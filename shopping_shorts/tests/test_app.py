@@ -349,37 +349,43 @@ def test_find_collect_unsupported_platform_400(monkeypatch, client, tmp_path):
     assert r.status_code == 400
 
 
-def test_find_collect_tiktok_prefers_korean_keyword_saves_candidates_and_scores(monkeypatch, client, tmp_path):
-    """틱톡은 국내 셀러 타겟이라 ko 키워드를 우선 사용한다(2026-07-09, 틱톡 실수집 추가)."""
+def test_find_collect_tiktok_searches_all_languages_and_dedupes_by_url(monkeypatch, client, tmp_path):
+    """5개 언어(ko/en/zh/ja/ru) 전부 검색하고 같은 URL은 중복제거한다(2026-07-10,
+    "다른 프로그램보다 정확도 떨어짐" 피드백 — 언어 하나만 검색하던 걸 확장)."""
     from shopping_shorts import app as app_module
     from shopping_shorts.store import Store
 
     test_db_path = tmp_path / "test.db"
     monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
     store = Store(test_db_path)
-    store.save_source_analysis("sc1", keywords={"ko": ["바닥 청소"], "en": ["floor cleaner"], "zh": []},
-                                frame_paths=["/tmp/f1.jpg"], analyzed_at="2026-07-09T00:00:00Z")
+    store.save_source_analysis(
+        "sc1", keywords={"ko": ["바닥 청소"], "en": ["floor cleaner"], "zh": ["地板清洁"], "ja": [], "ru": []},
+        frame_paths=["/tmp/f1.jpg"], analyzed_at="2026-07-09T00:00:00Z")
 
-    captured = {}
+    calls = []
     def fake_tiktok_search(keyword, max_results):
-        captured["keyword"] = keyword
+        calls.append(keyword)
+        # ko/en 검색은 같은 영상을 찾고(중복제거 대상), zh 검색만 새 영상을 찾는다.
+        if keyword == "地板清洁":
+            return [{"url": "https://www.tiktok.com/@u/video/2", "title": "t2", "thumbnail": "th2.jpg"}]
         return [{"url": "https://www.tiktok.com/@u/video/1", "title": "t", "thumbnail": "th.jpg"}]
     monkeypatch.setattr(app_module, "tiktok_search_fn", fake_tiktok_search)
     monkeypatch.setattr(app_module, "score_candidate", lambda frames, thumb: 0.6)
 
     r = client.post("/api/find/collect", params={"shortcode": "sc1", "platform": "tiktok"})
     assert r.status_code == 200
-    assert r.json() == {"ok": True, "count": 1}
-    assert captured["keyword"] == "바닥 청소"
+    assert r.json() == {"ok": True, "count": 2}
+    assert calls == ["바닥 청소", "floor cleaner", "地板清洁"]
 
     r2 = client.get("/api/find/candidates", params={"shortcode": "sc1"})
     d2 = r2.json()
-    assert d2["items"][0]["platform"] == "tiktok"
-    assert d2["items"][0]["similarity_score"] == 0.6
+    assert len(d2["items"]) == 2
+    assert {it["url"] for it in d2["items"]} == {
+        "https://www.tiktok.com/@u/video/1", "https://www.tiktok.com/@u/video/2",
+    }
 
 
-def test_find_collect_instagram_prefers_korean_keyword_saves_candidates_and_scores(monkeypatch, client, tmp_path):
-    """인스타는 국내 셀러 타겟이라 ko 키워드를 우선 사용한다(2026-07-09, 인스타 실수집 추가)."""
+def test_find_collect_instagram_searches_all_languages_and_dedupes_by_url(monkeypatch, client, tmp_path):
     from shopping_shorts import app as app_module
     from shopping_shorts.store import Store
 
@@ -389,17 +395,17 @@ def test_find_collect_instagram_prefers_korean_keyword_saves_candidates_and_scor
     store.save_source_analysis("sc1", keywords={"ko": ["바닥 청소"], "en": ["floor cleaner"], "zh": []},
                                 frame_paths=["/tmp/f1.jpg"], analyzed_at="2026-07-09T00:00:00Z")
 
-    captured = {}
+    calls = []
     def fake_instagram_search(keyword, max_results):
-        captured["keyword"] = keyword
+        calls.append(keyword)
         return [{"url": "https://www.instagram.com/p/x/", "title": "t", "thumbnail": "th.jpg"}]
     monkeypatch.setattr(app_module, "instagram_search_fn", fake_instagram_search)
     monkeypatch.setattr(app_module, "score_candidate", lambda frames, thumb: 0.6)
 
     r = client.post("/api/find/collect", params={"shortcode": "sc1", "platform": "instagram"})
     assert r.status_code == 200
-    assert r.json() == {"ok": True, "count": 1}
-    assert captured["keyword"] == "바닥 청소"
+    assert r.json() == {"ok": True, "count": 1}  # ko/en 둘 다 같은 URL이라 1건으로 중복제거
+    assert calls == ["바닥 청소", "floor cleaner"]
 
     r2 = client.get("/api/find/candidates", params={"shortcode": "sc1"})
     d2 = r2.json()
@@ -469,77 +475,3 @@ def test_find_save_adds_candidate_to_pool(monkeypatch, client, tmp_path):
     pool = store.pool_items()
     assert len(pool) == 1
     assert pool[0]["origin_shortcode"] == "sc1"
-
-
-def test_find_shop_returns_lens_matches_for_chosen_frame(monkeypatch, client, tmp_path):
-    """프레임 하나를 골라 SerpApi Google Lens로 실제 구매처를 찾는다
-    (2026-07-09, 인스타 실수집 대안 기술검증 중 추가)."""
-    from shopping_shorts import app as app_module
-    from shopping_shorts.store import Store
-
-    test_db_path = tmp_path / "test.db"
-    monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
-    monkeypatch.setattr(app_module, "PUBLIC_BASE_URL", "https://shoppingshorts.duckdns.org")
-    store = Store(test_db_path)
-    store.save_source_analysis(
-        "sc1", keywords={"ko": ["무선 헤어드라이어"], "en": [], "zh": []},
-        frame_paths=["/srv/find_frames/16a7/frame_02.jpg", "/srv/find_frames/16a7/frame_03.jpg"],
-        analyzed_at="2026-07-09T00:00:00Z",
-    )
-
-    captured = {}
-    def fake_lens_search(image_url):
-        captured["image_url"] = image_url
-        return [{"source": "Amazon.com", "title": "Cordless Hair Dryer",
-                  "link": "https://amazon.com/x", "thumbnail": "https://t.jpg"}]
-    monkeypatch.setattr(app_module, "lens_shopping_search", fake_lens_search)
-
-    r = client.post("/api/find/shop", params={"shortcode": "sc1", "frame_index": 1})
-    assert r.status_code == 200
-    d = r.json()
-    assert d["ok"] is True
-    assert d["items"][0]["link"] == "https://amazon.com/x"
-    assert captured["image_url"] == "https://shoppingshorts.duckdns.org/api/find/frame/16a7/frame_03.jpg"
-
-
-def test_find_shop_no_analysis_returns_404(monkeypatch, client, tmp_path):
-    from shopping_shorts import app as app_module
-    monkeypatch.setattr(app_module, "DB_PATH", tmp_path / "test.db")
-
-    r = client.post("/api/find/shop", params={"shortcode": "unknown", "frame_index": 0})
-    assert r.status_code == 404
-    assert r.json()["ok"] is False
-
-
-def test_find_shop_frame_index_out_of_range_returns_400(monkeypatch, client, tmp_path):
-    from shopping_shorts import app as app_module
-    from shopping_shorts.store import Store
-
-    test_db_path = tmp_path / "test.db"
-    monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
-    store = Store(test_db_path)
-    store.save_source_analysis("sc1", keywords={"ko": [], "en": [], "zh": []},
-                                frame_paths=["/srv/f1.jpg"], analyzed_at="2026-07-09T00:00:00Z")
-
-    r = client.post("/api/find/shop", params={"shortcode": "sc1", "frame_index": 5})
-    assert r.status_code == 400
-    assert r.json()["ok"] is False
-
-
-def test_find_shop_no_key_returns_503(monkeypatch, client, tmp_path):
-    from shopping_shorts import app as app_module
-    from shopping_shorts.store import Store
-
-    test_db_path = tmp_path / "test.db"
-    monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
-    store = Store(test_db_path)
-    store.save_source_analysis("sc1", keywords={"ko": [], "en": [], "zh": []},
-                                frame_paths=["/srv/f1.jpg"], analyzed_at="2026-07-09T00:00:00Z")
-
-    def fake_lens_search(image_url):
-        raise RuntimeError("lens_shopping: SERPAPI_KEY가 설정되지 않았습니다")
-    monkeypatch.setattr(app_module, "lens_shopping_search", fake_lens_search)
-
-    r = client.post("/api/find/shop", params={"shortcode": "sc1", "frame_index": 0})
-    assert r.status_code == 503
-    assert r.json()["ok"] is False

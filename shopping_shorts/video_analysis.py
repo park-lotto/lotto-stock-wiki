@@ -13,7 +13,14 @@ from pipeline.atoms import key_vault
 
 _MODEL = "gemini-3.5-flash"  # 비디오 입력 지원 모델 — "gemini-3-flash"는 실존하지 않는 모델명이었음
 # (2026-07-09 배포 후 실단말 검증 중 404 NOT_FOUND로 발견, 실제 사용 가능 모델 목록에서 확인 후 교체)
-_EMPTY = {"keywords": {"ko": [], "en": [], "zh": []}, "category": ""}
+
+# 5개 언어(2026-07-10, "다른 프로그램보다 정확도 떨어짐" 피드백 대응) — ko/en만
+# 검색에 쓰던 걸 5개어로 확장. zh는 원래도 생성만 하고 검색엔 안 쓰고 있었음
+# (app.py의 _COLLECT_LANG_PRIORITY가 ko/en만 참조) — 중국어권(더우인·샤오홍슈
+# 잠재대상)·일본어·러시아어권 창작자 콘텐츠를 전혀 못 찾던 게 정확도 격차의
+# 실제 원인 중 하나.
+_LANGS = ["ko", "en", "zh", "ja", "ru"]
+_EMPTY = {"keywords": {lang: [] for lang in _LANGS}, "category": ""}
 
 _PROMPT = """이 영상을 보고 어떤 제품/장면을 다루는지 파악해라.
 
@@ -24,7 +31,9 @@ _PROMPT = """이 영상을 보고 어떤 제품/장면을 다루는지 파악해
   "keywords": {{
     "ko": ["핵심 키워드 3~5개, 한국어"],
     "en": ["같은 키워드의 영어 번역"],
-    "zh": ["같은 키워드의 중국어(간체) 번역"]
+    "zh": ["같은 키워드의 중국어(간체) 번역"],
+    "ja": ["같은 키워드의 일본어 번역"],
+    "ru": ["같은 키워드의 러시아어 번역"]
   }},
   "category": "제품 카테고리 (예: 생활용품/홈케어, 뷰티, 주방가전 등)"
 }}
@@ -85,12 +94,9 @@ def analyze_video(video_path, caption, max_retries=3, quota_sleep=8):
                 config=types.GenerateContentConfig(response_mime_type="application/json"),
             )
             data = json.loads(resp.text)
+            got = data.get("keywords", {})
             return {
-                "keywords": {
-                    "ko": data.get("keywords", {}).get("ko", []),
-                    "en": data.get("keywords", {}).get("en", []),
-                    "zh": data.get("keywords", {}).get("zh", []),
-                },
+                "keywords": {lang: got.get(lang, []) for lang in _LANGS},
                 "category": data.get("category", ""),
             }
         except Exception as e:

@@ -34,7 +34,7 @@ def test_analyze_video_uploads_polls_and_parses(monkeypatch, tmp_path):
 
     class FakeModels:
         def generate_content(self, **kw):
-            class R: text = '{"keywords":{"ko":["바닥 청소"],"en":["floor cleaner"],"zh":["地板清洁"]},"category":"생활용품/홈케어"}'
+            class R: text = '{"keywords":{"ko":["바닥 청소"],"en":["floor cleaner"],"zh":["地板清洁"],"ja":["床掃除"],"ru":["уборка полов"]},"category":"생활용품/홈케어"}'
             return R()
 
     class FakeClient:
@@ -81,7 +81,7 @@ def test_analyze_video_failed_processing_returns_empty(monkeypatch, tmp_path):
     monkeypatch.setattr(video_analysis.time, "sleep", lambda s: None)
 
     result = video_analysis.analyze_video(video_path, caption="")
-    assert result == {"keywords": {"ko": [], "en": [], "zh": []}, "category": ""}
+    assert result == {"keywords": {"ko": [], "en": [], "zh": [], "ja": [], "ru": []}, "category": ""}
 
 
 def test_analyze_video_rotates_to_next_key_on_daily_exhaustion(monkeypatch, tmp_path):
@@ -147,4 +147,4 @@ def test_analyze_video_all_keys_exhausted_returns_empty(monkeypatch, tmp_path):
     monkeypatch.setattr(video_analysis, "_client_for_key", fail)
 
     result = video_analysis.analyze_video(video_path, caption="test")
-    assert result == {"keywords": {"ko": [], "en": [], "zh": []}, "category": ""}
+    assert result == {"keywords": {"ko": [], "en": [], "zh": [], "ja": [], "ru": []}, "category": ""}
