@@ -408,6 +408,59 @@ def test_find_preview_returns_six_items_tagged_with_lang(monkeypatch, client, tm
     assert r2.json()["items"][0]["source_lang"] == "ko"
 
 
+def test_find_preview_keyword_index_selects_alternate_keyword(monkeypatch, client, tmp_path):
+    """제품명이 불확실할 때 사용자가 keywords[lang]의 다른 후보를 골라 검색할 수
+    있어야 한다(2026-07-10, "키워드 여러개 선택" 요청)."""
+    from shopping_shorts import app as app_module
+    from shopping_shorts.store import Store
+
+    test_db_path = tmp_path / "test.db"
+    monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
+    store = Store(test_db_path)
+    store.save_source_analysis(
+        "sc1",
+        keywords={"ko": ["정밀 제품명", "후보키워드2", "후보키워드3"], "en": [], "zh": [], "ja": [], "ru": []},
+        frame_paths=["\tmp\f1.jpg"], analyzed_at="2026-07-09T00:00:00Z")
+
+    captured = {}
+    def fake_youtube_search(kw, max_results):
+        captured["kw"] = kw
+        return [{"url": "https://youtube.com/watch?v=x", "title": "t", "thumbnail": "th.jpg"}]
+    monkeypatch.setattr(app_module, "youtube_search_fn", fake_youtube_search)
+
+    r = client.get("/api/find/preview", params={
+        "shortcode": "sc1", "platform": "youtube", "lang": "ko", "keyword_index": 1,
+    })
+    assert r.status_code == 200
+    assert captured["kw"] == "후보키워드2"
+
+
+def test_find_preview_keyword_index_out_of_range_falls_back_to_first(monkeypatch, client, tmp_path):
+    """언어별 키워드 리스트 길이가 다를 수 있음(예: zh/ja/ru는 후보가 1개뿐) —
+    범위를 벗어난 keyword_index는 에러 대신 0번으로 안전하게 폴백한다."""
+    from shopping_shorts import app as app_module
+    from shopping_shorts.store import Store
+
+    test_db_path = tmp_path / "test.db"
+    monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
+    store = Store(test_db_path)
+    store.save_source_analysis(
+        "sc1", keywords={"ko": [], "en": [], "zh": ["唯一关键词"], "ja": [], "ru": []},
+        frame_paths=["\tmp\f1.jpg"], analyzed_at="2026-07-09T00:00:00Z")
+
+    captured = {}
+    def fake_youtube_search(kw, max_results):
+        captured["kw"] = kw
+        return []
+    monkeypatch.setattr(app_module, "youtube_search_fn", fake_youtube_search)
+
+    r = client.get("/api/find/preview", params={
+        "shortcode": "sc1", "platform": "youtube", "lang": "zh", "keyword_index": 5,
+    })
+    assert r.status_code == 200
+    assert captured["kw"] == "唯一关键词"
+
+
 def test_find_preview_no_analysis_404(monkeypatch, client, tmp_path):
     from shopping_shorts import app as app_module
     monkeypatch.setattr(app_module, "DB_PATH", tmp_path / "test.db")

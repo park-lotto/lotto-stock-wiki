@@ -243,10 +243,16 @@ _PREVIEW_COUNT = 6
 
 
 @app.get("/api/find/preview")
-def api_find_preview(shortcode: str, platform: str, lang: str = "ko"):
+def api_find_preview(shortcode: str, platform: str, lang: str = "ko", keyword_index: int = 0):
     """플랫폼 1개 + 언어 1개로 실제 검색 결과 6개를 빠르게 가져온다(채점 없음).
     분석 완료 직후 5개 플랫폼을 병렬로 자동 호출해 한번에 채우고, 각 줄의
-    언어 드롭다운을 바꾸면 이 엔드포인트를 그 언어로 다시 호출한다."""
+    언어 드롭다운을 바꾸면 이 엔드포인트를 그 언어로 다시 호출한다.
+
+    keyword_index: analysis["keywords"][lang]에서 몇 번째 키워드를 쓸지
+    (2026-07-10 추가). 제품명이 확실하지 않을 때 사용자가 후보 키워드 여러 개
+    중 하나를 선택할 수 있게 하기 위함 — ko/en은 index0=identify_product가 찾은
+    정밀 제품명, 이후는 Gemini의 다른 추정 키워드들. 언어별 리스트 길이가 다를
+    수 있어 범위를 벗어나면 0번으로 안전하게 폴백한다."""
     store = Store(DB_PATH)
     analysis = store.get_source_analysis(shortcode)
     if not analysis:
@@ -262,8 +268,9 @@ def api_find_preview(shortcode: str, platform: str, lang: str = "ko"):
     kw_list = analysis["keywords"].get(lang) or []
     if not kw_list:
         return {"ok": True, "items": []}
+    keyword = kw_list[keyword_index] if 0 <= keyword_index < len(kw_list) else kw_list[0]
     try:
-        raw = search_fn(kw_list[0], max_results=_PREVIEW_COUNT)
+        raw = search_fn(keyword, max_results=_PREVIEW_COUNT)
     except (RuntimeError, requests.RequestException) as e:
         return JSONResponse(status_code=503, content={"ok": False, "error": str(e)})
 
