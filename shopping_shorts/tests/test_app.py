@@ -413,7 +413,7 @@ def test_find_collect_unsupported_platform_400(monkeypatch, client, tmp_path):
     store.save_source_analysis("sc1", keywords={"ko": [], "en": ["floor cleaner"], "zh": []},
                                 frame_paths=["/tmp/f1.jpg"], analyzed_at="2026-07-09T00:00:00Z")
 
-    r = client.post("/api/find/collect", params={"shortcode": "sc1", "platform": "douyin"})
+    r = client.post("/api/find/collect", params={"shortcode": "sc1", "platform": "facebook"})
     assert r.status_code == 400
 
 

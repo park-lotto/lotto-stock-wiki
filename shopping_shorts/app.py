@@ -24,6 +24,7 @@ from shopping_shorts.youtube_search import search as youtube_search_fn
 from shopping_shorts.tiktok_search import search as tiktok_search_fn
 from shopping_shorts.instagram_search import search as instagram_search_fn
 from shopping_shorts.xiaohongshu_search import search as xiaohongshu_search_fn
+from shopping_shorts.douyin_search import search as douyin_search_fn
 from shopping_shorts.similarity import score_candidate
 
 app = FastAPI(title="쇼핑쇼츠 레퍼런스 랭킹")
@@ -232,7 +233,7 @@ def api_find_analyze(shortcode: str):
 # 조회한다 — 미리 (함수) 튜플로 캐싱하면 그 함수 레퍼런스가 모듈 로드 시점
 # 값으로 고정돼 테스트의 monkeypatch(app_module.xxx_search_fn 교체)가 안 먹는
 # 버그가 있었음.
-_COLLECT_PLATFORMS = ("youtube", "tiktok", "instagram", "xiaohongshu")
+_COLLECT_PLATFORMS = ("youtube", "tiktok", "instagram", "xiaohongshu", "douyin")
 
 # 5개 언어 전부 검색(2026-07-10, "다른 프로그램보다 정확도 떨어짐" 피드백 대응)
 # — 예전엔 플랫폼별로 언어 하나만 골라 검색해서 그 언어권 창작자 콘텐츠만
@@ -271,7 +272,8 @@ def api_find_collect(shortcode: str, platform: str):
     if platform not in _COLLECT_PLATFORMS:
         return JSONResponse(status_code=400, content={"ok": False, "error": f"'{platform}' 실수집은 아직 미지원"})
     search_fn = {"youtube": youtube_search_fn, "tiktok": tiktok_search_fn,
-                 "instagram": instagram_search_fn, "xiaohongshu": xiaohongshu_search_fn}[platform]
+                 "instagram": instagram_search_fn, "xiaohongshu": xiaohongshu_search_fn,
+                 "douyin": douyin_search_fn}[platform]
 
     lang_kw_lists = [analysis["keywords"].get(lang) or [] for lang in _COLLECT_LANGS]
     with ThreadPoolExecutor(max_workers=len(_COLLECT_LANGS)) as ex:
