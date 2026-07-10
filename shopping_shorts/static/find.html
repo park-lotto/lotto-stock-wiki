@@ -128,6 +128,7 @@ function renderResult(d){
         <button class="primary" onclick="doCollect('youtube')">📡 유튜브 실수집</button>
         <button class="primary" onclick="doCollect('tiktok')">🎵 틱톡 실수집</button>
         <button class="primary" onclick="doCollect('instagram')">📱 인스타 실수집</button>
+        <button class="primary" onclick="doCollect('xiaohongshu')">📕 샤오홍슈 실수집</button>
         <span class="platform-note" id="collectStatus"></span>
       </div>
     </div>
@@ -170,7 +171,7 @@ function renderCandidates(items){
     const scoreCls = hasScore && score >= 0.7 ? "score high" : "score";
     const cardCls = hasScore && score >= 0.7 ? "card match-high" : hasScore && score < 0.4 ? "card match-low" : "card";
     const badge = hasScore && score >= 0.7 ? `<div class="badge-match">✅ 일치</div>` : "";
-    const platformLabel = {youtube:"▶️ YouTube", tiktok:"🎵 TikTok", instagram:"📱 Instagram"}[c.platform] || c.platform;
+    const platformLabel = {youtube:"▶️ YouTube", tiktok:"🎵 TikTok", instagram:"📱 Instagram", xiaohongshu:"📕 샤오홍슈"}[c.platform] || c.platform;
     return `<div class="${cardCls}">
       <img src="${c.thumbnail||''}" loading="lazy" onerror="this.style.visibility='hidden'">
       <div class="body">
