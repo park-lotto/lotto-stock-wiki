@@ -4,6 +4,7 @@ tubefactory와의 차별화 핵심(설계문서 §1 참고). 전용 키 풀(comm
 comment_gen.py와 같은 SHORTS_GEMINI_KEYS 풀을 사용하므로, 두 모듈은 같은
 shorts_gemini_state.json 상태 파일을 공유해 하루 내 키 소진 추적을 동기화한다."""
 import json
+import sys
 import time
 from google import genai
 from google.genai import types
@@ -113,6 +114,7 @@ def analyze_video(video_path, caption, max_retries=3, quota_sleep=8):
             if attempt < max_retries - 1 and any(c in m for c in ("503", "UNAVAILABLE", "overloaded")):
                 time.sleep((attempt + 1) * 5)
                 continue
+            print(f"video_analysis: 미분류 오류로 빈 결과 반환 — {e!r}", file=sys.stderr)
             return dict(_EMPTY)
         finally:
             if file_obj is not None:
