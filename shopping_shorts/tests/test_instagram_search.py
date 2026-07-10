@@ -10,106 +10,71 @@ def test_search_returns_normalized_candidates(monkeypatch):
         captured["payload"] = payload
         captured["actor"] = actor
         return [{
-            "url": "https://www.instagram.com/p/abc123/",
-            "caption": "바닥 청소 완료!",
-            "displayUrl": "https://scontent.cdninstagram.com/thumb.jpg",
-            "videoUrl": "https://scontent.cdninstagram.com/v.mp4",
+            "code": "DYcgCgZPgHf",
+            "is_video": True,
+            "caption": {"text": "11 cm Deep Hole Marker Test"},
+            "thumbnail_url": "https://scontent.cdninstagram.com/thumb.jpg",
         }]
 
     monkeypatch.setattr(instagram_search, "_run_with_rotation", fake_run_with_rotation)
 
-    results = instagram_search.search("바닥 청소", max_results=10)
+    results = instagram_search.search("marker", max_results=10)
 
     assert results == [{
-        "url": "https://www.instagram.com/p/abc123/",
-        "title": "바닥 청소 완료!",
+        "url": "https://www.instagram.com/reel/DYcgCgZPgHf/",
+        "title": "11 cm Deep Hole Marker Test",
         "thumbnail": "https://scontent.cdninstagram.com/thumb.jpg",
     }]
-    # 해시태그는 공백을 포함할 수 없어 제거해서 전달한다.
-    assert captured["payload"]["hashtags"] == ["바닥청소"]
-    assert captured["payload"]["resultsLimit"] == 10
-    # resultsType 기본값(posts)은 사진·캐러셀 위주라 반드시 reels로 지정해야 한다
-    # (2026-07-09 실측 버그 — 지정 안 하면 전부 사진이라 videoUrl이 비어있었음).
-    assert captured["payload"]["resultsType"] == "reels"
-    assert captured["actor"] == "apify~instagram-hashtag-scraper"
+    assert captured["payload"] == {"query": "marker", "maxPages": 1}
+    assert captured["actor"] == "data-slayer~instagram-search-reels"
 
 
-def test_search_skips_items_without_url(monkeypatch):
+def test_search_skips_items_without_code(monkeypatch):
     monkeypatch.setattr(instagram_search, "APIFY_TOKENS", ["fake-key"])
 
     def fake_run_with_rotation(payload, tokens, timeout, poll_interval, actor=None):
         return [
-            {"caption": "no url", "videoUrl": "v.mp4"},
-            {"url": "https://www.instagram.com/p/x/", "caption": "t", "displayUrl": "d", "videoUrl": "v2.mp4"},
+            {"is_video": True, "caption": {"text": "no code"}, "thumbnail_url": "d"},
+            {"code": "abc123", "is_video": True, "caption": {"text": "t"}, "thumbnail_url": "d"},
         ]
     monkeypatch.setattr(instagram_search, "_run_with_rotation", fake_run_with_rotation)
 
     results = instagram_search.search("x")
 
     assert len(results) == 1
-    assert results[0]["url"] == "https://www.instagram.com/p/x/"
+    assert results[0]["url"] == "https://www.instagram.com/reel/abc123/"
 
 
-def test_search_skips_photo_posts_without_video_url(monkeypatch):
-    """resultsType=reels로 요청해도 사진 게시물이 섞여 나올 수 있어 videoUrl
-    없는 항목은 걸러낸다(2026-07-09, "일치라고 나온 게 이미지 페이지" 버그 —
-    resultsType 지정 전에는 검색결과 전부가 사진/캐러셀이라 존재하지도
-    않는 영상을 후보로 잘못 보여주고 있었음)."""
+def test_search_skips_non_video_items(monkeypatch):
+    """검색 결과에 사진 게시물이 섞여 나올 가능성 대비 이중 확인."""
     monkeypatch.setattr(instagram_search, "APIFY_TOKENS", ["fake-key"])
 
     def fake_run_with_rotation(payload, tokens, timeout, poll_interval, actor=None):
         return [
-            {"url": "https://www.instagram.com/p/photo/", "caption": "사진", "displayUrl": "d", "videoUrl": None},
-            {"url": "https://www.instagram.com/p/reel/", "caption": "영상", "displayUrl": "d2", "videoUrl": "v.mp4"},
+            {"code": "photo1", "is_video": False, "caption": {"text": "사진"}, "thumbnail_url": "d"},
+            {"code": "vid1", "is_video": True, "caption": {"text": "영상"}, "thumbnail_url": "d"},
         ]
     monkeypatch.setattr(instagram_search, "_run_with_rotation", fake_run_with_rotation)
 
     results = instagram_search.search("x")
 
     assert len(results) == 1
-    assert results[0]["url"] == "https://www.instagram.com/p/reel/"
+    assert results[0]["url"] == "https://www.instagram.com/reel/vid1/"
+
+
+def test_search_respects_max_results(monkeypatch):
+    monkeypatch.setattr(instagram_search, "APIFY_TOKENS", ["fake-key"])
+
+    def fake_run_with_rotation(payload, tokens, timeout, poll_interval, actor=None):
+        return [{"code": f"v{i}", "is_video": True, "caption": {"text": "t"}, "thumbnail_url": "d"}
+                for i in range(20)]
+    monkeypatch.setattr(instagram_search, "_run_with_rotation", fake_run_with_rotation)
+
+    results = instagram_search.search("x", max_results=3)
+    assert len(results) == 3
 
 
 def test_search_no_tokens_raises(monkeypatch):
     monkeypatch.setattr(instagram_search, "APIFY_TOKENS", [])
     with pytest.raises(RuntimeError, match="APIFY_TOKEN"):
         instagram_search.search("x")
-
-
-def test_search_falls_back_to_shorter_hashtag_when_full_phrase_empty(monkeypatch):
-    """전체 붙임 해시태그가 0건이면 앞쪽 수식어를 떼고 재시도한다(2026-07-10,
-    실측: "무선헤어드라이어"=0건이지만 "헤어드라이어"=5건 확인된 실제 버그 대응)."""
-    monkeypatch.setattr(instagram_search, "APIFY_TOKENS", ["fake-key"])
-    calls = []
-
-    def fake_run_with_rotation(payload, tokens, timeout, poll_interval, actor=None):
-        calls.append(payload["hashtags"][0])
-        if payload["hashtags"] == ["무선헤어드라이어"]:
-            return []
-        if payload["hashtags"] == ["헤어드라이어"]:
-            return [{"url": "https://www.instagram.com/p/found/", "caption": "c",
-                      "displayUrl": "d", "videoUrl": "v.mp4"}]
-        raise AssertionError(f"unexpected hashtag {payload['hashtags']}")
-
-    monkeypatch.setattr(instagram_search, "_run_with_rotation", fake_run_with_rotation)
-
-    results = instagram_search.search("무선 헤어드라이어")
-
-    assert calls == ["무선헤어드라이어", "헤어드라이어"]
-    assert len(results) == 1
-    assert results[0]["url"] == "https://www.instagram.com/p/found/"
-
-
-def test_search_returns_empty_when_all_candidates_empty(monkeypatch):
-    monkeypatch.setattr(instagram_search, "APIFY_TOKENS", ["fake-key"])
-
-    def fake_run_with_rotation(payload, tokens, timeout, poll_interval, actor=None):
-        return []
-    monkeypatch.setattr(instagram_search, "_run_with_rotation", fake_run_with_rotation)
-
-    assert instagram_search.search("무선 헤어드라이어") == []
-
-
-def test_candidate_hashtags_drops_leading_words_progressively():
-    assert instagram_search._candidate_hashtags("무선 헤어드라이어") == ["무선헤어드라이어", "헤어드라이어"]
-    assert instagram_search._candidate_hashtags("실링팬") == ["실링팬"]
