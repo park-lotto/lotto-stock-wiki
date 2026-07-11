@@ -4,6 +4,7 @@ import hashlib
 import os
 import re
 import urllib.parse
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 import requests
@@ -17,7 +18,7 @@ from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
 from shopping_shorts.frame_extract import download_video, extract_frames
 from shopping_shorts.apify_client import fetch_single_reel
 from shopping_shorts.video_analysis import analyze_video
-from shopping_shorts.product_identify import identify_product
+from shopping_shorts.product_identify import fetch_lens_lines, identify_product_from_lines
 from shopping_shorts.search_links import build_search_links, lens_search_url
 
 app = FastAPI(title="쇼핑쇼츠 레퍼런스 랭킹")
@@ -180,7 +181,6 @@ def api_find_analyze(shortcode: str):
     try:
         video_path = download_video(video_url, work_dir)
         frame_paths = extract_frames(video_path, work_dir, max_frames=6)
-        analysis = analyze_video(video_path, item.get("caption", ""))
     except (requests.RequestException, RuntimeError) as e:
         msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
         return JSONResponse(status_code=502, content={"ok": False, "error": msg})
@@ -192,13 +192,34 @@ def api_find_analyze(shortcode: str):
     frame_abs_urls = [f"{PUBLIC_BASE_URL}{u}" for u in frame_urls]
     served_video_url = f"/api/find/frame/{work_dir.name}/{video_path.name}"
 
+    # analyze_video(Gemini 비디오분석)와 fetch_lens_lines(SerpApi 렌즈검색으로
+    # 정확한 제품명 후보 수집)는 서로 입력이 독립적(렌즈는 프레임 이미지만
+    # 필요, category는 프롬프트 힌트일 뿐 필수 아님) — 순차 실행 시 두 단계
+    # 시간이 그대로 더해져 "분석 버튼이 느리다"는 실사용 피드백(2026-07-11)의
+    # 원인이었음. 병렬 실행으로 전체 소요시간을 둘 중 느린 쪽 하나로 줄인다.
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        analysis_future = ex.submit(analyze_video, video_path, item.get("caption", ""))
+        lens_future = ex.submit(fetch_lens_lines, frame_abs_urls)
+        try:
+            analysis = analysis_future.result()
+        except (requests.RequestException, RuntimeError) as e:
+            msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
+            return JSONResponse(status_code=502, content={"ok": False, "error": msg})
+        except Exception as e:
+            msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
+            return JSONResponse(status_code=500, content={"ok": False, "error": msg})
+        try:
+            lens_lines = lens_future.result()
+        except Exception:
+            lens_lines = []
+
     # 정확한 제품명 확인 후 키워드 최우선에 반영(2026-07-10, "제품 직접
     # 홍보형" 검색 정밀도 개선 — Gemini의 일반적인 키워드 추측보다 구글 렌즈로
     # 실제 브랜드/모델을 확인하면 같은 제품 영상을 더 정밀하게 찾을 수 있음).
     # 어디까지나 정밀도 "개선 시도"라 실패해도 분석 자체는 계속 진행한다.
     try:
-        product_name = identify_product(
-            frame_abs_urls, category=analysis["category"], caption=item.get("caption", ""),
+        product_name = identify_product_from_lines(
+            lens_lines, category=analysis["category"], caption=item.get("caption", ""),
         )
     except Exception:
         product_name = ""

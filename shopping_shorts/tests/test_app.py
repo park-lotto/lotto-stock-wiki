@@ -138,7 +138,8 @@ def test_find_analyze_prepends_identified_product_name_to_ko_en_only(monkeypatch
                      "ja": ["電子ノート"], "ru": ["электронный блокнот"]},
         "category": "가전/디지털",
     })
-    monkeypatch.setattr(app_module, "identify_product", lambda frame_urls, category, caption: "reMarkable Paper Pro")
+    monkeypatch.setattr(app_module, "fetch_lens_lines", lambda frame_urls: ["프레임1: reMarkable Paper Pro"])
+    monkeypatch.setattr(app_module, "identify_product_from_lines", lambda lines, category, caption: "reMarkable Paper Pro")
 
     r = client.post("/api/find/analyze", params={"shortcode": "sc1"})
     assert r.status_code == 200
@@ -176,9 +177,9 @@ def test_find_analyze_identify_product_failure_does_not_break_analyze(monkeypatc
         "keywords": {"ko": ["전자노트"], "en": [], "zh": [], "ja": [], "ru": []},
         "category": "가전/디지털",
     })
-    def fake_identify_product(frame_urls, category, caption):
+    def fake_identify_product_from_lines(lines, category, caption):
         raise RuntimeError("SerpApi 429")
-    monkeypatch.setattr(app_module, "identify_product", fake_identify_product)
+    monkeypatch.setattr(app_module, "identify_product_from_lines", fake_identify_product_from_lines)
 
     r = client.post("/api/find/analyze", params={"shortcode": "sc1"})
     assert r.status_code == 200

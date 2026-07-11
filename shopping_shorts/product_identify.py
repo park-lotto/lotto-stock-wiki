@@ -55,10 +55,16 @@ def _lens_matches(image_url, api_key=None, max_results=5, timeout=60):
             for m in matches[:max_results] if m.get("title")]
 
 
-def identify_product(frame_urls, category="", caption="", max_retries=3, quota_sleep=8):
-    """프레임 이미지 URL 목록 → 정확한 제품명(문자열) 또는 확신 없으면 ""."""
+def fetch_lens_lines(frame_urls):
+    """프레임 URL 목록 → 프레임별 렌즈 매칭 결과를 프롬프트용 텍스트 줄로.
+
+    이 함수는 SerpApi 호출(느린 네트워크 I/O)만 담당하고 category/caption에
+    의존하지 않는다 — video_analysis.analyze_video()와 입력이 완전히 독립적
+    이라 app.py에서 둘을 병렬 실행할 수 있게 분리함(2026-07-11, "분석" 버튼이
+    느리다는 실사용 피드백 대응 — 기존엔 analyze_video 끝난 뒤에야 이 함수를
+    불러 두 단계 시간이 그대로 더해졌음)."""
     if not SERPAPI_KEY or not frame_urls:
-        return ""
+        return []
     with ThreadPoolExecutor(max_workers=len(frame_urls)) as ex:
         all_matches = list(ex.map(_lens_matches, frame_urls))
 
@@ -68,6 +74,12 @@ def identify_product(frame_urls, category="", caption="", max_retries=3, quota_s
             continue
         titles = "; ".join(m["title"] for m in matches)
         lines.append(f"프레임{i + 1}: {titles}")
+    return lines
+
+
+def identify_product_from_lines(lines, category="", caption="", max_retries=3, quota_sleep=8):
+    """fetch_lens_lines() 결과(프레임별 렌즈 매칭 텍스트) → Gemini로 여러
+    프레임에 걸쳐 일관된 제품명 하나를 확정. 확신 없으면 ""."""
     if not lines or not SHORTS_GEMINI_KEYS:
         return ""
 
@@ -97,3 +109,15 @@ def identify_product(frame_urls, category="", caption="", max_retries=3, quota_s
                 continue
             return ""
     return ""
+
+
+def identify_product(frame_urls, category="", caption="", max_retries=3, quota_sleep=8):
+    """프레임 이미지 URL 목록 → 정확한 제품명(문자열) 또는 확신 없으면 "".
+
+    fetch_lens_lines()+identify_product_from_lines()를 순차로 묶은 편의
+    함수(단독 호출 시 사용). app.py는 analyze_video()와 병렬 실행하려고
+    fetch_lens_lines()를 직접 부른다."""
+    if not SERPAPI_KEY or not frame_urls:
+        return ""
+    lines = fetch_lens_lines(frame_urls)
+    return identify_product_from_lines(lines, category, caption, max_retries, quota_sleep)
