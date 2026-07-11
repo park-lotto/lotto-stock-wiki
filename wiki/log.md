@@ -1408,3 +1408,6 @@ stage1 엔진+스튜디오 서버배포(stockbrain1/yt/quote-studio). 서버 봇
 
 ## 2026-07-10 — SEO/애드센스 사업 Phase1 완료, 니치확정 보류
 8개 니치 조사에이전트 병렬실행 완료, 스코어카드 산출(IT활용팁1위 3.75점, 여행지·캠핑인테리어 공동2위 3.5점). 스코어카드 점수는 실측 수익데이터 아니라 업계지식 추론임을 사용자에게 명시적으로 전달. Phase3~6 실행단계(니치무관 공통골격)도 스펙문서에 상세 정리. 사용자가 직접 실제 수익후기 등 시장정보 더 가져오기로 하고 니치확정 보류 — 다음 세션에 이어서. 설계 `docs/superpowers/specs/2026-07-09-SEO-애드센스-사업-design.md`.
+
+## 2026-07-12 (집CH) — 쇼핑쇼츠: 릴스 대본추출 파이프라인 + 믹스대본
+인스타 릴스 대본추출 경로 확립. yt-dlp 쿠키방식은 최신크롬 App-Bound 암호화로 막힘→**Apify(instagram-scraper, directUrls)**로 우회. 서버 `/etc/shopping-shorts.env`에 APIFY토큰 17개(살아있는 9개). 다운→ffmpeg 오디오/프레임→**Gemini 전사**(신규 `shopping_shorts/transcribe_gemini.py`, Whisper키 불필요·key_vault 재사용). 릴스 2건 대본추출(@salim__mami 18s / @home__rabbit 27s, 프레임 화면자막 교차검증 일치). 두 강점 믹스→텀블러 CTA 새대본(원문단어 회피·의미계승) 43s/21s/샘플형 버전 → `out/shopping_shorts/텀블러_믹스대본.md`. transcribe_gemini는 기능③ 소스매칭 재사용부품. (참고: 서버에 instagram/douyin/tiktok/xiaohongshu_search.py 존재-로컬엔 없음, 기능③ 일부 서버선구현)
