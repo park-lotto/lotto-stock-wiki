@@ -1,0 +1,39 @@
+{
+  "target_kind": "market",
+  "market_direction": "neutral",
+  "macro_events": [
+    {
+      "fact": "코스피, 장중 7000~7500 등락하며 7291 마감",
+      "ts": "2026-07-09",
+      "quote": "코스피, 장중 7000~7500 등락하다 7291 마감"
+    },
+    {
+      "fact": "중동 긴장으로 인한 시장 변동성 확대",
+      "ts": "2026-07-09",
+      "quote": "중동 긴장에 주가 시장 ‘요동’"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "조선",
+      "stance": "긍정",
+      "comment": "미국 측 한국 조선사에 전투함 건조 역량 정보 요청"
+    },
+    {
+      "sector": "반도체",
+      "stance": "긍정",
+      "comment": "광주 반도체 팹 테마주 인기 및 SK하이닉스 ADR 흥행"
+    },
+    {
+      "sector": "신재생",
+      "stance": "긍정",
+      "comment": "다스코 762억 태양광 수주"
+    },
+    {
+      "sector": "바이오",
+      "stance": "긍정",
+      "comment": "HLB 급등"
+    }
+  ],
+  "quote": "롤러코스피, 장중 4%대 급등 후 강보합 7200선 마감…개인 1.3조 매도"
+}

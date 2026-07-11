@@ -72,7 +72,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
   gtag('config', 'G-C8B2QNTM16');
 </script>
 
-		<form method="post" action="./summaryexcel.aspx?cn=&amp;fmt=2&amp;ee=20260709&amp;sortCol=&amp;sortTyp=" id="Form1">
+		<form method="post" action="./summaryexcel.aspx?cn=&amp;fmt=2&amp;ee=20260713&amp;sortCol=&amp;sortTyp=" id="Form1">
 <div class="aspNetHidden">
 <input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwULLTE5ODc1MjczMzhkZK1uVmb2cGLVvIQ+lHb37TlJRESJ" />
 </div>
@@ -114,7 +114,7 @@ function __doPostBack(eventTarget, eventArgument) {
 					<col style='mso-width-source:userset;width:275px'>
                      <col style='mso-width-source:userset;width:450px'>
 				    <tr>
-					    <td colspan="7" height="30" align="center" class="title">산업리포트 요약(2026.07.09)</td>
+					    <td colspan="7" height="30" align="center" class="title">산업리포트 요약(2026.07.13)</td>
 				    </tr>
                     <tr>
                         <td class="hd">기관명/작성자</td>
@@ -129,243 +129,15 @@ function __doPostBack(eventTarget, eventArgument) {
                     </tr>
                     
                     <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">KB증권</font><br/>전우제,송윤주</td>
-                        <td class="ind"><font color="rgb(53,91,157)">화학</font></td>                        
-                        
-                            <td class="img0">&nbsp;</td>
-                            <td class="recomm">Positive</td>
-                        
-                        <td class="pre_recomm">Positive</td>
-						<td class="rpt_title">호르무즈 2차 봉쇄. 관련주 이익 장기화 예상</td>
-                        <td class="comment2"><span class="comment_text">▶</span> 이란 전쟁 재점화: 재고가 줄어든 상황에서, 다시 한번 봉쇄<br/><span class="comment_text">▶</span> [유가] 1~2월 수준으로 하락해, 바닥 확인<br/><span class="comment_text">▶</span> [정유] 유가 바닥 확인 & 정제/윤활 마진 추가 상승</td>
-                    </tr>
-                    
-                    <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">DS투자증권</font><br/>강태호</td>
-                        <td class="ind"><font color="rgb(53,91,157)">우주항공과국방</font></td>                        
-                        
-                            <td class="img0">&nbsp;</td>
-                            <td class="recomm"></td>
-                        
-                        <td class="pre_recomm"></td>
-						<td class="rpt_title">DS Defense Daily</td>
-                        <td class="comment2"></td>
-                    </tr>
-                    
-                    <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">NH투자증권</font><br/>리서치센터</td>
-                        <td class="ind"><font color="rgb(53,91,157)">복합기업</font></td>                        
-                        
-                            <td class="img0">&nbsp;</td>
-                            <td class="recomm"></td>
-                        
-                        <td class="pre_recomm"></td>
-						<td class="rpt_title">한 권으로 읽는 2Q26 프리뷰 (하)</td>
-                        <td class="comment2"></td>
-                    </tr>
-                    
-                    <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">대신증권</font><br/>이경연,최정환,이지니,이채리</td>
-                        <td class="ind"><font color="rgb(53,91,157)">복합기업</font></td>                        
-                        
-                            <td class="img0">&nbsp;</td>
-                            <td class="recomm"></td>
-                        
-                        <td class="pre_recomm">Overweight</td>
-						<td class="rpt_title">한화그룹 프리뷰</td>
-                        <td class="comment2"><span class="comment_text">▶</span> 한화그룹 지배구조 개편<br/><span class="comment_text">▶</span> 한화그룹 프리뷰</td>
-                    </tr>
-                    
-                    <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">유진투자증권</font><br/>양승윤</td>
-                        <td class="ind"><font color="rgb(53,91,157)">기계</font></td>                        
-                        
-                            <td class="img0">&nbsp;</td>
-                            <td class="recomm"></td>
-                        
-                        <td class="pre_recomm"></td>
-						<td class="rpt_title">안녕하세요 데일리에요(로봇/방산/조선)</td>
-                        <td class="comment2"></td>
-                    </tr>
-                    
-                    <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">메리츠증권</font><br/>배기연,김현비</td>
-                        <td class="ind"><font color="rgb(53,91,157)">조선</font></td>                        
-                        
-                            <td class="img0">&nbsp;</td>
-                            <td class="recomm"></td>
-                        
-                        <td class="pre_recomm"></td>
-						<td class="rpt_title">항해일지</td>
-                        <td class="comment2"></td>
-                    </tr>
-                    
-                    <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">DS투자증권</font><br/>김대성</td>
-                        <td class="ind"><font color="rgb(53,91,157)">조선</font></td>                        
-                        
-                            <td class="img0">&nbsp;</td>
-                            <td class="recomm"></td>
-                        
-                        <td class="pre_recomm">OVERWEIGHT</td>
-						<td class="rpt_title">LNG Update: 향후 5년은 거뜬하다.</td>
-                        <td class="comment2"><span class="comment_text">▶</span> LNG 프로젝트에 폐선 교체 수요까지 더해진다면 최소 2032년까지 연 평균 90~110척의 수요 전망<br/><span class="comment_text">▶</span> 원화 기준 선가는 꾸준히 상승 중. 하반기 본격적인 미국발 대규모 LNG선 발주로 선가 상승 전망</td>
-                    </tr>
-                    
-                    <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">상상인증권</font><br/>이서연</td>
-                        <td class="ind"><font color="rgb(53,91,157)">항공화물운송과물류</font></td>                        
-                        
-                            <td class="img0">&nbsp;</td>
-                            <td class="recomm">중립</td>
-                        
-                        <td class="pre_recomm"></td>
-						<td class="rpt_title">6월 항공 실적 - 정상화 과정</td>
-                        <td class="comment2"><span class="comment_text">▶</span> 6월 전국 공항 국제선 여객 수송 실적 yoy +4%<br/><span class="comment_text">▶</span> 6월 인천 공항 화물 수송 실적 yoy +5%<br/><span class="comment_text">▶</span> 불확실성에도 유가 레벨은 완화, 3q부터 실적 점진 회복 기대</td>
-                    </tr>
-                    
-                    <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">한국투자증권</font><br/>최고운</td>
-                        <td class="ind"><font color="rgb(53,91,157)">해운사</font></td>                        
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>유재선</td>
+                        <td class="ind"><font color="rgb(53,91,157)">복합유틸리티</font></td>                        
                         
                             <td class="img2">=</td>
-                            <td class="recomm">비중확대</td>
+                            <td class="recomm">Neutral</td>
                         
-                        <td class="pre_recomm">비중확대</td>
-						<td class="rpt_title">어느새 운임이 급등</td>
-                        <td class="comment2"><span class="comment_text">▶</span> 어느새 SCFI 3,300p, CCFI 1,800p 돌파<br/><span class="comment_text">▶</span> HMM 2026년 영업이익 전망치 1.6조원으로 41% 상향<br/><span class="comment_text">▶</span> BDI는 지난 4년래 최고치. 최근 6일 연속 상승하며 반등</td>
-                    </tr>
-                    
-                    <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">메리츠증권</font><br/>김준성,배현서</td>
-                        <td class="ind"><font color="rgb(53,91,157)">자동차</font></td>                        
-                        
-                            <td class="img0">&nbsp;</td>
-                            <td class="recomm"></td>
-                        
-                        <td class="pre_recomm">Overweight</td>
-						<td class="rpt_title">Mobility at a glance</td>
-                        <td class="comment2"></td>
-                    </tr>
-                    
-                    <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>송선재,박태웅</td>
-                        <td class="ind"><font color="rgb(53,91,157)">자동차</font></td>                        
-                        
-                            <td class="img2">=</td>
-                            <td class="recomm">Overweight</td>
-                        
-                        <td class="pre_recomm">Overweight</td>
-						<td class="rpt_title">완성차 2분기 프리뷰: 주가 선반영. 하반기 모멘텀 기대</td>
-                        <td class="comment2"><span class="comment_text">▶</span> 2분기 실적은 현대차 하회, 기아 상회 전망. 하반기는 판매대수 회복으로 개선<br/><span class="comment_text">▶</span> 완성차 2Q26 Preview: 2분기 영업이익률은 현대차 6.0%, 기아 8.8% 예상</td>
-                    </tr>
-                    
-                    <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">신한투자증권</font><br/>조상훈</td>
-                        <td class="ind"><font color="rgb(53,91,157)">판매업체</font></td>                        
-                        
-                            <td class="img2">=</td>
-                            <td class="recomm">비중확대</td>
-                        
-                        <td class="pre_recomm">비중확대</td>
-						<td class="rpt_title">싸워, 높아진 눈높이와 싸워</td>
-                        <td class="comment2"><span class="comment_text">▶</span> 소비심리 호조 지속, 백화점의 성장성 부각<br/><span class="comment_text">▶</span> 소비심리 호조, 2Q26 유통 업종 실적 긍정적<br/><span class="comment_text">▶</span> 군계일학 백화점, 다른 업태도 낙수효과 시작</td>
-                    </tr>
-                    
-                    <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">메리츠증권</font><br/>김정욱,황홍진</td>
-                        <td class="ind"><font color="rgb(53,91,157)">식품</font></td>                        
-                        
-                            <td class="img0">&nbsp;</td>
-                            <td class="recomm"></td>
-                        
-                        <td class="pre_recomm"></td>
-						<td class="rpt_title">F&B Morning Talk</td>
-                        <td class="comment2"></td>
-                    </tr>
-                    
-                    <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">메리츠증권</font><br/>조아해,공건희</td>
-                        <td class="ind"><font color="rgb(53,91,157)">은행</font></td>                        
-                        
-                            <td class="img0">&nbsp;</td>
-                            <td class="recomm"></td>
-                        
-                        <td class="pre_recomm"></td>
-						<td class="rpt_title">메리츠 Financial Daily</td>
-                        <td class="comment2"></td>
-                    </tr>
-                    
-                    <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">신한투자증권</font><br/>은경완</td>
-                        <td class="ind"><font color="rgb(53,91,157)">은행</font></td>                        
-                        
-                            <td class="img2">=</td>
-                            <td class="recomm">비중확대</td>
-                        
-                        <td class="pre_recomm">비중확대</td>
-						<td class="rpt_title">고민되는 가격대, 호실적으로 돌파 기대</td>
-                        <td class="comment2"><span class="comment_text">▶</span> 높아진 ROE, 높아질 Valuation<br/><span class="comment_text">▶</span> 2Q26F 지배주주순이익 5.6조원으로 컨센서스 부합<br/><span class="comment_text">▶</span> 대형은행 중심으로 비은행 경쟁력 강화되며 종목간 양극화 심화</td>
-                    </tr>
-                    
-                    <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">대신증권</font><br/>박혜진,권용수</td>
-                        <td class="ind"><font color="rgb(53,91,157)">은행</font></td>                        
-                        
-                            <td class="img2">=</td>
-                            <td class="recomm">Overweight</td>
-                        
-                        <td class="pre_recomm">Overweight</td>
-						<td class="rpt_title">비은행 전성시대</td>
-                        <td class="comment2"><span class="comment_text">▶</span> 은행주 현재 적극 매수 타이밍<br/><span class="comment_text">▶</span> 유행처럼 번지는 비은행 계열사 강화 움직임<br/><span class="comment_text">▶</span> 이자-비이자 모두 호조, 그럼에도 낮은 멀티플</td>
-                    </tr>
-                    
-                    <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">DB증권</font><br/>이병건</td>
-                        <td class="ind"><font color="rgb(53,91,157)">손해보험</font></td>                        
-                        
-                            <td class="img0">&nbsp;</td>
-                            <td class="recomm"></td>
-                        
-                        <td class="pre_recomm"></td>
-						<td class="rpt_title">1200%룰 확대적용 초기 상황</td>
-                        <td class="comment2"><span class="comment_text">▶</span> 1200%룰 확대적용 초반, 시책경쟁 종료는 아님<br/><span class="comment_text">▶</span> 내년초 분급강화와 총량규제가 중요<br/><span class="comment_text">▶</span> 규제 완화는 내년 하반기부터</td>
-                    </tr>
-                    
-                    <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">메리츠증권</font><br/>김선우,우서현</td>
-                        <td class="ind"><font color="rgb(53,91,157)">IT서비스</font></td>                        
-                        
-                            <td class="img0">&nbsp;</td>
-                            <td class="recomm"></td>
-                        
-                        <td class="pre_recomm"></td>
-						<td class="rpt_title">Meritz Overnight Tech</td>
-                        <td class="comment2"></td>
-                    </tr>
-                    
-                    <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">LS증권</font><br/>정경희</td>
-                        <td class="ind"><font color="rgb(53,91,157)">전자장비와기기</font></td>                        
-                        
-                            <td class="img0">&nbsp;</td>
-                            <td class="recomm"></td>
-                        
-                        <td class="pre_recomm">Underweight</td>
-						<td class="rpt_title">2차전지 Weekly</td>
-                        <td class="comment2"></td>
-                    </tr>
-                    
-                    <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">IBK투자증권</font><br/>이승훈,박상준</td>
-                        <td class="ind"><font color="rgb(53,91,157)">양방향미디어와서비스</font></td>                        
-                        
-                            <td class="img0">&nbsp;</td>
-                            <td class="recomm"></td>
-                        
-                        <td class="pre_recomm"></td>
-						<td class="rpt_title">IBKS Daily [인터넷/게임]</td>
-                        <td class="comment2"></td>
+                        <td class="pre_recomm">Neutral</td>
+						<td class="rpt_title">5월 전력통계월보: 산업용 수요 및 판가 약세 지속</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 5월 전력판매량 YoY -0.7%, 전력판매금액 YoY -1.8%<br/><span class="comment_text">▶</span> 원자력과 유연탄 발전소 이용률 전월대비 개선<br/><span class="comment_text">▶</span> 2분기까지 특이사항 없음. 하반기는 일시적으로 비용 확대 예상</td>
                     </tr>
                     
                     <!--tr style="height:5px; border:0px;">

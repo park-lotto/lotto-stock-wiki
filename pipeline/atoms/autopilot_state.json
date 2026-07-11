@@ -1,6 +1,6 @@
 {
   "_daily_stats": {
-    "date": "2026-07-09",
+    "date": "2026-07-11",
     "detected": 1,
     "escalated": 2
   },
@@ -11,17 +11,19 @@
       "2026-07-06",
       "2026-07-07",
       "2026-07-08",
-      "2026-07-09"
+      "2026-07-09",
+      "2026-07-10",
+      "2026-07-11"
     ],
     "latest_outcome": "escalated",
-    "last_seen": "2026-07-09"
+    "last_seen": "2026-07-11"
   },
   "삼성반도체": {
-    "first_detected": "2026-07-09",
+    "first_detected": "2026-07-11",
     "diagnosed_dates": [
-      "2026-07-09"
+      "2026-07-11"
     ],
     "latest_outcome": "escalated",
-    "last_seen": "2026-07-09"
+    "last_seen": "2026-07-11"
   }
 }

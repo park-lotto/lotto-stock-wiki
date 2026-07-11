@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-09",
+    "broker": "유안타증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-10_0803_단단한 본질과 확실한 성장.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "이승웅",
+    "report_date": "2026.07.09",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "KT",
+        "code": "030200",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "73,000원",
+        "tp_prev": "73,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 연결 영업수익은 6.9조원(-7.4% YoY), 영업이익은 5,770억원(-43.1% YoY, OPM 8.4%)으로 시장 컨센서스(6.9조원, 6,135억원)를 하회할 전망이다.",
+        "estimate_revision": null,
+        "next_catalyst": "8월부터 유무선 통신의 외형 성장세 회복과 비용 부담 완화",
+        "thesis": [
+          "AIDC 및 해저케이블 투자 계획을 통한 경쟁력 강화와 성장동력 확보",
+          "BC카드 및 에스테이트 등 그룹사의 실적 개선 및 성장 기대",
+          "자사주 매입을 통한 주가 하방 지지"
+        ],
+        "valuation_basis": "하반기 이익 정상화 구간 진입 및 자사주 매입 효과를 감안하여 BUY 투자의견 및 목표주가 73,000원 유지",
+        "risk": "하반기 해킹 사태 영향",
+        "supply_comment": "5년간 5조원을 투자해 AIDC 수전용량을 1GW까지 확대하고, 해저케이블에도 1조원을 투자할 계획",
+        "quote": "하반기 해킹 사태 영향에서 벗어나 이익 정상화 구간에 들어설 것으로 판단한다. 현재 진행 중인 2,500억원의 자사주 매입은 67% 완료된 상황으로 당분간 주가의 하방을 지지하는 요인으로 작용할 전망이다. 동사에 대한 투자의견 BUY, 목표주가 73,000원을 유지한다."
+      }
+    ],
+    "sector": "통신"
+  }
+}

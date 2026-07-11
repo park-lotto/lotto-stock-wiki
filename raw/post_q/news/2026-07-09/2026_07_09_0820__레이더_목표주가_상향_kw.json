@@ -1,0 +1,116 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "Knight Transportation",
+      "signal": "bull",
+      "reason": "실적 전망 개선",
+      "ts": "2026-07-08",
+      "quote": "BofA, Knight Transportation 실적 전망에 목표주가 상향 조정",
+      "sector": "기타"
+    },
+    {
+      "name": "삼성전자",
+      "signal": "neutral",
+      "reason": "증권가 엇갈린 전망(상향 vs 하향)",
+      "ts": "2026-07-08",
+      "quote": "삼전 주식, 팔아? 버텨?…키움은 목표주가 ‘하향’ KB·IBK는 ‘상향’ 조정",
+      "sector": "반도체"
+    },
+    {
+      "name": "테슬라",
+      "signal": "bull",
+      "reason": "스페이스X 합병설 및 관련 기대감",
+      "ts": "2026-07-08",
+      "quote": "테슬라와 스페이스X 합병설? 월가는 벌써 목표주가 상향조정",
+      "sector": "2차전지"
+    },
+    {
+      "name": "델",
+      "signal": "bull",
+      "reason": "AI 인프라 시장 견조한 입지",
+      "ts": "2026-07-08",
+      "quote": "델, AI 인프라 시장 견조한 입지에 목표주가 상향",
+      "sector": "IT"
+    },
+    {
+      "name": "베라 테라퓨틱스",
+      "signal": "bull",
+      "reason": "FDA 승인",
+      "ts": "2026-07-08",
+      "quote": "구겐하임, FDA 승인에 베라 테라퓨틱스 목표주가 상향",
+      "sector": "바이오"
+    },
+    {
+      "name": "시그나",
+      "signal": "bull",
+      "reason": "실적 전망 개선",
+      "ts": "2026-07-08",
+      "quote": "번스타인, 실적 전망에 시그나 목표주가 $381로 상향",
+      "sector": "기타"
+    },
+    {
+      "name": "Penguin Solutions",
+      "signal": "bull",
+      "reason": "AI 성장세",
+      "ts": "2026-07-08",
+      "quote": "Citizens, AI 성장세에 Penguin Solutions 목표주가 상향",
+      "sector": "IT"
+    },
+    {
+      "name": "Scholastic",
+      "signal": "bull",
+      "reason": "도서 판매 성장세",
+      "ts": "2026-07-08",
+      "quote": "B.Riley, Scholastic 목표주가 $42로 상향…도서 판매 성장세 반영",
+      "sector": "소비내수"
+    },
+    {
+      "name": "ADP",
+      "signal": "bull",
+      "reason": "유동 자산 수입 전망 개선",
+      "ts": "2026-07-08",
+      "quote": "Stifel, 유동 자산 수입 전망에 ADP 목표주가 $260로 상향",
+      "sector": "기타"
+    },
+    {
+      "name": "피너클 웨스트 캐피탈",
+      "signal": "bull",
+      "reason": null,
+      "ts": "2026-07-08",
+      "quote": "제프리스, 피너클 웨스트 캐피탈 목표주가 129달러로 상향",
+      "sector": "기타"
+    },
+    {
+      "name": "앱러빈",
+      "signal": "bull",
+      "reason": null,
+      "ts": "2026-07-07",
+      "quote": "웰스파고, 모바일 게임 앱러빈 목표주가 상향 조정",
+      "sector": "IT"
+    },
+    {
+      "name": "팔로 알토 네트웍스",
+      "signal": "bull",
+      "reason": "성장 전망",
+      "ts": "2026-07-07",
+      "quote": "니덤, 팔로 알토 네트웍스 성장 전망에 목표 주가 상향",
+      "sector": "IT"
+    },
+    {
+      "name": "마스터카드",
+      "signal": "bull",
+      "reason": "예상치 뛰어넘는 매출",
+      "ts": "2026-07-07",
+      "quote": "Baird, 마스터카드 목표 주가 상향…예상치 뛰어넘는 매출",
+      "sector": "기타"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "증권가, 목표주가 상향 조정 리포트 다수 발표",
+      "ts": "2026-07-08",
+      "quote": "증권가, 삼성전자 목표주가 상향 잇따라"
+    }
+  ]
+}

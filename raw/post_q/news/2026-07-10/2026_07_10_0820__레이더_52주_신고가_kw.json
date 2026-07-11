@@ -1,0 +1,149 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "프리비아 헬스 그룹",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-09",
+      "quote": "프리비아 헬스 그룹 주가, 52주 신고가 27.71달러 기록",
+      "sector": "바이오"
+    },
+    {
+      "name": "Urogen Pharma",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-09",
+      "quote": "Urogen Pharma 주가, 52주 신고가 $39.59 기록",
+      "sector": "바이오"
+    },
+    {
+      "name": "PC Connection",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-09",
+      "quote": "PC Connection 주가, 75.35달러로 52주 신고가 경신",
+      "sector": "IT"
+    },
+    {
+      "name": "Nurix Therapeutics",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-09",
+      "quote": "Nurix Therapeutics 주가, 24.93달러로 52주 신고가 경신",
+      "sector": "바이오"
+    },
+    {
+      "name": "넷스카우트 시스템즈",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-09",
+      "quote": "넷스카우트 시스템즈 주가, 44.11달러로 52주 신고가 기록",
+      "sector": "IT"
+    },
+    {
+      "name": "World Fuel Services",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-09",
+      "quote": "World Fuel Services 주가, 52주 신고가 $33.99 기록",
+      "sector": "기타"
+    },
+    {
+      "name": "아부투스 바이오파마",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-09",
+      "quote": "아부투스 바이오파마 주가, 52주 신고가 $5.34 기록",
+      "sector": "바이오"
+    },
+    {
+      "name": "코버넌트 로지스틱스 그룹",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-09",
+      "quote": "코버넌트 로지스틱스 그룹, 주가 47.24달러로 52주 신고가 경신",
+      "sector": "기타"
+    },
+    {
+      "name": "밀리콤 인터내셔널",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-09",
+      "quote": "밀리콤 인터내셔널 주가, 52주 신고가 95.77달러 기록",
+      "sector": "통신"
+    },
+    {
+      "name": "캠든 프라퍼티 트러스트",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-07",
+      "quote": "캠든 프라퍼티 트러스트, 52주 신고가 $117.56 기록",
+      "sector": "기타"
+    },
+    {
+      "name": "First Industrial Realty Trust",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-08",
+      "quote": "First Industrial Realty Trust 주식, 64.7달러로 52주 신고가 경신",
+      "sector": "기타"
+    },
+    {
+      "name": "Immunovant",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-07",
+      "quote": "Immunovant 주식, 39.28달러로 52주 신고가 경신",
+      "sector": "바이오"
+    },
+    {
+      "name": "Tenable Holdings Inc",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-07",
+      "quote": "Tenable Holdings Inc, 주가 42.44달러로 52주 신고가 기록",
+      "sector": "IT"
+    },
+    {
+      "name": "브로드스톤 넷 리스",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-07",
+      "quote": "브로드스톤 넷 리스 주가 21.51달러로 52주 신고가 경신",
+      "sector": "기타"
+    },
+    {
+      "name": "유나이티드헬스그룹",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-08",
+      "quote": "유나이티드헬스그룹 주가, 52주 신고가 430.3달러 기록",
+      "sector": "바이오"
+    },
+    {
+      "name": "TG 테라퓨틱스",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-07",
+      "quote": "TG 테라퓨틱스 주가, 57.4달러로 52주 신고가 경신",
+      "sector": "바이오"
+    },
+    {
+      "name": "U.S 뱅코프",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-06",
+      "quote": "U.S 뱅코프 주가 52주 신고가 62.79달러 기록",
+      "sector": "기타"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "7월 9일 다수의 종목이 52주 신고가를 기록함",
+      "ts": "2026-07-09",
+      "quote": "[표]7월 9일 52주 신고가 종목 및 최근 동향"
+    }
+  ],
+  "quote": "7월 초 다양한 업종의 종목들이 52주 신고가를 경신하며 강세를 보임"
+}

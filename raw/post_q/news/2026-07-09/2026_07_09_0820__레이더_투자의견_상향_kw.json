@@ -1,0 +1,149 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "오랑쥬",
+      "signal": "bull",
+      "reason": "프랑스 통신 시장 통합",
+      "ts": "2026-07-08",
+      "quote": "케플러, 프랑스 통신 시장 통합으로 오랑쥬 투자의견 상향",
+      "sector": "통신"
+    },
+    {
+      "name": "올드도미니언플라이트라인",
+      "signal": "bull",
+      "reason": "웰스파고 투자의견·목표가 상향",
+      "ts": "2026-07-08",
+      "quote": "올드도미니언플라이트라인, 웰스파고 투자의견·목표가 상향에 강세",
+      "sector": "기타"
+    },
+    {
+      "name": "시네마크",
+      "signal": "bull",
+      "reason": "산업 전망 개선",
+      "ts": "2026-07-08",
+      "quote": "골드만삭스, 시네마크 투자의견 상향... 산업 전망 개선",
+      "sector": "기타"
+    },
+    {
+      "name": "팔란티어",
+      "signal": "bull",
+      "reason": "증권사 투자의견 상향",
+      "ts": "2026-07-03",
+      "quote": "팔란티어, 증권사 투자의견 상향에 주가 상승…목표가 175달러",
+      "sector": "IT"
+    },
+    {
+      "name": "퍼스트솔라",
+      "signal": "bull",
+      "reason": "주가 조정은 매수 기회",
+      "ts": "2026-07-07",
+      "quote": "퍼스트솔라, 주가 조정은 매수 기회...투자의견 상향-도이체",
+      "sector": "신재생"
+    },
+    {
+      "name": "Forvia",
+      "signal": "bull",
+      "reason": "연간 가이던스 재확인",
+      "ts": "2026-07-08",
+      "quote": "Citi, Forvia 투자의견 상향…연간 가이던스 재확인이 회복 견인할 것",
+      "sector": "자동차"
+    },
+    {
+      "name": "Halma",
+      "signal": "bull",
+      "reason": "성장 전망 밝음",
+      "ts": "2026-07-08",
+      "quote": "뱅크오브아메리카, Halma 성장 전망 밝다며 투자의견 상향",
+      "sector": "기타"
+    },
+    {
+      "name": "달러 트리",
+      "signal": "bull",
+      "reason": "실적 상승 기대감",
+      "ts": "2026-07-08",
+      "quote": "달러 트리, 실적 상승 기대감에 투자의견 상향…매장 방문객 감소는 여전",
+      "sector": "소비내수"
+    },
+    {
+      "name": "아메리칸 타워",
+      "signal": "bull",
+      "reason": "타워 시장 회복 기대",
+      "ts": "2026-07-08",
+      "quote": "울프 리서치, 아메리칸 타워 투자의견 상향...타워 시장 회복 기대",
+      "sector": "통신"
+    },
+    {
+      "name": "옥시덴탈",
+      "signal": "bull",
+      "reason": "부채 감축에 따른 현금흐름 개선",
+      "ts": "2026-07-08",
+      "quote": "에버코어, 옥시덴탈 부채 감축이 현금흐름 개선 이끈다며 투자의견 상향",
+      "sector": "기타"
+    },
+    {
+      "name": "Restoration Hardware",
+      "signal": "bull",
+      "reason": "주식 안정화 전망",
+      "ts": "2026-07-08",
+      "quote": "골드만삭스, Restoration Hardware 주식 ’안정화 전망’에 투자의견 상향 조정",
+      "sector": "소비내수"
+    },
+    {
+      "name": "카스텔룸",
+      "signal": "bull",
+      "reason": "자사주 매입 기대감",
+      "ts": "2026-07-08",
+      "quote": "자사주 매입 기대감에 바클레이즈, 카스텔룸 투자의견 상향",
+      "sector": "기타"
+    },
+    {
+      "name": "Tele2",
+      "signal": "bull",
+      "reason": "현금 흐름 강점과 통합 기대감",
+      "ts": "2026-07-08",
+      "quote": "Kepler, 현금 흐름 강점과 통합 기대감에 Tele2 투자의견 상향",
+      "sector": "통신"
+    },
+    {
+      "name": "Allegiant Travel",
+      "signal": "bull",
+      "reason": "선 컨트리 인수 후 매수 의견",
+      "ts": "2026-07-07",
+      "quote": "멜리우스, Allegiant Travel 주식 투자의견 선 컨트리 인수 후 ’매수’로 상향",
+      "sector": "기타"
+    },
+    {
+      "name": "Flagstar Bank",
+      "signal": "bull",
+      "reason": "실적 회복 기대",
+      "ts": "2026-07-06",
+      "quote": "TD Cowen, Flagstar Bank 실적 회복 기대에 투자의견 상향",
+      "sector": "기타"
+    },
+    {
+      "name": "사브라 헬스케어",
+      "signal": "bull",
+      "reason": "실적 회복 및 목표가 상향",
+      "ts": "2026-07-08",
+      "quote": "트루이스트, 사브라 헬스케어 투자의견 ’매수’ 상향…목표가 $22 제시",
+      "sector": "바이오"
+    },
+    {
+      "name": "SBO",
+      "signal": "bull",
+      "reason": "Kepler Cheuvreux의 투자의견 상향",
+      "ts": "2026-07-06",
+      "quote": "Kepler Cheuvreux의 투자의견 상향 후 SBO 주가 2% 상승",
+      "sector": "기타"
+    },
+    {
+      "name": "Cloudflare",
+      "signal": "bull",
+      "reason": "AI 인프라 성장",
+      "ts": "2026-07-07",
+      "quote": "Scotiabank, AI 인프라 성장 주목하며 Cloudflare 투자의견 상향",
+      "sector": "IT"
+    }
+  ]
+}

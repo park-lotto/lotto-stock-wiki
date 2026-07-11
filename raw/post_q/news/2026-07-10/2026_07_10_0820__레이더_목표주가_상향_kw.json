@@ -1,0 +1,149 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "램리서치",
+      "signal": "bull",
+      "reason": "AI 칩 수요",
+      "ts": "2026-07-09",
+      "quote": "미즈호, AI 칩 수요에 램리서치 목표 주가 상향",
+      "sector": "반도체"
+    },
+    {
+      "name": "제너럴 다이내믹스",
+      "signal": "bull",
+      "reason": "항공 부문 강세",
+      "ts": "2026-07-09",
+      "quote": "제프리스, 제너럴 다이내믹스 목표주가 상향...항공 부문 강세",
+      "sector": "방산"
+    },
+    {
+      "name": "서비스나우",
+      "signal": "bull",
+      "reason": "AI 채택 전망",
+      "ts": "2026-07-09",
+      "quote": "트루이스트, 서비스나우 목표주가 AI 채택 전망에 상향 조정",
+      "sector": "IT"
+    },
+    {
+      "name": "Everest Group",
+      "signal": "bull",
+      "reason": "재난 기대치 하향 조정",
+      "ts": "2026-07-09",
+      "quote": "Cantor Fitzgerald, Everest Group 목표주가 상향…재난 기대치 하향 조정에 기반",
+      "sector": "기타"
+    },
+    {
+      "name": "에어버스",
+      "signal": "bull",
+      "reason": "2분기 실적 호조 전망",
+      "ts": "2026-07-09",
+      "quote": "골드만삭스, 에어버스 2분기 실적 호조 전망…목표주가 상향",
+      "sector": "기타"
+    },
+    {
+      "name": "Enliven Therapeutics",
+      "signal": "bull",
+      "reason": "임상 데이터",
+      "ts": "2026-07-09",
+      "quote": "H.C. Wainwright, 임상 데이터 기반 Enliven Therapeutics 목표주가 상향",
+      "sector": "바이오"
+    },
+    {
+      "name": "리바이 스트라우스",
+      "signal": "bull",
+      "reason": "호실적",
+      "ts": "2026-07-09",
+      "quote": "스티펠, 호실적에 리바이 스트라우스 목표주가 상향 조정",
+      "sector": "소비내수"
+    },
+    {
+      "name": "트래블러스",
+      "signal": "bull",
+      "reason": "마진 전망",
+      "ts": "2026-07-09",
+      "quote": "캔터 피츠제럴드, 마진 전망에 트래블러스 목표주가 상향",
+      "sector": "기타"
+    },
+    {
+      "name": "Delek Logistics",
+      "signal": "bull",
+      "reason": "강력한 전망",
+      "ts": "2026-07-09",
+      "quote": "미즈호, Delek Logistics 목표주가 $54로 상향…강력한 전망",
+      "sector": "기타"
+    },
+    {
+      "name": "헬렌오브트로이",
+      "signal": "bull",
+      "reason": "1분기 실적 호조",
+      "ts": "2026-07-09",
+      "quote": "UBS, 헬렌오브트로이 목표주가 상향...1분기 실적 호조",
+      "sector": "소비내수"
+    },
+    {
+      "name": "레이몬드 제임스",
+      "signal": "bull",
+      "reason": "자산관리 강점",
+      "ts": "2026-07-09",
+      "quote": "Citizens, 레이몬드 제임스 목표주가 상향… 자산관리 강점 부각",
+      "sector": "기타"
+    },
+    {
+      "name": "센사타 테크놀로지스",
+      "signal": "bull",
+      "reason": "운영 성과 개선",
+      "ts": "2026-07-09",
+      "quote": "BofA, 센사타 테크놀로지스 목표주가 상향…운영 성과 개선",
+      "sector": "IT"
+    },
+    {
+      "name": "Ligand Pharma",
+      "signal": "bull",
+      "reason": "로열티 성장",
+      "ts": "2026-07-09",
+      "quote": "BofA, 로열티 성장으로 Ligand Pharma 목표주가 상향 조정",
+      "sector": "바이오"
+    },
+    {
+      "name": "Bandwidth",
+      "signal": "bull",
+      "reason": "AI 음성 기술 성장",
+      "ts": "2026-07-09",
+      "quote": "B.Riley, AI 음성 기술 성장에 Bandwidth 목표주가 상향 조정",
+      "sector": "통신"
+    },
+    {
+      "name": "처브",
+      "signal": "bull",
+      "reason": "자사주 매입",
+      "ts": "2026-07-09",
+      "quote": "캔터 피츠제럴드, 처브 목표주가 상향…자사주 매입 영향",
+      "sector": "기타"
+    },
+    {
+      "name": "나이트 트랜스포테이션",
+      "signal": "bull",
+      "reason": "트럭 운송 전망",
+      "ts": "2026-07-09",
+      "quote": "벤치마크, 트럭 운송 전망에 나이트 트랜스포테이션 목표주가 상향",
+      "sector": "기타"
+    },
+    {
+      "name": "비타 코코",
+      "signal": "bull",
+      "reason": "매출 성장세",
+      "ts": "2026-07-09",
+      "quote": "피퍼 샌들러, 비타 코코 매출 성장세에 목표주가 상향",
+      "sector": "소비내수"
+    },
+    {
+      "name": "삼성전자",
+      "signal": "bull",
+      "reason": "증권가 목표주가 상향",
+      "ts": "2026-07-06",
+      "quote": "\"50만전자 간다\"…증권가, 삼성전자 목표주가 상향 잇따라",
+      "sector": "반도체"
+    }
+  ]
+}

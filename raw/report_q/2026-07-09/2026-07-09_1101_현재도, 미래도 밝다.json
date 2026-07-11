@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-09",
+    "broker": "하나증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-09_1101_현재도, 미래도 밝다.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "이준호",
+    "report_date": "2026년 7월 9일",
+    "stocks": [
+      {
+        "name": "NC",
+        "code": "036570",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "420,000원",
+        "tp_prev": "420,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "NC는 2분기 연결 기준 영업수익 6,846억원(+79.0%YoY, +22.8%QoQ), 영업이익 1,345억원(+792.0%YoY, +18.7%QoQ)으로 영업이익 컨센서스를 소폭 상회할 전망이다.",
+        "estimate_revision": "2026년 영업수익 2조 8,036억원(+86.0%YoY), 영업이익 5,389억원(+3,251.3%YoY, OPM 19.2%)을 기록할 전망이다.",
+        "next_catalyst": "9월 [아이온2 글로벌] 출시 예정",
+        "thesis": [
+          "리니지 클래식의 고무적인 성과와 아이온2 글로벌 출시로 인한 실적 견인",
+          "현재 서비스 라인업만으로도 2027년까지 증익이 확실한 상황",
+          "글로벌향 신작 로드맵(아이온2 글로벌, 호라이즌 스틸 프론티어즈, 길드워3) 가시화"
+        ],
+        "valuation_basis": "현재 12MF P/E 11배 이하의 주가 수준은 저평가 구간이라고 판단",
+        "risk": "자체 퍼블리싱, MMORPG 장르의 글로벌 수요에 대한 우려",
+        "supply_comment": null,
+        "quote": "투자의견 Buy, 목표주가 420,000원, 게임 산업 Top Pick을 유지한다."
+      }
+    ]
+  }
+}

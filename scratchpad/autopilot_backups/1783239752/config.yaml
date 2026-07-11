@@ -1,0 +1,395 @@
+server:
+  output_dir: /home/ubuntu/kmong/crawling_bot/output/md
+  log_dir: /home/ubuntu/kmong/crawling_bot/logs
+  timezone: Asia/Seoul
+  file_server_port: 8888
+ai:
+  provider: groq
+  model: qwen/qwen3-32b
+  whisper_model: whisper-large-v3
+  max_tokens: 1500
+news:
+  enabled: false
+  schedule: 0 * * * *
+  feeds:
+  - name: 아시아경제
+    url: https://www.asiae.co.kr/rss/all.htm
+    enabled: true
+  - name: MBN 경제
+    url: https://www.mbn.co.kr/rss/economy
+    enabled: true
+  - name: SBS 경제
+    url: https://news.sbs.co.kr/news/SectionRssFeed.do?sectionId=02&plink=RSSREADER
+    enabled: true
+  - name: CNBC Markets
+    url: https://www.cnbc.com/id/20910258/device/rss/rss.html
+    enabled: true
+  - name: Bloomberg Markets
+    url: https://feeds.bloomberg.com/markets/news.rss
+    enabled: true
+  - name: 매일경제
+    url: https://www.mk.co.kr/rss/30000001/
+    enabled: true
+  - name: 연합인포맥스
+    url: https://news.einfomax.co.kr/rss/allArticle.xml
+    enabled: true
+  - name: 인베스팅닷컴
+    url: https://kr.investing.com/rss/news.rss
+    enabled: true
+  - name: 한국경제
+    url: https://www.hankyung.com/feed/economy
+    enabled: true
+  - name: 한국경제주식
+    url: https://www.hankyung.com/feed/finance
+    enabled: true
+  - name: 서울경제
+    url: https://www.sedaily.com/RSS/Economy
+    enabled: true
+  - name: 뉴시스경제
+    url: https://www.newsis.com/RSS/economy.xml
+    enabled: true
+  - name: 조선비즈주식
+    url: https://biz.chosun.com/arc/outboundfeeds/rss/category/stock/?outputType=xml
+    enabled: true
+  - name: MarketWatch
+    url: https://feeds.marketwatch.com/marketwatch/topstories/
+    enabled: true
+  - name: FT
+    url: https://www.ft.com/?format=rss
+    enabled: true
+  collect_all: false
+  keywords:
+  - 미국관세
+  - 이란전쟁
+  - 호르무즈
+  - 조선업
+  - 조선소
+  - 조선수주
+  - 방산
+  - 하이닉스
+  - 동박
+  - 소부장
+  - 인텔
+  - 삼성전기
+  - 디앤디파마텍
+  - 올릭스
+  - 리가켐바이오
+  - 반도체클러스터
+  - sk하이닉스
+  - 두산에너빌리티
+  - 삼성전자
+  - 트럼프
+  - MLCC 기판
+  keyword_stock_map:
+  - keywords:
+    - mlcc
+    - 기판
+    stocks:
+    - 삼성전기
+    - 대덕전자
+    - 심텍
+    top_n: 10
+  - keywords:
+    - 하이브리드본딩
+    stocks:
+    - 한미반도체
+    top_n: 10
+  - keywords:
+    - 데이터센터
+    - 조선엔지
+    stocks:
+    - 한화엔진
+    - STX엔진
+    top_n: 10
+  - keywords:
+    - 원전
+    - 테라파워
+    stocks:
+    - HD현대중공업
+    - HD현대
+    top_n: 10
+telegram:
+  enabled: true
+  schedule: '*/15 7-23 * * *'
+  channels:
+  - name: 태린이아빠 주식투자
+    url: -1004362306699
+    enabled: true
+    collect_all: true
+    keywords: []
+  - name: 그로스리서치
+    url: https://t.me/growthresearch
+    enabled: true
+    collect_all: true
+    keywords: []
+  - name: 하나차이나
+    url: https://t.me/HANAchina
+    enabled: true
+    collect_all: true
+    keywords: []
+  - name: 신한리서치
+    url: https://t.me/shinhanresearch
+    enabled: true
+    collect_all: true
+    keywords: []
+  - name: 요약하는 고잉
+    url: https://t.me/one_going
+    enabled: true
+    collect_all: true
+    keywords: []
+  - name: 미래시황
+    url: https://t.me/globalmktinsight
+    enabled: true
+    collect_all: true
+    keywords: []
+  - name: 대신시황
+    url: https://t.me/daishinstrategy
+    enabled: true
+    collect_all: true
+    keywords: []
+  - name: 키움시황
+    url: https://t.me/hedgecat0301
+    enabled: true
+    collect_all: true
+    keywords: []
+  - name: 유안타시황
+    url: https://t.me/yuantais
+    enabled: true
+    collect_all: true
+    keywords: []
+  - name: 한투글로벌
+    url: https://t.me/chinaitev
+    enabled: true
+    collect_all: true
+    keywords: []
+  - name: 삼성반도체
+    url: https://t.me/jw_tech
+    enabled: true
+    collect_all: true
+    keywords: []
+  - name: 하나반도체
+    url: https://t.me/ITforYouFromHana
+    enabled: true
+    collect_all: true
+    keywords: []
+  - name: 다올조선방산
+    url: https://t.me/HI_GS
+    enabled: true
+    collect_all: true
+    keywords: []
+  - name: 한화철강
+    url: https://t.me/cheolkangtracking
+    enabled: true
+    collect_all: true
+    keywords: []
+  - name: 잠실개미고급수집
+    url: https://t.me/jake8lee
+    enabled: true
+    collect_all: true
+    keywords: []
+  - name: 주공고급수집
+    url: https://t.me/Yzoogong
+    enabled: true
+    collect_all: true
+    keywords: []
+  - name: 독학주식첵터정리
+    url: https://t.me/selfstudyview
+    enabled: true
+    collect_all: true
+    keywords: []
+  - name: 주식픽
+    url: https://t.me/stockinfo7
+    enabled: true
+    collect_all: true
+    keywords: []
+  - name: 실시간속보단독뉴스
+    url: https://t.me/news_kor
+    enabled: true
+    collect_all: true
+    keywords: []
+  - name: 실시간주식뉴스
+    url: https://t.me/realtime_stock_news
+    enabled: true
+    collect_all: true
+    keywords: []
+  - name: 그로쓰리서치특징주
+    url: https://t.me/rocket_news1
+    enabled: true
+    collect_all: true
+    keywords: []
+youtube:
+  enabled: true
+  schedule: 0 8,12,15,18,21 * * *
+  channels:
+  - name: 태린이아빠투자
+    url: https://www.youtube.com/@Taerins_Dad/videos
+    enabled: true
+    max_videos: 3
+    max_posts: 10
+  - name: UP_CYCLE_STOCK
+    url: https://www.youtube.com/@UP_CYCLE_STOCK/videos
+    enabled: true
+    max_videos: 3
+    max_posts: 10
+  - name: 한균수의주식사용설명서
+    url: https://www.youtube.com/@한균수의주식사용설명/videos
+    enabled: true
+    max_videos: 3
+    max_posts: 10
+  - name: GODofIT
+    url: https://www.youtube.com/@GODofIT_official/videos
+    enabled: true
+    max_videos: 3
+    max_posts: 10
+  - name: moneyinthetrap
+    url: https://www.youtube.com/@moneyinthetrap/videos
+    enabled: true
+    max_videos: 3
+    max_posts: 10
+  - name: 한국증권TV
+    url: https://www.youtube.com/@koreastockTV/videos
+    enabled: true
+    max_videos: 3
+    max_posts: 10
+  - name: hkwowtv
+    url: https://www.youtube.com/@hkwowtv/videos
+    enabled: true
+    max_videos: 3
+    max_posts: 10
+  - name: videos
+    url: https://www.youtube.com/@%EC%8B%AC%ED%94%8C%EA%B4%80%EC%8B%AC%EC%A2%85%EB%AA%A9TV/videos
+    enabled: true
+    max_videos: 3
+    max_posts: 10
+  - name: meritzon
+    url: https://www.youtube.com/@meritzon/videos
+    enabled: true
+    max_videos: 3
+    max_posts: 10
+  - name: futuresnow
+    url: https://www.youtube.com/@futuresnow/videos
+    enabled: true
+    max_videos: 3
+    max_posts: 10
+  - name: 3protv
+    url: https://www.youtube.com/@3protv/videos
+    enabled: true
+    max_videos: 3
+    max_posts: 10
+  - name: '@%ED%85%8C%EC%9D%B4%EB%B2%84'
+    url: https://www.youtube.com/@%ED%85%8C%EC%9D%B4%EB%B2%84/videos
+    enabled: true
+    max_videos: 3
+    max_posts: 10
+  - name: small_antmen
+    url: https://www.youtube.com/@small_antmen/videos
+    enabled: true
+    max_videos: 3
+    max_posts: 10
+  - name: Trimase_Stock
+    url: https://www.youtube.com/@Trimase_Stock/videos
+    enabled: true
+    max_videos: 3
+    max_posts: 10
+  - name: buja_tv
+    url: https://www.youtube.com/@buja_tv/videos
+    enabled: true
+    max_videos: 3
+    max_posts: 10
+  - name: understanding.
+    url: https://www.youtube.com/@understanding./videos
+    enabled: true
+    max_videos: 3
+    max_posts: 10
+  - name: blueoak1004
+    url: https://www.youtube.com/@blueoak1004/videos
+    enabled: true
+    max_videos: 3
+    max_posts: 10
+  - name: '@%EC%9D%B4%ED%95%B4%EC%A7%84_%EB%B0%94%EC%9D%B4%EC%98%A4%ED%88%AC%EC%9E%90'
+    url: https://www.youtube.com/@%EC%9D%B4%ED%95%B4%EC%A7%84_%EB%B0%94%EC%9D%B4%EC%98%A4%ED%88%AC%EC%9E%90/videos
+    enabled: true
+    max_videos: 3
+    max_posts: 10
+  - name: MER_NOTE
+    url: https://www.youtube.com/@MER_NOTE/videos
+    enabled: true
+    max_videos: 3
+    max_posts: 10
+  - name: e-hanbang
+    url: https://www.youtube.com/@e-hanbang/videos
+    enabled: true
+    max_videos: 3
+    max_posts: 10
+  - name: '@심플관심종목TV'
+    url: https://www.youtube.com/@심플관심종목TV/videos
+    enabled: true
+    max_videos: 3
+    max_posts: 10
+  - name: '@테이버'
+    url: https://www.youtube.com/@테이버/videos
+    enabled: true
+    max_videos: 3
+    max_posts: 10
+  - name: '@이해진_바이오투자'
+    url: https://www.youtube.com/@이해진_바이오투자/videos
+    enabled: true
+    max_videos: 3
+    max_posts: 10
+blog:
+  enabled: true
+  schedule: 0 8,12,15,18,21 * * *
+  sites:
+  - name: timegem 블로그
+    url: https://blog.naver.com/timegem
+    type: naver
+    enabled: true
+  - name: freekyj72 블로그
+    url: https://blog.naver.com/freekyj72
+    type: naver
+    enabled: true
+  - name: gunbaram 블로그
+    url: https://blog.naver.com/gunbaram
+    type: naver
+    enabled: true
+  - name: pokara61 블로그
+    url: https://blog.naver.com/pokara61
+    type: naver
+    enabled: true
+market:
+  enabled: true
+  collect:
+    domestic_index: true
+    foreign_index: true
+    foreign_futures: true
+    oil: true
+    bond: true
+    exchange_rate: true
+    volume_rank: true
+    fluctuation_rank: true
+  schedules:
+  - 0 9 * * 0-4
+  - 0 12 * * 0-4
+  - 20 15 * * 0-4
+  - 0 18 * * 0-4
+  - 0 20 * * 0-4
+client:
+  check_interval: 300
+recipients:
+- name: 고객(빅팜)
+  telegram_chat_id: 2121641255
+  enabled: true
+  receive:
+    news: true
+    market: true
+    blog: false
+    telegram: false
+    youtube: false
+    report: false
+reports:
+  enabled: true
+  schedule: 0 8,11 * * *
+  max_per_category: 10
+  summarize_categories:
+  - 종목분석
+  - 산업분석

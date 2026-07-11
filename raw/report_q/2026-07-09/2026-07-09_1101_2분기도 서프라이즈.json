@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-09",
+    "broker": "한화투자증권",
+    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-09_1101_2분기도 서프라이즈.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "한유정",
+    "report_date": "2026년 07월 08일",
+    "stocks": [
+      {
+        "name": "에이피알",
+        "code": "278470",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "500,000원",
+        "tp_prev": "500,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 2분기 에이피알의 연결 매출액은 7,512억원(+129.2% YoY, +26.6% QoQ), 영업이익은 1,838억원(+117.4% YoY, +20.7% QoQ)으로 컨센서스 영업이익(1,674억원)을 상회할 전망이다.",
+        "estimate_revision": null,
+        "next_catalyst": "계절적 성수기인 4분기 매출 증대",
+        "thesis": [
+          "미국 내 온라인 및 오프라인 채널(Amazon, TikTok, Target, Walmart) 확장 및 판매 호조",
+          "유럽 직접 사업 확대 및 성과 가시화",
+          "신규 SKU와 카테고리 확장 지속"
+        ],
+        "valuation_basis": null,
+        "risk": "일시적인 운임 부담 및 물류비 부담",
+        "supply_comment": "지정학적 리스크로 해상운송 리드타임이 길어진 상황에서, 빠르게 증가하는 수요에 대응하기 위해 항공운송을 확대한 영향으로 2분기 비용 부담이 컸다.",
+        "quote": "2026년 2분기 에이피알의 연결 매출액은 7,512억원(+129.2% YoY, +26.6% QoQ), 영업이익은 1,838억원(+117.4% YoY, +20.7% QoQ)으로 컨센서스 영업이익(1,674억원)을 상회할 전망이다."
+      }
+    ],
+    "sector": "화장품미용"
+  }
+}

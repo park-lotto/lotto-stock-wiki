@@ -1,0 +1,141 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "Adecco",
+      "signal": "bull",
+      "reason": "거시경제 전망 개선",
+      "ts": "2026-07-09",
+      "quote": "도이체방크, 거시경제 전망 개선으로 Adecco 투자의견 상향",
+      "sector": "기타"
+    },
+    {
+      "name": "파이브빌로우",
+      "signal": "bull",
+      "reason": "미즈호 투자의견 상향",
+      "ts": "2026-07-09",
+      "quote": "파이브빌로우, 상승…미즈호 투자의견 상향",
+      "sector": "소비내수"
+    },
+    {
+      "name": "SK하이닉스",
+      "signal": "neutral",
+      "reason": "목표가 185만원 제시",
+      "ts": "2026-07-09",
+      "quote": "'SK하이닉스 200만원 넘는데'…BNK증권, 목표가 185만원 제시",
+      "sector": "반도체"
+    },
+    {
+      "name": "ITT",
+      "signal": "bull",
+      "reason": "주식 가치 및 마진 전망 개선",
+      "ts": "2026-07-09",
+      "quote": "울프 리서치, ITT 주식 가치 및 마진 전망에 투자의견 상향",
+      "sector": "기타"
+    },
+    {
+      "name": "달러 트리",
+      "signal": "bull",
+      "reason": "실적 상승 기대감",
+      "ts": "2026-07-08",
+      "quote": "달러 트리, 실적 상승 기대감에 투자의견 상향…매장 방문객 감소는 여전",
+      "sector": "소비내수"
+    },
+    {
+      "name": "토스트",
+      "signal": "bull",
+      "reason": "상반기 실적 부진 딛고 반등 가능",
+      "ts": "2026-07-09",
+      "quote": "토스트, 상반기 실적 부진 딛고 반등 가능…투자의견·목표가↑-골드만삭스",
+      "sector": "IT"
+    },
+    {
+      "name": "Forvia",
+      "signal": "bull",
+      "reason": "연간 가이던스 재확인이 회복 견인",
+      "ts": "2026-07-08",
+      "quote": "Citi, Forvia 투자의견 상향…연간 가이던스 재확인이 회복 견인할 것",
+      "sector": "자동차"
+    },
+    {
+      "name": "퍼스트솔라",
+      "signal": "bull",
+      "reason": "주가 조정은 매수 기회 및 가치 평가 기반",
+      "ts": "2026-07-07",
+      "quote": "퍼스트솔라, 주가 조정은 매수 기회...투자의견 상향-도이체",
+      "sector": "신재생"
+    },
+    {
+      "name": "시네마크",
+      "signal": "bull",
+      "reason": "산업 전망 개선",
+      "ts": "2026-07-08",
+      "quote": "골드만삭스, 시네마크 투자의견 상향... 산업 전망 개선",
+      "sector": "기타"
+    },
+    {
+      "name": "US 뱅코프",
+      "signal": "bull",
+      "reason": "이자이익·수수료 수익 개선 기대",
+      "ts": "2026-07-06",
+      "quote": "US 뱅코프, 이자이익·수수료 수익 개선 기대...투자의견 상향-제프리스",
+      "sector": "기타"
+    },
+    {
+      "name": "아메리칸 타워",
+      "signal": "bull",
+      "reason": "타워 시장 회복 기대",
+      "ts": "2026-07-08",
+      "quote": "울프 리서치, 아메리칸 타워 투자의견 상향...타워 시장 회복 기대",
+      "sector": "통신"
+    },
+    {
+      "name": "Flagstar Bank",
+      "signal": "bull",
+      "reason": "실적 회복 기대",
+      "ts": "2026-07-06",
+      "quote": "TD Cowen, Flagstar Bank 실적 회복 기대에 투자의견 상향",
+      "sector": "기타"
+    },
+    {
+      "name": "Restoration Hardware",
+      "signal": "bull",
+      "reason": "주식 안정화 전망",
+      "ts": "2026-07-08",
+      "quote": "골드만삭스, Restoration Hardware 주식 ’안정화 전망’에 투자의견 상향 조정",
+      "sector": "소비내수"
+    },
+    {
+      "name": "GSK",
+      "signal": "bull",
+      "reason": "파이프라인 투자 강화",
+      "ts": "2026-07-06",
+      "quote": "HSBC, GSK 주식 투자의견 상향 조정: 파이프라인 투자 강화",
+      "sector": "바이오"
+    },
+    {
+      "name": "Cloudflare",
+      "signal": "bull",
+      "reason": "AI 인프라 성장 주목",
+      "ts": "2026-07-07",
+      "quote": "Scotiabank, AI 인프라 성장 주목하며 Cloudflare 투자의견 상향",
+      "sector": "IT"
+    },
+    {
+      "name": "SBO",
+      "signal": "bull",
+      "reason": "Kepler Cheuvreux 투자의견 상향",
+      "ts": "2026-07-06",
+      "quote": "Kepler Cheuvreux의 투자의견 상향 후 SBO 주가 2% 상승",
+      "sector": "기타"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "BofA, 광산주 투자의견 상향",
+      "ts": "2026-07-09",
+      "quote": "BofA, 광산주 투자의견 상향... 하락폭 제한적"
+    }
+  ],
+  "quote": "도이체방크, 거시경제 전망 개선으로 Adecco 투자의견 상향 외 다수 종목 투자의견 상향"
+}

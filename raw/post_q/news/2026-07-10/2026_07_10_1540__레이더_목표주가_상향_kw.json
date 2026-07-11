@@ -1,0 +1,34 @@
+{
+  "target_kind": "market",
+  "market_direction": null,
+  "macro_events": [
+    {
+      "fact": "코스피 고점 이후 목표주가 상향 리포트 절반으로 감소",
+      "ts": "2026-07-10 01:22",
+      "quote": "코스피 고점 이후 목표주가 상향 리포트, 절반으로 감소"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "IT",
+      "stance": "긍정",
+      "comment": "삼성SDS 클라우드와 AI 사업 성장 본격화"
+    },
+    {
+      "sector": "기타",
+      "stance": "긍정",
+      "comment": "MakeMyTrip 매출 전망 긍정적"
+    },
+    {
+      "sector": "기타",
+      "stance": "긍정",
+      "comment": "SK스퀘어 증권사 목표가 상향"
+    },
+    {
+      "sector": "기타",
+      "stance": "긍정",
+      "comment": "팬오션 VLCC 10척 매입 거래 성공적"
+    }
+  ],
+  "quote": "코스피 고점 이후 목표주가 상향 리포트, 절반으로 감소"
+}

@@ -1,0 +1,29 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "삼성SDI",
+      "signal": "bull",
+      "reason": "정부 주관 첫 'AI 배전망 ESS' 사업에서 전체 물량의 66%를 수주하며 시장 내 지배력을 입증함.",
+      "ts": "2026-07-10",
+      "quote": "삼성SDI, 정부 첫 'AI 배전망 ESS 구축 사업'서 ESS배터리 전체의 66% 수주",
+      "sector": "2차전지"
+    },
+    {
+      "name": "LG엔솔",
+      "signal": "neutral",
+      "reason": "배전망 ESS 사업자로 선정되었으나 삼성SDI 대비 수주 물량 비중이 낮음.",
+      "ts": "2026-07-10",
+      "quote": "LG엔솔, 배전망 ESS 사업자 선정…삼성SDI 66% 수주",
+      "sector": "2차전지"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "삼성SDI가 정부 주관 첫 'AI 배전망 ESS' 구축 사업에서 전체 배터리 물량의 66%를 수주함.",
+      "ts": "2026-07-10",
+      "quote": "삼성SDI, 정부 첫 'AI 배전망 ESS 구축 사업'서 ESS배터리 전체의 66% 수주"
+    }
+  ],
+  "quote": "삼성SDI, ‘AI 배전망 에너지저장장치’ 66% 수주"
+}

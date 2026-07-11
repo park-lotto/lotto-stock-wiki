@@ -1,0 +1,54 @@
+{
+  "target_kind": "sector",
+  "sector_name": "반도체",
+  "sector_view": "긍정",
+  "points": [
+    "SK하이닉스와 TSMC의 HBM4 개발 협력 및 2026년 양산 목표",
+    "첨단 패키징(CoWoS, EMIB) 기술 고도화에 따른 AI 반도체 공급망 변화",
+    "엔비디아 AI 가속기 탑재를 통한 SK하이닉스 HBM 경쟁력 입증",
+    "패키징 생태계 확장으로 인한 관련 장비 업체(피에스케이홀딩스 등) 수혜"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "SK하이닉스",
+      "comment": "TSMC와 협력하여 HBM4 개발 및 양산 추진, 패키징 기술 고도화",
+      "ts": "2026-07-10",
+      "quote": "SK하이닉스, TSMC와 손잡고 'HBM4' 개발…”2026년 양산\"",
+      "sector": "반도체"
+    },
+    {
+      "name": "삼성전자",
+      "comment": "TSMC와의 패키징 경쟁 및 AI 칩 공급망 내 위치",
+      "ts": "2026-07-10",
+      "quote": "삼성엔 절대 못 넘긴다…한국 견제하는 대만 TSMC의 선택",
+      "sector": "반도체"
+    },
+    {
+      "name": "피에스케이홀딩스",
+      "comment": "CoWoS 및 HBM 동시 수혜 기대",
+      "ts": "2026-07-10",
+      "quote": "피에스케이홀딩스, 목표가 15만원 상향…\"CoWoS·HBM 동시 수혜\"",
+      "sector": "반도체"
+    },
+    {
+      "name": "SKC",
+      "comment": "유리기판 기술 관련 훈풍 기대",
+      "ts": "2026-07-10",
+      "quote": "엔비디아도 유리기판에 '눈독'…SKC에 훈풍 부나",
+      "sector": "반도체"
+    }
+  ],
+  "events": [
+    {
+      "fact": "SK하이닉스-TSMC, HBM4 개발 협력 공식화",
+      "ts": "2024-04-19",
+      "quote": "SK하이닉스, TSMC와 손잡고 'HBM4' 개발…”2026년 양산\""
+    },
+    {
+      "fact": "엔비디아 HGX B200에 SK하이닉스 HBM3E 탑재 확인",
+      "ts": "2024-04-15",
+      "quote": "SK하이닉스 HBM3E, 엔비디아 HGX B200 탑재 확인"
+    }
+  ],
+  "quote": "SK하이닉스, 차세대 HBM에 TSMC 패키징 기술 'CoWoS' 선택"
+}

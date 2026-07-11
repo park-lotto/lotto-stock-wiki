@@ -1,0 +1,19 @@
+{
+  "target_kind": "market",
+  "market_direction": "중립",
+  "macro_events": [
+    {
+      "fact": "씨티그룹, 한국 10조원 규모 경기부양책 발표 예상",
+      "ts": "01-22",
+      "quote": "씨티그룹 “한국, 10조원 규모 경기부양책 발표할듯…이르면 3월”"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "기타",
+      "stance": "중립",
+      "comment": "경기부양책 발표에 따른 시장 영향 주목"
+    }
+  ],
+  "quote": "씨티그룹 “한국, 10조원 규모 경기부양책 발표할듯…이르면 3월”"
+}
