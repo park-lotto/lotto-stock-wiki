@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-25",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-26_0701_FLNG 글로벌 1등인데 FDC도.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "DS투자증권",
+    "analyst": "김대성",
+    "report_date": "2026.06.25",
+    "stocks": [
+      {
+        "name": "삼성중공업",
+        "code": "010140",
+        "rating": "매수",
+        "rating_changed": false,
+        "tp_new": "42,000원",
+        "tp_prev": "42,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "FLNG 부문 매출액은 27년 3조원, 28년 4.5조원 규모로 확대될 전망이다. 28년에는 Z-LNG 및 Cedar FLNG 인도에 따른 반복건조 효과와 체인지오더 정산이 맞물리며 20% 이상의 고마진 구간 진입을 전망한다.",
+        "estimate_revision": null,
+        "next_catalyst": "부유식 데이터센터(FDC) 수주 및 모잠비크 FLNG, 델핀 2호기 등 추가 FLNG 수주",
+        "thesis": [
+          "독보적인 FLNG 건조 역량을 바탕으로 한 FDC 시장 선점 및 수주 가시성 확보",
+          "FLNG 수주잔고 확대와 28년 고마진 구간 진입에 따른 실적 성장",
+          "액화 처리 장비 센스포(SENSPO) 내재화를 통한 수익성 레벨업"
+        ],
+        "valuation_basis": "목표주가 42,000원 투자의견 매수를 유지한다.",
+        "risk": "상세 설계 전 단계로 정확한 선가 및 마진 추정의 제한성",
+        "supply_comment": "FDC는 70~100MW급 니어쇼어 모델의 시리즈 발주가 견인할 전망이며, 500MW 규모 프로젝트 추진 시 5~7척의 동시 수주가 가능함",
+        "quote": "독보적인 FLNG 건조 역량을 통해 검증된 해수 냉각 및 안전 설비 기술력을 기반으로 FDC 수주에 있어 국내 조선사 중 가장 앞서 있다고 판단한다."
+      }
+    ]
+  }
+}

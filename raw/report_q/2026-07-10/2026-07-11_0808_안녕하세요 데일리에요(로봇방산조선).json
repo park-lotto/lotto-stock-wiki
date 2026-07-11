@@ -1,0 +1,65 @@
+{
+  "meta": {
+    "date": "2026-07-10",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-11_0808_안녕하세요 데일리에요(로봇방산조선).md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "양승윤",
+    "report_date": "07/09",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "6월 일본 공작기계 수주",
+      "폴란드 K2프로그램",
+      "미 군함 건조 요청"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "로봇",
+        "stance": null,
+        "reason": "삼성 로봇 레인보우로보틱스 4개 사업부 분할, LG전자 휴머노이드 로봇관절 악시움 조기 양산 등"
+      },
+      {
+        "sector": "방산",
+        "stance": null,
+        "reason": "지상군 방산전시회 K-DEX 출범, 현대로템 폴란드 K2전차 3차계약 윤곽 등"
+      },
+      {
+        "sector": "조선",
+        "stance": null,
+        "reason": "삼성중공업 연간 수주 100억 불 돌파, HD현대중공업 MR PC 6척 수주 등"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "12월",
+        "event": "지상군 방산전시회 'K-DEX' 첫 통합 개최"
+      },
+      {
+        "date": "2026~2034년",
+        "event": "폴란드 K2 3차 실행계약 이행"
+      }
+    ],
+    "top_picks": [
+      "레인보우로보틱스",
+      "LG전자",
+      "삼성전자",
+      "클로봇",
+      "미쓰비시자동차",
+      "1x",
+      "테슬라",
+      "현대로템",
+      "한화시스템",
+      "록히드 마틴",
+      "삼성중공업",
+      "HD현대중공업",
+      "유니온 마리타임",
+      "HD현대"
+    ],
+    "risk": null,
+    "quote": "일본 6월 공작기계 수주는 전년 대비 52.8% 증가한 2,035억엔을 기록하며 사상 처음으로 월간 2,000억엔을 돌파."
+  }
+}

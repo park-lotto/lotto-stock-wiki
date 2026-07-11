@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-26",
+    "broker": "SK증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-29_0700_백화점에 웃는다.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "SK증권",
+    "analyst": "최관순",
+    "report_date": "2026-06-26",
+    "stocks": [
+      {
+        "name": "현대지에프홀딩스",
+        "code": "005440",
+        "rating": "매수(유지)",
+        "rating_changed": false,
+        "tp_new": "20,000 원",
+        "tp_prev": "18,000 원",
+        "tp_direction": "up",
+        "earnings_outlook": "2026E 매출액 8,296 십억원, 영업이익 334 십억원, 순이익(지배주주) 437 십억원",
+        "estimate_revision": "목표주가도 지분가치 상승분을 반영하여 기존 18,000 원에서 20,000 원으로 상향한다.",
+        "next_catalyst": "현대홈쇼핑과의 포괄적 주식교환, 현대홈쇼핑 인적분할, 현대홈쇼핑 인적분할 후 투자회사와 현대지에프홀딩스의 합병",
+        "thesis": [
+          "현대백화점 지분가치 상승에 따른 NAV 증가",
+          "자사주 매입 및 배당 등 우호적인 주주환원 정책",
+          "포괄적 주식교환 및 합병을 통한 유동성 확대 및 배당수입 확대"
+        ],
+        "valuation_basis": "현대지에프홀딩스의 NAV(순자산가치) 산정 및 지분가치 상승분 반영",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "현대지에프홀딩스에 대한 투자의견 매수를 유지한다. 현대백화점에 대한 지분가치 상승과 우호적인 주주환원 정책이 주가에 반영될 것으로 예상하기 때문이다."
+      }
+    ]
+  }
+}

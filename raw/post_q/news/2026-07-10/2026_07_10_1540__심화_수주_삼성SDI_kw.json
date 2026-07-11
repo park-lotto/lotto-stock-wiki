@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "삼성SDI",
+      "signal": "bull",
+      "reason": "배전망 ESS 배터리 첫 수주전에서 완승을 거두며 시장 경쟁력 입증",
+      "ts": null,
+      "quote": "삼성SDI, 배전망 ESS 배터리 첫 수주전서 ‘완승’",
+      "sector": "2차전지"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "삼성SDI가 배전망 ESS 배터리 첫 수주전에서 승리함",
+      "ts": "2026-07-10",
+      "quote": "삼성SDI, 배전망 ESS 배터리 첫 수주전서 ‘완승’"
+    }
+  ],
+  "quote": "삼성SDI, 배전망 ESS 배터리 첫 수주전서 ‘완승’"
+}

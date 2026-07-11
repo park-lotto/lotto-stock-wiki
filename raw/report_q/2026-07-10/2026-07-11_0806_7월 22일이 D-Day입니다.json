@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "date": "2026-07-10",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-11_0806_7월 22일이 D-Day입니다.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "하나증권",
+    "analyst": "김홍식, 이상훈",
+    "report_date": "2026.7.10",
+    "market_direction": null,
+    "macro_vars": [
+      "미국 FCC 어퍼 C밴드 주파수 경매",
+      "미국 통신사 CAPEX"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "통신",
+        "stance": "매수 추천",
+        "reason": "미국 어퍼 C밴드 경매 일정 확정 및 2027년 실적 호전 기대감"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.7.22",
+        "event": "미국 FCC 어퍼 C밴드(3.98~4.14GHz) 160MHz에 대한 경매 여부 표결 결정"
+      }
+    ],
+    "top_picks": [
+      "KMW",
+      "HFR",
+      "RFHIC",
+      "SKT",
+      "LGU+"
+    ],
+    "risk": "코스닥 급락 및 미국 광통신 관련주 급락으로 인한 통신장비주 하락",
+    "quote": "현지 시간 7월 22일 1년간 고대했던 어퍼 C밴드 경매 일정 확정이 사실상 유력한 상황이라 현 시점 국내 무선통신장비주 적극 매수를 추천한다."
+  }
+}

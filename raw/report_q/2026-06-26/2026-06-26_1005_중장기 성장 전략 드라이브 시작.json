@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-26",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-26_1005_중장기 성장 전략 드라이브 시작.md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": "김진형",
+    "report_date": "2026.06.25",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "나우로보틱스",
+        "code": "459510",
+        "rating": "N/R",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "1Q26 매출액 19억원(+65% YoY), 영업적자 16억원(적자지속 YoY).",
+        "estimate_revision": null,
+        "next_catalyst": "1) 글로벌 Z사향 ODM 개시, 2) 제2공장 가동 등 CAPA 확대",
+        "thesis": [
+          "글로벌 Z사향 중대형 다관절 로봇 ODM 본격화로 1Q26부터 양산 매출 반영",
+          "인천 제2공장 준공 및 한양로보틱스 인수를 통한 CAPA 확대(최대 2,000억원 전망)",
+          "감속기 내재화 개발 완료 및 휴머노이드 시제품 개발 등 중장기 모멘텀 보유"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "주요 전방산업은 자동차/이차전지(47%)·화장품/의료기기(31%)",
+        "quote": "1Q26 매출액 19억원(+65% YoY), 영업적자 16억원(적자지속 YoY). 적자지속의 주요 원인은 한양 로보틱스 인수 등 선제적인 투자. 다만 1) 주로 하반기에 매출이 집중되는 계절성과, 2) 글로벌 Z사향 ODM 개시, 3) 제2공장 가동 등 CAPA 확대 등이 동시에 맞물리며 외형 성장과 수익성 개선 속도는 가속화될 것으로 기대"
+      }
+    ],
+    "sector": "로봇"
+  }
+}

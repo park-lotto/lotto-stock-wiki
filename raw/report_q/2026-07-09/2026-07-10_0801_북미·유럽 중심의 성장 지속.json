@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-09",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-10_0801_북미·유럽 중심의 성장 지속.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유안타증권",
+    "analyst": "이승은",
+    "report_date": "2026.07.09",
+    "stocks": [
+      {
+        "name": "달바글로벌",
+        "code": "483650",
+        "rating": "Not Rated",
+        "rating_changed": false,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 2분기 실적은 매출액 1,800억원(+40% YoY), 영업이익 410억원(+40% YoY, OPM 23%)이 예상되며 영업이익 시장기대치 417억원에 부합할 것으로 예상된다.",
+        "estimate_revision": "매출액 2Q26E 변경 전 1,795억원에서 변경 후 1,800억원으로 0.3% 상향, 영업이익 2Q26E 변경 전 446억원에서 변경 후 410억원으로 -8.1% 하향",
+        "next_catalyst": "글로벌 채널 확장 및 SKU 다변화",
+        "thesis": [
+          "북미 시장 아마존 판매 호조와 코스트코 및 Ulta 입점 확대, TikTok Shop 성장으로 매출 280억원(+121% YoY) 예상",
+          "유럽 시장 Notino, Druni, OVS, Boots 등 주요 오프라인 채널 확장 효과 본격화",
+          "멀티밤, 반반패드, Grip Glow Cushion 등 신규 SKU 판매 확대 및 Amazon Prime Day 매출 이연 효과 기대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "2026년 2분기 실적은 매출액 1,800억원(+40% YoY), 영업이익 410억원(+40% YoY, OPM 23%)이 예상되며 영업이익 시장기대치 417억원에 부합할 것으로 예상된다."
+      }
+    ],
+    "sector": "화장품미용"
+  }
+}

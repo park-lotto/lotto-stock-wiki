@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-26",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-26_1001_실적과 멀티플 둘 다 열려 있다.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "김록호",
+    "report_date": "2026년 6월 26일",
+    "stocks": [
+      {
+        "name": "SK하이닉스",
+        "code": "000660",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "3,600,000원",
+        "tp_prev": "2,750,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "SK하이닉스의 26년 2분기 매출액은 87.1조원(YoY +292%, QoQ +66%), 영업이익은 67.6조원(YoY +638%, QoQ +80%)으로 전망한다.",
+        "estimate_revision": "SK하이닉스의 2026년, 2027년 영업이익을 294조원, 435조원으로 기존대비 각각 8%, 18% 상향한다.",
+        "next_catalyst": "ADR 상장 일정이 확정되었고, Micron 실적발표를 통해 장기 공급 계약에 대한 디테일한 상황이 파악되었다.",
+        "thesis": [
+          "26년 하반기 일반 DRAM 가격이 LPDDR 중심으로 현재 가정을 상회할 것으로 예상",
+          "HBM4가 주력 제품으로 자리 잡으면서 Blended ASP 상승 및 신규 가격 결정 기여",
+          "장기 공급 계약 관련 실적 가시성이 높아 일반 메모리 대비 할증된 멀티플 적용 가능"
+        ],
+        "valuation_basis": "메모리 사업부 Peer Group 평균 EV/EBITDA 5.1배 적용, HBM 사업부 Peer Group 평균 EV/EBITDA 15.0배 적용",
+        "risk": null,
+        "supply_comment": "장기 공급 계약 관련 실적은 HBM과 마찬가지로 실적 가시성이 매우 높기 때문에 일반 메모리보다 할증된 멀티플 적용이 가능하다는 판단이다.",
+        "quote": "SK하이닉스에 대한 투자의견 ‘BUY’를 유지하고, 목표주가를 360만원으로 상향한다."
+      }
+    ],
+    "sector": "반도체"
+  }
+}

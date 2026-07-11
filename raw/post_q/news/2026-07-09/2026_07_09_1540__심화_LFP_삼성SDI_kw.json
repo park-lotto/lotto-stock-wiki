@@ -1,0 +1,29 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "삼성SDI",
+      "signal": "bull",
+      "reason": "엘앤에프와 LFP 양극재 공급 계약을 체결하여 미국 ESS 시장 공략을 가속화함",
+      "ts": "2026-07-09",
+      "quote": "삼성SDI, 엘앤에프와 LFP 양극재 공급 계약… 美 ESS 시장 공략 가속",
+      "sector": "2차전지"
+    },
+    {
+      "name": "엘앤에프",
+      "signal": "bull",
+      "reason": "삼성SDI와 LFP 양극재 공급 계약 체결",
+      "ts": "2026-07-09",
+      "quote": "삼성SDI, 엘앤에프와 LFP 양극재 공급 계약… 美 ESS 시장 공략 가속",
+      "sector": "2차전지"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "삼성SDI가 엘앤에프와 LFP 양극재 공급 계약을 맺고 미국 ESS 시장 공략을 본격화함",
+      "ts": "2026-07-09",
+      "quote": "삼성SDI, 엘앤에프와 LFP 양극재 공급 계약… 美 ESS 시장 공략 가속"
+    }
+  ],
+  "quote": "삼성SDI, 엘앤에프와 LFP 양극재 공급 계약… 美 ESS 시장 공략 가속"
+}

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-25",
+    "broker": "미래에셋증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-26_0702_27년에 더욱 부각될 생산능력.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "미래에셋증권",
+    "analyst": "김영건",
+    "report_date": "2026.6.25",
+    "stocks": [
+      {
+        "name": "삼성전자",
+        "code": "005930",
+        "rating": "매수",
+        "rating_changed": null,
+        "tp_new": "550,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "동사의 2Q26F/26F 영업이익 추정치를 각각 84.1조원/383조원(기존 97.7조원/395조원)으로 각각 -14%/-3% 하향했다.",
+        "estimate_revision": "하향",
+        "next_catalyst": "2Q26 50%대의 ASP 상승 이후에도 3Q26 전반적으로 20%를 웃도는 ASP 상승 가능성",
+        "thesis": [
+          "메모리 가격 상승구간에 최대 Capa 이점 극대화",
+          "2Q26 실적 전망치 하향 조정, 성과급 충당금 규모 확대",
+          "27년에 더욱 부각될 생산능력"
+        ],
+        "valuation_basis": "목표가를 환산한 26F P/E 및 P/B 배수는 각각 11.7배, 4.9배로 업종 평균보다 충분히 보수적인 눈높이다.",
+        "risk": "전체 성과급 충당금 규모 35조원 규모로 확대 추정 적용",
+        "supply_comment": "메모리 업계 전반에 걸쳐 50% 이상의 물량이 빅테크 고객사와 LTA로 묶일 전망이며, 동사 또한 예외가 아니다. LTA 비중이 확대되는 와중에 동사는 DRAM과 NAND 모두에서 최대 Capa 가동이 가능한 위치에 있어, 타이트해지는 수급 환경에서 상대적 공급여력 우위를 점유하고 있다.",
+        "quote": "동사에 대한 투자의견 '매수' 및 목표주가를 55만원으로 유지한다."
+      }
+    ]
+  }
+}

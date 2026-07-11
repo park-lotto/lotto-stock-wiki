@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date": "2026-07-10",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-11_0803_내년까지 마련된 이익 성장 스토리.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "김동우",
+    "report_date": "2026/07/10",
+    "stocks": [
+      {
+        "name": "NC",
+        "code": "036570",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "375,000원",
+        "tp_prev": "375,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "2Q26": "매출은 6,876억원(YoY +79.8%, QoQ +23.4%), 영업이익은 1,276억원(YoY +746.1%)으로 시장 예상치(매출 6,610억원, 영익 1,253억원) 부합 예상",
+          "26F": "매출 2.66조원(YoY +76.3%), 영업이익 5,055억원(YoY +3,044%)",
+          "27F": "매출 2.94조원(+10.6%), 영업이익 6,293억원(YoY +24.5%)"
+        },
+        "estimate_revision": null,
+        "next_catalyst": "아이온2(26년 9월 Steam 출시), Horizon: Steel Frontiers(27년 1H), DEFECT(27년), 아스트라에 오라티오(27년)",
+        "thesis": [
+          "캐주얼 애드테크(JustPlay) 및 개발사(스프링컴즈, 리후후) 인수를 통한 대형 신작 흥행 의존도 감소",
+          "강점인 MMORPG 장르와 신작 라인업(아이온2, Horizon: Steel Frontiers, DEFECT, 아스트라에 오라티오)의 흥행 모멘텀 지속",
+          "2027년부터 한국/일본 등 아시아 지역 구글 플레이스토어 수수료 인하에 따른 견조한 이익 성장 전망"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "동사는 캐주얼 애드테크(JustPlay) 및 개발사(스프링컴즈, 리후후) 인수를 통해 대형 신작 흥행에 대한 의존도를 줄이고 있으며, 동시에 신작 출시 모멘텀을 이어가고 있음."
+      }
+    ]
+  }
+}

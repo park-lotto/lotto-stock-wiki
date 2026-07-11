@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-10",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-11_0800_2Q26 Pre 쉬어가는 구간.md"
+  },
+  "questionnaire": {
+    "broker": "DS투자증권",
+    "analyst": "김민정",
+    "report_date": "2026.07.10",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "한미약품",
+        "code": "128940",
+        "rating": "매수",
+        "rating_changed": false,
+        "tp_new": "680,000원",
+        "tp_prev": "680,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 연결기준 매출액 약 4,601억원(+27.3% YoY) 및 영업이익 약 1,340억원(+121.7% YoY, OPM 29.1%)",
+        "estimate_revision": "컨센서스 매출액 약 3,894억원 및 영업이익 약 636억원 대비 대폭 상회할 것으로 전망한다.",
+        "next_catalyst": "HM17321 임상 1상 SAD 결과 발표",
+        "thesis": [
+          "GLP-2 신약 소네페글루타이드의 적응증 확장 가능성",
+          "비만치료제 에페글레나타이드 국내 출시 및 실적 기여",
+          "근육보존제 HM17321 임상 1상 결과 발표 및 파이프라인 가치 부여"
+        ],
+        "valuation_basis": null,
+        "risk": "북경한미가 집중구매제도 영향이 심화되며 실적에 부정적인 영향이 강화되고 있음",
+        "supply_comment": "GLP-2 analog 신약 소네페글루타이드 기술이전에 따른 Upfront $75mn(한화 약 1,129억원) 일시 인식",
+        "quote": "한미약품은 2Q26 연결기준 매출액 약 4,601억원(+27.3% YoY) 및 영업이익 약 1,340억원(+121.7% YoY, OPM 29.1%)로 컨센서스 매출액 약 3,894억원 및 영업이익 약 636억원 대비 대폭 상회할 것으로 전망한다."
+      }
+    ]
+  }
+}

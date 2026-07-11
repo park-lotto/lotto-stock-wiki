@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-10",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-11_0804_전과목 만점은 쉽지 않아 (2Q26 Pre).md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "김선아",
+    "report_date": "2026년 07월 10일",
+    "stocks": [
+      {
+        "name": "한미약품",
+        "code": "128940",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "710,000원",
+        "tp_prev": null,
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 실적은 연결기준 매출액 4,920억원(YoY+36.2%), 영업이익 1,215억원(YoY+101.0%, OPM 24.7%)으로 예상된다.",
+        "estimate_revision": "북경한미가 기대와 달리 집중구매제도의 영향에서 벗어나지 못하고 있고, 약품 별도의 코프로모션 효과도 뚜렷하지 않아 추정 EBITDA를 낮췄다.",
+        "next_catalyst": "4Q26부터는 에페글레나타이드가 출시될 예정이니 소액이여도 매출 기여를 기대할 수 있다.",
+        "thesis": [
+          "2Q-3Q는 계절적 비수기지만, 이번 분기는 선급금이 만회할 것",
+          "코프로모션 품목과의 시너지, 하반기 끝으로 갈수록 매출에 유리한 환경 조성될 것",
+          "7/6 인수한 앱토즈의 자산 가치와 ‘28년까지의 비용 관리 계획"
+        ],
+        "valuation_basis": "‘28년 EBITDA를 WACC 8.9%로 현가화하여, 목표 EV/EBITDA 15.8배(10% 프리미엄), 신약 비영업가치 2조2,281억원을 적용했다.",
+        "risk": "북경한미가 기대와 달리 집중구매제도의 영향에서 벗어나지 못하고 있고, 약품 별도의 코프로모션 효과도 뚜렷하지 않음.",
+        "supply_comment": null,
+        "quote": "‘28년 EBITDA를 WACC 8.9%로 현가화하여, 목표 EV/EBITDA 15.8배(10% 프리미엄), 신약 비영업가치 2조2,281억원을 적용했다."
+      }
+    ],
+    "sector": "바이오"
+  }
+}

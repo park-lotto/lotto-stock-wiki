@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "date": "2026-06-25",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-26_1009_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "박상준",
+    "report_date": "2026.06.25",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "국내 1분기 게임 분야 벤처 투자액 전년 동기 대비 90.9% 급감"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "대형사들은 역대 최대 실적을 기록하고 있으나 기존 IP 의존도가 높아지면서 국내 게임 산업 생태계 전반의 다양성이 훼손될 수 있다는 우려가 커지고 있음"
+      }
+    ],
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "크래프톤"
+    ],
+    "risk": "투자 시장 위축과 신작 부진이 맞물리며 중소 게임사들의 파산이 잇따르고 있으며, 올해 1분기 게임 분야 벤처 투자액은 전년 동기 대비 90.9% 급감함",
+    "quote": "흥행작도 투자도 없다…벼랑 끝 몰린 중소 게임사 파산 속출",
+    "sector": "IT"
+  }
+}

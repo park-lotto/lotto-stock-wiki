@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-25",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-26_0700_IPO 의무 발간 약국 채널 중심 사업 구조 유...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "한유정",
+    "report_date": "2026년 06월 24일",
+    "stocks": [
+      {
+        "name": "셀로맥스사이언스",
+        "code": "471820",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 1분기 연결 매출액은 47억원으로 전년 동기 대비 20.4% 감소했고, 영업이익은 3억원으로 전년 동기 대비 59.2% 감소했다.",
+        "estimate_revision": null,
+        "next_catalyst": "향후 회원약국 확대 속도, 기존 약국 내 판매 회전율, 신제품 성과, 해외 채널 매출화 여부",
+        "thesis": [
+          "약국 채널 주력의 건강기능식품 판매 구조",
+          "국내외 시장 채널·제품·해외 확장 전략",
+          "약국 직거래 중심의 영업조직 확대 및 회원약국 확보"
+        ],
+        "valuation_basis": null,
+        "risk": "국내 건강기능식품 시장 성장률 둔화",
+        "supply_comment": "회사는 직접 생산설비를 보유하지 않고 국내 전문제조업자에게 위탁 생산하는 구조이며, 약국 직거래를 중심으로 건강식품, 화장품, 일반의약품을 유통하고 있다.",
+        "quote": "셀로맥스사이언스는 2024년 12월 한화플러스제3호 SPAC과 흡수합병을 통해 코스닥 시장에 상장한 건강기능식품 판매 기업이다."
+      }
+    ]
+  }
+}

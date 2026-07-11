@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-09",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-10_0804_FLNG + FDC 강자.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "이지니",
+    "report_date": "2026.07.09",
+    "stocks": [
+      {
+        "name": "삼성중공업",
+        "code": "010140",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": 40000,
+        "tp_prev": 40000,
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 2분기 매출액 3.4조원, 영업이익 3,652억원(OPM 10.8%)로 전망",
+        "estimate_revision": "2026F 영업이익 1,564→1,397(억원), 2027F 영업이익 2,192→1,980(억원)",
+        "next_catalyst": "카타르 LNG 프로젝트, 글로벌 오퍼레이션 확대, 2도크 가동 본격화, FLNG 수주 확대, FDC 사업모델 구체화",
+        "thesis": [
+          "조선/해양 분야의 안정적인 매출 및 이익 성장",
+          "FLNG 사업부의 연간 4기 캐파 달성을 위한 적극적인 수주활동 및 매출 비중 확대",
+          "미래 성장전략인 FDC(부유식 데이터센터) 사업의 단계적 상업화 추진"
+        ],
+        "valuation_basis": "null",
+        "risk": "컨센서스는 1분기 발생한 일회성을 반영하지 않아 이익 수준이 다소 높게 형성되어 있음",
+        "supply_comment": "카타르 LNG 등 기존 대형 프로젝트는 2029년 하반기까지 슬롯이 채워진 상태",
+        "quote": "2026년 2분기 매출액 3.4조원, 영업이익 3,652억원(OPM 10.8%)로 전망"
+      }
+    ],
+    "sector": "조선"
+  }
+}

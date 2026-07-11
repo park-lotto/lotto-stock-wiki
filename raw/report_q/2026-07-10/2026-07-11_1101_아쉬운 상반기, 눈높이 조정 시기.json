@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-10",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-11_1101_아쉬운 상반기, 눈높이 조정 시기.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "이준호",
+    "report_date": "2026년 7월 10일",
+    "stocks": [
+      {
+        "name": "넷마블",
+        "code": "251270",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "60,000원",
+        "tp_prev": "68,000원",
+        "tp_direction": "down",
+        "earnings_outlook": "넷마블은 2분기 연결 기준 영업수익 7,214억원(+0.5%YoY, +10.7%QoQ), 영업이익 778억원(-23.1%YoY, +22.8%QoQ, OPM 10.8%)으로 컨센서스를 하회할 전망이다.",
+        "estimate_revision": "상반기 출시한 신작들의 매출 추이를 반영하여 추정치를 하향 조정했다.",
+        "next_catalyst": "하반기 [나 혼자만 레벨업: KARMA]를 포함한 5종을 준비 중이다. 기대해 볼 수 있는 신작은 5월 신규로 공개된 [프로젝트 이지스]다.",
+        "thesis": [
+          "상반기 출시한 [일곱 개의 대죄: Origin]과 [몬길: STAR DIVE]가 기대치에 미치지 못한 영향으로 실적 하회 전망",
+          "기존 강점인 다작을 통한 매출 창출, 약점으로 꼽히는 PLC(Product Life Cycle) 관리 역량에 대한 증명이 필요한 시점",
+          "2027년 신작들에 대한 정보 공개가 되어야 향후 추정치 상향이 가능하다고 판단"
+        ],
+        "valuation_basis": "12MF EPS에 Target Multiple 18배를 적용했다.",
+        "risk": "상반기 출시된 라인업 대비 기대감을 갖기는 어려운 라인업들이다.",
+        "supply_comment": null,
+        "quote": "투자의견 Buy를 유지, 목표주가는 60,000원으로 하향한다. 12MF EPS에 Target Multiple 18배를 적용했다."
+      }
+    ]
+  }
+}

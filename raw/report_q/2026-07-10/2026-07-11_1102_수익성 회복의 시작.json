@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-10",
+    "broker": "미래에셋증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-11_1102_수익성 회복의 시작.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "미래에셋증권",
+    "analyst": "정태준, CFA",
+    "report_date": "2026.7.10",
+    "stocks": [
+      {
+        "name": "DB손해보험",
+        "code": "005830",
+        "rating": "매수",
+        "rating_changed": true,
+        "tp_new": 210000,
+        "tp_prev": null,
+        "tp_direction": "up",
+        "earnings_outlook": "2분기 순이익은 4,993억원으로, 컨센서스 4,386억원을 13.8% 상회할 것으로 예상한다.",
+        "estimate_revision": "컨센서스 4,386억원을 13.8% 상회할 것으로 예상",
+        "next_catalyst": "하반기에 경영진이 연결 기준의 새로운 주주환원정책을 발표할 것으로 예상한다.",
+        "thesis": [
+          "위험손해율 개선에 따른 보험금 예실차가 축소될 전망",
+          "사업비 가정 변경에 따른 손실부담계약 비용 환입도 발생할 전망",
+          "지난 동기 일반보험에서의 고액사고 영향이 소멸함에 따라 전년동기대비로 개선될 것"
+        ],
+        "valuation_basis": "목표주가 산출에 적용한 2026년 예상 주당배당금 8,400원과 목표 배당수익률 4.0%를 유지했다.",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "DB손해보험에 대한 투자의견을 기존 중립에서 매수로 상향, 목표주가는 기존 210,000원을 유지한다."
+      }
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-26",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-29_0700_리가켐바이오 추가 투자 관련 코멘트.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "한유정",
+    "report_date": "2026년 6월 26일",
+    "stocks": [
+      {
+        "name": "오리온",
+        "code": "271560",
+        "rating": "Buy",
+        "rating_changed": null,
+        "tp_new": "180,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "바이오 사업 가치 상승",
+        "thesis": [
+          "지분 방어와 성장축 유지",
+          "바이오 사업 장기 투자 의지 재확인",
+          "합리적인 자본 배분"
+        ],
+        "valuation_basis": null,
+        "risk": "단기적인 1,250억원의 현금 유출",
+        "supply_comment": "오리온은 해외 종속회사 PAN ORION(지분율 95.2%)을 통해 리가켐바이오의 제3자배정 유상증자와 사모 CB 발행에 각각 참여한다.",
+        "quote": "종합하면 이번 공시는 단기적으로는 현금 유출, 중장기적으로는 지분 방어와 바이오 가치 유지 측면에서 긍정적이다."
+      }
+    ]
+  }
+}

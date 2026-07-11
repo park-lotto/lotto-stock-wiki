@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date": "2026-07-10",
+    "broker": "한국IR협의회",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-11_1102_파킨슨병 세포치료제, TED-A9의 글로벌 도전 ...md"
+  },
+  "questionnaire": {
+    "broker": "한국IR협의회",
+    "analyst": [
+      "김승준",
+      "이금민"
+    ],
+    "report_date": "2026.07.10",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "에스바이오메딕스",
+        "code": "304360",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 연간 실적은 매출액 약 194억원(+17.2% YoY), 영업손실 약 172억원(적자 확대)으로 추정",
+        "estimate_revision": null,
+        "next_catalyst": "FDA Type C Meeting, 미국 IND 신청 및 승인, 일본 PMDA Pre-consultation 등 'TED-A9' 글로벌 개발 이벤트",
+        "thesis": [
+          "TED와 FECS 두 세포공학 플랫폼을 기반으로 파킨슨병, 척수손상, 중증하지허혈 등 난치성 질환 세포치료제 파이프라인 개발",
+          "핵심 자산 'TED-A9'는 사멸된 도파민 신경세포를 직접 대체하는 세포 대체 치료제로 국내 임상 1/2a상에서 안전성 및 유효성 확인",
+          "자회사 에스테팜을 통한 의료기기 사업이 안정적인 캐시카우 역할을 수행하며 신약개발을 지원"
+        ],
+        "valuation_basis": "2026년 예상 실적 기준 PBR 31.5x, PSR 13.4x 수준",
+        "risk": "국내 초기 임상 데이터를 기반으로 미국 후기 임상 진입이 가능할지 여부 및 글로벌 임상 3상 진입 시 비용 부담 확대",
+        "supply_comment": null,
+        "quote": "2026년은 단기 실적보다는 FDA Type C Meeting, 미국 IND 신청, 일본 PMDA 협의, L/O 가능성 등 ‘TED-A9’ 글로벌 개발 이벤트에 주목할 시점",
+        "sector": "바이오"
+      }
+    ]
+  }
+}

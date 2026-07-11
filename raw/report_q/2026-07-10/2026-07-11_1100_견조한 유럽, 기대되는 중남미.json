@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-10",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-11_1100_견조한 유럽, 기대되는 중남미.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "박종대, 양정석",
+    "report_date": "2026년 07월 10일",
+    "stocks": [
+      {
+        "name": "실리콘투",
+        "code": "257720",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "52,000원",
+        "tp_prev": "50,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2분기 연결 매출 3,862억원(YoY 46%), 영업이익 714억원(YoY 37%) 추정",
+        "estimate_revision": null,
+        "next_catalyst": "멕시코 법인 설립 효과 본격화 및 유럽 내 메이저 리테일러 전개 확대",
+        "thesis": [
+          "유럽 지역 매출 YoY 65% 및 북미 매출 YoY 54% 성장 등 글로벌 실적 개선 견인",
+          "중남미 신규 현지 법인 물류센터를 통한 매출 본격화",
+          "현재 12MF PER 8.2배 수준의 현저한 저평가 상태"
+        ],
+        "valuation_basis": "매출이 YoY 40%, 영업이익이 YoY 30% 이상 증가하는 기업에 대해 현재 12MF PER 8.2배는 너무 인색한 밸류에이션",
+        "risk": "지속적인 투자 확대(물류센터/인력/마케팅비)로 인한 영업이익률의 제한적 수준",
+        "supply_comment": "K뷰티 글로벌 확대의 쇄빙선 및 국내 최대 화장품 무역 벤더로서의 입지 강화",
+        "quote": "실리콘투는 높은 매출 증가율과 이익 개선에도 불구하고, 현재 주가는 12MF PER 8.2배에 불과하다.",
+        "sector": "화장품미용"
+      }
+    ]
+  }
+}

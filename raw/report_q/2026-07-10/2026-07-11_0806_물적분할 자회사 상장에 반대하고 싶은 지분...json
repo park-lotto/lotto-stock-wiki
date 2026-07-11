@@ -1,0 +1,30 @@
+{
+  "meta": {
+    "date": "2026-07-10",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-11_0806_물적분할 자회사 상장에 반대하고 싶은 지분...md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "엄수진",
+    "report_date": "2026년 07월 08일",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "중복상장 가이드라인(안)",
+      "물적분할 자회사 상장",
+      "3% Rule"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "지난 6일",
+        "event": "한국거래소와 금융위원회는 중복상장 시 모회사의 의무 및 일반상장 대비 강화되어 적용되는 특례심사 기준에 관한 가이드라인 안을 발표했다."
+      }
+    ],
+    "top_picks": null,
+    "risk": "중복상장 시 3% Rule 적용으로 인해 일반주주 의결권이 제한되며, 이는 국민연금 등 다수 상장회사에서 3% 이상의 지분을 보유한 투자자에게 손해를 끼칠 수 있음.",
+    "quote": "중복상장은 지배주주와 일반주주의 이해가 충돌하는 대표적 상황이기에 일반주주 보호가 중요한데, 발표된 가이드라인 안에 따르면 보호 대상인 일반주주도 3% 이내로 의결권이 제한되는 결과가 발생한다."
+  }
+}

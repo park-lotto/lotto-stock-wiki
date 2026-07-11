@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "date": "2026-07-10",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-11_1104_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이승훈",
+    "report_date": "2026.07.10",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "코스피",
+      "코스닥",
+      "DOW",
+      "NASDAQ"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "인터넷/SW/게임 업종지수 및 국내외 기업 동향 리포트"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.07.10",
+        "event": "크래프톤, ‘서브노티카 2’ 첫 업데이트"
+      },
+      {
+        "date": "2026.07.08",
+        "event": "경찰청 압수코인, 두나무 1순위 협상대상자 선정"
+      }
+    ],
+    "top_picks": [
+      "크래프톤",
+      "두나무"
+    ],
+    "risk": null,
+    "quote": "크래프톤, ‘서브노티카 2’ 첫 업데이트…바이오모드·협동 플레이 개선, 경찰청 압수코인, 결국 두나무가 맡는다"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "date": "2026-07-10",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-11_0806_Weekly Retail-Cos.Letter - 홈플러스 폐업만...md"
+  },
+  "questionnaire": {
+    "market_direction": null,
+    "macro_vars": [
+      "아마존 프라임데이 매출과 마케팅 비용의 기간차",
+      "홈플러스 폐업 반사이익"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "소비내수",
+        "stance": null,
+        "reason": "홈플러스 폐업으로 롯데쇼핑과 이마트 등 대형마트 사업을 영위하고 있는 업체들의 반사이익이 기대된다."
+      },
+      {
+        "sector": "화장품미용",
+        "stance": null,
+        "reason": "에이피알 2분기 실적 예상보다 더 좋을 듯"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.7.10",
+        "event": "Weekly Retail-Cos. Letter 발행일"
+      }
+    ],
+    "top_picks": [
+      "롯데쇼핑",
+      "이마트",
+      "에이피알"
+    ],
+    "risk": "롯데쇼핑과 이마트의 경우 다른 실적 불확실성 요인이 작지 않음. 스타벅스(탱크데이), 신세계건설(미분양), G마켓(지분법손실), 하이마트와 마트 온라인 사업(비용부담) 등.",
+    "quote": "홈플러스 폐업만을 투자 포인트로 삼는 것은 무리",
+    "broker": "하나증권",
+    "analyst": "박종대, 양정석",
+    "report_date": "2026.7.10",
+    "target_kind": "market"
+  }
+}

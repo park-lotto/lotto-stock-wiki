@@ -1,0 +1,26 @@
+{
+  "target_kind": "sector",
+  "sector_name": "2차전지",
+  "sector_view": "긍정",
+  "points": [
+    "LG에너지솔루션과 GM의 합작사 얼티엄셀즈가 미국 테네시 공장에서 ESS용 LFP 배터리 양산 시작",
+    "기존 전기차 중심에서 ESS 시장으로 LFP 배터리 포트폴리오 확장"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "LG에너지솔루션",
+      "comment": "GM 합작법인 얼티엄셀즈를 통해 미국 내 ESS용 LFP 배터리 본격 양산 돌입",
+      "ts": "2026-07-08",
+      "quote": "LG엔솔·GM 합작 테네시 공장, ESS용 LFP 배터리 본격 양산",
+      "sector": "2차전지"
+    }
+  ],
+  "events": [
+    {
+      "fact": "LG에너지솔루션-GM 합작 테네시 공장, ESS용 LFP 배터리 양산 개시",
+      "ts": "2026-07-08",
+      "quote": "LG엔솔-GM 합작 ‘얼티엄셀즈’ 미 테네시 공장서 ESS용 LFP셀 양산"
+    }
+  ],
+  "quote": "LG엔솔-GM 합작 ‘얼티엄셀즈’ 미 테네시 공장서 ESS용 LFP셀 양산"
+}

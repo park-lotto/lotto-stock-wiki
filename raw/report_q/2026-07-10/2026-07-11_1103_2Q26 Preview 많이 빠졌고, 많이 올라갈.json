@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-10",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-11_1103_2Q26 Preview 많이 빠졌고, 많이 올라갈.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유진투자증권",
+    "analyst": "이해니",
+    "report_date": "2026.07.10",
+    "stocks": [
+      {
+        "name": "BGF 리테일",
+        "code": "282330",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "180,000원",
+        "tp_prev": "180,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26E 매출액 2.44조원(+6.6%, 이하 yoy), 영업이익 801억원(+15.4%) 전망",
+        "estimate_revision": "영업이익(26E) 305(직전 287) ▲, 영업이익(27E) 325(직전 300) ▲",
+        "next_catalyst": "3분기부터는 영업이익 훼손할 일회성 비용 없음",
+        "thesis": [
+          "외출에 적합했던 날씨로 객수와 객단가 모두 상승 추정",
+          "고유가, 강달러 상황 하에 해외 여행보다 내수로 쏠린 소비가 부의 효과와 맞물림",
+          "외국인 인바운드라는 고마진 신규 고객군 유입"
+        ],
+        "valuation_basis": "12MF 연결 순이익 246.2십억원, 12MF 지배주주 EPS 14,245원, Target PER 12.8배 적용",
+        "risk": "4월 화물연대 파업(처우 개선 및 운송료 협상 목적)으로 인한 상품 폐기 비용, 대차 비용",
+        "supply_comment": "향후 상승할 운송료는 제조사와의 납품 계약에 전가 예상",
+        "quote": "2Q26E 매출액 2.44조원(+6.6%, 이하 yoy), 영업이익 801억원(+15.4%) 전망",
+        "sector": "소비내수"
+      }
+    ]
+  }
+}

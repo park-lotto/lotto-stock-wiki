@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-26",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-26_1002_IPO 주관사 업데이트 고부가가치 품목 매출 ...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "김선아",
+    "report_date": "2026년 6월 26일",
+    "stocks": [
+      {
+        "name": "엠에프씨",
+        "code": "432980",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "‘25년 매출액 208억원(YoY +0.9%), 영업이익 3억원(YoY -79.7%)을 기록하며 5년 연속 영업이익 흑자를 이어갔다. 다만 올해 1분기에도 매출감소와 영업적자를 보이며 이익 감소 추세가 이어지고 있는데, 이는 고객사인 제약회사의 약가 인하 불확실성 등이 원인으로 보인다.",
+        "estimate_revision": null,
+        "next_catalyst": "Rosuvastatin과 Ilaprazole은 4Q26에 출시 가능할 것으로 전망된다.",
+        "thesis": [
+          "고순도 결정화 기술을 바탕으로 한 원료의약품/소재 개발 및 제조 전문성 확보",
+          "개량신약 원료의 고부가가치 창출 및 신약 후보물질 개발/CDMO 신사업 확대",
+          "AI 기반 의약품 예측 플랫폼 개발 및 글로벌 제약기업과의 협업을 통한 성과 가시화"
+        ],
+        "valuation_basis": null,
+        "risk": "2026년 상반기에 약가제도 개편으로 인해 단순 제네릭의 약가 오리지널 제품의 할인율이 증가되었고, 그로 인해 일시적으로 수주가 줄었다.",
+        "supply_comment": null,
+        "quote": "이제 약가 제도의 방향이 확정되었으므로 수주가 다시 증가하며 동사의 매출과 이익도 안정될 것으로 전망된다."
+      }
+    ]
+  }
+}

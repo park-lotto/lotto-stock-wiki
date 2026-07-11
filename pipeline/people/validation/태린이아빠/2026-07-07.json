@@ -1,0 +1,39 @@
+{
+  "date": "2026-07-07",
+  "hit_rate": null,
+  "mentioned_count": 22,
+  "matched": [],
+  "missed": [
+    "LIG디펜스앤에어로스페이스",
+    "SK이터닉스",
+    "SK하이닉스",
+    "금융",
+    "데이터센터 관련주",
+    "방산",
+    "브이엠",
+    "삼성전자",
+    "삼양식품",
+    "소비내수",
+    "소비재",
+    "시장 전체",
+    "실리콘투",
+    "원익IPS",
+    "유진테크",
+    "전력",
+    "증권",
+    "피에스케이",
+    "한화에어로스페이스",
+    "현대일렉트릭",
+    "화장품",
+    "효성중공업"
+  ],
+  "candidates": [],
+  "thresholds": {
+    "mode": "his",
+    "vacuum_pct_max": 35.0,
+    "min_up_count": 1,
+    "require_up_gt_down": true,
+    "require_leader": false,
+    "top_n": 20
+  }
+}

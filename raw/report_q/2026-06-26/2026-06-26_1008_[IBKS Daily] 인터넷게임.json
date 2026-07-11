@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date": "2026-06-26",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-26_1008_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이상준",
+    "report_date": "2026.06.26",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "네이버 AI 기반 대화형 검색 서비스 'AI탭' 정식 출시"
+      },
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "카카오 노사 교섭 재개 및 로그 오프 투쟁 예정"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.06.29",
+        "event": "카카오 파업 '로그 오프 투쟁'"
+      }
+    ],
+    "top_picks": [
+      "NAVER",
+      "카카오"
+    ],
+    "risk": null,
+    "quote": "네이버가 지난 4월 베타 출시한 AI 기반 대화형 검색 서비스 'AI탭'을 두 달 만에 전체 이용자 대상으로 정식 출시함"
+  }
+}

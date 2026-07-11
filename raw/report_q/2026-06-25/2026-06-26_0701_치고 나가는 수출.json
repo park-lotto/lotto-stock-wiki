@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date": "2026-06-25",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-26_0701_치고 나가는 수출.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "박종대",
+    "report_date": "2026년 06월 25일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "네오팜",
+        "code": "092730",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": {
+          "2Q26": "2분기 매출과 영업이익은 각각 전년 동기대비 31%, 29% 신장한 419억원과 90억원 수준이 가능할 전망이다.",
+          "YoY_growth": "당분간 아토팜/제로이드/리얼베리어 중심 YoY 20% 매출 증가세가 이어질 것으로 본다."
+        },
+        "estimate_revision": null,
+        "next_catalyst": "중장기적으로, 채널로는 오프라인, 지역으로는 유럽 진출 가능성이 크게 열려 있다.",
+        "thesis": [
+          "아토팜/제로이드/리얼베리어 중심의 신규 채널 및 수출 매출 큰 폭 증가",
+          "마케팅비 확대에도 매출 증가에 따른 레버리지 효과로 21.5% 수준의 영업이익률 달성 가능",
+          "국내 최대 베이비 케어 브랜드로서의 검증과 더마 카테고리의 글로벌 트렌드 선점"
+        ],
+        "valuation_basis": "현재 주가는 7.9배 저평가 상태다.",
+        "risk": "2분기 마케팅비는 YoY 90% 큰 폭 증가하면서, 매출 비중 14%까지 상승할 것으로 보인다.",
+        "supply_comment": null,
+        "quote": "경영진의 성장 전략이 좀더 공격적으로 바뀌었다. K컬쳐/K뷰티 글로벌 확장세에 편승하여, 마케팅비를 쓰더라도 좀더 외형 성장에 초점을 두겠다는 방향이다.",
+        "sector": "화장품미용"
+      }
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-26",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-29_0703_반도체 부문이 이끄는 턴어라운드.md"
+  },
+  "questionnaire": {
+    "broker": "키움증권",
+    "analyst": "오현진",
+    "report_date": "2026. 6. 26",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "스맥",
+        "code": "099440",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "26년 실적은 매출액 2,002억원(YoY 30%), 영업이익 180억원(흑자전환)을 전망",
+        "estimate_revision": null,
+        "next_catalyst": "사업 성과에 따른 기업가치 재평가",
+        "thesis": [
+          "반도체 산업 내 공정용 공작기계 수요 급증 및 고객 맞춤형 가공 장비 수주 본격화",
+          "반도체 향 특수장비의 높은 ASP로 인한 수익성 개선",
+          "스마트 제조 분야 사업 포트폴리오 다변화 및 경영권 분쟁 일단락에 따른 주가 변동성 해소"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "반도체 향 고부가 제품 중심의 수주량 증가, 장비 제작 리드 타임 등을 반영 시, 올해 상저하고의 실적 흐름을 예상. 매출 인식 시점 등을 보수적으로 반영한 동사의 26년 실적은 매출액 2,002억원(YoY 30%), 영업이익 180억원(흑자전환)을 전망",
+        "sector": "반도체"
+      }
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-09",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-10_0804_이른 더위, 우량 점포 매출 증가 효과로 실적...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "유정현",
+    "report_date": "2026.07.08",
+    "stocks": [
+      {
+        "name": "BGF리테일",
+        "code": "282330",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "170,000",
+        "tp_prev": "170,000",
+        "tp_direction": "flat",
+        "earnings_outlook": "2분기 매출액 2조 4,136억원(yoy +5%), 영업이익 730억원(yoy +5%)으로 전망. 일회성 비용 제외 시 영업이익 20% 증가 전망. 2분기 평균 기존점 성장률은 약 4% 수준 전망.",
+        "estimate_revision": "영업이익 2026F 기존 290십억원에서 304십억원으로 수정",
+        "next_catalyst": "물가 상승, 점포 구조조정에 따른 트래픽 증가 효과 하반기에도 지속 전망",
+        "thesis": [
+          "이른 더위와 우량 점포 매출 증가로 실적 호전",
+          "2024-2025년 점포 구조조정 효과 본격화에 따른 질적 성장",
+          "과출점 문제 일단락 및 식품 매출 비중 상승에 따른 마진 개선"
+        ],
+        "valuation_basis": "12개월 FWD 기준 P/E 11.5배 적용",
+        "risk": "화물연대 파업 관련 비용 발생",
+        "supply_comment": null,
+        "quote": "이른 더위, 우량 점포 매출 증가 효과로 실적 호전",
+        "sector": "소비내수"
+      }
+    ]
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "date": "2026-07-10",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-11_1104_iM Your Energy LNG 강세와 JKM-TTF 스프레...md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": "전유진",
+    "report_date": "2026.07.10",
+    "target_kind": "sector",
+    "sector_name": "에너지/정유/화학",
+    "sector_view": null,
+    "thesis": [
+      "카타르/호주 공급 차질 및 중동 사태로 인한 LNG 시장의 구조적 타이트 현상 지속",
+      "JKM-TTF 스프레드 확대로 미국 LNG 수출 업체들의 Cargo Optimization 수익성 개선",
+      "지정학적 리스크 지속 및 유럽의 대안 부재로 미국산 LNG의 역할 강화"
+    ],
+    "timeline": [
+      "2026년 하반기: Venture Global 및 Cheniere Energy의 이익 가이던스 상향 가능성",
+      "2027년: Cheniere Energy의 CCL Stage 3 장기계약 및 Open Capacity 마진 개선 본격화"
+    ],
+    "top_picks": [
+      {
+        "name": "Venture Global",
+        "reason": "연말 COD 전까지 Spot 판매를 통한 단기 이익 극대화 및 2Q26 액화수수료 급등(+70% QoQ)에 따른 수혜",
+        "tp": null
+      },
+      {
+        "name": "Cheniere Energy",
+        "reason": "장기계약 마진 개선으로 중장기 이익 체력 강화, 2027 Open Capacity 계약 마진 상승",
+        "tp": null
+      }
+    ],
+    "risk": "지정학적 갈등 해소 및 카타르 공급 정상화 가능성",
+    "quote": "중동사태로 촉발된 구조적 LNG 강세와 최근 JKM-TTF 스프레드 확대로 Venture Global, Cheniere Energy 등 미국 LNG 수출 업체들 수혜 기대."
+  }
+}

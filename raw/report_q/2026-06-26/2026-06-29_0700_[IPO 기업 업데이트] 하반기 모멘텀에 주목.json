@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-26",
+    "broker": "SK증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-29_0700_[IPO 기업 업데이트] 하반기 모멘텀에 주목.md"
+  },
+  "questionnaire": {
+    "broker": "SK증권",
+    "analyst": "이선경",
+    "report_date": "2026-06-26",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "로킷헬스케어",
+        "code": "376900",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "26년 1분기 영업이익은 연구개발비 증가 요인으로 23.5 억원의 손실을 기록했다. 27년 매출 성장이 가시화될 것으로 판단된다.",
+        "estimate_revision": null,
+        "next_catalyst": "하반기 노스웰 헬스 본계약 체결 및 임상 진입",
+        "thesis": [
+          "이집트 연골 재생 4년 장기 추적 임상 결과 발표 및 신장 재생 인체 임상 연구 계획 승인",
+          "미국 노스웰 헬스와의 본계약 체결 추진 및 당뇨발 국내 급여 적용 기대",
+          "로킷아메리카 나스닥 상장을 위한 최종 단계 진입 및 투자 자금 조달"
+        ],
+        "valuation_basis": null,
+        "risk": "연구개발비 증가 흐름 지속으로 인한 단기 이익 개선 지연",
+        "supply_comment": null,
+        "quote": "동사의 본격적인 매출 성장은 27 년 가시화될 것으로 판단된다."
+      }
+    ]
+  }
+}

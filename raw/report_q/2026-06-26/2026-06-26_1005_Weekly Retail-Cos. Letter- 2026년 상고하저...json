@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "date": "2026-06-26",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-26_1005_Weekly Retail-Cos. Letter- 2026년 상고하저...md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "하나증권",
+    "analyst": "박종대",
+    "report_date": "2026.6.26",
+    "market_direction": null,
+    "macro_vars": [
+      "조업 일수",
+      "글로벌 지역 확대",
+      "인력 수급",
+      "설비 투자",
+      "환율 및 수출 물량"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "화장품미용",
+        "stance": "긍정",
+        "reason": "화장품 ODM 업계는 2분기 예상 대비 견조한 실적을 기록 중이며, 3분기에는 분기 최고 매출 기록을 경신할 것으로 전망됨"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "8월 첫째주",
+        "event": "제조공장 하계 휴가로 인한 조업일수 감소"
+      },
+      {
+        "date": "9월말",
+        "event": "추석 연휴"
+      }
+    ],
+    "top_picks": [
+      "코스메카코리아",
+      "한국콜마",
+      "제닉",
+      "잉글우드랩",
+      "엔에프씨",
+      "E사",
+      "코스맥스"
+    ],
+    "risk": "절대적인 조업 일수가 2분기 대비 3분기가 10여일 적은 점, 지방 제조공장의 인력 구인난, 용기 쇼티지 문제 등",
+    "quote": "화장품 ODM: 2분기는 예상보다 좋고, 3분기는 2분기보다 더 크다"
+  }
+}

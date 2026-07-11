@@ -2,13 +2,13 @@
   "meta": {
     "date": "2026-07-03",
     "broker": "한국IR협의회",
-    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-04_0802_매출 및 이익 성장 재개.md"
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-04_0802_매출 및 이익 성장 재개.md"
   },
   "questionnaire": {
+    "target_kind": "stock",
     "broker": "한국IR협의회",
     "analyst": "백종석, 김지은",
     "report_date": "2026.07.03",
-    "target_kind": "stock",
     "stocks": [
       {
         "name": "LIG아큐버",
@@ -20,18 +20,17 @@
         "tp_direction": null,
         "earnings_outlook": "2026년 연간 매출액 2,227억 원(19.7% YoY), 영업이익 105억 원(흑자전환 YoY) 예정.",
         "estimate_revision": null,
-        "next_catalyst": "국내 통신 3사의 5G SA 상용화 투자 본격화",
+        "next_catalyst": "국내 통신 3사의 5G SA 상용화 투자가 본격화되어 무선망 최적화·빅데이터/AI 솔루션 등 핵심 제품군 실적이 회복되는 것",
         "thesis": [
           "무선망 최적화 제품군, 빅데이터/AI 솔루션 제품군 실적 회복 기대",
           "방산 제품군 高 성장 기대",
-          "Automotive 사업부문 캐시카우 역할 지속"
+          "Automotive 사업부문 캐시카우 역할 지속 기대"
         ],
         "valuation_basis": "2026F PER 21.3배",
         "risk": "이동통신사업자들의 네트워크 고도화 투자가 이연될 시 동사 실적 및 전망에 부정적일 가능성",
-        "supply_comment": "Automotive 사업부문은 2024년 1월 인수한 명성라이픽스 및 웨이티즈를 통해 사업 전개",
-        "quote": "향후 국내 통신 3사의 5G SA 상용화 투자가 본격화되어 무선망 최적화·빅데이터/AI 솔루션 등 핵심 제품군 실적이 회복되고, LIG D&A를 기반으로 한 방산 매출의 고성장이 이어진다면 동사 기업가치는 상승할 가능성이 있다고 전망"
+        "supply_comment": "Automotive 사업부문은 2024년부터 반영되기 시작한 사업으로, 대부분 연결 자회사 명성라이픽스 매출액이다.",
+        "quote": "LIG아큐버는 2026F PER 21.3배로 거래 중. 향후 국내 통신 3사의 5G SA 상용화 투자가 본격화되어 무선망 최적화·빅데이터/AI 솔루션 등 핵심 제품군 실적이 회복되고, LIG D&A를 기반으로 한 방산 매출의 고성장이 이어진다면 동사 기업가치는 상승할 가능성이 있다고 전망"
       }
-    ],
-    "sector": "통신"
+    ]
   }
 }

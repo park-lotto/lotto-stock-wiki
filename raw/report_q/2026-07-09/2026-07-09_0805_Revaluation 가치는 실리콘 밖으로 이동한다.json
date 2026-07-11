@@ -1,0 +1,199 @@
+{
+  "meta": {
+    "date": "2026-07-09",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-09_0805_Revaluation 가치는 실리콘 밖으로 이동한다.md"
+  },
+  "questionnaire": {
+    "broker": "키움증권",
+    "analyst": "권민규",
+    "report_date": "2026년 07월 08일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "삼성전기",
+        "code": "009150",
+        "rating": "BUY",
+        "rating_changed": "Reinitiate",
+        "tp_new": "2,800,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 예상 매출액 3조 3,253억원(YoY +19%), OP 4,111억원(+93%, OPM 12%) 추정",
+        "estimate_revision": "28년 예상 EPS 54,317 원",
+        "next_catalyst": "1Q26기준 동사의 MLCC 가동률은 95% 이상이고, AI 서버용 MLCC는 일반 MLCC 생산 용량의 3배를 잠식한다.",
+        "thesis": [
+          "MLCC, 가격 인상 시작도 안함",
+          "FC-BGA, 역시 본격 가격 인상 시작 안함",
+          "AI 사이클을 지탱하는 대장주"
+        ],
+        "valuation_basis": "28 년 예상 EPS 54,317 원에 Ibiden 의 28 년 예상 멀티플 58 배를 적용했다.",
+        "risk": null,
+        "supply_comment": "MLCC향 연간 CAPEX를 전년 대비 2배 이상 확대해 20% 이상 CAPA 확장을 준비 중",
+        "quote": "AI 투자 사이클이 초래한 하드웨어 쇼티지 부품 중 핵심인 MLCC, FC-BGA의 최대 수혜주이며, 본격 가격 상승 및 Si-Cap, 증설 등 여전히 업종 내 최상위 실적 업사이드를 보유하고 있습니다."
+      },
+      {
+        "name": "두산",
+        "code": "000150",
+        "rating": "BUY",
+        "rating_changed": "Reinitiate",
+        "tp_new": "2,200,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 전자BG 매출액 6,715억원(YoY +41%, 이하), OP 2,076억원(+8%, OPM 31%)을 전망",
+        "estimate_revision": null,
+        "next_catalyst": "6월부터 북미 네트워크보드 고객향 신규제품 양산 진입했으며, 지난 모델에 이어 신규 모델도 100% 점유율이 예상된다.",
+        "thesis": [
+          "증익, 증설 사이클 돌입",
+          "판가 협상, 광통신 모듈, 800G 스위치",
+          "해외 Peer 대비 저평가된 가치"
+        ],
+        "valuation_basis": "26F 두산 자체사업 EBITDA * Peer 평균 멀티플 33.1 배에 20% 할인(EMC, TUC, ITEQ)한 26.5배 적용",
+        "risk": null,
+        "supply_comment": "4Q26 중국(창수), 2Q27 국내(증평) 증설시 연간 기준 5,000억원 이상의 Capa가 확대되고, 28년 태국 Araya 증설시 추가적으로 연간 3,000억원 이상의 Capa가 증설된다.",
+        "quote": "고부가 CCL 쇼티지 업황 속 글로벌 선두업체향 Compute Tray 독점을 유지하고 있는 기술력과, 해당 물량 대응을 위한 증설 진행 및 높은 이익률 유지 추세로 비커머디티 부품군 대표 종목이라 판단합니다."
+      },
+      {
+        "name": "LG이노텍",
+        "code": "011070",
+        "rating": "BUY",
+        "rating_changed": "Reinitiate",
+        "tp_new": "1,100,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 매출액 5조 432억원(YoY +28%, 이하), OP 2,006억원(+1,661%, OPM 4%)을 전망",
+        "estimate_revision": null,
+        "next_catalyst": "아이폰 판매 호조와 글로벌 점유율 상승 전망되므로 실적 하락에 대한 우려보다 기판 사업 이익률 개선으로 인한 업사이드에 주목해야한다.",
+        "thesis": [
+          "우려는 기우, 하방을 받쳐주는 카메라 모듈",
+          "멀티플 재평가와 증명이 핵심"
+        ],
+        "valuation_basis": "글로벌 Peer 평균 Multiple 30% 할인 적용",
+        "risk": null,
+        "supply_comment": "27년 5월 준공 이후 2H27 시생산, 1H28 양산 예정",
+        "quote": "FC-BGA 기대감으로 인한 멀티플 리레이팅은 어느정도 진행되었고, 앞으로의 추가 실적(추가 고객사 확보, 양산 수율 확보, 증설 계획 공개 등)에 따라 경쟁업체들과의 Multiple Gap을 축소하는 것이 주가 상승의 핵심으로 판단됩니다."
+      },
+      {
+        "name": "LG전자",
+        "code": "066570",
+        "rating": "BUY",
+        "rating_changed": "Reinitiate",
+        "tp_new": "230,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 매출액 23조 8,297억원(YoY+115%, 이하), OP 1조 5,788억원(+147%, OPM 7%)를 기록했다.",
+        "estimate_revision": null,
+        "next_catalyst": "연결 자회사의 호실적이 배경이었다. 관세 환급은 이번 분기에 대부분 반영된 것으로 파악된다.",
+        "thesis": [
+          "2Q26 Review: 선방한 실적 + 관세환급",
+          "멀티플 변화를 받아들이는 구간"
+        ],
+        "valuation_basis": "과거 애플카 기대감 반영 시기(2021년) 연간 평균 PBR 적용",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "글로벌 매크로 환경 악화에도 견조한 실적으로 하방을 방어하는 중이며, 로보틱스, AI 데이터센터향 칠러 등 고성장 신사업을 육성하고 있는 구간입니다."
+      },
+      {
+        "name": "이수페타시스",
+        "code": "007660",
+        "rating": "BUY",
+        "rating_changed": "Reinitiate",
+        "tp_new": "190,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 컨센서스 OP 748억원은 부합할 것으로 전망된다(당사 전망치 751억원, OPM 21%).",
+        "estimate_revision": null,
+        "next_catalyst": "태국 APEX JV를 통한 폭발적인 매출 상승 가능성도 보유하고 있다.",
+        "thesis": [
+          "MLB, 공급보다 수요가 월등하게 많다",
+          "하반기를 감안하면 지금이 기회"
+        ],
+        "valuation_basis": "Global Peer 27F PER 평균 적용",
+        "risk": null,
+        "supply_comment": "태국 APEX사와의 JV설립(이수페타시스 지분 85%), 27년 본격 가동 예정",
+        "quote": "그동안 Full Capa로 인해 실적 상승이 제한적이었으나, 하반기부터 신규 고객사 및 Capa 확보로 본격적인 상승세를 예상합니다."
+      },
+      {
+        "name": "기가비스",
+        "code": "420770",
+        "rating": "BUY",
+        "rating_changed": "initiate",
+        "tp_new": "190,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "26년 예상 매출액 1,150억원(YoY +120%), OP 387억원(+223%, OPM 34%), 27년 예상 매출액 2,639억원( +130%) OP 1,096억원(+183%, OPM 42%)을 예상한다.",
+        "estimate_revision": null,
+        "next_catalyst": "글로벌 고객사들이 일제히 증설을 시작하며 수주 공시가 이어지는 가운데, 하반기 삼성전기, LG이노텍, 대덕전자 등 국내 업체들의 증설도 예정되어있어 추가적인 모멘텀 보유하고 있다 판단합니다.",
+        "thesis": [
+          "단순 CAPEX 증가보다 훨씬 큰 수요 예상",
+          "기가비스의 실적은 +40% 상승에 그치지 않는다. 과거 대비 3~4배의 장비가 더 필요할 것으로 판단되기 때문"
+        ],
+        "valuation_basis": "과거 FC-BGA 호황 사이클 저점",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "FC-BGA 쇼티지와 주요 핵심 업체들의 증설 국면에서 과반 이상의 점유율을 차지한 동사의 수혜를 예상합니다."
+      },
+      {
+        "name": "심텍",
+        "code": "222800",
+        "rating": "BUY",
+        "rating_changed": "Reinitiate",
+        "tp_new": "190,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "모듈 PCB의 영업이익률은 1Q26 약 4%에서 2Q26 약 10%까지 가파른 상승세를 예상한다.",
+        "estimate_revision": null,
+        "next_catalyst": "SOCAMM향 매출은 26년 약 1,500억원, 27년 약 2,700억원 수준으로 예상된다.",
+        "thesis": [
+          "메모리 기판 가격 인하는 기우다",
+          "SOCAMM 시장은 생각보다 크다",
+          "아직 영업이익 상승은 중간 정도 수준"
+        ],
+        "valuation_basis": "Peer(대덕전자, 티엘비, 코리아써키트, 해성디에스) 평균 PER 적용",
+        "risk": null,
+        "supply_comment": "PC등 저부가 제품을 말레이시아 공장으로 이관",
+        "quote": "메모리 호황을 반영함과 동시에 SOCAMM2 폼팩터에서 높은 점유율을 보유해 현재 업황을 가장 잘 반영할 수 있는 업체입니다."
+      },
+      {
+        "name": "대덕전자",
+        "code": "353200",
+        "rating": "BUY",
+        "rating_changed": "initiate",
+        "tp_new": "240,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 매출액 3,805억원(YoY +55%, 이하), OP 636억원(+3,186%, OPM 17%)를 전망",
+        "estimate_revision": null,
+        "next_catalyst": "4Q부터 감가상각 종료에 따른 이익률 추가 상승이 예상된다(분기 100억원).",
+        "thesis": [
+          "2Q26도 실적 고공행진",
+          "더 반영할 업사이드 카드가 남아있다"
+        ],
+        "valuation_basis": "FC-BGA Global Peer 27F PER 평균 적용",
+        "risk": null,
+        "supply_comment": "지난 증설 이후 900억원 유휴분으로 병목 장비 위주 투자 진행중이며, 신규 투자 및 고객사 LTA 논의도 진행 중이다.",
+        "quote": "비커머디티 부품군 핵심인 FC-BGA와 MLB 사업을 동시에 영위하고 있으며, 메모리 업황 호황도 반영할 수 있기에 높은 프리미엄이 정당화되는 업체입니다."
+      },
+      {
+        "name": "해성디에스",
+        "code": "195870",
+        "rating": "BUY",
+        "rating_changed": "initiate",
+        "tp_new": "120,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 예상 매출액 2,085억원(YoY +33%, 이하), OP 235억원(+186%, OPM 11%) 추정",
+        "estimate_revision": null,
+        "next_catalyst": "3Q부터 국내 메모리 업체 A향 D1b Prime의 물량 본격 확대가 예상된다.",
+        "thesis": [
+          "무난한 2Q, 리드프레임이 리드한다",
+          "하반기 호실적 예상, 패키징 기판이 이끈다",
+          "현재 하락은 기회, 매수 의견 제시"
+        ],
+        "valuation_basis": "Global Peer 27F PER 평균 적용",
+        "risk": null,
+        "supply_comment": "히트슬러그의 경우 하반기부터 북미 팹리스향 공급이 예상된다.",
+        "quote": "2Q에는 무난한 실적이 예상되지만 3Q부터 고객사 및 물량 확대로 본격적인 실적 개선이 시작될 것으로 전망합니다."
+      }
+    ]
+  }
+}

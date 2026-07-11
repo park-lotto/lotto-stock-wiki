@@ -1,0 +1,58 @@
+{
+  "meta": {
+    "date": "2026-07-10",
+    "broker": "Eugene Investment & Securities",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-10_1108_안녕하세요 데일리에요(로봇방산조선).md"
+  },
+  "questionnaire": {
+    "broker": "Eugene Investment & Securities",
+    "analyst": "양승윤",
+    "report_date": "2024-07-09",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "6월 일본 공작기계 수주 전년 대비 52.8% 증가",
+      "미국 군함 한국 건조 가능성"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "로봇",
+        "stance": null,
+        "reason": "삼성 로봇 레인보우로보틱스 4개 사업부 분할, LG전자 휴머노이드 로봇관절 악시움 조기 양산, 삼성전자 제조라인 4시간 무인 가동 성공, 클로봇 대규모 융합 로봇 실증사업 선정"
+      },
+      {
+        "sector": "방산",
+        "stance": null,
+        "reason": "지상군 방산전시회 K-DEX 출범, 현대로템 폴란드 K2전차 3차계약 윤곽, 한화시스템 30톤급 무인수상정 진수"
+      },
+      {
+        "sector": "조선",
+        "stance": null,
+        "reason": "삼성중공업 5년 만에 연간 수주 100억 불 돌파, HD현대중공업 $51.3m MR PC 6척 수주, 미국 군함 한국 건조 가능성 제기"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2024-12",
+        "event": "지상군 방산전시회 'K-DEX' 첫 통합 개최"
+      },
+      {
+        "date": "2026~2034",
+        "event": "폴란드 K2프로그램 3차 실행계약 이행"
+      }
+    ],
+    "top_picks": [
+      "레인보우로보틱스",
+      "LG전자",
+      "삼성전자",
+      "클로봇",
+      "현대로템",
+      "한화시스템",
+      "삼성중공업",
+      "HD현대중공업"
+    ],
+    "risk": "미국 군함의 해외 건조는 현행 법·제도상 제약이 큼",
+    "quote": "일본 6월 공작기계 수주는 전년 대비 52.8% 증가한 2,035억엔을 기록하며 사상 처음으로 월간 2,000억엔을 돌파."
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-09",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-10_0804_하반기 주가는 양호한 펀더멘털에 수렴할 것...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "유정현",
+    "report_date": "2026.07.08",
+    "stocks": [
+      {
+        "name": "GS리테일",
+        "code": "007070",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": 30000,
+        "tp_prev": 30000,
+        "tp_direction": "flat",
+        "earnings_outlook": "2분기 총매출액과 영업이익은 각각 3조 1,321억원(+5%, yoy), 1,016억원(+20%, yoy)을 기록할 것으로 전망",
+        "estimate_revision": "2026F 매출액 12,390->12,464, 영업이익 352->356",
+        "next_catalyst": "편의점 기존점 성장률, 편의점 점포 증가율, 슈퍼사업부 실적 개선, 기타사업부문 적자폭 개선",
+        "thesis": [
+          "2분기 편의점 기존점 성장률 5% 상회하며 호실적 기록할 전망",
+          "슈퍼 채널과 홈쇼핑도 경기 반영하며 실적 개선 기여",
+          "하반기 주가는 양호한 펀더멘털 상황 반영할 것으로 기대"
+        ],
+        "valuation_basis": "12개월 FWD P/E 10배",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "투자의견 BUY와 목표주가 30,000원(12개월 FWD P/E 10배) 유지"
+      }
+    ]
+  }
+}

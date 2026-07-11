@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-10",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-10_1100_확실한 투자포인트가 붙었다.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "송유림, 김예인",
+    "report_date": "2026년 7월 10일",
+    "stocks": [
+      {
+        "name": "GS건설",
+        "code": "006360",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "41,000원",
+        "tp_prev": "41,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "GS건설의 2분기 매출액은 2.7조 원, 영업이익은 1040억 원으로 전년동기 대비 각각 -16.5%, -35.8%를 기록한 것으로 추정된다. 시장 컨센서스인 영업이익 1269억 원 대비 18% 낮은 수치다.",
+        "estimate_revision": null,
+        "next_catalyst": "동해 AI데이터센터 캠퍼스 구축 계획",
+        "thesis": [
+          "주택 매출 회복 기반 마련",
+          "데이터센터 수주를 통한 투자포인트 확보",
+          "신규수주 목표 달성을 위한 기반 마련"
+        ],
+        "valuation_basis": "12개월 예상 BPS에 목표배수 0.7배(예상 ROE 4.2%, PER 환산시 16.7배)를 그대로 적용",
+        "risk": "시장 기대치를 하회하는 영업이익, 주택 매출 감소",
+        "supply_comment": "올해 공급계획 14320세대의 77%를 상반기에 소화",
+        "quote": "GS건설에 대해 투자의견 Buy와 목표주가를 41,000원을 유지합니다."
+      }
+    ]
+  }
+}

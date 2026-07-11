@@ -5,29 +5,30 @@
     "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-25_1003_NDR 後記 DX에서 AX, RX로 사업 영역 확대 ...md"
   },
   "questionnaire": {
+    "target_kind": "stock",
     "broker": "유진투자증권",
     "analyst": "박종선",
     "report_date": "2026.06.25",
-    "target_kind": "stock",
     "stocks": [
       {
         "name": "LG 씨엔에스",
         "code": "064400",
+        "sector": "IT",
         "rating": "BUY",
-        "rating_changed": false,
-        "tp_new": "111,000원",
-        "tp_prev": "93,000원",
+        "rating_changed": "유지",
+        "tp_new": 111000,
+        "tp_prev": 93000,
         "tp_direction": "up",
         "earnings_outlook": "당사 추정 올해 2분기 예상실적(연결 기준)은 매출액 1조 5,208억원, 영업이익 1,454억원으로 전년동기 대비 각각 4.2%, 3.3% 증가하면서 안정적인 실적 성장을 지속할 것으로 추정함.",
-        "estimate_revision": null,
-        "next_catalyst": "AI/클라우드 시장 확대 및 RX 서비스 본격적인 상용화",
+        "estimate_revision": "목표주가를 기존 93,000원에서 19.4% 상향한 111,000원으로 조정",
+        "next_catalyst": "AX, RX 서비스의 본격적인 상용화",
         "thesis": [
-          "Agentic AI에서 PhysicalWorks로 확대하며 AX 및 RX 선도",
-          "LG그룹과 엔비디아의 협력 기반 사업 확대",
-          "안정적인 매출 성장과 수익성 유지"
+          "엔비디아와의 협력을 통한 피지컬 AI와 로보틱스 분야 사업 확대",
+          "AI 서비스 전과정에서 고객의 AX 전환을 지원하는 AgenticWorks 기반 사업 확장",
+          "PhysicalWorks Forge와 PhysicalWorks Baton 플랫폼 기반의 토탈 로봇 서비스 제공"
         ],
-        "valuation_basis": "2026년 예상 EPS(4,621원)에 국내 동종 및 유사업체 Peer Group 평균 PER 34.5배를 30% 할인한 24.1배를 Target Multiple로 적용",
-        "risk": "상장 초기로 회사에 대한 낮은 관심도",
+        "valuation_basis": "당사 추정 2026년 실적 기준 예상 EPS(4,621원)에 국내 동종 및 유사업체 Peer Group 평균 PER 34.5배를 30% 할인한 24.1배를 Target Multiple로 적용",
+        "risk": null,
         "supply_comment": null,
         "quote": "목표주가를 기존 93,000원에서 19.4% 상향한 111,000원으로 조정하고, 투자의견은 BUY를 유지함."
       }

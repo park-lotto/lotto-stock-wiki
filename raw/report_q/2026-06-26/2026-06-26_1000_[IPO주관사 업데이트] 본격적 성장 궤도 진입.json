@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-26",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-26_1000_[IPO주관사 업데이트] 본격적 성장 궤도 진입.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "김민경",
+    "report_date": "2026년 6월 26일",
+    "stocks": [
+      {
+        "name": "사피엔반도체",
+        "code": "452430",
+        "sector": "반도체",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 매출액 35억 원, 영업이익 2억 원, 2027년 매출액 96억 원, 영업이익 17억 원",
+        "estimate_revision": null,
+        "next_catalyst": "AR 글라스 시장 개화 및 LEDoS 채택 확대",
+        "thesis": [
+          "Micro LED 특화 DDIC(디스플레이 패널 구동 반도체) 기술 보유",
+          "NRE 매출 흐름 지속 및 양산 매출 확대에 따른 본격적 성장 궤도 진입",
+          "스마트 글라스 시장 개화 및 LEDoS 기술 채택 확대에 따른 수혜 기대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "4월 초 공시된 미주향 공급 계약은 대량 양산 전 샘플 테스트를 위한 웨이퍼 공급 계약으로 추정되며, 전년대비 샘플 테스트 물량 규모가 대폭 증가한 것으로 파악됨.",
+        "quote": "안정적인 NRE 매출 흐름이 지속되는 가운데 양산 매출이 확대되며 본격적 실적 성장 궤도에 진입할 전망이다."
+      }
+    ]
+  }
+}

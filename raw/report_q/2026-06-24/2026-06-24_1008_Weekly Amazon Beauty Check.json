@@ -10,26 +10,24 @@
     "analyst": "형권훈",
     "report_date": "2026-06-24",
     "market_direction": null,
-    "macro_vars": [],
+    "macro_vars": null,
     "recommended_sectors": [
       {
         "sector": "화장품미용",
         "stance": null,
-        "reason": "아마존은 미국 뷰티 시장의 약 14.5%를 점유하고 있어 점유율 기준 1위 B2C 채널"
+        "reason": "K뷰티 유니버스의 아마존 BSR 총점은 이번 주 1,664pt 기록해 전 주 대비 ▼28pt 둔화"
       }
     ],
     "style": null,
-    "event_calendar": [],
+    "event_calendar": null,
     "top_picks": [
       "medicube",
       "ANUA",
       "BIODANCE",
       "SKIN1004",
-      "d’alba Piedmont",
-      "Vanicream",
-      "Tower 28"
+      "d'alba Piedmont"
     ],
     "risk": null,
-    "quote": "본 자료는 미국 아마존의 제품별 순위 데이터를 활용해 K뷰티를 비롯한 여러 뷰티 브랜드와 제품들의 상대적인 성과를 정량화하고, 시계열 변화에 따른 성과를 추적하기 위해 작성되었습니다."
+    "quote": "K뷰티 유니버스의 아마존 BSR 총점은 이번 주 1,664pt 기록해 전 주 대비 ▼28pt 둔화"
   }
 }

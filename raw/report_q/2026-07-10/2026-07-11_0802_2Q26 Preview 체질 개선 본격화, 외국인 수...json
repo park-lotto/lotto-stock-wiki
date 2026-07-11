@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-10",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-11_0802_2Q26 Preview 체질 개선 본격화, 외국인 수...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "장민지",
+    "report_date": "2026.07.10",
+    "stocks": [
+      {
+        "name": "BGF리테일",
+        "code": "282330",
+        "rating": "Buy",
+        "rating_changed": null,
+        "tp_new": "176,000",
+        "tp_prev": "176,000",
+        "tp_direction": "flat",
+        "earnings_outlook": "BGF리테일 2Q26 연결 실적은 매출액 2조 4,180억원(YoY +5.6%), 영업이익 740억원(YoY +6.5%, OPM 3.1%)으로 영업이익 기준 시장 기대치(Fnguide 기준 744억원) 부합 전망",
+        "estimate_revision": null,
+        "next_catalyst": "외국인 매출의 고성장세는 추가적인 밸류에이션 리레이팅 요인으로 작용할 수 있을 전망",
+        "thesis": [
+          "편의점 동일점 성장률은 YoY +4.0% 전망",
+          "외국인 매출의 고성장세(1분기 YoY +52.1%, 6월 +60% 수준 추정)",
+          "우량 점포 중심 출점과 감가상각비 감소에 따른 영업 레버리지 효과 본격화"
+        ],
+        "valuation_basis": "Target P/E 12.6x",
+        "risk": null,
+        "supply_comment": "점포 수는 연간 가이던스(순증 +300점) 달성이 가능한 수준의 출점 흐름을 보이고 있는 것으로 추정",
+        "quote": "BGF리테일에 대해 투자의견 Buy 및 목표주가 176,000원 유지(Target P/E 12.6x)."
+      }
+    ],
+    "sector": "소비내수"
+  }
+}

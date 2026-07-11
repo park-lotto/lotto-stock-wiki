@@ -1,0 +1,25 @@
+{
+  "target_kind": "sector",
+  "sector_name": "바이오",
+  "sector_view": "긍정",
+  "points": [
+    "K바이오 기업 CEO들이 바이오USA에 총출동하여 기술수출 및 수주 확대 전략 모색"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "삼성바이오로직스",
+      "comment": "바이오USA에서 기술수출 및 수주전 참여",
+      "ts": "2026-07-10",
+      "quote": "CEO 총출동한 K바이오…바이오USA서 기술수출·수주전",
+      "sector": "바이오"
+    }
+  ],
+  "events": [
+    {
+      "fact": "바이오USA 행사 개최",
+      "ts": "2026-06-22",
+      "quote": "CEO 총출동한 K바이오…바이오USA서 기술수출·수주전"
+    }
+  ],
+  "quote": "CEO 총출동한 K바이오…바이오USA서 기술수출·수주전"
+}

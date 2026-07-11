@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-10",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-10_1103_내년까지 마련된 이익 성장 스토리.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "김동우",
+    "report_date": "2026/07/10",
+    "stocks": [
+      {
+        "name": "NC",
+        "code": "036570",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "375,000원",
+        "tp_prev": "375,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 매출은 6,876억원(YoY +79.8%, QoQ +23.4%), 영업이익은 1,276억원(YoY +746.1%)으로 시장 예상치(매출 6,610억원, 영익 1,253억원) 부합 예상.",
+        "estimate_revision": null,
+        "next_catalyst": "26년 9월 아이온2의 Steam 출시",
+        "thesis": [
+          "캐주얼 애드테크(JustPlay) 및 개발사(스프링컴즈, 리후후) 인수를 통해 대형 신작 흥행에 대한 의존도 감소",
+          "강점을 가진 MMORPG 장르에서의 흥행 지속 및 아이온2를 포함한 신작 모멘텀",
+          "2027년부터 한국/일본 등 아시아 지역 구글 플레이스토어 수수료 인하로 견조한 이익 성장 전망"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "동사는 캐주얼 애드테크(JustPlay) 및 개발사(스프링컴즈, 리후후) 인수를 통해 대형 신작 흥행에 대한 의존도를 줄이고 있으며, 동시에 신작 출시 모멘텀을 이어가고 있음."
+      }
+    ]
+  }
+}

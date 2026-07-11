@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-25",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-26_0704_요즘 Hot한 거제에 다녀왔습니다.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유진투자증권",
+    "analyst": "양승윤",
+    "report_date": "2026.06.25",
+    "stocks": [
+      {
+        "name": "삼성중공업",
+        "code": "010140",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": 41000,
+        "tp_prev": 41000,
+        "tp_direction": "flat",
+        "earnings_outlook": "영업이익(26E) 1,461, 영업이익(27E) 2,205, 매출액 13,042(26E), 15,815(27E)",
+        "estimate_revision": null,
+        "next_catalyst": "2030년 이전 FDC 구체화 가능성, FLNG 탑사이드 설계 역량 내재화 및 원가 절감",
+        "thesis": [
+          "플로팅 데이터 센터(FDC) 시장 개척 및 주요 파트너사와의 협력",
+          "글로벌 오퍼레이션(중국, 베트남, 한국) 매출 업사이드 기대",
+          "FLNG 프로젝트 순항 및 고부가가치 영역 진출을 통한 수익성 개선"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "FDC의 경쟁력이 가격보다도 납기인 점을 고려했을 때, LNGC 및 FLNG와 비교해 동등 이상의 고수익성 확보가 가능할 것으로 기대",
+        "quote": "삼성중공업 야드 투어에서 보고 느낀 주요 포인트를 다음과 같이 정리함. 동사에 대한 투자의견 BUY와 목표주가 41,000원을 유지함."
+      }
+    ]
+  }
+}

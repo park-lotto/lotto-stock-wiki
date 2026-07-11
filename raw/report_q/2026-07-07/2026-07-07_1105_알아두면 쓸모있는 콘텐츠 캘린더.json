@@ -2,7 +2,7 @@
   "meta": {
     "date": "2026-07-07",
     "broker": "하나증권",
-    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-07_1105_알아두면 쓸모있는 콘텐츠 캘린더.md"
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-07_1105_알아두면 쓸모있는 콘텐츠 캘린더.md"
   },
   "questionnaire": {
     "broker": "하나증권",
@@ -86,12 +86,11 @@
     "top_picks": [
       "SM",
       "HYBE",
+      "JYP",
       "SBS",
       "콘텐트리중앙",
-      "tvN",
       "스튜디오드래곤",
-      "Netflix",
-      "JYP"
+      "Netflix"
     ],
     "risk": null,
     "quote": "알아두면 쓸모있는 콘텐츠 캘린더"

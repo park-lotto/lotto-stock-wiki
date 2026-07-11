@@ -2,33 +2,33 @@
   "meta": {
     "date": "2026-07-06",
     "broker": "교보증권",
-    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-06_1102_2Q26 Preview 영업이익 4,110억원, 컨센서스...md"
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-06_1102_2Q26 Preview 영업이익 4,110억원, 컨센서스...md"
   },
   "questionnaire": {
-    "target_kind": "stock",
     "broker": "교보증권",
     "analyst": "최보영",
-    "report_date": "2026/07/06",
+    "report_date": "2026.07.06",
+    "target_kind": "stock",
     "stocks": [
       {
         "name": "삼성전기",
         "code": "009150",
         "rating": "Buy",
         "rating_changed": "유지",
-        "tp_new": "3,000,000원",
-        "tp_prev": "1,200,000원",
+        "tp_new": "3,000,000 원",
+        "tp_prev": "1,200,000 원",
         "tp_direction": "up",
         "earnings_outlook": "2Q26 매출액 3조 4,084억원(YoY +22.4%, QoQ +6.2%), 영업이익 4,110억원(YoY +93.0%, QoQ +46.5%)으로 컨센서스 영업이익 3,820억원을 상회하는 호실적을 전망함.",
         "estimate_revision": "2027년 실적 개선과 글로벌 동종업계로 밸류에이션을 적용하여 목표주가를 상향 조정함.",
-        "next_catalyst": "AI 서버향 고부가 MLCC 공급 확대와 FCBGA 판가 상승",
+        "next_catalyst": "AI 서버향 고부가 MLCC 공급 확대와 FCBGA 판가 상승, 서버·네트워크향 매출 비중 확대에 따른 믹스 개선",
         "thesis": [
-          "AI 서버향 초소형·고용량 MLCC 수요 급증과 서버·전장 등 고부가 응용처 중심의 믹스 개선",
-          "AI 반도체의 대면적화·고다층화에 따른 서버향 FCBGA 중심 판가 인상 및 수익성 개선",
-          "최근 공시된 대규모 MLCC 공급계약 및 실리콘 커패시터 공급계약에 따른 실적 성장"
+          "AI 서버향 초소형·고용량 MLCC 수요 급증과 출하 확대 및 판가 인상",
+          "서버향 FCBGA를 중심으로 판가 인상이 이어지며 수익성이 한 단계 올라서는 구간",
+          "하반기 물량·판가·믹스 개선이 중첩되며 분기를 거듭할수록 증익 폭이 확대되는 흐름 예상"
         ],
         "valuation_basis": "2027년 실적 개선과 글로벌 동종업계로 밸류에이션을 적용하여 목표주가를 상향 조정함.",
         "risk": null,
-        "supply_comment": "최근 공시된 대규모 MLCC 공급계약은 고객사의 연간 물량 선제 확보라는 이례적 사례로, AI 서버향 MLCC의 구조적 공급 부족과 수급 주도권의 공급자 이동을 시사함.",
+        "supply_comment": "최근 공시된 대규모 MLCC 공급계약은 고객사의 연간 물량 선제 확보라는 이례적 사례로, AI 서버향 MLCC의 구조적 공급 부족과 수급 주도권의 공급자 이동을 시사함",
         "quote": "2Q26 매출액 3조 4,084억원(YoY +22.4%, QoQ +6.2%), 영업이익 4,110억원(YoY +93.0%, QoQ +46.5%)으로 컨센서스 영업이익 3,820억원을 상회하는 호실적을 전망함."
       }
     ]

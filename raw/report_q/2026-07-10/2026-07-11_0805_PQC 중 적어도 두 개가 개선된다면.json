@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "date": "2026-07-10",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-11_0805_PQC 중 적어도 두 개가 개선된다면.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "하나증권",
+    "analyst": "유재선",
+    "report_date": "2026.07.10",
+    "market_direction": null,
+    "macro_vars": [
+      "WTI 74.6달러/배럴",
+      "미국 천연가스 3.2달러/mmbtu",
+      "아시아 LNG 현물 16.5달러/mmbtu",
+      "호주산 유연탄 129.1달러/톤",
+      "원/달러 환율 1,505.5원",
+      "온실가스 배출권(KAU25) 25,300원"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "전력",
+        "stance": "Overweight",
+        "reason": "전력수요 급증으로 인한 외형 성장과 발전 Mix 변화에 따른 마진 개선 가능성 때문"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "연내",
+        "event": "제12차 전력수급기본계획 초안 또는 실무안 공개 가능성"
+      }
+    ],
+    "top_picks": [
+      "한국전력",
+      "지역난방공사"
+    ],
+    "risk": "전력사용량 급증에 따른 목표 달성의 어려움 및 원전/LNG 발전 Mix 정책 변화의 불확실성",
+    "quote": "Q 성장 대비 낮은 C 증가를 기대할 수 있을지에 대한 부분은 12차 전기본을 통해 확인 가능할 전망이다."
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "meta": {
+    "date": "2026-07-08",
+    "broker": "Eugene Investment & Securities",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-10_0805_안녕하세요 데일리에요(로봇방산조선).md"
+  },
+  "questionnaire": {
+    "broker": "Eugene Investment & Securities",
+    "analyst": "양승윤",
+    "report_date": "2024-07-07",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "NATO 방산포럼 파트너십 2.0 격상 및 조달 기본협정 협상",
+      "글로벌 조선 수주량 전년 대비 65.8% 증가(중국 점유율 72%)"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "로봇",
+        "stance": null,
+        "reason": "현대차그룹 공급망 상생협력 강화 및 휴머노이드 부품 사업 진출 활발"
+      },
+      {
+        "sector": "방산",
+        "stance": null,
+        "reason": "NATO 공동조달 시장 진입을 위한 제도적 기반 마련 및 국산 장수명 엔진 공개"
+      },
+      {
+        "sector": "조선",
+        "stance": null,
+        "reason": "중국 글로벌 수주 점유율 확대"
+      }
+    ],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": [
+      "현대차그룹",
+      "LS오토모티브",
+      "LG CNS",
+      "빅웨이브로보",
+      "테슬라",
+      "한화",
+      "ADD",
+      "LIG넥스원",
+      "한화오션",
+      "HD현대중공업"
+    ],
+    "risk": null,
+    "quote": "상반기 글로벌 선박 발주는 중국 쏠림이 더욱 심화."
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "meta": {
+    "date": "2026-06-25",
+    "broker": "Eugene Investment & Securities",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-26_0708_안녕하세요 데일리에요(로봇방산조선).md"
+  },
+  "questionnaire": {
+    "broker": "Eugene Investment & Securities",
+    "analyst": "양승윤",
+    "report_date": "06/24",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "반도체",
+      "AI",
+      "로봇",
+      "방산",
+      "조선"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "로봇",
+        "stance": "육성 가속화",
+        "reason": "이재명 대통령은 오는 29일 '로봇·AI 및 반도체 관련 정책 성과와 신규 대책 보고'를 진행할 예정"
+      },
+      {
+        "sector": "방산",
+        "stance": "수주 기대",
+        "reason": "한화에어로스페이스가 최대 3조 원 규모의 독일 대형 방산 패키지 사업 수주를 위한 막판 협상 진행 중"
+      },
+      {
+        "sector": "조선",
+        "stance": "변동",
+        "reason": "독일 국방부의 F126 사업 중단 및 TKMS MEKO A-200 도입 결정에 따른 업종 내 영향 발생"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "06/29",
+        "event": "이재명 대통령 '로봇·AI 및 반도체 관련 정책 성과와 신규 대책 보고'"
+      }
+    ],
+    "top_picks": [
+      "로보티즈",
+      "두산로보틱스",
+      "한화시스템",
+      "한화에어로스페이스",
+      "TKMS",
+      "Rheinmetall"
+    ],
+    "risk": "美 중국산 로봇 규제 검토, 獨 라인메탈 군함 사업 백지화, 조선업 관련 사업 취소 및 변경",
+    "quote": "반도체와 인공지능에 이어 로봇 산업 육성에 속도를 낼 예정. 국내 로봇 생태계 구축 확대 기대."
+  }
+}

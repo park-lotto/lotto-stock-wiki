@@ -1,0 +1,19 @@
+{
+  "target_kind": "market",
+  "market_direction": "neutral",
+  "macro_events": [
+    {
+      "fact": "AI 반도체 경쟁 우위 확보를 위한 이재용 삼성전자 회장과 최태원 SK그룹 회장의 미국 출장 및 톱세일즈 활동",
+      "ts": "2026-07-09",
+      "quote": "AI 반도체 승부는 고객···미국 간 이재용·최태원 '톱세일즈'"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "반도체",
+      "stance": "긍정",
+      "comment": "AI 반도체 시장에서의 고객 확보를 위한 경영진의 적극적인 현장 행보가 이어지고 있음"
+    }
+  ],
+  "quote": "AI 반도체 승부는 고객···미국 간 이재용·최태원 '톱세일즈'"
+}

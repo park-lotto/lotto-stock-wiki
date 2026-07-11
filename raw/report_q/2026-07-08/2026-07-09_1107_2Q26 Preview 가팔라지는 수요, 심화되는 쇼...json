@@ -1,0 +1,99 @@
+{
+  "meta": {
+    "date": "2026-07-08",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-09_1107_2Q26 Preview 가팔라지는 수요, 심화되는 쇼...md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "이주형",
+    "report_date": "2026.07.08",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "삼성전기",
+        "code": "009150",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "2,460,000원",
+        "tp_prev": "1,792,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2분기 매출액 3조 3,891억원(YoY +22%, QoQ +6%), 영업이익 4,085억원(YoY +92%, QoQ +46%, OPM 12.1%)을 기록할 것으로 예상.",
+        "estimate_revision": "우호적인 환율과 점차 타이트해지는 IT 부품 수급환경에 따라 종전 영업이익 추정치를 약 7.8% 상회하는 호실적을 기록할 것으로 추정",
+        "next_catalyst": "TSMC의 CoWoS CAPA 확대와 더불어 인텔 EMIB-T 패키징의 레퍼런스 확보에 대한 구체적인 숫자 확인 및 FC-BGA 생산능력 확대",
+        "thesis": [
+          "AI 서버용 MLCC 제품군의 빠른 수요 확대와 생산능력 확대를 상회하는 캐파 잠식 지속",
+          "서버 위주의 FC-BGA 매출 비중 확대와 업스트림 단가 인상에 따른 패키지솔루션 사업부 수익성 개선",
+          "Vera CPU 출하량 확대에 따른 BGA 기판의 빠른 마진 개선 기대"
+        ],
+        "valuation_basis": "28년 EPS 추정치 66,720원에 무라타, 이비덴, Taiyo Yuden ‘28F P/E 평균 * 20% 할증한 36.8x를 적용",
+        "risk": null,
+        "supply_comment": "AI 서버용 MLCC 및 FC-BGA 생산능력 확대 중이나 수요 확대가 이를 상회하여 쇼티지 지속 전망",
+        "quote": "FC-BGA 생산능력 확대는 곧 컨센서스 상향 조정 요소라고 판단. 이와 더불어 Vera CPU 출하량 확대에 따른 동사 패키지솔루션 사업부 내 BGA 기판의 빠른 마진 개선 기대"
+      },
+      {
+        "name": "대덕전자",
+        "code": "353200",
+        "rating": "STRONG BUY",
+        "rating_changed": "유지",
+        "tp_new": "230,000원",
+        "tp_prev": "230,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2분기 실적은 매출액 3,848억원(YoY +57%, QoQ +11%), 영업이익 676억원(YoY +3,515%, QoQ +32%, OPM 17.6%)을 기록할 것으로 예상.",
+        "estimate_revision": "패키지 제품군의 일괄적인 단가 인상과 FC-BGA 가동률 확대에 힘입어 당초 추정치를 크게 상회할 전망",
+        "next_catalyst": "내년 상반기 중 FC-BGA 가동률 상단 도달 및 북미 고객사의 차세대 프로세서향 볼륨 출하",
+        "thesis": [
+          "FC-BGA 가동률의 빠른 개선세 및 북미 고객사 차세대 프로세서향 볼륨 출하 대기",
+          "내년 상반기까지 믹스 개선 위주의 실적 상승이 기대되는 메모리PKG 부문",
+          "글로벌 탑티어 위성 사업자향 납품 가속화 및 항공우주 세그먼트 내 MLB 수요 증가"
+        ],
+        "valuation_basis": "전일 종가 기준 27F P/E 17.7x 수준",
+        "risk": null,
+        "supply_comment": "FC-BGA 가동률 3월말 73%, 5월말 76%로 추정되며 근시일 내 추가 부지 투자가 필요할 것으로 판단",
+        "quote": "FC-BGA 내 높은 기술력과 전 제품군의 강력한 성장세를 감안한다면 적극적인 매수 기회로 삼을 필요가 있다고 판단."
+      },
+      {
+        "name": "두산",
+        "code": "000150",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "2,580,000원",
+        "tp_prev": "2,580,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2분기 실적은 매출액 6,765억원(YoY +42%, QoQ +10%), 영업이익 2,069억원(YoY +52%, QoQ +11%, OPM 30.6%)을 예상.",
+        "estimate_revision": "광모듈향 CCL 매출액 전기비 약 16% 증가 예상 및 신규 고객 확보",
+        "next_catalyst": "4분기와 내년 3분기 브라운필드 증설분 반영 및 2H27 가동 타겟 신규 그린필드 투자",
+        "thesis": [
+          "800G 비중 확대와 1.6T 전환 로드맵에 따른 광모듈향 매출 성장",
+          "브라운필드 증설 및 신규 그린필드 투자를 통한 고객 포트폴리오 확대",
+          "반도체 업황 호조에 따른 SK실트론 인수 가능성 및 비선형적인 시가총액 상승 잠재력"
+        ],
+        "valuation_basis": "전자BG의 27F EV/EBITDA는 대만 3사 대비 16% 할인된 15.5x 수준",
+        "risk": "SK실트론 인수 관련 논의 지속 중",
+        "supply_comment": "4분기와 내년 3분기 브라운필드 증설분이 반영될 예정",
+        "quote": "북미 고객사 컴퓨트 트레이향 독점 지위 유지, 캐파 증설을 통한 고객 포트폴리오 확대는 명백한 프리미엄 부여 요소."
+      },
+      {
+        "name": "비에이치",
+        "code": "090460",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "40,000원",
+        "tp_prev": "40,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2분기 실적은 매출액 4,114억원(YoY +6%, QoQ +11%), 영업이익 126억원(YoY -21%, QoQ +19%)으로 전망.",
+        "estimate_revision": "모바일 제품 비수기 영향에도 전사 가동률 70% 중반 수준 유지",
+        "next_catalyst": "피지컬 AI 관련 센서향/액추에이터향 FPCB의 고객사 실사 및 벤더 등록 모멘텀",
+        "thesis": [
+          "모바일 FPCB 부문의 탄탄한 방어 및 연간 소폭 성장 예상",
+          "자회사의 기존 고객사 벤더 등록을 통한 피지컬 AI 관련 사업 순항",
+          "독일 신규 고객사 확보를 통한 BH EVS 부문의 전기차 업황 둔화 방어"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "초기 기대 대비 IT OLED 물동량은 소폭 낮아진 상황",
+        "quote": "단기 실적은 모바일 FPCB 중심으로 방어하며, 중장기적으로 피지컬 AI가 비에이치의 성장 모멘텀이 되어줄 것을 기대."
+      }
+    ]
+  }
+}

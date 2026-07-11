@@ -1,0 +1,59 @@
+{
+  "meta": {
+    "date": "2026-07-08",
+    "broker": "SK증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-10_0805_박제민의 QnA.I_최적화는 AI Labs 경쟁 구도...md"
+  },
+  "questionnaire": {
+    "broker": "SK증권",
+    "analyst": "박제민",
+    "report_date": "2026-07-08",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "GPU 렌탈 가격",
+      "LLM 추론 비용",
+      "AI Labs 기업가치",
+      "AI 인프라 Capex",
+      "CDS spread"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": "중립",
+        "reason": "소비자용 Agent 및 AI 최적화 기술 경쟁이 심화되는 가운데, 빅테크의 공격적인 AI 인프라 투자와 그에 따른 매출 실현 여부가 핵심 변수임"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026-06",
+        "event": "DeepSeek 신규 V4 모델 Dspark 적용"
+      },
+      {
+        "date": "2026-07-01",
+        "event": "보도 이후 시장 반응(Meta 상승, SOX 하락)"
+      }
+    ],
+    "top_picks": [
+      "엔비디아",
+      "알파벳",
+      "애플",
+      "마이크로소프트",
+      "아마존",
+      "메타 플랫폼스",
+      "오라클",
+      "코어위브",
+      "Anthropic",
+      "OpenAI",
+      "DeepSeek",
+      "SpaceX",
+      "Google",
+      "Broadcom",
+      "Sharon AI",
+      "Firmus"
+    ],
+    "risk": "AI 인프라 투자의 수익화 지연 및 과잉 공급 우려, AI Labs 간의 경쟁 심화로 인한 추론 비용 하락과 마진 축소 가능성",
+    "quote": "최적화는 AI Labs 경쟁 구도의 핵심 변수?"
+  }
+}

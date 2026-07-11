@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-26",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-26_1008_스페이스X, 첫 재진입 캡슐 Starfall 시험비...md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "정의훈",
+    "report_date": "2026.06.26",
+    "target_kind": "sector",
+    "sector_name": "우주",
+    "sector_view": null,
+    "thesis": [
+      "스페이스X가 무인 재진입·회수 캡슐 '스타폴(Starfall)' 첫 시험비행 실시",
+      "스타폴은 우주 제조(in-space manufacturing) 및 지점 간(point-to-point) 운송 시장 타겟",
+      "스페이스X의 시장 진입으로 기존 소형 캡슐 위주였던 미세중력 제조·회수 시장 구도 재편 전망"
+    ],
+    "timeline": [
+      "2026.06.23 스타폴 데모(Starfall Demo) 미션 수행"
+    ],
+    "top_picks": [
+      {
+        "name": "Varda Space Industries",
+        "reason": "2023년 첫 발사 이후 여섯 차례 발사·회수 수행, 시리즈 C 누적 조달액 3억 2,900만 달러 기록",
+        "tp": null
+      },
+      {
+        "name": "ElevationSpace",
+        "reason": "최근 4,000만 달러 규모의 시리즈 B 유치",
+        "tp": null
+      }
+    ],
+    "risk": "스페이스X가 이번 미션을 기밀 임무처럼 다루어 캡슐이 재진입에서 생존했는지 또는 착수 후 회수됐는지는 공개되지 않음",
+    "quote": "스타폴이 진입하려는 미세중력 제조·회수 시장에는 대표적으로 미국의 Varda Space Industries 와 일본의 ElevationSpace 등이 있다."
+  }
+}

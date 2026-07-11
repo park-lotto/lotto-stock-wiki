@@ -2,7 +2,7 @@
   "reports": [
     {
       "broker": "UBS",
-      "stock": "스페이스X AI 사업부",
+      "stock": "SpaceX AI",
       "rating": null,
       "tp": null,
       "ts": "05:48",
@@ -11,11 +11,11 @@
     },
     {
       "broker": "골드만삭스",
-      "stock": "반도체 공급/수요",
+      "stock": "DRAM",
       "rating": null,
       "tp": null,
       "ts": "05:50",
-      "quote": "DRAM 공급 타이트 국면이 2027년 2분기까지 연장",
+      "quote": "2026년 동일 제품 기준(like-for-like) DRAM 가격 250~300% 폭등 전망",
       "sector": "반도체"
     },
     {
@@ -26,6 +26,15 @@
       "ts": "16:34",
       "quote": "모건스탠리는 ABF 기판 가격이 2026년 20~25%, 2027년 25% 이상 상승할 것으로 전망",
       "sector": "반도체"
+    },
+    {
+      "broker": "BofA",
+      "stock": "미국 전력",
+      "rating": null,
+      "tp": null,
+      "ts": "15:32",
+      "quote": "미국 전체 전력 수요는 2026~2030년 연평균 4.1% 성장할 것으로 전망",
+      "sector": "전력"
     }
   ]
 }

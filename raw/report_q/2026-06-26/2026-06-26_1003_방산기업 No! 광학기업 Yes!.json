@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-26",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-26_1003_방산기업 No! 광학기업 Yes!.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "권명준",
+    "report_date": "2026.06.26",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "그린광학",
+        "code": "0015G0",
+        "rating": "Not Rated",
+        "rating_changed": false,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "방산 수주액이 3Q25 572.8억원→4Q25 618.7억원→1Q26 641.8억원으로 상향되고 있으며",
+        "estimate_revision": null,
+        "next_catalyst": "글로벌 방산기업 공급망 진입 및 2년간 최대 44억원 지원을 통한 MS-ZnS 돔 소재 양산기술 확보",
+        "thesis": [
+          "10년간 100억원의 연구 및 시설투자, 170회 이상의 공정 테스트를 통해 초고순도 ZnS 소재 국산화 성공",
+          "방산 수주액 상향 및 MS-ZnS 소재 수요 확대로 실적 성장 기대",
+          "자체 개발 검사장비 판매시 밸류에이션 상향 기대"
+        ],
+        "valuation_basis": null,
+        "risk": "중국 수출 규제 및 특정 산업 의존도",
+        "supply_comment": "중국 수출 규제로 안정적인 공급이 필요한 상황이다.",
+        "quote": "방산 수주액이 3Q25 572.8억원→4Q25 618.7억원→1Q26 641.8억원으로 상향되고 있으며, 가공한 MS-ZnS의 수요가 확대된다는 점에서 동사의 실적성장을 견인할 것으로 기대된다."
+      }
+    ]
+  }
+}

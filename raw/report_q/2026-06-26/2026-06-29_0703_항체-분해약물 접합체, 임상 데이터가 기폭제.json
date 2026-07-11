@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-26",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-29_0703_항체-분해약물 접합체, 임상 데이터가 기폭제.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "IBK투자증권",
+    "analyst": "정이수",
+    "report_date": "2026. 6. 26",
+    "stocks": [
+      {
+        "name": "오름테라퓨틱",
+        "code": "475830",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2024년 매출 21십억원, 영업이익 -10십억원, 2025년 매출 0십억원, 영업이익 -55십억원으로 예상된다.",
+        "estimate_revision": null,
+        "next_catalyst": "2027년 상반기 ORM-6151의 AML/MDS 환자 대상 임상 1상 데이터 확보",
+        "thesis": [
+          "항체의 표적 전달 능력과 표적단백질분해제(TPD) 페이로드를 결합한 항체-분해약물 접합체(DAC) 플랫폼 보유",
+          "자체 파이프라인 ORM-1153의 연내 임상 시험계획(IND) 제출 목표 및 혈액암 파이프라인 확장 기대",
+          "글로벌 제약사의 DAC 플랫폼 기술이전 및 M&A 사례를 통한 플랫폼 가치 검증"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "2027년 상반기 ORM-6151의 AML/MDS(골수형성이상증후군) 환자 대상 임상 1상 데이터 확보가 예상되어 동사의 DAC 플랫폼 검증과 함께 파이프라인 가치도 반영될 것으로 기대한다.",
+        "sector": "바이오"
+      }
+    ]
+  }
+}

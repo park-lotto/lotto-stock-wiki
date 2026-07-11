@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-09",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-09_1100_전 지역 고성장 중.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "권우정",
+    "report_date": "2026.07.09",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "실리콘투",
+        "code": "257720",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "63,000원",
+        "tp_prev": "63,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2분기 연결 매출액 및 영업이익은 각각 3.9천억원 (YoY 48%, QoQ 13%), 741억원 (YoY 42%)으로 시장 기대치 소폭 상회 전망.",
+        "estimate_revision": null,
+        "next_catalyst": "폴란드 항구 통관 이슈 해소에 따른 3분기 매출액 QoQ 유의미한 증가 전망 및 미국 올리브영 협업",
+        "thesis": [
+          "유럽 지역 내 K-뷰티 벤더로서의 절대적 시장 지위 유지와 폴란드향 수출의 견조한 흐름",
+          "북미 시장 아이허브 및 내셔널 리테일러 매출 증가와 미국 올리브영 협업을 통한 업사이드 요인 확보",
+          "중동 전쟁 영향 이후 수요 회복세 및 중남미 메디큐브 등 브랜드 실적 호조"
+        ],
+        "valuation_basis": "현 주가는 12개월 Fwd 기준 P/E 9배 수준에 불과해 매력적.",
+        "risk": "폴란드 항구 통관 지연 및 전쟁 영향에 따른 중동 수요 회복 속도 불확실성",
+        "supply_comment": "물류비는 1분기 대비 소폭 상승으로 추정되며 그 외 비용 특이사항 없음.",
+        "quote": "2분기 연결 매출액 및 영업이익은 각각 3.9천억원 (YoY 48%, QoQ 13%), 741억원(YoY 42%)으로 시장 기대치 소폭 상회 전망."
+      }
+    ]
+  }
+}

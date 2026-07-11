@@ -1,0 +1,145 @@
+{
+  "meta": {
+    "date": "2026-06-24",
+    "broker": "Yuanta Research",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-29_0706_2차전지 2H26 Outlook.md"
+  },
+  "questionnaire": {
+    "broker": "Yuanta Research",
+    "analyst": "이안나",
+    "report_date": "24 Jun, 2026",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "LG에너지솔루션",
+        "code": "373220",
+        "rating": "BUY",
+        "rating_changed": "null",
+        "tp_new": "574,000원",
+        "tp_prev": "574,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "2Q26_revenue": "7.3조원",
+          "2Q26_op": "1,300억원",
+          "2Q26_yoy": "+31% YoY",
+          "2Q26_qoq": "+11% QoQ"
+        },
+        "estimate_revision": "시장 기대 보상금 인식 지연 가능성",
+        "next_catalyst": "GM non-Bolt Ultium 모델 회복 및 Rivian R2 초기 공급",
+        "thesis": [
+          "미국 ESS 현지화의 최대 수혜",
+          "2Q26 실적 컨센서스 부합 예상",
+          "2027년 46시리즈 차세대 라인 가동 본격화"
+        ],
+        "valuation_basis": "null",
+        "risk": "EV 가동률 저조 및 GM 전기차 생산 계획 조정",
+        "supply_comment": "미국 ESS 가동률 확대 및 유럽 EV 중심 개선폭 확대 기대",
+        "quote": "동사에 대한 투자의견 Buy 및 목표주가 유지. 동사는 2분기에 이어 3분기에는 ESS 출하 확대, 이연 보상금 반영, 4분기에는 북미 BESS 가동률 확대, 유럽 EV 중심 개선폭 확대가 기대."
+      },
+      {
+        "name": "삼성SDI",
+        "code": "006400",
+        "rating": "BUY",
+        "rating_changed": "null",
+        "tp_new": "913,000원",
+        "tp_prev": "913,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "2Q26_revenue": "3.7조원",
+          "2Q26_op": "-750억원",
+          "2Q26_yoy": "+17% YoY",
+          "2Q26_qoq": "+4% QoQ"
+        },
+        "estimate_revision": "null",
+        "next_catalyst": "미국 LFP ESS 초기 양산",
+        "thesis": [
+          "ESS 전 라인업 중심으로 외형성장 지속",
+          "2H26 실적 흑자전환 기대(4분기, 빠르면 3분기)",
+          "미국 LFP ESS 초기 양산 및 StarPlus Energy 라인 전환"
+        ],
+        "valuation_basis": "null",
+        "risk": "미국 EV향 물량 부족 및 초기 고정비 부담",
+        "supply_comment": "미국 LFP ESS 초기 양산 및 StarPlus Energy 라인 전환",
+        "quote": "동사 실적 흑자전환은 4분기로 예상되나 전자재료, 데이터센터용 BBU·UPS, 유럽 EV 출하 회복, 기존 ESS 손익 개선으로 3분기 흑자전환 가능성도 높음."
+      },
+      {
+        "name": "에코프로비엠",
+        "code": "247540",
+        "rating": "BUY",
+        "rating_changed": "null",
+        "tp_new": "270,000원",
+        "tp_prev": "270,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "2Q26_revenue": "6,500억원",
+          "2Q26_op": "270억원",
+          "2Q26_yoy": "-17% YoY",
+          "2Q26_qoq": "+7% QoQ"
+        },
+        "estimate_revision": "null",
+        "next_catalyst": "헝가리 공장 가동 본격화",
+        "thesis": [
+          "북미 ESS + 유럽 정책 모멘텀",
+          "헝가리 공장 가동 본격화로 유럽 구조적 턴어라운드 기대",
+          "주요 고객사향 BESS 양극재 공급 확대"
+        ],
+        "valuation_basis": "null",
+        "risk": "2027년부터 고객사 LFP ESS 양산에 따른 수요 일부 감소 우려",
+        "supply_comment": "헝가리 공장 1개 라인 가동 후 9월 추가 라인 가동",
+        "quote": "동사는 2026년 2분기 매출액 6,500억원(-17% YoY, +7% QoQ), 영업이익 270억원(-45% YoY, +29% QoQ, OPM 4%)으로 컨센서스 부합하는 실적 예상."
+      },
+      {
+        "name": "엘앤에프",
+        "code": "365340",
+        "rating": "BUY",
+        "rating_changed": "null",
+        "tp_new": "235,000원",
+        "tp_prev": "235,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "2Q26_revenue": "9,624억원",
+          "2Q26_op": "467억원",
+          "2Q26_yoy": "+85% YoY",
+          "2Q26_qoq": "+30% QoQ"
+        },
+        "estimate_revision": "null",
+        "next_catalyst": "4분기 LFP 가동",
+        "thesis": [
+          "안정적 가동률 및 LFP 실적 본격화",
+          "꾸준한 출하량 증가로 안정적인 가동률 확보",
+          "미국 ESS용 비중국 LFP 양극재 공급망 수혜"
+        ],
+        "valuation_basis": "null",
+        "risk": "초기 고정비 부담",
+        "supply_comment": "4분기부터 LFP 가동 시작",
+        "quote": "동사는 2026년 2분기 매출액 9,624억원(+85% YoY, +30% QoQ), 영업이익 467억원(흑자전환 YoY, -60% QoQ, OPM 4.9%)으로 컨센서스 부합하는 실적 예상."
+      },
+      {
+        "name": "한중엔시에스",
+        "code": "107640",
+        "rating": "BUY",
+        "rating_changed": "null",
+        "tp_new": "97,000원",
+        "tp_prev": "97,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "2Q26_revenue": "650억원",
+          "2Q26_op": "37억원",
+          "2Q26_yoy": "+78.6% YoY",
+          "2Q26_qoq": "+18.8% QoQ"
+        },
+        "estimate_revision": "null",
+        "next_catalyst": "2027년 6월 미국 플랜트 가동",
+        "thesis": [
+          "미국 TRPP 규제 개정판 수혜주",
+          "AI 데이터센터 냉각시스템 핵심 경쟁력",
+          "완전 자동화 미국 공장 가동으로 높은 이익률 기대"
+        ],
+        "valuation_basis": "null",
+        "risk": "내연기관차 물량 공급 적자",
+        "supply_comment": "SBB 플랫폼 연동 및 미국향 BESS 냉각시스템 수주",
+        "quote": "동사는 2026년 2분기 매출액 650억원(+78.6% YoY, +18.8% QoQ), 영업이익 37억원(+390.0% YoY, +39.3% QoQ) 예상."
+      }
+    ]
+  }
+}

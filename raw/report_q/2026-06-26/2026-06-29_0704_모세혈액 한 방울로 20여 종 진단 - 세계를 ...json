@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-26",
+    "broker": "나이스평가정보(주)",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-29_0704_모세혈액 한 방울로 20여 종 진단 - 세계를 ...md"
+  },
+  "questionnaire": {
+    "broker": "나이스평가정보(주)",
+    "analyst": "류치선 연구원",
+    "report_date": "2026.06.25.",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "타스컴",
+        "code": "336040",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 매출은 40억 원이 전망되며(제품 40억 원, 상품 0억 원, 기타 0억 원), 자본확충 진행과 신제품 라인업 확장에 따른 매출 기반의 점진적 회복이 기대된다.",
+        "estimate_revision": null,
+        "next_catalyst": "SimplexTAS 신규 카트리지 출시 효과와 글로벌 Reflotron 대체 시장 진출이 본격 반영될 경우 변동할 가능성이 있는 것으로 판단된다.",
+        "thesis": [
+          "세계 최초 혈구방해 제거 기술을 상용화한 POCT 전문기업으로, SimplexTAS를 연구개발·제조·판매하는 사업을 영위",
+          "글로벌 40여 개국 독점 딜러망을 구축하고 있으며, 전략 핵심 국가에는 M&A 또는 법인설립을 통한 직접판매 영업망 설립 추진",
+          "2026년 Total bilirubin 카트리지 출시 예정 등 측정항목 포트폴리오의 지속적 확장을 통해 분석기 당 카트리지 소모율 증대와 매출 다각화 추진"
+        ],
+        "valuation_basis": null,
+        "risk": "동사의 매출 변동성은 SimplexTAS 카트리지 보급 속도에 의해 결정될 것으로 판단된다.",
+        "supply_comment": null,
+        "quote": "타스컴은 세계 최초 전혈 원심분리 복합 POCT 플랫폼 SimplexTAS의 카트리지 확장과 코스닥 이전상장, 100여 개국 딜러망 기반 글로벌 수요 증가가 맞물리며 성장 모멘텀이 본격화되는 시점에 진입한 것으로 판단된다.",
+        "sector": "IT"
+      }
+    ]
+  }
+}

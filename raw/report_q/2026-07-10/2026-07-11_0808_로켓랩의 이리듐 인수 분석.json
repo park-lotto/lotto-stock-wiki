@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "date": "2026-07-10",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-11_0808_로켓랩의 이리듐 인수 분석.md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "정의훈",
+    "report_date": "2026.07.10",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "로켓랩",
+        "code": null,
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "1분기 매출은 2억 30만 달러로 전년 대비 63.5% 증가하며 분기 최대치를 기록했고, 수주잔고 22 억 달러(전분기 대비 +20.2%) 역시 최고치를 달성했다. 1 분기에만 일렉트론·HASTE 계약 31건과 전용 뉴트론 5건을 수주해 2025년 연간 판매량을 한 분기만에 넘어섰고, 발사 수주 잔고 70 건을 상회한다.",
+        "estimate_revision": null,
+        "next_catalyst": "2026년 4분기를 목표로 하는 중형 발사체 뉴트론 첫 비행",
+        "thesis": [
+          "위성통신 기업 이리듐 인수를 통한 우주 밸류체인 수직 통합 및 주파수·고객 확보",
+          "스페이스X의 발사 용량 부족에 따른 구조적 헤지 역할",
+          "일렉트론·HASTE 계약 수주 및 뉴트론 발사체를 통한 매출 상한 확대"
+        ],
+        "valuation_basis": null,
+        "risk": "36 억 달러 브리지론에 따른 레버리지·차환 부담, 반독점·FCC·해외 당국 승인과 통합 리스크",
+        "supply_comment": "스페이스 X는 2028 년 말~2029 년 초 이후의 트랜스포터 예약을 받지 않고 있으며, 그 전까지의 발사 슬롯도 거의 찼다고 알려짐. 향후 스페이스X가 스타링크와 자체 궤도 데이터센터 등 내부 고객에 발사 역량을 집중할 것으로 예상되기 때문에 로켓 발사 공급 부족 현상은 지속될 전망.",
+        "quote": "이번 인수로 로켓랩은 위성통신 사업을 위한 주파수 확보, 위성 인프라 구축, 고객 확보 등에 대한 접근성을 높일 수 있으며, 향후 설계·제조·발사·운영을 로켓랩이 수직 통합하게 된다."
+      },
+      {
+        "name": "이리듐",
+        "code": null,
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "2027년 중반 인수 완료 예정",
+        "thesis": [
+          "66 기 위성 저궤도 네트워크, L-밴드 주파수, 항공기 추적 서비스 에어리온 보유",
+          "전 세계 255 만 명 이상의 가입자와 정부·국방·항공·해양 부문 고객 확보",
+          "PNT(측위·항법·시각) 서비스 보유"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "기업가치는 약 80 억 달러, 주당 54 달러로 6월 26일 종가 대비 24% 프리미엄이며, 거래는 규제 및 주주 승인 등을 거쳐 2027 년 중반 종결될 예정이다."
+      }
+    ]
+  }
+}

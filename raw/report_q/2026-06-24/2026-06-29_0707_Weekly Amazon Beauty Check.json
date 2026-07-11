@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "date": "2026-06-24",
+    "broker": "SK증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-29_0707_Weekly Amazon Beauty Check.md"
+  },
+  "questionnaire": {
+    "broker": "SK증권",
+    "analyst": "형권훈",
+    "report_date": "2026-06-24",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [
+      {
+        "sector": "화장품미용",
+        "stance": null,
+        "reason": "K뷰티 유니버스 합산 BSR 점수 및 개별 브랜드 BSR 점수 분석"
+      }
+    ],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": [
+      "medicube",
+      "ANUA",
+      "BIODANCE",
+      "SKIN1004",
+      "d’alba Piedmont",
+      "Vanicream",
+      "Tower 28"
+    ],
+    "risk": null,
+    "quote": "K뷰티 유니버스의 아마존 BSR 총점은 이번 주 1,664pt 기록해 전 주 대비 ▼28pt 둔화"
+  }
+}

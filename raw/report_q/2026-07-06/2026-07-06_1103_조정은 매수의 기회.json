@@ -2,7 +2,7 @@
   "meta": {
     "date": "2026-07-06",
     "broker": "유진투자증권",
-    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-06_1103_조정은 매수의 기회.md"
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-06_1103_조정은 매수의 기회.md"
   },
   "questionnaire": {
     "target_kind": "stock",
@@ -14,36 +14,22 @@
         "name": "삼성전자",
         "code": "005930",
         "rating": "STRONG BUY",
-        "rating_changed": false,
-        "tp_new": 560000,
-        "tp_prev": 560000,
+        "rating_changed": "유지",
+        "tp_new": "560,000원",
+        "tp_prev": "560,000원",
         "tp_direction": "flat",
-        "earnings_outlook": {
-          "2Q26": {
-            "sales": "168.1조원(+26%qoq)",
-            "operating_profit": "83.1조원(+45%qoq)"
-          },
-          "DS_2Q26": {
-            "operating_profit": "81.6조원(+52%qoq)"
-          },
-          "2026_2027": {
-            "operating_profit": "361.3조원(+726%yoy), 589.4조원(+63%YoY)"
-          }
-        },
-        "estimate_revision": {
-          "operating_profit_26E": "▲",
-          "operating_profit_27E": "▲"
-        },
-        "next_catalyst": "메모리 가격 강세 지속 및 주주환원 확대",
+        "earnings_outlook": "삼성전자의 2Q26 실적은 매출액 168.1조원(+26%qoq), 영업이익 83.1조원(+45%qoq)로 전망한다.",
+        "estimate_revision": "환율 가정과 범용 DRAM의 ASP 상승률을 소폭 상향 조정했으나, 1Q26에 미반영된 성과급 관련 충당금을 2Q26에 모두 반영하며 기존 추정치(영업이익 83.4조원)와 유사한 수준으로 유지한다.",
+        "next_catalyst": "연간 FCF의 50%를 자사주 소각 중심으로 주주환원에 활용할 것",
         "thesis": [
-          "고객사의 메모리 재고 확보 경쟁 및 가격 협상력 확대를 통한 실적 성장",
-          "공격적인 가격 인상 정책과 HBM4 선제적 출하로 인한 우호적인 blended ASP 확보",
-          "연간 FCF의 50%를 활용한 대규모 자사주 소각 중심의 주주환원 정책"
+          "DS 부문 영업이익이 81.6조원(+52%qoq)을 기록하며 전사 실적 성장을 견인",
+          "3Q26 범용 DRAM과 NAND의 ASP가 모두 +20%qoq 이상 인상하는 방향으로 협상이 진행되고 있어 2027년까지의 ASP 추정치 상향 여력 존재",
+          "대규모 주주환원은 최근 상대적으로 부진했던 삼성전자의 주가 아웃퍼폼을 이끌 것"
         ],
         "valuation_basis": null,
-        "risk": "반도체 업종 주가의 큰 폭 하락세 및 Foundry/LSI의 연내 흑자 전환 어려움",
-        "supply_comment": "메모리 공급과 연계된 고객사 확보 전략 진행 중",
-        "quote": "삼성전자의 2026년, 2027년 영업이익은 361.3조원(+726%yoy), 589.4조원(+63%YoY)으로 전망한다. 2H26에도 메모리 가격 강세는 지속될 전망이다."
+        "risk": "메모리 가격 상승에 따른 원가 부담이 본격화되며 큰 폭의 수익성 감소가 불가피할 전망(MX/NW 부문)",
+        "supply_comment": "고객사의 메모리 재고 확보 경쟁이 가격 협상력 확대로 이어지며, 메모리 부문 영업이익이 83.1조원을 기록한 것으로 추정한다.",
+        "quote": "삼성전자에 대해 Strong Buy 의견을 유지한다."
       }
     ]
   }

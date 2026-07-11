@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-26",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-26_1005_한국의 팔란티어가 될 수 있을까.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "김진형",
+    "report_date": "2026.06.25",
+    "stocks": [
+      {
+        "name": "에스투더블유",
+        "code": "488280",
+        "rating": "N/R",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "1Q26 매출액 22억원(+0.1% YoY), 영업적자 22억원(적자지속 YoY).",
+        "estimate_revision": null,
+        "next_catalyst": "관련 수주 재개가 실적 개선의 분기점이 될 것으로 기대. 또한 의무보유 해제에 따른 오버행 이슈도 잔존",
+        "thesis": [
+          "국내 유일 멀티도메인 데이터 인텔리전스 기업",
+          "국내에서 해외로, B2G에서 B2B로 성장 기대",
+          "수주 모멘텀은 회복 조짐이나 반복/확산 수주로의 전환 여부 확인 필요"
+        ],
+        "valuation_basis": null,
+        "risk": "‘24년 이후 저가 LLM 경쟁으로 25년 매출 공백. 또한 의무보유 해제에 따른 오버행 이슈도 잔존",
+        "supply_comment": "수주 모멘텀은 회복 조짐이나 반복/확산 수주로의 전환 여부 확인 필요",
+        "quote": "1Q26 매출액 22억원(+0.1% YoY), 영업적자 22억원(적자지속 YoY). 신성장 동력으로 기대를 받았던 부분은 산업특화 AI인 SAIP. 다만 ‘24년 이후 저가 LLM 경쟁으로 25년 매출 공백. 관련 수주 재개가 실적 개선의 분기점이 될 것으로 기대. 또한 의무보유 해제에 따른 오버행 이슈도 잔존"
+      }
+    ],
+    "sector": "양자보안"
+  }
+}

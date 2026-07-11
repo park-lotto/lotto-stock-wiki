@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "date": "2026-07-08",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-10_0806_슈퍼스타 B.md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": "정재원",
+    "report_date": "2026.07.08",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "셀트리온",
+        "code": "068270",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": 260000,
+        "tp_prev": 260000,
+        "tp_direction": "flat",
+        "earnings_outlook": "동사의 연간 매출 5.6조원(YoY +34%), 영업이익 1.9조원(YoY +65%, OPM 35%) 전망.",
+        "estimate_revision": null,
+        "next_catalyst": "신제품 옴니클로 미국 시장 출시 및 짐펜트라 매출 성장",
+        "thesis": [
+          "최근 출시한 신제품의 가파른 성장 전망.",
+          "짐펜트라의 미국 내 안정적인 처방 상승 흐름.",
+          "연간 매출 5.6조원, 영업이익 1.9조원(OPM 35%)의 실적 성장 기대."
+        ],
+        "valuation_basis": "펀더멘탈적인 관점에서는 외형과 이익이 동시에 성장하는 상황이며, 밸류에이션 측면에서도 역사적 하단 부근에 위치",
+        "risk": "업종 투자심리 약화",
+        "supply_comment": null,
+        "quote": "펀더멘탈적인 관점에서는 오히려 외형과 이익이 동시에 성장하는 상황인 점을 주목. 밸류에이션 측면에서도 동사의 현재 주가는 역사적 하단 부근에 있어 중장기적 관점에서 업종 내 매력적인 대안"
+      },
+      {
+        "name": "한미약품",
+        "code": "128940",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": 600000,
+        "tp_prev": 600000,
+        "tp_direction": "flat",
+        "earnings_outlook": "연간 매출 및 영업이익을 각각 1조 7,087억원(YoY +10%), 3,589억원(YoY +39%, OPM 21%) 제시",
+        "estimate_revision": null,
+        "next_catalyst": "비만 치료제 에페글레나타이드 하반기 국내 허가 및 출시",
+        "thesis": [
+          "하반기 국내 첫 비만치료제 에페글레나타이드 출시.",
+          "매년 1개 이상의 기술수출(L/O) 추진 가이던스.",
+          "비만 분야에서 국내 기업 중 가장 다채로운 파이프라인 보유."
+        ],
+        "valuation_basis": "파이프라인 가치는 에페글레나타이드의 국내 출시 케이스만 적용",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "비만 분야에서 국내 기업 중 가장 다채로운 파이프라인을 보유. 주목하는 파이프라인은 근육량을 증가시키면서 체중만 효과적으로 줄여주는 non GLP-1 계열 후보물질 HM17321."
+      },
+      {
+        "name": "리가켐바이오",
+        "code": "141080",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": 220000,
+        "tp_prev": 200000,
+        "tp_direction": "up",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "하반기 임상 중인 파이프라인 데이터 발표 및 추가 L/O 계약",
+        "thesis": [
+          "플랫폼 및 파이프라인 다각화를 통한 글로벌 경쟁력 유지.",
+          "국민성장펀드 직접투자 1호 선정으로 인한 R&D 투자 스탠스 확고화.",
+          "ROR1 ADC 파이프라인 가치 상향."
+        ],
+        "valuation_basis": "ROR1 ADC 파이프라인 가치를 기존 8,155억원에서 1조 3,709억원으로 68% 상향",
+        "risk": "ADC 관련 경쟁 및 규제 환경 변화",
+        "supply_comment": null,
+        "quote": "투자의견은 그대로 유지하며 목표주가를 20만원에서 22만원으로 상향. ROR1 ADC 파이프라인 가치를 기존 8,155억원에서 1조 3,709억원으로 68% 상향."
+      }
+    ]
+  }
+}

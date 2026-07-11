@@ -2,48 +2,38 @@
   "meta": {
     "date": "2026-07-08",
     "broker": "한화투자증권",
-    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-09_0808_[디지털자산] 월간 디지털자산 시장 동향 기...md"
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-09_0808_[디지털자산] 월간 디지털자산 시장 동향 기...md"
   },
   "questionnaire": {
     "broker": "한화투자증권",
     "analyst": "최윤영",
-    "report_date": "2026.07.07",
+    "report_date": "2026년 7월 7일",
     "target_kind": "market",
     "market_direction": null,
     "macro_vars": [
-      "디지털자산 ETP 6월 순유출",
       "매크로 불확실성",
-      "위험회피 심리",
-      "스테이블코인 공급량 감소",
-      "SEC 시장구조 개편",
-      "미국 규제형 무기한선물 시장 개화"
+      "미국 규제형 무기한선물 시장 개화",
+      "SEC 시장구조 개편"
     ],
     "recommended_sectors": [
       {
         "sector": "기타",
-        "stance": "중립",
-        "reason": "디지털자산 ETP는 6월 5주 연속 순유출을 기록했으며, Bitcoin ETP를 중심으로 자금 이탈 지속. CME 선물 OI 감소와 무기한선물 레버리지 정상화가 이어지며 시장은 관망 국면에 진입"
-      },
-      {
-        "sector": "기타",
-        "stance": "중립",
-        "reason": "스테이블코인 공급량이 감소했음에도 거래 활동은 증가. 경쟁 구도가 스테이블코인 발행에서 결제 인프라 구축과 준비자산 운용 영역으로 확대"
-      },
-      {
-        "sector": "기타",
-        "stance": "긍정적",
-        "reason": "RWA 시장은 사모신용·기타채권 중심으로 성장세를 이어갔으며, Coinbase의 슈퍼앱 전략 구체화, SEC의 시장구조 개편 움직임이 향후 토큰화 증권 시장 확대의 핵심 변수로 부상"
-      },
-      {
-        "sector": "기타",
-        "stance": "중립",
-        "reason": "DEX 거래가 소폭 회복됐지만 CEX 우위는 유지. 미국 규제형 무기한선물 시장이 본격 개화하는 가운데 예측시장은 빅테크와 전통 금융권의 참여 확대로 시장 외연을 넓혀가는 중"
+        "stance": null,
+        "reason": "디지털자산(ETP, 스테이블코인, RWA, DeFi)"
       }
     ],
     "style": null,
-    "event_calendar": null,
+    "event_calendar": [
+      {
+        "date": "2026.06.26",
+        "event": "BitMine Russell 1000 지수 편입"
+      },
+      {
+        "date": "2026.06.29",
+        "event": "Strategy Digital Credit Capital Framework 발표"
+      }
+    ],
     "top_picks": [
-      "Coinbase",
       "Bitcoin",
       "Ethereum",
       "Hyperliquid",
@@ -51,17 +41,9 @@
       "XRP",
       "Chainlink",
       "Sui",
-      "Litecoin",
-      "Strategy",
-      "BitMine",
-      "USDT",
-      "USDC",
-      "USDS",
-      "PYUSD",
-      "USDe",
-      "DAI"
+      "Litecoin"
     ],
-    "risk": "매크로 불확실성 확대 및 디지털자산 시장 자금 이탈, 규제 불확실성",
+    "risk": "매크로 불확실성 확대에 따른 위험회피 심리 강화 및 자금 이탈 지속",
     "quote": "자금 흐름은 둔화됐지만, 금융 인프라 혁신은 지속"
   }
 }

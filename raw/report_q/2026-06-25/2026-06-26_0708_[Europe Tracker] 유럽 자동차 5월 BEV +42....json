@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "date": "2026-06-25",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-26_0708_[Europe Tracker] 유럽 자동차 5월 BEV +42....md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이현욱",
+    "report_date": "2026년 6월 25일",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "EU 신차 등록 YoY +3.2%",
+      "BEV YoY +42.9% 확대",
+      "PHEV YoY +12.2%",
+      "HEV YoY +9.7%",
+      "휘발유 YoY -20.1%",
+      "디젤 YoY -19.0%"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "자동차",
+        "stance": "전동화 전환",
+        "reason": "시장 성장은 전동화 차량이 견인했다. 5월 BEV는 YoY +42.9%, PHEV는 +12.2%, HEV는 +9.7% 증가했으며, 세 파워트레인 합산 비중은 67.8%로 전년동월 58.9% 대비 +8.9%p 확대됐다."
+      }
+    ],
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "Tesla",
+      "BYD",
+      "Chery",
+      "Leapmotor"
+    ],
+    "risk": "유럽 시장 내 내연기관 수요 축소",
+    "quote": "2026년 5월 EU 신차 등록은 YoY +3.2% 증가한 95.5만대를 기록하며 1~5월 누적 기준 +4.0%의 성장세를 이어갔다. 시장 성장은 전동화 차량이 견인했다."
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "LG에너지솔루션",
+      "signal": "bull",
+      "reason": "국내 첫 AI 배전망 ESS 사업 수주 성공",
+      "ts": "140MWh",
+      "quote": "LG엔솔, 국내 첫 AI 배전망 ESS 사업 수주 성공",
+      "sector": "2차전지"
+    },
+    {
+      "name": "삼성SDI",
+      "signal": "bull",
+      "reason": "AI 배전망 ESS 사업 66% 수주",
+      "ts": null,
+      "quote": "정부 배전망 ESS 사업, 삼성SDI 66% 수주…LG엔솔 사업자 선정(종합)",
+      "sector": "2차전지"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "정부 주관 국내 첫 AI 배전망 ESS 사업자 선정 및 수주",
+      "ts": "2026-07-10",
+      "quote": "‘AI 배전망 ESS 사업’ 첫 승자 가려졌다… LG엔솔·VPP랩 ‘최다 수주’"
+    }
+  ],
+  "quote": "LG엔솔, 국내 첫 AI 배전망 ESS 사업 수주…호남권 140MWh 운영"
+}

@@ -1,0 +1,369 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"> 
+ <html xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:x="urn:schemas-microsoft-com:office:excel"
+xmlns="http://www.w3.org/TR/REC-html40">
+	<HEAD>
+		<title>리포트서머리</title>
+		<meta name="CODE_LANGUAGE" Content="C#">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<style type="text/css">
+			td { FONT: 11px '맑은 고딕'; COLOR: #333333; border-top:none;border-bottom:0.5pt solid rgb(209,209,209);}
+			br {mso-data-placement:same-cell;}
+			body { PADDING-RIGHT: 0px; PADDING-LEFT: 0px; PADDING-BOTTOM: 0px; MARGIN: 0px; FONT: 9pt '맑은 고딕'; PADDING-TOP: 0px }
+			form { PADDING-RIGHT: 0px; PADDING-LEFT: 0px; PADDING-BOTTOM: 0px; MARGIN: 0px; FONT: 9pt '맑은 고딕'; PADDING-TOP: 0px }
+			.title{font:bold 14pt 'HY견고딕';color:rgb(47,71,107)}
+			.hd { font: bold 9pt '맑은 고딕'; color: rgb(53,91,157); height: 30px; background-color: rgb(247,247,247); text-align: center;border-top:1px rgb(47,71,107) solid}
+			.strdeg{mso-width-source:userset;width:80px;height: 24px;text-align: left}
+			.pre_recomm{mso-width-source:userset;width:80px;height: 24px;text-align: left}
+			.recomm{width:80px;height: 24px;text-align: left}
+			.brk{mso-width-source:userset;width:110px;height: 24px;text-align: left}
+			.cmp,.ind{mso-width-source:userset;width:90px;height: 24px;text-align: left}
+			.strprc{mso-width-source:userset;width:60px;height: 24px;text-align: right}
+			.pre_targer_prc{mso-width-source:userset;width:60px;height: 24px;text-align: right}
+			.close_prc{mso-width-source:userset;width:80px;height: 24px;text-align: right}
+			.comment{width:500px;height: 49px;}
+			.comment2{width:450px;height: 49px;}
+			.rpt_title{width:275px;height:24px;text-align: left}
+			.img0{width:20px;height:30px;line-height:30px;font-size:11pt;font-family:'HY견고딕';font-weight:bold;color:rgb(101,102,102)}
+			.img1{width:20px;height:30px;line-height:30px;font-size:7pt;font-family:'맑은 고딕';color:rgb(254,1,10)}
+			.img2{width:20px;height:30px;line-height:30px;font-size:11pt;font-family:'맑은 고딕';font-weight:bold;color:rgb(14,152,15)}
+			.img3{width:20px;height:30px;line-height:30px;font-size:7pt;font-family:'맑은 고딕';color:rgb(52,101,254)}
+			.img4{width:20px;height:30px;line-height:30px;font-size:9pt;font-family:'맑은 고딕';font-weight:bold;color:rgb(254,1,10)}
+			@page
+	            {mso-header-data:"&R리포트서머리";
+	            mso-footer-data:"Page &P of &N";
+	            margin:.5in 0in .4in 0in;
+	            mso-header-margin:.31in;
+	            mso-footer-margin:.2in;
+	            mso-page-orientation:landscape;}
+		</style>
+    <!--[if gte mso 9]><xml>
+       <x:ExcelWorkbook>
+        <x:ExcelWorksheets>
+         <x:ExcelWorksheet>
+          <x:Name>WiseReport ReportSummary</x:Name>
+          <x:WorksheetOptions>
+            <x:FreezePanes/>
+            <x:FrozenNoSplit/>
+            <x:SplitHorizontal>5</x:SplitHorizontal>
+            <x:TopRowBottomPane>5</x:TopRowBottomPane>
+            <x:ActivePane>2</x:ActivePane>
+            <x:DoNotDisplayGridlines/>
+            <x:Print>
+                <x:PaperSizeIndex>9</x:PaperSizeIndex>
+                <x:Scale>90</x:Scale> 
+                <x:ValidPrinterInfo/>
+            </x:Print>
+          </x:WorksheetOptions>
+         </x:ExcelWorksheet>
+        </x:ExcelWorksheets>
+       </x:ExcelWorkbook>
+      </xml><![endif]-->
+	</HEAD>
+	<body bottomMargin="0" leftMargin="0" topMargin="0" rightMargin="0">
+         
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-C8B2QNTM16"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-C8B2QNTM16');
+</script>
+
+		<form method="post" action="./summaryexcel.aspx?cn=&amp;fmt=1&amp;ee=20260710&amp;sortCol=&amp;sortTyp=" id="Form1">
+<div class="aspNetHidden">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwULLTE5ODc1MjczMzhkZK1uVmb2cGLVvIQ+lHb37TlJRESJ" />
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+var theForm = document.forms['Form1'];
+if (!theForm) {
+    theForm = document.Form1;
+}
+function __doPostBack(eventTarget, eventArgument) {
+    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+        theForm.__EVENTTARGET.value = eventTarget;
+        theForm.__EVENTARGUMENT.value = eventArgument;
+        theForm.submit();
+    }
+}
+//]]>
+</script>
+
+
+<script src="/WebResource.axd?d=EnHdU53b5uA6lKGq8bLJgCXexEBiKJSTKiXq84RtXnNu7LDCmV1KxyTtwXgDEBhZaJdTNK9Rr5w1-1BOBKBccwQcrBs1&amp;t=638286403360000000" type="text/javascript"></script>
+
+<div class="aspNetHidden">
+
+	<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="3E16E249" />
+	<input type="hidden" name="__SCROLLPOSITIONX" id="__SCROLLPOSITIONX" value="0" />
+	<input type="hidden" name="__SCROLLPOSITIONY" id="__SCROLLPOSITIONY" value="0" />
+	<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="" />
+	<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="" />
+</div>
+        <div id="cmp_excel">
+                <table style="border-collapse:collapse;table-layout:fixed;mso-width-source:userset;width:1100px">
+                     <col style='mso-width-source:userset;width:110px'>
+                     <col style='mso-width-source:userset;width:90px'>
+                     <col style='mso-width-source:userset;width:20px'>
+                     <col style='mso-width-source:userset;width:80px'>
+                     
+                     <col style='mso-width-source:userset;width:20px'>
+                     <col style='mso-width-source:userset;width:60px'>
+					 
+                     <col style='mso-width-source:userset;width:80px'>
+					 <col style='mso-width-source:userset;width:200px'>
+                     <col style='mso-width-source:userset;width:440px'>
+ 				    <tr>
+					    <td colspan="9" height="30" align="center" class="title">기업리포트 요약(2026.07.10)</td>
+				    </tr>
+                    <tr>
+                        <td class="hd" style="mso-width-source:userset;width:110px;">기관명/작성자</td>
+                        <td class="hd" style="mso-width-source:userset;width:90px;">기업명</td>
+                        <td class="hd" colspan="2">투자의견</td>
+                        
+                        <td class="hd" colspan="2">목표주가</td>
+                        
+                        <td class="hd" style="mso-width-source:userset;width:80px;">전일수정주가</td>
+						<td class="hd" style="mso-width-source:userset;width:200px;">제목</td>
+                        <td class="hd" style="mso-width-source:userset;width:440px;">요약</td>
+                    </tr>
+                    <tr>
+                        <td colspan="9" style="height: 1px;border-bottom:1px solid rgb(209,209,209)"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">IR큐더스</font><br/>김태욱</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">비상장</font><br/>[000000]</td>
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="strdeg"></td>
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="strprc"></td>
+                        
+                        
+                        <td class="close_prc"></td>
+						<td class="rpt_title">삼홍아크튜리온-2030년 SMR 시대를 겨냥한 원전 부품 스페셜리스트</td>
+                        <td class="comment"><span class="comment_text">▶</span> 특수용접 · 정밀가공 역량 기반 SMR 주기기 핵심 부품 제조<br/><span class="comment_text">▶</span> 여전히 유효한 SMR 방향성에 의한 국내 공급망 직접적인 수혜 기대<br/><span class="comment_text">▶</span> 국내외 다수 프로젝트 참여 및 협력 요청으로 선제적 시장 진출</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>윤재성,김형준</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">한화솔루션</font><br/>[009830]</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strdeg">BUY</td>
+                        
+                            <td class="img1">▲</td>
+                            <td class="strprc"><font color='#FF6600'>60,000</span></td>
+                        
+                        
+                        <td class="close_prc">30,800</td>
+						<td class="rpt_title">태양광 모듈 판가 상승세 지속. 컨센 상회 전망</td>
+                        <td class="comment"><span class="comment_text">▶</span> 2Q26 영업이익 컨센 상회 전망<br/><span class="comment_text">▶</span> 3Q26 영업이익 조정되나, 태양광 실적은 추가 개선 전망<br/><span class="comment_text">▶</span> 미국 태양광 모듈 공급 과잉 해소와 판가 상승 국면 진입</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>김홍식,이상훈</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">SK텔레콤</font><br/>[017670]</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strdeg">BUY</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strprc">140,000</td>
+                        
+                        
+                        <td class="close_prc">86,700</td>
+						<td class="rpt_title">2Q 프리뷰 - 실적/배당 정상화 확신 갖는 계기될 것</td>
+                        <td class="comment"><span class="comment_text">▶</span> 실적 시즌 이익/배당 정상화 기대감 상승할 것, 방어주 보단 AI 관련주로 봐야<br/><span class="comment_text">▶</span> 2Q 연결영업이익 5,678억원 전망, 연간 2조원 수준의 이익 창출 능력 입증할 것<br/><span class="comment_text">▶</span> 피지컬 AI 통한 성장 기대감 여전, 시장 반등 시 탄력적인 주가 반등 예상</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>심은주,고찬결</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">CJ프레시웨이</font><br/>[051500]</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strdeg">BUY</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strprc">48,000</td>
+                        
+                        
+                        <td class="close_prc">22,250</td>
+						<td class="rpt_title">광판비 반영 VS. 온라인 분기 매출 최대</td>
+                        <td class="comment"><span class="comment_text">▶</span> 2Q26 Pre: 손익은 시장 기대 소폭 하회 예상<br/><span class="comment_text">▶</span> 단기 손익보다 온라인 매출 확장 속도가 중요<br/><span class="comment_text">▶</span> 밸류에이션 매력적</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">삼성증권</font><br/>이혜인</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">한세실업</font><br/>[105630]</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strdeg">HOLD</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strprc">12,000</td>
+                        
+                        
+                        <td class="close_prc">9,000</td>
+						<td class="rpt_title">8개 분기 만의 이익 반등, 다만 지속성은 확인 필요</td>
+                        <td class="comment"><span class="comment_text">▶</span> 2Q26 매출액과 영업이익 컨센서스 상회 기대<br/><span class="comment_text">▶</span> 완연한 성장에는 시간 필요<br/><span class="comment_text">▶</span> 목표주가 12,000원 및 HOLD 투자 의견 유지</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">다올투자증권</font><br/>이지수</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">한미약품</font><br/>[128940]</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strdeg">BUY</td>
+                        
+                            <td class="img3">▼</td>
+                            <td class="strprc"><font color='#3366CC'>710,000</span></td>
+                        
+                        
+                        <td class="close_prc">401,000</td>
+						<td class="rpt_title">릴리 딜 첫 성과, R&D는 진행형</td>
+                        <td class="comment"><span class="comment_text">▶</span> 2Q26 연결 매출액 4,981억원(+37.9% YoY, +26.8% QoQ), 영업이익 1,559억원(+157.9% YoY, +190.6% QoQ; OPM 31.3%)으로 컨센서스 상회할 것으로 추정<br/><span class="comment_text">▶</span> 로수젯 등 기존 제품 처방 확대와 한미정밀화학의 견조한 실적 지속에 더해 소네페글루타이드 L/O 선급금 7,800만달러(약 1,100억원)가 일시 반영되며 시장 기대치를 큰 폭으로 상회할 전망<br/><span class="comment_text">▶</span> 하반기 에포시페그트루타이드(트리플 아고니스트) 2b상 데이터, 에페글레나타이드(비만) 국내 허가 및 출시 등 주요 R&D 이벤트 다수</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>김선아</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">한미약품</font><br/>[128940]</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strdeg">BUY</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strprc">710,000</td>
+                        
+                        
+                        <td class="close_prc">401,000</td>
+						<td class="rpt_title">전과목 만점은 쉽지 않아 (2Q26 Pre)</td>
+                        <td class="comment"><span class="comment_text">▶</span> 2Q-3Q는 계절적 비수기지만, 이번 분기는 선급금이 만회할 것<br/><span class="comment_text">▶</span> 코프로모션 품목과의 시너지, 하반기 끝으로 갈수록 매출에 유리한 환경 조성될 것<br/><span class="comment_text">▶</span> 앱토즈 인수 효과, 선급금을 제외한 실적 확인 필요</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">상상인증권</font><br/>김현수</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">iM금융지주</font><br/>[139130]</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strdeg">BUY</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strprc">24,000</td>
+                        
+                        
+                        <td class="close_prc">17,310</td>
+						<td class="rpt_title">경상 이익 회복, 환원 여력은 유지</td>
+                        <td class="comment"><span class="comment_text">▶</span> 2분기 순익 1,585억원 전망, 이자 및 수수료수익이 호조를 보일 것으로 예상<br/><span class="comment_text">▶</span> 충당금 부담은 제한적이나, 보수적 관리 필요</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">한국투자증권</font><br/>김명주</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">이마트</font><br/>[139480]</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strdeg">매수</td>
+                        
+                            <td class="img3">▼</td>
+                            <td class="strprc"><font color='#3366CC'>115,000</span></td>
+                        
+                        
+                        <td class="close_prc">79,600</td>
+						<td class="rpt_title">2Q26 Preview: 긍정과 부정이 혼재</td>
+                        <td class="comment"><span class="comment_text">▶</span> 영업이익이 시장 기대치를 74.2% 하회할 전망<br/><span class="comment_text">▶</span> 산업 내 호재는 늘어나고 있지만<br/><span class="comment_text">▶</span> 시장의 관심을 되돌리기 위해선 시간이 필요</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>이준호</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">넷마블</font><br/>[251270]</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strdeg">BUY</td>
+                        
+                            <td class="img3">▼</td>
+                            <td class="strprc"><font color='#3366CC'>60,000</span></td>
+                        
+                        
+                        <td class="close_prc">38,250</td>
+						<td class="rpt_title">아쉬운 상반기, 눈높이 조정 시기</td>
+                        <td class="comment"><span class="comment_text">▶</span> 2Q26 Pre: 컨센서스 하회 전망<br/><span class="comment_text">▶</span> 하반기 신작 5종 출시 예정</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>박종대,양정석</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">실리콘투</font><br/>[257720]</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strdeg">BUY</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strprc">52,000</td>
+                        
+                        
+                        <td class="close_prc">35,550</td>
+						<td class="rpt_title">견조한 유럽, 기대되는 중남미</td>
+                        <td class="comment"><span class="comment_text">▶</span> 2분기 영업이익 714억원(YoY 37%) 추정<br/><span class="comment_text">▶</span> 3분기, 성수기 진입 효과+멕시코 물류센터 가동 본격화<br/><span class="comment_text">▶</span> 현재 12MF PER 8.2배 현저한 저평가</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">상상인증권</font><br/>김현수</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">우리금융지주</font><br/>[316140]</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strdeg">BUY</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strprc">46,000</td>
+                        
+                        
+                        <td class="close_prc">30,050</td>
+						<td class="rpt_title">높은 환원수익률에 주목할 필요</td>
+                        <td class="comment"><span class="comment_text">▶</span> 2분기 순익 9,096억원 전망, 마진과 대출이 경상 회복 견인<br/><span class="comment_text">▶</span> 자본비율 순증이 만드는 추가 환원 여력</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>박찬솔,윤채리</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">에이유브랜즈</font><br/>[481070]</td>
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="strdeg"></td>
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="strprc"></td>
+                        
+                        
+                        <td class="close_prc">15,010</td>
+						<td class="rpt_title">포기하지 않고, 꼭 MEGA가 브랜드가 되겠습니다</td>
+                        <td class="comment"><span class="comment_text">▶</span> 1H26 나타난 변화들<br/><span class="comment_text">▶</span> 2분기부터 나타나는 영업 레버리지 효과<br/><span class="comment_text">▶</span> 2Q26 매출액과 영업이익 모두 +100.0% 이상 성장할 것으로 전망</td>
+                    </tr>
+                    
+                    <!--tr style="height:5px; border:0px;">
+                        <td colspan="10" style="border-bottom:0px solid rgb(209,209,209)"></td>
+                    </tr-->
+				    <tr>
+                        <td colspan="9" style="border-bottom:0px solid rgb(209,209,209);"><img alt="" src="https://www.wisereport.co.kr/wisereport/summary/images/excel_footer.png" border="0"/></td>
+				    </tr>
+			    </table>
+            </div>
+    
+
+<script type="text/javascript">
+//<![CDATA[
+
+theForm.oldSubmit = theForm.submit;
+theForm.submit = WebForm_SaveScrollPositionSubmit;
+
+theForm.oldOnSubmit = theForm.onsubmit;
+theForm.onsubmit = WebForm_SaveScrollPositionOnSubmit;
+//]]>
+</script>
+</form>
+	</body>
+</HTML>
+

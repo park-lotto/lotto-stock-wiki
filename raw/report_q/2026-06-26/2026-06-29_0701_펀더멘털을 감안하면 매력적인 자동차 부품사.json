@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-26",
+    "broker": "한국IR협의회",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-29_0701_펀더멘털을 감안하면 매력적인 자동차 부품사.md"
+  },
+  "questionnaire": {
+    "broker": "한국IR협의회",
+    "analyst": "조영환, 박규연",
+    "report_date": "2026.06.26",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "영화테크",
+        "code": "265560",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 매출액은 1,249억원(+15.0% YoY), 영업이익은 211억원(+16.9% YoY)으로 실적이 개선될 것으로 전망",
+        "estimate_revision": null,
+        "next_catalyst": "멕시코 공장에서 신규 GM향 물량 본격 양산 및 환율 상승 효과",
+        "thesis": [
+          "강력한 GM(제너럴모터스) 정션박스 레퍼런스 확보",
+          "미래 모빌리티 시장(수소전기차, SDV, ESS)을 위한 기술 개발과 사업 확장 지속",
+          "GM 내 높은 정션박스 점유율(60~65%)과 경쟁사 대비 우수한 수익성 확보"
+        ],
+        "valuation_basis": "2026년 예상 PBR 0.63배로 밸류에이션 역사적 하단 수준",
+        "risk": "수출 비중이 약 79%로 환율 하락(원화 강세) 시 외화 기준 매출의 원화 환산 금액 감소 및 실적 변동 가능성",
+        "supply_comment": "GM Global CCC IEC 공급, GM T1 플랫폼향 BDU 공급, GM 전기차 전용 BEV3 플랫폼향 UEC/REC/BDU 공급 등 GM향 공급 물량 지속 및 확대",
+        "quote": "2026년 예상 PBR 0.63배로 밸류에이션 역사적 하단 수준. GM 내 높은 정션박스 점유율과 경쟁사 대비 우수한 수익성을 확보하고 있다는 점을 감안할 때, 현재의 밸류에이션은 다소 과도하게 할인되어 있는 것으로 판단"
+      }
+    ],
+    "sector": "자동차"
+  }
+}

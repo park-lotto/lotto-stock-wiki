@@ -19,9 +19,15 @@
       "어질리티 관련 부품 공급 가능한 밸류체인에 관심 집중 가능성."
     ],
     "timeline": [
-      "4Q26 어질리티, Churchill Capital XI(NASDAQ: CCXI)와의 합병을 통해 SPAC 상장 예정"
+      "4Q26 어질리티, Churchill Capital XI(NASDAQ: CCXI)와 합병을 통해 SPAC 상장 예정."
     ],
-    "top_picks": null,
+    "top_picks": [
+      {
+        "name": "어질리티",
+        "reason": "미국의 대표 휴머노이드 기업으로 4Q26 SPAC 상장 예정이며, 기술 역량 내재화 및 주요 고객사 상용 투입을 통해 성과를 입증하고 있음.",
+        "tp": null
+      }
+    ],
     "risk": null,
     "quote": "중국 유니트리를 비롯해, 본격적인 휴머노이드 IPO 시대에 진입. 국내 로봇 산업에 미치는 영향은 다음과 같음."
   }

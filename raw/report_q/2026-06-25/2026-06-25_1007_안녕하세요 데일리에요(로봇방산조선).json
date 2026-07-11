@@ -1,23 +1,21 @@
 {
   "meta": {
     "date": "2026-06-25",
-    "broker": "eugenefn",
+    "broker": "Eugene Investment & Securities",
     "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-25_1007_안녕하세요 데일리에요(로봇방산조선).md"
   },
   "questionnaire": {
-    "broker": "eugenefn",
+    "broker": "Eugene Investment & Securities",
     "analyst": "양승윤",
     "report_date": "06/24",
     "target_kind": "market",
     "market_direction": null,
-    "macro_vars": [
-      "美, 중국산 로봇 추가 규제 검토"
-    ],
+    "macro_vars": [],
     "recommended_sectors": [
       {
         "sector": "로봇",
         "stance": null,
-        "reason": "이재명 대통령은 오는 29일 '로봇·AI및 반도체 관련 정책 성과와 신규 대책 보고'를 진행. 반도체와 인공지능에 이어 로봇 산업 육성에 속도를 낼 예정."
+        "reason": "이재명 대통령은 오는 29일 '로봇·AI 및 반도체 관련 정책 성과와 신규 대책 보고'를 진행. 반도체와 인공지능에 이어 로봇 산업 육성에 속도를 낼 예정."
       },
       {
         "sector": "방산",
@@ -34,7 +32,7 @@
     "event_calendar": [
       {
         "date": "29일",
-        "event": "이재명 대통령, 로봇·AI및 반도체 관련 정책 성과와 신규 대책 보고"
+        "event": "로봇·AI 및 반도체 관련 정책 성과와 신규 대책 보고"
       }
     ],
     "top_picks": [
@@ -47,9 +45,10 @@
       "시도상선",
       "Asiatic Lloyd",
       "TKMS",
-      "Rheinmetall"
+      "Rheinmetall",
+      "사브"
     ],
     "risk": null,
-    "quote": "이재명 대통령은 오는 29일 '로봇·AI및 반도체 관련 정책 성과와 신규 대책 보고'를 진행.반도체와 인공지능에 이어 로봇 산업 육성에 속도를 낼 예정."
+    "quote": "이재명 대통령은 오는 29일 '로봇·AI및 반도체 관련 정책 성과와 신규 대책 보고'를 진행.반도체와 인공지능에 이어 로봇 산업 육성에 속도를 낼 예정. 당일 로보티즈,두산로보틱스 등 주요 로봇 기업 참석 예정.국내 로봇 생태계 구축 확대 기대."
   }
 }

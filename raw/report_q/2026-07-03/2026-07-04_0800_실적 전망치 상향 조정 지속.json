@@ -2,13 +2,13 @@
   "meta": {
     "date": "2026-07-03",
     "broker": "iM증권",
-    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-04_0800_실적 전망치 상향 조정 지속.md"
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-04_0800_실적 전망치 상향 조정 지속.md"
   },
   "questionnaire": {
     "target_kind": "stock",
     "broker": "iM증권",
-    "analyst": "송명석",
-    "report_date": "null",
+    "analyst": "송명섭",
+    "report_date": "2026.07.02",
     "stocks": [
       {
         "name": "삼성전자",
@@ -20,18 +20,17 @@
         "tp_direction": "flat",
         "earnings_outlook": "삼성전자의 2Q26 영업이익 전망치를 기존의 76.1조원에서 80.0조원으로 상향 조정한다. 또한 당사는 FY26 영업이익에 대한 전망치도 기존의 340조원에서 360조원으로 상향했다.",
         "estimate_revision": "상향",
-        "next_catalyst": "2Q26과 3Q26의 DRAM, NAND ASP 상승폭 확대 및 반도체 업황 호황",
+        "next_catalyst": "2Q26과 3Q26의 DRAM, NAND ASP 상승폭 확대",
         "thesis": [
-          "2Q26 및 3Q26 DRAM, NAND ASP 상승폭 확대에 따른 영업이익 전망치 상향",
-          "CY27까지 이어질 것으로 예상되는 메모리 반도체 업황 호황",
-          "2H26 글로벌 유동성 YoY 증감률 상승 전망에 따른 중기 주가 상승세 유효"
+          "2Q26과 3Q26의 DRAM, NAND ASP 상승폭 확대에 따른 영업이익 전망치 상향",
+          "메모리 반도체 업황의 적어도 CY27까지 호황 지속 전망",
+          "글로벌 유동성 YoY 증감률의 상승이 2H26에 재개될 전망에 따른 중기 상승세 유지"
         ],
         "valuation_basis": "FY26 예상 BPS 10.3만원에 P/B 4.7배 적용",
-        "risk": "이란 전쟁과 같은 지정학적 이슈 재발 시 스태그플레이션 발생, 고금리 및 유동성 축소로 인한 AI 투자 및 Memory 반도체 업황 둔화",
-        "supply_comment": "null",
-        "quote": "삼성전자의 2Q26 영업이익 전망치를 기존의 76.1조원에서 80.0조원으로 상향 조정한다. 또한 당사는 FY26 영업이익에 대한 전망치도 기존의 340조원에서 360조원으로 상향했다."
+        "risk": "이란 전쟁과 같은 지정학적 이슈 재발 및 장기화에 따른 스태그플레이션 발생, 고금리, 유동성 축소, 경기 악화에 따른 AI 투자 및 Memory 반도체 업황 둔화",
+        "supply_comment": "메모리 반도체 업계 생산 증가율이 올해의 25%에서 CY27에는 20% 미만으로 하락하고, 빅테크 업체들이 Cash 부족에도 불구하고 유상 증자, SPV & JV 등의 방식으로 데이터센터 투자를 강하게 지속할 전망",
+        "quote": "삼성전자의 2Q26 영업이익 전망치를 기존의 76.1조원에서 80.0조원으로 상향 조정한다."
       }
-    ],
-    "sector": "반도체"
+    ]
   }
 }

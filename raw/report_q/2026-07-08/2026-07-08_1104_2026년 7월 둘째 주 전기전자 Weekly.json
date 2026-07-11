@@ -2,7 +2,7 @@
   "meta": {
     "date": "2026-07-08",
     "broker": "교보증권",
-    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-08_1104_2026년 7월 둘째 주 전기전자 Weekly.md"
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-08_1104_2026년 7월 둘째 주 전기전자 Weekly.md"
   },
   "questionnaire": {
     "target_kind": "market",
@@ -12,11 +12,11 @@
       "최보영"
     ],
     "report_date": "2026/ 7/ 8",
-    "market_direction": null,
+    "market_direction": "중장기적인 관점에서 투자 접근 필요",
     "macro_vars": [
-      "금 선물",
-      "은 선물",
-      "구리 선물",
+      "Meta발 AI Capex 우려",
+      "Nvidia Kyber 출시 지연",
+      "메모리 가격 저항",
       "원/달러 환율"
     ],
     "recommended_sectors": [
@@ -29,11 +29,11 @@
     "style": null,
     "event_calendar": [
       {
-        "date": "2026-07-02",
-        "event": "삼성전기, 글래스 코어 생산 합작법인 'GlaSSEM' 설립"
+        "date": "2026/ 7/ 2",
+        "event": "삼성전기, GlaSSEM 설립"
       },
       {
-        "date": "2026-07-05",
+        "date": "2026/ 7/ 5",
         "event": "인텔, 일부 PC·서버용 CPU 가격 인상"
       }
     ],
@@ -41,16 +41,9 @@
       "삼성전기",
       "LG전자",
       "LG이노텍",
-      "두산",
-      "이수페타시스",
-      "심텍",
-      "대덕전자",
-      "해성디에스",
-      "비에이치",
-      "티엘비",
-      "드림텍"
+      "APPLE"
     ],
-    "risk": "Meta발 AI Capex 우려와 Nvidia Kyber 출시 지연 및 메모리에 대한 가격 저항",
-    "quote": "그럼에도 여전히 전기전자 섹터의 호실적 전망은 가시적으로 판단"
+    "risk": "무너진 테크 투심 속 AI Peak Out 우려",
+    "quote": "아직, AI Peak Out 근거까진 부족한 상황으로 중장기적인 관점에서 투자 접근 필요"
   }
 }

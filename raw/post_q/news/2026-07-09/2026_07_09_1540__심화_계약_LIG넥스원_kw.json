@@ -1,0 +1,29 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "센서뷰",
+      "signal": "bull",
+      "reason": "LIG넥스원 계약 수주",
+      "ts": "2026-07-09",
+      "quote": "센서뷰, LIG넥스원 계약 수주 소식에 급등",
+      "sector": "방산"
+    },
+    {
+      "name": "LIG넥스원",
+      "signal": "neutral",
+      "reason": "센서뷰와 계약 체결",
+      "ts": "2026-07-09",
+      "quote": "센서뷰, LIG넥스원 계약 수주 소식에 급등",
+      "sector": "방산"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "센서뷰가 LIG넥스원과 계약을 수주함",
+      "ts": "2026-07-09",
+      "quote": "센서뷰, LIG넥스원 계약 수주 소식에 급등"
+    }
+  ],
+  "quote": "센서뷰, LIG넥스원 계약 수주 소식에 급등"
+}

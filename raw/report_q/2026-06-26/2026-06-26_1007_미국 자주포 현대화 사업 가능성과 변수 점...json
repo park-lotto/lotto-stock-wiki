@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-26",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-26_1007_미국 자주포 현대화 사업 가능성과 변수 점...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "채운샘",
+    "report_date": "2026년 6월 26일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "한화에어로스페이스",
+        "code": "012450",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "1,860,000원",
+        "tp_prev": null,
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "2026년 7월 단일 업체에게 프로토타입 프로젝트 협정(PPA)이 수여될 예정",
+        "thesis": [
+          "K9 계열의 글로벌 운용 기반은 성숙도와 신뢰성 측면에서 중요한 강점",
+          "자주포 현지생산뿐 아니라 탄약, 추진장약, 재보급, 정비까지 포함한 통합 패키지를 제시",
+          "RPP가 중시하는 미국 탄약 호환성, 공급망 회복력, 생산 onshoring, 장기 군수지원 기준과 직접 연결"
+        ],
+        "valuation_basis": null,
+        "risk": "1) BAE의 미군 기존 납품/정비 기반, 2) Elbit에 우호적인 미-이스라엘 안보관계, 3) 미국 현지 업체 중심 조달 기조",
+        "supply_comment": "한화에어로스페이스는 자주포 현지생산뿐 아니라 탄약, 추진장약, 재보급, 정비까지 포함한 통합 패키지를 제시하고 있다는 점이 차별적이다.",
+        "quote": "한화에어로스페이스의 가능성은 충분. 다만 예측하기 어려운 변수도 존재"
+      }
+    ],
+    "sector": "방산"
+  }
+}

@@ -14,24 +14,23 @@
         "name": "삼익제약",
         "code": "014950",
         "rating": "Not Rated",
-        "rating_changed": false,
+        "rating_changed": null,
         "tp_new": null,
         "tp_prev": null,
         "tp_direction": null,
         "earnings_outlook": "동사는 1Q26 연결기준 매출액 155억원(YoY+10.4%), 영업이익 9.3억원(YoY-8.5%, OPM6%)의 실적을 달성하였다.",
         "estimate_revision": null,
-        "next_catalyst": "2H26 내 SLIM2401 비임상 약동학 시험 예정, 1Q27 팜베이 물류센터 가동 목표",
+        "next_catalyst": "2H26 내 SLIM2401 비임상 약동학 시험, 1Q27 팜베이 물류 센터 가동",
         "thesis": [
-          "전문의약품(86.0%) 및 CMO(11.4%) 중심의 안정적인 사업 구조",
-          "마이크로스피어 기술 기반 장기 지속형 주사제(SLIM Project) 등 R&D 역량 확보",
-          "중장기 비전 'Re-Leap 2030'을 통한 매출 2배 성장 및 사업 포트폴리오 다각화"
+          "전문의약품 및 CMO 중심 사업 구조와 100% 자회사 '팜베이'를 통한 물류 사업 효율화 추진",
+          "마이크로스피어 기술 'UniSphero'를 활용한 장기 지속형 주사제(SLIM Project) 파이프라인 확보",
+          "중장기 비전 'Re-Leap 2030'을 통해 '25년 매출 대비 2배 성장 및 R&D/사업 다각화 추진"
         ],
         "valuation_basis": null,
         "risk": null,
-        "supply_comment": "CMO 사업 부문에서 44개 거래처와 총 32개 품목 거래 중이며, 염산메트포르민 대량 생산 및 이층정 기술 적용 등을 통해 외형과 수익성 확보 예정",
-        "quote": "동사는 올해 1월 중장기 비전 'Re-Leap 2030'을 선포하여, ‘25년 매출 대비 2배 이상 성장하는 것을 목표로 세웠다."
+        "supply_comment": "CMO의 경우, 현재 44개 거래처와 당뇨병용제, 소화기용제, 진해거담제, 순환기용제, 기타처방 등 총 32개 품목 거래를 하고 있다.",
+        "quote": "동사는 1Q26 연결기준 매출액 155억원(YoY+10.4%), 영업이익 9.3억원(YoY-8.5%, OPM6%)의 실적을 달성하였다."
       }
-    ],
-    "sector": "바이오"
+    ]
   }
 }

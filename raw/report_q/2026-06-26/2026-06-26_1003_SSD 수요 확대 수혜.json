@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-26",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-26_1003_SSD 수요 확대 수혜.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "권명준",
+    "report_date": "2026.06.26",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "KX하이텍",
+        "code": "052900",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "주요 제품들의 판매 확대, CAPA 확대 등의 요인들로 인해 26년뿐 아니라 27년에도 실적개선이 기대된다.",
+        "estimate_revision": null,
+        "next_catalyst": "2H25이후 SSD 수요 확대",
+        "thesis": [
+          "글로벌 메모리 반도체 Top 3사에 SSD CASE를 공급하며 북미 메모리 공급사내에서 높은 점유율 차지",
+          "늘어나는 SSD 수요에 대응하기 위한 SSD 케이스의 CAPEX 투자 계획",
+          "반도체 트레이 제품 ASP 상승 및 반도체향 제품 수익성 개선 기대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "주력 제품인 IC tray는 플라스틱 레진을 통해 제작된다. 국제 정세로 인해 원자재 수급 이슈가 발생, 인상된 가격으로 원자재를 수급했다.",
+        "sector": "반도체",
+        "quote": "주요 제품들의 판매 확대, CAPA 확대 등의 요인들로 인해 26년뿐 아니라 27년에도 실적개선이 기대된다."
+      }
+    ]
+  }
+}

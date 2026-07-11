@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "date": "2026-06-24",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-29_0706_통신 Weekly - 안정화 흐름 지속.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "이승웅",
+    "report_date": "2026.06.24",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "통신서비스 주가 수익률",
+      "이동전화 번호이동자 수",
+      "통신사별 번호이동 가입자 수",
+      "통신사별 5G 핸드셋 가입자 비중",
+      "MVNO 가입자 수"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "통신",
+        "stance": "중립(하회)",
+        "reason": "특정 테크 종목으로의 수급 편중으로 인한 통신업종 하락 불가피"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.06.17",
+        "event": "KT, 에이전트 AI 청사진 발표, 'K-오픈클로' 하반기 내부 검증"
+      },
+      {
+        "date": "2026.06.18",
+        "event": "LGU+, 유튜브 프리미엄·구글 AI 결합 할인 프로모션"
+      },
+      {
+        "date": "2026.06.22",
+        "event": "KT, '소액결제 해킹' 위약금 환급 신청 11월까지 연장"
+      }
+    ],
+    "top_picks": [
+      "SK텔레콤",
+      "KT",
+      "LG유플러스"
+    ],
+    "risk": "특정 테크 종목으로의 수급 편중",
+    "quote": "지난 한주간 통신업종은 -9.8%(vs KOSPI -6.0%)로 시장 수익률을 하회. 특정 테크 종목으로의 수급 편중으로 인한 통신업종 하락 불가피."
+  }
+}

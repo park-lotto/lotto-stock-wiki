@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "date": "2026-07-09",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-09_1105_완성차 2분기 프리뷰 주가 선반영. 하반기 ...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "송선재",
+    "report_date": "2026년 07월 09일",
+    "stocks": [
+      {
+        "name": "현대차",
+        "code": "005380",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "76만원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 영업이익은 현대차가 2.90조원으로 기존 추정치를 하회할 것으로 예상한다. 도매판매가 7% (YoY) 감소한 99.0만대이며, 매출액/영업이익은 0%/19% (YoY) 감소한 48.3조원/2.90조원으로 예상한다.",
+        "estimate_revision": null,
+        "next_catalyst": "로봇/자율주행 모멘텀(BD의 RMAC 개소 및 생산법인 설립, 공급망 구축, SDV Pace Car 출시 등)",
+        "thesis": [
+          "하반기 재료비 상승 부담에도 불구하고 전년 동기 기저효과 및 판매대수 회복",
+          "주요 시장 내 볼륨 신차 및 친환경차 신차 출시로 인한 물량 만회",
+          "HEV 호조에 따른 친환경차 수익성 개선 및 우호적인 환율 효과"
+        ],
+        "valuation_basis": null,
+        "risk": "국내/인도 생산차질, 국내 모델 노후화, 해외 경쟁심화, 미국 관세 비용 및 판매보증비용 증가",
+        "supply_comment": null,
+        "quote": "현대차/기아에 대한 투자의견 BUY와 목표주가 76만원/22만원을 유지한다."
+      },
+      {
+        "name": "기아",
+        "code": "000270",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "22만원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 영업이익은 2.89조원으로 기존 추정치 대비 소폭 상회할 것으로 예상한다. 도매판매는 4% (YoY) 증가한 85.2만대이며, 매출액/영업이익은 12%/5% (YoY) 증가한 32.8조원/2.89조원으로 예상한다.",
+        "estimate_revision": null,
+        "next_catalyst": "로봇/자율주행 모멘텀(BD의 RMAC 개소 및 생산법인 설립, 공급망 구축, SDV Pace Car 출시 등)",
+        "thesis": [
+          "EV3/EV4/EV5/PV5 등 EV 신차 효과와 인도 판매 회복에 따른 물량 증가",
+          "HEV/EV 판매비중 상승 및 평균환율 상승에 따른 긍정적 가격 효과",
+          "물량 증가에 따른 가동률 효과가 판매보증비용 증가 및 재료비 상승분 만회"
+        ],
+        "valuation_basis": null,
+        "risk": "판매보증비용 증가, 재료비 상승 등",
+        "supply_comment": null,
+        "quote": "현대차/기아에 대한 투자의견 BUY와 목표주가 76만원/22만원을 유지한다."
+      }
+    ]
+  }
+}

@@ -6,7 +6,7 @@
   },
   "questionnaire": {
     "broker": "IBK투자증권",
-    "analyst": "이승훈",
+    "analyst": "이상훈",
     "report_date": "2026.06.24",
     "target_kind": "market",
     "market_direction": null,
@@ -14,7 +14,7 @@
     "recommended_sectors": [
       {
         "sector": "IT",
-        "stance": "neutral",
+        "stance": null,
         "reason": "AI 투자에 팔 걷어붙인 게임사들…"
       }
     ],

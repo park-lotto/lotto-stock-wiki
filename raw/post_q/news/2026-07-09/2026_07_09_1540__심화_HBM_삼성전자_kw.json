@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "삼성전자",
+      "signal": "bull",
+      "reason": "HBM에 이어 eSSD까지 베라루빈 공급망을 확장하며 제품 포트폴리오를 강화함",
+      "ts": null,
+      "quote": "HBM 이어 eSSD까지…삼성, 베라루빈 공급망 넓혔다",
+      "sector": "반도체"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "삼성전자가 HBM에 이어 eSSD를 베라루빈 공급망에 공급함",
+      "ts": "2026-07-09 02:00",
+      "quote": "HBM 이어 eSSD까지…삼성, 베라루빈 공급망 넓혔다"
+    }
+  ],
+  "quote": "HBM 이어 eSSD까지…삼성, 베라루빈 공급망 넓혔다"
+}

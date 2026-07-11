@@ -1,0 +1,62 @@
+{
+  "meta": {
+    "date": "2026-07-08",
+    "broker": "SK증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-10_0807_Weekly Amazon Beauty Check.md"
+  },
+  "questionnaire": {
+    "broker": "SK증권",
+    "analyst": "형권훈",
+    "report_date": "2026-07-08",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "Amazon U.S. BSR"
+    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026-07-08",
+        "event": "Weekly Amazon Beauty Check"
+      }
+    ],
+    "top_picks": [
+      "medicube",
+      "ANUA",
+      "BIODANCE",
+      "Dr.Melaxin",
+      "MISSHA",
+      "HARUHARU",
+      "CeraVe",
+      "The Ordinary",
+      "Vanicream",
+      "Neutrogena",
+      "La Roche-Posay",
+      "CLEAN SKIN CLUB",
+      "Mighty Patch",
+      "PanOxyl",
+      "EQQUALBERRY",
+      "Cetaphil",
+      "COSRX",
+      "SKIN1004",
+      "L'Oreal Paris",
+      "celimax",
+      "Dr.Althea",
+      "MEDITHERAPY",
+      "Paula's Choice",
+      "Differin",
+      "THAYERS",
+      "BLACK GIRL SUNSCREEN",
+      "Rael",
+      "e.l.f.",
+      "Good Molecules",
+      "Daolyo",
+      "SimplyVital",
+      "Cliganic",
+      "TruSkin"
+    ],
+    "risk": "Prime Day 행사가 종료된 효과로 K뷰티 트래픽 대체로 주간 하락",
+    "quote": "K뷰티 유니버스의 아마존 BSR 총점은 이번 주 2,085pt 기록해 전 주 대비 ▼264pt 둔화"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-08",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-10_0807_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "IBK투자증권",
+    "analyst": "이승훈",
+    "report_date": "2026.07.08",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "숏폼 콘텐츠 확산으로 글로벌 게임 이용률이 둔화되는 가운데, 해외 게임사들의 구조조정을 기회삼아 국내 게임사의 글로벌 시장 점유율을 높일 가능성이 제기되고 있음"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.07.07",
+        "event": "엑스박스, 3200명 감원"
+      },
+      {
+        "date": "2026.07.08",
+        "event": "네이버페이, 모험자본 투자 플랫폼 'Npay 스타트업' 출범"
+      }
+    ],
+    "top_picks": null,
+    "risk": null,
+    "quote": "숏폼 콘텐츠 확산으로 글로벌 게임 이용률이 둔화되는 가운데, 해외 게임사들의 구조조정을 기회삼아 국내 게임사의 글로벌 시장 점유율을 높일 가능성이 제기되고 있음"
+  }
+}

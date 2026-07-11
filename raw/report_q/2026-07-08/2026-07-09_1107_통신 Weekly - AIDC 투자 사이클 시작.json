@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "date": "2026-07-08",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-09_1107_통신 Weekly - AIDC 투자 사이클 시작.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "이승웅",
+    "report_date": "2026.07.08",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "AIDC 투자 사이클 시작"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "통신",
+        "stance": "시장 수익률 상회",
+        "reason": "증시 차익 실현 상황 속 통신 업종은 사각지대 업종으로 작용하며 상승 마감"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.07.06",
+        "event": "KT, 18조 미래 투자 시동"
+      },
+      {
+        "date": "2026.07.03",
+        "event": "갤럭시 와이드9, 갤럭시 점프5 출시"
+      },
+      {
+        "date": "2026.07.03",
+        "event": "구글 AI 플랜 3종 출시"
+      }
+    ],
+    "top_picks": [
+      "SK텔레콤",
+      "KT",
+      "LG유플러스"
+    ],
+    "risk": "실제 1GW급 AIDC 착공 및 완공 일정",
+    "quote": "지난 한주간 통신업종은 +0.9%(vs KOSPI -9.7%)로 시장 수익률을 상회. 증시 차익 실현 상황 속 통신 업종은 사각지대 업종으로 작용하며 상승 마감."
+  }
+}
