@@ -108,12 +108,13 @@ async function doAnalyze(){
 }
 
 const PLATFORM_LABEL = {youtube:"▶️ YouTube", tiktok:"🎵 TikTok", instagram:"📱 Instagram", xiaohongshu:"📕 샤오홍슈", douyin:"🎬 도우인"};
-// 플랫폼별로 기본 노출할 언어 2개(2026-07-10 링크전용 재설계 — 이전엔 전부
-// "한국어" 기본값이라 샤오홍슈/도우인(중국어권)까지 한국어(사실상 영어) 문구로
-// 검색되던 버그가 있었음. 중국어 플랫폼은 중국어를 기본으로 노출).
+// 모든 플랫폼에 5개 언어(한/영/중/일/러) 전부 노출(2026-07-11, "언어설정이
+// 지정 안됨" 피드백 대응 — 이전엔 플랫폼당 2개 언어만 하드코딩 노출이라
+// 나머지 3개 언어 후보는 API가 만들어놔도 화면에 아예 안 보였음).
 const PLATFORM_LANGS = {
-  youtube: ["ko", "en"], tiktok: ["ko", "en"], instagram: ["ko", "en"],
-  xiaohongshu: ["zh", "en"], douyin: ["zh", "en"],
+  youtube: ["ko", "en", "zh", "ja", "ru"], tiktok: ["ko", "en", "zh", "ja", "ru"],
+  instagram: ["ko", "en", "zh", "ja", "ru"], xiaohongshu: ["ko", "en", "zh", "ja", "ru"],
+  douyin: ["ko", "en", "zh", "ja", "ru"],
 };
 const LANG_FLAG = {ko:"🇰🇷", en:"🌐", zh:"🇨🇳", ja:"🇯🇵", ru:"🇷🇺"};
 
