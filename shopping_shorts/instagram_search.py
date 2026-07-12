@@ -40,9 +40,9 @@ def _owner_username(item):
     return None
 
 
-def _search_channels_once(query, tokens, max_results, timeout, poll_interval):
+def _search_channels_once(query, tokens, max_results, timeout, poll_interval, max_pages=1):
     """단일 쿼리 1회 검색 → 정규화 후보 리스트."""
-    items = _run_with_rotation({"query": query, "maxPages": 1},
+    items = _run_with_rotation({"query": query, "maxPages": max_pages},
                                tokens, timeout, poll_interval, actor=_ACTOR)
     out = []
     for item in items:
@@ -64,7 +64,8 @@ def _search_channels_once(query, tokens, max_results, timeout, poll_interval):
     return out
 
 
-def search_channels(keyword, max_results=20, token=None, timeout=180, poll_interval=5):
+def search_channels(keyword, max_results=30, token=None, timeout=180, poll_interval=5,
+                    max_pages=2):
     """키워드 검색 → [{username, url, caption, thumbnail}, ...] (발굴용).
 
     search()가 릴스 URL만 주는 것과 달리, "어느 채널이 올렸는지"(username)를 함께
@@ -77,9 +78,9 @@ def search_channels(keyword, max_results=20, token=None, timeout=180, poll_inter
     if not tokens:
         raise RuntimeError("instagram_search: APIFY_TOKEN이 설정되지 않았습니다")
     kw = (keyword or "").strip()
-    out = _search_channels_once(kw, tokens, max_results, timeout, poll_interval)
+    out = _search_channels_once(kw, tokens, max_results, timeout, poll_interval, max_pages)
     if not out and kw and not kw.startswith("#") and " " not in kw:
-        out = _search_channels_once("#" + kw, tokens, max_results, timeout, poll_interval)
+        out = _search_channels_once("#" + kw, tokens, max_results, timeout, poll_interval, max_pages)
     return out
 
 

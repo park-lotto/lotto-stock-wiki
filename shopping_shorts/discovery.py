@@ -121,7 +121,7 @@ def discover(keyword, known, *, search_fn, fetch_reels_fn, profiles_fn=None,
 
 def discover_multi(keywords, known, *, search_fn, fetch_reels_fn, profiles_fn=None,
                    prev_comments, prev_delta, now=None, window_hours=48,
-                   max_channels_per=8, max_total=40):
+                   max_channels_per=15, max_total=80):
     """여러 카테고리를 한 번에 → "업데이트" 한 번으로 새 채널들이 랭킹으로 정렬돼
     올라오게(2026-07-12). 카테고리별로 검색해 새 username을 모으되 전체에서
     중복 제거하고, 릴스 수집(fetch_reels)·프로필(fetch_profiles)은 각각 1회만 호출."""
