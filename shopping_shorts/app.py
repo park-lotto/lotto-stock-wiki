@@ -22,7 +22,7 @@ from shopping_shorts.channels import load_channels
 from shopping_shorts.video_analysis import analyze_video
 from shopping_shorts.product_identify import fetch_lens_lines, identify_product_from_lines
 from shopping_shorts.search_links import build_search_links, lens_search_url
-from shopping_shorts.mix_pipeline import run_mix_job, run_render, _source_video_id
+from shopping_shorts.mix_pipeline import run_mix_job, run_render, retype_mix_job, _source_video_id
 from shopping_shorts import edit_plan as _edit_plan
 import uuid
 
@@ -468,7 +468,27 @@ def api_mix_result(job_id: str):
     for b in plan["beats"]:
         beats.append({**b, "plagiarism_flag": b["beat_idx"] in flags,
                       "tts_preview_url": f"/api/mix/tts/{job_id}/{b['beat_idx']}"})
-    return {"ok": True, "structure": plan["structure"], "beats": beats}
+    detected = plan.get("detected_type") or _edit_plan._DEFAULT_TYPE
+    return {
+        "ok": True, "structure": plan["structure"], "beats": beats,
+        "detected_type": detected,
+        "detected_type_label": _edit_plan.VIDEO_TYPES.get(detected, {}).get("label", detected),
+        "affiliate_target": plan.get("affiliate_target", ""),
+        "video_types": [{"key": k, "label": v["label"]} for k, v in _edit_plan.VIDEO_TYPES.items()],
+    }
+
+
+@app.post("/api/mix/retype")
+def api_mix_retype(background_tasks: BackgroundTasks, body: dict):
+    """사용자가 감지된 영상 유형을 바꾸면 저장된 extract로 EDL+TTS 재생성(재다운로드 없음)."""
+    job_id = body.get("job_id"); video_type = body.get("video_type")
+    if video_type not in _edit_plan.VIDEO_TYPES:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "알 수 없는 영상 유형"})
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("extract"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "재생성할 데이터 없음"})
+    background_tasks.add_task(retype_mix_job, job_id, video_type, DB_PATH, _MIX_WORK_DIR)
+    return {"ok": True}
 
 
 @app.post("/api/mix/adjust")

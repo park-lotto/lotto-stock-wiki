@@ -9,6 +9,7 @@ def _client(monkeypatch, tmp_path):
     # 백그라운드 작업은 즉시 no-op(상태만 미리 세팅해 검증)
     monkeypatch.setattr(app_module, "run_mix_job", lambda *a, **k: None)
     monkeypatch.setattr(app_module, "run_render", lambda *a, **k: None)
+    monkeypatch.setattr(app_module, "retype_mix_job", lambda *a, **k: None)
     return TestClient(app_module.app), Store(db)
 
 
@@ -32,6 +33,35 @@ def test_mix_status_and_result(monkeypatch, tmp_path):
     assert client.get("/api/mix/status/j1").json()["status"] == "ready_for_review"
     body = client.get("/api/mix/result/j1").json()
     assert body["beats"][0]["narration"] == "n"
+
+
+def test_mix_result_includes_video_type(monkeypatch, tmp_path):
+    client, store = _client(monkeypatch, tmp_path)
+    store.create_mix_job("jv", ["u0"], 20, "free")
+    store.update_mix_job("jv", status="ready_for_review", edit_plan={
+        "structure": "free", "detected_type": "recipe_secret", "affiliate_target": "소금",
+        "beats": [{"beat_idx": 0, "role": "훅", "narration": "n", "target_seconds": 2,
+                   "primary": {"video_id": "s0", "seg_id": "s0-0", "start": 0.0, "end": 2.0},
+                   "alternates": [], "effect": "cut"}],
+        "plagiarism_flags": []})
+    body = client.get("/api/mix/result/jv").json()
+    assert body["detected_type"] == "recipe_secret"
+    assert "비밀비법형" in body["detected_type_label"]
+    assert body["affiliate_target"] == "소금"
+    assert any(t["key"] == "product_reveal" for t in body["video_types"])
+
+
+def test_mix_retype_valid_and_invalid(monkeypatch, tmp_path):
+    client, store = _client(monkeypatch, tmp_path)
+    store.create_mix_job("jr", ["u0"], 20, "free")
+    store.update_mix_job("jr", extract={"s0": {"video_id": "s0", "full_text": "x", "segments": []}})
+    # 유효 유형 → 200
+    assert client.post("/api/mix/retype", json={"job_id": "jr", "video_type": "recipe_secret"}).status_code == 200
+    # 무효 유형 → 422
+    assert client.post("/api/mix/retype", json={"job_id": "jr", "video_type": "nope"}).status_code == 422
+    # extract 없는 job → 404
+    store.create_mix_job("jr2", ["u0"], 20, "free")
+    assert client.post("/api/mix/retype", json={"job_id": "jr2", "video_type": "recipe_secret"}).status_code == 404
 
 
 def test_mix_adjust_regrounds_from_inventory(monkeypatch, tmp_path):
