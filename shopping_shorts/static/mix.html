@@ -86,7 +86,16 @@ async function loadReview(){
   const r=await fetch('/api/mix/result/'+JOB); const d=await r.json();
   if(!d.ok){ console.warn('mix result 실패', d.error); document.getElementById('status').textContent='편집안 로드 실패'+(d.error?(' — '+d.error):''); return; }
   const el=document.getElementById('review');
-  el.innerHTML='<h3>편집안 검토</h3>'+d.beats.map(b=>`
+  // 감지된 영상 유형(방식3: 자동감지+확인) — 틀리면 드롭다운으로 바꿔 재생성
+  const typeOpts=(d.video_types||[]).map(t=>
+    `<option value="${escapeHtml(t.key)}" ${t.key===d.detected_type?'selected':''}>${escapeHtml(t.label)}</option>`).join('');
+  const typeBar=`<div class="row" style="align-items:center;gap:8px;margin-bottom:6px">
+      <b>영상 유형</b>
+      <select onchange="retype(this.value)">${typeOpts}</select>
+      <span style="font-size:12px;color:#9a9aa5">자동 감지됨 — 틀리면 바꿔서 다시 생성</span>
+    </div>`+
+    (d.affiliate_target?`<div class="row" style="font-size:13px;color:#9a9aa5;margin-bottom:10px">🔗 쿠팡 연결 대상: <b style="color:#e6edf3">${escapeHtml(d.affiliate_target)}</b></div>`:'');
+  el.innerHTML='<h3>편집안 검토</h3>'+typeBar+d.beats.map(b=>`
     <div class="beat ${b.plagiarism_flag?'flag':''}">
       <span class="role">${escapeHtml(b.role)}</span>
       <div style="flex:1">
@@ -107,6 +116,14 @@ async function adjust(beat_idx, val){
   const r=await fetch('/api/mix/adjust',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:JOB,beat_idx,video_id,seg_id})});
   const d=await r.json().catch(()=>({ok:false}));
   if(!r.ok || !d.ok){ console.warn('adjust 실패', d.error); alert('대체 적용 실패'+(d.error?(': '+d.error):'')); }
+}
+async function retype(video_type){
+  // 유형 변경 → 저장된 대본으로 EDL+TTS 재생성(재다운로드 없음). 진행 폴링 후 새 편집안 로드.
+  const r=await fetch('/api/mix/retype',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:JOB,video_type})});
+  const d=await r.json().catch(()=>({ok:false}));
+  if(!r.ok || !d.ok){ console.warn('retype 실패', d.error); alert('유형 변경 실패'+(d.error?(': '+d.error):'')); return; }
+  document.getElementById('review').innerHTML='';
+  POLL=setInterval(poll,2500); poll();
 }
 async function render(){
   const r=await fetch('/api/mix/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:JOB})});
