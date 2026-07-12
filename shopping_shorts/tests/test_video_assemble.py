@@ -36,3 +36,60 @@ def test_pick_segment_skips_missing_source():
     }
     ref = va._pick_segment(beat, tts_dur=2.0, source_video_paths={"B": "b.mp4"})
     assert ref["seg_id"] == "B-0"
+
+
+# ── 자막 구절 분할 ──────────────────────────────────────────────
+
+def test_caption_segments_empty():
+    assert va._caption_segments("") == []
+    assert va._caption_segments(None) == []
+    assert va._caption_segments("   ") == []
+
+
+def test_caption_segments_splits_into_short_phrases():
+    # 어절 기준 짧은 구절. 각 구절은 공백 제외 글자수가 목표 근처(1줄), 줄바꿈 없음.
+    segs = va._caption_segments("오이 사자마자 냉장고에 넣으셨나요?")
+    assert len(segs) >= 2                       # 한 덩어리로 안 뭉침
+    assert " ".join(segs) == "오이 사자마자 냉장고에 넣으셨나요?"  # 어절 순서·내용 보존
+    for s in segs:
+        assert "\n" not in s                    # 짧은 1줄
+        assert len(s.replace(" ", "")) <= va._CAP_WRAP  # 화면 밖으로 안 나감
+
+
+def test_caption_segments_irregular_lengths():
+    # 어절 길이가 제각각이라 구절 길이도 불규칙(규칙적으로 안 잘림).
+    segs = va._caption_segments("이 오이는 사자마자 바로 냉장고에 넣어야 신선하게 오래 먹어요")
+    lengths = {len(s.replace(" ", "")) for s in segs}
+    assert len(lengths) > 1                     # 전부 같은 길이가 아님
+
+
+def test_caption_segments_long_single_word_wrapped():
+    # 목표를 크게 넘는 초장문 단일 어절은 _CAP_WRAP로 방어 줄바꿈.
+    long_word = "가" * (va._CAP_WRAP * 2 + 3)
+    segs = va._caption_segments(long_word)
+    assert all(len(s.replace("\n", "")) <= va._CAP_WRAP for s in segs)
+
+
+# ── 자막 시간 배분 ──────────────────────────────────────────────
+
+def test_caption_durations_sum_not_exceed_dur():
+    segs = va._caption_segments("오이 사자마자 냉장고에 넣으셨나요?")
+    durs = va._caption_durations(segs, dur=6.0)
+    assert len(durs) == len(segs)
+    assert sum(durs) <= 6.0 + 1e-6              # 총합이 나레이션 길이를 안 넘음
+
+
+def test_caption_durations_min_floor_applied():
+    # 아주 짧은 구절이라도 최소 표시시간 하한을 받는다(시간 여유가 있을 때).
+    segs = ["가", "매우매우긴구절이야여기"]
+    durs = va._caption_durations(segs, dur=6.0)
+    assert min(durs) >= va._CAP_MIN_DUR - 1e-6
+    assert sum(durs) <= 6.0 + 1e-6
+
+
+def test_caption_durations_equal_fallback_when_too_tight():
+    # 하한들의 합이 dur를 넘으면 균등분할로 폴백(총합 = dur).
+    segs = ["가", "나", "다", "라"]
+    durs = va._caption_durations(segs, dur=1.0)   # 4 * 0.5 = 2.0 > 1.0
+    assert sum(durs) == 1.0
+    assert durs == [0.25, 0.25, 0.25, 0.25]

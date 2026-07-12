@@ -11,7 +11,6 @@
 concat 후 원본 오디오를 제거하고 비트별 TTS를 이어붙인 트랙으로 교체한다.
 """
 import os
-import re
 import shutil
 import subprocess
 import textwrap
@@ -78,51 +77,85 @@ def _pick_segment(beat, tts_dur, source_video_paths):
 
 
 def _caption_segments(narration):
-    """나레이션을 자막 조각으로 나눈다. 균등 글자수가 아니라 **문장 경계**(. ? ! …)
-    로 먼저 끊어, 자막이 문장 중간에서 어색하게 끊기지 않게 한다. 문장이 길면
-    한 조각을 2줄까지 줄바꿈해 담는다. 반환: [조각텍스트(줄바꿈 포함), ...]."""
+    """나레이션을 **짧은 구절 단위**로 나눈다(예: "오이 사자마자 / 냉장고에 / 넣으셨나요?").
+    어절(띄어쓰기) 기준으로 묶되, 누적 글자수(공백 제외)가 _CAP_TARGET을 넘으면 끊어
+    새 구절을 시작한다. 어절 길이가 제각각이라 자연히 불규칙하게 끊긴다(규칙적으로
+    잘려 어색해지지 않음). 각 구절은 짧은 1줄. 반환: [구절텍스트, ...].
+
+    방어: 목표를 크게 넘는 아주 긴 단일 어절(URL·붙여쓴 문장 등)은 _CAP_WRAP로 강제
+    줄바꿈해 화면 밖으로 나가지 않게 한다."""
     narr = (narration or "").strip()
     if not narr:
         return []
-    # 문장부호 뒤에서 분할(부호는 앞 문장에 붙임). 쉼표는 너무 잘게 쪼개지 않게 제외.
-    sentences = re.split(r"(?<=[.?!…])\s+", narr)
+    out, cur = [], ""
+    for w in narr.split():
+        if not cur:
+            cur = w
+        elif len((cur + w).replace(" ", "")) <= _CAP_TARGET:
+            cur = cur + " " + w
+        else:
+            out.append(cur)
+            cur = w
+    if cur:
+        out.append(cur)
+    # 목표를 크게 넘는 초장문 단일 구절만 줄바꿈으로 방어(대부분은 그대로 1줄).
     segs = []
-    for s in sentences:
-        s = s.strip()
-        if not s:
-            continue
-        lines = textwrap.wrap(s, _CAP_WRAP)
-        # 한 조각은 최대 2줄. 3줄 이상이면 2줄씩 잘라 여러 조각으로.
-        for i in range(0, len(lines), 2):
-            segs.append("\n".join(lines[i:i + 2]))
+    for s in out:
+        if len(s.replace(" ", "")) > _CAP_WRAP:
+            segs.extend(textwrap.wrap(s, _CAP_WRAP) or [s])
+        else:
+            segs.append(s)
     return segs or [narr]
+
+
+def _caption_durations(segs, dur):
+    """각 구절의 표시 시간(초) 리스트를 반환. 기본은 글자수 비례(균등분할 X)지만,
+    아주 짧은 구절(2~3자)이 순식간에 지나가지 않도록 _CAP_MIN_DUR 하한을 준다.
+    하한을 채우고 남은 시간을 나머지 구절에 글자수 비례로 재분배해, 총합은 항상
+    dur를 넘지 않는다(하한들의 합이 dur를 초과하면 균등분할로 폴백)."""
+    n = len(segs)
+    if n == 0:
+        return []
+    if _CAP_MIN_DUR * n >= dur:      # 하한조차 못 채우면 균등분할
+        return [dur / n] * n
+    weights = [max(1, len(s.replace("\n", ""))) for s in segs]
+    total_w = sum(weights)
+    raw = [dur * w / total_w for w in weights]
+    # 하한 미달인 구절은 하한으로 올리고, 그만큼을 하한 이상인 구절에서 비례로 회수.
+    floored = [max(_CAP_MIN_DUR, r) for r in raw]
+    over = sum(floored) - dur
+    if over > 1e-6:
+        slack_idx = [i for i, r in enumerate(floored) if r > _CAP_MIN_DUR]
+        slack_total = sum(floored[i] - _CAP_MIN_DUR for i in slack_idx)
+        if slack_total > 1e-6:
+            for i in slack_idx:
+                floored[i] -= over * (floored[i] - _CAP_MIN_DUR) / slack_total
+    return floored
 
 
 def _caption_vf(narration, dur, has_font, work, idx):
     """비트 영상용 -vf 필터 문자열. scale/crop으로 규격 통일 후, 폰트가 있으면
-    하단 바 + 나레이션을 **문장 단위 조각**으로 순차 표시하는 drawtext들을 얹는다.
-    각 조각의 표시 시간은 그 조각 글자수에 비례해(균등분할 X) 읽는 속도와 맞춘다.
+    하단 바 + 나레이션을 **짧은 구절 단위**로 순차 표시하는 drawtext들을 얹는다.
+    각 구절의 표시 시간은 글자수 비례 + 최소 표시시간 하한(_caption_durations).
 
     ffmpeg 필터그래프는 값에 콜론(윈도 드라이브 'C:')을 못 넣으므로, 폰트·자막
     텍스트는 모두 work 폴더에 두고 **파일명만**(font.ttf / cap_*.txt) 참조한다.
-    호출부는 반드시 cwd=work 로 ffmpeg를 실행해야 한다. 각 조각 텍스트는 임시
+    호출부는 반드시 cwd=work 로 ffmpeg를 실행해야 한다. 각 구절 텍스트는 임시
     파일(textfile=)로 넘겨 따옴표/쉼표 이스케이프 문제를 피한다."""
     base = f"scale={_OUT_W}:{_OUT_H}:force_original_aspect_ratio=increase,crop={_OUT_W}:{_OUT_H}"
     segs = _caption_segments(narration)
     if not has_font or not segs:
         return base
-    weights = [max(1, len(s.replace("\n", ""))) for s in segs]
-    total_w = sum(weights)
+    durs = _caption_durations(segs, dur)
     parts = [base]
     # 하단 바(원본 소각 자막 가리기)
     parts.append(f"drawbox=x=0:y=ih-{_BAR_H}:w=iw:h={_BAR_H}:color=black@0.82:t=fill")
     t = 0.0
-    for i, (seg, w) in enumerate(zip(segs, weights)):
+    for i, (seg, d) in enumerate(zip(segs, durs)):
         (work / f"cap_{idx}_{i}.txt").write_text(seg, encoding="utf-8")
         start = t
-        t += dur * w / total_w
-        end = dur + 0.5 if i == len(segs) - 1 else t  # 마지막 조각은 끝까지
-        # 여러 줄이면 아래에서 위로 쌓이도록 text_h 기준으로 y 배치(하단 바 안).
+        t += d
+        end = dur + 0.5 if i == len(segs) - 1 else t  # 마지막 구절은 끝까지
         parts.append(
             f"drawtext=fontfile=font.ttf:textfile=cap_{idx}_{i}.txt:"
             f"fontcolor=white:fontsize={_CAP_FONTSIZE}:line_spacing=10:"
