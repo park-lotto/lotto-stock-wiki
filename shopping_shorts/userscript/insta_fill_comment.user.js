@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         로또 소통 · 인스타 댓글 자동채우기
 // @namespace    lotto.shopping_shorts
-// @version      1.0.0
+// @version      1.1.0
 // @description  소통큐에서 넘어온 댓글을 인스타 게시물 댓글칸에 자동으로 채운다. 전송·팔로우는 사용자가 직접(안전).
 // @match        https://www.instagram.com/*
-// @run-at       document-idle
+// @run-at       document-start
 // @grant        none
 // ==/UserScript==
 (function () {
@@ -12,48 +12,71 @@
 
   /* ===================== CONFIG (인스타 DOM 바뀌면 여기만 수선) ===================== */
   const CONFIG = {
+    DEBUG: true, // 진단 모드: 각 단계를 화면 토스트로 보여줌. 정상화되면 false로.
     // 댓글 입력창 후보 셀렉터 — 위에서부터 먼저 잡히는 것 사용
     COMMENT_SELECTORS: [
       'textarea[aria-label*="댓글"]',
       'textarea[aria-label*="comment" i]',
+      'textarea[placeholder*="댓글"]',
+      'textarea[placeholder*="comment" i]',
       'form[method="POST"] textarea',
+      'form textarea',
       'div[contenteditable="true"][role="textbox"][aria-label*="댓글"]',
       'div[contenteditable="true"][role="textbox"][aria-label*="comment" i]',
       'div[contenteditable="true"][role="textbox"]',
+      "textarea", // 최후: 페이지에 보이는 아무 textarea
     ],
-    WAIT_TIMEOUT_MS: 15000, // 댓글창 대기 최대
-    WAIT_POLL_MS: 250,
-    HUMANLIKE_TYPING: false, // true면 한 글자씩 랜덤 딜레이 타이핑(사용자가 직접 전송하므로 기본 off — 붙여넣기와 동일)
+    WAIT_TIMEOUT_MS: 20000, // 댓글창 대기 최대
+    WAIT_POLL_MS: 300,
+    HUMANLIKE_TYPING: false, // true면 한 글자씩 랜덤 딜레이 타이핑(기본 off — 붙여넣기와 동일)
   };
   /* ================================================================================ */
 
-  // 게시물/릴스 페이지에서만 동작
-  const IS_POST = /^\/(p|reel|reels)\/[^/]+/.test(location.pathname);
-  if (!IS_POST) return;
+  // ⚠️ document-start에서 해시를 "즉시" 붙잡는다 — 인스타 SPA가 나중에 URL을 정리하며
+  //    #lotto_fill 을 날려버려도, 이 시점에 이미 확보해 두면 안전하다(경계 B 방어).
+  const RAW_HASH = location.hash || "";
+  const PATHNAME = location.pathname;
 
-  // 해시 페이로드 파싱: #lotto_fill=<urlencoded base64(JSON)>
-  const payload = readPayload();
-  if (!payload || !payload.c) return; // 신호 없으면 평소 인스타 사용에 무영향
+  log("loaded · path=" + PATHNAME + " · hash길이=" + RAW_HASH.length);
 
-  // 중복 발사 가드: 해시 즉시 소거 + 세션 플래그
-  const guardKey = "lottoFilled:" + (payload.sc || location.pathname);
+  const IS_POST = /^\/(p|reel|reels)\/[^/]+/.test(PATHNAME);
+  const payload = readPayload(RAW_HASH);
+
+  if (!payload || !payload.c) {
+    // 신호 없음 → 평소 인스타 사용. (설치 확인용으로 DEBUG일 때만 알림)
+    dbg(RAW_HASH.indexOf("lotto_fill") >= 0
+      ? "⚠️ 해시는 있는데 파싱 실패 — 인코딩 확인 필요"
+      : "신호(해시) 없음 → 대기(스크립트는 정상 설치·동작 중)");
+    return;
+  }
+  dbg("✅ 페이로드 수신 — 댓글: " + preview(payload.c));
+
+  if (!IS_POST) {
+    dbg("⚠️ 게시물/릴스 URL 아님(" + PATHNAME + ") → 종료");
+    return;
+  }
+
+  // 중복 발사 가드: 세션 플래그 + 해시 소거
+  const guardKey = "lottoFilled:" + (payload.sc || PATHNAME);
   try {
-    if (sessionStorage.getItem(guardKey)) return;
+    if (sessionStorage.getItem(guardKey)) { dbg("이미 채운 건 → 스킵"); return; }
     sessionStorage.setItem(guardKey, "1");
   } catch (_) {}
-  history.replaceState(null, "", location.pathname + location.search);
+  try { history.replaceState(null, "", PATHNAME + location.search); } catch (_) {}
 
+  // DOM 준비되면 실행 (document-start라 아직 body 없을 수 있음 → 폴링이 알아서 대기)
   run(payload.c).catch((e) => toast("❌ 자동채우기 실패: " + e.message, "#c0392b"));
 
   /* ------------------------------------------------------------------ */
 
-  function readPayload() {
-    const m = /(?:^|#)lotto_fill=([^&]+)/.exec(location.hash);
+  function readPayload(hash) {
+    const m = /(?:^|#)lotto_fill=([^&]+)/.exec(hash);
     if (!m) return null;
     try {
       const json = decodeURIComponent(escape(atob(decodeURIComponent(m[1]))));
       return JSON.parse(json);
-    } catch (_) {
+    } catch (e) {
+      log("payload 파싱 오류: " + e.message);
       return null;
     }
   }
@@ -62,22 +85,35 @@
     const box = await waitForCommentBox();
     if (!box) {
       toast("⚠️ 댓글창을 못 찾음 — 직접 붙여넣기(Ctrl+V) 하세요", "#b9770e");
+      log("댓글창 탐색 실패. 시도한 셀렉터: " + CONFIG.COMMENT_SELECTORS.join(" | "));
       return;
     }
+    dbg("댓글창 발견: <" + box.tagName.toLowerCase() +
+        (box.getAttribute("aria-label") ? ' aria-label="' + box.getAttribute("aria-label") + '"' : "") + ">");
     box.focus();
+    // 일부 레이아웃은 클릭해야 입력창이 활성화됨
+    try { box.click(); } catch (_) {}
     if (CONFIG.HUMANLIKE_TYPING) {
       await typeHumanlike(box, text);
     } else {
       fillAtOnce(box, text);
     }
-    toast("✅ 댓글 채워둠 — 확인 후 직접 전송·팔로우 하세요", "#1e7e34");
+    // 검증: 실제로 값이 들어갔나
+    const ok = (getVal(box) || "").indexOf(text.slice(0, 4)) >= 0;
+    toast(ok ? "✅ 댓글 채워둠 — 확인 후 직접 전송·팔로우 하세요"
+             : "⚠️ 채우기 반영 안 됨 — 직접 붙여넣기(Ctrl+V) 하세요",
+          ok ? "#1e7e34" : "#b9770e");
+  }
+
+  function getVal(el) {
+    return (el.tagName === "TEXTAREA" || el.tagName === "INPUT") ? el.value : el.textContent;
   }
 
   function waitForCommentBox() {
     return new Promise((resolve) => {
       const deadline = Date.now() + CONFIG.WAIT_TIMEOUT_MS;
       (function poll() {
-        const el = findCommentBox();
+        const el = document.body ? findCommentBox() : null;
         if (el) return resolve(el);
         if (Date.now() > deadline) return resolve(null);
         setTimeout(poll, CONFIG.WAIT_POLL_MS);
@@ -87,8 +123,7 @@
 
   function findCommentBox() {
     for (const sel of CONFIG.COMMENT_SELECTORS) {
-      const nodes = document.querySelectorAll(sel);
-      for (const el of nodes) {
+      for (const el of document.querySelectorAll(sel)) {
         if (isVisible(el)) return el;
       }
     }
@@ -109,8 +144,8 @@
       const setter = Object.getOwnPropertyDescriptor(proto, "value").set;
       setter.call(el, text);
       el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
     } else {
-      // contenteditable: 기존 내용 비우고 insertText — React onInput 트리거
       el.focus();
       const sel = window.getSelection();
       const range = document.createRange();
@@ -121,16 +156,15 @@
     }
   }
 
-  // 옵션: 한 글자씩 사람처럼(건별 페르소나 μ + 키별 지터 + 문장내 드리프트)
   async function typeHumanlike(el, text) {
-    let mu = rand(55, 160); // 건별 기준속도
-    const pauseP = rand(0.04, 0.08); // 생각멈칫 확률
+    let mu = rand(55, 160);
+    const pauseP = rand(0.04, 0.08);
     for (const ch of text) {
       appendChar(el, ch);
-      mu = clamp(mu + rand(-15, 15), 40, 200); // 문장 내 드리프트
-      let delay = clamp(mu * rand(0.6, 1.4), 20, 400); // 키별 지터
-      if (ch === " ") delay += rand(20, 120); // 단어경계
-      if (Math.random() < pauseP) delay += rand(300, 900); // 생각멈칫
+      mu = clamp(mu + rand(-15, 15), 40, 200);
+      let delay = clamp(mu * rand(0.6, 1.4), 20, 400);
+      if (ch === " ") delay += rand(20, 120);
+      if (Math.random() < pauseP) delay += rand(300, 900);
       await sleep(delay);
     }
   }
@@ -150,16 +184,23 @@
   function rand(a, b) { return a + Math.random() * (b - a); }
   function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
   function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
+  function preview(s) { s = String(s); return s.length > 24 ? s.slice(0, 24) + "…" : s; }
+  function log(msg) { try { console.log("[로또소통] " + msg); } catch (_) {} }
+  function dbg(msg) { log(msg); if (CONFIG.DEBUG) toast("🔧 " + msg, "#334155"); }
 
   function toast(msg, color) {
-    const d = document.createElement("div");
-    d.textContent = msg;
-    d.style.cssText =
-      "position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:2147483647;" +
-      "background:" + (color || "#1e7e34") + ";color:#fff;padding:12px 18px;border-radius:10px;" +
-      "font:600 14px/1.4 'Malgun Gothic',system-ui,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.35);max-width:80vw";
-    document.body.appendChild(d);
-    setTimeout(() => { d.style.transition = "opacity .4s"; d.style.opacity = "0"; }, 3600);
-    setTimeout(() => d.remove(), 4200);
+    const show = () => {
+      const d = document.createElement("div");
+      d.textContent = msg;
+      d.style.cssText =
+        "position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:2147483647;" +
+        "background:" + (color || "#1e7e34") + ";color:#fff;padding:12px 18px;border-radius:10px;" +
+        "font:600 14px/1.4 'Malgun Gothic',system-ui,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.35);max-width:80vw";
+      document.body.appendChild(d);
+      setTimeout(() => { d.style.transition = "opacity .4s"; d.style.opacity = "0"; }, 4200);
+      setTimeout(() => d.remove(), 4800);
+    };
+    if (document.body) show();
+    else document.addEventListener("DOMContentLoaded", show, { once: true });
   }
 })();
