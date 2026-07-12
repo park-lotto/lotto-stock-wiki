@@ -78,6 +78,14 @@ def _probe_duration(path):
     return float(out.stdout.strip())
 
 
+def _run_ffmpeg(cmd, cwd=None):
+    """ffmpeg 실행. 실패 시 stderr를 예외에 담아 원인을 삼키지 않는다."""
+    r = subprocess.run(cmd, capture_output=True, text=True, cwd=cwd)
+    if r.returncode != 0:
+        raise RuntimeError(f"ffmpeg 실패(exit {r.returncode}): {r.stderr[-1000:]}")
+    return r
+
+
 def _pick_segment(beat, tts_dur, source_video_paths):
     """primary→alternates 중 나레이션(tts_dur)을 1배속으로 담을 수 있는
     (구간길이 >= tts_dur) 첫 후보를 고른다. 아무도 못 담으면 가장 긴 후보를
@@ -188,6 +196,35 @@ def _caption_durations(segs, dur):
     return floored
 
 
+def _caption_drawtexts(narration, dur, work, idx, t0=0.0):
+    """나레이션 한 비트의 자막(하단 바 + 순차 drawtext)을 필터 문자열 **리스트**로
+    반환한다. 각 구절 enable 구간을 t0(전체 타임라인 시작 오프셋)만큼 밀어, 여러 비트를
+    한 영상에 이어 구울 때(_burn_captions) 비트 경계에 맞게 배치된다.
+
+    반환 리스트를 그대로 필터그래프에 이어붙이면 되고, drawtext 값 안의
+    between(t,a,b) 콤마를 나중에 split할 필요가 없다(요소 단위로 이미 분리됨).
+    자막 구절이 없으면 빈 리스트. 텍스트는 work/cap_{idx}_{i}.txt 로 저장(cwd=work)."""
+    segs = _caption_segments(narration)
+    if not segs:
+        return []
+    durs = _caption_durations(segs, dur)
+    parts = [f"drawbox=x=0:y=ih-{_BAR_H}:w=iw:h={_BAR_H}:color=black@0.82:t=fill"]
+    t = 0.0
+    for i, (seg, d) in enumerate(zip(segs, durs)):
+        (work / f"cap_{idx}_{i}.txt").write_text(seg, encoding="utf-8")
+        start = t + t0
+        t += d
+        # 마지막 구절은 비트 끝까지(+0.5) 유지. t0 오프셋을 함께 적용.
+        end = (dur + 0.5 if i == len(segs) - 1 else t) + t0
+        parts.append(
+            f"drawtext=fontfile=font.ttf:textfile=cap_{idx}_{i}.txt:"
+            f"fontcolor=white:fontsize={_CAP_FONTSIZE}:line_spacing=10:"
+            f"x=(w-text_w)/2:y=h-text_h-100:"
+            f"enable='between(t,{start:.2f},{end:.2f})'"
+        )
+    return parts
+
+
 def _caption_vf(narration, dur, has_font, work, idx):
     """비트 영상용 -vf 필터 문자열. scale/crop으로 규격 통일 후, 폰트가 있으면
     하단 바 + 나레이션을 **짧은 구절 단위**로 순차 표시하는 drawtext들을 얹는다.
@@ -198,40 +235,19 @@ def _caption_vf(narration, dur, has_font, work, idx):
     호출부는 반드시 cwd=work 로 ffmpeg를 실행해야 한다. 각 구절 텍스트는 임시
     파일(textfile=)로 넘겨 따옴표/쉼표 이스케이프 문제를 피한다."""
     base = f"scale={_OUT_W}:{_OUT_H}:force_original_aspect_ratio=increase,crop={_OUT_W}:{_OUT_H}"
-    segs = _caption_segments(narration)
-    if not has_font or not segs:
+    if not has_font:
         return base
-    durs = _caption_durations(segs, dur)
-    parts = [base]
-    # 하단 바(원본 소각 자막 가리기)
-    parts.append(f"drawbox=x=0:y=ih-{_BAR_H}:w=iw:h={_BAR_H}:color=black@0.82:t=fill")
-    t = 0.0
-    for i, (seg, d) in enumerate(zip(segs, durs)):
-        (work / f"cap_{idx}_{i}.txt").write_text(seg, encoding="utf-8")
-        start = t
-        t += d
-        end = dur + 0.5 if i == len(segs) - 1 else t  # 마지막 구절은 끝까지
-        parts.append(
-            f"drawtext=fontfile=font.ttf:textfile=cap_{idx}_{i}.txt:"
-            f"fontcolor=white:fontsize={_CAP_FONTSIZE}:line_spacing=10:"
-            f"x=(w-text_w)/2:y=h-text_h-100:"
-            f"enable='between(t,{start:.2f},{end:.2f})'"
-        )
-    return ",".join(parts)
+    draws = _caption_drawtexts(narration, dur, work, idx)
+    if not draws:
+        return base
+    return ",".join([base] + draws)
 
 
-def assemble(edit_plan, tts_paths, source_video_paths, out_path):
-    """EDL을 실제 mp4로 렌더. 각 비트를 개별 mp4로 만든 뒤 concat + 오디오 교체."""
-    work = Path(out_path).parent / f"asm_{uuid.uuid4().hex[:8]}"
-    work.mkdir(parents=True, exist_ok=True)
-    # 폰트를 work에 복사해 필터그래프에서 파일명만 참조(콜론 이스케이프 회피). 비트
-    # 렌더 ffmpeg는 cwd=work로 실행하므로 font.ttf / cap_*.txt가 상대경로로 잡힌다.
-    font = _resolve_font()
-    if font:
-        try:
-            shutil.copy(font, work / "font.ttf")
-        except OSError:
-            font = None
+def _render_mix(edit_plan, tts_paths, source_video_paths, work):
+    """각 비트를 [소스영상+TTS]로 렌더(우리 자막 없음) → concat → mix_raw.mp4 경로.
+    자막을 굽지 않으므로 이후 VMake 자막제거가 우리 자막을 지우지 않는다.
+    -vf는 우리 자막 vf가 아니라 규격 통일용 base(scale/crop)만 쓴다."""
+    base_vf = f"scale={_OUT_W}:{_OUT_H}:force_original_aspect_ratio=increase,crop={_OUT_W}:{_OUT_H}"
     beat_clips = []
     for beat in edit_plan["beats"]:
         idx = beat["beat_idx"]
@@ -243,11 +259,9 @@ def assemble(edit_plan, tts_paths, source_video_paths, out_path):
         src = source_video_paths[ref["video_id"]]
         src_dur = _probe_duration(src)
         clip = work / f"beat_{idx}.mp4"
-        vf = _caption_vf(beat.get("narration", ""), tts_dur, bool(font), work, idx)
         # 나레이션 길이(tts_dur)만큼 소스를 ref["start"]부터 **이어서(연속)** 1배속
-        # 재생한다. 구간 끝을 넘어도 그냥 원본을 계속 흘려보내 같은 2~4초가 반복되는
-        # 것을 막는다. 시작점부터 tts_dur가 원본 끝을 넘으면 시작을 앞으로 당겨
-        # 연속 footage를 확보한다. 원본 전체가 나레이션보다 짧을 때만 루프한다.
+        # 재생. 시작점부터 tts_dur가 원본 끝을 넘으면 시작을 앞으로 당겨 연속 footage
+        # 를 확보한다. 원본 전체가 나레이션보다 짧을 때만 루프한다.
         start = ref["start"]
         if start + tts_dur > src_dur:
             start = max(0.0, src_dur - tts_dur)
@@ -256,25 +270,65 @@ def assemble(edit_plan, tts_paths, source_video_paths, out_path):
             "ffmpeg", "-y",
             *loop, "-ss", f"{start:.3f}", "-i", str(src),
             "-i", str(tts),
-            "-vf", vf, "-r", "30",
+            "-vf", base_vf, "-r", "30",
             "-map", "0:v:0", "-map", "1:a:0",
             "-t", str(tts_dur),
             "-c:v", "libx264", "-c:a", "aac", "-pix_fmt", "yuv420p", str(clip),
         ]
-        # cwd=work: 필터그래프의 font.ttf / cap_*.txt 상대경로 해석 기준(콜론 회피).
-        subprocess.run(cmd, capture_output=True, check=True, cwd=str(work))
+        _run_ffmpeg(cmd)
         beat_clips.append(clip)
-
     if not beat_clips:
         raise RuntimeError("video_assemble: 렌더할 비트가 없습니다")
-
-    concat_txt = work / "concat.txt"
+    concat_txt = work / "concat_mix.txt"
     concat_txt.write_text("".join(f"file '{c.as_posix()}'\n" for c in beat_clips), encoding="utf-8")
-    # 비트 클립들은 이미 동일 설정(720x1280 libx264/aac 30fps)으로 인코딩됐으므로
-    # concat에서 다시 풀 재인코딩하지 말고 스트림 복사(-c copy)한다. 재인코딩 concat은
-    # 2GB 서버에서 수십 초 걸려 백그라운드 렌더가 서비스 재시작(잦은 배포)에 걸려 죽는
-    # 원인이었다(2026-07-12 라이브 exit 255). -c copy는 ~0.3초로 그 취약 구간을 제거한다.
-    cmd = ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(concat_txt),
-           "-c", "copy", str(out_path)]
-    subprocess.run(cmd, capture_output=True, check=True)
+    # 비트 클립들은 이미 동일 설정(720x1280 libx264/aac 30fps)이므로 -c copy로 붙인다
+    # (재인코딩 concat은 2GB 서버에서 수십 초 → 배포 재시작에 걸려 죽던 원인, 2026-07-12).
+    mix_raw = work / "mix_raw.mp4"
+    _run_ffmpeg(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(concat_txt),
+                 "-c", "copy", str(mix_raw)])
+    return str(mix_raw)
+
+
+def _burn_captions(in_video, edit_plan, tts_paths, out_path, work):
+    """완성된 믹스 영상(in_video) 위에 우리 자막을 비트 타이밍대로 굽는다.
+    비트 경계는 각 비트 tts 길이 누적(t0)으로 계산해, drawtext enable 구간을 전체
+    타임라인 기준으로 배치한다(_caption_drawtexts에 t0 오프셋 전달). drawtext 값 안의
+    between(t,a,b) 콤마를 나중에 split할 필요가 없다(필터 요소 단위로 리스트 반환).
+    폰트가 없으면 자막 없이 원본을 그대로 복사한다."""
+    font = _resolve_font()
+    if font:
+        try:
+            shutil.copy(font, work / "font.ttf")
+        except OSError:
+            font = None
+    if not font:
+        shutil.copy(in_video, out_path)
+        return str(out_path)
+    filters = [f"scale={_OUT_W}:{_OUT_H}:force_original_aspect_ratio=increase,crop={_OUT_W}:{_OUT_H}"]
+    t0 = 0.0
+    for beat in edit_plan["beats"]:
+        idx = beat["beat_idx"]
+        tts = tts_paths.get(idx)
+        if not tts:
+            continue
+        dur = _probe_duration(tts)
+        filters.extend(_caption_drawtexts(beat.get("narration", ""), dur, work, idx, t0))
+        t0 += dur
+    vf = ",".join(filters)
+    # cwd=work: 필터그래프의 font.ttf / cap_*.txt 상대경로 해석 기준(콜론 회피).
+    _run_ffmpeg(["ffmpeg", "-y", "-i", str(in_video), "-vf", vf, "-r", "30",
+                 "-c:v", "libx264", "-c:a", "copy", "-pix_fmt", "yuv420p", str(out_path)],
+                cwd=str(work))
     return str(out_path)
+
+
+def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None):
+    """EDL → 최종 mp4. 1)믹스(자막X) 2)clean_fn(있으면 자막제거) 3)우리 자막.
+    clean_fn(mix_raw_path)->clean_path 를 주면 그 사이에 VMake 자막제거가 끼워진다
+    (없으면 생략). 자막제거는 우리 자막을 굽기 전 깨끗한 믹스에 돌려야 우리 자막이
+    함께 지워지지 않는다."""
+    work = Path(out_path).parent / f"asm_{uuid.uuid4().hex[:8]}"
+    work.mkdir(parents=True, exist_ok=True)
+    mix_raw = _render_mix(edit_plan, tts_paths, source_video_paths, work)
+    base_video = clean_fn(mix_raw) if clean_fn else mix_raw
+    return _burn_captions(base_video, edit_plan, tts_paths, out_path, work)

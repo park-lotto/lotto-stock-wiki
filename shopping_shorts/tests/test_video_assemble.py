@@ -151,3 +151,21 @@ def test_caption_durations_equal_fallback_when_too_tight():
     durs = va._caption_durations(segs, dur=1.0)   # 4 * 0.5 = 2.0 > 1.0
     assert sum(durs) == 1.0
     assert durs == [0.25, 0.25, 0.25, 0.25]
+
+
+# ── 믹스/자막굽기 분리 (VMake 훅) ────────────────────────────────
+
+import inspect
+
+
+def test_render_mix_and_burn_captions_exist():
+    assert callable(getattr(va, "_render_mix", None))
+    assert callable(getattr(va, "_burn_captions", None))
+    params = inspect.signature(va._render_mix).parameters
+    assert "edit_plan" in params and "tts_paths" in params and "source_video_paths" in params
+
+
+def test_burn_captions_signature():
+    params = list(inspect.signature(va._burn_captions).parameters)
+    assert params[0] == "in_video"
+    assert "edit_plan" in params and "out_path" in params
