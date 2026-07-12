@@ -2,7 +2,7 @@
   "reports": [
     {
       "broker": "그로쓰리서치",
-      "stock": "포스텍 기술 (HBM)",
+      "stock": "포스텍",
       "rating": null,
       "tp": null,
       "ts": "12:25",
@@ -51,8 +51,17 @@
       "rating": null,
       "tp": null,
       "ts": "16:00",
-      "quote": "SK하이닉스 '40조' 美 ADR 상장 이유…닛케이가 주목한 이유 셋",
+      "quote": "SK하이닉스 '40조' 美 ADR 상장 이유",
       "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "보스턴 다이나믹스",
+      "rating": null,
+      "tp": null,
+      "ts": "17:03",
+      "quote": "보스턴 다이나믹스 아틀라스, 노르웨이 Viking Row",
+      "sector": "로봇"
     },
     {
       "broker": "그로쓰리서치",
