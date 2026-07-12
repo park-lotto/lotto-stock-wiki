@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         로또 소통 · 인스타 댓글 자동채우기
 // @namespace    lotto.shopping_shorts
-// @version      1.3.1
+// @version      1.3.2
 // @description  소통큐에서 넘어온 댓글을 인스타 게시물 댓글칸에 자동으로 채운다. 전송·팔로우는 사용자가 직접(안전).
 // @match        https://www.instagram.com/*
 // @run-at       document-start
@@ -102,12 +102,17 @@
     } else {
       fillAtOnce(box, text);
     }
-    // 검증: 실제로 값이 들어갔나
-    const ok = (getVal(box) || "").indexOf(text.slice(0, 4)) >= 0;
+    // React가 값을 반영하며 댓글칸 노드를 새로 만들 수 있어, 잠깐 기다렸다가 "다시 조회한"
+    // 박스로 검증한다(원본 box 참조는 교체돼 비어 보일 수 있음 — 오탐 방지).
+    await sleep(400);
+    const cur = findCommentBox() || box;
+    const ok = (getVal(cur) || "").indexOf(text.slice(0, 2)) >= 0;
     toast(ok ? "✅ 댓글 채워둠 — 전송하면 소통큐에서 자동 완료 (팔로우는 직접)"
-             : "⚠️ 채우기 반영 안 됨 — 직접 붙여넣기(Ctrl+V) 하세요",
-          ok ? "#1e7e34" : "#b9770e");
-    if (ok) armDoneDetector(box);
+             : "🔎 입력함 — 내용 확인 후 전송하세요 (전송 시 자동 완료)",
+          ok ? "#1e7e34" : "#334155");
+    // ⚠️ 검증 결과와 무관하게 전송 감지는 무조건 장착한다(채우기는 대개 성공하는데
+    //    검증만 늦게 반영될 수 있으므로, ok=false여도 전송 시 자동완료가 되게 한다).
+    armDoneDetector(cur);
   }
 
   function getVal(el) {
@@ -145,12 +150,15 @@
       if (!t) return;
       if (/^(게시|게시하기|Post)$/i.test((t.textContent || "").trim())) setTimeout(fire, 900);
     }, true);
-    // 3) 폴백(가장 확실): 채웠던 댓글칸이 비워지면 = 전송된 것. Enter·버튼 못 잡아도 커버.
-    let ticks = 0;
+    // 3) 폴백(가장 확실): 댓글칸이 "채워졌다가 비워지면" = 전송된 것. Enter·버튼 못 잡아도 커버.
+    //    채워진 걸 한 번 확인한 뒤에만 판정(초기 렌더로 잠깐 비어보이는 오탐 방지).
+    let sawFilled = false, ticks = 0;
     const iv = setInterval(() => {
       if (fired || ticks++ > 600) { clearInterval(iv); return; } // 최대 ~5분 감시
       const cur = findCommentBox();
-      if (cur && !(getVal(cur) || "").trim()) { clearInterval(iv); setTimeout(fire, 300); }
+      const v = cur ? (getVal(cur) || "").trim() : "";
+      if (v) sawFilled = true;
+      else if (sawFilled) { clearInterval(iv); setTimeout(fire, 300); }
     }, 500);
   }
 
