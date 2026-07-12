@@ -1,6 +1,7 @@
 """SQLite 수집 이력 저장소."""
 import json
 import sqlite3
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -82,6 +83,21 @@ class Store:
                     origin_shortcode TEXT,
                     candidate_id INTEGER,
                     saved_at TEXT
+                )
+            """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS mix_jobs (
+                    job_id TEXT PRIMARY KEY,
+                    urls_json TEXT NOT NULL,
+                    target_seconds INTEGER NOT NULL,
+                    structure TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    error TEXT,
+                    extract_json TEXT,
+                    edit_plan_json TEXT,
+                    video_path TEXT,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
                 )
             """)
 
@@ -265,3 +281,47 @@ class Store:
             """).fetchall()
         return [{"origin_shortcode": r[0], "platform": r[1], "url": r[2], "title": r[3],
                  "thumbnail": r[4], "similarity_score": r[5], "saved_at": r[6]} for r in rows]
+
+    def create_mix_job(self, job_id, urls, target_seconds, structure):
+        """새 믹스 job 생성. 초기 status='downloading'."""
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO mix_jobs(job_id, urls_json, target_seconds, structure, "
+                "status, created_at, updated_at) VALUES(?,?,?,?,?,?,?)",
+                (job_id, json.dumps(urls, ensure_ascii=False), target_seconds,
+                 structure, "downloading", now, now),
+            )
+
+    def get_mix_job(self, job_id):
+        """믹스 job 1건 → dict(JSON 필드는 파싱됨). 없으면 None."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT job_id, urls_json, target_seconds, structure, status, error, "
+                "extract_json, edit_plan_json, video_path, created_at, updated_at "
+                "FROM mix_jobs WHERE job_id=?", (job_id,),
+            ).fetchone()
+        if not row:
+            return None
+        return {
+            "job_id": row[0], "urls": json.loads(row[1]), "target_seconds": row[2],
+            "structure": row[3], "status": row[4], "error": row[5],
+            "extract": json.loads(row[6]) if row[6] else None,
+            "edit_plan": json.loads(row[7]) if row[7] else None,
+            "video_path": row[8], "created_at": row[9], "updated_at": row[10],
+        }
+
+    def update_mix_job(self, job_id, **fields):
+        """status/error/extract/edit_plan/video_path 갱신(+updated_at). 객체는 JSON 직렬화."""
+        cols, vals = [], []
+        for k in ("status", "error", "video_path"):
+            if k in fields:
+                cols.append(f"{k}=?"); vals.append(fields[k])
+        for k, col in (("extract", "extract_json"), ("edit_plan", "edit_plan_json")):
+            if k in fields:
+                cols.append(f"{col}=?")
+                vals.append(json.dumps(fields[k], ensure_ascii=False) if fields[k] is not None else None)
+        cols.append("updated_at=?"); vals.append(datetime.now(timezone.utc).isoformat())
+        vals.append(job_id)
+        with self._conn() as c:
+            c.execute(f"UPDATE mix_jobs SET {', '.join(cols)} WHERE job_id=?", tuple(vals))
