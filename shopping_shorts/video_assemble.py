@@ -1,15 +1,14 @@
 """EDL + 비트별 TTS → ffmpeg으로 컷 편집·오디오 교체한 최종 mp4(설계 §3-4).
 
-각 비트의 primary 구간을 그 비트 TTS 길이에 맞춰 트림/배속보정하고, 배속보정
-한도를 넘으면 alternates의 다음 후보로 자동 대체한다. concat 후 원본 오디오를
-제거하고 비트별 TTS를 이어붙인 트랙으로 교체한다.
+각 비트의 소스 구간을 그 비트 나레이션(TTS) 길이만큼 **정상 속도(1배속)** 로
+재생한다. 자막이 정상 속도로 읽히도록, 영상 길이는 배속으로 압축하지 않고
+나레이션 읽는 시간에 맞춰 늘린다(설계: 대본 못 줄이면 클립을 길게, 20~30초).
+구간 원본이 나레이션보다 짧으면 소스를 루프(-stream_loop)해서 부족분을 채운다.
+concat 후 원본 오디오를 제거하고 비트별 TTS를 이어붙인 트랙으로 교체한다.
 """
 import subprocess
 import uuid
 from pathlib import Path
-
-_MIN_RATE = 0.8
-_MAX_RATE = 1.2
 
 
 def _probe_duration(path):
@@ -20,42 +19,23 @@ def _probe_duration(path):
     return float(out.stdout.strip())
 
 
-def _rate_for(seg_len, tts_dur, min_rate, max_rate):
-    """seg를 tts_dur에 맞추기 위한 setpts 배속. seg가 길면 1.0(트림), 짧으면
-    필요한 배속을 [min_rate,max_rate]로 클램프. 반환 rate<min_rate면 '더 긴
-    구간이 필요'하다는 신호로 호출부가 판단."""
-    if seg_len <= 0:
-        return max_rate
-    needed = tts_dur / seg_len  # >1이면 느리게(늘려야), <1이면 빠르게
-    if needed <= 1.0:
-        return 1.0  # 소스가 더 길다 → 트림해서 사용
-    return min(needed, max_rate)
-
-
-def _pick_segment(beat, tts_dur, source_video_paths, min_rate=_MIN_RATE, max_rate=_MAX_RATE):
-    """primary→alternates 순으로 배속보정 한도 내 감당 가능한 구간 선택.
-    아무도 한도 내 못 맞추면 primary를 최대배속으로 best-effort 반환(비트 드롭 안 함).
-    반환: (ref, setpts_rate)."""
+def _pick_segment(beat, tts_dur, source_video_paths):
+    """primary→alternates 중 나레이션(tts_dur)을 1배속으로 담을 수 있는
+    (구간길이 >= tts_dur) 첫 후보를 고른다. 아무도 못 담으면 가장 긴 후보를
+    반환하고, 부족분은 assemble에서 소스 루프로 채운다. 반환: ref(dict).
+    더 이상 배속 보정을 하지 않으므로 setpts rate는 반환하지 않는다."""
     candidates = [beat["primary"]] + list(beat.get("alternates", []))
     best = None
-    eps = 1e-9
+    best_len = -1.0
     for ref in candidates:
         if ref["video_id"] not in source_video_paths:
             continue
         seg_len = ref["end"] - ref["start"]
-        needed = (tts_dur / seg_len) if seg_len > 0 else max_rate + 1
-        if needed <= 1.0:
-            # 소스가 충분히 길다
-            if needed >= min_rate - eps:
-                return ref, max(needed, min_rate)  # 정확한 배속 (min_rate 이상)
-            else:
-                return ref, 1.0  # 트림으로 처리 (min_rate 미만)
-        rate = min(needed, max_rate)
-        if needed <= max_rate + eps:
-            return ref, max(rate, min_rate)  # 한도 내 배속으로 감당 가능 (min_rate 이상)
-        if best is None:
-            best = (ref, max_rate)  # 아무도 못 맞추면 primary(첫 후보) 최대배속
-    return best if best else (beat["primary"], max_rate)
+        if seg_len >= tts_dur:
+            return ref  # 1배속으로 나레이션 전체를 담을 수 있는 첫 후보
+        if seg_len > best_len:
+            best, best_len = ref, seg_len
+    return best if best else beat["primary"]
 
 
 def assemble(edit_plan, tts_paths, source_video_paths, out_path):
@@ -69,20 +49,19 @@ def assemble(edit_plan, tts_paths, source_video_paths, out_path):
         if not tts:
             continue
         tts_dur = _probe_duration(tts)
-        ref, rate = _pick_segment(beat, tts_dur, source_video_paths)
+        ref = _pick_segment(beat, tts_dur, source_video_paths)
         src = source_video_paths[ref["video_id"]]
         clip = work / f"beat_{idx}.mp4"
-        # 소스 구간 잘라 배속(setpts) 적용 + tts 오디오로 교체, tts 길이에 맞춤
-        # rate = tts_dur/seg_len 이 곧 setpts 배수(N). N<1=압축(빠르게), N>1=연장(느리게).
-        vf = f"setpts={rate}*PTS" if rate != 1.0 else "setpts=PTS"
+        # 소스를 ref["start"]부터 1배속으로 재생, tts 오디오로 교체, 출력 길이를
+        # tts_dur로 고정(-t). 구간이 짧으면 -stream_loop로 소스를 반복해 나레이션
+        # 길이만큼 영상을 채운다(배속 압축으로 자막이 빨라지는 것을 방지).
         cmd = [
             "ffmpeg", "-y",
-            "-ss", str(ref["start"]), "-to", str(ref["end"]), "-i", str(src),
+            "-stream_loop", "-1", "-ss", str(ref["start"]), "-i", str(src),
             "-i", str(tts),
-            "-filter:v", vf,
             "-map", "0:v:0", "-map", "1:a:0",
-            "-t", str(tts_dur), "-shortest",
-            "-c:v", "libx264", "-c:a", "aac", str(clip),
+            "-t", str(tts_dur),
+            "-c:v", "libx264", "-c:a", "aac", "-pix_fmt", "yuv420p", str(clip),
         ]
         subprocess.run(cmd, capture_output=True, check=True)
         beat_clips.append(clip)

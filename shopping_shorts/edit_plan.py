@@ -183,12 +183,12 @@ _PROMPT = """너는 숏폼 쇼핑 영상 편집 감독이다. 아래 여러 소�
 - 비트(beat) 단위로 순서대로 짜라. 각 비트마다: 그 순간 할 새 나레이션 문장 +
   그 말에 어울리는 소스 구간(primary는 seg_id로 지목) + 대체 후보(alternates,
   seg_id로 {n_alternates}개까지) + 예상 길이(target_seconds) + 효과(effect, 기본 "cut").
-- **[길이 — 매우 중요] 최종 영상 길이는 네가 쓴 나레이션을 소리 내 읽는 시간으로
-  정해진다. 목표는 {target_seconds}초다. 한국어는 대략 초당 4~5자로 읽히므로,
-  전체 나레이션 글자수가 약 {char_target}자는 되어야 {target_seconds}초를 채운다.
-  나레이션을 너무 짧게 쓰면 영상이 목표의 절반밖에 안 나온다 — 각 비트를 한 문장으로
-  끝내지 말고 자연스럽게 두세 문장씩, 설명·근거·디테일을 넣어 풍부하게 써서 목표
-  길이를 반드시 채워라.** 각 비트 target_seconds도 그 나레이션 실제 발화시간에 맞춰라.
+- **[길이 — 매우 중요] 최종 영상 길이 = 나레이션을 소리 내 읽는 시간이다. 목표는
+  {target_seconds}초. 한국어는 초당 약 4~5자로 읽히므로, **전체 나레이션 글자수(공백
+  포함)를 약 {char_target}자 내외**로 맞춰라. 이보다 많이 쓰면 자막이 너무 빨리
+  지나가서 시청자가 못 읽는다 — {char_target}자를 크게 넘기지 마라. 반대로 너무 짧아도
+  안 되니 {char_target}자에 가깝게 채워라. 각 비트에 글자수를 고르게 분배해라(예: 비트가
+  5개면 비트당 약 {char_target}÷5자).
 - **[두 영상 모두 사용 — 필수] primary 구간을 한 영상에만 몰지 마라. 제공된 소스
   영상이 여러 개면 반드시 그 영상들 모두에서 고르게 구간을 가져와 진짜로 섞어라
   (예: 소스가 2개면 둘 다 최소 한 번씩 이상 써라). 한 영상만 쓰면 믹스가 아니다.**
@@ -309,6 +309,12 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
             raw = json.loads(resp.text)
             raw.setdefault("structure", structure)
             grounded = _validate_and_ground(raw, seg_map, n_alternates)
+            # 각 비트 target_seconds는 모델 값이 아니라 나레이션 글자수 기준으로
+            # 재계산한다. 실제 렌더 길이 = 나레이션 읽는 시간(≈글자수÷4.5초)이므로
+            # UI에 표시되는 초와 실제 영상 길이가 어긋나지 않게 맞춘다(초당 4.5자).
+            for _b in grounded["beats"]:
+                _n = len((_b.get("narration") or "").strip())
+                _b["target_seconds"] = round(max(1.5, _n / 4.5), 1)
             grounded["structure"] = structure  # 모델이 지어낸 라벨(template_mode 등) 무시, 입력값 고정
             grounded["detected_type"] = video_type
             grounded["affiliate_target"] = raw.get("affiliate_target", "")
