@@ -1,67 +1,36 @@
 # NEXT_SESSION — 쇼핑쇼츠 믹스 자막 이어하기
 
-**날짜**: 2026-07-12 (사무실 PC) → 집에서 이어서
+**날짜**: 2026-07-12 (집 PC) — 사무실에서 이어받아 진행
 **대상 파일**: `shopping_shorts/video_assemble.py`
 
-## 지금까지 완료 (전부 main 푸시됨)
+## ✅ 방금 완료 (main 푸시됨: f85f3339)
 
-| 커밋 | 내용 |
-|------|------|
-| 45da313e | 자막 페이싱: setpts 배속압축 폐지, 나레이션 길이만큼 1배속 재생 |
-| 02fd75c1 | **새 대본 자막 굽기**: 하단 바 + drawtext(렌더러가 오디오만 교체하던 문제 해결) |
-| 2d908760 | NanumGothic 폰트 repo 번들(서버 pull만으로 자막 렌더, apt 불필요) |
-| 5eaaaa9a | 장면 반복 해결(연속재생) + 자막 문장단위 분할 |
+**자막 "짧은 구절 단위" 분할** — 사무실에서 준비했던 알고리즘 그대로 적용·검증 완료.
 
-## ⚡ 바로 할 일: 자막을 "짧은 구절 단위"로 분할 (사용자 요청)
+- `_caption_segments`: 문장/textwrap 분할 폐지 → **어절 기준 짧은 구절**(목표 7자).
+  예) "오이 사자마자 / 냉장고에 / 넣으셨나요?" (어절 길이 제각각 → 자연히 불규칙).
+- `_caption_durations` 신설: 글자수 비례 + **최소 표시시간 0.5s 하한**, 합은 항상 dur 이하.
+- 폰트 52로 상향(짧은 1줄이라 여유), 미사용 `re` import 제거.
+- 테스트 8개 추가(총 11개 통과). **로컬 ffmpeg 렌더 → 프레임 눈 검증까지 완료**
+  (720×1280 세로, 하단 바 위 흰 자막 1줄, 구절 순차 전환 확인).
 
-현재 `_caption_segments`는 문장(.?!) 단위 2줄 덩어리 → 너무 큼.
-사용자는 **어절 단위 짧은 구절**(오이 사자마자 / 냉장고에 / 넣으셨나요?)로 원함.
-"너무 규칙적으로 자르면 이상하니까" → 어절 길이가 제각각이라 자연히 불규칙해짐.
-
-### ✅ 검증 완료된 알고리즘 (이대로 `_caption_segments` 교체)
-
-```python
-_CAP_TARGET = 7  # 한 구절 목표 글자수(공백 제외)
-
-def _caption_segments(narration):
-    """어절(띄어쓰기) 기준으로 짧게 묶는다. 누적 글자수가 _CAP_TARGET을 넘으면
-    끊어 새 구절 시작. 어절 길이가 제각각이라 자연히 불규칙하게 끊긴다."""
-    narr = (narration or "").strip()
-    if not narr:
-        return []
-    out, cur = [], ""
-    for w in narr.split():
-        if not cur:
-            cur = w
-        elif len((cur + w).replace(" ", "")) <= _CAP_TARGET:
-            cur = cur + " " + w
-        else:
-            out.append(cur); cur = w
-    if cur:
-        out.append(cur)
-    return out or [narr]
-```
-
-사용자 예시 텍스트로 돌려본 결과가 사용자가 손으로 나눈 예시와 거의 동일했음(검증됨).
-
-### 구현 시 같이 볼 것
-- `_caption_vf`: 이제 각 구절이 짧은 **1줄**이므로 2줄 wrap 로직 불필요.
-  글자수 비례 시간배분은 유지. 아주 짧은 구절(2~3자)이 너무 빨리 지나가면
-  최소 표시시간(~0.5s) 하한 고려(단, 합이 dur 넘지 않게 정규화).
-- 폰트 크기 키워도 됨(짧은 1줄이라 여유). 현재 `_CAP_FONTSIZE=46`.
-- 미사용된 `_CAP_WRAP`(=13)는 아주 긴 단일 어절 방어용으로 남기거나 정리.
+> 검증 소스: `C:\Users\CH\Downloads\source_76cbad1d-*.mp4`(1080×1920, 21s).
+> 이 집 PC에 winget으로 **ffmpeg 8.1.2 설치함**(경로: WinGet\Packages\Gyan.FFmpeg\...\bin).
 
 ## 남은 과제 (우선순위 순)
-1. **위 자막 구절 분할** (바로 위, 알고리즘 준비됨)
-2. **실음성** — 서버에 ElevenLabs 키 없어 무음(-91dB). Gemini TTS 연결 검토.
-3. **원본 중앙자막 덮기** — 일부 소스는 원본 자막이 화면 중앙이라 하단 바로 안 가려짐.
+
+1. **실음성(TTS)** — 서버에 ElevenLabs 키 없어 무음(-91dB). Gemini TTS 연결 검토.
+   - `shopping_shorts/tests/test_tts.py`의 ffmpeg 테스트는 ffmpeg 없는 PC에선 실패(환경 문제, 코드 무관).
+2. **원본 중앙자막 덮기** — 일부 소스는 원본 자막이 화면 중앙이라 하단 바로 안 가려짐.
+   → 중앙 마스킹 or 소스 선별 로직 필요.
+3. (선택) 전체 파이프라인 end-to-end 렌더 검증 — 실제 EDL+TTS로 `assemble()` 한 번 돌려보기.
 
 ## 검증 방법 (집에서)
-- 소스 예시: `C:\Users\TheRose\Downloads\source_8d49da15-*.mp4`(가지, 20s),
-  `source_2_8d49da15-*.mp4`(20s). 캐시 EDL: 스크래치패드 `synctest/edl.json`(있으면).
-- 로컬 렌더 후 프레임 뽑아 눈으로 확인(자막 속도·구절 끊김·장면 반복).
-- `python -m pytest shopping_shorts/tests/ -q` (현재 194 통과).
+- `python -m pytest shopping_shorts/tests/test_video_assemble.py -q` (11 통과)
+- 자막 렌더 눈 검증 스크립트: 스크래치패드 `render_caption_check.py` (소스+dur 주면 프레임 뽑음).
 
 ## 주의
 - 브랜치 **main** 고정. `git add -A` 금지(raw/ 크롤데이터 섞임) — shopping_shorts 파일만.
 - 커밋 전 `git branch --show-current`=main 확인.
+- ⚠️ 이번 세션 시작 시 git이 꼬여있었음(merge 충돌 + autocrlf=true 문제).
+  `core.autocrlf=false`로 고침(.gitattributes eol=lf와 맞음). 재발 시 이 설정 확인.
