@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         로또 소통 · 인스타 댓글 자동채우기
 // @namespace    lotto.shopping_shorts
-// @version      1.3.2
+// @version      1.3.3
 // @description  소통큐에서 넘어온 댓글을 인스타 게시물 댓글칸에 자동으로 채운다. 전송·팔로우는 사용자가 직접(안전).
 // @match        https://www.instagram.com/*
 // @run-at       document-start
@@ -16,7 +16,7 @@
 
   /* ===================== CONFIG (인스타 DOM 바뀌면 여기만 수선) ===================== */
   const CONFIG = {
-    DEBUG: true, // 진단 모드: 각 단계를 화면 토스트로 보여줌. 정상화되면 false로.
+    DEBUG: false, // 진단 모드: 각 단계를 화면 토스트로 보여줌. 문제시 true로.
     // 댓글 입력창 후보 셀렉터 — 위에서부터 먼저 잡히는 것 사용
     COMMENT_SELECTORS: [
       'textarea[aria-label*="댓글"]',
@@ -125,7 +125,6 @@
     let fired = false;
     const fire = () => {
       if (fired) return; fired = true;
-      dbg("✅ 전송 감지 → 완료처리 시도");
       // (a) opener(소통큐) 살아있으면 즉시 알림 (COOP로 끊겼을 수 있으니 보너스)
       try {
         if (window.opener && !window.opener.closed)
@@ -137,8 +136,9 @@
       try {
         fetch(base + "/api/comment/done?shortcode=" + encodeURIComponent(payload.sc),
               { method: "POST", mode: "no-cors", keepalive: true });
-        dbg("✅ 서버 완료기록 요청 전송 — 소통큐 복귀 시 감춰짐");
-      } catch (e) { dbg("⚠️ 완료기록 예외: " + e.message); }
+        // DEBUG와 무관하게 항상 보이는 명확한 완료 알림(전송 순간에만 뜸)
+        toast("✅ 완료 처리! 소통큐 탭으로 가면 이 카드가 사라져요", "#1e7e34");
+      } catch (e) { toast("⚠️ 완료기록 실패: " + e.message, "#b9770e"); }
     };
     // 1) Enter 키로 전송
     box.addEventListener("keydown", (e) => {
