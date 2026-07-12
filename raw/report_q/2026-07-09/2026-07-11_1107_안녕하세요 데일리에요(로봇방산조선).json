@@ -1,41 +1,41 @@
 {
   "meta": {
     "date": "2026-07-09",
-    "broker": "eugene",
-    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-11_1107_안녕하세요 데일리에요(로봇방산조선).md"
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-11_1107_안녕하세요 데일리에요(로봇방산조선).md"
   },
   "questionnaire": {
-    "broker": "eugene",
+    "broker": "유진투자증권",
     "analyst": "양승윤",
     "report_date": "07/08",
     "target_kind": "market",
     "market_direction": null,
     "macro_vars": [
       "중동 지정학 리스크",
-      "미국 정부의 한국 조선사 전투함·급유함 건조 역량 타진"
+      "나토 정상회담"
     ],
     "recommended_sectors": [
       {
         "sector": "로봇",
-        "stance": "뉴스 브리핑",
-        "reason": "휴머노이드 액추에이터 브랜드 ‘AXLON’ 공개 및 2025~2029년 5년간 약 1,000억원 투자 등 공급망 상생협력 강화"
+        "stance": null,
+        "reason": "박홍근 휴머노이드 3대 축 중심 재정투자 보강, 삼현 5년간 1,000억 투자 및 액슬론 공개"
       },
       {
         "sector": "방산",
-        "stance": "뉴스 브리핑",
-        "reason": "NATO 주요 인사와 네트워킹 및 트럼프 대통령의 우크라 패트리엇 요격미사일 생산 허가 언급"
+        "stance": null,
+        "reason": "한화에어로 NATO 인사 네트워킹, 한화 KAI 지분 확대, 트럼프 우크라 패트리엇 생산 허가"
       },
       {
         "sector": "조선",
-        "stance": "뉴스 브리핑",
-        "reason": "미국 정부의 전투함·급유함 건조 역량 공식 타진 및 HD한국조선해양-슈나이더 FDC 공동 개발"
+        "stance": null,
+        "reason": "미국 정부 한국 조선사 전투함·급유함 타진, HD현대-슈나이더 FDC 공동 개발"
       }
     ],
     "style": null,
     "event_calendar": [
       {
         "date": "내달",
-        "event": "베이징서 'WRC 2026' 열린다"
+        "event": "베이징 WRC 2026"
       },
       {
         "date": "9월",
@@ -44,17 +44,16 @@
     ],
     "top_picks": [
       "삼현",
-      "한화에어로",
+      "한화에어로스페이스",
       "한화",
       "KAI",
       "HD현대",
       "HD한국조선해양",
+      "슈나이더",
       "삼성중공업",
-      "HD현대중공업",
-      "한화오션",
       "오스탈"
     ],
     "risk": "중동 지정학 리스크 재차 확대될 가능성",
-    "quote": "미국 정부가 한국 조선사에 전투함·급유함 건조 역량을 공식 타진. HD현대중공업·한화오션은 전투함 RFI에, HD현대중공업·한화오션·삼성중공업은 급유함 RFI에 회신."
+    "quote": "미국은 이란과의 협상 교착, 호르무즈 해협 선박 공격, 무력 충돌 재개 이후 대이란 압박을 다시 강화. 이에 따라 중동 지정학 리스크 재차 확대될 가능성."
   }
 }

@@ -5,10 +5,10 @@
     "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-25_0703_AI전환에 따른 하반기 실적 개선 기대.md"
   },
   "questionnaire": {
-    "target_kind": "stock",
     "broker": "키움증권",
     "analyst": "김학준",
     "report_date": "2026. 6. 24",
+    "target_kind": "stock",
     "stocks": [
       {
         "name": "유라클",
@@ -18,18 +18,18 @@
         "tp_new": null,
         "tp_prev": null,
         "tp_direction": null,
-        "earnings_outlook": "2026년 연결 기준 실적은 매출액 466억원(+6.5% YoY), 영업손실 35억원(적자 유지 YoY)으로 전망된다.",
+        "earnings_outlook": "2026년 연결 기준 실적은 매출액 466억원(+6.5% YoY), 영업손실 35억원(적자유지 YoY)으로 전망된다. 2Q부터 실적 개선흐름이 이어질 것으로 전망되지만 아직까지는 AI매출 증가가 기존 비용증가분을 전부를 상쇄하지는 못할 것으로 추정되며 4Q시점에 분기 기준 BEP를 넘어설 것으로 전망된다.",
         "estimate_revision": null,
-        "next_catalyst": "4Q 시점 분기 기준 BEP 달성 및 AI매출 지속 증가 여부",
+        "next_catalyst": "AI매출이 지속적으로 늘어나는지 여부가 AI기업으로의 전환이 성공여부를 알려줄 지표가 될 것이다.",
         "thesis": [
-          "AI전환(아테나 플랫폼)을 통한 체질 개선 및 매출 확대",
-          "AI인프라 관리 툴 '오르다' 및 코드어시스턴트 등 AX전환 상품 수요 증가",
-          "하반기 AI매출 비중 급격한 확대 기대"
+          "LLM 최적화 플랫폼인 아테나의 수주가 이어지고 있음",
+          "AI인프라 관리 툴인 오르다와 코드어시스턴트 등 제품을 중심으로 매출 확대 기대",
+          "하반기부터 AI매출이 본격적으로 늘어날 것으로 기대"
         ],
         "valuation_basis": null,
-        "risk": "AI매출 증가가 기존 비용증가분을 전부 상쇄하지 못할 가능성",
+        "risk": null,
         "supply_comment": null,
-        "quote": "유라클은 어플리케이션 개발 플랫폼인 모피어스라는 안정된 수익을 기반으로 AI 업체로 전환을 빠르게 진행하고 있다."
+        "quote": "유라클은 어플리케이션 개발 플랫폼인 모피어스라는 안정된 수익을 기반으로 AI업체로 전환을 빠르게 진행하고 있다."
       }
     ]
   }

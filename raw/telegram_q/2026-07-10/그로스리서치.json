@@ -1,21 +1,102 @@
 {
   "reports": [
     {
+      "broker": "TrendForce",
+      "stock": "서버 D램",
+      "rating": null,
+      "tp": null,
+      "ts": "07:08",
+      "quote": "3Q26 서버 D램 계약가격은 전분기 대비 13~18% 상승 전망",
+      "sector": "반도체"
+    },
+    {
       "broker": "그로쓰리서치",
       "stock": "삼성전자, SK하이닉스",
       "rating": null,
       "tp": null,
       "ts": "08:32",
-      "quote": "삼성전자·SK하이닉스처럼 등락이 큰 종목도 채권과 섞으면 전체 변동성을 낮출 수 있음",
+      "quote": "삼성전자·SK하이닉스를 각각 25%, 나머지 50%는 국고채에 투자하는 ETF",
       "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "HLB",
+      "rating": null,
+      "tp": null,
+      "ts": "08:48",
+      "quote": "FDA가 리보세라닙 간암 신약 NDA에 대해 보완요구서한(CRL) 발부",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "선익시스템",
+      "rating": null,
+      "tp": null,
+      "ts": "08:52",
+      "quote": "선익시스템이 인도 안드라프라데시주 정부 주관 투자협의회에 참석해 차세대 디스플레이 협력 가능성을 논의",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성전자",
+      "rating": null,
+      "tp": null,
+      "ts": "08:52",
+      "quote": "삼성전자는 HBM·로직·광 기술을 하나의 패키지로 구현하는 2.xD 패키징 개발 중",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "한화큐셀",
+      "rating": null,
+      "tp": null,
+      "ts": "09:18",
+      "quote": "한화큐셀이 애리조나주 ‘아틀라스 에너지 파크’ EPC 수행",
+      "sector": "신재생"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "셀트리온",
+      "rating": null,
+      "tp": null,
+      "ts": "09:46",
+      "quote": "셀트리온 후속 바이오시밀러 유럽 시장 안착",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "TSMC",
+      "rating": null,
+      "tp": null,
+      "ts": "09:59",
+      "quote": "시장에서는 TSMC의 2027년 CoWoS 월 생산능력이 최소 20만장, 업계에서는 24만~26만장까지 확대될 가능성을 전망.",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "롯데에너지머티리얼즈",
+      "rating": null,
+      "tp": null,
+      "ts": "10:58",
+      "quote": "익산 회로박 생산능력 3,700톤 → 6,700톤(2026년) → 1만 6,000톤(2027년 상반기) 확대",
+      "sector": "2차전지"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "한미약품",
+      "rating": null,
+      "tp": null,
+      "ts": "11:30",
+      "quote": "2027년까지 환자 등록을 완료하고 2028년 국내 조건부 품목허가 신청 목표",
+      "sector": "바이오"
     },
     {
       "broker": "그로쓰리서치",
       "stock": "엘티씨",
       "rating": null,
       "tp": null,
-      "ts": "17:45",
-      "quote": "SK하이닉스의 M15X 및 용인 반도체 클러스터(Y1) 투자 확대에 따른 LSE와 LTCAM의 수요 증가",
+      "ts": "13:02",
+      "quote": "2026년 매출 4,329억 원, 영업이익 650억 원 전망",
       "sector": "반도체"
     },
     {
@@ -23,9 +104,27 @@
       "stock": "대주전자재료",
       "rating": null,
       "tp": null,
-      "ts": "15:24",
-      "quote": "AI 서버와 데이터센터 투자 확대에 따른 MLCC 페이스트 수요 증가",
+      "ts": "15:11",
+      "quote": "삼성전기 MLCC 수요 증가에 맞춰 소재 공급 확대",
       "sector": "2차전지"
+    },
+    {
+      "broker": "골드만삭스",
+      "stock": "광 네트워킹",
+      "rating": null,
+      "tp": null,
+      "ts": "16:03",
+      "quote": "CPO 시장 2028년 910억달러 전망",
+      "sector": "통신"
+    },
+    {
+      "broker": "골드만삭스",
+      "stock": "휴머노이드",
+      "rating": null,
+      "tp": null,
+      "ts": "17:22",
+      "quote": "휴머노이드 연간 판매량은 2025년부터 2030년까지 30배 증가한 100만 대 규모 예상",
+      "sector": "로봇"
     },
     {
       "broker": "그로쓰리서치",
@@ -33,7 +132,7 @@
       "rating": null,
       "tp": null,
       "ts": "18:01",
-      "quote": "LPDDR6 수주 파이프라인이 전체의 약 50%까지 확대, 관련 수요 10건 이상 확보",
+      "quote": "연간 라이선스 수주 목표 2,000만달러 유지",
       "sector": "반도체"
     }
   ]

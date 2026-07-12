@@ -1,0 +1,33 @@
+{
+  "target_kind": "sector",
+  "sector_name": "2차전지",
+  "sector_view": "긍정",
+  "points": [
+    "2026 AI 배전망 ESS 사업 내 삼성SDI의 높은 수주 비중 확인",
+    "LG엔솔의 ESS 운영사업자 선정으로 인한 시장 경쟁력 입증"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "삼성SDI",
+      "comment": "2026 AI 배전망 ESS 사업 66% 수주",
+      "ts": "2026-07-10",
+      "quote": "'2026 AI 배전망 ESS' 삼성SDI 66% 수주",
+      "sector": "2차전지"
+    },
+    {
+      "name": "LG에너지솔루션",
+      "comment": "ESS 운영사업자 선정",
+      "ts": "2026-07-10",
+      "quote": "LG엔솔 운영사업자 선정",
+      "sector": "2차전지"
+    }
+  ],
+  "events": [
+    {
+      "fact": "2026 AI 배전망 ESS 사업 수주 및 운영사업자 선정",
+      "ts": "2026-07-10",
+      "quote": "'2026 AI 배전망 ESS' 삼성SDI 66% 수주, LG엔솔 운영사업자 선정"
+    }
+  ],
+  "quote": "'2026 AI 배전망 ESS' 삼성SDI 66% 수주, LG엔솔 운영사업자 선정"
+}

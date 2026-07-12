@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-10",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-12_0801_2Q26 Pre 본업 좀 봐주세요 좋아요.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "iM증권",
+    "analyst": "변용진",
+    "report_date": "2026.07.10",
+    "stocks": [
+      {
+        "name": "HD현대중공업",
+        "code": "329180",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "860,000원",
+        "tp_prev": "860,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 2분기 매출은 6조 1,126억원/영업이익은 9,288억원으로 지난 분기 대비 각각 +3.3%, +2.6%상승할 것으로 예상한다.",
+        "estimate_revision": null,
+        "next_catalyst": "AIDC용 엔진사업 현실화 및 증설",
+        "thesis": [
+          "조선사업부의 15%대 높은 영업이익률 유지 및 해양사업부의 준수한 이익률(8.2%) 기여",
+          "전세계 조선업 발주량 호조 및 상선 수주목표(114.7억 달러)의 약 98% 달성",
+          "AIDC용 엔진사업 수주 성공 및 향후 생산능력 증설 기대"
+        ],
+        "valuation_basis": null,
+        "risk": "건조 중 잠수함(홍범도함) 화재 관련 비용의 2분기 반영 가능성",
+        "supply_comment": "하반기 강재가 협상이 시작된 상태이며 최근 국내 후판 유통가의 상승(저점 대비 9.3%)이 조선사의 협상가에도 영향을 미칠 수 있지만 빨라도 3분기, 늦으면 4분기에 타결 및 실적 반영 예정",
+        "quote": "동사에 대한 투자의견 BUY와 목표주가 860,000원을 유지하고, 조선업종 TOP PICK의견을 견지한다."
+      }
+    ],
+    "sector": "조선"
+  }
+}

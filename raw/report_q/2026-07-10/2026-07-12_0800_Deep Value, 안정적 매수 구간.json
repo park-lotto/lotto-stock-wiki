@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-10",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-12_0800_Deep Value, 안정적 매수 구간.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "iM증권",
+    "analyst": "배세호",
+    "report_date": "2026.07.10",
+    "stocks": [
+      {
+        "name": "팬오션",
+        "code": "028670",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "8,000원",
+        "tp_prev": "7,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2Q26 연결 기준 팬오션 매출액은 1.5조원(+14.2% YoY, -2.1% QoQ), 영업이익 1,590억원(+29.2% YoY, +12.8% QoQ)가 예상된다.",
+        "estimate_revision": "이에 Target P/B를 기존 0.59배에서 0.64배(P/E 9.1배)로 상향하였다.",
+        "next_catalyst": "SK해운으로부터 VLCC 및 장기계약 인수, 신규 발주(9척) 건 및 향후 탱커 영업이익 기여도 증가",
+        "thesis": [
+          "최근 벌크와 탱커 운임 호조로 2Q26 호실적이 예상되며 장기계약 기반의 실적 안정성이 지속될 것",
+          "SK해운 VLCC 인수 및 추가 발주를 통한 탱커 부문 포트폴리오 확장과 이익 기여도 확대 예상",
+          "12개월 선행 기준 P/E 5.7배, P/B 0.40배로 벨류에이션 매력도가 높음"
+        ],
+        "valuation_basis": "12개월 선행 BPS 12,448원에 최근 3년 고점 수준인 Target P/B 0.64배를 적용",
+        "risk": "스팟 물량에 대한 연료비 급등 영향 및 감가상각비 증가에 따른 영업이익 인식 차이",
+        "supply_comment": "시만두 철광석 프로젝트는 수출 물량이 적지만(중국 수입 물량의 1%), 장기계약 수행 중인 Capesize 선대 감안 시, 약 3%의 Capesize 공급 축소 효과를 발생시켜 운임 상승 효과를 주고 있다.",
+        "quote": "팬오션에 대해 투자의견 Buy를 유지하고 목표주가를 기존 7,000원에서 8,000원으로 상향한다."
+      }
+    ]
+  }
+}

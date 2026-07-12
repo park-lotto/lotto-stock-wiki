@@ -1,0 +1,52 @@
+{
+  "meta": {
+    "date": "2026-07-09",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-12_0801_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이상훈",
+    "report_date": "2026.07.09",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "네이버클라우드가 프랑스 AI 기업 미스트랄AI와 전략적 파트너십을 체결하며 제조업 특화 소버린 AI 생태계 구축과 글로벌 시장 공략에 나섰음"
+      },
+      {
+        "sector": "기타",
+        "stance": null,
+        "reason": "국내 280여 개 중소·중견 게임사가 구글의 인앱결제 수수료 강제와 독점적 시장 지배력 남용에 맞서 미국 연방법원에서 손해배상 집단조정을 진행 중임"
+      }
+    ],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": [
+      "NAVER",
+      "카카오",
+      "삼성에스디에스",
+      "현대오토에버",
+      "더존비즈온",
+      "한글과컴퓨터",
+      "롯데이노베이트",
+      "크래프톤",
+      "NC",
+      "넷마블",
+      "시프트업",
+      "펄어비스",
+      "카카오게임즈",
+      "더블유게임즈",
+      "웹젠",
+      "NHN",
+      "컴투스",
+      "네오위즈",
+      "데브시스터즈"
+    ],
+    "risk": null,
+    "quote": "K게임업계 “구글 인앱결제 피해 16조원…대형사 집단조정 동참해야”, 네이버클라우드, 佛 미스트랄AI와 맞손…제조 AI 시장 공략 본격화"
+  }
+}

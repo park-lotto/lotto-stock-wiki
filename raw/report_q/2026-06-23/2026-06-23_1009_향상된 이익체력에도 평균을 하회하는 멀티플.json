@@ -1,36 +1,36 @@
 {
   "meta": {
     "date": "2026-06-23",
-    "broker": "NH투자증권",
+    "broker": "대신증권",
     "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-23_1009_향상된 이익체력에도 평균을 하회하는 멀티플.md"
   },
   "questionnaire": {
-    "target_kind": "stock",
-    "broker": "NH투자증권",
+    "broker": "대신증권",
     "analyst": [
       "박혜진",
       "권용수RA"
     ],
     "report_date": "2026.06.23",
+    "target_kind": "stock",
     "stocks": [
       {
         "name": "NH투자증권",
         "code": "005940",
         "rating": "Buy",
         "rating_changed": false,
-        "tp_new": 45000,
-        "tp_prev": 45000,
+        "tp_new": "45,000",
+        "tp_prev": "45,000",
         "tp_direction": "flat",
-        "earnings_outlook": "2분기 순이익은 컨센서스 3,905억원을 20% 상회할 전망. 2Q26E 지배주주 순이익 4,685억원(QoQ -1.5%, YoY +82.5%) 전망.",
-        "estimate_revision": null,
+        "earnings_outlook": "2Q26E 지배주주 순이익 4,685억원(QoQ -1.5%, YoY +82.5%) 전망",
+        "estimate_revision": "2분기 순이익은 컨센서스 3,905억원을 20% 상회할 전망.",
         "next_catalyst": "2분기 실적발표",
         "thesis": [
-          "거래대금 증가에 따른 브로커리지 수수료수익 사상 최대치 경신 예정",
-          "자본시장 유동성 풍부로 인한 자산관리 수수료수익 견조세 유지",
-          "PBR 1배 하락에 따른 5.8% 배당수익률로 투자 매력 상승"
+          "증권업종 가운데 투자 매력 높음",
+          "PBR 1배까지 하락하여 배당수익률 5.8%까지 상승",
+          "브로커리지 수수료수익 사상 최대치 경신 예정"
         ],
-        "valuation_basis": "최근 동사의 PBR이 1배까지 하락함에 따라 커버리지 평균인 1.54x를 크게 하회하고 있고, 무엇보다 고배당주 특성상 배당수익률이 5.8%까지 상승",
-        "risk": "채권금리 상승 요인 소멸에 따른 상품운용손익의 전분기 대비 감소 전망",
+        "valuation_basis": "최근 동사의 PBR이 1배까지 하락함에 따라 커버리지 평균인 1.54x를 크게 하회하고 있고, 무엇보다 고배당주 특성상 배당수익률이 5.8%까지 상승.",
+        "risk": "금리 상승 요인 소멸 및 상품운용손익 감소 가능성",
         "supply_comment": null,
         "quote": "최근 2분기 실적발표를 앞두고 견조한 이익흐름 유지되고 있어 증권업종 가운데 투자 매력 높다는 판단"
       }

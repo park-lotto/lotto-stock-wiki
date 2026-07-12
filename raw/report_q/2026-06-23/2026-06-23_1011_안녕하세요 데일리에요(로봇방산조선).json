@@ -1,11 +1,11 @@
 {
   "meta": {
     "date": "2026-06-23",
-    "broker": "eugene",
+    "broker": "Eugene Investment & Securities",
     "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-23_1011_안녕하세요 데일리에요(로봇방산조선).md"
   },
   "questionnaire": {
-    "broker": "eugene",
+    "broker": "Eugene Investment & Securities",
     "analyst": "양승윤",
     "report_date": "06/22",
     "target_kind": "market",
@@ -15,24 +15,28 @@
       {
         "sector": "로봇",
         "stance": null,
-        "reason": "LG전자, 로보티즈 우즈벡 공장 지분투자, 두산로보 오토메이트 AI 팔레타이징 로봇 첫선, 씨메스-레인보우로보틱스 양팔로봇 협력 등 주요 뉴스 발생"
+        "reason": "LG전자, 로보티즈 우즈벡 공장 지분투자 및 액추에이터 협력 확대, 두산로보 AI 팔레타이징 로봇 첫선, 씨메스 레인보우로보틱스 양팔로봇 사업화 협력, 베어로보틱스 휴머노이드 스타트업 인수 등"
       },
       {
         "sector": "방산",
         "stance": null,
-        "reason": "한화에어로스페이스 S&P 신용등급 A- 획득, 한화 스위스 방공시스템 수주 관련 현지 생산 언급 등"
+        "reason": "한화에어로스페이스 S&P 신용등급 A- 획득 및 수주 경쟁 신뢰도 상승, 독일 KNDS 주주 지분 매입 등"
       },
       {
         "sector": "조선",
         "stance": null,
-        "reason": "HD현대중공업 한국형 차기구축함 이의신청, CPSP 사업 관련 한화-TKMS 광고전 신경전 등"
+        "reason": "HD현대중공업 차기구축함 평가결과 이의신청, CPSP 사업 한화-TKMS 광고전 등"
       }
     ],
     "style": null,
     "event_calendar": [
       {
-        "date": "06/22",
-        "event": "로봇, 방산, 조선 주요 뉴스 업데이트"
+        "date": "15일",
+        "event": "로보티즈 우즈벡 로봇 생산기지 착공"
+      },
+      {
+        "date": "7월 초",
+        "event": "CPSP 전격 발표 유력"
       }
     ],
     "top_picks": [
@@ -43,9 +47,16 @@
       "레인보우로보틱스",
       "베어로보틱스",
       "리얼월드",
+      "GM",
       "한화에어로스페이스",
+      "한화",
+      "록히드마틴",
+      "BAE시스템즈",
+      "KNDS",
       "HD현대중공업",
+      "금속노조",
       "한화오션",
+      "CPSP",
       "TKMS"
     ],
     "risk": null,

@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "date": "2026-06-23",
+    "broker": "한국IR협의회",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-24_0700_문서 SW에서 Sovereign Agentic OS로.md"
+  },
+  "questionnaire": {
+    "broker": "한국IR협의회",
+    "analyst": [
+      "이나연",
+      "권지승"
+    ],
+    "report_date": "2026.06.23",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "한글과컴퓨터",
+        "code": "030520",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026F 연결 매출액은 3,703억원(+13.3% YoY), 영업이익은 476억원(+30.9% YoY)으로 외형과 수익성의 동반 개선이 예상됨.",
+        "estimate_revision": "AI 매출은 2025년 89억원에서 2026F 360억원으로 확대될 전망",
+        "next_catalyst": "Sovereign Agentic OS 사업화 및 유럽 파트너십 상용화",
+        "thesis": [
+          "기존 오피스 고객 기반 유료 AI 패키지 전환을 통한 AI 매출 성장 본격화",
+          "문서 데이터 기반 Sovereign Agentic OS로의 사업 정체성 확장",
+          "공공 레퍼런스 및 유럽 파트너십을 기반으로 한 AI 실행 플랫폼으로의 도약"
+        ],
+        "valuation_basis": "현 주가는 2026F P/E 11.3배 수준으로, AI 반복매출 확대와 Sovereign Agentic OS 사업화 가시성에 따라 밸류에이션 재평가가 가능하다고 판단",
+        "risk": "AI 매출 성장의 지속 여부, Sovereign Agentic OS 상용화 지연 리스크, 연결 자회사 실적 변동성 리스크",
+        "supply_comment": "IT",
+        "quote": "한컴은 국내 오피스 SW 시장에서 장기간 축적한 문서 처리 기술과 약 20만 이상의 고객 기반을 보유. 기존 오피스 고객의 유료 AI 패키지 전환이 확대되며 AI 매출 성장 본격화. 한컴(별도)의 AI 매출은 2025년 89억원에서 2026F 360억원으로 확대될 전망"
+      }
+    ]
+  }
+}

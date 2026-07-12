@@ -1,3 +1,67 @@
 {
-  "reports": []
+  "reports": [
+    {
+      "broker": "그로쓰리서치",
+      "stock": "포스텍 기술",
+      "rating": null,
+      "tp": null,
+      "ts": "12:25",
+      "quote": "동일한 패키지 높이에서 더 많은 칩을 적층할 수 있는 구조 기존 12단 HBM 대비 약 4배 높은 집적도 달성",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "펩트론",
+      "rating": null,
+      "tp": null,
+      "ts": "13:13",
+      "quote": "펩트론 ‘월 1회 마운자로’ 기대 흔들…대표 발언 이후 주가 하한가 직행",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "에이비엘바이오",
+      "rating": null,
+      "tp": null,
+      "ts": "13:13",
+      "quote": "에이비엘바이오 ‘ABL111’ 위암 1차 치료 임상 3상 직행 전략 공개",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "한미사이언스",
+      "rating": null,
+      "tp": null,
+      "ts": "13:13",
+      "quote": "한미사이언스 신동국 회장 1,727억원 추가 투자…경영권 경쟁 재점화",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "리가켐바이오",
+      "rating": null,
+      "tp": null,
+      "ts": "13:13",
+      "quote": "리가켐바이오 비캄토테신 TOPO-1·듀얼 페이로드 전략 공식화",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "SK하이닉스",
+      "rating": null,
+      "tp": null,
+      "ts": "16:00",
+      "quote": "나스닥 ADR 상장으로 265억달러, 약 40조원 조달",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성전자",
+      "rating": null,
+      "tp": null,
+      "ts": "22:02",
+      "quote": "삼성전자 호실적에도 주가가 급락한 핵심 배경으로 지목",
+      "sector": "반도체"
+    }
+  ]
 }

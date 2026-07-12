@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-23",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-24_0702_정상화를 넘어 성장 국면으로.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "키움증권",
+    "analyst": "오현진",
+    "report_date": "2026. 6. 23",
+    "stocks": [
+      {
+        "name": "워트",
+        "code": "396470",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 실적은 매출액 70억원(YoY 210%), 영업이익 16억원(흑자전환)을 전망한다. 이에 동사 26년 실적은 매출액 258억원(YoY 70%), 영업이익 60억원(YoY 141%)을 전망한다.",
+        "estimate_revision": null,
+        "next_catalyst": "해외 진출 부문, 특히 대만 업체와의 성과",
+        "thesis": [
+          "반도체 및 디스플레이 공정 환경 제어 설비인 THC(초정밀 온습도 제어 장비)의 국산화 성공 및 과점적 시장 지위",
+          "고객사 투자 재개 및 가동률 상승에 따른 실적 정상화 및 흑자전환 전망",
+          "4세대 에너지 절감 기술 등을 통한 해외 고객사 신규 수주 기대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "반도체 및 디스플레이 공정 환경 제어 설비 업체로, 주력 장비는 THC(초정밀 온습도 제어 장비).",
+        "quote": "동사는 반도체 및 디스플레이 공정 환경 제어 설비 업체로, 주력 장비는 THC(초정밀 온습도 제어 장비).",
+        "sector": "반도체"
+      }
+    ]
+  }
+}

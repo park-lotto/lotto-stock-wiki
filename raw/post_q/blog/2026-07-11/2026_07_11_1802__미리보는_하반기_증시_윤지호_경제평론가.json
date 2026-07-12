@@ -1,0 +1,34 @@
+{
+  "target_kind": "market",
+  "market_direction": "null",
+  "macro_events": [
+    {
+      "fact": "자본비용 상승 환경",
+      "ts": "2024 하반기",
+      "quote": "자본비용 상승 환경에서는 현금창출력 확보된 종목이 우위를 이룬다."
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "반도체",
+      "stance": "긍정",
+      "comment": "포트폴리오 핵심 구성 종목"
+    },
+    {
+      "sector": "자동차",
+      "stance": "긍정",
+      "comment": "포트폴리오 핵심 구성 종목"
+    },
+    {
+      "sector": "전력",
+      "stance": "긍정",
+      "comment": "AI 관련 성장 기대"
+    },
+    {
+      "sector": "기타",
+      "stance": "긍정",
+      "comment": "주주환원 기대 금융주"
+    }
+  ],
+  "quote": "2024 하반기 증시는 소수 핵심 종목 집중 투자가 유리하며, 현금 보유가 필수적이다."
+}

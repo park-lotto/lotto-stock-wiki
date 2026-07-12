@@ -1,0 +1,61 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "삼성전자",
+      "signal": "bull",
+      "reason": "시스템 LSI와의 협력 강화 및 빅테크 AI 칩 수주 확대",
+      "ts": null,
+      "quote": "시스템 LSI와의 협력 강화와 빅테크 칩 개발에 유리한 기술적 우월성.",
+      "sector": "반도체"
+    },
+    {
+      "name": "삼성전기",
+      "signal": "bull",
+      "reason": "부품 공급 안정성 확보 및 첨단 패키징 협력",
+      "ts": null,
+      "quote": "삼성전기와의 합작(플립칩 BGA, MLCC)으로 부품공급 안정성 확보.",
+      "sector": "반도체"
+    },
+    {
+      "name": "두산테스나",
+      "signal": "bull",
+      "reason": "그록 LPU 생산을 위한 플립칩 BGA 투자 수혜",
+      "ts": null,
+      "quote": "그록 LPU 생산을 위한 플립칩 BGA 투자로 수혜를 받을 OSAT 업체인 두산테스나",
+      "sector": "반도체"
+    },
+    {
+      "name": "원익IPS",
+      "signal": "bull",
+      "reason": "삼성 파운드리 장비 수주 기대",
+      "ts": null,
+      "quote": "장비 관련 종목인 원익IPS·케이씨텍·HPSP가 수혜 기대.",
+      "sector": "반도체"
+    },
+    {
+      "name": "케이씨텍",
+      "signal": "bull",
+      "reason": "삼성 파운드리 장비 수주 기대",
+      "ts": null,
+      "quote": "장비 관련 종목인 원익IPS·케이씨텍·HPSP가 수혜 기대.",
+      "sector": "반도체"
+    },
+    {
+      "name": "HPSP",
+      "signal": "bull",
+      "reason": "삼성 파운드리 장비 수주 기대",
+      "ts": null,
+      "quote": "장비 관련 종목인 원익IPS·케이씨텍·HPSP가 수혜 기대.",
+      "sector": "반도체"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "엔트로픽 AI 칩 및 메타 MT I 3세대 칩 수주 성공",
+      "ts": "2026-07-11",
+      "quote": "엔트로픽의 AI 칩, 메타의 MT I 3세대 칩 생산 수주를 통해 AI 칩 협업이 본격화되며"
+    }
+  ],
+  "quote": "삼성 파운드리의 빅테크 수주 성장과 AI 칩 관련 기술적 우세를 고려해 연관 종목을 주목할 필요."
+}

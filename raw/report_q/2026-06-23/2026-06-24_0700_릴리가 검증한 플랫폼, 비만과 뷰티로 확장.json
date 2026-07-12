@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-23",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-24_0700_릴리가 검증한 플랫폼, 비만과 뷰티로 확장.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "홍가혜",
+    "report_date": "2026.06.23",
+    "stocks": [
+      {
+        "name": "올릭스",
+        "code": "226950",
+        "rating": "N.R",
+        "rating_changed": null,
+        "tp_new": "N.R",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2025년 매출액 17십억원, 영업이익 8십억원 전망",
+        "estimate_revision": null,
+        "next_catalyst": "7/14 R&D Day, MASH(MARC1) 2상 진입, 비만(ALK7) 기술이전",
+        "thesis": [
+          "MASH(MARC1) 임상 2상 진입 및 마일스톤 기대",
+          "비만치료제(ALK7) 전임상 데이터 확보 및 기술이전 추진",
+          "로레알 지분투자를 통한 파트너십 업그레이드 및 화장품 영역 확장"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "동사는 일라이 릴리 파트너십으로 검증된 간(Liver) 플랫폼을 기반으로, ALK7, MyD88, CNS 등 간 외(extra-hepatic) 적응증 확장과 로레알 파트너십을 통한 화장품 영역 확장이 동시에 진행되고 있음."
+      }
+    ]
+  }
+}

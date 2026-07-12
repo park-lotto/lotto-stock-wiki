@@ -5,74 +5,45 @@
     "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-23_1009_통신서비스 7월 투자 전략 - 가격 메리트 보...md"
   },
   "questionnaire": {
+    "target_kind": "sector",
     "broker": "하나증권",
-    "analyst": "김홍식, 이상훈",
+    "analyst": "김홍식",
     "report_date": "2026년 06월 23일",
-    "target_kind": "stock",
-    "stocks": [
+    "sector_name": "통신",
+    "sector_view": "비중확대",
+    "thesis": [
+      "장기적으로 이익 성장을 바탕으로 주주이익환원 확대 움직임이 지속될 전망",
+      "네트워크 진화 이벤트 및 시중 금리 추이를 감안하면 국내 통신 3사 배당수익률이 여전히 매력적인 상황",
+      "2026년에는 이익 급증 속에 DPS 정상화 및 AI 국책 사업자 선정 예상"
+    ],
+    "timeline": [
+      "2026년 7월",
+      "2026년 2분기",
+      "2027년",
+      "2027년 하반기"
+    ],
+    "top_picks": [
       {
         "name": "SKT",
-        "code": "017670",
-        "rating": "BUY",
-        "rating_changed": null,
-        "tp_new": "140,000원",
-        "tp_prev": null,
-        "tp_direction": null,
-        "earnings_outlook": "KT를 제외한 SKT/LGU+의 2026년 2분기 연결 영업이익이 YoY/QoQ 증가하는 모습을 나타낼 전망",
-        "estimate_revision": null,
-        "next_catalyst": "AI 국책 사업자 선정 및 AI RAN 투자 본격화",
-        "thesis": [
-          "2026년도에는 통신 3사 중 가장 높은 이익 성장이 유력한 가운데 DPS 정상화가 예상됨",
-          "국책 AI 사업자로 선정될 가능성이 높고 AI RAN 활성화와 더불어 5G SA 도입 기대감이 높음",
-          "장기적으로 2027년에는 비과세 배당이 가능함"
-        ],
-        "valuation_basis": "2026년 예상 실적 기준, 140,000원",
-        "risk": "휴대폰 가입자 감소 지속 및 5G 가입자 정체/이동전화매출액 정체 양상",
-        "supply_comment": null,
-        "quote": "통신서비스업종 12개월 Top Pick을 SKT로 유지한다. (중략) 2026년도에는 통신 3사 중 가장 높은 이익 성장이 유력한 가운데 DPS 정상화가 예상되기 때문이다."
-      },
-      {
-        "name": "KT",
-        "code": "030200",
-        "rating": "BUY",
-        "rating_changed": null,
-        "tp_new": "76,000원",
-        "tp_prev": null,
-        "tp_direction": null,
-        "earnings_outlook": "KT의 경우엔 비용측면에서 SKT/LGU+와는 조금 다른 모습을 나타낼 가능성이 높아 유의할 필요가 있겠다.",
-        "estimate_revision": null,
-        "next_catalyst": "부동산 분양 이익 발생",
-        "thesis": [
-          "비용 통제로 본사 이익 성장 지속될 전망",
-          "부동산 분양 이익 발생으로 자회사 실적 호전 지속 전망",
-          "실질 자산가치대비 시가총액 적은 상황"
-        ],
-        "valuation_basis": "2026년 예상 실적 기준, 76,000원",
-        "risk": "구조조정효과 미흡, 2026년 이후 인건비 다시 증가 전환 예상 및 외국인 한도 소진",
-        "supply_comment": null,
-        "quote": "KT의 경우엔 가격적인 메리트를 제외하면 특별한 주가 상승 트리거가 없는 상황이라 단기보단 중/장기 매수에 나설 것을 추천한다."
+        "reason": "AI 국책 사업자 및 AI RAN 투자 본격화, 장기 DPS 성장 기대감, 2026년 가장 높은 이익 성장",
+        "tp": "140,000원"
       },
       {
         "name": "LGU+",
-        "code": "032640",
-        "rating": "BUY",
-        "rating_changed": null,
-        "tp_new": "20,000원",
-        "tp_prev": null,
-        "tp_direction": null,
-        "earnings_outlook": "LGU+/SKT 2분기 실적이 양호할 전망",
-        "estimate_revision": null,
-        "next_catalyst": "자사주 매입/소각 확대",
-        "thesis": [
-          "이익 성장률/배당 성향 수준으로 볼 때 장기 배당 증가 여력 존재",
-          "비용 이슈 종결, 이익 측면에서 양호한 흐름으로 전환 예상",
-          "2026년 높은 연결 영업이익 성장 기록할 전망"
-        ],
-        "valuation_basis": "2026년 예상 실적 기준, 20,000원",
-        "risk": "이동전화매출액 성장 둔화 및 주주 환원 규모로 보면 2026년 단기 감소 예상",
-        "supply_comment": null,
-        "quote": "7월엔 SKT와 더불어 LGU+도 통신서비스 월간 Top Picks로 제시한다. (중략) LGU+는 자사주 매입/소각 확대가 단기 호재로 작용할 가능성이 높기 때문이다."
+        "reason": "자사주 매입/소각 확대, 2분기 실적 양호 전망",
+        "tp": "20,000원"
+      },
+      {
+        "name": "KT",
+        "reason": "부동산 자회사 및 자회사 이익 개선 예상",
+        "tp": "76,000원"
       }
-    ]
+    ],
+    "risk": [
+      "개인정보 유출 관련 과징금 발표 가능성",
+      "이동전화매출액 정체 양상 및 비용 부담",
+      "경쟁 심화 및 규제 리스크"
+    ],
+    "quote": "국내 통신서비스 업종에 대한 12개월 투자의견을 비중확대로 유지한다. 더불어 2026년 7월 통신서비스 업종 투자 매력도를 ‘높음’으로 유지한다."
   }
 }

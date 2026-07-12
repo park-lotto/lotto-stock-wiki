@@ -1,0 +1,33 @@
+{
+  "target_kind": "sector",
+  "sector_name": "2차전지",
+  "sector_view": "긍정",
+  "points": [
+    "삼성자산운용의 전고체 배터리 및 ESS 관련 ETF 신규 상장",
+    "삼성SDI 및 LG에너지솔루션 등 핵심 기업에 대한 집중 투자 전략"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "삼성SDI",
+      "comment": "KODEX 전고체배터리ESS TOP2플러스 ETF의 주요 투자 대상",
+      "ts": "2026-06-23",
+      "quote": "삼성SDI·LG엔솔 50% 집중 투자",
+      "sector": "2차전지"
+    },
+    {
+      "name": "LG에너지솔루션",
+      "comment": "KODEX 전고체배터리ESS TOP2플러스 ETF의 주요 투자 대상",
+      "ts": "2026-06-23",
+      "quote": "삼성SDI·LG엔솔 50% 집중 투자",
+      "sector": "2차전지"
+    }
+  ],
+  "events": [
+    {
+      "fact": "삼성운용, KODEX 전고체배터리ESS TOP2플러스 ETF 상장",
+      "ts": "2026-06-23",
+      "quote": "삼성운용, KODEX 전고체배터리ESS TOP2플러스 ETF 상장"
+    }
+  ],
+  "quote": "삼성SDI·LG엔솔 50% 집중 투자…삼성운용, KODEX 전고체배터리ESS TOP2플러스 ETF 상장"
+}

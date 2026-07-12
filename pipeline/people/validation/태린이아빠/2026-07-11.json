@@ -1,0 +1,42 @@
+{
+  "date": "2026-07-11",
+  "hit_rate": null,
+  "mentioned_count": 26,
+  "matched": [],
+  "missed": [
+    "HLB",
+    "SK하이닉스",
+    "고영",
+    "금융",
+    "데이터센터 인프라",
+    "두산",
+    "리노공업",
+    "미국 테크",
+    "바이오",
+    "반도체",
+    "반도체 소부장",
+    "삼성전자",
+    "소비재",
+    "실리콘투",
+    "에이피알",
+    "원익IPS",
+    "유진테크",
+    "전력기기",
+    "주성엔지니어링",
+    "코스닥",
+    "코스피",
+    "파마리서치",
+    "펩트론",
+    "하이닉스",
+    "현대일렉트릭"
+  ],
+  "candidates": [],
+  "thresholds": {
+    "mode": "his",
+    "vacuum_pct_max": 35.0,
+    "min_up_count": 1,
+    "require_up_gt_down": true,
+    "require_leader": false,
+    "top_n": 20
+  }
+}

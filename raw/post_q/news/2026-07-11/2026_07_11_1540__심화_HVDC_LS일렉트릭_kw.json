@@ -1,0 +1,39 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "LS일렉트릭",
+      "signal": "bull",
+      "reason": "HVDC 변환설비 국산화 및 데이터센터 관련 사업 확장",
+      "ts": "2026-07-11 15:40",
+      "quote": "LS일렉트릭, HVDC·데이터센터로 몸집 불린다",
+      "sector": "전력"
+    },
+    {
+      "name": "효성중공업",
+      "signal": "neutral",
+      "reason": "2GW HVDC 변환기술 국산화 사업 경쟁 및 협력",
+      "ts": "2026-07-11 15:40",
+      "quote": "효성중공업-LS일렉트릭, 2GW HVDC 변환기술 국산화 두고 “같지만 다른 길”",
+      "sector": "전력"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "효성중공업-LS일렉트릭, 2GW HVDC 변환기술 국산화 경쟁",
+      "ts": "09-04 07:00",
+      "quote": "효성중공업-LS일렉트릭, 2GW HVDC 변환기술 국산화 두고 “같지만 다른 길”"
+    },
+    {
+      "fact": "LS일렉트릭 HVDC 및 데이터센터 사업 확대",
+      "ts": "02-08 08:00",
+      "quote": "LS일렉트릭, HVDC·데이터센터로 몸집 불린다"
+    },
+    {
+      "fact": "LS ELECTRIC, 전압형 HVDC 변환설비 국산화 착수",
+      "ts": "07-24 07:00",
+      "quote": "LS ELECTRIC, 전압형 HVDC 변환설비 국산화 착수했다"
+    }
+  ],
+  "quote": "효성중공업-LS일렉트릭, 2GW HVDC 변환기술 국산화 두고 “같지만 다른 길”"
+}

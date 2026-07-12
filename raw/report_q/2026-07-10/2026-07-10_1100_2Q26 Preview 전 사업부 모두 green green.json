@@ -2,13 +2,13 @@
   "meta": {
     "date": "2026-07-10",
     "broker": "교보증권",
-    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-10_1100_2Q26 Preview 전 사업부 모두 green green.md"
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-10_1100_2Q26 Preview 전 사업부 모두 green green.md"
   },
   "questionnaire": {
+    "target_kind": "stock",
     "broker": "교보증권",
     "analyst": "장민지",
     "report_date": "2026/07/10",
-    "target_kind": "stock",
     "stocks": [
       {
         "name": "GS리테일",
@@ -20,16 +20,17 @@
         "tp_direction": "flat",
         "earnings_outlook": "GS리테일 2Q26 연결 실적은 매출액 3조 1,445억원(YoY +5.5%), 영업이익 1,023억원(YoY +21.0%, OPM 3.3%)으로 영업이익 기준 시장 기대치(Fnguide 기준 1,019억원) 부합 전망",
         "estimate_revision": null,
-        "next_catalyst": "우량 점포 중심 출점 및 감가상각비 감소, 수퍼 부문 매출 회복 및 비용 효율화, 홈쇼핑 고마진 상품 중심 편성",
+        "next_catalyst": "1) 우량 점포 중심 출점 및 감가상각비 감소에 따른 편의점 부문 수익성 개선, 2) 수퍼 부문의 매출 회복 및 비용 효율화, 3) 고마진 상품 중심 편성 전략에 따른 홈쇼핑 수익성 개선",
         "thesis": [
-          "편의점 부문: 1분기보다 높은 성장세를 보이며 YoY +5%를 상회할 것으로 추정",
-          "수퍼 부문: 1분기 회복세에 이어 2분기 기존점 성장률 +MSD% 수준 추정 및 홈플러스 폐점 반사 수혜",
-          "홈쇼핑 부문: 고마진 상품 위주 편성 전략 유지되며 수익성 개선 흐름 지속"
+          "편의점 부문 기존점 성장률 1분기보다 높은 성장세를 보이며 YoY +5% 상회 추정",
+          "수퍼 부문 1분기 회복세에 이어 2분기 기존점 성장률 +MSD% 수준 기록 추정",
+          "홈쇼핑 부문 고마진 상품 위주 편성 전략 유지되며 수익성 개선 흐름 지속"
         ],
         "valuation_basis": "Target P/E 12.3x",
         "risk": null,
         "supply_comment": null,
-        "quote": "GS리테일에 대해 투자의견 Buy 및 목표주가 36,000원 유지(Target P/E 12.3x). 동사는 1) 우량 점포 중심 출점 및 감가상각비 감소에 따른 편의점 부문 수익성 개선, 2) 수퍼 부문의 매출 회복 및 비용 효율화, 3) 고마진 상품 중심 편성 전략에 따른 홈쇼핑 수익성 개선 등 전 사업부 실적 개선이 나타나고 있는 상황."
+        "quote": "GS리테일에 대해 투자의견 Buy 및 목표주가 36,000원 유지(Target P/E 12.3x).",
+        "sector": "소비내수"
       }
     ]
   }

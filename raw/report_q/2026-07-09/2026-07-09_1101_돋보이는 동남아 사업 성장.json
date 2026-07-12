@@ -2,7 +2,7 @@
   "meta": {
     "date": "2026-07-09",
     "broker": "하나증권",
-    "raw_file": "/home/ubuntu/lotto-stock-wiki/raw/report/2026-07-09_1101_돋보이는 동남아 사업 성장.md"
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-09_1101_돋보이는 동남아 사업 성장.md"
   },
   "questionnaire": {
     "target_kind": "stock",
@@ -14,22 +14,23 @@
         "name": "코웨이",
         "code": "021240",
         "rating": "Not Rated",
-        "rating_changed": null,
+        "rating_changed": false,
         "tp_new": null,
         "tp_prev": null,
         "tp_direction": null,
-        "earnings_outlook": "2분기 연결 매출 1조 4,292억원(YoY 14%), 영업이익 2,733억원(YoY 13%) 전망. 국내 렌탈 계정 순증 23만 예상.",
+        "earnings_outlook": "2분기 연결 매출 1조 4,292억원(YoY 14%), 영업이익 2,733억원(YoY 13%) 전망",
         "estimate_revision": null,
-        "next_catalyst": "동남아 렌탈 사업 성장, 매트리스 및 에어컨 카테고리 확장, 하이닉스 미국 반도체 공장 수처리 사업권",
+        "next_catalyst": "동남아(말레이시아, 태국, 인도네시아) 사업의 성장세 지속 및 수처리 사업(코웨이엔텍) 매출 추가",
         "thesis": [
-          "동남아(말레이시아/태국) 지역 내 외형 성장 및 수익성 동시 개선",
-          "국내 렌탈 시장 내 매트리스 등 카테고리 확대를 통한 견조한 성장",
-          "해외 사업 고신장과 실적 가시성 대비 현저한 저평가 상태"
+          "국내외 렌탈 시장에서의 강력한 시장 지위와 동남아 지역의 고성장세",
+          "렌탈 카테고리(정수기, 매트리스, 에어컨 등) 확장으로 인한 실적 개선",
+          "국내외 절대적 점유율과 높은 실적 가시성 대비 현저한 저평가"
         ],
         "valuation_basis": "12MF PER 7.8배",
-        "risk": "미국 및 인도네시아 시장의 부진",
-        "supply_comment": "소비내수",
-        "quote": "2분기 연결 매출과 영업이익은 각각 전년 동기 대비 14%, 13% 성장한 1조 4,292억원과 2,733억원 수준이 가능할 전망이다."
+        "risk": null,
+        "supply_comment": null,
+        "quote": "현재 주가는 12MF PER 7.8배로 i) 국내외 절대적인 렌탈 시장 점유율, ii) 말레이 등 해외 사업 고신장과 iii) 높은 실적 가시성 등을 감안하면 현저한 저평가 상태다.",
+        "sector": "소비내수"
       }
     ]
   }
