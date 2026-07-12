@@ -1,0 +1,120 @@
+{
+  "meta": {
+    "date": "2026-06-24",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-24_1006_2차전지 2H26 Outlook.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "이안나",
+    "report_date": "24 Jun, 2026",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "LG에너지솔루션",
+        "code": "373220",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "574,000원",
+        "tp_prev": "574,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 2분기 매출액 7.3조원(+31% YoY, +11% QoQ), 영업이익 1,300억원(-74% YoY, 흑전 QoQ, OPM 2%)",
+        "estimate_revision": null,
+        "next_catalyst": "2026년 하반기 GM non-Bolt Ultium 모델 회복과 Rivian R2 초기 공급 효과, 2027년부터는 애리조나 신규 4695 원통형 및 Rivian R2 효과",
+        "thesis": [
+          "미국 ESS 현지화의 최대 수혜",
+          "2027년 46시리즈 차세대 라인 가동 본격화",
+          "2026년 하반기 GM non-Bolt Ultium 모델 회복 및 Rivian R2 초기 공급 효과"
+        ],
+        "valuation_basis": null,
+        "risk": "LG에너지솔루션의 GM향 EV 가동률 저조 및 세액공제 보상금 인식 지연 가능성",
+        "supply_comment": "LG에너지솔루션은 북미를 중심으로 유럽·한국 수요까지 흡수할 수 있는 가장 넓은 ESS 네트워크를 보유",
+        "quote": "동사에 대한 투자의견 Buy 및 목표주가 유지. 동사는 2분기에 이어 3분기에는 ESS 출하 확대, 이연 보상금 반영, 4분기에는 북미 BESS 가동률 확대, 유럽 EV 중심 개선폭 확대가 기대."
+      },
+      {
+        "name": "삼성SDI",
+        "code": "006400",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "913,000원",
+        "tp_prev": "913,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 2분기 매출액 3.7조원(+17% YoY, +4% QoQ), 영업손실 750억원",
+        "estimate_revision": null,
+        "next_catalyst": "데이터센터용 BBU·UPS 수요 증가 및 4분기 미국 LFP ESS 초기 양산",
+        "thesis": [
+          "ESS 전 라인업 중심 외형성장 지속",
+          "4분기 미국 LFP ESS 초기 양산 및 StarPlus Energy 라인 전환 효과",
+          "데이터센터용 BBU·UPS 수요 확대"
+        ],
+        "valuation_basis": null,
+        "risk": "미국 EV향 물량 부족 및 프리미엄 EV 수요처 의존도",
+        "supply_comment": "미국 EV향은 볼륨모델 부재로 대부분 ESS 라인으로 전환할 예정",
+        "quote": "동사에 대한 투자의견 및 목표주가 유지. 동사는 미국 EV향은 볼륨모델 부재로 대부분 ESS 라인으로 전환할 예정. 이에 4분기부터는 가동률이 안정적으로 유지될 것으로 예상되어 이익률 개선 속도가 빠를 것."
+      },
+      {
+        "name": "에코프로비엠",
+        "code": "247540",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "270,000원",
+        "tp_prev": "270,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 2분기 매출액 6,500억원(-17% YoY, +7% QoQ), 영업이익 270억원(-45% YoY, +29% QoQ, OPM 4%)",
+        "estimate_revision": null,
+        "next_catalyst": "헝가리 공장 1개 라인 가동 및 9월 추가 라인 가동",
+        "thesis": [
+          "유럽 IAA 법안으로 인한 수혜",
+          "헝가리 공장 가동 본격화",
+          "주요 고객사향 BESS 양극재 공급 확대"
+        ],
+        "valuation_basis": null,
+        "risk": "2027년부터 주요 고객사의 LFP ESS 양산 확대로 인한 일부 수요 감소 가능성",
+        "supply_comment": "유럽 고객사의 재고조정 완화 및 일부 모델 출하 회복",
+        "quote": "동사에 대한 투자의견 및 목표주가 유지. 물론 2027년부터 주요 고객사의 LFP ESS 양산 확대로 일부 수요 감소가 예상되나 유럽 EV 수요 확대와 역내 생산 정책이 맞물려 유럽 EV 중심 일부 수요 회복이 기대됨"
+      },
+      {
+        "name": "엘앤에프",
+        "code": "365340",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "235,000원",
+        "tp_prev": "235,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 2분기 매출액 9,624억원(+85% YoY, +30% QoQ), 영업이익 467억원(흑자전환 YoY, -60% QoQ, OPM 4.9%)",
+        "estimate_revision": null,
+        "next_catalyst": "2026년 하반기 LFP 초기 출하 및 2027년 6만톤 체제",
+        "thesis": [
+          "LFP 양극재 공급에 따른 수혜",
+          "미국 ESS용 비중국 LFP 양극재 공급망 적격성",
+          "2028년 가동률 상승 전망"
+        ],
+        "valuation_basis": null,
+        "risk": "초기 고정비 부담에 따른 이익률 상승 제한",
+        "supply_comment": "꾸준히 출하량이 증가하고 있어 안정적인 가동률 확보",
+        "quote": "동사는 2026년 하반기 LFP 초기 출하, 2027년 6만톤 체제, 2028년 가동률 상승으로 이어질 경우 미국 ESS용 비중국 LFP 양극재 공급망 측면에서 수혜 클 것"
+      },
+      {
+        "name": "한중엔시에스",
+        "code": "107640",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "97,000원",
+        "tp_prev": "97,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 2분기 매출액 650억원(+78.6% YoY, +18.8% QoQ), 영업이익 37억원(+390.0% YoY, +39.3% QoQ)",
+        "estimate_revision": null,
+        "next_catalyst": "2027년 6월 미국 플랜트 가동 시작",
+        "thesis": [
+          "미국 TRPP 규제 개정판 수혜",
+          "AI 데이터센터 냉각시스템 경쟁력",
+          "고객사 다변화 및 미국 공장 완전 자동화"
+        ],
+        "valuation_basis": null,
+        "risk": "내연기관차 물량 공급 중단에 따른 일시적 영향",
+        "supply_comment": "이미 검증된 수냉식 냉각·TRPP 솔루션 보유",
+        "quote": "동사는 여전히 AI 데이터센터 냉각시스템 핵심 경쟁력으로 외형성장 지속. 이에 따라 하반기 고객사 다변화에 이어 2027년에도 미국 내 고객사 확대가 지속될 것."
+      }
+    ]
+  }
+}

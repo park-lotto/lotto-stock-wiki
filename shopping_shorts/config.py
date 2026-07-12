@@ -53,6 +53,11 @@ YOUTUBE_API_KEYS = [
 # 높이는 데 재사용한다. 유료 API라 로테이션 풀 없이 단일 키.
 SERPAPI_KEY = os.environ.get("SERPAPI_KEY", "")
 
+# ElevenLabs TTS(영상 믹싱 기능④, 2026-07-12) — 새 나레이션 음성 생성. Gemini와
+# 무관한 별도 API라 전용/공유 키풀 규칙과 무관(단일 키). 미설정이면 개발용 무음 fallback.
+ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY", "")
+ELEVENLABS_VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM")  # 기본 voice(Rachel)
+
 # 수집 규칙
 WINDOW_HOURS = 48          # 48시간 이내만 랭킹
 RESULTS_PER_CHANNEL = 3    # 채널당 최신 상한
