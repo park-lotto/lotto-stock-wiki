@@ -86,12 +86,28 @@ def test_caption_segments_ref_rhythm_2to3_words():
 
 
 def test_caption_segments_no_dangling_modifier():
-    # 관형어·부사로 구절이 끝나지 않는다("며칠 안"|"됐는데" 같은 어색한 끊김 방지).
+    # 수식어(관형어·부사)가 구절 끝에 홀로 남지 않는다("며칠 안"|"됐는데" 방지).
     segs = va._caption_segments("분명 사온 지 며칠 안 됐는데 물러지고 곰팡이 펴서")
     for s in segs:
-        assert s.split()[-1] not in va._CAP_NO_TAIL         # 매달리는 말로 안 끝남
+        assert s.split()[-1] not in va._CAP_HEAD            # 머리 단어로 안 끝남
     # "며칠 안 됐는데"가 한 덩어리로 붙었는지
     assert any("며칠 안" in s and "됐는데" in s for s in segs)
+
+
+def test_caption_segments_modifier_leads_next_phrase():
+    # 사용자 예시에서 뽑은 원리: 수식어(관형어·부사)는 앞 구절 꼬리에 남지 않고
+    # 뒤 단어의 '머리'로 붙는다. 예시 배열들을 회귀 고정.
+    cases = [
+        ("여러분 오이 절대", ["여러분", "오이 절대"]),
+        ("냉장고에 그냥 두지 마세요", ["냉장고에", "그냥 두지 마세요"]),
+        ("버리기 일쑤였는데 이 방법은 진짜", ["버리기 일쑤였는데", "이 방법은 진짜"]),
+        ("밭에서 딴듯한 식감이 그대로 살아있어요",
+         ["밭에서 딴듯한 식감이", "그대로 살아있어요"]),
+        ("남겨주시면 자세한 보관비법 바로 알려드릴게요",
+         ["남겨주시면", "자세한 보관비법", "바로 알려드릴게요"]),
+    ]
+    for src, want in cases:
+        assert va._caption_segments(src) == want, src
 
 
 def test_caption_segments_han_modifier_stays_with_noun():
