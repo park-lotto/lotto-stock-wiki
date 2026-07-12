@@ -208,13 +208,12 @@ window.addEventListener("message", (e) => {
 
 // opener가 COOP로 끊겨 postMessage가 안 와도, 유저스크립트가 서버에 완료기록을 남긴다.
 // 인스타에서 전송 후 소통큐 탭으로 돌아오면(포커스) 큐를 새로고침해 완료된 카드를 감춘다.
-let _lastFocusReload = 0;
+let _focusTimer = null;
 window.addEventListener("focus", () => {
   if (STATE.mode !== "list") return;
-  const now = Date.now();
-  if (now - _lastFocusReload < 1500) return;   // 과도한 재로딩 방지
-  _lastFocusReload = now;
-  reload();
+  reload();                                     // 즉시
+  clearTimeout(_focusTimer);                    // + 지연 재조회(완료기록 서버반영 타이밍 커버)
+  _focusTimer = setTimeout(() => { if (STATE.mode === "list") reload(); }, 2500);
 });
 
 function renderProgress(){
