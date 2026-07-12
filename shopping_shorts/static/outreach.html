@@ -145,7 +145,7 @@ function openAndCopy(sc){
   if(chosen){
     // 유저스크립트가 이 해시를 읽어 인스타 댓글칸을 자동으로 채운다(전송·팔로우는 사용자가 직접).
     // UTF-8 안전 base64 — 한글·이모지 보존.
-    const b64 = btoa(unescape(encodeURIComponent(JSON.stringify({c: chosen, sc: sc}))));
+    const b64 = btoa(unescape(encodeURIComponent(JSON.stringify({c: chosen, sc: sc, o: location.origin}))));
     url += "#lotto_fill=" + encodeURIComponent(b64);
   }
   window.open(url, "_blank");
@@ -194,6 +194,17 @@ async function doneCard(sc){
   if(document.getElementById("hideDone").checked){ if(el) el.remove(); }
   else if(el){ el.classList.add("done"); }
 }
+
+// 인스타 탭(유저스크립트)이 "전송 완료" 신호를 보내면 그 카드를 자동으로 완료처리한다.
+// 인스타 탭은 openAndCopy의 window.open으로 열렸으므로 이 탭(window.opener)에 postMessage 가능.
+window.addEventListener("message", (e) => {
+  if (e.origin !== "https://www.instagram.com") return;      // 인스타에서 온 신호만
+  const d = e.data || {};
+  if (d.type !== "lotto_done" || !d.sc) return;
+  const it = STATE.items.find(x => x.shortcode === d.sc);
+  if (it && it.done) return;                                 // 이미 완료면 무시
+  doneCard(d.sc);                                            // 동일출처·인증된 완료 API 호출 + UI 갱신
+});
 
 function renderProgress(){
   const v=document.getElementById("view");

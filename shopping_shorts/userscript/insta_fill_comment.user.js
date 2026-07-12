@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         로또 소통 · 인스타 댓글 자동채우기
 // @namespace    lotto.shopping_shorts
-// @version      1.1.1
+// @version      1.2.0
 // @description  소통큐에서 넘어온 댓글을 인스타 게시물 댓글칸에 자동으로 채운다. 전송·팔로우는 사용자가 직접(안전).
 // @match        https://www.instagram.com/*
 // @run-at       document-start
@@ -102,13 +102,41 @@
     }
     // 검증: 실제로 값이 들어갔나
     const ok = (getVal(box) || "").indexOf(text.slice(0, 4)) >= 0;
-    toast(ok ? "✅ 댓글 채워둠 — 확인 후 직접 전송·팔로우 하세요"
+    toast(ok ? "✅ 댓글 채워둠 — 전송하면 소통큐에서 자동 완료 (팔로우는 직접)"
              : "⚠️ 채우기 반영 안 됨 — 직접 붙여넣기(Ctrl+V) 하세요",
           ok ? "#1e7e34" : "#b9770e");
+    if (ok) armDoneDetector(box);
   }
 
   function getVal(el) {
     return (el.tagName === "TEXTAREA" || el.tagName === "INPUT") ? el.value : el.textContent;
+  }
+
+  // 사용자가 "게시(전송)"를 누른 걸 감지 → 소통큐(window.opener)에 완료 신호를 보낸다.
+  // 실제 전송 행위(Enter 또는 게시 버튼 클릭)만 잡아 오탐을 줄인다.
+  function armDoneDetector(box) {
+    let fired = false;
+    const fire = () => {
+      if (fired) return; fired = true;
+      try {
+        if (window.opener && !window.opener.closed) {
+          window.opener.postMessage({ type: "lotto_done", sc: payload.sc }, payload.o || "*");
+          dbg("✅ 전송 감지 → 소통큐 완료처리 신호 전송");
+        } else {
+          dbg("전송 감지했으나 소통큐 탭이 닫힘 → 수동 완료 필요");
+        }
+      } catch (_) {}
+    };
+    // 1) Enter 키로 전송
+    box.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) setTimeout(fire, 900);
+    });
+    // 2) 게시/Post 버튼 클릭
+    document.addEventListener("click", (e) => {
+      const t = e.target && e.target.closest && e.target.closest('div[role="button"],button,[type="submit"]');
+      if (!t) return;
+      if (/^(게시|게시하기|Post)$/i.test((t.textContent || "").trim())) setTimeout(fire, 900);
+    }, true);
   }
 
   function waitForCommentBox() {
