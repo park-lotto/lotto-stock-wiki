@@ -183,13 +183,22 @@ _PROMPT = """너는 숏폼 쇼핑 영상 편집 감독이다. 아래 여러 소�
 - 비트(beat) 단위로 순서대로 짜라. 각 비트마다: 그 순간 할 새 나레이션 문장 +
   그 말에 어울리는 소스 구간(primary는 seg_id로 지목) + 대체 후보(alternates,
   seg_id로 {n_alternates}개까지) + 예상 길이(target_seconds) + 효과(effect, 기본 "cut").
+- **[길이 — 매우 중요] 최종 영상 길이는 네가 쓴 나레이션을 소리 내 읽는 시간으로
+  정해진다. 목표는 {target_seconds}초다. 한국어는 대략 초당 4~5자로 읽히므로,
+  전체 나레이션 글자수가 약 {char_target}자는 되어야 {target_seconds}초를 채운다.
+  나레이션을 너무 짧게 쓰면 영상이 목표의 절반밖에 안 나온다 — 각 비트를 한 문장으로
+  끝내지 말고 자연스럽게 두세 문장씩, 설명·근거·디테일을 넣어 풍부하게 써서 목표
+  길이를 반드시 채워라.** 각 비트 target_seconds도 그 나레이션 실제 발화시간에 맞춰라.
+- **[두 영상 모두 사용 — 필수] primary 구간을 한 영상에만 몰지 마라. 제공된 소스
+  영상이 여러 개면 반드시 그 영상들 모두에서 고르게 구간을 가져와 진짜로 섞어라
+  (예: 소스가 2개면 둘 다 최소 한 번씩 이상 써라). 한 영상만 쓰면 믹스가 아니다.**
 - **말을 먼저 다 쓰고 화면을 나중에 맞추지 마라.** "쓸 화면이 있는 말"을 골라라 —
   나레이션과 primary 구간의 화면(scene_desc)이 실제로 어울려야 한다.
+- 화면이 튀지 않게: 같은 소스 안에서는 되도록 시간 순서가 크게 뒤바뀌지 않는,
+  자연스럽게 이어지는 구간을 골라라.
 - **소스 구간은 반드시 위 인벤토리의 seg_id로만 지목**해라. 없는 seg_id를 지어내지 마라.
 - **표절 금지:** 소스 원문 문장·구절을 그대로 베끼지 마라. 후킹 방식·구조·핵심
   셀링포인트만 계승해서 완전히 새 표현으로 써라.
-- 비트별 target_seconds 합이 대략 {target_seconds}초가 되게 하고, 각 비트 길이는
-  지목한 구간이 감당할 수 있는 범위로 잡아라.
 - 출력은 스키마 JSON만."""
 
 _TEMPLATE_INSTR = (
@@ -280,6 +289,7 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
              "detected_type": video_type, "affiliate_target": ""}
     prompt = _PROMPT.format(
         target_seconds=target_seconds, inventory=inventory, n_alternates=n_alternates,
+        char_target=int(target_seconds * 4.5),
         structure_instruction=(_TEMPLATE_INSTR if structure == "template" else _FREE_INSTR),
         type_strategy=VIDEO_TYPES[video_type]["strategy"],
     )
