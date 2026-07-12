@@ -206,6 +206,17 @@ window.addEventListener("message", (e) => {
   doneCard(d.sc);                                            // 동일출처·인증된 완료 API 호출 + UI 갱신
 });
 
+// opener가 COOP로 끊겨 postMessage가 안 와도, 유저스크립트가 서버에 완료기록을 남긴다.
+// 인스타에서 전송 후 소통큐 탭으로 돌아오면(포커스) 큐를 새로고침해 완료된 카드를 감춘다.
+let _lastFocusReload = 0;
+window.addEventListener("focus", () => {
+  if (STATE.mode !== "list") return;
+  const now = Date.now();
+  if (now - _lastFocusReload < 1500) return;   // 과도한 재로딩 방지
+  _lastFocusReload = now;
+  reload();
+});
+
 function renderProgress(){
   const v=document.getElementById("view");
   const list=STATE.items.filter(i=>!i.done);

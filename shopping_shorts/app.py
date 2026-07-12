@@ -578,7 +578,10 @@ DASH_PASS = os.environ.get("DASH_PASS", "")  # 비어있으면 인증 OFF(로컬
 DASH_SECRET = os.environ.get("DASH_SECRET", "shopping-shorts-local-secret")
 _AUTH_ON = bool(DASH_PASS)
 _AUTH_ALLOW = ("/login", "/api/login", "/favicon.ico", "/healthz",
-               "/insta_fill_comment.user.js")
+               "/insta_fill_comment.user.js",
+               # 유저스크립트(insta_fill_comment)가 인스타 탭에서 전송 감지 시 GM_xmlhttpRequest로
+               # 완료기록을 POST한다. 인증쿠키 없이 오므로 허용. 마킹은 저위험(되돌리기 가능).
+               "/api/comment/done")
 
 
 def _auth_token() -> str:

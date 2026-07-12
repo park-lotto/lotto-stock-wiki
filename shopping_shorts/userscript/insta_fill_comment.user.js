@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         로또 소통 · 인스타 댓글 자동채우기
 // @namespace    lotto.shopping_shorts
-// @version      1.2.0
+// @version      1.3.0
 // @description  소통큐에서 넘어온 댓글을 인스타 게시물 댓글칸에 자동으로 채운다. 전송·팔로우는 사용자가 직접(안전).
 // @match        https://www.instagram.com/*
 // @run-at       document-start
-// @grant        none
+// @grant        GM_xmlhttpRequest
+// @connect      shoppingshorts.duckdns.org
 // @downloadURL  https://shoppingshorts.duckdns.org/insta_fill_comment.user.js
 // @updateURL    https://shoppingshorts.duckdns.org/insta_fill_comment.user.js
 // ==/UserScript==
@@ -118,14 +119,22 @@
     let fired = false;
     const fire = () => {
       if (fired) return; fired = true;
+      dbg("✅ 전송 감지 → 완료처리 시도");
+      // (a) opener(소통큐) 살아있으면 즉시 알림 (COOP로 끊겼을 수 있으니 보너스)
       try {
-        if (window.opener && !window.opener.closed) {
+        if (window.opener && !window.opener.closed)
           window.opener.postMessage({ type: "lotto_done", sc: payload.sc }, payload.o || "*");
-          dbg("✅ 전송 감지 → 소통큐 완료처리 신호 전송");
-        } else {
-          dbg("전송 감지했으나 소통큐 탭이 닫힘 → 수동 완료 필요");
-        }
       } catch (_) {}
+      // (b) 서버에 직접 완료기록 — opener가 끊겨도 확실. 소통큐는 탭 복귀 시 반영.
+      const base = payload.o || "https://shoppingshorts.duckdns.org";
+      try {
+        GM_xmlhttpRequest({
+          method: "POST",
+          url: base + "/api/comment/done?shortcode=" + encodeURIComponent(payload.sc),
+          onload: () => dbg("✅ 서버 완료기록됨 — 소통큐 복귀 시 감춰짐"),
+          onerror: () => dbg("⚠️ 서버 완료기록 실패"),
+        });
+      } catch (e) { dbg("⚠️ 완료기록 예외: " + e.message); }
     };
     // 1) Enter 키로 전송
     box.addEventListener("keydown", (e) => {
@@ -137,6 +146,13 @@
       if (!t) return;
       if (/^(게시|게시하기|Post)$/i.test((t.textContent || "").trim())) setTimeout(fire, 900);
     }, true);
+    // 3) 폴백(가장 확실): 채웠던 댓글칸이 비워지면 = 전송된 것. Enter·버튼 못 잡아도 커버.
+    let ticks = 0;
+    const iv = setInterval(() => {
+      if (fired || ticks++ > 600) { clearInterval(iv); return; } // 최대 ~5분 감시
+      const cur = findCommentBox();
+      if (cur && !(getVal(cur) || "").trim()) { clearInterval(iv); setTimeout(fire, 300); }
+    }, 500);
   }
 
   function waitForCommentBox() {
