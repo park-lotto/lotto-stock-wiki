@@ -19,6 +19,7 @@ from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
 from shopping_shorts.frame_extract import download_video, extract_frames
 from shopping_shorts.script_extract import extract_script
 from shopping_shorts.structure_analyze import analyze_structure
+from shopping_shorts import script_generate
 from shopping_shorts.apify_client import fetch_single_reel, fetch_reels, fetch_profiles
 from shopping_shorts import discovery, instagram_search
 from shopping_shorts.channels import load_channels
@@ -400,6 +401,26 @@ def api_wiki_remove(shortcode: str):
     """위키에서 제거."""
     Store(DB_PATH).remove_from_wiki(shortcode)
     return {"ok": True, "shortcode": shortcode}
+
+
+@app.post("/api/wiki/generate")
+def api_wiki_generate(shortcode: str, mode: str = "A", my_topic: str = "", keep: str = "", n: int = 3):
+    """도서관 S급 1개의 구조를 빌려 새 20초 대본 초안 생성(모드 A/B, 유지/변형).
+
+    keep: 유지할 요소 키를 콤마로(예: "characters,twist,development"). 나머지는 변형."""
+    it = Store(DB_PATH).get_wiki_item(shortcode)
+    if not it:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "위키에 없는 항목 — 먼저 S급으로 저장하세요"})
+    if not (it.get("structure") or it.get("full_text")):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "구조분석/대본이 비어 생성 불가 — 재저장 필요"})
+    kept = {x for x in (keep or "").split(",") if x}
+    keep_flags = {k: (k in kept) for k in script_generate.ELEM_KEYS}
+    drafts = script_generate.generate_variations(
+        it.get("structure") or {}, it.get("full_text") or "", keep_flags,
+        mode=mode, my_topic=my_topic, n=n)
+    if not drafts:
+        return JSONResponse(status_code=502, content={"ok": False, "error": "생성 실패(Gemini 키 소진 또는 오류) — 잠시 후 재시도"})
+    return {"ok": True, "drafts": drafts}
 
 
 @app.post("/api/find/analyze")

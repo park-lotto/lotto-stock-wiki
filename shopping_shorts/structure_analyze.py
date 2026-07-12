@@ -30,6 +30,7 @@ _SCHEMA = {
         "development": {"type": "string"},
         "twist": {"type": "string"},
         "appeal": {"type": "string"},
+        "tone": {"type": "string"},
         "beats": {
             "type": "array",
             "items": {
@@ -47,7 +48,7 @@ _SCHEMA = {
         "one_line_why": {"type": "string"},
     },
     "required": ["hook_type", "hook_line", "narrator", "characters", "storyline",
-                 "development", "appeal", "beats", "devices", "one_line_why"],
+                 "development", "appeal", "tone", "beats", "devices", "one_line_why"],
 }
 
 _PROMPT = """너는 바이럴 숏폼 대본을 해부하는 분석가다. 아래 대본이 '왜 잘 터졌는지'
@@ -74,6 +75,8 @@ _PROMPT = """너는 바이럴 숏폼 대본을 해부하는 분석가다. 아래
 - twist: 참신한 발상전환/반전 포인트(있으면 그 대목, 없으면 "").
 - appeal: 어필포인트 — 시청자를 무엇으로 끌어당기나. 예: 돈 절약, 손실회피("이거 모르면 손해"),
   건강/안전, 편리함, 호기심 해소, 공감/위로, 과시.
+- tone: 말투·어미 스타일 — 화자의 말투와 문장 끝(어미) 특징을 짧게. 예: "친근한 존댓말,
+  ~거든요/~더라고요/~잖아요 수다체", "담백한 정보체, ~하세요/~합니다".
 - beats: 시간 순서 '비트' 배열. 각 비트 label(훅|문제제기|공감|주변인물등장|반전|증거/시연|
   결과|CTA 등), desc(역할 한 줄), approx_sec("0-2").
 - devices: 수사·설득 장치(권위자인용, 구체적숫자, 감정트리거, 비포애프터, 손실회피,

@@ -92,6 +92,25 @@ def test_wiki_list_and_remove(monkeypatch):
     assert client.post("/api/wiki/remove?shortcode=X").json()["ok"]
 
 
+def test_wiki_generate_404_when_not_in_wiki(monkeypatch):
+    monkeypatch.setattr(app_module, "_AUTH_ON", False)
+    monkeypatch.setattr(app_module.Store, "get_wiki_item", lambda self, sc: None)
+    client = TestClient(app_module.app)
+    assert client.post("/api/wiki/generate?shortcode=x").status_code == 404
+
+
+def test_wiki_generate_ok(monkeypatch):
+    monkeypatch.setattr(app_module, "_AUTH_ON", False)
+    monkeypatch.setattr(app_module.Store, "get_wiki_item",
+                        lambda self, sc: {"structure": {"characters": []}, "full_text": "ft"})
+    monkeypatch.setattr(app_module.script_generate, "generate_variations",
+                        lambda *a, **k: [{"hook": "h", "script": "s", "applied": "a"}])
+    client = TestClient(app_module.app)
+    r = client.post("/api/wiki/generate?shortcode=x&keep=characters,twist&mode=A")
+    assert r.status_code == 200
+    assert r.json()["drafts"][0]["script"] == "s"
+
+
 def test_store_wiki_roundtrip(tmp_path):
     from shopping_shorts.store import Store
     s = Store(tmp_path / "w.db")

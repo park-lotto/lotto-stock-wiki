@@ -54,6 +54,32 @@
   .row button{font-size:12px;color:var(--accent);background:none;border:1px solid var(--line);border-radius:6px;padding:5px 10px;cursor:pointer}
   .row button:hover{border-color:var(--accent)}
   .empty{color:var(--sub);text-align:center;padding:80px 20px;line-height:1.8}
+  .gen-btn{background:linear-gradient(90deg,#153a6b,#0d2340)!important;border-color:var(--accent)!important;color:#7db4ff!important;font-weight:600}
+  /* 생성 모달 */
+  .gen-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:flex-start;justify-content:center;padding:24px;overflow:auto}
+  .gen-bg.open{display:flex}
+  .gen-box{background:var(--panel);border:1px solid var(--line);border-radius:14px;width:min(760px,100%);display:flex;flex-direction:column;max-height:92vh}
+  .gen-head{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+  .gen-head b{font-size:15px}
+  .gen-head .x{background:none;border:none;color:var(--sub);font-size:20px;cursor:pointer}
+  .gen-body{padding:16px 18px;overflow:auto}
+  .gen-sec{font-size:12px;color:var(--sub);margin:12px 0 8px;text-transform:uppercase}
+  .toggles{display:flex;flex-wrap:wrap;gap:8px}
+  .toggles label{display:flex;align-items:center;gap:6px;font-size:13px;background:#0d131c;border:1px solid var(--line);border-radius:8px;padding:7px 11px;cursor:pointer}
+  .toggles input{accent-color:var(--accent)}
+  .modes{display:flex;flex-direction:column;gap:6px;font-size:13px}
+  .modes label{display:flex;align-items:center;gap:6px;cursor:pointer}
+  #genTopic{width:100%;margin-top:8px;background:#0d131c;border:1px solid var(--line);border-radius:8px;padding:9px 12px;color:var(--txt);font-size:13px}
+  .gen-run{margin-top:16px;width:100%;background:linear-gradient(90deg,#153a6b,#0d2340);border:1px solid var(--accent);color:#7db4ff;font-weight:600;font-size:14px;padding:11px;border-radius:9px;cursor:pointer}
+  .gen-run:disabled{opacity:.6;cursor:wait}
+  .gen-results{margin-top:8px}
+  .draft{background:#0d131c;border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:12px}
+  .draft .dh{font-size:14px;font-weight:700;color:var(--gold);margin-bottom:6px}
+  .draft .ds{font-size:13.5px;line-height:1.7;white-space:pre-wrap}
+  .draft .da{font-size:11px;color:var(--sub);margin-top:8px;border-top:1px solid var(--line);padding-top:6px}
+  .draft .dcopy{margin-top:8px;font-size:12px;color:var(--accent);background:none;border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer}
+  .gen-load{text-align:center;color:var(--sub);padding:30px;font-size:14px}
+  .gen-err{color:#ff9b9b;padding:16px;font-size:13px;text-align:center}
   @media(max-width:768px){.sidebar{width:100%;border-right:none;border-bottom:1px solid var(--line)}.main{padding:16px 14px}.card{flex-direction:column}.vid{width:100%;max-width:280px}}
 </style>
 </head>
@@ -77,6 +103,30 @@
     <div class="desc" id="desc">S급 대본을 <b>원본 영상 + 구조 분석</b>을 나란히 보며 학습합니다. 랭킹에서 <b>📝 대본 추출 → ⭐ S급 위키 저장</b>으로 담으세요.</div>
     <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
   </main>
+  <div class="gen-bg" id="genModal">
+    <div class="gen-box">
+      <div class="gen-head"><b>🎬 이 구조로 대본 생성</b><button class="x" onclick="closeGen()">✕</button></div>
+      <div class="gen-body">
+        <div class="gen-sec">유지할 요소 (체크 = 유지 / 해제 = 참신하게 변형)</div>
+        <div class="toggles" id="genToggles">
+          <label><input type="checkbox" data-k="characters" checked> 👥 주변인물</label>
+          <label><input type="checkbox" data-k="twist" checked> ✨ 발상전환</label>
+          <label><input type="checkbox" data-k="development" checked> 🎬 전개방식</label>
+          <label><input type="checkbox" data-k="hook" checked> 🎣 훅</label>
+          <label><input type="checkbox" data-k="appeal" checked> 🎯 어필포인트</label>
+          <label><input type="checkbox" data-k="tone" checked> 🗣 말투/어미</label>
+        </div>
+        <div class="gen-sec">주제</div>
+        <div class="modes">
+          <label><input type="radio" name="genmode" value="A" checked onchange="toggleTopic()"> 같은 주제로 신선하게 변주</label>
+          <label><input type="radio" name="genmode" value="B" onchange="toggleTopic()"> 내 주제/제품으로 이식 (구조만 빌림)</label>
+          <input id="genTopic" placeholder="예: 무선 가습기 / 여름 결로 방지 커튼" style="display:none">
+        </div>
+        <button class="gen-run" id="genRun" onclick="runGen()">✨ 초안 생성 (10~20초)</button>
+        <div class="gen-results" id="genResults"></div>
+      </div>
+    </div>
+  </div>
 <script>
 function esc(s){ return (s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function videoFallback(v){
@@ -112,14 +162,14 @@ function render(i){
       <div class="meta">팔로워 ${(i.followers||0).toLocaleString()} · 댓글 ${(i.comments||0).toLocaleString()} · 참여밀도 ${((i.density||0)*100).toFixed(2)}%</div>
       ${s.hook_type?`<div class="hook"><span class="type">🎣 ${esc(s.hook_type)}</span><div class="line">${esc(s.hook_line||'')}</div></div>`:''}
       ${s.one_line_why?`<div class="why">💡 ${esc(s.one_line_why)}</div>`:''}
-      <div class="tagrow">${tag('🎙 화자',s.narrator)}${tag('🎬 전개',s.development)}${tag('🎯 어필포인트',s.appeal)}${tag('⏱',s.target_seconds?s.target_seconds+'초':'')}</div>
+      <div class="tagrow">${tag('🎙 화자',s.narrator)}${tag('🎬 전개',s.development)}${tag('🎯 어필포인트',s.appeal)}${tag('🗣 말투',s.tone)}${tag('⏱',s.target_seconds?s.target_seconds+'초':'')}</div>
       ${chars?`<div class="chars"><div class="t">👥 등장 주변인물 (스토리텔링 핵심 기법)</div><ul>${chars}</ul></div>`:''}
       ${s.storyline?`<div><div class="sec-t">스토리라인</div><div class="story">${esc(s.storyline)}</div></div>`:''}
       ${s.twist?`<div><div class="sec-t">✨ 발상전환</div><div class="story">${esc(s.twist)}</div></div>`:''}
       ${beats?`<div class="sec-t">비트 구조</div><ul class="beats">${beats}</ul>`:''}
       ${devs?`<div class="sec-t">설득 장치</div><div class="devices">${devs}</div>`:''}
       <details><summary>전체 대본 보기</summary><div class="full">${esc(i.full_text||'(대본 없음)')}</div></details>
-      <div class="row"><button onclick="copyFull(this)">📋 대본 복사</button></div>
+      <div class="row"><button class="gen-btn" onclick="openGen('${sc}')">🎬 이 구조로 생성</button><button onclick="copyFull(this)">📋 대본 복사</button></div>
     </div>
   </div>`;
 }
@@ -131,6 +181,36 @@ async function removeItem(sc, btn){
 async function copyFull(btn){
   const full=((btn.closest('.card').querySelector('.full'))||{}).innerText||'';
   try{ await navigator.clipboard.writeText(full); }catch(e){ const t=document.createElement('textarea'); t.value=full; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
+  const o=btn.textContent; btn.textContent='✓ 복사됨'; setTimeout(()=>btn.textContent=o,1200);
+}
+// ── 생성(적용) ──
+function openGen(sc){ window._genSC=sc; document.getElementById('genResults').innerHTML=''; document.getElementById('genModal').classList.add('open'); }
+function closeGen(){ document.getElementById('genModal').classList.remove('open'); }
+function toggleTopic(){ const b=document.querySelector('input[name=genmode]:checked').value==='B'; document.getElementById('genTopic').style.display=b?'block':'none'; }
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeGen(); });
+async function runGen(){
+  const btn=document.getElementById('genRun'); const res=document.getElementById('genResults');
+  const keep=[...document.querySelectorAll('#genToggles input:checked')].map(x=>x.dataset.k).join(',');
+  const mode=document.querySelector('input[name=genmode]:checked').value;
+  const topic=document.getElementById('genTopic').value.trim();
+  if(mode==='B' && !topic){ res.innerHTML='<div class="gen-err">내 주제/제품을 입력하세요.</div>'; return; }
+  btn.disabled=true; btn.textContent='⏳ 생성 중…'; res.innerHTML='<div class="gen-load">✨ S급 구조를 빌려 초안 만드는 중… (10~20초)</div>';
+  try{
+    const q=new URLSearchParams({shortcode:window._genSC, mode, my_topic:topic, keep, n:3});
+    const d=await (await fetch('/api/wiki/generate?'+q.toString(), {method:'POST'})).json();
+    if(!d.ok){ res.innerHTML='<div class="gen-err">⚠️ '+esc(d.error||'생성 실패')+'</div>'; return; }
+    res.innerHTML=(d.drafts||[]).map((dr,i)=>`<div class="draft">
+      <div class="dh">초안 ${i+1} · ${esc(dr.hook||'')}</div>
+      <div class="ds">${esc(dr.script||'')}</div>
+      <div class="da">🔧 ${esc(dr.applied||'')}</div>
+      <button class="dcopy" onclick="copyDraft(this)">📋 복사</button></div>`).join('')
+      || '<div class="gen-err">생성 결과가 비었습니다 — 다시 시도해주세요.</div>';
+  }catch(e){ res.innerHTML='<div class="gen-err">⚠️ 네트워크 오류 — 잠시 후 재시도</div>'; }
+  finally{ btn.disabled=false; btn.textContent='✨ 초안 생성 (10~20초)'; }
+}
+async function copyDraft(btn){
+  const s=((btn.closest('.draft').querySelector('.ds'))||{}).innerText||'';
+  try{ await navigator.clipboard.writeText(s); }catch(e){ const t=document.createElement('textarea'); t.value=s; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
   const o=btn.textContent; btn.textContent='✓ 복사됨'; setTimeout(()=>btn.textContent=o,1200);
 }
 load();
