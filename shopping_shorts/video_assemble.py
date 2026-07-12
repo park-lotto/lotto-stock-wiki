@@ -73,7 +73,8 @@ def assemble(edit_plan, tts_paths, source_video_paths, out_path):
         src = source_video_paths[ref["video_id"]]
         clip = work / f"beat_{idx}.mp4"
         # 소스 구간 잘라 배속(setpts) 적용 + tts 오디오로 교체, tts 길이에 맞춤
-        vf = f"setpts={1.0/rate}*PTS" if rate != 1.0 else "setpts=PTS"
+        # rate = tts_dur/seg_len 이 곧 setpts 배수(N). N<1=압축(빠르게), N>1=연장(느리게).
+        vf = f"setpts={rate}*PTS" if rate != 1.0 else "setpts=PTS"
         cmd = [
             "ffmpeg", "-y",
             "-ss", str(ref["start"]), "-to", str(ref["end"]), "-i", str(src),
