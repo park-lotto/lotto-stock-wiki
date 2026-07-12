@@ -108,6 +108,12 @@ class Store:
                     updated_at TEXT NOT NULL
                 )
             """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS settings (
+                    key TEXT PRIMARY KEY,
+                    value TEXT
+                )
+            """)
             # 발굴로 찾아 "벤치마크 목록에 추가"한 채널 — collect()가 엑셀 목록과
             # union해 이후 메인 랭킹에도 추적한다(2026-07-12).
             c.execute("""
@@ -446,3 +452,18 @@ class Store:
         vals.append(job_id)
         with self._conn() as c:
             c.execute(f"UPDATE mix_jobs SET {', '.join(cols)} WHERE job_id=?", tuple(vals))
+
+    def get_setting(self, key, default=None):
+        """전역 설정값 조회(예: vmake_api_key). 없으면 default."""
+        with self._conn() as c:
+            row = c.execute("SELECT value FROM settings WHERE key=?", (key,)).fetchone()
+        return row[0] if row else default
+
+    def set_setting(self, key, value):
+        """전역 설정값 저장(upsert)."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO settings(key, value) VALUES(?,?) "
+                "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+                (key, value),
+            )
