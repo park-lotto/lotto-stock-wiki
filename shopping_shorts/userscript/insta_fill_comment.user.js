@@ -1,11 +1,13 @@
 // ==UserScript==
 // @name         로또 소통 · 인스타 댓글 자동채우기
 // @namespace    lotto.shopping_shorts
-// @version      1.1.0
+// @version      1.1.1
 // @description  소통큐에서 넘어온 댓글을 인스타 게시물 댓글칸에 자동으로 채운다. 전송·팔로우는 사용자가 직접(안전).
 // @match        https://www.instagram.com/*
 // @run-at       document-start
 // @grant        none
+// @downloadURL  https://shoppingshorts.duckdns.org/insta_fill_comment.user.js
+// @updateURL    https://shoppingshorts.duckdns.org/insta_fill_comment.user.js
 // ==/UserScript==
 (function () {
   "use strict";

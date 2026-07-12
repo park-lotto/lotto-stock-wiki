@@ -83,6 +83,8 @@
       <label class="toggle"><input type="checkbox" id="hideDone" checked onchange="reload()"> 완료 감추기</label>
       <button class="primary" id="modeBtn" onclick="toggleMode()">▶ 진행 시작</button>
       <button id="moreDraftsBtn" onclick="generateMoreDrafts()">💬 댓글 더 생성 (+40)</button>
+      <a href="/insta_fill_comment.user.js" id="installBtn" title="Tampermonkey 설치 후 클릭하면 자동채우기 설치"
+         style="text-decoration:none;background:var(--panel);color:var(--txt);border:1px solid var(--line);padding:9px 14px;border-radius:8px;font-size:13px">🧩 자동채우기 설치</a>
       <span id="status" style="color:var(--sub);font-size:12px"></span>
     </div>
     <div id="view"><div class="cards"><div class="empty">불러오는 중…</div></div></div>

@@ -577,7 +577,8 @@ DASH_USER = os.environ.get("DASH_USER", "admin")
 DASH_PASS = os.environ.get("DASH_PASS", "")  # 비어있으면 인증 OFF(로컬 개발)
 DASH_SECRET = os.environ.get("DASH_SECRET", "shopping-shorts-local-secret")
 _AUTH_ON = bool(DASH_PASS)
-_AUTH_ALLOW = ("/login", "/api/login", "/favicon.ico", "/healthz")
+_AUTH_ALLOW = ("/login", "/api/login", "/favicon.ico", "/healthz",
+               "/insta_fill_comment.user.js")
 
 
 def _auth_token() -> str:
@@ -640,6 +641,14 @@ async def _auth_guard(request: Request, call_next):
     if path.startswith("/api/"):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
     return RedirectResponse("/login")
+
+
+@app.get("/insta_fill_comment.user.js", include_in_schema=False)
+def _serve_userscript():
+    """댓글 자동채우기 유저스크립트 — Tampermonkey가 이 URL로 설치·자동업데이트한다.
+    (인증 없이 접근 가능하도록 _AUTH_ALLOW에 등록됨)"""
+    p = Path(__file__).parent / "userscript" / "insta_fill_comment.user.js"
+    return FileResponse(p, media_type="text/javascript; charset=utf-8")
 
 
 # 정적 프론트 (마운트는 맨 마지막)
