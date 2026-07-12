@@ -85,8 +85,9 @@ def test_fetch_profiles_normalizes(monkeypatch):
     monkeypatch.setattr(apify_client, "APIFY_TOKENS", ["k"])
 
     def fake_run(payload, tokens, timeout, poll_interval, actor=None):
-        assert actor == "apify~instagram-profile-scraper"
-        assert payload == {"usernames": ["zi0home"]}
+        assert actor == "apify~instagram-scraper"
+        assert payload["directUrls"] == ["https://www.instagram.com/zi0home/"]
+        assert payload["resultsType"] == "details"
         return [{"username": "zi0home", "followersCount": 36525,
                  "postsCount": 300, "fullName": "김민석"}]
     monkeypatch.setattr(apify_client, "_run_with_rotation", fake_run)

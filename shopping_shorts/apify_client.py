@@ -138,22 +138,26 @@ def fetch_reels(usernames, token=None, results_per_channel=RESULTS_PER_CHANNEL,
     return all_items
 
 
-_PROFILE_ACTOR = "apify~instagram-profile-scraper"
+# 팔로워 조회 액터. 전용 프로필 액터(apify~instagram-profile-scraper)는 유료
+# 렌탈이라 계정 체험 소진 시 403이 뜬다(2026-07-12 실측). 일반 스크래퍼
+# (apify~instagram-scraper)는 같은 토큰풀로 403 없이 팔로워를 반환해 이걸로 교체.
+_PROFILE_ACTOR = "apify~instagram-scraper"
 
 
 def fetch_profiles(usernames, token=None, timeout=300, poll_interval=5):
     """usernames 리스트 → {username_소문자: {followers, posts, full_name}} (2026-07-12).
 
     릴스 스크래퍼엔 팔로워 정보가 없어(실측) 발굴 채널의 구독자수·참여밀도를
-    채우려면 프로필 액터를 따로 호출한다. 여러 username을 한 run에 넣어 1회로
-    끝낸다(발굴 채널은 보통 ≤40개). 토큰 로테이션은 공통 로직 재사용."""
+    채우려면 프로필을 따로 조회한다. apify~instagram-scraper의 details 모드에
+    프로필 URL들을 한 run에 넣어 1회로 끝낸다(발굴 채널은 보통 ≤40개)."""
     if not usernames:
         return {}
     tokens = [token] if token else APIFY_TOKENS
     if not tokens:
         raise RuntimeError("APIFY_TOKEN 미설정")
-    items = _run_with_rotation({"usernames": list(usernames)}, tokens,
-                               timeout, poll_interval, actor=_PROFILE_ACTOR)
+    urls = [f"https://www.instagram.com/{u.strip().lstrip('@')}/" for u in usernames]
+    payload = {"directUrls": urls, "resultsType": "details", "resultsLimit": len(urls)}
+    items = _run_with_rotation(payload, tokens, timeout, poll_interval, actor=_PROFILE_ACTOR)
     out = {}
     for it in items:
         u = it.get("username")
