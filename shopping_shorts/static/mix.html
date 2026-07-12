@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>영상 믹싱 · 쇼핑쇼츠</title>
+  <style>
+    body{margin:0;font-family:system-ui,sans-serif;background:#0d0d10;color:#eee}
+    .wrap{max-width:1100px;margin:0 auto;padding:24px}
+    h2{margin:0 0 16px}
+    .row{display:flex;gap:8px;margin:6px 0}
+    input[type=text]{flex:1;background:#1a1a20;border:1px solid #333;color:#eee;padding:10px;border-radius:8px}
+    button{background:#6d3bef;color:#fff;border:0;padding:10px 16px;border-radius:8px;cursor:pointer}
+    button.ghost{background:#26262e}
+    .beat{border:1px solid #333;border-radius:10px;padding:12px;margin:10px 0;display:flex;gap:12px;align-items:flex-start}
+    .beat .role{font-size:12px;background:#6d3bef;padding:2px 8px;border-radius:10px}
+    .beat.flag{border-color:#e0623d}
+    .warn{color:#e0623d;font-size:12px}
+    select{background:#1a1a20;color:#eee;border:1px solid #333;border-radius:6px;padding:6px}
+    #status{margin:12px 0;color:#9a9aa5}
+    video{max-width:100%;border-radius:10px}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h2>🎬 영상 믹싱</h2>
+  <div id="inputPanel">
+    <div id="urls">
+      <div class="row"><input type="text" placeholder="레퍼런스 URL 1"/></div>
+      <div class="row"><input type="text" placeholder="레퍼런스 URL 2"/></div>
+    </div>
+    <div class="row">
+      <button class="ghost" onclick="addUrl()">+ 소스 추가</button>
+    </div>
+    <div class="row">
+      목표 길이 <input id="target" type="range" min="10" max="90" value="30" oninput="tv.textContent=this.value"/>
+      <span id="tv">30</span>초
+      · 구조
+      <select id="structure"><option value="template">템플릿(훅→페인→반전→실용→CTA)</option><option value="free">자유</option></select>
+    </div>
+    <div class="row"><button onclick="startMix()">믹스 시작</button></div>
+  </div>
+
+  <div id="status"></div>
+  <div id="review"></div>
+  <div id="done"></div>
+</div>
+
+<script>
+let JOB=null, POLL=null;
+function addUrl(){
+  if(document.querySelectorAll('#urls input').length>=5) return;
+  const d=document.createElement('div'); d.className='row';
+  d.innerHTML='<input type="text" placeholder="레퍼런스 URL"/>';
+  document.getElementById('urls').appendChild(d);
+}
+async function startMix(){
+  const urls=[...document.querySelectorAll('#urls input')].map(i=>i.value.trim()).filter(Boolean);
+  if(urls.length<2){ alert('URL 2개 이상 입력'); return; }
+  const body={urls, target_seconds:+document.getElementById('target').value, structure:document.getElementById('structure').value};
+  const r=await fetch('/api/mix/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const d=await r.json(); if(!d.ok){ alert(d.error); return; }
+  JOB=d.job_id; document.getElementById('inputPanel').style.display='none';
+  POLL=setInterval(poll,2500); poll();
+}
+const LABEL={downloading:'영상 다운로드 중…',extracting:'대본 추출 중…',planning:'편집안 생성 중…',tts:'음성 생성 중…',ready_for_review:'검토 준비 완료',rendering:'최종 렌더 중…',done:'완료',failed:'실패'};
+async function poll(){
+  const r=await fetch('/api/mix/status/'+JOB); const d=await r.json();
+  document.getElementById('status').textContent='상태: '+(LABEL[d.status]||d.status)+(d.error?(' — '+d.error):'');
+  if(d.status==='ready_for_review'){ clearInterval(POLL); loadReview(); }
+  if(d.status==='done'){ clearInterval(POLL); loadDone(); }
+  if(d.status==='failed'){ clearInterval(POLL); }
+}
+async function loadReview(){
+  const r=await fetch('/api/mix/result/'+JOB); const d=await r.json();
+  const el=document.getElementById('review');
+  el.innerHTML='<h3>편집안 검토</h3>'+d.beats.map(b=>`
+    <div class="beat ${b.plagiarism_flag?'flag':''}">
+      <span class="role">${b.role}</span>
+      <div style="flex:1">
+        <div>${b.narration}</div>
+        <div style="font-size:12px;color:#9a9aa5">${b.primary.video_id} · ${b.primary.start}s~${b.primary.end}s · ${b.target_seconds}s</div>
+        ${b.plagiarism_flag?'<div class="warn">⚠️ 원문과 유사 — 재작성 권장</div>':''}
+        ${b.alternates.length?`<div class="row">대체:
+          <select onchange="adjust(${b.beat_idx}, this.value)">
+            <option value="${b.primary.video_id}|${b.primary.seg_id}">현재: ${b.primary.seg_id}</option>
+            ${b.alternates.map(a=>`<option value="${a.video_id}|${a.seg_id}">${a.seg_id} (${a.start}~${a.end}s)</option>`).join('')}
+          </select></div>`:''}
+        <audio controls src="${b.tts_preview_url}" style="height:28px"></audio>
+      </div>
+    </div>`).join('')+'<div class="row"><button onclick="render()">최종 렌더</button></div>';
+}
+async function adjust(beat_idx, val){
+  const [video_id, seg_id]=val.split('|');
+  await fetch('/api/mix/adjust',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:JOB,beat_idx,video_id,seg_id})});
+}
+async function render(){
+  await fetch('/api/mix/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:JOB})});
+  document.getElementById('review').innerHTML='';
+  POLL=setInterval(poll,3000); poll();
+}
+function loadDone(){
+  document.getElementById('done').innerHTML=`<h3>완성</h3><video controls src="/api/mix/video/${JOB}"></video>
+    <div class="row"><a href="/api/mix/video/${JOB}" download><button>다운로드</button></a></div>`;
+}
+</script>
+</body>
+</html>
