@@ -78,11 +78,38 @@ def test_caption_segments_max_words_cap():
     assert " ".join(segs) == "가 나 다 라 마 바 사 아"        # 내용 보존
 
 
-def test_caption_segments_ref_rhythm_short_phrases():
-    # 레퍼런스 대사가 1~3어절 짧은 구절로 나뉘는지(속도감).
+def test_caption_segments_ref_rhythm_2to3_words():
+    # 레퍼런스 리듬: 2~3어절 단위(너무 잘게 쪼개지 않음). 어절 상한은 지킨다.
     segs = va._caption_segments("저도 오이를 냉장고에 넣어도 꼭 두 세개씩 물러서 버렸거든요")
-    assert len(segs) >= 5                                    # 잘게 쪼개짐
+    assert 3 <= len(segs) <= 5                               # 적당히 뭉침(잘게X)
     assert all(len(s.split()) <= va._CAP_MAX_WORDS for s in segs)
+
+
+def test_caption_segments_no_dangling_modifier():
+    # 관형어·부사로 구절이 끝나지 않는다("며칠 안"|"됐는데" 같은 어색한 끊김 방지).
+    segs = va._caption_segments("분명 사온 지 며칠 안 됐는데 물러지고 곰팡이 펴서")
+    for s in segs:
+        assert s.split()[-1] not in va._CAP_NO_TAIL         # 매달리는 말로 안 끝남
+    # "며칠 안 됐는데"가 한 덩어리로 붙었는지
+    assert any("며칠 안" in s and "됐는데" in s for s in segs)
+
+
+def test_caption_segments_han_modifier_stays_with_noun():
+    # "한 스푼", "한 달" 등 관형사 "한"이 뒤 명사와 분리되지 않는다.
+    segs = va._caption_segments("이것 한 스푼이면 아삭함이 한 달넘게 마법의 가루!")
+    assert any("한 스푼이면" in s for s in segs)
+    assert any("한 달넘게" in s for s in segs)
+
+
+def test_caption_segments_breaks_after_sentence_end():
+    # 문장부호(? .)로 끝난 뒤엔 문장 경계에서 끊는다(다음 문장이 앞에 안 붙음).
+    segs = va._caption_segments("오이 사서 냉장고에 넣으셨나요? 그럼 지금 바로 버리셔야 합니다.")
+    # 물음표로 끝나는 구절이 있고, 그 구절 뒤로 새 문장이 분리됨
+    q_idx = [i for i, s in enumerate(segs) if s.endswith("?")]
+    assert q_idx                                             # ?로 끝나는 구절 존재
+    for i in q_idx:
+        if i + 1 < len(segs):
+            assert not segs[i].endswith("? 그럼")            # 다음 문장이 안 붙음
 
 
 # ── 자막 시간 배분 ──────────────────────────────────────────────
