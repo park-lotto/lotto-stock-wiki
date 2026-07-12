@@ -471,15 +471,20 @@ def api_mix_adjust(body: dict):
     job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan") or not job.get("extract"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "job/데이터 없음"})
+    # video_id는 신뢰 안 함 — seg_id만으로 인벤토리에서 실제 video_id/start/end를 되붙인다(클라 숫자 위조 방지)
     seg_map, _ = _edit_plan._build_inventory(list(job["extract"].values()))
     grounded = _edit_plan._ground_ref({"seg_id": seg_id}, seg_map)
     if grounded is None:
         return JSONResponse(status_code=422, content={"ok": False, "error": "존재하지 않는 seg_id"})
     plan = job["edit_plan"]
+    matched = False
     for b in plan["beats"]:
         if b["beat_idx"] == beat_idx:
             b["primary"] = grounded
+            matched = True
             break
+    if not matched:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "beat_idx 없음"})
     store.update_mix_job(job_id, edit_plan=plan)
     return {"ok": True}
 

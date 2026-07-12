@@ -51,6 +51,23 @@ def test_mix_adjust_regrounds_from_inventory(monkeypatch, tmp_path):
     assert plan["beats"][0]["primary"] == {"video_id": "s0", "seg_id": "s0-1", "start": 2.0, "end": 4.0}
 
 
+def test_mix_adjust_invalid_beat_idx_returns_404(monkeypatch, tmp_path):
+    client, store = _client(monkeypatch, tmp_path)
+    store.create_mix_job("j2b", ["u0"], 20, "free")
+    store.update_mix_job("j2b", extract={"s0": {"video_id": "s0", "full_text": "x", "segments": [
+        {"seg_id": "s0-0", "start": 0.0, "end": 2.0, "text": "a", "scene_desc": "c"},
+        {"seg_id": "s0-1", "start": 2.0, "end": 4.0, "text": "b", "scene_desc": "d"},
+    ]}}, edit_plan={"structure": "free", "beats": [
+        {"beat_idx": 0, "role": "훅", "narration": "n", "target_seconds": 2,
+         "primary": {"video_id": "s0", "seg_id": "s0-0", "start": 0.0, "end": 2.0},
+         "alternates": [], "effect": "cut"}], "plagiarism_flags": []}, status="ready_for_review")
+    # 존재하지 않는 beat_idx — 매치되는 비트가 없으면 404여야 함(성공으로 위장 금지)
+    r = client.post("/api/mix/adjust", json={"job_id": "j2b", "beat_idx": 999, "video_id": "s0", "seg_id": "s0-1"})
+    assert r.status_code == 404
+    plan = store.get_mix_job("j2b")["edit_plan"]
+    assert plan["beats"][0]["primary"] == {"video_id": "s0", "seg_id": "s0-0", "start": 0.0, "end": 2.0}
+
+
 def test_mix_render_sets_background(monkeypatch, tmp_path):
     client, store = _client(monkeypatch, tmp_path)
     store.create_mix_job("j3", ["u0"], 20, "free")
