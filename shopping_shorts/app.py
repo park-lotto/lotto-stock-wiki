@@ -17,6 +17,7 @@ from shopping_shorts.store import Store
 from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
 from shopping_shorts.frame_extract import download_video, extract_frames
 from shopping_shorts.script_extract import extract_script
+from shopping_shorts.structure_analyze import analyze_structure
 from shopping_shorts.apify_client import fetch_single_reel, fetch_reels, fetch_profiles
 from shopping_shorts import discovery, instagram_search
 from shopping_shorts.channels import load_channels
@@ -322,6 +323,52 @@ def api_extract_script(shortcode: str):
 
     store.save_script(code, result)
     return {"ok": True, "cached": False, **result}
+
+
+@app.post("/api/wiki/save")
+def api_wiki_save(shortcode: str):
+    """S급 대본을 위키(도서관)에 저장 — 대본 확보(캐시/즉석추출) → 구조분석 → 저장."""
+    store = Store(DB_PATH)
+    items, _ = store.load_last_run()
+    target_code = _media_code(shortcode)
+    item = next((i for i in items if i["shortcode"] == shortcode
+                 or _media_code(i["shortcode"]) == target_code), None)
+    if not item:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "해당 항목 없음 — 재수집 필요"})
+    code = item["shortcode"]
+
+    script = store.get_script(code)
+    if not script:                      # 아직 대본추출 안 했으면 즉석 추출
+        video_url = item.get("video_url")
+        if not video_url:
+            return JSONResponse(status_code=422, content={"ok": False, "error": "video_url 없음 — 재수집 필요"})
+        work_dir = _FIND_TMP_DIR / hashlib.sha1(code.encode()).hexdigest()[:16]
+        try:
+            video_path = download_video(video_url, work_dir)
+        except (requests.RequestException, RuntimeError) as e:
+            msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
+            return JSONResponse(status_code=502, content={"ok": False, "error": f"영상 다운로드 실패(URL 만료 가능): {msg}"})
+        script = extract_script(video_path, code, caption=item.get("caption", ""))
+        if not script.get("full_text") and not script.get("segments"):
+            return JSONResponse(status_code=502, content={"ok": False, "error": "대본 추출 실패 — 잠시 후 재시도"})
+        store.save_script(code, script)
+
+    structure = analyze_structure(script.get("full_text", ""))
+    store.save_to_wiki(item, script, structure)
+    return {"ok": True, "shortcode": code, "structure": structure}
+
+
+@app.get("/api/wiki/list")
+def api_wiki_list():
+    """위키(도서관)에 담은 S급 대본 전체."""
+    return {"ok": True, "items": Store(DB_PATH).wiki_list()}
+
+
+@app.post("/api/wiki/remove")
+def api_wiki_remove(shortcode: str):
+    """위키에서 제거."""
+    Store(DB_PATH).remove_from_wiki(shortcode)
+    return {"ok": True, "shortcode": shortcode}
 
 
 @app.post("/api/find/analyze")

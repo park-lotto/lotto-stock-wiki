@@ -68,6 +68,16 @@ class Store:
                     extracted_at TEXT
                 )
             """)
+            # S급 대본 위키(도서관, 2026-07-13) — 담은 대본 + AI 구조분석. 생성의 재료.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS script_wiki (
+                    shortcode TEXT PRIMARY KEY,
+                    name TEXT, category TEXT, source_url TEXT,
+                    full_text TEXT, segments_json TEXT, structure_json TEXT,
+                    followers INTEGER, comments INTEGER, density REAL,
+                    saved_at TEXT
+                )
+            """)
             c.execute("""
                 CREATE TABLE IF NOT EXISTS source_candidates (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -344,6 +354,60 @@ class Store:
         data = json.loads(row[0])
         data["extracted_at"] = row[1]
         return data
+
+    # ── S급 대본 위키(도서관) ──
+    def save_to_wiki(self, item, script, structure):
+        """S급 대본을 위키에 저장(덮어쓰기). item=랭킹항목, script={full_text,segments},
+        structure=구조분석 dict."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO script_wiki(shortcode, name, category, source_url, full_text, "
+                "segments_json, structure_json, followers, comments, density, saved_at) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,datetime('now')) "
+                "ON CONFLICT(shortcode) DO UPDATE SET name=excluded.name, category=excluded.category, "
+                "source_url=excluded.source_url, full_text=excluded.full_text, segments_json=excluded.segments_json, "
+                "structure_json=excluded.structure_json, followers=excluded.followers, comments=excluded.comments, "
+                "density=excluded.density, saved_at=excluded.saved_at",
+                (item.get("shortcode"), item.get("name") or item.get("username"), item.get("category"),
+                 item.get("url") or item.get("shortcode"), script.get("full_text", ""),
+                 json.dumps(script.get("segments", []), ensure_ascii=False),
+                 json.dumps(structure or {}, ensure_ascii=False),
+                 int(item.get("followers") or 0), int(item.get("comments") or 0),
+                 float(item.get("density") or 0.0)),
+            )
+
+    def _wiki_row(self, r):
+        return {"shortcode": r[0], "name": r[1], "category": r[2], "source_url": r[3],
+                "full_text": r[4], "segments": json.loads(r[5] or "[]"),
+                "structure": json.loads(r[6] or "{}"), "followers": r[7], "comments": r[8],
+                "density": r[9], "saved_at": r[10]}
+
+    _WIKI_COLS = ("shortcode, name, category, source_url, full_text, segments_json, "
+                  "structure_json, followers, comments, density, saved_at")
+
+    def wiki_list(self):
+        """위키에 담은 S급 대본 전체(최근 저장순)."""
+        with self._conn() as c:
+            rows = c.execute(f"SELECT {self._WIKI_COLS} FROM script_wiki ORDER BY saved_at DESC").fetchall()
+        return [self._wiki_row(r) for r in rows]
+
+    def get_wiki_item(self, shortcode):
+        with self._conn() as c:
+            r = c.execute(f"SELECT {self._WIKI_COLS} FROM script_wiki WHERE shortcode=?", (shortcode,)).fetchone()
+        return self._wiki_row(r) if r else None
+
+    def is_in_wiki(self, shortcode):
+        with self._conn() as c:
+            return c.execute("SELECT 1 FROM script_wiki WHERE shortcode=?", (shortcode,)).fetchone() is not None
+
+    def remove_from_wiki(self, shortcode):
+        with self._conn() as c:
+            c.execute("DELETE FROM script_wiki WHERE shortcode=?", (shortcode,))
+
+    def wiki_shortcodes(self):
+        """위키에 담긴 shortcode 집합(카드에 '담김' 표시용)."""
+        with self._conn() as c:
+            return {r[0] for r in c.execute("SELECT shortcode FROM script_wiki").fetchall()}
 
     def save_source_analysis(self, shortcode, keywords, frame_paths, analyzed_at):
         """영상 분석 결과(키워드+프레임 경로) 저장(덮어쓰기)."""

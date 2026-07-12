@@ -64,6 +64,50 @@ def test_extract_script_returns_cache_without_download(monkeypatch):
     assert d["ok"] and d["cached"] and d["full_text"] == "안녕하세요"
 
 
+def test_wiki_save_uses_cache_and_analysis(monkeypatch):
+    monkeypatch.setattr(app_module, "_AUTH_ON", False)
+    item = {"shortcode": "ABC", "name": "홈에디터", "category": "레시피", "url": "u",
+            "video_url": "v", "followers": 100, "comments": 50, "density": 0.1}
+    monkeypatch.setattr(app_module.Store, "load_last_run", lambda self: ([item], None))
+    monkeypatch.setattr(app_module.Store, "get_script", lambda self, c: {"full_text": "생선 굽기 꿀팁", "segments": []})
+    monkeypatch.setattr(app_module, "analyze_structure",
+                        lambda t: {"hook_type": "경고형", "hook_line": "x", "beats": [], "devices": [], "one_line_why": "y"})
+    saved = {}
+    monkeypatch.setattr(app_module.Store, "save_to_wiki",
+                        lambda self, it, sc, st: saved.update({"it": it, "st": st}))
+    client = TestClient(app_module.app)
+    r = client.post("/api/wiki/save?shortcode=ABC")
+    assert r.status_code == 200
+    d = r.json()
+    assert d["ok"] and d["structure"]["hook_type"] == "경고형"
+    assert saved["it"]["shortcode"] == "ABC"
+
+
+def test_wiki_list_and_remove(monkeypatch):
+    monkeypatch.setattr(app_module, "_AUTH_ON", False)
+    monkeypatch.setattr(app_module.Store, "wiki_list", lambda self: [{"shortcode": "X"}])
+    monkeypatch.setattr(app_module.Store, "remove_from_wiki", lambda self, sc: None)
+    client = TestClient(app_module.app)
+    assert client.get("/api/wiki/list").json()["items"][0]["shortcode"] == "X"
+    assert client.post("/api/wiki/remove?shortcode=X").json()["ok"]
+
+
+def test_store_wiki_roundtrip(tmp_path):
+    from shopping_shorts.store import Store
+    s = Store(tmp_path / "w.db")
+    item = {"shortcode": "S1", "name": "n", "category": "레시피", "url": "u",
+            "followers": 10, "comments": 5, "density": 0.2}
+    assert not s.is_in_wiki("S1")
+    s.save_to_wiki(item, {"full_text": "ft", "segments": [{"text": "a"}]}, {"hook_type": "경고형"})
+    assert s.is_in_wiki("S1")
+    got = s.get_wiki_item("S1")
+    assert got["full_text"] == "ft" and got["structure"]["hook_type"] == "경고형" and got["name"] == "n"
+    assert len(s.wiki_list()) == 1
+    assert s.wiki_shortcodes() == {"S1"}
+    s.remove_from_wiki("S1")
+    assert not s.is_in_wiki("S1")
+
+
 def test_store_script_roundtrip(tmp_path):
     from shopping_shorts.store import Store
     s = Store(tmp_path / "t.db")
