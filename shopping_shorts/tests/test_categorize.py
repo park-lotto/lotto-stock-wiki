@@ -32,6 +32,25 @@ def test_caption_beats_name_stuffing():
     assert categorize(name, caption) == "레시피"
 
 
+def test_name_only_weak_keyword_not_recipe():
+    # 실측 오분류: 캐릭터 굿즈 채널이 소개글에 '간식'을 넣어둠. 영상 캡션엔
+    # 요리 신호가 없으니(우산·저금통) 레시피로 잡히면 안 된다 → 기타.
+    name = "냠사친 | 꿀템•간식•캐릭터콜라보(포켓몬,가나디)"
+    assert categorize(name, "꼬부기 우산 나왔다") == "기타"
+    assert categorize("계란말이", "") == "기타"
+
+
+def test_strong_name_keyword_still_classifies():
+    # 캡션이 비어도 채널명의 '강한' 장르어는 그대로 분류한다.
+    assert categorize("셀프DIY 인테리어 계정", "") == "인테리어"
+    assert categorize("뷰티템 추천", "") == "뷰티"
+
+
+def test_restaurant_caption_stays_recipe():
+    # 맛집(식당추천)은 캡션 키워드로 레시피 유지(B안: 분리 안 함).
+    assert categorize("팡팡 맛집 | 살림템", "전대 웨이팅 1등 맛집 마라 국물") == "레시피"
+
+
 def test_ctype_mapping():
     assert ctype_of("인테리어") == "비법형"
     assert ctype_of("레시피") == "비법형"
