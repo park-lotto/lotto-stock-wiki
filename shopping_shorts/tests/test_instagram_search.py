@@ -80,6 +80,27 @@ def test_search_no_tokens_raises(monkeypatch):
         instagram_search.search("x")
 
 
+def test_fetch_profiles_normalizes(monkeypatch):
+    from shopping_shorts import apify_client
+    monkeypatch.setattr(apify_client, "APIFY_TOKENS", ["k"])
+
+    def fake_run(payload, tokens, timeout, poll_interval, actor=None):
+        assert actor == "apify~instagram-profile-scraper"
+        assert payload == {"usernames": ["zi0home"]}
+        return [{"username": "zi0home", "followersCount": 36525,
+                 "postsCount": 300, "fullName": "김민석"}]
+    monkeypatch.setattr(apify_client, "_run_with_rotation", fake_run)
+
+    out = apify_client.fetch_profiles(["zi0home"])
+    assert out == {"zi0home": {"followers": 36525, "posts": 300, "full_name": "김민석"}}
+
+
+def test_fetch_profiles_empty_returns_dict(monkeypatch):
+    from shopping_shorts import apify_client
+    monkeypatch.setattr(apify_client, "APIFY_TOKENS", ["k"])
+    assert apify_client.fetch_profiles([]) == {}
+
+
 def test_owner_username_tries_multiple_paths():
     assert instagram_search._owner_username({"user": {"username": "a"}}) == "a"
     assert instagram_search._owner_username({"owner": {"username": "b"}}) == "b"

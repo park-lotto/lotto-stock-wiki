@@ -16,7 +16,7 @@ from shopping_shorts.outreach import build_queue
 from shopping_shorts.store import Store
 from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
 from shopping_shorts.frame_extract import download_video, extract_frames
-from shopping_shorts.apify_client import fetch_single_reel, fetch_reels
+from shopping_shorts.apify_client import fetch_single_reel, fetch_reels, fetch_profiles
 from shopping_shorts import discovery, instagram_search
 from shopping_shorts.channels import load_channels
 from shopping_shorts.video_analysis import analyze_video
@@ -142,6 +142,23 @@ def _known_usernames(store):
     return known
 
 
+# 발굴은 "최근 이틀 영상수"를 세야 해서 채널당 상한을 넉넉히(메인 랭킹의 3보다 큼).
+def _discover_fetch(usernames):
+    return fetch_reels(usernames, results_per_channel=12, only_newer_than="2 days")
+
+
+def _save_discovery_snapshot(store, items):
+    """발굴 결과를 snapshots에 저장 → 다음 업데이트 때 Δ·가속(accel) 계산 가능."""
+    if not items:
+        return
+    from datetime import datetime, timezone
+    run_date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
+    store.save_run(run_date, [
+        {"shortcode": i["shortcode"], "username": i["username"],
+         "comments": i["comments"], "delta": i["delta"]} for i in items
+    ])
+
+
 @app.get("/api/discover")
 def api_discover(keyword: str, max_channels: int = 15):
     """🔎 채널 발굴 — 카테고리 키워드로 '내가 모르던 채널' 중 최근 48h 댓글이
@@ -153,10 +170,12 @@ def api_discover(keyword: str, max_channels: int = 15):
     try:
         items = discovery.discover(
             keyword, known=_known_usernames(store),
-            search_fn=instagram_search.search_channels, fetch_reels_fn=fetch_reels,
+            search_fn=instagram_search.search_channels, fetch_reels_fn=_discover_fetch,
+            profiles_fn=fetch_profiles,
             prev_comments=store.prev_comments, prev_delta=store.prev_delta,
             max_channels=max_channels,
         )
+        _save_discovery_snapshot(store, items)
     except Exception as e:
         return _err(e)
     return {"ok": True, "count": len(items), "items": items, "keyword": keyword}
@@ -176,9 +195,11 @@ def api_discover_update():
     try:
         items = discovery.discover_multi(
             _DISCOVER_CATEGORIES, known=_known_usernames(store),
-            search_fn=instagram_search.search_channels, fetch_reels_fn=fetch_reels,
+            search_fn=instagram_search.search_channels, fetch_reels_fn=_discover_fetch,
+            profiles_fn=fetch_profiles,
             prev_comments=store.prev_comments, prev_delta=store.prev_delta,
         )
+        _save_discovery_snapshot(store, items)
     except Exception as e:
         return _err(e)
     return {"ok": True, "count": len(items), "items": items,

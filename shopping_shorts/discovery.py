@@ -10,7 +10,8 @@
 엔진(build_items/apply_grades/sort_by)·수집(fetch_reels)·검색(search_channels)은
 전부 재사용하고, 이 모듈은 그것들을 엮는 순수 오케스트레이션만 담당한다
 (의존성 주입 → 테스트 시 Apify 없이 검증 가능)."""
-from shopping_shorts.ranking import build_items, apply_grades, sort_by
+from datetime import datetime, timezone
+from shopping_shorts.ranking import build_items, apply_grades, sort_by, hours_since
 
 
 def _norm(u):
@@ -36,43 +37,81 @@ def new_usernames(candidates, known, max_channels=15):
     return out
 
 
-def _rank_reels(reels, prev_comments, prev_delta, now, window_hours):
-    """발굴 릴스 원본 → 지표·등급 채워 댓글순 정렬. 발굴 채널은 엑셀 메타가
-    없으므로 username 기반 합성 메타(팔로워 미상 → density 0, 댓글·속도·가속으로
-    랭킹)를 만든다. 각 항목 discovered=True."""
+def _recent_counts(reels, now, window_hours):
+    """owner_소문자 → 창(window) 이내 릴스 개수(최근 이틀 영상수 표시용)."""
+    counts = {}
+    for r in reels:
+        owner = r.get("ownerUsername") or r.get("username")
+        ts = r.get("timestamp")
+        if not owner or not ts:
+            continue
+        try:
+            age = hours_since(ts, now=now)
+        except (ValueError, AttributeError):
+            continue
+        if 0 <= age <= window_hours:
+            counts[owner.lower()] = counts.get(owner.lower(), 0) + 1
+    return counts
+
+
+def _rank_reels(reels, prev_comments, prev_delta, now, window_hours, profiles=None):
+    """발굴 릴스 원본 → 지표·등급 채워 정렬. 발굴 채널은 엑셀 메타가 없으므로
+    합성 메타를 만들되, 프로필 액터로 받은 팔로워(profiles)를 넣어 참여밀도까지
+    계산되게 한다. 각 항목에 discovered=True, followers, recent_count 부착."""
+    profiles = profiles or {}
+    now = now or datetime.now(timezone.utc)
+    counts = _recent_counts(reels, now, window_hours)
     items = []
     for r in reels:
         owner = r.get("ownerUsername") or r.get("username")
         if not owner:
             continue
-        meta = {"name": owner, "username": owner,
-                "followers": int(r.get("ownerFollowersCount") or 0), "inpock": ""}
+        prof = profiles.get(owner.lower(), {})
+        followers = int(prof.get("followers") or 0)
+        meta = {"name": prof.get("full_name") or owner, "username": owner,
+                "followers": followers, "inpock": ""}
         built = build_items([r], meta, prev_comments=prev_comments,
                             prev_delta=prev_delta, now=now, window_hours=window_hours)
         for it in built:
             it["discovered"] = True
+            it["followers"] = followers
+            it["recent_count"] = counts.get(owner.lower(), 0)
         items.extend(built)
     apply_grades(items)
     return sort_by(items, "comments")
 
 
-def discover(keyword, known, *, search_fn, fetch_reels_fn,
+def _owners(reels):
+    """릴스 리스트의 고유 owner username(원형 유지, 중복 제거)."""
+    seen, out = set(), []
+    for r in reels:
+        u = r.get("ownerUsername") or r.get("username")
+        if u and u.lower() not in seen:
+            seen.add(u.lower())
+            out.append(u)
+    return out
+
+
+def discover(keyword, known, *, search_fn, fetch_reels_fn, profiles_fn=None,
              prev_comments, prev_delta, now=None, window_hours=48, max_channels=15):
     """카테고리 키워드 하나 → 발굴 랭킹 항목 리스트(댓글 내림차순).
 
-    search_fn(keyword)->[{username,...}], fetch_reels_fn(usernames)->[reel,...]."""
+    search_fn(keyword)->[{username,...}], fetch_reels_fn(usernames)->[reel,...],
+    profiles_fn(usernames)->{username소문자:{followers,...}} (팔로워·참여밀도용)."""
     targets = new_usernames(search_fn(keyword), known, max_channels=max_channels)
     if not targets:
         return []
-    return _rank_reels(fetch_reels_fn(targets), prev_comments, prev_delta, now, window_hours)
+    reels = fetch_reels_fn(targets)
+    profiles = profiles_fn(_owners(reels)) if profiles_fn else {}
+    return _rank_reels(reels, prev_comments, prev_delta, now, window_hours, profiles)
 
 
-def discover_multi(keywords, known, *, search_fn, fetch_reels_fn,
+def discover_multi(keywords, known, *, search_fn, fetch_reels_fn, profiles_fn=None,
                    prev_comments, prev_delta, now=None, window_hours=48,
                    max_channels_per=8, max_total=40):
     """여러 카테고리를 한 번에 → "업데이트" 한 번으로 새 채널들이 랭킹으로 정렬돼
     올라오게(2026-07-12). 카테고리별로 검색해 새 username을 모으되 전체에서
-    중복 제거하고, 릴스 수집(fetch_reels)은 모아서 1회만 호출(비용·속도)."""
+    중복 제거하고, 릴스 수집(fetch_reels)·프로필(fetch_profiles)은 각각 1회만 호출."""
     known_n = {_norm(k) for k in known}
     seen = set()
     targets = []
@@ -89,7 +128,9 @@ def discover_multi(keywords, known, *, search_fn, fetch_reels_fn,
             break
     if not targets:
         return []
-    return _rank_reels(fetch_reels_fn(targets), prev_comments, prev_delta, now, window_hours)
+    reels = fetch_reels_fn(targets)
+    profiles = profiles_fn(_owners(reels)) if profiles_fn else {}
+    return _rank_reels(reels, prev_comments, prev_delta, now, window_hours, profiles)
 
 
 def find_inactive(channels, active_usernames):

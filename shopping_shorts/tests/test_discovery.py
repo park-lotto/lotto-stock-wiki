@@ -56,6 +56,37 @@ def test_discover_empty_when_no_new_channels():
     assert called == []  # 새 채널 없으면 Apify 수집 호출 자체를 안 함(비용 절약)
 
 
+def test_discover_injects_followers_and_recent_count():
+    now = datetime(2026, 7, 12, 12, 0, tzinfo=timezone.utc)
+    r1 = (now - timedelta(hours=2)).isoformat()
+    r2 = (now - timedelta(hours=10)).isoformat()
+
+    def search_fn(kw):
+        return [{"username": "hot_ch"}]
+
+    def fetch_reels_fn(usernames):
+        # hot_ch가 최근 2일에 릴스 2개
+        return [
+            {"ownerUsername": "hot_ch", "timestamp": r1, "commentsCount": 200, "shortcode": "h1"},
+            {"ownerUsername": "hot_ch", "timestamp": r2, "commentsCount": 100, "shortcode": "h2"},
+        ]
+
+    def profiles_fn(owners):
+        assert owners == ["hot_ch"]
+        return {"hot_ch": {"followers": 1000, "posts": 50, "full_name": "핫채널"}}
+
+    items = discovery.discover(
+        "x", known=set(), search_fn=search_fn, fetch_reels_fn=fetch_reels_fn,
+        profiles_fn=profiles_fn, prev_comments=lambda sc: None,
+        prev_delta=lambda sc: None, now=now,
+    )
+    assert all(i["followers"] == 1000 for i in items)
+    assert all(i["recent_count"] == 2 for i in items)          # 최근2일 영상 2개
+    assert items[0]["name"] == "핫채널"                          # 프로필 실명 사용
+    top = items[0]
+    assert abs(top["density"] - top["comments"] / 1000) < 1e-9  # 참여밀도 = 댓글/팔로워
+
+
 def test_discover_multi_aggregates_and_dedupes():
     now = datetime(2026, 7, 12, 12, 0, tzinfo=timezone.utc)
     recent = (now - timedelta(hours=1)).isoformat()

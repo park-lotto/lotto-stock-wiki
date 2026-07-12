@@ -138,6 +138,35 @@ def fetch_reels(usernames, token=None, results_per_channel=RESULTS_PER_CHANNEL,
     return all_items
 
 
+_PROFILE_ACTOR = "apify~instagram-profile-scraper"
+
+
+def fetch_profiles(usernames, token=None, timeout=300, poll_interval=5):
+    """usernames 리스트 → {username_소문자: {followers, posts, full_name}} (2026-07-12).
+
+    릴스 스크래퍼엔 팔로워 정보가 없어(실측) 발굴 채널의 구독자수·참여밀도를
+    채우려면 프로필 액터를 따로 호출한다. 여러 username을 한 run에 넣어 1회로
+    끝낸다(발굴 채널은 보통 ≤40개). 토큰 로테이션은 공통 로직 재사용."""
+    if not usernames:
+        return {}
+    tokens = [token] if token else APIFY_TOKENS
+    if not tokens:
+        raise RuntimeError("APIFY_TOKEN 미설정")
+    items = _run_with_rotation({"usernames": list(usernames)}, tokens,
+                               timeout, poll_interval, actor=_PROFILE_ACTOR)
+    out = {}
+    for it in items:
+        u = it.get("username")
+        if not u:
+            continue
+        out[u.lower()] = {
+            "followers": int(it.get("followersCount") or 0),
+            "posts": int(it.get("postsCount") or 0),
+            "full_name": it.get("fullName") or "",
+        }
+    return out
+
+
 def fetch_single_reel(url, token=None, timeout=180, poll_interval=5):
     """추적 채널 목록에 없는 임의의 인스타 릴스 URL 하나를 즉시 조회(2026-07-09,
     제품찾기에서 "우리 목록에 없는 영상"도 분석할 수 있게 추가). "username"

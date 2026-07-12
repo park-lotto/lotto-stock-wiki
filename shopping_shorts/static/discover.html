@@ -20,6 +20,9 @@
   .tabs{display:flex;gap:8px;border-bottom:1px solid var(--line);margin-bottom:18px}
   .tab{padding:10px 16px;font-size:14px;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent}
   .tab.active{color:var(--txt);border-bottom-color:var(--accent)}
+  .mtabs{display:flex;gap:8px;border-bottom:1px solid var(--line);margin:6px 0 14px}
+  .mtab{padding:8px 14px;font-size:13px;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent}
+  .mtab.active{color:var(--txt);border-bottom-color:var(--accent)}
   .cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
   .cat{padding:7px 14px;border:1px solid var(--line);border-radius:20px;font-size:13px;color:var(--sub);cursor:pointer}
   .cat:hover{border-color:var(--accent);color:var(--txt)}
@@ -98,6 +101,12 @@
         <button id="searchBtn" onclick="runDiscover(document.getElementById('kw').value)">검색</button>
       </div>
       <div class="status" id="dstatus">🔄 업데이트를 누르거나, 카테고리 버튼·키워드로 개별 발굴하세요.</div>
+      <div class="mtabs" id="mtabs">
+        <div class="mtab active" data-mt="comments" onclick="setMTab('comments')" title="댓글 수">📊 전체</div>
+        <div class="mtab" data-mt="speed" onclick="setMTab('speed')" title="댓글수 ÷ 경과시간">⚡ 속도</div>
+        <div class="mtab" data-mt="accel" onclick="setMTab('accel')" title="이번 Δ − 직전 Δ (증가세 가속)">📈 가속</div>
+        <div class="mtab" data-mt="density" onclick="setMTab('density')" title="댓글수 ÷ 팔로워수">💥 참여밀도</div>
+      </div>
       <div class="cards" id="dcards"></div>
     </section>
 
@@ -124,6 +133,15 @@ function setTab(t){
   if(t==='prune') loadRemoved();
 }
 const thumb = u => u ? '/api/thumb?url='+encodeURIComponent(u) : '';
+let DSTATE = {items:[], tab:'comments'};
+function setMTab(t){
+  DSTATE.tab=t;
+  document.querySelectorAll('.mtab').forEach(x=>x.classList.toggle('active',x.dataset.mt===t));
+  renderDiscover();
+}
+function dSortKey(i){
+  return {comments:i.comments, speed:i.speed, accel:(i.accel??-1), density:i.density}[DSTATE.tab] || 0;
+}
 
 async function runUpdate(){
   const btn=document.getElementById('updateBtn'), st=document.getElementById('ustatus');
@@ -154,16 +172,21 @@ async function runDiscover(kw){
   finally{ btn.disabled=false; }
 }
 function renderDiscover(items){
+  if(items) DSTATE.items = items;
   const el=document.getElementById('dcards');
-  if(!items.length){ el.innerHTML='<div class="empty">결과 없음.</div>'; return; }
-  el.innerHTML = items.map((i,idx)=>`
+  const list = DSTATE.items.slice().sort((a,b)=>dSortKey(b)-dSortKey(a));
+  if(!list.length){ el.innerHTML='<div class="empty">결과 없음.</div>'; return; }
+  el.innerHTML = list.map((i,idx)=>`
     <div class="card">
       <img src="${thumb(i.thumbnail)}" loading="lazy" onerror="this.style.visibility='hidden'">
       <div class="body">
         <div class="rank">#${idx+1} · ${i.category} · ${Math.round(i.age_hours)}시간 전</div>
         <div class="ch">@${i.username} <span class="grade">${i.grade||''}</span></div>
-        <div class="stat"><span>댓글</span><b>${(i.comments||0).toLocaleString()}</b></div>
+        <div class="rank" style="margin:-2px 0 4px">구독자 ${(i.followers||0).toLocaleString()} · 최근2일 ${i.recent_count||0}개</div>
+        <div class="stat"><span>댓글</span><b>${(i.comments||0).toLocaleString()} <span style="color:var(--fire)">${i.is_new?'신규':'+'+i.delta}</span></b></div>
         <div class="stat"><span>속도(시간당)</span><b>${(i.speed||0).toFixed(1)}</b></div>
+        <div class="stat"><span>가속</span><b>${i.accel==null?'—':(i.accel>0?'+':'')+i.accel}</b></div>
+        <div class="stat"><span>참여밀도</span><b>${((i.density||0)*100).toFixed(2)}%</b></div>
         <div class="btns">
           <button class="view" onclick="window.open('${i.url}','_blank')">👁 보기</button>
           <button class="add" id="add_${i.username}" onclick="addChannel('${i.username}',this)">➕ 목록추가</button>
