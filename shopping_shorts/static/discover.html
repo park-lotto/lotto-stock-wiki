@@ -20,6 +20,9 @@
   .tabs{display:flex;gap:8px;border-bottom:1px solid var(--line);margin-bottom:18px}
   .tab{padding:10px 16px;font-size:14px;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent}
   .tab.active{color:var(--txt);border-bottom-color:var(--accent)}
+  .opt{font-size:12px;color:var(--sub);display:flex;align-items:center;gap:5px}
+  .opt select{background:#0d131c;border:1px solid var(--line);border-radius:7px;color:var(--txt);padding:7px 8px;font-size:12px}
+  .opt input[type=checkbox]{width:15px;height:15px;accent-color:var(--accent)}
   .mtabs{display:flex;gap:8px;border-bottom:1px solid var(--line);margin:6px 0 14px}
   .mtab{padding:8px 14px;font-size:13px;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent}
   .mtab.active{color:var(--txt);border-bottom-color:var(--accent)}
@@ -91,9 +94,26 @@
 
     <!-- 발굴 탭 -->
     <section id="pane-discover">
-      <div class="searchbar" style="margin-bottom:12px">
+      <div class="searchbar" style="margin-bottom:8px;align-items:center">
         <button id="updateBtn" onclick="runUpdate()" style="background:linear-gradient(90deg,#1f6feb,#238636);font-weight:600">🔄 업데이트 — 새 채널 자동 발굴</button>
-        <span class="status" id="ustatus" style="margin:0;align-self:center">누르면 여러 카테고리를 한 번에 검색해 모르던 채널을 랭킹으로 올립니다.</span>
+        <label class="opt">기간
+          <select id="optDays">
+            <option value="2">최근 2일</option>
+            <option value="3">최근 3일</option>
+            <option value="7">최근 7일</option>
+          </select>
+        </label>
+        <label class="opt">개수
+          <select id="optMax">
+            <option value="40">40개</option>
+            <option value="80">80개</option>
+            <option value="120">120개</option>
+          </select>
+        </label>
+        <label class="opt"><input type="checkbox" id="optAccum"> 누적(계속 쌓기)</label>
+      </div>
+      <div class="searchbar" style="margin-bottom:12px">
+        <span class="status" id="ustatus" style="margin:0;align-self:center">기간·개수를 정하고 누르면 여러 카테고리를 한 번에 검색해 모르던 채널을 랭킹으로 올립니다. 누적을 켜면 돌릴수록 리스트가 쌓입니다.</span>
       </div>
       <div class="cats" id="cats"></div>
       <div class="searchbar">
@@ -133,7 +153,7 @@ function setTab(t){
   if(t==='prune') loadRemoved();
 }
 const thumb = u => u ? '/api/thumb?url='+encodeURIComponent(u) : '';
-let DSTATE = {items:[], tab:'comments'};
+let DSTATE = {items:[], tab:'comments', days:2};
 // 서버가 JSON 아닌 HTML(재시작/프록시 에러페이지)을 줄 때 "Unexpected token '<'"로
 // 깨지지 않게 감싼다 — 동시 세션 배포로 서비스가 3분마다 재시작될 수 있음(2026-07-12).
 async function fetchJSON(url){
@@ -157,19 +177,25 @@ function dSortKey(i){
 async function runUpdate(){
   const btn=document.getElementById('updateBtn'), st=document.getElementById('ustatus');
   const ds=document.getElementById('dstatus');
-  btn.disabled=true; st.textContent='업데이트 중… (여러 카테고리 검색+수집, 1~2분 소요)';
-  document.getElementById('dcards').innerHTML='';
+  const days=document.getElementById('optDays').value;
+  const max_total=document.getElementById('optMax').value;
+  const accumulate=document.getElementById('optAccum').checked;
+  DSTATE.days=+days;
+  const qs=`/api/discover/update?days=${days}&max_total=${max_total}&accumulate=${accumulate}`;
+  btn.disabled=true; st.textContent=`업데이트 중… (최근 ${days}일·최대 ${max_total}개${accumulate?'·누적':''}, 1~2분 소요)`;
+  if(!accumulate) document.getElementById('dcards').innerHTML='';
   try{
     let d;
-    try{ d = await fetchJSON('/api/discover/update'); }
+    try{ d = await fetchJSON(qs); }
     catch(err){  // 서버 재시작 등으로 HTML 응답 → 한 번 자동 재시도
       st.textContent = err.message + ' (15초 후 재시도)';
       await sleep(15000);
-      d = await fetchJSON('/api/discover/update');
+      d = await fetchJSON(qs);
     }
     if(!d.ok) throw new Error(d.error||'실패');
-    st.textContent = d.count ? `✅ 새 채널 ${d.count}곳 (댓글순)` : '새로 발굴된 채널이 없습니다 (이미 목록에 있거나 결과 없음)';
-    ds.textContent = `카테고리: ${(d.categories||[]).join(' ')}`;
+    DSTATE.days=d.days||+days;
+    st.textContent = d.count ? `✅ ${accumulate?'누적 ':''}새 채널 ${d.count}곳 (댓글순)` : '새로 발굴된 채널이 없습니다 (이미 목록에 있거나 결과 없음)';
+    ds.textContent = `카테고리: ${(d.categories||[]).join(' ')} · 최근 ${d.days}일`;
     renderDiscover(d.items);
   }catch(e){ st.textContent='❌ '+e.message; }
   finally{ btn.disabled=false; }
@@ -199,7 +225,7 @@ function renderDiscover(items){
       <div class="body">
         <div class="rank">#${idx+1} · ${i.category} · ${Math.round(i.age_hours)}시간 전</div>
         <div class="ch">@${i.username} <span class="grade">${i.grade||''}</span></div>
-        <div class="rank" style="margin:-2px 0 4px">구독자 ${(i.followers||0).toLocaleString()} · 최근2일 ${i.recent_count||0}개</div>
+        <div class="rank" style="margin:-2px 0 4px">구독자 ${(i.followers||0).toLocaleString()} · 최근${DSTATE.days||2}일 ${i.recent_count||0}개</div>
         <div class="stat"><span>댓글</span><b>${(i.comments||0).toLocaleString()} <span style="color:var(--fire)">${i.is_new?'신규':'+'+i.delta}</span></b></div>
         <div class="stat"><span>속도(시간당)</span><b>${(i.speed||0).toFixed(1)}</b></div>
         <div class="stat"><span>가속</span><b>${i.accel==null?'—':(i.accel>0?'+':'')+i.accel}</b></div>
@@ -259,6 +285,17 @@ async function restoreChannel(username){
   await fetch('/api/prune/restore?username='+encodeURIComponent(username),{method:'POST'});
   const row=document.getElementById('rrow_'+username); if(row) row.remove();
 }
+// 페이지 열면 마지막 발굴 피드 복원(특히 누적 모드 — 새로고침해도 유지)
+async function loadFeed(){
+  try{
+    const d = await fetchJSON('/api/discover/feed');
+    if(d.items && d.items.length){
+      renderDiscover(d.items);
+      document.getElementById('ustatus').textContent = `저장된 발굴 ${d.items.length}곳 표시 중 — 🔄 업데이트로 갱신/추가`;
+    }
+  }catch(e){}
+}
+loadFeed();
 </script>
 </body>
 </html>

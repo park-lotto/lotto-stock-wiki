@@ -191,22 +191,45 @@ _DISCOVER_CATEGORIES = ["#주방템", "#살림템", "#인테리어", "#자취템
 
 
 @app.get("/api/discover/update")
-def api_discover_update():
+def api_discover_update(days: int = 2, max_total: int = 40, accumulate: bool = False):
     """🔄 업데이트 — 기본 카테고리들을 한 번에 검색해 '내가 모르던 채널' 중
-    댓글 터지는 릴스를 모아 랭킹으로 반환(수동 검색과 별개, 버튼 하나로)."""
+    댓글 터지는 릴스를 모아 랭킹으로 반환. 3개 조절값(2026-07-12):
+      days: 신선도 창(최근 N일 안에 올린 채널만). 2/3/7.
+      max_total: 한 번에 발굴할 새 채널 상한.
+      accumulate: True면 기존 발굴 피드에 이어붙임(누적)."""
+    days = max(1, min(int(days), 14))
+    max_total = max(10, min(int(max_total), 120))
+    per = 12 if max_total <= 40 else 18
+
+    def fetch(usernames):
+        return fetch_reels(usernames, results_per_channel=per,
+                           only_newer_than=f"{days} days")
+
     store = Store(DB_PATH)
     try:
         items = discovery.discover_multi(
             _DISCOVER_CATEGORIES, known=_known_usernames(store),
-            search_fn=instagram_search.search_channels, fetch_reels_fn=_discover_fetch,
+            search_fn=instagram_search.search_channels, fetch_reels_fn=fetch,
             profiles_fn=fetch_profiles,
             prev_comments=store.prev_comments, prev_delta=store.prev_delta,
+            window_hours=days * 24, max_channels_per=per, max_total=max_total,
         )
+        if accumulate:
+            prev, _ = store.load_discovery_feed()
+            items = discovery.merge_feeds(prev, items)
+        store.save_discovery_feed(items)
         _save_discovery_snapshot(store, items)
     except Exception as e:
         return _err(e)
     return {"ok": True, "count": len(items), "items": items,
-            "categories": _DISCOVER_CATEGORIES}
+            "categories": _DISCOVER_CATEGORIES, "days": days, "accumulate": accumulate}
+
+
+@app.get("/api/discover/feed")
+def api_discover_feed():
+    """마지막 발굴 피드 반환(새로고침 시 복원 — 특히 누적 모드)."""
+    items, updated_at = Store(DB_PATH).load_discovery_feed()
+    return {"ok": True, "items": items, "updated_at": updated_at}
 
 
 @app.post("/api/discover/add")

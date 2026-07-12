@@ -38,6 +38,16 @@ def test_add_discovered_clears_removal(store):
     assert store.discovered_channels()[0]["name"] == "부활"
 
 
+def test_discovery_feed_save_load(store):
+    assert store.load_discovery_feed() == ([], None)
+    store.save_discovery_feed([{"username": "a"}, {"username": "b"}])
+    items, updated = store.load_discovery_feed()
+    assert [i["username"] for i in items] == ["a", "b"]
+    assert updated is not None
+    store.save_discovery_feed([{"username": "c"}])  # 덮어쓰기
+    assert [i["username"] for i in store.load_discovery_feed()[0]] == ["c"]
+
+
 def test_remove_channel_drops_from_discovered(store):
     store.add_discovered("ch", "x")
     store.remove_channel("ch", "x")

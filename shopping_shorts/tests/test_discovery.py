@@ -117,6 +117,16 @@ def test_discover_multi_aggregates_and_dedupes():
     assert len(items) == 3
 
 
+def test_merge_feeds_accumulates_and_updates():
+    prev = [{"username": "a", "comments": 10}, {"username": "b", "comments": 5}]
+    new = [{"username": "b", "comments": 99}, {"username": "c", "comments": 3}]
+    out = discovery.merge_feeds(prev, new)
+    # new(b갱신,c신규) 먼저, 겹치지 않는 prev(a) 뒤
+    assert [i["username"] for i in out] == ["b", "c", "a"]
+    assert out[0]["comments"] == 99   # b는 새 데이터로 갱신
+    assert len(out) == 3              # 누적(a,b,c)
+
+
 def test_find_inactive_flags_channels_with_no_reels():
     channels = [
         {"name": "살아있음", "username": "alive"},

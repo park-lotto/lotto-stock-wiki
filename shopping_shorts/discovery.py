@@ -150,6 +150,18 @@ def discover_multi(keywords, known, *, search_fn, fetch_reels_fn, profiles_fn=No
     return _rank_reels(reels, prev_comments, prev_delta, now, window_hours, profiles)
 
 
+def merge_feeds(prev, new):
+    """누적 모드 — 이전 발굴 피드에 새 결과를 채널 단위로 합친다(2026-07-12).
+    같은 채널(username)은 새 데이터로 갱신(최신 지표), 나머지 이전 채널은 유지.
+    새로 발굴된 채널이 위로 오도록 new 먼저, 그 뒤 겹치지 않는 prev."""
+    new_keys = {(_norm(i.get("username"))) for i in new}
+    out = list(new)
+    for i in prev:
+        if _norm(i.get("username")) not in new_keys:
+            out.append(i)
+    return out
+
+
 def find_inactive(channels, active_usernames):
     """엑셀 채널 목록 중 "영상 안 올라오는" 채널 = 이번 수집에서 릴스가 하나도
     안 잡힌 채널을 삭제 후보로 반환(입력 순서 보존).
