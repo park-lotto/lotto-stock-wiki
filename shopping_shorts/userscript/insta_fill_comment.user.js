@@ -1,18 +1,23 @@
 // ==UserScript==
 // @name         로또 소통 · 인스타 댓글 자동채우기
 // @namespace    lotto.shopping_shorts
-// @version      1.3.3
+// @version      1.4.0
 // @description  소통큐에서 넘어온 댓글을 인스타 게시물 댓글칸에 자동으로 채운다. 전송·팔로우는 사용자가 직접(안전).
 // @match        https://www.instagram.com/*
 // @run-at       document-start
-// @grant        none
+// @grant        GM_xmlhttpRequest
+// @connect      shoppingshorts.duckdns.org
 // @downloadURL  https://shoppingshorts.duckdns.org/insta_fill_comment.user.js
 // @updateURL    https://shoppingshorts.duckdns.org/insta_fill_comment.user.js
 // ==/UserScript==
-// ⚠️ @grant는 반드시 none 유지! GM_* 를 넣으면 Tampermonkey가 샌드박스 컨텍스트로
-//    전환돼 페이지 React에 값 주입(댓글 채우기)이 깨진다. 서버 완료기록은 no-cors fetch로 처리.
+// 완료기록은 GM_xmlhttpRequest로 보낸다(인스타 CSP connect-src가 외부도메인 fetch를 막으므로,
+// 확장 컨텍스트에서 도는 GM_로 우회). @grant를 켜면 샌드박스로 전환돼 페이지 React 조작이
+// 깨지므로, 댓글 채우기는 unsafeWindow(진짜 페이지 window)의 프로토타입/이벤트로 처리한다.
 (function () {
   "use strict";
+
+  // 진짜 페이지 window(unsafeWindow) — 샌드박스 우회용. 없으면 일반 window.
+  const W = (typeof unsafeWindow !== "undefined" && unsafeWindow) ? unsafeWindow : window;
 
   /* ===================== CONFIG (인스타 DOM 바뀌면 여기만 수선) ===================== */
   const CONFIG = {
@@ -127,18 +132,20 @@
       if (fired) return; fired = true;
       // (a) opener(소통큐) 살아있으면 즉시 알림 (COOP로 끊겼을 수 있으니 보너스)
       try {
-        if (window.opener && !window.opener.closed)
-          window.opener.postMessage({ type: "lotto_done", sc: payload.sc }, payload.o || "*");
+        if (W.opener && !W.opener.closed)
+          W.opener.postMessage({ type: "lotto_done", sc: payload.sc }, payload.o || "*");
       } catch (_) {}
-      // (b) 서버에 직접 완료기록 — opener가 끊겨도 확실. 소통큐는 탭 복귀 시 반영.
-      //     no-cors POST(단순요청이라 프리플라이트 없음). /api/comment/done은 무인증 허용목록.
+      // (b) 서버에 완료기록 — GM_xmlhttpRequest로 인스타 CSP(connect-src) 우회.
+      //     onload(실제 서버 응답)에서만 완료 토스트 → 정말 기록됐을 때만 알림.
       const base = payload.o || "https://shoppingshorts.duckdns.org";
       try {
-        fetch(base + "/api/comment/done?shortcode=" + encodeURIComponent(payload.sc),
-              { method: "POST", mode: "no-cors", keepalive: true });
-        // DEBUG와 무관하게 항상 보이는 명확한 완료 알림(전송 순간에만 뜸)
-        toast("✅ 완료 처리! 소통큐 탭으로 가면 이 카드가 사라져요", "#1e7e34");
-      } catch (e) { toast("⚠️ 완료기록 실패: " + e.message, "#b9770e"); }
+        GM_xmlhttpRequest({
+          method: "POST",
+          url: base + "/api/comment/done?shortcode=" + encodeURIComponent(payload.sc),
+          onload: () => toast("✅ 완료 처리됨! 소통큐 탭으로 가면 이 카드가 사라져요", "#1e7e34"),
+          onerror: () => toast("⚠️ 완료기록 실패(네트워크) — 소통큐에서 직접 완료 눌러주세요", "#b9770e"),
+        });
+      } catch (e) { toast("⚠️ 완료기록 예외: " + e.message, "#b9770e"); }
     };
     // 1) Enter 키로 전송
     box.addEventListener("keydown", (e) => {
@@ -193,19 +200,20 @@
   // React가 관리하는 필드에 값을 한 번에 주입(붙여넣기 동일). textarea/input과 contenteditable 모두 대응.
   function fillAtOnce(el, text) {
     if (el.tagName === "TEXTAREA" || el.tagName === "INPUT") {
-      const proto = el.tagName === "TEXTAREA" ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+      // 페이지(React)의 네이티브 value setter를 써야 React가 값 변경을 인식한다 → unsafeWindow.
+      const proto = el.tagName === "TEXTAREA" ? W.HTMLTextAreaElement.prototype : W.HTMLInputElement.prototype;
       const setter = Object.getOwnPropertyDescriptor(proto, "value").set;
       setter.call(el, text);
-      el.dispatchEvent(new Event("input", { bubbles: true }));
-      el.dispatchEvent(new Event("change", { bubbles: true }));
+      el.dispatchEvent(new W.Event("input", { bubbles: true }));
+      el.dispatchEvent(new W.Event("change", { bubbles: true }));
     } else {
       el.focus();
-      const sel = window.getSelection();
-      const range = document.createRange();
+      const sel = W.getSelection();
+      const range = W.document.createRange();
       range.selectNodeContents(el);
       sel.removeAllRanges();
       sel.addRange(range);
-      document.execCommand("insertText", false, text);
+      W.document.execCommand("insertText", false, text);
     }
   }
 
@@ -224,12 +232,12 @@
 
   function appendChar(el, ch) {
     if (el.tagName === "TEXTAREA" || el.tagName === "INPUT") {
-      const proto = el.tagName === "TEXTAREA" ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+      const proto = el.tagName === "TEXTAREA" ? W.HTMLTextAreaElement.prototype : W.HTMLInputElement.prototype;
       const setter = Object.getOwnPropertyDescriptor(proto, "value").set;
       setter.call(el, el.value + ch);
-      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new W.Event("input", { bubbles: true }));
     } else {
-      document.execCommand("insertText", false, ch);
+      W.document.execCommand("insertText", false, ch);
     }
   }
 
