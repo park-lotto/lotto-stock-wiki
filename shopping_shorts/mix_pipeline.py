@@ -10,6 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from shopping_shorts.store import Store
+from shopping_shorts.apify_client import fetch_single_reel
 from shopping_shorts.frame_extract import download_video
 from shopping_shorts.script_extract import extract_script
 from shopping_shorts.edit_plan import build_edit_plan
@@ -30,20 +31,30 @@ def run_mix_job(job_id, db_path, work_root):
     work = Path(work_root) / job_id
     work.mkdir(parents=True, exist_ok=True)
     try:
-        # 1) 다운로드
+        # 1) 다운로드 — 사용자가 붙여넣은 URL은 인스타 "페이지" 주소라 그대로
+        # download_video 하면 영상이 아니라 HTML을 받아 Gemini가 state=FAILED로
+        # 거부한다(2026-07-12 라이브 실측). 제품찾기(app.py)와 동일하게 먼저
+        # fetch_single_reel로 실제 CDN videoUrl(+캡션)을 해석한 뒤 그걸 받는다.
         store.update_mix_job(job_id, status="downloading")
         video_paths = {}   # video_id -> mp4 path
+        captions = {}      # video_id -> caption
         for i, url in enumerate(job["urls"]):
             vid = _source_video_id(i)
+            if "instagram.com" not in url:
+                raise RuntimeError(f"인스타그램 URL만 지원합니다: {url}")
+            raw = fetch_single_reel(url)
+            if not raw or not raw.get("videoUrl"):
+                raise RuntimeError(f"영상을 가져올 수 없음(비공개/삭제 또는 videoUrl 없음): {url}")
+            captions[vid] = raw.get("caption", "")
             d = work / vid
             d.mkdir(parents=True, exist_ok=True)
-            video_paths[vid] = str(download_video(url, d))
+            video_paths[vid] = str(download_video(raw["videoUrl"], d))
 
         # 2) 대본 추출(병렬)
         store.update_mix_job(job_id, status="extracting")
         def _extract(item):
             vid, path = item
-            r = extract_script(path, vid)
+            r = extract_script(path, vid, caption=captions.get(vid, ""))
             r["video_id"] = vid
             return vid, r
         with ThreadPoolExecutor(max_workers=max(1, len(video_paths))) as ex:
