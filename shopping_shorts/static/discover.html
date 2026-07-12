@@ -35,7 +35,11 @@
   button:disabled{opacity:.5;cursor:wait}
   .status{color:var(--sub);font-size:12px;margin:6px 0 16px}
   .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+  .card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+  .badges{position:absolute;top:8px;left:8px;display:flex;gap:4px;z-index:2}
+  .badge{font-size:11px;font-weight:700;padding:3px 7px;border-radius:20px;color:#fff;backdrop-filter:blur(2px)}
+  .badge.hot{background:rgba(255,60,30,.92)}
+  .badge.new{background:rgba(47,129,247,.92)}
   .card img{width:100%;height:220px;object-fit:cover;background:#000}
   .card .body{padding:12px;flex:1;display:flex;flex-direction:column}
   .card .rank{font-size:12px;color:var(--sub)}
@@ -127,6 +131,11 @@
         <div class="mtab" data-mt="accel" onclick="setMTab('accel')" title="이번 Δ − 직전 Δ (증가세 가속)">📈 가속</div>
         <div class="mtab" data-mt="density" onclick="setMTab('density')" title="댓글수 ÷ 팔로워수">💥 참여밀도</div>
       </div>
+      <div class="cats" id="dfilter">
+        <div class="cat active" data-f="all" onclick="setFilter('all')">전체</div>
+        <div class="cat" data-f="hot" onclick="setFilter('hot')" title="종합등급 🔥🔥🔥">🔥 핫채널</div>
+        <div class="cat" data-f="new" onclick="setFilter('new')" title="팔로워 1만 미만 신흥 라이징">🆕 뉴채널</div>
+      </div>
       <div class="cards" id="dcards"></div>
     </section>
 
@@ -153,7 +162,18 @@ function setTab(t){
   if(t==='prune') loadRemoved();
 }
 const thumb = u => u ? '/api/thumb?url='+encodeURIComponent(u) : '';
-let DSTATE = {items:[], tab:'comments', days:2};
+let DSTATE = {items:[], tab:'comments', days:2, filter:'all'};
+const NEW_FOLLOWER_MAX = 10000;                 // 팔로워 1만 미만 = 뉴(신흥)
+const isHot = i => (i.grade||'') === '🔥🔥🔥';    // 종합등급 최상 = 핫
+const isNew = i => (i.followers||0) > 0 && (i.followers||0) < NEW_FOLLOWER_MAX;
+function setFilter(f){
+  DSTATE.filter=f;
+  document.querySelectorAll('#dfilter .cat').forEach(x=>x.classList.toggle('active',x.dataset.f===f));
+  renderDiscover();
+}
+function passFilter(i){
+  return DSTATE.filter==='hot' ? isHot(i) : DSTATE.filter==='new' ? isNew(i) : true;
+}
 // 서버가 JSON 아닌 HTML(재시작/프록시 에러페이지)을 줄 때 "Unexpected token '<'"로
 // 깨지지 않게 감싼다 — 동시 세션 배포로 서비스가 3분마다 재시작될 수 있음(2026-07-12).
 async function fetchJSON(url){
@@ -217,10 +237,11 @@ async function runDiscover(kw){
 function renderDiscover(items){
   if(items) DSTATE.items = items;
   const el=document.getElementById('dcards');
-  const list = DSTATE.items.slice().sort((a,b)=>dSortKey(b)-dSortKey(a));
+  const list = DSTATE.items.slice().filter(passFilter).sort((a,b)=>dSortKey(b)-dSortKey(a));
   if(!list.length){ el.innerHTML='<div class="empty">결과 없음.</div>'; return; }
   el.innerHTML = list.map((i,idx)=>`
     <div class="card">
+      <div class="badges">${isHot(i)?'<span class="badge hot">🔥 핫</span>':''}${isNew(i)?'<span class="badge new">🆕 뉴</span>':''}</div>
       <img src="${thumb(i.thumbnail)}" loading="lazy" onerror="this.style.visibility='hidden'">
       <div class="body">
         <div class="rank">#${idx+1} · ${i.category} · ${Math.round(i.age_hours)}시간 전</div>
