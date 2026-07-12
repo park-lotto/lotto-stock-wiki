@@ -25,9 +25,12 @@ _CAP_FONTSIZE = 46
 _CAP_WRAP = 13          # 한 줄 최대 글자수(720px 안에 들어오게)
 _CAP_BASELINE_Y = _OUT_H - 190
 
-# 한글 폰트 후보(먼저 발견되는 것 사용). 서버(우분투)는 fonts-nanum/noto 설치 필요.
+# 한글 폰트 후보(먼저 발견되는 것 사용). repo에 NanumGothic을 번들하므로 서버·로컬
+# 어디서든 별도 설치 없이 자막이 나온다(env로 다른 폰트 강제 가능).
+_BUNDLED_FONT = str(Path(__file__).parent / "assets" / "NanumGothic.ttf")
 _FONT_CANDIDATES = [
     os.environ.get("SHORTS_CAPTION_FONT"),
+    _BUNDLED_FONT,
     "C:/Windows/Fonts/malgun.ttf",
     "/usr/share/fonts/truetype/nanum/NanumGothic.ttf",
     "/usr/share/fonts/truetype/nanum/NanumBarunGothic.ttf",

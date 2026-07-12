@@ -25,4 +25,6 @@
 *.xls    binary
 *.xlsx   binary
 *.xlsm   binary
+*.ttf    binary
+*.otf    binary
 *.pyc    binary
