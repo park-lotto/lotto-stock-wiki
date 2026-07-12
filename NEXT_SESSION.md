@@ -1,36 +1,49 @@
-# NEXT_SESSION — 쇼핑쇼츠 믹스 자막 이어하기
+# NEXT_SESSION — VMake 자막제거 실스펙 채우기 (내일 회사서)
 
-**날짜**: 2026-07-12 (집 PC) — 사무실에서 이어받아 진행
-**대상 파일**: `shopping_shorts/video_assemble.py`
+**날짜**: 2026-07-13 (집 PC) → 내일 회사서 VMake API 키/문서 확보 후 이어서
 
-## ✅ 방금 완료 (main 푸시됨: f85f3339)
+## ✅ 오늘 완료 — VMake 자막제거 연동 뼈대 (전부 커밋됨, push는 아직)
 
-**자막 "짧은 구절 단위" 분할** — 사무실에서 준비했던 알고리즘 그대로 적용·검증 완료.
+믹스된 최종 영상의 원본 하드섭을 VMake API로 제거하고 우리 자막을 굽는 기능.
+흐름: **믹스(자막X) → VMake제거 → 우리자막**. 옵션 토글, 개인키 대시보드 저장.
+설계: `docs/superpowers/specs/2026-07-13-쇼핑쇼츠-VMake자막제거-design.md`
+계획: `docs/superpowers/plans/2026-07-13-VMake자막제거.md`
 
-- `_caption_segments`: 문장/textwrap 분할 폐지 → **어절 기준 짧은 구절**(목표 7자).
-  예) "오이 사자마자 / 냉장고에 / 넣으셨나요?" (어절 길이 제각각 → 자연히 불규칙).
-- `_caption_durations` 신설: 글자수 비례 + **최소 표시시간 0.5s 하한**, 합은 항상 dur 이하.
-- 폰트 52로 상향(짧은 1줄이라 여유), 미사용 `re` import 제거.
-- 테스트 8개 추가(총 11개 통과). **로컬 ffmpeg 렌더 → 프레임 눈 검증까지 완료**
-  (720×1280 세로, 하단 바 위 흰 자막 1줄, 구절 순차 전환 확인).
+| 커밋 | 내용 |
+|------|------|
+| 86f770c5 | store: mix_jobs에 subtitle_removal/clean_video_path 필드+마이그레이션 |
+| (4c40774e) | store: settings 테이블 + get/set_setting (키 저장) |
+| 0fed5ff3 | vmake_client 서명 인증(추정 스펙) |
+| 15c2c4c2 | vmake remove_subtitles 제출→폴링→다운로드(mock) |
+| b983b360 | assemble → _render_mix + _burn_captions 분리 (+clean_fn 훅) |
+| e8f53891 | run_render에 VMake 자막제거 단계+removing_subtitles 상태 |
+| fb4f91f1 | 개인키 저장/조회 API + mix start subtitle_removal 플래그 |
+| 47e0cc7e | 믹스 UI(mix.html)에 자막제거 토글+개인키 입력 |
 
-> 검증 소스: `C:\Users\CH\Downloads\source_76cbad1d-*.mp4`(1080×1920, 21s).
-> 이 집 PC에 winget으로 **ffmpeg 8.1.2 설치함**(경로: WinGet\Packages\Gyan.FFmpeg\...\bin).
+**전체 테스트 241 passed**(신규 31). 실제 렌더 스모크로 assemble 분리 눈검증 완료.
 
-## 남은 과제 (우선순위 순)
+## ⚡ 내일 바로 할 일: VMake 실제 API 스펙 채우기
 
-1. **실음성(TTS)** — 서버에 ElevenLabs 키 없어 무음(-91dB). Gemini TTS 연결 검토.
-   - `shopping_shorts/tests/test_tts.py`의 ffmpeg 테스트는 ffmpeg 없는 PC에선 실패(환경 문제, 코드 무관).
-2. **원본 중앙자막 덮기** — 일부 소스는 원본 자막이 화면 중앙이라 하단 바로 안 가려짐.
-   → 중앙 마스킹 or 소스 선별 로직 필요.
-3. (선택) 전체 파이프라인 end-to-end 렌더 검증 — 실제 EDL+TTS로 `assemble()` 한 번 돌려보기.
+`shopping_shorts/vmake_client.py`가 **모든 불확실 스펙을 격리**하고 있다. 지금은 조사 기반
+**추정값**이고 mock 테스트로만 검증됨. 개발자 문서(open.vmake.ai, 로그인 뒤)를 보고 아래만 교체:
 
-## 검증 방법 (집에서)
-- `python -m pytest shopping_shorts/tests/test_video_assemble.py -q` (11 통과)
-- 자막 렌더 눈 검증 스크립트: 스크래치패드 `render_caption_check.py` (소스+dur 주면 프레임 뽑음).
+1. `_API_BASE` — 실제 베이스 URL (지금 `https://open.vmake.ai/api/v1` 추정)
+2. `_sign()` — 실제 서명 알고리즘 (지금 HMAC-SHA256(secret, app_key+ts+nonce) 가정)
+3. `_auth_headers()` — 실제 헤더 이름 (지금 X-App-Key/X-Sign/X-Timestamp/X-Nonce 가정)
+4. `_submit()` — 자막제거 엔드포인트 경로·업로드 필드명 (지금 POST /video/remove-subtitles, files={file})
+5. `_poll()` — job 조회 경로·상태 필드값·결과 URL 필드 (지금 GET /video/jobs/{id}, status/result_url)
+6. 키 형식: 대시보드는 `app_key:secret` 형태로 저장 가정(`_split_key`). VMake 실제 발급 형태에 맞춰라.
 
-## 주의
-- 브랜치 **main** 고정. `git add -A` 금지(raw/ 크롤데이터 섞임) — shopping_shorts 파일만.
-- 커밋 전 `git branch --show-current`=main 확인.
-- ⚠️ 이번 세션 시작 시 git이 꼬여있었음(merge 충돌 + autocrlf=true 문제).
-  `core.autocrlf=false`로 고침(.gitattributes eol=lf와 맞음). 재발 시 이 설정 확인.
+교체 후:
+- `python -m pytest shopping_shorts/tests/test_vmake_client.py -q` 통과 유지(mock이라 스펙 바뀌어도 통과 — 실제 검증은 아래)
+- **실제 키 등록 → 진짜 소스로 1회 렌더** → 자막제거+우리자막 프레임 눈검증(로컬 ffmpeg 있음)
+- 서버 배포 후 라이브 1건
+
+## 사용자가 줄 것
+VMake 결제 후 개발자 포털에서 발급한 **API 키** + 개발자 문서(엔드포인트/서명 스펙).
+
+## ⚠️ 주의
+- 브랜치 main 고정. `git add`는 shopping_shorts 파일만(-A 금지).
+- **push 아직 안 함** — 오늘 커밋들 로컬에만 있음. 세션 마감 시 push 필요.
+- store.py에 다른 세션의 "S급 대본 위키(script_wiki)" 미커밋 변경 있음 — 내 것 아니니 건드리지 말 것.
+- 자막 분할 로직은 계속 튜닝 대상: [[project_자막분할_원리]]
