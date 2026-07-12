@@ -32,7 +32,11 @@
   .card img{width:100%;height:220px;object-fit:cover;background:#000}
   .card .body{padding:12px;flex:1;display:flex;flex-direction:column}
   .card .rank{font-size:12px;color:var(--sub)}
-  .card .ch{font-weight:600;font-size:14px;margin:4px 0}
+  .card .ch{font-weight:600;font-size:14px;margin:4px 0;display:flex;align-items:center;justify-content:space-between;gap:6px}
+  .card .ch .chname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .copy{flex-shrink:0;background:#0d131c;border:1px solid var(--line);color:var(--sub);font-size:12px;padding:4px 7px;border-radius:6px;cursor:pointer;line-height:1}
+  .copy:hover{color:#7db4ff;border-color:#2f81f7}
+  .copy.copied{background:#2ea043;border-color:#2ea043;color:#fff}
   .stat{display:flex;justify-content:space-between;font-size:12px;color:var(--sub);margin-top:4px}
   .stat b{color:var(--txt)}
   .grade{font-size:14px}
@@ -134,7 +138,7 @@ function render(){
       <img src="${i.thumbnail?('/api/thumb?url='+encodeURIComponent(i.thumbnail)):''}" loading="lazy" onerror="this.style.visibility='hidden'">
       <div class="body">
         <div class="rank">#${idx+1} · ${i.category} · ${Math.round(i.age_hours)}시간 전</div>
-        <div class="ch">${i.name||i.username} <span class="grade">${i.grade||''}</span></div>
+        <div class="ch"><span class="chname">${i.name||i.username} <span class="grade">${i.grade||''}</span></span><button class="copy" title="릴스 링크 복사" onclick="copyLink('${i.url}', this)">🔗 복사</button></div>
         <div class="rank" style="margin:-4px 0 4px">팔로워 ${(i.followers||0).toLocaleString()}</div>
         <div class="stat" title="댓글 수 그대로"><span>댓글</span><b>${i.comments.toLocaleString()} <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span></b></div>
         <div class="stat" title="댓글수 ÷ 경과시간(시간)"><span>속도(시간당)</span><b>${i.speed.toFixed(1)}</b></div>
@@ -176,6 +180,13 @@ async function loadLast(){
     document.getElementById("status").textContent=`마지막 수집: ${fmtTime(d.collected_at)}`; }
 }
 function goComment(sc){ location.href = '/outreach.html?focus=' + encodeURIComponent(sc); }
+async function copyLink(url, btn){
+  try{ await navigator.clipboard.writeText(url); }
+  catch(e){ const t=document.createElement('textarea'); t.value=url; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
+  const old = btn.textContent;
+  btn.textContent='✓ 복사됨'; btn.classList.add('copied');
+  setTimeout(()=>{ btn.textContent=old; btn.classList.remove('copied'); }, 1200);
+}
 async function doSave(sc, btn){
   await fetch('/api/save?shortcode=' + encodeURIComponent(sc), {method:'POST'});
   btn.textContent = '담김✓'; btn.classList.add('saved');
