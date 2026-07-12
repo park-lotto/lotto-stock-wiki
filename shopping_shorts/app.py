@@ -485,16 +485,30 @@ def api_find_frame(work_id: str, filename: str):
 
 @app.post("/api/mix/start")
 def api_mix_start(background_tasks: BackgroundTasks, body: dict):
-    """믹스 job 시작. body: {urls:[...], target_seconds:int, structure:'template'|'free'}."""
+    """믹스 job 시작. body: {urls, target_seconds, structure, subtitle_removal}."""
     urls = [u for u in (body.get("urls") or []) if u]
     if len(urls) < 2:
         return JSONResponse(status_code=422, content={"ok": False, "error": "레퍼런스 URL 2개 이상 필요"})
     target = int(body.get("target_seconds") or 30)
     structure = body.get("structure") if body.get("structure") in ("template", "free") else "template"
+    subtitle_removal = bool(body.get("subtitle_removal", False))
     job_id = uuid.uuid4().hex[:12]
-    Store(DB_PATH).create_mix_job(job_id, urls, target, structure)
+    Store(DB_PATH).create_mix_job(job_id, urls, target, structure, subtitle_removal=subtitle_removal)
     background_tasks.add_task(run_mix_job, job_id, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True, "job_id": job_id}
+
+
+@app.post("/api/settings/vmake_key")
+def api_set_vmake_key(body: dict):
+    key = (body.get("key") or "").strip()
+    Store(DB_PATH).set_setting("vmake_api_key", key)
+    return {"ok": True}
+
+
+@app.get("/api/settings/vmake_key")
+def api_get_vmake_key():
+    key = Store(DB_PATH).get_setting("vmake_api_key", "")
+    return {"ok": True, "configured": bool(key)}      # 원문은 노출하지 않음
 
 
 @app.get("/api/mix/status/{job_id}")
