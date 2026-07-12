@@ -24,7 +24,12 @@
   .tabs{display:flex;gap:8px;border-bottom:1px solid var(--line);margin-bottom:16px}
   .tab{padding:10px 16px;font-size:13px;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent}
   .tab.active{color:var(--txt);border-bottom-color:var(--accent)}
-  .cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+  .ctypes{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  .ctype{padding:9px 16px;border:1px solid var(--line);border-radius:10px;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer;background:#0d131c}
+  .ctype:hover{border-color:var(--accent);color:#7db4ff}
+  .ctype.active{background:linear-gradient(90deg,#153a6b,#0d2340);color:#7db4ff;border-color:var(--accent)}
+  .cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;min-height:0}
+  .cats:empty{margin-bottom:0}
   .cat{padding:6px 12px;border:1px solid var(--line);border-radius:20px;font-size:12px;color:var(--sub);cursor:pointer}
   .cat.active{background:var(--accent);color:#fff;border-color:var(--accent)}
   .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
@@ -105,20 +110,36 @@
       <div class="tab" data-tab="accel" title="이번 수집 Δ(댓글 증가분) − 직전 수집 Δ — 증가세 자체가 빨라지고 있는지(가속도)">📈 가속</div>
       <div class="tab" data-tab="density" title="댓글수 ÷ 팔로워수 — 팔로워 규모 대비 반응이 얼마나 뜨거운지(작은 채널도 상위권 가능)">💥 참여밀도</div>
     </div>
+    <div class="ctypes" id="ctypes"></div>
     <div class="cats" id="cats"></div>
     <div class="cards" id="cards">
       <div class="empty">「지금 수집」을 눌러 시작하세요.</div>
     </div>
   </main>
 <script>
-const CATS = ["전체","인테리어","레시피","생활용품","가전","뷰티","기타"];
-let STATE = {items:[], tab:"comments", cat:"전체"};
+// 유형(제작·수익화 방식) = 초보자 탐색 1차축. topics = 그 유형의 세부주제(2차축).
+const CTYPES = [
+  {key:"전체",  label:"✨ 전체",       topics:[]},
+  {key:"비법형", label:"🔥 비법·꿀팁형", topics:["인테리어","레시피"]},
+  {key:"제품형", label:"🛒 제품추천형",  topics:["생활용품","가전"]},
+  {key:"혼합형", label:"💄 뷰티(혼합)",  topics:["뷰티"]},
+];
+const TOPIC_CTYPE = {인테리어:"비법형",레시피:"비법형",생활용품:"제품형",가전:"제품형",뷰티:"혼합형",기타:"기타"};
+let STATE = {items:[], tab:"comments", ctype:"전체", cat:"전체"};
 
+function renderCtypes(){
+  document.getElementById("ctypes").innerHTML = CTYPES.map(c =>
+    `<div class="ctype ${c.key===STATE.ctype?'active':''}" onclick="setCtype('${c.key}')">${c.label}</div>`).join("");
+}
 function renderCats(){
   const el = document.getElementById("cats");
-  el.innerHTML = CATS.map(c =>
+  const cur = CTYPES.find(c=>c.key===STATE.ctype);
+  const topics = cur ? cur.topics : [];
+  if(!topics.length){ el.innerHTML=""; return; }   // '전체' 유형이면 세부주제 칩 숨김
+  el.innerHTML = ["전체", ...topics].map(c =>
     `<div class="cat ${c===STATE.cat?'active':''}" onclick="setCat('${c}')">${c}</div>`).join("");
 }
+function setCtype(k){ STATE.ctype=k; STATE.cat="전체"; renderCtypes(); renderCats(); render(); }
 function setCat(c){ STATE.cat=c; renderCats(); render(); }
 function setTab(t){ STATE.tab=t; document.querySelectorAll('.tab').forEach(x=>
   x.classList.toggle('active', x.dataset.tab===t)); render(); }
@@ -129,7 +150,8 @@ function sortKey(i){
 }
 function render(){
   let items = STATE.items.slice();
-  if(STATE.cat!=="전체") items = items.filter(i=>i.category===STATE.cat);
+  if(STATE.ctype!=="전체") items = items.filter(i=> TOPIC_CTYPE[i.category]===STATE.ctype);
+  if(STATE.cat!=="전체")   items = items.filter(i=> i.category===STATE.cat);
   items.sort((a,b)=> sortKey(b)-sortKey(a));
   const el = document.getElementById("cards");
   if(!items.length){ el.innerHTML='<div class="empty">결과 없음.</div>'; return; }
@@ -213,7 +235,7 @@ async function markSavedButtons(){
     });
   }catch(e){}
 }
-renderCats(); loadLast();
+renderCtypes(); renderCats(); loadLast();
 </script>
 </body>
 </html>
