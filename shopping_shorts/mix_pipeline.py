@@ -82,10 +82,13 @@ def run_render(job_id, db_path, work_root):
         plan = job["edit_plan"]
         tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
         # 다운로드된 소스 재사용
-        source_video_paths = {
-            _source_video_id(i): str(next((work / _source_video_id(i)).glob("*.mp4")))
-            for i in range(len(job["urls"]))
-        }
+        source_video_paths = {}
+        for i in range(len(job["urls"])):
+            vid = _source_video_id(i)
+            mp4 = next((work / vid).glob("*.mp4"), None)
+            if mp4 is None:
+                raise RuntimeError(f"소스 영상 없음: {vid} (다운로드 디렉터리에 mp4 없음)")
+            source_video_paths[vid] = str(mp4)
         out_path = work / "final.mp4"
         assemble(plan, tts_paths, source_video_paths, str(out_path))
         store.update_mix_job(job_id, status="done", video_path=str(out_path))
