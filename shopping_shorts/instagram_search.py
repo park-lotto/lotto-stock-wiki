@@ -20,6 +20,56 @@ from shopping_shorts.config import APIFY_TOKENS
 _ACTOR = "data-slayer~instagram-search-reels"
 
 
+def _owner_username(item):
+    """검색 raw 항목에서 게시자 username 추출 — 액터 스키마가 버전마다 바뀔 수
+    있어(2026-07-12 발굴기능 추가 시점) 흔한 키 경로를 순서대로 시도한다.
+    없으면 None(그 항목은 채널 발굴에서 제외)."""
+    for path in (("user", "username"), ("owner", "username"),
+                 ("author", "username"), ("account", "username")):
+        node = item
+        for key in path:
+            node = node.get(key) if isinstance(node, dict) else None
+            if node is None:
+                break
+        if isinstance(node, str) and node:
+            return node
+    for flat in ("username", "ownerUsername", "owner_username"):
+        v = item.get(flat)
+        if isinstance(v, str) and v:
+            return v
+    return None
+
+
+def search_channels(keyword, max_results=20, token=None, timeout=180, poll_interval=5):
+    """키워드 검색 → [{username, url, caption, thumbnail}, ...] (발굴용).
+
+    search()가 릴스 URL만 주는 것과 달리, "어느 채널이 올렸는지"(username)를 함께
+    뽑아 카테고리 기반 새 채널 발굴에 쓴다. username을 못 뽑은 항목은 제외."""
+    tokens = [token] if token else APIFY_TOKENS
+    if not tokens:
+        raise RuntimeError("instagram_search: APIFY_TOKEN이 설정되지 않았습니다")
+    payload = {"query": keyword, "maxPages": 1}
+    items = _run_with_rotation(payload, tokens, timeout, poll_interval, actor=_ACTOR)
+    out = []
+    for item in items:
+        code = item.get("code")
+        if not code or not item.get("is_video"):
+            continue
+        username = _owner_username(item)
+        if not username:
+            continue
+        caption = (item.get("caption") or {}).get("text", "")
+        out.append({
+            "username": username,
+            "url": f"https://www.instagram.com/reel/{code}/",
+            "title": caption,
+            "thumbnail": item.get("thumbnail_url", ""),
+        })
+        if len(out) >= max_results:
+            break
+    return out
+
+
 def search(keyword, max_results=10, token=None, timeout=180, poll_interval=5):
     """키워드(자유 텍스트) → [{url, title, thumbnail}, ...]."""
     tokens = [token] if token else APIFY_TOKENS

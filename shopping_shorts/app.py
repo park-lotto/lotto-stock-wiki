@@ -16,7 +16,9 @@ from shopping_shorts.outreach import build_queue
 from shopping_shorts.store import Store
 from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
 from shopping_shorts.frame_extract import download_video, extract_frames
-from shopping_shorts.apify_client import fetch_single_reel
+from shopping_shorts.apify_client import fetch_single_reel, fetch_reels
+from shopping_shorts import discovery, instagram_search
+from shopping_shorts.channels import load_channels
 from shopping_shorts.video_analysis import analyze_video
 from shopping_shorts.product_identify import fetch_lens_lines, identify_product_from_lines
 from shopping_shorts.search_links import build_search_links, lens_search_url
@@ -121,6 +123,98 @@ def api_saved():
     """담긴 shortcode 목록."""
     store = Store(DB_PATH)
     return {"ok": True, "saved": sorted(store.saved_set())}
+
+
+def _err(e):
+    """토큰 마스킹 후 500 JSON (수집 계열 공통)."""
+    msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
+    return JSONResponse(status_code=500, content={"ok": False, "error": msg})
+
+
+def _known_usernames(store):
+    """이미 추적 중인 채널(엑셀 + 발굴추가) username 집합. 엑셀 없으면(로컬 등)
+    발굴목록만."""
+    known = {d["username"] for d in store.discovered_channels()}
+    try:
+        known |= {c["username"] for c in load_channels()}
+    except Exception:
+        pass  # 엑셀 경로 없음(로컬) — 발굴은 계속 동작
+    return known
+
+
+@app.get("/api/discover")
+def api_discover(keyword: str, max_channels: int = 15):
+    """🔎 채널 발굴 — 카테고리 키워드로 '내가 모르던 채널' 중 최근 48h 댓글이
+    빠르게 쌓이는 릴스를 캐치(기존 랭킹엔진 재사용)."""
+    keyword = (keyword or "").strip()
+    if not keyword:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "키워드를 입력하세요"})
+    store = Store(DB_PATH)
+    try:
+        items = discovery.discover(
+            keyword, known=_known_usernames(store),
+            search_fn=instagram_search.search_channels, fetch_reels_fn=fetch_reels,
+            prev_comments=store.prev_comments, prev_delta=store.prev_delta,
+            max_channels=max_channels,
+        )
+    except Exception as e:
+        return _err(e)
+    return {"ok": True, "count": len(items), "items": items, "keyword": keyword}
+
+
+@app.post("/api/discover/add")
+def api_discover_add(username: str, name: str = ""):
+    """발굴 채널을 벤치마크 목록에 추가(이후 메인 랭킹에도 추적)."""
+    Store(DB_PATH).add_discovered(username.strip().lstrip("@"), name)
+    return {"ok": True, "username": username}
+
+
+@app.get("/api/discover/added")
+def api_discover_added():
+    """발굴로 추가한 채널 목록."""
+    return {"ok": True, "items": Store(DB_PATH).discovered_channels()}
+
+
+@app.get("/api/prune/scan")
+def api_prune_scan():
+    """🧹 죽은 채널 정리 — 마지막 수집에서 릴스가 하나도 안 잡힌 엑셀 채널을
+    삭제(추적 제외) 후보로 반환. 별도 Apify 호출 없이 최근 수집 결과 재사용
+    (=삭제 전에 「지금 수집」을 먼저 돌려야 최신 판단)."""
+    store = Store(DB_PATH)
+    items, collected_at = store.load_last_run()
+    if not items:
+        return JSONResponse(status_code=400, content={
+            "ok": False, "error": "수집 데이터 없음 — 레퍼런스 랭킹에서 「지금 수집」 먼저 실행"})
+    try:
+        channels = load_channels()
+    except Exception as e:
+        return _err(e)
+    active = {i.get("username") for i in items if i.get("username")}
+    removed = store.removed_usernames()
+    inactive = [c for c in discovery.find_inactive(channels, active)
+                if (c["username"] or "").strip().lstrip("@").lower() not in removed]
+    return {"ok": True, "count": len(inactive), "items": inactive,
+            "collected_at": collected_at, "total": len(channels), "active": len(active)}
+
+
+@app.post("/api/prune/remove")
+def api_prune_remove(username: str, name: str = ""):
+    """죽은 채널 추적 제외(소프트 삭제 — 엑셀 원본 미변경, 복구 가능)."""
+    Store(DB_PATH).remove_channel(username.strip().lstrip("@"), name)
+    return {"ok": True, "username": username}
+
+
+@app.post("/api/prune/restore")
+def api_prune_restore(username: str):
+    """추적 제외 해제(되돌리기)."""
+    Store(DB_PATH).restore_channel(username.strip().lstrip("@"))
+    return {"ok": True, "username": username}
+
+
+@app.get("/api/prune/removed")
+def api_prune_removed():
+    """추적 제외된 채널 목록."""
+    return {"ok": True, "items": Store(DB_PATH).removed_list()}
 
 
 _FIND_TMP_DIR = Path(__file__).parent / "data" / "find_frames"

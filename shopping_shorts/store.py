@@ -100,6 +100,72 @@ class Store:
                     updated_at TEXT NOT NULL
                 )
             """)
+            # 발굴로 찾아 "벤치마크 목록에 추가"한 채널 — collect()가 엑셀 목록과
+            # union해 이후 메인 랭킹에도 추적한다(2026-07-12).
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS discovered_channels (
+                    username TEXT PRIMARY KEY,
+                    name TEXT,
+                    added_at TEXT
+                )
+            """)
+            # "영상 안 올라오는" 죽은 채널 — 엑셀 원본은 안 건드리고 여기에 넣어
+            # collect()가 추적에서 제외한다(소프트 삭제, 복구 가능, 2026-07-12).
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS removed_channels (
+                    username TEXT PRIMARY KEY,
+                    name TEXT,
+                    removed_at TEXT
+                )
+            """)
+
+    # ── 발굴/정리 채널 관리(2026-07-12) ──
+    def add_discovered(self, username, name=""):
+        """발굴 채널을 벤치마크 목록에 추가(중복 시 이름 갱신). 제외목록에 있었다면 해제."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO discovered_channels(username, name, added_at) "
+                "VALUES(?,?,datetime('now')) ON CONFLICT(username) DO UPDATE SET name=excluded.name",
+                (username, name or username),
+            )
+            c.execute("DELETE FROM removed_channels WHERE username=?", (username,))
+
+    def discovered_channels(self):
+        """추가된 발굴 채널 [{name, username, followers, inpock}] (collect union용 메타 형태)."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT username, name FROM discovered_channels ORDER BY added_at DESC"
+            ).fetchall()
+        return [{"name": r[1] or r[0], "username": r[0], "followers": 0, "inpock": ""} for r in rows]
+
+    def remove_channel(self, username, name=""):
+        """죽은 채널을 추적 제외목록에 추가(소프트 삭제). 발굴목록에 있었다면 함께 제거."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO removed_channels(username, name, removed_at) "
+                "VALUES(?,?,datetime('now')) ON CONFLICT(username) DO NOTHING",
+                (username, name or username),
+            )
+            c.execute("DELETE FROM discovered_channels WHERE username=?", (username,))
+
+    def restore_channel(self, username):
+        """추적 제외 해제(되돌리기)."""
+        with self._conn() as c:
+            c.execute("DELETE FROM removed_channels WHERE username=?", (username,))
+
+    def removed_usernames(self):
+        """추적 제외된 username 집합(소문자 정규화)."""
+        with self._conn() as c:
+            rows = c.execute("SELECT username FROM removed_channels").fetchall()
+        return {(r[0] or "").strip().lstrip("@").lower() for r in rows}
+
+    def removed_list(self):
+        """추적 제외 채널 목록 [{name, username, removed_at}]."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT username, name, removed_at FROM removed_channels ORDER BY removed_at DESC"
+            ).fetchall()
+        return [{"username": r[0], "name": r[1], "removed_at": r[2]} for r in rows]
 
     def prev_comments(self, shortcode):
         """가장 최근에 기록된 이 영상의 댓글수. 없으면 None."""

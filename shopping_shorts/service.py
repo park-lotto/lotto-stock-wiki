@@ -86,6 +86,19 @@ def collect(limit_channels=None):
     호출해야 한다.
     """
     channels = load_channels()
+
+    # 발굴로 추가한 채널을 엑셀 목록과 union하고, 죽은(추적제외) 채널은 뺀다
+    # (2026-07-12). 엑셀 원본은 안 건드리는 소프트 관리 — 제외/추가 모두 DB에서만.
+    _store = Store(DB_PATH)
+    known = {c["username"].strip().lstrip("@").lower() for c in channels}
+    for d in _store.discovered_channels():
+        if d["username"].strip().lstrip("@").lower() not in known:
+            channels.append(d)
+    removed = _store.removed_usernames()
+    if removed:
+        channels = [c for c in channels
+                    if c["username"].strip().lstrip("@").lower() not in removed]
+
     if limit_channels:
         channels = channels[:limit_channels]
 

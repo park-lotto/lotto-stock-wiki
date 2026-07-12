@@ -78,3 +78,29 @@ def test_search_no_tokens_raises(monkeypatch):
     monkeypatch.setattr(instagram_search, "APIFY_TOKENS", [])
     with pytest.raises(RuntimeError, match="APIFY_TOKEN"):
         instagram_search.search("x")
+
+
+def test_owner_username_tries_multiple_paths():
+    assert instagram_search._owner_username({"user": {"username": "a"}}) == "a"
+    assert instagram_search._owner_username({"owner": {"username": "b"}}) == "b"
+    assert instagram_search._owner_username({"username": "c"}) == "c"
+    assert instagram_search._owner_username({"ownerUsername": "d"}) == "d"
+    assert instagram_search._owner_username({"foo": 1}) is None
+    assert instagram_search._owner_username({"user": None}) is None
+
+
+def test_search_channels_returns_username(monkeypatch):
+    monkeypatch.setattr(instagram_search, "APIFY_TOKENS", ["fake-key"])
+
+    def fake_run(payload, tokens, timeout, poll_interval, actor=None):
+        return [
+            {"code": "c1", "is_video": True, "user": {"username": "chan_a"},
+             "caption": {"text": "주방템"}, "thumbnail_url": "t1"},
+            {"code": "c2", "is_video": True, "caption": {"text": "no user"}, "thumbnail_url": "t2"},
+        ]
+    monkeypatch.setattr(instagram_search, "_run_with_rotation", fake_run)
+
+    out = instagram_search.search_channels("주방템")
+    assert out == [{"username": "chan_a",
+                    "url": "https://www.instagram.com/reel/c1/",
+                    "title": "주방템", "thumbnail": "t1"}]  # username 없는 c2는 제외

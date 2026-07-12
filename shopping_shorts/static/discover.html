@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>쇼핑쇼츠 채널 발굴 · 정리</title>
+<style>
+  :root{--bg:#0a0e14;--panel:#111722;--line:#1e2735;--txt:#e6edf3;--sub:#8b98a9;--accent:#2f81f7;--fire:#ff6b35;--ok:#2ea043;--danger:#e5534b;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic',system-ui,sans-serif;display:flex;min-height:100vh}
+  .sidebar{width:230px;background:var(--panel);border-right:1px solid var(--line);padding:16px;flex-shrink:0}
+  .sidebar h1{font-size:14px;color:var(--sub);margin-bottom:16px}
+  .menu-group{margin-bottom:18px}
+  .menu-group .label{font-size:11px;color:var(--sub);text-transform:uppercase;margin-bottom:8px}
+  .menu-item{padding:8px 12px;border-radius:8px;font-size:13px;color:var(--txt);cursor:pointer;margin-bottom:2px}
+  .menu-item.active{background:linear-gradient(90deg,#153a6b,#0d2340);color:#7db4ff}
+  .main{flex:1;padding:28px 36px;overflow:auto}
+  .head h2{font-size:24px}
+  .desc{color:var(--sub);font-size:13px;margin-bottom:20px}
+  .tabs{display:flex;gap:8px;border-bottom:1px solid var(--line);margin-bottom:18px}
+  .tab{padding:10px 16px;font-size:14px;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent}
+  .tab.active{color:var(--txt);border-bottom-color:var(--accent)}
+  .cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .cat{padding:7px 14px;border:1px solid var(--line);border-radius:20px;font-size:13px;color:var(--sub);cursor:pointer}
+  .cat:hover{border-color:var(--accent);color:var(--txt)}
+  .searchbar{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+  .searchbar input{flex:1;min-width:180px;background:#0d131c;border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:10px 14px;font-size:14px}
+  button{background:var(--accent);color:#fff;border:none;padding:10px 18px;border-radius:8px;font-size:13px;cursor:pointer}
+  button:disabled{opacity:.5;cursor:wait}
+  .status{color:var(--sub);font-size:12px;margin:6px 0 16px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+  .card img{width:100%;height:220px;object-fit:cover;background:#000}
+  .card .body{padding:12px;flex:1;display:flex;flex-direction:column}
+  .card .rank{font-size:12px;color:var(--sub)}
+  .card .ch{font-weight:600;font-size:14px;margin:4px 0}
+  .stat{display:flex;justify-content:space-between;font-size:12px;color:var(--sub);margin-top:4px}
+  .stat b{color:var(--txt)}
+  .grade{font-size:14px}
+  .btns{display:flex;gap:6px;margin-top:auto;padding-top:10px}
+  .btns button{flex:1;font-size:11px;padding:7px 4px;border-radius:7px;border:1px solid var(--line);background:#0d131c;color:var(--txt);cursor:pointer}
+  .btns button.view{border-color:#2f81f7;color:#7db4ff}
+  .btns button.add{background:linear-gradient(90deg,#1f6feb,#238636);border:none;color:#fff}
+  .btns button.add.done{background:var(--ok);border-color:var(--ok)}
+  .empty{color:var(--sub);text-align:center;padding:60px;grid-column:1/-1}
+  /* 정리 탭 리스트 */
+  .rows{display:flex;flex-direction:column;gap:8px}
+  .row{display:flex;align-items:center;justify-content:space-between;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 16px}
+  .row .info{font-size:14px}
+  .row .info small{color:var(--sub);font-size:12px;margin-left:8px}
+  .row button.del{background:var(--danger)}
+  .row button.restore{background:#30363d}
+  .hide{display:none}
+  @media (max-width:768px){
+    body{flex-direction:column}
+    .sidebar{width:100%;border-right:none;border-bottom:1px solid var(--line);padding:10px 12px;display:flex;gap:6px;overflow-x:auto;align-items:center;white-space:nowrap}
+    .sidebar h1{margin:0 8px 0 0}
+    .sidebar .menu-group{margin:0;display:flex;gap:6px}
+    .sidebar .menu-group .label{display:none}
+    .menu-item{margin:0;padding:6px 10px;flex-shrink:0;font-size:12px}
+    .main{padding:16px 14px}
+    .cards{grid-template-columns:repeat(2,1fr);gap:10px}
+  }
+</style>
+</head>
+<body>
+  <aside class="sidebar">
+    <h1>🛍️ 쇼핑쇼츠</h1>
+    <div class="menu-group">
+      <div class="label">트렌드 리서치</div>
+      <div class="menu-item" onclick="location.href='/'">📊 레퍼런스 랭킹</div>
+      <div class="menu-item active">🔎 채널 발굴·정리</div>
+      <div class="menu-item" onclick="location.href='/find.html'">🔍 제품 찾기</div>
+    </div>
+    <div class="menu-group">
+      <div class="label">채널 &amp; 콘텐츠</div>
+      <div class="menu-item" onclick="location.href='/outreach.html'">💬 소통 큐</div>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="head"><h2>🔎 채널 발굴 · 정리</h2></div>
+    <div class="desc">카테고리로 <b>내가 모르던 채널</b> 중 댓글이 터지는 릴스를 캐치하고, <b>영상 안 올라오는 채널</b>은 추적에서 제외합니다.</div>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="discover" onclick="setTab('discover')">🔎 새 채널 발굴</div>
+      <div class="tab" data-tab="prune" onclick="setTab('prune')">🧹 죽은 채널 정리</div>
+    </div>
+
+    <!-- 발굴 탭 -->
+    <section id="pane-discover">
+      <div class="cats" id="cats"></div>
+      <div class="searchbar">
+        <input id="kw" placeholder="카테고리·키워드 직접 입력 (예: 주방템, 캠핑용품)" onkeydown="if(event.key==='Enter')runDiscover(this.value)">
+        <button id="searchBtn" onclick="runDiscover(document.getElementById('kw').value)">검색</button>
+      </div>
+      <div class="status" id="dstatus">카테고리 버튼을 누르거나 키워드를 입력해 발굴을 시작하세요.</div>
+      <div class="cards" id="dcards"></div>
+    </section>
+
+    <!-- 정리 탭 -->
+    <section id="pane-prune" class="hide">
+      <div class="searchbar">
+        <button id="scanBtn" onclick="runScan()">🧹 죽은 채널 스캔</button>
+        <span class="status" id="pstatus" style="margin:0;align-self:center">마지막 수집 기준으로 영상 안 올라온 채널을 찾습니다.</span>
+      </div>
+      <div class="rows" id="prows"></div>
+      <h3 style="margin:24px 0 10px;font-size:15px;color:var(--sub)">🗑 추적 제외됨 (복구 가능)</h3>
+      <div class="rows" id="removedRows"></div>
+    </section>
+  </main>
+<script>
+const CATS = ["인테리어","레시피","생활용품","가전","뷰티"];
+document.getElementById("cats").innerHTML =
+  CATS.map(c=>`<div class="cat" onclick="runDiscover('${c}')">${c}</div>`).join("");
+
+function setTab(t){
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===t));
+  document.getElementById('pane-discover').classList.toggle('hide',t!=='discover');
+  document.getElementById('pane-prune').classList.toggle('hide',t!=='prune');
+  if(t==='prune') loadRemoved();
+}
+const thumb = u => u ? '/api/thumb?url='+encodeURIComponent(u) : '';
+
+async function runDiscover(kw){
+  kw=(kw||'').trim(); if(!kw) return;
+  document.getElementById('kw').value=kw;
+  const btn=document.getElementById('searchBtn'), st=document.getElementById('dstatus');
+  btn.disabled=true; st.textContent=`"${kw}" 발굴 중… (검색+수집, 수십 초 소요)`;
+  document.getElementById('dcards').innerHTML='';
+  try{
+    const d = await (await fetch('/api/discover?keyword='+encodeURIComponent(kw))).json();
+    if(!d.ok) throw new Error(d.error||'실패');
+    st.textContent = d.count ? `✅ "${kw}" — 새 채널 릴스 ${d.count}건 (댓글순)` : `"${kw}" — 새로 발굴된 채널이 없습니다 (이미 목록에 있거나 결과 없음)`;
+    renderDiscover(d.items);
+  }catch(e){ st.textContent='❌ '+e.message; }
+  finally{ btn.disabled=false; }
+}
+function renderDiscover(items){
+  const el=document.getElementById('dcards');
+  if(!items.length){ el.innerHTML='<div class="empty">결과 없음.</div>'; return; }
+  el.innerHTML = items.map((i,idx)=>`
+    <div class="card">
+      <img src="${thumb(i.thumbnail)}" loading="lazy" onerror="this.style.visibility='hidden'">
+      <div class="body">
+        <div class="rank">#${idx+1} · ${i.category} · ${Math.round(i.age_hours)}시간 전</div>
+        <div class="ch">@${i.username} <span class="grade">${i.grade||''}</span></div>
+        <div class="stat"><span>댓글</span><b>${(i.comments||0).toLocaleString()}</b></div>
+        <div class="stat"><span>속도(시간당)</span><b>${(i.speed||0).toFixed(1)}</b></div>
+        <div class="btns">
+          <button class="view" onclick="window.open('${i.url}','_blank')">👁 보기</button>
+          <button class="add" id="add_${i.username}" onclick="addChannel('${i.username}',this)">➕ 목록추가</button>
+        </div>
+      </div>
+    </div>`).join("");
+}
+async function addChannel(username, btn){
+  btn.disabled=true;
+  await fetch('/api/discover/add?username='+encodeURIComponent(username),{method:'POST'});
+  document.querySelectorAll('#add_'+CSS.escape(username)).forEach(b=>{
+    b.textContent='추가됨✓'; b.classList.add('done'); b.disabled=true;
+  });
+}
+
+async function runScan(){
+  const btn=document.getElementById('scanBtn'), st=document.getElementById('pstatus');
+  btn.disabled=true; st.textContent='스캔 중…';
+  try{
+    const d = await (await fetch('/api/prune/scan')).json();
+    if(!d.ok) throw new Error(d.error||'실패');
+    st.textContent=`전체 ${d.total}채널 중 영상 잡힌 곳 ${d.active} · 삭제 후보 ${d.count}`;
+    renderPrune(d.items);
+  }catch(e){ st.textContent='❌ '+e.message; }
+  finally{ btn.disabled=false; }
+}
+function renderPrune(items){
+  const el=document.getElementById('prows');
+  if(!items.length){ el.innerHTML='<div class="empty">삭제 후보가 없습니다 👍</div>'; return; }
+  el.innerHTML = items.map(i=>`
+    <div class="row" id="prow_${i.username}">
+      <div class="info">${i.name||'(이름없음)'} <small>@${i.username}</small></div>
+      <button class="del" onclick="removeChannel('${i.username}','${(i.name||'').replace(/'/g,'')}',this)">추적 제외</button>
+    </div>`).join("");
+}
+async function removeChannel(username,name,btn){
+  btn.disabled=true;
+  await fetch('/api/prune/remove?username='+encodeURIComponent(username)+'&name='+encodeURIComponent(name),{method:'POST'});
+  const row=document.getElementById('prow_'+username); if(row) row.remove();
+  loadRemoved();
+}
+async function loadRemoved(){
+  const d = await (await fetch('/api/prune/removed')).json();
+  const el=document.getElementById('removedRows');
+  if(!d.items?.length){ el.innerHTML='<div style="color:var(--sub);font-size:13px">없음</div>'; return; }
+  el.innerHTML = d.items.map(i=>`
+    <div class="row" id="rrow_${i.username}">
+      <div class="info">${i.name||'(이름없음)'} <small>@${i.username}</small></div>
+      <button class="restore" onclick="restoreChannel('${i.username}')">복구</button>
+    </div>`).join("");
+}
+async function restoreChannel(username){
+  await fetch('/api/prune/restore?username='+encodeURIComponent(username),{method:'POST'});
+  const row=document.getElementById('rrow_'+username); if(row) row.remove();
+}
+</script>
+</body>
+</html>
