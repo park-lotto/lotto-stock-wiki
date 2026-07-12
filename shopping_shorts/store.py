@@ -105,7 +105,9 @@ class Store:
                     edit_plan_json TEXT,
                     video_path TEXT,
                     created_at TEXT NOT NULL,
-                    updated_at TEXT NOT NULL
+                    updated_at TEXT NOT NULL,
+                    subtitle_removal INTEGER NOT NULL DEFAULT 0,
+                    clean_video_path TEXT
                 )
             """)
             c.execute("""
@@ -140,6 +142,16 @@ class Store:
                     updated_at TEXT
                 )
             """)
+            # 기존 DB용 마이그레이션 — mix_jobs 자막제거 필드(2026-07-13).
+            # 새 DB는 위 CREATE에 이미 있어 여기선 "이미 존재" 예외를 조용히 넘긴다.
+            for col, ddl in (
+                ("subtitle_removal", "INTEGER NOT NULL DEFAULT 0"),
+                ("clean_video_path", "TEXT"),
+            ):
+                try:
+                    c.execute(f"ALTER TABLE mix_jobs ADD COLUMN {col} {ddl}")
+                except sqlite3.OperationalError:
+                    pass  # 이미 존재
 
     # ── 발굴 피드(누적 모드용) 저장 — last_run과 같은 단일행 JSON 패턴(2026-07-12) ──
     def save_discovery_feed(self, items):
@@ -409,15 +421,15 @@ class Store:
         return [{"origin_shortcode": r[0], "platform": r[1], "url": r[2], "title": r[3],
                  "thumbnail": r[4], "similarity_score": r[5], "saved_at": r[6]} for r in rows]
 
-    def create_mix_job(self, job_id, urls, target_seconds, structure):
+    def create_mix_job(self, job_id, urls, target_seconds, structure, subtitle_removal=False):
         """새 믹스 job 생성. 초기 status='downloading'."""
         now = datetime.now(timezone.utc).isoformat()
         with self._conn() as c:
             c.execute(
                 "INSERT INTO mix_jobs(job_id, urls_json, target_seconds, structure, "
-                "status, created_at, updated_at) VALUES(?,?,?,?,?,?,?)",
+                "status, created_at, updated_at, subtitle_removal) VALUES(?,?,?,?,?,?,?,?)",
                 (job_id, json.dumps(urls, ensure_ascii=False), target_seconds,
-                 structure, "downloading", now, now),
+                 structure, "downloading", now, now, 1 if subtitle_removal else 0),
             )
 
     def get_mix_job(self, job_id):
@@ -425,7 +437,8 @@ class Store:
         with self._conn() as c:
             row = c.execute(
                 "SELECT job_id, urls_json, target_seconds, structure, status, error, "
-                "extract_json, edit_plan_json, video_path, created_at, updated_at "
+                "extract_json, edit_plan_json, video_path, created_at, updated_at, "
+                "subtitle_removal, clean_video_path "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -436,12 +449,13 @@ class Store:
             "extract": json.loads(row[6]) if row[6] else None,
             "edit_plan": json.loads(row[7]) if row[7] else None,
             "video_path": row[8], "created_at": row[9], "updated_at": row[10],
+            "subtitle_removal": bool(row[11]), "clean_video_path": row[12],
         }
 
     def update_mix_job(self, job_id, **fields):
         """status/error/extract/edit_plan/video_path 갱신(+updated_at). 객체는 JSON 직렬화."""
         cols, vals = [], []
-        for k in ("status", "error", "video_path"):
+        for k in ("status", "error", "video_path", "clean_video_path"):
             if k in fields:
                 cols.append(f"{k}=?"); vals.append(fields[k])
         for k, col in (("extract", "extract_json"), ("edit_plan", "edit_plan_json")):
