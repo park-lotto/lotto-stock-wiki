@@ -1,15 +1,16 @@
 // ==UserScript==
 // @name         로또 소통 · 인스타 댓글 자동채우기
 // @namespace    lotto.shopping_shorts
-// @version      1.3.0
+// @version      1.3.1
 // @description  소통큐에서 넘어온 댓글을 인스타 게시물 댓글칸에 자동으로 채운다. 전송·팔로우는 사용자가 직접(안전).
 // @match        https://www.instagram.com/*
 // @run-at       document-start
-// @grant        GM_xmlhttpRequest
-// @connect      shoppingshorts.duckdns.org
+// @grant        none
 // @downloadURL  https://shoppingshorts.duckdns.org/insta_fill_comment.user.js
 // @updateURL    https://shoppingshorts.duckdns.org/insta_fill_comment.user.js
 // ==/UserScript==
+// ⚠️ @grant는 반드시 none 유지! GM_* 를 넣으면 Tampermonkey가 샌드박스 컨텍스트로
+//    전환돼 페이지 React에 값 주입(댓글 채우기)이 깨진다. 서버 완료기록은 no-cors fetch로 처리.
 (function () {
   "use strict";
 
@@ -126,14 +127,12 @@
           window.opener.postMessage({ type: "lotto_done", sc: payload.sc }, payload.o || "*");
       } catch (_) {}
       // (b) 서버에 직접 완료기록 — opener가 끊겨도 확실. 소통큐는 탭 복귀 시 반영.
+      //     no-cors POST(단순요청이라 프리플라이트 없음). /api/comment/done은 무인증 허용목록.
       const base = payload.o || "https://shoppingshorts.duckdns.org";
       try {
-        GM_xmlhttpRequest({
-          method: "POST",
-          url: base + "/api/comment/done?shortcode=" + encodeURIComponent(payload.sc),
-          onload: () => dbg("✅ 서버 완료기록됨 — 소통큐 복귀 시 감춰짐"),
-          onerror: () => dbg("⚠️ 서버 완료기록 실패"),
-        });
+        fetch(base + "/api/comment/done?shortcode=" + encodeURIComponent(payload.sc),
+              { method: "POST", mode: "no-cors", keepalive: true });
+        dbg("✅ 서버 완료기록 요청 전송 — 소통큐 복귀 시 감춰짐");
       } catch (e) { dbg("⚠️ 완료기록 예외: " + e.message); }
     };
     // 1) Enter 키로 전송
