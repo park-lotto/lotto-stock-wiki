@@ -3,6 +3,7 @@ import hmac
 import hashlib
 import os
 import re
+import shutil
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone

@@ -17,6 +17,19 @@ _SCHEMA = {
     "properties": {
         "hook_type": {"type": "string"},
         "hook_line": {"type": "string"},
+        "narrator": {"type": "string"},
+        "characters": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {"who": {"type": "string"}, "role": {"type": "string"}},
+                "required": ["who", "role"],
+            },
+        },
+        "storyline": {"type": "string"},
+        "development": {"type": "string"},
+        "twist": {"type": "string"},
+        "appeal": {"type": "string"},
         "beats": {
             "type": "array",
             "items": {
@@ -33,25 +46,39 @@ _SCHEMA = {
         "target_seconds": {"type": "number"},
         "one_line_why": {"type": "string"},
     },
-    "required": ["hook_type", "hook_line", "beats", "devices", "one_line_why"],
+    "required": ["hook_type", "hook_line", "narrator", "characters", "storyline",
+                 "development", "appeal", "beats", "devices", "one_line_why"],
 }
 
 _PROMPT = """너는 바이럴 숏폼 대본을 해부하는 분석가다. 아래 대본이 '왜 잘 터졌는지'
-그 구조를 뽑아내라(내용 요약이 아니라 재사용 가능한 뼈대).
+그 구조를 뽑아내라(내용 요약이 아니라 재사용 가능한 뼈대). 특히 이 니치의 핵심
+기법인 '자연스러운 스토리텔링'(누가·어떤 주변인물을 등장시켜·어떻게 이야기를
+끌고 가는지)을 정밀하게 잡아내라.
 
 [대본 전체]
 {full_text}
 
 다음을 채워라:
-- hook_type: 첫 훅의 유형을 한 단어로. 예: 경고형("절대 하지 마세요"), 반전형("알고보니"),
+- hook_type: 첫 훅 유형을 한 단어로. 예: 경고형("절대 하지 마세요"), 반전형("알고보니"),
   권위인용형("이모님이 알려준"), 호기심갭형("99%가 모르는"), 공감형("저도 그랬어요"),
   실수지적형, 비교형 중 가장 가까운 것(없으면 새로 명명).
 - hook_line: 실제 첫 훅 문장 그대로.
-- beats: 시간 순서의 '비트' 배열. 각 비트는 label(훅|문제제기|공감|반전|증거/시연|결과|CTA 등),
-  desc(그 비트가 하는 역할 한 줄), approx_sec("0-2" 같은 대략 구간).
-- devices: 사용된 수사·설득 장치들(예: 권위자인용, 구체적숫자, 감정트리거, 비포애프터,
-  손실회피, 시연, 반문). 해당되는 것만.
-- target_seconds: 전체 영상 길이 추정(초).
+- narrator: 화자가 누구인가(누구 시점으로 말하나). 예: "직접(나)", "지인 의사 인용",
+  "김밥집 사장님 시점".
+- characters: 이야기에 '등장시킨 주변인물'과 그 역할. 이게 핵심 기법이다 — 나와 관련된
+  주변인(예: 부산에서 장사하신 이모님, 병원 하는 지인, 김밥집 사장님)을 오버하지 않고
+  자연스럽게 끌어와 신뢰·흥미를 만든다. 각 항목 {who, role}. 없으면 빈 배열.
+- storyline: 이야기를 어떻게 끌고 가는지 한 줄 흐름(기승전결 요약).
+- development: 전개방식을 한 단어~짧게. 예: 시간순, 문제→해결, 개인일화형, 비교대조,
+  실험/시연형, 반전폭로형, 리스트나열형.
+- twist: 참신한 발상전환/반전 포인트(있으면 그 대목, 없으면 "").
+- appeal: 소구점 — 시청자를 무엇으로 끌어당기나. 예: 돈 절약, 손실회피("이거 모르면 손해"),
+  건강/안전, 편리함, 호기심 해소, 공감/위로, 과시.
+- beats: 시간 순서 '비트' 배열. 각 비트 label(훅|문제제기|공감|주변인물등장|반전|증거/시연|
+  결과|CTA 등), desc(역할 한 줄), approx_sec("0-2").
+- devices: 수사·설득 장치(권위자인용, 구체적숫자, 감정트리거, 비포애프터, 손실회피,
+  시연, 반문 등). 해당되는 것만.
+- target_seconds: 전체 길이 추정(초).
 - one_line_why: 이 대본이 잘 먹힌 핵심 이유 한 줄.
 
 JSON만 출력."""
