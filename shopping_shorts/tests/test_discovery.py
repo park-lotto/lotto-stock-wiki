@@ -80,8 +80,10 @@ def test_discover_injects_followers_and_recent_count():
         profiles_fn=profiles_fn, prev_comments=lambda sc: None,
         prev_delta=lambda sc: None, now=now,
     )
-    assert all(i["followers"] == 1000 for i in items)
-    assert all(i["recent_count"] == 2 for i in items)          # 최근2일 영상 2개
+    assert len(items) == 1                                     # 채널 단위 — 릴스 2개→1카드
+    assert items[0]["comments"] == 200                          # 대표=댓글 최다 릴스
+    assert items[0]["followers"] == 1000
+    assert items[0]["recent_count"] == 2                        # 최근2일 영상 2개(채널값 유지)
     assert items[0]["name"] == "핫채널"                          # 프로필 실명 사용
     top = items[0]
     assert abs(top["density"] - top["comments"] / 1000) < 1e-9  # 참여밀도 = 댓글/팔로워

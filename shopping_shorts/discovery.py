@@ -77,8 +77,21 @@ def _rank_reels(reels, prev_comments, prev_delta, now, window_hours, profiles=No
             it["followers"] = followers
             it["recent_count"] = counts.get(owner.lower(), 0)
         items.extend(built)
+    items = _one_per_channel(items)  # 채널 단위 — 채널당 대표 릴스 1개
     apply_grades(items)
     return sort_by(items, "comments")
+
+
+def _one_per_channel(items):
+    """채널당 댓글 최다 릴스 1개만 남긴다(채널 단위 발굴 — 같은 채널이 여러 릴스로
+    중복 노출되지 않게, 2026-07-12). 최근2일 영상수(recent_count)는 채널 전체 값이라
+    대표 릴스에 그대로 유지된다."""
+    best = {}
+    for it in items:
+        u = (it.get("username") or "").lower()
+        if u not in best or (it.get("comments") or 0) > (best[u].get("comments") or 0):
+            best[u] = it
+    return list(best.values())
 
 
 def _owners(reels):
