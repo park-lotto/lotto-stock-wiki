@@ -117,6 +117,26 @@ def test_discover_multi_aggregates_and_dedupes():
     assert len(items) == 3
 
 
+def test_discover_survives_profile_failure():
+    """팔로워 조회(프로필 액터)가 403 등으로 실패해도 발굴은 계속돼야 한다."""
+    now = datetime(2026, 7, 12, 12, 0, tzinfo=timezone.utc)
+    recent = (now - timedelta(hours=1)).isoformat()
+
+    def boom(owners):
+        raise RuntimeError("apify 토큰 17개 전부 실패(403 Forbidden)")
+
+    items = discovery.discover(
+        "x", known=set(), search_fn=lambda kw: [{"username": "ch"}],
+        fetch_reels_fn=lambda us: [{"ownerUsername": "ch", "timestamp": recent,
+                                    "commentsCount": 50, "shortcode": "c1"}],
+        profiles_fn=boom, prev_comments=lambda sc: None,
+        prev_delta=lambda sc: None, now=now,
+    )
+    assert len(items) == 1               # 프로필 실패해도 채널은 나옴
+    assert items[0]["followers"] == 0    # 팔로워만 빈값
+    assert items[0]["comments"] == 50
+
+
 def test_merge_feeds_accumulates_and_updates():
     prev = [{"username": "a", "comments": 10}, {"username": "b", "comments": 5}]
     new = [{"username": "b", "comments": 99}, {"username": "c", "comments": 3}]

@@ -95,6 +95,18 @@ def _one_per_channel(items):
     return list(best.values())
 
 
+def _safe_profiles(profiles_fn, reels):
+    """팔로워 조회(부가 데이터)는 실패해도 발굴을 죽이지 않는다 — 프로필 액터가
+    403(렌탈 소진)·오류여도 빈 dict로 넘어가 채널 랭킹은 그대로 반환(2026-07-12,
+    프로필 403이 업데이트 전체를 죽이던 버그)."""
+    if not profiles_fn:
+        return {}
+    try:
+        return profiles_fn(_owners(reels))
+    except Exception:
+        return {}
+
+
 def _owners(reels):
     """릴스 리스트의 고유 owner username(원형 유지, 중복 제거)."""
     seen, out = set(), []
@@ -116,7 +128,7 @@ def discover(keyword, known, *, search_fn, fetch_reels_fn, profiles_fn=None,
     if not targets:
         return []
     reels = fetch_reels_fn(targets)
-    profiles = profiles_fn(_owners(reels)) if profiles_fn else {}
+    profiles = _safe_profiles(profiles_fn, reels)
     return _rank_reels(reels, prev_comments, prev_delta, now, window_hours, profiles)
 
 
@@ -146,7 +158,7 @@ def discover_multi(keywords, known, *, search_fn, fetch_reels_fn, profiles_fn=No
     if not targets:
         return []
     reels = fetch_reels_fn(targets)
-    profiles = profiles_fn(_owners(reels)) if profiles_fn else {}
+    profiles = _safe_profiles(profiles_fn, reels)
     return _rank_reels(reels, prev_comments, prev_delta, now, window_hours, profiles)
 
 
