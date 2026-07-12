@@ -54,6 +54,11 @@ def run_mix_job(job_id, db_path, work_root):
         store.update_mix_job(job_id, status="planning")
         source_scripts = list(extracts.values())
         plan = build_edit_plan(source_scripts, job["target_seconds"], structure=job["structure"])
+        # 빈 EDL(추출 전량 실패 또는 파이프라인 중간 전용풀 소진)을 ready_for_review로
+        # 오보고하지 않는다 — 성공처럼 보이는 빈 리뷰화면 대신 즉시 실패로 정상 종료
+        # (2026-07-12 최종 전체리뷰 Important).
+        if not plan["beats"]:
+            raise RuntimeError("EDL 비어있음 — 대본 추출 실패 또는 Gemini 키 소진으로 편집안을 만들지 못함")
 
         # 4) 비트별 TTS
         store.update_mix_job(job_id, status="tts")

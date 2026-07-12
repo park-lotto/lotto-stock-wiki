@@ -39,6 +39,26 @@ def test_run_mix_job_happy_path(monkeypatch):
     assert job["edit_plan"]["beats"][0]["tts_path"]  # 렌더가 의존하는 불변식
 
 
+def test_run_mix_job_empty_edl_fails(monkeypatch):
+    # 빈 EDL(추출 전량 실패/키 소진)은 ready_for_review로 오보고하지 않고 failed로 종료
+    db = _dbpath()
+    work = Path(tempfile.mkdtemp())
+    s = Store(db)
+    s.create_mix_job("je", ["url0"], 20, "free")
+
+    monkeypatch.setattr(mix_pipeline, "download_video", lambda url, d: Path(d) / "v.mp4")
+    monkeypatch.setattr(mix_pipeline, "extract_script",
+                        lambda path, video_id, caption="": {"segments": [], "full_text": ""})
+    monkeypatch.setattr(mix_pipeline, "build_edit_plan",
+                        lambda scripts, target_seconds, structure, **k: {
+                            "structure": structure, "beats": [], "plagiarism_flags": []})
+
+    mix_pipeline.run_mix_job("je", db, work)
+    job = s.get_mix_job("je")
+    assert job["status"] == "failed"
+    assert "EDL 비어있음" in job["error"]
+
+
 def test_run_mix_job_failure_sets_status(monkeypatch):
     db = _dbpath()
     work = Path(tempfile.mkdtemp())
