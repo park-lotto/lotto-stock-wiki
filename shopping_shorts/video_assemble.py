@@ -92,7 +92,11 @@ def assemble(edit_plan, tts_paths, source_video_paths, out_path):
 
     concat_txt = work / "concat.txt"
     concat_txt.write_text("".join(f"file '{c.as_posix()}'\n" for c in beat_clips), encoding="utf-8")
+    # 비트 클립들은 이미 동일 설정(libx264/aac)으로 인코딩됐으므로 concat에서 다시
+    # 풀 재인코딩하지 말고 스트림 복사(-c copy)한다. 재인코딩 concat은 2GB 서버에서
+    # 수십 초 걸려 백그라운드 렌더가 서비스 재시작(잦은 배포)에 걸려 죽는 원인이었다
+    # (2026-07-12 라이브 exit 255). -c copy는 ~0.3초로 그 취약 구간을 제거한다.
     cmd = ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(concat_txt),
-           "-c:v", "libx264", "-c:a", "aac", str(out_path)]
+           "-c", "copy", str(out_path)]
     subprocess.run(cmd, capture_output=True, check=True)
     return str(out_path)
