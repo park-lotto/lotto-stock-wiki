@@ -54,6 +54,35 @@
   .btns button.view{border-color:#2f81f7;color:#7db4ff}
   .btns button.comment{background:linear-gradient(90deg,#7b2ff7,#c22ed0);border:none;color:#fff}
   .btns button.save.saved{background:#2ea043;border-color:#2ea043;color:#fff}
+  .script-btn{width:100%;margin-top:6px;padding:8px;border-radius:7px;border:1px solid #b8860b;
+              background:linear-gradient(90deg,#3a2f0d,#2a2408);color:#ffd76b;font-size:12px;cursor:pointer}
+  .script-btn:hover{background:linear-gradient(90deg,#4a3d10,#352d0a)}
+  .script-btn:disabled{opacity:.6;cursor:wait}
+  /* 대본 모달 */
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;
+            align-items:center;justify-content:center;padding:20px}
+  .modal-bg.open{display:flex}
+  .modal-box{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+             width:min(720px,100%);max-height:86vh;display:flex;flex-direction:column;overflow:hidden}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;gap:8px;
+              padding:14px 18px;border-bottom:1px solid var(--line)}
+  .modal-head b{font-size:15px}
+  .modal-head .x{background:none;border:none;color:var(--sub);font-size:20px;cursor:pointer;padding:0 4px}
+  .modal-body{padding:16px 18px;overflow:auto}
+  .sm-full{background:#0d131c;border:1px solid var(--line);border-radius:8px;padding:12px;
+           font-size:14px;line-height:1.7;white-space:pre-wrap;color:var(--txt)}
+  .sm-sec{display:flex;align-items:center;justify-content:space-between;margin:18px 0 8px}
+  .sm-sec b{font-size:13px;color:var(--sub)}
+  .sm-copy{background:#0d131c;border:1px solid var(--line);color:var(--sub);font-size:12px;
+           padding:5px 10px;border-radius:6px;cursor:pointer}
+  .sm-copy:hover{color:#7db4ff;border-color:var(--accent)}
+  .sm-copy.done{background:#2ea043;border-color:#2ea043;color:#fff}
+  .sm-seg{border-left:2px solid var(--line);padding:6px 0 6px 12px;margin-bottom:10px}
+  .sm-seg .t{font-size:11px;color:var(--accent);margin-bottom:2px}
+  .sm-seg .txt{font-size:13px;line-height:1.5}
+  .sm-seg .scene{font-size:11px;color:var(--sub);margin-top:2px}
+  .sm-loading{text-align:center;padding:40px;color:var(--sub);font-size:14px}
+  .sm-err{padding:24px;color:#ff9b9b;font-size:14px;text-align:center}
   @media (max-width: 768px){
     body{flex-direction:column;min-height:100vh}
     .sidebar{width:100%;border-right:none;border-bottom:1px solid var(--line);padding:10px 12px;
@@ -116,6 +145,12 @@
       <div class="empty">「지금 수집」을 눌러 시작하세요.</div>
     </div>
   </main>
+  <div class="modal-bg" id="scriptModal" onclick="closeScript(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-head"><b>📝 대본 추출</b><button class="x" onclick="closeScript()">✕</button></div>
+      <div class="modal-body" id="scriptBody"></div>
+    </div>
+  </div>
 <script>
 // 유형(제작·수익화 방식) = 초보자 탐색 1차축. topics = 그 유형의 세부주제(2차축).
 const CTYPES = [
@@ -171,6 +206,7 @@ function render(){
           <button class="comment" onclick="goComment('${i.shortcode}')">💬 댓글</button>
           <button class="save" id="save_${i.shortcode}" onclick="doSave('${i.shortcode}', this)">📥 담기</button>
         </div>
+        <button class="script-btn" onclick="extractScript('${i.shortcode}')">📝 대본 추출</button>
         ${i.inpock?`<div style="margin-top:6px"><a href="${i.inpock}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🛒 판매채널</a></div>`:''}
       </div>
     </div>`).join("");
@@ -208,6 +244,42 @@ async function copyLink(url, btn){
   const old = btn.textContent;
   btn.textContent='✓ 복사됨'; btn.classList.add('copied');
   setTimeout(()=>{ btn.textContent=old; btn.classList.remove('copied'); }, 1200);
+}
+
+// ── 대본 추출 ──────────────────────────────────────────
+function esc(s){ return (s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function openScript(html){ document.getElementById('scriptBody').innerHTML=html; document.getElementById('scriptModal').classList.add('open'); }
+function closeScript(){ document.getElementById('scriptModal').classList.remove('open'); }
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeScript(); });
+async function extractScript(shortcode){
+  openScript('<div class="sm-loading">⏳ 대본 추출 중… 다운로드 + AI 분석 (10~30초)<br><small>한번 뽑으면 다음부턴 즉시 열립니다</small></div>');
+  try{
+    const r = await fetch('/api/extract_script?shortcode='+encodeURIComponent(shortcode), {method:'POST'});
+    const d = await r.json();
+    if(!d.ok){ document.getElementById('scriptBody').innerHTML='<div class="sm-err">⚠️ '+esc(d.error||'추출 실패')+'</div>'; return; }
+    renderScript(d);
+  }catch(err){ document.getElementById('scriptBody').innerHTML='<div class="sm-err">⚠️ 네트워크 오류 — 잠시 후 재시도</div>'; }
+}
+function renderScript(d){
+  const full = d.full_text||'';
+  const segs = d.segments||[];
+  let h = `<div class="sm-sec"><b>전체 대본${d.cached?' (저장됨)':''}</b>`
+        + `<button class="sm-copy" onclick="copyFullText(this)">📋 전체 복사</button></div>`
+        + `<div class="sm-full">${esc(full)||'(대본 없음)'}</div>`;
+  if(segs.length){
+    h += `<div class="sm-sec"><b>세그먼트 ${segs.length}개 (타임코드·장면)</b></div>`;
+    h += segs.map(s=>`<div class="sm-seg"><div class="t">${(+s.start).toFixed(1)}s ~ ${(+s.end).toFixed(1)}s</div>`
+        + `<div class="txt">${esc(s.text)}</div>`
+        + (s.scene_desc?`<div class="scene">🎬 ${esc(s.scene_desc)}</div>`:'')+`</div>`).join('');
+  }
+  openScript(h);
+}
+async function copyFullText(btn){
+  const full = (document.querySelector('#scriptBody .sm-full')||{}).innerText || '';
+  try{ await navigator.clipboard.writeText(full); }
+  catch(e){ const t=document.createElement('textarea'); t.value=full; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
+  btn.textContent='✓ 복사됨'; btn.classList.add('done');
+  setTimeout(()=>{ btn.textContent='📋 전체 복사'; btn.classList.remove('done'); }, 1200);
 }
 async function doSave(sc, btn){
   await fetch('/api/save?shortcode=' + encodeURIComponent(sc), {method:'POST'});

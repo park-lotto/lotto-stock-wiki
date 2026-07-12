@@ -16,6 +16,7 @@ from shopping_shorts.outreach import build_queue
 from shopping_shorts.store import Store
 from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
 from shopping_shorts.frame_extract import download_video, extract_frames
+from shopping_shorts.script_extract import extract_script
 from shopping_shorts.apify_client import fetch_single_reel, fetch_reels, fetch_profiles
 from shopping_shorts import discovery, instagram_search
 from shopping_shorts.channels import load_channels
@@ -274,6 +275,53 @@ def api_prune_removed():
 
 _FIND_TMP_DIR = Path(__file__).parent / "data" / "find_frames"
 _MIX_WORK_DIR = Path(__file__).parent / "data" / "mix_jobs"
+
+
+@app.post("/api/extract_script")
+def api_extract_script(shortcode: str):
+    """카드 영상 1개 → 대본(세그먼트+전체텍스트) 온디맨드 추출. 캐시 우선.
+
+    수집 때 전체를 뽑지 않고, 버튼 클릭한 영상만 다운로드→Gemini 추출→저장한다.
+    한번 추출하면 캐시되어 재클릭은 즉시 반환. 인스타 CDN URL 만료 시 다운로드가
+    실패할 수 있어(오래된 항목) 통째로 감싸 502로 안내한다."""
+    store = Store(DB_PATH)
+    items, _ = store.load_last_run()
+    target_code = _media_code(shortcode)
+    item = next((i for i in items if i["shortcode"] == shortcode
+                 or _media_code(i["shortcode"]) == target_code), None)
+    if not item:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "해당 항목 없음 — 재수집 필요"})
+    code = item["shortcode"]
+
+    cached = store.get_script(code)
+    if cached:
+        return {"ok": True, "cached": True, **cached}
+
+    video_url = item.get("video_url")
+    if not video_url:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "video_url 없음 — 재수집 필요"})
+
+    work_dir = _FIND_TMP_DIR / hashlib.sha1(code.encode()).hexdigest()[:16]
+    try:
+        video_path = download_video(video_url, work_dir)
+    except (requests.RequestException, RuntimeError) as e:
+        msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
+        return JSONResponse(status_code=502, content={"ok": False, "error": f"영상 다운로드 실패(URL 만료 가능) — 재수집 필요: {msg}"})
+    except Exception as e:
+        msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
+        return JSONResponse(status_code=500, content={"ok": False, "error": msg})
+
+    try:
+        result = extract_script(video_path, code, caption=item.get("caption", ""))
+    except Exception as e:
+        msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
+        return JSONResponse(status_code=500, content={"ok": False, "error": msg})
+
+    if not result.get("full_text") and not result.get("segments"):
+        return JSONResponse(status_code=502, content={"ok": False, "error": "대본 추출 실패(Gemini 키 소진 또는 영상 인식 실패) — 잠시 후 재시도"})
+
+    store.save_script(code, result)
+    return {"ok": True, "cached": False, **result}
 
 
 @app.post("/api/find/analyze")

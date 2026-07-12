@@ -60,6 +60,14 @@ class Store:
                     analyzed_at TEXT
                 )
             """)
+            # 카드 대본추출 캐시(2026-07-13) — shortcode당 1행, 재클릭 시 즉시 반환.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS script_extracts (
+                    shortcode TEXT PRIMARY KEY,
+                    script_json TEXT NOT NULL,
+                    extracted_at TEXT
+                )
+            """)
             c.execute("""
                 CREATE TABLE IF NOT EXISTS source_candidates (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -295,6 +303,29 @@ class Store:
         if not row:
             return [], None
         return json.loads(row[0]), row[1]
+
+    def save_script(self, shortcode, script):
+        """대본추출 결과({segments, full_text}) 저장(덮어쓰기)."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO script_extracts(shortcode, script_json, extracted_at) "
+                "VALUES(?,?,datetime('now')) ON CONFLICT(shortcode) DO UPDATE SET "
+                "script_json=excluded.script_json, extracted_at=excluded.extracted_at",
+                (shortcode, json.dumps(script, ensure_ascii=False)),
+            )
+
+    def get_script(self, shortcode):
+        """저장된 대본추출 결과. 없으면 None. 있으면 {segments, full_text, extracted_at}."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT script_json, extracted_at FROM script_extracts WHERE shortcode=?",
+                (shortcode,),
+            ).fetchone()
+        if not row:
+            return None
+        data = json.loads(row[0])
+        data["extracted_at"] = row[1]
+        return data
 
     def save_source_analysis(self, shortcode, keywords, frame_paths, analyzed_at):
         """영상 분석 결과(키워드+프레임 경로) 저장(덮어쓰기)."""

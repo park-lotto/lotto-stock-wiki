@@ -41,6 +41,41 @@ def test_unauthenticated_api_returns_401(monkeypatch):
     assert r.status_code == 401
 
 
+def test_extract_script_404_when_no_item(monkeypatch):
+    monkeypatch.setattr(app_module, "_AUTH_ON", False)
+    monkeypatch.setattr(app_module.Store, "load_last_run", lambda self: ([], None))
+    client = TestClient(app_module.app)
+    r = client.post("/api/extract_script?shortcode=abc")
+    assert r.status_code == 404
+    assert r.json()["ok"] is False
+
+
+def test_extract_script_returns_cache_without_download(monkeypatch):
+    # 캐시가 있으면 다운로드·Gemini 없이 즉시 반환.
+    monkeypatch.setattr(app_module, "_AUTH_ON", False)
+    item = {"shortcode": "ABC", "video_url": "http://x", "caption": "c"}
+    monkeypatch.setattr(app_module.Store, "load_last_run", lambda self: ([item], None))
+    monkeypatch.setattr(app_module.Store, "get_script",
+                        lambda self, code: {"full_text": "안녕하세요", "segments": [], "extracted_at": "2026-07-13"})
+    client = TestClient(app_module.app)
+    r = client.post("/api/extract_script?shortcode=ABC")
+    assert r.status_code == 200
+    d = r.json()
+    assert d["ok"] and d["cached"] and d["full_text"] == "안녕하세요"
+
+
+def test_store_script_roundtrip(tmp_path):
+    from shopping_shorts.store import Store
+    s = Store(tmp_path / "t.db")
+    assert s.get_script("X") is None
+    s.save_script("X", {"full_text": "hi", "segments": [
+        {"seg_id": "X-0", "start": 0.0, "end": 1.0, "text": "hi", "scene_desc": "s"}]})
+    got = s.get_script("X")
+    assert got["full_text"] == "hi"
+    assert got["segments"][0]["text"] == "hi"
+    assert got["extracted_at"]
+
+
 def test_unauthenticated_page_redirects_to_login(monkeypatch):
     client = _client_with_auth(monkeypatch)
     r = client.get("/", follow_redirects=False)
