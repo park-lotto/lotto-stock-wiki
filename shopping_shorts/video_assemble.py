@@ -22,10 +22,14 @@ _OUT_W, _OUT_H = 720, 1280
 # 하단 자막 바(원본 소각 자막을 덮는다) + 한 줄 자막 스타일.
 _BAR_H = 300
 _CAP_FONTSIZE = 52      # 짧은 1줄 구절이라 여유 있음 → 키움
-_CAP_TARGET = 7         # 한 구절 목표 글자수(공백 제외). 어절 길이가 제각각이라
-                        # 이 목표 근처에서 끊어도 자연히 불규칙하게 나뉜다.
+# 레퍼런스(바이럴 숏폼) 자막 리듬: 한 구절이 1~3어절(예: "여러분, 오이 절대",
+# "저도 오이를", "꼭 두 세개씩", "수분이라")로 아주 짧고, 무자막 구간 없이 빠르게
+# 순차 전환된다. 목표 글자수를 작게 잡아 어절 1~3개 단위로 끊기게 한다.
+_CAP_TARGET = 5         # 한 구절 목표 글자수(공백 제외). 어절 길이가 제각각이라
+                        # 이 목표 근처에서 끊어도 자연히 불규칙하게(1~3어절) 나뉜다.
+_CAP_MAX_WORDS = 3      # 한 구절 최대 어절 수(글자수가 짧아도 3어절 넘기지 않음).
 _CAP_WRAP = 13          # 아주 긴 단일 어절 방어용(한 줄 최대 글자수, 720px 안)
-_CAP_MIN_DUR = 0.5      # 한 구절 최소 표시시간(짧은 2~3자가 순식간에 지나가지 않게)
+_CAP_MIN_DUR = 0.25     # 한 구절 최소 표시시간(속도감). 레퍼런스도 0.2s 구절 존재.
 
 # 한글 폰트 후보(먼저 발견되는 것 사용). repo에 NanumGothic을 번들하므로 서버·로컬
 # 어디서든 별도 설치 없이 자막이 나온다(env로 다른 폰트 강제 가능).
@@ -87,17 +91,19 @@ def _caption_segments(narration):
     narr = (narration or "").strip()
     if not narr:
         return []
-    out, cur = [], ""
+    out, cur = [], []
     for w in narr.split():
         if not cur:
-            cur = w
-        elif len((cur + w).replace(" ", "")) <= _CAP_TARGET:
-            cur = cur + " " + w
+            cur = [w]
+        # 글자수 목표 안이고 어절 수도 상한 이내면 같은 구절에 붙인다.
+        elif (len("".join(cur + [w])) <= _CAP_TARGET
+              and len(cur) < _CAP_MAX_WORDS):
+            cur.append(w)
         else:
-            out.append(cur)
-            cur = w
+            out.append(" ".join(cur))
+            cur = [w]
     if cur:
-        out.append(cur)
+        out.append(" ".join(cur))
     # 목표를 크게 넘는 초장문 단일 구절만 줄바꿈으로 방어(대부분은 그대로 1줄).
     segs = []
     for s in out:

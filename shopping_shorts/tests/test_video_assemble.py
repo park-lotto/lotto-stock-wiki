@@ -70,6 +70,21 @@ def test_caption_segments_long_single_word_wrapped():
     assert all(len(s.replace("\n", "")) <= va._CAP_WRAP for s in segs)
 
 
+def test_caption_segments_max_words_cap():
+    # 아주 짧은 어절이 여러 개여도 한 구절이 _CAP_MAX_WORDS 어절을 넘지 않는다.
+    # (레퍼런스 리듬: 1~3어절 단위로 빠르게 전환)
+    segs = va._caption_segments("가 나 다 라 마 바 사 아")   # 1글자 어절 8개
+    assert all(len(s.split()) <= va._CAP_MAX_WORDS for s in segs)
+    assert " ".join(segs) == "가 나 다 라 마 바 사 아"        # 내용 보존
+
+
+def test_caption_segments_ref_rhythm_short_phrases():
+    # 레퍼런스 대사가 1~3어절 짧은 구절로 나뉘는지(속도감).
+    segs = va._caption_segments("저도 오이를 냉장고에 넣어도 꼭 두 세개씩 물러서 버렸거든요")
+    assert len(segs) >= 5                                    # 잘게 쪼개짐
+    assert all(len(s.split()) <= va._CAP_MAX_WORDS for s in segs)
+
+
 # ── 자막 시간 배분 ──────────────────────────────────────────────
 
 def test_caption_durations_sum_not_exceed_dur():
