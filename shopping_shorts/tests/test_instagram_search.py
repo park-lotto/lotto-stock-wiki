@@ -100,7 +100,39 @@ def test_search_channels_returns_username(monkeypatch):
         ]
     monkeypatch.setattr(instagram_search, "_run_with_rotation", fake_run)
 
-    out = instagram_search.search_channels("주방템")
+    out = instagram_search.search_channels("kitchen gadgets")
     assert out == [{"username": "chan_a",
                     "url": "https://www.instagram.com/reel/c1/",
                     "title": "주방템", "thumbnail": "t1"}]  # username 없는 c2는 제외
+
+
+def test_search_channels_hashtag_fallback_when_empty(monkeypatch):
+    """붙은 한국어 복합어("주방템")가 0건이면 "#주방템"으로 자동 재시도(2026-07-12 실측)."""
+    monkeypatch.setattr(instagram_search, "APIFY_TOKENS", ["fake-key"])
+    queries = []
+
+    def fake_run(payload, tokens, timeout, poll_interval, actor=None):
+        queries.append(payload["query"])
+        if payload["query"] == "#주방템":
+            return [{"code": "c1", "is_video": True, "user": {"username": "kch"},
+                     "caption": {"text": "주방"}, "thumbnail_url": "t"}]
+        return []  # 붙은 "주방템"은 0건
+    monkeypatch.setattr(instagram_search, "_run_with_rotation", fake_run)
+
+    out = instagram_search.search_channels("주방템")
+    assert queries == ["주방템", "#주방템"]  # 폴백 발동
+    assert out[0]["username"] == "kch"
+
+
+def test_search_channels_no_fallback_for_multiword(monkeypatch):
+    """공백 있는 쿼리(영어 등)는 해시태그 폴백 안 함(원래 잘 됨)."""
+    monkeypatch.setattr(instagram_search, "APIFY_TOKENS", ["fake-key"])
+    queries = []
+
+    def fake_run(payload, tokens, timeout, poll_interval, actor=None):
+        queries.append(payload["query"])
+        return []
+    monkeypatch.setattr(instagram_search, "_run_with_rotation", fake_run)
+
+    instagram_search.search_channels("kitchen gadgets")
+    assert queries == ["kitchen gadgets"]  # 폴백 없음

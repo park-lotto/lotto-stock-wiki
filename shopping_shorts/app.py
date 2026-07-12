@@ -162,6 +162,29 @@ def api_discover(keyword: str, max_channels: int = 15):
     return {"ok": True, "count": len(items), "items": items, "keyword": keyword}
 
 
+# 업데이트 버튼이 자동으로 도는 기본 카테고리(해시태그 형태 — 붙은 한국어
+# 복합어는 액터가 0건이라 "#" 필수, 2026-07-12 실측). search_channels가 0건 시
+# 자동 폴백도 하지만, 여기선 처음부터 해시태그로 넣어 1회 호출로 끝낸다.
+_DISCOVER_CATEGORIES = ["#주방템", "#살림템", "#인테리어", "#자취템", "#생활꿀템", "#뷰티템"]
+
+
+@app.get("/api/discover/update")
+def api_discover_update():
+    """🔄 업데이트 — 기본 카테고리들을 한 번에 검색해 '내가 모르던 채널' 중
+    댓글 터지는 릴스를 모아 랭킹으로 반환(수동 검색과 별개, 버튼 하나로)."""
+    store = Store(DB_PATH)
+    try:
+        items = discovery.discover_multi(
+            _DISCOVER_CATEGORIES, known=_known_usernames(store),
+            search_fn=instagram_search.search_channels, fetch_reels_fn=fetch_reels,
+            prev_comments=store.prev_comments, prev_delta=store.prev_delta,
+        )
+    except Exception as e:
+        return _err(e)
+    return {"ok": True, "count": len(items), "items": items,
+            "categories": _DISCOVER_CATEGORIES}
+
+
 @app.post("/api/discover/add")
 def api_discover_add(username: str, name: str = ""):
     """발굴 채널을 벤치마크 목록에 추가(이후 메인 랭킹에도 추적)."""

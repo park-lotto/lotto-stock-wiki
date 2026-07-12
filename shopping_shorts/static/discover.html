@@ -88,12 +88,16 @@
 
     <!-- 발굴 탭 -->
     <section id="pane-discover">
+      <div class="searchbar" style="margin-bottom:12px">
+        <button id="updateBtn" onclick="runUpdate()" style="background:linear-gradient(90deg,#1f6feb,#238636);font-weight:600">🔄 업데이트 — 새 채널 자동 발굴</button>
+        <span class="status" id="ustatus" style="margin:0;align-self:center">누르면 여러 카테고리를 한 번에 검색해 모르던 채널을 랭킹으로 올립니다.</span>
+      </div>
       <div class="cats" id="cats"></div>
       <div class="searchbar">
         <input id="kw" placeholder="카테고리·키워드 직접 입력 (예: 주방템, 캠핑용품)" onkeydown="if(event.key==='Enter')runDiscover(this.value)">
         <button id="searchBtn" onclick="runDiscover(document.getElementById('kw').value)">검색</button>
       </div>
-      <div class="status" id="dstatus">카테고리 버튼을 누르거나 키워드를 입력해 발굴을 시작하세요.</div>
+      <div class="status" id="dstatus">🔄 업데이트를 누르거나, 카테고리 버튼·키워드로 개별 발굴하세요.</div>
       <div class="cards" id="dcards"></div>
     </section>
 
@@ -121,6 +125,20 @@ function setTab(t){
 }
 const thumb = u => u ? '/api/thumb?url='+encodeURIComponent(u) : '';
 
+async function runUpdate(){
+  const btn=document.getElementById('updateBtn'), st=document.getElementById('ustatus');
+  const ds=document.getElementById('dstatus');
+  btn.disabled=true; st.textContent='업데이트 중… (여러 카테고리 검색+수집, 1~2분 소요)';
+  document.getElementById('dcards').innerHTML='';
+  try{
+    const d = await (await fetch('/api/discover/update')).json();
+    if(!d.ok) throw new Error(d.error||'실패');
+    st.textContent = d.count ? `✅ 새 채널 릴스 ${d.count}건 (댓글순)` : '새로 발굴된 채널이 없습니다 (이미 목록에 있거나 결과 없음)';
+    ds.textContent = `카테고리: ${(d.categories||[]).join(' ')}`;
+    renderDiscover(d.items);
+  }catch(e){ st.textContent='❌ '+e.message; }
+  finally{ btn.disabled=false; }
+}
 async function runDiscover(kw){
   kw=(kw||'').trim(); if(!kw) return;
   document.getElementById('kw').value=kw;

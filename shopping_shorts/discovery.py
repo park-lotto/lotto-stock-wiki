@@ -36,19 +36,10 @@ def new_usernames(candidates, known, max_channels=15):
     return out
 
 
-def discover(keyword, known, *, search_fn, fetch_reels_fn,
-             prev_comments, prev_delta, now=None, window_hours=48, max_channels=15):
-    """카테고리 키워드 → 발굴 랭킹 항목 리스트(댓글 내림차순).
-
-    search_fn(keyword)->[{username,...}], fetch_reels_fn(usernames)->[reel,...].
-    발굴 채널은 엑셀 메타(팔로워/인포크)가 없으므로 username 기반 합성 메타를
-    만든다 — 팔로워 미상이라 참여밀도(density)는 0이 되지만 댓글수·속도·가속으로
-    충분히 랭킹된다. 각 항목에 discovered=True 표시."""
-    candidates = search_fn(keyword)
-    targets = new_usernames(candidates, known, max_channels=max_channels)
-    if not targets:
-        return []
-    reels = fetch_reels_fn(targets)
+def _rank_reels(reels, prev_comments, prev_delta, now, window_hours):
+    """발굴 릴스 원본 → 지표·등급 채워 댓글순 정렬. 발굴 채널은 엑셀 메타가
+    없으므로 username 기반 합성 메타(팔로워 미상 → density 0, 댓글·속도·가속으로
+    랭킹)를 만든다. 각 항목 discovered=True."""
     items = []
     for r in reels:
         owner = r.get("ownerUsername") or r.get("username")
@@ -63,6 +54,42 @@ def discover(keyword, known, *, search_fn, fetch_reels_fn,
         items.extend(built)
     apply_grades(items)
     return sort_by(items, "comments")
+
+
+def discover(keyword, known, *, search_fn, fetch_reels_fn,
+             prev_comments, prev_delta, now=None, window_hours=48, max_channels=15):
+    """카테고리 키워드 하나 → 발굴 랭킹 항목 리스트(댓글 내림차순).
+
+    search_fn(keyword)->[{username,...}], fetch_reels_fn(usernames)->[reel,...]."""
+    targets = new_usernames(search_fn(keyword), known, max_channels=max_channels)
+    if not targets:
+        return []
+    return _rank_reels(fetch_reels_fn(targets), prev_comments, prev_delta, now, window_hours)
+
+
+def discover_multi(keywords, known, *, search_fn, fetch_reels_fn,
+                   prev_comments, prev_delta, now=None, window_hours=48,
+                   max_channels_per=8, max_total=40):
+    """여러 카테고리를 한 번에 → "업데이트" 한 번으로 새 채널들이 랭킹으로 정렬돼
+    올라오게(2026-07-12). 카테고리별로 검색해 새 username을 모으되 전체에서
+    중복 제거하고, 릴스 수집(fetch_reels)은 모아서 1회만 호출(비용·속도)."""
+    known_n = {_norm(k) for k in known}
+    seen = set()
+    targets = []
+    for kw in keywords:
+        for u in new_usernames(search_fn(kw), known_n | seen, max_channels=max_channels_per):
+            n = _norm(u)
+            if n in seen:
+                continue
+            seen.add(n)
+            targets.append(u)
+            if len(targets) >= max_total:
+                break
+        if len(targets) >= max_total:
+            break
+    if not targets:
+        return []
+    return _rank_reels(fetch_reels_fn(targets), prev_comments, prev_delta, now, window_hours)
 
 
 def find_inactive(channels, active_usernames):

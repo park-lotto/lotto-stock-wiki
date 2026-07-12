@@ -56,6 +56,34 @@ def test_discover_empty_when_no_new_channels():
     assert called == []  # 새 채널 없으면 Apify 수집 호출 자체를 안 함(비용 절약)
 
 
+def test_discover_multi_aggregates_and_dedupes():
+    now = datetime(2026, 7, 12, 12, 0, tzinfo=timezone.utc)
+    recent = (now - timedelta(hours=1)).isoformat()
+    searches = []
+
+    def search_fn(kw):
+        searches.append(kw)
+        return {  # 카테고리별 후보(일부 중복 chX)
+            "#주방템": [{"username": "chA"}, {"username": "chB"}],
+            "#살림템": [{"username": "chB"}, {"username": "known1"}, {"username": "chC"}],
+        }.get(kw, [])
+
+    fetched = {}
+    def fetch_reels_fn(usernames):
+        fetched["u"] = usernames
+        return [{"ownerUsername": u, "timestamp": recent, "commentsCount": 100,
+                 "shortcode": u + "1"} for u in usernames]
+
+    items = discovery.discover_multi(
+        ["#주방템", "#살림템"], known={"known1"},
+        search_fn=search_fn, fetch_reels_fn=fetch_reels_fn,
+        prev_comments=lambda sc: None, prev_delta=lambda sc: None, now=now,
+    )
+    assert searches == ["#주방템", "#살림템"]           # 두 카테고리 모두 검색
+    assert fetched["u"] == ["chA", "chB", "chC"]        # 중복 chB 1회, known1 제외
+    assert len(items) == 3
+
+
 def test_find_inactive_flags_channels_with_no_reels():
     channels = [
         {"name": "살아있음", "username": "alive"},

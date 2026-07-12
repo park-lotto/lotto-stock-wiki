@@ -40,16 +40,10 @@ def _owner_username(item):
     return None
 
 
-def search_channels(keyword, max_results=20, token=None, timeout=180, poll_interval=5):
-    """키워드 검색 → [{username, url, caption, thumbnail}, ...] (발굴용).
-
-    search()가 릴스 URL만 주는 것과 달리, "어느 채널이 올렸는지"(username)를 함께
-    뽑아 카테고리 기반 새 채널 발굴에 쓴다. username을 못 뽑은 항목은 제외."""
-    tokens = [token] if token else APIFY_TOKENS
-    if not tokens:
-        raise RuntimeError("instagram_search: APIFY_TOKEN이 설정되지 않았습니다")
-    payload = {"query": keyword, "maxPages": 1}
-    items = _run_with_rotation(payload, tokens, timeout, poll_interval, actor=_ACTOR)
+def _search_channels_once(query, tokens, max_results, timeout, poll_interval):
+    """단일 쿼리 1회 검색 → 정규화 후보 리스트."""
+    items = _run_with_rotation({"query": query, "maxPages": 1},
+                               tokens, timeout, poll_interval, actor=_ACTOR)
     out = []
     for item in items:
         code = item.get("code")
@@ -67,6 +61,25 @@ def search_channels(keyword, max_results=20, token=None, timeout=180, poll_inter
         })
         if len(out) >= max_results:
             break
+    return out
+
+
+def search_channels(keyword, max_results=20, token=None, timeout=180, poll_interval=5):
+    """키워드 검색 → [{username, url, caption, thumbnail}, ...] (발굴용).
+
+    search()가 릴스 URL만 주는 것과 달리, "어느 채널이 올렸는지"(username)를 함께
+    뽑아 카테고리 기반 새 채널 발굴에 쓴다. username을 못 뽑은 항목은 제외.
+
+    해시태그 폴백(2026-07-12 실측): 붙은 한국어 복합어(예 "주방템")는 이 액터가
+    0건을 주지만 해시태그 형태("#주방템")는 정상적으로 한국 채널을 반환한다.
+    그래서 공백 없는 단일 토큰이 0건이면 자동으로 "#키워드"로 재시도한다."""
+    tokens = [token] if token else APIFY_TOKENS
+    if not tokens:
+        raise RuntimeError("instagram_search: APIFY_TOKEN이 설정되지 않았습니다")
+    kw = (keyword or "").strip()
+    out = _search_channels_once(kw, tokens, max_results, timeout, poll_interval)
+    if not out and kw and not kw.startswith("#") and " " not in kw:
+        out = _search_channels_once("#" + kw, tokens, max_results, timeout, poll_interval)
     return out
 
 
