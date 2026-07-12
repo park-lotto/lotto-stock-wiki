@@ -112,8 +112,8 @@ def test_discover_multi_aggregates_and_dedupes():
         search_fn=search_fn, fetch_reels_fn=fetch_reels_fn,
         prev_comments=lambda sc: None, prev_delta=lambda sc: None, now=now,
     )
-    assert searches == ["#주방템", "#살림템"]           # 두 카테고리 모두 검색
-    assert fetched["u"] == ["chA", "chB", "chC"]        # 중복 chB 1회, known1 제외
+    assert sorted(searches) == ["#살림템", "#주방템"]    # 두 카테고리 모두 검색(병렬 → 순서무관)
+    assert fetched["u"] == ["chA", "chB", "chC"]        # 결과는 키워드 순서 보존, 중복 chB 1회·known1 제외
     assert len(items) == 3
 
 

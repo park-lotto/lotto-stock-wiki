@@ -134,6 +134,17 @@ function setTab(t){
 }
 const thumb = u => u ? '/api/thumb?url='+encodeURIComponent(u) : '';
 let DSTATE = {items:[], tab:'comments'};
+// 서버가 JSON 아닌 HTML(재시작/프록시 에러페이지)을 줄 때 "Unexpected token '<'"로
+// 깨지지 않게 감싼다 — 동시 세션 배포로 서비스가 3분마다 재시작될 수 있음(2026-07-12).
+async function fetchJSON(url){
+  const r = await fetch(url);
+  const ct = r.headers.get('content-type')||'';
+  if(!ct.includes('application/json')){
+    throw new Error('서버가 잠시 재시작 중일 수 있어요(다른 작업 배포 중). 잠시 후 자동 재시도합니다.');
+  }
+  return r.json();
+}
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
 function setMTab(t){
   DSTATE.tab=t;
   document.querySelectorAll('.mtab').forEach(x=>x.classList.toggle('active',x.dataset.mt===t));
@@ -149,9 +160,15 @@ async function runUpdate(){
   btn.disabled=true; st.textContent='업데이트 중… (여러 카테고리 검색+수집, 1~2분 소요)';
   document.getElementById('dcards').innerHTML='';
   try{
-    const d = await (await fetch('/api/discover/update')).json();
+    let d;
+    try{ d = await fetchJSON('/api/discover/update'); }
+    catch(err){  // 서버 재시작 등으로 HTML 응답 → 한 번 자동 재시도
+      st.textContent = err.message + ' (15초 후 재시도)';
+      await sleep(15000);
+      d = await fetchJSON('/api/discover/update');
+    }
     if(!d.ok) throw new Error(d.error||'실패');
-    st.textContent = d.count ? `✅ 새 채널 릴스 ${d.count}건 (댓글순)` : '새로 발굴된 채널이 없습니다 (이미 목록에 있거나 결과 없음)';
+    st.textContent = d.count ? `✅ 새 채널 ${d.count}곳 (댓글순)` : '새로 발굴된 채널이 없습니다 (이미 목록에 있거나 결과 없음)';
     ds.textContent = `카테고리: ${(d.categories||[]).join(' ')}`;
     renderDiscover(d.items);
   }catch(e){ st.textContent='❌ '+e.message; }
@@ -164,7 +181,7 @@ async function runDiscover(kw){
   btn.disabled=true; st.textContent=`"${kw}" 발굴 중… (검색+수집, 수십 초 소요)`;
   document.getElementById('dcards').innerHTML='';
   try{
-    const d = await (await fetch('/api/discover?keyword='+encodeURIComponent(kw))).json();
+    const d = await fetchJSON('/api/discover?keyword='+encodeURIComponent(kw));
     if(!d.ok) throw new Error(d.error||'실패');
     st.textContent = d.count ? `✅ "${kw}" — 새 채널 릴스 ${d.count}건 (댓글순)` : `"${kw}" — 새로 발굴된 채널이 없습니다 (이미 목록에 있거나 결과 없음)`;
     renderDiscover(d.items);

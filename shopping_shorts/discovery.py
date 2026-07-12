@@ -11,6 +11,7 @@
 전부 재사용하고, 이 모듈은 그것들을 엮는 순수 오케스트레이션만 담당한다
 (의존성 주입 → 테스트 시 Apify 없이 검증 가능)."""
 from datetime import datetime, timezone
+from concurrent.futures import ThreadPoolExecutor
 from shopping_shorts.ranking import build_items, apply_grades, sort_by, hours_since
 
 
@@ -121,15 +122,18 @@ def discover(keyword, known, *, search_fn, fetch_reels_fn, profiles_fn=None,
 
 def discover_multi(keywords, known, *, search_fn, fetch_reels_fn, profiles_fn=None,
                    prev_comments, prev_delta, now=None, window_hours=48,
-                   max_channels_per=15, max_total=80):
+                   max_channels_per=12, max_total=40):
     """여러 카테고리를 한 번에 → "업데이트" 한 번으로 새 채널들이 랭킹으로 정렬돼
-    올라오게(2026-07-12). 카테고리별로 검색해 새 username을 모으되 전체에서
-    중복 제거하고, 릴스 수집(fetch_reels)·프로필(fetch_profiles)은 각각 1회만 호출."""
+    올라오게(2026-07-12). 카테고리 검색은 병렬로 돌려 전체 소요시간을 가장 느린
+    한 카테고리 수준으로 줄인다(순차로 돌면 6개 합이 몇 분 걸려 서버 재시작에
+    걸려 죽던 문제, 2026-07-12). 릴스 수집·프로필은 각각 1회만 호출."""
+    with ThreadPoolExecutor(max_workers=min(6, len(keywords) or 1)) as pool:
+        results = list(pool.map(search_fn, keywords))  # 입력 순서 보존
     known_n = {_norm(k) for k in known}
     seen = set()
     targets = []
-    for kw in keywords:
-        for u in new_usernames(search_fn(kw), known_n | seen, max_channels=max_channels_per):
+    for cands in results:
+        for u in new_usernames(cands, known_n | seen, max_channels=max_channels_per):
             n = _norm(u)
             if n in seen:
                 continue
