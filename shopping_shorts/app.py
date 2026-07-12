@@ -22,6 +22,9 @@ from shopping_shorts.channels import load_channels
 from shopping_shorts.video_analysis import analyze_video
 from shopping_shorts.product_identify import fetch_lens_lines, identify_product_from_lines
 from shopping_shorts.search_links import build_search_links, lens_search_url
+from shopping_shorts.mix_pipeline import run_mix_job, run_render, _source_video_id
+from shopping_shorts import edit_plan as _edit_plan
+import uuid
 
 app = FastAPI(title="쇼핑쇼츠 레퍼런스 랭킹")
 
@@ -262,6 +265,7 @@ def api_prune_removed():
 
 
 _FIND_TMP_DIR = Path(__file__).parent / "data" / "find_frames"
+_MIX_WORK_DIR = Path(__file__).parent / "data" / "mix_jobs"
 
 
 @app.post("/api/find/analyze")
@@ -421,6 +425,92 @@ def api_find_frame(work_id: str, filename: str):
     if not path.is_relative_to(_FIND_TMP_DIR.resolve()) or not path.exists():
         return JSONResponse(status_code=404, content={"ok": False})
     return FileResponse(path)
+
+
+@app.post("/api/mix/start")
+def api_mix_start(background_tasks: BackgroundTasks, body: dict):
+    """믹스 job 시작. body: {urls:[...], target_seconds:int, structure:'template'|'free'}."""
+    urls = [u for u in (body.get("urls") or []) if u]
+    if len(urls) < 2:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "레퍼런스 URL 2개 이상 필요"})
+    target = int(body.get("target_seconds") or 30)
+    structure = body.get("structure") if body.get("structure") in ("template", "free") else "template"
+    job_id = uuid.uuid4().hex[:12]
+    Store(DB_PATH).create_mix_job(job_id, urls, target, structure)
+    background_tasks.add_task(run_mix_job, job_id, DB_PATH, _MIX_WORK_DIR)
+    return {"ok": True, "job_id": job_id}
+
+
+@app.get("/api/mix/status/{job_id}")
+def api_mix_status(job_id: str):
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    return {"ok": True, "status": job["status"], "error": job["error"]}
+
+
+@app.get("/api/mix/result/{job_id}")
+def api_mix_result(job_id: str):
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "아직 결과 없음"})
+    plan = job["edit_plan"]
+    flags = {f["beat_idx"] for f in plan.get("plagiarism_flags", [])}
+    beats = []
+    for b in plan["beats"]:
+        beats.append({**b, "plagiarism_flag": b["beat_idx"] in flags,
+                      "tts_preview_url": f"/api/mix/tts/{job_id}/{b['beat_idx']}"})
+    return {"ok": True, "structure": plan["structure"], "beats": beats}
+
+
+@app.post("/api/mix/adjust")
+def api_mix_adjust(body: dict):
+    """비트 primary를 다른 seg로 교체. start/end는 서버가 extract 인벤토리에서 되붙임."""
+    job_id = body.get("job_id"); beat_idx = body.get("beat_idx"); seg_id = body.get("seg_id")
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan") or not job.get("extract"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job/데이터 없음"})
+    seg_map, _ = _edit_plan._build_inventory(list(job["extract"].values()))
+    grounded = _edit_plan._ground_ref({"seg_id": seg_id}, seg_map)
+    if grounded is None:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "존재하지 않는 seg_id"})
+    plan = job["edit_plan"]
+    for b in plan["beats"]:
+        if b["beat_idx"] == beat_idx:
+            b["primary"] = grounded
+            break
+    store.update_mix_job(job_id, edit_plan=plan)
+    return {"ok": True}
+
+
+@app.post("/api/mix/render")
+def api_mix_render(background_tasks: BackgroundTasks, body: dict):
+    job_id = body.get("job_id")
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "렌더할 job 없음"})
+    background_tasks.add_task(run_render, job_id, DB_PATH, _MIX_WORK_DIR)
+    return {"ok": True}
+
+
+@app.get("/api/mix/tts/{job_id}/{beat_idx}")
+def api_mix_tts(job_id: str, beat_idx: int):
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False})
+    for b in job["edit_plan"]["beats"]:
+        if b["beat_idx"] == beat_idx and b.get("tts_path") and Path(b["tts_path"]).exists():
+            return FileResponse(b["tts_path"])
+    return JSONResponse(status_code=404, content={"ok": False})
+
+
+@app.get("/api/mix/video/{job_id}")
+def api_mix_video(job_id: str):
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("video_path") or not Path(job["video_path"]).exists():
+        return JSONResponse(status_code=404, content={"ok": False})
+    return FileResponse(job["video_path"])
 
 
 @app.get("/api/thumb")
