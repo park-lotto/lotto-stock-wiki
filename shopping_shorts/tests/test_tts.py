@@ -1,14 +1,57 @@
 import tempfile
 from pathlib import Path
-from shopping_shorts import tts
+from shopping_shorts import tts, video_assemble
 
 
 def test_synthesize_without_key_writes_mock(monkeypatch):
+    """ffmpeg 없이도(CI 안전) mock 경로가 올바른 길이로 subprocess를 호출하는지 검증."""
     monkeypatch.setattr(tts.config, "ELEVENLABS_API_KEY", "")
+
+    calls = {}
+
+    def fake_run(cmd, **kw):
+        calls["cmd"] = cmd
+        # 실제 ffmpeg 대신 out_path에 더미 바이트만 써서 "파일 존재"를 재현
+        out_path = cmd[-1]
+        with open(out_path, "wb") as f:
+            f.write(b"fake-mp3-bytes")
+
+        class R:
+            returncode = 0
+        return R()
+
+    monkeypatch.setattr(tts.subprocess, "run", fake_run)
+
     out = Path(tempfile.mkdtemp()) / "b.mp3"
     ret = tts.synthesize_tts("안녕하세요", str(out))
     assert ret == str(out)
     assert out.exists() and out.stat().st_size > 0  # mock 무음이라도 파일 존재
+    assert "ffmpeg" in calls["cmd"][0]
+    assert "anullsrc" in calls["cmd"][calls["cmd"].index("-i") + 1]
+    # "안녕하세요" 5글자 / 5자초 = 1.0초 → min clamp(1.0)과 동일
+    assert calls["cmd"][calls["cmd"].index("-t") + 1] == "1.00"
+
+
+def test_synthesize_without_key_real_ffmpeg_produces_probeable_mp3(monkeypatch):
+    """실제 ffmpeg로 무음 mock을 만들고 video_assemble._probe_duration으로
+    duration>0을 확인한다(핵심 회귀: 예전 16바이트 stub은 ffprobe가 못 읽었음)."""
+    monkeypatch.setattr(tts.config, "ELEVENLABS_API_KEY", "")
+    text = "안녕하세요 이것은 테스트 문장입니다"  # 17자 → 17/5=3.4초 추정
+    out = Path(tempfile.mkdtemp()) / "real.mp3"
+    ret = tts.synthesize_tts(text, str(out))
+    assert ret == str(out)
+    assert out.exists() and out.stat().st_size > 0
+
+    dur = video_assemble._probe_duration(str(out))
+    assert dur > 0
+    assert abs(dur - tts._estimate_seconds(text)) < 1.0  # 근사치 허용오차
+
+
+def test_estimate_seconds_clamped():
+    assert tts._estimate_seconds("") == tts._MIN_MOCK_SEC
+    assert tts._estimate_seconds("가" * 3) == tts._MIN_MOCK_SEC  # 3/5=0.6 → clamp 1.0
+    assert tts._estimate_seconds("가" * 1000) == tts._MAX_MOCK_SEC  # clamp 15.0
+    assert tts._estimate_seconds("가" * 25) == 5.0  # 25/5=5.0, 범위 내
 
 
 def test_synthesize_with_key_calls_api(monkeypatch):

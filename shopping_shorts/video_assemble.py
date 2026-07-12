@@ -16,7 +16,7 @@ def _probe_duration(path):
     """ffprobe로 미디어 길이(초)."""
     cmd = ["ffprobe", "-v", "error", "-show_entries", "format=duration",
            "-of", "default=noprint_wrappers=1:nokey=1", str(path)]
-    out = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    out = subprocess.run(cmd, stdin=subprocess.DEVNULL, capture_output=True, text=True, check=True)
     return float(out.stdout.strip())
 
 
