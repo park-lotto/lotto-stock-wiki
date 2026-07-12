@@ -615,6 +615,27 @@ def api_thumb(url: str):
         return Response(status_code=404, content=b"")
 
 
+@app.get("/api/video")
+def api_video(url: str):
+    """인스타 CDN 릴스 영상 프록시 (핫링크 차단 우회) — 썸네일 인라인 재생용.
+    /api/thumb와 동일 패턴(Referer 헤더). 릴스는 수 MB라 통째로 프록시."""
+    import requests
+    from fastapi.responses import Response
+    if not any(h in url for h in ("cdninstagram.com", "fbcdn.net")):
+        return Response(status_code=400, content=b"invalid host")
+    try:
+        r = requests.get(url, timeout=30, headers={
+            "User-Agent": "Mozilla/5.0",
+            "Referer": "https://www.instagram.com/",
+        })
+        r.raise_for_status()
+        ctype = r.headers.get("Content-Type", "video/mp4")
+        return Response(content=r.content, media_type=ctype,
+                        headers={"Cache-Control": "public, max-age=3600"})
+    except Exception:
+        return Response(status_code=404, content=b"")
+
+
 @app.get("/healthz")
 def api_healthz():
     return {"ok": True}

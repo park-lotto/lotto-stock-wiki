@@ -35,6 +35,12 @@
   .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
   .card img{width:100%;height:220px;object-fit:cover;background:#000}
+  .thumb{position:relative;cursor:pointer}
+  .thumb-video{width:100%;height:220px;object-fit:cover;background:#000;display:block}
+  .play-badge{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+              width:52px;height:52px;border-radius:50%;background:rgba(0,0,0,.5);color:#fff;
+              font-size:20px;display:flex;align-items:center;justify-content:center;
+              pointer-events:none;border:2px solid rgba(255,255,255,.85)}
   .card .body{padding:12px;flex:1;display:flex;flex-direction:column}
   .card .rank{font-size:12px;color:var(--sub)}
   .card .ch{font-weight:600;font-size:14px;margin:4px 0;display:flex;align-items:center;justify-content:space-between;gap:6px}
@@ -59,13 +65,15 @@
   .script-btn:hover{background:linear-gradient(90deg,#4a3d10,#352d0a)}
   .script-btn:disabled{opacity:.6;cursor:wait}
   /* 대본 모달 */
-  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;
-            align-items:center;justify-content:center;padding:20px}
-  .modal-bg.open{display:flex}
-  .modal-box{background:var(--panel);border:1px solid var(--line);border-radius:14px;
-             width:min(720px,100%);max-height:86vh;display:flex;flex-direction:column;overflow:hidden}
+  /* 화면을 막지 않는 이동식(플로팅) 창 — 컨테이너는 클릭 통과, 박스만 잡힘 */
+  .modal-bg{display:none;position:fixed;inset:0;z-index:100;pointer-events:none}
+  .modal-bg.open{display:block}
+  .modal-box{position:absolute;top:14px;left:50%;transform:translateX(-50%);pointer-events:auto;
+             background:var(--panel);border:1px solid var(--line);border-radius:14px;
+             width:min(720px,94vw);max-height:80vh;display:flex;flex-direction:column;overflow:hidden;
+             box-shadow:0 10px 44px rgba(0,0,0,.6)}
   .modal-head{display:flex;align-items:center;justify-content:space-between;gap:8px;
-              padding:14px 18px;border-bottom:1px solid var(--line)}
+              padding:14px 18px;border-bottom:1px solid var(--line);cursor:move;user-select:none}
   .modal-head b{font-size:15px}
   .modal-head .x{background:none;border:none;color:var(--sub);font-size:20px;cursor:pointer;padding:0 4px}
   .modal-body{padding:16px 18px;overflow:auto}
@@ -145,9 +153,9 @@
       <div class="empty">「지금 수집」을 눌러 시작하세요.</div>
     </div>
   </main>
-  <div class="modal-bg" id="scriptModal" onclick="closeScript(event)">
-    <div class="modal-box" onclick="event.stopPropagation()">
-      <div class="modal-head"><b>📝 대본 추출</b><button class="x" onclick="closeScript()">✕</button></div>
+  <div class="modal-bg" id="scriptModal">
+    <div class="modal-box">
+      <div class="modal-head" onpointerdown="startDrag(event)"><b>📝 대본 추출 <span style="font-size:11px;color:var(--sub);font-weight:400">— 잡고 이동</span></b><button class="x" onclick="closeScript()">✕</button></div>
       <div class="modal-body" id="scriptBody"></div>
     </div>
   </div>
@@ -192,7 +200,10 @@ function render(){
   if(!items.length){ el.innerHTML='<div class="empty">결과 없음.</div>'; return; }
   el.innerHTML = items.map((i,idx)=>`
     <div class="card">
-      <img src="${i.thumbnail?('/api/thumb?url='+encodeURIComponent(i.thumbnail)):''}" loading="lazy" onerror="this.style.visibility='hidden'">
+      <div class="thumb">
+        <img src="${i.thumbnail?('/api/thumb?url='+encodeURIComponent(i.thumbnail)):''}" data-vurl="${i.video_url?('/api/video?url='+encodeURIComponent(i.video_url)):''}" ${i.video_url?'onclick="playInline(this)"':''} loading="lazy" onerror="this.style.visibility='hidden'">
+        ${i.video_url?'<span class="play-badge">▶</span>':''}
+      </div>
       <div class="body">
         <div class="rank">#${idx+1} · ${i.category} · ${Math.round(i.age_hours)}시간 전</div>
         <div class="ch"><span class="chname">${i.name||i.username} <span class="grade">${i.grade||''}</span></span><button class="copy" title="릴스 링크 복사" onclick="copyLink('${i.url}', this)">🔗 복사</button></div>
@@ -248,9 +259,46 @@ async function copyLink(url, btn){
 
 // ── 대본 추출 ──────────────────────────────────────────
 function esc(s){ return (s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-function openScript(html){ document.getElementById('scriptBody').innerHTML=html; document.getElementById('scriptModal').classList.add('open'); }
+function openScript(html){
+  const box=document.querySelector('#scriptModal .modal-box');
+  if(box){ box.style.transform='translateX(-50%)'; box.style.left='50%'; box.style.top='14px'; }  // 열 때마다 맨 위 중앙
+  document.getElementById('scriptBody').innerHTML=html;
+  document.getElementById('scriptModal').classList.add('open');
+}
 function closeScript(){ document.getElementById('scriptModal').classList.remove('open'); }
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeScript(); });
+// 대본창 드래그 이동(헤더 잡고)
+let _sdrag=null;
+function startDrag(e){
+  if(e.target.closest('.x')) return;                 // X 버튼은 드래그 시작 안 함
+  const box=document.querySelector('#scriptModal .modal-box');
+  const r=box.getBoundingClientRect();
+  box.style.transform='none'; box.style.left=r.left+'px'; box.style.top=r.top+'px';
+  _sdrag={dx:e.clientX-r.left, dy:e.clientY-r.top, box};
+  window.addEventListener('pointermove',_onDrag);
+  window.addEventListener('pointerup',_endDrag);
+  e.preventDefault();
+}
+function _onDrag(e){
+  if(!_sdrag) return;
+  const w=_sdrag.box.offsetWidth;
+  const x=Math.max(120-w, Math.min(e.clientX-_sdrag.dx, window.innerWidth-120));
+  const y=Math.max(0, Math.min(e.clientY-_sdrag.dy, window.innerHeight-44));
+  _sdrag.box.style.left=x+'px'; _sdrag.box.style.top=y+'px';
+}
+function _endDrag(){ _sdrag=null; window.removeEventListener('pointermove',_onDrag); window.removeEventListener('pointerup',_endDrag); }
+// 썸네일 클릭 → 인라인 재생(보기 안 눌러도 됨). URL 만료 시 안내.
+function playInline(img){
+  const url=img.dataset.vurl;
+  if(!url) return;
+  const badge=img.parentElement && img.parentElement.querySelector('.play-badge');
+  if(badge) badge.remove();
+  const v=document.createElement('video');
+  v.src=url; v.controls=true; v.autoplay=true; v.playsInline=true; v.setAttribute('playsinline','');
+  v.className='thumb-video';
+  v.onerror=()=>{ v.replaceWith(img); img.title='영상 URL 만료 — 「지금 수집」 후 재생 가능'; };
+  img.replaceWith(v);
+}
 async function extractScript(shortcode){
   openScript('<div class="sm-loading">⏳ 대본 추출 중… 다운로드 + AI 분석 (10~30초)<br><small>한번 뽑으면 다음부턴 즉시 열립니다</small></div>');
   try{
