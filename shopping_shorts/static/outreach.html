@@ -137,8 +137,16 @@ function openAndCopy(sc){
   const item = ITEM_MAP[sc];
   if(!item) return;
   const chosen = SELECTED[sc] || (item.drafts && item.drafts[0]) || "";
+  // 폴백: 유저스크립트(insta_fill_comment) 미설치 시 수동 붙여넣기용으로 클립보드에도 복사.
   if(chosen) navigator.clipboard.writeText(chosen);
-  window.open(item.url, "_blank");
+  let url = item.url;
+  if(chosen){
+    // 유저스크립트가 이 해시를 읽어 인스타 댓글칸을 자동으로 채운다(전송·팔로우는 사용자가 직접).
+    // UTF-8 안전 base64 — 한글·이모지 보존.
+    const b64 = btoa(unescape(encodeURIComponent(JSON.stringify({c: chosen, sc: sc}))));
+    url += "#lotto_fill=" + encodeURIComponent(b64);
+  }
+  window.open(url, "_blank");
 }
 async function markDone(sc){
   await fetch(`/api/comment/done?shortcode=${encodeURIComponent(sc)}`, {method:"POST"});
@@ -157,7 +165,7 @@ function cardHtml(i, idx){
       <div class="cap">${escapeHtml((i.caption||'').slice(0,60))}</div>
       ${drafts}
       <div class="row">
-        <button class="primary" onclick="openAndCopy('${i.shortcode}')">🔗 게시물 열기+복사</button>
+        <button class="primary" onclick="openAndCopy('${i.shortcode}')">🔗 열기+댓글채우기</button>
         <button onclick="doneCard('${i.shortcode}')">✓ 완료</button>
       </div>
     </div></div>`;
