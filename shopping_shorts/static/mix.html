@@ -38,6 +38,16 @@
       · 구조
       <select id="structure"><option value="template">템플릿(훅→페인→반전→실용→CTA)</option><option value="free">자유</option></select>
     </div>
+    <div class="row" style="align-items:center">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" id="subtitleRemoval"/> 원본 자막 제거 (VMake)
+      </label>
+    </div>
+    <div class="row" style="align-items:center;flex-wrap:wrap">
+      <input type="text" id="vmakeKey" placeholder="vmake.ai 개인 API 키 (app_key:secret)" style="flex:1;min-width:220px"/>
+      <button class="ghost" onclick="saveVmakeKey()">키 저장</button>
+      <span id="vmakeKeyState" style="font-size:12px;color:#9a9aa5"></span>
+    </div>
     <div class="row"><button onclick="startMix()">믹스 시작</button></div>
   </div>
 
@@ -63,7 +73,7 @@ function addUrl(){
 async function startMix(){
   const urls=[...document.querySelectorAll('#urls input')].map(i=>i.value.trim()).filter(Boolean);
   if(urls.length<2){ alert('URL 2개 이상 입력'); return; }
-  const body={urls, target_seconds:+document.getElementById('target').value, structure:document.getElementById('structure').value};
+  const body={urls, target_seconds:+document.getElementById('target').value, structure:document.getElementById('structure').value, subtitle_removal:document.getElementById('subtitleRemoval').checked};
   const r=await fetch('/api/mix/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   const d=await r.json(); if(!d.ok){ alert(d.error); return; }
   JOB=d.job_id; document.getElementById('inputPanel').style.display='none';
@@ -136,6 +146,21 @@ function loadDone(){
   document.getElementById('done').innerHTML=`<h3>완성</h3><video controls src="/api/mix/video/${escapeHtml(JOB)}"></video>
     <div class="row"><a href="/api/mix/video/${escapeHtml(JOB)}" download><button>다운로드</button></a></div>`;
 }
+async function saveVmakeKey(){
+  const key=document.getElementById('vmakeKey').value.trim();
+  try{
+    const r=await fetch('/api/settings/vmake_key',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key})});
+    const d=await r.json().catch(()=>({ok:r.ok}));
+    document.getElementById('vmakeKeyState').textContent=(r.ok&&d.ok!==false)?'저장됨':'실패';
+  }catch(e){ document.getElementById('vmakeKeyState').textContent='실패'; }
+}
+async function loadVmakeKeyState(){
+  try{
+    const j=await (await fetch('/api/settings/vmake_key')).json();
+    document.getElementById('vmakeKeyState').textContent=j.configured?'등록됨':'미등록';
+  }catch(e){}
+}
+loadVmakeKeyState();
 </script>
 </body>
 </html>
