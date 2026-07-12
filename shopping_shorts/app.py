@@ -277,6 +277,7 @@ def api_prune_removed():
 
 _FIND_TMP_DIR = Path(__file__).parent / "data" / "find_frames"
 _MIX_WORK_DIR = Path(__file__).parent / "data" / "mix_jobs"
+_WIKI_MEDIA_DIR = Path(__file__).parent / "data" / "wiki_media"   # 도서관 원본 영구보관
 
 
 @app.post("/api/extract_script")
@@ -337,13 +338,15 @@ def api_wiki_save(shortcode: str):
     if not item:
         return JSONResponse(status_code=404, content={"ok": False, "error": "해당 항목 없음 — 재수집 필요"})
     code = item["shortcode"]
+    hashed = hashlib.sha1(code.encode()).hexdigest()[:16]
+    work_dir = _FIND_TMP_DIR / hashed
+    video_path = None
 
     script = store.get_script(code)
     if not script:                      # 아직 대본추출 안 했으면 즉석 추출
         video_url = item.get("video_url")
         if not video_url:
             return JSONResponse(status_code=422, content={"ok": False, "error": "video_url 없음 — 재수집 필요"})
-        work_dir = _FIND_TMP_DIR / hashlib.sha1(code.encode()).hexdigest()[:16]
         try:
             video_path = download_video(video_url, work_dir)
         except (requests.RequestException, RuntimeError) as e:
@@ -354,9 +357,36 @@ def api_wiki_save(shortcode: str):
             return JSONResponse(status_code=502, content={"ok": False, "error": "대본 추출 실패 — 잠시 후 재시도"})
         store.save_script(code, script)
 
+    # 원본 영상 영구보관(도서관 인라인 재생용) — 만료되는 CDN URL 대신 파일로 남긴다.
+    media_target = _WIKI_MEDIA_DIR / f"{hashed}.mp4"
+    if not media_target.exists():
+        src = video_path
+        if src is None and item.get("video_url"):
+            try:
+                src = download_video(item["video_url"], work_dir)
+            except Exception:
+                src = None
+        if src and Path(src).exists():
+            try:
+                _WIKI_MEDIA_DIR.mkdir(parents=True, exist_ok=True)
+                shutil.copy(str(src), str(media_target))
+            except Exception:
+                pass  # 영상 보관 실패해도 대본·구조는 저장(치명적 아님)
+
     structure = analyze_structure(script.get("full_text", ""))
     store.save_to_wiki(item, script, structure)
-    return {"ok": True, "shortcode": code, "structure": structure}
+    return {"ok": True, "shortcode": code, "structure": structure, "has_video": media_target.exists()}
+
+
+@app.get("/api/wiki/video")
+def api_wiki_video(shortcode: str):
+    """도서관에 영구보관한 원본 영상 서빙(인라인 재생). 없으면 404.
+    FileResponse는 Range 요청을 지원해 탐색(seek)도 됨."""
+    from fastapi.responses import FileResponse, Response
+    f = _WIKI_MEDIA_DIR / f"{hashlib.sha1(shortcode.encode()).hexdigest()[:16]}.mp4"
+    if not f.exists():
+        return Response(status_code=404, content=b"")
+    return FileResponse(str(f), media_type="video/mp4")
 
 
 @app.get("/api/wiki/list")

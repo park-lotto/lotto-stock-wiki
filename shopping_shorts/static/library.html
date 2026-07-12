@@ -16,9 +16,15 @@
   .menu-item.active{background:linear-gradient(90deg,#153a6b,#0d2340);color:#7db4ff}
   .main{flex:1;padding:28px 36px;overflow:auto}
   .head h2{font-size:24px}
-  .desc{color:var(--sub);font-size:13px;margin:6px 0 20px}
-  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px}
+  .desc{color:var(--sub);font-size:13px;margin:6px 0 20px;line-height:1.6}
+  .cards{display:flex;flex-direction:column;gap:18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;gap:18px}
+  .vid{width:260px;flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+  .vid video{width:100%;border-radius:10px;background:#000;max-height:440px}
+  .vid .novid{width:100%;aspect-ratio:9/16;border-radius:10px;background:#0d131c;border:1px dashed var(--line);
+              display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:12px;text-align:center;padding:14px}
+  .vid a{font-size:12px;color:var(--accent);text-decoration:none;text-align:center}
+  .body{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px}
   .ch{font-weight:600;font-size:15px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
   .ch .rm{background:none;border:1px solid var(--line);color:var(--sub);font-size:11px;border-radius:6px;padding:3px 8px;cursor:pointer;flex-shrink:0}
   .ch .rm:hover{color:#ff9b9b;border-color:#ff9b9b}
@@ -27,20 +33,28 @@
   .hook .type{display:inline-block;background:linear-gradient(90deg,#3a2f0d,#2a2408);border:1px solid #b8860b;color:var(--gold);font-size:11px;padding:2px 8px;border-radius:12px;margin-bottom:6px}
   .hook .line{font-size:14px;font-weight:600;line-height:1.5}
   .why{font-size:12px;color:#9fd0ff;background:#0d1b2e;border-left:2px solid var(--accent);padding:7px 10px;border-radius:4px;line-height:1.5}
+  .tagrow{display:flex;flex-wrap:wrap;gap:6px}
+  .tag{font-size:11px;border:1px solid var(--line);border-radius:6px;padding:3px 9px;color:var(--txt)}
+  .tag b{color:var(--sub);font-weight:400;margin-right:4px}
+  .chars{background:#12100a;border:1px solid #4a3d10;border-radius:8px;padding:10px}
+  .chars .t{font-size:11px;color:var(--gold);margin-bottom:6px}
+  .chars li{list-style:none;font-size:12px;padding:3px 0;line-height:1.5}
+  .chars .who{color:var(--gold);font-weight:600}
+  .story{font-size:12.5px;line-height:1.6;color:var(--txt)}
+  .sec-t{font-size:11px;color:var(--sub);text-transform:uppercase;margin-top:2px}
   .beats{list-style:none;font-size:12px}
   .beats li{padding:5px 0 5px 10px;border-left:2px solid var(--line);margin-bottom:5px}
   .beats .lb{color:var(--accent);font-weight:600;font-size:11px}
   .beats .sc{color:var(--sub);font-size:10px;margin-left:4px}
   .devices{display:flex;flex-wrap:wrap;gap:5px}
   .devices span{font-size:11px;color:var(--sub);border:1px solid var(--line);border-radius:12px;padding:2px 8px}
-  .sec-t{font-size:11px;color:var(--sub);text-transform:uppercase;margin-top:2px}
   details summary{cursor:pointer;font-size:12px;color:var(--accent);list-style:none}
   details .full{background:#0d131c;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:13px;line-height:1.7;white-space:pre-wrap;margin-top:8px}
   .row{display:flex;gap:8px;margin-top:2px}
-  .row a,.row button{font-size:12px;color:var(--accent);text-decoration:none;background:none;border:1px solid var(--line);border-radius:6px;padding:5px 10px;cursor:pointer}
-  .row button:hover,.row a:hover{border-color:var(--accent)}
-  .empty{color:var(--sub);text-align:center;padding:80px 20px;grid-column:1/-1;line-height:1.8}
-  @media(max-width:768px){.sidebar{width:100%;border-right:none;border-bottom:1px solid var(--line)}.main{padding:16px 14px}.cards{grid-template-columns:1fr}}
+  .row button{font-size:12px;color:var(--accent);background:none;border:1px solid var(--line);border-radius:6px;padding:5px 10px;cursor:pointer}
+  .row button:hover{border-color:var(--accent)}
+  .empty{color:var(--sub);text-align:center;padding:80px 20px;line-height:1.8}
+  @media(max-width:768px){.sidebar{width:100%;border-right:none;border-bottom:1px solid var(--line)}.main{padding:16px 14px}.card{flex-direction:column}.vid{width:100%;max-width:280px}}
 </style>
 </head>
 <body>
@@ -60,36 +74,53 @@
   </aside>
   <main class="main">
     <div class="head"><h2>📚 대본 위키(도서관)</h2></div>
-    <div class="desc" id="desc">남들이 제일 힘들어하는 <b>S급 대본</b>을 모아 구조를 분석해둡니다. 랭킹에서 <b>📝 대본 추출 → ⭐ S급 위키 저장</b>으로 담으세요. (생성 기능은 다음 단계)</div>
+    <div class="desc" id="desc">S급 대본을 <b>원본 영상 + 구조 분석</b>을 나란히 보며 학습합니다. 랭킹에서 <b>📝 대본 추출 → ⭐ S급 위키 저장</b>으로 담으세요.</div>
     <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
   </main>
 <script>
 function esc(s){ return (s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function videoFallback(v){
+  const div=document.createElement('div'); div.className='novid';
+  const a=document.createElement('a'); a.href=v.dataset.src||'#'; a.target='_blank'; a.textContent='인스타 원본 ↗';
+  div.append('원본 영상 없음 (저장 당시 URL 만료)', document.createElement('br'), a);
+  v.replaceWith(div);
+}
 async function load(){
   const el=document.getElementById('cards');
   try{
     const d=await (await fetch('/api/wiki/list')).json();
     const items=d.items||[];
     document.getElementById('desc').innerHTML += ` <b style="color:var(--gold)">· ${items.length}개 보관 중</b>`;
-    if(!items.length){ el.innerHTML='<div class="empty">아직 담은 S급 대본이 없습니다.<br>레퍼런스 랭킹에서 마음에 드는 영상의 <b>📝 대본 추출</b> → <b>⭐ S급 위키 저장</b>을 눌러 채워보세요.</div>'; return; }
+    if(!items.length){ el.innerHTML='<div class="empty">아직 담은 S급 대본이 없습니다.<br>레퍼런스 랭킹에서 마음에 드는 영상의 <b>📝 대본 추출 → ⭐ S급 위키 저장</b>을 눌러 채워보세요.</div>'; return; }
     el.innerHTML=items.map(render).join('');
   }catch(e){ el.innerHTML='<div class="empty">불러오기 실패 — 새로고침 해주세요.</div>'; }
 }
+function tag(label,val){ return val?`<span class="tag"><b>${label}</b>${esc(val)}</span>`:''; }
 function render(i){
   const s=i.structure||{};
+  const sc=esc(i.shortcode);
+  const vurl='/api/wiki/video?shortcode='+encodeURIComponent(i.shortcode);
+  const video=`<video src="${vurl}" controls playsinline preload="metadata" data-src="${esc(i.source_url||'')}" onerror="videoFallback(this)"></video>`;
+  const chars=(s.characters||[]).map(c=>`<li><span class="who">${esc(c.who)}</span> — ${esc(c.role)}</li>`).join('');
   const beats=(s.beats||[]).map(b=>`<li><span class="lb">${esc(b.label)}</span><span class="sc">${esc(b.approx_sec||'')}</span><br>${esc(b.desc||'')}</li>`).join('');
   const devs=(s.devices||[]).map(d=>`<span>${esc(d)}</span>`).join('');
   return `<div class="card">
-    <div class="ch"><span>${esc(i.name||'')} <span class="meta">· ${esc(i.category||'')}</span></span>
-      <button class="rm" onclick="removeItem('${i.shortcode}', this)">삭제</button></div>
-    <div class="meta">팔로워 ${(i.followers||0).toLocaleString()} · 댓글 ${(i.comments||0).toLocaleString()} · 참여밀도 ${((i.density||0)*100).toFixed(2)}%</div>
-    ${s.hook_type?`<div class="hook"><span class="type">🎣 ${esc(s.hook_type)}</span><div class="line">${esc(s.hook_line||'')}</div></div>`:''}
-    ${s.one_line_why?`<div class="why">💡 ${esc(s.one_line_why)}</div>`:''}
-    ${beats?`<div class="sec-t">비트 구조</div><ul class="beats">${beats}</ul>`:''}
-    ${devs?`<div class="sec-t">설득 장치</div><div class="devices">${devs}</div>`:''}
-    <details><summary>전체 대본 보기</summary><div class="full">${esc(i.full_text||'(대본 없음)')}</div></details>
-    <div class="row"><a href="${esc(i.source_url||'#')}" target="_blank">▶ 원본</a>
-      <button onclick="copyFull(this)">📋 대본 복사</button></div>
+    <div class="vid">${video}</div>
+    <div class="body">
+      <div class="ch"><span>${esc(i.name||'')} <span class="meta">· ${esc(i.category||'')}</span></span>
+        <button class="rm" onclick="removeItem('${sc}', this)">삭제</button></div>
+      <div class="meta">팔로워 ${(i.followers||0).toLocaleString()} · 댓글 ${(i.comments||0).toLocaleString()} · 참여밀도 ${((i.density||0)*100).toFixed(2)}%</div>
+      ${s.hook_type?`<div class="hook"><span class="type">🎣 ${esc(s.hook_type)}</span><div class="line">${esc(s.hook_line||'')}</div></div>`:''}
+      ${s.one_line_why?`<div class="why">💡 ${esc(s.one_line_why)}</div>`:''}
+      <div class="tagrow">${tag('🎙 화자',s.narrator)}${tag('🎬 전개',s.development)}${tag('🎯 어필포인트',s.appeal)}${tag('⏱',s.target_seconds?s.target_seconds+'초':'')}</div>
+      ${chars?`<div class="chars"><div class="t">👥 등장 주변인물 (스토리텔링 핵심 기법)</div><ul>${chars}</ul></div>`:''}
+      ${s.storyline?`<div><div class="sec-t">스토리라인</div><div class="story">${esc(s.storyline)}</div></div>`:''}
+      ${s.twist?`<div><div class="sec-t">✨ 발상전환</div><div class="story">${esc(s.twist)}</div></div>`:''}
+      ${beats?`<div class="sec-t">비트 구조</div><ul class="beats">${beats}</ul>`:''}
+      ${devs?`<div class="sec-t">설득 장치</div><div class="devices">${devs}</div>`:''}
+      <details><summary>전체 대본 보기</summary><div class="full">${esc(i.full_text||'(대본 없음)')}</div></details>
+      <div class="row"><button onclick="copyFull(this)">📋 대본 복사</button></div>
+    </div>
   </div>`;
 }
 async function removeItem(sc, btn){
