@@ -11,6 +11,7 @@
 concat 후 원본 오디오를 제거하고 비트별 TTS를 이어붙인 트랙으로 교체한다.
 """
 import os
+import re
 import shutil
 import subprocess
 import textwrap
@@ -23,7 +24,6 @@ _OUT_W, _OUT_H = 720, 1280
 _BAR_H = 300
 _CAP_FONTSIZE = 46
 _CAP_WRAP = 13          # 한 줄 최대 글자수(720px 안에 들어오게)
-_CAP_BASELINE_Y = _OUT_H - 190
 
 # 한글 폰트 후보(먼저 발견되는 것 사용). repo에 NanumGothic을 번들하므로 서버·로컬
 # 어디서든 별도 설치 없이 자막이 나온다(env로 다른 폰트 강제 가능).
@@ -74,38 +74,56 @@ def _pick_segment(beat, tts_dur, source_video_paths):
     return best if best else beat["primary"]
 
 
-def _wrap_lines(narration):
-    """나레이션을 한 줄 최대 _CAP_WRAP자로 쪼갠 리스트. 빈 문자열이면 []."""
+def _caption_segments(narration):
+    """나레이션을 자막 조각으로 나눈다. 균등 글자수가 아니라 **문장 경계**(. ? ! …)
+    로 먼저 끊어, 자막이 문장 중간에서 어색하게 끊기지 않게 한다. 문장이 길면
+    한 조각을 2줄까지 줄바꿈해 담는다. 반환: [조각텍스트(줄바꿈 포함), ...]."""
     narr = (narration or "").strip()
     if not narr:
         return []
-    return textwrap.wrap(narr, _CAP_WRAP) or [narr]
+    # 문장부호 뒤에서 분할(부호는 앞 문장에 붙임). 쉼표는 너무 잘게 쪼개지 않게 제외.
+    sentences = re.split(r"(?<=[.?!…])\s+", narr)
+    segs = []
+    for s in sentences:
+        s = s.strip()
+        if not s:
+            continue
+        lines = textwrap.wrap(s, _CAP_WRAP)
+        # 한 조각은 최대 2줄. 3줄 이상이면 2줄씩 잘라 여러 조각으로.
+        for i in range(0, len(lines), 2):
+            segs.append("\n".join(lines[i:i + 2]))
+    return segs or [narr]
 
 
 def _caption_vf(narration, dur, has_font, work, idx):
     """비트 영상용 -vf 필터 문자열. scale/crop으로 규격 통일 후, 폰트가 있으면
-    하단 바 + 나레이션을 한 줄씩 순차 표시하는 drawtext들을 얹는다.
+    하단 바 + 나레이션을 **문장 단위 조각**으로 순차 표시하는 drawtext들을 얹는다.
+    각 조각의 표시 시간은 그 조각 글자수에 비례해(균등분할 X) 읽는 속도와 맞춘다.
 
     ffmpeg 필터그래프는 값에 콜론(윈도 드라이브 'C:')을 못 넣으므로, 폰트·자막
     텍스트는 모두 work 폴더에 두고 **파일명만**(font.ttf / cap_*.txt) 참조한다.
-    호출부는 반드시 cwd=work 로 ffmpeg를 실행해야 한다. 각 줄 텍스트는 임시
+    호출부는 반드시 cwd=work 로 ffmpeg를 실행해야 한다. 각 조각 텍스트는 임시
     파일(textfile=)로 넘겨 따옴표/쉼표 이스케이프 문제를 피한다."""
     base = f"scale={_OUT_W}:{_OUT_H}:force_original_aspect_ratio=increase,crop={_OUT_W}:{_OUT_H}"
-    lines = _wrap_lines(narration)
-    if not has_font or not lines:
+    segs = _caption_segments(narration)
+    if not has_font or not segs:
         return base
-    slice_dur = dur / len(lines)
+    weights = [max(1, len(s.replace("\n", ""))) for s in segs]
+    total_w = sum(weights)
     parts = [base]
     # 하단 바(원본 소각 자막 가리기)
     parts.append(f"drawbox=x=0:y=ih-{_BAR_H}:w=iw:h={_BAR_H}:color=black@0.82:t=fill")
-    for i, line in enumerate(lines):
-        (work / f"cap_{idx}_{i}.txt").write_text(line, encoding="utf-8")
-        start = i * slice_dur
-        end = dur + 0.5 if i == len(lines) - 1 else (i + 1) * slice_dur  # 마지막 줄은 끝까지
+    t = 0.0
+    for i, (seg, w) in enumerate(zip(segs, weights)):
+        (work / f"cap_{idx}_{i}.txt").write_text(seg, encoding="utf-8")
+        start = t
+        t += dur * w / total_w
+        end = dur + 0.5 if i == len(segs) - 1 else t  # 마지막 조각은 끝까지
+        # 여러 줄이면 아래에서 위로 쌓이도록 text_h 기준으로 y 배치(하단 바 안).
         parts.append(
             f"drawtext=fontfile=font.ttf:textfile=cap_{idx}_{i}.txt:"
-            f"fontcolor=white:fontsize={_CAP_FONTSIZE}:"
-            f"x=(w-text_w)/2:y={_CAP_BASELINE_Y}:"
+            f"fontcolor=white:fontsize={_CAP_FONTSIZE}:line_spacing=10:"
+            f"x=(w-text_w)/2:y=h-text_h-100:"
             f"enable='between(t,{start:.2f},{end:.2f})'"
         )
     return ",".join(parts)
@@ -132,15 +150,20 @@ def assemble(edit_plan, tts_paths, source_video_paths, out_path):
         tts_dur = _probe_duration(tts)
         ref = _pick_segment(beat, tts_dur, source_video_paths)
         src = source_video_paths[ref["video_id"]]
+        src_dur = _probe_duration(src)
         clip = work / f"beat_{idx}.mp4"
         vf = _caption_vf(beat.get("narration", ""), tts_dur, bool(font), work, idx)
-        # 소스를 ref["start"]부터 1배속으로 재생, tts 오디오로 교체, 출력 길이를
-        # tts_dur로 고정(-t). 구간이 짧으면 -stream_loop로 소스를 반복해 나레이션
-        # 길이만큼 영상을 채운다(배속 압축으로 자막이 빨라지는 것을 방지). -vf로
-        # 규격(720x1280) 통일 + 새 대본 자막을 하단 바 위에 한 줄씩 굽는다.
+        # 나레이션 길이(tts_dur)만큼 소스를 ref["start"]부터 **이어서(연속)** 1배속
+        # 재생한다. 구간 끝을 넘어도 그냥 원본을 계속 흘려보내 같은 2~4초가 반복되는
+        # 것을 막는다. 시작점부터 tts_dur가 원본 끝을 넘으면 시작을 앞으로 당겨
+        # 연속 footage를 확보한다. 원본 전체가 나레이션보다 짧을 때만 루프한다.
+        start = ref["start"]
+        if start + tts_dur > src_dur:
+            start = max(0.0, src_dur - tts_dur)
+        loop = ["-stream_loop", "-1"] if src_dur + 0.05 < tts_dur else []
         cmd = [
             "ffmpeg", "-y",
-            "-stream_loop", "-1", "-ss", str(ref["start"]), "-i", str(src),
+            *loop, "-ss", f"{start:.3f}", "-i", str(src),
             "-i", str(tts),
             "-vf", vf, "-r", "30",
             "-map", "0:v:0", "-map", "1:a:0",
