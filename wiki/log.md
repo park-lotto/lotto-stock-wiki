@@ -1413,3 +1413,6 @@ stage1 엔진+스튜디오 서버배포(stockbrain1/yt/quote-studio). 서버 봇
 
 ## 2026-07-12 (집CH) — 쇼핑쇼츠: 릴스 대본추출 파이프라인 + 믹스대본
 인스타 릴스 대본추출 경로 확립. yt-dlp 쿠키방식은 최신크롬 App-Bound 암호화로 막힘→**Apify(instagram-scraper, directUrls)**로 우회. 서버 `/etc/shopping-shorts.env`에 APIFY토큰 17개(살아있는 9개). 다운→ffmpeg 오디오/프레임→**Gemini 전사**(신규 `shopping_shorts/transcribe_gemini.py`, Whisper키 불필요·key_vault 재사용). 릴스 2건 대본추출(@salim__mami 18s / @home__rabbit 27s, 프레임 화면자막 교차검증 일치). 두 강점 믹스→텀블러 CTA 새대본(원문단어 회피·의미계승) 43s/21s/샘플형 버전 → `out/shopping_shorts/텀블러_믹스대본.md`. transcribe_gemini는 기능③ 소스매칭 재사용부품. (참고: 서버에 instagram/douyin/tiktok/xiaohongshu_search.py 존재-로컬엔 없음, 기능③ 일부 서버선구현)
+
+## 2026-07-13 (집CH) — 쇼핑쇼츠 소통큐: 인스타 댓글 원클릭 반자동 완성 ✅
+소통큐 `열기+댓글채우기` 버튼 → 인스타 게시물 열리며 **댓글 자동입력 → 전송 시 소통큐 카드 자동 완료처리**. 전송·팔로우는 사용자가 직접(안전·봇탐지 회피). 신규 `shopping_shorts/userscript/insta_fill_comment.user.js`(Tampermonkey, 서버서빙+자동업데이트, `/insta_fill_comment.user.js` 라우트) + `outreach.html`(해시 페이로드 전달·완료신호 수신·포커스 재조회). 실사용 디버깅으로 넘은 벽 4개(다음 세션 재삽질 방지 — memory `project_쇼핑쇼츠_소통큐_유저스크립트` 참조): ①크롬138+ **"사용자 스크립트 허용" 토글** 켜야 유저스크립트 작동 ②`@grant none`=페이지컨텍스트라야 React 값주입(채우기) 됨 ③인스타 **CSP connect-src**가 외부 fetch 차단→**GM_xmlhttpRequest**로 우회(단 이땐 샌드박스라 채우기는 **unsafeWindow**로) ④인스타 **COOP**가 `window.opener` 끊음→서버기록+포커스재조회로 완료반영. 최종 v1.4.0.
