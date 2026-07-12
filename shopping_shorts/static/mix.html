@@ -48,6 +48,12 @@
 
 <script>
 let JOB=null, POLL=null;
+function escapeHtml(s){
+  // 대본(narration)·video_id/seg_id 등은 외부 영상에서 추출된 텍스트라 <, &, >
+  // 등이 그대로 들어있을 수 있다 — innerHTML/속성에 그대로 꽂으면 마크업으로
+  // 해석돼 XSS로 이어짐(outreach.html의 escapeHtml과 동일 패턴, 2026-07-12).
+  return (s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
 function addUrl(){
   if(document.querySelectorAll('#urls input').length>=5) return;
   const d=document.createElement('div'); d.className='row';
@@ -66,6 +72,11 @@ async function startMix(){
 const LABEL={downloading:'영상 다운로드 중…',extracting:'대본 추출 중…',planning:'편집안 생성 중…',tts:'음성 생성 중…',ready_for_review:'검토 준비 완료',rendering:'최종 렌더 중…',done:'완료',failed:'실패'};
 async function poll(){
   const r=await fetch('/api/mix/status/'+JOB); const d=await r.json();
+  if(!d.ok){
+    document.getElementById('status').textContent='상태 조회 실패'+(d.error?(' — '+d.error):'');
+    clearInterval(POLL);
+    return;
+  }
   document.getElementById('status').textContent='상태: '+(LABEL[d.status]||d.status)+(d.error?(' — '+d.error):'');
   if(d.status==='ready_for_review'){ clearInterval(POLL); loadReview(); }
   if(d.status==='done'){ clearInterval(POLL); loadDone(); }
@@ -73,35 +84,40 @@ async function poll(){
 }
 async function loadReview(){
   const r=await fetch('/api/mix/result/'+JOB); const d=await r.json();
+  if(!d.ok){ console.warn('mix result 실패', d.error); document.getElementById('status').textContent='편집안 로드 실패'+(d.error?(' — '+d.error):''); return; }
   const el=document.getElementById('review');
   el.innerHTML='<h3>편집안 검토</h3>'+d.beats.map(b=>`
     <div class="beat ${b.plagiarism_flag?'flag':''}">
-      <span class="role">${b.role}</span>
+      <span class="role">${escapeHtml(b.role)}</span>
       <div style="flex:1">
-        <div>${b.narration}</div>
-        <div style="font-size:12px;color:#9a9aa5">${b.primary.video_id} · ${b.primary.start}s~${b.primary.end}s · ${b.target_seconds}s</div>
+        <div>${escapeHtml(b.narration)}</div>
+        <div style="font-size:12px;color:#9a9aa5">${escapeHtml(b.primary.video_id)} · ${b.primary.start}s~${b.primary.end}s · ${b.target_seconds}s</div>
         ${b.plagiarism_flag?'<div class="warn">⚠️ 원문과 유사 — 재작성 권장</div>':''}
         ${b.alternates.length?`<div class="row">대체:
           <select onchange="adjust(${b.beat_idx}, this.value)">
-            <option value="${b.primary.video_id}|${b.primary.seg_id}">현재: ${b.primary.seg_id}</option>
-            ${b.alternates.map(a=>`<option value="${a.video_id}|${a.seg_id}">${a.seg_id} (${a.start}~${a.end}s)</option>`).join('')}
+            <option value="${escapeHtml(b.primary.video_id)}|${escapeHtml(b.primary.seg_id)}">현재: ${escapeHtml(b.primary.seg_id)}</option>
+            ${b.alternates.map(a=>`<option value="${escapeHtml(a.video_id)}|${escapeHtml(a.seg_id)}">${escapeHtml(a.seg_id)} (${a.start}~${a.end}s)</option>`).join('')}
           </select></div>`:''}
-        <audio controls src="${b.tts_preview_url}" style="height:28px"></audio>
+        <audio controls src="${escapeHtml(b.tts_preview_url)}" style="height:28px"></audio>
       </div>
     </div>`).join('')+'<div class="row"><button onclick="render()">최종 렌더</button></div>';
 }
 async function adjust(beat_idx, val){
   const [video_id, seg_id]=val.split('|');
-  await fetch('/api/mix/adjust',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:JOB,beat_idx,video_id,seg_id})});
+  const r=await fetch('/api/mix/adjust',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:JOB,beat_idx,video_id,seg_id})});
+  const d=await r.json().catch(()=>({ok:false}));
+  if(!r.ok || !d.ok){ console.warn('adjust 실패', d.error); alert('대체 적용 실패'+(d.error?(': '+d.error):'')); }
 }
 async function render(){
-  await fetch('/api/mix/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:JOB})});
+  const r=await fetch('/api/mix/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:JOB})});
+  const d=await r.json().catch(()=>({ok:false}));
+  if(!r.ok || !d.ok){ console.warn('render 시작 실패', d.error); alert('렌더 시작 실패'+(d.error?(': '+d.error):'')); return; }
   document.getElementById('review').innerHTML='';
   POLL=setInterval(poll,3000); poll();
 }
 function loadDone(){
-  document.getElementById('done').innerHTML=`<h3>완성</h3><video controls src="/api/mix/video/${JOB}"></video>
-    <div class="row"><a href="/api/mix/video/${JOB}" download><button>다운로드</button></a></div>`;
+  document.getElementById('done').innerHTML=`<h3>완성</h3><video controls src="/api/mix/video/${escapeHtml(JOB)}"></video>
+    <div class="row"><a href="/api/mix/video/${escapeHtml(JOB)}" download><button>다운로드</button></a></div>`;
 }
 </script>
 </body>
