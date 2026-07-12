@@ -192,37 +192,22 @@ _DISCOVER_CATEGORIES = ["#주방템", "#살림템", "#인테리어", "#자취템
 
 @app.get("/api/discover/update")
 def api_discover_update(days: int = 2, max_total: int = 40, accumulate: bool = False):
-    """🔄 업데이트 — 기본 카테고리들을 한 번에 검색해 '내가 모르던 채널' 중
-    댓글 터지는 릴스를 모아 랭킹으로 반환. 3개 조절값(2026-07-12):
-      days: 신선도 창(최근 N일 안에 올린 채널만). 2/3/7.
-      max_total: 한 번에 발굴할 새 채널 상한.
-      accumulate: True면 기존 발굴 피드에 이어붙임(누적)."""
+    """🔄 업데이트 시작(비동기) — 몇 분 걸리는 수집을 백그라운드 스레드로 돌리고
+    즉시 반환한다(2026-07-12, 동기처리 시 프론트가 몇 분 멈추고 배포 재시작에
+    응답이 깨지던 문제). 프론트는 /api/discover/status를 폴링해 진행/결과 확인."""
+    from shopping_shorts import discover_jobs
     days = max(1, min(int(days), 14))
     max_total = max(10, min(int(max_total), 120))
-    per = 12 if max_total <= 40 else 18
+    st = discover_jobs.start(days, max_total, accumulate)
+    return {"ok": True, **st, "categories": _DISCOVER_CATEGORIES,
+            "days": days, "accumulate": accumulate}
 
-    def fetch(usernames):
-        return fetch_reels(usernames, results_per_channel=per,
-                           only_newer_than=f"{days} days")
 
-    store = Store(DB_PATH)
-    try:
-        items = discovery.discover_multi(
-            _DISCOVER_CATEGORIES, known=_known_usernames(store),
-            search_fn=instagram_search.search_channels, fetch_reels_fn=fetch,
-            profiles_fn=fetch_profiles,
-            prev_comments=store.prev_comments, prev_delta=store.prev_delta,
-            window_hours=days * 24, max_channels_per=per, max_total=max_total,
-        )
-        if accumulate:
-            prev, _ = store.load_discovery_feed()
-            items = discovery.merge_feeds(prev, items)
-        store.save_discovery_feed(items)
-        _save_discovery_snapshot(store, items)
-    except Exception as e:
-        return _err(e)
-    return {"ok": True, "count": len(items), "items": items,
-            "categories": _DISCOVER_CATEGORIES, "days": days, "accumulate": accumulate}
+@app.get("/api/discover/status")
+def api_discover_status():
+    """업데이트 백그라운드 잡 진행상황(running/done/error) + 완료 시 결과."""
+    from shopping_shorts import discover_jobs
+    return {"ok": True, **discover_jobs.status()}
 
 
 @app.get("/api/discover/feed")

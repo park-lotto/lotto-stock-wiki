@@ -202,21 +202,31 @@ async function runUpdate(){
   const accumulate=document.getElementById('optAccum').checked;
   DSTATE.days=+days;
   const qs=`/api/discover/update?days=${days}&max_total=${max_total}&accumulate=${accumulate}`;
-  btn.disabled=true; st.textContent=`업데이트 중… (최근 ${days}일·최대 ${max_total}개${accumulate?'·누적':''}, 1~2분 소요)`;
+  btn.disabled=true; st.textContent='업데이트 시작 중…';
   if(!accumulate) document.getElementById('dcards').innerHTML='';
   try{
-    let d;
-    try{ d = await fetchJSON(qs); }
-    catch(err){  // 서버 재시작 등으로 HTML 응답 → 한 번 자동 재시도
-      st.textContent = err.message + ' (15초 후 재시도)';
-      await sleep(15000);
-      d = await fetchJSON(qs);
+    // 1) 백그라운드 잡 시작 (즉시 반환)
+    const startRes = await fetchJSON(qs);
+    ds.textContent = `카테고리: ${(startRes.categories||[]).join(' ')} · 최근 ${days}일`;
+    // 2) 상태 폴링 (최대 8분). 서버 재시작으로 HTML/에러 나도 계속 재시도.
+    const t0=Date.now(); let fails=0;
+    while(Date.now()-t0 < 8*60*1000){
+      await sleep(4000);
+      let s;
+      try{ s = await fetchJSON('/api/discover/status'); fails=0; }
+      catch(e){ if(++fails>15) throw new Error('상태 확인 실패(서버 재시작 반복). 잠시 후 다시.');
+                st.textContent='서버 재시작 중… 계속 대기'; continue; }
+      const el=Math.round(s.elapsed||(Date.now()-t0)/1000);
+      if(s.status==='running'){ st.textContent=`업데이트 중… ${s.phase||''} (${el}초 경과, 보통 1~3분)`; continue; }
+      if(s.status==='error'){ throw new Error(s.error||'수집 실패'); }
+      if(s.status==='done'){
+        st.textContent = s.count ? `✅ ${accumulate?'누적 ':''}새 채널 ${s.count}곳` : '새로 발굴된 채널이 없습니다';
+        renderDiscover(s.items||[]);
+        return;
+      }
+      if(s.status==='idle'){ throw new Error('작업이 중단됐어요(서버 재시작). 다시 눌러주세요.'); }
     }
-    if(!d.ok) throw new Error(d.error||'실패');
-    DSTATE.days=d.days||+days;
-    st.textContent = d.count ? `✅ ${accumulate?'누적 ':''}새 채널 ${d.count}곳 (댓글순)` : '새로 발굴된 채널이 없습니다 (이미 목록에 있거나 결과 없음)';
-    ds.textContent = `카테고리: ${(d.categories||[]).join(' ')} · 최근 ${d.days}일`;
-    renderDiscover(d.items);
+    st.textContent='시간 초과 — 잠시 후 새로고침하면 결과가 있을 수 있어요.';
   }catch(e){ st.textContent='❌ '+e.message; }
   finally{ btn.disabled=false; }
 }
