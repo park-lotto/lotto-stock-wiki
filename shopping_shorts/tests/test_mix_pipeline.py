@@ -196,7 +196,7 @@ def test_run_render_happy_path(monkeypatch):
     (src_dir / "vid.mp4").write_bytes(b"")
 
     captured = {}
-    def fake_assemble(plan, tts_paths, source_video_paths, out_path):
+    def fake_assemble(plan, tts_paths, source_video_paths, out_path, clean_fn=None):
         captured["plan"] = plan
         captured["tts_paths"] = tts_paths
         captured["source_video_paths"] = source_video_paths

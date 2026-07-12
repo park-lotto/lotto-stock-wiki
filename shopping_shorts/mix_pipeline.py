@@ -16,6 +16,7 @@ from shopping_shorts.script_extract import extract_script
 from shopping_shorts.edit_plan import build_edit_plan
 from shopping_shorts.tts import synthesize_tts
 from shopping_shorts.video_assemble import assemble
+from shopping_shorts.vmake_client import remove_subtitles
 
 
 def _source_video_id(i):
@@ -111,27 +112,52 @@ def retype_mix_job(job_id, video_type, db_path, work_root):
         store.update_mix_job(job_id, status="failed", error=str(e))
 
 
+def _resolve_sources(job, work):
+    """다운로드된 소스 mp4 경로 맵 {video_id: path}. 없으면 예외."""
+    source_video_paths = {}
+    for i in range(len(job["urls"])):
+        vid = _source_video_id(i)
+        mp4 = next((work / vid).glob("*.mp4"), None)
+        if mp4 is None:
+            raise RuntimeError(f"소스 영상 없음: {vid} (다운로드 디렉터리에 mp4 없음)")
+        source_video_paths[vid] = str(mp4)
+    return source_video_paths
+
+
+def _vmake_key(store):
+    """등록된 VMake 개인키(DB settings). 없으면 빈 문자열."""
+    return store.get_setting("vmake_api_key", "") or ""
+
+
 def run_render(job_id, db_path, work_root):
-    """확인 완료된 EDL을 최종 mp4로 렌더. 완료 시 status='done'+video_path."""
+    """확인된 EDL을 최종 mp4로 렌더. subtitle_removal이 켜져 있으면 믹스 후
+    VMake로 원본 자막을 제거하고 그 위에 우리 자막을 굽는다. 완료 시 status='done'."""
     store = Store(db_path)
     job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return
     work = Path(work_root) / job_id
+    work.mkdir(parents=True, exist_ok=True)
     try:
         store.update_mix_job(job_id, status="rendering")
         plan = job["edit_plan"]
         tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
-        # 다운로드된 소스 재사용
-        source_video_paths = {}
-        for i in range(len(job["urls"])):
-            vid = _source_video_id(i)
-            mp4 = next((work / vid).glob("*.mp4"), None)
-            if mp4 is None:
-                raise RuntimeError(f"소스 영상 없음: {vid} (다운로드 디렉터리에 mp4 없음)")
-            source_video_paths[vid] = str(mp4)
+        source_video_paths = _resolve_sources(job, work)
         out_path = work / "final.mp4"
-        assemble(plan, tts_paths, source_video_paths, str(out_path))
+
+        clean_fn = None
+        if job.get("subtitle_removal"):
+            key = _vmake_key(store)
+            if not key:
+                raise RuntimeError("자막 제거가 켜져 있으나 VMake 개인키가 등록되지 않았습니다")
+            def clean_fn(mix_raw):                        # noqa: E306
+                store.update_mix_job(job_id, status="removing_subtitles")
+                clean_path = str(work / "clean.mp4")
+                out = remove_subtitles(mix_raw, key, out_path=clean_path)
+                store.update_mix_job(job_id, clean_video_path=out)
+                return out
+
+        assemble(plan, tts_paths, source_video_paths, str(out_path), clean_fn=clean_fn)
         store.update_mix_job(job_id, status="done", video_path=str(out_path))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
