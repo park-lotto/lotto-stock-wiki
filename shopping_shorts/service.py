@@ -9,6 +9,7 @@ from shopping_shorts.apify_client import fetch_reels
 from shopping_shorts.ranking import build_items, apply_grades
 from shopping_shorts.store import Store
 from shopping_shorts.comment_gen import generate as _gen_comments
+from shopping_shorts import ai_categorize
 
 _CSV_FIELDS = ["name", "username", "category", "comments", "delta", "is_new",
                "speed", "accel", "density", "grade", "age_hours", "url", "inpock"]
@@ -124,6 +125,10 @@ def collect(limit_channels=None):
         all_items.extend(items)
 
     apply_grades(all_items)
+
+    # 캡션 기반 AI 재분류(주). 키워드(build_items)의 stray-단어 오판을 교정한다.
+    # 실패·무키면 no-op → 키워드 결과 유지(폴백). (2026-07-13)
+    ai_categorize.reclassify(all_items)
 
     run_date = now.strftime("%Y-%m-%d %H:%M")
     store.save_run(run_date, [
