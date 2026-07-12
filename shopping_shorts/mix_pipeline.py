@@ -61,26 +61,51 @@ def run_mix_job(job_id, db_path, work_root):
             extracts = dict(ex.map(_extract, video_paths.items()))
         store.update_mix_job(job_id, extract=extracts)
 
-        # 3) 통합 EDL
-        store.update_mix_job(job_id, status="planning")
+        # 3~4) 통합 EDL 생성 + 비트별 TTS (video_type=None → 자동 유형 감지)
         source_scripts = list(extracts.values())
-        plan = build_edit_plan(source_scripts, job["target_seconds"], structure=job["structure"])
-        # 빈 EDL(추출 전량 실패 또는 파이프라인 중간 전용풀 소진)을 ready_for_review로
-        # 오보고하지 않는다 — 성공처럼 보이는 빈 리뷰화면 대신 즉시 실패로 정상 종료
-        # (2026-07-12 최종 전체리뷰 Important).
-        if not plan["beats"]:
-            raise RuntimeError("EDL 비어있음 — 대본 추출 실패 또는 Gemini 키 소진으로 편집안을 만들지 못함")
+        _plan_and_tts(store, job_id, source_scripts, job["target_seconds"],
+                      job["structure"], None, work)
+    except Exception as e:
+        traceback.print_exc(file=sys.stderr)
+        store.update_mix_job(job_id, status="failed", error=str(e))
 
-        # 4) 비트별 TTS
-        store.update_mix_job(job_id, status="tts")
-        tts_dir = work / "tts"
-        tts_dir.mkdir(parents=True, exist_ok=True)
-        for beat in plan["beats"]:
-            out = tts_dir / f"beat_{beat['beat_idx']}.mp3"
-            synthesize_tts(beat["narration"], str(out))
-            beat["tts_path"] = str(out)
 
-        store.update_mix_job(job_id, edit_plan=plan, status="ready_for_review")
+def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, video_type, work):
+    """EDL 생성(3) + 비트별 TTS(4) → edit_plan 저장 + ready_for_review.
+    run_mix_job(자동판별, video_type=None)과 retype_mix_job(사용자 선택 유형)이 공유."""
+    # 3) 통합 EDL
+    store.update_mix_job(job_id, status="planning")
+    plan = build_edit_plan(source_scripts, target_seconds, structure=structure, video_type=video_type)
+    # 빈 EDL(추출 전량 실패 또는 파이프라인 중간 전용풀 소진)을 ready_for_review로
+    # 오보고하지 않는다 — 성공처럼 보이는 빈 리뷰화면 대신 즉시 실패로 정상 종료
+    # (2026-07-12 최종 전체리뷰 Important).
+    if not plan["beats"]:
+        raise RuntimeError("EDL 비어있음 — 대본 추출 실패 또는 Gemini 키 소진으로 편집안을 만들지 못함")
+
+    # 4) 비트별 TTS
+    store.update_mix_job(job_id, status="tts")
+    tts_dir = work / "tts"
+    tts_dir.mkdir(parents=True, exist_ok=True)
+    for beat in plan["beats"]:
+        out = tts_dir / f"beat_{beat['beat_idx']}.mp3"
+        synthesize_tts(beat["narration"], str(out))
+        beat["tts_path"] = str(out)
+
+    store.update_mix_job(job_id, edit_plan=plan, status="ready_for_review")
+
+
+def retype_mix_job(job_id, video_type, db_path, work_root):
+    """사용자가 감지된 영상 유형을 바꾸면, 저장된 extract로 EDL+TTS만 재생성한다
+    (재다운로드·재추출 없음 — 방식3의 '확인/변경' 경로, 설계 §3-6)."""
+    store = Store(db_path)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("extract"):
+        return  # 추출 캐시 없으면 재생성 불가
+    work = Path(work_root) / job_id
+    try:
+        source_scripts = list(job["extract"].values())
+        _plan_and_tts(store, job_id, source_scripts, job["target_seconds"],
+                      job["structure"], video_type, work)
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=str(e))

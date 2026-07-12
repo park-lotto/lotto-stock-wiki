@@ -129,6 +129,44 @@ def test_run_mix_job_non_instagram_url_fails(monkeypatch):
     assert "인스타그램" in job["error"]
 
 
+def test_retype_mix_job_regenerates_with_chosen_type(monkeypatch):
+    # 사용자가 유형을 바꾸면 저장된 extract로 EDL+TTS만 재생성(재다운로드 없음)
+    db = _dbpath()
+    work = Path(tempfile.mkdtemp())
+    s = Store(db)
+    s.create_mix_job("jt", ["https://www.instagram.com/reel/AAA/"], 20, "free")
+    s.update_mix_job("jt", extract={"s0": {"video_id": "s0", "full_text": "ft",
+                     "segments": [{"seg_id": "s0-0", "start": 0.0, "end": 2.0,
+                                   "text": "t", "scene_desc": "sc"}]}}, status="ready_for_review")
+
+    got = {}
+    def fake_build(scripts, target_seconds, structure, video_type=None, **k):
+        got["video_type"] = video_type
+        return {"structure": structure, "detected_type": video_type, "affiliate_target": "소금",
+                "beats": [{"beat_idx": 0, "role": "훅", "narration": "n", "target_seconds": 2,
+                           "primary": {"video_id": "s0", "seg_id": "s0-0", "start": 0.0, "end": 2.0},
+                           "alternates": [], "effect": "cut"}], "plagiarism_flags": []}
+    monkeypatch.setattr(mix_pipeline, "build_edit_plan", fake_build)
+    monkeypatch.setattr(mix_pipeline, "synthesize_tts", lambda text, out, **k: out)
+
+    mix_pipeline.retype_mix_job("jt", "recipe_secret", db, work)
+    job = s.get_mix_job("jt")
+    assert got["video_type"] == "recipe_secret"       # 사용자 선택 유형 명시 전달
+    assert job["status"] == "ready_for_review"
+    assert job["edit_plan"]["detected_type"] == "recipe_secret"
+    assert job["edit_plan"]["beats"][0]["tts_path"]   # TTS 재생성됨
+
+
+def test_retype_mix_job_no_extract_noop(monkeypatch):
+    db = _dbpath()
+    work = Path(tempfile.mkdtemp())
+    s = Store(db)
+    s.create_mix_job("jx", ["https://www.instagram.com/reel/AAA/"], 20, "free")
+    # extract 없음 → 조용히 무시(상태 그대로)
+    mix_pipeline.retype_mix_job("jx", "recipe_secret", db, work)
+    assert s.get_mix_job("jx")["status"] == "downloading"
+
+
 def test_source_video_id():
     assert mix_pipeline._source_video_id(0) == "s0"
     assert mix_pipeline._source_video_id(2) == "s2"
