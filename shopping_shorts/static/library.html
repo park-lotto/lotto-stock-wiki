@@ -218,9 +218,12 @@ async function openGen(sc){
     const sel = row.querySelector('.elem-mode');
     sel.innerHTML = '';
     const _mk=(v,t)=>{const op=document.createElement('option');op.value=v;op.textContent=t;return op;};
-    sel.appendChild(_mk('random','🎲 랜덤'));
-    opts.forEach(o=>sel.appendChild(_mk('category:'+o.label, o.label)));
-    sel.appendChild(_mk('free','✨ AI 자유즉흥'));
+    if(opts.length){
+      sel.appendChild(_mk('random','🎲 랜덤 (학습된 카테고리 중 무작위)'));
+      opts.forEach(o=>sel.appendChild(_mk('category:'+o.label, o.label)));
+    } else {
+      sel.appendChild(_mk('random','⏳ 학습된 카테고리 아직 없음 — 레퍼런스 더 쌓이면 생김'));
+    }
   });
 }
 function onElemToggle(cb){
