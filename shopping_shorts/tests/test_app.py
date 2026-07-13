@@ -453,6 +453,31 @@ def test_find_analyze_missing_video_url_returns_clean_error(monkeypatch, client,
     assert d["ok"] is False
 
 
+def test_translate_keyword_returns_5langs_and_search_links(monkeypatch, client):
+    """자동분석이 영상 내용을 잘못 짚었을 때(2026-07-13, "레시피 영상인데
+    조리도구 키워드로 잡힘" 피드백) 사용자가 정확한 한국어 키워드를 직접
+    넣으면 4개 언어로 번역돼 검색 링크까지 만들어져야 한다."""
+    from shopping_shorts import app as app_module
+
+    monkeypatch.setattr(app_module, "translate_keyword", lambda kw: {
+        "ko": "풍선감자", "en": "Balloon Potato", "zh": "气球土豆", "ja": "バルーンポテト", "ru": "Картофельный шар",
+    })
+
+    r = client.post("/api/find/translate_keyword", json={"keyword": "풍선감자"})
+    assert r.status_code == 200
+    d = r.json()
+    assert d["ok"] is True
+    assert d["keywords"]["en"] == "Balloon Potato"
+    assert d["search_links"]["youtube"]["ko"][0]["keyword"] == "풍선감자"
+    assert d["search_links"]["instagram"]["en"][0]["keyword"] == "Balloon Potato"
+
+
+def test_translate_keyword_empty_input_returns_422(client):
+    r = client.post("/api/find/translate_keyword", json={"keyword": "  "})
+    assert r.status_code == 422
+    assert r.json()["ok"] is False
+
+
 def test_find_frame_rejects_path_traversal(client):
     """work_id="..", filename=<실제파일명> 이면 슬래시 하나 없이도
     _FIND_TMP_DIR(data/find_frames/)의 부모 디렉터리(data/)로 탈출해서

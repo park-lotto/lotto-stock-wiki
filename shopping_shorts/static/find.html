@@ -37,6 +37,8 @@
   .hint{font-size:11px;color:var(--sub);margin-bottom:16px}
   .lens-row{margin:14px 0;font-size:13px}
   .lens-row a{color:var(--accent);text-decoration:none;margin-right:8px}
+  .custom-kw-row{display:flex;gap:6px;margin:10px 0 16px}
+  .custom-kw-row input{flex:1;min-width:0}
 
   .grid-table{width:100%;border-collapse:separate;border-spacing:0 8px}
   .grid-table td{vertical-align:top;padding:4px 8px 4px 0}
@@ -82,6 +84,7 @@
 const params = new URLSearchParams(location.search);
 const AUTO_SC = params.get("shortcode");
 let CUR_SC = null;  // 마지막으로 분석 완료된 shortcode
+let LAST_RESULT = null;  // 직접 키워드 추가 시 병합 대상(마지막 renderResult 데이터)
 
 async function doAnalyze(){
   const sc = document.getElementById("scInput").value || AUTO_SC;
@@ -113,6 +116,7 @@ const PLATFORM_LANGS = {
 const LANG_FLAG = {ko:"🇰🇷", en:"🌐", zh:"🇨🇳", ja:"🇯🇵", ru:"🇷🇺"};
 
 function renderResult(d){
+  LAST_RESULT = d;
   const kwList = d.keywords.ko || [];
   const kw = kwList.map(k=>`<span class="chip">${k}</span>`).join("");
   const lensLinks = (d.lens_links||[]).map((u,i)=>{
@@ -133,12 +137,55 @@ function renderResult(d){
         <div class="category-badge">${d.category || "-"}</div>
         <div class="section-label">키워드</div>
         <div class="chips">${kw}</div>
+        <div class="custom-kw-row">
+          <input id="customKwInput" placeholder="자동분석이 틀렸다면 정확한 키워드를 한국어로 직접 입력 (예: 풍선감자)">
+          <button id="customKwBtn" onclick="addCustomKeyword()">번역+추가</button>
+        </div>
         <div class="hint">채널·언어별 검색어를 클릭하면 해당 플랫폼 자체 검색으로 바로 이동합니다 · 📋는 복사</div>
         ${renderLinkGrid(d.search_links)}
         <div class="lens-row"><b>Google Lens 역검색</b><br>${lensLinks}</div>
       </div>
     </div>
   `;
+}
+
+async function addCustomKeyword(){
+  const input = document.getElementById("customKwInput");
+  const keyword = input.value.trim();
+  if(!keyword || !LAST_RESULT) return;
+  const btn = document.getElementById("customKwBtn");
+  btn.disabled = true;
+  btn.textContent = "번역 중…";
+  try{
+    const r = await fetch("/api/find/translate_keyword", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({keyword}),
+    });
+    const d = await r.json();
+    if(!d.ok){ alert(d.error || "번역 실패"); return; }
+
+    // 언어별 키워드·검색링크 맨 앞에 추가(기존 자동분석 결과는 그대로 유지)
+    for(const lang of Object.keys(d.keywords)){
+      const translated = d.keywords[lang];
+      if(!translated) continue;
+      if(!LAST_RESULT.keywords[lang]) LAST_RESULT.keywords[lang] = [];
+      LAST_RESULT.keywords[lang] = [translated, ...LAST_RESULT.keywords[lang]];
+    }
+    for(const platform of Object.keys(d.search_links)){
+      const byLang = d.search_links[platform];
+      if(!LAST_RESULT.search_links[platform]) LAST_RESULT.search_links[platform] = {};
+      for(const lang of Object.keys(byLang)){
+        const existing = LAST_RESULT.search_links[platform][lang] || [];
+        LAST_RESULT.search_links[platform][lang] = [...byLang[lang], ...existing];
+      }
+    }
+    renderResult(LAST_RESULT);
+  }catch(e){
+    alert(e.message);
+  }finally{
+    if(btn.isConnected){ btn.disabled = false; btn.textContent = "번역+추가"; }
+  }
 }
 
 function renderLinkGrid(searchLinks){

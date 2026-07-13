@@ -183,6 +183,41 @@ def test_analyze_video_rotates_to_next_key_on_account_disabled(monkeypatch, tmp_
     assert comment_gen._live_key_indices() == [1]
 
 
+def test_translate_keyword_returns_5langs(monkeypatch, tmp_path):
+    monkeypatch.setattr(video_analysis, "SHORTS_GEMINI_KEYS", ["fake-key"])
+    monkeypatch.setattr(comment_gen, "SHORTS_GEMINI_KEYS", ["fake-key"])
+
+    class FakeModels:
+        def generate_content(self, **kw):
+            class R:
+                text = '{"en":"Balloon Potato","zh":"气球土豆","ja":"バルーンポテト","ru":"Картофельный шар"}'
+            return R()
+
+    class FakeClient:
+        models = FakeModels()
+
+    monkeypatch.setattr(video_analysis, "_client_for_key", lambda key: FakeClient())
+
+    result = video_analysis.translate_keyword("풍선감자")
+
+    assert result == {
+        "ko": "풍선감자", "en": "Balloon Potato", "zh": "气球土豆",
+        "ja": "バルーンポテト", "ru": "Картофельный шар",
+    }
+
+
+def test_translate_keyword_empty_keyword_returns_ko_only(monkeypatch):
+    monkeypatch.setattr(video_analysis, "SHORTS_GEMINI_KEYS", ["fake-key"])
+    result = video_analysis.translate_keyword("")
+    assert result == {"ko": "", "en": "", "zh": "", "ja": "", "ru": ""}
+
+
+def test_translate_keyword_no_keys_returns_ko_only(monkeypatch):
+    monkeypatch.setattr(video_analysis, "SHORTS_GEMINI_KEYS", [])
+    result = video_analysis.translate_keyword("풍선감자")
+    assert result == {"ko": "풍선감자", "en": "", "zh": "", "ja": "", "ru": ""}
+
+
 def test_analyze_video_all_keys_exhausted_returns_empty(monkeypatch, tmp_path):
     """모든 키가 소진되면 공허한 결과를 반환."""
     video_path = tmp_path / "v.mp4"
