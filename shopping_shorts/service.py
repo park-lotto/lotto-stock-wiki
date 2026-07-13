@@ -1,15 +1,16 @@
 """수집 오케스트레이션: 채널→Apify→랭킹→저장→CSV 아카이브."""
 import csv
 from pathlib import Path
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from concurrent.futures import ThreadPoolExecutor
 from shopping_shorts.config import DB_PATH, WINDOW_HOURS, DRAFT_BATCH_SIZE, MAX_CHANNELS
 from shopping_shorts.channels import load_channels
 from shopping_shorts.apify_client import fetch_reels
-from shopping_shorts.ranking import build_items, apply_grades
+from shopping_shorts.ranking import build_items, build_youtube_items, apply_grades
 from shopping_shorts.store import Store
 from shopping_shorts.comment_gen import generate as _gen_comments
 from shopping_shorts import ai_categorize, topic_grouper
+from shopping_shorts.youtube_client import search_shorts as yt_search
 
 _CSV_FIELDS = ["name", "username", "category", "comments", "delta", "is_new",
                "speed", "accel", "density", "grade", "age_hours", "url", "inpock"]
@@ -79,13 +80,41 @@ def generate_missing_drafts(items):
         list(pool.map(_generate_one, items))
 
 
-def collect(limit_channels=None):
+def _collect_youtube():
+    """유튜브 키워드 시드로 인기 Shorts 발굴 → 조회수 기반 랭킹."""
+    store = Store(DB_PATH)
+    keywords = [s["value"] for s in store.list_seeds("youtube") if s["kind"] == "keyword"]
+    if not keywords:
+        return []
+    now = datetime.now(timezone.utc)
+    after = (now - timedelta(hours=WINDOW_HOURS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    raw = yt_search(keywords, after)
+    items = build_youtube_items(
+        raw,
+        prev_base=lambda sc: store.prev_base_platform("youtube", sc),
+        prev_delta=lambda sc: store.prev_delta_platform("youtube", sc),
+        now=now, window_hours=WINDOW_HOURS,
+    )
+    apply_grades(items)
+    run_date = now.strftime("%Y-%m-%d %H:%M")
+    store.save_run_platform("youtube", run_date,
+                            [{"shortcode": i["shortcode"], "base": i["base_count"], "delta": i["delta"]} for i in items])
+    store.save_last_run_platform("youtube", items, now.isoformat())
+    return items
+
+
+def collect(platform="instagram", limit_channels=None):
     """1회 수집 실행 → 지표·등급 채워진 항목 리스트 반환 + DB 저장.
 
+    platform: "instagram"(기본, 엑셀 채널 기반) | "youtube"(키워드 시드 기반,
+    _collect_youtube()로 분기).
     limit_channels: 테스트/절약용 채널 수 상한 (None=전체). 댓글 draft 생성은
     포함하지 않음 — 호출부(app.py)가 generate_missing_drafts()를 별도로(백그라운드)
     호출해야 한다.
     """
+    if platform == "youtube":
+        return _collect_youtube()
+
     channels = load_channels()
 
     # 발굴로 추가한 채널을 엑셀 목록과 union하고, 죽은(추적제외) 채널은 뺀다

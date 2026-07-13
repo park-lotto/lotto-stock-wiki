@@ -392,6 +392,19 @@ class Store:
                             "ORDER BY id DESC LIMIT 1", (platform, shortcode)).fetchone()
         return row[0] if row else None
 
+    # ── 플랫폼별 마지막 수집 결과(last_run 테이블에 platform 컬럼이 없어 settings 재사용) ──
+    def save_last_run_platform(self, platform, items, collected_at):
+        with self._conn() as c:
+            c.execute("INSERT OR REPLACE INTO settings(key, value) VALUES(?,?)",
+                      (f"last_run::{platform}", json.dumps({"items": items, "collected_at": collected_at}, ensure_ascii=False)))
+
+    def load_last_run_platform(self, platform):
+        v = self.get_setting(f"last_run::{platform}", "")
+        if not v:
+            return [], None
+        d = json.loads(v)
+        return d.get("items", []), d.get("collected_at")
+
     # --- 영상 믹싱 바구니(mix basket) — 담기 토글로 채우고 mix.html이 소스로 사용 ---
     def mix_basket_toggle(self, shortcode, url="", thumbnail="", name="", caption=""):
         """이미 있으면 제거, 없으면 추가. 최종적으로 담겨있으면 True 반환."""
