@@ -427,23 +427,44 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
             filters.append(wm_dt)
     vf = ",".join(filters)
     # cwd=work: 필터그래프의 font.ttf / cap_*.txt 상대경로 해석 기준(콜론 회피).
+    # 오버레이 이미지·BGM 유무로 -vf(단순) 또는 filter_complex(합성) 선택. 둘 다 조합 가능.
     bgm = deco.get("bgm") or {}
     bgm_path = bgm.get("_abspath")
-    if bgm_path and os.path.exists(bgm_path):
-        # BGM 믹스: 영상 오디오(TTS 나레이션) 위에 배경음악을 낮은 볼륨으로 얹는다.
-        # 음악이 영상보다 짧으면 무한 루프, amix duration=first로 영상 길이에 맞춰 자른다.
-        vol = max(0.0, min(1.0, (bgm.get("volume", 15)) / 100.0))
-        fc = (f"[0:v]{vf}[v];"
-              f"[1:a]aloop=loop=-1:size=2000000000,volume={vol:.3f}[bg];"
-              f"[0:a][bg]amix=inputs=2:duration=first:dropout_transition=2[a]")
-        _run_ffmpeg(["ffmpeg", "-y", "-i", str(in_video), "-i", bgm_path,
-                     "-filter_complex", fc, "-map", "[v]", "-map", "[a]", "-r", "30",
-                     "-c:v", "libx264", "-c:a", "aac", "-pix_fmt", "yuv420p", str(out_path)],
-                    cwd=str(work))
-    else:
+    has_bgm = bool(bgm_path and os.path.exists(bgm_path))
+    overlay = deco.get("overlay") or {}
+    ov_path = overlay.get("_abspath")
+    has_overlay = bool(ov_path and os.path.exists(ov_path))
+    if not has_bgm and not has_overlay:
         _run_ffmpeg(["ffmpeg", "-y", "-i", str(in_video), "-vf", vf, "-r", "30",
                      "-c:v", "libx264", "-c:a", "copy", "-pix_fmt", "yuv420p", str(out_path)],
                     cwd=str(work))
+        return str(out_path)
+    inputs = ["-i", str(in_video)]
+    fc = [f"[0:v]{vf}[v0]"]
+    vcur, idx = "v0", 1
+    if has_overlay:                                   # 이미지 오버레이(로고·뱃지 등)
+        inputs += ["-i", ov_path]
+        w = overlay.get("width")                      # 1080px 기준 폭(없으면 원본)
+        scale = f"scale={int(w)}:-1," if w else ""
+        xf = min(1.0, max(0.0, overlay.get("x", 50) / 100.0))
+        yf = min(1.0, max(0.0, overlay.get("y", 50) / 100.0))
+        aa = max(0.0, min(1.0, overlay.get("alpha", 1)))
+        fc.append(f"[{idx}:v]{scale}format=rgba,colorchannelmixer=aa={aa:.2f}[ov]")
+        fc.append(f"[{vcur}][ov]overlay=x=W*{xf:.4f}-w/2:y=H*{yf:.4f}-h/2[v1]")
+        vcur = "v1"
+        idx += 1
+    amap = None
+    if has_bgm:                                       # 배경음악(나레이션 위 낮은 볼륨)
+        inputs += ["-i", bgm_path]
+        vol = max(0.0, min(1.0, (bgm.get("volume", 15)) / 100.0))
+        fc.append(f"[{idx}:a]aloop=loop=-1:size=2000000000,volume={vol:.3f}[bg]")
+        fc.append("[0:a][bg]amix=inputs=2:duration=first:dropout_transition=2[a]")
+        amap = "[a]"
+        idx += 1
+    cmd = ["ffmpeg", "-y", *inputs, "-filter_complex", ";".join(fc), "-map", f"[{vcur}]"]
+    cmd += (["-map", amap, "-c:a", "aac"] if amap else ["-map", "0:a", "-c:a", "copy"])
+    cmd += ["-r", "30", "-c:v", "libx264", "-pix_fmt", "yuv420p", str(out_path)]
+    _run_ffmpeg(cmd, cwd=str(work))
     return str(out_path)
 
 

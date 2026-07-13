@@ -191,6 +191,11 @@ def run_render(job_id, db_path, work_root):
             bp = work / bgm["file"]
             if bp.exists():
                 deco = {**deco, "bgm": {**bgm, "_abspath": str(bp)}}
+        ov = deco.get("overlay") or {}
+        if ov.get("file"):
+            op = work / ov["file"]
+            if op.exists():
+                deco = {**deco, "overlay": {**ov, "_abspath": str(op)}}
         assemble(plan, tts_paths, source_video_paths, str(out_path), clean_fn=clean_fn,
                  headcopy=job.get("headcopy"), caption_style=job.get("caption_style"),
                  deco=deco)

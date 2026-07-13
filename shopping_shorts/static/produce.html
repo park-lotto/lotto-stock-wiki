@@ -222,7 +222,8 @@
             <div id="capPreviewText" style="position:absolute;left:50%;transform:translateX(-50%);text-align:center;white-space:pre-wrap;word-break:keep-all;line-height:1.2;z-index:2;pointer-events:none"></div>
             <div id="hcPreviewText" style="position:absolute;transform:translate(-50%,-50%);text-align:center;line-height:1.18;word-break:keep-all;padding:0 6px;cursor:move;user-select:none;z-index:3"></div>
             <div id="extraPreview"></div>
-            <div id="wmPreview" style="position:absolute;transform:translate(-50%,-50%);white-space:nowrap;z-index:4;pointer-events:none;display:none"></div>
+            <img id="ovPreview" style="position:absolute;transform:translate(-50%,-50%);cursor:move;user-select:none;z-index:5;display:none" alt="">
+            <div id="wmPreview" style="position:absolute;transform:translate(-50%,-50%);white-space:nowrap;z-index:6;pointer-events:none;display:none"></div>
           </div>
         </div>
       </div>
@@ -284,6 +285,15 @@
           <span id="bgmStatus" class="hint"></span>
           <label style="font-size:12px;color:var(--sub)">볼륨 <input id="bgmVol" type="range" min="0" max="60" value="15" oninput="updateBgmVol()"> <span id="bgmVolV">15</span>%</label>
           <button onclick="clearBgm()" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:12px">제거</button>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;border-top:1px dashed var(--line);padding-top:12px">
+          <span style="font-size:13px;font-weight:600">🖼 이미지 오버레이</span>
+          <input id="ovFile" type="file" accept="image/png,image/jpeg,image/webp" onchange="uploadOverlay(this)" style="font-size:12px;max-width:200px">
+          <span id="ovStatus" class="hint"></span>
+          <label style="font-size:12px;color:var(--sub)">크기 <input id="ovW" type="range" min="80" max="700" value="240" oninput="updateOverlay()"></label>
+          <label style="font-size:12px;color:var(--sub)">투명도 <input id="ovAlpha" type="range" min="20" max="100" value="100" oninput="updateOverlay()"></label>
+          <button onclick="clearOverlay()" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:12px">제거</button>
+          <span class="hint">미리보기에서 <b>드래그</b>로 이동</span>
         </div>
       </div>
     </section>
@@ -348,6 +358,7 @@ function initHeadcopy(){
   updateDeco();
   renderExtraTexts();
   renderExtraPreview();
+  renderOverlayPreview();
 }
 // ── 자막 스타일(나레이션 자막) ──────────────
 let CAP_EFFECT='none';
@@ -534,6 +545,45 @@ async function uploadBgm(input){
 function updateBgmVol(){ const v=+document.getElementById('bgmVol').value; document.getElementById('bgmVolV').textContent=v;
   if(STATE.deco&&STATE.deco.bgm) STATE.deco.bgm.volume=v; }
 function clearBgm(){ if(STATE.deco) STATE.deco.bgm=null; const el=document.getElementById('bgmFile'); if(el) el.value=''; const st=document.getElementById('bgmStatus'); if(st) st.textContent='제거됨'; }
+// 🖼 이미지 오버레이(로고·뱃지) 업로드 + 미리보기(클라 objectURL)
+let OV_OBJ_URL=null;
+async function uploadOverlay(input){
+  const f=input.files&&input.files[0]; if(!f) return;
+  if(!MIX_JOB){ alert('2단계에서 영상 매칭을 먼저 실행하세요'); input.value=''; return; }
+  const st=document.getElementById('ovStatus'); st.textContent='업로드 중…';
+  const fd=new FormData(); fd.append('job_id',MIX_JOB); fd.append('file',f);
+  try{ const r=await (await fetch('/api/produce/mix/overlay',{method:'POST',body:fd})).json();
+    if(r.ok){ STATE.deco=STATE.deco||{extra_texts:[]};
+      STATE.deco.overlay={file:r.file, x:50, y:50, width:+document.getElementById('ovW').value, alpha:+document.getElementById('ovAlpha').value/100};
+      if(OV_OBJ_URL) URL.revokeObjectURL(OV_OBJ_URL); OV_OBJ_URL=URL.createObjectURL(f);
+      st.textContent='✅ '+f.name; renderOverlayPreview(); }
+    else st.textContent='실패: '+(r.error||''); }
+  catch(e){ st.textContent='업로드 오류'; }
+}
+function updateOverlay(){ if(!STATE.deco||!STATE.deco.overlay) return;
+  STATE.deco.overlay.width=+document.getElementById('ovW').value;
+  STATE.deco.overlay.alpha=+document.getElementById('ovAlpha').value/100; renderOverlayPreview(); }
+function clearOverlay(){ if(STATE.deco) STATE.deco.overlay=null; const el=document.getElementById('ovFile'); if(el) el.value=''; renderOverlayPreview(); const st=document.getElementById('ovStatus'); if(st) st.textContent='제거됨'; }
+function renderOverlayPreview(){
+  const img=document.getElementById('ovPreview'); if(!img) return;
+  const o=STATE.deco&&STATE.deco.overlay, scale=PREVIEW_W/VIDEO_W;
+  if(o&&OV_OBJ_URL){ img.src=OV_OBJ_URL; img.style.display='block';
+    img.style.left=o.x+'%'; img.style.top=o.y+'%';
+    img.style.width=Math.max(10,o.width*scale)+'px'; img.style.opacity=o.alpha; bindOverlayDrag();
+  } else img.style.display='none';
+}
+function bindOverlayDrag(){
+  const pv=document.getElementById('hcPreview'), img=document.getElementById('ovPreview');
+  if(!img||img._bound) return; img._bound=true;
+  img.onmousedown=e=>{ e.preventDefault();
+    const move=ev=>{ if(!STATE.deco.overlay) return; const r=pv.getBoundingClientRect();
+      STATE.deco.overlay.x=Math.round(Math.max(0,Math.min(100,(ev.clientX-r.left)/r.width*100)));
+      STATE.deco.overlay.y=Math.round(Math.max(0,Math.min(100,(ev.clientY-r.top)/r.height*100)));
+      img.style.left=STATE.deco.overlay.x+'%'; img.style.top=STATE.deco.overlay.y+'%'; };
+    const up=()=>{ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); };
+    document.addEventListener('mousemove',move); document.addEventListener('mouseup',up);
+  };
+}
 function renderMyPresets(){
   const box=document.getElementById('myPresets'); if(!box) return;
   const list=myPresets();

@@ -1433,6 +1433,22 @@ async def api_produce_mix_bgm(job_id: str = Form(...), file: UploadFile = File(.
     return {"ok": True, "file": name}
 
 
+@app.post("/api/produce/mix/overlay")
+async def api_produce_mix_overlay(job_id: str = Form(...), file: UploadFile = File(...)):
+    """오버레이 이미지(PNG/JPG) 업로드 → job work dir에 overlay.{ext}로 저장. deco.overlay.file로 참조."""
+    store = Store(DB_PATH)
+    if not job_id or not store.get_mix_job(job_id):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if ext not in (".png", ".jpg", ".jpeg", ".webp"):
+        ext = ".png"
+    d = _MIX_WORK_DIR / job_id
+    d.mkdir(parents=True, exist_ok=True)
+    name = "overlay" + ext
+    (d / name).write_bytes(await file.read())
+    return {"ok": True, "file": name}
+
+
 # 정적 프론트 (마운트는 맨 마지막)
 _STATIC = Path(__file__).parent / "static"
 
