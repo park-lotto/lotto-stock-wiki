@@ -173,8 +173,41 @@
           <div class="hint" style="margin-bottom:4px">🖱️ 실시간 미리보기 (9:16) — 글자를 <b>드래그</b>해 위치 이동</div>
           <div id="hcPreview" style="position:relative;width:340px;aspect-ratio:9/16;background:#0d131c;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.4)">
             <img id="hcPreviewBg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none" alt="">
-            <div id="hcPreviewText" style="position:absolute;transform:translate(-50%,-50%);text-align:center;line-height:1.18;word-break:keep-all;padding:0 6px;cursor:move;user-select:none;z-index:2"></div>
+            <div id="capPreviewText" style="position:absolute;left:50%;transform:translateX(-50%);text-align:center;white-space:pre-wrap;word-break:keep-all;line-height:1.2;z-index:2;pointer-events:none"></div>
+            <div id="hcPreviewText" style="position:absolute;transform:translate(-50%,-50%);text-align:center;line-height:1.18;word-break:keep-all;padding:0 6px;cursor:move;user-select:none;z-index:3"></div>
           </div>
+        </div>
+      </div>
+      <!-- 자막 스타일(나레이션 자막 자체 디자인) -->
+      <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:2px">💬 자막 스타일</div>
+        <div class="sub" style="margin-bottom:10px">나레이션 자막(문구는 대본에서 자동)의 폰트·색·박스·효과. 미리보기 하단에 <b>샘플</b>로 표시됩니다.</div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+          <label style="font-size:12px;color:var(--sub)">폰트
+            <select id="capFont" onchange="updateCaption()" style="background:#0d1420;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px"></select></label>
+          <label style="font-size:12px;color:var(--sub)">색상 <input id="capColor" type="color" value="#FFFFFF" oninput="updateCaption()"></label>
+        </div>
+        <div style="margin-top:8px;font-size:12px;color:var(--sub)">글씨 크기 <span id="capSizeV">54</span>px
+          <input id="capSize" type="range" min="28" max="96" value="54" oninput="updateCaption()" style="width:100%"></div>
+        <div style="font-size:12px;color:var(--sub)">세로 위치 <span id="capYV">84</span>%
+          <input id="capY" type="range" min="0" max="100" value="84" oninput="updateCaption()" style="width:100%"></div>
+        <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">
+          <input id="capOutline" type="checkbox" checked onchange="updateCaption()"> 외곽선
+          <input id="capOutColor" type="color" value="#000000" oninput="updateCaption()">
+          <span style="color:var(--sub)">두께 <input id="capOutW" type="range" min="0" max="12" value="5" oninput="updateCaption()"></span>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">
+          <input id="capBox" type="checkbox" onchange="updateCaption()"> 배경 박스<span style="color:var(--sub);font-size:11px">(켜면 하단 바 대신 글자마다 박스)</span>
+          <input id="capBoxColor" type="color" value="#000000" oninput="updateCaption()">
+          <span style="color:var(--sub)">여백 <input id="capBoxPad" type="range" min="0" max="40" value="12" oninput="updateCaption()"></span>
+          <span style="color:var(--sub)">투명도 <input id="capBoxOpacity" type="range" min="20" max="100" value="80" oninput="updateCaption()"></span>
+        </label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center">
+          <span style="font-size:12px;color:var(--sub)">효과:</span>
+          <button type="button" class="capEff tab active" data-eff="none" onclick="setCapEffect('none')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">없음</button>
+          <button type="button" class="capEff tab" data-eff="fade" onclick="setCapEffect('fade')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">페이드</button>
+          <button type="button" class="capEff tab" data-eff="slide" onclick="setCapEffect('slide')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">슬라이드</button>
+          <button type="button" class="capEff tab" data-eff="pop" onclick="setCapEffect('pop')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">팝</button>
         </div>
       </div>
     </section>
@@ -232,6 +265,38 @@ function initHeadcopy(){
   renderPresets();
   bindHCDrag();
   updateHC();
+  renderCapFontSelect();
+  updateCaption();
+}
+// ── 자막 스타일(나레이션 자막) ──────────────
+let CAP_EFFECT='none';
+function renderCapFontSelect(){
+  const s=document.getElementById('capFont');
+  if(s && !s.options.length) s.innerHTML=HC_FONTS.map(f=>`<option value="${f.file}"${f.file==='NanumGothic-Bold.ttf'?' selected':''}>${f.name}</option>`).join('');
+}
+function setCapEffect(e){ CAP_EFFECT=e;
+  document.querySelectorAll('.capEff').forEach(b=>b.classList.toggle('active', b.dataset.eff===e));
+  updateCaption(); }
+function updateCaption(){
+  const g=id=>document.getElementById(id); if(!g('capFont')) return;
+  const cs={ font:g('capFont').value||'NanumGothic-Bold.ttf', color:g('capColor').value, size:+g('capSize').value,
+    y_pct:+g('capY').value, outline:g('capOutline').checked, outline_color:g('capOutColor').value, outline_w:+g('capOutW').value,
+    box:g('capBox').checked, box_color:g('capBoxColor').value, box_pad:+g('capBoxPad').value, box_opacity:+g('capBoxOpacity').value,
+    bar:!g('capBox').checked, effect:CAP_EFFECT };
+  STATE.captionStyle=cs;
+  g('capSizeV').textContent=cs.size; g('capYV').textContent=cs.y_pct;
+  const el=g('capPreviewText'); if(!el) return;
+  const scale=PREVIEW_W/VIDEO_W;
+  el.textContent='이렇게 자막이 나와요';
+  el.style.fontFamily=`'${fontCss(cs.font)}',sans-serif`;
+  el.style.top=cs.y_pct+'%'; el.style.transform='translate(-50%,-50%)';
+  el.style.color=cs.color; el.style.fontWeight=900;
+  el.style.fontSize=Math.max(9, cs.size*scale)+'px';
+  el.style.maxWidth=(PREVIEW_W-16)+'px';
+  const oc=cs.outline_color, ow=(cs.outline_w*scale).toFixed(1);
+  el.style.textShadow = cs.outline ? `${ow}px ${ow}px 0 ${oc}, -${ow}px -${ow}px 0 ${oc}, ${ow}px -${ow}px 0 ${oc}, -${ow}px ${ow}px 0 ${oc}` : 'none';
+  if(cs.box){ el.style.background=hexA(cs.box_color, cs.box_opacity/100); el.style.padding=`${Math.round(cs.box_pad*scale)}px ${Math.round(cs.box_pad*1.5*scale)}px`; el.style.borderRadius='6px'; }
+  else { el.style.background='none'; el.style.padding='2px 6px'; el.style.borderRadius='0'; }
 }
 // 번들 폰트 22종(ttf/otf만 — 미리보기=실제 렌더 일치). ⭐=쇼츠 헤드카피 추천 베스트5
 const HC_FONTS=[
@@ -394,13 +459,13 @@ function bindHCDrag(){
 async function saveHeadcopy(){
   if(!MIX_JOB) return;
   try{ await fetch('/api/produce/mix/settings',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({job_id:MIX_JOB, headcopy:STATE.headcopy})}); }catch(e){}
+    body:JSON.stringify({job_id:MIX_JOB, headcopy:STATE.headcopy, caption_style:STATE.captionStyle})}); }catch(e){}
 }
 function jump(i){ cur=i; renderSteps(); showPanel(); }
 function go(d){ const n=cur+d; if(n<0||n>=STEPS.length) return; cur=n; renderSteps(); showPanel(); }
 
 // ── 1단계 대본: 3모드 ──────────────────────────────
-const STATE = { script: "", subtitleRemoval: false, headcopy: null };   // 확정 대본 + 렌더 설정
+const STATE = { script: "", subtitleRemoval: false, headcopy: null, captionStyle: null };   // 확정 대본 + 렌더 설정
 
 const SCRIPT_MODE_HTML = {
   manual: () => `<textarea id="scriptText" placeholder="여기에 대본을 직접 입력하세요…" oninput="onScriptInput()">${esc(STATE.script)}</textarea>

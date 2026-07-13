@@ -168,7 +168,7 @@ def run_render(job_id, db_path, work_root):
                 return out
 
         assemble(plan, tts_paths, source_video_paths, str(out_path), clean_fn=clean_fn,
-                 headcopy=job.get("headcopy"))
+                 headcopy=job.get("headcopy"), caption_style=job.get("caption_style"))
         store.update_mix_job(job_id, status="done", video_path=str(out_path))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)

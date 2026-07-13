@@ -1235,6 +1235,8 @@ def api_produce_mix_settings(body: dict):
         fields["subtitle_removal"] = bool(body.get("subtitle_removal"))
     if "headcopy" in body:
         fields["headcopy"] = body.get("headcopy")  # dict or None
+    if "caption_style" in body:
+        fields["caption_style"] = body.get("caption_style")  # dict or None
     if fields:
         store.update_mix_job(job_id, **fields)
     return {"ok": True}
