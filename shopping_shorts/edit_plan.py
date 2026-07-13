@@ -98,6 +98,7 @@ def _validate_and_ground(raw_plan, seg_map, n_alternates):
             "primary": primary,
             "alternates": alts,
             "effect": beat.get("effect", "cut"),
+            "fit": int(beat.get("fit") or 0),
         })
     return {"structure": raw_plan.get("structure", ""), "beats": beats_out}
 
@@ -156,6 +157,7 @@ _RESPONSE_SCHEMA = {
                         },
                     },
                     "effect": {"type": "string"},
+                    "fit": {"type": "integer"},
                 },
                 "required": ["role", "narration", "target_seconds", "primary"],
             },
@@ -227,6 +229,8 @@ _SCRIPTED_PROMPT = """너는 숏폼 쇼핑 영상 편집 감독이다. **나레�
 - **[여러 영상 모두 사용] primary 구간을 한 영상에만 몰지 마라. 소스가 여러 개면 고르게 섞어라.**
 - 나레이션과 primary 구간의 화면(scene_desc)이 실제로 어울리게 골라라.
 - **소스 구간은 반드시 인벤토리의 seg_id로만 지목**해라. 없는 seg_id 지어내지 마라.
+- **fit: 이 비트의 나레이션과 primary 화면이 얼마나 잘 맞는지 1~5로 솔직하게 매겨라
+  (5=딱 맞음, 3=무난, 1~2=마땅한 영상이 없어 억지로 붙임). 억지로 붙였으면 낮게 줘라.**
 - affiliate_target: 이 영상이 팔거나 연결할 핵심 제품/재료 하나를 정확한 이름으로.
 - 출력은 스키마 JSON만."""
 
