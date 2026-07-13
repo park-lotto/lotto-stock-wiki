@@ -40,6 +40,23 @@ def test_youtu_be_and_xhslink_and_iesdouyin(monkeypatch):
     assert [i["platform"] for i in out] == ["youtube", "xiaohongshu", "douyin"]
 
 
+def test_requests_type_visual_matches(monkeypatch):
+    """google_lens는 요리·제품 프레임 같은 이미지엔 ai_overview만 주고 visual_matches를
+    생략한다(2026-07-14 라이브 실측: type 없으면 0개, type=visual_matches면 60개).
+    항상 type=visual_matches를 명시해야 결과가 온다 — 이 파라미터 누락이 '유사영상
+    못 찾음' 버그의 원인이었다."""
+    monkeypatch.setattr(lens_discover, "SERPAPI_KEY", "fake")
+    captured = {}
+
+    def fake_get(url, params=None, timeout=None):
+        captured["params"] = params
+        return _fake_response([])
+    monkeypatch.setattr(lens_discover.requests, "get", fake_get)
+
+    lens_discover.search_similar_videos("https://ex.com/f.jpg")
+    assert captured["params"]["type"] == "visual_matches"
+
+
 def test_no_key_returns_empty(monkeypatch):
     monkeypatch.setattr(lens_discover, "SERPAPI_KEY", "")
     assert lens_discover.search_similar_videos("https://ex.com/f.jpg") == []

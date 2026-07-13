@@ -33,7 +33,10 @@ def search_similar_videos(image_url, api_key=None, timeout=60):
     key = api_key or SERPAPI_KEY
     if not key:
         return []
-    params = {"engine": "google_lens", "url": image_url, "api_key": key}
+    # type=visual_matches 필수 — 요리·제품 프레임엔 google_lens가 ai_overview만 주고
+    # visual_matches를 생략한다(2026-07-14 라이브 실측: 없으면 0개, 있으면 60개).
+    params = {"engine": "google_lens", "type": "visual_matches",
+              "url": image_url, "api_key": key}
     try:
         r = requests.get(_LENS_ENDPOINT, params=params, timeout=timeout)
         r.raise_for_status()
