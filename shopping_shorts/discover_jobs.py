@@ -62,7 +62,11 @@ def _run(days, max_total, accumulate):
         )
         if accumulate:
             prev, _ = store.load_discovery_feed()
-            items = discovery.merge_feeds(prev, items)
+            # cap=max_total: 매일 신규후보(new)가 우선 배치되고, 합친 뒤 댓글수
+            # 기준 상위 max_total개만 남긴다(2026-07-13) — 예전엔 무한 누적만 하고
+            # 트리밍이 없어 계속 커지기만 했음. 이제 성과(댓글수) 낮은 채널이
+            # 자연스럽게 밀려나 빠지는 로테이션 효과가 생긴다.
+            items = discovery.merge_feeds(prev, items, cap=max_total)
         store.save_discovery_feed(items)
         store.save_run(
             time.strftime("%Y-%m-%d %H:%M"),

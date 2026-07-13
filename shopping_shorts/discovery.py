@@ -162,15 +162,21 @@ def discover_multi(keywords, known, *, search_fn, fetch_reels_fn, profiles_fn=No
     return _rank_reels(reels, prev_comments, prev_delta, now, window_hours, profiles)
 
 
-def merge_feeds(prev, new):
+def merge_feeds(prev, new, cap=None):
     """누적 모드 — 이전 발굴 피드에 새 결과를 채널 단위로 합친다(2026-07-12).
     같은 채널(username)은 새 데이터로 갱신(최신 지표), 나머지 이전 채널은 유지.
-    새로 발굴된 채널이 위로 오도록 new 먼저, 그 뒤 겹치지 않는 prev."""
+    새로 발굴된 채널이 위로 오도록 new 먼저, 그 뒤 겹치지 않는 prev.
+
+    cap 지정 시 병합 후 댓글수(comments) 내림차순 상위 cap개만 남긴다(2026-07-13
+    — 매일 누적만 하고 트리밍이 없어 무한정 커지던 문제 해결. 댓글수 낮은
+    채널이 자연스럽게 밀려서 빠지는 로테이션 효과)."""
     new_keys = {(_norm(i.get("username"))) for i in new}
     out = list(new)
     for i in prev:
         if _norm(i.get("username")) not in new_keys:
             out.append(i)
+    if cap:
+        out = sorted(out, key=lambda i: i.get("comments") or 0, reverse=True)[:cap]
     return out
 
 

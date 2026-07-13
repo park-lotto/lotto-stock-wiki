@@ -3,7 +3,7 @@ import csv
 from pathlib import Path
 from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor
-from shopping_shorts.config import DB_PATH, WINDOW_HOURS, DRAFT_BATCH_SIZE
+from shopping_shorts.config import DB_PATH, WINDOW_HOURS, DRAFT_BATCH_SIZE, MAX_CHANNELS
 from shopping_shorts.channels import load_channels
 from shopping_shorts.apify_client import fetch_reels
 from shopping_shorts.ranking import build_items, apply_grades
@@ -99,6 +99,13 @@ def collect(limit_channels=None):
     if removed:
         channels = [c for c in channels
                     if c["username"].strip().lstrip("@").lower() not in removed]
+
+    # 엑셀(load_channels에서 이미 MAX_CHANNELS 캡됨)+발굴채널 union 후 다시 캡
+    # (2026-07-13) — union으로 발굴채널이 계속 늘면 엑셀 캡을 우회해 무한정
+    # 커지던 구멍. 순서(엑셀 먼저, 발굴채널은 최신 추가순)를 유지한 채 자르므로
+    # 엑셀은 그대로 유지되고 오래된 발굴채널부터 자연스럽게 빠진다.
+    if len(channels) > MAX_CHANNELS:
+        channels = channels[:MAX_CHANNELS]
 
     if limit_channels:
         channels = channels[:limit_channels]
