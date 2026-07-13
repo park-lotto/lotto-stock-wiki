@@ -36,11 +36,14 @@ app = FastAPI(title="쇼핑쇼츠 레퍼런스 랭킹")
 
 # ── 틱톡 키워드검색 노브 기본값 + 비용 상수 (2026-07-14) ──
 # clockworks/tiktok-scraper = $1.70/1,000건 → 1건 $0.0017 (조사확정).
-_TIKTOK_SEARCH_COUNT_DEFAULT = 60      # 검색당 fetch 개수
+_TIKTOK_SEARCH_COUNT_DEFAULT = 50      # 언어당 fetch 개수
 _TIKTOK_DAILY_LIMIT_DEFAULT = 10       # 사용자별 하루 수집 횟수
 _TIKTOK_MONTH_BUDGET_DEFAULT = 5.0     # 월 예산 상한($) — 넘으면 킬스위치
 _TIKTOK_COST_PER_ITEM = 0.0017
-_TIKTOK_LANGS = 5                       # translate_keyword가 만드는 언어 수(ko 포함)
+_TIKTOK_LANG_KINDS = {"ko", "en", "ja", "zh", "ru"}   # 키워드 시드의 언어코드 kind
+
+# ── 렌즈(SerpApi Google Lens) 유사영상 발굴 (2026-07-14) ──
+_LENS_MONTH_LIMIT_DEFAULT = 100   # SerpApi 무료 100회/월
 
 
 def _tiktok_knobs(store):
@@ -101,8 +104,9 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
         items = collect(platform=platform, limit_channels=limit)
         if platform == "tiktok":
             guard.bump_tiktok_daily(_cid(request), datetime.now(timezone.utc).strftime("%Y-%m-%d"))
-            n_kw = len([s for s in guard.list_seeds("tiktok") if s["kind"] == "keyword"])
-            est = n_kw * _TIKTOK_LANGS * knobs["search_count"] * _TIKTOK_COST_PER_ITEM
+            # 언어 시드 1개 = 1회 검색(그 언어로 search_count개). 지출 = 언어시드수 × 개수 × 단가.
+            n_lang = len([s for s in guard.list_seeds("tiktok") if s["kind"] in _TIKTOK_LANG_KINDS])
+            est = n_lang * knobs["search_count"] * _TIKTOK_COST_PER_ITEM
             if est:
                 guard.add_tiktok_spend(datetime.now(timezone.utc).strftime("%Y-%m"), est)
         if platform != "instagram":
@@ -597,8 +601,13 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         return JSONResponse(status_code=422, content={"ok": False, "error": "구조분석/대본이 비어 생성 불가 — 재저장 필요"})
     mode = body.get("mode", "A")
     my_topic = body.get("my_topic", "")
-    n = int(body.get("n") or 3)
-    elem_modes = {k: v for k, v in (body.get("elem_modes") or {}).items() if k in script_generate.ELEM_KEYS}
+    try:
+        n = int(body.get("n") or 3)
+    except (TypeError, ValueError):
+        n = 3
+    _em = body.get("elem_modes")
+    elem_modes = ({k: v for k, v in _em.items() if k in script_generate.ELEM_KEYS}
+                  if isinstance(_em, dict) else {})
     category_lookup = store.get_element_options(it.get("category") or "")
     drafts = script_generate.generate_variations(
         it.get("structure") or {}, it.get("full_text") or "", elem_modes, category_lookup,

@@ -215,9 +215,11 @@ async function openGen(sc){
     const key = row.dataset.k;
     const opts = window._genOptions[key] || [];
     const sel = row.querySelector('.elem-mode');
-    sel.innerHTML = '<option value="random">🎲 랜덤</option>'
-      + opts.map(o=>`<option value="category:${o.label}">${o.label}</option>`).join('')
-      + '<option value="free">✨ AI 자유즉흥</option>';
+    sel.innerHTML = '';
+    const _mk=(v,t)=>{const op=document.createElement('option');op.value=v;op.textContent=t;return op;};
+    sel.appendChild(_mk('random','🎲 랜덤'));
+    opts.forEach(o=>sel.appendChild(_mk('category:'+o.label, o.label)));
+    sel.appendChild(_mk('free','✨ AI 자유즉흥'));
   });
 }
 function onElemToggle(cb){
