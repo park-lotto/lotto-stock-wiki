@@ -1452,3 +1452,8 @@ S급 대본을 위키에 모아 **구조를 학습→변형/믹스로 새 대본
 - 8태스크 TDD: tts(voice_settings/speed·API 0.7~1.2 clamp)/audio_post(atempo+silenceremove)/store(voice_presets 테이블+voice_json)/voice_presets(JSON로더+seed KR6종)/build_voice_samples/mix_pipeline(프리셋적용+resynth_tts_job)/app(프리셋API4종+startup seed)/produce 4단계 프리셋UI(카드·속도·무음·고급접기)
 - 검증: 24/25 테스트 green(1 기존 headcopy fail 무관), 라이브 /api/voice-presets seed+응답+source_ref숨김+UTF-8, produce.html JS구문 OK
 - ⏭ 남은것: ①`build_voice_samples` 실행해 샘플mp3 생성+🎧사장님 귀 튜닝(voice_id·감도값) ②서버 `/etc/shopping-shorts.env`에 ELEVENLABS_API_KEY 추가 ③라이브 produce 4단계 실클릭 검증 / 향후 Phase2: 앱내 생성도구·JP/EN·클로닝
+
+## 2026-07-14 (집PC) 렌즈 "유사영상 못찾음" 버그 수정 (커밋 02bd1af7, 배포됨)
+- 증상: 렌즈 항상 items:[] / 근본원인(체계적 디버깅): google_lens가 요리·제품 프레임엔 ai_overview만 주고 visual_matches 생략 → type=visual_matches 파라미터 필수인데 누락. 유명인 테스트이미지는 우연히 둘다 반환해 버그 가려짐
+- 수정: lens_discover params에 type=visual_matches. 라이브 실측 0→60 visual_matches→5플랫폼 필터 14개(틱톡8·인스타4·유튜브2)
+- 배포·검증완료. (디버깅 중 SerpApi 92/250 사용, 158 남음)
