@@ -337,6 +337,8 @@ function render(){
         </div>
         <button class="script-btn" onclick="extractScript('${i.shortcode}')">📝 대본 추출</button>
         <button class="script-btn" onclick="showRelated('${i.shortcode}')">🔗 같은 주제</button>
+        <button class="script-btn" onclick="lensSearch(this,'${i.shortcode}')">🔍 렌즈 유사영상</button>
+        <div class="lens-box" id="lens_${i.shortcode}" style="display:none"></div>
         ${i.inpock?`<div style="margin-top:6px"><a href="${i.inpock}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🛒 판매채널</a></div>`:''}
       </div>
     </div>`).join("");
@@ -426,32 +428,41 @@ function playInline(img){
   v.onerror=()=>{ v.replaceWith(img); img.title='영상 URL 만료 — 「지금 수집」 후 재생 가능'; };
   img.replaceWith(v);
 }
-// 유튜브는 프록시 mp4가 없어 embed 플레이어(iframe)로 인라인 재생.
-// 틱톡은 프록시 mp4 대신 공식 embed 플레이어(iframe)로 인라인 재생.
-function playTiktok(img, videoId){
+// 유튜브/틱톡: 우리가 뽑은 mp4 direct URL로 재생(same-origin canvas 캡처 가능).
+// mp4 확보 실패(비공개·지역차단) 시 기존 embed(iframe)로 폴백 — 재생은 되게(캡처만 불가).
+async function _playViaMedia(img, videoId, platform, embedFn){
   if(!videoId) return;
   const box=img.parentElement;
-  const badge=box && box.querySelector('.play-badge');
-  if(badge) badge.remove();
-  const f=document.createElement('iframe');
-  f.src='https://www.tiktok.com/embed/v2/'+encodeURIComponent(videoId);
-  f.style.cssText='width:100%;height:220px;border:0;display:block;background:#000';
-  f.allow='autoplay; encrypted-media; picture-in-picture';
-  f.allowFullscreen=true;
-  img.replaceWith(f);
+  const badge=box && box.querySelector('.play-badge'); if(badge) badge.remove();
+  try{
+    const d=await (await fetch(`/api/media?platform=${platform}&id=${encodeURIComponent(videoId)}`)).json();
+    if(d.ok && d.url){
+      const v=document.createElement('video');
+      v.src=d.url; v.controls=true; v.autoplay=true; v.playsInline=true;
+      v.setAttribute('playsinline',''); v.setAttribute('crossorigin','anonymous');
+      v.className='thumb-video';
+      v.onerror=()=>embedFn(v, videoId);   // mp4 재생 실패 시 embed 폴백
+      img.replaceWith(v); return;
+    }
+  }catch(e){}
+  embedFn(img, videoId);
 }
-function playYoutube(img, videoId){
-  if(!videoId) return;
-  const box=img.parentElement;
-  const badge=box && box.querySelector('.play-badge');
-  if(badge) badge.remove();
+function _embedYoutube(el, videoId){
   const f=document.createElement('iframe');
   f.src='https://www.youtube.com/embed/'+encodeURIComponent(videoId)+'?autoplay=1&playsinline=1';
   f.style.cssText='width:100%;height:220px;border:0;display:block;background:#000';
-  f.allow='autoplay; encrypted-media; picture-in-picture';
-  f.allowFullscreen=true;
-  img.replaceWith(f);
+  f.allow='autoplay; encrypted-media; picture-in-picture'; f.allowFullscreen=true;
+  el.replaceWith(f);
 }
+function _embedTiktok(el, videoId){
+  const f=document.createElement('iframe');
+  f.src='https://www.tiktok.com/embed/v2/'+encodeURIComponent(videoId);
+  f.style.cssText='width:100%;height:220px;border:0;display:block;background:#000';
+  f.allow='autoplay; encrypted-media; picture-in-picture'; f.allowFullscreen=true;
+  el.replaceWith(f);
+}
+function playYoutube(img, videoId){ _playViaMedia(img, videoId, 'youtube', _embedYoutube); }
+function playTiktok(img, videoId){ _playViaMedia(img, videoId, 'tiktok', _embedTiktok); }
 // ── 같은 주제 모아보기(2026-07-13) ──────────────────────
 async function showRelated(shortcode){
   openScript('<div class="sm-loading">⏳ 같은 주제 영상 찾는 중…</div>', '🔗 같은 주제 영상');
@@ -477,6 +488,59 @@ async function showRelated(shortcode){
       </div>`).join('');
     document.getElementById('scriptBody').innerHTML = h;
   }catch(err){ document.getElementById('scriptBody').innerHTML='<div class="sm-err">⚠️ 네트워크 오류 — 잠시 후 재시도</div>'; }
+}
+// ── 렌즈 유사영상 발굴(2026-07-14) ──────────────────────
+// 재생중/멈춘 <video>의 현재 프레임을 canvas 캡처 → 구글렌즈 → 5플랫폼 유사영상.
+const LENS_PLATFORMS=[
+  {k:'youtube',label:'▶️ 유튜브'},{k:'tiktok',label:'🎵 틱톡'},
+  {k:'instagram',label:'📷 인스타'},{k:'xiaohongshu',label:'📕 샤오홍슈'},
+  {k:'douyin',label:'🎶 도우인'}];
+let LENS_STATE={};   // shortcode → {items, on:Set}
+function _captureFrame(shortcode){
+  const box=document.getElementById('lens_'+shortcode);
+  const card=box.closest('.card');
+  const v=card && card.querySelector('video.thumb-video');
+  if(!v || v.readyState<2) return null;
+  const cv=document.createElement('canvas');
+  cv.width=v.videoWidth; cv.height=v.videoHeight;
+  cv.getContext('2d').drawImage(v,0,0);
+  return cv;
+}
+async function lensSearch(btn, shortcode){
+  const box=document.getElementById('lens_'+shortcode);
+  box.style.display='block';
+  const cv=_captureFrame(shortcode);
+  if(!cv){ box.innerHTML='<div style="font-size:12px;color:var(--sub)">▶ 미리보기를 재생하고 원하는 장면에서 멈춘 뒤 눌러주세요.</div>'; return; }
+  box.innerHTML='<div style="font-size:12px;color:var(--sub)">🔍 렌즈 검색 중…</div>';
+  const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.85));
+  const fd=new FormData(); fd.append('frame', blob, 'f.jpg');
+  try{
+    const r=await fetch('/api/lens/search',{method:'POST',body:fd});
+    if(r.status===429){ const d=await r.json(); box.innerHTML=`<div style="font-size:12px;color:#e0623d">💰 ${d.error||'이번 달 렌즈 한도 초과'}</div>`; return; }
+    const d=await r.json();
+    if(!d.ok || !d.items.length){ box.innerHTML='<div style="font-size:12px;color:var(--sub)">유사 동영상을 찾지 못했습니다.</div>'; return; }
+    LENS_STATE[shortcode]={items:d.items, on:new Set(LENS_PLATFORMS.map(p=>p.k))};
+    renderLens(shortcode);
+  }catch(e){ box.innerHTML='<div style="font-size:12px;color:#e0623d">❌ '+e.message+'</div>'; }
+}
+function toggleLensPlatform(shortcode, k){
+  const st=LENS_STATE[shortcode]; if(!st) return;
+  st.on.has(k)?st.on.delete(k):st.on.add(k); renderLens(shortcode);
+}
+function renderLens(shortcode){
+  const box=document.getElementById('lens_'+shortcode);
+  const st=LENS_STATE[shortcode]; if(!st) return;
+  const chips=LENS_PLATFORMS.map(p=>{
+    const active=st.on.has(p.k);
+    const n=st.items.filter(i=>i.platform===p.k).length;
+    return `<span onclick="toggleLensPlatform('${shortcode}','${p.k}')" style="cursor:pointer;display:inline-block;padding:2px 8px;margin:2px;border-radius:12px;font-size:11px;border:1px solid var(--line);background:${active?'#1f6feb22':'transparent'};opacity:${active?1:0.45}">${p.label} ${n}</span>`;
+  }).join('');
+  const cards=st.items.filter(i=>st.on.has(i.platform)).map(i=>`
+    <a href="${i.url}" target="_blank" style="display:flex;gap:8px;align-items:center;text-decoration:none;color:var(--txt);padding:4px;border-bottom:1px solid var(--line)">
+      <img src="${i.thumbnail?('/api/thumb?url='+encodeURIComponent(i.thumbnail)):''}" style="width:56px;height:56px;object-fit:cover;border-radius:6px;flex-shrink:0" onerror="this.style.visibility='hidden'">
+      <span style="font-size:12px">${LENS_PLATFORMS.find(p=>p.k===i.platform)?.label||''}<br>${(i.title||'').slice(0,50)}</span>
+    </a>`).join('') || '<div style="font-size:12px;color:var(--sub);padding:6px">켠 플랫폼 결과 없음</div>';
+  box.innerHTML=`<div style="margin:6px 0">${chips}</div><div>${cards}</div>`;
 }
 async function extractScript(shortcode){
   window._curSC = shortcode;
