@@ -104,3 +104,9 @@ def test_elem_lines_devices_keep_mode_joins_list():
 def test_elem_lines_devices_in_elem_keys():
     assert "devices" in script_generate.ELEM_KEYS
     assert script_generate.ELEM_LABELS["devices"] == "설득장치"
+
+
+def test_gen_prompt_includes_interjection_guidance():
+    # 생성 대본이 딱딱한 문어체가 아니라 실제 말하듯 자연스러운 추임새·감탄사 포함하도록
+    assert "추임새" in script_generate._GEN_PROMPT
+    assert "감탄사" in script_generate._GEN_PROMPT
