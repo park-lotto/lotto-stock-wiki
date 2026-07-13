@@ -1058,6 +1058,21 @@ class Store:
         self.set_setting(f"tiktok_spend:{month}", repr(total))
         return total
 
+    # ── 렌즈(SerpApi) 월 호출 카운트 (2026-07-14) ──
+    # SerpApi 무료 100회/월. settings 네임스페이스 키 lens_count:{YYYY-MM}로 누적,
+    # 월 경계에서 키가 달라 자동 리셋(틱톡 카운터와 동일 패턴).
+    def lens_month_count(self, month):
+        raw = self.get_setting(f"lens_count:{month}", "0")
+        try:
+            return int(raw)
+        except (TypeError, ValueError):
+            return 0
+
+    def bump_lens(self, month):
+        n = self.lens_month_count(month) + 1
+        self.set_setting(f"lens_count:{month}", str(n))
+        return n
+
     # ── 고객 계정(2026-07-13 멀티테넌시) ──
     # 비밀번호는 pbkdf2-sha256(고객별 랜덤 솔트, 260,000회)로만 저장 — 평문/역가역
     # 방식 금지. 표준 hashlib만 사용해 외부 의존성을 늘리지 않는다.

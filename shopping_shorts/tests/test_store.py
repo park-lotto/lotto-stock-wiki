@@ -56,6 +56,15 @@ def test_tiktok_month_spend_accumulates(tmp_path):
     assert round(s.tiktok_month_spend("2026-07"), 2) == 0.15
 
 
+def test_lens_month_count_starts_zero_and_bumps(tmp_path):
+    s = Store(tmp_path / "t.db")
+    assert s.lens_month_count("2026-07") == 0
+    assert s.bump_lens("2026-07") == 1
+    assert s.bump_lens("2026-07") == 2
+    assert s.lens_month_count("2026-08") == 0   # 새 달 = 새 카운터
+    assert s.lens_month_count("2026-07") == 2
+
+
 def test_comment_drafts_roundtrip(tmp_path):
     s = Store(tmp_path / "t.db")
     assert s.get_drafts("sc1") == []
