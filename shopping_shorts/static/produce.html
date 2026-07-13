@@ -124,8 +124,33 @@
     </section>
     <section class="panel" data-step="3">
       <h3>4 · TTS 음성</h3>
-      <div class="sub">확정 대본을 비트별로 읽은 음성입니다(장면 길이에 맞춰 생성됨). 들어보고 다음으로.</div>
-      <div id="ttsBeats">불러오는 중…</div>
+      <div class="sub">성우 프리셋을 고르면 톤·속도·감도가 한 번에 세팅됩니다. 들어보고 다음으로.</div>
+      <label style="display:flex;align-items:center;gap:8px;margin:8px 0;cursor:pointer">
+        <input type="checkbox" id="noVoice" onchange="onNoVoice()"> <b>자막/음성 없이 진행</b>
+        <span class="hint">켜면 TTS·자막 없이 영상만 내보냅니다</span>
+      </label>
+      <div id="voiceUI">
+        <div id="presetCards">불러오는 중…</div>
+        <div id="voiceControls" style="display:none;margin-top:12px">
+          <div style="font-size:12px;color:var(--sub)">속도</div>
+          <div id="speedBtns" style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px"></div>
+          <div style="font-size:12px;color:var(--sub)">무음 삭제</div>
+          <div id="silenceBtns" style="display:flex;gap:6px;margin:4px 0 10px"></div>
+          <details style="margin:8px 0">
+            <summary style="cursor:pointer;font-size:13px;color:var(--sub)">고급 ▾</summary>
+            <div style="padding:8px 0;display:flex;flex-direction:column;gap:8px">
+              <label>Stability <input type="range" id="advStability" min="0" max="1" step="0.05" oninput="onAdv()"> <span id="advStabilityV"></span></label>
+              <label>Similarity <input type="range" id="advSimilarity" min="0" max="1" step="0.05" oninput="onAdv()"> <span id="advSimilarityV"></span></label>
+              <label>Style <input type="range" id="advStyle" min="0" max="1" step="0.05" oninput="onAdv()"> <span id="advStyleV"></span></label>
+              <label><input type="checkbox" id="advBoost" onchange="onAdv()"> Speaker boost</label>
+            </div>
+          </details>
+          <button onclick="previewVoice()" class="btn-prev" style="padding:8px 14px;margin-right:8px">🎧 이 대본으로 다시 듣기</button>
+          <button onclick="applyVoice()" class="btn-next" style="padding:8px 16px">이 음성으로 전체 생성</button>
+          <div id="voicePreview" style="margin-top:8px"></div>
+        </div>
+      </div>
+      <div id="ttsBeats" style="margin-top:14px"></div>
     </section>
     <section class="panel" data-step="4">
       <h3>5 · 꾸미기 · 헤드카피</h3>
@@ -782,17 +807,97 @@ async function onSubToggle(){
   }catch(e){ if(s) s.textContent='설정 저장 실패'; }
 }
 
-// ── 4단계 TTS 프리뷰 ──────────────
+// ── 4단계 보이스 프리셋 ──────────────
+let VOICE = { preset_id:null, voice_id:null, settings:null, speed:1.0, silence_trim:'off' };
+const SPEEDS=[0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5];
+const SIL=[['off','OFF'],['weak','약'],['mid','중'],['strong','강']];
+
 async function loadTtsBeats(){
+  if(!MIX_JOB){ document.getElementById('presetCards').innerHTML='<div class="hint">⚠️ 2단계에서 영상 매칭을 먼저 실행하세요.</div>'; return; }
+  try{
+    const d=await (await fetch('/api/voice-presets?lang=KR')).json();
+    const cards=(d.presets||[]).map(p=>`
+      <div onclick='pickPreset(${JSON.stringify(p)})'
+        style="border:1px solid ${VOICE.preset_id===p.preset_id?'var(--accent2)':'var(--line)'};border-radius:9px;padding:9px;margin-bottom:6px;cursor:pointer;background:#0d1420">
+        <b>${esc(p.name)}</b> — ${esc(p.one_liner||'')}
+        ${p.sample_url?`<audio controls src="${esc(p.sample_url)}" style="height:26px;vertical-align:middle;margin-left:8px"></audio>`:''}
+      </div>`).join('');
+    document.getElementById('presetCards').innerHTML=cards||'<div class="hint">프리셋이 없습니다.</div>';
+  }catch(e){ document.getElementById('presetCards').innerHTML='<div class="hint" style="color:var(--fire)">프리셋 로드 실패</div>'; return; }
+  renderTtsBeats();
+}
+
+function pickPreset(p){
+  VOICE={preset_id:p.preset_id, voice_id:p.base_voice_id||p.voice_id,
+         settings:Object.assign({}, p.voice_settings), speed:p.default_speed,
+         silence_trim:p.default_silence_trim};
+  document.getElementById('voiceControls').style.display='block';
+  pickHighlight();
+  const vs=VOICE.settings||{};
+  const g=id=>document.getElementById(id);
+  g('advStability').value=(vs.stability!=null?vs.stability:0.5);
+  g('advSimilarity').value=(vs.similarity_boost!=null?vs.similarity_boost:0.75);
+  g('advStyle').value=(vs.style!=null?vs.style:0);
+  g('advBoost').checked=vs.use_speaker_boost!==false;
+  syncAdvLabels();
+  loadTtsBeats();
+}
+function setSpeed(s){ VOICE.speed=s; pickHighlight(); }
+function setSil(v){ VOICE.silence_trim=v; pickHighlight(); }
+function pickHighlight(){
+  document.getElementById('speedBtns').innerHTML=SPEEDS.map(s=>`<button onclick="setSpeed(${s})" class="tab${VOICE.speed===s?' active':''}" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:13px">${s}x</button>`).join('');
+  document.getElementById('silenceBtns').innerHTML=SIL.map(([v,l])=>`<button onclick="setSil('${v}')" class="tab${VOICE.silence_trim===v?' active':''}" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:13px">${l}</button>`).join('');
+}
+function syncAdvLabels(){
+  const g=id=>document.getElementById(id);
+  g('advStabilityV').textContent=(+g('advStability').value).toFixed(2);
+  g('advSimilarityV').textContent=(+g('advSimilarity').value).toFixed(2);
+  g('advStyleV').textContent=(+g('advStyle').value).toFixed(2);
+}
+function onAdv(){
+  const g=id=>document.getElementById(id);
+  VOICE.settings={stability:+g('advStability').value, similarity_boost:+g('advSimilarity').value,
+                  style:+g('advStyle').value, use_speaker_boost:g('advBoost').checked};
+  syncAdvLabels();
+}
+function onNoVoice(){
+  const off=document.getElementById('noVoice').checked;
+  document.getElementById('voiceUI').style.opacity=off?0.4:1;
+  STATE.noVoice=off;
+}
+async function previewVoice(){
+  const el=document.getElementById('voicePreview'); el.textContent='⏳ 생성 중…';
+  try{
+    const r=await fetch('/api/mix/voice/preview',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({job_id:MIX_JOB, voice_id:VOICE.voice_id, settings:VOICE.settings, speed:VOICE.speed, silence_trim:VOICE.silence_trim})});
+    if(!r.ok){ el.textContent='❌ 실패'; return; }
+    const b=await r.blob();
+    el.innerHTML=`<audio controls autoplay src="${URL.createObjectURL(b)}" style="height:30px"></audio>`;
+  }catch(e){ el.textContent='❌ 실패'; }
+}
+async function applyVoice(){
+  const el=document.getElementById('voicePreview'); el.textContent='⏳ 전체 음성 생성 중…';
+  try{
+    await fetch('/api/mix/voice',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({job_id:MIX_JOB, preset_id:VOICE.preset_id, voice_id:VOICE.voice_id, settings:VOICE.settings, speed:VOICE.speed, silence_trim:VOICE.silence_trim})});
+  }catch(e){ el.textContent='❌ 요청 실패'; return; }
+  const poll=setInterval(async()=>{
+    try{
+      const d=await (await fetch('/api/mix/status/'+MIX_JOB)).json();
+      if(d.status==='ready_for_review'){ clearInterval(poll); el.textContent='✅ 완료'; renderTtsBeats(); }
+      else if(d.status==='failed'){ clearInterval(poll); el.textContent='❌ 실패: '+(d.error||''); }
+    }catch(e){ clearInterval(poll); el.textContent='❌ 상태 확인 실패'; }
+  },2500);
+}
+async function renderTtsBeats(){
   const el=document.getElementById('ttsBeats');
-  if(!MIX_JOB){ el.innerHTML='<div class="hint">⚠️ 2단계에서 영상 매칭을 먼저 실행하세요.</div>'; return; }
   try{
     const d=await (await fetch('/api/mix/result/'+MIX_JOB)).json();
-    if(!d.ok || !(d.beats||[]).length){ el.innerHTML='<div class="hint">음성 정보가 없습니다.</div>'; return; }
-    el.innerHTML=d.beats.map((b,i)=>`
+    if(!d.ok || !(d.beats||[]).length){ el.innerHTML=''; return; }
+    el.innerHTML='<div style="font-size:12px;color:var(--sub);margin-bottom:4px">비트별 음성</div>'+d.beats.map((b,i)=>`
       <div style="border:1px solid var(--line);border-radius:9px;padding:9px;margin-bottom:6px;background:#0d1420">
         <div style="font-size:13px;margin-bottom:4px"><b>${i+1}.</b> ${esc(b.narration||'')}</div>
-        ${b.tts_preview_url?`<audio controls src="${esc(b.tts_preview_url)}" style="height:26px"></audio>`:'<span class="hint">음성 없음</span>'}
+        ${b.tts_preview_url?`<audio controls src="${esc(b.tts_preview_url)}?t=${Date.now()}" style="height:26px"></audio>`:'<span class="hint">음성 없음</span>'}
       </div>`).join('');
   }catch(e){ el.innerHTML='<div class="hint" style="color:var(--fire)">로드 실패</div>'; }
 }
