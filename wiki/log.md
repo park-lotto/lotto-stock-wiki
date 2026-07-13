@@ -1464,3 +1464,8 @@ S급 대본을 위키에 모아 **구조를 학습→변형/믹스로 새 대본
   type=visual_matches 단독=0(error), all모드=59, hl=ko&country=kr=60, type+로케일=60
 - 진짜 원인: **로케일(hl=ko&country=kr) 누락** — 한국어·요리 콘텐츠에서 type만 주면 google_lens가 "no results". type=visual_matches는 red herring이었음(신발 프레임이 우연히 통과해 가려짐)
 - 수정: params에 hl=ko&country=kr 추가 + 빈응답 재시도(3회). 배포 E2E: 감자프레임 0→30개(인스타18·틱톡8·유튜브4), 신발 3개. 둘다 실제 유사영상
+
+## 2026-07-14 (집PC) 보이스 프리셋 후속 — 샘플배포·서버키·v3 감정태그 검증
+- 샘플mp3 6종 생성·배포 / 서버 /etc/shopping-shorts.env에 ELEVENLABS_API_KEY 추가+실음성검증 / audio_post in-place ffmpeg 버그수정 / produce 4단계 프리셋카드 job없이도 항상표시(17ca3e8f)
+- **v3 감정태그 검증완료**: eleven_v3 접근가능+한국어OK. 대본에 [excited]/[whispers]/[sighs] 인라인태그→그뒤 4~5단어 감정적용. A/B로 사람같음 확인(사장님 OK). 한국어 여성성우 Kelee K 서울내레이터(5DWGv3VDkihNUcbvaonB) 선호
+- 설계원칙 확정: 성우·감도=프리셋고정(대본무관), 태그만 대본따라(핵심2~3군데). 편차관리=태그도배금지+비트별재롤+seed. 감도 v3베스트=stability0.5~0.7·style0~0.3·similarity0.75~0.8(speaker_boost 비호환). UX=원노브"차분↔생생". 상세 NEXT_SESSION 🎙️섹션

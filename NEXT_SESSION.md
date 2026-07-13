@@ -10,11 +10,19 @@
 빅채널 나레이션 *느낌*을 페르소나 프리셋(이름+설명+감도값)으로 굳혀 produce 4단계에서 카드로 선택. 하이브리드(MVP=스톡매칭, 클로닝 Phase2).
 - 스펙 `docs/superpowers/specs/2026-07-14-보이스-프리셋-라이브러리-design.md` / 계획 `docs/superpowers/plans/2026-07-14-보이스-프리셋-라이브러리.md`
 - ElevenLabs 연결완료(키+ToS권한+`.env` load_dotenv, 실음성 E2E). 8태스크 TDD: tts(voice_settings/speed 0.7~1.2 clamp)·audio_post(atempo+silenceremove)·store(voice_presets+voice_json)·voice_presets(seed KR6종)·build_voice_samples·mix_pipeline(resynth_tts_job)·app(프리셋API4종+startup seed)·produce UI(카드·속도·무음·고급접기). 24/25 green, 라이브 API·JS구문 검증.
-- ⏭ **남은 것(다음 세션)**:
-  1. **샘플 생성+튜닝**: `python -m shopping_shorts.scripts.build_voice_samples` 실행 → `assets/voice_samples/*.mp3` 6개 생성 → 🎧 **사장님 귀로 프리셋별 느낌 확인** → `assets/voice_presets.json`의 voice_id·감도값 튜닝(반복). 현재 voice_id는 ElevenLabs 기본 라이브러리 placeholder라 실제 KR 성우로 교체 필요.
-  2. **서버 배포**: `/etc/shopping-shorts.env`에 `ELEVENLABS_API_KEY=3d835f...` 추가(SSH) — 안 하면 라이브에서 무음.
-  3. **라이브 실클릭**: produce 4단계에서 프리셋 선택→"다시 듣기"→"전체 생성"→비트별 음성 육안검증.
-  - Phase2(다음 스펙): 앱내 "레퍼런스URL→측정→프리셋 자동생성" 도구 / JP·EN / 보이스 클로닝.
+- ✅ **오늘 완료(2026-07-14 추가)**: 샘플mp3 6종 생성·배포 / 서버 `/etc/shopping-shorts.env`에 ELEVENLABS_API_KEY 추가+실음성검증 / audio_post in-place ffmpeg 버그수정 / **produce 4단계 프리셋 카드를 job 없이도 항상 표시**(커밋 17ca3e8f) — 라이브 서버 반영됨.
+
+- 🔥 **다음 세션 핵심 — v3 감정태그 "인간처럼" 나레이션 (오늘 검증완료, 방향확정)**:
+  - **검증됨**: `eleven_v3` 모델 이 키로 접근가능+한국어 지원. 대본에 `[excited]` `[whispers]` `[sighs]` `[laughs]` `[slow]` 인라인 태그 삽입 → 그 뒤 4~5단어에 감정 적용. A/B로 무태그 vs 태그판 확연히 사람같음 확인(사장님 OK).
+  - **한국어 여성 성우 후보**(라이브러리): ⭐**Kelee K 서울내레이터**(`5DWGv3VDkihNUcbvaonB`, 사장님 선호) / Jiana(`uD0jH1cfRqteeku18ODi`,크리스프) / Inbeul(`GcdAArSHrZw06Pf1X4Df`) / Yu Haon(`B8rl62CpT9zOQ7RC3Mdl`). 남성: 지훈 onwK4e9ZLuTAKqWW03F9 / 도현 TxGEqnHWrfWFTfGW9XjX.
+  - **확정된 설계원칙**:
+    1. **역할 3분리**: 성우(voice_id)·감도(voice_settings)는 **프리셋 고정(대본무관)**, **태그만 대본따라(핵심 2~3군데만)**. 감도를 대본마다 바꾸지 않음.
+    2. **편차 관리(중요 — 사장님 우려)**: v3+태그는 take편차 큼. "전 문장 태그 도배 금지". 훅·펀치라인만 태그 + **비트별 재생성(re-roll)** + **seed 고정**(문서상 완전보장X but 충분) + N개 베스트픽 + 하이브리드(평상시 v2, 훅만 v3).
+    3. **감도 베스트값(v3)**: stability 0.5~0.7(태그가 감정담당→베이스 안정으로 편차↓), style 0~0.3(태그와 겹침방지), similarity 0.75~0.8, **speaker_boost는 v3 비호환**.
+    4. **UX**: raw 3슬라이더 노출 X → 프리셋에 감도 박고, 원노브 "차분↔생생"(stability 매핑), 파워유저만 고급.
+  - **다음 작업**: 브레인스토밍→설계→구현. 프리셋별 **감정 프로파일**(성우별 어울리는 태그셋) + 제미니 대본생성 시 **감정태그 자동삽입**(핵심만) + **비트별 재생성** + seed. tts.py는 이미 model_id 받게 돼있음.
+  - Phase2(더 나중): 앱내 "레퍼런스URL→측정→프리셋 자동생성" 도구 / JP·EN / 보이스 클로닝.
+  - 참고: v3 A/B 샘플들 사장님 바탕화면에 있음(v3_쇼츠_*, v3_서울_A/B_*).
 
 ---
 
