@@ -1469,3 +1469,9 @@ S급 대본을 위키에 모아 **구조를 학습→변형/믹스로 새 대본
 - 샘플mp3 6종 생성·배포 / 서버 /etc/shopping-shorts.env에 ELEVENLABS_API_KEY 추가+실음성검증 / audio_post in-place ffmpeg 버그수정 / produce 4단계 프리셋카드 job없이도 항상표시(17ca3e8f)
 - **v3 감정태그 검증완료**: eleven_v3 접근가능+한국어OK. 대본에 [excited]/[whispers]/[sighs] 인라인태그→그뒤 4~5단어 감정적용. A/B로 사람같음 확인(사장님 OK). 한국어 여성성우 Kelee K 서울내레이터(5DWGv3VDkihNUcbvaonB) 선호
 - 설계원칙 확정: 성우·감도=프리셋고정(대본무관), 태그만 대본따라(핵심2~3군데). 편차관리=태그도배금지+비트별재롤+seed. 감도 v3베스트=stability0.5~0.7·style0~0.3·similarity0.75~0.8(speaker_boost 비호환). UX=원노브"차분↔생생". 상세 NEXT_SESSION 🎙️섹션
+
+## 2026-07-14 (집PC) 렌즈 디버깅·UX 대량 (커밋 ~94cd17cc, 라이브)
+- 🐛 3연쇄 버그해결: ①type=visual_matches 제거+로케일(hl=ko&country=kr) ②진짜원인 Google 인덱싱지연 → 캡처 imgur업로드후 검색(즉시매칭, 실증0→10~59) ③틱톡 discover페이지 제외
+- ✨ UX: 팝업모달(wide)·큰세로썸네일+클릭즉시embed재생·썸네일상태캡처·gstatic직접로드
+- 💰 SerpApi 월250무료→$50/5000=~14원/회, imgur무료. 다음: API결제부터(사용자명시)
+- ⚠️ 재배포순간 502 "Unexpected token '<'" 일시적(Apache프록시, 안정화됨)
