@@ -79,8 +79,14 @@ def _group_batch(batch, max_key_tries=3):
 def group_items(items, run_tag, batch_size=_BATCH):
     """items([{shortcode, name, caption}, ...]) → {shortcode: group_id}.
 
-    run_tag: 배치를 구분하는 문자열(예: run_date) — 전역 고유 group_id 생성용
-    (배치마다 로컬 그룹번호 1,2,3...이 겹치지 않게 접두어로 붙인다).
+    run_tag: 배치 묶음을 구분하는 문자열(예: run_date) — 전역 고유 group_id
+    생성용. 버그수정(2026-07-13): 청크(batch_size)로 여러 개 배치를 나눠
+    처리하는데 로컬 그룹번호(1,2,3...)는 배치마다 독립적으로 매겨진다 — 이전엔
+    run_tag만 접두어로 붙여서 "배치1의 그룹1"과 "배치2의 전혀 다른 그룹1"이
+    같은 전역 ID로 합쳐지는 버그가 있었다(실측: 감자요리·아이스박스·피아노가
+    한 그룹으로 뒤섞임). 배치 시작 인덱스(start)도 접두어에 포함해 배치 간
+    충돌을 원천 차단한다.
+
     키 미설정/전부 실패면 빈 dict(기능 조용히 비활성 — 폴백 없음, 부가기능이라
     죽여도 수집 자체엔 영향 없음)."""
     if not comment_gen.SHORTS_GEMINI_KEYS or not items:
@@ -93,5 +99,5 @@ def group_items(items, run_tag, batch_size=_BATCH):
             if 0 <= idx < len(items):
                 sc = items[idx].get("shortcode")
                 if sc:
-                    mapping[sc] = f"{run_tag}_{local_gid}"
+                    mapping[sc] = f"{run_tag}_{start}_{local_gid}"
     return mapping

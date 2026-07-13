@@ -364,10 +364,15 @@ async function showRelated(shortcode){
     }
     const PLATFORM_BADGE = {instagram:'📷', youtube:'▶️', tiktok:'🎵'};
     const h = d.items.map(i=>`
-      <div class="sm-seg">
-        <div class="t">${PLATFORM_BADGE[i.platform]||''} ${esc(i.name||i.username||'')}</div>
-        <div class="txt">${esc((i.caption||'').slice(0,80))}</div>
-        <button class="view" onclick="window.open('${i.url}','_blank')">👁 보기</button>
+      <div class="sm-seg" style="display:flex;gap:10px;align-items:flex-start">
+        ${i.thumbnail?`<img src="/api/thumb?url=${encodeURIComponent(i.thumbnail)}" loading="lazy"
+             style="width:64px;height:64px;object-fit:cover;border-radius:6px;flex-shrink:0;background:#000"
+             onerror="this.style.visibility='hidden'">`:''}
+        <div style="min-width:0;flex:1">
+          <div class="t">${PLATFORM_BADGE[i.platform]||''} ${esc(i.name||i.username||'')}</div>
+          <div class="txt">${esc((i.caption||'').slice(0,80))}</div>
+          <button class="view" onclick="window.open('${i.url}','_blank')">👁 보기</button>
+        </div>
       </div>`).join('');
     document.getElementById('scriptBody').innerHTML = h;
   }catch(err){ document.getElementById('scriptBody').innerHTML='<div class="sm-err">⚠️ 네트워크 오류 — 잠시 후 재시도</div>'; }
