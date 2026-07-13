@@ -200,3 +200,31 @@ def test_prepare_sources_carries_instagram_caption(monkeypatch, tmp_path):
     paths, captions = mp._prepare_sources(urls, tmp_path)
     assert captions["s0"] == "인스타 원본 캡션"
     assert captions["s1"] == ""
+
+
+def test_resynth_tts_job_applies_voice(monkeypatch, tmp_path):
+    from shopping_shorts import mix_pipeline
+    from shopping_shorts.store import Store
+
+    captured = {}
+    def fake_synth(text, out, **kw):
+        captured["kw"] = kw
+        from pathlib import Path
+        Path(out).write_bytes(b"ID3"); return out
+    monkeypatch.setattr(mix_pipeline, "synthesize_tts", fake_synth)
+    monkeypatch.setattr(mix_pipeline.audio_post, "post_process", lambda *a, **k: a[1])
+
+    db = tmp_path / "t.db"; s = Store(db)
+    s.create_mix_job("j1", ["u"], 30, "구조")
+    s.update_mix_job("j1", edit_plan={"structure": "구조", "beats": [
+        {"beat_idx": 0, "narration": "안녕", "primary": {}}]})
+    s.update_mix_job("j1", voice={"voice_id": "vZ",
+        "settings": {"stability": 0.4, "similarity_boost": 0.75, "style": 0.3, "use_speaker_boost": True},
+        "speed": 1.3, "silence_trim": "strong"})
+
+    mix_pipeline.resynth_tts_job("j1", str(db), str(tmp_path / "work"))
+
+    assert captured["kw"]["voice_id"] == "vZ"
+    assert captured["kw"]["voice_settings"]["style"] == 0.3
+    assert captured["kw"]["speed"] == 1.3
+    assert s.get_mix_job("j1")["status"] == "ready_for_review"
