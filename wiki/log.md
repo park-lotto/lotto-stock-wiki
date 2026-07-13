@@ -1419,3 +1419,9 @@ stage1 엔진+스튜디오 서버배포(stockbrain1/yt/quote-studio). 서버 봇
 
 ## 2026-07-13 (집CH) — 쇼핑쇼츠 "대본 위키(도서관)" + 생성(적용) Phase A ✅
 S급 대본을 위키에 모아 **구조를 학습→변형/믹스로 새 대본을 뽑는** 시스템 착수. ①랭킹 카드 🔗링크복사·썸네일 인라인재생(`/api/video`핫링크우회) ②카테고리 2단(유형→세부주제)+**AI 캡션 분류**(`ai_categorize.py` 수집시 Gemini 재분류·키워드 폴백, 채널명 태그도배 오분류 해결) ③**대본추출**(카드 📝→`script_extract` Gemini, 캐시, 이동식 모달) ④**대본 위키**: `script_wiki`테이블+`structure_analyze.py`(훅·**화자·주변인물·스토리라인·전개방식·발상전환·어필포인트·tone말투**·비트·장치)+`library.html`(원본영상 영구보관 인라인 `/api/wiki/video`+분석 나란히) ⑤**생성** `script_generate.py`: 요소별 유지/변형 토글+모드A(같은주제)/B(내주제이식)→20초 초안 N개(`/api/wiki/generate`). 스모크: "주변인물만 변형"→농원언니/김밥집이모님 자연스러운 초안 확인. 전체 테스트 255통과. 다음: 모드B 실사용·믹스(체크박스 강점조합)·스타일라이브러리. 상세 handoff=NEXT_SESSION.md 🅐. ⚠️서버 자동배포가 raw/telegram 봇쓰기+autopilot_state.json dirty로 막혀 `reset --hard origin/main`으로 수동배포함.
+
+## 2026-07-13 (사무실) 틱톡 키워드검색 발굴 — 설계확정+실증
+- 틱톡 무료발굴 실증불가(yt-dlp /search=Unsupported, /tag=차단). 계정/개별영상 yt-dlp만 됨
+- B1(무료 로그인크롬) 24개 수확 실증했으나 운영자전용·취약 → 폐기. B2(Apify) 채택
+- Apify clockworks/tiktok-scraper: $1.70/1000(30개=5센트), searchQueries 키워드검색O, 월$5무료~2900건
+- 설계확정: 노브3개(검색당개수 기본60·하루횟수 기본10·월예산상한 기본$5)+Apify연동. 사용자 "고" 대기 → 집에서 이어서(NEXT_SESSION 🅒)
