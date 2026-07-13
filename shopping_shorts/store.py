@@ -747,6 +747,8 @@ class Store:
         for k in ("status", "error", "video_path", "clean_video_path"):
             if k in fields:
                 cols.append(f"{k}=?"); vals.append(fields[k])
+        if "subtitle_removal" in fields:
+            cols.append("subtitle_removal=?"); vals.append(1 if fields["subtitle_removal"] else 0)
         for k, col in (("extract", "extract_json"), ("edit_plan", "edit_plan_json")):
             if k in fields:
                 cols.append(f"{col}=?")

@@ -1115,6 +1115,17 @@ def api_produce_mix_start(background_tasks: BackgroundTasks, body: dict):
     return {"ok": True, "job_id": job_id}
 
 
+@app.post("/api/produce/mix/settings")
+def api_produce_mix_settings(body: dict):
+    """3단계 자막제거 등 렌더 전 설정 갱신. body: {job_id, subtitle_removal}."""
+    job_id = (body.get("job_id") or "").strip()
+    store = Store(DB_PATH)
+    if not job_id or not store.get_mix_job(job_id):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    store.update_mix_job(job_id, subtitle_removal=bool(body.get("subtitle_removal", False)))
+    return {"ok": True}
+
+
 # 정적 프론트 (마운트는 맨 마지막)
 _STATIC = Path(__file__).parent / "static"
 
