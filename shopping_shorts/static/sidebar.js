@@ -12,7 +12,7 @@
     { label: "채널 & 콘텐츠", items: [
       { icon: "👁", text: "내 모니터링 리스트", href: null },
       { icon: "📚", text: "대본 위키(도서관)",  href: "/library" },
-      { icon: "🎬", text: "영상 믹싱",         href: "/mix" },
+      { icon: "🎬", text: "영상 제작",         href: "/produce" },
       { icon: "📁", text: "레퍼런스 모음집",    href: null },
       { icon: "💬", text: "소통 큐",          href: "/outreach" },
     ] },

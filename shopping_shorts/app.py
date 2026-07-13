@@ -23,7 +23,7 @@ from shopping_shorts import script_generate
 from shopping_shorts.apify_client import fetch_single_reel, fetch_reels, fetch_profiles
 from shopping_shorts import discovery, instagram_search
 from shopping_shorts.channels import load_channels
-from shopping_shorts.video_analysis import analyze_video
+from shopping_shorts.video_analysis import analyze_video, translate_keyword
 from shopping_shorts.product_identify import fetch_lens_lines, identify_product_from_lines
 from shopping_shorts.search_links import build_search_links, lens_search_url
 from shopping_shorts.mix_pipeline import run_mix_job, run_render, retype_mix_job, _source_video_id
@@ -619,6 +619,23 @@ def api_find_analyze(shortcode: str):
     }
 
 
+@app.post("/api/find/translate_keyword")
+def api_find_translate_keyword(body: dict):
+    """제품 찾기 화면에서 자동 분석이 영상 내용을 잘못 짚었을 때, 사용자가
+    정확한 키워드를 한국어로 직접 넣으면 4개 언어로 번역해서 검색 링크까지
+    만들어 반환한다(2026-07-13, "레시피 영상인데 조리도구로 키워드가 잡힘"
+    피드백 대응)."""
+    keyword = (body.get("keyword") or "").strip()
+    if not keyword:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "키워드를 입력하세요"})
+    translated = translate_keyword(keyword)
+    return {
+        "ok": True,
+        "keywords": translated,
+        "search_links": build_search_links({lang: [kw] for lang, kw in translated.items() if kw}),
+    }
+
+
 # 실수집(플랫폼당 5개 언어 전부 검색 + Gemini 유사도 채점) → 임베드 미리보기
 # (/api/find/preview, 채점 없이 Apify로 직접 검색) 순으로 시도했으나 둘 다
 # 폐기(2026-07-10). 임베드 미리보기도 실측 결과 정확한 키워드로도 관련성이
@@ -913,7 +930,7 @@ _STATIC = Path(__file__).parent / "static"
 
 # 클린 URL — /library, /mix 등 확장자(.html) 없이 접근. (index는 루트 '/'로 자동)
 # 기존 /xxx.html 경로도 아래 StaticFiles 마운트로 계속 동작(백워드 호환).
-for _pg in ("discover", "find", "library", "mix", "outreach"):
+for _pg in ("discover", "find", "library", "mix", "outreach", "produce"):
     app.add_api_route(
         f"/{_pg}",
         (lambda n=_pg: FileResponse(_STATIC / f"{n}.html", media_type="text/html")),
