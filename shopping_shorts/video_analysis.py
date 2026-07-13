@@ -167,3 +167,55 @@ def analyze_video(video_path, caption, max_retries=5, quota_sleep=8):
                     pass
 
     return dict(_EMPTY)
+
+
+_TRANSLATE_MODEL = "gemini-3.1-flash-lite"  # 텍스트 번역만이라 가벼운 모델로 충분 — 영상분석용 모델과 분리
+
+_TRANSLATE_PROMPT = """다음 한국어 키워드를 4개 언어(영어/중국어 간체/일본어/러시아어)로
+번역해라. 축자번역 대신 그 언어권 창작자가 실제 릴스·숏폼 캡션·해시태그에
+쓸 법한 자연스러운 표현으로 쓰고, 구체성 수준은 한국어 원문과 동일하게 유지해라.
+
+한국어 키워드: {keyword}
+
+다음 JSON으로만 출력해라: {{"en": "...", "zh": "...", "ja": "...", "ru": "..."}}"""
+
+
+def translate_keyword(keyword, max_retries=3, quota_sleep=8):
+    """사용자가 직접 입력한 한국어 키워드 → 5개 언어(ko 포함) 딕셔너리.
+
+    Gemini 자동 분석이 영상 내용을 잘못 짚었을 때(예: 레시피 영상을 조리도구
+    상품 키워드로 잘못 잡음, 2026-07-13 실사용 피드백) 사용자가 정확한
+    키워드를 직접 넣고 5개 언어로 바로 검색 링크를 만들 수 있게 한다.
+    번역 실패해도 ko는 항상 채워서 반환 — 실패한 언어만 빈 문자열."""
+    result = {"ko": keyword, "en": "", "zh": "", "ja": "", "ru": ""}
+    if not keyword or not SHORTS_GEMINI_KEYS:
+        return result
+
+    prompt = _TRANSLATE_PROMPT.format(keyword=keyword)
+    for attempt in range(max_retries):
+        key, idx = comment_gen._current_key_and_idx()
+        if key is None:
+            return result
+        try:
+            client = _client_for_key(key)
+            resp = client.models.generate_content(
+                model=_TRANSLATE_MODEL, contents=prompt,
+                config=types.GenerateContentConfig(response_mime_type="application/json"),
+            )
+            data = json.loads(resp.text)
+            for lang in ("en", "zh", "ja", "ru"):
+                if data.get(lang):
+                    result[lang] = data[lang]
+            return result
+        except Exception as e:
+            if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
+                comment_gen._mark_key_exhausted(idx)
+                continue
+            if key_vault.is_quota_error(e):
+                time.sleep(quota_sleep)
+                continue
+            if attempt < max_retries - 1 and any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded")):
+                time.sleep((attempt + 1) * 5)
+                continue
+            return result
+    return result
