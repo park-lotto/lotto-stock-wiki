@@ -317,7 +317,7 @@ def _headcopy_drawtext(hc, work):
     xf = min(1.0, max(0.0, (hc.get("x", 50)) / 100.0))
     yf = min(1.0, max(0.0, (hc.get("y", 14)) / 100.0))
     parts = [
-        "drawtext=fontfile=font.ttf:textfile=headcopy.txt",
+        f"drawtext=fontfile={fontref}:textfile=headcopy.txt",
         f"fontcolor={_hex_to_ff(hc.get('color'), '0xFF8800')}",
         f"fontsize={size}",
         f"x=(w*{xf:.4f}-tw/2)", f"y=(h*{yf:.4f}-th/2)",
