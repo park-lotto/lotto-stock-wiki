@@ -1457,3 +1457,9 @@ S급 대본을 위키에 모아 **구조를 학습→변형/믹스로 새 대본
 - 증상: 렌즈 항상 items:[] / 근본원인(체계적 디버깅): google_lens가 요리·제품 프레임엔 ai_overview만 주고 visual_matches 생략 → type=visual_matches 파라미터 필수인데 누락. 유명인 테스트이미지는 우연히 둘다 반환해 버그 가려짐
 - 수정: lens_discover params에 type=visual_matches. 라이브 실측 0→60 visual_matches→5플랫폼 필터 14개(틱톡8·인스타4·유튜브2)
 - 배포·검증완료. (디버깅 중 SerpApi 92/250 사용, 158 남음)
+
+## 2026-07-14 (집PC) 렌즈 no-results 진짜원인 해결 (커밋 63e97451, 배포·E2E검증)
+- 사용자: 브라우저 우클릭 렌즈는 되는데 앱은 0개. 체계적 디버깅으로 파라미터 4조합 대조:
+  type=visual_matches 단독=0(error), all모드=59, hl=ko&country=kr=60, type+로케일=60
+- 진짜 원인: **로케일(hl=ko&country=kr) 누락** — 한국어·요리 콘텐츠에서 type만 주면 google_lens가 "no results". type=visual_matches는 red herring이었음(신발 프레임이 우연히 통과해 가려짐)
+- 수정: params에 hl=ko&country=kr 추가 + 빈응답 재시도(3회). 배포 E2E: 감자프레임 0→30개(인스타18·틱톡8·유튜브4), 신발 3개. 둘다 실제 유사영상
