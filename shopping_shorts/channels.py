@@ -1,7 +1,7 @@
 """벤치마킹 엑셀 → 채널 목록 로더."""
 import re
 from openpyxl import load_workbook
-from shopping_shorts.config import EXCEL_PATH
+from shopping_shorts.config import EXCEL_PATH, MAX_CHANNELS
 
 _IG_RE = re.compile(r"instagram\.com/([A-Za-z0-9_.]+)")
 _RESERVED = {"p", "reel", "reels", "stories", "explore", "tv", "s", "accounts"}
@@ -40,10 +40,19 @@ def parse_rows(rows):
     return channels
 
 
+def cap_channels(channels, max_channels=MAX_CHANNELS):
+    """채널 수가 max_channels 초과면 팔로워 낮은 순으로 잘라낸다(2026-07-13,
+    채널당 수집비 고정이라 리스트가 커질수록 매일 비용이 그대로 늘어남 —
+    비용 관리용 상한). max_channels 이하면 순서 그대로 반환."""
+    if len(channels) <= max_channels:
+        return channels
+    return sorted(channels, key=lambda c: c.get("followers", 0), reverse=True)[:max_channels]
+
+
 def load_channels(excel_path=EXCEL_PATH):
-    """엑셀 파일 열어 채널 리스트 반환."""
+    """엑셀 파일 열어 채널 리스트 반환(MAX_CHANNELS 상한 적용)."""
     wb = load_workbook(excel_path, data_only=True, read_only=True)
     ws = wb.worksheets[0]
     rows = list(ws.iter_rows(values_only=True))
     wb.close()
-    return parse_rows(rows)
+    return cap_channels(parse_rows(rows))
