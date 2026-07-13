@@ -99,7 +99,9 @@
     </section>
     <section class="panel" data-step="4">
       <h3>5 · 꾸미기 · 헤드카피</h3>
-      <div class="sub">영상 위에 고정으로 얹는 타이틀(자막과 별개). 폰트·색·위치·외곽선을 정하고 오른쪽에서 미리보기.</div>
+      <div class="sub">영상 위에 고정으로 얹는 타이틀(자막과 별개). <b>프리셋을 누르면 색·크기·외곽선이 한 번에 지정</b>됩니다. 미리보기에서 <b>드래그</b>로 위치 이동도 돼요.</div>
+      <div style="font-size:12px;color:var(--sub);margin-bottom:4px">🎨 스타일 프리셋</div>
+      <div id="hcPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"></div>
       <div style="display:flex;gap:20px;flex-wrap:wrap">
         <div style="flex:1;min-width:280px">
           <div style="font-size:13px;margin-bottom:4px">헤드카피 문구</div>
@@ -118,6 +120,13 @@
             <input id="hcY" type="range" min="0" max="100" value="14" oninput="updateHC()" style="width:100%"></div>
           <div style="font-size:12px;color:var(--sub)">가로 위치 <span id="hcXV">50</span>%
             <input id="hcX" type="range" min="0" max="100" value="50" oninput="updateHC()" style="width:100%"></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+            <span style="font-size:12px;color:var(--sub);align-self:center">정렬:</span>
+            <button class="tab" style="flex:0;min-width:auto;padding:5px 10px;font-size:12px" onclick="alignHC('top')">⬆ 위</button>
+            <button class="tab" style="flex:0;min-width:auto;padding:5px 10px;font-size:12px" onclick="alignHC('mid')">중간</button>
+            <button class="tab" style="flex:0;min-width:auto;padding:5px 10px;font-size:12px" onclick="alignHC('bottom')">⬇ 하단</button>
+            <button class="tab" style="flex:0;min-width:auto;padding:5px 10px;font-size:12px" onclick="alignHC('center')">↔ 가운데</button>
+          </div>
           <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;cursor:pointer">
             <input id="hcOutline" type="checkbox" checked onchange="updateHC()"> 외곽선
             <input id="hcOutColor" type="color" value="#000000" oninput="updateHC()">
@@ -182,6 +191,8 @@ function initHeadcopy(){
     const first=(STATE.script||'').split(/[.!?\n]/)[0].trim().slice(0,20);
     t.value=first;
   }
+  renderPresets();
+  bindHCDrag();
   updateHC();
 }
 function updateHC(){
@@ -203,6 +214,59 @@ function updateHC(){
   el.style.textShadow = hc.outline
     ? `0 0 0 ${hc.outline_color}, ${(hc.outline_w*scale).toFixed(1)}px ${(hc.outline_w*scale).toFixed(1)}px 0 ${hc.outline_color}, -1px -1px 0 ${hc.outline_color}, 1px -1px 0 ${hc.outline_color}, -1px 1px 0 ${hc.outline_color}, 1px 1px 0 ${hc.outline_color}`
     : 'none';
+}
+
+// 스타일 프리셋 — 고민없이 누르면 색·크기·외곽선 한 번에 지정(핵심 포인트)
+const HC_PRESETS=[
+  {name:'임팩트 오렌지', color:'#FF8800', weight:900, size:72, outline:true, outline_color:'#000000', outline_w:8, y:12},
+  {name:'화이트 클린',   color:'#FFFFFF', weight:900, size:64, outline:true, outline_color:'#000000', outline_w:6, y:12},
+  {name:'옐로 팝',       color:'#FFE100', weight:900, size:72, outline:true, outline_color:'#000000', outline_w:8, y:12},
+  {name:'레드 강조',     color:'#FF2D2D', weight:900, size:70, outline:true, outline_color:'#FFFFFF', outline_w:6, y:12},
+  {name:'민트 포인트',   color:'#00E0B8', weight:900, size:66, outline:true, outline_color:'#062B24', outline_w:6, y:12},
+  {name:'블랙 미니멀',   color:'#111111', weight:700, size:60, outline:true, outline_color:'#FFFFFF', outline_w:7, y:12},
+  {name:'하단 자막형',   color:'#FFFFFF', weight:900, size:56, outline:true, outline_color:'#000000', outline_w:6, y:82},
+];
+function renderPresets(){
+  const box=document.getElementById('hcPresets'); if(!box) return;
+  box.innerHTML=HC_PRESETS.map((p,i)=>`
+    <button class="tab" style="flex:0;min-width:auto;padding:6px 12px;font-size:12px;border-left:10px solid ${p.color}"
+      onclick="applyPreset(${i})">${p.name}</button>`).join('');
+}
+function applyPreset(i){
+  const p=HC_PRESETS[i], g=id=>document.getElementById(id);
+  g('hcColor').value=p.color; g('hcWeight').value=p.weight; g('hcSize').value=p.size;
+  g('hcOutline').checked=p.outline; g('hcOutColor').value=p.outline_color; g('hcOutW').value=p.outline_w;
+  g('hcY').value=p.y;
+  updateHC();
+}
+function alignHC(where){
+  const g=id=>document.getElementById(id);
+  if(where==='top') g('hcY').value=10;
+  else if(where==='mid') g('hcY').value=50;
+  else if(where==='bottom') g('hcY').value=88;
+  else if(where==='center') g('hcX').value=50;
+  updateHC();
+}
+function bindHCDrag(){
+  const pv=document.getElementById('hcPreview'), tx=document.getElementById('hcPreviewText');
+  if(!pv||!tx||tx._dragBound) return; tx._dragBound=true;
+  tx.style.cursor='move'; let drag=false;
+  const move=e=>{ if(!drag) return; const r=pv.getBoundingClientRect();
+    const cx=(e.touches?e.touches[0].clientX:e.clientX), cy=(e.touches?e.touches[0].clientY:e.clientY);
+    let x=Math.round(Math.max(0,Math.min(100,(cx-r.left)/r.width*100)));
+    let y=Math.round(Math.max(0,Math.min(100,(cy-r.top)/r.height*100)));
+    document.getElementById('hcX').value=x; document.getElementById('hcY').value=y; updateHC(); };
+  tx.addEventListener('mousedown', e=>{drag=true; e.preventDefault();});
+  tx.addEventListener('touchstart', e=>{drag=true;}, {passive:true});
+  document.addEventListener('mousemove', move);
+  document.addEventListener('touchmove', move, {passive:true});
+  document.addEventListener('mouseup', ()=>drag=false);
+  document.addEventListener('touchend', ()=>drag=false);
+}
+async function saveHeadcopy(){
+  if(!MIX_JOB) return;
+  try{ await fetch('/api/produce/mix/settings',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({job_id:MIX_JOB, headcopy:STATE.headcopy})}); }catch(e){}
 }
 function jump(i){ cur=i; renderSteps(); showPanel(); }
 function go(d){ const n=cur+d; if(n<0||n>=STEPS.length) return; cur=n; renderSteps(); showPanel(); }
@@ -432,6 +496,7 @@ async function renderFinal(){
   if(!MIX_JOB){ alert('2단계에서 영상 매칭을 먼저 실행하세요'); return; }
   const st=document.getElementById('finalStatus'); st.textContent='⏳ 렌더 시작…';
   document.getElementById('finalVideo').innerHTML='';
+  await saveHeadcopy();   // 헤드카피 설정을 job에 반영 후 렌더
   const r=await fetch('/api/mix/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:MIX_JOB})});
   const d=await r.json().catch(()=>({ok:false}));
   if(!r.ok||!d.ok){ st.textContent='❌ 렌더 시작 실패'; return; }
