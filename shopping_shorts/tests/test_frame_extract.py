@@ -60,3 +60,38 @@ def test_extract_frames_raises_on_ffmpeg_failure(monkeypatch, tmp_path):
 
     with pytest.raises(RuntimeError, match="ffmpeg"):
         frame_extract.extract_frames(video_path, tmp_path, max_frames=6)
+
+
+def test_extract_frame_at_returns_path_on_success(monkeypatch, tmp_path):
+    video_path = tmp_path / "in.mp4"
+    video_path.write_bytes(b"fake")
+
+    calls = []
+    def fake_run(cmd, capture_output=True, check=False):
+        calls.append(cmd)
+        (tmp_path / "frame_hint.jpg").write_bytes(b"jpg")
+        class FakeResult:
+            returncode = 0
+            stderr = b""
+        return FakeResult()
+    monkeypatch.setattr(frame_extract.subprocess, "run", fake_run)
+
+    result = frame_extract.extract_frame_at(video_path, tmp_path, 12.5)
+
+    assert result == tmp_path / "frame_hint.jpg"
+    assert result.exists()
+    assert "12.5" in calls[0]
+
+
+def test_extract_frame_at_returns_none_on_ffmpeg_failure(monkeypatch, tmp_path):
+    video_path = tmp_path / "in.mp4"
+    video_path.write_bytes(b"fake")
+
+    def fake_run(cmd, capture_output=True, check=False):
+        class FakeResult:
+            returncode = 1
+            stderr = b"ffmpeg: error"
+        return FakeResult()
+    monkeypatch.setattr(frame_extract.subprocess, "run", fake_run)
+
+    assert frame_extract.extract_frame_at(video_path, tmp_path, 5) is None

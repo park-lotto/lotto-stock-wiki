@@ -37,3 +37,25 @@ def extract_frames(video_path, dest_dir, max_frames=6):
     if result.returncode != 0:
         raise RuntimeError(f"ffmpeg 프레임 추출 실패: {result.stderr}")
     return sorted(dest_dir.glob("frame_*.jpg"))
+
+
+def extract_frame_at(video_path, dest_dir, timestamp_sec, filename="frame_hint.jpg"):
+    """timestamp_sec 위치의 프레임 1장만 추출.
+
+    extract_frames()의 장면전환 감지는 제품이 잘 보이는지와 무관하게 화면이
+    바뀌는 순간을 뽑아서, 얼굴·손·배경 같은 프레임이 섞여 Lens 역검색이
+    헛도는 경우가 있었다(2026-07-13). Gemini가 영상 분석 중 함께 짚어준
+    "제품이 가장 선명한 순간"(lens_hint_sec)으로 별도 프레임을 하나 더
+    떠서 Lens 역검색 1순위로 쓴다. 실패해도 조용히 None — 기존 장면전환
+    프레임만으로도 동작은 계속돼야 한다."""
+    dest_dir = Path(dest_dir)
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    out_path = dest_dir / filename
+    cmd = [
+        "ffmpeg", "-y", "-ss", str(max(0, timestamp_sec)), "-i", str(video_path),
+        "-frames:v", "1", str(out_path),
+    ]
+    result = subprocess.run(cmd, capture_output=True, check=False)
+    if result.returncode != 0 or not out_path.exists():
+        return None
+    return out_path

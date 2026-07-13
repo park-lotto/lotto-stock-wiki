@@ -16,7 +16,7 @@ from shopping_shorts.service import collect, generate_missing_drafts, next_draft
 from shopping_shorts.outreach import build_queue
 from shopping_shorts.store import Store
 from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
-from shopping_shorts.frame_extract import download_video, extract_frames
+from shopping_shorts.frame_extract import download_video, extract_frames, extract_frame_at
 from shopping_shorts.script_extract import extract_script
 from shopping_shorts.structure_analyze import analyze_structure
 from shopping_shorts import script_generate
@@ -569,6 +569,23 @@ def api_find_analyze(shortcode: str):
         frame_paths=[str(p) for p in frame_paths],
         analyzed_at=datetime.now(timezone.utc).isoformat(),
     )
+
+    # Lens 역검색용 프레임은 장면전환 감지 프레임(frame_abs_urls)뿐 아니라,
+    # Gemini가 영상 분석 중 함께 짚어준 "제품이 가장 선명한 순간"(lens_hint_sec)도
+    # 하나 더 떠서 맨 앞에 추천으로 붙인다(2026-07-13, "Lens 역검색도 결과 없음이
+    # 잦다" 피드백 대응 — 장면전환 프레임은 얼굴·손·배경이 섞여 역검색이 헛돌 때가
+    # 있었음). 실패해도 조용히 기존 프레임만 사용.
+    lens_frame_abs_urls = list(frame_abs_urls)
+    hint_sec = analysis.get("lens_hint_sec")
+    if isinstance(hint_sec, (int, float)):
+        try:
+            hint_path = extract_frame_at(video_path, work_dir, hint_sec)
+        except Exception:
+            hint_path = None
+        if hint_path:
+            hint_url = f"{PUBLIC_BASE_URL}/api/find/frame/{work_dir.name}/{hint_path.name}"
+            lens_frame_abs_urls = [hint_url] + lens_frame_abs_urls
+
     return {
         "ok": True,
         "shortcode": shortcode,
@@ -577,7 +594,8 @@ def api_find_analyze(shortcode: str):
         "frame_urls": frame_urls,
         "video_url": served_video_url,
         "search_links": build_search_links(analysis["keywords"]),
-        "lens_links": [lens_search_url(u) for u in frame_abs_urls],
+        "lens_links": [lens_search_url(u) for u in lens_frame_abs_urls],
+        "lens_hint_used": lens_frame_abs_urls != frame_abs_urls,
     }
 
 

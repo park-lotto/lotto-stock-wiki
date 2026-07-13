@@ -115,7 +115,11 @@ const LANG_FLAG = {ko:"🇰🇷", en:"🌐", zh:"🇨🇳", ja:"🇯🇵", ru:"�
 function renderResult(d){
   const kwList = d.keywords.ko || [];
   const kw = kwList.map(k=>`<span class="chip">${k}</span>`).join("");
-  const lensLinks = (d.lens_links||[]).map((u,i)=>`<a href="${u}" target="_blank">🔍 프레임${i+1}</a>`).join(" ");
+  const lensLinks = (d.lens_links||[]).map((u,i)=>{
+    const isHint = d.lens_hint_used && i === 0;
+    const label = isHint ? "⭐ 추천 프레임" : `🔍 프레임${d.lens_hint_used ? i : i+1}`;
+    return `<a href="${u}" target="_blank">${label}</a>`;
+  }).join(" ");
 
   document.getElementById("result").innerHTML = `
     <div class="layout">

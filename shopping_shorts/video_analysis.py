@@ -34,12 +34,13 @@ _RESPONSE_SCHEMA = {
         "keywords": {
             "type": "object",
             "properties": {
-                lang: {"type": "array", "items": {"type": "string"}, "minItems": 1, "maxItems": 5}
+                lang: {"type": "array", "items": {"type": "string"}, "minItems": 2, "maxItems": 5}
                 for lang in _LANGS
             },
             "required": _LANGS,
         },
         "category": {"type": "string"},
+        "lens_hint_sec": {"type": "number"},
     },
     "required": ["keywords", "category"],
 }
@@ -51,13 +52,14 @@ _PROMPT = """이 영상을 보고 어떤 제품/장면을 다루는지 파악해
 다음 JSON으로만 출력해라:
 {{
   "keywords": {{
-    "ko": ["핵심 키워드 3~5개, 한국어"],
+    "ko": ["핵심 키워드 2~5개, 한국어"],
     "en": ["같은 키워드의 영어 번역"],
     "zh": ["같은 키워드의 중국어(간체) 번역"],
     "ja": ["같은 키워드의 일본어 번역"],
     "ru": ["같은 키워드의 러시아어 번역"]
   }},
-  "category": "제품 카테고리 (예: 생활용품/홈케어, 뷰티, 주방가전 등)"
+  "category": "제품 카테고리 (예: 생활용품/홈케어, 뷰티, 주방가전 등)",
+  "lens_hint_sec": "영상 내에서 그 제품이 가장 선명하고 크게 화면을 채우는 순간의 타임스탬프(초, 숫자). 정면·클로즈업일수록 좋음"
 }}
 
 키워드는 반드시 영상 속에 실제로 등장하는 그 제품(브랜드/모델/구체적 형태)을
@@ -69,8 +71,15 @@ _PROMPT = """이 영상을 보고 어떤 제품/장면을 다루는지 파악해
 "아기 물안경", "유아 수영 고글" 처럼 화면에 보이는 그 제품 자체여야 하고,
 "아기 목욕"·"머리감기"는 안 된다.
 
-같은 원칙으로 5개 언어 전부 동일한 구체성을 유지해라(번역만 다르고 포괄
-범위가 넓어지면 안 됨). 다른 텍스트 없이 JSON만 출력."""
+각 언어 배열의 첫 번째 키워드는 가장 구체적인 것(브랜드/모델명이 보이면 그것)으로,
+마지막 키워드 하나는 검색 실패에 대비한 대체용으로 만들어라 — 여전히 그 제품군을
+가리켜야 하지만(카테고리 전체로 넓어지면 안 됨) 브랜드/모델 같은 세부 디테일을 뺀
+한 단계 넓은 표현으로 한다("○○ 무선 청소기 A1 프로" → 대체 "무선 핸디청소기").
+
+zh/ja/ru는 ko/en 문구를 그대로 축자 번역하지 말고, 그 언어권 창작자가 릴스·숏폼
+캡션·해시태그에 실제로 쓸 법한 자연스러운 표현으로 써라(어순·조사·관용 표현
+포함). 구체성 수준은 5개 언어 전부 동일하게 유지한다. 다른 텍스트 없이 JSON만
+출력."""
 
 _client_cache = {}
 
@@ -132,6 +141,7 @@ def analyze_video(video_path, caption, max_retries=5, quota_sleep=8):
             return {
                 "keywords": {lang: got.get(lang, []) for lang in _LANGS},
                 "category": data.get("category", ""),
+                "lens_hint_sec": data.get("lens_hint_sec"),
             }
         except Exception as e:
             m = str(e)
