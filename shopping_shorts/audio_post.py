@@ -2,7 +2,9 @@
 
 ElevenLabs speed는 0.7~1.2만 지원해, 그 이상(1.3~1.5) 속도는 여기서 atempo로 얹는다.
 무음삭제는 나레이션 사이 쉬는 구간을 잘라 빠르게 이어붙인다(레벨: off/weak/mid/strong)."""
+import os
 import subprocess
+import tempfile
 
 # 레벨별 silenceremove 파라미터. stop_duration=자를 최소 무음길이(초), stop_threshold=무음 판정 dB.
 # 강할수록 짧은 무음까지 자르고(작은 duration), 판정 임계도 관대(높은 dB).
@@ -30,9 +32,24 @@ def post_process(in_path, out_path, tempo=1.0, silence_trim="off"):
         filters.append(sf)
     if not filters:
         return in_path
-    subprocess.run(
-        ["ffmpeg", "-y", "-i", str(in_path), "-af", ",".join(filters),
-         "-q:a", "4", str(out_path)],
-        stdin=subprocess.DEVNULL, capture_output=True, check=True,
-    )
+    # ffmpeg는 같은 파일을 입력이자 출력으로 쓰지 못한다(in-place 시 입력이 잘려 실패).
+    # in==out이면 임시파일에 쓴 뒤 원자적으로 교체한다.
+    same = os.path.abspath(str(in_path)) == os.path.abspath(str(out_path))
+    if same:
+        fd, target = tempfile.mkstemp(suffix=".mp3", dir=os.path.dirname(os.path.abspath(str(out_path))))
+        os.close(fd)
+    else:
+        target = str(out_path)
+    try:
+        subprocess.run(
+            ["ffmpeg", "-y", "-i", str(in_path), "-af", ",".join(filters),
+             "-q:a", "4", target],
+            stdin=subprocess.DEVNULL, capture_output=True, check=True,
+        )
+    except Exception:
+        if same and os.path.exists(target):
+            os.remove(target)
+        raise
+    if same:
+        os.replace(target, str(out_path))
     return str(out_path)

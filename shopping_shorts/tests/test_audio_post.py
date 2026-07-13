@@ -31,6 +31,26 @@ def test_builds_filter_chain(monkeypatch):
     assert "silenceremove" in af
 
 
+def test_inplace_same_path_uses_tempfile(monkeypatch):
+    """in==out이면 ffmpeg 출력이 입력과 다른 임시파일이어야(같으면 ffmpeg 실패)."""
+    cmd = {}
+    def fake_run(c, **k):
+        cmd["c"] = c
+        Path(c[-1]).write_bytes(b"ID3out")
+        class R: returncode = 0
+        return R()
+    monkeypatch.setattr(audio_post.subprocess, "run", fake_run)
+
+    p = Path(tempfile.mkdtemp()) / "same.mp3"; p.write_bytes(b"ID3-original")
+    out = audio_post.post_process(str(p), str(p), tempo=1.25, silence_trim="off")
+    assert out == str(p)
+    # ffmpeg에 넘긴 출력경로(마지막 인자)는 입력과 달라야 한다
+    assert cmd["c"][-1] != str(p)
+    assert cmd["c"][cmd["c"].index("-i") + 1] == str(p)
+    # 교체 결과가 out_path에 반영됨
+    assert p.read_bytes() == b"ID3out"
+
+
 def test_silence_level_params():
     assert audio_post._silence_filter("off") is None
     assert "stop_threshold" in audio_post._silence_filter("weak")
