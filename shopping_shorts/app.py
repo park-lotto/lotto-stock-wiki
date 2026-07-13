@@ -611,6 +611,58 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
     return {"ok": True, "drafts": drafts}
 
 
+@app.post("/api/wiki/draft/refine")
+def api_draft_refine(request: Request, body: dict):
+    """초안을 지시문으로 재생성(전체재작성 또는 부분수정) — 새 버전으로 저장.
+
+    body: {draft_id, mode: "rewrite"|"partial", instruction, selected_text?(partial 필수)}"""
+    store = Store(DB_PATH)
+    draft_id = body.get("draft_id", "")
+    mode = body.get("mode", "rewrite")
+    instruction = (body.get("instruction") or "").strip()
+    cur = store.get_draft(draft_id)
+    if not cur:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "해당 초안 없음"})
+    if not instruction:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "지시문을 입력하세요"})
+    if mode == "partial":
+        selected = (body.get("selected_text") or "").strip()
+        if not selected:
+            return JSONResponse(status_code=422, content={"ok": False, "error": "선택한 부분이 필요합니다"})
+        new_text = script_generate.refine_draft_partial(cur["script_text"], selected, instruction)
+    else:
+        new_text = script_generate.refine_draft_rewrite(cur["script_text"], instruction)
+    if not new_text:
+        return JSONResponse(status_code=502, content={"ok": False, "error": "재생성 실패(Gemini 키 소진 또는 오류) — 잠시 후 재시도"})
+    new_id = uuid.uuid4().hex[:12]
+    store.save_draft(new_id, _cid(request), cur["source_shortcode"], draft_id, cur.get("hook", ""),
+                      new_text, instruction, mode)
+    return {"ok": True, "draft_id": new_id, "script_text": new_text}
+
+
+@app.post("/api/wiki/draft/edit")
+def api_draft_edit(request: Request, body: dict):
+    """텍스트박스에서 직접 고친 내용을 AI 호출 없이 새 버전으로 저장.
+
+    body: {draft_id, script_text}"""
+    store = Store(DB_PATH)
+    draft_id = body.get("draft_id", "")
+    script_text = body.get("script_text", "")
+    cur = store.get_draft(draft_id)
+    if not cur:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "해당 초안 없음"})
+    new_id = uuid.uuid4().hex[:12]
+    store.save_draft(new_id, _cid(request), cur["source_shortcode"], draft_id, cur.get("hook", ""),
+                      script_text, None, "manual")
+    return {"ok": True, "draft_id": new_id}
+
+
+@app.get("/api/wiki/draft/history")
+def api_draft_history(draft_id: str):
+    """초안의 버전 체인 전체(오래된 순)."""
+    return {"ok": True, "history": Store(DB_PATH).get_draft_chain(draft_id)}
+
+
 @app.post("/api/find/analyze")
 def api_find_analyze(shortcode: str):
     """영상 다운로드 → 프레임 추출 → Gemini 분석 → 검색링크 생성, 결과 저장 후 반환.

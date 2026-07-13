@@ -562,3 +562,71 @@ def test_find_save_adds_candidate_to_pool(monkeypatch, client, tmp_path):
     pool = store.pool_items()
     assert len(pool) == 1
     assert pool[0]["origin_shortcode"] == "sc1"
+
+
+def test_draft_refine_rewrite_saves_new_version(monkeypatch):
+    monkeypatch.setattr(app_module, "_AUTH_ON", False)
+    monkeypatch.setattr(app_module.Store, "get_draft",
+                        lambda self, draft_id: {"draft_id": "d1", "source_shortcode": "SC1",
+                                                 "hook": "h", "script_text": "원본"})
+    monkeypatch.setattr(app_module.script_generate, "refine_draft_rewrite",
+                        lambda script, instruction: "재작성됨")
+    saved = []
+    monkeypatch.setattr(app_module.Store, "save_draft",
+                        lambda self, draft_id, customer_id, source_shortcode, parent_draft_id, hook, script_text, edit_instruction, edit_mode:
+                        saved.append((draft_id, parent_draft_id, script_text, edit_instruction, edit_mode)))
+    client = TestClient(app_module.app)
+    r = client.post("/api/wiki/draft/refine",
+                     json={"draft_id": "d1", "mode": "rewrite", "instruction": "더 유머러스하게"})
+    d = r.json()
+    assert r.status_code == 200 and d["ok"] is True
+    assert d["script_text"] == "재작성됨"
+    assert saved[0][1] == "d1"  # parent_draft_id
+    assert saved[0][3] == "더 유머러스하게"
+    assert saved[0][4] == "rewrite"
+
+
+def test_draft_refine_partial_requires_selected_text(monkeypatch):
+    monkeypatch.setattr(app_module, "_AUTH_ON", False)
+    monkeypatch.setattr(app_module.Store, "get_draft",
+                        lambda self, draft_id: {"draft_id": "d1", "source_shortcode": "SC1",
+                                                 "hook": "h", "script_text": "원본"})
+    client = TestClient(app_module.app)
+    r = client.post("/api/wiki/draft/refine",
+                     json={"draft_id": "d1", "mode": "partial", "instruction": "더 재밌게"})
+    assert r.status_code == 422
+
+
+def test_draft_refine_unknown_draft_404(monkeypatch):
+    monkeypatch.setattr(app_module, "_AUTH_ON", False)
+    monkeypatch.setattr(app_module.Store, "get_draft", lambda self, draft_id: None)
+    client = TestClient(app_module.app)
+    r = client.post("/api/wiki/draft/refine", json={"draft_id": "nope", "mode": "rewrite", "instruction": "x"})
+    assert r.status_code == 404
+
+
+def test_draft_edit_saves_manual_version(monkeypatch):
+    monkeypatch.setattr(app_module, "_AUTH_ON", False)
+    monkeypatch.setattr(app_module.Store, "get_draft",
+                        lambda self, draft_id: {"draft_id": "d1", "source_shortcode": "SC1", "hook": "h"})
+    saved = []
+    monkeypatch.setattr(app_module.Store, "save_draft",
+                        lambda self, draft_id, customer_id, source_shortcode, parent_draft_id, hook, script_text, edit_instruction, edit_mode:
+                        saved.append((script_text, edit_mode)))
+    client = TestClient(app_module.app)
+    r = client.post("/api/wiki/draft/edit", json={"draft_id": "d1", "script_text": "직접 고침"})
+    d = r.json()
+    assert d["ok"] is True
+    assert saved[0] == ("직접 고침", "manual")
+
+
+def test_draft_history_returns_chain(monkeypatch):
+    monkeypatch.setattr(app_module, "_AUTH_ON", False)
+    monkeypatch.setattr(app_module.Store, "get_draft_chain",
+                        lambda self, draft_id: [{"draft_id": "d1", "script_text": "v1"},
+                                                 {"draft_id": "d2", "script_text": "v2"}])
+    client = TestClient(app_module.app)
+    r = client.get("/api/wiki/draft/history?draft_id=d2")
+    d = r.json()
+    assert d["ok"] is True
+    assert len(d["history"]) == 2
