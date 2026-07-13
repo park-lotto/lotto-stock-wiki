@@ -993,12 +993,58 @@ async function renderTtsBeats(){
   try{
     const d=await (await fetch('/api/mix/result/'+MIX_JOB)).json();
     if(!d.ok || !(d.beats||[]).length){ el.innerHTML=''; return; }
-    el.innerHTML='<div style="font-size:12px;color:var(--sub);margin-bottom:4px">비트별 음성</div>'+d.beats.map((b,i)=>`
-      <div style="border:1px solid var(--line);border-radius:9px;padding:9px;margin-bottom:6px;background:#0d1420">
+    const beats=d.beats;
+    const vidLen=beats.reduce((s,b)=>s+(+b.target_seconds||0),0);
+    const rows=beats.map((b,i)=>`
+      <div id="beatRow${i}" style="border:1px solid var(--line);border-radius:9px;padding:9px;margin-bottom:6px;background:#0d1420;transition:background .15s">
         <div style="font-size:13px;margin-bottom:4px"><b>${i+1}.</b> ${esc(b.narration||'')}</div>
-        ${b.tts_preview_url?`<audio controls src="${esc(b.tts_preview_url)}?t=${Date.now()}" style="height:26px"></audio>`:'<span class="hint">음성 없음</span>'}
+        ${b.tts_preview_url?`<audio id="beatAudio${i}" controls preload="metadata" src="${esc(b.tts_preview_url)}?t=${Date.now()}" style="height:26px"></audio>`:'<span class="hint">음성 없음</span>'}
       </div>`).join('');
+    // 영상길이(비트 목표시간 합) vs 음성길이(오디오 실측 합) — 맞춤 힌트로 편집 편의성↑
+    el.innerHTML=`
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;border:1px solid var(--line);border-radius:9px;padding:10px 12px;margin-bottom:10px;background:#0d1420">
+        <div><span class="hint">영상 길이</span> <b style="color:var(--accent2)">${vidLen.toFixed(1)}초</b></div>
+        <div><span class="hint">음성 길이</span> <b id="voiceLen" style="color:var(--ok)">…</b></div>
+        <div id="fitMsg" class="hint">음성 길이 측정 중…</div>
+        <button onclick="playAllBeats()" class="btn-prev" style="padding:6px 12px;margin-left:auto">▶ 전체 재생</button>
+      </div>
+      <div style="font-size:12px;color:var(--sub);margin-bottom:4px">비트별 음성</div>${rows}`;
+    _updateVoiceLen(beats.length, vidLen);
   }catch(e){ el.innerHTML='<div class="hint" style="color:var(--fire)">로드 실패</div>'; }
+}
+function _beatAudios(n){ const a=[]; for(let i=0;i<n;i++){ const el=document.getElementById('beatAudio'+i); if(el) a.push(el);} return a; }
+function _updateVoiceLen(n, vidLen){
+  const auds=_beatAudios(n);
+  const recompute=()=>{
+    if(!auds.length || auds.some(a=>!a.duration||isNaN(a.duration))) return; // 아직 메타로딩중
+    const total=auds.reduce((s,a)=>s+a.duration,0);
+    const vl=document.getElementById('voiceLen'); if(vl) vl.textContent=total.toFixed(1)+'초';
+    const msg=document.getElementById('fitMsg'); if(!msg) return;
+    const diff=total-vidLen;
+    if(vidLen<=0){ msg.textContent=''; }
+    else if(Math.abs(diff)<=vidLen*0.1){ msg.innerHTML='✅ <span style="color:var(--ok)">영상에 잘 맞아요</span>'; }
+    else if(diff>0){ msg.innerHTML='⚠️ <span style="color:var(--fire)">음성이 '+diff.toFixed(1)+'초 길어요</span> — 속도↑ 또는 무음삭제 강 추천'; }
+    else { msg.innerHTML='⚠️ <span style="color:var(--fire)">음성이 '+(-diff).toFixed(1)+'초 짧아요</span> — 속도↓ 추천'; }
+  };
+  auds.forEach(a=>{ if(a.readyState>=1) recompute(); else a.addEventListener('loadedmetadata', recompute, {once:true}); });
+}
+// ▶ 전체 재생 — 비트 음성을 순서대로 이어 재생하며 현재 비트 줄을 하이라이트(가라오케식)
+function playAllBeats(){
+  const auds=[]; let i=0; while(document.getElementById('beatAudio'+i)){ auds.push(document.getElementById('beatAudio'+i)); i++; }
+  if(!auds.length) return;
+  const clear=()=>auds.forEach((a,idx)=>{ const r=document.getElementById('beatRow'+idx); if(r) r.style.background='#0d1420'; });
+  auds.forEach(a=>{ a.pause(); a.currentTime=0; a.onended=null; });
+  clear();
+  let cur=0;
+  const playOne=()=>{
+    if(cur>=auds.length){ clear(); return; }
+    clear();
+    const r=document.getElementById('beatRow'+cur); if(r) r.style.background='#1a2740';
+    const a=auds[cur];
+    a.onended=()=>{ cur++; playOne(); };
+    a.play().catch(()=>{ cur++; playOne(); });
+  };
+  playOne();
 }
 
 // ── 8단계 최종검수·렌더 ──────────────
