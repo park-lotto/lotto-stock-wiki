@@ -1,45 +1,47 @@
-# 영상제작 위저드 — 이어서 할 일 (핸드오프)
+# 영상제작 위저드 5·꾸미기 — 이어서 할 일 (핸드오프)
 
-날짜: 2026-07-13 · 라이브: https://shoppingshorts.duckdns.org/produce (로그인)
-> 모든 코드·폰트 **origin/main에 푸시 완료 + 서버 배포됨**. 집에서 `git pull origin main`이면 전부 받아짐.
+날짜: 2026-07-14 · 라이브: https://shoppingshorts.duckdns.org/produce (로그인)
+> 관련 메모리: [[feedback_꾸미기_딸깍프리셋철학]] [[feedback_동시세션_커밋규칙]]
 
-## ✅ 완성된 단계 (8단계 위저드 `/produce`)
+## ✅ 완료·배포됨 (2026-07-14, 커밋 순서대로)
 
-- **1·대본** — 3모드 전부 라이브 검증
-  - 직접작성 / 우리믹스(도서관 선택→조합 or **1개 그대로 쓰기**) / 제미니 자동
-  - 도서관(library)에서 "🎬 영상제작으로 보내기" → 우리믹스 탭 기본목록(picks)
-  - 대본 생성은 key_vault 예비키풀 사용(전용키 소진 회피)
-- **2·영상믹스** — given_script 매칭(확정대본→비트분할→소스영상 장면매칭). 비트별 **fit(1~5)** 약한매칭 ⚠️경고
-- **3·자막제거** — VMake 토글(job settings). ※실제 VMake 제거는 API 스펙 미완(mock, 다른 트랙)
-- **4·TTS** — 비트별 음성 프리뷰(매칭 파이프라인서 생성)
-- **5·꾸미기(헤드카피)** — 완전 완료·실렌더 검증
-  - 폰트 7종(배민주아/도현·티몬몬소리·지마켓·SUIT·프리텐다드·나눔) + 색·굵기·크기·외곽선
-  - **스타일 프리셋 7종**(원클릭) + 미리보기 **드래그** 이동 + **정렬**(위/중/하/가운데)
-  - video_assemble `_headcopy_drawtext`로 실제 영상에 구워짐(검증됨)
+- `46c756b6` **슬라이스A**: 폰트 7→**22종**(쇼핑팩토리 폰트, woff/woff2 6개 ttf/otf 변환,
+  한글파일명 ASCII 리네임 GBatang/GowunBatang/RIDIBatang/Kkubulim) + ⭐베스트5 상단 +
+  미리보기 200→**340px** + **배경박스**(headcopy) + 레퍼런스 프리셋 16종
+- `6bddd45e` **폰트 커스텀 드롭다운**: 마우스 hover 시 프리뷰 실시간 폰트 변경(각 항목 자기폰트 렌더)
+- `1893a684` **슬라이스B**: **자막 스타일 분리**(자막 자체 폰트·색·크기·위치·외곽선·박스) +
+  **자막 효과**(없음/페이드/슬라이드/팝) + 듀얼 프리뷰. ⚠️버그수정: `assemble`이 headcopy를
+  `_burn_captions`에 미전달하던 것(헤드카피가 최종렌더에 안 구워짐) 수정 — 이제 headcopy·caption_style 둘 다 전달
+- `6817550e` **🎯 딸깍 완성스타일 14종**(원클릭: 헤드카피+자막+효과 한번에, applyFullPreset) +
+  **미리보기 흰배경 기본** + **효과 프리뷰 애니메이션**(CSS 반복재생)
+- `aeaf09be` **커스텀 프리셋 저장**(내 프리셋, localStorage, applyConfig 공용)
 
-## ⏭ 다음 (미구현)
+렌더 지원(video_assemble): 헤드카피/자막 각각 폰트·색·크기·위치·외곽선·**배경박스**(box=1) + 자막 효과(alpha/y expr).
+`caption_style`은 store(caption_style_json)→app(/api/produce/mix/settings)→mix_pipeline.run_render→assemble 배선 완료.
 
-1. **6·썸네일** — 영상 프레임 선택 + 텍스트 오버레이 (스텁 상태)
-2. **7·SEO** — 제목/설명/태그 AI 생성 (스텁 상태)
-3. **8·최종검수** — 렌더 UI는 있음. 내보내기(CapCut export)는 미구현
-4. (선택) woff 폰트 79종 → ttf 변환하면 어그로체 등 더 쓸 수 있음. 지금은 ttf/otf 7종만(렌더 일치)
+## ⏭ 남은 것 — 슬라이스 C (백엔드 필요, **다른 세션 끝난 뒤 진행**)
 
-## 파일 지도 (shopping_shorts/)
+⚠️ **동시성 주의**: 2026-07-14 기준 다른 세션이 `app.py`·`video_assemble.py`·`mix_pipeline.py`·`store.py`에
+렌즈발굴·보이스프리셋을 활발히 커밋 중이었음. 슬라이스C는 이 파일들을 크게 건드리므로,
+**별도 git 워크트리에서 작업 후 병합** 권장(공유트리 churn 회피). 커밋 규칙: [[feedback_동시세션_커밋규칙]].
 
-- `static/produce.html` — 위저드 UI 전체(8스텝, STATE.script/subtitleRemoval/headcopy)
-- `static/library.html` — 도서관, "영상제작으로 보내기" 버튼
-- `edit_plan.py` — build_edit_plan(given_script, fit), key_vault 라우팅(_vault_call)
-- `script_generate.py` — generate_from_topic(제미니자동)·generate_mix(우리믹스)
-- `video_assemble.py` — _headcopy_drawtext(헤드카피 굽기), static/fonts 로드
-- `mix_pipeline.py` — run_mix_job/run_render (given_script·headcopy 관통)
-- `store.py` — mix_jobs(given_script/headcopy_json 컬럼), produce_script_picks 테이블
-- `app.py` — /api/produce/* (script/gemini·mix·picks·mix/start·mix/settings)
-- `static/fonts/` — 번들 폰트 7종
+구현 대상(전부 /produce 5단계에 UI + video_assemble 렌더 + app.py 업로드 엔드포인트):
+1. **이미지 오버레이**: PNG/JPG 업로드 → 영상 위 overlay(위치·크기). ffmpeg `overlay` 필터. 프리셋 4종(블랙/화이트 조합) 참고.
+2. **워터마크 닉네임**: drawtext 워터마크(우하단 기본), 토글 + 텍스트/투명도.
+3. **BGM 업로드**: mp3/wav/m4a → 오디오 믹스(TTS 나레이션 위에 덕킹). ffmpeg `amix`/`sidechaincompress`.
+4. **추가 텍스트 블록**: 헤드카피 외 여러 텍스트를 각자 위치·스타일로(현재 headcopy 1개 → 배열화).
+5. **프리뷰 실장면 배경**: 매칭된 소스클립 첫 프레임을 poster로 서빙하는 app 엔드포인트(`/api/mix/poster/{job}`) →
+   produce.html `hcPreviewBg`(이미 DOM에 있음, display:none)에 세팅. 현재는 흰배경 기본.
+6. (후순위) 자막 **정밀 동기화**(TTS word-timing) — whisper 등 필요.
 
-## 집에서 시작 절차
+## 파일 지도
+`static/produce.html`(위저드 전체: FULL_PRESETS·HC_PRESETS·자막스타일·내프리셋·폰트피커) /
+`video_assemble.py`(_headcopy_drawtext·_caption_drawtexts[style dict]·_burn_captions·assemble) /
+`store.py`(mix_jobs.caption_style_json) / `app.py`(/api/produce/mix/settings) / `mix_pipeline.py`(run_render)
 
+## 재개 절차
 ```
-git pull origin main          # 최신 코드·폰트 받기
-# 라이브 확인: https://shoppingshorts.duckdns.org/produce (로그인)
-# 이어서 6·썸네일 or 7·SEO 구현
+git pull origin main
+# 다른 세션 backend 작업 끝났는지 확인(git log, app.py/video_assemble 안정?)
+# 워크트리 생성 후 슬라이스C 1번(이미지 오버레이)부터 TDD로
 ```
