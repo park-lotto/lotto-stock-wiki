@@ -45,6 +45,14 @@
     .tab.active{background:linear-gradient(90deg,#153a6b,#0d2340);border-color:var(--accent);color:#9dc4ff}
     textarea{width:100%;min-height:160px;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:12px;font-size:14px;resize:vertical;font-family:inherit}
     .hint{color:var(--sub);font-size:12px;margin-top:6px}
+    /* 헤드카피 번들 폰트(브라우저 미리보기 = 실제 렌더 일치, ttf/otf만) */
+    @font-face{font-family:'HCNanum';src:url('/fonts/NanumGothic-Bold.ttf')}
+    @font-face{font-family:'HCJua';src:url('/fonts/BMJUA.ttf')}
+    @font-face{font-family:'HCDohyeon';src:url('/fonts/BMDOHYEON.ttf')}
+    @font-face{font-family:'HCTmon';src:url('/fonts/TmonMonsori.ttf')}
+    @font-face{font-family:'HCGmarket';src:url('/fonts/GmarketSansBold.otf')}
+    @font-face{font-family:'HCSuit';src:url('/fonts/SUIT-Bold.otf')}
+    @font-face{font-family:'HCPretendard';src:url('/fonts/Pretendard-ExtraBold.otf')}
   </style>
 </head>
 <body>
@@ -107,7 +115,9 @@
           <div style="font-size:13px;margin-bottom:4px">헤드카피 문구</div>
           <input id="hcText" type="text" placeholder="예: 써보면 놀라는 이것" oninput="updateHC()"
             style="width:100%;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px;margin-bottom:10px">
-          <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+            <label style="font-size:12px;color:var(--sub)">폰트
+              <select id="hcFont" onchange="updateHC()" style="background:#0d1420;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px"></select></label>
             <label style="font-size:12px;color:var(--sub)">색상 <input id="hcColor" type="color" value="#FF8800" oninput="updateHC()"></label>
             <label style="font-size:12px;color:var(--sub)">굵기
               <select id="hcWeight" onchange="updateHC()" style="background:#0d1420;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px">
@@ -191,14 +201,31 @@ function initHeadcopy(){
     const first=(STATE.script||'').split(/[.!?\n]/)[0].trim().slice(0,20);
     t.value=first;
   }
+  renderFontSelect();
   renderPresets();
   bindHCDrag();
   updateHC();
 }
+// 번들 폰트(ttf/otf만 — 미리보기=실제 렌더 일치)
+const HC_FONTS=[
+  {name:'나눔고딕',   file:'NanumGothic-Bold.ttf',    css:'HCNanum'},
+  {name:'배민 주아',  file:'BMJUA.ttf',               css:'HCJua'},
+  {name:'배민 도현',  file:'BMDOHYEON.ttf',           css:'HCDohyeon'},
+  {name:'티몬 몬소리',file:'TmonMonsori.ttf',         css:'HCTmon'},
+  {name:'지마켓 산스',file:'GmarketSansBold.otf',     css:'HCGmarket'},
+  {name:'SUIT',       file:'SUIT-Bold.otf',           css:'HCSuit'},
+  {name:'프리텐다드', file:'Pretendard-ExtraBold.otf',css:'HCPretendard'},
+];
+function fontCss(file){ const f=HC_FONTS.find(x=>x.file===file); return f?f.css:'HCNanum'; }
+function renderFontSelect(){
+  const s=document.getElementById('hcFont'); if(!s||s.options.length) return;
+  s.innerHTML=HC_FONTS.map(f=>`<option value="${f.file}">${f.name}</option>`).join('');
+}
 function updateHC(){
   const g=id=>document.getElementById(id);
   const hc={
-    text:g('hcText').value, color:g('hcColor').value, weight:+g('hcWeight').value,
+    text:g('hcText').value, font:g('hcFont').value||'NanumGothic-Bold.ttf',
+    color:g('hcColor').value, weight:+g('hcWeight').value,
     size:+g('hcSize').value, x:+g('hcX').value, y:+g('hcY').value,
     outline:g('hcOutline').checked, outline_color:g('hcOutColor').value, outline_w:+g('hcOutW').value,
   };
@@ -207,6 +234,7 @@ function updateHC(){
   const el=g('hcPreviewText');
   const scale=PREVIEW_W/VIDEO_W;
   el.textContent=hc.text;
+  el.style.fontFamily=`'${fontCss(hc.font)}',sans-serif`;
   el.style.left=hc.x+'%'; el.style.top=hc.y+'%';
   el.style.color=hc.color; el.style.fontWeight=hc.weight;
   el.style.fontSize=Math.max(9, hc.size*scale)+'px';
@@ -218,13 +246,13 @@ function updateHC(){
 
 // 스타일 프리셋 — 고민없이 누르면 색·크기·외곽선 한 번에 지정(핵심 포인트)
 const HC_PRESETS=[
-  {name:'임팩트 오렌지', color:'#FF8800', weight:900, size:72, outline:true, outline_color:'#000000', outline_w:8, y:12},
-  {name:'화이트 클린',   color:'#FFFFFF', weight:900, size:64, outline:true, outline_color:'#000000', outline_w:6, y:12},
-  {name:'옐로 팝',       color:'#FFE100', weight:900, size:72, outline:true, outline_color:'#000000', outline_w:8, y:12},
-  {name:'레드 강조',     color:'#FF2D2D', weight:900, size:70, outline:true, outline_color:'#FFFFFF', outline_w:6, y:12},
-  {name:'민트 포인트',   color:'#00E0B8', weight:900, size:66, outline:true, outline_color:'#062B24', outline_w:6, y:12},
-  {name:'블랙 미니멀',   color:'#111111', weight:700, size:60, outline:true, outline_color:'#FFFFFF', outline_w:7, y:12},
-  {name:'하단 자막형',   color:'#FFFFFF', weight:900, size:56, outline:true, outline_color:'#000000', outline_w:6, y:82},
+  {name:'임팩트 오렌지', font:'TmonMonsori.ttf',         color:'#FF8800', weight:900, size:76, outline:true, outline_color:'#000000', outline_w:8, y:12},
+  {name:'화이트 클린',   font:'Pretendard-ExtraBold.otf',color:'#FFFFFF', weight:900, size:64, outline:true, outline_color:'#000000', outline_w:6, y:12},
+  {name:'옐로 팝',       font:'BMJUA.ttf',               color:'#FFE100', weight:900, size:74, outline:true, outline_color:'#000000', outline_w:8, y:12},
+  {name:'레드 강조',     font:'BMDOHYEON.ttf',           color:'#FF2D2D', weight:900, size:72, outline:true, outline_color:'#FFFFFF', outline_w:6, y:12},
+  {name:'민트 포인트',   font:'SUIT-Bold.otf',           color:'#00E0B8', weight:900, size:66, outline:true, outline_color:'#062B24', outline_w:6, y:12},
+  {name:'블랙 미니멀',   font:'GmarketSansBold.otf',     color:'#111111', weight:700, size:60, outline:true, outline_color:'#FFFFFF', outline_w:7, y:12},
+  {name:'하단 자막형',   font:'NanumGothic-Bold.ttf',    color:'#FFFFFF', weight:900, size:56, outline:true, outline_color:'#000000', outline_w:6, y:82},
 ];
 function renderPresets(){
   const box=document.getElementById('hcPresets'); if(!box) return;
@@ -234,6 +262,7 @@ function renderPresets(){
 }
 function applyPreset(i){
   const p=HC_PRESETS[i], g=id=>document.getElementById(id);
+  if(p.font) g('hcFont').value=p.font;
   g('hcColor').value=p.color; g('hcWeight').value=p.weight; g('hcSize').value=p.size;
   g('hcOutline').checked=p.outline; g('hcOutColor').value=p.outline_color; g('hcOutW').value=p.outline_w;
   g('hcY').value=p.y;

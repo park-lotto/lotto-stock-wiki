@@ -295,13 +295,24 @@ def _hex_to_ff(c, default="0xFFFFFF"):
     return f"0x{c.upper()}" if len(c) == 6 and all(ch in "0123456789ABCDEFabcdef" for ch in c) else default
 
 
+_FONT_DIR = Path(__file__).parent / "static" / "fonts"
+
+
 def _headcopy_drawtext(hc, work):
     """헤드카피(고정 타이틀) drawtext 필터 문자열. text는 파일로 빼서 이스케이프 회피.
-    x/y는 % 위치(가로·세로 중심). 없으면 None."""
+    x/y는 % 위치(가로·세로 중심). 없으면 None.
+    hc['font']이 static/fonts의 실제 파일이면 그 폰트로, 아니면 기본 자막폰트(font.ttf)."""
     text = (hc.get("text") or "").strip()
     if not text:
         return None
     (work / "headcopy.txt").write_text(text, encoding="utf-8")
+    fontref = "font.ttf"  # _burn_captions가 work에 복사해둔 기본폰트
+    fname = os.path.basename(hc.get("font") or "")
+    if fname:
+        fpath = _FONT_DIR / fname
+        if fpath.exists():
+            shutil.copy(fpath, work / "hc_font.ttf")
+            fontref = "hc_font.ttf"
     size = max(10, int(hc.get("size") or 64))
     xf = min(1.0, max(0.0, (hc.get("x", 50)) / 100.0))
     yf = min(1.0, max(0.0, (hc.get("y", 14)) / 100.0))
