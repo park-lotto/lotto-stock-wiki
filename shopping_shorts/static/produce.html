@@ -234,10 +234,14 @@ async function loadWikiForMix(){
       return;
     }
     el.innerHTML=items.map(w=>`
-      <label style="display:flex;gap:8px;align-items:flex-start;padding:8px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;cursor:pointer;background:#0d1420">
-        <input type="checkbox" class="mixPick" value="${esc(w.shortcode)}" style="margin-top:3px">
-        <span style="flex:1"><b>${esc(w.name||w.shortcode)}</b> <span class="hint">· ${esc(w.category||'')}</span>
-          <div class="hint" style="margin-top:2px">${esc((w.full_text||'').slice(0,70))}…</div></span>
+      <label style="display:flex;gap:10px;align-items:flex-start;padding:9px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;cursor:pointer;background:#0d1420">
+        <input type="checkbox" class="mixPick" value="${esc(w.shortcode)}" style="margin-top:3px;flex-shrink:0">
+        <video src="/api/wiki/video?shortcode=${encodeURIComponent(w.shortcode)}" muted preload="metadata" playsinline
+          style="width:56px;height:96px;object-fit:cover;border-radius:6px;background:#000;flex-shrink:0" onerror="this.style.display='none'"></video>
+        <span style="flex:1;min-width:0">
+          <b>${esc(w.name||w.shortcode)}</b> <span class="hint">· ${esc(w.category||'')}</span>
+          <div style="font-size:12px;color:var(--txt);line-height:1.55;margin-top:4px;max-height:120px;overflow:auto;white-space:pre-wrap">${esc(w.full_text||'(대본 없음)')}</div>
+        </span>
       </label>`).join('');
   }catch(e){ el.innerHTML='<div class="hint" style="color:var(--fire)">로드 실패</div>'; }
 }
