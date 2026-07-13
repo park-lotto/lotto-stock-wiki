@@ -221,6 +221,8 @@
             <img id="hcPreviewBg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none" alt="">
             <div id="capPreviewText" style="position:absolute;left:50%;transform:translateX(-50%);text-align:center;white-space:pre-wrap;word-break:keep-all;line-height:1.2;z-index:2;pointer-events:none"></div>
             <div id="hcPreviewText" style="position:absolute;transform:translate(-50%,-50%);text-align:center;line-height:1.18;word-break:keep-all;padding:0 6px;cursor:move;user-select:none;z-index:3"></div>
+            <div id="extraPreview"></div>
+            <div id="wmPreview" style="position:absolute;transform:translate(-50%,-50%);white-space:nowrap;z-index:4;pointer-events:none;display:none"></div>
           </div>
         </div>
       </div>
@@ -255,6 +257,27 @@
           <button type="button" class="capEff tab" data-eff="slide" onclick="setCapEffect('slide')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">슬라이드</button>
           <button type="button" class="capEff tab" data-eff="pop" onclick="setCapEffect('pop')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">팝</button>
         </div>
+      </div>
+      <!-- 🏷 워터마크 · 추가 텍스트 -->
+      <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:8px">🏷 워터마크 · 추가 텍스트</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+            <input id="wmOn" type="checkbox" onchange="updateDeco()"> 워터마크 닉네임</label>
+          <input id="wmText" type="text" placeholder="@내채널" oninput="updateDeco()" style="width:150px;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 9px;font-size:13px">
+          <input id="wmColor" type="color" value="#FFFFFF" oninput="updateDeco()">
+          <label style="font-size:12px;color:var(--sub)">위치
+            <select id="wmPos" onchange="updateDeco()" style="background:#0d1420;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px">
+              <option value="bc" selected>하단중앙</option><option value="br">우하단</option><option value="bl">좌하단</option><option value="tr">우상단</option><option value="tl">좌상단</option>
+            </select></label>
+          <label style="font-size:12px;color:var(--sub)">투명도 <input id="wmAlpha" type="range" min="20" max="100" value="60" oninput="updateDeco()"></label>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="font-size:13px;font-weight:600">➕ 추가 텍스트</span>
+          <button class="tab" onclick="addExtraText()" style="flex:0 0 auto;min-width:auto;padding:5px 13px;font-size:12px;white-space:nowrap">+ 텍스트 추가</button>
+          <span class="hint">미리보기에서 <b>드래그</b>로 위치 이동</span>
+        </div>
+        <div id="extraTextList"></div>
       </div>
     </section>
     <section class="panel" data-step="5"><h3>6 · 썸네일</h3><div class="sub">프레임 선택 + 텍스트.</div><div class="stub">Phase 4 예정</div></section>
@@ -315,6 +338,9 @@ function initHeadcopy(){
   updateHC();
   renderCapFontSelect();
   updateCaption();
+  updateDeco();
+  renderExtraTexts();
+  renderExtraPreview();
 }
 // ── 자막 스타일(나레이션 자막) ──────────────
 let CAP_EFFECT='none';
@@ -435,6 +461,58 @@ function saveMyPreset(){
 }
 function applyMyPreset(i){ const p=myPresets()[i]; if(p) applyConfig(p.hc, p.cap); }
 function deleteMyPreset(i){ const list=myPresets(); list.splice(i,1); localStorage.setItem('hc_my_presets', JSON.stringify(list)); renderMyPresets(); }
+// ── 🏷 워터마크 · 추가 텍스트(deco) ──────────────
+const WM_POS={bc:{x:50,y:95},br:{x:82,y:94},bl:{x:18,y:94},tr:{x:82,y:8},tl:{x:18,y:8}};
+function updateDeco(){
+  const g=id=>document.getElementById(id); if(!g('wmOn')) return;
+  STATE.deco=STATE.deco||{extra_texts:[]};
+  const on=g('wmOn').checked, text=(g('wmText').value||'').trim();
+  const pos=WM_POS[g('wmPos').value]||WM_POS.bc, alpha=+g('wmAlpha').value/100;
+  STATE.deco.watermark=(on&&text)?{text, color:g('wmColor').value, x:pos.x, y:pos.y, size:30, alpha,
+    font:'Pretendard-ExtraBold.otf', outline:true, outline_color:'#000000', outline_w:3}:null;
+  const wp=g('wmPreview'), scale=PREVIEW_W/VIDEO_W, w=STATE.deco.watermark;
+  if(w){ wp.style.display='block'; wp.textContent=w.text; wp.style.left=w.x+'%'; wp.style.top=w.y+'%';
+    wp.style.color=w.color; wp.style.opacity=w.alpha; wp.style.fontFamily="'HCPretendard',sans-serif";
+    wp.style.fontWeight=900; wp.style.fontSize=Math.max(9,w.size*scale)+'px';
+    wp.style.textShadow='1px 1px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000';
+  } else wp.style.display='none';
+}
+function addExtraText(){
+  STATE.deco=STATE.deco||{extra_texts:[]}; STATE.deco.extra_texts=STATE.deco.extra_texts||[];
+  STATE.deco.extra_texts.push({text:'텍스트', font:'Pretendard-ExtraBold.otf', color:'#FFFFFF', size:44, x:50, y:50, outline:true, outline_color:'#000000', outline_w:5});
+  renderExtraTexts(); renderExtraPreview();
+}
+function deleteExtraText(i){ STATE.deco.extra_texts.splice(i,1); renderExtraTexts(); renderExtraPreview(); }
+function updateExtraField(i,field,val){ STATE.deco.extra_texts[i][field]=(field==='size'?+val:val); renderExtraPreview(); }
+function renderExtraTexts(){
+  const box=document.getElementById('extraTextList'); if(!box) return;
+  const list=(STATE.deco&&STATE.deco.extra_texts)||[];
+  box.innerHTML=list.map((t,i)=>`<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:6px;background:#0d1420;border:1px solid var(--line);border-radius:8px;padding:6px 8px">
+    <input type="text" value="${(t.text||'').replace(/"/g,'&quot;')}" oninput="updateExtraField(${i},'text',this.value)" style="flex:1;min-width:120px;background:#0b1018;border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:5px 8px;font-size:13px">
+    <input type="color" value="${t.color}" oninput="updateExtraField(${i},'color',this.value)">
+    <span style="font-size:11px;color:var(--sub)">크기<input type="range" min="20" max="90" value="${t.size}" oninput="updateExtraField(${i},'size',this.value)" style="width:66px;vertical-align:middle"></span>
+    <button onclick="deleteExtraText(${i})" title="삭제" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:15px">✕</button>
+  </div>`).join('');
+}
+function renderExtraPreview(){
+  const box=document.getElementById('extraPreview'); if(!box) return;
+  const list=(STATE.deco&&STATE.deco.extra_texts)||[]; const scale=PREVIEW_W/VIDEO_W;
+  box.innerHTML=list.map((t,i)=>`<div class="exPv" data-i="${i}" style="position:absolute;left:${t.x}%;top:${t.y}%;transform:translate(-50%,-50%);white-space:nowrap;cursor:move;user-select:none;z-index:3;font-family:'${fontCss(t.font)}',sans-serif;font-weight:900;color:${t.color};font-size:${Math.max(9,t.size*scale)}px;text-shadow:1px 1px 0 ${t.outline_color},-1px -1px 0 ${t.outline_color},1px -1px 0 ${t.outline_color},-1px 1px 0 ${t.outline_color}">${(t.text||'').replace(/</g,'&lt;')}</div>`).join('');
+  bindExtraDrag();
+}
+function bindExtraDrag(){
+  const pv=document.getElementById('hcPreview');
+  document.querySelectorAll('#extraPreview .exPv').forEach(el=>{
+    el.onmousedown=e=>{ e.preventDefault(); const i=+el.dataset.i;
+      const move=ev=>{ const r=pv.getBoundingClientRect();
+        STATE.deco.extra_texts[i].x=Math.round(Math.max(0,Math.min(100,(ev.clientX-r.left)/r.width*100)));
+        STATE.deco.extra_texts[i].y=Math.round(Math.max(0,Math.min(100,(ev.clientY-r.top)/r.height*100)));
+        el.style.left=STATE.deco.extra_texts[i].x+'%'; el.style.top=STATE.deco.extra_texts[i].y+'%'; };
+      const up=()=>{ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); };
+      document.addEventListener('mousemove',move); document.addEventListener('mouseup',up);
+    };
+  });
+}
 function renderMyPresets(){
   const box=document.getElementById('myPresets'); if(!box) return;
   const list=myPresets();
@@ -604,13 +682,13 @@ function bindHCDrag(){
 async function saveHeadcopy(){
   if(!MIX_JOB) return;
   try{ await fetch('/api/produce/mix/settings',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({job_id:MIX_JOB, headcopy:STATE.headcopy, caption_style:STATE.captionStyle})}); }catch(e){}
+    body:JSON.stringify({job_id:MIX_JOB, headcopy:STATE.headcopy, caption_style:STATE.captionStyle, deco:STATE.deco})}); }catch(e){}
 }
 function jump(i){ cur=i; renderSteps(); showPanel(); }
 function go(d){ const n=cur+d; if(n<0||n>=STEPS.length) return; cur=n; renderSteps(); showPanel(); }
 
 // ── 1단계 대본: 3모드 ──────────────────────────────
-const STATE = { script: "", subtitleRemoval: false, headcopy: null, captionStyle: null };   // 확정 대본 + 렌더 설정
+const STATE = { script: "", subtitleRemoval: false, headcopy: null, captionStyle: null, deco: { extra_texts: [] } };   // 확정 대본 + 렌더 설정
 
 const SCRIPT_MODE_HTML = {
   manual: () => `<textarea id="scriptText" placeholder="여기에 대본을 직접 입력하세요…" oninput="onScriptInput()">${esc(STATE.script)}</textarea>

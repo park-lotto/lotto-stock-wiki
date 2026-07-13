@@ -305,6 +305,7 @@ class Store:
                 ("given_script", "TEXT"),  # 영상제작 2단계 given_script 모드(2026-07-13)
                 ("headcopy_json", "TEXT"),  # 영상제작 5단계 꾸미기 헤드카피(2026-07-13)
                 ("caption_style_json", "TEXT"),  # 영상제작 5단계 자막 스타일(2026-07-14)
+                ("deco_json", "TEXT"),  # 영상제작 5단계 장식(워터마크·추가텍스트·오버레이·BGM, 2026-07-14)
                 ("voice_json", "TEXT"),     # 영상제작 4단계 보이스 프리셋 선택 스냅샷(2026-07-14)
             ):
                 try:
@@ -996,7 +997,7 @@ class Store:
                 "SELECT job_id, urls_json, target_seconds, structure, status, error, "
                 "extract_json, edit_plan_json, video_path, created_at, updated_at, "
                 "subtitle_removal, clean_video_path, given_script, headcopy_json, "
-                "caption_style_json, voice_json "
+                "caption_style_json, voice_json, deco_json "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -1012,6 +1013,7 @@ class Store:
             "headcopy": json.loads(row[14]) if row[14] else None,
             "caption_style": json.loads(row[15]) if row[15] else None,
             "voice": json.loads(row[16]) if row[16] else None,
+            "deco": json.loads(row[17]) if row[17] else None,
         }
 
     def update_mix_job(self, job_id, **fields):
@@ -1028,6 +1030,9 @@ class Store:
         if "caption_style" in fields:
             cols.append("caption_style_json=?")
             vals.append(json.dumps(fields["caption_style"], ensure_ascii=False) if fields["caption_style"] else None)
+        if "deco" in fields:
+            cols.append("deco_json=?")
+            vals.append(json.dumps(fields["deco"], ensure_ascii=False) if fields["deco"] else None)
         if "voice" in fields:
             cols.append("voice_json=?")
             vals.append(json.dumps(fields["voice"], ensure_ascii=False) if fields["voice"] else None)
