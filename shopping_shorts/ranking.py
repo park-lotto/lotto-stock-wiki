@@ -142,7 +142,7 @@ def build_youtube_items(raw, prev_base, prev_delta, now=None, window_hours=48):
             "accel": accel,
             "speed": views / age if age > 0 else float(views),
             "density": (likes + comments) / views if views else 0.0,
-            "category": "",
+            "category": categorize(r.get("channel_title"), r.get("title", "")),
             "caption": r.get("title", ""),
         })
     return items

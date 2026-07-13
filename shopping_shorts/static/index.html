@@ -133,8 +133,13 @@
     </div>
     <div id="seedPanel" style="display:none;margin-bottom:12px">
       <input id="seedInput" type="text" placeholder="검색 키워드 (예: 살림꿀팁)" style="padding:8px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)">
+      <select id="seedLang" title="검색 언어(지역) — 한국어면 국내영상, 다른 언어면 그 나라 영상 발굴" style="padding:8px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)">
+        <option value="ko">🇰🇷 한국어</option><option value="en">🇺🇸 영어</option>
+        <option value="ja">🇯🇵 일본어</option><option value="zh">🇹🇼 중국어</option><option value="ru">🇷🇺 러시아어</option>
+      </select>
       <button onclick="addSeed()">+ 키워드</button>
-      <span id="seedList" style="margin-left:8px;font-size:12px;color:var(--sub)"></span>
+      <span id="seedHint" style="font-size:11px;color:var(--sub)">한국어 외 언어 선택 시 자동 번역해 등록</span>
+      <div id="seedList" style="margin-top:6px;font-size:12px;color:var(--sub)"></div>
     </div>
     <div class="toolbar">
       <button id="collectBtn" onclick="doCollect()">⚡ 지금 수집</button>
@@ -177,14 +182,40 @@ function switchPlatform(p, el){
   if(p!=='instagram') loadSeeds();
   loadLast();          // 기존 초기 로드 함수 — platform 반영하도록 아래 수정
 }
+const LANGLABEL={ko:'🇰🇷',en:'🇺🇸',ja:'🇯🇵',zh:'🇹🇼',ru:'🇷🇺',keyword:'🇰🇷',account:'🎵'};
 async function loadSeeds(){
   const d=await (await fetch('/api/seeds?platform='+PLATFORM)).json();
-  document.getElementById('seedList').textContent = (d.items||[]).map(s=>s.value).join(' · ') || '키워드 없음';
+  const el=document.getElementById('seedList');
+  const items=d.items||[];
+  el.innerHTML = items.length ? items.map(s=>
+    `<span style="display:inline-block;background:#1a2230;border-radius:12px;padding:2px 8px;margin:2px 4px 0 0">
+       ${LANGLABEL[s.kind]||''} ${s.value}
+       <span style="cursor:pointer;color:#e0623d" onclick="removeSeed('${s.value.replace(/'/g,"\\'")}')">✕</span>
+     </span>`).join('') : '키워드 없음';
+  // 유튜브만 언어 선택기 노출(틱톡=계정 기반)
+  document.getElementById('seedLang').style.display = (PLATFORM==='youtube')?'':'none';
+  document.getElementById('seedHint').style.display = (PLATFORM==='youtube')?'':'none';
 }
 async function addSeed(){
-  const v=document.getElementById('seedInput').value.trim(); if(!v) return;
-  await fetch('/api/seeds',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({platform:PLATFORM,kind:(PLATFORM==='tiktok'?'account':'keyword'),value:v})});
+  const raw=document.getElementById('seedInput').value.trim(); if(!raw) return;
+  if(PLATFORM==='tiktok'){
+    await fetch('/api/seeds',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({platform:'tiktok',kind:'account',value:raw})});
+    document.getElementById('seedInput').value=''; return loadSeeds();
+  }
+  const lang=document.getElementById('seedLang').value;
+  let value=raw;
+  if(lang!=='ko'){
+    try{
+      const t=await (await fetch('/api/find/translate_keyword',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keyword:raw})})).json();
+      value = (t.keywords && t.keywords[lang]) ? t.keywords[lang] : raw;   // 번역실패시 원문
+    }catch(e){}
+  }
+  await fetch('/api/seeds',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({platform:'youtube',kind:lang,value})});
   document.getElementById('seedInput').value=''; loadSeeds();
+}
+async function removeSeed(v){
+  await fetch('/api/seeds',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({platform:PLATFORM,value:v})});
+  loadSeeds();
 }
 
 function renderCtypes(){

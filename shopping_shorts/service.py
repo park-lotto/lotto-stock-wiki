@@ -81,14 +81,25 @@ def generate_missing_drafts(items):
 
 
 def _collect_youtube():
-    """유튜브 키워드 시드로 인기 Shorts 발굴 → 조회수 기반 랭킹."""
+    """유튜브 키워드 시드로 인기 Shorts 발굴 → 조회수 기반 랭킹.
+
+    시드의 kind = 언어코드(ko/en/ja/zh/ru). 언어별로 묶어 각 언어·지역으로
+    검색(regionCode 편향 → 외국영상 혼입 방지). 예전 kind="keyword" 시드는 ko로 취급."""
     store = Store(DB_PATH)
-    keywords = [s["value"] for s in store.list_seeds("youtube") if s["kind"] == "keyword"]
-    if not keywords:
+    seeds = store.list_seeds("youtube")
+    if not seeds:
         return []
+    # 언어별 키워드 묶음 (kind가 언어코드가 아니면 ko)
+    _LANGS = {"ko", "en", "ja", "zh", "ru"}
+    by_lang = {}
+    for s in seeds:
+        lang = s["kind"] if s["kind"] in _LANGS else "ko"
+        by_lang.setdefault(lang, []).append(s["value"])
     now = datetime.now(timezone.utc)
     after = (now - timedelta(hours=WINDOW_HOURS)).strftime("%Y-%m-%dT%H:%M:%SZ")
-    raw = yt_search(keywords, after)
+    raw = []
+    for lang, kws in by_lang.items():
+        raw.extend(yt_search(kws, after, lang=lang))
     items = build_youtube_items(
         raw,
         prev_base=lambda sc: store.prev_base_platform("youtube", sc),

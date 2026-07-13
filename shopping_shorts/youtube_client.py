@@ -29,11 +29,17 @@ def _stats(video_ids, token):
     return out
 
 
-def _search_page(kw, published_after_iso, max_per_kw, tok):
-    """키워드 하나를 토큰 하나로 검색. 반환: (status_code, items_or_None)."""
+# 언어코드 → YouTube regionCode(검색 지역 편향). 없는 언어는 기본 KR.
+_LANG_REGION = {"ko": "KR", "en": "US", "ja": "JP", "zh": "TW", "ru": "RU"}
+
+
+def _search_page(kw, published_after_iso, max_per_kw, tok, region="KR", lang="ko"):
+    """키워드 하나를 토큰 하나로 검색. 반환: (status_code, items_or_None).
+    region/lang로 지역·언어를 편향(기본 한국/한국어) — 외국 영상 혼입 방지."""
     r = requests.get(_SEARCH_URL, params={
         "part": "snippet", "q": kw, "type": "video", "videoDuration": "short",
         "order": "viewCount", "publishedAfter": published_after_iso,
+        "regionCode": region, "relevanceLanguage": lang,
         "maxResults": min(max_per_kw, 50), "key": tok}, timeout=30)
     if r.status_code != 200:
         return r.status_code, None
@@ -53,8 +59,11 @@ def _search_page(kw, published_after_iso, max_per_kw, tok):
     return r.status_code, items
 
 
-def search_shorts(keywords, published_after_iso, max_per_kw=20, token=None):
+def search_shorts(keywords, published_after_iso, max_per_kw=20, token=None, lang="ko"):
     """키워드별로 최신·인기 영상 검색 → 통계 채운 원시 dict 리스트.
+
+    lang: 검색 언어(ko/en/ja/zh/ru). 지역(regionCode)은 언어에 매핑(기본 한국/한국어)
+    → 외국 영상 혼입 방지. 키워드는 이미 해당 언어로 번역돼 들어온다고 가정.
 
     쿼터 초과(403) 시 다음 키로 로테이션: 검색 요청이 403이면 그 토큰은
     이후 검색에도 다시 시도하지 않고 다음 토큰으로 전체 검색을 재시도한다.
@@ -63,13 +72,14 @@ def search_shorts(keywords, published_after_iso, max_per_kw=20, token=None):
     tokens = [token] if token else list(YOUTUBE_API_KEYS)
     if not tokens:
         raise RuntimeError("YOUTUBE_API_KEY 미설정")
+    region = _LANG_REGION.get(lang, "KR")
 
     tok = tokens[0]
     tok_idx = 0
     raw = []
     for kw in keywords:
         while True:
-            status, items = _search_page(kw, published_after_iso, max_per_kw, tok)
+            status, items = _search_page(kw, published_after_iso, max_per_kw, tok, region, lang)
             if status == 403 and tok_idx + 1 < len(tokens):
                 tok_idx += 1
                 tok = tokens[tok_idx]
