@@ -338,7 +338,6 @@ function render(){
         <button class="script-btn" onclick="extractScript('${i.shortcode}')">📝 대본 추출</button>
         <button class="script-btn" onclick="showRelated('${i.shortcode}')">🔗 같은 주제</button>
         <button class="script-btn" onclick="lensSearch(this,'${i.shortcode}')">🔍 렌즈 유사영상</button>
-        <div class="lens-box" id="lens_${i.shortcode}" style="display:none"></div>
         ${i.inpock?`<div style="margin-top:6px"><a href="${i.inpock}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🛒 판매채널</a></div>`:''}
       </div>
     </div>`).join("");
@@ -496,9 +495,11 @@ const LENS_PLATFORMS=[
   {k:'instagram',label:'📷 인스타'},{k:'xiaohongshu',label:'📕 샤오홍슈'},
   {k:'douyin',label:'🎶 도우인'}];
 let LENS_STATE={};   // shortcode → {items, on:Set}
+let _lensSC=null;    // 현재 모달에 표시 중인 shortcode
+// 카드의 재생중/멈춘 <video> 프레임을 canvas 캡처. 카드는 담기 버튼(save_${sc})으로 특정.
 function _captureFrame(shortcode){
-  const box=document.getElementById('lens_'+shortcode);
-  const card=box.closest('.card');
+  const anchor=document.getElementById('save_'+shortcode);
+  const card=anchor && anchor.closest('.card');
   const v=card && card.querySelector('video.thumb-video');
   if(!v || v.readyState<2) return null;
   const cv=document.createElement('canvas');
@@ -507,40 +508,41 @@ function _captureFrame(shortcode){
   return cv;
 }
 async function lensSearch(btn, shortcode){
-  const box=document.getElementById('lens_'+shortcode);
-  box.style.display='block';
   const cv=_captureFrame(shortcode);
-  if(!cv){ box.innerHTML='<div style="font-size:12px;color:var(--sub)">▶ 미리보기를 재생하고 원하는 장면에서 멈춘 뒤 눌러주세요.</div>'; return; }
-  box.innerHTML='<div style="font-size:12px;color:var(--sub)">🔍 렌즈 검색 중…</div>';
+  if(!cv){ openScript('<div style="padding:10px;color:var(--sub)">▶ 미리보기를 재생하고 원하는 장면에서 멈춘 뒤 눌러주세요.</div>','🔍 렌즈 유사영상'); return; }
+  openScript('<div class="sm-loading">🔍 렌즈 검색 중… (5~15초)</div>','🔍 렌즈 유사영상');
   const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.85));
   const fd=new FormData(); fd.append('frame', blob, 'f.jpg');
   try{
     const r=await fetch('/api/lens/search',{method:'POST',body:fd});
-    if(r.status===429){ const d=await r.json(); box.innerHTML=`<div style="font-size:12px;color:#e0623d">💰 ${d.error||'이번 달 렌즈 한도 초과'}</div>`; return; }
+    const body=document.getElementById('scriptBody');
+    if(r.status===429){ const d=await r.json(); body.innerHTML=`<div style="padding:10px;color:#e0623d">💰 ${d.error||'이번 달 렌즈 한도 초과'}</div>`; return; }
     const d=await r.json();
-    if(!d.ok || !d.items.length){ box.innerHTML='<div style="font-size:12px;color:var(--sub)">유사 동영상을 찾지 못했습니다.</div>'; return; }
+    if(!d.ok || !d.items.length){ body.innerHTML='<div style="padding:10px;color:var(--sub)">유사 동영상을 찾지 못했습니다.<br><small>다른 장면(제품·요리가 크게 보이는 순간)에서 다시 시도해보세요.</small></div>'; return; }
     LENS_STATE[shortcode]={items:d.items, on:new Set(LENS_PLATFORMS.map(p=>p.k))};
+    _lensSC=shortcode;
     renderLens(shortcode);
-  }catch(e){ box.innerHTML='<div style="font-size:12px;color:#e0623d">❌ '+e.message+'</div>'; }
+  }catch(e){ document.getElementById('scriptBody').innerHTML='<div style="padding:10px;color:#e0623d">❌ '+e.message+'</div>'; }
 }
 function toggleLensPlatform(shortcode, k){
   const st=LENS_STATE[shortcode]; if(!st) return;
   st.on.has(k)?st.on.delete(k):st.on.add(k); renderLens(shortcode);
 }
 function renderLens(shortcode){
-  const box=document.getElementById('lens_'+shortcode);
-  const st=LENS_STATE[shortcode]; if(!st) return;
+  const box=document.getElementById('scriptBody');   // 모달 body에 렌더(인라인 X → UI 안 망가짐)
+  const st=LENS_STATE[shortcode]; if(!st || !box) return;
   const chips=LENS_PLATFORMS.map(p=>{
     const active=st.on.has(p.k);
     const n=st.items.filter(i=>i.platform===p.k).length;
-    return `<span onclick="toggleLensPlatform('${shortcode}','${p.k}')" style="cursor:pointer;display:inline-block;padding:2px 8px;margin:2px;border-radius:12px;font-size:11px;border:1px solid var(--line);background:${active?'#1f6feb22':'transparent'};opacity:${active?1:0.45}">${p.label} ${n}</span>`;
+    return `<span onclick="toggleLensPlatform('${shortcode}','${p.k}')" style="cursor:pointer;display:inline-block;padding:3px 10px;margin:2px;border-radius:12px;font-size:11px;border:1px solid var(--line);background:${active?'#1f6feb33':'transparent'};opacity:${active?1:0.4}">${p.label} ${n}</span>`;
   }).join('');
+  // 썸네일은 구글 gstatic CDN(encrypted-tbn) — 핫링크 제한 없어 직접 로드(프록시 불필요).
   const cards=st.items.filter(i=>st.on.has(i.platform)).map(i=>`
-    <a href="${i.url}" target="_blank" style="display:flex;gap:8px;align-items:center;text-decoration:none;color:var(--txt);padding:4px;border-bottom:1px solid var(--line)">
-      <img src="${i.thumbnail?('/api/thumb?url='+encodeURIComponent(i.thumbnail)):''}" style="width:56px;height:56px;object-fit:cover;border-radius:6px;flex-shrink:0" onerror="this.style.visibility='hidden'">
-      <span style="font-size:12px">${LENS_PLATFORMS.find(p=>p.k===i.platform)?.label||''}<br>${(i.title||'').slice(0,50)}</span>
-    </a>`).join('') || '<div style="font-size:12px;color:var(--sub);padding:6px">켠 플랫폼 결과 없음</div>';
-  box.innerHTML=`<div style="margin:6px 0">${chips}</div><div>${cards}</div>`;
+    <a href="${i.url}" target="_blank" style="display:flex;gap:10px;align-items:center;text-decoration:none;color:var(--txt);padding:6px 4px;border-bottom:1px solid var(--line)">
+      <img src="${i.thumbnail||''}" referrerpolicy="no-referrer" loading="lazy" style="width:64px;height:64px;object-fit:cover;border-radius:8px;flex-shrink:0;background:#0d131c" onerror="this.style.visibility='hidden'">
+      <span style="font-size:12px;line-height:1.4;min-width:0"><b>${LENS_PLATFORMS.find(p=>p.k===i.platform)?.label||''}</b><br>${esc((i.title||'').slice(0,60))}</span>
+    </a>`).join('') || '<div style="font-size:12px;color:var(--sub);padding:10px">켠 플랫폼 결과 없음</div>';
+  box.innerHTML=`<div style="position:sticky;top:0;background:var(--bg,#0d131c);padding:4px 0;margin-bottom:4px;z-index:1">${chips}</div><div>${cards}</div>`;
 }
 async function extractScript(shortcode){
   window._curSC = shortcode;
