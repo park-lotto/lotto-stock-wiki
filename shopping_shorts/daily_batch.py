@@ -28,11 +28,13 @@ def backfill_structures(store, limit=100):
     return n
 
 
-def recompute_element_stats(store):
+def recompute_element_stats(store, only_category=None):
     """카테고리 × 요소 조합마다 클러스터링을 재계산해 저장. 실제로 카테고리가
-    저장된(표본 충분·클러스터링 성공) 조합 수를 반환."""
+    저장된(표본 충분·클러스터링 성공) 조합 수를 반환. only_category가 주어지면
+    그 카테고리만 재계산(위키 저장 직후 즉시 학습용, 2026-07-14)."""
     saved = 0
-    for product_category in store.distinct_extract_categories():
+    cats_to_do = [only_category] if only_category else store.distinct_extract_categories()
+    for product_category in cats_to_do:
         for element in ELEM_KEYS:
             try:
                 values = store.element_raw_values(product_category, element)

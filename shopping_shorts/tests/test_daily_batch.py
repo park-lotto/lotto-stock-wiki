@@ -69,3 +69,16 @@ def test_backfill_structures_skips_poison_item_and_processes_survivors(tmp_path,
     # 독성 항목은 여전히 구조 미분석 상태로 남는다(스킵됐으므로)
     missing = {t["shortcode"] for t in s.extracts_missing_structure(limit=10)}
     assert "SC1" in missing
+
+
+def test_recompute_only_category_scopes_to_one(tmp_path, monkeypatch):
+    s = Store(tmp_path / "onlycat.db")
+    s.save_script("A", {"full_text": "t"}, category="레시피")
+    s.save_extract_structure("A", {"tone": "친근"})
+    s.save_script("B", {"full_text": "t"}, category="뷰티")
+    s.save_extract_structure("B", {"tone": "정중"})
+    monkeypatch.setattr(daily_batch.element_stats, "cluster_element_values",
+                        lambda element, values, **kw: ([{"label": "L", "description": "d", "examples": []}] if values else []))
+    daily_batch.recompute_element_stats(s, only_category="레시피")
+    assert s.get_element_options("뷰티") == {}      # 뷰티는 안 건드림
+    assert s.get_element_options("레시피").get("tone")  # 레시피만 학습됨
