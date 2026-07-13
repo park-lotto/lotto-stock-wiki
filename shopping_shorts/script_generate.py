@@ -11,8 +11,38 @@ import json
 from google.genai import types
 
 from shopping_shorts import comment_gen
+from pipeline.atoms import key_vault
 
 _MODEL = comment_gen._MODEL
+
+# produce 대본생성(제미니자동·우리믹스)은 comment_gen 전용키(1개, 쉽게 소진) 대신
+# key_vault 공유풀을 캐스케이드로 쓴다 — 배치된 예비키(general→ingest→embed→briefing)를
+# 전부 활용해 소진 사고를 피한다(2026-07-13).
+_GEN_GROUP = "general"
+
+
+def _generate_drafts(prompt):
+    """key_vault 캐스케이드 키풀로 대본 초안 리스트 생성. 소진키는 마킹하고 다음 키로.
+    무키·전부실패면 []."""
+    keys = key_vault.get_live_keys_cascade(_GEN_GROUP)
+    if not keys:
+        return []
+    for key in keys:
+        try:
+            resp = key_vault.get_client_for_key(key).models.generate_content(
+                model=_MODEL, contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json", response_schema=_SCHEMA),
+            )
+            return json.loads(resp.text).get("drafts", [])
+        except Exception as e:  # noqa: BLE001 — 생성 실패는 치명적 아님
+            if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
+                key_vault.mark_exhausted(key_vault._owner_group(key) or _GEN_GROUP, key)
+                continue
+            if key_vault.is_quota_error(e):
+                continue  # 순간 rate limit — 다음 키로
+            return []
+    return []
 
 # 유지/변형 토글 대상 요소(키 → 표시 라벨). 프론트·엔드포인트가 공유.
 ELEM_LABELS = {
@@ -91,24 +121,7 @@ def generate_from_topic(topic, target_seconds=20, n=3, max_key_tries=3):
     seconds = max(5, min(int(target_seconds or 20), 90))
     words = max(15, round(seconds * 2.3))  # 대략치(초당 ~2.3단어)
     prompt = _TOPIC_PROMPT.format(topic=topic.strip()[:1000], seconds=seconds, words=words, n=n)
-    for _ in range(max_key_tries):
-        key, ki = comment_gen._current_key_and_idx()
-        if key is None:
-            return []
-        try:
-            resp = comment_gen._client_for_key(key).models.generate_content(
-                model=_MODEL, contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json", response_schema=_SCHEMA),
-            )
-            return json.loads(resp.text).get("drafts", [])
-        except Exception as e:  # noqa: BLE001 — 생성 실패는 치명적 아님(빈 리스트)
-            if (comment_gen.key_vault.is_daily_exhausted_error(e)
-                    or comment_gen.key_vault.is_account_disabled_error(e)):
-                comment_gen._mark_key_exhausted(ki)
-                continue
-            return []
-    return []
+    return _generate_drafts(prompt)
 
 
 _MIX_PROMPT = """너는 한국 쇼핑 숏폼 대본 작가다. 아래 여러 개의 검증된 S급 대본이 있다.
@@ -152,24 +165,7 @@ def generate_mix(sources, target_seconds=20, n=3, max_key_tries=3):
     seconds = max(5, min(int(target_seconds or 20), 90))
     words = max(15, round(seconds * 2.3))
     prompt = _MIX_PROMPT.format(sources=_mix_source_block(sources[:3]), seconds=seconds, words=words, n=n)
-    for _ in range(max_key_tries):
-        key, ki = comment_gen._current_key_and_idx()
-        if key is None:
-            return []
-        try:
-            resp = comment_gen._client_for_key(key).models.generate_content(
-                model=_MODEL, contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json", response_schema=_SCHEMA),
-            )
-            return json.loads(resp.text).get("drafts", [])
-        except Exception as e:  # noqa: BLE001
-            if (comment_gen.key_vault.is_daily_exhausted_error(e)
-                    or comment_gen.key_vault.is_account_disabled_error(e)):
-                comment_gen._mark_key_exhausted(ki)
-                continue
-            return []
-    return []
+    return _generate_drafts(prompt)
 
 
 def _elem_lines(structure, keep_flags):
