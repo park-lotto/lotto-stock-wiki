@@ -53,6 +53,7 @@ ELEM_LABELS = {
     "hook": "훅",
     "appeal": "어필포인트",
     "tone": "말투/어미",
+    "devices": "설득장치",
 }
 ELEM_KEYS = list(ELEM_LABELS)
 
@@ -182,6 +183,9 @@ def _elem_lines(structure, elem_modes, category_lookup):
         if key == "characters":
             chs = structure.get("characters") or []
             val = ", ".join(f"{c.get('who')}({c.get('role')})" for c in chs) or "없음"
+        elif key == "devices":
+            devs = structure.get("devices") or []
+            val = ", ".join(str(d) for d in devs if str(d).strip()) or "없음"
         else:
             val = structure.get(struct_key) or "(원본에 없음)"
 

@@ -92,3 +92,15 @@ def test_refine_draft_no_keys_returns_empty(monkeypatch):
     monkeypatch.setattr(comment_gen, "SHORTS_GEMINI_KEYS", [])
     assert script_generate.refine_draft_rewrite("원본", "지시") == ""
     assert script_generate.refine_draft_partial("원본", "부분", "지시") == ""
+
+
+def test_elem_lines_devices_keep_mode_joins_list():
+    struct = {"devices": ["권위자인용", "구체적숫자"]}
+    lines = script_generate._elem_lines(struct, {"devices": "keep"}, {})
+    assert "설득장치" in lines
+    assert "권위자인용" in lines and "구체적숫자" in lines
+
+
+def test_elem_lines_devices_in_elem_keys():
+    assert "devices" in script_generate.ELEM_KEYS
+    assert script_generate.ELEM_LABELS["devices"] == "설득장치"

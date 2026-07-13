@@ -727,6 +727,11 @@ class Store:
                     role = (ch.get("role") or "").strip()
                     if role:
                         out.append(role)
+            elif element == "devices":
+                for d in (st.get("devices") or []):
+                    d = (d if isinstance(d, str) else str(d)).strip()
+                    if d:
+                        out.append(d)
             else:
                 val = (st.get(struct_key) or "").strip()
                 if val:

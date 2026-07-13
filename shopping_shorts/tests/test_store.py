@@ -278,3 +278,15 @@ def test_distinct_extract_categories(tmp_path):
     s.save_script("SC3", {"full_text": "t"}, category="레시피")
     s.save_script("SC4", {"full_text": "t"})  # category 없음 — 제외
     assert sorted(s.distinct_extract_categories()) == ["레시피", "뷰티"]
+
+
+def test_element_raw_values_flattens_devices_list(tmp_path):
+    from shopping_shorts.store import Store
+    s = Store(tmp_path / "dev.db")
+    s.save_script("SC1", {"full_text": "t"}, category="레시피")
+    s.save_extract_structure("SC1", {"devices": ["권위자인용", "구체적숫자"]})
+    s.save_script("SC2", {"full_text": "t"}, category="레시피")
+    s.save_extract_structure("SC2", {"devices": ["감정트리거", ""]})  # 빈 문자열 제외
+    vals = s.element_raw_values("레시피", "devices")
+    assert "권위자인용" in vals and "구체적숫자" in vals and "감정트리거" in vals
+    assert "" not in vals
