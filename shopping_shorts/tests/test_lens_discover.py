@@ -57,6 +57,32 @@ def test_requests_type_visual_matches(monkeypatch):
     assert captured["params"]["type"] == "visual_matches"
 
 
+def test_retries_when_lens_returns_no_results_then_succeeds(monkeypatch):
+    """google_lens는 갓 호스팅된 이미지에 첫 호출 때 'hasn't returned any results'로
+    빈 응답을 주고, 잠시 후 재호출하면 결과를 준다(2026-07-14 실측: 같은 URL이 0개→60개).
+    이 일시적 빈 결과에 대해 재시도해야 사용자가 매번 '못 찾음'을 안 본다."""
+    monkeypatch.setattr(lens_discover, "SERPAPI_KEY", "fake")
+    monkeypatch.setattr(lens_discover.time, "sleep", lambda s: None)  # 테스트 대기 제거
+    calls = {"n": 0}
+
+    class R:
+        def __init__(self, payload): self._p = payload
+        def raise_for_status(self): pass
+        def json(self): return self._p
+
+    def flaky_get(url, params=None, timeout=None):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            return R({"error": "Google Lens hasn't returned any results for this query."})
+        return R({"visual_matches": [
+            {"link": "https://youtu.be/a", "title": "y", "thumbnail": "t", "source": "YouTube"}]})
+    monkeypatch.setattr(lens_discover.requests, "get", flaky_get)
+
+    out = lens_discover.search_similar_videos("https://ex.com/f.jpg")
+    assert calls["n"] == 2                      # 첫 빈 응답 후 재시도함
+    assert len(out) == 1 and out[0]["platform"] == "youtube"
+
+
 def test_no_key_returns_empty(monkeypatch):
     monkeypatch.setattr(lens_discover, "SERPAPI_KEY", "")
     assert lens_discover.search_similar_videos("https://ex.com/f.jpg") == []
