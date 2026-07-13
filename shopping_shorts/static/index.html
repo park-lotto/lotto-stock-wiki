@@ -249,8 +249,8 @@ function render(){
   el.innerHTML = items.map((i,idx)=>`
     <div class="card">
       <div class="thumb">
-        <img src="${i.thumbnail?('/api/thumb?url='+encodeURIComponent(i.thumbnail)):''}" data-vurl="${i.video_url?('/api/video?url='+encodeURIComponent(i.video_url)):''}" ${i.video_url?'onclick="playInline(this)"':''} loading="lazy" onerror="this.style.visibility='hidden'">
-        ${i.video_url?'<span class="play-badge">▶</span>':''}
+        <img src="${i.thumbnail?('/api/thumb?url='+encodeURIComponent(i.thumbnail)):''}" data-vurl="${i.video_url?('/api/video?url='+encodeURIComponent(i.video_url)):''}" ${i.video_url?'onclick="playInline(this)"':(i.platform==='youtube'?`onclick="playYoutube(this,'${i.shortcode}')"`:'')} loading="lazy" onerror="this.style.visibility='hidden'">
+        ${(i.video_url||i.platform==='youtube')?'<span class="play-badge">▶</span>':''}
       </div>
       <div class="body">
         <div class="rank">#${idx+1} · ${i.category} · ${Math.round(i.age_hours)}시간 전</div>
@@ -350,6 +350,19 @@ function playInline(img){
   v.className='thumb-video';
   v.onerror=()=>{ v.replaceWith(img); img.title='영상 URL 만료 — 「지금 수집」 후 재생 가능'; };
   img.replaceWith(v);
+}
+// 유튜브는 프록시 mp4가 없어 embed 플레이어(iframe)로 인라인 재생.
+function playYoutube(img, videoId){
+  if(!videoId) return;
+  const box=img.parentElement;
+  const badge=box && box.querySelector('.play-badge');
+  if(badge) badge.remove();
+  const f=document.createElement('iframe');
+  f.src='https://www.youtube.com/embed/'+encodeURIComponent(videoId)+'?autoplay=1&playsinline=1';
+  f.style.cssText='width:100%;height:220px;border:0;display:block;background:#000';
+  f.allow='autoplay; encrypted-media; picture-in-picture';
+  f.allowFullscreen=true;
+  img.replaceWith(f);
 }
 // ── 같은 주제 모아보기(2026-07-13) ──────────────────────
 async function showRelated(shortcode){
