@@ -3,3 +3,4 @@ uvicorn
 requests
 openpyxl
 pytest
+alibabacloud_oss_v2  # VMake SDK(vmake_sdk) OSS 업로드용 — 자막제거 렌더 시에만 사용
