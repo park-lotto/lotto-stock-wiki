@@ -26,13 +26,24 @@ from shopping_shorts.channels import load_channels
 from shopping_shorts.video_analysis import analyze_video, translate_keyword
 from shopping_shorts.product_identify import fetch_lens_lines, identify_product_from_lines
 from shopping_shorts.search_links import build_search_links, lens_search_url
-from shopping_shorts.mix_pipeline import run_mix_job, run_render, retype_mix_job, _source_video_id
+from shopping_shorts.mix_pipeline import run_mix_job, run_render, retype_mix_job, _source_video_id, resynth_tts_job
 from shopping_shorts.lens_discover import search_similar_videos
 from shopping_shorts.media_download import resolve_media_url
 from shopping_shorts import edit_plan as _edit_plan
+from shopping_shorts import voice_presets, audio_post
+from shopping_shorts.tts import synthesize_tts
 import uuid
 
 app = FastAPI(title="쇼핑쇼츠 레퍼런스 랭킹")
+
+
+@app.on_event("startup")
+def _seed_voice_presets():
+    """기동 시 큐레이션 프리셋을 DB로 upsert(idempotent)."""
+    try:
+        voice_presets.seed_presets(Store(DB_PATH))
+    except Exception:
+        pass  # seed 실패가 앱 기동을 막지 않게
 
 # ── 틱톡 키워드검색 노브 기본값 + 비용 상수 (2026-07-14) ──
 # clockworks/tiktok-scraper = $1.70/1,000건 → 1건 $0.0017 (조사확정).
@@ -983,6 +994,73 @@ def api_mix_tts(job_id: str, beat_idx: int):
         if b["beat_idx"] == beat_idx and b.get("tts_path") and Path(b["tts_path"]).exists():
             return FileResponse(b["tts_path"])
     return JSONResponse(status_code=404, content={"ok": False})
+
+
+@app.get("/api/voice-presets")
+def api_voice_presets(lang: str = "KR"):
+    """프리셋 목록(유저 노출용 — source_ref는 내부 전용이라 제외)."""
+    rows = Store(DB_PATH).list_voice_presets(lang=lang)
+    out = []
+    for p in rows:
+        out.append({
+            "preset_id": p["preset_id"], "name": p["name"], "one_liner": p["one_liner"],
+            "lang": p["lang"], "archetype": p["archetype"],
+            "voice_settings": p["voice_settings"], "default_speed": p["default_speed"],
+            "default_silence_trim": p["default_silence_trim"],
+            "sample_url": f"/api/voice-presets/{p['preset_id']}/sample" if p["sample_file"] else None,
+        })
+    return {"ok": True, "presets": out}
+
+
+@app.get("/api/voice-presets/{preset_id}/sample")
+def api_voice_preset_sample(preset_id: str):
+    p = Store(DB_PATH).get_voice_preset(preset_id)
+    if not p or not p.get("sample_file"):
+        return JSONResponse(status_code=404, content={"ok": False})
+    f = voice_presets.SAMPLES_DIR / p["sample_file"]
+    if not f.exists():
+        return JSONResponse(status_code=404, content={"ok": False})
+    return FileResponse(str(f), media_type="audio/mpeg")
+
+
+@app.post("/api/mix/voice")
+def api_mix_voice(background_tasks: BackgroundTasks, body: dict):
+    """프리셋 선택을 job에 스냅샷 저장 후 기존 plan에 대해 TTS 재생성(백그라운드).
+    body: {job_id, preset_id?, voice_id, settings, speed, silence_trim}."""
+    job_id = body.get("job_id")
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job/plan 없음"})
+    voice = {
+        "preset_id": body.get("preset_id"),
+        "voice_id": body.get("voice_id"),
+        "settings": body.get("settings"),
+        "speed": body.get("speed", 1.0),
+        "silence_trim": body.get("silence_trim", "off"),
+    }
+    store.update_mix_job(job_id, voice=voice)
+    background_tasks.add_task(resynth_tts_job, job_id, DB_PATH, _MIX_WORK_DIR)
+    return {"ok": True}
+
+
+@app.post("/api/mix/voice/preview")
+def api_mix_voice_preview(body: dict):
+    """첫 비트만 주어진 설정으로 즉시 합성해 미리듣기 mp3 반환('이 대본으로 다시 듣기')."""
+    job_id = body.get("job_id")
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("edit_plan") or not job["edit_plan"].get("beats"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "plan 없음"})
+    beat0 = job["edit_plan"]["beats"][0]
+    speed = body.get("speed", 1.0)
+    extra = speed / 1.2 if speed > 1.2 else 1.0
+    d = _MIX_WORK_DIR / job_id / "tts"
+    d.mkdir(parents=True, exist_ok=True)
+    out = d / "preview.mp3"
+    synthesize_tts(beat0["narration"], str(out), voice_id=body.get("voice_id"),
+                   voice_settings=body.get("settings"), speed=speed)
+    audio_post.post_process(str(out), str(out), tempo=extra, silence_trim=body.get("silence_trim", "off"))
+    return FileResponse(str(out), media_type="audio/mpeg")
 
 
 @app.get("/api/mix/video/{job_id}")
