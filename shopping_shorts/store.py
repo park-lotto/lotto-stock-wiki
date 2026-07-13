@@ -713,14 +713,20 @@ class Store:
         실제 필드명이 hook_type이라(analyze_structure 출력 기준) 그걸 읽는다."""
         with self._conn() as c:
             rows = c.execute(
-                "SELECT structure_json FROM script_extracts "
+                "SELECT shortcode, structure_json FROM script_wiki "
                 "WHERE category=? AND structure_json IS NOT NULL "
-                "ORDER BY structure_analyzed_at DESC LIMIT ?",
-                (product_category, limit),
+                "UNION ALL "
+                "SELECT shortcode, structure_json FROM script_extracts "
+                "WHERE category=? AND structure_json IS NOT NULL LIMIT ?",
+                (product_category, product_category, limit),
             ).fetchall()
         out = []
+        seen = set()
         struct_key = self._CHAR_ELEMENT_STRUCT_KEYS.get(element, element)
-        for (sj,) in rows:
+        for sc, sj in rows:
+            if sc in seen:
+                continue
+            seen.add(sc)
             st = json.loads(sj) or {}
             if element == "characters":
                 for ch in (st.get("characters") or []):
@@ -739,10 +745,11 @@ class Store:
         return out
 
     def distinct_extract_categories(self):
-        """대본추출 항목들에 실제로 쓰인 category 값(카테고리별 통계 배치의 순회 대상)."""
+        """학습 대상 카테고리 — 도서관(script_wiki)+대본추출(script_extracts) 합집합."""
         with self._conn() as c:
             return [r[0] for r in c.execute(
-                "SELECT DISTINCT category FROM script_extracts WHERE category IS NOT NULL"
+                "SELECT DISTINCT category FROM script_wiki WHERE category IS NOT NULL "
+                "UNION SELECT DISTINCT category FROM script_extracts WHERE category IS NOT NULL"
             ).fetchall()]
 
     def save_element_category_stats(self, product_category, element, categories):

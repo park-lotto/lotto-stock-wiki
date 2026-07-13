@@ -290,3 +290,16 @@ def test_element_raw_values_flattens_devices_list(tmp_path):
     vals = s.element_raw_values("레시피", "devices")
     assert "권위자인용" in vals and "구체적숫자" in vals and "감정트리거" in vals
     assert "" not in vals
+
+
+def test_element_raw_values_reads_from_wiki_library(tmp_path):
+    from shopping_shorts.store import Store
+    s = Store(tmp_path / "wikilearn.db")
+    # 도서관(S급) 저장 — 카테고리+구조 포함, script_extracts엔 없음
+    s.save_to_wiki({"shortcode": "W1", "category": "레시피", "name": "n"},
+                   {"full_text": "t", "segments": []},
+                   {"devices": ["권위자인용", "구체적숫자"], "tone": "친근한 반말"})
+    # 학습이 도서관에서 값을 읽어야 함
+    assert set(s.element_raw_values("레시피", "devices")) == {"권위자인용", "구체적숫자"}
+    assert s.element_raw_values("레시피", "tone") == ["친근한 반말"]
+    assert "레시피" in s.distinct_extract_categories()
