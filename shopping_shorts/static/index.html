@@ -72,6 +72,8 @@
              background:var(--panel);border:1px solid var(--line);border-radius:14px;
              width:min(720px,94vw);max-height:80vh;display:flex;flex-direction:column;overflow:hidden;
              box-shadow:0 10px 44px rgba(0,0,0,.6)}
+  .modal-box.wide{width:min(1040px,96vw);max-height:88vh}   /* 렌즈 결과용 큰 팝업 */
+  .lens-play{width:100%;aspect-ratio:9/16;max-height:60vh;border:0;border-radius:8px;background:#000;display:block}
   .modal-head{display:flex;align-items:center;justify-content:space-between;gap:8px;
               padding:14px 18px;border-bottom:1px solid var(--line);cursor:move;user-select:none}
   .modal-head b{font-size:15px}
@@ -385,9 +387,10 @@ async function copyLink(url, btn){
 
 // ── 대본 추출 ──────────────────────────────────────────
 function esc(s){ return (s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-function openScript(html, title){
+function openScript(html, title, wide){
   const box=document.querySelector('#scriptModal .modal-box');
-  if(box){ box.style.transform='translateX(-50%)'; box.style.left='50%'; box.style.top='14px'; }  // 열 때마다 맨 위 중앙
+  if(box){ box.style.transform='translateX(-50%)'; box.style.left='50%'; box.style.top='14px'; // 열 때마다 맨 위 중앙
+           box.classList.toggle('wide', !!wide); }
   const t=document.getElementById('modalTitle');
   if(t) t.innerHTML=(title||'📝 대본 추출')+' <span style="font-size:11px;color:var(--sub);font-weight:400">— 잡고 이동</span>';
   document.getElementById('scriptBody').innerHTML=html;
@@ -496,21 +499,36 @@ const LENS_PLATFORMS=[
   {k:'douyin',label:'🎶 도우인'}];
 let LENS_STATE={};   // shortcode → {items, on:Set}
 let _lensSC=null;    // 현재 모달에 표시 중인 shortcode
-// 카드의 재생중/멈춘 <video> 프레임을 canvas 캡처. 카드는 담기 버튼(save_${sc})으로 특정.
+// 카드에서 렌즈에 넣을 이미지를 canvas 캡처. 우선순위:
+//  ① 재생중/멈춘 <video> 프레임(사용자가 고른 장면)
+//  ② 없으면 카드 썸네일 <img>(재생 안 하고 바로 눌러도 되게, 2026-07-14)
+// 카드는 담기 버튼(save_${sc})으로 특정. 썸네일은 /api/thumb 프록시=same-origin이라
+// canvas 오염(taint) 없이 toBlob 가능.
 function _captureFrame(shortcode){
   const anchor=document.getElementById('save_'+shortcode);
   const card=anchor && anchor.closest('.card');
-  const v=card && card.querySelector('video.thumb-video');
-  if(!v || v.readyState<2) return null;
-  const cv=document.createElement('canvas');
-  cv.width=v.videoWidth; cv.height=v.videoHeight;
-  cv.getContext('2d').drawImage(v,0,0);
-  return cv;
+  if(!card) return null;
+  const v=card.querySelector('video.thumb-video');
+  if(v && v.readyState>=2){
+    const cv=document.createElement('canvas');
+    cv.width=v.videoWidth; cv.height=v.videoHeight;
+    cv.getContext('2d').drawImage(v,0,0);
+    return cv;
+  }
+  // 썸네일 폴백 — 재생 전 상태
+  const img=card.querySelector('.thumb img, img');
+  if(img && img.naturalWidth>0){
+    const cv=document.createElement('canvas');
+    cv.width=img.naturalWidth; cv.height=img.naturalHeight;
+    try{ cv.getContext('2d').drawImage(img,0,0); return cv; }
+    catch(e){ return null; }   // 혹시 taint면 null(안내문 뜸)
+  }
+  return null;
 }
 async function lensSearch(btn, shortcode){
   const cv=_captureFrame(shortcode);
-  if(!cv){ openScript('<div style="padding:10px;color:var(--sub)">▶ 미리보기를 재생하고 원하는 장면에서 멈춘 뒤 눌러주세요.</div>','🔍 렌즈 유사영상'); return; }
-  openScript('<div class="sm-loading">🔍 렌즈 검색 중… (5~15초)</div>','🔍 렌즈 유사영상');
+  if(!cv){ openScript('<div style="padding:10px;color:var(--sub)">이미지를 준비하지 못했습니다. 썸네일이 로드된 뒤 다시 눌러주세요.</div>','🔍 렌즈 유사영상',true); return; }
+  openScript('<div class="sm-loading">🔍 렌즈 검색 중… (5~15초)</div>','🔍 렌즈 유사영상',true);
   const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.85));
   const fd=new FormData(); fd.append('frame', blob, 'f.jpg');
   try{
@@ -537,12 +555,47 @@ function renderLens(shortcode){
     return `<span onclick="toggleLensPlatform('${shortcode}','${p.k}')" style="cursor:pointer;display:inline-block;padding:3px 10px;margin:2px;border-radius:12px;font-size:11px;border:1px solid var(--line);background:${active?'#1f6feb33':'transparent'};opacity:${active?1:0.4}">${p.label} ${n}</span>`;
   }).join('');
   // 썸네일은 구글 gstatic CDN(encrypted-tbn) — 핫링크 제한 없어 직접 로드(프록시 불필요).
-  const cards=st.items.filter(i=>st.on.has(i.platform)).map(i=>`
-    <a href="${i.url}" target="_blank" style="display:flex;gap:10px;align-items:center;text-decoration:none;color:var(--txt);padding:6px 4px;border-bottom:1px solid var(--line)">
-      <img src="${i.thumbnail||''}" referrerpolicy="no-referrer" loading="lazy" style="width:64px;height:64px;object-fit:cover;border-radius:8px;flex-shrink:0;background:#0d131c" onerror="this.style.visibility='hidden'">
-      <span style="font-size:12px;line-height:1.4;min-width:0"><b>${LENS_PLATFORMS.find(p=>p.k===i.platform)?.label||''}</b><br>${esc((i.title||'').slice(0,60))}</span>
-    </a>`).join('') || '<div style="font-size:12px;color:var(--sub);padding:10px">켠 플랫폼 결과 없음</div>';
-  box.innerHTML=`<div style="position:sticky;top:0;background:var(--bg,#0d131c);padding:4px 0;margin-bottom:4px;z-index:1">${chips}</div><div>${cards}</div>`;
+  // 각 결과는 팝업 안에서 ▶ 재생(embed)으로 1차 확인 가능 + 원본 새 탭 링크.
+  const shown=st.items.filter(i=>st.on.has(i.platform));
+  const cards=shown.map((i,idx)=>`
+    <div style="border-bottom:1px solid var(--line);padding:8px 4px">
+      <div style="display:flex;gap:10px;align-items:center">
+        <div style="position:relative;width:72px;height:72px;flex-shrink:0;cursor:pointer" onclick="lensPlay(${idx})">
+          <img src="${i.thumbnail||''}" referrerpolicy="no-referrer" loading="lazy" style="width:72px;height:72px;object-fit:cover;border-radius:8px;background:#0d131c" onerror="this.style.visibility='hidden'">
+          <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:20px;text-shadow:0 1px 4px #000">▶</span>
+        </div>
+        <div style="font-size:12px;line-height:1.4;min-width:0;flex:1">
+          <b>${LENS_PLATFORMS.find(p=>p.k===i.platform)?.label||''}</b><br>${esc((i.title||'').slice(0,70))}
+          <div style="margin-top:4px">
+            <button onclick="lensPlay(${idx})" style="font-size:11px;padding:2px 8px;margin-right:6px">▶ 여기서 재생</button>
+            <a href="${i.url}" target="_blank" style="font-size:11px;color:var(--accent)">↗ 원본 열기</a>
+          </div>
+        </div>
+      </div>
+      <div id="lensplay_${idx}"></div>
+    </div>`).join('') || '<div style="font-size:12px;color:var(--sub);padding:10px">켠 플랫폼 결과 없음</div>';
+  box.innerHTML=`<div style="position:sticky;top:0;background:var(--panel);padding:4px 0;margin-bottom:4px;z-index:1">${chips}</div><div>${cards}</div>`;
+  box._lensShown=shown;   // lensPlay가 참조
+}
+// 렌즈 결과를 팝업 안에서 embed로 인라인 재생(새 탭 안 열고 1차 확인).
+function _lensEmbed(url){
+  let m;
+  if((m=url.match(/youtube\.com\/watch\?v=([\w-]+)|youtu\.be\/([\w-]+)|youtube\.com\/shorts\/([\w-]+)/)))
+    return 'https://www.youtube.com/embed/'+(m[1]||m[2]||m[3])+'?autoplay=1&playsinline=1';
+  if((m=url.match(/tiktok\.com\/.*\/video\/(\d+)/)))
+    return 'https://www.tiktok.com/embed/v2/'+m[1];
+  if((m=url.match(/instagram\.com\/(?:reel|p)\/([\w-]+)/)))
+    return 'https://www.instagram.com/'+(url.includes('/reel/')?'reel':'p')+'/'+m[1]+'/embed';
+  return null;   // 샤오홍슈·도우인 등 embed 불가 → 원본 새 탭만
+}
+function lensPlay(idx){
+  const box=document.getElementById('scriptBody');
+  const it=box && box._lensShown && box._lensShown[idx]; if(!it) return;
+  const slot=document.getElementById('lensplay_'+idx); if(!slot) return;
+  if(slot.firstChild){ slot.innerHTML=''; return; }   // 토글: 다시 누르면 닫힘
+  const src=_lensEmbed(it.url);
+  if(!src){ window.open(it.url,'_blank'); return; }    // embed 불가 플랫폼은 새 탭
+  slot.innerHTML=`<iframe class="lens-play" src="${src}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
 }
 async function extractScript(shortcode){
   window._curSC = shortcode;
