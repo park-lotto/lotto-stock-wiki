@@ -216,7 +216,8 @@
           </label>
         </div>
         <div style="flex:0 0 auto">
-          <div class="hint" style="margin-bottom:4px">🖱️ 실시간 미리보기 (9:16) — 글자를 <b>드래그</b>해 위치 이동</div>
+          <div class="hint" style="margin-bottom:4px">🖱️ 실시간 미리보기 (9:16) — 글자를 <b>드래그</b>해 위치 이동
+            <label style="cursor:pointer;margin-left:6px;color:var(--txt)"><input type="checkbox" id="sceneBg" onchange="toggleSceneBg()"> 실장면 배경</label></div>
           <div id="hcPreview" style="position:relative;width:340px;aspect-ratio:9/16;background:#ffffff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.4)">
             <img id="hcPreviewBg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none" alt="">
             <div id="capPreviewText" style="position:absolute;left:50%;transform:translateX(-50%);text-align:center;white-space:pre-wrap;word-break:keep-all;line-height:1.2;z-index:2;pointer-events:none"></div>
@@ -544,6 +545,16 @@ async function uploadBgm(input){
 }
 function updateBgmVol(){ const v=+document.getElementById('bgmVol').value; document.getElementById('bgmVolV').textContent=v;
   if(STATE.deco&&STATE.deco.bgm) STATE.deco.bgm.volume=v; }
+// 🖼 실장면 배경 — 매칭된 소스 프레임을 미리보기 배경으로(기본 흰색). 스타일 판단을 실제 영상 위에서.
+function toggleSceneBg(){
+  const on=document.getElementById('sceneBg').checked;
+  const img=document.getElementById('hcPreviewBg'), pv=document.getElementById('hcPreview');
+  if(!on){ img.style.display='none'; pv.style.background='#ffffff'; return; }
+  if(!MIX_JOB){ alert('2단계에서 영상 매칭을 먼저 실행하세요'); document.getElementById('sceneBg').checked=false; return; }
+  img.onload=()=>{ img.style.display='block'; };
+  img.onerror=()=>{ img.style.display='none'; document.getElementById('sceneBg').checked=false; alert('실장면 배경을 불러오지 못했습니다(매칭 완료 후 가능)'); };
+  img.src='/api/produce/mix/poster/'+MIX_JOB+'?t='+Date.now();
+}
 function clearBgm(){ if(STATE.deco) STATE.deco.bgm=null; const el=document.getElementById('bgmFile'); if(el) el.value=''; const st=document.getElementById('bgmStatus'); if(st) st.textContent='제거됨'; }
 // 🖼 이미지 오버레이(로고·뱃지) 업로드 + 미리보기(클라 objectURL)
 let OV_OBJ_URL=null;

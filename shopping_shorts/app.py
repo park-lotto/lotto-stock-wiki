@@ -1449,6 +1449,37 @@ async def api_produce_mix_overlay(job_id: str = Form(...), file: UploadFile = Fi
     return {"ok": True, "file": name}
 
 
+@app.get("/api/produce/mix/poster/{job_id}")
+def api_produce_mix_poster(job_id: str):
+    """미리보기 실장면 배경용 — 매칭된 첫 소스 영상의 한 프레임을 9:16으로 잘라 JPG 서빙(캐시)."""
+    import subprocess
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "매칭 먼저"})
+    work = _MIX_WORK_DIR / job_id
+    poster = work / "poster.jpg"
+    if not poster.exists():
+        beats = (job["edit_plan"] or {}).get("beats") or []
+        src, ss = None, 0.0
+        if beats:
+            pr = beats[0].get("primary") or {}
+            vid = pr.get("video_id")
+            ss = float(pr.get("start") or 0)
+            if vid:
+                src = next((work / vid).glob("*.mp4"), None)
+        if src is None:  # 폴백: 이미 렌더된 결과물
+            src = next(work.glob("final.mp4"), None) or next(work.glob("mix_raw.mp4"), None)
+        if src is None:
+            return JSONResponse(status_code=404, content={"ok": False, "error": "소스 영상 없음"})
+        subprocess.run(["ffmpeg", "-y", "-ss", str(ss), "-i", str(src),
+                        "-vf", "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920",
+                        "-frames:v", "1", str(poster)], capture_output=True)
+    if not poster.exists():
+        return JSONResponse(status_code=404, content={"ok": False})
+    return FileResponse(str(poster), media_type="image/jpeg")
+
+
 # 정적 프론트 (마운트는 맨 마지막)
 _STATIC = Path(__file__).parent / "static"
 
