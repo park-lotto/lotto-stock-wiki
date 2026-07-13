@@ -135,6 +135,14 @@
         <div style="font-size:14px;font-weight:800;margin-bottom:2px">🎯 완성 스타일 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 딸깍 하나로 헤드카피+자막+효과 완성</span></div>
         <div class="sub" style="margin-bottom:9px">빅채널 레퍼런스 스타일. 누르면 그대로 완성되고, 아래에서 조금씩만 손보면 됩니다.</div>
         <div id="fullPresets" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+        <div style="border-top:1px dashed var(--line);margin-top:12px;padding-top:10px">
+          <div style="font-size:12px;color:var(--sub);margin-bottom:6px">⭐ 내 프리셋 <span style="font-size:11px">— 지금 스타일을 저장해 나만의 딸깍 샘플로</span></div>
+          <div id="myPresets" style="display:flex;flex-wrap:wrap;align-items:center;margin-bottom:8px"></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <input id="myPresetName" type="text" placeholder="예: 내 채널 기본형" style="flex:1;min-width:160px;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 10px;font-size:13px">
+            <button class="tab" onclick="saveMyPreset()" style="flex:0 0 auto;min-width:auto;padding:7px 16px;font-size:13px;white-space:nowrap;background:linear-gradient(90deg,#153a6b,#0d2340);border-color:var(--accent)">💾 현재 스타일 저장</button>
+          </div>
+        </div>
       </div>
       <div style="font-size:12px;color:var(--sub);margin-bottom:4px">🎨 헤드카피 프리셋(헤드카피만)</div>
       <div id="hcPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"></div>
@@ -277,6 +285,7 @@ function initHeadcopy(){
   renderFontSelect();
   renderPresets();
   renderFullPresets();
+  renderMyPresets();
   bindHCDrag();
   updateHC();
   renderCapFontSelect();
@@ -367,21 +376,47 @@ function renderFullPresets(){
   box.innerHTML=FULL_PRESETS.map((p,i)=>`<button class="fullPreset tab" onclick="applyFullPreset(${i})"
     style="flex:0 0 auto;min-width:auto;padding:8px 14px;font-size:13px;font-weight:600;white-space:nowrap;border-left:12px solid ${p.chip}">${p.name}</button>`).join('');
 }
+function applyConfig(h, c){
+  const g=id=>document.getElementById(id);
+  if(h){ // 헤드카피
+    if(h.font){ g('hcFont').value=h.font; HC_FONT_COMMITTED=h.font; syncFontBtn(); }
+    g('hcColor').value=h.color; g('hcWeight').value=h.weight!=null?h.weight:900; g('hcSize').value=h.size;
+    g('hcX').value=(h.x!=null?h.x:50); g('hcY').value=h.y;
+    g('hcOutline').checked=!!h.outline; g('hcOutColor').value=h.outline_color||'#000000'; g('hcOutW').value=h.outline_w||0;
+    g('hcBox').checked=!!h.box; g('hcBoxColor').value=h.box_color||'#000000'; g('hcBoxPad').value=(h.box_pad!=null?h.box_pad:16); g('hcBoxOpacity').value=(h.box_opacity!=null?h.box_opacity:80);
+    updateHC();
+  }
+  if(c){ // 자막(y 또는 y_pct 둘 다 허용)
+    g('capFont').value=c.font; g('capColor').value=c.color; g('capSize').value=c.size;
+    g('capY').value=(c.y!=null?c.y:(c.y_pct!=null?c.y_pct:84));
+    g('capOutline').checked=!!c.outline; g('capOutColor').value=c.outline_color||'#000000'; g('capOutW').value=c.outline_w||0;
+    g('capBox').checked=!!c.box; g('capBoxColor').value=c.box_color||'#000000'; g('capBoxPad').value=(c.box_pad!=null?c.box_pad:12); g('capBoxOpacity').value=(c.box_opacity!=null?c.box_opacity:80);
+    setCapEffect(c.effect||'none');   // updateCaption 내부호출됨
+  }
+}
 function applyFullPreset(i){
-  const p=FULL_PRESETS[i], g=id=>document.getElementById(id), h=p.hc, c=p.cap;
-  // 헤드카피
-  g('hcFont').value=h.font; HC_FONT_COMMITTED=h.font; syncFontBtn();
-  g('hcColor').value=h.color; g('hcWeight').value=h.weight; g('hcSize').value=h.size;
-  g('hcX').value=(h.x!=null?h.x:50); g('hcY').value=h.y;
-  g('hcOutline').checked=!!h.outline; g('hcOutColor').value=h.outline_color||'#000000'; g('hcOutW').value=h.outline_w||0;
-  g('hcBox').checked=!!h.box; g('hcBoxColor').value=h.box_color||'#000000'; g('hcBoxPad').value=(h.box_pad!=null?h.box_pad:16); g('hcBoxOpacity').value=(h.box_opacity!=null?h.box_opacity:80);
-  updateHC();
-  // 자막
-  g('capFont').value=c.font; g('capColor').value=c.color; g('capSize').value=c.size; g('capY').value=c.y;
-  g('capOutline').checked=!!c.outline; g('capOutColor').value=c.outline_color||'#000000'; g('capOutW').value=c.outline_w||0;
-  g('capBox').checked=!!c.box; g('capBoxColor').value=c.box_color||'#000000'; g('capBoxPad').value=(c.box_pad!=null?c.box_pad:12); g('capBoxOpacity').value=(c.box_opacity!=null?c.box_opacity:80);
-  setCapEffect(c.effect||'none');   // updateCaption 내부호출됨
+  applyConfig(FULL_PRESETS[i].hc, FULL_PRESETS[i].cap);
   document.querySelectorAll('.fullPreset').forEach((b,idx)=>b.style.outline = idx===i?'2px solid var(--accent2)':'none');
+}
+// ── 💾 내 프리셋(localStorage) — 사용자가 만든 완성 스타일을 딸깍 축적 ──
+function myPresets(){ try{ return JSON.parse(localStorage.getItem('hc_my_presets')||'[]'); }catch(e){ return []; } }
+function saveMyPreset(){
+  const name=(document.getElementById('myPresetName').value||'').trim();
+  if(!name){ alert('프리셋 이름을 입력하세요'); return; }
+  const list=myPresets();
+  list.push({name, hc:STATE.headcopy, cap:STATE.captionStyle});
+  localStorage.setItem('hc_my_presets', JSON.stringify(list));
+  document.getElementById('myPresetName').value=''; renderMyPresets();
+}
+function applyMyPreset(i){ const p=myPresets()[i]; if(p) applyConfig(p.hc, p.cap); }
+function deleteMyPreset(i){ const list=myPresets(); list.splice(i,1); localStorage.setItem('hc_my_presets', JSON.stringify(list)); renderMyPresets(); }
+function renderMyPresets(){
+  const box=document.getElementById('myPresets'); if(!box) return;
+  const list=myPresets();
+  box.innerHTML = list.length ? list.map((p,i)=>`<span style="display:inline-flex;align-items:center;gap:4px;background:#0d1420;border:1px solid var(--line);border-radius:9px;padding:2px 4px 2px 0;margin:0 6px 6px 0">
+    <button class="tab" onclick="applyMyPreset(${i})" style="flex:0 0 auto;min-width:auto;padding:5px 11px;font-size:12px;white-space:nowrap;border:none;background:none">⭐ ${p.name}</button>
+    <button onclick="deleteMyPreset(${i})" title="삭제" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:14px">✕</button></span>`).join('')
+    : '<span class="hint">저장된 내 프리셋이 없습니다. 아래 조정 후 “현재 스타일 저장”을 눌러 만드세요.</span>';
 }
 // 번들 폰트 22종(ttf/otf만 — 미리보기=실제 렌더 일치). ⭐=쇼츠 헤드카피 추천 베스트5
 const HC_FONTS=[
