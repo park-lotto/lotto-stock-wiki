@@ -14,13 +14,17 @@ from shopping_shorts.store import Store
 
 def backfill_structures(store, limit=100):
     """구조분석 안 된 대본추출 항목에 analyze_structure()를 돌려 채운다.
-    처리한 건수 반환(성공만 카운트하지 않음 — 시도한 건수)."""
+    성공적으로 백필한 건수를 반환한다(항목 단위로 예외를 삼키므로 실패 건은 제외)."""
     targets = store.extracts_missing_structure(limit=limit)
     n = 0
     for t in targets:
-        structure = analyze_structure(t["full_text"])
-        store.save_extract_structure(t["shortcode"], structure)
-        n += 1
+        try:
+            structure = analyze_structure(t["full_text"])
+            store.save_extract_structure(t["shortcode"], structure)
+            n += 1
+        except Exception as e:
+            print(f"daily_batch backfill 실패 {t['shortcode']}: {e}")
+            continue
     return n
 
 
@@ -30,13 +34,17 @@ def recompute_element_stats(store):
     saved = 0
     for product_category in store.distinct_extract_categories():
         for element in ELEM_KEYS:
-            values = store.element_raw_values(product_category, element)
-            cats = element_stats.cluster_element_values(element, values)
-            if cats:
-                for c in cats:
-                    c["sample_count"] = len(values)
-                store.save_element_category_stats(product_category, element, cats)
-                saved += 1
+            try:
+                values = store.element_raw_values(product_category, element)
+                cats = element_stats.cluster_element_values(element, values)
+                if cats:
+                    for c in cats:
+                        c["sample_count"] = len(values)
+                    store.save_element_category_stats(product_category, element, cats)
+                    saved += 1
+            except Exception as e:
+                print(f"daily_batch stats 실패 {product_category}/{element}: {e}")
+                continue
     return saved
 
 

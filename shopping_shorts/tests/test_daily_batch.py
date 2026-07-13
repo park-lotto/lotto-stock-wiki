@@ -48,3 +48,24 @@ def test_recompute_element_stats_saves_when_cluster_returns_categories(tmp_path,
     assert n == 1
     opts = s.get_element_options("레시피")
     assert opts["tone"][0]["label"] == "친근체"
+
+
+def test_backfill_structures_skips_poison_item_and_processes_survivors(tmp_path, monkeypatch):
+    """한 항목이 예외를 던져도 배치 전체가 멈추지 않고 나머지가 처리된다."""
+    s = Store(tmp_path / "b4.db")
+    for i in range(3):
+        s.save_script(f"SC{i}", {"full_text": f"본문{i}"}, category="레시피")
+
+    def flaky(text):
+        if text == "본문1":
+            raise RuntimeError("독성 항목")
+        return {"tone": "친근한"}
+    monkeypatch.setattr(daily_batch, "analyze_structure", flaky)
+
+    n = daily_batch.backfill_structures(s, limit=100)
+    assert n == 2  # 독성 1건 제외한 생존 2건만 카운트
+    assert s.get_extract("SC0")["structure"]["tone"] == "친근한"
+    assert s.get_extract("SC2")["structure"]["tone"] == "친근한"
+    # 독성 항목은 여전히 구조 미분석 상태로 남는다(스킵됐으므로)
+    missing = {t["shortcode"] for t in s.extracts_missing_structure(limit=10)}
+    assert "SC1" in missing
