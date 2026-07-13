@@ -925,6 +925,21 @@ def _serve_userscript():
     return FileResponse(p, media_type="text/javascript; charset=utf-8")
 
 
+# ── 영상제작 위저드(produce) ─────────────────────────────────
+@app.post("/api/produce/script/gemini")
+def api_produce_script_gemini(body: dict):
+    """1단계 대본 · 제미니 자동 — 주제/제품으로 처음부터 대본 초안 N개 생성."""
+    topic = (body.get("topic") or "").strip()
+    if not topic:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "주제/제품을 입력하세요"})
+    drafts = script_generate.generate_from_topic(
+        topic, target_seconds=body.get("target_seconds") or 20, n=body.get("n") or 3)
+    if not drafts:
+        return JSONResponse(status_code=502,
+                            content={"ok": False, "error": "생성 실패(키 소진 또는 응답 오류)"})
+    return {"ok": True, "drafts": drafts}
+
+
 # 정적 프론트 (마운트는 맨 마지막)
 _STATIC = Path(__file__).parent / "static"
 

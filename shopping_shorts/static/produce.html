@@ -104,25 +104,56 @@ function jump(i){ cur=i; renderSteps(); showPanel(); }
 function go(d){ const n=cur+d; if(n<0||n>=STEPS.length) return; cur=n; renderSteps(); showPanel(); }
 
 // ── 1단계 대본: 3모드 ──────────────────────────────
+const STATE = { script: "" };   // 확정 대본(모든 모드의 최종 산출물, step2가 사용)
+
 const SCRIPT_MODE_HTML = {
-  manual: `<textarea id="scriptText" placeholder="여기에 대본을 직접 입력하세요…" oninput="updateLen()"></textarea>
-    <div class="hint" id="lenHint">0자 · 약 0초</div>`,
-  mix: `<div class="stub">도서관 S급 대본 2~3개 선택 → 강점 조합(훅·전개·주변인물) → 새 대본 생성<br>(Feature B — Phase 1에서 연결)</div>`,
-  gemini: `<div class="stub">주제/제품 입력 → 제미니가 대본 자동 생성<br>(Phase 1에서 연결)</div>`,
+  manual: () => `<textarea id="scriptText" placeholder="여기에 대본을 직접 입력하세요…" oninput="onScriptInput()">${esc(STATE.script)}</textarea>
+    <div class="hint" id="lenHint">${lenText(STATE.script)}</div>`,
+  gemini: () => `
+    <div style="display:flex;gap:8px;margin-bottom:6px">
+      <input id="gemTopic" type="text" placeholder="주제/제품 (예: 실리콘 다용도 집게)"
+        style="flex:1;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:11px">
+      <button class="btn-next" style="padding:11px 16px" onclick="genGemini()">✨ 생성</button>
+    </div>
+    <div class="hint">주제만 넣으면 제미니가 여러 초안을 만듭니다. 마음에 드는 초안을 고르면 편집창으로 넘어갑니다.</div>
+    <div id="gemDrafts" style="margin-top:12px"></div>`,
+  mix: () => `<div class="stub">도서관 S급 대본 2~3개 선택 → 강점 조합(훅·전개·주변인물) → 새 대본 생성<br>(다음 슬라이스에서 연결)</div>`,
 };
 function setScriptMode(mode){
   document.querySelectorAll('#scriptTabs .tab').forEach(t=>t.classList.toggle('active', t.dataset.mode===mode));
-  document.getElementById('scriptModeBody').innerHTML = SCRIPT_MODE_HTML[mode];
+  document.getElementById('scriptModeBody').innerHTML = SCRIPT_MODE_HTML[mode]();
 }
 document.querySelectorAll('#scriptTabs .tab').forEach(t=> t.onclick=()=>setScriptMode(t.dataset.mode));
 
-// 실시간 예상 음성 길이(한국어 대략 초당 6~7자 → 6.5자/초 기준)
-function updateLen(){
-  const t = (document.getElementById('scriptText')||{}).value || '';
-  const chars = t.replace(/\s/g,'').length;
-  const sec = Math.round(chars/6.5);
-  const h = document.getElementById('lenHint');
-  if(h) h.textContent = `${t.length}자 · 약 ${sec}초`;
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function lenText(t){ t=t||''; const c=t.replace(/\s/g,'').length; return `${t.length}자 · 약 ${Math.round(c/6.5)}초`; }
+function onScriptInput(){ const ta=document.getElementById('scriptText'); STATE.script=ta.value; document.getElementById('lenHint').textContent=lenText(STATE.script); }
+function updateLen(){ onScriptInput(); }
+
+// 제미니 자동 생성
+async function genGemini(){
+  const topic=(document.getElementById('gemTopic').value||'').trim();
+  const box=document.getElementById('gemDrafts');
+  if(!topic){ box.innerHTML='<div class="hint" style="color:var(--fire)">주제를 입력하세요</div>'; return; }
+  box.innerHTML='<div class="hint">⏳ 생성 중…</div>';
+  try{
+    const r=await fetch('/api/produce/script/gemini',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic, target_seconds:20, n:3})});
+    const d=await r.json();
+    if(!d.ok){ box.innerHTML=`<div class="hint" style="color:var(--fire)">${esc(d.error||'실패')}</div>`; return; }
+    box.innerHTML=d.drafts.map((dr,i)=>`
+      <div style="border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:8px;background:#0d1420">
+        <div style="font-weight:600;color:#9dc4ff;margin-bottom:4px">초안 ${i+1} · ${esc(dr.hook||'')}</div>
+        <div style="font-size:13px;color:var(--txt);line-height:1.5">${esc(dr.script||'')}</div>
+        <div class="hint" style="margin:6px 0">${esc(dr.applied||'')} · ${lenText(dr.script||'')}</div>
+        <button class="btn-next" style="padding:8px 14px" onclick="useDraft(${i})">이 대본 사용 →</button>
+      </div>`).join('');
+    window._gemDrafts=d.drafts;
+  }catch(e){ box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; }
+}
+function useDraft(i){
+  const dr=(window._gemDrafts||[])[i]; if(!dr) return;
+  STATE.script=dr.script||'';
+  setScriptMode('manual');   // 편집 가능한 직접작성 창으로 이동(내용 채움)
 }
 
 renderSteps(); showPanel(); setScriptMode('manual');
