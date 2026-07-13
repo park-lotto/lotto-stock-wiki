@@ -5,6 +5,19 @@
 
 ---
 
+## 🎙️ 보이스 프리셋 라이브러리 — ✅ 구현·검증 (2026-07-14 집PC, 커밋 b5463de9~3cd1abfe)
+
+빅채널 나레이션 *느낌*을 페르소나 프리셋(이름+설명+감도값)으로 굳혀 produce 4단계에서 카드로 선택. 하이브리드(MVP=스톡매칭, 클로닝 Phase2).
+- 스펙 `docs/superpowers/specs/2026-07-14-보이스-프리셋-라이브러리-design.md` / 계획 `docs/superpowers/plans/2026-07-14-보이스-프리셋-라이브러리.md`
+- ElevenLabs 연결완료(키+ToS권한+`.env` load_dotenv, 실음성 E2E). 8태스크 TDD: tts(voice_settings/speed 0.7~1.2 clamp)·audio_post(atempo+silenceremove)·store(voice_presets+voice_json)·voice_presets(seed KR6종)·build_voice_samples·mix_pipeline(resynth_tts_job)·app(프리셋API4종+startup seed)·produce UI(카드·속도·무음·고급접기). 24/25 green, 라이브 API·JS구문 검증.
+- ⏭ **남은 것(다음 세션)**:
+  1. **샘플 생성+튜닝**: `python -m shopping_shorts.scripts.build_voice_samples` 실행 → `assets/voice_samples/*.mp3` 6개 생성 → 🎧 **사장님 귀로 프리셋별 느낌 확인** → `assets/voice_presets.json`의 voice_id·감도값 튜닝(반복). 현재 voice_id는 ElevenLabs 기본 라이브러리 placeholder라 실제 KR 성우로 교체 필요.
+  2. **서버 배포**: `/etc/shopping-shorts.env`에 `ELEVENLABS_API_KEY=3d835f...` 추가(SSH) — 안 하면 라이브에서 무음.
+  3. **라이브 실클릭**: produce 4단계에서 프리셋 선택→"다시 듣기"→"전체 생성"→비트별 음성 육안검증.
+  - Phase2(다음 스펙): 앱내 "레퍼런스URL→측정→프리셋 자동생성" 도구 / JP·EN / 보이스 클로닝.
+
+---
+
 ## 🔍 렌즈 유사영상 발굴 — ✅ 구현·배포·라이브 (2026-07-14 집PC, 커밋 9ca8a6d9)
 
 멈춘 장면 구글렌즈 역검색 → 5플랫폼(유튜브·틱톡·인스타·샤오홍슈·도우인) 유사 동영상 발굴. 6태스크 TDD 완료·서버배포·라우트라이브.

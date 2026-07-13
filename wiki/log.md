@@ -1446,3 +1446,9 @@ S급 대본을 위키에 모아 **구조를 학습→변형/믹스로 새 대본
 - 45개 테스트 green. 브라우저 육안검증(캡처가드·칩·토글필터, JS에러0). 서버 수동배포+multipart설치, 라우트 라이브(401 auth)
 - ⚠️ 동시세션 충돌로 틱톡 app.py 언어확장이 덮였던 것 복구(커밋 684c47cc). 순차커밋 규칙 확립
 - ⏭ 남은것: 라이브 대시보드에서 인스타 카드 재생→캡처→🔍렌즈 실결과 육안(SerpApi 실호출, 중국플랫폼 나오는지 관찰)
+
+## 2026-07-14 (집PC) 보이스 프리셋 라이브러리 — ✅ 구현·검증 (커밋 b5463de9~3cd1abfe)
+- ElevenLabs TTS API 연결: 키+Text to Speech 권한(restricted키 권한부여)+`.env` 자동로드(config load_dotenv). 실한국어 음성 E2E 검증
+- 8태스크 TDD: tts(voice_settings/speed·API 0.7~1.2 clamp)/audio_post(atempo+silenceremove)/store(voice_presets 테이블+voice_json)/voice_presets(JSON로더+seed KR6종)/build_voice_samples/mix_pipeline(프리셋적용+resynth_tts_job)/app(프리셋API4종+startup seed)/produce 4단계 프리셋UI(카드·속도·무음·고급접기)
+- 검증: 24/25 테스트 green(1 기존 headcopy fail 무관), 라이브 /api/voice-presets seed+응답+source_ref숨김+UTF-8, produce.html JS구문 OK
+- ⏭ 남은것: ①`build_voice_samples` 실행해 샘플mp3 생성+🎧사장님 귀 튜닝(voice_id·감도값) ②서버 `/etc/shopping-shorts.env`에 ELEVENLABS_API_KEY 추가 ③라이브 produce 4단계 실클릭 검증 / 향후 Phase2: 앱내 생성도구·JP/EN·클로닝
