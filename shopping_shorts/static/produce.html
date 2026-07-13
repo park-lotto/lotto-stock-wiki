@@ -69,7 +69,20 @@
     </section>
 
     <!-- 2~8) 자리 (Phase별로 채움) -->
-    <section class="panel" data-step="1"><h3>2 · 영상믹스</h3><div class="sub">대본 장면에 소스영상을 붙입니다.</div><div class="stub">Phase 1에서 given_script 매칭 연결 예정</div></section>
+    <section class="panel" data-step="1">
+      <h3>2 · 영상믹스</h3>
+      <div class="sub">1단계 확정 대본을 소스 영상 장면에 매칭합니다(나레이션은 그대로).</div>
+      <div id="mixScriptPeek" class="hint" style="margin-bottom:10px"></div>
+      <div style="font-size:13px;margin-bottom:4px">소스 영상 URL (2개 이상)</div>
+      <div id="mixUrls">
+        <div class="row" style="margin-bottom:6px"><input class="mixUrl" type="text" placeholder="인스타 릴스 URL" style="width:100%;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px"></div>
+        <div class="row" style="margin-bottom:6px"><input class="mixUrl" type="text" placeholder="인스타 릴스 URL" style="width:100%;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px"></div>
+      </div>
+      <button class="btn-prev" style="padding:8px 14px" onclick="addMixUrl()">+ URL 추가</button>
+      <button class="btn-next" style="padding:8px 16px;margin-left:8px" onclick="startProduceMix()">🎬 영상 매칭 시작</button>
+      <div id="mixStatus" class="hint" style="margin-top:12px"></div>
+      <div id="mixReview" style="margin-top:12px"></div>
+    </section>
     <section class="panel" data-step="2"><h3>3 · 자막제거</h3><div class="sub">원본 하드섭을 VMake로 제거(옵션).</div><div class="stub">Phase 2 예정</div></section>
     <section class="panel" data-step="3"><h3>4 · TTS 음성</h3><div class="sub">나레이션 음성 생성, 장면 길이 맞춤.</div><div class="stub">Phase 2 예정</div></section>
     <section class="panel" data-step="4"><h3>5 · 꾸미기</h3><div class="sub">헤드카피 디자인(폰트·색·위치·외곽선).</div><div class="stub">Phase 3 예정</div></section>
@@ -99,6 +112,7 @@ function showPanel(){
   document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('show', +p.dataset.step===cur));
   document.getElementById('btnPrev').disabled = cur===0;
   document.getElementById('btnNext').textContent = cur===STEPS.length-1 ? '완료' : '다음 →';
+  if(cur===1) refreshMixStep();
 }
 function jump(i){ cur=i; renderSteps(); showPanel(); }
 function go(d){ const n=cur+d; if(n<0||n>=STEPS.length) return; cur=n; renderSteps(); showPanel(); }
@@ -189,6 +203,73 @@ function genMix(){
   const box=document.getElementById('mixDrafts');
   if(picks.length<2){ box.innerHTML='<div class="hint" style="color:var(--fire)">2개 이상 선택하세요</div>'; return; }
   postDrafts('/api/produce/script/mix', {shortcodes:picks, target_seconds:20, n:3}, 'mixDrafts');
+}
+
+// ── 2단계 영상믹스(given_script 매칭) ──────────────
+let MIX_JOB=null, MIX_POLL=null;
+const MIX_LABEL={downloading:'영상 다운로드 중…',extracting:'대본 분석 중…',planning:'장면 매칭 중…',tts:'음성 생성 중…',ready_for_review:'매칭 완료',rendering:'최종 렌더 중…',done:'완료',failed:'실패'};
+function refreshMixStep(){
+  const p=document.getElementById('mixScriptPeek');
+  if(!p) return;
+  p.innerHTML = STATE.script
+    ? `✅ 확정 대본(${lenText(STATE.script)}): "${esc(STATE.script.slice(0,60))}…"`
+    : '⚠️ 1단계에서 대본을 먼저 확정하세요.';
+}
+function addMixUrl(){
+  const wrap=document.getElementById('mixUrls');
+  if(wrap.querySelectorAll('.mixUrl').length>=5) return;
+  const d=document.createElement('div'); d.className='row'; d.style.marginBottom='6px';
+  d.innerHTML='<input class="mixUrl" type="text" placeholder="인스타 릴스 URL" style="width:100%;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px">';
+  wrap.appendChild(d);
+}
+async function startProduceMix(){
+  if(!STATE.script){ alert('1단계에서 대본을 먼저 확정하세요'); return; }
+  const urls=[...document.querySelectorAll('.mixUrl')].map(i=>i.value.trim()).filter(Boolean);
+  if(urls.length<2){ alert('소스 영상 URL 2개 이상 입력'); return; }
+  const st=document.getElementById('mixStatus'); st.textContent='⏳ 시작 중…';
+  document.getElementById('mixReview').innerHTML='';
+  try{
+    const r=await fetch('/api/produce/mix/start',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({script:STATE.script, urls, target_seconds:30})});
+    const d=await r.json();
+    if(!d.ok){ st.textContent='❌ '+(d.error||'실패'); return; }
+    MIX_JOB=d.job_id; MIX_POLL=setInterval(pollMix,2500); pollMix();
+  }catch(e){ st.textContent='❌ 네트워크 오류'; }
+}
+async function pollMix(){
+  try{
+    const d=await (await fetch('/api/mix/status/'+MIX_JOB)).json();
+    const st=document.getElementById('mixStatus');
+    if(!d.ok){ st.textContent='상태 조회 실패'+(d.error?' — '+d.error:''); clearInterval(MIX_POLL); return; }
+    st.textContent='상태: '+(MIX_LABEL[d.status]||d.status)+(d.error?' — '+d.error:'');
+    if(d.status==='ready_for_review'){ clearInterval(MIX_POLL); loadMixReview(); }
+    if(d.status==='done'){ clearInterval(MIX_POLL); loadMixDone(); }
+    if(d.status==='failed'){ clearInterval(MIX_POLL); }
+  }catch(e){}
+}
+async function loadMixReview(){
+  const d=await (await fetch('/api/mix/result/'+MIX_JOB)).json();
+  const el=document.getElementById('mixReview');
+  if(!d.ok){ el.innerHTML=`<div class="hint" style="color:var(--fire)">편집안 로드 실패 ${esc(d.error||'')}</div>`; return; }
+  el.innerHTML='<h3 style="font-size:15px">편집안(장면 매칭)</h3>'+(d.beats||[]).map(b=>`
+    <div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;background:#0d1420">
+      <span style="font-size:11px;background:var(--accent2);padding:2px 8px;border-radius:10px">${esc(b.role||'')}</span>
+      <div style="margin:6px 0;font-size:13px">${esc(b.narration||'')}</div>
+      <div class="hint">🎞 ${esc(b.primary?.video_id||'')} · ${b.primary?.start}s~${b.primary?.end}s · ${b.target_seconds}s</div>
+      ${b.tts_preview_url?`<audio controls src="${esc(b.tts_preview_url)}" style="height:26px;margin-top:4px"></audio>`:''}
+    </div>`).join('')+`<button class="btn-next" onclick="renderMix()">🎬 최종 렌더</button>`;
+}
+async function renderMix(){
+  document.getElementById('mixReview').innerHTML='';
+  const st=document.getElementById('mixStatus'); st.textContent='⏳ 렌더 시작…';
+  const r=await fetch('/api/mix/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:MIX_JOB})});
+  const d=await r.json().catch(()=>({ok:false}));
+  if(!r.ok||!d.ok){ st.textContent='❌ 렌더 시작 실패'; return; }
+  MIX_POLL=setInterval(pollMix,3000); pollMix();
+}
+function loadMixDone(){
+  document.getElementById('mixReview').innerHTML=`<h3 style="font-size:15px">완성</h3>
+    <video controls src="/api/mix/video/${esc(MIX_JOB)}" style="max-width:360px;border-radius:10px"></video>`;
 }
 
 renderSteps(); showPanel(); setScriptMode('manual');

@@ -207,6 +207,57 @@ _TEMPLATE_INSTR = (
 )
 _FREE_INSTR = "[구조: 자유 모드] 비트 수와 구조(role 라벨)를 네가 자유롭게 정해라."
 
+# given_script 모드(영상제작 위저드 2단계) — 나레이션을 새로 쓰지 않고 확정 대본을
+# 비트로 쪼개 각 비트에 소스 영상 구간만 매칭한다.
+_SCRIPTED_PROMPT = """너는 숏폼 쇼핑 영상 편집 감독이다. **나레이션 대본은 이미 확정**돼 있다.
+아래 확정 대본을 자연스러운 비트(문장/구절) 단위로 나누고, 각 비트에 어울리는 소스
+영상 구간(seg_id)을 골라 편집안(EDL)을 만들어라.
+
+[확정 나레이션 대본] — 이 문장들을 **그대로** 사용해라(새로 쓰거나 바꾸지 마라).
+{given_script}
+
+[소스 세그먼트 인벤토리] — 각 줄이 하나의 구간이다. 대괄호 안이 seg_id다.
+{inventory}
+
+규칙(반드시 지켜라):
+- 확정 대본을 순서대로 비트로 쪼개라. 각 비트의 narration은 **확정 대본의 실제 구절
+  그대로**(표현·어미 바꾸지 말 것). 대본 전체가 빠짐없이 비트로 커버되게 해라.
+- 각 비트마다 그 말에 어울리는 소스 구간(primary는 seg_id로 지목) + 대체 후보
+  (alternates, seg_id로 {n_alternates}개까지) + 효과(effect, 기본 "cut").
+- **[여러 영상 모두 사용] primary 구간을 한 영상에만 몰지 마라. 소스가 여러 개면 고르게 섞어라.**
+- 나레이션과 primary 구간의 화면(scene_desc)이 실제로 어울리게 골라라.
+- **소스 구간은 반드시 인벤토리의 seg_id로만 지목**해라. 없는 seg_id 지어내지 마라.
+- affiliate_target: 이 영상이 팔거나 연결할 핵심 제품/재료 하나를 정확한 이름으로.
+- 출력은 스키마 JSON만."""
+
+
+def _vault_call(prompt, schema, max_tries=4):
+    """key_vault 캐스케이드 예비키풀로 JSON 생성 호출 → raw dict. 무키/실패면 None.
+
+    build_edit_plan이 comment_gen 전용키(1개, 쉽게 소진) 대신 배치된 예비키를
+    쓰도록 하는 공용 경로(2026-07-13)."""
+    keys = key_vault.get_live_keys_cascade("general")
+    if not keys:
+        return None
+    for key in keys[:max_tries]:
+        try:
+            resp = key_vault.get_client_for_key(key).models.generate_content(
+                model=comment_gen._MODEL, contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json", response_schema=schema),
+            )
+            return json.loads(resp.text)
+        except Exception as e:  # noqa: BLE001
+            if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
+                key_vault.mark_exhausted(key_vault._owner_group(key) or "general", key)
+                continue
+            if key_vault.is_quota_error(e):
+                continue
+            print(f"edit_plan._vault_call: {e!r}", file=sys.stderr)
+            return None
+    return None
+
+
 _TYPE_SCHEMA = {
     "type": "object",
     "properties": {"video_type": {"type": "string"}},
@@ -269,68 +320,52 @@ def detect_video_type(source_scripts, max_retries=3, quota_sleep=8):
 
 
 def build_edit_plan(source_scripts, target_seconds, structure="template", video_type=None,
-                    n_alternates=2, max_retries=4, quota_sleep=8):
-    """소스 대본들 → 그라운딩·표절검사된 EDL(설계 §3-2). 전용 풀 소진/실패 시 빈 EDL.
+                    n_alternates=2, max_retries=4, quota_sleep=8, given_script=None):
+    """소스 대본들 → 그라운딩·표절검사된 EDL(설계 §3-2). 실패 시 빈 EDL.
 
-    video_type이 None이면 detect_video_type()으로 자동 판별한다(설계 §3-1)."""
-    if not SHORTS_GEMINI_KEYS:
-        raise RuntimeError("edit_plan: SHORTS_GEMINI_KEY가 설정되지 않았습니다")
+    video_type이 None이면 detect_video_type()으로 자동 판별한다(설계 §3-1).
+    given_script이 주어지면(영상제작 2단계) 나레이션을 새로 쓰지 않고 그 확정 대본을
+    비트로 쪼개 각 비트에 소스 영상 구간만 매칭한다.
+    키는 key_vault 캐스케이드 예비키풀을 쓴다(comment_gen 전용키 소진 회피)."""
     seg_map, inventory = _build_inventory(source_scripts)
     if not seg_map:
         return {"structure": structure, "beats": [], "plagiarism_flags": [],
                 "detected_type": video_type or _DEFAULT_TYPE, "affiliate_target": ""}
 
-    if video_type is None:
-        video_type = detect_video_type(source_scripts)
-    if video_type not in VIDEO_TYPES:
-        video_type = _DEFAULT_TYPE
+    scripted = bool(given_script and given_script.strip())
+    if scripted:
+        video_type = video_type if video_type in VIDEO_TYPES else _DEFAULT_TYPE
+        prompt = _SCRIPTED_PROMPT.format(
+            given_script=given_script.strip()[:4000], inventory=inventory, n_alternates=n_alternates)
+    else:
+        if video_type is None:
+            video_type = detect_video_type(source_scripts)
+        if video_type not in VIDEO_TYPES:
+            video_type = _DEFAULT_TYPE
+        prompt = _PROMPT.format(
+            target_seconds=target_seconds, inventory=inventory, n_alternates=n_alternates,
+            char_target=int(target_seconds * 4.5),
+            structure_instruction=(_TEMPLATE_INSTR if structure == "template" else _FREE_INSTR),
+            type_strategy=VIDEO_TYPES[video_type]["strategy"],
+        )
 
     empty = {"structure": structure, "beats": [], "plagiarism_flags": [],
              "detected_type": video_type, "affiliate_target": ""}
-    prompt = _PROMPT.format(
-        target_seconds=target_seconds, inventory=inventory, n_alternates=n_alternates,
-        char_target=int(target_seconds * 4.5),
-        structure_instruction=(_TEMPLATE_INSTR if structure == "template" else _FREE_INSTR),
-        type_strategy=VIDEO_TYPES[video_type]["strategy"],
-    )
-    source_full_texts = [s.get("full_text", "") for s in source_scripts]
-
-    for attempt in range(max_retries):
-        key, idx = comment_gen._current_key_and_idx()
-        if key is None:
-            return empty
-        try:
-            resp = comment_gen._client_for_key(key).models.generate_content(
-                model=comment_gen._MODEL, contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json", response_schema=_RESPONSE_SCHEMA,
-                ),
-            )
-            raw = json.loads(resp.text)
-            raw.setdefault("structure", structure)
-            grounded = _validate_and_ground(raw, seg_map, n_alternates)
-            # 각 비트 target_seconds는 모델 값이 아니라 나레이션 글자수 기준으로
-            # 재계산한다. 실제 렌더 길이 = 나레이션 읽는 시간(≈글자수÷4.5초)이므로
-            # UI에 표시되는 초와 실제 영상 길이가 어긋나지 않게 맞춘다(초당 4.5자).
-            for _b in grounded["beats"]:
-                _n = len((_b.get("narration") or "").strip())
-                _b["target_seconds"] = round(max(1.5, _n / 4.5), 1)
-            grounded["structure"] = structure  # 모델이 지어낸 라벨(template_mode 등) 무시, 입력값 고정
-            grounded["detected_type"] = video_type
-            grounded["affiliate_target"] = raw.get("affiliate_target", "")
-            grounded["plagiarism_flags"] = _plagiarism_flags(grounded["beats"], source_full_texts)
-            return grounded
-        except Exception as e:
-            m = str(e)
-            if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                comment_gen._mark_key_exhausted(idx)
-                continue
-            if key_vault.is_quota_error(e):
-                time.sleep(quota_sleep)
-                continue
-            if attempt < max_retries - 1 and any(c in m for c in ("503", "UNAVAILABLE", "overloaded")):
-                time.sleep((attempt + 1) * 5)
-                continue
-            print(f"edit_plan: 미분류 오류로 빈 EDL 반환 — {e!r}", file=sys.stderr)
-            return empty
-    return empty
+    raw = _vault_call(prompt, _RESPONSE_SCHEMA, max_tries=max_retries)
+    if raw is None:
+        return empty
+    raw.setdefault("structure", structure)
+    grounded = _validate_and_ground(raw, seg_map, n_alternates)
+    # 각 비트 target_seconds는 나레이션 글자수 기준으로 재계산(실제 렌더 길이 =
+    # 나레이션 읽는 시간 ≈ 글자수÷4.5초). UI 표시 초와 실제 길이가 어긋나지 않게.
+    for _b in grounded["beats"]:
+        _n = len((_b.get("narration") or "").strip())
+        _b["target_seconds"] = round(max(1.5, _n / 4.5), 1)
+    grounded["structure"] = structure
+    grounded["detected_type"] = video_type
+    grounded["affiliate_target"] = raw.get("affiliate_target", "")
+    # given_script 모드에선 나레이션이 사용자 확정 대본이므로 소스원문 표절검사 생략.
+    grounded["plagiarism_flags"] = ([] if scripted
+                                    else _plagiarism_flags(grounded["beats"],
+                                                           [s.get("full_text", "") for s in source_scripts]))
+    return grounded

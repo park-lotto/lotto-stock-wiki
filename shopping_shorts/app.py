@@ -995,6 +995,26 @@ def api_produce_script_mix(body: dict):
     return {"ok": True, "drafts": drafts}
 
 
+@app.post("/api/produce/mix/start")
+def api_produce_mix_start(background_tasks: BackgroundTasks, body: dict):
+    """2단계 영상믹스 — 확정 대본(given_script)을 소스영상 장면에 매칭하는 job 시작.
+    리뷰·렌더는 기존 /api/mix/{status,result,adjust,render,video}를 그대로 쓴다.
+    body: {script, urls, target_seconds, subtitle_removal}."""
+    script = (body.get("script") or "").strip()
+    urls = [u for u in (body.get("urls") or []) if u]
+    if not script:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "확정 대본이 비어 있습니다(1단계)"})
+    if len(urls) < 2:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "소스 영상 URL 2개 이상 필요"})
+    target = int(body.get("target_seconds") or 30)
+    subtitle_removal = bool(body.get("subtitle_removal", False))
+    job_id = uuid.uuid4().hex[:12]
+    Store(DB_PATH).create_mix_job(job_id, urls, target, "free",
+                                  subtitle_removal=subtitle_removal, given_script=script)
+    background_tasks.add_task(run_mix_job, job_id, DB_PATH, _MIX_WORK_DIR)
+    return {"ok": True, "job_id": job_id}
+
+
 # 정적 프론트 (마운트는 맨 마지막)
 _STATIC = Path(__file__).parent / "static"
 

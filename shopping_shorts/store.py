@@ -127,7 +127,8 @@ class Store:
                     created_at TEXT NOT NULL,
                     updated_at TEXT NOT NULL,
                     subtitle_removal INTEGER NOT NULL DEFAULT 0,
-                    clean_video_path TEXT
+                    clean_video_path TEXT,
+                    given_script TEXT
                 )
             """)
             c.execute("""
@@ -201,6 +202,7 @@ class Store:
             for col, ddl in (
                 ("subtitle_removal", "INTEGER NOT NULL DEFAULT 0"),
                 ("clean_video_path", "TEXT"),
+                ("given_script", "TEXT"),  # 영상제작 2단계 given_script 모드(2026-07-13)
             ):
                 try:
                     c.execute(f"ALTER TABLE mix_jobs ADD COLUMN {col} {ddl}")
@@ -618,15 +620,19 @@ class Store:
         return [{"origin_shortcode": r[0], "platform": r[1], "url": r[2], "title": r[3],
                  "thumbnail": r[4], "similarity_score": r[5], "saved_at": r[6]} for r in rows]
 
-    def create_mix_job(self, job_id, urls, target_seconds, structure, subtitle_removal=False):
-        """새 믹스 job 생성. 초기 status='downloading'."""
+    def create_mix_job(self, job_id, urls, target_seconds, structure,
+                       subtitle_removal=False, given_script=None):
+        """새 믹스 job 생성. 초기 status='downloading'.
+        given_script: 영상제작 2단계 — 확정 대본을 그대로 쓸 때(나레이션 자동생성 대신)."""
         now = datetime.now(timezone.utc).isoformat()
         with self._conn() as c:
             c.execute(
                 "INSERT INTO mix_jobs(job_id, urls_json, target_seconds, structure, "
-                "status, created_at, updated_at, subtitle_removal) VALUES(?,?,?,?,?,?,?,?)",
+                "status, created_at, updated_at, subtitle_removal, given_script) "
+                "VALUES(?,?,?,?,?,?,?,?,?)",
                 (job_id, json.dumps(urls, ensure_ascii=False), target_seconds,
-                 structure, "downloading", now, now, 1 if subtitle_removal else 0),
+                 structure, "downloading", now, now, 1 if subtitle_removal else 0,
+                 given_script or None),
             )
 
     def get_mix_job(self, job_id):
@@ -635,7 +641,7 @@ class Store:
             row = c.execute(
                 "SELECT job_id, urls_json, target_seconds, structure, status, error, "
                 "extract_json, edit_plan_json, video_path, created_at, updated_at, "
-                "subtitle_removal, clean_video_path "
+                "subtitle_removal, clean_video_path, given_script "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -647,6 +653,7 @@ class Store:
             "edit_plan": json.loads(row[7]) if row[7] else None,
             "video_path": row[8], "created_at": row[9], "updated_at": row[10],
             "subtitle_removal": bool(row[11]), "clean_video_path": row[12],
+            "given_script": row[13],
         }
 
     def update_mix_job(self, job_id, **fields):
