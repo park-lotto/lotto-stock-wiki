@@ -69,3 +69,26 @@ def test_elem_lines_hook_uses_hook_type_field():
     struct["hook_type"] = "경고형"
     lines = script_generate._elem_lines(struct, {"hook": "keep"}, {})
     assert "경고형" in lines
+
+
+def test_refine_draft_rewrite_returns_new_script(monkeypatch):
+    _wire(monkeypatch, json.dumps({"script": "더 유머러스한 새 대본"}))
+    out = script_generate.refine_draft_rewrite("원본 대본", "더 유머러스하게")
+    assert out == "더 유머러스한 새 대본"
+
+
+def test_refine_draft_rewrite_empty_on_failure(monkeypatch):
+    _wire(monkeypatch, "not json")
+    assert script_generate.refine_draft_rewrite("원본", "지시") == ""
+
+
+def test_refine_draft_partial_returns_new_script(monkeypatch):
+    _wire(monkeypatch, json.dumps({"script": "앞부분 그대로. 바뀐 뒷부분."}))
+    out = script_generate.refine_draft_partial("앞부분 그대로. 원래 뒷부분.", "원래 뒷부분.", "더 재밌게")
+    assert out == "앞부분 그대로. 바뀐 뒷부분."
+
+
+def test_refine_draft_no_keys_returns_empty(monkeypatch):
+    monkeypatch.setattr(comment_gen, "SHORTS_GEMINI_KEYS", [])
+    assert script_generate.refine_draft_rewrite("원본", "지시") == ""
+    assert script_generate.refine_draft_partial("원본", "부분", "지시") == ""

@@ -237,3 +237,70 @@ def generate_variations(structure, full_text, elem_modes, category_lookup, mode=
                 continue
             return []
     return []
+
+
+_REFINE_SCHEMA = {
+    "type": "object",
+    "properties": {"script": {"type": "string"}},
+    "required": ["script"],
+}
+
+_REWRITE_PROMPT = """너는 한국 쇼핑 숏폼 대본 작가다. 아래 대본을 지시에 맞춰 통째로
+다시 써라(구어체 나레이션, 0초 훅부터 끝 CTA까지 흐름은 유지).
+
+[원본 대본]
+{script}
+
+[지시]
+{instruction}
+
+다음 JSON으로만 출력: {{"script": "다시 쓴 전체 대본"}}"""
+
+_PARTIAL_PROMPT = """너는 한국 쇼핑 숏폼 대본 작가다. 아래 대본에서 지정된 부분만
+지시대로 바꿔라. 지정된 부분 밖은 토씨 하나 그대로 유지해라.
+
+[원본 대본 전체]
+{script}
+
+[바꿀 부분]
+{selected}
+
+[지시]
+{instruction}
+
+다음 JSON으로만 출력: {{"script": "수정된 전체 대본(바뀐 부분만 반영, 나머지는 원본 그대로)"}}"""
+
+
+def _refine(prompt, max_key_tries=3):
+    if not comment_gen.SHORTS_GEMINI_KEYS:
+        return ""
+    for _ in range(max_key_tries):
+        key, ki = comment_gen._current_key_and_idx()
+        if key is None:
+            return ""
+        try:
+            resp = comment_gen._client_for_key(key).models.generate_content(
+                model=_MODEL, contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json", response_schema=_REFINE_SCHEMA),
+            )
+            return json.loads(resp.text).get("script", "")
+        except Exception as e:  # noqa: BLE001 — 재생성 실패는 치명적 아님(빈 문자열)
+            if (comment_gen.key_vault.is_daily_exhausted_error(e)
+                    or comment_gen.key_vault.is_account_disabled_error(e)):
+                comment_gen._mark_key_exhausted(ki)
+                continue
+            return ""
+    return ""
+
+
+def refine_draft_rewrite(script_text, instruction, max_key_tries=3):
+    """대본 전체를 지시문에 맞춰 다시 쓴다. 실패/무키면 ""."""
+    return _refine(_REWRITE_PROMPT.format(script=script_text, instruction=instruction), max_key_tries)
+
+
+def refine_draft_partial(script_text, selected_text, instruction, max_key_tries=3):
+    """선택한 부분만 지시문에 맞춰 바꾸고 나머지는 유지. 실패/무키면 ""."""
+    return _refine(
+        _PARTIAL_PROMPT.format(script=script_text, selected=selected_text, instruction=instruction),
+        max_key_tries)
