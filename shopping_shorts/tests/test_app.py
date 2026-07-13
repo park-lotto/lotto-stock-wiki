@@ -120,6 +120,28 @@ def test_wiki_generate_ok(monkeypatch):
     assert captured["elem_modes"] == {"characters": "keep", "twist": "category:반전형"}
 
 
+def test_wiki_generate_saves_drafts_and_returns_draft_id(monkeypatch):
+    monkeypatch.setattr(app_module, "_AUTH_ON", False)
+    monkeypatch.setattr(app_module.Store, "get_wiki_item",
+                        lambda self, sc, **kw: {"structure": {}, "full_text": "ft", "category": "레시피"})
+    monkeypatch.setattr(app_module.Store, "get_element_options", lambda self, category: {})
+    monkeypatch.setattr(app_module.script_generate, "generate_variations",
+                        lambda *a, **k: [{"hook": "h1", "script": "s1", "applied": "a1"},
+                                          {"hook": "h2", "script": "s2", "applied": "a2"}])
+    saved = []
+    monkeypatch.setattr(app_module.Store, "save_draft",
+                        lambda self, draft_id, customer_id, source_shortcode, parent_draft_id, hook, script_text, edit_instruction, edit_mode:
+                        saved.append((draft_id, source_shortcode, script_text, edit_mode)))
+    client = TestClient(app_module.app)
+    r = client.post("/api/wiki/generate", params={"shortcode": "SC1"},
+                     json={"mode": "A", "elem_modes": {}})
+    d = r.json()
+    assert len(d["drafts"]) == 2
+    assert all(dr.get("draft_id") for dr in d["drafts"])
+    assert len(saved) == 2
+    assert saved[0][1] == "SC1" and saved[0][2] == "s1" and saved[0][3] == "generate"
+
+
 def test_wiki_element_options_returns_saved_categories(monkeypatch, client):
     monkeypatch.setattr(app_module, "_AUTH_ON", False)
     monkeypatch.setattr(app_module.Store, "get_element_options",

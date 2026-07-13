@@ -603,6 +603,11 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         mode=mode, my_topic=my_topic, n=n)
     if not drafts:
         return JSONResponse(status_code=502, content={"ok": False, "error": "생성 실패(Gemini 키 소진 또는 오류) — 잠시 후 재시도"})
+    cid = _cid(request)
+    for dr in drafts:
+        draft_id = uuid.uuid4().hex[:12]
+        store.save_draft(draft_id, cid, shortcode, None, dr.get("hook", ""), dr.get("script", ""), None, "generate")
+        dr["draft_id"] = draft_id
     return {"ok": True, "drafts": drafts}
 
 
