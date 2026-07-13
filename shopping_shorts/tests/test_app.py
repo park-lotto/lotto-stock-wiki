@@ -630,3 +630,26 @@ def test_draft_history_returns_chain(monkeypatch):
     d = r.json()
     assert d["ok"] is True
     assert len(d["history"]) == 2
+
+
+def test_wiki_save_triggers_immediate_relearn(monkeypatch):
+    """도서관 저장 직후 구조를 학습소스에 채우고 그 카테고리를 즉시 재학습(백그라운드)."""
+    monkeypatch.setattr(app_module, "_AUTH_ON", False)
+    monkeypatch.setattr(app_module.Store, "load_last_run",
+                        lambda self: ([{"shortcode": "SC1", "category": "레시피"}], "now"))
+    monkeypatch.setattr(app_module.Store, "get_script",
+                        lambda self, code: {"full_text": "대본", "segments": []})
+    monkeypatch.setattr(app_module, "analyze_structure", lambda t: {"tone": "친근"})
+    monkeypatch.setattr(app_module.Store, "save_to_wiki", lambda self, *a, **k: None)
+    saved_struct = []
+    monkeypatch.setattr(app_module.Store, "save_extract_structure",
+                        lambda self, code, structure: saved_struct.append((code, structure)))
+    import shopping_shorts.daily_batch as db
+    relearned = []
+    monkeypatch.setattr(db, "recompute_element_stats",
+                        lambda store, only_category=None: relearned.append(only_category))
+    client = TestClient(app_module.app)
+    r = client.post("/api/wiki/save", params={"shortcode": "SC1"})
+    assert r.status_code == 200
+    assert saved_struct and saved_struct[0][0] == "SC1"       # 학습소스에 구조 채움
+    assert relearned == ["레시피"]                             # 그 카테고리만 재학습

@@ -515,9 +515,21 @@ def api_extract_script(shortcode: str):
     return {"ok": True, "cached": False, **result}
 
 
+def _relearn_category(db_path, category):
+    """위키 저장 직후 그 카테고리의 요소 카테고리를 즉시 재학습(백그라운드). 실패해도 무해."""
+    if not category:
+        return
+    try:
+        from shopping_shorts import daily_batch
+        daily_batch.recompute_element_stats(Store(db_path), only_category=category)
+    except Exception as e:  # noqa: BLE001 — 학습 실패는 저장 자체엔 영향 없음
+        print(f"relearn 실패 {category}: {e}")
+
+
 @app.post("/api/wiki/save")
-def api_wiki_save(request: Request, shortcode: str):
-    """S급 대본을 위키(도서관)에 저장 — 대본 확보(캐시/즉석추출) → 구조분석 → 저장."""
+def api_wiki_save(request: Request, shortcode: str, background_tasks: BackgroundTasks):
+    """S급 대본을 위키(도서관)에 저장 — 대본 확보(캐시/즉석추출) → 구조분석 → 저장.
+    저장 직후 그 카테고리를 즉시 재학습(예약 안 기다림, 2026-07-14)."""
     store = Store(DB_PATH)
     items, _ = store.load_last_run()
     target_code = _media_code(shortcode)
@@ -563,6 +575,9 @@ def api_wiki_save(request: Request, shortcode: str):
 
     structure = analyze_structure(script.get("full_text", ""))
     store.save_to_wiki(item, script, structure, customer_id=_cid(request))
+    # 학습 소스에도 구조 채우고(재분석 없이 재사용) 그 카테고리 즉시 재학습(백그라운드).
+    store.save_extract_structure(code, structure)
+    background_tasks.add_task(_relearn_category, DB_PATH, item.get("category"))
     return {"ok": True, "shortcode": code, "structure": structure, "has_video": media_target.exists()}
 
 
