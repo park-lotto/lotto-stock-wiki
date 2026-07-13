@@ -81,6 +81,16 @@
   .draft .ds{font-size:13.5px;line-height:1.7;white-space:pre-wrap}
   .draft .da{font-size:11px;color:var(--sub);margin-top:8px;border-top:1px solid var(--line);padding-top:6px}
   .draft .dcopy{margin-top:8px;font-size:12px;color:var(--accent);background:none;border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer}
+  .draft .dtext{width:100%;min-height:90px;background:#0a0e14;border:1px solid var(--line);border-radius:8px;
+                color:var(--txt);font-size:13.5px;line-height:1.7;padding:10px;font-family:inherit;resize:vertical}
+  .draft .refine-row{display:flex;gap:6px;margin-top:8px}
+  .draft .refine-row input{flex:1;background:#0d131c;border:1px solid var(--line);border-radius:6px;color:var(--txt);padding:7px 10px;font-size:12.5px}
+  .draft .refine-row button{font-size:12px;color:var(--accent);background:none;border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer;white-space:nowrap}
+  .draft .hist{margin-top:8px;font-size:11.5px;color:var(--sub);cursor:pointer}
+  .draft .hist-list{display:none;margin-top:6px;background:#0a0e14;border:1px solid var(--line);border-radius:6px;padding:6px}
+  .draft .hist-list.open{display:block}
+  .draft .hist-item{padding:5px 6px;font-size:12px;cursor:pointer;border-radius:4px}
+  .draft .hist-item:hover{background:#161d2b}
   .gen-load{text-align:center;color:var(--sub);padding:30px;font-size:14px}
   .gen-err{color:#ff9b9b;padding:16px;font-size:13px;text-align:center}
   @media(max-width:768px){.sidebar{width:100%;border-right:none;border-bottom:1px solid var(--line)}.main{padding:16px 14px}.card{flex-direction:column}.vid{width:100%;max-width:280px}}
@@ -235,19 +245,88 @@ async function runGen(){
       body: JSON.stringify({mode, my_topic: topic, n: 3, elem_modes: elemModes}),
     })).json();
     if(!d.ok){ res.innerHTML='<div class="gen-err">⚠️ '+esc(d.error||'생성 실패')+'</div>'; return; }
-    res.innerHTML=(d.drafts||[]).map((dr,i)=>`<div class="draft">
+    res.innerHTML=(d.drafts||[]).map((dr,i)=>`<div class="draft" data-draft-id="${dr.draft_id}">
       <div class="dh">초안 ${i+1} · ${esc(dr.hook||'')}</div>
-      <div class="ds">${esc(dr.script||'')}</div>
+      <textarea class="dtext" onblur="onDraftEdit(this)">${esc(dr.script||'')}</textarea>
       <div class="da">🔧 ${esc(dr.applied||'')}</div>
-      <button class="dcopy" onclick="copyDraft(this)">📋 복사</button></div>`).join('')
+      <div class="refine-row">
+        <input type="text" class="refine-inst" placeholder="지시문 (예: 더 유머러스하게)">
+        <button onclick="refineDraft(this,'rewrite')">전체 재작성</button>
+        <button onclick="refineDraft(this,'partial')">선택 부분만 수정</button>
+      </div>
+      <button class="dcopy" onclick="copyDraft(this)">📋 복사</button>
+      <div class="hist" onclick="toggleHistory(this)">📜 버전 이력 보기 ▾</div>
+      <div class="hist-list"></div>
+    </div>`).join('')
       || '<div class="gen-err">생성 결과가 비었습니다 — 다시 시도해주세요.</div>';
   }catch(e){ res.innerHTML='<div class="gen-err">⚠️ 네트워크 오류 — 잠시 후 재시도</div>'; }
   finally{ btn.disabled=false; btn.textContent='✨ 초안 생성 (10~20초)'; }
 }
 async function copyDraft(btn){
-  const s=((btn.closest('.draft').querySelector('.ds'))||{}).innerText||'';
+  const s=((btn.closest('.draft').querySelector('.dtext'))||{}).value||'';
   try{ await navigator.clipboard.writeText(s); }catch(e){ const t=document.createElement('textarea'); t.value=s; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
   const o=btn.textContent; btn.textContent='✓ 복사됨'; setTimeout(()=>btn.textContent=o,1200);
+}
+async function onDraftEdit(textarea){
+  const card = textarea.closest('.draft');
+  const draftId = card.dataset.draftId;
+  const text = textarea.value;
+  try{
+    const d = await (await fetch('/api/wiki/draft/edit', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({draft_id: draftId, script_text: text}),
+    })).json();
+    if(d.ok) card.dataset.draftId = d.draft_id;
+  }catch(e){}
+}
+
+async function refineDraft(btn, mode){
+  const card = btn.closest('.draft');
+  const draftId = card.dataset.draftId;
+  const textarea = card.querySelector('.dtext');
+  const instruction = card.querySelector('.refine-inst').value.trim();
+  if(!instruction){ alert('지시문을 입력하세요.'); return; }
+  let selectedText = '';
+  if(mode === 'partial'){
+    selectedText = textarea.value.substring(textarea.selectionStart, textarea.selectionEnd).trim();
+    if(!selectedText){ alert('수정할 부분을 텍스트박스에서 드래그로 선택하세요.'); return; }
+  }
+  btn.disabled = true; const orig = btn.textContent; btn.textContent = '⏳ 생성 중…';
+  try{
+    const body = {draft_id: draftId, mode, instruction};
+    if(mode === 'partial') body.selected_text = selectedText;
+    const d = await (await fetch('/api/wiki/draft/refine', {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body),
+    })).json();
+    if(!d.ok){ alert(d.error || '재생성 실패'); return; }
+    textarea.value = d.script_text;
+    card.dataset.draftId = d.draft_id;
+    card.querySelector('.refine-inst').value = '';
+  }catch(e){ alert('네트워크 오류'); }
+  finally{ btn.disabled = false; btn.textContent = orig; }
+}
+
+async function toggleHistory(el){
+  const card = el.closest('.draft');
+  const list = card.querySelector('.hist-list');
+  if(list.classList.contains('open')){ list.classList.remove('open'); return; }
+  try{
+    const d = await (await fetch('/api/wiki/draft/history?draft_id=' + encodeURIComponent(card.dataset.draftId))).json();
+    list.innerHTML = (d.history || []).map((h, i) =>
+      `<div class="hist-item" onclick="restoreVersion(this,'${h.draft_id}')">v${i+1}${h.edit_instruction ? ' · '+esc(h.edit_instruction) : ''} — ${esc((h.script_text||'').slice(0,40))}…</div>`
+    ).join('') || '<div class="hist-item">이력 없음</div>';
+  }catch(e){}
+  list.classList.add('open');
+}
+
+function restoreVersion(el, draftId){
+  const card = el.closest('.draft');
+  fetch('/api/wiki/draft/history?draft_id=' + encodeURIComponent(card.dataset.draftId))
+    .then(r => r.json())
+    .then(d => {
+      const found = (d.history || []).find(h => h.draft_id === draftId);
+      if(found){ card.querySelector('.dtext').value = found.script_text; }
+    });
 }
 load();
 </script>
