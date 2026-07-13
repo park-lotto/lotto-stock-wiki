@@ -18,26 +18,54 @@ def _wire(mp, text):
 
 def test_generate_ok(monkeypatch):
     _wire(monkeypatch, json.dumps({"drafts": [{"hook": "h", "script": "s", "applied": "a"}]}))
-    out = script_generate.generate_variations(_STRUCT, "원본 대본", {"characters": True}, "A")
+    out = script_generate.generate_variations(_STRUCT, "원본 대본", {"characters": "keep"}, {}, "A")
     assert out[0]["script"] == "s"
 
 
 def test_generate_no_keys(monkeypatch):
     monkeypatch.setattr(comment_gen, "SHORTS_GEMINI_KEYS", [])
-    assert script_generate.generate_variations(_STRUCT, "t", {}, "A") == []
+    assert script_generate.generate_variations(_STRUCT, "t", {}, {}, "A") == []
 
 
 def test_generate_empty_text_is_noop(monkeypatch):
     monkeypatch.setattr(comment_gen, "SHORTS_GEMINI_KEYS", ["k"])
-    assert script_generate.generate_variations(_STRUCT, "   ", {}, "A") == []
+    assert script_generate.generate_variations(_STRUCT, "   ", {}, {}, "A") == []
 
 
 def test_generate_bad_json(monkeypatch):
     _wire(monkeypatch, "not json")
-    assert script_generate.generate_variations(_STRUCT, "t", {}, "A") == []
+    assert script_generate.generate_variations(_STRUCT, "t", {}, {}, "A") == []
 
 
-def test_elem_lines_keep_vs_vary():
-    lines = script_generate._elem_lines(_STRUCT, {"characters": True, "twist": False})
-    assert "유지" in lines and "변형" in lines
+def test_elem_lines_keep_mode():
+    lines = script_generate._elem_lines(_STRUCT, {"characters": "keep", "twist": "keep"}, {})
+    assert "유지" in lines
     assert "농원 언니" in lines  # characters를 사람이 읽을 형태로 펼침
+
+
+def test_elem_lines_free_mode():
+    lines = script_generate._elem_lines(_STRUCT, {"twist": "free"}, {})
+    assert "변형" in lines and "자유" in lines
+
+
+def test_elem_lines_category_mode_uses_lookup_description():
+    lookup = {"characters": [{"label": "전문가", "description": "직업 전문가 등장"}]}
+    lines = script_generate._elem_lines(
+        _STRUCT, {"characters": "category:전문가"}, lookup)
+    assert "전문가" in lines and "직업 전문가 등장" in lines
+
+
+def test_elem_lines_random_mode_picks_from_lookup(monkeypatch):
+    lookup = {"tone": [{"label": "정중체", "description": "존댓말"}]}
+    monkeypatch.setattr(script_generate.random, "choice", lambda seq: seq[0])
+    lines = script_generate._elem_lines(_STRUCT, {"tone": "random"}, lookup)
+    assert "정중체" in lines
+
+
+def test_elem_lines_hook_uses_hook_type_field():
+    # hook 요소는 structure의 실제 필드명이 hook_type(analyze_structure 출력 기준) —
+    # _elem_lines가 "hook"이 아니라 "hook_type"을 읽는지 확인(버그 수정, 2026-07-13).
+    struct = dict(_STRUCT)
+    struct["hook_type"] = "경고형"
+    lines = script_generate._elem_lines(struct, {"hook": "keep"}, {})
+    assert "경고형" in lines

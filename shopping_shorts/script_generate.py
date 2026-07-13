@@ -7,6 +7,7 @@
 전용 키풀(comment_gen) 재사용. 실패/무키면 [].
 """
 import json
+import random
 
 from google.genai import types
 
@@ -168,23 +169,46 @@ def generate_mix(sources, target_seconds=20, n=3, max_key_tries=3):
     return _generate_drafts(prompt)
 
 
-def _elem_lines(structure, keep_flags):
+def _elem_lines(structure, elem_modes, category_lookup):
+    """요소별 지시 라인 생성. elem_modes: {element_key: mode_string}, mode_string은
+    "keep"(원본유지) / "free"(AI 자유즉흥) / "random"(학습된 카테고리 중 랜덤) /
+    "category:<label>"(특정 카테고리 지정) 중 하나(2026-07-13, 4단 모드).
+    category_lookup: {element: [{"label","description"}, ...]} — Store.get_element_options()
+    형태. 지정/랜덤 모드인데 옵션이 없으면 free로 자동 폴백."""
+    _STRUCT_KEY = {"hook": "hook_type"}  # analyze_structure 출력 필드명과 매핑
     lines = []
     for key, label in ELEM_LABELS.items():
+        struct_key = _STRUCT_KEY.get(key, key)
         if key == "characters":
             chs = structure.get("characters") or []
             val = ", ".join(f"{c.get('who')}({c.get('role')})" for c in chs) or "없음"
         else:
-            val = structure.get(key) or "(원본에 없음)"
-        if keep_flags.get(key, True):
+            val = structure.get(struct_key) or "(원본에 없음)"
+
+        mode = elem_modes.get(key, "keep")
+        options = category_lookup.get(key) or []
+
+        if mode == "keep":
             lines.append(f"- {label}: 유지 → 원본과 같은 강점 살려라 [{val}]")
-        else:
-            lines.append(f"- {label}: 변형 → 원본[{val}]과 다르게 더 참신하게 바꿔라")
+            continue
+        if mode == "random" and options:
+            mode = "category:" + random.choice(options)["label"]
+        if mode.startswith("category:") and options:
+            wanted = mode.split(":", 1)[1]
+            opt = next((o for o in options if o["label"] == wanted), None)
+            if opt:
+                lines.append(
+                    f"- {label}: 반드시 '{opt['label']}' 유형으로 — {opt['description']} "
+                    f"(원본[{val}]과 달라도 됨, 이 카테고리 안에서 자연스럽게)")
+                continue
+        # free 모드이거나, category/random인데 옵션이 없으면 자유즉흥으로 폴백
+        lines.append(f"- {label}: 변형(자유 즉흥) → 원본[{val}]과 다르게 더 참신하게 바꿔라")
     return "\n".join(lines)
 
 
-def generate_variations(structure, full_text, keep_flags, mode="A", my_topic="", n=3, max_key_tries=3):
-    """구조+대본을 재료로 유지/변형 지시에 맞춰 초안 리스트 반환. 실패/무키면 []."""
+def generate_variations(structure, full_text, elem_modes, category_lookup, mode="A",
+                         my_topic="", n=3, max_key_tries=3):
+    """구조+대본을 재료로 요소별 모드 지시에 맞춰 초안 리스트 반환. 실패/무키면 []."""
     if not comment_gen.SHORTS_GEMINI_KEYS or not (full_text or "").strip():
         return []
     n = max(1, min(int(n or 3), 5))
@@ -193,7 +217,7 @@ def generate_variations(structure, full_text, keep_flags, mode="A", my_topic="",
     else:
         topic_line = "주제: 원본과 같은 주제 영역에서, 내용은 새롭게 신선하게 변주"
     prompt = _GEN_PROMPT.format(
-        full_text=full_text[:3000], elems=_elem_lines(structure or {}, keep_flags),
+        full_text=full_text[:3000], elems=_elem_lines(structure or {}, elem_modes, category_lookup),
         topic_line=topic_line, n=n)
     for _ in range(max_key_tries):
         key, ki = comment_gen._current_key_and_idx()
