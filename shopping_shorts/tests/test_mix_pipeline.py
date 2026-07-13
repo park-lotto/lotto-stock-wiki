@@ -15,7 +15,7 @@ def test_run_mix_job_happy_path(monkeypatch):
     s.create_mix_job("j1", ["https://www.instagram.com/reel/AAA/",
                              "https://www.instagram.com/reel/BBB/"], 20, "free")
 
-    monkeypatch.setattr(mix_pipeline, "download_any", lambda url, d: str(Path(d) / "v.mp4"))
+    monkeypatch.setattr(mix_pipeline, "download_any", lambda url, d: (str(Path(d) / "v.mp4"), ""))
     monkeypatch.setattr(mix_pipeline, "extract_script",
                         lambda path, video_id, caption="": {
                             "segments": [{"seg_id": f"{video_id}-0", "start": 0.0, "end": 2.0,
@@ -47,7 +47,7 @@ def test_run_mix_job_empty_edl_fails(monkeypatch):
     s = Store(db)
     s.create_mix_job("je", ["https://www.instagram.com/reel/AAA/"], 20, "free")
 
-    monkeypatch.setattr(mix_pipeline, "download_any", lambda url, d: str(Path(d) / "v.mp4"))
+    monkeypatch.setattr(mix_pipeline, "download_any", lambda url, d: (str(Path(d) / "v.mp4"), ""))
     monkeypatch.setattr(mix_pipeline, "extract_script",
                         lambda path, video_id, caption="": {"segments": [], "full_text": ""})
     monkeypatch.setattr(mix_pipeline, "build_edit_plan",
@@ -177,8 +177,26 @@ def test_run_render_happy_path(monkeypatch):
 def test_mix_accepts_youtube_url(monkeypatch, tmp_path):
     from shopping_shorts import mix_pipeline as mp
     got = {}
-    monkeypatch.setattr(mp, "download_any", lambda url, d: got.setdefault("urls", []).append(url) or str(tmp_path / "x.mp4"))
+    monkeypatch.setattr(mp, "download_any", lambda url, d: got.setdefault("urls", []).append(url) or (str(tmp_path / "x.mp4"), ""))
     # _prepare_sources 만 단위 검증(전체 잡 아님): youtube URL도 통과해야 함
     urls = ["https://www.youtube.com/watch?v=a", "https://www.tiktok.com/@u/video/1"]
-    paths = mp._prepare_sources(urls, tmp_path)
+    paths, captions = mp._prepare_sources(urls, tmp_path)
     assert len(paths) == 2 and got["urls"] == urls
+    assert captions == {"s0": "", "s1": ""}
+
+
+def test_prepare_sources_carries_instagram_caption(monkeypatch, tmp_path):
+    # 인스타 캡션 회귀 수정: download_any가 (path, caption)을 반환하면
+    # _prepare_sources가 captions 딕셔너리에 그대로 실어야 한다(최종리뷰 IMPORTANT).
+    from shopping_shorts import mix_pipeline as mp
+
+    def fake_download(url, d):
+        if "instagram" in url:
+            return str(tmp_path / "ig.mp4"), "인스타 원본 캡션"
+        return str(tmp_path / "yt.mp4"), ""
+    monkeypatch.setattr(mp, "download_any", fake_download)
+
+    urls = ["https://www.instagram.com/reel/AAA/", "https://www.youtube.com/watch?v=a"]
+    paths, captions = mp._prepare_sources(urls, tmp_path)
+    assert captions["s0"] == "인스타 원본 캡션"
+    assert captions["s1"] == ""

@@ -114,6 +114,8 @@ def collect(platform="instagram", limit_channels=None):
     """
     if platform == "youtube":
         return _collect_youtube()
+    if platform != "instagram":
+        return []   # 미구현 플랫폼(틱톡 등)이 인스타 Apify 스크레이프로 흘러들지 않게(Phase2 전까지)
 
     channels = load_channels()
 

@@ -62,7 +62,9 @@ def api_collect(background_tasks: BackgroundTasks, limit: int | None = None, pla
     try:
         items = collect(platform=platform, limit_channels=limit)
         if platform != "instagram":
-            return {"ok": True, "count": len(items), "items": items}
+            _, collected_at = Store(DB_PATH).load_last_run_platform(platform)
+            return {"ok": True, "count": len(items), "items": items,
+                    "collected_at": collected_at}
         from datetime import datetime, timezone
         collected_at = datetime.now(timezone.utc).isoformat()
         store = Store(DB_PATH)

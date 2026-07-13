@@ -23,14 +23,19 @@ def _source_video_id(i):
 
 
 def _prepare_sources(urls, work):
-    """소스 URL들을 플랫폼 무관하게 다운로드 → {video_id: mp4경로}. 캡션은 별도."""
+    """소스 URL들을 플랫폼 무관하게 다운로드 → ({video_id: mp4경로}, {video_id: caption}).
+    caption은 인스타 소스만 채워짐(download_any가 (path, caption) 튜플 반환) — 유튜브/틱톡은
+    빈 문자열이라 extract_script가 영상 재전사로 채운다."""
     video_paths = {}
+    captions = {}
     for i, url in enumerate(urls):
         vid = _source_video_id(i)
         d = Path(work) / vid
         d.mkdir(parents=True, exist_ok=True)
-        video_paths[vid] = download_any(url, str(d))
-    return video_paths
+        path, caption = download_any(url, str(d))
+        video_paths[vid] = path
+        captions[vid] = caption
+    return video_paths, captions
 
 
 def run_mix_job(job_id, db_path, work_root):
@@ -48,9 +53,9 @@ def run_mix_job(job_id, db_path, work_root):
         # media_download.download_any가 플랫폼별로(인스타=Apify로 CDN videoUrl
         # 해석 후 다운로드, 유튜브/틱톡=yt-dlp) 알아서 처리한다.
         store.update_mix_job(job_id, status="downloading")
-        video_paths = _prepare_sources(job["urls"], work)   # video_id -> mp4 path
-        captions = {}      # video_id -> caption (Phase1: extract_script가 영상에서
-                            # 재전사하므로 캡션 없이도 동작 — .get(vid, "")로 안전 기본값)
+        # video_id -> mp4 path, video_id -> caption(인스타만 채워짐, 유튜브/틱톡은 "").
+        # extract_script가 caption을 힌트로 쓰고 없어도 영상 재전사로 동작 — .get(vid, "")로 안전 기본값.
+        video_paths, captions = _prepare_sources(job["urls"], work)
 
         # 2) 대본 추출(병렬)
         store.update_mix_job(job_id, status="extracting")
