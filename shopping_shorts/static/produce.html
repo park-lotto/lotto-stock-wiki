@@ -973,7 +973,7 @@ const SPEEDS=[0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5];
 const SIL=[['off','OFF'],['weak','약'],['mid','중'],['strong','강']];
 
 async function loadTtsBeats(){
-  if(!MIX_JOB){ document.getElementById('presetCards').innerHTML='<div class="hint">⚠️ 2단계에서 영상 매칭을 먼저 실행하세요.</div>'; return; }
+  // 프리셋 카드는 job(영상매칭) 없이도 항상 표시 — 둘러보기·샘플 미리듣기 가능
   try{
     const d=await (await fetch('/api/voice-presets?lang=KR')).json();
     const cards=(d.presets||[]).map(p=>`
@@ -1026,7 +1026,9 @@ function onNoVoice(){
   STATE.noVoice=off;
 }
 async function previewVoice(){
-  const el=document.getElementById('voicePreview'); el.textContent='⏳ 생성 중…';
+  const el=document.getElementById('voicePreview');
+  if(!MIX_JOB){ el.innerHTML='<span class="hint">🎬 2단계 영상 매칭 후 사용할 수 있어요. 지금은 위 카드의 ▶로 샘플을 들어보세요.</span>'; return; }
+  el.textContent='⏳ 생성 중…';
   try{
     const r=await fetch('/api/mix/voice/preview',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({job_id:MIX_JOB, voice_id:VOICE.voice_id, settings:VOICE.settings, speed:VOICE.speed, silence_trim:VOICE.silence_trim})});
@@ -1036,7 +1038,9 @@ async function previewVoice(){
   }catch(e){ el.textContent='❌ 실패'; }
 }
 async function applyVoice(){
-  const el=document.getElementById('voicePreview'); el.textContent='⏳ 전체 음성 생성 중…';
+  const el=document.getElementById('voicePreview');
+  if(!MIX_JOB){ el.innerHTML='<span class="hint">🎬 2단계 영상 매칭 후 사용할 수 있어요.</span>'; return; }
+  el.textContent='⏳ 전체 음성 생성 중…';
   try{
     await fetch('/api/mix/voice',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({job_id:MIX_JOB, preset_id:VOICE.preset_id, voice_id:VOICE.voice_id, settings:VOICE.settings, speed:VOICE.speed, silence_trim:VOICE.silence_trim})});
@@ -1051,6 +1055,7 @@ async function applyVoice(){
 }
 async function renderTtsBeats(){
   const el=document.getElementById('ttsBeats');
+  if(!MIX_JOB){ el.innerHTML='<div class="hint" style="margin-top:6px">🎬 2단계 <b>영상 매칭</b>을 완료하면 비트별 음성·길이 맞춤이 여기 표시됩니다. (지금은 프리셋 둘러보기·샘플 미리듣기만 가능)</div>'; return; }
   try{
     const d=await (await fetch('/api/mix/result/'+MIX_JOB)).json();
     if(!d.ok || !(d.beats||[]).length){ el.innerHTML=''; return; }
