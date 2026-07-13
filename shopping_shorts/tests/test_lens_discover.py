@@ -55,6 +55,10 @@ def test_requests_type_visual_matches(monkeypatch):
 
     lens_discover.search_similar_videos("https://ex.com/f.jpg")
     assert captured["params"]["type"] == "visual_matches"
+    # 로케일(hl=ko&country=kr) 필수 — 없으면 한국어·요리 콘텐츠 프레임에서 google_lens가
+    # type=visual_matches 단독일 때 "no results"를 준다(2026-07-14 실측: 로케일 넣으면 60개).
+    assert captured["params"]["hl"] == "ko"
+    assert captured["params"]["country"] == "kr"
 
 
 def test_retries_when_lens_returns_no_results_then_succeeds(monkeypatch):

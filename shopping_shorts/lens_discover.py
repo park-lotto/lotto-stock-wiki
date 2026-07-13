@@ -36,12 +36,13 @@ def search_similar_videos(image_url, api_key=None, timeout=60):
     key = api_key or SERPAPI_KEY
     if not key:
         return []
-    # type=visual_matches 필수 — 요리·제품 프레임엔 google_lens가 ai_overview만 주고
-    # visual_matches를 생략한다(2026-07-14 라이브 실측: 없으면 0개, 있으면 60개).
-    # + 갓 호스팅된 이미지는 첫 호출 때 "hasn't returned any results"로 빈 응답을 주고
-    # 잠시 후 재호출하면 결과가 나온다(같은 URL 0개→60개 실측). 빈 응답이면 재시도한다.
+    # 파라미터 조합이 결과를 좌우한다(2026-07-14 라이브 실측, 같은 감자 프레임):
+    #   type=visual_matches 단독 → 0개(error "no results")
+    #   type=visual_matches + hl=ko&country=kr → 60개 ✅
+    # 로케일(hl=ko&country=kr) 없이 type만 주면 한국어·요리 콘텐츠에서 google_lens가
+    # "no results"를 준다 — 로케일이 매칭 성공의 핵심. + 드물게 첫 호출이 비면 재시도.
     params = {"engine": "google_lens", "type": "visual_matches",
-              "url": image_url, "api_key": key}
+              "hl": "ko", "country": "kr", "url": image_url, "api_key": key}
     matches = []
     for attempt in range(_MAX_ATTEMPTS):
         try:
