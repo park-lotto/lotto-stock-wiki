@@ -835,8 +835,11 @@ def api_thumb(url: str):
     """인스타 CDN 썸네일 프록시 (핫링크 차단 우회). url=원본 이미지 주소."""
     import requests
     from fastapi.responses import Response
-    # 인스타 CDN 도메인만 허용 (SSRF 방지 — 임의 URL 프록시 금지)
-    if not any(h in url for h in ("cdninstagram.com", "fbcdn.net")):
+    # 허용 CDN 도메인만 프록시 (SSRF 방지 — 임의 URL 프록시 금지).
+    # 인스타 + 유튜브(ytimg) + 틱톡(tiktokcdn) 썸네일 호스트.
+    _ALLOWED_THUMB_HOSTS = ("cdninstagram.com", "fbcdn.net", "ytimg.com",
+                            "ggpht.com", "tiktokcdn.com", "tiktokcdn-us.com")
+    if not any(h in url for h in _ALLOWED_THUMB_HOSTS):
         return Response(status_code=400, content=b"invalid host")
     try:
         r = requests.get(url, timeout=15, headers={
