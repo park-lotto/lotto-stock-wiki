@@ -55,6 +55,7 @@
   .row button:hover{border-color:var(--accent)}
   .empty{color:var(--sub);text-align:center;padding:80px 20px;line-height:1.8}
   .gen-btn{background:linear-gradient(90deg,#153a6b,#0d2340)!important;border-color:var(--accent)!important;color:#7db4ff!important;font-weight:600}
+  .send-btn.sent{background:linear-gradient(90deg,#1c5a2e,#0d3a1c)!important;border-color:#2ea043!important;color:#7ee0a0!important}
   /* 생성 모달 */
   .gen-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:flex-start;justify-content:center;padding:24px;overflow:auto}
   .gen-bg.open{display:flex}
@@ -129,7 +130,17 @@ async function load(){
     document.getElementById('desc').innerHTML += ` <b style="color:var(--gold)">· ${items.length}개 보관 중</b>`;
     if(!items.length){ el.innerHTML='<div class="empty">아직 담은 S급 대본이 없습니다.<br>레퍼런스 랭킹에서 마음에 드는 영상의 <b>📝 대본 추출 → ⭐ S급 위키 저장</b>을 눌러 채워보세요.</div>'; return; }
     el.innerHTML=items.map(render).join('');
+    markPicked();
   }catch(e){ el.innerHTML='<div class="empty">불러오기 실패 — 새로고침 해주세요.</div>'; }
+}
+async function markPicked(){
+  try{
+    const d=await (await fetch('/api/produce/picks')).json();
+    const set=new Set(d.shortcodes||[]);
+    document.querySelectorAll('.send-btn').forEach(b=>{
+      if(set.has(b.dataset.sc)){ b.textContent='✓ 영상제작에 담김'; b.classList.add('sent'); }
+    });
+  }catch(e){}
 }
 function tag(label,val){ return val?`<span class="tag"><b>${label}</b>${esc(val)}</span>`:''; }
 function render(i){
@@ -155,9 +166,17 @@ function render(i){
       ${beats?`<div class="sec-t">비트 구조</div><ul class="beats">${beats}</ul>`:''}
       ${devs?`<div class="sec-t">설득 장치</div><div class="devices">${devs}</div>`:''}
       <details><summary>전체 대본 보기</summary><div class="full">${esc(i.full_text||'(대본 없음)')}</div></details>
-      <div class="row"><button class="gen-btn" onclick="openGen('${sc}')">🎬 이 구조로 생성</button><button onclick="copyFull(this)">📋 대본 복사</button></div>
+      <div class="row"><button class="gen-btn" onclick="openGen('${sc}')">🎬 이 구조로 생성</button><button onclick="copyFull(this)">📋 대본 복사</button><button class="send-btn" data-sc="${sc}" onclick="sendToProduce('${sc}', this)">🎬 영상제작으로 보내기</button></div>
     </div>
   </div>`;
+}
+async function sendToProduce(sc, btn){
+  try{
+    const d=await (await fetch('/api/produce/picks/toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({shortcode:sc})})).json();
+    if(!d.ok){ alert(d.error||'실패'); return; }
+    btn.textContent = d.picked ? '✓ 영상제작에 담김' : '🎬 영상제작으로 보내기';
+    btn.classList.toggle('sent', d.picked);
+  }catch(e){ alert('네트워크 오류'); }
 }
 async function removeItem(sc, btn){
   if(!confirm('위키에서 제거할까요?')) return;
