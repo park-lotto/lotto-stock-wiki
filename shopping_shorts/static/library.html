@@ -84,20 +84,6 @@
 </style>
 </head>
 <body>
-  <aside class="sidebar">
-    <h1>🛍️ 쇼핑쇼츠</h1>
-    <div class="menu-group">
-      <div class="label">트렌드 리서치</div>
-      <div class="menu-item" onclick="location.href='/'" style="cursor:pointer">📊 레퍼런스 랭킹</div>
-      <div class="menu-item" onclick="location.href='/discover'" style="cursor:pointer">🔎 채널 발굴·정리</div>
-      <div class="menu-item" onclick="location.href='/find'" style="cursor:pointer">🔍 제품 찾기</div>
-    </div>
-    <div class="menu-group">
-      <div class="label">채널 &amp; 콘텐츠</div>
-      <div class="menu-item active">📚 대본 위키(도서관)</div>
-      <div class="menu-item" onclick="location.href='/outreach'" style="cursor:pointer">💬 소통 큐</div>
-    </div>
-  </aside>
   <main class="main">
     <div class="head"><h2>📚 대본 위키(도서관)</h2></div>
     <div class="desc" id="desc">S급 대본을 <b>원본 영상 + 구조 분석</b>을 나란히 보며 학습합니다. 랭킹에서 <b>📝 대본 추출 → ⭐ S급 위키 저장</b>으로 담으세요.</div>
@@ -215,5 +201,6 @@ async function copyDraft(btn){
 }
 load();
 </script>
+<script src="/sidebar.js"></script>
 </body>
 </html>

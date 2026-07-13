@@ -121,24 +121,6 @@
 </style>
 </head>
 <body>
-  <aside class="sidebar">
-    <h1>🛍️ 쇼핑쇼츠</h1>
-    <div class="menu-group">
-      <div class="label">트렌드 리서치</div>
-      <div class="menu-item active">📊 레퍼런스 랭킹</div>
-      <div class="menu-item" onclick="location.href='/discover'" style="cursor:pointer">🔎 채널 발굴·정리</div>
-      <div class="menu-item" onclick="location.href='/find'" style="cursor:pointer">🔍 제품 찾기</div>
-      <div class="menu-item">📈 실시간 쇼핑순위</div>
-    </div>
-    <div class="menu-group">
-      <div class="label">채널 &amp; 콘텐츠</div>
-      <div class="menu-item">👁 내 모니터링 리스트</div>
-      <div class="menu-item" onclick="location.href='/library'" style="cursor:pointer">📚 대본 위키(도서관)</div>
-      <div class="menu-item" onclick="location.href='/mix.html'" style="cursor:pointer">🎬 영상 믹싱</div>
-      <div class="menu-item">📁 레퍼런스 모음집</div>
-      <div class="menu-item" onclick="location.href='/outreach'" style="cursor:pointer">💬 소통 큐</div>
-    </div>
-  </aside>
   <main class="main">
     <div class="head">
       <h2>📊 레퍼런스 랭킹</h2>
@@ -377,5 +359,6 @@ async function markSavedButtons(){
 }
 renderCtypes(); renderCats(); loadLast();
 </script>
+<script src="/sidebar.js"></script>
 </body>
 </html>
