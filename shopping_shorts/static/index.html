@@ -126,16 +126,16 @@
     <div class="menu-group">
       <div class="label">트렌드 리서치</div>
       <div class="menu-item active">📊 레퍼런스 랭킹</div>
-      <div class="menu-item" onclick="location.href='/discover.html'" style="cursor:pointer">🔎 채널 발굴·정리</div>
-      <div class="menu-item" onclick="location.href='/find.html'" style="cursor:pointer">🔍 제품 찾기</div>
+      <div class="menu-item" onclick="location.href='/discover'" style="cursor:pointer">🔎 채널 발굴·정리</div>
+      <div class="menu-item" onclick="location.href='/find'" style="cursor:pointer">🔍 제품 찾기</div>
       <div class="menu-item">📈 실시간 쇼핑순위</div>
     </div>
     <div class="menu-group">
       <div class="label">채널 &amp; 콘텐츠</div>
       <div class="menu-item">👁 내 모니터링 리스트</div>
-      <div class="menu-item" onclick="location.href='/library.html'" style="cursor:pointer">📚 대본 위키(도서관)</div>
+      <div class="menu-item" onclick="location.href='/library'" style="cursor:pointer">📚 대본 위키(도서관)</div>
       <div class="menu-item">📁 레퍼런스 모음집</div>
-      <div class="menu-item" onclick="location.href='/outreach.html'" style="cursor:pointer">💬 소통 큐</div>
+      <div class="menu-item" onclick="location.href='/outreach'" style="cursor:pointer">💬 소통 큐</div>
     </div>
   </aside>
   <main class="main">
@@ -254,7 +254,7 @@ async function loadLast(){
   if(d.items?.length){ STATE.items=d.items; render();
     document.getElementById("status").textContent=`마지막 수집: ${fmtTime(d.collected_at)}`; }
 }
-function goComment(sc){ location.href = '/outreach.html?focus=' + encodeURIComponent(sc); }
+function goComment(sc){ location.href = '/outreach?focus=' + encodeURIComponent(sc); }
 async function copyLink(url, btn){
   try{ await navigator.clipboard.writeText(url); }
   catch(e){ const t=document.createElement('textarea'); t.value=url; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }

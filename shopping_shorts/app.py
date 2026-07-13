@@ -838,4 +838,14 @@ def _serve_userscript():
 
 # 정적 프론트 (마운트는 맨 마지막)
 _STATIC = Path(__file__).parent / "static"
+
+# 클린 URL — /library, /mix 등 확장자(.html) 없이 접근. (index는 루트 '/'로 자동)
+# 기존 /xxx.html 경로도 아래 StaticFiles 마운트로 계속 동작(백워드 호환).
+for _pg in ("discover", "find", "library", "mix", "outreach"):
+    app.add_api_route(
+        f"/{_pg}",
+        (lambda n=_pg: FileResponse(_STATIC / f"{n}.html", media_type="text/html")),
+        include_in_schema=False,
+    )
+
 app.mount("/", StaticFiles(directory=str(_STATIC), html=True), name="static")
