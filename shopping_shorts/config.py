@@ -59,7 +59,11 @@ ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY", "")
 ELEVENLABS_VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM")  # 기본 voice(Rachel)
 
 # 수집 규칙
-WINDOW_HOURS = 48          # 48시간 이내만 랭킹
+WINDOW_HOURS = 48          # 48시간 이내만 랭킹(인스타 — 빠르게 도는 릴스 기준)
+# 유튜브 Shorts는 며칠~몇 주에 걸쳐 조회수가 쌓여 48h는 결과가 너무 적다(실측
+# 2026-07-13). 발굴 창을 넓게(14일) 잡아 언어필터 후에도 충분한 후보를 확보.
+YOUTUBE_WINDOW_HOURS = 336  # 14일
+YOUTUBE_MAX_PER_KW = 50     # 키워드당 검색 상한(YouTube API 한 호출 최대)
 RESULTS_PER_CHANNEL = 3    # 채널당 최신 상한
 ONLY_NEWER_THAN = "2 days" # Apify 날짜필터 (창 + 여유)
 

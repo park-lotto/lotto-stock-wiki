@@ -3,7 +3,8 @@ import csv
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 from concurrent.futures import ThreadPoolExecutor
-from shopping_shorts.config import DB_PATH, WINDOW_HOURS, DRAFT_BATCH_SIZE, MAX_CHANNELS
+from shopping_shorts.config import (DB_PATH, WINDOW_HOURS, DRAFT_BATCH_SIZE, MAX_CHANNELS,
+                                    YOUTUBE_WINDOW_HOURS, YOUTUBE_MAX_PER_KW)
 from shopping_shorts.channels import load_channels
 from shopping_shorts.apify_client import fetch_reels
 from shopping_shorts.ranking import build_items, build_youtube_items, apply_grades
@@ -96,15 +97,15 @@ def _collect_youtube():
         lang = s["kind"] if s["kind"] in _LANGS else "ko"
         by_lang.setdefault(lang, []).append(s["value"])
     now = datetime.now(timezone.utc)
-    after = (now - timedelta(hours=WINDOW_HOURS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    after = (now - timedelta(hours=YOUTUBE_WINDOW_HOURS)).strftime("%Y-%m-%dT%H:%M:%SZ")
     raw = []
     for lang, kws in by_lang.items():
-        raw.extend(yt_search(kws, after, lang=lang))
+        raw.extend(yt_search(kws, after, max_per_kw=YOUTUBE_MAX_PER_KW, lang=lang))
     items = build_youtube_items(
         raw,
         prev_base=lambda sc: store.prev_base_platform("youtube", sc),
         prev_delta=lambda sc: store.prev_delta_platform("youtube", sc),
-        now=now, window_hours=WINDOW_HOURS,
+        now=now, window_hours=YOUTUBE_WINDOW_HOURS,
     )
     apply_grades(items)
     run_date = now.strftime("%Y-%m-%d %H:%M")
