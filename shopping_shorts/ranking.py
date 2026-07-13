@@ -96,3 +96,53 @@ def sort_by(items, tab):
            "가속": "accel", "accel": "accel",
            "밀도": "density", "density": "density"}.get(tab, "comments")
     return sorted(items, key=lambda i: (i.get(key) or 0), reverse=True)
+
+
+def build_youtube_items(raw, prev_base, prev_delta, now=None, window_hours=48):
+    """유튜브 원시 dict → 공통 item(조회수 기반 지표). 48h 이내만.
+
+    prev_base(shortcode)->int|None: 직전 base_count(조회수). prev_delta 동일.
+    speed=조회수/경과h, density=(좋아요+댓글)/조회수, accel=Δ−직전Δ.
+    """
+    now = now or datetime.now(timezone.utc)
+    items = []
+    for r in raw:
+        ts = r.get("published_at")
+        if not ts:
+            continue
+        age = hours_since(ts, now=now)
+        if age > window_hours or age < 0:
+            continue
+        views = int(r.get("views") or 0)
+        sc = r.get("video_id") or ""
+        prev = prev_base(sc)
+        is_new = prev is None
+        delta = views if is_new else views - prev
+        prev_d = prev_delta(sc)
+        accel = None if prev_d is None else delta - prev_d
+        likes = int(r.get("likes") or 0)
+        comments = int(r.get("comments") or 0)
+        items.append({
+            "platform": "youtube",
+            "shortcode": sc,
+            "name": r.get("channel_title"),
+            "username": r.get("channel_id"),
+            "inpock": "",
+            "followers": None,
+            "thumbnail": r.get("thumbnail", ""),
+            "video_url": "",                       # 인라인은 mix 다운로드 시 해석
+            "url": f"https://www.youtube.com/watch?v={sc}",
+            "comments": comments,
+            "likes": likes,
+            "views": views,
+            "base_count": views,
+            "age_hours": round(age, 1),
+            "delta": delta,
+            "is_new": is_new,
+            "accel": accel,
+            "speed": views / age if age > 0 else float(views),
+            "density": (likes + comments) / views if views else 0.0,
+            "category": "",
+            "caption": r.get("title", ""),
+        })
+    return items
