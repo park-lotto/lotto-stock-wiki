@@ -78,3 +78,55 @@ def test_synthesize_with_key_calls_api(monkeypatch):
     assert calls["json"]["text"] == "테스트 문장"
     assert calls["headers"]["xi-api-key"] == "sk-test"
     assert out.read_bytes() == b"ID3fakebytes"
+
+
+def test_synthesize_sends_voice_settings_and_speed(monkeypatch):
+    calls = {}
+
+    class FakeResp:
+        content = b"ID3fake"
+        def raise_for_status(self): pass
+
+    def fake_post(url, **kw):
+        calls["json"] = kw.get("json")
+        return FakeResp()
+
+    monkeypatch.setattr(tts.config, "ELEVENLABS_API_KEY", "sk-test")
+    monkeypatch.setattr(tts.requests, "post", fake_post)
+
+    import tempfile
+    from pathlib import Path
+    out = Path(tempfile.mkdtemp()) / "b.mp3"
+    tts.synthesize_tts(
+        "테스트", str(out), voice_id="vX",
+        voice_settings={"stability": 0.65, "similarity_boost": 0.75,
+                        "style": 0.0, "use_speaker_boost": True},
+        speed=1.1, model_id="eleven_multilingual_v2",
+    )
+    vs = calls["json"]["voice_settings"]
+    assert vs["stability"] == 0.65
+    assert vs["style"] == 0.0
+    assert vs["use_speaker_boost"] is True
+    assert vs["speed"] == 1.1
+    assert calls["json"]["model_id"] == "eleven_multilingual_v2"
+
+
+def test_synthesize_speed_clamped_to_api_range(monkeypatch):
+    calls = {}
+
+    class FakeResp:
+        content = b"ID3"
+        def raise_for_status(self): pass
+
+    def fake_post(url, **kw):
+        calls["json"] = kw.get("json")
+        return FakeResp()
+
+    monkeypatch.setattr(tts.config, "ELEVENLABS_API_KEY", "sk-test")
+    monkeypatch.setattr(tts.requests, "post", fake_post)
+
+    import tempfile
+    from pathlib import Path
+    out = Path(tempfile.mkdtemp()) / "b.mp3"
+    tts.synthesize_tts("x", str(out), voice_id="v", speed=1.5)
+    assert calls["json"]["voice_settings"]["speed"] == 1.2

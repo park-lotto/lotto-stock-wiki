@@ -34,15 +34,29 @@ def _write_silent_mp3(out_path, seconds):
     )
 
 
-def synthesize_tts(text, out_path, voice_id=None, max_retries=3):
-    """text → mp3(out_path). ElevenLabs 호출, 키 없으면 무음 mock. out_path 반환."""
+# API가 허용하는 speed 범위(문서: 0.7~1.2). 이 밖은 호출부에서 atempo로 보정.
+_SPEED_API_MIN, _SPEED_API_MAX = 0.7, 1.2
+
+
+def synthesize_tts(text, out_path, voice_id=None, voice_settings=None,
+                   speed=None, model_id=None, max_retries=3):
+    """text → mp3(out_path). ElevenLabs 호출, 키 없으면 무음 mock. out_path 반환.
+
+    voice_settings: {stability, similarity_boost, style, use_speaker_boost} (0~1).
+    speed: 재생속도. API는 0.7~1.2만 허용하므로 그 범위로 clamp해 voice_settings.speed로 보냄
+           (1.2 초과분은 audio_post에서 atempo로 별도 보정)."""
     if not config.ELEVENLABS_API_KEY:
         _write_silent_mp3(out_path, _estimate_seconds(text))
         return out_path
     vid = voice_id or config.ELEVENLABS_VOICE_ID
     url = _ENDPOINT.format(voice_id=vid)
     headers = {"xi-api-key": config.ELEVENLABS_API_KEY, "Content-Type": "application/json"}
-    payload = {"text": text, "model_id": "eleven_multilingual_v2"}
+    payload = {"text": text, "model_id": model_id or "eleven_multilingual_v2"}
+    settings = dict(voice_settings) if voice_settings else {}
+    if speed is not None:
+        settings["speed"] = max(_SPEED_API_MIN, min(_SPEED_API_MAX, speed))
+    if settings:
+        payload["voice_settings"] = settings
     for attempt in range(max_retries):
         try:
             r = requests.post(url, headers=headers, json=payload, timeout=60)
