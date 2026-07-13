@@ -212,6 +212,25 @@ class Store:
                     headcopy_json TEXT
                 )
             """)
+            # 보이스 프리셋(2026-07-14, 영상제작 4단계) — 큐레이션된 목소리 카드.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS voice_presets (
+                    preset_id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    one_liner TEXT,
+                    lang TEXT NOT NULL DEFAULT 'KR',
+                    archetype TEXT,
+                    base_voice_id TEXT NOT NULL,
+                    model_id TEXT NOT NULL DEFAULT 'eleven_multilingual_v2',
+                    voice_settings_json TEXT NOT NULL,
+                    default_speed REAL NOT NULL DEFAULT 1.0,
+                    default_silence_trim TEXT NOT NULL DEFAULT 'off',
+                    sample_file TEXT,
+                    source_ref TEXT,
+                    origin TEXT NOT NULL DEFAULT 'curated',
+                    created_at TEXT NOT NULL
+                )
+            """)
             c.execute("""
                 CREATE TABLE IF NOT EXISTS settings (
                     key TEXT PRIMARY KEY,
@@ -286,6 +305,7 @@ class Store:
                 ("given_script", "TEXT"),  # 영상제작 2단계 given_script 모드(2026-07-13)
                 ("headcopy_json", "TEXT"),  # 영상제작 5단계 꾸미기 헤드카피(2026-07-13)
                 ("caption_style_json", "TEXT"),  # 영상제작 5단계 자막 스타일(2026-07-14)
+                ("voice_json", "TEXT"),     # 영상제작 4단계 보이스 프리셋 선택 스냅샷(2026-07-14)
             ):
                 try:
                     c.execute(f"ALTER TABLE mix_jobs ADD COLUMN {col} {ddl}")
@@ -976,7 +996,7 @@ class Store:
                 "SELECT job_id, urls_json, target_seconds, structure, status, error, "
                 "extract_json, edit_plan_json, video_path, created_at, updated_at, "
                 "subtitle_removal, clean_video_path, given_script, headcopy_json, "
-                "caption_style_json "
+                "caption_style_json, voice_json "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -991,6 +1011,7 @@ class Store:
             "given_script": row[13],
             "headcopy": json.loads(row[14]) if row[14] else None,
             "caption_style": json.loads(row[15]) if row[15] else None,
+            "voice": json.loads(row[16]) if row[16] else None,
         }
 
     def update_mix_job(self, job_id, **fields):
@@ -1007,6 +1028,9 @@ class Store:
         if "caption_style" in fields:
             cols.append("caption_style_json=?")
             vals.append(json.dumps(fields["caption_style"], ensure_ascii=False) if fields["caption_style"] else None)
+        if "voice" in fields:
+            cols.append("voice_json=?")
+            vals.append(json.dumps(fields["voice"], ensure_ascii=False) if fields["voice"] else None)
         for k, col in (("extract", "extract_json"), ("edit_plan", "edit_plan_json")):
             if k in fields:
                 cols.append(f"{col}=?")
@@ -1015,6 +1039,61 @@ class Store:
         vals.append(job_id)
         with self._conn() as c:
             c.execute(f"UPDATE mix_jobs SET {', '.join(cols)} WHERE job_id=?", tuple(vals))
+
+    # ── 보이스 프리셋(2026-07-14, 영상제작 4단계) ──
+    def upsert_voice_preset(self, p):
+        """보이스 프리셋 1건 upsert(preset_id 충돌 시 덮어씀)."""
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            c.execute("""
+                INSERT INTO voice_presets(preset_id, name, one_liner, lang, archetype,
+                    base_voice_id, model_id, voice_settings_json, default_speed,
+                    default_silence_trim, sample_file, source_ref, origin, created_at)
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                ON CONFLICT(preset_id) DO UPDATE SET
+                    name=excluded.name, one_liner=excluded.one_liner, lang=excluded.lang,
+                    archetype=excluded.archetype, base_voice_id=excluded.base_voice_id,
+                    model_id=excluded.model_id, voice_settings_json=excluded.voice_settings_json,
+                    default_speed=excluded.default_speed,
+                    default_silence_trim=excluded.default_silence_trim,
+                    sample_file=excluded.sample_file, source_ref=excluded.source_ref,
+                    origin=excluded.origin
+            """, (
+                p["preset_id"], p["name"], p.get("one_liner"), p.get("lang", "KR"),
+                p.get("archetype"), p["base_voice_id"],
+                p.get("model_id", "eleven_multilingual_v2"),
+                json.dumps(p.get("voice_settings", {}), ensure_ascii=False),
+                p.get("default_speed", 1.0), p.get("default_silence_trim", "off"),
+                p.get("sample_file"), p.get("source_ref"), p.get("origin", "curated"), now,
+            ))
+
+    def _row_to_preset(self, r):
+        return {
+            "preset_id": r[0], "name": r[1], "one_liner": r[2], "lang": r[3],
+            "archetype": r[4], "base_voice_id": r[5], "model_id": r[6],
+            "voice_settings": json.loads(r[7]) if r[7] else {},
+            "default_speed": r[8], "default_silence_trim": r[9],
+            "sample_file": r[10], "source_ref": r[11], "origin": r[12], "created_at": r[13],
+        }
+
+    def get_voice_preset(self, preset_id):
+        with self._conn() as c:
+            r = c.execute("SELECT preset_id,name,one_liner,lang,archetype,base_voice_id,"
+                          "model_id,voice_settings_json,default_speed,default_silence_trim,"
+                          "sample_file,source_ref,origin,created_at FROM voice_presets "
+                          "WHERE preset_id=?", (preset_id,)).fetchone()
+        return self._row_to_preset(r) if r else None
+
+    def list_voice_presets(self, lang=None):
+        q = ("SELECT preset_id,name,one_liner,lang,archetype,base_voice_id,model_id,"
+             "voice_settings_json,default_speed,default_silence_trim,sample_file,"
+             "source_ref,origin,created_at FROM voice_presets")
+        args = ()
+        if lang:
+            q += " WHERE lang=?"; args = (lang,)
+        q += " ORDER BY created_at"
+        with self._conn() as c:
+            return [self._row_to_preset(r) for r in c.execute(q, args).fetchall()]
 
     def get_setting(self, key, default=None):
         """전역 설정값 조회(예: vmake_api_key). 없으면 default."""
