@@ -111,6 +111,67 @@ def generate_from_topic(topic, target_seconds=20, n=3, max_key_tries=3):
     return []
 
 
+_MIX_PROMPT = """너는 한국 쇼핑 숏폼 대본 작가다. 아래 여러 개의 검증된 S급 대본이 있다.
+각 대본의 **강점**(훅·전개방식·주변인물 활용·말투)을 뽑아 하나로 **조합**한, 약 {seconds}초
+분량(대략 {words}단어)의 새 대본 초안 {n}개를 만들어라.
+
+[재료 대본들]
+{sources}
+
+규칙:
+- 특정 대본을 통째로 베끼지 말고, 각 대본의 좋은 부분을 골라 자연스럽게 녹여 새로 써라.
+- 훅은 가장 강한 대본의 훅 방식을 살리고, 전개·주변인물·말투도 좋은 걸 조합해라.
+- 실제로 읽을 구어체 나레이션(0초 훅 → … → 끝 CTA). 억지 설정·과장 금지.
+- 초안끼리 서로 다르게 조합을 시도해라.
+각 초안: hook(첫 훅 한 줄), script(전체 나레이션 대본), applied(어느 대본의 무엇을 조합했는지 한 줄).
+JSON만 출력."""
+
+
+def _mix_source_block(sources):
+    lines = []
+    for i, s in enumerate(sources, 1):
+        st = s.get("structure") or {}
+        chs = ", ".join(f"{c.get('who')}({c.get('role')})" for c in (st.get("characters") or [])) or "없음"
+        lines.append(
+            f"[대본 {i}] {s.get('name') or ''}\n"
+            f"- 훅: {st.get('hook') or '(미상)'}\n"
+            f"- 전개방식: {st.get('development') or '(미상)'}\n"
+            f"- 주변인물: {chs}\n"
+            f"- 말투/어미: {st.get('tone') or '(미상)'}\n"
+            f"- 전체대본: {(s.get('full_text') or '')[:800]}")
+    return "\n\n".join(lines)
+
+
+def generate_mix(sources, target_seconds=20, n=3, max_key_tries=3):
+    """여러 S급 대본(각 {name, full_text, structure})의 강점을 조합해 새 대본 초안 리스트.
+    우리믹스(Feature B) 모드. 소스 2개 미만이거나 무키면 []."""
+    sources = [s for s in (sources or []) if (s.get("full_text") or "").strip()]
+    if not comment_gen.SHORTS_GEMINI_KEYS or len(sources) < 2:
+        return []
+    n = max(1, min(int(n or 3), 5))
+    seconds = max(5, min(int(target_seconds or 20), 90))
+    words = max(15, round(seconds * 2.3))
+    prompt = _MIX_PROMPT.format(sources=_mix_source_block(sources[:3]), seconds=seconds, words=words, n=n)
+    for _ in range(max_key_tries):
+        key, ki = comment_gen._current_key_and_idx()
+        if key is None:
+            return []
+        try:
+            resp = comment_gen._client_for_key(key).models.generate_content(
+                model=_MODEL, contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json", response_schema=_SCHEMA),
+            )
+            return json.loads(resp.text).get("drafts", [])
+        except Exception as e:  # noqa: BLE001
+            if (comment_gen.key_vault.is_daily_exhausted_error(e)
+                    or comment_gen.key_vault.is_account_disabled_error(e)):
+                comment_gen._mark_key_exhausted(ki)
+                continue
+            return []
+    return []
+
+
 def _elem_lines(structure, keep_flags):
     lines = []
     for key, label in ELEM_LABELS.items():

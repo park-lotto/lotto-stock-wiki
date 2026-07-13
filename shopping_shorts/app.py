@@ -977,6 +977,24 @@ def api_produce_script_gemini(body: dict):
     return {"ok": True, "drafts": drafts}
 
 
+@app.post("/api/produce/script/mix")
+def api_produce_script_mix(body: dict):
+    """1단계 대본 · 우리믹스(Feature B) — 선택한 도서관 S급 대본들 강점 조합 → 새 대본."""
+    shortcodes = body.get("shortcodes") or []
+    if len(shortcodes) < 2:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "도서관 대본 2개 이상 선택"})
+    wiki = {w["shortcode"]: w for w in Store(DB_PATH).wiki_list()}
+    sources = [wiki[sc] for sc in shortcodes if sc in wiki]
+    if len(sources) < 2:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "선택한 대본을 찾을 수 없음"})
+    drafts = script_generate.generate_mix(
+        sources, target_seconds=body.get("target_seconds") or 20, n=body.get("n") or 3)
+    if not drafts:
+        return JSONResponse(status_code=502,
+                            content={"ok": False, "error": "생성 실패(키 소진 또는 응답 오류)"})
+    return {"ok": True, "drafts": drafts}
+
+
 # 정적 프론트 (마운트는 맨 마지막)
 _STATIC = Path(__file__).parent / "static"
 

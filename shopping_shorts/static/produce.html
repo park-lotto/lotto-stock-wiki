@@ -117,11 +117,16 @@ const SCRIPT_MODE_HTML = {
     </div>
     <div class="hint">주제만 넣으면 제미니가 여러 초안을 만듭니다. 마음에 드는 초안을 고르면 편집창으로 넘어갑니다.</div>
     <div id="gemDrafts" style="margin-top:12px"></div>`,
-  mix: () => `<div class="stub">도서관 S급 대본 2~3개 선택 → 강점 조합(훅·전개·주변인물) → 새 대본 생성<br>(다음 슬라이스에서 연결)</div>`,
+  mix: () => `
+    <div class="hint">도서관 S급 대본을 2~3개 골라 강점(훅·전개·주변인물·말투)을 조합합니다.</div>
+    <div id="mixWiki" style="margin:10px 0">불러오는 중…</div>
+    <button class="btn-next" style="padding:10px 16px" onclick="genMix()">🧬 선택한 대본 조합 생성</button>
+    <div id="mixDrafts" style="margin-top:12px"></div>`,
 };
 function setScriptMode(mode){
   document.querySelectorAll('#scriptTabs .tab').forEach(t=>t.classList.toggle('active', t.dataset.mode===mode));
   document.getElementById('scriptModeBody').innerHTML = SCRIPT_MODE_HTML[mode]();
+  if(mode==='mix') loadWikiForMix();
 }
 document.querySelectorAll('#scriptTabs .tab').forEach(t=> t.onclick=()=>setScriptMode(t.dataset.mode));
 
@@ -130,30 +135,60 @@ function lenText(t){ t=t||''; const c=t.replace(/\s/g,'').length; return `${t.le
 function onScriptInput(){ const ta=document.getElementById('scriptText'); STATE.script=ta.value; document.getElementById('lenHint').textContent=lenText(STATE.script); }
 function updateLen(){ onScriptInput(); }
 
-// 제미니 자동 생성
-async function genGemini(){
-  const topic=(document.getElementById('gemTopic').value||'').trim();
-  const box=document.getElementById('gemDrafts');
-  if(!topic){ box.innerHTML='<div class="hint" style="color:var(--fire)">주제를 입력하세요</div>'; return; }
-  box.innerHTML='<div class="hint">⏳ 생성 중…</div>';
-  try{
-    const r=await fetch('/api/produce/script/gemini',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic, target_seconds:20, n:3})});
-    const d=await r.json();
-    if(!d.ok){ box.innerHTML=`<div class="hint" style="color:var(--fire)">${esc(d.error||'실패')}</div>`; return; }
-    box.innerHTML=d.drafts.map((dr,i)=>`
-      <div style="border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:8px;background:#0d1420">
-        <div style="font-weight:600;color:#9dc4ff;margin-bottom:4px">초안 ${i+1} · ${esc(dr.hook||'')}</div>
-        <div style="font-size:13px;color:var(--txt);line-height:1.5">${esc(dr.script||'')}</div>
-        <div class="hint" style="margin:6px 0">${esc(dr.applied||'')} · ${lenText(dr.script||'')}</div>
-        <button class="btn-next" style="padding:8px 14px" onclick="useDraft(${i})">이 대본 사용 →</button>
-      </div>`).join('');
-    window._gemDrafts=d.drafts;
-  }catch(e){ box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; }
+// 초안 렌더(제미니·믹스 공유)
+function renderDrafts(drafts, boxId){
+  window._drafts = drafts;
+  document.getElementById(boxId).innerHTML = drafts.map((dr,i)=>`
+    <div style="border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:8px;background:#0d1420">
+      <div style="font-weight:600;color:#9dc4ff;margin-bottom:4px">초안 ${i+1} · ${esc(dr.hook||'')}</div>
+      <div style="font-size:13px;color:var(--txt);line-height:1.5">${esc(dr.script||'')}</div>
+      <div class="hint" style="margin:6px 0">${esc(dr.applied||'')} · ${lenText(dr.script||'')}</div>
+      <button class="btn-next" style="padding:8px 14px" onclick="useDraft(${i})">이 대본 사용 →</button>
+    </div>`).join('');
 }
 function useDraft(i){
-  const dr=(window._gemDrafts||[])[i]; if(!dr) return;
+  const dr=(window._drafts||[])[i]; if(!dr) return;
   STATE.script=dr.script||'';
   setScriptMode('manual');   // 편집 가능한 직접작성 창으로 이동(내용 채움)
+}
+async function postDrafts(url, payload, boxId){
+  const box=document.getElementById(boxId);
+  box.innerHTML='<div class="hint">⏳ 생성 중…</div>';
+  try{
+    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const d=await r.json();
+    if(!d.ok){ box.innerHTML=`<div class="hint" style="color:var(--fire)">${esc(d.error||'실패')}</div>`; return; }
+    renderDrafts(d.drafts, boxId);
+  }catch(e){ box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; }
+}
+
+// 제미니 자동
+function genGemini(){
+  const topic=(document.getElementById('gemTopic').value||'').trim();
+  if(!topic){ document.getElementById('gemDrafts').innerHTML='<div class="hint" style="color:var(--fire)">주제를 입력하세요</div>'; return; }
+  postDrafts('/api/produce/script/gemini', {topic, target_seconds:20, n:3}, 'gemDrafts');
+}
+
+// 우리믹스(Feature B)
+async function loadWikiForMix(){
+  const el=document.getElementById('mixWiki');
+  try{
+    const d=await (await fetch('/api/wiki/list')).json();
+    const items=d.items||[];
+    if(!items.length){ el.innerHTML='<div class="hint">도서관에 저장된 S급 대본이 없습니다. (레퍼런스 랭킹에서 📝대본추출 → ⭐S급 위키저장)</div>'; return; }
+    el.innerHTML=items.map(w=>`
+      <label style="display:flex;gap:8px;align-items:flex-start;padding:8px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;cursor:pointer;background:#0d1420">
+        <input type="checkbox" class="mixPick" value="${esc(w.shortcode)}" style="margin-top:3px">
+        <span style="flex:1"><b>${esc(w.name||w.shortcode)}</b> <span class="hint">· ${esc(w.category||'')}</span>
+          <div class="hint" style="margin-top:2px">${esc((w.full_text||'').slice(0,70))}…</div></span>
+      </label>`).join('');
+  }catch(e){ el.innerHTML='<div class="hint" style="color:var(--fire)">도서관 로드 실패</div>'; }
+}
+function genMix(){
+  const picks=[...document.querySelectorAll('.mixPick:checked')].map(c=>c.value);
+  const box=document.getElementById('mixDrafts');
+  if(picks.length<2){ box.innerHTML='<div class="hint" style="color:var(--fire)">2개 이상 선택하세요</div>'; return; }
+  postDrafts('/api/produce/script/mix', {shortcodes:picks, target_seconds:20, n:3}, 'mixDrafts');
 }
 
 renderSteps(); showPanel(); setScriptMode('manual');
