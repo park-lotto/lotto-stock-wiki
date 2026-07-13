@@ -15,9 +15,7 @@ def test_run_mix_job_happy_path(monkeypatch):
     s.create_mix_job("j1", ["https://www.instagram.com/reel/AAA/",
                              "https://www.instagram.com/reel/BBB/"], 20, "free")
 
-    monkeypatch.setattr(mix_pipeline, "fetch_single_reel",
-                        lambda url: {"videoUrl": "https://cdn/v.mp4", "caption": "cap"})
-    monkeypatch.setattr(mix_pipeline, "download_video", lambda url, d: Path(d) / "v.mp4")
+    monkeypatch.setattr(mix_pipeline, "download_any", lambda url, d: str(Path(d) / "v.mp4"))
     monkeypatch.setattr(mix_pipeline, "extract_script",
                         lambda path, video_id, caption="": {
                             "segments": [{"seg_id": f"{video_id}-0", "start": 0.0, "end": 2.0,
@@ -49,9 +47,7 @@ def test_run_mix_job_empty_edl_fails(monkeypatch):
     s = Store(db)
     s.create_mix_job("je", ["https://www.instagram.com/reel/AAA/"], 20, "free")
 
-    monkeypatch.setattr(mix_pipeline, "fetch_single_reel",
-                        lambda url: {"videoUrl": "https://cdn/v.mp4", "caption": ""})
-    monkeypatch.setattr(mix_pipeline, "download_video", lambda url, d: Path(d) / "v.mp4")
+    monkeypatch.setattr(mix_pipeline, "download_any", lambda url, d: str(Path(d) / "v.mp4"))
     monkeypatch.setattr(mix_pipeline, "extract_script",
                         lambda path, video_id, caption="": {"segments": [], "full_text": ""})
     monkeypatch.setattr(mix_pipeline, "build_edit_plan",
@@ -70,10 +66,8 @@ def test_run_mix_job_failure_sets_status(monkeypatch):
     s = Store(db)
     s.create_mix_job("j2", ["https://www.instagram.com/reel/AAA/"], 20, "free")
 
-    monkeypatch.setattr(mix_pipeline, "fetch_single_reel",
-                        lambda url: {"videoUrl": "https://cdn/v.mp4", "caption": ""})
     def boom(url, d): raise RuntimeError("다운로드 실패")
-    monkeypatch.setattr(mix_pipeline, "download_video", boom)
+    monkeypatch.setattr(mix_pipeline, "download_any", boom)
 
     mix_pipeline.run_mix_job("j2", db, work)
     job = s.get_mix_job("j2")
@@ -81,52 +75,17 @@ def test_run_mix_job_failure_sets_status(monkeypatch):
     assert "다운로드 실패" in job["error"]
 
 
-def test_run_mix_job_downloads_resolved_videourl_not_page(monkeypatch):
-    # 회귀방지: 페이지 URL을 그대로 download_video 하면 안 되고(HTML→Gemini FAILED),
-    # fetch_single_reel로 해석한 videoUrl을 다운로드해야 한다(2026-07-12 라이브버그).
+def test_run_mix_job_unsupported_url_fails(monkeypatch):
+    # download_any가 지원하지 않는 플랫폼(인스타/유튜브/틱톡 외)이면 다운로드 단계에서
+    # 실패해야 한다(media_download.download_any를 실제로 통해 검증 — 네트워크 호출 없음).
     db = _dbpath()
     work = Path(tempfile.mkdtemp())
     s = Store(db)
-    page_url = "https://www.instagram.com/reel/AAA/"
-    s.create_mix_job("jr", [page_url], 20, "free")
-
-    monkeypatch.setattr(mix_pipeline, "fetch_single_reel",
-                        lambda url: {"videoUrl": "https://cdn/real.mp4", "caption": "c"})
-    got = {}
-    def fake_dl(url, d):
-        got["url"] = url
-        return Path(d) / "v.mp4"
-    monkeypatch.setattr(mix_pipeline, "download_video", fake_dl)
-    monkeypatch.setattr(mix_pipeline, "extract_script",
-                        lambda path, video_id, caption="": {
-                            "segments": [{"seg_id": f"{video_id}-0", "start": 0.0, "end": 2.0,
-                                          "text": "t", "scene_desc": "s"}], "full_text": "ft"})
-    monkeypatch.setattr(mix_pipeline, "build_edit_plan",
-                        lambda scripts, target_seconds, structure, **k: {
-                            "structure": structure,
-                            "beats": [{"beat_idx": 0, "role": "훅", "narration": "n",
-                                       "target_seconds": 2,
-                                       "primary": {"video_id": "s0", "seg_id": "s0-0",
-                                                   "start": 0.0, "end": 2.0},
-                                       "alternates": [], "effect": "cut"}],
-                            "plagiarism_flags": []})
-    monkeypatch.setattr(mix_pipeline, "synthesize_tts", lambda text, out, **k: out)
-
-    mix_pipeline.run_mix_job("jr", db, work)
-    # download_video는 페이지 URL이 아니라 해석된 CDN videoUrl로 호출돼야 함
-    assert got["url"] == "https://cdn/real.mp4"
-    assert got["url"] != page_url
-
-
-def test_run_mix_job_non_instagram_url_fails(monkeypatch):
-    db = _dbpath()
-    work = Path(tempfile.mkdtemp())
-    s = Store(db)
-    s.create_mix_job("jn", ["https://youtube.com/watch?v=x"], 20, "free")
+    s.create_mix_job("jn", ["https://example.com/video/x"], 20, "free")
     mix_pipeline.run_mix_job("jn", db, work)
     job = s.get_mix_job("jn")
     assert job["status"] == "failed"
-    assert "인스타그램" in job["error"]
+    assert "지원하지 않는 URL" in job["error"]
 
 
 def test_retype_mix_job_regenerates_with_chosen_type(monkeypatch):
@@ -213,3 +172,13 @@ def test_run_render_happy_path(monkeypatch):
 
     assert captured["tts_paths"] == {0: str(work / "j3" / "tts" / "beat_0.mp3")}
     assert captured["source_video_paths"] == {"s0": str(src_dir / "vid.mp4")}
+
+
+def test_mix_accepts_youtube_url(monkeypatch, tmp_path):
+    from shopping_shorts import mix_pipeline as mp
+    got = {}
+    monkeypatch.setattr(mp, "download_any", lambda url, d: got.setdefault("urls", []).append(url) or str(tmp_path / "x.mp4"))
+    # _prepare_sources 만 단위 검증(전체 잡 아님): youtube URL도 통과해야 함
+    urls = ["https://www.youtube.com/watch?v=a", "https://www.tiktok.com/@u/video/1"]
+    paths = mp._prepare_sources(urls, tmp_path)
+    assert len(paths) == 2 and got["urls"] == urls
