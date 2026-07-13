@@ -11,7 +11,7 @@ from google.genai import types
 from shopping_shorts import comment_gen
 
 _MODEL = comment_gen._MODEL
-MIN_SAMPLES = 20
+MIN_SAMPLES = 1  # 1개부터 즉시 카테고리 반영, 쌓이면 재계산으로 정교화(2026-07-14)
 
 _PROMPT = """너는 한국 쇼핑 숏폼 대본의 "{element}" 요소를 분석하는 전문가다.
 아래는 여러 잘 써진 대본에서 뽑은 실제 "{element}" 값들이다. 비슷한 것끼리

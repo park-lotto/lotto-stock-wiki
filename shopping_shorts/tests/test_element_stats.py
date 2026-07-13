@@ -33,9 +33,9 @@ def test_cluster_returns_empty_when_below_min_samples(monkeypatch):
     monkeypatch.setattr(comment_gen, "SHORTS_GEMINI_KEYS", ["k"])
     called = []
     monkeypatch.setattr(comment_gen, "_current_key_and_idx", lambda: called.append(1) or ("k", 0))
-    out = element_stats.cluster_element_values("tone", ["친근한 반말"] * 5)
+    out = element_stats.cluster_element_values("tone", ["  ", "", "   "])  # 공백뿐 = 유효표본 0
     assert out == []
-    assert called == []  # 표본부족이면 Gemini 호출 자체를 안 한다(비용 절약)
+    assert called == []  # 표본부족(유효 0개)이면 Gemini 호출 자체를 안 한다(비용 절약)
 
 
 def test_cluster_no_keys_returns_empty(monkeypatch):
