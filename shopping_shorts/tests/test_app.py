@@ -96,19 +96,28 @@ def test_wiki_generate_404_when_not_in_wiki(monkeypatch):
     monkeypatch.setattr(app_module, "_AUTH_ON", False)
     monkeypatch.setattr(app_module.Store, "get_wiki_item", lambda self, sc, **kw: None)
     client = TestClient(app_module.app)
-    assert client.post("/api/wiki/generate?shortcode=x").status_code == 404
+    r = client.post("/api/wiki/generate", params={"shortcode": "x"},
+                    json={"mode": "A", "elem_modes": {}})
+    assert r.status_code == 404
 
 
 def test_wiki_generate_ok(monkeypatch):
     monkeypatch.setattr(app_module, "_AUTH_ON", False)
     monkeypatch.setattr(app_module.Store, "get_wiki_item",
-                        lambda self, sc, **kw: {"structure": {"characters": []}, "full_text": "ft"})
-    monkeypatch.setattr(app_module.script_generate, "generate_variations",
-                        lambda *a, **k: [{"hook": "h", "script": "s", "applied": "a"}])
+                        lambda self, sc, **kw: {"structure": {"characters": []}, "full_text": "ft", "category": "레시피"})
+    monkeypatch.setattr(app_module.Store, "get_element_options", lambda self, category: {})
+    captured = {}
+    def fake_gen(structure, full_text, elem_modes, category_lookup, mode="A", my_topic="", n=3):
+        captured["elem_modes"] = elem_modes
+        return [{"hook": "h", "script": "s", "applied": "a"}]
+    monkeypatch.setattr(app_module.script_generate, "generate_variations", fake_gen)
     client = TestClient(app_module.app)
-    r = client.post("/api/wiki/generate?shortcode=x&keep=characters,twist&mode=A")
+    r = client.post("/api/wiki/generate", params={"shortcode": "x"},
+                     json={"mode": "A", "elem_modes": {"characters": "keep", "twist": "category:반전형"}})
     assert r.status_code == 200
-    assert r.json()["drafts"][0]["script"] == "s"
+    d = r.json()
+    assert d["drafts"][0]["script"] == "s"
+    assert captured["elem_modes"] == {"characters": "keep", "twist": "category:반전형"}
 
 
 def test_wiki_element_options_returns_saved_categories(monkeypatch, client):

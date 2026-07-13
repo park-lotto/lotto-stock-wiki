@@ -66,6 +66,8 @@
   .gen-body{padding:16px 18px;overflow:auto}
   .gen-sec{font-size:12px;color:var(--sub);margin:12px 0 8px;text-transform:uppercase}
   .toggles{display:flex;flex-wrap:wrap;gap:8px}
+  .elem-row{display:flex;align-items:center;gap:6px}
+  .elem-mode{background:#0d131c;border:1px solid var(--line);border-radius:6px;color:var(--txt);font-size:12px;padding:4px 6px}
   .toggles label{display:flex;align-items:center;gap:6px;font-size:13px;background:#0d131c;border:1px solid var(--line);border-radius:8px;padding:7px 11px;cursor:pointer}
   .toggles input{accent-color:var(--accent)}
   .modes{display:flex;flex-direction:column;gap:6px;font-size:13px}
@@ -94,14 +96,14 @@
     <div class="gen-box">
       <div class="gen-head"><b>🎬 이 구조로 대본 생성</b><button class="x" onclick="closeGen()">✕</button></div>
       <div class="gen-body">
-        <div class="gen-sec">유지할 요소 (체크 = 유지 / 해제 = 참신하게 변형)</div>
+        <div class="gen-sec">유지할 요소 (체크=원본유지 / 해제 시 아래에서 선택)</div>
         <div class="toggles" id="genToggles">
-          <label><input type="checkbox" data-k="characters" checked> 👥 주변인물</label>
-          <label><input type="checkbox" data-k="twist" checked> ✨ 발상전환</label>
-          <label><input type="checkbox" data-k="development" checked> 🎬 전개방식</label>
-          <label><input type="checkbox" data-k="hook" checked> 🎣 훅</label>
-          <label><input type="checkbox" data-k="appeal" checked> 🎯 어필포인트</label>
-          <label><input type="checkbox" data-k="tone" checked> 🗣 말투/어미</label>
+          <div class="elem-row" data-k="characters"><label><input type="checkbox" data-k="characters" checked onchange="onElemToggle(this)"> 👥 주변인물</label><select class="elem-mode" style="display:none"></select></div>
+          <div class="elem-row" data-k="twist"><label><input type="checkbox" data-k="twist" checked onchange="onElemToggle(this)"> ✨ 발상전환</label><select class="elem-mode" style="display:none"></select></div>
+          <div class="elem-row" data-k="development"><label><input type="checkbox" data-k="development" checked onchange="onElemToggle(this)"> 🎬 전개방식</label><select class="elem-mode" style="display:none"></select></div>
+          <div class="elem-row" data-k="hook"><label><input type="checkbox" data-k="hook" checked onchange="onElemToggle(this)"> 🎣 훅</label><select class="elem-mode" style="display:none"></select></div>
+          <div class="elem-row" data-k="appeal"><label><input type="checkbox" data-k="appeal" checked onchange="onElemToggle(this)"> 🎯 어필포인트</label><select class="elem-mode" style="display:none"></select></div>
+          <div class="elem-row" data-k="tone"><label><input type="checkbox" data-k="tone" checked onchange="onElemToggle(this)"> 🗣 말투/어미</label><select class="elem-mode" style="display:none"></select></div>
         </div>
         <div class="gen-sec">주제</div>
         <div class="modes">
@@ -189,20 +191,49 @@ async function copyFull(btn){
   const o=btn.textContent; btn.textContent='✓ 복사됨'; setTimeout(()=>btn.textContent=o,1200);
 }
 // ── 생성(적용) ──
-function openGen(sc){ window._genSC=sc; document.getElementById('genResults').innerHTML=''; document.getElementById('genModal').classList.add('open'); }
+async function openGen(sc){
+  window._genSC=sc; document.getElementById('genResults').innerHTML='';
+  document.getElementById('genModal').classList.add('open');
+  const card = document.querySelector(`[onclick="openGen('${sc}')"]`)?.closest('.card');
+  const category = card?.querySelector('.meta')?.textContent?.split('·')[1]?.trim() || '';
+  window._genOptions = {};
+  try{
+    const d = await (await fetch('/api/wiki/element_options?category='+encodeURIComponent(category))).json();
+    window._genOptions = d.options || {};
+  }catch(e){}
+  document.querySelectorAll('#genToggles .elem-row').forEach(row=>{
+    const key = row.dataset.k;
+    const opts = window._genOptions[key] || [];
+    const sel = row.querySelector('.elem-mode');
+    sel.innerHTML = '<option value="random">🎲 랜덤</option>'
+      + opts.map(o=>`<option value="category:${o.label}">${o.label}</option>`).join('')
+      + '<option value="free">✨ AI 자유즉흥</option>';
+  });
+}
+function onElemToggle(cb){
+  const sel = cb.closest('.elem-row').querySelector('.elem-mode');
+  sel.style.display = cb.checked ? 'none' : 'inline-block';
+}
 function closeGen(){ document.getElementById('genModal').classList.remove('open'); }
 function toggleTopic(){ const b=document.querySelector('input[name=genmode]:checked').value==='B'; document.getElementById('genTopic').style.display=b?'block':'none'; }
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeGen(); });
 async function runGen(){
   const btn=document.getElementById('genRun'); const res=document.getElementById('genResults');
-  const keep=[...document.querySelectorAll('#genToggles input:checked')].map(x=>x.dataset.k).join(',');
+  const elemModes = {};
+  document.querySelectorAll('#genToggles .elem-row').forEach(row=>{
+    const key = row.dataset.k;
+    const cb = row.querySelector('input[type=checkbox]');
+    elemModes[key] = cb.checked ? 'keep' : row.querySelector('.elem-mode').value;
+  });
   const mode=document.querySelector('input[name=genmode]:checked').value;
   const topic=document.getElementById('genTopic').value.trim();
   if(mode==='B' && !topic){ res.innerHTML='<div class="gen-err">내 주제/제품을 입력하세요.</div>'; return; }
   btn.disabled=true; btn.textContent='⏳ 생성 중…'; res.innerHTML='<div class="gen-load">✨ S급 구조를 빌려 초안 만드는 중… (10~20초)</div>';
   try{
-    const q=new URLSearchParams({shortcode:window._genSC, mode, my_topic:topic, keep, n:3});
-    const d=await (await fetch('/api/wiki/generate?'+q.toString(), {method:'POST'})).json();
+    const d=await (await fetch('/api/wiki/generate?shortcode='+encodeURIComponent(window._genSC), {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({mode, my_topic: topic, n: 3, elem_modes: elemModes}),
+    })).json();
     if(!d.ok){ res.innerHTML='<div class="gen-err">⚠️ '+esc(d.error||'생성 실패')+'</div>'; return; }
     res.innerHTML=(d.drafts||[]).map((dr,i)=>`<div class="draft">
       <div class="dh">초안 ${i+1} · ${esc(dr.hook||'')}</div>

@@ -580,19 +580,26 @@ def api_wiki_element_options(category: str):
 
 
 @app.post("/api/wiki/generate")
-def api_wiki_generate(request: Request, shortcode: str, mode: str = "A", my_topic: str = "", keep: str = "", n: int = 3):
-    """도서관 S급 1개의 구조를 빌려 새 20초 대본 초안 생성(모드 A/B, 유지/변형).
+def api_wiki_generate(request: Request, shortcode: str, body: dict):
+    """도서관 S급 1개의 구조를 빌려 새 20초 대본 초안 생성(모드 A/B, 4단 요소 모드).
 
-    keep: 유지할 요소 키를 콤마로(예: "characters,twist,development"). 나머지는 변형."""
-    it = Store(DB_PATH).get_wiki_item(shortcode, customer_id=_cid(request))
+    body: {mode: "A"|"B", my_topic: str, n: int,
+           elem_modes: {element_key: "keep"|"free"|"random"|"category:<label>"}}
+    (2026-07-13, 기존 쿼리파라미터 keep=콤마문자열 방식에서 JSON body로 전환 —
+    카테고리 지정 모드가 라벨 문자열까지 실어야 해서 콤마 목록으로는 표현이 안 됨)."""
+    store = Store(DB_PATH)
+    it = store.get_wiki_item(shortcode, customer_id=_cid(request))
     if not it:
         return JSONResponse(status_code=404, content={"ok": False, "error": "위키에 없는 항목 — 먼저 S급으로 저장하세요"})
     if not (it.get("structure") or it.get("full_text")):
         return JSONResponse(status_code=422, content={"ok": False, "error": "구조분석/대본이 비어 생성 불가 — 재저장 필요"})
-    kept = {x for x in (keep or "").split(",") if x}
-    keep_flags = {k: (k in kept) for k in script_generate.ELEM_KEYS}
+    mode = body.get("mode", "A")
+    my_topic = body.get("my_topic", "")
+    n = int(body.get("n") or 3)
+    elem_modes = {k: v for k, v in (body.get("elem_modes") or {}).items() if k in script_generate.ELEM_KEYS}
+    category_lookup = store.get_element_options(it.get("category") or "")
     drafts = script_generate.generate_variations(
-        it.get("structure") or {}, it.get("full_text") or "", keep_flags,
+        it.get("structure") or {}, it.get("full_text") or "", elem_modes, category_lookup,
         mode=mode, my_topic=my_topic, n=n)
     if not drafts:
         return JSONResponse(status_code=502, content={"ok": False, "error": "생성 실패(Gemini 키 소진 또는 오류) — 잠시 후 재시도"})
