@@ -1142,7 +1142,13 @@ def api_produce_mix_settings(body: dict):
     store = Store(DB_PATH)
     if not job_id or not store.get_mix_job(job_id):
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
-    store.update_mix_job(job_id, subtitle_removal=bool(body.get("subtitle_removal", False)))
+    fields = {}
+    if "subtitle_removal" in body:
+        fields["subtitle_removal"] = bool(body.get("subtitle_removal"))
+    if "headcopy" in body:
+        fields["headcopy"] = body.get("headcopy")  # dict or None
+    if fields:
+        store.update_mix_job(job_id, **fields)
     return {"ok": True}
 
 

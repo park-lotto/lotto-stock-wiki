@@ -168,7 +168,8 @@ class Store:
                     updated_at TEXT NOT NULL,
                     subtitle_removal INTEGER NOT NULL DEFAULT 0,
                     clean_video_path TEXT,
-                    given_script TEXT
+                    given_script TEXT,
+                    headcopy_json TEXT
                 )
             """)
             c.execute("""
@@ -243,6 +244,7 @@ class Store:
                 ("subtitle_removal", "INTEGER NOT NULL DEFAULT 0"),
                 ("clean_video_path", "TEXT"),
                 ("given_script", "TEXT"),  # 영상제작 2단계 given_script 모드(2026-07-13)
+                ("headcopy_json", "TEXT"),  # 영상제작 5단계 꾸미기 헤드카피(2026-07-13)
             ):
                 try:
                     c.execute(f"ALTER TABLE mix_jobs ADD COLUMN {col} {ddl}")
@@ -762,7 +764,7 @@ class Store:
             row = c.execute(
                 "SELECT job_id, urls_json, target_seconds, structure, status, error, "
                 "extract_json, edit_plan_json, video_path, created_at, updated_at, "
-                "subtitle_removal, clean_video_path, given_script "
+                "subtitle_removal, clean_video_path, given_script, headcopy_json "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -775,6 +777,7 @@ class Store:
             "video_path": row[8], "created_at": row[9], "updated_at": row[10],
             "subtitle_removal": bool(row[11]), "clean_video_path": row[12],
             "given_script": row[13],
+            "headcopy": json.loads(row[14]) if row[14] else None,
         }
 
     def update_mix_job(self, job_id, **fields):
@@ -785,6 +788,9 @@ class Store:
                 cols.append(f"{k}=?"); vals.append(fields[k])
         if "subtitle_removal" in fields:
             cols.append("subtitle_removal=?"); vals.append(1 if fields["subtitle_removal"] else 0)
+        if "headcopy" in fields:
+            cols.append("headcopy_json=?")
+            vals.append(json.dumps(fields["headcopy"], ensure_ascii=False) if fields["headcopy"] else None)
         for k, col in (("extract", "extract_json"), ("edit_plan", "edit_plan_json")):
             if k in fields:
                 cols.append(f"{col}=?")

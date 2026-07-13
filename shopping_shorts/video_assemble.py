@@ -289,7 +289,35 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work):
     return str(mix_raw)
 
 
-def _burn_captions(in_video, edit_plan, tts_paths, out_path, work):
+def _hex_to_ff(c, default="0xFFFFFF"):
+    """'#FF8800' → '0xFF8800' (ffmpeg drawtext color). 이상하면 default."""
+    c = (c or "").strip().lstrip("#")
+    return f"0x{c.upper()}" if len(c) == 6 and all(ch in "0123456789ABCDEFabcdef" for ch in c) else default
+
+
+def _headcopy_drawtext(hc, work):
+    """헤드카피(고정 타이틀) drawtext 필터 문자열. text는 파일로 빼서 이스케이프 회피.
+    x/y는 % 위치(가로·세로 중심). 없으면 None."""
+    text = (hc.get("text") or "").strip()
+    if not text:
+        return None
+    (work / "headcopy.txt").write_text(text, encoding="utf-8")
+    size = max(10, int(hc.get("size") or 64))
+    xf = min(1.0, max(0.0, (hc.get("x", 50)) / 100.0))
+    yf = min(1.0, max(0.0, (hc.get("y", 14)) / 100.0))
+    parts = [
+        "drawtext=fontfile=font.ttf:textfile=headcopy.txt",
+        f"fontcolor={_hex_to_ff(hc.get('color'), '0xFF8800')}",
+        f"fontsize={size}",
+        f"x=(w*{xf:.4f}-tw/2)", f"y=(h*{yf:.4f}-th/2)",
+    ]
+    if hc.get("outline"):
+        parts.append(f"borderw={max(1, int(hc.get('outline_w') or 6))}")
+        parts.append(f"bordercolor={_hex_to_ff(hc.get('outline_color'), '0x000000')}")
+    return ":".join(parts)
+
+
+def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None):
     """완성된 믹스 영상(in_video) 위에 우리 자막을 비트 타이밍대로 굽는다.
     비트 경계는 각 비트 tts 길이 누적(t0)으로 계산해, drawtext enable 구간을 전체
     타임라인 기준으로 배치한다(_caption_drawtexts에 t0 오프셋 전달). drawtext 값 안의
@@ -314,6 +342,10 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work):
         dur = _probe_duration(tts)
         filters.extend(_caption_drawtexts(beat.get("narration", ""), dur, work, idx, t0))
         t0 += dur
+    if headcopy:
+        hc_dt = _headcopy_drawtext(headcopy, work)
+        if hc_dt:
+            filters.append(hc_dt)  # 항상 표시(고정 타이틀) — enable 없음
     vf = ",".join(filters)
     # cwd=work: 필터그래프의 font.ttf / cap_*.txt 상대경로 해석 기준(콜론 회피).
     _run_ffmpeg(["ffmpeg", "-y", "-i", str(in_video), "-vf", vf, "-r", "30",
@@ -322,7 +354,7 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work):
     return str(out_path)
 
 
-def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None):
+def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, headcopy=None):
     """EDL → 최종 mp4. 1)믹스(자막X) 2)clean_fn(있으면 자막제거) 3)우리 자막.
     clean_fn(mix_raw_path)->clean_path 를 주면 그 사이에 VMake 자막제거가 끼워진다
     (없으면 생략). 자막제거는 우리 자막을 굽기 전 깨끗한 믹스에 돌려야 우리 자막이
