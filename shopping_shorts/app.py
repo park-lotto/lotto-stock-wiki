@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 import requests
-from fastapi import BackgroundTasks, FastAPI, Request, UploadFile, File
+from fastapi import BackgroundTasks, FastAPI, Request, UploadFile, File, Form
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from shopping_shorts.service import collect, generate_missing_drafts, next_draft_targets
@@ -1415,6 +1415,22 @@ def api_produce_mix_settings(body: dict):
     if fields:
         store.update_mix_job(job_id, **fields)
     return {"ok": True}
+
+
+@app.post("/api/produce/mix/bgm")
+async def api_produce_mix_bgm(job_id: str = Form(...), file: UploadFile = File(...)):
+    """BGM 오디오 업로드 → job work dir에 bgm.{ext}로 저장. deco.bgm.file로 참조·렌더 시 믹스."""
+    store = Store(DB_PATH)
+    if not job_id or not store.get_mix_job(job_id):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if ext not in (".mp3", ".wav", ".m4a", ".aac", ".ogg"):
+        ext = ".mp3"
+    d = _MIX_WORK_DIR / job_id
+    d.mkdir(parents=True, exist_ok=True)
+    name = "bgm" + ext
+    (d / name).write_bytes(await file.read())
+    return {"ok": True, "file": name}
 
 
 # 정적 프론트 (마운트는 맨 마지막)

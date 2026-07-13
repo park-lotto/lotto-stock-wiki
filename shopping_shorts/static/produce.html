@@ -278,6 +278,13 @@
           <span class="hint">미리보기에서 <b>드래그</b>로 위치 이동</span>
         </div>
         <div id="extraTextList"></div>
+        <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;border-top:1px dashed var(--line);padding-top:12px">
+          <span style="font-size:13px;font-weight:600">🎵 배경음악(BGM)</span>
+          <input id="bgmFile" type="file" accept="audio/*,.mp3,.wav,.m4a" onchange="uploadBgm(this)" style="font-size:12px;max-width:220px">
+          <span id="bgmStatus" class="hint"></span>
+          <label style="font-size:12px;color:var(--sub)">볼륨 <input id="bgmVol" type="range" min="0" max="60" value="15" oninput="updateBgmVol()"> <span id="bgmVolV">15</span>%</label>
+          <button onclick="clearBgm()" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:12px">제거</button>
+        </div>
       </div>
     </section>
     <section class="panel" data-step="5"><h3>6 · 썸네일</h3><div class="sub">프레임 선택 + 텍스트.</div><div class="stub">Phase 4 예정</div></section>
@@ -513,6 +520,20 @@ function bindExtraDrag(){
     };
   });
 }
+// 🎵 BGM 업로드(즉시 job work dir에 저장) → 렌더 시 나레이션 위에 믹스
+async function uploadBgm(input){
+  const f=input.files&&input.files[0]; if(!f) return;
+  if(!MIX_JOB){ alert('2단계에서 영상 매칭을 먼저 실행하세요'); input.value=''; return; }
+  const st=document.getElementById('bgmStatus'); st.textContent='업로드 중…';
+  const fd=new FormData(); fd.append('job_id',MIX_JOB); fd.append('file',f);
+  try{ const r=await (await fetch('/api/produce/mix/bgm',{method:'POST',body:fd})).json();
+    if(r.ok){ STATE.deco=STATE.deco||{extra_texts:[]}; STATE.deco.bgm={file:r.file, volume:+document.getElementById('bgmVol').value}; st.textContent='✅ '+f.name; }
+    else st.textContent='실패: '+(r.error||''); }
+  catch(e){ st.textContent='업로드 오류'; }
+}
+function updateBgmVol(){ const v=+document.getElementById('bgmVol').value; document.getElementById('bgmVolV').textContent=v;
+  if(STATE.deco&&STATE.deco.bgm) STATE.deco.bgm.volume=v; }
+function clearBgm(){ if(STATE.deco) STATE.deco.bgm=null; const el=document.getElementById('bgmFile'); if(el) el.value=''; const st=document.getElementById('bgmStatus'); if(st) st.textContent='제거됨'; }
 function renderMyPresets(){
   const box=document.getElementById('myPresets'); if(!box) return;
   const list=myPresets();

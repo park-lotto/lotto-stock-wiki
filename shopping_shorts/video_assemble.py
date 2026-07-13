@@ -427,9 +427,23 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
             filters.append(wm_dt)
     vf = ",".join(filters)
     # cwd=work: 필터그래프의 font.ttf / cap_*.txt 상대경로 해석 기준(콜론 회피).
-    _run_ffmpeg(["ffmpeg", "-y", "-i", str(in_video), "-vf", vf, "-r", "30",
-                 "-c:v", "libx264", "-c:a", "copy", "-pix_fmt", "yuv420p", str(out_path)],
-                cwd=str(work))
+    bgm = deco.get("bgm") or {}
+    bgm_path = bgm.get("_abspath")
+    if bgm_path and os.path.exists(bgm_path):
+        # BGM 믹스: 영상 오디오(TTS 나레이션) 위에 배경음악을 낮은 볼륨으로 얹는다.
+        # 음악이 영상보다 짧으면 무한 루프, amix duration=first로 영상 길이에 맞춰 자른다.
+        vol = max(0.0, min(1.0, (bgm.get("volume", 15)) / 100.0))
+        fc = (f"[0:v]{vf}[v];"
+              f"[1:a]aloop=loop=-1:size=2000000000,volume={vol:.3f}[bg];"
+              f"[0:a][bg]amix=inputs=2:duration=first:dropout_transition=2[a]")
+        _run_ffmpeg(["ffmpeg", "-y", "-i", str(in_video), "-i", bgm_path,
+                     "-filter_complex", fc, "-map", "[v]", "-map", "[a]", "-r", "30",
+                     "-c:v", "libx264", "-c:a", "aac", "-pix_fmt", "yuv420p", str(out_path)],
+                    cwd=str(work))
+    else:
+        _run_ffmpeg(["ffmpeg", "-y", "-i", str(in_video), "-vf", vf, "-r", "30",
+                     "-c:v", "libx264", "-c:a", "copy", "-pix_fmt", "yuv420p", str(out_path)],
+                    cwd=str(work))
     return str(out_path)
 
 

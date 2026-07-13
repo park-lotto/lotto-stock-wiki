@@ -184,9 +184,16 @@ def run_render(job_id, db_path, work_root):
                 store.update_mix_job(job_id, clean_video_path=out)
                 return out
 
+        # deco의 BGM 파일(업로드 시 work/{file}에 저장)을 절대경로로 해석해 넘긴다.
+        deco = job.get("deco") or {}
+        bgm = deco.get("bgm") or {}
+        if bgm.get("file"):
+            bp = work / bgm["file"]
+            if bp.exists():
+                deco = {**deco, "bgm": {**bgm, "_abspath": str(bp)}}
         assemble(plan, tts_paths, source_video_paths, str(out_path), clean_fn=clean_fn,
                  headcopy=job.get("headcopy"), caption_style=job.get("caption_style"),
-                 deco=job.get("deco"))
+                 deco=deco)
         store.update_mix_job(job_id, status="done", video_path=str(out_path))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
