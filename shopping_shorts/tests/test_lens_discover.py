@@ -40,6 +40,23 @@ def test_youtu_be_and_xhslink_and_iesdouyin(monkeypatch):
     assert [i["platform"] for i in out] == ["youtube", "xiaohongshu", "douyin"]
 
 
+def test_excludes_tiktok_discover_search_pages(monkeypatch):
+    """틱톡 discover/tag/search URL은 개별 영상이 아니라 검색·모음 페이지라 제외한다
+    (2026-07-14 실측: 렌즈가 tiktok.com/discover/키워드 형태를 섞어 반환 — 재생·매칭
+    의미 없음). @user/video/숫자 형태의 개별 영상만 통과."""
+    matches = [
+        {"link": "https://www.tiktok.com/discover/일본-고구마-탕후루", "title": "d", "thumbnail": "t", "source": "TikTok"},
+        {"link": "https://www.tiktok.com/@zihyuncook/video/7564364411620625685", "title": "v", "thumbnail": "t", "source": "TikTok"},
+        {"link": "https://www.tiktok.com/tag/potato", "title": "tag", "thumbnail": "t", "source": "TikTok"},
+        {"link": "https://www.tiktok.com/search?q=x", "title": "s", "thumbnail": "t", "source": "TikTok"},
+    ]
+    monkeypatch.setattr(lens_discover, "SERPAPI_KEY", "fake")
+    monkeypatch.setattr(lens_discover.requests, "get", lambda *a, **k: _fake_response(matches))
+    out = lens_discover.search_similar_videos("https://ex.com/f.jpg")
+    assert len(out) == 1
+    assert out[0]["url"].endswith("/video/7564364411620625685")
+
+
 def test_requests_type_visual_matches(monkeypatch):
     """google_lens는 요리·제품 프레임 같은 이미지엔 ai_overview만 주고 visual_matches를
     생략한다(2026-07-14 라이브 실측: type 없으면 0개, type=visual_matches면 60개).

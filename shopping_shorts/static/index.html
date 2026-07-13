@@ -555,24 +555,18 @@ function renderLens(shortcode){
     return `<span onclick="toggleLensPlatform('${shortcode}','${p.k}')" style="cursor:pointer;display:inline-block;padding:3px 10px;margin:2px;border-radius:12px;font-size:11px;border:1px solid var(--line);background:${active?'#1f6feb33':'transparent'};opacity:${active?1:0.4}">${p.label} ${n}</span>`;
   }).join('');
   // 썸네일은 구글 gstatic CDN(encrypted-tbn) — 핫링크 제한 없어 직접 로드(프록시 불필요).
-  // 각 결과는 팝업 안에서 ▶ 재생(embed)으로 1차 확인 가능 + 원본 새 탭 링크.
+  // 큰 썸네일 그리드 + 썸네일 클릭 시 바로 그 자리 인라인 재생(embed). embed 불가 플랫폼만 새 탭.
   const shown=st.items.filter(i=>st.on.has(i.platform));
   const cards=shown.map((i,idx)=>`
-    <div style="border-bottom:1px solid var(--line);padding:8px 4px">
-      <div style="display:flex;gap:10px;align-items:center">
-        <div style="position:relative;width:72px;height:72px;flex-shrink:0;cursor:pointer" onclick="lensPlay(${idx})">
-          <img src="${i.thumbnail||''}" referrerpolicy="no-referrer" loading="lazy" style="width:72px;height:72px;object-fit:cover;border-radius:8px;background:#0d131c" onerror="this.style.visibility='hidden'">
-          <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:20px;text-shadow:0 1px 4px #000">▶</span>
-        </div>
-        <div style="font-size:12px;line-height:1.4;min-width:0;flex:1">
-          <b>${LENS_PLATFORMS.find(p=>p.k===i.platform)?.label||''}</b><br>${esc((i.title||'').slice(0,70))}
-          <div style="margin-top:4px">
-            <button onclick="lensPlay(${idx})" style="font-size:11px;padding:2px 8px;margin-right:6px">▶ 여기서 재생</button>
-            <a href="${i.url}" target="_blank" style="font-size:11px;color:var(--accent)">↗ 원본 열기</a>
-          </div>
+    <div style="padding:8px 0;border-bottom:1px solid var(--line)">
+      <div style="font-size:12px;margin-bottom:6px"><b>${LENS_PLATFORMS.find(p=>p.k===i.platform)?.label||''}</b> <span style="color:var(--sub)">${esc((i.title||'').slice(0,80))}</span>
+        <a href="${i.url}" target="_blank" style="font-size:11px;color:var(--accent);margin-left:6px">↗ 원본</a></div>
+      <div id="lensplay_${idx}">
+        <div onclick="lensPlay(${idx})" style="position:relative;width:100%;max-width:260px;aspect-ratio:9/16;cursor:pointer;border-radius:10px;overflow:hidden;background:#0d131c">
+          <img src="${i.thumbnail||''}" referrerpolicy="no-referrer" loading="lazy" style="width:100%;height:100%;object-fit:cover" onerror="this.style.visibility='hidden'">
+          <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:40px;color:#fff;text-shadow:0 2px 8px #000">▶</span>
         </div>
       </div>
-      <div id="lensplay_${idx}"></div>
     </div>`).join('') || '<div style="font-size:12px;color:var(--sub);padding:10px">켠 플랫폼 결과 없음</div>';
   box.innerHTML=`<div style="position:sticky;top:0;background:var(--panel);padding:4px 0;margin-bottom:4px;z-index:1">${chips}</div><div>${cards}</div>`;
   box._lensShown=shown;   // lensPlay가 참조
@@ -592,10 +586,13 @@ function lensPlay(idx){
   const box=document.getElementById('scriptBody');
   const it=box && box._lensShown && box._lensShown[idx]; if(!it) return;
   const slot=document.getElementById('lensplay_'+idx); if(!slot) return;
-  if(slot.firstChild){ slot.innerHTML=''; return; }   // 토글: 다시 누르면 닫힘
+  if(slot.querySelector('iframe')){          // 이미 재생 중 → 썸네일로 복귀(닫기)
+    renderLens(_lensSC); return;
+  }
   const src=_lensEmbed(it.url);
-  if(!src){ window.open(it.url,'_blank'); return; }    // embed 불가 플랫폼은 새 탭
-  slot.innerHTML=`<iframe class="lens-play" src="${src}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+  if(!src){ window.open(it.url,'_blank'); return; }    // 샤오홍슈·도우인 등 embed 불가 → 새 탭
+  slot.innerHTML=`<iframe class="lens-play" src="${src}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`
+    +`<div style="text-align:right"><button onclick="lensPlay(${idx})" style="font-size:11px;padding:2px 8px;margin-top:4px">✕ 닫기</button></div>`;
 }
 async function extractScript(shortcode){
   window._curSC = shortcode;

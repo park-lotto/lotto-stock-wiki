@@ -57,6 +57,16 @@ def _platform_of(link):
     return None
 
 
+def _is_watchable(platform, link):
+    """개별 재생 가능한 영상 URL만 True. 틱톡은 discover/tag/search/music 등 검색·모음
+    페이지(개별영상 X)를 렌즈가 섞어 반환해(2026-07-14 실측) 이를 걸러낸다 —
+    /video/숫자 또는 /@user/video/숫자 형태만 통과."""
+    path = urlparse(link or "").path.lower()
+    if platform == "tiktok":
+        return "/video/" in path
+    return True   # 유튜브·인스타·중국플랫폼은 그대로(대부분 개별 콘텐츠)
+
+
 def search_similar_videos(image_url, api_key=None, timeout=60):
     """공개 이미지 URL → [{platform, url, title, thumbnail}]. 5개 동영상 플랫폼만.
     키 없음·호출 실패 시 []."""
@@ -86,7 +96,7 @@ def search_similar_videos(image_url, api_key=None, timeout=60):
     out = []
     for m in matches:
         platform = _platform_of(m.get("link"))
-        if not platform:
+        if not platform or not _is_watchable(platform, m.get("link")):
             continue
         out.append({
             "platform": platform,
