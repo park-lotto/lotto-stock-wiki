@@ -132,6 +132,40 @@ def api_saved():
     return {"ok": True, "saved": sorted(store.saved_set())}
 
 
+@app.post("/api/mix/basket/toggle")
+def api_mix_basket_toggle(body: dict):
+    """영상 믹싱 바구니 담기/담기취소 토글. body: {shortcode, url, thumbnail, name, caption}."""
+    sc = (body.get("shortcode") or "").strip()
+    if not sc:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "shortcode 필요"})
+    store = Store(DB_PATH)
+    in_basket = store.mix_basket_toggle(
+        sc,
+        url=body.get("url") or "",
+        thumbnail=body.get("thumbnail") or "",
+        name=body.get("name") or "",
+        caption=body.get("caption") or "",
+    )
+    return {"ok": True, "in": in_basket, "count": len(store.mix_basket_shortcodes())}
+
+
+@app.post("/api/mix/basket/remove")
+def api_mix_basket_remove(body: dict):
+    """바구니에서 shortcode 제거."""
+    sc = (body.get("shortcode") or "").strip()
+    store = Store(DB_PATH)
+    store.mix_basket_remove(sc)
+    return {"ok": True, "count": len(store.mix_basket_shortcodes())}
+
+
+@app.get("/api/mix/basket")
+def api_mix_basket():
+    """바구니 항목 목록(담은 순서) + shortcode 집합."""
+    store = Store(DB_PATH)
+    return {"ok": True, "items": store.mix_basket_list(),
+            "shortcodes": sorted(store.mix_basket_shortcodes())}
+
+
 def _err(e):
     """토큰 마스킹 후 500 JSON (수집 계열 공통)."""
     msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))

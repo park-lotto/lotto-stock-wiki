@@ -25,13 +25,19 @@
 <div class="wrap">
   <h2>🎬 영상 믹싱</h2>
   <div id="inputPanel">
-    <div id="urls">
-      <div class="row"><input type="text" placeholder="레퍼런스 URL 1"/></div>
-      <div class="row"><input type="text" placeholder="레퍼런스 URL 2"/></div>
+    <div id="basketWrap" style="margin-bottom:10px">
+      <div style="font-size:13px;color:#9a9aa5;margin-bottom:6px">🧺 담은 영상 (레퍼런스 랭킹에서 📥담기)</div>
+      <div id="basket"></div>
     </div>
-    <div class="row">
-      <button class="ghost" onclick="addUrl()">+ 소스 추가</button>
-    </div>
+    <details style="margin-bottom:8px">
+      <summary style="cursor:pointer;color:#9a9aa5;font-size:13px">＋ URL 직접 추가</summary>
+      <div id="urls" style="margin-top:8px">
+        <div class="row"><input type="text" placeholder="레퍼런스 URL"/></div>
+      </div>
+      <div class="row">
+        <button class="ghost" onclick="addUrl()">+ 소스 추가</button>
+      </div>
+    </details>
     <div class="row">
       목표 길이 <input id="target" type="range" min="10" max="90" value="30" oninput="tv.textContent=this.value"/>
       <span id="tv">30</span>초
@@ -70,9 +76,32 @@ function addUrl(){
   d.innerHTML='<input type="text" placeholder="레퍼런스 URL"/>';
   document.getElementById('urls').appendChild(d);
 }
+let BASKET=[];   // [{shortcode,url,thumbnail,name}]
+async function loadBasket(){
+  try{
+    const d=await (await fetch('/api/mix/basket')).json();
+    BASKET=d.items||[];
+  }catch(e){ BASKET=[]; }
+  const el=document.getElementById('basket');
+  if(!BASKET.length){ el.innerHTML='<div style="font-size:12px;color:#6a6a75">담은 영상이 없습니다. 레퍼런스 랭킹에서 📥담기를 누르면 여기에 순서대로 쌓입니다.</div>'; return; }
+  el.innerHTML=BASKET.map((it,i)=>`
+    <div class="row" style="align-items:center;gap:8px;background:#1a1a20;border-radius:8px;padding:6px 8px;margin-bottom:6px">
+      <span style="color:#6a6a75;width:18px">${i+1}</span>
+      ${it.thumbnail?`<img src="/api/thumb?url=${encodeURIComponent(it.thumbnail)}" style="width:40px;height:52px;object-fit:cover;border-radius:4px" onerror="this.style.visibility='hidden'">`:''}
+      <span style="flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(it.name||it.shortcode)}</span>
+      <a href="${escapeHtml(it.url||'#')}" target="_blank" style="color:#6ab0ff;font-size:12px;text-decoration:none">↗</a>
+      <button class="ghost" style="padding:2px 8px" onclick="removeFromBasket('${escapeHtml(it.shortcode)}')">🗑 삭제</button>
+    </div>`).join('');
+}
+async function removeFromBasket(sc){
+  try{ await fetch('/api/mix/basket/remove',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({shortcode:sc})}); }catch(e){}
+  loadBasket();
+}
 async function startMix(){
-  const urls=[...document.querySelectorAll('#urls input')].map(i=>i.value.trim()).filter(Boolean);
-  if(urls.length<2){ alert('URL 2개 이상 입력'); return; }
+  const manual=[...document.querySelectorAll('#urls input')].map(i=>i.value.trim()).filter(Boolean);
+  const basketUrls=BASKET.map(it=>it.url).filter(Boolean);
+  const seen=new Set(); const urls=[...basketUrls, ...manual].filter(u=>!seen.has(u)&&seen.add(u));
+  if(urls.length<2){ alert('영상 2개 이상 필요 — 랭킹에서 담기하거나 URL 직접 추가'); return; }
   const body={urls, target_seconds:+document.getElementById('target').value, structure:document.getElementById('structure').value, subtitle_removal:document.getElementById('subtitleRemoval').checked};
   const r=await fetch('/api/mix/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   const d=await r.json(); if(!d.ok){ alert(d.error); return; }
@@ -163,6 +192,7 @@ async function loadVmakeKeyState(){
   }catch(e){}
 }
 loadVmakeKeyState();
+loadBasket();
 </script>
 </body>
 </html>

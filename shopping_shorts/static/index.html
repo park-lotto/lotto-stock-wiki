@@ -134,6 +134,7 @@
       <div class="label">채널 &amp; 콘텐츠</div>
       <div class="menu-item">👁 내 모니터링 리스트</div>
       <div class="menu-item" onclick="location.href='/library'" style="cursor:pointer">📚 대본 위키(도서관)</div>
+      <div class="menu-item" onclick="location.href='/mix.html'" style="cursor:pointer">🎬 영상 믹싱</div>
       <div class="menu-item">📁 레퍼런스 모음집</div>
       <div class="menu-item" onclick="location.href='/outreach'" style="cursor:pointer">💬 소통 큐</div>
     </div>
@@ -221,7 +222,7 @@ function render(){
         <div class="btns">
           <button class="view" onclick="window.open('${i.url}','_blank')">👁 보기</button>
           <button class="comment" onclick="goComment('${i.shortcode}')">💬 댓글</button>
-          <button class="save" id="save_${i.shortcode}" onclick="doSave('${i.shortcode}', this)">📥 담기</button>
+          <button class="save" id="save_${i.shortcode}" onclick="toggleMix('${i.shortcode}', this)">📥 담기</button>
         </div>
         <button class="script-btn" onclick="extractScript('${i.shortcode}')">📝 대본 추출</button>
         ${i.inpock?`<div style="margin-top:6px"><a href="${i.inpock}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🛒 판매채널</a></div>`:''}
@@ -347,30 +348,31 @@ async function copyFullText(btn){
   btn.textContent='✓ 복사됨'; btn.classList.add('done');
   setTimeout(()=>{ btn.textContent='📋 전체 복사'; btn.classList.remove('done'); }, 1200);
 }
-async function doSave(sc, btn){
-  await fetch('/api/save?shortcode=' + encodeURIComponent(sc), {method:'POST'});
-  btn.textContent = '담김✓'; btn.classList.add('saved');
-  // 제품찾기(shopping.tubefactory.kr)로 넘겨서 틱톡·인스타·유튭·더우인·샤오홍슈·
-  // 구글에서 같은 영상 소스를 찾는 다음 단계로 이어준다(2026-07-09). 이 도구는
-  // SPA라 URL 파라미터로 검색창을 미리 채우는 게 안 될 수 있어 복사+새탭 방식으로
-  // 확실하게 — 사용자가 새탭에서 Ctrl+V만 하면 됨.
-  const it = STATE.items.find(x=>x.shortcode===sc);
-  if(it?.url){
-    try{
-      await navigator.clipboard.writeText(it.url);
-      const st = document.getElementById("status");
-      if(st) st.textContent = "🔗 URL 복사됨 — 제품찾기 탭에서 Ctrl+V로 붙여넣으세요";
-    }catch(e){}
-    window.open('https://shopping.tubefactory.kr', '_blank');
-  }
+// 담기 = 영상 믹싱 바구니 토글(서버 저장, 모든 PC 공유). 한 번 더 누르면 담기취소.
+async function toggleMix(sc, btn){
+  const it = STATE.items.find(x=>x.shortcode===sc) || {};
+  try{
+    const r = await fetch('/api/mix/basket/toggle', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({shortcode: sc, url: it.url||'', thumbnail: it.thumbnail||'',
+                            name: it.name||it.username||'', caption: it.caption||''})
+    });
+    const d = await r.json();
+    setMixBtn(btn, d.in);
+    const st = document.getElementById("status");
+    if(st) st.textContent = d.in ? `🎬 영상 믹싱에 담김 (총 ${d.count}개)` : `담기취소됨 (총 ${d.count}개)`;
+  }catch(e){ /* 무시 */ }
 }
+function setMixBtn(btn, inBasket){
+  if(!btn) return;
+  if(inBasket){ btn.textContent='🎬 담김✓'; btn.classList.add('saved'); }
+  else { btn.textContent='📥 담기'; btn.classList.remove('saved'); }
+}
+// 렌더 후 바구니에 담긴 카드 버튼을 담김 상태로 표시
 async function markSavedButtons(){
   try{
-    const d = await (await fetch('/api/saved')).json();
-    (d.saved||[]).forEach(sc=>{
-      const b=document.getElementById('save_'+sc);
-      if(b){ b.textContent='담김✓'; b.classList.add('saved'); }
-    });
+    const d = await (await fetch('/api/mix/basket')).json();
+    (d.shortcodes||[]).forEach(sc=>setMixBtn(document.getElementById('save_'+sc), true));
   }catch(e){}
 }
 renderCtypes(); renderCats(); loadLast();

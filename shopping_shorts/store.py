@@ -46,6 +46,16 @@ class Store:
                 )
             """)
             c.execute("""
+                CREATE TABLE IF NOT EXISTS mix_basket (
+                    shortcode TEXT PRIMARY KEY,
+                    url TEXT,
+                    thumbnail TEXT,
+                    name TEXT,
+                    caption TEXT,
+                    added_at TEXT
+                )
+            """)
+            c.execute("""
                 CREATE TABLE IF NOT EXISTS last_run (
                     id INTEGER PRIMARY KEY CHECK (id = 1),
                     items_json TEXT NOT NULL,
@@ -310,6 +320,46 @@ class Store:
         """담긴 shortcode 집합."""
         with self._conn() as c:
             rows = c.execute("SELECT shortcode FROM saved").fetchall()
+        return {r[0] for r in rows}
+
+    # --- 영상 믹싱 바구니(mix basket) — 담기 토글로 채우고 mix.html이 소스로 사용 ---
+    def mix_basket_toggle(self, shortcode, url="", thumbnail="", name="", caption=""):
+        """이미 있으면 제거, 없으면 추가. 최종적으로 담겨있으면 True 반환."""
+        with self._conn() as c:
+            exists = c.execute(
+                "SELECT 1 FROM mix_basket WHERE shortcode=?", (shortcode,)
+            ).fetchone()
+            if exists:
+                c.execute("DELETE FROM mix_basket WHERE shortcode=?", (shortcode,))
+                return False
+            c.execute(
+                "INSERT INTO mix_basket(shortcode, url, thumbnail, name, caption, added_at) "
+                "VALUES(?,?,?,?,?, datetime('now'))",
+                (shortcode, url, thumbnail, name, caption),
+            )
+            return True
+
+    def mix_basket_remove(self, shortcode):
+        """바구니에서 제거."""
+        with self._conn() as c:
+            c.execute("DELETE FROM mix_basket WHERE shortcode=?", (shortcode,))
+
+    def mix_basket_list(self):
+        """담은 순서(added_at)대로 항목 dict 리스트."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT shortcode, url, thumbnail, name, caption FROM mix_basket "
+                "ORDER BY added_at ASC, rowid ASC"
+            ).fetchall()
+        return [
+            {"shortcode": r[0], "url": r[1], "thumbnail": r[2], "name": r[3], "caption": r[4]}
+            for r in rows
+        ]
+
+    def mix_basket_shortcodes(self):
+        """바구니에 담긴 shortcode 집합(버튼 상태 표시용)."""
+        with self._conn() as c:
+            rows = c.execute("SELECT shortcode FROM mix_basket").fetchall()
         return {r[0] for r in rows}
 
     def save_last_run(self, items, collected_at):
