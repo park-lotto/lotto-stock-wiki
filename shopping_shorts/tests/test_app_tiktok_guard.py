@@ -20,7 +20,7 @@ def test_settings_get_defaults(tmp_path, monkeypatch):
     c, _ = _client(tmp_path, monkeypatch)
     r = c.get("/api/tiktok/settings").json()
     assert r["ok"]
-    assert r["search_count"] == 60
+    assert r["search_count"] == 50   # 언어당 기본 50개(요청 변경 60→50)
     assert r["daily_limit"] == 10
     assert r["month_budget"] == 5.0
 
@@ -82,15 +82,17 @@ def test_collect_blocked_when_daily_limit_reached(tmp_path, monkeypatch):
 def test_successful_tiktok_collect_bumps_count_and_spend(tmp_path, monkeypatch):
     c, db = _client(tmp_path, monkeypatch)
     s = Store(db)
-    s.add_seed("tiktok", "keyword", "청소")
+    # 언어 시드 2개(ko, en) → 각 50개 검색 = 100건 × $0.0017 = $0.17 추정
+    s.add_seed("tiktok", "ko", "청소")
+    s.add_seed("tiktok", "en", "cleaning")
     r = c.post("/api/collect?platform=tiktok")
     assert r.status_code == 200 and r.json()["ok"]
 
     from datetime import datetime, timezone
     now = datetime.now(timezone.utc)
     assert s.tiktok_daily_count(0, now.strftime("%Y-%m-%d")) == 1
-    # 지출이 누적됐다(키워드 있으면 0보다 큼)
-    assert s.tiktok_month_spend(now.strftime("%Y-%m")) > 0
+    # 지출 = 언어시드수(2) × 검색개수(50) × $0.0017 = $0.17
+    assert round(s.tiktok_month_spend(now.strftime("%Y-%m")), 3) == 0.170
 
 
 def test_non_tiktok_collect_not_guarded(tmp_path, monkeypatch):

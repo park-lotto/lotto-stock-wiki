@@ -14,9 +14,9 @@ from shopping_shorts import ai_categorize, topic_grouper
 from shopping_shorts.youtube_client import search_shorts as yt_search
 from shopping_shorts.tiktok_client import fetch_account_videos as tt_fetch
 from shopping_shorts.tiktok_search import search_full as tt_search_full
-from shopping_shorts.video_analysis import translate_keyword
 
-TIKTOK_SEARCH_COUNT_DEFAULT = 60   # 검색당 fetch 개수(설정 tiktok_search_count로 오버라이드)
+TIKTOK_SEARCH_COUNT_DEFAULT = 50   # 언어당 fetch 개수(설정 tiktok_search_count로 오버라이드)
+_TIKTOK_LANG_KINDS = {"ko", "en", "ja", "zh", "ru"}   # 키워드 시드의 언어코드 kind
 
 _CSV_FIELDS = ["name", "username", "category", "comments", "delta", "is_new",
                "speed", "accel", "density", "grade", "age_hours", "url", "inpock"]
@@ -134,16 +134,15 @@ def _collect_tiktok():
     # 계정 시드(@handle) — yt-dlp 무료 수집(기존 경로)
     for acc in [s["value"] for s in seeds if s["kind"] == "account"]:
         raw.extend(tt_fetch(acc))          # 실패 계정은 tiktok_client가 빈 리스트 반환
-    # 키워드 시드 — 5개국어 번역 후 각 언어로 Apify 키워드검색(2026-07-14).
-    # 계정 경로와 같은 raw 스키마라 아래 build_tiktok_items로 함께 흘러간다.
-    keywords = [s["value"] for s in seeds if s["kind"] == "keyword"]
-    if keywords:
+    # 키워드 시드 — kind=언어코드(ko/en/ja/zh/ru)별로 저장된 값을 그대로 검색(2026-07-14).
+    # 5개국어 자동확장이 아니라 사용자가 켠 언어만; 비한국어 시드는 등록 시 이미 그 언어로
+    # 번역돼 저장됨(UI addSeed). 언어당 tiktok_search_count(기본 50)개. 계정 경로와 같은
+    # raw 스키마라 아래 build_tiktok_items로 함께 흘러간다.
+    lang_seeds = [s["value"] for s in seeds if s["kind"] in _TIKTOK_LANG_KINDS]
+    if lang_seeds:
         count = int(store.get_setting("tiktok_search_count", TIKTOK_SEARCH_COUNT_DEFAULT))
-        for kw in keywords:
-            for lang_kw in translate_keyword(kw).values():
-                if not lang_kw:
-                    continue               # 번역 실패 언어는 스킵(ko는 항상 채워짐)
-                raw.extend(tt_search_full(lang_kw, max_results=count))
+        for kw in lang_seeds:
+            raw.extend(tt_search_full(kw, max_results=count))
     items = build_tiktok_items(
         raw,
         prev_base=lambda sc: store.prev_base_platform("tiktok", sc),

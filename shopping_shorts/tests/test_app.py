@@ -111,6 +111,17 @@ def test_wiki_generate_ok(monkeypatch):
     assert r.json()["drafts"][0]["script"] == "s"
 
 
+def test_wiki_element_options_returns_saved_categories(monkeypatch, client):
+    monkeypatch.setattr(app_module, "_AUTH_ON", False)
+    monkeypatch.setattr(app_module.Store, "get_element_options",
+                        lambda self, category: {"characters": [{"label": "가족관계", "description": "d"}]})
+    r = client.get("/api/wiki/element_options?category=레시피")
+    assert r.status_code == 200
+    d = r.json()
+    assert d["ok"] is True
+    assert d["options"]["characters"][0]["label"] == "가족관계"
+
+
 def test_store_wiki_roundtrip(tmp_path):
     from shopping_shorts.store import Store
     s = Store(tmp_path / "w.db")

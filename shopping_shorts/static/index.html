@@ -145,8 +145,8 @@
       <span id="seedHint" style="font-size:11px;color:var(--sub)">한국어 외 언어 선택 시 자동 번역해 등록</span>
       <div id="seedList" style="margin-top:6px;font-size:12px;color:var(--sub)"></div>
       <div id="ttPanel" style="display:none;margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:8px;background:#0d131c">
-        <div style="font-size:12px;color:var(--sub);margin-bottom:8px">⚙️ 틱톡 키워드검색 설정 <span style="font-size:11px">— Apify 유료($1.70/1,000건), 키워드는 5개국어로 자동검색</span></div>
-        <label style="font-size:12px;color:var(--sub)">검색당 개수 <input id="ttCount" type="number" min="10" max="200" style="width:64px;padding:4px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)"></label>
+        <div style="font-size:12px;color:var(--sub);margin-bottom:8px">⚙️ 틱톡 키워드검색 설정 <span style="font-size:11px">— Apify 유료($1.70/1,000건). 선택 언어로 검색, 부족하면 다른 언어로 확장</span></div>
+        <label style="font-size:12px;color:var(--sub)">언어당 개수 <input id="ttCount" type="number" min="10" max="200" style="width:64px;padding:4px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)"></label>
         <label style="font-size:12px;color:var(--sub);margin-left:10px">하루 수집횟수 <input id="ttDaily" type="number" min="1" max="100" style="width:56px;padding:4px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)"></label>
         <label style="font-size:12px;color:var(--sub);margin-left:10px">월 예산($) <input id="ttBudget" type="number" min="0" step="0.5" style="width:64px;padding:4px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)"></label>
         <button onclick="saveTtSettings()" style="margin-left:8px">저장</button>
@@ -199,12 +199,18 @@ function switchPlatform(p, el){
   if(p!=='instagram') loadSeeds();
   loadLast();          // 기존 초기 로드 함수 — platform 반영하도록 아래 수정
 }
+const TT_LANG_KINDS=['ko','en','ja','zh','ru'];   // 틱톡 키워드 시드의 언어코드
+function ttKeywordMode(){ return PLATFORM==='tiktok' && ttMode()==='keyword'; }
 function ttModeChange(){
   const si=document.getElementById('seedInput');
   if(PLATFORM==='tiktok'){
     const kw = ttMode()==='keyword';
     if(si) si.placeholder = kw ? '틱톡 검색 키워드 (예: 곰팡이 제거)' : '틱톡 계정 (예: @salim__mami)';
     document.getElementById('ttPanel').style.display = kw?'block':'none';
+    // 키워드 모드면 언어 선택기 노출(선택 언어로 검색·확장), 계정 모드면 숨김
+    document.getElementById('seedLang').style.display = kw?'':'none';
+    document.getElementById('seedHint').style.display = kw?'':'none';
+    if(kw) document.getElementById('seedHint').textContent='선택 언어로 검색 — 한국어가 부족하면 영어 등 다른 언어로 확장';
   } else if(si){
     si.placeholder = '검색 키워드 (예: 살림꿀팁)';
   }
@@ -214,25 +220,26 @@ async function loadSeeds(){
   const d=await (await fetch('/api/seeds?platform='+PLATFORM)).json();
   const el=document.getElementById('seedList');
   const items=d.items||[];
-  el.innerHTML = items.length ? items.map(s=>
-    `<span class="${s.kind==='keyword'?'ttkw':''}" style="display:inline-block;background:#1a2230;border-radius:12px;padding:2px 8px;margin:2px 4px 0 0">
+  el.innerHTML = items.length ? items.map(s=>{
+    const isLang = TT_LANG_KINDS.includes(s.kind);   // 틱톡 언어 시드 = 비용 대상
+    return `<span class="${(PLATFORM==='tiktok'&&isLang)?'ttkw':''}" style="display:inline-block;background:#1a2230;border-radius:12px;padding:2px 8px;margin:2px 4px 0 0">
        ${LANGLABEL[s.kind]||''} ${s.value}
        <span style="cursor:pointer;color:#e0623d" onclick="removeSeed('${s.value.replace(/'/g,"\\'")}')">✕</span>
-     </span>`).join('') : '키워드 없음';
+     </span>`;
+  }).join('') : '키워드 없음';
   if(PLATFORM==='tiktok') renderTtStatus();
-  // 유튜브만 언어 선택기 노출(틱톡 키워드는 백엔드가 5개국어 자동번역, 계정은 불필요)
-  document.getElementById('seedLang').style.display = (PLATFORM==='youtube')?'':'none';
-  document.getElementById('seedHint').style.display = (PLATFORM==='youtube')?'':'none';
+  // 유튜브 + 틱톡 키워드모드에서 언어 선택기 노출(계정 모드는 ttModeChange가 숨김)
+  const showLang = (PLATFORM==='youtube') || ttKeywordMode();
+  document.getElementById('seedLang').style.display = showLang?'':'none';
+  document.getElementById('seedHint').style.display = showLang?'':'none';
 }
 async function addSeed(){
   const raw=document.getElementById('seedInput').value.trim(); if(!raw) return;
-  if(PLATFORM==='tiktok'){
-    // 키워드 모드=백엔드가 5개국어 자동번역 후 각 언어로 검색하므로 한국어 원문만 저장.
-    // 계정 모드=yt-dlp 무료 시드.
-    const kind = ttMode();   // 'keyword' | 'account'
-    await fetch('/api/seeds',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({platform:'tiktok',kind,value:raw})});
+  if(PLATFORM==='tiktok' && ttMode()==='account'){
+    await fetch('/api/seeds',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({platform:'tiktok',kind:'account',value:raw})});
     document.getElementById('seedInput').value=''; return loadSeeds();
   }
+  // 유튜브 + 틱톡 키워드모드 공통: 선택 언어로 저장(비한국어는 번역), kind=언어코드
   const lang=document.getElementById('seedLang').value;
   let value=raw;
   if(lang!=='ko'){
@@ -241,14 +248,14 @@ async function addSeed(){
       value = (t.keywords && t.keywords[lang]) ? t.keywords[lang] : raw;   // 번역실패시 원문
     }catch(e){}
   }
-  await fetch('/api/seeds',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({platform:'youtube',kind:lang,value})});
+  await fetch('/api/seeds',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({platform:PLATFORM,kind:lang,value})});
   document.getElementById('seedInput').value=''; loadSeeds();
 }
 async function removeSeed(v){
   await fetch('/api/seeds',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({platform:PLATFORM,value:v})});
   loadSeeds();
 }
-let TT_KNOBS={search_count:60,daily_limit:10,month_budget:5.0};
+let TT_KNOBS={search_count:50,daily_limit:10,month_budget:5.0};
 async function loadTtSettings(){
   try{
     const d=await (await fetch('/api/tiktok/settings')).json();
@@ -262,17 +269,17 @@ async function loadTtSettings(){
 }
 function renderTtStatus(){
   const el=document.getElementById('ttStatus'); if(!el) return;
-  const nkw = document.querySelectorAll('#seedList .ttkw').length;
-  // 키워드 1개당 5개국어 × 검색개수 × $0.0017 추정
-  const est = (nkw * 5 * TT_KNOBS.search_count * 0.0017);
+  const nlang = document.querySelectorAll('#seedList .ttkw').length;   // 언어 시드 수 = 검색 횟수
+  // 언어 시드 1개 = 1회 검색(검색개수개). 지출 = 언어시드수 × 검색개수 × $0.0017
+  const est = (nlang * TT_KNOBS.search_count * 0.0017);
   const rem = (TT_KNOBS.remaining_today!=null) ? TT_KNOBS.remaining_today : TT_KNOBS.daily_limit;
   const spent = Number(TT_KNOBS.month_spend||0);
-  el.innerHTML = `1회 수집 추정비용 ≈ $${est.toFixed(3)} (키워드 ${nkw}개 × 5개국어 × ${TT_KNOBS.search_count}개)<br>`
+  el.innerHTML = `1회 수집 추정비용 ≈ $${est.toFixed(3)} (언어 ${nlang}개 × ${TT_KNOBS.search_count}개)<br>`
     + `📅 오늘 남은 <b>${rem}</b>회 · 💰 이번달 $${spent.toFixed(2)} / $${Number(TT_KNOBS.month_budget).toFixed(2)}`;
 }
 async function saveTtSettings(){
   const body={
-    search_count: parseInt(document.getElementById('ttCount').value||60,10),
+    search_count: parseInt(document.getElementById('ttCount').value||50,10),
     daily_limit: parseInt(document.getElementById('ttDaily').value||10,10),
     month_budget: parseFloat(document.getElementById('ttBudget').value||5),
   };

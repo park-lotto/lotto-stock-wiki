@@ -573,6 +573,12 @@ def api_wiki_remove(request: Request, shortcode: str):
     return {"ok": True, "shortcode": shortcode}
 
 
+@app.get("/api/wiki/element_options")
+def api_wiki_element_options(category: str):
+    """생성 모달이 열릴 때 그 대본의 카테고리로 학습된 요소별 옵션을 조회."""
+    return {"ok": True, "options": Store(DB_PATH).get_element_options(category)}
+
+
 @app.post("/api/wiki/generate")
 def api_wiki_generate(request: Request, shortcode: str, mode: str = "A", my_topic: str = "", keep: str = "", n: int = 3):
     """도서관 S급 1개의 구조를 빌려 새 20초 대본 초안 생성(모드 A/B, 유지/변형).
