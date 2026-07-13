@@ -44,7 +44,7 @@
       </label>
     </div>
     <div class="row" style="align-items:center;flex-wrap:wrap">
-      <input type="text" id="vmakeKey" placeholder="vmake.ai 개인 API 키 (app_key:secret)" style="flex:1;min-width:220px"/>
+      <input type="password" id="vmakeKey" autocomplete="off" placeholder="vmake.ai 개인 API 키 (app_key:secret)" style="flex:1;min-width:220px"/>
       <button class="ghost" onclick="saveVmakeKey()">키 저장</button>
       <span id="vmakeKeyState" style="font-size:12px;color:#9a9aa5"></span>
     </div>
@@ -151,7 +151,9 @@ async function saveVmakeKey(){
   try{
     const r=await fetch('/api/settings/vmake_key',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key})});
     const d=await r.json().catch(()=>({ok:r.ok}));
-    document.getElementById('vmakeKeyState').textContent=(r.ok&&d.ok!==false)?'저장됨':'실패';
+    const ok=(r.ok&&d.ok!==false);
+    if(ok){ document.getElementById('vmakeKey').value=''; }   // 저장 후 화면에서 키 지움(노출방지)
+    document.getElementById('vmakeKeyState').textContent=ok?'등록됨':'실패';
   }catch(e){ document.getElementById('vmakeKeyState').textContent='실패'; }
 }
 async function loadVmakeKeyState(){
