@@ -325,6 +325,13 @@ def _headcopy_drawtext(hc, work):
     if hc.get("outline"):
         parts.append(f"borderw={max(1, int(hc.get('outline_w') or 6))}")
         parts.append(f"bordercolor={_hex_to_ff(hc.get('outline_color'), '0x000000')}")
+    if hc.get("box"):
+        bc = _hex_to_ff(hc.get("box_color"), "0x000000")
+        op = max(0.0, min(1.0, (hc.get("box_opacity") or 80) / 100.0))
+        pad = max(0, int(hc.get("box_pad") if hc.get("box_pad") is not None else 16))
+        parts.append("box=1")
+        parts.append(f"boxcolor={bc}@{op:.2f}")
+        parts.append(f"boxborderw={pad}")
     return ":".join(parts)
 
 

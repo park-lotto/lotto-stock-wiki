@@ -45,14 +45,29 @@
     .tab.active{background:linear-gradient(90deg,#153a6b,#0d2340);border-color:var(--accent);color:#9dc4ff}
     textarea{width:100%;min-height:160px;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:12px;font-size:14px;resize:vertical;font-family:inherit}
     .hint{color:var(--sub);font-size:12px;margin-top:6px}
-    /* 헤드카피 번들 폰트(브라우저 미리보기 = 실제 렌더 일치, ttf/otf만) */
-    @font-face{font-family:'HCNanum';src:url('/fonts/NanumGothic-Bold.ttf')}
+    /* 헤드카피 번들 폰트 22종(브라우저 미리보기 = 실제 렌더 일치, ttf/otf만) */
+    @font-face{font-family:'HCTmon';src:url('/fonts/TmonMonsori.ttf')}
     @font-face{font-family:'HCJua';src:url('/fonts/BMJUA.ttf')}
     @font-face{font-family:'HCDohyeon';src:url('/fonts/BMDOHYEON.ttf')}
-    @font-face{font-family:'HCTmon';src:url('/fonts/TmonMonsori.ttf')}
+    @font-face{font-family:'HCBinggrae';src:url('/fonts/Binggrae-Bold.otf')}
+    @font-face{font-family:'HCKkubulim';src:url('/fonts/Kkubulim.ttf')}
     @font-face{font-family:'HCGmarket';src:url('/fonts/GmarketSansBold.otf')}
     @font-face{font-family:'HCSuit';src:url('/fonts/SUIT-Bold.otf')}
     @font-face{font-family:'HCPretendard';src:url('/fonts/Pretendard-ExtraBold.otf')}
+    @font-face{font-family:'HCPretendardB';src:url('/fonts/Pretendard-Bold.otf')}
+    @font-face{font-family:'HCPretendardS';src:url('/fonts/Pretendard-SemiBold.otf')}
+    @font-face{font-family:'HCSpoqa';src:url('/fonts/SpoqaHanSansNeo-Bold.otf')}
+    @font-face{font-family:'HCIBM';src:url('/fonts/IBMPlexSansKR-Bold.otf')}
+    @font-face{font-family:'HCNoto';src:url('/fonts/NotoSansKR-Bold.otf')}
+    @font-face{font-family:'HCNanum';src:url('/fonts/NanumGothic-Bold.ttf')}
+    @font-face{font-family:'HCOkmallang';src:url('/fonts/OkMallangW.ttf')}
+    @font-face{font-family:'HCGBatang';src:url('/fonts/GBatang.otf')}
+    @font-face{font-family:'HCGowun';src:url('/fonts/GowunBatang.ttf')}
+    @font-face{font-family:'HCRidi';src:url('/fonts/RIDIBatang.otf')}
+    @font-face{font-family:'HCPretendardR';src:url('/fonts/Pretendard-Regular.otf')}
+    @font-face{font-family:'HCSuitR';src:url('/fonts/SUIT-Regular.otf')}
+    @font-face{font-family:'HCSpoqaR';src:url('/fonts/SpoqaHanSansNeo-Regular.otf')}
+    @font-face{font-family:'HCIBMR';src:url('/fonts/IBMPlexSansKR-Regular.otf')}
   </style>
 </head>
 <body>
@@ -142,11 +157,18 @@
             <input id="hcOutColor" type="color" value="#000000" oninput="updateHC()">
             <span style="color:var(--sub)">두께 <input id="hcOutW" type="range" min="0" max="12" value="6" oninput="updateHC()"></span>
           </label>
+          <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">
+            <input id="hcBox" type="checkbox" onchange="updateHC()"> 배경 박스
+            <input id="hcBoxColor" type="color" value="#000000" oninput="updateHC()">
+            <span style="color:var(--sub)">여백 <input id="hcBoxPad" type="range" min="0" max="40" value="16" oninput="updateHC()"></span>
+            <span style="color:var(--sub)">투명도 <input id="hcBoxOpacity" type="range" min="20" max="100" value="80" oninput="updateHC()"></span>
+          </label>
         </div>
         <div style="flex:0 0 auto">
-          <div class="hint" style="margin-bottom:4px">실시간 미리보기 (9:16)</div>
-          <div id="hcPreview" style="position:relative;width:200px;aspect-ratio:9/16;background:#0d131c;border:1px solid var(--line);border-radius:10px;overflow:hidden">
-            <div id="hcPreviewText" style="position:absolute;transform:translate(-50%,-50%);text-align:center;line-height:1.15;word-break:keep-all;padding:0 6px;pointer-events:none"></div>
+          <div class="hint" style="margin-bottom:4px">🖱️ 실시간 미리보기 (9:16) — 글자를 <b>드래그</b>해 위치 이동</div>
+          <div id="hcPreview" style="position:relative;width:340px;aspect-ratio:9/16;background:#0d131c;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.4)">
+            <img id="hcPreviewBg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none" alt="">
+            <div id="hcPreviewText" style="position:absolute;transform:translate(-50%,-50%);text-align:center;line-height:1.18;word-break:keep-all;padding:0 6px;cursor:move;user-select:none;z-index:2"></div>
           </div>
         </div>
       </div>
@@ -192,7 +214,7 @@ function showPanel(){
 }
 
 // ── 5단계 꾸미기(헤드카피 디자인) ──────────────
-const PREVIEW_W=200, VIDEO_W=1080;   // 미리보기↔실영상 스케일
+const PREVIEW_W=340, VIDEO_W=1080;   // 미리보기↔실영상 스케일
 function initHeadcopy(){
   const t=document.getElementById('hcText');
   if(t && !t.value && STATE.headcopy) t.value=STATE.headcopy.text||'';
@@ -206,28 +228,45 @@ function initHeadcopy(){
   bindHCDrag();
   updateHC();
 }
-// 번들 폰트(ttf/otf만 — 미리보기=실제 렌더 일치)
+// 번들 폰트 22종(ttf/otf만 — 미리보기=실제 렌더 일치). ⭐=쇼츠 헤드카피 추천 베스트5
 const HC_FONTS=[
-  {name:'나눔고딕',   file:'NanumGothic-Bold.ttf',    css:'HCNanum'},
-  {name:'배민 주아',  file:'BMJUA.ttf',               css:'HCJua'},
-  {name:'배민 도현',  file:'BMDOHYEON.ttf',           css:'HCDohyeon'},
-  {name:'티몬 몬소리',file:'TmonMonsori.ttf',         css:'HCTmon'},
-  {name:'지마켓 산스',file:'GmarketSansBold.otf',     css:'HCGmarket'},
-  {name:'SUIT',       file:'SUIT-Bold.otf',           css:'HCSuit'},
-  {name:'프리텐다드', file:'Pretendard-ExtraBold.otf',css:'HCPretendard'},
+  {name:'⭐ 티몬 몬소리',       file:'TmonMonsori.ttf',          css:'HCTmon'},
+  {name:'⭐ 배민 주아',        file:'BMJUA.ttf',                css:'HCJua'},
+  {name:'⭐ 배민 도현',        file:'BMDOHYEON.ttf',            css:'HCDohyeon'},
+  {name:'⭐ 빙그레',           file:'Binggrae-Bold.otf',        css:'HCBinggrae'},
+  {name:'⭐ 꾸불림체',         file:'Kkubulim.ttf',             css:'HCKkubulim'},
+  {name:'지마켓 산스',         file:'GmarketSansBold.otf',      css:'HCGmarket'},
+  {name:'SUIT',                file:'SUIT-Bold.otf',            css:'HCSuit'},
+  {name:'프리텐다드',          file:'Pretendard-ExtraBold.otf', css:'HCPretendard'},
+  {name:'프리텐다드 Bold',     file:'Pretendard-Bold.otf',      css:'HCPretendardB'},
+  {name:'프리텐다드 SemiBold', file:'Pretendard-SemiBold.otf',  css:'HCPretendardS'},
+  {name:'스포카 한 산스',      file:'SpoqaHanSansNeo-Bold.otf', css:'HCSpoqa'},
+  {name:'IBM Plex Sans',       file:'IBMPlexSansKR-Bold.otf',   css:'HCIBM'},
+  {name:'노토 산스',           file:'NotoSansKR-Bold.otf',      css:'HCNoto'},
+  {name:'나눔고딕',            file:'NanumGothic-Bold.ttf',     css:'HCNanum'},
+  {name:'옥 말랑',             file:'OkMallangW.ttf',           css:'HCOkmallang'},
+  {name:'경기천년바탕',        file:'GBatang.otf',              css:'HCGBatang'},
+  {name:'고운바탕',            file:'GowunBatang.ttf',          css:'HCGowun'},
+  {name:'리디바탕',            file:'RIDIBatang.otf',           css:'HCRidi'},
+  {name:'프리텐다드 Reg',      file:'Pretendard-Regular.otf',   css:'HCPretendardR'},
+  {name:'SUIT Reg',            file:'SUIT-Regular.otf',         css:'HCSuitR'},
+  {name:'스포카 Reg',          file:'SpoqaHanSansNeo-Regular.otf',css:'HCSpoqaR'},
+  {name:'IBM Plex Reg',        file:'IBMPlexSansKR-Regular.otf',css:'HCIBMR'},
 ];
 function fontCss(file){ const f=HC_FONTS.find(x=>x.file===file); return f?f.css:'HCNanum'; }
 function renderFontSelect(){
   const s=document.getElementById('hcFont'); if(!s||s.options.length) return;
   s.innerHTML=HC_FONTS.map(f=>`<option value="${f.file}">${f.name}</option>`).join('');
 }
+function hexA(hex,a){ const h=(hex||'#000000').replace('#',''); const r=parseInt(h.slice(0,2),16)||0,gg=parseInt(h.slice(2,4),16)||0,b=parseInt(h.slice(4,6),16)||0; return `rgba(${r},${gg},${b},${a})`; }
 function updateHC(){
   const g=id=>document.getElementById(id);
   const hc={
-    text:g('hcText').value, font:g('hcFont').value||'NanumGothic-Bold.ttf',
+    text:g('hcText').value, font:g('hcFont').value||'TmonMonsori.ttf',
     color:g('hcColor').value, weight:+g('hcWeight').value,
     size:+g('hcSize').value, x:+g('hcX').value, y:+g('hcY').value,
     outline:g('hcOutline').checked, outline_color:g('hcOutColor').value, outline_w:+g('hcOutW').value,
+    box:g('hcBox').checked, box_color:g('hcBoxColor').value, box_pad:+g('hcBoxPad').value, box_opacity:+g('hcBoxOpacity').value,
   };
   STATE.headcopy=hc;
   g('hcSizeV').textContent=hc.size; g('hcYV').textContent=hc.y; g('hcXV').textContent=hc.x;
@@ -239,33 +278,59 @@ function updateHC(){
   el.style.color=hc.color; el.style.fontWeight=hc.weight;
   el.style.fontSize=Math.max(9, hc.size*scale)+'px';
   el.style.maxWidth=(PREVIEW_W-12)+'px';
+  const oc=hc.outline_color, ow=(hc.outline_w*scale).toFixed(1);
   el.style.textShadow = hc.outline
-    ? `0 0 0 ${hc.outline_color}, ${(hc.outline_w*scale).toFixed(1)}px ${(hc.outline_w*scale).toFixed(1)}px 0 ${hc.outline_color}, -1px -1px 0 ${hc.outline_color}, 1px -1px 0 ${hc.outline_color}, -1px 1px 0 ${hc.outline_color}, 1px 1px 0 ${hc.outline_color}`
+    ? `${ow}px ${ow}px 0 ${oc}, -${ow}px -${ow}px 0 ${oc}, ${ow}px -${ow}px 0 ${oc}, -${ow}px ${ow}px 0 ${oc}, -1px -1px 0 ${oc}, 1px -1px 0 ${oc}, -1px 1px 0 ${oc}, 1px 1px 0 ${oc}`
     : 'none';
+  if(hc.box){
+    el.style.background=hexA(hc.box_color, hc.box_opacity/100);
+    el.style.padding=`${Math.round(hc.box_pad*scale)}px ${Math.round(hc.box_pad*1.5*scale)}px`;
+    el.style.borderRadius=Math.round(10*scale*3)+'px';
+  } else { el.style.background='none'; el.style.padding='0 6px'; el.style.borderRadius='0'; }
 }
 
 // 스타일 프리셋 — 고민없이 누르면 색·크기·외곽선 한 번에 지정(핵심 포인트)
+// 레퍼런스(바이럴 쇼츠 자막) 기반 프리셋 라이브러리. 누르면 폰트·색·외곽선·배경박스·크기·위치 한 번에.
+// b1=배경박스, bc=박스색, bp=박스여백, bo=박스투명도(%). 없으면 박스 OFF.
 const HC_PRESETS=[
-  {name:'임팩트 오렌지', font:'TmonMonsori.ttf',         color:'#FF8800', weight:900, size:76, outline:true, outline_color:'#000000', outline_w:8, y:12},
-  {name:'화이트 클린',   font:'Pretendard-ExtraBold.otf',color:'#FFFFFF', weight:900, size:64, outline:true, outline_color:'#000000', outline_w:6, y:12},
-  {name:'옐로 팝',       font:'BMJUA.ttf',               color:'#FFE100', weight:900, size:74, outline:true, outline_color:'#000000', outline_w:8, y:12},
-  {name:'레드 강조',     font:'BMDOHYEON.ttf',           color:'#FF2D2D', weight:900, size:72, outline:true, outline_color:'#FFFFFF', outline_w:6, y:12},
-  {name:'민트 포인트',   font:'SUIT-Bold.otf',           color:'#00E0B8', weight:900, size:66, outline:true, outline_color:'#062B24', outline_w:6, y:12},
-  {name:'블랙 미니멀',   font:'GmarketSansBold.otf',     color:'#111111', weight:700, size:60, outline:true, outline_color:'#FFFFFF', outline_w:7, y:12},
-  {name:'하단 자막형',   font:'NanumGothic-Bold.ttf',    color:'#FFFFFF', weight:900, size:56, outline:true, outline_color:'#000000', outline_w:6, y:82},
+  // ── 썸네일형(상단 헤드라인, 큼직) ──
+  {cat:'썸네일', name:'화이트 임팩트',   font:'TmonMonsori.ttf',          color:'#FFFFFF', weight:900, size:78, y:12, outline:true, outline_color:'#000000', outline_w:9},
+  {cat:'썸네일', name:'옐로 팝',        font:'BMJUA.ttf',                color:'#FFE100', weight:900, size:76, y:12, outline:true, outline_color:'#000000', outline_w:9},
+  {cat:'썸네일', name:'민트 포인트',     font:'BMDOHYEON.ttf',            color:'#00E5C0', weight:900, size:74, y:12, outline:true, outline_color:'#06231F', outline_w:8},
+  {cat:'썸네일', name:'오렌지 임팩트',   font:'TmonMonsori.ttf',          color:'#FF7A00', weight:900, size:78, y:12, outline:true, outline_color:'#000000', outline_w:9},
+  {cat:'썸네일', name:'레드 경고',       font:'BMDOHYEON.ttf',            color:'#FF2D2D', weight:900, size:74, y:12, outline:true, outline_color:'#FFFFFF', outline_w:7},
+  {cat:'썸네일', name:'블랙박스 화이트', font:'Pretendard-ExtraBold.otf', color:'#FFFFFF', weight:900, size:66, y:14, outline:false, outline_color:'#000000', outline_w:0, box:true, box_color:'#000000', box_pad:18, box_opacity:82},
+  {cat:'썸네일', name:'옐로박스 블랙',   font:'GmarketSansBold.otf',      color:'#111111', weight:900, size:64, y:14, outline:false, outline_color:'#000000', outline_w:0, box:true, box_color:'#FFE100', box_pad:16, box_opacity:100},
+  {cat:'썸네일', name:'핑크 큐트',       font:'Binggrae-Bold.otf',        color:'#FF4D8D', weight:900, size:74, y:12, outline:true, outline_color:'#FFFFFF', outline_w:8},
+  {cat:'썸네일', name:'네이비 딥',       font:'GmarketSansBold.otf',      color:'#13234E', weight:900, size:68, y:12, outline:true, outline_color:'#FFFFFF', outline_w:7},
+  {cat:'썸네일', name:'그린 프레시',     font:'BMDOHYEON.ttf',            color:'#12B24A', weight:900, size:74, y:12, outline:true, outline_color:'#000000', outline_w:7},
+  {cat:'썸네일', name:'스카이 클린',     font:'SUIT-Bold.otf',            color:'#FFFFFF', weight:900, size:66, y:12, outline:true, outline_color:'#1E5AA8', outline_w:7},
+  // ── 내용형(하단/중하단 강조 자막) ──
+  {cat:'내용', name:'하단 화이트바',     font:'Pretendard-ExtraBold.otf', color:'#FFFFFF', weight:900, size:56, y:84, outline:true, outline_color:'#000000', outline_w:6, box:true, box_color:'#000000', box_pad:14, box_opacity:55},
+  {cat:'내용', name:'하단 옐로강조',     font:'BMJUA.ttf',                color:'#FFE100', weight:900, size:58, y:84, outline:true, outline_color:'#000000', outline_w:7},
+  {cat:'내용', name:'하단 블랙박스',     font:'SUIT-Bold.otf',            color:'#FFFFFF', weight:900, size:54, y:84, outline:false, outline_color:'#000000', outline_w:0, box:true, box_color:'#000000', box_pad:16, box_opacity:84},
+  {cat:'내용', name:'하단 민트박스',     font:'GmarketSansBold.otf',      color:'#FFFFFF', weight:900, size:52, y:82, outline:false, outline_color:'#000000', outline_w:0, box:true, box_color:'#0B8F7A', box_pad:14, box_opacity:92},
+  {cat:'내용', name:'하단 심플',         font:'NanumGothic-Bold.ttf',     color:'#FFFFFF', weight:900, size:54, y:86, outline:true, outline_color:'#000000', outline_w:5},
 ];
 function renderPresets(){
   const box=document.getElementById('hcPresets'); if(!box) return;
-  box.innerHTML=HC_PRESETS.map((p,i)=>`
-    <button class="tab" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:12px;white-space:nowrap;border-left:10px solid ${p.color}"
-      onclick="applyPreset(${i})">${p.name}</button>`).join('');
+  const cats=['썸네일','내용'];
+  box.innerHTML=cats.map(cat=>{
+    const items=HC_PRESETS.map((p,i)=>({p,i})).filter(x=>x.p.cat===cat);
+    return `<div style="width:100%;font-size:11px;color:var(--sub);margin:2px 0 4px">${cat==='썸네일'?'🖼 썸네일형(상단 헤드라인)':'💬 내용형(하단 강조자막)'}</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;width:100%;margin-bottom:8px">`+
+      items.map(({p,i})=>`<button class="tab" title="${p.name}"
+        style="flex:0 0 auto;min-width:auto;padding:5px 11px;font-size:12px;white-space:nowrap;border-left:10px solid ${p.box?p.box_color:p.color}"
+        onclick="applyPreset(${i})">${p.name}</button>`).join('')+`</div>`;
+  }).join('');
 }
 function applyPreset(i){
   const p=HC_PRESETS[i], g=id=>document.getElementById(id);
   if(p.font) g('hcFont').value=p.font;
-  g('hcColor').value=p.color; g('hcWeight').value=p.weight; g('hcSize').value=p.size;
-  g('hcOutline').checked=p.outline; g('hcOutColor').value=p.outline_color; g('hcOutW').value=p.outline_w;
-  g('hcY').value=p.y;
+  g('hcColor').value=p.color; g('hcWeight').value=p.weight; g('hcSize').value=p.size; g('hcY').value=p.y;
+  g('hcOutline').checked=!!p.outline; g('hcOutColor').value=p.outline_color||'#000000'; g('hcOutW').value=p.outline_w||0;
+  g('hcBox').checked=!!p.box; g('hcBoxColor').value=p.box_color||'#000000';
+  g('hcBoxPad').value=(p.box_pad!=null?p.box_pad:16); g('hcBoxOpacity').value=(p.box_opacity!=null?p.box_opacity:80);
   updateHC();
 }
 function alignHC(where){
