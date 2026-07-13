@@ -136,6 +136,26 @@ class Store:
                     value TEXT
                 )
             """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS platform_seeds (
+                    platform TEXT NOT NULL,
+                    kind TEXT NOT NULL,
+                    value TEXT NOT NULL,
+                    added_at TEXT,
+                    PRIMARY KEY (platform, value)
+                )
+            """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS platform_snapshots (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    platform TEXT NOT NULL,
+                    run_date TEXT NOT NULL,
+                    shortcode TEXT NOT NULL,
+                    base INTEGER,
+                    delta INTEGER
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_psnap ON platform_snapshots(platform, shortcode, id)")
             # 발굴로 찾아 "벤치마크 목록에 추가"한 채널 — collect()가 엑셀 목록과
             # union해 이후 메인 랭킹에도 추적한다(2026-07-12).
             c.execute("""
@@ -335,6 +355,42 @@ class Store:
         with self._conn() as c:
             rows = c.execute("SELECT shortcode FROM saved").fetchall()
         return {r[0] for r in rows}
+
+    # ── 플랫폼 발굴 시드(유튜브 키워드/채널, 틱톡 계정) ──
+    def add_seed(self, platform, kind, value):
+        with self._conn() as c:
+            c.execute("INSERT OR IGNORE INTO platform_seeds(platform, kind, value, added_at) "
+                      "VALUES(?,?,?, datetime('now'))", (platform, kind, value))
+
+    def remove_seed(self, platform, value):
+        with self._conn() as c:
+            c.execute("DELETE FROM platform_seeds WHERE platform=? AND value=?", (platform, value))
+
+    def list_seeds(self, platform):
+        with self._conn() as c:
+            rows = c.execute("SELECT kind, value FROM platform_seeds WHERE platform=? "
+                             "ORDER BY added_at ASC, rowid ASC", (platform,)).fetchall()
+        return [{"kind": r[0], "value": r[1]} for r in rows]
+
+    # ── 플랫폼 스코프 스냅샷(가속 계산용) ──
+    def save_run_platform(self, platform, run_date, rows):
+        with self._conn() as c:
+            c.executemany(
+                "INSERT INTO platform_snapshots(platform, run_date, shortcode, base, delta) "
+                "VALUES(?,?,?,?,?)",
+                [(platform, run_date, r["shortcode"], r.get("base"), r.get("delta")) for r in rows])
+
+    def prev_base_platform(self, platform, shortcode):
+        with self._conn() as c:
+            row = c.execute("SELECT base FROM platform_snapshots WHERE platform=? AND shortcode=? "
+                            "ORDER BY id DESC LIMIT 1", (platform, shortcode)).fetchone()
+        return row[0] if row else None
+
+    def prev_delta_platform(self, platform, shortcode):
+        with self._conn() as c:
+            row = c.execute("SELECT delta FROM platform_snapshots WHERE platform=? AND shortcode=? "
+                            "ORDER BY id DESC LIMIT 1", (platform, shortcode)).fetchone()
+        return row[0] if row else None
 
     # --- 영상 믹싱 바구니(mix basket) — 담기 토글로 채우고 mix.html이 소스로 사용 ---
     def mix_basket_toggle(self, shortcode, url="", thumbnail="", name="", caption=""):
