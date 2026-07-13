@@ -74,7 +74,7 @@ def test_wiki_save_uses_cache_and_analysis(monkeypatch):
                         lambda t: {"hook_type": "경고형", "hook_line": "x", "beats": [], "devices": [], "one_line_why": "y"})
     saved = {}
     monkeypatch.setattr(app_module.Store, "save_to_wiki",
-                        lambda self, it, sc, st: saved.update({"it": it, "st": st}))
+                        lambda self, it, sc, st, **kw: saved.update({"it": it, "st": st}))
     client = TestClient(app_module.app)
     r = client.post("/api/wiki/save?shortcode=ABC")
     assert r.status_code == 200
@@ -85,8 +85,8 @@ def test_wiki_save_uses_cache_and_analysis(monkeypatch):
 
 def test_wiki_list_and_remove(monkeypatch):
     monkeypatch.setattr(app_module, "_AUTH_ON", False)
-    monkeypatch.setattr(app_module.Store, "wiki_list", lambda self: [{"shortcode": "X"}])
-    monkeypatch.setattr(app_module.Store, "remove_from_wiki", lambda self, sc: None)
+    monkeypatch.setattr(app_module.Store, "wiki_list", lambda self, **kw: [{"shortcode": "X"}])
+    monkeypatch.setattr(app_module.Store, "remove_from_wiki", lambda self, sc, **kw: None)
     client = TestClient(app_module.app)
     assert client.get("/api/wiki/list").json()["items"][0]["shortcode"] == "X"
     assert client.post("/api/wiki/remove?shortcode=X").json()["ok"]
@@ -94,7 +94,7 @@ def test_wiki_list_and_remove(monkeypatch):
 
 def test_wiki_generate_404_when_not_in_wiki(monkeypatch):
     monkeypatch.setattr(app_module, "_AUTH_ON", False)
-    monkeypatch.setattr(app_module.Store, "get_wiki_item", lambda self, sc: None)
+    monkeypatch.setattr(app_module.Store, "get_wiki_item", lambda self, sc, **kw: None)
     client = TestClient(app_module.app)
     assert client.post("/api/wiki/generate?shortcode=x").status_code == 404
 
@@ -102,7 +102,7 @@ def test_wiki_generate_404_when_not_in_wiki(monkeypatch):
 def test_wiki_generate_ok(monkeypatch):
     monkeypatch.setattr(app_module, "_AUTH_ON", False)
     monkeypatch.setattr(app_module.Store, "get_wiki_item",
-                        lambda self, sc: {"structure": {"characters": []}, "full_text": "ft"})
+                        lambda self, sc, **kw: {"structure": {"characters": []}, "full_text": "ft"})
     monkeypatch.setattr(app_module.script_generate, "generate_variations",
                         lambda *a, **k: [{"hook": "h", "script": "s", "applied": "a"}])
     client = TestClient(app_module.app)

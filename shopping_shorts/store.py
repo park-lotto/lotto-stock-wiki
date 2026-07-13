@@ -1,8 +1,15 @@
 """SQLite 수집 이력 저장소."""
+import hashlib
 import json
+import secrets
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
+
+# 개인 행동 테이블(saved/mix_basket/commented/script_wiki)의 레거시(마이그레이션
+# 이전) 데이터가 귀속되는 고객 ID(2026-07-13, 멀티테넌시). 기존 단일 관리자
+# 계정의 데이터를 그대로 보존하기 위한 값 — 신규 고객은 1부터 발급.
+LEGACY_CUSTOMER_ID = 0
 
 
 class Store:
@@ -33,26 +40,35 @@ class Store:
                     drafts_json TEXT NOT NULL
                 )
             """)
+            # 개인 행동 테이블(2026-07-13 멀티테넌시 — customer_id 복합키). 신규 DB는
+            # 바로 이 스키마로 생성되고, 기존 DB(customer_id 없는 구버전)는 아래
+            # _migrate_personal_tables()가 재생성 방식으로 이관한다.
             c.execute("""
                 CREATE TABLE IF NOT EXISTS commented (
-                    shortcode TEXT PRIMARY KEY,
-                    commented_at TEXT
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    shortcode TEXT NOT NULL,
+                    commented_at TEXT,
+                    PRIMARY KEY (customer_id, shortcode)
                 )
             """)
             c.execute("""
                 CREATE TABLE IF NOT EXISTS saved (
-                    shortcode TEXT PRIMARY KEY,
-                    saved_at TEXT
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    shortcode TEXT NOT NULL,
+                    saved_at TEXT,
+                    PRIMARY KEY (customer_id, shortcode)
                 )
             """)
             c.execute("""
                 CREATE TABLE IF NOT EXISTS mix_basket (
-                    shortcode TEXT PRIMARY KEY,
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    shortcode TEXT NOT NULL,
                     url TEXT,
                     thumbnail TEXT,
                     name TEXT,
                     caption TEXT,
-                    added_at TEXT
+                    added_at TEXT,
+                    PRIMARY KEY (customer_id, shortcode)
                 )
             """)
             c.execute("""
@@ -79,13 +95,27 @@ class Store:
                 )
             """)
             # S급 대본 위키(도서관, 2026-07-13) — 담은 대본 + AI 구조분석. 생성의 재료.
+            # customer_id 복합키(2026-07-13 멀티테넌시) — 위 commented/saved/mix_basket와 동일 패턴.
             c.execute("""
                 CREATE TABLE IF NOT EXISTS script_wiki (
-                    shortcode TEXT PRIMARY KEY,
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    shortcode TEXT NOT NULL,
                     name TEXT, category TEXT, source_url TEXT,
                     full_text TEXT, segments_json TEXT, structure_json TEXT,
                     followers INTEGER, comments INTEGER, density REAL,
-                    saved_at TEXT
+                    saved_at TEXT,
+                    PRIMARY KEY (customer_id, shortcode)
+                )
+            """)
+            # 고객 계정(2026-07-13 멀티테넌시). 비밀번호는 pbkdf2-sha256(솔트별도)로만
+            # 저장 — 평문 저장 금지.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS customers (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT NOT NULL UNIQUE,
+                    password_hash TEXT NOT NULL,
+                    salt TEXT NOT NULL,
+                    created_at TEXT
                 )
             """)
             c.execute("""
@@ -208,6 +238,36 @@ class Store:
                     c.execute(f"ALTER TABLE mix_jobs ADD COLUMN {col} {ddl}")
                 except sqlite3.OperationalError:
                     pass  # 이미 존재
+            self._migrate_personal_tables(c)
+
+    def _migrate_personal_tables(self, c):
+        """기존 DB(customer_id 없는 구버전 saved/mix_basket/commented/script_wiki)를
+        (customer_id, shortcode) 복합키 스키마로 재생성 이관(2026-07-13 멀티테넌시).
+        SQLite는 PRIMARY KEY를 ALTER로 못 바꿔 테이블 재생성이 필요하다. 기존
+        데이터는 전부 LEGACY_CUSTOMER_ID(0)로 귀속 — 기존 단일 관리자 계정의
+        작업물을 그대로 보존한다. 이미 마이그레이션된 DB(customer_id 컬럼 있음)는
+        조용히 건너뛴다(idempotent)."""
+        for table in ("commented", "saved", "mix_basket", "script_wiki"):
+            cols = [r[1] for r in c.execute(f"PRAGMA table_info({table})").fetchall()]
+            if "customer_id" in cols or not cols:
+                continue  # 이미 마이그레이션됐거나(customer_id 있음) 테이블 자체가 없음
+            tmp = f"{table}__legacy"
+            c.execute(f"ALTER TABLE {table} RENAME TO {tmp}")
+            # 원본 테이블의 컬럼 정의(이름+타입)를 그대로 복사하고 customer_id·
+            # 복합PK만 새로 얹는다 — 컬럼 목록을 하드코딩하지 않아 타입 불일치 위험 없음.
+            orig_cols = c.execute(f"PRAGMA table_info({tmp})").fetchall()
+            col_defs = ", ".join(f'"{o[1]}" {o[2]}' for o in orig_cols)
+            c.execute(f"""
+                CREATE TABLE {table} (
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    {col_defs},
+                    PRIMARY KEY (customer_id, shortcode)
+                )
+            """)
+            col_names = ", ".join(f'"{o[1]}"' for o in orig_cols)
+            c.execute(f"INSERT INTO {table}(customer_id, {col_names}) "
+                      f"SELECT {LEGACY_CUSTOMER_ID}, {col_names} FROM {tmp}")
+            c.execute(f"DROP TABLE {tmp}")
 
     # ── 발굴 피드(누적 모드용) 저장 — last_run과 같은 단일행 JSON 패턴(2026-07-12) ──
     def save_discovery_feed(self, items):
@@ -329,33 +389,38 @@ class Store:
             ).fetchall()
         return {sc: json.loads(dj) for sc, dj in rows}
 
-    def mark_commented(self, shortcode):
-        """소통 완료 기록 (중복 무시)."""
+    def mark_commented(self, shortcode, customer_id=LEGACY_CUSTOMER_ID):
+        """소통 완료 기록 (중복 무시). customer_id별로 독립(2026-07-13 멀티테넌시)."""
         with self._conn() as c:
             c.execute(
-                "INSERT OR IGNORE INTO commented(shortcode, commented_at) "
-                "VALUES(?, datetime('now'))",
-                (shortcode,),
+                "INSERT OR IGNORE INTO commented(customer_id, shortcode, commented_at) "
+                "VALUES(?, ?, datetime('now'))",
+                (customer_id, shortcode),
             )
 
-    def commented_set(self):
-        """완료된 shortcode 집합."""
+    def commented_set(self, customer_id=LEGACY_CUSTOMER_ID):
+        """이 고객이 완료 처리한 shortcode 집합."""
         with self._conn() as c:
-            rows = c.execute("SELECT shortcode FROM commented").fetchall()
+            rows = c.execute(
+                "SELECT shortcode FROM commented WHERE customer_id=?", (customer_id,)
+            ).fetchall()
         return {r[0] for r in rows}
 
-    def mark_saved(self, shortcode):
-        """제품찾기 소스로 담기 (중복 무시)."""
+    def mark_saved(self, shortcode, customer_id=LEGACY_CUSTOMER_ID):
+        """제품찾기 소스로 담기 (중복 무시). customer_id별로 독립."""
         with self._conn() as c:
             c.execute(
-                "INSERT OR IGNORE INTO saved(shortcode, saved_at) VALUES(?, datetime('now'))",
-                (shortcode,),
+                "INSERT OR IGNORE INTO saved(customer_id, shortcode, saved_at) "
+                "VALUES(?, ?, datetime('now'))",
+                (customer_id, shortcode),
             )
 
-    def saved_set(self):
-        """담긴 shortcode 집합."""
+    def saved_set(self, customer_id=LEGACY_CUSTOMER_ID):
+        """이 고객이 담은 shortcode 집합."""
         with self._conn() as c:
-            rows = c.execute("SELECT shortcode FROM saved").fetchall()
+            rows = c.execute(
+                "SELECT shortcode FROM saved WHERE customer_id=?", (customer_id,)
+            ).fetchall()
         return {r[0] for r in rows}
 
     # ── 플랫폼 발굴 시드(유튜브 키워드/채널, 틱톡 계정) ──
@@ -408,43 +473,51 @@ class Store:
         return d.get("items", []), d.get("collected_at")
 
     # --- 영상 믹싱 바구니(mix basket) — 담기 토글로 채우고 mix.html이 소스로 사용 ---
-    def mix_basket_toggle(self, shortcode, url="", thumbnail="", name="", caption=""):
-        """이미 있으면 제거, 없으면 추가. 최종적으로 담겨있으면 True 반환."""
+    def mix_basket_toggle(self, shortcode, url="", thumbnail="", name="", caption="",
+                          customer_id=LEGACY_CUSTOMER_ID):
+        """이미 있으면 제거, 없으면 추가. 최종적으로 담겨있으면 True 반환.
+        customer_id별로 독립된 바구니(2026-07-13 멀티테넌시)."""
         with self._conn() as c:
             exists = c.execute(
-                "SELECT 1 FROM mix_basket WHERE shortcode=?", (shortcode,)
+                "SELECT 1 FROM mix_basket WHERE customer_id=? AND shortcode=?",
+                (customer_id, shortcode),
             ).fetchone()
             if exists:
-                c.execute("DELETE FROM mix_basket WHERE shortcode=?", (shortcode,))
+                c.execute("DELETE FROM mix_basket WHERE customer_id=? AND shortcode=?",
+                          (customer_id, shortcode))
                 return False
             c.execute(
-                "INSERT INTO mix_basket(shortcode, url, thumbnail, name, caption, added_at) "
-                "VALUES(?,?,?,?,?, datetime('now'))",
-                (shortcode, url, thumbnail, name, caption),
+                "INSERT INTO mix_basket(customer_id, shortcode, url, thumbnail, name, caption, added_at) "
+                "VALUES(?,?,?,?,?,?, datetime('now'))",
+                (customer_id, shortcode, url, thumbnail, name, caption),
             )
             return True
 
-    def mix_basket_remove(self, shortcode):
+    def mix_basket_remove(self, shortcode, customer_id=LEGACY_CUSTOMER_ID):
         """바구니에서 제거."""
         with self._conn() as c:
-            c.execute("DELETE FROM mix_basket WHERE shortcode=?", (shortcode,))
+            c.execute("DELETE FROM mix_basket WHERE customer_id=? AND shortcode=?",
+                      (customer_id, shortcode))
 
-    def mix_basket_list(self):
-        """담은 순서(added_at)대로 항목 dict 리스트."""
+    def mix_basket_list(self, customer_id=LEGACY_CUSTOMER_ID):
+        """이 고객이 담은 순서(added_at)대로 항목 dict 리스트."""
         with self._conn() as c:
             rows = c.execute(
                 "SELECT shortcode, url, thumbnail, name, caption FROM mix_basket "
-                "ORDER BY added_at ASC, rowid ASC"
+                "WHERE customer_id=? ORDER BY added_at ASC, rowid ASC",
+                (customer_id,),
             ).fetchall()
         return [
             {"shortcode": r[0], "url": r[1], "thumbnail": r[2], "name": r[3], "caption": r[4]}
             for r in rows
         ]
 
-    def mix_basket_shortcodes(self):
-        """바구니에 담긴 shortcode 집합(버튼 상태 표시용)."""
+    def mix_basket_shortcodes(self, customer_id=LEGACY_CUSTOMER_ID):
+        """이 고객의 바구니에 담긴 shortcode 집합(버튼 상태 표시용)."""
         with self._conn() as c:
-            rows = c.execute("SELECT shortcode FROM mix_basket").fetchall()
+            rows = c.execute(
+                "SELECT shortcode FROM mix_basket WHERE customer_id=?", (customer_id,)
+            ).fetchall()
         return {r[0] for r in rows}
 
     def save_last_run(self, items, collected_at):
@@ -490,20 +563,20 @@ class Store:
         data["extracted_at"] = row[1]
         return data
 
-    # ── S급 대본 위키(도서관) ──
-    def save_to_wiki(self, item, script, structure):
+    # ── S급 대본 위키(도서관) — customer_id별로 독립(2026-07-13 멀티테넌시) ──
+    def save_to_wiki(self, item, script, structure, customer_id=LEGACY_CUSTOMER_ID):
         """S급 대본을 위키에 저장(덮어쓰기). item=랭킹항목, script={full_text,segments},
         structure=구조분석 dict."""
         with self._conn() as c:
             c.execute(
-                "INSERT INTO script_wiki(shortcode, name, category, source_url, full_text, "
+                "INSERT INTO script_wiki(customer_id, shortcode, name, category, source_url, full_text, "
                 "segments_json, structure_json, followers, comments, density, saved_at) "
-                "VALUES(?,?,?,?,?,?,?,?,?,?,datetime('now')) "
-                "ON CONFLICT(shortcode) DO UPDATE SET name=excluded.name, category=excluded.category, "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?,datetime('now')) "
+                "ON CONFLICT(customer_id, shortcode) DO UPDATE SET name=excluded.name, category=excluded.category, "
                 "source_url=excluded.source_url, full_text=excluded.full_text, segments_json=excluded.segments_json, "
                 "structure_json=excluded.structure_json, followers=excluded.followers, comments=excluded.comments, "
                 "density=excluded.density, saved_at=excluded.saved_at",
-                (item.get("shortcode"), item.get("name") or item.get("username"), item.get("category"),
+                (customer_id, item.get("shortcode"), item.get("name") or item.get("username"), item.get("category"),
                  item.get("url") or item.get("shortcode"), script.get("full_text", ""),
                  json.dumps(script.get("segments", []), ensure_ascii=False),
                  json.dumps(structure or {}, ensure_ascii=False),
@@ -520,29 +593,41 @@ class Store:
     _WIKI_COLS = ("shortcode, name, category, source_url, full_text, segments_json, "
                   "structure_json, followers, comments, density, saved_at")
 
-    def wiki_list(self):
-        """위키에 담은 S급 대본 전체(최근 저장순)."""
+    def wiki_list(self, customer_id=LEGACY_CUSTOMER_ID):
+        """이 고객이 위키에 담은 S급 대본 전체(최근 저장순)."""
         with self._conn() as c:
-            rows = c.execute(f"SELECT {self._WIKI_COLS} FROM script_wiki ORDER BY saved_at DESC").fetchall()
+            rows = c.execute(
+                f"SELECT {self._WIKI_COLS} FROM script_wiki WHERE customer_id=? ORDER BY saved_at DESC",
+                (customer_id,),
+            ).fetchall()
         return [self._wiki_row(r) for r in rows]
 
-    def get_wiki_item(self, shortcode):
+    def get_wiki_item(self, shortcode, customer_id=LEGACY_CUSTOMER_ID):
         with self._conn() as c:
-            r = c.execute(f"SELECT {self._WIKI_COLS} FROM script_wiki WHERE shortcode=?", (shortcode,)).fetchone()
+            r = c.execute(
+                f"SELECT {self._WIKI_COLS} FROM script_wiki WHERE customer_id=? AND shortcode=?",
+                (customer_id, shortcode),
+            ).fetchone()
         return self._wiki_row(r) if r else None
 
-    def is_in_wiki(self, shortcode):
+    def is_in_wiki(self, shortcode, customer_id=LEGACY_CUSTOMER_ID):
         with self._conn() as c:
-            return c.execute("SELECT 1 FROM script_wiki WHERE shortcode=?", (shortcode,)).fetchone() is not None
+            return c.execute(
+                "SELECT 1 FROM script_wiki WHERE customer_id=? AND shortcode=?",
+                (customer_id, shortcode),
+            ).fetchone() is not None
 
-    def remove_from_wiki(self, shortcode):
+    def remove_from_wiki(self, shortcode, customer_id=LEGACY_CUSTOMER_ID):
         with self._conn() as c:
-            c.execute("DELETE FROM script_wiki WHERE shortcode=?", (shortcode,))
+            c.execute("DELETE FROM script_wiki WHERE customer_id=? AND shortcode=?",
+                      (customer_id, shortcode))
 
-    def wiki_shortcodes(self):
-        """위키에 담긴 shortcode 집합(카드에 '담김' 표시용)."""
+    def wiki_shortcodes(self, customer_id=LEGACY_CUSTOMER_ID):
+        """이 고객이 위키에 담은 shortcode 집합(카드에 '담김' 표시용)."""
         with self._conn() as c:
-            return {r[0] for r in c.execute("SELECT shortcode FROM script_wiki").fetchall()}
+            return {r[0] for r in c.execute(
+                "SELECT shortcode FROM script_wiki WHERE customer_id=?", (customer_id,)
+            ).fetchall()}
 
     def save_source_analysis(self, shortcode, keywords, frame_paths, analyzed_at):
         """영상 분석 결과(키워드+프레임 경로) 저장(덮어쓰기)."""
@@ -685,6 +770,55 @@ class Store:
                 "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
                 (key, value),
             )
+
+    # ── 고객 계정(2026-07-13 멀티테넌시) ──
+    # 비밀번호는 pbkdf2-sha256(고객별 랜덤 솔트, 260,000회)로만 저장 — 평문/역가역
+    # 방식 금지. 표준 hashlib만 사용해 외부 의존성을 늘리지 않는다.
+    _PBKDF2_ITERATIONS = 260_000
+
+    @staticmethod
+    def _hash_password(password, salt):
+        return hashlib.pbkdf2_hmac(
+            "sha256", password.encode("utf-8"), bytes.fromhex(salt), Store._PBKDF2_ITERATIONS
+        ).hex()
+
+    def create_customer(self, username, password):
+        """신규 고객 계정 생성. username 중복이면 ValueError. 성공 시 customer_id 반환."""
+        salt = secrets.token_hex(16)
+        pw_hash = self._hash_password(password, salt)
+        with self._conn() as c:
+            try:
+                cur = c.execute(
+                    "INSERT INTO customers(username, password_hash, salt, created_at) "
+                    "VALUES(?,?,?,datetime('now'))",
+                    (username, pw_hash, salt),
+                )
+            except sqlite3.IntegrityError:
+                raise ValueError(f"이미 존재하는 아이디: {username}")
+        return cur.lastrowid
+
+    def verify_customer(self, username, password):
+        """username/password 검증 → 성공 시 customer_id, 실패 시 None.
+        타이밍 공격 방지를 위해 hmac.compare_digest로 해시 비교."""
+        import hmac as _hmac
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT id, password_hash, salt FROM customers WHERE username=?", (username,)
+            ).fetchone()
+        if not row:
+            return None
+        customer_id, stored_hash, salt = row
+        if _hmac.compare_digest(self._hash_password(password, salt), stored_hash):
+            return customer_id
+        return None
+
+    def get_customer(self, customer_id):
+        """customer_id → {id, username, created_at} 또는 None."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT id, username, created_at FROM customers WHERE id=?", (customer_id,)
+            ).fetchone()
+        return {"id": row[0], "username": row[1], "created_at": row[2]} if row else None
 
     # ── 같은 주제 모아보기(2026-07-13) ──
     def save_topic_groups(self, mapping, platform="instagram"):

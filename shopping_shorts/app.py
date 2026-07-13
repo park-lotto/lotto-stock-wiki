@@ -148,8 +148,16 @@ def api_related(shortcode: str, platform: str = "instagram"):
     return {"ok": True, "items": out}
 
 
+def _cid(request: Request) -> int:
+    """요청의 로그인 고객 ID(2026-07-13 멀티테넌시). 인증 게이트를 안 거치는
+    경로(_AUTH_ALLOW, 예: 유저스크립트 콜백)는 customer_id가 안 채워지므로
+    LEGACY_CUSTOMER_ID(0)로 폴백."""
+    return getattr(request.state, "customer_id", 0)
+
+
 @app.get("/api/outreach")
-def api_outreach(sort: str = "latest", hide_done: bool = True, rank_limit: int = DRAFT_BATCH_SIZE):
+def api_outreach(request: Request, sort: str = "latest", hide_done: bool = True,
+                 rank_limit: int = DRAFT_BATCH_SIZE):
     """소통 큐 반환 — 마지막 수집 릴스 + draft 결합, 정렬·완료필터.
 
     rank_limit: 레퍼런스랭킹(score) 상위 N개만 큐 후보로 노출(2026-07-09).
@@ -157,67 +165,71 @@ def api_outreach(sort: str = "latest", hide_done: bool = True, rank_limit: int =
     store = Store(DB_PATH)
     items, _ = store.load_last_run()
     drafts = store.drafts_map([i["shortcode"] for i in items])
-    commented = store.commented_set()
+    commented = store.commented_set(customer_id=_cid(request))
     queue = build_queue(items, drafts_map=drafts, commented=commented,
                         sort=sort, hide_done=hide_done, rank_limit=rank_limit)
     return {"ok": True, "count": len(queue), "items": queue}
 
 
 @app.post("/api/comment/done")
-def api_comment_done(shortcode: str):
+def api_comment_done(request: Request, shortcode: str):
     """소통 완료 기록."""
     store = Store(DB_PATH)
-    store.mark_commented(shortcode)
+    store.mark_commented(shortcode, customer_id=_cid(request))
     return {"ok": True, "shortcode": shortcode}
 
 
 @app.post("/api/save")
-def api_save(shortcode: str):
+def api_save(request: Request, shortcode: str):
     """제품찾기 소스로 담기 (기능 ③에서 재사용)."""
     store = Store(DB_PATH)
-    store.mark_saved(shortcode)
+    store.mark_saved(shortcode, customer_id=_cid(request))
     return {"ok": True, "shortcode": shortcode}
 
 
 @app.get("/api/saved")
-def api_saved():
+def api_saved(request: Request):
     """담긴 shortcode 목록."""
     store = Store(DB_PATH)
-    return {"ok": True, "saved": sorted(store.saved_set())}
+    return {"ok": True, "saved": sorted(store.saved_set(customer_id=_cid(request)))}
 
 
 @app.post("/api/mix/basket/toggle")
-def api_mix_basket_toggle(body: dict):
+def api_mix_basket_toggle(request: Request, body: dict):
     """영상 믹싱 바구니 담기/담기취소 토글. body: {shortcode, url, thumbnail, name, caption}."""
     sc = (body.get("shortcode") or "").strip()
     if not sc:
         return JSONResponse(status_code=422, content={"ok": False, "error": "shortcode 필요"})
     store = Store(DB_PATH)
+    cid = _cid(request)
     in_basket = store.mix_basket_toggle(
         sc,
         url=body.get("url") or "",
         thumbnail=body.get("thumbnail") or "",
         name=body.get("name") or "",
         caption=body.get("caption") or "",
+        customer_id=cid,
     )
-    return {"ok": True, "in": in_basket, "count": len(store.mix_basket_shortcodes())}
+    return {"ok": True, "in": in_basket, "count": len(store.mix_basket_shortcodes(customer_id=cid))}
 
 
 @app.post("/api/mix/basket/remove")
-def api_mix_basket_remove(body: dict):
+def api_mix_basket_remove(request: Request, body: dict):
     """바구니에서 shortcode 제거."""
     sc = (body.get("shortcode") or "").strip()
     store = Store(DB_PATH)
-    store.mix_basket_remove(sc)
-    return {"ok": True, "count": len(store.mix_basket_shortcodes())}
+    cid = _cid(request)
+    store.mix_basket_remove(sc, customer_id=cid)
+    return {"ok": True, "count": len(store.mix_basket_shortcodes(customer_id=cid))}
 
 
 @app.get("/api/mix/basket")
-def api_mix_basket():
+def api_mix_basket(request: Request):
     """바구니 항목 목록(담은 순서) + shortcode 집합."""
     store = Store(DB_PATH)
-    return {"ok": True, "items": store.mix_basket_list(),
-            "shortcodes": sorted(store.mix_basket_shortcodes())}
+    cid = _cid(request)
+    return {"ok": True, "items": store.mix_basket_list(customer_id=cid),
+            "shortcodes": sorted(store.mix_basket_shortcodes(customer_id=cid))}
 
 
 def _err(e):
@@ -417,7 +429,7 @@ def api_extract_script(shortcode: str):
 
 
 @app.post("/api/wiki/save")
-def api_wiki_save(shortcode: str):
+def api_wiki_save(request: Request, shortcode: str):
     """S급 대본을 위키(도서관)에 저장 — 대본 확보(캐시/즉석추출) → 구조분석 → 저장."""
     store = Store(DB_PATH)
     items, _ = store.load_last_run()
@@ -463,7 +475,7 @@ def api_wiki_save(shortcode: str):
                 pass  # 영상 보관 실패해도 대본·구조는 저장(치명적 아님)
 
     structure = analyze_structure(script.get("full_text", ""))
-    store.save_to_wiki(item, script, structure)
+    store.save_to_wiki(item, script, structure, customer_id=_cid(request))
     return {"ok": True, "shortcode": code, "structure": structure, "has_video": media_target.exists()}
 
 
@@ -479,24 +491,24 @@ def api_wiki_video(shortcode: str):
 
 
 @app.get("/api/wiki/list")
-def api_wiki_list():
+def api_wiki_list(request: Request):
     """위키(도서관)에 담은 S급 대본 전체."""
-    return {"ok": True, "items": Store(DB_PATH).wiki_list()}
+    return {"ok": True, "items": Store(DB_PATH).wiki_list(customer_id=_cid(request))}
 
 
 @app.post("/api/wiki/remove")
-def api_wiki_remove(shortcode: str):
+def api_wiki_remove(request: Request, shortcode: str):
     """위키에서 제거."""
-    Store(DB_PATH).remove_from_wiki(shortcode)
+    Store(DB_PATH).remove_from_wiki(shortcode, customer_id=_cid(request))
     return {"ok": True, "shortcode": shortcode}
 
 
 @app.post("/api/wiki/generate")
-def api_wiki_generate(shortcode: str, mode: str = "A", my_topic: str = "", keep: str = "", n: int = 3):
+def api_wiki_generate(request: Request, shortcode: str, mode: str = "A", my_topic: str = "", keep: str = "", n: int = 3):
     """도서관 S급 1개의 구조를 빌려 새 20초 대본 초안 생성(모드 A/B, 유지/변형).
 
     keep: 유지할 요소 키를 콤마로(예: "characters,twist,development"). 나머지는 변형."""
-    it = Store(DB_PATH).get_wiki_item(shortcode)
+    it = Store(DB_PATH).get_wiki_item(shortcode, customer_id=_cid(request))
     if not it:
         return JSONResponse(status_code=404, content={"ok": False, "error": "위키에 없는 항목 — 먼저 S급으로 저장하세요"})
     if not (it.get("structure") or it.get("full_text")):
@@ -880,21 +892,51 @@ def api_healthz():
     return {"ok": True}
 
 
-# ── 로그인 게이트 (공유 계정, dashboard/server.py 패턴 포팅) ──
+# ── 로그인 게이트 (멀티테넌시, 2026-07-13 — 고객별 계정) ──
+# 기존 단일 관리자 계정(DASH_USER/DASH_PASS)은 그대로 유지하고 LEGACY_CUSTOMER_ID(0)로
+# 로그인되게 하위호환(기존 작업물 보존). 신규 고객은 customers 테이블(회원가입) 계정.
 DASH_USER = os.environ.get("DASH_USER", "admin")
 DASH_PASS = os.environ.get("DASH_PASS", "")  # 비어있으면 인증 OFF(로컬 개발)
 DASH_SECRET = os.environ.get("DASH_SECRET", "shopping-shorts-local-secret")
 _AUTH_ON = bool(DASH_PASS)
-_AUTH_ALLOW = ("/login", "/api/login", "/favicon.ico", "/healthz",
+_AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico", "/healthz",
                "/insta_fill_comment.user.js",
                # 유저스크립트(insta_fill_comment)가 인스타 탭에서 전송 감지 시 GM_xmlhttpRequest로
                # 완료기록을 POST한다. 인증쿠키 없이 오므로 허용. 마킹은 저위험(되돌리기 가능).
                "/api/comment/done")
+_COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 
 
-def _auth_token() -> str:
-    return hmac.new(DASH_SECRET.encode(), f"{DASH_USER}:{DASH_PASS}".encode(),
-                     hashlib.sha256).hexdigest()
+def _sign_session(customer_id: int, expiry: int) -> str:
+    payload = f"{customer_id}:{expiry}"
+    sig = hmac.new(DASH_SECRET.encode(), payload.encode(), hashlib.sha256).hexdigest()
+    return f"{payload}:{sig}"
+
+
+def _verify_session(cookie: str):
+    """쿠키 문자열 → customer_id(int) 또는 None(위조·만료·형식오류)."""
+    if not cookie:
+        return None
+    try:
+        cid_s, exp_s, sig = cookie.split(":")
+        expiry = int(exp_s)
+    except ValueError:
+        return None
+    if datetime.now(timezone.utc).timestamp() > expiry:
+        return None
+    expected = hmac.new(DASH_SECRET.encode(), f"{cid_s}:{exp_s}".encode(), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(sig, expected):
+        return None
+    try:
+        return int(cid_s)
+    except ValueError:
+        return None
+
+
+def _set_session_cookie(response, customer_id: int):
+    expiry = int(datetime.now(timezone.utc).timestamp()) + _COOKIE_MAX_AGE
+    response.set_cookie("dash_auth", _sign_session(customer_id, expiry),
+                         max_age=_COOKIE_MAX_AGE, httponly=True, samesite="lax")
 
 
 _LOGIN_HTML = """<!doctype html><html lang=ko><head><meta charset=utf-8>
@@ -907,18 +949,49 @@ input{width:100%;box-sizing:border-box;margin:6px 0;padding:11px 12px;background
 border:1px solid #333;border-radius:8px;color:#eee;font-size:14px}
 button{width:100%;margin-top:12px;padding:11px;background:#4f9dfa;color:#111;border:0;
 border-radius:8px;font-weight:700;font-size:14px;cursor:pointer}
-.err{color:#e74c3c;font-size:12px;text-align:center;margin-top:10px;min-height:14px}</style></head>
+a{color:#7db4ff;font-size:12px;text-decoration:none}
+.err{color:#e74c3c;font-size:12px;text-align:center;margin-top:10px;min-height:14px}
+.foot{text-align:center;margin-top:14px}</style></head>
 <body><form class=box method=post action=/api/login>
 <h1>🛍️ 쇼핑쇼츠</h1>
 <input name=user placeholder=아이디 autocomplete=username autofocus>
 <input name=pass type=password placeholder=비밀번호 autocomplete=current-password>
 <button>로그인</button>
-<div class=err>__ERR__</div></form></body></html>"""
+<div class=err>__ERR__</div>
+<div class=foot><a href=/signup>계정이 없으신가요? 가입하기</a></div>
+</form></body></html>"""
+
+_SIGNUP_HTML = """<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>쇼핑쇼츠 가입</title>
+<style>body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;
+background:#0b0b0e;font-family:system-ui,'Noto Sans KR',sans-serif}
+.box{background:#16161c;border:1px solid #2a2a30;border-radius:14px;padding:32px 28px;width:280px}
+h1{color:#4f9dfa;font-size:18px;margin:0 0 18px;text-align:center;letter-spacing:1px}
+input{width:100%;box-sizing:border-box;margin:6px 0;padding:11px 12px;background:#0e0e12;
+border:1px solid #333;border-radius:8px;color:#eee;font-size:14px}
+button{width:100%;margin-top:12px;padding:11px;background:#4f9dfa;color:#111;border:0;
+border-radius:8px;font-weight:700;font-size:14px;cursor:pointer}
+a{color:#7db4ff;font-size:12px;text-decoration:none}
+.err{color:#e74c3c;font-size:12px;text-align:center;margin-top:10px;min-height:14px}
+.foot{text-align:center;margin-top:14px}</style></head>
+<body><form class=box method=post action=/api/signup>
+<h1>🛍️ 쇼핑쇼츠 가입</h1>
+<input name=user placeholder=아이디(영문/숫자) autocomplete=username autofocus>
+<input name=pass type=password placeholder=비밀번호 autocomplete=new-password>
+<button>가입하기</button>
+<div class=err>__ERR__</div>
+<div class=foot><a href=/login>이미 계정이 있으신가요? 로그인</a></div>
+</form></body></html>"""
 
 
 @app.get("/login", response_class=HTMLResponse)
 def _login_page(e: str = ""):
     return _LOGIN_HTML.replace("__ERR__", "아이디 또는 비밀번호가 틀렸습니다" if e else "")
+
+
+@app.get("/signup", response_class=HTMLResponse)
+def _signup_page(e: str = ""):
+    return _SIGNUP_HTML.replace("__ERR__", e or "")
 
 
 @app.post("/api/login")
@@ -927,17 +1000,43 @@ async def _api_login(req: Request):
     form = urllib.parse.parse_qs(body)
     u = (form.get("user") or [""])[0]
     p = (form.get("pass") or [""])[0]
-    if _AUTH_ON and hmac.compare_digest(u, DASH_USER) and hmac.compare_digest(p, DASH_PASS):
+    if not _AUTH_ON:
+        return RedirectResponse("/", status_code=303)
+    # 기존 단일 관리자 계정(env) — 하위호환, LEGACY_CUSTOMER_ID(0)로 로그인.
+    if hmac.compare_digest(u, DASH_USER) and hmac.compare_digest(p, DASH_PASS):
         r = RedirectResponse("/", status_code=303)
-        r.set_cookie("dash_auth", _auth_token(), max_age=60 * 60 * 24 * 30,
-                     httponly=True, samesite="lax")
+        _set_session_cookie(r, 0)
+        return r
+    # 신규 고객 계정(DB).
+    customer_id = Store(DB_PATH).verify_customer(u, p)
+    if customer_id is not None:
+        r = RedirectResponse("/", status_code=303)
+        _set_session_cookie(r, customer_id)
         return r
     return RedirectResponse("/login?e=1", status_code=303)
+
+
+@app.post("/api/signup")
+async def _api_signup(req: Request):
+    body = (await req.body()).decode("utf-8", "ignore")
+    form = urllib.parse.parse_qs(body)
+    u = (form.get("user") or [""])[0].strip()
+    p = (form.get("pass") or [""])[0]
+    if len(u) < 3 or len(p) < 4:
+        return RedirectResponse("/signup?e=" + urllib.parse.quote("아이디 3자·비밀번호 4자 이상"), status_code=303)
+    try:
+        customer_id = Store(DB_PATH).create_customer(u, p)
+    except ValueError:
+        return RedirectResponse("/signup?e=" + urllib.parse.quote("이미 존재하는 아이디입니다"), status_code=303)
+    r = RedirectResponse("/", status_code=303)
+    _set_session_cookie(r, customer_id)
+    return r
 
 
 @app.middleware("http")
 async def _auth_guard(request: Request, call_next):
     if not _AUTH_ON:
+        request.state.customer_id = 0
         return await call_next(request)
     path = request.url.path
     # /api/find/frame/*는 Google Lens·SerpApi 등 외부 이미지검색 크롤러가 인증
@@ -946,8 +1045,9 @@ async def _auth_guard(request: Request, call_next):
     # 랜덤 work_id 해시라 노출 위험 낮음).
     if path in _AUTH_ALLOW or path.startswith("/static") or path.startswith("/api/find/frame/"):
         return await call_next(request)
-    cookie = request.cookies.get("dash_auth")
-    if cookie and hmac.compare_digest(cookie, _auth_token()):
+    customer_id = _verify_session(request.cookies.get("dash_auth"))
+    if customer_id is not None:
+        request.state.customer_id = customer_id
         return await call_next(request)
     if path.startswith("/api/"):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
@@ -978,12 +1078,12 @@ def api_produce_script_gemini(body: dict):
 
 
 @app.post("/api/produce/script/mix")
-def api_produce_script_mix(body: dict):
+def api_produce_script_mix(request: Request, body: dict):
     """1단계 대본 · 우리믹스(Feature B) — 선택한 도서관 S급 대본들 강점 조합 → 새 대본."""
     shortcodes = body.get("shortcodes") or []
     if len(shortcodes) < 2:
         return JSONResponse(status_code=422, content={"ok": False, "error": "도서관 대본 2개 이상 선택"})
-    wiki = {w["shortcode"]: w for w in Store(DB_PATH).wiki_list()}
+    wiki = {w["shortcode"]: w for w in Store(DB_PATH).wiki_list(customer_id=_cid(request))}
     sources = [wiki[sc] for sc in shortcodes if sc in wiki]
     if len(sources) < 2:
         return JSONResponse(status_code=422, content={"ok": False, "error": "선택한 대본을 찾을 수 없음"})
