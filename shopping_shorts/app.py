@@ -1038,6 +1038,38 @@ def api_video(url: str):
         return Response(status_code=404, content=b"")
 
 
+@app.get("/api/media")
+def api_media(platform: str, id: str):
+    """유튜브/틱톡 영상 → 진행형 mp4 direct URL(프론트 <video>가 embed 대신 이 URL로
+    재생 → same-origin canvas 캡처 가능, 2026-07-14). 실패 시 ok:false(프론트 embed 폴백)."""
+    url = resolve_media_url(platform, id)
+    return {"ok": bool(url), "url": url}
+
+
+@app.post("/api/lens/search")
+async def api_lens_search(request: Request, frame: UploadFile = File(...)):
+    """멈춘 프레임 캡처 이미지 → 구글렌즈 → 5플랫폼 유사영상. 월 호출가드(429 lens_limit).
+
+    캡처본을 find_frames/lens/{uuid}.jpg로 저장하고 기존 /api/find/frame 서빙
+    (SerpApi가 쿠키없이 fetch 가능한 _AUTH_ALLOW 경로)으로 공개 URL을 만든다."""
+    store = Store(DB_PATH)
+    now = datetime.now(timezone.utc)
+    month = now.strftime("%Y-%m")
+    limit = int(store.get_setting("lens_month_limit", _LENS_MONTH_LIMIT_DEFAULT))
+    if store.lens_month_count(month) >= limit:
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "lens_limit",
+            "error": f"이번 달 렌즈 검색 한도({limit}회)를 다 썼습니다"})
+    work_dir = _FIND_TMP_DIR / "lens"
+    work_dir.mkdir(parents=True, exist_ok=True)
+    name = uuid.uuid4().hex + ".jpg"
+    (work_dir / name).write_bytes(await frame.read())
+    image_url = f"{PUBLIC_BASE_URL}/api/find/frame/lens/{name}"
+    items = search_similar_videos(image_url)
+    store.bump_lens(month)
+    return {"ok": True, "items": items, "count": len(items)}
+
+
 @app.get("/healthz")
 def api_healthz():
     return {"ok": True}
