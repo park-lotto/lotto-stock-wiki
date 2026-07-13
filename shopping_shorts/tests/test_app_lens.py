@@ -26,6 +26,8 @@ def _client(tmp_path, monkeypatch, items=None, limit_reached=False):
     monkeypatch.setattr(appmod, "PUBLIC_BASE_URL", "https://example.test")
     monkeypatch.setattr(appmod, "search_similar_videos",
                         lambda url: items if items is not None else [])
+    # imgur 업로드는 네트워크라 목킹 — None 반환 시 서버URL 폴백 경로를 탄다
+    monkeypatch.setattr(appmod, "upload_to_imgur", lambda raw: None)
     if limit_reached:
         Store(db).set_setting("lens_month_limit", "0")
     return TestClient(appmod.app), db

@@ -88,6 +88,35 @@ def test_retries_when_lens_returns_no_results_then_succeeds(monkeypatch):
     assert len(out) == 1 and out[0]["platform"] == "youtube"
 
 
+def test_upload_to_imgur_returns_public_link(monkeypatch):
+    """캡처 바이트 → imgur 익명 업로드 → 공개 URL. Google Lens가 우리서버 URL은
+    갓 호스팅돼 인덱싱 지연으로 못 읽지만(0개), imgur는 상시 크롤링돼 즉시 매칭된다
+    (2026-07-14 실측: 같은 프레임 우리서버=0, imgur=59). 실패 시 None."""
+    captured = {}
+
+    class R:
+        status_code = 200
+        def json(self): return {"success": True, "data": {"link": "https://i.imgur.com/abc.jpeg"}}
+
+    def fake_post(url, headers=None, files=None, timeout=None):
+        captured["url"] = url
+        captured["auth"] = headers.get("Authorization", "")
+        return R()
+    monkeypatch.setattr(lens_discover.requests, "post", fake_post)
+
+    link = lens_discover.upload_to_imgur(b"\xff\xd8\xff\x00jpegbytes")
+    assert link == "https://i.imgur.com/abc.jpeg"
+    assert "imgur.com" in captured["url"]
+    assert captured["auth"].startswith("Client-ID ")
+
+
+def test_upload_to_imgur_failure_returns_none(monkeypatch):
+    def boom(*a, **k):
+        raise lens_discover.requests.RequestException("net")
+    monkeypatch.setattr(lens_discover.requests, "post", boom)
+    assert lens_discover.upload_to_imgur(b"x") is None
+
+
 def test_no_key_returns_empty(monkeypatch):
     monkeypatch.setattr(lens_discover, "SERPAPI_KEY", "")
     assert lens_discover.search_similar_videos("https://ex.com/f.jpg") == []

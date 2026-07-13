@@ -27,7 +27,7 @@ from shopping_shorts.video_analysis import analyze_video, translate_keyword
 from shopping_shorts.product_identify import fetch_lens_lines, identify_product_from_lines
 from shopping_shorts.search_links import build_search_links, lens_search_url
 from shopping_shorts.mix_pipeline import run_mix_job, run_render, retype_mix_job, _source_video_id, resynth_tts_job
-from shopping_shorts.lens_discover import search_similar_videos
+from shopping_shorts.lens_discover import search_similar_videos, upload_to_imgur
 from shopping_shorts.media_download import resolve_media_url
 from shopping_shorts import edit_plan as _edit_plan
 from shopping_shorts import voice_presets, audio_post
@@ -1153,11 +1153,17 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...)):
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "lens_limit",
             "error": f"이번 달 렌즈 검색 한도({limit}회)를 다 썼습니다"})
-    work_dir = _FIND_TMP_DIR / "lens"
-    work_dir.mkdir(parents=True, exist_ok=True)
-    name = uuid.uuid4().hex + ".jpg"
-    (work_dir / name).write_bytes(await frame.read())
-    image_url = f"{PUBLIC_BASE_URL}/api/find/frame/lens/{name}"
+    raw = await frame.read()
+    # Google Lens는 갓 호스팅된 우리서버 이미지를 인덱싱 전이라 못 읽어 0개를 준다(실측).
+    # imgur는 Google이 상시 크롤링하는 도메인이라 즉시 매칭 → imgur 업로드 우선,
+    # 실패 시에만 우리서버 URL 폴백(2026-07-14).
+    image_url = upload_to_imgur(raw)
+    if not image_url:
+        work_dir = _FIND_TMP_DIR / "lens"
+        work_dir.mkdir(parents=True, exist_ok=True)
+        name = uuid.uuid4().hex + ".jpg"
+        (work_dir / name).write_bytes(raw)
+        image_url = f"{PUBLIC_BASE_URL}/api/find/frame/lens/{name}"
     items = search_similar_videos(image_url)
     store.bump_lens(month)
     return {"ok": True, "items": items, "count": len(items)}
