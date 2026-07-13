@@ -129,6 +129,21 @@ class Store:
                 "CREATE INDEX IF NOT EXISTS idx_element_stats_lookup "
                 "ON element_category_stats(product_category, element)"
             )
+            # 생성 초안 버전 이력(2026-07-13, 디벨롭 루프) — 수정/재생성마다 새 행,
+            # parent_draft_id로 체인. customer_id 멀티테넌시 패턴.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS script_drafts (
+                    draft_id TEXT PRIMARY KEY,
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    source_shortcode TEXT,
+                    parent_draft_id TEXT,
+                    hook TEXT,
+                    script_text TEXT NOT NULL,
+                    edit_instruction TEXT,
+                    edit_mode TEXT,
+                    created_at TEXT
+                )
+            """)
             # S급 대본 위키(도서관, 2026-07-13) — 담은 대본 + AI 구조분석. 생성의 재료.
             # customer_id 복합키(2026-07-13 멀티테넌시) — 위 commented/saved/mix_basket와 동일 패턴.
             c.execute("""
@@ -746,6 +761,42 @@ class Store:
         if not row:
             return None
         return {"description": row[0], "examples": json.loads(row[1] or "[]")}
+
+    def save_draft(self, draft_id, customer_id, source_shortcode, parent_draft_id, hook,
+                    script_text, edit_instruction, edit_mode):
+        """초안 버전 하나 저장(항상 새 행 — 덮어쓰지 않음, 2026-07-13 디벨롭 루프)."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO script_drafts(draft_id, customer_id, source_shortcode, parent_draft_id, "
+                "hook, script_text, edit_instruction, edit_mode, created_at) "
+                "VALUES(?,?,?,?,?,?,?,?,datetime('now'))",
+                (draft_id, customer_id, source_shortcode, parent_draft_id, hook, script_text,
+                 edit_instruction, edit_mode),
+            )
+
+    _DRAFT_COLS = ("draft_id, customer_id, source_shortcode, parent_draft_id, hook, "
+                   "script_text, edit_instruction, edit_mode, created_at")
+
+    def _draft_row(self, r):
+        return {"draft_id": r[0], "customer_id": r[1], "source_shortcode": r[2],
+                "parent_draft_id": r[3], "hook": r[4], "script_text": r[5],
+                "edit_instruction": r[6], "edit_mode": r[7], "created_at": r[8]}
+
+    def get_draft(self, draft_id):
+        with self._conn() as c:
+            r = c.execute(
+                f"SELECT {self._DRAFT_COLS} FROM script_drafts WHERE draft_id=?", (draft_id,)
+            ).fetchone()
+        return self._draft_row(r) if r else None
+
+    def get_draft_chain(self, draft_id):
+        """draft_id부터 parent_draft_id를 거슬러 올라가 체인 전체를 오래된 순으로 반환."""
+        chain = []
+        cur = self.get_draft(draft_id)
+        while cur:
+            chain.append(cur)
+            cur = self.get_draft(cur["parent_draft_id"]) if cur["parent_draft_id"] else None
+        return list(reversed(chain))
 
     def get_script(self, shortcode):
         """저장된 대본추출 결과. 없으면 None. 있으면 {segments, full_text, extracted_at}."""

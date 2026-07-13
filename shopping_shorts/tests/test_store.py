@@ -243,6 +243,24 @@ def test_element_category_stats_roundtrip(tmp_path):
     assert [c["label"] for c in opts2["characters"]] == ["지인동료"]
 
 
+def test_draft_save_get_and_chain(tmp_path):
+    from shopping_shorts.store import Store
+    s = Store(tmp_path / "d1.db")
+    s.save_draft("d1", 0, "SC1", None, "훅1", "대본1", None, "generate")
+    s.save_draft("d2", 0, "SC1", "d1", "훅2", "대본2", "더 유머러스하게", "rewrite")
+    s.save_draft("d3", 0, "SC1", "d2", "훅2", "대본2 수정", None, "manual")
+
+    got = s.get_draft("d3")
+    assert got["script_text"] == "대본2 수정"
+    assert got["parent_draft_id"] == "d2"
+    assert got["edit_mode"] == "manual"
+
+    chain = s.get_draft_chain("d3")
+    assert [c["draft_id"] for c in chain] == ["d1", "d2", "d3"]
+
+    assert s.get_draft("nope") is None
+
+
 def test_distinct_extract_categories(tmp_path):
     from shopping_shorts.store import Store
     s = Store(tmp_path / "t5.db")
