@@ -1,6 +1,25 @@
-# NEXT_SESSION — 이어서 할 일 (4트랙 병행)
+# NEXT_SESSION — 이어서 할 일 (5트랙 병행)
 
 > ⚠️ 여러 작업 트랙이 병행 중. 각자 자기 트랙만 이어서. main 고정, `git add`는 자기 파일만(-A 금지).
+
+---
+
+## 🅔 쇼핑쇼츠 레퍼런스랭킹 — 비용전환+같은주제그룹핑+멀티테넌시 — 2026-07-13 (다른 PC 세션)
+
+**전부 완료·배포·라이브 검증까지 끝남.** 커밋: `2b859d1d`(apidojo전환) `01839b92`(200캡) `b76be003`(같은주제그룹핑) `e8d0d50b`~`f2d123ac`(멀티테넌시) `278c099a`(그룹핑버그수정+썸네일).
+
+### ✅ 완료
+1. **벤치마킹 채널 정리**: 443개 → 팔로워 낮은거·죽은채널(API로 생존확인) 제거 → 151개. `MAX_CHANNELS=200` 자동캡도 추가(엑셀+발굴채널 union 양쪽 다 적용).
+2. **수집 액터 전환**: `apify~instagram-reel-scraper`(비쌈) → `apidojo~instagram-scraper-api`(run당 $0.005 고정, 151채널/회 실측 $0.755). `apify_client.py` fetch_reels() 재작성, 필드 정규화, until날짜필터, 15동시병렬.
+3. **"같은 주제 모아보기"**: `topic_grouper.py`(신규) — 수집 배치 안에서 Gemini가 캡션 의미로 그룹핑. `topic_groups` 테이블(platform 컬럼 포함 — 유튜브·틱톡 나중에 붙어도 그대로 편입). 카드에 🔗버튼+모달.
+   - **버그수정(278c099a)**: 청크(batch_size=25)로 나눠 처리하는데 배치 인덱스 없이 날짜만 접두어로 써서 서로 다른 배치의 "그룹1"들이 충돌 — 배치 시작 인덱스 포함해 수정. 모달에 썸네일도 추가.
+   - ⚠️ **미완**: 도서관(위키)/우리믹스 쪽 대본선택 리스트에도 썸네일 추가 요청받았으나 **착수 전 중단**(store.py `script_wiki`에 thumbnail 컬럼 자체가 없음 — 추가 필요). `save_to_wiki()`가 item에서 thumbnail 안 받아서 저장 안 됨.
+4. **멀티테넌시(100명 고객 대비)**: `customers` 테이블(pbkdf2 해시), `/signup` 회원가입, saved/mix_basket/commented/script_wiki 4개 테이블 (customer_id,shortcode) 복합키로 격리. 기존 admin 계정은 LEGACY_CUSTOMER_ID(0) 하위호환. 별도 워크트리(`feat/multi-tenancy`)에서 작업 후 무충돌 병합, 라이브 서버 실검증(회원가입→로그인→저장 4단계) 완료.
+
+### ⏭ 다음
+1. **위키/우리믹스 썸네일 추가**(중단된 것 이어서): `store.py` script_wiki 테이블에 `thumbnail` 컬럼 마이그레이션 추가 + `save_to_wiki()`가 `item.get("thumbnail")` 저장하도록 + `_WIKI_COLS`/`_wiki_row`에 포함 + `produce.html`의 `loadWikiForMix()` 렌더링에 좌측 썸네일(64x64) 추가.
+2. 사용자가 "지금 수집" 재실행 후 같은주제 그룹핑 정확도 육안 확인 필요(버그수정 이후 아직 실데이터 미검증 — 서버 topic_groups 0행 상태로 세션 종료됨).
+3. 서버 앞단이 **Apache 리버스프록시**(443/80→내부 8849)임을 확인 — 재배포 타이밍과 겹치면 502 HTML을 프론트가 JSON파싱 실패하는 걸로 착각할 수 있음(정상, 일시적).
 
 ---
 
