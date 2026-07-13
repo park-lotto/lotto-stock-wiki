@@ -1427,3 +1427,9 @@ S급 대본을 위키에 모아 **구조를 학습→변형/믹스로 새 대본
 - B1(무료 로그인크롬) 24개 수확 실증했으나 운영자전용·취약 → 폐기. B2(Apify) 채택
 - Apify clockworks/tiktok-scraper: $1.70/1000(30개=5센트), searchQueries 키워드검색O, 월$5무료~2900건
 - 설계확정: 노브3개(검색당개수 기본60·하루횟수 기본10·월예산상한 기본$5)+Apify연동. 사용자 "고" 대기 → 집에서 이어서(NEXT_SESSION 🅒)
+
+## 2026-07-14 (집PC) 틱톡 키워드검색 발굴 — ✅ 구현완료·push (커밋 919058e8)
+- 🅒 트랙 전부 구현: search_full(풀raw스키마)/store 하루카운트·월예산헬퍼/service.collect(tiktok) 키워드분기(5개국어 번역→Apify)/app 가드(429 예산·하루)+/api/tiktok/settings/index.html 틱톡탭 모드토글+노브패널+비용·남은횟수
+- TDD 37개 테스트 신규(전부 green). 로컬서버로 UI 렌더+가드 429 2종 육안검증
+- ⚠️ 진행중 auto-commit 훅이 app/store를 엉뚱한 메시지로 선커밋 → amend로 9파일 원자커밋 정정 후 push
+- ⏭ 남은것: 실 Apify 토큰으로 라이브 1회 수집 육안검증(요금발생)
