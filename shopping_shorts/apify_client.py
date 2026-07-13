@@ -1,7 +1,10 @@
 """Apify Instagram Reel Scraper HTTP 클라이언트."""
 import json
+import re
 import time
 import requests
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from shopping_shorts.config import APIFY_TOKENS, APIFY_ACTOR, RESULTS_PER_CHANNEL, ONLY_NEWER_THAN
 
@@ -110,31 +113,74 @@ def _run_with_rotation(payload, tokens, timeout, poll_interval, actor=APIFY_ACTO
     raise RuntimeError(f"apify 토큰 {len(tokens)}개 전부 실패(마지막 오류: {last_err})")
 
 
-def fetch_reels(usernames, token=None, results_per_channel=RESULTS_PER_CHANNEL,
-                only_newer_than=ONLY_NEWER_THAN, timeout=900, poll_interval=5,
-                chunk_size=CHUNK_SIZE):
-    """usernames 리스트 → reel dict 리스트. Apify가 채널별 최신 N개(48h 여유) 반환.
+# apidojo~instagram-scraper-api로 전환(2026-07-13) — reel당 $0.0026(apify 공식
+# reel-scraper) 대비 run당 $0.005 고정(151채널 실측 $0.755/회, 5배 절감).
+# reel-scraper와 달리 username 배치 입력이 없어 채널당 run 1개 필요, 대신
+# 동시실행(ThreadPoolExecutor)으로 속도 확보(151채널 실측 몇 분대).
+_APIDOJO_ACTOR = "apidojo~instagram-scraper-api"
+_PARALLEL_WORKERS = 15
 
-    usernames를 chunk_size 단위로 나눠 별도 run으로 순차 처리한다(액터의 대량
-    입력 조용한 부분처리 회피, 2026-07-09). 청크별로 비동기 run 시작 → 완료까지
-    폴링 → 데이터셋 조회 (동기 엔드포인트의 서버측 타임아웃 회피). token 미지정
-    시 계정 풀(APIFY_TOKENS)을 순환하며, 시작 시점 거부(401/402/429)뿐 아니라
-    실행 도중 계정이 소진돼 run 자체가 실패한 경우도 다음 계정으로 그 청크를
-    이어서 재시도한다."""
+
+def _relative_to_until_date(spec):
+    """ONLY_NEWER_THAN 같은 상대 표현("2 days") → apidojo용 절대 날짜(YYYY-MM-DD).
+    apidojo의 until 파라미터는 절대 날짜만 받아(apify reel-scraper의
+    onlyPostsNewerThan 상대표현과 다름, 2026-07-13 확인) 여기서 변환한다."""
+    m = re.match(r"\s*(\d+)\s*day", str(spec))
+    days = int(m.group(1)) if m else 2
+    dt = datetime.now(timezone.utc) - timedelta(days=days)
+    return dt.strftime("%Y-%m-%d")
+
+
+def _normalize_apidojo_item(it, username):
+    """apidojo 원본 아이템 → 기존 apify~instagram-reel-scraper 호환 스키마로 정규화
+    (2026-07-13 실측 필드 매핑). ranking.py 등 하위 코드가 기존 필드명을 그대로
+    쓰므로 여기서만 흡수하면 호출부 변경이 필요없다."""
+    video = it.get("video") or {}
+    image = it.get("image") or {}
+    return {
+        "shortcode": it.get("code", ""),
+        "url": it.get("url", ""),
+        "timestamp": it.get("createdAt", ""),
+        "caption": it.get("caption") or "",
+        "commentsCount": it.get("commentCount") or 0,
+        "likesCount": it.get("likeCount") or 0,
+        "videoViewCount": video.get("playCount") or 0,
+        "displayUrl": image.get("url", ""),
+        "videoUrl": video.get("url", ""),
+        "ownerUsername": username,
+    }
+
+
+def fetch_reels(usernames, token=None, results_per_channel=RESULTS_PER_CHANNEL,
+                only_newer_than=ONLY_NEWER_THAN, timeout=180, poll_interval=4,
+                chunk_size=CHUNK_SIZE, max_workers=_PARALLEL_WORKERS):
+    """usernames 리스트 → reel dict 리스트 (apidojo~instagram-scraper-api 기반,
+    2026-07-13 전환). 채널당 run 1개(startUrls=.../reels/)를 동시실행 풀로
+    처리 후 기존 스키마로 정규화해 합친다. chunk_size는 이제 미사용(구 시그니처
+    호환용, 호출부 변경 불필요)."""
     tokens = [token] if token else APIFY_TOKENS
     if not tokens:
         raise RuntimeError("APIFY_TOKEN 미설정 (환경변수 APIFY_TOKEN)")
-    payload_extra = {
-        "resultsLimit": results_per_channel,
-        "onlyPostsNewerThan": only_newer_than,
-        "skipPinnedPosts": True,
-    }
+    until_date = _relative_to_until_date(only_newer_than)
+
+    def _fetch_one(uname):
+        clean = uname.strip().lstrip("@")
+        payload = {
+            "startUrls": [{"url": f"https://www.instagram.com/{clean}/reels/"}],
+            "maxItems": results_per_channel,
+            "until": until_date,
+        }
+        try:
+            items = _run_with_rotation(payload, tokens, timeout, poll_interval, actor=_APIDOJO_ACTOR)
+        except RuntimeError:
+            return []
+        return [_normalize_apidojo_item(it, clean) for it in items]
 
     all_items = []
-    for i in range(0, len(usernames), chunk_size):
-        chunk = usernames[i:i + chunk_size]
-        payload = {"username": chunk, **payload_extra}
-        all_items.extend(_run_with_rotation(payload, tokens, timeout, poll_interval))
+    with ThreadPoolExecutor(max_workers=max_workers) as ex:
+        futures = [ex.submit(_fetch_one, u) for u in usernames]
+        for fut in as_completed(futures):
+            all_items.extend(fut.result())
     return all_items
 
 
