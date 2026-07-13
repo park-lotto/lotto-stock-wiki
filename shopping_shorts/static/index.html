@@ -144,7 +144,7 @@
   </main>
   <div class="modal-bg" id="scriptModal">
     <div class="modal-box">
-      <div class="modal-head" onpointerdown="startDrag(event)"><b>📝 대본 추출 <span style="font-size:11px;color:var(--sub);font-weight:400">— 잡고 이동</span></b><button class="x" onclick="closeScript()">✕</button></div>
+      <div class="modal-head" onpointerdown="startDrag(event)"><b id="modalTitle">📝 대본 추출 <span style="font-size:11px;color:var(--sub);font-weight:400">— 잡고 이동</span></b><button class="x" onclick="closeScript()">✕</button></div>
       <div class="modal-body" id="scriptBody"></div>
     </div>
   </div>
@@ -207,6 +207,7 @@ function render(){
           <button class="save" id="save_${i.shortcode}" onclick="toggleMix('${i.shortcode}', this)">📥 담기</button>
         </div>
         <button class="script-btn" onclick="extractScript('${i.shortcode}')">📝 대본 추출</button>
+        <button class="script-btn" onclick="showRelated('${i.shortcode}')">🔗 같은 주제</button>
         ${i.inpock?`<div style="margin-top:6px"><a href="${i.inpock}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🛒 판매채널</a></div>`:''}
       </div>
     </div>`).join("");
@@ -248,9 +249,11 @@ async function copyLink(url, btn){
 
 // ── 대본 추출 ──────────────────────────────────────────
 function esc(s){ return (s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-function openScript(html){
+function openScript(html, title){
   const box=document.querySelector('#scriptModal .modal-box');
   if(box){ box.style.transform='translateX(-50%)'; box.style.left='50%'; box.style.top='14px'; }  // 열 때마다 맨 위 중앙
+  const t=document.getElementById('modalTitle');
+  if(t) t.innerHTML=(title||'📝 대본 추출')+' <span style="font-size:11px;color:var(--sub);font-weight:400">— 잡고 이동</span>';
   document.getElementById('scriptBody').innerHTML=html;
   document.getElementById('scriptModal').classList.add('open');
 }
@@ -287,6 +290,27 @@ function playInline(img){
   v.className='thumb-video';
   v.onerror=()=>{ v.replaceWith(img); img.title='영상 URL 만료 — 「지금 수집」 후 재생 가능'; };
   img.replaceWith(v);
+}
+// ── 같은 주제 모아보기(2026-07-13) ──────────────────────
+async function showRelated(shortcode){
+  openScript('<div class="sm-loading">⏳ 같은 주제 영상 찾는 중…</div>', '🔗 같은 주제 영상');
+  try{
+    const r = await fetch('/api/related?shortcode='+encodeURIComponent(shortcode));
+    const d = await r.json();
+    if(!d.ok){ document.getElementById('scriptBody').innerHTML='<div class="sm-err">⚠️ 조회 실패</div>'; return; }
+    if(!d.items.length){
+      document.getElementById('scriptBody').innerHTML='<div class="sm-loading">같은 주제로 묶인 다른 영상이 없습니다.<br><small>AI 그룹핑은 수집 시 자동 실행되며, 배치(48시간 창) 안에서만 묶입니다.</small></div>';
+      return;
+    }
+    const PLATFORM_BADGE = {instagram:'📷', youtube:'▶️', tiktok:'🎵'};
+    const h = d.items.map(i=>`
+      <div class="sm-seg">
+        <div class="t">${PLATFORM_BADGE[i.platform]||''} ${esc(i.name||i.username||'')}</div>
+        <div class="txt">${esc((i.caption||'').slice(0,80))}</div>
+        <button class="view" onclick="window.open('${i.url}','_blank')">👁 보기</button>
+      </div>`).join('');
+    document.getElementById('scriptBody').innerHTML = h;
+  }catch(err){ document.getElementById('scriptBody').innerHTML='<div class="sm-err">⚠️ 네트워크 오류 — 잠시 후 재시도</div>'; }
 }
 async function extractScript(shortcode){
   window._curSC = shortcode;

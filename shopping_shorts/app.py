@@ -94,6 +94,26 @@ def api_reference():
     return {"ok": True, "items": items, "collected_at": collected_at}
 
 
+@app.get("/api/related")
+def api_related(shortcode: str, platform: str = "instagram"):
+    """"같은 주제 모아보기" — 같은 topic_group인 다른 영상들 반환(2026-07-13).
+    플랫폼 무관하게 그룹 전체를 조회하므로 유튜브·틱톡 데이터가 나중에 붙어도
+    코드 변경 없이 같이 나온다. 지금은 인스타 최근수집(last_run) 캐시에서만
+    상세정보를 매칭한다 — 다른 플랫폼이 생기면 각자의 캐시 매칭을 추가해야 함."""
+    store = Store(DB_PATH)
+    related = store.related_shortcodes(platform, shortcode)
+    if not related:
+        return {"ok": True, "items": []}
+    items, _ = store.load_last_run()
+    by_sc = {i["shortcode"]: i for i in items}
+    out = []
+    for r in related:
+        it = by_sc.get(r["shortcode"])
+        if it:
+            out.append({**it, "platform": r["platform"]})
+    return {"ok": True, "items": out}
+
+
 @app.get("/api/outreach")
 def api_outreach(sort: str = "latest", hide_done: bool = True, rank_limit: int = DRAFT_BATCH_SIZE):
     """소통 큐 반환 — 마지막 수집 릴스 + draft 결합, 정렬·완료필터.

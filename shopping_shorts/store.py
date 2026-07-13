@@ -162,6 +162,20 @@ class Store:
                     updated_at TEXT
                 )
             """)
+            # "같은 주제 모아보기"(2026-07-13) — 수집 배치(캡션 묶음) 안에서 Gemini가
+            # 같은 제품/주제로 판단한 항목끼리 group_id를 공유한다. platform 컬럼을
+            # 처음부터 둬 유튜브·틱톡 랭킹이 나중에 붙어도 스키마 변경 없이 그대로
+            # 크로스플랫폼 그룹핑에 편입된다(source_candidates의 platform 관례 재사용).
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS topic_groups (
+                    platform TEXT NOT NULL DEFAULT 'instagram',
+                    shortcode TEXT NOT NULL,
+                    group_id TEXT NOT NULL,
+                    tagged_at TEXT,
+                    PRIMARY KEY (platform, shortcode)
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_topic_groups_group ON topic_groups(group_id)")
             # 기존 DB용 마이그레이션 — mix_jobs 자막제거 필드(2026-07-13).
             # 새 DB는 위 CREATE에 이미 있어 여기선 "이미 존재" 예외를 조용히 넘긴다.
             for col, ddl in (
@@ -595,3 +609,35 @@ class Store:
                 "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
                 (key, value),
             )
+
+    # ── 같은 주제 모아보기(2026-07-13) ──
+    def save_topic_groups(self, mapping, platform="instagram"):
+        """{shortcode: group_id} 저장(upsert). mapping이 비면 아무것도 안 함."""
+        if not mapping:
+            return
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            c.executemany(
+                "INSERT INTO topic_groups(platform, shortcode, group_id, tagged_at) "
+                "VALUES(?,?,?,?) ON CONFLICT(platform, shortcode) "
+                "DO UPDATE SET group_id=excluded.group_id, tagged_at=excluded.tagged_at",
+                [(platform, sc, gid, now) for sc, gid in mapping.items()],
+            )
+
+    def related_shortcodes(self, platform, shortcode):
+        """주어진 (platform, shortcode)와 같은 주제 그룹인 다른 항목들
+        [{platform, shortcode}] 반환(자기 자신 제외, 플랫폼 무관하게 전체 조회
+        — 유튜브·틱톡 데이터가 붙으면 자동으로 같이 나온다)."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT group_id FROM topic_groups WHERE platform=? AND shortcode=?",
+                (platform, shortcode),
+            ).fetchone()
+            if not row:
+                return []
+            rows = c.execute(
+                "SELECT platform, shortcode FROM topic_groups WHERE group_id=? "
+                "AND NOT (platform=? AND shortcode=?)",
+                (row[0], platform, shortcode),
+            ).fetchall()
+        return [{"platform": r[0], "shortcode": r[1]} for r in rows]

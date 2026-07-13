@@ -9,7 +9,7 @@ from shopping_shorts.apify_client import fetch_reels
 from shopping_shorts.ranking import build_items, apply_grades
 from shopping_shorts.store import Store
 from shopping_shorts.comment_gen import generate as _gen_comments
-from shopping_shorts import ai_categorize
+from shopping_shorts import ai_categorize, topic_grouper
 
 _CSV_FIELDS = ["name", "username", "category", "comments", "delta", "is_new",
                "speed", "accel", "density", "grade", "age_hours", "url", "inpock"]
@@ -136,6 +136,11 @@ def collect(limit_channels=None):
     # 캡션 기반 AI 재분류(주). 키워드(build_items)의 stray-단어 오판을 교정한다.
     # 실패·무키면 no-op → 키워드 결과 유지(폴백). (2026-07-13)
     ai_categorize.reclassify(all_items)
+
+    # 같은 주제 모아보기(2026-07-13) — 부가기능이라 실패해도 수집 자체는 그대로.
+    # run_tag=날짜 단위(하루 여러 번 돌려도 같은 그룹 접두어 유지).
+    topic_map = topic_grouper.group_items(all_items, run_tag=now.strftime("%Y-%m-%d"))
+    store.save_topic_groups(topic_map)
 
     run_date = now.strftime("%Y-%m-%d %H:%M")
     store.save_run(run_date, [
