@@ -1095,6 +1095,26 @@ def api_produce_script_mix(request: Request, body: dict):
     return {"ok": True, "drafts": drafts}
 
 
+@app.post("/api/produce/picks/toggle")
+def api_produce_picks_toggle(request: Request, body: dict):
+    """도서관 대본을 영상제작 목록에 담기/빼기 토글. body: {shortcode}."""
+    sc = (body.get("shortcode") or "").strip()
+    if not sc:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "shortcode 필요"})
+    picked = Store(DB_PATH).produce_pick_toggle(sc, customer_id=_cid(request))
+    return {"ok": True, "picked": picked}
+
+
+@app.get("/api/produce/picks")
+def api_produce_picks(request: Request):
+    """영상제작에 담긴 도서관 대본(전체 데이터). 우리믹스 탭 기본 목록."""
+    store = Store(DB_PATH)
+    cid = _cid(request)
+    picks = store.produce_pick_shortcodes(customer_id=cid)
+    items = [w for w in store.wiki_list(customer_id=cid) if w["shortcode"] in picks]
+    return {"ok": True, "items": items, "shortcodes": sorted(picks)}
+
+
 @app.post("/api/produce/mix/start")
 def api_produce_mix_start(background_tasks: BackgroundTasks, body: dict):
     """2단계 영상믹스 — 확정 대본(given_script)을 소스영상 장면에 매칭하는 job 시작.

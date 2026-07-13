@@ -71,6 +71,16 @@ class Store:
                     PRIMARY KEY (customer_id, shortcode)
                 )
             """)
+            # 영상제작으로 "보낸" 도서관 대본(2026-07-13) — 우리믹스 탭 기본 목록.
+            # script_wiki를 shortcode로 참조. customer_id별 독립(멀티테넌시 패턴).
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS produce_script_picks (
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    shortcode TEXT NOT NULL,
+                    added_at TEXT,
+                    PRIMARY KEY (customer_id, shortcode)
+                )
+            """)
             c.execute("""
                 CREATE TABLE IF NOT EXISTS last_run (
                     id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -517,6 +527,32 @@ class Store:
         with self._conn() as c:
             rows = c.execute(
                 "SELECT shortcode FROM mix_basket WHERE customer_id=?", (customer_id,)
+            ).fetchall()
+        return {r[0] for r in rows}
+
+    def produce_pick_toggle(self, shortcode, customer_id=LEGACY_CUSTOMER_ID):
+        """도서관 대본을 영상제작 목록에 담기/빼기 토글. 담기면 True."""
+        with self._conn() as c:
+            exists = c.execute(
+                "SELECT 1 FROM produce_script_picks WHERE customer_id=? AND shortcode=?",
+                (customer_id, shortcode),
+            ).fetchone()
+            if exists:
+                c.execute("DELETE FROM produce_script_picks WHERE customer_id=? AND shortcode=?",
+                          (customer_id, shortcode))
+                return False
+            c.execute(
+                "INSERT INTO produce_script_picks(customer_id, shortcode, added_at) "
+                "VALUES(?,?, datetime('now'))",
+                (customer_id, shortcode),
+            )
+            return True
+
+    def produce_pick_shortcodes(self, customer_id=LEGACY_CUSTOMER_ID):
+        """영상제작에 담긴 도서관 대본 shortcode 집합."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT shortcode FROM produce_script_picks WHERE customer_id=?", (customer_id,)
             ).fetchall()
         return {r[0] for r in rows}
 
