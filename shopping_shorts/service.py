@@ -7,11 +7,12 @@ from shopping_shorts.config import (DB_PATH, WINDOW_HOURS, DRAFT_BATCH_SIZE, MAX
                                     YOUTUBE_WINDOW_HOURS, YOUTUBE_MAX_PER_KW)
 from shopping_shorts.channels import load_channels
 from shopping_shorts.apify_client import fetch_reels
-from shopping_shorts.ranking import build_items, build_youtube_items, apply_grades
+from shopping_shorts.ranking import build_items, build_youtube_items, build_tiktok_items, apply_grades
 from shopping_shorts.store import Store
 from shopping_shorts.comment_gen import generate as _gen_comments
 from shopping_shorts import ai_categorize, topic_grouper
 from shopping_shorts.youtube_client import search_shorts as yt_search
+from shopping_shorts.tiktok_client import fetch_account_videos as tt_fetch
 
 _CSV_FIELDS = ["name", "username", "category", "comments", "delta", "is_new",
                "speed", "accel", "density", "grade", "age_hours", "url", "inpock"]
@@ -115,6 +116,33 @@ def _collect_youtube():
     return items
 
 
+def _collect_tiktok():
+    """틱톡 시드 계정(@handle)들의 최근 영상 → 조회수 기반 랭킹(무료 yt-dlp).
+
+    시드 kind='account'. 계정마다 yt-dlp로 훑어(실패계정은 스킵) 14일 창 내 영상을
+    공통 item으로 만든다. 유튜브와 동일한 지표·저장 구조."""
+    store = Store(DB_PATH)
+    accounts = [s["value"] for s in store.list_seeds("tiktok")]
+    if not accounts:
+        return []
+    now = datetime.now(timezone.utc)
+    raw = []
+    for acc in accounts:
+        raw.extend(tt_fetch(acc))          # 실패 계정은 tiktok_client가 빈 리스트 반환
+    items = build_tiktok_items(
+        raw,
+        prev_base=lambda sc: store.prev_base_platform("tiktok", sc),
+        prev_delta=lambda sc: store.prev_delta_platform("tiktok", sc),
+        now=now, window_hours=YOUTUBE_WINDOW_HOURS,   # 틱톡도 14일 창(유튜브와 동일 근거)
+    )
+    apply_grades(items)
+    run_date = now.strftime("%Y-%m-%d %H:%M")
+    store.save_run_platform("tiktok", run_date,
+                            [{"shortcode": i["shortcode"], "base": i["base_count"], "delta": i["delta"]} for i in items])
+    store.save_last_run_platform("tiktok", items, now.isoformat())
+    return items
+
+
 def collect(platform="instagram", limit_channels=None):
     """1회 수집 실행 → 지표·등급 채워진 항목 리스트 반환 + DB 저장.
 
@@ -126,8 +154,10 @@ def collect(platform="instagram", limit_channels=None):
     """
     if platform == "youtube":
         return _collect_youtube()
+    if platform == "tiktok":
+        return _collect_tiktok()
     if platform != "instagram":
-        return []   # 미구현 플랫폼(틱톡 등)이 인스타 Apify 스크레이프로 흘러들지 않게(Phase2 전까지)
+        return []   # 미구현 플랫폼이 인스타 Apify 스크레이프로 흘러들지 않게
 
     channels = load_channels()
 

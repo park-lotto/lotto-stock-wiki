@@ -146,3 +146,52 @@ def build_youtube_items(raw, prev_base, prev_delta, now=None, window_hours=48):
             "caption": r.get("title", ""),
         })
     return items
+
+
+def build_tiktok_items(raw, prev_base, prev_delta, now=None, window_hours=336):
+    """틱톡 원시 dict(tiktok_client) → 공통 item(조회수 기반 지표). 유튜브와 동일 구조.
+
+    tiktok_client가 이미 url·published_at(ISO)·views/likes/comments를 채워 온다.
+    speed=조회수/경과h, density=(좋아요+댓글)/조회수, accel=Δ−직전Δ."""
+    now = now or datetime.now(timezone.utc)
+    items = []
+    for r in raw:
+        ts = r.get("published_at")
+        if not ts:
+            continue
+        age = hours_since(ts, now=now)
+        if age > window_hours or age < 0:
+            continue
+        views = int(r.get("views") or 0)
+        sc = r.get("video_id") or ""
+        prev = prev_base(sc)
+        is_new = prev is None
+        delta = views if is_new else views - prev
+        prev_d = prev_delta(sc)
+        accel = None if prev_d is None else delta - prev_d
+        likes = int(r.get("likes") or 0)
+        comments = int(r.get("comments") or 0)
+        items.append({
+            "platform": "tiktok",
+            "shortcode": sc,
+            "name": r.get("channel_title"),
+            "username": r.get("channel_title"),
+            "inpock": "",
+            "followers": None,
+            "thumbnail": r.get("thumbnail", ""),
+            "video_url": "",
+            "url": r.get("url", ""),
+            "comments": comments,
+            "likes": likes,
+            "views": views,
+            "base_count": views,
+            "age_hours": round(age, 1),
+            "delta": delta,
+            "is_new": is_new,
+            "accel": accel,
+            "speed": views / age if age > 0 else float(views),
+            "density": (likes + comments) / views if views else 0.0,
+            "category": categorize(r.get("channel_title"), r.get("title", "")),
+            "caption": r.get("title", ""),
+        })
+    return items

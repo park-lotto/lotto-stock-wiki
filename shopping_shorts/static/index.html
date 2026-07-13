@@ -179,6 +179,8 @@ function switchPlatform(p, el){
   document.querySelectorAll('#platformTabs .ctype').forEach(x=>x.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('seedPanel').style.display = (p==='instagram')?'none':'block';
+  const si=document.getElementById('seedInput');
+  if(si) si.placeholder = (p==='tiktok') ? '틱톡 계정 (예: @salim__mami)' : '검색 키워드 (예: 살림꿀팁)';
   if(p!=='instagram') loadSeeds();
   loadLast();          // 기존 초기 로드 함수 — platform 반영하도록 아래 수정
 }
@@ -249,8 +251,8 @@ function render(){
   el.innerHTML = items.map((i,idx)=>`
     <div class="card">
       <div class="thumb">
-        <img src="${i.thumbnail?('/api/thumb?url='+encodeURIComponent(i.thumbnail)):''}" data-vurl="${i.video_url?('/api/video?url='+encodeURIComponent(i.video_url)):''}" ${i.video_url?'onclick="playInline(this)"':(i.platform==='youtube'?`onclick="playYoutube(this,'${i.shortcode}')"`:'')} loading="lazy" onerror="this.style.visibility='hidden'">
-        ${(i.video_url||i.platform==='youtube')?'<span class="play-badge">▶</span>':''}
+        <img src="${i.thumbnail?('/api/thumb?url='+encodeURIComponent(i.thumbnail)):''}" data-vurl="${i.video_url?('/api/video?url='+encodeURIComponent(i.video_url)):''}" ${i.video_url?'onclick="playInline(this)"':(i.platform==='youtube'?`onclick="playYoutube(this,'${i.shortcode}')"`:(i.platform==='tiktok'?`onclick="playTiktok(this,'${i.shortcode}')"`:''))} loading="lazy" onerror="this.style.visibility='hidden'">
+        ${(i.video_url||i.platform==='youtube'||i.platform==='tiktok')?'<span class="play-badge">▶</span>':''}
       </div>
       <div class="body">
         <div class="rank">#${idx+1} · ${i.category} · ${Math.round(i.age_hours)}시간 전</div>
@@ -352,6 +354,19 @@ function playInline(img){
   img.replaceWith(v);
 }
 // 유튜브는 프록시 mp4가 없어 embed 플레이어(iframe)로 인라인 재생.
+// 틱톡은 프록시 mp4 대신 공식 embed 플레이어(iframe)로 인라인 재생.
+function playTiktok(img, videoId){
+  if(!videoId) return;
+  const box=img.parentElement;
+  const badge=box && box.querySelector('.play-badge');
+  if(badge) badge.remove();
+  const f=document.createElement('iframe');
+  f.src='https://www.tiktok.com/embed/v2/'+encodeURIComponent(videoId);
+  f.style.cssText='width:100%;height:220px;border:0;display:block;background:#000';
+  f.allow='autoplay; encrypted-media; picture-in-picture';
+  f.allowFullscreen=true;
+  img.replaceWith(f);
+}
 function playYoutube(img, videoId){
   if(!videoId) return;
   const box=img.parentElement;
