@@ -45,8 +45,8 @@ def _media_code(url):
 
 
 @app.post("/api/collect")
-def api_collect(background_tasks: BackgroundTasks, limit: int | None = None):
-    """지금 수집 버튼. limit=채널 수 상한(테스트용).
+def api_collect(background_tasks: BackgroundTasks, limit: int | None = None, platform: str = "instagram"):
+    """지금 수집 버튼. limit=채널 수 상한(테스트용). platform=플랫폼(기본 인스타).
 
     댓글 draft 생성(항목당 Gemini 호출, 쿼터 걸리면 62초 대기)은 응답 후
     백그라운드로 넘긴다 — 랭킹 결과는 Apify 수집 즉시 반환, 소통 큐 draft는
@@ -55,9 +55,14 @@ def api_collect(background_tasks: BackgroundTasks, limit: int | None = None):
 
     Gemini 쿼터 절약을 위해 draft는 랭킹 상위 40개만 자동 생성한다(2026-07-09).
     나머지(또는 실패해서 draft 없는 상위권 항목)는 /api/generate_drafts 버튼으로
-    필요할 때만 이어서 생성."""
+    필요할 때만 이어서 생성.
+
+    platform != "instagram"인 경우 댓글 draft/save_last_run(인스타 전용
+    캐시)은 건너뛴다 — 유튜브 등은 _collect_youtube가 자체적으로 저장한다."""
     try:
-        items = collect(limit_channels=limit)
+        items = collect(platform=platform, limit_channels=limit)
+        if platform != "instagram":
+            return {"ok": True, "count": len(items), "items": items}
         from datetime import datetime, timezone
         collected_at = datetime.now(timezone.utc).isoformat()
         store = Store(DB_PATH)
@@ -88,10 +93,37 @@ def api_generate_drafts(background_tasks: BackgroundTasks):
 
 
 @app.get("/api/reference")
-def api_reference():
-    """마지막 수집 결과 반환 (프론트 초기 로드용)."""
-    items, collected_at = Store(DB_PATH).load_last_run()
+def api_reference(platform: str = "instagram"):
+    """마지막 수집 결과 반환 (프론트 초기 로드용). platform=플랫폼(기본 인스타)."""
+    if platform == "instagram":
+        items, collected_at = Store(DB_PATH).load_last_run()
+    else:
+        items, collected_at = Store(DB_PATH).load_last_run_platform(platform)
     return {"ok": True, "items": items, "collected_at": collected_at}
+
+
+@app.get("/api/seeds")
+def api_seeds(platform: str = "youtube"):
+    """플랫폼별 시드(키워드/채널 등) 목록."""
+    return {"ok": True, "items": Store(DB_PATH).list_seeds(platform)}
+
+
+@app.post("/api/seeds")
+def api_seeds_add(body: dict):
+    """시드 추가. body: {platform, kind, value}."""
+    p = (body.get("platform") or "").strip()
+    v = (body.get("value") or "").strip()
+    if not p or not v:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "platform·value 필요"})
+    Store(DB_PATH).add_seed(p, (body.get("kind") or "keyword").strip(), v)
+    return {"ok": True}
+
+
+@app.delete("/api/seeds")
+def api_seeds_remove(body: dict):
+    """시드 제거. body: {platform, value}."""
+    Store(DB_PATH).remove_seed((body.get("platform") or "").strip(), (body.get("value") or "").strip())
+    return {"ok": True}
 
 
 @app.get("/api/related")
