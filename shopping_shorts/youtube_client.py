@@ -3,11 +3,36 @@
 무료(쿼터 내). config.YOUTUBE_API_KEYS를 순서대로 시도(쿼터 초과 시 다음 키).
 검색(search.list)은 통계가 없어 videos.list로 조회수·좋아요·댓글을 채운다.
 """
+import re
 import requests
 from shopping_shorts.config import YOUTUBE_API_KEYS
 
 _SEARCH_URL = "https://www.googleapis.com/youtube/v3/search"
 _VIDEOS_URL = "https://www.googleapis.com/youtube/v3/videos"
+
+# 제목 문자(스크립트) 기반 언어 필터 — regionCode/relevanceLanguage는 약한 힌트라
+# 조회수순 검색에 외국 영상이 섞인다(실측 2026-07-13). 제목에 해당 언어 문자가
+# 있어야 통과시켜 "일어 선택=일본어 영상만" 되게 한다.
+_HANGUL = re.compile(r"[가-힣]")
+_KANA = re.compile(r"[ぁ-んァ-ヶ]")          # 히라가나·가타카나
+_CJK = re.compile(r"[一-鿿]")                # 한자(중/일 공통)
+_CYRILLIC = re.compile(r"[а-яА-ЯёЁ]")
+
+
+def _title_lang_ok(title, lang):
+    """제목이 선택 언어의 문자를 담고 있는지 — 외국영상 걸러내기."""
+    t = title or ""
+    if lang == "ko":
+        return bool(_HANGUL.search(t))
+    if lang == "ja":
+        return bool(_KANA.search(t)) or bool(_CJK.search(t))   # 가나 or 한자
+    if lang == "zh":
+        return bool(_CJK.search(t)) and not _KANA.search(t)    # 한자 있고 가나 없음
+    if lang == "ru":
+        return bool(_CYRILLIC.search(t))
+    if lang == "en":                                           # 라틴 전용(비라틴 문자 없음)
+        return not (_HANGUL.search(t) or _KANA.search(t) or _CJK.search(t) or _CYRILLIC.search(t))
+    return True
 
 
 def _stats(video_ids, token):
@@ -86,7 +111,8 @@ def search_shorts(keywords, published_after_iso, max_per_kw=20, token=None, lang
                 continue  # 다음 키로 이 키워드부터 재시도
             break
         if items:
-            raw.extend(items)
+            # 제목 언어 필터로 외국영상 제거(선택 언어 문자가 제목에 있어야 통과)
+            raw.extend([it for it in items if _title_lang_ok(it.get("title"), lang)])
     stats = _stats([r["video_id"] for r in raw], tok)
     for r in raw:
         r.update(stats.get(r["video_id"], {"views": 0, "likes": 0, "comments": 0}))
