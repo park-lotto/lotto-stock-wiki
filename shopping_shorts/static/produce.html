@@ -131,8 +131,13 @@
           <input id="hcText" type="text" placeholder="예: 써보면 놀라는 이것" oninput="updateHC()"
             style="width:100%;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px;margin-bottom:10px">
           <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-            <label style="font-size:12px;color:var(--sub)">폰트
-              <select id="hcFont" onchange="updateHC()" style="background:#0d1420;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px"></select></label>
+            <span style="font-size:12px;color:var(--sub)">폰트
+              <span id="hcFontPicker" style="position:relative;display:inline-block;vertical-align:middle">
+                <button type="button" id="hcFontBtn" onclick="toggleFontMenu(event)"
+                  style="background:#0d1420;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 10px;cursor:pointer;min-width:130px;text-align:left;font-size:13px">폰트 선택 ▾</button>
+                <div id="hcFontMenu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:60;background:#0d1420;border:1px solid var(--line);border-radius:8px;max-height:340px;overflow:auto;box-shadow:0 12px 34px rgba(0,0,0,.55);min-width:190px"></div>
+              </span>
+              <select id="hcFont" onchange="updateHC()" style="display:none"></select></span>
             <label style="font-size:12px;color:var(--sub)">색상 <input id="hcColor" type="color" value="#FF8800" oninput="updateHC()"></label>
             <label style="font-size:12px;color:var(--sub)">굵기
               <select id="hcWeight" onchange="updateHC()" style="background:#0d1420;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px">
@@ -253,11 +258,40 @@ const HC_FONTS=[
   {name:'스포카 Reg',          file:'SpoqaHanSansNeo-Regular.otf',css:'HCSpoqaR'},
   {name:'IBM Plex Reg',        file:'IBMPlexSansKR-Regular.otf',css:'HCIBMR'},
 ];
-function fontCss(file){ const f=HC_FONTS.find(x=>x.file===file); return f?f.css:'HCNanum'; }
+function fontCss(file){ const f=HC_FONTS.find(x=>x.file===file); return f?f.css:'HCTmon'; }
+let HC_FONT_COMMITTED='TmonMonsori.ttf';
 function renderFontSelect(){
-  const s=document.getElementById('hcFont'); if(!s||s.options.length) return;
-  s.innerHTML=HC_FONTS.map(f=>`<option value="${f.file}">${f.name}</option>`).join('');
+  const s=document.getElementById('hcFont');
+  if(s && !s.options.length) s.innerHTML=HC_FONTS.map(f=>`<option value="${f.file}">${f.name}</option>`).join('');
+  const menu=document.getElementById('hcFontMenu');
+  if(menu && !menu._built){
+    menu._built=true;
+    // 각 항목을 실제 폰트로 렌더 + hover 시 프리뷰 즉시 변경
+    menu.innerHTML=HC_FONTS.map(f=>`<div class="fontItem" data-file="${f.file}"
+      style="padding:8px 13px;cursor:pointer;font-family:'${f.css}','Pretendard',sans-serif;font-size:17px;white-space:nowrap;border-bottom:1px solid rgba(255,255,255,.04)"
+      onmouseenter="hoverFont('${f.file}')" onclick="pickFont('${f.file}')">${f.name}</div>`).join('');
+    menu.addEventListener('mouseleave', ()=>{ setFontVal(HC_FONT_COMMITTED); updateHC(); });
+  }
+  syncFontBtn();
 }
+function setFontVal(file){ const s=document.getElementById('hcFont'); if(s) s.value=file; }
+function toggleFontMenu(ev){ if(ev) ev.stopPropagation();
+  const m=document.getElementById('hcFontMenu'); if(!m) return;
+  const open=m.style.display==='block'; m.style.display=open?'none':'block';
+  if(!open){ // 열 때 현재 선택 항목으로 스크롤
+    const cur=m.querySelector(`.fontItem[data-file="${HC_FONT_COMMITTED}"]`);
+    if(cur){ cur.style.background='rgba(93,169,255,.18)'; cur.scrollIntoView({block:'nearest'}); }
+  } }
+function hoverFont(file){ // 미리보기만(커밋 아님)
+  document.querySelectorAll('#hcFontMenu .fontItem').forEach(el=>el.style.background = el.dataset.file===file?'rgba(93,169,255,.18)':'transparent');
+  setFontVal(file); updateHC(); }
+function pickFont(file){ HC_FONT_COMMITTED=file; setFontVal(file);
+  const m=document.getElementById('hcFontMenu'); if(m) m.style.display='none'; syncFontBtn(); updateHC(); }
+function closeFontMenu(){ const m=document.getElementById('hcFontMenu'); if(!m||m.style.display!=='block') return;
+  m.style.display='none'; setFontVal(HC_FONT_COMMITTED); updateHC(); }
+function syncFontBtn(){ const btn=document.getElementById('hcFontBtn'); const f=HC_FONTS.find(x=>x.file===HC_FONT_COMMITTED);
+  if(btn&&f){ btn.textContent=f.name+' ▾'; btn.style.fontFamily=`'${f.css}','Pretendard',sans-serif`; } }
+document.addEventListener('click', e=>{ const p=document.getElementById('hcFontPicker'); if(p && !p.contains(e.target)) closeFontMenu(); });
 function hexA(hex,a){ const h=(hex||'#000000').replace('#',''); const r=parseInt(h.slice(0,2),16)||0,gg=parseInt(h.slice(2,4),16)||0,b=parseInt(h.slice(4,6),16)||0; return `rgba(${r},${gg},${b},${a})`; }
 function updateHC(){
   const g=id=>document.getElementById(id);
@@ -326,7 +360,7 @@ function renderPresets(){
 }
 function applyPreset(i){
   const p=HC_PRESETS[i], g=id=>document.getElementById(id);
-  if(p.font) g('hcFont').value=p.font;
+  if(p.font){ g('hcFont').value=p.font; HC_FONT_COMMITTED=p.font; syncFontBtn(); }
   g('hcColor').value=p.color; g('hcWeight').value=p.weight; g('hcSize').value=p.size; g('hcY').value=p.y;
   g('hcOutline').checked=!!p.outline; g('hcOutColor').value=p.outline_color||'#000000'; g('hcOutW').value=p.outline_w||0;
   g('hcBox').checked=!!p.box; g('hcBoxColor').value=p.box_color||'#000000';
