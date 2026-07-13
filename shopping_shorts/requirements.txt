@@ -4,3 +4,4 @@ requests
 openpyxl
 pytest
 alibabacloud_oss_v2  # VMake SDK(vmake_sdk) OSS 업로드용 — 자막제거 렌더 시에만 사용
+yt-dlp  # 유튜브/틱톡 무료 다운로드(media_download)
