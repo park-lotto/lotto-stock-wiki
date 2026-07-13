@@ -54,9 +54,10 @@ def test_requests_type_visual_matches(monkeypatch):
     monkeypatch.setattr(lens_discover.requests, "get", fake_get)
 
     lens_discover.search_similar_videos("https://ex.com/f.jpg")
-    assert captured["params"]["type"] == "visual_matches"
-    # 로케일(hl=ko&country=kr) 필수 — 없으면 한국어·요리 콘텐츠 프레임에서 google_lens가
-    # type=visual_matches 단독일 때 "no results"를 준다(2026-07-14 실측: 로케일 넣으면 60개).
+    # type=visual_matches를 넣으면 안 된다 — 그 별도 엔드포인트는 많은 프레임에서 "no results"를
+    # 준다(2026-07-14 실측: type 있으면 0개, 없는 all모드면 59~60개). 기본 all모드로 부른다.
+    assert "type" not in captured["params"]
+    # 로케일(hl=ko&country=kr) 필수 — 없으면 한국어 콘텐츠 매칭이 약하다(실측).
     assert captured["params"]["hl"] == "ko"
     assert captured["params"]["country"] == "kr"
 
