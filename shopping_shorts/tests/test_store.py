@@ -197,3 +197,57 @@ def test_save_script_without_category_is_backward_compatible(tmp_path):
     got = s.get_extract("SC2")
     assert got["category"] is None
     assert got["full_text"] == "카테고리 없이"
+
+
+def test_element_raw_values_extracts_characters_and_plain_fields(tmp_path):
+    from shopping_shorts.store import Store
+    s = Store(tmp_path / "t3.db")
+    s.save_script("SC1", {"full_text": "t1"}, category="레시피")
+    s.save_extract_structure("SC1", {
+        "hook_type": "경고형",
+        "characters": [{"who": "엄마", "role": "엄마가 알려준 노하우"}, {"who": "언니", "role": "언니네 집 팁"}],
+        "tone": "친근한 반말",
+    })
+    s.save_script("SC2", {"full_text": "t2"}, category="레시피")
+    s.save_extract_structure("SC2", {"hook_type": "반전형", "characters": [], "tone": ""})
+
+    chars = s.element_raw_values("레시피", "characters")
+    assert chars == ["엄마가 알려준 노하우", "언니네 집 팁"]
+
+    hooks = s.element_raw_values("레시피", "hook")
+    assert hooks == ["경고형", "반전형"]
+
+    tones = s.element_raw_values("레시피", "tone")
+    assert tones == ["친근한 반말"]  # 빈 문자열은 제외
+
+
+def test_element_category_stats_roundtrip(tmp_path):
+    from shopping_shorts.store import Store
+    s = Store(tmp_path / "t4.db")
+    cats = [{"label": "가족관계", "description": "d1", "examples": ["e1", "e2"]},
+            {"label": "전문가", "description": "d2", "examples": ["e3"]}]
+    s.save_element_category_stats("레시피", "characters", cats)
+
+    opts = s.get_element_options("레시피")
+    assert [c["label"] for c in opts["characters"]] == ["가족관계", "전문가"]
+    assert opts.get("tone", []) == []  # 아직 저장 안 한 요소는 빈 리스트
+
+    detail = s.get_category_detail("레시피", "characters", "전문가")
+    assert detail["description"] == "d2"
+    assert detail["examples"] == ["e3"]
+
+    # 재계산은 기존 값을 덮어쓴다(누적 아님)
+    s.save_element_category_stats("레시피", "characters", [
+        {"label": "지인동료", "description": "d3", "examples": []}])
+    opts2 = s.get_element_options("레시피")
+    assert [c["label"] for c in opts2["characters"]] == ["지인동료"]
+
+
+def test_distinct_extract_categories(tmp_path):
+    from shopping_shorts.store import Store
+    s = Store(tmp_path / "t5.db")
+    s.save_script("SC1", {"full_text": "t"}, category="레시피")
+    s.save_script("SC2", {"full_text": "t"}, category="뷰티")
+    s.save_script("SC3", {"full_text": "t"}, category="레시피")
+    s.save_script("SC4", {"full_text": "t"})  # category 없음 — 제외
+    assert sorted(s.distinct_extract_categories()) == ["레시피", "뷰티"]

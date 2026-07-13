@@ -112,6 +112,23 @@ class Store:
                     c.execute(f"ALTER TABLE script_extracts ADD COLUMN {col} {ddl}")
                 except sqlite3.OperationalError:
                     pass  # 이미 있으면(기존 DB) 무시
+            # 학습소재 카테고리 통계 캐시(2026-07-13) — 매일 새벽 배치가 재계산해 덮어씀.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS element_category_stats (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    product_category TEXT NOT NULL,
+                    element TEXT NOT NULL,
+                    category_label TEXT NOT NULL,
+                    description TEXT,
+                    examples_json TEXT,
+                    sample_count INTEGER,
+                    computed_at TEXT
+                )
+            """)
+            c.execute(
+                "CREATE INDEX IF NOT EXISTS idx_element_stats_lookup "
+                "ON element_category_stats(product_category, element)"
+            )
             # S급 대본 위키(도서관, 2026-07-13) — 담은 대본 + AI 구조분석. 생성의 재료.
             # customer_id 복합키(2026-07-13 멀티테넌시) — 위 commented/saved/mix_basket와 동일 패턴.
             c.execute("""
@@ -649,6 +666,86 @@ class Store:
             if full_text.strip():
                 out.append({"shortcode": sc, "full_text": full_text, "category": category})
         return out
+
+    _CHAR_ELEMENT_STRUCT_KEYS = {"hook": "hook_type"}  # element 이름 → structure_json 내 실제 키
+
+    def element_raw_values(self, product_category, element, limit=500):
+        """카테고리 안의 대본들에서 요소 하나의 자유서술 값들을 펼쳐서 반환.
+        characters는 인물별 role을 각각 개별 값으로(한 대본에 여러 명 가능),
+        나머지는 구조 필드 하나가 값 하나. 빈 값은 제외. hook 요소는 구조상
+        실제 필드명이 hook_type이라(analyze_structure 출력 기준) 그걸 읽는다."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT structure_json FROM script_extracts "
+                "WHERE category=? AND structure_json IS NOT NULL "
+                "ORDER BY structure_analyzed_at DESC LIMIT ?",
+                (product_category, limit),
+            ).fetchall()
+        out = []
+        struct_key = self._CHAR_ELEMENT_STRUCT_KEYS.get(element, element)
+        for (sj,) in rows:
+            st = json.loads(sj) or {}
+            if element == "characters":
+                for ch in (st.get("characters") or []):
+                    role = (ch.get("role") or "").strip()
+                    if role:
+                        out.append(role)
+            else:
+                val = (st.get(struct_key) or "").strip()
+                if val:
+                    out.append(val)
+        return out
+
+    def distinct_extract_categories(self):
+        """대본추출 항목들에 실제로 쓰인 category 값(카테고리별 통계 배치의 순회 대상)."""
+        with self._conn() as c:
+            return [r[0] for r in c.execute(
+                "SELECT DISTINCT category FROM script_extracts WHERE category IS NOT NULL"
+            ).fetchall()]
+
+    def save_element_category_stats(self, product_category, element, categories):
+        """(product_category, element)의 기존 카테고리 통계를 지우고 새로 저장(덮어쓰기,
+        누적 아님 — 매일 새벽 배치가 항상 최신 상태로 재계산)."""
+        with self._conn() as c:
+            c.execute(
+                "DELETE FROM element_category_stats WHERE product_category=? AND element=?",
+                (product_category, element),
+            )
+            for cat in categories:
+                c.execute(
+                    "INSERT INTO element_category_stats"
+                    "(product_category, element, category_label, description, examples_json, "
+                    "sample_count, computed_at) VALUES(?,?,?,?,?,?,datetime('now'))",
+                    (product_category, element, cat.get("label", ""), cat.get("description", ""),
+                     json.dumps(cat.get("examples") or [], ensure_ascii=False),
+                     cat.get("sample_count", 0)),
+                )
+
+    def get_element_options(self, product_category):
+        """이 카테고리의 요소별 학습된 옵션. {element: [{label, description}, ...]}.
+        저장된 적 없는 요소는 빈 리스트(프론트가 드롭다운 숨김 처리에 씀)."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT element, category_label, description FROM element_category_stats "
+                "WHERE product_category=? ORDER BY element, id",
+                (product_category,),
+            ).fetchall()
+        out = {}
+        for element, label, desc in rows:
+            out.setdefault(element, []).append({"label": label, "description": desc})
+        return out
+
+    def get_category_detail(self, product_category, element, label):
+        """특정 카테고리 하나의 설명+예시(생성 프롬프트에 제약으로 넣을 때 씀)."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT description, examples_json FROM element_category_stats "
+                "WHERE product_category=? AND element=? AND category_label=?",
+                (product_category, element, label),
+            ).fetchone()
+        if not row:
+            return None
+        return {"description": row[0], "examples": json.loads(row[1] or "[]")}
 
     def get_script(self, shortcode):
         """저장된 대본추출 결과. 없으면 None. 있으면 {segments, full_text, extracted_at}."""
