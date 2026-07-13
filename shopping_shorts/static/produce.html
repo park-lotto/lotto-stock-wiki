@@ -160,7 +160,11 @@ const SCRIPT_MODE_HTML = {
       <button class="tab" id="mixSrcAll" style="flex:0 0 auto;min-width:auto;padding:7px 14px" onclick="switchMixSource('all')">📚 위키 전체 영상대본</button>
     </div>
     <div id="mixWiki" style="margin:10px 0">불러오는 중…</div>
-    <button class="btn-next" style="padding:10px 16px" onclick="genMix()">🧬 선택한 대본 조합 생성</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-next" style="padding:10px 16px;background:linear-gradient(90deg,#1c5a2e,#0d3a1c)" onclick="useSingleScript()">✅ 선택 1개 그대로 쓰기</button>
+      <button class="btn-next" style="padding:10px 16px" onclick="genMix()">🧬 선택 2개+ 조합 생성</button>
+    </div>
+    <div class="hint" style="margin-top:6px">같은 주제면 1개 대본 그대로 쓰고 영상만 여러 개 붙이는 게 자연스럽습니다. 텍스트 조합이 필요할 때만 2개+.</div>
     <div id="mixDrafts" style="margin-top:12px"></div>`,
 };
 function setScriptMode(mode){
@@ -227,6 +231,7 @@ async function loadWikiForMix(){
   try{
     const d=await (await fetch(url)).json();
     const items=d.items||[];
+    window._mixItems=items;
     if(!items.length){
       el.innerHTML = MIX_SRC==='all'
         ? '<div class="hint">도서관에 저장된 S급 대본이 없습니다. (레퍼런스 랭킹에서 📝대본추출 → ⭐S급 위키저장)</div>'
@@ -244,6 +249,15 @@ async function loadWikiForMix(){
         </span>
       </label>`).join('');
   }catch(e){ el.innerHTML='<div class="hint" style="color:var(--fire)">로드 실패</div>'; }
+}
+function useSingleScript(){
+  const picks=[...document.querySelectorAll('.mixPick:checked')].map(c=>c.value);
+  const box=document.getElementById('mixDrafts');
+  if(picks.length!==1){ box.innerHTML='<div class="hint" style="color:var(--fire)">1개만 선택하세요(그대로 쓰기)</div>'; return; }
+  const it=(window._mixItems||[]).find(w=>w.shortcode===picks[0]);
+  if(!it || !(it.full_text||'').trim()){ box.innerHTML='<div class="hint" style="color:var(--fire)">대본 내용이 없습니다</div>'; return; }
+  STATE.script=it.full_text;
+  setScriptMode('manual');   // 그 대본 그대로 편집창에 채움
 }
 function genMix(){
   const picks=[...document.querySelectorAll('.mixPick:checked')].map(c=>c.value);
