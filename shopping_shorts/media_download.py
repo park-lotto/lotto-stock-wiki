@@ -40,3 +40,27 @@ def download_any(url, dest_dir):
     if "youtube.com" in u or "youtu.be" in u or "tiktok.com" in u:
         return _download_ytdlp(url, dest_dir)
     raise RuntimeError(f"지원하지 않는 URL: {url}")
+
+
+def resolve_media_url(platform, video_id, timeout=30):
+    """유튜브/틱톡 영상ID → 진행형 mp4 direct URL(다운로드 없이). yt-dlp -g로
+    재생 가능한 단일 mp4 포맷 URL만 뽑는다. 실패(비공개·지역차단) 시 "".
+    캡처(canvas)를 위해 우리 <video>로 same-origin 재생하려는 용도(2026-07-14).
+    embed(iframe)은 크로스도메인이라 canvas 캡처가 안 돼 mp4로 직접 재생한다."""
+    page = {
+        "youtube": f"https://www.youtube.com/watch?v={video_id}",
+        "tiktok": f"https://www.tiktok.com/@x/video/{video_id}",
+    }.get(platform)
+    if not page:
+        return ""
+    try:
+        r = subprocess.run(
+            [sys.executable, "-m", "yt_dlp", "-g", "-f",
+             "best[ext=mp4][vcodec!=none][acodec!=none]/best[ext=mp4]/best",
+             "--no-warnings", page],
+            capture_output=True, text=True, encoding="utf-8", timeout=timeout)
+    except Exception:
+        return ""
+    if r.returncode != 0 or not r.stdout.strip():
+        return ""
+    return r.stdout.strip().splitlines()[0]

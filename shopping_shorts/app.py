@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 import requests
-from fastapi import BackgroundTasks, FastAPI, Request
+from fastapi import BackgroundTasks, FastAPI, Request, UploadFile, File
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from shopping_shorts.service import collect, generate_missing_drafts, next_draft_targets
@@ -27,6 +27,8 @@ from shopping_shorts.video_analysis import analyze_video, translate_keyword
 from shopping_shorts.product_identify import fetch_lens_lines, identify_product_from_lines
 from shopping_shorts.search_links import build_search_links, lens_search_url
 from shopping_shorts.mix_pipeline import run_mix_job, run_render, retype_mix_job, _source_video_id
+from shopping_shorts.lens_discover import search_similar_videos
+from shopping_shorts.media_download import resolve_media_url
 from shopping_shorts import edit_plan as _edit_plan
 import uuid
 
