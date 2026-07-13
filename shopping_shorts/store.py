@@ -104,6 +104,14 @@ class Store:
                     extracted_at TEXT
                 )
             """)
+            # 학습소재 통계용 확장(2026-07-13) — 위키 저장 여부와 무관하게 대본추출된
+            # 모든 항목에 구조분석을 백필하기 위한 컬럼.
+            for col, ddl in (("category", "TEXT"), ("structure_json", "TEXT"),
+                              ("structure_analyzed_at", "TEXT")):
+                try:
+                    c.execute(f"ALTER TABLE script_extracts ADD COLUMN {col} {ddl}")
+                except sqlite3.OperationalError:
+                    pass  # 이미 있으면(기존 DB) 무시
             # S급 대본 위키(도서관, 2026-07-13) — 담은 대본 + AI 구조분석. 생성의 재료.
             # customer_id 복합키(2026-07-13 멀티테넌시) — 위 commented/saved/mix_basket와 동일 패턴.
             c.execute("""
@@ -578,15 +586,69 @@ class Store:
             return [], None
         return json.loads(row[0]), row[1]
 
-    def save_script(self, shortcode, script):
-        """대본추출 결과({segments, full_text}) 저장(덮어쓰기)."""
+    def save_script(self, shortcode, script, category=None):
+        """대본추출 결과({segments, full_text}) 저장(덮어쓰기). category가 오면
+        같이 저장(학습소재 통계의 그룹핑 키, 2026-07-13). 구조분석은 별도
+        save_extract_structure()로 나중에 채워진다."""
+        with self._conn() as c:
+            if category is not None:
+                c.execute(
+                    "INSERT INTO script_extracts(shortcode, script_json, extracted_at, category) "
+                    "VALUES(?,?,datetime('now'),?) ON CONFLICT(shortcode) DO UPDATE SET "
+                    "script_json=excluded.script_json, extracted_at=excluded.extracted_at, "
+                    "category=excluded.category",
+                    (shortcode, json.dumps(script, ensure_ascii=False), category),
+                )
+            else:
+                c.execute(
+                    "INSERT INTO script_extracts(shortcode, script_json, extracted_at) "
+                    "VALUES(?,?,datetime('now')) ON CONFLICT(shortcode) DO UPDATE SET "
+                    "script_json=excluded.script_json, extracted_at=excluded.extracted_at",
+                    (shortcode, json.dumps(script, ensure_ascii=False)),
+                )
+
+    def get_extract(self, shortcode):
+        """대본추출 결과 + category + 구조분석(있으면). 없으면 None."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT script_json, extracted_at, category, structure_json, structure_analyzed_at "
+                "FROM script_extracts WHERE shortcode=?",
+                (shortcode,),
+            ).fetchone()
+        if not row:
+            return None
+        data = json.loads(row[0])
+        data["extracted_at"] = row[1]
+        data["category"] = row[2]
+        data["structure"] = json.loads(row[3]) if row[3] else None
+        data["structure_analyzed_at"] = row[4]
+        return data
+
+    def save_extract_structure(self, shortcode, structure):
+        """대본추출 항목에 구조분석 결과를 채운다(2026-07-13, 학습소재 통계 백필용)."""
         with self._conn() as c:
             c.execute(
-                "INSERT INTO script_extracts(shortcode, script_json, extracted_at) "
-                "VALUES(?,?,datetime('now')) ON CONFLICT(shortcode) DO UPDATE SET "
-                "script_json=excluded.script_json, extracted_at=excluded.extracted_at",
-                (shortcode, json.dumps(script, ensure_ascii=False)),
+                "UPDATE script_extracts SET structure_json=?, structure_analyzed_at=datetime('now') "
+                "WHERE shortcode=?",
+                (json.dumps(structure or {}, ensure_ascii=False), shortcode),
             )
+
+    def extracts_missing_structure(self, limit=100):
+        """구조분석이 아직 안 된 대본추출 항목(카테고리 있는 것만 — 카테고리 없으면
+        통계 그룹핑을 못 하므로 백필 대상에서 제외). full_text 없는 빈 항목도 제외."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT shortcode, script_json, category FROM script_extracts "
+                "WHERE structure_json IS NULL AND category IS NOT NULL "
+                "ORDER BY extracted_at ASC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        out = []
+        for sc, script_json, category in rows:
+            full_text = (json.loads(script_json) or {}).get("full_text", "")
+            if full_text.strip():
+                out.append({"shortcode": sc, "full_text": full_text, "category": category})
+        return out
 
     def get_script(self, shortcode):
         """저장된 대본추출 결과. 없으면 None. 있으면 {segments, full_text, extracted_at}."""
@@ -814,6 +876,39 @@ class Store:
                 "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
                 (key, value),
             )
+
+    # ── 틱톡 키워드검색 남용/비용 가드 (2026-07-14) ──
+    # 별도 테이블을 만들지 않고 settings에 네임스페이스 키로 눌러쓴다:
+    #   tiktok_daily:{customer_id}:{YYYY-MM-DD} → 그 날 그 고객의 수집 횟수
+    #   tiktok_spend:{YYYY-MM}                  → 그 달 전체 누적 지출($)
+    # 날짜/월을 키에 넣어 두면 경계에서 자동으로 새 카운터가 시작(별도 리셋 불필요).
+    def tiktok_daily_count(self, customer_id, day):
+        """(고객, 날짜)의 오늘 틱톡 수집 횟수. 없으면 0."""
+        raw = self.get_setting(f"tiktok_daily:{customer_id}:{day}", "0")
+        try:
+            return int(raw)
+        except (TypeError, ValueError):
+            return 0
+
+    def bump_tiktok_daily(self, customer_id, day):
+        """(고객, 날짜) 수집 횟수 +1 → 증가 후 값 반환(남용 방지 카운터)."""
+        n = self.tiktok_daily_count(customer_id, day) + 1
+        self.set_setting(f"tiktok_daily:{customer_id}:{day}", str(n))
+        return n
+
+    def tiktok_month_spend(self, month):
+        """그 달(YYYY-MM) 틱톡 누적 지출($). 없으면 0.0."""
+        raw = self.get_setting(f"tiktok_spend:{month}", "0")
+        try:
+            return float(raw)
+        except (TypeError, ValueError):
+            return 0.0
+
+    def add_tiktok_spend(self, month, usd):
+        """그 달 지출에 usd 누적 → 누적 후 값 반환(월예산 킬스위치 판단용)."""
+        total = self.tiktok_month_spend(month) + float(usd)
+        self.set_setting(f"tiktok_spend:{month}", repr(total))
+        return total
 
     # ── 고객 계정(2026-07-13 멀티테넌시) ──
     # 비밀번호는 pbkdf2-sha256(고객별 랜덤 솔트, 260,000회)로만 저장 — 평문/역가역

@@ -27,6 +27,35 @@ def test_prev_deltas_for_acceleration(tmp_path):
     s.save_run("2026-07-09", [{"shortcode": "x", "username": "u", "comments": 500, "delta": 300}])
     assert s.prev_delta("x") == 300  # 직전 Δ (가속 계산용)
 
+def test_tiktok_daily_count_starts_at_zero_and_bumps(tmp_path):
+    """하루 수집 횟수: 처음 0, bump할 때마다 1씩 증가한 새 값 반환(남용 방지 카운터)."""
+    s = Store(tmp_path / "t.db")
+    assert s.tiktok_daily_count(1, "2026-07-14") == 0
+    assert s.bump_tiktok_daily(1, "2026-07-14") == 1
+    assert s.bump_tiktok_daily(1, "2026-07-14") == 2
+    assert s.tiktok_daily_count(1, "2026-07-14") == 2
+
+
+def test_tiktok_daily_count_isolated_by_customer_and_day(tmp_path):
+    """카운터는 (고객, 날짜)별로 격리 — 다른 고객·다른 날짜는 서로 영향 없음."""
+    s = Store(tmp_path / "t.db")
+    s.bump_tiktok_daily(1, "2026-07-14")
+    s.bump_tiktok_daily(1, "2026-07-14")
+    assert s.tiktok_daily_count(2, "2026-07-14") == 0   # 다른 고객
+    assert s.tiktok_daily_count(1, "2026-07-15") == 0   # 다른 날짜
+    assert s.tiktok_daily_count(1, "2026-07-14") == 2
+
+
+def test_tiktok_month_spend_accumulates(tmp_path):
+    """월 예산 누적: 처음 0.0, add할 때마다 누적 달러 반환. 월 경계는 키가 달라 자동 리셋."""
+    s = Store(tmp_path / "t.db")
+    assert s.tiktok_month_spend("2026-07") == 0.0
+    assert s.add_tiktok_spend("2026-07", 0.05) == 0.05
+    assert round(s.add_tiktok_spend("2026-07", 0.10), 2) == 0.15
+    assert s.tiktok_month_spend("2026-08") == 0.0   # 새 달 = 새 예산
+    assert round(s.tiktok_month_spend("2026-07"), 2) == 0.15
+
+
 def test_comment_drafts_roundtrip(tmp_path):
     s = Store(tmp_path / "t.db")
     assert s.get_drafts("sc1") == []
@@ -140,3 +169,31 @@ def test_save_to_pool_and_pool_items(tmp_path):
     assert len(pool) == 1
     assert pool[0]["origin_shortcode"] == "sc1"
     assert pool[0]["url"] == "u"
+
+
+def test_save_script_with_category_and_structure_backfill(tmp_path):
+    from shopping_shorts.store import Store
+    s = Store(tmp_path / "t.db")
+    s.save_script("SC1", {"full_text": "안녕하세요 대본", "segments": []}, category="레시피")
+    got = s.get_extract("SC1")
+    assert got["full_text"] == "안녕하세요 대본"
+    assert got["category"] == "레시피"
+    assert got["structure"] is None  # 아직 구조분석 전
+
+    missing = s.extracts_missing_structure(limit=10)
+    assert any(m["shortcode"] == "SC1" and m["category"] == "레시피" for m in missing)
+
+    s.save_extract_structure("SC1", {"hook_type": "경고형", "tone": "친근한 수다체"})
+    got2 = s.get_extract("SC1")
+    assert got2["structure"]["hook_type"] == "경고형"
+    missing2 = s.extracts_missing_structure(limit=10)
+    assert not any(m["shortcode"] == "SC1" for m in missing2)
+
+
+def test_save_script_without_category_is_backward_compatible(tmp_path):
+    from shopping_shorts.store import Store
+    s = Store(tmp_path / "t2.db")
+    s.save_script("SC2", {"full_text": "카테고리 없이", "segments": []})
+    got = s.get_extract("SC2")
+    assert got["category"] is None
+    assert got["full_text"] == "카테고리 없이"

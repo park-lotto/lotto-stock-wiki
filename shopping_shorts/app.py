@@ -32,6 +32,24 @@ import uuid
 
 app = FastAPI(title="쇼핑쇼츠 레퍼런스 랭킹")
 
+# ── 틱톡 키워드검색 노브 기본값 + 비용 상수 (2026-07-14) ──
+# clockworks/tiktok-scraper = $1.70/1,000건 → 1건 $0.0017 (조사확정).
+_TIKTOK_SEARCH_COUNT_DEFAULT = 60      # 검색당 fetch 개수
+_TIKTOK_DAILY_LIMIT_DEFAULT = 10       # 사용자별 하루 수집 횟수
+_TIKTOK_MONTH_BUDGET_DEFAULT = 5.0     # 월 예산 상한($) — 넘으면 킬스위치
+_TIKTOK_COST_PER_ITEM = 0.0017
+_TIKTOK_LANGS = 5                       # translate_keyword가 만드는 언어 수(ko 포함)
+
+
+def _tiktok_knobs(store):
+    """설정 3노브를 타입 정규화해 반환(없으면 기본값)."""
+    return {
+        "search_count": int(store.get_setting("tiktok_search_count", _TIKTOK_SEARCH_COUNT_DEFAULT)),
+        "daily_limit": int(store.get_setting("tiktok_daily_limit", _TIKTOK_DAILY_LIMIT_DEFAULT)),
+        "month_budget": float(store.get_setting("tiktok_month_budget", _TIKTOK_MONTH_BUDGET_DEFAULT)),
+    }
+
+
 _MEDIA_CODE_RE = re.compile(r"/(?:p|reel|reels)/([A-Za-z0-9_-]+)")
 
 
@@ -45,7 +63,7 @@ def _media_code(url):
 
 
 @app.post("/api/collect")
-def api_collect(background_tasks: BackgroundTasks, limit: int | None = None, platform: str = "instagram"):
+def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int | None = None, platform: str = "instagram"):
     """지금 수집 버튼. limit=채널 수 상한(테스트용). platform=플랫폼(기본 인스타).
 
     댓글 draft 생성(항목당 Gemini 호출, 쿼터 걸리면 62초 대기)은 응답 후
@@ -58,14 +76,37 @@ def api_collect(background_tasks: BackgroundTasks, limit: int | None = None, pla
     필요할 때만 이어서 생성.
 
     platform != "instagram"인 경우 댓글 draft/save_last_run(인스타 전용
-    캐시)은 건너뛴다 — 유튜브 등은 _collect_youtube가 자체적으로 저장한다."""
+    캐시)은 건너뛴다 — 유튜브 등은 _collect_youtube가 자체적으로 저장한다.
+
+    platform == "tiktok"이면 키워드검색이 Apify 유료라 남용/비용 가드를 건다:
+    ① 월예산 킬스위치(초과 시 429 budget_exceeded) ② 사용자별 하루 상한
+    (초과 시 429 daily_limit). 통과 후 수집하면 하루카운트 +1, 추정비용 누적."""
+    if platform == "tiktok":
+        guard = Store(DB_PATH)
+        knobs = _tiktok_knobs(guard)
+        now = datetime.now(timezone.utc)
+        month, day = now.strftime("%Y-%m"), now.strftime("%Y-%m-%d")
+        cid = _cid(request)
+        if guard.tiktok_month_spend(month) >= knobs["month_budget"]:
+            return JSONResponse(status_code=429, content={
+                "ok": False, "error_code": "budget_exceeded",
+                "error": f"이번 달 틱톡 예산(${knobs['month_budget']:.2f})을 다 썼습니다"})
+        if guard.tiktok_daily_count(cid, day) >= knobs["daily_limit"]:
+            return JSONResponse(status_code=429, content={
+                "ok": False, "error_code": "daily_limit",
+                "error": f"오늘 틱톡 수집 한도({knobs['daily_limit']}회)를 다 썼습니다"})
     try:
         items = collect(platform=platform, limit_channels=limit)
+        if platform == "tiktok":
+            guard.bump_tiktok_daily(_cid(request), datetime.now(timezone.utc).strftime("%Y-%m-%d"))
+            n_kw = len([s for s in guard.list_seeds("tiktok") if s["kind"] == "keyword"])
+            est = n_kw * _TIKTOK_LANGS * knobs["search_count"] * _TIKTOK_COST_PER_ITEM
+            if est:
+                guard.add_tiktok_spend(datetime.now(timezone.utc).strftime("%Y-%m"), est)
         if platform != "instagram":
             _, collected_at = Store(DB_PATH).load_last_run_platform(platform)
             return {"ok": True, "count": len(items), "items": items,
                     "collected_at": collected_at}
-        from datetime import datetime, timezone
         collected_at = datetime.now(timezone.utc).isoformat()
         store = Store(DB_PATH)
         store.save_last_run(items, collected_at)
@@ -76,6 +117,35 @@ def api_collect(background_tasks: BackgroundTasks, limit: int | None = None, pla
         import re
         msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
         return JSONResponse(status_code=500, content={"ok": False, "error": msg})
+
+
+@app.get("/api/tiktok/settings")
+def api_tiktok_settings_get(request: Request):
+    """틱톡 키워드검색 관리자 노브 3개 + 오늘 사용현황(remaining_today·month_spend) 조회.
+
+    프론트가 '오늘 남은 N회'와 이번달 지출을 실제 카운트로 보여주기 위해 사용현황도
+    함께 반환한다. 사용현황은 로그인 고객(_cid)·오늘 날짜 기준."""
+    store = Store(DB_PATH)
+    k = _tiktok_knobs(store)
+    now = datetime.now(timezone.utc)
+    used = store.tiktok_daily_count(_cid(request), now.strftime("%Y-%m-%d"))
+    return {"ok": True, **k,
+            "used_today": used,
+            "remaining_today": max(0, k["daily_limit"] - used),
+            "month_spend": store.tiktok_month_spend(now.strftime("%Y-%m"))}
+
+
+@app.post("/api/tiktok/settings")
+def api_tiktok_settings_set(body: dict):
+    """틱톡 노브 저장. body: {search_count, daily_limit, month_budget} (부분 갱신 허용)."""
+    store = Store(DB_PATH)
+    if "search_count" in body:
+        store.set_setting("tiktok_search_count", str(int(body["search_count"])))
+    if "daily_limit" in body:
+        store.set_setting("tiktok_daily_limit", str(int(body["daily_limit"])))
+    if "month_budget" in body:
+        store.set_setting("tiktok_month_budget", str(float(body["month_budget"])))
+    return {"ok": True, **_tiktok_knobs(store)}
 
 
 @app.post("/api/generate_drafts")
@@ -424,7 +494,7 @@ def api_extract_script(shortcode: str):
     if not result.get("full_text") and not result.get("segments"):
         return JSONResponse(status_code=502, content={"ok": False, "error": "대본 추출 실패(Gemini 키 소진 또는 영상 인식 실패) — 잠시 후 재시도"})
 
-    store.save_script(code, result)
+    store.save_script(code, result, category=item.get("category"))
     return {"ok": True, "cached": False, **result}
 
 
@@ -456,7 +526,7 @@ def api_wiki_save(request: Request, shortcode: str):
         script = extract_script(video_path, code, caption=item.get("caption", ""))
         if not script.get("full_text") and not script.get("segments"):
             return JSONResponse(status_code=502, content={"ok": False, "error": "대본 추출 실패 — 잠시 후 재시도"})
-        store.save_script(code, script)
+        store.save_script(code, script, category=item.get("category"))
 
     # 원본 영상 영구보관(도서관 인라인 재생용) — 만료되는 CDN URL 대신 파일로 남긴다.
     media_target = _WIKI_MEDIA_DIR / f"{hashed}.mp4"

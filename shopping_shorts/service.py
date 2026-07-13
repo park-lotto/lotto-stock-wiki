@@ -13,6 +13,10 @@ from shopping_shorts.comment_gen import generate as _gen_comments
 from shopping_shorts import ai_categorize, topic_grouper
 from shopping_shorts.youtube_client import search_shorts as yt_search
 from shopping_shorts.tiktok_client import fetch_account_videos as tt_fetch
+from shopping_shorts.tiktok_search import search_full as tt_search_full
+from shopping_shorts.video_analysis import translate_keyword
+
+TIKTOK_SEARCH_COUNT_DEFAULT = 60   # 검색당 fetch 개수(설정 tiktok_search_count로 오버라이드)
 
 _CSV_FIELDS = ["name", "username", "category", "comments", "delta", "is_new",
                "speed", "accel", "density", "grade", "age_hours", "url", "inpock"]
@@ -122,13 +126,24 @@ def _collect_tiktok():
     시드 kind='account'. 계정마다 yt-dlp로 훑어(실패계정은 스킵) 14일 창 내 영상을
     공통 item으로 만든다. 유튜브와 동일한 지표·저장 구조."""
     store = Store(DB_PATH)
-    accounts = [s["value"] for s in store.list_seeds("tiktok")]
-    if not accounts:
+    seeds = store.list_seeds("tiktok")
+    if not seeds:
         return []
     now = datetime.now(timezone.utc)
     raw = []
-    for acc in accounts:
+    # 계정 시드(@handle) — yt-dlp 무료 수집(기존 경로)
+    for acc in [s["value"] for s in seeds if s["kind"] == "account"]:
         raw.extend(tt_fetch(acc))          # 실패 계정은 tiktok_client가 빈 리스트 반환
+    # 키워드 시드 — 5개국어 번역 후 각 언어로 Apify 키워드검색(2026-07-14).
+    # 계정 경로와 같은 raw 스키마라 아래 build_tiktok_items로 함께 흘러간다.
+    keywords = [s["value"] for s in seeds if s["kind"] == "keyword"]
+    if keywords:
+        count = int(store.get_setting("tiktok_search_count", TIKTOK_SEARCH_COUNT_DEFAULT))
+        for kw in keywords:
+            for lang_kw in translate_keyword(kw).values():
+                if not lang_kw:
+                    continue               # 번역 실패 언어는 스킵(ko는 항상 채워짐)
+                raw.extend(tt_search_full(lang_kw, max_results=count))
     items = build_tiktok_items(
         raw,
         prev_base=lambda sc: store.prev_base_platform("tiktok", sc),

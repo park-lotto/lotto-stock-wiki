@@ -49,3 +49,71 @@ def test_search_no_tokens_raises(monkeypatch):
     monkeypatch.setattr(tiktok_search, "APIFY_TOKENS", [])
     with pytest.raises(RuntimeError, match="APIFY_TOKEN"):
         tiktok_search.search("x")
+
+
+def test_search_full_returns_ranking_raw_schema(monkeypatch):
+    """search_full은 build_tiktok_items가 그대로 소비하는 풀 raw 스키마를 반환한다
+    (video_id/views/likes/comments/published_at/channel_title/title/thumbnail/url).
+    minimal search()와 달리 랭킹 파이프라인에 바로 흘려넣기 위함."""
+    monkeypatch.setattr(tiktok_search, "APIFY_TOKENS", ["fake-key"])
+    captured = {}
+
+    def fake_run_with_rotation(payload, tokens, timeout, poll_interval, actor=None):
+        captured["payload"] = payload
+        captured["actor"] = actor
+        return [{
+            "id": "7412345678901234567",
+            "text": "곰팡이 제거 꿀팁",
+            "createTimeISO": "2026-07-12T09:30:00.000Z",
+            "webVideoUrl": "https://www.tiktok.com/@clean/video/7412345678901234567",
+            "playCount": 152000,
+            "diggCount": 8400,
+            "commentCount": 210,
+            "authorMeta": {"name": "clean_life"},
+            "videoMeta": {"coverUrl": "https://p16-sign.tiktokcdn.com/cover.jpeg"},
+        }]
+
+    monkeypatch.setattr(tiktok_search, "_run_with_rotation", fake_run_with_rotation)
+
+    results = tiktok_search.search_full("곰팡이 제거", max_results=60)
+
+    assert results == [{
+        "video_id": "7412345678901234567",
+        "url": "https://www.tiktok.com/@clean/video/7412345678901234567",
+        "channel_title": "clean_life",
+        "title": "곰팡이 제거 꿀팁",
+        "thumbnail": "https://p16-sign.tiktokcdn.com/cover.jpeg",
+        "published_at": "2026-07-12T09:30:00.000Z",
+        "views": 152000,
+        "likes": 8400,
+        "comments": 210,
+    }]
+    assert captured["payload"]["searchQueries"] == ["곰팡이 제거"]
+    assert captured["payload"]["resultsPerPage"] == 60
+    assert captured["actor"] == "clockworks~tiktok-scraper"
+
+
+def test_search_full_skips_items_without_id(monkeypatch):
+    """id 없는 아이템(썸네일만 있는 광고행 등)은 랭킹 키가 없어 제외."""
+    monkeypatch.setattr(tiktok_search, "APIFY_TOKENS", ["fake-key"])
+
+    def fake_run_with_rotation(payload, tokens, timeout, poll_interval, actor=None):
+        return [
+            {"text": "no id", "playCount": 100},
+            {"id": "1", "text": "t", "webVideoUrl": "u",
+             "authorMeta": {"name": "a"}, "videoMeta": {"coverUrl": "c"},
+             "createTimeISO": "2026-07-12T00:00:00.000Z",
+             "playCount": 5, "diggCount": 1, "commentCount": 0},
+        ]
+    monkeypatch.setattr(tiktok_search, "_run_with_rotation", fake_run_with_rotation)
+
+    results = tiktok_search.search_full("x")
+
+    assert len(results) == 1
+    assert results[0]["video_id"] == "1"
+
+
+def test_search_full_no_tokens_raises(monkeypatch):
+    monkeypatch.setattr(tiktok_search, "APIFY_TOKENS", [])
+    with pytest.raises(RuntimeError, match="APIFY_TOKEN"):
+        tiktok_search.search_full("x")

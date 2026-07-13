@@ -132,6 +132,10 @@
       <div class="ctype" data-platform="tiktok" onclick="switchPlatform('tiktok',this)">🎵 틱톡</div>
     </div>
     <div id="seedPanel" style="display:none;margin-bottom:12px">
+      <div id="ttMode" style="display:none;margin-bottom:6px">
+        <label style="font-size:12px;color:var(--sub);cursor:pointer"><input type="radio" name="ttmode" value="keyword" checked onclick="ttModeChange()"> 🔎 키워드 검색발굴</label>
+        <label style="font-size:12px;color:var(--sub);cursor:pointer;margin-left:12px"><input type="radio" name="ttmode" value="account" onclick="ttModeChange()"> 🎵 계정 시드</label>
+      </div>
       <input id="seedInput" type="text" placeholder="검색 키워드 (예: 살림꿀팁)" style="padding:8px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)">
       <select id="seedLang" title="검색 언어(지역) — 한국어면 국내영상, 다른 언어면 그 나라 영상 발굴" style="padding:8px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)">
         <option value="ko">🇰🇷 한국어</option><option value="en">🇺🇸 영어</option>
@@ -140,6 +144,14 @@
       <button onclick="addSeed()">+ 키워드</button>
       <span id="seedHint" style="font-size:11px;color:var(--sub)">한국어 외 언어 선택 시 자동 번역해 등록</span>
       <div id="seedList" style="margin-top:6px;font-size:12px;color:var(--sub)"></div>
+      <div id="ttPanel" style="display:none;margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:8px;background:#0d131c">
+        <div style="font-size:12px;color:var(--sub);margin-bottom:8px">⚙️ 틱톡 키워드검색 설정 <span style="font-size:11px">— Apify 유료($1.70/1,000건), 키워드는 5개국어로 자동검색</span></div>
+        <label style="font-size:12px;color:var(--sub)">검색당 개수 <input id="ttCount" type="number" min="10" max="200" style="width:64px;padding:4px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)"></label>
+        <label style="font-size:12px;color:var(--sub);margin-left:10px">하루 수집횟수 <input id="ttDaily" type="number" min="1" max="100" style="width:56px;padding:4px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)"></label>
+        <label style="font-size:12px;color:var(--sub);margin-left:10px">월 예산($) <input id="ttBudget" type="number" min="0" step="0.5" style="width:64px;padding:4px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)"></label>
+        <button onclick="saveTtSettings()" style="margin-left:8px">저장</button>
+        <div id="ttStatus" style="margin-top:6px;font-size:11px;color:var(--sub)"></div>
+      </div>
     </div>
     <div class="toolbar">
       <button id="collectBtn" onclick="doCollect()">⚡ 지금 수집</button>
@@ -174,15 +186,28 @@ const CTYPES = [
 const TOPIC_CTYPE = {인테리어:"비법형",레시피:"비법형",생활용품:"제품형",가전:"제품형",뷰티:"혼합형",기타:"기타"};
 let STATE = {items:[], tab:"comments", ctype:"전체", cat:"전체"};
 let PLATFORM='instagram';
+function ttMode(){ const r=document.querySelector('input[name="ttmode"]:checked'); return r?r.value:'keyword'; }
 function switchPlatform(p, el){
   PLATFORM=p;
   document.querySelectorAll('#platformTabs .ctype').forEach(x=>x.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('seedPanel').style.display = (p==='instagram')?'none':'block';
-  const si=document.getElementById('seedInput');
-  if(si) si.placeholder = (p==='tiktok') ? '틱톡 계정 (예: @salim__mami)' : '검색 키워드 (예: 살림꿀팁)';
+  document.getElementById('ttMode').style.display = (p==='tiktok')?'block':'none';
+  document.getElementById('ttPanel').style.display = (p==='tiktok' && ttMode()==='keyword')?'block':'none';
+  if(p==='tiktok') loadTtSettings();
+  ttModeChange();       // 입력 placeholder·언어선택기·설정패널 표시 갱신
   if(p!=='instagram') loadSeeds();
   loadLast();          // 기존 초기 로드 함수 — platform 반영하도록 아래 수정
+}
+function ttModeChange(){
+  const si=document.getElementById('seedInput');
+  if(PLATFORM==='tiktok'){
+    const kw = ttMode()==='keyword';
+    if(si) si.placeholder = kw ? '틱톡 검색 키워드 (예: 곰팡이 제거)' : '틱톡 계정 (예: @salim__mami)';
+    document.getElementById('ttPanel').style.display = kw?'block':'none';
+  } else if(si){
+    si.placeholder = '검색 키워드 (예: 살림꿀팁)';
+  }
 }
 const LANGLABEL={ko:'🇰🇷',en:'🇺🇸',ja:'🇯🇵',zh:'🇹🇼',ru:'🇷🇺',keyword:'🇰🇷',account:'🎵'};
 async function loadSeeds(){
@@ -190,18 +215,22 @@ async function loadSeeds(){
   const el=document.getElementById('seedList');
   const items=d.items||[];
   el.innerHTML = items.length ? items.map(s=>
-    `<span style="display:inline-block;background:#1a2230;border-radius:12px;padding:2px 8px;margin:2px 4px 0 0">
+    `<span class="${s.kind==='keyword'?'ttkw':''}" style="display:inline-block;background:#1a2230;border-radius:12px;padding:2px 8px;margin:2px 4px 0 0">
        ${LANGLABEL[s.kind]||''} ${s.value}
        <span style="cursor:pointer;color:#e0623d" onclick="removeSeed('${s.value.replace(/'/g,"\\'")}')">✕</span>
      </span>`).join('') : '키워드 없음';
-  // 유튜브만 언어 선택기 노출(틱톡=계정 기반)
+  if(PLATFORM==='tiktok') renderTtStatus();
+  // 유튜브만 언어 선택기 노출(틱톡 키워드는 백엔드가 5개국어 자동번역, 계정은 불필요)
   document.getElementById('seedLang').style.display = (PLATFORM==='youtube')?'':'none';
   document.getElementById('seedHint').style.display = (PLATFORM==='youtube')?'':'none';
 }
 async function addSeed(){
   const raw=document.getElementById('seedInput').value.trim(); if(!raw) return;
   if(PLATFORM==='tiktok'){
-    await fetch('/api/seeds',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({platform:'tiktok',kind:'account',value:raw})});
+    // 키워드 모드=백엔드가 5개국어 자동번역 후 각 언어로 검색하므로 한국어 원문만 저장.
+    // 계정 모드=yt-dlp 무료 시드.
+    const kind = ttMode();   // 'keyword' | 'account'
+    await fetch('/api/seeds',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({platform:'tiktok',kind,value:raw})});
     document.getElementById('seedInput').value=''; return loadSeeds();
   }
   const lang=document.getElementById('seedLang').value;
@@ -218,6 +247,37 @@ async function addSeed(){
 async function removeSeed(v){
   await fetch('/api/seeds',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({platform:PLATFORM,value:v})});
   loadSeeds();
+}
+let TT_KNOBS={search_count:60,daily_limit:10,month_budget:5.0};
+async function loadTtSettings(){
+  try{
+    const d=await (await fetch('/api/tiktok/settings')).json();
+    if(!d.ok) return;
+    TT_KNOBS=d;
+    document.getElementById('ttCount').value=d.search_count;
+    document.getElementById('ttDaily').value=d.daily_limit;
+    document.getElementById('ttBudget').value=d.month_budget;
+    renderTtStatus();
+  }catch(e){}
+}
+function renderTtStatus(){
+  const el=document.getElementById('ttStatus'); if(!el) return;
+  const nkw = document.querySelectorAll('#seedList .ttkw').length;
+  // 키워드 1개당 5개국어 × 검색개수 × $0.0017 추정
+  const est = (nkw * 5 * TT_KNOBS.search_count * 0.0017);
+  const rem = (TT_KNOBS.remaining_today!=null) ? TT_KNOBS.remaining_today : TT_KNOBS.daily_limit;
+  const spent = Number(TT_KNOBS.month_spend||0);
+  el.innerHTML = `1회 수집 추정비용 ≈ $${est.toFixed(3)} (키워드 ${nkw}개 × 5개국어 × ${TT_KNOBS.search_count}개)<br>`
+    + `📅 오늘 남은 <b>${rem}</b>회 · 💰 이번달 $${spent.toFixed(2)} / $${Number(TT_KNOBS.month_budget).toFixed(2)}`;
+}
+async function saveTtSettings(){
+  const body={
+    search_count: parseInt(document.getElementById('ttCount').value||60,10),
+    daily_limit: parseInt(document.getElementById('ttDaily').value||10,10),
+    month_budget: parseFloat(document.getElementById('ttBudget').value||5),
+  };
+  const d=await (await fetch('/api/tiktok/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
+  if(d.ok){ TT_KNOBS=d; renderTtStatus(); document.getElementById('ttStatus').innerHTML='✅ 저장됨 · '+document.getElementById('ttStatus').innerHTML; }
 }
 
 function renderCtypes(){
@@ -289,9 +349,15 @@ async function doCollect(){
   try{
     const r = await fetch("/api/collect?platform="+PLATFORM, {method:"POST"});
     const d = await r.json();
+    if(r.status===429){   // 틱톡 남용/예산 킬스위치
+      const label = d.error_code==='budget_exceeded' ? '💰 월 예산 초과' : '🚫 오늘 한도 초과';
+      st.textContent = `${label} — ${d.error||''}`;
+      return;
+    }
     if(!d.ok) throw new Error(d.error||"실패");
     STATE.items = d.items; st.textContent=`✅ ${d.count}건 수집 (${fmtTime(d.collected_at)})`;
     render();
+    if(PLATFORM==='tiktok') loadTtSettings();   // 하루 남은 횟수·지출 갱신
   }catch(e){ st.textContent="❌ "+e.message; }
   finally{ btn.disabled=false; }
 }
