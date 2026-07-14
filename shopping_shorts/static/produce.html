@@ -913,6 +913,16 @@ function addMixUrl(){
   d.innerHTML='<input class="mixUrl" type="text" placeholder="인스타 릴스 URL" style="width:100%;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px">';
   wrap.appendChild(d);
 }
+// 레퍼런스 모음집(/collection)에서 "🎬 영상제작으로 보내기"로 넘어온 URL을 2단계
+// 입력칸에 채워넣는다. sessionStorage로 한 번만 전달(소비 후 즉시 제거).
+function _consumeProduceHandoff(){
+  let urls;
+  try{ urls=JSON.parse(sessionStorage.getItem('produce_mix_urls')||'null'); }catch(e){ urls=null; }
+  if(!urls || !urls.length) return;
+  sessionStorage.removeItem('produce_mix_urls');
+  while(document.querySelectorAll('.mixUrl').length<urls.length) addMixUrl();
+  document.querySelectorAll('.mixUrl').forEach((inp,i)=>{ inp.value=urls[i]||''; });
+}
 async function startProduceMix(){
   if(!STATE.script){ alert('1단계에서 대본을 먼저 확정하세요'); return; }
   const urls=[...document.querySelectorAll('.mixUrl')].map(i=>i.value.trim()).filter(Boolean);
@@ -1142,7 +1152,7 @@ async function pollFinal(){
   }catch(e){}
 }
 
-renderSteps(); showPanel(); setScriptMode('manual');
+renderSteps(); showPanel(); setScriptMode('manual'); _consumeProduceHandoff();
 </script>
 <script src="/sidebar.js"></script>
 </body>

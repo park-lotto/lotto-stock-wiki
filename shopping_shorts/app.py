@@ -1507,7 +1507,7 @@ _STATIC = Path(__file__).parent / "static"
 
 # 클린 URL — /library, /mix 등 확장자(.html) 없이 접근. (index는 루트 '/'로 자동)
 # 기존 /xxx.html 경로도 아래 StaticFiles 마운트로 계속 동작(백워드 호환).
-for _pg in ("discover", "find", "library", "mix", "outreach", "produce"):
+for _pg in ("discover", "find", "library", "mix", "outreach", "produce", "collection"):
     app.add_api_route(
         f"/{_pg}",
         (lambda n=_pg: FileResponse(_STATIC / f"{n}.html", media_type="text/html")),

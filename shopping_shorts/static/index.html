@@ -496,7 +496,13 @@ const LENS_PLATFORMS=[
   {k:'youtube',label:'▶️ 유튜브'},{k:'tiktok',label:'🎵 틱톡'},
   {k:'instagram',label:'📷 인스타'},{k:'xiaohongshu',label:'📕 샤오홍슈'},
   {k:'douyin',label:'🎶 도우인'}];
-let LENS_STATE={};   // shortcode → {items, on:Set}
+let LENS_STATE={};   // shortcode → {items, on:Set, saved:Set}
+// 짧고 안정적인(같은 url→같은 값) 해시 — 담기 바구니 합성키용. 암호학적 용도 아님.
+function _lensHash(s){
+  let h=0; s=String(s||'');
+  for(let i=0;i<s.length;i++){ h=((h<<5)-h+s.charCodeAt(i))|0; }
+  return (h>>>0).toString(36);
+}
 // 카드에서 렌즈에 넣을 이미지를 canvas 캡처. 우선순위:
 //  ① 재생중/멈춘 <video> 프레임(사용자가 고른 장면)
 //  ② 없으면 카드 썸네일 <img>(재생 안 하고 바로 눌러도 되게, 2026-07-14)
@@ -537,7 +543,12 @@ async function lensSearch(btn, shortcode){
     if(r.status===429){ const d=await r.json(); body.innerHTML=`<div style="padding:10px;color:#e0623d">💰 ${d.error||'이번 달 렌즈 한도 초과'}</div>`; return; }
     const d=await r.json();
     if(!d.ok || !d.items.length){ body.innerHTML='<div style="padding:10px;color:var(--sub)">유사 동영상을 찾지 못했습니다.<br><small>다른 장면(제품·요리가 크게 보이는 순간)에서 다시 시도해보세요.</small></div>'; return; }
-    LENS_STATE[shortcode]={items:d.items, on:new Set(LENS_PLATFORMS.map(p=>p.k))};
+    // 렌즈 결과는 우리 DB shortcode가 없어 담기 바구니 키를 URL기반으로 합성한다
+    // (플랫폼 프리픽스+url 해시 — 같은 URL 재검색해도 같은 키라 담김상태가 유지됨).
+    d.items.forEach(i=>{ i.savesc='lens_'+i.platform+'_'+_lensHash(i.url); });
+    let saved=new Set();
+    try{ saved=new Set((await (await fetch('/api/mix/basket')).json()).shortcodes||[]); }catch(e){}
+    LENS_STATE[shortcode]={items:d.items, on:new Set(LENS_PLATFORMS.map(p=>p.k)), saved};
     renderLens(shortcode);
   }catch(e){ document.getElementById('scriptBody').innerHTML='<div style="padding:10px;color:#e0623d">❌ '+e.message+'</div>'; }
 }
@@ -557,8 +568,9 @@ function renderLens(shortcode){
   // 메인 랭킹카드와 같은 .card/.thumb/.btns 스타일로 통일 — 클릭시 인라인 확대재생X,
   // 썸네일 카드 자체에 플랫폼·매칭뱃지 얹고 원본은 새탭으로만 연다(2026-07-14).
   const shown=st.items.filter(i=>st.on.has(i.platform));
-  const cards=shown.map(i=>{
+  const cards=shown.map((i,idx)=>{
     const plabel=LENS_PLATFORMS.find(p=>p.k===i.platform)?.label||'';
+    const isSaved=st.saved.has(i.savesc);
     return `
     <div class="card">
       <div class="thumb" onclick="window.open('${i.url}','_blank')">
@@ -568,11 +580,32 @@ function renderLens(shortcode){
       </div>
       <div class="body">
         <div class="rank" style="white-space:normal;line-height:1.4;min-height:2.8em">${esc((i.title||'').slice(0,70))}</div>
-        <div class="btns"><button class="view" onclick="window.open('${i.url}','_blank')">👁 원본보기</button></div>
+        <div class="btns">
+          <button class="view" onclick="window.open('${i.url}','_blank')">👁 원본보기</button>
+          <button class="save${isSaved?' saved':''}" onclick="toggleLensSave(${idx},this)">${isSaved?'🎬 담김✓':'📥 담기'}</button>
+        </div>
       </div>
     </div>`;
   }).join('') || '<div style="font-size:12px;color:var(--sub);padding:10px">켠 플랫폼 결과 없음</div>';
   box.innerHTML=`<div style="position:sticky;top:0;background:var(--panel);padding:4px 0;margin-bottom:8px;z-index:1">${chips}</div><div class="cards">${cards}</div>`;
+  box._lensCurSC=shortcode;
+  box._lensShown=shown;   // toggleLensSave가 idx로 참조
+}
+// 렌즈 결과 카드 담기 — 우리 DB에 없는 항목이라 mix_basket에 합성 shortcode로 저장.
+async function toggleLensSave(idx, btn){
+  const box=document.getElementById('scriptBody');
+  const it=box && box._lensShown && box._lensShown[idx]; if(!it) return;
+  try{
+    const r=await fetch('/api/mix/basket/toggle',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({shortcode:it.savesc, url:it.url||'', thumbnail:it.thumbnail||'',
+                           name:it.title||'', caption:it.title||''})});
+    const d=await r.json();
+    btn.textContent=d.in?'🎬 담김✓':'📥 담기';
+    btn.classList.toggle('saved', !!d.in);
+    const st=LENS_STATE[box._lensCurSC];
+    if(st){ d.in?st.saved.add(it.savesc):st.saved.delete(it.savesc); }
+    if(d.in) showToast('✅ 담았음 <a href="/collection" style="color:#7db4ff;margin-left:6px">모음집 보기 →</a>');
+  }catch(e){ /* 무시 */ }
 }
 async function extractScript(shortcode){
   window._curSC = shortcode;
@@ -616,7 +649,21 @@ async function copyFullText(btn){
   btn.textContent='✓ 복사됨'; btn.classList.add('done');
   setTimeout(()=>{ btn.textContent='📋 전체 복사'; btn.classList.remove('done'); }, 1200);
 }
+// 화면 우하단 잠깐 뜨는 알림 — 링크 등 HTML 포함 가능. 3.5초 후 자동 사라짐.
+function showToast(html){
+  let t=document.getElementById('ssToast');
+  if(!t){
+    t=document.createElement('div'); t.id='ssToast';
+    t.style.cssText='position:fixed;bottom:24px;right:24px;background:var(--panel);border:1px solid var(--line);color:var(--txt);padding:12px 16px;border-radius:10px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:200;transition:opacity .2s';
+    document.body.appendChild(t);
+  }
+  t.innerHTML=html; t.style.opacity='1';
+  clearTimeout(t._hideTimer);
+  t._hideTimer=setTimeout(()=>{ t.style.opacity='0'; }, 3500);
+}
 // 담기 = 영상 믹싱 바구니 토글(서버 저장, 모든 PC 공유). 한 번 더 누르면 담기취소.
+// 담기는 그 자리에서 토글만 하고(연속으로 여러 개 담기 편하게), 모음집 이동은
+// 토스트 링크로만 안내한다 — 누를 때마다 페이지 이동하면 여러 개 담을 때 불편해서(2026-07-14).
 async function toggleMix(sc, btn){
   const it = STATE.items.find(x=>x.shortcode===sc) || {};
   try{
@@ -629,6 +676,7 @@ async function toggleMix(sc, btn){
     setMixBtn(btn, d.in);
     const st = document.getElementById("status");
     if(st) st.textContent = d.in ? `🎬 영상 믹싱에 담김 (총 ${d.count}개)` : `담기취소됨 (총 ${d.count}개)`;
+    if(d.in) showToast('✅ 담았음 <a href="/collection" style="color:#7db4ff;margin-left:6px">모음집 보기 →</a>');
   }catch(e){ /* 무시 */ }
 }
 function setMixBtn(btn, inBasket){

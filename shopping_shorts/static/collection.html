@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>레퍼런스 모음집 · 쇼핑쇼츠</title>
+<style>
+  :root{--bg:#0a0e14;--panel:#111722;--line:#1e2735;--txt:#e6edf3;--sub:#8b98a9;--accent:#2f81f7;--accent2:#6d3bef;--fire:#ff6b35;--ok:#2ea043;}
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic',system-ui,sans-serif;margin:0;min-height:100vh}
+  .main{flex:1;padding:24px 32px;overflow:auto}
+  .head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+  .head h2{margin:0;font-size:22px}
+  .head .desc{color:var(--sub);font-size:13px;margin-top:4px}
+  .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .toolbar button{font-family:inherit;border:0;border-radius:9px;padding:9px 16px;cursor:pointer;font-size:13px}
+  .btn-ghost{background:var(--panel);border:1px solid var(--line);color:var(--txt)}
+  .btn-send{background:linear-gradient(90deg,var(--accent2),#8b5cf6);color:#fff}
+  .btn-send:disabled{opacity:.4;cursor:default}
+  #selCount{font-size:12px;color:var(--sub)}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;cursor:default}
+  .card.sel{border-color:var(--accent2);box-shadow:0 0 0 2px rgba(109,59,239,.35)}
+  .thumb{position:relative;cursor:pointer;background:#000}
+  .thumb img{width:100%;height:220px;object-fit:cover;display:block}
+  .thumb .chk{position:absolute;top:8px;left:8px;font-size:18px;filter:drop-shadow(0 1px 3px rgba(0,0,0,.8))}
+  .body{padding:12px;flex:1;display:flex;flex-direction:column}
+  .rank{font-size:13px;color:var(--txt)}
+  .btns{display:flex;gap:6px;margin-top:auto;padding-top:10px}
+  .btns button{flex:1;font-size:11px;padding:7px 4px;border-radius:7px;border:1px solid var(--line);background:#0d131c;color:var(--txt);cursor:pointer}
+  .btns button.view{border-color:#2f81f7;color:#7db4ff}
+  .empty{color:var(--sub);text-align:center;padding:60px;grid-column:1/-1}
+</style>
+</head>
+<body>
+<main class="main">
+  <div class="head">
+    <div>
+      <h2>📁 레퍼런스 모음집</h2>
+      <div class="desc">담아둔 레퍼런스 영상을 모아보고, 고른 것만 영상 제작으로 보냅니다.</div>
+    </div>
+    <div class="toolbar">
+      <span id="selCount"></span>
+      <button class="btn-ghost" onclick="selectAll()">전체선택</button>
+      <button class="btn-ghost" onclick="selectNone()">선택해제</button>
+      <button class="btn-send" onclick="sendToProduce()">🎬 영상제작으로 보내기</button>
+    </div>
+  </div>
+  <div class="cards" id="cards"></div>
+</main>
+<script>
+function esc(s){ return (s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+let ITEMS=[];
+const SELECTED=new Set();
+async function loadItems(){
+  try{
+    const d=await (await fetch('/api/mix/basket')).json();
+    ITEMS=d.items||[];
+  }catch(e){ ITEMS=[]; }
+  render();
+}
+function toggleSelect(sc){
+  SELECTED.has(sc)?SELECTED.delete(sc):SELECTED.add(sc);
+  render();
+}
+function selectAll(){ ITEMS.forEach(i=>SELECTED.add(i.shortcode)); render(); }
+function selectNone(){ SELECTED.clear(); render(); }
+async function removeItem(sc){
+  try{ await fetch('/api/mix/basket/remove',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({shortcode:sc})}); }catch(e){}
+  SELECTED.delete(sc);
+  loadItems();
+}
+function sendToProduce(){
+  // produce.html 2단계는 URL 입력칸을 최대 5개까지만 받는다 — 넘으면 앞 5개만 전달.
+  const urls=ITEMS.filter(i=>SELECTED.has(i.shortcode)).map(i=>i.url).filter(Boolean).slice(0,5);
+  if(!urls.length){ alert('보낼 항목을 먼저 선택하세요'); return; }
+  sessionStorage.setItem('produce_mix_urls', JSON.stringify(urls));
+  location.href='/produce';
+}
+function render(){
+  const el=document.getElementById('cards');
+  document.getElementById('selCount').textContent = SELECTED.size ? `${SELECTED.size}개 선택` : '';
+  if(!ITEMS.length){
+    el.innerHTML='<div class="empty">담아둔 영상이 없습니다.<br><small>레퍼런스 랭킹이나 렌즈 결과에서 📥담기를 눌러보세요.</small></div>';
+    return;
+  }
+  el.innerHTML = ITEMS.map(i=>{
+    const sel = SELECTED.has(i.shortcode);
+    return `
+    <div class="card ${sel?'sel':''}">
+      <div class="thumb" onclick="toggleSelect('${i.shortcode}')">
+        ${i.thumbnail?`<img src="/api/thumb?url=${encodeURIComponent(i.thumbnail)}" loading="lazy" onerror="this.style.visibility='hidden'">`:''}
+        <span class="chk">${sel?'✅':'⬜'}</span>
+      </div>
+      <div class="body">
+        <div class="rank" style="white-space:normal;line-height:1.4;min-height:2.6em">${esc((i.name||i.caption||'').slice(0,60))}</div>
+        <div class="btns">
+          <button class="view" onclick="window.open('${esc(i.url||'#')}','_blank')">👁 보기</button>
+          <button onclick="removeItem('${i.shortcode}')">🗑 빼기</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+loadItems();
+</script>
+<script src="/sidebar.js"></script>
+</body>
+</html>
