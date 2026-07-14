@@ -103,3 +103,30 @@ def test_mix_render_sets_background(monkeypatch, tmp_path):
     store.create_mix_job("j3", ["u0"], 20, "free")
     store.update_mix_job("j3", status="ready_for_review", edit_plan={"structure": "free", "beats": [], "plagiarism_flags": []})
     assert client.post("/api/mix/render", json={"job_id": "j3"}).status_code == 200
+
+
+# ── 영상제작소 2단계: 1개 영상 순서편집도 허용(2026-07-14) ──────────
+
+def test_produce_mix_start_accepts_single_url(monkeypatch, tmp_path):
+    """소스 1개만 보내도(레퍼런스 모음집에서 하나만 골라 보낸 경우) 시작돼야 한다
+    — 그 영상 안에서 구간 순서편집. 예전엔 '2개 이상' 검증에 막혔다."""
+    client, store = _client(monkeypatch, tmp_path)
+    r = client.post("/api/produce/mix/start",
+                    json={"script": "테스트 대본", "urls": ["u0"], "target_seconds": 20})
+    assert r.status_code == 200
+    jid = r.json()["job_id"]
+    assert store.get_mix_job(jid)["urls"] == ["u0"]
+
+
+def test_produce_mix_start_rejects_empty_urls(monkeypatch, tmp_path):
+    client, store = _client(monkeypatch, tmp_path)
+    r = client.post("/api/produce/mix/start",
+                    json={"script": "테스트 대본", "urls": [], "target_seconds": 20})
+    assert r.status_code == 422
+
+
+def test_produce_mix_start_rejects_empty_script(monkeypatch, tmp_path):
+    client, store = _client(monkeypatch, tmp_path)
+    r = client.post("/api/produce/mix/start",
+                    json={"script": "", "urls": ["u0", "u1"], "target_seconds": 20})
+    assert r.status_code == 422

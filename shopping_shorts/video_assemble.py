@@ -19,6 +19,45 @@ from pathlib import Path
 
 # 출력 규격(숏폼 세로). 소스 해상도가 달라도 여기로 통일해야 concat -c copy가 안전.
 _OUT_W, _OUT_H = 720, 1280
+# 반중복탐지 회피(2026-07-14) — 말 안 해도 항상 적용. 화질 오염 없는(비가역 손상X)
+# 것만 자동화: ①전 비트 기본 크롭+줌(살짝 확대, 원본과 프레임 구도가 달라짐)
+# ②중요 비트(훅·반전)만 서서히 확대되는 켄번즈 줌(더 눈에 띄는 변형+시선 유도 효과 겸함).
+# 좌우반전은 제외 — 원본 화면 속 글자·로고가 있으면 뒤집혀서 오염돼 보일 위험이 있어
+# "화질 오염 없이"라는 기준에 안 맞는다고 판단(2026-07-14).
+_BASE_ZOOM = 1.04          # 전 비트 기본 확대율(정적, 저비용)
+_KENBURNS_ZOOM = 1.10       # 중요 비트 최종 확대율(동적)
+_IMPORTANT_ROLES = {"훅", "반전"}  # edit_plan.py _REQUIRED_ROLES와 동일 어휘
+
+
+def _important_beat_indices(beats):
+    """훅·반전 롤 비트만 켄번즈 대상. 스크립트모드(produce.html 2단계)는 role이
+    안 채워지므로(edit_plan._SCRIPTED_PROMPT가 role을 요구 안 함) 그때는 첫 비트
+    (오프닝 훅 역할)만 켄번즈로 폴백한다."""
+    idxs = {b["beat_idx"] for b in beats if (b.get("role") or "") in _IMPORTANT_ROLES}
+    if not idxs and beats:
+        idxs = {beats[0]["beat_idx"]}
+    return idxs
+
+
+def _kenburns_vf(duration_sec, fps=30, zoom_end=_KENBURNS_ZOOM):
+    """서서히 확대되는 줌(켄번즈) vf. zoompan은 self-referencing 'zoom+step' 방식이
+    비디오 입력(정지이미지 아님)에서 상태가 안 이어져 매 프레임 그대로 있는 버그가
+    있어(2026-07-14 로컬 실측: 89px→89px, 안 움직임), 출력 프레임번호 'on'을 직접
+    식에 넣는 방식으로 고쳤다('on' 사용 시 89px→97px로 실제 확대 확인됨)."""
+    frames = max(1, round(duration_sec * fps))
+    step = (zoom_end - 1) / frames
+    pre_w, pre_h = int(_OUT_W * 1.3), int(_OUT_H * 1.3)  # zoompan 전에 여유있게 확대해둬야 크롭 여백이 남는다
+    return (
+        f"scale={pre_w}:{pre_h}:force_original_aspect_ratio=increase,"
+        f"zoompan=z='min(1+{step:.8f}*on,{zoom_end})':d=1:"
+        f"x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={_OUT_W}x{_OUT_H}:fps={fps}"
+    )
+
+
+def _base_zoom_vf():
+    """일반 비트 기본 크롭+줌(정적, 저비용) — 원본과 프레임 구도만 살짝 달라지게."""
+    w, h = int(_OUT_W * _BASE_ZOOM), int(_OUT_H * _BASE_ZOOM)
+    return f"scale={w}:{h}:force_original_aspect_ratio=increase,crop={_OUT_W}:{_OUT_H}"
 # 하단 자막 바(원본 소각 자막을 덮는다) + 한 줄 자막 스타일.
 _BAR_H = 300
 _CAP_FONTSIZE = 52      # 짧은 1줄 구절이라 여유 있음 → 키움
@@ -282,8 +321,9 @@ def _caption_vf(narration, dur, has_font, work, idx):
 def _render_mix(edit_plan, tts_paths, source_video_paths, work):
     """각 비트를 [소스영상+TTS]로 렌더(우리 자막 없음) → concat → mix_raw.mp4 경로.
     자막을 굽지 않으므로 이후 VMake 자막제거가 우리 자막을 지우지 않는다.
-    -vf는 우리 자막 vf가 아니라 규격 통일용 base(scale/crop)만 쓴다."""
-    base_vf = f"scale={_OUT_W}:{_OUT_H}:force_original_aspect_ratio=increase,crop={_OUT_W}:{_OUT_H}"
+    -vf는 우리 자막 vf가 아니라 규격 통일용 base(scale/crop)만 쓴다.
+    반중복탐지 회피(항상 자동): 훅·반전 비트는 켄번즈 줌, 나머지는 기본 크롭+줌."""
+    important = _important_beat_indices(edit_plan["beats"])
     beat_clips = []
     for beat in edit_plan["beats"]:
         idx = beat["beat_idx"]
@@ -295,6 +335,7 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work):
         src = source_video_paths[ref["video_id"]]
         src_dur = _probe_duration(src)
         clip = work / f"beat_{idx}.mp4"
+        vf = _kenburns_vf(tts_dur) if idx in important else _base_zoom_vf()
         # 나레이션 길이(tts_dur)만큼 소스를 ref["start"]부터 **이어서(연속)** 1배속
         # 재생. 시작점부터 tts_dur가 원본 끝을 넘으면 시작을 앞으로 당겨 연속 footage
         # 를 확보한다. 원본 전체가 나레이션보다 짧을 때만 루프한다.
@@ -306,7 +347,7 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work):
             "ffmpeg", "-y",
             *loop, "-ss", f"{start:.3f}", "-i", str(src),
             "-i", str(tts),
-            "-vf", base_vf, "-r", "30",
+            "-vf", vf, "-r", "30",
             "-map", "0:v:0", "-map", "1:a:0",
             "-t", str(tts_dur),
             "-c:v", "libx264", "-c:a", "aac", "-pix_fmt", "yuv420p", str(clip),

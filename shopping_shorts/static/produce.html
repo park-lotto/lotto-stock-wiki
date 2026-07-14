@@ -100,10 +100,10 @@
 
     <!-- 2~8) 자리 (Phase별로 채움) -->
     <section class="panel" data-step="1">
-      <h3>2 · 영상믹스</h3>
-      <div class="sub">1단계 확정 대본을 소스 영상 장면에 매칭합니다(나레이션은 그대로).</div>
+      <h3>2 · 영상</h3>
+      <div class="sub">1단계 확정 대본을 소스 영상 장면에 매칭합니다(나레이션은 그대로). 1개만 넣으면 그 영상 안에서 구간을 순서편집, 2개 이상이면 여러 영상을 믹스합니다.</div>
       <div id="mixScriptPeek" class="hint" style="margin-bottom:10px"></div>
-      <div style="font-size:13px;margin-bottom:4px">소스 영상 URL (2개 이상)</div>
+      <div style="font-size:13px;margin-bottom:4px">소스 영상 URL (1개=순서편집 · 2개 이상=믹스)</div>
       <div id="mixUrls">
         <div class="row" style="margin-bottom:6px"><input class="mixUrl" type="text" placeholder="인스타 릴스 URL" style="width:100%;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px"></div>
         <div class="row" style="margin-bottom:6px"><input class="mixUrl" type="text" placeholder="인스타 릴스 URL" style="width:100%;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px"></div>
@@ -316,7 +316,7 @@
   </main>
 
 <script>
-const STEPS = ["대본","영상믹스","자막제거","TTS","꾸미기","썸네일","SEO","최종검수"];
+const STEPS = ["대본","영상","자막제거","TTS","꾸미기","썸네일","SEO","최종검수"];
 let cur = 0;
 
 function renderSteps(){
@@ -926,7 +926,7 @@ function _consumeProduceHandoff(){
 async function startProduceMix(){
   if(!STATE.script){ alert('1단계에서 대본을 먼저 확정하세요'); return; }
   const urls=[...document.querySelectorAll('.mixUrl')].map(i=>i.value.trim()).filter(Boolean);
-  if(urls.length<2){ alert('소스 영상 URL 2개 이상 입력'); return; }
+  if(urls.length<1){ alert('소스 영상 URL을 1개 이상 입력하세요'); return; }
   const st=document.getElementById('mixStatus'); st.textContent='⏳ 시작 중…';
   document.getElementById('mixReview').innerHTML='';
   try{

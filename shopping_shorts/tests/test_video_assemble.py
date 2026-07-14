@@ -169,3 +169,49 @@ def test_burn_captions_signature():
     params = list(inspect.signature(va._burn_captions).parameters)
     assert params[0] == "in_video"
     assert "edit_plan" in params and "out_path" in params
+
+
+# ── 반중복탐지 회피(2026-07-14) — 켄번즈 줌(훅·반전) + 기본 크롭줌(나머지) ──
+
+def test_important_beat_indices_picks_hook_and_reversal_roles():
+    beats = [
+        {"beat_idx": 0, "role": "훅"},
+        {"beat_idx": 1, "role": "페인포인트"},
+        {"beat_idx": 2, "role": "반전"},
+        {"beat_idx": 3, "role": "실용"},
+        {"beat_idx": 4, "role": "CTA"},
+    ]
+    assert va._important_beat_indices(beats) == {0, 2}
+
+
+def test_important_beat_indices_falls_back_to_first_beat_when_no_role():
+    # produce.html 2단계(given_script 모드)는 role이 안 채워짐(edit_plan._SCRIPTED_PROMPT
+    # 가 role을 요구하지 않음) — 그때는 첫 비트만 켄번즈 대상으로 폴백.
+    beats = [{"beat_idx": 0, "role": ""}, {"beat_idx": 1, "role": ""}]
+    assert va._important_beat_indices(beats) == {0}
+
+
+def test_important_beat_indices_empty_beats():
+    assert va._important_beat_indices([]) == set()
+
+
+def test_base_zoom_vf_targets_output_resolution():
+    vf = va._base_zoom_vf()
+    assert f"crop={va._OUT_W}:{va._OUT_H}" in vf
+    assert "scale=" in vf
+
+
+def test_kenburns_vf_ramps_zoom_via_output_frame_number():
+    # 'zoom+step' self-reference는 비디오 입력에서 상태가 안 이어지는 버그가 있어
+    # (2026-07-14 로컬 ffmpeg 실측: 프레임 크기 89px→89px, 안 움직임) 출력 프레임
+    # 번호 'on'을 직접 식에 넣는 방식으로 고쳤다 — 그 표현이 살아있는지 회귀 방지.
+    vf = va._kenburns_vf(4.0, fps=30)
+    assert "zoompan" in vf
+    assert "*on" in vf          # 'on' 기반 — 'zoom+' 자기참조 방식으로 되돌아가면 실패
+    assert "zoom+" not in vf
+    assert f"s={va._OUT_W}x{va._OUT_H}" in vf
+
+
+def test_kenburns_vf_handles_zero_duration_without_division_error():
+    vf = va._kenburns_vf(0.0)
+    assert "zoompan" in vf
