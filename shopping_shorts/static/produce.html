@@ -586,9 +586,7 @@ function applyDefaultStyleOnEntry(){
   const sb=document.getElementById('sceneBg');
   if(sb && !sb.checked && typeof MIX_JOB!=='undefined' && MIX_JOB){
     sb.checked=true;
-    window._autoScene=true;
-    try{ toggleSceneBg(); }catch(e){}
-    setTimeout(()=>{window._autoScene=false;},0);
+    try{ toggleSceneBg(true); }catch(e){}
   }
   renderStyleCards();
 }
@@ -698,13 +696,13 @@ async function uploadBgm(input){
 function updateBgmVol(){ const v=+document.getElementById('bgmVol').value; document.getElementById('bgmVolV').textContent=v;
   if(STATE.deco&&STATE.deco.bgm) STATE.deco.bgm.volume=v; }
 // 🖼 실장면 배경 — 매칭된 소스 프레임을 미리보기 배경으로(기본 흰색). 스타일 판단을 실제 영상 위에서.
-function toggleSceneBg(){
+function toggleSceneBg(silent){
   const on=document.getElementById('sceneBg').checked;
   const img=document.getElementById('hcPreviewBg'), pv=document.getElementById('hcPreview');
   if(!on){ img.style.display='none'; pv.style.background='#ffffff'; return; }
   if(!MIX_JOB){ alert('2단계에서 영상 매칭을 먼저 실행하세요'); document.getElementById('sceneBg').checked=false; return; }
   img.onload=()=>{ img.style.display='block'; };
-  img.onerror=()=>{ img.style.display='none'; document.getElementById('sceneBg').checked=false; if(!window._autoScene) alert('실장면 배경을 불러오지 못했습니다(매칭 완료 후 가능)'); };
+  img.onerror=()=>{ img.style.display='none'; document.getElementById('sceneBg').checked=false; if(!silent) alert('실장면 배경을 불러오지 못했습니다(매칭 완료 후 가능)'); };
   img.src='/api/produce/mix/poster/'+MIX_JOB+'?t='+Date.now();
 }
 function clearBgm(){ if(STATE.deco) STATE.deco.bgm=null; const el=document.getElementById('bgmFile'); if(el) el.value=''; const st=document.getElementById('bgmStatus'); if(st) st.textContent='제거됨'; }
