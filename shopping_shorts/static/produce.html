@@ -443,6 +443,20 @@ const FULL_PRESETS=[
   {name:'정보전달 블루', chip:'#1E5AA8',
     hc:{font:'Pretendard-ExtraBold.otf',color:'#1E5AA8',weight:900,size:64,x:50,y:12,outline:true,outline_color:'#FFFFFF',outline_w:7},
     cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:52,y:84,outline:false,box:true,box_color:'#1E5AA8',box_pad:14,box_opacity:88,effect:'fade'}},
+  {name:'옐로 2톤 A', chip:'#FFE100',
+    hc:{font:'GmarketSansBold.otf',color:'#FFFFFF',weight:900,size:38,x:50,y:8,outline:true,outline_color:'#000000',outline_w:6},
+    extra:[{text:'',font:'GmarketSansBold.otf',color:'#FFE100',size:68,x:50,y:19,outline:true,outline_color:'#000000',outline_w:8}],
+    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:52,y:84,outline:true,outline_color:'#000000',outline_w:6,box:false,effect:'fade'}},
+  {name:'옐로 2톤 B(좌측)', chip:'#FFE100',
+    hc:{font:'BMDOHYEON.ttf',color:'#FFFFFF',weight:900,size:36,x:32,y:9,outline:true,outline_color:'#000000',outline_w:6},
+    extra:[{text:'',font:'BMDOHYEON.ttf',color:'#FFE100',size:64,x:32,y:19,outline:true,outline_color:'#000000',outline_w:7}],
+    cap:{font:'SUIT-Bold.otf',color:'#FFFFFF',size:50,y:84,outline:true,outline_color:'#000000',outline_w:6,box:false,effect:'slide'}},
+  {name:'네온 글로우 화이트', chip:'#00E5FF',
+    hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:60,x:50,y:14,outline:true,outline_color:'#00E5FF',outline_w:9},
+    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:50,y:84,outline:true,outline_color:'#00E5FF',outline_w:7,box:false,effect:'fade'}},
+  {name:'네온 글로우 센터', chip:'#00E5FF',
+    hc:{font:'SUIT-Bold.otf',color:'#FFFFFF',weight:900,size:58,x:50,y:16,outline:true,outline_color:'#00D9E8',outline_w:8},
+    cap:{font:'SUIT-Bold.otf',color:'#FFFFFF',size:48,y:84,outline:true,outline_color:'#00D9E8',outline_w:6,box:false,effect:'pop'}},
 ];
 function renderFullPresets(){
   const box=document.getElementById('fullPresets'); if(!box) return;
@@ -468,7 +482,17 @@ function applyConfig(h, c){
   }
 }
 function applyFullPreset(i){
-  applyConfig(FULL_PRESETS[i].hc, FULL_PRESETS[i].cap);
+  const p = FULL_PRESETS[i];
+  applyConfig(p.hc, p.cap);
+  STATE.deco = STATE.deco || {extra_texts: []};
+  if(p.extra){
+    // 프리셋의 extra는 텍스트가 비어있음(스타일만 지정) — 기존 문구가 있으면 유지, 없으면 빈칸
+    const prevText = (STATE.deco.extra_texts[0] && STATE.deco.extra_texts[0].text) || '';
+    STATE.deco.extra_texts = p.extra.map((e,idx)=>({...e, text: idx===0 ? prevText : (e.text||'')}));
+  } else {
+    STATE.deco.extra_texts = [];
+  }
+  renderExtraTexts(); renderExtraPreview();
   document.querySelectorAll('.fullPreset').forEach((b,idx)=>b.style.outline = idx===i?'2px solid var(--accent2)':'none');
 }
 // ── 💾 내 프리셋(localStorage) — 사용자가 만든 완성 스타일을 딸깍 축적 ──
