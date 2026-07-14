@@ -44,3 +44,18 @@ def test_resolve_skips_unknown_and_missing_file(tmp_path):
         {"asset_id": "sparkle"},                 # 매니페스트엔 있으나 파일 실물 없음 → skip
     ]
     assert resolve_layers(layers, str(d)) == []
+
+
+def test_resolve_handles_none_and_empty(tmp_path):
+    d = _make_assets(tmp_path)
+    assert resolve_layers(None, str(d)) == []
+    assert resolve_layers([], str(d)) == []
+
+
+def test_resolve_skips_entry_without_file(tmp_path):
+    d = tmp_path / "motion"
+    d.mkdir(parents=True)
+    (d / "manifest.json").write_text(json.dumps({"assets": [
+        {"id": "nofile", "type": "sticker", "default": {}},  # file 키 없음 → skip
+    ]}, ensure_ascii=False), encoding="utf-8")
+    assert resolve_layers([{"asset_id": "nofile"}], str(d)) == []

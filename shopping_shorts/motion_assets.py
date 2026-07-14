@@ -1,7 +1,6 @@
 """모션 자산 매니페스트 로드 + 레이어(asset_id) → 실경로·기본배치 해석.
 Remotion(Node)과 무관한 순수 Python — 프리렌더된 자산 파일과 manifest.json만 읽는다."""
 import json
-import os
 from pathlib import Path
 
 # 기본 자산 폴더(리포 내 프리렌더 자산). 호출부가 override 가능.
@@ -26,24 +25,27 @@ def resolve_layers(layers, assets_dir=DEFAULT_ASSETS_DIR):
     """
     manifest = load_manifest(assets_dir)
     resolved = []
-    for L in layers or []:
-        aid = L.get("asset_id")
+    for layer in layers or []:
+        aid = layer.get("asset_id")
         entry = manifest.get(aid)
         if not entry:
             continue
-        path = Path(assets_dir) / entry.get("file", "")
+        fname = entry.get("file")
+        if not fname:   # file 키 없음/빈 값 → 자산 경로로 오인 방지
+            continue
+        path = Path(assets_dir) / fname
         if not path.exists():
             continue
         default = entry.get("default") or {}
         merged = {
             "asset_id": aid,
             "_abspath": str(path),
-            "start": float(L.get("start") or 0),
-            "dur": L.get("dur", None),   # None이면 전체 재생(enable 생략)
-            "x": L.get("x", default.get("x", 50)),
-            "y": L.get("y", default.get("y", 50)),
-            "width": L.get("width", default.get("width")),
-            "alpha": L.get("alpha", default.get("alpha", 1)),
+            "start": float(layer.get("start") or 0),
+            "dur": layer.get("dur", None),   # None이면 전체 재생(enable 생략)
+            "x": layer.get("x", default.get("x", 50)),
+            "y": layer.get("y", default.get("y", 50)),
+            "width": layer.get("width", default.get("width")),
+            "alpha": layer.get("alpha", default.get("alpha", 1)),
         }
         resolved.append(merged)
     return resolved
