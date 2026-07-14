@@ -111,3 +111,6 @@ output/weather_state.json
 
 # 장면 수집 산출물(프레임/클립)
 out/scenes/
+
+# Remotion 자산생성기 의존성 (로컬 전용 — 자산은 프리렌더 커밋)
+shopping_shorts/motion/node_modules/
