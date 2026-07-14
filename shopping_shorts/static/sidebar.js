@@ -3,18 +3,17 @@
    드리프트되고 mix 페이지엔 아예 없던 문제를 하나로 통일(2026-07-13). */
 (function () {
   var NAV = [
-    { label: "트렌드 리서치", items: [
-      { icon: "📊", text: "레퍼런스 랭킹",    href: "/" },
-      { icon: "🔎", text: "채널 발굴·정리",   href: "/discover" },
-      { icon: "🔍", text: "제품 찾기",        href: "/find" },
-      { icon: "📈", text: "실시간 쇼핑순위",   href: null },
+    { label: "리서치", items: [
+      { icon: "📊", text: "레퍼런스 랭킹",   href: "/" },
+      { icon: "⭐", text: "영상 즐겨찾기",   href: "/collection" },
+      { icon: "📚", text: "대본 즐겨찾기",   href: "/library" },
+      { icon: "🔎", text: "신규채널 픽업",   href: "/discover" },
     ] },
-    { label: "채널 & 콘텐츠", items: [
-      { icon: "👁", text: "내 모니터링 리스트", href: null },
-      { icon: "📚", text: "대본 위키(도서관)",  href: "/library" },
-      { icon: "🎬", text: "영상 제작",         href: "/produce" },
-      { icon: "📁", text: "레퍼런스 모음집",    href: "/collection" },
-      { icon: "💬", text: "소통 큐",          href: "/outreach" },
+    { label: "제작", items: [
+      { icon: "🎬", text: "영상 제작소",     href: "/produce" },
+    ] },
+    { label: "소통", items: [
+      { icon: "💬", text: "인스타 소통공간", href: "/outreach" },
     ] },
   ];
 
