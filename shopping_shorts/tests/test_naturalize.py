@@ -28,3 +28,22 @@ def test_off_is_noop():
     p = _only("normalize")
     p["normalize"]["on"] = False
     assert naturalize("50%", p) == "50%"
+
+def test_spoken_style_converts_formal_endings():
+    p = _only("spoken_style")
+    p["spoken_style"]["intensity"] = 1.0   # 전부 변환
+    # 문어체 종결 → 서울 구어체
+    assert naturalize("이건 정말 좋습니다.", p) == "이건 정말 좋아요."
+    assert naturalize("가격이 저렴합니다.", p) == "가격이 저렴해요."
+
+def test_spoken_style_intensity_partial_deterministic():
+    p = _only("spoken_style")
+    p["spoken_style"]["intensity"] = 0.5   # 절반만(앞에서부터 결정적)
+    src = "좋습니다. 쌉니다. 편합니다. 예쁩니다."  # 4개 종결
+    out = naturalize(src, p)
+    # 결정적: 같은 입력 두 번 → 동일
+    assert out == naturalize(src, p)
+
+def test_spoken_style_off_noop():
+    p = _only("spoken_style"); p["spoken_style"]["on"] = False
+    assert naturalize("좋습니다.", p) == "좋습니다."

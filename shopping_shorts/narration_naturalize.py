@@ -80,7 +80,41 @@ def _normalize(text, cfg):
     return text
 
 
-_STAGES = [("normalize", _normalize)]
+# spoken_style: 문어체 종결어미 → 서울 구어체. 매핑은 시작점(작업대에서 확장).
+_SPOKEN_MAP = [
+    ("있습니다", "있어요"), ("없습니다", "없어요"), ("좋습니다", "좋아요"),
+    ("같습니다", "같아요"), ("합니다", "해요"), ("됩니다", "돼요"),
+    ("입니다", "이에요"), ("습니다", "어요"), ("ㅂ니다", "요"),
+    ("드립니다", "드려요"), ("겠습니다", "겠어요"),
+]
+
+
+def _spoken_style(text, cfg):
+    intensity = cfg.get("intensity", 0.4)
+    # 종결(문장부호 앞) 위치를 찾아 앞에서부터 intensity 비율만 변환(결정적)
+    sentences = re.split(r"(?<=[.!?…])\s*", text)
+    hits = []
+    for si, s in enumerate(sentences):
+        for a, b in _SPOKEN_MAP:
+            if re.search(a + r"(?=[.!?…]?$)", s):
+                hits.append(si)
+                break
+    take = int(len(hits) * intensity + 1e-9)  # 앞에서부터 take개만
+    take = min(len(hits), take if intensity < 1.0 else len(hits))
+    chosen = set(hits[:take])
+    out = []
+    for si, s in enumerate(sentences):
+        if si in chosen:
+            for a, b in _SPOKEN_MAP:
+                new = re.sub(a + r"(?=[.!?…]?$)", b, s)
+                if new != s:
+                    s = new
+                    break
+        out.append(s)
+    return " ".join(x for x in out if x != "").strip() if " " in text else "".join(out)
+
+
+_STAGES = [("normalize", _normalize), ("spoken_style", _spoken_style)]
 
 
 def naturalize(text, profile=None, *, beat_role=None, beat_index=None, beat_total=None):
