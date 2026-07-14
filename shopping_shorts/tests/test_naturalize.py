@@ -86,3 +86,24 @@ def test_endings_partial_deterministic():
 def test_endings_off_noop():
     p = _only("endings"); p["endings"]["on"] = False
     assert naturalize("좋아요.", p) == "좋아요."
+
+def test_fillers_prepends_one_and_caps():
+    p = _only("fillers")
+    p["fillers"]["intensity"] = 1.0
+    p["fillers"]["bank"] = ["음"]
+    out = naturalize("이거 진짜 좋아요", p)
+    assert out.startswith("음, ")                 # 앞에 추임새 1개
+    # 하드캡: intensity=1이어도 max_fillers_per_text(기본1) 초과 안 함
+    assert out.count("음,") == 1
+
+def test_fillers_off_noop():
+    p = _only("fillers"); p["fillers"]["on"] = False
+    assert naturalize("이거 좋아요", p) == "이거 좋아요"
+
+def test_fillers_bank_selection_deterministic_by_beat():
+    p = _only("fillers"); p["fillers"]["intensity"] = 1.0
+    p["fillers"]["bank"] = ["음", "아", "그"]
+    a = naturalize("좋아요", p, beat_index=0, beat_total=3)
+    b = naturalize("좋아요", p, beat_index=1, beat_total=3)
+    assert a != b            # 비트마다 다른 필러(결정적 순환)
+    assert a == naturalize("좋아요", p, beat_index=0, beat_total=3)

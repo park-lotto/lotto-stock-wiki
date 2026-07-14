@@ -153,9 +153,21 @@ def _endings(text, cfg):
     return "".join(out)
 
 
+def _fillers(text, cfg, ctx):
+    intensity = cfg.get("intensity", 0.2)
+    bank = cfg.get("bank") or ["음"]
+    cap = ctx["caps"].get("max_fillers_per_text", 1)
+    # intensity 임계: 낮으면 아예 삽입 안 함(오버금지 기본)
+    if intensity < 0.15 or cap <= 0:
+        return text
+    bi = ctx["beat_index"] or 0
+    filler = bank[bi % len(bank)]         # 비트별 결정적 순환
+    return f"{filler}, {text}"
+
+
 _STAGES = [("normalize", _normalize), ("spoken_style", _spoken_style),
            ("pronunciation", _pronunciation), ("phrasing", _phrasing),
-           ("endings", _endings)]
+           ("endings", _endings), ("fillers", _fillers)]
 
 
 def naturalize(text, profile=None, *, beat_role=None, beat_index=None, beat_total=None):
