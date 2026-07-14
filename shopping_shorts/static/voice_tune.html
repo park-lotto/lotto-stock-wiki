@@ -1,0 +1,116 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>보이스 튜닝 작업대</title>
+<style>
+ body{font-family:system-ui,sans-serif;margin:0;display:flex;height:100vh}
+ #left{flex:1;overflow:auto;padding:16px;border-right:1px solid #ddd}
+ #right{width:320px;padding:16px;overflow:auto;flex-shrink:0}
+ .card{border:1px solid #ddd;border-radius:8px;padding:10px;margin-bottom:10px}
+ .orig{color:#333;font-weight:600}
+ .conv{color:#0a7;font-size:14px;margin:4px 0;white-space:pre-wrap}
+ .diff .sub,.diff .del{color:#e33;font-weight:700}
+ .diff .ins{color:#c80;font-weight:700}
+ .row{display:flex;align-items:center;gap:8px;margin:6px 0}
+ .stage{display:flex;align-items:center;gap:6px;margin:4px 0;font-size:13px}
+ .stage input[type=range]{flex:1}
+ button{cursor:pointer}
+</style></head><body>
+<div id="left">
+  <div class="row"><select id="preset"></select>
+    <button onclick="synthAll()">전체 재합성</button></div>
+  <div id="cards"></div>
+</div>
+<div id="right">
+  <h3>프로파일</h3><div id="stages"></div>
+  <div class="row">seed <input id="seed" type="number" value="42" style="width:70px">
+    N-best <input id="nbest" type="number" value="3" style="width:50px"></div>
+  <button onclick="freeze()">💾 이 프로파일 동결</button>
+  <p id="msg" style="color:#0a7"></p>
+</div>
+<script>
+const STAGES=[["normalize","정규화"],["spoken_style","구어체"],["pronunciation","연음/발음"],
+ ["phrasing","끊어읽기"],["endings","끝음"],["fillers","추임새"],
+ ["emotion_arc","감정곡선"],["intonation","억양"]];
+let corpus=[], profile={}, presetList=[];
+
+function defaultProfile(){
+ const p={caps:{max_tags_total:3,max_tags_per_beat:1,max_fillers_per_text:1}};
+ STAGES.forEach(([k])=>p[k]={on:true,intensity:0.3});
+ p.normalize={on:true}; p.pronunciation={on:true,dict:{}};
+ p.fillers={on:true,intensity:0.2,bank:["음","아","그","뭐","자"]};
+ return p;
+}
+function renderStages(){
+ document.getElementById('stages').innerHTML=STAGES.map(([k,label])=>{
+  const s=profile[k]||{on:true,intensity:0.3};
+  const slider=('intensity' in s)?`<input type=range min=0 max=1 step=0.05 value=${s.intensity}
+     oninput="setInt('${k}',this.value)">`:'';
+  return `<div class="stage"><input type=checkbox ${s.on?'checked':''}
+     onchange="setOn('${k}',this.checked)">${label}${slider}</div>`;
+ }).join('');
+}
+function setOn(k,v){profile[k]=profile[k]||{};profile[k].on=v;previewAll();}
+function setInt(k,v){profile[k]=profile[k]||{};profile[k].intensity=parseFloat(v);previewAll();}
+
+async function previewAll(){
+ for(const c of corpus){
+  const r=await fetch('/api/voice-tune/preview',{method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({text:c.text,profile:withMeta(),beat_role:c.role})});
+  const j=await r.json();
+  const el=document.getElementById('conv-'+c.id);
+  if(el)el.textContent=j.text;
+ }
+}
+function withMeta(){profile.seed=parseInt(seed.value);profile.n_best=parseInt(nbest.value);return profile;}
+function renderCards(){
+ document.getElementById('cards').innerHTML=corpus.map(c=>`
+  <div class="card">
+   <div class="orig">${c.role} · ${c.text}</div>
+   <div class="conv" id="conv-${c.id}"></div>
+   <div class="row"><button onclick="synthOne('${c.id}')">▶ 합성/재롤</button>
+     <audio id="au-${c.id}" controls style="height:32px"></audio></div>
+   <div class="diff" id="diff-${c.id}"></div>
+  </div>`).join('');
+}
+async function synthOne(id){
+ const c=corpus.find(x=>x.id===id);
+ const r=await fetch('/api/voice-tune/synth',{method:'POST',headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({text:c.text,profile:withMeta(),line_id:id,preset_id:preset.value,beat_role:c.role})});
+ const j=await r.json();
+ document.getElementById('au-'+id).src=j.audio_url+'?t='+Date.now();
+ document.getElementById('conv-'+id).textContent=j.text;
+ const d=document.getElementById('diff-'+id);
+ if(j.diff.no_asr){d.innerHTML='<span style=color:#999>ASR 미설정</span>';}
+ else d.innerHTML=j.diff.ok?'<span style=color:#0a7>✓ 오독없음</span>':
+   j.diff.words.map(w=>`<span class="${w.kind}">${w.ref||w.hyp}</span>`).join(' ');
+}
+async function synthAll(){for(const c of corpus)await synthOne(c.id);}
+async function freeze(){
+ const r=await fetch('/api/voice-tune/profile/'+preset.value,{method:'POST',
+  headers:{'Content-Type':'application/json'},body:JSON.stringify({profile:withMeta(),frozen:true})});
+ document.getElementById('msg').textContent=(await r.json()).ok?'동결 완료 ✓':'실패';
+}
+async function loadPreset(){
+ const r=await fetch('/api/voice-tune/profile/'+preset.value);
+ const j=await r.json();
+ profile=(j.profile&&Object.keys(j.profile).length)?j.profile:defaultProfile();
+ if(profile.seed)seed.value=profile.seed; if(profile.n_best)nbest.value=profile.n_best;
+ renderStages();previewAll();
+}
+async function init(){
+ // /api/voice-presets 실제 응답: {ok, groups:[{group_id,name,variants:{variant:{preset_id,...}}}]}
+ // (계획서가 가정한 {presets:[{preset_id,name,variant}]}과 다름 — groups/variants를 평탄화한다.
+ const pr=await (await fetch('/api/voice-presets?lang=KR')).json();
+ presetList=[];
+ for(const g of (pr.groups||[])){
+  for(const [variant,v] of Object.entries(g.variants||{})){
+   presetList.push({preset_id:v.preset_id, name:g.name, variant});
+  }
+ }
+ preset.innerHTML=presetList.map(p=>`<option value="${p.preset_id}">${p.name}·${p.variant||''}</option>`).join('');
+ preset.onchange=loadPreset;
+ corpus=(await (await fetch('/api/voice-tune/corpus')).json()).lines;
+ renderCards(); await loadPreset();
+}
+init();
+</script></body></html>
