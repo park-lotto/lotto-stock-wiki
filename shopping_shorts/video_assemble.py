@@ -351,6 +351,38 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work):
     return str(mix_raw)
 
 
+def _motion_layer_filters(layers, next_input_idx, vcur):
+    """해석완료 레이어 리스트(_abspath 보유) → filter_complex 조각.
+    각 레이어를 vcur 위에 투명 오버레이로 얹는다. dur=None이면 enable 생략(전체 재생).
+    반환: (input_args, fc_parts, vcur_out, next_input_idx_out).
+    - input_args: ffmpeg에 추가할 ["-i", path, ...]
+    - fc_parts: filter_complex 세미콜론 조각 리스트
+    - vcur_out: 마지막 비디오 스트림 라벨(다음 필터가 이어받음)
+    """
+    input_args = []
+    fc = []
+    idx = next_input_idx
+    for i, L in enumerate(layers or []):
+        path = L.get("_abspath")
+        if not path:
+            continue
+        input_args += ["-i", path]
+        w = L.get("width")
+        scale = f"scale={int(w)}:-1," if w else ""
+        aa = max(0.0, min(1.0, float(L.get("alpha", 1))))
+        xf = min(1.0, max(0.0, float(L.get("x", 50)) / 100.0))
+        yf = min(1.0, max(0.0, float(L.get("y", 50)) / 100.0))
+        lab, out = f"ml{i}", f"mlv{i}"
+        fc.append(f"[{idx}:v]{scale}format=rgba,colorchannelmixer=aa={aa:.2f}[{lab}]")
+        start = float(L.get("start") or 0)
+        dur = L.get("dur")
+        en = f":enable='between(t,{start:.3f},{start + float(dur):.3f})'" if dur is not None else ""
+        fc.append(f"[{vcur}][{lab}]overlay=x=W*{xf:.4f}-w/2:y=H*{yf:.4f}-h/2{en}[{out}]")
+        vcur = out
+        idx += 1
+    return input_args, fc, vcur, idx
+
+
 def _hex_to_ff(c, default="0xFFFFFF"):
     """'#FF8800' → '0xFF8800' (ffmpeg drawtext color). 이상하면 default."""
     c = (c or "").strip().lstrip("#")

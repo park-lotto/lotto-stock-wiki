@@ -59,3 +59,30 @@ def test_resolve_skips_entry_without_file(tmp_path):
         {"id": "nofile", "type": "sticker", "default": {}},  # file 키 없음 → skip
     ]}, ensure_ascii=False), encoding="utf-8")
     assert resolve_layers([{"asset_id": "nofile"}], str(d)) == []
+
+
+from shopping_shorts.video_assemble import _motion_layer_filters
+
+
+def test_motion_layer_filters_builds_overlay_chain():
+    layers = [
+        {"_abspath": "/a/swipe.mov", "start": 1.5, "dur": 0.6, "x": 50, "y": 50, "width": 720, "alpha": 1},
+        {"_abspath": "/a/spark.mov", "start": 0, "dur": None, "x": 50, "y": 40, "width": 300, "alpha": 0.8},
+    ]
+    inputs, fc, vcur, nxt = _motion_layer_filters(layers, next_input_idx=1, vcur="v0")
+    # 입력 2개가 인덱스 1,2로 추가된다
+    assert inputs == ["-i", "/a/swipe.mov", "-i", "/a/spark.mov"]
+    assert nxt == 3
+    assert vcur == "mlv1"                       # 마지막 레이어 출력 라벨
+    joined = ";".join(fc)
+    # 첫 레이어: width 스케일 + enable(구간)
+    assert "scale=720:-1" in joined
+    assert "between(t,1.500,2.100)" in joined
+    # 둘째 레이어: dur=None → enable 없음, alpha 0.8
+    assert "colorchannelmixer=aa=0.80" in joined
+    assert joined.count("enable=") == 1        # 전체재생 레이어는 enable 없음
+
+
+def test_motion_layer_filters_empty_is_noop():
+    inputs, fc, vcur, nxt = _motion_layer_filters([], next_input_idx=1, vcur="v0")
+    assert inputs == [] and fc == [] and vcur == "v0" and nxt == 1
