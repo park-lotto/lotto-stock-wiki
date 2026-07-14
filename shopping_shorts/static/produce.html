@@ -491,11 +491,12 @@ let STYLE_TOUCHED=false;
 const FEATURED = ['모던 화이트','임팩트 옐로','옐로 2톤 A','네온 글로우 화이트','레드 강조'];
 let MORE_OPEN = false;
 let POSTER_URL_CACHE = null;
+let PICKED_STYLE_IDX = -1;
 function currentPosterUrl(){
-  // MIX_JOB 있으면 실장면 poster, 없으면 null(카드 폴백=chip 그라데이션). 한 번 계산해 캐시.
-  if(POSTER_URL_CACHE!==null) return POSTER_URL_CACHE || null;
-  POSTER_URL_CACHE = (typeof MIX_JOB!=='undefined' && MIX_JOB) ? ('/api/produce/mix/poster/'+MIX_JOB) : '';
-  return POSTER_URL_CACHE || null;
+  // 실 poster URL만 캐시. MIX_JOB 아직 없으면 캐시하지 말고 null(나중에 매칭되면 그때 계산됨).
+  if(POSTER_URL_CACHE) return POSTER_URL_CACHE;
+  if(typeof MIX_JOB!=='undefined' && MIX_JOB){ POSTER_URL_CACHE = '/api/produce/mix/poster/'+MIX_JOB; return POSTER_URL_CACHE; }
+  return null;
 }
 function styleCardHTML(p, idx, selIdx){
   const sample = ((document.getElementById('hcText')||{}).value||'').trim() || '이거 실화?';
@@ -522,6 +523,7 @@ function styleCardHTML(p, idx, selIdx){
   </button>`;
 }
 function selectedStyleIdx(){
+  if(PICKED_STYLE_IDX>=0) return PICKED_STYLE_IDX;
   // STATE.headcopy가 가리키는 현재 스타일 추정: 폰트+색 일치하는 첫 프리셋(없으면 -1)
   const h = (STATE && STATE.headcopy)||{};
   return FULL_PRESETS.findIndex(p => p.hc && p.hc.font===h.font && p.hc.color===h.color);
@@ -536,7 +538,7 @@ function renderStyleCards(){
   const mb=document.getElementById('moreStylesBtn'); if(mb) mb.textContent = MORE_OPEN ? '− 접기' : '+ 더보기';
 }
 function toggleMoreStyles(){ MORE_OPEN=!MORE_OPEN; renderStyleCards(); }
-function pickStyleCard(i){ STYLE_TOUCHED=true; applyFullPreset(i); renderStyleCards(); }
+function pickStyleCard(i){ PICKED_STYLE_IDX=i; STYLE_TOUCHED=true; applyFullPreset(i); renderStyleCards(); }
 // renderFullPresets 이름을 참조하는 기존 호출부 호환용 별칭
 function renderFullPresets(){ renderStyleCards(); }
 function applyConfig(h, c){
