@@ -212,16 +212,27 @@ def _elem_lines(structure, elem_modes, category_lookup):
     return "\n".join(lines)
 
 
-def generate_variations(structure, full_text, elem_modes, category_lookup, mode="A",
-                         my_topic="", n=3, max_key_tries=3):
-    """구조+대본을 재료로 요소별 모드 지시에 맞춰 초안 리스트 반환. 실패/무키면 []."""
+def generate_variations(structure, full_text, elem_modes, category_lookup, mode="remake",
+                        my_topic="", subject="", n=3, max_key_tries=3):
+    """구조+대본을 재료로 요소별 모드 지시에 맞춰 초안 리스트 반환. 실패/무키면 [].
+
+    mode: "remake"(원본 소재 고정, 표현만 재작성) 또는 "transplant"(구조만 빌려 내 주제로).
+    구버전 "A"/"B"도 하위호환으로 각각 remake/transplant에 매핑된다.
+    """
     if not comment_gen.SHORTS_GEMINI_KEYS or not (full_text or "").strip():
         return []
     n = max(1, min(int(n or 3), 5))
-    if mode == "B" and (my_topic or "").strip():
-        topic_line = f"주제: 구조만 빌리고 아래 '내 주제/제품'에 맞춰 새로 써라.\n내 주제/제품: {my_topic.strip()}"
+    mode = {"A": "remake", "B": "transplant"}.get(mode, mode)  # 구버전 하위호환
+    if mode == "transplant" and (my_topic or "").strip():
+        topic_line = (f"주제: 구조만 빌리고 아래 '내 주제/제품'에 맞춰 새로 써라."
+                      f"\n내 주제/제품: {my_topic.strip()}")
     else:
-        topic_line = "주제: 원본과 같은 주제 영역에서, 내용은 새롭게 신선하게 변주"
+        subj = (subject or "").strip()
+        subj_line = f"\n소재(고정): {subj}" if subj else ""
+        topic_line = (
+            "주제: 아래 원본의 '소재'를 그대로 유지한 리메이크다. 원본의 제품·사실·장면·정보는 "
+            "바꾸지 말고, 표현(훅 문장·어휘·문장 순서·말투)만 새로 써서 원문을 그대로 베끼지 않게 "
+            "(중복 회피) 리라이트하라. 없던 내용이나 다른 제품을 지어내지 마라." + subj_line)
     prompt = _GEN_PROMPT.format(
         full_text=full_text[:3000], elems=_elem_lines(structure or {}, elem_modes, category_lookup),
         topic_line=topic_line, n=n)

@@ -136,3 +136,54 @@ def test_detect_subject_bad_json(monkeypatch):
 def test_detect_subject_strips_whitespace(monkeypatch):
     _wire(monkeypatch, json.dumps({"subject": "  물때 청소 \n"}))
     assert script_generate.detect_subject("대본") == "물때 청소"
+
+
+def _capture_prompt(mp, holder):
+    """generate_content에 들어간 prompt를 holder['p']에 담고 정상 JSON 반환하도록 배선."""
+    mp.setattr(comment_gen, "SHORTS_GEMINI_KEYS", ["k"])
+    mp.setattr(comment_gen, "_current_key_and_idx", lambda: ("k", 0))
+    def gen(model, contents, config):
+        holder["p"] = contents
+        return type("R", (), {"text": json.dumps({"drafts": [{"hook": "h", "script": "s", "applied": "a"}]})})()
+    models = type("M", (), {"generate_content": staticmethod(gen)})()
+    mp.setattr(comment_gen, "_client_for_key", lambda key: type("C", (), {"models": models})())
+
+
+def test_remake_mode_prompt_locks_subject(monkeypatch):
+    h = {}
+    _capture_prompt(monkeypatch, h)
+    script_generate.generate_variations(_STRUCT, "원본 대본", {}, {}, mode="remake",
+                                        subject="무선 가습기 물때 청소")
+    assert "소재(고정): 무선 가습기 물때 청소" in h["p"]
+    assert "중복 회피" in h["p"]
+    assert "신선하게 변주" not in h["p"]  # 옛 A 문구 부재
+
+
+def test_transplant_mode_prompt_uses_my_topic(monkeypatch):
+    h = {}
+    _capture_prompt(monkeypatch, h)
+    script_generate.generate_variations(_STRUCT, "원본 대본", {}, {}, mode="transplant",
+                                        my_topic="여름 결로 방지 커튼")
+    assert "내 주제/제품: 여름 결로 방지 커튼" in h["p"]
+
+
+def test_legacy_mode_A_maps_to_remake(monkeypatch):
+    h = {}
+    _capture_prompt(monkeypatch, h)
+    script_generate.generate_variations(_STRUCT, "원본", {}, {}, mode="A", subject="물때 청소")
+    assert "소재(고정): 물때 청소" in h["p"]
+
+
+def test_legacy_mode_B_maps_to_transplant(monkeypatch):
+    h = {}
+    _capture_prompt(monkeypatch, h)
+    script_generate.generate_variations(_STRUCT, "원본", {}, {}, mode="B", my_topic="커튼")
+    assert "내 주제/제품: 커튼" in h["p"]
+
+
+def test_remake_without_subject_still_locks_original(monkeypatch):
+    h = {}
+    _capture_prompt(monkeypatch, h)
+    script_generate.generate_variations(_STRUCT, "원본 대본 원문", {}, {}, mode="remake", subject="")
+    assert "중복 회피" in h["p"]
+    assert "소재(고정):" not in h["p"]  # 빈 소재면 명시줄 생략, full_text로만 잠금
