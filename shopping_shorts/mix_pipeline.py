@@ -17,11 +17,11 @@ from shopping_shorts import tts
 from shopping_shorts import audio_post
 from shopping_shorts.video_assemble import assemble
 from shopping_shorts.motion_assets import resolve_layers, DEFAULT_ASSETS_DIR
+from shopping_shorts.vmake_client import remove_subtitles
+from shopping_shorts.narration_naturalize import naturalize
 
 # 모션 자산 폴더(테스트가 monkeypatch로 교체 가능하도록 모듈 상수로 노출)
 MOTION_ASSETS_DIR = DEFAULT_ASSETS_DIR
-from shopping_shorts.vmake_client import remove_subtitles
-from shopping_shorts.narration_naturalize import naturalize
 
 
 def _source_video_id(i):
