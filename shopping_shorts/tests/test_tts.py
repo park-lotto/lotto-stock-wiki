@@ -178,3 +178,36 @@ def test_backward_compat_no_extra_keys(monkeypatch):
     tts.synthesize_tts("안녕", str(out))
     for k in ("seed", "previous_text", "next_text"):
         assert k not in captured["json"]
+
+
+def test_synthesize_best_picks_by_ranker(monkeypatch):
+    """N개 합성 후 ranker 점수 최소 take 선택. 각 take는 seed를 달리해 호출."""
+    monkeypatch.setattr(tts.config, "ELEVENLABS_API_KEY", "k")
+    seeds_seen = []
+    def fake_synth(text, out_path, **kw):
+        seeds_seen.append(kw.get("seed"))
+        with open(out_path, "wb") as f:
+            f.write(b"x")
+        return out_path
+    monkeypatch.setattr(tts, "synthesize_tts", fake_synth)
+    import tempfile; from pathlib import Path
+    d = Path(tempfile.mkdtemp())
+    # ranker: 경로 끝 숫자가 작을수록 좋음 → take0(_0) 선택
+    best = tts.synthesize_best("안녕", str(d / "b.mp3"), n=3, base_seed=10,
+                               ranker=lambda path, text: int(path.split("_")[-1].split(".")[0]))
+    assert best == str(d / "b.mp3")            # 최종 픽은 out_path로 복사
+    assert len(seeds_seen) == 3                # 3회 합성
+    assert seeds_seen == [10, 11, 12]          # seed 증분
+
+def test_synthesize_best_n1_single_call(monkeypatch):
+    monkeypatch.setattr(tts.config, "ELEVENLABS_API_KEY", "k")
+    calls = {"n": 0}
+    def fake_synth(text, out_path, **kw):
+        calls["n"] += 1
+        with open(out_path, "wb") as f: f.write(b"x")
+        return out_path
+    monkeypatch.setattr(tts, "synthesize_tts", fake_synth)
+    import tempfile; from pathlib import Path
+    out = Path(tempfile.mkdtemp()) / "b.mp3"
+    tts.synthesize_best("안녕", str(out), n=1)
+    assert calls["n"] == 1

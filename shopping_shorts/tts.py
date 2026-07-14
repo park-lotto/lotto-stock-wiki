@@ -3,6 +3,7 @@
 ElevenLabs는 Gemini와 무관한 별도 API라 전용/공유 키풀 규칙과 무관(단일 키).
 키가 없으면 개발용 무음 mp3를 반환해 파이프라인 E2E가 키 없이도 관통되게 한다.
 """
+import shutil
 import subprocess
 import time
 
@@ -80,4 +81,21 @@ def synthesize_tts(text, out_path, voice_id=None, voice_settings=None,
                 time.sleep((attempt + 1) * 2)
                 continue
             raise
+    return out_path
+
+
+def synthesize_best(text, out_path, n=1, base_seed=None, ranker=None, **kw):
+    """N개 take를 합성해 ranker 점수가 가장 낮은(=좋은) take를 out_path로 확정.
+    ranker(path, text)->float, 낮을수록 좋음. 미지정 시 첫 take. base_seed부터 +1씩."""
+    if n <= 1:
+        return synthesize_tts(text, out_path, seed=base_seed, **kw)
+    cands = []
+    for i in range(n):
+        cand = f"{out_path}_{i}.mp3"
+        seed = None if base_seed is None else base_seed + i
+        synthesize_tts(text, cand, seed=seed, **kw)
+        score = ranker(cand, text) if ranker else i
+        cands.append((score, cand))
+    cands.sort(key=lambda x: x[0])
+    shutil.copyfile(cands[0][1], out_path)
     return out_path
