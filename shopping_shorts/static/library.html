@@ -18,8 +18,7 @@
   .head h2{font-size:24px}
   .desc{color:var(--sub);font-size:13px;margin:6px 0 20px;line-height:1.6}
   .cards{display:flex;flex-direction:column;gap:18px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:14px}
-  .toprow{display:flex;gap:18px;align-items:flex-start}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;gap:18px;align-items:flex-start}
   .vid{width:260px;flex-shrink:0;display:flex;flex-direction:column;gap:8px}
   .vid video{width:100%;border-radius:10px;background:#000;max-height:440px}
   .vid .novid{width:100%;aspect-ratio:9/16;border-radius:10px;background:#0d131c;border:1px dashed var(--line);
@@ -30,7 +29,6 @@
   .info-side .sec-t:first-child{margin-top:0}
   .learn-status{font-size:11px;color:var(--sub);line-height:1.7;background:#0d131c;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
   .learn-status b{color:var(--gold);font-weight:600}
-  .bottomrow{display:flex;flex-direction:column;gap:10px}
   .ch{font-weight:600;font-size:15px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
   .ch .rm{background:none;border:1px solid var(--line);color:var(--sub);font-size:11px;border-radius:6px;padding:3px 8px;cursor:pointer;flex-shrink:0}
   .ch .rm:hover{color:#ff9b9b;border-color:#ff9b9b}
@@ -99,7 +97,7 @@
   .draft .hist-item:hover{background:#161d2b}
   .gen-load{text-align:center;color:var(--sub);padding:30px;font-size:14px}
   .gen-err{color:#ff9b9b;padding:16px;font-size:13px;text-align:center}
-  @media(max-width:768px){.sidebar{width:100%;border-right:none;border-bottom:1px solid var(--line)}.main{padding:16px 14px}.toprow{flex-direction:column}.vid{width:100%;max-width:280px}.info-side{width:100%;border-left:none;padding-left:0;border-top:1px solid var(--line);padding-top:12px}}
+  @media(max-width:768px){.sidebar{width:100%;border-right:none;border-bottom:1px solid var(--line)}.main{padding:16px 14px}.card{flex-direction:column}.vid{width:100%;max-width:280px}.info-side{width:100%;border-left:none;padding-left:0;border-top:1px solid var(--line);padding-top:12px}}
 </style>
 </head>
 <body>
@@ -172,32 +170,28 @@ function render(i){
   const beats=(s.beats||[]).map(b=>`<li><span class="lb">${esc(b.label)}</span><span class="sc">${esc(b.approx_sec||'')}</span><br>${esc(b.desc||'')}</li>`).join('');
   const devs=(s.devices||[]).map(d=>`<span>${esc(d)}</span>`).join('');
   return `<div class="card" data-category="${esc(i.category||'')}">
-    <div class="toprow">
-      <div class="vid">${video}</div>
-      <div class="body">
-        <div class="ch"><span>${esc(i.name||'')} <span class="meta">· ${esc(i.category||'')}</span></span>
-          <button class="rm" onclick="removeItem('${sc}', this)">삭제</button></div>
-        <div class="meta">팔로워 ${(i.followers||0).toLocaleString()} · 댓글 ${(i.comments||0).toLocaleString()} · 참여밀도 ${((i.density||0)*100).toFixed(2)}%</div>
-        ${s.hook_type?`<div class="hook"><span class="type">🎣 ${esc(s.hook_type)}</span><div class="line">${esc(s.hook_line||'')}</div></div>`:''}
-        ${s.one_line_why?`<div class="why">💡 ${esc(s.one_line_why)}</div>`:''}
-        <div class="tagrow">${tag('🎙 화자',s.narrator)}${tag('🎬 전개',s.development)}${tag('🎯 어필포인트',s.appeal)}${tag('🗣 말투',s.tone)}${tag('⏱',s.target_seconds?s.target_seconds+'초':'')}</div>
-        ${chars?`<div class="chars"><div class="t">👥 등장 주변인물 (스토리텔링 핵심 기법)</div><ul>${chars}</ul></div>`:''}
-        ${s.storyline?`<div><div class="sec-t">스토리라인</div><div class="story">${esc(s.storyline)}</div></div>`:''}
-        ${s.twist?`<div><div class="sec-t">✨ 발상전환</div><div class="story">${esc(s.twist)}</div></div>`:''}
-      </div>
-      <div class="info-side">
-        ${devs?`<div><div class="sec-t">설득 장치</div><div class="devices">${devs}</div></div>`:''}
-        <div class="learn-status" id="learn-${sc}" data-cat="${esc(i.category||'')}">🎓 학습현황 불러오는 중…</div>
-        <div class="row" style="flex-direction:column">
-          <button class="gen-btn" onclick="openGen('${sc}')">🎬 이 구조로 생성</button>
-          <button onclick="copyFull(this)">📋 대본 복사</button>
-          <button class="send-btn" data-sc="${sc}" onclick="sendToProduce('${sc}', this)">🎬 영상제작으로 보내기</button>
-        </div>
-      </div>
-    </div>
-    <div class="bottomrow">
+    <div class="vid">${video}</div>
+    <div class="body">
+      <div class="ch"><span>${esc(i.name||'')} <span class="meta">· ${esc(i.category||'')}</span></span>
+        <button class="rm" onclick="removeItem('${sc}', this)">삭제</button></div>
+      <div class="meta">팔로워 ${(i.followers||0).toLocaleString()} · 댓글 ${(i.comments||0).toLocaleString()} · 참여밀도 ${((i.density||0)*100).toFixed(2)}%</div>
+      ${s.hook_type?`<div class="hook"><span class="type">🎣 ${esc(s.hook_type)}</span><div class="line">${esc(s.hook_line||'')}</div></div>`:''}
+      ${s.one_line_why?`<div class="why">💡 ${esc(s.one_line_why)}</div>`:''}
+      <div class="tagrow">${tag('🎙 화자',s.narrator)}${tag('🎬 전개',s.development)}${tag('🎯 어필포인트',s.appeal)}${tag('🗣 말투',s.tone)}${tag('⏱',s.target_seconds?s.target_seconds+'초':'')}</div>
+      ${chars?`<div class="chars"><div class="t">👥 등장 주변인물 (스토리텔링 핵심 기법)</div><ul>${chars}</ul></div>`:''}
+      ${s.storyline?`<div><div class="sec-t">스토리라인</div><div class="story">${esc(s.storyline)}</div></div>`:''}
+      ${s.twist?`<div><div class="sec-t">✨ 발상전환</div><div class="story">${esc(s.twist)}</div></div>`:''}
       ${beats?`<div><div class="sec-t">비트 구조</div><ul class="beats">${beats}</ul></div>`:''}
       <details><summary>전체 대본 보기</summary><div class="full">${esc(i.full_text||'(대본 없음)')}</div></details>
+    </div>
+    <div class="info-side">
+      ${devs?`<div><div class="sec-t">설득 장치</div><div class="devices">${devs}</div></div>`:''}
+      <div class="learn-status" id="learn-${sc}" data-cat="${esc(i.category||'')}">🎓 학습현황 불러오는 중…</div>
+      <div class="row" style="flex-direction:column">
+        <button class="gen-btn" onclick="openGen('${sc}')">🎬 이 구조로 생성</button>
+        <button onclick="copyFull(this)">📋 대본 복사</button>
+        <button class="send-btn" data-sc="${sc}" onclick="sendToProduce('${sc}', this)">🎬 영상제작으로 보내기</button>
+      </div>
     </div>
   </div>`;
 }
