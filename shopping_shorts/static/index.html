@@ -73,7 +73,6 @@
              width:min(720px,94vw);max-height:80vh;display:flex;flex-direction:column;overflow:hidden;
              box-shadow:0 10px 44px rgba(0,0,0,.6)}
   .modal-box.wide{width:min(1040px,96vw);max-height:88vh}   /* 렌즈 결과용 큰 팝업 */
-  .lens-play{width:100%;aspect-ratio:9/16;max-height:60vh;border:0;border-radius:8px;background:#000;display:block}
   .modal-head{display:flex;align-items:center;justify-content:space-between;gap:8px;
               padding:14px 18px;border-bottom:1px solid var(--line);cursor:move;user-select:none}
   .modal-head b{font-size:15px}
@@ -498,7 +497,6 @@ const LENS_PLATFORMS=[
   {k:'instagram',label:'📷 인스타'},{k:'xiaohongshu',label:'📕 샤오홍슈'},
   {k:'douyin',label:'🎶 도우인'}];
 let LENS_STATE={};   // shortcode → {items, on:Set}
-let _lensSC=null;    // 현재 모달에 표시 중인 shortcode
 // 카드에서 렌즈에 넣을 이미지를 canvas 캡처. 우선순위:
 //  ① 재생중/멈춘 <video> 프레임(사용자가 고른 장면)
 //  ② 없으면 카드 썸네일 <img>(재생 안 하고 바로 눌러도 되게, 2026-07-14)
@@ -540,7 +538,6 @@ async function lensSearch(btn, shortcode){
     const d=await r.json();
     if(!d.ok || !d.items.length){ body.innerHTML='<div style="padding:10px;color:var(--sub)">유사 동영상을 찾지 못했습니다.<br><small>다른 장면(제품·요리가 크게 보이는 순간)에서 다시 시도해보세요.</small></div>'; return; }
     LENS_STATE[shortcode]={items:d.items, on:new Set(LENS_PLATFORMS.map(p=>p.k))};
-    _lensSC=shortcode;
     renderLens(shortcode);
   }catch(e){ document.getElementById('scriptBody').innerHTML='<div style="padding:10px;color:#e0623d">❌ '+e.message+'</div>'; }
 }
@@ -557,45 +554,25 @@ function renderLens(shortcode){
     return `<span onclick="toggleLensPlatform('${shortcode}','${p.k}')" style="cursor:pointer;display:inline-block;padding:3px 10px;margin:2px;border-radius:12px;font-size:11px;border:1px solid var(--line);background:${active?'#1f6feb33':'transparent'};opacity:${active?1:0.4}">${p.label} ${n}</span>`;
   }).join('');
   // 썸네일은 구글 gstatic CDN(encrypted-tbn) — 핫링크 제한 없어 직접 로드(프록시 불필요).
-  // 큰 썸네일 그리드 + 썸네일 클릭 시 바로 그 자리 인라인 재생(embed). embed 불가 플랫폼만 새 탭.
+  // 메인 랭킹카드와 같은 .card/.thumb/.btns 스타일로 통일 — 클릭시 인라인 확대재생X,
+  // 썸네일 카드 자체에 플랫폼·매칭뱃지 얹고 원본은 새탭으로만 연다(2026-07-14).
   const shown=st.items.filter(i=>st.on.has(i.platform));
-  const cards=shown.map((i,idx)=>`
-    <div style="padding:8px 0;border-bottom:1px solid var(--line);opacity:${i.match===false?0.55:1}">
-      <div style="font-size:12px;margin-bottom:6px"><b>${LENS_PLATFORMS.find(p=>p.k===i.platform)?.label||''}</b> <span style="color:var(--sub)">${esc((i.title||'').slice(0,80))}</span>
-        ${i.match===false?'<span title="원본 캡션 키워드와 제목이 안 겹침 — 다른 주제일 수 있음" style="font-size:10px;color:#e0623d;margin-left:4px">⚠️다른주제?</span>':''}
-        <a href="${i.url}" target="_blank" style="font-size:11px;color:var(--accent);margin-left:6px">↗ 원본</a></div>
-      <div id="lensplay_${idx}">
-        <div onclick="lensPlay(${idx})" style="position:relative;width:100%;max-width:260px;aspect-ratio:9/16;cursor:pointer;border-radius:10px;overflow:hidden;background:#0d131c">
-          <img src="${i.thumbnail||''}" referrerpolicy="no-referrer" loading="lazy" style="width:100%;height:100%;object-fit:cover" onerror="this.style.visibility='hidden'">
-          <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:40px;color:#fff;text-shadow:0 2px 8px #000">▶</span>
-        </div>
+  const cards=shown.map(i=>{
+    const plabel=LENS_PLATFORMS.find(p=>p.k===i.platform)?.label||'';
+    return `
+    <div class="card">
+      <div class="thumb" onclick="window.open('${i.url}','_blank')">
+        <img src="${i.thumbnail||''}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'">
+        <span style="position:absolute;top:6px;left:6px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;padding:2px 8px;border-radius:10px">${plabel}</span>
+        ${i.match===false?'<span title="원본 캡션 키워드와 제목이 안 겹침 — 다른 주제일 수 있음" style="position:absolute;top:6px;right:6px;background:#e0623d;color:#fff;font-size:10px;padding:2px 7px;border-radius:10px">⚠️다른주제?</span>':''}
       </div>
-    </div>`).join('') || '<div style="font-size:12px;color:var(--sub);padding:10px">켠 플랫폼 결과 없음</div>';
-  box.innerHTML=`<div style="position:sticky;top:0;background:var(--panel);padding:4px 0;margin-bottom:4px;z-index:1">${chips}</div><div>${cards}</div>`;
-  box._lensShown=shown;   // lensPlay가 참조
-}
-// 렌즈 결과를 팝업 안에서 embed로 인라인 재생(새 탭 안 열고 1차 확인).
-function _lensEmbed(url){
-  let m;
-  if((m=url.match(/youtube\.com\/watch\?v=([\w-]+)|youtu\.be\/([\w-]+)|youtube\.com\/shorts\/([\w-]+)/)))
-    return 'https://www.youtube.com/embed/'+(m[1]||m[2]||m[3])+'?autoplay=1&playsinline=1';
-  if((m=url.match(/tiktok\.com\/.*\/video\/(\d+)/)))
-    return 'https://www.tiktok.com/embed/v2/'+m[1];
-  if((m=url.match(/instagram\.com\/(?:reel|p)\/([\w-]+)/)))
-    return 'https://www.instagram.com/'+(url.includes('/reel/')?'reel':'p')+'/'+m[1]+'/embed';
-  return null;   // 샤오홍슈·도우인 등 embed 불가 → 원본 새 탭만
-}
-function lensPlay(idx){
-  const box=document.getElementById('scriptBody');
-  const it=box && box._lensShown && box._lensShown[idx]; if(!it) return;
-  const slot=document.getElementById('lensplay_'+idx); if(!slot) return;
-  if(slot.querySelector('iframe')){          // 이미 재생 중 → 썸네일로 복귀(닫기)
-    renderLens(_lensSC); return;
-  }
-  const src=_lensEmbed(it.url);
-  if(!src){ window.open(it.url,'_blank'); return; }    // 샤오홍슈·도우인 등 embed 불가 → 새 탭
-  slot.innerHTML=`<iframe class="lens-play" src="${src}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`
-    +`<div style="text-align:right"><button onclick="lensPlay(${idx})" style="font-size:11px;padding:2px 8px;margin-top:4px">✕ 닫기</button></div>`;
+      <div class="body">
+        <div class="rank" style="white-space:normal;line-height:1.4;min-height:2.8em">${esc((i.title||'').slice(0,70))}</div>
+        <div class="btns"><button class="view" onclick="window.open('${i.url}','_blank')">👁 원본보기</button></div>
+      </div>
+    </div>`;
+  }).join('') || '<div style="font-size:12px;color:var(--sub);padding:10px">켠 플랫폼 결과 없음</div>';
+  box.innerHTML=`<div style="position:sticky;top:0;background:var(--panel);padding:4px 0;margin-bottom:8px;z-index:1">${chips}</div><div class="cards">${cards}</div>`;
 }
 async function extractScript(shortcode){
   window._curSC = shortcode;
