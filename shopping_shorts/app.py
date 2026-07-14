@@ -32,6 +32,7 @@ from shopping_shorts.media_download import resolve_media_url, download_any
 from shopping_shorts import edit_plan as _edit_plan
 from shopping_shorts import voice_presets, audio_post
 from shopping_shorts.tts import synthesize_tts
+from shopping_shorts import tts, asr_check
 from shopping_shorts.narration_naturalize import naturalize as _naturalize
 import uuid
 
@@ -1146,6 +1147,7 @@ def api_voice_preset_sample(preset_id: str):
 
 
 _TUNE_CORPUS = Path(__file__).parent / "assets" / "tune_corpus.json"
+_TUNE_CACHE = Path(__file__).parent / "data" / "voice_tune_cache"
 
 
 @app.get("/api/voice-tune/corpus")
@@ -1165,6 +1167,62 @@ async def api_voice_tune_preview(req: Request):
     out = _naturalize(text, profile, beat_role=body.get("beat_role"),
                       beat_index=body.get("beat_index"), beat_total=body.get("beat_total"))
     return {"text": out}
+
+
+@app.post("/api/voice-tune/synth")
+async def api_voice_tune_synth(req: Request):
+    """변환텍스트를 N-best 합성 + ASR diff. (변환텍스트,seed,voice) 조합으로 캐시."""
+    body = await req.json()
+    profile = body.get("profile") or {}
+    text = _naturalize(body.get("text", ""), profile, beat_role=body.get("beat_role"))
+    preset_id = body.get("preset_id", "adhoc")
+    n = int(profile.get("n_best", 1))
+    seed = profile.get("seed")
+    voice_id = body.get("voice_id")
+    settings = body.get("voice_settings")
+    key = hashlib.sha1(f"{text}|{seed}|{voice_id}|{settings}|{n}".encode()).hexdigest()[:16]
+    _TUNE_CACHE.mkdir(parents=True, exist_ok=True)
+    out = _TUNE_CACHE / f"{preset_id}_{body.get('line_id', 'x')}_{key}.mp3"
+    if not out.exists():
+        def _ranker(path, t):
+            hyp = asr_check.transcribe(path)
+            return asr_check.mismatch_score(asr_check.diff_words(t, hyp)) if hyp else 0
+        tts.synthesize_best(text, str(out), n=n, base_seed=seed, ranker=_ranker,
+                            voice_id=voice_id, voice_settings=settings, model_id="eleven_v3")
+    hyp = asr_check.transcribe(str(out))
+    diff = asr_check.diff_words(text, hyp) if hyp else {"ok": True, "words": [], "no_asr": True}
+    return {"audio_url": f"/api/voice-tune/audio/{out.name}", "text": text, "diff": diff}
+
+
+@app.get("/api/voice-tune/audio/{fname}")
+def api_voice_tune_audio(fname: str):
+    f = _TUNE_CACHE / fname
+    if not f.exists():
+        return JSONResponse({"error": "not found"}, status_code=404)
+    return FileResponse(str(f), media_type="audio/mpeg")
+
+
+@app.get("/api/voice-tune/profile/{preset_id}")
+def api_voice_tune_profile_get(preset_id: str):
+    p = Store(DB_PATH).get_voice_preset(preset_id)
+    return {"profile": (p or {}).get("naturalize_profile") if p else None}
+
+
+@app.post("/api/voice-tune/profile/{preset_id}")
+async def api_voice_tune_profile_save(preset_id: str, req: Request):
+    """튜닝 작업대에서 완성한 프로파일을 프리셋에 동결 저장. 없는 preset_id면 작업대 임시 프리셋 생성."""
+    body = await req.json()
+    store = Store(DB_PATH)
+    p = store.get_voice_preset(preset_id)
+    if not p:
+        p = {"preset_id": preset_id, "name": preset_id, "lang": "KR",
+             "base_voice_id": body.get("voice_id", "v"), "voice_settings": {},
+             "model_id": "eleven_v3"}
+    prof = dict(body.get("profile") or {})
+    prof["_frozen"] = bool(body.get("frozen"))
+    p["naturalize_profile"] = prof
+    store.upsert_voice_preset(p)
+    return {"ok": True}
 
 
 @app.post("/api/mix/voice")
