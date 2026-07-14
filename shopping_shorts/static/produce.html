@@ -546,8 +546,11 @@ function deleteHighlightRule(i){
   STATE.deco.highlight_rules.splice(i,1); renderHighlightRules(); updateHC();
 }
 function updateHighlightRule(i, field, val){
-  STATE.deco.highlight_rules[i][field] = (field==='box' ? val : val);
-  renderHighlightRules(); updateHC();
+  STATE.deco.highlight_rules[i][field] = val;
+  // box 체크박스 토글만 행을 재구성한다(box_color input 표시/숨김 때문). 텍스트·색
+  // 입력에서 재렌더하면 포커스·한글 IME 조합이 끊기므로 미리보기만 갱신(updateHC).
+  if(field==='box') renderHighlightRules();
+  updateHC();
 }
 function renderHighlightRules(){
   const box=document.getElementById('highlightRuleList'); if(!box) return;
