@@ -47,3 +47,14 @@ def test_spoken_style_intensity_partial_deterministic():
 def test_spoken_style_off_noop():
     p = _only("spoken_style"); p["spoken_style"]["on"] = False
     assert naturalize("좋습니다.", p) == "좋습니다."
+
+def test_pronunciation_dict_replace():
+    p = _only("pronunciation")
+    p["pronunciation"]["dict"] = {"SNS": "에스엔에스", "AI": "에이아이"}
+    assert naturalize("SNS와 AI", p) == "에스엔에스와 에이아이"
+
+def test_pronunciation_longest_first():
+    p = _only("pronunciation")
+    p["pronunciation"]["dict"] = {"A": "에이", "AI": "에이아이"}
+    # 긴 키 우선(AI가 A로 먼저 안 깨지게)
+    assert naturalize("AI", p) == "에이아이"

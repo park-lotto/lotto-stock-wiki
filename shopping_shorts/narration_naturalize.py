@@ -114,7 +114,15 @@ def _spoken_style(text, cfg):
     return " ".join(x for x in out if x != "").strip() if " " in text else "".join(out)
 
 
-_STAGES = [("normalize", _normalize), ("spoken_style", _spoken_style)]
+def _pronunciation(text, cfg):
+    d = cfg.get("dict") or {}
+    for k in sorted(d, key=len, reverse=True):   # 긴 키 먼저(부분매칭 방지)
+        text = text.replace(k, d[k])
+    return text
+
+
+_STAGES = [("normalize", _normalize), ("spoken_style", _spoken_style),
+           ("pronunciation", _pronunciation)]
 
 
 def naturalize(text, profile=None, *, beat_role=None, beat_index=None, beat_total=None):
