@@ -5,6 +5,24 @@
 
 ---
 
+## 🎨 꾸미기(5단계) "피팅룸" UX 재설계 — 설계·계획 완료, 구현 0/4 (2026-07-14 사무실 → 집에서 이어서)
+
+**배경**: 사용자가 꾸미기 페이지 UX 불만(스크린샷4장) — 완성스타일 19버튼+헤드카피11+자막5 = 버튼벽/어수선/뭘눌러야될지모름. 요구: "직접 옷 피팅해보듯" 실장면 위 완성본 보며 고르기 + 최적 샘플 하나 기본 + 세부는 고급으로 감추기.
+
+**✅ 완료(커밋됨)**:
+- 설계: `docs/superpowers/specs/2026-07-14-쇼핑쇼츠-꾸미기-피팅룸-UX재설계-design.md` (커밋 ac414f84)
+- 계획: `docs/superpowers/plans/2026-07-14-쇼핑쇼츠-꾸미기-피팅룸-UX재설계.md` (커밋 d33318a6) — 4태스크, 각 태스크에 정확한 HTML/JS + 브라우저 grounding 스텝 포함
+- 선행완료(같은 세션): **단어별 강조(highlight_rules)+프리셋4종** 전체 SDD 완료·검증·배포(마지막 커밋 351e78f1). 실렌더 grounding으로 색상버그·배선버그 2개 잡아 수정. 강조가 실제 MP4에 나옴 확인.
+
+**⏭ 집에서 재개 — SDD Task1부터 (구현 0/4)**:
+- 원장: `.superpowers/sdd/progress.md` 맨 아래 "꾸미기 피팅룸" 섹션. BASE=d33318a6(당시). Task1 미시작(구현자 커밋 전 세션마감으로 중단, produce.html clean, 유실없음).
+- 재개법: `git pull origin main` → superpowers:subagent-driven-development로 계획서 실행. **구현=sonnet(단일파일 HTML 취약+통합), 리뷰=opus** (memory `feedback_sdd_reviewer_model_opus`). 공유파일 git위생(내 파일만 stage).
+- 4태스크: (1)레이아웃 재배치+세부 직접다듬기 접기[가장 큰 HTML 재구성, 중복id 금지가 핵심] (2)스타일 실장면카드 필름스트립(renderStyleCards, 대표5+더보기) (3)진입 자동완성(applyDefaultStyleOnEntry, 기본=임팩트옐로+실장면배경 자동ON) (4)실렌더 통합 grounding.
+- 서버 무변경(순수 produce.html). 서버 기동은 **repo루트에서** `python -m uvicorn shopping_shorts.app:app --port <p>`(절대임포트).
+- 교훈(memory `feedback_whole_branch_review_catches_seams`): 격리 grounding 말고 실제 payload/사용 경로로 검증. 최종 whole-branch 리뷰 생략금지.
+
+---
+
 ## 🎙️ 보이스 프리셋 라이브러리 — ✅ 구현·검증 (2026-07-14 집PC, 커밋 b5463de9~3cd1abfe)
 
 빅채널 나레이션 *느낌*을 페르소나 프리셋(이름+설명+감도값)으로 굳혀 produce 4단계에서 카드로 선택. 하이브리드(MVP=스톡매칭, 클로닝 Phase2).
