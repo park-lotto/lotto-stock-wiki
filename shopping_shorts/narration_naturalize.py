@@ -22,7 +22,10 @@ DEFAULT_PROFILE = {
 
 
 def merge_profile(profile):
-    """유저 프로파일을 DEFAULT_PROFILE 위에 깊게 병합(빈 값은 기본으로 채움)."""
+    """유저 프로파일을 DEFAULT_PROFILE 위에 1단계 병합(빈 값은 기본으로 채움).
+
+    최상위 dict 값(스테이지·caps)은 `.update`로 얕게 합쳐지므로 그 내부에 중첩된
+    dict(예: pronunciation.dict)를 부분 지정하면 통째로 교체된다(재귀 병합 아님)."""
     out = copy.deepcopy(DEFAULT_PROFILE)
     for k, v in (profile or {}).items():
         if isinstance(v, dict) and isinstance(out.get(k), dict):
@@ -42,7 +45,6 @@ def _int_to_sino(n):
     """정수 → 사이노 한국어 읽기(간이). 0~9999 지원(그 이상은 자리 붙여 읽기 근사)."""
     if n == 0:
         return "영"
-    digits = "만천백십"
     s = str(n)
     if len(s) <= 4:
         pad = s.rjust(4, "0")
@@ -65,7 +67,7 @@ def _num_to_words(whole):
     return _int_to_sino(int(whole))
 
 
-def _normalize(text, cfg):
+def _normalize(text, cfg, ctx):
     def num_repl(m):
         return _num_to_words(m.group(0))
     # 단위 먼저(숫자+단위) → 숫자 → 기호
@@ -89,32 +91,33 @@ _SPOKEN_MAP = [
 ]
 
 
-def _spoken_style(text, cfg):
+def _spoken_style(text, cfg, ctx):
     intensity = cfg.get("intensity", 0.4)
-    # 종결(문장부호 앞) 위치를 찾아 앞에서부터 intensity 비율만 변환(결정적)
-    sentences = re.split(r"(?<=[.!?…])\s*", text)
+    # 구분자(문장부호 뒤 공백)를 캡처해 보존 — 짝수 셀=문장, 홀수 셀=구분자.
+    # 문장 셀만 변환하고 "".join으로 원본 공백을 그대로 복원(공백 훼손 방지).
+    parts = re.split(r"((?<=[.!?…])\s*)", text)
+    cell_idxs = list(range(0, len(parts), 2))
     hits = []
-    for si, s in enumerate(sentences):
+    for i in cell_idxs:
+        s = parts[i]
         for a, b in _SPOKEN_MAP:
             if re.search(a + r"(?=[.!?…]?$)", s):
-                hits.append(si)
+                hits.append(i)
                 break
-    take = int(len(hits) * intensity + 1e-9)  # 앞에서부터 take개만
-    take = min(len(hits), take if intensity < 1.0 else len(hits))
+    # 앞에서부터 intensity 비율만 변환(결정적)
+    take = len(hits) if intensity >= 1.0 else int(len(hits) * intensity + 1e-9)
     chosen = set(hits[:take])
-    out = []
-    for si, s in enumerate(sentences):
-        if si in chosen:
-            for a, b in _SPOKEN_MAP:
-                new = re.sub(a + r"(?=[.!?…]?$)", b, s)
-                if new != s:
-                    s = new
-                    break
-        out.append(s)
-    return " ".join(x for x in out if x != "").strip() if " " in text else "".join(out)
+    for i in chosen:
+        s = parts[i]
+        for a, b in _SPOKEN_MAP:
+            new = re.sub(a + r"(?=[.!?…]?$)", b, s)
+            if new != s:
+                parts[i] = new
+                break
+    return "".join(parts)
 
 
-def _pronunciation(text, cfg):
+def _pronunciation(text, cfg, ctx):
     d = cfg.get("dict") or {}
     for k in sorted(d, key=len, reverse=True):   # 긴 키 먼저(부분매칭 방지)
         text = text.replace(k, d[k])
@@ -122,15 +125,19 @@ def _pronunciation(text, cfg):
 
 
 # 연결어미(뒤에 호흡을 두면 자연스러운 지점). 시작점 — 작업대에서 강도로 밀도 조절.
-_CONNECTIVES = ["는데", "은데", "지만", "어서", "아서", "라서", "고", "며", "면서"]
+# ⚠️ 단음절 `고`/`며`는 명사 꼬리("최고","참고")와 substring 충돌해 오탐(참고 하세요→참고, 하세요)이
+# 나므로 기본 목록에서 제외한다. 남긴 2음절 어미는 명사와 겹치지 않아 안전(트레이드오프:
+# "싸고" 같은 진짜 연결어미 뒤 호흡은 놓치지만, 오탐 0이 더 중요).
+_CONNECTIVES = ["는데", "은데", "지만", "어서", "아서", "라서", "면서"]
 
 
-def _phrasing(text, cfg):
+def _phrasing(text, cfg, ctx):
     intensity = cfg.get("intensity", 0.3)
     if intensity <= 0:
         return text
     # 연결어미 + 공백 경계에 쉼표 삽입(이미 쉼표/문장부호가 붙어있으면 skip)
-    # intensity로 삽입할 연결어미 종류 수를 제한(결정적: 앞에서부터)
+    # intensity로 삽입할 연결어미 종류 수를 제한(결정적: 앞에서부터).
+    # +0.999 = 올림(ceil): 낮은 강도에서도 최소 1종은 활성(다른 곳의 +1e-9 내림과 대비).
     take = max(1, int(len(_CONNECTIVES) * intensity + 0.999))
     active = _CONNECTIVES[:take] if intensity < 1.0 else _CONNECTIVES
     for c in sorted(active, key=len, reverse=True):
@@ -138,7 +145,7 @@ def _phrasing(text, cfg):
     return text
 
 
-def _endings(text, cfg):
+def _endings(text, cfg, ctx):
     intensity = cfg.get("intensity", 0.3)
     if intensity <= 0:
         return text
@@ -185,7 +192,8 @@ def _emotion_arc(text, cfg, ctx):
         tag = _ARC_BY_ROLE[role]
     elif ctx.get("beat_index") is not None and ctx.get("beat_total"):
         n = max(1, ctx["beat_total"] - 1)
-        pos = round((ctx["beat_index"] / n) * (len(_ARC_BY_POS) - 1))
+        raw = round((ctx["beat_index"] / n) * (len(_ARC_BY_POS) - 1))
+        pos = min(len(_ARC_BY_POS) - 1, max(0, raw))  # 범위밖 beat_index 클램프(IndexError 방지)
         tag = _ARC_BY_POS[pos]
     return f"{tag} {text}" if tag else text
 
@@ -206,11 +214,13 @@ def _enforce_total_tag_cap(text, cap):
     tags = list(re.finditer(r"\[[^\]]+\]\s?", text))
     if len(tags) <= cap:
         return text
-    keep_end = tags[cap - 1].start() if cap > 0 else 0
-    # cap개까지만 남기고 이후 태그 제거
-    kept = text[:tags[cap].start()] if cap < len(tags) else text
-    rest = re.sub(r"\[[^\]]+\]\s?", "", text[tags[cap].start():]) if cap < len(tags) else ""
-    return (kept + rest) if cap > 0 else re.sub(r"\[[^\]]+\]\s?", "", text)
+    if cap <= 0:                              # 전부 제거
+        return re.sub(r"\[[^\]]+\]\s?", "", text)
+    # 여기 도달 = len(tags) > cap > 0 이므로 tags[cap]는 항상 존재.
+    # cap개까지만 남기고 그 이후 구간의 태그만 제거(본문은 보존).
+    kept = text[:tags[cap].start()]
+    rest = re.sub(r"\[[^\]]+\]\s?", "", text[tags[cap].start():])
+    return kept + rest
 
 
 def naturalize(text, profile=None, *, beat_role=None, beat_index=None, beat_total=None):
@@ -219,9 +229,9 @@ def naturalize(text, profile=None, *, beat_role=None, beat_index=None, beat_tota
     ctx = {"beat_role": beat_role, "beat_index": beat_index, "beat_total": beat_total,
            "caps": p.get("caps", {})}
     out = text
-    for name, fn in _STAGES:
+    for name, fn in _STAGES:                  # 모든 스테이지 시그니처 통일: (text, cfg, ctx)
         cfg = p.get(name, {})
         if cfg.get("on"):
-            out = fn(out, cfg) if fn.__code__.co_argcount == 2 else fn(out, cfg, ctx)
+            out = fn(out, cfg, ctx)
     out = _enforce_total_tag_cap(out, p.get("caps", {}).get("max_tags_total", 3))
     return out
