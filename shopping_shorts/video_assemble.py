@@ -11,14 +11,18 @@
 concat 후 원본 오디오를 제거하고 비트별 TTS를 이어붙인 트랙으로 교체한다.
 """
 import os
+import re
 import shutil
 import subprocess
 import textwrap
 import uuid
 from pathlib import Path
 
+from PIL import ImageFont
+
 # 출력 규격(숏폼 세로). 소스 해상도가 달라도 여기로 통일해야 concat -c copy가 안전.
 _OUT_W, _OUT_H = 720, 1280
+_FONT_DIR = Path(__file__).parent / "static" / "fonts"
 # 반중복탐지 회피(2026-07-14) — 말 안 해도 항상 적용. 화질 오염 없는(비가역 손상X)
 # 것만 자동화: ①전 비트 기본 크롭+줌(살짝 확대, 원본과 프레임 구도가 달라짐)
 # ②중요 비트(훅·반전)만 서서히 확대되는 켄번즈 줌(더 눈에 띄는 변형+시선 유도 효과 겸함).
@@ -372,7 +376,108 @@ def _hex_to_ff(c, default="0xFFFFFF"):
     return f"0x{c.upper()}" if len(c) == 6 and all(ch in "0123456789ABCDEFabcdef" for ch in c) else default
 
 
-_FONT_DIR = Path(__file__).parent / "static" / "fonts"
+def _resolve_seg_font(base_style, work, key_prefix):
+    """세그먼트 폰트파일 경로(work에 복사된 실제 경로)와 ffmpeg fontfile 참조명을 함께 반환.
+    _fixed_drawtext/_caption_drawtexts의 폰트 해석 로직과 동일 규칙(있으면 그 폰트, 없으면 font.ttf)."""
+    fontref = "font.ttf"
+    fname = os.path.basename((base_style or {}).get("font") or "")
+    if fname:
+        fpath = _FONT_DIR / fname
+        if fpath.exists():
+            shutil.copy(fpath, work / f"font_{key_prefix}.ttf")
+            fontref = f"font_{key_prefix}.ttf"
+    real_path = work / fontref if (work / fontref).exists() else _FONT_DIR.parent.parent / fontref
+    return fontref, str(work / fontref)
+
+
+def _match_highlight(word, highlight_rules):
+    """word가 highlight_rules의 keyword와 정확히 일치하면 그 규칙(dict) 반환, 아니면 None."""
+    for rule in (highlight_rules or []):
+        if rule.get("keyword") and word == rule["keyword"]:
+            return rule
+    return None
+
+
+def _build_segments(line, base_color, highlight_rules):
+    """한 줄 텍스트를 공백 기준 토큰화하고, 연속된 동일 스타일(강조 or 기본) 토큰을 묶어
+    [(text, color, box, box_color), ...] 세그먼트 리스트로 반환. 사이 공백은 각 세그먼트
+    텍스트에 뒤따르는 공백으로 포함시켜(마지막 세그먼트 제외) 폭 계산 시 자연스럽게 처리한다."""
+    words = line.split(" ")
+    segs = []
+    cur_text, cur_style = "", None
+    for i, w in enumerate(words):
+        rule = _match_highlight(w, highlight_rules)
+        style = (rule["color"], bool(rule.get("box")), rule.get("box_color")) if rule else (base_color, False, None)
+        piece = w + (" " if i < len(words) - 1 else "")
+        if cur_style is None:
+            cur_text, cur_style = piece, style
+        elif style == cur_style:
+            cur_text += piece
+        else:
+            segs.append((cur_text, *cur_style))
+            cur_text, cur_style = piece, style
+    if cur_text:
+        segs.append((cur_text, *cur_style))
+    return segs
+
+
+def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
+                          highlight_rules=None, default_color="0xFFFFFF"):
+    """헤드카피/자막 한 블록을 줄 단위로 나누고, highlight_rules에 매칭되는 단어만
+    별도 색·배지로 세그먼트를 쪼개 나란히 이어붙인 drawtext 필터 리스트를 반환한다.
+    규칙이 없거나 매칭 0건이면 줄마다 세그먼트 1개 = 기존 _fixed_drawtext/_caption_drawtexts와
+    동일한 산출물(하위호환). 폭 측정은 Pillow로 실제 폰트파일 기준 수행."""
+    base_style = base_style or {}
+    lines = (text or "").split("\n")
+    if not any(l.strip() for l in lines):
+        return []
+    fontref, font_disk_path = _resolve_seg_font(base_style, work, key_prefix)
+    size = max(8, int(base_style.get("size") or 64))
+    try:
+        pil_font = ImageFont.truetype(font_disk_path, size)
+    except OSError:
+        pil_font = ImageFont.load_default()
+    base_color_hex = _hex_to_ff(base_style.get("color"), default_color)
+    x_center = x_pct / 100.0 * _OUT_W
+    y_top = y_pct / 100.0 * _OUT_H
+    line_h = size * 1.2
+    total_h = line_h * len(lines)
+    parts = []
+    for li, line in enumerate(lines):
+        segs = _build_segments(line, base_color_hex, highlight_rules or [])
+        if not segs:
+            continue
+        widths = [pil_font.getlength(s[0]) for s in segs]
+        line_w = sum(widths)
+        start_x = x_center - line_w / 2
+        line_y = y_top - total_h / 2 + li * line_h
+        run_x = start_x
+        for (seg_text, seg_color, seg_box, seg_box_color), w in zip(segs, widths):
+            if not seg_text.strip():
+                run_x += w
+                continue
+            key = f"{key_prefix}_{li}_{len(parts)}"
+            (work / f"txt_{key}.txt").write_text(seg_text.rstrip(), encoding="utf-8")
+            seg_parts = [
+                f"drawtext=fontfile={fontref}:textfile=txt_{key}.txt",
+                f"fontcolor={_hex_to_ff(seg_color, default_color)}",
+                f"fontsize={size}",
+                f"x={int(run_x)}", f"y={int(line_y)}",
+            ]
+            if base_style.get("outline"):
+                seg_parts.append(f"borderw={max(1, int(base_style.get('outline_w') or 6))}")
+                seg_parts.append(f"bordercolor={_hex_to_ff(base_style.get('outline_color'), '0x000000')}")
+            if seg_box:
+                bc = _hex_to_ff(seg_box_color, "0x000000")
+                seg_parts += ["box=1", f"boxcolor={bc}@0.90", "boxborderw=8"]
+            elif base_style.get("box") and not seg_box:
+                bc = _hex_to_ff(base_style.get("box_color"), "0x000000")
+                op = max(0.0, min(1.0, (base_style.get("box_opacity") or 80) / 100.0))
+                pad = max(0, int(base_style.get("box_pad") if base_style.get("box_pad") is not None else 16))
+                seg_parts += ["box=1", f"boxcolor={bc}@{op:.2f}", f"boxborderw={pad}"]
+            parts.append(":".join(seg_parts))
+            run_x += w
+    return parts
 
 
 def _fixed_drawtext(spec, work, key, default_color="0xFFFFFF"):

@@ -215,3 +215,49 @@ def test_kenburns_vf_ramps_zoom_via_output_frame_number():
 def test_kenburns_vf_handles_zero_duration_without_division_error():
     vf = va._kenburns_vf(0.0)
     assert "zoompan" in vf
+
+
+# ── 단어별 강조(highlight_rules) — 세그먼트 drawtext ──────────
+
+def test_segmented_drawtext_no_rules_single_segment(tmp_path):
+    """규칙 없으면 세그먼트 1개(기존 _fixed_drawtext와 동일 산출물 형태)."""
+    style = {"font": "", "size": 64, "color": "#FFFFFF", "outline": True,
+              "outline_color": "#000000", "outline_w": 6}
+    parts = va._segmented_drawtext("안녕하세요", style, tmp_path, "hc", 50, 14)
+    assert len(parts) == 1
+    assert "drawtext=fontfile=" in parts[0]
+    assert "fontcolor=0xFFFFFF" in parts[0]
+
+
+def test_segmented_drawtext_matches_keyword_splits_segments(tmp_path):
+    """키워드 매칭 시 세그먼트가 여러 개로 쪼개지고, x좌표가 증가 순서.
+    v1은 정확 단어(공백 분리 토큰) 일치만 지원(설계서 §7 — 부분문자열 매칭은 범위 밖).
+    레퍼런스 원본은 "쿠팡꿀템"처럼 붙어있지만, 그 형태는 부분매칭이 필요해 이번엔 다루지 않는다."""
+    style = {"font": "", "size": 64, "color": "#FFFFFF"}
+    rules = [{"keyword": "쿠팡", "color": "#FF2D2D", "box": True, "box_color": "#FF2D2D"}]
+    parts = va._segmented_drawtext("나만 몰랐던 쿠팡 꿀템", style, tmp_path, "hc", 50, 14,
+                                     highlight_rules=rules)
+    assert len(parts) >= 2
+    import re
+    xs = [int(m.group(1)) for p in parts for m in [re.search(r"x=(-?\d+)", p)] if m]
+    assert xs == sorted(xs)
+    assert any("fontcolor=0xFF2D2D" in p and "box=1" in p for p in parts)
+
+
+def test_segmented_drawtext_no_keyword_match_falls_back_to_one_segment(tmp_path):
+    style = {"font": "", "size": 64, "color": "#FFFFFF"}
+    rules = [{"keyword": "없는단어", "color": "#FF2D2D"}]
+    parts = va._segmented_drawtext("안녕하세요 반갑습니다", style, tmp_path, "hc", 50, 14,
+                                     highlight_rules=rules)
+    assert len(parts) == 1
+
+
+def test_segmented_drawtext_two_lines_resets_x_per_line(tmp_path):
+    style = {"font": "", "size": 40, "color": "#FFFFFF"}
+    rules = [{"keyword": "꿀템", "color": "#FFE100"}]
+    parts = va._segmented_drawtext("나만 몰랐던\n쿠팡 꿀템", style, tmp_path, "hc", 50, 14,
+                                     highlight_rules=rules)
+    assert len(parts) >= 3  # 1줄(1세그먼트) + 2줄(쿠팡/꿀템 최소 2세그먼트)
+    import re
+    ys = sorted(set(int(m.group(1)) for p in parts for m in [re.search(r"y=(-?\d+)", p)] if m))
+    assert len(ys) == 2  # 줄마다 다른 y
