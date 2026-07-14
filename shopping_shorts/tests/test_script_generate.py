@@ -110,3 +110,29 @@ def test_gen_prompt_includes_interjection_guidance():
     # 생성 대본이 딱딱한 문어체가 아니라 실제 말하듯 자연스러운 추임새·감탄사 포함하도록
     assert "추임새" in script_generate._GEN_PROMPT
     assert "감탄사" in script_generate._GEN_PROMPT
+
+
+def test_detect_subject_returns_one_line(monkeypatch):
+    _wire(monkeypatch, json.dumps({"subject": "무선 가습기 물때 청소"}))
+    out = script_generate.detect_subject("가습기 물때 어떻게 닦지... 이거 하나면 끝")
+    assert out == "무선 가습기 물때 청소"
+
+
+def test_detect_subject_no_keys(monkeypatch):
+    monkeypatch.setattr(comment_gen, "SHORTS_GEMINI_KEYS", [])
+    assert script_generate.detect_subject("아무 대본") == ""
+
+
+def test_detect_subject_empty_text(monkeypatch):
+    monkeypatch.setattr(comment_gen, "SHORTS_GEMINI_KEYS", ["k"])
+    assert script_generate.detect_subject("   ") == ""
+
+
+def test_detect_subject_bad_json(monkeypatch):
+    _wire(monkeypatch, "not json")
+    assert script_generate.detect_subject("대본") == ""
+
+
+def test_detect_subject_strips_whitespace(monkeypatch):
+    _wire(monkeypatch, json.dumps({"subject": "  물때 청소 \n"}))
+    assert script_generate.detect_subject("대본") == "물때 청소"

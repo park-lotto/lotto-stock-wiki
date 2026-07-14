@@ -310,3 +310,44 @@ def refine_draft_partial(script_text, selected_text, instruction, max_key_tries=
     return _refine(
         _PARTIAL_PROMPT.format(script=script_text, selected=selected_text, instruction=instruction),
         max_key_tries)
+
+
+_SUBJECT_SCHEMA = {
+    "type": "object",
+    "properties": {"subject": {"type": "string"}},
+    "required": ["subject"],
+}
+
+_SUBJECT_PROMPT = """다음 한국 쇼핑 숏폼 대본이 다루는 '소재'(무엇에 관한 영상인지 —
+제품/장면/주제)를 한 줄 명사구로만 요약해라. 말투·훅 방식·기법이 아니라 '무엇'인지만.
+예: "무선 가습기 물때 청소".
+
+[대본]
+{full_text}
+
+다음 JSON으로만 출력: {{"subject": "소재 한 줄"}}"""
+
+
+def detect_subject(full_text, max_key_tries=3):
+    """원본 대본 원문에서 '소재 한 줄'을 Gemini로 요약. 실패/무키/빈입력이면 ""."""
+    if not comment_gen.SHORTS_GEMINI_KEYS or not (full_text or "").strip():
+        return ""
+    prompt = _SUBJECT_PROMPT.format(full_text=full_text[:3000])
+    for _ in range(max_key_tries):
+        key, ki = comment_gen._current_key_and_idx()
+        if key is None:
+            return ""
+        try:
+            resp = comment_gen._client_for_key(key).models.generate_content(
+                model=_MODEL, contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json", response_schema=_SUBJECT_SCHEMA),
+            )
+            return (json.loads(resp.text).get("subject", "") or "").strip()
+        except Exception as e:  # noqa: BLE001 — 감지 실패는 치명적 아님(빈 문자열)
+            if (comment_gen.key_vault.is_daily_exhausted_error(e)
+                    or comment_gen.key_vault.is_account_disabled_error(e)):
+                comment_gen._mark_key_exhausted(ki)
+                continue
+            return ""
+    return ""
