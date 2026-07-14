@@ -519,16 +519,19 @@ def api_extract_script(shortcode: str):
 
 @app.post("/api/produce/extract_from_url")
 def api_produce_extract_from_url(body: dict):
-    """영상 URL로 직접 대본 추출(영상제작소 역할배정 '대본용'). body: {url, caption?, shortcode?}.
+    """영상 URL로 직접 대본 추출(영상제작소 역할배정 '대본용'). body: {url, caption?, shortcode?, category?}.
 
     /api/extract_script는 현재 레퍼런스 랭킹 run(last_run)에서만 shortcode를 찾아,
     즐겨찾기에 예전 run 때 담긴 영상은 'last_run에 없음'으로 실패한다(2026-07-14 실버그).
     여기선 last_run을 안 거치고 저장된 URL을 download_any로 바로 받아 추출 → run 무관.
-    shortcode가 있으면 대본 캐시(get_script/save_script)를 재사용해 재클릭을 즉시화한다."""
+    shortcode가 있으면 대본 캐시(get_script/save_script)를 재사용해 재클릭을 즉시화한다.
+    category가 실리면 같이 저장(요소 학습·element_options 조회의 그룹핑 키, 2026-07-15
+    영상제작소 대본뽑기 모달 연동 — 없으면 None으로 저장돼도 무해)."""
     url = (body.get("url") or "").strip()
     if not url:
         return JSONResponse(status_code=422, content={"ok": False, "error": "url 필요"})
     code = (body.get("shortcode") or "").strip() or hashlib.sha1(url.encode()).hexdigest()[:12]
+    category = (body.get("category") or "").strip() or None
     store = Store(DB_PATH)
     cached = store.get_script(code)
     if cached:
@@ -548,7 +551,7 @@ def api_produce_extract_from_url(body: dict):
         return JSONResponse(status_code=500, content={"ok": False, "error": msg})
     if not result.get("full_text") and not result.get("segments"):
         return JSONResponse(status_code=502, content={"ok": False, "error": "대본 추출 실패 — 잠시 후 재시도"})
-    store.save_script(code, result)
+    store.save_script(code, result, category=category)
     return {"ok": True, "cached": False, **result}
 
 
@@ -717,13 +720,27 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
 
     body: {mode: "remake"|"transplant"(구버전 "A"|"B" 하위호환), subject: str(remake 소재 고정),
            my_topic: str(transplant 이식 주제), n: int,
-           elem_modes: {element_key: "keep"|"free"|"random"|"category:<label>"}}
+           elem_modes: {element_key: "keep"|"free"|"random"|"category:<label>"},
+           structure?: dict, base_script?: str, category?: str}
     (2026-07-13, 기존 쿼리파라미터 keep=콤마문자열 방식에서 JSON body로 전환 —
-    카테고리 지정 모드가 라벨 문자열까지 실어야 해서 콤마 목록으로는 표현이 안 됨)."""
+    카테고리 지정 모드가 라벨 문자열까지 실어야 해서 콤마 목록으로는 표현이 안 됨)
+
+    2026-07-15 폴백: 제작소(영상제작소) 직행 영상은 위키 저장 없이 대본을 뽑는다.
+    위키에 shortcode가 없어도 body에 structure/base_script가 실려오면 그걸로 생성 진행
+    (기존 위키 경로는 그대로 우선 — 있으면 위키 걸 쓴다, 하위호환 유지)."""
     store = Store(DB_PATH)
     it = store.get_wiki_item(shortcode, customer_id=_cid(request))
     if not it:
-        return JSONResponse(status_code=404, content={"ok": False, "error": "위키에 없는 항목 — 먼저 S급으로 저장하세요"})
+        _structure = body.get("structure")
+        _base_script = body.get("base_script")
+        if isinstance(_structure, dict) or (_base_script or "").strip():
+            it = {
+                "structure": _structure if isinstance(_structure, dict) else {},
+                "full_text": _base_script or "",
+                "category": body.get("category") or "",
+            }
+        else:
+            return JSONResponse(status_code=404, content={"ok": False, "error": "위키에 없는 항목 — 먼저 S급으로 저장하세요"})
     if not (it.get("structure") or it.get("full_text")):
         return JSONResponse(status_code=422, content={"ok": False, "error": "구조분석/대본이 비어 생성 불가 — 재저장 필요"})
     mode = body.get("mode", "remake")
