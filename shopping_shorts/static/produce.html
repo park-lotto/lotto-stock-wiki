@@ -174,6 +174,11 @@
       </div>
       <div style="font-size:12px;color:var(--sub);margin-bottom:4px">🎨 헤드카피 프리셋(헤드카피만)</div>
       <div id="hcPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"></div>
+      <div style="background:#0d1420;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:14px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:2px">🎯 강조 단어 <span style="font-size:11px;color:var(--sub);font-weight:400">— 헤드카피 + 자막 공통 적용(키워드 일치 시 자동 강조)</span></div>
+        <div id="highlightRuleList" style="margin-top:6px"></div>
+        <button class="tab" onclick="addHighlightRule()" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:12px;margin-top:4px">+ 강조 단어 추가</button>
+      </div>
       <div style="display:flex;gap:20px;flex-wrap:wrap">
         <div style="flex:1;min-width:280px">
           <div style="font-size:13px;margin-bottom:4px">헤드카피 문구</div>
@@ -355,6 +360,7 @@ function initHeadcopy(){
   renderPresets();
   renderFullPresets();
   renderMyPresets();
+  renderHighlightRules();
   bindHCDrag();
   updateHC();
   renderCapFontSelect();
@@ -530,6 +536,31 @@ function addExtraText(){
 }
 function deleteExtraText(i){ STATE.deco.extra_texts.splice(i,1); renderExtraTexts(); renderExtraPreview(); }
 function updateExtraField(i,field,val){ STATE.deco.extra_texts[i][field]=(field==='size'?+val:val); renderExtraPreview(); }
+function addHighlightRule(){
+  STATE.deco = STATE.deco || {extra_texts: []};
+  STATE.deco.highlight_rules = STATE.deco.highlight_rules || [];
+  STATE.deco.highlight_rules.push({keyword:'', color:'#FFE100', box:false, box_color:'#FF2D2D'});
+  renderHighlightRules(); updateHC();
+}
+function deleteHighlightRule(i){
+  STATE.deco.highlight_rules.splice(i,1); renderHighlightRules(); updateHC();
+}
+function updateHighlightRule(i, field, val){
+  STATE.deco.highlight_rules[i][field] = (field==='box' ? val : val);
+  renderHighlightRules(); updateHC();
+}
+function renderHighlightRules(){
+  const box=document.getElementById('highlightRuleList'); if(!box) return;
+  const list=(STATE.deco && STATE.deco.highlight_rules)||[];
+  box.innerHTML=list.map((r,i)=>`<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:6px;background:#0b1018;border:1px solid var(--line);border-radius:8px;padding:6px 8px">
+    <input type="text" placeholder="단어(예: 쿠팡)" value="${(r.keyword||'').replace(/"/g,'&quot;')}"
+      oninput="updateHighlightRule(${i},'keyword',this.value)" style="flex:1;min-width:100px;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:5px 8px;font-size:13px">
+    <label style="font-size:11px;color:var(--sub)">글자색 <input type="color" value="${r.color}" oninput="updateHighlightRule(${i},'color',this.value)"></label>
+    <label style="font-size:11px;color:var(--sub)"><input type="checkbox" ${r.box?'checked':''} onchange="updateHighlightRule(${i},'box',this.checked)"> 배지</label>
+    <input type="color" value="${r.box_color||'#FF2D2D'}" oninput="updateHighlightRule(${i},'box_color',this.value)" style="${r.box?'':'display:none'}">
+    <button onclick="deleteHighlightRule(${i})" title="삭제" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:15px">✕</button>
+  </div>`).join('');
+}
 function renderExtraTexts(){
   const box=document.getElementById('extraTextList'); if(!box) return;
   const list=(STATE.deco&&STATE.deco.extra_texts)||[];
@@ -703,7 +734,18 @@ function updateHC(){
   g('hcSizeV').textContent=hc.size; g('hcYV').textContent=hc.y; g('hcXV').textContent=hc.x;
   const el=g('hcPreviewText');
   const scale=PREVIEW_W/VIDEO_W;
-  el.textContent=hc.text;
+  const rules = (STATE.deco && STATE.deco.highlight_rules) || [];
+  if(rules.length && hc.text){
+    const esc2 = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+    el.innerHTML = hc.text.split(' ').map(w=>{
+      const r = rules.find(x=>x.keyword && x.keyword===w);
+      if(!r) return esc2(w);
+      const bg = r.box ? `background:${r.box_color};padding:0 4px;border-radius:4px;` : '';
+      return `<span style="color:${r.color};${bg}">${esc2(w)}</span>`;
+    }).join(' ');
+  } else {
+    el.textContent = hc.text;
+  }
   el.style.fontFamily=`'${fontCss(hc.font)}',sans-serif`;
   el.style.left=hc.x+'%'; el.style.top=hc.y+'%';
   el.style.color=hc.color; el.style.fontWeight=hc.weight;
