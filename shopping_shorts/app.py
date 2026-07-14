@@ -711,9 +711,10 @@ def api_wiki_subject(request: Request, shortcode: str):
 
 @app.post("/api/wiki/generate")
 def api_wiki_generate(request: Request, shortcode: str, body: dict):
-    """도서관 S급 1개의 구조를 빌려 새 20초 대본 초안 생성(모드 A/B, 4단 요소 모드).
+    """도서관 S급 1개의 구조를 빌려 새 20초 대본 초안 생성(모드 remake/transplant, 4단 요소 모드).
 
-    body: {mode: "A"|"B", my_topic: str, n: int,
+    body: {mode: "remake"|"transplant"(구버전 "A"|"B" 하위호환), subject: str(remake 소재 고정),
+           my_topic: str(transplant 이식 주제), n: int,
            elem_modes: {element_key: "keep"|"free"|"random"|"category:<label>"}}
     (2026-07-13, 기존 쿼리파라미터 keep=콤마문자열 방식에서 JSON body로 전환 —
     카테고리 지정 모드가 라벨 문자열까지 실어야 해서 콤마 목록으로는 표현이 안 됨)."""
