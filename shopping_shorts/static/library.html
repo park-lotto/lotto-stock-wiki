@@ -80,6 +80,11 @@
   .modes{display:flex;flex-direction:column;gap:6px;font-size:13px}
   .modes label{display:flex;align-items:center;gap:6px;cursor:pointer}
   #genTopic{width:100%;margin-top:8px;background:#0d131c;border:1px solid var(--line);border-radius:8px;padding:9px 12px;color:var(--txt);font-size:13px}
+  .subject-row{margin:6px 0 10px 20px;font-size:13px}
+  .subject-row .subj-label{color:var(--sub);margin-right:6px}
+  .subject-row #genSubject{width:70%;background:#0d131c;border:1px solid var(--line);
+    border-radius:6px;color:var(--txt);padding:6px 10px;font-size:13px}
+  .subject-row .subj-hint{color:var(--sub);font-size:11.5px;margin-top:5px}
   .gen-run{margin-top:16px;width:100%;background:linear-gradient(90deg,#153a6b,#0d2340);border:1px solid var(--accent);color:#7db4ff;font-weight:600;font-size:14px;padding:11px;border-radius:9px;cursor:pointer}
   .gen-run:disabled{opacity:.6;cursor:wait}
   .gen-results{margin-top:8px}
@@ -123,10 +128,14 @@
           <div class="elem-row" data-k="tone"><label><input type="checkbox" data-k="tone" checked onchange="onElemToggle(this)"> 🗣 말투/어미</label><select class="elem-mode" style="display:none"></select></div>
           <div class="elem-row" data-k="devices"><label><input type="checkbox" data-k="devices" checked onchange="onElemToggle(this)"> 🧲 설득장치</label><select class="elem-mode" style="display:none"></select></div>
         </div>
-        <div class="gen-sec">주제</div>
+        <div class="gen-sec">주제 / 소재</div>
         <div class="modes">
-          <label><input type="radio" name="genmode" value="A" checked onchange="toggleTopic()"> 같은 주제로 신선하게 변주</label>
-          <label><input type="radio" name="genmode" value="B" onchange="toggleTopic()"> 내 주제/제품으로 이식 (구조만 빌림)</label>
+          <label><input type="radio" name="genmode" value="remake" checked onchange="toggleTopic()"> ♻️ 원본 소재 그대로 · 표현만 새로 (중복 회피)</label>
+          <div class="subject-row" id="subjectRow">
+            <span class="subj-label">감지된 소재:</span><input id="genSubject" placeholder="소재 감지 중…">
+            <div class="subj-hint">원본 영상 재사용·2영상 믹싱용. 제품·사실·장면은 그대로, 훅·문장·순서만 새로.</div>
+          </div>
+          <label><input type="radio" name="genmode" value="transplant" onchange="toggleTopic()"> 🔀 내 제품으로 이식 (구조만 빌림)</label>
           <input id="genTopic" placeholder="예: 무선 가습기 / 여름 결로 방지 커튼" style="display:none">
         </div>
         <button class="gen-run" id="genRun" onclick="runGen()">✨ 초안 생성 (10~20초)</button>
@@ -262,13 +271,27 @@ async function openGen(sc){
       sel.appendChild(_mk('random','⏳ 학습된 카테고리 아직 없음 — 레퍼런스 더 쌓이면 생김'));
     }
   });
+  // 리메이크가 기본 → 원본 소재 자동감지 프리필
+  const subjEl = document.getElementById('genSubject');
+  subjEl.value=''; subjEl.placeholder='소재 감지 중…';
+  document.querySelector('input[name=genmode][value=remake]').checked = true;
+  toggleTopic();
+  try{
+    const s = await (await fetch('/api/wiki/subject?shortcode='+encodeURIComponent(sc))).json();
+    if(s.ok) subjEl.value = s.subject || '';
+  }catch(e){}
+  subjEl.placeholder='예: 무선 가습기 물때 청소';
 }
 function onElemToggle(cb){
   const sel = cb.closest('.elem-row').querySelector('.elem-mode');
   sel.style.display = cb.checked ? 'none' : 'inline-block';
 }
 function closeGen(){ document.getElementById('genModal').classList.remove('open'); }
-function toggleTopic(){ const b=document.querySelector('input[name=genmode]:checked').value==='B'; document.getElementById('genTopic').style.display=b?'block':'none'; }
+function toggleTopic(){
+  const mode=document.querySelector('input[name=genmode]:checked').value;
+  document.getElementById('genTopic').style.display = mode==='transplant' ? 'block' : 'none';
+  document.getElementById('subjectRow').style.display = mode==='remake' ? 'block' : 'none';
+}
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeGen(); });
 async function runGen(){
   const btn=document.getElementById('genRun'); const res=document.getElementById('genResults');
@@ -280,12 +303,13 @@ async function runGen(){
   });
   const mode=document.querySelector('input[name=genmode]:checked').value;
   const topic=document.getElementById('genTopic').value.trim();
-  if(mode==='B' && !topic){ res.innerHTML='<div class="gen-err">내 주제/제품을 입력하세요.</div>'; return; }
+  const subject=document.getElementById('genSubject').value.trim();
+  if(mode==='transplant' && !topic){ res.innerHTML='<div class="gen-err">내 주제/제품을 입력하세요.</div>'; return; }
   btn.disabled=true; btn.textContent='⏳ 생성 중…'; res.innerHTML='<div class="gen-load">✨ S급 구조를 빌려 초안 만드는 중… (10~20초)</div>';
   try{
     const d=await (await fetch('/api/wiki/generate?shortcode='+encodeURIComponent(window._genSC), {
       method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({mode, my_topic: topic, n: 3, elem_modes: elemModes}),
+      body: JSON.stringify({mode, my_topic: topic, subject, n: 3, elem_modes: elemModes}),
     })).json();
     if(!d.ok){ res.innerHTML='<div class="gen-err">⚠️ '+esc(d.error||'생성 실패')+'</div>'; return; }
     res.innerHTML=(d.drafts||[]).map((dr,i)=>`<div class="draft" data-draft-id="${dr.draft_id}">
