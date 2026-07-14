@@ -123,3 +123,22 @@ def test_emotion_arc_caps_one_tag_per_beat():
 def test_emotion_arc_low_intensity_no_tag():
     p = _only("emotion_arc"); p["emotion_arc"]["intensity"] = 0.0
     assert naturalize("좋아요", p, beat_role="hook") == "좋아요"
+
+def test_full_pipeline_deterministic():
+    p = merge_profile({})   # 전 스테이지 기본 ON
+    src = "이건 정말 좋습니다. 50% 할인이고 SNS에서 난리예요"
+    p["pronunciation"]["dict"] = {"SNS": "에스엔에스"}
+    a = naturalize(src, p, beat_role="hook", beat_index=0, beat_total=3)
+    b = naturalize(src, p, beat_role="hook", beat_index=0, beat_total=3)
+    assert a == b                          # 완전 결정적
+
+def test_total_tag_cap_across_stages():
+    # emotion_arc + intonation 합쳐도 전체 태그 ≤ max_tags_total
+    p = merge_profile({})
+    p["caps"]["max_tags_total"] = 1
+    out = naturalize("좋아요", p, beat_role="hook")
+    assert out.count("[") <= 1
+
+def test_intonation_off_noop_when_no_question():
+    p = _only("intonation")
+    assert naturalize("좋아요", p) == "좋아요"

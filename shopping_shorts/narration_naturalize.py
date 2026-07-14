@@ -190,10 +190,27 @@ def _emotion_arc(text, cfg, ctx):
     return f"{tag} {text}" if tag else text
 
 
+def _intonation(text, cfg, ctx):
+    # 최소 구현: 물음표 종결 보존(상승억양). 강조는 v2에서. 현재는 무변경에 가깝게.
+    return text
+
+
 _STAGES = [("normalize", _normalize), ("spoken_style", _spoken_style),
            ("pronunciation", _pronunciation), ("phrasing", _phrasing),
            ("endings", _endings), ("fillers", _fillers),
-           ("emotion_arc", _emotion_arc)]
+           ("emotion_arc", _emotion_arc), ("intonation", _intonation)]
+
+
+def _enforce_total_tag_cap(text, cap):
+    """전체 v3 태그([...]) 수를 cap 이하로. 초과분은 앞에서부터 유지, 나머지 제거."""
+    tags = list(re.finditer(r"\[[^\]]+\]\s?", text))
+    if len(tags) <= cap:
+        return text
+    keep_end = tags[cap - 1].start() if cap > 0 else 0
+    # cap개까지만 남기고 이후 태그 제거
+    kept = text[:tags[cap].start()] if cap < len(tags) else text
+    rest = re.sub(r"\[[^\]]+\]\s?", "", text[tags[cap].start():]) if cap < len(tags) else ""
+    return (kept + rest) if cap > 0 else re.sub(r"\[[^\]]+\]\s?", "", text)
 
 
 def naturalize(text, profile=None, *, beat_role=None, beat_index=None, beat_total=None):
@@ -206,4 +223,5 @@ def naturalize(text, profile=None, *, beat_role=None, beat_index=None, beat_tota
         cfg = p.get(name, {})
         if cfg.get("on"):
             out = fn(out, cfg) if fn.__code__.co_argcount == 2 else fn(out, cfg, ctx)
+    out = _enforce_total_tag_cap(out, p.get("caps", {}).get("max_tags_total", 3))
     return out
