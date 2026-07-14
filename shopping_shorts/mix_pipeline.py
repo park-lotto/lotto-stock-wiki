@@ -13,10 +13,11 @@ from shopping_shorts.store import Store
 from shopping_shorts.media_download import download_any
 from shopping_shorts.script_extract import extract_script
 from shopping_shorts.edit_plan import build_edit_plan
-from shopping_shorts.tts import synthesize_tts
+from shopping_shorts import tts
 from shopping_shorts import audio_post
 from shopping_shorts.video_assemble import assemble
 from shopping_shorts.vmake_client import remove_subtitles
+from shopping_shorts.narration_naturalize import naturalize
 
 
 def _source_video_id(i):
@@ -24,13 +25,39 @@ def _source_video_id(i):
 
 
 def _voice_params(voice):
-    """job의 voice 스냅샷(dict|None) → (voice_id, voice_settings, speed, extra_tempo, silence_trim).
-    voice 없으면 전부 기본값(config 기본 성우, 속도 1.0, 무음삭제 off)."""
+    """job의 voice 스냅샷(dict|None) → (voice_id, voice_settings, speed, extra_tempo,
+    silence_trim, naturalize_profile). voice 없으면 전부 기본값(config 기본 성우,
+    속도 1.0, 무음삭제 off, naturalize_profile None → naturalize()가 자체 기본값 사용)."""
     v = voice or {}
     speed = v.get("speed", 1.0)
     extra_tempo = speed / 1.2 if speed > 1.2 else 1.0  # 1.2 초과분만 atempo로
     return (v.get("voice_id"), v.get("settings"), speed, extra_tempo,
-            v.get("silence_trim", "off"))
+            v.get("silence_trim", "off"), v.get("naturalize_profile"))
+
+
+def _synthesize_beats(beats, tts_dir, *, voice_id, voice_settings, speed,
+                      extra_tempo, trim, profile):
+    """비트별로 naturalize→TTS(N-best·연속성)→후처리. beat['tts_path']를 채운다.
+    연속성(previous_text/next_text)은 인접 비트의 '원문'(naturalize 전) narration을 쓴다
+    — naturalize된 텍스트(오디오 태그·추임새 포함)를 연속성으로 넘기면 ElevenLabs가
+    태그를 발화 텍스트로 오인할 수 있어서다."""
+    tts_dir = Path(tts_dir)
+    tts_dir.mkdir(parents=True, exist_ok=True)
+    prof = profile or {}
+    n_best = prof.get("n_best", 1)
+    seed = prof.get("seed")
+    total = len(beats)
+    for i, beat in enumerate(beats):
+        natural = naturalize(beat["narration"], prof, beat_role=beat.get("role"),
+                             beat_index=i, beat_total=total)
+        prev_t = beats[i - 1]["narration"] if i > 0 else None
+        next_t = beats[i + 1]["narration"] if i < total - 1 else None
+        out = tts_dir / f"beat_{beat['beat_idx']}.mp3"
+        tts.synthesize_best(natural, str(out), n=n_best, base_seed=seed,
+                            voice_id=voice_id, voice_settings=voice_settings, speed=speed,
+                            model_id="eleven_v3", previous_text=prev_t, next_text=next_t)
+        audio_post.post_process(str(out), str(out), tempo=extra_tempo, silence_trim=trim)
+        beat["tts_path"] = str(out)
 
 
 def _prepare_sources(urls, work):
@@ -106,17 +133,11 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     if not plan["beats"]:
         raise RuntimeError("EDL 비어있음 — 대본 추출 실패 또는 Gemini 키 소진으로 편집안을 만들지 못함")
 
-    # 4) 비트별 TTS (프리셋 적용 + 후처리)
+    # 4) 비트별 TTS (naturalize + N-best + 연속성 + 프리셋 후처리)
     store.update_mix_job(job_id, status="tts")
-    tts_dir = work / "tts"
-    tts_dir.mkdir(parents=True, exist_ok=True)
-    voice_id, vs, speed, extra_tempo, trim = _voice_params(voice)
-    for beat in plan["beats"]:
-        out = tts_dir / f"beat_{beat['beat_idx']}.mp3"
-        synthesize_tts(beat["narration"], str(out), voice_id=voice_id,
-                       voice_settings=vs, speed=speed)
-        audio_post.post_process(str(out), str(out), tempo=extra_tempo, silence_trim=trim)
-        beat["tts_path"] = str(out)
+    voice_id, vs, speed, extra_tempo, trim, profile = _voice_params(voice)
+    _synthesize_beats(plan["beats"], work / "tts", voice_id=voice_id, voice_settings=vs,
+                      speed=speed, extra_tempo=extra_tempo, trim=trim, profile=profile)
 
     store.update_mix_job(job_id, edit_plan=plan, status="ready_for_review")
 
@@ -214,17 +235,11 @@ def resynth_tts_job(job_id, db_path, work_root):
         return
     plan = job["edit_plan"]
     work = Path(work_root) / job_id
-    tts_dir = work / "tts"
-    tts_dir.mkdir(parents=True, exist_ok=True)
     store.update_mix_job(job_id, status="tts")
-    voice_id, vs, speed, extra_tempo, trim = _voice_params(job.get("voice"))
+    voice_id, vs, speed, extra_tempo, trim, profile = _voice_params(job.get("voice"))
     try:
-        for beat in plan["beats"]:
-            out = tts_dir / f"beat_{beat['beat_idx']}.mp3"
-            synthesize_tts(beat["narration"], str(out), voice_id=voice_id,
-                           voice_settings=vs, speed=speed)
-            audio_post.post_process(str(out), str(out), tempo=extra_tempo, silence_trim=trim)
-            beat["tts_path"] = str(out)
+        _synthesize_beats(plan["beats"], work / "tts", voice_id=voice_id, voice_settings=vs,
+                          speed=speed, extra_tempo=extra_tempo, trim=trim, profile=profile)
         store.update_mix_job(job_id, edit_plan=plan, status="ready_for_review")
     except Exception as e:
         traceback.print_exc(file=sys.stderr)

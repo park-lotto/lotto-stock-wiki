@@ -30,7 +30,7 @@ def test_run_mix_job_happy_path(monkeypatch):
                                                    "start": 0.0, "end": 2.0},
                                        "alternates": [], "effect": "cut"}],
                             "plagiarism_flags": []})
-    monkeypatch.setattr(mix_pipeline, "synthesize_tts", lambda text, out, **k: out)
+    monkeypatch.setattr(mix_pipeline.tts, "synthesize_best", lambda text, out, **k: out)
 
     mix_pipeline.run_mix_job("j1", db, work)
     job = s.get_mix_job("j1")
@@ -106,7 +106,7 @@ def test_retype_mix_job_regenerates_with_chosen_type(monkeypatch):
                            "primary": {"video_id": "s0", "seg_id": "s0-0", "start": 0.0, "end": 2.0},
                            "alternates": [], "effect": "cut"}], "plagiarism_flags": []}
     monkeypatch.setattr(mix_pipeline, "build_edit_plan", fake_build)
-    monkeypatch.setattr(mix_pipeline, "synthesize_tts", lambda text, out, **k: out)
+    monkeypatch.setattr(mix_pipeline.tts, "synthesize_best", lambda text, out, **k: out)
 
     mix_pipeline.retype_mix_job("jt", "recipe_secret", db, work)
     job = s.get_mix_job("jt")
@@ -211,7 +211,7 @@ def test_resynth_tts_job_applies_voice(monkeypatch, tmp_path):
         captured["kw"] = kw
         from pathlib import Path
         Path(out).write_bytes(b"ID3"); return out
-    monkeypatch.setattr(mix_pipeline, "synthesize_tts", fake_synth)
+    monkeypatch.setattr(mix_pipeline.tts, "synthesize_best", fake_synth)
     monkeypatch.setattr(mix_pipeline.audio_post, "post_process", lambda *a, **k: a[1])
 
     db = tmp_path / "t.db"; s = Store(db)
