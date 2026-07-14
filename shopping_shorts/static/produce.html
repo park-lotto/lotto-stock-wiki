@@ -96,7 +96,10 @@
 
       <!-- 즐겨찾기에서 받은 영상 역할 배정(핸드오프 있을 때만 표시) -->
       <div id="rolePanel" style="display:none;background:#0d1420;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:16px">
-        <div style="font-size:13px;margin-bottom:4px"><b>📥 받은 영상 — 각각 역할을 정하세요</b></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <b style="font-size:13px">📥 받은 영상 — 각각 역할을 정하세요</b>
+          <button onclick="resetHandoff()" style="background:none;border:1px solid var(--line);color:var(--sub);font-size:11px;border-radius:6px;padding:3px 8px;cursor:pointer">🔄 새로 시작</button>
+        </div>
         <div class="hint" style="margin:0 0 10px">📝 <b>대본용</b>= 이 영상의 대본을 뽑아 씁니다(한국판 추천) · 🎬 <b>화면용</b>= 2단계에서 대본에 맞춰 화면으로 씁니다(외국·무자막 추천)</div>
         <div id="roleList" style="display:flex;flex-direction:column;gap:8px"></div>
         <button class="btn-next" style="padding:9px 16px;margin-top:12px" onclick="extractRoleScripts()">📝 대본용 영상에서 대본 뽑기</button>
@@ -889,7 +892,7 @@ document.querySelectorAll('#scriptTabs .tab').forEach(t=> t.onclick=()=>setScrip
 
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function lenText(t){ t=t||''; const c=t.replace(/\s/g,'').length; return `${t.length}자 · 약 ${Math.round(c/6.5)}초`; }
-function onScriptInput(){ const ta=document.getElementById('scriptText'); STATE.script=ta.value; document.getElementById('lenHint').textContent=lenText(STATE.script); }
+function onScriptInput(){ const ta=document.getElementById('scriptText'); STATE.script=ta.value; document.getElementById('lenHint').textContent=lenText(STATE.script); if(HANDOFF.length) saveWork(); }
 function updateLen(){ onScriptInput(); }
 
 // 초안 렌더(제미니·믹스 공유)
@@ -1001,26 +1004,44 @@ function addMixUrl(){
 // 즐겨찾기에서 넘어온 영상들. 각 항목에 role('script'=대본용 / 'footage'=화면용)을 붙여
 // 관리한다. 기본값: 첫 영상은 대본용, 나머지는 화면용(사장님이 바꿈).
 let HANDOFF = [];   // [{url,shortcode,name,thumbnail,caption,role}]
+// 작업 상태 저장/복원 — 다른 페이지 갔다 오면 받은 영상·역할·대본이 사라지던 것 방지
+// (2026-07-14). sessionStorage에 상시 보관, 매 변경 시 갱신, 로드 시 복원.
+function saveWork(){
+  try{ sessionStorage.setItem('produce_work', JSON.stringify({handoff:HANDOFF, script:STATE.script||''})); }catch(e){}
+}
+function clearWork(){ try{ sessionStorage.removeItem('produce_work'); }catch(e){} }
 function _consumeProduceHandoff(){
-  let items;
+  // 1순위: 즐겨찾기에서 방금 넘어온 신규 핸드오프. 2순위: 이전 작업상태 복원.
+  let items, restored=false, savedScript='';
   try{ items=JSON.parse(sessionStorage.getItem('produce_handoff')||'null'); }catch(e){ items=null; }
-  if(!items || !items.length){
-    // 구버전 호환: items 없이 urls만 있으면 화면용으로 취급.
+  if(items && items.length){
+    HANDOFF = items.map((it,i)=>({...it, role: i===0 ? 'script' : 'footage'}));
+  } else {
+    // 구버전 호환(urls만)
     let urls; try{ urls=JSON.parse(sessionStorage.getItem('produce_mix_urls')||'null'); }catch(e){ urls=null; }
-    if(!urls || !urls.length) return;
-    items = urls.map(u=>({url:u, shortcode:'', name:'', thumbnail:'', caption:''}));
+    if(urls && urls.length){
+      HANDOFF = urls.map((u,i)=>({url:u, shortcode:'', name:'', thumbnail:'', caption:'', role:i===0?'script':'footage'}));
+    } else {
+      // 넘어온 게 없으면 이전 작업상태 복원
+      let w; try{ w=JSON.parse(sessionStorage.getItem('produce_work')||'null'); }catch(e){ w=null; }
+      if(w && w.handoff && w.handoff.length){ HANDOFF=w.handoff; savedScript=w.script||''; restored=true; }
+    }
   }
   sessionStorage.removeItem('produce_handoff');
   sessionStorage.removeItem('produce_mix_urls');
-  HANDOFF = items.map((it,i)=>({...it, role: i===0 ? 'script' : 'footage'}));
+  if(!HANDOFF.length) return;   // 받은 것도 복원할 것도 없음 → 역할패널 숨김 유지
+  if(restored && savedScript){ STATE.script = savedScript; setScriptMode('manual'); }
   const b=document.getElementById('handoffBanner');
   if(b){
     b.style.display='block';
-    b.innerHTML=`⭐ 즐겨찾기에서 <b>영상 ${HANDOFF.length}개</b>를 받았어요 — 아래에서 각 영상을 <b>📝대본용 / 🎬화면용</b>으로 나눈 뒤, 대본용에서 대본을 뽑아 확정하세요.`;
+    b.innerHTML = restored
+      ? `↩️ 이어서 작업 중 — 받은 <b>영상 ${HANDOFF.length}개</b>와 역할·대본을 유지했어요.`
+      : `⭐ 즐겨찾기에서 <b>영상 ${HANDOFF.length}개</b>를 받았어요 — 아래에서 각 영상을 <b>📝대본용 / 🎬화면용</b>으로 나눈 뒤, 대본용에서 대본을 뽑아 확정하세요.`;
   }
   document.getElementById('rolePanel').style.display='block';
   renderRoleList();
   syncFootageToStep2();
+  saveWork();
 }
 function renderRoleList(){
   const el=document.getElementById('roleList'); if(!el) return;
@@ -1035,7 +1056,15 @@ function renderRoleList(){
     </div>`).join('');
 }
 function setRole(i, role){
-  if(HANDOFF[i]){ HANDOFF[i].role=role; syncFootageToStep2(); }
+  if(HANDOFF[i]){ HANDOFF[i].role=role; syncFootageToStep2(); saveWork(); }
+}
+function resetHandoff(){
+  if(!confirm('받은 영상·역할·대본을 비우고 새로 시작할까요?')) return;
+  HANDOFF=[]; STATE.script=''; clearWork();
+  document.getElementById('rolePanel').style.display='none';
+  document.getElementById('handoffBanner').style.display='none';
+  setScriptMode('manual');
+  syncFootageToStep2();
 }
 // 화면용으로 지정된 영상들을 2단계(영상) URL 입력칸에 반영.
 function syncFootageToStep2(){
@@ -1079,6 +1108,7 @@ function pickRoleScript(idx){
   STATE.script = r.text;
   setScriptMode('manual');   // 편집 가능한 직접작성 창에 채워 넣음(변주는 여기서)
   document.getElementById('roleScriptStatus').innerHTML='✅ 대본을 골랐어요 — 아래 직접작성 창에서 다듬거나, 제미니/믹스로 변주할 수 있어요.';
+  saveWork();
 }
 async function startProduceMix(){
   if(!STATE.script){ alert('1단계에서 대본을 먼저 확정하세요'); return; }
