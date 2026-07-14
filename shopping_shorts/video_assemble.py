@@ -611,13 +611,20 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     overlay = deco.get("overlay") or {}
     ov_path = overlay.get("_abspath")
     has_overlay = bool(ov_path and os.path.exists(ov_path))
-    if not has_bgm and not has_overlay:
-        _run_ffmpeg(["ffmpeg", "-y", "-i", str(in_video), "-vf", vf, "-r", "30",
+    # 모션(전환·스티커 등 타임드 투명 레이어)과 색감 필터
+    motion = deco.get("motion") or {}
+    motion_layers = [L for L in (motion.get("layers") or []) if L.get("_abspath")]
+    color_filter = (motion.get("color_filter") or "").strip()
+    has_motion = bool(motion_layers)
+    if not has_bgm and not has_overlay and not has_motion:
+        base_vf = f"{vf},{color_filter}" if color_filter else vf
+        _run_ffmpeg(["ffmpeg", "-y", "-i", str(in_video), "-vf", base_vf, "-r", "30",
                      "-c:v", "libx264", "-c:a", "copy", "-pix_fmt", "yuv420p", str(out_path)],
                     cwd=str(work))
         return str(out_path)
     inputs = ["-i", str(in_video)]
-    fc = [f"[0:v]{vf}[v0]"]
+    base_vf = f"{vf},{color_filter}" if color_filter else vf
+    fc = [f"[0:v]{base_vf}[v0]"]
     vcur, idx = "v0", 1
     if has_overlay:                                   # 이미지 오버레이(로고·뱃지 등)
         inputs += ["-i", ov_path]
@@ -630,6 +637,10 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         fc.append(f"[{vcur}][ov]overlay=x=W*{xf:.4f}-w/2:y=H*{yf:.4f}-h/2[v1]")
         vcur = "v1"
         idx += 1
+    if has_motion:                                    # 전환·스티커 등 타임드 투명 레이어
+        m_inputs, m_fc, vcur, idx = _motion_layer_filters(motion_layers, idx, vcur)
+        inputs += m_inputs
+        fc += m_fc
     amap = None
     if has_bgm:                                       # 배경음악(나레이션 위 낮은 볼륨)
         inputs += ["-i", bgm_path]

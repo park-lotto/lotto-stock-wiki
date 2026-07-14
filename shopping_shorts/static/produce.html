@@ -579,9 +579,12 @@ function applyFullPreset(i){
 }
 // ── 🪄 진입 자동완성: step5(꾸미기) 첫 진입 시 기본 스타일+실장면 배경 자동 적용(딸깍) ──
 const DEFAULT_STYLE_NAME='임팩트 옐로';
+let DEFAULT_APPLIED=false;
 function applyDefaultStyleOnEntry(){
   // step5 진입 1회: 사용자가 아직 스타일을 안 건드렸으면 기본 스타일 자동 적용 + 실장면 배경 자동 ON.
-  if(STYLE_TOUCHED) { renderStyleCards(); return; }
+  // DEFAULT_APPLIED: 페이지 로드당 최초 1회만 자동적용 → 재진입 시 수동 미세조정(카드 미클릭) 보존.
+  if(STYLE_TOUCHED || DEFAULT_APPLIED){ renderStyleCards(); return; }
+  DEFAULT_APPLIED=true;
   const di = FULL_PRESETS.findIndex(p=>p.name===DEFAULT_STYLE_NAME);
   if(di>=0) applyFullPreset(di);          // updateHC/updateCaption 내부호출됨
   // 실장면 배경 자동 ON(매칭된 job 있을 때만). 실패는 조용히 흰배경 유지.

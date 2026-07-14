@@ -86,3 +86,38 @@ def test_motion_layer_filters_builds_overlay_chain():
 def test_motion_layer_filters_empty_is_noop():
     inputs, fc, vcur, nxt = _motion_layer_filters([], next_input_idx=1, vcur="v0")
     assert inputs == [] and fc == [] and vcur == "v0" and nxt == 1
+
+
+import shopping_shorts.video_assemble as va
+
+
+def test_burn_captions_composites_motion_layers(tmp_path, monkeypatch):
+    # 모션 자산 실물(빈 파일이어도 경로 존재하면 빌더가 포함)
+    asset = tmp_path / "swipe.mov"
+    asset.write_bytes(b"\x00")
+    base = tmp_path / "base.mp4"
+    base.write_bytes(b"\x00")
+
+    captured = {}
+    monkeypatch.setattr(va, "_run_ffmpeg", lambda cmd, **k: captured.setdefault("cmd", cmd))
+    # ⚠️ _burn_captions는 폰트 미해결 시 조기 복사 후 return(538~540행) → 모션 코드에 도달 못 함.
+    #    테스트를 실폰트에 의존시키지 않도록 폰트 해석을 강제하고 실제 복사는 no-op.
+    monkeypatch.setattr(va, "_resolve_font", lambda: str(asset))
+    monkeypatch.setattr(va.shutil, "copy", lambda *a, **k: None)
+    # 폰트/자막 경로를 타지 않도록 자막 없는 최소 edit_plan
+    edit_plan = {"beats": []}
+    deco = {
+        "motion": {
+            "color_filter": "eq=saturation=1.2",
+            "layers": [{"_abspath": str(asset), "start": 0.5, "dur": 0.6,
+                        "x": 50, "y": 50, "width": 720, "alpha": 1}],
+        }
+    }
+    out = tmp_path / "out.mp4"
+    va._burn_captions(str(base), edit_plan, {}, str(out), tmp_path, None, None, deco)
+    cmd = captured["cmd"]
+    assert "-filter_complex" in cmd            # 모션 있으면 복합 경로
+    fcx = cmd[cmd.index("-filter_complex") + 1]
+    assert "eq=saturation=1.2" in fcx          # base vf에 색감필터 부착
+    assert "overlay=" in fcx                   # 레이어 합성
+    assert str(asset) in cmd                   # 자산이 입력으로 추가됨
