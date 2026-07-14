@@ -138,8 +138,24 @@ def _phrasing(text, cfg):
     return text
 
 
+def _endings(text, cfg):
+    intensity = cfg.get("intensity", 0.3)
+    if intensity <= 0:
+        return text
+    # 마침표 위치를 앞에서부터 intensity 비율만 '…'로(결정적)
+    positions = [m.start() for m in re.finditer(r"\.(?=\s|$)", text)]
+    take = int(len(positions) * intensity + 1e-9)
+    take = len(positions) if intensity >= 1.0 else take
+    chosen = set(positions[:take])
+    out = []
+    for i, ch in enumerate(text):
+        out.append("…" if (ch == "." and i in chosen) else ch)
+    return "".join(out)
+
+
 _STAGES = [("normalize", _normalize), ("spoken_style", _spoken_style),
-           ("pronunciation", _pronunciation), ("phrasing", _phrasing)]
+           ("pronunciation", _pronunciation), ("phrasing", _phrasing),
+           ("endings", _endings)]
 
 
 def naturalize(text, profile=None, *, beat_role=None, beat_index=None, beat_total=None):

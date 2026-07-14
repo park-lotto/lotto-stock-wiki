@@ -72,3 +72,17 @@ def test_phrasing_skip_if_already_punctuated():
 def test_phrasing_off_noop():
     p = _only("phrasing"); p["phrasing"]["on"] = False
     assert naturalize("싸고 좋은데 최고", p) == "싸고 좋은데 최고"
+
+def test_endings_softens_period_to_ellipsis():
+    p = _only("endings"); p["endings"]["intensity"] = 1.0
+    # 마침표 종결을 부드러운 여운(…)으로(모두)
+    assert naturalize("좋아요. 예뻐요.", p) == "좋아요… 예뻐요…"
+
+def test_endings_partial_deterministic():
+    p = _only("endings"); p["endings"]["intensity"] = 0.5
+    src = "하나. 둘. 셋. 넷."
+    assert naturalize(src, p) == naturalize(src, p)  # 결정적
+
+def test_endings_off_noop():
+    p = _only("endings"); p["endings"]["on"] = False
+    assert naturalize("좋아요.", p) == "좋아요."
