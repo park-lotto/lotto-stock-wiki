@@ -164,7 +164,7 @@ function render(i){
   const chars=(s.characters||[]).map(c=>`<li><span class="who">${esc(c.who)}</span> — ${esc(c.role)}</li>`).join('');
   const beats=(s.beats||[]).map(b=>`<li><span class="lb">${esc(b.label)}</span><span class="sc">${esc(b.approx_sec||'')}</span><br>${esc(b.desc||'')}</li>`).join('');
   const devs=(s.devices||[]).map(d=>`<span>${esc(d)}</span>`).join('');
-  return `<div class="card">
+  return `<div class="card" data-category="${esc(i.category||'')}">
     <div class="vid">${video}</div>
     <div class="body">
       <div class="ch"><span>${esc(i.name||'')} <span class="meta">· ${esc(i.category||'')}</span></span>
@@ -206,7 +206,7 @@ async function openGen(sc){
   window._genSC=sc; document.getElementById('genResults').innerHTML='';
   document.getElementById('genModal').classList.add('open');
   const card = document.querySelector(`[onclick="openGen('${sc}')"]`)?.closest('.card');
-  const category = card?.querySelector('.meta')?.textContent?.split('·')[1]?.trim() || '';
+  const category = card?.dataset.category || '';
   window._genOptions = {};
   try{
     const d = await (await fetch('/api/wiki/element_options?category='+encodeURIComponent(category))).json();
