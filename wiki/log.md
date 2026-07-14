@@ -1476,3 +1476,10 @@ S급 대본을 위키에 모아 **구조를 학습→변형/믹스로 새 대본
 - ✨ UX: 팝업모달(wide)·큰세로썸네일+클릭즉시embed재생·썸네일상태캡처·gstatic직접로드
 - 💰 SerpApi 월250무료→$50/5000=~14원/회, imgur무료. 다음: API결제부터(사용자명시)
 - ⚠️ 재배포순간 502 "Unexpected token '<'" 일시적(Apache프록시, 안정화됨)
+
+## 2026-07-15 (집PC) 대본생성 소재고정 리메이크 — ✅ 구현·검증 (커밋 15bbfe99~49f7d023)
+- 문제: 도서관 대본생성 모드 A("같은주제 신선변주")가 소재를 드리프트 → 원본영상 재사용·2영상믹싱 때 화면과 결 안맞음. 브레인스토밍→설계→계획→SDD 5태스크
+- 재편: 애매한 A/B → **remake(원본 소재 고정, 표현만 새로=중복회피) + transplant(내 제품 이식)**. A→remake·B→transplant 하위호환
+- detect_subject(원본 full_text→소재 한줄, 온디맨드 1콜) / generate_variations remake 프롬프트 소재잠금 / GET /api/wiki/subject / library.html 2모드UI+소재 자동프리필(수정가능)+stale레이스 가드
+- 검증: 65 테스트 green, node --check, toggleTopic 실함수 DOM스텁 구동(remake→소재칸/transplant→이식칸 토글), 라이브 HTTP /api/wiki/subject 404 JSON. 각 태스크 spec+quality(opus) 리뷰 통과, 최종 전체리뷰 Ready
+- ⏭ 남은것: 라이브 배포 후 실 S급항목으로 브라우저 육안(브라우저 MCP 동시세션 점유로 이월) — 소재 유지·표현변형 눈으로 확인
