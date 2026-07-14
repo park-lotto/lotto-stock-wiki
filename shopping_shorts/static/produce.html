@@ -486,11 +486,59 @@ const FULL_PRESETS=[
     hc:{font:'SUIT-Bold.otf',color:'#FFFFFF',weight:900,size:58,x:50,y:16,outline:true,outline_color:'#00D9E8',outline_w:8},
     cap:{font:'SUIT-Bold.otf',color:'#FFFFFF',size:48,y:84,outline:true,outline_color:'#00D9E8',outline_w:6,box:false,effect:'pop'}},
 ];
-function renderFullPresets(){
-  const box=document.getElementById('fullPresets'); if(!box) return;
-  box.innerHTML=FULL_PRESETS.map((p,i)=>`<button class="fullPreset tab" onclick="applyFullPreset(${i})"
-    style="flex:0 0 auto;min-width:auto;padding:8px 14px;font-size:13px;font-weight:600;white-space:nowrap;border-left:12px solid ${p.chip}">${p.name}</button>`).join('');
+// 대표 완성 스타일(피팅 카드 우선 노출). 나머지는 더보기.
+let STYLE_TOUCHED=false;
+const FEATURED = ['모던 화이트','임팩트 옐로','옐로 2톤 A','네온 글로우 화이트','레드 강조'];
+let MORE_OPEN = false;
+let POSTER_URL_CACHE = null;
+function currentPosterUrl(){
+  // MIX_JOB 있으면 실장면 poster, 없으면 null(카드 폴백=chip 그라데이션). 한 번 계산해 캐시.
+  if(POSTER_URL_CACHE!==null) return POSTER_URL_CACHE || null;
+  POSTER_URL_CACHE = (typeof MIX_JOB!=='undefined' && MIX_JOB) ? ('/api/produce/mix/poster/'+MIX_JOB) : '';
+  return POSTER_URL_CACHE || null;
 }
+function styleCardHTML(p, idx, selIdx){
+  const sample = ((document.getElementById('hcText')||{}).value||'').trim() || '이거 실화?';
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  const hc = p.hc||{}, extra = (p.extra&&p.extra[0])||null;
+  const poster = currentPosterUrl();
+  const bg = poster ? `background:#000;` : `background:linear-gradient(160deg,${p.chip||'#333'},#0d1420);`;
+  const bgImg = poster ? `<img src="${poster}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.9" alt="" onerror="this.style.display='none'">` : '';
+  // 카드 스케일: 카드폭 92px 기준으로 hc.size(1080기준)를 축소
+  const sc = 92/1080;
+  const oc = hc.outline_color||'#000', ow = Math.max(1,Math.round((hc.outline_w||6)*sc));
+  const shadow = hc.outline ? `text-shadow:${ow}px ${ow}px 0 ${oc},-${ow}px -${ow}px 0 ${oc},${ow}px -${ow}px 0 ${oc},-${ow}px ${ow}px 0 ${oc};` : '';
+  const line1 = `<div style="color:${hc.color||'#fff'};font-family:'${fontCss(hc.font)}',sans-serif;font-weight:900;font-size:${Math.max(10,(hc.size||64)*sc)}px;${shadow}line-height:1.1">${esc(sample)}</div>`;
+  let line2 = '';
+  if(extra){ const es=92/1080; const eoc=extra.outline_color||'#000', eow=Math.max(1,Math.round((extra.outline_w||6)*es));
+    const esh = extra.outline ? `text-shadow:${eow}px ${eow}px 0 ${eoc},-${eow}px -${eow}px 0 ${eoc},${eow}px -${eow}px 0 ${eoc},-${eow}px ${eow}px 0 ${eoc};` : '';
+    line2 = `<div style="color:${extra.color||'#FFE100'};font-family:'${fontCss(extra.font)}',sans-serif;font-weight:900;font-size:${Math.max(10,(extra.size||64)*es)}px;${esh}line-height:1.1;margin-top:2px">${esc(sample)}</div>`; }
+  const selBorder = idx===selIdx ? 'outline:2px solid var(--accent2);outline-offset:1px;' : 'border:1px solid var(--line);';
+  return `<button type="button" onclick="pickStyleCard(${idx})" title="${esc(p.name)}"
+    style="flex:0 0 auto;position:relative;width:92px;aspect-ratio:9/16;border-radius:9px;overflow:hidden;cursor:pointer;padding:0;${bg}${selBorder}background-clip:padding-box">
+    ${bgImg}
+    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px;text-align:center;z-index:2">${line1}${line2}</div>
+    <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.55);color:#fff;font-size:9px;padding:2px 0;z-index:3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.name)}</div>
+  </button>`;
+}
+function selectedStyleIdx(){
+  // STATE.headcopy가 가리키는 현재 스타일 추정: 폰트+색 일치하는 첫 프리셋(없으면 -1)
+  const h = (STATE && STATE.headcopy)||{};
+  return FULL_PRESETS.findIndex(p => p.hc && p.hc.font===h.font && p.hc.color===h.color);
+}
+function renderStyleCards(){
+  const box=document.getElementById('fullPresets'); if(!box) return;
+  const selIdx = selectedStyleIdx();
+  const featIdx = FEATURED.map(n=>FULL_PRESETS.findIndex(p=>p.name===n)).filter(i=>i>=0);
+  const restIdx = FULL_PRESETS.map((_,i)=>i).filter(i=>!featIdx.includes(i));
+  const show = MORE_OPEN ? featIdx.concat(restIdx) : featIdx;
+  box.innerHTML = show.map(i=>styleCardHTML(FULL_PRESETS[i], i, selIdx)).join('');
+  const mb=document.getElementById('moreStylesBtn'); if(mb) mb.textContent = MORE_OPEN ? '− 접기' : '+ 더보기';
+}
+function toggleMoreStyles(){ MORE_OPEN=!MORE_OPEN; renderStyleCards(); }
+function pickStyleCard(i){ STYLE_TOUCHED=true; applyFullPreset(i); renderStyleCards(); }
+// renderFullPresets 이름을 참조하는 기존 호출부 호환용 별칭
+function renderFullPresets(){ renderStyleCards(); }
 function applyConfig(h, c){
   const g=id=>document.getElementById(id);
   if(h){ // 헤드카피
@@ -785,6 +833,7 @@ function updateHC(){
     el.style.padding=`${Math.round(hc.box_pad*scale)}px ${Math.round(hc.box_pad*1.5*scale)}px`;
     el.style.borderRadius=Math.round(10*scale*3)+'px';
   } else { el.style.background='none'; el.style.padding='0 6px'; el.style.borderRadius='0'; }
+  if(document.getElementById('fullPresets')) renderStyleCards();
 }
 
 // 스타일 프리셋 — 고민없이 누르면 색·크기·외곽선 한 번에 지정(핵심 포인트)
