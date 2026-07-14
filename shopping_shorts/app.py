@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 import requests
-from fastapi import BackgroundTasks, FastAPI, Request
+from fastapi import BackgroundTasks, FastAPI, Request, UploadFile, File, Form
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from shopping_shorts.service import collect, generate_missing_drafts, next_draft_targets
@@ -26,11 +26,45 @@ from shopping_shorts.channels import load_channels
 from shopping_shorts.video_analysis import analyze_video, translate_keyword
 from shopping_shorts.product_identify import fetch_lens_lines, identify_product_from_lines
 from shopping_shorts.search_links import build_search_links, lens_search_url
-from shopping_shorts.mix_pipeline import run_mix_job, run_render, retype_mix_job, _source_video_id
+from shopping_shorts.mix_pipeline import run_mix_job, run_render, retype_mix_job, _source_video_id, resynth_tts_job
+from shopping_shorts.lens_discover import search_similar_videos, upload_to_imgur
+from shopping_shorts.media_download import resolve_media_url
 from shopping_shorts import edit_plan as _edit_plan
+from shopping_shorts import voice_presets, audio_post
+from shopping_shorts.tts import synthesize_tts
 import uuid
 
 app = FastAPI(title="쇼핑쇼츠 레퍼런스 랭킹")
+
+
+@app.on_event("startup")
+def _seed_voice_presets():
+    """기동 시 큐레이션 프리셋을 DB로 upsert(idempotent)."""
+    try:
+        voice_presets.seed_presets(Store(DB_PATH))
+    except Exception:
+        pass  # seed 실패가 앱 기동을 막지 않게
+
+# ── 틱톡 키워드검색 노브 기본값 + 비용 상수 (2026-07-14) ──
+# clockworks/tiktok-scraper = $1.70/1,000건 → 1건 $0.0017 (조사확정).
+_TIKTOK_SEARCH_COUNT_DEFAULT = 50      # 언어당 fetch 개수
+_TIKTOK_DAILY_LIMIT_DEFAULT = 10       # 사용자별 하루 수집 횟수
+_TIKTOK_MONTH_BUDGET_DEFAULT = 5.0     # 월 예산 상한($) — 넘으면 킬스위치
+_TIKTOK_COST_PER_ITEM = 0.0017
+_TIKTOK_LANG_KINDS = {"ko", "en", "ja", "zh", "ru"}   # 키워드 시드의 언어코드 kind
+
+# ── 렌즈(SerpApi Google Lens) 유사영상 발굴 (2026-07-14) ──
+_LENS_MONTH_LIMIT_DEFAULT = 100   # SerpApi 무료 100회/월
+
+
+def _tiktok_knobs(store):
+    """설정 3노브를 타입 정규화해 반환(없으면 기본값)."""
+    return {
+        "search_count": int(store.get_setting("tiktok_search_count", _TIKTOK_SEARCH_COUNT_DEFAULT)),
+        "daily_limit": int(store.get_setting("tiktok_daily_limit", _TIKTOK_DAILY_LIMIT_DEFAULT)),
+        "month_budget": float(store.get_setting("tiktok_month_budget", _TIKTOK_MONTH_BUDGET_DEFAULT)),
+    }
+
 
 _MEDIA_CODE_RE = re.compile(r"/(?:p|reel|reels)/([A-Za-z0-9_-]+)")
 
@@ -45,7 +79,7 @@ def _media_code(url):
 
 
 @app.post("/api/collect")
-def api_collect(background_tasks: BackgroundTasks, limit: int | None = None, platform: str = "instagram"):
+def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int | None = None, platform: str = "instagram"):
     """지금 수집 버튼. limit=채널 수 상한(테스트용). platform=플랫폼(기본 인스타).
 
     댓글 draft 생성(항목당 Gemini 호출, 쿼터 걸리면 62초 대기)은 응답 후
@@ -58,14 +92,38 @@ def api_collect(background_tasks: BackgroundTasks, limit: int | None = None, pla
     필요할 때만 이어서 생성.
 
     platform != "instagram"인 경우 댓글 draft/save_last_run(인스타 전용
-    캐시)은 건너뛴다 — 유튜브 등은 _collect_youtube가 자체적으로 저장한다."""
+    캐시)은 건너뛴다 — 유튜브 등은 _collect_youtube가 자체적으로 저장한다.
+
+    platform == "tiktok"이면 키워드검색이 Apify 유료라 남용/비용 가드를 건다:
+    ① 월예산 킬스위치(초과 시 429 budget_exceeded) ② 사용자별 하루 상한
+    (초과 시 429 daily_limit). 통과 후 수집하면 하루카운트 +1, 추정비용 누적."""
+    if platform == "tiktok":
+        guard = Store(DB_PATH)
+        knobs = _tiktok_knobs(guard)
+        now = datetime.now(timezone.utc)
+        month, day = now.strftime("%Y-%m"), now.strftime("%Y-%m-%d")
+        cid = _cid(request)
+        if guard.tiktok_month_spend(month) >= knobs["month_budget"]:
+            return JSONResponse(status_code=429, content={
+                "ok": False, "error_code": "budget_exceeded",
+                "error": f"이번 달 틱톡 예산(${knobs['month_budget']:.2f})을 다 썼습니다"})
+        if guard.tiktok_daily_count(cid, day) >= knobs["daily_limit"]:
+            return JSONResponse(status_code=429, content={
+                "ok": False, "error_code": "daily_limit",
+                "error": f"오늘 틱톡 수집 한도({knobs['daily_limit']}회)를 다 썼습니다"})
     try:
         items = collect(platform=platform, limit_channels=limit)
+        if platform == "tiktok":
+            guard.bump_tiktok_daily(_cid(request), datetime.now(timezone.utc).strftime("%Y-%m-%d"))
+            # 언어 시드 1개 = 1회 검색(그 언어로 search_count개). 지출 = 언어시드수 × 개수 × 단가.
+            n_lang = len([s for s in guard.list_seeds("tiktok") if s["kind"] in _TIKTOK_LANG_KINDS])
+            est = n_lang * knobs["search_count"] * _TIKTOK_COST_PER_ITEM
+            if est:
+                guard.add_tiktok_spend(datetime.now(timezone.utc).strftime("%Y-%m"), est)
         if platform != "instagram":
             _, collected_at = Store(DB_PATH).load_last_run_platform(platform)
             return {"ok": True, "count": len(items), "items": items,
                     "collected_at": collected_at}
-        from datetime import datetime, timezone
         collected_at = datetime.now(timezone.utc).isoformat()
         store = Store(DB_PATH)
         store.save_last_run(items, collected_at)
@@ -76,6 +134,35 @@ def api_collect(background_tasks: BackgroundTasks, limit: int | None = None, pla
         import re
         msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
         return JSONResponse(status_code=500, content={"ok": False, "error": msg})
+
+
+@app.get("/api/tiktok/settings")
+def api_tiktok_settings_get(request: Request):
+    """틱톡 키워드검색 관리자 노브 3개 + 오늘 사용현황(remaining_today·month_spend) 조회.
+
+    프론트가 '오늘 남은 N회'와 이번달 지출을 실제 카운트로 보여주기 위해 사용현황도
+    함께 반환한다. 사용현황은 로그인 고객(_cid)·오늘 날짜 기준."""
+    store = Store(DB_PATH)
+    k = _tiktok_knobs(store)
+    now = datetime.now(timezone.utc)
+    used = store.tiktok_daily_count(_cid(request), now.strftime("%Y-%m-%d"))
+    return {"ok": True, **k,
+            "used_today": used,
+            "remaining_today": max(0, k["daily_limit"] - used),
+            "month_spend": store.tiktok_month_spend(now.strftime("%Y-%m"))}
+
+
+@app.post("/api/tiktok/settings")
+def api_tiktok_settings_set(body: dict):
+    """틱톡 노브 저장. body: {search_count, daily_limit, month_budget} (부분 갱신 허용)."""
+    store = Store(DB_PATH)
+    if "search_count" in body:
+        store.set_setting("tiktok_search_count", str(int(body["search_count"])))
+    if "daily_limit" in body:
+        store.set_setting("tiktok_daily_limit", str(int(body["daily_limit"])))
+    if "month_budget" in body:
+        store.set_setting("tiktok_month_budget", str(float(body["month_budget"])))
+    return {"ok": True, **_tiktok_knobs(store)}
 
 
 @app.post("/api/generate_drafts")
@@ -424,13 +511,25 @@ def api_extract_script(shortcode: str):
     if not result.get("full_text") and not result.get("segments"):
         return JSONResponse(status_code=502, content={"ok": False, "error": "대본 추출 실패(Gemini 키 소진 또는 영상 인식 실패) — 잠시 후 재시도"})
 
-    store.save_script(code, result)
+    store.save_script(code, result, category=item.get("category"))
     return {"ok": True, "cached": False, **result}
 
 
+def _relearn_category(db_path, category):
+    """위키 저장 직후 그 카테고리의 요소 카테고리를 즉시 재학습(백그라운드). 실패해도 무해."""
+    if not category:
+        return
+    try:
+        from shopping_shorts import daily_batch
+        daily_batch.recompute_element_stats(Store(db_path), only_category=category)
+    except Exception as e:  # noqa: BLE001 — 학습 실패는 저장 자체엔 영향 없음
+        print(f"relearn 실패 {category}: {e}")
+
+
 @app.post("/api/wiki/save")
-def api_wiki_save(request: Request, shortcode: str):
-    """S급 대본을 위키(도서관)에 저장 — 대본 확보(캐시/즉석추출) → 구조분석 → 저장."""
+def api_wiki_save(request: Request, shortcode: str, background_tasks: BackgroundTasks):
+    """S급 대본을 위키(도서관)에 저장 — 대본 확보(캐시/즉석추출) → 구조분석 → 저장.
+    저장 직후 그 카테고리를 즉시 재학습(예약 안 기다림, 2026-07-14)."""
     store = Store(DB_PATH)
     items, _ = store.load_last_run()
     target_code = _media_code(shortcode)
@@ -456,7 +555,7 @@ def api_wiki_save(request: Request, shortcode: str):
         script = extract_script(video_path, code, caption=item.get("caption", ""))
         if not script.get("full_text") and not script.get("segments"):
             return JSONResponse(status_code=502, content={"ok": False, "error": "대본 추출 실패 — 잠시 후 재시도"})
-        store.save_script(code, script)
+        store.save_script(code, script, category=item.get("category"))
 
     # 원본 영상 영구보관(도서관 인라인 재생용) — 만료되는 CDN URL 대신 파일로 남긴다.
     media_target = _WIKI_MEDIA_DIR / f"{hashed}.mp4"
@@ -476,6 +575,9 @@ def api_wiki_save(request: Request, shortcode: str):
 
     structure = analyze_structure(script.get("full_text", ""))
     store.save_to_wiki(item, script, structure, customer_id=_cid(request))
+    # 학습 소스에도 구조 채우고(재분석 없이 재사용) 그 카테고리 즉시 재학습(백그라운드).
+    store.save_extract_structure(code, structure)
+    background_tasks.add_task(_relearn_category, DB_PATH, item.get("category"))
     return {"ok": True, "shortcode": code, "structure": structure, "has_video": media_target.exists()}
 
 
@@ -503,24 +605,99 @@ def api_wiki_remove(request: Request, shortcode: str):
     return {"ok": True, "shortcode": shortcode}
 
 
-@app.post("/api/wiki/generate")
-def api_wiki_generate(request: Request, shortcode: str, mode: str = "A", my_topic: str = "", keep: str = "", n: int = 3):
-    """도서관 S급 1개의 구조를 빌려 새 20초 대본 초안 생성(모드 A/B, 유지/변형).
+@app.get("/api/wiki/element_options")
+def api_wiki_element_options(category: str):
+    """생성 모달이 열릴 때 그 대본의 카테고리로 학습된 요소별 옵션을 조회."""
+    return {"ok": True, "options": Store(DB_PATH).get_element_options(category)}
 
-    keep: 유지할 요소 키를 콤마로(예: "characters,twist,development"). 나머지는 변형."""
-    it = Store(DB_PATH).get_wiki_item(shortcode, customer_id=_cid(request))
+
+@app.post("/api/wiki/generate")
+def api_wiki_generate(request: Request, shortcode: str, body: dict):
+    """도서관 S급 1개의 구조를 빌려 새 20초 대본 초안 생성(모드 A/B, 4단 요소 모드).
+
+    body: {mode: "A"|"B", my_topic: str, n: int,
+           elem_modes: {element_key: "keep"|"free"|"random"|"category:<label>"}}
+    (2026-07-13, 기존 쿼리파라미터 keep=콤마문자열 방식에서 JSON body로 전환 —
+    카테고리 지정 모드가 라벨 문자열까지 실어야 해서 콤마 목록으로는 표현이 안 됨)."""
+    store = Store(DB_PATH)
+    it = store.get_wiki_item(shortcode, customer_id=_cid(request))
     if not it:
         return JSONResponse(status_code=404, content={"ok": False, "error": "위키에 없는 항목 — 먼저 S급으로 저장하세요"})
     if not (it.get("structure") or it.get("full_text")):
         return JSONResponse(status_code=422, content={"ok": False, "error": "구조분석/대본이 비어 생성 불가 — 재저장 필요"})
-    kept = {x for x in (keep or "").split(",") if x}
-    keep_flags = {k: (k in kept) for k in script_generate.ELEM_KEYS}
+    mode = body.get("mode", "A")
+    my_topic = body.get("my_topic", "")
+    try:
+        n = int(body.get("n") or 3)
+    except (TypeError, ValueError):
+        n = 3
+    _em = body.get("elem_modes")
+    elem_modes = ({k: v for k, v in _em.items() if k in script_generate.ELEM_KEYS}
+                  if isinstance(_em, dict) else {})
+    category_lookup = store.get_element_options(it.get("category") or "")
     drafts = script_generate.generate_variations(
-        it.get("structure") or {}, it.get("full_text") or "", keep_flags,
+        it.get("structure") or {}, it.get("full_text") or "", elem_modes, category_lookup,
         mode=mode, my_topic=my_topic, n=n)
     if not drafts:
         return JSONResponse(status_code=502, content={"ok": False, "error": "생성 실패(Gemini 키 소진 또는 오류) — 잠시 후 재시도"})
+    cid = _cid(request)
+    for dr in drafts:
+        draft_id = uuid.uuid4().hex[:12]
+        store.save_draft(draft_id, cid, shortcode, None, dr.get("hook", ""), dr.get("script", ""), None, "generate")
+        dr["draft_id"] = draft_id
     return {"ok": True, "drafts": drafts}
+
+
+@app.post("/api/wiki/draft/refine")
+def api_draft_refine(request: Request, body: dict):
+    """초안을 지시문으로 재생성(전체재작성 또는 부분수정) — 새 버전으로 저장.
+
+    body: {draft_id, mode: "rewrite"|"partial", instruction, selected_text?(partial 필수)}"""
+    store = Store(DB_PATH)
+    draft_id = body.get("draft_id", "")
+    mode = body.get("mode", "rewrite")
+    instruction = (body.get("instruction") or "").strip()
+    cur = store.get_draft(draft_id)
+    if not cur:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "해당 초안 없음"})
+    if not instruction:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "지시문을 입력하세요"})
+    if mode == "partial":
+        selected = (body.get("selected_text") or "").strip()
+        if not selected:
+            return JSONResponse(status_code=422, content={"ok": False, "error": "선택한 부분이 필요합니다"})
+        new_text = script_generate.refine_draft_partial(cur["script_text"], selected, instruction)
+    else:
+        new_text = script_generate.refine_draft_rewrite(cur["script_text"], instruction)
+    if not new_text:
+        return JSONResponse(status_code=502, content={"ok": False, "error": "재생성 실패(Gemini 키 소진 또는 오류) — 잠시 후 재시도"})
+    new_id = uuid.uuid4().hex[:12]
+    store.save_draft(new_id, _cid(request), cur["source_shortcode"], draft_id, cur.get("hook", ""),
+                      new_text, instruction, mode)
+    return {"ok": True, "draft_id": new_id, "script_text": new_text}
+
+
+@app.post("/api/wiki/draft/edit")
+def api_draft_edit(request: Request, body: dict):
+    """텍스트박스에서 직접 고친 내용을 AI 호출 없이 새 버전으로 저장.
+
+    body: {draft_id, script_text}"""
+    store = Store(DB_PATH)
+    draft_id = body.get("draft_id", "")
+    script_text = body.get("script_text", "")
+    cur = store.get_draft(draft_id)
+    if not cur:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "해당 초안 없음"})
+    new_id = uuid.uuid4().hex[:12]
+    store.save_draft(new_id, _cid(request), cur["source_shortcode"], draft_id, cur.get("hook", ""),
+                      script_text, None, "manual")
+    return {"ok": True, "draft_id": new_id}
+
+
+@app.get("/api/wiki/draft/history")
+def api_draft_history(draft_id: str):
+    """초안의 버전 체인 전체(오래된 순)."""
+    return {"ok": True, "history": Store(DB_PATH).get_draft_chain(draft_id)}
 
 
 @app.post("/api/find/analyze")
@@ -834,6 +1011,73 @@ def api_mix_tts(job_id: str, beat_idx: int):
     return JSONResponse(status_code=404, content={"ok": False})
 
 
+@app.get("/api/voice-presets")
+def api_voice_presets(lang: str = "KR"):
+    """프리셋 목록(유저 노출용 — source_ref는 내부 전용이라 제외)."""
+    rows = Store(DB_PATH).list_voice_presets(lang=lang)
+    out = []
+    for p in rows:
+        out.append({
+            "preset_id": p["preset_id"], "name": p["name"], "one_liner": p["one_liner"],
+            "lang": p["lang"], "archetype": p["archetype"],
+            "voice_settings": p["voice_settings"], "default_speed": p["default_speed"],
+            "default_silence_trim": p["default_silence_trim"],
+            "sample_url": f"/api/voice-presets/{p['preset_id']}/sample" if p["sample_file"] else None,
+        })
+    return {"ok": True, "presets": out}
+
+
+@app.get("/api/voice-presets/{preset_id}/sample")
+def api_voice_preset_sample(preset_id: str):
+    p = Store(DB_PATH).get_voice_preset(preset_id)
+    if not p or not p.get("sample_file"):
+        return JSONResponse(status_code=404, content={"ok": False})
+    f = voice_presets.SAMPLES_DIR / p["sample_file"]
+    if not f.exists():
+        return JSONResponse(status_code=404, content={"ok": False})
+    return FileResponse(str(f), media_type="audio/mpeg")
+
+
+@app.post("/api/mix/voice")
+def api_mix_voice(background_tasks: BackgroundTasks, body: dict):
+    """프리셋 선택을 job에 스냅샷 저장 후 기존 plan에 대해 TTS 재생성(백그라운드).
+    body: {job_id, preset_id?, voice_id, settings, speed, silence_trim}."""
+    job_id = body.get("job_id")
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job/plan 없음"})
+    voice = {
+        "preset_id": body.get("preset_id"),
+        "voice_id": body.get("voice_id"),
+        "settings": body.get("settings"),
+        "speed": body.get("speed", 1.0),
+        "silence_trim": body.get("silence_trim", "off"),
+    }
+    store.update_mix_job(job_id, voice=voice)
+    background_tasks.add_task(resynth_tts_job, job_id, DB_PATH, _MIX_WORK_DIR)
+    return {"ok": True}
+
+
+@app.post("/api/mix/voice/preview")
+def api_mix_voice_preview(body: dict):
+    """첫 비트만 주어진 설정으로 즉시 합성해 미리듣기 mp3 반환('이 대본으로 다시 듣기')."""
+    job_id = body.get("job_id")
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("edit_plan") or not job["edit_plan"].get("beats"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "plan 없음"})
+    beat0 = job["edit_plan"]["beats"][0]
+    speed = body.get("speed", 1.0)
+    extra = speed / 1.2 if speed > 1.2 else 1.0
+    d = _MIX_WORK_DIR / job_id / "tts"
+    d.mkdir(parents=True, exist_ok=True)
+    out = d / "preview.mp3"
+    synthesize_tts(beat0["narration"], str(out), voice_id=body.get("voice_id"),
+                   voice_settings=body.get("settings"), speed=speed)
+    audio_post.post_process(str(out), str(out), tempo=extra, silence_trim=body.get("silence_trim", "off"))
+    return FileResponse(str(out), media_type="audio/mpeg")
+
+
 @app.get("/api/mix/video/{job_id}")
 def api_mix_video(job_id: str):
     job = Store(DB_PATH).get_mix_job(job_id)
@@ -885,6 +1129,44 @@ def api_video(url: str):
                         headers={"Cache-Control": "public, max-age=3600"})
     except Exception:
         return Response(status_code=404, content=b"")
+
+
+@app.get("/api/media")
+def api_media(platform: str, id: str):
+    """유튜브/틱톡 영상 → 진행형 mp4 direct URL(프론트 <video>가 embed 대신 이 URL로
+    재생 → same-origin canvas 캡처 가능, 2026-07-14). 실패 시 ok:false(프론트 embed 폴백)."""
+    url = resolve_media_url(platform, id)
+    return {"ok": bool(url), "url": url}
+
+
+@app.post("/api/lens/search")
+async def api_lens_search(request: Request, frame: UploadFile = File(...)):
+    """멈춘 프레임 캡처 이미지 → 구글렌즈 → 5플랫폼 유사영상. 월 호출가드(429 lens_limit).
+
+    캡처본을 find_frames/lens/{uuid}.jpg로 저장하고 기존 /api/find/frame 서빙
+    (SerpApi가 쿠키없이 fetch 가능한 _AUTH_ALLOW 경로)으로 공개 URL을 만든다."""
+    store = Store(DB_PATH)
+    now = datetime.now(timezone.utc)
+    month = now.strftime("%Y-%m")
+    limit = int(store.get_setting("lens_month_limit", _LENS_MONTH_LIMIT_DEFAULT))
+    if store.lens_month_count(month) >= limit:
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "lens_limit",
+            "error": f"이번 달 렌즈 검색 한도({limit}회)를 다 썼습니다"})
+    raw = await frame.read()
+    # Google Lens는 갓 호스팅된 우리서버 이미지를 인덱싱 전이라 못 읽어 0개를 준다(실측).
+    # imgur는 Google이 상시 크롤링하는 도메인이라 즉시 매칭 → imgur 업로드 우선,
+    # 실패 시에만 우리서버 URL 폴백(2026-07-14).
+    image_url = upload_to_imgur(raw)
+    if not image_url:
+        work_dir = _FIND_TMP_DIR / "lens"
+        work_dir.mkdir(parents=True, exist_ok=True)
+        name = uuid.uuid4().hex + ".jpg"
+        (work_dir / name).write_bytes(raw)
+        image_url = f"{PUBLIC_BASE_URL}/api/find/frame/lens/{name}"
+    items = search_similar_videos(image_url)
+    store.bump_lens(month)
+    return {"ok": True, "items": items, "count": len(items)}
 
 
 @app.get("/healthz")
@@ -1147,9 +1429,76 @@ def api_produce_mix_settings(body: dict):
         fields["subtitle_removal"] = bool(body.get("subtitle_removal"))
     if "headcopy" in body:
         fields["headcopy"] = body.get("headcopy")  # dict or None
+    if "caption_style" in body:
+        fields["caption_style"] = body.get("caption_style")  # dict or None
+    if "deco" in body:
+        fields["deco"] = body.get("deco")  # 워터마크·추가텍스트·오버레이·BGM dict or None
     if fields:
         store.update_mix_job(job_id, **fields)
     return {"ok": True}
+
+
+@app.post("/api/produce/mix/bgm")
+async def api_produce_mix_bgm(job_id: str = Form(...), file: UploadFile = File(...)):
+    """BGM 오디오 업로드 → job work dir에 bgm.{ext}로 저장. deco.bgm.file로 참조·렌더 시 믹스."""
+    store = Store(DB_PATH)
+    if not job_id or not store.get_mix_job(job_id):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if ext not in (".mp3", ".wav", ".m4a", ".aac", ".ogg"):
+        ext = ".mp3"
+    d = _MIX_WORK_DIR / job_id
+    d.mkdir(parents=True, exist_ok=True)
+    name = "bgm" + ext
+    (d / name).write_bytes(await file.read())
+    return {"ok": True, "file": name}
+
+
+@app.post("/api/produce/mix/overlay")
+async def api_produce_mix_overlay(job_id: str = Form(...), file: UploadFile = File(...)):
+    """오버레이 이미지(PNG/JPG) 업로드 → job work dir에 overlay.{ext}로 저장. deco.overlay.file로 참조."""
+    store = Store(DB_PATH)
+    if not job_id or not store.get_mix_job(job_id):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if ext not in (".png", ".jpg", ".jpeg", ".webp"):
+        ext = ".png"
+    d = _MIX_WORK_DIR / job_id
+    d.mkdir(parents=True, exist_ok=True)
+    name = "overlay" + ext
+    (d / name).write_bytes(await file.read())
+    return {"ok": True, "file": name}
+
+
+@app.get("/api/produce/mix/poster/{job_id}")
+def api_produce_mix_poster(job_id: str):
+    """미리보기 실장면 배경용 — 매칭된 첫 소스 영상의 한 프레임을 9:16으로 잘라 JPG 서빙(캐시)."""
+    import subprocess
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "매칭 먼저"})
+    work = _MIX_WORK_DIR / job_id
+    poster = work / "poster.jpg"
+    if not poster.exists():
+        beats = (job["edit_plan"] or {}).get("beats") or []
+        src, ss = None, 0.0
+        if beats:
+            pr = beats[0].get("primary") or {}
+            vid = pr.get("video_id")
+            ss = float(pr.get("start") or 0)
+            if vid:
+                src = next((work / vid).glob("*.mp4"), None)
+        if src is None:  # 폴백: 이미 렌더된 결과물
+            src = next(work.glob("final.mp4"), None) or next(work.glob("mix_raw.mp4"), None)
+        if src is None:
+            return JSONResponse(status_code=404, content={"ok": False, "error": "소스 영상 없음"})
+        subprocess.run(["ffmpeg", "-y", "-ss", str(ss), "-i", str(src),
+                        "-vf", "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920",
+                        "-frames:v", "1", str(poster)], capture_output=True)
+    if not poster.exists():
+        return JSONResponse(status_code=404, content={"ok": False})
+    return FileResponse(str(poster), media_type="image/jpeg")
 
 
 # 정적 프론트 (마운트는 맨 마지막)

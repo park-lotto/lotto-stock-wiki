@@ -2,6 +2,15 @@
 import os
 from pathlib import Path
 
+# 로컬 개발: shopping_shorts/.env 자동로드(APIFY·ELEVENLABS 등). 서버는 systemd
+# EnvironmentFile로 주입되므로, override=False로 이미 설정된 환경변수를 덮지 않는다
+# (.env 파일이 없으면 조용히 무시 — 서버엔 이 파일이 없어도 정상).
+try:
+    from dotenv import load_dotenv
+    load_dotenv(Path(__file__).parent / ".env", override=False)
+except ImportError:
+    pass
+
 # 채널 소스 엑셀 (컬럼: 채널명 / 주소 / 팔로워 / 인포크링크)
 EXCEL_PATH = Path(
     os.environ.get(

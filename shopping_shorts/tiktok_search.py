@@ -33,3 +33,43 @@ def search(keyword, max_results=10, token=None, timeout=180, poll_interval=5):
             "thumbnail": cover,
         })
     return out
+
+
+def search_full(keyword, max_results=60, token=None, timeout=180, poll_interval=5):
+    """키워드 → 랭킹 파이프라인(build_tiktok_items)이 그대로 소비하는 풀 raw dict 리스트.
+
+    minimal search()가 {url,title,thumbnail}만 뽑는 것과 달리 조회수·좋아요·댓글·
+    게시시각·작성자까지 채워 build_tiktok_items → apply_grades로 바로 흘려보낸다
+    (2026-07-13 필드매핑 실증: id/text/createTimeISO/webVideoUrl/playCount/diggCount/
+    commentCount/authorMeta.name/videoMeta.coverUrl). video_id(id) 없는 행은 랭킹 키가
+    없어 제외."""
+    tokens = [token] if token else APIFY_TOKENS
+    if not tokens:
+        raise RuntimeError("tiktok_search: APIFY_TOKEN이 설정되지 않았습니다")
+    payload = {
+        "searchQueries": [keyword],
+        "resultsPerPage": max_results,
+        "shouldDownloadCovers": False,
+        "shouldDownloadVideos": False,
+        "shouldDownloadAvatars": False,
+    }
+    items = _run_with_rotation(payload, tokens, timeout, poll_interval, actor=_ACTOR)
+    out = []
+    for item in items:
+        vid = str(item.get("id") or "")
+        if not vid:
+            continue
+        meta = item.get("videoMeta") or {}
+        author = item.get("authorMeta") or {}
+        out.append({
+            "video_id": vid,
+            "url": item.get("webVideoUrl", ""),
+            "channel_title": author.get("name", ""),
+            "title": item.get("text", ""),
+            "thumbnail": meta.get("coverUrl") or meta.get("originalCoverUrl", ""),
+            "published_at": item.get("createTimeISO", ""),
+            "views": int(item.get("playCount") or 0),
+            "likes": int(item.get("diggCount") or 0),
+            "comments": int(item.get("commentCount") or 0),
+        })
+    return out

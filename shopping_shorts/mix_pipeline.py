@@ -14,12 +14,23 @@ from shopping_shorts.media_download import download_any
 from shopping_shorts.script_extract import extract_script
 from shopping_shorts.edit_plan import build_edit_plan
 from shopping_shorts.tts import synthesize_tts
+from shopping_shorts import audio_post
 from shopping_shorts.video_assemble import assemble
 from shopping_shorts.vmake_client import remove_subtitles
 
 
 def _source_video_id(i):
     return f"s{i}"
+
+
+def _voice_params(voice):
+    """job의 voice 스냅샷(dict|None) → (voice_id, voice_settings, speed, extra_tempo, silence_trim).
+    voice 없으면 전부 기본값(config 기본 성우, 속도 1.0, 무음삭제 off)."""
+    v = voice or {}
+    speed = v.get("speed", 1.0)
+    extra_tempo = speed / 1.2 if speed > 1.2 else 1.0  # 1.2 초과분만 atempo로
+    return (v.get("voice_id"), v.get("settings"), speed, extra_tempo,
+            v.get("silence_trim", "off"))
 
 
 def _prepare_sources(urls, work):
@@ -72,17 +83,19 @@ def run_mix_job(job_id, db_path, work_root):
         # given_script이 있으면(영상제작 2단계) 나레이션을 새로 쓰지 않고 그 대본으로 매칭.
         source_scripts = list(extracts.values())
         _plan_and_tts(store, job_id, source_scripts, job["target_seconds"],
-                      job["structure"], None, work, given_script=job.get("given_script"))
+                      job["structure"], None, work, given_script=job.get("given_script"),
+                      voice=job.get("voice"))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=str(e))
 
 
 def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, video_type, work,
-                  given_script=None):
+                  given_script=None, voice=None):
     """EDL 생성(3) + 비트별 TTS(4) → edit_plan 저장 + ready_for_review.
     run_mix_job(자동판별, video_type=None)과 retype_mix_job(사용자 선택 유형)이 공유.
-    given_script: 있으면 확정 대본을 그대로 비트로 쪼개 영상만 매칭(영상제작 2단계)."""
+    given_script: 있으면 확정 대본을 그대로 비트로 쪼개 영상만 매칭(영상제작 2단계).
+    voice: job의 voice 스냅샷(선택된 보이스 프리셋) — 있으면 비트별 TTS에 적용."""
     # 3) 통합 EDL
     store.update_mix_job(job_id, status="planning")
     plan = build_edit_plan(source_scripts, target_seconds, structure=structure,
@@ -93,13 +106,16 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     if not plan["beats"]:
         raise RuntimeError("EDL 비어있음 — 대본 추출 실패 또는 Gemini 키 소진으로 편집안을 만들지 못함")
 
-    # 4) 비트별 TTS
+    # 4) 비트별 TTS (프리셋 적용 + 후처리)
     store.update_mix_job(job_id, status="tts")
     tts_dir = work / "tts"
     tts_dir.mkdir(parents=True, exist_ok=True)
+    voice_id, vs, speed, extra_tempo, trim = _voice_params(voice)
     for beat in plan["beats"]:
         out = tts_dir / f"beat_{beat['beat_idx']}.mp3"
-        synthesize_tts(beat["narration"], str(out))
+        synthesize_tts(beat["narration"], str(out), voice_id=voice_id,
+                       voice_settings=vs, speed=speed)
+        audio_post.post_process(str(out), str(out), tempo=extra_tempo, silence_trim=trim)
         beat["tts_path"] = str(out)
 
     store.update_mix_job(job_id, edit_plan=plan, status="ready_for_review")
@@ -116,7 +132,8 @@ def retype_mix_job(job_id, video_type, db_path, work_root):
     try:
         source_scripts = list(job["extract"].values())
         _plan_and_tts(store, job_id, source_scripts, job["target_seconds"],
-                      job["structure"], video_type, work, given_script=job.get("given_script"))
+                      job["structure"], video_type, work, given_script=job.get("given_script"),
+                      voice=job.get("voice"))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=str(e))
@@ -167,9 +184,48 @@ def run_render(job_id, db_path, work_root):
                 store.update_mix_job(job_id, clean_video_path=out)
                 return out
 
+        # deco의 BGM 파일(업로드 시 work/{file}에 저장)을 절대경로로 해석해 넘긴다.
+        deco = job.get("deco") or {}
+        bgm = deco.get("bgm") or {}
+        if bgm.get("file"):
+            bp = work / bgm["file"]
+            if bp.exists():
+                deco = {**deco, "bgm": {**bgm, "_abspath": str(bp)}}
+        ov = deco.get("overlay") or {}
+        if ov.get("file"):
+            op = work / ov["file"]
+            if op.exists():
+                deco = {**deco, "overlay": {**ov, "_abspath": str(op)}}
         assemble(plan, tts_paths, source_video_paths, str(out_path), clean_fn=clean_fn,
-                 headcopy=job.get("headcopy"))
+                 headcopy=job.get("headcopy"), caption_style=job.get("caption_style"),
+                 deco=deco)
         store.update_mix_job(job_id, status="done", video_path=str(out_path))
+    except Exception as e:
+        traceback.print_exc(file=sys.stderr)
+        store.update_mix_job(job_id, status="failed", error=str(e))
+
+
+def resynth_tts_job(job_id, db_path, work_root):
+    """기존 edit_plan은 그대로 두고, job의 voice 설정으로 비트별 TTS만 다시 생성한다
+    (영상제작 4단계 '이 대본으로 다시 듣기'·프리셋 변경). 재다운로드·재매칭 없음."""
+    store = Store(db_path)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return
+    plan = job["edit_plan"]
+    work = Path(work_root) / job_id
+    tts_dir = work / "tts"
+    tts_dir.mkdir(parents=True, exist_ok=True)
+    store.update_mix_job(job_id, status="tts")
+    voice_id, vs, speed, extra_tempo, trim = _voice_params(job.get("voice"))
+    try:
+        for beat in plan["beats"]:
+            out = tts_dir / f"beat_{beat['beat_idx']}.mp3"
+            synthesize_tts(beat["narration"], str(out), voice_id=voice_id,
+                           voice_settings=vs, speed=speed)
+            audio_post.post_process(str(out), str(out), tempo=extra_tempo, silence_trim=trim)
+            beat["tts_path"] = str(out)
+        store.update_mix_job(job_id, edit_plan=plan, status="ready_for_review")
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=str(e))

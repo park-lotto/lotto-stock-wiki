@@ -104,6 +104,46 @@ class Store:
                     extracted_at TEXT
                 )
             """)
+            # 학습소재 통계용 확장(2026-07-13) — 위키 저장 여부와 무관하게 대본추출된
+            # 모든 항목에 구조분석을 백필하기 위한 컬럼.
+            for col, ddl in (("category", "TEXT"), ("structure_json", "TEXT"),
+                              ("structure_analyzed_at", "TEXT")):
+                try:
+                    c.execute(f"ALTER TABLE script_extracts ADD COLUMN {col} {ddl}")
+                except sqlite3.OperationalError:
+                    pass  # 이미 있으면(기존 DB) 무시
+            # 학습소재 카테고리 통계 캐시(2026-07-13) — 매일 새벽 배치가 재계산해 덮어씀.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS element_category_stats (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    product_category TEXT NOT NULL,
+                    element TEXT NOT NULL,
+                    category_label TEXT NOT NULL,
+                    description TEXT,
+                    examples_json TEXT,
+                    sample_count INTEGER,
+                    computed_at TEXT
+                )
+            """)
+            c.execute(
+                "CREATE INDEX IF NOT EXISTS idx_element_stats_lookup "
+                "ON element_category_stats(product_category, element)"
+            )
+            # 생성 초안 버전 이력(2026-07-13, 디벨롭 루프) — 수정/재생성마다 새 행,
+            # parent_draft_id로 체인. customer_id 멀티테넌시 패턴.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS script_drafts (
+                    draft_id TEXT PRIMARY KEY,
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    source_shortcode TEXT,
+                    parent_draft_id TEXT,
+                    hook TEXT,
+                    script_text TEXT NOT NULL,
+                    edit_instruction TEXT,
+                    edit_mode TEXT,
+                    created_at TEXT
+                )
+            """)
             # S급 대본 위키(도서관, 2026-07-13) — 담은 대본 + AI 구조분석. 생성의 재료.
             # customer_id 복합키(2026-07-13 멀티테넌시) — 위 commented/saved/mix_basket와 동일 패턴.
             c.execute("""
@@ -170,6 +210,25 @@ class Store:
                     clean_video_path TEXT,
                     given_script TEXT,
                     headcopy_json TEXT
+                )
+            """)
+            # 보이스 프리셋(2026-07-14, 영상제작 4단계) — 큐레이션된 목소리 카드.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS voice_presets (
+                    preset_id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    one_liner TEXT,
+                    lang TEXT NOT NULL DEFAULT 'KR',
+                    archetype TEXT,
+                    base_voice_id TEXT NOT NULL,
+                    model_id TEXT NOT NULL DEFAULT 'eleven_multilingual_v2',
+                    voice_settings_json TEXT NOT NULL,
+                    default_speed REAL NOT NULL DEFAULT 1.0,
+                    default_silence_trim TEXT NOT NULL DEFAULT 'off',
+                    sample_file TEXT,
+                    source_ref TEXT,
+                    origin TEXT NOT NULL DEFAULT 'curated',
+                    created_at TEXT NOT NULL
                 )
             """)
             c.execute("""
@@ -245,6 +304,9 @@ class Store:
                 ("clean_video_path", "TEXT"),
                 ("given_script", "TEXT"),  # 영상제작 2단계 given_script 모드(2026-07-13)
                 ("headcopy_json", "TEXT"),  # 영상제작 5단계 꾸미기 헤드카피(2026-07-13)
+                ("caption_style_json", "TEXT"),  # 영상제작 5단계 자막 스타일(2026-07-14)
+                ("deco_json", "TEXT"),  # 영상제작 5단계 장식(워터마크·추가텍스트·오버레이·BGM, 2026-07-14)
+                ("voice_json", "TEXT"),     # 영상제작 4단계 보이스 프리셋 선택 스냅샷(2026-07-14)
             ):
                 try:
                     c.execute(f"ALTER TABLE mix_jobs ADD COLUMN {col} {ddl}")
@@ -578,15 +640,197 @@ class Store:
             return [], None
         return json.loads(row[0]), row[1]
 
-    def save_script(self, shortcode, script):
-        """대본추출 결과({segments, full_text}) 저장(덮어쓰기)."""
+    def save_script(self, shortcode, script, category=None):
+        """대본추출 결과({segments, full_text}) 저장(덮어쓰기). category가 오면
+        같이 저장(학습소재 통계의 그룹핑 키, 2026-07-13). 구조분석은 별도
+        save_extract_structure()로 나중에 채워진다."""
+        with self._conn() as c:
+            if category is not None:
+                c.execute(
+                    "INSERT INTO script_extracts(shortcode, script_json, extracted_at, category) "
+                    "VALUES(?,?,datetime('now'),?) ON CONFLICT(shortcode) DO UPDATE SET "
+                    "script_json=excluded.script_json, extracted_at=excluded.extracted_at, "
+                    "category=excluded.category",
+                    (shortcode, json.dumps(script, ensure_ascii=False), category),
+                )
+            else:
+                c.execute(
+                    "INSERT INTO script_extracts(shortcode, script_json, extracted_at) "
+                    "VALUES(?,?,datetime('now')) ON CONFLICT(shortcode) DO UPDATE SET "
+                    "script_json=excluded.script_json, extracted_at=excluded.extracted_at",
+                    (shortcode, json.dumps(script, ensure_ascii=False)),
+                )
+
+    def get_extract(self, shortcode):
+        """대본추출 결과 + category + 구조분석(있으면). 없으면 None."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT script_json, extracted_at, category, structure_json, structure_analyzed_at "
+                "FROM script_extracts WHERE shortcode=?",
+                (shortcode,),
+            ).fetchone()
+        if not row:
+            return None
+        data = json.loads(row[0])
+        data["extracted_at"] = row[1]
+        data["category"] = row[2]
+        data["structure"] = json.loads(row[3]) if row[3] else None
+        data["structure_analyzed_at"] = row[4]
+        return data
+
+    def save_extract_structure(self, shortcode, structure):
+        """대본추출 항목에 구조분석 결과를 채운다(2026-07-13, 학습소재 통계 백필용)."""
         with self._conn() as c:
             c.execute(
-                "INSERT INTO script_extracts(shortcode, script_json, extracted_at) "
-                "VALUES(?,?,datetime('now')) ON CONFLICT(shortcode) DO UPDATE SET "
-                "script_json=excluded.script_json, extracted_at=excluded.extracted_at",
-                (shortcode, json.dumps(script, ensure_ascii=False)),
+                "UPDATE script_extracts SET structure_json=?, structure_analyzed_at=datetime('now') "
+                "WHERE shortcode=?",
+                (json.dumps(structure or {}, ensure_ascii=False), shortcode),
             )
+
+    def extracts_missing_structure(self, limit=100):
+        """구조분석이 아직 안 된 대본추출 항목(카테고리 있는 것만 — 카테고리 없으면
+        통계 그룹핑을 못 하므로 백필 대상에서 제외). full_text 없는 빈 항목도 제외."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT shortcode, script_json, category FROM script_extracts "
+                "WHERE structure_json IS NULL AND category IS NOT NULL "
+                "ORDER BY extracted_at ASC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        out = []
+        for sc, script_json, category in rows:
+            full_text = (json.loads(script_json) or {}).get("full_text", "")
+            if full_text.strip():
+                out.append({"shortcode": sc, "full_text": full_text, "category": category})
+        return out
+
+    _CHAR_ELEMENT_STRUCT_KEYS = {"hook": "hook_type"}  # element 이름 → structure_json 내 실제 키
+
+    def element_raw_values(self, product_category, element, limit=500):
+        """카테고리 안의 대본들에서 요소 하나의 자유서술 값들을 펼쳐서 반환.
+        characters는 인물별 role을 각각 개별 값으로(한 대본에 여러 명 가능),
+        나머지는 구조 필드 하나가 값 하나. 빈 값은 제외. hook 요소는 구조상
+        실제 필드명이 hook_type이라(analyze_structure 출력 기준) 그걸 읽는다."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT shortcode, structure_json FROM script_wiki "
+                "WHERE category=? AND structure_json IS NOT NULL "
+                "UNION ALL "
+                "SELECT shortcode, structure_json FROM script_extracts "
+                "WHERE category=? AND structure_json IS NOT NULL LIMIT ?",
+                (product_category, product_category, limit),
+            ).fetchall()
+        out = []
+        seen = set()
+        struct_key = self._CHAR_ELEMENT_STRUCT_KEYS.get(element, element)
+        for sc, sj in rows:
+            if sc in seen:
+                continue
+            seen.add(sc)
+            st = json.loads(sj) or {}
+            if element == "characters":
+                for ch in (st.get("characters") or []):
+                    role = (ch.get("role") or "").strip()
+                    if role:
+                        out.append(role)
+            elif element == "devices":
+                for d in (st.get("devices") or []):
+                    d = (d if isinstance(d, str) else str(d)).strip()
+                    if d:
+                        out.append(d)
+            else:
+                val = (st.get(struct_key) or "").strip()
+                if val:
+                    out.append(val)
+        return out
+
+    def distinct_extract_categories(self):
+        """학습 대상 카테고리 — 도서관(script_wiki)+대본추출(script_extracts) 합집합."""
+        with self._conn() as c:
+            return [r[0] for r in c.execute(
+                "SELECT DISTINCT category FROM script_wiki WHERE category IS NOT NULL "
+                "UNION SELECT DISTINCT category FROM script_extracts WHERE category IS NOT NULL"
+            ).fetchall()]
+
+    def save_element_category_stats(self, product_category, element, categories):
+        """(product_category, element)의 기존 카테고리 통계를 지우고 새로 저장(덮어쓰기,
+        누적 아님 — 매일 새벽 배치가 항상 최신 상태로 재계산)."""
+        with self._conn() as c:
+            c.execute(
+                "DELETE FROM element_category_stats WHERE product_category=? AND element=?",
+                (product_category, element),
+            )
+            for cat in categories:
+                c.execute(
+                    "INSERT INTO element_category_stats"
+                    "(product_category, element, category_label, description, examples_json, "
+                    "sample_count, computed_at) VALUES(?,?,?,?,?,?,datetime('now'))",
+                    (product_category, element, cat.get("label", ""), cat.get("description", ""),
+                     json.dumps(cat.get("examples") or [], ensure_ascii=False),
+                     cat.get("sample_count", 0)),
+                )
+
+    def get_element_options(self, product_category):
+        """이 카테고리의 요소별 학습된 옵션. {element: [{label, description}, ...]}.
+        저장된 적 없는 요소는 빈 리스트(프론트가 드롭다운 숨김 처리에 씀)."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT element, category_label, description FROM element_category_stats "
+                "WHERE product_category=? ORDER BY element, id",
+                (product_category,),
+            ).fetchall()
+        out = {}
+        for element, label, desc in rows:
+            out.setdefault(element, []).append({"label": label, "description": desc})
+        return out
+
+    def get_category_detail(self, product_category, element, label):
+        """특정 카테고리 하나의 설명+예시(생성 프롬프트에 제약으로 넣을 때 씀)."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT description, examples_json FROM element_category_stats "
+                "WHERE product_category=? AND element=? AND category_label=?",
+                (product_category, element, label),
+            ).fetchone()
+        if not row:
+            return None
+        return {"description": row[0], "examples": json.loads(row[1] or "[]")}
+
+    def save_draft(self, draft_id, customer_id, source_shortcode, parent_draft_id, hook,
+                    script_text, edit_instruction, edit_mode):
+        """초안 버전 하나 저장(항상 새 행 — 덮어쓰지 않음, 2026-07-13 디벨롭 루프)."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO script_drafts(draft_id, customer_id, source_shortcode, parent_draft_id, "
+                "hook, script_text, edit_instruction, edit_mode, created_at) "
+                "VALUES(?,?,?,?,?,?,?,?,datetime('now'))",
+                (draft_id, customer_id, source_shortcode, parent_draft_id, hook, script_text,
+                 edit_instruction, edit_mode),
+            )
+
+    _DRAFT_COLS = ("draft_id, customer_id, source_shortcode, parent_draft_id, hook, "
+                   "script_text, edit_instruction, edit_mode, created_at")
+
+    def _draft_row(self, r):
+        return {"draft_id": r[0], "customer_id": r[1], "source_shortcode": r[2],
+                "parent_draft_id": r[3], "hook": r[4], "script_text": r[5],
+                "edit_instruction": r[6], "edit_mode": r[7], "created_at": r[8]}
+
+    def get_draft(self, draft_id):
+        with self._conn() as c:
+            r = c.execute(
+                f"SELECT {self._DRAFT_COLS} FROM script_drafts WHERE draft_id=?", (draft_id,)
+            ).fetchone()
+        return self._draft_row(r) if r else None
+
+    def get_draft_chain(self, draft_id):
+        """draft_id부터 parent_draft_id를 거슬러 올라가 체인 전체를 오래된 순으로 반환."""
+        chain = []
+        cur = self.get_draft(draft_id)
+        while cur:
+            chain.append(cur)
+            cur = self.get_draft(cur["parent_draft_id"]) if cur["parent_draft_id"] else None
+        return list(reversed(chain))
 
     def get_script(self, shortcode):
         """저장된 대본추출 결과. 없으면 None. 있으면 {segments, full_text, extracted_at}."""
@@ -764,7 +1008,8 @@ class Store:
             row = c.execute(
                 "SELECT job_id, urls_json, target_seconds, structure, status, error, "
                 "extract_json, edit_plan_json, video_path, created_at, updated_at, "
-                "subtitle_removal, clean_video_path, given_script, headcopy_json "
+                "subtitle_removal, clean_video_path, given_script, headcopy_json, "
+                "caption_style_json, voice_json, deco_json "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -778,6 +1023,9 @@ class Store:
             "subtitle_removal": bool(row[11]), "clean_video_path": row[12],
             "given_script": row[13],
             "headcopy": json.loads(row[14]) if row[14] else None,
+            "caption_style": json.loads(row[15]) if row[15] else None,
+            "voice": json.loads(row[16]) if row[16] else None,
+            "deco": json.loads(row[17]) if row[17] else None,
         }
 
     def update_mix_job(self, job_id, **fields):
@@ -791,6 +1039,15 @@ class Store:
         if "headcopy" in fields:
             cols.append("headcopy_json=?")
             vals.append(json.dumps(fields["headcopy"], ensure_ascii=False) if fields["headcopy"] else None)
+        if "caption_style" in fields:
+            cols.append("caption_style_json=?")
+            vals.append(json.dumps(fields["caption_style"], ensure_ascii=False) if fields["caption_style"] else None)
+        if "deco" in fields:
+            cols.append("deco_json=?")
+            vals.append(json.dumps(fields["deco"], ensure_ascii=False) if fields["deco"] else None)
+        if "voice" in fields:
+            cols.append("voice_json=?")
+            vals.append(json.dumps(fields["voice"], ensure_ascii=False) if fields["voice"] else None)
         for k, col in (("extract", "extract_json"), ("edit_plan", "edit_plan_json")):
             if k in fields:
                 cols.append(f"{col}=?")
@@ -799,6 +1056,61 @@ class Store:
         vals.append(job_id)
         with self._conn() as c:
             c.execute(f"UPDATE mix_jobs SET {', '.join(cols)} WHERE job_id=?", tuple(vals))
+
+    # ── 보이스 프리셋(2026-07-14, 영상제작 4단계) ──
+    def upsert_voice_preset(self, p):
+        """보이스 프리셋 1건 upsert(preset_id 충돌 시 덮어씀)."""
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            c.execute("""
+                INSERT INTO voice_presets(preset_id, name, one_liner, lang, archetype,
+                    base_voice_id, model_id, voice_settings_json, default_speed,
+                    default_silence_trim, sample_file, source_ref, origin, created_at)
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                ON CONFLICT(preset_id) DO UPDATE SET
+                    name=excluded.name, one_liner=excluded.one_liner, lang=excluded.lang,
+                    archetype=excluded.archetype, base_voice_id=excluded.base_voice_id,
+                    model_id=excluded.model_id, voice_settings_json=excluded.voice_settings_json,
+                    default_speed=excluded.default_speed,
+                    default_silence_trim=excluded.default_silence_trim,
+                    sample_file=excluded.sample_file, source_ref=excluded.source_ref,
+                    origin=excluded.origin
+            """, (
+                p["preset_id"], p["name"], p.get("one_liner"), p.get("lang", "KR"),
+                p.get("archetype"), p["base_voice_id"],
+                p.get("model_id", "eleven_multilingual_v2"),
+                json.dumps(p.get("voice_settings", {}), ensure_ascii=False),
+                p.get("default_speed", 1.0), p.get("default_silence_trim", "off"),
+                p.get("sample_file"), p.get("source_ref"), p.get("origin", "curated"), now,
+            ))
+
+    def _row_to_preset(self, r):
+        return {
+            "preset_id": r[0], "name": r[1], "one_liner": r[2], "lang": r[3],
+            "archetype": r[4], "base_voice_id": r[5], "model_id": r[6],
+            "voice_settings": json.loads(r[7]) if r[7] else {},
+            "default_speed": r[8], "default_silence_trim": r[9],
+            "sample_file": r[10], "source_ref": r[11], "origin": r[12], "created_at": r[13],
+        }
+
+    def get_voice_preset(self, preset_id):
+        with self._conn() as c:
+            r = c.execute("SELECT preset_id,name,one_liner,lang,archetype,base_voice_id,"
+                          "model_id,voice_settings_json,default_speed,default_silence_trim,"
+                          "sample_file,source_ref,origin,created_at FROM voice_presets "
+                          "WHERE preset_id=?", (preset_id,)).fetchone()
+        return self._row_to_preset(r) if r else None
+
+    def list_voice_presets(self, lang=None):
+        q = ("SELECT preset_id,name,one_liner,lang,archetype,base_voice_id,model_id,"
+             "voice_settings_json,default_speed,default_silence_trim,sample_file,"
+             "source_ref,origin,created_at FROM voice_presets")
+        args = ()
+        if lang:
+            q += " WHERE lang=?"; args = (lang,)
+        q += " ORDER BY created_at"
+        with self._conn() as c:
+            return [self._row_to_preset(r) for r in c.execute(q, args).fetchall()]
 
     def get_setting(self, key, default=None):
         """전역 설정값 조회(예: vmake_api_key). 없으면 default."""
@@ -814,6 +1126,54 @@ class Store:
                 "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
                 (key, value),
             )
+
+    # ── 틱톡 키워드검색 남용/비용 가드 (2026-07-14) ──
+    # 별도 테이블을 만들지 않고 settings에 네임스페이스 키로 눌러쓴다:
+    #   tiktok_daily:{customer_id}:{YYYY-MM-DD} → 그 날 그 고객의 수집 횟수
+    #   tiktok_spend:{YYYY-MM}                  → 그 달 전체 누적 지출($)
+    # 날짜/월을 키에 넣어 두면 경계에서 자동으로 새 카운터가 시작(별도 리셋 불필요).
+    def tiktok_daily_count(self, customer_id, day):
+        """(고객, 날짜)의 오늘 틱톡 수집 횟수. 없으면 0."""
+        raw = self.get_setting(f"tiktok_daily:{customer_id}:{day}", "0")
+        try:
+            return int(raw)
+        except (TypeError, ValueError):
+            return 0
+
+    def bump_tiktok_daily(self, customer_id, day):
+        """(고객, 날짜) 수집 횟수 +1 → 증가 후 값 반환(남용 방지 카운터)."""
+        n = self.tiktok_daily_count(customer_id, day) + 1
+        self.set_setting(f"tiktok_daily:{customer_id}:{day}", str(n))
+        return n
+
+    def tiktok_month_spend(self, month):
+        """그 달(YYYY-MM) 틱톡 누적 지출($). 없으면 0.0."""
+        raw = self.get_setting(f"tiktok_spend:{month}", "0")
+        try:
+            return float(raw)
+        except (TypeError, ValueError):
+            return 0.0
+
+    def add_tiktok_spend(self, month, usd):
+        """그 달 지출에 usd 누적 → 누적 후 값 반환(월예산 킬스위치 판단용)."""
+        total = self.tiktok_month_spend(month) + float(usd)
+        self.set_setting(f"tiktok_spend:{month}", repr(total))
+        return total
+
+    # ── 렌즈(SerpApi) 월 호출 카운트 (2026-07-14) ──
+    # SerpApi 무료 100회/월. settings 네임스페이스 키 lens_count:{YYYY-MM}로 누적,
+    # 월 경계에서 키가 달라 자동 리셋(틱톡 카운터와 동일 패턴).
+    def lens_month_count(self, month):
+        raw = self.get_setting(f"lens_count:{month}", "0")
+        try:
+            return int(raw)
+        except (TypeError, ValueError):
+            return 0
+
+    def bump_lens(self, month):
+        n = self.lens_month_count(month) + 1
+        self.set_setting(f"lens_count:{month}", str(n))
+        return n
 
     # ── 고객 계정(2026-07-13 멀티테넌시) ──
     # 비밀번호는 pbkdf2-sha256(고객별 랜덤 솔트, 260,000회)로만 저장 — 평문/역가역

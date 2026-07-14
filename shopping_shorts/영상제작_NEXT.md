@@ -1,45 +1,36 @@
-# 영상제작 위저드 — 이어서 할 일 (핸드오프)
+# 영상제작 위저드 5·꾸미기 — 상태 (핸드오프)
 
-날짜: 2026-07-13 · 라이브: https://shoppingshorts.duckdns.org/produce (로그인)
-> 모든 코드·폰트 **origin/main에 푸시 완료 + 서버 배포됨**. 집에서 `git pull origin main`이면 전부 받아짐.
+날짜: 2026-07-14 · 라이브: https://shoppingshorts.duckdns.org/produce (로그인)
+> 관련 메모리: [[feedback_꾸미기_딸깍프리셋철학]] [[feedback_동시세션_커밋규칙]]
 
-## ✅ 완성된 단계 (8단계 위저드 `/produce`)
+## ✅ 꾸미기 5단계 — 전면 업그레이드 완료·배포 (2026-07-14)
 
-- **1·대본** — 3모드 전부 라이브 검증
-  - 직접작성 / 우리믹스(도서관 선택→조합 or **1개 그대로 쓰기**) / 제미니 자동
-  - 도서관(library)에서 "🎬 영상제작으로 보내기" → 우리믹스 탭 기본목록(picks)
-  - 대본 생성은 key_vault 예비키풀 사용(전용키 소진 회피)
-- **2·영상믹스** — given_script 매칭(확정대본→비트분할→소스영상 장면매칭). 비트별 **fit(1~5)** 약한매칭 ⚠️경고
-- **3·자막제거** — VMake 토글(job settings). ※실제 VMake 제거는 API 스펙 미완(mock, 다른 트랙)
-- **4·TTS** — 비트별 음성 프리뷰(매칭 파이프라인서 생성)
-- **5·꾸미기(헤드카피)** — 완전 완료·실렌더 검증
-  - 폰트 7종(배민주아/도현·티몬몬소리·지마켓·SUIT·프리텐다드·나눔) + 색·굵기·크기·외곽선
-  - **스타일 프리셋 7종**(원클릭) + 미리보기 **드래그** 이동 + **정렬**(위/중/하/가운데)
-  - video_assemble `_headcopy_drawtext`로 실제 영상에 구워짐(검증됨)
+**A/B/딸깍/커스텀 (커밋순):**
+- 폰트 7→**22종**(쇼핑팩토리 폰트, woff/woff2 변환, 한글명 ASCII 리네임) + ⭐베스트5 상단
+- 폰트 **hover 실시간 프리뷰** 커스텀 드롭다운(각 항목 자기폰트 렌더)
+- 미리보기 **340px** + 드래그 + **배경박스**(headcopy) + 레퍼런스 프리셋 16종
+- **자막 스타일 분리**(폰트·색·크기·위치·외곽선·박스) + **자막 효과**(없음/페이드/슬라이드/팝, 프리뷰 애니메이션)
+- **🎯 딸깍 완성스타일 14종**(원클릭: 헤드카피+자막+효과 한번에) + **미리보기 흰배경 기본**
+- **커스텀 프리셋 저장**(내 프리셋, localStorage)
+- ⚠️버그수정: `assemble`이 headcopy를 `_burn_captions`에 미전달하던 것 수정
 
-## ⏭ 다음 (미구현)
+**슬라이스 C (전부 완료):**
+- `e87de516` **C1** 워터마크 닉네임 + 추가 텍스트(드래그)
+- `2c9c1773` **C2** BGM 업로드 + 오디오 믹스(볼륨·루프·amix)
+- `32d655c7` **C3** 이미지 오버레이(로고·뱃지, overlay±BGM filter_complex 조합)
+- `0cdd5748` **C4** 프리뷰 실장면 배경(poster 엔드포인트, 흰배경↔실영상 토글)
 
-1. **6·썸네일** — 영상 프레임 선택 + 텍스트 오버레이 (스텁 상태)
-2. **7·SEO** — 제목/설명/태그 AI 생성 (스텁 상태)
-3. **8·최종검수** — 렌더 UI는 있음. 내보내기(CapCut export)는 미구현
-4. (선택) woff 폰트 79종 → ttf 변환하면 어그로체 등 더 쓸 수 있음. 지금은 ttf/otf 7종만(렌더 일치)
+## 렌더 파이프라인 (video_assemble.py)
+- `_fixed_drawtext`(공용): 헤드카피·추가텍스트·워터마크. 폰트·색·크기·위치·외곽선·**박스**·alpha
+- `_caption_drawtexts(style)`: 자막 폰트·색·박스·**효과**(alpha/y expr)
+- `_burn_captions`: drawtext 체인 + **이미지 오버레이**(overlay) + **BGM**(amix) 조합별 filter_complex 빌더
+- 배선: store(caption_style_json/deco_json) → app(/mix/settings, /mix/bgm, /mix/overlay, /mix/poster) → mix_pipeline.run_render(bgm·overlay _abspath 해석) → assemble
 
-## 파일 지도 (shopping_shorts/)
+## ⏭ 남은 것 (선택)
+- 자막 **정밀 동기화**(TTS word-timing, whisper 등) — 후순위
+- 6·썸네일 / 7·SEO 단계(현재 스텁)
+- deco 프리셋에 BGM/오버레이 기본값 묶기(딸깍 확장)
 
-- `static/produce.html` — 위저드 UI 전체(8스텝, STATE.script/subtitleRemoval/headcopy)
-- `static/library.html` — 도서관, "영상제작으로 보내기" 버튼
-- `edit_plan.py` — build_edit_plan(given_script, fit), key_vault 라우팅(_vault_call)
-- `script_generate.py` — generate_from_topic(제미니자동)·generate_mix(우리믹스)
-- `video_assemble.py` — _headcopy_drawtext(헤드카피 굽기), static/fonts 로드
-- `mix_pipeline.py` — run_mix_job/run_render (given_script·headcopy 관통)
-- `store.py` — mix_jobs(given_script/headcopy_json 컬럼), produce_script_picks 테이블
-- `app.py` — /api/produce/* (script/gemini·mix·picks·mix/start·mix/settings)
-- `static/fonts/` — 번들 폰트 7종
-
-## 집에서 시작 절차
-
-```
-git pull origin main          # 최신 코드·폰트 받기
-# 라이브 확인: https://shoppingshorts.duckdns.org/produce (로그인)
-# 이어서 6·썸네일 or 7·SEO 구현
-```
+## ⚠️ 동시세션 주의
+다른 세션이 렌즈·보이스·생성요소를 같은 워킹트리에 활발히 커밋 중. 커밋 규칙 [[feedback_동시세션_커밋규칙]]:
+커밋전 status확인 → `git add -A` 금지·내 hunk만 격리(`git apply --cached`) → 원자적 add+commit+push.

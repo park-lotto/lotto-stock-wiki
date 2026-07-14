@@ -96,19 +96,61 @@ def test_wiki_generate_404_when_not_in_wiki(monkeypatch):
     monkeypatch.setattr(app_module, "_AUTH_ON", False)
     monkeypatch.setattr(app_module.Store, "get_wiki_item", lambda self, sc, **kw: None)
     client = TestClient(app_module.app)
-    assert client.post("/api/wiki/generate?shortcode=x").status_code == 404
+    r = client.post("/api/wiki/generate", params={"shortcode": "x"},
+                    json={"mode": "A", "elem_modes": {}})
+    assert r.status_code == 404
 
 
 def test_wiki_generate_ok(monkeypatch):
     monkeypatch.setattr(app_module, "_AUTH_ON", False)
     monkeypatch.setattr(app_module.Store, "get_wiki_item",
-                        lambda self, sc, **kw: {"structure": {"characters": []}, "full_text": "ft"})
-    monkeypatch.setattr(app_module.script_generate, "generate_variations",
-                        lambda *a, **k: [{"hook": "h", "script": "s", "applied": "a"}])
+                        lambda self, sc, **kw: {"structure": {"characters": []}, "full_text": "ft", "category": "레시피"})
+    monkeypatch.setattr(app_module.Store, "get_element_options", lambda self, category: {})
+    captured = {}
+    def fake_gen(structure, full_text, elem_modes, category_lookup, mode="A", my_topic="", n=3):
+        captured["elem_modes"] = elem_modes
+        return [{"hook": "h", "script": "s", "applied": "a"}]
+    monkeypatch.setattr(app_module.script_generate, "generate_variations", fake_gen)
     client = TestClient(app_module.app)
-    r = client.post("/api/wiki/generate?shortcode=x&keep=characters,twist&mode=A")
+    r = client.post("/api/wiki/generate", params={"shortcode": "x"},
+                     json={"mode": "A", "elem_modes": {"characters": "keep", "twist": "category:반전형"}})
     assert r.status_code == 200
-    assert r.json()["drafts"][0]["script"] == "s"
+    d = r.json()
+    assert d["drafts"][0]["script"] == "s"
+    assert captured["elem_modes"] == {"characters": "keep", "twist": "category:반전형"}
+
+
+def test_wiki_generate_saves_drafts_and_returns_draft_id(monkeypatch):
+    monkeypatch.setattr(app_module, "_AUTH_ON", False)
+    monkeypatch.setattr(app_module.Store, "get_wiki_item",
+                        lambda self, sc, **kw: {"structure": {}, "full_text": "ft", "category": "레시피"})
+    monkeypatch.setattr(app_module.Store, "get_element_options", lambda self, category: {})
+    monkeypatch.setattr(app_module.script_generate, "generate_variations",
+                        lambda *a, **k: [{"hook": "h1", "script": "s1", "applied": "a1"},
+                                          {"hook": "h2", "script": "s2", "applied": "a2"}])
+    saved = []
+    monkeypatch.setattr(app_module.Store, "save_draft",
+                        lambda self, draft_id, customer_id, source_shortcode, parent_draft_id, hook, script_text, edit_instruction, edit_mode:
+                        saved.append((draft_id, source_shortcode, script_text, edit_mode)))
+    client = TestClient(app_module.app)
+    r = client.post("/api/wiki/generate", params={"shortcode": "SC1"},
+                     json={"mode": "A", "elem_modes": {}})
+    d = r.json()
+    assert len(d["drafts"]) == 2
+    assert all(dr.get("draft_id") for dr in d["drafts"])
+    assert len(saved) == 2
+    assert saved[0][1] == "SC1" and saved[0][2] == "s1" and saved[0][3] == "generate"
+
+
+def test_wiki_element_options_returns_saved_categories(monkeypatch, client):
+    monkeypatch.setattr(app_module, "_AUTH_ON", False)
+    monkeypatch.setattr(app_module.Store, "get_element_options",
+                        lambda self, category: {"characters": [{"label": "가족관계", "description": "d"}]})
+    r = client.get("/api/wiki/element_options?category=레시피")
+    assert r.status_code == 200
+    d = r.json()
+    assert d["ok"] is True
+    assert d["options"]["characters"][0]["label"] == "가족관계"
 
 
 def test_store_wiki_roundtrip(tmp_path):
@@ -520,3 +562,94 @@ def test_find_save_adds_candidate_to_pool(monkeypatch, client, tmp_path):
     pool = store.pool_items()
     assert len(pool) == 1
     assert pool[0]["origin_shortcode"] == "sc1"
+
+
+def test_draft_refine_rewrite_saves_new_version(monkeypatch):
+    monkeypatch.setattr(app_module, "_AUTH_ON", False)
+    monkeypatch.setattr(app_module.Store, "get_draft",
+                        lambda self, draft_id: {"draft_id": "d1", "source_shortcode": "SC1",
+                                                 "hook": "h", "script_text": "원본"})
+    monkeypatch.setattr(app_module.script_generate, "refine_draft_rewrite",
+                        lambda script, instruction: "재작성됨")
+    saved = []
+    monkeypatch.setattr(app_module.Store, "save_draft",
+                        lambda self, draft_id, customer_id, source_shortcode, parent_draft_id, hook, script_text, edit_instruction, edit_mode:
+                        saved.append((draft_id, parent_draft_id, script_text, edit_instruction, edit_mode)))
+    client = TestClient(app_module.app)
+    r = client.post("/api/wiki/draft/refine",
+                     json={"draft_id": "d1", "mode": "rewrite", "instruction": "더 유머러스하게"})
+    d = r.json()
+    assert r.status_code == 200 and d["ok"] is True
+    assert d["script_text"] == "재작성됨"
+    assert saved[0][1] == "d1"  # parent_draft_id
+    assert saved[0][3] == "더 유머러스하게"
+    assert saved[0][4] == "rewrite"
+
+
+def test_draft_refine_partial_requires_selected_text(monkeypatch):
+    monkeypatch.setattr(app_module, "_AUTH_ON", False)
+    monkeypatch.setattr(app_module.Store, "get_draft",
+                        lambda self, draft_id: {"draft_id": "d1", "source_shortcode": "SC1",
+                                                 "hook": "h", "script_text": "원본"})
+    client = TestClient(app_module.app)
+    r = client.post("/api/wiki/draft/refine",
+                     json={"draft_id": "d1", "mode": "partial", "instruction": "더 재밌게"})
+    assert r.status_code == 422
+
+
+def test_draft_refine_unknown_draft_404(monkeypatch):
+    monkeypatch.setattr(app_module, "_AUTH_ON", False)
+    monkeypatch.setattr(app_module.Store, "get_draft", lambda self, draft_id: None)
+    client = TestClient(app_module.app)
+    r = client.post("/api/wiki/draft/refine", json={"draft_id": "nope", "mode": "rewrite", "instruction": "x"})
+    assert r.status_code == 404
+
+
+def test_draft_edit_saves_manual_version(monkeypatch):
+    monkeypatch.setattr(app_module, "_AUTH_ON", False)
+    monkeypatch.setattr(app_module.Store, "get_draft",
+                        lambda self, draft_id: {"draft_id": "d1", "source_shortcode": "SC1", "hook": "h"})
+    saved = []
+    monkeypatch.setattr(app_module.Store, "save_draft",
+                        lambda self, draft_id, customer_id, source_shortcode, parent_draft_id, hook, script_text, edit_instruction, edit_mode:
+                        saved.append((script_text, edit_mode)))
+    client = TestClient(app_module.app)
+    r = client.post("/api/wiki/draft/edit", json={"draft_id": "d1", "script_text": "직접 고침"})
+    d = r.json()
+    assert d["ok"] is True
+    assert saved[0] == ("직접 고침", "manual")
+
+
+def test_draft_history_returns_chain(monkeypatch):
+    monkeypatch.setattr(app_module, "_AUTH_ON", False)
+    monkeypatch.setattr(app_module.Store, "get_draft_chain",
+                        lambda self, draft_id: [{"draft_id": "d1", "script_text": "v1"},
+                                                 {"draft_id": "d2", "script_text": "v2"}])
+    client = TestClient(app_module.app)
+    r = client.get("/api/wiki/draft/history?draft_id=d2")
+    d = r.json()
+    assert d["ok"] is True
+    assert len(d["history"]) == 2
+
+
+def test_wiki_save_triggers_immediate_relearn(monkeypatch):
+    """도서관 저장 직후 구조를 학습소스에 채우고 그 카테고리를 즉시 재학습(백그라운드)."""
+    monkeypatch.setattr(app_module, "_AUTH_ON", False)
+    monkeypatch.setattr(app_module.Store, "load_last_run",
+                        lambda self: ([{"shortcode": "SC1", "category": "레시피"}], "now"))
+    monkeypatch.setattr(app_module.Store, "get_script",
+                        lambda self, code: {"full_text": "대본", "segments": []})
+    monkeypatch.setattr(app_module, "analyze_structure", lambda t: {"tone": "친근"})
+    monkeypatch.setattr(app_module.Store, "save_to_wiki", lambda self, *a, **k: None)
+    saved_struct = []
+    monkeypatch.setattr(app_module.Store, "save_extract_structure",
+                        lambda self, code, structure: saved_struct.append((code, structure)))
+    import shopping_shorts.daily_batch as db
+    relearned = []
+    monkeypatch.setattr(db, "recompute_element_stats",
+                        lambda store, only_category=None: relearned.append(only_category))
+    client = TestClient(app_module.app)
+    r = client.post("/api/wiki/save", params={"shortcode": "SC1"})
+    assert r.status_code == 200
+    assert saved_struct and saved_struct[0][0] == "SC1"       # 학습소스에 구조 채움
+    assert relearned == ["레시피"]                             # 그 카테고리만 재학습

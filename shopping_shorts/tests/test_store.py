@@ -27,6 +27,44 @@ def test_prev_deltas_for_acceleration(tmp_path):
     s.save_run("2026-07-09", [{"shortcode": "x", "username": "u", "comments": 500, "delta": 300}])
     assert s.prev_delta("x") == 300  # 직전 Δ (가속 계산용)
 
+def test_tiktok_daily_count_starts_at_zero_and_bumps(tmp_path):
+    """하루 수집 횟수: 처음 0, bump할 때마다 1씩 증가한 새 값 반환(남용 방지 카운터)."""
+    s = Store(tmp_path / "t.db")
+    assert s.tiktok_daily_count(1, "2026-07-14") == 0
+    assert s.bump_tiktok_daily(1, "2026-07-14") == 1
+    assert s.bump_tiktok_daily(1, "2026-07-14") == 2
+    assert s.tiktok_daily_count(1, "2026-07-14") == 2
+
+
+def test_tiktok_daily_count_isolated_by_customer_and_day(tmp_path):
+    """카운터는 (고객, 날짜)별로 격리 — 다른 고객·다른 날짜는 서로 영향 없음."""
+    s = Store(tmp_path / "t.db")
+    s.bump_tiktok_daily(1, "2026-07-14")
+    s.bump_tiktok_daily(1, "2026-07-14")
+    assert s.tiktok_daily_count(2, "2026-07-14") == 0   # 다른 고객
+    assert s.tiktok_daily_count(1, "2026-07-15") == 0   # 다른 날짜
+    assert s.tiktok_daily_count(1, "2026-07-14") == 2
+
+
+def test_tiktok_month_spend_accumulates(tmp_path):
+    """월 예산 누적: 처음 0.0, add할 때마다 누적 달러 반환. 월 경계는 키가 달라 자동 리셋."""
+    s = Store(tmp_path / "t.db")
+    assert s.tiktok_month_spend("2026-07") == 0.0
+    assert s.add_tiktok_spend("2026-07", 0.05) == 0.05
+    assert round(s.add_tiktok_spend("2026-07", 0.10), 2) == 0.15
+    assert s.tiktok_month_spend("2026-08") == 0.0   # 새 달 = 새 예산
+    assert round(s.tiktok_month_spend("2026-07"), 2) == 0.15
+
+
+def test_lens_month_count_starts_zero_and_bumps(tmp_path):
+    s = Store(tmp_path / "t.db")
+    assert s.lens_month_count("2026-07") == 0
+    assert s.bump_lens("2026-07") == 1
+    assert s.bump_lens("2026-07") == 2
+    assert s.lens_month_count("2026-08") == 0   # 새 달 = 새 카운터
+    assert s.lens_month_count("2026-07") == 2
+
+
 def test_comment_drafts_roundtrip(tmp_path):
     s = Store(tmp_path / "t.db")
     assert s.get_drafts("sc1") == []
@@ -140,3 +178,128 @@ def test_save_to_pool_and_pool_items(tmp_path):
     assert len(pool) == 1
     assert pool[0]["origin_shortcode"] == "sc1"
     assert pool[0]["url"] == "u"
+
+
+def test_save_script_with_category_and_structure_backfill(tmp_path):
+    from shopping_shorts.store import Store
+    s = Store(tmp_path / "t.db")
+    s.save_script("SC1", {"full_text": "안녕하세요 대본", "segments": []}, category="레시피")
+    got = s.get_extract("SC1")
+    assert got["full_text"] == "안녕하세요 대본"
+    assert got["category"] == "레시피"
+    assert got["structure"] is None  # 아직 구조분석 전
+
+    missing = s.extracts_missing_structure(limit=10)
+    assert any(m["shortcode"] == "SC1" and m["category"] == "레시피" for m in missing)
+
+    s.save_extract_structure("SC1", {"hook_type": "경고형", "tone": "친근한 수다체"})
+    got2 = s.get_extract("SC1")
+    assert got2["structure"]["hook_type"] == "경고형"
+    missing2 = s.extracts_missing_structure(limit=10)
+    assert not any(m["shortcode"] == "SC1" for m in missing2)
+
+
+def test_save_script_without_category_is_backward_compatible(tmp_path):
+    from shopping_shorts.store import Store
+    s = Store(tmp_path / "t2.db")
+    s.save_script("SC2", {"full_text": "카테고리 없이", "segments": []})
+    got = s.get_extract("SC2")
+    assert got["category"] is None
+    assert got["full_text"] == "카테고리 없이"
+
+
+def test_element_raw_values_extracts_characters_and_plain_fields(tmp_path):
+    from shopping_shorts.store import Store
+    s = Store(tmp_path / "t3.db")
+    s.save_script("SC1", {"full_text": "t1"}, category="레시피")
+    s.save_extract_structure("SC1", {
+        "hook_type": "경고형",
+        "characters": [{"who": "엄마", "role": "엄마가 알려준 노하우"}, {"who": "언니", "role": "언니네 집 팁"}],
+        "tone": "친근한 반말",
+    })
+    s.save_script("SC2", {"full_text": "t2"}, category="레시피")
+    s.save_extract_structure("SC2", {"hook_type": "반전형", "characters": [], "tone": ""})
+
+    chars = s.element_raw_values("레시피", "characters")
+    assert chars == ["엄마가 알려준 노하우", "언니네 집 팁"]
+
+    hooks = s.element_raw_values("레시피", "hook")
+    assert hooks == ["경고형", "반전형"]
+
+    tones = s.element_raw_values("레시피", "tone")
+    assert tones == ["친근한 반말"]  # 빈 문자열은 제외
+
+
+def test_element_category_stats_roundtrip(tmp_path):
+    from shopping_shorts.store import Store
+    s = Store(tmp_path / "t4.db")
+    cats = [{"label": "가족관계", "description": "d1", "examples": ["e1", "e2"]},
+            {"label": "전문가", "description": "d2", "examples": ["e3"]}]
+    s.save_element_category_stats("레시피", "characters", cats)
+
+    opts = s.get_element_options("레시피")
+    assert [c["label"] for c in opts["characters"]] == ["가족관계", "전문가"]
+    assert opts.get("tone", []) == []  # 아직 저장 안 한 요소는 빈 리스트
+
+    detail = s.get_category_detail("레시피", "characters", "전문가")
+    assert detail["description"] == "d2"
+    assert detail["examples"] == ["e3"]
+
+    # 재계산은 기존 값을 덮어쓴다(누적 아님)
+    s.save_element_category_stats("레시피", "characters", [
+        {"label": "지인동료", "description": "d3", "examples": []}])
+    opts2 = s.get_element_options("레시피")
+    assert [c["label"] for c in opts2["characters"]] == ["지인동료"]
+
+
+def test_draft_save_get_and_chain(tmp_path):
+    from shopping_shorts.store import Store
+    s = Store(tmp_path / "d1.db")
+    s.save_draft("d1", 0, "SC1", None, "훅1", "대본1", None, "generate")
+    s.save_draft("d2", 0, "SC1", "d1", "훅2", "대본2", "더 유머러스하게", "rewrite")
+    s.save_draft("d3", 0, "SC1", "d2", "훅2", "대본2 수정", None, "manual")
+
+    got = s.get_draft("d3")
+    assert got["script_text"] == "대본2 수정"
+    assert got["parent_draft_id"] == "d2"
+    assert got["edit_mode"] == "manual"
+
+    chain = s.get_draft_chain("d3")
+    assert [c["draft_id"] for c in chain] == ["d1", "d2", "d3"]
+
+    assert s.get_draft("nope") is None
+
+
+def test_distinct_extract_categories(tmp_path):
+    from shopping_shorts.store import Store
+    s = Store(tmp_path / "t5.db")
+    s.save_script("SC1", {"full_text": "t"}, category="레시피")
+    s.save_script("SC2", {"full_text": "t"}, category="뷰티")
+    s.save_script("SC3", {"full_text": "t"}, category="레시피")
+    s.save_script("SC4", {"full_text": "t"})  # category 없음 — 제외
+    assert sorted(s.distinct_extract_categories()) == ["레시피", "뷰티"]
+
+
+def test_element_raw_values_flattens_devices_list(tmp_path):
+    from shopping_shorts.store import Store
+    s = Store(tmp_path / "dev.db")
+    s.save_script("SC1", {"full_text": "t"}, category="레시피")
+    s.save_extract_structure("SC1", {"devices": ["권위자인용", "구체적숫자"]})
+    s.save_script("SC2", {"full_text": "t"}, category="레시피")
+    s.save_extract_structure("SC2", {"devices": ["감정트리거", ""]})  # 빈 문자열 제외
+    vals = s.element_raw_values("레시피", "devices")
+    assert "권위자인용" in vals and "구체적숫자" in vals and "감정트리거" in vals
+    assert "" not in vals
+
+
+def test_element_raw_values_reads_from_wiki_library(tmp_path):
+    from shopping_shorts.store import Store
+    s = Store(tmp_path / "wikilearn.db")
+    # 도서관(S급) 저장 — 카테고리+구조 포함, script_extracts엔 없음
+    s.save_to_wiki({"shortcode": "W1", "category": "레시피", "name": "n"},
+                   {"full_text": "t", "segments": []},
+                   {"devices": ["권위자인용", "구체적숫자"], "tone": "친근한 반말"})
+    # 학습이 도서관에서 값을 읽어야 함
+    assert set(s.element_raw_values("레시피", "devices")) == {"권위자인용", "구체적숫자"}
+    assert s.element_raw_values("레시피", "tone") == ["친근한 반말"]
+    assert "레시피" in s.distinct_extract_categories()

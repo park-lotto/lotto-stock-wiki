@@ -72,6 +72,8 @@
              background:var(--panel);border:1px solid var(--line);border-radius:14px;
              width:min(720px,94vw);max-height:80vh;display:flex;flex-direction:column;overflow:hidden;
              box-shadow:0 10px 44px rgba(0,0,0,.6)}
+  .modal-box.wide{width:min(1040px,96vw);max-height:88vh}   /* 렌즈 결과용 큰 팝업 */
+  .lens-play{width:100%;aspect-ratio:9/16;max-height:60vh;border:0;border-radius:8px;background:#000;display:block}
   .modal-head{display:flex;align-items:center;justify-content:space-between;gap:8px;
               padding:14px 18px;border-bottom:1px solid var(--line);cursor:move;user-select:none}
   .modal-head b{font-size:15px}
@@ -132,6 +134,10 @@
       <div class="ctype" data-platform="tiktok" onclick="switchPlatform('tiktok',this)">🎵 틱톡</div>
     </div>
     <div id="seedPanel" style="display:none;margin-bottom:12px">
+      <div id="ttMode" style="display:none;margin-bottom:6px">
+        <label style="font-size:12px;color:var(--sub);cursor:pointer"><input type="radio" name="ttmode" value="keyword" checked onclick="ttModeChange()"> 🔎 키워드 검색발굴</label>
+        <label style="font-size:12px;color:var(--sub);cursor:pointer;margin-left:12px"><input type="radio" name="ttmode" value="account" onclick="ttModeChange()"> 🎵 계정 시드</label>
+      </div>
       <input id="seedInput" type="text" placeholder="검색 키워드 (예: 살림꿀팁)" style="padding:8px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)">
       <select id="seedLang" title="검색 언어(지역) — 한국어면 국내영상, 다른 언어면 그 나라 영상 발굴" style="padding:8px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)">
         <option value="ko">🇰🇷 한국어</option><option value="en">🇺🇸 영어</option>
@@ -140,6 +146,14 @@
       <button onclick="addSeed()">+ 키워드</button>
       <span id="seedHint" style="font-size:11px;color:var(--sub)">한국어 외 언어 선택 시 자동 번역해 등록</span>
       <div id="seedList" style="margin-top:6px;font-size:12px;color:var(--sub)"></div>
+      <div id="ttPanel" style="display:none;margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:8px;background:#0d131c">
+        <div style="font-size:12px;color:var(--sub);margin-bottom:8px">⚙️ 틱톡 키워드검색 설정 <span style="font-size:11px">— Apify 유료($1.70/1,000건). 선택 언어로 검색, 부족하면 다른 언어로 확장</span></div>
+        <label style="font-size:12px;color:var(--sub)">언어당 개수 <input id="ttCount" type="number" min="10" max="200" style="width:64px;padding:4px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)"></label>
+        <label style="font-size:12px;color:var(--sub);margin-left:10px">하루 수집횟수 <input id="ttDaily" type="number" min="1" max="100" style="width:56px;padding:4px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)"></label>
+        <label style="font-size:12px;color:var(--sub);margin-left:10px">월 예산($) <input id="ttBudget" type="number" min="0" step="0.5" style="width:64px;padding:4px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)"></label>
+        <button onclick="saveTtSettings()" style="margin-left:8px">저장</button>
+        <div id="ttStatus" style="margin-top:6px;font-size:11px;color:var(--sub)"></div>
+      </div>
     </div>
     <div class="toolbar">
       <button id="collectBtn" onclick="doCollect()">⚡ 지금 수집</button>
@@ -174,36 +188,60 @@ const CTYPES = [
 const TOPIC_CTYPE = {인테리어:"비법형",레시피:"비법형",생활용품:"제품형",가전:"제품형",뷰티:"혼합형",기타:"기타"};
 let STATE = {items:[], tab:"comments", ctype:"전체", cat:"전체"};
 let PLATFORM='instagram';
+function ttMode(){ const r=document.querySelector('input[name="ttmode"]:checked'); return r?r.value:'keyword'; }
 function switchPlatform(p, el){
   PLATFORM=p;
   document.querySelectorAll('#platformTabs .ctype').forEach(x=>x.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('seedPanel').style.display = (p==='instagram')?'none':'block';
-  const si=document.getElementById('seedInput');
-  if(si) si.placeholder = (p==='tiktok') ? '틱톡 계정 (예: @salim__mami)' : '검색 키워드 (예: 살림꿀팁)';
+  document.getElementById('ttMode').style.display = (p==='tiktok')?'block':'none';
+  document.getElementById('ttPanel').style.display = (p==='tiktok' && ttMode()==='keyword')?'block':'none';
+  if(p==='tiktok') loadTtSettings();
+  ttModeChange();       // 입력 placeholder·언어선택기·설정패널 표시 갱신
   if(p!=='instagram') loadSeeds();
   loadLast();          // 기존 초기 로드 함수 — platform 반영하도록 아래 수정
+}
+const TT_LANG_KINDS=['ko','en','ja','zh','ru'];   // 틱톡 키워드 시드의 언어코드
+function ttKeywordMode(){ return PLATFORM==='tiktok' && ttMode()==='keyword'; }
+function ttModeChange(){
+  const si=document.getElementById('seedInput');
+  if(PLATFORM==='tiktok'){
+    const kw = ttMode()==='keyword';
+    if(si) si.placeholder = kw ? '틱톡 검색 키워드 (예: 곰팡이 제거)' : '틱톡 계정 (예: @salim__mami)';
+    document.getElementById('ttPanel').style.display = kw?'block':'none';
+    // 키워드 모드면 언어 선택기 노출(선택 언어로 검색·확장), 계정 모드면 숨김
+    document.getElementById('seedLang').style.display = kw?'':'none';
+    document.getElementById('seedHint').style.display = kw?'':'none';
+    if(kw) document.getElementById('seedHint').textContent='선택 언어로 검색 — 한국어가 부족하면 영어 등 다른 언어로 확장';
+  } else if(si){
+    si.placeholder = '검색 키워드 (예: 살림꿀팁)';
+  }
 }
 const LANGLABEL={ko:'🇰🇷',en:'🇺🇸',ja:'🇯🇵',zh:'🇹🇼',ru:'🇷🇺',keyword:'🇰🇷',account:'🎵'};
 async function loadSeeds(){
   const d=await (await fetch('/api/seeds?platform='+PLATFORM)).json();
   const el=document.getElementById('seedList');
   const items=d.items||[];
-  el.innerHTML = items.length ? items.map(s=>
-    `<span style="display:inline-block;background:#1a2230;border-radius:12px;padding:2px 8px;margin:2px 4px 0 0">
+  el.innerHTML = items.length ? items.map(s=>{
+    const isLang = TT_LANG_KINDS.includes(s.kind);   // 틱톡 언어 시드 = 비용 대상
+    return `<span class="${(PLATFORM==='tiktok'&&isLang)?'ttkw':''}" style="display:inline-block;background:#1a2230;border-radius:12px;padding:2px 8px;margin:2px 4px 0 0">
        ${LANGLABEL[s.kind]||''} ${s.value}
        <span style="cursor:pointer;color:#e0623d" onclick="removeSeed('${s.value.replace(/'/g,"\\'")}')">✕</span>
-     </span>`).join('') : '키워드 없음';
-  // 유튜브만 언어 선택기 노출(틱톡=계정 기반)
-  document.getElementById('seedLang').style.display = (PLATFORM==='youtube')?'':'none';
-  document.getElementById('seedHint').style.display = (PLATFORM==='youtube')?'':'none';
+     </span>`;
+  }).join('') : '키워드 없음';
+  if(PLATFORM==='tiktok') renderTtStatus();
+  // 유튜브 + 틱톡 키워드모드에서 언어 선택기 노출(계정 모드는 ttModeChange가 숨김)
+  const showLang = (PLATFORM==='youtube') || ttKeywordMode();
+  document.getElementById('seedLang').style.display = showLang?'':'none';
+  document.getElementById('seedHint').style.display = showLang?'':'none';
 }
 async function addSeed(){
   const raw=document.getElementById('seedInput').value.trim(); if(!raw) return;
-  if(PLATFORM==='tiktok'){
+  if(PLATFORM==='tiktok' && ttMode()==='account'){
     await fetch('/api/seeds',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({platform:'tiktok',kind:'account',value:raw})});
     document.getElementById('seedInput').value=''; return loadSeeds();
   }
+  // 유튜브 + 틱톡 키워드모드 공통: 선택 언어로 저장(비한국어는 번역), kind=언어코드
   const lang=document.getElementById('seedLang').value;
   let value=raw;
   if(lang!=='ko'){
@@ -212,12 +250,43 @@ async function addSeed(){
       value = (t.keywords && t.keywords[lang]) ? t.keywords[lang] : raw;   // 번역실패시 원문
     }catch(e){}
   }
-  await fetch('/api/seeds',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({platform:'youtube',kind:lang,value})});
+  await fetch('/api/seeds',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({platform:PLATFORM,kind:lang,value})});
   document.getElementById('seedInput').value=''; loadSeeds();
 }
 async function removeSeed(v){
   await fetch('/api/seeds',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({platform:PLATFORM,value:v})});
   loadSeeds();
+}
+let TT_KNOBS={search_count:50,daily_limit:10,month_budget:5.0};
+async function loadTtSettings(){
+  try{
+    const d=await (await fetch('/api/tiktok/settings')).json();
+    if(!d.ok) return;
+    TT_KNOBS=d;
+    document.getElementById('ttCount').value=d.search_count;
+    document.getElementById('ttDaily').value=d.daily_limit;
+    document.getElementById('ttBudget').value=d.month_budget;
+    renderTtStatus();
+  }catch(e){}
+}
+function renderTtStatus(){
+  const el=document.getElementById('ttStatus'); if(!el) return;
+  const nlang = document.querySelectorAll('#seedList .ttkw').length;   // 언어 시드 수 = 검색 횟수
+  // 언어 시드 1개 = 1회 검색(검색개수개). 지출 = 언어시드수 × 검색개수 × $0.0017
+  const est = (nlang * TT_KNOBS.search_count * 0.0017);
+  const rem = (TT_KNOBS.remaining_today!=null) ? TT_KNOBS.remaining_today : TT_KNOBS.daily_limit;
+  const spent = Number(TT_KNOBS.month_spend||0);
+  el.innerHTML = `1회 수집 추정비용 ≈ $${est.toFixed(3)} (언어 ${nlang}개 × ${TT_KNOBS.search_count}개)<br>`
+    + `📅 오늘 남은 <b>${rem}</b>회 · 💰 이번달 $${spent.toFixed(2)} / $${Number(TT_KNOBS.month_budget).toFixed(2)}`;
+}
+async function saveTtSettings(){
+  const body={
+    search_count: parseInt(document.getElementById('ttCount').value||50,10),
+    daily_limit: parseInt(document.getElementById('ttDaily').value||10,10),
+    month_budget: parseFloat(document.getElementById('ttBudget').value||5),
+  };
+  const d=await (await fetch('/api/tiktok/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
+  if(d.ok){ TT_KNOBS=d; renderTtStatus(); document.getElementById('ttStatus').innerHTML='✅ 저장됨 · '+document.getElementById('ttStatus').innerHTML; }
 }
 
 function renderCtypes(){
@@ -270,6 +339,7 @@ function render(){
         </div>
         <button class="script-btn" onclick="extractScript('${i.shortcode}')">📝 대본 추출</button>
         <button class="script-btn" onclick="showRelated('${i.shortcode}')">🔗 같은 주제</button>
+        <button class="script-btn" onclick="lensSearch(this,'${i.shortcode}')">🔍 렌즈 유사영상</button>
         ${i.inpock?`<div style="margin-top:6px"><a href="${i.inpock}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🛒 판매채널</a></div>`:''}
       </div>
     </div>`).join("");
@@ -289,9 +359,15 @@ async function doCollect(){
   try{
     const r = await fetch("/api/collect?platform="+PLATFORM, {method:"POST"});
     const d = await r.json();
+    if(r.status===429){   // 틱톡 남용/예산 킬스위치
+      const label = d.error_code==='budget_exceeded' ? '💰 월 예산 초과' : '🚫 오늘 한도 초과';
+      st.textContent = `${label} — ${d.error||''}`;
+      return;
+    }
     if(!d.ok) throw new Error(d.error||"실패");
     STATE.items = d.items; st.textContent=`✅ ${d.count}건 수집 (${fmtTime(d.collected_at)})`;
     render();
+    if(PLATFORM==='tiktok') loadTtSettings();   // 하루 남은 횟수·지출 갱신
   }catch(e){ st.textContent="❌ "+e.message; }
   finally{ btn.disabled=false; }
 }
@@ -311,9 +387,10 @@ async function copyLink(url, btn){
 
 // ── 대본 추출 ──────────────────────────────────────────
 function esc(s){ return (s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-function openScript(html, title){
+function openScript(html, title, wide){
   const box=document.querySelector('#scriptModal .modal-box');
-  if(box){ box.style.transform='translateX(-50%)'; box.style.left='50%'; box.style.top='14px'; }  // 열 때마다 맨 위 중앙
+  if(box){ box.style.transform='translateX(-50%)'; box.style.left='50%'; box.style.top='14px'; // 열 때마다 맨 위 중앙
+           box.classList.toggle('wide', !!wide); }
   const t=document.getElementById('modalTitle');
   if(t) t.innerHTML=(title||'📝 대본 추출')+' <span style="font-size:11px;color:var(--sub);font-weight:400">— 잡고 이동</span>';
   document.getElementById('scriptBody').innerHTML=html;
@@ -353,32 +430,41 @@ function playInline(img){
   v.onerror=()=>{ v.replaceWith(img); img.title='영상 URL 만료 — 「지금 수집」 후 재생 가능'; };
   img.replaceWith(v);
 }
-// 유튜브는 프록시 mp4가 없어 embed 플레이어(iframe)로 인라인 재생.
-// 틱톡은 프록시 mp4 대신 공식 embed 플레이어(iframe)로 인라인 재생.
-function playTiktok(img, videoId){
+// 유튜브/틱톡: 우리가 뽑은 mp4 direct URL로 재생(same-origin canvas 캡처 가능).
+// mp4 확보 실패(비공개·지역차단) 시 기존 embed(iframe)로 폴백 — 재생은 되게(캡처만 불가).
+async function _playViaMedia(img, videoId, platform, embedFn){
   if(!videoId) return;
   const box=img.parentElement;
-  const badge=box && box.querySelector('.play-badge');
-  if(badge) badge.remove();
-  const f=document.createElement('iframe');
-  f.src='https://www.tiktok.com/embed/v2/'+encodeURIComponent(videoId);
-  f.style.cssText='width:100%;height:220px;border:0;display:block;background:#000';
-  f.allow='autoplay; encrypted-media; picture-in-picture';
-  f.allowFullscreen=true;
-  img.replaceWith(f);
+  const badge=box && box.querySelector('.play-badge'); if(badge) badge.remove();
+  try{
+    const d=await (await fetch(`/api/media?platform=${platform}&id=${encodeURIComponent(videoId)}`)).json();
+    if(d.ok && d.url){
+      const v=document.createElement('video');
+      v.src=d.url; v.controls=true; v.autoplay=true; v.playsInline=true;
+      v.setAttribute('playsinline',''); v.setAttribute('crossorigin','anonymous');
+      v.className='thumb-video';
+      v.onerror=()=>embedFn(v, videoId);   // mp4 재생 실패 시 embed 폴백
+      img.replaceWith(v); return;
+    }
+  }catch(e){}
+  embedFn(img, videoId);
 }
-function playYoutube(img, videoId){
-  if(!videoId) return;
-  const box=img.parentElement;
-  const badge=box && box.querySelector('.play-badge');
-  if(badge) badge.remove();
+function _embedYoutube(el, videoId){
   const f=document.createElement('iframe');
   f.src='https://www.youtube.com/embed/'+encodeURIComponent(videoId)+'?autoplay=1&playsinline=1';
   f.style.cssText='width:100%;height:220px;border:0;display:block;background:#000';
-  f.allow='autoplay; encrypted-media; picture-in-picture';
-  f.allowFullscreen=true;
-  img.replaceWith(f);
+  f.allow='autoplay; encrypted-media; picture-in-picture'; f.allowFullscreen=true;
+  el.replaceWith(f);
 }
+function _embedTiktok(el, videoId){
+  const f=document.createElement('iframe');
+  f.src='https://www.tiktok.com/embed/v2/'+encodeURIComponent(videoId);
+  f.style.cssText='width:100%;height:220px;border:0;display:block;background:#000';
+  f.allow='autoplay; encrypted-media; picture-in-picture'; f.allowFullscreen=true;
+  el.replaceWith(f);
+}
+function playYoutube(img, videoId){ _playViaMedia(img, videoId, 'youtube', _embedYoutube); }
+function playTiktok(img, videoId){ _playViaMedia(img, videoId, 'tiktok', _embedTiktok); }
 // ── 같은 주제 모아보기(2026-07-13) ──────────────────────
 async function showRelated(shortcode){
   openScript('<div class="sm-loading">⏳ 같은 주제 영상 찾는 중…</div>', '🔗 같은 주제 영상');
@@ -404,6 +490,109 @@ async function showRelated(shortcode){
       </div>`).join('');
     document.getElementById('scriptBody').innerHTML = h;
   }catch(err){ document.getElementById('scriptBody').innerHTML='<div class="sm-err">⚠️ 네트워크 오류 — 잠시 후 재시도</div>'; }
+}
+// ── 렌즈 유사영상 발굴(2026-07-14) ──────────────────────
+// 재생중/멈춘 <video>의 현재 프레임을 canvas 캡처 → 구글렌즈 → 5플랫폼 유사영상.
+const LENS_PLATFORMS=[
+  {k:'youtube',label:'▶️ 유튜브'},{k:'tiktok',label:'🎵 틱톡'},
+  {k:'instagram',label:'📷 인스타'},{k:'xiaohongshu',label:'📕 샤오홍슈'},
+  {k:'douyin',label:'🎶 도우인'}];
+let LENS_STATE={};   // shortcode → {items, on:Set}
+let _lensSC=null;    // 현재 모달에 표시 중인 shortcode
+// 카드에서 렌즈에 넣을 이미지를 canvas 캡처. 우선순위:
+//  ① 재생중/멈춘 <video> 프레임(사용자가 고른 장면)
+//  ② 없으면 카드 썸네일 <img>(재생 안 하고 바로 눌러도 되게, 2026-07-14)
+// 카드는 담기 버튼(save_${sc})으로 특정. 썸네일은 /api/thumb 프록시=same-origin이라
+// canvas 오염(taint) 없이 toBlob 가능.
+function _captureFrame(shortcode){
+  const anchor=document.getElementById('save_'+shortcode);
+  const card=anchor && anchor.closest('.card');
+  if(!card) return null;
+  const v=card.querySelector('video.thumb-video');
+  if(v && v.readyState>=2){
+    const cv=document.createElement('canvas');
+    cv.width=v.videoWidth; cv.height=v.videoHeight;
+    cv.getContext('2d').drawImage(v,0,0);
+    return cv;
+  }
+  // 썸네일 폴백 — 재생 전 상태
+  const img=card.querySelector('.thumb img, img');
+  if(img && img.naturalWidth>0){
+    const cv=document.createElement('canvas');
+    cv.width=img.naturalWidth; cv.height=img.naturalHeight;
+    try{ cv.getContext('2d').drawImage(img,0,0); return cv; }
+    catch(e){ return null; }   // 혹시 taint면 null(안내문 뜸)
+  }
+  return null;
+}
+async function lensSearch(btn, shortcode){
+  const cv=_captureFrame(shortcode);
+  if(!cv){ openScript('<div style="padding:10px;color:var(--sub)">이미지를 준비하지 못했습니다. 썸네일이 로드된 뒤 다시 눌러주세요.</div>','🔍 렌즈 유사영상',true); return; }
+  openScript('<div class="sm-loading">🔍 렌즈 검색 중… (5~15초)</div>','🔍 렌즈 유사영상',true);
+  const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.85));
+  const fd=new FormData(); fd.append('frame', blob, 'f.jpg');
+  try{
+    const r=await fetch('/api/lens/search',{method:'POST',body:fd});
+    const body=document.getElementById('scriptBody');
+    if(r.status===429){ const d=await r.json(); body.innerHTML=`<div style="padding:10px;color:#e0623d">💰 ${d.error||'이번 달 렌즈 한도 초과'}</div>`; return; }
+    const d=await r.json();
+    if(!d.ok || !d.items.length){ body.innerHTML='<div style="padding:10px;color:var(--sub)">유사 동영상을 찾지 못했습니다.<br><small>다른 장면(제품·요리가 크게 보이는 순간)에서 다시 시도해보세요.</small></div>'; return; }
+    LENS_STATE[shortcode]={items:d.items, on:new Set(LENS_PLATFORMS.map(p=>p.k))};
+    _lensSC=shortcode;
+    renderLens(shortcode);
+  }catch(e){ document.getElementById('scriptBody').innerHTML='<div style="padding:10px;color:#e0623d">❌ '+e.message+'</div>'; }
+}
+function toggleLensPlatform(shortcode, k){
+  const st=LENS_STATE[shortcode]; if(!st) return;
+  st.on.has(k)?st.on.delete(k):st.on.add(k); renderLens(shortcode);
+}
+function renderLens(shortcode){
+  const box=document.getElementById('scriptBody');   // 모달 body에 렌더(인라인 X → UI 안 망가짐)
+  const st=LENS_STATE[shortcode]; if(!st || !box) return;
+  const chips=LENS_PLATFORMS.map(p=>{
+    const active=st.on.has(p.k);
+    const n=st.items.filter(i=>i.platform===p.k).length;
+    return `<span onclick="toggleLensPlatform('${shortcode}','${p.k}')" style="cursor:pointer;display:inline-block;padding:3px 10px;margin:2px;border-radius:12px;font-size:11px;border:1px solid var(--line);background:${active?'#1f6feb33':'transparent'};opacity:${active?1:0.4}">${p.label} ${n}</span>`;
+  }).join('');
+  // 썸네일은 구글 gstatic CDN(encrypted-tbn) — 핫링크 제한 없어 직접 로드(프록시 불필요).
+  // 큰 썸네일 그리드 + 썸네일 클릭 시 바로 그 자리 인라인 재생(embed). embed 불가 플랫폼만 새 탭.
+  const shown=st.items.filter(i=>st.on.has(i.platform));
+  const cards=shown.map((i,idx)=>`
+    <div style="padding:8px 0;border-bottom:1px solid var(--line)">
+      <div style="font-size:12px;margin-bottom:6px"><b>${LENS_PLATFORMS.find(p=>p.k===i.platform)?.label||''}</b> <span style="color:var(--sub)">${esc((i.title||'').slice(0,80))}</span>
+        <a href="${i.url}" target="_blank" style="font-size:11px;color:var(--accent);margin-left:6px">↗ 원본</a></div>
+      <div id="lensplay_${idx}">
+        <div onclick="lensPlay(${idx})" style="position:relative;width:100%;max-width:260px;aspect-ratio:9/16;cursor:pointer;border-radius:10px;overflow:hidden;background:#0d131c">
+          <img src="${i.thumbnail||''}" referrerpolicy="no-referrer" loading="lazy" style="width:100%;height:100%;object-fit:cover" onerror="this.style.visibility='hidden'">
+          <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:40px;color:#fff;text-shadow:0 2px 8px #000">▶</span>
+        </div>
+      </div>
+    </div>`).join('') || '<div style="font-size:12px;color:var(--sub);padding:10px">켠 플랫폼 결과 없음</div>';
+  box.innerHTML=`<div style="position:sticky;top:0;background:var(--panel);padding:4px 0;margin-bottom:4px;z-index:1">${chips}</div><div>${cards}</div>`;
+  box._lensShown=shown;   // lensPlay가 참조
+}
+// 렌즈 결과를 팝업 안에서 embed로 인라인 재생(새 탭 안 열고 1차 확인).
+function _lensEmbed(url){
+  let m;
+  if((m=url.match(/youtube\.com\/watch\?v=([\w-]+)|youtu\.be\/([\w-]+)|youtube\.com\/shorts\/([\w-]+)/)))
+    return 'https://www.youtube.com/embed/'+(m[1]||m[2]||m[3])+'?autoplay=1&playsinline=1';
+  if((m=url.match(/tiktok\.com\/.*\/video\/(\d+)/)))
+    return 'https://www.tiktok.com/embed/v2/'+m[1];
+  if((m=url.match(/instagram\.com\/(?:reel|p)\/([\w-]+)/)))
+    return 'https://www.instagram.com/'+(url.includes('/reel/')?'reel':'p')+'/'+m[1]+'/embed';
+  return null;   // 샤오홍슈·도우인 등 embed 불가 → 원본 새 탭만
+}
+function lensPlay(idx){
+  const box=document.getElementById('scriptBody');
+  const it=box && box._lensShown && box._lensShown[idx]; if(!it) return;
+  const slot=document.getElementById('lensplay_'+idx); if(!slot) return;
+  if(slot.querySelector('iframe')){          // 이미 재생 중 → 썸네일로 복귀(닫기)
+    renderLens(_lensSC); return;
+  }
+  const src=_lensEmbed(it.url);
+  if(!src){ window.open(it.url,'_blank'); return; }    // 샤오홍슈·도우인 등 embed 불가 → 새 탭
+  slot.innerHTML=`<iframe class="lens-play" src="${src}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`
+    +`<div style="text-align:right"><button onclick="lensPlay(${idx})" style="font-size:11px;padding:2px 8px;margin-top:4px">✕ 닫기</button></div>`;
 }
 async function extractScript(shortcode){
   window._curSC = shortcode;

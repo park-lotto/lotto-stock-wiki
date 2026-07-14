@@ -1,4 +1,6 @@
 - 2026-07-14 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-07-14.md
+- 2026-07-14 (집PC) — [구현·배포] **쇼핑쇼츠 영상제작 5·꾸미기 전면 업그레이드**(`shopping_shorts/` produce.html·video_assemble·store·app·mix_pipeline): 사무실서 하던 폰트 트랙 이어서 "쇼핑팩토리 풀 구성" 완성. ①폰트 7→22종(woff/woff2 변환·한글명 ASCII 리네임)+hover 실시간프리뷰 커스텀드롭다운+베스트5상단 ②미리보기340px+배경박스+레퍼런스프리셋16 ③자막 스타일 분리(폰트·색·박스)+자막 효과(페이드/슬라이드/팝, 프리뷰 애니메이션) ④**🎯딸깍 완성스타일14**(원클릭 헤드카피+자막+효과)+흰배경기본+커스텀프리셋저장(localStorage) ⑤슬라이스C 전부: 워터마크(C1)·추가텍스트(C1)·BGM업로드+오디오믹스(C2)·이미지오버레이(C3)·실장면배경poster(C4). 렌더는 drawtext+overlay+amix 조합별 filter_complex 빌더로 재구성, 전 조합 ffmpeg 실렌더+로컬 playwright UI 검증. ⚠️버그수정: assemble이 headcopy 미전달하던 것. **⚠️ 다른 세션이 렌즈·보이스·생성요소를 초단위로 같은워킹트리에 커밋 → 커밋마다 내 hunk만 격리(git apply --cached)+원자적 add+commit+push로 이물질0·선형유지**(인덱스 리셋 1회 워킹트리 복구). 커밋 11개. 상세=shopping_shorts/영상제작_NEXT.md. 남은일: 자막 정밀동기화·6썸네일·7SEO.
+- 2026-07-14 (집PC) — [구현·배포] **쇼핑쇼츠 대본위키 학습소재 선택기 + 디벨롭 루프 전 12태스크**(`shopping_shorts/`): 설계·계획만 있던 🅓 트랙을 서브에이전트 기반 SDD로 완성. A트랙(학습소재 선택기): script_extracts category+구조백필 컬럼, element_stats Gemini 클러스터링(MIN_SAMPLES=20 안전장치), element_category_stats 캐시테이블, daily_batch 야간배치(항목단위 예외격리+회복력테스트), element_options API, script_generate 4단 요소모드(keep/free/random/category+옵션없으면 free폴백), 생성모달 카테고리 드롭다운UI+쿼리→JSON body 전환. B트랙(디벨롭 루프): script_drafts 버전이력테이블(parent_draft_id 체인), 생성초안 자동저장+draft_id, refine 전체재작성·부분수정 함수, draft refine·edit·history 3엔드포인트, 편집텍스트박스(blur자동저장)+지시문재생성+📜버전이력 UI. 태스크별 TDD+2단리뷰(스펙+품질), 실DB E2E 스모크 통과(버전 2→3단 체이닝). **⚠️ 작업 내내 다른 세션이 같은 워킹트리에서 틱톡·꾸미기·lens 동시 커밋 → 각 커밋 foreign hunk를 인덱스에서 격리(git apply --cached -R)해 오염분리**(A1만 초반 틱톡 hunk 혼입, 사용자 승인). 남은일: A4 원격크론등록·UI 실브라우저검증. 상세=NEXT_SESSION.md(🅓).
 - 2026-07-13 (다른PC) — [구현·배포] **쇼핑쇼츠 비용전환+같은주제그룹핑+멀티테넌시**(`shopping_shorts/`): Apify 무료계정 17개 전부 월한도소진(403) → apidojo~instagram-scraper-api로 액터교체(실측 flat $0.005/run, 151채널×매일=월$22.65). 채널엑셀 443→151(팔로워1만+생존검증). 200채널 자동캡(discovery로도 못뚫게 service.py 이중가드). "같은 주제" AI그룹핑 신규(`topic_grouper.py`, Gemini배치) — 배치간 group_id 충돌 버그(실제사용자 리포트: 감자레시피+아이스박스+피아노 오분류) 근본수정(`run_tag_{batch_start}_{gid}`), 관련영상 모달에 썸네일 추가. 멀티테넌시(고객100명 대비) 워크트리로 병행구현: customers테이블+pbkdf2세션쿠키+개인테이블(commented/saved/mix_basket/script_wiki) customer_id격리, 동시세션 stash보존 머지. 미결: produce.html 대본선택기 썸네일(script_wiki에 thumbnail컬럼 없음). 상세=NEXT_SESSION.md(🅔).
 - 2026-07-13 — [설계·계획] **쇼핑쇼츠 대본위키 학습소재 선택기+디벨롭 루프**(사무실PC, `shopping_shorts/`): "유지할 요소" 6개를 위키 통계기반 카테고리선택(4단 모드)으로 확장 + 생성초안 개별수정·프롬프트재생성·버전이력 기능. 브레인스토밍→스펙→구현계획(A 7태스크+B 5태스크, TDD 완전코드) 커밋까지 완료, 구현은 미착수. 같은 세션에서 `/find` 레시피오분석 수정+직접키워드입력, 소통큐 자동채우기 Tampermonkey 사무실PC 설치도 완료·배포. 상세=NEXT_SESSION.md(🅓).
 - 2026-07-12 — [구현·배포] **쇼핑쇼츠 믹스 렌더 4연속 개선**(`shopping_shorts/video_assemble.py`, 사무실→집 이어작업): 실렌더 피드백을 순차 수정. ①자막 페이싱(45da313e): setpts 배속압축(최대1.2x, 자막 16.4자/초=3배속화 원인) 폐지, 소스를 나레이션 길이만큼 1배속 재생. ②**새 대본 자막 굽기**(02fd75c1): 렌더러가 오디오만 교체하고 화면 drawtext가 아예 없어 새 대본이 안 보이던 문제 해결 — 하단 불투명 바 위에 자막 굽기. ③NanumGothic 폰트 repo 번들(2d908760): 서버(우분투) pull만으로 apt 없이 자막 렌더. ④장면 반복+자막 끊김(5eaaaa9a): 짧은 구간을 -stream_loop 되풀이하던 것을 연속재생으로, 균등분할 자막을 문장경계 분할로. 각 단계 실렌더+프레임 눈검증, 194 유닛테스트 통과. 다음=자막 어절단위 짧은구절 분할(알고리즘 검증완료, NEXT_SESSION.md)+실음성. 상세=NEXT_SESSION.md.
@@ -1428,3 +1430,49 @@ S급 대본을 위키에 모아 **구조를 학습→변형/믹스로 새 대본
 - B1(무료 로그인크롬) 24개 수확 실증했으나 운영자전용·취약 → 폐기. B2(Apify) 채택
 - Apify clockworks/tiktok-scraper: $1.70/1000(30개=5센트), searchQueries 키워드검색O, 월$5무료~2900건
 - 설계확정: 노브3개(검색당개수 기본60·하루횟수 기본10·월예산상한 기본$5)+Apify연동. 사용자 "고" 대기 → 집에서 이어서(NEXT_SESSION 🅒)
+
+## 2026-07-14 (집PC) 틱톡 키워드검색 발굴 — ✅ 구현완료·push (커밋 919058e8)
+- 🅒 트랙 전부 구현: search_full(풀raw스키마)/store 하루카운트·월예산헬퍼/service.collect(tiktok) 키워드분기(5개국어 번역→Apify)/app 가드(429 예산·하루)+/api/tiktok/settings/index.html 틱톡탭 모드토글+노브패널+비용·남은횟수
+- TDD 37개 테스트 신규(전부 green). 로컬서버로 UI 렌더+가드 429 2종 육안검증
+- ⚠️ 진행중 auto-commit 훅이 app/store를 엉뚱한 메시지로 선커밋 → amend로 9파일 원자커밋 정정 후 push
+- ⏭ 남은것: 실 Apify 토큰으로 라이브 1회 수집 육안검증(요금발생)
+
+## 2026-07-14 (집PC) 틱톡 발굴 언어확장 방식 전환 (커밋 6d3c9736, 라이브)
+- 5개국어 자동 폐기 → 사용자 언어지정+국가확장. 시드 kind=언어코드, 켠 언어만 검색. 언어당 50개(60→50)
+- 중단조건 없음(비용은 향후 포인트=현금 차감). UI 언어선택기+언어수기반 비용표시. 브라우저 육안검증(ko/en 공존, $0.170)
+- 서버 수동배포(자동크론 raw쓰기로 막힘). 남은것: 실 Apify토큰 라이브 1회 수집검증
+
+## 2026-07-14 (집PC) 렌즈 유사영상 발굴 — ✅ 구현·배포·라이브 (커밋 9ca8a6d9)
+- 6태스크 TDD: lens_discover(google_lens 5플랫폼 필터)/store 월카운트/api_lens_search+api_media/유튜브·틱톡 mp4재생통일(embed폴백)/렌즈탭UI(캡처+토글칩5개+결과카드)
+- 5플랫폼: 유튜브·틱톡·인스타·샤오홍슈·도우인 도메인 화이트리스트. 월 100회 가드(SerpApi 무료). python-multipart 추가
+- 45개 테스트 green. 브라우저 육안검증(캡처가드·칩·토글필터, JS에러0). 서버 수동배포+multipart설치, 라우트 라이브(401 auth)
+- ⚠️ 동시세션 충돌로 틱톡 app.py 언어확장이 덮였던 것 복구(커밋 684c47cc). 순차커밋 규칙 확립
+- ⏭ 남은것: 라이브 대시보드에서 인스타 카드 재생→캡처→🔍렌즈 실결과 육안(SerpApi 실호출, 중국플랫폼 나오는지 관찰)
+
+## 2026-07-14 (집PC) 보이스 프리셋 라이브러리 — ✅ 구현·검증 (커밋 b5463de9~3cd1abfe)
+- ElevenLabs TTS API 연결: 키+Text to Speech 권한(restricted키 권한부여)+`.env` 자동로드(config load_dotenv). 실한국어 음성 E2E 검증
+- 8태스크 TDD: tts(voice_settings/speed·API 0.7~1.2 clamp)/audio_post(atempo+silenceremove)/store(voice_presets 테이블+voice_json)/voice_presets(JSON로더+seed KR6종)/build_voice_samples/mix_pipeline(프리셋적용+resynth_tts_job)/app(프리셋API4종+startup seed)/produce 4단계 프리셋UI(카드·속도·무음·고급접기)
+- 검증: 24/25 테스트 green(1 기존 headcopy fail 무관), 라이브 /api/voice-presets seed+응답+source_ref숨김+UTF-8, produce.html JS구문 OK
+- ⏭ 남은것: ①`build_voice_samples` 실행해 샘플mp3 생성+🎧사장님 귀 튜닝(voice_id·감도값) ②서버 `/etc/shopping-shorts.env`에 ELEVENLABS_API_KEY 추가 ③라이브 produce 4단계 실클릭 검증 / 향후 Phase2: 앱내 생성도구·JP/EN·클로닝
+
+## 2026-07-14 (집PC) 렌즈 "유사영상 못찾음" 버그 수정 (커밋 02bd1af7, 배포됨)
+- 증상: 렌즈 항상 items:[] / 근본원인(체계적 디버깅): google_lens가 요리·제품 프레임엔 ai_overview만 주고 visual_matches 생략 → type=visual_matches 파라미터 필수인데 누락. 유명인 테스트이미지는 우연히 둘다 반환해 버그 가려짐
+- 수정: lens_discover params에 type=visual_matches. 라이브 실측 0→60 visual_matches→5플랫폼 필터 14개(틱톡8·인스타4·유튜브2)
+- 배포·검증완료. (디버깅 중 SerpApi 92/250 사용, 158 남음)
+
+## 2026-07-14 (집PC) 렌즈 no-results 진짜원인 해결 (커밋 63e97451, 배포·E2E검증)
+- 사용자: 브라우저 우클릭 렌즈는 되는데 앱은 0개. 체계적 디버깅으로 파라미터 4조합 대조:
+  type=visual_matches 단독=0(error), all모드=59, hl=ko&country=kr=60, type+로케일=60
+- 진짜 원인: **로케일(hl=ko&country=kr) 누락** — 한국어·요리 콘텐츠에서 type만 주면 google_lens가 "no results". type=visual_matches는 red herring이었음(신발 프레임이 우연히 통과해 가려짐)
+- 수정: params에 hl=ko&country=kr 추가 + 빈응답 재시도(3회). 배포 E2E: 감자프레임 0→30개(인스타18·틱톡8·유튜브4), 신발 3개. 둘다 실제 유사영상
+
+## 2026-07-14 (집PC) 보이스 프리셋 후속 — 샘플배포·서버키·v3 감정태그 검증
+- 샘플mp3 6종 생성·배포 / 서버 /etc/shopping-shorts.env에 ELEVENLABS_API_KEY 추가+실음성검증 / audio_post in-place ffmpeg 버그수정 / produce 4단계 프리셋카드 job없이도 항상표시(17ca3e8f)
+- **v3 감정태그 검증완료**: eleven_v3 접근가능+한국어OK. 대본에 [excited]/[whispers]/[sighs] 인라인태그→그뒤 4~5단어 감정적용. A/B로 사람같음 확인(사장님 OK). 한국어 여성성우 Kelee K 서울내레이터(5DWGv3VDkihNUcbvaonB) 선호
+- 설계원칙 확정: 성우·감도=프리셋고정(대본무관), 태그만 대본따라(핵심2~3군데). 편차관리=태그도배금지+비트별재롤+seed. 감도 v3베스트=stability0.5~0.7·style0~0.3·similarity0.75~0.8(speaker_boost 비호환). UX=원노브"차분↔생생". 상세 NEXT_SESSION 🎙️섹션
+
+## 2026-07-14 (집PC) 렌즈 디버깅·UX 대량 (커밋 ~94cd17cc, 라이브)
+- 🐛 3연쇄 버그해결: ①type=visual_matches 제거+로케일(hl=ko&country=kr) ②진짜원인 Google 인덱싱지연 → 캡처 imgur업로드후 검색(즉시매칭, 실증0→10~59) ③틱톡 discover페이지 제외
+- ✨ UX: 팝업모달(wide)·큰세로썸네일+클릭즉시embed재생·썸네일상태캡처·gstatic직접로드
+- 💰 SerpApi 월250무료→$50/5000=~14원/회, imgur무료. 다음: API결제부터(사용자명시)
+- ⚠️ 재배포순간 502 "Unexpected token '<'" 일시적(Apache프록시, 안정화됨)

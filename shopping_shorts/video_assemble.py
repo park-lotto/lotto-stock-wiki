@@ -196,19 +196,39 @@ def _caption_durations(segs, dur):
     return floored
 
 
-def _caption_drawtexts(narration, dur, work, idx, t0=0.0):
+def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None):
     """나레이션 한 비트의 자막(하단 바 + 순차 drawtext)을 필터 문자열 **리스트**로
     반환한다. 각 구절 enable 구간을 t0(전체 타임라인 시작 오프셋)만큼 밀어, 여러 비트를
     한 영상에 이어 구울 때(_burn_captions) 비트 경계에 맞게 배치된다.
 
+    style(자막 스타일 dict, 없으면 기존 기본값 = 하단 바 + 흰색)로 폰트·색·크기·위치·
+    외곽선·배경박스·효과를 제어한다. style이 None이면 하위호환(기존 렌더와 동일).
     반환 리스트를 그대로 필터그래프에 이어붙이면 되고, drawtext 값 안의
     between(t,a,b) 콤마를 나중에 split할 필요가 없다(요소 단위로 이미 분리됨).
     자막 구절이 없으면 빈 리스트. 텍스트는 work/cap_{idx}_{i}.txt 로 저장(cwd=work)."""
     segs = _caption_segments(narration)
     if not segs:
         return []
+    style = style or {}
     durs = _caption_durations(segs, dur)
-    parts = [f"drawbox=x=0:y=ih-{_BAR_H}:w=iw:h={_BAR_H}:color=black@0.82:t=fill"]
+    # 폰트: style.font이 static/fonts의 실제 파일이면 그것, 아니면 기본 자막폰트(font.ttf)
+    capfont = "font.ttf"
+    fname = os.path.basename(style.get("font") or "")
+    if fname and (_FONT_DIR / fname).exists():
+        shutil.copy(_FONT_DIR / fname, work / "cap_font.ttf")
+        capfont = "cap_font.ttf"
+    color = _hex_to_ff(style.get("color"), "0xFFFFFF")
+    size = max(10, int(style.get("size") or _CAP_FONTSIZE))
+    # 세로 위치: y_pct(0~100) 지정 시 중심기준, 없으면 하단 기본
+    ypct = style.get("y_pct")
+    ypos = f"(h*{min(1.0, max(0.0, ypct / 100.0)):.4f}-text_h/2)" if ypct is not None else "h-text_h-100"
+    # 효과: fade(알파 페이드-인)/pop(초반 살짝 확대는 drawtext 불가라 알파로 근사)/slide(y 위로)
+    effect = style.get("effect") or "none"
+    use_box = bool(style.get("box"))
+    show_bar = style.get("bar", True) and not use_box
+    parts = []
+    if show_bar:
+        parts.append(f"drawbox=x=0:y=ih-{_BAR_H}:w=iw:h={_BAR_H}:color=black@0.82:t=fill")
     t = 0.0
     for i, (seg, d) in enumerate(zip(segs, durs)):
         (work / f"cap_{idx}_{i}.txt").write_text(seg, encoding="utf-8")
@@ -216,12 +236,28 @@ def _caption_drawtexts(narration, dur, work, idx, t0=0.0):
         t += d
         # 마지막 구절은 비트 끝까지(+0.5) 유지. t0 오프셋을 함께 적용.
         end = (dur + 0.5 if i == len(segs) - 1 else t) + t0
-        parts.append(
-            f"drawtext=fontfile=font.ttf:textfile=cap_{idx}_{i}.txt:"
-            f"fontcolor=white:fontsize={_CAP_FONTSIZE}:line_spacing=10:"
-            f"x=(w-text_w)/2:y=h-text_h-100:"
-            f"enable='between(t,{start:.2f},{end:.2f})'"
-        )
+        yexpr = ypos
+        if effect == "slide":
+            # 등장 0.25초 동안 아래→위로 미끄러짐
+            yexpr = f"({ypos}+30*(1-min(1\\,(t-{start:.2f})/0.25)))"
+        dt = [
+            f"drawtext=fontfile={capfont}:textfile=cap_{idx}_{i}.txt",
+            f"fontcolor={color}", f"fontsize={size}", "line_spacing=10",
+            "x=(w-text_w)/2", f"y={yexpr}",
+        ]
+        if effect in ("fade", "pop"):
+            spd = 0.18 if effect == "fade" else 0.12
+            dt.append(f"alpha='min(1,max(0,(t-{start:.2f})/{spd}))'")
+        if style.get("outline"):
+            dt.append(f"borderw={max(1, int(style.get('outline_w') or 5))}")
+            dt.append(f"bordercolor={_hex_to_ff(style.get('outline_color'), '0x000000')}")
+        if use_box:
+            bc = _hex_to_ff(style.get("box_color"), "0x000000")
+            op = max(0.0, min(1.0, (style.get("box_opacity") or 80) / 100.0))
+            pad = max(0, int(style.get("box_pad") if style.get("box_pad") is not None else 12))
+            dt += ["box=1", f"boxcolor={bc}@{op:.2f}", f"boxborderw={pad}"]
+        dt.append(f"enable='between(t,{start:.2f},{end:.2f})'")
+        parts.append(":".join(dt))
     return parts
 
 
@@ -298,37 +334,50 @@ def _hex_to_ff(c, default="0xFFFFFF"):
 _FONT_DIR = Path(__file__).parent / "static" / "fonts"
 
 
-def _headcopy_drawtext(hc, work):
-    """헤드카피(고정 타이틀) drawtext 필터 문자열. text는 파일로 빼서 이스케이프 회피.
-    x/y는 % 위치(가로·세로 중심). 없으면 None.
-    hc['font']이 static/fonts의 실제 파일이면 그 폰트로, 아니면 기본 자막폰트(font.ttf)."""
-    text = (hc.get("text") or "").strip()
+def _fixed_drawtext(spec, work, key, default_color="0xFFFFFF"):
+    """고정 위치 drawtext 공용 생성기(헤드카피·추가텍스트·워터마크). text·폰트 파일은
+    key로 유일화(txt_{key}.txt / font_{key}.ttf)해 여러 개를 한 필터그래프에 안전히 얹는다.
+    x/y는 % 위치(가로·세로 중심). spec.alpha(0~1)로 전체 투명도(워터마크용). text 없으면 None.
+    spec['font']이 static/fonts의 실제 파일이면 그 폰트, 아니면 기본 자막폰트(font.ttf)."""
+    text = (spec.get("text") or "").strip()
     if not text:
         return None
-    (work / "headcopy.txt").write_text(text, encoding="utf-8")
+    (work / f"txt_{key}.txt").write_text(text, encoding="utf-8")
     fontref = "font.ttf"  # _burn_captions가 work에 복사해둔 기본폰트
-    fname = os.path.basename(hc.get("font") or "")
+    fname = os.path.basename(spec.get("font") or "")
     if fname:
         fpath = _FONT_DIR / fname
         if fpath.exists():
-            shutil.copy(fpath, work / "hc_font.ttf")
-            fontref = "hc_font.ttf"
-    size = max(10, int(hc.get("size") or 64))
-    xf = min(1.0, max(0.0, (hc.get("x", 50)) / 100.0))
-    yf = min(1.0, max(0.0, (hc.get("y", 14)) / 100.0))
+            shutil.copy(fpath, work / f"font_{key}.ttf")
+            fontref = f"font_{key}.ttf"
+    size = max(8, int(spec.get("size") or 64))
+    xf = min(1.0, max(0.0, (spec.get("x", 50)) / 100.0))
+    yf = min(1.0, max(0.0, (spec.get("y", 14)) / 100.0))
     parts = [
-        f"drawtext=fontfile={fontref}:textfile=headcopy.txt",
-        f"fontcolor={_hex_to_ff(hc.get('color'), '0xFF8800')}",
+        f"drawtext=fontfile={fontref}:textfile=txt_{key}.txt",
+        f"fontcolor={_hex_to_ff(spec.get('color'), default_color)}",
         f"fontsize={size}",
         f"x=(w*{xf:.4f}-tw/2)", f"y=(h*{yf:.4f}-th/2)",
     ]
-    if hc.get("outline"):
-        parts.append(f"borderw={max(1, int(hc.get('outline_w') or 6))}")
-        parts.append(f"bordercolor={_hex_to_ff(hc.get('outline_color'), '0x000000')}")
+    if spec.get("alpha") is not None:
+        parts.append(f"alpha={max(0.0, min(1.0, float(spec.get('alpha')))):.2f}")
+    if spec.get("outline"):
+        parts.append(f"borderw={max(1, int(spec.get('outline_w') or 6))}")
+        parts.append(f"bordercolor={_hex_to_ff(spec.get('outline_color'), '0x000000')}")
+    if spec.get("box"):
+        bc = _hex_to_ff(spec.get("box_color"), "0x000000")
+        op = max(0.0, min(1.0, (spec.get("box_opacity") or 80) / 100.0))
+        pad = max(0, int(spec.get("box_pad") if spec.get("box_pad") is not None else 16))
+        parts += ["box=1", f"boxcolor={bc}@{op:.2f}", f"boxborderw={pad}"]
     return ":".join(parts)
 
 
-def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None):
+def _headcopy_drawtext(hc, work):
+    """헤드카피(고정 타이틀) drawtext — _fixed_drawtext 래퍼(기본색 오렌지)."""
+    return _fixed_drawtext(hc, work, "hc", default_color="0xFF8800")
+
+
+def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None, caption_style=None, deco=None):
     """완성된 믹스 영상(in_video) 위에 우리 자막을 비트 타이밍대로 굽는다.
     비트 경계는 각 비트 tts 길이 누적(t0)으로 계산해, drawtext enable 구간을 전체
     타임라인 기준으로 배치한다(_caption_drawtexts에 t0 오프셋 전달). drawtext 값 안의
@@ -351,21 +400,75 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         if not tts:
             continue
         dur = _probe_duration(tts)
-        filters.extend(_caption_drawtexts(beat.get("narration", ""), dur, work, idx, t0))
+        filters.extend(_caption_drawtexts(beat.get("narration", ""), dur, work, idx, t0, caption_style))
         t0 += dur
     if headcopy:
         hc_dt = _headcopy_drawtext(headcopy, work)
         if hc_dt:
             filters.append(hc_dt)  # 항상 표시(고정 타이틀) — enable 없음
+    # 꾸미기 장식(deco): 추가 텍스트(여러 개) + 워터마크 닉네임. 모두 고정 drawtext.
+    deco = deco or {}
+    for i, t in enumerate(deco.get("extra_texts") or []):
+        ex_dt = _fixed_drawtext(t, work, f"ex{i}")
+        if ex_dt:
+            filters.append(ex_dt)
+    wm = deco.get("watermark") or {}
+    if wm.get("text"):
+        wm_spec = {"text": wm.get("text"), "font": wm.get("font"),
+                   "color": wm.get("color", "#FFFFFF"),
+                   "size": wm.get("size", 30),
+                   "x": wm.get("x", 50), "y": wm.get("y", 95),
+                   "alpha": wm.get("alpha", 0.6),
+                   "outline": wm.get("outline", True),
+                   "outline_color": wm.get("outline_color", "#000000"),
+                   "outline_w": wm.get("outline_w", 3)}
+        wm_dt = _fixed_drawtext(wm_spec, work, "wm", default_color="0xFFFFFF")
+        if wm_dt:
+            filters.append(wm_dt)
     vf = ",".join(filters)
     # cwd=work: 필터그래프의 font.ttf / cap_*.txt 상대경로 해석 기준(콜론 회피).
-    _run_ffmpeg(["ffmpeg", "-y", "-i", str(in_video), "-vf", vf, "-r", "30",
-                 "-c:v", "libx264", "-c:a", "copy", "-pix_fmt", "yuv420p", str(out_path)],
-                cwd=str(work))
+    # 오버레이 이미지·BGM 유무로 -vf(단순) 또는 filter_complex(합성) 선택. 둘 다 조합 가능.
+    bgm = deco.get("bgm") or {}
+    bgm_path = bgm.get("_abspath")
+    has_bgm = bool(bgm_path and os.path.exists(bgm_path))
+    overlay = deco.get("overlay") or {}
+    ov_path = overlay.get("_abspath")
+    has_overlay = bool(ov_path and os.path.exists(ov_path))
+    if not has_bgm and not has_overlay:
+        _run_ffmpeg(["ffmpeg", "-y", "-i", str(in_video), "-vf", vf, "-r", "30",
+                     "-c:v", "libx264", "-c:a", "copy", "-pix_fmt", "yuv420p", str(out_path)],
+                    cwd=str(work))
+        return str(out_path)
+    inputs = ["-i", str(in_video)]
+    fc = [f"[0:v]{vf}[v0]"]
+    vcur, idx = "v0", 1
+    if has_overlay:                                   # 이미지 오버레이(로고·뱃지 등)
+        inputs += ["-i", ov_path]
+        w = overlay.get("width")                      # 1080px 기준 폭(없으면 원본)
+        scale = f"scale={int(w)}:-1," if w else ""
+        xf = min(1.0, max(0.0, overlay.get("x", 50) / 100.0))
+        yf = min(1.0, max(0.0, overlay.get("y", 50) / 100.0))
+        aa = max(0.0, min(1.0, overlay.get("alpha", 1)))
+        fc.append(f"[{idx}:v]{scale}format=rgba,colorchannelmixer=aa={aa:.2f}[ov]")
+        fc.append(f"[{vcur}][ov]overlay=x=W*{xf:.4f}-w/2:y=H*{yf:.4f}-h/2[v1]")
+        vcur = "v1"
+        idx += 1
+    amap = None
+    if has_bgm:                                       # 배경음악(나레이션 위 낮은 볼륨)
+        inputs += ["-i", bgm_path]
+        vol = max(0.0, min(1.0, (bgm.get("volume", 15)) / 100.0))
+        fc.append(f"[{idx}:a]aloop=loop=-1:size=2000000000,volume={vol:.3f}[bg]")
+        fc.append("[0:a][bg]amix=inputs=2:duration=first:dropout_transition=2[a]")
+        amap = "[a]"
+        idx += 1
+    cmd = ["ffmpeg", "-y", *inputs, "-filter_complex", ";".join(fc), "-map", f"[{vcur}]"]
+    cmd += (["-map", amap, "-c:a", "aac"] if amap else ["-map", "0:a", "-c:a", "copy"])
+    cmd += ["-r", "30", "-c:v", "libx264", "-pix_fmt", "yuv420p", str(out_path)]
+    _run_ffmpeg(cmd, cwd=str(work))
     return str(out_path)
 
 
-def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, headcopy=None):
+def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, headcopy=None, caption_style=None, deco=None):
     """EDL → 최종 mp4. 1)믹스(자막X) 2)clean_fn(있으면 자막제거) 3)우리 자막.
     clean_fn(mix_raw_path)->clean_path 를 주면 그 사이에 VMake 자막제거가 끼워진다
     (없으면 생략). 자막제거는 우리 자막을 굽기 전 깨끗한 믹스에 돌려야 우리 자막이
@@ -374,4 +477,4 @@ def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, 
     work.mkdir(parents=True, exist_ok=True)
     mix_raw = _render_mix(edit_plan, tts_paths, source_video_paths, work)
     base_video = clean_fn(mix_raw) if clean_fn else mix_raw
-    return _burn_captions(base_video, edit_plan, tts_paths, out_path, work)
+    return _burn_captions(base_video, edit_plan, tts_paths, out_path, work, headcopy, caption_style, deco)

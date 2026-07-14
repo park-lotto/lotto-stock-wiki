@@ -45,14 +45,36 @@
     .tab.active{background:linear-gradient(90deg,#153a6b,#0d2340);border-color:var(--accent);color:#9dc4ff}
     textarea{width:100%;min-height:160px;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:12px;font-size:14px;resize:vertical;font-family:inherit}
     .hint{color:var(--sub);font-size:12px;margin-top:6px}
-    /* 헤드카피 번들 폰트(브라우저 미리보기 = 실제 렌더 일치, ttf/otf만) */
-    @font-face{font-family:'HCNanum';src:url('/fonts/NanumGothic-Bold.ttf')}
+    /* 자막 효과 프리뷰 애니메이션(실제 렌더 효과를 미리보기에서 반복 재생) */
+    @keyframes capFade{0%{opacity:0}30%{opacity:1}100%{opacity:1}}
+    @keyframes capSlide{0%{opacity:0;transform:translate(-50%,calc(-50% + 22px))}35%{opacity:1;transform:translate(-50%,-50%)}100%{opacity:1;transform:translate(-50%,-50%)}}
+    @keyframes capPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}45%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}65%{transform:translate(-50%,-50%) scale(.97)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+    .eff-fade{animation:capFade 2.2s ease-in-out infinite}
+    .eff-slide{animation:capSlide 2.2s ease-in-out infinite}
+    .eff-pop{animation:capPop 2.2s ease-in-out infinite}
+    /* 헤드카피 번들 폰트 22종(브라우저 미리보기 = 실제 렌더 일치, ttf/otf만) */
+    @font-face{font-family:'HCTmon';src:url('/fonts/TmonMonsori.ttf')}
     @font-face{font-family:'HCJua';src:url('/fonts/BMJUA.ttf')}
     @font-face{font-family:'HCDohyeon';src:url('/fonts/BMDOHYEON.ttf')}
-    @font-face{font-family:'HCTmon';src:url('/fonts/TmonMonsori.ttf')}
+    @font-face{font-family:'HCBinggrae';src:url('/fonts/Binggrae-Bold.otf')}
+    @font-face{font-family:'HCKkubulim';src:url('/fonts/Kkubulim.ttf')}
     @font-face{font-family:'HCGmarket';src:url('/fonts/GmarketSansBold.otf')}
     @font-face{font-family:'HCSuit';src:url('/fonts/SUIT-Bold.otf')}
     @font-face{font-family:'HCPretendard';src:url('/fonts/Pretendard-ExtraBold.otf')}
+    @font-face{font-family:'HCPretendardB';src:url('/fonts/Pretendard-Bold.otf')}
+    @font-face{font-family:'HCPretendardS';src:url('/fonts/Pretendard-SemiBold.otf')}
+    @font-face{font-family:'HCSpoqa';src:url('/fonts/SpoqaHanSansNeo-Bold.otf')}
+    @font-face{font-family:'HCIBM';src:url('/fonts/IBMPlexSansKR-Bold.otf')}
+    @font-face{font-family:'HCNoto';src:url('/fonts/NotoSansKR-Bold.otf')}
+    @font-face{font-family:'HCNanum';src:url('/fonts/NanumGothic-Bold.ttf')}
+    @font-face{font-family:'HCOkmallang';src:url('/fonts/OkMallangW.ttf')}
+    @font-face{font-family:'HCGBatang';src:url('/fonts/GBatang.otf')}
+    @font-face{font-family:'HCGowun';src:url('/fonts/GowunBatang.ttf')}
+    @font-face{font-family:'HCRidi';src:url('/fonts/RIDIBatang.otf')}
+    @font-face{font-family:'HCPretendardR';src:url('/fonts/Pretendard-Regular.otf')}
+    @font-face{font-family:'HCSuitR';src:url('/fonts/SUIT-Regular.otf')}
+    @font-face{font-family:'HCSpoqaR';src:url('/fonts/SpoqaHanSansNeo-Regular.otf')}
+    @font-face{font-family:'HCIBMR';src:url('/fonts/IBMPlexSansKR-Regular.otf')}
   </style>
 </head>
 <body>
@@ -102,13 +124,52 @@
     </section>
     <section class="panel" data-step="3">
       <h3>4 · TTS 음성</h3>
-      <div class="sub">확정 대본을 비트별로 읽은 음성입니다(장면 길이에 맞춰 생성됨). 들어보고 다음으로.</div>
-      <div id="ttsBeats">불러오는 중…</div>
+      <div class="sub">성우 프리셋을 고르면 톤·속도·감도가 한 번에 세팅됩니다. 들어보고 다음으로.</div>
+      <label style="display:flex;align-items:center;gap:8px;margin:8px 0;cursor:pointer">
+        <input type="checkbox" id="noVoice" onchange="onNoVoice()"> <b>자막/음성 없이 진행</b>
+        <span class="hint">켜면 TTS·자막 없이 영상만 내보냅니다</span>
+      </label>
+      <div id="voiceUI">
+        <div id="presetCards">불러오는 중…</div>
+        <div id="voiceControls" style="display:none;margin-top:12px">
+          <div style="font-size:12px;color:var(--sub)">속도</div>
+          <div id="speedBtns" style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px"></div>
+          <div style="font-size:12px;color:var(--sub)">무음 삭제</div>
+          <div id="silenceBtns" style="display:flex;gap:6px;margin:4px 0 10px"></div>
+          <details style="margin:8px 0">
+            <summary style="cursor:pointer;font-size:13px;color:var(--sub)">고급 ▾</summary>
+            <div style="padding:8px 0;display:flex;flex-direction:column;gap:8px">
+              <label>Stability <input type="range" id="advStability" min="0" max="1" step="0.05" oninput="onAdv()"> <span id="advStabilityV"></span></label>
+              <label>Similarity <input type="range" id="advSimilarity" min="0" max="1" step="0.05" oninput="onAdv()"> <span id="advSimilarityV"></span></label>
+              <label>Style <input type="range" id="advStyle" min="0" max="1" step="0.05" oninput="onAdv()"> <span id="advStyleV"></span></label>
+              <label><input type="checkbox" id="advBoost" onchange="onAdv()"> Speaker boost</label>
+            </div>
+          </details>
+          <button onclick="previewVoice()" class="btn-prev" style="padding:8px 14px;margin-right:8px">🎧 이 대본으로 다시 듣기</button>
+          <button onclick="applyVoice()" class="btn-next" style="padding:8px 16px">이 음성으로 전체 생성</button>
+          <div id="voicePreview" style="margin-top:8px"></div>
+        </div>
+      </div>
+      <div id="ttsBeats" style="margin-top:14px"></div>
     </section>
     <section class="panel" data-step="4">
       <h3>5 · 꾸미기 · 헤드카피</h3>
-      <div class="sub">영상 위에 고정으로 얹는 타이틀(자막과 별개). <b>프리셋을 누르면 색·크기·외곽선이 한 번에 지정</b>됩니다. 미리보기에서 <b>드래그</b>로 위치 이동도 돼요.</div>
-      <div style="font-size:12px;color:var(--sub);margin-bottom:4px">🎨 스타일 프리셋</div>
+      <div class="sub">영상 위에 고정으로 얹는 타이틀(자막과 별개). 미리보기에서 <b>드래그</b>로 위치 이동도 돼요.</div>
+      <!-- 🎯 완성 스타일(원클릭) — 딸깍 하나로 헤드카피+자막+효과까지 완성. 빅채널 레퍼런스 기반 -->
+      <div style="background:linear-gradient(90deg,#1a1030,#0d1420);border:1px solid var(--accent);border-radius:12px;padding:12px 14px;margin-bottom:16px">
+        <div style="font-size:14px;font-weight:800;margin-bottom:2px">🎯 완성 스타일 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 딸깍 하나로 헤드카피+자막+효과 완성</span></div>
+        <div class="sub" style="margin-bottom:9px">빅채널 레퍼런스 스타일. 누르면 그대로 완성되고, 아래에서 조금씩만 손보면 됩니다.</div>
+        <div id="fullPresets" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+        <div style="border-top:1px dashed var(--line);margin-top:12px;padding-top:10px">
+          <div style="font-size:12px;color:var(--sub);margin-bottom:6px">⭐ 내 프리셋 <span style="font-size:11px">— 지금 스타일을 저장해 나만의 딸깍 샘플로</span></div>
+          <div id="myPresets" style="display:flex;flex-wrap:wrap;align-items:center;margin-bottom:8px"></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <input id="myPresetName" type="text" placeholder="예: 내 채널 기본형" style="flex:1;min-width:160px;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 10px;font-size:13px">
+            <button class="tab" onclick="saveMyPreset()" style="flex:0 0 auto;min-width:auto;padding:7px 16px;font-size:13px;white-space:nowrap;background:linear-gradient(90deg,#153a6b,#0d2340);border-color:var(--accent)">💾 현재 스타일 저장</button>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--sub);margin-bottom:4px">🎨 헤드카피 프리셋(헤드카피만)</div>
       <div id="hcPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"></div>
       <div style="display:flex;gap:20px;flex-wrap:wrap">
         <div style="flex:1;min-width:280px">
@@ -116,8 +177,13 @@
           <input id="hcText" type="text" placeholder="예: 써보면 놀라는 이것" oninput="updateHC()"
             style="width:100%;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px;margin-bottom:10px">
           <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-            <label style="font-size:12px;color:var(--sub)">폰트
-              <select id="hcFont" onchange="updateHC()" style="background:#0d1420;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px"></select></label>
+            <span style="font-size:12px;color:var(--sub)">폰트
+              <span id="hcFontPicker" style="position:relative;display:inline-block;vertical-align:middle">
+                <button type="button" id="hcFontBtn" onclick="toggleFontMenu(event)"
+                  style="background:#0d1420;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 10px;cursor:pointer;min-width:130px;text-align:left;font-size:13px">폰트 선택 ▾</button>
+                <div id="hcFontMenu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:60;background:#0d1420;border:1px solid var(--line);border-radius:8px;max-height:340px;overflow:auto;box-shadow:0 12px 34px rgba(0,0,0,.55);min-width:190px"></div>
+              </span>
+              <select id="hcFont" onchange="updateHC()" style="display:none"></select></span>
             <label style="font-size:12px;color:var(--sub)">색상 <input id="hcColor" type="color" value="#FF8800" oninput="updateHC()"></label>
             <label style="font-size:12px;color:var(--sub)">굵기
               <select id="hcWeight" onchange="updateHC()" style="background:#0d1420;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px">
@@ -142,12 +208,93 @@
             <input id="hcOutColor" type="color" value="#000000" oninput="updateHC()">
             <span style="color:var(--sub)">두께 <input id="hcOutW" type="range" min="0" max="12" value="6" oninput="updateHC()"></span>
           </label>
+          <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">
+            <input id="hcBox" type="checkbox" onchange="updateHC()"> 배경 박스
+            <input id="hcBoxColor" type="color" value="#000000" oninput="updateHC()">
+            <span style="color:var(--sub)">여백 <input id="hcBoxPad" type="range" min="0" max="40" value="16" oninput="updateHC()"></span>
+            <span style="color:var(--sub)">투명도 <input id="hcBoxOpacity" type="range" min="20" max="100" value="80" oninput="updateHC()"></span>
+          </label>
         </div>
         <div style="flex:0 0 auto">
-          <div class="hint" style="margin-bottom:4px">실시간 미리보기 (9:16)</div>
-          <div id="hcPreview" style="position:relative;width:200px;aspect-ratio:9/16;background:#0d131c;border:1px solid var(--line);border-radius:10px;overflow:hidden">
-            <div id="hcPreviewText" style="position:absolute;transform:translate(-50%,-50%);text-align:center;line-height:1.15;word-break:keep-all;padding:0 6px;pointer-events:none"></div>
+          <div class="hint" style="margin-bottom:4px">🖱️ 실시간 미리보기 (9:16) — 글자를 <b>드래그</b>해 위치 이동
+            <label style="cursor:pointer;margin-left:6px;color:var(--txt)"><input type="checkbox" id="sceneBg" onchange="toggleSceneBg()"> 실장면 배경</label></div>
+          <div id="hcPreview" style="position:relative;width:340px;aspect-ratio:9/16;background:#ffffff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.4)">
+            <img id="hcPreviewBg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none" alt="">
+            <div id="capPreviewText" style="position:absolute;left:50%;transform:translateX(-50%);text-align:center;white-space:pre-wrap;word-break:keep-all;line-height:1.2;z-index:2;pointer-events:none"></div>
+            <div id="hcPreviewText" style="position:absolute;transform:translate(-50%,-50%);text-align:center;line-height:1.18;word-break:keep-all;padding:0 6px;cursor:move;user-select:none;z-index:3"></div>
+            <div id="extraPreview"></div>
+            <img id="ovPreview" style="position:absolute;transform:translate(-50%,-50%);cursor:move;user-select:none;z-index:5;display:none" alt="">
+            <div id="wmPreview" style="position:absolute;transform:translate(-50%,-50%);white-space:nowrap;z-index:6;pointer-events:none;display:none"></div>
           </div>
+        </div>
+      </div>
+      <!-- 자막 스타일(나레이션 자막 자체 디자인) -->
+      <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:2px">💬 자막 스타일</div>
+        <div class="sub" style="margin-bottom:10px">나레이션 자막(문구는 대본에서 자동)의 폰트·색·박스·효과. 미리보기 하단에 <b>샘플</b>로 표시됩니다.</div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+          <label style="font-size:12px;color:var(--sub)">폰트
+            <select id="capFont" onchange="updateCaption()" style="background:#0d1420;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px"></select></label>
+          <label style="font-size:12px;color:var(--sub)">색상 <input id="capColor" type="color" value="#FFFFFF" oninput="updateCaption()"></label>
+        </div>
+        <div style="margin-top:8px;font-size:12px;color:var(--sub)">글씨 크기 <span id="capSizeV">54</span>px
+          <input id="capSize" type="range" min="28" max="96" value="54" oninput="updateCaption()" style="width:100%"></div>
+        <div style="font-size:12px;color:var(--sub)">세로 위치 <span id="capYV">84</span>%
+          <input id="capY" type="range" min="0" max="100" value="84" oninput="updateCaption()" style="width:100%"></div>
+        <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">
+          <input id="capOutline" type="checkbox" checked onchange="updateCaption()"> 외곽선
+          <input id="capOutColor" type="color" value="#000000" oninput="updateCaption()">
+          <span style="color:var(--sub)">두께 <input id="capOutW" type="range" min="0" max="12" value="5" oninput="updateCaption()"></span>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">
+          <input id="capBox" type="checkbox" onchange="updateCaption()"> 배경 박스<span style="color:var(--sub);font-size:11px">(켜면 하단 바 대신 글자마다 박스)</span>
+          <input id="capBoxColor" type="color" value="#000000" oninput="updateCaption()">
+          <span style="color:var(--sub)">여백 <input id="capBoxPad" type="range" min="0" max="40" value="12" oninput="updateCaption()"></span>
+          <span style="color:var(--sub)">투명도 <input id="capBoxOpacity" type="range" min="20" max="100" value="80" oninput="updateCaption()"></span>
+        </label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center">
+          <span style="font-size:12px;color:var(--sub)">효과:</span>
+          <button type="button" class="capEff tab active" data-eff="none" onclick="setCapEffect('none')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">없음</button>
+          <button type="button" class="capEff tab" data-eff="fade" onclick="setCapEffect('fade')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">페이드</button>
+          <button type="button" class="capEff tab" data-eff="slide" onclick="setCapEffect('slide')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">슬라이드</button>
+          <button type="button" class="capEff tab" data-eff="pop" onclick="setCapEffect('pop')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">팝</button>
+        </div>
+      </div>
+      <!-- 🏷 워터마크 · 추가 텍스트 -->
+      <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:8px">🏷 워터마크 · 추가 텍스트</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+            <input id="wmOn" type="checkbox" onchange="updateDeco()"> 워터마크 닉네임</label>
+          <input id="wmText" type="text" placeholder="@내채널" oninput="updateDeco()" style="width:150px;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 9px;font-size:13px">
+          <input id="wmColor" type="color" value="#FFFFFF" oninput="updateDeco()">
+          <label style="font-size:12px;color:var(--sub)">위치
+            <select id="wmPos" onchange="updateDeco()" style="background:#0d1420;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px">
+              <option value="bc" selected>하단중앙</option><option value="br">우하단</option><option value="bl">좌하단</option><option value="tr">우상단</option><option value="tl">좌상단</option>
+            </select></label>
+          <label style="font-size:12px;color:var(--sub)">투명도 <input id="wmAlpha" type="range" min="20" max="100" value="60" oninput="updateDeco()"></label>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="font-size:13px;font-weight:600">➕ 추가 텍스트</span>
+          <button class="tab" onclick="addExtraText()" style="flex:0 0 auto;min-width:auto;padding:5px 13px;font-size:12px;white-space:nowrap">+ 텍스트 추가</button>
+          <span class="hint">미리보기에서 <b>드래그</b>로 위치 이동</span>
+        </div>
+        <div id="extraTextList"></div>
+        <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;border-top:1px dashed var(--line);padding-top:12px">
+          <span style="font-size:13px;font-weight:600">🎵 배경음악(BGM)</span>
+          <input id="bgmFile" type="file" accept="audio/*,.mp3,.wav,.m4a" onchange="uploadBgm(this)" style="font-size:12px;max-width:220px">
+          <span id="bgmStatus" class="hint"></span>
+          <label style="font-size:12px;color:var(--sub)">볼륨 <input id="bgmVol" type="range" min="0" max="60" value="15" oninput="updateBgmVol()"> <span id="bgmVolV">15</span>%</label>
+          <button onclick="clearBgm()" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:12px">제거</button>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;border-top:1px dashed var(--line);padding-top:12px">
+          <span style="font-size:13px;font-weight:600">🖼 이미지 오버레이</span>
+          <input id="ovFile" type="file" accept="image/png,image/jpeg,image/webp" onchange="uploadOverlay(this)" style="font-size:12px;max-width:200px">
+          <span id="ovStatus" class="hint"></span>
+          <label style="font-size:12px;color:var(--sub)">크기 <input id="ovW" type="range" min="80" max="700" value="240" oninput="updateOverlay()"></label>
+          <label style="font-size:12px;color:var(--sub)">투명도 <input id="ovAlpha" type="range" min="20" max="100" value="100" oninput="updateOverlay()"></label>
+          <button onclick="clearOverlay()" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:12px">제거</button>
+          <span class="hint">미리보기에서 <b>드래그</b>로 이동</span>
         </div>
       </div>
     </section>
@@ -192,7 +339,7 @@ function showPanel(){
 }
 
 // ── 5단계 꾸미기(헤드카피 디자인) ──────────────
-const PREVIEW_W=200, VIDEO_W=1080;   // 미리보기↔실영상 스케일
+const PREVIEW_W=340, VIDEO_W=1080;   // 미리보기↔실영상 스케일
 function initHeadcopy(){
   const t=document.getElementById('hcText');
   if(t && !t.value && STATE.headcopy) t.value=STATE.headcopy.text||'';
@@ -203,31 +350,327 @@ function initHeadcopy(){
   }
   renderFontSelect();
   renderPresets();
+  renderFullPresets();
+  renderMyPresets();
   bindHCDrag();
   updateHC();
+  renderCapFontSelect();
+  updateCaption();
+  updateDeco();
+  renderExtraTexts();
+  renderExtraPreview();
+  renderOverlayPreview();
 }
-// 번들 폰트(ttf/otf만 — 미리보기=실제 렌더 일치)
-const HC_FONTS=[
-  {name:'나눔고딕',   file:'NanumGothic-Bold.ttf',    css:'HCNanum'},
-  {name:'배민 주아',  file:'BMJUA.ttf',               css:'HCJua'},
-  {name:'배민 도현',  file:'BMDOHYEON.ttf',           css:'HCDohyeon'},
-  {name:'티몬 몬소리',file:'TmonMonsori.ttf',         css:'HCTmon'},
-  {name:'지마켓 산스',file:'GmarketSansBold.otf',     css:'HCGmarket'},
-  {name:'SUIT',       file:'SUIT-Bold.otf',           css:'HCSuit'},
-  {name:'프리텐다드', file:'Pretendard-ExtraBold.otf',css:'HCPretendard'},
+// ── 자막 스타일(나레이션 자막) ──────────────
+let CAP_EFFECT='none';
+function renderCapFontSelect(){
+  const s=document.getElementById('capFont');
+  if(s && !s.options.length) s.innerHTML=HC_FONTS.map(f=>`<option value="${f.file}"${f.file==='NanumGothic-Bold.ttf'?' selected':''}>${f.name}</option>`).join('');
+}
+function setCapEffect(e){ CAP_EFFECT=e;
+  document.querySelectorAll('.capEff').forEach(b=>b.classList.toggle('active', b.dataset.eff===e));
+  updateCaption(); }
+function updateCaption(){
+  const g=id=>document.getElementById(id); if(!g('capFont')) return;
+  const cs={ font:g('capFont').value||'NanumGothic-Bold.ttf', color:g('capColor').value, size:+g('capSize').value,
+    y_pct:+g('capY').value, outline:g('capOutline').checked, outline_color:g('capOutColor').value, outline_w:+g('capOutW').value,
+    box:g('capBox').checked, box_color:g('capBoxColor').value, box_pad:+g('capBoxPad').value, box_opacity:+g('capBoxOpacity').value,
+    bar:!g('capBox').checked, effect:CAP_EFFECT };
+  STATE.captionStyle=cs;
+  g('capSizeV').textContent=cs.size; g('capYV').textContent=cs.y_pct;
+  const el=g('capPreviewText'); if(!el) return;
+  const scale=PREVIEW_W/VIDEO_W;
+  el.textContent='이렇게 자막이 나와요';
+  el.style.fontFamily=`'${fontCss(cs.font)}',sans-serif`;
+  el.style.top=cs.y_pct+'%'; el.style.transform='translate(-50%,-50%)';
+  el.style.color=cs.color; el.style.fontWeight=900;
+  el.style.fontSize=Math.max(9, cs.size*scale)+'px';
+  el.style.maxWidth=(PREVIEW_W-16)+'px';
+  const oc=cs.outline_color, ow=(cs.outline_w*scale).toFixed(1);
+  el.style.textShadow = cs.outline ? `${ow}px ${ow}px 0 ${oc}, -${ow}px -${ow}px 0 ${oc}, ${ow}px -${ow}px 0 ${oc}, -${ow}px ${ow}px 0 ${oc}` : 'none';
+  if(cs.box){ el.style.background=hexA(cs.box_color, cs.box_opacity/100); el.style.padding=`${Math.round(cs.box_pad*scale)}px ${Math.round(cs.box_pad*1.5*scale)}px`; el.style.borderRadius='6px'; }
+  else { el.style.background='none'; el.style.padding='2px 6px'; el.style.borderRadius='0'; }
+  // 효과 프리뷰: 선택 효과를 미리보기에서 반복 재생(fade/slide/pop). 없음이면 정지.
+  el.classList.remove('eff-fade','eff-slide','eff-pop');
+  if(cs.effect==='fade') el.classList.add('eff-fade');
+  else if(cs.effect==='slide') el.classList.add('eff-slide');
+  else if(cs.effect==='pop') el.classList.add('eff-pop');
+}
+// ── 🎯 완성 스타일 프리셋(원클릭: 헤드카피+자막+효과 한 번에) — 빅채널 레퍼런스 기반 ──
+const FULL_PRESETS=[
+  {name:'모던 화이트', chip:'#FFFFFF',
+    hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:66,x:50,y:12,outline:true,outline_color:'#000000',outline_w:7},
+    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:52,y:84,outline:false,box:true,box_color:'#000000',box_pad:14,box_opacity:68,effect:'fade'}},
+  {name:'임팩트 옐로', chip:'#FFE100',
+    hc:{font:'TmonMonsori.ttf',color:'#FFE100',weight:900,size:76,x:50,y:12,outline:true,outline_color:'#000000',outline_w:9},
+    cap:{font:'BMJUA.ttf',color:'#FFFFFF',size:56,y:84,outline:true,outline_color:'#000000',outline_w:6,box:false,effect:'pop'}},
+  {name:'민트 클린', chip:'#00E5C0',
+    hc:{font:'BMDOHYEON.ttf',color:'#00E5C0',weight:900,size:72,x:50,y:12,outline:true,outline_color:'#06231F',outline_w:8},
+    cap:{font:'SUIT-Bold.otf',color:'#FFFFFF',size:52,y:84,outline:true,outline_color:'#000000',outline_w:6,box:false,effect:'slide'}},
+  {name:'레드 강조', chip:'#FF2D2D',
+    hc:{font:'BMDOHYEON.ttf',color:'#FF2D2D',weight:900,size:72,x:50,y:12,outline:true,outline_color:'#FFFFFF',outline_w:7},
+    cap:{font:'GmarketSansBold.otf',color:'#FFFFFF',size:52,y:84,outline:false,box:true,box_color:'#000000',box_pad:14,box_opacity:80,effect:'fade'}},
+  {name:'블랙박스 시크', chip:'#111111',
+    hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:62,x:50,y:14,outline:false,box:true,box_color:'#000000',box_pad:18,box_opacity:85},
+    cap:{font:'SUIT-Bold.otf',color:'#FFFFFF',size:50,y:84,outline:false,box:true,box_color:'#000000',box_pad:14,box_opacity:85,effect:'fade'}},
+  {name:'큐트 핑크', chip:'#FF4D8D',
+    hc:{font:'Binggrae-Bold.otf',color:'#FF4D8D',weight:900,size:72,x:50,y:12,outline:true,outline_color:'#FFFFFF',outline_w:8},
+    cap:{font:'BMJUA.ttf',color:'#FFFFFF',size:54,y:84,outline:true,outline_color:'#FF4D8D',outline_w:6,box:false,effect:'pop'}},
+  {name:'네이비 신뢰', chip:'#13234E',
+    hc:{font:'GmarketSansBold.otf',color:'#13234E',weight:900,size:66,x:50,y:12,outline:true,outline_color:'#FFFFFF',outline_w:7},
+    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:52,y:84,outline:false,box:true,box_color:'#13234E',box_pad:14,box_opacity:88,effect:'slide'}},
+  {name:'푸드 그린', chip:'#12B24A',
+    hc:{font:'BMDOHYEON.ttf',color:'#12B24A',weight:900,size:72,x:50,y:12,outline:true,outline_color:'#000000',outline_w:7},
+    cap:{font:'BMJUA.ttf',color:'#FFFFFF',size:54,y:84,outline:true,outline_color:'#000000',outline_w:6,box:false,effect:'pop'}},
+  {name:'뉴스 자막형', chip:'#FFFFFF',
+    hc:{font:'GmarketSansBold.otf',color:'#111111',weight:900,size:56,x:50,y:10,outline:false,box:true,box_color:'#FFE100',box_pad:14,box_opacity:100},
+    cap:{font:'NanumGothic-Bold.ttf',color:'#FFFFFF',size:50,y:86,outline:true,outline_color:'#000000',outline_w:5,box:true,box_color:'#000000',box_pad:12,box_opacity:60,effect:'none'}},
+  {name:'핸드메이드 감성', chip:'#FF7A00',
+    hc:{font:'Kkubulim.ttf',color:'#FF7A00',weight:900,size:74,x:50,y:12,outline:true,outline_color:'#FFFFFF',outline_w:8},
+    cap:{font:'Kkubulim.ttf',color:'#FFFFFF',size:56,y:84,outline:true,outline_color:'#000000',outline_w:6,box:false,effect:'fade'}},
+  {name:'하이엔드 세리프', chip:'#C9A24B',
+    hc:{font:'RIDIBatang.otf',color:'#FFFFFF',weight:700,size:60,x:50,y:12,outline:true,outline_color:'#000000',outline_w:5},
+    cap:{font:'GowunBatang.ttf',color:'#FFFFFF',size:48,y:85,outline:false,box:true,box_color:'#000000',box_pad:14,box_opacity:60,effect:'fade'}},
+  {name:'오렌지 팝', chip:'#FF7A00',
+    hc:{font:'TmonMonsori.ttf',color:'#FF7A00',weight:900,size:78,x:50,y:12,outline:true,outline_color:'#000000',outline_w:9},
+    cap:{font:'TmonMonsori.ttf',color:'#111111',size:52,y:84,outline:false,box:true,box_color:'#FFE100',box_pad:14,box_opacity:100,effect:'pop'}},
+  {name:'파스텔 소프트', chip:'#8FD3FF',
+    hc:{font:'SUIT-Bold.otf',color:'#FFFFFF',weight:900,size:64,x:50,y:12,outline:true,outline_color:'#3A6EA5',outline_w:6},
+    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:50,y:84,outline:false,box:true,box_color:'#3A6EA5',box_pad:14,box_opacity:55,effect:'slide'}},
+  {name:'정보전달 블루', chip:'#1E5AA8',
+    hc:{font:'Pretendard-ExtraBold.otf',color:'#1E5AA8',weight:900,size:64,x:50,y:12,outline:true,outline_color:'#FFFFFF',outline_w:7},
+    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:52,y:84,outline:false,box:true,box_color:'#1E5AA8',box_pad:14,box_opacity:88,effect:'fade'}},
 ];
-function fontCss(file){ const f=HC_FONTS.find(x=>x.file===file); return f?f.css:'HCNanum'; }
-function renderFontSelect(){
-  const s=document.getElementById('hcFont'); if(!s||s.options.length) return;
-  s.innerHTML=HC_FONTS.map(f=>`<option value="${f.file}">${f.name}</option>`).join('');
+function renderFullPresets(){
+  const box=document.getElementById('fullPresets'); if(!box) return;
+  box.innerHTML=FULL_PRESETS.map((p,i)=>`<button class="fullPreset tab" onclick="applyFullPreset(${i})"
+    style="flex:0 0 auto;min-width:auto;padding:8px 14px;font-size:13px;font-weight:600;white-space:nowrap;border-left:12px solid ${p.chip}">${p.name}</button>`).join('');
 }
+function applyConfig(h, c){
+  const g=id=>document.getElementById(id);
+  if(h){ // 헤드카피
+    if(h.font){ g('hcFont').value=h.font; HC_FONT_COMMITTED=h.font; syncFontBtn(); }
+    g('hcColor').value=h.color; g('hcWeight').value=h.weight!=null?h.weight:900; g('hcSize').value=h.size;
+    g('hcX').value=(h.x!=null?h.x:50); g('hcY').value=h.y;
+    g('hcOutline').checked=!!h.outline; g('hcOutColor').value=h.outline_color||'#000000'; g('hcOutW').value=h.outline_w||0;
+    g('hcBox').checked=!!h.box; g('hcBoxColor').value=h.box_color||'#000000'; g('hcBoxPad').value=(h.box_pad!=null?h.box_pad:16); g('hcBoxOpacity').value=(h.box_opacity!=null?h.box_opacity:80);
+    updateHC();
+  }
+  if(c){ // 자막(y 또는 y_pct 둘 다 허용)
+    g('capFont').value=c.font; g('capColor').value=c.color; g('capSize').value=c.size;
+    g('capY').value=(c.y!=null?c.y:(c.y_pct!=null?c.y_pct:84));
+    g('capOutline').checked=!!c.outline; g('capOutColor').value=c.outline_color||'#000000'; g('capOutW').value=c.outline_w||0;
+    g('capBox').checked=!!c.box; g('capBoxColor').value=c.box_color||'#000000'; g('capBoxPad').value=(c.box_pad!=null?c.box_pad:12); g('capBoxOpacity').value=(c.box_opacity!=null?c.box_opacity:80);
+    setCapEffect(c.effect||'none');   // updateCaption 내부호출됨
+  }
+}
+function applyFullPreset(i){
+  applyConfig(FULL_PRESETS[i].hc, FULL_PRESETS[i].cap);
+  document.querySelectorAll('.fullPreset').forEach((b,idx)=>b.style.outline = idx===i?'2px solid var(--accent2)':'none');
+}
+// ── 💾 내 프리셋(localStorage) — 사용자가 만든 완성 스타일을 딸깍 축적 ──
+function myPresets(){ try{ return JSON.parse(localStorage.getItem('hc_my_presets')||'[]'); }catch(e){ return []; } }
+function saveMyPreset(){
+  const name=(document.getElementById('myPresetName').value||'').trim();
+  if(!name){ alert('프리셋 이름을 입력하세요'); return; }
+  const list=myPresets();
+  list.push({name, hc:STATE.headcopy, cap:STATE.captionStyle});
+  localStorage.setItem('hc_my_presets', JSON.stringify(list));
+  document.getElementById('myPresetName').value=''; renderMyPresets();
+}
+function applyMyPreset(i){ const p=myPresets()[i]; if(p) applyConfig(p.hc, p.cap); }
+function deleteMyPreset(i){ const list=myPresets(); list.splice(i,1); localStorage.setItem('hc_my_presets', JSON.stringify(list)); renderMyPresets(); }
+// ── 🏷 워터마크 · 추가 텍스트(deco) ──────────────
+const WM_POS={bc:{x:50,y:95},br:{x:82,y:94},bl:{x:18,y:94},tr:{x:82,y:8},tl:{x:18,y:8}};
+function updateDeco(){
+  const g=id=>document.getElementById(id); if(!g('wmOn')) return;
+  STATE.deco=STATE.deco||{extra_texts:[]};
+  const on=g('wmOn').checked, text=(g('wmText').value||'').trim();
+  const pos=WM_POS[g('wmPos').value]||WM_POS.bc, alpha=+g('wmAlpha').value/100;
+  STATE.deco.watermark=(on&&text)?{text, color:g('wmColor').value, x:pos.x, y:pos.y, size:30, alpha,
+    font:'Pretendard-ExtraBold.otf', outline:true, outline_color:'#000000', outline_w:3}:null;
+  const wp=g('wmPreview'), scale=PREVIEW_W/VIDEO_W, w=STATE.deco.watermark;
+  if(w){ wp.style.display='block'; wp.textContent=w.text; wp.style.left=w.x+'%'; wp.style.top=w.y+'%';
+    wp.style.color=w.color; wp.style.opacity=w.alpha; wp.style.fontFamily="'HCPretendard',sans-serif";
+    wp.style.fontWeight=900; wp.style.fontSize=Math.max(9,w.size*scale)+'px';
+    wp.style.textShadow='1px 1px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000';
+  } else wp.style.display='none';
+}
+function addExtraText(){
+  STATE.deco=STATE.deco||{extra_texts:[]}; STATE.deco.extra_texts=STATE.deco.extra_texts||[];
+  STATE.deco.extra_texts.push({text:'텍스트', font:'Pretendard-ExtraBold.otf', color:'#FFFFFF', size:44, x:50, y:50, outline:true, outline_color:'#000000', outline_w:5});
+  renderExtraTexts(); renderExtraPreview();
+}
+function deleteExtraText(i){ STATE.deco.extra_texts.splice(i,1); renderExtraTexts(); renderExtraPreview(); }
+function updateExtraField(i,field,val){ STATE.deco.extra_texts[i][field]=(field==='size'?+val:val); renderExtraPreview(); }
+function renderExtraTexts(){
+  const box=document.getElementById('extraTextList'); if(!box) return;
+  const list=(STATE.deco&&STATE.deco.extra_texts)||[];
+  box.innerHTML=list.map((t,i)=>`<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:6px;background:#0d1420;border:1px solid var(--line);border-radius:8px;padding:6px 8px">
+    <input type="text" value="${(t.text||'').replace(/"/g,'&quot;')}" oninput="updateExtraField(${i},'text',this.value)" style="flex:1;min-width:120px;background:#0b1018;border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:5px 8px;font-size:13px">
+    <input type="color" value="${t.color}" oninput="updateExtraField(${i},'color',this.value)">
+    <span style="font-size:11px;color:var(--sub)">크기<input type="range" min="20" max="90" value="${t.size}" oninput="updateExtraField(${i},'size',this.value)" style="width:66px;vertical-align:middle"></span>
+    <button onclick="deleteExtraText(${i})" title="삭제" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:15px">✕</button>
+  </div>`).join('');
+}
+function renderExtraPreview(){
+  const box=document.getElementById('extraPreview'); if(!box) return;
+  const list=(STATE.deco&&STATE.deco.extra_texts)||[]; const scale=PREVIEW_W/VIDEO_W;
+  box.innerHTML=list.map((t,i)=>`<div class="exPv" data-i="${i}" style="position:absolute;left:${t.x}%;top:${t.y}%;transform:translate(-50%,-50%);white-space:nowrap;cursor:move;user-select:none;z-index:3;font-family:'${fontCss(t.font)}',sans-serif;font-weight:900;color:${t.color};font-size:${Math.max(9,t.size*scale)}px;text-shadow:1px 1px 0 ${t.outline_color},-1px -1px 0 ${t.outline_color},1px -1px 0 ${t.outline_color},-1px 1px 0 ${t.outline_color}">${(t.text||'').replace(/</g,'&lt;')}</div>`).join('');
+  bindExtraDrag();
+}
+function bindExtraDrag(){
+  const pv=document.getElementById('hcPreview');
+  document.querySelectorAll('#extraPreview .exPv').forEach(el=>{
+    el.onmousedown=e=>{ e.preventDefault(); const i=+el.dataset.i;
+      const move=ev=>{ const r=pv.getBoundingClientRect();
+        STATE.deco.extra_texts[i].x=Math.round(Math.max(0,Math.min(100,(ev.clientX-r.left)/r.width*100)));
+        STATE.deco.extra_texts[i].y=Math.round(Math.max(0,Math.min(100,(ev.clientY-r.top)/r.height*100)));
+        el.style.left=STATE.deco.extra_texts[i].x+'%'; el.style.top=STATE.deco.extra_texts[i].y+'%'; };
+      const up=()=>{ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); };
+      document.addEventListener('mousemove',move); document.addEventListener('mouseup',up);
+    };
+  });
+}
+// 🎵 BGM 업로드(즉시 job work dir에 저장) → 렌더 시 나레이션 위에 믹스
+async function uploadBgm(input){
+  const f=input.files&&input.files[0]; if(!f) return;
+  if(!MIX_JOB){ alert('2단계에서 영상 매칭을 먼저 실행하세요'); input.value=''; return; }
+  const st=document.getElementById('bgmStatus'); st.textContent='업로드 중…';
+  const fd=new FormData(); fd.append('job_id',MIX_JOB); fd.append('file',f);
+  try{ const r=await (await fetch('/api/produce/mix/bgm',{method:'POST',body:fd})).json();
+    if(r.ok){ STATE.deco=STATE.deco||{extra_texts:[]}; STATE.deco.bgm={file:r.file, volume:+document.getElementById('bgmVol').value}; st.textContent='✅ '+f.name; }
+    else st.textContent='실패: '+(r.error||''); }
+  catch(e){ st.textContent='업로드 오류'; }
+}
+function updateBgmVol(){ const v=+document.getElementById('bgmVol').value; document.getElementById('bgmVolV').textContent=v;
+  if(STATE.deco&&STATE.deco.bgm) STATE.deco.bgm.volume=v; }
+// 🖼 실장면 배경 — 매칭된 소스 프레임을 미리보기 배경으로(기본 흰색). 스타일 판단을 실제 영상 위에서.
+function toggleSceneBg(){
+  const on=document.getElementById('sceneBg').checked;
+  const img=document.getElementById('hcPreviewBg'), pv=document.getElementById('hcPreview');
+  if(!on){ img.style.display='none'; pv.style.background='#ffffff'; return; }
+  if(!MIX_JOB){ alert('2단계에서 영상 매칭을 먼저 실행하세요'); document.getElementById('sceneBg').checked=false; return; }
+  img.onload=()=>{ img.style.display='block'; };
+  img.onerror=()=>{ img.style.display='none'; document.getElementById('sceneBg').checked=false; alert('실장면 배경을 불러오지 못했습니다(매칭 완료 후 가능)'); };
+  img.src='/api/produce/mix/poster/'+MIX_JOB+'?t='+Date.now();
+}
+function clearBgm(){ if(STATE.deco) STATE.deco.bgm=null; const el=document.getElementById('bgmFile'); if(el) el.value=''; const st=document.getElementById('bgmStatus'); if(st) st.textContent='제거됨'; }
+// 🖼 이미지 오버레이(로고·뱃지) 업로드 + 미리보기(클라 objectURL)
+let OV_OBJ_URL=null;
+async function uploadOverlay(input){
+  const f=input.files&&input.files[0]; if(!f) return;
+  if(!MIX_JOB){ alert('2단계에서 영상 매칭을 먼저 실행하세요'); input.value=''; return; }
+  const st=document.getElementById('ovStatus'); st.textContent='업로드 중…';
+  const fd=new FormData(); fd.append('job_id',MIX_JOB); fd.append('file',f);
+  try{ const r=await (await fetch('/api/produce/mix/overlay',{method:'POST',body:fd})).json();
+    if(r.ok){ STATE.deco=STATE.deco||{extra_texts:[]};
+      STATE.deco.overlay={file:r.file, x:50, y:50, width:+document.getElementById('ovW').value, alpha:+document.getElementById('ovAlpha').value/100};
+      if(OV_OBJ_URL) URL.revokeObjectURL(OV_OBJ_URL); OV_OBJ_URL=URL.createObjectURL(f);
+      st.textContent='✅ '+f.name; renderOverlayPreview(); }
+    else st.textContent='실패: '+(r.error||''); }
+  catch(e){ st.textContent='업로드 오류'; }
+}
+function updateOverlay(){ if(!STATE.deco||!STATE.deco.overlay) return;
+  STATE.deco.overlay.width=+document.getElementById('ovW').value;
+  STATE.deco.overlay.alpha=+document.getElementById('ovAlpha').value/100; renderOverlayPreview(); }
+function clearOverlay(){ if(STATE.deco) STATE.deco.overlay=null; const el=document.getElementById('ovFile'); if(el) el.value=''; renderOverlayPreview(); const st=document.getElementById('ovStatus'); if(st) st.textContent='제거됨'; }
+function renderOverlayPreview(){
+  const img=document.getElementById('ovPreview'); if(!img) return;
+  const o=STATE.deco&&STATE.deco.overlay, scale=PREVIEW_W/VIDEO_W;
+  if(o&&OV_OBJ_URL){ img.src=OV_OBJ_URL; img.style.display='block';
+    img.style.left=o.x+'%'; img.style.top=o.y+'%';
+    img.style.width=Math.max(10,o.width*scale)+'px'; img.style.opacity=o.alpha; bindOverlayDrag();
+  } else img.style.display='none';
+}
+function bindOverlayDrag(){
+  const pv=document.getElementById('hcPreview'), img=document.getElementById('ovPreview');
+  if(!img||img._bound) return; img._bound=true;
+  img.onmousedown=e=>{ e.preventDefault();
+    const move=ev=>{ if(!STATE.deco.overlay) return; const r=pv.getBoundingClientRect();
+      STATE.deco.overlay.x=Math.round(Math.max(0,Math.min(100,(ev.clientX-r.left)/r.width*100)));
+      STATE.deco.overlay.y=Math.round(Math.max(0,Math.min(100,(ev.clientY-r.top)/r.height*100)));
+      img.style.left=STATE.deco.overlay.x+'%'; img.style.top=STATE.deco.overlay.y+'%'; };
+    const up=()=>{ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); };
+    document.addEventListener('mousemove',move); document.addEventListener('mouseup',up);
+  };
+}
+function renderMyPresets(){
+  const box=document.getElementById('myPresets'); if(!box) return;
+  const list=myPresets();
+  box.innerHTML = list.length ? list.map((p,i)=>`<span style="display:inline-flex;align-items:center;gap:4px;background:#0d1420;border:1px solid var(--line);border-radius:9px;padding:2px 4px 2px 0;margin:0 6px 6px 0">
+    <button class="tab" onclick="applyMyPreset(${i})" style="flex:0 0 auto;min-width:auto;padding:5px 11px;font-size:12px;white-space:nowrap;border:none;background:none">⭐ ${p.name}</button>
+    <button onclick="deleteMyPreset(${i})" title="삭제" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:14px">✕</button></span>`).join('')
+    : '<span class="hint">저장된 내 프리셋이 없습니다. 아래 조정 후 “현재 스타일 저장”을 눌러 만드세요.</span>';
+}
+// 번들 폰트 22종(ttf/otf만 — 미리보기=실제 렌더 일치). ⭐=쇼츠 헤드카피 추천 베스트5
+const HC_FONTS=[
+  {name:'⭐ 티몬 몬소리',       file:'TmonMonsori.ttf',          css:'HCTmon'},
+  {name:'⭐ 배민 주아',        file:'BMJUA.ttf',                css:'HCJua'},
+  {name:'⭐ 배민 도현',        file:'BMDOHYEON.ttf',            css:'HCDohyeon'},
+  {name:'⭐ 빙그레',           file:'Binggrae-Bold.otf',        css:'HCBinggrae'},
+  {name:'⭐ 꾸불림체',         file:'Kkubulim.ttf',             css:'HCKkubulim'},
+  {name:'지마켓 산스',         file:'GmarketSansBold.otf',      css:'HCGmarket'},
+  {name:'SUIT',                file:'SUIT-Bold.otf',            css:'HCSuit'},
+  {name:'프리텐다드',          file:'Pretendard-ExtraBold.otf', css:'HCPretendard'},
+  {name:'프리텐다드 Bold',     file:'Pretendard-Bold.otf',      css:'HCPretendardB'},
+  {name:'프리텐다드 SemiBold', file:'Pretendard-SemiBold.otf',  css:'HCPretendardS'},
+  {name:'스포카 한 산스',      file:'SpoqaHanSansNeo-Bold.otf', css:'HCSpoqa'},
+  {name:'IBM Plex Sans',       file:'IBMPlexSansKR-Bold.otf',   css:'HCIBM'},
+  {name:'노토 산스',           file:'NotoSansKR-Bold.otf',      css:'HCNoto'},
+  {name:'나눔고딕',            file:'NanumGothic-Bold.ttf',     css:'HCNanum'},
+  {name:'옥 말랑',             file:'OkMallangW.ttf',           css:'HCOkmallang'},
+  {name:'경기천년바탕',        file:'GBatang.otf',              css:'HCGBatang'},
+  {name:'고운바탕',            file:'GowunBatang.ttf',          css:'HCGowun'},
+  {name:'리디바탕',            file:'RIDIBatang.otf',           css:'HCRidi'},
+  {name:'프리텐다드 Reg',      file:'Pretendard-Regular.otf',   css:'HCPretendardR'},
+  {name:'SUIT Reg',            file:'SUIT-Regular.otf',         css:'HCSuitR'},
+  {name:'스포카 Reg',          file:'SpoqaHanSansNeo-Regular.otf',css:'HCSpoqaR'},
+  {name:'IBM Plex Reg',        file:'IBMPlexSansKR-Regular.otf',css:'HCIBMR'},
+];
+function fontCss(file){ const f=HC_FONTS.find(x=>x.file===file); return f?f.css:'HCTmon'; }
+let HC_FONT_COMMITTED='TmonMonsori.ttf';
+function renderFontSelect(){
+  const s=document.getElementById('hcFont');
+  if(s && !s.options.length) s.innerHTML=HC_FONTS.map(f=>`<option value="${f.file}">${f.name}</option>`).join('');
+  const menu=document.getElementById('hcFontMenu');
+  if(menu && !menu._built){
+    menu._built=true;
+    // 각 항목을 실제 폰트로 렌더 + hover 시 프리뷰 즉시 변경
+    menu.innerHTML=HC_FONTS.map(f=>`<div class="fontItem" data-file="${f.file}"
+      style="padding:8px 13px;cursor:pointer;font-family:'${f.css}','Pretendard',sans-serif;font-size:17px;white-space:nowrap;border-bottom:1px solid rgba(255,255,255,.04)"
+      onmouseenter="hoverFont('${f.file}')" onclick="pickFont('${f.file}')">${f.name}</div>`).join('');
+    menu.addEventListener('mouseleave', ()=>{ setFontVal(HC_FONT_COMMITTED); updateHC(); });
+  }
+  syncFontBtn();
+}
+function setFontVal(file){ const s=document.getElementById('hcFont'); if(s) s.value=file; }
+function toggleFontMenu(ev){ if(ev) ev.stopPropagation();
+  const m=document.getElementById('hcFontMenu'); if(!m) return;
+  const open=m.style.display==='block'; m.style.display=open?'none':'block';
+  if(!open){ // 열 때 현재 선택 항목으로 스크롤
+    const cur=m.querySelector(`.fontItem[data-file="${HC_FONT_COMMITTED}"]`);
+    if(cur){ cur.style.background='rgba(93,169,255,.18)'; cur.scrollIntoView({block:'nearest'}); }
+  } }
+function hoverFont(file){ // 미리보기만(커밋 아님)
+  document.querySelectorAll('#hcFontMenu .fontItem').forEach(el=>el.style.background = el.dataset.file===file?'rgba(93,169,255,.18)':'transparent');
+  setFontVal(file); updateHC(); }
+function pickFont(file){ HC_FONT_COMMITTED=file; setFontVal(file);
+  const m=document.getElementById('hcFontMenu'); if(m) m.style.display='none'; syncFontBtn(); updateHC(); }
+function closeFontMenu(){ const m=document.getElementById('hcFontMenu'); if(!m||m.style.display!=='block') return;
+  m.style.display='none'; setFontVal(HC_FONT_COMMITTED); updateHC(); }
+function syncFontBtn(){ const btn=document.getElementById('hcFontBtn'); const f=HC_FONTS.find(x=>x.file===HC_FONT_COMMITTED);
+  if(btn&&f){ btn.textContent=f.name+' ▾'; btn.style.fontFamily=`'${f.css}','Pretendard',sans-serif`; } }
+document.addEventListener('click', e=>{ const p=document.getElementById('hcFontPicker'); if(p && !p.contains(e.target)) closeFontMenu(); });
+function hexA(hex,a){ const h=(hex||'#000000').replace('#',''); const r=parseInt(h.slice(0,2),16)||0,gg=parseInt(h.slice(2,4),16)||0,b=parseInt(h.slice(4,6),16)||0; return `rgba(${r},${gg},${b},${a})`; }
 function updateHC(){
   const g=id=>document.getElementById(id);
   const hc={
-    text:g('hcText').value, font:g('hcFont').value||'NanumGothic-Bold.ttf',
+    text:g('hcText').value, font:g('hcFont').value||'TmonMonsori.ttf',
     color:g('hcColor').value, weight:+g('hcWeight').value,
     size:+g('hcSize').value, x:+g('hcX').value, y:+g('hcY').value,
     outline:g('hcOutline').checked, outline_color:g('hcOutColor').value, outline_w:+g('hcOutW').value,
+    box:g('hcBox').checked, box_color:g('hcBoxColor').value, box_pad:+g('hcBoxPad').value, box_opacity:+g('hcBoxOpacity').value,
   };
   STATE.headcopy=hc;
   g('hcSizeV').textContent=hc.size; g('hcYV').textContent=hc.y; g('hcXV').textContent=hc.x;
@@ -239,33 +682,59 @@ function updateHC(){
   el.style.color=hc.color; el.style.fontWeight=hc.weight;
   el.style.fontSize=Math.max(9, hc.size*scale)+'px';
   el.style.maxWidth=(PREVIEW_W-12)+'px';
+  const oc=hc.outline_color, ow=(hc.outline_w*scale).toFixed(1);
   el.style.textShadow = hc.outline
-    ? `0 0 0 ${hc.outline_color}, ${(hc.outline_w*scale).toFixed(1)}px ${(hc.outline_w*scale).toFixed(1)}px 0 ${hc.outline_color}, -1px -1px 0 ${hc.outline_color}, 1px -1px 0 ${hc.outline_color}, -1px 1px 0 ${hc.outline_color}, 1px 1px 0 ${hc.outline_color}`
+    ? `${ow}px ${ow}px 0 ${oc}, -${ow}px -${ow}px 0 ${oc}, ${ow}px -${ow}px 0 ${oc}, -${ow}px ${ow}px 0 ${oc}, -1px -1px 0 ${oc}, 1px -1px 0 ${oc}, -1px 1px 0 ${oc}, 1px 1px 0 ${oc}`
     : 'none';
+  if(hc.box){
+    el.style.background=hexA(hc.box_color, hc.box_opacity/100);
+    el.style.padding=`${Math.round(hc.box_pad*scale)}px ${Math.round(hc.box_pad*1.5*scale)}px`;
+    el.style.borderRadius=Math.round(10*scale*3)+'px';
+  } else { el.style.background='none'; el.style.padding='0 6px'; el.style.borderRadius='0'; }
 }
 
 // 스타일 프리셋 — 고민없이 누르면 색·크기·외곽선 한 번에 지정(핵심 포인트)
+// 레퍼런스(바이럴 쇼츠 자막) 기반 프리셋 라이브러리. 누르면 폰트·색·외곽선·배경박스·크기·위치 한 번에.
+// b1=배경박스, bc=박스색, bp=박스여백, bo=박스투명도(%). 없으면 박스 OFF.
 const HC_PRESETS=[
-  {name:'임팩트 오렌지', font:'TmonMonsori.ttf',         color:'#FF8800', weight:900, size:76, outline:true, outline_color:'#000000', outline_w:8, y:12},
-  {name:'화이트 클린',   font:'Pretendard-ExtraBold.otf',color:'#FFFFFF', weight:900, size:64, outline:true, outline_color:'#000000', outline_w:6, y:12},
-  {name:'옐로 팝',       font:'BMJUA.ttf',               color:'#FFE100', weight:900, size:74, outline:true, outline_color:'#000000', outline_w:8, y:12},
-  {name:'레드 강조',     font:'BMDOHYEON.ttf',           color:'#FF2D2D', weight:900, size:72, outline:true, outline_color:'#FFFFFF', outline_w:6, y:12},
-  {name:'민트 포인트',   font:'SUIT-Bold.otf',           color:'#00E0B8', weight:900, size:66, outline:true, outline_color:'#062B24', outline_w:6, y:12},
-  {name:'블랙 미니멀',   font:'GmarketSansBold.otf',     color:'#111111', weight:700, size:60, outline:true, outline_color:'#FFFFFF', outline_w:7, y:12},
-  {name:'하단 자막형',   font:'NanumGothic-Bold.ttf',    color:'#FFFFFF', weight:900, size:56, outline:true, outline_color:'#000000', outline_w:6, y:82},
+  // ── 썸네일형(상단 헤드라인, 큼직) ──
+  {cat:'썸네일', name:'화이트 임팩트',   font:'TmonMonsori.ttf',          color:'#FFFFFF', weight:900, size:78, y:12, outline:true, outline_color:'#000000', outline_w:9},
+  {cat:'썸네일', name:'옐로 팝',        font:'BMJUA.ttf',                color:'#FFE100', weight:900, size:76, y:12, outline:true, outline_color:'#000000', outline_w:9},
+  {cat:'썸네일', name:'민트 포인트',     font:'BMDOHYEON.ttf',            color:'#00E5C0', weight:900, size:74, y:12, outline:true, outline_color:'#06231F', outline_w:8},
+  {cat:'썸네일', name:'오렌지 임팩트',   font:'TmonMonsori.ttf',          color:'#FF7A00', weight:900, size:78, y:12, outline:true, outline_color:'#000000', outline_w:9},
+  {cat:'썸네일', name:'레드 경고',       font:'BMDOHYEON.ttf',            color:'#FF2D2D', weight:900, size:74, y:12, outline:true, outline_color:'#FFFFFF', outline_w:7},
+  {cat:'썸네일', name:'블랙박스 화이트', font:'Pretendard-ExtraBold.otf', color:'#FFFFFF', weight:900, size:66, y:14, outline:false, outline_color:'#000000', outline_w:0, box:true, box_color:'#000000', box_pad:18, box_opacity:82},
+  {cat:'썸네일', name:'옐로박스 블랙',   font:'GmarketSansBold.otf',      color:'#111111', weight:900, size:64, y:14, outline:false, outline_color:'#000000', outline_w:0, box:true, box_color:'#FFE100', box_pad:16, box_opacity:100},
+  {cat:'썸네일', name:'핑크 큐트',       font:'Binggrae-Bold.otf',        color:'#FF4D8D', weight:900, size:74, y:12, outline:true, outline_color:'#FFFFFF', outline_w:8},
+  {cat:'썸네일', name:'네이비 딥',       font:'GmarketSansBold.otf',      color:'#13234E', weight:900, size:68, y:12, outline:true, outline_color:'#FFFFFF', outline_w:7},
+  {cat:'썸네일', name:'그린 프레시',     font:'BMDOHYEON.ttf',            color:'#12B24A', weight:900, size:74, y:12, outline:true, outline_color:'#000000', outline_w:7},
+  {cat:'썸네일', name:'스카이 클린',     font:'SUIT-Bold.otf',            color:'#FFFFFF', weight:900, size:66, y:12, outline:true, outline_color:'#1E5AA8', outline_w:7},
+  // ── 내용형(하단/중하단 강조 자막) ──
+  {cat:'내용', name:'하단 화이트바',     font:'Pretendard-ExtraBold.otf', color:'#FFFFFF', weight:900, size:56, y:84, outline:true, outline_color:'#000000', outline_w:6, box:true, box_color:'#000000', box_pad:14, box_opacity:55},
+  {cat:'내용', name:'하단 옐로강조',     font:'BMJUA.ttf',                color:'#FFE100', weight:900, size:58, y:84, outline:true, outline_color:'#000000', outline_w:7},
+  {cat:'내용', name:'하단 블랙박스',     font:'SUIT-Bold.otf',            color:'#FFFFFF', weight:900, size:54, y:84, outline:false, outline_color:'#000000', outline_w:0, box:true, box_color:'#000000', box_pad:16, box_opacity:84},
+  {cat:'내용', name:'하단 민트박스',     font:'GmarketSansBold.otf',      color:'#FFFFFF', weight:900, size:52, y:82, outline:false, outline_color:'#000000', outline_w:0, box:true, box_color:'#0B8F7A', box_pad:14, box_opacity:92},
+  {cat:'내용', name:'하단 심플',         font:'NanumGothic-Bold.ttf',     color:'#FFFFFF', weight:900, size:54, y:86, outline:true, outline_color:'#000000', outline_w:5},
 ];
 function renderPresets(){
   const box=document.getElementById('hcPresets'); if(!box) return;
-  box.innerHTML=HC_PRESETS.map((p,i)=>`
-    <button class="tab" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:12px;white-space:nowrap;border-left:10px solid ${p.color}"
-      onclick="applyPreset(${i})">${p.name}</button>`).join('');
+  const cats=['썸네일','내용'];
+  box.innerHTML=cats.map(cat=>{
+    const items=HC_PRESETS.map((p,i)=>({p,i})).filter(x=>x.p.cat===cat);
+    return `<div style="width:100%;font-size:11px;color:var(--sub);margin:2px 0 4px">${cat==='썸네일'?'🖼 썸네일형(상단 헤드라인)':'💬 내용형(하단 강조자막)'}</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;width:100%;margin-bottom:8px">`+
+      items.map(({p,i})=>`<button class="tab" title="${p.name}"
+        style="flex:0 0 auto;min-width:auto;padding:5px 11px;font-size:12px;white-space:nowrap;border-left:10px solid ${p.box?p.box_color:p.color}"
+        onclick="applyPreset(${i})">${p.name}</button>`).join('')+`</div>`;
+  }).join('');
 }
 function applyPreset(i){
   const p=HC_PRESETS[i], g=id=>document.getElementById(id);
-  if(p.font) g('hcFont').value=p.font;
-  g('hcColor').value=p.color; g('hcWeight').value=p.weight; g('hcSize').value=p.size;
-  g('hcOutline').checked=p.outline; g('hcOutColor').value=p.outline_color; g('hcOutW').value=p.outline_w;
-  g('hcY').value=p.y;
+  if(p.font){ g('hcFont').value=p.font; HC_FONT_COMMITTED=p.font; syncFontBtn(); }
+  g('hcColor').value=p.color; g('hcWeight').value=p.weight; g('hcSize').value=p.size; g('hcY').value=p.y;
+  g('hcOutline').checked=!!p.outline; g('hcOutColor').value=p.outline_color||'#000000'; g('hcOutW').value=p.outline_w||0;
+  g('hcBox').checked=!!p.box; g('hcBoxColor').value=p.box_color||'#000000';
+  g('hcBoxPad').value=(p.box_pad!=null?p.box_pad:16); g('hcBoxOpacity').value=(p.box_opacity!=null?p.box_opacity:80);
   updateHC();
 }
 function alignHC(where){
@@ -295,13 +764,13 @@ function bindHCDrag(){
 async function saveHeadcopy(){
   if(!MIX_JOB) return;
   try{ await fetch('/api/produce/mix/settings',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({job_id:MIX_JOB, headcopy:STATE.headcopy})}); }catch(e){}
+    body:JSON.stringify({job_id:MIX_JOB, headcopy:STATE.headcopy, caption_style:STATE.captionStyle, deco:STATE.deco})}); }catch(e){}
 }
 function jump(i){ cur=i; renderSteps(); showPanel(); }
 function go(d){ const n=cur+d; if(n<0||n>=STEPS.length) return; cur=n; renderSteps(); showPanel(); }
 
 // ── 1단계 대본: 3모드 ──────────────────────────────
-const STATE = { script: "", subtitleRemoval: false, headcopy: null };   // 확정 대본 + 렌더 설정
+const STATE = { script: "", subtitleRemoval: false, headcopy: null, captionStyle: null, deco: { extra_texts: [] } };   // 확정 대본 + 렌더 설정
 
 const SCRIPT_MODE_HTML = {
   manual: () => `<textarea id="scriptText" placeholder="여기에 대본을 직접 입력하세요…" oninput="onScriptInput()">${esc(STATE.script)}</textarea>
@@ -498,19 +967,150 @@ async function onSubToggle(){
   }catch(e){ if(s) s.textContent='설정 저장 실패'; }
 }
 
-// ── 4단계 TTS 프리뷰 ──────────────
+// ── 4단계 보이스 프리셋 ──────────────
+let VOICE = { preset_id:null, voice_id:null, settings:null, speed:1.0, silence_trim:'off' };
+const SPEEDS=[0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5];
+const SIL=[['off','OFF'],['weak','약'],['mid','중'],['strong','강']];
+
 async function loadTtsBeats(){
+  // 프리셋 카드는 job(영상매칭) 없이도 항상 표시 — 둘러보기·샘플 미리듣기 가능
+  try{
+    const d=await (await fetch('/api/voice-presets?lang=KR')).json();
+    const cards=(d.presets||[]).map(p=>`
+      <div onclick='pickPreset(${JSON.stringify(p)})'
+        style="border:1px solid ${VOICE.preset_id===p.preset_id?'var(--accent2)':'var(--line)'};border-radius:9px;padding:9px;margin-bottom:6px;cursor:pointer;background:#0d1420">
+        <b>${esc(p.name)}</b> — ${esc(p.one_liner||'')}
+        ${p.sample_url?`<audio controls src="${esc(p.sample_url)}" style="height:26px;vertical-align:middle;margin-left:8px"></audio>`:''}
+      </div>`).join('');
+    document.getElementById('presetCards').innerHTML=cards||'<div class="hint">프리셋이 없습니다.</div>';
+  }catch(e){ document.getElementById('presetCards').innerHTML='<div class="hint" style="color:var(--fire)">프리셋 로드 실패</div>'; return; }
+  renderTtsBeats();
+}
+
+function pickPreset(p){
+  VOICE={preset_id:p.preset_id, voice_id:p.base_voice_id||p.voice_id,
+         settings:Object.assign({}, p.voice_settings), speed:p.default_speed,
+         silence_trim:p.default_silence_trim};
+  document.getElementById('voiceControls').style.display='block';
+  pickHighlight();
+  const vs=VOICE.settings||{};
+  const g=id=>document.getElementById(id);
+  g('advStability').value=(vs.stability!=null?vs.stability:0.5);
+  g('advSimilarity').value=(vs.similarity_boost!=null?vs.similarity_boost:0.75);
+  g('advStyle').value=(vs.style!=null?vs.style:0);
+  g('advBoost').checked=vs.use_speaker_boost!==false;
+  syncAdvLabels();
+  loadTtsBeats();
+}
+function setSpeed(s){ VOICE.speed=s; pickHighlight(); }
+function setSil(v){ VOICE.silence_trim=v; pickHighlight(); }
+function pickHighlight(){
+  document.getElementById('speedBtns').innerHTML=SPEEDS.map(s=>`<button onclick="setSpeed(${s})" class="tab${VOICE.speed===s?' active':''}" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:13px">${s}x</button>`).join('');
+  document.getElementById('silenceBtns').innerHTML=SIL.map(([v,l])=>`<button onclick="setSil('${v}')" class="tab${VOICE.silence_trim===v?' active':''}" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:13px">${l}</button>`).join('');
+}
+function syncAdvLabels(){
+  const g=id=>document.getElementById(id);
+  g('advStabilityV').textContent=(+g('advStability').value).toFixed(2);
+  g('advSimilarityV').textContent=(+g('advSimilarity').value).toFixed(2);
+  g('advStyleV').textContent=(+g('advStyle').value).toFixed(2);
+}
+function onAdv(){
+  const g=id=>document.getElementById(id);
+  VOICE.settings={stability:+g('advStability').value, similarity_boost:+g('advSimilarity').value,
+                  style:+g('advStyle').value, use_speaker_boost:g('advBoost').checked};
+  syncAdvLabels();
+}
+function onNoVoice(){
+  const off=document.getElementById('noVoice').checked;
+  document.getElementById('voiceUI').style.opacity=off?0.4:1;
+  STATE.noVoice=off;
+}
+async function previewVoice(){
+  const el=document.getElementById('voicePreview');
+  if(!MIX_JOB){ el.innerHTML='<span class="hint">🎬 2단계 영상 매칭 후 사용할 수 있어요. 지금은 위 카드의 ▶로 샘플을 들어보세요.</span>'; return; }
+  el.textContent='⏳ 생성 중…';
+  try{
+    const r=await fetch('/api/mix/voice/preview',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({job_id:MIX_JOB, voice_id:VOICE.voice_id, settings:VOICE.settings, speed:VOICE.speed, silence_trim:VOICE.silence_trim})});
+    if(!r.ok){ el.textContent='❌ 실패'; return; }
+    const b=await r.blob();
+    el.innerHTML=`<audio controls autoplay src="${URL.createObjectURL(b)}" style="height:30px"></audio>`;
+  }catch(e){ el.textContent='❌ 실패'; }
+}
+async function applyVoice(){
+  const el=document.getElementById('voicePreview');
+  if(!MIX_JOB){ el.innerHTML='<span class="hint">🎬 2단계 영상 매칭 후 사용할 수 있어요.</span>'; return; }
+  el.textContent='⏳ 전체 음성 생성 중…';
+  try{
+    await fetch('/api/mix/voice',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({job_id:MIX_JOB, preset_id:VOICE.preset_id, voice_id:VOICE.voice_id, settings:VOICE.settings, speed:VOICE.speed, silence_trim:VOICE.silence_trim})});
+  }catch(e){ el.textContent='❌ 요청 실패'; return; }
+  const poll=setInterval(async()=>{
+    try{
+      const d=await (await fetch('/api/mix/status/'+MIX_JOB)).json();
+      if(d.status==='ready_for_review'){ clearInterval(poll); el.textContent='✅ 완료'; renderTtsBeats(); }
+      else if(d.status==='failed'){ clearInterval(poll); el.textContent='❌ 실패: '+(d.error||''); }
+    }catch(e){ clearInterval(poll); el.textContent='❌ 상태 확인 실패'; }
+  },2500);
+}
+async function renderTtsBeats(){
   const el=document.getElementById('ttsBeats');
-  if(!MIX_JOB){ el.innerHTML='<div class="hint">⚠️ 2단계에서 영상 매칭을 먼저 실행하세요.</div>'; return; }
+  if(!MIX_JOB){ el.innerHTML='<div class="hint" style="margin-top:6px">🎬 2단계 <b>영상 매칭</b>을 완료하면 비트별 음성·길이 맞춤이 여기 표시됩니다. (지금은 프리셋 둘러보기·샘플 미리듣기만 가능)</div>'; return; }
   try{
     const d=await (await fetch('/api/mix/result/'+MIX_JOB)).json();
-    if(!d.ok || !(d.beats||[]).length){ el.innerHTML='<div class="hint">음성 정보가 없습니다.</div>'; return; }
-    el.innerHTML=d.beats.map((b,i)=>`
-      <div style="border:1px solid var(--line);border-radius:9px;padding:9px;margin-bottom:6px;background:#0d1420">
+    if(!d.ok || !(d.beats||[]).length){ el.innerHTML=''; return; }
+    const beats=d.beats;
+    const vidLen=beats.reduce((s,b)=>s+(+b.target_seconds||0),0);
+    const rows=beats.map((b,i)=>`
+      <div id="beatRow${i}" style="border:1px solid var(--line);border-radius:9px;padding:9px;margin-bottom:6px;background:#0d1420;transition:background .15s">
         <div style="font-size:13px;margin-bottom:4px"><b>${i+1}.</b> ${esc(b.narration||'')}</div>
-        ${b.tts_preview_url?`<audio controls src="${esc(b.tts_preview_url)}" style="height:26px"></audio>`:'<span class="hint">음성 없음</span>'}
+        ${b.tts_preview_url?`<audio id="beatAudio${i}" controls preload="metadata" src="${esc(b.tts_preview_url)}?t=${Date.now()}" style="height:26px"></audio>`:'<span class="hint">음성 없음</span>'}
       </div>`).join('');
+    // 영상길이(비트 목표시간 합) vs 음성길이(오디오 실측 합) — 맞춤 힌트로 편집 편의성↑
+    el.innerHTML=`
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;border:1px solid var(--line);border-radius:9px;padding:10px 12px;margin-bottom:10px;background:#0d1420">
+        <div><span class="hint">영상 길이</span> <b style="color:var(--accent2)">${vidLen.toFixed(1)}초</b></div>
+        <div><span class="hint">음성 길이</span> <b id="voiceLen" style="color:var(--ok)">…</b></div>
+        <div id="fitMsg" class="hint">음성 길이 측정 중…</div>
+        <button onclick="playAllBeats()" class="btn-prev" style="padding:6px 12px;margin-left:auto">▶ 전체 재생</button>
+      </div>
+      <div style="font-size:12px;color:var(--sub);margin-bottom:4px">비트별 음성</div>${rows}`;
+    _updateVoiceLen(beats.length, vidLen);
   }catch(e){ el.innerHTML='<div class="hint" style="color:var(--fire)">로드 실패</div>'; }
+}
+function _beatAudios(n){ const a=[]; for(let i=0;i<n;i++){ const el=document.getElementById('beatAudio'+i); if(el) a.push(el);} return a; }
+function _updateVoiceLen(n, vidLen){
+  const auds=_beatAudios(n);
+  const recompute=()=>{
+    if(!auds.length || auds.some(a=>!a.duration||isNaN(a.duration))) return; // 아직 메타로딩중
+    const total=auds.reduce((s,a)=>s+a.duration,0);
+    const vl=document.getElementById('voiceLen'); if(vl) vl.textContent=total.toFixed(1)+'초';
+    const msg=document.getElementById('fitMsg'); if(!msg) return;
+    const diff=total-vidLen;
+    if(vidLen<=0){ msg.textContent=''; }
+    else if(Math.abs(diff)<=vidLen*0.1){ msg.innerHTML='✅ <span style="color:var(--ok)">영상에 잘 맞아요</span>'; }
+    else if(diff>0){ msg.innerHTML='⚠️ <span style="color:var(--fire)">음성이 '+diff.toFixed(1)+'초 길어요</span> — 속도↑ 또는 무음삭제 강 추천'; }
+    else { msg.innerHTML='⚠️ <span style="color:var(--fire)">음성이 '+(-diff).toFixed(1)+'초 짧아요</span> — 속도↓ 추천'; }
+  };
+  auds.forEach(a=>{ if(a.readyState>=1) recompute(); else a.addEventListener('loadedmetadata', recompute, {once:true}); });
+}
+// ▶ 전체 재생 — 비트 음성을 순서대로 이어 재생하며 현재 비트 줄을 하이라이트(가라오케식)
+function playAllBeats(){
+  const auds=[]; let i=0; while(document.getElementById('beatAudio'+i)){ auds.push(document.getElementById('beatAudio'+i)); i++; }
+  if(!auds.length) return;
+  const clear=()=>auds.forEach((a,idx)=>{ const r=document.getElementById('beatRow'+idx); if(r) r.style.background='#0d1420'; });
+  auds.forEach(a=>{ a.pause(); a.currentTime=0; a.onended=null; });
+  clear();
+  let cur=0;
+  const playOne=()=>{
+    if(cur>=auds.length){ clear(); return; }
+    clear();
+    const r=document.getElementById('beatRow'+cur); if(r) r.style.background='#1a2740';
+    const a=auds[cur];
+    a.onended=()=>{ cur++; playOne(); };
+    a.play().catch(()=>{ cur++; playOne(); });
+  };
+  playOne();
 }
 
 // ── 8단계 최종검수·렌더 ──────────────
