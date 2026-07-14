@@ -5,6 +5,31 @@
 
 ---
 
+## 🎬 영상제작소 대본·영상믹스 단계 통합 — SDD Task1~2完·Task3 백엔드完·프론트 未 (2026-07-15 집PC → 집에서 이어서)
+
+**트리거**: "영상제작소 대본믹스 통합 이어서" → 이 섹션 + memory `project_영상제작소_대본믹스통합` 읽기.
+
+**목표**: 영상제작소(`produce.html`)의 분리된 "1·대본"+"2·영상"을 하나의 "제작소"(좌=영상풀·우=결과) 2단으로 통합. 넘어온 영상=재료풀, 각 영상에 📝뽑기(대본)·🎬담기(화면) 겸용. 대본 뽑기는 **도서관 생성모달 재사용**(2경로 1엔진: 레퍼런스→도서관=학습축적 / 레퍼런스→제작소직행=바로제작). ⭐위키저장 다리로 제작소서도 학습 반영.
+
+- 스펙 `docs/superpowers/specs/2026-07-15-쇼핑쇼츠-영상제작소-대본믹스-통합-design.md`
+- 계획 `docs/superpowers/plans/2026-07-15-쇼핑쇼츠-영상제작소-대본믹스-통합.md` (5태스크 TDD, SDD 서브에이전트 방식)
+
+**✅ 완료·배포됨**:
+- **Task1** (커밋 9e74e892+b0128340): 백엔드 `/api/produce/save_to_wiki` — URL기반 위키저장(load_last_run 비의존), category `.strip() or None` 정규화(학습 NULL누수 방지). spec·품질 리뷰 통과.
+- **Task2** (커밋 2e121144에 흡수, 코드 온전): produce.html 단계병합 골격 — STEPS 8→7, data-step 2~7→1~6, 좌우2단, `renderPool`/`toggleFootage`/`syncFootageToMixUrls`/`refreshFinalPeek`, `openScriptModal(i)`는 **임시 스텁**(alert). 역할배정 UI 폐기. spec·품질 리뷰 통과.
+- **Task3 백엔드** (커밋 bcd32029): `/api/wiki/generate`에 **위키미저장 폴백** — body에 `structure`/`base_script`/`category` 실어오면 위키 없어도 생성(제작소 직행 대본생성 지원). 테스트 3 green. 기존 위키경로 하위호환 유지.
+
+**⏭ 집에서 이어서 — Task3 프론트(도서관 모달 이식)부터**:
+- **produce.html에 pm 네임스페이스 모달 이식 미완**(pmModal/pmRunGen/pmUseDraft 0 — 세션한도로 중단). 계획서 Task3 Step1~5 코드 참고. `openScriptModal(i)` 스텁을 교체: 📝뽑기→`/api/produce/extract_from_url`(url·shortcode·category)로 추출→도서관식 생성모달(구조/요소토글/초안/편집·재생성·버전이력/**확정버튼**). generate 호출 시 body에 structure/base_script/category 실어보냄(백엔드 폴백과 짝). 확정=`STATE.script=…;setScriptMode('manual');refreshFinalPeek();saveWork()`.
+- ⚠️ **`extract_from_url`에 category 전달 보완**(계획§6.2): 지금 `save_script(code,result)`가 category 안 넘김 → `category=body.get("category")` 추가 필요(app.py:518~). Task3 안에서 같이.
+- **Task4**: 오른쪽 `#saveWikiBtn`(현재 display:none, onclick=saveScriptToWiki 미정의)에 `saveScriptToWiki()` 배선 → Task1 라우트 호출. 확정대본+category로 위키저장.
+- **Task5**: whole-file seam검사(중복id/미정의핸들러/data-step) + 실렌더 통합 grounding(즐겨찾기 영상 2개→📝뽑기 실추출·생성·확정→🎬담기→MIX매칭→⭐위키저장→element_stats 증가 확인) + 라이브 배포검증.
+
+**⚠️⚠️ 이 워킹트리 동시편집 지옥**: 다른 세션/PC가 초단위로 같은 produce.html·motion·tts·app.py 커밋 중. Task2때 내 커밋이 남의 커밋에 흡수됨(코드유실0). **집에서는 그 세션 꺼져있길 기대** — 안 그러면 격리커밋+autostash rebase 반복 필요. 구현자에게 "변경즉시 자기파일만 격리커밋+push, 보류창0" 지시할 것. `git add -A` 절대금지. produce.html에 `DEFAULT_APPLIED`(남의것) 섞이면 staged 제외.
+- 학습배치 정상 확인(2026-07-15): 서버크론 0 4 * * *, element_category_stats 81행 실축적.
+
+---
+
 ## ✅ 대본생성 소재고정 리메이크 — 구현·검증 완료 (2026-07-15 집PC, 커밋 15bbfe99~49f7d023)
 
 애매하던 대본생성 모드 A/B를 **remake(원본 소재 고정·표현만 새로=중복회피) / transplant(내 제품 이식)**로 재편. 리메이크는 원본 대본에서 소재 자동감지(수정가능) → 프롬프트에 소재 잠금. SDD 5태스크, 각 spec+quality(opus) 리뷰·최종 전체리뷰 통과, 65 테스트 green.
@@ -29,6 +54,28 @@
 ---
 
 ## 🎙️ 보이스 프리셋 라이브러리 — ✅ 구현·검증 (2026-07-14 집PC, 커밋 b5463de9~3cd1abfe)
+
+### 🔥 2026-07-15 (사무실) 보이스 "자연화 엔진(AI티 제거)" — 구현 거의 완료, 집에서 마감
+**방향 대전환(사장님 확정)**: 감정태그 몇 개 뿌리기 ❌ → **규칙기반으로 텍스트를 다듬어 서울 20대 여성 톤·AI티 제거**. 기준 = "1%라도 AI로 판단되면 실패". 브레인스토밍→스펙→계획→SDD 구현까지 진행.
+- 스펙: `docs/superpowers/specs/2026-07-15-쇼핑쇼츠-보이스-자연화엔진-AI티제거-design.md` (커밋 826a7451)
+- 계획 2부: `docs/superpowers/plans/2026-07-15-보이스-자연화엔진-1-엔진과통합.md` / `-2-작업대와ASR.md` (커밋 4f53a9e1)
+- **핵심 통찰**: AI티 병목은 감정부족이 아니라 ①문어체 종결(낭독체) ②비트마다 리셋되는 콜드스타트 억양 ③v3 take 편차. → 8스테이지 순수엔진 + 튜닝작업대 + N-best/연속성/seed.
+- **✅ 구현·테스트·커밋 완료 (SDD, 서브에이전트 기반, 구현=sonnet·리뷰=opus)**:
+  - **엔진** `narration_naturalize.py`: 8스테이지(정규화·구어체·연음·끊어읽기·끝음·추임새·감정곡선·억양) 순수함수, 결정적, 하드캡(태그≤3·비트당≤1·추임새상한). 28테스트. opus리뷰로 실버그3개(phrasing "고"오탐·whitespace훼손·emotion_arc IndexError)+죽은코드 수정. 커밋 ea6087ee~a04b1029.
+  - **tts.py**: seed·previous_text/next_text(연속성)·**v3 speaker_boost 자동drop**·N-best래퍼(`synthesize_best`). 하위호환 유지. 11테스트. 커밋 6eaf2b86·b6d4b2e0.
+  - **mix_pipeline.py**: TTS루프를 `_synthesize_beats` 헬퍼로 추출, naturalize+연속성(raw나레이션)+N-best 통합. `_plan_and_tts`·`resynth_tts_job` 둘 다. 커밋 2e121144.
+  - **asr_check.py**: Whisper(GROQ) 재전사→diff 오독자동경보 + mismatch_score(N-best ranker). config에 `GROQ_API_KEY`. 커밋 928539ba.
+  - **store.py+voice_presets.json**: 프리셋에 `naturalize_profile` 저장(컬럼마이그레이션) + **speaker_boost 42개 전부 정리**. 커밋 65ab3488.
+  - **app.py**: 튜닝전용 API 4개(`/api/voice-tune/corpus·preview·synth·profile`)+auth allow. 코퍼스 10줄. 커밋 6cb4cbbb·b41af1a0.
+  - **작업대** `static/voice_tune.html`: 좌 코퍼스카드(원문→변환텍스트→▶합성/재롤→ASR diff) 우 8스테이지 토글+강도슬라이더+seed+N-best+💾동결. 서빙200·corpus·preview(좋습니다→좋아요/50%→오십 퍼센트) 백엔드 검증완료. 커밋 3546cd3f.
+- ⏭ **집에서 마감(다음 세션 즉시)**:
+  1. **whole-branch 최종리뷰**(SDD 필수단계, 아직 안 함) — cross-unit seam 확인. memory `feedback_whole_branch_review_catches_seams`.
+  2. **작업대 실 grounding**: ELEVENLABS 키로 코퍼스 전체 합성→**사장님 귀 튜닝**(각 성우 프로파일 강도·구어체맵·발음사전 다듬어 동결). 이게 "진짜 게이트"(자동테스트 대체불가). freeze버튼·스크린샷 grounding도 미완(세션한도로 서브에이전트 중단).
+  3. **규칙 정교화**: 구어체맵·연결어미·감정곡선 태그·추임새뱅크는 **시작점**임. 사장님 귀로 값 조정이 본론. (엔진은 이미 값을 데이터로 받게 돼있음 — 코드수정 최소)
+  4. **서버 배포**: `/etc/shopping-shorts.env`에 `GROQ_API_KEY` 추가(ASR용). push하면 3분 자동배포.
+  5. (선택) **연속성 v3 실지원 확인**: previous_text/next_text가 eleven_v3에서 실제 먹는지 실키로 1회 검증(미지원이면 payload무시라 안전).
+- ⚠️ 이 세션 내내 **동시세션 3~4개가 같은 워킹트리 편집**(produce.html·motion·대본생성). 공유인덱스 레이스로 produce.html이 내 커밋 2e121144에 한번 섞임(무손실, 0f2c2791이 위에 재작업). 이후 전부 **`git commit -- <경로>` pathspec 커밋**으로 격리 성공.
+
 
 빅채널 나레이션 *느낌*을 페르소나 프리셋(이름+설명+감도값)으로 굳혀 produce 4단계에서 카드로 선택. 하이브리드(MVP=스톡매칭, 클로닝 Phase2).
 - 스펙 `docs/superpowers/specs/2026-07-14-보이스-프리셋-라이브러리-design.md` / 계획 `docs/superpowers/plans/2026-07-14-보이스-프리셋-라이브러리.md`
