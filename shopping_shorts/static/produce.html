@@ -391,6 +391,7 @@ function initHeadcopy(){
   renderExtraTexts();
   renderExtraPreview();
   renderOverlayPreview();
+  applyDefaultStyleOnEntry();   // step5 진입 시 1회: 미터치 상태면 기본 스타일+실장면 배경 자동 적용
 }
 // ── 자막 스타일(나레이션 자막) ──────────────
 let CAP_EFFECT='none';
@@ -526,7 +527,8 @@ function selectedStyleIdx(){
   if(PICKED_STYLE_IDX>=0) return PICKED_STYLE_IDX;
   // STATE.headcopy가 가리키는 현재 스타일 추정: 폰트+색 일치하는 첫 프리셋(없으면 -1)
   const h = (STATE && STATE.headcopy)||{};
-  return FULL_PRESETS.findIndex(p => p.hc && p.hc.font===h.font && p.hc.color===h.color);
+  const hCol = (h.color||'').toLowerCase();
+  return FULL_PRESETS.findIndex(p => p.hc && p.hc.font===h.font && (p.hc.color||'').toLowerCase()===hCol);
 }
 function renderStyleCards(){
   const box=document.getElementById('fullPresets'); if(!box) return;
@@ -572,6 +574,23 @@ function applyFullPreset(i){
   }
   renderExtraTexts(); renderExtraPreview();
   document.querySelectorAll('.fullPreset').forEach((b,idx)=>b.style.outline = idx===i?'2px solid var(--accent2)':'none');
+}
+// ── 🪄 진입 자동완성: step5(꾸미기) 첫 진입 시 기본 스타일+실장면 배경 자동 적용(딸깍) ──
+const DEFAULT_STYLE_NAME='임팩트 옐로';
+function applyDefaultStyleOnEntry(){
+  // step5 진입 1회: 사용자가 아직 스타일을 안 건드렸으면 기본 스타일 자동 적용 + 실장면 배경 자동 ON.
+  if(STYLE_TOUCHED) { renderStyleCards(); return; }
+  const di = FULL_PRESETS.findIndex(p=>p.name===DEFAULT_STYLE_NAME);
+  if(di>=0) applyFullPreset(di);          // updateHC/updateCaption 내부호출됨
+  // 실장면 배경 자동 ON(매칭된 job 있을 때만). 실패는 조용히 흰배경 유지.
+  const sb=document.getElementById('sceneBg');
+  if(sb && !sb.checked && typeof MIX_JOB!=='undefined' && MIX_JOB){
+    sb.checked=true;
+    window._autoScene=true;
+    try{ toggleSceneBg(); }catch(e){}
+    setTimeout(()=>{window._autoScene=false;},0);
+  }
+  renderStyleCards();
 }
 // ── 💾 내 프리셋(localStorage) — 사용자가 만든 완성 스타일을 딸깍 축적 ──
 function myPresets(){ try{ return JSON.parse(localStorage.getItem('hc_my_presets')||'[]'); }catch(e){ return []; } }
@@ -685,7 +704,7 @@ function toggleSceneBg(){
   if(!on){ img.style.display='none'; pv.style.background='#ffffff'; return; }
   if(!MIX_JOB){ alert('2단계에서 영상 매칭을 먼저 실행하세요'); document.getElementById('sceneBg').checked=false; return; }
   img.onload=()=>{ img.style.display='block'; };
-  img.onerror=()=>{ img.style.display='none'; document.getElementById('sceneBg').checked=false; alert('실장면 배경을 불러오지 못했습니다(매칭 완료 후 가능)'); };
+  img.onerror=()=>{ img.style.display='none'; document.getElementById('sceneBg').checked=false; if(!window._autoScene) alert('실장면 배경을 불러오지 못했습니다(매칭 완료 후 가능)'); };
   img.src='/api/produce/mix/poster/'+MIX_JOB+'?t='+Date.now();
 }
 function clearBgm(){ if(STATE.deco) STATE.deco.bgm=null; const el=document.getElementById('bgmFile'); if(el) el.value=''; const st=document.getElementById('bgmStatus'); if(st) st.textContent='제거됨'; }
