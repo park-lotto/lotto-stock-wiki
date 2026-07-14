@@ -107,3 +107,19 @@ def test_fillers_bank_selection_deterministic_by_beat():
     b = naturalize("좋아요", p, beat_index=1, beat_total=3)
     assert a != b            # 비트마다 다른 필러(결정적 순환)
     assert a == naturalize("좋아요", p, beat_index=0, beat_total=3)
+
+def test_emotion_arc_tags_by_role():
+    p = _only("emotion_arc"); p["emotion_arc"]["intensity"] = 1.0
+    hook = naturalize("이거 봐요", p, beat_role="hook")
+    cta = naturalize("링크 눌러요", p, beat_role="cta")
+    assert hook.startswith("[") and cta.startswith("[")
+    assert hook != cta                    # 역할마다 다른 태그(곡선)
+
+def test_emotion_arc_caps_one_tag_per_beat():
+    p = _only("emotion_arc"); p["emotion_arc"]["intensity"] = 1.0
+    out = naturalize("좋아요", p, beat_role="hook")
+    assert out.count("[") == 1            # 비트당 태그 ≤ 1 (하드캡)
+
+def test_emotion_arc_low_intensity_no_tag():
+    p = _only("emotion_arc"); p["emotion_arc"]["intensity"] = 0.0
+    assert naturalize("좋아요", p, beat_role="hook") == "좋아요"

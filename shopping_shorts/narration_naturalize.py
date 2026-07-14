@@ -165,9 +165,35 @@ def _fillers(text, cfg, ctx):
     return f"{filler}, {text}"
 
 
+# 비트 역할별 감정 태그 곡선(v3 오디오 태그). 시작점 — 작업대에서 세기 조절.
+_ARC_BY_ROLE = {
+    "hook": "[curious]", "intro": "[warm]", "build": "[warm]",
+    "body": None, "payoff": "[satisfied]", "cta": "[excited]",
+}
+_ARC_BY_POS = ["[curious]", "[warm]", None, "[satisfied]", "[excited]"]  # 역할 없을 때 위치기반
+
+
+def _emotion_arc(text, cfg, ctx):
+    intensity = cfg.get("intensity", 0.3)
+    if intensity < 0.15:                  # 오버금지: 낮으면 무태그
+        return text
+    if ctx["caps"].get("max_tags_per_beat", 1) <= 0:
+        return text
+    tag = None
+    role = ctx.get("beat_role")
+    if role and role in _ARC_BY_ROLE:
+        tag = _ARC_BY_ROLE[role]
+    elif ctx.get("beat_index") is not None and ctx.get("beat_total"):
+        n = max(1, ctx["beat_total"] - 1)
+        pos = round((ctx["beat_index"] / n) * (len(_ARC_BY_POS) - 1))
+        tag = _ARC_BY_POS[pos]
+    return f"{tag} {text}" if tag else text
+
+
 _STAGES = [("normalize", _normalize), ("spoken_style", _spoken_style),
            ("pronunciation", _pronunciation), ("phrasing", _phrasing),
-           ("endings", _endings), ("fillers", _fillers)]
+           ("endings", _endings), ("fillers", _fillers),
+           ("emotion_arc", _emotion_arc)]
 
 
 def naturalize(text, profile=None, *, beat_role=None, beat_index=None, beat_total=None):
