@@ -52,6 +52,22 @@ log.md에 `투경 해제 예측 검증` / `종가배팅 시스템` 키워드 있
    ⚠️ **pull을 커밋보다 먼저 하지 마라** — uncommitted 변경 상태의 raw `git pull`은 같은
    파일 충돌로 막힌다. 반드시 **커밋 → pull --rebase → push**. 커밋 전 `git branch --show-current`=main 확인.
 7. CRLF/데이터 노이즈는 `.gitattributes`(eol=lf)로 봉인됨. `raw/`는 git추적 유지(PC간 공유).
+8. **같은 서버(`ubuntu@3.39.179.148`), 같은 repo(`/home/ubuntu/lotto-stock-wiki`)에 서비스 2개.**
+   `dashboard/`·`scripts/` 변경 → systemd `stockbrain`(:8090, stockbrain1.duckdns.org) 재시작.
+   `shopping_shorts/` 변경 → systemd `shopping-shorts`(:8849, shoppingshorts.duckdns.org) 재시작.
+   둘 다 같은 `deploy/auto_deploy.sh` 크론(3분)이 처리 — 그래서 아래 9번 사고가 **두 서비스 배포를 동시에** 막는다.
+9. **서버 워킹트리는 SSH로 절대 `git add`/`commit` 하지 않는다(핫패치 금지의 연장).** 서버는 `git pull --ff-only`
+   전용 — 서버에 uncommitted/staged 변경이 하나라도 남으면 `auto_deploy.sh`가 pull 실패로 **조용히 스킵**되고,
+   이후 다른 세션이 아무리 정상적으로 push해도 서버엔 영영 안 감(2026-07-14 실사고: `shopping_shorts/` 여러 파일이
+   서버에 staged 상태로 방치돼 배포가 통째로 멈춰있었음, 로컬 4세션 작업 자체는 문제 없었음).
+   - **세션 시작 시 1번만 확인**(의심되거나 "배포했는데 안 바뀜" 제보 시 필수):
+     ```
+     ssh -i C:\Users\TheRose\crawling_bot_client\LightsailDefaultKey-ap-northeast-2.pem ubuntu@3.39.179.148 \
+       "cd /home/ubuntu/lotto-stock-wiki && git status --short && tail -5 /tmp/auto_deploy.log"
+     ```
+   - `git status --short`에 뭔가 걸리면(특히 "M "/"A " staged) 로그에 `pull실패(작업트리충돌?)`가 있는지 확인.
+   - **발견해도 함부로 `git stash`/`reset`으로 지우지 마라** — 누구 작업인지 모르면 사용자에게 먼저 보고하고
+     처리 방법(그대로 두기 vs stash) 확인받는다. 판단은 사용자 몫.
 
 > 상세·SSH키 위치·트러블슈팅: memory `reference_deploy_truth_branch_ssh`
 
