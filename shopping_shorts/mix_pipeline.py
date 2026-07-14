@@ -16,6 +16,10 @@ from shopping_shorts.edit_plan import build_edit_plan
 from shopping_shorts import tts
 from shopping_shorts import audio_post
 from shopping_shorts.video_assemble import assemble
+from shopping_shorts.motion_assets import resolve_layers, DEFAULT_ASSETS_DIR
+
+# 모션 자산 폴더(테스트가 monkeypatch로 교체 가능하도록 모듈 상수로 노출)
+MOTION_ASSETS_DIR = DEFAULT_ASSETS_DIR
 from shopping_shorts.vmake_client import remove_subtitles
 from shopping_shorts.narration_naturalize import naturalize
 
@@ -217,6 +221,11 @@ def run_render(job_id, db_path, work_root):
             op = work / ov["file"]
             if op.exists():
                 deco = {**deco, "overlay": {**ov, "_abspath": str(op)}}
+        # 모션 레이어(전환·스티커): asset_id → 실경로·기본배치 해석
+        motion = deco.get("motion") or {}
+        if motion.get("layers"):
+            resolved = resolve_layers(motion["layers"], MOTION_ASSETS_DIR)
+            deco = {**deco, "motion": {**motion, "layers": resolved}}
         assemble(plan, tts_paths, source_video_paths, str(out_path), clean_fn=clean_fn,
                  headcopy=job.get("headcopy"), caption_style=job.get("caption_style"),
                  deco=deco)

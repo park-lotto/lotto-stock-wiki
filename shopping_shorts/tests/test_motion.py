@@ -160,3 +160,41 @@ def test_burn_captions_color_only_uses_simple_vf(tmp_path, monkeypatch):
     assert "-filter_complex" not in cmd          # 레이어 없으니 단순 경로
     assert "-vf" in cmd
     assert "eq=saturation=1.3" in cmd[cmd.index("-vf") + 1]   # 색감필터가 -vf에 부착
+
+
+import json as _json
+import shopping_shorts.mix_pipeline as mp
+from shopping_shorts.store import Store
+
+
+def test_run_render_resolves_motion_layers(tmp_path, monkeypatch):
+    # 자산 폴더 + 매니페스트
+    adir = tmp_path / "assets"
+    adir.mkdir()
+    (adir / "swipe_left.mov").write_bytes(b"\x00")
+    (adir / "manifest.json").write_text(_json.dumps({"assets": [
+        {"id": "swipe_left", "type": "transition", "file": "swipe_left.mov",
+         "default": {"width": 1080, "x": 50, "y": 50}}]}), encoding="utf-8")
+    # motion_assets가 이 폴더를 보도록 기본 경로 교체
+    monkeypatch.setattr(mp, "MOTION_ASSETS_DIR", str(adir))
+
+    db = tmp_path / "t.db"
+    store = Store(db)
+    store.create_mix_job("jm", ["u0"], 20, "free")
+    store.update_mix_job("jm", status="ready_for_review",
+        edit_plan={"structure": "free", "beats": [
+            {"beat_idx": 0, "role": "훅", "narration": "n", "tts_path": str(tmp_path / "t.mp3")}]},
+        deco={"motion": {"layers": [{"asset_id": "swipe_left", "start": 1.0, "dur": 0.5}]}})
+    # 소스/ tts 실물 없이도 assemble 직전까지만 검증하도록 의존부 무력화
+    work = tmp_path / "work" / "jm"; work.mkdir(parents=True)
+    (work / "s0").mkdir(); (work / "s0" / "a.mp4").write_bytes(b"\x00")
+    (tmp_path / "t.mp3").write_bytes(b"\x00")
+
+    captured = {}
+    monkeypatch.setattr(mp, "assemble", lambda *a, **k: captured.update(k) or "x")
+    mp.run_render("jm", str(db), str(tmp_path / "work"))
+
+    deco = captured["deco"]
+    layer = deco["motion"]["layers"][0]
+    assert layer["_abspath"].endswith("swipe_left.mov")   # 경로 해석됨
+    assert layer["start"] == 1.0 and layer["dur"] == 0.5
