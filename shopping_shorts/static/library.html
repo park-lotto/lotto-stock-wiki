@@ -28,8 +28,8 @@
   .body{flex:1;min-width:0;max-width:680px;display:flex;flex-direction:column;gap:10px}
   .info-side{width:230px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;border-left:1px solid var(--line);padding-left:16px}
   .info-side .sec-t:first-child{margin-top:0}
-  .actions{display:flex;gap:8px;justify-content:flex-start}
-  .actions button{flex:0 0 auto;padding:8px 18px}
+  .actions{display:flex;gap:8px;margin-top:auto;padding-top:6px}
+  .actions button{flex:1;padding:9px 12px}
   .learn-status{font-size:11px;color:var(--sub);line-height:1.7;background:#0d131c;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
   .learn-status b{color:var(--gold);font-weight:600}
   .ch{font-weight:600;font-size:15px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
@@ -185,6 +185,11 @@ function render(i){
         ${chars?`<div class="chars"><div class="t">👥 등장 주변인물 (스토리텔링 핵심 기법)</div><ul>${chars}</ul></div>`:''}
         ${s.storyline?`<div><div class="sec-t">스토리라인</div><div class="story">${esc(s.storyline)}</div></div>`:''}
         ${s.twist?`<div><div class="sec-t">✨ 발상전환</div><div class="story">${esc(s.twist)}</div></div>`:''}
+        <div class="actions">
+          <button class="gen-btn" onclick="openGen('${sc}')">🎬 이 구조로 생성</button>
+          <button onclick="copyFull(this)">📋 대본 복사</button>
+          <button class="send-btn" data-sc="${sc}" onclick="sendToProduce('${sc}', this)">🎬 영상제작으로 보내기</button>
+        </div>
       </div>
       <div class="info-side">
         ${beats?`<div><div class="sec-t">비트 구조</div><ul class="beats">${beats}</ul></div>`:''}
@@ -192,11 +197,6 @@ function render(i){
         ${devs?`<div><div class="sec-t">설득 장치</div><div class="devices">${devs}</div></div>`:''}
         <div class="learn-status" id="learn-${sc}" data-cat="${esc(i.category||'')}">🎓 학습현황 불러오는 중…</div>
       </div>
-    </div>
-    <div class="actions">
-      <button class="gen-btn" onclick="openGen('${sc}')">🎬 이 구조로 생성</button>
-      <button onclick="copyFull(this)">📋 대본 복사</button>
-      <button class="send-btn" data-sc="${sc}" onclick="sendToProduce('${sc}', this)">🎬 영상제작으로 보내기</button>
     </div>
   </div>`;
 }
