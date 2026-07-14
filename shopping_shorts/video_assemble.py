@@ -240,67 +240,48 @@ def _caption_durations(segs, dur):
 
 
 def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None):
-    """나레이션 한 비트의 자막(하단 바 + 순차 drawtext)을 필터 문자열 **리스트**로
-    반환한다. 각 구절 enable 구간을 t0(전체 타임라인 시작 오프셋)만큼 밀어, 여러 비트를
-    한 영상에 이어 구울 때(_burn_captions) 비트 경계에 맞게 배치된다.
-
-    style(자막 스타일 dict, 없으면 기존 기본값 = 하단 바 + 흰색)로 폰트·색·크기·위치·
-    외곽선·배경박스·효과를 제어한다. style이 None이면 하위호환(기존 렌더와 동일).
-    반환 리스트를 그대로 필터그래프에 이어붙이면 되고, drawtext 값 안의
-    between(t,a,b) 콤마를 나중에 split할 필요가 없다(요소 단위로 이미 분리됨).
-    자막 구절이 없으면 빈 리스트. 텍스트는 work/cap_{idx}_{i}.txt 로 저장(cwd=work)."""
+    """나레이션 한 비트의 자막(하단 바 + 순차 drawtext)을 필터 문자열 리스트로 반환한다.
+    _segmented_drawtext 기반: highlight_rules가 있으면 단어별 강조, 없으면 세그먼트 1개
+    (기존과 동일 산출물). 각 구절 enable 구간은 t0(전체 타임라인 오프셋)만큼 밀린다."""
     segs = _caption_segments(narration)
     if not segs:
         return []
     style = style or {}
     durs = _caption_durations(segs, dur)
-    # 폰트: style.font이 static/fonts의 실제 파일이면 그것, 아니면 기본 자막폰트(font.ttf)
-    capfont = "font.ttf"
-    fname = os.path.basename(style.get("font") or "")
-    if fname and (_FONT_DIR / fname).exists():
-        shutil.copy(_FONT_DIR / fname, work / "cap_font.ttf")
-        capfont = "cap_font.ttf"
-    color = _hex_to_ff(style.get("color"), "0xFFFFFF")
     size = max(10, int(style.get("size") or _CAP_FONTSIZE))
-    # 세로 위치: y_pct(0~100) 지정 시 중심기준, 없으면 하단 기본
     ypct = style.get("y_pct")
-    ypos = f"(h*{min(1.0, max(0.0, ypct / 100.0)):.4f}-text_h/2)" if ypct is not None else "h-text_h-100"
-    # 효과: fade(알파 페이드-인)/pop(초반 살짝 확대는 drawtext 불가라 알파로 근사)/slide(y 위로)
-    effect = style.get("effect") or "none"
+    if ypct is None:
+        # 기존 폴백 "h-text_h-100"의 근사치를 %로 환산(문자 높이는 size*1.2로 근사)
+        ypct = max(0.0, min(100.0, (_OUT_H - 100 - size * 0.6) / _OUT_H * 100.0))
     use_box = bool(style.get("box"))
     show_bar = style.get("bar", True) and not use_box
+    effect = style.get("effect") or "none"
     parts = []
     if show_bar:
         parts.append(f"drawbox=x=0:y=ih-{_BAR_H}:w=iw:h={_BAR_H}:color=black@0.82:t=fill")
     t = 0.0
     for i, (seg, d) in enumerate(zip(segs, durs)):
-        (work / f"cap_{idx}_{i}.txt").write_text(seg, encoding="utf-8")
         start = t + t0
         t += d
-        # 마지막 구절은 비트 끝까지(+0.5) 유지. t0 오프셋을 함께 적용.
         end = (dur + 0.5 if i == len(segs) - 1 else t) + t0
-        yexpr = ypos
-        if effect == "slide":
-            # 등장 0.25초 동안 아래→위로 미끄러짐
-            yexpr = f"({ypos}+30*(1-min(1\\,(t-{start:.2f})/0.25)))"
-        dt = [
-            f"drawtext=fontfile={capfont}:textfile=cap_{idx}_{i}.txt",
-            f"fontcolor={color}", f"fontsize={size}", "line_spacing=10",
-            "x=(w-text_w)/2", f"y={yexpr}",
-        ]
-        if effect in ("fade", "pop"):
-            spd = 0.18 if effect == "fade" else 0.12
-            dt.append(f"alpha='min(1,max(0,(t-{start:.2f})/{spd}))'")
-        if style.get("outline"):
-            dt.append(f"borderw={max(1, int(style.get('outline_w') or 5))}")
-            dt.append(f"bordercolor={_hex_to_ff(style.get('outline_color'), '0x000000')}")
-        if use_box:
-            bc = _hex_to_ff(style.get("box_color"), "0x000000")
-            op = max(0.0, min(1.0, (style.get("box_opacity") or 80) / 100.0))
-            pad = max(0, int(style.get("box_pad") if style.get("box_pad") is not None else 12))
-            dt += ["box=1", f"boxcolor={bc}@{op:.2f}", f"boxborderw={pad}"]
-        dt.append(f"enable='between(t,{start:.2f},{end:.2f})'")
-        parts.append(":".join(dt))
+        seg_parts = _segmented_drawtext(
+            seg, style, work, f"cap_{idx}_{i}", 50, ypct,
+            highlight_rules=style.get("highlight_rules"), default_color="0xFFFFFF",
+        )
+        enable_clause = f"enable='between(t,{start:.2f},{end:.2f})'"
+        for sp in seg_parts:
+            if effect == "slide":
+                # _segmented_drawtext가 만든 "y=<정수>"를 시간기반 슬라이드 표현식으로 치환.
+                # 기존 로직과 동일하게 등장 0.25초 동안 +30px 아래에서 위로 미끄러짐.
+                sp = re.sub(
+                    r"y=(-?\d+)",
+                    lambda m: f"y=({m.group(1)}+30*(1-min(1\\,(t-{start:.2f})/0.25)))",
+                    sp, count=1,
+                )
+            elif effect in ("fade", "pop"):
+                spd = 0.18 if effect == "fade" else 0.12
+                sp = sp + f":alpha='min(1,max(0,(t-{start:.2f})/{spd}))'"
+            parts.append(sp + ":" + enable_clause)
     return parts
 
 
@@ -518,9 +499,13 @@ def _fixed_drawtext(spec, work, key, default_color="0xFFFFFF"):
     return ":".join(parts)
 
 
-def _headcopy_drawtext(hc, work):
-    """헤드카피(고정 타이틀) drawtext — _fixed_drawtext 래퍼(기본색 오렌지)."""
-    return _fixed_drawtext(hc, work, "hc", default_color="0xFF8800")
+def _headcopy_drawtext_parts(hc, work):
+    """헤드카피(고정 타이틀) drawtext 필터 리스트 — _segmented_drawtext 래퍼(기본색 오렌지).
+    hc['highlight_rules']가 있으면 단어별 강조, 없으면 세그먼트 1개(기존과 동일)."""
+    return _segmented_drawtext(
+        hc.get("text", ""), hc, work, "hc", hc.get("x", 50), hc.get("y", 14),
+        highlight_rules=hc.get("highlight_rules"), default_color="0xFF8800",
+    )
 
 
 def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None, caption_style=None, deco=None):
@@ -548,10 +533,8 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         dur = _probe_duration(tts)
         filters.extend(_caption_drawtexts(beat.get("narration", ""), dur, work, idx, t0, caption_style))
         t0 += dur
-    if headcopy:
-        hc_dt = _headcopy_drawtext(headcopy, work)
-        if hc_dt:
-            filters.append(hc_dt)  # 항상 표시(고정 타이틀) — enable 없음
+    if headcopy and (headcopy.get("text") or "").strip():
+        filters.extend(_headcopy_drawtext_parts(headcopy, work))  # 항상 표시(고정 타이틀) — enable 없음
     # 꾸미기 장식(deco): 추가 텍스트(여러 개) + 워터마크 닉네임. 모두 고정 drawtext.
     deco = deco or {}
     for i, t in enumerate(deco.get("extra_texts") or []):

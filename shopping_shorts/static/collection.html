@@ -77,6 +77,13 @@ function sendToProduce(){
   sessionStorage.setItem('produce_mix_urls', JSON.stringify(urls));
   location.href='/produce';
 }
+// 썸네일 소스: 렌즈 결과(gstatic)는 /api/thumb 프록시가 허용호스트가 아니라 400을
+// 주므로(검게 나옴) referrerpolicy=no-referrer로 직접 로드. 인스타·틱톡·유튜브 CDN은
+// 핫링크 차단이 있어 프록시 경유해야 뜬다(2026-07-14 버그수정).
+function thumbSrc(u){
+  if(!u) return '';
+  return u.includes('gstatic.com') ? u : '/api/thumb?url='+encodeURIComponent(u);
+}
 function render(){
   const el=document.getElementById('cards');
   document.getElementById('selCount').textContent = SELECTED.size ? `${SELECTED.size}개 선택` : '';
@@ -89,7 +96,7 @@ function render(){
     return `
     <div class="card ${sel?'sel':''}">
       <div class="thumb" onclick="toggleSelect('${i.shortcode}')">
-        ${i.thumbnail?`<img src="/api/thumb?url=${encodeURIComponent(i.thumbnail)}" loading="lazy" onerror="this.style.visibility='hidden'">`:''}
+        ${i.thumbnail?`<img src="${thumbSrc(i.thumbnail)}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'">`:''}
         <span class="chk">${sel?'✅':'⬜'}</span>
       </div>
       <div class="body">

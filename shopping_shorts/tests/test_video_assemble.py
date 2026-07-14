@@ -261,3 +261,22 @@ def test_segmented_drawtext_two_lines_resets_x_per_line(tmp_path):
     import re
     ys = sorted(set(int(m.group(1)) for p in parts for m in [re.search(r"y=(-?\d+)", p)] if m))
     assert len(ys) == 2  # 줄마다 다른 y
+
+
+# ── Task 2: _headcopy_drawtext_parts/_caption_drawtexts 리팩터 회귀 가드 ──
+
+def test_headcopy_drawtext_no_highlight_matches_single_block(tmp_path):
+    """highlight_rules 없는 hc는 세그먼트 1개(폭측정 x좌표 무관하게 fontcolor/폰트 등 필드는 기존과 동일)."""
+    hc = {"text": "테스트 문구", "font": "", "color": "#FF8800", "size": 60,
+          "x": 50, "y": 14, "outline": True, "outline_color": "#000000", "outline_w": 7}
+    dt = va._headcopy_drawtext_parts(hc, tmp_path)[0]
+    assert dt is not None
+    assert "fontcolor=0xFF8800" in dt
+    assert "borderw=7" in dt
+    assert "bordercolor=0x000000" in dt
+
+
+def test_caption_drawtexts_no_style_still_renders_bar_and_text(tmp_path):
+    parts = va._caption_drawtexts("여러분 안녕하세요 반갑습니다", 2.0, tmp_path, 0)
+    assert any("drawbox" in p for p in parts)  # 하단 바 유지
+    assert any("drawtext=fontfile=" in p for p in parts)
