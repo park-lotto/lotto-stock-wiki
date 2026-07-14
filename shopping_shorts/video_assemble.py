@@ -508,6 +508,21 @@ def _headcopy_drawtext_parts(hc, work):
     )
 
 
+def _merge_highlight_rules(headcopy, caption_style, deco):
+    """강조 단어 규칙(deco.highlight_rules)을 헤드카피·자막 스타일 dict 양쪽에 주입한다.
+    규칙은 UI에서 deco에 저장되지만 렌더는 headcopy/caption_style에서 읽으므로 여기서 잇는다.
+    각 dict가 이미 자체 highlight_rules를 가지면 그것을 우선(덮어쓰지 않음).
+    원본 dict를 변형하지 않고 얕은 복사본을 반환한다."""
+    hl = (deco or {}).get("highlight_rules")
+    if not hl:
+        return headcopy, caption_style
+    if headcopy is not None and not headcopy.get("highlight_rules"):
+        headcopy = {**headcopy, "highlight_rules": hl}
+    if not (caption_style or {}).get("highlight_rules"):
+        caption_style = {**(caption_style or {}), "highlight_rules": hl}
+    return headcopy, caption_style
+
+
 def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None, caption_style=None, deco=None):
     """완성된 믹스 영상(in_video) 위에 우리 자막을 비트 타이밍대로 굽는다.
     비트 경계는 각 비트 tts 길이 누적(t0)으로 계산해, drawtext enable 구간을 전체
@@ -523,6 +538,7 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     if not font:
         shutil.copy(in_video, out_path)
         return str(out_path)
+    headcopy, caption_style = _merge_highlight_rules(headcopy, caption_style, deco)
     filters = [f"scale={_OUT_W}:{_OUT_H}:force_original_aspect_ratio=increase,crop={_OUT_W}:{_OUT_H}"]
     t0 = 0.0
     for beat in edit_plan["beats"]:

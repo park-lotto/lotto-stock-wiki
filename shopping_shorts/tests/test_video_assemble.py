@@ -303,4 +303,39 @@ def test_headcopy_drawtext_no_highlight_matches_single_block(tmp_path):
 def test_caption_drawtexts_no_style_still_renders_bar_and_text(tmp_path):
     parts = va._caption_drawtexts("여러분 안녕하세요 반갑습니다", 2.0, tmp_path, 0)
     assert any("drawbox" in p for p in parts)  # 하단 바 유지
+
+
+# ── Critical 버그 픽스: deco.highlight_rules → headcopy/caption_style 병합 ──
+# UI는 강조단어 규칙을 deco에 저장하지만 렌더는 headcopy/caption_style에서 읽는다.
+# _merge_highlight_rules가 _burn_captions 진입부에서 이 둘을 잇는 다리 역할.
+
+def test_merge_highlight_rules_injects_into_both():
+    rules = [{"keyword": "쿠팡", "color": "#FF2D2D"}]
+    hc, cap = va._merge_highlight_rules({"text": "x"}, None, {"highlight_rules": rules})
+    assert hc["highlight_rules"] == rules            # 헤드카피에 주입
+    assert cap["highlight_rules"] == rules            # 자막(None이었어도) 주입
+
+
+def test_merge_highlight_rules_no_rules_passthrough():
+    hc, cap = va._merge_highlight_rules({"text": "x"}, None, {"extra_texts": []})
+    assert "highlight_rules" not in hc               # 규칙 없으면 무변경
+    assert cap is None                                # caption_style None 유지
+
+
+def test_merge_highlight_rules_does_not_override_existing():
+    own = [{"keyword": "자체", "color": "#000000"}]
+    deco_rules = [{"keyword": "덮지마", "color": "#FFFFFF"}]
+    hc, cap = va._merge_highlight_rules({"highlight_rules": own}, {"highlight_rules": own}, {"highlight_rules": deco_rules})
+    assert hc["highlight_rules"] == own              # 기존 우선
+    assert cap["highlight_rules"] == own
+
+
+def test_merge_highlight_rules_reaches_headcopy_drawtext(tmp_path):
+    # 통합: deco에만 규칙이 있어도 병합 후 _headcopy_drawtext_parts가 규칙색을 낸다.
+    hc0 = {"text": "나만 몰랐던 쿠팡", "font": "", "color": "#FFFFFF", "size": 60, "x": 50, "y": 20}
+    rules = [{"keyword": "쿠팡", "color": "#FF2D2D", "box": True, "box_color": "#FFE100"}]
+    hc, _ = va._merge_highlight_rules(hc0, None, {"highlight_rules": rules})
+    parts = va._headcopy_drawtext_parts(hc, tmp_path)
+    joined = " ".join(parts)
+    assert "fontcolor=0xFF2D2D" in joined            # 강조 단어 규칙색이 실제 필터에 나온다
     assert any("drawtext=fontfile=" in p for p in parts)
