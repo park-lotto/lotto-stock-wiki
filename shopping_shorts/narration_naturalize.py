@@ -121,8 +121,25 @@ def _pronunciation(text, cfg):
     return text
 
 
+# 연결어미(뒤에 호흡을 두면 자연스러운 지점). 시작점 — 작업대에서 강도로 밀도 조절.
+_CONNECTIVES = ["는데", "은데", "지만", "어서", "아서", "라서", "고", "며", "면서"]
+
+
+def _phrasing(text, cfg):
+    intensity = cfg.get("intensity", 0.3)
+    if intensity <= 0:
+        return text
+    # 연결어미 + 공백 경계에 쉼표 삽입(이미 쉼표/문장부호가 붙어있으면 skip)
+    # intensity로 삽입할 연결어미 종류 수를 제한(결정적: 앞에서부터)
+    take = max(1, int(len(_CONNECTIVES) * intensity + 0.999))
+    active = _CONNECTIVES[:take] if intensity < 1.0 else _CONNECTIVES
+    for c in sorted(active, key=len, reverse=True):
+        text = re.sub(r"(" + c + r")(\s+)(?=[^\s,.!?…])", r"\1,\2", text)
+    return text
+
+
 _STAGES = [("normalize", _normalize), ("spoken_style", _spoken_style),
-           ("pronunciation", _pronunciation)]
+           ("pronunciation", _pronunciation), ("phrasing", _phrasing)]
 
 
 def naturalize(text, profile=None, *, beat_role=None, beat_index=None, beat_total=None):

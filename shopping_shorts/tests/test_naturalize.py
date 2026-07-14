@@ -58,3 +58,17 @@ def test_pronunciation_longest_first():
     p["pronunciation"]["dict"] = {"A": "에이", "AI": "에이아이"}
     # 긴 키 우선(AI가 A로 먼저 안 깨지게)
     assert naturalize("AI", p) == "에이아이"
+
+def test_phrasing_inserts_comma_after_connectives():
+    p = _only("phrasing")
+    p["phrasing"]["intensity"] = 1.0
+    # 연결어미(고/는데) 뒤에 쉼표 삽입 → 호흡
+    assert naturalize("이게 싸고 좋은데 품질도 최고예요", p) == "이게 싸고, 좋은데, 품질도 최고예요"
+
+def test_phrasing_skip_if_already_punctuated():
+    p = _only("phrasing"); p["phrasing"]["intensity"] = 1.0
+    assert naturalize("싸고, 좋아요", p) == "싸고, 좋아요"   # 이미 쉼표면 중복삽입 안 함
+
+def test_phrasing_off_noop():
+    p = _only("phrasing"); p["phrasing"]["on"] = False
+    assert naturalize("싸고 좋은데 최고", p) == "싸고 좋은데 최고"
