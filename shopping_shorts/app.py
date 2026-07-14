@@ -633,7 +633,7 @@ def api_produce_save_to_wiki(request: Request, body: dict, background_tasks: Bac
     if not url or not script_text:
         return JSONResponse(status_code=422, content={"ok": False, "error": "url·script_text 필요"})
     code = (body.get("shortcode") or "").strip() or hashlib.sha1(url.encode()).hexdigest()[:12]
-    category = body.get("category")
+    category = (body.get("category") or "").strip() or None  # 빈문자열→None (NULL/빈문자열 혼재 방지)
     store = Store(DB_PATH)
 
     structure = body.get("structure") or analyze_structure(script_text)
