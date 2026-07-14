@@ -17,8 +17,9 @@ def load_presets_file():
 
 
 def seed_presets(store):
-    """큐레이션 프리셋을 DB에 upsert. 등록 건수 반환(idempotent)."""
+    """큐레이션 프리셋을 DB에 upsert. 파일에서 빠진 옛 프리셋은 정리(prune). 등록 건수 반환(idempotent)."""
     rows = load_presets_file()
     for p in rows:
         store.upsert_voice_preset(p)
+    store.prune_voice_presets([p["preset_id"] for p in rows])
     return len(rows)

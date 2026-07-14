@@ -8,7 +8,8 @@ import argparse
 from shopping_shorts import voice_presets, audio_post
 from shopping_shorts.tts import synthesize_tts
 
-DEMO_TEXT = "요즘 이거 하나씩 다 들고 다니시더라고요. 왜 인기인지 제가 직접 써봤습니다."
+DEMO_TEXT = ("[warmly] 시어머니가 알려주신 이 세제로 욕실을 청소했더니 구석구석 반짝반짝, "
+             "[amused] 찌든 때가 싹 없어졌더라고요.")
 
 
 def main():

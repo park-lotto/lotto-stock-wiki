@@ -1126,6 +1126,15 @@ class Store:
         with self._conn() as c:
             return [self._row_to_preset(r) for r in c.execute(q, args).fetchall()]
 
+    def prune_voice_presets(self, keep_preset_ids):
+        """curated 파일에서 빠진(더 이상 없는) 프리셋을 DB에서 정리. keep_preset_ids에 없는 행 삭제."""
+        keep = list(keep_preset_ids)
+        if not keep:
+            return
+        placeholders = ",".join("?" for _ in keep)
+        with self._conn() as c:
+            c.execute(f"DELETE FROM voice_presets WHERE preset_id NOT IN ({placeholders})", keep)
+
     def get_setting(self, key, default=None):
         """전역 설정값 조회(예: vmake_api_key). 없으면 default."""
         with self._conn() as c:
