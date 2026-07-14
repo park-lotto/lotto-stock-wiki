@@ -130,3 +130,18 @@ def test_produce_mix_start_rejects_empty_script(monkeypatch, tmp_path):
     r = client.post("/api/produce/mix/start",
                     json={"script": "", "urls": ["u0", "u1"], "target_seconds": 20})
     assert r.status_code == 422
+
+
+def test_produce_mix_settings_saves_highlight_rules_inside_deco(monkeypatch, tmp_path):
+    """설계서 §2: deco는 서버가 필드를 까지 않고 통짜 dict로 저장/조회한다 —
+    highlight_rules도 서버 코드 변경 없이 그대로 왕복돼야 한다(회귀 확인용 스모크 테스트)."""
+    client, store = _client(monkeypatch, tmp_path)
+    store.create_mix_job("jd1", ["u0"], 20, "free")
+    r = client.post("/api/produce/mix/settings", json={
+        "job_id": "jd1",
+        "deco": {"extra_texts": [], "highlight_rules": [
+            {"keyword": "쿠팡", "color": "#FF2D2D", "box": True, "box_color": "#FFE100"}]},
+    })
+    assert r.status_code == 200
+    saved = store.get_mix_job("jd1")
+    assert saved["deco"]["highlight_rules"][0]["keyword"] == "쿠팡"
