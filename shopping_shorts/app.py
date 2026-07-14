@@ -1516,10 +1516,14 @@ _STATIC = Path(__file__).parent / "static"
 
 # 클린 URL — /library, /mix 등 확장자(.html) 없이 접근. (index는 루트 '/'로 자동)
 # 기존 /xxx.html 경로도 아래 StaticFiles 마운트로 계속 동작(백워드 호환).
+# no-cache: UI 배포 후 브라우저가 옛 HTML을 캐시로 재사용해 "고쳤는데 안 바뀜"이
+# 반복됨(2026-07-14 역할배정·사이드바 등 실사고) → 매 요청 서버 재검증 강제.
+_NOCACHE = {"Cache-Control": "no-cache, must-revalidate"}
 for _pg in ("discover", "find", "library", "mix", "outreach", "produce", "collection"):
     app.add_api_route(
         f"/{_pg}",
-        (lambda n=_pg: FileResponse(_STATIC / f"{n}.html", media_type="text/html")),
+        (lambda n=_pg: FileResponse(_STATIC / f"{n}.html", media_type="text/html",
+                                    headers=_NOCACHE)),
         include_in_schema=False,
     )
 
