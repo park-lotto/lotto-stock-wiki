@@ -12,8 +12,7 @@
     "voice_settings": {
       "stability": 0.55,
       "similarity_boost": 0.78,
-      "style": 0.15,
-      "use_speaker_boost": true
+      "style": 0.15
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -34,8 +33,7 @@
     "voice_settings": {
       "stability": 0.3,
       "similarity_boost": 0.78,
-      "style": 0.3,
-      "use_speaker_boost": true
+      "style": 0.3
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -56,8 +54,7 @@
     "voice_settings": {
       "stability": 0.35,
       "similarity_boost": 0.78,
-      "style": 0.4,
-      "use_speaker_boost": true
+      "style": 0.4
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -78,8 +75,7 @@
     "voice_settings": {
       "stability": 0.55,
       "similarity_boost": 0.78,
-      "style": 0.15,
-      "use_speaker_boost": true
+      "style": 0.15
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -100,8 +96,7 @@
     "voice_settings": {
       "stability": 0.3,
       "similarity_boost": 0.78,
-      "style": 0.3,
-      "use_speaker_boost": true
+      "style": 0.3
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -122,8 +117,7 @@
     "voice_settings": {
       "stability": 0.35,
       "similarity_boost": 0.78,
-      "style": 0.4,
-      "use_speaker_boost": true
+      "style": 0.4
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -144,8 +138,7 @@
     "voice_settings": {
       "stability": 0.55,
       "similarity_boost": 0.78,
-      "style": 0.15,
-      "use_speaker_boost": true
+      "style": 0.15
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -166,8 +159,7 @@
     "voice_settings": {
       "stability": 0.3,
       "similarity_boost": 0.78,
-      "style": 0.3,
-      "use_speaker_boost": true
+      "style": 0.3
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -188,8 +180,7 @@
     "voice_settings": {
       "stability": 0.35,
       "similarity_boost": 0.78,
-      "style": 0.4,
-      "use_speaker_boost": true
+      "style": 0.4
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -210,8 +201,7 @@
     "voice_settings": {
       "stability": 0.55,
       "similarity_boost": 0.78,
-      "style": 0.15,
-      "use_speaker_boost": true
+      "style": 0.15
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -232,8 +222,7 @@
     "voice_settings": {
       "stability": 0.3,
       "similarity_boost": 0.78,
-      "style": 0.3,
-      "use_speaker_boost": true
+      "style": 0.3
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -254,8 +243,7 @@
     "voice_settings": {
       "stability": 0.35,
       "similarity_boost": 0.78,
-      "style": 0.4,
-      "use_speaker_boost": true
+      "style": 0.4
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -276,8 +264,7 @@
     "voice_settings": {
       "stability": 0.55,
       "similarity_boost": 0.78,
-      "style": 0.15,
-      "use_speaker_boost": true
+      "style": 0.15
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -298,8 +285,7 @@
     "voice_settings": {
       "stability": 0.3,
       "similarity_boost": 0.78,
-      "style": 0.3,
-      "use_speaker_boost": true
+      "style": 0.3
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -320,8 +306,7 @@
     "voice_settings": {
       "stability": 0.35,
       "similarity_boost": 0.78,
-      "style": 0.4,
-      "use_speaker_boost": true
+      "style": 0.4
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -342,8 +327,7 @@
     "voice_settings": {
       "stability": 0.55,
       "similarity_boost": 0.78,
-      "style": 0.15,
-      "use_speaker_boost": true
+      "style": 0.15
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -364,8 +348,7 @@
     "voice_settings": {
       "stability": 0.3,
       "similarity_boost": 0.78,
-      "style": 0.3,
-      "use_speaker_boost": true
+      "style": 0.3
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -386,8 +369,7 @@
     "voice_settings": {
       "stability": 0.35,
       "similarity_boost": 0.78,
-      "style": 0.4,
-      "use_speaker_boost": true
+      "style": 0.4
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -408,8 +390,7 @@
     "voice_settings": {
       "stability": 0.55,
       "similarity_boost": 0.78,
-      "style": 0.15,
-      "use_speaker_boost": true
+      "style": 0.15
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -430,8 +411,7 @@
     "voice_settings": {
       "stability": 0.3,
       "similarity_boost": 0.78,
-      "style": 0.3,
-      "use_speaker_boost": true
+      "style": 0.3
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -452,8 +432,7 @@
     "voice_settings": {
       "stability": 0.35,
       "similarity_boost": 0.78,
-      "style": 0.4,
-      "use_speaker_boost": true
+      "style": 0.4
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -474,8 +453,7 @@
     "voice_settings": {
       "stability": 0.55,
       "similarity_boost": 0.78,
-      "style": 0.15,
-      "use_speaker_boost": true
+      "style": 0.15
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -496,8 +474,7 @@
     "voice_settings": {
       "stability": 0.3,
       "similarity_boost": 0.78,
-      "style": 0.3,
-      "use_speaker_boost": true
+      "style": 0.3
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -518,8 +495,7 @@
     "voice_settings": {
       "stability": 0.35,
       "similarity_boost": 0.78,
-      "style": 0.4,
-      "use_speaker_boost": true
+      "style": 0.4
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -540,8 +516,7 @@
     "voice_settings": {
       "stability": 0.55,
       "similarity_boost": 0.78,
-      "style": 0.15,
-      "use_speaker_boost": true
+      "style": 0.15
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -562,8 +537,7 @@
     "voice_settings": {
       "stability": 0.3,
       "similarity_boost": 0.78,
-      "style": 0.3,
-      "use_speaker_boost": true
+      "style": 0.3
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -584,8 +558,7 @@
     "voice_settings": {
       "stability": 0.35,
       "similarity_boost": 0.78,
-      "style": 0.4,
-      "use_speaker_boost": true
+      "style": 0.4
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -606,8 +579,7 @@
     "voice_settings": {
       "stability": 0.55,
       "similarity_boost": 0.78,
-      "style": 0.15,
-      "use_speaker_boost": true
+      "style": 0.15
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -628,8 +600,7 @@
     "voice_settings": {
       "stability": 0.3,
       "similarity_boost": 0.78,
-      "style": 0.3,
-      "use_speaker_boost": true
+      "style": 0.3
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -650,8 +621,7 @@
     "voice_settings": {
       "stability": 0.35,
       "similarity_boost": 0.78,
-      "style": 0.4,
-      "use_speaker_boost": true
+      "style": 0.4
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -672,8 +642,7 @@
     "voice_settings": {
       "stability": 0.55,
       "similarity_boost": 0.78,
-      "style": 0.15,
-      "use_speaker_boost": true
+      "style": 0.15
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -694,8 +663,7 @@
     "voice_settings": {
       "stability": 0.3,
       "similarity_boost": 0.78,
-      "style": 0.3,
-      "use_speaker_boost": true
+      "style": 0.3
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -716,8 +684,7 @@
     "voice_settings": {
       "stability": 0.35,
       "similarity_boost": 0.78,
-      "style": 0.4,
-      "use_speaker_boost": true
+      "style": 0.4
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -738,8 +705,7 @@
     "voice_settings": {
       "stability": 0.55,
       "similarity_boost": 0.78,
-      "style": 0.15,
-      "use_speaker_boost": true
+      "style": 0.15
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -760,8 +726,7 @@
     "voice_settings": {
       "stability": 0.3,
       "similarity_boost": 0.78,
-      "style": 0.3,
-      "use_speaker_boost": true
+      "style": 0.3
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -782,8 +747,7 @@
     "voice_settings": {
       "stability": 0.35,
       "similarity_boost": 0.78,
-      "style": 0.4,
-      "use_speaker_boost": true
+      "style": 0.4
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -804,8 +768,7 @@
     "voice_settings": {
       "stability": 0.55,
       "similarity_boost": 0.78,
-      "style": 0.15,
-      "use_speaker_boost": true
+      "style": 0.15
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -826,8 +789,7 @@
     "voice_settings": {
       "stability": 0.3,
       "similarity_boost": 0.78,
-      "style": 0.3,
-      "use_speaker_boost": true
+      "style": 0.3
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -848,8 +810,7 @@
     "voice_settings": {
       "stability": 0.35,
       "similarity_boost": 0.78,
-      "style": 0.4,
-      "use_speaker_boost": true
+      "style": 0.4
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -870,8 +831,7 @@
     "voice_settings": {
       "stability": 0.55,
       "similarity_boost": 0.78,
-      "style": 0.15,
-      "use_speaker_boost": true
+      "style": 0.15
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -892,8 +852,7 @@
     "voice_settings": {
       "stability": 0.3,
       "similarity_boost": 0.78,
-      "style": 0.3,
-      "use_speaker_boost": true
+      "style": 0.3
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
@@ -914,8 +873,7 @@
     "voice_settings": {
       "stability": 0.35,
       "similarity_boost": 0.78,
-      "style": 0.4,
-      "use_speaker_boost": true
+      "style": 0.4
     },
     "default_speed": 1.15,
     "default_silence_trim": "mid",
