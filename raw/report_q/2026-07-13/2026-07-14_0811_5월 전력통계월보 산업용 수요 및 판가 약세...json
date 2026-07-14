@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-13",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-14_0811_5월 전력통계월보 산업용 수요 및 판가 약세...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "유재선",
+    "report_date": "2026년 7월 13일",
+    "stocks": [
+      {
+        "name": "한국전력",
+        "code": "051600",
+        "rating": "Neutral",
+        "rating_changed": null,
+        "tp_new": "45,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "5월 전력판매량은 40.9TWh로 전년대비 0.7% 감소, 전력판매금액은 6.5조원으로 전년대비 1.8% 감소했다.",
+        "estimate_revision": null,
+        "next_catalyst": "하반기 원전 이용률 전년대비 개선",
+        "thesis": [
+          "산업용(을) 요금 개편 영향이 온기로 반영되면서 단가 하락폭이 전월대비 확대",
+          "하반기부터는 원전 이용률이 전년대비 개선되는 흐름으로 전환될 전망",
+          "2분기는 구입전력비 부담이 완화될 수 있으나 하반기 SMP 강세 가능성 상존"
+        ],
+        "valuation_basis": null,
+        "risk": "발전용 천연가스 가격 상승 및 원가 지표의 단기 반등 가능성",
+        "supply_comment": "5월 발전량은 45.5TWh를 기록하며 전년대비 0.3% 증가. 유연탄 12.1TWh로 12.0% 증가, 원자력 14.2TWh로 10.4% 감소",
+        "quote": "5월 전력판매량은 40.9TWh로 전년대비 0.7% 감소, 전력판매금액은 6.5조원으로 전년대비 1.8% 감소했다."
+      }
+    ],
+    "sector": "전력"
+  }
+}

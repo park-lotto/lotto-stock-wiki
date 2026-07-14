@@ -1,0 +1,33 @@
+{
+  "target_kind": "sector",
+  "sector_name": "전력",
+  "sector_view": "중립",
+  "points": [
+    "효성중공업과 LS일렉트릭이 2GW급 HVDC 변환기술 국산화를 추진 중",
+    "두 기업이 각기 다른 전략으로 HVDC 시장 공략"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "LS일렉트릭",
+      "comment": "2GW HVDC 변환기술 국산화 추진",
+      "ts": "2026-07-12",
+      "quote": "효성중공업-LS일렉트릭, 2GW HVDC 변환기술 국산화 두고 “같지만 다른 길”",
+      "sector": "전력"
+    },
+    {
+      "name": "효성중공업",
+      "comment": "2GW HVDC 변환기술 국산화 추진",
+      "ts": "2026-07-12",
+      "quote": "효성중공업-LS일렉트릭, 2GW HVDC 변환기술 국산화 두고 “같지만 다른 길”",
+      "sector": "전력"
+    }
+  ],
+  "events": [
+    {
+      "fact": "효성중공업-LS일렉트릭, 2GW HVDC 변환기술 국산화 추진",
+      "ts": "2026-07-12",
+      "quote": "효성중공업-LS일렉트릭, 2GW HVDC 변환기술 국산화 두고 “같지만 다른 길”"
+    }
+  ],
+  "quote": "효성중공업-LS일렉트릭, 2GW HVDC 변환기술 국산화 두고 “같지만 다른 길”"
+}

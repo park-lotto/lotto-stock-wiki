@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-19",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-19_1002_점포 영업레버리지 효과 본격화.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "박종대",
+    "report_date": "2026년 6월 19일",
+    "stocks": [
+      {
+        "name": "BGF리테일",
+        "code": "282330",
+        "rating": "Not Rated",
+        "rating_changed": false,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "1분기 영업이익은 전년 동기 대비 68%나 증가한 381억원을 기록했다. 2분기는 화물연대 파업 관련 일회성 비용 때문에 영업이익 증가폭은 제한적인 수준에 그칠 가능성이 크다(연결 OP 740억원 예상).",
+        "estimate_revision": null,
+        "next_catalyst": "감가상각비 감소 및 상품믹스 개선에 따른 수익성 향상, 외국인 인바운드 소비 증가",
+        "thesis": [
+          "감가상각비가 처음으로 감소하기 시작하며 영업레버리지 효과가 본격화됨",
+          "상품믹스 개선(저마진 담배 비중 축소, 고마진 식품 비중 상승)으로 매출총이익률 상승",
+          "외국인 인바운드 매출 기여도 증가로 인한 수익성 및 매출 성장 견인"
+        ],
+        "valuation_basis": "12MF PER 8.6배로 여유있는 수준",
+        "risk": "화물연대 파업 관련 일회성 비용(가맹점주 위로금+폐기/대차비용 등)",
+        "supply_comment": null,
+        "quote": "1분기 영업이익은 전년 동기 대비 68%나 증가한 381억원을 기록했다. 가파른 이익 개선의 이유는 첫째, 감가상각비가 처음으로 감소하기 시작했다."
+      }
+    ]
+  }
+}

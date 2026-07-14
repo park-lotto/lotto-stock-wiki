@@ -1,0 +1,56 @@
+{
+  "meta": {
+    "date": "2026-07-13",
+    "broker": "DS INVESTMENT & SECURITIES",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-13_1106_캐나다 잠수함 수주 실패, 아쉽지만 지상방산...md"
+  },
+  "questionnaire": {
+    "broker": "DS INVESTMENT & SECURITIES",
+    "analyst": "강태호",
+    "report_date": "2026.07.13",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "캐나다 잠수함 사업",
+      "NATO 공동조달 및 유럽 역내 생산",
+      "미국-이란 분쟁",
+      "호르무즈 해협 봉쇄"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "방산",
+        "stance": "비중확대",
+        "reason": "유럽 내 지상무기 핵심 체계로 자리잡으며 마켓셰어 확대 예상 및 중동 정세 불안에 따른 방공망 강화 니즈 지속"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "7/7",
+        "event": "호르무즈 상선 공격→미국 80여 개 목표 공습"
+      },
+      {
+        "date": "7/7",
+        "event": "미국 제재 완화 철회"
+      },
+      {
+        "date": "7/8~9",
+        "event": "추가 공습·보복 위협"
+      },
+      {
+        "date": "7/10~11",
+        "event": "오만 중재 협상, 호르무즈 개방 갈등"
+      },
+      {
+        "date": "7/12",
+        "event": "미국 추가 공습, 이란의 걸프 국가 공격 및 호르무즈 폐쇄 선언"
+      }
+    ],
+    "top_picks": [
+      "한화에어로스페이스",
+      "LIG디펜스앤에어로스페이스"
+    ],
+    "risk": "중동 전쟁 장기화 시 사우디 MNG, 이라크 K2 등 다수의 파이프라인을 보유한 한국 방위산업에 악재로 작용",
+    "quote": "결론적으로 한국 지상무기는 NATO가 요구하는 ‘공동조달’ 및 ‘유럽 역내 생산’요건을 만족시키는 핵심 무기체계로 자리잡는 중 → 마켓셰어는 더욱 확대될 것으로 판단"
+  }
+}

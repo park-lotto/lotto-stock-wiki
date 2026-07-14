@@ -1,0 +1,28 @@
+{
+  "meta": {
+    "date": "2026-07-14",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-14_0807_피부미용 산업 시장의 등대 에스테틱.md"
+  },
+  "questionnaire": {
+    "broker": "키움증권",
+    "analyst": "신민수",
+    "report_date": "2026. 7. 14.",
+    "target_kind": "sector",
+    "sector_name": "피부미용 산업",
+    "sector_view": "Overweight",
+    "thesis": [
+      "외국인 관광객 의료 소비액 및 피부과 진료 소비액 사상 최고치 경신",
+      "톡신 및 필러 품목의 가파른 수출 성장세 유지 및 창상피복재 성장 전환",
+      "미국 K-뷰티 테마 ETF 상장 예고로 인한 대세 문화로서의 입지 확인"
+    ],
+    "timeline": [
+      "2026년 6월: 외국인 의료 관광객 소비액 2,508억 원으로 역대 최고치 유지",
+      "2026년 7월 10일: Guinness Atkinson Funds(GA)가 K-뷰티 ETF(KBTY) 예비 신고서 제출",
+      "2026년 9월 23일: KBTY ETF 효력 발생 예정일"
+    ],
+    "top_picks": null,
+    "risk": "작은 AUM, niche ETF 성공 사례 부재로 인해 한국 개별종목에 대한 패시브 수급 효과는 제한적일 것으로 전망함",
+    "quote": "K-뷰티가 마이너를 뛰어넘어 진정한 대세 문화로 자리잡을 수 있다는 근거로 생각해볼 수 있습니다."
+  }
+}

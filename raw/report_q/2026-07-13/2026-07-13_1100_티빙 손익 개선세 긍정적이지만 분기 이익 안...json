@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-13",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-13_1100_티빙 손익 개선세 긍정적이지만 분기 이익 안...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "김소혜, 김나우",
+    "report_date": "2026년 7월 10일",
+    "stocks": [
+      {
+        "name": "CJ ENM",
+        "code": "035760",
+        "sector": "IT",
+        "rating": "Buy(유지)",
+        "rating_changed": false,
+        "tp_new": "60,000원",
+        "tp_prev": "85,000원",
+        "tp_direction": "down",
+        "earnings_outlook": "동사의 2Q26 실적은 매출액 1.34조 원, 영업이익 304억 원을 기록하며 영업이익 컨센서스 342억 원을 하회한 것으로 추정한다.",
+        "estimate_revision": "동사에 대한 목표주가를 올해 영업이익 추정치를 하향으로 6만 원으로 낮춰 제시한다.",
+        "next_catalyst": "티빙 하반기 해외 브랜드관 매출, 커머스 부문의 MLC 사업 확대",
+        "thesis": [
+          "티빙 오리지널 콘텐츠 흥행 및 KBO 효과로 손익 BEP 수준 개선 전망",
+          "커머스 부문 수익성 중심 사업 운영 및 MLC 중심의 성장",
+          "콘텐츠 경쟁력 및 플랫폼 시너지는 일부 확인되고 있음"
+        ],
+        "valuation_basis": "올해 영업이익 추정치 하향 반영",
+        "risk": "분기 이익 변동성, TV광고 역성장 지속, 영화드라마 부문 피프스시즌 딜리버리 공백",
+        "supply_comment": null,
+        "quote": "동사에 대한 목표주가를 올해 영업이익 추정치를 하향으로 6만 원으로 낮춰 제시한다. 연초 이후 크게 하락한 주가는 추가 하락 여지가 제한적이라고 보지만, 당장의 상승 탄력을 기대하기도 어렵다고 판단한다."
+      }
+    ]
+  }
+}

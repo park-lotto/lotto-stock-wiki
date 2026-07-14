@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "date": "2026-07-13",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-14_0808_글로벌 실적 시즌 진입. 실적으로 우려 해소 ...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김록호",
+    "report_date": "2026.7.13",
+    "target_kind": "market",
+    "market_direction": "비중확대 기회",
+    "macro_vars": [
+      "7월 10일 영업일 평균 메모리 반도체 수출 금액 전년동기대비 200% 증가",
+      "DRAM 수출 단가 반등",
+      "Nvidia발 LPDDR 강한 수요",
+      "2027년 HBM 가격 협상"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "비중확대",
+        "reason": "7월 DRAM 수출 단가 반등, SK하이닉스 ADR 상승, 업황과 실적 고려 시 주가 하락은 비중확대 기회"
+      }
+    ],
+    "style": "성장주",
+    "event_calendar": [
+      {
+        "date": "2026.7.15",
+        "event": "ASML 실적 발표"
+      },
+      {
+        "date": "2026.7.17",
+        "event": "TSMC 실적 발표"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스"
+    ],
+    "risk": "매크로 리스크 및 Apple, Meta발 리스크로 인한 글로벌 반도체 관련 업체 주가 부진, AI 수요에 대한 과잉 논란",
+    "quote": "업황과 실적을 감안하면 최근의 주가 하락을 비중확대 기회로 활용 가능하다고 판단한다."
+  }
+}

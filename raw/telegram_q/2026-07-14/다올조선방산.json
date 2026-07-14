@@ -1,0 +1,40 @@
+{
+  "sector_name": "조선/방산",
+  "sector_view": "긍정",
+  "points": [
+    "K-조선 영업이익 10조원 시대를 앞두고 2분기 흑자 행진 지속",
+    "사우디 및 중동 시장 대상 K-방산 수출 확대 기대감 고조",
+    "HD한국조선해양의 VLAC 3척 신규 수주 확인"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "Hanwha Ocean",
+      "comment": "VLCC 신조선 계약 및 일본 기업과의 사이버 보안 협력",
+      "ts": "08:56",
+      "quote": "Pan Ocean inks $542m VLCC newbuilding contract with Hanwha Ocean",
+      "sector": "조선"
+    },
+    {
+      "name": "HD현대중공업",
+      "comment": "태국 호위함 사업 수주 경쟁 참여",
+      "ts": "08:56",
+      "quote": "HD현대重•한화오션, 태국서 '8000억 호위함' 수주 경쟁",
+      "sector": "조선"
+    },
+    {
+      "name": "HD한국조선해양",
+      "comment": "VLAC 3척 수주(5,456억원)",
+      "ts": "11:46",
+      "quote": "HD한국조선해양, VLAC 3척 5,456억원 수주",
+      "sector": "조선"
+    }
+  ],
+  "events": [
+    {
+      "fact": "HD한국조선해양 5,456억원 규모 VLAC 3척 수주",
+      "ts": "11:46",
+      "quote": "HD한국조선해양, VLAC 3척 5,456억원 수주"
+    }
+  ],
+  "quote": "K-조선 '영업익 10兆 시대' 가시권… 2분기도 2兆대 흑자 랠리"
+}

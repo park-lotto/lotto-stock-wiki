@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-13",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-14_0805_내수 양호, 중국은 환율 효과로 성장.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "유정현",
+    "report_date": "2026.07.10",
+    "stocks": [
+      {
+        "name": "F&F",
+        "code": "383220",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "100,000",
+        "tp_prev": "100,000",
+        "tp_direction": "flat",
+        "earnings_outlook": "2분기 매출액과 영업이익은 각각 4,166억원(yoy +10%), 972억원(yoy +16%)으로 전망됨",
+        "estimate_revision": "연간 실적 추정 변경 (2026F 매출액 2,071→2,095 십억원, 영업이익 537→550 십억원)",
+        "next_catalyst": "주력 브랜드들의 좀더 고무적인 성장",
+        "thesis": [
+          "2분기 국내 MLB 견조한 성장 예상",
+          "중국은 위안화 기준 flat 성장, 그러나 환율 효과로 14% 성장 예상",
+          "주력 브랜드들의 좀더 고무적인 성장 확인돼야 valuation 저평가 해소"
+        ],
+        "valuation_basis": "12개월 FWD 예상 P/E 8배",
+        "risk": "디스커버리의 부진이 계속되는 점",
+        "supply_comment": null,
+        "quote": "투자의견 BUY와 목표주가 100,000원(12개월 FWD 예상 P/E 8배) 유지",
+        "sector": "소비내수"
+      }
+    ]
+  }
+}

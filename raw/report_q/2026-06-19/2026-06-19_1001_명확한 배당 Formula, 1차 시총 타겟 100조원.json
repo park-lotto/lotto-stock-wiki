@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-19",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-19_1001_명확한 배당 Formula, 1차 시총 타겟 100조원.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "DS투자증권",
+    "analyst": "김수현",
+    "report_date": "2026.06.19",
+    "stocks": [
+      {
+        "name": "삼성물산",
+        "code": "028260",
+        "rating": "매수",
+        "rating_changed": null,
+        "tp_new": "620,000원",
+        "tp_prev": "380,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2Q부터 평택 P4 마감·P5 골조 공사가 동시에 본격화되며 올해 하이테크 연간 수주는 기존 가이던스 6.8조원을 상회할 전망이며 본격적인 매출 인식은 2~3분부터이다.",
+        "estimate_revision": "목표주가 62만원으로 상향 조정",
+        "next_catalyst": "2Q부터 평택 P4 마감·P5 골조 공사 본격화, 기흥 R&D, 베트남 후공정 등 후속 발주 모멘텀",
+        "thesis": [
+          "삼성전자 및 삼성생명으로부터 수취한 배당의 최대 70% 재배당 정책",
+          "26년 주당 배당금은 약 720% YoY 증가한 23,050원으로 추정",
+          "2Q부터 하이테크 공사 레버리지 효과 및 후속 발주 모멘텀 가시화"
+        ],
+        "valuation_basis": "Target NAV 100,417십억원 산정 (중복상장 이슈로 30% 이상 할인 적용)",
+        "risk": "자회사 배당 정책의 불확실성 또는 NAV 할인율 변동 가능성",
+        "supply_comment": null,
+        "quote": "동사는 삼성전자의 대규모 배당이 예상되는 26년부터 28년까지 매년 삼성전자와 삼성생명을 포함한 관계사로부터 수취하는 배당 수익의 60~70%를 재배당한다."
+      }
+    ]
+  }
+}

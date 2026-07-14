@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-13",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-13_1101_예상 대비 선방 중.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "권우정",
+    "report_date": "2026.07.13",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "농심",
+        "code": "004370",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "570,000원",
+        "tp_prev": "570,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2분기 연결 매출액 및 영업이익은 각각 9.3천억원(YoY 7%), 523억원(YoY 30%)으로 시장기대치(488억원) 소폭 상회할 전망.",
+        "estimate_revision": null,
+        "next_catalyst": "가파른 해외 매출 성장",
+        "thesis": [
+          "국내 라면 내수 신제품(신라면 골드, 배홍동 막국수, 신라면 로제) 효과로 물량 증가",
+          "해외 매출액 YoY 25% 증가하며 견조한 성장세 지속",
+          "북미 판매량 회복 및 유럽/중국 매출 기여 확대"
+        ],
+        "valuation_basis": null,
+        "risk": "3분기에는 전쟁 이슈로 인한 부자재 비용 상승 부담이 본격적으로 반영되며 수익성에는 일부 부담이 존재",
+        "supply_comment": "국내 수익성은 전쟁 영향에 따른 부자재 비용 상승 부담이 일부 존재했으나, 소맥/팜유 등 주요 원재료는 안정적인 흐름 유지 중",
+        "sector": "소비내수",
+        "quote": "2분기 연결 매출액 및 영업이익은 각각 9.3천억원(YoY 7%), 523억원(YoY 30%)으로 시장기대치(488억원) 소폭 상회할 전망."
+      }
+    ]
+  }
+}

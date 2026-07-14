@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "date": "2026-07-13",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-13_1104_[디지털자산] 디지털자산 Weekly 2026.07.10.md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "최윤영",
+    "report_date": "2026.07.10",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "Ripple CASP 인가",
+      "Ondo Perps 출시",
+      "Gemini 주식 거래 서비스 출시",
+      "미래에셋컨설팅 코빗 인수 승인",
+      "Lean Ethereum 로드맵 공개",
+      "Sony Bank Connectia Trust 설립 조건부 승인",
+      "네이버파이낸셜·두나무 주식교환 연기",
+      "美 SEC 디지털자산 규제안"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "7/4",
+        "event": "비탈릭 부테린, Lean Ethereum 로드맵 공개"
+      },
+      {
+        "date": "7/6",
+        "event": "Ripple, MiCA 최종 인가 획득"
+      },
+      {
+        "date": "7/6",
+        "event": "Sony Bank, 美 스테이블코인 신탁은행 조건부 인가"
+      },
+      {
+        "date": "7/6",
+        "event": "네이버파이낸셜·두나무 주식교환 일정 재연기"
+      },
+      {
+        "date": "7/7",
+        "event": "Ondo Finance, 토큰화 주식 담보 활용한 무기한선물 거래 지원"
+      },
+      {
+        "date": "7/7",
+        "event": "Gemini, 금융 슈퍼앱 경쟁 가세"
+      },
+      {
+        "date": "7/7",
+        "event": "美 SEC, 디지털자산 규제안 공개 임박"
+      },
+      {
+        "date": "7/9",
+        "event": "공정위, 미래에셋컨설팅의 코빗 인수 승인"
+      }
+    ],
+    "top_picks": [
+      "Ripple",
+      "Ondo Finance",
+      "Gemini",
+      "Coinbase",
+      "Robinhood",
+      "코빗",
+      "Sony Bank",
+      "Connectia Trust",
+      "네이버파이낸셜",
+      "두나무",
+      "Hyperliquid",
+      "Ostium",
+      "Olympus",
+      "Kraken"
+    ],
+    "risk": "규제 환경 변화(MiCA, SEC 규제안 등) 및 기업 간 결합 심사 지연",
+    "quote": "유럽 시장이 인가 사업자 중심으로 재편되는 가운데, Ripple은 기존 EMI 라이선스에 CASP 인가를 추가 확보하며 사업 확대 기반 확보"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-13",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-14_0806_빠른 회복에 성공.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "김회재",
+    "report_date": "2026.07.13",
+    "stocks": [
+      {
+        "name": "SK텔레콤",
+        "code": "017670",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "110,000",
+        "tp_prev": "110,000",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 매출 4.4조원(+1% yoy), OP 5.5천억원(+62% yoy) 전망. 3Q 무선서비스 매출 2.6조원(+22% yoy)으로 회복 전망",
+        "estimate_revision": "매출액 4,370십억원(당사추정), 영업이익 548십억원(당사추정)",
+        "next_catalyst": "29년부터 1단계 5GW 규모의 AIDC 단계적 오픈",
+        "thesis": [
+          "2Q26 매출 4.4조원(+1% yoy), OP 5.5천억원(+62% yoy)",
+          "사이버 침해사고 이전 수준의 이익 회복. SKB는 역대 최고 이익 경신",
+          "DC로 성장하겠다는 강한 의지 표명. 29년부터 5GW AIDC 단계적 오픈"
+        ],
+        "valuation_basis": "목표주가는 26E EPS 7,103원에 PER 13배 적용 후 Anthropic의 시장 기대 수준 가치인 3.6조원(Series H 965bn에 약 0.25% 지분 적용)을 반영하여 산정",
+        "risk": "클라이언트, 투자 구조, 매출 형태 등이 아직 구체화되지는 않았음",
+        "supply_comment": null,
+        "quote": "2Q26 매출 4.4조원(+1% yoy), OP 5.5천억원(+62% yoy) 전망. 사이버 침해사고 이전 수준의 이익 회복. SKB는 역대 최고 이익 경신. DC로 성장하겠다는 강한 의지 표명. 29년부터 5GW AIDC 단계적 오픈",
+        "sector": "통신"
+      }
+    ]
+  }
+}

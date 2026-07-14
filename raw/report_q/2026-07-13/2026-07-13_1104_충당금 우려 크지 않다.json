@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-13",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-13_1104_충당금 우려 크지 않다.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "우도형",
+    "report_date": "2026.07.13",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "하나금융지주",
+        "code": "086790",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "170,000원",
+        "tp_prev": "165,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "하나금융지주의 2분기 지배주주순이익은 1조 2,227억원으로 컨센서스에 부합할 것으로 판단된다.",
+        "estimate_revision": "목표주가 상향은 NIM 상승으로 이익 추정치 상향에 따른 ROE 개선에 기인한다.",
+        "next_catalyst": "2026년 총주주환원율 50.6% 전망, 운영리스크 완화 반영 시점은 3분기가 될 것으로 판단",
+        "thesis": [
+          "2Q26 순이익 컨센서스 부합 전망",
+          "CET-1비율 13% 수준 관리",
+          "2026년 총주주환원율 50.6% 전망"
+        ],
+        "valuation_basis": "목표주가 상향은 NIM 상승으로 이익 추정치 상향에 따른 ROE 개선에 기인한다.",
+        "risk": "대손비용은 중앙그룹 관련 충당금 500억원 반영이 예상된다. 중앙그룹 관련 익스포저는 그룹 4,000억원으로 은행 3,500억원, 캐피탈 500억원이다.",
+        "supply_comment": null,
+        "quote": "목표주가 상향은 NIM 상승으로 이익 추정치 상향에 따른 ROE 개선에 기인한다.",
+        "sector": "기타"
+      }
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-13",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-13_1102_기대를 넘어 쭉쭉 올라가는 실적 (2Q26 Pre).md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "김선아",
+    "report_date": "2026년 07월 13일",
+    "stocks": [
+      {
+        "name": "에스티팜",
+        "code": "237690",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "210,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 실적은 연결 기준 매출액 1,034억원(YoY+51.5%), 영업이익 208억원(YoY+60.8%, OPM 20.1%)으로, 컨센서스 대비 매출 3.2%, 영업이익 14.9% 상회할 것으로 전망된다.",
+        "estimate_revision": "이번 실적 발표에 가이던스(매출 YoY+15~18% 성장)를 높일 가능성도 기대할 수 있다.",
+        "next_catalyst": "HIV 치료제 STP0404의 임상2a 탑라인 발표, 제2 올리고동 phase 2 활용 확정, 올리고 예비 상업화 고객 3상 탑라인 및 중간 결과 발표",
+        "thesis": [
+          "1Q에 나갔어야 할 상업화 물량이 4월에 출하되면서 2Q 매출에 본격적으로 반영",
+          "Small molecule 수주 잔고와 올리고 프로젝트의 고마진 매출 비중 확대로 인한 수익성 개선",
+          "RNAi 시장의 성장과 주요 고객사의 가이던스 상향으로 인한 구조적 성장"
+        ],
+        "valuation_basis": "SOTP 방식 적용 (에스티팜 영업가치 4,289.4억원 + 순현금 33.9억원 = 주주가치 4,323.3억원)",
+        "risk": "해외 CRO의 연간 흑자전환에 대한 불확실성",
+        "supply_comment": "Small molecule의 수주 잔고가 1Q 기준 약 800억원이었고, 4~6개 분기의 매출에 반영될 예정",
+        "quote": "2Q26 실적은 연결 기준 매출액 1,034억원(YoY+51.5%), 영업이익 208억원(YoY+60.8%, OPM 20.1%)으로, 컨센서스 대비 매출 3.2%, 영업이익 14.9% 상회할 것으로 전망된다."
+      }
+    ],
+    "sector": "바이오"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "target_kind": "sector",
+  "sector_name": "반도체",
+  "sector_view": "긍정",
+  "points": [
+    "온디바이스 AI PC 상용화 본격화",
+    "엔비디아 슈퍼칩을 탑재한 MS의 온디바이스 AI 시장 확대"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "SK하이닉스",
+      "comment": "온디바이스 AI 시장 확대에 따른 수혜 기대",
+      "ts": null,
+      "quote": "온디바이스AI SK하이닉스",
+      "sector": "반도체"
+    }
+  ],
+  "events": [
+    {
+      "fact": "엔비디아 슈퍼칩을 품은 MS의 온디바이스 AI PC 상용화 추진",
+      "ts": "2026-06-04",
+      "quote": "엔비디아 슈퍼칩 품은 MS, 온디바이스 AI PC 상용화"
+    }
+  ],
+  "quote": "엔비디아 슈퍼칩 품은 MS, 온디바이스 AI PC 상용화"
+}

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-13",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-13_1101_판가 상향과 중장기 성장 방향성 명확. 저가 ...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "윤재성",
+    "report_date": "2026년 07월 13일",
+    "stocks": [
+      {
+        "name": "OCI홀딩스",
+        "code": "010060",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "550,000원",
+        "tp_prev": null,
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 영업이익은 1,224억원(QoQ +1,023%, YoY 흑전)으로 컨센(1,213억원)에 부합할 전망이다. 3Q26 영업이익은 1,108억원(QoQ -10%, YoY 흑전)을 예상한다.",
+        "estimate_revision": null,
+        "next_catalyst": "Section 232 발표",
+        "thesis": [
+          "판가 상향과 중장기 성장 방향성 명확",
+          "Section 232 발표 이후 OCI TRS 실적 개선 본격화",
+          "비중국 경쟁사 대비 낮은 변동비 보유"
+        ],
+        "valuation_basis": null,
+        "risk": "Section 232 발표 지연에 따른 우려",
+        "supply_comment": "비중국산 폴리실리콘 판가가 3년 만에 반등할 수 있는 계기 마련",
+        "quote": "BUY, TP 55만원을 유지한다. 주요 고객사인 한화솔루션의 미국 모듈 판가 상향이 2개 분기 연속으로 나타나고 있다."
+      }
+    ]
+  }
+}

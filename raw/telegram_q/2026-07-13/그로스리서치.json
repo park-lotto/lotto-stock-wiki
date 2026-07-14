@@ -1,0 +1,103 @@
+{
+  "reports": [
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성중공업",
+      "rating": null,
+      "tp": null,
+      "ts": "08:00",
+      "quote": "삼성중공업이 업계 최초로 상업용 부유식 데이터센터의 서비스 준비 시점을 2028년 2분기로 제시.",
+      "sector": "조선"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "HD현대마린솔루션",
+      "rating": null,
+      "tp": null,
+      "ts": "08:00",
+      "quote": "HD현대마린솔루션 : 초기 FDC 시장에서 예상되는 노후선 개조와 장기 유지보수 사업의 핵심 수혜 가능성.",
+      "sector": "조선"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "선익시스템",
+      "rating": null,
+      "tp": null,
+      "ts": "08:46",
+      "quote": "평택 브레인시티 신규 생산거점의 1단계 A동 준공 완료",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "아이씨티케이",
+      "rating": null,
+      "tp": null,
+      "ts": "09:14",
+      "quote": "하드웨어 양자보안 기업 최초 수상",
+      "sector": "양자보안"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "엘티씨",
+      "rating": null,
+      "tp": null,
+      "ts": "09:29",
+      "quote": "2026년 매출 4,329억 원, 영업이익 650억 원 전망",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "피에스케이홀딩스",
+      "rating": null,
+      "tp": null,
+      "ts": "09:43",
+      "quote": "CoWoS 공정용 Reflow·Descum 장비를 공급하는 국내 대표 후공정 장비사",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "SK하이닉스",
+      "rating": null,
+      "tp": null,
+      "ts": "10:07",
+      "quote": "SK하이닉스 ADR 상장 사흘 만에 미국 ETF 운용사들이 관련 상품 출시",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "알테오젠",
+      "rating": null,
+      "tp": null,
+      "ts": "11:11",
+      "quote": "판매 실적에 연동되는 최대 10억 달러 규모 판매 마일스톤 및 판매 로열티 수취 대상",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "엑시콘",
+      "rating": null,
+      "tp": null,
+      "ts": "13:04",
+      "quote": "삼성전자와 498억원 규모 CLT·SSD 테스터 공급계약 체결",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "태성",
+      "rating": null,
+      "tp": null,
+      "ts": "15:35",
+      "quote": "임직원 이전을 완료했으며, 7월 16일 임시주총에서 본점 소재지를 안산에서 천안으로 변경하는 안건 상정 예정",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성에피스",
+      "rating": null,
+      "tp": null,
+      "ts": "18:01",
+      "quote": "삼성에피스는 키트루다·엔허투 시밀러에 자체 SC 기술 적용 검토",
+      "sector": "바이오"
+    }
+  ]
+}

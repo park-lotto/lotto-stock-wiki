@@ -1,0 +1,33 @@
+{
+  "meta": {
+    "date": "2026-07-13",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-13_1105_PBR 0.8배법의 도미노 효과.md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "엄수진",
+    "report_date": "2026년 07월 10일",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "상속세 및 증여세법 개정안(PBR 0.8배법)",
+      "연부연납 제도"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2025년 5월",
+        "event": "더불어민주당 이소영 의원 상속세 및 증여세법 개정안 발의"
+      },
+      {
+        "date": "2026년 7월 말",
+        "event": "정부 세제개편안 발표 및 국회 기획재정위원회 심사 예정"
+      }
+    ],
+    "top_picks": null,
+    "risk": "PBR 0.8배법 통과 시 과세표준이 높아져 납부해야 할 세액이 상당히 증가할 수 있음",
+    "quote": "PBR 0.8배법의 일차적인 효과는, PBR 0.8 미만인 기업의 경우 상속세 및 증여세 과세표준이 되는 상장회사의 가치가 더 이상 주가가 아닌 순자산가치에 근거해 산정되기 때문에, 피상속인이나 증여자가 주가를 낮게 유지할 유인이 약해지거나 없어짐에 따라, PBR이 0.8이 되는 수준까지는 주가를 끌어올릴 유인이 생긴다는 것이다."
+  }
+}

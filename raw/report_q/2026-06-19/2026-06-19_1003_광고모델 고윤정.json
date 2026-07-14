@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-19",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-19_1003_광고모델 고윤정.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "권명준",
+    "report_date": "2026.06.19",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "젝시믹스",
+        "code": "337930",
+        "rating": "Not Rated",
+        "rating_changed": false,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26에는 N주년 행사가 기여하는 바가 크다. 전년 대비 실적개선을 기대하는 요인은 기존 여성 애슬레저 의류 위주에서 골프, 스윔웨어, 이너웨어, 러닝 등으로 라인업이 확대되고 있기 때문이다. 이른 더위도 2Q26 실적개선에 기여할 것으로 기대한다.",
+        "estimate_revision": null,
+        "next_catalyst": "2Q26 N주년 행사, 광고모델 고윤정 마케팅, 일본/대만/중국/인도네시아 등 아시아 시장 확대 및 오프라인 매장 확대",
+        "thesis": [
+          "기존 여성 애슬레저 의류 위주에서 골프, 스윔웨어, 이너웨어, 러닝 등으로 제품 라인업 확대",
+          "배우 고윤정을 광고모델로 선정하여 아시아 시장 인지도 제고 및 마케팅 효과 기대",
+          "일본, 대만, 중국, 인도네시아 등 주요 거점의 오프라인 매장 확대 및 매출 성장세 확인"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "소비내수",
+        "quote": "2Q26에는 N주년 행사가 기여하는 바가 크다. 전년 대비 실적개선을 기대하는 요인은 기존 여성 애슬레저 의류 위주에서 골프, 스윔웨어, 이너웨어, 러닝 등으로 라인업이 확대되고 있기 때문이다."
+      }
+    ]
+  }
+}

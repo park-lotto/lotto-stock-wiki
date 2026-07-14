@@ -1,0 +1,69 @@
+{
+  "meta": {
+    "date": "2026-07-13",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-14_0810_POSCO, 그룹 포트폴리오 Transformation 전략...md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "하나증권",
+    "analyst": "박성봉",
+    "report_date": "2026.07.13",
+    "market_direction": "global steel stock performance divergence",
+    "macro_vars": [
+      "국내 철강가격",
+      "해외 철강가격",
+      "원재료 가격",
+      "비철금속 및 귀금속 가격",
+      "중국 철강 유통가격",
+      "산업용 금속가격"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "철강",
+        "stance": "Transformation",
+        "reason": "POSCO그룹은 기존 철강 중심의 사업 구조에서 벗어나 리튬과 에너지 분야까지 아우르는 자원 공급자로 사업 영역을 확장하는 전략을 발표함"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026/07/10",
+        "event": "후판 내수 강세…4년 만에 최대"
+      },
+      {
+        "date": "2026/07/10",
+        "event": "중국산 석도강판도 반덤핑 조사…철강 무역장벽 확대"
+      },
+      {
+        "date": "2026/07/10",
+        "event": "냉연도금 추가 상승 ‘가시권’"
+      },
+      {
+        "date": "2026/07/10",
+        "event": "철강업계도 AI 덕에 웃는다… 美 데이터센터 건설 붐에 철근 수요 급증"
+      },
+      {
+        "date": "2026/07/09",
+        "event": "IMF, 韓 성장률 전망 2.6%로 대폭 상향"
+      },
+      {
+        "date": "2026/07/08",
+        "event": "현대제철 美 제철소, 9월 4일 첫 삽 뜬다"
+      }
+    ],
+    "top_picks": [
+      "POSCO홀딩스",
+      "현대제철",
+      "세아베스틸지주",
+      "고려아연",
+      "BAO STEEL",
+      "A. MITTAL",
+      "NSSMC",
+      "TATA STEEL",
+      "NUCOR"
+    ],
+    "risk": "중국 내수 부진 및 비수기 영향, 글로벌 무역 블록화, 철강 수요 성장 정체",
+    "quote": "글로벌 철강사들 주가 국가별로 차별화. 미국 철강 가격 상승으로 미국 철강사들 주가 상승세 두드러져…."
+  }
+}

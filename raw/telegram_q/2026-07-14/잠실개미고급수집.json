@@ -1,0 +1,40 @@
+{
+  "stocks": [
+    {
+      "name": "SK Hynix",
+      "signal": "neutral",
+      "reason": "SK Hynix has become a massive cash-generating machine, but faces significant risks including heavy reliance on AI market cycles, increased global production capacity causing potential supply gluts, and social responsibilities in the Korean market.",
+      "ts": "10:30",
+      "quote": "SK하이닉스는 ‘황금 거위’로 변모했기 때문",
+      "sector": "반도체"
+    },
+    {
+      "name": "TSMC",
+      "signal": "bull",
+      "reason": "Strong YoY and monthly revenue growth, showing accelerated performance.",
+      "ts": "14:46",
+      "quote": "TSMC 6월 매출액 4,426.80억 대만달러, +67.9% y-y, +6.2% m-m, +35.6% YTD",
+      "sector": "반도체"
+    },
+    {
+      "name": "Meta",
+      "signal": "bull",
+      "reason": "Massive capital expenditure increase for AI data center infrastructure indicates strong commitment to AI expansion.",
+      "ts": "19:11",
+      "quote": "메타(Meta)가 루이지애나주에 건설 중인 '하이페리온(Hyperion)' 데이터 센터의 투자 규모를 기존 270억 달러에서 500억 달러(약 69조 원 이상)로 대폭 확대",
+      "sector": "IT"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "SK Hynix raised $26.5 billion in foreign stock issuance, the largest ever for a foreign company in the US market.",
+      "ts": "10:30",
+      "quote": "한국의 SK하이닉스가 미국 증시에서 외국 기업의 사상 첫 주식 발행 규모로는 최대인 265억 달러를 조달했다."
+    },
+    {
+      "fact": "Meta is increasing the investment scale for its Hyperion data center in Louisiana to $50 billion.",
+      "ts": "19:11",
+      "quote": "메타(Meta)가 루이지애나주에 건설 중인 '하이페리온(Hyperion)' 데이터 센터의 투자 규모를 기존 270억 달러에서 500억 달러(약 69조 원 이상)로 대폭 확대"
+    }
+  ]
+}

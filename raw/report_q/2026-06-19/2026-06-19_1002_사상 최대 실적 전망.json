@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-19",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-19_1002_사상 최대 실적 전망.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "권우정",
+    "report_date": "2026.06.19",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "제이투케이바이오",
+        "code": "420570",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "1분기 연결 매출액 111억원(YoY 53%), 영업이익 19억원 (YoY 477%, OPM 17.2%). 2분기 사상 최대 실적 경신 전망. 26년 매출액 480억원(YoY 46%), 영업이익 80억원(OPM 16.6%) 가정.",
+        "estimate_revision": null,
+        "next_catalyst": "주요 고객사인 ODM사들의 인디브랜드 글로벌 수출 확대 및 동사의 원료를 사용하는 히트 SKU 증가",
+        "thesis": [
+          "주요 고객사인 ODM사들의 디브랜드 매출 성장에 힘입어 1분기 고성장 시현",
+          "1~2분기 영업 환경을 감안하면 사측의 26년 매출액 가이던스(400~450억원)를 상회할 가능성 높음",
+          "소재 업체 특성상 원재료 비중이 낮아 일정 매출 규모를 넘어설 경우 이익 레버리지 폭이 확대되는 구조"
+        ],
+        "valuation_basis": "26년 매출액 480억원(YoY 46%), 영업이익 80억원(OPM 16.6%) 가정할 경우, 현재 주가는 26년 기준 P/E는 6배에 불과함",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "2분기 제이투케이바이오는 사상 최대 실적을 경신할 것으로 전망.",
+        "sector": "화장품미용"
+      }
+    ]
+  }
+}

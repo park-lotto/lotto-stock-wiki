@@ -9,36 +9,37 @@
     "analyst": "송명섭, 박정하",
     "report_date": "2026.06.18",
     "target_kind": "sector",
-    "sector_name": "반도체",
-    "sector_view": "비중확대",
-    "thesis": [
-      "NVIDIA의 차세대 AI 가속기 Rubin Ultra의 HBM4E 탑재량이 패키징 레티클 한계 및 HBM 적층 수율 문제로 인해 1TB에서 384GB로 축소될 가능성이 제기됨.",
-      "HBM4E 16단 적층 시 발생하는 열, 신호 마진 및 수율 문제로 인해 초기에는 12단 제품이 주력이 될 전망.",
-      "삼성전자와 SK하이닉스는 16단 HBM4E 공정에서 각각 하이브리드 본딩과 Advanced MR-MUF라는 상반된 공정 노선을 취하고 있음."
-    ],
-    "timeline": [
-      "CY27: Rubin Ultra 양산 및 HBM4E 시장 본격 진입",
-      "2H26: 삼성전자 16단 HBM4 MR-MUF 기반 양산 계획",
-      "2027: 마이크론 HBM4E 양산 목표"
-    ],
-    "top_picks": [
-      {
-        "name": "삼성전자",
-        "reason": "세계 최초 12단 48GB HBM4E 샘플 출하 완료, 16단 공정으로 하이브리드 본딩 도입 추진",
-        "tp": null
-      },
-      {
-        "name": "SK하이닉스",
-        "reason": "검증된 MR-MUF 공정 연장을 통해 16단 HBM4E 수율 리스크 최소화 전략",
-        "tp": null
-      },
-      {
-        "name": "마이크론",
-        "reason": "1γ 공정 및 TSMC 외주를 통한 HBM4E 시장 진입 추진",
-        "tp": null
-      }
-    ],
-    "risk": "인터포저 면적 확대에 따른 워피지 현상, 범프 피로도 증가, 박리 리스크 및 16단 적층 공정의 신뢰성 확보 문제",
-    "quote": "NVIDIA의 CY27 차세대 AI 가속기 Rubin Ultra는 당초 GPU 패키지당 HBM4E 1TB(1,024GB)의 용량을 목표로 발표되었으나, 두 가지 제조 병목 (패키징 레티클 한계, HBM 적층 수율)으로 인해 384GB 축소안이 거론되고 있는 것으로 보인다."
+    "sector": {
+      "sector_name": "반도체",
+      "sector_view": "비중확대",
+      "thesis": [
+        "NVIDIA의 차세대 AI 가속기 Rubin Ultra의 스펙이 제조 병목으로 인해 당초 1TB에서 384GB로 축소될 가능성이 거론됨",
+        "스펙 변화의 주원인은 CoWoS-L 패키지의 물리적 한계에 따른 워피지 현상과 16단 HBM4E 적층 수율 문제임",
+        "향후 1년간의 핵심 관전 포인트는 16단 HBM4E 샘플을 누가 먼저 제출하고 인증을 통과하느냐에 달려 있음"
+      ],
+      "timeline": [
+        "2H26: 16단 HBM4 양산 계획",
+        "CY27: Rubin Ultra 양산 및 CY27 말 이후 64GB(16단) HBM4E 시장 진입 유력"
+      ],
+      "top_picks": [
+        {
+          "name": "삼성전자",
+          "reason": "16단 공정에 하이브리드 본딩 신공정 적용 전망, 5월 29일 세계 최초 12단 48GB HBM4E 샘플 출하",
+          "tp": null
+        },
+        {
+          "name": "SK하이닉스",
+          "reason": "16단 공정에 검증된 Advanced MR-MUF 기술 연장 사용, 6~7월 중 12단 48GB HBM4E 샘플 출하 추진",
+          "tp": null
+        },
+        {
+          "name": "마이크론",
+          "reason": "1γ 공정 및 TSMC 외주를 통해 2027년 HBM4E 양산 목표",
+          "tp": null
+        }
+      ],
+      "risk": "16단 HBM4E 양산 시 열, 신호 마진이 타이트하여 CY27 양산 성공이 어려울 수 있으며, TSMC의 CoPoS 패키징 성숙도에 영향을 받음",
+      "quote": "NVIDIA의 CY27 차세대 AI 가속기 Rubin Ultra는 당초 GPU 패키지당 HBM4E 1TB(1,024GB)의 용량을 목표로 발표되었으나, 두 가지 제조 병목 (패키징 레티클 한계, HBM 적층 수율)으로 인해 384GB 축소안이 거론되고 있는 것으로 보인다."
+    }
   }
 }

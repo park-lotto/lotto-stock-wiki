@@ -1,0 +1,49 @@
+{
+  "meta": {
+    "date": "2026-07-13",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-14_0809_다시 찾아온 기회.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김현수",
+    "report_date": "2026.7.13",
+    "target_kind": "market",
+    "market_direction": "Overweight",
+    "macro_vars": [
+      "미국 전기차 판매 부진",
+      "미국 중간 선거",
+      "트럼프 정책",
+      "유럽 전기차 판매 데이터",
+      "중국 전기차 수출 데이터",
+      "리튬 가격",
+      "전력 가격"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "2차전지",
+        "stance": "Overweight",
+        "reason": "가격 매력 부각, 실적 흑자전환 및 적자 축소 가시화, 하반기 ESS 수주 증가 가능성"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.7.15",
+        "event": "미국 상원 상무위원회, 중국 자동차 업체의 미국 승용차 판매 금지 및 경형 승용차 시장 진입 제한 법안 표결 예정"
+      },
+      {
+        "date": "2026.11",
+        "event": "미국 중간 선거"
+      }
+    ],
+    "top_picks": [
+      "LG에너지솔루션",
+      "삼성SDI",
+      "에코프로비엠",
+      "엘앤에프"
+    ],
+    "risk": "ESS 부문 수익성 리스크, 미국 전기차 판매 부진",
+    "quote": "이익 증가 폭 확실한 셀 메이커(LG에너지솔루션, 삼성SDI)와 가격 매력 확대된 소재 기업(에코프로비엠, 엘앤에프)에 대한 매수를 권고한다."
+  }
+}

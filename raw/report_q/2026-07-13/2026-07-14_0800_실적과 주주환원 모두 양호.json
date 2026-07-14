@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-13",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-14_0800_실적과 주주환원 모두 양호.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "우도형",
+    "report_date": "2026.07.13",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "신한지주",
+        "code": "055550",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "129,000원",
+        "tp_prev": "124,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "신한지주의 2분기 지배주주순이익은 1조 6,944억원으로 컨센서스에 부합할 것으로 판단된다.",
+        "estimate_revision": "이익 추정치 상향에 따른 ROE 개선에 기인한다.",
+        "next_catalyst": "2026년 총주주환원율 51.7% 전망",
+        "thesis": [
+          "2Q26 순이익 컨센서스 부합 전망",
+          "CET-1비율 13% 수준 관리",
+          "2026년 총주주환원율 51.7% 전망"
+        ],
+        "valuation_basis": "목표주가를 상향하는 이유는 이익 추정치 상향에 따른 ROE 개선에 기인한다.",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "신한지주에 대해 목표주를 기존 대비 4.0% 상향한 129,000원을 제시한다. 목표주가를 상향하는 이유는 이익 추정치 상향에 따른 ROE 개선에 기인한다.",
+        "sector": "기타"
+      }
+    ]
+  }
+}

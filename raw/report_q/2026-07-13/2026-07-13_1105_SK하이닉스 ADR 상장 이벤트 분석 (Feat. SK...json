@@ -1,0 +1,55 @@
+{
+  "meta": {
+    "date": "2026-07-13",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-13_1105_SK하이닉스 ADR 상장 이벤트 분석 (Feat. SK...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "DS투자증권",
+    "analyst": "김수현",
+    "report_date": "2026.07.13",
+    "stocks": [
+      {
+        "name": "SK하이닉스",
+        "code": null,
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "ADR 상장 이벤트",
+        "thesis": [
+          "ADR 상장으로 인한 마이크론과의 밸류에이션 갭 축소",
+          "업황 효과 제외하고 SK하이닉스 본주 최소 +8~18% 상승 효과 기대",
+          "자사주 매입 소각을 통한 SK스퀘어 지분율 유지 및 NAV 할인율 개선"
+        ],
+        "valuation_basis": "12개월 Forward PER은 SK하이닉스 5.5배, 마이크론 6.8배로 마이크론이 24% 할증 거래되고 있다.",
+        "risk": null,
+        "supply_comment": "SK하이닉스 ADR은 신주 발행분(전체 주식의 2.5%)로만 구성되며 본주를 ADR로 전환하는 것은 규제 당국의 승인이 필요해 당분간 불가능하다.",
+        "quote": "업황과 관련 없이 ADR 상장 이벤트만으로 본주는 최소 8~18%의 상승 효과가 기대된다."
+      },
+      {
+        "name": "SK스퀘어",
+        "code": null,
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "SK하이닉스 자사주 매입 소각을 통한 지분율 유지",
+        "thesis": [
+          "SK하이닉스의 자사주 소각과 본주 재평가로 인해 SK스퀘어의 NAV 할인율 추가 개선 기대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "SK하이닉스의 자사주 소각과 본주 재평가로 인해 SK스퀘어의 NAV 할인율 추가 개선이 동시에 기대된다."
+      }
+    ]
+  }
+}

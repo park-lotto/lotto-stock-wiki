@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-13",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-14_0805_무선에 강점. DC는 다크호스.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "김회재",
+    "report_date": "2026.07.13",
+    "stocks": [
+      {
+        "name": "LG유플러스",
+        "code": "032640",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "20,000",
+        "tp_prev": "20,000",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 매출 3.9조원(+2% yoy), OP 3.3천억원(+8% yoy) 전망",
+        "estimate_revision": null,
+        "next_catalyst": "7월말~8월초 26년 주주환원 공개 전망",
+        "thesis": [
+          "무선 가입자 성과 및 핸드셋 가입자 증가세",
+          "데이터센터(DC) 사업의 고성장 및 고부가 BM 전환",
+          "주주환원율 확대 가능성"
+        ],
+        "valuation_basis": "26E EPS 1,609원에 PER 13배 적용. 최근 5년 통신업(KT, LGU+ 기준) 평균 10배 대비 30% 할증 적용",
+        "risk": null,
+        "supply_comment": "통신",
+        "quote": "2Q26 매출 3.9조원(+2% yoy), OP 3.3천억원(+8% yoy) 전망"
+      }
+    ]
+  }
+}

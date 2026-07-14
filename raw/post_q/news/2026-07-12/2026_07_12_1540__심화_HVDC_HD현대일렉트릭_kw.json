@@ -1,0 +1,33 @@
+{
+  "target_kind": "sector",
+  "sector_name": "전력",
+  "sector_view": "긍정",
+  "points": [
+    "서해안 에너지 고속도로 구축을 위한 HVDC 사업 본격화",
+    "국내 주요 전력기기 업체 간 수주 경쟁 심화"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "LS일렉트릭",
+      "comment": "서해안 에너지 고속도로 HVDC 사업에서 HD현대일렉트릭과 경쟁 구도 형성",
+      "ts": "2026-07-12",
+      "quote": "LS일렉트릭 vs HD현대일렉트릭, 서해안 에너지 고속도로 'HVDC' 대결",
+      "sector": "전력"
+    },
+    {
+      "name": "HD현대일렉트릭",
+      "comment": "서해안 에너지 고속도로 HVDC 사업에서 LS일렉트릭과 경쟁 구도 형성",
+      "ts": "2026-07-12",
+      "quote": "LS일렉트릭 vs HD현대일렉트릭, 서해안 에너지 고속도로 'HVDC' 대결",
+      "sector": "전력"
+    }
+  ],
+  "events": [
+    {
+      "fact": "서해안 에너지 고속도로 HVDC 프로젝트 관련 기업 간 경쟁 구도 형성",
+      "ts": "2026-07-12",
+      "quote": "LS일렉트릭 vs HD현대일렉트릭, 서해안 에너지 고속도로 'HVDC' 대결"
+    }
+  ],
+  "quote": "LS일렉트릭 vs HD현대일렉트릭, 서해안 에너지 고속도로 'HVDC' 대결"
+}

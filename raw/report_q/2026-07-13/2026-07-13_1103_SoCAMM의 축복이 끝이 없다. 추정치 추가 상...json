@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-13",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-13_1103_SoCAMM의 축복이 끝이 없다. 추정치 추가 상...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "키움증권",
+    "analyst": "권민규",
+    "report_date": "2026.07.13",
+    "stocks": [
+      {
+        "name": "티엘비",
+        "code": "356860",
+        "rating": "BUY(Initiate)",
+        "rating_changed": null,
+        "tp_new": "120,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 예상 매출액 880억원(YoY + 37%, 이하), OP 147억원(+115%, OPM 17%)를 전망한다.",
+        "estimate_revision": "SoCAMM2의 ‘26년 연간 매출 전망은 연초 200억원 수준이었으나, 상반기에 500억원까지 상향되었고, 현재는 700억원까지 추가 상향되는 추세다.",
+        "next_catalyst": "2Q26부터 SoCAMM 매출 반영, 실적 서프라이즈 지속",
+        "thesis": [
+          "SoCAMM2 추정치 추가 상향: ‘27년 YoY + 123% 전망",
+          "2Q26부터 SoCAMM 매출 반영, 실적 서프라이즈 지속",
+          "AI CapEx 증가, 메모리 호황을 동시 반영하고, 28년 베트남 증설을 통한 중장기 우상향"
+        ],
+        "valuation_basis": "Global Peer 27F PER 평균에 30% 할증 적용(심텍, 코리아써키트, Tripod)",
+        "risk": "최근 코스닥 부진 및 유상증자로 인한 희석 우려",
+        "supply_comment": "Capa 증설도 예정대로 진행 중이다. 3Q25에 집행됐던 안산 2공장, 베트남 1공장의 병목공정 위주 투자가 마무리되고 3Q26(7월)부터 가동 중이다.",
+        "quote": "SoCAMM의 축복이 끝이 없다. 추정치 추가 상향"
+      }
+    ],
+    "sector": "반도체"
+  }
+}

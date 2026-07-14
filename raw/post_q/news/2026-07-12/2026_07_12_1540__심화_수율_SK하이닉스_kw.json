@@ -1,0 +1,19 @@
+{
+  "target_kind": "market",
+  "market_direction": "neutral",
+  "macro_events": [
+    {
+      "fact": "3조 펀드부터 낙수율 10%까지 대기업 상생협력 내실 강화",
+      "ts": "2026-07-08",
+      "quote": "3조 펀드부터 낙수율 10%까지…대기업 상생협력 ‘내실’ 따져보니"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "IT",
+      "stance": "neutral",
+      "comment": "대기업 상생협력 차원의 IT 업계 지원 방안"
+    }
+  ],
+  "quote": "3조 펀드부터 낙수율 10%까지…대기업 상생협력 ‘내실’ 따져보니"
+}

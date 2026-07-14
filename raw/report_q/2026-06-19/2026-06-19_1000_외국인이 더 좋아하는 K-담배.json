@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "date": "2026-06-19",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-19_1000_외국인이 더 좋아하는 K-담배.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "DS투자증권",
+    "analyst": "장지혜",
+    "report_date": "2026.06.19",
+    "stocks": [
+      {
+        "name": "KT&G",
+        "code": "033780",
+        "rating": "매수",
+        "rating_changed": null,
+        "tp_new": "240,000원",
+        "tp_prev": "210,000원",
+        "tp_direction": "up",
+        "earnings_outlook": {
+          "2026F_revenue": "6.9조원",
+          "2026F_op": "1.49조원",
+          "2026F_op_margin": "21.6%",
+          "tobacco_2026F_revenue": "4.8조원",
+          "tobacco_2026F_op": "1.3조원",
+          "tobacco_2026F_op_margin": "27.2%"
+        },
+        "estimate_revision": "상향",
+        "next_catalyst": "하반기 신규 배당 정책 발표 및 해외 NGP 사업 확대",
+        "thesis": [
+          "해외 궐련 부문 실적 성장 견인 (P상승&Q증가 및 C절감)",
+          "NGP 부문 해외 시장 직접 진출 및 사업 확대",
+          "적극적인 주주환원 정책 강화 (자사주 소각 및 신규 배당 정책 예고)"
+        ],
+        "valuation_basis": "목표배수를 기존 PER 15배에서 19배로 상향. 글로벌 경쟁사 PMI의 현재 밸류에이션 대비 할인율을 기존 30%에서 10%로 축소 적용.",
+        "risk": null,
+        "supply_comment": "26년 인니 2공장(250억개비) 등 CAPA를 지속 확대하며 글로벌 생산 비중을 25년 30% 수준에서 50% 이상으로 확대할 계획",
+        "quote": "KT&G의 목표주가를 기존 21만원에서 24만원으로 14% 상향한다. 목표주가 상향은 목표배수를 기존 PER 15배에서 19배로 상향한데 기인한다."
+      }
+    ]
+  }
+}

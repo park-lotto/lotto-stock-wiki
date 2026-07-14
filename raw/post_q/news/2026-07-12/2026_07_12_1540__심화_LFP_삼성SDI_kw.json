@@ -1,0 +1,34 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "삼성SDI",
+      "signal": "neutral",
+      "reason": "LFP 전구체 업체 지분 인수 추진 및 ESS 시장 공략을 위한 양극재 공급 계약 체결",
+      "ts": null,
+      "quote": "삼성SDI, LFP 전구체 업체 피노 지분 인수 추진 (한국경제, 03-26 07:00), 삼성SDI, 엘앤에프와 LFP 양극재 공급 계약… 美 ESS 시장 공략 가속 (글로벌이코노믹, 03-24 07:00)",
+      "sector": "2차전지"
+    },
+    {
+      "name": "엘앤에프",
+      "signal": "neutral",
+      "reason": "삼성SDI와 LFP 양극재 공급 계약 체결",
+      "ts": null,
+      "quote": "삼성SDI, 엘앤에프와 LFP 양극재 공급 계약… 美 ESS 시장 공략 가속",
+      "sector": "2차전지"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "삼성SDI, LFP 전구체 업체 피노 지분 인수 추진",
+      "ts": "03-26 07:00",
+      "quote": "삼성SDI, LFP 전구체 업체 피노 지분 인수 추진"
+    },
+    {
+      "fact": "삼성SDI, 엘앤에프와 LFP 양극재 공급 계약 체결",
+      "ts": "03-24 07:00",
+      "quote": "삼성SDI, 엘앤에프와 LFP 양극재 공급 계약… 美 ESS 시장 공략 가속"
+    }
+  ],
+  "quote": "삼성SDI, LFP 전구체 업체 피노 지분 인수 추진 (한국경제, 03-26 07:00), 삼성SDI, 엘앤에프와 LFP 양극재 공급 계약… 美 ESS 시장 공략 가속 (글로벌이코노믹, 03-24 07:00)"
+}

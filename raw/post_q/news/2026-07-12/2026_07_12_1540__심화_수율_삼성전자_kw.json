@@ -1,0 +1,25 @@
+{
+  "target_kind": "sector",
+  "sector_name": "반도체",
+  "sector_view": "중립",
+  "points": [
+    "중국 CXMT가 상장 서류에서 HBM 투자 계획을 제외하며 중국발 HBM 공급 우려가 완화됨"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "삼성전자",
+      "comment": null,
+      "ts": null,
+      "quote": null,
+      "sector": "반도체"
+    }
+  ],
+  "events": [
+    {
+      "fact": "중국 CXMT, 상장 서류에서 HBM 투자 계획 삭제",
+      "ts": "2026-07-08",
+      "quote": "中 CXMT 상장 서류서 사라진 HBM 투자 계획"
+    }
+  ],
+  "quote": "‘중국발 HBM’ 공포 과장됐나… 中 CXMT 상장 서류서 사라진 HBM 투자 계획"
+}

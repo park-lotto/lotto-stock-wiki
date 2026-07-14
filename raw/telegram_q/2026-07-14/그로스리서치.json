@@ -1,0 +1,85 @@
+{
+  "reports": [
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성중공업",
+      "rating": null,
+      "tp": null,
+      "ts": "08:15",
+      "quote": "FLNG 설계·건조 경험을 바탕으로 FDC 상용화를 주도하고 있는 '삼성중공업'",
+      "sector": "조선"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "HD현대마린솔루션",
+      "rating": null,
+      "tp": null,
+      "ts": "08:15",
+      "quote": "1,000건 이상의 선박 개조 경험과 누적 1만 척의 AM 서비스 역량을 보유한 'HD현대마린솔루션'",
+      "sector": "조선"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "선익시스템",
+      "rating": null,
+      "tp": null,
+      "ts": "08:46",
+      "quote": "선익시스템, 평택 브레인시티 생산 거점 구축 본격화",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "아이씨티케이",
+      "rating": null,
+      "tp": null,
+      "ts": "09:14",
+      "quote": "아이씨티케이, WIPO 글로벌 어워즈 수상기업 선정",
+      "sector": "양자보안"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "엘티씨",
+      "rating": null,
+      "tp": null,
+      "ts": "09:29",
+      "quote": "엘티씨 탐방보고서로 소개해드린 엘티씨, 주가 흐름이 좋네요",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "피에스케이홀딩스",
+      "rating": null,
+      "tp": null,
+      "ts": "09:43",
+      "quote": "피에스케이홀딩스도 견조한 주가 흐름을 보이고 있습니다.",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "알테오젠",
+      "rating": null,
+      "tp": null,
+      "ts": "11:11",
+      "quote": "알테오젠, '키트루다 큐렉스' 상업화 순항에 판매 마일스톤 기대감 ↑",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "태성",
+      "rating": null,
+      "tp": null,
+      "ts": "15:35",
+      "quote": "태성, 천안 신공장으로 임직원 본사 이전 완료…\"생산능력 확대\"",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "바이오솔루션",
+      "rating": null,
+      "tp": null,
+      "ts": "15:55",
+      "quote": "바이오솔루션, 오가노이드 수혜 기대…\"100조 시장 적극 공략\"",
+      "sector": "바이오"
+    }
+  ]
+}

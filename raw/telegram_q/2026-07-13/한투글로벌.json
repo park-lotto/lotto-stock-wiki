@@ -1,0 +1,22 @@
+{
+  "reports": [
+    {
+      "broker": "한투글로벌",
+      "stock": null,
+      "rating": null,
+      "tp": null,
+      "ts": "07:04",
+      "quote": "AI 모델 경쟁의 핵심이 ‘성능 극대화’에서 ‘성능 대비 비용 효율성’으로 이동 중. OpenAI GPT-5.6은 토큰 사용량 절감, Grok 4.5는 경쟁 모델 대비 2배 수준의 토큰 효율성, Meta는 공격적인 가격 정책을 강조.",
+      "sector": "IT"
+    },
+    {
+      "broker": "한투글로벌",
+      "stock": "Zhipu",
+      "rating": null,
+      "tp": null,
+      "ts": "07:06",
+      "quote": "중국 AI 모델 업체 Zhipu 창업자 탕제는 첨단 AI를 소수 기업·정부가 통제하기보다 오픈소스로 광범위하게 공개해야 한다고 주장. Zhipu는 최신 GLM-5.2를 무료 다운로드 및 상업적 활용이 가능한 오픈소스로 공개.",
+      "sector": "중국"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "date": "2026-07-13",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-14_0810_오리온 6월 Re + ‘담뱃세’ 설문조사 시사점.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "심은주, 고찬결",
+    "report_date": "2026.7.13",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "환율",
+      "곡물가",
+      "원자재 가격"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "소비내수",
+        "stance": "Overweight",
+        "reason": "음식료 업종지수는 코스피 대비 8.0%p 아웃퍼폼 시현, 시장이 반도체 대형주 중심으로 큰 폭 조정 받으면서 업종 지수는 상대적으로 견조한 흐름 보여줌"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.7.13",
+        "event": "음식료/담배 Weekly Comment 발행"
+      }
+    ],
+    "top_picks": [
+      "CJ제일제당",
+      "삼양식품"
+    ],
+    "risk": "하반기 궐련 수출 증가율 둔화 가능성, 전년 높은 베이스, 주요 수입 원자재 가격 인상에 따른 원가 부담 상존, 경쟁사의 신공장 증설에 따른 경쟁 심화",
+    "quote": "전주 음식료 업종지수는 코스피 대비 8.0%p 아웃퍼폼 시현, 시장이 반도체 대형주 중심으로 큰 폭 조정 받으면서 업종 지수는 상대적으로 견조한 흐름 보여줌"
+  }
+}
