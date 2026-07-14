@@ -418,14 +418,14 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
         pil_font = ImageFont.truetype(font_disk_path, size)
     except OSError:
         pil_font = ImageFont.load_default()
-    base_color_hex = _hex_to_ff(base_style.get("color"), default_color)
+    base_color_raw = base_style.get("color")  # 원시 #hex(또는 None) — _hex_to_ff는 drawtext 빌드에서 1회만 적용(이중변환 방지)
     x_center = x_pct / 100.0 * _OUT_W
     y_top = y_pct / 100.0 * _OUT_H
     line_h = size * 1.2
     total_h = line_h * len(lines)
     parts = []
     for li, line in enumerate(lines):
-        segs = _build_segments(line, base_color_hex, highlight_rules or [])
+        segs = _build_segments(line, base_color_raw, highlight_rules or [])
         if not segs:
             continue
         widths = [pil_font.getlength(s[0]) for s in segs]

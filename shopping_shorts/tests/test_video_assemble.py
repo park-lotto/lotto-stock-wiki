@@ -263,6 +263,30 @@ def test_segmented_drawtext_two_lines_resets_x_per_line(tmp_path):
     assert len(ys) == 2  # 줄마다 다른 y
 
 
+def test_segmented_drawtext_base_color_not_clobbered_to_default(tmp_path):
+    """비강조 단어는 default_color가 아니라 style의 실제 색으로 렌더돼야 한다
+    (base_color_hex를 미리 _hex_to_ff 변환해 넘기면 drawtext 빌드 시 2중 변환되어
+    '0x...' 문자열이 6-hex 판정에서 탈락 → default_color로 새는 회귀 버그)."""
+    style = {"font": "", "size": 60, "color": "#00FF00"}  # 초록, default(주황)와 다름
+    parts = va._segmented_drawtext("안녕 세상", style, tmp_path, "hc", 50, 14,
+                                     highlight_rules=None, default_color="0xFF8800")
+    assert len(parts) == 1
+    assert "fontcolor=0x00FF00" in parts[0]
+    assert "0xFF8800" not in parts[0]
+
+
+def test_segmented_drawtext_base_color_kept_alongside_highlight(tmp_path):
+    """강조 규칙과 비강조 base 색이 함께 있을 때도 base가 default로 새면 안 된다."""
+    style = {"font": "", "size": 60, "color": "#FFFFFF"}  # 흰색 base
+    rules = [{"keyword": "쿠팡", "color": "#FF2D2D"}]
+    parts = va._segmented_drawtext("나만 몰랐던 쿠팡", style, tmp_path, "hc", 50, 14,
+                                     highlight_rules=rules, default_color="0xFF8800")
+    joined = " ".join(parts)
+    assert "fontcolor=0xFFFFFF" in joined   # 비강조 단어 = 흰색(주황 아님)
+    assert "fontcolor=0xFF2D2D" in joined   # 강조 단어 = 규칙색
+    assert "fontcolor=0xFF8800" not in joined  # default로 새면 안 됨
+
+
 # ── Task 2: _headcopy_drawtext_parts/_caption_drawtexts 리팩터 회귀 가드 ──
 
 def test_headcopy_drawtext_no_highlight_matches_single_block(tmp_path):
