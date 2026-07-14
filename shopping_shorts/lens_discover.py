@@ -4,6 +4,7 @@ visual_matches에는 동영상 여부 필드가 없어(2026-07-14 실측: link/s
 thumbnail만) link 도메인 화이트리스트로 판별한다. product_identify.py와 같은
 google_lens 엔진이지만 용도가 달라(제품명 추론 X, 유사영상 발굴 O) 분리."""
 import os
+import re
 import time
 import requests
 from urllib.parse import urlparse
@@ -14,7 +15,13 @@ _IMGUR_ENDPOINT = "https://api.imgur.com/3/image"
 # imgur 익명 업로드용 Client-ID. 전용 발급분을 IMGUR_CLIENT_ID env로 넣는 걸 권장하고,
 # 없으면 공개 테스트 ID로 폴백(2026-07-14 실증 동작). imgur는 Google이 상시 크롤링하는
 # 도메인이라 갓 올린 이미지도 렌즈가 즉시 읽는다(우리서버 URL은 인덱싱 지연으로 0개).
+# ⚠️ imgur이 2025년부터 신규 앱(전용 Client-ID) 등록을 정책적으로 막아놔서(재개시점
+# 미공지, GitHub 이슈 다수) 폴백 ID를 발급받을 수 없다. 게다가 이 공개 테스트 ID는
+# gallery-dl·Rimgo 등 무관한 대형 툴도 공유해 남용 시 우리와 무관하게 막힐 위험이 있어
+# imgbb를 1순위로 승격했다(아래 upload_frame).
 _IMGUR_CLIENT_ID = os.environ.get("IMGUR_CLIENT_ID", "546c25a59c58ad7")
+_IMGBB_ENDPOINT = "https://api.imgbb.com/1/upload"
+_IMGBB_API_KEY = os.environ.get("IMGBB_API_KEY", "")
 _MAX_ATTEMPTS = 3          # 일시적 'no results'에 대한 재시도 횟수
 _RETRY_SLEEP = 2.5         # 재시도 전 대기(초) — 갓 호스팅된 이미지가 인덱싱될 시간
 
@@ -49,12 +56,63 @@ def upload_to_imgur(image_bytes, client_id=None):
     return data.get("data", {}).get("link") or None
 
 
+def upload_to_imgbb(image_bytes, api_key=None):
+    """캡처 이미지 바이트 → imgbb 업로드 → 공개 URL(실패 시 None).
+    2026-07-14 실측: 프레시 이미지 기준 imgur과 동일하게 대기 0초·즉시 60개 매칭
+    (imgur=60/imgbb=60 동시비교). 전용 API키 발급이 열려있어(imgur은 막힘) 1순위로 쓴다."""
+    key = api_key or _IMGBB_API_KEY
+    if not key:
+        return None
+    try:
+        r = requests.post(_IMGBB_ENDPOINT, data={"key": key},
+                          files={"image": image_bytes}, timeout=30)
+        if r.status_code != 200:
+            return None
+        data = r.json()
+    except (requests.RequestException, ValueError):
+        return None
+    return data.get("data", {}).get("url") or None
+
+
+def upload_frame(image_bytes):
+    """렌즈 검색용 캡처 프레임 업로드. imgbb(전용키, 1순위) → imgur(공유 공개ID,
+    2순위 폴백) 순. 둘 다 실패(키 없음·네트워크 오류 등)하면 None — 호출부(app.py)가
+    자체서버 URL로 최종 폴백한다(단, 인덱싱 지연으로 결과가 비어있을 수 있음)."""
+    return upload_to_imgbb(image_bytes) or upload_to_imgur(image_bytes)
+
+
 def _platform_of(link):
     host = urlparse(link or "").netloc.lower()
     for name, domains in _PLATFORM_DOMAINS:
         if any(host == d or host.endswith("." + d) for d in domains):
             return name
     return None
+
+
+_TOKEN_RE = re.compile(r"[0-9A-Za-z가-힣]{2,}")
+# 캡션에 흔한 무의미 고빈도어 — 남기면 거의 모든 제목과 매칭돼 필터 무력화됨.
+_STOPWORDS = {
+    "그리고", "진짜", "완전", "오늘", "이거", "저거", "제가", "나만", "너무", "정말",
+    "이번", "우리", "해서", "하는", "했어요", "합니다", "있는", "있어요", "같은", "위한",
+    "the", "and", "for", "with", "this", "that", "from", "you", "your", "shorts",
+}
+
+
+def _extract_keywords(caption):
+    """캡션 → 2자 이상 토큰 집합(불용어 제외). 소스 자체가 짧거나 비어있으면 빈 집합."""
+    if not caption:
+        return set()
+    tokens = _TOKEN_RE.findall(caption.lower())
+    return {t for t in tokens if t not in _STOPWORDS}
+
+
+def _title_matches(keywords, title):
+    """소스 키워드가 하나라도 제목에 부분포함되면 True, 있는데 하나도 없으면 False.
+    소스 키워드 자체가 없으면(캡션 없음/전부 불용어) 판정불가 None — 필터 대상 아님."""
+    if not keywords:
+        return None
+    title_l = (title or "").lower()
+    return any(k in title_l for k in keywords)
 
 
 def _is_watchable(platform, link):
@@ -67,12 +125,19 @@ def _is_watchable(platform, link):
     return True   # 유튜브·인스타·중국플랫폼은 그대로(대부분 개별 콘텐츠)
 
 
-def search_similar_videos(image_url, api_key=None, timeout=60):
-    """공개 이미지 URL → [{platform, url, title, thumbnail}]. 5개 동영상 플랫폼만.
-    키 없음·호출 실패 시 []."""
+def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=None):
+    """공개 이미지 URL → [{platform, url, title, thumbnail, match}]. 5개 동영상 플랫폼만.
+    키 없음·호출 실패 시 [].
+
+    match: source_caption 키워드가 결과 제목에 있으면 True, 있는데 없으면 False,
+    (캡션 없음 등으로) 판정 자체가 불가하면 None. 렌즈는 시각 유사도만 보기 때문에
+    장르는 같지만 다른 주제인 결과가 섞이는 문제(2026-07-14 실측)를 프론트에서
+    표시용으로 구분하기 위함 — 결과를 제거하진 않는다(교차언어 플랫폼은 매칭 불가라
+    False가 나올 수 있어 하드 필터링하면 회수율이 떨어짐)."""
     key = api_key or SERPAPI_KEY
     if not key:
         return []
+    keywords = _extract_keywords(source_caption)
     # 파라미터가 결과를 좌우한다(2026-07-14 라이브 실측, 6프레임 대조):
     #   type=visual_matches (별도 엔드포인트) → 많은 프레임에서 0개("no results")
     #   type 없는 기본 all모드 + hl=ko&country=kr → 모든 프레임 59~60개 ✅
@@ -98,10 +163,12 @@ def search_similar_videos(image_url, api_key=None, timeout=60):
         platform = _platform_of(m.get("link"))
         if not platform or not _is_watchable(platform, m.get("link")):
             continue
+        title = m.get("title", "")
         out.append({
             "platform": platform,
             "url": m.get("link", ""),
-            "title": m.get("title", ""),
+            "title": title,
             "thumbnail": m.get("thumbnail", ""),
+            "match": _title_matches(keywords, title),
         })
     return out

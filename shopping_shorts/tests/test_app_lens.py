@@ -25,9 +25,9 @@ def _client(tmp_path, monkeypatch, items=None, limit_reached=False):
     monkeypatch.setattr(appmod, "DB_PATH", db)
     monkeypatch.setattr(appmod, "PUBLIC_BASE_URL", "https://example.test")
     monkeypatch.setattr(appmod, "search_similar_videos",
-                        lambda url: items if items is not None else [])
+                        lambda url, source_caption="": items if items is not None else [])
     # imgur 업로드는 네트워크라 목킹 — None 반환 시 서버URL 폴백 경로를 탄다
-    monkeypatch.setattr(appmod, "upload_to_imgur", lambda raw: None)
+    monkeypatch.setattr(appmod, "upload_frame", lambda raw: None)
     if limit_reached:
         Store(db).set_setting("lens_month_limit", "0")
     return TestClient(appmod.app), db
@@ -48,6 +48,26 @@ def test_lens_search_returns_filtered_videos(tmp_path, monkeypatch):
     from datetime import datetime, timezone
     m = datetime.now(timezone.utc).strftime("%Y-%m")
     assert Store(db).lens_month_count(m) == 1
+
+
+def test_lens_search_forwards_source_caption(tmp_path, monkeypatch):
+    """프론트가 보낸 원본 캡션을 lens_discover로 그대로 넘겨야 제목 키워드 매칭이 된다."""
+    db = str(tmp_path / "t.db")
+    monkeypatch.setattr(appmod, "DB_PATH", db)
+    monkeypatch.setattr(appmod, "PUBLIC_BASE_URL", "https://example.test")
+    monkeypatch.setattr(appmod, "upload_frame", lambda raw: None)
+    captured = {}
+
+    def fake_search(url, source_caption=""):
+        captured["source_caption"] = source_caption
+        return []
+    monkeypatch.setattr(appmod, "search_similar_videos", fake_search)
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/search",
+               files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
+               data={"source_caption": "다이소 정리박스 꿀템"})
+    assert r.status_code == 200
+    assert captured["source_caption"] == "다이소 정리박스 꿀템"
 
 
 def test_lens_search_blocked_when_month_limit_reached(tmp_path, monkeypatch):

@@ -25,7 +25,7 @@ def test_filters_to_five_video_platforms(monkeypatch):
 
     platforms = [i["platform"] for i in out]
     assert platforms == ["youtube", "tiktok", "instagram", "xiaohongshu", "douyin"]
-    assert out[0] == {"platform": "youtube", "url": "https://www.youtube.com/watch?v=abc", "title": "yt", "thumbnail": "t1"}
+    assert out[0] == {"platform": "youtube", "url": "https://www.youtube.com/watch?v=abc", "title": "yt", "thumbnail": "t1", "match": None}
 
 
 def test_youtu_be_and_xhslink_and_iesdouyin(monkeypatch):
@@ -134,6 +134,62 @@ def test_upload_to_imgur_failure_returns_none(monkeypatch):
     assert lens_discover.upload_to_imgur(b"x") is None
 
 
+# ── imgbb 업로드(2026-07-14) ──────────────────────
+# imgur이 신규 전용 Client-ID 발급을 막아놔서(정책변경, 실측·크로스검증 완료) 전용키
+# 발급이 열려있는 imgbb를 1순위로 승격. 실측: 프레시 이미지 기준 imgur과 동일하게
+# 즉시 인덱싱(대기 0초 60개 매칭, imgur=60/imgbb=60 동시비교).
+
+def test_upload_to_imgbb_returns_public_url(monkeypatch):
+    captured = {}
+
+    class R:
+        status_code = 200
+        def json(self): return {"success": True, "data": {"url": "https://i.ibb.co/abc/x.jpg"}}
+
+    def fake_post(url, data=None, files=None, timeout=None):
+        captured["url"] = url
+        captured["key"] = data.get("key")
+        return R()
+    monkeypatch.setattr(lens_discover.requests, "post", fake_post)
+
+    link = lens_discover.upload_to_imgbb(b"\xff\xd8\xff\x00jpegbytes", api_key="fakekey")
+    assert link == "https://i.ibb.co/abc/x.jpg"
+    assert "imgbb.com" in captured["url"]
+    assert captured["key"] == "fakekey"
+
+
+def test_upload_to_imgbb_no_key_returns_none(monkeypatch):
+    monkeypatch.setattr(lens_discover, "_IMGBB_API_KEY", "")
+    assert lens_discover.upload_to_imgbb(b"x") is None
+
+
+def test_upload_to_imgbb_failure_returns_none(monkeypatch):
+    def boom(*a, **k):
+        raise lens_discover.requests.RequestException("net")
+    monkeypatch.setattr(lens_discover.requests, "post", boom)
+    assert lens_discover.upload_to_imgbb(b"x", api_key="fakekey") is None
+
+
+def test_upload_frame_prefers_imgbb_over_imgur(monkeypatch):
+    calls = []
+    monkeypatch.setattr(lens_discover, "upload_to_imgbb", lambda raw: calls.append("imgbb") or "https://i.ibb.co/x.jpg")
+    monkeypatch.setattr(lens_discover, "upload_to_imgur", lambda raw: calls.append("imgur") or "https://i.imgur.com/x.jpg")
+    assert lens_discover.upload_frame(b"x") == "https://i.ibb.co/x.jpg"
+    assert calls == ["imgbb"]   # imgbb 성공하면 imgur은 아예 호출 안 함
+
+
+def test_upload_frame_falls_back_to_imgur_when_imgbb_fails(monkeypatch):
+    monkeypatch.setattr(lens_discover, "upload_to_imgbb", lambda raw: None)
+    monkeypatch.setattr(lens_discover, "upload_to_imgur", lambda raw: "https://i.imgur.com/x.jpg")
+    assert lens_discover.upload_frame(b"x") == "https://i.imgur.com/x.jpg"
+
+
+def test_upload_frame_none_when_both_fail(monkeypatch):
+    monkeypatch.setattr(lens_discover, "upload_to_imgbb", lambda raw: None)
+    monkeypatch.setattr(lens_discover, "upload_to_imgur", lambda raw: None)
+    assert lens_discover.upload_frame(b"x") is None
+
+
 def test_no_key_returns_empty(monkeypatch):
     monkeypatch.setattr(lens_discover, "SERPAPI_KEY", "")
     assert lens_discover.search_similar_videos("https://ex.com/f.jpg") == []
@@ -145,3 +201,37 @@ def test_request_failure_returns_empty(monkeypatch):
     def boom(*a, **k): raise _rq.RequestException("net")
     monkeypatch.setattr(lens_discover.requests, "get", boom)
     assert lens_discover.search_similar_videos("https://ex.com/f.jpg") == []
+
+
+# ── 제목 키워드 후처리 필터(2026-07-14) ──────────────────────
+# 렌즈는 시각 유사도만 보기 때문에 장르는 같지만 다른 주제인 결과가 섞인다(실측).
+# 소스 캡션 키워드가 결과 제목에 있는지로 match 필드를 매겨 프론트가 표시만 하게 한다
+# (하드 필터는 교차언어 플랫폼에서 회수율을 떨어뜨리므로 하지 않는다).
+
+def test_match_true_when_title_contains_source_keyword(monkeypatch):
+    matches = [{"link": "https://www.youtube.com/watch?v=abc",
+                "title": "다이소 꿀템 정리박스 추천", "thumbnail": "t1", "source": "YouTube"}]
+    monkeypatch.setattr(lens_discover, "SERPAPI_KEY", "fake")
+    monkeypatch.setattr(lens_discover.requests, "get", lambda *a, **k: _fake_response(matches))
+    out = lens_discover.search_similar_videos("https://ex.com/f.jpg", source_caption="다이소 신상 정리박스 꿀템")
+    assert out[0]["match"] is True
+
+
+def test_match_false_when_no_keyword_overlap(monkeypatch):
+    matches = [{"link": "https://www.youtube.com/watch?v=abc",
+                "title": "감자 크로켓 레시피", "thumbnail": "t1", "source": "YouTube"}]
+    monkeypatch.setattr(lens_discover, "SERPAPI_KEY", "fake")
+    monkeypatch.setattr(lens_discover.requests, "get", lambda *a, **k: _fake_response(matches))
+    out = lens_discover.search_similar_videos("https://ex.com/f.jpg", source_caption="다이소 신상 정리박스 꿀템")
+    assert out[0]["match"] is False
+
+
+def test_match_none_when_no_source_caption(monkeypatch):
+    matches = [{"link": "https://www.youtube.com/watch?v=abc",
+                "title": "아무 제목", "thumbnail": "t1", "source": "YouTube"}]
+    monkeypatch.setattr(lens_discover, "SERPAPI_KEY", "fake")
+    monkeypatch.setattr(lens_discover.requests, "get", lambda *a, **k: _fake_response(matches))
+    out = lens_discover.search_similar_videos("https://ex.com/f.jpg")
+    assert out[0]["match"] is None
+    out2 = lens_discover.search_similar_videos("https://ex.com/f.jpg", source_caption="   ")
+    assert out2[0]["match"] is None

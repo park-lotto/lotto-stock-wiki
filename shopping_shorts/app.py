@@ -27,7 +27,7 @@ from shopping_shorts.video_analysis import analyze_video, translate_keyword
 from shopping_shorts.product_identify import fetch_lens_lines, identify_product_from_lines
 from shopping_shorts.search_links import build_search_links, lens_search_url
 from shopping_shorts.mix_pipeline import run_mix_job, run_render, retype_mix_job, _source_video_id, resynth_tts_job
-from shopping_shorts.lens_discover import search_similar_videos, upload_to_imgur
+from shopping_shorts.lens_discover import search_similar_videos, upload_frame
 from shopping_shorts.media_download import resolve_media_url
 from shopping_shorts import edit_plan as _edit_plan
 from shopping_shorts import voice_presets, audio_post
@@ -1140,7 +1140,8 @@ def api_media(platform: str, id: str):
 
 
 @app.post("/api/lens/search")
-async def api_lens_search(request: Request, frame: UploadFile = File(...)):
+async def api_lens_search(request: Request, frame: UploadFile = File(...),
+                           source_caption: str = Form("")):
     """멈춘 프레임 캡처 이미지 → 구글렌즈 → 5플랫폼 유사영상. 월 호출가드(429 lens_limit).
 
     캡처본을 find_frames/lens/{uuid}.jpg로 저장하고 기존 /api/find/frame 서빙
@@ -1155,16 +1156,16 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...)):
             "error": f"이번 달 렌즈 검색 한도({limit}회)를 다 썼습니다"})
     raw = await frame.read()
     # Google Lens는 갓 호스팅된 우리서버 이미지를 인덱싱 전이라 못 읽어 0개를 준다(실측).
-    # imgur는 Google이 상시 크롤링하는 도메인이라 즉시 매칭 → imgur 업로드 우선,
-    # 실패 시에만 우리서버 URL 폴백(2026-07-14).
-    image_url = upload_to_imgur(raw)
+    # imgbb·imgur은 Google이 상시 크롤링하는 도메인이라 즉시 매칭 → imgbb(전용키) 1순위,
+    # imgur(공유 공개ID) 2순위로 업로드, 실패 시에만 우리서버 URL 폴백(2026-07-14).
+    image_url = upload_frame(raw)
     if not image_url:
         work_dir = _FIND_TMP_DIR / "lens"
         work_dir.mkdir(parents=True, exist_ok=True)
         name = uuid.uuid4().hex + ".jpg"
         (work_dir / name).write_bytes(raw)
         image_url = f"{PUBLIC_BASE_URL}/api/find/frame/lens/{name}"
-    items = search_similar_videos(image_url)
+    items = search_similar_videos(image_url, source_caption=source_caption)
     store.bump_lens(month)
     return {"ok": True, "items": items, "count": len(items)}
 

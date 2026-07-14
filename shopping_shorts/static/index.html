@@ -531,6 +531,8 @@ async function lensSearch(btn, shortcode){
   openScript('<div class="sm-loading">🔍 렌즈 검색 중… (5~15초)</div>','🔍 렌즈 유사영상',true);
   const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.85));
   const fd=new FormData(); fd.append('frame', blob, 'f.jpg');
+  const srcItem=STATE.items.find(i=>i.shortcode===shortcode);
+  if(srcItem && srcItem.caption) fd.append('source_caption', srcItem.caption);
   try{
     const r=await fetch('/api/lens/search',{method:'POST',body:fd});
     const body=document.getElementById('scriptBody');
@@ -558,8 +560,9 @@ function renderLens(shortcode){
   // 큰 썸네일 그리드 + 썸네일 클릭 시 바로 그 자리 인라인 재생(embed). embed 불가 플랫폼만 새 탭.
   const shown=st.items.filter(i=>st.on.has(i.platform));
   const cards=shown.map((i,idx)=>`
-    <div style="padding:8px 0;border-bottom:1px solid var(--line)">
+    <div style="padding:8px 0;border-bottom:1px solid var(--line);opacity:${i.match===false?0.55:1}">
       <div style="font-size:12px;margin-bottom:6px"><b>${LENS_PLATFORMS.find(p=>p.k===i.platform)?.label||''}</b> <span style="color:var(--sub)">${esc((i.title||'').slice(0,80))}</span>
+        ${i.match===false?'<span title="원본 캡션 키워드와 제목이 안 겹침 — 다른 주제일 수 있음" style="font-size:10px;color:#e0623d;margin-left:4px">⚠️다른주제?</span>':''}
         <a href="${i.url}" target="_blank" style="font-size:11px;color:var(--accent);margin-left:6px">↗ 원본</a></div>
       <div id="lensplay_${idx}">
         <div onclick="lensPlay(${idx})" style="position:relative;width:100%;max-width:260px;aspect-ratio:9/16;cursor:pointer;border-radius:10px;overflow:hidden;background:#0d131c">
