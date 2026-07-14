@@ -616,6 +616,58 @@ def api_wiki_save(request: Request, shortcode: str, background_tasks: Background
     return {"ok": True, "shortcode": code, "structure": structure, "has_video": media_target.exists()}
 
 
+@app.post("/api/produce/save_to_wiki")
+def api_produce_save_to_wiki(request: Request, body: dict, background_tasks: BackgroundTasks):
+    """제작소(영상제작소)에서 확정한 대본을 URL 기반으로 위키(도서관)에 저장.
+
+    기존 /api/wiki/save는 load_last_run()에 의존해 '레퍼런스 랭킹 last_run에
+    있는 항목'만 저장 가능했다. 즐겨찾기 경유로 last_run을 안 거치고 제작소에
+    직행한 영상은 last_run에 없을 수 있어 저장이 막혔다(2026-07-15). 여기선
+    클라이언트가 이미 확정한 대본 텍스트를 URL과 함께 받아 last_run 무관하게
+    저장한다.
+
+    body: {url, shortcode?, script_text, structure?, segments?, category?,
+           name?, video_url?, caption?, followers?, comments?, density?}."""
+    url = (body.get("url") or "").strip()
+    script_text = (body.get("script_text") or "").strip()
+    if not url or not script_text:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "url·script_text 필요"})
+    code = (body.get("shortcode") or "").strip() or hashlib.sha1(url.encode()).hexdigest()[:12]
+    category = body.get("category")
+    store = Store(DB_PATH)
+
+    structure = body.get("structure") or analyze_structure(script_text)
+    script = {"full_text": script_text, "segments": body.get("segments") or []}
+    store.save_script(code, script, category=category)
+
+    # 원본 영상 영구보관(도서관 인라인 재생용) — 실패해도 대본·구조는 저장(무해).
+    hashed = hashlib.sha1(code.encode()).hexdigest()[:16]
+    work_dir = _FIND_TMP_DIR / hashed
+    media_target = _WIKI_MEDIA_DIR / f"{hashed}.mp4"
+    if not media_target.exists():
+        try:
+            video_path, _dl_caption = download_any(body.get("video_url") or url, str(work_dir))
+            if video_path and Path(video_path).exists():
+                _WIKI_MEDIA_DIR.mkdir(parents=True, exist_ok=True)
+                shutil.copy(str(video_path), str(media_target))
+        except Exception:
+            pass  # 다운로드 실패(URL 만료·비공개 등) — 치명적 아님
+
+    item = {
+        "shortcode": code,
+        "name": body.get("name"),
+        "category": category,
+        "url": url,
+        "followers": body.get("followers") or 0,
+        "comments": body.get("comments") or 0,
+        "density": body.get("density") or 0.0,
+    }
+    store.save_to_wiki(item, script, structure, customer_id=_cid(request))
+    store.save_extract_structure(code, structure)
+    background_tasks.add_task(_relearn_category, DB_PATH, category)
+    return {"ok": True, "shortcode": code, "structure": structure, "has_video": media_target.exists()}
+
+
 @app.get("/api/wiki/video")
 def api_wiki_video(shortcode: str):
     """도서관에 영구보관한 원본 영상 서빙(인라인 재생). 없으면 404.
