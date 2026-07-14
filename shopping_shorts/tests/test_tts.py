@@ -130,3 +130,51 @@ def test_synthesize_speed_clamped_to_api_range(monkeypatch):
     out = Path(tempfile.mkdtemp()) / "b.mp3"
     tts.synthesize_tts("x", str(out), voice_id="v", speed=1.5)
     assert calls["json"]["voice_settings"]["speed"] == 1.2
+
+
+def test_v3_drops_speaker_boost(monkeypatch):
+    """v3 모델이면 payload에서 use_speaker_boost 자동 제거."""
+    monkeypatch.setattr(tts.config, "ELEVENLABS_API_KEY", "k")
+    captured = {}
+    class R:
+        content = b"x"
+        def raise_for_status(self): pass
+    def fake_post(url, headers=None, json=None, timeout=None):
+        captured["json"] = json
+        return R()
+    monkeypatch.setattr(tts.requests, "post", fake_post)
+    import tempfile; from pathlib import Path
+    out = Path(tempfile.mkdtemp()) / "b.mp3"
+    tts.synthesize_tts("안녕", str(out), model_id="eleven_v3",
+                       voice_settings={"stability": 0.5, "use_speaker_boost": True})
+    assert "use_speaker_boost" not in captured["json"]["voice_settings"]
+
+def test_continuity_and_seed_in_payload(monkeypatch):
+    monkeypatch.setattr(tts.config, "ELEVENLABS_API_KEY", "k")
+    captured = {}
+    class R:
+        content = b"x"
+        def raise_for_status(self): pass
+    monkeypatch.setattr(tts.requests, "post",
+                        lambda url, headers=None, json=None, timeout=None: (captured.update(json=json) or R()))
+    import tempfile; from pathlib import Path
+    out = Path(tempfile.mkdtemp()) / "b.mp3"
+    tts.synthesize_tts("안녕", str(out), seed=7, previous_text="앞", next_text="뒤")
+    assert captured["json"]["seed"] == 7
+    assert captured["json"]["previous_text"] == "앞"
+    assert captured["json"]["next_text"] == "뒤"
+
+def test_backward_compat_no_extra_keys(monkeypatch):
+    """seed/연속성 미지정 시 payload에 해당 키 없음(회귀)."""
+    monkeypatch.setattr(tts.config, "ELEVENLABS_API_KEY", "k")
+    captured = {}
+    class R:
+        content = b"x"
+        def raise_for_status(self): pass
+    monkeypatch.setattr(tts.requests, "post",
+                        lambda url, headers=None, json=None, timeout=None: (captured.update(json=json) or R()))
+    import tempfile; from pathlib import Path
+    out = Path(tempfile.mkdtemp()) / "b.mp3"
+    tts.synthesize_tts("안녕", str(out))
+    for k in ("seed", "previous_text", "next_text"):
+        assert k not in captured["json"]
