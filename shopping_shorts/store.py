@@ -228,9 +228,17 @@ class Store:
                     sample_file TEXT,
                     source_ref TEXT,
                     origin TEXT NOT NULL DEFAULT 'curated',
-                    created_at TEXT NOT NULL
+                    created_at TEXT NOT NULL,
+                    group_id TEXT,
+                    variant TEXT NOT NULL DEFAULT 'stable'
                 )
             """)
+            # 성우 1명당 stable/natural/expressive 3톤(2026-07-14) — 기존 DB 백필.
+            for col, ddl in (("group_id", "TEXT"), ("variant", "TEXT NOT NULL DEFAULT 'stable'")):
+                try:
+                    c.execute(f"ALTER TABLE voice_presets ADD COLUMN {col} {ddl}")
+                except sqlite3.OperationalError:
+                    pass  # 이미 있으면(기존 DB) 무시
             c.execute("""
                 CREATE TABLE IF NOT EXISTS settings (
                     key TEXT PRIMARY KEY,
@@ -1059,14 +1067,18 @@ class Store:
 
     # ── 보이스 프리셋(2026-07-14, 영상제작 4단계) ──
     def upsert_voice_preset(self, p):
-        """보이스 프리셋 1건 upsert(preset_id 충돌 시 덮어씀)."""
+        """보이스 프리셋 1건 upsert(preset_id 충돌 시 덮어씀).
+
+        group_id: 같은 성우의 stable/natural/expressive 3톤을 묶는 키(미지정 시 preset_id로 대체).
+        variant: stable(기본)/natural/expressive."""
         now = datetime.now(timezone.utc).isoformat()
         with self._conn() as c:
             c.execute("""
                 INSERT INTO voice_presets(preset_id, name, one_liner, lang, archetype,
                     base_voice_id, model_id, voice_settings_json, default_speed,
-                    default_silence_trim, sample_file, source_ref, origin, created_at)
-                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                    default_silence_trim, sample_file, source_ref, origin, created_at,
+                    group_id, variant)
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 ON CONFLICT(preset_id) DO UPDATE SET
                     name=excluded.name, one_liner=excluded.one_liner, lang=excluded.lang,
                     archetype=excluded.archetype, base_voice_id=excluded.base_voice_id,
@@ -1074,7 +1086,7 @@ class Store:
                     default_speed=excluded.default_speed,
                     default_silence_trim=excluded.default_silence_trim,
                     sample_file=excluded.sample_file, source_ref=excluded.source_ref,
-                    origin=excluded.origin
+                    origin=excluded.origin, group_id=excluded.group_id, variant=excluded.variant
             """, (
                 p["preset_id"], p["name"], p.get("one_liner"), p.get("lang", "KR"),
                 p.get("archetype"), p["base_voice_id"],
@@ -1082,6 +1094,7 @@ class Store:
                 json.dumps(p.get("voice_settings", {}), ensure_ascii=False),
                 p.get("default_speed", 1.0), p.get("default_silence_trim", "off"),
                 p.get("sample_file"), p.get("source_ref"), p.get("origin", "curated"), now,
+                p.get("group_id") or p["preset_id"], p.get("variant", "stable"),
             ))
 
     def _row_to_preset(self, r):
@@ -1091,20 +1104,21 @@ class Store:
             "voice_settings": json.loads(r[7]) if r[7] else {},
             "default_speed": r[8], "default_silence_trim": r[9],
             "sample_file": r[10], "source_ref": r[11], "origin": r[12], "created_at": r[13],
+            "group_id": r[14] or r[0], "variant": r[15] or "stable",
         }
 
     def get_voice_preset(self, preset_id):
         with self._conn() as c:
             r = c.execute("SELECT preset_id,name,one_liner,lang,archetype,base_voice_id,"
                           "model_id,voice_settings_json,default_speed,default_silence_trim,"
-                          "sample_file,source_ref,origin,created_at FROM voice_presets "
+                          "sample_file,source_ref,origin,created_at,group_id,variant FROM voice_presets "
                           "WHERE preset_id=?", (preset_id,)).fetchone()
         return self._row_to_preset(r) if r else None
 
     def list_voice_presets(self, lang=None):
         q = ("SELECT preset_id,name,one_liner,lang,archetype,base_voice_id,model_id,"
              "voice_settings_json,default_speed,default_silence_trim,sample_file,"
-             "source_ref,origin,created_at FROM voice_presets")
+             "source_ref,origin,created_at,group_id,variant FROM voice_presets")
         args = ()
         if lang:
             q += " WHERE lang=?"; args = (lang,)

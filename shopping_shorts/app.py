@@ -1013,18 +1013,24 @@ def api_mix_tts(job_id: str, beat_idx: int):
 
 @app.get("/api/voice-presets")
 def api_voice_presets(lang: str = "KR"):
-    """프리셋 목록(유저 노출용 — source_ref는 내부 전용이라 제외)."""
+    """성우별 그룹 목록(유저 노출용 — source_ref는 내부 전용이라 제외).
+    성우 1명당 stable(기본 노출)/natural/expressive 3톤을 variants에 묶어서 반환."""
     rows = Store(DB_PATH).list_voice_presets(lang=lang)
-    out = []
+    groups = {}
     for p in rows:
-        out.append({
-            "preset_id": p["preset_id"], "name": p["name"], "one_liner": p["one_liner"],
+        gid = p["group_id"]
+        g = groups.setdefault(gid, {
+            "group_id": gid, "name": p["name"], "one_liner": p["one_liner"],
             "lang": p["lang"], "archetype": p["archetype"],
+            "default_variant": "stable", "variants": {},
+        })
+        g["variants"][p["variant"]] = {
+            "preset_id": p["preset_id"], "voice_id": p["base_voice_id"],
             "voice_settings": p["voice_settings"], "default_speed": p["default_speed"],
             "default_silence_trim": p["default_silence_trim"],
             "sample_url": f"/api/voice-presets/{p['preset_id']}/sample" if p["sample_file"] else None,
-        })
-    return {"ok": True, "presets": out}
+        }
+    return {"ok": True, "groups": list(groups.values())}
 
 
 @app.get("/api/voice-presets/{preset_id}/sample")
@@ -1407,8 +1413,11 @@ def api_produce_mix_start(background_tasks: BackgroundTasks, body: dict):
     urls = [u for u in (body.get("urls") or []) if u]
     if not script:
         return JSONResponse(status_code=422, content={"ok": False, "error": "확정 대본이 비어 있습니다(1단계)"})
-    if len(urls) < 2:
-        return JSONResponse(status_code=422, content={"ok": False, "error": "소스 영상 URL 2개 이상 필요"})
+    if len(urls) < 1:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "소스 영상 URL이 필요합니다"})
+    # 1개면 그 영상 안에서 구간 순서편집(재배치), 2개 이상이면 여러 영상을 섞는
+    # 믹스 — build_edit_plan(edit_plan.py)의 세그먼트 인벤토리 매칭이 소스 개수와
+    # 무관하게 동작해서 이 유효성검사만 완화하면 별도 분기 없이 그대로 지원된다(2026-07-14).
     target = int(body.get("target_seconds") or 30)
     subtitle_removal = bool(body.get("subtitle_removal", False))
     job_id = uuid.uuid4().hex[:12]

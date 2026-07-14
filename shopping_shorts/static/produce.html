@@ -978,7 +978,10 @@ async function onSubToggle(){
 }
 
 // ── 4단계 보이스 프리셋 ──────────────
-let VOICE = { preset_id:null, voice_id:null, settings:null, speed:1.0, silence_trim:'off' };
+let VOICE = { preset_id:null, voice_id:null, settings:null, speed:1.0, silence_trim:'off', group_id:null, variant:null };
+let VOICE_GROUPS = [];
+let SEL_VARIANT = {}; // group_id -> 'stable'|'natural'|'expressive' (기본 노출은 stable, 나머지는 버튼으로 전환)
+const VARIANT_LABELS = {stable:'안정', natural:'자연', expressive:'표현'};
 const SPEEDS=[0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5];
 const SIL=[['off','OFF'],['weak','약'],['mid','중'],['strong','강']];
 
@@ -986,31 +989,58 @@ async function loadTtsBeats(){
   // 프리셋 카드는 job(영상매칭) 없이도 항상 표시 — 둘러보기·샘플 미리듣기 가능
   try{
     const d=await (await fetch('/api/voice-presets?lang=KR')).json();
-    const cards=(d.presets||[]).map(p=>`
-      <div onclick='pickPreset(${JSON.stringify(p)})'
-        style="border:1px solid ${VOICE.preset_id===p.preset_id?'var(--accent2)':'var(--line)'};border-radius:9px;padding:9px;margin-bottom:6px;cursor:pointer;background:#0d1420">
-        <b>${esc(p.name)}</b> — ${esc(p.one_liner||'')}
-        ${p.sample_url?`<audio controls src="${esc(p.sample_url)}" style="height:26px;vertical-align:middle;margin-left:8px"></audio>`:''}
-      </div>`).join('');
-    document.getElementById('presetCards').innerHTML=cards||'<div class="hint">프리셋이 없습니다.</div>';
+    VOICE_GROUPS=d.groups||[];
+    renderPresetCards();
   }catch(e){ document.getElementById('presetCards').innerHTML='<div class="hint" style="color:var(--fire)">프리셋 로드 실패</div>'; return; }
   renderTtsBeats();
 }
 
-function pickPreset(p){
-  VOICE={preset_id:p.preset_id, voice_id:p.base_voice_id||p.voice_id,
-         settings:Object.assign({}, p.voice_settings), speed:p.default_speed,
-         silence_trim:p.default_silence_trim};
+function renderPresetCards(){
+  const cards=VOICE_GROUPS.map(g=>{
+    const variant=SEL_VARIANT[g.group_id]||g.default_variant||'stable';
+    const v=g.variants[variant]||g.variants[g.default_variant]||Object.values(g.variants)[0];
+    const active=VOICE.group_id===g.group_id;
+    const tabs=['stable','natural','expressive'].filter(k=>g.variants[k]).map(k=>
+      `<button type="button" class="tab${variant===k?' active':''}" style="flex:0 0 auto;min-width:auto;padding:3px 9px;font-size:11px"
+        onclick="event.stopPropagation();pickVariant('${g.group_id}','${k}')">${VARIANT_LABELS[k]}</button>`).join('');
+    return `
+      <div onclick="pickPreset('${g.group_id}')"
+        style="border:1px solid ${active?'var(--accent2)':'var(--line)'};border-radius:9px;padding:9px;margin-bottom:6px;cursor:pointer;background:#0d1420">
+        <b>${esc(g.name)}</b> — ${esc(g.one_liner||'')}
+        <div style="display:flex;gap:4px;align-items:center;margin-top:6px;flex-wrap:wrap">
+          ${tabs}
+          ${v&&v.sample_url?`<audio controls src="${esc(v.sample_url)}" style="height:26px;vertical-align:middle;margin-left:4px"></audio>`:''}
+        </div>
+      </div>`;
+  }).join('');
+  document.getElementById('presetCards').innerHTML=cards||'<div class="hint">프리셋이 없습니다.</div>';
+}
+
+function pickVariant(gid, variant){
+  SEL_VARIANT[gid]=variant;
+  pickPreset(gid); // 버튼으로 톤 전환 시 바로 적용
+}
+
+function pickPreset(gid){
+  const g=VOICE_GROUPS.find(x=>x.group_id===gid);
+  if(!g) return;
+  const variant=SEL_VARIANT[gid]||g.default_variant||'stable';
+  const v=g.variants[variant]||g.variants[g.default_variant]||Object.values(g.variants)[0];
+  if(!v) return;
+  VOICE={preset_id:v.preset_id, voice_id:v.voice_id,
+         settings:Object.assign({}, v.voice_settings), speed:v.default_speed,
+         silence_trim:v.default_silence_trim, group_id:gid, variant};
   document.getElementById('voiceControls').style.display='block';
   pickHighlight();
+  renderPresetCards();
   const vs=VOICE.settings||{};
-  const g=id=>document.getElementById(id);
-  g('advStability').value=(vs.stability!=null?vs.stability:0.5);
-  g('advSimilarity').value=(vs.similarity_boost!=null?vs.similarity_boost:0.75);
-  g('advStyle').value=(vs.style!=null?vs.style:0);
-  g('advBoost').checked=vs.use_speaker_boost!==false;
+  const g2=id=>document.getElementById(id);
+  g2('advStability').value=(vs.stability!=null?vs.stability:0.5);
+  g2('advSimilarity').value=(vs.similarity_boost!=null?vs.similarity_boost:0.75);
+  g2('advStyle').value=(vs.style!=null?vs.style:0);
+  g2('advBoost').checked=vs.use_speaker_boost!==false;
   syncAdvLabels();
-  loadTtsBeats();
+  renderTtsBeats();
 }
 function setSpeed(s){ VOICE.speed=s; pickHighlight(); }
 function setSil(v){ VOICE.silence_trim=v; pickHighlight(); }
