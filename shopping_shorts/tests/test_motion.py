@@ -121,3 +121,42 @@ def test_burn_captions_composites_motion_layers(tmp_path, monkeypatch):
     assert "eq=saturation=1.2" in fcx          # base vf에 색감필터 부착
     assert "overlay=" in fcx                   # 레이어 합성
     assert str(asset) in cmd                   # 자산이 입력으로 추가됨
+
+
+def test_burn_captions_motion_plus_bgm_keeps_audio_index(tmp_path, monkeypatch):
+    # 모션 입력이 인덱스를 소비한 뒤에도 bgm 오디오 입력 인덱스가 맞아야 한다(idx off-by-one 가드)
+    asset = tmp_path / "swipe.mov"; asset.write_bytes(b"\x00")
+    bgm = tmp_path / "bgm.mp3"; bgm.write_bytes(b"\x00")
+    base = tmp_path / "base.mp4"; base.write_bytes(b"\x00")
+    captured = {}
+    monkeypatch.setattr(va, "_run_ffmpeg", lambda cmd, **k: captured.setdefault("cmd", cmd))
+    monkeypatch.setattr(va, "_resolve_font", lambda: str(asset))
+    monkeypatch.setattr(va.shutil, "copy", lambda *a, **k: None)
+    deco = {
+        "bgm": {"_abspath": str(bgm), "volume": 15},
+        "motion": {"layers": [{"_abspath": str(asset), "start": 0, "dur": 0.5,
+                               "x": 50, "y": 50, "width": 720, "alpha": 1}]},
+    }
+    va._burn_captions(str(base), {"beats": []}, {}, str(tmp_path / "out.mp4"), tmp_path, None, None, deco)
+    cmd = captured["cmd"]
+    fcx = cmd[cmd.index("-filter_complex") + 1]
+    # 입력 순서: 0=base, 1=motion asset, 2=bgm → bgm 오디오는 [2:a]
+    assert "[2:a]" in fcx                    # bgm 오디오 인덱스가 모션 입력 뒤로 정확히 밀렸다
+    assert "amix" in fcx                     # bgm 믹스 존재
+    assert "overlay=" in fcx                 # 모션 합성 존재
+
+
+def test_burn_captions_color_only_uses_simple_vf(tmp_path, monkeypatch):
+    # 레이어 없이 색감필터만 → filter_complex 안 타고 단순 -vf에 필터가 붙는다
+    asset = tmp_path / "f.ttf"; asset.write_bytes(b"\x00")
+    base = tmp_path / "base.mp4"; base.write_bytes(b"\x00")
+    captured = {}
+    monkeypatch.setattr(va, "_run_ffmpeg", lambda cmd, **k: captured.setdefault("cmd", cmd))
+    monkeypatch.setattr(va, "_resolve_font", lambda: str(asset))
+    monkeypatch.setattr(va.shutil, "copy", lambda *a, **k: None)
+    deco = {"motion": {"color_filter": "eq=saturation=1.3", "layers": []}}
+    va._burn_captions(str(base), {"beats": []}, {}, str(tmp_path / "out.mp4"), tmp_path, None, None, deco)
+    cmd = captured["cmd"]
+    assert "-filter_complex" not in cmd          # 레이어 없으니 단순 경로
+    assert "-vf" in cmd
+    assert "eq=saturation=1.3" in cmd[cmd.index("-vf") + 1]   # 색감필터가 -vf에 부착
