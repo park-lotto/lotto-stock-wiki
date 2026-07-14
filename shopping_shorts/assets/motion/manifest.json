@@ -1,0 +1,8 @@
+{
+  "assets": [
+    {"id": "ph_swipe", "type": "transition", "file": "ph_swipe.mov",
+     "default": {"width": 720, "x": 50, "y": 50}},
+    {"id": "ph_sparkle", "type": "sticker", "file": "ph_sparkle.mov",
+     "default": {"width": 300, "x": 50, "y": 40}}
+  ]
+}
