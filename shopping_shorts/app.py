@@ -32,6 +32,7 @@ from shopping_shorts.media_download import resolve_media_url, download_any
 from shopping_shorts import edit_plan as _edit_plan
 from shopping_shorts import voice_presets, audio_post
 from shopping_shorts.tts import synthesize_tts
+from shopping_shorts.narration_naturalize import naturalize as _naturalize
 import uuid
 
 app = FastAPI(title="쇼핑쇼츠 레퍼런스 랭킹")
@@ -1144,6 +1145,28 @@ def api_voice_preset_sample(preset_id: str):
     return FileResponse(str(f), media_type="audio/mpeg")
 
 
+_TUNE_CORPUS = Path(__file__).parent / "assets" / "tune_corpus.json"
+
+
+@app.get("/api/voice-tune/corpus")
+def api_voice_tune_corpus():
+    """튜닝 작업대 회귀 코퍼스(고정 10줄) — role별 카드로 렌더링."""
+    import json as _json
+    lines = _json.loads(_TUNE_CORPUS.read_text(encoding="utf-8")) if _TUNE_CORPUS.exists() else []
+    return {"lines": lines}
+
+
+@app.post("/api/voice-tune/preview")
+async def api_voice_tune_preview(req: Request):
+    """합성 없이 naturalize만 실행해 변환텍스트를 실시간 미리보기."""
+    body = await req.json()
+    text = body.get("text", "")
+    profile = body.get("profile") or {}
+    out = _naturalize(text, profile, beat_role=body.get("beat_role"),
+                      beat_index=body.get("beat_index"), beat_total=body.get("beat_total"))
+    return {"text": out}
+
+
 @app.post("/api/mix/voice")
 def api_mix_voice(background_tasks: BackgroundTasks, body: dict):
     """프리셋 선택을 job에 스냅샷 저장 후 기존 plan에 대해 TTS 재생성(백그라운드).
@@ -1432,7 +1455,10 @@ async def _auth_guard(request: Request, call_next):
     # 쿠키 없이 fetch해야 해서 예외 처리(2026-07-09, SerpApi 연동 시도 중
     # 401로 전부 막혀있던 것을 발견 — 경로 자체는 path traversal 방어된
     # 랜덤 work_id 해시라 노출 위험 낮음).
-    if path in _AUTH_ALLOW or path.startswith("/static") or path.startswith("/api/find/frame/"):
+    # /api/voice-tune/*·/voice_tune.html은 보이스 튜닝 작업대(운영자 전용 로컬 도구) —
+    # 별도 로그인 세션 없이도 접근 가능해야 해서 예외 처리(2026-07-15).
+    if (path in _AUTH_ALLOW or path.startswith("/static") or path.startswith("/api/find/frame/")
+            or path.startswith("/api/voice-tune/") or path == "/voice_tune.html"):
         return await call_next(request)
     customer_id = _verify_session(request.cookies.get("dash_auth"))
     if customer_id is not None:

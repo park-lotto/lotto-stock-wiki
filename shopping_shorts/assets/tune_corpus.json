@@ -1,0 +1,12 @@
+[
+  {"id": "hook1", "role": "hook", "text": "이거 진짜 대박이거든요 끝까지 보세요"},
+  {"id": "hook2", "role": "hook", "text": "어머 이건 사야 돼 진짜"},
+  {"id": "product1", "role": "body", "text": "3.5kg에 이천 원이면 완전 혜자죠"},
+  {"id": "product2", "role": "body", "text": "SNS에서 2024년부터 난리 난 그 제품이에요"},
+  {"id": "number1", "role": "body", "text": "50% 할인에 배송비까지 무료입니다"},
+  {"id": "story1", "role": "build", "text": "저도 처음엔 반신반의했는데 써보고 생각이 완전 바뀌었어요"},
+  {"id": "long1", "role": "body", "text": "이게 싸고 좋은데 품질도 최고고 심지어 디자인까지 예뻐서 안 살 이유가 없더라고요"},
+  {"id": "cta1", "role": "cta", "text": "지금 링크 눌러서 확인해보세요"},
+  {"id": "cta2", "role": "cta", "text": "품절되기 전에 서두르세요"},
+  {"id": "short1", "role": "hook", "text": "이거 봤어요?"}
+]
