@@ -1483,3 +1483,11 @@ S급 대본을 위키에 모아 **구조를 학습→변형/믹스로 새 대본
 - detect_subject(원본 full_text→소재 한줄, 온디맨드 1콜) / generate_variations remake 프롬프트 소재잠금 / GET /api/wiki/subject / library.html 2모드UI+소재 자동프리필(수정가능)+stale레이스 가드
 - 검증: 65 테스트 green, node --check, toggleTopic 실함수 DOM스텁 구동(remake→소재칸/transplant→이식칸 토글), 라이브 HTTP /api/wiki/subject 404 JSON. 각 태스크 spec+quality(opus) 리뷰 통과, 최종 전체리뷰 Ready
 - ⏭ 남은것: 라이브 배포 후 실 S급항목으로 브라우저 육안(브라우저 MCP 동시세션 점유로 이월) — 소재 유지·표현변형 눈으로 확인
+
+## 2026-07-15 (집PC) 꾸미기(5단계) 피팅룸 UX 재설계 — ✅ 구현·검증·배포 (SDD 3태스크, origin/main)
+- 배경: 꾸미기 페이지 "버튼 벽" 불만 → "피팅룸"으로. 진입 즉시 좋은 기본스타일이 실장면 위 완성돼 보이고, 스타일은 시각카드로 고르고, 세부는 "직접 다듬기"로 접기 (딸깍철학)
+- Task1 좌측 큰 미러(380px)+완성스타일 카드+강조단어 노출 / 세부(폰트·자막·워터마크·내프리셋)는 details#advDetails 접기. Task2 renderStyleCards — 실장면 poster 위 스타일텍스트 미니 9:16 카드(대표5+더보기18). Task3 applyDefaultStyleOnEntry(기본=임팩트옐로, 실장면배경 자동ON) initHeadcopy에 배선
+- 리뷰가 잡은 버그 5건 수정: ①poster캐시 매칭전 빈값영구고정 ②선택카드 하이라이트 오탐(PICKED_STYLE_IDX 추적) ③색상 대소문자 매칭(input=color 소문자) ④실장면배경 alert가드 setTimeout경합(→silent 파라미터 클로저) ⑤**재진입 시 수동 미세조정 날아가는 회귀(DEFAULT_APPLIED 최초1회 가드)** — 시그니처 경로라 유보안하고 수정
+- 검증: 각 태스크 spec+quality(opus) 리뷰 통과 → 통합 grounding 4/4 통과(진입자동완성·카드·접힘·문구/강조, JS에러0) → 전체브랜치 리뷰 Ready. 커밋 3ba5671b·a5610c0d·4f29c742·22466b17·320c9dba, 회귀수정은 동시세션 커밋 0f2c2791에 실려 반영(파일 온전 확인)
+- ⚠️ 동시세션이 `git add -A`로 내 produce.html을 자기 커밋에 쓸어담음(파일은 무손실). 공유워킹트리 -A 위험 재확인
+- ⏭ 남은것(defer): poster캐시 재매칭 시 카드썸네일 stale(미러는 live, cosmetic) / 순수 produce.html이라 서버 무변경, 자동배포 크론 반영
