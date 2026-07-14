@@ -145,3 +145,46 @@ def test_produce_mix_settings_saves_highlight_rules_inside_deco(monkeypatch, tmp
     assert r.status_code == 200
     saved = store.get_mix_job("jd1")
     assert saved["deco"]["highlight_rules"][0]["keyword"] == "쿠팡"
+
+
+# ── 대본용 영상 URL 직접추출(2026-07-14) — last_run 의존 제거 ──────────
+
+def test_extract_from_url_extracts_without_last_run(monkeypatch, tmp_path):
+    """즐겨찾기에 예전 run 때 담긴 영상(last_run에 없음)도 URL로 직접 대본추출돼야 한다.
+    /api/extract_script는 last_run 조회라 실패하던 실버그(2026-07-14) 대응 엔드포인트."""
+    client, store = _client(monkeypatch, tmp_path)
+    monkeypatch.setattr(app_module, "download_any", lambda url, d: ("/tmp/x.mp4", "캡션"))
+    monkeypatch.setattr(app_module, "extract_script",
+                        lambda path, code, caption="": {"full_text": "감자 대본", "segments": []})
+    r = client.post("/api/produce/extract_from_url",
+                    json={"url": "https://www.instagram.com/p/OLD/", "shortcode": "OLD1"})
+    assert r.status_code == 200
+    assert r.json()["full_text"] == "감자 대본"
+
+
+def test_extract_from_url_caches_by_shortcode(monkeypatch, tmp_path):
+    """shortcode로 캐시 재사용 — 두 번째 호출은 다운로드/추출 없이 즉시 캐시 반환."""
+    client, store = _client(monkeypatch, tmp_path)
+    calls = {"dl": 0}
+    def fake_dl(url, d): calls["dl"] += 1; return ("/tmp/x.mp4", "")
+    monkeypatch.setattr(app_module, "download_any", fake_dl)
+    monkeypatch.setattr(app_module, "extract_script",
+                        lambda path, code, caption="": {"full_text": "T", "segments": []})
+    body = {"url": "https://insta/p/X", "shortcode": "SC1"}
+    assert client.post("/api/produce/extract_from_url", json=body).json()["full_text"] == "T"
+    r2 = client.post("/api/produce/extract_from_url", json=body)
+    assert r2.json()["cached"] is True
+    assert calls["dl"] == 1   # 두 번째는 다운로드 안 함
+
+
+def test_extract_from_url_download_failure_returns_502(monkeypatch, tmp_path):
+    client, store = _client(monkeypatch, tmp_path)
+    def boom(url, d): raise RuntimeError("URL expired")
+    monkeypatch.setattr(app_module, "download_any", boom)
+    r = client.post("/api/produce/extract_from_url", json={"url": "https://insta/p/GONE"})
+    assert r.status_code == 502
+
+
+def test_extract_from_url_requires_url(monkeypatch, tmp_path):
+    client, store = _client(monkeypatch, tmp_path)
+    assert client.post("/api/produce/extract_from_url", json={"url": ""}).status_code == 422

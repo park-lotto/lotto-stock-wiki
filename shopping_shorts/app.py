@@ -28,7 +28,7 @@ from shopping_shorts.product_identify import fetch_lens_lines, identify_product_
 from shopping_shorts.search_links import build_search_links, lens_search_url
 from shopping_shorts.mix_pipeline import run_mix_job, run_render, retype_mix_job, _source_video_id, resynth_tts_job
 from shopping_shorts.lens_discover import search_similar_videos, upload_frame
-from shopping_shorts.media_download import resolve_media_url
+from shopping_shorts.media_download import resolve_media_url, download_any
 from shopping_shorts import edit_plan as _edit_plan
 from shopping_shorts import voice_presets, audio_post
 from shopping_shorts.tts import synthesize_tts
@@ -512,6 +512,41 @@ def api_extract_script(shortcode: str):
         return JSONResponse(status_code=502, content={"ok": False, "error": "대본 추출 실패(Gemini 키 소진 또는 영상 인식 실패) — 잠시 후 재시도"})
 
     store.save_script(code, result, category=item.get("category"))
+    return {"ok": True, "cached": False, **result}
+
+
+@app.post("/api/produce/extract_from_url")
+def api_produce_extract_from_url(body: dict):
+    """영상 URL로 직접 대본 추출(영상제작소 역할배정 '대본용'). body: {url, caption?, shortcode?}.
+
+    /api/extract_script는 현재 레퍼런스 랭킹 run(last_run)에서만 shortcode를 찾아,
+    즐겨찾기에 예전 run 때 담긴 영상은 'last_run에 없음'으로 실패한다(2026-07-14 실버그).
+    여기선 last_run을 안 거치고 저장된 URL을 download_any로 바로 받아 추출 → run 무관.
+    shortcode가 있으면 대본 캐시(get_script/save_script)를 재사용해 재클릭을 즉시화한다."""
+    url = (body.get("url") or "").strip()
+    if not url:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "url 필요"})
+    code = (body.get("shortcode") or "").strip() or hashlib.sha1(url.encode()).hexdigest()[:12]
+    store = Store(DB_PATH)
+    cached = store.get_script(code)
+    if cached:
+        return {"ok": True, "cached": True, **cached}
+    work_dir = _FIND_TMP_DIR / hashlib.sha1(code.encode()).hexdigest()[:16]
+    try:
+        video_path, dl_caption = download_any(url, str(work_dir))
+    except Exception as e:  # noqa: BLE001 — 다운로드 실패는 사용자에게 안내(치명 아님)
+        msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
+        return JSONResponse(status_code=502, content={
+            "ok": False, "error": f"영상 다운로드 실패(URL 만료·비공개·프로필주소 가능): {msg}"})
+    caption = (body.get("caption") or dl_caption or "")
+    try:
+        result = extract_script(video_path, code, caption=caption)
+    except Exception as e:  # noqa: BLE001
+        msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
+        return JSONResponse(status_code=500, content={"ok": False, "error": msg})
+    if not result.get("full_text") and not result.get("segments"):
+        return JSONResponse(status_code=502, content={"ok": False, "error": "대본 추출 실패 — 잠시 후 재시도"})
+    store.save_script(code, result)
     return {"ok": True, "cached": False, **result}
 
 
