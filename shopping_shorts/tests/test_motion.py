@@ -198,3 +198,12 @@ def test_run_render_resolves_motion_layers(tmp_path, monkeypatch):
     layer = deco["motion"]["layers"][0]
     assert layer["_abspath"].endswith("swipe_left.mov")   # 경로 해석됨
     assert layer["start"] == 1.0 and layer["dur"] == 0.5
+
+
+from shopping_shorts.motion_text import render_text_overlay, TextRenderUnavailable
+import pytest
+
+
+def test_render_text_overlay_stub_raises(tmp_path):
+    with pytest.raises(TextRenderUnavailable):
+        render_text_overlay("KineticHook", {"text": "역대급세일"}, str(tmp_path))
