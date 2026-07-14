@@ -272,13 +272,14 @@ async function openGen(sc){
     }
   });
   // 리메이크가 기본 → 원본 소재 자동감지 프리필
+  const mySC = sc;
   const subjEl = document.getElementById('genSubject');
   subjEl.value=''; subjEl.placeholder='소재 감지 중…';
   document.querySelector('input[name=genmode][value=remake]').checked = true;
   toggleTopic();
   try{
     const s = await (await fetch('/api/wiki/subject?shortcode='+encodeURIComponent(sc))).json();
-    if(s.ok) subjEl.value = s.subject || '';
+    if(s.ok && window._genSC===mySC) subjEl.value = s.subject || '';
   }catch(e){}
   subjEl.placeholder='예: 무선 가습기 물때 청소';
 }
@@ -303,7 +304,7 @@ async function runGen(){
   });
   const mode=document.querySelector('input[name=genmode]:checked').value;
   const topic=document.getElementById('genTopic').value.trim();
-  const subject=document.getElementById('genSubject').value.trim();
+  const subject = mode==='remake' ? document.getElementById('genSubject').value.trim() : '';
   if(mode==='transplant' && !topic){ res.innerHTML='<div class="gen-err">내 주제/제품을 입력하세요.</div>'; return; }
   btn.disabled=true; btn.textContent='⏳ 생성 중…'; res.innerHTML='<div class="gen-load">✨ S급 구조를 빌려 초안 만드는 중… (10~20초)</div>';
   try{
