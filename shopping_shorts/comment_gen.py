@@ -60,7 +60,10 @@ def _live_key_indices():
 
 def _client_for_key(key):
     if key not in _client_cache:
-        _client_cache[key] = genai.Client(api_key=key)
+        # 타임아웃 미지정 시 Gemini 응답이 느릴 때(영상 업로드+추론 등) 무한 대기할 수 있어
+        # 기존 재시도 로직(quota/503 등)이 아예 발동을 못 한다(2026-07-14 실사고: extracting
+        # 단계가 5분+ 멈춤, 에러도 안 남음). 타임아웃을 줘서 느린 요청이 예외로 떨어지게 한다.
+        _client_cache[key] = genai.Client(api_key=key, http_options=types.HttpOptions(timeout=120_000))
     return _client_cache[key]
 
 _PROMPT = """너는 인스타에서 활발히 소통하는 진짜 사람이다.
