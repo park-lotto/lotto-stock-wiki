@@ -646,6 +646,17 @@ def api_wiki_element_options(category: str):
     return {"ok": True, "options": Store(DB_PATH).get_element_options(category)}
 
 
+@app.get("/api/wiki/subject")
+def api_wiki_subject(request: Request, shortcode: str):
+    """리메이크 모달 프리필용 — 위키 항목 원문에서 소재 한 줄 자동 감지."""
+    store = Store(DB_PATH)
+    it = store.get_wiki_item(shortcode, customer_id=_cid(request))
+    if not it:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "위키에 없는 항목"})
+    subject = script_generate.detect_subject(it.get("full_text") or "")
+    return {"ok": True, "subject": subject}
+
+
 @app.post("/api/wiki/generate")
 def api_wiki_generate(request: Request, shortcode: str, body: dict):
     """도서관 S급 1개의 구조를 빌려 새 20초 대본 초안 생성(모드 A/B, 4단 요소 모드).
@@ -660,8 +671,9 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         return JSONResponse(status_code=404, content={"ok": False, "error": "위키에 없는 항목 — 먼저 S급으로 저장하세요"})
     if not (it.get("structure") or it.get("full_text")):
         return JSONResponse(status_code=422, content={"ok": False, "error": "구조분석/대본이 비어 생성 불가 — 재저장 필요"})
-    mode = body.get("mode", "A")
+    mode = body.get("mode", "remake")
     my_topic = body.get("my_topic", "")
+    subject = body.get("subject", "")
     try:
         n = int(body.get("n") or 3)
     except (TypeError, ValueError):
@@ -672,7 +684,7 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
     category_lookup = store.get_element_options(it.get("category") or "")
     drafts = script_generate.generate_variations(
         it.get("structure") or {}, it.get("full_text") or "", elem_modes, category_lookup,
-        mode=mode, my_topic=my_topic, n=n)
+        mode=mode, my_topic=my_topic, subject=subject, n=n)
     if not drafts:
         return JSONResponse(status_code=502, content={"ok": False, "error": "생성 실패(Gemini 키 소진 또는 오류) — 잠시 후 재시도"})
     cid = _cid(request)

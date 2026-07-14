@@ -107,7 +107,7 @@ def test_wiki_generate_ok(monkeypatch):
                         lambda self, sc, **kw: {"structure": {"characters": []}, "full_text": "ft", "category": "레시피"})
     monkeypatch.setattr(app_module.Store, "get_element_options", lambda self, category: {})
     captured = {}
-    def fake_gen(structure, full_text, elem_modes, category_lookup, mode="A", my_topic="", n=3):
+    def fake_gen(structure, full_text, elem_modes, category_lookup, mode="A", my_topic="", subject="", n=3):
         captured["elem_modes"] = elem_modes
         return [{"hook": "h", "script": "s", "applied": "a"}]
     monkeypatch.setattr(app_module.script_generate, "generate_variations", fake_gen)
@@ -653,3 +653,45 @@ def test_wiki_save_triggers_immediate_relearn(monkeypatch):
     assert r.status_code == 200
     assert saved_struct and saved_struct[0][0] == "SC1"       # 학습소스에 구조 채움
     assert relearned == ["레시피"]                             # 그 카테고리만 재학습
+
+
+def test_wiki_subject_returns_detected(monkeypatch):
+    from shopping_shorts import app as app_module
+    from shopping_shorts import script_generate
+    monkeypatch.setattr(app_module, "_AUTH_ON", False)
+    monkeypatch.setattr(app_module.Store, "get_wiki_item",
+                        lambda self, sc, customer_id=0: {"full_text": "가습기 물때"})
+    monkeypatch.setattr(script_generate, "detect_subject", lambda ft: "무선 가습기 물때 청소")
+    client = TestClient(app_module.app)
+    r = client.get("/api/wiki/subject?shortcode=ABC")
+    assert r.status_code == 200
+    assert r.json()["subject"] == "무선 가습기 물때 청소"
+
+
+def test_wiki_subject_404_when_no_item(monkeypatch):
+    from shopping_shorts import app as app_module
+    monkeypatch.setattr(app_module, "_AUTH_ON", False)
+    monkeypatch.setattr(app_module.Store, "get_wiki_item", lambda self, sc, customer_id=0: None)
+    client = TestClient(app_module.app)
+    r = client.get("/api/wiki/subject?shortcode=NOPE")
+    assert r.status_code == 404
+
+
+def test_wiki_generate_passes_subject(monkeypatch):
+    from shopping_shorts import app as app_module
+    from shopping_shorts import script_generate
+    monkeypatch.setattr(app_module, "_AUTH_ON", False)
+    monkeypatch.setattr(app_module.Store, "get_wiki_item",
+                        lambda self, sc, customer_id=0: {"structure": {}, "full_text": "원본", "category": ""})
+    monkeypatch.setattr(app_module.Store, "get_element_options", lambda self, cat: {})
+    monkeypatch.setattr(app_module.Store, "save_draft", lambda self, *a, **k: None)
+    captured = {}
+    def fake_gen(structure, full_text, elem_modes, lookup, mode="remake", my_topic="", subject="", n=3):
+        captured.update(mode=mode, subject=subject, my_topic=my_topic)
+        return [{"hook": "h", "script": "s", "applied": "a"}]
+    monkeypatch.setattr(script_generate, "generate_variations", fake_gen)
+    client = TestClient(app_module.app)
+    r = client.post("/api/wiki/generate?shortcode=ABC",
+                    json={"mode": "remake", "subject": "물때 청소", "n": 1, "elem_modes": {}})
+    assert r.status_code == 200
+    assert captured["mode"] == "remake" and captured["subject"] == "물때 청소"
