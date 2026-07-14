@@ -93,6 +93,17 @@
     <section class="panel" data-step="0">
       <h3>1 · 대본</h3>
       <div class="sub">어떻게 대본을 준비할지 고르세요.</div>
+
+      <!-- 즐겨찾기에서 받은 영상 역할 배정(핸드오프 있을 때만 표시) -->
+      <div id="rolePanel" style="display:none;background:#0d1420;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:16px">
+        <div style="font-size:13px;margin-bottom:4px"><b>📥 받은 영상 — 각각 역할을 정하세요</b></div>
+        <div class="hint" style="margin:0 0 10px">📝 <b>대본용</b>= 이 영상의 대본을 뽑아 씁니다(한국판 추천) · 🎬 <b>화면용</b>= 2단계에서 대본에 맞춰 화면으로 씁니다(외국·무자막 추천)</div>
+        <div id="roleList" style="display:flex;flex-direction:column;gap:8px"></div>
+        <button class="btn-next" style="padding:9px 16px;margin-top:12px" onclick="extractRoleScripts()">📝 대본용 영상에서 대본 뽑기</button>
+        <div id="roleScriptStatus" class="hint" style="margin-top:8px"></div>
+        <div id="roleScriptCandidates" style="margin-top:10px"></div>
+      </div>
+
       <div class="tabs" id="scriptTabs">
         <div class="tab active" data-mode="manual">✍️ 직접작성</div>
         <div class="tab" data-mode="mix">🧬 우리 시스템으로 믹스</div>
@@ -987,20 +998,87 @@ function addMixUrl(){
 }
 // 레퍼런스 모음집(/collection)에서 "🎬 영상제작으로 보내기"로 넘어온 URL을 2단계
 // 입력칸에 채워넣는다. sessionStorage로 한 번만 전달(소비 후 즉시 제거).
+// 즐겨찾기에서 넘어온 영상들. 각 항목에 role('script'=대본용 / 'footage'=화면용)을 붙여
+// 관리한다. 기본값: 첫 영상은 대본용, 나머지는 화면용(사장님이 바꿈).
+let HANDOFF = [];   // [{url,shortcode,name,thumbnail,caption,role}]
 function _consumeProduceHandoff(){
-  let urls;
-  try{ urls=JSON.parse(sessionStorage.getItem('produce_mix_urls')||'null'); }catch(e){ urls=null; }
-  if(!urls || !urls.length) return;
+  let items;
+  try{ items=JSON.parse(sessionStorage.getItem('produce_handoff')||'null'); }catch(e){ items=null; }
+  if(!items || !items.length){
+    // 구버전 호환: items 없이 urls만 있으면 화면용으로 취급.
+    let urls; try{ urls=JSON.parse(sessionStorage.getItem('produce_mix_urls')||'null'); }catch(e){ urls=null; }
+    if(!urls || !urls.length) return;
+    items = urls.map(u=>({url:u, shortcode:'', name:'', thumbnail:'', caption:''}));
+  }
+  sessionStorage.removeItem('produce_handoff');
   sessionStorage.removeItem('produce_mix_urls');
-  while(document.querySelectorAll('.mixUrl').length<urls.length) addMixUrl();
-  document.querySelectorAll('.mixUrl').forEach((inp,i)=>{ inp.value=urls[i]||''; });
-  // 사용자는 1단계(대본)에 도착하므로, 2단계 입력칸에 조용히 채워지면 "아무 일도 안
-  // 일어난" 것처럼 보인다 → 받았다는 확인 배너를 띄워 흐름을 안내(2026-07-14).
+  HANDOFF = items.map((it,i)=>({...it, role: i===0 ? 'script' : 'footage'}));
   const b=document.getElementById('handoffBanner');
   if(b){
     b.style.display='block';
-    b.innerHTML=`⭐ 즐겨찾기에서 <b>영상 ${urls.length}개</b>를 받았어요 — <b>2단계(영상)</b> 입력칸에 넣어뒀습니다. 먼저 <b>1단계에서 대본을 확정</b>하면 이어서 영상 매칭을 돌릴 수 있어요.`;
+    b.innerHTML=`⭐ 즐겨찾기에서 <b>영상 ${HANDOFF.length}개</b>를 받았어요 — 아래에서 각 영상을 <b>📝대본용 / 🎬화면용</b>으로 나눈 뒤, 대본용에서 대본을 뽑아 확정하세요.`;
   }
+  document.getElementById('rolePanel').style.display='block';
+  renderRoleList();
+  syncFootageToStep2();
+}
+function renderRoleList(){
+  const el=document.getElementById('roleList'); if(!el) return;
+  el.innerHTML = HANDOFF.map((it,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px">
+      ${it.thumbnail?`<img src="${it.thumbnail.includes('gstatic.com')?it.thumbnail:('/api/thumb?url='+encodeURIComponent(it.thumbnail))}" referrerpolicy="no-referrer" style="width:40px;height:52px;object-fit:cover;border-radius:4px;flex-shrink:0;background:#000" onerror="this.style.visibility='hidden'">`:''}
+      <span style="flex:1;min-width:0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((it.name||it.url||'').slice(0,50))}</span>
+      <select onchange="setRole(${i}, this.value)" style="background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:7px;padding:6px 8px;font-size:12px">
+        <option value="script" ${it.role==='script'?'selected':''}>📝 대본용</option>
+        <option value="footage" ${it.role==='footage'?'selected':''}>🎬 화면용</option>
+      </select>
+    </div>`).join('');
+}
+function setRole(i, role){
+  if(HANDOFF[i]){ HANDOFF[i].role=role; syncFootageToStep2(); }
+}
+// 화면용으로 지정된 영상들을 2단계(영상) URL 입력칸에 반영.
+function syncFootageToStep2(){
+  const footage = HANDOFF.filter(h=>h.role==='footage').map(h=>h.url).filter(Boolean);
+  const wrap=document.getElementById('mixUrls');
+  wrap.innerHTML='';
+  const list = footage.length ? footage : [''];   // 최소 1칸 유지
+  list.forEach(u=>{
+    const d=document.createElement('div'); d.className='row'; d.style.marginBottom='6px';
+    d.innerHTML=`<input class="mixUrl" type="text" value="${esc(u)}" placeholder="인스타 릴스 URL" style="width:100%;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px">`;
+    wrap.appendChild(d);
+  });
+}
+// 대본용 영상들의 대본을 추출해 후보 카드로 보여준다. 클릭하면 직접작성 대본창에 채움.
+async function extractRoleScripts(){
+  const scripts = HANDOFF.filter(h=>h.role==='script' && h.shortcode);
+  const st=document.getElementById('roleScriptStatus');
+  const box=document.getElementById('roleScriptCandidates');
+  if(!scripts.length){ st.innerHTML='<span style="color:var(--fire)">📝 대본용으로 지정한 영상이 없습니다(대본은 shortcode가 있는 레퍼런스 영상에서만 뽑혀요).</span>'; return; }
+  st.textContent=`⏳ 대본용 영상 ${scripts.length}개에서 대본 추출 중… (영상당 10~30초)`;
+  box.innerHTML='';
+  const results=[];
+  for(const h of scripts){
+    try{
+      const d=await (await fetch('/api/extract_script?shortcode='+encodeURIComponent(h.shortcode),{method:'POST'})).json();
+      if(d.ok && d.full_text) results.push({name:h.name, text:d.full_text});
+    }catch(e){}
+  }
+  if(!results.length){ st.innerHTML='<span style="color:var(--fire)">대본을 뽑지 못했습니다. 다른 영상을 대본용으로 지정해보세요.</span>'; return; }
+  window._roleCandidates = results;   // 대본 원문을 onclick 속성에 박지 않고 인덱스로 참조(따옴표 파손 방지)
+  st.textContent=`✅ ${results.length}개 대본 후보 — 마음에 드는 걸 고르면 아래 직접작성 창에 들어갑니다(수정·변주 가능).`;
+  box.innerHTML=results.map((r,i)=>`
+    <div style="background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:10px">
+      <div style="font-size:12px;color:var(--sub);margin-bottom:6px">후보 ${i+1} · ${esc((r.name||'').slice(0,40))}</div>
+      <div style="font-size:13px;line-height:1.6;white-space:pre-wrap;max-height:160px;overflow:auto">${esc(r.text)}</div>
+      <button class="btn-next" style="padding:7px 14px;margin-top:8px;background:linear-gradient(90deg,#1c5a2e,#0d3a1c)" onclick="pickRoleScript(${i})">✅ 이 대본 쓰기</button>
+    </div>`).join('');
+}
+function pickRoleScript(idx){
+  const r=(window._roleCandidates||[])[idx]; if(!r) return;
+  STATE.script = r.text;
+  setScriptMode('manual');   // 편집 가능한 직접작성 창에 채워 넣음(변주는 여기서)
+  document.getElementById('roleScriptStatus').innerHTML='✅ 대본을 골랐어요 — 아래 직접작성 창에서 다듬거나, 제미니/믹스로 변주할 수 있어요.';
 }
 async function startProduceMix(){
   if(!STATE.script){ alert('1단계에서 대본을 먼저 확정하세요'); return; }

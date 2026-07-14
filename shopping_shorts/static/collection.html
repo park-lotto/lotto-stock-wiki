@@ -71,10 +71,15 @@ async function removeItem(sc){
   loadItems();
 }
 function sendToProduce(){
-  // produce.html 2단계는 URL 입력칸을 최대 5개까지만 받는다 — 넘으면 앞 5개만 전달.
-  const urls=ITEMS.filter(i=>SELECTED.has(i.shortcode)).map(i=>i.url).filter(Boolean).slice(0,5);
-  if(!urls.length){ alert('보낼 항목을 먼저 선택하세요'); return; }
-  sessionStorage.setItem('produce_mix_urls', JSON.stringify(urls));
+  // 영상당 역할(대본용/화면용)을 제작소에서 배정하려면 url뿐 아니라 shortcode·name·
+  // thumbnail·caption도 넘겨야 한다(대본 추출은 shortcode로). 최대 5개(2단계 입력 상한).
+  const picks=ITEMS.filter(i=>SELECTED.has(i.shortcode)).slice(0,5).map(i=>({
+    url:i.url||'', shortcode:i.shortcode||'', name:i.name||'',
+    thumbnail:i.thumbnail||'', caption:i.caption||''}));
+  if(!picks.length){ alert('보낼 항목을 먼저 선택하세요'); return; }
+  // 신규 형식(items)과 구버전 호환(urls) 둘 다 저장.
+  sessionStorage.setItem('produce_handoff', JSON.stringify(picks));
+  sessionStorage.setItem('produce_mix_urls', JSON.stringify(picks.map(p=>p.url).filter(Boolean)));
   location.href='/produce';
 }
 // 썸네일 소스: 렌즈 결과(gstatic)는 /api/thumb 프록시가 허용호스트가 아니라 400을
