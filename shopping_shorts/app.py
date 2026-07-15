@@ -547,6 +547,38 @@ def api_wiki_categories():
     return {"ok": True, "categories": sorted(cats)}
 
 
+@app.post("/api/produce/category")
+def api_produce_category(body: dict):
+    """카테고리 교정 전용(Task 9, ②, 2026-07-15) — 사용자의 명시적 교정은 항상 이긴다.
+
+    /api/produce/extract_from_url의 `if not cached.get("category")` 가드는 이미 추론값이
+    채워진 뒤엔 절대 안 열려(설계상 재클릭 안정화용) — 그래서 사용자가 #finalCategory
+    드롭다운으로 고쳐도 브라우저 상태(HANDOFF[i].category)만 바뀌고 DB(script_extracts)엔
+    영영 안 써졌다. element_raw_values가 script_extracts.category=?로 학습 코퍼스를 직접
+    필터하므로, 이대로면 I-3(교정 경로)이 없애려던 '틀린 버킷 오염'이 그대로 존속한다.
+
+    body: {shortcode, category}. category는 통제 어휘(CATEGORY_KEYWORDS 키 ∪ DB 실측값)
+    밖이면 422 — I-4(고아 학습 버킷 차단)를 백엔드에서도 지킨다(프론트만 믿지 않는다).
+    store.update_extract_category만 쓴다 — category 컬럼만 UPDATE, script_json(원본 대본)은
+    절대 안 건드린다(C-1 재발방지: save_script(code, cached, category=...)로 레코드를
+    통째 재기록하는 패턴 금지, 원본 소실 사고 재발 방지).
+
+    재학습(_relearn_category)은 여기서 걸지 않는다 — 드롭다운 change 이벤트마다(디바운스
+    없이) BackgroundTasks를 걸면 사용자가 후보를 훑어보는 동안 클릭당 재학습이 반복 실행될
+    수 있다. 교정은 저장 시점(save_to_wiki/api_wiki_save)의 _relearn_category 한 번으로
+    이미 반영되므로, 여기서 또 거는 건 과하다고 판단."""
+    shortcode = (body.get("shortcode") or "").strip()
+    category = (body.get("category") or "").strip()
+    if not shortcode or not category:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "shortcode·category 필요"})
+    store = Store(DB_PATH)
+    allowed = set(CATEGORY_KEYWORDS.keys()) | set(store.distinct_extract_categories())
+    if category not in allowed:
+        return JSONResponse(status_code=422, content={"ok": False, "error": f"통제 어휘 밖 카테고리: {category}"})
+    store.update_extract_category(shortcode, category)
+    return {"ok": True, "shortcode": shortcode, "category": category}
+
+
 @app.post("/api/produce/extract_from_url")
 def api_produce_extract_from_url(body: dict, background_tasks: BackgroundTasks):
     """영상 URL로 직접 대본 추출(영상제작소 역할배정 '대본용'). body: {url, caption?, shortcode?, category?, name?}.
@@ -1891,6 +1923,32 @@ def _scene_token_path(token, ext=".mp4"):
     return _SCENE_ASSETS_DIR / f"{token}{ext}"
 
 
+def _validate_render_mode(asset_type, render_mode):
+    """render_mode 화이트리스트 검증 — commit·update 공용 헬퍼(리뷰 Important I-1: 이 규칙이
+    commit에만 있고 update엔 없어 sfx에 render_mode='banana'가 그대로 저장되는 뒷문이 있었다).
+    clip이면 replace/cutaway/None만, clip이 아니면 None만 허용(스펙 §4 — sfx/overlay는
+    render_mode가 없다). 문제 없으면 None, 있으면 에러메시지."""
+    if asset_type == "clip":
+        if render_mode not in ("replace", "cutaway", None):
+            return "render_mode는 replace/cutaway만"
+    elif render_mode is not None:
+        return "render_mode는 clip에만 허용됨"
+    return None
+
+
+def _validate_keep_original_audio(koa):
+    """keep_original_audio 정규화 — commit·update 공용 헬퍼. DB의 int(0/1) 컬럼이라
+    검증 없이 넘기면 int("yes")가 ValueError→500이 난다(리뷰 실증). 불리언/0/1/None만 허용.
+    반환: (정규화된 int, 에러메시지|None)."""
+    if koa is None:
+        return 0, None
+    if isinstance(koa, bool):
+        return int(koa), None
+    if koa in (0, 1):
+        return int(koa), None
+    return None, "keep_original_audio는 0/1/불리언만"
+
+
 def _reject_ssrf(url):
     """내부망·클라우드 메타데이터(169.254.169.254 등, 이 서버는 AWS Lightsail) 접근 차단.
     문제 없으면 None, 문제 있으면 에러 메시지 문자열.
@@ -1985,31 +2043,43 @@ def api_scene_save_commit(request: Request, body: dict):
 
     # render_mode는 clip에서만 의미가 있고 값도 두 가지뿐 — 원시값을 그대로 흘리면 나중에
     # 렌더 분기에서 예기치 못한 값을 만난다. clip일 때만 화이트리스트로 막는다(422).
+    # (비clip은 기존과 동일하게 검증하지 않고 아래에서 무조건 None으로 저장한다 — 이 자리에서
+    # 새로 거부하면 sfx에 render_mode를 실어보내는 기존 클라이언트 호출이 깨진다.)
     render_mode = body.get("render_mode")
-    if asset_type == "clip" and render_mode not in ("replace", "cutaway", None):
-        return JSONResponse(status_code=422,
-                            content={"ok": False, "error": "render_mode는 replace/cutaway만"})
+    if asset_type == "clip":
+        err = _validate_render_mode(asset_type, render_mode)
+        if err:
+            return JSONResponse(status_code=422, content={"ok": False, "error": err})
 
-    # keep_original_audio는 DB의 int(0/1) 컬럼 — 검증 없이 store로 넘기면 int("yes")가
-    # ValueError→500이 난다(리뷰 Important I-3, 실증됨). 불리언/0/1/None만 허용해 정규화.
-    koa = body.get("keep_original_audio")
-    if koa is None:
-        koa = 0
-    elif isinstance(koa, bool):
-        koa = int(koa)
-    elif koa in (0, 1):
-        koa = int(koa)
+    koa, err = _validate_keep_original_audio(body.get("keep_original_audio"))
+    if err:
+        return JSONResponse(status_code=422, content={"ok": False, "error": err})
+
+    # 토큰을 여기서 단일사용으로 소비한다(리뷰 Critical C-1) — prepare가 남긴 토큰 파일을
+    # 커밋 시점에 즉시 새 이름으로 rename한다. 같은 토큰으로 commit을 두 번 하면 두 번째
+    # 요청은 위 `p.exists()` 체크에서 이미 원본이 없어 자연히 404가 되므로, 서로 다른 자산이
+    # 같은 media_path를 공유할 구조적 여지가 없어진다. 스펙 §4의 `<id>.<ext>` 규약이 이상적이나
+    # 이 시점엔 아직 id를 모르므로(add_scene_asset 이전) 새 uuid로 우선 소비한다(리뷰가 권고한 방식).
+    consumed = uuid.uuid4().hex
+    old_poster = p.with_suffix(".jpg")
+    media = _SCENE_ASSETS_DIR / f"{consumed}{p.suffix}"
+    try:
+        p.rename(media)
+    except OSError:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "준비된 클립 없음"})
+    poster = _SCENE_ASSETS_DIR / f"{consumed}.jpg"
+    if old_poster.exists():
+        try:
+            old_poster.rename(poster)
+        except OSError:
+            poster = None
     else:
-        return JSONResponse(status_code=422,
-                            content={"ok": False, "error": "keep_original_audio는 0/1/불리언만"})
-
-    media = p
-    poster = p.with_suffix(".jpg")
+        poster = None
     if asset_type == "sfx":
         # 스펙 §5.3 — 효과음은 업로드 말고 **화면짤에서 오디오만 뽑는** 경로도 있다.
         # 같은 구간컷을 재사용하므로 재추출이 없다.
         try:
-            media = scene_assets.extract_audio(p, p.with_suffix(".mp3"))
+            media = scene_assets.extract_audio(media, media.with_suffix(".mp3"))
         except RuntimeError as e:
             return JSONResponse(status_code=502,
                                 content={"ok": False, "error": f"오디오 추출 실패: {e}"})
@@ -2067,7 +2137,10 @@ async def api_scene_upload(request: Request, asset_type: str = Form(...),
                             content={"ok": False, "error": "파일이 너무 큼(최대 20MB)"})
     poster = None
     if asset_type == "overlay":
-        pp = _SCENE_ASSETS_DIR / f"{token}.jpg"
+        # `_poster` 접미사 필수 — ext가 이미 .jpg인 업로드(png/jpg/jpeg 전부 허용됨)라면
+        # `{token}.jpg`는 dest와 **같은 경로**가 된다. make_poster가 그 경로에 ffmpeg를
+        # 태우면 사용자 업로드 원본을 제자리에서 재인코딩·파괴한다(리뷰 Important I-3, 실증됨).
+        pp = _SCENE_ASSETS_DIR / f"{token}_poster.jpg"
         poster = scene_assets.make_poster(dest, pp)
     aid = Store(DB_PATH).add_scene_asset({
         "asset_type": asset_type, "media_path": str(dest),
@@ -2098,7 +2171,25 @@ def api_scene_update(request: Request, asset_id: int, body: dict):
         if k != "keywords" and isinstance(v, (dict, list)):
             return JSONResponse(status_code=422,
                                 content={"ok": False, "error": f"{k}는 스칼라 값만"})
-    ok = Store(DB_PATH).update_scene_asset(asset_id, body, customer_id=_cid(request))
+    cid = _cid(request)
+    store = Store(DB_PATH)
+    body = dict(body)
+    # render_mode·keep_original_audio는 commit 라우트와 같은 규칙으로 검증한다(리뷰 Important
+    # I-1) — commit에만 있고 여기 없어 sfx에 render_mode='banana', keep_original_audio='yes'가
+    # 그대로 저장되는 뒷문이 있었다. render_mode는 대상 자산의 asset_type이 필요해 먼저 조회한다.
+    if "render_mode" in body:
+        asset = store.get_scene_asset(asset_id, customer_id=cid)
+        if not asset:
+            return JSONResponse(status_code=404, content={"ok": False, "error": "자산 없음"})
+        err = _validate_render_mode(asset["asset_type"], body.get("render_mode"))
+        if err:
+            return JSONResponse(status_code=422, content={"ok": False, "error": err})
+    if "keep_original_audio" in body:
+        koa, err = _validate_keep_original_audio(body.get("keep_original_audio"))
+        if err:
+            return JSONResponse(status_code=422, content={"ok": False, "error": err})
+        body["keep_original_audio"] = koa
+    ok = store.update_scene_asset(asset_id, body, customer_id=cid)
     if not ok:
         return JSONResponse(status_code=404, content={"ok": False, "error": "자산 없음"})
     return {"ok": True}

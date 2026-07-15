@@ -121,6 +121,84 @@ def test_make_poster_returns_none_on_failure(monkeypatch, tmp_path):
     assert scene_assets.make_poster(media, tmp_path / "poster.jpg") is None
 
 
+# ── 리뷰 Important I-3 회귀 테스트 (2026-07-15) ──
+# `-ss 0` 위치탐색이 image2 디먹서(png/jpg/jpeg)에서 0프레임을 내 항상 실패했다(ffmpeg 8.1.1
+# 실증). 정지이미지는 frame_extract.extract_frame_at(=-ss 0 경로)를 아예 타지 않고 별도
+# 경로로 처리돼야 한다.
+
+def test_make_poster_still_image_does_not_delegate_to_frame_extract(monkeypatch, tmp_path):
+    media = tmp_path / "arrow.jpg"
+    media.write_bytes(b"fake-jpg")
+    out = tmp_path / "poster.jpg"
+
+    def boom(*a, **k):
+        raise AssertionError("정지이미지는 -ss 0 경로(extract_frame_at)를 타면 안 된다")
+    monkeypatch.setattr(scene_assets.frame_extract, "extract_frame_at", boom)
+
+    seen_cmd = {}
+    def fake_run(cmd, capture_output=True, check=False):
+        seen_cmd["cmd"] = cmd
+        out.write_bytes(b"poster-bytes")
+        class R:
+            returncode = 0
+            stderr = b""
+        return R()
+    monkeypatch.setattr(scene_assets.subprocess, "run", fake_run)
+
+    result = scene_assets.make_poster(media, out)
+
+    assert result == out
+    assert result.exists()
+    assert "-ss" not in seen_cmd["cmd"]        # 버그의 직접 원인이었던 플래그가 빠졌는지 확인
+    assert str(media) in seen_cmd["cmd"]
+
+
+@pytest.mark.parametrize("ext", [".png", ".jpg", ".jpeg"])
+def test_make_poster_still_image_covers_all_broken_extensions(monkeypatch, tmp_path, ext):
+    media = tmp_path / f"arrow{ext}"
+    media.write_bytes(b"fake-image")
+    out = tmp_path / "poster.jpg"
+    monkeypatch.setattr(scene_assets.frame_extract, "extract_frame_at",
+                        lambda *a, **k: (_ for _ in ()).throw(AssertionError("잘못된 경로")))
+    monkeypatch.setattr(scene_assets.subprocess, "run", _fake_run_ok(out))
+
+    assert scene_assets.make_poster(media, out) == out
+
+
+def test_make_poster_still_image_returns_none_on_ffmpeg_failure(monkeypatch, tmp_path):
+    media = tmp_path / "arrow.png"
+    media.write_bytes(b"fake-png")
+
+    def fake_run(cmd, capture_output=True, check=False):
+        class R:
+            returncode = 1
+            stderr = b"ffmpeg: error"
+        return R()
+    monkeypatch.setattr(scene_assets.subprocess, "run", fake_run)
+
+    assert scene_assets.make_poster(media, tmp_path / "poster.jpg") is None
+
+
+def test_make_poster_still_gif_and_webp_keep_using_frame_extract(monkeypatch, tmp_path):
+    # gif/webp는 -ss 0으로도 정상(다른 디먹서, 리뷰 실증) — 회귀 방지로 기존 경로 유지 확인.
+    for ext in (".gif", ".webp"):
+        media = tmp_path / f"anim{ext}"
+        media.write_bytes(b"fake-anim")
+        out = tmp_path / "poster.jpg"
+        seen = {}
+
+        def fake_extract(video_path, dest_dir, timestamp_sec, filename="frame_hint.jpg"):
+            seen["called"] = True
+            out.write_bytes(b"jpg")
+            return out
+        monkeypatch.setattr(scene_assets.frame_extract, "extract_frame_at", fake_extract)
+
+        result = scene_assets.make_poster(media, out)
+
+        assert result == out
+        assert seen.get("called") is True
+
+
 def test_probe_duration_parses_ffprobe(monkeypatch, tmp_path):
     def fake_run(cmd, capture_output=True, check=False):
         assert "ffprobe" in cmd[0]

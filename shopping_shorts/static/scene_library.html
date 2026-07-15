@@ -63,7 +63,6 @@
     </select>
     <select id="fCat" onchange="loadScenes()">
       <option value="">전체 카테고리</option>
-      <option>레시피</option><option>생활용품</option><option>인테리어</option><option>가전</option>
     </select>
     <select id="fRole" onchange="loadScenes()">
       <option value="">전체 역할</option>
@@ -121,6 +120,9 @@
           <option value="overlay">오버레이 (png/jpg/webp/gif)</option>
         </select></div>
       <div class="fld"><label>이름</label><input id="uTitle" placeholder="띠용 효과음"></div>
+      <div class="fld"><label>카테고리</label>
+        <select id="uCat"><option value="">(없음 — 범용)</option></select>
+        <div class="hint">페이즈2 매칭이 같은 카테고리 자산만 1차 후보로 본다. 나중에 편집에서도 바꿀 수 있다.</div></div>
       <div class="fld"><label>파일</label><input type="file" id="uFile"></div>
     </div>
     <div class="m-foot"><button class="primary" onclick="doUpload()">업로드</button></div>
@@ -131,6 +133,15 @@
 function esc(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 var SCENES = [];
+
+// 필터(#fCat)·업로드(#uCat)가 같은 카테고리 목록을 쓴다 — 두 벌 하드코딩하면 어긋난다
+// (리뷰 Important I-2 권고).
+const SCENE_CATEGORIES = ['레시피','생활용품','인테리어','가전'];
+(function populateCategorySelects(){
+  const opts = SCENE_CATEGORIES.map(c=>`<option>${c}</option>`).join('');
+  document.getElementById('fCat').insertAdjacentHTML('beforeend', opts);
+  document.getElementById('uCat').insertAdjacentHTML('beforeend', opts);
+})();
 
 function badge(a){
   if(a.asset_type==='sfx') return '<span class="badge b-sfx">효과음</span>';
@@ -247,6 +258,7 @@ async function doUpload(){
   const fd = new FormData();
   fd.append('asset_type', document.getElementById('uType').value);
   fd.append('title', title);
+  fd.append('category', document.getElementById('uCat').value);
   fd.append('file', f);
   try{
     const res = await fetch('/api/scene/upload',{method:'POST', body:fd});
@@ -255,6 +267,7 @@ async function doUpload(){
     if(!d.ok){ alert(d.error||'업로드 실패'); return; }
     document.getElementById('upModal').classList.remove('open');
     document.getElementById('uTitle').value=''; document.getElementById('uFile').value='';
+    document.getElementById('uCat').value='';
     loadScenes();
   }catch(e){ alert('네트워크 오류'); }
 }

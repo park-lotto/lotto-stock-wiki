@@ -65,7 +65,10 @@ def test_commit_rejects_bogus_token(client):
 
 
 def test_commit_rejects_client_supplied_media_path(client, tmp_path):
-    # 토큰은 정상이지만 media_path를 끼워넣으면 무시돼야 한다
+    # 토큰은 정상이지만 media_path를 끼워넣으면 무시돼야 한다.
+    # C-1 수정으로 commit이 토큰파일을 소비용으로 rename하므로 최종 media_path는 더 이상
+    # 원본 토큰 이름으로 끝나지 않는다 — 여전히 scene_assets 디렉터리 안의 .mp4이고
+    # 주입한 /etc/passwd가 전혀 안 쓰였는지만 확인한다(이 테스트의 원래 취지).
     d = tmp_path / "scene_assets"
     d.mkdir(parents=True, exist_ok=True)
     token = "a" * 32
@@ -77,7 +80,8 @@ def test_commit_rejects_client_supplied_media_path(client, tmp_path):
 
     assert r.status_code == 200
     got = Store(app_mod.DB_PATH).get_scene_asset(r.json()["id"])
-    assert got["media_path"].endswith(f"{token}.mp4")
+    assert got["media_path"].endswith(".mp4")
+    assert str(d) in got["media_path"]
     assert "/etc/passwd" not in got["media_path"]
 
 
@@ -126,9 +130,13 @@ def test_commit_as_sfx_extracts_audio_from_clip(client, tmp_path, monkeypatch):
         "token": token, "asset_type": "sfx", "title": "띠용", "render_mode": "cutaway"})
 
     assert r.status_code == 200
-    assert seen["clip"].name == f"{token}.mp4"       # 같은 구간컷 재사용 — 재추출 없음
+    # C-1 수정으로 commit이 원본 토큰파일을 먼저 소비용 이름으로 rename하므로 extract_audio에
+    # 넘어가는 경로는 더 이상 원본 토큰 이름이 아니다 — 같은 구간컷(.mp4) 1개만 재사용됐는지
+    # (재추출 없음, 이 테스트의 원래 취지)만 확인한다.
+    assert seen["clip"].suffix == ".mp4"
+    assert seen["clip"].name != f"{token}.mp4"       # 토큰은 이미 소비돼 원본 이름이 아니다
     got = Store(app_mod.DB_PATH).get_scene_asset(r.json()["id"])
-    assert got["media_path"].endswith(f"{token}.mp3")
+    assert got["media_path"].endswith(".mp3")
     assert got["render_mode"] is None                # sfx는 render_mode 없음(스펙 §4)
     assert got["poster_path"] is None
 
@@ -418,3 +426,145 @@ def test_prepare_allows_public_host(client, tmp_path, monkeypatch):
 
     assert r.status_code == 200
     assert r.json()["ok"] is True
+
+
+# ── 최종 whole-branch 리뷰 회귀 테스트 (2026-07-15, scene-p1-final-review.md) ──
+
+def test_commit_token_reuse_is_blocked_c1(client, tmp_path):
+    """C-1 재현 시나리오 재실행 — 이전엔 같은 토큰으로 commit을 두 번 하면 둘 다 200이었고
+    두 자산이 같은 media_path를 공유했다. 이제 두 번째는 404여야 한다."""
+    d = tmp_path / "scene_assets"
+    d.mkdir(parents=True, exist_ok=True)
+    token = "9" * 32
+    (d / f"{token}.mp4").write_bytes(b"clip-bytes")
+
+    r1 = client.post("/api/scene/save/commit", json={
+        "token": token, "asset_type": "clip", "title": "첫번째"})
+    assert r1.status_code == 200 and r1.json()["ok"] is True
+
+    r2 = client.post("/api/scene/save/commit", json={
+        "token": token, "asset_type": "clip", "title": "두번째(재사용 시도)"})
+    assert r2.status_code == 404
+
+    # 중복 카드가 생기지 않는다 — 자산은 정확히 1개.
+    items = client.get("/api/scene/list").json()["items"]
+    assert len(items) == 1
+
+
+def test_commit_distinct_assets_never_share_media_path_c1(client, tmp_path):
+    """C-1 — 서로 다른 prepare 토큰으로 만든 두 자산의 media_path는 절대 같아선 안 된다.
+    같으면(=고쳐지기 전 버그) 한쪽 삭제가 다른 쪽 파일을 파괴한다."""
+    d = tmp_path / "scene_assets"
+    d.mkdir(parents=True, exist_ok=True)
+    tok_a, tok_b = "7" * 32, "8" * 32
+    (d / f"{tok_a}.mp4").write_bytes(b"clip-a")
+    (d / f"{tok_b}.mp4").write_bytes(b"clip-b")
+
+    id_a = client.post("/api/scene/save/commit", json={
+        "token": tok_a, "asset_type": "clip", "title": "A"}).json()["id"]
+    id_b = client.post("/api/scene/save/commit", json={
+        "token": tok_b, "asset_type": "clip", "title": "B"}).json()["id"]
+
+    media_a = Store(app_mod.DB_PATH).get_scene_asset(id_a)["media_path"]
+    media_b = Store(app_mod.DB_PATH).get_scene_asset(id_b)["media_path"]
+    assert media_a != media_b
+
+
+def test_commit_token_reuse_delete_one_survive_other_c1(client, tmp_path):
+    """C-1 — 리뷰 재현의 핵심 인수 시나리오: 두 자산이 있을 때 하나를 지워도 다른 하나의
+    media는 계속 200으로 서빙돼야 한다(파일 공유가 없으므로 파괴가 전파되지 않음)."""
+    d = tmp_path / "scene_assets"
+    d.mkdir(parents=True, exist_ok=True)
+    tok_a, tok_b = "5" * 32, "6" * 32
+    (d / f"{tok_a}.mp4").write_bytes(b"clip-a")
+    (d / f"{tok_b}.mp4").write_bytes(b"clip-b")
+
+    id_a = client.post("/api/scene/save/commit", json={
+        "token": tok_a, "asset_type": "clip", "title": "A"}).json()["id"]
+    id_b = client.post("/api/scene/save/commit", json={
+        "token": tok_b, "asset_type": "clip", "title": "B"}).json()["id"]
+
+    assert client.post(f"/api/scene/{id_a}/delete").json()["ok"] is True
+    r = client.get(f"/api/scene/{id_b}/media")
+    assert r.status_code == 200
+    assert r.content == b"clip-b"
+
+
+# ── I-1: render_mode/keep_original_audio 불변식이 update에도 지켜지는지 ──
+
+def test_update_rejects_bogus_render_mode_on_sfx_i1(client, tmp_path):
+    aid = _mk_asset(client, tmp_path, asset_type="sfx", render_mode=None)
+
+    r = client.post(f"/api/scene/{aid}/update", json={"render_mode": "banana"})
+
+    assert r.status_code == 422
+    assert r.json()["ok"] is False
+    got = Store(app_mod.DB_PATH).get_scene_asset(aid)
+    assert got["render_mode"] is None                # 오염 안 됨
+
+
+def test_update_rejects_bogus_render_mode_on_clip_i1(client, tmp_path):
+    aid = _mk_asset(client, tmp_path, asset_type="clip", render_mode="cutaway")
+
+    r = client.post(f"/api/scene/{aid}/update", json={"render_mode": "banana"})
+
+    assert r.status_code == 422
+    got = Store(app_mod.DB_PATH).get_scene_asset(aid)
+    assert got["render_mode"] == "cutaway"            # 원래 값 그대로
+
+
+def test_update_rejects_bogus_keep_original_audio_i1(client, tmp_path):
+    aid = _mk_asset(client, tmp_path)
+
+    r = client.post(f"/api/scene/{aid}/update", json={"keep_original_audio": "yes"})
+
+    assert r.status_code == 422
+    assert r.json()["ok"] is False
+    got = Store(app_mod.DB_PATH).get_scene_asset(aid)
+    assert got["keep_original_audio"] != "yes"        # 문자열로 새어들어가지 않음
+
+
+def test_update_accepts_valid_render_mode_and_koa_i1(client, tmp_path):
+    aid = _mk_asset(client, tmp_path, asset_type="clip", render_mode="cutaway")
+
+    r = client.post(f"/api/scene/{aid}/update", json={
+        "render_mode": "replace", "keep_original_audio": True})
+
+    assert r.status_code == 200 and r.json()["ok"] is True
+    got = Store(app_mod.DB_PATH).get_scene_asset(aid)
+    assert got["render_mode"] == "replace"
+    assert got["keep_original_audio"] == 1
+
+
+# ── I-2: 업로드 자산도 category를 저장하고 페이즈2 1차필터로 찾을 수 있어야 한다 ──
+
+def test_upload_saves_category_and_is_findable_by_filter_i2(client):
+    r = client.post("/api/scene/upload",
+                    data={"asset_type": "sfx", "title": "띠용", "category": "레시피"},
+                    files={"file": ("a.mp3", b"mp3bytes", "audio/mpeg")})
+
+    assert r.status_code == 200 and r.json()["ok"] is True
+    got = client.get("/api/scene/list?category=레시피").json()["items"]
+    assert [i["title"] for i in got] == ["띠용"]
+
+
+# ── I-3: overlay poster 경로가 media 경로와 절대 겹치면 안 된다(.jpg 업로드 함정) ──
+
+def test_upload_overlay_poster_path_never_equals_media_path_i3(client, monkeypatch):
+    seen = {}
+
+    def fake_make_poster(media_path, out_path):
+        seen["media"] = media_path
+        seen["poster"] = out_path
+        out_path.write_bytes(b"jpg")
+        return out_path
+    monkeypatch.setattr(app_mod.scene_assets, "make_poster", fake_make_poster)
+
+    r = client.post("/api/scene/upload",
+                    data={"asset_type": "overlay", "title": "화살표"},
+                    files={"file": ("arrow.jpg", b"orig-jpg-bytes", "image/jpeg")})
+
+    assert r.status_code == 200 and r.json()["ok"] is True
+    assert seen["media"] != seen["poster"]
+    assert seen["media"].suffix == ".jpg"
+    assert seen["poster"].name != seen["media"].name

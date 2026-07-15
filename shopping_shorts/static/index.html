@@ -786,6 +786,12 @@ function showSceneDraft(d){
 async function commitScene(){
   const title = document.getElementById('scTitle').value.trim();
   if(!title){ alert('이름은 필수입니다.'); return; }
+  // 더블서밋 가드(리뷰 Critical C-1) — runScenePrepare()와 동일 패턴. 이게 없으면 느린
+  // 응답 중 두 번 눌러 같은 토큰으로 commit이 두 번 나가고, 백엔드가 프론트보다 먼저
+  // 응답한 요청이 뭐든 하나는 이미 성공 처리돼 라이브러리에 카드 2개가 생긴다.
+  const btn = event.target;
+  if(btn.disabled) return;
+  btn.disabled = true; btn.textContent = '저장 중…';
   const body = {
     token: SCENE_CTX.token, asset_type:'clip',
     render_mode: document.getElementById('scMode').value,
@@ -806,6 +812,7 @@ async function commitScene(){
     document.getElementById('sceneModal').style.display='none';
     alert('장면 라이브러리에 담았습니다.');
   }catch(e){ alert('네트워크 오류'); }
+  finally{ btn.disabled = false; btn.textContent = '💾 라이브러리에 저장'; }
 }
 
 renderCtypes(); renderCats(); loadLast();

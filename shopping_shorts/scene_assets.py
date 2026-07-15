@@ -75,10 +75,26 @@ def extract_audio(clip_path, out_path):
     return out_path
 
 
+# 정지이미지 확장자 — image2 디먹서는 `-ss 0` 위치탐색에서 0프레임을 내어 항상 실패한다
+# (리뷰 Important I-3, ffmpeg 8.1.1로 실증: png/jpg/jpeg 전부 "Output file is empty").
+# webp/gif는 다른 디먹서를 타 -ss 0으로도 정상 동작하므로 여기 넣지 않는다(회귀 방지).
+_STILL_IMAGE_EXTS = (".png", ".jpg", ".jpeg")
+
+
 def make_poster(media_path, out_path):
-    """첫 프레임 썸네일. 실패해도 None(썸네일은 없어도 목록이 뜬다).
-    프레임 1장 추출은 frame_extract.extract_frame_at이 이미 하는 일이라 위임."""
+    """첫 프레임(또는 정지이미지 그 자체) 썸네일. 실패해도 None(썸네일은 없어도 목록이 뜬다).
+
+    동영상/gif/webp는 프레임 1장 추출을 frame_extract.extract_frame_at에 위임(기존 동작
+    유지 — Task2 테스트 회귀 없음). png/jpg/jpeg는 `-ss` 없이 직접 ffmpeg를 태운다."""
+    media_path = Path(media_path)
     out_path = Path(out_path)
+    if media_path.suffix.lower() in _STILL_IMAGE_EXTS:
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        cmd = ["ffmpeg", "-y", "-i", str(media_path), "-frames:v", "1", str(out_path)]
+        r = subprocess.run(cmd, capture_output=True, check=False)
+        if r.returncode != 0 or not out_path.exists():
+            return None
+        return out_path
     return frame_extract.extract_frame_at(media_path, out_path.parent, 0,
                                           filename=out_path.name)
 
