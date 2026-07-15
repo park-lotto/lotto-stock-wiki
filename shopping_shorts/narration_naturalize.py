@@ -90,8 +90,12 @@ def normalize_reading(text):
     n3 = 0
     for sym, word in _SYMBOL_MAP.items():
         n3 += text.count(sym)
-        text = text.replace(sym, " " + word)
-    text = re.sub(r" {2,}", " ", text)
+        # 앞뒤 공백(N-5) — 기호 앞에만 공백을 넣으면 뒤 단어가 읽기말에 들러붙는다
+        # (예: "1+1" → "일 플러스일"). asr_check가 이 함수 출력을 오독판정 정본으로
+        # 재사용하므로 표기 오류가 곧 판정 오류가 된다. 앞뒤 다 띄우고 아래에서
+        # 중복공백·양끝을 정리한다.
+        text = text.replace(sym, " " + word + " ")
+    text = re.sub(r" {2,}", " ", text).strip()
     return text, n1 + n2 + n3
 
 
@@ -145,20 +149,24 @@ def _spoken_style(text, cfg, ctx):
 
 def _pronunciation(text, cfg, ctx):
     d = cfg.get("dict") or {}
-    # 참가 판정을 원문(orig) 기준으로 한다(Minor1) — 선택: "1패스로 만들기" 대신
-    # "판정 기준을 원문으로" 쪽을 택했다(주석대로 명시). 발음사전은 작업대에서
-    # 사장님이 채우는 열린 입력이라 값↔키가 우연히 겹칠 수 있다(예:
-    # {"AS센터":"에이에스 센터","에이에스":"AS"}) — 기존처럼 누적 변이된 `text`에
-    # `k in text`로 판정하면, 앞선 치환이 만들어낸 유령 문자열이 뒤 키에 매칭돼
-    # 원문에 없던 치환이 일어나고 카운트도 그만큼 오른다. `orig`는 이 함수 호출 동안
-    # 절대 바뀌지 않으므로 유령매칭 자체가 발생하지 않는다(카운트뿐 아니라 실제
-    # 치환도 원문 기준 참가로 제한됨 — 유령 키 사전에서의 실동작도 함께 고쳐진다).
+    # 참가 판정은 원문(orig) 기준(Minor1) — 유령 매칭 차단용. 발음사전은 작업대에서
+    # 사장님이 채우는 열린 입력이라 키끼리 서로 부분집합인 게 표준 사용법이다
+    # (예: {"AS센터":"...", "AS":"..."}, {"AI칩":"...", "AI":"..."}) — "긴 키 먼저"
+    # 주석 자체가 그 전제 위에 있다. `orig`는 이 함수 호출 동안 절대 바뀌지 않으므로
+    # 앞선 치환이 만든 유령 문자열이 뒤 키에 다시 매칭되는 일은 없다.
+    # 다만 orig 게이트만으로는 부족하다(N-1 재리뷰) — 긴 키가 먼저 통째로 삼켜버리면
+    # 뒤 키는 원문엔 있었지만(게이트 통과) 지금 `text`에는 이미 없어 실제로는
+    # no-op인 치환이 남는다. 그래도 게이트만 보고 세면 "치환 안 됐는데 적용됐다"는
+    # 거짓말이 된다. 그래서 게이트(유령매칭 차단)와 실효과 계수(no-op 배제)를 함께
+    # 적용한다 — `_spoken_style`이 이미 쓰는 `new != s` 전략과 동일한 원칙이다.
     orig = text
     n = 0
     for k in sorted(d, key=len, reverse=True):   # 긴 키 먼저(부분매칭 방지)
         if k in orig:
-            n += 1
-            text = text.replace(k, d[k])
+            nt = text.replace(k, d[k])
+            if nt != text:      # 실제로 뭔가 바뀌었을 때만 계수(no-op 제외)
+                n += 1
+            text = nt
     _bump(ctx, "pronunciation", n)
     return text
 

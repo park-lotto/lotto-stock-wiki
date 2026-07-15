@@ -41,8 +41,34 @@ def test_applied_does_not_lie_when_total_tag_cap_removes_our_tag():
     d = naturalize_detail("지금 확인해보세요.", {"caps": {"max_tags_total": 0}},
                           beat_role="CTA", beat_index=0, beat_total=1)
     assert "[excited]" not in d["text"]
-    assert d["applied"] == {}                  # emotion_arc 키 자체가 없어야 함(계약: 0=기록없음)
+    # N-4: `applied == {}`는 과잉 단언이다 — 같은 케이스에서 fillers가 이미
+    # 텍스트를 바꾸는데("음, " 삽입), Task 4에서 fillers의 _bump가 배선되면
+    # applied=={'fillers': 1}이 되어 emotion_arc와 무관한 이유로 이 단언이 깨진다.
+    # 이 테스트가 실제로 보장하려는 건 "emotion_arc가 거짓 카운트를 안 남긴다"뿐이다.
+    assert "emotion_arc" not in d["applied"]    # emotion_arc 키 자체가 없어야 함(계약: 0=기록없음)
     assert d["text"] == "음, 지금 확인해보세요."   # 태그만 빠지고 나머지 스테이지는 그대로
+
+
+def test_emotion_arc_tag_survives_total_cap_when_input_has_existing_tag():
+    """N-3 — I-1의 하중 지지 불변식을 직접 pin한다.
+
+    `_emotion_arc`의 max_tags_total 게이트는 `_enforce_total_tag_cap`의 "앞에서
+    cap개 보존" 규칙을 전제로 "우리 태그(항상 0번째)는 cap>=1이면 절대 안 지워진다"고
+    가정한다. 기존 테스트는 max_tags_total=0(전부 제거)만 다뤄서 이 가정 자체는
+    무테스트였다 — `_enforce_total_tag_cap`이 "뒤에서 cap개 보존"으로 바뀌면 이
+    가정이 조용히 깨지고 거짓말(태그는 지워졌는데 applied는 찍힘)이 부활한다.
+    입력에 이미 다른 태그([whispers])가 있는 채로 cap=1을 줘서, 우리 태그가 그
+    기존 태그를 밀어내고 생존하는지 + applied 카운트가 그 생존과 일치하는지를
+    같이 확인한다."""
+    p = {"normalize": {"on": False}, "spoken_style": {"on": False},
+         "pronunciation": {"on": False}, "phrasing": {"on": False},
+         "endings": {"on": False}, "fillers": {"on": False},
+         "emotion_arc": {"on": True, "intensity": 1.0}, "intonation": {"on": False},
+         "caps": {"max_tags_total": 1}}
+    d = naturalize_detail("[whispers] 지금 확인해보세요.", p,
+                          beat_role="CTA", beat_index=0, beat_total=1)
+    assert "[excited]" in d["text"]
+    assert d["applied"]["emotion_arc"] == 1
 
 
 def test_applied_spoken_style_counts_exact_conversions():
@@ -61,6 +87,33 @@ def test_applied_pronunciation_counts_keys_substituted():
     d = naturalize_detail("SNS와 AI 그리고 SNS", p)
     assert d["applied"]["pronunciation"] == 2   # SNS가 2번 등장해도 키 수는 2(SNS,AI)
     assert d["text"] == "에스엔에스와 에이아이 그리고 에스엔에스"
+
+
+def test_applied_pronunciation_counts_one_for_overlapping_key_pair():
+    """N-1 재현 — 겹침 사전({"AI칩","AI"} 류, 발음사전의 표준 사용법)에서 긴 키가
+    먼저 통째로 치환되면 원문(orig)엔 "AI"가 있어 게이트는 통과하지만, 지금
+    `text`엔 이미 "AI"라는 부분문자열이 없어 실제로는 no-op이어야 한다.
+    게이트만 보고 세면(직전 수정의 하이브리드 버그) 2로 거짓말 났었다 — 실효과만
+    세면 1이어야 한다."""
+    p = {"pronunciation": {"on": True,
+                            "dict": {"AI칩": "에이아이 칩", "AI": "에이아이"}},
+         "fillers": {"on": False}, "emotion_arc": {"on": False}}
+    d = naturalize_detail("AI칩 사세요", p)
+    assert d["applied"]["pronunciation"] == 1
+    assert d["text"] == "에이아이 칩 사세요"
+
+
+def test_pronunciation_dict_is_single_pass_no_chaining():
+    """N-2 계약 pin — {"A":"B","B":"C"} + "A"는 체이닝(→"C")되지 않고 1패스만
+    적용돼 "B"에서 멈춘다. `orig`가 원문으로 고정되므로 첫 치환의 결과("B")는
+    두번째 키("B")의 판정 대상(orig="A")에 없어 재적용되지 않는다. 이 계약이
+    테스트로 안 박혀 있으면 나중에 `orig`를 `text`로 되돌려도(연쇄 부활) 전부
+    그린으로 통과한다."""
+    p = {"pronunciation": {"on": True, "dict": {"A": "B", "B": "C"}},
+         "fillers": {"on": False}, "emotion_arc": {"on": False}}
+    d = naturalize_detail("A", p)
+    assert d["text"] == "B"                       # 체이닝 없음(1패스)
+    assert d["applied"]["pronunciation"] == 1
 
 
 def test_applied_pronunciation_ignores_ghost_key_from_chained_replacement():
@@ -97,6 +150,9 @@ def test_normalize_reading_returns_text_and_count_tuple():
 
 
 def test_normalize_reading_percent_and_symbol_cases():
-    """대표 케이스 — 숫자 단독(%), 숫자+기호(+) 조합."""
+    """대표 케이스 — 숫자 단독(%), 숫자+기호(+) 조합.
+
+    N-5: 기호 치환을 앞뒤 공백으로 바꿔 뒷 단어가 안 붙게 했다("일 플러스일" →
+    "일 플러스 일"). 기존 "일 플러스일"은 결함을 정답으로 못박은 값이었다."""
     assert normalize_reading("50%") == ("오십 퍼센트", 2)          # 숫자1 + 기호(%)1
-    assert normalize_reading("1+1") == ("일 플러스일", 3)          # 숫자2 + 기호(+)1
+    assert normalize_reading("1+1") == ("일 플러스 일", 3)         # 숫자2 + 기호(+)1
