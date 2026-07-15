@@ -1915,6 +1915,11 @@ def api_scene_save_commit(request: Request, body: dict):
     if not title:
         return JSONResponse(status_code=422, content={"ok": False, "error": "title 필요"})
     asset_type = body.get("asset_type") or "clip"
+    # 검증 없이 asset_type을 받으면 임의 문자열이 DB에 그대로 저장되고, 이게 프론트 HTML
+    # 속성 컨텍스트(onclick='...')로 그대로 흘러 XSS 체인이 닫힌다(리뷰 실증) — 화이트리스트로 막는다.
+    if asset_type not in ("clip", "sfx", "overlay"):
+        return JSONResponse(status_code=422,
+                            content={"ok": False, "error": "asset_type은 clip/sfx/overlay만"})
 
     # render_mode는 clip에서만 의미가 있고 값도 두 가지뿐 — 원시값을 그대로 흘리면 나중에
     # 렌더 분기에서 예기치 못한 값을 만난다. clip일 때만 화이트리스트로 막는다(422).

@@ -128,7 +128,7 @@
 </div>
 
 <script>
-function esc(s){ return (s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function esc(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 var SCENES = [];
 
@@ -213,9 +213,14 @@ async function saveEdit(){
     category: document.getElementById('eCat').value,
     tone: document.getElementById('eTone').value.trim(),
     keywords: document.getElementById('eKw').value.split(',').map(s=>s.trim()).filter(Boolean),
-    render_mode: document.getElementById('eMode').value,
-    keep_original_audio: document.getElementById('eAudio').checked?1:0,
   };
+  // render_mode/keep_original_audio는 clip 전용 — non-clip(sfx/overlay)에도 실어보내면
+  // 백엔드가 지키는 "render_mode는 clip에서만" 불변식이 오염된다(NULL -> 'cutaway').
+  const a = SCENES.find(x=>x.id===id);
+  if(a && a.asset_type==='clip'){
+    body.render_mode = document.getElementById('eMode').value;
+    body.keep_original_audio = document.getElementById('eAudio').checked?1:0;
+  }
   if(!body.title){ alert('이름은 필수입니다.'); return; }
   try{
     const d = await (await fetch(`/api/scene/${id}/update`,{method:'POST',

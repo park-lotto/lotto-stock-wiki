@@ -317,6 +317,36 @@ def test_commit_rejects_bogus_render_mode(client, tmp_path):
     assert r.json()["ok"] is False
 
 
+def test_commit_rejects_bogus_asset_type(client, tmp_path):
+    # asset_type을 검증 없이 받으면 임의 문자열이 저장되고, 그게 프론트 onclick='...'
+    # 속성 컨텍스트로 흘러 XSS 체인이 닫힌다(리뷰 실증). clip/sfx/overlay만 허용해야 한다.
+    d = tmp_path / "scene_assets"
+    d.mkdir(parents=True, exist_ok=True)
+    for bad, token in (("x'),alert(1),('", "2" * 32), ("banana", "3" * 32)):
+        (d / f"{token}.mp4").write_bytes(b"clip")
+        r = client.post("/api/scene/save/commit", json={
+            "token": token, "asset_type": bad, "title": "t"})
+        assert r.status_code == 422, f"asset_type={bad!r}가 통과됨"
+        assert r.json()["ok"] is False
+
+
+def test_commit_accepts_valid_asset_types(client, tmp_path, monkeypatch):
+    # sfx는 commit 안에서 실제 ffmpeg로 오디오를 추출한다 — 여기선 화이트리스트 통과 여부만
+    # 보는 테스트라 extract_audio를 스텁해 ffmpeg 의존을 없앤다(다른 sfx 동작은 이미
+    # test_commit_as_sfx_extracts_audio_from_clip에서 검증됨).
+    monkeypatch.setattr(app_mod.scene_assets, "extract_audio",
+                        lambda clip, out: (out.write_bytes(b"mp3"), out)[-1])
+    d = tmp_path / "scene_assets"
+    d.mkdir(parents=True, exist_ok=True)
+    for i, at in enumerate(("clip", "sfx", "overlay")):
+        token = f"{i}" * 32
+        (d / f"{token}.mp4").write_bytes(b"clip")
+        r = client.post("/api/scene/save/commit", json={
+            "token": token, "asset_type": at, "title": f"t-{at}"})
+        assert r.status_code == 200, f"asset_type={at}가 막힘: {r.text}"
+        assert r.json()["ok"] is True
+
+
 def test_update_rejects_dict_value(client, tmp_path):
     # I-3 — dict 값이 sqlite에 그대로 넘어가면 InterfaceError로 500 나던 것(리뷰 실증).
     aid = _mk_asset(client, tmp_path)
