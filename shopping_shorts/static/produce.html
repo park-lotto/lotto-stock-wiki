@@ -236,8 +236,6 @@
           <div style="font-size:13px;font-weight:800;margin-bottom:6px">🎯 완성 스타일 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 그대로 완성</span></div>
           <div id="fullPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"></div>
           <button type="button" id="moreStylesBtn" onclick="toggleMoreStyles()" class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;margin-bottom:14px">+ 더보기</button>
-          <!-- 🎬 모션 팩: 완성 스타일 카드에 내장(별도 선택지 없음). pickStyleCard→applyFullPreset이 값을 채움. -->
-          <select id="motionPack" style="display:none"><option value="">없음</option><option value="dynamic_pop">다이나믹 팝</option><option value="minimal_chic">미니멀 시크</option></select>
           <!-- 강조 단어(노출 유지) -->
           <div style="background:#0d1420;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
             <div style="font-size:13px;font-weight:700;margin-bottom:2px">🎯 강조 단어 <span style="font-size:11px;color:var(--sub);font-weight:400">— 헤드카피 + 자막 공통(키워드 일치 시 자동 강조)</span></div>
@@ -296,6 +294,13 @@
                 <span style="color:var(--sub)">여백 <input id="hcBoxPad" type="range" min="0" max="40" value="16" oninput="updateHC()"></span>
                 <span style="color:var(--sub)">투명도 <input id="hcBoxOpacity" type="range" min="20" max="100" value="80" oninput="updateHC()"></span>
               </label>
+              <div style="margin-top:10px">
+                <label style="font-size:12px;opacity:.8">모션 팩</label>
+                <select id="motionPack" onchange="pickMotionPack(this.value)"
+                        style="width:100%;padding:6px;border-radius:6px">
+                  <option value="">모션 끄기</option>
+                </select>
+              </div>
               <!-- 자막 스타일(나레이션 자막 자체 디자인) -->
               <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px">
                 <div style="font-size:14px;font-weight:700;margin-bottom:2px">💬 자막 스타일</div>
@@ -460,6 +465,23 @@ function initHeadcopy(){
   renderExtraPreview();
   renderOverlayPreview();
   applyDefaultStyleOnEntry();   // step5 진입 시 1회: 미터치 상태면 기본 스타일+실장면 배경 자동 적용
+  syncMotionPicker();
+}
+// 모션 팩 목록(서버 packs.json과 id가 일치해야 함 — Task7에서 확정)
+const MOTION_PACKS=[{id:'dynamic_pop',name:'다이나믹 팝'},{id:'minimal_chic',name:'미니멀 시크'}];
+function syncMotionPicker(){
+  const sel=document.getElementById('motionPack'); if(!sel) return;
+  if(sel.options.length<=1){
+    MOTION_PACKS.forEach(p=>{ const o=document.createElement('option');
+      o.value=p.id; o.textContent=p.name; sel.appendChild(o); });
+  }
+  sel.value = ((STATE.deco||{}).motion||{}).pack_id || '';
+}
+function pickMotionPack(id){
+  STATE.deco = STATE.deco || {extra_texts: []};
+  STATE.deco.motion = STATE.deco.motion || {};
+  if(id) STATE.deco.motion.pack_id = id; else delete STATE.deco.motion.pack_id;
+  saveHeadcopy();
 }
 // ── 자막 스타일(나레이션 자막) ──────────────
 let CAP_EFFECT='none';
@@ -633,6 +655,9 @@ function applyFullPreset(i){
   const p = FULL_PRESETS[i];
   applyConfig(p.hc, p.cap);
   STATE.deco = STATE.deco || {extra_texts: []};
+  // 모션 팩: pack_id만 저장한다. 실제 레이어는 렌더 시점에 비트 타임라인으로 계산됨(서버).
+  if(p.motion){ STATE.deco.motion = {...(STATE.deco.motion||{}), pack_id: p.motion}; }
+  else if(STATE.deco.motion){ delete STATE.deco.motion.pack_id; }
   if(p.extra){
     // 프리셋의 extra는 텍스트가 비어있음(스타일만 지정) — 기존 문구가 있으면 유지, 없으면 빈칸
     const prevText = (STATE.deco.extra_texts[0] && STATE.deco.extra_texts[0].text) || '';
@@ -640,10 +665,8 @@ function applyFullPreset(i){
   } else {
     STATE.deco.extra_texts = [];
   }
-  // 모션 팩: 완성 스타일 카드에 내장된 pack_id만 저장. 실제 레이어는 렌더 시점에 서버가 만든다(비트 경계=TTS 실길이).
-  STATE.deco.motion = p.motion ? {pack_id: p.motion} : null;
-  const mp = document.getElementById('motionPack'); if(mp) mp.value = p.motion || '';
   renderExtraTexts(); renderExtraPreview();
+  syncMotionPicker();
   document.querySelectorAll('.fullPreset').forEach((b,idx)=>b.style.outline = idx===i?'2px solid var(--accent2)':'none');
 }
 // ── 🪄 진입 자동완성: step5(꾸미기) 첫 진입 시 기본 스타일+실장면 배경 자동 적용(딸깍) ──
