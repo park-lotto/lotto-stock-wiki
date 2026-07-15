@@ -34,7 +34,11 @@ const STAGES=[["normalize","정규화"],["spoken_style","구어체"],["pronuncia
 let corpus=[], profile={}, presetList=[];
 
 function defaultProfile(){
- const p={caps:{max_tags_total:3,max_tags_per_beat:1,max_fillers_per_text:1}};
+ // caps는 여기서 하드코딩하지 않는다(Task4 C1) — 서버 merge_profile이
+ // DEFAULT_PROFILE(narration_naturalize.py)의 caps를 채워준다. 여기서
+ // max_fillers_per_text:1을 박아두면 엔진 기본값을 올려도 작업대만
+ // 영원히 캡=1로 남아 "슬라이더를 돌려도 똑같다"가 화면에서 재발한다.
+ const p={};
  STAGES.forEach(([k])=>p[k]={on:true,intensity:0.3});
  p.normalize={on:true}; p.pronunciation={on:true,dict:{}};
  p.fillers={on:true,intensity:0.2,bank:["음","아","그","뭐","자"]};

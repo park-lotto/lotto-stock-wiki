@@ -16,7 +16,14 @@ DEFAULT_PROFILE = {
     "fillers":       {"on": True, "intensity": 0.2, "bank": ["음", "아", "그", "뭐", "자"]},
     "emotion_arc":   {"on": True, "intensity": 0.3},
     "intonation":    {"on": True, "intensity": 0.2},
-    "caps": {"max_tags_total": 3, "max_tags_per_beat": 1, "max_fillers_per_text": 1},
+    # max_fillers_per_text=1(구값)은 n = min(cap, _take_count(...))에서 cap이 항상
+    # 병목이 돼 강도가 뭘 하든 결과가 늘 1개로 고정됐다(2026-07-15 컨트롤러 재현,
+    # Task4 리뷰 Critical1 — "슬라이더를 돌렸는데 출력이 똑같다"는 이 재설계 전체의
+    # 존재 이유를 기본 설정에서 그대로 재현하는 결함이었다). 실대본은 비트당 1~2
+    # 문장이 보통이라 cap=2면 비례가 실제로 드러나고, 문장 수 자체를 넘는 추임새는
+    # 어차피 `_take_count`가 막는다. 도배 방지는 캡이 아니라 `_beat_selected`(비트
+    # 빈도 게이트)가 담당한다.
+    "caps": {"max_tags_total": 3, "max_tags_per_beat": 1, "max_fillers_per_text": 2},
     "seed": 42,
     "n_best": 1,
 }
@@ -305,7 +312,16 @@ def _endings(text, cfg, ctx):
 
 
 def _sentence_starts(text):
-    """문장 시작 오프셋들. 추임새를 문장 앞에 붙이기 위한 후보 목록."""
+    """문장 시작 오프셋들. 추임새를 문장 앞에 붙이기 위한 후보 목록.
+
+    `…`를 문장 구분자로 인식하는 건 의도적이다(M1) — `_endings`가 이 함수보다
+    먼저 돌아 마침표 없는 문장 끝에 `…`를 새로 만들어 넣을 수 있는데(예: tail
+    경로), 그 결과물을 여기서 문장 경계로 못 읽으면 파이프라인이 자기가 만든
+    구분자를 자기가 못 보는 결함이 된다(`_endings` 주석의 "자기가 만든 걸
+    자기가 못 봄" 계열과 동일 원칙). 다만 부작용도 있다 — 마침표 없는 코퍼스에서는
+    `_endings`가 넣은 `…` 개수가 그대로 문장 경계 개수가 되므로, 추임새 개수가
+    간접적으로 끝음(endings) 강도 슬라이더의 함수가 된다. 의미상 타당한
+    트레이드오프라 그대로 둔다."""
     starts = [0]
     for m in re.finditer(r"(?<=[.!?…])\s+", text):
         if m.end() < len(text):
@@ -313,24 +329,57 @@ def _sentence_starts(text):
     return starts
 
 
+def _beat_selected(bi, intensity):
+    """이 비트가 추임새 발동 대상인지 — Bresenham식 균등분배(I1 수정).
+
+    옛 `every = round(1.0/intensity)`(역수·반올림)는 강도가 클수록 양자화가 거칠어져
+    슬라이더 상단이 평지가 됐다(2026-07-15 리뷰 실측: 작업대 10비트·21개 슬라이더
+    위치 중 13개가 단 2칸에 갇힘 — 0.40~0.65가 전부 "every=2", 0.70~1.00이 전부
+    "every=1"로 뭉쳤다). `_take_count`가 이미 쓰는 철학(선형·단조, "내림이면 슬라이더가
+    계단이 된다")을 비트 축에도 그대로 적용한다 — (bi-1, bi] 구간에 발동 경계가
+    있는지로 판정하면(고전 Bresenham 직선 알고리즘과 동일한 형태) 강도가 오를수록
+    선택 비트 수가 절대 줄지 않고, 역수 양자화 특유의 평지도 생기지 않는다(실측:
+    10비트 기준 [0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10] — 최대 2칸 겹침).
+
+    비교 방향을 `bi+1` 대신 `bi-1`로 잡은 이유: bi=0에서 intensity>0이면
+    `floor(0*i)=0 != floor(-i)=-1`이라 **항상** 선택된다 — 단일 비트 프리뷰
+    (beat_total=1)나 스크립트 맨 첫 비트가 낮은 강도에서 영원히 스킵되는 걸
+    막는다(순방향 비교였다면 bi=0은 intensity==1.0이 아닌 한 절대 선택 못 하는
+    새 회귀가 생겼을 것). 이 텔레스코핑 항등식 덕에 "몇 번째로 선택됐는가"(뱅크
+    순환에 쓰는 sel_idx)는 어느 방향으로 잡아도 `math.floor(bi * intensity)`로
+    동일하다."""
+    if intensity <= 0:
+        return False
+    if intensity >= 1.0:
+        return True
+    return math.floor(bi * intensity) != math.floor((bi - 1) * intensity)
+
+
 def _fillers(text, cfg, ctx):
     intensity = cfg.get("intensity", 0.2)
     bank = cfg.get("bank") or ["음"]
     cap = ctx["caps"].get("max_fillers_per_text", 1)
+    if not text or not text.strip():   # M4: 대상 자체가 없는 빈/공백 텍스트는 손대지 않는다
+        return text
     if intensity <= 0 or cap <= 0:
         return text
-    # 비트 빈도: 낮은 강도 = 'N비트마다 1번'(도배 방지). 1.0이면 매 비트.
-    every = 1 if intensity >= 1.0 else max(1, round(1.0 / intensity))
     bi = ctx.get("beat_index") or 0
-    if bi % every != 0:
+    if not _beat_selected(bi, intensity):
         return text
+    # 발동 순번(0-index)으로 뱅크를 순환한다(I2 수정) — 비트 인덱스(bi)로 직접
+    # 인덱싱하면 gcd(선택주기, len(bank))>1일 때 순환이 붕괴해 항상 같은 추임새만
+    # 나왔다(기본값 재현: every=5·bank 5종 → 선택 비트가 {0,5}뿐이라 bank[0],bank[0]
+    # = "음","음"만 들림 — 게이트가 없던 시절엔 bi가 0,1,2,3…을 다 훑어 문제가
+    # 없었던 게 이 태스크가 게이트를 넣으며 새로 만든 결함이었다). sel_idx는
+    # 선택될 때마다 정확히 1씩 늘어나(위 텔레스코핑 항등식) bank 전체를 실제로 순환한다.
+    sel_idx = math.floor(bi * intensity) if intensity < 1.0 else bi
     # 텍스트 내 개수: 문장 수 × 강도(올림), cap 이하.
     starts = _sentence_starts(text)
     n = min(cap, _take_count(len(starts), intensity))
     if n <= 0:
         return text
     for k, pos in enumerate(sorted(starts[:n], reverse=True)):
-        filler = bank[(bi + (n - 1 - k)) % len(bank)]   # 비트·문장별 결정적 순환
+        filler = bank[(sel_idx + (n - 1 - k)) % len(bank)]   # 비트·문장별 결정적 순환
         text = text[:pos] + f"{filler}, " + text[pos:]
     _bump(ctx, "fillers", n)
     return text
