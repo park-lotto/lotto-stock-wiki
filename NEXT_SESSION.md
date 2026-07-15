@@ -177,7 +177,21 @@
 4. **멀티테넌시(100명 고객 대비)**: `customers` 테이블(pbkdf2 해시), `/signup` 회원가입, saved/mix_basket/commented/script_wiki 4개 테이블 (customer_id,shortcode) 복합키로 격리. 기존 admin 계정은 LEGACY_CUSTOMER_ID(0) 하위호환. 별도 워크트리(`feat/multi-tenancy`)에서 작업 후 무충돌 병합, 라이브 서버 실검증(회원가입→로그인→저장 4단계) 완료.
 
 ### ⏭ 다음
-1. **위키/우리믹스 썸네일 추가**(중단된 것 이어서): `store.py` script_wiki 테이블에 `thumbnail` 컬럼 마이그레이션 추가 + `save_to_wiki()`가 `item.get("thumbnail")` 저장하도록 + `_WIKI_COLS`/`_wiki_row`에 포함 + `produce.html`의 `loadWikiForMix()` 렌더링에 좌측 썸네일(64x64) 추가.
+1. ~~**위키/우리믹스 썸네일 추가**~~ → ✅ **완료·배포·라이브검증 (2026-07-15)**
+   - 커밋: `13eaf79c`(동시세션이 흡수 — store.py thumbnail 컬럼+save_to_wiki 저장, 코드 온전)
+     / `d5f95a17`(프론트 img+테스트3) / `74bd8a24`(**/api/wiki/poster**) / `9536605e`(lazy 제거).
+   - **진짜 원인은 썸네일 컬럼 부재가 아니었다**(라이브 실측): 리스트가 `<video preload=metadata>`로
+     썸네일을 대신했는데 `/api/wiki/video`가 **Range를 안 먹여 200으로 mp4 전체(3.4MB)** 를 내려준다.
+     10행=34MB 동시수신 → `readyState=0`으로 메타데이터도 못 붙어 전부 검은칸.
+   - 해결: 보관 mp4에서 0.1초 프레임 1장을 떠 `{hash}.jpg` 캐시하는 `/api/wiki/poster` 신설
+     (55KB·824ms, 재요청은 ffmpeg 미실행). 프론트는 `<img>` 단일화(thumbnail→poster→숨김).
+   - ⚠️ **교훈 2개**: ① CDN 썸네일 백필은 3/10만 복구가능+만료위험이라 폐기 — 보관영상 기반이 옳다.
+     ② `loading="lazy"` 금지: 숨긴 패널에 innerHTML로 그린 뒤 보여주면 크롬이 재평가 안 해
+     **뷰포트 안인데도 영영 미로드**(eager로 바꾸니 즉시 로드 — 이걸로 원인 확정).
+   - 라이브 최종: 10/10 `720x1280` 로드, 숨김 0, 스크린샷 육안확인.
+   - ⏭ 남은 것: 기존 10행은 `thumbnail` 컬럼이 빈값(컬럼 생기기 전 저장분) → poster로 대체되니
+     무해. **새로 저장하는 것부터 thumbnail 채워짐.** 단 Task4 `saveScriptToWiki()`(다른 세션 작업중)가
+     body에 `thumbnail`을 안 실어보냄 — 그쪽에서 `thumbnail:src.thumbnail` 추가하면 CDN 썸네일도 붙는다.
 2. 사용자가 "지금 수집" 재실행 후 같은주제 그룹핑 정확도 육안 확인 필요(버그수정 이후 아직 실데이터 미검증 — 서버 topic_groups 0행 상태로 세션 종료됨).
 3. 서버 앞단이 **Apache 리버스프록시**(443/80→내부 8849)임을 확인 — 재배포 타이밍과 겹치면 502 HTML을 프론트가 JSON파싱 실패하는 걸로 착각할 수 있음(정상, 일시적).
 
