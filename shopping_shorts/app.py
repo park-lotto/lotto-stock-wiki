@@ -919,6 +919,26 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
     return {"ok": True, "drafts": drafts}
 
 
+@app.post("/api/wiki/draft/analyze")
+def api_wiki_draft_analyze(body: dict):
+    """초안 텍스트 → 구조분석(도서관→제작소 다리, 2026-07-15). body: {script_text}.
+
+    도서관 초안은 요소별 유지/변형으로 만들어져 원본 영상의 구조와 다르다(주변인물을
+    '요리 고수 언니'로 바꿔 생성했다면 원본 구조의 주변인물과 어긋남). 그래서 원본
+    구조를 재사용하지 않고 초안을 다시 분석한다(사용자 결정).
+
+    구조분석 실패({})해도 200으로 응답한다 — 구조는 있으면 좋은 것이고, 여기서
+    막으면 대본 이동 자체가 죽는다."""
+    text = (body.get("script_text") or "").strip()
+    if not text:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "script_text 필요"})
+    try:
+        structure = analyze_structure(text) or None
+    except Exception:  # noqa: BLE001 — 구조분석 실패는 무해(대본은 넘어가야 함)
+        structure = None
+    return {"ok": True, "structure": structure}
+
+
 @app.post("/api/wiki/draft/refine")
 def api_draft_refine(request: Request, body: dict):
     """초안을 지시문으로 재생성(전체재작성 또는 부분수정) — 새 버전으로 저장.
@@ -1794,7 +1814,10 @@ def api_produce_picks(request: Request):
 def api_produce_mix_start(background_tasks: BackgroundTasks, body: dict):
     """2단계 영상믹스 — 확정 대본(given_script)을 소스영상 장면에 매칭하는 job 시작.
     리뷰·렌더는 기존 /api/mix/{status,result,adjust,render,video}를 그대로 쓴다.
-    body: {script, urls, target_seconds, subtitle_removal}."""
+    body: {script, urls, target_seconds, subtitle_removal, script_structure}.
+    script_structure: 도서관 초안 구조분석 dict|None(2026-07-15, /api/wiki/draft/analyze
+    결과를 그대로 보관용으로 전달) — mix_jobs.structure(4번째 위치인자, template/free
+    모드 플래그 문자열)와는 이름만 비슷할 뿐 전혀 다른 값이니 섞지 말 것."""
     script = (body.get("script") or "").strip()
     urls = [u for u in (body.get("urls") or []) if u]
     if not script:
@@ -1806,9 +1829,13 @@ def api_produce_mix_start(background_tasks: BackgroundTasks, body: dict):
     # 무관하게 동작해서 이 유효성검사만 완화하면 별도 분기 없이 그대로 지원된다(2026-07-14).
     target = int(body.get("target_seconds") or 30)
     subtitle_removal = bool(body.get("subtitle_removal", False))
+    script_structure = body.get("script_structure") or None
+    if not isinstance(script_structure, dict):
+        script_structure = None   # 잘못된 형식은 조용히 버린다(보관 전용이라 무해)
     job_id = uuid.uuid4().hex[:12]
     Store(DB_PATH).create_mix_job(job_id, urls, target, "free",
-                                  subtitle_removal=subtitle_removal, given_script=script)
+                                  subtitle_removal=subtitle_removal, given_script=script,
+                                  script_structure=script_structure)
     background_tasks.add_task(run_mix_job, job_id, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True, "job_id": job_id}
 
