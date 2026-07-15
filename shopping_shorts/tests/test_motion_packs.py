@@ -77,3 +77,41 @@ def test_비트가_하나면_경계가_없어_전환은_없지만_스티커는_�
 def test_color_filter를_그대로_넘긴다():
     assert build_plan(PACK_EVERY, TL)["color_filter"] == "eq=saturation=1.15"
     assert build_plan({"id": "x"}, TL)["color_filter"] is None
+
+
+import json
+
+from shopping_shorts.motion_packs import load_packs
+
+
+def test_packs_json을_id로_인덱싱한다(tmp_path):
+    (tmp_path / "packs.json").write_text(json.dumps({"packs": [
+        {"id": "a", "name": "A"}, {"id": "b", "name": "B"},
+    ]}), encoding="utf-8")
+    packs = load_packs(str(tmp_path))
+    assert set(packs) == {"a", "b"}
+    assert packs["a"]["name"] == "A"
+
+
+def test_파일이_없으면_빈dict(tmp_path):
+    assert load_packs(str(tmp_path)) == {}
+
+
+def test_id없는_항목은_무시(tmp_path):
+    (tmp_path / "packs.json").write_text(json.dumps({"packs": [
+        {"name": "no id"}, {"id": "ok"},
+    ]}), encoding="utf-8")
+    assert set(load_packs(str(tmp_path))) == {"ok"}
+
+
+def test_실제_packs_json이_로드되고_스키마를_지킨다():
+    packs = load_packs()
+    assert packs, "assets/motion/packs.json이 비었다"
+    for pid, p in packs.items():
+        assert p["id"] == pid
+        assert p.get("name")
+        assert p.get("intensity") in ("low", "mid", "high")
+        for key in ("transition", "sticker"):
+            sub = p.get(key) or {}
+            if sub:
+                assert sub.get("policy") in ("every_beat", "hook_climax", "none")

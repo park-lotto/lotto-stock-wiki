@@ -10,6 +10,17 @@ from pathlib import Path
 DEFAULT_ASSETS_DIR = str(Path(__file__).parent / "assets" / "motion")
 
 
+def load_packs(assets_dir=DEFAULT_ASSETS_DIR):
+    """assets_dir/packs.json을 읽어 {pack_id: pack}으로 인덱싱. 없으면 {}.
+    packs.json(큐레이션)은 manifest.json(자산 빌드산출물)과 수명주기가 달라 파일을 분리한다.
+    """
+    ppath = Path(assets_dir) / "packs.json"
+    if not ppath.exists():
+        return {}
+    data = json.loads(ppath.read_text(encoding="utf-8"))
+    return {p["id"]: p for p in data.get("packs", []) if p.get("id")}
+
+
 def _boundaries(timeline):
     """비트 경계 시각 리스트(첫 비트 시작 0.0은 경계가 아니다)."""
     return [b["t0"] for b in timeline[1:]]

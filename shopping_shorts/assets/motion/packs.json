@@ -1,0 +1,24 @@
+{
+  "packs": [
+    {
+      "id": "dynamic_pop",
+      "name": "다이나믹 팝",
+      "intensity": "high",
+      "transition": {"asset_id": "swipe_left", "dur": 0.5, "lead": 0.25, "policy": "every_beat"},
+      "sticker": {"asset_id": "sparkle", "dur": 1.0, "policy": "hook_climax"},
+      "caption": {"effect": "pop"},
+      "headcopy": {"policy": "hook_only"},
+      "color_filter": "eq=saturation=1.15:contrast=1.05"
+    },
+    {
+      "id": "minimal_chic",
+      "name": "미니멀 시크",
+      "intensity": "low",
+      "transition": {"asset_id": "swipe_left", "dur": 0.4, "lead": 0.2, "policy": "hook_climax"},
+      "sticker": {"asset_id": "sparkle", "dur": 0.8, "policy": "none"},
+      "caption": {"effect": "fade"},
+      "headcopy": {"policy": "always"},
+      "color_filter": "eq=saturation=0.95:contrast=1.02"
+    }
+  ]
+}
