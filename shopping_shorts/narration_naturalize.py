@@ -567,10 +567,35 @@ def _tag_for(ctx):
     return _pos_tag(ctx.get("beat_index"), ctx.get("beat_total"))
 
 
+# 억양: 강조어 앞에 짧은 포즈(쉼표)를 두면 그 단어에 힘이 실린다("이거, 진짜 대박").
+# v3 태그를 더 쓰지 않고 구두점만으로 만든다 — ① 태그 총량 캡(max_tags_total)을
+# emotion_arc가 이미 쓰고 있고 ② 미지원 태그를 지어내면 성우가 그 글자를 그대로
+# 읽어버릴 위험이 있기 때문(_tag_for 주석과 동일 원칙: 알려진 v3 태그만 쓴다).
+#
+# ⚠️ 뒤쪽 경계(lookahead) 필수 — 브리프 초안 패턴엔 이게 없어서 "딱"이 "딱딱해요"의
+# 앞 두 글자와, "완전"이 "완전체가"의 앞 두 글자와, "절대"가 "절대값이"의 앞 두 글자와
+# 겹쳐 오탐한다(강조어가 아닌데 쉼표가 박힘). `_CONNECTIVES`/`_ENDING_SUFFIXES`가 이미
+# 세운 원칙과 동일하다 — "오탐 0이 더 중요"(그 두 주석 참조). 앞쪽 경계(이미 쉼표가
+# 있는 자리엔 또 넣지 않음)는 기존 lookbehind `(?<=[^\s,.!?…])`가 담당한다: 강조어
+# 앞 공백 바로 앞 글자가 이미 쉼표/마침표/공백류면 그 자리는 애초에 후보에서 빠진다.
+_EMPHASIS_WORDS = ["진짜", "완전", "역대급", "훨씬", "절대", "딱"]
+_EMPHASIS_PAT = re.compile(
+    r"(?<=[^\s,.!?…])(\s+)(?:" + "|".join(_EMPHASIS_WORDS) + r")(?=[\s,.!?…]|$)"
+)
+
+
 def _intonation(text, cfg, ctx):
-    # 최소 구현: 물음표 종결 보존(상승억양). 강조는 v2에서. 현재는 무변경에 가깝게.
-    # _bump는 Task 4~6 중 배선 예정(현재 미배선 — 죽은 스테이지 아님. 근거는 _endings 주석 참조).
-    # 지금은 실제로 텍스트를 바꾸지 않는 무변경 스텁이라 bump할 것 자체가 없다(v2 예정).
+    intensity = cfg.get("intensity", 0.2)
+    if intensity <= 0:
+        return text
+    cands = [m.start(1) for m in _EMPHASIS_PAT.finditer(text)]
+    take = _take_count(len(cands), intensity)
+    if take <= 0:
+        return text
+    # 오프셋이 밀리지 않도록 뒤에서부터 적용(다른 스테이지의 동일 패턴 참조).
+    for pos in sorted(cands[:take], reverse=True):
+        text = text[:pos] + "," + text[pos:]
+    _bump(ctx, "intonation", take)
     return text
 
 
