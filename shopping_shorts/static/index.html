@@ -374,12 +374,22 @@ function fmtTime(iso){
   if(isNaN(d)) return iso.slice(0,16);
   return d.toLocaleString('ko-KR', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
 }
+// 서버 재배포로 백엔드가 잠깐 내려간 순간엔 Apache가 JSON이 아니라 HTML 에러페이지(502)를 준다.
+// 그대로 r.json()에 넣으면 "Unexpected token '<'"가 사용자 화면에 뜬다(2026-07-15 실사고).
+async function readJson(r){
+  const ct = r.headers.get("content-type") || "";
+  if(!ct.includes("application/json")){
+    if(r.status>=500) throw new Error("서버 재시작 중입니다. 20초쯤 뒤 다시 눌러주세요.");
+    throw new Error(`서버 응답 오류 (HTTP ${r.status})`);
+  }
+  return r.json();
+}
 async function doCollect(){
   const btn=document.getElementById("collectBtn"), st=document.getElementById("status");
   btn.disabled=true; st.textContent="수집 중… (수 분 소요)";
   try{
     const r = await fetch("/api/collect?platform="+PLATFORM, {method:"POST"});
-    const d = await r.json();
+    const d = await readJson(r);
     if(r.status===429){   // 틱톡 남용/예산 킬스위치
       const label = d.error_code==='budget_exceeded' ? '💰 월 예산 초과' : '🚫 오늘 한도 초과';
       st.textContent = `${label} — ${d.error||''}`;
