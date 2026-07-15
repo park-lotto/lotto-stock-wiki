@@ -416,23 +416,52 @@ _ARC_BY_ROLE = {
 _ARC_BY_POS = ["[curious]", "[warm]", None, "[satisfied]", "[excited]"]  # role 미지 시 폴백
 
 
+def _tag_priority(total):
+    """태그를 붙일 비트 우선순위(비트 인덱스 순서, Task5).
+
+    태그 예산(`n_tagged`, 강도가 정한 "태그 붙는 비트 개수")이 비트 총수보다 적을 때
+    어디부터 쓸지의 배분이다 — 훅(첫 비트) → CTA(마지막 비트) → 나머지는 앞에서부터.
+    감정곡선상 가장 중요한 자리(오프닝의 호기심, 클로징의 CTA)를 예산이 적어도
+    항상 먼저 채운다. `_emotion_arc`가 이 순서의 앞 n_tagged개에 현재 비트가
+    속하는지로 발동 여부를 결정한다."""
+    if total <= 0:
+        return []
+    order = [0]
+    if total > 1:
+        order.append(total - 1)
+    order += [i for i in range(1, total - 1)]
+    return order
+
+
 def _emotion_arc(text, cfg, ctx):
     intensity = cfg.get("intensity", 0.3)
-    if intensity < 0.15:
+    if intensity <= 0:
         return text
     if ctx["caps"].get("max_tags_per_beat", 1) <= 0:
         return text
-    # max_tags_total도 여기서 미리 게이트한다(Important1 수정) — 이전엔 이 캡을
-    # 스테이지 루프 밖 `_enforce_total_tag_cap`이 사후에만 걸러서, bump는 이미
-    # 찍힌 뒤 태그가 지워지는 비대칭이 있었다(캡을 0으로 내렸는데 "감정×1 적용"이라고
-    # 뜨는 거짓말 — 2026-07-15 재현). 이 스테이지는 naturalize_detail 1회 호출당
-    # 정확히 1번만 실행되고, 우리가 붙이는 태그는 이후 스테이지(intonation)가 텍스트
-    # 앞부분을 건드리지 않는 한 항상 전체 문자열의 맨 앞(=태그 목록의 0번째)이 되므로
-    # — max_tags_total>=1이면 `_enforce_total_tag_cap`의 "앞에서 cap개 보존" 규칙상
-    # 우리 태그는 절대 제거되지 않는다. 즉 사후 캡이 실제로 우리 태그를 지우는 경우는
-    # max_tags_total<=0뿐이고, 그 경우만 여기서 미리 걸러내면 bump와 실제 결과가
-    # 항상 일치한다(사후 차감 로직 불필요).
+    # max_tags_total도 여기서 미리 게이트한다(Important1 수정 — Task5에서도 유지) —
+    # 이 캡을 스테이지 루프 밖 `_enforce_total_tag_cap`이 사후에만 걸러버리면, bump는
+    # 이미 찍힌 뒤 태그가 지워지는 비대칭이 생긴다(캡을 0으로 내렸는데 "감정×1
+    # 적용"이라고 뜨는 거짓말 — 2026-07-15 재현). 이 스테이지는 naturalize_detail
+    # 1회 호출당 정확히 1번만 실행되고, 우리가 붙이는 태그는 이후 스테이지(intonation)가
+    # 텍스트 앞부분을 건드리지 않는 한 항상 전체 문자열의 맨 앞(=태그 목록의 0번째)이
+    # 되므로 — max_tags_total>=1이면 `_enforce_total_tag_cap`의 "앞에서 cap개 보존"
+    # 규칙상 우리 태그는 절대 제거되지 않는다. 즉 사후 캡이 실제로 우리 태그를 지우는
+    # 경우는 max_tags_total<=0뿐이고, 그 경우만 여기서 미리 걸러내면 bump와 실제
+    # 결과가 항상 일치한다(사후 차감 로직 불필요). 이 게이트는 브리프 스냅샷(Task2
+    # 이전 시점)엔 없었지만, 여기서 빠지면 Task2가 고친 버그가 되살아나므로 유지한다.
     if ctx["caps"].get("max_tags_total", 3) <= 0:
+        return text
+    # 강도 = 태그가 붙는 비트의 비율(임계형 → 비례형, Task5). 옛 방식은
+    # `intensity < 0.15`면 무태그, 넘으면 항상 태그(0.2든 1.0이든 동일)라 슬라이더가
+    # on/off 스위치나 다름없었다. `_take_count`(4개 스테이지가 이미 공유하는 같은
+    # 비례 계산)로 "태그가 붙는 비트 개수"를 구하고, `_tag_priority` 순서의 앞
+    # n_tagged개에 현재 비트가 들면 태그를 붙인다 — 태그 예산이 적을수록 훅·CTA만
+    # 남고, 늘어날수록 중간 비트로 번진다.
+    total = ctx.get("beat_total") or 1
+    bi = ctx.get("beat_index") or 0
+    n_tagged = _take_count(total, intensity)
+    if bi not in _tag_priority(total)[:n_tagged]:
         return text
     tag = _tag_for(ctx)
     if not tag:
