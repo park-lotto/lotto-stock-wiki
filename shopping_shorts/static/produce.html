@@ -1082,6 +1082,16 @@ function switchMixSource(src){
   if(ba) ba.classList.toggle('active', src==='all');
   loadWikiForMix();
 }
+// 썸네일 URL은 인스타 CDN이라 만료된다(저장 시점 URL). 깨지면 영구보관 영상의
+// 첫 프레임으로 폴백 — 빈칸으로 두지 않는다(2026-07-15).
+function mixVideoThumb(shortcode){
+  const v=document.createElement('video');
+  v.src='/api/wiki/video?shortcode='+encodeURIComponent(shortcode)+'#t=0.1';
+  v.muted=true; v.preload='metadata'; v.playsInline=true;
+  v.style.cssText='width:56px;height:96px;object-fit:cover;border-radius:6px;background:#000;flex-shrink:0';
+  v.onerror=()=>{ v.style.display='none'; };
+  return v;
+}
 async function loadWikiForMix(){
   const el=document.getElementById('mixWiki');
   const bp=document.getElementById('mixSrcPicks'), ba=document.getElementById('mixSrcAll');
@@ -1101,8 +1111,12 @@ async function loadWikiForMix(){
     el.innerHTML=items.map(w=>`
       <label style="display:flex;gap:10px;align-items:flex-start;padding:9px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;cursor:pointer;background:#0d1420">
         <input type="checkbox" class="mixPick" value="${esc(w.shortcode)}" style="margin-top:3px;flex-shrink:0">
-        <video src="/api/wiki/video?shortcode=${encodeURIComponent(w.shortcode)}" muted preload="metadata" playsinline
-          style="width:56px;height:96px;object-fit:cover;border-radius:6px;background:#000;flex-shrink:0" onerror="this.style.display='none'"></video>
+        ${w.thumbnail
+          ? `<img src="${esc(w.thumbnail)}" alt="" loading="lazy"
+               style="width:56px;height:96px;object-fit:cover;border-radius:6px;background:#000;flex-shrink:0"
+               onerror="this.replaceWith(mixVideoThumb('${esc(w.shortcode)}'))">`
+          : `<video src="/api/wiki/video?shortcode=${encodeURIComponent(w.shortcode)}#t=0.1" muted preload="metadata" playsinline
+               style="width:56px;height:96px;object-fit:cover;border-radius:6px;background:#000;flex-shrink:0" onerror="this.style.display='none'"></video>`}
         <span style="flex:1;min-width:0">
           <b>${esc(w.name||w.shortcode)}</b> <span class="hint">· ${esc(w.category||'')}</span>
           <div style="font-size:12px;color:var(--txt);line-height:1.55;margin-top:4px;max-height:120px;overflow:auto;white-space:pre-wrap">${esc(w.full_text||'(대본 없음)')}</div>

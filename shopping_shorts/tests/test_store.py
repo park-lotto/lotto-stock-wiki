@@ -303,3 +303,36 @@ def test_element_raw_values_reads_from_wiki_library(tmp_path):
     assert set(s.element_raw_values("레시피", "devices")) == {"권위자인용", "구체적숫자"}
     assert s.element_raw_values("레시피", "tone") == ["친근한 반말"]
     assert "레시피" in s.distinct_extract_categories()
+
+
+def test_wiki_saves_and_returns_thumbnail(tmp_path):
+    """도서관 저장 시 랭킹항목의 썸네일 URL도 함께 보관해야 한다(2026-07-15).
+
+    우리믹스 대본선택 리스트가 <video> 첫 프레임에 의존해 검은칸으로 보이던 문제 —
+    저장 시점에 썸네일을 남겨 <img>로 즉시 그린다."""
+    from shopping_shorts.store import Store
+    s = Store(tmp_path / "thumb.db")
+    s.save_to_wiki({"shortcode": "W1", "name": "n", "category": "레시피",
+                    "thumbnail": "https://cdn.example/t1.jpg"},
+                   {"full_text": "t", "segments": []}, {})
+    assert s.wiki_list()[0]["thumbnail"] == "https://cdn.example/t1.jpg"
+    assert s.get_wiki_item("W1")["thumbnail"] == "https://cdn.example/t1.jpg"
+
+
+def test_wiki_thumbnail_missing_is_empty_not_error(tmp_path):
+    """썸네일 없는 항목(구버전 저장분·produce 직행)도 저장되고 빈 값으로 읽힌다."""
+    from shopping_shorts.store import Store
+    s = Store(tmp_path / "thumb2.db")
+    s.save_to_wiki({"shortcode": "W2", "name": "n"}, {"full_text": "t", "segments": []}, {})
+    assert not s.wiki_list()[0]["thumbnail"]
+
+
+def test_wiki_resave_updates_thumbnail(tmp_path):
+    """재저장(덮어쓰기) 시 썸네일도 갱신된다 — 만료 URL이 굳지 않게."""
+    from shopping_shorts.store import Store
+    s = Store(tmp_path / "thumb3.db")
+    item = {"shortcode": "W3", "name": "n", "thumbnail": "https://cdn.example/old.jpg"}
+    s.save_to_wiki(item, {"full_text": "t", "segments": []}, {})
+    s.save_to_wiki({**item, "thumbnail": "https://cdn.example/new.jpg"},
+                   {"full_text": "t", "segments": []}, {})
+    assert s.wiki_list()[0]["thumbnail"] == "https://cdn.example/new.jpg"
