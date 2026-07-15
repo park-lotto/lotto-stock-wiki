@@ -213,7 +213,18 @@ def _phrasing(text, cfg, ctx):
 
 # 종결어미(마침표 없이 끝나는 대본에서도 끝음을 흐릴 수 있게). 튜닝 코퍼스엔 마침표가
 # 없고 실제 대본엔 있다 — 양쪽 다 동작해야 작업대에서 들은 것이 실제와 같아진다.
-_ENDING_TAIL = re.compile(r"(요|죠|다)(?=\s|$)")
+# ⚠️ 단독 `요`/`다`/`죠`는 절대 쓰지 마라(2026-07-15 컨트롤러 실측 오탐) —
+#   '이거 하나면 다 돼요'는 부사 '다'에, '중요/필요/주요 포인트예요'는 명사 꼬리 '요'에
+#   달라붙어 진짜 종결어미(돼요/포인트예요) 대신 엉뚱한 곳에 `…`가 박힌다. 강도가
+#   낮을수록(=후보 1개만 취함) 위치상 앞선 오탐이 진짜 종결어미보다 먼저 뽑혀 더 틀린다.
+#   `_CONNECTIVES`가 이미 세운 원칙("오탐 0이 더 중요")을 그대로 따라 — 명시적
+#   다음절 종결어미만 나열한다(서버 실측 대본 기준). 놓치는 어미(false negative,
+#   예: 조사축약형 "돼요"·"라고요" 밖의 변형)는 안전하니 목록을 함부로 넓히지 마라.
+_ENDING_SUFFIXES = ["거든요", "라고요", "세요", "니다", "해요",
+                    "어요", "아요", "에요", "예요", "네요", "죠"]
+_ENDING_TAIL = re.compile(
+    "(?:" + "|".join(sorted(_ENDING_SUFFIXES, key=len, reverse=True)) + r")(?=\s|$)"
+)
 
 
 def _endings(text, cfg, ctx):
@@ -221,19 +232,37 @@ def _endings(text, cfg, ctx):
     if intensity <= 0:
         return text
     # 후보: ① 마침표 ② 마침표 없는 종결어미. 위치 순으로 앞에서부터 강도 비율만.
+    # dot 스팬(".")과 tail 스팬(다음절 어미)이 서로 겹칠 수 없다는 게 이 정렬의 전제다:
+    # tail은 (?=\s|$)로 "다음 글자가 공백/끝"일 때만 매칭되므로, 어미 바로 뒤에 마침표가
+    # 오는 위치("...세요.")에서는 tail이 애초에 발동하지 않는다(다음 글자가 "."라서) —
+    # 그래서 dot·tail 후보는 항상 서로 다른 위치를 가리키고, 정렬 후 취해도 안전하다.
     cands = [(m.start(), m.end(), "dot") for m in re.finditer(r"\.(?=\s|$)", text)]
     cands += [(m.start(), m.end(), "tail") for m in _ENDING_TAIL.finditer(text)]
     cands.sort()
     take = _take_count(len(cands), intensity)
     if take <= 0:
         return text
-    # 오프셋이 밀리지 않도록 뒤에서부터 적용
+    # 오프셋이 밀리지 않도록 뒤에서부터 적용. 어미가 단음절(요/다)에서 다음절(세요/거든요
+    # 등)로 늘어나도 안전하다 — 여기 start/end는 치환 전 원본 문자열 기준으로 전부
+    # 미리 계산돼 있고(re.finditer는 원본을 스캔), 뒤(큰 start)부터 앞으로 적용하므로
+    # 아직 처리 안 된(=앞쪽) 후보의 좌표는 그 뒤 어떤 치환에도 영향받지 않는다. 즉
+    # 스팬 길이 자체는 오프셋 안전성과 무관하다(중요한 건 적용 "순서"뿐).
+    #
+    # "계획한 수(take)"가 아니라 "실제 바뀐 횟수"만 센다(Important2) — `_spoken_style`·
+    # `_pronunciation`이 이미 쓰는 `new != s` 전략과 통일. 구조상 dot 치환(문자 교체)과
+    # tail 삽입(문자 추가)은 항상 실효과가 나므로(no-op이 될 수 없음) 지금 당장은 take와
+    # n이 같은 값이 나오지만, 어미 목록이 앞으로 바뀌어도 계약이 "실제 효과"로 고정돼
+    # 있어야 다른 스테이지와 전략이 어긋나지 않는다.
+    n = 0
     for start, end, kind in sorted(cands[:take], key=lambda c: c[0], reverse=True):
+        before = text
         if kind == "dot":
             text = text[:start] + "…" + text[end:]
         else:
             text = text[:end] + "…" + text[end:]
-    _bump(ctx, "endings", take)
+        if text != before:
+            n += 1
+    _bump(ctx, "endings", n)
     return text
 
 
