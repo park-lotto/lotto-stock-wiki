@@ -417,13 +417,18 @@ _ARC_BY_POS = ["[curious]", "[warm]", None, "[satisfied]", "[excited]"]  # role 
 
 
 def _tag_priority(total):
-    """태그를 붙일 비트 우선순위(비트 인덱스 순서, Task5).
+    """태그를 붙일 비트 우선순위(비트 인덱스 순서) — **미지 role 위치폴백 전용**
+    (Task5 I1 재리뷰 이후로는 정본 role엔 안 쓰인다, 아래 `_TAG_ROLE_PRIORITY` 참조).
 
     태그 예산(`n_tagged`, 강도가 정한 "태그 붙는 비트 개수")이 비트 총수보다 적을 때
-    어디부터 쓸지의 배분이다 — 훅(첫 비트) → CTA(마지막 비트) → 나머지는 앞에서부터.
-    감정곡선상 가장 중요한 자리(오프닝의 호기심, 클로징의 CTA)를 예산이 적어도
-    항상 먼저 채운다. `_emotion_arc`가 이 순서의 앞 n_tagged개에 현재 비트가
-    속하는지로 발동 여부를 결정한다."""
+    어디부터 쓸지의 배분이다 — 첫 비트 → 마지막 비트 → 나머지는 앞에서부터.
+    감정곡선상 가장 중요한 자리(오프닝의 호기심, 클로징)를 예산이 적어도 항상 먼저
+    채운다. role을 모를 때(작업대 옛 코퍼스의 `body`/`build` 등)만 `_emotion_arc`가
+    이 순서의 앞 n_tagged개에 현재 비트가 속하는지로 발동 여부를 결정한다.
+
+    `total <= 0` 분기는 방어 코드다 — 유일한 호출부(`_emotion_arc` 위치폴백 경로)가
+    항상 `ctx.get("beat_total") or 1`로 부르므로 실제로는 도달 불가(total>=1 보장).
+    """
     if total <= 0:
         return []
     order = [0]
@@ -431,6 +436,25 @@ def _tag_priority(total):
         order.append(total - 1)
     order += [i for i in range(1, total - 1)]
     return order
+
+
+# 정본 role 전용 태그 우선순위(Task5 I1 수정) — **비트 위치가 아니라 role 그 자체의
+# 고정 순위**다. `_tag_priority`(위치기반)와 근본이 다르다: 정본 role은 비트가 몇 번째인지
+# 몰라도 자기 role만으로 예산 안에 드는지 스스로 판정할 수 있다(브리프 권장안 채택).
+# 페인포인트는 여기 목록에 아예 없다 — `_ARC_BY_ROLE["페인포인트"]=None`이라 태그를 못
+# 붙이는데, 순위 슬롯을 차지하면 예산 1자리가 그대로 버려진다(I1이 잡은 실측 버그:
+# 정본 5비트 기준 강도 0.3~0.6 네 지점의 출력이 문자 단위로 동일했다 — 3순위 슬롯이
+# 페인포인트를 가리켜 예산을 소비만 하고 아무 태그도 못 붙였기 때문). 태그 가능한
+# role만 세면(4개) 이 낭비가 원천적으로 사라진다.
+_TAG_ROLE_PRIORITY = ["훅", "CTA", "반전", "실용"]
+
+
+def _role_tag_rank(role_canon):
+    """정본 role의 태그 우선순위(0=최우선). 태그불가(페인포인트)·미지 role은 None —
+    호출부가 None을 "예산을 소비하지 않고 태그도 안 붙는다"로 처리한다."""
+    if role_canon is None or role_canon not in _TAG_ROLE_PRIORITY:
+        return None
+    return _TAG_ROLE_PRIORITY.index(role_canon)
 
 
 def _emotion_arc(text, cfg, ctx):
@@ -454,15 +478,36 @@ def _emotion_arc(text, cfg, ctx):
         return text
     # 강도 = 태그가 붙는 비트의 비율(임계형 → 비례형, Task5). 옛 방식은
     # `intensity < 0.15`면 무태그, 넘으면 항상 태그(0.2든 1.0이든 동일)라 슬라이더가
-    # on/off 스위치나 다름없었다. `_take_count`(4개 스테이지가 이미 공유하는 같은
-    # 비례 계산)로 "태그가 붙는 비트 개수"를 구하고, `_tag_priority` 순서의 앞
-    # n_tagged개에 현재 비트가 들면 태그를 붙인다 — 태그 예산이 적을수록 훅·CTA만
-    # 남고, 늘어날수록 중간 비트로 번진다.
-    total = ctx.get("beat_total") or 1
-    bi = ctx.get("beat_index") or 0
-    n_tagged = _take_count(total, intensity)
-    if bi not in _tag_priority(total)[:n_tagged]:
-        return text
+    # on/off 스위치나 다름없었다.
+    #
+    # 경로 분기(I1 재수정) — 정본 role이면 role 자체의 고정 순위로 예산을 판정하고,
+    # 미지 role(위치폴백)만 예전 위치기반 `_tag_priority`를 쓴다:
+    #
+    #   role 기반(정본): 비트는 자기 role만 알면 되므로, "태그 가능한 role 수(4개,
+    #   페인포인트 제외)"를 모집단으로 `_take_count`를 돌린다. 페인포인트는 애초에
+    #   순위가 없어(`_role_tag_rank`→None) 예산을 소비하지 않는다 — 이게 I1이 고친
+    #   버그다: 예전엔 비트 "위치"(전체 beat_total 기준)로 예산을 셌고 3순위 슬롯이
+    #   우연히 페인포인트를 가리켜 예산 1자리를 그대로 버렸다(정본 5비트 기준
+    #   0.3~0.6 네 강도의 출력이 문자 단위로 동일했던 실측 결함, tests 참조).
+    #
+    #   위치 기반(미지 role): role을 모르면 "이 비트가 태그 가능한 role인지" 자체를
+    #   알 수 없으므로 예산 낭비를 막을 방법이 없다 — 옛 로직을 그대로 유지한다
+    #   (작업대 옛 코퍼스의 `body`/`build`가 실제로 이 경로를 타고, 매끄러운 램프를
+    #   기대하는 회귀 스위트이기도 하다).
+    canon = ctx.get("role_canon")
+    if canon:
+        rank = _role_tag_rank(canon)
+        if rank is None:          # 페인포인트: 설계상 영구 무태그, 예산 안 먹는다
+            return text
+        n_tagged = _take_count(len(_TAG_ROLE_PRIORITY), intensity)
+        if rank >= n_tagged:
+            return text
+    else:
+        total = ctx.get("beat_total") or 1
+        bi = ctx.get("beat_index") or 0
+        n_tagged = _take_count(total, intensity)
+        if bi not in _tag_priority(total)[:n_tagged]:
+            return text
     tag = _tag_for(ctx)
     if not tag:
         return text
@@ -539,6 +584,16 @@ def naturalize_detail(text, profile=None, *, beat_role=None, beat_index=None, be
     # 경우에도 뜬다. "위치기반으로 폴백함"이라고 단정하면 거짓이 된다.
     if beat_role and ctx["role_canon"] is None:
         ctx["warnings"].append(f"미지 role '{beat_role}' — 별칭표에 없음(감정태그 사용 시 위치기반 폴백)")
+    # beat_index/beat_total 배선 어긋남도 데이터 품질 사실로 1회 경고한다(Minor,
+    # role 경고와 동일 패턴) — 위치기반 폴백(미지 role) 경로에서 bi가 범위를 벗어나면
+    # `_tag_priority(total)`엔 애초에 그 인덱스가 없어 실패 모드가 "잘못된 태그"가
+    # 아니라 "조용한 무태그"가 된다. 호출부 배선 버그가 나면 감정태그가 통째로
+    # 사라지는데 신호가 전혀 없었던 걸 여기서 남긴다.
+    if beat_index is not None and beat_total and beat_index >= beat_total:
+        ctx["warnings"].append(
+            f"beat_index({beat_index}) >= beat_total({beat_total}) — 배선 오류 가능성"
+            "(미지 role 위치폴백 시 감정태그 조용히 무발동)"
+        )
     out = text
     for name, fn in _STAGES:
         cfg = p.get(name, {})
