@@ -4,13 +4,14 @@ import hashlib
 import os
 import re
 import shutil
+import tempfile
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 import requests
 from fastapi import BackgroundTasks, FastAPI, Request, UploadFile, File, Form
-from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, FileResponse
+from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from shopping_shorts.service import collect, generate_missing_drafts, next_draft_targets
 from shopping_shorts.outreach import build_queue
@@ -35,6 +36,7 @@ from shopping_shorts import voice_presets, audio_post
 from shopping_shorts.tts import synthesize_tts
 from shopping_shorts import tts, asr_check
 from shopping_shorts.narration_naturalize import naturalize as _naturalize
+from shopping_shorts import frame_extract, scene_assets
 import uuid
 
 app = FastAPI(title="쇼핑쇼츠 레퍼런스 랭킹")
@@ -469,6 +471,7 @@ def api_prune_removed():
 _FIND_TMP_DIR = Path(__file__).parent / "data" / "find_frames"
 _MIX_WORK_DIR = Path(__file__).parent / "data" / "mix_jobs"
 _WIKI_MEDIA_DIR = Path(__file__).parent / "data" / "wiki_media"   # 도서관 원본 영구보관
+_SCENE_ASSETS_DIR = Path(__file__).parent / "data" / "scene_assets"  # 장면 라이브러리 자산 영구보관
 
 
 @app.post("/api/extract_script")
@@ -1769,6 +1772,188 @@ def api_produce_mix_poster(job_id: str):
     return FileResponse(str(poster), media_type="image/jpeg")
 
 
+# ── 장면 라이브러리(재사용 짤 뱅크, 2026-07-15) ──
+# 저장은 2스텝: prepare(구간컷+Gemini 태그초안) → 사람 확인 → commit(DB 확정).
+# 재추출이 없고, 확인 없이 저장되지 않는다.
+_SCENE_TOKEN_RE = re.compile(r"^[0-9a-f]{32}$")
+_SCENE_EXT = {"clip": (".mp4",), "overlay": (".png", ".jpg", ".jpeg", ".webp", ".gif"),
+              "sfx": (".mp3", ".wav", ".m4a", ".aac")}
+_SCENE_MIME = {".mp4": "video/mp4", ".mp3": "audio/mpeg", ".wav": "audio/wav",
+               ".m4a": "audio/mp4", ".aac": "audio/aac", ".png": "image/png",
+               ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp",
+               ".gif": "image/gif"}
+
+
+def _scene_token_path(token, ext=".mp4"):
+    """토큰 → 서버가 재구성한 자산 경로. 클라이언트 문자열을 경로로 쓰지 않기 위한 관문.
+    토큰이 32자 hex가 아니면 None(호출부가 422)."""
+    if not token or not _SCENE_TOKEN_RE.match(str(token)):
+        return None
+    return _SCENE_ASSETS_DIR / f"{token}{ext}"
+
+
+@app.post("/api/scene/save/prepare")
+def api_scene_save_prepare(request: Request, body: dict):
+    """구간컷 + Gemini 다축 태그 초안 → 모달 프리필용. 아직 DB 저장 안 함.
+    body: {source_kind, source_ref, src_url, start, end, category?, caption?, script?}"""
+    src_url = (body.get("src_url") or "").strip()
+    if not src_url:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "src_url 필요"})
+    try:
+        start, end = float(body.get("start") or 0), float(body.get("end") or 0)
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "start/end 숫자 필요"})
+    if end - start <= 0:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "구간이 잘못됨"})
+    token = uuid.uuid4().hex
+    _SCENE_ASSETS_DIR.mkdir(parents=True, exist_ok=True)
+    clip = _SCENE_ASSETS_DIR / f"{token}.mp4"
+    poster = _SCENE_ASSETS_DIR / f"{token}.jpg"
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            src = frame_extract.download_video(src_url, td)
+            scene_assets.make_clip(src, start, end, clip)
+    except Exception as e:  # noqa: BLE001 — 다운로드/ffmpeg 실패는 사용자에게 그대로 알림
+        return JSONResponse(status_code=502, content={"ok": False, "error": f"구간컷 실패: {e}"})
+    scene_assets.make_poster(clip, poster)
+    draft = scene_assets.autotag([poster] if poster.exists() else [], {
+        "category": body.get("category"), "caption": body.get("caption"),
+        "script": body.get("script"),
+    })
+    return {"ok": True, "token": token, "duration": scene_assets.probe_duration(clip),
+            "poster_url": f"/api/scene/prepared/{token}/poster", "draft": draft}
+
+
+@app.get("/api/scene/prepared/{token}/poster")
+def api_scene_prepared_poster(token: str):
+    """commit 전 미리보기 썸네일. 토큰은 hex 검증 — 경로조작 차단."""
+    p = _scene_token_path(token, ".jpg")
+    if p is None or not p.exists():
+        return Response(status_code=404, content=b"")
+    return FileResponse(str(p), media_type="image/jpeg")
+
+
+@app.post("/api/scene/save/commit")
+def api_scene_save_commit(request: Request, body: dict):
+    """사람이 확인·수정한 태그로 자산 확정 저장. media_path는 **토큰으로만** 재구성 —
+    body의 media_path는 있어도 무시한다(경로조작 차단)."""
+    p = _scene_token_path(body.get("token"))
+    if p is None:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "token 형식 오류"})
+    if not p.exists():
+        return JSONResponse(status_code=404, content={"ok": False, "error": "준비된 클립 없음"})
+    title = (body.get("title") or "").strip()
+    if not title:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "title 필요"})
+    asset_type = body.get("asset_type") or "clip"
+    media = p
+    poster = p.with_suffix(".jpg")
+    if asset_type == "sfx":
+        # 스펙 §5.3 — 효과음은 업로드 말고 **화면짤에서 오디오만 뽑는** 경로도 있다.
+        # 같은 구간컷을 재사용하므로 재추출이 없다.
+        try:
+            media = scene_assets.extract_audio(p, p.with_suffix(".mp3"))
+        except RuntimeError as e:
+            return JSONResponse(status_code=502,
+                                content={"ok": False, "error": f"오디오 추출 실패: {e}"})
+        poster = None
+    aid = Store(DB_PATH).add_scene_asset({
+        "asset_type": asset_type,
+        "render_mode": body.get("render_mode") if asset_type == "clip" else None,
+        "media_path": str(media),
+        "poster_path": str(poster) if (poster and poster.exists()) else None,
+        "duration": scene_assets.probe_duration(media),
+        "keep_original_audio": body.get("keep_original_audio"),
+        "title": title, "scene_desc": body.get("scene_desc"), "role": body.get("role"),
+        "category": body.get("category"), "subject": body.get("subject"),
+        "tone": body.get("tone"), "keywords": body.get("keywords"),
+        "source_kind": body.get("source_kind"), "source_ref": body.get("source_ref"),
+    }, customer_id=_cid(request))
+    return {"ok": True, "id": aid}
+
+
+@app.post("/api/scene/upload")
+async def api_scene_upload(request: Request, asset_type: str = Form(...),
+                           title: str = Form(...), file: UploadFile = File(...),
+                           category: str = Form(""), role: str = Form(""),
+                           subject: str = Form(""), tone: str = Form("")):
+    """효과음·오버레이 직접 업로드. 확장자 화이트리스트 밖은 거부."""
+    if not (title or "").strip():
+        return JSONResponse(status_code=422, content={"ok": False, "error": "title 필요"})
+    allowed = _SCENE_EXT.get(asset_type)
+    if not allowed:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "asset_type 오류"})
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if ext not in allowed:
+        return JSONResponse(status_code=422,
+                            content={"ok": False, "error": f"{asset_type}는 {'/'.join(allowed)}만"})
+    token = uuid.uuid4().hex
+    _SCENE_ASSETS_DIR.mkdir(parents=True, exist_ok=True)
+    dest = _SCENE_ASSETS_DIR / f"{token}{ext}"
+    dest.write_bytes(await file.read())
+    poster = None
+    if asset_type == "overlay":
+        pp = _SCENE_ASSETS_DIR / f"{token}.jpg"
+        poster = scene_assets.make_poster(dest, pp)
+    aid = Store(DB_PATH).add_scene_asset({
+        "asset_type": asset_type, "media_path": str(dest),
+        "poster_path": str(poster) if poster else None,
+        "duration": scene_assets.probe_duration(dest),
+        "title": title.strip(), "category": category or None, "role": role or None,
+        "subject": subject or None, "tone": tone or None,
+        "source_kind": "upload", "source_ref": file.filename or "",
+    }, customer_id=_cid(request))
+    return {"ok": True, "id": aid}
+
+
+@app.get("/api/scene/list")
+def api_scene_list(request: Request, type: str = "", category: str = "", role: str = ""):
+    """이 고객의 장면 자산 목록(필터 옵션)."""
+    items = Store(DB_PATH).list_scene_assets(
+        customer_id=_cid(request), asset_type=type or None,
+        category=category or None, role=role or None)
+    return {"ok": True, "items": items}
+
+
+@app.post("/api/scene/{asset_id}/update")
+def api_scene_update(request: Request, asset_id: int, body: dict):
+    """다축 태그 편집. store가 화이트리스트로 media_path 등을 걸러낸다."""
+    ok = Store(DB_PATH).update_scene_asset(asset_id, body, customer_id=_cid(request))
+    if not ok:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "자산 없음"})
+    return {"ok": True}
+
+
+@app.post("/api/scene/{asset_id}/delete")
+def api_scene_delete(request: Request, asset_id: int):
+    ok = Store(DB_PATH).delete_scene_asset(asset_id, customer_id=_cid(request))
+    if not ok:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "자산 없음"})
+    return {"ok": True}
+
+
+@app.get("/api/scene/{asset_id}/media")
+def api_scene_media(request: Request, asset_id: int):
+    """자산 미디어 서빙(FileResponse가 Range를 처리해 seek 됨).
+    DB로 소유권을 먼저 확인 — 남의 id를 찍어도 404."""
+    a = Store(DB_PATH).get_scene_asset(asset_id, customer_id=_cid(request))
+    if not a or not a.get("media_path"):
+        return Response(status_code=404, content=b"")
+    f = Path(a["media_path"])
+    if not f.exists():
+        return Response(status_code=404, content=b"")
+    return FileResponse(str(f), media_type=_SCENE_MIME.get(f.suffix.lower(),
+                                                           "application/octet-stream"))
+
+
+@app.get("/api/scene/{asset_id}/poster")
+def api_scene_poster(request: Request, asset_id: int):
+    a = Store(DB_PATH).get_scene_asset(asset_id, customer_id=_cid(request))
+    if not a or not a.get("poster_path") or not Path(a["poster_path"]).exists():
+        return Response(status_code=404, content=b"")
+    return FileResponse(a["poster_path"], media_type="image/jpeg")
+
+
 # 정적 프론트 (마운트는 맨 마지막)
 _STATIC = Path(__file__).parent / "static"
 
@@ -1777,7 +1962,8 @@ _STATIC = Path(__file__).parent / "static"
 # no-cache: UI 배포 후 브라우저가 옛 HTML을 캐시로 재사용해 "고쳤는데 안 바뀜"이
 # 반복됨(2026-07-14 역할배정·사이드바 등 실사고) → 매 요청 서버 재검증 강제.
 _NOCACHE = {"Cache-Control": "no-cache, must-revalidate"}
-for _pg in ("discover", "find", "library", "mix", "outreach", "produce", "collection"):
+for _pg in ("discover", "find", "library", "mix", "outreach", "produce", "collection",
+            "scene_library"):
     app.add_api_route(
         f"/{_pg}",
         (lambda n=_pg: FileResponse(_STATIC / f"{n}.html", media_type="text/html",
