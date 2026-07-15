@@ -229,15 +229,18 @@ STEP 3 — 결합 답변
 **저장 트리거** (`저장해` / `마무리` / `세션 끝` / `마감해줘` / `집에서 이어해`):
 
 ```
-□ 1. NEXT_SESSION.md 갱신 (덮어쓰기)
+□ 1. handoff/{내 트랙}.md 갱신 (내 트랙 파일만!)
       - 날짜·PC명·세션 요약
       - 완료 항목 / 미완료 항목 (구체적으로)
       - 관련 파일 경로
-□ 2. wiki/log.md 기록 (1~3줄)
+      ⚠️ NEXT_SESSION.md는 목록일 뿐 — 거기 쓰면 타세션과 덮어쓴다
+□ 2. wiki/log.d/{내 트랙}.md 에 1~3줄 추가 (log.md는 동결 아카이브)
 □ 3. memory/ 업데이트 (중요 결정·피드백만)
-□ 4. git add -A → git commit -m "session: {요약} ({PC명})" → git push
-□ 5. push 완료 확인 후 출력:
-      ✅ 마감 완료 / 오늘 한 것 / 다음 할 것 / git push 완료
+□ 4. git add {내 파일만} → git commit -m "..." → git pull --rebase
+      ⚠️ git add -A 절대 금지 — 6세션이 .git·인덱스를 공유해 남의 변경이 내 커밋에 실린다
+      ⚠️ push는 post-commit 훅이 자동 (커밋 = 즉시 라이브)
+□ 5. 커밋 후 확인 후 출력:
+      ✅ 마감 완료 / 오늘 한 것 / 다음 할 것 / push 완료
 ```
 
 ⚠️ **git push 없이 끝내면 다른 PC에서 못 이어간다. push 완료 필수.**
