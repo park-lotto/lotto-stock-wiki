@@ -157,6 +157,38 @@ class Store:
                     PRIMARY KEY (customer_id, shortcode)
                 )
             """)
+            # 장면 라이브러리 — 재사용 짤 뱅크(2026-07-15). 자주 쓰는 후킹 장면(놀라는짤·
+            # 효과음·"비법 한 스푼" 등)을 구간컷으로 저장해 믹스 때 재사용한다.
+            # saved/script_wiki와 달리 자연키(shortcode)가 없고 한 소스에서 여러 자산을
+            # 뽑으므로 AUTOINCREMENT id를 PK로 쓰고 customer_id는 일반 컬럼+인덱스로 격리.
+            # 매칭 키는 한 단어 라벨이 아니라 다축(role·category·subject·keywords·scene_desc)
+            # — "한스푼"이 가루↔액체↔세제로 섞이는 사고를 막는 이 설계의 심장.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS scene_assets (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    asset_type TEXT NOT NULL,
+                    render_mode TEXT,
+                    media_path TEXT NOT NULL,
+                    poster_path TEXT,
+                    duration REAL,
+                    keep_original_audio INTEGER NOT NULL DEFAULT 0,
+                    title TEXT,
+                    scene_desc TEXT,
+                    role TEXT,
+                    category TEXT,
+                    subject TEXT,
+                    tone TEXT,
+                    keywords TEXT,
+                    source_kind TEXT,
+                    source_ref TEXT,
+                    created_at TEXT
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_scene_assets_type "
+                      "ON scene_assets(customer_id, asset_type)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_scene_assets_cat "
+                      "ON scene_assets(customer_id, category)")
             # 썸네일 URL 보관(2026-07-15) — 우리믹스 대본선택 리스트가 <video> 첫 프레임에
             # 의존해 검은칸으로 보이던 문제. 저장 시점 URL을 남겨 <img>로 즉시 그린다.
             try:
@@ -926,6 +958,97 @@ class Store:
             return {r[0] for r in c.execute(
                 "SELECT shortcode FROM script_wiki WHERE customer_id=?", (customer_id,)
             ).fetchall()}
+
+    # ── 장면 라이브러리(재사용 짤 뱅크) — customer_id별로 독립(2026-07-15) ──
+    _SCENE_COLS = ("id, asset_type, render_mode, media_path, poster_path, duration, "
+                   "keep_original_audio, title, scene_desc, role, category, subject, "
+                   "tone, keywords, source_kind, source_ref, created_at")
+
+    # 태그 편집으로 바꿀 수 있는 필드만. media_path/customer_id/id는 제외 —
+    # 클라이언트가 준 값이 파일 경로가 되면 traversal이 열린다.
+    _SCENE_EDITABLE = ("title", "scene_desc", "role", "category", "subject", "tone",
+                       "keywords", "render_mode", "keep_original_audio")
+
+    def _scene_row(self, r):
+        return {"id": r[0], "asset_type": r[1], "render_mode": r[2], "media_path": r[3],
+                "poster_path": r[4], "duration": r[5], "keep_original_audio": r[6],
+                "title": r[7], "scene_desc": r[8], "role": r[9], "category": r[10],
+                "subject": r[11], "tone": r[12],
+                "keywords": [k for k in (r[13] or "").split(",") if k],
+                "source_kind": r[14], "source_ref": r[15], "created_at": r[16]}
+
+    @staticmethod
+    def _scene_keywords(v):
+        """keywords는 list로 주고받고 DB엔 콤마 문자열로 눕힌다."""
+        if isinstance(v, (list, tuple)):
+            return ",".join(str(k).strip() for k in v if str(k).strip())
+        return (v or "").strip()
+
+    def add_scene_asset(self, asset, customer_id=LEGACY_CUSTOMER_ID):
+        """장면 자산 1개 저장 → 새 id. asset=다축 태그 dict(§4 스키마)."""
+        with self._conn() as c:
+            cur = c.execute(
+                "INSERT INTO scene_assets(customer_id, asset_type, render_mode, media_path, "
+                "poster_path, duration, keep_original_audio, title, scene_desc, role, category, "
+                "subject, tone, keywords, source_kind, source_ref, created_at) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now'))",
+                (customer_id, asset.get("asset_type"), asset.get("render_mode"),
+                 asset.get("media_path"), asset.get("poster_path"),
+                 float(asset.get("duration") or 0.0), int(asset.get("keep_original_audio") or 0),
+                 asset.get("title"), asset.get("scene_desc"), asset.get("role"),
+                 asset.get("category"), asset.get("subject"), asset.get("tone"),
+                 self._scene_keywords(asset.get("keywords")),
+                 asset.get("source_kind"), asset.get("source_ref")),
+            )
+            return cur.lastrowid
+
+    def list_scene_assets(self, customer_id=LEGACY_CUSTOMER_ID, asset_type=None,
+                          category=None, role=None):
+        """이 고객의 장면 자산(최근순). 타입·카테고리·역할로 좁힐 수 있다."""
+        where, params = ["customer_id=?"], [customer_id]
+        for col, val in (("asset_type", asset_type), ("category", category), ("role", role)):
+            if val:
+                where.append(f"{col}=?")
+                params.append(val)
+        with self._conn() as c:
+            rows = c.execute(
+                f"SELECT {self._SCENE_COLS} FROM scene_assets WHERE {' AND '.join(where)} "
+                f"ORDER BY id DESC", params,
+            ).fetchall()
+        return [self._scene_row(r) for r in rows]
+
+    def get_scene_asset(self, asset_id, customer_id=LEGACY_CUSTOMER_ID):
+        with self._conn() as c:
+            r = c.execute(
+                f"SELECT {self._SCENE_COLS} FROM scene_assets WHERE id=? AND customer_id=?",
+                (asset_id, customer_id),
+            ).fetchone()
+        return self._scene_row(r) if r else None
+
+    def update_scene_asset(self, asset_id, tags, customer_id=LEGACY_CUSTOMER_ID):
+        """다축 태그 편집. _SCENE_EDITABLE 화이트리스트 밖 필드는 조용히 무시.
+        바꾼 게 있으면 True, 대상이 없거나(남의 것 포함) 바꿀 게 없으면 False."""
+        sets, params = [], []
+        for col in self._SCENE_EDITABLE:
+            if col in tags:
+                sets.append(f"{col}=?")
+                params.append(self._scene_keywords(tags[col]) if col == "keywords"
+                              else tags[col])
+        if not sets:
+            return False
+        params += [asset_id, customer_id]
+        with self._conn() as c:
+            cur = c.execute(
+                f"UPDATE scene_assets SET {', '.join(sets)} WHERE id=? AND customer_id=?",
+                params,
+            )
+            return cur.rowcount > 0
+
+    def delete_scene_asset(self, asset_id, customer_id=LEGACY_CUSTOMER_ID):
+        with self._conn() as c:
+            cur = c.execute("DELETE FROM scene_assets WHERE id=? AND customer_id=?",
+                            (asset_id, customer_id))
+            return cur.rowcount > 0
 
     def save_source_analysis(self, shortcode, keywords, frame_paths, analyzed_at):
         """영상 분석 결과(키워드+프레임 경로) 저장(덮어쓰기)."""
