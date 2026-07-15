@@ -165,3 +165,65 @@ def test_output_dimensions_match_video_assemble():
 
     assert scene_assets._OUT_W == video_assemble._OUT_W
     assert scene_assets._OUT_H == video_assemble._OUT_H
+
+
+def test_autotag_returns_draft_from_gemini(monkeypatch, tmp_path):
+    f1 = tmp_path / "f1.jpg"
+    f1.write_bytes(b"jpgbytes")
+    seen = {}
+
+    def fake_vault_call(prompt, schema, max_tries=4):
+        seen["prompt"] = prompt
+        seen["schema"] = schema
+        return {"scene_desc": "흰 가루를 숟가락으로 떠 그릇에 넣음", "role": "비법공개",
+                "subject": "가루(밀가루·설탕류)", "tone": "비밀스러운·궁금",
+                "keywords": ["숟가락", "가루"]}
+    monkeypatch.setattr(scene_assets.edit_plan, "_vault_call", fake_vault_call)
+
+    got = scene_assets.autotag([f1], {"category": "레시피", "caption": "이거 한 스푼이면 끝"})
+
+    assert got["scene_desc"] == "흰 가루를 숟가락으로 떠 그릇에 넣음"
+    assert got["role"] == "비법공개"
+    assert got["subject"] == "가루(밀가루·설탕류)"
+    assert got["keywords"] == ["숟가락", "가루"]
+    # 프레임을 실제로 실어보냈는지(멀티모달) — contents가 파츠 리스트여야 한다
+    assert isinstance(seen["prompt"], list)
+    assert any(not isinstance(p, str) for p in seen["prompt"])   # 이미지 파트 존재
+    assert any(isinstance(p, str) and "레시피" in p for p in seen["prompt"])  # 맥락 주입
+    # 필드 생략 방지 — mime_type만으론 Gemini가 필드를 빠뜨린다(video_analysis.py:26)
+    assert set(seen["schema"]["required"]) == {"scene_desc", "role", "subject", "tone", "keywords"}
+
+
+def test_autotag_returns_shaped_empty_when_no_key(monkeypatch, tmp_path):
+    f1 = tmp_path / "f1.jpg"
+    f1.write_bytes(b"jpgbytes")
+    monkeypatch.setattr(scene_assets.edit_plan, "_vault_call", lambda *a, **k: None)
+
+    got = scene_assets.autotag([f1], {"category": "레시피"})
+
+    # 무키/실패여도 예외 아님 — 사람이 수기 입력할 수 있게 형태만 온전한 빈 값
+    assert got == {"scene_desc": "", "role": "", "subject": "", "tone": "", "keywords": []}
+
+
+def test_autotag_with_no_frames_skips_gemini(monkeypatch, tmp_path):
+    called = []
+    monkeypatch.setattr(scene_assets.edit_plan, "_vault_call",
+                        lambda *a, **k: called.append(1) or {})
+
+    got = scene_assets.autotag([], {"category": "레시피"})
+
+    assert called == []   # 보낼 화면이 없으면 호출 자체를 안 함(비용 절약)
+    assert got["keywords"] == []
+
+
+def test_autotag_clamps_role_to_controlled_vocabulary(monkeypatch, tmp_path):
+    f1 = tmp_path / "f1.jpg"
+    f1.write_bytes(b"jpgbytes")
+    monkeypatch.setattr(scene_assets.edit_plan, "_vault_call",
+                        lambda *a, **k: {"scene_desc": "x", "role": "아무말역할",
+                                         "subject": "s", "tone": "t", "keywords": "a,b"})
+
+    got = scene_assets.autotag([f1], {})
+
+    assert got["role"] == ""            # 통제어휘 밖은 버림(사람이 고르게)
+    assert got["keywords"] == ["a", "b"]  # 문자열로 와도 list로 정규화
