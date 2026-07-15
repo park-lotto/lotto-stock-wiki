@@ -22,7 +22,7 @@ from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
 from shopping_shorts.frame_extract import download_video, extract_frames, extract_frame_at
 from shopping_shorts.script_extract import extract_script
 from shopping_shorts.structure_analyze import analyze_structure
-from shopping_shorts.categorize import categorize
+from shopping_shorts.categorize import categorize, KEYWORDS as CATEGORY_KEYWORDS
 from shopping_shorts import script_generate
 from shopping_shorts.apify_client import fetch_single_reel, fetch_reels, fetch_profiles
 from shopping_shorts import discovery, instagram_search
@@ -524,8 +524,31 @@ def api_extract_script(shortcode: str):
     return {"ok": True, "cached": False, **result}
 
 
+def _backfill_extract_structure(db_path, shortcode, full_text):
+    """캐시히트 응답 뒤에서 구조분석을 수행한다(I-2, 2026-07-15) — BackgroundTasks로
+    호출돼 클릭 즉시 응답을 막지 않는다. Gemini 호출 실패가 이어져도 다음 클릭이
+    또 동기 대기(최대 120s×3)하는 일이 없다. if structure: 가드는 그대로 유지
+    (실패 시 저장 안 함 — {}를 저장하면 extracts_missing_structure 백필 대상에서
+    영구 제외되므로 가드 자체는 옳다, 원 주석 참고)."""
+    try:
+        structure = analyze_structure(full_text) or None
+    except Exception:  # noqa: BLE001 — 백그라운드 실패는 무해(다음 클릭이 재시도)
+        structure = None
+    if structure:
+        Store(db_path).save_extract_structure(shortcode, structure)
+
+
+@app.get("/api/wiki/categories")
+def api_wiki_categories():
+    """카테고리 선택기용 통제 어휘(I-4, 2026-07-15) — categorize.KEYWORDS 키(인테리어·
+    레시피·생활용품·가전·뷰티) + DB 실측값(distinct_extract_categories, 옛 값·'기타' 포함)
+    합집합을 정렬해 내려준다. 프론트의 자유 입력(prompt) 폴백을 없애는 유일한 통로."""
+    cats = set(CATEGORY_KEYWORDS.keys()) | set(Store(DB_PATH).distinct_extract_categories())
+    return {"ok": True, "categories": sorted(cats)}
+
+
 @app.post("/api/produce/extract_from_url")
-def api_produce_extract_from_url(body: dict):
+def api_produce_extract_from_url(body: dict, background_tasks: BackgroundTasks):
     """영상 URL로 직접 대본 추출(영상제작소 역할배정 '대본용'). body: {url, caption?, shortcode?, category?, name?}.
 
     /api/extract_script는 현재 레퍼런스 랭킹 run(last_run)에서만 shortcode를 찾아,
@@ -538,9 +561,14 @@ def api_produce_extract_from_url(body: dict):
     선택 기능이 완전히 무력화됐다(라이브 실측). 우선순위 body.category → 저장된
     get_extract().category → categorize(name, caption)(레퍼런스 랭킹과 동일 함수) → None
     으로 고정 해결한다. structure도 get_extract()가 이미 반환하므로 같이 실어 보낸다
-    (없으면 analyze_structure 1회로 채우고 캐시 — 다음부터 재분석 없이 재사용,
-    extracts_missing_structure 백필 대상에서도 빠짐). analyze_structure는 Gemini 호출이라
-    실패할 수 있으나 대본 추출 응답 자체는 항상 성공시킨다(structure=None 폴백)."""
+    (없으면 캐시히트 시엔 BackgroundTasks로 뒤에서 채우고, 새 영상 추출 시엔 즉석
+    analyze_structure 1회로 채우고 캐시 — 다음부터 재분석 없이 재사용, extracts_missing_structure
+    백필 대상에서도 빠짐). analyze_structure는 Gemini 호출이라 실패할 수 있으나 대본 추출
+    응답 자체는 항상 성공시킨다(structure=None 폴백).
+
+    2026-07-15(Task 8, I-2): 캐시히트 경로의 구조분석은 동기 호출하지 않는다 — 실패가
+    이어지면 캐시히트마다 Gemini 재호출로 클릭당 최대 120s×3이 걸려 '재클릭 즉시화'가
+    깨졌다(실측). BackgroundTasks로 미루고 응답은 캐시된 structure(없으면 None)로 즉시 준다."""
     url = (body.get("url") or "").strip()
     if not url:
         return JSONResponse(status_code=422, content={"ok": False, "error": "url 필요"})
@@ -553,15 +581,10 @@ def api_produce_extract_from_url(body: dict):
         caption_for_infer = body.get("caption") or cached.get("full_text", "")
         category = body_category or cached.get("category") or categorize(name, caption_for_infer) or None
         if not cached.get("category") and category:
-            store.save_script(code, cached, category=category)  # 다음 클릭부터 안정
+            store.update_extract_category(code, category)  # 다음 클릭부터 안정(C-1: script_json은 안 건드림)
         structure = cached.get("structure")
         if not structure:
-            try:
-                structure = analyze_structure(cached.get("full_text", "")) or None
-            except Exception:  # noqa: BLE001 — 구조분석 실패해도 대본 응답은 성공시킨다
-                structure = None
-            if structure:
-                store.save_extract_structure(code, structure)
+            background_tasks.add_task(_backfill_extract_structure, DB_PATH, code, cached.get("full_text", ""))
         return {"ok": True, "cached": True, **cached, "category": category, "structure": structure}
     work_dir = _FIND_TMP_DIR / hashlib.sha1(code.encode()).hexdigest()[:16]
     try:

@@ -709,6 +709,16 @@ class Store:
                     (shortcode, json.dumps(script, ensure_ascii=False)),
                 )
 
+    def update_extract_category(self, shortcode, category):
+        """category만 UPDATE — script_json은 절대 안 건드린다(2026-07-15, C-1 재발방지).
+        원본 텍스트를 다시 쓰지 않고 카테고리 추론·교정만 반영할 때 이걸 쓸 것
+        (save_script(code, cached, category=...)로 원본을 통째로 재기록하는 패턴 금지)."""
+        with self._conn() as c:
+            c.execute(
+                "UPDATE script_extracts SET category=? WHERE shortcode=?",
+                (category, shortcode),
+            )
+
     def get_extract(self, shortcode):
         """대본추출 결과 + category + 구조분석(있으면). 없으면 None."""
         with self._conn() as c:

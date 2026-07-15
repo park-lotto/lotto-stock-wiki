@@ -154,7 +154,10 @@
               <div class="tab" data-mode="gemini">✨ 제미니 자동</div>
             </div>
             <div id="scriptModeBody"></div>
-            <button id="saveWikiBtn" class="btn-prev" style="padding:8px 14px;margin-top:10px;display:none" onclick="saveScriptToWiki(this)" title="내 리메이크가 아니라, 이 원본 영상 자체를 도서관에 담아 학습 재료로 씁니다.">⭐ 이 원본 영상 위키에 담기(학습 반영)</button>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap">
+              <select id="finalCategory" onchange="onFinalCategoryChange(this)" style="display:none;background:#0d1420;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:12px" title="학습 그룹핑 카테고리 — 추론이 틀렸으면 여기서 고치세요"></select>
+              <button id="saveWikiBtn" class="btn-prev" style="padding:8px 14px;display:none" onclick="saveScriptToWiki(this)" title="내 리메이크가 아니라, 이 원본 영상 자체를 도서관에 담아 학습 재료로 씁니다.">⭐ 이 원본 영상 위키에 담기(학습 반영)</button>
+            </div>
           </div>
           <!-- 화면 담김 -->
           <div style="background:#0d1420;border:1px solid var(--line);border-radius:12px;padding:14px">
@@ -1259,7 +1262,7 @@ async function openScriptModal(i){
     await pmLoadElementOptions(PM_CATEGORY);
   }catch(e){ document.getElementById('pmResults').innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; }
 }
-function pmUseRaw(){ STATE.script=PM_BASE_SCRIPT; STATE.script_src_idx=PM_IDX; pmClose(); setScriptMode('manual'); refreshFinalPeek(); if(HANDOFF.length) saveWork(); }
+function pmUseRaw(){ STATE.script=PM_BASE_SCRIPT; STATE.script_src_idx=PM_IDX; pmClose(); setScriptMode('manual'); refreshFinalPeek(); setFinalCategoryValue(PM_CATEGORY); if(HANDOFF.length) saveWork(); }
 function pmClose(){ document.getElementById('pmModal').classList.remove('open'); }
 function pmToggleTopic(){
   const mode=document.querySelector('input[name=pmmode]:checked').value;
@@ -1319,7 +1322,8 @@ function pmRenderDrafts(drafts){
 function pmUseDraft(btn){
   const t=btn.closest('.draft').querySelector('.dtext'); STATE.script=(t?t.value:'')||'';
   STATE.script_src_idx=PM_IDX;
-  pmClose(); setScriptMode('manual'); refreshFinalPeek(); if(HANDOFF.length) saveWork();
+  pmClose(); setScriptMode('manual'); refreshFinalPeek(); setFinalCategoryValue(PM_CATEGORY);
+  if(HANDOFF.length) saveWork();
 }
 async function pmOnDraftEdit(textarea){
   const card=textarea.closest('.draft');
@@ -1383,30 +1387,78 @@ function pmRestoreVersion(el, draftId){
     });
 }
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') pmClose(); });
+// 카테고리 선택기(#finalCategory) — 통제 어휘 로딩·값 세팅·변경 반영 (Task 8, I-3·I-4).
+// prompt() 자유 입력을 없애고 /api/wiki/categories의 통제 어휘로만 고르게 한다.
+let CATEGORY_OPTIONS_LOADED=false;
+async function ensureCategoryOptions(){
+  if(CATEGORY_OPTIONS_LOADED) return;
+  const sel=document.getElementById('finalCategory'); if(!sel) return;
+  CATEGORY_OPTIONS_LOADED=true;  // await 전에 세팅 — 동시 호출 중복요청 방지
+  let cats=[];
+  try{ const d=await (await fetch('/api/wiki/categories')).json(); cats=d.categories||[]; }
+  catch(e){ CATEGORY_OPTIONS_LOADED=false; return; }
+  sel.innerHTML='';
+  const blank=document.createElement('option'); blank.value=''; blank.textContent='카테고리 선택…'; sel.appendChild(blank);
+  cats.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o); });
+}
+async function setFinalCategoryValue(cat){
+  await ensureCategoryOptions();
+  const sel=document.getElementById('finalCategory'); if(sel) sel.value=cat||'';
+}
+// script_src_idx(확정 시점에 남긴 인덱스) 우선, 없으면 대본을 뽑은 영상 → 화면 담긴
+// 첫 영상 → 첫 영상 순으로 폴백. saveScriptToWiki·onFinalCategoryChange가 공유.
+function _currentSrcItem(){
+  const byIdx = (typeof STATE.script_src_idx === 'number') ? HANDOFF[STATE.script_src_idx] : null;
+  return byIdx || HANDOFF.find(h=>h.pickScript) || HANDOFF.find(h=>h.useFootage) || HANDOFF[0] || null;
+}
+// 사용자가 추론된 카테고리를 교정 — HANDOFF에 갱신하고, 모달이 열려 있으면 요소
+// 드롭다운을 새 카테고리 학습소재로 즉시 재로딩(교정이 눈에 보인다, 설계 §2).
+function onFinalCategoryChange(sel){
+  const cat=sel.value;
+  const src=_currentSrcItem();
+  if(src) src.category=cat;
+  PM_CATEGORY=cat;
+  if(HANDOFF.length) saveWork();
+  const modal=document.getElementById('pmModal');
+  if(modal && modal.classList.contains('open')) pmLoadElementOptions(cat);
+}
 // 오른쪽 "확정 대본" peek — 대본이 바뀔 때마다 갱신(onScriptInput/useDraft에서 호출).
 function refreshFinalPeek(){
   const p=document.getElementById('finalScriptPeek');
   if(p) p.innerHTML = STATE.script ? `"${esc(STATE.script.slice(0,60))}…" · ${lenText(STATE.script)}` : '<span style="color:var(--sub)">아직 대본이 없습니다. 왼쪽 영상에서 📝뽑기 하거나 직접 작성하세요.</span>';
-  const b=document.getElementById('saveWikiBtn'); if(b) b.style.display=STATE.script?'inline-block':'none';
+  const b=document.getElementById('saveWikiBtn');
+  if(b){
+    b.style.display=STATE.script?'inline-block':'none';
+    // I-B: 대본이 바뀌면 stale된 '✓ 저장됨' 라벨을 기본으로 되돌린다. 저장 진행 중(disabled)엔
+    // '⏳ 저장 중…' 스피너 텍스트를 이 호출이 지우면 안 되므로 !b.disabled로 가드한다.
+    if(!b.disabled){ b.textContent='⭐ 이 원본 영상 위키에 담기(학습 반영)'; b.classList.remove('sent'); }
+  }
+  const catSel=document.getElementById('finalCategory');
+  if(catSel){
+    catSel.style.display=STATE.script?'inline-block':'none';
+    if(STATE.script) ensureCategoryOptions();
+  }
 }
 // 이 "원본 영상"(내 리메이크 아님)을 위키(도서관)에 담아 학습에 반영한다.
 // [2026-07-15 C-1 수정] 예전엔 여기서 STATE.script(=내가 확정한 리메이크)를 함께 보내
 // 서버가 그걸 원본 키에 그대로 저장해버렸다(원본 소실 사고). 서버는 이제 원본만 저장하고
 // script_text를 받아도 무시하므로 여기서도 아예 안 보낸다. STATE.script는 "어느 영상을
-// 저장할지" 판단에만 쓴다 — script_src_idx(확정 시점에 남긴 인덱스, 리뷰 I-1 수정) 우선,
-// 없으면 대본을 뽑은 영상 → 화면 담긴 첫 영상 → 첫 영상 순으로 폴백(기존 순서 유지).
+// 저장할지" 판단에만 쓴다 — _currentSrcItem()이 script_src_idx 우선, 없으면 대본을 뽑은
+// 영상 → 화면 담긴 첫 영상 → 첫 영상 순으로 폴백(기존 순서 유지).
+// [2026-07-15 Task 8, I-4] prompt() 자유 입력 제거 — #finalCategory(통제 어휘)만 쓴다.
+// 비어 있으면 저장하지 않는다(버튼이 "학습 반영"을 거짓 주장하지 않게).
 async function saveScriptToWiki(btn){
   if(!STATE.script){ alert('먼저 대본을 확정하세요.'); return; }
-  const byIdx = (typeof STATE.script_src_idx === 'number') ? HANDOFF[STATE.script_src_idx] : null;
-  const src = byIdx || HANDOFF.find(h=>h.pickScript) || HANDOFF.find(h=>h.useFootage) || HANDOFF[0];
+  const src = _currentSrcItem();
   if(!src||!src.url){ alert('저장할 원본 영상을 찾을 수 없습니다.'); return; }
-  let category=src.category||'';
-  if(!category){ category=prompt('학습 반영을 위한 카테고리 (예: 레시피/생활용품/인테리어/가전)','')||''; }
+  const catSel=document.getElementById('finalCategory');
+  const category=(catSel?catSel.value:'')||'';
+  if(!category){ alert('카테고리를 선택하세요 — 비어 있으면 학습에 반영되지 않습니다.'); return; }
   btn.disabled=true; const o=btn.textContent; btn.textContent='⏳ 저장 중…';
   try{
     const d=await (await fetch('/api/produce/save_to_wiki',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({url:src.url, shortcode:src.shortcode||undefined,
-        category:category||undefined, name:src.name||undefined, video_url:src.video_url||src.url})})).json();
+        category:category, name:src.name||undefined, video_url:src.video_url||src.url})})).json();
     if(!d.ok){ alert(d.error||'저장 실패'); btn.textContent=o; return; }
     btn.textContent='✓ 원본 영상 위키에 담김(학습 반영)'; btn.classList.add('sent');
   }catch(e){ alert('네트워크 오류'); btn.textContent=o; }
