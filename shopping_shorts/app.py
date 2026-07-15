@@ -658,41 +658,79 @@ def api_wiki_save(request: Request, shortcode: str, background_tasks: Background
 
 @app.post("/api/produce/save_to_wiki")
 def api_produce_save_to_wiki(request: Request, body: dict, background_tasks: BackgroundTasks):
-    """제작소(영상제작소)에서 확정한 대본을 URL 기반으로 위키(도서관)에 저장.
+    """제작소(영상제작소)에서 지정한 '이 원본 영상'을 URL 기반으로 위키(도서관)에 담아
+    학습에 반영한다 — /api/wiki/save와 같은 의미(항상 원본만 저장), 다만
+    load_last_run() 대신 URL로 직접 동작한다는 점만 다르다.
 
-    기존 /api/wiki/save는 load_last_run()에 의존해 '레퍼런스 랭킹 last_run에
-    있는 항목'만 저장 가능했다. 즐겨찾기 경유로 last_run을 안 거치고 제작소에
-    직행한 영상은 last_run에 없을 수 있어 저장이 막혔다(2026-07-15). 여기선
-    클라이언트가 이미 확정한 대본 텍스트를 URL과 함께 받아 last_run 무관하게
-    저장한다.
+    [2026-07-15 C-1 사고 수정] 예전엔 클라이언트가 리메이크로 확정한 script_text를
+    원본 영상의 shortcode 키에 그대로 저장했다 — script_extracts(원본 캐시)가
+    리메이크로 덮여 원본이 복구불가로 소실되고(extract_from_url은 캐시 히트 시
+    재추출을 안 함), 위키(=S급 학습 창고)에도 리메이크가 들어가 학습 코퍼스가
+    우리 출력을 재학습하는 루프가 됐다(실측: script_extracts['lens_instagram_
+    1uwwsav'] 원본 소실). 이제 body.script_text/structure/segments는 파생물이라
+    절대 쓰지 않고 무시한다. 원본은 캐시(get_extract)가 있으면 그걸 그대로 쓰고
+    (텍스트는 손대지 않는다 — category만 다시 붙이려고 통째로 덮어쓰지 않음),
+    없으면 URL에서 즉석 추출한다(/api/produce/extract_from_url과 같은 경로).
+    클라이언트가 만든 리메이크는 이미 script_drafts에 남아있으므로 잃는 게 없다.
 
-    body: {url, shortcode?, script_text, structure?, segments?, category?,
-           name?, video_url?, caption?, followers?, comments?, density?,
-           thumbnail?}."""
+    body: {url, shortcode?, video_url?, caption?, category?, name?, followers?,
+           comments?, density?, thumbnail?}."""
     url = (body.get("url") or "").strip()
-    script_text = (body.get("script_text") or "").strip()
-    if not url or not script_text:
-        return JSONResponse(status_code=422, content={"ok": False, "error": "url·script_text 필요"})
+    if not url:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "url 필요"})
     code = (body.get("shortcode") or "").strip() or hashlib.sha1(url.encode()).hexdigest()[:12]
-    category = (body.get("category") or "").strip() or None  # 빈문자열→None (NULL/빈문자열 혼재 방지)
+    body_category = (body.get("category") or "").strip() or None  # 빈문자열→None (NULL/빈문자열 혼재 방지)
     store = Store(DB_PATH)
-
-    structure = body.get("structure") or analyze_structure(script_text)
-    script = {"full_text": script_text, "segments": body.get("segments") or []}
-    store.save_script(code, script, category=category)
-
-    # 원본 영상 영구보관(도서관 인라인 재생용) — 실패해도 대본·구조는 저장(무해).
     hashed = hashlib.sha1(code.encode()).hexdigest()[:16]
     work_dir = _FIND_TMP_DIR / hashed
+    video_path = None  # 추출 중 다운로드했으면 영상보관 때 재다운로드 없이 재사용
+
+    cached = store.get_extract(code)
+    if cached and (cached.get("full_text") or cached.get("segments")):
+        script = {"full_text": cached.get("full_text", ""), "segments": cached.get("segments") or []}
+        category = body_category or cached.get("category") or None
+        structure = cached.get("structure")
+    else:
+        try:
+            video_path, dl_caption = download_any(body.get("video_url") or url, str(work_dir))
+        except Exception as e:  # noqa: BLE001 — 다운로드 실패는 사용자에게 안내(치명 아님)
+            msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
+            return JSONResponse(status_code=502, content={
+                "ok": False, "error": f"영상 다운로드 실패(URL 만료·비공개 가능): {msg}"})
+        caption = body.get("caption") or dl_caption or ""
+        try:
+            result = extract_script(video_path, code, caption=caption)
+        except Exception as e:  # noqa: BLE001
+            msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
+            return JSONResponse(status_code=500, content={"ok": False, "error": msg})
+        if not result.get("full_text") and not result.get("segments"):
+            return JSONResponse(status_code=502, content={"ok": False, "error": "대본 추출 실패 — 잠시 후 재시도"})
+        category = body_category or None
+        script = {"full_text": result.get("full_text", ""), "segments": result.get("segments") or []}
+        store.save_script(code, script, category=category)
+        structure = None
+
+    if not structure:
+        try:
+            structure = analyze_structure(script.get("full_text", "")) or None
+        except Exception:  # noqa: BLE001 — 구조분석 실패해도 저장 자체는 성공시킨다
+            structure = None
+
+    # 원본 영상 영구보관(도서관 인라인 재생용) — 실패해도 대본·구조는 저장(무해).
     media_target = _WIKI_MEDIA_DIR / f"{hashed}.mp4"
     if not media_target.exists():
-        try:
-            video_path, _dl_caption = download_any(body.get("video_url") or url, str(work_dir))
-            if video_path and Path(video_path).exists():
+        src = video_path
+        if src is None:
+            try:
+                src, _dl_caption = download_any(body.get("video_url") or url, str(work_dir))
+            except Exception:
+                src = None
+        if src and Path(src).exists():
+            try:
                 _WIKI_MEDIA_DIR.mkdir(parents=True, exist_ok=True)
-                shutil.copy(str(video_path), str(media_target))
-        except Exception:
-            pass  # 다운로드 실패(URL 만료·비공개 등) — 치명적 아님
+                shutil.copy(str(src), str(media_target))
+            except Exception:
+                pass  # 다운로드 실패(URL 만료·비공개 등) — 치명적 아님
 
     item = {
         "shortcode": code,
@@ -705,7 +743,8 @@ def api_produce_save_to_wiki(request: Request, body: dict, background_tasks: Bac
         "thumbnail": body.get("thumbnail") or "",
     }
     store.save_to_wiki(item, script, structure, customer_id=_cid(request))
-    store.save_extract_structure(code, structure)
+    if structure:
+        store.save_extract_structure(code, structure)
     background_tasks.add_task(_relearn_category, DB_PATH, category)
     return {"ok": True, "shortcode": code, "structure": structure, "has_video": media_target.exists()}
 
