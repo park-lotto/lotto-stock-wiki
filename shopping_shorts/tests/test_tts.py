@@ -149,6 +149,29 @@ def test_v3_drops_speaker_boost(monkeypatch):
                        voice_settings={"stability": 0.5, "use_speaker_boost": True})
     assert "use_speaker_boost" not in captured["json"]["voice_settings"]
 
+def test_v3_drops_continuity(monkeypatch):
+    """v3면 previous_text/next_text를 payload에서 제거한다.
+
+    회귀: v3는 이 필드를 '무시'하는 게 아니라 400을 던진다(2026-07-15 실측) —
+    'Providing previous_text or next_text is not yet supported with the eleven_v3 model'.
+    호출부(mix_pipeline·작업대)는 늘 인접 비트를 넘기므로 여기서 안 막으면 합성이 통째로 죽는다.
+    seed는 v3에서도 지원되므로 남아야 한다."""
+    monkeypatch.setattr(tts.config, "ELEVENLABS_API_KEY", "k")
+    captured = {}
+    class R:
+        content = b"x"
+        def raise_for_status(self): pass
+    monkeypatch.setattr(tts.requests, "post",
+                        lambda url, headers=None, json=None, timeout=None: (captured.update(json=json) or R()))
+    import tempfile; from pathlib import Path
+    out = Path(tempfile.mkdtemp()) / "v3c.mp3"
+    tts.synthesize_tts("안녕", str(out), model_id="eleven_v3", seed=7,
+                       previous_text="앞", next_text="뒤")
+    assert "previous_text" not in captured["json"]
+    assert "next_text" not in captured["json"]
+    assert captured["json"]["seed"] == 7
+
+
 def test_continuity_and_seed_in_payload(monkeypatch):
     monkeypatch.setattr(tts.config, "ELEVENLABS_API_KEY", "k")
     captured = {}

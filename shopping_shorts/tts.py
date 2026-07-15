@@ -59,16 +59,22 @@ def synthesize_tts(text, out_path, voice_id=None, voice_settings=None,
     settings = dict(voice_settings) if voice_settings else {}
     if speed is not None:
         settings["speed"] = max(_SPEED_API_MIN, min(_SPEED_API_MAX, speed))
-    if "v3" in mid:                       # v3 비호환 → 제거(스펙 §5)
+    is_v3 = "v3" in mid
+    if is_v3:                             # v3 비호환 → 제거(스펙 §5)
         settings.pop("use_speaker_boost", None)
     if settings:
         payload["voice_settings"] = settings
     if seed is not None:
         payload["seed"] = seed
-    if previous_text:
-        payload["previous_text"] = previous_text
-    if next_text:
-        payload["next_text"] = next_text
+    # v3는 연속성 미지원 — 무시가 아니라 400을 던진다(2026-07-15 실측):
+    #   "Providing previous_text or next_text is not yet supported with the 'eleven_v3' model."
+    # 호출부는 v2/v3를 모르고 인접 비트 텍스트를 늘 넘기므로 여기서 흡수한다.
+    # v3가 연속성을 지원하게 되면 이 가드만 풀면 된다.
+    if not is_v3:
+        if previous_text:
+            payload["previous_text"] = previous_text
+        if next_text:
+            payload["next_text"] = next_text
     for attempt in range(max_retries):
         try:
             r = requests.post(url, headers=headers, json=payload, timeout=60)
