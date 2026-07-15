@@ -1,9 +1,11 @@
 """FastAPI: 수집 API + 정적 프론트 서빙."""
 import hmac
 import hashlib
+import ipaddress
 import os
 import re
 import shutil
+import socket
 import tempfile
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
@@ -1805,12 +1807,18 @@ def api_produce_mix_poster(job_id: str):
 # 저장은 2스텝: prepare(구간컷+Gemini 태그초안) → 사람 확인 → commit(DB 확정).
 # 재추출이 없고, 확인 없이 저장되지 않는다.
 _SCENE_TOKEN_RE = re.compile(r"^[0-9a-f]{32}$")
-_SCENE_EXT = {"clip": (".mp4",), "overlay": (".png", ".jpg", ".jpeg", ".webp", ".gif"),
+# clip은 여기서 뺐다 — clip은 save/prepare→save/commit 경로로만 들어오고 거기서
+# make_clip이 규격(720x1280/30fps/libx264/aac)을 강제한다. 업로드로 임의 mp4가 들어오면
+# 규격 정규화를 안 거쳐 페이즈2 concat -c copy 렌더가 깨진다(리뷰 Important I-2).
+_SCENE_EXT = {"overlay": (".png", ".jpg", ".jpeg", ".webp", ".gif"),
               "sfx": (".mp3", ".wav", ".m4a", ".aac")}
 _SCENE_MIME = {".mp4": "video/mp4", ".mp3": "audio/mpeg", ".wav": "audio/wav",
                ".m4a": "audio/mp4", ".aac": "audio/aac", ".png": "image/png",
                ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp",
                ".gif": "image/gif"}
+# 업로드 크기 상한 — await file.read() 통짜 읽기는 무제한 RAM 적재라 라이브 박스 OOM
+# 위험(리뷰 Important I-1). sfx·overlay 용도면 20MB면 충분.
+_SCENE_UPLOAD_MAX = 20 * 1024 * 1024
 
 
 def _scene_token_path(token, ext=".mp4"):
@@ -1821,6 +1829,35 @@ def _scene_token_path(token, ext=".mp4"):
     return _SCENE_ASSETS_DIR / f"{token}{ext}"
 
 
+def _reject_ssrf(url):
+    """내부망·클라우드 메타데이터(169.254.169.254 등, 이 서버는 AWS Lightsail) 접근 차단.
+    문제 없으면 None, 문제 있으면 에러 메시지 문자열.
+    호스트 allowlist는 안 쓴다 — 레퍼런스 원본 URL의 호스트가 인스타/틱톡/유튜브 CDN 등
+    다양하고 자주 바뀌어 allowlist는 정상 기능을 깨뜨린다(리뷰 Important I-4).
+    ⚠️ 1차 방어일 뿐이다 — TOCTOU·리다이렉트 추적까지 막지는 못한다. 완전 차단은 별도 트랙."""
+    try:
+        parsed = urllib.parse.urlparse(url)
+    except ValueError:
+        return "URL 파싱 실패"
+    if parsed.scheme not in ("http", "https"):
+        return "http/https URL만 허용"
+    host = parsed.hostname
+    if not host:
+        return "호스트 없음"
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        # 호스트가 IP 리터럴이 아니라 도메인이면 실제 접속에 쓰일 IP로 해석해서 검사
+        # (DNS가 사설 IP를 가리키는 rebinding에 대한 1차 방어).
+        try:
+            ip = ipaddress.ip_address(socket.gethostbyname(host))
+        except (socket.gaierror, ValueError):
+            return "호스트 해석 실패"
+    if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved or ip.is_multicast:
+        return "내부망/예약 IP는 접근할 수 없음"
+    return None
+
+
 @app.post("/api/scene/save/prepare")
 def api_scene_save_prepare(request: Request, body: dict):
     """구간컷 + Gemini 다축 태그 초안 → 모달 프리필용. 아직 DB 저장 안 함.
@@ -1828,6 +1865,9 @@ def api_scene_save_prepare(request: Request, body: dict):
     src_url = (body.get("src_url") or "").strip()
     if not src_url:
         return JSONResponse(status_code=422, content={"ok": False, "error": "src_url 필요"})
+    ssrf_err = _reject_ssrf(src_url)  # SSRF 1차 방어 — 내부망·169.254.169.254 등 차단
+    if ssrf_err:
+        return JSONResponse(status_code=422, content={"ok": False, "error": ssrf_err})
     try:
         start, end = float(body.get("start") or 0), float(body.get("end") or 0)
     except (TypeError, ValueError):
@@ -1875,6 +1915,27 @@ def api_scene_save_commit(request: Request, body: dict):
     if not title:
         return JSONResponse(status_code=422, content={"ok": False, "error": "title 필요"})
     asset_type = body.get("asset_type") or "clip"
+
+    # render_mode는 clip에서만 의미가 있고 값도 두 가지뿐 — 원시값을 그대로 흘리면 나중에
+    # 렌더 분기에서 예기치 못한 값을 만난다. clip일 때만 화이트리스트로 막는다(422).
+    render_mode = body.get("render_mode")
+    if asset_type == "clip" and render_mode not in ("replace", "cutaway", None):
+        return JSONResponse(status_code=422,
+                            content={"ok": False, "error": "render_mode는 replace/cutaway만"})
+
+    # keep_original_audio는 DB의 int(0/1) 컬럼 — 검증 없이 store로 넘기면 int("yes")가
+    # ValueError→500이 난다(리뷰 Important I-3, 실증됨). 불리언/0/1/None만 허용해 정규화.
+    koa = body.get("keep_original_audio")
+    if koa is None:
+        koa = 0
+    elif isinstance(koa, bool):
+        koa = int(koa)
+    elif koa in (0, 1):
+        koa = int(koa)
+    else:
+        return JSONResponse(status_code=422,
+                            content={"ok": False, "error": "keep_original_audio는 0/1/불리언만"})
+
     media = p
     poster = p.with_suffix(".jpg")
     if asset_type == "sfx":
@@ -1888,11 +1949,11 @@ def api_scene_save_commit(request: Request, body: dict):
         poster = None
     aid = Store(DB_PATH).add_scene_asset({
         "asset_type": asset_type,
-        "render_mode": body.get("render_mode") if asset_type == "clip" else None,
+        "render_mode": render_mode if asset_type == "clip" else None,
         "media_path": str(media),
         "poster_path": str(poster) if (poster and poster.exists()) else None,
         "duration": scene_assets.probe_duration(media),
-        "keep_original_audio": body.get("keep_original_audio"),
+        "keep_original_audio": koa,
         "title": title, "scene_desc": body.get("scene_desc"), "role": body.get("role"),
         "category": body.get("category"), "subject": body.get("subject"),
         "tone": body.get("tone"), "keywords": body.get("keywords"),
@@ -1919,7 +1980,24 @@ async def api_scene_upload(request: Request, asset_type: str = Form(...),
     token = uuid.uuid4().hex
     _SCENE_ASSETS_DIR.mkdir(parents=True, exist_ok=True)
     dest = _SCENE_ASSETS_DIR / f"{token}{ext}"
-    dest.write_bytes(await file.read())
+    # 청크 단위로 읽으며 누적 크기를 잰다 — await file.read()로 통째 읽은 뒤 len()으로
+    # 재는 방식은 이미 메모리에 다 올린 뒤라 방어가 안 됨(리뷰 Important I-1, OOM 위험).
+    total = 0
+    too_big = False
+    with open(dest, "wb") as f:
+        while True:
+            chunk = await file.read(1024 * 1024)
+            if not chunk:
+                break
+            total += len(chunk)
+            if total > _SCENE_UPLOAD_MAX:
+                too_big = True
+                break
+            f.write(chunk)
+    if too_big:
+        dest.unlink(missing_ok=True)
+        return JSONResponse(status_code=413,
+                            content={"ok": False, "error": "파일이 너무 큼(최대 20MB)"})
     poster = None
     if asset_type == "overlay":
         pp = _SCENE_ASSETS_DIR / f"{token}.jpg"
@@ -1947,6 +2025,12 @@ def api_scene_list(request: Request, type: str = "", category: str = "", role: s
 @app.post("/api/scene/{asset_id}/update")
 def api_scene_update(request: Request, asset_id: int, body: dict):
     """다축 태그 편집. store가 화이트리스트로 media_path 등을 걸러낸다."""
+    # keywords는 list가 정상(store가 콤마문자열로 정규화)이라 예외. 그 밖에 dict/list 등
+    # 비-스칼라 값이 오면 sqlite에 그대로 넘어가 InterfaceError→500이 난다(리뷰 I-3, 실증됨).
+    for k, v in body.items():
+        if k != "keywords" and isinstance(v, (dict, list)):
+            return JSONResponse(status_code=422,
+                                content={"ok": False, "error": f"{k}는 스칼라 값만"})
     ok = Store(DB_PATH).update_scene_asset(asset_id, body, customer_id=_cid(request))
     if not ok:
         return JSONResponse(status_code=404, content={"ok": False, "error": "자산 없음"})

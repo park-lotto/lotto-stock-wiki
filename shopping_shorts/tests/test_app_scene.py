@@ -27,6 +27,8 @@ def _mk_asset(client, tmp_path, **over):
 
 
 def test_prepare_cuts_clip_and_returns_draft(client, tmp_path, monkeypatch):
+    # example.com은 실제 DNS 해석이 되지만 테스트 환경 네트워크에 의존하지 않도록 고정 IP로 스텁
+    monkeypatch.setattr(app_mod.socket, "gethostbyname", lambda h: "93.184.216.34")
     monkeypatch.setattr(app_mod.frame_extract, "download_video",
                         lambda url, dest: tmp_path / "src.mp4")
     (tmp_path / "src.mp4").write_bytes(b"src")
@@ -210,3 +212,130 @@ def test_scene_api_is_not_in_auth_allowlist():
     # /api/scene/*가 allowlist에 들어가면 남의 자산을 인증 없이 만질 수 있다
     for p in app_mod._AUTH_ALLOW:
         assert not p.startswith("/api/scene"), f"{p}가 allowlist에 있음"
+
+
+# ── 리뷰 Important 4건 회귀 테스트 (2026-07-15) ──
+
+def test_upload_rejects_clip_type(client):
+    # I-2 — clip 업로드는 make_clip 규격정규화를 안 거쳐 페이즈2 렌더가 깨진다.
+    # _SCENE_EXT에서 clip을 뺐으니 asset_type=clip은 422로 막혀야 한다.
+    r = client.post("/api/scene/upload",
+                    data={"asset_type": "clip", "title": "몰래업로드"},
+                    files={"file": ("evil.mp4", b"\x00" * 100, "video/mp4")})
+
+    assert r.status_code == 422
+    assert r.json()["ok"] is False
+
+
+def test_upload_rejects_oversized_file(client, monkeypatch):
+    # I-1 — 무제한 RAM 적재로 인한 OOM 방지. 상한을 낮춰 실제로 넘겨서 413을 확인한다.
+    monkeypatch.setattr(app_mod, "_SCENE_UPLOAD_MAX", 10)
+    r = client.post("/api/scene/upload",
+                    data={"asset_type": "sfx", "title": "너무큼"},
+                    files={"file": ("big.mp3", b"x" * 1000, "audio/mpeg")})
+
+    assert r.status_code == 413
+    assert r.json()["ok"] is False
+
+
+def test_commit_rejects_bogus_keep_original_audio(client, tmp_path):
+    # I-3 — int("yes")가 ValueError로 500 나던 것(리뷰 실증). 422로 막혀야 한다.
+    d = tmp_path / "scene_assets"
+    d.mkdir(parents=True, exist_ok=True)
+    token = "f" * 32
+    (d / f"{token}.mp4").write_bytes(b"clip")
+
+    r = client.post("/api/scene/save/commit", json={
+        "token": token, "asset_type": "clip", "title": "t",
+        "keep_original_audio": "yes"})
+
+    assert r.status_code == 422
+    assert r.json()["ok"] is False
+
+
+def test_commit_rejects_bogus_render_mode(client, tmp_path):
+    # asset_type=clip일 때 render_mode는 replace/cutaway 둘뿐이어야 한다.
+    d = tmp_path / "scene_assets"
+    d.mkdir(parents=True, exist_ok=True)
+    token = "1" * 32
+    (d / f"{token}.mp4").write_bytes(b"clip")
+
+    r = client.post("/api/scene/save/commit", json={
+        "token": token, "asset_type": "clip", "title": "t",
+        "render_mode": "DROP TABLE"})
+
+    assert r.status_code == 422
+    assert r.json()["ok"] is False
+
+
+def test_update_rejects_dict_value(client, tmp_path):
+    # I-3 — dict 값이 sqlite에 그대로 넘어가면 InterfaceError로 500 나던 것(리뷰 실증).
+    aid = _mk_asset(client, tmp_path)
+
+    r = client.post(f"/api/scene/{aid}/update",
+                    json={"title": {"nested": "dict"}})
+
+    assert r.status_code == 422
+    assert r.json()["ok"] is False
+    # 실제로 반영 안 됐는지도 확인
+    got = Store(app_mod.DB_PATH).get_scene_asset(aid)
+    assert got["title"] != {"nested": "dict"}
+
+
+def test_update_still_allows_keywords_list(client, tmp_path):
+    # keywords는 list가 정상 — dict/list 거부 로직이 keywords까지 막으면 안 된다.
+    aid = _mk_asset(client, tmp_path)
+
+    r = client.post(f"/api/scene/{aid}/update", json={"keywords": ["설탕", "소금"]})
+
+    assert r.status_code == 200 and r.json()["ok"] is True
+    got = Store(app_mod.DB_PATH).get_scene_asset(aid)
+    assert got["keywords"] == ["설탕", "소금"]
+
+
+def test_prepare_rejects_cloud_metadata_ip(client):
+    # I-4 — AWS 메타데이터 엔드포인트로 SSRF 시도. 422로 막혀야 한다.
+    r = client.post("/api/scene/save/prepare", json={
+        "src_url": "http://169.254.169.254/latest/meta-data/",
+        "start": 0, "end": 1})
+
+    assert r.status_code == 422
+    assert r.json()["ok"] is False
+
+
+def test_prepare_rejects_file_scheme(client):
+    # I-4 — file:// 스킴으로 로컬 파일 접근 시도. 422로 막혀야 한다.
+    r = client.post("/api/scene/save/prepare", json={
+        "src_url": "file:///etc/passwd", "start": 0, "end": 1})
+
+    assert r.status_code == 422
+    assert r.json()["ok"] is False
+
+
+def test_prepare_rejects_localhost(client):
+    # I-4 — 루프백으로 서버 자기 자신을 호출하는 SSRF 시도. 422로 막혀야 한다.
+    r = client.post("/api/scene/save/prepare", json={
+        "src_url": "http://127.0.0.1:8849/admin", "start": 0, "end": 1})
+
+    assert r.status_code == 422
+    assert r.json()["ok"] is False
+
+
+def test_prepare_allows_public_host(client, tmp_path, monkeypatch):
+    # 정상 공개 URL은 여전히 통과해야 한다(회귀 방지) — DNS는 고정 IP로 스텁.
+    monkeypatch.setattr(app_mod.socket, "gethostbyname", lambda h: "93.184.216.34")
+    monkeypatch.setattr(app_mod.frame_extract, "download_video",
+                        lambda url, dest: tmp_path / "src2.mp4")
+    (tmp_path / "src2.mp4").write_bytes(b"src")
+    monkeypatch.setattr(app_mod.scene_assets, "make_clip",
+                        lambda src, s, e, out: (out.parent.mkdir(parents=True, exist_ok=True),
+                                                out.write_bytes(b"clip"), out)[-1])
+    monkeypatch.setattr(app_mod.scene_assets, "make_poster", lambda m, o: o)
+    monkeypatch.setattr(app_mod.scene_assets, "probe_duration", lambda p: 1.0)
+    monkeypatch.setattr(app_mod.scene_assets, "autotag", lambda frames, ctx: {})
+
+    r = client.post("/api/scene/save/prepare", json={
+        "src_url": "https://cdn.example.com/v.mp4", "start": 0, "end": 2})
+
+    assert r.status_code == 200
+    assert r.json()["ok"] is True
