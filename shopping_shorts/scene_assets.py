@@ -1,6 +1,7 @@
 """장면 라이브러리(재사용 짤 뱅크) — 구간컷·오디오추출·썸네일·Gemini 자동태깅.
 
-순수 함수만 둔다(DB·HTTP 없음). frame_extract.py와 같은 골격:
+미디어 유틸(make_clip, extract_audio 등)은 순수 함수 또는 subprocess만 사용한다(DB 없음).
+autotag는 Gemini API를 호출해 다축 태그 초안을 생성한다. frame_extract.py와 같은 골격:
 ffmpeg는 subprocess로, 치명적 실패는 RuntimeError, 없어도 되는 것은 조용한 None.
 """
 import json
@@ -142,7 +143,10 @@ def autotag(frame_paths, context):
     # _vault_call은 contents=prompt로 그대로 넘기므로 파츠 리스트가 그대로 먹는다.
     # 키풀은 캐스케이드(general→ingest→embed→briefing) — 전용키 소진 회피.
     raw = edit_plan._vault_call(parts, _AUTOTAG_SCHEMA)
-    if not raw:
+    if not raw or not isinstance(raw, dict):
+        # _vault_call이 dict가 아닌 값(list/str/int 등)을 반환하면 raw.get() 호출에서
+        # AttributeError 발생 → 후속 Task4의 /api/scene/save/prepare 라우트가 500 에러.
+        # 형태가 온전한 빈 값을 반드시 보장해야 함(호출부 예외처리 없음)
         return empty
     kw = raw.get("keywords")
     if isinstance(kw, str):

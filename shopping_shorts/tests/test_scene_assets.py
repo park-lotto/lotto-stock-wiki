@@ -227,3 +227,20 @@ def test_autotag_clamps_role_to_controlled_vocabulary(monkeypatch, tmp_path):
 
     assert got["role"] == ""            # 통제어휘 밖은 버림(사람이 고르게)
     assert got["keywords"] == ["a", "b"]  # 문자열로 와도 list로 정규화
+
+
+def test_autotag_handles_non_dict_from_vault_call(monkeypatch, tmp_path):
+    """_vault_call이 dict가 아닌 값(list/str/int)을 반환해도 예외 없이 형태만 온전한 빈 값 반환.
+
+    Task4의 /api/scene/save/prepare 라우트가 예외처리 없이 autotag 결과를 쓰므로,
+    비-dict 반환 시 AttributeError 대신 반드시 형태가 온전한 빈 값을 보장해야 한다.
+    """
+    f1 = tmp_path / "f1.jpg"
+    f1.write_bytes(b"jpgbytes")
+
+    for non_dict in [[], "string", 5]:  # list, str, int 세 경우
+        monkeypatch.setattr(scene_assets.edit_plan, "_vault_call",
+                          lambda *a, **k: non_dict)
+        got = scene_assets.autotag([f1], {"category": "테스트"})
+        # 어떤 비-dict가 와도 항상 형태가 온전한 빈 값
+        assert got == {"scene_desc": "", "role": "", "subject": "", "tone": "", "keywords": []}
