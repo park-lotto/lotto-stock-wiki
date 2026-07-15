@@ -355,6 +355,8 @@ class Store:
                 ("caption_style_json", "TEXT"),  # 영상제작 5단계 자막 스타일(2026-07-14)
                 ("deco_json", "TEXT"),  # 영상제작 5단계 장식(워터마크·추가텍스트·오버레이·BGM, 2026-07-14)
                 ("voice_json", "TEXT"),     # 영상제작 4단계 보이스 프리셋 선택 스냅샷(2026-07-14)
+                ("script_structure_json", "TEXT"),  # 도서관→제작소 다리: 대본 구조분석 스냅샷(2026-07-15).
+                                                    # ⚠️ 위 structure 컬럼과 다른 것 — 그건 template/free 모드 플래그.
             ):
                 try:
                     c.execute(f"ALTER TABLE mix_jobs ADD COLUMN {col} {ddl}")
@@ -1137,18 +1139,22 @@ class Store:
                  "thumbnail": r[4], "similarity_score": r[5], "saved_at": r[6]} for r in rows]
 
     def create_mix_job(self, job_id, urls, target_seconds, structure,
-                       subtitle_removal=False, given_script=None):
+                       subtitle_removal=False, given_script=None, script_structure=None):
         """새 믹스 job 생성. 초기 status='downloading'.
-        given_script: 영상제작 2단계 — 확정 대본을 그대로 쓸 때(나레이션 자동생성 대신)."""
+        given_script: 영상제작 2단계 — 확정 대본을 그대로 쓸 때(나레이션 자동생성 대신).
+        script_structure: 도서관에서 딸려온 대본 구조분석 dict(2026-07-15). 뒷단계가 꺼내 쓸
+            스냅샷으로 보관만 한다. ⚠️ 인자 structure(template/free 모드 플래그)와 다른 것."""
         now = datetime.now(timezone.utc).isoformat()
         with self._conn() as c:
             c.execute(
                 "INSERT INTO mix_jobs(job_id, urls_json, target_seconds, structure, "
-                "status, created_at, updated_at, subtitle_removal, given_script) "
-                "VALUES(?,?,?,?,?,?,?,?,?)",
+                "status, created_at, updated_at, subtitle_removal, given_script, "
+                "script_structure_json) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?)",
                 (job_id, json.dumps(urls, ensure_ascii=False), target_seconds,
                  structure, "downloading", now, now, 1 if subtitle_removal else 0,
-                 given_script or None),
+                 given_script or None,
+                 json.dumps(script_structure, ensure_ascii=False) if script_structure else None),
             )
 
     def get_mix_job(self, job_id):
@@ -1158,7 +1164,7 @@ class Store:
                 "SELECT job_id, urls_json, target_seconds, structure, status, error, "
                 "extract_json, edit_plan_json, video_path, created_at, updated_at, "
                 "subtitle_removal, clean_video_path, given_script, headcopy_json, "
-                "caption_style_json, voice_json, deco_json "
+                "caption_style_json, voice_json, deco_json, script_structure_json "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -1175,6 +1181,7 @@ class Store:
             "caption_style": json.loads(row[15]) if row[15] else None,
             "voice": json.loads(row[16]) if row[16] else None,
             "deco": json.loads(row[17]) if row[17] else None,
+            "script_structure": json.loads(row[18]) if row[18] else None,
         }
 
     def update_mix_job(self, job_id, **fields):
