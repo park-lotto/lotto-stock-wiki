@@ -126,6 +126,59 @@ def test_cache_hit_does_not_call_analyze_structure_synchronously(monkeypatch, tm
     assert captured_tasks[0][0] is app_module._backfill_extract_structure
 
 
+# ---------------------------------------------------------------------------
+# POST /api/produce/category — Task 9 ② 교정 영속화(설계 구멍 메움)
+# ---------------------------------------------------------------------------
+
+def test_category_correction_endpoint_persists_and_preserves_original_text(monkeypatch, tmp_path):
+    """이미 category='레시피'로 저장된 행에 '가전' 교정 요청 →
+    script_extracts.category가 '가전'이 되고 script_json(원본 텍스트)은 byte-identical 유지(C-1 회귀가드)."""
+    client, st = _client(monkeypatch, tmp_path)
+    original = {"full_text": "감자전 만드는 법, 아주 자세한 원본 대본입니다.",
+                "segments": [{"text": "감자전 만드는 법", "start": 0.0, "end": 1.2}]}
+    st.save_script("ABC", original, category="레시피")
+
+    r = client.post("/api/produce/category", json={"shortcode": "ABC", "category": "가전"})
+    assert r.status_code == 200, r.text
+    assert r.json() == {"ok": True, "shortcode": "ABC", "category": "가전"}
+
+    saved = st.get_extract("ABC")
+    assert saved["category"] == "가전"
+    assert saved["full_text"] == original["full_text"]
+    assert saved["segments"] == original["segments"]
+
+
+def test_category_correction_endpoint_rejects_out_of_vocabulary(monkeypatch, tmp_path):
+    """통제 어휘 밖 값('요리')은 422, DB 무변경(I-4 취지를 백엔드에서도 지킨다)."""
+    client, st = _client(monkeypatch, tmp_path)
+    st.save_script("ABC", {"full_text": "본문", "segments": []}, category="레시피")
+
+    r = client.post("/api/produce/category", json={"shortcode": "ABC", "category": "요리"})
+    assert r.status_code == 422, r.text
+
+    saved = st.get_extract("ABC")
+    assert saved["category"] == "레시피"  # 안 바뀜
+
+
+def test_category_correction_endpoint_allows_db_measured_value_not_in_keywords(monkeypatch, tmp_path):
+    """KEYWORDS엔 없지만 DB 실측값('기타')엔 있는 카테고리로의 교정은 허용된다."""
+    client, st = _client(monkeypatch, tmp_path)
+    st.save_script("ABC", {"full_text": "본문", "segments": []}, category="레시피")
+    st.save_script("OLD", {"full_text": "본문2", "segments": []}, category="기타")
+
+    r = client.post("/api/produce/category", json={"shortcode": "ABC", "category": "기타"})
+    assert r.status_code == 200, r.text
+    assert st.get_extract("ABC")["category"] == "기타"
+
+
+def test_category_correction_endpoint_requires_shortcode_and_category(monkeypatch, tmp_path):
+    client, st = _client(monkeypatch, tmp_path)
+    r1 = client.post("/api/produce/category", json={"category": "레시피"})
+    assert r1.status_code == 422
+    r2 = client.post("/api/produce/category", json={"shortcode": "ABC"})
+    assert r2.status_code == 422
+
+
 def test_cache_hit_with_existing_structure_never_schedules_backfill(monkeypatch, tmp_path):
     """이미 구조분석이 돼 있으면 백그라운드 태스크조차 등록하지 않는다(불필요한 재분석 방지)."""
     captured_tasks = []

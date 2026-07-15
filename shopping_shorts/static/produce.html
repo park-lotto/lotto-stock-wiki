@@ -1389,17 +1389,25 @@ function pmRestoreVersion(el, draftId){
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') pmClose(); });
 // 카테고리 선택기(#finalCategory) — 통제 어휘 로딩·값 세팅·변경 반영 (Task 8, I-3·I-4).
 // prompt() 자유 입력을 없애고 /api/wiki/categories의 통제 어휘로만 고르게 한다.
-let CATEGORY_OPTIONS_LOADED=false;
-async function ensureCategoryOptions(){
-  if(CATEGORY_OPTIONS_LOADED) return;
-  const sel=document.getElementById('finalCategory'); if(!sel) return;
-  CATEGORY_OPTIONS_LOADED=true;  // await 전에 세팅 — 동시 호출 중복요청 방지
-  let cats=[];
-  try{ const d=await (await fetch('/api/wiki/categories')).json(); cats=d.categories||[]; }
-  catch(e){ CATEGORY_OPTIONS_LOADED=false; return; }
-  sel.innerHTML='';
-  const blank=document.createElement('option'); blank.value=''; blank.textContent='카테고리 선택…'; sel.appendChild(blank);
-  cats.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o); });
+// [2026-07-15 Task 9, ①] 불린 플래그였을 때: ensureCategoryOptions()가 await(fetch) 전에
+// '로드됨'을 세팅해버려, refreshFinalPeek()(await 안 함)가 먼저 부른 직후 곧바로
+// setFinalCategoryValue()가 또 부르면 이미 true라 early-return → 아직 옵션이 없는 select에
+// 값을 대입해 ''로 떨어지고, 나중에 옵션이 채워져도 아무도 값을 다시 세팅하지 않았다
+// (라이브 재현: 첫 확정마다 추론 category가 조용히 사라짐). in-flight Promise 캐시로 교체 —
+// 동시에 부른 모든 호출이 "같은 fetch가 끝나는 시점"을 공유하게 해 값 대입이 항상 옵션 로드 뒤에 온다.
+let CATEGORY_OPTIONS_PROMISE=null;
+function ensureCategoryOptions(){
+  const sel=document.getElementById('finalCategory'); if(!sel) return Promise.resolve();
+  if(CATEGORY_OPTIONS_PROMISE) return CATEGORY_OPTIONS_PROMISE;
+  CATEGORY_OPTIONS_PROMISE=(async()=>{
+    let cats=[];
+    try{ const d=await (await fetch('/api/wiki/categories')).json(); cats=d.categories||[]; }
+    catch(e){ CATEGORY_OPTIONS_PROMISE=null; return; }  // 실패 시 캐시 비워 다음 호출이 재시도
+    sel.innerHTML='';
+    const blank=document.createElement('option'); blank.value=''; blank.textContent='카테고리 선택…'; sel.appendChild(blank);
+    cats.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o); });
+  })();
+  return CATEGORY_OPTIONS_PROMISE;
 }
 async function setFinalCategoryValue(cat){
   await ensureCategoryOptions();
@@ -1413,6 +1421,11 @@ function _currentSrcItem(){
 }
 // 사용자가 추론된 카테고리를 교정 — HANDOFF에 갱신하고, 모달이 열려 있으면 요소
 // 드롭다운을 새 카테고리 학습소재로 즉시 재로딩(교정이 눈에 보인다, 설계 §2).
+// [2026-07-15 Task 9, ②] 교정을 DB(script_extracts.category)에도 영속화 — 안 하면
+// 사용자가 고쳐도 학습 코퍼스(element_raw_values)는 옛 카테고리로 계속 필터돼 틀린
+// 버킷 오염이 존속한다(I-3이 없애려던 문제). shortcode 없으면(직접 작성 등) DB에 쓸
+// 대상이 없으니 스킵 — 저장 시점에 save_to_wiki가 category를 실어 반영한다. 실패해도
+// 무시(alert 없음) — 교정 자체는 저장 시 다시 한 번 반영되므로 치명적이지 않다.
 function onFinalCategoryChange(sel){
   const cat=sel.value;
   const src=_currentSrcItem();
@@ -1421,6 +1434,11 @@ function onFinalCategoryChange(sel){
   if(HANDOFF.length) saveWork();
   const modal=document.getElementById('pmModal');
   if(modal && modal.classList.contains('open')) pmLoadElementOptions(cat);
+  const shortcode=src&&src.shortcode;
+  if(shortcode && cat){
+    fetch('/api/produce/category', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({shortcode, category: cat})}).catch(()=>{});
+  }
 }
 // 오른쪽 "확정 대본" peek — 대본이 바뀔 때마다 갱신(onScriptInput/useDraft에서 호출).
 function refreshFinalPeek(){
