@@ -304,17 +304,36 @@ def _endings(text, cfg, ctx):
     return text
 
 
+def _sentence_starts(text):
+    """문장 시작 오프셋들. 추임새를 문장 앞에 붙이기 위한 후보 목록."""
+    starts = [0]
+    for m in re.finditer(r"(?<=[.!?…])\s+", text):
+        if m.end() < len(text):
+            starts.append(m.end())
+    return starts
+
+
 def _fillers(text, cfg, ctx):
     intensity = cfg.get("intensity", 0.2)
     bank = cfg.get("bank") or ["음"]
     cap = ctx["caps"].get("max_fillers_per_text", 1)
-    # intensity 임계: 낮으면 아예 삽입 안 함(오버금지 기본)
-    if intensity < 0.15 or cap <= 0:
+    if intensity <= 0 or cap <= 0:
         return text
-    bi = ctx["beat_index"] or 0
-    filler = bank[bi % len(bank)]         # 비트별 결정적 순환
-    # _bump는 Task 4~6 중 배선 예정(현재 미배선 — 죽은 스테이지 아님. 근거는 _endings 주석 참조).
-    return f"{filler}, {text}"
+    # 비트 빈도: 낮은 강도 = 'N비트마다 1번'(도배 방지). 1.0이면 매 비트.
+    every = 1 if intensity >= 1.0 else max(1, round(1.0 / intensity))
+    bi = ctx.get("beat_index") or 0
+    if bi % every != 0:
+        return text
+    # 텍스트 내 개수: 문장 수 × 강도(올림), cap 이하.
+    starts = _sentence_starts(text)
+    n = min(cap, _take_count(len(starts), intensity))
+    if n <= 0:
+        return text
+    for k, pos in enumerate(sorted(starts[:n], reverse=True)):
+        filler = bank[(bi + (n - 1 - k)) % len(bank)]   # 비트·문장별 결정적 순환
+        text = text[:pos] + f"{filler}, " + text[pos:]
+    _bump(ctx, "fillers", n)
+    return text
 
 
 # 비트 role 정본 = edit_plan._REQUIRED_ROLES(훅·페인포인트·반전·실용·CTA).
