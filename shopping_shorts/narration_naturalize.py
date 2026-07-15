@@ -126,22 +126,37 @@ def _spoken_style(text, cfg, ctx):
     # 앞에서부터 intensity 비율만 변환(결정적)
     take = len(hits) if intensity >= 1.0 else int(len(hits) * intensity + 1e-9)
     chosen = set(hits[:take])
+    # len(chosen)이 아니라 실제 치환 성공 횟수를 센다(Minor2 재리뷰) — chosen의 모든
+    # 셀이 실제로 바뀐다는 건 "히트 판정 루프와 치환 루프가 같은 패턴을 쓰고 모든
+    # (a,b) 쌍이 a!=b"라는 암묵 불변식일 뿐이다. _SPOKEN_MAP에 항등 쌍이 섞이면
+    # 깨지므로, 여기서 직접 `new != s`를 확인해 센다.
+    n = 0
     for i in chosen:
         s = parts[i]
         for a, b in _SPOKEN_MAP:
             new = re.sub(a + r"(?=[.!?…]?$)", b, s)
             if new != s:
                 parts[i] = new
+                n += 1
                 break
-    _bump(ctx, "spoken_style", len(chosen))
+    _bump(ctx, "spoken_style", n)
     return "".join(parts)
 
 
 def _pronunciation(text, cfg, ctx):
     d = cfg.get("dict") or {}
+    # 참가 판정을 원문(orig) 기준으로 한다(Minor1) — 선택: "1패스로 만들기" 대신
+    # "판정 기준을 원문으로" 쪽을 택했다(주석대로 명시). 발음사전은 작업대에서
+    # 사장님이 채우는 열린 입력이라 값↔키가 우연히 겹칠 수 있다(예:
+    # {"AS센터":"에이에스 센터","에이에스":"AS"}) — 기존처럼 누적 변이된 `text`에
+    # `k in text`로 판정하면, 앞선 치환이 만들어낸 유령 문자열이 뒤 키에 매칭돼
+    # 원문에 없던 치환이 일어나고 카운트도 그만큼 오른다. `orig`는 이 함수 호출 동안
+    # 절대 바뀌지 않으므로 유령매칭 자체가 발생하지 않는다(카운트뿐 아니라 실제
+    # 치환도 원문 기준 참가로 제한됨 — 유령 키 사전에서의 실동작도 함께 고쳐진다).
+    orig = text
     n = 0
     for k in sorted(d, key=len, reverse=True):   # 긴 키 먼저(부분매칭 방지)
-        if k in text:
+        if k in orig:
             n += 1
             text = text.replace(k, d[k])
     _bump(ctx, "pronunciation", n)
@@ -184,6 +199,8 @@ def _endings(text, cfg, ctx):
     out = []
     for i, ch in enumerate(text):
         out.append("…" if (ch == "." and i in chosen) else ch)
+    # _bump는 Task 3에서 배선 예정(현재 미배선 — 죽은 스테이지 아님. voice-task-2-brief
+    # §Step3: "_endings·_fillers·_emotion_arc·_intonation은 Task 3~6에서 각자 배선").
     return "".join(out)
 
 
@@ -196,6 +213,7 @@ def _fillers(text, cfg, ctx):
         return text
     bi = ctx["beat_index"] or 0
     filler = bank[bi % len(bank)]         # 비트별 결정적 순환
+    # _bump는 Task 4~6 중 배선 예정(현재 미배선 — 죽은 스테이지 아님. 근거는 _endings 주석 참조).
     return f"{filler}, {text}"
 
 
@@ -236,6 +254,18 @@ def _emotion_arc(text, cfg, ctx):
         return text
     if ctx["caps"].get("max_tags_per_beat", 1) <= 0:
         return text
+    # max_tags_total도 여기서 미리 게이트한다(Important1 수정) — 이전엔 이 캡을
+    # 스테이지 루프 밖 `_enforce_total_tag_cap`이 사후에만 걸러서, bump는 이미
+    # 찍힌 뒤 태그가 지워지는 비대칭이 있었다(캡을 0으로 내렸는데 "감정×1 적용"이라고
+    # 뜨는 거짓말 — 2026-07-15 재현). 이 스테이지는 naturalize_detail 1회 호출당
+    # 정확히 1번만 실행되고, 우리가 붙이는 태그는 이후 스테이지(intonation)가 텍스트
+    # 앞부분을 건드리지 않는 한 항상 전체 문자열의 맨 앞(=태그 목록의 0번째)이 되므로
+    # — max_tags_total>=1이면 `_enforce_total_tag_cap`의 "앞에서 cap개 보존" 규칙상
+    # 우리 태그는 절대 제거되지 않는다. 즉 사후 캡이 실제로 우리 태그를 지우는 경우는
+    # max_tags_total<=0뿐이고, 그 경우만 여기서 미리 걸러내면 bump와 실제 결과가
+    # 항상 일치한다(사후 차감 로직 불필요).
+    if ctx["caps"].get("max_tags_total", 3) <= 0:
+        return text
     tag = _tag_for(ctx)
     if not tag:
         return text
@@ -267,6 +297,8 @@ def _tag_for(ctx):
 
 def _intonation(text, cfg, ctx):
     # 최소 구현: 물음표 종결 보존(상승억양). 강조는 v2에서. 현재는 무변경에 가깝게.
+    # _bump는 Task 4~6 중 배선 예정(현재 미배선 — 죽은 스테이지 아님. 근거는 _endings 주석 참조).
+    # 지금은 실제로 텍스트를 바꾸지 않는 무변경 스텁이라 bump할 것 자체가 없다(v2 예정).
     return text
 
 
