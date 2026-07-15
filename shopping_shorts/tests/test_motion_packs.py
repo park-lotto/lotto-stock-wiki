@@ -105,7 +105,9 @@ def test_id없는_항목은_무시(tmp_path):
 
 
 def test_실제_packs_json이_로드되고_스키마를_지킨다():
-    from shopping_shorts.motion_assets import load_manifest
+    from pathlib import Path
+
+    from shopping_shorts.motion_assets import DEFAULT_ASSETS_DIR, load_manifest
 
     packs = load_packs()
     assert packs, "assets/motion/packs.json이 비었다"
@@ -118,16 +120,35 @@ def test_실제_packs_json이_로드되고_스키마를_지킨다():
             sub = p.get(key) or {}
             if not sub:
                 continue
-            assert sub.get("policy") in ("every_beat", "hook_climax", "none")
+            policy = sub.get("policy")
+            assert policy in ("every_beat", "hook_climax", "none")
             asset_id = sub.get("asset_id")
+            if policy != "none":
+                assert asset_id, (
+                    f"{pid}.{key}.policy={policy!r}인데 asset_id가 없다"
+                    " — build_plan의 `if tr.get('asset_id')`에서 레이어가 0개가 되어"
+                    " 에러 없이 모션이 안 나온다"
+                )
             if asset_id:
                 assert asset_id in manifest, (
                     f"{pid}.{key}.asset_id={asset_id!r}가 manifest.json에 없다"
+                    " — resolve_layers가 조용히 skip해 모션이 안 나온다"
+                )
+                entry = manifest[asset_id]
+                fname = entry.get("file")
+                assert fname, (
+                    f"{pid}.{key}.asset_id={asset_id!r}의 manifest 엔트리에 file 키가 없다"
+                    " — resolve_layers가 조용히 skip해 모션이 안 나온다"
+                )
+                fpath = Path(DEFAULT_ASSETS_DIR) / fname
+                assert fpath.exists(), (
+                    f"{pid}.{key}.asset_id={asset_id!r}의 file={fname!r} 실물이"
+                    f" {DEFAULT_ASSETS_DIR}에 없다"
                     " — resolve_layers가 조용히 skip해 모션이 안 나온다"
                 )
             if "dur" in sub:
                 dur = sub["dur"]
                 assert isinstance(dur, (int, float)) and not isinstance(dur, bool), (
                     f"{pid}.{key}.dur={dur!r}는 수치형이어야 한다"
-                    " (문자열이면 build_plan의 float()에서 ValueError)"
+                    " (문자열이면 build_plan/ffmpeg의 시간 계산이 깨진다)"
                 )
