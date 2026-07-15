@@ -75,6 +75,40 @@
     @font-face{font-family:'HCSuitR';src:url('/fonts/SUIT-Regular.otf')}
     @font-face{font-family:'HCSpoqaR';src:url('/fonts/SpoqaHanSansNeo-Regular.otf')}
     @font-face{font-family:'HCIBMR';src:url('/fonts/IBMPlexSansKR-Regular.otf')}
+
+    /* 📝뽑기 생성 모달(도서관 library.html 이식, pm 네임스페이스) */
+    .gen-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:flex-start;justify-content:center;padding:24px;overflow:auto}
+    .gen-bg.open{display:flex}
+    .gen-box{background:var(--panel);border:1px solid var(--line);border-radius:14px;width:min(760px,100%);display:flex;flex-direction:column;max-height:92vh}
+    .gen-head{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+    .gen-head b{font-size:15px}
+    .gen-head .x{background:none;border:none;color:var(--sub);font-size:20px;cursor:pointer}
+    .gen-body{padding:16px 18px;overflow:auto}
+    .gen-sec{font-size:12px;color:var(--sub);margin:12px 0 8px;text-transform:uppercase}
+    .toggles{display:flex;flex-wrap:wrap;gap:8px}
+    .elem-row{display:flex;align-items:center;gap:6px}
+    .elem-mode{background:#0d131c;border:1px solid var(--line);border-radius:6px;color:var(--txt);font-size:12px;padding:4px 6px}
+    .toggles label{display:flex;align-items:center;gap:6px;font-size:13px;background:#0d131c;border:1px solid var(--line);border-radius:8px;padding:7px 11px;cursor:pointer}
+    .toggles input{accent-color:var(--accent)}
+    .modes{display:flex;flex-direction:column;gap:6px;font-size:13px}
+    .modes label{display:flex;align-items:center;gap:6px;cursor:pointer}
+    #pmTopic{width:100%;margin-top:8px;background:#0d131c;border:1px solid var(--line);border-radius:8px;padding:9px 12px;color:var(--txt);font-size:13px}
+    .gen-run{margin-top:16px;width:100%;background:linear-gradient(90deg,#153a6b,#0d2340);border:1px solid var(--accent);color:#7db4ff;font-weight:600;font-size:14px;padding:11px;border-radius:9px;cursor:pointer}
+    .gen-run:disabled{opacity:.6;cursor:wait}
+    .gen-results{margin-top:8px}
+    .draft{background:#0d131c;border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:12px}
+    .draft .dh{font-size:14px;font-weight:700;color:var(--gold,#ffd76b);margin-bottom:6px}
+    .draft .da{font-size:11px;color:var(--sub);margin-top:8px;border-top:1px solid var(--line);padding-top:6px}
+    .draft .dtext{width:100%;min-height:90px;background:#0a0e14;border:1px solid var(--line);border-radius:8px;
+                  color:var(--txt);font-size:13.5px;line-height:1.7;padding:10px;font-family:inherit;resize:vertical}
+    .draft .refine-row{display:flex;gap:6px;margin-top:8px}
+    .draft .refine-row input{flex:1;background:#0d131c;border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:7px 10px;font-size:12.5px}
+    .draft .refine-row button{font-size:12px;color:var(--accent);background:none;border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer;white-space:nowrap}
+    .draft .hist{margin-top:8px;font-size:11.5px;color:var(--sub);cursor:pointer}
+    .draft .hist-list{display:none;margin-top:6px;background:#0a0e14;border:1px solid var(--line);border-radius:6px;padding:6px}
+    .draft .hist-list.open{display:block}
+    .draft .hist-item{padding:5px 6px;font-size:12px;cursor:pointer;border-radius:4px}
+    .draft .hist-item:hover{background:#161d2b}
   </style>
 </head>
 <body>
@@ -347,6 +381,33 @@
       <button class="btn-next" id="btnNext" onclick="go(1)">다음 →</button>
     </div>
   </main>
+
+  <!-- 📝뽑기: 도서관(library.html) 구조분석 생성 모달 이식(pm 네임스페이스, id 충돌방지) -->
+  <div class="gen-bg" id="pmModal">
+    <div class="gen-box">
+      <div class="gen-head"><b>📝 대본 뽑기 · 구조 분석 생성</b><button class="x" onclick="pmClose()">✕</button></div>
+      <div class="gen-body">
+        <div class="gen-sec">유지할 요소 (체크=원본유지 / 해제 시 아래에서 선택)</div>
+        <div class="toggles" id="pmToggles">
+          <div class="elem-row" data-k="characters"><label><input type="checkbox" data-k="characters" checked onchange="pmOnElemToggle(this)"> 👥 주변인물</label><select class="elem-mode" style="display:none"></select></div>
+          <div class="elem-row" data-k="twist"><label><input type="checkbox" data-k="twist" checked onchange="pmOnElemToggle(this)"> ✨ 발상전환</label><select class="elem-mode" style="display:none"></select></div>
+          <div class="elem-row" data-k="development"><label><input type="checkbox" data-k="development" checked onchange="pmOnElemToggle(this)"> 🎬 전개방식</label><select class="elem-mode" style="display:none"></select></div>
+          <div class="elem-row" data-k="hook"><label><input type="checkbox" data-k="hook" checked onchange="pmOnElemToggle(this)"> 🎣 훅</label><select class="elem-mode" style="display:none"></select></div>
+          <div class="elem-row" data-k="appeal"><label><input type="checkbox" data-k="appeal" checked onchange="pmOnElemToggle(this)"> 🎯 어필포인트</label><select class="elem-mode" style="display:none"></select></div>
+          <div class="elem-row" data-k="tone"><label><input type="checkbox" data-k="tone" checked onchange="pmOnElemToggle(this)"> 🗣 말투/어미</label><select class="elem-mode" style="display:none"></select></div>
+          <div class="elem-row" data-k="devices"><label><input type="checkbox" data-k="devices" checked onchange="pmOnElemToggle(this)"> 🧲 설득장치</label><select class="elem-mode" style="display:none"></select></div>
+        </div>
+        <div class="gen-sec">주제 / 소재</div>
+        <div class="modes">
+          <label><input type="radio" name="pmmode" value="A" checked onchange="pmToggleTopic()"> ♻️ 원본 소재 그대로 · 표현만 새로 (중복 회피)</label>
+          <label><input type="radio" name="pmmode" value="B" onchange="pmToggleTopic()"> 🔀 내 제품으로 이식 (구조만 빌림)</label>
+          <input id="pmTopic" placeholder="예: 무선 가습기 / 여름 결로 방지 커튼" style="display:none">
+        </div>
+        <button class="gen-run" id="pmRun" onclick="pmRunGen()">✨ 초안 생성 (10~20초)</button>
+        <div class="gen-results" id="pmResults"></div>
+      </div>
+    </div>
+  </div>
 
 <script>
 const STEPS = ["제작소","자막제거","TTS","꾸미기","썸네일","SEO","최종검수"];
@@ -1154,8 +1215,149 @@ function syncFootageToMixUrls(){
   const fl=document.getElementById('footageList');
   if(fl) fl.textContent=urls.length?`🎬 화면 ${urls.length}개 담김 (${urls.length===1?'순서편집':'믹스'})`:'🎬 담기로 화면에 쓸 영상을 고르세요. (1개=순서편집 · 2개+=믹스)';
 }
-// 📝뽑기: Task 3(도서관 생성모달 이식)에서 실제 구현. 지금은 콘솔에러 방지용 임시 스텁.
-function openScriptModal(i){ alert('대본 뽑기는 다음 단계에서 연결됩니다'); }
+// 📝뽑기: 영상 i의 대본을 확보(캐시/추출)한 뒤 구조분석해 도서관식 생성 모달을 연다.
+// (도서관 library.html의 openGen/runGen/refineDraft/history를 pm 접두로 이식, 2026-07-15)
+let PM_IDX=null, PM_BASE_STRUCT=null, PM_CATEGORY='', PM_URL='', PM_SHORTCODE='', PM_BASE_SCRIPT='';
+async function openScriptModal(i){
+  const it=HANDOFF[i]; if(!it||!it.url){ alert('영상 URL이 없습니다'); return; }
+  PM_IDX=i; PM_URL=it.url; PM_SHORTCODE=it.shortcode||''; PM_CATEGORY=it.category||'';
+  PM_BASE_STRUCT=null; PM_BASE_SCRIPT='';
+  const modal=document.getElementById('pmModal'); modal.classList.add('open');
+  document.getElementById('pmResults').innerHTML='<div class="hint">⏳ 대본 추출 중… (영상당 10~30초)</div>';
+  try{
+    const r=await fetch('/api/produce/extract_from_url',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({url:it.url, shortcode:it.shortcode||undefined, category:it.category||undefined})});
+    const d=await r.json();
+    if(!d.ok){ document.getElementById('pmResults').innerHTML=`<div class="hint" style="color:var(--fire)">${esc(d.error||'추출 실패')}</div>`; return; }
+    it.pickScript=true; renderPool(); saveWork();
+    PM_BASE_SCRIPT=d.full_text||'';
+    document.getElementById('pmResults').innerHTML=`<div class="hint">✅ 원본 대본 확보. 아래에서 요소를 조절해 새 초안을 만들거나, <button class="btn-next" style="padding:4px 10px" onclick="pmUseRaw()">원본 대본 그대로 확정 →</button></div>`;
+    await pmLoadElementOptions(PM_CATEGORY);
+  }catch(e){ document.getElementById('pmResults').innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; }
+}
+function pmUseRaw(){ STATE.script=PM_BASE_SCRIPT; pmClose(); setScriptMode('manual'); refreshFinalPeek(); if(HANDOFF.length) saveWork(); }
+function pmClose(){ document.getElementById('pmModal').classList.remove('open'); }
+function pmToggleTopic(){
+  const mode=document.querySelector('input[name=pmmode]:checked').value;
+  const t=document.getElementById('pmTopic'); if(t) t.style.display = mode==='B' ? 'block' : 'none';
+}
+function pmOnElemToggle(cb){
+  const sel=cb.closest('.elem-row').querySelector('.elem-mode');
+  sel.style.display = cb.checked ? 'none' : 'inline-block';
+}
+async function pmLoadElementOptions(category){
+  window._pmOpts={};
+  try{ const d=await (await fetch('/api/wiki/element_options?category='+encodeURIComponent(category||''))).json(); window._pmOpts=d.options||{}; }catch(e){}
+  document.querySelectorAll('#pmToggles .elem-row').forEach(row=>{
+    const key=row.dataset.k, opts=window._pmOpts[key]||[], sel=row.querySelector('.elem-mode');
+    sel.innerHTML='';
+    const mk=(v,t)=>{const o=document.createElement('option');o.value=v;o.textContent=t;return o;};
+    if(opts.length){ sel.appendChild(mk('random','🎲 랜덤')); opts.forEach(o=>sel.appendChild(mk('category:'+o.label,o.label))); }
+    else sel.appendChild(mk('random','⏳ 학습된 카테고리 아직 없음'));
+  });
+}
+async function pmRunGen(){
+  const btn=document.getElementById('pmRun'), res=document.getElementById('pmResults');
+  const elemModes={};
+  document.querySelectorAll('#pmToggles .elem-row').forEach(row=>{
+    const cb=row.querySelector('input[type=checkbox]');
+    elemModes[row.dataset.k]=cb.checked?'keep':row.querySelector('.elem-mode').value;
+  });
+  const mode=document.querySelector('input[name=pmmode]:checked').value;
+  const topic=document.getElementById('pmTopic').value.trim();
+  if(mode==='B'&&!topic){ res.innerHTML='<div class="hint" style="color:var(--fire)">내 주제/제품을 입력하세요.</div>'; return; }
+  btn.disabled=true; res.innerHTML='<div class="hint">✨ 초안 만드는 중… (10~20초)</div>';
+  try{
+    const body={mode, my_topic:topic, n:3, elem_modes:elemModes, structure:PM_BASE_STRUCT, base_script:PM_BASE_SCRIPT, category:PM_CATEGORY};
+    const d=await (await fetch('/api/wiki/generate?shortcode='+encodeURIComponent(PM_SHORTCODE||PM_URL),
+      {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
+    if(!d.ok){ res.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(d.error||'생성 실패')+'</div>'; return; }
+    pmRenderDrafts(d.drafts||[]);
+  }catch(e){ res.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; }
+  finally{ btn.disabled=false; }
+}
+function pmRenderDrafts(drafts){
+  const res=document.getElementById('pmResults'); window._pmDrafts=drafts;
+  res.innerHTML=drafts.map((dr,i)=>`<div class="draft" data-draft-id="${dr.draft_id||''}" data-idx="${i}">
+    <div class="dh">초안 ${i+1} · ${esc(dr.hook||'')}</div>
+    <textarea class="dtext" onblur="pmOnDraftEdit(this)">${esc(dr.script||'')}</textarea>
+    <div class="da">🔧 ${esc(dr.applied||'')}</div>
+    <div class="refine-row">
+      <input type="text" class="refine-inst" placeholder="지시문 (예: 더 유머러스하게)">
+      <button onclick="pmRefineDraft(this,'rewrite')">전체 재작성</button>
+      <button onclick="pmRefineDraft(this,'partial')">선택 부분만</button>
+    </div>
+    <div class="hist" onclick="pmToggleHistory(this)">📜 버전 이력 ▾</div>
+    <div class="hist-list"></div>
+    <button class="btn-next" style="padding:6px 12px;margin-top:8px" onclick="pmUseDraft(this)">이 대본 확정 →</button>
+  </div>`).join('') || '<div class="hint" style="color:var(--fire)">생성 결과가 비었습니다</div>';
+}
+function pmUseDraft(btn){
+  const t=btn.closest('.draft').querySelector('.dtext'); STATE.script=(t?t.value:'')||'';
+  pmClose(); setScriptMode('manual'); refreshFinalPeek(); if(HANDOFF.length) saveWork();
+}
+async function pmOnDraftEdit(textarea){
+  const card=textarea.closest('.draft');
+  const draftId=card.dataset.draftId;
+  if(!draftId) return;   // structure 폴백 생성(위키미저장)은 draft_id가 없을 수 있음 — 서버 반영 없이 로컬 편집만 유지
+  const text=textarea.value;
+  try{
+    const d=await (await fetch('/api/wiki/draft/edit', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({draft_id:draftId, script_text:text}),
+    })).json();
+    if(d.ok) card.dataset.draftId=d.draft_id;
+  }catch(e){}
+}
+async function pmRefineDraft(btn, mode){
+  const card=btn.closest('.draft');
+  const draftId=card.dataset.draftId;
+  if(!draftId){ alert('이 초안은 서버에 저장된 버전이 없어 디벨롭(재생성)을 지원하지 않습니다. 직접 편집하거나 확정하세요.'); return; }
+  const textarea=card.querySelector('.dtext');
+  const instruction=card.querySelector('.refine-inst').value.trim();
+  if(!instruction){ alert('지시문을 입력하세요.'); return; }
+  let selectedText='';
+  if(mode==='partial'){
+    selectedText=textarea.value.substring(textarea.selectionStart, textarea.selectionEnd).trim();
+    if(!selectedText){ alert('수정할 부분을 텍스트박스에서 드래그로 선택하세요.'); return; }
+  }
+  btn.disabled=true; const orig=btn.textContent; btn.textContent='⏳ 생성 중…';
+  try{
+    const body={draft_id:draftId, mode, instruction};
+    if(mode==='partial') body.selected_text=selectedText;
+    const d=await (await fetch('/api/wiki/draft/refine', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body),
+    })).json();
+    if(!d.ok){ alert(d.error||'재생성 실패'); return; }
+    textarea.value=d.script_text;
+    card.dataset.draftId=d.draft_id;
+    card.querySelector('.refine-inst').value='';
+  }catch(e){ alert('네트워크 오류'); }
+  finally{ btn.disabled=false; btn.textContent=orig; }
+}
+async function pmToggleHistory(el){
+  const card=el.closest('.draft');
+  const list=card.querySelector('.hist-list');
+  if(list.classList.contains('open')){ list.classList.remove('open'); return; }
+  if(!card.dataset.draftId){ list.innerHTML='<div class="hist-item">이력 없음</div>'; list.classList.add('open'); return; }
+  try{
+    const d=await (await fetch('/api/wiki/draft/history?draft_id='+encodeURIComponent(card.dataset.draftId))).json();
+    list.innerHTML=(d.history||[]).map((h,i)=>
+      `<div class="hist-item" onclick="pmRestoreVersion(this,'${h.draft_id}')">v${i+1}${h.edit_instruction?' · '+esc(h.edit_instruction):''} — ${esc((h.script_text||'').slice(0,40))}…</div>`
+    ).join('') || '<div class="hist-item">이력 없음</div>';
+  }catch(e){}
+  list.classList.add('open');
+}
+function pmRestoreVersion(el, draftId){
+  const card=el.closest('.draft');
+  fetch('/api/wiki/draft/history?draft_id='+encodeURIComponent(card.dataset.draftId))
+    .then(r=>r.json())
+    .then(d=>{
+      const found=(d.history||[]).find(h=>h.draft_id===draftId);
+      if(found){ card.querySelector('.dtext').value=found.script_text; }
+    });
+}
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') pmClose(); });
 // 오른쪽 "확정 대본" peek — 대본이 바뀔 때마다 갱신(onScriptInput/useDraft에서 호출).
 function refreshFinalPeek(){
   const p=document.getElementById('finalScriptPeek');
