@@ -155,3 +155,13 @@ def test_probe_duration_survives_missing_ffprobe(monkeypatch, tmp_path):
     monkeypatch.setattr(scene_assets.subprocess, "run", boom)
 
     assert scene_assets.probe_duration(tmp_path / "x.mp4") == 0.0
+
+
+def test_output_dimensions_match_video_assemble():
+    """scene_assets와 video_assemble의 출력 규격이 일치해야 한다.
+    페이즈2에서 concat -c copy로 자산 클립을 비트 클립과 붙이기 때문에
+    규격이 어긋나면 렌더가 깨진다."""
+    from shopping_shorts import video_assemble
+
+    assert scene_assets._OUT_W == video_assemble._OUT_W
+    assert scene_assets._OUT_H == video_assemble._OUT_H
