@@ -687,6 +687,27 @@ def api_wiki_video(shortcode: str):
     return FileResponse(str(f), media_type="video/mp4")
 
 
+@app.get("/api/wiki/poster")
+def api_wiki_poster(shortcode: str):
+    """보관영상의 첫 프레임(JPEG). 대본선택 리스트 썸네일용. 없으면 404.
+
+    이전엔 리스트가 <video preload=metadata>로 썸네일을 대신했는데, 위
+    /api/wiki/video가 Range를 안 먹여 200으로 mp4 전체(수 MB)를 내려준다.
+    10행이면 수십 MB를 동시에 받느라 메타데이터도 못 붙어 전부 검은칸이었다
+    (2026-07-15 실측 readyState=0). 프레임 1장만 떠서 캐시해 준다."""
+    from fastapi.responses import FileResponse, Response
+    hashed = hashlib.sha1(shortcode.encode()).hexdigest()[:16]
+    mp4 = _WIKI_MEDIA_DIR / f"{hashed}.mp4"
+    poster = _WIKI_MEDIA_DIR / f"{hashed}.jpg"
+    if not poster.exists():
+        if not mp4.exists():
+            return Response(status_code=404, content=b"")
+        # 0.1초 지점 — 0초는 검은 첫 프레임인 영상이 있어 피한다.
+        if not extract_frame_at(str(mp4), str(_WIKI_MEDIA_DIR), 0.1, filename=f"{hashed}.jpg"):
+            return Response(status_code=404, content=b"")
+    return FileResponse(str(poster), media_type="image/jpeg")
+
+
 @app.get("/api/wiki/list")
 def api_wiki_list(request: Request):
     """위키(도서관)에 담은 S급 대본 전체."""

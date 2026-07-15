@@ -1082,15 +1082,13 @@ function switchMixSource(src){
   if(ba) ba.classList.toggle('active', src==='all');
   loadWikiForMix();
 }
-// 썸네일 URL은 인스타 CDN이라 만료된다(저장 시점 URL). 깨지면 영구보관 영상의
-// 첫 프레임으로 폴백 — 빈칸으로 두지 않는다(2026-07-15).
-function mixVideoThumb(shortcode){
-  const v=document.createElement('video');
-  v.src='/api/wiki/video?shortcode='+encodeURIComponent(shortcode)+'#t=0.1';
-  v.muted=true; v.preload='metadata'; v.playsInline=true;
-  v.style.cssText='width:56px;height:96px;object-fit:cover;border-radius:6px;background:#000;flex-shrink:0';
-  v.onerror=()=>{ v.style.display='none'; };
-  return v;
+// 썸네일 URL은 인스타 CDN이라 만료된다(저장 시점 URL). 깨지면 보관영상 첫 프레임
+// (/api/wiki/poster)으로 한 번 폴백하고, 그것도 없으면 조용히 숨긴다(2026-07-15).
+function mixThumbFallback(img, shortcode){
+  const poster='/api/wiki/poster?shortcode='+encodeURIComponent(shortcode);
+  if(img.dataset.fellback || img.src.endsWith(poster)){ img.style.display='none'; return; }
+  img.dataset.fellback='1';
+  img.src=poster;
 }
 async function loadWikiForMix(){
   const el=document.getElementById('mixWiki');
@@ -1111,12 +1109,10 @@ async function loadWikiForMix(){
     el.innerHTML=items.map(w=>`
       <label style="display:flex;gap:10px;align-items:flex-start;padding:9px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;cursor:pointer;background:#0d1420">
         <input type="checkbox" class="mixPick" value="${esc(w.shortcode)}" style="margin-top:3px;flex-shrink:0">
-        ${w.thumbnail
-          ? `<img src="${esc(w.thumbnail)}" alt="" loading="lazy"
-               style="width:56px;height:96px;object-fit:cover;border-radius:6px;background:#000;flex-shrink:0"
-               onerror="this.replaceWith(mixVideoThumb('${esc(w.shortcode)}'))">`
-          : `<video src="/api/wiki/video?shortcode=${encodeURIComponent(w.shortcode)}#t=0.1" muted preload="metadata" playsinline
-               style="width:56px;height:96px;object-fit:cover;border-radius:6px;background:#000;flex-shrink:0" onerror="this.style.display='none'"></video>`}
+        <img src="${w.thumbnail ? esc(w.thumbnail) : '/api/wiki/poster?shortcode='+encodeURIComponent(w.shortcode)}"
+             alt="" loading="lazy"
+             style="width:56px;height:96px;object-fit:cover;border-radius:6px;background:#000;flex-shrink:0"
+             onerror="mixThumbFallback(this, '${esc(w.shortcode)}')">
         <span style="flex:1;min-width:0">
           <b>${esc(w.name||w.shortcode)}</b> <span class="hint">· ${esc(w.category||'')}</span>
           <div style="font-size:12px;color:var(--txt);line-height:1.55;margin-top:4px;max-height:120px;overflow:auto;white-space:pre-wrap">${esc(w.full_text||'(대본 없음)')}</div>
@@ -1377,6 +1373,24 @@ function refreshFinalPeek(){
   const p=document.getElementById('finalScriptPeek');
   if(p) p.innerHTML = STATE.script ? `"${esc(STATE.script.slice(0,60))}…" · ${lenText(STATE.script)}` : '<span style="color:var(--sub)">아직 대본이 없습니다. 왼쪽 영상에서 📝뽑기 하거나 직접 작성하세요.</span>';
   const b=document.getElementById('saveWikiBtn'); if(b) b.style.display=STATE.script?'inline-block':'none';
+}
+// 확정 대본을 위키에 저장해 학습에 반영(제작소 직행이어도 다리). 대본을 뽑은 영상 기준.
+async function saveScriptToWiki(btn){
+  if(!STATE.script){ alert('먼저 대본을 확정하세요.'); return; }
+  // 대본을 뽑은 영상(pickScript) 우선, 없으면 화면 담긴 첫 영상
+  const src=HANDOFF.find(h=>h.pickScript) || HANDOFF.find(h=>h.useFootage) || HANDOFF[0];
+  if(!src||!src.url){ alert('저장할 원본 영상을 찾을 수 없습니다.'); return; }
+  let category=src.category||'';
+  if(!category){ category=prompt('학습 반영을 위한 카테고리 (예: 레시피/생활용품/인테리어/가전)','')||''; }
+  btn.disabled=true; const o=btn.textContent; btn.textContent='⏳ 저장 중…';
+  try{
+    const d=await (await fetch('/api/produce/save_to_wiki',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({url:src.url, shortcode:src.shortcode||undefined, script_text:STATE.script,
+        category:category||undefined, name:src.name||undefined, video_url:src.video_url||src.url})})).json();
+    if(!d.ok){ alert(d.error||'저장 실패'); return; }
+    btn.textContent='✓ 위키에 저장됨(학습 반영)'; btn.classList.add('sent');
+  }catch(e){ alert('네트워크 오류'); btn.textContent=o; }
+  finally{ btn.disabled=false; }
 }
 async function startProduceMix(){
   if(!STATE.script){ alert('1단계에서 대본을 먼저 확정하세요'); return; }
