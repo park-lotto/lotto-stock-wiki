@@ -555,6 +555,31 @@ def _merge_highlight_rules(headcopy, caption_style, deco):
     return headcopy, caption_style
 
 
+def _beat_timeline(edit_plan, tts_paths):
+    """비트별 전체 타임라인 [{beat_idx, t0, dur, narration, role}, ...].
+
+    자막(_burn_captions)과 모션(motion_packs)이 **같은 경계**를 쓰도록 하는 단일 출처.
+    여기서 중복 계산하면 전환이 자막과 어긋난다. tts 없는 비트는 건너뛴다(기존 동작).
+    """
+    timeline = []
+    t0 = 0.0
+    for beat in edit_plan["beats"]:
+        idx = beat["beat_idx"]
+        tts = tts_paths.get(idx)
+        if not tts:
+            continue
+        dur = _probe_duration(tts)
+        timeline.append({
+            "beat_idx": idx,
+            "t0": t0,
+            "dur": dur,
+            "narration": beat.get("narration", ""),
+            "role": beat.get("role", ""),
+        })
+        t0 += dur
+    return timeline
+
+
 def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None, caption_style=None, deco=None):
     """완성된 믹스 영상(in_video) 위에 우리 자막을 비트 타이밍대로 굽는다.
     비트 경계는 각 비트 tts 길이 누적(t0)으로 계산해, drawtext enable 구간을 전체
@@ -572,15 +597,10 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         return str(out_path)
     headcopy, caption_style = _merge_highlight_rules(headcopy, caption_style, deco)
     filters = [f"scale={_OUT_W}:{_OUT_H}:force_original_aspect_ratio=increase,crop={_OUT_W}:{_OUT_H}"]
-    t0 = 0.0
-    for beat in edit_plan["beats"]:
-        idx = beat["beat_idx"]
-        tts = tts_paths.get(idx)
-        if not tts:
-            continue
-        dur = _probe_duration(tts)
-        filters.extend(_caption_drawtexts(beat.get("narration", ""), dur, work, idx, t0, caption_style))
-        t0 += dur
+    timeline = _beat_timeline(edit_plan, tts_paths)
+    for b in timeline:
+        filters.extend(_caption_drawtexts(b["narration"], b["dur"], work, b["beat_idx"],
+                                          b["t0"], caption_style))
     if headcopy and (headcopy.get("text") or "").strip():
         filters.extend(_headcopy_drawtext_parts(headcopy, work))  # 항상 표시(고정 타이틀) — enable 없음
     # 꾸미기 장식(deco): 추가 텍스트(여러 개) + 워터마크 닉네임. 모두 고정 drawtext.
