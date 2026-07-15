@@ -172,30 +172,61 @@ def _fillers(text, cfg, ctx):
     return f"{filler}, {text}"
 
 
-# 비트 역할별 감정 태그 곡선(v3 오디오 태그). 시작점 — 작업대에서 세기 조절.
-_ARC_BY_ROLE = {
-    "hook": "[curious]", "intro": "[warm]", "build": "[warm]",
-    "body": None, "payoff": "[satisfied]", "cta": "[excited]",
+# 비트 role 정본 = edit_plan._REQUIRED_ROLES(훅·페인포인트·반전·실용·CTA).
+# role은 열린 집합이다 — edit_plan 자유 모드가 Gemini에게 "role 라벨을 자유롭게 정해라"라고
+# 지시하므로 새 변종이 계속 생긴다. 아래는 2026-07-15 서버 실측 17변종 기준 별칭표이고,
+# 미지 role은 위치기반으로 폴백하되 반드시 경고를 남긴다(조용히 넘어가면 결함이 숨는다).
+_ROLE_ALIASES = {
+    "훅": "훅", "hook": "훅",
+    "페인포인트": "페인포인트", "painpoint": "페인포인트", "pain point": "페인포인트",
+    "반전": "반전", "twist": "반전", "reversal": "반전", "reveal": "반전",
+    "실용": "실용", "utility": "실용", "practical": "실용", "solution": "실용",
+    "cta": "CTA",
 }
-_ARC_BY_POS = ["[curious]", "[warm]", None, "[satisfied]", "[excited]"]  # 역할 없을 때 위치기반
+
+
+def normalize_role(role):
+    """실제 role(한글/영어/대소문자/동의어) → 정본. 미지면 None."""
+    if not role:
+        return None
+    return _ROLE_ALIASES.get(str(role).strip().lower())
+
+
+# 정본 role별 감정 태그. **알려진 v3 태그만 사용**(새 태그를 지어내면 그대로 읽힐 위험).
+_ARC_BY_ROLE = {
+    "훅": "[curious]",
+    "페인포인트": None,        # 문제 제기 구간 — 무태그(태그 도배 금지)
+    "반전": "[satisfied]",
+    "실용": "[warm]",
+    "CTA": "[excited]",
+}
+_ARC_BY_POS = ["[curious]", "[warm]", None, "[satisfied]", "[excited]"]  # role 미지 시 폴백
 
 
 def _emotion_arc(text, cfg, ctx):
     intensity = cfg.get("intensity", 0.3)
-    if intensity < 0.15:                  # 오버금지: 낮으면 무태그
+    if intensity < 0.15:
         return text
     if ctx["caps"].get("max_tags_per_beat", 1) <= 0:
         return text
-    tag = None
-    role = ctx.get("beat_role")
-    if role and role in _ARC_BY_ROLE:
-        tag = _ARC_BY_ROLE[role]
-    elif ctx.get("beat_index") is not None and ctx.get("beat_total"):
-        n = max(1, ctx["beat_total"] - 1)
-        raw = round((ctx["beat_index"] / n) * (len(_ARC_BY_POS) - 1))
-        pos = min(len(_ARC_BY_POS) - 1, max(0, raw))  # 범위밖 beat_index 클램프(IndexError 방지)
-        tag = _ARC_BY_POS[pos]
+    tag = _tag_for(ctx)
     return f"{tag} {text}" if tag else text
+
+
+def _tag_for(ctx):
+    """정본 role → 태그. 미지 role은 경고 후 위치기반 폴백."""
+    raw = ctx.get("beat_role")
+    canon = normalize_role(raw)
+    if canon:
+        return _ARC_BY_ROLE[canon]
+    if raw:
+        ctx["warnings"].append(f"미지 role '{raw}' — 위치기반으로 폴백함(별칭표 추가 검토)")
+    if ctx.get("beat_index") is None or not ctx.get("beat_total"):
+        return None
+    n = max(1, ctx["beat_total"] - 1)
+    raw_pos = round((ctx["beat_index"] / n) * (len(_ARC_BY_POS) - 1))
+    pos = min(len(_ARC_BY_POS) - 1, max(0, raw_pos))
+    return _ARC_BY_POS[pos]
 
 
 def _intonation(text, cfg, ctx):
@@ -223,15 +254,24 @@ def _enforce_total_tag_cap(text, cap):
     return kept + rest
 
 
-def naturalize(text, profile=None, *, beat_role=None, beat_index=None, beat_total=None):
-    """text를 프로파일 규칙으로 다듬어 반환. 스테이지를 순서대로 적용."""
+def naturalize_detail(text, profile=None, *, beat_role=None, beat_index=None, beat_total=None):
+    """naturalize와 같지만 {"text", "applied", "warnings"}를 반환.
+
+    applied = 스테이지별 실제 적용 횟수. 작업대가 이걸 보여줘서 "슬라이더를 돌렸는데
+    왜 그대로냐"가 화면에서 즉시 드러나게 한다(2026-07-15 사고의 재발방지)."""
     p = merge_profile(profile)
     ctx = {"beat_role": beat_role, "beat_index": beat_index, "beat_total": beat_total,
-           "caps": p.get("caps", {})}
+           "caps": p.get("caps", {}), "applied": {}, "warnings": []}
     out = text
-    for name, fn in _STAGES:                  # 모든 스테이지 시그니처 통일: (text, cfg, ctx)
+    for name, fn in _STAGES:
         cfg = p.get(name, {})
         if cfg.get("on"):
             out = fn(out, cfg, ctx)
     out = _enforce_total_tag_cap(out, p.get("caps", {}).get("max_tags_total", 3))
-    return out
+    return {"text": out, "applied": ctx["applied"], "warnings": ctx["warnings"]}
+
+
+def naturalize(text, profile=None, *, beat_role=None, beat_index=None, beat_total=None):
+    """text를 프로파일 규칙으로 다듬어 반환(문자열). 상세는 naturalize_detail 사용."""
+    return naturalize_detail(text, profile, beat_role=beat_role,
+                             beat_index=beat_index, beat_total=beat_total)["text"]
