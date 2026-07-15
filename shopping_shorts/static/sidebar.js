@@ -8,6 +8,7 @@
       { icon: "⭐", text: "영상 즐겨찾기",   href: "/collection" },
       { icon: "📚", text: "대본 즐겨찾기",   href: "/library" },
       { icon: "🔎", text: "신규채널 픽업",   href: "/discover" },
+      { icon: "🎞️", text: "장면 라이브러리", href: "/scene_library" },
     ] },
     { label: "제작", items: [
       { icon: "🎬", text: "영상 제작소",     href: "/produce" },
