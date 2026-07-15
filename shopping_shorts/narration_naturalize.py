@@ -67,18 +67,37 @@ def _num_to_words(whole):
     return _int_to_sino(int(whole))
 
 
-def _normalize(text, cfg, ctx):
+def _bump(ctx, name, n=1):
+    """스테이지가 실제로 적용한 횟수를 누적. 0이면 기록하지 않는다(=아무 일도 안 함)."""
+    if n:
+        ctx["applied"][name] = ctx["applied"].get(name, 0) + n
+
+
+def normalize_reading(text):
+    """숫자·단위·기호를 한국어 읽기로 바꾼다 → (변환텍스트, 적용횟수).
+
+    정규화 스테이지의 순수 알맹이. **오독경보(asr_check)도 이 함수를 재사용한다** —
+    Whisper가 '삼 점 오 킬로그램'을 다시 '3.5kg'로 표기해버려서, 양쪽을 같은 표기로
+    맞추지 않으면 성우가 제대로 읽었는데도 전부 오독으로 뜬다(2026-07-15 실측).
+    """
     def num_repl(m):
         return _num_to_words(m.group(0))
-    # 단위 먼저(숫자+단위) → 숫자 → 기호
     def numunit(m):
         return f"{_num_to_words(m.group(1))} {_UNIT_MAP[m.group(2)]}"
     unit_pat = r"(\d+(?:\.\d+)?)(" + "|".join(sorted(_UNIT_MAP, key=len, reverse=True)) + r")"
-    text = re.sub(unit_pat, numunit, text)
-    text = re.sub(r"\d+(?:\.\d+)?", num_repl, text)
+    text, n1 = re.subn(unit_pat, numunit, text)
+    text, n2 = re.subn(r"\d+(?:\.\d+)?", num_repl, text)
+    n3 = 0
     for sym, word in _SYMBOL_MAP.items():
+        n3 += text.count(sym)
         text = text.replace(sym, " " + word)
     text = re.sub(r" {2,}", " ", text)
+    return text, n1 + n2 + n3
+
+
+def _normalize(text, cfg, ctx):
+    text, n = normalize_reading(text)
+    _bump(ctx, "normalize", n)
     return text
 
 
@@ -114,13 +133,18 @@ def _spoken_style(text, cfg, ctx):
             if new != s:
                 parts[i] = new
                 break
+    _bump(ctx, "spoken_style", len(chosen))
     return "".join(parts)
 
 
 def _pronunciation(text, cfg, ctx):
     d = cfg.get("dict") or {}
+    n = 0
     for k in sorted(d, key=len, reverse=True):   # 긴 키 먼저(부분매칭 방지)
-        text = text.replace(k, d[k])
+        if k in text:
+            n += 1
+            text = text.replace(k, d[k])
+    _bump(ctx, "pronunciation", n)
     return text
 
 
@@ -140,8 +164,11 @@ def _phrasing(text, cfg, ctx):
     # +0.999 = 올림(ceil): 낮은 강도에서도 최소 1종은 활성(다른 곳의 +1e-9 내림과 대비).
     take = max(1, int(len(_CONNECTIVES) * intensity + 0.999))
     active = _CONNECTIVES[:take] if intensity < 1.0 else _CONNECTIVES
+    n = 0
     for c in sorted(active, key=len, reverse=True):
-        text = re.sub(r"(" + c + r")(\s+)(?=[^\s,.!?…])", r"\1,\2", text)
+        text, k = re.subn(r"(" + c + r")(\s+)(?=[^\s,.!?…])", r"\1,\2", text)
+        n += k
+    _bump(ctx, "phrasing", n)
     return text
 
 
@@ -210,7 +237,10 @@ def _emotion_arc(text, cfg, ctx):
     if ctx["caps"].get("max_tags_per_beat", 1) <= 0:
         return text
     tag = _tag_for(ctx)
-    return f"{tag} {text}" if tag else text
+    if not tag:
+        return text
+    _bump(ctx, "emotion_arc", 1)
+    return f"{tag} {text}"
 
 
 def _tag_for(ctx):
