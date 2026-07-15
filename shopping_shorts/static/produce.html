@@ -236,6 +236,8 @@
           <div style="font-size:13px;font-weight:800;margin-bottom:6px">🎯 완성 스타일 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 그대로 완성</span></div>
           <div id="fullPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"></div>
           <button type="button" id="moreStylesBtn" onclick="toggleMoreStyles()" class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;margin-bottom:14px">+ 더보기</button>
+          <!-- 🎬 모션 팩: 완성 스타일 카드에 내장(별도 선택지 없음). pickStyleCard→applyFullPreset이 값을 채움. -->
+          <select id="motionPack" style="display:none"><option value="">없음</option><option value="dynamic_pop">다이나믹 팝</option><option value="minimal_chic">미니멀 시크</option></select>
           <!-- 강조 단어(노출 유지) -->
           <div style="background:#0d1420;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
             <div style="font-size:13px;font-weight:700;margin-bottom:2px">🎯 강조 단어 <span style="font-size:11px;color:var(--sub);font-weight:400">— 헤드카피 + 자막 공통(키워드 일치 시 자동 강조)</span></div>
@@ -496,60 +498,60 @@ function updateCaption(){
 }
 // ── 🎯 완성 스타일 프리셋(원클릭: 헤드카피+자막+효과 한 번에) — 빅채널 레퍼런스 기반 ──
 const FULL_PRESETS=[
-  {name:'모던 화이트', chip:'#FFFFFF',
+  {name:'모던 화이트', chip:'#FFFFFF', motion:'minimal_chic',
     hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:66,x:50,y:12,outline:true,outline_color:'#000000',outline_w:7},
     cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:52,y:84,outline:false,box:true,box_color:'#000000',box_pad:14,box_opacity:68,effect:'fade'}},
-  {name:'임팩트 옐로', chip:'#FFE100',
+  {name:'임팩트 옐로', chip:'#FFE100', motion:'dynamic_pop',
     hc:{font:'TmonMonsori.ttf',color:'#FFE100',weight:900,size:76,x:50,y:12,outline:true,outline_color:'#000000',outline_w:9},
     cap:{font:'BMJUA.ttf',color:'#FFFFFF',size:56,y:84,outline:true,outline_color:'#000000',outline_w:6,box:false,effect:'pop'}},
-  {name:'민트 클린', chip:'#00E5C0',
+  {name:'민트 클린', chip:'#00E5C0', motion:'minimal_chic',
     hc:{font:'BMDOHYEON.ttf',color:'#00E5C0',weight:900,size:72,x:50,y:12,outline:true,outline_color:'#06231F',outline_w:8},
     cap:{font:'SUIT-Bold.otf',color:'#FFFFFF',size:52,y:84,outline:true,outline_color:'#000000',outline_w:6,box:false,effect:'slide'}},
-  {name:'레드 강조', chip:'#FF2D2D',
+  {name:'레드 강조', chip:'#FF2D2D', motion:'dynamic_pop',
     hc:{font:'BMDOHYEON.ttf',color:'#FF2D2D',weight:900,size:72,x:50,y:12,outline:true,outline_color:'#FFFFFF',outline_w:7},
     cap:{font:'GmarketSansBold.otf',color:'#FFFFFF',size:52,y:84,outline:false,box:true,box_color:'#000000',box_pad:14,box_opacity:80,effect:'fade'}},
-  {name:'블랙박스 시크', chip:'#111111',
+  {name:'블랙박스 시크', chip:'#111111', motion:'minimal_chic',
     hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:62,x:50,y:14,outline:false,box:true,box_color:'#000000',box_pad:18,box_opacity:85},
     cap:{font:'SUIT-Bold.otf',color:'#FFFFFF',size:50,y:84,outline:false,box:true,box_color:'#000000',box_pad:14,box_opacity:85,effect:'fade'}},
-  {name:'큐트 핑크', chip:'#FF4D8D',
+  {name:'큐트 핑크', chip:'#FF4D8D', motion:'dynamic_pop',
     hc:{font:'Binggrae-Bold.otf',color:'#FF4D8D',weight:900,size:72,x:50,y:12,outline:true,outline_color:'#FFFFFF',outline_w:8},
     cap:{font:'BMJUA.ttf',color:'#FFFFFF',size:54,y:84,outline:true,outline_color:'#FF4D8D',outline_w:6,box:false,effect:'pop'}},
-  {name:'네이비 신뢰', chip:'#13234E',
+  {name:'네이비 신뢰', chip:'#13234E', motion:'minimal_chic',
     hc:{font:'GmarketSansBold.otf',color:'#13234E',weight:900,size:66,x:50,y:12,outline:true,outline_color:'#FFFFFF',outline_w:7},
     cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:52,y:84,outline:false,box:true,box_color:'#13234E',box_pad:14,box_opacity:88,effect:'slide'}},
-  {name:'푸드 그린', chip:'#12B24A',
+  {name:'푸드 그린', chip:'#12B24A', motion:'dynamic_pop',
     hc:{font:'BMDOHYEON.ttf',color:'#12B24A',weight:900,size:72,x:50,y:12,outline:true,outline_color:'#000000',outline_w:7},
     cap:{font:'BMJUA.ttf',color:'#FFFFFF',size:54,y:84,outline:true,outline_color:'#000000',outline_w:6,box:false,effect:'pop'}},
-  {name:'뉴스 자막형', chip:'#FFFFFF',
+  {name:'뉴스 자막형', chip:'#FFFFFF', motion:'minimal_chic',
     hc:{font:'GmarketSansBold.otf',color:'#111111',weight:900,size:56,x:50,y:10,outline:false,box:true,box_color:'#FFE100',box_pad:14,box_opacity:100},
     cap:{font:'NanumGothic-Bold.ttf',color:'#FFFFFF',size:50,y:86,outline:true,outline_color:'#000000',outline_w:5,box:true,box_color:'#000000',box_pad:12,box_opacity:60,effect:'none'}},
-  {name:'핸드메이드 감성', chip:'#FF7A00',
+  {name:'핸드메이드 감성', chip:'#FF7A00', motion:'dynamic_pop',
     hc:{font:'Kkubulim.ttf',color:'#FF7A00',weight:900,size:74,x:50,y:12,outline:true,outline_color:'#FFFFFF',outline_w:8},
     cap:{font:'Kkubulim.ttf',color:'#FFFFFF',size:56,y:84,outline:true,outline_color:'#000000',outline_w:6,box:false,effect:'fade'}},
-  {name:'하이엔드 세리프', chip:'#C9A24B',
+  {name:'하이엔드 세리프', chip:'#C9A24B', motion:'minimal_chic',
     hc:{font:'RIDIBatang.otf',color:'#FFFFFF',weight:700,size:60,x:50,y:12,outline:true,outline_color:'#000000',outline_w:5},
     cap:{font:'GowunBatang.ttf',color:'#FFFFFF',size:48,y:85,outline:false,box:true,box_color:'#000000',box_pad:14,box_opacity:60,effect:'fade'}},
-  {name:'오렌지 팝', chip:'#FF7A00',
+  {name:'오렌지 팝', chip:'#FF7A00', motion:'dynamic_pop',
     hc:{font:'TmonMonsori.ttf',color:'#FF7A00',weight:900,size:78,x:50,y:12,outline:true,outline_color:'#000000',outline_w:9},
     cap:{font:'TmonMonsori.ttf',color:'#111111',size:52,y:84,outline:false,box:true,box_color:'#FFE100',box_pad:14,box_opacity:100,effect:'pop'}},
-  {name:'파스텔 소프트', chip:'#8FD3FF',
+  {name:'파스텔 소프트', chip:'#8FD3FF', motion:'minimal_chic',
     hc:{font:'SUIT-Bold.otf',color:'#FFFFFF',weight:900,size:64,x:50,y:12,outline:true,outline_color:'#3A6EA5',outline_w:6},
     cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:50,y:84,outline:false,box:true,box_color:'#3A6EA5',box_pad:14,box_opacity:55,effect:'slide'}},
-  {name:'정보전달 블루', chip:'#1E5AA8',
+  {name:'정보전달 블루', chip:'#1E5AA8', motion:'minimal_chic',
     hc:{font:'Pretendard-ExtraBold.otf',color:'#1E5AA8',weight:900,size:64,x:50,y:12,outline:true,outline_color:'#FFFFFF',outline_w:7},
     cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:52,y:84,outline:false,box:true,box_color:'#1E5AA8',box_pad:14,box_opacity:88,effect:'fade'}},
-  {name:'옐로 2톤 A', chip:'#FFE100',
+  {name:'옐로 2톤 A', chip:'#FFE100', motion:'dynamic_pop',
     hc:{font:'GmarketSansBold.otf',color:'#FFFFFF',weight:900,size:38,x:50,y:8,outline:true,outline_color:'#000000',outline_w:6},
     extra:[{text:'',font:'GmarketSansBold.otf',color:'#FFE100',size:68,x:50,y:19,outline:true,outline_color:'#000000',outline_w:8}],
     cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:52,y:84,outline:true,outline_color:'#000000',outline_w:6,box:false,effect:'fade'}},
-  {name:'옐로 2톤 B(좌측)', chip:'#FFE100',
+  {name:'옐로 2톤 B(좌측)', chip:'#FFE100', motion:'dynamic_pop',
     hc:{font:'BMDOHYEON.ttf',color:'#FFFFFF',weight:900,size:36,x:32,y:9,outline:true,outline_color:'#000000',outline_w:6},
     extra:[{text:'',font:'BMDOHYEON.ttf',color:'#FFE100',size:64,x:32,y:19,outline:true,outline_color:'#000000',outline_w:7}],
     cap:{font:'SUIT-Bold.otf',color:'#FFFFFF',size:50,y:84,outline:true,outline_color:'#000000',outline_w:6,box:false,effect:'slide'}},
-  {name:'네온 글로우 화이트', chip:'#00E5FF',
+  {name:'네온 글로우 화이트', chip:'#00E5FF', motion:'dynamic_pop',
     hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:60,x:50,y:14,outline:true,outline_color:'#00E5FF',outline_w:9},
     cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:50,y:84,outline:true,outline_color:'#00E5FF',outline_w:7,box:false,effect:'fade'}},
-  {name:'네온 글로우 센터', chip:'#00E5FF',
+  {name:'네온 글로우 센터', chip:'#00E5FF', motion:'dynamic_pop',
     hc:{font:'SUIT-Bold.otf',color:'#FFFFFF',weight:900,size:58,x:50,y:16,outline:true,outline_color:'#00D9E8',outline_w:8},
     cap:{font:'SUIT-Bold.otf',color:'#FFFFFF',size:48,y:84,outline:true,outline_color:'#00D9E8',outline_w:6,box:false,effect:'pop'}},
 ];
@@ -638,6 +640,9 @@ function applyFullPreset(i){
   } else {
     STATE.deco.extra_texts = [];
   }
+  // 모션 팩: 완성 스타일 카드에 내장된 pack_id만 저장. 실제 레이어는 렌더 시점에 서버가 만든다(비트 경계=TTS 실길이).
+  STATE.deco.motion = p.motion ? {pack_id: p.motion} : null;
+  const mp = document.getElementById('motionPack'); if(mp) mp.value = p.motion || '';
   renderExtraTexts(); renderExtraPreview();
   document.querySelectorAll('.fullPreset').forEach((b,idx)=>b.style.outline = idx===i?'2px solid var(--accent2)':'none');
 }
@@ -1001,7 +1006,7 @@ function jump(i){ cur=i; renderSteps(); showPanel(); }
 function go(d){ const n=cur+d; if(n<0||n>=STEPS.length) return; cur=n; renderSteps(); showPanel(); }
 
 // ── 1단계 대본: 3모드 ──────────────────────────────
-const STATE = { script: "", script_src_idx: null, subtitleRemoval: false, headcopy: null, captionStyle: null, deco: { extra_texts: [] } };   // 확정 대본 + 렌더 설정
+const STATE = { script: "", script_src_idx: null, subtitleRemoval: false, headcopy: null, captionStyle: null, deco: { extra_texts: [], motion: null } };   // 확정 대본 + 렌더 설정
 // script_src_idx: 확정한 대본이 HANDOFF의 몇 번 영상에서 나왔는지(리뷰 I-1 수정, 2026-07-15).
 // pickScript가 true인 영상이 여러 개면(A로 뽑아본 뒤 B로 확정해도 A가 true로 남음) 첫 매치만
 // 찾는 기존 방식이 틀린 영상을 위키저장 대상으로 골랐다 — 확정 시점(pmUseRaw/pmUseDraft)에
