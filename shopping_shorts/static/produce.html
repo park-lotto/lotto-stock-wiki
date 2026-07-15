@@ -1109,8 +1109,11 @@ async function loadWikiForMix(){
     el.innerHTML=items.map(w=>`
       <label style="display:flex;gap:10px;align-items:flex-start;padding:9px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;cursor:pointer;background:#0d1420">
         <input type="checkbox" class="mixPick" value="${esc(w.shortcode)}" style="margin-top:3px;flex-shrink:0">
+        <!-- loading=lazy 금지: 이 목록은 숨겨진 패널에 innerHTML로 그린 뒤 나중에 보여줘서
+             크롬이 lazy 이미지를 재평가하지 않는다(뷰포트 안인데도 영영 미로드 — 2026-07-15
+             라이브 실측). 10행×55KB라 lazy 이득도 없다. -->
         <img src="${w.thumbnail ? esc(w.thumbnail) : '/api/wiki/poster?shortcode='+encodeURIComponent(w.shortcode)}"
-             alt="" loading="lazy"
+             alt=""
              style="width:56px;height:96px;object-fit:cover;border-radius:6px;background:#000;flex-shrink:0"
              onerror="mixThumbFallback(this, '${esc(w.shortcode)}')">
         <span style="flex:1;min-width:0">
