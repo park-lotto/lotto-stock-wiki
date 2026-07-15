@@ -2039,9 +2039,25 @@ def api_scene_update(request: Request, asset_id: int, body: dict):
 
 @app.post("/api/scene/{asset_id}/delete")
 def api_scene_delete(request: Request, asset_id: int):
-    ok = Store(DB_PATH).delete_scene_asset(asset_id, customer_id=_cid(request))
+    """DB row 삭제 + 디스크 물리파일(media/poster) 정리.
+    순서: (1) 지우기 전에 경로 확보(지운 뒤엔 알 수 없음) → (2) DB 삭제 →
+    (3) 삭제가 내 자산이었을 때만(True) 파일 unlink. 404(남의 자산·없는 id)면
+    파일에 손대지 않는다 — 소유권 확인 없이 지우면 남의 파일을 지울 위험."""
+    store = Store(DB_PATH)
+    asset = store.get_scene_asset(asset_id, customer_id=_cid(request))
+    ok = store.delete_scene_asset(asset_id, customer_id=_cid(request))
     if not ok:
         return JSONResponse(status_code=404, content={"ok": False, "error": "자산 없음"})
+    if asset:
+        for path_key in ("media_path", "poster_path"):
+            p = asset.get(path_key)
+            if not p:
+                continue
+            try:
+                Path(p).unlink()
+            except OSError:
+                # 파일이 이미 없거나 권한 문제여도 DB 삭제는 끝났으므로 요청은 성공 처리
+                pass
     return {"ok": True}
 
 

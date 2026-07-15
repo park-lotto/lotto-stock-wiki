@@ -1,4 +1,5 @@
 import re
+from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 from shopping_shorts import app as app_mod
@@ -168,9 +169,57 @@ def test_update_edits_tags(client, tmp_path):
 
 def test_delete_removes(client, tmp_path):
     aid = _mk_asset(client, tmp_path)
+    media = Path(Store(app_mod.DB_PATH).get_scene_asset(aid)["media_path"])
+    assert media.exists()
 
     assert client.post(f"/api/scene/{aid}/delete").json()["ok"] is True
     assert Store(app_mod.DB_PATH).get_scene_asset(aid) is None
+    assert not media.exists()          # 물리 파일도 같이 지워져야 한다(디스크 누수 버그 회귀)
+
+
+def test_delete_removes_poster_too(client, tmp_path):
+    d = tmp_path / "scene_assets"
+    d.mkdir(parents=True, exist_ok=True)
+    media = d / "poster1.mp4"
+    poster = d / "poster1.jpg"
+    media.write_bytes(b"video")
+    poster.write_bytes(b"jpg")
+    aid = Store(app_mod.DB_PATH).add_scene_asset({
+        "asset_type": "overlay", "media_path": str(media), "poster_path": str(poster),
+        "title": "포스터있음"})
+
+    assert client.post(f"/api/scene/{aid}/delete").json()["ok"] is True
+    assert not media.exists()
+    assert not poster.exists()
+
+
+def test_delete_of_other_customers_asset_leaves_files(client, tmp_path):
+    # 남의 자산(customer_id 다름)은 404여야 하고, 그 파일은 절대 지워지면 안 된다.
+    d = tmp_path / "scene_assets"
+    d.mkdir(parents=True, exist_ok=True)
+    media = d / "other.mp4"
+    media.write_bytes(b"video")
+    aid = Store(app_mod.DB_PATH).add_scene_asset(
+        {"asset_type": "clip", "media_path": str(media), "title": "남의것"},
+        customer_id=999)
+
+    r = client.post(f"/api/scene/{aid}/delete")
+
+    assert r.status_code == 404
+    assert media.exists()                          # 파일이 그대로 남아있어야 한다
+    assert Store(app_mod.DB_PATH).get_scene_asset(aid, customer_id=999) is not None
+
+
+def test_delete_ok_when_file_already_missing(client, tmp_path):
+    # 파일이 디스크에서 이미 사라져도(수동 정리 등) 삭제 요청 자체는 500 없이 성공해야 한다.
+    aid = _mk_asset(client, tmp_path)
+    media = Path(Store(app_mod.DB_PATH).get_scene_asset(aid)["media_path"])
+    media.unlink()
+
+    r = client.post(f"/api/scene/{aid}/delete")
+
+    assert r.status_code == 200
+    assert r.json()["ok"] is True
 
 
 def test_media_serves_file(client, tmp_path):
