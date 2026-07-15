@@ -1239,10 +1239,14 @@ async function openScriptModal(i){
   document.getElementById('pmResults').innerHTML='<div class="hint">⏳ 대본 추출 중… (영상당 10~30초)</div>';
   try{
     const r=await fetch('/api/produce/extract_from_url',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({url:it.url, shortcode:it.shortcode||undefined, category:it.category||undefined})});
+      body:JSON.stringify({url:it.url, shortcode:it.shortcode||undefined, category:it.category||undefined,
+        caption:it.caption||undefined, name:it.name||undefined})});
     const d=await r.json();
     if(!d.ok){ document.getElementById('pmResults').innerHTML=`<div class="hint" style="color:var(--fire)">${esc(d.error||'추출 실패')}</div>`; return; }
-    it.pickScript=true; renderPool(); saveWork();
+    it.pickScript=true;
+    PM_CATEGORY=d.category||''; PM_BASE_STRUCT=d.structure||null;
+    it.category=d.category;  // saveScriptToWiki가 src.category로 읽어 prompt 폴백 없이 저장
+    renderPool(); saveWork();
     PM_BASE_SCRIPT=d.full_text||'';
     document.getElementById('pmResults').innerHTML=`<div class="hint">✅ 원본 대본 확보. 아래에서 요소를 조절해 새 초안을 만들거나, <button class="btn-next" style="padding:4px 10px" onclick="pmUseRaw()">원본 대본 그대로 확정 →</button></div>`;
     await pmLoadElementOptions(PM_CATEGORY);

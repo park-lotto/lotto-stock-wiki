@@ -20,6 +20,7 @@ from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
 from shopping_shorts.frame_extract import download_video, extract_frames, extract_frame_at
 from shopping_shorts.script_extract import extract_script
 from shopping_shorts.structure_analyze import analyze_structure
+from shopping_shorts.categorize import categorize
 from shopping_shorts import script_generate
 from shopping_shorts.apify_client import fetch_single_reel, fetch_reels, fetch_profiles
 from shopping_shorts import discovery, instagram_search
@@ -523,23 +524,43 @@ def api_extract_script(shortcode: str):
 
 @app.post("/api/produce/extract_from_url")
 def api_produce_extract_from_url(body: dict):
-    """영상 URL로 직접 대본 추출(영상제작소 역할배정 '대본용'). body: {url, caption?, shortcode?, category?}.
+    """영상 URL로 직접 대본 추출(영상제작소 역할배정 '대본용'). body: {url, caption?, shortcode?, category?, name?}.
 
     /api/extract_script는 현재 레퍼런스 랭킹 run(last_run)에서만 shortcode를 찾아,
     즐겨찾기에 예전 run 때 담긴 영상은 'last_run에 없음'으로 실패한다(2026-07-14 실버그).
     여기선 last_run을 안 거치고 저장된 URL을 download_any로 바로 받아 추출 → run 무관.
-    shortcode가 있으면 대본 캐시(get_script/save_script)를 재사용해 재클릭을 즉시화한다.
-    category가 실리면 같이 저장(요소 학습·element_options 조회의 그룹핑 키, 2026-07-15
-    영상제작소 대본뽑기 모달 연동 — 없으면 None으로 저장돼도 무해)."""
+    shortcode가 있으면 대본 캐시(get_extract/save_script)를 재사용해 재클릭을 즉시화한다.
+
+    2026-07-15(Task 6, I-1·I-2 배선 수정): 즐겨찾기 HANDOFF엔 category가 없다(name·caption뿐).
+    category 없인 /api/wiki/element_options이 옵션 0개를 반환해 대본뽑기 모달의 학습소재
+    선택 기능이 완전히 무력화됐다(라이브 실측). 우선순위 body.category → 저장된
+    get_extract().category → categorize(name, caption)(레퍼런스 랭킹과 동일 함수) → None
+    으로 고정 해결한다. structure도 get_extract()가 이미 반환하므로 같이 실어 보낸다
+    (없으면 analyze_structure 1회로 채우고 캐시 — 다음부터 재분석 없이 재사용,
+    extracts_missing_structure 백필 대상에서도 빠짐). analyze_structure는 Gemini 호출이라
+    실패할 수 있으나 대본 추출 응답 자체는 항상 성공시킨다(structure=None 폴백)."""
     url = (body.get("url") or "").strip()
     if not url:
         return JSONResponse(status_code=422, content={"ok": False, "error": "url 필요"})
     code = (body.get("shortcode") or "").strip() or hashlib.sha1(url.encode()).hexdigest()[:12]
-    category = (body.get("category") or "").strip() or None
+    body_category = (body.get("category") or "").strip() or None
+    name = body.get("name") or ""
     store = Store(DB_PATH)
-    cached = store.get_script(code)
+    cached = store.get_extract(code)
     if cached:
-        return {"ok": True, "cached": True, **cached}
+        caption_for_infer = body.get("caption") or cached.get("full_text", "")
+        category = body_category or cached.get("category") or categorize(name, caption_for_infer) or None
+        if not cached.get("category") and category:
+            store.save_script(code, cached, category=category)  # 다음 클릭부터 안정
+        structure = cached.get("structure")
+        if not structure:
+            try:
+                structure = analyze_structure(cached.get("full_text", "")) or None
+            except Exception:  # noqa: BLE001 — 구조분석 실패해도 대본 응답은 성공시킨다
+                structure = None
+            if structure:
+                store.save_extract_structure(code, structure)
+        return {"ok": True, "cached": True, **cached, "category": category, "structure": structure}
     work_dir = _FIND_TMP_DIR / hashlib.sha1(code.encode()).hexdigest()[:16]
     try:
         video_path, dl_caption = download_any(url, str(work_dir))
@@ -555,8 +576,16 @@ def api_produce_extract_from_url(body: dict):
         return JSONResponse(status_code=500, content={"ok": False, "error": msg})
     if not result.get("full_text") and not result.get("segments"):
         return JSONResponse(status_code=502, content={"ok": False, "error": "대본 추출 실패 — 잠시 후 재시도"})
+    category = body_category or categorize(name, caption) or None
     store.save_script(code, result, category=category)
-    return {"ok": True, "cached": False, **result}
+    structure = None
+    try:
+        structure = analyze_structure(result.get("full_text", "")) or None
+    except Exception:  # noqa: BLE001 — 구조분석 실패해도 대본 응답은 성공시킨다
+        structure = None
+    if structure:
+        store.save_extract_structure(code, structure)
+    return {"ok": True, "cached": False, **result, "category": category, "structure": structure}
 
 
 def _relearn_category(db_path, category):
