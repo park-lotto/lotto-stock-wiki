@@ -214,13 +214,16 @@ def _emotion_arc(text, cfg, ctx):
 
 
 def _tag_for(ctx):
-    """정본 role → 태그. 미지 role은 경고 후 위치기반 폴백."""
+    """정본 role → 태그. 미지 role은 위치기반으로 폴백.
+
+    ⚠️ 경고는 여기서 내지 않는다(Critical1 수정) — 이 함수는 emotion_arc 스테이지가
+    ON이고 intensity/캡 조건을 통과했을 때만 호출되므로, 감정태그를 끈 상태에서는
+    호출 자체가 안 돼 경고가 조용히 사라진다. 경고는 `naturalize_detail`이 스테이지
+    루프를 돌기 전에 1회 판정한다(감정태그 여부와 무관한 데이터 품질 사실이므로)."""
     raw = ctx.get("beat_role")
     canon = normalize_role(raw)
     if canon:
         return _ARC_BY_ROLE[canon]
-    if raw:
-        ctx["warnings"].append(f"미지 role '{raw}' — 위치기반으로 폴백함(별칭표 추가 검토)")
     if ctx.get("beat_index") is None or not ctx.get("beat_total"):
         return None
     n = max(1, ctx["beat_total"] - 1)
@@ -262,6 +265,10 @@ def naturalize_detail(text, profile=None, *, beat_role=None, beat_index=None, be
     p = merge_profile(profile)
     ctx = {"beat_role": beat_role, "beat_index": beat_index, "beat_total": beat_total,
            "caps": p.get("caps", {}), "applied": {}, "warnings": []}
+    # role 정규화 실패는 감정태그 슬라이더와 무관한 데이터 품질 사실이다(Critical1) —
+    # 스테이지 루프(emotion_arc on/intensity/캡에 종속) 밖에서 1회 판정·경고한다.
+    if beat_role and normalize_role(beat_role) is None:
+        ctx["warnings"].append(f"미지 role '{beat_role}' — 위치기반으로 폴백함(별칭표 추가 검토)")
     out = text
     for name, fn in _STAGES:
         cfg = p.get(name, {})
