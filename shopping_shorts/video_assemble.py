@@ -14,6 +14,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import textwrap
 import uuid
 from pathlib import Path
@@ -531,13 +532,19 @@ def _fixed_drawtext(spec, work, key, default_color="0xFFFFFF"):
     return ":".join(parts)
 
 
-def _headcopy_drawtext_parts(hc, work):
-    """헤드카피(고정 타이틀) drawtext 필터 리스트 — _segmented_drawtext 래퍼(기본색 오렌지).
-    hc['highlight_rules']가 있으면 단어별 강조, 없으면 세그먼트 1개(기존과 동일)."""
-    return _segmented_drawtext(
+def _headcopy_drawtext_parts(hc, work, enable=None):
+    """헤드카피 drawtext 필터 리스트 — _segmented_drawtext 래퍼(기본색 오렌지).
+    hc['highlight_rules']가 있으면 단어별 강조, 없으면 세그먼트 1개(기존과 동일).
+    enable(ffmpeg between 식)이 주어지면 노출 구간을 제한한다(팩 headcopy.policy=hook_only).
+    None이면 기존대로 영상 전체 고정 표시.
+    """
+    parts = _segmented_drawtext(
         hc.get("text", ""), hc, work, "hc", hc.get("x", 50), hc.get("y", 14),
         highlight_rules=hc.get("highlight_rules"), default_color="0xFF8800",
     )
+    if not enable:
+        return parts
+    return [f"{p}:enable='{enable}'" for p in parts]
 
 
 def _merge_highlight_rules(headcopy, caption_style, deco):
@@ -593,6 +600,8 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         except OSError:
             font = None
     if not font:
+        print("[motion] 폰트 미해결 — 자막·모션·색감·오버레이·BGM 전부 스킵하고 원본 복사",
+              file=sys.stderr)
         shutil.copy(in_video, out_path)
         return str(out_path)
     headcopy, caption_style = _merge_highlight_rules(headcopy, caption_style, deco)
@@ -606,7 +615,9 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         filters.extend(_caption_drawtexts(b["narration"], b["dur"], work, b["beat_idx"],
                                           b["t0"], caption_style))
     if headcopy and (headcopy.get("text") or "").strip():
-        filters.extend(_headcopy_drawtext_parts(headcopy, work))  # 항상 표시(고정 타이틀) — enable 없음
+        # enable 없으면 전체 표시(기존). 팩이 hook_only면 렌더 파생값 _headcopy_enable이 온다.
+        hc_enable = ((deco or {}).get("motion") or {}).get("_headcopy_enable")
+        filters.extend(_headcopy_drawtext_parts(headcopy, work, enable=hc_enable))
     # 꾸미기 장식(deco): 추가 텍스트(여러 개) + 워터마크 닉네임. 모두 고정 drawtext.
     deco = deco or {}
     for i, t in enumerate(deco.get("extra_texts") or []):
