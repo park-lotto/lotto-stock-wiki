@@ -1390,7 +1390,7 @@ async function saveScriptToWiki(btn){
     const d=await (await fetch('/api/produce/save_to_wiki',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({url:src.url, shortcode:src.shortcode||undefined, script_text:STATE.script,
         category:category||undefined, name:src.name||undefined, video_url:src.video_url||src.url})})).json();
-    if(!d.ok){ alert(d.error||'저장 실패'); return; }
+    if(!d.ok){ alert(d.error||'저장 실패'); btn.textContent=o; return; }
     btn.textContent='✓ 위키에 저장됨(학습 반영)'; btn.classList.add('sent');
   }catch(e){ alert('네트워크 오류'); btn.textContent=o; }
   finally{ btn.disabled=false; }
