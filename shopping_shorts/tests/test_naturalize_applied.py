@@ -46,7 +46,9 @@ def test_applied_does_not_lie_when_total_tag_cap_removes_our_tag():
     # applied=={'fillers': 1}이 되어 emotion_arc와 무관한 이유로 이 단언이 깨진다.
     # 이 테스트가 실제로 보장하려는 건 "emotion_arc가 거짓 카운트를 안 남긴다"뿐이다.
     assert "emotion_arc" not in d["applied"]    # emotion_arc 키 자체가 없어야 함(계약: 0=기록없음)
-    assert d["text"] == "음, 지금 확인해보세요."   # 태그만 빠지고 나머지 스테이지는 그대로
+    # Task 3: endings가 기본 강도(0.3)에서도 마침표 1개를 …로 바꾸도록 배선됐다
+    # (이전엔 내림 계산이라 후보 1개면 0.3에서 무발동인 죽은 스테이지였다).
+    assert d["text"] == "음, 지금 확인해보세요…"   # 태그만 빠지고 나머지 스테이지는 그대로(endings 적용됨)
 
 
 def test_emotion_arc_tag_survives_total_cap_when_input_has_existing_tag():
@@ -100,7 +102,9 @@ def test_applied_pronunciation_counts_one_for_overlapping_key_pair():
          "fillers": {"on": False}, "emotion_arc": {"on": False}}
     d = naturalize_detail("AI칩 사세요", p)
     assert d["applied"]["pronunciation"] == 1
-    assert d["text"] == "에이아이 칩 사세요"
+    # Task 3: endings(기본 on)가 마침표 없는 "사세요"도 종결어미 후보로 잡아 문미에
+    # …를 붙인다(이전엔 마침표 전용이라 무발동인 죽은 스테이지였다).
+    assert d["text"] == "에이아이 칩 사세요…"
 
 
 def test_pronunciation_dict_is_single_pass_no_chaining():
@@ -128,7 +132,9 @@ def test_applied_pronunciation_ignores_ghost_key_from_chained_replacement():
          "fillers": {"on": False}, "emotion_arc": {"on": False}}
     d = naturalize_detail("AS센터 방문하세요", p)
     assert d["applied"]["pronunciation"] == 1    # 유령 키("에이에스")는 안 셈
-    assert d["text"] == "에이에스 센터 방문하세요"  # 유령 치환으로 도로 뒤집히지 않음
+    # Task 3: endings(기본 on)가 마침표 없는 "방문하세요"도 종결어미 후보로 잡아
+    # 문미에 …를 붙인다(이전엔 마침표 전용이라 무발동인 죽은 스테이지였다).
+    assert d["text"] == "에이에스 센터 방문하세요…"  # 유령 치환으로 도로 뒤집히지 않음
 
 
 def test_applied_phrasing_counts_insertions():
@@ -137,7 +143,9 @@ def test_applied_phrasing_counts_insertions():
          "fillers": {"on": False}, "emotion_arc": {"on": False}}
     d = naturalize_detail("비싸지만 좋은데 사세요", p)
     assert d["applied"]["phrasing"] == 2
-    assert d["text"] == "비싸지만, 좋은데, 사세요"
+    # Task 3: endings(기본 on)가 마침표 없는 "사세요"도 종결어미 후보로 잡아
+    # 문미에 …를 붙인다(이전엔 마침표 전용이라 무발동인 죽은 스테이지였다).
+    assert d["text"] == "비싸지만, 좋은데, 사세요…"
 
 
 def test_normalize_reading_returns_text_and_count_tuple():

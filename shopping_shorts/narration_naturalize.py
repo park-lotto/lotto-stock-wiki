@@ -4,6 +4,7 @@ API·Gemini 무호출. naturalize(text, profile, ...) -> text. 결정적(같은 
 프로파일(dict)이 8스테이지를 구동한다. 규칙 자체는 시작점이고, 실제 정교 튜닝은
 튜닝 작업대에서 프로파일 값(강도·사전)을 조절해 완성한다(스펙 §3)."""
 import copy
+import math
 import re
 
 DEFAULT_PROFILE = {
@@ -73,6 +74,19 @@ def _bump(ctx, name, n=1):
         ctx["applied"][name] = ctx["applied"].get(name, 0) + n
 
 
+def _take_count(n_candidates, intensity):
+    """후보 n개 중 강도 비율만큼 앞에서부터 적용할 개수(결정적).
+
+    올림(ceil)을 쓴다 — 내림이면 후보가 1개인 짧은 문장은 1.0에서만 발동해 슬라이더가
+    계단이 된다(2026-07-15 실측 버그). intensity 0이면 0.
+    """
+    if n_candidates <= 0 or intensity <= 0:
+        return 0
+    if intensity >= 1.0:
+        return n_candidates
+    return min(n_candidates, math.ceil(n_candidates * intensity - 1e-9))
+
+
 def normalize_reading(text):
     """숫자·단위·기호를 한국어 읽기로 바꾼다 → (변환텍스트, 적용횟수).
 
@@ -127,8 +141,9 @@ def _spoken_style(text, cfg, ctx):
             if re.search(a + r"(?=[.!?…]?$)", s):
                 hits.append(i)
                 break
-    # 앞에서부터 intensity 비율만 변환(결정적)
-    take = len(hits) if intensity >= 1.0 else int(len(hits) * intensity + 1e-9)
+    # 앞에서부터 intensity 비율만 변환(결정적) — 올림이라 후보 1개짜리 짧은 문장도
+    # 낮은 강도에서 반영된다(내림이면 0이라 1.0에서만 발동하는 계단이 됨).
+    take = _take_count(len(hits), intensity)
     chosen = set(hits[:take])
     # len(chosen)이 아니라 실제 치환 성공 횟수를 센다(Minor2 재리뷰) — chosen의 모든
     # 셀이 실제로 바뀐다는 건 "히트 판정 루프와 치환 루프가 같은 패턴을 쓰고 모든
@@ -183,10 +198,11 @@ def _phrasing(text, cfg, ctx):
     if intensity <= 0:
         return text
     # 연결어미 + 공백 경계에 쉼표 삽입(이미 쉼표/문장부호가 붙어있으면 skip)
-    # intensity로 삽입할 연결어미 종류 수를 제한(결정적: 앞에서부터).
-    # +0.999 = 올림(ceil): 낮은 강도에서도 최소 1종은 활성(다른 곳의 +1e-9 내림과 대비).
-    take = max(1, int(len(_CONNECTIVES) * intensity + 0.999))
-    active = _CONNECTIVES[:take] if intensity < 1.0 else _CONNECTIVES
+    # intensity로 삽입할 연결어미 종류 수를 제한(결정적: 앞에서부터). _take_count가
+    # 이미 올림(ceil)이라 낮은 강도에서도 최소 1종은 활성 — max(1, ...)은 intensity==0
+    # 방어용(위에서 이미 걸러지지만 이중 안전장치).
+    take = max(1, _take_count(len(_CONNECTIVES), intensity))
+    active = _CONNECTIVES[:take]
     n = 0
     for c in sorted(active, key=len, reverse=True):
         text, k = re.subn(r"(" + c + r")(\s+)(?=[^\s,.!?…])", r"\1,\2", text)
@@ -195,21 +211,30 @@ def _phrasing(text, cfg, ctx):
     return text
 
 
+# 종결어미(마침표 없이 끝나는 대본에서도 끝음을 흐릴 수 있게). 튜닝 코퍼스엔 마침표가
+# 없고 실제 대본엔 있다 — 양쪽 다 동작해야 작업대에서 들은 것이 실제와 같아진다.
+_ENDING_TAIL = re.compile(r"(요|죠|다)(?=\s|$)")
+
+
 def _endings(text, cfg, ctx):
     intensity = cfg.get("intensity", 0.3)
     if intensity <= 0:
         return text
-    # 마침표 위치를 앞에서부터 intensity 비율만 '…'로(결정적)
-    positions = [m.start() for m in re.finditer(r"\.(?=\s|$)", text)]
-    take = int(len(positions) * intensity + 1e-9)
-    take = len(positions) if intensity >= 1.0 else take
-    chosen = set(positions[:take])
-    out = []
-    for i, ch in enumerate(text):
-        out.append("…" if (ch == "." and i in chosen) else ch)
-    # _bump는 Task 3에서 배선 예정(현재 미배선 — 죽은 스테이지 아님. voice-task-2-brief
-    # §Step3: "_endings·_fillers·_emotion_arc·_intonation은 Task 3~6에서 각자 배선").
-    return "".join(out)
+    # 후보: ① 마침표 ② 마침표 없는 종결어미. 위치 순으로 앞에서부터 강도 비율만.
+    cands = [(m.start(), m.end(), "dot") for m in re.finditer(r"\.(?=\s|$)", text)]
+    cands += [(m.start(), m.end(), "tail") for m in _ENDING_TAIL.finditer(text)]
+    cands.sort()
+    take = _take_count(len(cands), intensity)
+    if take <= 0:
+        return text
+    # 오프셋이 밀리지 않도록 뒤에서부터 적용
+    for start, end, kind in sorted(cands[:take], key=lambda c: c[0], reverse=True):
+        if kind == "dot":
+            text = text[:start] + "…" + text[end:]
+        else:
+            text = text[:end] + "…" + text[end:]
+    _bump(ctx, "endings", take)
+    return text
 
 
 def _fillers(text, cfg, ctx):
