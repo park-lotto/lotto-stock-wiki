@@ -105,13 +105,29 @@ def test_id없는_항목은_무시(tmp_path):
 
 
 def test_실제_packs_json이_로드되고_스키마를_지킨다():
+    from shopping_shorts.motion_assets import load_manifest
+
     packs = load_packs()
     assert packs, "assets/motion/packs.json이 비었다"
+    manifest = load_manifest()
     for pid, p in packs.items():
         assert p["id"] == pid
         assert p.get("name")
         assert p.get("intensity") in ("low", "mid", "high")
         for key in ("transition", "sticker"):
             sub = p.get(key) or {}
-            if sub:
-                assert sub.get("policy") in ("every_beat", "hook_climax", "none")
+            if not sub:
+                continue
+            assert sub.get("policy") in ("every_beat", "hook_climax", "none")
+            asset_id = sub.get("asset_id")
+            if asset_id:
+                assert asset_id in manifest, (
+                    f"{pid}.{key}.asset_id={asset_id!r}가 manifest.json에 없다"
+                    " — resolve_layers가 조용히 skip해 모션이 안 나온다"
+                )
+            if "dur" in sub:
+                dur = sub["dur"]
+                assert isinstance(dur, (int, float)) and not isinstance(dur, bool), (
+                    f"{pid}.{key}.dur={dur!r}는 수치형이어야 한다"
+                    " (문자열이면 build_plan의 float()에서 ValueError)"
+                )
