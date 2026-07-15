@@ -1,5 +1,6 @@
 from shopping_shorts.narration_naturalize import (
-    naturalize_detail, _tag_priority, _role_tag_rank, _TAG_ROLE_PRIORITY,
+    naturalize_detail, _tag_priority, _tag_priority_taggable, _role_tag_rank,
+    _TAG_ROLE_PRIORITY, _ARC_BY_ROLE,
 )
 
 ROLES = ["훅", "페인포인트", "반전", "실용", "CTA"]
@@ -61,11 +62,35 @@ def _tagged_count(intensity):
 
 
 def test_role_tag_rank_excludes_painpoint_and_ranks_taggable_roles():
-    """페인포인트는 순위가 없다(예산을 소비하지 않음) — 태그 가능한 4개 role만 순위를 갖는다."""
+    """페인포인트는 순위가 없다(예산을 소비하지 않음) — 태그 가능한 4개 role만 순위를 갖는다.
+
+    (재리뷰 Important1) 이전엔 마지막 단언이
+    `[_role_tag_rank(r) for r in _TAG_ROLE_PRIORITY] == [0, 1, 2, 3]`였다 —
+    `_role_tag_rank`는 `_TAG_ROLE_PRIORITY.index(r)`라서 리스트를 자기 자신으로
+    인덱싱하는 꼴이라 **순서와 무관하게 항상 [0,1,2,3]**이 나온다. 즉 순서를
+    `["실용","반전","CTA","훅"]`으로 뒤섞은 뮤턴트에서도 이 단언은 그대로 통과했고,
+    그 뮤턴트에서는 강도 0.3(정본 5비트)일 때 CTA가 태그를 잃는 실제 결함이
+    있었는데도 전체 스위트가 초록이었다(재현 확인 완료). 아래 리터럴 고정 +
+    블랙박스 검증으로 대체한다."""
     assert _role_tag_rank("페인포인트") is None
     assert _role_tag_rank(None) is None
     assert _role_tag_rank("모르는역할") is None
-    assert [ _role_tag_rank(r) for r in _TAG_ROLE_PRIORITY ] == [0, 1, 2, 3]
+    # 순서를 리터럴로 고정 — 인덱스 자기참조 항진명제가 아니라 실제 순서를 검증한다.
+    assert _TAG_ROLE_PRIORITY == ["훅", "CTA", "반전", "실용"]
+
+
+def test_role_tag_rank_blackbox_intensity_0_3_tags_hook_and_cta_only():
+    """블랙박스 증명 — 내부 랭크 리스트가 아니라 실제 출력으로 검증한다.
+    정본 5비트에서 intensity=0.3이면 태그 예산은 `_take_count(4, 0.3)`=2 —
+    `_TAG_ROLE_PRIORITY`의 앞 2개(훅, CTA)만 태그를 받아야 한다. `_TAG_ROLE_PRIORITY`
+    순서가 뒤섞이는 뮤턴트가 나면 이 결과 집합이 달라져 이 테스트가 죽는다."""
+    tagged_roles = set()
+    for i, r in enumerate(ROLES):
+        out = naturalize_detail("문장이에요", _p(0.3), beat_role=r,
+                                beat_index=i, beat_total=len(ROLES))
+        if out["applied"].get("emotion_arc", 0):
+            tagged_roles.add(r)
+    assert tagged_roles == {"훅", "CTA"}
 
 
 def test_budget_not_wasted_on_painpoint_no_plateau_0_3_to_0_6():
@@ -114,6 +139,60 @@ def test_unknown_role_fallback_uses_tag_priority_tail_order():
                                    beat_index=3, beat_total=5)
     assert tagged_bi1["applied"].get("emotion_arc", 0) == 1
     assert tagged_bi3["applied"].get("emotion_arc", 0) == 0
+
+
+# ---------------------------------------------------------------------------
+# I2 재수정: free 모드(미지 role) 위치폴백도 페인포인트와 같은 결함이 있었다 —
+# `_tag_priority`의 3번 슬롯(total=5 기준 bi=2)이 `_ARC_BY_POS[2]`=None(무태그)을
+# 가리켜, 강도 0.7~0.8에서 예산만 늘고 실제 태그는 늘지 않았다(2026-07-15 재리뷰).
+# ---------------------------------------------------------------------------
+
+def _tagged_count_unknown_role(intensity, total=5):
+    """미지 role(위치폴백)로 total개 비트를 각각 독립 호출해 태그 붙은 개수."""
+    return sum(
+        naturalize_detail("문장이에요", _p(intensity), beat_role="미지역할",
+                          beat_index=i, beat_total=total)["applied"].get("emotion_arc", 0)
+        for i in range(total)
+    )
+
+
+def test_tag_priority_taggable_excludes_untaggable_position():
+    """total=5에서 bi=2는 `_ARC_BY_POS[2]`=None이라 태그 불가 — 우선순위에서 빠져야 한다."""
+    assert _tag_priority(5) == [0, 4, 1, 2, 3]          # 필터 전(원본) — bi=2 포함
+    assert _tag_priority_taggable(5) == [0, 4, 1, 3]     # 필터 후 — bi=2 제거
+
+
+def test_unknown_role_no_plateau_0_5_to_0_8():
+    """I2 핵심 증명 — free 모드(미지 role) 5비트에서 강도 0.5~0.8 구간이 수정 전엔
+    문자 단위로 완전히 동일했다(3번 슬롯이 무태그 위치를 가리켜 예산만 소비).
+    수정 후 실측값으로 고정한다: 더 이상 네 지점 전부 동일하지 않다."""
+    before_plateau = {0.5: 3, 0.6: 3, 0.7: 3, 0.8: 3}   # 수정 전 실측(재리뷰 재현)
+    after = {iv: _tagged_count_unknown_role(iv) for iv in (0.5, 0.6, 0.7, 0.8)}
+    assert after == {0.5: 3, 0.6: 3, 0.7: 4, 0.8: 4}
+    assert after[0.7] != before_plateau[0.7]
+    assert after[0.8] != before_plateau[0.8]
+    assert after[0.7] > after[0.6]
+    # 단조 비감소(같은 값 유지는 허용, 감소는 없어야 함)
+    vals = [after[iv] for iv in (0.5, 0.6, 0.7, 0.8)]
+    assert vals == sorted(vals)
+
+
+def test_unknown_role_bi3_now_reachable_at_budget_4():
+    """수정 전엔 total=5, n_tagged=4(강도 0.7)에서 bi=3이 태그를 못 받았다 —
+    3번 슬롯을 무태그 위치(bi=2)가 차지했기 때문. 필터링 후 bi=3이 태그를 받는다."""
+    out = naturalize_detail("문장이에요", _p(0.7), beat_role="미지역할",
+                            beat_index=3, beat_total=5)
+    assert out["applied"].get("emotion_arc", 0) == 1
+
+
+# ---------------------------------------------------------------------------
+# Minor2: `_TAG_ROLE_PRIORITY` ↔ `_ARC_BY_ROLE` 동기화 불변식 —
+# 어긋나면 태그 있는 정본 role이 강도 1.0에서도 영구 무태그로 조용히 죽는다
+# (방금 고친 페인포인트 버그의 비의도적 재현).
+# ---------------------------------------------------------------------------
+
+def test_tag_role_priority_matches_arc_by_role_taggable_set():
+    assert {k for k, v in _ARC_BY_ROLE.items() if v} == set(_TAG_ROLE_PRIORITY)
 
 
 # ---------------------------------------------------------------------------

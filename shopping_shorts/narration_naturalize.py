@@ -426,6 +426,10 @@ def _tag_priority(total):
     채운다. role을 모를 때(작업대 옛 코퍼스의 `body`/`build` 등)만 `_emotion_arc`가
     이 순서의 앞 n_tagged개에 현재 비트가 속하는지로 발동 여부를 결정한다.
 
+    ⚠️ 이 함수 자체는 태그 불가능한 위치(`_pos_tag`가 None인 자리)를 걸러내지
+    않는다 — 실제 발동 판정(`_emotion_arc`)은 반드시 `_tag_priority_taggable`을
+    통해 걸러진 순서를 써야 한다(Task5 I2, 아래 참조).
+
     `total <= 0` 분기는 방어 코드다 — 유일한 호출부(`_emotion_arc` 위치폴백 경로)가
     항상 `ctx.get("beat_total") or 1`로 부르므로 실제로는 도달 불가(total>=1 보장).
     """
@@ -436,6 +440,34 @@ def _tag_priority(total):
         order.append(total - 1)
     order += [i for i in range(1, total - 1)]
     return order
+
+
+def _pos_tag(bi, total):
+    """위치기반 폴백 전용 — (비트 인덱스, 비트 총수)만으로 이 위치가 태그 가능한지,
+    가능하다면 무슨 태그인지를 결정적으로 계산한다. 다른 비트의 role을 몰라도
+    이 계산은 항상 가능하다(Task5 I2 재리뷰 — 이 사실이 예산 낭비를 막는 근거).
+
+    `_tag_for`(실제 태그 결정)와 `_tag_priority_taggable`(예산 판정용 필터)이
+    이 하나의 함수를 공유한다 — 두 곳이 각자 계산하면 정의가 어긋날 위험이 있다."""
+    if bi is None or not total:
+        return None
+    n = max(1, total - 1)
+    raw_pos = round((bi / n) * (len(_ARC_BY_POS) - 1))
+    pos = min(len(_ARC_BY_POS) - 1, max(0, raw_pos))
+    return _ARC_BY_POS[pos]
+
+
+def _tag_priority_taggable(total):
+    """위치폴백 전용 우선순위 — `_tag_priority(total)`에서 애초에 태그를 못 받는
+    자리(`_pos_tag`가 None인 위치, 예: total=5일 때 bi=2)를 제거한다(Task5 I2).
+
+    role을 몰라도 "이 위치가 태그 가능한가"는 (bi, total)만으로 결정적으로 계산
+    가능하다 — 다른 비트의 role을 알 필요가 없다. 필터링 전에는 태그 불가능한
+    위치가 우선순위 슬롯을 차지해, 강도를 올려 예산이 그 슬롯까지 늘어나도 실제
+    태그 개수는 그대로인 낭비가 있었다(total=5 실측: 강도 0.7~0.8에서 슬롯
+    [0,4,1,2]까지 배정되지만 2번 슬롯이 무태그라 실제 태그는 [0,1,4]에서 멈춤 —
+    정본 role 경로에서 I1이 고친 것과 근본이 같은 결함)."""
+    return [bi for bi in _tag_priority(total) if _pos_tag(bi, total) is not None]
 
 
 # 정본 role 전용 태그 우선순위(Task5 I1 수정) — **비트 위치가 아니라 role 그 자체의
@@ -490,10 +522,13 @@ def _emotion_arc(text, cfg, ctx):
     #   우연히 페인포인트를 가리켜 예산 1자리를 그대로 버렸다(정본 5비트 기준
     #   0.3~0.6 네 강도의 출력이 문자 단위로 동일했던 실측 결함, tests 참조).
     #
-    #   위치 기반(미지 role): role을 모르면 "이 비트가 태그 가능한 role인지" 자체를
-    #   알 수 없으므로 예산 낭비를 막을 방법이 없다 — 옛 로직을 그대로 유지한다
-    #   (작업대 옛 코퍼스의 `body`/`build`가 실제로 이 경로를 타고, 매끄러운 램프를
-    #   기대하는 회귀 스위트이기도 하다).
+    #   위치 기반(미지 role): role은 몰라도 "이 위치(bi, total)가 태그 가능한가"는
+    #   `_pos_tag`로 결정적으로 계산 가능하다 — 다른 비트의 role을 알 필요가 없다.
+    #   (이전 주석은 여기서 "예산 낭비를 막을 방법이 없다"고 적었는데 틀린 서술이었다
+    #   — Task5 I2 재리뷰로 정정. `_tag_priority_taggable`이 태그 불가능한 위치를
+    #   미리 제거한 순서를 주므로, 정본 role 경로(I1)와 동일한 방식으로 예산 낭비를
+    #   막는다. 작업대 옛 코퍼스의 `body`/`build`가 실제로 이 경로를 타는 회귀
+    #   스위트다.)
     canon = ctx.get("role_canon")
     if canon:
         rank = _role_tag_rank(canon)
@@ -506,7 +541,7 @@ def _emotion_arc(text, cfg, ctx):
         total = ctx.get("beat_total") or 1
         bi = ctx.get("beat_index") or 0
         n_tagged = _take_count(total, intensity)
-        if bi not in _tag_priority(total)[:n_tagged]:
+        if bi not in _tag_priority_taggable(total)[:n_tagged]:
             return text
     tag = _tag_for(ctx)
     if not tag:
@@ -529,12 +564,7 @@ def _tag_for(ctx):
     canon = ctx.get("role_canon")
     if canon:
         return _ARC_BY_ROLE[canon]
-    if ctx.get("beat_index") is None or not ctx.get("beat_total"):
-        return None
-    n = max(1, ctx["beat_total"] - 1)
-    raw_pos = round((ctx["beat_index"] / n) * (len(_ARC_BY_POS) - 1))
-    pos = min(len(_ARC_BY_POS) - 1, max(0, raw_pos))
-    return _ARC_BY_POS[pos]
+    return _pos_tag(ctx.get("beat_index"), ctx.get("beat_total"))
 
 
 def _intonation(text, cfg, ctx):
@@ -586,13 +616,19 @@ def naturalize_detail(text, profile=None, *, beat_role=None, beat_index=None, be
         ctx["warnings"].append(f"미지 role '{beat_role}' — 별칭표에 없음(감정태그 사용 시 위치기반 폴백)")
     # beat_index/beat_total 배선 어긋남도 데이터 품질 사실로 1회 경고한다(Minor,
     # role 경고와 동일 패턴) — 위치기반 폴백(미지 role) 경로에서 bi가 범위를 벗어나면
-    # `_tag_priority(total)`엔 애초에 그 인덱스가 없어 실패 모드가 "잘못된 태그"가
-    # 아니라 "조용한 무태그"가 된다. 호출부 배선 버그가 나면 감정태그가 통째로
-    # 사라지는데 신호가 전혀 없었던 걸 여기서 남긴다.
+    # `_tag_priority_taggable(total)`엔 애초에 그 인덱스가 없어 실패 모드가 "잘못된
+    # 태그"가 아니라 "조용한 무태그"가 된다. 호출부 배선 버그가 나면 감정태그가
+    # 통째로 사라지는데 신호가 전혀 없었던 걸 여기서 남긴다.
+    #
+    # 문구는 결과를 단정하지 않는다(Task5 Minor1 재리뷰) — 정본 role은 이제
+    # `_role_tag_rank`가 role만으로 판정하고 beat_index를 아예 보지 않으므로,
+    # 이 mismatch가 있어도 태그는 정상 발동할 수 있다. "조용히 무발동"이라고
+    # 단정하면 정본 role에서는 거짓이 된다 — 그래서 이 경고는 미지 role
+    # 위치폴백에서만 영향이 있다는 사실만 남기고 결과를 예단하지 않는다.
     if beat_index is not None and beat_total and beat_index >= beat_total:
         ctx["warnings"].append(
             f"beat_index({beat_index}) >= beat_total({beat_total}) — 배선 오류 가능성"
-            "(미지 role 위치폴백 시 감정태그 조용히 무발동)"
+            "(정본 role이면 무관 · 미지 role 위치폴백에서만 감정태그에 영향)"
         )
     out = text
     for name, fn in _STAGES:
