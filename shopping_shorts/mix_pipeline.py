@@ -15,8 +15,9 @@ from shopping_shorts.script_extract import extract_script
 from shopping_shorts.edit_plan import build_edit_plan
 from shopping_shorts import tts
 from shopping_shorts import audio_post
-from shopping_shorts.video_assemble import assemble
+from shopping_shorts.video_assemble import assemble, _beat_timeline
 from shopping_shorts.motion_assets import resolve_layers, DEFAULT_ASSETS_DIR
+from shopping_shorts.motion_packs import build_plan, load_packs
 from shopping_shorts.vmake_client import remove_subtitles
 from shopping_shorts.narration_naturalize import naturalize, merge_profile
 from shopping_shorts import asr_check
@@ -208,6 +209,35 @@ def _vmake_key(store):
     return store.get_setting("vmake_api_key", "") or ""
 
 
+def _apply_motion_pack(deco, caption_style, timeline, packs):
+    """deco.motion.pack_id → 팩 정책으로 레이어·색감·자막효과·헤드카피 노출을 채운다.
+
+    핵심: 레이어는 **저장하지 않고 렌더 시점에 만든다**(비트 경계는 TTS 실길이로 정해지므로).
+    저장되는 건 pack_id뿐. 사용자가 직접 지정한 값(color_filter·caption effect)이 팩보다 우선한다.
+    반환: (deco, caption_style) — 원본을 변형하지 않은 얕은 복사본.
+    """
+    motion = (deco or {}).get("motion") or {}
+    pack_id = motion.get("pack_id")
+    if not pack_id:
+        return deco, caption_style
+    pack = packs.get(pack_id)
+    if not pack:
+        print(f"[motion] 모르는 pack_id={pack_id!r} — 모션 없이 진행", file=sys.stderr)
+        return deco, caption_style
+
+    p = build_plan(pack, timeline)
+    new_motion = {**motion, "layers": p["layers"] + list(motion.get("layers") or [])}
+    if not motion.get("color_filter"):
+        new_motion["color_filter"] = p["color_filter"]
+    if p["headcopy_enable"]:
+        new_motion["_headcopy_enable"] = p["headcopy_enable"]   # DB 저장 안 함(렌더 파생값)
+    deco = {**deco, "motion": new_motion}
+
+    if p["caption_effect"] and not (caption_style or {}).get("effect"):
+        caption_style = {**(caption_style or {}), "effect": p["caption_effect"]}
+    return deco, caption_style
+
+
 def run_render(job_id, db_path, work_root):
     """확인된 EDL을 최종 mp4로 렌더. subtitle_removal이 켜져 있으면 믹스 후
     VMake로 원본 자막을 제거하고 그 위에 우리 자막을 굽는다. 완료 시 status='done'."""
@@ -248,13 +278,20 @@ def run_render(job_id, db_path, work_root):
             op = work / ov["file"]
             if op.exists():
                 deco = {**deco, "overlay": {**ov, "_abspath": str(op)}}
+        # 모션 팩: pack_id → 비트 타임라인으로 레이어 생성(렌더 시점에만 알 수 있음)
+        # pack_id 없으면 _apply_motion_pack이 무변경으로 통과하므로, 그 경우 불필요한
+        # ffprobe 호출(_beat_timeline)을 피한다 — 수동 layers만 쓰는 기존 deco를 위해 필수.
+        caption_style = job.get("caption_style")
+        if (deco.get("motion") or {}).get("pack_id"):
+            timeline = _beat_timeline(plan, tts_paths)
+            deco, caption_style = _apply_motion_pack(deco, caption_style, timeline, load_packs())
         # 모션 레이어(전환·스티커): asset_id → 실경로·기본배치 해석
         motion = deco.get("motion") or {}
         if motion.get("layers"):
             resolved = resolve_layers(motion["layers"], MOTION_ASSETS_DIR)
             deco = {**deco, "motion": {**motion, "layers": resolved}}
         assemble(plan, tts_paths, source_video_paths, str(out_path), clean_fn=clean_fn,
-                 headcopy=job.get("headcopy"), caption_style=job.get("caption_style"),
+                 headcopy=job.get("headcopy"), caption_style=caption_style,
                  deco=deco)
         store.update_mix_job(job_id, status="done", video_path=str(out_path))
     except Exception as e:
