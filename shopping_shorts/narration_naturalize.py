@@ -219,9 +219,12 @@ def _tag_for(ctx):
     ⚠️ 경고는 여기서 내지 않는다(Critical1 수정) — 이 함수는 emotion_arc 스테이지가
     ON이고 intensity/캡 조건을 통과했을 때만 호출되므로, 감정태그를 끈 상태에서는
     호출 자체가 안 돼 경고가 조용히 사라진다. 경고는 `naturalize_detail`이 스테이지
-    루프를 돌기 전에 1회 판정한다(감정태그 여부와 무관한 데이터 품질 사실이므로)."""
-    raw = ctx.get("beat_role")
-    canon = normalize_role(raw)
+    루프를 돌기 전에 1회 판정한다(감정태그 여부와 무관한 데이터 품질 사실이므로).
+
+    canon 판정은 `naturalize_detail`이 ctx["role_canon"]에 1회 미리 넣어둔 값을
+    재사용한다(재리뷰 Minor4 — normalize_role을 호출당 2곳에서 독립 판정하면
+    한쪽만 바뀌었을 때 "경고는 나는데 태그는 정본" 드리프트가 생길 수 있었다)."""
+    canon = ctx.get("role_canon")
     if canon:
         return _ARC_BY_ROLE[canon]
     if ctx.get("beat_index") is None or not ctx.get("beat_total"):
@@ -264,11 +267,19 @@ def naturalize_detail(text, profile=None, *, beat_role=None, beat_index=None, be
     왜 그대로냐"가 화면에서 즉시 드러나게 한다(2026-07-15 사고의 재발방지)."""
     p = merge_profile(profile)
     ctx = {"beat_role": beat_role, "beat_index": beat_index, "beat_total": beat_total,
-           "caps": p.get("caps", {}), "applied": {}, "warnings": []}
+           "caps": p.get("caps", {}), "applied": {}, "warnings": [],
+           "role_canon": normalize_role(beat_role)}
     # role 정규화 실패는 감정태그 슬라이더와 무관한 데이터 품질 사실이다(Critical1) —
     # 스테이지 루프(emotion_arc on/intensity/캡에 종속) 밖에서 1회 판정·경고한다.
-    if beat_role and normalize_role(beat_role) is None:
-        ctx["warnings"].append(f"미지 role '{beat_role}' — 위치기반으로 폴백함(별칭표 추가 검토)")
+    # role_canon도 여기서 1회만 판정해 ctx에 실어두고 _tag_for가 재사용한다(Minor4 —
+    # 이전엔 이 게이트와 _tag_for가 각자 normalize_role을 불러 독립 판정이었다).
+    #
+    # 문구는 "폴백함"(결과)이 아니라 "별칭표에 없음"(사실)을 말한다(재리뷰 Important2) —
+    # 이 경고는 스테이지 루프 밖에서 나오므로 emotion_arc.on=False·intensity<0.15·
+    # max_tags_per_beat<=0·beat_index=None 등 폴백이 실제로는 전혀 일어나지 않는
+    # 경우에도 뜬다. "위치기반으로 폴백함"이라고 단정하면 거짓이 된다.
+    if beat_role and ctx["role_canon"] is None:
+        ctx["warnings"].append(f"미지 role '{beat_role}' — 별칭표에 없음(감정태그 사용 시 위치기반 폴백)")
     out = text
     for name, fn in _STAGES:
         cfg = p.get(name, {})

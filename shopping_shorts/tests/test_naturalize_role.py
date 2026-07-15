@@ -1,4 +1,6 @@
-from shopping_shorts.narration_naturalize import normalize_role, naturalize_detail, merge_profile
+from shopping_shorts.narration_naturalize import (
+    normalize_role, naturalize_detail, merge_profile, _ARC_BY_ROLE,
+)
 
 
 def _only(stage):
@@ -68,18 +70,39 @@ def test_korean_and_english_role_get_same_tag():
     assert ko == en == "[curious] 이거 보세요"
 
 
+def test_arc_table_is_pinned_literally():
+    """정본 role→태그 표를 리터럴로 고정.
+
+    위치폴백(_ARC_BY_POS)과 정본(_ARC_BY_ROLE)의 값 집합이 동일해서, naturalize를
+    거쳐 단언하면 어떤 좌표를 쓰든 한 role은 폴백과 값이 겹쳐 무력해진다(재리뷰 I-1).
+    표 자체를 직접 못박아 그 상호작용을 배제한다."""
+    assert _ARC_BY_ROLE == {
+        "훅": "[curious]",
+        "페인포인트": None,
+        "반전": "[satisfied]",
+        "실용": "[warm]",
+        "CTA": "[excited]",
+    }
+
+
 def test_emotion_arc_tag_table_is_pinned():
-    """Important4: 정본 5개 role → 고정 태그. `_ARC_BY_ROLE`을 통째로 갈아엎어도(예:
-    curious↔excited를 맞바꿔도) 여기서 잡혀야 한다 — 스위트 전체에 이 표를 직접
-    단언하는 테스트가 없었다(hook/cta 두 개만, 값이 아니라 형태만 확인)."""
+    """Important4: 정본 5개 role → 고정 태그(naturalize 경로를 통해 확인).
+
+    이 테스트가 실제로 검증하는 것은 "별칭이 정본 태그로 이어지는 경로"이지 표 자체가
+    아니다 — `_ARC_BY_POS`와 `_ARC_BY_ROLE`의 값 집합이 동일해서, 단일 좌표로 단언하면
+    반드시 한 role이 위치폴백과 값이 겹쳐 그 칸의 단언이 무력해진다(재리뷰 I-1).
+    표 자체의 고정은 `test_arc_table_is_pinned_literally`가 `_ARC_BY_ROLE`을 직접
+    단언해서 담당한다.
+
+    페인포인트만 좌표를 beat_index=0, beat_total=5로 따로 줘서 위치폴백([curious])과
+    정본(None)이 갈리게 한다 — 나머지 4개는 2/5 좌표(폴백 None)를 그대로 쓴다."""
     p = _only("emotion_arc")
     p["emotion_arc"]["intensity"] = 1.0
-    # canon 경로는 beat_index/beat_total과 무관하게 먼저 결정되지만, 위치폴백과
-    # 헷갈리지 않는 좌표(2/5 → 폴백 None)를 그대로 써서 혼선 여지를 없앤다.
-    def tag(role):
-        return naturalize_detail("텍스트", p, beat_role=role, beat_index=2, beat_total=5)["text"]
+    def tag(role, beat_index=2, beat_total=5):
+        return naturalize_detail("텍스트", p, beat_role=role,
+                                 beat_index=beat_index, beat_total=beat_total)["text"]
     assert tag("훅") == "[curious] 텍스트"
-    assert tag("페인포인트") == "텍스트"          # 무태그(None)
+    assert tag("페인포인트", beat_index=0) == "텍스트"          # 무태그(None), 폴백([curious])과 구분
     assert tag("반전") == "[satisfied] 텍스트"
     assert tag("실용") == "[warm] 텍스트"
     assert tag("CTA") == "[excited] 텍스트"
