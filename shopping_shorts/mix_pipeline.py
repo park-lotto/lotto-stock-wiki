@@ -284,7 +284,7 @@ def run_render(job_id, db_path, work_root):
         caption_style = job.get("caption_style")
         if (deco.get("motion") or {}).get("pack_id"):
             timeline = _beat_timeline(plan, tts_paths)
-            deco, caption_style = _apply_motion_pack(deco, caption_style, timeline, load_packs())
+            deco, caption_style = _apply_motion_pack(deco, caption_style, timeline, load_packs(MOTION_ASSETS_DIR))
         # 모션 레이어(전환·스티커): asset_id → 실경로·기본배치 해석
         motion = deco.get("motion") or {}
         if motion.get("layers"):
