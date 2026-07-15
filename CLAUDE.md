@@ -7,21 +7,28 @@
 새 세션이 시작되면 아래 파일을 **순서대로** 반드시 읽어라.
 
 ```
-0. NEXT_SESSION.md (존재하면)                 → ⚡ 최우선 읽기. 미완료 작업 즉시 파악
+0. handoff/{내 트랙}.md                        → ⚡ 최우선. 내 트랙 미완료 작업 파악
+   (트랙을 못 정했으면 NEXT_SESSION.md = 트랙 목록 → 사용자에게 어느 트랙인지 확인)
 1. wiki/BRAIN_INDEX.md                        → 6레이어 분석 프레임워크
 2. channel/yt/yt_전략_채널방향.md              → 채널/서비스 전략 (STOCK BRAIN)
 3. channel/strategy/strategy_remotion_가이드.md → 영상 작성 핵심 가이드
-4. wiki/log.md                                → 최근 작업 이력
+4. py tools/log_view.py --days 7              → 최근 작업 이력(전 트랙 합본)
+   (wiki/log.md는 2026-07-15부로 동결된 아카이브 — 옛 기록 찾을 때만)
 5. wiki/rules/analysis_rules.md               → 분석 행동 규칙
 ```
+
+⚠️ **동시세션**: 한 PC에서 여러 창이 이 폴더를 공유한다. `.git`과 **인덱스까지 공유**하므로
+`git add -A`는 남의 작업을 내 커밋에 싣는다. **내 트랙 파일만** 만지고 커밋해라.
+규칙: `handoff/README.md` / 설계: `docs/superpowers/specs/2026-07-15-동시세션-충돌차단-트랙격리-design.md`
 
 **git pull 후 CLAUDE.md가 변경됐으면 즉시 다시 읽어라.**
 
 읽기 완료 후 출력:
 ```
 📋 세션 시작 요약
-- 최근 작업: {log.md 최근 내용}
-- 미결 작업: {NEXT_SESSION.md 있으면 → 내용 그대로 / 없으면 "없음"}
+- 내 트랙: {트랙명}
+- 최근 작업: {log_view 최근 내용}
+- 미결 작업: {handoff/{내 트랙}.md 의 ⏭ 항목 그대로 / 없으면 "없음"}
 ```
 
 log.md에 `투경 해제 예측 검증` / `종가배팅 시스템` 키워드 있으면 **요약 전에 먼저 표로 보고**.
