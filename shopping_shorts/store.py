@@ -157,6 +157,12 @@ class Store:
                     PRIMARY KEY (customer_id, shortcode)
                 )
             """)
+            # 썸네일 URL 보관(2026-07-15) — 우리믹스 대본선택 리스트가 <video> 첫 프레임에
+            # 의존해 검은칸으로 보이던 문제. 저장 시점 URL을 남겨 <img>로 즉시 그린다.
+            try:
+                c.execute("ALTER TABLE script_wiki ADD COLUMN thumbnail TEXT")
+            except sqlite3.OperationalError:
+                pass  # 이미 있으면(기존 DB) 무시
             # 고객 계정(2026-07-13 멀티테넌시). 비밀번호는 pbkdf2-sha256(솔트별도)로만
             # 저장 — 평문 저장 금지.
             c.execute("""
@@ -862,28 +868,28 @@ class Store:
         with self._conn() as c:
             c.execute(
                 "INSERT INTO script_wiki(customer_id, shortcode, name, category, source_url, full_text, "
-                "segments_json, structure_json, followers, comments, density, saved_at) "
-                "VALUES(?,?,?,?,?,?,?,?,?,?,?,datetime('now')) "
+                "segments_json, structure_json, followers, comments, density, thumbnail, saved_at) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,datetime('now')) "
                 "ON CONFLICT(customer_id, shortcode) DO UPDATE SET name=excluded.name, category=excluded.category, "
                 "source_url=excluded.source_url, full_text=excluded.full_text, segments_json=excluded.segments_json, "
                 "structure_json=excluded.structure_json, followers=excluded.followers, comments=excluded.comments, "
-                "density=excluded.density, saved_at=excluded.saved_at",
+                "density=excluded.density, thumbnail=excluded.thumbnail, saved_at=excluded.saved_at",
                 (customer_id, item.get("shortcode"), item.get("name") or item.get("username"), item.get("category"),
                  item.get("url") or item.get("shortcode"), script.get("full_text", ""),
                  json.dumps(script.get("segments", []), ensure_ascii=False),
                  json.dumps(structure or {}, ensure_ascii=False),
                  int(item.get("followers") or 0), int(item.get("comments") or 0),
-                 float(item.get("density") or 0.0)),
+                 float(item.get("density") or 0.0), item.get("thumbnail") or ""),
             )
 
     def _wiki_row(self, r):
         return {"shortcode": r[0], "name": r[1], "category": r[2], "source_url": r[3],
                 "full_text": r[4], "segments": json.loads(r[5] or "[]"),
                 "structure": json.loads(r[6] or "{}"), "followers": r[7], "comments": r[8],
-                "density": r[9], "saved_at": r[10]}
+                "density": r[9], "saved_at": r[10], "thumbnail": r[11] or ""}
 
     _WIKI_COLS = ("shortcode, name, category, source_url, full_text, segments_json, "
-                  "structure_json, followers, comments, density, saved_at")
+                  "structure_json, followers, comments, density, saved_at, thumbnail")
 
     def wiki_list(self, customer_id=LEGACY_CUSTOMER_ID):
         """이 고객이 위키에 담은 S급 대본 전체(최근 저장순)."""
@@ -1092,7 +1098,11 @@ class Store:
                     default_silence_trim=excluded.default_silence_trim,
                     sample_file=excluded.sample_file, source_ref=excluded.source_ref,
                     origin=excluded.origin, group_id=excluded.group_id, variant=excluded.variant,
-                    naturalize_profile_json=excluded.naturalize_profile_json
+                    -- 동결 프로파일만은 COALESCE로 보존한다. 다른 컬럼과 달리 이 값의 소스오브
+                    -- 트루스는 JSON 파일이 아니라 튜닝 작업대(DB)다. excluded로 덮으면 startup
+                    -- seed_presets가 매 재기동마다 NULL로 지워버린다(2026-07-15 리뷰 S2).
+                    naturalize_profile_json=COALESCE(excluded.naturalize_profile_json,
+                                                     voice_presets.naturalize_profile_json)
             """, (
                 p["preset_id"], p["name"], p.get("one_liner"), p.get("lang", "KR"),
                 p.get("archetype"), p["base_voice_id"],
@@ -1135,13 +1145,17 @@ class Store:
             return [self._row_to_preset(r) for r in c.execute(q, args).fetchall()]
 
     def prune_voice_presets(self, keep_preset_ids):
-        """curated 파일에서 빠진(더 이상 없는) 프리셋을 DB에서 정리. keep_preset_ids에 없는 행 삭제."""
+        """curated 파일에서 빠진(더 이상 없는) 프리셋을 DB에서 정리. keep_preset_ids에 없는 행 삭제.
+
+        단 origin='curated' 행만 지운다 — 튜닝 작업대가 만든 프리셋(origin='tuned')은 JSON에
+        없으므로, 무조건 삭제하면 재기동 때마다 동결한 프로파일이 행째로 날아간다(리뷰 S2)."""
         keep = list(keep_preset_ids)
         if not keep:
             return
         placeholders = ",".join("?" for _ in keep)
         with self._conn() as c:
-            c.execute(f"DELETE FROM voice_presets WHERE preset_id NOT IN ({placeholders})", keep)
+            c.execute(f"DELETE FROM voice_presets WHERE origin='curated' "
+                      f"AND preset_id NOT IN ({placeholders})", keep)
 
     def get_setting(self, key, default=None):
         """전역 설정값 조회(예: vmake_api_key). 없으면 default."""

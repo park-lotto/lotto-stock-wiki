@@ -52,10 +52,13 @@ function renderStages(){
 function setOn(k,v){profile[k]=profile[k]||{};profile[k].on=v;previewAll();}
 function setInt(k,v){profile[k]=profile[k]||{};profile[k].intensity=parseFloat(v);previewAll();}
 
+// 비트 위치(index/total)는 감정곡선·추임새 스테이지가 쓰는 입력이다. 안 보내면 작업대는
+// 항상 추임새 bank[0]("음")만 들려주는데 렌더는 비트마다 순환해 다른 소리가 난다(리뷰 S6).
+function beatCtx(c){return {beat_role:c.role, beat_index:corpus.indexOf(c), beat_total:corpus.length};}
 async function previewAll(){
  for(const c of corpus){
   const r=await fetch('/api/voice-tune/preview',{method:'POST',headers:{'Content-Type':'application/json'},
-   body:JSON.stringify({text:c.text,profile:withMeta(),beat_role:c.role})});
+   body:JSON.stringify({text:c.text,profile:withMeta(),...beatCtx(c)})});
   const j=await r.json();
   const el=document.getElementById('conv-'+c.id);
   if(el)el.textContent=j.text;
@@ -67,15 +70,23 @@ function renderCards(){
   <div class="card">
    <div class="orig">${c.role} · ${c.text}</div>
    <div class="conv" id="conv-${c.id}"></div>
-   <div class="row"><button onclick="synthOne('${c.id}')">▶ 합성/재롤</button>
+   <div class="row"><button onclick="synthOne('${c.id}')">▶ 합성</button>
+     <button onclick="synthOne('${c.id}',true)">🎲 재롤</button>
      <audio id="au-${c.id}" controls style="height:32px"></audio></div>
    <div class="diff" id="diff-${c.id}"></div>
   </div>`).join('');
 }
-async function synthOne(id){
+let rerolls={};
+async function synthOne(id,reroll){
  const c=corpus.find(x=>x.id===id);
+ if(reroll)rerolls[id]=(rerolls[id]||0)+1;   // nonce ↑ = 캐시 우회 = 진짜 새 take(리뷰 S9)
+ // 성우·감도·속도·무음삭제는 서버가 preset_id로 조회한다(클라 전송 X) — 작업대와 렌더가
+ // 같은 값을 쓰도록 단일 소스로 강제(리뷰 S3/S5).
+ const i=corpus.indexOf(c);
  const r=await fetch('/api/voice-tune/synth',{method:'POST',headers:{'Content-Type':'application/json'},
-  body:JSON.stringify({text:c.text,profile:withMeta(),line_id:id,preset_id:preset.value,beat_role:c.role})});
+  body:JSON.stringify({text:c.text,profile:withMeta(),line_id:id,preset_id:preset.value,
+   ...beatCtx(c),nonce:rerolls[id]||0,
+   previous_text:i>0?corpus[i-1].text:null, next_text:i<corpus.length-1?corpus[i+1].text:null})});
  const j=await r.json();
  document.getElementById('au-'+id).src=j.audio_url+'?t='+Date.now();
  document.getElementById('conv-'+id).textContent=j.text;

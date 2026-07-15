@@ -26,6 +26,7 @@ from shopping_shorts.channels import load_channels
 from shopping_shorts.video_analysis import analyze_video, translate_keyword
 from shopping_shorts.product_identify import fetch_lens_lines, identify_product_from_lines
 from shopping_shorts.search_links import build_search_links, lens_search_url
+from shopping_shorts import mix_pipeline
 from shopping_shorts.mix_pipeline import run_mix_job, run_render, retype_mix_job, _source_video_id, resynth_tts_job
 from shopping_shorts.lens_discover import search_similar_videos, upload_frame
 from shopping_shorts.media_download import resolve_media_url, download_any
@@ -632,7 +633,8 @@ def api_produce_save_to_wiki(request: Request, body: dict, background_tasks: Bac
     저장한다.
 
     body: {url, shortcode?, script_text, structure?, segments?, category?,
-           name?, video_url?, caption?, followers?, comments?, density?}."""
+           name?, video_url?, caption?, followers?, comments?, density?,
+           thumbnail?}."""
     url = (body.get("url") or "").strip()
     script_text = (body.get("script_text") or "").strip()
     if not url or not script_text:
@@ -666,6 +668,7 @@ def api_produce_save_to_wiki(request: Request, body: dict, background_tasks: Bac
         "followers": body.get("followers") or 0,
         "comments": body.get("comments") or 0,
         "density": body.get("density") or 0.0,
+        "thumbnail": body.get("thumbnail") or "",
     }
     store.save_to_wiki(item, script, structure, customer_id=_cid(request))
     store.save_extract_structure(code, structure)
@@ -1188,24 +1191,38 @@ async def api_voice_tune_preview(req: Request):
 
 @app.post("/api/voice-tune/synth")
 async def api_voice_tune_synth(req: Request):
-    """변환텍스트를 N-best 합성 + ASR diff. (변환텍스트,seed,voice) 조합으로 캐시."""
+    """코퍼스 한 줄을 **실제 렌더와 동일한 경로**로 합성 + ASR diff.
+
+    성우·감도·속도·무음삭제·model_id를 전부 preset_id로 서버가 조회해 쓴다 — 클라이언트가
+    일부만 보내던 탓에 작업대는 기본성우(Rachel)·1.0배속·후처리없음으로 합성돼 사장님이
+    "튜닝해서 승인한 소리"와 영상 소리가 딴판이었다(2026-07-15 리뷰 S3/S5/S6/S8).
+    캐시 키에 nonce를 포함해 '재롤'이 실제로 새 take를 뽑게 한다(S9)."""
     body = await req.json()
     profile = body.get("profile") or {}
-    text = _naturalize(body.get("text", ""), profile, beat_role=body.get("beat_role"))
     preset_id = body.get("preset_id", "adhoc")
-    n = int(profile.get("n_best", 1))
-    seed = profile.get("seed")
-    voice_id = body.get("voice_id")
-    settings = body.get("voice_settings")
-    key = hashlib.sha1(f"{text}|{seed}|{voice_id}|{settings}|{n}".encode()).hexdigest()[:16]
+    voice = _voice_snapshot(Store(DB_PATH), {"preset_id": preset_id,
+                                             "speed": body.get("speed"),
+                                             "silence_trim": body.get("silence_trim")})
+    if body.get("speed") is None:      # 프리셋 기본 속도/무음삭제를 그대로 따른다(렌더와 동일)
+        p = Store(DB_PATH).get_voice_preset(preset_id) or {}
+        voice["speed"] = p.get("default_speed", 1.0)
+        voice["silence_trim"] = p.get("default_silence_trim", "off")
+    import json as _json
+    key_src = (f"{body.get('text','')}|{_json.dumps(profile, sort_keys=True, ensure_ascii=False)}"
+               f"|{voice.get('voice_id')}|{voice.get('speed')}|{body.get('nonce','')}")
+    key = hashlib.sha1(key_src.encode()).hexdigest()[:16]
     _TUNE_CACHE.mkdir(parents=True, exist_ok=True)
     out = _TUNE_CACHE / f"{preset_id}_{body.get('line_id', 'x')}_{key}.mp3"
-    if not out.exists():
-        def _ranker(path, t):
-            hyp = asr_check.transcribe(path)
-            return asr_check.mismatch_score(asr_check.diff_words(t, hyp)) if hyp else 0
-        tts.synthesize_best(text, str(out), n=n, base_seed=seed, ranker=_ranker,
-                            voice_id=voice_id, voice_settings=settings, model_id="eleven_v3")
+    if out.exists():
+        text = _naturalize(body.get("text", ""), profile, beat_role=body.get("beat_role"),
+                           beat_index=body.get("beat_index"), beat_total=body.get("beat_total"))
+    else:
+        text = mix_pipeline.synthesize_line(
+            body.get("text", ""), out, voice=voice, profile=profile,
+            beat_role=body.get("beat_role"), beat_index=body.get("beat_index"),
+            beat_total=body.get("beat_total"),
+            previous_text=body.get("previous_text"), next_text=body.get("next_text"),
+        )
     hyp = asr_check.transcribe(str(out))
     diff = asr_check.diff_words(text, hyp) if hyp else {"ok": True, "words": [], "no_asr": True}
     return {"audio_url": f"/api/voice-tune/audio/{out.name}", "text": text, "diff": diff}
@@ -1232,14 +1249,35 @@ async def api_voice_tune_profile_save(preset_id: str, req: Request):
     store = Store(DB_PATH)
     p = store.get_voice_preset(preset_id)
     if not p:
+        # origin='tuned' — prune_voice_presets(curated 전용 삭제)가 이 행을 지우지 않게 한다(리뷰 S2).
         p = {"preset_id": preset_id, "name": preset_id, "lang": "KR",
              "base_voice_id": body.get("voice_id", "v"), "voice_settings": {},
-             "model_id": "eleven_v3"}
+             "model_id": "eleven_v3", "origin": "tuned"}
     prof = dict(body.get("profile") or {})
     prof["_frozen"] = bool(body.get("frozen"))
     p["naturalize_profile"] = prof
     store.upsert_voice_preset(p)
     return {"ok": True}
+
+
+def _voice_snapshot(store, body):
+    """UI 선택(body) + 프리셋 DB → job에 저장할 voice 스냅샷.
+
+    **naturalize_profile·model_id는 반드시 프리셋에서 조회해 넣어야 한다.** 이게 빠지면
+    튜닝 작업대에서 동결한 프로파일이 렌더에 도달하지 못하고, 에러 없이 기본값으로 조용히
+    합성돼 "동결했는데 소리가 그대로"가 된다(2026-07-15 whole-branch 리뷰 S1).
+    미리듣기(/api/mix/voice/preview)도 같은 스냅샷을 써야 미리듣기=렌더가 보장된다(S8)."""
+    preset_id = body.get("preset_id")
+    p = store.get_voice_preset(preset_id) if preset_id else None
+    return {
+        "preset_id": preset_id,
+        "voice_id": body.get("voice_id") or (p or {}).get("base_voice_id"),
+        "settings": body.get("settings") or (p or {}).get("voice_settings"),
+        "speed": body.get("speed", 1.0),
+        "silence_trim": body.get("silence_trim", "off"),
+        "naturalize_profile": (p or {}).get("naturalize_profile"),
+        "model_id": (p or {}).get("model_id") or "eleven_v3",
+    }
 
 
 @app.post("/api/mix/voice")
@@ -1251,13 +1289,7 @@ def api_mix_voice(background_tasks: BackgroundTasks, body: dict):
     job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "job/plan 없음"})
-    voice = {
-        "preset_id": body.get("preset_id"),
-        "voice_id": body.get("voice_id"),
-        "settings": body.get("settings"),
-        "speed": body.get("speed", 1.0),
-        "silence_trim": body.get("silence_trim", "off"),
-    }
+    voice = _voice_snapshot(store, body)
     store.update_mix_job(job_id, voice=voice)
     background_tasks.add_task(resynth_tts_job, job_id, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True}
@@ -1270,15 +1302,17 @@ def api_mix_voice_preview(body: dict):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job or not job.get("edit_plan") or not job["edit_plan"].get("beats"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "plan 없음"})
-    beat0 = job["edit_plan"]["beats"][0]
-    speed = body.get("speed", 1.0)
-    extra = speed / 1.2 if speed > 1.2 else 1.0
+    beats = job["edit_plan"]["beats"]
     d = _MIX_WORK_DIR / job_id / "tts"
     d.mkdir(parents=True, exist_ok=True)
     out = d / "preview.mp3"
-    synthesize_tts(beat0["narration"], str(out), voice_id=body.get("voice_id"),
-                   voice_settings=body.get("settings"), speed=speed)
-    audio_post.post_process(str(out), str(out), tempo=extra, silence_trim=body.get("silence_trim", "off"))
+    # 렌더와 동일한 공유 경로(synthesize_line)로 합성한다 — 직접 synthesize_tts를 부르면
+    # naturalize 미적용·model v2로 나가 "미리듣기랑 영상 소리가 다르다"가 된다(리뷰 S8).
+    mix_pipeline.synthesize_line(
+        beats[0]["narration"], out, voice=_voice_snapshot(Store(DB_PATH), body),
+        beat_role=beats[0].get("role"), beat_index=0, beat_total=len(beats),
+        next_text=beats[1]["narration"] if len(beats) > 1 else None,
+    )
     return FileResponse(str(out), media_type="audio/mpeg")
 
 
@@ -1530,10 +1564,12 @@ async def _auth_guard(request: Request, call_next):
     # 쿠키 없이 fetch해야 해서 예외 처리(2026-07-09, SerpApi 연동 시도 중
     # 401로 전부 막혀있던 것을 발견 — 경로 자체는 path traversal 방어된
     # 랜덤 work_id 해시라 노출 위험 낮음).
-    # /api/voice-tune/*·/voice_tune.html은 보이스 튜닝 작업대(운영자 전용 로컬 도구) —
-    # 별도 로그인 세션 없이도 접근 가능해야 해서 예외 처리(2026-07-15).
-    if (path in _AUTH_ALLOW or path.startswith("/static") or path.startswith("/api/find/frame/")
-            or path.startswith("/api/voice-tune/") or path == "/voice_tune.html"):
+    # ⚠️ /api/voice-tune/*는 인증 예외로 두지 말 것. "운영자 전용 로컬 도구"라는 전제로
+    # allowlist에 있었으나 이 앱은 shoppingshorts.duckdns.org로 공개 서비스 중이라,
+    # 외부인이 /synth를 반복 호출해 ElevenLabs·GROQ 크레딧을 태우고 /profile/{임의id}로
+    # voice_presets에 임의 행을 넣을 수 있었다(2026-07-15 리뷰 S7). 운영자는 대시보드
+    # 로그인 세션으로 접근한다.
+    if path in _AUTH_ALLOW or path.startswith("/static") or path.startswith("/api/find/frame/"):
         return await call_next(request)
     customer_id = _verify_session(request.cookies.get("dash_auth"))
     if customer_id is not None:
