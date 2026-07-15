@@ -597,6 +597,10 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         return str(out_path)
     headcopy, caption_style = _merge_highlight_rules(headcopy, caption_style, deco)
     filters = [f"scale={_OUT_W}:{_OUT_H}:force_original_aspect_ratio=increase,crop={_OUT_W}:{_OUT_H}"]
+    # 색감 필터는 drawtext보다 **앞**에 온다 — 뒤에 두면 자막·헤드카피까지 색보정에 물든다.
+    _color_filter = ((deco or {}).get("motion") or {}).get("color_filter") or ""
+    if _color_filter.strip():
+        filters.append(_color_filter.strip())
     timeline = _beat_timeline(edit_plan, tts_paths)
     for b in timeline:
         filters.extend(_caption_drawtexts(b["narration"], b["dur"], work, b["beat_idx"],
@@ -634,17 +638,15 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     # 모션(전환·스티커 등 타임드 투명 레이어)과 색감 필터
     motion = deco.get("motion") or {}
     motion_layers = [L for L in (motion.get("layers") or []) if L.get("_abspath")]
-    color_filter = (motion.get("color_filter") or "").strip()
     has_motion = bool(motion_layers)
     if not has_bgm and not has_overlay and not has_motion:
-        base_vf = f"{vf},{color_filter}" if color_filter else vf
+        base_vf = vf
         _run_ffmpeg(["ffmpeg", "-y", "-i", str(in_video), "-vf", base_vf, "-r", "30",
                      "-c:v", "libx264", "-c:a", "copy", "-pix_fmt", "yuv420p", str(out_path)],
                     cwd=str(work))
         return str(out_path)
     inputs = ["-i", str(in_video)]
-    base_vf = f"{vf},{color_filter}" if color_filter else vf
-    fc = [f"[0:v]{base_vf}[v0]"]
+    fc = [f"[0:v]{vf}[v0]"]
     vcur, idx = "v0", 1
     if has_overlay:                                   # 이미지 오버레이(로고·뱃지 등)
         inputs += ["-i", ov_path]
