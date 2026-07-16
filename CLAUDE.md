@@ -17,9 +17,34 @@
 5. wiki/rules/analysis_rules.md               → 분석 행동 규칙
 ```
 
-⚠️ **동시세션**: 한 PC에서 여러 창이 이 폴더를 공유한다. `.git`과 **인덱스까지 공유**하므로
-`git add -A`는 남의 작업을 내 커밋에 싣는다. **내 트랙 파일만** 만지고 커밋해라.
-규칙: `handoff/README.md` / 설계: `docs/superpowers/specs/2026-07-15-동시세션-충돌차단-트랙격리-design.md`
+---
+
+## ⚠️ 동시세션 = 트랙마다 **자기 폴더**에서 일한다 (2026-07-16~)
+
+**이 폴더(`로또의 주식`)에서 코드 작업하지 마라.** 여기서 일하면 파일이 디스크에 하나뿐이라
+먼저 커밋하는 세션이 **남의 미완성 코드를 물리적으로 자기 커밋에 담아** 라이브로 내보낸다(흡수).
+규칙으로 못 막는다 — 2026-07-15에 "`git add -A` 금지"를 박은 날 저녁에 흡수가 3번 났다.
+
+```
+py tools/track.py start <트랙명>     # 내 폴더 ../lotto-<트랙명> + track/<트랙명> 브랜치 생성
+   → 그 폴더에서 Claude Code를 새로 열고 거기서 작업·커밋
+py tools/track.py finish <트랙명>    # 게이트 통과해야만 main 병합 → 라이브
+py tools/track.py list              # 열린 트랙 + 얼마나 밀렸는지
+```
+
+- **내 폴더 안에선 `git add -A`도 안전하다** — 남의 파일이 애초에 없다. 커밋은 `track/<트랙명>`으로만 간다.
+- **`finish`가 게이트를 돌린다**: 문법 → `import shopping_shorts.app` → pytest.
+  **"전부 green"이 아니라 "병합 전보다 실패가 늘지 않았나"**로 본다(기준선 10건은 이미 깨져 있다).
+  실패하면 병합을 버리고 **라이브는 무사**하다. 트랙 폴더도 그대로 남는다.
+- **병합은 전용 임시 폴더에서** 한다 → 이 폴더는 안 건드린다. 다른 세션이 여기서 일하고 있어도 상관없다.
+- **동시에 `finish`해도 안전**: git이 두 번째 push를 거절하면 최신 main 위에서 자동 재시도한다.
+  "나 커밋하니까 기다려" 같은 신호등은 필요 없다.
+- ⚠️ **새 폴더는 `shopping_shorts/data/`가 빈 DB**(gitignore). 로컬 데이터가 필요하면 복사해 오거나 서버에서 확인.
+- ⚠️ **오래 끌지 마라.** 태스크 단위로 병합한다. `list`가 5커밋 이상 밀리면 경고한다.
+
+> 아직 이 폴더에서 일하는 중이라면(전환 전 세션): 내 파일만 커밋 → `start`로 폴더 만들고 옮겨라.
+> 규칙: `handoff/README.md` / 설계: `docs/superpowers/specs/2026-07-15-트랙폴더-병합게이트-design.md`
+> (선행 설계 `2026-07-15-동시세션-충돌차단-트랙격리-design.md`의 **페이즈2(락·신호등)는 폐기됨** — 따라가지 마라)
 
 **git pull 후 CLAUDE.md가 변경됐으면 즉시 다시 읽어라.**
 
@@ -49,15 +74,23 @@ log.md에 `투경 해제 예측 검증` / `종가배팅 시스템` 키워드 있
 3. **배포는 자동.** 서버 크론(`deploy/auto_deploy.sh`, 3분)이 새 커밋 감지 시 pull+조건부재시작. 즉 **push까지만 하면 3분 내 자동반영.** 급하면 서버에서 `git pull --ff-only origin main && sudo systemctl restart stockbrain`.
 4. **세션 끝 = 반드시 커밋+푸시.** "커밋할까요?"로 방치 금지. 남기면 다른 세션·PC와 꼬인다.
 5. **동시에 여러 세션/PC가 같은 워킹트리 편집 금지** (커밋 섞임·작업 유실).
-6. **동시 세션 안전 커밋 순서 (충돌 방지 — 이 순서 고정):**
+6. **배포 = `finish`.** 내 트랙 폴더에서 커밋만 하면 라이브로 안 간다(서버는 main만 추적).
    ```
-   ① git add <내 파일만>              # git add -A 금지 (크롤 데이터·런타임파일 섞임)
+   ① (트랙 폴더에서) git add -A → git commit -m "..."   # 내 폴더라 -A 안전
+   ② py tools/track.py finish <트랙명>                   # 게이트 통과해야만 main → 3분 뒤 라이브
+   ```
+   게이트가 막으면 **라이브는 무사**하고 트랙 폴더도 그대로다. 고치고 다시 `finish`.
+   충돌이 나면 트랙 폴더에서 `git fetch origin && git merge origin/main`으로 풀고 다시 `finish`.
+   <details><summary>아직 main 폴더에서 일하는 전환 전 세션이라면 (옛 방식)</summary>
+
+   ```
+   ① git add <내 파일만>              # git add -A 금지 (남의 작업이 실린다)
    ② git commit -m "..."              # 내 작업 먼저 커밋 (원자적 보존)
-   ③ git pull --rebase origin main    # 남의 최신 커밋 위에 내 커밋 재배치 (선형 유지)
-   ④ git push origin main             # 서버 3분 크론이 자동 pull+재시작
+   ③ git pull --rebase origin main    # 남의 최신 커밋 위에 재배치
+   ④ (push는 post-commit 훅이 자동)
    ```
-   ⚠️ **pull을 커밋보다 먼저 하지 마라** — uncommitted 변경 상태의 raw `git pull`은 같은
-   파일 충돌로 막힌다. 반드시 **커밋 → pull --rebase → push**. 커밋 전 `git branch --show-current`=main 확인.
+   ⚠️ pull을 커밋보다 먼저 하지 마라 — uncommitted 상태의 raw `git pull`은 충돌로 막힌다.
+   </details>
 7. CRLF/데이터 노이즈는 `.gitattributes`(eol=lf)로 봉인됨. `raw/`는 git추적 유지(PC간 공유).
 8. **같은 서버(`ubuntu@3.39.179.148`), 같은 repo(`/home/ubuntu/lotto-stock-wiki`)에 서비스 2개.**
    `dashboard/`·`scripts/` 변경 → systemd `stockbrain`(:8090, stockbrain1.duckdns.org) 재시작.
@@ -243,14 +276,16 @@ STEP 3 — 결합 답변
       ⚠️ NEXT_SESSION.md는 목록일 뿐 — 거기 쓰면 타세션과 덮어쓴다
 □ 2. wiki/log.d/{내 트랙}.md 에 1~3줄 추가 (log.md는 동결 아카이브)
 □ 3. memory/ 업데이트 (중요 결정·피드백만)
-□ 4. git add {내 파일만} → git commit -m "..." → git pull --rebase
-      ⚠️ git add -A 절대 금지 — 6세션이 .git·인덱스를 공유해 남의 변경이 내 커밋에 실린다
-      ⚠️ push는 post-commit 훅이 자동 (커밋 = 즉시 라이브)
-□ 5. 커밋 후 확인 후 출력:
-      ✅ 마감 완료 / 오늘 한 것 / 다음 할 것 / push 완료
+□ 4. (내 트랙 폴더에서) git add -A → git commit -m "..."     # 내 폴더라 -A 안전
+□ 5. 작업이 끝났으면 py tools/track.py finish {내 트랙}      # 게이트 통과 시 main → 3분 뒤 라이브
+      ⚠️ 아직 진행 중이면 finish 하지 마라 — 커밋만 해두면 트랙 브랜치에 남는다(유실 없음)
+      ⚠️ main 폴더에서 일하는 전환 전 세션이라면: git add {내 파일만}(‑A 금지) → commit → pull --rebase
+□ 6. 확인 후 출력:
+      ✅ 마감 완료 / 오늘 한 것 / 다음 할 것 / 커밋(+병합 여부)
 ```
 
-⚠️ **git push 없이 끝내면 다른 PC에서 못 이어간다. push 완료 필수.**
+⚠️ **커밋 없이 끝내면 다른 PC에서 못 이어간다.** 트랙 브랜치 커밋은 origin에 백업되니
+`finish` 안 해도 유실은 없다 — 단 **`finish` 전엔 라이브에 안 간다**(서버는 main만 추적).
 
 ---
 
