@@ -220,6 +220,76 @@ def test_list_makes_output_safe(repo, monkeypatch):
     assert called == ["list"], "list_tracks()가 출력 안전화를 안 했다"
 
 
+def test_main_worktree_found_from_inside_a_track_folder(repo):
+    """★finish는 main 워크트리를 알아야 한다. __file__ 기준으로 잡으면 트랙 폴더 안에서
+    부를 때 그 폴더의 복사본을 가리켜 깨진다(2026-07-16 실측: worktree_path가 존재하지도
+    않는 .tracks/lotto-<이름>을 가리켰다). git에게 물어야 한다."""
+    track.start("보이스", repo=repo)
+    wt = track.worktree_path("보이스", repo)
+    assert track.main_worktree(wt) == repo.resolve(), "트랙 폴더 안에서 main을 못 찾는다"
+    assert track.main_worktree(repo) == repo.resolve()
+    sub = wt / "sub" / "deep"
+    sub.mkdir(parents=True)
+    assert track.main_worktree(sub) == repo.resolve(), "하위폴더에서도"
+
+
+def test_finish_keeps_the_track_folder(repo):
+    """★설계는 '태스크 단위로 자주 병합'을 요구한다. 병합할 때마다 883MB 체크아웃을
+    지웠다 다시 만들면 그 요구와 정면으로 안 맞는다. 폴더는 남기고 재사용한다."""
+    _make_track_commit(repo, "보이스")
+    track.finish("보이스", repo=repo, gate=_Gate())
+    assert track.worktree_path("보이스", repo).exists(), "★폴더를 또 지웠다"
+    assert track.branch_exists(repo, "track/보이스"), "★브랜치를 또 지웠다"
+
+
+def test_finish_levels_track_branch_with_new_main(repo):
+    """병합 후 트랙 브랜치는 새 main과 같은 자리에 서야 다음 작업을 바로 얹는다."""
+    _make_track_commit(repo, "보이스")
+    track.finish("보이스", repo=repo, gate=_Gate())
+    assert track.ahead_count(repo, "track/보이스") == 0, "★병합했는데 아직 앞서 있다"
+    wt = track.worktree_path("보이스", repo)
+    assert _git(wt, "rev-parse", "HEAD").strip() == _origin_head(repo)
+
+
+def test_finish_does_not_destroy_ignorable_edits_in_track_folder(repo):
+    """★ff 병합이어야 하는 이유 — `reset --hard`로 맞추면 안 되는 근거.
+
+    함정: **미추적 파일로는 이걸 증명 못 한다.** reset --hard는 미추적 파일을 안 지우므로
+    그런 테스트는 reset 뮤턴트가 그대로 살아남는다(실측으로 확인함 — 내 첫 테스트가 딱 그
+    죽은 테스트였다). 진짜 차이는 **추적되면서 무시대상인 파일의 수정분**이다:
+    _preflight가 통과시키고 → reset --hard는 조용히 날리고 → ff는 보존한다.
+    """
+    wt = _make_track_commit(repo, "보이스")
+    raw = wt / "raw"
+    raw.mkdir()
+    (raw / "크롤.md").write_text("커밋된 크롤 데이터\n", encoding="utf-8")
+    _git(wt, "add", "raw/크롤.md")
+    _git(wt, "commit", "-m", "크롤 데이터 추가")
+    # 이제 추적되는 파일을 고친다 → " M raw/크롤.md" = _preflight가 무시대상으로 통과시킴
+    (raw / "크롤.md").write_text("작업 중인 수정분\n", encoding="utf-8")
+
+    track.finish("보이스", repo=repo, gate=_Gate())
+
+    assert (raw / "크롤.md").read_text(encoding="utf-8") == "작업 중인 수정분\n", \
+        "★무시대상 수정분이 날아갔다 — reset --hard로 되돌아갔나?"
+
+
+def test_close_removes_folder_and_branch(repo):
+    _make_track_commit(repo, "보이스")
+    track.finish("보이스", repo=repo, gate=_Gate())
+    track.close("보이스", repo=repo)
+    assert not track.worktree_path("보이스", repo).exists()
+    assert not track.branch_exists(repo, "track/보이스")
+
+
+def test_close_refuses_to_throw_away_unmerged_work(repo):
+    """★close는 파괴적이다. 아직 main에 안 들어간 커밋이 있으면 막아야 한다."""
+    _make_track_commit(repo, "보이스")          # 커밋만 하고 finish 안 함
+    with pytest.raises(track.TrackError, match="병합 안 된"):
+        track.close("보이스", repo=repo)
+    assert track.worktree_path("보이스", repo).exists(), "막았으면 폴더도 그대로여야"
+
+
 def test_start_refuses_duplicate(repo):
     track.start("보이스", repo=repo)
     with pytest.raises(track.TrackError, match="이미 있는"):
@@ -237,7 +307,7 @@ def test_finish_commits_when_gate_passes(repo):
     assert rc == 0
     assert _origin_head(repo) != before, "게이트 통과했으면 origin/main에 병합이 올라가야 한다"
     assert (repo / "app.py").read_text(encoding="utf-8") == "VALUE = 2\n", "원본 폴더도 당겨졌어야"
-    assert not track.worktree_path("보이스", repo).exists(), "트랙 폴더 정리됐어야 한다"
+    assert track.worktree_path("보이스", repo).exists(), "폴더는 남아야 한다(close가 지운다)"
 
 
 # ★★ 이 설계의 심장 ★★
