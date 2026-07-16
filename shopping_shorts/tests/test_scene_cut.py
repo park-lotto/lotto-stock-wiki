@@ -51,3 +51,57 @@ def test_video_fps_reads_non_integer_rational(tmp_path):
     fps = scene_cut.video_fps(f)
     assert abs(fps - 24000 / 1001) < 1e-9      # 23.976023976...
     assert fps != 24.0                          # 24로 반올림돼 있으면 실패
+
+
+def _make_three_scene_video(path, fps=30):
+    """색이 확 바뀌는 3장면(각 1초). 경계는 30·60프레임에 있어야 한다.
+
+    ★색 선택 주의: ffmpeg의 scene 점수는 주로 luma(밝기) 차이로 계산된다.
+    CSS "red"(Y≈76)와 "green"(Y≈75)은 밝기가 거의 같아 육안으론 확 바뀌어도
+    scene 점수가 문턱값 0.3을 못 넘는다(실측 확인됨). black/white/red는
+    두 경계 모두 밝기 차가 커서 안정적으로 검출된다."""
+    parts = []
+    for color in ("black", "white", "red"):
+        p = path.parent / f"_{color}.mp4"
+        subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi",
+                        "-i", f"color=c={color}:size=320x568:rate={fps}:duration=1",
+                        "-c:v", "libx264", "-pix_fmt", "yuv420p", str(p)],
+                       check=True, capture_output=True, stdin=subprocess.DEVNULL)
+        parts.append(p)
+    lst = path.parent / "_list.txt"
+    lst.write_text("".join(f"file '{p}'\n" for p in parts), encoding="utf-8")
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0",
+                    "-i", str(lst), "-c", "copy", str(path)],
+                   check=True, capture_output=True, stdin=subprocess.DEVNULL)
+    return path
+
+
+def test_detect_cuts_returns_frame_pairs_covering_video(tmp_path):
+    f = _make_three_scene_video(tmp_path / "three.mp4")
+    cuts = scene_cut.detect_cuts(f)
+    assert cuts[0][0] == 0                      # 첫 컷은 0프레임부터
+    assert cuts[-1][1] == scene_cut.video_frame_count(f)   # 마지막은 총 프레임까지
+    for a, b in cuts:
+        assert isinstance(a, int) and isinstance(b, int)   # ★초가 아니라 프레임
+        assert b > a
+
+
+def test_detect_cuts_finds_the_two_boundaries(tmp_path):
+    f = _make_three_scene_video(tmp_path / "three.mp4")
+    cuts = scene_cut.detect_cuts(f)
+    starts = [a for a, _ in cuts]
+    assert 30 in starts and 60 in starts        # 색이 바뀌는 지점
+
+
+def test_detect_cuts_drops_fragments_shorter_than_min(tmp_path):
+    f = _make_three_scene_video(tmp_path / "three.mp4")
+    # 최소 2초 → 1초짜리 장면은 전부 탈락, 남는 게 없다
+    assert scene_cut.detect_cuts(f, min_seconds=2.0) == []
+
+
+def test_detect_cuts_never_exceeds_video_frames(tmp_path):
+    # 오디오가 1초 더 긴 영상 — 경계가 비디오 끝을 넘으면 안 된다
+    f = _make_video(tmp_path / "longaudio.mp4", seconds=2, fps=30, longer_audio=1.0)
+    total = scene_cut.video_frame_count(f)
+    for _, b in scene_cut.detect_cuts(f, min_seconds=0.1):
+        assert b <= total

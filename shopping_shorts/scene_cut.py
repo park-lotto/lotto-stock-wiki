@@ -4,7 +4,9 @@
 반올림된 초(4.13)는 '프레임이 없는 시각'이 되고, ffmpeg가 다음 프레임에
 붙이면서 다음 컷의 첫 프레임이 딸려 들어온다(설계 §3.4 실측 증명).
 """
+import re
 import subprocess
+from pathlib import Path
 
 
 def _ffprobe(args):
@@ -39,3 +41,40 @@ def video_frame_count(path):
         return int(raw)
     except ValueError as e:
         raise RuntimeError(f"프레임 수 해석 실패: {raw!r}") from e
+
+
+_PTS_RE = re.compile(r"pts_time:([\d.]+)")
+
+# 다른 트랙(frame_extract.py)이 이미 쓰는 값. 실측상 낮춰도 쓸 만한 구간은
+# 안 늘고 부스러기만 폭증한다(설계 §3.3) — 건드리지 마라.
+DEFAULT_THRESHOLD = 0.3
+MIN_SECONDS = 0.5
+
+
+def _boundary_frames(path, threshold, fps):
+    """showinfo가 stderr로 뱉는 pts_time → 프레임 번호."""
+    r = subprocess.run(
+        ["ffmpeg", "-v", "info", "-i", str(path),
+         "-vf", f"select='gt(scene,{threshold})',showinfo",
+         "-vsync", "vfr", "-f", "null", "-"],
+        capture_output=True, text=True, check=False,
+        stdin=subprocess.DEVNULL)
+    return {round(float(m) * fps) for m in _PTS_RE.findall(r.stderr)}
+
+
+def detect_cuts(path, threshold=DEFAULT_THRESHOLD, min_seconds=MIN_SECONDS):
+    """컷 경계를 프레임 번호로. 반환 (start_frame, end_frame) — end는 미포함.
+
+    ★병합하지 않는다. 짧은 조각을 이웃과 이어붙이면 그 사람의 '편집 결정'까지
+    가져오게 되고(설계 §3.2), 그건 표절 회피(§7)와 정면으로 부딪힌다.
+    min_seconds보다 짧은 건 전환 찌꺼기이므로 그냥 버린다.
+    """
+    if not Path(path).exists():
+        raise RuntimeError(f"소스 없음: {path}")
+    fps = video_fps(path)
+    total = video_frame_count(path)
+    inner = {f for f in _boundary_frames(path, threshold, fps) if 0 < f < total}
+    bounds = [0] + sorted(inner) + [total]
+    floor = round(min_seconds * fps)
+    return [(bounds[i], bounds[i + 1]) for i in range(len(bounds) - 1)
+            if bounds[i + 1] - bounds[i] >= floor]
