@@ -31,7 +31,8 @@ from shopping_shorts.video_analysis import analyze_video, translate_keyword
 from shopping_shorts.product_identify import fetch_lens_lines, identify_product_from_lines
 from shopping_shorts.search_links import build_search_links, lens_search_url
 from shopping_shorts import mix_pipeline
-from shopping_shorts.mix_pipeline import run_mix_job, run_render, retype_mix_job, _source_video_id, resynth_tts_job
+from shopping_shorts.mix_pipeline import (run_mix_job, run_render, run_preview, retype_mix_job,
+                                          _source_video_id, resynth_tts_job)
 from shopping_shorts.lens_discover import search_similar_videos, upload_frame
 from shopping_shorts.media_download import resolve_media_url, download_any
 from shopping_shorts import edit_plan as _edit_plan
@@ -1251,7 +1252,11 @@ def api_mix_status(job_id: str):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
-    return {"ok": True, "status": job["status"], "error": job["error"]}
+    return {"ok": True, "status": job["status"], "error": job["error"],
+            # 1단계 미리보기(2026-07-17): 폴러를 둘로 만들지 않으려고 기존 응답에 얹는다(스펙 §6.3).
+            # preview_path는 서버 내부 경로라 안 내보낸다 — 파일은 전용 라우트로만 서빙.
+            "preview_status": job.get("preview_status"),
+            "preview_error": job.get("preview_error")}
 
 
 @app.get("/api/mix/result/{job_id}")
@@ -1322,6 +1327,33 @@ def api_mix_render(background_tasks: BackgroundTasks, body: dict):
         return JSONResponse(status_code=404, content={"ok": False, "error": "렌더할 job 없음"})
     background_tasks.add_task(run_render, job_id, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True}
+
+
+@app.post("/api/produce/mix/preview")
+def api_produce_mix_preview(background_tasks: BackgroundTasks, body: dict):
+    """1단계 미리보기 렌더 예약 — 유료 자막제거 없이(0원). 스펙 §6.3.
+
+    다음 단계(자막제거)가 VMake 유료 API라, 컷·대본이 틀린 채 넘어가면 그 돈이 날아간다.
+    그래서 여기서 먼저 공짜로 보여주고 OK를 받는다."""
+    job_id = body.get("job_id")
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "매칭 먼저 실행하세요"})
+    if job.get("preview_status") == "rendering":
+        return {"ok": True, "status": "rendering"}   # 더블클릭 — ffmpeg를 두 번 돌리지 않는다
+    background_tasks.add_task(run_preview, job_id, DB_PATH, _MIX_WORK_DIR)
+    return {"ok": True, "status": "rendering"}
+
+
+@app.get("/api/produce/mix/preview/{job_id}")
+def api_produce_mix_preview_file(job_id: str):
+    """1단계 미리보기 mp4 서빙(/api/produce/mix/poster와 같은 성격 — job의 미디어 파일)."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    path = (job or {}).get("preview_path")
+    if not job or job.get("preview_status") != "ready" or not path or not Path(path).exists():
+        return JSONResponse(status_code=404, content={"ok": False, "error": "미리보기 없음"})
+    return FileResponse(path, media_type="video/mp4")
 
 
 @app.get("/api/mix/tts/{job_id}/{beat_idx}")

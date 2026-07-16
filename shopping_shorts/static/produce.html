@@ -443,6 +443,7 @@ function showPanel(){
   document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('show', +p.dataset.step===cur));
   document.getElementById('btnPrev').disabled = cur===0;
   document.getElementById('btnNext').textContent = cur===STEPS.length-1 ? '완료' : '다음 →';
+  refreshNextBtn();   // 1단계 미리보기 게이트(2026-07-17) — 단계 이동·초기 렌더마다 상태를 맞춘다
   if(cur===1) refreshSub();
   if(cur===2) loadTtsBeats();
   if(cur===3) initHeadcopy();
@@ -1034,7 +1035,12 @@ async function saveHeadcopy(){
     body:JSON.stringify({job_id:MIX_JOB, headcopy:STATE.headcopy, caption_style:STATE.captionStyle, deco:STATE.deco})}); }catch(e){}
 }
 function jump(i){ cur=i; renderSteps(); showPanel(); }
-function go(d){ const n=cur+d; if(n<0||n>=STEPS.length) return; cur=n; renderSteps(); showPanel(); }
+function go(d){
+  // 1단계 미리보기 게이트(2026-07-17). btnNext의 disabled만으론 부족하다 — go(1)이 다른
+  // 경로로도 불릴 수 있어 방어를 두 겹으로 둔다. 유료 자막제거로 못 본 채 넘어가는 걸 막는다.
+  if(d > 0 && cur === 0 && MIX_JOB && !canGoNext()) return;
+  const n=cur+d; if(n<0||n>=STEPS.length) return; cur=n; renderSteps(); showPanel();
+}
 
 // ── 1단계 대본: 3모드 ──────────────────────────────
 const STATE = { script: "", script_src_idx: null, script_from_wiki: null, subtitleRemoval: false, headcopy: null, captionStyle: null, deco: { extra_texts: [], motion: null } };   // 확정 대본 + 렌더 설정
@@ -1609,7 +1615,64 @@ async function loadMixReview(){
       <div style="margin:6px 0;font-size:13px">${esc(b.narration||'')}</div>
       <div class="hint">🎞 ${esc(b.primary?.video_id||'')} · ${b.primary?.start}s~${b.primary?.end}s · ${b.target_seconds}s${b.fit?` · 매칭 ${b.fit}/5`:''}</div>
       ${(b.fit&&b.fit<=2)?`<div style="color:var(--fire);font-size:12px;margin-top:3px">⚠️ 이 문장에 맞는 영상이 부족합니다 — 대본을 살짝 바꾸거나 소스 영상을 추가하세요.</div>`:''}
-    </div>`).join('')+`<div class="hint" style="margin-top:6px">✅ 매칭 완료${(d.beats||[]).some(b=>b.fit&&b.fit<=2)?' <span style="color:var(--fire)">— ⚠️ 표시된 문장은 영상이 약합니다</span>':''} — "다음"으로 자막제거·음성 확인 후 마지막에 렌더합니다.</div>`;
+    </div>`).join('')+`<div class="hint" style="margin-top:6px">✅ 매칭 완료${(d.beats||[]).some(b=>b.fit&&b.fit<=2)?' <span style="color:var(--fire)">— ⚠️ 표시된 문장은 영상이 약합니다</span>':''} — 아래에서 <b>미리보기</b>를 확인한 뒤 다음으로 넘어가세요.</div>`
+    +`<button class="btn-next" style="margin-top:8px;padding:7px 14px" onclick="startPreview()">▶ 미리보기 만들기</button>`
+    +`<div id="mixPreview" style="margin-top:8px"></div>`;
+  // 편집안을 새로 그렸다 = 새 매칭이다. 옛 미리보기 상태를 물고 있으면 사장님이 옛 영상을
+  // 본 것으로 치고 다음이 열린다 → 여기서 반드시 초기화한다.
+  PREVIEW_STATUS = null; refreshNextBtn();
+}
+
+// ── 1단계 미리보기(2026-07-17) ──────────────
+// 다음 단계(자막제거)가 VMake 유료 API라, 컷·대본이 틀린 채 넘어가면 그 돈이 날아간다.
+// 편집안(텍스트)만 보고는 "잘 붙었나"를 판단할 수 없으므로 여기서 공짜로(clean_fn 없이) 렌더해
+// 보여주고 OK를 받는다. 스펙 docs/superpowers/specs/2026-07-17-제작소-1단계-미리보기-design.md
+let PREVIEW_STATUS = null;   // null|'rendering'|'ready'|'failed'
+let PREVIEW_POLL = null;
+
+function canGoNext(){
+  // 'failed'도 통과시킨다 — 렌더가 고장 났을 때의 탈출구(스펙 §7.1).
+  // ffmpeg 문제 하나로 사장님이 영영 갇히면 안 된다. 정상 경로에선 안 뜬다.
+  return PREVIEW_STATUS === 'ready' || PREVIEW_STATUS === 'failed';
+}
+
+function refreshNextBtn(){
+  const b = document.getElementById('btnNext'); if(!b) return;
+  const gated = (cur === 0 && MIX_JOB && !canGoNext());
+  b.disabled = gated;
+  b.title = gated ? '미리보기를 먼저 확인하세요' : '';
+}
+
+async function startPreview(){
+  const box = document.getElementById('mixPreview');
+  box.innerHTML = '<div class="hint">⏳ 미리보기 만드는 중… (자막제거·꾸미기 없이 렌더합니다)</div>';
+  PREVIEW_STATUS = 'rendering'; refreshNextBtn();
+  try{
+    const d = await (await fetch('/api/produce/mix/preview',{method:'POST',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify({job_id: MIX_JOB})})).json();
+    if(!d.ok){ PREVIEW_STATUS='failed'; box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(d.error||'미리보기 실패')+'</div>'; refreshNextBtn(); return; }
+    PREVIEW_POLL = setInterval(pollPreview, 2500); pollPreview();
+  }catch(e){ PREVIEW_STATUS='failed'; box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; refreshNextBtn(); }
+}
+
+async function pollPreview(){
+  const box = document.getElementById('mixPreview');
+  try{
+    const d = await (await fetch('/api/mix/status/'+MIX_JOB)).json();
+    if(d.preview_status === 'ready'){
+      clearInterval(PREVIEW_POLL); PREVIEW_STATUS='ready';
+      // ?t= 캐시버스터 필수: 대본을 고쳐 재매칭하면 같은 URL에 다른 영상이 온다.
+      box.innerHTML = '<video controls muted playsinline style="width:260px;border-radius:10px;background:#000"'
+        + ' src="/api/produce/mix/preview/'+encodeURIComponent(MIX_JOB)+'?t='+Date.now()+'"></video>'
+        + '<div class="hint">원본 자막이 남아 있는 건 정상입니다 — 다음 단계에서 지웁니다.</div>';
+      refreshNextBtn();
+    } else if(d.preview_status === 'failed'){
+      clearInterval(PREVIEW_POLL); PREVIEW_STATUS='failed';
+      box.innerHTML = '<div class="hint" style="color:var(--fire)">⚠️ 미리보기 렌더 실패 — '
+        + esc(d.preview_error||'') + '<br>미리보기 없이 진행할 수 있지만, 확인하지 못한 채 유료 자막제거로 넘어갑니다.</div>';
+      refreshNextBtn();
+    }
+  }catch(e){ /* 폴링 실패는 다음 tick에 재시도 */ }
 }
 
 // ── 3단계 자막제거 ──────────────

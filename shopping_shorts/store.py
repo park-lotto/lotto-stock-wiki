@@ -380,6 +380,11 @@ class Store:
                 ("voice_json", "TEXT"),     # 영상제작 4단계 보이스 프리셋 선택 스냅샷(2026-07-14)
                 ("script_structure_json", "TEXT"),  # 도서관→제작소 다리: 대본 구조분석 스냅샷(2026-07-15).
                                                     # ⚠️ 위 structure 컬럼과 다른 것 — 그건 template/free 모드 플래그.
+                # 1단계 미리보기(2026-07-17). status(downloading→…→done)는 한 줄기라 여기에
+                # 미리보기를 끼우면 최종 렌더 폴링과 서로를 오인한다 → 별도 컬럼으로 둔다.
+                ("preview_status", "TEXT"),  # null|rendering|ready|failed
+                ("preview_path", "TEXT"),
+                ("preview_error", "TEXT"),
             ):
                 try:
                     c.execute(f"ALTER TABLE mix_jobs ADD COLUMN {col} {ddl}")
@@ -1206,7 +1211,8 @@ class Store:
                 "SELECT job_id, urls_json, target_seconds, structure, status, error, "
                 "extract_json, edit_plan_json, video_path, created_at, updated_at, "
                 "subtitle_removal, clean_video_path, given_script, headcopy_json, "
-                "caption_style_json, voice_json, deco_json, script_structure_json "
+                "caption_style_json, voice_json, deco_json, script_structure_json, "
+                "preview_status, preview_path, preview_error "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -1224,12 +1230,16 @@ class Store:
             "voice": json.loads(row[16]) if row[16] else None,
             "deco": json.loads(row[17]) if row[17] else None,
             "script_structure": json.loads(row[18]) if row[18] else None,
+            "preview_status": row[19], "preview_path": row[20], "preview_error": row[21],
         }
 
     def update_mix_job(self, job_id, **fields):
         """status/error/extract/edit_plan/video_path 갱신(+updated_at). 객체는 JSON 직렬화."""
         cols, vals = [], []
-        for k in ("status", "error", "video_path", "clean_video_path"):
+        for k in ("status", "error", "video_path", "clean_video_path",
+                  # 1단계 미리보기(2026-07-17) — 여기 없으면 update_mix_job(preview_status=...)이
+                  # 에러도 없이 조용히 무시된다(이 화이트리스트가 이 배선의 함정).
+                  "preview_status", "preview_path", "preview_error"):
             if k in fields:
                 cols.append(f"{k}=?"); vals.append(fields[k])
         if "subtitle_removal" in fields:
