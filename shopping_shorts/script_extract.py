@@ -19,6 +19,11 @@ from shopping_shorts import comment_gen
 from shopping_shorts.config import SHORTS_GEMINI_KEYS
 from shopping_shorts.video_analysis import _MODEL, _wait_until_active
 
+# _MODEL이 503으로 막혔을 때만 쓰는 대체 모델. 영상 입력을 받고 response_schema도 지키는 것으로
+# 실측 확인(2026-07-16 서버: 실제 extract_script를 이 모델로 태워 구간 6개·본문 208자 확보).
+# _MODEL(video_analysis 공유)은 건드리지 않는다 — 폴백은 이 함수 안에서만 일어난다.
+_FALLBACK_MODEL = "gemini-3.1-flash-lite"
+
 _EMPTY = {"segments": [], "full_text": ""}
 
 _RESPONSE_SCHEMA = {
@@ -82,10 +87,20 @@ def _assign_seg_ids(video_id, raw_segments):
 def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=8):
     """영상 파일 → {"segments": [...seg_id 포함...], "full_text": str}. 실패 시 빈 결과.
 
-    전용 키 풀 로테이션(comment_gen 재사용). 전용 풀 소진 시 빈 결과."""
+    전용 키 풀 로테이션(comment_gen 재사용). 전용 풀 소진 시 빈 결과.
+
+    2026-07-16 모델 폴백: _MODEL이 503(UNAVAILABLE/overloaded)로 계속 막히면 _FALLBACK_MODEL로
+    갈아탄다. **503은 키가 아니라 모델 용량 문제**라 키 로테이션으로는 절대 안 풀린다 —
+    실측(서버, 같은 순간): 키 16개 중 5개를 각각 때려 gemini-3.5-flash가 5/5 전부 503,
+    같은 키로 gemini-3.1-flash-lite는 정상(실제 extract_script로 구간 6개·본문 208자 확보).
+    폴백 전 재시도가 필요한 이유: 503은 spike라 잠깐 뒤 원래 모델이 살아나는 경우가 많고,
+    그때까지 품질 좋은 쪽을 쓰는 게 낫다. 그래서 primary로 2번 겪은 뒤에만 내려간다.
+    폴백 후엔 sleep을 넣지 않는다 — 다른 모델이라 앞 모델의 혼잡과 무관하다."""
     if not SHORTS_GEMINI_KEYS:
         raise RuntimeError("script_extract: SHORTS_GEMINI_KEY가 설정되지 않았습니다")
     prompt = _PROMPT.format(caption=caption or "(캡션 없음)")
+    model = _MODEL
+    primary_503 = 0
 
     for attempt in range(max_retries):
         key, idx = comment_gen._current_key_and_idx()
@@ -98,7 +113,7 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
                 file_obj = client.files.upload(file=fh, config=types.UploadFileConfig(mime_type="video/mp4"))
             file_obj = _wait_until_active(client, file_obj)
             resp = client.models.generate_content(
-                model=_MODEL,
+                model=model,
                 contents=[file_obj, prompt],
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
@@ -118,10 +133,18 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
             if key_vault.is_quota_error(e):
                 time.sleep(quota_sleep)
                 continue
-            if attempt < max_retries - 1 and any(c in m for c in ("503", "UNAVAILABLE", "overloaded")):
-                time.sleep((attempt + 1) * 5)
-                continue
-            print(f"script_extract: 미분류 오류로 빈 결과 반환 — {e!r}", file=sys.stderr)
+            if any(c in m for c in ("503", "UNAVAILABLE", "overloaded")):
+                if model == _MODEL:
+                    primary_503 += 1
+                    if primary_503 >= 2:
+                        model = _FALLBACK_MODEL
+                        print(f"script_extract: {_MODEL} 503 반복 → {_FALLBACK_MODEL}로 폴백",
+                              file=sys.stderr)
+                        continue  # 다른 모델이라 앞 모델의 혼잡과 무관 — 기다리지 않는다
+                if attempt < max_retries - 1:
+                    time.sleep((attempt + 1) * 5)
+                    continue
+            print(f"script_extract: 빈 결과 반환(재시도 소진 또는 미분류 오류) — {e!r}", file=sys.stderr)
             return dict(_EMPTY)
         finally:
             if file_obj is not None:
