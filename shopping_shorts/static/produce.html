@@ -109,6 +109,11 @@
     .draft .hist-list.open{display:block}
     .draft .hist-item{padding:5px 6px;font-size:12px;cursor:pointer;border-radius:4px}
     .draft .hist-item:hover{background:#161d2b}
+    .subject-row{margin:6px 0 10px 20px;font-size:13px}
+    .subject-row .subj-label{color:var(--sub);margin-right:6px}
+    .subject-row #pmSubject{width:70%;background:#0d131c;border:1px solid var(--line);
+      color:var(--txt);border-radius:6px;padding:7px 9px;font-size:13px}
+    .subject-row .subj-hint{color:var(--sub);font-size:11.5px;margin-top:5px}
   </style>
 </head>
 <body>
@@ -151,7 +156,6 @@
             <div class="tabs" id="scriptTabs" style="margin-top:6px">
               <div class="tab active" data-mode="manual">✍️ 직접작성</div>
               <div class="tab" data-mode="mix">🧬 우리 시스템으로 믹스</div>
-              <div class="tab" data-mode="gemini">✨ 제미니 자동</div>
             </div>
             <div id="scriptModeBody"></div>
             <div style="display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap">
@@ -410,6 +414,10 @@
         <div class="gen-sec">주제 / 소재</div>
         <div class="modes">
           <label><input type="radio" name="pmmode" value="A" checked onchange="pmToggleTopic()"> ♻️ 원본 소재 그대로 · 표현만 새로 (중복 회피)</label>
+          <div class="subject-row" id="pmSubjectRow">
+            <span class="subj-label">감지된 소재:</span><input id="pmSubject" placeholder="소재 감지 중…">
+            <div class="subj-hint">원본 영상 재사용·2영상 믹싱용. 제품·사실·장면은 그대로, 훅·문장·순서만 새로.</div>
+          </div>
           <label><input type="radio" name="pmmode" value="B" onchange="pmToggleTopic()"> 🔀 내 제품으로 이식 (구조만 빌림)</label>
           <input id="pmTopic" placeholder="예: 무선 가습기 / 여름 결로 방지 커튼" style="display:none">
         </div>
@@ -1029,7 +1037,11 @@ function jump(i){ cur=i; renderSteps(); showPanel(); }
 function go(d){ const n=cur+d; if(n<0||n>=STEPS.length) return; cur=n; renderSteps(); showPanel(); }
 
 // ── 1단계 대본: 3모드 ──────────────────────────────
-const STATE = { script: "", script_src_idx: null, subtitleRemoval: false, headcopy: null, captionStyle: null, deco: { extra_texts: [], motion: null } };   // 확정 대본 + 렌더 설정
+const STATE = { script: "", script_src_idx: null, script_from_wiki: null, subtitleRemoval: false, headcopy: null, captionStyle: null, deco: { extra_texts: [], motion: null } };   // 확정 대본 + 렌더 설정
+// script_from_wiki: 확정한 대본이 위키(mix 목록)에서 왔나 — 왔으면 shortcode(조합은 'mix'),
+// 왼쪽 뽑기(HANDOFF)에서 왔으면 null. 위키 유래면 '⭐이 원본 영상 위키에 담기'를 숨긴다:
+// 이미 위키에 있는 원본이라 담을 게 없고, 그냥 두면 _currentSrcItem()이 엉뚱한 HANDOFF
+// 영상으로 폴백해 무관한 영상을 학습 재료로 담는다(I-1이 잡으려던 오귀속의 mix 경로판).
 // script_src_idx: 확정한 대본이 HANDOFF의 몇 번 영상에서 나왔는지(리뷰 I-1 수정, 2026-07-15).
 // pickScript가 true인 영상이 여러 개면(A로 뽑아본 뒤 B로 확정해도 A가 true로 남음) 첫 매치만
 // 찾는 기존 방식이 틀린 영상을 위키저장 대상으로 골랐다 — 확정 시점(pmUseRaw/pmUseDraft)에
@@ -1038,14 +1050,6 @@ const STATE = { script: "", script_src_idx: null, subtitleRemoval: false, headco
 const SCRIPT_MODE_HTML = {
   manual: () => `<textarea id="scriptText" placeholder="여기에 대본을 직접 입력하세요…" oninput="onScriptInput()">${esc(STATE.script)}</textarea>
     <div class="hint" id="lenHint">${lenText(STATE.script)}</div>`,
-  gemini: () => `
-    <div style="display:flex;gap:8px;margin-bottom:6px">
-      <input id="gemTopic" type="text" placeholder="주제/제품 (예: 실리콘 다용도 집게)"
-        style="flex:1;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:11px">
-      <button class="btn-next" style="padding:11px 16px" onclick="genGemini()">✨ 생성</button>
-    </div>
-    <div class="hint">주제만 넣으면 제미니가 여러 초안을 만듭니다. 마음에 드는 초안을 고르면 편집창으로 넘어갑니다.</div>
-    <div id="gemDrafts" style="margin-top:12px"></div>`,
   mix: () => `
     <div class="hint">도서관에서 <b>영상제작으로 보낸</b> 대본이 기본으로 보입니다. 2~3개 골라 강점(훅·전개·주변인물·말투)을 조합합니다.</div>
     <div style="display:flex;gap:8px;margin:8px 0">
@@ -1054,10 +1058,10 @@ const SCRIPT_MODE_HTML = {
     </div>
     <div id="mixWiki" style="margin:10px 0">불러오는 중…</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn-next" style="padding:10px 16px;background:linear-gradient(90deg,#1c5a2e,#0d3a1c)" onclick="useSingleScript()">✅ 선택 1개 그대로 쓰기</button>
+      <button class="btn-next" style="padding:10px 16px;background:linear-gradient(90deg,#1c5a2e,#0d3a1c)" onclick="openGenFromWiki()">♻️ 선택 1개로 새 대본 생성</button>
       <button class="btn-next" style="padding:10px 16px" onclick="genMix()">🧬 선택 2개+ 조합 생성</button>
     </div>
-    <div class="hint" style="margin-top:6px">같은 주제면 1개 대본 그대로 쓰고 영상만 여러 개 붙이는 게 자연스럽습니다. 텍스트 조합이 필요할 때만 2개+.</div>
+    <div class="hint" style="margin-top:6px">1개 = 그 대본의 구조를 빌려 새로 씁니다(요소별로 유지·교체 선택). 여러 대본의 강점을 섞으려면 2개+.</div>
     <div id="mixDrafts" style="margin-top:12px"></div>`,
 };
 function setScriptMode(mode){
@@ -1086,6 +1090,7 @@ function renderDrafts(drafts, boxId){
 function useDraft(i){
   const dr=(window._drafts||[])[i]; if(!dr) return;
   STATE.script=dr.script||'';
+  STATE.script_from_wiki='mix';   // 조합 초안 = 위키 대본 여러 개에서 나옴. 원본을 하나로 특정할 수 없다.
   setScriptMode('manual');   // 편집 가능한 직접작성 창으로 이동(내용 채움)
   refreshFinalPeek();
   if(HANDOFF.length) saveWork();
@@ -1099,13 +1104,6 @@ async function postDrafts(url, payload, boxId){
     if(!d.ok){ box.innerHTML=`<div class="hint" style="color:var(--fire)">${esc(d.error||'실패')}</div>`; return; }
     renderDrafts(d.drafts, boxId);
   }catch(e){ box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; }
-}
-
-// 제미니 자동
-function genGemini(){
-  const topic=(document.getElementById('gemTopic').value||'').trim();
-  if(!topic){ document.getElementById('gemDrafts').innerHTML='<div class="hint" style="color:var(--fire)">주제를 입력하세요</div>'; return; }
-  postDrafts('/api/produce/script/gemini', {topic, target_seconds:20, n:3}, 'gemDrafts');
 }
 
 // 우리믹스(Feature B) — 기본은 '담긴 대본(picks)', 버튼으로 '위키 전체' 전환
@@ -1158,16 +1156,29 @@ async function loadWikiForMix(){
       </label>`).join('');
   }catch(e){ el.innerHTML='<div class="hint" style="color:var(--fire)">로드 실패</div>'; }
 }
-function useSingleScript(){
+// mix 목록에서 고른 위키 대본 1개를 재료로 pmModal(즐겨찾기 생성패널)을 연다.
+// 원본을 그대로 복사해 확정하던 이전 함수를 대체 — 원본 대본을 원본 영상에 얹는 건
+// 리메이크가 아니라 재업로드다(2026-07-16).
+// 뽑기 경로와 달리 **추출 단계가 없다**: 위키 대본이라 본문이 이미 있고, 구조는
+// 백엔드 /api/wiki/generate가 shortcode로 읽는다. PM_BASE_SCRIPT는 위키에 항목이
+// 없을 때를 위한 폴백으로만 실린다(pmRunGen이 body에 이미 담고 있다).
+function openGenFromWiki(){
   const picks=[...document.querySelectorAll('.mixPick:checked')].map(c=>c.value);
   const box=document.getElementById('mixDrafts');
-  if(picks.length!==1){ box.innerHTML='<div class="hint" style="color:var(--fire)">1개만 선택하세요(그대로 쓰기)</div>'; return; }
+  if(picks.length!==1){ box.innerHTML='<div class="hint" style="color:var(--fire)">1개만 선택하세요 — 2개 이상은 아래 조합 생성입니다</div>'; return; }
   const it=(window._mixItems||[]).find(w=>w.shortcode===picks[0]);
   if(!it || !(it.full_text||'').trim()){ box.innerHTML='<div class="hint" style="color:var(--fire)">대본 내용이 없습니다</div>'; return; }
-  STATE.script=it.full_text;
-  setScriptMode('manual');   // 그 대본 그대로 편집창에 채움
-  refreshFinalPeek();
-  if(HANDOFF.length) saveWork();
+  box.innerHTML='';
+  ++PM_GEN;                                     // 모달을 가져간다 — 늦게 돌아올 openScriptModal continuation을 무효화
+  PM_IDX=null; PM_URL='';                       // HANDOFF 유래가 아니다
+  PM_SHORTCODE=it.shortcode; PM_CATEGORY=it.category||'';
+  PM_BASE_STRUCT=null;                          // 백엔드가 위키에서 읽는다
+  PM_BASE_SCRIPT=it.full_text; PM_FROM_WIKI=it.shortcode;
+  document.getElementById('pmModal').classList.add('open');
+  document.getElementById('pmResults').innerHTML='<div class="hint">✅ 이 위키 대본을 재료로 새 대본을 만듭니다. 아래에서 요소를 조절하고 초안을 생성하세요.</div>';
+  pmToggleTopic();
+  pmLoadElementOptions(PM_CATEGORY);
+  pmPrefillSubject(it.shortcode);
 }
 function genMix(){
   const picks=[...document.querySelectorAll('.mixPick:checked')].map(c=>c.value);
@@ -1193,7 +1204,7 @@ let HANDOFF = [];   // [{url,shortcode,name,thumbnail,caption,pickScript,useFoot
 // 작업 상태 저장/복원 — 다른 페이지 갔다 오면 받은 영상·상태·대본이 사라지던 것 방지
 // (2026-07-14). sessionStorage에 상시 보관, 매 변경 시 갱신, 로드 시 복원.
 function saveWork(){
-  try{ sessionStorage.setItem('produce_work', JSON.stringify({handoff:HANDOFF, script:STATE.script||'', script_src_idx:STATE.script_src_idx})); }catch(e){}
+  try{ sessionStorage.setItem('produce_work', JSON.stringify({handoff:HANDOFF, script:STATE.script||'', script_src_idx:STATE.script_src_idx, script_from_wiki:STATE.script_from_wiki})); }catch(e){}
 }
 function clearWork(){ try{ sessionStorage.removeItem('produce_work'); }catch(e){} }
 function _consumeProduceHandoff(){
@@ -1213,6 +1224,7 @@ function _consumeProduceHandoff(){
       if(w && w.handoff && w.handoff.length){
         HANDOFF=w.handoff; savedScript=w.script||''; restored=true;
         STATE.script_src_idx = (typeof w.script_src_idx === 'number') ? w.script_src_idx : null;
+        STATE.script_from_wiki = (typeof w.script_from_wiki !== 'undefined') ? w.script_from_wiki : null;   // 구페이로드 호환: 없으면 null(뽑기 유래 취급=안전 기본값, 버튼 보임)
       }
     }
   }
@@ -1269,10 +1281,20 @@ function syncFootageToMixUrls(){
 // 📝뽑기: 영상 i의 대본을 확보(캐시/추출)한 뒤 구조분석해 도서관식 생성 모달을 연다.
 // (도서관 library.html의 openGen/runGen/refineDraft/history를 pm 접두로 이식, 2026-07-15)
 let PM_IDX=null, PM_BASE_STRUCT=null, PM_CATEGORY='', PM_URL='', PM_SHORTCODE='', PM_BASE_SCRIPT='';
+// 이 대본이 위키(mix 목록)에서 왔나 — 왔으면 shortcode, 왼쪽 뽑기(HANDOFF) 유래면 null.
+// Task 4의 위키담기 오귀속 차단이 이걸 읽는다.
+let PM_FROM_WIKI=null;
+// 모달의 "현재 주인" 세대번호 — 📝뽑기(openScriptModal)의 await(추출) 도중 mix 쪽
+// (openGenFromWiki)이 같은 PM_* 전역·pmModal을 가져가면, 뒤늦게 돌아온 추출
+// continuation이 자기가 더 이상 주인이 아닌 줄 모르고 mix가 채운 PM_*를 덮어써
+// "재료는 남의 영상 것, shortcode만 위키 것"인 무관한 리메이크가 나온다(리뷰 I-1).
+// 두 진입점 모두 시작 시 ++PM_GEN, await 뒤 자기 번호(myGen)가 최신인지 확인한다.
+let PM_GEN=0;
 async function openScriptModal(i){
   const it=HANDOFF[i]; if(!it||!it.url){ alert('영상 URL이 없습니다'); return; }
+  const myGen=++PM_GEN;
   PM_IDX=i; PM_URL=it.url; PM_SHORTCODE=it.shortcode||''; PM_CATEGORY=it.category||'';
-  PM_BASE_STRUCT=null; PM_BASE_SCRIPT='';
+  PM_BASE_STRUCT=null; PM_BASE_SCRIPT=''; PM_FROM_WIKI=null;   // HANDOFF 유래 — 위키담기 대상이 있다
   const modal=document.getElementById('pmModal'); modal.classList.add('open');
   document.getElementById('pmResults').innerHTML='<div class="hint">⏳ 대본 추출 중… (영상당 10~30초)</div>';
   try{
@@ -1280,6 +1302,7 @@ async function openScriptModal(i){
       body:JSON.stringify({url:it.url, shortcode:it.shortcode||undefined, category:it.category||undefined,
         caption:it.caption||undefined, name:it.name||undefined})});
     const d=await r.json();
+    if(PM_GEN!==myGen) return;   // 그 사이 다른 진입점(mix)이 모달을 가져갔다 — d.ok든 아니든 손대지 않는다
     if(!d.ok){ document.getElementById('pmResults').innerHTML=`<div class="hint" style="color:var(--fire)">${esc(d.error||'추출 실패')}</div>`; return; }
     it.pickScript=true;
     PM_CATEGORY=d.category||''; PM_BASE_STRUCT=d.structure||null;
@@ -1288,13 +1311,31 @@ async function openScriptModal(i){
     PM_BASE_SCRIPT=d.full_text||'';
     document.getElementById('pmResults').innerHTML=`<div class="hint">✅ 원본 대본 확보. 아래에서 요소를 조절해 새 초안을 만들거나, <button class="btn-next" style="padding:4px 10px" onclick="pmUseRaw()">원본 대본 그대로 확정 →</button></div>`;
     await pmLoadElementOptions(PM_CATEGORY);
-  }catch(e){ document.getElementById('pmResults').innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; }
+    if(PM_GEN!==myGen) return;   // 요소옵션 로딩 중에도 가져갈 수 있다 — 그 뒤 소재프리필까지 막는다
+    pmToggleTopic();                    // 소재칸 표시상태를 현재 모드에 맞춤
+    pmPrefillSubject(PM_SHORTCODE);     // shortcode 없으면(직행 URL) 손입력만 열어둔다
+  }catch(e){ if(PM_GEN===myGen) document.getElementById('pmResults').innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; }
 }
-function pmUseRaw(){ STATE.script=PM_BASE_SCRIPT; STATE.script_src_idx=PM_IDX; pmClose(); setScriptMode('manual'); refreshFinalPeek(); setFinalCategoryValue(PM_CATEGORY); if(HANDOFF.length) saveWork(); }
+function pmUseRaw(){ STATE.script=PM_BASE_SCRIPT; STATE.script_src_idx=PM_IDX; STATE.script_from_wiki=PM_FROM_WIKI; pmClose(); setScriptMode('manual'); refreshFinalPeek(); setFinalCategoryValue(PM_CATEGORY); if(HANDOFF.length) saveWork(); }
 function pmClose(){ document.getElementById('pmModal').classList.remove('open'); }
 function pmToggleTopic(){
   const mode=document.querySelector('input[name=pmmode]:checked').value;
   const t=document.getElementById('pmTopic'); if(t) t.style.display = mode==='B' ? 'block' : 'none';
+  const s=document.getElementById('pmSubjectRow'); if(s) s.style.display = mode==='A' ? 'block' : 'none';
+}
+// 소재 자동감지 프리필(도서관 library.html openGen의 소재 블록 이식, 2026-07-16).
+// 경합 가드 필수: 모달을 빨리 두 번 열면 먼저 띄운 요청이 늦게 도착해 남의 소재를 덮어쓴다.
+// library는 window._genSC로 봤고 여기선 PM_SHORTCODE가 같은 역할을 한다.
+async function pmPrefillSubject(sc){
+  const el=document.getElementById('pmSubject'); if(!el) return;
+  el.value=''; el.placeholder='소재 감지 중…';
+  if(!sc){ el.placeholder='예: 무선 가습기 물때 청소'; return; }   // 직행 URL 등 shortcode 없음 — 손입력은 열어둔다
+  const mine=sc;
+  try{
+    const s=await (await fetch('/api/wiki/subject?shortcode='+encodeURIComponent(sc))).json();
+    if(s.ok && PM_SHORTCODE===mine) el.value=s.subject||'';
+  }catch(e){}
+  el.placeholder='예: 무선 가습기 물때 청소';
 }
 function pmOnElemToggle(cb){
   const sel=cb.closest('.elem-row').querySelector('.elem-mode');
@@ -1320,10 +1361,12 @@ async function pmRunGen(){
   });
   const mode=document.querySelector('input[name=pmmode]:checked').value;
   const topic=document.getElementById('pmTopic').value.trim();
+  const subjEl=document.getElementById('pmSubject');
+  const subject = mode==='A' ? ((subjEl&&subjEl.value)||'').trim() : '';   // 이식(B)엔 소재 안 보냄
   if(mode==='B'&&!topic){ res.innerHTML='<div class="hint" style="color:var(--fire)">내 주제/제품을 입력하세요.</div>'; return; }
   btn.disabled=true; res.innerHTML='<div class="hint">✨ 초안 만드는 중… (10~20초)</div>';
   try{
-    const body={mode, my_topic:topic, n:3, elem_modes:elemModes, structure:PM_BASE_STRUCT, base_script:PM_BASE_SCRIPT, category:PM_CATEGORY};
+    const body={mode, my_topic:topic, subject, n:3, elem_modes:elemModes, structure:PM_BASE_STRUCT, base_script:PM_BASE_SCRIPT, category:PM_CATEGORY};
     const d=await (await fetch('/api/wiki/generate?shortcode='+encodeURIComponent(PM_SHORTCODE||PM_URL),
       {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
     if(!d.ok){ res.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(d.error||'생성 실패')+'</div>'; return; }
@@ -1350,6 +1393,7 @@ function pmRenderDrafts(drafts){
 function pmUseDraft(btn){
   const t=btn.closest('.draft').querySelector('.dtext'); STATE.script=(t?t.value:'')||'';
   STATE.script_src_idx=PM_IDX;
+  STATE.script_from_wiki=PM_FROM_WIKI;   // mix 유래면 shortcode, 뽑기 유래면 null
   pmClose(); setScriptMode('manual'); refreshFinalPeek(); setFinalCategoryValue(PM_CATEGORY);
   if(HANDOFF.length) saveWork();
 }
@@ -1454,19 +1498,26 @@ function _currentSrcItem(){
 // 버킷 오염이 존속한다(I-3이 없애려던 문제). shortcode 없으면(직접 작성 등) DB에 쓸
 // 대상이 없으니 스킵 — 저장 시점에 save_to_wiki가 category를 실어 반영한다. 실패해도
 // 무시(alert 없음) — 교정 자체는 저장 시 다시 한 번 반영되므로 치명적이지 않다.
+// [최종 리뷰 I-2] 위키 유래 대본(STATE.script_from_wiki)일 땐 _currentSrcItem()이
+// 담을 원본이 없는데도 HANDOFF로 폴백한다 — refreshFinalPeek/saveScriptToWiki(Task 4)와
+// 같은 판단을 여기서도 해야 한다. 안 하면 위키 대본의 카테고리 교정이 무관한 HANDOFF
+// 영상의 category로 DB(script_extracts.category)에 영속 기록돼 학습 코퍼스가 오염된다.
+// PM_CATEGORY 갱신·요소 드롭다운 재로딩은 위키 유래여도 계속 동작해야 한다 — 생성(pmRunGen)에 쓰인다.
 function onFinalCategoryChange(sel){
   const cat=sel.value;
-  const src=_currentSrcItem();
-  if(src) src.category=cat;
   PM_CATEGORY=cat;
-  if(HANDOFF.length) saveWork();
+  if(!STATE.script_from_wiki){      // refreshFinalPeek과 같은 판단 — 위키 유래면 담을 원본이 없다
+    const src=_currentSrcItem();
+    if(src) src.category=cat;
+    if(HANDOFF.length) saveWork();
+    const shortcode=src&&src.shortcode;
+    if(shortcode && cat){
+      fetch('/api/produce/category', {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({shortcode, category: cat})}).catch(()=>{});
+    }
+  }
   const modal=document.getElementById('pmModal');
   if(modal && modal.classList.contains('open')) pmLoadElementOptions(cat);
-  const shortcode=src&&src.shortcode;
-  if(shortcode && cat){
-    fetch('/api/produce/category', {method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({shortcode, category: cat})}).catch(()=>{});
-  }
 }
 // 오른쪽 "확정 대본" peek — 대본이 바뀔 때마다 갱신(onScriptInput/useDraft에서 호출).
 function refreshFinalPeek(){
@@ -1474,7 +1525,9 @@ function refreshFinalPeek(){
   if(p) p.innerHTML = STATE.script ? `"${esc(STATE.script.slice(0,60))}…" · ${lenText(STATE.script)}` : '<span style="color:var(--sub)">아직 대본이 없습니다. 왼쪽 영상에서 📝뽑기 하거나 직접 작성하세요.</span>';
   const b=document.getElementById('saveWikiBtn');
   if(b){
-    b.style.display=STATE.script?'inline-block':'none';
+    // 위키 유래 대본(mix 목록/조합)은 담을 원본이 없다 — 버튼을 숨기지 않으면
+    // _currentSrcItem()이 무관한 HANDOFF 영상으로 폴백해 그걸 담아버린다.
+    b.style.display=(STATE.script && !STATE.script_from_wiki)?'inline-block':'none';
     // I-B: 대본이 바뀌면 stale된 '✓ 저장됨' 라벨을 기본으로 되돌린다. 저장 진행 중(disabled)엔
     // '⏳ 저장 중…' 스피너 텍스트를 이 호출이 지우면 안 되므로 !b.disabled로 가드한다.
     if(!b.disabled){ b.textContent='⭐ 이 원본 영상 위키에 담기(학습 반영)'; b.classList.remove('sent'); }
