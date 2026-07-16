@@ -15,7 +15,7 @@ def _make_video(path, seconds=2, fps=30, with_audio=True, longer_audio=0.0):
     if with_audio:
         cmd += ["-c:a", "aac"]
     cmd += [str(path)]
-    subprocess.run(cmd, check=True, capture_output=True)
+    subprocess.run(cmd, check=True, capture_output=True, stdin=subprocess.DEVNULL)
     return path
 
 

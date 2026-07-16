@@ -4,14 +4,15 @@
 반올림된 초(4.13)는 '프레임이 없는 시각'이 되고, ffmpeg가 다음 프레임에
 붙이면서 다음 컷의 첫 프레임이 딸려 들어온다(설계 §3.4 실측 증명).
 """
-import re
 import subprocess
-from pathlib import Path
 
 
 def _ffprobe(args):
+    # stdin=DEVNULL — pytest 기본 캡처(--capture=fd)가 fd 0을 무효화해서
+    # 이게 없으면 테스트에서 OSError [WinError 6]이 난다. 실서비스에선 무해.
     r = subprocess.run(["ffprobe", "-v", "error"] + args,
-                       capture_output=True, text=True, check=False)
+                       capture_output=True, text=True, check=False,
+                       stdin=subprocess.DEVNULL)
     if r.returncode != 0 or not r.stdout.strip():
         raise RuntimeError(f"ffprobe 실패: {r.stderr.strip() or '출력 없음'}")
     return r.stdout.strip()
