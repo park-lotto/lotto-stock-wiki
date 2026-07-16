@@ -1,0 +1,226 @@
+[
+ {
+  "group_id": "kr-mina",
+  "name": "미나",
+  "kind": "plain",
+  "file": "kr-mina_plain.mp3",
+  "bytes": 48527,
+  "one_liner": "차분하고 또렷한 정보전달형"
+ },
+ {
+  "group_id": "kr-mina",
+  "name": "미나",
+  "kind": "whisper",
+  "file": "kr-mina_whisper.mp3",
+  "bytes": 52288,
+  "one_liner": "차분하고 또렷한 정보전달형"
+ },
+ {
+  "group_id": "kr-chloecha",
+  "name": "클로이차",
+  "kind": "plain",
+  "file": "kr-chloecha_plain.mp3",
+  "bytes": 40586,
+  "one_liner": "부드럽고 잔잔한 스토리텔링형"
+ },
+ {
+  "group_id": "kr-chloecha",
+  "name": "클로이차",
+  "kind": "whisper",
+  "file": "kr-chloecha_whisper.mp3",
+  "bytes": 44765,
+  "one_liner": "부드럽고 잔잔한 스토리텔링형"
+ },
+ {
+  "group_id": "kr-hanna",
+  "name": "한나",
+  "kind": "plain",
+  "file": "kr-hanna_plain.mp3",
+  "bytes": 47273,
+  "one_liner": "또렷하고 산뜻한 소셜미디어형"
+ },
+ {
+  "group_id": "kr-hanna",
+  "name": "한나",
+  "kind": "whisper",
+  "file": "kr-hanna_whisper.mp3",
+  "bytes": 46019,
+  "one_liner": "또렷하고 산뜻한 소셜미디어형"
+ },
+ {
+  "group_id": "kr-juha",
+  "name": "주하",
+  "kind": "plain",
+  "file": "kr-juha_plain.mp3",
+  "bytes": 41839,
+  "one_liner": "자연스럽고 차분한 내레이션형"
+ },
+ {
+  "group_id": "kr-juha",
+  "name": "주하",
+  "kind": "whisper",
+  "file": "kr-juha_whisper.mp3",
+  "bytes": 40586,
+  "one_liner": "자연스럽고 차분한 내레이션형"
+ },
+ {
+  "group_id": "kr-keleek",
+  "name": "켈릭",
+  "kind": "plain",
+  "file": "kr-keleek_plain.mp3",
+  "bytes": 44765,
+  "one_liner": "캐주얼한 서울말투 대화형"
+ },
+ {
+  "group_id": "kr-keleek",
+  "name": "켈릭",
+  "kind": "whisper",
+  "file": "kr-keleek_whisper.mp3",
+  "bytes": 51035,
+  "one_liner": "캐주얼한 서울말투 대화형"
+ },
+ {
+  "group_id": "kr-monobeige",
+  "name": "모노베이지",
+  "kind": "plain",
+  "file": "kr-monobeige_plain.mp3",
+  "bytes": 43511,
+  "one_liner": "부드럽고 감성적인 스토리텔링형"
+ },
+ {
+  "group_id": "kr-monobeige",
+  "name": "모노베이지",
+  "kind": "whisper",
+  "file": "kr-monobeige_whisper.mp3",
+  "bytes": 46019,
+  "one_liner": "부드럽고 감성적인 스토리텔링형"
+ },
+ {
+  "group_id": "kr-minzy",
+  "name": "민지",
+  "kind": "plain",
+  "file": "kr-minzy_plain.mp3",
+  "bytes": 44765,
+  "one_liner": "차분한 중년 내레이션형"
+ },
+ {
+  "group_id": "kr-minzy",
+  "name": "민지",
+  "kind": "whisper",
+  "file": "kr-minzy_whisper.mp3",
+  "bytes": 52288,
+  "one_liner": "차분한 중년 내레이션형"
+ },
+ {
+  "group_id": "kr-yura",
+  "name": "유라",
+  "kind": "plain",
+  "file": "kr-yura_plain.mp3",
+  "bytes": 48527,
+  "one_liner": "캐주얼하고 발랄한 스토리텔링형"
+ },
+ {
+  "group_id": "kr-yura",
+  "name": "유라",
+  "kind": "whisper",
+  "file": "kr-yura_whisper.mp3",
+  "bytes": 52288,
+  "one_liner": "캐주얼하고 발랄한 스토리텔링형"
+ },
+ {
+  "group_id": "kr-han",
+  "name": "한",
+  "kind": "plain",
+  "file": "kr-han_plain.mp3",
+  "bytes": 44765,
+  "one_liner": "캐주얼한 대화형"
+ },
+ {
+  "group_id": "kr-han",
+  "name": "한",
+  "kind": "whisper",
+  "file": "kr-han_whisper.mp3",
+  "bytes": 47273,
+  "one_liner": "캐주얼한 대화형"
+ },
+ {
+  "group_id": "kr-kanna",
+  "name": "칸나",
+  "kind": "plain",
+  "file": "kr-kanna_plain.mp3",
+  "bytes": 47273,
+  "one_liner": "차분하고 친근한 예능형"
+ },
+ {
+  "group_id": "kr-kanna",
+  "name": "칸나",
+  "kind": "whisper",
+  "file": "kr-kanna_whisper.mp3",
+  "bytes": 51035,
+  "one_liner": "차분하고 친근한 예능형"
+ },
+ {
+  "group_id": "kr-talia",
+  "name": "탈리아",
+  "kind": "plain",
+  "file": "kr-talia_plain.mp3",
+  "bytes": 44765,
+  "one_liner": "느긋하고 친근한 대화형"
+ },
+ {
+  "group_id": "kr-talia",
+  "name": "탈리아",
+  "kind": "whisper",
+  "file": "kr-talia_whisper.mp3",
+  "bytes": 47273,
+  "one_liner": "느긋하고 친근한 대화형"
+ },
+ {
+  "group_id": "kr-hanabad",
+  "name": "하나바드",
+  "kind": "plain",
+  "file": "kr-hanabad_plain.mp3",
+  "bytes": 44765,
+  "one_liner": "당당하고 차분한 스토리텔링형"
+ },
+ {
+  "group_id": "kr-hanabad",
+  "name": "하나바드",
+  "kind": "whisper",
+  "file": "kr-hanabad_whisper.mp3",
+  "bytes": 44765,
+  "one_liner": "당당하고 차분한 스토리텔링형"
+ },
+ {
+  "group_id": "kr-jiana",
+  "name": "지아나",
+  "kind": "plain",
+  "file": "kr-jiana_plain.mp3",
+  "bytes": 39332,
+  "one_liner": "또렷한 정보전달형"
+ },
+ {
+  "group_id": "kr-jiana",
+  "name": "지아나",
+  "kind": "whisper",
+  "file": "kr-jiana_whisper.mp3",
+  "bytes": 40586,
+  "one_liner": "또렷한 정보전달형"
+ },
+ {
+  "group_id": "kr-yooni",
+  "name": "유니",
+  "kind": "plain",
+  "file": "kr-yooni_plain.mp3",
+  "bytes": 40586,
+  "one_liner": "자연스럽고 또렷한 스토리텔링형"
+ },
+ {
+  "group_id": "kr-yooni",
+  "name": "유니",
+  "kind": "whisper",
+  "file": "kr-yooni_whisper.mp3",
+  "bytes": 49781,
+  "one_liner": "자연스럽고 또렷한 스토리텔링형"
+ }
+]

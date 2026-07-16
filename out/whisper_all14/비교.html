@@ -1,0 +1,169 @@
+<meta charset="utf-8">
+<title>성우 14명 속삭임 테스트 — 2026-07-16</title>
+<style>
+ body{font-family:system-ui,sans-serif;max-width:1000px;margin:0 auto;padding:2rem 1.5rem;background:#111;color:#eee}
+ h1{font-size:1.4rem;margin:0 0 .3rem}
+ .sub{opacity:.6;font-size:.9rem;margin-bottom:1.5rem;line-height:1.6}
+ .note{border-left:3px solid #c9a227;padding:.8rem 1rem;background:#181818;border-radius:0 8px 8px 0;
+       font-size:.9rem;line-height:1.6;margin-bottom:2rem}
+ .card{border:1px solid #333;border-radius:10px;padding:1rem 1.2rem;margin-bottom:.9rem}
+ .hd{font-size:1.05rem}
+ .gid{opacity:.4;font-size:.8rem;font-family:ui-monospace,monospace;margin-left:.4rem}
+ .diff{float:right;opacity:.5;font-size:.85rem;font-family:ui-monospace,monospace}
+ .one{opacity:.55;font-size:.85rem;margin:.2rem 0 .6rem}
+ .warn{display:block;color:#e0a030;font-size:.85rem;margin-bottom:.5rem}
+ .ab{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+ .lbl{font-size:.75rem;letter-spacing:.06em;opacity:.5;text-transform:uppercase;margin-bottom:.25rem}
+ audio{width:100%}
+ .verdict{display:block;margin-top:.6rem;font-size:.85rem;opacity:.7}
+ @media(max-width:640px){.ab{grid-template-columns:1fr}}
+</style>
+<h1>성우 14명 · 속삭임 테스트</h1>
+<div class="sub">같은 문장 &quot;진짜 대박이거든요 끝까지 보세요&quot; · seed 42 고정 · stable 톤 대표 · 2026-07-16</div>
+<div class="note">
+ <b>왜 14명 다 듣나</b> — ElevenLabs 문서가 &quot;태그 효과는 <b>성우·문맥에 따라 다르다</b>&quot;고 명시한다.
+ 미나 1명으로만 확인했으므로 나머지 13명은 미검증이었다. <b>안 먹히는 성우는 whisper 톤을 빼는 게 맞다</b> —
+ 억지로 붙이면 품질이 떨어진다.<br><br>
+ <b>크기차는 증거가 아니다</b> — &quot;태그가 뭔가 바꿨다&quot;는 신호일 뿐 &quot;속삭인다&quot;를 뜻하지 않는다.
+ 판정은 귀로만 가능하다. 노란 경고는 <b>의심 지점</b>이지 결론이 아니다.
+</div>
+<div class="card">
+  <div class="hd"><b>미나</b> <span class="gid">kr-mina</span> <span class="diff">+3,761B</span></div>
+  <div class="one">차분하고 또렷한 정보전달형</div>
+  
+  <div class="ab">
+    <div><div class="lbl">대조군 (태그 없음)</div><audio controls src="kr-mina_plain.mp3"></audio></div>
+    <div><div class="lbl">[whispers]</div><audio controls src="kr-mina_whisper.mp3"></audio></div>
+  </div>
+  <label class="verdict">속삭이나? <input type="checkbox"> 예 &nbsp; <input type="checkbox"> 아니오</label>
+</div>
+<div class="card">
+  <div class="hd"><b>클로이차</b> <span class="gid">kr-chloecha</span> <span class="diff">+4,179B</span></div>
+  <div class="one">부드럽고 잔잔한 스토리텔링형</div>
+  
+  <div class="ab">
+    <div><div class="lbl">대조군 (태그 없음)</div><audio controls src="kr-chloecha_plain.mp3"></audio></div>
+    <div><div class="lbl">[whispers]</div><audio controls src="kr-chloecha_whisper.mp3"></audio></div>
+  </div>
+  <label class="verdict">속삭이나? <input type="checkbox"> 예 &nbsp; <input type="checkbox"> 아니오</label>
+</div>
+<div class="card">
+  <div class="hd"><b>한나</b> <span class="gid">kr-hanna</span> <span class="diff">-1,254B</span></div>
+  <div class="one">또렷하고 산뜻한 소셜미디어형</div>
+  <span class="warn">크기 감소 — 다른 성우와 반대 방향</span>
+  <div class="ab">
+    <div><div class="lbl">대조군 (태그 없음)</div><audio controls src="kr-hanna_plain.mp3"></audio></div>
+    <div><div class="lbl">[whispers]</div><audio controls src="kr-hanna_whisper.mp3"></audio></div>
+  </div>
+  <label class="verdict">속삭이나? <input type="checkbox"> 예 &nbsp; <input type="checkbox"> 아니오</label>
+</div>
+<div class="card">
+  <div class="hd"><b>주하</b> <span class="gid">kr-juha</span> <span class="diff">-1,253B</span></div>
+  <div class="one">자연스럽고 차분한 내레이션형</div>
+  <span class="warn">크기 감소 — 다른 성우와 반대 방향</span>
+  <div class="ab">
+    <div><div class="lbl">대조군 (태그 없음)</div><audio controls src="kr-juha_plain.mp3"></audio></div>
+    <div><div class="lbl">[whispers]</div><audio controls src="kr-juha_whisper.mp3"></audio></div>
+  </div>
+  <label class="verdict">속삭이나? <input type="checkbox"> 예 &nbsp; <input type="checkbox"> 아니오</label>
+</div>
+<div class="card">
+  <div class="hd"><b>켈릭</b> <span class="gid">kr-keleek</span> <span class="diff">+6,270B</span></div>
+  <div class="one">캐주얼한 서울말투 대화형</div>
+  
+  <div class="ab">
+    <div><div class="lbl">대조군 (태그 없음)</div><audio controls src="kr-keleek_plain.mp3"></audio></div>
+    <div><div class="lbl">[whispers]</div><audio controls src="kr-keleek_whisper.mp3"></audio></div>
+  </div>
+  <label class="verdict">속삭이나? <input type="checkbox"> 예 &nbsp; <input type="checkbox"> 아니오</label>
+</div>
+<div class="card">
+  <div class="hd"><b>모노베이지</b> <span class="gid">kr-monobeige</span> <span class="diff">+2,508B</span></div>
+  <div class="one">부드럽고 감성적인 스토리텔링형</div>
+  
+  <div class="ab">
+    <div><div class="lbl">대조군 (태그 없음)</div><audio controls src="kr-monobeige_plain.mp3"></audio></div>
+    <div><div class="lbl">[whispers]</div><audio controls src="kr-monobeige_whisper.mp3"></audio></div>
+  </div>
+  <label class="verdict">속삭이나? <input type="checkbox"> 예 &nbsp; <input type="checkbox"> 아니오</label>
+</div>
+<div class="card">
+  <div class="hd"><b>민지</b> <span class="gid">kr-minzy</span> <span class="diff">+7,523B</span></div>
+  <div class="one">차분한 중년 내레이션형</div>
+  
+  <div class="ab">
+    <div><div class="lbl">대조군 (태그 없음)</div><audio controls src="kr-minzy_plain.mp3"></audio></div>
+    <div><div class="lbl">[whispers]</div><audio controls src="kr-minzy_whisper.mp3"></audio></div>
+  </div>
+  <label class="verdict">속삭이나? <input type="checkbox"> 예 &nbsp; <input type="checkbox"> 아니오</label>
+</div>
+<div class="card">
+  <div class="hd"><b>유라</b> <span class="gid">kr-yura</span> <span class="diff">+3,761B</span></div>
+  <div class="one">캐주얼하고 발랄한 스토리텔링형</div>
+  
+  <div class="ab">
+    <div><div class="lbl">대조군 (태그 없음)</div><audio controls src="kr-yura_plain.mp3"></audio></div>
+    <div><div class="lbl">[whispers]</div><audio controls src="kr-yura_whisper.mp3"></audio></div>
+  </div>
+  <label class="verdict">속삭이나? <input type="checkbox"> 예 &nbsp; <input type="checkbox"> 아니오</label>
+</div>
+<div class="card">
+  <div class="hd"><b>한</b> <span class="gid">kr-han</span> <span class="diff">+2,508B</span></div>
+  <div class="one">캐주얼한 대화형</div>
+  
+  <div class="ab">
+    <div><div class="lbl">대조군 (태그 없음)</div><audio controls src="kr-han_plain.mp3"></audio></div>
+    <div><div class="lbl">[whispers]</div><audio controls src="kr-han_whisper.mp3"></audio></div>
+  </div>
+  <label class="verdict">속삭이나? <input type="checkbox"> 예 &nbsp; <input type="checkbox"> 아니오</label>
+</div>
+<div class="card">
+  <div class="hd"><b>칸나</b> <span class="gid">kr-kanna</span> <span class="diff">+3,762B</span></div>
+  <div class="one">차분하고 친근한 예능형</div>
+  
+  <div class="ab">
+    <div><div class="lbl">대조군 (태그 없음)</div><audio controls src="kr-kanna_plain.mp3"></audio></div>
+    <div><div class="lbl">[whispers]</div><audio controls src="kr-kanna_whisper.mp3"></audio></div>
+  </div>
+  <label class="verdict">속삭이나? <input type="checkbox"> 예 &nbsp; <input type="checkbox"> 아니오</label>
+</div>
+<div class="card">
+  <div class="hd"><b>탈리아</b> <span class="gid">kr-talia</span> <span class="diff">+2,508B</span></div>
+  <div class="one">느긋하고 친근한 대화형</div>
+  
+  <div class="ab">
+    <div><div class="lbl">대조군 (태그 없음)</div><audio controls src="kr-talia_plain.mp3"></audio></div>
+    <div><div class="lbl">[whispers]</div><audio controls src="kr-talia_whisper.mp3"></audio></div>
+  </div>
+  <label class="verdict">속삭이나? <input type="checkbox"> 예 &nbsp; <input type="checkbox"> 아니오</label>
+</div>
+<div class="card">
+  <div class="hd"><b>하나바드</b> <span class="gid">kr-hanabad</span> <span class="diff">+0B</span></div>
+  <div class="one">당당하고 차분한 스토리텔링형</div>
+  <span class="warn">크기 동일 — 태그가 아무것도 안 했을 수 있음</span>
+  <div class="ab">
+    <div><div class="lbl">대조군 (태그 없음)</div><audio controls src="kr-hanabad_plain.mp3"></audio></div>
+    <div><div class="lbl">[whispers]</div><audio controls src="kr-hanabad_whisper.mp3"></audio></div>
+  </div>
+  <label class="verdict">속삭이나? <input type="checkbox"> 예 &nbsp; <input type="checkbox"> 아니오</label>
+</div>
+<div class="card">
+  <div class="hd"><b>지아나</b> <span class="gid">kr-jiana</span> <span class="diff">+1,254B</span></div>
+  <div class="one">또렷한 정보전달형</div>
+  
+  <div class="ab">
+    <div><div class="lbl">대조군 (태그 없음)</div><audio controls src="kr-jiana_plain.mp3"></audio></div>
+    <div><div class="lbl">[whispers]</div><audio controls src="kr-jiana_whisper.mp3"></audio></div>
+  </div>
+  <label class="verdict">속삭이나? <input type="checkbox"> 예 &nbsp; <input type="checkbox"> 아니오</label>
+</div>
+<div class="card">
+  <div class="hd"><b>유니</b> <span class="gid">kr-yooni</span> <span class="diff">+9,195B</span></div>
+  <div class="one">자연스럽고 또렷한 스토리텔링형</div>
+  
+  <div class="ab">
+    <div><div class="lbl">대조군 (태그 없음)</div><audio controls src="kr-yooni_plain.mp3"></audio></div>
+    <div><div class="lbl">[whispers]</div><audio controls src="kr-yooni_whisper.mp3"></audio></div>
+  </div>
+  <label class="verdict">속삭이나? <input type="checkbox"> 예 &nbsp; <input type="checkbox"> 아니오</label>
+</div>
