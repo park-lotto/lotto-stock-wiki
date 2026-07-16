@@ -126,6 +126,44 @@ def test_start_creates_folder_and_branch(repo):
     assert track.branch_exists(repo, "track/보이스")
 
 
+def test_start_never_points_upstream_at_main(repo):
+    """★`worktree add -b <br> origin/main`은 upstream을 origin/main으로 박는다 →
+    post-commit의 인자 없는 push가 '트랙 브랜치를 main으로'가 된다(게이트 우회)."""
+    track.start("보이스", repo=repo)
+    up = track.upstream_of(track.worktree_path("보이스", repo))
+    assert up != "origin/main", "★트랙 커밋이 post-commit으로 main에 직행하는 경로가 열렸다"
+    assert up in (None, "origin/track/보이스"), f"예상 밖 upstream: {up}"
+
+
+def test_track_commit_cannot_reach_main_even_without_push_default_simple(repo):
+    """지금 안전한 건 push.default가 unset(=simple)이라 git이 거절해주기 때문일 뿐이다.
+    누가 push.default=upstream으로 바꿔도 main은 안전해야 한다 — 우연에 기대지 않는다."""
+    track.start("보이스", repo=repo)
+    wt = track.worktree_path("보이스", repo)
+    _git(wt, "config", "user.email", "t@t.t")
+    _git(wt, "config", "user.name", "t")
+    _git(wt, "config", "push.default", "upstream")  # simple의 보호를 벗긴다
+    origin_before = _origin_head(repo)
+
+    (wt / "app.py").write_text("트랙의 미완성 코드\n", encoding="utf-8")
+    _git(wt, "add", "app.py")
+    _git(wt, "commit", "-m", "트랙 작업")
+    subprocess.run(["git", "push"], cwd=str(wt), capture_output=True)  # post-commit이 하는 짓
+
+    assert _origin_head(repo) == origin_before, \
+        "★트랙 커밋이 게이트를 건너뛰고 main으로 직행했다"
+
+
+def test_start_leaves_no_main_upstream_when_push_fails(repo):
+    """오프라인·원격장애로 `push -u`가 실패하는 경로. 그때 upstream이 origin/main으로
+    남으면 post-commit이 트랙 커밋을 곧장 main으로 민다 — push 성공 경로만 보면 안 보인다."""
+    _git(repo, "remote", "set-url", "origin", str(repo.parent / "없는저장소.git"))
+    track.start("보이스", repo=repo)
+    up = track.upstream_of(track.worktree_path("보이스", repo))
+    assert up != "origin/main", "★원격이 죽으면 트랙 커밋이 main으로 직행한다"
+    assert up is None, f"원격에 못 올렸으면 upstream은 없어야 한다: {up}"
+
+
 def test_start_refuses_duplicate(repo):
     track.start("보이스", repo=repo)
     with pytest.raises(track.TrackError, match="이미 있는"):

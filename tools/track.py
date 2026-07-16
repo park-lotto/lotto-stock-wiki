@@ -124,6 +124,30 @@ def branch_exists(repo, branch):
 
 # ── start ────────────────────────────────────────────────────────
 
+def _detach_upstream_from_main(wt, br):
+    """★ `worktree add -b <br> origin/main`은 upstream을 **origin/main으로 박는다.**
+
+    그러면 트랙 폴더의 커밋마다 post-commit의 인자 없는 `git push`가
+    '트랙 브랜치를 main으로 밀어라'가 된다 — 게이트를 통째로 우회하는 경로다.
+    지금 사고가 안 나는 건 순전히 `push.default`가 unset(=git 기본 `simple`)이라
+    git이 거절해주기 때문이다(실측 2026-07-16). **누가 `push.default=upstream`으로
+    바꾸는 순간 트랙 커밋이 곧장 main으로 나간다.** 우연에 기대지 않는다.
+
+    → upstream을 끊고, 자기 이름의 원격 브랜치로 다시 건다(백업 겸용).
+      원격에 못 올리면 upstream 없는 채로 둔다 — 그러면 post-commit이
+      무해하게 실패할 뿐 main은 안전하다.
+    """
+    run(["git", "branch", "--unset-upstream"], wt)
+    rc, out = run(["git", "push", "-u", "origin", f"HEAD:{br}"], wt)
+    if rc != 0:
+        print(f"ℹ️ 트랙 브랜치를 origin에 못 올렸다 — 로컬에만 둔다(병합엔 지장 없다).\n   {out.strip()[:200]}")
+
+
+def upstream_of(wt):
+    rc, out = run(["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"], wt)
+    return out.strip() if rc == 0 else None
+
+
 def start(name, repo=BASE):
     validate_name(name)
     wt = worktree_path(name, repo)
@@ -145,6 +169,8 @@ def start(name, repo=BASE):
     )
     if rc != 0:
         raise TrackError(f"worktree 생성 실패:\n{out}")
+
+    _detach_upstream_from_main(wt, branch_name(name))
 
     print(f"✅ 트랙 '{name}' 시작")
     print(f"   폴더:    {wt}")
