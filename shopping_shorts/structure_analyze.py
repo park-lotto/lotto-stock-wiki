@@ -9,12 +9,19 @@ import json
 from google.genai import types
 
 from shopping_shorts import comment_gen
+from shopping_shorts.categorize import KEYWORDS as _CATEGORY_KEYWORDS
 
 _MODEL = comment_gen._MODEL
+
+# 통제 어휘는 categorize.KEYWORDS에서 가져온다 — 여기에 따로 적으면 어휘가 갈라진다
+# (/api/wiki/categories도 같은 출처를 쓴다). enum으로 못박아 통제 어휘 밖 값이
+# 애초에 안 나오게 한다(I-4에서 없앤 '고아 학습 버킷'을 AI가 다시 만들면 안 되므로).
+_CATEGORIES = list(_CATEGORY_KEYWORDS.keys())
 
 _SCHEMA = {
     "type": "object",
     "properties": {
+        "product_category": {"type": "string", "enum": _CATEGORIES + ["기타"]},
         "hook_type": {"type": "string"},
         "hook_line": {"type": "string"},
         "narrator": {"type": "string"},
@@ -47,8 +54,9 @@ _SCHEMA = {
         "target_seconds": {"type": "number"},
         "one_line_why": {"type": "string"},
     },
-    "required": ["hook_type", "hook_line", "narrator", "characters", "storyline",
-                 "development", "appeal", "tone", "beats", "devices", "one_line_why"],
+    "required": ["product_category", "hook_type", "hook_line", "narrator", "characters",
+                 "storyline", "development", "appeal", "tone", "beats", "devices",
+                 "one_line_why"],
 }
 
 _PROMPT = """너는 바이럴 숏폼 대본을 해부하는 분석가다. 아래 대본이 '왜 잘 터졌는지'
@@ -60,6 +68,9 @@ _PROMPT = """너는 바이럴 숏폼 대본을 해부하는 분석가다. 아래
 {full_text}
 
 다음을 채워라:
+- product_category: 이 영상이 다루는 제품 카테고리. 반드시 다음 중 하나: {categories}.
+  어디에도 확실히 안 맞을 때만 "기타". ★채널 이름이나 분위기가 아니라 **대본이 실제로
+  무엇을 다루는지**로 판단하라(집꾸미기 채널이 요리를 다루면 레시피다).
 - hook_type: 첫 훅 유형을 한 단어로. 예: 경고형("절대 하지 마세요"), 반전형("알고보니"),
   권위인용형("이모님이 알려준"), 호기심갭형("99%가 모르는"), 공감형("저도 그랬어요"),
   실수지적형, 비교형 중 가장 가까운 것(없으면 새로 명명).
@@ -91,7 +102,8 @@ def analyze_structure(full_text, max_key_tries=3):
     """대본 전체 텍스트 → 구조 dict. 실패/무키면 {}."""
     if not comment_gen.SHORTS_GEMINI_KEYS or not (full_text or "").strip():
         return {}
-    prompt = _PROMPT.format(full_text=full_text[:4000])
+    prompt = _PROMPT.format(full_text=full_text[:4000],
+                            categories="|".join(_CATEGORIES))
     for _ in range(max_key_tries):
         key, ki = comment_gen._current_key_and_idx()
         if key is None:

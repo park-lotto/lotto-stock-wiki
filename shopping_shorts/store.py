@@ -106,8 +106,12 @@ class Store:
             """)
             # 학습소재 통계용 확장(2026-07-13) — 위키 저장 여부와 무관하게 대본추출된
             # 모든 항목에 구조분석을 백필하기 위한 컬럼.
+            # category_source(2026-07-16): 카테고리가 어디서 왔나 — user|gemini|keyword.
+            # 키워드 추측 정확도가 실측 54%(13건 중 7건)인데 학습 코퍼스의 다수를
+            # 차지해(생활용품 79%·인테리어 80%가 추측) 통계가 오염된다. 출처를 남겨야
+            # ①사용자 교정을 AI가 덮지 않고 ②나중에 추측만 골라 재분류·가중치 조정이 된다.
             for col, ddl in (("category", "TEXT"), ("structure_json", "TEXT"),
-                              ("structure_analyzed_at", "TEXT")):
+                              ("structure_analyzed_at", "TEXT"), ("category_source", "TEXT")):
                 try:
                     c.execute(f"ALTER TABLE script_extracts ADD COLUMN {col} {ddl}")
                 except sqlite3.OperationalError:
@@ -711,21 +715,27 @@ class Store:
                     (shortcode, json.dumps(script, ensure_ascii=False)),
                 )
 
-    def update_extract_category(self, shortcode, category):
+    def update_extract_category(self, shortcode, category, source=None):
         """category만 UPDATE — script_json은 절대 안 건드린다(2026-07-15, C-1 재발방지).
         원본 텍스트를 다시 쓰지 않고 카테고리 추론·교정만 반영할 때 이걸 쓸 것
-        (save_script(code, cached, category=...)로 원본을 통째로 재기록하는 패턴 금지)."""
+        (save_script(code, cached, category=...)로 원본을 통째로 재기록하는 패턴 금지).
+
+        source(2026-07-16): user|gemini|keyword — 어디서 온 값인지. 안 주면 종전대로
+        category만 바꾸고 출처는 건드리지 않는다(기존 호출부 호환)."""
         with self._conn() as c:
-            c.execute(
-                "UPDATE script_extracts SET category=? WHERE shortcode=?",
-                (category, shortcode),
-            )
+            if source is None:
+                c.execute("UPDATE script_extracts SET category=? WHERE shortcode=?",
+                          (category, shortcode))
+            else:
+                c.execute("UPDATE script_extracts SET category=?, category_source=? "
+                          "WHERE shortcode=?", (category, source, shortcode))
 
     def get_extract(self, shortcode):
         """대본추출 결과 + category + 구조분석(있으면). 없으면 None."""
         with self._conn() as c:
             row = c.execute(
-                "SELECT script_json, extracted_at, category, structure_json, structure_analyzed_at "
+                "SELECT script_json, extracted_at, category, structure_json, "
+                "structure_analyzed_at, category_source "
                 "FROM script_extracts WHERE shortcode=?",
                 (shortcode,),
             ).fetchone()
@@ -736,6 +746,7 @@ class Store:
         data["category"] = row[2]
         data["structure"] = json.loads(row[3]) if row[3] else None
         data["structure_analyzed_at"] = row[4]
+        data["category_source"] = row[5]
         return data
 
     def save_extract_structure(self, shortcode, structure):
