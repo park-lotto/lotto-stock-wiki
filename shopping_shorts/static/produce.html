@@ -109,6 +109,11 @@
     .draft .hist-list.open{display:block}
     .draft .hist-item{padding:5px 6px;font-size:12px;cursor:pointer;border-radius:4px}
     .draft .hist-item:hover{background:#161d2b}
+    .subject-row{margin:6px 0 10px 20px;font-size:13px}
+    .subject-row .subj-label{color:var(--sub);margin-right:6px}
+    .subject-row #pmSubject{width:70%;background:#0d131c;border:1px solid var(--line);
+      color:var(--txt);border-radius:6px;padding:7px 9px;font-size:13px}
+    .subject-row .subj-hint{color:var(--sub);font-size:11.5px;margin-top:5px}
   </style>
 </head>
 <body>
@@ -409,6 +414,10 @@
         <div class="gen-sec">주제 / 소재</div>
         <div class="modes">
           <label><input type="radio" name="pmmode" value="A" checked onchange="pmToggleTopic()"> ♻️ 원본 소재 그대로 · 표현만 새로 (중복 회피)</label>
+          <div class="subject-row" id="pmSubjectRow">
+            <span class="subj-label">감지된 소재:</span><input id="pmSubject" placeholder="소재 감지 중…">
+            <div class="subj-hint">원본 영상 재사용·2영상 믹싱용. 제품·사실·장면은 그대로, 훅·문장·순서만 새로.</div>
+          </div>
           <label><input type="radio" name="pmmode" value="B" onchange="pmToggleTopic()"> 🔀 내 제품으로 이식 (구조만 빌림)</label>
           <input id="pmTopic" placeholder="예: 무선 가습기 / 여름 결로 방지 커튼" style="display:none">
         </div>
@@ -1272,6 +1281,8 @@ async function openScriptModal(i){
     PM_BASE_SCRIPT=d.full_text||'';
     document.getElementById('pmResults').innerHTML=`<div class="hint">✅ 원본 대본 확보. 아래에서 요소를 조절해 새 초안을 만들거나, <button class="btn-next" style="padding:4px 10px" onclick="pmUseRaw()">원본 대본 그대로 확정 →</button></div>`;
     await pmLoadElementOptions(PM_CATEGORY);
+    pmToggleTopic();                    // 소재칸 표시상태를 현재 모드에 맞춤
+    pmPrefillSubject(PM_SHORTCODE);     // shortcode 없으면(직행 URL) 손입력만 열어둔다
   }catch(e){ document.getElementById('pmResults').innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; }
 }
 function pmUseRaw(){ STATE.script=PM_BASE_SCRIPT; STATE.script_src_idx=PM_IDX; pmClose(); setScriptMode('manual'); refreshFinalPeek(); setFinalCategoryValue(PM_CATEGORY); if(HANDOFF.length) saveWork(); }
@@ -1279,6 +1290,21 @@ function pmClose(){ document.getElementById('pmModal').classList.remove('open');
 function pmToggleTopic(){
   const mode=document.querySelector('input[name=pmmode]:checked').value;
   const t=document.getElementById('pmTopic'); if(t) t.style.display = mode==='B' ? 'block' : 'none';
+  const s=document.getElementById('pmSubjectRow'); if(s) s.style.display = mode==='A' ? 'block' : 'none';
+}
+// 소재 자동감지 프리필(도서관 library.html openGen의 소재 블록 이식, 2026-07-16).
+// 경합 가드 필수: 모달을 빨리 두 번 열면 먼저 띄운 요청이 늦게 도착해 남의 소재를 덮어쓴다.
+// library는 window._genSC로 봤고 여기선 PM_SHORTCODE가 같은 역할을 한다.
+async function pmPrefillSubject(sc){
+  const el=document.getElementById('pmSubject'); if(!el) return;
+  el.value=''; el.placeholder='소재 감지 중…';
+  if(!sc){ el.placeholder='예: 무선 가습기 물때 청소'; return; }   // 직행 URL 등 shortcode 없음 — 손입력은 열어둔다
+  const mine=sc;
+  try{
+    const s=await (await fetch('/api/wiki/subject?shortcode='+encodeURIComponent(sc))).json();
+    if(s.ok && PM_SHORTCODE===mine) el.value=s.subject||'';
+  }catch(e){}
+  el.placeholder='예: 무선 가습기 물때 청소';
 }
 function pmOnElemToggle(cb){
   const sel=cb.closest('.elem-row').querySelector('.elem-mode');
@@ -1304,10 +1330,12 @@ async function pmRunGen(){
   });
   const mode=document.querySelector('input[name=pmmode]:checked').value;
   const topic=document.getElementById('pmTopic').value.trim();
+  const subjEl=document.getElementById('pmSubject');
+  const subject = mode==='A' ? ((subjEl&&subjEl.value)||'').trim() : '';   // 이식(B)엔 소재 안 보냄
   if(mode==='B'&&!topic){ res.innerHTML='<div class="hint" style="color:var(--fire)">내 주제/제품을 입력하세요.</div>'; return; }
   btn.disabled=true; res.innerHTML='<div class="hint">✨ 초안 만드는 중… (10~20초)</div>';
   try{
-    const body={mode, my_topic:topic, n:3, elem_modes:elemModes, structure:PM_BASE_STRUCT, base_script:PM_BASE_SCRIPT, category:PM_CATEGORY};
+    const body={mode, my_topic:topic, subject, n:3, elem_modes:elemModes, structure:PM_BASE_STRUCT, base_script:PM_BASE_SCRIPT, category:PM_CATEGORY};
     const d=await (await fetch('/api/wiki/generate?shortcode='+encodeURIComponent(PM_SHORTCODE||PM_URL),
       {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
     if(!d.ok){ res.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(d.error||'생성 실패')+'</div>'; return; }
