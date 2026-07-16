@@ -111,6 +111,12 @@ py tools/track.py close <트랙명>     # 트랙을 아주 접는다 — 폴더�
 `terminalSequence`는 **최상위 필드**다. `hookSpecificOutput` 안에 넣으면 조용히 무시된다.
 허용 이스케이프는 **OSC 0/1/2/9/99/777 + BEL만** — 그래서 OSC 2(창/탭 제목)를 쓴다.
 `sessionTitle`은 `UserPromptSubmit` 분기에만 있다("Set the session title").
+
+**★훅 `command`는 `python.exe`여야 한다 — `py`도 `py.exe`도 안 된다.**
+Claude Code는 훅을 셸 없이 띄우는데, `WindowsApps\py.exe`는 **104바이트짜리 스토어 앱 별칭**
+(reparse point)이라 실행파일로 안 쳐준다(`Executable not found in $PATH: "py.exe"`).
+`AppData\Local\Python\bin\python.exe`는 591KB짜리 진짜 실행파일이고 PATH에 있다.
+셸을 거치는 곳(Claude의 Bash 툴, 위의 `set` 명령)에선 `py`가 그대로 된다 — 셸이 별칭을 풀어준다.
 </details>
 
 > 트랙 폴더에서 직접 Claude Code를 열어도 된다(상대경로가 자연히 그 트랙을 가리켜 실수 여지가 준다).
