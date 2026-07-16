@@ -18,7 +18,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-mina-stable.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": true
   },
   {
     "preset_id": "kr-mina-natural",
@@ -39,7 +40,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-mina-natural.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": true
   },
   {
     "preset_id": "kr-mina-expressive",
@@ -60,7 +62,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-mina-expressive.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": true
   },
   {
     "preset_id": "kr-chloecha-stable",
@@ -81,7 +84,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-chloecha-stable.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": true
   },
   {
     "preset_id": "kr-chloecha-natural",
@@ -102,7 +106,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-chloecha-natural.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": true
   },
   {
     "preset_id": "kr-chloecha-expressive",
@@ -123,7 +128,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-chloecha-expressive.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": true
   },
   {
     "preset_id": "kr-hanna-stable",
@@ -144,7 +150,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-hanna-stable.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": false
   },
   {
     "preset_id": "kr-hanna-natural",
@@ -165,7 +172,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-hanna-natural.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": false
   },
   {
     "preset_id": "kr-hanna-expressive",
@@ -186,7 +194,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-hanna-expressive.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": false
   },
   {
     "preset_id": "kr-juha-stable",
@@ -207,7 +216,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-juha-stable.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": false
   },
   {
     "preset_id": "kr-juha-natural",
@@ -228,7 +238,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-juha-natural.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": false
   },
   {
     "preset_id": "kr-juha-expressive",
@@ -249,7 +260,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-juha-expressive.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": false
   },
   {
     "preset_id": "kr-keleek-stable",
@@ -270,7 +282,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-keleek-stable.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": false
   },
   {
     "preset_id": "kr-keleek-natural",
@@ -291,7 +304,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-keleek-natural.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": false
   },
   {
     "preset_id": "kr-keleek-expressive",
@@ -312,7 +326,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-keleek-expressive.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": false
   },
   {
     "preset_id": "kr-monobeige-stable",
@@ -333,7 +348,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-monobeige-stable.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": false
   },
   {
     "preset_id": "kr-monobeige-natural",
@@ -354,7 +370,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-monobeige-natural.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": false
   },
   {
     "preset_id": "kr-monobeige-expressive",
@@ -375,7 +392,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-monobeige-expressive.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": false
   },
   {
     "preset_id": "kr-minzy-stable",
@@ -396,7 +414,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-minzy-stable.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": false
   },
   {
     "preset_id": "kr-minzy-natural",
@@ -417,7 +436,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-minzy-natural.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": false
   },
   {
     "preset_id": "kr-minzy-expressive",
@@ -438,7 +458,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-minzy-expressive.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": false
   },
   {
     "preset_id": "kr-yura-stable",
@@ -459,7 +480,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-yura-stable.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": false
   },
   {
     "preset_id": "kr-yura-natural",
@@ -480,7 +502,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-yura-natural.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": false
   },
   {
     "preset_id": "kr-yura-expressive",
@@ -501,7 +524,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-yura-expressive.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": false
   },
   {
     "preset_id": "kr-han-stable",
@@ -522,7 +546,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-han-stable.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": false
   },
   {
     "preset_id": "kr-han-natural",
@@ -543,7 +568,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-han-natural.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": false
   },
   {
     "preset_id": "kr-han-expressive",
@@ -564,7 +590,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-han-expressive.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": false
   },
   {
     "preset_id": "kr-kanna-stable",
@@ -585,7 +612,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-kanna-stable.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": true
   },
   {
     "preset_id": "kr-kanna-natural",
@@ -606,7 +634,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-kanna-natural.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": true
   },
   {
     "preset_id": "kr-kanna-expressive",
@@ -627,7 +656,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-kanna-expressive.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": true
   },
   {
     "preset_id": "kr-talia-stable",
@@ -648,7 +678,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-talia-stable.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": false
   },
   {
     "preset_id": "kr-talia-natural",
@@ -669,7 +700,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-talia-natural.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": false
   },
   {
     "preset_id": "kr-talia-expressive",
@@ -690,7 +722,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-talia-expressive.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": false
   },
   {
     "preset_id": "kr-hanabad-stable",
@@ -711,7 +744,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-hanabad-stable.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": true
   },
   {
     "preset_id": "kr-hanabad-natural",
@@ -732,7 +766,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-hanabad-natural.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": true
   },
   {
     "preset_id": "kr-hanabad-expressive",
@@ -753,7 +788,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-hanabad-expressive.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": true
   },
   {
     "preset_id": "kr-jiana-stable",
@@ -774,7 +810,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-jiana-stable.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": false
   },
   {
     "preset_id": "kr-jiana-natural",
@@ -795,7 +832,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-jiana-natural.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": false
   },
   {
     "preset_id": "kr-jiana-expressive",
@@ -816,7 +854,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-jiana-expressive.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": false
   },
   {
     "preset_id": "kr-yooni-stable",
@@ -837,7 +876,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-yooni-stable.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": true
   },
   {
     "preset_id": "kr-yooni-natural",
@@ -858,7 +898,8 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-yooni-natural.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": true
   },
   {
     "preset_id": "kr-yooni-expressive",
@@ -879,6 +920,177 @@
     "default_silence_trim": "mid",
     "sample_file": "kr-yooni-expressive.mp3",
     "source_ref": "성우 후보 라운드6 태깅 스크리닝 채택",
-    "origin": "curated"
+    "origin": "curated",
+    "best": true
+  },
+  {
+    "preset_id": "kr-yooni-whisper",
+    "group_id": "kr-yooni",
+    "variant": "whisper",
+    "name": "유니",
+    "one_liner": "자연스럽고 또렷한 스토리텔링형",
+    "lang": "KR",
+    "archetype": "자연스럽고 또렷한 스토리텔링형",
+    "base_voice_id": "n2fbxG88jqAoaVPUy3IG",
+    "model_id": "eleven_v3",
+    "voice_settings": {
+      "stability": 0.55,
+      "similarity_boost": 0.78,
+      "style": 0.15
+    },
+    "default_speed": 1.15,
+    "default_silence_trim": "mid",
+    "sample_file": "kr-yooni-whisper.mp3",
+    "source_ref": "사장님 청취 판정 2026-07-16(베스트 5명) — out/whisper_all14 프로브",
+    "origin": "curated",
+    "best": true,
+    "naturalize_profile": {
+      "whisper": {
+        "on": true,
+        "roles": [
+          "훅",
+          "페인포인트",
+          "반전",
+          "실용",
+          "CTA"
+        ]
+      }
+    }
+  },
+  {
+    "preset_id": "kr-mina-whisper",
+    "group_id": "kr-mina",
+    "variant": "whisper",
+    "name": "미나",
+    "one_liner": "차분하고 또렷한 정보전달형",
+    "lang": "KR",
+    "archetype": "차분하고 또렷한 정보전달형",
+    "base_voice_id": "aiUUgjHa4mpHf6UenZuf",
+    "model_id": "eleven_v3",
+    "voice_settings": {
+      "stability": 0.55,
+      "similarity_boost": 0.78,
+      "style": 0.15
+    },
+    "default_speed": 1.15,
+    "default_silence_trim": "mid",
+    "sample_file": "kr-mina-whisper.mp3",
+    "source_ref": "사장님 청취 판정 2026-07-16(베스트 5명) — out/whisper_all14 프로브",
+    "origin": "curated",
+    "best": true,
+    "naturalize_profile": {
+      "whisper": {
+        "on": true,
+        "roles": [
+          "훅",
+          "페인포인트",
+          "반전",
+          "실용",
+          "CTA"
+        ]
+      }
+    }
+  },
+  {
+    "preset_id": "kr-chloecha-whisper",
+    "group_id": "kr-chloecha",
+    "variant": "whisper",
+    "name": "클로이차",
+    "one_liner": "부드럽고 잔잔한 스토리텔링형",
+    "lang": "KR",
+    "archetype": "부드럽고 잔잔한 스토리텔링형",
+    "base_voice_id": "74i8I1pZi98ZjmmYLdaF",
+    "model_id": "eleven_v3",
+    "voice_settings": {
+      "stability": 0.55,
+      "similarity_boost": 0.78,
+      "style": 0.15
+    },
+    "default_speed": 1.15,
+    "default_silence_trim": "mid",
+    "sample_file": "kr-chloecha-whisper.mp3",
+    "source_ref": "사장님 청취 판정 2026-07-16(베스트 5명) — out/whisper_all14 프로브",
+    "origin": "curated",
+    "best": true,
+    "naturalize_profile": {
+      "whisper": {
+        "on": true,
+        "roles": [
+          "훅",
+          "페인포인트",
+          "반전",
+          "실용",
+          "CTA"
+        ]
+      }
+    }
+  },
+  {
+    "preset_id": "kr-kanna-whisper",
+    "group_id": "kr-kanna",
+    "variant": "whisper",
+    "name": "칸나",
+    "one_liner": "차분하고 친근한 예능형",
+    "lang": "KR",
+    "archetype": "차분하고 친근한 예능형",
+    "base_voice_id": "5I7B1di44aCL15NkP0jn",
+    "model_id": "eleven_v3",
+    "voice_settings": {
+      "stability": 0.55,
+      "similarity_boost": 0.78,
+      "style": 0.15
+    },
+    "default_speed": 1.15,
+    "default_silence_trim": "mid",
+    "sample_file": "kr-kanna-whisper.mp3",
+    "source_ref": "사장님 청취 판정 2026-07-16(베스트 5명) — out/whisper_all14 프로브",
+    "origin": "curated",
+    "best": true,
+    "naturalize_profile": {
+      "whisper": {
+        "on": true,
+        "roles": [
+          "훅",
+          "페인포인트",
+          "반전",
+          "실용",
+          "CTA"
+        ]
+      }
+    }
+  },
+  {
+    "preset_id": "kr-hanabad-whisper",
+    "group_id": "kr-hanabad",
+    "variant": "whisper",
+    "name": "하나바드",
+    "one_liner": "당당하고 차분한 스토리텔링형",
+    "lang": "KR",
+    "archetype": "당당하고 차분한 스토리텔링형",
+    "base_voice_id": "YDseIkMzKtO5bK1Ehnev",
+    "model_id": "eleven_v3",
+    "voice_settings": {
+      "stability": 0.55,
+      "similarity_boost": 0.78,
+      "style": 0.15
+    },
+    "default_speed": 1.15,
+    "default_silence_trim": "mid",
+    "sample_file": "kr-hanabad-whisper.mp3",
+    "source_ref": "사장님 청취 판정 2026-07-16(베스트 5명) — out/whisper_all14 프로브",
+    "origin": "curated",
+    "best": true,
+    "naturalize_profile": {
+      "whisper": {
+        "on": true,
+        "roles": [
+          "훅",
+          "페인포인트",
+          "반전",
+          "실용",
+          "CTA"
+        ]
+      }
+    }
   }
 ]
