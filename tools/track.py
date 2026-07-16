@@ -1,0 +1,382 @@
+"""트랙별 작업 폴더 — 시작 / 끝 / 목록.
+
+설계: docs/superpowers/specs/2026-07-15-트랙폴더-병합게이트-design.md
+
+한 PC에서 6개 세션이 같은 폴더·같은 인덱스로 일하면 먼저 커밋하는 세션이
+남의 미완성 코드를 **물리적으로** 자기 커밋에 담는다(흡수). 락으로는 못 막는다
+— 락은 '언제 커밋하나'만 조율하고 '파일 안에 뭐가 들었나'는 못 바꾼다.
+그래서 트랙마다 자기 폴더(worktree)+자기 브랜치를 준다.
+
+폴더를 나누면 흡수는 사라지지만 **의미적 충돌**이 커진다(A가 함수명을 바꾸고
+B가 옛 버전을 보고 그 함수를 부르면, 텍스트가 안 겹쳐 깨끗이 병합되고 main이
+ImportError). 그래서 병합에 게이트가 붙는다 — merge_gate.py.
+
+★ post-commit이 무조건 `git push`다. 그래서 병합은 반드시
+  `merge --no-ff --no-commit`(커밋 없음 → 훅 안 돎) → 게이트 → 통과해야 commit.
+  순진하게 merge하면 게이트가 돌기 전에 이미 라이브다.
+
+사용:
+    py tools/track.py start 보이스
+    py tools/track.py finish 보이스
+    py tools/track.py list
+"""
+import argparse
+import json
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import merge_gate
+
+BASE = Path(__file__).resolve().parent.parent
+BRANCH_PREFIX = "track/"
+FOLDER_PREFIX = "lotto-"
+MAIN_BRANCH = "main"
+
+# 봇 산출물·런타임 파일 — main 폴더에 이게 더러워도 병합을 막지 않는다.
+# (크롤봇이 raw/에 계속 쓴다. 이걸로 막으면 게이트가 영원히 안 돈다.)
+_IGNORABLE = ("raw/", "out/", "wiki/log.d/", ".fablize/", ".superpowers/")
+_IGNORABLE_PARTS = ("/data/", "__pycache__/")
+_IGNORABLE_SUFFIX = (".db", ".db-journal", ".db-wal", ".pyc", ".log")
+
+
+class TrackError(Exception):
+    """사람에게 그대로 보여줄 중단 사유."""
+
+
+def run(cmd, cwd, check=False):
+    p = subprocess.run(
+        cmd, cwd=str(cwd), capture_output=True, text=True,
+        encoding="utf-8", errors="replace",
+    )
+    out = (p.stdout or "") + (p.stderr or "")
+    if check and p.returncode != 0:
+        raise TrackError(f"명령 실패: {' '.join(cmd)}\n{out}")
+    return p.returncode, out
+
+
+def validate_name(name):
+    """폴더·브랜치 이름이 될 것이므로 경로를 벗어나는 이름을 막는다."""
+    if not name or not name.strip():
+        raise TrackError("트랙 이름이 비었다")
+    bad = set('/\\:*?"<>| \t')
+    if any(c in bad for c in name) or ".." in name or name.startswith("."):
+        raise TrackError(
+            f"트랙 이름에 쓸 수 없는 문자: {name!r}\n"
+            "경로 구분자·공백·'..'는 폴더와 브랜치를 깨뜨린다."
+        )
+    return name
+
+
+def branch_name(name):
+    return f"{BRANCH_PREFIX}{name}"
+
+
+def worktree_path(name, repo=BASE):
+    """트랙 폴더는 repo의 형제로 만든다 (repo 안에 만들면 git이 자기를 추적한다)."""
+    return Path(repo).resolve().parent / f"{FOLDER_PREFIX}{name}"
+
+
+def is_ignorable(path):
+    p = path.replace("\\", "/")
+    return (
+        p.startswith(_IGNORABLE)
+        or any(part in p for part in _IGNORABLE_PARTS)
+        or p.endswith(_IGNORABLE_SUFFIX)
+    )
+
+
+def parse_status(porcelain):
+    """git status --porcelain → 경로 목록."""
+    paths = []
+    for line in porcelain.splitlines():
+        if not line.strip():
+            continue
+        path = line[3:].strip() if len(line) > 3 else line.strip()
+        if " -> " in path:  # rename
+            path = path.split(" -> ", 1)[1]
+        paths.append(path.strip('"'))
+    return paths
+
+
+def dirty_code_files(repo):
+    """봇 산출물을 뺀 '진짜' 더러운 파일."""
+    _, out = run(["git", "status", "--porcelain"], repo)
+    return [p for p in parse_status(out) if not is_ignorable(p)]
+
+
+def current_branch(repo):
+    _, out = run(["git", "branch", "--show-current"], repo)
+    return out.strip()
+
+
+def worktree_exists(name, repo=BASE):
+    return worktree_path(name, repo).exists()
+
+
+def branch_exists(repo, branch):
+    rc, _ = run(["git", "rev-parse", "--verify", "--quiet", f"refs/heads/{branch}"], repo)
+    return rc == 0
+
+
+# ── start ────────────────────────────────────────────────────────
+
+def start(name, repo=BASE):
+    validate_name(name)
+    wt = worktree_path(name, repo)
+    if wt.exists():
+        raise TrackError(
+            f"이미 있는 트랙 폴더: {wt}\n"
+            "덮어쓰지 않는다. 이어서 쓰려면 그 폴더에서 Claude Code를 열어라."
+        )
+    if branch_exists(repo, branch_name(name)):
+        raise TrackError(
+            f"이미 있는 브랜치: {branch_name(name)}\n"
+            f"폴더만 없다면 되살릴 수 있다: git worktree add \"{wt}\" {branch_name(name)}"
+        )
+
+    run(["git", "fetch", "origin"], repo)
+    rc, out = run(
+        ["git", "worktree", "add", str(wt), "-b", branch_name(name), "origin/main"],
+        repo,
+    )
+    if rc != 0:
+        raise TrackError(f"worktree 생성 실패:\n{out}")
+
+    print(f"✅ 트랙 '{name}' 시작")
+    print(f"   폴더:    {wt}")
+    print(f"   브랜치:  {branch_name(name)} (origin/main 기준)")
+    print()
+    print("   이제 그 폴더에서 Claude Code를 열어라. 여기(main 폴더)에서 일하지 마라 —")
+    print("   그러면 흡수가 그대로 재발한다.")
+    print()
+    print("   ⚠️ shopping_shorts/data/ 는 gitignore라 새 폴더는 빈 DB로 시작한다.")
+    print("      로컬 데이터가 필요하면 복사해 오거나 서버에서 확인해라.")
+    print(f"   끝나면: py tools/track.py finish {name}")
+    return 0
+
+
+# ── finish ───────────────────────────────────────────────────────
+
+def _preflight(name, repo):
+    """트랙 폴더만 본다. **main 폴더는 검사하지도, 건드리지도 않는다** —
+    거기선 다른 세션 5개가 계속 일하고 있고, 우리는 그 폴더를 쓰지 않는다."""
+    wt = worktree_path(name, repo)
+    if not wt.exists():
+        raise TrackError(f"트랙 폴더가 없다: {wt}\n먼저: py tools/track.py start {name}")
+
+    _, st = run(["git", "status", "--porcelain"], wt)
+    if [p for p in parse_status(st) if not is_ignorable(p)]:
+        raise TrackError(
+            f"트랙 폴더가 dirty다 — 커밋 먼저 해라.\n\n{st}\n"
+            f"(폴더: {wt})"
+        )
+    return wt
+
+
+def _open_stage(repo, name):
+    """병합·게이트 전용 임시 폴더 (origin/main에 detached).
+
+    ★ 왜 main 폴더에서 안 하나: `merge --no-commit` 후 게이트(pytest)가 도는
+    수 분 동안 main 폴더는 '반쯤 병합된' 상태가 된다. 그 창에 다른 세션이
+    커밋하면 그 반쪽 병합을 통째로 담아 push한다 — 없애려던 흡수가 바로
+    그 자리에서 되살아난다. 게다가 옆 세션의 편집이 게이트 결과를 오염시켜
+    없는 실패가 잡힌다(오탐). 전용 폴더는 둘 다 원천 차단한다.
+    """
+    stage = Path(repo).resolve().parent / f"{FOLDER_PREFIX}merge-{name}"
+    if stage.exists():
+        run(["git", "worktree", "remove", "--force", str(stage)], repo)
+    rc, out = run(["git", "worktree", "add", "--detach", str(stage), "origin/main"], repo)
+    if rc != 0:
+        raise TrackError(f"병합용 임시 폴더를 못 만들었다:\n{out}")
+    return stage
+
+
+def _close_stage(repo, stage):
+    run(["git", "worktree", "remove", "--force", str(stage)], repo)
+
+
+def finish(name, repo=BASE, gate=merge_gate, attempts=3):
+    validate_name(name)
+    wt = _preflight(name, repo)
+    br = branch_name(name)
+
+    for attempt in range(1, attempts + 1):
+        run(["git", "fetch", "origin"], repo)
+        stage = _open_stage(repo, name)
+        try:
+            result = _merge_and_gate(name, repo, stage, br, gate, wt)
+        finally:
+            _close_stage(repo, stage)
+
+        if result == "nothing":
+            print(f"\n병합할 것이 없다 (트랙 '{name}'에 새 커밋 없음).")
+            _cleanup(name, repo, wt, br)
+            return 0
+        if result == "pushed":
+            _sync_main_folder(repo)
+            _cleanup(name, repo, wt, br)
+            return 0
+        # result == "raced": 다른 트랙이 먼저 병합했다 → 그 위에서 다시
+        print(f"⚠️ 다른 트랙이 먼저 main에 들어왔다. 최신 main 위에서 다시 시도 "
+              f"({attempt}/{attempts})...")
+
+    raise TrackError(
+        f"{attempts}번 시도했는데 매번 다른 트랙이 먼저 들어왔다.\n"
+        "지금 병합이 몰리는 중이다. 잠시 뒤 다시: py tools/track.py finish " + name
+    )
+
+
+def _merge_and_gate(name, repo, stage, br, gate, wt):
+    print("기준선 수집 중 (병합 전 origin/main)...")
+    before = gate.snapshot(stage)
+    for w in gate.baseline_warnings(before):
+        print(f"  {w}")
+
+    # ★ 커밋 없이 병합만 — 커밋하면 post-commit(git push)이 게이트 전에 라이브로 보낸다
+    rc, out = run(["git", "merge", "--no-ff", "--no-commit", br], stage)
+
+    if "Already up to date" in out:
+        return "nothing"
+
+    if rc != 0:
+        # abort하지 않는다 — stage 자체가 finally에서 통째로 삭제되므로 중복이다.
+        # (실측: abort를 지워도 부분 병합이 남지 않는다 — worktree remove --force가 처리)
+        raise TrackError(
+            f"병합 충돌 — 자동 해결하지 않는다(사람 판단).\n\n{out}\n"
+            f"트랙 폴더에서 main을 먼저 받아 충돌을 풀어라:\n"
+            f"  cd \"{wt}\"\n"
+            f"  git fetch origin && git merge origin/main\n"
+            f"  (충돌 해결·커밋 후) py tools/track.py finish {name}"
+        )
+
+    print("게이트 실행 중 (병합된 상태, 아직 커밋 없음)...")
+    after = gate.snapshot(stage)
+    problems = gate.compare(before, after)
+
+    if problems:
+        msg = ["❌ 게이트 실패 — 병합을 버렸다. 라이브는 무사하다.\n"]
+        msg += [f"  • {p}" for p in problems]
+        if not after["import_ok"]:
+            msg.append(f"\n--- import 출력 ---\n{after['import_out']}")
+        if after["pytest_rc"] not in merge_gate._PYTEST_SANE_RC:
+            msg.append(f"\n--- pytest 출력 ---\n{after['pytest_out']}")
+        msg.append(f"\n트랙 폴더는 그대로 있다: {wt}\n고친 뒤 다시: py tools/track.py finish {name}")
+        raise TrackError("\n".join(msg))
+
+    print(f"✅ 게이트 통과 (기존 실패 {len(before['failed'])}건은 그대로)")
+
+    # stage는 detached HEAD라 post-commit의 인자 없는 `git push`는 조용히 실패한다.
+    # 그래서 push는 아래에서 우리가 명시적으로 한다 — 즉 **게이트 통과 후에만** 나간다.
+    rc, out = run(["git", "commit", "--no-edit"], stage)
+    if rc != 0:
+        raise TrackError(f"커밋 실패 — 병합을 버렸다(라이브 무사):\n{out}")
+
+    rc, out = run(["git", "push", "origin", "HEAD:main"], stage)
+    if rc != 0:
+        if _is_race(out):
+            return "raced"
+        raise TrackError(
+            f"push 실패 — main은 안 바뀌었다(라이브 무사):\n{out}"
+        )
+    print("✅ main에 병합 완료 — push됨. 3분 뒤 서버 반영.")
+    return "pushed"
+
+
+def _is_race(push_output):
+    """다른 트랙이 먼저 밀어넣어 거절당했나 (git이 주는 원자적 신호등)."""
+    o = push_output.lower()
+    return "non-fast-forward" in o or "fetch first" in o or "rejected" in o
+
+
+def _sync_main_folder(repo):
+    """원본 폴더를 새 main으로 당겨준다. 실패해도 병합은 이미 끝났다 — 알리기만."""
+    rc, out = run(["git", "merge", "--ff-only", "origin/main"], repo)
+    if rc != 0:
+        print(f"ℹ️ 원본 폴더는 아직 옛 main이다 (거기서 직접 pull 해라):\n{out.strip()}")
+
+
+def _cleanup(name, repo, wt, br):
+    rc, out = run(["git", "worktree", "remove", str(wt)], repo)
+    if rc != 0:
+        print(f"⚠️ 트랙 폴더를 못 지웠다 (수동으로): {wt}\n{out}")
+        return
+    rc, out = run(["git", "branch", "-d", br], repo)
+    if rc != 0:
+        print(f"⚠️ 브랜치를 못 지웠다 (수동으로): git branch -D {br}\n{out}")
+        return
+    run(["git", "push", "origin", "--delete", br], repo)  # 없으면 조용히 실패, 무해
+    print(f"🧹 트랙 '{name}' 정리 완료 (폴더·브랜치 삭제)")
+
+
+# ── list ─────────────────────────────────────────────────────────
+
+def track_branches(repo=BASE):
+    _, out = run(["git", "branch", "--list", f"{BRANCH_PREFIX}*", "--format=%(refname:short)"], repo)
+    return [b.strip() for b in out.splitlines() if b.strip()]
+
+
+def ahead_count(repo, branch, base=MAIN_BRANCH):
+    rc, out = run(["git", "rev-list", "--count", f"{base}..{branch}"], repo)
+    if rc != 0:
+        return None
+    try:
+        return int(out.strip())
+    except ValueError:
+        return None
+
+
+def list_tracks(repo=BASE):
+    branches = track_branches(repo)
+    if not branches:
+        print("열린 트랙 없음.  시작: py tools/track.py start <이름>")
+        return 0
+    print("열린 트랙:\n")
+    for br in branches:
+        name = br[len(BRANCH_PREFIX):]
+        wt = worktree_path(name, repo)
+        n = ahead_count(repo, br)
+        mark = ""
+        if n is None:
+            mark = "  (앞선 커밋 수 계산 실패)"
+        elif n >= 10:
+            mark = f"  ⚠️⚠️ main보다 {n}커밋 앞섬 — 너무 오래 끌었다. 지금 병합해라."
+        elif n >= 5:
+            mark = f"  ⚠️ main보다 {n}커밋 앞섬 — 슬슬 병합할 때."
+        else:
+            mark = f"  main보다 {n}커밋 앞섬"
+        exists = "" if wt.exists() else "  ❗폴더 없음(브랜치만 남음)"
+        print(f"  {name:<16} {br}{mark}{exists}")
+        print(f"  {'':<16} {wt}")
+    print("\n끝내기: py tools/track.py finish <이름>")
+    return 0
+
+
+# ── cli ──────────────────────────────────────────────────────────
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description="트랙별 작업 폴더")
+    sub = parser.add_subparsers(dest="cmd", required=True)
+    p_start = sub.add_parser("start", help="트랙 폴더+브랜치 생성")
+    p_start.add_argument("name")
+    p_finish = sub.add_parser("finish", help="게이트 통과 시 main에 병합")
+    p_finish.add_argument("name")
+    sub.add_parser("list", help="열린 트랙과 밀린 정도")
+
+    args = parser.parse_args(argv)
+    try:
+        if args.cmd == "start":
+            return start(args.name)
+        if args.cmd == "finish":
+            return finish(args.name)
+        return list_tracks()
+    except TrackError as e:
+        print(f"\n중단: {e}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
