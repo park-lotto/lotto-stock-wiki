@@ -529,13 +529,20 @@ def _backfill_extract_structure(db_path, shortcode, full_text):
     호출돼 클릭 즉시 응답을 막지 않는다. Gemini 호출 실패가 이어져도 다음 클릭이
     또 동기 대기(최대 120s×3)하는 일이 없다. if structure: 가드는 그대로 유지
     (실패 시 저장 안 함 — {}를 저장하면 extracts_missing_structure 백필 대상에서
-    영구 제외되므로 가드 자체는 옳다, 원 주석 참고)."""
+    영구 제외되므로 가드 자체는 옳다, 원 주석 참고).
+
+    [2026-07-16 I-2 잔여] 실패해도 '시도했음'만 기록한다(structure_json은 NULL 유지).
+    안 그러면 구조분석이 실패하는 영상은 클릭할 때마다 백그라운드에서 Gemini를 또
+    불러 쿼터를 태운다. 재시도는 daily_batch(extracts_missing_structure)가 맡는다."""
+    store = Store(db_path)
     try:
         structure = analyze_structure(full_text) or None
-    except Exception:  # noqa: BLE001 — 백그라운드 실패는 무해(다음 클릭이 재시도)
+    except Exception:  # noqa: BLE001 — 백그라운드 실패는 무해(daily_batch가 재시도)
         structure = None
     if structure:
-        Store(db_path).save_extract_structure(shortcode, structure)
+        store.save_extract_structure(shortcode, structure)
+    else:
+        store.mark_structure_attempted(shortcode)
 
 
 @app.get("/api/wiki/categories")
@@ -615,7 +622,9 @@ def api_produce_extract_from_url(body: dict, background_tasks: BackgroundTasks):
         if not cached.get("category") and category:
             store.update_extract_category(code, category)  # 다음 클릭부터 안정(C-1: script_json은 안 건드림)
         structure = cached.get("structure")
-        if not structure:
+        # [2026-07-16 I-2 잔여] 한 번 시도해서 못 얻은 영상은 다시 예약하지 않는다 —
+        # 안 그러면 클릭마다 Gemini를 또 부른다. 재시도는 daily_batch가 맡는다.
+        if not structure and not cached.get("structure_analyzed_at"):
             background_tasks.add_task(_backfill_extract_structure, DB_PATH, code, cached.get("full_text", ""))
         return {"ok": True, "cached": True, **cached, "category": category, "structure": structure}
     work_dir = _FIND_TMP_DIR / hashlib.sha1(code.encode()).hexdigest()[:16]
