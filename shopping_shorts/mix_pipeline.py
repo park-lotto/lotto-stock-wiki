@@ -238,6 +238,45 @@ def _apply_motion_pack(deco, caption_style, timeline, packs):
     return deco, caption_style
 
 
+def run_preview(job_id, db_path, work_root):
+    """1단계 미리보기: 유료 자막제거(VMake)·꾸미기 없이 믹스+음성+기본자막만 렌더.
+
+    ★clean_fn을 안 넘기는 것이 이 함수의 전부다 — assemble이 이미 3토막
+    (_render_mix → clean_fn(선택) → _burn_captions)이라 clean_fn=None이면 유료 단계만
+    빠진다(스펙 §3). deco={}로 꾸미기도 뺀다(4단계 소관).
+
+    왜 필요한가: 다음 단계(자막제거)가 VMake 유료 API라, 컷·대본이 틀린 채 넘어가면 그 돈이
+    날아간다. 편집안(텍스트)만 보고는 판단이 안 되므로 여기서 공짜로 보여준다.
+    원본 자막이 남는 건 의도된 트레이드오프 — 두 겹은 지저분할 뿐 공짜고, 2단계가 깨끗하게 다시 굽는다.
+
+    기존 status(downloading→…→done)는 **건드리지 않는다** — preview_status만 쓴다.
+    섞으면 최종렌더 폴링과 서로를 오인한다(스펙 §6.1).
+
+    BackgroundTasks로 불리므로 예외를 밖으로 던지지 않는다(아무도 안 받는다).
+    """
+    store = Store(db_path)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return
+    work = Path(work_root) / job_id
+    work.mkdir(parents=True, exist_ok=True)
+    try:
+        store.update_mix_job(job_id, preview_status="rendering", preview_error=None)
+        plan = job["edit_plan"]
+        tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
+        source_video_paths = _resolve_sources(job, work)
+        out_path = work / "preview.mp4"
+        assemble(plan, tts_paths, source_video_paths, str(out_path),
+                 clean_fn=None,                      # ← 유료 VMake 건너뜀. 이게 핵심이다.
+                 headcopy=job.get("headcopy"),
+                 caption_style=job.get("caption_style"),
+                 deco={})                            # ← 꾸미기 없음(4단계 소관)
+        store.update_mix_job(job_id, preview_status="ready", preview_path=str(out_path))
+    except Exception as e:  # noqa: BLE001 — BackgroundTasks라 밖에서 아무도 안 받는다
+        traceback.print_exc(file=sys.stderr)
+        store.update_mix_job(job_id, preview_status="failed", preview_error=str(e))
+
+
 def run_render(job_id, db_path, work_root):
     """확인된 EDL을 최종 mp4로 렌더. subtitle_removal이 켜져 있으면 믹스 후
     VMake로 원본 자막을 제거하고 그 위에 우리 자막을 굽는다. 완료 시 status='done'."""
