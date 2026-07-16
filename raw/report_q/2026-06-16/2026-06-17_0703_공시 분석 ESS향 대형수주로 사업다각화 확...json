@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-16",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-17_0703_공시 분석 ESS향 대형수주로 사업다각화 확...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유진투자증권",
+    "analyst": "박종선",
+    "report_date": "2026.06.16",
+    "stocks": [
+      {
+        "name": "하이비젼시스템",
+        "code": "126700",
+        "sector": "IT",
+        "rating": "NR(유지)",
+        "rating_changed": false,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "당사 추정 2분기 예상 실적(연결 기준)은 매출액 554억원, 영업이익 29억원으로, 매출액은 전년동기 대비 34.5% 증가하고, 영업이익은 흑자 전환할 것으로 예상함.",
+        "estimate_revision": "영업이익(26E) 직전 31.6에서 35.5로 상향(▲), 영업이익(27E) 직전 50.4에서 62.1로 상향(▲)",
+        "next_catalyst": "ESS 배터리팩 조립 설비 공급 계약에 따른 2차전지 부문 매출 급성장 및 인도 공장 가동에 따른 실적 성장",
+        "thesis": [
+          "정정 공시를 통한 950억원 규모의 ESS 배터리팩 조립 설비 대형 수주",
+          "인도 공장 가동 및 글로벌 EMS 업체향 매출 확대로 인한 IT/모바일 부문 성장세 전환",
+          "2차전지 및 IT/모바일 부문 매출 성장을 통한 사업 다각화 및 실적 개선"
+        ],
+        "valuation_basis": "당사 추정 2026년 예상실적 기준, PER 5.7배로 국내 동종업체 평균 PER 19.7배 대비 크게 할인되어 거래 중",
+        "risk": null,
+        "supply_comment": "정정 고시를 통해 ‘ESS(Energy Storage System, 에너지저장장치) 배터리팩 조립 설비 공급’ 계약을 발표함. 기존 192억원에서 950억원으로 금액이 상향되었음.",
+        "quote": "공시 분석: ESS 향 대형수주로 사업다각화 확대 중"
+      }
+    ]
+  }
+}

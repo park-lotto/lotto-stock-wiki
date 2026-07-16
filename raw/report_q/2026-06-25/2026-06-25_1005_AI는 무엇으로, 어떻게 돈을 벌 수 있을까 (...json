@@ -6,97 +6,93 @@
   },
   "questionnaire": {
     "broker": "유안타증권",
-    "analyst": [
-      "이창영",
-      "하현수",
-      "백종민"
-    ],
-    "report_date": "2026-06-25",
+    "analyst": "이창영, 하현수, 백종민",
+    "report_date": "2026년 6월 25일",
     "target_kind": "stock",
     "stocks": [
       {
-        "name": "NAVER",
+        "name": "네이버",
         "code": "035420",
-        "rating": "BUY (M)",
+        "rating": "BUY",
         "rating_changed": false,
         "tp_new": "290,000원",
         "tp_prev": "290,000원",
         "tp_direction": "flat",
-        "earnings_outlook": "27년 후반부터 초기 매출(1조원 전후) 및 마진은 안정적일 것으로 예상. 1GW급 데이터센터 완성 시(2030~2031) 연간 예상 매출액 약 20조원.",
-        "estimate_revision": "1단계 200MW 고객과의 27년 후반부터 1조원 전후 규모의 데이터센터 매출 기대",
+        "earnings_outlook": "27년 후반부터 초기 매출(1조원 전후) 및 마진은 안정적일 것으로 예상. 1GW급 데이터센터 완성시(2030~2031) 연간 예상 매출액 약 20조원.",
+        "estimate_revision": null,
         "next_catalyst": "글로벌 AI 팩토리 사업",
         "thesis": [
-          "글로벌 AI 데이터센터 부지확보와 구축 및 운영",
-          "네이버의 다양하고 방대한 데이터 기반한 AI 모델협력",
-          "동사의 기존 국내 검색, 쇼핑 중심의 수익모델의 성장한계에서 동사에게 새로운 글로벌 성장이 가능한 수익모델이 될 수 있다는 판단"
+          "글로벌 AI 팩토리 사업 부지확보와 구축 및 운영",
+          "미국 외 범 글로벌 GPU판매확대 및 네이버의 데이터 기반 AI 모델협력",
+          "동사의 기존 국내 검색, 쇼핑 중심의 수익모델의 성장한계에서 새로운 글로벌 성장이 가능한 수익모델 확보"
         ],
-        "valuation_basis": "1단계 200MW 고객과의 27년 후반부터 1조원 전후 규모의 데이터센터 매출 기대",
-        "risk": "1GW급 데이터센터 구축에 필요한 (1) 투자 재원 조달 (2) 각국의 인허가·규제 등의 불확실성 (3) 한국 및 각 국의 AI 수요 증가 속도차이 등에 따른 매출과 비용의 불일치 (4) 현재 엔비디아 GPU를 대체할 새로운 기술 또는 고효율 AI모델 개발",
-        "supply_comment": "동사는 글로벌 AI 데이터센터 부지확보와 구축 및 운영. 엔비디아는 GPU공급과 글로벌 고객 발굴, 매출·사업 리스크 공동 부담하는 사업자로 참여.",
-        "quote": "동사는 글로벌 AI 데이터센터 부지확보와 구축 및 운영. 엔비디아는 GPU공급과 글로벌 고객 발굴, 매출·사업 리스크 공동 부담하는 사업자로 참여."
+        "valuation_basis": "2026년 예상 영업이익(7,166억원) * Target P/E 27.7배 * (1-27%)",
+        "risk": "1) 투자 재원 조달, 2) 각국의 인허가·규제 등의 불확실성, 3) 매출과 비용의 불일치, 4) GPU 대체 기술 또는 고효율 AI모델 개발",
+        "supply_comment": "동사는 글로벌 AI 데이터센터 부지확보와 구축 및 운영. 엔비디아는 GPU공급과 글로벌 고객 발굴",
+        "quote": "동사의 기존 국내 검색, 쇼핑 중심의 수익모델의 성장한계에서 동사에게 새로운 글로벌 성장이 가능한 수익모델이 될 수 있다는 판단."
       },
       {
         "name": "카카오",
         "code": "035720",
-        "rating": "BUY (M)",
+        "rating": "BUY",
         "rating_changed": false,
         "tp_new": "80,000원",
         "tp_prev": "80,000원",
         "tp_direction": "flat",
-        "earnings_outlook": "연내 ‘AI 에이전트 커머스’ 로 사용자 취향분석, 선물추천, 가격비교, 구매, 결제 까지 연결.",
+        "earnings_outlook": "연내 'AI 에이전트 커머스' 로 사용자 취향분석, 선물추천, 가격비교, 구매, 결제 까지 연결. '카나나 검색'을 통해 호텔, 맛집, 모빌리티 예약 계획",
         "estimate_revision": null,
-        "next_catalyst": "AI 에이전트 커머스",
+        "next_catalyst": "카나나 인 톡을 통한 Proactive AI 서비스",
         "thesis": [
-          "플랫폼 내 다양한 App의 사용자 데이터 및 API를 쉽게 사용할 수 있어 초기에 많은 사용자들에게 다양한 사용 경험(UX) 제공 가능",
-          "5천만명의 MAU 트래픽 기반으로 AI 에이전트를 할 수 있어 더 많은 사용자 데이터를 축적해 App 성능 향상",
-          "자체 보유 Vertical App이 많아서 AI에이전트 성능이 높을 수 있음"
+          "AI 에이전트 선점효과로 인한 시장 지배자 가능성",
+          "플랫폼 내 다양한 App 데이터 및 API 활용으로 사용자 경험 제공",
+          "5천만명의 MAU 트래픽 기반으로 데이터 축적 및 성능 향상"
         ],
-        "valuation_basis": "선점자의 이익이 존재 할 것",
-        "risk": null,
+        "valuation_basis": null,
+        "risk": "경쟁사의 AI 에이전트 서비스",
         "supply_comment": null,
-        "quote": "First Mover’s Advantage : AI 에이전트 시장도 초기에 사용자들에게 다양한 경험을 제공하여 고객을 먼저 확보하는 기업이 최종 시장 지배자가 될 수 있는 선점자의 이익이 존재 할 것"
+        "quote": "연내 'AI 에이전트 커머스' 로 사용자 취향분석, 선물추천, 가격비교, 구매, 결제 까지 연결. '카나나 검색'을 통해 호텔, 맛집, 모빌리티 예약 계획."
       },
       {
         "name": "삼성에스디에스",
         "code": "018260",
-        "rating": "BUY (M)",
+        "rating": "BUY",
         "rating_changed": true,
         "tp_new": "290,000원",
-        "tp_prev": null,
+        "tp_prev": "250,000원",
         "tp_direction": "up",
-        "earnings_outlook": "AX 전환 구축·유지 및 AI 플랫폼·솔루션에 대한 수요가 크게 증가할 것으로 전망",
-        "estimate_revision": "투자의견 BUY, 목표주가 29만원으로 상향",
-        "next_catalyst": "AX, AI 서비스",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "기업형 AI 서비스 'Brity Copilot' 및 'Fabrix'",
         "thesis": [
-          "삼성계열사 AX 도입 및 AI Driven Factory 전환에 따른 수혜",
-          "업종 특화된 Vertical AI Agent 구축·운영 경험으로 인한 국내외 경쟁력 보유",
-          "현금 활용성 증가로 인한 ROE 개선 기대"
+          "GPUaaS/NPUaaS 등 글로벌 CSP를 통한 안정된 AI 클라우드 공급",
+          "업종 특화된 Vertical AI Agent 구축·운영 경험 보유",
+          "현금 활용성 증가로 인한 신규 사업 투자 및 ROE 개선"
         ],
-        "valuation_basis": "적용 멀티플(PER)을 종전 17.6배에서 27.7배(동종사 현대오토에버 멀티플 포함)로 상향",
-        "risk": null,
-        "supply_comment": "삼성전자 등 삼성계열사 AX 도입 및 AI Driven Factory 전환에 따른 수혜",
-        "quote": "투자의견 BUY, 목표주가 29만원으로 상향 : 향후 국내 기업들의 AX, RX가 가속화될 것을 전제로 이에 대한 동사의 수혜가 예상되는 바, 적용 멀티플(PER)을 종전 17.6배에서 27.7배(동종사 현대오토에버 멀티플 포함)로 상향하여 목표주가를 상향조정함"
+        "valuation_basis": "적용 멀티플(PER)을 종전 17.6배에서 27.7배로 상향",
+        "risk": "금융·공공 중심에서 민간 제조업으로의 AX/AI 투자 지연",
+        "supply_comment": null,
+        "quote": "향후 국내 기업들의 AX, RX가 가속화될 것을 전제로 이에 대한 동사의 수혜가 예상되는 바, 적용 멀티플(PER)을 종전 17.6배에서 27.7배로 상향하여 목표주가를 상향조정함"
       },
       {
         "name": "LG씨엔에스",
         "code": "064400",
-        "rating": "BUY (M)",
+        "rating": "BUY",
         "rating_changed": true,
         "tp_new": "125,000원",
-        "tp_prev": null,
+        "tp_prev": "93,000원",
         "tp_direction": "up",
         "earnings_outlook": null,
-        "estimate_revision": "투자의견 BUY, 목표주가 12만5천원으로 상향",
-        "next_catalyst": "기업 AX, RX 전환 확대",
+        "estimate_revision": null,
+        "next_catalyst": "기업 AX 및 RX 전환",
         "thesis": [
-          "기업 AX에 필요한 컨설팅, Agentic AI, AX 플랫폼 등의 구축·운영 경쟁력",
-          "로봇 역량, 플랫폼 역량, SI 역량을 동시에 보유한 사업자",
-          "휴머노이드를 포함한 차세대 로봇 영역에서도 선도적인 위치"
+          "기업 AX에 필요한 컨설팅 및 구축·운영 독보적 경쟁력 보유",
+          "휴머노이드를 포함한 차세대 로봇 영역 선도",
+          "안정적이고 확장 가능한 로봇 운영 플랫폼 구축 역량"
         ],
-        "valuation_basis": "적용 멀티플(PER)을 종전 18.0배에서 27.4배(동종사 현대오토에버 멀티플 포함)로 상향",
+        "valuation_basis": "적용 멀티플(PER)을 종전 18.0배에서 27.4배로 상향",
         "risk": null,
-        "supply_comment": "로봇 역량, 플랫폼 역량, SI 역량을 동시에 보유한 사업자",
-        "quote": "투자의견 BUY, 목표주가 12만5천원으로 상향 : 향후 국내 기업들의 AX, RX가 가속화될 것을 전제로 이에 대한 동사의 수혜가 예상되는 바, 적용 멀티플(PER)을 종전 18.0배에서 27.4배(동종사 현대오토에버 멀티플 포함)로 상향하여 목표주가를 상향조정함"
+        "supply_comment": null,
+        "quote": "향후 국내 기업들의 AX, RX가 가속화될 것을 전제로 이에 대한 동사의 수혜가 예상되는 바, 적용 멀티플(PER)을 종전 18.0배에서 27.4배로 상향하여 목표주가를 상향조정함"
       }
     ]
   }

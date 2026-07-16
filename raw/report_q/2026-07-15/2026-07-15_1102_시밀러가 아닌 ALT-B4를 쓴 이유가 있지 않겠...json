@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-15",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-15_1102_시밀러가 아닌 ALT-B4를 쓴 이유가 있지 않겠...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김선아",
+    "report_date": "2026년 7월 15일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "알테오젠",
+        "code": "196170",
+        "sector": "바이오",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "580,000원",
+        "tp_prev": "640,000원",
+        "tp_direction": "down",
+        "earnings_outlook": "근시일내에 MSD 2Q26 실적 발표를 통해 Qlex의 매출 상승 추세를 확인하고, Sales milestone까지 수령하는 이벤트가 있을 예정이다.",
+        "estimate_revision": null,
+        "next_catalyst": "MSD 2Q26 실적 발표 및 하반기 파트너십 성과 공개",
+        "thesis": [
+          "Enhanze 시밀러 이슈에 대한 오해 해소 및 ALT-B4의 기술적 우수성 입증",
+          "키트루다SC 바이오시밀러 개발에 대한 ALT-B4의 독점적 파트너십 이점",
+          "Keytruda Qlex 전환율 상승 및 하반기 추가 기술이전 기대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "Enhanze가 적용된 바이오시밀러가 등장하면 오히려 우수성 입증할 기회가 될 것"
+      }
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-16",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-17_0702_로봇 하드웨어 티어 1 공급자의 길.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유안타증권",
+    "analyst": "김용민",
+    "report_date": "2026.06.16",
+    "stocks": [
+      {
+        "name": "현대모비스",
+        "code": "012330",
+        "rating": "BUY (M)",
+        "rating_changed": null,
+        "tp_new": "870,000원",
+        "tp_prev": "560,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2Q26E 매출액 17,305억원(+8.6% YoY, +11.2% QoQ), 영업이익 995억원(+14.4% YoY, +24.0% QoQ), 세전계속사업이익 1,530억원, 지배순이익 1,113억원",
+        "estimate_revision": "AS부문 Target P/E multiple을 15배로 상향하며 BD 지분가치, BD향 로봇 부품사업 적정주가를 반영하며 목표주가 870,000원 제시.",
+        "next_catalyst": "1) 6-7월 소프트뱅크의 BD 풋옵션 행사, 2) 하반기 유상증자시 제3자의 지분투자를 통한 BD 캡티브 물량 확대, 3) BD 외 non-captive 로보틱스 업체로부터의 로봇 부품 수주.",
+        "thesis": [
+          "BD의 중장기 성장은 그룹내 완성차 업체보다 동사의 실적과 가장 큰 상관관계를 가질 것.",
+          "동사의 향후 역할은 단순한 부품 공급업체가 아닌 휴머노이드 산업의 하드웨어 플랫폼 티어 1 공급자이다.",
+          "기존 사업에서 보유한 공급 체인과 품질관리 능력 자체가 동사의 로봇 부품 사업 경쟁력."
+        ],
+        "valuation_basis": "AS부문 Target P/E multiple을 15배로 상향하며 BD 지분가치(지주사 할인율 50% 적용)와 BD향 로봇 부품 사업의 적정가치를 합산.",
+        "risk": null,
+        "supply_comment": "휴머노이드 하드웨어 시장에서 완전한 수직 계열화를 이루는 Full-stack robot 사업을 영위하려는 업체들은 빠르게 증가하고 있지만, 자동차 산업 수준의 품질관리와 대량생산 능력을 갖춘 하드웨어 플랫폼 공급자는 여전히 매우 제한적.",
+        "quote": "AS부문 Target P/E multiple을 15배로 상향하며 BD 지분가치, BD향 로봇 부품사업 적정주가를 반영하며 목표주가 870,000원 제시.",
+        "sector": "로봇"
+      }
+    ]
+  }
+}

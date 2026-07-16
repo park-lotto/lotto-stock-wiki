@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "date": "2026-06-16",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-17_0704_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "IBK투자증권",
+    "analyst": "이승훈",
+    "report_date": "2026.06.16",
+    "market_direction": null,
+    "macro_vars": [
+      "원·달러 환율"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": "수혜",
+        "reason": "원·달러 환율 상승에 따른 환차익 수혜"
+      },
+      {
+        "sector": "방산",
+        "stance": "경쟁",
+        "reason": "AI가 전쟁 수행 방식의 핵심 변수로 떠오르면서 국방 AI 전환(AX) 시장 선점 경쟁"
+      }
+    ],
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "크래프톤",
+      "펄어비스",
+      "더블유게임즈",
+      "네이버클라우드",
+      "SK텔레콤",
+      "현대로템"
+    ],
+    "risk": null,
+    "quote": "원·달러 환율이 1500원대 고공행진을 이어가는 가운데, 원자재 가격 변동 영향을 받지 않는 게임사들이 환차익 특수를 누리고 있음 / AI가 전쟁 수행 방식의 핵심 변수로 떠오르면서 국내 기업 ‘국방 AX’ 경쟁 불붙었다"
+  }
+}

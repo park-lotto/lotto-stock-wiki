@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "date": "2026-06-18",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-19_0704_외국인 매출 성장률 가팔라졌다.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "유정현",
+    "report_date": "2026.06.15",
+    "stocks": [
+      {
+        "name": "현대백화점",
+        "code": "069960",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "250,000",
+        "tp_prev": "145,000",
+        "tp_direction": "up",
+        "earnings_outlook": {
+          "quote": "총매출액과 영업이익 각각 2조 4,856억원(+0.5%, yoy), 900억원(+4%, yoy). 전망 2분기 백화점 기존점 성장률 17% 전망."
+        },
+        "estimate_revision": "26-27년 실적 상향",
+        "next_catalyst": "인천공항 면세점 사업 확대 및 인바운드 증가에 따른 수혜",
+        "thesis": [
+          "경쟁사 대비 낮았던 외국인 매출 증가폭이 2분기 들어 가파르게 상승 중",
+          "백화점 본업의 실적 개선 강도가 매우 강함",
+          "면세점은 인바운드 증가와 시내점 할인율 하락으로 영업이익 흑자 기조 지속 중"
+        ],
+        "valuation_basis": "12M FWD PER 15배 적용",
+        "risk": "지누스 적자가 실적에 다소 크게 영향을 미치고 있음",
+        "supply_comment": null,
+        "quote": "투자의견 BUY를 유지하며 목표주가를 250,000원(12M FWD PER 15배)으로 상향. 목표주가 상향은 26-27년 실적 상향에 적정 valuation을 P/E 15배로 상향한데 따름"
+      }
+    ]
+  }
+}

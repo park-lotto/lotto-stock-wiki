@@ -1,0 +1,24 @@
+{
+  "target_kind": "market",
+  "market_direction": "neutral",
+  "macro_events": [
+    {
+      "fact": "최근 CPI(소비자물가지수) 개선과 미국 주가 상승이 국내 시장에 긍정 영향 제공",
+      "ts": "2026-07-15",
+      "quote": "최근 CPI(소비자물가지수) 개선과 미국 주가 상승이 국내 시장에 긍정 영향 제공"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "반도체",
+      "stance": "중립",
+      "comment": "반등 시도 중이나 성과가 저조하여 단기 투자자 이탈 우려"
+    },
+    {
+      "sector": "IT",
+      "stance": "긍정",
+      "comment": "AI 발전으로 인해 기술 섹터는 여전히 주목할만함"
+    }
+  ],
+  "quote": "2026년 7월 15일 주가 반등은 단기적 현상에 그치며, 추세적 반등 여부는 장기적으로 관찰 필요"
+}

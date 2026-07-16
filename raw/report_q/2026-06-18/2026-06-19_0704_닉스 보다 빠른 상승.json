@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-18",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-19_0704_닉스 보다 빠른 상승.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "김회재",
+    "report_date": "2026.06.18",
+    "stocks": [
+      {
+        "name": "SK스퀘어",
+        "code": "402340",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "1,870,000",
+        "tp_prev": "1,500,000",
+        "tp_direction": "up",
+        "earnings_outlook": "컨센서스 기준 하이닉스 DPS 26E 6,770원, 27E 11,935원 / SK스퀘어의 배당금 유입 26E 9.9천억원, 1.7조원",
+        "estimate_revision": "목표주가는 NAV에 할인율 34% 적용(기존 31%).",
+        "next_catalyst": "하이닉스의 배당, 자사주 취득/소각, DR 발행",
+        "thesis": [
+          "NAV 대비 할인율 축소 및 SK하이닉스의 시총 상승 반영",
+          "SK하이닉스의 실적 상승에 따른 배당금 유입 확대",
+          "SK하이닉스의 자사주 취득/소각 및 DR 발행에 따른 주가 상승 및 현금 유입 효과"
+        ],
+        "valuation_basis": "스퀘어의 목표주가 산정을 위한 NAV 할인율을 밴드 하단인 39.9%에 13% 할인을 적용한 34%로 적용",
+        "risk": null,
+        "supply_comment": "SK스퀘어의 하이닉스 지분율은 20.5%. 하이닉스가 DR 신주 발행시, 공정거래법 제 18조 지주회사 등의 행위제한 등에 해당하지 않기 위해서는 발생주식총수의 2.5% 이내로 발행해야 스퀘어의 지분율이 20%로 유지.",
+        "quote": "투자의견 매수(Buy) 유지, 목표주가 1,870,000원으로 +25% 상향",
+        "sector": "통신"
+      }
+    ]
+  }
+}

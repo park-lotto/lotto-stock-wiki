@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "date": "2026-07-15",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-16_0809_통신 Weekly - 닮은 듯 다른.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "이승웅",
+    "report_date": "2026.07.15",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "통신 업종 수익률",
+      "시장 컨센서스",
+      "마케팅비",
+      "ARPU",
+      "번호이동"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "통신",
+        "stance": "시장 수익률 상회",
+        "reason": "증시 차익 실현 상황 속 통신 업종은 사각지대 업종으로 작용"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "26.07.10",
+        "event": "KT클라우드, 여의도 데이터센터 증설"
+      },
+      {
+        "date": "26.07.09",
+        "event": "리벨리온, 내년 상반기 코스피 상장 추진"
+      },
+      {
+        "date": "26.07.13",
+        "event": "LGU+, 버스 공공 와이파이 사업 수주"
+      }
+    ],
+    "top_picks": [
+      "SK텔레콤",
+      "KT",
+      "LG유플러스"
+    ],
+    "risk": "부동산 분양이익 등 역기저 부담, 사이버 침해 사고 영향 등",
+    "quote": "지난 한주간 통신업종은 -4.0%(vs KOSPI -9.7%)로 시장 수익률을 상회. 증시 차익 실현 상황 속 통신 업종은 사각지대 업종으로 작용하며 시장 수익률 상회."
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "meta": {
+    "date": "2026-07-13",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-15_0806_[디지털자산] 디지털자산 Weekly 2026.07.10.md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "최윤영",
+    "report_date": "2026.07.10",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "BTC 가격",
+      "ETH 가격",
+      "BTC 펀딩비",
+      "BTC 미결제약정",
+      "미국 BTC 현물 ETF 자금 유출입",
+      "미국 ETH 현물 ETF 자금 유출입",
+      "BTC 도미넌스",
+      "나스닥, 금, 달러인덱스 상관계수"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "7월 중",
+        "event": "美 SEC 디지털자산 규제안(AN38, AN48, AN49) 공개 가능성"
+      }
+    ],
+    "top_picks": [
+      "Ripple",
+      "Ondo Finance",
+      "Gemini",
+      "Sony Bank",
+      "네이버파이낸셜",
+      "두나무",
+      "미래에셋컨설팅",
+      "코빗",
+      "Coinbase",
+      "Robinhood",
+      "Kraken",
+      "Nvidia",
+      "Tesla",
+      "Apple",
+      "Microsoft",
+      "Circle",
+      "Strategy",
+      "Hyperliquid",
+      "Ostium"
+    ],
+    "risk": "규제 환경 변화에 따른 시장 영향, 가상자산 관련 기업의 라이선스 확보 및 규제 준수 여부",
+    "quote": "7월 7일, 美 SEC는 2026년 규제 어젠다에 디지털자산 관련 규제안 5건을 포함. 발행·유통 규정(3235-AN38), 수탁 규정 개정안(3235-AN46), 브로커딜러 규정 개정안(3235-AN48), 시장구조 개정안(3235-AN49), 명의개서대리인·DLT 규정 개정안(3235-AL55)으로 구성. AN38·AN48·AN49는 7월 중 공개 가능성"
+  }
+}

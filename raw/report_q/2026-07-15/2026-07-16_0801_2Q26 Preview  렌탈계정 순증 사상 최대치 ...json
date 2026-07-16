@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-15",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-16_0801_2Q26 Preview  렌탈계정 순증 사상 최대치 ...md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "이진협",
+    "report_date": "2026년 7월 15일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "코웨이",
+        "code": "021240",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "150,000원",
+        "tp_prev": "150,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "코웨이는 2Q26 매출액 14,221억원(+13% YoY), 영업이익 2,623억원(+8% YoY)을 기록해 시장 기대치에 부합할 것으로 추정한다.",
+        "estimate_revision": null,
+        "next_catalyst": "신규 카테고리인 매트리스, 에어컨 등이 안착하면서 신규 진출 시기에 이어 2차적으로 성장기를 맞은 것으로 판단된다.",
+        "thesis": [
+          "렌탈계정 순증 20만계정(+27% YoY) 달성 및 사상 최대 성과",
+          "해외 사업(말레이시아, 태국)의 견조한 성장세 지속",
+          "대주주 지분매입 지속에 따른 수급적 긍정 요인"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "최근 대주주인 넷마블이 400억원 지분매입에 이어 추가 500억원 지분매입을 추가 공시했는 데, 이는 1년간 총 1,500억원 규모의 지분을 장내매수 계획의 일부이다.",
+        "quote": "코웨이는 2Q26 매출액 14,221억원(+13% YoY), 영업이익 2,623억원(+8% YoY)을 기록해 시장 기대치에 부합할 것으로 추정한다."
+      }
+    ]
+  }
+}

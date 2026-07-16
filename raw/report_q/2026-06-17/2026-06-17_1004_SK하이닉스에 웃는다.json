@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-17",
+    "broker": "SK증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-17_1004_SK하이닉스에 웃는다.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "SK증권",
+    "analyst": "최관순",
+    "report_date": "2026-06-17",
+    "stocks": [
+      {
+        "name": "SK 스퀘어",
+        "code": "402340",
+        "rating": "매수",
+        "rating_changed": false,
+        "tp_new": "1,850,000 원",
+        "tp_prev": "145 만원",
+        "tp_direction": "up",
+        "earnings_outlook": "26년 매출액 43,101 십억원, 영업이익 41,156 십억원 / 27년 매출액 60,688 십억원, 영업이익 58,350 십억원",
+        "estimate_revision": "보유 지분가치 상승과 주주환원 확대에 대한 기대감 반영",
+        "next_catalyst": "26 년부터 본격화될 SK 하이닉스 실적개선에 따른 주주환원 확대",
+        "thesis": [
+          "SK 하이닉스 주주환원 확대에 대한 기대감 유효",
+          "SK 하이닉스의 코스피 내 시가총액 비중과 실제비중 간의 괴리로 기관투자자 중심의 SK 스퀘어 매수세 지속 가능",
+          "보유 지분가치 상승 및 자회사 가치 상승을 반영한 목표주가 상향"
+        ],
+        "valuation_basis": "자회사 가치 상승을 반영(Target 할인율: 30%)하여 기존 145 만원에서 185 만원으로 상향",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "SK 스퀘어에 대한 투자의견 매수를 유지한다. 보유 지분가치 상승과 주주환원 확대에 대한 기대감이 유효하기 때문이다."
+      }
+    ]
+  }
+}

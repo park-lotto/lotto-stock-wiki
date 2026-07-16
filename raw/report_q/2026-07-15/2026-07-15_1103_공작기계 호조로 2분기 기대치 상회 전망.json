@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-15",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-15_1103_공작기계 호조로 2분기 기대치 상회 전망.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "송선재, 박태웅",
+    "report_date": "2026년 7월 15일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "DN오토모티브",
+        "code": "007340",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "60,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 매출액/영업이익은 전년 동기대비 24%/32% 증가한 1.13조원/1,609억원(영업이익률 14.2%, +0.8%p (YoY))으로 예상한다.",
+        "estimate_revision": "2분기 실적은 기존 추정치를 상회할 것으로 전망한다(영업이익 기준 +9%).",
+        "next_catalyst": "DN솔루션즈의 상장 가능성이 낮아짐에 따른 공작기계 부문 가치 반영 및 지주사 할인 축소",
+        "thesis": [
+          "공작기계 부문 수주 증가 및 믹스 개선에 따른 실적 호조",
+          "글로벌 동종업계 대비 P/E 6배 수준의 극심한 저평가",
+          "중복상장 가이드라인에 따른 DN솔루션즈 상장 가능성 저하"
+        ],
+        "valuation_basis": "P/E 6배 수준의 Valuation으로 글로벌 동종업체 대비 50%에 불과할 정도로 저평가되어 있다는 판단",
+        "risk": "자회사 DN솔루션즈의 상장 재추진 가능성 및 일반주주 보호방안 미흡 시 리스크",
+        "supply_comment": "자동차/튜브/공작기계 부문이 각각 7.6%/10.5%/17.4% 영업이익률을 기록할 것으로 예상",
+        "quote": "DN오토모티브에 대해 투자의견 BUY와 목표주가 6.0만원을 유지한다."
+      }
+    ],
+    "sector": "자동차"
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "meta": {
+    "date": "2026-07-15",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-15_1106_[디지털자산] 7월 디지털자산 정책 인사이트.md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "최윤영",
+    "report_date": "2026년 7월 14일",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "미국 Reg NMS 개편 및 무기한선물 제도 정비",
+      "EU MiCA 집행 및 후속 개편 논의",
+      "국내 토큰증권 하위법규 및 가이드라인",
+      "금융규제 샌드박스 혁신친화적 개편"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "기타",
+        "stance": "중립",
+        "reason": "디지털자산 정책이 감독 및 제재 기준을 구체화하는 단계로 진입"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.07.07",
+        "event": "美 SEC 디지털자산 규제안 공개 가능성"
+      },
+      {
+        "date": "2026.07.18",
+        "event": "GENIUS법 시행규칙 제정기한"
+      },
+      {
+        "date": "2026.07.01",
+        "event": "MiCA 경과조치 최종 종료, EU 전역 감독·집행 단계로 전환"
+      },
+      {
+        "date": "2026.07",
+        "event": "금융위, 토큰증권 하위법규·조각투자 가이드라인 발표 목표"
+      }
+    ],
+    "top_picks": [
+      "Coinbase",
+      "Robinhood",
+      "Kraken",
+      "Ondo Finance",
+      "SBI 신세이신탁은행",
+      "SBI VC트레이드",
+      "스타테일 그룹",
+      "Kalshi"
+    ],
+    "risk": "디지털자산의 법적 지위를 둘러싼 법원의 판단, 추가적인 제도 정비와 인프라 구축 필요성, MiCA Review에 따른 규제 범위 확대 가능성",
+    "quote": "6월 글로벌 디지털자산 정책은 제도 도입 논의를 넘어 감독·제재 기준을 구체화하는 단계로 진입했습니다."
+  }
+}

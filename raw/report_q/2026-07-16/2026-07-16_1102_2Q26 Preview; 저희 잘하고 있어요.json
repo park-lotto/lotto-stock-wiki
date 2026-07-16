@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-16",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-16_1102_2Q26 Preview; 저희 잘하고 있어요.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "정희령",
+    "report_date": "2026/07/16",
+    "stocks": [
+      {
+        "name": "파마리서치",
+        "code": "214450",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "530,000원",
+        "tp_prev": "800,000원",
+        "tp_direction": "down",
+        "earnings_outlook": "2Q26 매출액 1,699억원 (YoY +20.9%), 영업이익 668억원 (YoY +19.5%, OPM 39.3%)으로 컨센서스 상회할 것으로 추정",
+        "estimate_revision": "2026E 순이익 2,251억원으로 하향",
+        "next_catalyst": "2분기 이후 화장품 사업부 새로운 성장동력으로 작용, 유럽향 의료기기 수출",
+        "thesis": [
+          "2분기 의료기기 매출은 전년 동기 높은 기저에도 수출 호조와 신규 국가 진출로 성장세 지속",
+          "화장품 사업부의 미국 및 동남아 온라인 채널 확장으로 성장이 의료기기를 넘어설 전망",
+          "높은 기저효과로 인한 성장률 둔화는 주가에 충분히 반영되었으며 밸류에이션 매력 부각"
+        ],
+        "valuation_basis": "2026E 순이익 2,251억원 하향 및 Target P/E 25배 적용",
+        "risk": "높은 기저효과로 인한 성장률 둔화",
+        "supply_comment": null,
+        "quote": "파마리서치의 투자의견 Buy 유지 및 목표주가 530,000원 하향. 2026E 순이익 2,251억원으로 하향 및 Target P/E 25배 적용으로 목표주가 하향."
+      }
+    ]
+  }
+}

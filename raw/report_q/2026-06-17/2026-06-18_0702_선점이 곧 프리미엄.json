@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-17",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-18_0702_선점이 곧 프리미엄.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "DS투자증권",
+    "analyst": "안주원",
+    "report_date": "2026.06.17",
+    "stocks": [
+      {
+        "name": "SGC에너지",
+        "code": "005090",
+        "rating": "매수",
+        "rating_changed": "유지",
+        "tp_new": "83,000원",
+        "tp_prev": "83,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026F 매출액 2,650십억원, 영업이익 178십억원, 영업이익률 6.7%. 2027F 매출액 2,811십억원, 영업이익 186십억원, 영업이익률 6.6%.",
+        "estimate_revision": null,
+        "next_catalyst": "7~8월 모듈러 발주 및 임차 확약서 체결을 시작으로 연말 착공에 들어감. 2차 사업 240MW 규모 전력계통평가 진행 중.",
+        "thesis": [
+          "SMP가격 상승에 따른 실적 확대",
+          "데이터센터 사업 확장을 통한 성장",
+          "민간 발전사로서 바이오매스를 활용한 안정적 전력 공급 및 PPA 도입 검토를 통한 사업 경쟁력 확보"
+        ],
+        "valuation_basis": "12MF EPS 4,160.3원에 Target PER 19.8배를 적용(국내 주요 경쟁사 12MF PER대비 40% 할인)",
+        "risk": "시장 경쟁사들의 진입 가능성",
+        "supply_comment": "전력 및 부지 확보 준비가 되어 있는 SGC에너지에게 기회가 많을 것으로 판단하며, 2차 사업부터는 PPA 도입도 검토 중이라 발전소를 활용한 전력 공급이 핵심 차별화 요소로 부각될 것",
+        "quote": "SGC에너지에 대해 투자의견 매수와 목표주가를 유지한다. 투자포인트는 1) SMP가격 상승에 따른 실적 확대와 2) 데이터센터 사업 확장을 통한 성장이다."
+      }
+    ]
+  }
+}

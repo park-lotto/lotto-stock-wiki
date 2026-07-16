@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "date": "2026-06-17",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-17_1006_통신 Weekly - AIDC 경쟁 우위 지속.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "유안타증권",
+    "analyst": "이승웅",
+    "report_date": "2026.06.17",
+    "market_direction": "KOSPI 7.8% 상승 대비 통신업종 -1.3%로 하회",
+    "macro_vars": [
+      "통신업종 수급 소외",
+      "테크 업종으로의 수급 쏠림"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "통신",
+        "stance": "데이터센터(AIDC) 경쟁 우위",
+        "reason": "AI로 인한 인프라 수요 지속 증가와 AIDC 전환을 통한 경쟁력 강화"
+      }
+    ],
+    "top_picks": [
+      "SK텔레콤",
+      "KT",
+      "LG유플러스"
+    ],
+    "risk": "테크 업종으로의 수급 쏠림으로 인한 통신업종 소외",
+    "quote": "지난 한주간 통신업종은 -1.3%(vs KOSPI +7.8%)로 시장 수익률을 하회. 테크 업종으로의 수급 쏠림으로 인해 통신업종은 소외."
+  }
+}

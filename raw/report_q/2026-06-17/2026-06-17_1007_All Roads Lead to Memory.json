@@ -1,0 +1,99 @@
+{
+  "meta": {
+    "date": "2026-06-17",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-17_1007_All Roads Lead to Memory.md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "손인준",
+    "report_date": "2026.06.17",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "삼성전자",
+        "code": "005930",
+        "rating": "STRONG BUY",
+        "rating_changed": false,
+        "tp_new": 560000,
+        "tp_prev": 500000,
+        "tp_direction": "up",
+        "earnings_outlook": "2Q26 영업이익 83.4조원(+46%qoq), 2026년 영업이익 355.8조원(+703%yoy), 2027년 영업이익 583.8조원(+64%yoy)",
+        "estimate_revision": "영업이익 추정치 상향",
+        "next_catalyst": "HBM 가격 급등, 파운드리 고객사 확보, 1Q27 대규모 특별 배당",
+        "thesis": [
+          "삼성전자는 업계 최대 메모리 Capa를 바탕으로 보다 유연한 고객 대응이 가능한 상황이며, 이로 인해 가격 협상 또한 공격적으로 진행 중",
+          "HBM 가격 급등이 2027년 실적 성장을 이끌 전망",
+          "2H26을 지날수록 메모리 공급 역량에 기반한 파운드리 고객사 확보에 대한 가시성이 커질 것으로 보임"
+        ],
+        "valuation_basis": "타겟 12MF P/E 8.0배",
+        "risk": "CXMT의 상장은 단기적으로 메모리 업종 투자 심리에 부정적 영향",
+        "supply_comment": "삼성전자는 업계 최대 메모리 Capa를 바탕으로 보다 유연한 고객 대응이 가능한 상황",
+        "quote": "실적 추정치 상향에 따라 목표주가를 560,000원(타겟 12MF P/E 8.0배)으로 상향한다."
+      },
+      {
+        "name": "SK하이닉스",
+        "code": "000660",
+        "rating": "STRONG BUY",
+        "rating_changed": false,
+        "tp_new": 3700000,
+        "tp_prev": 3200000,
+        "tp_direction": "up",
+        "earnings_outlook": "2Q26 영업이익 62.8조원(+67%qoq), 2026년 영업이익 275.5조원(+481%yoy), 2027년 영업이익 459.5조원(+67%yoy)",
+        "estimate_revision": "영업이익 추정치 상향",
+        "next_catalyst": "HBM4 성공적 리비전 및 HBM4E 샘플 출하, ADR 상장, 대규모 주주환원",
+        "thesis": [
+          "HBM4 성공적인 리비전에 이어 HBM4E의 샘플 출하도 하반기 정상 진행되며 핵심 고객사와의 기술 파트너십이 긴밀히 유지될 것",
+          "HBM 가격 급등이 2027년 실적 성장을 이끌 전망",
+          "SK하이닉스의 2027년 HBM Capa mix는 35% 수준으로, 업계 평균인 28%를 상회할 전망"
+        ],
+        "valuation_basis": "타겟 12MF P/E 8.0배",
+        "risk": "CXMT의 상장은 단기적으로 메모리 업종 투자 심리에 부정적 영향",
+        "supply_comment": "SK하이닉스의 2027년 HBM Capa mix는 35% 수준으로, 업계 평균인 28%를 상회할 전망",
+        "quote": "실적 추정치 상향에 따라 목표주가를 3,700,000원(타겟 12MF P/E 8.0배)으로 상향한다."
+      },
+      {
+        "name": "티씨케이",
+        "code": "064760",
+        "rating": "BUY",
+        "rating_changed": true,
+        "tp_new": 380000,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 매출액 962억원(+1%qoq), 영업이익 281억원(-2%qoq), 2026년 매출액 3,975억원(+32%yoy), 영업이익 1,189억원(+42%yoy), 2027년 매출액 4,969억원(+25%yoy), 영업이익 1,652억원(+39%yoy)",
+        "estimate_revision": null,
+        "next_catalyst": "Kioxia 및 YMTC 증설, SiC Ring 침투 확대",
+        "thesis": [
+          "글로벌 NAND 업체들의 증설이 본격화됨에 따라 중장기 실적에 대한 기대감을 키울 수 있음",
+          "삼성전자, SK하이닉스, Micron의 V9 전환 투자 가속화는 SiC Ring 침투의 확대로 이어지고 있음",
+          "2027년부턴 케이씨와의 판매 지원 관련 수수료 지급 계약이 종료되며 매출총이익률의 개선 또한 가능할 것으로 보임"
+        ],
+        "valuation_basis": "역대 고점 수준인 12MF PER 32.0배",
+        "risk": "2Q26에 진행된 판가 협상이 단기적인 실적 기대감을 낮출 수 있는 요인",
+        "supply_comment": "식각 공정용 SiC Ring 분야에서 비포마켓 기준 약 80%의 점유율을 보유",
+        "quote": "업황 강도를 고려해 역대 고점 수준인 12MF PER 32.0배를 적용해 목표주가 380,000원과 함께 투자의견 매수를 제시한다."
+      },
+      {
+        "name": "예스티",
+        "code": "122640",
+        "rating": "BUY",
+        "rating_changed": true,
+        "tp_new": 48000,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 매출액 148억원, 영업이익 26억원, 2027년 매출액 250억원, 영업이익 73억원",
+        "estimate_revision": null,
+        "next_catalyst": "HPA 매출 본격화, HPO 시장 개화",
+        "thesis": [
+          "예스티는 고압 열처리 기술력을 기반으로 HPA 시장에 진입하기 시작",
+          "HPA 매출액이 2026년 110억원, 2027년 900억원을 기록할 것으로 전망",
+          "HPA에서 HPO로 이어지는 예스티의 중장기 성장 모멘텀에 주목"
+        ],
+        "valuation_basis": "HPA 경쟁사 12MF PER 40% 할인",
+        "risk": null,
+        "supply_comment": "웨이퍼 투입량 기준 75매와 125매 장비를 모두 갖추고 있다는 점이 차별화 요소",
+        "quote": "HPA에서 HPO로 이어지는 예스티의 중장기 성장 모멘텀에 주목하며, 투자의견 'BUY'와 목표주가 48,000원을 제시한다."
+      }
+    ]
+  }
+}

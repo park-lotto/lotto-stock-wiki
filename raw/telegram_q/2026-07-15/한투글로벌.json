@@ -1,0 +1,40 @@
+{
+  "reports": [
+    {
+      "broker": "한투글로벌",
+      "stock": "OpenAI",
+      "rating": null,
+      "tp": null,
+      "ts": "07:11",
+      "quote": "OpenAI가 첫 소비자용 하드웨어로 휴대 가능한 화면 없는 스마트 스피커 개발 중.",
+      "sector": "IT"
+    },
+    {
+      "broker": "한투글로벌",
+      "stock": "DeepSeek",
+      "rating": null,
+      "tp": null,
+      "ts": "07:13",
+      "quote": "딥시크(DeepSeek)가 기업공개(IPO) 준비에 착수했으며, 이르면 올해 상장 신청서를 제출할 가능성 있음",
+      "sector": "IT"
+    },
+    {
+      "broker": "한투글로벌",
+      "stock": "CXMT",
+      "rating": null,
+      "tp": null,
+      "ts": "13:49",
+      "quote": "CXMT 공모가 기준 상장 시가총액은 약 5800억위안입니다.",
+      "sector": "반도체"
+    },
+    {
+      "broker": "한투글로벌",
+      "stock": "ASML",
+      "rating": null,
+      "tp": null,
+      "ts": "14:11",
+      "quote": "ASML raises sales forecast for second time this year on strong AI chip demand",
+      "sector": "반도체"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-16",
+    "broker": "미래에셋증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-16_1101_전력 인프라의 최전선.md"
+  },
+  "questionnaire": {
+    "broker": "미래에셋증권",
+    "analyst": "김태형",
+    "report_date": "2026.7.15",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "대한전선",
+        "code": "001440",
+        "rating": "매수",
+        "rating_changed": null,
+        "tp_new": "35,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "동사의 26F 실적은 매출액 4조 515억원(YoY +11.4%), 영업이익 2,157억원(YoY +68.1%, OPM 5.3%)을 전망한다.",
+        "estimate_revision": null,
+        "next_catalyst": "서해안 에너지고속도로, HVDC 등 고부가 프로젝트의 수주 모멘텀이 현실화될 경우",
+        "thesis": [
+          "고부가 품목 증설과 CLV 확보로 강화되는 턴키 솔루션 역량",
+          "강화되는 프로젝트 턴키 수주 역량",
+          "확대되는 유럽 및 미국 시장 내 초고압 전력망 프로젝트 수주"
+        ],
+        "valuation_basis": "26F BPS에 타겟 멀티플 4.0배를 부여해 산출함. 타겟 멀티플은 글로벌 전선 Peer의 26F PBR을 평균해 산출함.",
+        "risk": "동사의 2026F PER은 49.1배로, 글로벌 전선 기업 평균 대비 80% 이상 할증된 수준에서 거래되고 있음.",
+        "supply_comment": "동사는 현재 당진에서 2027년 4분기 준공을 목표로 해저케이블 2공장을 증설 중이며, 1,154억원을 투자해 해저케이블 포설선(CLV)인 스칸디커넥터호 인수를 결정함.",
+        "quote": "대한전선에 대해 투자의견 ‘매수’와 목표주가 35,000원으로 커버리지를 개시한다."
+      }
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-18",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-18_1003_백화점이 이끌고, 계열사가 따라오고.md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": "유정현, 홍성원 RA",
+    "report_date": "2026.06.15",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "롯데쇼핑",
+        "code": "023530",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "260,000",
+        "tp_prev": "200,000",
+        "tp_direction": "up",
+        "earnings_outlook": "2분기 순매출액 3조 6,051억원(+8%), 영업이익 1,081억원(+167%) 전망",
+        "estimate_revision": "투자의견 BUY를 유지하며 목표주가를 260,000원(12M FWD PER 15배)으로 상향(+30%). 목표주가 상향은 26-27년 실적 상향 조정에 따른 것",
+        "next_catalyst": "백화점 사업부 영업이익률 상승에 따른 향후 2-3년간 손익 개선",
+        "thesis": [
+          "백화점 2분기 기존점 성장률 14% 전망",
+          "대형마트 홈플러스 폐점 효과로 실적 개선 예상",
+          "ROE 상승에 따라 PBR 상향 재평가 필요"
+        ],
+        "valuation_basis": "12M FWD PER 15배 적용",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "투자의견 BUY를 유지하며 목표주가를 260,000원(12M FWD PER 15배)으로 상향(+30%).",
+        "sector": "소비내수"
+      }
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-16",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-17_0702_지누스만 남았다.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "박종대",
+    "report_date": "2026년 06월 16일",
+    "stocks": [
+      {
+        "name": "현대백화점",
+        "code": "069960",
+        "rating": "Not Rated",
+        "rating_changed": false,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 연결 영업이익 컨센서스는 약 770억원(YoY -11%)이다. 지누스 실적에 따라 증익 전환할 수도 있다. 백화점 사업은 YoY 500억원 이상, 면세점 사업도 YoY 50억원 내외 증익이 예상된다.",
+        "estimate_revision": null,
+        "next_catalyst": "백화점 신규 점포 계획(2027년 말 더현대 부산, '28년 말 경산 프리미엄 아웃렛, '29년 말 더현대 광주점) 및 압구정 본점 재개발",
+        "thesis": [
+          "백화점 부문 호실적 지속 및 외국인 매출 비중 확대",
+          "면세점 사업의 불확실성 해소(동대문점 철수 및 인천공항 DF2 추가에 따른 BEP 달성)",
+          "백화점 업종의 실적과 밸류에이션 레벨업 국면 진입"
+        ],
+        "valuation_basis": "현재 주가는 12MF PER 13배 수준으로, 15배 이상은 충분히 적용 가능한 상황이다.",
+        "risk": "지누스의 미국 관세 정책에 따른 영업적자 지속 가능성",
+        "supply_comment": null,
+        "quote": "백화점 업종은 실적과 밸류에이션 측면에서 모두 레벨업 국면에 있다. 현재 주가는 12MF PER 13배 수준으로, 15배 이상은 충분히 적용 가능한 상황이다."
+      }
+    ]
+  }
+}

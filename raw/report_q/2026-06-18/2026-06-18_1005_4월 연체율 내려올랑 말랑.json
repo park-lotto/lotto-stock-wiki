@@ -1,0 +1,30 @@
+{
+  "meta": {
+    "date": "2026-06-18",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-18_1005_4월 연체율 내려올랑 말랑.md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "김도하",
+    "report_date": "2026년 6월 18일",
+    "target_kind": "sector",
+    "sector_name": "은행",
+    "sector_view": "Positive",
+    "thesis": [
+      "국내은행 4월 말 원화대출 연체율은 0.61%(+4bp YoY)로 상승",
+      "은행업종의 연체율 및 연체채권 잔액은 YoY 지표를 기준으로 상승폭 및 증가율이 둔화",
+      "2026년 중 은행업종의 연체율이 개선(YoY) 추세로 전환될 것이라는 전망을 유지"
+    ],
+    "timeline": [
+      "2026년 4월",
+      "2026년 중"
+    ],
+    "top_picks": null,
+    "risk": [
+      "연체 채권 정리 감소",
+      "4Q25부터 지속적으로 상승한 시장금리"
+    ],
+    "quote": "그럼에도 2026년 중 은행업종의 연체율이 개선(YoY) 추세로 전환될 것이라는 전망을 유지함."
+  }
+}

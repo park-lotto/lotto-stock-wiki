@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-18",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-18_1001_성과급 반영해도 실적 전망치 상향.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김록호, 김영규",
+    "report_date": "2026년 6월 18일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "삼성전자",
+        "code": "005930",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "480,000원",
+        "tp_prev": null,
+        "tp_direction": "up",
+        "earnings_outlook": "26년 2분기 매출액 179조원(YoY +140%, QoQ +34%), 영업이익 92조원(YoY +1,850%, QoQ +61%) 전망",
+        "estimate_revision": "DRAM의 평균판매가격이 당초 예상치를 상회할 것으로 파악되어 가격 가정을 상향 조정한다.",
+        "next_catalyst": "2026년 진행될 주주환원",
+        "thesis": [
+          "DRAM의 평균판매가격 상승 및 LPDDR 수요 강도 지속",
+          "2027년 HBM 가격 협상 및 비중 역전에 따른 실적 상향 기여",
+          "2026년 대규모 FCF 기반 주주환원 정책"
+        ],
+        "valuation_basis": "2027년 영업이익 전망치 상향, 12개월 선행 추정치 가중치 확대, 글로벌 반도체 업체들의 멀티플 레벨업 반영",
+        "risk": "고객사의 제품 출하 지연 등으로 인한 HBM 4 실적 기여도 축소",
+        "supply_comment": "중화권 및 로컬 스마트폰 업체들의 스마트폰 물량 하향 조정에도 불구하고 Nvidia를 필두로 AI CPU에 탑재되는 LPDDR 수요 강도가 강한 것으로 추정",
+        "quote": "삼성전자에 대한 투자의견 ‘BUY’를 유지하고, 목표주가를 480,000원으로 상향한다."
+      }
+    ]
+  }
+}

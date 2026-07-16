@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "date": "2026-06-18",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-19_0707_성장성과 밸류에이션 시소게임. 숨은 가치 찾...md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": "허민호",
+    "report_date": "2026",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "LS",
+        "code": "006260",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "630,000원",
+        "tp_prev": "630,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "26년 연결기준 매출액 38.5조원(+21%, 이하 YoY), 영업이익 1.7조원(+59%) 전망",
+        "estimate_revision": null,
+        "next_catalyst": "1Q26 어닝 서프라이즈, 주요 자회사들의 구조적 실적 개선 및 성장성 제고",
+        "thesis": [
+          "1Q26 어닝 서프라이즈를 시작으로 실적 개선 본격화",
+          "주요 자회사들의 구조적 실적 개선 및 성장성 제고, 적정가치 재평가 기대",
+          "3차 상법 개정안 시행으로 자사주 11% 소각 기대, 중복상장 원칙적 금지 등으로 자회사의 적정 가치 할인율 축소"
+        ],
+        "valuation_basis": "적정 순자산가치",
+        "risk": null,
+        "supply_comment": "고마진의 지중 및 해저 케이블, 부스웨이 수주 확대 예상",
+        "quote": "1) 1Q26 어닝 서프라이즈를 시작으로 실적 개선 본격화, 2) 주요 자회사들의 구조적 실적 개선 및 성장성 제고, 적정가치 재평가 기대, 3) 3차 상법 개정안 시행으로 자사주 11% 소각 기대, 중복상장 원칙적 금지 등으로 자회사의 적정 가치 할인율 축소 예상."
+      },
+      {
+        "name": "효성중공업",
+        "code": "298040",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "4,800,000원",
+        "tp_prev": "4,800,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 매출액 7.22조원(+21%, 이하 YoY), 영업이익 1.07조원(+43%) 전망",
+        "estimate_revision": null,
+        "next_catalyst": "미국향 765kV 전력기기, 친환경 GIS, AIS용 GCB, STATCOM, 리액터 등 제품 포트폴리오 다각화",
+        "thesis": [
+          "2~3년 전부터 급증한 미국향 수주가 매출로 인식되며, 외형성장 및 수익성 개선 가속화",
+          "미국향 765kV 전력기기 및 제품 포트폴리오 다각화",
+          "초고압 전력기기 공급 부족 지속 예상 및 생산능력 증설을 통한 수주 확대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "초고압 전력기기의 빠른 생산능력 증설을 통해 수주 확대",
+        "quote": "동사는 1) 2~3년 전부터 급증한 미국향 수주가 매출로 인식되며, 외형성장 및 수익성 개선이 가속화될 전망. 2) 미국향 765kV 전력기기, 친환경 GIS, AIS용 GCB, STATCOM, 리액터 등 제품 포트폴리오 다각화."
+      },
+      {
+        "name": "두산에너빌리티",
+        "code": "034020",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "156,000원",
+        "tp_prev": "156,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 매출액 17.45조원(+2%, 이하 YoY), 영업이익 1.06조원(+39%) 전망",
+        "estimate_revision": null,
+        "next_catalyst": "TVA 이사회에서 원전 증설 계획이 포함된 '2025 IRP'의 승인 이후 NuScale 프로젝트의 조건부 PPA 승인",
+        "thesis": [
+          "NuScale 프로젝트의 조건부 PPA 승인 기대",
+          "미국 대형 원전 프로젝트 추진 과정에서 한국전력 그룹의 AP1000 건설 참여 시 EPC 및 기자재 수주 가능성",
+          "원전 주설비 EPC 수주 확대 기대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "2026년 14.4조원의 수주 예상. 이 중 원전 분야 5.9조원, 가스/수소 분야 6.2조원 기대",
+        "quote": "1) TVA 이사회에서 원전 증설 계획이 포함된 ‘2025 IRP’의 승인 이후 NuScale 프로젝트의 조건부 PPA 승인 기대."
+      }
+    ]
+  }
+}

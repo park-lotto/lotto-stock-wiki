@@ -1,0 +1,49 @@
+{
+  "meta": {
+    "date": "2026-06-15",
+    "broker": "Hanwha Investment & Securities",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-17_0706_[디지털자산] 디지털자산 Weekly 2026.06.12.md"
+  },
+  "questionnaire": {
+    "broker": "Hanwha Investment & Securities",
+    "analyst": "최윤영",
+    "report_date": "2026.06.12",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "미국 하원 디지털자산 과세 체계 정비",
+      "스테이킹·채굴 보상 과세",
+      "블록체인 기반 디지털채권 발행",
+      "ZK 기반 프라이버시 기술",
+      "비트코인(BTC) 및 이더리움(ETH) 가격 변동",
+      "ETF 자금 유출입",
+      "디지털자산 시장 규제 및 제도권 편입"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.08",
+        "event": "넥스트레이드와 한국거래소, 토큰증권 장외시장 본인가 신청 예정"
+      },
+      {
+        "date": "2026.06.12",
+        "event": "디지털자산 Weekly 보고서 발행"
+      }
+    ],
+    "top_picks": [
+      "비트코인",
+      "이더리움",
+      "테더",
+      "비앤비",
+      "유에스디코인",
+      "엑스알피",
+      "솔라나",
+      "트론",
+      "하이퍼리퀴드",
+      "도지코인"
+    ],
+    "risk": "스테이킹 보상 과세 이연 여부를 두고 업계와 학계의 의견이 엇갈리고 있으며, 세부 내용에 대한 초당적 합의는 이뤄지지 않은 상태임",
+    "quote": "클래리티 법안과 세제 개편 논의가 병행되면서, 미국은 시장구조 규제뿐 아니라 과세 체계까지 정비해 디지털자산 산업의 제도권 편입을 추진하는 방향이 더욱 뚜렷"
+  }
+}

@@ -1,0 +1,162 @@
+{
+  "meta": {
+    "date": "2026-07-16",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-16_1106_2Q26 Preview 해외 성장 그리고 비용 통제.md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "한유정",
+    "report_date": "2026년 07월 16일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "KT&G",
+        "code": "033780",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "250,000원",
+        "tp_prev": "250,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 2분기 연결 매출액 1조 6,980억원(+9.7% YoY), 영업이익 4,043억원(+15.6%)으로 컨센서스(3,843억원) 상회 전망",
+        "estimate_revision": null,
+        "next_catalyst": "해외 궐련의 이익 기여도 확대",
+        "thesis": [
+          "해외 궐련 물량 증가(+8%)와 판가 상승(+11%)",
+          "국내 NGP 점유율 확대 및 고가 스틱 비중 확대로 믹스 개선",
+          "신규 국가 진출과 직접 사업 확대, 해외 생산 거점 확충을 통한 중장기 성장 여력 확보"
+        ],
+        "valuation_basis": "과거 내수 담배 중심의 성장 한계에 따른 할인 요인을 완화하며 Valuation Re-rating의 근거가 될 전망",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "해외 궐련의 물량 증가(+8%)와 판가 상승(+11%), 국내 NGP 점유율 확대가 실적 성장을 견인한 것으로 추정한다."
+      },
+      {
+        "name": "삼양식품",
+        "code": "003230",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "1,800,000원",
+        "tp_prev": "2,000,000원",
+        "tp_direction": "down",
+        "earnings_outlook": "2026년 2분기 연결 매출액 7,720억원(+39.6% YoY), 영업이익 1,750억원(+45.7%)으로 컨센서스(1,796억원) 부합 전망",
+        "estimate_revision": "Target Multiple 종전 대비 하향",
+        "next_catalyst": "미국향 선적 물량 매출 인식 이연에 따른 3분기 성장 가시성",
+        "thesis": [
+          "미국과 중국을 중심으로 한 해외 법인의 전사 실적 성장 견인",
+          "미주(+51.5%), 중국(+62.3%) 지역의 높은 매출 성장",
+          "중국과 유럽 등 기타 지역에서의 수요 확대"
+        ],
+        "valuation_basis": "Peer group의 밸류에이션 하락과 할증률을 하향해 Target Multiple을 종전 대비 하향",
+        "risk": "높은 실적 기저와 신규 브랜드 출시에 따른 비용 부담, 중국 공장 가동 이후의 성장 지속성, 인건비 및 광고선전비 확대, 오너 일가 지분 승계 우려",
+        "supply_comment": null,
+        "quote": "Peer group의 밸류에이션 하락과 할증률을 하향해 Target Multiple을 종전 대비 하향하고, 목표주가를 1,800,000원으로 하향 조정한다."
+      },
+      {
+        "name": "오리온",
+        "code": "271560",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "180,000원",
+        "tp_prev": "180,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 2분기 연결 매출액 8,969억원(+15.4% YoY), 영업이익 1,321억원(+8.7%) 기록 추정",
+        "estimate_revision": null,
+        "next_catalyst": "9월 중국 스낵 라인 증설 및 3분기 말 러시아 파이 라인 증설",
+        "thesis": [
+          "중국 간식점과 이커머스 채널 전환 및 전용제품 확대",
+          "유지류·감자 플레이크 등 주요 원재료 가격 하락",
+          "러시아 가동률 100% 상회 및 현지 통화 기준 두 자릿수 성장"
+        ],
+        "valuation_basis": null,
+        "risk": "베트남 시장 경쟁 심화 및 에너지·포장재·물류비 상승, 한국 내 인건비 및 임대료 등 비용 증가",
+        "supply_comment": null,
+        "quote": "중국은 간식점과 이커머스 전용제품 확대가 이어지는 가운데 9월 스낵 라인 증설로 공급 여력도 확대될 전망이며, 러시아 역시 가동률이 100%를 상회하는 상황에서 3분기 말 파이 라인 증설이 예정돼 있어 높은 성장세가 이어질 가능성이 높다."
+      },
+      {
+        "name": "CJ제일제당",
+        "code": "097950",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "270,000원",
+        "tp_prev": "300,000원",
+        "tp_direction": "down",
+        "earnings_outlook": "2026년 2분기 연결 매출액 7조 323억원(-2.8% YoY), 영업이익 2,640억원(-25.2%) 추정",
+        "estimate_revision": "Target Multiple 종전 대비 하향",
+        "next_catalyst": "바이오 부문 QoQ 회복 흐름 및 해외 GSP 성장",
+        "thesis": [
+          "가공식품 중심의 견조한 성장세(+5.8%)",
+          "바이오 부문 아미노산 스팟 가격 반등에 따른 실적 회복",
+          "미국 경기 둔화에도 햇반 등 GSP 판매 견조"
+        ],
+        "valuation_basis": "Peer group의 밸류에이션 하락을 반영해 Target Multiple 종전 대비 하향",
+        "risk": "국내 소재식품의 원가 부담과 판가 인하, 해외 식품의 광고선전비 및 운반비 증가",
+        "supply_comment": null,
+        "quote": "Peer group의 밸류에이션 하락을 반영해 Target Multiple을 종전 대비 하향하고, 목표주가를 270,000원으로 하향 조정한다."
+      },
+      {
+        "name": "농심",
+        "code": "004370",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "550,000원",
+        "tp_prev": "550,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 2분기 연결 매출액 9,328억원(+7.5% YoY), 영업이익 522억원(+29.8%)으로 컨센서스(492억원) 소폭 상회 전망",
+        "estimate_revision": null,
+        "next_catalyst": "4분기 녹산 수출 전용 공장 가동을 통한 유럽향 물량 대응력 확대",
+        "thesis": [
+          "국내 라면 가격 인하 영향에도 신제품 판매 호조",
+          "미주 판촉 및 마케팅비 기저효과에 따른 이익 증가",
+          "유럽 법인 매출 본격화 및 서유럽 SKU 확대"
+        ],
+        "valuation_basis": null,
+        "risk": "국내 가격 인하 효과 및 부자재 가격 상승 부담",
+        "supply_comment": null,
+        "quote": "지난해 판촉 및 마케팅비 과집행에 따른 기저효과로 이익은 큰 폭의 증가세를 시현한 것으로 파악된다."
+      },
+      {
+        "name": "롯데웰푸드",
+        "code": "280360",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "170,000원",
+        "tp_prev": "190,000원",
+        "tp_direction": "down",
+        "earnings_outlook": "2026년 2분기 연결 매출액 1조 1,294억원(+6.1% YoY), 영업이익 519억원(+51.3%) 기록 추정",
+        "estimate_revision": "Target Multiple 종전 대비 하향",
+        "next_catalyst": "인도 푸네 신공장 생산 안정화 및 초코파이 생산라인 가동 확대",
+        "thesis": [
+          "인도 시장 빙과 판매 환경 우호 및 건과 성장",
+          "저수익 SKU 축소 및 물류 개선 등 경영개선 활동",
+          "인도 푸네 공장 고정비 부담 완화 및 수익성 정상화"
+        ],
+        "valuation_basis": "Peer group의 밸류에이션 하락 반영해 Target Multiple 종전 대비 하향",
+        "risk": "포장재 가격 상승 및 환율 부담, 일부 원재료 부담",
+        "supply_comment": null,
+        "quote": "Peer group의 밸류에이션 하락을 반영해 Target Multiple을 종전 대비 하향하고, 목표주가를 170,000원으로 하향 조정한다."
+      },
+      {
+        "name": "롯데칠성",
+        "code": "005300",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "120,000원",
+        "tp_prev": "160,000원",
+        "tp_direction": "down",
+        "earnings_outlook": "2026년 2분기 연결 매출액 1조 1,261억원(+3.6% YoY), 영업이익 546억원(-12.5%)으로 컨센서스(647억원) 하회 전망",
+        "estimate_revision": "Target Multiple 종전 대비 하향",
+        "next_catalyst": "6월 말 가격 인상 효과가 3분기부터 반영 및 성수기 효과",
+        "thesis": [
+          "제로탄산과 에너지음료 중심의 음료 성장",
+          "RTD 신제품 및 '새로' 판매 호조",
+          "매크로 변수 안정화 시 하반기 이익 방어 가능"
+        ],
+        "valuation_basis": "이익 추정치 하향과 Peer group의 밸류에이션 하락 반영해 Target Multiple 종전 대비 하향",
+        "risk": "중동 리스크 영향 본격 반영, 포장재 가격 및 유가 상승에 따른 원가 부담",
+        "supply_comment": null,
+        "quote": "이익 추정치 하향과 Peer group의 밸류에이션 하락을 반영해 Target Multiple을 종전 대비 하향하고, 목표주가를 120,000원으로 하향 조정한다."
+      }
+    ]
+  }
+}
