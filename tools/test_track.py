@@ -126,6 +126,37 @@ def test_start_creates_folder_and_branch(repo):
     assert track.branch_exists(repo, "track/보이스")
 
 
+def test_track_folder_lives_inside_the_project(repo):
+    """프로젝트 밖(형제 폴더)이 아니라 안에 둔다 — 사장님이 찾기 쉬운 곳."""
+    track.start("보이스", repo=repo)
+    wt = track.worktree_path("보이스", repo)
+    assert wt.parent == repo.resolve() / ".tracks"
+    assert repo.resolve() in wt.parents, "프로젝트 밖으로 나가면 안 된다"
+
+
+def test_track_folder_does_not_pollute_main_status(repo):
+    """★프로젝트 안에 두면 main 워킹트리가 트랙 폴더(883MB·1만여 파일)를 untracked로 본다.
+    .gitignore에 의존하지 않고 도구 자체가 무시해야 한다 — .gitignore가 없는
+    클론·테스트 저장소에서도 안전해야 하니까."""
+    track.start("보이스", repo=repo)
+    assert track.dirty_code_files(repo) == [], \
+        "★트랙 폴더가 main의 '커밋 안 된 코드'로 잡힌다 = finish가 남의 작업으로 오인"
+
+
+def test_stage_also_lives_inside_tracks_dir(repo):
+    _make_track_commit(repo, "보이스")
+    seen = []
+
+    class Watcher(_Gate):
+        def snapshot(self, cwd=None, **kw):
+            seen.append(Path(cwd).resolve())
+            return super().snapshot(cwd, **kw)
+
+    track.finish("보이스", repo=repo, gate=Watcher())
+    for cwd in seen:
+        assert cwd.parent == repo.resolve() / ".tracks", f"stage가 엉뚱한 데 있다: {cwd}"
+
+
 def test_start_never_points_upstream_at_main(repo):
     """★`worktree add -b <br> origin/main`은 upstream을 origin/main으로 박는다 →
     post-commit의 인자 없는 push가 '트랙 브랜치를 main으로'가 된다(게이트 우회)."""
@@ -162,6 +193,31 @@ def test_start_leaves_no_main_upstream_when_push_fails(repo):
     up = track.upstream_of(track.worktree_path("보이스", repo))
     assert up != "origin/main", "★원격이 죽으면 트랙 커밋이 main으로 직행한다"
     assert up is None, f"원격에 못 올렸으면 upstream은 없어야 한다: {up}"
+
+
+def test_start_makes_output_safe(repo, monkeypatch):
+    """main()에서만 안전화하면 코드가 start()를 직접 부를 때 cp949에서 터진다.
+    실측: 트랙 이전 스크립트가 worktree를 만든 직후 '✅' print에서 크래시 —
+    폴더는 생기고 예외는 나는 어정쩡한 상태가 됐다."""
+    called = []
+    monkeypatch.setattr(track.merge_gate, "make_output_safe", lambda: called.append("start"))
+    track.start("보이스", repo=repo)
+    assert called == ["start"], "start()가 출력 안전화를 안 했다"
+
+
+def test_finish_makes_output_safe(repo, monkeypatch):
+    _make_track_commit(repo, "보이스")
+    called = []
+    monkeypatch.setattr(track.merge_gate, "make_output_safe", lambda: called.append("finish"))
+    track.finish("보이스", repo=repo, gate=_Gate())
+    assert "finish" in called, "finish()가 출력 안전화를 안 했다"
+
+
+def test_list_makes_output_safe(repo, monkeypatch):
+    called = []
+    monkeypatch.setattr(track.merge_gate, "make_output_safe", lambda: called.append("list"))
+    track.list_tracks(repo=repo)
+    assert called == ["list"], "list_tracks()가 출력 안전화를 안 했다"
 
 
 def test_start_refuses_duplicate(repo):
@@ -205,7 +261,7 @@ def test_finish_gate_failure_leaves_no_merge_anywhere(repo):
     with pytest.raises(track.TrackError):
         track.finish("보이스", repo=repo, gate=_Gate(problems=["x"]))
     # 부분 병합이 어디에도 남으면 안 된다 — 남으면 다른 세션이 그걸 커밋한다
-    assert not (repo.parent / "lotto-merge-보이스").exists()
+    assert not (track.tracks_dir(repo) / "_merge-보이스").exists()
     rc, _ = track.run(["git", "rev-parse", "--verify", "--quiet", "MERGE_HEAD"], repo)
     assert rc != 0
     assert (repo / "app.py").read_text(encoding="utf-8") == "VALUE = 1\n", "main 폴더가 오염됐다"
@@ -232,14 +288,14 @@ def test_finish_never_touches_main_folder_during_gate(repo):
 def test_stage_folder_is_removed_after_success(repo):
     _make_track_commit(repo, "보이스")
     track.finish("보이스", repo=repo, gate=_Gate())
-    assert not (repo.parent / "lotto-merge-보이스").exists()
+    assert not (track.tracks_dir(repo) / "_merge-보이스").exists()
 
 
 def test_stage_folder_is_removed_after_gate_failure(repo):
     _make_track_commit(repo, "보이스")
     with pytest.raises(track.TrackError):
         track.finish("보이스", repo=repo, gate=_Gate(problems=["x"]))
-    assert not (repo.parent / "lotto-merge-보이스").exists(), "임시 폴더가 쌓이면 디스크가 샌다"
+    assert not (track.tracks_dir(repo) / "_merge-보이스").exists(), "임시 폴더가 쌓이면 디스크가 샌다"
 
 
 def test_finish_gate_failure_keeps_track_folder(repo):
@@ -332,7 +388,7 @@ def test_finish_aborts_and_reports_on_conflict(repo):
     # ⚠️ repo의 MERGE_HEAD를 확인하는 건 죽은 검사다 — 병합은 stage에서 하므로
     #    repo엔 애초에 생길 수 없다. 진짜로 지켜야 할 것만 검사한다.
     assert _origin_head(repo) == origin_before, "충돌인데 라이브로 나갔다"
-    assert not (repo.parent / "lotto-merge-보이스").exists(), \
+    assert not (track.tracks_dir(repo) / "_merge-보이스").exists(), \
         "충돌 상태의 stage가 남으면 디스크가 새고, 다음 finish가 그걸 주워 쓴다"
     assert track.worktree_path("보이스", repo).exists(), "충돌 났다고 작업을 날리면 안 된다"
 

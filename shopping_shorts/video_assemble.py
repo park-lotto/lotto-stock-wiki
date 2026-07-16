@@ -259,7 +259,17 @@ def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None):
     effect = style.get("effect") or "none"
     parts = []
     if show_bar:
-        parts.append(f"drawbox=x=0:y=ih-{_BAR_H}:w=iw:h={_BAR_H}:color=black@0.82:t=fill")
+        # ⚠️ enable= 없이는 이 바가 영상 전체 시간대에 걸쳐 그려진다. _burn_captions가
+        # 비트마다 _caption_drawtexts를 호출해 필터체인에 이어붙이므로(613~616줄),
+        # enable 없는 바 N개가 겹쳐 black@0.82가 누적되어 마지막 비트를 제외한 모든
+        # 비트의 자막이 거의 안 보이게 된다(2026-07-15 Task9 실렌더 검증 결함2,
+        # 실측 밝기 9/255). 이 비트의 자막 표시 구간(t0 ~ 마지막 세그먼트 종료시각인
+        # t0+dur+0.5, 아래 end 계산과 동일)에만 바를 그려 자막 텍스트의 enable 창과
+        # 정확히 맞춘다.
+        parts.append(
+            f"drawbox=x=0:y=ih-{_BAR_H}:w=iw:h={_BAR_H}:color=black@0.82:t=fill:"
+            f"enable='between(t,{t0:.2f},{t0 + dur + 0.5:.2f})'"
+        )
     t = 0.0
     for i, (seg, d) in enumerate(zip(segs, durs)):
         start = t + t0
@@ -359,6 +369,14 @@ def _motion_layer_filters(layers, next_input_idx, vcur):
     - input_args: ffmpeg에 추가할 ["-i", path, ...]
     - fc_parts: filter_complex 세미콜론 조각 리스트
     - vcur_out: 마지막 비디오 스트림 라벨(다음 필터가 이어받음)
+
+    ⚠️ enable=은 "언제 그릴지"만 정할 뿐, 소스 스트림이 몇 초 지점을 재생 중인지는
+    그대로 벽시계 시간(입력 스트림 자체의 PTS, t=0부터)을 따라간다. start>0인 레이어를
+    enable만으로 게이팅하면, enable 창이 열릴 때 그 자산은 이미 자기 시간으로 그 이상
+    지나 끝난 뒤라(짧은 전환/스티커는 정지 마지막 프레임) 재생이 아니라 정지 잔상만
+    보인다(2026-07-15 Task9 실렌더 검증 결함1). setpts=PTS-STARTPTS+start/TB로 레이어
+    자신의 PTS를 start초만큼 뒤로 밀어, enable 창이 열리는 순간 자산이 자기 0초부터
+    재생되도록 맞춘다(ffmpeg 표준 "시간차 오버레이" 레시피).
     """
     input_args = []
     fc = []
@@ -374,9 +392,12 @@ def _motion_layer_filters(layers, next_input_idx, vcur):
         xf = min(1.0, max(0.0, float(L.get("x", 50)) / 100.0))
         yf = min(1.0, max(0.0, float(L.get("y", 50)) / 100.0))
         lab, out = f"ml{i}", f"mlv{i}"
-        fc.append(f"[{idx}:v]{scale}format=rgba,colorchannelmixer=aa={aa:.2f}[{lab}]")
         start = float(L.get("start") or 0)
         dur = L.get("dur")
+        # start>0일 때만 setpts를 얹는다(start=0은 원점이라 이동이 no-op — 필터 문자열을
+        # 불필요하게 늘리지 않고 기존 산출물과의 호환성도 유지).
+        ts = f"setpts=PTS-STARTPTS+{start:.3f}/TB," if start > 0 else ""
+        fc.append(f"[{idx}:v]{ts}{scale}format=rgba,colorchannelmixer=aa={aa:.2f}[{lab}]")
         en = f":enable='between(t,{start:.3f},{start + float(dur):.3f})'" if dur is not None else ""
         fc.append(f"[{vcur}][{lab}]overlay=x=W*{xf:.4f}-w/2:y=H*{yf:.4f}-h/2{en}[{out}]")
         vcur = out
