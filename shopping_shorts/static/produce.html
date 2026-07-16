@@ -1037,7 +1037,11 @@ function jump(i){ cur=i; renderSteps(); showPanel(); }
 function go(d){ const n=cur+d; if(n<0||n>=STEPS.length) return; cur=n; renderSteps(); showPanel(); }
 
 // ── 1단계 대본: 3모드 ──────────────────────────────
-const STATE = { script: "", script_src_idx: null, subtitleRemoval: false, headcopy: null, captionStyle: null, deco: { extra_texts: [], motion: null } };   // 확정 대본 + 렌더 설정
+const STATE = { script: "", script_src_idx: null, script_from_wiki: null, subtitleRemoval: false, headcopy: null, captionStyle: null, deco: { extra_texts: [], motion: null } };   // 확정 대본 + 렌더 설정
+// script_from_wiki: 확정한 대본이 위키(mix 목록)에서 왔나 — 왔으면 shortcode(조합은 'mix'),
+// 왼쪽 뽑기(HANDOFF)에서 왔으면 null. 위키 유래면 '⭐이 원본 영상 위키에 담기'를 숨긴다:
+// 이미 위키에 있는 원본이라 담을 게 없고, 그냥 두면 _currentSrcItem()이 엉뚱한 HANDOFF
+// 영상으로 폴백해 무관한 영상을 학습 재료로 담는다(I-1이 잡으려던 오귀속의 mix 경로판).
 // script_src_idx: 확정한 대본이 HANDOFF의 몇 번 영상에서 나왔는지(리뷰 I-1 수정, 2026-07-15).
 // pickScript가 true인 영상이 여러 개면(A로 뽑아본 뒤 B로 확정해도 A가 true로 남음) 첫 매치만
 // 찾는 기존 방식이 틀린 영상을 위키저장 대상으로 골랐다 — 확정 시점(pmUseRaw/pmUseDraft)에
@@ -1086,6 +1090,7 @@ function renderDrafts(drafts, boxId){
 function useDraft(i){
   const dr=(window._drafts||[])[i]; if(!dr) return;
   STATE.script=dr.script||'';
+  STATE.script_from_wiki='mix';   // 조합 초안 = 위키 대본 여러 개에서 나옴. 원본을 하나로 특정할 수 없다.
   setScriptMode('manual');   // 편집 가능한 직접작성 창으로 이동(내용 채움)
   refreshFinalPeek();
   if(HANDOFF.length) saveWork();
@@ -1300,7 +1305,7 @@ async function openScriptModal(i){
     pmPrefillSubject(PM_SHORTCODE);     // shortcode 없으면(직행 URL) 손입력만 열어둔다
   }catch(e){ document.getElementById('pmResults').innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; }
 }
-function pmUseRaw(){ STATE.script=PM_BASE_SCRIPT; STATE.script_src_idx=PM_IDX; pmClose(); setScriptMode('manual'); refreshFinalPeek(); setFinalCategoryValue(PM_CATEGORY); if(HANDOFF.length) saveWork(); }
+function pmUseRaw(){ STATE.script=PM_BASE_SCRIPT; STATE.script_src_idx=PM_IDX; STATE.script_from_wiki=PM_FROM_WIKI; pmClose(); setScriptMode('manual'); refreshFinalPeek(); setFinalCategoryValue(PM_CATEGORY); if(HANDOFF.length) saveWork(); }
 function pmClose(){ document.getElementById('pmModal').classList.remove('open'); }
 function pmToggleTopic(){
   const mode=document.querySelector('input[name=pmmode]:checked').value;
@@ -1377,6 +1382,7 @@ function pmRenderDrafts(drafts){
 function pmUseDraft(btn){
   const t=btn.closest('.draft').querySelector('.dtext'); STATE.script=(t?t.value:'')||'';
   STATE.script_src_idx=PM_IDX;
+  STATE.script_from_wiki=PM_FROM_WIKI;   // mix 유래면 shortcode, 뽑기 유래면 null
   pmClose(); setScriptMode('manual'); refreshFinalPeek(); setFinalCategoryValue(PM_CATEGORY);
   if(HANDOFF.length) saveWork();
 }
@@ -1501,7 +1507,9 @@ function refreshFinalPeek(){
   if(p) p.innerHTML = STATE.script ? `"${esc(STATE.script.slice(0,60))}…" · ${lenText(STATE.script)}` : '<span style="color:var(--sub)">아직 대본이 없습니다. 왼쪽 영상에서 📝뽑기 하거나 직접 작성하세요.</span>';
   const b=document.getElementById('saveWikiBtn');
   if(b){
-    b.style.display=STATE.script?'inline-block':'none';
+    // 위키 유래 대본(mix 목록/조합)은 담을 원본이 없다 — 버튼을 숨기지 않으면
+    // _currentSrcItem()이 무관한 HANDOFF 영상으로 폴백해 그걸 담아버린다.
+    b.style.display=(STATE.script && !STATE.script_from_wiki)?'inline-block':'none';
     // I-B: 대본이 바뀌면 stale된 '✓ 저장됨' 라벨을 기본으로 되돌린다. 저장 진행 중(disabled)엔
     // '⏳ 저장 중…' 스피너 텍스트를 이 호출이 지우면 안 되므로 !b.disabled로 가드한다.
     if(!b.disabled){ b.textContent='⭐ 이 원본 영상 위키에 담기(학습 반영)'; b.classList.remove('sent'); }
