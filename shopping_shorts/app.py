@@ -1338,7 +1338,11 @@ def api_mix_tts(job_id: str, beat_idx: int):
 @app.get("/api/voice-presets")
 def api_voice_presets(lang: str = "KR"):
     """성우별 그룹 목록(유저 노출용 — source_ref는 내부 전용이라 제외).
-    성우 1명당 stable(기본 노출)/natural/expressive 3톤을 variants에 묶어서 반환."""
+
+    성우 1명당 stable(기본 노출)/natural/expressive를 variants에 묶어 반환하고,
+    베스트 5명은 whisper까지 4톤이다(2026-07-16 청취 판정). best=베스트 성우 플래그로,
+    프론트가 ⭐ 배지에 쓴다. **순서는 여기서 정하지 않는다** — Store.list_voice_presets의
+    ORDER BY best DESC, created_at이 정본이고 이 함수는 그 순서를 보존만 한다."""
     rows = Store(DB_PATH).list_voice_presets(lang=lang)
     groups = {}
     for p in rows:
@@ -1346,6 +1350,10 @@ def api_voice_presets(lang: str = "KR"):
         g = groups.setdefault(gid, {
             "group_id": gid, "name": p["name"], "one_liner": p["one_liner"],
             "lang": p["lang"], "archetype": p["archetype"],
+            # best는 성우(그룹)의 성질이라 첫 행에서 한 번만 집는다 — 같은 성우의
+            # 3~4개 variant 행은 모두 같은 값이다. 순서는 Store가 이미 정해서
+            # 줬고(ORDER BY best DESC), dict가 삽입 순서를 보존하므로 여기선 보존만 한다.
+            "best": bool(p.get("best", False)),
             "default_variant": "stable", "variants": {},
         })
         g["variants"][p["variant"]] = {

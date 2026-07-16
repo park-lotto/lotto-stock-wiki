@@ -292,8 +292,12 @@ class Store:
             """)
             # 성우 1명당 stable/natural/expressive 3톤(2026-07-14) — 기존 DB 백필.
             # naturalize_profile_json(2026-07-15): 튜닝 작업대에서 동결한 자연화 프로파일.
+            # best(2026-07-16): 사장님 청취 판정으로 뽑은 베스트 성우. 이 한 필드가 두 일을
+            # 한다 — 카드 정렬(ORDER BY best DESC)과 ⭐ 배지. 둘로 나누면(sort_order +
+            # recommended) "베스트인데 순서는 뒤"라는 모순 상태가 표현 가능해진다(설계 §4.1).
             for col, ddl in (("group_id", "TEXT"), ("variant", "TEXT NOT NULL DEFAULT 'stable'"),
-                             ("naturalize_profile_json", "TEXT")):
+                             ("naturalize_profile_json", "TEXT"),
+                             ("best", "INTEGER NOT NULL DEFAULT 0")):
                 try:
                     c.execute(f"ALTER TABLE voice_presets ADD COLUMN {col} {ddl}")
                 except sqlite3.OperationalError:
@@ -1266,8 +1270,8 @@ class Store:
                 INSERT INTO voice_presets(preset_id, name, one_liner, lang, archetype,
                     base_voice_id, model_id, voice_settings_json, default_speed,
                     default_silence_trim, sample_file, source_ref, origin, created_at,
-                    group_id, variant, naturalize_profile_json)
-                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                    group_id, variant, naturalize_profile_json, best)
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 ON CONFLICT(preset_id) DO UPDATE SET
                     name=excluded.name, one_liner=excluded.one_liner, lang=excluded.lang,
                     archetype=excluded.archetype, base_voice_id=excluded.base_voice_id,
@@ -1276,6 +1280,7 @@ class Store:
                     default_silence_trim=excluded.default_silence_trim,
                     sample_file=excluded.sample_file, source_ref=excluded.source_ref,
                     origin=excluded.origin, group_id=excluded.group_id, variant=excluded.variant,
+                    best=excluded.best,
                     -- 동결 프로파일만은 COALESCE로 보존한다. 다른 컬럼과 달리 이 값의 소스오브
                     -- 트루스는 JSON 파일이 아니라 튜닝 작업대(DB)다. excluded로 덮으면 startup
                     -- seed_presets가 매 재기동마다 NULL로 지워버린다(2026-07-15 리뷰 S2).
@@ -1289,6 +1294,7 @@ class Store:
                 p.get("default_speed", 1.0), p.get("default_silence_trim", "off"),
                 p.get("sample_file"), p.get("source_ref"), p.get("origin", "curated"), now,
                 p.get("group_id") or p["preset_id"], p.get("variant", "stable"), prof_json,
+                int(bool(p.get("best", False))),
             ))
 
     def _row_to_preset(self, r):
@@ -1300,6 +1306,7 @@ class Store:
             "sample_file": r[10], "source_ref": r[11], "origin": r[12], "created_at": r[13],
             "group_id": r[14] or r[0], "variant": r[15] or "stable",
             "naturalize_profile": json.loads(r[16]) if len(r) > 16 and r[16] else None,
+            "best": bool(r[17]) if len(r) > 17 else False,
         }
 
     def get_voice_preset(self, preset_id):
@@ -1307,18 +1314,21 @@ class Store:
             r = c.execute("SELECT preset_id,name,one_liner,lang,archetype,base_voice_id,"
                           "model_id,voice_settings_json,default_speed,default_silence_trim,"
                           "sample_file,source_ref,origin,created_at,group_id,variant,"
-                          "naturalize_profile_json FROM voice_presets "
+                          "naturalize_profile_json,best FROM voice_presets "
                           "WHERE preset_id=?", (preset_id,)).fetchone()
         return self._row_to_preset(r) if r else None
 
     def list_voice_presets(self, lang=None):
         q = ("SELECT preset_id,name,one_liner,lang,archetype,base_voice_id,model_id,"
              "voice_settings_json,default_speed,default_silence_trim,sample_file,"
-             "source_ref,origin,created_at,group_id,variant,naturalize_profile_json FROM voice_presets")
+             "source_ref,origin,created_at,group_id,variant,naturalize_profile_json,"
+             "best FROM voice_presets")
         args = ()
         if lang:
             q += " WHERE lang=?"; args = (lang,)
-        q += " ORDER BY created_at"
+        # 베스트가 앞, 그 안에선 기존 순서(삽입 시각) 유지. ★순서의 소스오브트루스는
+        # 여기다 — assets/voice_presets.json의 배열 순서가 아니다(설계 §4.1의 실측).
+        q += " ORDER BY best DESC, created_at"
         with self._conn() as c:
             return [self._row_to_preset(r) for r in c.execute(q, args).fetchall()]
 
