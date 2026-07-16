@@ -1329,6 +1329,31 @@ def api_mix_render(background_tasks: BackgroundTasks, body: dict):
     return {"ok": True}
 
 
+_PREVIEW_STALE_SEC = 600   # 10분 — 이보다 오래 'rendering'이면 죽은 렌더의 잔해로 본다.
+
+
+def _preview_render_is_stale(job) -> bool:
+    """preview_status='rendering'이 **죽은 렌더의 잔해**인가.
+
+    preview_status는 DB 영속 상태인데 TTL·하트비트가 없다. 미리보기 렌더 중 서버가 재시작되면
+    (auto_deploy 크론 3분 — shopping_shorts 변경 시 systemd 재시작이라 자주 일어난다)
+    BackgroundTask가 죽어 except가 못 돌고 DB엔 'rendering'이 **영원히** 남는다. 그러면 다시
+    눌러도 위 중복예약 가드에 걸려 무한 ⏳이고, 'failed'가 안 오니 스펙 §7.1 탈출구도 안 열려
+    **다음 버튼이 영구 잠긴다**(복구는 재매칭뿐인데 화면에 힌트가 없다).
+    → updated_at 기준 타임아웃으로 재예약을 허용해 탈출구를 연다.
+    """
+    ts = job.get("updated_at")
+    if not ts:
+        return True                      # 알 수 없으면 갇히는 쪽보다 재시도 쪽으로
+    try:
+        dt = datetime.fromisoformat(ts)
+    except (TypeError, ValueError):
+        return True
+    if dt.tzinfo is None:                # 옛 행이 naive면 UTC로 본다(store는 UTC로 쓴다)
+        dt = dt.replace(tzinfo=timezone.utc)
+    return (datetime.now(timezone.utc) - dt).total_seconds() > _PREVIEW_STALE_SEC
+
+
 @app.post("/api/produce/mix/preview")
 def api_produce_mix_preview(background_tasks: BackgroundTasks, body: dict):
     """1단계 미리보기 렌더 예약 — 유료 자막제거 없이(0원). 스펙 §6.3.
@@ -1340,8 +1365,13 @@ def api_produce_mix_preview(background_tasks: BackgroundTasks, body: dict):
     job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=422, content={"ok": False, "error": "매칭 먼저 실행하세요"})
-    if job.get("preview_status") == "rendering":
+    if job.get("preview_status") == "rendering" and not _preview_render_is_stale(job):
         return {"ok": True, "status": "rendering"}   # 더블클릭 — ffmpeg를 두 번 돌리지 않는다
+    # ★'rendering'을 여기서 **동기적으로** 쓴다. run_preview 안에서 쓰면 그건 응답을 보낸 뒤에
+    # 도는지라, 수십 ms 간격의 POST 2건이 둘 다 위 가드를 통과해(둘 다 아직 None을 본다)
+    # run_preview가 두 번 예약되고 ffmpeg 두 개가 같은 work/preview.mp4에 쓴다 —
+    # 잘린 mp4가 'ready'로 게이트를 통과할 수 있다(TOCTOU).
+    store.update_mix_job(job_id, preview_status="rendering", preview_error=None)
     background_tasks.add_task(run_preview, job_id, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True, "status": "rendering"}
 

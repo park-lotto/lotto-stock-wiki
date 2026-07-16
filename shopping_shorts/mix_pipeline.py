@@ -258,18 +258,22 @@ def run_preview(job_id, db_path, work_root):
     job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return
-    work = Path(work_root) / job_id
-    work.mkdir(parents=True, exist_ok=True)
     try:
+        # ★mkdir을 try 안에 둔다 — 밖에서 터지면 preview_status가 갱신되지 않아 화면이 무한 ⏳가 된다
+        # (라우트가 이미 'rendering'을 써둔 상태라 failed로 내려주는 건 여기밖에 없다).
+        work = Path(work_root) / job_id
+        work.mkdir(parents=True, exist_ok=True)
         store.update_mix_job(job_id, preview_status="rendering", preview_error=None)
         plan = job["edit_plan"]
         tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
         source_video_paths = _resolve_sources(job, work)
         out_path = work / "preview.mp4"
+        # headcopy·caption_style은 **넘기지 않는다**(스펙 §9: 꾸미기 제외 / caption_style 기본값만).
+        # headcopy는 store.py 주석대로 "영상제작 5단계 꾸미기 헤드카피"라 deco={}로 꾸미기를
+        # 뺐다면서 헤드카피를 넘기는 건 자기모순이었다. assemble의 기본값이면 우리 자막은 정상으로
+        # 굽힌다(라이브 관측: caption_style=None인 job으로 렌더해 자막 정상 확인).
         assemble(plan, tts_paths, source_video_paths, str(out_path),
                  clean_fn=None,                      # ← 유료 VMake 건너뜀. 이게 핵심이다.
-                 headcopy=job.get("headcopy"),
-                 caption_style=job.get("caption_style"),
                  deco={})                            # ← 꾸미기 없음(4단계 소관)
         store.update_mix_job(job_id, preview_status="ready", preview_path=str(out_path))
     except Exception as e:  # noqa: BLE001 — BackgroundTasks라 밖에서 아무도 안 받는다

@@ -8,6 +8,8 @@ subprocess.run이 죽는다(장면라이브러리 트랙 실측). assemble을 �
 mix_pipeline이 `from shopping_shorts.video_assemble import assemble`로 **이름 import**
 하므로 monkeypatch.setattr(mix_pipeline, "assemble", ...)가 먹는다.
 """
+import pathlib
+
 import pytest
 
 from shopping_shorts import mix_pipeline
@@ -48,6 +50,51 @@ def test_preview_never_calls_clean_fn(job, monkeypatch):
 
     assert seen["clean_fn"] is None, "미리보기가 유료 VMake를 붙였다 — 0원 전제가 깨진다"
     assert not seen["deco"], f"미리보기에 꾸미기가 붙었다(4단계 소관): {seen['deco']}"
+
+
+def test_preview_does_not_pass_deco_params(job, monkeypatch):
+    """★M-1 스펙 §9 — 꾸미기(deco) 제외 / caption_style은 **기본값만**.
+
+    headcopy는 store.py 주석대로 "영상제작 5단계 꾸미기 헤드카피"다. deco={}로 꾸미기를 뺐다면서
+    headcopy·caption_style을 넘기는 건 자기모순이었다(함수 주석과도 충돌).
+    라이브 관측: caption_style=None인 job으로 렌더해도 우리 자막은 정상으로 굽힌다.
+    """
+    db, work, store = job
+    # job에 5단계 꾸미기 값이 들어 있어도 미리보기는 그걸 쓰면 안 된다
+    store.update_mix_job("J1", headcopy={"text": "5단계 헤드카피"},
+                         caption_style={"font_size": 99})
+    seen = {}
+
+    def fake_assemble(plan, tts, srcs, out, clean_fn=None, headcopy=None,
+                      caption_style=None, deco=None):
+        seen.update(headcopy=headcopy, caption_style=caption_style, deco=deco)
+        open(out, "w").write("x")
+        return out
+
+    monkeypatch.setattr(mix_pipeline, "assemble", fake_assemble)
+    mix_pipeline.run_preview("J1", db, work)
+
+    assert seen["headcopy"] is None, \
+        f"미리보기가 5단계 꾸미기 헤드카피를 넘겼다(스펙 §9 위반): {seen['headcopy']}"
+    assert seen["caption_style"] is None, \
+        f"미리보기가 caption_style을 넘겼다 — 스펙은 기본값만 쓰라고 못박았다: {seen['caption_style']}"
+
+
+def test_preview_mkdir_failure_records_failed(job, monkeypatch):
+    """★M-2 — work.mkdir이 try 밖이면 여기서 터질 때 preview_status가 갱신되지 않는다.
+
+    라우트가 이미 'rendering'을 써둔 뒤라, failed로 내려주는 건 run_preview의 except뿐이다.
+    안 내려주면 화면은 무한 ⏳ = I-1과 같은 교착.
+    """
+    db, _work, store = job
+    # work_root 자리에 **파일**을 둔다 → work_root/job_id mkdir이 NotADirectoryError로 터진다
+    bad = pathlib.Path(db).parent / "not_a_dir"
+    bad.write_text("나는 파일이다")
+    mix_pipeline.run_preview("J1", db, str(bad))     # 예외가 밖으로 새면 실패(BackgroundTask라 아무도 안 받는다)
+    j = store.get_mix_job("J1")
+    assert j["preview_status"] == "failed", \
+        f"mkdir이 터졌는데 preview_status가 {j['preview_status']!r} — 화면이 무한 ⏳로 갇힌다"
+    assert j["preview_error"], "실패 사유가 안 남았다 — 사장님이 왜 안 되는지 모른다"
 
 
 def test_preview_sets_ready_and_path(job, monkeypatch):
