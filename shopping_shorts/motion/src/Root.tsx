@@ -70,6 +70,7 @@ export const RemotionRoot: React.FC = () => (
       fps={30}
       width={720}
       height={1280}
+      calculateMetadata={({props}) => ({durationInFrames: (props as {durationInFrames?: number}).durationInFrames ?? 748})}
       defaultProps={{
         videoSrc: 'full.mp4',
         sections: [
