@@ -91,6 +91,11 @@ py tools/track.py close <트랙명>     # 트랙을 아주 접는다 — 폴더�
   (실측 2026-07-16: 트랙 13,504 vs main 14,572 = **1,068개 차이**). 옛 데이터로 분석하면 틀린 답이 나온다.
 - `shopping_shorts/data/` — DB. gitignore라 **빈 DB로 시작**한다. 로컬 확인이 필요하면 복사해 오거나 서버에서 봐라.
 - `.obsidian` — 볼트 설정. **볼트는 main 폴더뿐**이라 트랙 폴더의 `.md`는 옵시디언에 안 보인다.
+- `.superpowers/` — **SDD 원장·브리프·리뷰**. gitignore라 트랙 폴더에 없다 → main 폴더에서 읽어라.
+- `.env`(API 키) — gitignore지만 **`start`가 자동으로 복사한다**(2026-07-16 추가).
+  안 하면 `key_vault`가 모듈 위치 기준으로 `.env`를 찾다 키 0개가 돼 **트랙에서 AI 작업이 통째로 막힌다**
+  (실측: main 45개 / 트랙 0개 → Gemini 영상분석이 "키풀이 비었다"로 죽었다).
+  ⚠️ `start` 전에 만든 트랙 폴더엔 없을 수 있다 — `copy .env .tracks\<트랙명>\`
 
 **따라오는 것**(git 추적): `CLAUDE.md` · `.claude/settings.json`(훅) · `.agents/skills` · `tools/` · `wiki/` · `handoff/` · 코드 전부.
 → 트랙 폴더에서 Claude Code를 열어도 **규칙·스킬·훅이 그대로 도는 똑같은 세션**이다.

@@ -22,6 +22,7 @@ ImportError). 그래서 병합에 게이트가 붙는다 — merge_gate.py.
 """
 import argparse
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -185,6 +186,26 @@ def _detach_upstream_from_main(wt, br):
         print(f"ℹ️ 트랙 브랜치를 origin에 못 올렸다 — 로컬에만 둔다(병합엔 지장 없다).\n   {out.strip()[:200]}")
 
 
+def _copy_local_secrets(repo, wt):
+    """`.env`를 트랙 폴더에 복사한다 — **이게 없으면 트랙에서 AI 작업이 통째로 막힌다.**
+
+    `.env`는 gitignore(비밀키)라 worktree로 안 따라온다. 그런데 `key_vault._ENV_PATH`는
+    **모듈 위치 기준**이라 트랙 폴더에선 `.tracks/<이름>/.env`를 찾고, 없으니 키가 0개가 된다
+    (2026-07-16 실측: main 45개 / 트랙 0개 → Gemini 영상분석이 "키풀이 비었다"로 죽었다).
+
+    복사가 안전한 이유: 같은 PC·같은 사용자이고, 트랙 폴더에서도 `.env`는 gitignore라
+    커밋될 수 없다. 없으면(서버·CI) 조용히 넘어간다.
+    """
+    src = Path(repo).resolve() / ".env"
+    if not src.exists():
+        return
+    try:
+        shutil.copy2(src, wt / ".env")
+        print("   .env 복사됨 (트랙에서도 AI 키 사용 가능)")
+    except OSError as e:
+        print(f"⚠️ .env를 못 복사했다 — 이 트랙에선 AI 작업이 막힌다: {e}")
+
+
 def upstream_of(wt):
     rc, out = run(["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"], wt)
     return out.strip() if rc == 0 else None
@@ -215,6 +236,7 @@ def start(name, repo=BASE):
         raise TrackError(f"worktree 생성 실패:\n{out}")
 
     _detach_upstream_from_main(wt, branch_name(name))
+    _copy_local_secrets(repo, wt)
 
     print(f"✅ 트랙 '{name}' 시작")
     print(f"   폴더:    {wt}")
