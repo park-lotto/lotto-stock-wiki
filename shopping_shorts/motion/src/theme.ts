@@ -37,6 +37,29 @@ export const WARM: Theme = {
   impactTop: '#fff0ea', impactStroke: '#7a2c22',
 };
 
-export const THEMES: Record<string, Theme> = {tech: TECH, warm: WARM};
+// 레시피 팔레트 변주 — 톤만 다르고 형태(둥근카드·친근폰트)는 공유.
+export const BERRY: Theme = {
+  accent: '#e8547c', accentSoft: '#ff9bb5',
+  cardBg: 'rgba(255,247,250,0.95)', ink: '#4a2230', label: '#d63f6a',
+  border: 'rgba(232,84,124,0.34)', radius: 22, brackets: false, labelMono: false,
+  heading: ROUND, glow: 'rgba(255,155,181,0.5)',
+  impactTop: '#ffe6ee', impactStroke: '#5a1f30',
+};
+export const HONEY: Theme = {
+  accent: '#e8a13a', accentSoft: '#f5c877',
+  cardBg: 'rgba(255,250,240,0.95)', ink: '#4a3720', label: '#cf8a24',
+  border: 'rgba(232,161,58,0.34)', radius: 22, brackets: false, labelMono: false,
+  heading: ROUND, glow: 'rgba(245,200,119,0.55)',
+  impactTop: '#fff2d6', impactStroke: '#5a3f14',
+};
+export const FRESH: Theme = {
+  accent: '#5bbf7a', accentSoft: '#9ee0b0',
+  cardBg: 'rgba(246,255,248,0.95)', ink: '#22402c', label: '#3fa864',
+  border: 'rgba(91,191,122,0.34)', radius: 22, brackets: false, labelMono: false,
+  heading: ROUND, glow: 'rgba(158,224,176,0.5)',
+  impactTop: '#e6ffec', impactStroke: '#1f4029',
+};
+
+export const THEMES: Record<string, Theme> = {tech: TECH, warm: WARM, berry: BERRY, honey: HONEY, fresh: FRESH};
 export const resolveTheme = (t?: string | Theme): Theme =>
   typeof t === 'string' ? (THEMES[t] || TECH) : (t || TECH);
