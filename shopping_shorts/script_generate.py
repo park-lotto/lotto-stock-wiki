@@ -100,35 +100,6 @@ _GEN_PROMPT = """너는 한국 쇼핑 숏폼(살림·요리·인테리어) 대�
 JSON만 출력."""
 
 
-_TOPIC_PROMPT = """너는 한국 쇼핑 숏폼(살림·요리·인테리어·생활용품) 대본 작가다.
-아래 주제/제품으로 약 {seconds}초 분량(대략 {words}단어)의 판매용 숏폼 나레이션
-대본 초안 {n}개를 새로 써라.
-
-[주제/제품]
-{topic}
-
-규칙:
-- 실제로 읽을 구어체 나레이션. 0초 훅 → 문제공감 → 반전/해결 → 실사용 → 끝 CTA 흐름.
-- 훅은 첫 1초에 시선을 잡게(궁금증·반전·공감 중 하나). 광고티 과하지 않게 자연스럽게.
-- 초안끼리 훅·전개를 서로 다르게 시도해라.
-각 초안: hook(첫 훅 한 줄), script(전체 나레이션 대본), applied(어떤 각도로 썼는지 한 줄).
-JSON만 출력."""
-
-
-def generate_from_topic(topic, target_seconds=20, n=3, max_key_tries=3):
-    """주제/제품 하나로 처음부터 대본 초안 리스트 생성(제미니 자동 모드). 실패/무키면 [].
-
-    generate_variations(원본 필요=Feature A)와 달리 소스 대본 없이 주제만으로 만든다.
-    한국어 대략 6.5자/초 기준으로 목표 길이에 맞춰 분량을 지시한다."""
-    if not comment_gen.SHORTS_GEMINI_KEYS or not (topic or "").strip():
-        return []
-    n = max(1, min(int(n or 3), 5))
-    seconds = max(5, min(int(target_seconds or 20), 90))
-    words = max(15, round(seconds * 2.3))  # 대략치(초당 ~2.3단어)
-    prompt = _TOPIC_PROMPT.format(topic=topic.strip()[:1000], seconds=seconds, words=words, n=n)
-    return _generate_drafts(prompt)
-
-
 _MIX_PROMPT = """너는 한국 쇼핑 숏폼 대본 작가다. 아래 여러 개의 검증된 S급 대본이 있다.
 각 대본의 **강점**(훅·전개방식·주변인물 활용·말투)을 뽑아 하나로 **조합**한, 약 {seconds}초
 분량(대략 {words}단어)의 새 대본 초안 {n}개를 만들어라.

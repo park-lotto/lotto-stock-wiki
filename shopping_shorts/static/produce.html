@@ -151,7 +151,6 @@
             <div class="tabs" id="scriptTabs" style="margin-top:6px">
               <div class="tab active" data-mode="manual">✍️ 직접작성</div>
               <div class="tab" data-mode="mix">🧬 우리 시스템으로 믹스</div>
-              <div class="tab" data-mode="gemini">✨ 제미니 자동</div>
             </div>
             <div id="scriptModeBody"></div>
             <div style="display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap">
@@ -1038,14 +1037,6 @@ const STATE = { script: "", script_src_idx: null, subtitleRemoval: false, headco
 const SCRIPT_MODE_HTML = {
   manual: () => `<textarea id="scriptText" placeholder="여기에 대본을 직접 입력하세요…" oninput="onScriptInput()">${esc(STATE.script)}</textarea>
     <div class="hint" id="lenHint">${lenText(STATE.script)}</div>`,
-  gemini: () => `
-    <div style="display:flex;gap:8px;margin-bottom:6px">
-      <input id="gemTopic" type="text" placeholder="주제/제품 (예: 실리콘 다용도 집게)"
-        style="flex:1;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:11px">
-      <button class="btn-next" style="padding:11px 16px" onclick="genGemini()">✨ 생성</button>
-    </div>
-    <div class="hint">주제만 넣으면 제미니가 여러 초안을 만듭니다. 마음에 드는 초안을 고르면 편집창으로 넘어갑니다.</div>
-    <div id="gemDrafts" style="margin-top:12px"></div>`,
   mix: () => `
     <div class="hint">도서관에서 <b>영상제작으로 보낸</b> 대본이 기본으로 보입니다. 2~3개 골라 강점(훅·전개·주변인물·말투)을 조합합니다.</div>
     <div style="display:flex;gap:8px;margin:8px 0">
@@ -1099,13 +1090,6 @@ async function postDrafts(url, payload, boxId){
     if(!d.ok){ box.innerHTML=`<div class="hint" style="color:var(--fire)">${esc(d.error||'실패')}</div>`; return; }
     renderDrafts(d.drafts, boxId);
   }catch(e){ box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; }
-}
-
-// 제미니 자동
-function genGemini(){
-  const topic=(document.getElementById('gemTopic').value||'').trim();
-  if(!topic){ document.getElementById('gemDrafts').innerHTML='<div class="hint" style="color:var(--fire)">주제를 입력하세요</div>'; return; }
-  postDrafts('/api/produce/script/gemini', {topic, target_seconds:20, n:3}, 'gemDrafts');
 }
 
 // 우리믹스(Feature B) — 기본은 '담긴 대본(picks)', 버튼으로 '위키 전체' 전환

@@ -1767,20 +1767,6 @@ def _serve_userscript():
 
 
 # ── 영상제작 위저드(produce) ─────────────────────────────────
-@app.post("/api/produce/script/gemini")
-def api_produce_script_gemini(body: dict):
-    """1단계 대본 · 제미니 자동 — 주제/제품으로 처음부터 대본 초안 N개 생성."""
-    topic = (body.get("topic") or "").strip()
-    if not topic:
-        return JSONResponse(status_code=422, content={"ok": False, "error": "주제/제품을 입력하세요"})
-    drafts = script_generate.generate_from_topic(
-        topic, target_seconds=body.get("target_seconds") or 20, n=body.get("n") or 3)
-    if not drafts:
-        return JSONResponse(status_code=502,
-                            content={"ok": False, "error": "생성 실패(키 소진 또는 응답 오류)"})
-    return {"ok": True, "drafts": drafts}
-
-
 @app.post("/api/produce/script/mix")
 def api_produce_script_mix(request: Request, body: dict):
     """1단계 대본 · 우리믹스(Feature B) — 선택한 도서관 S급 대본들 강점 조합 → 새 대본."""
