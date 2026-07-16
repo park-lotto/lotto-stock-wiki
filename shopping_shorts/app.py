@@ -541,8 +541,27 @@ def _backfill_extract_structure(db_path, shortcode, full_text):
         structure = None
     if structure:
         store.save_extract_structure(shortcode, structure)
+        _promote_category_from_structure(store, shortcode, structure)
     else:
         store.mark_structure_attempted(shortcode)
+
+
+def _promote_category_from_structure(store, shortcode, structure):
+    """구조분석이 함께 뽑아온 product_category로 키워드 추측을 승격한다(2026-07-16).
+
+    왜: categorize()의 키워드 추측은 실측 정확도 54%(13건 중 7)인데 학습 코퍼스의
+    다수를 차지해 통계를 오염시킨다. 같은 13건을 Gemini는 77%(10건) 맞혔고, 구조분석이
+    어차피 같은 full_text를 보내므로 추가 비용은 사실상 0이다.
+
+    우선순위 user > gemini > keyword — 사용자가 고른 값은 절대 덮지 않는다(덮으면
+    교정 경로 자체가 무의미해진다). 통제 어휘 밖 값은 버린다(고아 학습 버킷 방지)."""
+    cat = (structure or {}).get("product_category")
+    if not cat or cat not in CATEGORY_KEYWORDS:
+        return  # "기타"·미상·어휘 밖 → 손대지 않는다(기존 값 유지)
+    cached = store.get_extract(shortcode)
+    if cached and cached.get("category_source") == "user":
+        return
+    store.update_extract_category(shortcode, cat, source="gemini")
 
 
 @app.get("/api/wiki/categories")
@@ -619,8 +638,13 @@ def api_produce_extract_from_url(body: dict, background_tasks: BackgroundTasks):
     if cached:
         caption_for_infer = body.get("caption") or cached.get("full_text", "")
         category = body_category or cached.get("category") or categorize(name, caption_for_infer) or None
-        if not cached.get("category") and category:
-            store.update_extract_category(code, category)  # 다음 클릭부터 안정(C-1: script_json은 안 건드림)
+        # [2026-07-16] 출처를 남긴다: 사용자가 고른 값(body_category)은 user — 이후
+        # Gemini 승격이 이걸 덮지 않는다. 자동 추측은 keyword로 남겨 승격 대상이 된다.
+        if body_category:
+            store.update_extract_category(code, body_category, source="user")
+        elif not cached.get("category") and category:
+            # 다음 클릭부터 안정(C-1: script_json은 안 건드림)
+            store.update_extract_category(code, category, source="keyword")
         structure = cached.get("structure")
         # [2026-07-16 I-2 잔여] 한 번 시도해서 못 얻은 영상은 다시 예약하지 않는다 —
         # 안 그러면 클릭마다 Gemini를 또 부른다. 재시도는 daily_batch가 맡는다.
