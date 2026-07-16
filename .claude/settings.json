@@ -96,7 +96,7 @@
           },
           {
             "type": "command",
-            "command": "py",
+            "command": "py.exe",
             "args": ["tools/session_title.py"],
             "timeout": 10,
             "statusMessage": "탭 제목을 트랙명으로..."
@@ -109,7 +109,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "py",
+            "command": "py.exe",
             "args": ["tools/session_title.py"],
             "timeout": 10
           }
@@ -121,7 +121,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "py",
+            "command": "py.exe",
             "args": ["tools/session_title.py"],
             "timeout": 10
           }
