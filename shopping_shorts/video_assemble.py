@@ -114,19 +114,31 @@ def _resolve_font():
     return None
 
 
+# ⚠️ ffmpeg/ffprobe는 stderr를 **UTF-8**로 낸다. text=True만 주면 파이썬이 로캘
+# (윈도우=cp949)로 디코드하다 subprocess 리더 스레드에서 UnicodeDecodeError로 죽고,
+# 그 결과 stdout/stderr가 **None**이 된다. 이 저장소는 한글 파일명이 도처에 있어
+# 흔히 밟는 경로다(Task9 리포트 §5가 관측·기록). 재현(2026-07-16):
+#   _run_ffmpeg(["ffmpeg","-i","없는영상_한글이름.mp4", ...])
+#     → 리더 스레드 UnicodeDecodeError → r.stderr=None
+#     → r.stderr[-1000:] → TypeError: 'NoneType' object is not subscriptable
+#   = "원인을 삼키지 않는다"던 함수가 **정확히 원인을 삼켰다.**
+# → 인코딩을 명시하고 못 읽는 바이트는 대체한다. 로그가 조금 깨질지언정 원인은 남는다.
+_FF_TEXT = {"capture_output": True, "text": True, "encoding": "utf-8", "errors": "replace"}
+
+
 def _probe_duration(path):
     """ffprobe로 미디어 길이(초)."""
     cmd = ["ffprobe", "-v", "error", "-show_entries", "format=duration",
            "-of", "default=noprint_wrappers=1:nokey=1", str(path)]
-    out = subprocess.run(cmd, stdin=subprocess.DEVNULL, capture_output=True, text=True, check=True)
+    out = subprocess.run(cmd, stdin=subprocess.DEVNULL, check=True, **_FF_TEXT)
     return float(out.stdout.strip())
 
 
 def _run_ffmpeg(cmd, cwd=None):
     """ffmpeg 실행. 실패 시 stderr를 예외에 담아 원인을 삼키지 않는다."""
-    r = subprocess.run(cmd, capture_output=True, text=True, cwd=cwd)
+    r = subprocess.run(cmd, cwd=cwd, **_FF_TEXT)
     if r.returncode != 0:
-        raise RuntimeError(f"ffmpeg 실패(exit {r.returncode}): {r.stderr[-1000:]}")
+        raise RuntimeError(f"ffmpeg 실패(exit {r.returncode}): {(r.stderr or '')[-1000:]}")
     return r
 
 
