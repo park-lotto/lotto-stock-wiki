@@ -1203,7 +1203,7 @@ let HANDOFF = [];   // [{url,shortcode,name,thumbnail,caption,pickScript,useFoot
 // 작업 상태 저장/복원 — 다른 페이지 갔다 오면 받은 영상·상태·대본이 사라지던 것 방지
 // (2026-07-14). sessionStorage에 상시 보관, 매 변경 시 갱신, 로드 시 복원.
 function saveWork(){
-  try{ sessionStorage.setItem('produce_work', JSON.stringify({handoff:HANDOFF, script:STATE.script||'', script_src_idx:STATE.script_src_idx})); }catch(e){}
+  try{ sessionStorage.setItem('produce_work', JSON.stringify({handoff:HANDOFF, script:STATE.script||'', script_src_idx:STATE.script_src_idx, script_from_wiki:STATE.script_from_wiki})); }catch(e){}
 }
 function clearWork(){ try{ sessionStorage.removeItem('produce_work'); }catch(e){} }
 function _consumeProduceHandoff(){
@@ -1223,6 +1223,7 @@ function _consumeProduceHandoff(){
       if(w && w.handoff && w.handoff.length){
         HANDOFF=w.handoff; savedScript=w.script||''; restored=true;
         STATE.script_src_idx = (typeof w.script_src_idx === 'number') ? w.script_src_idx : null;
+        STATE.script_from_wiki = (typeof w.script_from_wiki !== 'undefined') ? w.script_from_wiki : null;   // 구페이로드 호환: 없으면 null(뽑기 유래 취급=안전 기본값, 버튼 보임)
       }
     }
   }
