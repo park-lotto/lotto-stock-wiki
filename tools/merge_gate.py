@@ -35,6 +35,20 @@ _FAIL_RE = re.compile(r"^(?:FAILED|ERROR)\s+(.+?)(?:\s+-\s+.*)?$")
 _PYTEST_SANE_RC = (0, 1)
 
 
+def make_output_safe():
+    """Windows 콘솔은 cp949라 이모지를 인코딩 못 해 print가 UnicodeEncodeError로 터진다.
+
+    실측(2026-07-16 드라이런): 게이트가 기준선을 수집하고도 'ℹ️'를 찍다가 크래시해
+    **한 번도 완주하지 못했다.** 출력 장식 때문에 게이트가 죽으면 안 된다.
+    인코딩은 그대로 두고(한글은 cp949에서 멀쩡하다) 못 찍는 문자만 '?'로 바꾼다.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(errors="replace")
+        except (AttributeError, OSError, ValueError):
+            pass  # 리다이렉트·파이프 등 reconfigure 못 하는 스트림이면 그냥 둔다
+
+
 def parse_failed(output):
     """pytest 출력에서 실패한 테스트 id 집합을 뽑는다."""
     failed = set()
@@ -130,6 +144,7 @@ def _print_report(before, after, problems):
 
 
 def main(argv=None):
+    make_output_safe()
     parser = argparse.ArgumentParser(description="병합 게이트")
     sub = parser.add_subparsers(dest="cmd", required=True)
 

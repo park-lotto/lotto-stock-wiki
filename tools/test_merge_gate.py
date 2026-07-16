@@ -1,9 +1,48 @@
+import os
+import subprocess
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import merge_gate
+
+TOOLS = str(Path(__file__).resolve().parent)
+
+
+# ── Windows 콘솔 인코딩 (실측으로 발견된 크래시) ──────────────────
+
+def _run_under_cp949(code):
+    env = dict(os.environ, PYTHONIOENCODING="cp949")
+    return subprocess.run([sys.executable, "-c", code], capture_output=True, env=env)
+
+
+def test_cp949_console_really_crashes_on_emoji():
+    """짝 테스트 — 이게 없으면 아래 테스트가 죽은 테스트인지 알 수 없다.
+    (통과하는데 결함 못 잡는 테스트가 이 저장소에서 반복됐다)"""
+    p = _run_under_cp949("print('\\u2139')")
+    assert p.returncode != 0
+    assert b"UnicodeEncodeError" in p.stderr
+
+
+def test_make_output_safe_survives_cp949_console():
+    """2026-07-16 드라이런 실측: 게이트가 'ℹ️'를 찍다 터져 한 번도 완주 못 했다."""
+    p = _run_under_cp949(
+        f"import sys; sys.path.insert(0, r'{TOOLS}');"
+        "import merge_gate; merge_gate.make_output_safe();"
+        "print('\\u2139 \\uae30\\uc900\\uc120 \\u26a0\\ufe0f \\u2705 \\U0001f9f9')"
+    )
+    assert p.returncode == 0, p.stderr.decode("cp949", "replace")
+    assert "기준선".encode("cp949") in p.stdout, "한글까지 깨지면 안 된다"
+
+
+def test_track_cli_survives_cp949_console():
+    """track.py도 ✅·⚠️·🧹를 찍는다 — 3단계 실전에서 똑같이 터질 자리였다."""
+    p = _run_under_cp949(
+        f"import sys; sys.path.insert(0, r'{TOOLS}');"
+        "import track; sys.exit(track.main(['list']))"
+    )
+    assert p.returncode == 0, p.stderr.decode("cp949", "replace")
 
 
 # ── 실패 목록 파싱 ────────────────────────────────────────────────

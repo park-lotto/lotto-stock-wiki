@@ -358,6 +358,7 @@ def list_tracks(repo=BASE):
 # ── cli ──────────────────────────────────────────────────────────
 
 def main(argv=None):
+    merge_gate.make_output_safe()  # cp949 콘솔에서 ✅·⚠️ 찍다 터지는 것 방지(실측)
     parser = argparse.ArgumentParser(description="트랙별 작업 폴더")
     sub = parser.add_subparsers(dest="cmd", required=True)
     p_start = sub.add_parser("start", help="트랙 폴더+브랜치 생성")
