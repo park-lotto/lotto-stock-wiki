@@ -39,7 +39,10 @@ function makeGenericEl(){
            textContent:'', innerHTML:'', disabled:false, value:'', placeholder:'', appendChild(){} };
 }
 const _elements = { pmModal: makeGenericEl(), pmResults: makeGenericEl(), mixDrafts: makeGenericEl(),
-                    pmSubject: makeGenericEl(), pmSubjectRow: makeGenericEl(), pmTopic: makeGenericEl() };
+                    pmSubject: makeGenericEl(), pmSubjectRow: makeGenericEl(), pmTopic: makeGenericEl(),
+                    // pmRun: 실제 페이지(produce.html:424)엔 늘 있다. 두 진입점이 재료 유무에 따라
+                    // 생성 버튼을 잠그고 푸는 2026-07-16 수정 이후 하네스에도 필요.
+                    pmRun: makeGenericEl() };
 let _checked = [];
 const document = {
   getElementById(id){ return _elements[id] || null; },
