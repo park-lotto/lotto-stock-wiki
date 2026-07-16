@@ -26,11 +26,16 @@
 규칙으로 못 막는다 — 2026-07-15에 "`git add -A` 금지"를 박은 날 저녁에 흡수가 3번 났다.
 
 ```
-py tools/track.py start <트랙명>     # 내 폴더 ../lotto-<트랙명> + track/<트랙명> 브랜치 생성
+py tools/track.py start <트랙명>     # 내 폴더 .tracks/<트랙명> + track/<트랙명> 브랜치 생성
    → 그 폴더에서 Claude Code를 새로 열고 거기서 작업·커밋
 py tools/track.py finish <트랙명>    # 게이트 통과해야만 main 병합 → 라이브
 py tools/track.py list              # 열린 트랙 + 얼마나 밀렸는지
 ```
+
+**내 트랙 폴더 = `로또의 주식\.tracks\<트랙명>`** (프로젝트 안에 있다).
+점(`.`)으로 시작하는 이유: 이 폴더는 **옵시디언 볼트**고 `.md`가 11,120개다. 점 폴더는
+옵시디언이 인덱싱에서 자동 제외하므로 트랙마다 볼트에 중복 노트 1만여 개가 생기는 걸 막는다.
+`.gitignore`(`/.tracks/`)와 짝이라 main이 트랙 폴더를 untracked로도 안 본다.
 
 - **내 폴더 안에선 `git add -A`도 안전하다** — 남의 파일이 애초에 없다. 커밋은 `track/<트랙명>`으로만 간다.
 - **`finish`가 게이트를 돌린다**: 문법 → `import shopping_shorts.app` → pytest.

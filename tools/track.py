@@ -33,12 +33,19 @@ import merge_gate
 
 BASE = Path(__file__).resolve().parent.parent
 BRANCH_PREFIX = "track/"
-FOLDER_PREFIX = "lotto-"
 MAIN_BRANCH = "main"
+
+# 트랙 폴더는 프로젝트 **안**에 둔다 — 사장님이 찾기 쉬운 곳.
+# 점(.)으로 시작하는 이유 2가지:
+#   ① 이 폴더는 옵시디언 볼트고 .md가 11,120개다. 점 폴더는 옵시디언이 인덱싱에서
+#      자동 제외하므로, 트랙마다 볼트에 중복 노트 1만여 개가 생기는 걸 막는다.
+#   ② .gitignore(/.tracks/)와 짝 — main 워킹트리가 트랙 폴더를 untracked로 보지 않는다.
+TRACKS_DIR = ".tracks"
+STAGE_PREFIX = "_merge-"
 
 # 봇 산출물·런타임 파일 — main 폴더에 이게 더러워도 병합을 막지 않는다.
 # (크롤봇이 raw/에 계속 쓴다. 이걸로 막으면 게이트가 영원히 안 돈다.)
-_IGNORABLE = ("raw/", "out/", "wiki/log.d/", ".fablize/", ".superpowers/")
+_IGNORABLE = ("raw/", "out/", "wiki/log.d/", ".fablize/", ".superpowers/", ".tracks/")
 _IGNORABLE_PARTS = ("/data/", "__pycache__/")
 _IGNORABLE_SUFFIX = (".db", ".db-journal", ".db-wal", ".pyc", ".log")
 
@@ -75,9 +82,13 @@ def branch_name(name):
     return f"{BRANCH_PREFIX}{name}"
 
 
+def tracks_dir(repo=BASE):
+    return Path(repo).resolve() / TRACKS_DIR
+
+
 def worktree_path(name, repo=BASE):
-    """트랙 폴더는 repo의 형제로 만든다 (repo 안에 만들면 git이 자기를 추적한다)."""
-    return Path(repo).resolve().parent / f"{FOLDER_PREFIX}{name}"
+    """`<프로젝트>/.tracks/<이름>` — 프로젝트 안. gitignore + 옵시디언 자동제외로 안전."""
+    return tracks_dir(repo) / name
 
 
 def is_ignorable(path):
@@ -164,6 +175,7 @@ def start(name, repo=BASE):
         )
 
     run(["git", "fetch", "origin"], repo)
+    wt.parent.mkdir(parents=True, exist_ok=True)
     rc, out = run(
         ["git", "worktree", "add", str(wt), "-b", branch_name(name), "origin/main"],
         repo,
@@ -213,7 +225,8 @@ def _open_stage(repo, name):
     그 자리에서 되살아난다. 게다가 옆 세션의 편집이 게이트 결과를 오염시켜
     없는 실패가 잡힌다(오탐). 전용 폴더는 둘 다 원천 차단한다.
     """
-    stage = Path(repo).resolve().parent / f"{FOLDER_PREFIX}merge-{name}"
+    stage = tracks_dir(repo) / f"{STAGE_PREFIX}{name}"
+    stage.parent.mkdir(parents=True, exist_ok=True)
     if stage.exists():
         run(["git", "worktree", "remove", "--force", str(stage)], repo)
     rc, out = run(["git", "worktree", "add", "--detach", str(stage), "origin/main"], repo)

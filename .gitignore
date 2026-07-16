@@ -114,3 +114,7 @@ out/scenes/
 
 # Remotion 자산생성기 의존성 (로컬 전용 — 자산은 프리렌더 커밋)
 shopping_shorts/motion/node_modules/
+
+# 트랙 작업 폴더(worktree) — 프로젝트 안에 두되 git·옵시디언 양쪽에서 안 보이게.
+# 점(.)으로 시작해 옵시디언이 자동으로 인덱싱에서 제외한다(11,120개 .md의 중복 방지).
+/.tracks/
