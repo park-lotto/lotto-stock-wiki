@@ -97,7 +97,7 @@
           {
             "type": "command",
             "command": "python.exe",
-            "args": ["tools/session_title.py"],
+            "args": ["$CLAUDE_PROJECT_DIR/tools/session_title.py"],
             "timeout": 10,
             "statusMessage": "탭 제목을 트랙명으로..."
           }
@@ -110,7 +110,7 @@
           {
             "type": "command",
             "command": "python.exe",
-            "args": ["tools/session_title.py"],
+            "args": ["$CLAUDE_PROJECT_DIR/tools/session_title.py"],
             "timeout": 10
           }
         ]
@@ -122,7 +122,7 @@
           {
             "type": "command",
             "command": "python.exe",
-            "args": ["tools/session_title.py"],
+            "args": ["$CLAUDE_PROJECT_DIR/tools/session_title.py"],
             "timeout": 10
           }
         ]
