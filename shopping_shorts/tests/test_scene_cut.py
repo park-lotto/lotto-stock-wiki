@@ -76,14 +76,22 @@ def _make_three_scene_video(path, fps=30):
     return path
 
 
-def test_detect_cuts_returns_frame_pairs_covering_video(tmp_path):
+def test_detect_cuts_returns_ordered_frame_pairs_within_video(tmp_path):
+    """detect_cuts의 진짜 계약: 0에서 시작하거나 total에 닿는다는 보장은 없다
+    (min_seconds 미만 찌꺼기는 버려지므로 — 실 릴스는 항상 이 모양이다, 아래
+    test_detect_cuts_drops_edge_fragment_shorter_than_min 참고). 보장되는 건
+    프레임 쌍이 [0, total] 안에 있고, 순서대로, 서로 안 겹친다는 것뿐이다."""
     f = _make_three_scene_video(tmp_path / "three.mp4")
+    total = scene_cut.video_frame_count(f)
     cuts = scene_cut.detect_cuts(f)
-    assert cuts[0][0] == 0                      # 첫 컷은 0프레임부터
-    assert cuts[-1][1] == scene_cut.video_frame_count(f)   # 마지막은 총 프레임까지
+    assert cuts
+    prev_end = 0
     for a, b in cuts:
         assert isinstance(a, int) and isinstance(b, int)   # ★초가 아니라 프레임
         assert b > a
+        assert 0 <= a and b <= total                        # [0, total] 안
+        assert a >= prev_end                                 # 순서대로, 안 겹침
+        prev_end = b
 
 
 def test_detect_cuts_finds_the_two_boundaries(tmp_path):
@@ -97,6 +105,38 @@ def test_detect_cuts_drops_fragments_shorter_than_min(tmp_path):
     f = _make_three_scene_video(tmp_path / "three.mp4")
     # 최소 2초 → 1초짜리 장면은 전부 탈락, 남는 게 없다
     assert scene_cut.detect_cuts(f, min_seconds=2.0) == []
+
+
+def _make_two_scene_video(path, fps=30, short_seconds=0.2, long_seconds=1.0):
+    """짧은(short_seconds) 장면 + 긴(long_seconds) 장면 2개를 붙인다.
+    black→white — luma 차가 확실해야 scene 경계가 안정적으로 검출된다
+    (red/green 금지 사유는 _make_three_scene_video의 주석 참고)."""
+    parts = []
+    for color, secs in (("black", short_seconds), ("white", long_seconds)):
+        p = path.parent / f"_edge_{color}.mp4"
+        subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi",
+                        "-i", f"color=c={color}:size=320x568:rate={fps}:duration={secs}",
+                        "-c:v", "libx264", "-pix_fmt", "yuv420p", str(p)],
+                       check=True, capture_output=True, stdin=subprocess.DEVNULL)
+        parts.append(p)
+    lst = path.parent / "_edge_list.txt"
+    lst.write_text("".join(f"file '{p}'\n" for p in parts), encoding="utf-8")
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0",
+                    "-i", str(lst), "-c", "copy", str(path)],
+                   check=True, capture_output=True, stdin=subprocess.DEVNULL)
+    return path
+
+
+def test_detect_cuts_drops_edge_fragment_shorter_than_min(tmp_path):
+    """★맨 앞의 짧은 조각은 버려진다 — 첫 컷이 0프레임에서 시작하지 않는다.
+    실 릴스가 이 모양이다(컨트롤러 실측: 원 경계가 3프레임부터 시작, (0,3)이 버려져
+    첫 컷이 (3,28)이 됨). 합성 픽스처만 보면 '항상 0부터'라고 착각하게 된다."""
+    f = _make_two_scene_video(tmp_path / "edge.mp4")
+    total = scene_cut.video_frame_count(f)
+    cuts = scene_cut.detect_cuts(f)          # 기본 min_seconds=0.5초 → 0.2초 조각은 버려짐
+    assert cuts
+    assert cuts[0][0] != 0                    # 맨 앞 찌꺼기가 버려져 0에서 시작하지 않는다
+    assert cuts[-1][1] == total               # 남은 건 긴 장면 하나뿐, 끝까지 이어진다
 
 
 def test_detect_cuts_never_exceeds_video_frames(tmp_path):
