@@ -172,7 +172,10 @@ def _run(scenario: str, tmp_path) -> subprocess.CompletedProcess:
     src = _HARNESS_PREFIX + _extract() + scenario
     f = tmp_path / "probe.js"
     f.write_text(src, encoding="utf-8")
-    return subprocess.run([NODE, str(f)], capture_output=True, text=True, timeout=30)
+    # encoding="utf-8", errors="replace": _run_race와 동일 이유(기본 cp949 캡처가
+    # 실패 시 한글 console.error를 못 읽고 죽어 stderr=None으로 보인다).
+    return subprocess.run([NODE, str(f)], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=30)
 
 
 @pytest.mark.skipif(NODE is None, reason="node 없음 — JS 하네스 스킵")

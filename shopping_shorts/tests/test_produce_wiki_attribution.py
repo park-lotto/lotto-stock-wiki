@@ -83,7 +83,10 @@ def _run(scenario: str, tmp_path) -> subprocess.CompletedProcess:
     src = _HARNESS_PREFIX + _extract() + scenario
     f = tmp_path / "probe.js"
     f.write_text(src, encoding="utf-8")
-    return subprocess.run([NODE, str(f)], capture_output=True, text=True, timeout=30)
+    # encoding="utf-8", errors="replace": 기본(cp949) 캡처는 실패메시지의 한글 console.error를
+    # 못 읽어 리더 스레드에서 죽는다(stderr=None으로 보임) — test_produce_subject.py의 _run_race와 동일 수정.
+    return subprocess.run([NODE, str(f)], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=30)
 
 
 @pytest.mark.skipif(NODE is None, reason="node 없음 — JS 하네스 스킵")
@@ -169,7 +172,8 @@ def _run_confirm(start: str, end: str, scenario: str, tmp_path) -> subprocess.Co
     src = _CONFIRM_HARNESS_PREFIX + _extract_span(start, end) + scenario
     f = tmp_path / "probe_confirm.js"
     f.write_text(src, encoding="utf-8")
-    return subprocess.run([NODE, str(f)], capture_output=True, text=True, timeout=30)
+    return subprocess.run([NODE, str(f)], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=30)
 
 
 _SCENARIO_USE_DRAFT_SETS_FLAG = r"""
@@ -292,7 +296,8 @@ def _run_restore(scenario: str, tmp_path) -> subprocess.CompletedProcess:
     src = _RESTORE_HARNESS_PREFIX + _extract_restore_and_peek() + scenario
     f = tmp_path / "probe_restore.js"
     f.write_text(src, encoding="utf-8")
-    return subprocess.run([NODE, str(f)], capture_output=True, text=True, timeout=30)
+    return subprocess.run([NODE, str(f)], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=30)
 
 
 _SCENARIO_SAVE_THEN_RESTORE_KEEPS_FLAG = r"""
@@ -362,3 +367,88 @@ def test_save_then_restore_keeps_wiki_flag_and_button_hidden(tmp_path):
 def test_legacy_payload_without_flag_restores_to_null_and_shows_button(tmp_path):
     r = _run_restore(_SCENARIO_LEGACY_PAYLOAD_DEFAULTS_TO_NULL, tmp_path)
     assert r.returncode == 0, f"stdout={r.stdout} stderr={r.stderr}"
+
+
+# ============================================================================
+# 최종 리뷰 I-2: saveScriptToWiki(Task 4)는 위키 유래 대본의 오귀속을 막았지만
+# onFinalCategoryChange는 무방비였다 — mix 확정 후에도 #finalCategory가 계속
+# 보이고(refreshFinalPeek는 STATE.script만 봄), 사용자가 카테고리를 교정하면
+# _currentSrcItem()이 HANDOFF로 폴백해 무관한 영상의 category를 HANDOFF에 쓰고
+# /api/produce/category로 DB(script_extracts.category)에도 영속 기록해버린다.
+# refreshFinalPeek과 같은 STATE.script_from_wiki 가드를 여기서도 검증한다.
+# ============================================================================
+
+_CATCHANGE_START = "function _currentSrcItem(){"
+_CATCHANGE_END = "function refreshFinalPeek(){"
+
+_CATCHANGE_HARNESS_PREFIX = r"""
+'use strict';
+function makeGenericEl(){
+  return { style:{}, classList:{ contains(){return false;}, add(){}, remove(){} },
+           textContent:'', innerHTML:'', disabled:false, value:'', appendChild(){} };
+}
+const _elements = { pmModal: makeGenericEl() };
+const document = { getElementById(id){ return _elements[id] || null; } };
+let _fetchCalls = [];
+function fetch(url, opts){
+  _fetchCalls.push({ url: String(url), body: opts && opts.body ? JSON.parse(opts.body) : null });
+  return Promise.resolve({ json: async () => ({ ok:true }) });
+}
+let _saveWorkCalls = 0;
+function saveWork(){ _saveWorkCalls++; }
+let _loadedCatCalls = [];
+function pmLoadElementOptions(cat){ _loadedCatCalls.push(cat); }
+let HANDOFF = [];
+let PM_CATEGORY = '';
+const STATE = { script:'대본', script_src_idx:null, script_from_wiki:null };
+// ---- 여기부터 produce.html에서 그대로 잘라낸 실제 소스(_currentSrcItem + onFinalCategoryChange) ----
+"""
+
+_SCENARIO_WIKI_SOURCED_DOES_NOT_WRITE = r"""
+STATE.script_from_wiki = 'WIKI_SC';   // mix 유래 — 담을 원본이 없다
+HANDOFF = [{ url:'https://other/video', shortcode:'OTHER_SC', category:'가전' }];
+onFinalCategoryChange({ value: '레시피' });
+const fails = [];
+if (HANDOFF[0].category !== '가전') fails.push('위키 유래인데 무관한 HANDOFF 영상 category가 바뀜 — ' + JSON.stringify(HANDOFF[0].category));
+if (_fetchCalls.length !== 0) fails.push('위키 유래인데 /api/produce/category POST가 나감 — ' + JSON.stringify(_fetchCalls));
+if (PM_CATEGORY !== '레시피') fails.push('PM_CATEGORY는 위키 유래여도 갱신돼야(생성에 씀) — ' + JSON.stringify(PM_CATEGORY));
+if (fails.length) { console.error('FAIL: ' + fails.join(' / ')); process.exit(1); }
+console.log('PASS');
+"""
+
+_SCENARIO_HANDOFF_SOURCED_STILL_WRITES = r"""
+STATE.script_from_wiki = null;   // 뽑기(HANDOFF) 유래 — 담을 원본이 있다
+HANDOFF = [{ url:'https://mine/video', shortcode:'MY_SC', category:'가전', pickScript:true }];
+onFinalCategoryChange({ value: '뷰티' });
+const fails = [];
+if (HANDOFF[0].category !== '뷰티') fails.push('뽑기 유래인데 category 교정이 HANDOFF에 반영 안 됨(회귀) — ' + JSON.stringify(HANDOFF[0].category));
+if (_fetchCalls.length !== 1) fails.push('뽑기 유래인데 /api/produce/category POST가 안 나감(회귀) — count=' + _fetchCalls.length);
+else {
+  const body = _fetchCalls[0].body;
+  if (body.shortcode !== 'MY_SC' || body.category !== '뷰티') fails.push('POST 페이로드 불일치 — ' + JSON.stringify(body));
+}
+if (fails.length) { console.error('FAIL: ' + fails.join(' / ')); process.exit(1); }
+console.log('PASS');
+"""
+
+
+def _run_catchange(scenario: str, tmp_path) -> subprocess.CompletedProcess:
+    src = _CATCHANGE_HARNESS_PREFIX + _extract_span(_CATCHANGE_START, _CATCHANGE_END) + scenario
+    f = tmp_path / "probe_catchange.js"
+    f.write_text(src, encoding="utf-8")
+    return subprocess.run([NODE, str(f)], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=30)
+
+
+@pytest.mark.skipif(NODE is None, reason="node 없음 — JS 하네스 스킵")
+def test_wiki_sourced_category_change_does_not_write_to_unrelated_handoff(tmp_path):
+    r = _run_catchange(_SCENARIO_WIKI_SOURCED_DOES_NOT_WRITE, tmp_path)
+    assert r.returncode == 0, f"stdout={r.stdout} stderr={r.stderr}"
+    assert "PASS" in r.stdout
+
+
+@pytest.mark.skipif(NODE is None, reason="node 없음 — JS 하네스 스킵")
+def test_handoff_sourced_category_change_still_writes(tmp_path):
+    r = _run_catchange(_SCENARIO_HANDOFF_SOURCED_STILL_WRITES, tmp_path)
+    assert r.returncode == 0, f"stdout={r.stdout} stderr={r.stderr}"
+    assert "PASS" in r.stdout

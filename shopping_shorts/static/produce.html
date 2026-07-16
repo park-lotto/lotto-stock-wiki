@@ -1169,6 +1169,7 @@ function openGenFromWiki(){
   const it=(window._mixItems||[]).find(w=>w.shortcode===picks[0]);
   if(!it || !(it.full_text||'').trim()){ box.innerHTML='<div class="hint" style="color:var(--fire)">대본 내용이 없습니다</div>'; return; }
   box.innerHTML='';
+  ++PM_GEN;                                     // 모달을 가져간다 — 늦게 돌아올 openScriptModal continuation을 무효화
   PM_IDX=null; PM_URL='';                       // HANDOFF 유래가 아니다
   PM_SHORTCODE=it.shortcode; PM_CATEGORY=it.category||'';
   PM_BASE_STRUCT=null;                          // 백엔드가 위키에서 읽는다
@@ -1283,8 +1284,15 @@ let PM_IDX=null, PM_BASE_STRUCT=null, PM_CATEGORY='', PM_URL='', PM_SHORTCODE=''
 // 이 대본이 위키(mix 목록)에서 왔나 — 왔으면 shortcode, 왼쪽 뽑기(HANDOFF) 유래면 null.
 // Task 4의 위키담기 오귀속 차단이 이걸 읽는다.
 let PM_FROM_WIKI=null;
+// 모달의 "현재 주인" 세대번호 — 📝뽑기(openScriptModal)의 await(추출) 도중 mix 쪽
+// (openGenFromWiki)이 같은 PM_* 전역·pmModal을 가져가면, 뒤늦게 돌아온 추출
+// continuation이 자기가 더 이상 주인이 아닌 줄 모르고 mix가 채운 PM_*를 덮어써
+// "재료는 남의 영상 것, shortcode만 위키 것"인 무관한 리메이크가 나온다(리뷰 I-1).
+// 두 진입점 모두 시작 시 ++PM_GEN, await 뒤 자기 번호(myGen)가 최신인지 확인한다.
+let PM_GEN=0;
 async function openScriptModal(i){
   const it=HANDOFF[i]; if(!it||!it.url){ alert('영상 URL이 없습니다'); return; }
+  const myGen=++PM_GEN;
   PM_IDX=i; PM_URL=it.url; PM_SHORTCODE=it.shortcode||''; PM_CATEGORY=it.category||'';
   PM_BASE_STRUCT=null; PM_BASE_SCRIPT=''; PM_FROM_WIKI=null;   // HANDOFF 유래 — 위키담기 대상이 있다
   const modal=document.getElementById('pmModal'); modal.classList.add('open');
@@ -1294,6 +1302,7 @@ async function openScriptModal(i){
       body:JSON.stringify({url:it.url, shortcode:it.shortcode||undefined, category:it.category||undefined,
         caption:it.caption||undefined, name:it.name||undefined})});
     const d=await r.json();
+    if(PM_GEN!==myGen) return;   // 그 사이 다른 진입점(mix)이 모달을 가져갔다 — d.ok든 아니든 손대지 않는다
     if(!d.ok){ document.getElementById('pmResults').innerHTML=`<div class="hint" style="color:var(--fire)">${esc(d.error||'추출 실패')}</div>`; return; }
     it.pickScript=true;
     PM_CATEGORY=d.category||''; PM_BASE_STRUCT=d.structure||null;
@@ -1302,9 +1311,10 @@ async function openScriptModal(i){
     PM_BASE_SCRIPT=d.full_text||'';
     document.getElementById('pmResults').innerHTML=`<div class="hint">✅ 원본 대본 확보. 아래에서 요소를 조절해 새 초안을 만들거나, <button class="btn-next" style="padding:4px 10px" onclick="pmUseRaw()">원본 대본 그대로 확정 →</button></div>`;
     await pmLoadElementOptions(PM_CATEGORY);
+    if(PM_GEN!==myGen) return;   // 요소옵션 로딩 중에도 가져갈 수 있다 — 그 뒤 소재프리필까지 막는다
     pmToggleTopic();                    // 소재칸 표시상태를 현재 모드에 맞춤
     pmPrefillSubject(PM_SHORTCODE);     // shortcode 없으면(직행 URL) 손입력만 열어둔다
-  }catch(e){ document.getElementById('pmResults').innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; }
+  }catch(e){ if(PM_GEN===myGen) document.getElementById('pmResults').innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; }
 }
 function pmUseRaw(){ STATE.script=PM_BASE_SCRIPT; STATE.script_src_idx=PM_IDX; STATE.script_from_wiki=PM_FROM_WIKI; pmClose(); setScriptMode('manual'); refreshFinalPeek(); setFinalCategoryValue(PM_CATEGORY); if(HANDOFF.length) saveWork(); }
 function pmClose(){ document.getElementById('pmModal').classList.remove('open'); }
@@ -1488,19 +1498,26 @@ function _currentSrcItem(){
 // 버킷 오염이 존속한다(I-3이 없애려던 문제). shortcode 없으면(직접 작성 등) DB에 쓸
 // 대상이 없으니 스킵 — 저장 시점에 save_to_wiki가 category를 실어 반영한다. 실패해도
 // 무시(alert 없음) — 교정 자체는 저장 시 다시 한 번 반영되므로 치명적이지 않다.
+// [최종 리뷰 I-2] 위키 유래 대본(STATE.script_from_wiki)일 땐 _currentSrcItem()이
+// 담을 원본이 없는데도 HANDOFF로 폴백한다 — refreshFinalPeek/saveScriptToWiki(Task 4)와
+// 같은 판단을 여기서도 해야 한다. 안 하면 위키 대본의 카테고리 교정이 무관한 HANDOFF
+// 영상의 category로 DB(script_extracts.category)에 영속 기록돼 학습 코퍼스가 오염된다.
+// PM_CATEGORY 갱신·요소 드롭다운 재로딩은 위키 유래여도 계속 동작해야 한다 — 생성(pmRunGen)에 쓰인다.
 function onFinalCategoryChange(sel){
   const cat=sel.value;
-  const src=_currentSrcItem();
-  if(src) src.category=cat;
   PM_CATEGORY=cat;
-  if(HANDOFF.length) saveWork();
+  if(!STATE.script_from_wiki){      // refreshFinalPeek과 같은 판단 — 위키 유래면 담을 원본이 없다
+    const src=_currentSrcItem();
+    if(src) src.category=cat;
+    if(HANDOFF.length) saveWork();
+    const shortcode=src&&src.shortcode;
+    if(shortcode && cat){
+      fetch('/api/produce/category', {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({shortcode, category: cat})}).catch(()=>{});
+    }
+  }
   const modal=document.getElementById('pmModal');
   if(modal && modal.classList.contains('open')) pmLoadElementOptions(cat);
-  const shortcode=src&&src.shortcode;
-  if(shortcode && cat){
-    fetch('/api/produce/category', {method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({shortcode, category: cat})}).catch(()=>{});
-  }
 }
 // 오른쪽 "확정 대본" peek — 대본이 바뀔 때마다 갱신(onScriptInput/useDraft에서 호출).
 function refreshFinalPeek(){

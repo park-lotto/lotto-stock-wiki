@@ -44,6 +44,7 @@ function pmToggleTopic(){}
 function esc(s){ return s; }
 let PM_IDX='기존값', PM_BASE_STRUCT='기존값', PM_CATEGORY='', PM_URL='기존값',
     PM_SHORTCODE='', PM_BASE_SCRIPT='', PM_FROM_WIKI=null;
+let PM_GEN=0;   // 최종 리뷰 I-1: openGenFromWiki가 모달을 가져갈 때 ++PM_GEN 해야 한다
 // Node엔 window가 없다. 'use strict'라 선언 없이 대입하면 ReferenceError → globalThis에 붙인다.
 globalThis.window = { _mixItems: [
   { shortcode:'ABC123', name:'감자스낵', category:'레시피', full_text:'원본 대본 본문' },
@@ -53,9 +54,11 @@ globalThis.window = { _mixItems: [
 """
 
 _SCENARIO_OPENS_MODAL = r"""
+const genBefore = PM_GEN;
 _checked = ['ABC123'];
 openGenFromWiki();
 const fails = [];
+if (PM_GEN !== genBefore + 1) fails.push('PM_GEN이 증가 안 함(모달을 가져가는 신호가 없음) — before=' + genBefore + ' after=' + PM_GEN);
 if (!document.getElementById('pmModal').classList.contains()) fails.push('모달이 안 열림');
 if (PM_SHORTCODE !== 'ABC123') fails.push('PM_SHORTCODE=' + JSON.stringify(PM_SHORTCODE));
 if (PM_CATEGORY !== '레시피') fails.push('PM_CATEGORY=' + JSON.stringify(PM_CATEGORY));
@@ -104,7 +107,10 @@ def _run(scenario: str, tmp_path) -> subprocess.CompletedProcess:
     src = _HARNESS_PREFIX + _extract() + scenario
     f = tmp_path / "probe.js"
     f.write_text(src, encoding="utf-8")
-    return subprocess.run([NODE, str(f)], capture_output=True, text=True, timeout=30)
+    # encoding="utf-8", errors="replace": 기본(cp949) 캡처는 실패메시지의 한글 console.error를
+    # 못 읽어 리더 스레드에서 죽는다(stderr=None으로 보임) — test_produce_subject.py의 _run_race와 동일 수정.
+    return subprocess.run([NODE, str(f)], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=30)
 
 
 @pytest.mark.skipif(NODE is None, reason="node 없음 — JS 하네스 스킵")

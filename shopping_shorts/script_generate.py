@@ -17,7 +17,7 @@ from pipeline.atoms import key_vault
 
 _MODEL = comment_gen._MODEL
 
-# produce 대본생성(제미니자동·우리믹스)은 comment_gen 전용키(1개, 쉽게 소진) 대신
+# produce 대본생성(우리믹스)은 comment_gen 전용키(1개, 쉽게 소진) 대신
 # key_vault 공유풀을 캐스케이드로 쓴다 — 배치된 예비키(general→ingest→embed→briefing)를
 # 전부 활용해 소진 사고를 피한다(2026-07-13).
 _GEN_GROUP = "general"
