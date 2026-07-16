@@ -29,7 +29,7 @@ def test_categories_endpoint_returns_controlled_vocabulary(monkeypatch, tmp_path
     assert d["ok"] is True
     cats = set(d["categories"])
     # categorize.py의 KEYWORDS 키 — 통제 어휘 실측(브리프 §통제 어휘)
-    assert {"인테리어", "레시피", "생활용품", "가전", "뷰티"} <= cats
+    assert {"홈템", "레시피", "가전", "뷰티"} <= cats  # 2026-07-16: 인테리어+생활용품 → 홈템
 
 
 def test_categories_endpoint_includes_db_values_not_in_keywords(monkeypatch, tmp_path):

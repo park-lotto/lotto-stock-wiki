@@ -116,6 +116,21 @@ class Store:
                     c.execute(f"ALTER TABLE script_extracts ADD COLUMN {col} {ddl}")
                 except sqlite3.OperationalError:
                     pass  # 이미 있으면(기존 DB) 무시
+            # 옛 어휘 → 홈템 이관(2026-07-16). 코드만 바꾸면 DB의 옛 라벨이 통제 어휘
+            # 밖으로 떨어져 나가(고아 버킷) 학습에서 조용히 빠진다. 되돌릴 수 없는
+            # 병합이라 실행 전 서버 백업을 떴다(/tmp/hometem_backup/pre_merge.json).
+            # element_category_stats는 배치가 재계산해 덮으므로 옛 버킷만 지운다.
+            for table, col in (("script_extracts", "category"), ("script_wiki", "category")):
+                try:
+                    c.execute(f"UPDATE {table} SET {col}='홈템' "
+                              f"WHERE {col} IN ('인테리어', '생활용품')")
+                except sqlite3.OperationalError:
+                    pass  # 아직 테이블·컬럼이 없는 신규 DB
+            try:
+                c.execute("DELETE FROM element_category_stats "
+                          "WHERE product_category IN ('인테리어', '생활용품')")
+            except sqlite3.OperationalError:
+                pass
             # 학습소재 카테고리 통계 캐시(2026-07-13) — 매일 새벽 배치가 재계산해 덮어씀.
             c.execute("""
                 CREATE TABLE IF NOT EXISTS element_category_stats (
