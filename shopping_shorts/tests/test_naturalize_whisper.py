@@ -45,13 +45,22 @@ def test_tag_order_is_emotion_then_whispers():
 def test_whisper_ignores_emotion_budget():
     """설계 §3.1 — whisper는 감정 예산과 별개 축.
 
-    emotion_arc를 통째로 꺼도(=감정태그 0개) 속삭임은 그대로 나온다. 이게 깨지면
-    'ASMR 톤인데 예산이 모자라 중간 비트가 안 속삭이는' 설계 위반이 된다.
+    리뷰 지적(Minor, 죽은 단언 수정) — role="실용"·beat_index=3/total=5는 rank
+    3 >= n_tagged(기본 intensity 0.3 → 2)라 emotion_arc가 켜져있어도 애초에
+    감정태그를 못 받는다. 그래서 옛 버전은 arc ON/OFF 출력이 바이트 단위로
+    동일했고(`assert "[warm]" not in out`가 항상 참) 아무것도 검증 못 했다.
+    role="훅"(beat_index=0)은 기본 intensity에서 실제로 태그를 받는 자리라
+    ON/OFF 차이가 실제로 관측된다 — "arc를 껐더니 감정태그가 사라졌고, 그런데도
+    속삭임은 남았다"를 두 눈으로 확인해야 하는 테스트라 두 프로파일을 모두 돈다.
     """
-    p = {"whisper": {"on": True, "roles": ROLES}, "emotion_arc": {"on": False}}
-    out = _d("이건 진짜 물건이에요", "실용", 3, p)["text"]
-    assert "[whispers]" in out
-    assert "[warm]" not in out
+    p_on = {"whisper": {"on": True, "roles": ROLES}, "emotion_arc": {"on": True}}
+    p_off = {"whisper": {"on": True, "roles": ROLES}, "emotion_arc": {"on": False}}
+    out_on = _d("이건 진짜 물건이에요", "훅", 0, p_on)["text"]
+    out_off = _d("이건 진짜 물건이에요", "훅", 0, p_off)["text"]
+    assert "[curious]" in out_on     # arc ON: 감정태그가 실제로 붙는다(대조군)
+    assert "[curious]" not in out_off  # arc OFF: 감정태그가 사라진다
+    assert "[whispers]" in out_on    # 속삭임은 arc 상태와 무관하게 항상 켜져 있다
+    assert "[whispers]" in out_off
 
 
 def test_off_means_no_whisper():
@@ -113,3 +122,20 @@ def test_no_ghost_comma_after_tags():
     out = _d("진짜 대박이에요", "훅", 1, p)["text"]
     assert "], 진짜" not in out
     assert "[whispers], " not in out
+
+
+def test_whisper_is_idempotent_on_already_tagged_input():
+    """리뷰 지적(Important) — 입력에 이미 [whispers]가 있으면 하나 더 붙이지 않는다.
+
+    재현: 캡 계산이 `1+1=2 > 2`=False라 통과해버려 '[whispers][whispers] ...'가
+    만들어졌다(태그 2개짜리 입력은 캡이 막지만 1개짜리는 못 막는다). 이 입력
+    shape은 test_naturalize_applied.py의 실제 회귀 케이스와 동일하다(가상의
+    걱정이 아니라 이미 스위트가 쓰는 형태). count()로 검증하는 이유는 다른
+    기본 스테이지(spoken_style/endings/fillers 등)가 이 문장에 부수효과를
+    내더라도 이 테스트의 관심사(중복 여부)와 무관하게 하기 위함이다.
+    """
+    d = _d("[whispers] 지금 확인해보세요.", "반전", 0, {"emotion_arc": {"on": False}})
+    assert d["text"].count("[whispers]") == 1, d["text"]
+    # no-op(이미 있었음)이므로 새로 "적용"한 게 아니다 — 안 붙였는데 계상하면
+    # T6에서 이미 한 번 고친 거짓말 패턴(찍혔는데 실제로 없음)의 재발이다.
+    assert not d["applied"].get("whisper")

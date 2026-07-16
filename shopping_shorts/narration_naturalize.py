@@ -30,9 +30,16 @@ DEFAULT_PROFILE = {
     # 어차피 `_take_count`가 막는다. 도배 방지는 캡이 아니라 `_beat_selected`(비트
     # 빈도 게이트)가 담당한다.
     # max_tags_per_beat=2(2026-07-16): [감정][whispers] 두 개를 허용한다. 사장님 청취
-    # 판정 "4번이 좋다"(=[curious][whispers])가 근거. 도배 위험은 없다 — 실측으로
-    # 확인했듯 5비트 대본에서 감정태그가 붙는 건 훅·CTA 2비트뿐이고(나머지는 예산 밖),
-    # whisper도 roles에 든 비트만 받는다. **3 이상으로 올리지 않는다** — 2가 필요한 최대치다.
+    # 판정 "4번이 좋다"(=[curious][whispers])가 근거 — 다만 그 조합은 **기본
+    # 프로파일에선 도달 불가**라는 점을 정확히 적는다(리뷰 실측 정정, 이전 주석은
+    # "기본값에서 이래서 2가 필요하다"처럼 읽혀 근거를 과장했다). 실제 기본값 실측:
+    # ① 훅은 기본 `whisper.roles=["반전"]`에 없고 ② 반전은 기본 emotion_arc
+    # intensity 0.3에서 `_role_tag_rank`(rank=2) >= n_tagged(2)라 애초에 감정태그를
+    # 못 받는다 → 기본 출력은 `'[whispers] 이건, 진짜 물건이에요…'`뿐, 어떤 비트도
+    # 태그 2개 조합이 안 된다. 2가 실제로 필요해지는 자리는 whisper.roles에
+    # 훅/CTA가 들어간 프리셋(예: ASMR 톤 프리셋)에서 `[감정][whispers]`가 실제로
+    # 만들어질 때다. 값 2 자체는 그대로 맞다 — **3 이상으로 올리지 않는다**(2가
+    # 필요한 최대치라는 결론은 유지, 근거만 "기본값"이 아니라 "프리셋"으로 정정).
     "caps": {"max_tags_total": 3, "max_tags_per_beat": 2, "max_fillers_per_text": 2},
     "seed": 42,
     "n_best": 1,
@@ -651,6 +658,20 @@ def _whisper(text, cfg, ctx):
     """
     canon = ctx.get("role_canon")
     if canon is None or canon not in (cfg.get("roles") or []):
+        return text
+    # 멱등성 가드(리뷰 지적) — 이미 [whispers]가 있으면 그대로 반환한다. 캡
+    # 검사(`max_tags_per_beat`)만으로는 못 막는다: 태그 1개짜리 입력은
+    # `len(existing)+1 <= cap`(예: 1+1=2<=2)이 참이라 캡을 통과해버려서
+    # "2개 이상 있어야 막는" 캡의 경계를 정확히 피해간다 — 캡은 총량 상한이지
+    # 중복 방지가 아니다. `_bump`를 부르지 않는다 — 아무것도 안 붙였는데
+    # "속삭임 1건"으로 계상하면 T6에서 이미 고친 거짓말 패턴의 재발이다.
+    # 멱등성 가드(리뷰 지적) — 이미 [whispers]가 있으면 그대로 반환한다. 캡
+    # 검사(`max_tags_per_beat`)만으로는 못 막는다: 태그 1개짜리 입력은
+    # `len(existing)+1 <= cap`(예: 1+1=2<=2)이 참이라 캡을 통과해버려서
+    # "2개 이상 있어야 막는" 캡의 경계를 정확히 피해간다 — 캡은 총량 상한이지
+    # 중복 방지가 아니다. `_bump`를 부르지 않는다 — 아무것도 안 붙였는데
+    # "속삭임 1건"으로 계상하면 T6에서 이미 고친 거짓말 패턴의 재발이다.
+    if _WHISPER_TAG in text:
         return text
     # 이 비트에 이미 붙은 태그 수 + 우리 1개가 캡을 넘으면 붙이지 않는다. 붙였다가
     # `_enforce_total_tag_cap`이 사후에 지우면 applied에 "속삭임 1건"이라고 적어놓고
