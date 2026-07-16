@@ -1567,8 +1567,8 @@ async function onSubToggle(){
 // ── 4단계 보이스 프리셋 ──────────────
 let VOICE = { preset_id:null, voice_id:null, settings:null, speed:1.0, silence_trim:'off', group_id:null, variant:null };
 let VOICE_GROUPS = [];
-let SEL_VARIANT = {}; // group_id -> 'stable'|'natural'|'expressive' (기본 노출은 stable, 나머지는 버튼으로 전환)
-const VARIANT_LABELS = {stable:'안정', natural:'자연', expressive:'표현'};
+let SEL_VARIANT = {}; // group_id -> 'stable'|'natural'|'expressive'|'whisper' (기본 노출은 stable, 나머지는 버튼으로 전환)
+const VARIANT_LABELS = {stable:'안정', natural:'자연', expressive:'표현', whisper:'속삭임'};
 const SPEEDS=[0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5];
 const SIL=[['off','OFF'],['weak','약'],['mid','중'],['strong','강']];
 
@@ -1587,13 +1587,15 @@ function renderPresetCards(){
     const variant=SEL_VARIANT[g.group_id]||g.default_variant||'stable';
     const v=g.variants[variant]||g.variants[g.default_variant]||Object.values(g.variants)[0];
     const active=VOICE.group_id===g.group_id;
-    const tabs=['stable','natural','expressive'].filter(k=>g.variants[k]).map(k=>
+    // whisper는 베스트 5명에게만 프리셋이 있다(사장님 청취 판정 2026-07-16). filter가
+    // 존재하는 variant만 그리므로 나머지 9명은 탭이 자동으로 안 뜬다 — 숨김 분기 불필요.
+    const tabs=['stable','natural','expressive','whisper'].filter(k=>g.variants[k]).map(k=>
       `<button type="button" class="tab${variant===k?' active':''}" style="flex:0 0 auto;min-width:auto;padding:3px 9px;font-size:11px"
         onclick="event.stopPropagation();pickVariant('${g.group_id}','${k}')">${VARIANT_LABELS[k]}</button>`).join('');
     return `
       <div onclick="pickPreset('${g.group_id}')"
         style="border:1px solid ${active?'var(--accent2)':'var(--line)'};border-radius:9px;padding:9px;margin-bottom:6px;cursor:pointer;background:#0d1420">
-        <b>${esc(g.name)}</b> — ${esc(g.one_liner||'')}
+        <b>${esc(g.name)}</b>${g.best?' <span title="사장님 청취 판정 베스트" style="color:var(--accent2)">⭐</span>':''} — ${esc(g.one_liner||'')}
         <div style="display:flex;gap:4px;align-items:center;margin-top:6px;flex-wrap:wrap">
           ${tabs}
           ${v&&v.sample_url?`<audio controls src="${esc(v.sample_url)}" style="height:26px;vertical-align:middle;margin-left:4px"></audio>`:''}

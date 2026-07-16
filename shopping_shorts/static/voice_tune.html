@@ -30,7 +30,8 @@
 <script>
 const STAGES=[["normalize","정규화"],["spoken_style","구어체"],["pronunciation","연음/발음"],
  ["phrasing","끊어읽기"],["endings","끝음"],["fillers","추임새"],
- ["emotion_arc","감정곡선"],["intonation","억양"]];
+ ["emotion_arc","감정곡선"],["whisper","속삭임"],["intonation","억양"]];
+const WHISPER_ROLES=[["훅","훅"],["페인포인트","페인포인트"],["반전","반전"],["실용","실용"],["CTA","CTA"]];
 let corpus=[], profile={}, presetList=[];
 
 function defaultProfile(){
@@ -42,19 +43,40 @@ function defaultProfile(){
  STAGES.forEach(([k])=>p[k]={on:true,intensity:0.3});
  p.normalize={on:true}; p.pronunciation={on:true,dict:{}};
  p.fillers={on:true,intensity:0.2,bank:["음","아","그","뭐","자"]};
+ // 속삭임은 intensity가 없다(설계 §6: 태그는 켜지거나 꺼질 뿐 중간이 없다).
+ // 위 forEach가 넣은 intensity를 여기서 걷어내지 않으면 renderStages의
+ // ('intensity' in s) 검사에 걸려 있지도 않은 "속삭임 강도" 슬라이더가 뜬다.
+ // roles = 속삭일 비트의 role 목록. 전체면 ASMR, 일부면 강조 도구(설계 §3).
+ p.whisper={on:true,roles:["반전"]};
  return p;
 }
 function renderStages(){
  document.getElementById('stages').innerHTML=STAGES.map(([k,label])=>{
   const s=profile[k]||{on:true,intensity:0.3};
-  const slider=('intensity' in s)?`<input type=range min=0 max=1 step=0.05 value=${s.intensity}
-     oninput="setInt('${k}',this.value)">`:'';
+  let ctl='';
+  if(k==='whisper'){
+   // 속삭임은 슬라이더 자리에 role 체크박스 5개를 그린다(intensity 없음 — 설계 §6).
+   // 전부 체크=ASMR, 일부만 체크=강조 도구(설계 §3).
+   const roles=s.roles||[];
+   ctl=WHISPER_ROLES.map(([v,rl])=>`<label style="font-size:11px;margin-right:6px">
+     <input type=checkbox ${roles.includes(v)?'checked':''} onchange="setWhisperRole('${v}',this.checked)">${rl}</label>`).join('');
+  }else if('intensity' in s){
+   ctl=`<input type=range min=0 max=1 step=0.05 value=${s.intensity}
+     oninput="setInt('${k}',this.value)">`;
+  }
   return `<div class="stage"><input type=checkbox ${s.on?'checked':''}
-     onchange="setOn('${k}',this.checked)">${label}${slider}</div>`;
+     onchange="setOn('${k}',this.checked)">${label}${ctl}</div>`;
  }).join('');
 }
 function setOn(k,v){profile[k]=profile[k]||{};profile[k].on=v;previewAll();}
 function setInt(k,v){profile[k]=profile[k]||{};profile[k].intensity=parseFloat(v);previewAll();}
+function setWhisperRole(role,checked){
+ profile.whisper=profile.whisper||{on:true,roles:[]};
+ const roles=new Set(profile.whisper.roles||[]);
+ if(checked)roles.add(role); else roles.delete(role);
+ profile.whisper.roles=Array.from(roles);
+ previewAll();
+}
 
 // 비트 위치(index/total)는 감정곡선·추임새 스테이지가 쓰는 입력이다. 안 보내면 작업대는
 // 항상 추임새 bank[0]("음")만 들려주는데 렌더는 비트마다 순환해 다른 소리가 난다(리뷰 S6).
