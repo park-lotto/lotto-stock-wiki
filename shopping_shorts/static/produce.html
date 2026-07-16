@@ -1034,7 +1034,15 @@ async function saveHeadcopy(){
   try{ await fetch('/api/produce/mix/settings',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({job_id:MIX_JOB, headcopy:STATE.headcopy, caption_style:STATE.captionStyle, deco:STATE.deco})}); }catch(e){}
 }
-function jump(i){ cur=i; renderSteps(); showPanel(); }
+function jump(i){
+  // ★1단계 미리보기 게이트(2026-07-17). renderSteps()가 **모든 스텝 칩**에 onclick="jump(i)"를
+  // 박아 상단에 항상 렌더한다 — 여기 가드가 없으면 "자막제거" 칩 한 번 클릭으로 게이트가 통째로
+  // 우회되고, 그 뒤 refreshNextBtn()은 cur=1이라 게이트를 안 걸어 버튼까지 도로 열어준다
+  // (우회 흔적도 안 남는다). go()의 "방어 두 겹"은 실은 같은 문에 두 겹이었다.
+  // 뒤로 가는 건 막지 않는다 — 앞으로 가는 것만.
+  if(i > cur && cur === 0 && MIX_JOB && !canGoNext()) return;
+  cur=i; renderSteps(); showPanel();
+}
 function go(d){
   // 1단계 미리보기 게이트(2026-07-17). btnNext의 disabled만으론 부족하다 — go(1)이 다른
   // 경로로도 불릴 수 있어 방어를 두 겹으로 둔다. 유료 자막제거로 못 본 채 넘어가는 걸 막는다.
@@ -1616,10 +1624,14 @@ async function loadMixReview(){
       <div class="hint">🎞 ${esc(b.primary?.video_id||'')} · ${b.primary?.start}s~${b.primary?.end}s · ${b.target_seconds}s${b.fit?` · 매칭 ${b.fit}/5`:''}</div>
       ${(b.fit&&b.fit<=2)?`<div style="color:var(--fire);font-size:12px;margin-top:3px">⚠️ 이 문장에 맞는 영상이 부족합니다 — 대본을 살짝 바꾸거나 소스 영상을 추가하세요.</div>`:''}
     </div>`).join('')+`<div class="hint" style="margin-top:6px">✅ 매칭 완료${(d.beats||[]).some(b=>b.fit&&b.fit<=2)?' <span style="color:var(--fire)">— ⚠️ 표시된 문장은 영상이 약합니다</span>':''} — 아래에서 <b>미리보기</b>를 확인한 뒤 다음으로 넘어가세요.</div>`
-    +`<button class="btn-next" style="margin-top:8px;padding:7px 14px" onclick="startPreview()">▶ 미리보기 만들기</button>`
+    +`<button id="btnPreview" class="btn-next" style="margin-top:8px;padding:7px 14px" onclick="startPreview()">▶ 미리보기 만들기</button>`
     +`<div id="mixPreview" style="margin-top:8px"></div>`;
   // 편집안을 새로 그렸다 = 새 매칭이다. 옛 미리보기 상태를 물고 있으면 사장님이 옛 영상을
   // 본 것으로 치고 다음이 열린다 → 여기서 반드시 초기화한다.
+  // ★폴러도 같이 죽인다: 재매칭은 정상 흐름(⚠️ 매칭 약한 문장은 "대본을 살짝 바꾸세요"를 권한다)이고
+  // 그때 새 job_id가 잡히는데, 옛 폴러를 안 죽이면 그놈이 살아서 새 MIX_JOB을 폴링해 옛 렌더의
+  // 결과로 게이트를 열어버린다. ++PREVIEW_GEN은 이미 날아간 요청의 늦은 continuation까지 무효화한다.
+  clearInterval(PREVIEW_POLL); PREVIEW_POLL = null; ++PREVIEW_GEN;
   PREVIEW_STATUS = null; refreshNextBtn();
 }
 
@@ -1629,6 +1641,9 @@ async function loadMixReview(){
 // 보여주고 OK를 받는다. 스펙 docs/superpowers/specs/2026-07-17-제작소-1단계-미리보기-design.md
 let PREVIEW_STATUS = null;   // null|'rendering'|'ready'|'failed'
 let PREVIEW_POLL = null;
+// 미리보기의 "현재 주인" 세대번호 — PM_GEN(위 openScriptModal/openGenFromWiki 경합)과 같은 패턴이다.
+// await 뒤 돌아온 continuation은 자기가 아직 주인인지 확인하고, 아니면 아무것도 건드리지 않는다.
+let PREVIEW_GEN = 0;
 
 function canGoNext(){
   // 'failed'도 통과시킨다 — 렌더가 고장 났을 때의 탈출구(스펙 §7.1).
@@ -1645,31 +1660,51 @@ function refreshNextBtn(){
 
 async function startPreview(){
   const box = document.getElementById('mixPreview');
+  const btn = document.getElementById('btnPreview');
+  // ★기존 폴러를 반드시 죽이고 시작한다. 안 죽이고 PREVIEW_POLL을 덮으면 옛 핸들을 잃어
+  // 옛 폴러가 **고아**로 살아남는다(서버는 중복예약을 막지만 클라이언트 타이머는 별개다).
+  // 그 뒤 렌더가 끝나면 고아가 먼저 tick해 clearInterval(PREVIEW_POLL)로 **새 폴러를** 죽이고
+  // 자기는 살아남아, 2.5초마다 box.innerHTML에 <video>를 다시 써 노드를 파괴·재생성한다
+  // → 재생이 계속 0초로 리셋되고 5MB mp4를 2.5초마다 재다운로드한다. 사장님이 **못 본다** =
+  // 이 기능의 존재이유가 무너진다.
+  clearInterval(PREVIEW_POLL); PREVIEW_POLL = null;
+  const myGen = ++PREVIEW_GEN;     // 이 시점부터 내가 주인 — 늦게 돌아오는 옛 continuation은 무효
+  const myJob = MIX_JOB;           // 재매칭으로 MIX_JOB이 바뀌어도 내 응답은 내 job 것이다
+  if(btn) btn.disabled = true;     // 렌더는 20초+ 걸린다 — 그 사이 재클릭을 막는다
   box.innerHTML = '<div class="hint">⏳ 미리보기 만드는 중… (자막제거·꾸미기 없이 렌더합니다)</div>';
   PREVIEW_STATUS = 'rendering'; refreshNextBtn();
   try{
     const d = await (await fetch('/api/produce/mix/preview',{method:'POST',
-      headers:{'Content-Type':'application/json'}, body: JSON.stringify({job_id: MIX_JOB})})).json();
-    if(!d.ok){ PREVIEW_STATUS='failed'; box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(d.error||'미리보기 실패')+'</div>'; refreshNextBtn(); return; }
-    PREVIEW_POLL = setInterval(pollPreview, 2500); pollPreview();
-  }catch(e){ PREVIEW_STATUS='failed'; box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; refreshNextBtn(); }
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify({job_id: myJob})})).json();
+    if(PREVIEW_GEN !== myGen) return;   // 그 사이 재클릭·재매칭이 주인을 가져갔다 — 손대지 않는다
+    if(!d.ok){ PREVIEW_STATUS='failed'; box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(d.error||'미리보기 실패')+'</div>'; if(btn) btn.disabled=false; refreshNextBtn(); return; }
+    PREVIEW_POLL = setInterval(()=>pollPreview(myGen, myJob), 2500); pollPreview(myGen, myJob);
+  }catch(e){
+    if(PREVIEW_GEN !== myGen) return;
+    PREVIEW_STATUS='failed'; box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; if(btn) btn.disabled=false; refreshNextBtn();
+  }
 }
 
-async function pollPreview(){
+async function pollPreview(gen, job){
   const box = document.getElementById('mixPreview');
   try{
-    const d = await (await fetch('/api/mix/status/'+MIX_JOB)).json();
+    const d = await (await fetch('/api/mix/status/'+job)).json();
+    // ★await 뒤 주인 확인(PM_GEN과 같은 패턴). 재클릭·재매칭이 주인을 가져갔으면 이 응답은
+    // 남의 화면에 쓰는 것이 된다 — 전역도 box도 건드리지 않고 조용히 빠진다.
+    if(PREVIEW_GEN !== gen || MIX_JOB !== job) return;
     if(d.preview_status === 'ready'){
-      clearInterval(PREVIEW_POLL); PREVIEW_STATUS='ready';
+      clearInterval(PREVIEW_POLL); PREVIEW_POLL = null; PREVIEW_STATUS='ready';
       // ?t= 캐시버스터 필수: 대본을 고쳐 재매칭하면 같은 URL에 다른 영상이 온다.
       box.innerHTML = '<video controls muted playsinline style="width:260px;border-radius:10px;background:#000"'
-        + ' src="/api/produce/mix/preview/'+encodeURIComponent(MIX_JOB)+'?t='+Date.now()+'"></video>'
+        + ' src="/api/produce/mix/preview/'+encodeURIComponent(job)+'?t='+Date.now()+'"></video>'
         + '<div class="hint">원본 자막이 남아 있는 건 정상입니다 — 다음 단계에서 지웁니다.</div>';
+      const btn = document.getElementById('btnPreview'); if(btn) btn.disabled = false;
       refreshNextBtn();
     } else if(d.preview_status === 'failed'){
-      clearInterval(PREVIEW_POLL); PREVIEW_STATUS='failed';
+      clearInterval(PREVIEW_POLL); PREVIEW_POLL = null; PREVIEW_STATUS='failed';
       box.innerHTML = '<div class="hint" style="color:var(--fire)">⚠️ 미리보기 렌더 실패 — '
         + esc(d.preview_error||'') + '<br>미리보기 없이 진행할 수 있지만, 확인하지 못한 채 유료 자막제거로 넘어갑니다.</div>';
+      const btn = document.getElementById('btnPreview'); if(btn) btn.disabled = false;
       refreshNextBtn();
     }
   }catch(e){ /* 폴링 실패는 다음 tick에 재시도 */ }
