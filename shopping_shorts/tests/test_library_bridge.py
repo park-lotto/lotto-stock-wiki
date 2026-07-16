@@ -53,3 +53,39 @@ def test_create_mix_job_without_script_structure_is_none(tmp_path):
     job = st.get_mix_job("J2")
     assert job["script_structure"] is None
     assert job["structure"] == "template"
+
+
+# ── 라우트→스토어 배선 가드(2026-07-15, opus 리뷰 Critical) ──────────
+# test_app_mix.py:_client 패턴 재사용 — 백그라운드 작업(다운로드·Gemini)은 no-op.
+
+def _client(monkeypatch, tmp_path):
+    db = tmp_path / "t.db"
+    monkeypatch.setattr(app_mod, "DB_PATH", db)
+    monkeypatch.setattr(app_mod, "run_mix_job", lambda *a, **k: None)
+    return TestClient(app_mod.app), Store(db)
+
+
+def test_mix_start_passes_script_structure_to_job(monkeypatch, tmp_path):
+    """라우트→스토어 배선 가드. 이 테스트가 없으면 app.py의
+    script_structure= 인자를 지워도 전 스위트가 통과한다(2026-07-15 뮤테이션 실증)."""
+    client, store = _client(monkeypatch, tmp_path)
+    struct = {"hook_type": "질문형", "tone": "반말"}
+    r = client.post("/api/produce/mix/start",
+                    json={"script": "확정 대본", "urls": ["u0"],
+                          "target_seconds": 20, "script_structure": struct})
+    assert r.status_code == 200
+    job = store.get_mix_job(r.json()["job_id"])
+    assert job["script_structure"] == struct
+    assert job["structure"] == "free"      # 모드 플래그 오염 방지 — 이름충돌 회귀가드
+
+
+def test_mix_start_rejects_non_dict_script_structure(monkeypatch, tmp_path):
+    """dict 아닌 값은 조용히 버린다(보관 전용이라 무해) — 모드 플래그로 새면 안 됨."""
+    client, store = _client(monkeypatch, tmp_path)
+    r = client.post("/api/produce/mix/start",
+                    json={"script": "확정 대본", "urls": ["u0"],
+                          "target_seconds": 20, "script_structure": "질문형"})
+    assert r.status_code == 200
+    job = store.get_mix_job(r.json()["job_id"])
+    assert job["script_structure"] is None
+    assert job["structure"] == "free"

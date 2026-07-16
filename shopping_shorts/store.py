@@ -747,6 +747,18 @@ class Store:
                 (json.dumps(structure or {}, ensure_ascii=False), shortcode),
             )
 
+    def mark_structure_attempted(self, shortcode):
+        """구조분석을 시도했으나 결과를 못 얻었음을 기록한다(I-2, 2026-07-16).
+        structure_json은 NULL로 그대로 둔다 — {}를 넣으면 extracts_missing_structure
+        백필 대상에서 영구 제외되므로 절대 쓰지 않는다. 표식은 대화형 경로(캐시히트)가
+        클릭마다 Gemini를 다시 부르는 것만 막고, 재시도 책임은 daily_batch가 갖는다."""
+        with self._conn() as c:
+            c.execute(
+                "UPDATE script_extracts SET structure_analyzed_at=datetime('now') "
+                "WHERE shortcode=?",
+                (shortcode,),
+            )
+
     def extracts_missing_structure(self, limit=100):
         """구조분석이 아직 안 된 대본추출 항목(카테고리 있는 것만 — 카테고리 없으면
         통계 그룹핑을 못 하므로 백필 대상에서 제외). full_text 없는 빈 항목도 제외."""
