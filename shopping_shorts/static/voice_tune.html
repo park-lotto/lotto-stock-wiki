@@ -31,8 +31,16 @@
 const STAGES=[["normalize","정규화"],["spoken_style","구어체"],["pronunciation","연음/발음"],
  ["phrasing","끊어읽기"],["endings","끝음"],["fillers","추임새"],
  ["emotion_arc","감정곡선"],["whisper","속삭임"],["intonation","억양"]];
-const WHISPER_ROLES=[["훅","훅"],["페인포인트","페인포인트"],["반전","반전"],["실용","실용"],["CTA","CTA"]];
+// 5개 다 value===label이라 짝 배열일 이유가 없다(리뷰 Minor, task-5) — 평범한 배열로.
+const WHISPER_ROLES=["훅","페인포인트","반전","실용","CTA"];
 let corpus=[], profile={}, presetList=[];
+
+// 엔진 DEFAULT_PROFILE['whisper'](narration_naturalize.py L10~L23)의 프론트 미러.
+// 매번 새 객체/배열을 반환한다 — 여러 프로파일이 같은 참조를 공유하면 한쪽 roles를
+// 바꿀 때 다른 쪽도 같이 바뀌는 사고가 난다. 값이 엔진과 갈리면 "화면=roles 없음(무시)
+// vs 엔진=['반전'](속삭임 실행)" 불일치가 재발한다(리뷰 실측 STALE 버그, task-5 Important1).
+// 엔진 값을 바꾸면 여기도 같이 바꿔라.
+function whisperDefault(){return {on:true,roles:["반전"]};}
 
 function defaultProfile(){
  // caps는 여기서 하드코딩하지 않는다(Task4 C1) — 서버 merge_profile이
@@ -47,7 +55,7 @@ function defaultProfile(){
  // 위 forEach가 넣은 intensity를 여기서 걷어내지 않으면 renderStages의
  // ('intensity' in s) 검사에 걸려 있지도 않은 "속삭임 강도" 슬라이더가 뜬다.
  // roles = 속삭일 비트의 role 목록. 전체면 ASMR, 일부면 강조 도구(설계 §3).
- p.whisper={on:true,roles:["반전"]};
+ p.whisper=whisperDefault();
  return p;
 }
 function renderStages(){
@@ -57,9 +65,12 @@ function renderStages(){
   if(k==='whisper'){
    // 속삭임은 슬라이더 자리에 role 체크박스 5개를 그린다(intensity 없음 — 설계 §6).
    // 전부 체크=ASMR, 일부만 체크=강조 도구(설계 §3).
-   const roles=s.roles||[];
-   ctl=WHISPER_ROLES.map(([v,rl])=>`<label style="font-size:11px;margin-right:6px">
-     <input type=checkbox ${roles.includes(v)?'checked':''} onchange="setWhisperRole('${v}',this.checked)">${rl}</label>`).join('');
+   // s.roles가 없으면(예: roles 키를 안 지정한 옛 프로파일) 서버 merge_profile의 얕은
+   // 병합(.update)과 같은 결과가 되도록 whisperDefault().roles로 채운다 — loadPreset의
+   // 병합과 이중 방어다. 한쪽만 고치면 다른 경로로 같은 불일치가 남는다(task-5 Important1).
+   const roles=(s.roles!==undefined)?s.roles:whisperDefault().roles;
+   ctl=WHISPER_ROLES.map(v=>`<label style="font-size:11px;margin-right:6px">
+     <input type=checkbox ${roles.includes(v)?'checked':''} onchange="setWhisperRole('${v}',this.checked)">${v}</label>`).join('');
   }else if('intensity' in s){
    ctl=`<input type=range min=0 max=1 step=0.05 value=${s.intensity}
      oninput="setInt('${k}',this.value)">`;
@@ -131,6 +142,12 @@ async function loadPreset(){
  const r=await fetch('/api/voice-tune/profile/'+preset.value);
  const j=await r.json();
  profile=(j.profile&&Object.keys(j.profile).length)?j.profile:defaultProfile();
+ // 서버 merge_profile은 whisper 키가 아예 없는 옛 동결 프로파일을 DEFAULT_PROFILE['whisper']
+ // (whisperDefault())로 채운 뒤 합성한다. 프론트가 이걸 안 하면 "화면=role 전부 해제(무시)
+ // vs 엔진=roles:['반전'](실제 속삭임)"으로 갈리고, 그대로 💾동결하면 그 갈림이 영구화된다
+ // (리뷰 실측 STALE 버그, task-5 Important1). renderStages의 표시용 폴백과 별개로 여기서도
+ // profile 객체 자체를 채워야 setWhisperRole 등 이후 조작이 옳은 기준 위에서 시작한다.
+ if(!profile.whisper)profile.whisper=whisperDefault();
  if(profile.seed)seed.value=profile.seed; if(profile.n_best)nbest.value=profile.n_best;
  renderStages();previewAll();
 }
