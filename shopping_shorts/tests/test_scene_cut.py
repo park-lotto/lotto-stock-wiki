@@ -33,3 +33,21 @@ def test_video_frame_count_counts_video_not_audio(tmp_path):
 def test_video_fps_raises_on_missing_file(tmp_path):
     with pytest.raises(RuntimeError):
         scene_cut.video_fps(tmp_path / "nope.mp4")
+
+
+def test_video_frame_count_raises_on_missing_file(tmp_path):
+    with pytest.raises(RuntimeError):
+        scene_cut.video_frame_count(tmp_path / "nope.mp4")
+
+
+def test_video_fps_reads_non_integer_rational(tmp_path):
+    """★24000/1001 같은 NTSC 프레임레이트도 정확해야 한다. 이 모듈의 존재 이유가
+    프레임 번호 계산이고, fps가 틀리면 round(t*fps)가 통째로 틀어진다."""
+    f = tmp_path / "ntsc.mp4"
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi",
+                    "-i", "testsrc=size=320x568:rate=24000/1001:duration=1",
+                    "-c:v", "libx264", "-pix_fmt", "yuv420p", str(f)],
+                   check=True, capture_output=True, stdin=subprocess.DEVNULL)
+    fps = scene_cut.video_fps(f)
+    assert abs(fps - 24000 / 1001) < 1e-9      # 23.976023976...
+    assert fps != 24.0                          # 24로 반올림돼 있으면 실패
