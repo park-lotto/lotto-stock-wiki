@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date": "2026-07-15",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-15_1104_2Q26 기대이상의 영업실적 전망.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "박성봉, 김승규",
+    "report_date": "2026년 7월 15일",
+    "stocks": [
+      {
+        "name": "동국제강",
+        "code": "460860",
+        "sector": "철강",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "14,000원",
+        "tp_prev": "14,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "2Q26": "매출액 9,660억원(YoY +8.1%, QoQ +12.7%), 영업이익 352억원(YoY +17.8%, QoQ +64.3%)",
+          "3Q26": "봉형강 판매 65.6만(YoY +12.4%, QoQ -12.7%), 후판 판매 23.1만톤(YoY -6.2%, QoQ -8.8%), 영업이익 172억원(YoY -29.8%, QoQ -51.2%)"
+        },
+        "estimate_revision": null,
+        "next_catalyst": "하반기 조선향 후판과 대형 건설사향 철근 가격 인상",
+        "thesis": [
+          "2분기 공격적인 영업전략과 수출 확대에 힙입어 봉형강 판매량 회복",
+          "중국산 수입 규제 강화로 인한 후판 판매량 증가 및 스프레드 유지",
+          "판매량 증가에 따른 고정비 절감 효과로 수익성 개선"
+        ],
+        "valuation_basis": "현재 주가는 PBR 0.22배 수준",
+        "risk": "여름철 비수기, 9월말 추석 연휴 및 대보수 영향, 인천 전기로 개보수 비용(약 50억원)",
+        "supply_comment": null,
+        "quote": "동국제강에 대해 투자의견 BUY와 목표주가 14,000원을 유지한다."
+      }
+    ]
+  }
+}

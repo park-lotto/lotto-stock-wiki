@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-14",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-15_0800_2분기 프리뷰 부합 전망. 로봇 부품도 일정...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "송선재, 박태웅",
+    "report_date": "2026년 7월 14일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "현대모비스",
+        "code": "012330",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "770,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 매출액/영업이익은 각각 3%/6% (YoY) 증가한 16.4조원/9,220억원(영업이익률 5.6%, +0.1%p (YoY))으로 예상한다.",
+        "estimate_revision": null,
+        "next_catalyst": "2028년 아틀라스 모델향 액추에이터 생산, 로봇 부품 직접 생산에 따른 사업 현금흐름 창출",
+        "thesis": [
+          "AS 부문의 호조와 고객사 생산차질 해소 및 신차/친환경차 출시, 높은 환율로 인한 외형 성장",
+          "비핵심 제품(범퍼/램프) 매각을 통한 전장/전동화/차량용 반도체/로보틱스 등 미래 사업 투자 가속화",
+          "보스턴다이내믹스(BD)향 액추에이터 공장 건설 등 로봇 부품 사업의 본격화 및 관련 매출액 기대"
+        ],
+        "valuation_basis": null,
+        "risk": "반도체 등 원자재 가격상승 부담, 완성차 물량 감소 및 유럽 전동화 양산 초기 비용",
+        "supply_comment": "자동차 핵심부품 및 로보틱스 부품군으로 사업 재편 중",
+        "quote": "현대모비스에 대한 투자의견 BUY와 목표주가 77만원을 유지한다. 2분기 실적은 AS 부문의 호조로 기존 추정치에 부합할 것으로 예상한다."
+      }
+    ]
+  }
+}

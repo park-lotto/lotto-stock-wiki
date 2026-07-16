@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-18",
+    "broker": "한국IR협의회 기업리서치센터",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-18_1002_소방사업 인수로 한층 넓어진 성장스토리.md"
+  },
+  "questionnaire": {
+    "broker": "한국IR협의회 기업리서치센터",
+    "analyst": "조영환, 박규연",
+    "report_date": "2026.06.18",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "블랙야크아이앤씨",
+        "code": "478560",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 매출액은 833억원(+45.5% YoY), 영업이익은 147억원(+58.4% YoY)을 기록할 것으로 전망된다.",
+        "estimate_revision": null,
+        "next_catalyst": "한주케미칼 인수 효과 온기 반영 및 산업안전 부문 실적 성장 지속",
+        "thesis": [
+          "한주케미칼 인수에 따른 실적 개선과 글로벌 AI 인프라 투자 확대에 따른 반도체 Capex 수혜",
+          "산업안전에 IT 기술을 접목한 연구개발을 통한 중장기 성장동력 확보",
+          "한주케미칼 실적 온기 반영 및 산업안전부문 포트폴리오 확대로 2026년 실적 큰 폭 개선 전망"
+        ],
+        "valuation_basis": "2026년 예상 PBR 1.7배는 과거 12개월 선행 평균 PBR 2.0배 대비 할인된 수준에 위치",
+        "risk": "낮은 유통주식 비중으로 인한 주가 변동성 확대 및 환금성 제약 가능성",
+        "supply_comment": "2026년 1분기 말 기준 동사의 실질 유통가능주식 비중은 약 23.65% 수준으로 파악됨",
+        "quote": "한주케미칼 실적 온기반영 효과, 산업안전부문 실적 개선 영향으로 2026년 실적 큰 폭 개선 전망"
+      }
+    ]
+  }
+}

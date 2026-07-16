@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-14",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-14_1101_엔비디아와의 AI동맹 확대.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "최보영",
+    "report_date": "2026/07/14",
+    "stocks": [
+      {
+        "name": "LG전자",
+        "code": "066570",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "350,000 원",
+        "tp_prev": "350,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2 분기 컨센서스를 50% 상회한 호실적을 시작으로 3~4분기에도 예상보다 강한 실적을 보여줄 것으로 전망",
+        "estimate_revision": null,
+        "next_catalyst": "로봇사업센터 신설 및 액추에이터 '악시움' 생산",
+        "thesis": [
+          "엔비디아와 피지컬 AI·AI인프라(AIDC)·모빌리티 전 영역에 걸친 협력 확대",
+          "7/1자 CEO 직속 로보틱스사업센터 신설을 통한 로봇업체로의 도약",
+          "유럽 폭염 에어컨 판매 호조 및 칠러 수주 매출전환으로 인한 실적 성장"
+        ],
+        "valuation_basis": "27년 실적 성장과 밸류에이션 리레이팅 전망",
+        "risk": "지수 변동성",
+        "supply_comment": "LG 외 2 인 35.27%",
+        "quote": "2 분기 컨센서스를 50% 상회한 호실적을 시작으로 3~4분기에도 예상보다 강한 실적을 보여줄 것으로 전망하며 그 근거는 유럽 폭염으로 인한 에어컨 판매 호조와 상반기 확보한 칠러 수주의 매출전환으로 기존 27년 하반기 1조 매출 돌파를 앞당겨 달성하게 될 것이기 때문."
+      }
+    ]
+  }
+}

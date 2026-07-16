@@ -1,0 +1,36 @@
+{
+  "date": "2026-07-15",
+  "hit_rate": null,
+  "mentioned_count": 19,
+  "matched": [],
+  "missed": [
+    "SK하이닉스",
+    "광섬유 케이블",
+    "국내 반도체 장비",
+    "금융",
+    "반도체",
+    "반도체 소부장",
+    "반도체 장비",
+    "방산",
+    "삼성전자",
+    "삼성증권",
+    "실리콘투",
+    "애플",
+    "에너지",
+    "유진테크",
+    "전닉",
+    "전력",
+    "코스메카코리아",
+    "피에스케이홀딩스",
+    "한양이엔지"
+  ],
+  "candidates": [],
+  "thresholds": {
+    "mode": "his",
+    "vacuum_pct_max": 35.0,
+    "min_up_count": 1,
+    "require_up_gt_down": true,
+    "require_leader": false,
+    "top_n": 20
+  }
+}

@@ -22,6 +22,7 @@ ImportError). 그래서 병합에 게이트가 붙는다 — merge_gate.py.
 """
 import argparse
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -31,9 +32,40 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import merge_gate
 
-BASE = Path(__file__).resolve().parent.parent
 BRANCH_PREFIX = "track/"
 MAIN_BRANCH = "main"
+
+
+def _sh(cmd, cwd):
+    """cwd가 없어도 크래시하지 않는다 — 지워진 트랙 폴더를 가리킬 수 있다(finish 직후 등).
+    subprocess는 없는 cwd에 NotADirectoryError를 던지는데, 그건 호출자가 다룰 수 없다."""
+    try:
+        p = subprocess.run(cmd, cwd=str(cwd), capture_output=True, text=True,
+                           encoding="utf-8", errors="replace")
+    except (NotADirectoryError, FileNotFoundError) as e:
+        return 127, str(e)
+    return p.returncode, (p.stdout or "") + (p.stderr or "")
+
+
+def main_worktree(cwd=None):
+    """이 저장소의 **main 워크트리**를 찾는다 — git에게 물어서.
+
+    ★`__file__` 기준으로 잡으면 안 된다. 트랙 폴더에는 tools/track.py의 복사본이 있어서,
+    거기서 부르면 BASE가 그 트랙 폴더가 되고 `worktree_path`가 존재하지도 않는
+    `.tracks/<이름>/.tracks/<이름>`을 가리킨다 → finish가 "트랙 폴더가 없다"로 깨진다
+    (2026-07-16 실측). CLAUDE.md에 "finish는 main 폴더에서"라는 우회를 적어둬야 했던 이유.
+
+    `git rev-parse --git-common-dir`는 링크된 워크트리에서도 **공유 .git**을 가리킨다
+    → 그 부모가 main 워크트리다.
+    """
+    start = Path(cwd) if cwd else Path(__file__).resolve().parent
+    rc, out = _sh(["git", "rev-parse", "--path-format=absolute", "--git-common-dir"], start)
+    if rc == 0 and out.strip():
+        return Path(out.strip()).resolve().parent
+    return Path(__file__).resolve().parent.parent      # git이 없거나 구버전이면 옛 방식
+
+
+BASE = main_worktree()
 
 # 트랙 폴더는 프로젝트 **안**에 둔다 — 사장님이 찾기 쉬운 곳.
 # 점(.)으로 시작하는 이유 2가지:
@@ -154,6 +186,26 @@ def _detach_upstream_from_main(wt, br):
         print(f"ℹ️ 트랙 브랜치를 origin에 못 올렸다 — 로컬에만 둔다(병합엔 지장 없다).\n   {out.strip()[:200]}")
 
 
+def _copy_local_secrets(repo, wt):
+    """`.env`를 트랙 폴더에 복사한다 — **이게 없으면 트랙에서 AI 작업이 통째로 막힌다.**
+
+    `.env`는 gitignore(비밀키)라 worktree로 안 따라온다. 그런데 `key_vault._ENV_PATH`는
+    **모듈 위치 기준**이라 트랙 폴더에선 `.tracks/<이름>/.env`를 찾고, 없으니 키가 0개가 된다
+    (2026-07-16 실측: main 45개 / 트랙 0개 → Gemini 영상분석이 "키풀이 비었다"로 죽었다).
+
+    복사가 안전한 이유: 같은 PC·같은 사용자이고, 트랙 폴더에서도 `.env`는 gitignore라
+    커밋될 수 없다. 없으면(서버·CI) 조용히 넘어간다.
+    """
+    src = Path(repo).resolve() / ".env"
+    if not src.exists():
+        return
+    try:
+        shutil.copy2(src, wt / ".env")
+        print("   .env 복사됨 (트랙에서도 AI 키 사용 가능)")
+    except OSError as e:
+        print(f"⚠️ .env를 못 복사했다 — 이 트랙에선 AI 작업이 막힌다: {e}")
+
+
 def upstream_of(wt):
     rc, out = run(["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"], wt)
     return out.strip() if rc == 0 else None
@@ -184,6 +236,7 @@ def start(name, repo=BASE):
         raise TrackError(f"worktree 생성 실패:\n{out}")
 
     _detach_upstream_from_main(wt, branch_name(name))
+    _copy_local_secrets(repo, wt)
 
     print(f"✅ 트랙 '{name}' 시작")
     print(f"   폴더:    {wt}")
@@ -255,11 +308,10 @@ def finish(name, repo=BASE, gate=merge_gate, attempts=3):
 
         if result == "nothing":
             print(f"\n병합할 것이 없다 (트랙 '{name}'에 새 커밋 없음).")
-            _cleanup(name, repo, wt, br)
             return 0
         if result == "pushed":
             _sync_main_folder(repo)
-            _cleanup(name, repo, wt, br)
+            _level_track_with_main(name, repo, wt, br)
             return 0
         # result == "raced": 다른 트랙이 먼저 병합했다 → 그 위에서 다시
         print(f"⚠️ 다른 트랙이 먼저 main에 들어왔다. 최신 main 위에서 다시 시도 "
@@ -340,17 +392,64 @@ def _sync_main_folder(repo):
         print(f"ℹ️ 원본 폴더는 아직 옛 main이다 (거기서 직접 pull 해라):\n{out.strip()}")
 
 
-def _cleanup(name, repo, wt, br):
-    rc, out = run(["git", "worktree", "remove", str(wt)], repo)
+def _level_track_with_main(name, repo, wt, br):
+    """병합 후 트랙 브랜치를 새 main 자리로 당긴다. **폴더는 남긴다.**
+
+    ★왜 안 지우나: 설계는 "태스크 단위로 자주 병합"을 요구한다. 병합할 때마다 883MB
+    체크아웃을 지웠다 다시 만들면 그 요구와 정면으로 안 맞는다. 게다가 사용자의 터미널이
+    그 폴더 안에 있으면 윈도우가 삭제를 거부해 어차피 실패한다(2026-07-16 실측 2회).
+    트랙 폴더 = 그 트랙의 작업대다. 태스크가 끝난 거지 트랙이 끝난 게 아니다.
+    트랙을 진짜 접을 땐 `close`.
+
+    ★reset --hard가 아니라 ff 병합인 이유: reset은 트랙 폴더의 미추적 산출물·메모를
+    날릴 수 있다. 우리 커밋은 방금 main에 병합됐으므로 origin/main은 트랙 브랜치의
+    **자손**이다 → ff가 성립한다.
+    """
+    rc, out = run(["git", "merge", "--ff-only", "origin/main"], wt)
     if rc != 0:
-        print(f"⚠️ 트랙 폴더를 못 지웠다 (수동으로): {wt}\n{out}")
+        print(f"ℹ️ 트랙 '{name}' 폴더를 최신 main으로 못 당겼다 — 거기서 직접 pull 해라.\n   {out.strip()[:200]}")
         return
-    rc, out = run(["git", "branch", "-d", br], repo)
+    # ff 결과를 백업 브랜치에도 올린다. 안 올리면 로컬이 자기 upstream보다 앞선 상태가 돼
+    # `git branch -d`가 "upstream에 아직 병합 안 됨"이라며 거절한다(HEAD엔 병합됐는데도).
+    # 실패해도(오프라인 등) 병합은 이미 끝났으므로 조용히 넘어간다 — close가 -D로 처리한다.
+    run(["git", "push", "origin", f"HEAD:{br}"], wt)
+    print(f"✅ 트랙 '{name}' 폴더는 그대로 두고 최신 main에 맞췄다 — 바로 다음 작업 가능.")
+    print(f"   트랙을 아주 접으려면: py tools/track.py close {name}")
+
+
+def close(name, repo=BASE):
+    """트랙을 접는다 — 폴더·브랜치 삭제. finish와 달리 **파괴적**이라 확인이 붙는다."""
+    merge_gate.make_output_safe()
+    validate_name(name)
+    wt = worktree_path(name, repo)
+    br = branch_name(name)
+    if not wt.exists() and not branch_exists(repo, br):
+        raise TrackError(f"없는 트랙: {name}")
+
+    run(["git", "fetch", "origin"], repo)
+    ahead = ahead_count(repo, br) if branch_exists(repo, br) else 0
+    if ahead:
+        raise TrackError(
+            f"트랙 '{name}'에 아직 **병합 안 된 커밋 {ahead}개**가 있다 — 접으면 사라진다.\n"
+            f"먼저: py tools/track.py finish {name}\n"
+            f"버릴 작정이면: git worktree remove --force \"{wt}\" && git branch -D {br}"
+        )
+    if wt.exists():
+        rc, out = run(["git", "worktree", "remove", str(wt)], repo)
+        if rc != 0:
+            raise TrackError(
+                f"트랙 폴더를 못 지웠다 — 그 폴더 안에 열린 터미널·창이 있나 확인해라"
+                f"(윈도우는 사용 중인 폴더 삭제를 거부한다).\n{out.strip()[:200]}"
+            )
+    run(["git", "push", "origin", "--delete", br], repo)   # 원격 백업 먼저(없으면 조용히 실패)
+    # -D인 이유: `-d`는 **upstream**(origin/track/X) 기준으로 판단해서, 로컬이 ff로 앞서 있으면
+    # "HEAD엔 병합됐는데도" 거절한다(실측). 우리는 위에서 ahead_count==0으로 **main에 다 들어갔음**을
+    # 이미 확인했다 — git의 upstream 휴리스틱보다 정확한 검사다. 그 확인 없이 -D를 쓰면 안 된다.
+    rc, out = run(["git", "branch", "-D", br], repo)
     if rc != 0:
-        print(f"⚠️ 브랜치를 못 지웠다 (수동으로): git branch -D {br}\n{out}")
-        return
-    run(["git", "push", "origin", "--delete", br], repo)  # 없으면 조용히 실패, 무해
-    print(f"🧹 트랙 '{name}' 정리 완료 (폴더·브랜치 삭제)")
+        raise TrackError(f"브랜치를 못 지웠다:\n{out.strip()[:200]}")
+    print(f"🧹 트랙 '{name}' 접음 (폴더·브랜치 삭제)")
+    return 0
 
 
 # ── list ─────────────────────────────────────────────────────────
@@ -405,8 +504,10 @@ def main(argv=None):
     sub = parser.add_subparsers(dest="cmd", required=True)
     p_start = sub.add_parser("start", help="트랙 폴더+브랜치 생성")
     p_start.add_argument("name")
-    p_finish = sub.add_parser("finish", help="게이트 통과 시 main에 병합")
+    p_finish = sub.add_parser("finish", help="게이트 통과 시 main에 병합 (폴더는 남는다)")
     p_finish.add_argument("name")
+    p_close = sub.add_parser("close", help="트랙을 접는다 — 폴더·브랜치 삭제")
+    p_close.add_argument("name")
     sub.add_parser("list", help="열린 트랙과 밀린 정도")
 
     args = parser.parse_args(argv)
@@ -415,6 +516,8 @@ def main(argv=None):
             return start(args.name)
         if args.cmd == "finish":
             return finish(args.name)
+        if args.cmd == "close":
+            return close(args.name)
         return list_tracks()
     except TrackError as e:
         print(f"\n중단: {e}", file=sys.stderr)

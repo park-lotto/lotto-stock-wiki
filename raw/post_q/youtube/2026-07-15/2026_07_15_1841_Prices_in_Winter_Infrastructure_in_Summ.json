@@ -1,0 +1,29 @@
+{
+  "target_kind": "market",
+  "market_direction": "bearish_crypto_bullish_infrastructure",
+  "macro_events": [
+    {
+      "fact": "비트코인 및 금 ETF에서 약 18조 원 유출",
+      "ts": "2026-07-15",
+      "quote": "비트코인 ETF 같은 곳과 금에서 이제 빠져나간 돈이 한 18조 정도 되는데"
+    },
+    {
+      "fact": "AI ETF로 약 40조 원 유입",
+      "ts": "2026-07-15",
+      "quote": "그 같은 기간에 한 40조 정도가 AI ETF에 들어갔습니다."
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "IT",
+      "stance": "긍정",
+      "comment": "기술 인프라 및 사용성 개선으로 인한 구조적 변화"
+    },
+    {
+      "sector": "기타",
+      "stance": "긍정",
+      "comment": "디파이 프로토콜의 수익 모델 전환"
+    }
+  ],
+  "quote": "가격은 겨울이고 인프라는 오히려 여름처럼 보이는 그런 상황이 생기고 있습니다."
+}

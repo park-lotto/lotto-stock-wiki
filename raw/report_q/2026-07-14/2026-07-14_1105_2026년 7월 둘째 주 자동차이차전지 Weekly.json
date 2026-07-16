@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "date": "2026-07-14",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-14_1105_2026년 7월 둘째 주 자동차이차전지 Weekly.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "교보증권",
+    "analyst": "김광식, 최보영",
+    "report_date": "2026/07/14",
+    "market_direction": null,
+    "macro_vars": [
+      "USMCA: 도요타 $3.6B 텍사스 투자-타코마 생산 미국 이전하며, OEM 미국 투자 가속",
+      "중국 NEV 소매 판매량, 7월 첫쨰 주 9% 감소…계절적 비수기 진입 (7/10, CNEV)"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "자동차",
+        "stance": null,
+        "reason": "1M 영업이익 컨센서스 변화: 2Q26 현대차 -5.8%, 기아 +0.4%, 기아 상향 조정 지속"
+      },
+      {
+        "sector": "2차전지",
+        "stance": null,
+        "reason": "LG엔솔 2Q 영업이익 1,133억원으로 컨센서스 하회. AMPC 감소, ESS 가이던스 미달 등 영향"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026/07/09",
+        "event": "LG엔솔, 중국 난징서 테슬라 배터리 생산 늘린다"
+      },
+      {
+        "date": "2026/07/10",
+        "event": "중국 NEV 소매 판매량, 7월 첫쨰 주 9% 감소…계절적 비수기 진입"
+      },
+      {
+        "date": "2026/07/10",
+        "event": "LG엔솔, 첫 ESS VPP 사업자 선정, 삼성SDI 배터리 최다 낙찰"
+      },
+      {
+        "date": "2026/07/13",
+        "event": "현대차, 노사 입금협상 난항…노조 2년 연속 파업"
+      }
+    ],
+    "top_picks": [
+      "현대차",
+      "기아",
+      "LG에너지솔루션",
+      "삼성SDI"
+    ],
+    "risk": "중국 NEV 소매 판매량, 7월 첫쨰 주 9% 감소…계절적 비수기 진입",
+    "quote": "1M 영업이익 컨센서스 변화: 2Q26 현대차 -5.8%, 기아 +0.4%, 기아 상향 조정 지속"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "date": "2026-06-17",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-18_0707_통신 Weekly - AIDC 경쟁 우위 지속.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "이승웅",
+    "report_date": "2026.06.17",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "통신업종은 -1.3%(vs KOSPI +7.8%)로 시장 수익률을 하회"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "통신",
+        "stance": "비중확대(경쟁 우위 지속)",
+        "reason": "데이터센터 시장은 AI로 촉발된 수요 증가와 더불어 입지, 기술적 요구, 정책적 변화가 나타나는 중이며, 통신사는 입지, 커넥티비티, 대형 고객 등을 바탕으로 AIDC 전환을 통한 경쟁력 강화 중"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2027-02",
+        "event": "AIDC 특별법 시행 예정"
+      }
+    ],
+    "top_picks": [
+      "SK텔레콤",
+      "KT",
+      "LG유플러스"
+    ],
+    "risk": "테크 업종으로의 수급 쏠림으로 인한 통신업종 소외",
+    "quote": "데이터센터 시장에서 통신사의 경쟁 우위는 지속될 전망. 데이터센터 시장은 AI로 촉발된 수요 증가와 더불어 입지, 기술적 요구, 정책적 변화가 나타나는 중."
+  }
+}

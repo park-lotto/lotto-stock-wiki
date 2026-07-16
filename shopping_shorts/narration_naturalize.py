@@ -499,12 +499,18 @@ def _emotion_arc(text, cfg, ctx):
     # 이 캡을 스테이지 루프 밖 `_enforce_total_tag_cap`이 사후에만 걸러버리면, bump는
     # 이미 찍힌 뒤 태그가 지워지는 비대칭이 생긴다(캡을 0으로 내렸는데 "감정×1
     # 적용"이라고 뜨는 거짓말 — 2026-07-15 재현). 이 스테이지는 naturalize_detail
-    # 1회 호출당 정확히 1번만 실행되고, 우리가 붙이는 태그는 이후 스테이지(intonation)가
-    # 텍스트 앞부분을 건드리지 않는 한 항상 전체 문자열의 맨 앞(=태그 목록의 0번째)이
-    # 되므로 — max_tags_total>=1이면 `_enforce_total_tag_cap`의 "앞에서 cap개 보존"
-    # 규칙상 우리 태그는 절대 제거되지 않는다. 즉 사후 캡이 실제로 우리 태그를 지우는
-    # 경우는 max_tags_total<=0뿐이고, 그 경우만 여기서 미리 걸러내면 bump와 실제
-    # 결과가 항상 일치한다(사후 차감 로직 불필요). 이 게이트는 브리프 스냅샷(Task2
+    # 1회 호출당 정확히 1번만 실행되고, 우리가 붙이는 태그는 항상 전체 문자열의 맨
+    # 앞(=태그 목록의 0번째)에 남는다 — max_tags_total>=1이면 `_enforce_total_tag_cap`의
+    # "앞에서 cap개 보존" 규칙상 우리 태그는 절대 제거되지 않는다.
+    # ⚠️ "이후 스테이지(intonation)가 텍스트 앞부분을 건드리지 않는 한"이라는 옛 전제는
+    # 틀렸다(Task6 재리뷰 Important1로 드러남) — intonation은 태그 바로 뒤(강조어 앞)에
+    # 쉼표를 끼워 넣을 수 있어 실제로 텍스트 맨 앞부분을 건드린다(`]` lookbehind 누락
+    # 버그 당시 `[curious], 진짜 대박이에요…`가 그 증거). 그런데도 **결론은 우연히
+    # 유지된다** — intonation은 새 `[...]` 태그를 만들거나 기존 태그를 옮기지 않고
+    # 쉼표만 삽입하므로, `_enforce_total_tag_cap`이 세는 태그 목록에서 우리 태그의
+    # 순번(0번째)은 그대로다. 즉 사후 캡이 실제로 우리 태그를 지우는 경우는 여전히
+    # max_tags_total<=0뿐이고, 그 경우만 여기서 미리 걸러내면 bump와 실제 결과가
+    # 항상 일치한다(사후 차감 로직 불필요). 이 게이트는 브리프 스냅샷(Task2
     # 이전 시점)엔 없었지만, 여기서 빠지면 Task2가 고친 버그가 되살아나므로 유지한다.
     if ctx["caps"].get("max_tags_total", 3) <= 0:
         return text
@@ -578,9 +584,17 @@ def _tag_for(ctx):
 # 세운 원칙과 동일하다 — "오탐 0이 더 중요"(그 두 주석 참조). 앞쪽 경계(이미 쉼표가
 # 있는 자리엔 또 넣지 않음)는 기존 lookbehind `(?<=[^\s,.!?…])`가 담당한다: 강조어
 # 앞 공백 바로 앞 글자가 이미 쉼표/마침표/공백류면 그 자리는 애초에 후보에서 빠진다.
+#
+# ⚠️ lookbehind 문자군에 `\]`도 반드시 포함(Task6 재리뷰 Important1) — `_emotion_arc`가
+# 이 스테이지보다 먼저 돌며 `[curious] ` 같은 v3 태그를 문장 맨 앞에 붙이는데, `\]`가
+# 빠진 lookbehind는 태그의 닫는 대괄호를 "이미 앞에 실질 단어가 있다"로 오인해
+# `[curious], 진짜 대박이에요…` 처럼 **문장 맨 앞(선행 단어 없음)에 쉼표를 만든다**
+# (컨트롤러 실측: `merge_profile({})` + role=훅/CTA + beat_index=1 → intonation=1로
+# 잘못 계상됨, arc를 끄면 재현 안 됨 — 원인 확정). 앞에 아무 단어도 없는 자리의 포즈는
+# 설계 의미가 없고, `applied`에 태그 아티팩트를 강조 포즈로 잘못 계상하는 거짓말이 된다.
 _EMPHASIS_WORDS = ["진짜", "완전", "역대급", "훨씬", "절대", "딱"]
 _EMPHASIS_PAT = re.compile(
-    r"(?<=[^\s,.!?…])(\s+)(?:" + "|".join(_EMPHASIS_WORDS) + r")(?=[\s,.!?…]|$)"
+    r"(?<=[^\s,.!?…\]])(\s+)(?:" + "|".join(_EMPHASIS_WORDS) + r")(?=[\s,.!?…]|$)"
 )
 
 
@@ -592,10 +606,19 @@ def _intonation(text, cfg, ctx):
     take = _take_count(len(cands), intensity)
     if take <= 0:
         return text
-    # 오프셋이 밀리지 않도록 뒤에서부터 적용(다른 스테이지의 동일 패턴 참조).
+    # "계획한 수(take)"가 아니라 "실제 바뀐 횟수"만 센다(Task6 재리뷰 Minor3) —
+    # `_spoken_style`/`_pronunciation`/`_endings`가 이미 쓰는 `new != s` 전략과 통일.
+    # 구조상 쉼표 삽입은 항상 문자열을 바꾸므로(no-op이 될 수 없음) take와 n이 지금은
+    # 같은 값이 나오지만, `_endings` 주석의 선례를 따라 계약을 "실제 효과"로 고정해둬야
+    # 다른 스테이지와 전략이 어긋나지 않는다. 오프셋이 밀리지 않도록 뒤에서부터 적용
+    # (다른 스테이지의 동일 패턴 참조).
+    n = 0
     for pos in sorted(cands[:take], reverse=True):
+        before = text
         text = text[:pos] + "," + text[pos:]
-    _bump(ctx, "intonation", take)
+        if text != before:
+            n += 1
+    _bump(ctx, "intonation", n)
     return text
 
 

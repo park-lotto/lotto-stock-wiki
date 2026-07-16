@@ -1,0 +1,91 @@
+{
+  "meta": {
+    "date": "2026-06-17",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-18_0707_하나 Biweekly 제약바이오 이벤트 비수기, ...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김선아",
+    "report_date": "2026년 6월 17일",
+    "target_kind": "market",
+    "market_direction": "중립",
+    "macro_vars": [
+      "코스닥 활성화 정책",
+      "미국 10년물 국채 금리"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "바이오",
+        "stance": "비중확대",
+        "reason": "코스닥 활성화 정책 수혜 및 주요 R&D 데이 개최 등 이벤트 대기"
+      }
+    ],
+    "style": "이벤트 비수기",
+    "event_calendar": [
+      {
+        "date": "06월 22일",
+        "event": "Bio-USA"
+      },
+      {
+        "date": "07월 01일",
+        "event": "ESMO GI Cancer congress"
+      },
+      {
+        "date": "07월 12일",
+        "event": "AAIC"
+      },
+      {
+        "date": "09월 12일",
+        "event": "WCLC"
+      },
+      {
+        "date": "09월 28일",
+        "event": "EASD"
+      },
+      {
+        "date": "10월 12일",
+        "event": "World ADC-USA"
+      },
+      {
+        "date": "10월 23일",
+        "event": "ESMO"
+      },
+      {
+        "date": "11월 04일",
+        "event": "SITC"
+      },
+      {
+        "date": "11월 09일",
+        "event": "Bio Europe"
+      },
+      {
+        "date": "11월 05일",
+        "event": "AASLD"
+      },
+      {
+        "date": "11월 14일",
+        "event": "Obesity Week"
+      },
+      {
+        "date": "12월 04일",
+        "event": "AES"
+      },
+      {
+        "date": "12월 16일",
+        "event": "CTAD"
+      },
+      {
+        "date": "12월 12일",
+        "event": "ASH"
+      }
+    ],
+    "top_picks": [
+      "한미약품",
+      "알테오젠",
+      "올릭스"
+    ],
+    "risk": "학회 비수기 진입에 따른 기술이전 공시 감소 가능성",
+    "quote": "이벤트 비수기, 코스닥 활성화 정책이 중요"
+  }
+}

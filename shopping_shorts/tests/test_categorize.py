@@ -1,8 +1,9 @@
 from shopping_shorts.categorize import categorize, ctype_of, classify
 
 
-def test_interior():
-    assert categorize("셀프DIY 인테리어 계정", "") == "인테리어"
+def test_hometem_from_interior_side():
+    # 2026-07-16: 옛 '인테리어'는 홈템에 흡수됨(경계가 실무에 없어 병합)
+    assert categorize("셀프DIY 인테리어 계정", "") == "홈템"
 
 def test_recipe_from_caption():
     assert categorize("팡팡", "오늘의 간단 레시피 자취요리") == "레시피"
@@ -13,15 +14,16 @@ def test_beauty():
 def test_appliance():
     assert categorize("가전 리뷰", "최신 로봇청소기 언박싱") == "가전"
 
-def test_household():
-    assert categorize("살림템", "주방 생활용품 꿀템") == "생활용품"
+def test_hometem_from_household_side():
+    # 옛 '생활용품'도 같은 홈템 — 양쪽 키워드를 다 흡수해야 한다
+    assert categorize("살림템", "주방 생활용품 꿀템") == "홈템"
 
 def test_unmatched_is_etc():
     assert categorize("그냥계정", "안녕하세요") == "기타"
 
 def test_tie_breaks_by_declaration_order():
     # 점수가 같으면 KEYWORDS 선언 순서(앞선 것) 우선
-    assert categorize("인테리어 뷰티 다하는 계정", "") == "인테리어"
+    assert categorize("인테리어 뷰티 다하는 계정", "") == "홈템"
 
 
 def test_caption_beats_name_stuffing():
@@ -42,7 +44,7 @@ def test_name_only_weak_keyword_not_recipe():
 
 def test_strong_name_keyword_still_classifies():
     # 캡션이 비어도 채널명의 '강한' 장르어는 그대로 분류한다.
-    assert categorize("셀프DIY 인테리어 계정", "") == "인테리어"
+    assert categorize("셀프DIY 인테리어 계정", "") == "홈템"
     assert categorize("뷰티템 추천", "") == "뷰티"
 
 
@@ -52,9 +54,9 @@ def test_restaurant_caption_stays_recipe():
 
 
 def test_ctype_mapping():
-    assert ctype_of("인테리어") == "비법형"
+    # 홈템=혼합형: 병합 전 인테리어(비법형)·생활용품(제품형)이 정반대였다
+    assert ctype_of("홈템") == "혼합형"
     assert ctype_of("레시피") == "비법형"
-    assert ctype_of("생활용품") == "제품형"
     assert ctype_of("가전") == "제품형"
     assert ctype_of("뷰티") == "혼합형"
     assert ctype_of("기타") == "기타"

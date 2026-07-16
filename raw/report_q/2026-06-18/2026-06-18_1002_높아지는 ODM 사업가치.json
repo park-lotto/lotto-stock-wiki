@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "date": "2026-06-18",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-18_1002_높아지는 ODM 사업가치.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "박종대",
+    "report_date": "2026년 06월 18일",
+    "stocks": [
+      {
+        "name": "엔에프씨",
+        "code": "265740",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": {
+          "2Q26": "2분기 연결 매출과 영업이익은 각각 전년 동기대비 58%, 55% 성장한 266억원과 48억원 수준이 가능할 전망이다.",
+          "2026": "2026년 매출과 영업이익은 각각 998억원(YoY 39%), 180억원(YoY 43%, OPM 18%)으로 추정한다."
+        },
+        "estimate_revision": null,
+        "next_catalyst": [
+          "메이저 고객사들의 글로벌 판매 지역 확대 전략으로 기존 히트 제품의 추가적인 물량 증대",
+          "메이저 고객사 대부분 품목 확대",
+          "신규 고객사 증가 효과 가시화"
+        ],
+        "thesis": [
+          "원료/소재 분야 높은 R&D 역량을 기반으로 ODM 사업 본격화 및 사업 규모 레벨업",
+          "K뷰티 글로벌 모멘텀 및 원료/소재 사업의 높은 인지도를 통한 ODM 사업의 서비스 범위와 연속성 경쟁 우위",
+          "주요 고객사 주문 증가 및 신규 고객사 유입으로 인한 실적 개선 및 Re-rating 가능성"
+        ],
+        "valuation_basis": "현재 주가는 12MF PER 5.5배에 불과하다.",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "ODM 사업의 차별적 경쟁력을 실적으로 입증하면서 Re-rating 국면으로 진입할 가능성이 크다.",
+        "sector": "화장품미용"
+      }
+    ]
+  }
+}

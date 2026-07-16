@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-14",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-14_1102_2026년 이익 증가율 YoY +91% vs. 주가는 제...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "윤재성",
+    "report_date": "2026년 07월 14일",
+    "stocks": [
+      {
+        "name": "금호석유화학",
+        "code": "011780",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "180,000원",
+        "tp_prev": "180,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 영업이익은 2,084억원(QoQ +251%, YoY +220%)으로 컨센(1,401억원)을 49% 상회할 전망이다. 3Q26 영업이익은 1,197억원(QoQ -43%, YoY +42%)로 전분기 대비 감익을 예상한다. 2026년 영업이익은 5,183억원으로 YoY +91% 개선을 추정한다.",
+        "estimate_revision": "2026년 영업이익 5,183억원으로 YoY +91% 개선 추정",
+        "next_catalyst": "주요 제품 NBL, SBR/BR, MDI, 에폭시 사이클 회복 국면 진입",
+        "thesis": [
+          "주요 제품 사이클 회복 국면 진입",
+          "라텍스 장갑 재고 소진 및 가동률 상향",
+          "금호미쓰이화학 실적 개선 및 건전한 재무구조"
+        ],
+        "valuation_basis": "PBR 0.5배/PER 6배 수준으로 절대 저평가 구간",
+        "risk": "유가 급등에 따른 매크로 리스크, BD 가격 하락에 따른 부정적 역래깅 효과",
+        "supply_comment": "NBL/BR/SBR 공급부족에 따른 판가 급등, 글로벌 장갑 공급 부족, SBR/BR 제한된 증설, MDI 글로벌 증설 전무 구간",
+        "quote": "BUY, TP 18만원을 유지한다. 2026년 영업이익은 5,183억원으로 YoY +91% 개선을 추정하나, 주가는 YTD -3%로 부진하다."
+      }
+    ]
+  }
+}

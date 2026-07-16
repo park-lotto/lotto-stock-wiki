@@ -1,0 +1,73 @@
+<meta charset="utf-8">
+<title>속삭임·울림 프로브 — 2026-07-16</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem;
+         background: #111; color: #eee; }
+  h1 { font-size: 1.4rem; margin: 0 0 .3rem; }
+  .sub { opacity: .6; font-size: .9rem; margin-bottom: 2rem; }
+  .card { border: 1px solid #333; border-radius: 10px; padding: 1rem 1.2rem; margin-bottom: .9rem; }
+  .card.hi { border-color: #c9a227; background: #1a1710; }
+  .lbl { font-size: .78rem; letter-spacing: .08em; opacity: .55; text-transform: uppercase; }
+  .txt { font-size: 1.05rem; margin: .35rem 0 .6rem; font-family: ui-monospace, monospace; }
+  .tag { color: #c9a227; }
+  audio { width: 100%; }
+  .note { font-size: .85rem; opacity: .65; margin-top: .5rem; line-height: 1.5; }
+  .q { border-left: 3px solid #c9a227; padding: .8rem 1rem; margin: 2rem 0 0; background: #181818;
+       border-radius: 0 8px 8px 0; }
+  .q h2 { font-size: 1rem; margin: 0 0 .5rem; }
+  .q p { margin: .4rem 0; font-size: .92rem; line-height: 1.6; }
+  code { background: #222; padding: .1rem .35rem; border-radius: 3px; }
+</style>
+
+<h1>속삭임 · 울림 프로브</h1>
+<div class="sub">성우 미나 · eleven_v3 · seed 42 고정(take 편차 배제, 태그 효과만 비교) · 2026-07-16</div>
+
+<div class="card">
+  <div class="lbl">1 · 대조군 — 태그 없음</div>
+  <div class="txt">진짜 대박이거든요 끝까지 보세요</div>
+  <audio controls src="1_notag.mp3"></audio>
+</div>
+
+<div class="card">
+  <div class="lbl">2 · 지금 훅에 쓰는 것</div>
+  <div class="txt"><span class="tag">[curious]</span> 진짜 대박이거든요 끝까지 보세요</div>
+  <audio controls src="2_curious.mp3"></audio>
+</div>
+
+<div class="card hi">
+  <div class="lbl">3 · A안 — 속삭임이 감정태그를 대체</div>
+  <div class="txt"><span class="tag">[whispers]</span> 진짜 대박이거든요 끝까지 보세요</div>
+  <audio controls src="3_whisper.mp3"></audio>
+  <div class="note">비트당 태그 1개 캡을 지킴. 이 비트의 감정색(<code>curious</code>)은 포기.</div>
+</div>
+
+<div class="card hi">
+  <div class="lbl">4 · B안 — 태그 2개</div>
+  <div class="txt"><span class="tag">[curious][whispers]</span> 진짜 대박이거든요 끝까지 보세요</div>
+  <audio controls src="4_both.mp3"></audio>
+  <div class="note">실측: <b>400 에러 없이 통과</b>. 다만 캡을 1→2로 올려야 하고, "태그 도배 금지"라는
+    기존 설계 의도와 충돌. <b>3번과 실제로 다르게 들리는지가 판단 근거.</b></div>
+</div>
+
+<div class="card">
+  <div class="lbl">5 · 울림 약하게 (리버브 얹음)</div>
+  <div class="txt">3번 소리 + <code>aecho=0.8:0.85:35:0.25</code></div>
+  <audio controls src="5_whisper_reverb_약.mp3"></audio>
+</div>
+
+<div class="card">
+  <div class="lbl">6 · 울림 동굴 느낌</div>
+  <div class="txt">3번 소리 + <code>aecho=0.8:0.9:60|90:0.4|0.25</code></div>
+  <audio controls src="6_whisper_reverb_동굴.mp3"></audio>
+  <div class="note">울림은 TTS가 아니라 합성된 소리에 거는 후처리라, 강도를 슬라이더로 자유롭게 조절 가능.
+    5·6은 그 양끝을 보여주는 예시일 뿐 최종값이 아님.</div>
+</div>
+
+<div class="q">
+  <h2>듣고 정해주실 것</h2>
+  <p><b>① 3번이 실제로 속삭이나요?</b> — 문서는 <code>[whispers]</code>를 지원한다고 하지만
+     "효과는 성우·문맥에 따라 다르다"고 단서를 답니다. 우리 한국어 성우에게 먹히는지는 귀로만 압니다.</p>
+  <p><b>② 4번이 3번과 다르게 들리나요?</b> — 같게 들리면 캡을 올릴 이유가 없으니 <b>A안</b>입니다.
+     4번이 확실히 낫게 들릴 때만 B안(캡 1→2)이 값어치가 있습니다.</p>
+  <p><b>③ 울림은 5·6 중 어느 쪽이 방향인가요?</b> — 아니면 아예 필요 없는지.</p>
+</div>

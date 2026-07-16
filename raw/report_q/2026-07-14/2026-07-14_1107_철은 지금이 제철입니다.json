@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "date": "2026-07-14",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-14_1107_철은 지금이 제철입니다.md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": "강민아",
+    "report_date": "2026.07.14",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "POSCO홀딩스",
+        "code": "005490",
+        "rating": "Buy",
+        "rating_changed": "신규",
+        "tp_new": "615,800원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 연간 매출액 72.8조원(YoY +5%), 영업이익은 3.0조원(YoY +64%)",
+        "estimate_revision": null,
+        "next_catalyst": "리튬 가격 상승과 포스코아르헨티나 흑자전환",
+        "thesis": [
+          "P/B 0.3배의 저평가된 밸류에이션",
+          "낮은 기저효과에 기반한 본격적인 업황 턴어라운드",
+          "리튬 사업 가치 재평가 기대"
+        ],
+        "valuation_basis": "SOTP 방식",
+        "risk": "중국 공급 리스크, 리튬 가격 변동성",
+        "supply_comment": "이차전지 소재 내재화",
+        "quote": "POSCO홀딩스에 대해 매수(BUY) 의견과 함께 철강업종 내 Top Pick으로 제시한다."
+      },
+      {
+        "name": "세아베스틸지주",
+        "code": "001430",
+        "rating": "Buy",
+        "rating_changed": "신규",
+        "tp_new": "61,700원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 매출액 4조원(+10.6% YoY), 영업이익 1,490억원(+51.0% YoY)",
+        "estimate_revision": null,
+        "next_catalyst": "2H26 미국 SST 공장 가동과 CASK 사업 수주",
+        "thesis": [
+          "중국산 특수강봉강에 대한 반덤핑(AD) 관세 부과 수혜",
+          "우주항공 소재 기업으로서의 시장 재평가",
+          "CASK 사업 수주에 따른 원전 기업으로서의 재평가"
+        ],
+        "valuation_basis": "SOTP 방식",
+        "risk": null,
+        "supply_comment": "항공우주, 방산, 원전향 첨단 소재 공급",
+        "quote": "세아베스틸지주에 대해 투자의견 BUY, 목표주가 61,700원으로 커버리지를 개시한다."
+      },
+      {
+        "name": "현대제철",
+        "code": "004020",
+        "rating": "Buy",
+        "rating_changed": "신규",
+        "tp_new": "44,600원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 연결 매출액은 24.1조원(YoY +5.8%), 영업이익 4,030억원(YoY +84.0%)",
+        "estimate_revision": null,
+        "next_catalyst": "미국 전기로 제철소 건설 및 현대모비스 지분가치 부각",
+        "thesis": [
+          "낮은 기저를 기반으로 한 실적 턴어라운드",
+          "미국 전기로 제철소 투자를 통한 성장 동력 확보",
+          "현대모비스 지분가치 재평가"
+        ],
+        "valuation_basis": "P/B 방식",
+        "risk": null,
+        "supply_comment": "AI 인프라 소재 공급",
+        "quote": "현대제철에 대해 투자의견 BUY, 목표주가 44,600원으로 커버리지를 개시한다."
+      }
+    ]
+  }
+}

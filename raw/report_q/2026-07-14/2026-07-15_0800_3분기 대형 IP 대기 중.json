@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "date": "2026-07-14",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-15_0800_3분기 대형 IP 대기 중.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "김소혜, 김나우",
+    "report_date": "2026년 7월 14일",
+    "stocks": [
+      {
+        "name": "컴투스",
+        "code": "078340",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "45,000원",
+        "tp_prev": "45,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "2Q26_sales": "1,645억 원",
+          "2Q26_op_profit": "65억 원",
+          "op_profit_consensus": "88억 원",
+          "outlook_summary": "동사의 2Q26 실적은 매출총이익 1,645억 원, 영업이익 65억 원을 기록하며 영업이익 컨센서스 88억 원을 하회한 것으로 추정한다."
+        },
+        "estimate_revision": "컨센서스 하회 추정",
+        "next_catalyst": "3분기 출시 예정인 신작 MMORPG [제우스: 오만의 신]",
+        "thesis": [
+          "서머너즈워 및 야구게임의 견조한 성과",
+          "연결 자회사 손실 규모 안정화 및 인건비/마케팅비 효율화",
+          "신작 [제우스: 오만의 신]에 대한 기대감"
+        ],
+        "valuation_basis": "동사의 현재 기업가치는 서머너즈워 및 야구게임의 견조한 성과를 반영하지도 않고 있는 수준이라고 본다.",
+        "risk": "신작 단 한 개만 성공하면 리레이팅이 나타날 것으로 기대해왔던 시간이 장기화되고 있는 점",
+        "supply_comment": null,
+        "quote": "동사의 2Q26 실적은 마케팅 비용 집행 증가로 인해 영업이익 시장기대치를 하회한 것으로 추정합니다. 동사의 현재 기업가치는 서머너즈워 및 야구게임의 견조한 성과를 반영하지도 않고 있는 수준이라고 봅니다. 단기 주가는 3 분기 출시 예정인 제우스의 성과에 따라 움직일 것으로 예상합니다."
+      }
+    ]
+  }
+}

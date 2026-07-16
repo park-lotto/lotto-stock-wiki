@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-17",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-17_1004_4월 전력통계월보 3개월 연속 전력판매금액 ...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "유재선, 성무규",
+    "report_date": "2026년 6월 17일",
+    "stocks": [
+      {
+        "name": "한국전력",
+        "code": "051600",
+        "rating": "Neutral",
+        "rating_changed": null,
+        "tp_new": "45,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "4월 전력판매량은 42.7TWh로 전년대비 0.9% 감소, 전력판매금액은 6.8조원으로 전년대비 0.8% 감소했다.",
+        "estimate_revision": "2분기 원전 이용률은 74% 수준으로 추정되며 하반기는 80% 초반 수준까지 상승할 것으로 보인다.",
+        "next_catalyst": "5월 이후 수치 확인, 호르무즈 해협 물류 정상화 여부",
+        "thesis": [
+          "4월 전력판매량 YoY -0.9%, 전력판매금액 YoY -0.8%",
+          "원전 이용률 전월대비 개선되며 기저발전 비중 소폭 상승",
+          "SMP보다 덜 오른 구입단가로 비용 증가 속도는 완화되지만 방향은 유지"
+        ],
+        "valuation_basis": null,
+        "risk": "호르무즈 해협 물류 정상화가 이뤄지지 않았고 협상 과정에서 돌발상황 발생 여지",
+        "supply_comment": "유연탄 기여도가 원전 감소를 상쇄하고 있다.",
+        "quote": "SMP 대비 정산단가 비율도 전년대비 낮아진 것을 감안하면 2분기 구입전력비 증가에 대한 부담은 일부 완화될 여지가 있다."
+      }
+    ],
+    "sector": "전력"
+  }
+}

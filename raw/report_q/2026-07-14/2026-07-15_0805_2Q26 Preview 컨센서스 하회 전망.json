@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-14",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-15_0805_2Q26 Preview 컨센서스 하회 전망.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "최정환",
+    "report_date": "2026.07.14",
+    "stocks": [
+      {
+        "name": "현대로템",
+        "code": "064350",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "280,000",
+        "tp_prev": "280,000",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 연결 기준 매출액 1조 8,070억원(+27.5% YoY), 영업이익 2,350억원(-8.7% YoY, OPM 13.0%)으로 컨센서스인 매출액 1.7조원 상회, 영업이익 2,770억(OPM 16.3%) 하회 전망.",
+        "estimate_revision": "2Q26 컨센서스 대비 매출 부합, 영업이익 하회 전망",
+        "next_catalyst": "페루, 이라크, 루마니아 등 사업 수주 성공",
+        "thesis": [
+          "폴란드 사업의 3, 4차 계속되는 사업으로 매출 성장 지속 전망",
+          "현재 주가는 밴드 차트 기준 최하단 수준으로 저평가 구간",
+          "신규 사업 진행 상황(페루, 이라크, 루마니아 등) 고려 시 피어 대비 저평가 해소 기대"
+        ],
+        "valuation_basis": "26년 부문별 EBITDA에 Target EV/EBITDA 적용 후 SOTP 통해 목표주가 산출",
+        "risk": null,
+        "supply_comment": "디펜스솔루션 내수 매출 증가에 따라 수출 비중이 1Q26 75.0%에서 2Q26 59.8%로 하락하며 매출 믹스 악화에 따른 영업이익률 감소 추정",
+        "quote": "26년 부문별 EBITDA에 Target EV/EBITDA 적용 후 SOTP 통해 목표주가 산출. 26년 이후 수주 공백이 길어지고 있으나, 현재 주가는 밴드 차트 기준 최하단 수준으로 폴란드, 페루 등 신규 사업 진행 상황 고려했을 때 저평가 구간 판단, 매수 의견 유지",
+        "sector": "방산"
+      }
+    ]
+  }
+}

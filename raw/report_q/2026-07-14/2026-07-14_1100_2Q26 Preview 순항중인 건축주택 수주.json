@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-14",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-14_1100_2Q26 Preview 순항중인 건축주택 수주.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "이상호",
+    "report_date": "2026-07-14",
+    "stocks": [
+      {
+        "name": "GS건설",
+        "code": "006360",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "34,000원",
+        "tp_prev": "24,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "GS건설의 2026년 2분기 연결 매출액 2.7조원 (YoY -15.5%), 영업이익 1,168억원 (YoY -27.9%)을 전망.",
+        "estimate_revision": "GS건설에 대한 투자의견 BUY로 유지하고 목표주가는 24,000원에서 34,000원으로 상향.",
+        "next_catalyst": "GS그룹의 데이터센터 건설 계획",
+        "thesis": [
+          "건축·주택 수주가 2023년부터 빠르게 증가 중이며 올해부터 본격 매출 인식 시작",
+          "상반기 주택 신규수주는 연간 가이던스 건축주택 12조원 중 67% 수준인 8조원 달성 예상",
+          "GS그룹의 데이터센터 건설 계획 발표로 수주 모멘텀 가능성은 긍정적"
+        ],
+        "valuation_basis": "Target BPS는 2027년 조정 BPS로 유지. Target PBR 과거 4개년 하단 0.39배에서 중상단 수준인 0.54배로 상향 적용.",
+        "risk": "중동 전쟁으로 인한 원가 영향, 중동 발주처의 상황으로 플랜트 수주 지연 가능성",
+        "supply_comment": "중동 발주처의 상황으로 플랜트 수주는 지연되고 있지만 투프라스SAF, 오만 등 하반기에는 수주 기대.",
+        "quote": "GS건설에 대한 투자의견 BUY로 유지하고 목표주가는 24,000원에서 34,000원으로 상향."
+      }
+    ],
+    "sector": "건설"
+  }
+}

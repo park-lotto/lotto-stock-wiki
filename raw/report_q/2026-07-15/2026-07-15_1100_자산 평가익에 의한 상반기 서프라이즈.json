@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-15",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-15_1100_자산 평가익에 의한 상반기 서프라이즈.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "김도하",
+    "report_date": "2026년 7월 14일",
+    "stocks": [
+      {
+        "name": "한화생명",
+        "code": "088350",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "6,100원",
+        "tp_prev": "6,100원",
+        "tp_direction": "flat",
+        "earnings_outlook": "한화생명의 2Q26 별도 순이익은 1,764억원(+206% YoY)으로 시장 컨센서스를 17% 상회하는 어닝 서프라이즈가 예상됨.",
+        "estimate_revision": null,
+        "next_catalyst": "본질적인 보험손익의 회복을 나타내면서 ROE 정상화를 동반할 경우 멀티플 개선이 가능할 것으로 전망",
+        "thesis": [
+          "2Q26 별도 순이익 1,764억원(+206% YoY)으로 시장 컨센서스를 17% 상회하는 어닝 서프라이즈 예상",
+          "투자손익에서의 평가익 호조와 보험손익의 경상 체력 회복이 실적 개선의 주요 요인",
+          "12m forward PBR 0.23배로 낮은 valuation 구간에 위치하며 ROE 정상화 시 멀티플 개선 기대"
+        ],
+        "valuation_basis": "12m forward PBR 0.23배로 절대적으로 낮은 valuation 구간에 위치",
+        "risk": "보장성 신계약 물량 부진, 해지 증가에 따른 조정(-2,500억원) 및 계리감독 선진화 방안의 영향(-1,500억원) 반영",
+        "supply_comment": null,
+        "quote": "한화생명의 2Q26 별도 순이익은 1,764억원(+206% YoY)으로 시장 컨센서스를 17% 상회하는 어닝 서프라이즈가 예상됨."
+      }
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-18",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-18_1004_사상 첫 연 매출 1,000억원 돌파.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "김진형",
+    "report_date": "2026.06.18",
+    "stocks": [
+      {
+        "name": "엑시콘",
+        "code": "092870",
+        "rating": "N/R",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026F 매출액 1,321억원(+100% YoY)과 영업이익 160억원(+19,936% YoY).",
+        "estimate_revision": null,
+        "next_catalyst": "‘27년 x86 진영에서 PCIe* 6.0 지원 CPU의 본격적인 양산이 시작될 예정. 이에 따라 Gen 6 SSD와 CXL 관련 수요가 순차적으로 발생할 것으로 전망.",
+        "thesis": [
+          "‘25년 출시된 CLT의 공급 대수 확대(‘25년 10대 → ‘26년 15~20대)",
+          "PCIe 6.0 지원에 따른 Gen 6 SSD와 CXL 테스터 등 수혜 기대",
+          "상저하고 흐름 속 ‘26년 매출액 1,321억원(+100% YoY) 전망"
+        ],
+        "valuation_basis": "현재 주가는 ‘26년 예상 당기순이익 기준 P/E 17배 수준. 글로벌 Peer들의 평균 44배이며 동사의 높은 성장성을 감안하면 현재 밸류에이션은 상대적으로 저렴한 구간.",
+        "risk": "경쟁사의 CLT 시장 진입 여부",
+        "supply_comment": "‘25년 출시된 CLT의 공급 대수 확대(‘25년 10대 → ‘26년 15~20대)",
+        "quote": "상저하고 흐름 속 ‘26년 매출액 1,321억원(+100% YoY) 전망"
+      }
+    ]
+  }
+}

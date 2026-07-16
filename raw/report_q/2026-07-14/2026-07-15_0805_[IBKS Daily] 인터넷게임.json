@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date": "2026-07-14",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-15_0805_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "IBK투자증권",
+    "analyst": "이승훈",
+    "report_date": "2026.07.14",
+    "market_direction": null,
+    "macro_vars": [
+      "AI 기술 활용 증가",
+      "개인정보 유출 리스크",
+      "AI 윤리 문제",
+      "구조조정"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": "투자 확대",
+        "reason": "네이버는 AI·인프라에 공격적으로 투자하며 매출 성장을 이어가고 있으며, AI탭 누적 이용자 400만명 돌파·검색 점유율 반등 등 투자 성과가 가시화되고 있음"
+      },
+      {
+        "sector": "IT",
+        "stance": "수익성 제고",
+        "reason": "카카오는 다음 매각·계열사 정리 등 구조조정으로 수익성을 높이는 전략을 택했으나, AI 서비스가 실질적 매출로 이어지는 구체적 성과가 아직 불분명하다는 우려가 나옴"
+      }
+    ],
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "NAVER",
+      "카카오"
+    ],
+    "risk": "글로벌 시장 진출 확대와 AI 기술 활용 증가로 개인정보 유출·AI 윤리 문제가 기업 신뢰와 직결되는 경영 리스크로 부상함",
+    "quote": "사회공헌 넘어 AI·보안까지…게임사 ESG 경영 확장, 왜? 투자 늘리는 네이버, 몸집 줄이는 카카오...엇갈린 전략"
+  }
+}

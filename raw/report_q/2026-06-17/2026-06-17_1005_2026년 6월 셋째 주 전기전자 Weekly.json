@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "date": "2026-06-17",
+    "broker": "교보증권 리서치센터",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-17_1005_2026년 6월 셋째 주 전기전자 Weekly.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권 리서치센터",
+    "analyst": [
+      "박희철",
+      "최보영"
+    ],
+    "report_date": "2026/ 6/ 17",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "원자재 가격",
+      "환율"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": "강세",
+        "reason": "핵심 병목 부품 등으로 지목되며 공격적인 가격 전략이 가능한 기업의 뚜렷한 강세 포착"
+      }
+    ],
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "삼성전기",
+      "Kingboard Lami",
+      "Shengyi",
+      "Largan"
+    ],
+    "risk": "불확실성 이후 섹터 내의 핵심 트리거는 가격 인상 및 원자재 가격 전가 여부 등이 작용",
+    "quote": "매크로 리스크가 완화됨에 따라 전기전자 섹터는 완만한 반등 추세 시현"
+  }
+}

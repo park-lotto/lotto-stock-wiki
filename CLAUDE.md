@@ -29,9 +29,15 @@
 py tools/track.py start <트랙명>     # 내 폴더 .tracks/<트랙명> + track/<트랙명> 브랜치 생성
 트랙.bat                            # ★열린 트랙 목록에서 번호로 골라 Claude Code 열기
 트랙.bat <트랙명>                    #   바로 그 트랙으로 (경로 칠 필요 없음)
-py tools/track.py finish <트랙명>    # 게이트 통과해야만 main 병합 → 라이브
+py tools/track.py finish <트랙명>    # 게이트 통과해야만 main 병합 → 라이브 (폴더는 남는다)
 py tools/track.py list              # 열린 트랙 + 얼마나 밀렸는지
+py tools/track.py close <트랙명>     # 트랙을 아주 접는다 — 폴더·브랜치 삭제
 ```
+
+**`finish`는 폴더를 안 지운다.** 태스크가 끝난 거지 트랙이 끝난 게 아니다 — 병합 후 트랙 폴더는
+자동으로 최신 main에 맞춰지고 **바로 다음 작업을 얹으면 된다**. 설계가 "태스크 단위로 자주 병합"을
+요구하는데 매번 883MB 체크아웃을 다시 만들 순 없다. 트랙을 진짜 접을 때만 `close`
+(아직 main에 안 들어간 커밋이 있으면 막는다).
 
 **경로를 손으로 치지 마라.** 프로젝트 루트의 `트랙.bat`을 더블클릭하면 열린 트랙이 번호로
 뜨고, 고르면 그 폴더에서 Claude Code가 뜬다. 규칙은 지키기 쉬워야 지켜진다.
@@ -63,14 +69,59 @@ py tools/track.py list              # 열린 트랙 + 얼마나 밀렸는지
 □ 3. git은 전부 -C 로: git -C .tracks/<트랙명> add -A / commit / status
 □ 4. 커밋 전 반드시: git -C .tracks/<트랙명> status --porcelain 로 내 트랙 파일만 있는지 눈으로 확인
 □ 5. 작업이 끝났으면(진행 중이면 하지 마라): py tools/track.py finish <트랙명>
-      ⚠️ finish는 반드시 main 폴더에서 실행. 트랙 폴더 안에서 부르면 BASE가 그 폴더가 돼서 깨진다.
+      → 폴더는 남고 최신 main에 맞춰진다. 바로 다음 작업 가능.
 ```
 
 **세션 하나가 트랙 여러 개를 다뤄도 된다** — 폴더만 정확히 가르면 흡수는 안 난다.
 흡수를 막는 건 "어느 창에서 여느냐"가 아니라 **"파일이 어느 폴더에 있느냐"**다.
 
+### 🏷 탭 제목 = 지금 무슨 작업 중인지 — ★Claude가 직접 바꾼다 (2026-07-16~)
+
+창을 6개 띄워놓으면 탭만 보고 어느 창이 뭘 하는지 알아야 한다. 원래 Claude Code는 탭 제목을
+**세션 이름**에서 가져오는데(설치본 `terminalTitleFromRename`, 기본 켜짐) 그 이름이 **대화 자동요약**이라
+퍼미션 얘기로 시작한 창엔 "권한 없이 작업 진행하기"가 떴다. 폴더명만으로도 부족하다 — 한 세션이
+트랙 여러 개를 다루고, main 폴더에서 조사만 하는 창도 있다.
+
+```
+□ 작업을 시작하거나 바꿀 때마다 Claude가 직접 실행한다:
+      py tools/session_title.py set "<지금 하는 일>"
+
+  예)  py tools/session_title.py set "보이스 T6 회수"
+       py tools/session_title.py set "장면라이브러리 페이즈2 설계"
+       py tools/session_title.py set "발굴신선도 조사"
+```
+
+**언제 부르나**: 트랙을 잡았을 때 / 사장님이 다른 일을 시켰을 때 / 태스크가 넘어갈 때.
+매 턴 부를 필요는 없다 — **하는 일이 바뀔 때만**. 짧게 써라(40자에서 잘린다).
+
+**안 부르면** 폴더에서 자동으로 뽑는다: `.tracks/<트랙명>` → 트랙명 / main 폴더 → `main · 위키/조사`.
+즉 안 불러도 망가지진 않지만, 그 창이 실제로 뭘 하는지는 안 보인다.
+
+<details><summary>어떻게 도는가 (고칠 때만 보면 된다)</summary>
+
+**Claude는 탭을 직접 못 박는다** — Bash 출력은 터미널에 안 닿는다(실측: OSC를 내보내면 그냥
+문자로 캡처된다). 훅만이 `terminalSequence`로 터미널에 쓸 수 있다. 그래서 둘로 나눴다:
+
+- `set` → 상태파일에 쓴다. **세션마다 따로**(`CLAUDE_CODE_SESSION_ID`, Bash에 노출됨) 저장하므로
+  창 6개가 같은 폴더를 봐도 서로 제목을 안 밟는다.
+- 훅(`.claude/settings.json`) → 읽어서 탭에 박는다. `Stop`(답 마칠 때=사장님이 탭을 보는 순간) ·
+  `UserPromptSubmit`(세션 이름까지 덮어 자동요약을 막는다) · `SessionStart`.
+
+**설치본 스키마 실측 (추측 금지 — 여기서 이미 한 번 틀렸다)**:
+`terminalSequence`는 **최상위 필드**다. `hookSpecificOutput` 안에 넣으면 조용히 무시된다.
+허용 이스케이프는 **OSC 0/1/2/9/99/777 + BEL만** — 그래서 OSC 2(창/탭 제목)를 쓴다.
+`sessionTitle`은 `UserPromptSubmit` 분기에만 있다("Set the session title").
+
+**★훅 `command`는 `python.exe`여야 한다 — `py`도 `py.exe`도 안 된다.**
+Claude Code는 훅을 셸 없이 띄우는데, `WindowsApps\py.exe`는 **104바이트짜리 스토어 앱 별칭**
+(reparse point)이라 실행파일로 안 쳐준다(`Executable not found in $PATH: "py.exe"`).
+`AppData\Local\Python\bin\python.exe`는 591KB짜리 진짜 실행파일이고 PATH에 있다.
+셸을 거치는 곳(Claude의 Bash 툴, 위의 `set` 명령)에선 `py`가 그대로 된다 — 셸이 별칭을 풀어준다.
+</details>
+
 > 트랙 폴더에서 직접 Claude Code를 열어도 된다(상대경로가 자연히 그 트랙을 가리켜 실수 여지가 준다).
-> 그때도 규칙·스킬·훅은 그대로 돈다. 다만 `finish`만 main 폴더에서.
+> 규칙·스킬·훅 다 그대로 돌고, **`finish`도 트랙 폴더 안에서 그냥 된다**(2026-07-16 수정 —
+> 예전엔 BASE가 트랙 폴더가 돼 깨져서 "main 폴더에서 실행"이라는 우회를 적어둬야 했다).
 
 ### 어느 폴더에서 일하나 — 작업 종류로 갈린다
 
@@ -84,6 +135,11 @@ py tools/track.py list              # 열린 트랙 + 얼마나 밀렸는지
   (실측 2026-07-16: 트랙 13,504 vs main 14,572 = **1,068개 차이**). 옛 데이터로 분석하면 틀린 답이 나온다.
 - `shopping_shorts/data/` — DB. gitignore라 **빈 DB로 시작**한다. 로컬 확인이 필요하면 복사해 오거나 서버에서 봐라.
 - `.obsidian` — 볼트 설정. **볼트는 main 폴더뿐**이라 트랙 폴더의 `.md`는 옵시디언에 안 보인다.
+- `.superpowers/` — **SDD 원장·브리프·리뷰**. gitignore라 트랙 폴더에 없다 → main 폴더에서 읽어라.
+- `.env`(API 키) — gitignore지만 **`start`가 자동으로 복사한다**(2026-07-16 추가).
+  안 하면 `key_vault`가 모듈 위치 기준으로 `.env`를 찾다 키 0개가 돼 **트랙에서 AI 작업이 통째로 막힌다**
+  (실측: main 45개 / 트랙 0개 → Gemini 영상분석이 "키풀이 비었다"로 죽었다).
+  ⚠️ `start` 전에 만든 트랙 폴더엔 없을 수 있다 — `copy .env .tracks\<트랙명>\`
 
 **따라오는 것**(git 추적): `CLAUDE.md` · `.claude/settings.json`(훅) · `.agents/skills` · `tools/` · `wiki/` · `handoff/` · 코드 전부.
 → 트랙 폴더에서 Claude Code를 열어도 **규칙·스킬·훅이 그대로 도는 똑같은 세션**이다.

@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-18",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-18_1000_기대감에서 실적으로.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "김성래, 김예인",
+    "report_date": "2026년 6월 18일",
+    "stocks": [
+      {
+        "name": "현대차",
+        "code": "005380",
+        "sector": "자동차",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "760,000원",
+        "tp_prev": "660,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2Q26 판매량은 100.1만대(-6.1% 이하 YoY)로 전년 동기 대비 감소세 확대 전망. 전년 동기 대비 OPM 기준 1.2%p 수준의 수익성 감소 전망.",
+        "estimate_revision": "매출액(FY1) -1.5%, 영업이익(FY1) -8.8%, EPS(FY1) -3.6% 하향",
+        "next_catalyst": "하반기 신차 효과, RMAC 가동, BD 주주간 지분 거래",
+        "thesis": [
+          "관세 영향 완화 및 하반기 친환경차 중심 신차 출시로 인한 실적 회복 기대",
+          "RMAC 가동을 통한 휴머노이드 로봇 양산개발 프로세스 본격화",
+          "BD 주주간 지분 거래 및 BD IPO를 통한 로봇 사업 가치 증대 기대"
+        ],
+        "valuation_basis": "올해 가시화된 KOSPI 밸류 프리미엄(+30%) 및 완성차 주가 베타 추이(0.93) 반영",
+        "risk": "원자재가 상승, 연간 R&D 투자 규모 증액(+19.7%)에 따른 개발비 증가, 환율 변동에 따른 판매보증비 및 외화환산손익 영향",
+        "supply_comment": "지난 3월 협력사 화재 영향으로 인한 공급 차질",
+        "quote": "기존 동사 사업가치 밸류에이션에 있어 올해 가시화된 KOSPI 밸류 프리미엄(+30%) 및 완성차 주가 베타 추이(0.93) 반영하여 TP 상향."
+      }
+    ]
+  }
+}

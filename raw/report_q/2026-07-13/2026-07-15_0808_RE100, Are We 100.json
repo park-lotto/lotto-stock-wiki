@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-13",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-15_0808_RE100, Are We 100.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "조혜빈",
+    "report_date": "2026.7.13",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "SK이터닉스",
+        "code": "475150",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "60,000원",
+        "tp_prev": "50,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2Q26E 매출액 2,582억원(+298% YoY), 영업이익 144억원(+50% YoY) 전망. 2026E 연간 매출액 5,590억원(+45% YoY), 영업이익 657억원(+24% YoY, OPM 12%) 전망",
+        "estimate_revision": "투자의견 Buy, 목표주가 60,000원 상향",
+        "next_catalyst": "SK-KKR JV를 통해 국내 최대 재생에너지 플랫폼으로 체급이 높아지며, 구조화 규모와 대형 프로젝트 수행도 확대될 것으로 예상",
+        "thesis": [
+          "AIDC 특별법에서 LNG가 제외되며 재생에너지 PPA를 구조화하는 동사의 역할이 부각될 전망",
+          "SK-KKR JV를 통해 국내 최대 재생에너지 플랫폼으로 체급이 높아지며, 구조화 규모와 대형 프로젝트 수행도 확대될 것으로 예상",
+          "상반기 해상풍력 입찰에서 인천굴업도 사업이 선정되며 ’27년 개발용역 수익 가시성이 높아진 상태"
+        ],
+        "valuation_basis": "’27년 EPS에 글로벌 재생에너지 플랫폼 Peer 평균에 15% 할인한 Target PER 40배 적용",
+        "risk": "프로젝트 일정에 따른 실적 변동성",
+        "supply_comment": "재생에너지 개발 및 구조화 플랫폼인 SK이터닉스(475150)를 신재생 섹터 내 Top-Pick으로 유지합니다",
+        "quote": "신재생 개발 및 구조화 플랫폼인 SK이터닉스(475150)를 신재생 섹터 내 Top-Pick으로 유지합니다."
+      }
+    ]
+  }
+}

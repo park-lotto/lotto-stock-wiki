@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "date": "2026-06-18",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-18_1008_404 New era 출산율 반등과 외국인 러쉬.md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "이해니",
+    "report_date": "2026.06.18",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "신세계",
+        "code": "004170",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "950,000원",
+        "tp_prev": null,
+        "tp_direction": "up",
+        "earnings_outlook": "2Q26E 순매출액 1.79조원(+5.7%, 이하 yoy), 영업이익 1,597억원(+112.0%) 전망한다.",
+        "estimate_revision": "실적 추정치 개선과, 외국인 매출 비중 증가에 따른 적용 PER 재조정이다.",
+        "next_catalyst": "출산율 반등에 따른 트래픽 증가 및 유아용품 객단가 상승, 외국인 매출 확대",
+        "thesis": [
+          "출산율/30대 여성인구 반등에 따른 트래픽 증가",
+          "유아용품 시장의 구조적 가격 상승 트렌드에 따른 객단가 방어 및 상승",
+          "외국인 매출 비중 확대에 따른 구조적 성장"
+        ],
+        "valuation_basis": "12MF FWD 47,979원에 Target PER 19.9배를 적용해 950,000원을 산정했다.",
+        "risk": "절대 규모의 감소와 출산율 반등의 지속성에 대한 우려",
+        "supply_comment": "소비내수",
+        "quote": "Top pick 신세계: 투자의견 ‘BUY’, 목표주가 950,000원(상향)"
+      },
+      {
+        "name": "현대백화점",
+        "code": "069960",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "290,000원",
+        "tp_prev": null,
+        "tp_direction": "up",
+        "earnings_outlook": "2Q26E 순매출액 1.01조원(-6.1%, 이하 yoy), 영업이익 843억원(-3.0%) 전망한다.",
+        "estimate_revision": "실적 추정치 개선과, 외국인 매출 비중 증가에 따른 적용 PER 재조정이다.",
+        "next_catalyst": "외국인 매출 비중 확대, 백화점 부문 명품 및 패션 카테고리 호조",
+        "thesis": [
+          "백화점 부문의 명품, 패션, 생활용품 등 전 카테고리 실적 호조",
+          "외국인 고객 비중 확대에 따른 구조적 성장",
+          "면세점 부문의 흑자 구조 안착"
+        ],
+        "valuation_basis": "12MF FWD 17,148원에 Target PER 17.1배를 적용하여 290,000원을 산정했다.",
+        "risk": "지누스 부문의 관세 충격에 따른 매출 부진 및 턴어라운드 확인 필요",
+        "supply_comment": "소비내수",
+        "quote": "현대백화점: 투자의견 ‘BUY’, 목표주가 290,000원(상향)"
+      },
+      {
+        "name": "롯데쇼핑",
+        "code": "023530",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "240,000원",
+        "tp_prev": null,
+        "tp_direction": "up",
+        "earnings_outlook": "2Q26E 순매출액 3.47조원(3.6%, 이하 yoy), 영업이익 1,000억원(146.2%) 전망한다.",
+        "estimate_revision": "실적 추정치 개선과, 외국인 매출 비중 증가에 따른 적용 PER 재조정이다.",
+        "next_catalyst": "백화점 명품과 패션 호조, 할인점 및 슈퍼 경쟁 완화",
+        "thesis": [
+          "백화점 명품 및 패션 부문의 호조 지속",
+          "할인점 및 슈퍼의 통합시스템 도입에 따른 효율화 및 경쟁 완화",
+          "해외(베트남) 영업환경 고신장 유지"
+        ],
+        "valuation_basis": "12MF FWD 14,291원에 Target PER 17.1배를 적용해 240,000원을 산정했다.",
+        "risk": "하이마트의 부동산 가격 상승으로 인한 대형 가전 판매 부진 지속",
+        "supply_comment": "소비내수",
+        "quote": "롯데쇼핑: 투자의견 ‘BUY’, 목표주가 240,000원(상향)"
+      }
+    ]
+  }
+}

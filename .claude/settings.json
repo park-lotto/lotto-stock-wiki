@@ -93,6 +93,37 @@
             "args": ["-NoProfile", "-Command", "git pull"],
             "timeout": 60,
             "statusMessage": "git pull (회사 PC 변경사항 받는 중)..."
+          },
+          {
+            "type": "command",
+            "command": "python.exe",
+            "args": ["tools/session_title.py"],
+            "timeout": 10,
+            "statusMessage": "탭 제목을 트랙명으로..."
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python.exe",
+            "args": ["tools/session_title.py"],
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python.exe",
+            "args": ["tools/session_title.py"],
+            "timeout": 10
           }
         ]
       }

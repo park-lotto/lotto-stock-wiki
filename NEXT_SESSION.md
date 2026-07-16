@@ -19,6 +19,7 @@
 | 쇼핑쇼츠 대본 위키(도서관) | `handoff/대본위키_도서관.md` |
 | VMake 자막제거 | `handoff/VMake자막제거.md` |
 | 동시세션 충돌차단(트랙격리) | `handoff/트랙격리.md` |
+| 카테고리 분류 정확도(Gemini 이관) | `handoff/카테고리분류.md` |
 
 ---
 

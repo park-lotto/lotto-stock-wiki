@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-14",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-14_1106_[ESG & Transition] 통키[通 Keys] Transitio...md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "박세연, 김예인",
+    "report_date": "2026년 7월 14일",
+    "target_kind": "market",
+    "market_direction": "유럽·국내 모두 완만한 상방 압력",
+    "macro_vars": [
+      "유럽 배출권(EUA) 가격 78~82€/t 박스권",
+      "국내 배출권 가격 2.4만~2.6만원대 흐름",
+      "TTF 가스 가격",
+      "국제 유가 및 중동 리스크"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "기타",
+        "stance": "상방",
+        "reason": "에너지·수요 회복 및 ETS 리뷰 등 정책 방향성"
+      }
+    ],
+    "style": "박스권 대응",
+    "event_calendar": [
+      {
+        "date": "2026.07.17",
+        "event": "EU ETS 리뷰"
+      }
+    ],
+    "top_picks": null,
+    "risk": "LRF 조정(완화), 무료할당 확대, Investment Booster 등 공급 측 ETS 개편 논의",
+    "quote": "유럽 탄소 가격은 3월 저점 이후 80달러 선까지 반등한 뒤, 호르무즈 해협 재개와 중동산 에너지 수출 재개 등으로 에너지 수급이 정상화되는 과정에서 17일 ETS 리뷰를 앞두고 78~82€/t 박스권에서 정책 방향을 가늠할 것."
+  }
+}
