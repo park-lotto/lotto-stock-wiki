@@ -290,6 +290,25 @@ def test_close_refuses_to_throw_away_unmerged_work(repo):
     assert track.worktree_path("보이스", repo).exists(), "막았으면 폴더도 그대로여야"
 
 
+def test_start_copies_local_env_so_ai_work_has_keys(repo):
+    """★.env는 gitignore(비밀키)라 worktree로 안 따라온다. 그런데 key_vault는 **모듈 위치
+    기준**으로 .env를 찾으므로, 트랙 폴더에선 키가 0개가 되어 **AI 작업이 전부 불가능**해진다
+    (2026-07-16 실측: main 45개 / 트랙 0개 — Gemini 영상분석이 '키풀이 비었다'로 죽었다).
+    같은 PC·같은 사용자이고 트랙 폴더에서도 gitignore라 커밋될 수 없다."""
+    (repo / ".env").write_text("GEMINI_API_KEY=abc123\nAPIFY_TOKEN=xyz\n", encoding="utf-8")
+    track.start("보이스", repo=repo)
+    wt = track.worktree_path("보이스", repo)
+    assert (wt / ".env").exists(), "★트랙 폴더에 키가 없다 — AI 작업이 통째로 막힌다"
+    assert (wt / ".env").read_text(encoding="utf-8") == (repo / ".env").read_text(encoding="utf-8")
+
+
+def test_start_works_when_there_is_no_local_env(repo):
+    """.env가 없는 환경(서버·CI)에서도 start는 그냥 돼야 한다."""
+    assert not (repo / ".env").exists()
+    track.start("보이스", repo=repo)
+    assert track.worktree_path("보이스", repo).exists()
+
+
 def test_start_refuses_duplicate(repo):
     track.start("보이스", repo=repo)
     with pytest.raises(track.TrackError, match="이미 있는"):
