@@ -149,6 +149,7 @@ def upstream_of(wt):
 
 
 def start(name, repo=BASE):
+    merge_gate.make_output_safe()
     validate_name(name)
     wt = worktree_path(name, repo)
     if wt.exists():
@@ -226,6 +227,7 @@ def _close_stage(repo, stage):
 
 
 def finish(name, repo=BASE, gate=merge_gate, attempts=3):
+    merge_gate.make_output_safe()
     validate_name(name)
     wt = _preflight(name, repo)
     br = branch_name(name)
@@ -356,6 +358,7 @@ def ahead_count(repo, branch, base=MAIN_BRANCH):
 
 
 def list_tracks(repo=BASE):
+    merge_gate.make_output_safe()
     branches = track_branches(repo)
     if not branches:
         print("열린 트랙 없음.  시작: py tools/track.py start <이름>")

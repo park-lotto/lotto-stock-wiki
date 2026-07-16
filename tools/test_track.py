@@ -164,6 +164,31 @@ def test_start_leaves_no_main_upstream_when_push_fails(repo):
     assert up is None, f"원격에 못 올렸으면 upstream은 없어야 한다: {up}"
 
 
+def test_start_makes_output_safe(repo, monkeypatch):
+    """main()에서만 안전화하면 코드가 start()를 직접 부를 때 cp949에서 터진다.
+    실측: 트랙 이전 스크립트가 worktree를 만든 직후 '✅' print에서 크래시 —
+    폴더는 생기고 예외는 나는 어정쩡한 상태가 됐다."""
+    called = []
+    monkeypatch.setattr(track.merge_gate, "make_output_safe", lambda: called.append("start"))
+    track.start("보이스", repo=repo)
+    assert called == ["start"], "start()가 출력 안전화를 안 했다"
+
+
+def test_finish_makes_output_safe(repo, monkeypatch):
+    _make_track_commit(repo, "보이스")
+    called = []
+    monkeypatch.setattr(track.merge_gate, "make_output_safe", lambda: called.append("finish"))
+    track.finish("보이스", repo=repo, gate=_Gate())
+    assert "finish" in called, "finish()가 출력 안전화를 안 했다"
+
+
+def test_list_makes_output_safe(repo, monkeypatch):
+    called = []
+    monkeypatch.setattr(track.merge_gate, "make_output_safe", lambda: called.append("list"))
+    track.list_tracks(repo=repo)
+    assert called == ["list"], "list_tracks()가 출력 안전화를 안 했다"
+
+
 def test_start_refuses_duplicate(repo):
     track.start("보이스", repo=repo)
     with pytest.raises(track.TrackError, match="이미 있는"):
