@@ -92,6 +92,73 @@ _SCENARIO_TRANSPLANT_NO_SUBJECT = r"""
 """
 
 
+# 경합 재현 전용 하네스: /api/wiki/subject 응답 지연을 shortcode별로 다르게 준다
+# (test_produce_category_race.py의 setTimeout 지연 패턴을 그대로 따른다).
+# '첫번째'는 100ms 늦게, '두번째'는 0ms(다음 tick)로 먼저 도착시켜
+# "먼저 연 모달의 응답이 나중에 온다"는 실제 경합 순서를 재현한다.
+_HARNESS_PREFIX_RACE = r"""
+'use strict';
+function makeGenericEl(){
+  return { style:{}, classList:{ contains(){return false;}, add(){}, remove(){} },
+           textContent:'', innerHTML:'', disabled:false, value:'', placeholder:'', appendChild(){},
+           querySelector(){ return null; }, querySelectorAll(){ return []; } };
+}
+const _elements = { pmSubject: makeGenericEl(), pmSubjectRow: makeGenericEl(),
+                    pmTopic: makeGenericEl(), pmRun: makeGenericEl(),
+                    pmResults: makeGenericEl(), pmModal: makeGenericEl() };
+let _mode = 'A';
+const document = {
+  getElementById(id){ return _elements[id] || null; },
+  querySelector(sel){
+    if (sel.indexOf('pmmode') !== -1) return { value: _mode };
+    return null;
+  },
+  querySelectorAll(sel){ return []; },
+  addEventListener(){},
+};
+function fetch(url, opts){
+  const m = String(url).match(/shortcode=([^&]*)/);
+  const sc = m ? decodeURIComponent(m[1]) : '';
+  if (String(url).indexOf('/api/wiki/subject') !== -1) {
+    const delay = sc === '첫번째' ? 100 : 0;
+    const subject = sc + ' 소재';
+    return new Promise(resolve => setTimeout(() => resolve({ json: async () => ({ ok:true, subject }) }), delay));
+  }
+  return Promise.reject(new Error('unmocked fetch: ' + url));
+}
+function esc(s){ return s; }
+function pmRenderDrafts(){}
+let PM_IDX=null, PM_BASE_STRUCT=null, PM_CATEGORY='레시피', PM_URL='', PM_SHORTCODE='', PM_BASE_SCRIPT='원본 대본';
+// ---- 여기부터 produce.html에서 그대로 잘라낸 실제 소스 ----
+"""
+
+_SCENARIO_RACE_SECOND_OPEN_WINS = r"""
+(async () => {
+  PM_SHORTCODE = '첫번째';
+  const p1 = pmPrefillSubject('첫번째');   // 느린 응답(100ms) 예약 — 아직 안 옴
+  PM_SHORTCODE = '두번째';                  // 그 사이 모달을 다시 열어 shortcode가 바뀜
+  await pmPrefillSubject('두번째');         // 빠른 응답(0ms) — 먼저 도착해 채워짐
+  await p1;                                 // 느린 첫 응답이 이제 도착 — 가드가 막아야 함
+  const el = document.getElementById('pmSubject');
+  if (el.value !== '두번째 소재') {
+    console.error('FAIL: 경합 가드 깨짐(먼저 연 모달의 늦은 응답이 덮어씀) — value=' + JSON.stringify(el.value));
+    process.exit(1);
+  }
+  console.log('PASS');
+})();
+"""
+
+
+def _run_race(scenario: str, tmp_path) -> subprocess.CompletedProcess:
+    src = _HARNESS_PREFIX_RACE + _extract() + scenario
+    f = tmp_path / "probe_race.js"
+    f.write_text(src, encoding="utf-8")
+    # encoding="utf-8": 기본(cp949) 캡처는 실패메시지의 한글 console.error를 못 읽어
+    # 리더 스레드에서 UnicodeDecodeError로 죽는다(stderr=None으로 보임) — 실측.
+    return subprocess.run([NODE, str(f)], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=30)
+
+
 def _extract() -> str:
     text = PRODUCE_HTML.read_text(encoding="utf-8")
     start = text.find(START_ANCHOR)
@@ -118,6 +185,16 @@ def test_subject_prefilled_and_sent(tmp_path):
 @pytest.mark.skipif(NODE is None, reason="node 없음 — JS 하네스 스킵")
 def test_transplant_mode_sends_empty_subject(tmp_path):
     r = _run(_SCENARIO_TRANSPLANT_NO_SUBJECT, tmp_path)
+    assert r.returncode == 0, f"stdout={r.stdout} stderr={r.stderr}"
+    assert "PASS" in r.stdout
+
+
+@pytest.mark.skipif(NODE is None, reason="node 없음 — JS 하네스 스킵")
+def test_prefill_race_second_open_wins(tmp_path):
+    """모달을 빨리 두 번 열면(shortcode 변경) 먼저 띄운 요청이 늦게 도착해도
+    나중에 연 모달의 소재를 덮어쓰면 안 된다 — pmPrefillSubject의 경합 가드
+    (`if(s.ok && PM_SHORTCODE===mine)`)를 실제로 재현·검증한다."""
+    r = _run_race(_SCENARIO_RACE_SECOND_OPEN_WINS, tmp_path)
     assert r.returncode == 0, f"stdout={r.stdout} stderr={r.stderr}"
     assert "PASS" in r.stdout
 
