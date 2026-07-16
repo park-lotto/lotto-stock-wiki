@@ -46,8 +46,10 @@ def test_gemini_never_overwrites_a_user_choice(monkeypatch, tmp_path):
     """사용자가 고른 값은 Gemini가 덮지 않는다 — 교정이 최종 권위다."""
     db = tmp_path / "t.db"
     store = Store(db)
-    store.save_script("ABC", {"full_text": "감자 으깨서 튀겨요", "segments": []}, category="생활용품")
-    store.update_extract_category("ABC", "생활용품", source="user")
+    # 픽스처는 살아있는 어휘로 — 옛 '생활용품'을 쓰면 홈템 마이그레이션이 값을 바꿔
+    # 이 테스트가 엉뚱한 이유로 죽는다(2026-07-16 실제로 겪음).
+    store.save_script("ABC", {"full_text": "감자 으깨서 튀겨요", "segments": []}, category="가전")
+    store.update_extract_category("ABC", "가전", source="user")
 
     monkeypatch.setattr(app_module, "analyze_structure",
                         lambda text: {"hook_type": "공감형", "product_category": "레시피"})
@@ -55,7 +57,7 @@ def test_gemini_never_overwrites_a_user_choice(monkeypatch, tmp_path):
     app_module._backfill_extract_structure(db, "ABC", "감자 으깨서 튀겨요")
 
     cached = store.get_extract("ABC")
-    assert cached["category"] == "생활용품", "사용자 교정을 AI가 덮었다 — 교정 경로가 무의미해짐"
+    assert cached["category"] == "가전", "사용자 교정을 AI가 덮었다 — 교정 경로가 무의미해짐"
     assert cached["category_source"] == "user"
 
 
