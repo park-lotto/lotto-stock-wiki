@@ -28,6 +28,10 @@ _JUMP_END = "// ── 1단계 대본: 3모드"
 # loadMixReview(재매칭 시 폴러 정리)부터 미리보기 전체까지.
 _PREVIEW_START = "async function loadMixReview(){"
 _PREVIEW_END = "// ── 3단계 자막제거"
+# ★startProduceMix = 재매칭의 **시작**. MIX_JOB을 바꾸는 유일한 곳(초기화 제외)이다.
+# 재리뷰 C-3: 이게 슬라이스에 없어서 34건이 다 green인데도 "재매칭 중 게이트가 열려 있다"가 살아 있었다.
+_MIX_START = "async function startProduceMix(){"
+_MIX_END = "async function pollMix(){"
 
 _HARNESS = r"""
 'use strict';
@@ -44,17 +48,23 @@ function el(){
   });
   return o;
 }
-const _els = { mixPreview: el(), btnNext: el(), mixState: el(), mixReview: el(), btnPreview: el() };
+const _els = { mixPreview: el(), btnNext: el(), mixState: el(), mixReview: el(), btnPreview: el(),
+               mixStatus: el() };
 const document = { getElementById(id){ return _els[id] || null; }, querySelector(){ return null; },
-                   querySelectorAll(){ return []; } };
+                   // startProduceMix가 소스 URL을 읽는다 — 1개는 있어야 진행된다.
+                   querySelectorAll(sel){ return sel === '.mixUrl' ? [{value:'https://x/1'}] : []; } };
 function esc(s){ return s; }
 // ⚠️ PREVIEW_STATUS·PREVIEW_POLL·PREVIEW_GEN은 여기서 선언하지 마라 — 아래 실제 소스가 let으로
 // 선언하므로 중복 선언이 되어 SyntaxError로 죽는다. 슬라이스 밖 심볼만 여기서 준다.
 var cur = 0;
 var MIX_JOB = 'J1';
+var MIX_POLL = null;
+var STATE = { script: '확정된 대본' };     // startProduceMix가 없으면 alert하고 빠진다
 var STEPS = ["제작소","자막제거","TTS","꾸미기","썸네일","SEO","최종검수"];
 function renderSteps(){}
 function showPanel(){ refreshNextBtn(); }
+function alert(){}
+function pollMix(){}                        // 슬라이스 밖 — 이 테스트는 미리보기 게이트만 본다
 
 // ── 가짜 시계: setInterval을 진짜로 등록하고 수동으로 tick한다 ──
 let _timerSeq = 0;
@@ -66,6 +76,7 @@ async function _tick(){ for (const fn of Array.from(_timers.values())) await fn(
 
 // ── 가짜 네트워크 ──
 let _postResponse = { ok:true, status:'rendering' };
+let _postMixStart = { ok:true, job_id:'J2' };   // startProduceMix(재매칭)가 받는 새 job
 let _statusResponse = { ok:true, preview_status:'rendering' };
 let _resultResponse = { ok:true, beats:[] };
 let _holdStatus = false;      // true면 상태 응답을 붙잡아 둔다(늦게 도착하는 경합 재현)
@@ -74,6 +85,8 @@ function fetch(url, opts){
   const u = String(url);
   if (u.indexOf('/api/produce/mix/preview') !== -1 && opts && opts.method === 'POST')
     return Promise.resolve({ json: async () => _postResponse });
+  if (u.indexOf('/api/produce/mix/start') !== -1)
+    return Promise.resolve({ json: async () => _postMixStart });
   if (u.indexOf('/api/mix/status/') !== -1) {
     if (_holdStatus) return new Promise(res => { _releaseStatus = r => res({ json: async () => r }); });
     return Promise.resolve({ json: async () => _statusResponse });
@@ -261,6 +274,47 @@ _SCENARIO_FAILED_OPENS_ESCAPE = r"""
 """
 
 
+# ★C-3(재리뷰): 재매칭 = 새 job. 옛 job의 'ready'를 물고 있으면 canGoNext()가 그걸 보고
+# **한 번도 본 적 없는 새 영상으로 다음을 열어준다**. 매칭은 수십 초~수 분 걸리므로 창이 넓다.
+# 화면이 "대본을 살짝 바꾸거나 소스 영상을 추가하세요"라고 권하는 **정상 흐름**이다.
+# 앞선 수정은 재매칭의 '끝'(loadMixReview)만 봉인하고 '시작'(startProduceMix)을 놓쳤다.
+_SCENARIO_REMATCH_RELOCKS_GATE = r"""
+(async () => {
+  const fails = [];
+  const btn = document.getElementById('btnNext');
+
+  // 1) J1을 미리보기까지 봤다 — 게이트 열림
+  MIX_JOB = 'J1'; cur = 0;
+  _statusResponse = { ok:true, preview_status:'ready' };
+  await startPreview(); await _drain(); await _tick();
+  if (PREVIEW_STATUS !== 'ready') { console.error('FAIL(전제): J1 미리보기가 ready가 아니다 — ' + PREVIEW_STATUS); process.exit(1); }
+  if (canGoNext() !== true) { console.error('FAIL(전제): J1을 봤는데 게이트가 잠겼다'); process.exit(1); }
+
+  // 2) 대본을 고쳐 재매칭 — 새 job J2가 잡힌다(매칭은 수십 초~수 분 걸린다)
+  _postMixStart = { ok:true, job_id:'J2' };
+  await startProduceMix(); await _drain();
+
+  if (MIX_JOB !== 'J2') { console.error('FAIL(전제): 재매칭이 안 됐다 — MIX_JOB=' + MIX_JOB); process.exit(1); }
+
+  // 3) ★J2는 한 번도 미리보기를 만든 적이 없다 — 게이트가 **다시 잠겨야** 한다
+  if (PREVIEW_STATUS !== null)
+    fails.push('재매칭했는데 옛 job의 미리보기 상태가 남았다(' + PREVIEW_STATUS + ') — 새 영상을 못 본 채 게이트가 열린다');
+  if (canGoNext() !== false)
+    fails.push('재매칭 중인데 canGoNext()가 true — [다음]을 누르면 J2를 한 번도 못 본 채 유료 자막제거로 넘어간다');
+  if (btn.disabled !== true)
+    fails.push('재매칭 중인데 btnNext가 열려 있다');
+
+  // 4) 옛 **미리보기** 폴러가 죽어야 한다(안 죽이면 옛 job을 2.5초마다 계속 두드린다).
+  //    ⚠️ _timers 전체를 세면 안 된다 — startProduceMix가 MIX_POLL(매칭 폴러)을 **정당하게** 만든다.
+  if (PREVIEW_POLL !== null)
+    fails.push('재매칭 후에도 옛 미리보기 폴러가 살아있다(PREVIEW_POLL=' + PREVIEW_POLL + ')');
+
+  if (fails.length) { console.error('FAIL: ' + fails.join(' / ')); process.exit(1); }
+  console.log('PASS');
+})().catch(e => { console.error('FAIL(예외): ' + (e && e.stack || e)); process.exit(1); });
+"""
+
+
 def _src():
     text = PRODUCE_HTML.read_text(encoding="utf-8")
 
@@ -270,7 +324,9 @@ def _src():
         assert e != -1 and e > s, f"END 못 찾음: {end!r}"
         return text[s:e]
 
-    return _span(_JUMP_START, _JUMP_END) + "\n" + _span(_PREVIEW_START, _PREVIEW_END)
+    return (_span(_JUMP_START, _JUMP_END) + "\n"
+            + _span(_MIX_START, _MIX_END) + "\n"
+            + _span(_PREVIEW_START, _PREVIEW_END))
 
 
 def _run(scenario, tmp_path):
@@ -285,6 +341,7 @@ def _run(scenario, tmp_path):
 # id를 명시한다 — 안 그러면 시나리오 소스 전체가 테스트 이름이 돼 실패 보고를 못 읽는다.
 @pytest.mark.parametrize("name,scenario", [
     pytest.param("canGoNext_상태표", _SCENARIO_GATE, id="canGoNext_상태표"),
+    pytest.param("C3_재매칭이_게이트를_다시_잠그나", _SCENARIO_REMATCH_RELOCKS_GATE, id="C3_rematch_relocks_gate"),
     pytest.param("btnNext_disabled", _SCENARIO_BTN, id="btnNext_disabled"),
     pytest.param("C1_jump가_게이트를_지키나", _SCENARIO_JUMP, id="C1_jump_guard"),
     pytest.param("C2_더블클릭_고아인터벌", _SCENARIO_DOUBLE_CLICK, id="C2_double_click_orphan_poller"),

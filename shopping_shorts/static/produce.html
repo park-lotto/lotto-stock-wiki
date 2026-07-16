@@ -1600,7 +1600,18 @@ async function startProduceMix(){
       body:JSON.stringify({script:STATE.script, urls, target_seconds:30})});
     const d=await r.json();
     if(!d.ok){ st.textContent='❌ '+(d.error||'실패'); return; }
+    // ★재매칭 = 새 job이다. 옛 job의 미리보기 상태를 물고 있으면 canGoNext()가 그걸 보고
+    // **한 번도 본 적 없는 새 영상으로 다음을 열어준다** — 매칭이 끝날 때까지 수십 초~수 분이나
+    // 열려 있고, 그 사이 [다음]을 누르면 유료 자막제거로 그냥 넘어간다(재리뷰 C-3).
+    // 화면이 "대본을 살짝 바꾸거나 소스 영상을 추가하세요"라고 권하는 정상 흐름이다.
+    // ⚠️ loadMixReview(재매칭의 '끝')에도 같은 초기화가 있지만 그건 **너무 늦다** —
+    //    초기화는 job이 바뀌는 바로 이 순간(재매칭의 '시작')에 걸려야 한다.
+    // 옛 폴러도 여기서 죽인다: pollPreview는 주인이 아니면 return만 하고 자기 인터벌은 안 끄므로
+    // 안 죽이면 옛 job을 2.5초마다 계속 두드린다.
+    clearInterval(PREVIEW_POLL); PREVIEW_POLL=null; ++PREVIEW_GEN;
+    PREVIEW_STATUS=null;
     MIX_JOB=d.job_id; MIX_POLL=setInterval(pollMix,2500); pollMix();
+    refreshNextBtn();   // 새 job은 아직 미리보기가 없다 — 다시 잠근다
   }catch(e){ st.textContent='❌ 네트워크 오류'; }
 }
 async function pollMix(){
