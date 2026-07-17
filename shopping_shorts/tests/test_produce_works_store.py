@@ -96,3 +96,30 @@ def test_does_not_touch_mix_jobs(store):
     store.upsert_produce_work(None, {"script": "대본"}, job_id="job-1")
     with store._conn() as c:
         assert c.execute("SELECT COUNT(*) FROM mix_jobs").fetchone()[0] == 0
+
+
+def test_partial_update_preserves_job_and_step(store):
+    """★안 보낸 필드는 건드리지 않는다. 예전엔 파이썬 기본값이 UPDATE에 그대로 박혀
+    job_id·step이 조용히 초기화됐다 — 작업 유실을 막으려는 기능이 유실을 만들던 자리."""
+    wid = store.upsert_produce_work(None, {"script": "s"}, job_id="job-123", step=3)
+    store.upsert_produce_work(wid, {"script": "s edited"})   # job_id·step 재전송 안 함
+    got = store.get_produce_work(wid)
+    assert got["job_id"] == "job-123", "부분 저장이 job_id를 지웠다"
+    assert got["step"] == 3, "부분 저장이 step을 되감았다"
+    assert got["state"]["script"] == "s edited"
+
+
+def test_explicit_none_clears_job(store):
+    """명시적 None은 진짜로 지운다 — 재매칭으로 job이 무효가 되면 끊어야 한다."""
+    wid = store.upsert_produce_work(None, {"script": "s"}, job_id="job-123", step=3)
+    store.upsert_produce_work(wid, {"script": "s"}, job_id=None)
+    assert store.get_produce_work(wid)["job_id"] is None
+    assert store.get_produce_work(wid)["step"] == 3   # step은 안 건드렸으니 그대로
+
+
+def test_unknown_work_id_is_revived_not_dropped(store):
+    """서버 DB가 갈아엎였는데 브라우저가 옛 work_id를 들고 있으면 그 id로 되살린다.
+    조용히 버리면 사장님 작업이 사라진다."""
+    same = store.upsert_produce_work("옛날id", {"script": "되살아남"})
+    assert same == "옛날id"
+    assert store.get_produce_work("옛날id")["state"]["script"] == "되살아남"

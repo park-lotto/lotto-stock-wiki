@@ -12,6 +12,13 @@ from pathlib import Path
 # 계정의 데이터를 그대로 보존하기 위한 값 — 신규 고객은 1부터 발급.
 LEGACY_CUSTOMER_ID = 0
 
+# upsert_produce_work의 job_id/step 부분 업데이트 센티널(2026-07-17).
+# 파이썬 기본 인자값(None/0)은 "미지정"과 구별이 안 돼서, 부분 저장(재전송 안 한 필드)이
+# 그대로 UPDATE에 박혀 기존 job_id·step을 조용히 지웠다(리뷰 재현). 규칙:
+#   인자를 아예 안 넘기면(=_UNSET) → 기존 값 보존
+#   job_id=None / step=0을 명시적으로 넘기면 → 정말로 그 값으로 덮어씀(재매칭 무효화 등)
+_UNSET = object()
+
 
 class Store:
     def __init__(self, db_path):
@@ -1287,31 +1294,42 @@ class Store:
             c.execute(f"UPDATE mix_jobs SET {', '.join(cols)} WHERE job_id=?", tuple(vals))
 
     # ── 제작소 작업파일(2026-07-17) ──────────────────────────
-    def upsert_produce_work(self, work_id, state, job_id=None, step=0,
+    def upsert_produce_work(self, work_id, state, job_id=_UNSET, step=_UNSET,
                             customer_id=LEGACY_CUSTOMER_ID):
         """작업 저장. work_id가 None이면 새로 만들어 반환한다.
         state: 클라이언트 작업상태 dict(sessionStorage.produce_work 스키마 + step).
         ★title은 서버가 state['script'] 앞 20자에서 뽑는다 — 클라이언트가 매번 보내면
-        대본을 고쳤을 때 목록 이름과 어긋난다(스펙 §4.6)."""
+        대본을 고쳤을 때 목록 이름과 어긋난다(스펙 §4.6).
+        job_id/step: UPDATE 경로에서는 update_mix_job과 같은 관례 — 넘어온 필드만 갱신한다.
+        안 넘기면(_UNSET) 기존 값 보존, job_id=None/step=0을 명시적으로 넘기면 그 값으로 덮어쓴다
+        (부분 저장이 job_id·step을 조용히 리셋하던 버그 수정, 2026-07-17)."""
         now = datetime.now(timezone.utc).isoformat()
         title = (state.get("script") or "")[:20] if isinstance(state, dict) else ""
         payload = json.dumps(state, ensure_ascii=False)
         with self._conn() as c:
             if work_id:
+                cols, vals = ["title=?", "state_json=?"], [title, payload]
+                if job_id is not _UNSET:
+                    cols.append("job_id=?"); vals.append(job_id)
+                if step is not _UNSET:
+                    cols.append("step=?"); vals.append(step)
+                cols.append("updated_at=?"); vals.append(now)
+                vals.append(work_id)
                 n = c.execute(
-                    "UPDATE produce_works SET title=?, state_json=?, job_id=?, step=?, "
-                    "updated_at=? WHERE work_id=?",
-                    (title, payload, job_id, step, now, work_id),
+                    f"UPDATE produce_works SET {', '.join(cols)} WHERE work_id=?",
+                    tuple(vals),
                 ).rowcount
                 if n:
                     return work_id
                 # 서버 DB가 갈아엎였는데 브라우저가 옛 work_id를 들고 있는 경우 —
                 # 조용히 버리지 말고 그 id로 되살린다(사장님 작업이 사라지는 것보다 낫다).
             wid = work_id or uuid.uuid4().hex[:12]
+            ins_job_id = None if job_id is _UNSET else job_id
+            ins_step = 0 if step is _UNSET else step
             c.execute(
                 "INSERT INTO produce_works(work_id, customer_id, title, state_json, "
                 "job_id, step, created_at, updated_at) VALUES(?,?,?,?,?,?,?,?)",
-                (wid, customer_id, title, payload, job_id, step, now, now),
+                (wid, customer_id, title, payload, ins_job_id, ins_step, now, now),
             )
             return wid
 
