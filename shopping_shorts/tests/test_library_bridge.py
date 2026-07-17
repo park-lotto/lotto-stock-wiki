@@ -71,7 +71,7 @@ def test_mix_start_passes_script_structure_to_job(monkeypatch, tmp_path):
     client, store = _client(monkeypatch, tmp_path)
     struct = {"hook_type": "질문형", "tone": "반말"}
     r = client.post("/api/produce/mix/start",
-                    json={"script": "확정 대본", "urls": ["u0"],
+                    json={"script": "확정 대본", "urls": ["https://www.instagram.com/reel/AAA111/"],
                           "target_seconds": 20, "script_structure": struct})
     assert r.status_code == 200
     job = store.get_mix_job(r.json()["job_id"])
@@ -83,7 +83,7 @@ def test_mix_start_rejects_non_dict_script_structure(monkeypatch, tmp_path):
     """dict 아닌 값은 조용히 버린다(보관 전용이라 무해) — 모드 플래그로 새면 안 됨."""
     client, store = _client(monkeypatch, tmp_path)
     r = client.post("/api/produce/mix/start",
-                    json={"script": "확정 대본", "urls": ["u0"],
+                    json={"script": "확정 대본", "urls": ["https://www.instagram.com/reel/AAA111/"],
                           "target_seconds": 20, "script_structure": "질문형"})
     assert r.status_code == 200
     job = store.get_mix_job(r.json()["job_id"])
