@@ -1985,6 +1985,25 @@ def _validate_keep_original_audio(koa):
     return None, "keep_original_audio는 0/1/불리언만"
 
 
+# SQLite INTEGER 상한 — 부호있는 64비트. 이보다 큰 값은 파이썬 int()는 받아줘도
+# sqlite3 바인딩에서 OverflowError가 난다.
+_SQLITE_INT_MAX = 2 ** 63 - 1
+
+
+def _normalize_source_start_frame(raw):
+    """source_start_frame 정규화 — commit 전용. 편집 편의용 부가 메타라 없어도 안전하다
+    (설계 의도) — 그래서 -5·12.5·"abc" 같은 쓰레기 값은 거부하지 않고 조용히 None으로
+    흘린다(손해가 대칭이라 저장을 막는 게 더 나쁘다). 문제는 10**19처럼 SQLite INTEGER
+    상한을 넘는 값 — str().isdigit()도 int()도 통과해 store.py의 INSERT에서
+    OverflowError→500이 났다(리뷰 I-1, 실증됨). 상한 밖이면 다른 쓰레기 값과 같은
+    대접(None)을 받는 게 이 픽스다 — 별도로 거부하지 않는다."""
+    s = str(raw if raw is not None else "").strip()
+    if not s.isdigit():
+        return None
+    n = int(s)
+    return n if n <= _SQLITE_INT_MAX else None
+
+
 def _reject_ssrf(url):
     """내부망·클라우드 메타데이터(169.254.169.254 등, 이 서버는 AWS Lightsail) 접근 차단.
     문제 없으면 None, 문제 있으면 에러 메시지 문자열.
@@ -2213,9 +2232,7 @@ def api_scene_save_commit(request: Request, body: dict):
         "tone": body.get("tone"), "keywords": body.get("keywords"),
         "source_kind": body.get("source_kind"), "source_ref": body.get("source_ref"),
         "source_origin": origin,
-        "source_start_frame": (int(body["source_start_frame"])
-                               if str(body.get("source_start_frame", "")).strip().isdigit()
-                               else None),
+        "source_start_frame": _normalize_source_start_frame(body.get("source_start_frame")),
     }, customer_id=_cid(request))
     return {"ok": True, "id": aid}
 
@@ -2302,6 +2319,14 @@ def api_scene_update(request: Request, asset_id: int, body: dict):
         asset = store.get_scene_asset(asset_id, customer_id=cid)
         if not asset:
             return JSONResponse(status_code=404, content={"ok": False, "error": "자산 없음"})
+        # commit은 clip에 render_mode를 필수로 강제한다(설계 §8, 페이즈1 리뷰 잔여) —
+        # update가 같은 자산을 render_mode=None으로 되돌리면 그 불변식이 뒷문으로 풀린다
+        # (리뷰 I-2, 실증됨: 200으로 통과하고 배지가 NULL을 '컷어웨이'로 거짓 표기).
+        # commit과 동일하게 clip에서만 None을 거부 — sfx/overlay는 원래 render_mode가
+        # 없는 게 정상(스펙 §4)이라 계속 허용해야 한다.
+        if asset["asset_type"] == "clip" and not body.get("render_mode"):
+            return JSONResponse(status_code=422,
+                                content={"ok": False, "error": "clip은 render_mode가 필요합니다"})
         err = _validate_render_mode(asset["asset_type"], body.get("render_mode"))
         if err:
             return JSONResponse(status_code=422, content={"ok": False, "error": err})

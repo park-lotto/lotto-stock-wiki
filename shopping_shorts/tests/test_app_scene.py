@@ -729,3 +729,74 @@ def test_split_never_writes_to_db(client, monkeypatch, tmp_path):
     assert r.status_code == 200
     assert r.json()["ok"] is True
     assert Store(app_mod.DB_PATH).list_scene_assets() == []
+
+
+# ── 장면라이브러리 저장 라우트 리뷰 회귀 테스트 — I-1/I-2 (2026-07-16) ──
+
+def test_commit_normalizes_oversized_source_start_frame_i1(client, tmp_path):
+    """source_start_frame에 SQLite INTEGER 상한(부호있는 64비트)을 넘는 정수를 넣으면
+    str().isdigit()도 int()도 통과해 store.py의 INSERT에서 OverflowError→500이 났다
+    (실증). source_start_frame은 편집 편의용 부가 메타라 -5·12.5·"abc" 같은 쓰레기 값은
+    거부 대신 조용히 None으로 흘리는 게 설계 의도 — 10**19도 그 대접을 받아야 한다
+    (거부 422가 아니라 저장 성공 200 + None)."""
+    d = tmp_path / "scene_assets"
+    d.mkdir(parents=True, exist_ok=True)
+    token = "b1" * 16
+    (d / f"{token}.mp4").write_bytes(b"clip")
+
+    # 실제 서버(uvicorn)처럼 예외를 500 응답으로 관찰하려면 raise_server_exceptions=False가
+    # 필요하다 — 기본 TestClient(다른 테스트들이 쓰는 `client` 픽스처)는 처리 안 된 서버
+    # 예외를 파이썬 레벨로 재발생시켜서, 고쳐지기 전 코드로 돌리면 500 응답이 아니라
+    # pytest 에러(OverflowError)로 나타난다.
+    raw_client = TestClient(app_mod.app, raise_server_exceptions=False)
+    r = raw_client.post("/api/scene/save/commit", json={
+        "token": token, "asset_type": "clip", "title": "t", "render_mode": "cutaway",
+        "source_origin": "짜집기", "source_start_frame": 10 ** 19})
+
+    assert r.status_code == 200, r.text
+    assert r.json()["ok"] is True
+    got = Store(app_mod.DB_PATH).get_scene_asset(r.json()["id"])
+    assert got["source_start_frame"] is None   # 상한 밖 값은 다른 쓰레기 값과 같이 None으로
+
+
+def test_commit_keeps_source_start_frame_at_sqlite_int_boundary(client, tmp_path):
+    """경계값 확인 — SQLite INTEGER 상한 그 자체는 여전히 정상 저장돼야 한다(과잉 조임 방지)."""
+    d = tmp_path / "scene_assets"
+    d.mkdir(parents=True, exist_ok=True)
+    token = "b2" * 16
+    (d / f"{token}.mp4").write_bytes(b"clip")
+
+    r = client.post("/api/scene/save/commit", json={
+        "token": token, "asset_type": "clip", "title": "t", "render_mode": "cutaway",
+        "source_origin": "짜집기", "source_start_frame": app_mod._SQLITE_INT_MAX})
+
+    assert r.status_code == 200, r.text
+    got = Store(app_mod.DB_PATH).get_scene_asset(r.json()["id"])
+    assert got["source_start_frame"] == app_mod._SQLITE_INT_MAX
+
+
+def test_update_rejects_render_mode_none_on_clip_i2(client, tmp_path):
+    """commit이 clip에 render_mode를 필수로 강제하는데(설계 §8), update가
+    render_mode=None을 그대로 허용해 그 불변식을 되돌릴 수 있었다(실증: 200, 저장값
+    None). NULL이면 배지가 그걸 '컷어웨이'로 거짓 표기한다."""
+    aid = _mk_asset(client, tmp_path, asset_type="clip", render_mode="cutaway")
+
+    r = client.post(f"/api/scene/{aid}/update", json={"render_mode": None})
+
+    assert r.status_code == 422
+    got = Store(app_mod.DB_PATH).get_scene_asset(aid)
+    assert got["render_mode"] == "cutaway"            # 원래 값 그대로, None으로 안 풀림
+
+
+def test_update_still_allows_render_mode_none_on_sfx_i2(client, tmp_path):
+    """sfx/overlay는 render_mode가 없는 게 정상(스펙 §4) — I-2 방어는 clip에만 적용돼야
+    하고, 멀쩡한 sfx 편집(다른 필드와 같이 render_mode=None을 보내는 흔한 프론트 패턴)까지
+    막으면 안 된다."""
+    aid = _mk_asset(client, tmp_path, asset_type="sfx", render_mode=None)
+
+    r = client.post(f"/api/scene/{aid}/update", json={"render_mode": None, "title": "새 이름"})
+
+    assert r.status_code == 200 and r.json()["ok"] is True
+    got = Store(app_mod.DB_PATH).get_scene_asset(aid)
+    assert got["render_mode"] is None
+    assert got["title"] == "새 이름"
