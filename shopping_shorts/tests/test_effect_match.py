@@ -15,12 +15,14 @@ def test_theme_for_recipe_is_warm():
     assert em.theme_for("모르는장르") == "warm"  # 기본
 
 
-def test_rules_detect_count_list_impact():
+def test_rules_detect_count_impact_no_empty_list():
     fx = em.match_rules(BEATS)
     comps = {f["comp"] for f in fx}
     assert "count" in comps   # "5분"
-    assert "list" in comps    # "3가지"
     assert "impact" in comps  # "대박"
+    # list 규칙은 items 소스가 없어 비활성 — 빈 카드가 생기면 안 된다(최종리뷰 I-1 봉인).
+    assert "list" not in comps
+    assert all(f["comp"] != "list" for f in fx)
 
     # "5분" 비트(BEATS[0], s=0.0~e=2.0)는 정확히 count 효과 하나만 만들어야 한다.
     # match_rules의 숫자(_NUM) 분기가 continue 없이 impact 분기로 흘러
@@ -45,8 +47,9 @@ def test_build_plan_shape_is_fullreel_props():
 def test_suggest_without_client_is_rules_only(monkeypatch):
     plan = em.suggest(BEATS, "레시피", "f.mp4", 180, client=None)
     assert plan["themeName"] == "warm"
-    # 규칙만: count/list/impact 존재
-    assert {f["comp"] for f in plan["fx"]} >= {"count", "list", "impact"}
+    # 규칙만: count·impact 존재(list는 items 소스 없어 비활성)
+    assert {f["comp"] for f in plan["fx"]} >= {"count", "impact"}
+    assert "list" not in {f["comp"] for f in plan["fx"]}
 
 
 class _BoomClient:

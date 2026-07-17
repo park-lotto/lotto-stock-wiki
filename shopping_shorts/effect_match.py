@@ -32,10 +32,10 @@ def match_rules(beats):
                        "props": {"label": "POINT", "value": int(m.group(1)),
                                  "suffix": m.group(2), "position": "top"}})
             continue
-        if _LIST.search(t):
-            fx.append({"s": b["s"] + 0.1, "e": b["e"], "comp": "list",
-                       "props": {"title": "LIST", "items": [], "position": "bottom"}})
-            continue
+        # list 효과는 items를 채울 소스(나레이션→항목 추출)가 아직 없다. 규칙으로 발동시키면
+        # items=[]인 **빈 카드**가 렌더돼 유료 사용자에게 고장으로 보인다(최종리뷰 I-1).
+        # ListReveal 컴포넌트·_LIST 정규식은 남겨두고, 항목 추출이 붙으면 여기서 재활성한다.
+        # if _LIST.search(t): ...(items 채운 뒤)
         mi = _IMPACT.search(t)
         if mi:
             fx.append({"s": b["s"] + 0.2, "e": b["e"], "comp": "impact",
