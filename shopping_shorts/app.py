@@ -1538,16 +1538,30 @@ def _voice_snapshot(store, body):
     **naturalize_profile·model_id는 반드시 프리셋에서 조회해 넣어야 한다.** 이게 빠지면
     튜닝 작업대에서 동결한 프로파일이 렌더에 도달하지 못하고, 에러 없이 기본값으로 조용히
     합성돼 "동결했는데 소리가 그대로"가 된다(2026-07-15 whole-branch 리뷰 S1).
-    미리듣기(/api/mix/voice/preview)도 같은 스냅샷을 써야 미리듣기=렌더가 보장된다(S8)."""
+    미리듣기(/api/mix/voice/preview)도 같은 스냅샷을 써야 미리듣기=렌더가 보장된다(S8).
+
+    body.whisper_roles: 영상별 "이 영상은 속삭임을 훅에만" 오버라이드(2026-07-17). 설계문서
+    §6은 "영상별 비트 토글은 새 저장층이 필요하다"고 적었지만 틀렸다 — 이 함수가 만드는
+    voice 스냅샷이 이미 job(영상)마다 저장된다(app.py의 store.update_mix_job(job_id, voice=...)).
+    그래서 새 테이블 없이 body 값을 naturalize_profile.whisper.roles에만 얹는다.
+    없으면(None/누락) 프리셋의 원래 프로파일을 그대로 쓴다(하위호환 — 기존 호출부가 안 깨짐).
+    프리셋 dict는 store가 매번 새로 만들어 주지만(json.loads), 혹시 캐싱하는 구현으로 바뀌어도
+    안전하도록 **제자리 수정 없이** 얕은 복사 위에서만 whisper 키를 교체한다."""
     preset_id = body.get("preset_id")
     p = store.get_voice_preset(preset_id) if preset_id else None
+    naturalize_profile = (p or {}).get("naturalize_profile")
+    whisper_roles = body.get("whisper_roles")
+    if whisper_roles is not None:
+        naturalize_profile = dict(naturalize_profile) if naturalize_profile else {}
+        naturalize_profile["whisper"] = dict(naturalize_profile.get("whisper") or {})
+        naturalize_profile["whisper"]["roles"] = whisper_roles
     return {
         "preset_id": preset_id,
         "voice_id": body.get("voice_id") or (p or {}).get("base_voice_id"),
         "settings": body.get("settings") or (p or {}).get("voice_settings"),
         "speed": body.get("speed", 1.0),
         "silence_trim": body.get("silence_trim", "off"),
-        "naturalize_profile": (p or {}).get("naturalize_profile"),
+        "naturalize_profile": naturalize_profile,
         "model_id": (p or {}).get("model_id") or "eleven_v3",
     }
 

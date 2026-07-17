@@ -179,8 +179,12 @@ def _run(scenario: str, tmp_path) -> subprocess.CompletedProcess:
     src = _HARNESS_PREFIX + _extract_src() + scenario
     f = tmp_path / "probe_gen_button_gate.js"
     f.write_text(src, encoding="utf-8")
+    # stdin=DEVNULL: Windows에서 여러 node 하위프로세스가 같은 세션에서 잇달아 뜨면 부모
+    # stdin 핸들 복제 경합으로 간헐적 OSError([WinError 50])가 난다(test_produce_category_race.py
+    # 기존 조치와 동일 원인·동일 처방 — 2026-07-17, 보이스 트랙 회귀런에서 실측).
     return subprocess.run([NODE, str(f)], capture_output=True, text=True,
-                          encoding="utf-8", errors="replace", timeout=30)
+                          encoding="utf-8", errors="replace", timeout=30,
+                          stdin=subprocess.DEVNULL)
 
 
 @pytest.mark.skipif(NODE is None, reason="node 없음 — JS 하네스 스킵")
