@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-16",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-16_1002_다시 백조로 전환 소캠2 매출 증가,실적 호조.md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": "박강호",
+    "report_date": "2026.06.16",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "심텍",
+        "code": "222800",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": 160000,
+        "tp_prev": null,
+        "tp_direction": "up",
+        "earnings_outlook": "2Q25 영업이익은 465억원으로 컨센서스 상회 추정, 매출은 4,502억원으로 32.1%(yoy/6.6% qoq) 증가 추정. 2026년 영업이익은 1195%(yoy) 증가 추정.",
+        "estimate_revision": "2026년, 2027년 주당순이익(EPS)을 종전대비 각각 10.5%, 4.1%씩 상향",
+        "next_catalyst": "2026년 6월에 추가 생산이 진행되면서 2026년 3Q 실적 상향 가능성",
+        "thesis": [
+          "비메모리향 패키지(FC CSP, SiP) 매출 증가 속에 소캠2 매출 반영",
+          "MCP(Multi Chip Package) 매출 10%(qoq) 증가 및 고부가 MSAP 비중 증가로 인한 믹스 효과",
+          "엔비디아의 소캠2 양산 본격화에 따른 메모리 3사 점유율 확대 최대 수혜"
+        ],
+        "valuation_basis": "2027년 EPS X 목표 P/E 39.2배(실적 호조 상단)",
+        "risk": null,
+        "supply_comment": "삼성전자, SK하이닉스, 마이크론의 소캠2 생산에 유일하게 모두 참여",
+        "quote": "2026년 2Q 영업이익은 465억원(738% yoy/239% qoq)으로 종전 추정(402억원) 대비 15.7% 상향, 그리고 컨센서스(426억원)대비 상회를 예상"
+      }
+    ],
+    "sector": "반도체"
+  }
+}

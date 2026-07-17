@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-16",
+    "broker": "DAISHIN SECURITIES",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-16_1003_원전으로 한 번 더 도약.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "DAISHIN SECURITIES",
+    "analyst": "이혜진",
+    "report_date": "26.06.15",
+    "stocks": [
+      {
+        "name": "현대건설",
+        "code": "000720",
+        "rating": "BUY",
+        "rating_changed": "신규",
+        "tp_new": "195,000",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 연결 기준 매출액 27조 4,348억 원(-11.7%, YoY), 영업이익 8,183억 원(+25.3%, YoY, OPM 3.0%) 예상",
+        "estimate_revision": null,
+        "next_catalyst": "미국 펠리세이즈 SMR 2기(Holtec, 상반기 내 EPC 계약 체결 목표), 미국 페르미 아메리카 대형 원전 4기(FEED 수행 후 연내 EPC 본계약 체결 목표), 불가리아 코즐로두이 2기(Westinghouse, ESC 이후 연내 EPC 계약 체결 목표)",
+        "thesis": [
+          "국내외 원전 프로젝트를 통해 입증된 글로벌 원전 EPC 경쟁력",
+          "미국, 불가리아 등 다수의 가시화된 해외 원전 파이프라인 보유",
+          "글로벌 원전 시장 확대 과정에서 수혜 기대"
+        ],
+        "valuation_basis": "목표주가는 12개월 선행 BPS에 Target PBR 2.45배를 적용. Target PBR은 과거 중동 플랜트 사이클(2006~2010년) 당시 평균 PBR",
+        "risk": null,
+        "supply_comment": "국내 건설사 중 가장 풍부한 해외 원전 파이프라인 확보",
+        "quote": "투자의견 매수, 목표주가 195,000원으로 커버리지 개시. 차선호주"
+      }
+    ]
+  }
+}

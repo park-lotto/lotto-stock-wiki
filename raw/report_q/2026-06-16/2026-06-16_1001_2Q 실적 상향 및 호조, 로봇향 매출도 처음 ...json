@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-16",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-16_1001_2Q 실적 상향 및 호조, 로봇향 매출도 처음 ...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "박강호",
+    "report_date": "2026.06.16",
+    "stocks": [
+      {
+        "name": "비에이치",
+        "code": "090460",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "52,000",
+        "tp_prev": "52,000",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 2Q 매출(4,156억원)과 영업이익(151억원)은 각각 11.8%(qoq/6.6% yoy), 42%(qoq/-6% yoy) 증가하여 종전 추정 및 컨센서스를 각각 8.7%, 11.9%씩 상회할 전망. 3Q 매출(6,684억원)과 영업이익(613억원)은 각각 18.8%(yoy), 78%(yoy)씩 증가하여 최대 실적(분기 기준)으로 추정.",
+        "estimate_revision": "상향",
+        "next_catalyst": "2026년 3Q 애플 폴더블폰 출시 및 아이폰18 프로/프로맥스 판매",
+        "thesis": [
+          "2026년 2Q 실적 상향 및 호조, 컨센서스 상회",
+          "애플 폴더블폰 출시(3Q26)에 따른 R/F PCB 공급 및 매출 확대",
+          "차량용 무선충전모듈의 휴머노이드향 다각화 및 실적 반영"
+        ],
+        "valuation_basis": "2026년 EPS X 목표 P/E 14.9배(실적 호조 상단)",
+        "risk": null,
+        "supply_comment": "이미 폴더블폰향 R/F PCB는 5월말에 공급 시작, 안정적인 수율을 유지 중으로 분석",
+        "quote": "2026년 2Q 매출(4,156억원)과 영업이익(151억원)은 각각 11.8%(qoq/6.6% yoy), 42%(qoq/-6% yoy) 증가하여 종전 추정 및 컨센서스를 각각 8.7%, 11.9%씩 상회할 전망."
+      }
+    ],
+    "sector": "IT"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "LG에너지솔루션",
+      "signal": "bull",
+      "reason": "LFP 시장 진출 및 엘앤에프와 협력",
+      "ts": null,
+      "quote": "(단독)LG엔솔·엘앤에프 '맞손'…LFP 시장 ‘한국 연합’ 출격",
+      "sector": "2차전지"
+    },
+    {
+      "name": "엘앤에프",
+      "signal": "bull",
+      "reason": "LG에너지솔루션과 LFP 시장 협력",
+      "ts": null,
+      "quote": "(단독)LG엔솔·엘앤에프 '맞손'…LFP 시장 ‘한국 연합’ 출격",
+      "sector": "2차전지"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "LG에너지솔루션과 엘앤에프가 LFP 시장 공략을 위해 협력함",
+      "ts": "2026-07-16 15:40",
+      "quote": "(단독)LG엔솔·엘앤에프 '맞손'…LFP 시장 ‘한국 연합’ 출격"
+    }
+  ],
+  "quote": "(단독)LG엔솔·엘앤에프 '맞손'…LFP 시장 ‘한국 연합’ 출격"
+}

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-16",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-17_0700_본업에 집중, 해외는 추가 옵션.md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": "이혜진",
+    "report_date": "2026.06.15",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "GS건설",
+        "code": "006360",
+        "rating": "BUY",
+        "rating_changed": "신규",
+        "tp_new": "39,000",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 연결 기준 매출액 11조 3,608억 원 (-8.8%, YoY), 영업이익 4,712억 원(+7.5%, YoY, OPM 4.1%) 예상",
+        "estimate_revision": null,
+        "next_catalyst": "주택 수익성 개선 및 신규 현장 매출 인식, 원전·중동 재건 참여 가능성",
+        "thesis": [
+          "주택 수익성 개선 및 신규 현장 매출 인식으로 본업 정상화 기대",
+          "원전·중동 재건 참여 가능성 보유",
+          "해외 수주 모멘텀은 추가 업사이드"
+        ],
+        "valuation_basis": "12개월 선행 BPS에 Target PBR 0.65배를 적용",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "GS건설 투자의견 매수, 목표주가 39,000원 제시. 목표주가는 12개월 선행 BPS에 Target PBR 0.65배를 적용"
+      }
+    ]
+  }
+}
