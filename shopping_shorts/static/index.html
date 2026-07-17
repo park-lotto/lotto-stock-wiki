@@ -760,18 +760,29 @@ let SCENE_DRAFT = null;
 // 자동분할 상태 — 컷 목록·체크된 컷 인덱스. 병합은 사람이 인접한 것만 골랐을 때만
 // 버튼이 뜬다(syncSplitButtons) — 기계가 자동으로 합치지 않는다(설계 §3.2, 표절회피).
 let SPLIT = { token:null, fps:30, cuts:[], picked:new Set() };
+// 여러 컷을 골라 '자르고 AI 태그 뽑기'를 눌렀을 때 쓰는 순차 담기 큐(리뷰 I-2).
+// prepare는 큐의 "지금 차례"인 컷 하나만 부른다 — 나머지는 그 컷을 저장(또는 건너뛰기)한
+// 뒤에야 다음 컷을 prepare한다. 예전엔 고른 컷 전부를 한꺼번에 prepare(=Gemini autotag
+// N회+클립 N개 생성)해놓고 화면엔 마지막 1개 초안만 남아 나머지가 조용히 버려졌다.
+let SCENE_QUEUE = null;   // {idxs:[cut인덱스...], pos:0, total:N, saved:0}
 
 function sceneTab(name){
   document.getElementById('tabSplit').classList.toggle('on', name==='split');
   document.getElementById('tabManual').classList.toggle('on', name==='manual');
   document.getElementById('paneSplit').style.display = name==='split' ? '' : 'none';
   document.getElementById('paneManual').style.display = name==='manual' ? '' : 'none';
+  // 리뷰 C-1: showSceneDraft()가 sceneStep1(수동 자르기 버튼)을 꺼놓으면 복원하는 곳이
+  // 모달 재오픈(openSceneCut)뿐이었다 — 자동분할로 초안을 본 뒤 '직접 자르기' 탭으로 오면
+  // 시작·끝 찍기는 보이는데 자를 버튼이 안 보여 반쪽 죽었다(실측, display:"none"인 채 방치).
+  // 탭을 열 때마다 그 탭이 쓸 상태를 스스로 세운다 — 끄는 곳(showSceneDraft)과 켜는 곳을 짝 맞춘다.
+  if(name==='manual') document.getElementById('sceneStep1').style.display = '';
 }
 
 function openSceneCut(sc, url, category){
   if(!url){ alert('이 영상은 원본 다운로드 URL이 없어 장면 담기를 지원하지 않습니다(현재 인스타그램만 지원).'); return; }
   SCENE_CTX = {sc:sc, url:url, category:category, start:null, end:null, token:null};
   SCENE_DRAFT = null;
+  SCENE_QUEUE = null;
   SPLIT = { token:null, fps:30, cuts:[], picked:new Set() };
   document.getElementById('splitList').innerHTML = '';
   document.getElementById('btnMergePick').style.display = 'none';
@@ -789,20 +800,36 @@ function openSceneCut(sc, url, category){
 
 // ── 자동 분할(컷 나누기) ── 전 컷을 사람에게 보여준다(설계 §3.1) — AI가 고르지 않는다.
 async function runSceneSplit(){
+  // 리뷰 I-1: commitScene·runScenePrepare·tagPicked·mergePicked엔 이미 더블서밋 가드가
+  // 있는데 이 함수에만 빠져 있었다(가장 비싼 작업인데도) — 두 번 눌리면 영상 다운로드+ffmpeg가
+  // 통째로 두 번 돈다(실측: split 요청 2회). 같은 관례(event.target 잠금)를 그대로 따른다.
+  const btn = event.target;
+  if(btn.disabled) return;
+  btn.disabled = true;
   const listEl = document.getElementById('splitList');
   listEl.innerHTML = '<div style="color:#8b98a9;font-size:12px;padding:8px 0">⏳ 컷 분할 중… (영상 길이에 따라 수십 초)</div>';
   document.getElementById('btnMergePick').style.display = 'none';
   document.getElementById('btnTagPicked').style.display = 'none';
+  SCENE_QUEUE = null;   // 재분할하면 이전 담기 큐는 무효
   try{
     const r = await fetch('/api/scene/split', {method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({src_url: SCENE_CTX.url})});
     const d = await r.json();
-    if(!d.ok){ listEl.innerHTML=''; alert('분할 실패: ' + (d.error||'')); return; }
-    SPLIT = {token:d.token, fps:d.fps, cuts:d.cuts, picked:new Set()};
+    // 리뷰 M-1: 서버가 이미 "분할 실패: {e}"로 접두를 붙여 보낸다(app.py:2079). 여기서 또
+    // '분할 실패: '를 붙이면 "분할 실패: 분할 실패: ffmpeg"로 이중접두된다(실측). d.error를
+    // 가공 없이 그대로 보여주고, 없을 때만 기본 문구를 쓴다.
+    if(!d.ok){ listEl.innerHTML=''; alert(d.error || '분할 실패'); return; }
+    SPLIT = {token:d.token, fps:d.fps, cuts:d.cuts||[], picked:new Set()};
+    // 리뷰 I-3: 컷 0개면 innerText=""로 그냥 백지였다 — 수십 초 기다린 끝에 "아무 일도
+    // 안 일어남"과 구분이 안 갔다(실측). 안내 문구를 넣는다.
+    if(!SPLIT.cuts.length){
+      listEl.innerHTML = '<div style="color:#8b98a9;font-size:12px;padding:8px 0">컷이 검출되지 않았습니다. 「직접 자르기」 탭에서 수동으로 잘라주세요.</div>';
+      return;
+    }
     // XSS 회피: onclick 문자열보간 대신 data-* + addEventListener — esc()는 작은따옴표를
-    // 안 막는다(index.html:420, 이 파일 실측). onclick="fn('${esc(x)}')" 패턴은 여기서 금지.
-    listEl.innerHTML = '<div class="cut-grid">' + d.cuts.map(c => `
+    // 안 막는다(index.html:442, 이 파일 실측). onclick="fn('${esc(x)}')" 패턴은 여기서 금지.
+    listEl.innerHTML = '<div class="cut-grid">' + SPLIT.cuts.map(c => `
       <label class="cut">
         <input type="checkbox" data-i="${c.i}">
         <img src="${esc(c.poster_url)}" loading="lazy">
@@ -813,6 +840,7 @@ async function runSceneSplit(){
     });
     syncSplitButtons();
   }catch(e){ listEl.innerHTML=''; alert('네트워크 오류'); }
+  finally{ btn.disabled = false; }
 }
 
 function pickCut(i, on){ on ? SPLIT.picked.add(i) : SPLIT.picked.delete(i); syncSplitButtons(); }
@@ -827,14 +855,42 @@ function syncSplitButtons(){
   document.getElementById('btnMergePick').style.display = adjacent ? '' : 'none';
 }
 
+// 리뷰 I-2: 여러 컷을 고르고 '자르고 AI 태그 뽑기'를 누르면 예전엔 prepare를 N번 다 부르고
+// (Gemini autotag N회+클립 N개 낭비) 마지막 응답만 화면에 남아 나머지 N-1개가 조용히
+// 버려졌다(저장하면 alert도 "담았습니다" 단수로 떠서 N개 다 담긴 줄 알았다). 큐를 세우고
+// "지금 차례" 컷 하나만 prepare한다 — 저장(또는 건너뛰기) 후에야 다음 컷으로 넘어간다.
 async function tagPicked(){
   const btn = event.target; btn.disabled = true;
   try{
-    for(const i of [...SPLIT.picked].sort((a,b)=>a-b)){
-      const c = SPLIT.cuts[i];
-      await prepareOne(c.start, c.end, c.start_frame);
-    }
+    const idxs = [...SPLIT.picked].sort((a,b)=>a-b);
+    if(!idxs.length) return;
+    SCENE_QUEUE = { idxs, pos:0, total: idxs.length, saved:0 };
+    await advanceQueue();
   } finally { btn.disabled = false; }
+}
+
+// 큐의 "지금 차례" 컷 하나만 prepare해서 초안을 보여준다. 큐가 끝나면 몇 개 중 몇 개가
+// 담겼는지 요약하고 모달을 닫는다 — "고른 개수 ≠ 담긴 개수"가 조용히 벌어지지 않게 한다.
+async function advanceQueue(){
+  if(!SCENE_QUEUE) return;
+  if(SCENE_QUEUE.pos >= SCENE_QUEUE.idxs.length){
+    const total = SCENE_QUEUE.total, saved = SCENE_QUEUE.saved;
+    SCENE_QUEUE = null;
+    alert(`${total}개 중 ${saved}개를 장면 라이브러리에 담았습니다.`);
+    document.getElementById('sceneModal').style.display='none';
+    return;
+  }
+  const i = SCENE_QUEUE.idxs[SCENE_QUEUE.pos];
+  const c = SPLIT.cuts[i];
+  await prepareOne(c.start, c.end, c.start_frame,
+    {cutNo:c.i+1, pos:SCENE_QUEUE.pos+1, total:SCENE_QUEUE.total});
+}
+
+// 지금 초안은 저장하지 않고 다음 컷으로 넘어간다(담기 큐 전용 — 일반 흐름엔 없음).
+function skipQueueItem(){
+  if(!SCENE_QUEUE) return;
+  SCENE_QUEUE.pos++;
+  advanceQueue();
 }
 
 async function mergePicked(){
@@ -846,7 +902,7 @@ async function mergePicked(){
   finally { btn.disabled = false; }
 }
 
-async function prepareOne(start, end, startFrame){
+async function prepareOne(start, end, startFrame, queueInfo){
   try{
     const r = await fetch('/api/scene/save/prepare', {method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -854,12 +910,13 @@ async function prepareOne(start, end, startFrame){
         source_kind:'reference', source_ref:SCENE_CTX.sc,
         category:SCENE_CTX.category})});
     const d = await r.json();
-    if(!d.ok){ alert('구간컷 실패: ' + (d.error||'')); return; }
+    // 리뷰 M-1과 동일 패턴 — 서버가 이미 "구간컷 실패: {e}"를 붙인다(app.py:2125).
+    if(!d.ok){ alert(d.error || '구간컷 실패'); return; }
     SCENE_CTX.token = d.token;   // commitScene이 이 토큰으로 커밋한다(runScenePrepare와 동일 배선)
     // 서버가 준 start_frame(정수)을 우선하고, 없을 때만 분할 응답의 원래 프레임으로 폴백.
     // 여기서 끝 — parseFloat·toFixed 등 산술을 스치지 않는다(스치면 프레임 번호가 사라진다).
     d._start_frame = (d.start_frame != null) ? d.start_frame : startFrame;
-    showSceneDraft(d);
+    showSceneDraft(d, queueInfo);
   }catch(e){ alert('네트워크 오류'); }
 }
 
@@ -888,14 +945,20 @@ async function runScenePrepare(){
   finally{ btn.disabled = false; btn.textContent = '✂ 자르고 AI 태그 뽑기'; }
 }
 
-function showSceneDraft(d){
+function showSceneDraft(d, queueInfo){
   SCENE_DRAFT = d;   // commitScene이 source_start_frame을 여기서 그대로 읽는다(손대지 않음)
   const t = d.draft||{};
   const opt = (list, v) => list.map(x=>`<option ${x===v?'selected':''}>${x}</option>`).join('');
   document.getElementById('sceneStep1').style.display = 'none';
   const box = document.getElementById('sceneStep2');
   box.style.display = 'flex';
+  // 리뷰 I-2: 큐로 들어온 초안이면 "몇 번 컷 · 몇 개 중 몇 번째 · 지금까지 몇 개 담음"을
+  // 보여준다 — 사장님이 지금 몇 번 컷의 초안을 보는지, 몇 개 중 몇 개가 담겼는지 알아야 한다.
+  const queueBadge = queueInfo
+    ? `<div style="font-size:12px;color:#7db4ff">📦 ${queueInfo.cutNo}번 컷 — ${queueInfo.pos}/${queueInfo.total}개째 (담음 ${SCENE_QUEUE?SCENE_QUEUE.saved:0}개)</div>`
+    : '';
   box.innerHTML = `
+    ${queueBadge}
     <div style="font-size:12px;color:#ffd76b">✂ ${d.duration?d.duration.toFixed(1):'?'}초 잘렸습니다. AI 태그 초안을 확인·수정하세요.</div>
     <input id="scTitle" placeholder="이름 (예: 가루 한스푼)" style="background:#0d1420;color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">
     <textarea id="scDesc" rows="2" placeholder="화면 설명" style="background:#0d1420;color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">${(t.scene_desc||'').replace(/</g,'&lt;')}</textarea>
@@ -916,7 +979,10 @@ function showSceneDraft(d){
         <option value="촬영원본">촬영원본(그 사람이 찍은 것)</option>
       </select>
     </label>
-    <button style="background:#2f81f7;border:none;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="commitScene()">💾 라이브러리에 저장</button>`;
+    <div style="display:flex;gap:8px">
+      <button style="background:#2f81f7;border:none;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="commitScene()">💾 라이브러리에 저장</button>
+      ${queueInfo ? `<button style="background:#0d131c;border:1px solid #1e2735;color:#8b98a9;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="skipQueueItem()">⏭ 건너뛰기</button>` : ''}
+    </div>`;
 }
 
 async function commitScene(){
@@ -949,8 +1015,16 @@ async function commitScene(){
     const d = await (await fetch('/api/scene/save/commit',{method:'POST',
       headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)})).json();
     if(!d.ok){ alert(d.error||'저장 실패'); return; }
-    document.getElementById('sceneModal').style.display='none';
-    alert('장면 라이브러리에 담았습니다.');
+    // 리뷰 I-2: 담기 큐 중이면 모달을 닫지 않고 바로 다음 컷 초안으로 넘어간다.
+    // 큐가 아니면(수동 자르기·이어붙이기 1건) 기존처럼 닫고 알린다.
+    if(SCENE_QUEUE){
+      SCENE_QUEUE.saved++;
+      SCENE_QUEUE.pos++;
+      await advanceQueue();
+    } else {
+      document.getElementById('sceneModal').style.display='none';
+      alert('장면 라이브러리에 담았습니다.');
+    }
   }catch(e){ alert('네트워크 오류'); }
   finally{ btn.disabled = false; btn.textContent = '💾 라이브러리에 저장'; }
 }
