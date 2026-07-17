@@ -497,6 +497,7 @@ function showPanel(){
   if(cur===1) refreshSub();
   if(cur===2) loadTtsBeats();
   if(cur===3) initHeadcopy();
+  if(cur===4) initThumb();
   if(cur===6) refreshFinal();
 }
 
@@ -2133,6 +2134,182 @@ function drawThumb(ctx, img, layers, W, H){
     ctx.fillText(L.text, 0, 0);
     ctx.restore();
   });
+}
+
+const THUMB_STATE = {frames: [], frame_ts: null, frame_url: null, img: null,
+                     layers: [], sel: 0, results: [], selected: null};
+
+async function loadThumbFrames(){
+  const r = await fetch('/api/produce/thumb/frames', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({job_id: STATE.job_id}),
+  });
+  const d = await r.json();
+  if (!d.ok){ document.getElementById('thumbFramesHint').textContent = d.error || '프레임 추출 실패'; return; }
+  THUMB_STATE.frames = d.frames;
+  document.getElementById('thumbFrameCount').textContent = `(${d.frames.length}개)`;
+  document.getElementById('thumbFramesHint').textContent = '';
+  document.getElementById('thumbFrames').innerHTML = d.frames.map((f, i) => `
+    <div onclick="pickThumbFrame(${i})" style="position:relative;cursor:pointer;border-radius:6px;
+         overflow:hidden;border:2px solid ${i === 0 ? 'var(--accent2)' : 'transparent'}" data-fi="${i}">
+      <img src="${f.url}" style="width:100%;display:block">
+      <span style="position:absolute;right:4px;bottom:4px;background:#000c;color:#fff;
+            font-size:10px;padding:1px 4px;border-radius:3px">${f.ts}s</span>
+    </div>`).join('');
+  if (d.frames.length) pickThumbFrame(0);
+}
+
+function pickThumbFrame(i){
+  const f = THUMB_STATE.frames[i]; if (!f) return;
+  THUMB_STATE.frame_ts = f.ts; THUMB_STATE.frame_url = f.url;
+  const box = document.getElementById('thumbFrames');
+  Array.from(box.children || []).forEach((el, k) => {
+    if (el.style) el.style.border = `2px solid ${k === i ? 'var(--accent2)' : 'transparent'}`;
+  });
+  const img = new Image();
+  img.onload = () => { THUMB_STATE.img = img; renderThumbCanvas(); };
+  img.src = f.url;
+}
+
+function renderThumbCanvas(){
+  const cv = document.getElementById('thumbCanvas'); if (!cv) return;
+  const ctx = cv.getContext('2d');
+  drawThumb(ctx, THUMB_STATE.img, THUMB_STATE.layers, THUMB_W, THUMB_H);
+}
+
+function addThumbLayer(){
+  const base = thumbPresetToLayer(HC_PRESETS.find(p => p.cat === '썸네일') || {y: 12});
+  base.text = '문구를 입력하세요';
+  THUMB_STATE.layers.push(base);
+  THUMB_STATE.sel = THUMB_STATE.layers.length - 1;
+  renderThumbLayers(); renderThumbCanvas();
+}
+
+function selectThumbLayer(i){ THUMB_STATE.sel = i; renderThumbLayers(); }
+function removeThumbLayer(i){
+  THUMB_STATE.layers.splice(i, 1);
+  THUMB_STATE.sel = Math.max(0, THUMB_STATE.sel - 1);
+  renderThumbLayers(); renderThumbCanvas();
+}
+
+function applyThumbPreset(i){
+  const p = HC_PRESETS.filter(x => x.cat === '썸네일')[i]; if (!p) return;
+  const cur = THUMB_STATE.layers[THUMB_STATE.sel]; if (!cur) return;
+  const styled = thumbPresetToLayer(p);
+  styled.text = cur.text;          // 스타일만 바꾼다 — 문구·위치는 사장님 것
+  styled.x = cur.x; styled.rot = cur.rot;
+  THUMB_STATE.layers[THUMB_STATE.sel] = styled;
+  renderThumbLayers(); renderThumbCanvas();
+}
+
+function setThumbField(key, val){
+  const L = THUMB_STATE.layers[THUMB_STATE.sel]; if (!L) return;
+  if (key === 'outline_w'){ L.outline = L.outline || {color: '#000000', w: 0}; L.outline.w = +val; }
+  else if (key === 'outline_color'){ L.outline = L.outline || {color: '#000000', w: 4}; L.outline.color = val; }
+  else if (key === 'box'){ L.box = val ? {color: '#000000', pad: 16, opacity: 80} : null; }
+  else if (key === 'size' || key === 'rot'){ L[key] = +val; }
+  else L[key] = val;
+  renderThumbCanvas();
+}
+
+function renderThumbLayers(){
+  document.getElementById('thumbLayers').innerHTML = THUMB_STATE.layers.map((L, i) => `
+    <div onclick="selectThumbLayer(${i})" style="display:flex;justify-content:space-between;
+         align-items:center;padding:6px 9px;border-radius:6px;cursor:pointer;
+         background:${i === THUMB_STATE.sel ? 'var(--accent)' : '#2a2a3a'}">
+      <span style="font-size:12px">${L.text || '(빈 문구)'}</span>
+      <span onclick="event.stopPropagation();removeThumbLayer(${i})" style="cursor:pointer">✕</span>
+    </div>`).join('');
+  document.getElementById('thumbPresets').innerHTML =
+    HC_PRESETS.filter(p => p.cat === '썸네일').map((p, i) =>
+      `<button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 11px;font-size:12px;
+        border-left:10px solid ${p.box ? p.box_color : p.color}"
+        onclick="applyThumbPreset(${i})">${p.name}</button>`).join('');
+  const L = THUMB_STATE.layers[THUMB_STATE.sel];
+  document.getElementById('thumbEdit').innerHTML = !L ? '' : `
+    <input value="${(L.text || '').replace(/"/g, '&quot;')}" oninput="setThumbField('text', this.value)"
+           style="width:100%;padding:8px;margin-bottom:6px" placeholder="문구">
+    <select onchange="setThumbField('font', this.value)" style="width:100%;padding:6px;margin-bottom:6px">
+      ${HC_FONTS.map(f => `<option value="${f.file}" ${f.file === L.font ? 'selected' : ''}>${f.name}</option>`).join('')}
+    </select>
+    <label style="font-size:11px;color:var(--sub)">크기 ${L.size}px</label>
+    <input type="range" min="30" max="200" value="${L.size}" oninput="setThumbField('size', this.value)" style="width:100%">
+    <label style="font-size:11px;color:var(--sub)">회전 ${L.rot}°</label>
+    <input type="range" min="-45" max="45" value="${L.rot}" oninput="setThumbField('rot', this.value)" style="width:100%">
+    <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+      <input type="color" value="${L.color}" oninput="setThumbField('color', this.value)">
+      <input type="color" value="${L.outline ? L.outline.color : '#000000'}" oninput="setThumbField('outline_color', this.value)">
+      <label style="font-size:11px;color:var(--sub)"><input type="checkbox" ${L.box ? 'checked' : ''}
+        onchange="setThumbField('box', this.checked)"> 배경</label>
+    </div>
+    <label style="font-size:11px;color:var(--sub)">외곽선 ${L.outline ? L.outline.w : 0}px</label>
+    <input type="range" min="0" max="20" value="${L.outline ? L.outline.w : 0}"
+           oninput="setThumbField('outline_w', this.value)" style="width:100%">`;
+}
+
+// 드래그 = 비율 좌표를 바꾼다(픽셀이 아니라) — 그래야 1080 결과가 같은 자리에 찍힌다.
+function initThumbDrag(){
+  const cv = document.getElementById('thumbCanvas'); if (!cv || !cv.addEventListener) return;
+  let on = false;
+  const to = e => {
+    const r = cv.getBoundingClientRect();
+    return {x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height};
+  };
+  cv.addEventListener('mousedown', () => { on = true; });
+  window.addEventListener('mouseup', () => { on = false; });
+  cv.addEventListener('mousemove', e => {
+    if (!on) return;
+    const L = THUMB_STATE.layers[THUMB_STATE.sel]; if (!L) return;
+    const p = to(e);
+    L.x = Math.min(1, Math.max(0, p.x)); L.y = Math.min(1, Math.max(0, p.y));
+    renderThumbCanvas();
+  });
+}
+
+async function generateThumb(){
+  const st = document.getElementById('thumbSaveStatus');
+  st.textContent = '생성 중…';
+  renderThumbCanvas();
+  const cv = document.getElementById('thumbCanvas');
+  const blob = await new Promise(res => cv.toBlob(res, 'image/png'));
+  const fd = new FormData();
+  fd.append('job_id', STATE.job_id);
+  fd.append('meta', JSON.stringify({frame_ts: THUMB_STATE.frame_ts,
+                                    frame_url: THUMB_STATE.frame_url,
+                                    layers: THUMB_STATE.layers}));
+  fd.append('file', blob, 'thumb.png');   // 이 이름은 서버가 무시한다(경로순회 방지)
+  const r = await fetch('/api/produce/thumb/save', {method: 'POST', body: fd});
+  const d = await r.json();
+  if (!d.ok){ st.textContent = d.error || '저장 실패'; return; }
+  st.textContent = '';
+  THUMB_STATE.results.push({name: d.name, url: d.url});
+  renderThumbGallery();
+  selectThumbResult(d.name);
+}
+
+function renderThumbGallery(){
+  document.getElementById('thumbGallery').innerHTML = THUMB_STATE.results.map(r => `
+    <div onclick="selectThumbResult('${r.name}')" data-name="${r.name}"
+         style="cursor:pointer;border-radius:6px;overflow:hidden;border:2px solid
+         ${THUMB_STATE.selected === r.name ? 'var(--accent2)' : 'transparent'}">
+      <img src="${r.url}" style="width:100%;display:block">
+    </div>`).join('');
+}
+
+async function selectThumbResult(name){
+  THUMB_STATE.selected = name;
+  renderThumbGallery();
+  await fetch('/api/produce/thumb/select', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({job_id: STATE.job_id, name}),
+  });
+}
+
+let THUMB_INITED = false;
+function initThumb(){
+  if (!THUMB_INITED){ initThumbDrag(); THUMB_INITED = true; }  // 리스너는 한 번만
+  if (!THUMB_STATE.frames.length) loadThumbFrames();           // 프레임은 이미 있으면 재요청 안 함
+  renderThumbLayers();
 }
 // ── 썸네일 끝 ────────────────────────────────────────────────
 </script>
