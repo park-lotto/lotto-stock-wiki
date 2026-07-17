@@ -72,6 +72,7 @@ _BASE_PROMPT = """너는 한국 쇼츠 채널의 SEO 담당이다. 아래 확정
 - 태그: 정확히 20개. 유튜브 태그 전체가 500자를 넘지 않게.
 - 해시태그: 플랫폼마다 다르게. youtube 3~5개 / tiktok 3~5개 / threads 1~2개(쓰레드는 해시태그를 거의 안 쓴다).
 - CTA: 플랫폼마다 어투가 다르다. youtube=설명란 링크 유도 / tiktok=댓글 유도형 / threads=되묻는 대화체.
+- 말투: 구조 분석의 tone을 그대로 따른다. 대본이 반말이면 제목·설명·CTA도 반말로 쓴다(영상은 반말인데 제목만 존댓말이면 같은 영상으로 안 보인다).
 - 전부 한국어. 과장·허위 금지(대본에 없는 효능을 지어내지 마라).
 
 [대본]
@@ -100,9 +101,12 @@ def _fmt_stats(keyword_stats):
             note = "수요 낮음 — 빼라"
         else:
             note = "미측정"
+        # 수요는 views_top(상위 5편 중앙값)이다 — 20편 중앙값(views_median)은 꼬리에
+        # 눌려 실제 수요를 못 보여준다(T8 실측). 되먹임에 틀린 숫자를 넣으면
+        # AI가 틀린 근거 위에서 다시 쓴다.
         lines.append(
             f"- {s.get('keyword')}: {v} / {note} "
-            f"(상위 조회수 중앙값 {s.get('views_median')}, 소형채널 비율 {s.get('small_ratio')})")
+            f"(상위 조회수 {s.get('views_top')}, 소형채널 비율 {s.get('small_ratio')})")
     return ("\n[유튜브 실측 — 이 근거 위에서 다시 써라]\n" + "\n".join(lines) + "\n")
 
 

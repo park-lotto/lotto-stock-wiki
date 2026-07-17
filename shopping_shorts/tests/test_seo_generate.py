@@ -156,3 +156,31 @@ def test_schema_forces_exactly_20_tags():
     tags_schema = seo_generate._SCHEMA["properties"]["tags"]
     assert tags_schema["minItems"] == 20
     assert tags_schema["maxItems"] == 20
+
+
+# ── T8 실측이 드러낸 것(2026-07-17) ──────────────────────────────
+
+
+def test_prompt_orders_tone_to_follow_script(monkeypatch):
+    """실측: 대본 tone이 '친근한 반말'인데 제목·CTA가 전부 존댓말로 나왔다.
+    tone은 structure JSON에 실려 프롬프트에 '있긴' 했으나 따르라는 지시가 없었다.
+    영상은 반말인데 제목이 존댓말이면 같은 영상으로 안 보인다."""
+    log = []
+    _patch(monkeypatch, ["k1"], _FakeClient(_OUT, log=log))
+    seo_generate.generate(_JOB)
+    p = log[0]
+    assert "친근한 반말" in p          # 값은 전부터 있었다
+    assert "말투" in p                 # 지시가 새로 생겼다
+
+
+def test_stats_prompt_uses_views_top_not_tail_median(monkeypatch):
+    """되먹임에 넣는 숫자는 수요(views_top)여야 한다. 20편 중앙값을 '상위 조회수'라고
+    넘기면 AI가 틀린 근거 위에서 다시 쓴다."""
+    log = []
+    _patch(monkeypatch, ["k1"], _FakeClient(_OUT, log=log))
+    seo_generate.generate(_JOB, only="title", keyword_stats=[
+        {"keyword": "빨대텀블러", "verdict": "blue", "views_top": 150_651,
+         "views_median": 10_230, "small_ratio": 0.3}])
+    p = log[0]
+    assert "150,651" in p or "150651" in p     # 수요가 들어간다
+    assert "10,230" not in p and "10230" not in p   # 꼬리 중앙값은 근거로 안 쓴다

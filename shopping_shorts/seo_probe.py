@@ -8,6 +8,7 @@
    (search_shorts()는 pageInfo.totalResults를 버리고 결과가 키워드별로 안 갈려 재사용 불가)
 """
 
+import html
 from datetime import datetime, timedelta, timezone
 
 import requests
@@ -19,8 +20,13 @@ _SEARCH_URL = "https://www.googleapis.com/youtube/v3/search"
 _VIDEOS_URL = "https://www.googleapis.com/youtube/v3/videos"
 _CHANNELS_URL = "https://www.googleapis.com/youtube/v3/channels"
 
-# 판정 문턱 — 실측 후 튜닝 대상. 이 숫자가 맞다는 근거는 아직 없다(설계 §10 리스크 1).
-_VIEWS_FLOOR = 100_000       # 상위 쇼츠 조회수 중앙값이 이 밑이면 '수요 없음'
+# 판정 문턱.
+# _VIEWS_FLOOR만 T8 실측(2026-07-17)으로 근거가 생겼다 — 나머지는 아직 추측이다.
+# 실측 6키워드의 상위5 중앙값: 다이슨에어랩 19k · 캠핑의자 102k · 빨대텀블러 151k ·
+# 무선청소기 233k · 주방수납 253k · 제습기 848k. 10만은 '90일간 아무도 안 본 키워드'
+# (다이슨에어랩)와 나머지를 가르는 자리에 실제로 놓여 있었다.
+_VIEWS_FLOOR = 100_000       # 상위권 조회수(_TOP_N 중앙값)가 이 밑이면 '수요 없음'
+_TOP_N = 5                   # 수요를 재는 표본 — 상위 몇 편으로 보나
 _SMALL_RATIO_FLOOR = 0.3     # 상위권 중 소형채널이 이 비율 이상이면 '뚫린다'
 _SMALL_SUBS = 10_000         # 이 미만이면 소형채널
 _WINDOW_DAYS = 90            # 최근 N일 안에 올라온 영상만
@@ -29,49 +35,69 @@ _SAMPLE_MIN = 3              # 이 밑이면 판정하지 않는다
 _MAX_PROBE = 6               # 생성 1회당 측정할 키워드 상한 (search.list = 100유닛/회)
 
 
-def judge(views_median, small_ratio, sample_n):
+def judge(views_top, small_ratio, sample_n):
     """측정치 → blue/red/dead/unknown.
 
-    조회수 중앙값만으로는 '대형채널이 독식한 키워드'와 '작은 채널도 뚫리는
-    키워드'가 구분되지 않는다. 우리한테 필요한 건 후자라 둘을 같이 본다.
+    조회수만으로는 '대형채널이 독식한 키워드'와 '작은 채널도 뚫리는 키워드'가
+    구분되지 않는다. 우리한테 필요한 건 후자라 둘을 같이 본다.
+
+    첫 인자는 '상위권 조회수'(summarize의 views_top)다 — 20편 중앙값이 아니다.
+    이유는 summarize 참조.
     """
     if not sample_n or sample_n < _SAMPLE_MIN:
         return "unknown"          # 표본 부족 — 거짓 근거를 만들지 않는다
-    if (views_median or 0) < _VIEWS_FLOOR:
+    if (views_top or 0) < _VIEWS_FLOOR:
         return "dead"             # 검색해도 사람이 안 본다
     if (small_ratio or 0) >= _SMALL_RATIO_FLOOR:
         return "blue"             # 수요 있고 작은 채널도 상위권
     return "red"                  # 수요는 있으나 대형채널 독식
 
 
+def _median(sorted_vals):
+    n = len(sorted_vals)
+    mid = n // 2
+    return sorted_vals[mid] if n % 2 else (sorted_vals[mid - 1] + sorted_vals[mid]) // 2
+
+
 def summarize(items):
     """[{title, views, subs}] → 측정치 dict.
+
+    수요는 **상위 _TOP_N편의 중앙값**(views_top)으로 잰다. 20편 전체의 중앙값이
+    아니다 — T8 실측에서 검색 결과가 극단적 롱테일로 드러났기 때문이다.
+    '빨대텀블러' 90일: 1,525,523 / 950,512 / 150,651 / 92,205 / 24,016 … 9위부터 1만 아래.
+    20편 중앙값은 10,230이라 중앙값으로 재면 150만짜리가 두 편 터진 키워드가
+    '아무도 안 본다(dead)'가 된다. 꼬리는 그 키워드의 수요가 아니라 검색이 긁어온
+    변두리 영상이다.
+
+    views_median(20편 중앙값)도 같이 돌려준다 — 상위권에 들었을 때의 기대치라
+    수요와 다른 질문에 답한다. 판정에는 쓰지 않는다.
 
     subs가 없는 항목은 '큰 채널'로 친다 — 못 받아온 걸 작다고 치면
     블루오션이 과대평가돼서 없는 기회를 있다고 보고하게 된다.
     """
     n = len(items)
     if not n:
-        return {"views_median": 0, "small_ratio": 0.0, "sample_n": 0,
-                "top_titles": [], "verdict": "unknown"}
+        return {"views_top": 0, "views_median": 0, "small_ratio": 0.0,
+                "sample_n": 0, "top_titles": [], "verdict": "unknown"}
     views = sorted(int(it.get("views") or 0) for it in items)
-    mid = n // 2
-    views_median = views[mid] if n % 2 else (views[mid - 1] + views[mid]) // 2
+    views_median = _median(views)
+    views_top = _median(views[-_TOP_N:])      # 상위 _TOP_N편(없으면 있는 것 전부)
     small = sum(1 for it in items if 0 < int(it.get("subs") or 0) < _SMALL_SUBS)
     small_ratio = small / n
     top = sorted(items, key=lambda it: int(it.get("views") or 0), reverse=True)[:3]
     return {
+        "views_top": views_top,
         "views_median": views_median,
         "small_ratio": small_ratio,
         "sample_n": n,
         "top_titles": [it.get("title") or "" for it in top],
-        "verdict": judge(views_median, small_ratio, n),
+        "verdict": judge(views_top, small_ratio, n),
     }
 
 
 def _unknown(keyword, region):
     """측정 실패 — 판정하지 않는다. 캐시하지 않으므로 다음에 다시 시도된다."""
-    return {"keyword": keyword, "region": region, "views_median": 0,
+    return {"keyword": keyword, "region": region, "views_top": 0, "views_median": 0,
             "small_ratio": 0.0, "sample_n": 0, "top_titles": [],
             "verdict": "unknown", "checked_at": None}
 
@@ -99,8 +125,10 @@ def _search(kw, tok, region, lang):
         sn = it.get("snippet") or {}
         if not vid or not _title_lang_ok(sn.get("title"), lang):
             continue      # 외국 영상 제거 — 섞이면 측정이 틀어진다
+        # 유튜브는 제목을 HTML 이스케이프해서 준다(실측: "아직도 &#39;맹물 커피&#39;").
+        # 이 제목은 화면에 근거로 그대로 뜨므로 여기서 푼다.
         items.append({"video_id": vid, "channel_id": sn.get("channelId"),
-                      "title": sn.get("title") or ""})
+                      "title": html.unescape(sn.get("title") or "")})
     return r.status_code, items
 
 

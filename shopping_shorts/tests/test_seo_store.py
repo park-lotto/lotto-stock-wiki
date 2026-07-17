@@ -115,3 +115,10 @@ def test_keyword_stats_region_separate(store):
     store.put_keyword_stats({**_STAT, "region": "US", "views_median": 111})
     assert store.get_keyword_stats("빨대텀블러", region="KR")["views_median"] == 320000
     assert store.get_keyword_stats("빨대텀블러", region="US")["views_median"] == 111
+
+
+def test_keyword_stats_views_top_roundtrip(store):
+    """views_top(수요)이 캐시를 왕복한다 — 캐시 적중분은 이 값으로 판정·표시된다.
+    안 실리면 캐시된 키워드만 조용히 0이 돼 7일간 dead로 보인다."""
+    store.put_keyword_stats({**_STAT, "views_top": 150_651})
+    assert store.get_keyword_stats("빨대텀블러")["views_top"] == 150_651

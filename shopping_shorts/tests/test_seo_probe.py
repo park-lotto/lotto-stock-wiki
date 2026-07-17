@@ -266,3 +266,60 @@ def test_summarize_median_even_sample():
              {"title": "d", "views": 500, "subs": 1}]
     got = seo_probe.summarize(items)
     assert got["views_median"] == 250       # (200+300)//2
+
+
+# ── T8 실측이 드러낸 것(2026-07-17) ──────────────────────────────
+# 유튜브를 처음 진짜로 불러보니 상위 조회수 분포가 극단적 롱테일이었다.
+# '빨대텀블러' 90일 실측: 1,525,523 / 950,512 / 150,651 / 92,205 / 24,016 …
+# 9위부터 1만 아래. 20편 중앙값=10,230 → 기존 판정은 dead(수요 없음).
+# 150만짜리가 두 편 터진 키워드를 '아무도 안 본다'고 말하는 건 틀렸다.
+# → 수요는 '상위 5편의 중앙값'으로 재고, 20편 중앙값은 기대치로 남긴다.
+
+
+def _tail(top, tail_views=5_000, tail_n=15, subs=500):
+    """상위 몇 편 + 긴 꼬리 = 실제 유튜브 검색 결과 모양."""
+    return ([{"title": f"top{i}", "views": v, "subs": subs} for i, v in enumerate(top)]
+            + [{"title": f"tail{i}", "views": tail_views, "subs": subs}
+               for i in range(tail_n)])
+
+
+def test_summarize_demand_is_top_not_tail():
+    """빨대텀블러 실측 그대로 — 꼬리가 수요 판정을 죽이면 안 된다."""
+    got = seo_probe.summarize(_tail([1_525_523, 950_512, 150_651, 92_205, 24_016]))
+    assert got["views_top"] == 150_651        # 상위 5편의 중앙값 = 수요
+    assert got["views_median"] < 30_000       # 기대치는 정직하게 낮게 남는다
+    assert got["verdict"] == "blue"           # 소형채널이 뚫는 키워드다
+
+
+def test_summarize_demand_red_when_big_channels_own_it():
+    """무선청소기 실측 모양 — 수요는 있는데 대형채널 독식이면 red(dead 아님)."""
+    got = seo_probe.summarize(_tail([1_198_270, 500_000, 233_462, 120_000, 90_000],
+                                    subs=500_000))
+    assert got["views_top"] == 233_462
+    assert got["verdict"] == "red"
+
+
+def test_summarize_views_top_when_fewer_than_five():
+    """5편이 안 되면 있는 것 전부의 중앙값 — 표본이 작다고 0으로 죽이지 않는다."""
+    got = seo_probe.summarize([{"title": "a", "views": 300, "subs": 1},
+                               {"title": "b", "views": 100, "subs": 1},
+                               {"title": "c", "views": 200, "subs": 1}])
+    assert got["views_top"] == 200
+
+
+def test_summarize_empty_has_views_top():
+    got = seo_probe.summarize([])
+    assert got["views_top"] == 0
+    assert got["verdict"] == "unknown"
+
+
+def test_probe_unescapes_html_entities_in_titles(monkeypatch, store):
+    """유튜브 API는 제목을 HTML 이스케이프해 준다(실측: "아직도 &#39;맹물 커피&#39;").
+    그대로 두면 사장님 화면의 근거 제목에 &#39;가 그대로 보인다."""
+    monkeypatch.setattr(seo_probe, "YOUTUBE_API_KEYS", ["k1"])
+    monkeypatch.setattr(seo_probe.requests, "get", _fake_get(
+        _search_payload(["아직도 &#39;맹물 커피&#39; 드세요?", "한글둘", "한글셋"]),
+        _videos_payload(3, 500_000), _channels_payload(3, 500)))
+    got = seo_probe.probe_keywords(["이스케이프"], store)
+    assert "아직도 '맹물 커피' 드세요?" in got[0]["top_titles"]
+    assert "&#39;" not in " ".join(got[0]["top_titles"])

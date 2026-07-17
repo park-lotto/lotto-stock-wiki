@@ -276,6 +276,7 @@ class Store:
                 CREATE TABLE IF NOT EXISTS seo_keyword_stats (
                     keyword TEXT NOT NULL,
                     region TEXT NOT NULL DEFAULT 'KR',
+                    views_top INTEGER,
                     views_median INTEGER,
                     small_ratio REAL,
                     sample_n INTEGER,
@@ -285,6 +286,12 @@ class Store:
                     PRIMARY KEY (keyword, region)
                 )
             """)
+            # views_top은 T8 실측 뒤에 붙었다(2026-07-17) — 그 전에 테이블을 만든
+            # 로컬 DB가 있으므로 없으면 채워 넣는다. 서버엔 아직 이 테이블 자체가 없다.
+            try:
+                c.execute("ALTER TABLE seo_keyword_stats ADD COLUMN views_top INTEGER")
+            except sqlite3.OperationalError:
+                pass  # 이미 존재
             # 보이스 프리셋(2026-07-14, 영상제작 4단계) — 큐레이션된 목소리 카드.
             c.execute("""
                 CREATE TABLE IF NOT EXISTS voice_presets (
@@ -1318,9 +1325,10 @@ class Store:
         with self._conn() as c:
             c.execute(
                 "INSERT OR REPLACE INTO seo_keyword_stats "
-                "(keyword, region, views_median, small_ratio, sample_n, "
-                " top_titles_json, verdict, checked_at) VALUES (?,?,?,?,?,?,?,?)",
+                "(keyword, region, views_top, views_median, small_ratio, sample_n, "
+                " top_titles_json, verdict, checked_at) VALUES (?,?,?,?,?,?,?,?,?)",
                 (stat["keyword"], stat.get("region") or "KR",
+                 stat.get("views_top"),
                  stat.get("views_median"), stat.get("small_ratio"), stat.get("sample_n"),
                  json.dumps(stat.get("top_titles") or [], ensure_ascii=False),
                  stat.get("verdict"),
@@ -1333,7 +1341,7 @@ class Store:
         with self._conn() as c:
             row = c.execute(
                 "SELECT views_median, small_ratio, sample_n, top_titles_json, "
-                "verdict, checked_at FROM seo_keyword_stats "
+                "verdict, checked_at, views_top FROM seo_keyword_stats "
                 "WHERE keyword=? AND region=?", (keyword, region),
             ).fetchone()
         if not row:
@@ -1346,6 +1354,7 @@ class Store:
             return None
         return {
             "keyword": keyword, "region": region,
+            "views_top": row[6],
             "views_median": row[0], "small_ratio": row[1], "sample_n": row[2],
             "top_titles": json.loads(row[3]) if row[3] else [],
             "verdict": row[4], "checked_at": row[5],

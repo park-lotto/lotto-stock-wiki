@@ -585,8 +585,10 @@ function seoStatBadge(kw){
   if(!st) return `<span class="kwBadge">${seoEsc(kw)}</span>`;
   const v = SEO_VERDICT[st.verdict] || SEO_VERDICT.unknown;
   const tip = (st.top_titles||[]).join(' / ');
+  // 상위 조회수 = views_top(상위 5편 중앙값). views_median(20편 중앙값)이 아니다 —
+  // 검색 결과가 롱테일이라 중앙값을 '상위 조회수'라고 부르면 화면이 거짓말을 한다(T8 실측).
   const detail = st.verdict==='unknown' ? '' :
-    ` · 상위 조회수 ${Number(st.views_median||0).toLocaleString()}` +
+    ` · 상위 조회수 ${Number(st.views_top||0).toLocaleString()}` +
     ` · 소형채널 ${Math.round((st.small_ratio||0)*100)}%`;
   return `<span class="kwBadge ${seoEsc(st.verdict)}" title="${seoEsc(tip)}">`
        + `${v.icon} ${seoEsc(kw)} — ${v.label}${detail}</span>`;
