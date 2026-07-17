@@ -91,11 +91,16 @@ def test_intonation_no_ghost_candidate_from_emotion_tag():
     ★role=CTA로 바꾼 이유(Task2 보이스 트랙이 새 규칙을 추가한 뒤 재검증) —
     Task2가 `intonation.emphasis_roles=["훅"]` + `_HOOK_TAIL_PAT`(훅 마지막 어절을
     쉼표+느낌표로 강조)를 추가했다. 이 새 규칙은 role=훅에서 **합법적으로**
-    `applied["intonation"]`을 1 올리고 태그 바로 뒤에 쉼표를 만든다
-    (`'[curious] 진짜, 대박이에요!'`) — 유령 버그가 만드는 모양과 겉보기가
-    똑같아서, role=훅에 남겨두면 이 테스트는 "유령이 도졌다"와 "새 훅꼬리 규칙이
-    정상 발동했다"를 구별하지 못하는 무력한 카운터가 된다(둘 다
-    `d["applied"]["intonation"]`을 1로 만든다).
+    `applied["intonation"]`을 1 올린다 — 단, 쉼표는 "태그 바로 뒤"가 아니라
+    **훅 마지막 어절 앞**에 박힌다(실측: `'[curious] 진짜, 대박이에요!'` — 쉼표는
+    "진짜" 뒤에 있지, "[curious]" 바로 뒤가 아니다). 두 버그가 겉보기까지 완전히
+    같지는 않다 — `d["text"].startswith("[curious] 진짜")`는 role=훅에서도 여전히
+    참이라(유령 버그였다면 `"[curious], 진짜..."`가 돼 거짓이 됐을 자리) *텍스트*
+    단언은 role=훅에 남겨둬도 살아있다. 눈머는 건 오직 `applied["intonation"]`
+    **카운터** 단언뿐이다 — 유령 버그와 새 훅꼬리 규칙 둘 다 `intonation`을 1로
+    올리므로, role=훅에 남겨두면 "유령이 도졌다"와 "새 규칙이 정상 발동했다"를
+    카운터만으로는 구별 못 하는 무력한 판별자가 된다(리뷰 지적 Minor, 2026-07-17 —
+    옛 서술은 "겉보기가 똑같다"고 과장했다).
 
     role=CTA는 `emphasis_roles=["훅"]`에 없으므로 훅꼬리 규칙이 원천적으로
     발동하지 않는다(`ctx.get("role_canon") in (cfg.get("emphasis_roles") or [])`가

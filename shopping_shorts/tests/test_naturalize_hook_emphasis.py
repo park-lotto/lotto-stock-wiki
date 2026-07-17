@@ -12,6 +12,11 @@ def _run(text, role, profile=None):
                              beat_role=role, beat_index=0, beat_total=5)["text"]
 
 
+def _run_detail(text, role, profile=None, beat_index=0):
+    return naturalize_detail(text, merge_profile(profile or {}),
+                             beat_role=role, beat_index=beat_index, beat_total=5)
+
+
 def test_hook_last_word_gets_comma_and_bang():
     out = _run("요새 해외 인플루언서들 손에 하나씩 들려있는 이거.", "훅")
     assert ", 이거!" in out, f"③ 규칙(쉼표+느낌표)이 적용 안 됐다: {out!r}"
@@ -83,3 +88,38 @@ def test_existing_adverb_emphasis_still_works():
                {"intonation": {"intensity": 1.0}})
     assert ", 진짜" in out or ", 완전" in out or ", 딱" in out, \
         f"부사 강조가 죽었다: {out!r}"
+
+
+def test_hook_question_mark_is_preserved_not_flattened():
+    """물음표 훅은 건드리지 않는다(리뷰 지적 Critical1, 2026-07-17).
+
+    `_HOOK_TAIL_PAT`의 `([.…!?]*)`가 뒤쪽 문장부호를 통째로 삼키는데 치환은
+    하드코딩된 "!"였다 — 그래서 반전의문 훅("이거 뭔지 알아요?")이 하강 느낌표로
+    잘못 읽혔다(엔진 원칙: 안 터지는 쪽이 안전한 쪽 — 잘못 터지는 것보다 훨씬 낫다).
+    수정 후: 매치된 꼬리의 문장부호에 "?"가 섞여 있으면 규칙이 아예 발동하지 않고
+    문장을 그대로 둔다(오늘의 동작 = 질문 훅에겐 리스크 0).
+    """
+    for text in ["이거 뭔지 알아요?", "왜 다들 이걸 살까요?"]:
+        d = _run_detail(text, "훅")
+        out = d["text"]
+        assert out.rstrip().endswith("?"), f"물음표가 사라졌다: {out!r}"
+        assert "!" not in out, f"물음표 훅에 느낌표가 붙었다: {out!r}"
+        assert d["applied"].get("intonation", 0) == 0, \
+            f"물음표 훅인데 훅꼬리 규칙이 발동해 계상됐다: {d['applied']!r} / {out!r}"
+
+
+def test_intonation_count_stays_one_when_hook_tail_word_is_adverb():
+    """훅 마지막 어절이 그 자체로 부사(`_EMPHASIS_WORDS`)일 때도 카운트는 1이어야
+    한다(리뷰 지적 Important, 2026-07-17).
+
+    "완전"은 `_HOOK_TAIL_PAT`(훅 꼬리)과 `_EMPHASIS_PAT`(부사 강조) 둘 다의
+    사정권이다 — 순서(꼬리 먼저)가 텍스트가 아니라 **카운트**를 지킨다. 꼬리를
+    먼저 태우면 "완전" 자리가 이미 쉼표+느낌표로 바뀌어 `_EMPHASIS_PAT`의
+    lookbehind가 더는 그 자리를 후보로 못 잡아 `applied["intonation"]`이 정확히
+    1로 남는다. 순서를 뒤집으면(부사 먼저) 같은 글자가 부사 쉼표로 먼저 잡히고
+    꼬리 규칙이 다시 한 번 `_bump`해 2로 거짓 계상된다 — `ca92f9c8`이 잡은 유령
+    카운트와 같은 결함 클래스다.
+    """
+    d = _run_detail("가격이 싼데 완전.", "훅")
+    assert d["applied"].get("intonation") == 1, \
+        f"완전(부사=꼬리 겹침 자리)에서 카운트가 거짓 계상됐다: {d['applied']!r} / {d['text']!r}"
