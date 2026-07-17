@@ -77,13 +77,20 @@ def _unknown(keyword, region):
 
 
 def _search(kw, tok, region, lang):
-    """(status, items|None). items = [{video_id, channel_id, title}]"""
+    """(status, items|None). items = [{video_id, channel_id, title}].
+
+    네트워크 예외(타임아웃·연결끊김 등)도 실패로 접어서 status=0, items=None으로
+    돌려준다 — 예외를 밖으로 던지면 SEO 문구 생성 자체가 죽는다(계약 위반).
+    """
     since = (datetime.now(timezone.utc) - timedelta(days=_WINDOW_DAYS)).isoformat()
-    r = requests.get(_SEARCH_URL, params={
-        "part": "snippet", "q": kw, "type": "video", "videoDuration": "short",
-        "order": "viewCount", "publishedAfter": since,
-        "regionCode": region, "relevanceLanguage": lang,
-        "maxResults": _SAMPLE_MAX, "key": tok}, timeout=30)
+    try:
+        r = requests.get(_SEARCH_URL, params={
+            "part": "snippet", "q": kw, "type": "video", "videoDuration": "short",
+            "order": "viewCount", "publishedAfter": since,
+            "regionCode": region, "relevanceLanguage": lang,
+            "maxResults": _SAMPLE_MAX, "key": tok}, timeout=30)
+    except requests.exceptions.RequestException:
+        return 0, None
     if r.status_code != 200:
         return r.status_code, None
     items = []
@@ -98,19 +105,31 @@ def _search(kw, tok, region, lang):
 
 
 def _fetch_stats(url, ids, tok, field):
-    """videos/channels statistics → {id: int}. 실패는 조용히 건너뛴다(빈 dict)."""
+    """videos/channels statistics → (out={id: int}, ok).
+
+    ok=False면 최소 한 청크가 실패(HTTP 에러·네트워크 예외)했다는 뜻 — out에 든
+    값(특히 빈 dict)을 "진짜 0"으로 신뢰하면 안 된다. 호출부가 용도별로 다르게
+    쓴다: views 실패는 위험(허위 '수요없음')이라 unknown 처리, subs 실패는
+    기존처럼 '큰 채널'로 보수적 처리해 무해하다.
+    """
     out = {}
+    ok = True
     for i in range(0, len(ids), 50):          # API 상한 50개/호출
         chunk = [x for x in ids[i:i + 50] if x]
         if not chunk:
             continue
-        r = requests.get(url, params={
-            "part": "statistics", "id": ",".join(chunk), "key": tok}, timeout=30)
+        try:
+            r = requests.get(url, params={
+                "part": "statistics", "id": ",".join(chunk), "key": tok}, timeout=30)
+        except requests.exceptions.RequestException:
+            ok = False
+            continue
         if r.status_code != 200:
+            ok = False
             continue
         for it in r.json().get("items", []):
             out[it["id"]] = int((it.get("statistics") or {}).get(field) or 0)
-    return out
+    return out, ok
 
 
 def probe_keywords(keywords, store, lang="ko"):
@@ -144,8 +163,13 @@ def probe_keywords(keywords, store, lang="ko"):
             out.append(_unknown(kw, region))
             continue
         tok = tokens[min(tok_idx, len(tokens) - 1)]
-        views = _fetch_stats(_VIDEOS_URL, [i["video_id"] for i in items], tok, "viewCount")
-        subs = _fetch_stats(_CHANNELS_URL, [i["channel_id"] for i in items], tok, "subscriberCount")
+        views, views_ok = _fetch_stats(_VIDEOS_URL, [i["video_id"] for i in items], tok, "viewCount")
+        if not views_ok:
+            # search는 성공했는데 videos.list만 실패 — 전부 0으로 잡히면 'dead'로
+            # 오판되고 7일간 캐시된다. 측정 실패는 캐시하지 않는다.
+            out.append(_unknown(kw, region))
+            continue
+        subs, _subs_ok = _fetch_stats(_CHANNELS_URL, [i["channel_id"] for i in items], tok, "subscriberCount")
         stat = summarize([{"title": i["title"],
                            "views": views.get(i["video_id"], 0),
                            "subs": subs.get(i["channel_id"], 0)} for i in items])

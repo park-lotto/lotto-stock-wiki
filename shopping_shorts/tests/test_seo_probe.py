@@ -1,4 +1,5 @@
 import pytest
+import requests
 
 from shopping_shorts import seo_probe
 from shopping_shorts.store import Store
@@ -206,6 +207,55 @@ def test_summarize_missing_subs_counts_as_large():
     got = seo_probe.summarize(items)
     assert got["small_ratio"] == 0.0
     assert got["verdict"] == "red"
+
+
+def test_probe_keywords_videos_fail_is_unknown_not_cached(monkeypatch, store):
+    """search는 성공, videos.list만 500 실패 → dead로 오판돼 캐시되면 안 된다."""
+    monkeypatch.setattr(seo_probe, "YOUTUBE_API_KEYS", ["k1"])
+
+    def _get(url, params=None, timeout=None):
+        if "search" in url:
+            return _FakeResp(_search_payload(["한글1", "한글2", "한글3"]))
+        if "videos" in url:
+            return _FakeResp({}, status=500)
+        return _FakeResp(_channels_payload(3, 500))
+
+    monkeypatch.setattr(seo_probe.requests, "get", _get)
+    got = seo_probe.probe_keywords(["통계실패"], store)
+    assert got[0]["verdict"] == "unknown"
+    assert store.get_keyword_stats("통계실패") is None
+
+
+def test_probe_keywords_channels_fail_keeps_measurement_as_large(monkeypatch, store):
+    """channels.list 실패해도 측정은 살아있고 subs는 '큰 채널'로 처리된다(small_ratio=0)."""
+    monkeypatch.setattr(seo_probe, "YOUTUBE_API_KEYS", ["k1"])
+
+    def _get(url, params=None, timeout=None):
+        if "search" in url:
+            return _FakeResp(_search_payload(["한글1", "한글2", "한글3"]))
+        if "videos" in url:
+            return _FakeResp(_videos_payload(3, 500_000))
+        return _FakeResp({}, status=500)
+
+    monkeypatch.setattr(seo_probe.requests, "get", _get)
+    got = seo_probe.probe_keywords(["구독실패"], store)
+    assert got[0]["views_median"] == 500_000
+    assert got[0]["small_ratio"] == 0.0
+    assert got[0]["verdict"] == "red"
+    assert store.get_keyword_stats("구독실패") is not None
+
+
+def test_probe_keywords_network_exception_does_not_raise(monkeypatch, store):
+    """requests.get이 Timeout을 던져도 probe_keywords 밖으로 예외가 나가면 안 된다."""
+    monkeypatch.setattr(seo_probe, "YOUTUBE_API_KEYS", ["k1"])
+
+    def _boom(url, params=None, timeout=None):
+        raise requests.exceptions.Timeout("network is slow today")
+
+    monkeypatch.setattr(seo_probe.requests, "get", _boom)
+    got = seo_probe.probe_keywords(["타임아웃"], store)  # 예외 없이 리턴돼야 한다
+    assert got[0]["verdict"] == "unknown"
+    assert store.get_keyword_stats("타임아웃") is None
 
 
 def test_summarize_median_even_sample():
