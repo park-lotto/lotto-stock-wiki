@@ -527,6 +527,14 @@ const SEO_VERDICT = {
   unknown: {icon:'–', label:'미측정'},
 };
 
+// 카드 id → 그 카드가 소유한 SEO 필드. 부분 재생성(갈아끼울 것)과 전체 생성(잠금 시
+// 지킬 것) 양쪽이 같은 표를 봐야 한다 — 갈라지면 한쪽만 잠금이 새다.
+const SEO_CARD_KEYS = {
+  title: ['title','title_candidates'], description: ['description'],
+  tags: ['tags'], hashtags: ['hashtags'],
+  hook: ['hook_line','comment_bait'], cta: ['cta'],
+};
+
 function seoEsc(s){
   return String(s==null?'':s).replace(/[&<>"']/g, c=>(
     {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -555,9 +563,11 @@ async function seoGenerate(only){
       job_id: MIX_JOB,
       captions: (typeof HANDOFF!=='undefined' ? HANDOFF : []).map(h=>h && h.caption).filter(Boolean),
     };
+    // 잠금은 전체 생성에도 보낸다 — 서버가 잠긴 내용을 프롬프트에 실어 AI가 그것에
+    // 어울리게 쓴다. 예전엔 only일 때만 보내서 전체 생성이 잠금을 아예 몰랐다.
+    body.locked = (SEO && SEO.locked) || {};
     if(only){
       body.only = only;
-      body.locked = (SEO && SEO.locked) || {};
       body.keyword_stats = (SEO && SEO.keyword_stats) || [];   // 실측치 되먹임
     }
     const r = await fetch('/api/produce/seo/generate', {
@@ -568,13 +578,20 @@ async function seoGenerate(only){
     if(only){
       // 부분 재생성 — 요청한 카드만 갈아끼우고 나머지는 손으로 다듬은 걸 지킨다
       const keep = Object.assign({}, SEO);
-      const map = {title:['title','title_candidates'], description:['description'],
-                   tags:['tags'], hashtags:['hashtags'],
-                   hook:['hook_line','comment_bait'], cta:['cta']};
-      (map[only]||[]).forEach(k=>{ keep[k] = d.seo[k]; });
+      (SEO_CARD_KEYS[only]||[]).forEach(k=>{ keep[k] = d.seo[k]; });
       SEO = keep;
     }else{
-      SEO = d.seo;
+      // 전체 생성 — ★잠근 카드는 사장님이 확정한 것이라 새 것으로 덮지 않는다.
+      // 예전엔 SEO=d.seo로 통째 교체하고 자물쇠 '표시'만 되살려서, 🔒는 그대로인데
+      // 내용은 날아갔다(화면이 거짓말). seoSave가 곧바로 DB에 커밋해 복구도 안 됐다.
+      const fresh = d.seo;
+      Object.keys(locked).forEach(card=>{
+        if(!locked[card]) return;
+        (SEO_CARD_KEYS[card]||[]).forEach(k=>{
+          if(SEO && SEO[k] !== undefined) fresh[k] = SEO[k];
+        });
+      });
+      SEO = fresh;
     }
     SEO.locked = locked;
     renderSeo();
@@ -607,9 +624,11 @@ function seoStatBadge(kw){
   const tip = (st.top_titles||[]).join(' / ');
   // 상위 조회수 = views_top(상위 5편 중앙값). views_median(20편 중앙값)이 아니다 —
   // 검색 결과가 롱테일이라 중앙값을 '상위 조회수'라고 부르면 화면이 거짓말을 한다(T8 실측).
+  // 뚫림은 비율이 아니라 '10만+ 낸 영상 중 소형채널 몇 편'으로 보여준다 — 비율로 쓰면
+  // 꼬리의 영세채널이 부풀려 red를 blue로 뒤집었다(2026-07-17 리뷰).
   const detail = st.verdict==='unknown' ? '' :
     ` · 상위 조회수 ${Number(st.views_top||0).toLocaleString()}` +
-    ` · 소형채널 ${Math.round((st.small_ratio||0)*100)}%`;
+    ` · 10만+ ${Number(st.hit_n||0)}편 중 소형채널 ${Number(st.small_hits||0)}편`;
   return `<span class="kwBadge ${seoEsc(st.verdict)}" title="${seoEsc(tip)}">`
        + `${v.icon} ${seoEsc(kw)} — ${v.label}${detail}</span>`;
 }

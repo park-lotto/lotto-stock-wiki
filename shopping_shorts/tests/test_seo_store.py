@@ -122,3 +122,17 @@ def test_keyword_stats_views_top_roundtrip(store):
     안 실리면 캐시된 키워드만 조용히 0이 돼 7일간 dead로 보인다."""
     store.put_keyword_stats({**_STAT, "views_top": 150_651})
     assert store.get_keyword_stats("빨대텀블러")["views_top"] == 150_651
+
+
+def test_keyword_stats_verdict_fields_roundtrip(store):
+    """★판정에 쓰는 값 전부가 캐시를 왕복한다(2026-07-17).
+
+    small_hits/hit_n이 안 실리면 **캐시 적중한 키워드만** 배지가 '10만+ 0편 중 0편'으로
+    조용히 깨진다(verdict 컬럼은 따로 저장돼 blue로 남으므로 근거와 판정이 어긋난다).
+    실제로 이 왕복을 넣었다가 git checkout으로 날렸는데 45건이 전부 green이었다 —
+    아무도 안 재고 있었다는 뜻이다."""
+    store.put_keyword_stats({**_STAT, "views_top": 150_651, "small_hits": 2, "hit_n": 7})
+    got = store.get_keyword_stats("빨대텀블러")
+    assert got["views_top"] == 150_651
+    assert got["small_hits"] == 2      # 판정 인자
+    assert got["hit_n"] == 7           # 화면이 'N편 중 M편'으로 쓴다

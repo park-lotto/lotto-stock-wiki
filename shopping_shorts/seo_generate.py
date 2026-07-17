@@ -94,30 +94,68 @@ def _fmt_stats(keyword_stats):
     for s in keyword_stats:
         v = s.get("verdict")
         if v == "blue":
-            note = "뚫린다(수요 있고 소형채널도 상위권) — 밀어라"
+            note = "뚫린다(수요 있고, 소형채널이 여기서 조회수를 낸 적 있다) — 밀어라"
         elif v == "red":
-            note = "레드오션(대형채널 독식) — 이걸 메인으로 쓰지 마라"
+            note = "레드오션(수요는 있으나 소형채널은 아무도 못 뚫었다) — 이걸 메인으로 쓰지 마라"
         elif v == "dead":
             note = "수요 낮음 — 빼라"
         else:
             note = "미측정"
         # 수요는 views_top(상위 5편 중앙값)이다 — 20편 중앙값(views_median)은 꼬리에
-        # 눌려 실제 수요를 못 보여준다(T8 실측). 되먹임에 틀린 숫자를 넣으면
+        # 눌려 실제 수요를 못 보여준다(T8 실측). 뚫림은 '10만+ 낸 소형채널 편수'다 —
+        # 비율은 꼬리의 영세채널이 부풀린다. 되먹임에 틀린 숫자를 넣으면
         # AI가 틀린 근거 위에서 다시 쓴다.
         lines.append(
             f"- {s.get('keyword')}: {v} / {note} "
-            f"(상위 조회수 {s.get('views_top')}, 소형채널 비율 {s.get('small_ratio')})")
+            f"(상위 조회수 {s.get('views_top')}, "
+            f"10만+ 낸 영상 {s.get('hit_n')}편 중 소형채널 {s.get('small_hits')}편)")
     return ("\n[유튜브 실측 — 이 근거 위에서 다시 써라]\n" + "\n".join(lines) + "\n")
 
 
-def _fmt_locked(locked):
+def _locked_value(seo, card):
+    """카드 id → 지금 확정된 내용(사람이 읽는 문자열). 없으면 None."""
+    if card == "title":
+        return seo.get("title")
+    if card == "description":
+        return seo.get("description")
+    if card == "tags":
+        tags = seo.get("tags") or []
+        return ", ".join(tags) if tags else None
+    if card == "hashtags":
+        hs = seo.get("hashtags") or {}
+        parts = [f"{k}: {' '.join(v or [])}" for k, v in hs.items() if v]
+        return " / ".join(parts) if parts else None
+    if card == "hook":
+        bits = [x for x in (seo.get("hook_line"), seo.get("comment_bait")) if x]
+        return " / ".join(bits) if bits else None
+    if card == "cta":
+        cta = seo.get("cta") or {}
+        parts = [f"{k}: {v}" for k, v in cta.items() if v]
+        return " / ".join(parts) if parts else None
+    return None
+
+
+def _fmt_locked(locked, seo=None):
+    """잠긴 항목을 **내용까지** 프롬프트에 싣는다.
+
+    ★필드명만 넣던 시절엔("title, cta") AI가 잠긴 제목을 볼 수 없는 채로 "그대로 두고
+    나머지를 여기에 어울리게 써라"는 지시를 받았다 — 볼 수 없는 것에 맞출 수는 없으므로
+    잠금의 광고된 동작이 전혀 일어나지 않았다(2026-07-17 리뷰).
+    """
     if not locked:
         return ""
-    on = [k for k, v in locked.items() if v]
-    if not on:
+    seo = seo or {}
+    lines = []
+    for card, on in locked.items():
+        if not on:
+            continue
+        label = _ONLY_LABELS.get(card, card)
+        val = _locked_value(seo, card)
+        lines.append(f"- {label}: {val}" if val else f"- {label}: (아직 내용 없음)")
+    if not lines:
         return ""
-    return ("\n[잠긴 항목 — 확정이다. 그대로 두고, 나머지를 여기에 어울리게 써라]\n"
-            + ", ".join(on) + "\n")
+    return ("\n[잠긴 항목 — 사장님이 확정한 것이다. 이 내용을 그대로 두고, "
+            "나머지를 여기에 어울리게 써라]\n" + "\n".join(lines) + "\n")
 
 
 def _build_prompt(job, captions, only, locked, keyword_stats):
@@ -135,7 +173,7 @@ def _build_prompt(job, captions, only, locked, keyword_stats):
               "인스타 해시태그 문법을 유튜브에 그대로 옮기지 마라]\n"
               + "\n".join(f"- {c}" for c in captions if c) + "\n")
     p += _fmt_stats(keyword_stats)
-    p += _fmt_locked(locked)
+    p += _fmt_locked(locked, job.get("seo") or {})   # 잠긴 값은 job에 저장된 확정본에서
     if only:
         p += (f"\n[이번엔 {_ONLY_LABELS.get(only, only)}만 새로 써라. "
               "나머지 항목도 스키마대로 채워서 반환하되 기존 것을 유지해라.]\n")

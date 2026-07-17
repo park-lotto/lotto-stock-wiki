@@ -301,6 +301,8 @@ class Store:
                     views_top INTEGER,
                     views_median INTEGER,
                     small_ratio REAL,
+                    small_hits INTEGER,
+                    hit_n INTEGER,
                     sample_n INTEGER,
                     top_titles_json TEXT,
                     verdict TEXT,
@@ -308,12 +310,16 @@ class Store:
                     PRIMARY KEY (keyword, region)
                 )
             """)
-            # views_top은 T8 실측 뒤에 붙었다(2026-07-17) — 그 전에 테이블을 만든
-            # 로컬 DB가 있으므로 없으면 채워 넣는다. 서버엔 아직 이 테이블 자체가 없다.
-            try:
-                c.execute("ALTER TABLE seo_keyword_stats ADD COLUMN views_top INTEGER")
-            except sqlite3.OperationalError:
-                pass  # 이미 존재
+            # views_top은 T8 실측 뒤에, small_hits·hit_n은 그 뒤 리뷰 지적으로 붙었다
+            # (2026-07-17) — 그 전에 테이블을 만든 로컬 DB가 있으므로 없으면 채워 넣는다.
+            # 서버엔 아직 이 테이블 자체가 없다.
+            for _col, _ddl in (("views_top", "INTEGER"),
+                               ("small_hits", "INTEGER"),
+                               ("hit_n", "INTEGER")):
+                try:
+                    c.execute(f"ALTER TABLE seo_keyword_stats ADD COLUMN {_col} {_ddl}")
+                except sqlite3.OperationalError:
+                    pass  # 이미 존재
             # 제작소 작업파일(2026-07-17) — 사장님 제보 "뒤로가기 하니까 작업물이 지워진다".
             # ★mix_jobs를 재활용하지 않는다: urls_json·structure가 NOT NULL이라 **매칭 전
             # 작업**(대본만 확정한 상태)을 못 담는다. 실측으로 서버 job 21건 중 매칭 전은 0건 —
@@ -1372,11 +1378,13 @@ class Store:
         with self._conn() as c:
             c.execute(
                 "INSERT OR REPLACE INTO seo_keyword_stats "
-                "(keyword, region, views_top, views_median, small_ratio, sample_n, "
-                " top_titles_json, verdict, checked_at) VALUES (?,?,?,?,?,?,?,?,?)",
+                "(keyword, region, views_top, views_median, small_ratio, small_hits, "
+                " hit_n, sample_n, top_titles_json, verdict, checked_at) "
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                 (stat["keyword"], stat.get("region") or "KR",
                  stat.get("views_top"),
-                 stat.get("views_median"), stat.get("small_ratio"), stat.get("sample_n"),
+                 stat.get("views_median"), stat.get("small_ratio"),
+                 stat.get("small_hits"), stat.get("hit_n"), stat.get("sample_n"),
                  json.dumps(stat.get("top_titles") or [], ensure_ascii=False),
                  stat.get("verdict"),
                  datetime.now(timezone.utc).isoformat()),
@@ -1388,7 +1396,8 @@ class Store:
         with self._conn() as c:
             row = c.execute(
                 "SELECT views_median, small_ratio, sample_n, top_titles_json, "
-                "verdict, checked_at, views_top FROM seo_keyword_stats "
+                "verdict, checked_at, views_top, small_hits, hit_n "
+                "FROM seo_keyword_stats "
                 "WHERE keyword=? AND region=?", (keyword, region),
             ).fetchone()
         if not row:
@@ -1401,7 +1410,7 @@ class Store:
             return None
         return {
             "keyword": keyword, "region": region,
-            "views_top": row[6],
+            "views_top": row[6], "small_hits": row[7], "hit_n": row[8],
             "views_median": row[0], "small_ratio": row[1], "sample_n": row[2],
             "top_titles": json.loads(row[3]) if row[3] else [],
             "verdict": row[4], "checked_at": row[5],

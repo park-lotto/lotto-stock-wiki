@@ -184,3 +184,35 @@ def test_stats_prompt_uses_views_top_not_tail_median(monkeypatch):
     p = log[0]
     assert "150,651" in p or "150651" in p     # 수요가 들어간다
     assert "10,230" not in p and "10230" not in p   # 꼬리 중앙값은 근거로 안 쓴다
+
+
+# ── 리뷰가 잡은 Major: 잠금이 이름뿐이었다(2026-07-17) ──────────────
+
+
+def test_prompt_includes_locked_values_not_just_field_names(monkeypatch):
+    """★잠긴 항목의 '내용'이 프롬프트에 들어간다.
+
+    기존엔 'title, cta' 같은 **영문 필드명만** 실려서, AI는 잠긴 제목을 볼 수 없는 채로
+    "그대로 두고 나머지를 여기에 어울리게 써라"는 지시를 받았다 — 볼 수 없는 것에
+    맞출 수는 없으므로 지시가 물리적으로 수행 불가능했다. 잠금의 광고된 동작이
+    전혀 일어나지 않고 있었다."""
+    job = {**_JOB, "seo": {"title": "다이슨 에어랩 3개월 실사용",
+                           "tags": ["기존태그"], "cta": {"youtube": "구독 눌러"}}}
+    log = []
+    _patch(monkeypatch, ["k1"], _FakeClient(_OUT, log=log))
+    seo_generate.generate(job, locked={"title": True}, only="tags")
+    locked_block = log[0].split("[잠긴 항목")[1]
+    assert "다이슨 에어랩 3개월 실사용" in locked_block   # ★잠근 제목의 내용이 실린다
+    assert "title" not in locked_block                   # 영문 필드명이 새지 않는다
+
+
+def test_prompt_locked_shows_only_locked_fields(monkeypatch):
+    """안 잠근 항목까지 '확정'이라고 넣으면 재생성이 아무것도 못 바꾼다."""
+    job = {**_JOB, "seo": {"title": "잠긴제목", "description": "안잠근설명"}}
+    log = []
+    _patch(monkeypatch, ["k1"], _FakeClient(_OUT, log=log))
+    seo_generate.generate(job, locked={"title": True, "description": False}, only="tags")
+    p = log[0]
+    locked_block = p.split("[잠긴 항목")[1]
+    assert "잠긴제목" in locked_block
+    assert "안잠근설명" not in locked_block
