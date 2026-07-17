@@ -33,6 +33,10 @@
     ".ss-item{padding:8px 12px;border-radius:8px;font-size:13px;color:var(--txt,#e6edf3);cursor:pointer;margin-bottom:2px}" +
     ".ss-item.ss-disabled{cursor:default;opacity:.45}" +
     ".ss-item.active{background:linear-gradient(90deg,#153a6b,#0d2340);color:#7db4ff}" +
+    ".ss-work{padding:5px 12px 5px 30px;border-radius:6px;font-size:12px;color:var(--sub,#8b98a9);" +
+      "cursor:pointer;margin-bottom:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}" +
+    ".ss-work:hover{color:var(--txt,#e6edf3)}" +
+    ".ss-work.ss-work-current{color:#7db4ff;background:rgba(21,58,107,.35)}" +
     "@media(max-width:760px){body{flex-direction:column}" +
       ".ss-nav{width:100%;border-right:none;border-bottom:1px solid var(--line,#1e2735);display:flex;gap:6px;" +
         "overflow-x:auto;align-items:center;white-space:nowrap;padding:10px 12px}" +
@@ -67,9 +71,35 @@
     aside.innerHTML = html;
     document.body.insertBefore(aside, document.body.firstChild);
   }
+  // 제작소 작업파일 목록(2026-07-17) — 사장님 제보 "내일 다시 들어와도 기록남고 그대로".
+  // NAV는 로드 시 동기로 그려지는 정적 배열이라 하위 항목 개념이 없다 → 마운트 뒤에 주입한다.
+  // NAV 구조 자체는 안 건드린다 — 페이지 6개가 이 파일을 공유한다.
+  function mountWorks() {
+    if (path !== "/produce") return;   // 다른 페이지에서 제작소 작업을 부를 이유가 없다
+    var nav = document.querySelector(".ss-nav");
+    if (!nav) return;
+    var open = null;
+    try { open = new URLSearchParams(location.search).get("work"); } catch (e) {}
+    fetch("/api/produce/works").then(function (r) { return r.json(); }).then(function (d) {
+      if (!d || !d.ok || !d.works) return;
+      var h = "";
+      d.works.forEach(function (w) {
+        var cur = open && w.work_id === open;
+        var name = (w.title || "(제목 없음)");
+        h += '<div class="ss-work' + (cur ? " ss-work-current" : "") + '"' +
+             " onclick=\"location.href='/produce?work=" + esc(w.work_id) + "'\"" +
+             ' title="' + esc(name) + '">· ' + esc(name) + " · " + (w.step + 1) + "단계</div>";
+      });
+      h += '<div class="ss-work" onclick="location.href=\'/produce\'">+ 새 작업</div>';
+      nav.innerHTML = nav.innerHTML + h;
+    }).catch(function () {});   // 서버가 죽어도 네비게이션은 살아 있어야 한다
+  }
+
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", mount);
+    document.addEventListener("DOMContentLoaded", mountWorks);
   } else {
     mount();
+    mountWorks();
   }
 })();
