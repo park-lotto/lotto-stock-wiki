@@ -128,3 +128,8 @@ pipeline/atoms/autopilot_state.json
 output/regular_close_prices.json
 pipeline/watchlist.json.bak
 test_final.json
+
+# shopping_shorts 리모션 렌더 로컬 산출물(영상은 커밋 안 함)
+shopping_shorts/motion/public/
+shopping_shorts/motion/*.mp4
+shopping_shorts/motion/.render_tmp/
