@@ -1,5 +1,6 @@
 """비트+카테고리 → 리모션 효과 배치 플랜(FullReel props). 순수 모듈.
 규칙 1차 + (Task3) Haiku 2차. 렌더·DB를 모른다."""
+import json
 import re
 
 EFFECT_CATALOG = [
@@ -40,6 +41,39 @@ def match_rules(beats):
             fx.append({"s": b["s"] + 0.2, "e": b["e"], "comp": "impact",
                        "props": {"word": mi.group(0) + "!", "position": "top"}})
     return fx
+
+
+_LLM_PROMPT = (
+    "다음 릴스 비트에서, 규칙이 못 잡은 훅/감정절정/CTA 비트에만 효과를 추천해라. "
+    "impact(강조어)와 callout(아이콘+이름+태그)만. 실제 대사 단어만 써라. "
+    'JSON만: {"extra":[{"beat":인덱스,"comp":"impact|callout","props":{...}}]}'
+)
+
+
+def _llm_extra(beats, client):
+    body = "\n".join(f'{i}: {b.get("text","")}' for i, b in enumerate(beats))
+    resp = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=[_LLM_PROMPT + "\n" + body],
+        config={"response_mime_type": "application/json"},
+    )
+    data = json.loads(resp.text)
+    out = []
+    for e in data.get("extra", []):
+        b = beats[int(e["beat"])]
+        out.append({"s": b["s"] + 0.15, "e": b["e"], "comp": e["comp"], "props": e.get("props", {})})
+    return out
+
+
+def suggest(beats, category, video_src, dur_frames, client=None):
+    fx = match_rules(beats)
+    if client is not None:
+        try:
+            fx = fx + _llm_extra(beats, client)
+        except Exception:
+            pass  # 폴백: 규칙 결과 유지(무과금)
+    fx.sort(key=lambda f: f["s"])
+    return build_plan(beats, category, video_src, dur_frames, fx=fx)
 
 
 def build_plan(beats, category, video_src, dur_frames, fx=None):

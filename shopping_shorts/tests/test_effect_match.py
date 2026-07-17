@@ -40,3 +40,23 @@ def test_build_plan_shape_is_fullreel_props():
     for f in plan["fx"]:
         assert f["comp"] in {"impact", "count", "list", "callout"}
         assert 0.0 <= f["s"] < f["e"]
+
+
+def test_suggest_without_client_is_rules_only(monkeypatch):
+    plan = em.suggest(BEATS, "레시피", "f.mp4", 180, client=None)
+    assert plan["themeName"] == "warm"
+    # 규칙만: count/list/impact 존재
+    assert {f["comp"] for f in plan["fx"]} >= {"count", "list", "impact"}
+
+
+class _BoomClient:
+    class models:
+        @staticmethod
+        def generate_content(*a, **k):
+            raise RuntimeError("LLM down")
+
+
+def test_suggest_llm_failure_falls_back_to_rules(monkeypatch):
+    plan = em.suggest(BEATS, "레시피", "f.mp4", 180, client=_BoomClient())
+    # 폴백: 규칙 결과가 그대로 나온다(예외 삼킴)
+    assert {f["comp"] for f in plan["fx"]} >= {"count", "impact"}
