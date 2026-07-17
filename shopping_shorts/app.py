@@ -4,6 +4,7 @@ import hashlib
 import ipaddress
 import os
 import re
+import secrets
 import shutil
 import socket
 import tempfile
@@ -1323,21 +1324,35 @@ def api_mix_adjust(body: dict):
 
 @app.post("/api/mix/render")
 def api_mix_render(background_tasks: BackgroundTasks, body: dict):
+    """최종 렌더 예약. 미리보기(/api/produce/mix/preview)와 같은 중복예약 가드를 건다 —
+    이쪽이 오히려 **돈이 나가는** 경로다(subtitle_removal이 켜져 있으면 VMake 유료 호출).
+
+    가드가 없으면 더블클릭·폴링 재시도로 run_render가 2개 예약돼 같은 work/final.mp4에
+    ffmpeg 둘이 동시에 쓰고(잘린 mp4가 status='done'으로 통과) VMake 유료 호출도 2회 나간다.
+    run_render 안의 status='rendering'은 응답을 보낸 뒤에야 돌기 때문에 가드가 못 된다 —
+    수십 ms 간격의 POST 2건이 둘 다 아직 이전 status를 보고 통과한다(TOCTOU).
+    → 여기서 **동기적으로** 선기록한다.
+    """
     job_id = body.get("job_id")
-    job = Store(DB_PATH).get_mix_job(job_id)
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "렌더할 job 없음"})
+    # removing_subtitles = VMake 유료 단계 진행 중. 여기서 재예약되면 그 돈이 두 번 나간다.
+    if job.get("status") in ("rendering", "removing_subtitles") and not _render_is_stale(job):
+        return {"ok": True, "status": job["status"]}
+    store.update_mix_job(job_id, status="rendering", error=None)
     background_tasks.add_task(run_render, job_id, DB_PATH, _MIX_WORK_DIR)
-    return {"ok": True}
+    return {"ok": True, "status": "rendering"}
 
 
 _PREVIEW_STALE_SEC = 600   # 10분 — 이보다 오래 'rendering'이면 죽은 렌더의 잔해로 본다.
 
 
-def _preview_render_is_stale(job) -> bool:
-    """preview_status='rendering'이 **죽은 렌더의 잔해**인가.
+def _render_is_stale(job) -> bool:
+    """'rendering' 상태가 **죽은 렌더의 잔해**인가 (미리보기·최종렌더 공용).
 
-    preview_status는 DB 영속 상태인데 TTL·하트비트가 없다. 미리보기 렌더 중 서버가 재시작되면
+    status/preview_status는 DB 영속 상태인데 TTL·하트비트가 없다. 렌더 중 서버가 재시작되면
     (auto_deploy 크론 3분 — shopping_shorts 변경 시 systemd 재시작이라 자주 일어난다)
     BackgroundTask가 죽어 except가 못 돌고 DB엔 'rendering'이 **영원히** 남는다. 그러면 다시
     눌러도 위 중복예약 가드에 걸려 무한 ⏳이고, 'failed'가 안 오니 스펙 §7.1 탈출구도 안 열려
@@ -1367,7 +1382,7 @@ def api_produce_mix_preview(background_tasks: BackgroundTasks, body: dict):
     job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=422, content={"ok": False, "error": "매칭 먼저 실행하세요"})
-    if job.get("preview_status") == "rendering" and not _preview_render_is_stale(job):
+    if job.get("preview_status") == "rendering" and not _render_is_stale(job):
         return {"ok": True, "status": "rendering"}   # 더블클릭 — ffmpeg를 두 번 돌리지 않는다
     # ★'rendering'을 여기서 **동기적으로** 쓴다. run_preview 안에서 쓰면 그건 응답을 보낸 뒤에
     # 도는지라, 수십 ms 간격의 POST 2건이 둘 다 위 가드를 통과해(둘 다 아직 None을 본다)
@@ -1612,16 +1627,40 @@ def api_mix_video(job_id: str):
     return FileResponse(job["video_path"])
 
 
+def _reject_cdn_proxy(url: str, allowed_hosts) -> bool:
+    """CDN 프록시(/api/thumb·/api/video)에 들어온 url이 거부 대상인가.
+
+    ★부분문자열 검사(`h in url`)를 쓰면 안 된다. 그건 URL 문자열 아무 데나 허용호스트
+    이름이 들어있기만 하면 통과시키므로
+        http://169.254.169.254/latest/meta-data/...?x=cdninstagram.com
+    이 화이트리스트를 뚫고, 서버가 AWS 메타데이터에 GET을 보내 응답 본문을 그대로
+    돌려준다(이 서버는 Lightsail — IAM 크리덴셜 직결). 반드시 파싱한 hostname으로
+    정확일치/서브도메인 일치만 허용하고, 내부망 차단(_reject_ssrf)도 함께 건다.
+    """
+    if _reject_ssrf(url) is not None:
+        return True
+    try:
+        host = (urllib.parse.urlparse(url).hostname or "").lower()
+    except ValueError:
+        return True
+    if not host:
+        return True
+    return not any(host == h or host.endswith("." + h) for h in allowed_hosts)
+
+
+# 허용 CDN 도메인만 프록시 (SSRF 방지 — 임의 URL 프록시 금지).
+# 인스타 + 유튜브(ytimg) + 틱톡(tiktokcdn) 썸네일 호스트.
+_ALLOWED_THUMB_HOSTS = ("cdninstagram.com", "fbcdn.net", "ytimg.com",
+                        "ggpht.com", "tiktokcdn.com", "tiktokcdn-us.com")
+_ALLOWED_VIDEO_HOSTS = ("cdninstagram.com", "fbcdn.net")
+
+
 @app.get("/api/thumb")
 def api_thumb(url: str):
     """인스타 CDN 썸네일 프록시 (핫링크 차단 우회). url=원본 이미지 주소."""
     import requests
     from fastapi.responses import Response
-    # 허용 CDN 도메인만 프록시 (SSRF 방지 — 임의 URL 프록시 금지).
-    # 인스타 + 유튜브(ytimg) + 틱톡(tiktokcdn) 썸네일 호스트.
-    _ALLOWED_THUMB_HOSTS = ("cdninstagram.com", "fbcdn.net", "ytimg.com",
-                            "ggpht.com", "tiktokcdn.com", "tiktokcdn-us.com")
-    if not any(h in url for h in _ALLOWED_THUMB_HOSTS):
+    if _reject_cdn_proxy(url, _ALLOWED_THUMB_HOSTS):
         return Response(status_code=400, content=b"invalid host")
     try:
         r = requests.get(url, timeout=15, headers={
@@ -1642,7 +1681,7 @@ def api_video(url: str):
     /api/thumb와 동일 패턴(Referer 헤더). 릴스는 수 MB라 통째로 프록시."""
     import requests
     from fastapi.responses import Response
-    if not any(h in url for h in ("cdninstagram.com", "fbcdn.net")):
+    if _reject_cdn_proxy(url, _ALLOWED_VIDEO_HOSTS):
         return Response(status_code=400, content=b"invalid host")
     try:
         r = requests.get(url, timeout=30, headers={
@@ -1706,7 +1745,36 @@ def api_healthz():
 # 로그인되게 하위호환(기존 작업물 보존). 신규 고객은 customers 테이블(회원가입) 계정.
 DASH_USER = os.environ.get("DASH_USER", "admin")
 DASH_PASS = os.environ.get("DASH_PASS", "")  # 비어있으면 인증 OFF(로컬 개발)
-DASH_SECRET = os.environ.get("DASH_SECRET", "shopping-shorts-local-secret")
+def _load_dash_secret() -> str:
+    """세션쿠키 HMAC 서명키. env가 최우선, 없으면 data/ 밑에 랜덤 생성해 영속화.
+
+    ★소스에 기본값을 박지 않는다. 예전엔 "shopping-shorts-local-secret"이 기본값이라
+    운영에서 DASH_PASS만 넣고 DASH_SECRET env 한 줄을 빠뜨리면, 소스에 공개된 그 값으로
+    누구나 `customer_id:expiry:sig` 쿠키를 위조해 관리자(cid=0) 포함 임의 고객을 사칭할 수
+    있었다. _AUTH_ON은 DASH_PASS 유무만 보므로 시크릿 누락을 감지조차 못한다.
+    기본값을 없애면 그 실수 자체가 성립하지 않는다.
+    """
+    env = os.environ.get("DASH_SECRET", "").strip()
+    if env:
+        return env
+    path = Path(DB_PATH).parent / ".session_secret"
+    try:
+        existing = path.read_text(encoding="utf-8").strip()
+        if existing:
+            return existing
+    except OSError:
+        pass
+    generated = secrets.token_hex(32)
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(generated, encoding="utf-8")
+        os.chmod(path, 0o600)
+    except OSError:
+        pass  # 영속화 실패해도 이번 프로세스는 랜덤키로 뜬다(재기동 시 재로그인될 뿐).
+    return generated
+
+
+DASH_SECRET = _load_dash_secret()
 _AUTH_ON = bool(DASH_PASS)
 _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico", "/healthz",
                "/insta_fill_comment.user.js",
