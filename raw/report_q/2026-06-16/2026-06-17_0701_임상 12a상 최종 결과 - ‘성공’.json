@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-16",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-17_0701_임상 12a상 최종 결과 - ‘성공’.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "DS투자증권",
+    "analyst": "김민정",
+    "report_date": "2026.06.16",
+    "stocks": [
+      {
+        "name": "에스바이오메딕스",
+        "code": "304360",
+        "rating": "매수",
+        "rating_changed": false,
+        "tp_new": 65000,
+        "tp_prev": 65000,
+        "tp_direction": "flat",
+        "earnings_outlook": "2023년 매출액 131억원, 2024년 137억원, 2025년 165억원, 2026F 167억원, 2027F 169억원. 2023년 영업이익 -60억원, 2024년 -54억원, 2025년 -83억원, 2026F -84억원, 2027F -85억원.",
+        "estimate_revision": null,
+        "next_catalyst": "9-10월 미국 임상 3상 IND 신청",
+        "thesis": [
+          "파킨슨 세포치료제 TED-A9 임상 1/2a상 24개월 추적관찰 결과 주요 지표에서 치료 효과 확인",
+          "뇌영상 데이터([18F]FP-CIT PET) 도파민수송체(DAT) 신호 증가로 신경 기능 개선 확인",
+          "미국 임상 3상 진입을 위한 파트너십 논의 및 7월 FDA type C meeting 예정"
+        ],
+        "valuation_basis": null,
+        "risk": "파킨슨은 baseline에 따라 환자 치료반응 편차가 크며 용량별 6명으로 대상자 수가 적어 직접 효능 비교가 어려움",
+        "supply_comment": null,
+        "quote": "고용량군 24개월 시점, MDS-UPDRS Part III(OFF)에서 약 -18.5점 감소되어 시간이 경과함에 따라 치료 효과가 점진적으로 강화됨을 확인하였다.",
+        "sector": "바이오"
+      }
+    ]
+  }
+}

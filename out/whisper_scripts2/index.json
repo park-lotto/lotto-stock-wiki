@@ -1,0 +1,202 @@
+[
+ {
+  "group_id": "kr-yooni",
+  "name": "유니",
+  "script": "A_정보형",
+  "text": "후기가 2,847개인데 평점이 4.8이에요. 근데 가격은 19,900원.",
+  "kind": "plain",
+  "file": "kr-yooni_A_정보형_plain.mp3",
+  "natural": "[curious] 음, 후기가 이,팔백사십칠개인데 평점이 사 점 팔이에요… 근데 가격은 십구,구백원.",
+  "bytes": 87066
+ },
+ {
+  "group_id": "kr-yooni",
+  "name": "유니",
+  "script": "A_정보형",
+  "text": "후기가 2,847개인데 평점이 4.8이에요. 근데 가격은 19,900원.",
+  "kind": "whisper",
+  "file": "kr-yooni_A_정보형_whisper.mp3",
+  "natural": "[curious][whispers] 음, 후기가 이,팔백사십칠개인데 평점이 사 점 팔이에요… 근데 가격은 십구,구백원.",
+  "bytes": 87481
+ },
+ {
+  "group_id": "kr-yooni",
+  "name": "유니",
+  "script": "B_감정형",
+  "text": "이건 진짜 안 사면 후회해요. 저 이거 쓰고 완전 바뀌었어요.",
+  "kind": "plain",
+  "file": "kr-yooni_B_감정형_plain.mp3",
+  "natural": "[curious] 음, 이건, 진짜 안 사면 후회해요… 저 이거 쓰고 완전 바뀌었어요.",
+  "bytes": 55465
+ },
+ {
+  "group_id": "kr-yooni",
+  "name": "유니",
+  "script": "B_감정형",
+  "text": "이건 진짜 안 사면 후회해요. 저 이거 쓰고 완전 바뀌었어요.",
+  "kind": "whisper",
+  "file": "kr-yooni_B_감정형_whisper.mp3",
+  "natural": "[curious][whispers] 음, 이건, 진짜 안 사면 후회해요… 저 이거 쓰고 완전 바뀌었어요.",
+  "bytes": 56213
+ },
+ {
+  "group_id": "kr-mina",
+  "name": "미나",
+  "script": "A_정보형",
+  "text": "후기가 2,847개인데 평점이 4.8이에요. 근데 가격은 19,900원.",
+  "kind": "plain",
+  "file": "kr-mina_A_정보형_plain.mp3",
+  "natural": "[curious] 음, 후기가 이,팔백사십칠개인데 평점이 사 점 팔이에요… 근데 가격은 십구,구백원.",
+  "bytes": 88893
+ },
+ {
+  "group_id": "kr-mina",
+  "name": "미나",
+  "script": "A_정보형",
+  "text": "후기가 2,847개인데 평점이 4.8이에요. 근데 가격은 19,900원.",
+  "kind": "whisper",
+  "file": "kr-mina_A_정보형_whisper.mp3",
+  "natural": "[curious][whispers] 음, 후기가 이,팔백사십칠개인데 평점이 사 점 팔이에요… 근데 가격은 십구,구백원.",
+  "bytes": 83964
+ },
+ {
+  "group_id": "kr-mina",
+  "name": "미나",
+  "script": "B_감정형",
+  "text": "이건 진짜 안 사면 후회해요. 저 이거 쓰고 완전 바뀌었어요.",
+  "kind": "plain",
+  "file": "kr-mina_B_감정형_plain.mp3",
+  "natural": "[curious] 음, 이건, 진짜 안 사면 후회해요… 저 이거 쓰고 완전 바뀌었어요.",
+  "bytes": 58728
+ },
+ {
+  "group_id": "kr-mina",
+  "name": "미나",
+  "script": "B_감정형",
+  "text": "이건 진짜 안 사면 후회해요. 저 이거 쓰고 완전 바뀌었어요.",
+  "kind": "whisper",
+  "file": "kr-mina_B_감정형_whisper.mp3",
+  "natural": "[curious][whispers] 음, 이건, 진짜 안 사면 후회해요… 저 이거 쓰고 완전 바뀌었어요.",
+  "bytes": 62218
+ },
+ {
+  "group_id": "kr-chloecha",
+  "name": "클로이차",
+  "script": "A_정보형",
+  "text": "후기가 2,847개인데 평점이 4.8이에요. 근데 가격은 19,900원.",
+  "kind": "plain",
+  "file": "kr-chloecha_A_정보형_plain.mp3",
+  "natural": "[curious] 음, 후기가 이,팔백사십칠개인데 평점이 사 점 팔이에요… 근데 가격은 십구,구백원.",
+  "bytes": 85361
+ },
+ {
+  "group_id": "kr-chloecha",
+  "name": "클로이차",
+  "script": "A_정보형",
+  "text": "후기가 2,847개인데 평점이 4.8이에요. 근데 가격은 19,900원.",
+  "kind": "whisper",
+  "file": "kr-chloecha_A_정보형_whisper.mp3",
+  "natural": "[curious][whispers] 음, 후기가 이,팔백사십칠개인데 평점이 사 점 팔이에요… 근데 가격은 십구,구백원.",
+  "bytes": 86339
+ },
+ {
+  "group_id": "kr-chloecha",
+  "name": "클로이차",
+  "script": "B_감정형",
+  "text": "이건 진짜 안 사면 후회해요. 저 이거 쓰고 완전 바뀌었어요.",
+  "kind": "plain",
+  "file": "kr-chloecha_B_감정형_plain.mp3",
+  "natural": "[curious] 음, 이건, 진짜 안 사면 후회해요… 저 이거 쓰고 완전 바뀌었어요.",
+  "bytes": 53433
+ },
+ {
+  "group_id": "kr-chloecha",
+  "name": "클로이차",
+  "script": "B_감정형",
+  "text": "이건 진짜 안 사면 후회해요. 저 이거 쓰고 완전 바뀌었어요.",
+  "kind": "whisper",
+  "file": "kr-chloecha_B_감정형_whisper.mp3",
+  "natural": "[curious][whispers] 음, 이건, 진짜 안 사면 후회해요… 저 이거 쓰고 완전 바뀌었어요.",
+  "bytes": 50248
+ },
+ {
+  "group_id": "kr-hanabad",
+  "name": "하나바드",
+  "script": "A_정보형",
+  "text": "후기가 2,847개인데 평점이 4.8이에요. 근데 가격은 19,900원.",
+  "kind": "plain",
+  "file": "kr-hanabad_A_정보형_plain.mp3",
+  "natural": "[curious] 음, 후기가 이,팔백사십칠개인데 평점이 사 점 팔이에요… 근데 가격은 십구,구백원.",
+  "bytes": 79776
+ },
+ {
+  "group_id": "kr-hanabad",
+  "name": "하나바드",
+  "script": "A_정보형",
+  "text": "후기가 2,847개인데 평점이 4.8이에요. 근데 가격은 19,900원.",
+  "kind": "whisper",
+  "file": "kr-hanabad_A_정보형_whisper.mp3",
+  "natural": "[curious][whispers] 음, 후기가 이,팔백사십칠개인데 평점이 사 점 팔이에요… 근데 가격은 십구,구백원.",
+  "bytes": 94897
+ },
+ {
+  "group_id": "kr-hanabad",
+  "name": "하나바드",
+  "script": "B_감정형",
+  "text": "이건 진짜 안 사면 후회해요. 저 이거 쓰고 완전 바뀌었어요.",
+  "kind": "plain",
+  "file": "kr-hanabad_B_감정형_plain.mp3",
+  "natural": "[curious] 음, 이건, 진짜 안 사면 후회해요… 저 이거 쓰고 완전 바뀌었어요.",
+  "bytes": 55780
+ },
+ {
+  "group_id": "kr-hanabad",
+  "name": "하나바드",
+  "script": "B_감정형",
+  "text": "이건 진짜 안 사면 후회해요. 저 이거 쓰고 완전 바뀌었어요.",
+  "kind": "whisper",
+  "file": "kr-hanabad_B_감정형_whisper.mp3",
+  "natural": "[curious][whispers] 음, 이건, 진짜 안 사면 후회해요… 저 이거 쓰고 완전 바뀌었어요.",
+  "bytes": 60778
+ },
+ {
+  "group_id": "kr-kanna",
+  "name": "칸나",
+  "script": "A_정보형",
+  "text": "후기가 2,847개인데 평점이 4.8이에요. 근데 가격은 19,900원.",
+  "kind": "plain",
+  "file": "kr-kanna_A_정보형_plain.mp3",
+  "natural": "[curious] 음, 후기가 이,팔백사십칠개인데 평점이 사 점 팔이에요… 근데 가격은 십구,구백원.",
+  "bytes": 85268
+ },
+ {
+  "group_id": "kr-kanna",
+  "name": "칸나",
+  "script": "A_정보형",
+  "text": "후기가 2,847개인데 평점이 4.8이에요. 근데 가격은 19,900원.",
+  "kind": "whisper",
+  "file": "kr-kanna_A_정보형_whisper.mp3",
+  "natural": "[curious][whispers] 음, 후기가 이,팔백사십칠개인데 평점이 사 점 팔이에요… 근데 가격은 십구,구백원.",
+  "bytes": 92333
+ },
+ {
+  "group_id": "kr-kanna",
+  "name": "칸나",
+  "script": "B_감정형",
+  "text": "이건 진짜 안 사면 후회해요. 저 이거 쓰고 완전 바뀌었어요.",
+  "kind": "plain",
+  "file": "kr-kanna_B_감정형_plain.mp3",
+  "natural": "[curious] 음, 이건, 진짜 안 사면 후회해요… 저 이거 쓰고 완전 바뀌었어요.",
+  "bytes": 56657
+ },
+ {
+  "group_id": "kr-kanna",
+  "name": "칸나",
+  "script": "B_감정형",
+  "text": "이건 진짜 안 사면 후회해요. 저 이거 쓰고 완전 바뀌었어요.",
+  "kind": "whisper",
+  "file": "kr-kanna_B_감정형_whisper.mp3",
+  "natural": "[curious][whispers] 음, 이건, 진짜 안 사면 후회해요… 저 이거 쓰고 완전 바뀌었어요.",
+  "bytes": 62198
+ }
+]

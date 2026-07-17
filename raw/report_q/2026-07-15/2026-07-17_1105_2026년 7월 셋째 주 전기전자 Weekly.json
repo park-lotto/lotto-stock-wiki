@@ -1,0 +1,66 @@
+{
+  "meta": {
+    "date": "2026-07-15",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-17_1105_2026년 7월 셋째 주 전기전자 Weekly.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": [
+      "박희철",
+      "최보영"
+    ],
+    "report_date": "2026/ 7/ 15",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "반도체발 주가 변동성",
+      "원/달러 환율"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "섹터 내 Peer 논리가 작용하며, Top-Tier급과 Second Tier급 업체의 밸류에이션 격차 발생"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026-07-09",
+        "event": "애플, 중국 CXMT D램 테스트 착수"
+      },
+      {
+        "date": "2026-07-12",
+        "event": "LG전자, 엔비디아 AI 서버 랙 만든다"
+      },
+      {
+        "date": "2026-07-13",
+        "event": "삼성전자-삼성D, 유리 인터포저 협력 추진"
+      },
+      {
+        "date": "2026-07-13",
+        "event": "JNTC, 일본 토판과 유리기판 상용화 협약 체결"
+      }
+    ],
+    "top_picks": [
+      "삼성전기",
+      "LG전자",
+      "LG이노텍",
+      "두산",
+      "이수페타시스",
+      "심텍",
+      "대덕전자",
+      "해성디에스",
+      "비에이치",
+      "티엘비",
+      "드림텍",
+      "Zhen Ding",
+      "Largan",
+      "Nan Ya PCB",
+      "Lenovo"
+    ],
+    "risk": "높은 밸류에이션을 형성하던 기업들에 대한 수급 이탈이 뚜렷",
+    "quote": "실적을 앞두고 밸류에이션과 실적이라는 본질에 집중할 시점"
+  }
+}
