@@ -1310,7 +1310,15 @@ async function _pushWork(){
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({work_id: WORK_ID, state: st, job_id: MIX_JOB, step: cur})});
     const d = await r.json();
-    if(d && d.ok && d.work_id) WORK_ID = d.work_id;   // 다음 저장이 같은 작업을 갱신하도록
+    if(d && d.ok && d.work_id){
+      WORK_ID = d.work_id;   // 다음 저장이 같은 작업을 갱신하도록
+      // ★sessionStorage도 다시 쓴다(구멍 2, 2026-07-17 라이브 실사고: 제작소를 열 때마다 작업이
+      // 복제됨). saveWork()가 이미 위에서 WORK_ID=null인 채로 sessionStorage를 써버렸다 — 여기서
+      // 갱신 안 하면 새로고침 시 _consumeProduceHandoff가 work_id=null을 읽어 다음 저장이 새
+      // 작업을 만든다. "중복 아닌가?" 하고 지우지 말 것 — saveWork()의 즉시쓰기와 이건 서로 다른
+      // 시점(POST 전 vs POST 응답 후)을 담당한다.
+      try{ sessionStorage.setItem('produce_work', JSON.stringify(_workState())); }catch(e){}
+    }
   }catch(e){}   // 서버가 죽어도 sessionStorage 복원은 살아 있다 — 저장 실패로 작업을 막지 않는다
 }
 function saveWork(){
