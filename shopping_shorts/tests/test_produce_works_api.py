@@ -93,3 +93,80 @@ def test_state_roundtrips_verbatim(client):
              "script": "본문", "script_src_idx": 0, "script_from_wiki": "ABC123", "step": 1}
     wid = client.post("/api/produce/works", json={"state": state}).json()["work_id"]
     assert client.get(f"/api/produce/works/{wid}").json()["state"] == state
+
+
+# ── 고객 격리(2026-07-17 T2 리뷰) ──────────────────────────
+# 라우트가 Request를 안 받아 _cid()를 못 써 모든 저장·조회가 customer_id=0으로 떨어지던 결함.
+# _cid는 request.state.customer_id를 읽는다(app.py:247) — 이 저장소는 로그인 세션 쿠키로
+# 그 값을 채우는데, 세션 없이 두 "고객"을 흉내내는 가장 단순한 방법은 _cid 자체를
+# monkeypatch하는 것이다(auth_guard 미들웨어를 실제로 태우지 않고 라우트가 무엇을
+# 넘기는지만 검증). scene_asset 테스트(test_app_scene.py)처럼 실 세션을 흉내내려면
+# DASH_PASS·쿠키 서명까지 필요해 이 테스트의 목적(라우트가 _cid를 쓰는지)에 비해 과하다.
+def test_isolation_customer2_does_not_see_customer1_work(client, monkeypatch):
+    from shopping_shorts import app as app_mod
+    monkeypatch.setattr(app_mod, "_cid", lambda request: 1)
+    client.post("/api/produce/works", json={"state": {"script": "고객1 작업"}})
+
+    monkeypatch.setattr(app_mod, "_cid", lambda request: 2)
+    works = client.get("/api/produce/works").json()["works"]
+    assert works == []
+
+
+def test_isolation_save_lands_under_real_customer_id_not_zero(client, monkeypatch, tmp_path):
+    from shopping_shorts import app as app_mod
+    from shopping_shorts.store import Store
+
+    monkeypatch.setattr(app_mod, "_cid", lambda request: 1)
+    client.post("/api/produce/works", json={"state": {"script": "고객1 작업"}})
+
+    rows = Store(app_mod.DB_PATH).list_produce_works(customer_id=1)
+    assert len(rows) == 1
+    rows0 = Store(app_mod.DB_PATH).list_produce_works(customer_id=0)
+    assert rows0 == []
+
+
+def test_isolation_get_and_delete_are_404_for_other_customer(client, monkeypatch):
+    from shopping_shorts import app as app_mod
+    monkeypatch.setattr(app_mod, "_cid", lambda request: 1)
+    wid = client.post("/api/produce/works", json={"state": {"script": "고객1"}}).json()["work_id"]
+
+    monkeypatch.setattr(app_mod, "_cid", lambda request: 2)
+    assert client.get(f"/api/produce/works/{wid}").status_code == 404
+    assert client.post(f"/api/produce/works/{wid}/delete").status_code == 404
+
+    # 고객1은 여전히 자기 작업을 볼 수 있어야 한다(지워지지 않았다).
+    monkeypatch.setattr(app_mod, "_cid", lambda request: 1)
+    assert client.get(f"/api/produce/works/{wid}").status_code == 200
+
+
+# ── step 타입오류 가드(2026-07-17 T2 리뷰) ──────────────────
+def test_step_string_is_preserved_not_rewound(client):
+    """step="3"(문자열)을 보내면 파괴되지 않고 기존 값이 그대로 보존된다."""
+    wid = client.post("/api/produce/works",
+                      json={"state": {"script": "s"}, "step": 5}).json()["work_id"]
+    client.post("/api/produce/works",
+                json={"work_id": wid, "state": {"script": "s2"}, "step": "3"})
+    d = client.get(f"/api/produce/works/{wid}").json()
+    assert d["step"] == 5, "문자열 step이 진행 단계를 0으로 되감았다"
+
+
+def test_step_bool_true_is_preserved_not_saved_as_one(client):
+    """step=True는 isinstance(True, int)가 True라 잘못 1로 저장되는 파이썬 함정 — 막혀야 한다."""
+    wid = client.post("/api/produce/works",
+                      json={"state": {"script": "s"}, "step": 5}).json()["work_id"]
+    client.post("/api/produce/works",
+                json={"work_id": wid, "state": {"script": "s2"}, "step": True})
+    d = client.get(f"/api/produce/works/{wid}").json()
+    assert d["step"] == 5, "step=True가 bool 서브클래스 함정으로 1로 저장됐다"
+
+
+def test_step_explicit_zero_still_rewinds(client):
+    """step=0(진짜 정수 0)은 여전히 0으로 저장된다 — T1의
+    test_explicit_zero_step_really_rewinds와 대칭. 복원이 게이트에 막혀 1단계로
+    되돌려질 때 실제로 필요하다."""
+    wid = client.post("/api/produce/works",
+                      json={"state": {"script": "s"}, "step": 5}).json()["work_id"]
+    client.post("/api/produce/works",
+                json={"work_id": wid, "state": {"script": "s2"}, "step": 0})
+    d = client.get(f"/api/produce/works/{wid}").json()
+    assert d["step"] == 0, "명시적 step=0이 무시됐다"

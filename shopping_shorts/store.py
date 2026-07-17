@@ -1333,12 +1333,13 @@ class Store:
             )
             return wid
 
-    def get_produce_work(self, work_id):
-        """작업 1건 → dict(state는 파싱됨). 없으면 None."""
+    def get_produce_work(self, work_id, customer_id=LEGACY_CUSTOMER_ID):
+        """작업 1건 → dict(state는 파싱됨). 없거나 남의 것이면 None
+        (scene_assets의 get_scene_asset과 같은 관례, 2026-07-17 리뷰 반영)."""
         with self._conn() as c:
             row = c.execute(
                 "SELECT work_id, title, state_json, job_id, step, created_at, updated_at "
-                "FROM produce_works WHERE work_id=?", (work_id,),
+                "FROM produce_works WHERE work_id=? AND customer_id=?", (work_id, customer_id),
             ).fetchone()
         if not row:
             return None
@@ -1356,11 +1357,11 @@ class Store:
         return [{"work_id": r[0], "title": r[1], "step": r[2], "job_id": r[3],
                  "updated_at": r[4]} for r in rows]
 
-    def delete_produce_work(self, work_id):
-        """지운다. 실제로 지워졌으면 True."""
+    def delete_produce_work(self, work_id, customer_id=LEGACY_CUSTOMER_ID):
+        """지운다. 실제로 지워졌으면(내 것이었으면) True — 남의 것은 지워지지 않는다."""
         with self._conn() as c:
-            return c.execute("DELETE FROM produce_works WHERE work_id=?",
-                             (work_id,)).rowcount > 0
+            return c.execute("DELETE FROM produce_works WHERE work_id=? AND customer_id=?",
+                             (work_id, customer_id)).rowcount > 0
 
     # ── 보이스 프리셋(2026-07-14, 영상제작 4단계) ──
     def upsert_voice_preset(self, p):
