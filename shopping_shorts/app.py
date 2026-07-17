@@ -2311,6 +2311,30 @@ def _reject_ssrf(url):
     return None
 
 
+def _scene_wiki_source(body: dict):
+    """도서관 영구보관 릴스를 장면 소스로 쓸 때의 **로컬 경로**. (경로, 에러응답) 반환.
+
+    왜 URL이 아니라 로컬 경로인가: 서버가 자기 자신을 HTTP로 다시 부르면 SSRF
+    방어(루프백 차단)에 스스로 막힌다. 애초에 같은 디스크에 있는 파일이라
+    네트워크를 탈 이유가 없다.
+
+    왜 이 다리가 필요한가: 랭킹 다리는 구조적으로 임시다 — 인스타 CDN 주소는
+    DB에 저장되지 않고(source_pool 0행) 요청 때마다 새로 받아오며 만료된다.
+    도서관은 mp4를 영구보관하므로 언제든 담을 수 있다.
+
+    경로조작은 구조적으로 불가능하다 — shortcode를 파일명에 쓰지 않고 sha1
+    해시로 바꾼다(/api/wiki/video와 같은 규칙). 그래서 별도 검증이 없다.
+    """
+    sc = (body.get("wiki_shortcode") or "").strip()
+    if not sc:
+        return None, None
+    f = _WIKI_MEDIA_DIR / f"{hashlib.sha1(sc.encode()).hexdigest()[:16]}.mp4"
+    if not f.exists():
+        return None, JSONResponse(status_code=404, content={
+            "ok": False, "error": "도서관에 보관된 영상이 없다 — 먼저 도서관에 저장할 것"})
+    return f, None
+
+
 @app.post("/api/scene/split")
 def api_scene_split(request: Request, body: dict):
     """소스 영상 → 컷 목록 + 컷별 포스터. **DB에 아무것도 안 쓴다.**
@@ -2324,12 +2348,17 @@ def api_scene_split(request: Request, body: dict):
     이 파일의 기존 배선(prepare가 scene_assets.make_clip/make_poster를 쓰는
     것과 동일한 이유)을 그대로 따른 것. 그래서 app.py에 subprocess import가
     추가로 필요 없다."""
+    wiki_src, wiki_err = _scene_wiki_source(body)
+    if wiki_err:
+        return wiki_err
     src_url = (body.get("src_url") or "").strip()
-    if not src_url:
-        return JSONResponse(status_code=422, content={"ok": False, "error": "src_url 필요"})
-    ssrf_err = _reject_ssrf(src_url)  # SSRF 1차 방어 — 내부망·169.254.169.254 등 차단
-    if ssrf_err:
-        return JSONResponse(status_code=422, content={"ok": False, "error": ssrf_err})
+    if not wiki_src:
+        if not src_url:
+            return JSONResponse(status_code=422,
+                                content={"ok": False, "error": "src_url 또는 wiki_shortcode 필요"})
+        ssrf_err = _reject_ssrf(src_url)  # SSRF 1차 방어 — 내부망·169.254.169.254 등 차단
+        if ssrf_err:
+            return JSONResponse(status_code=422, content={"ok": False, "error": ssrf_err})
     token = uuid.uuid4().hex
     # ★_SCENE_SPLIT_DIR를 모듈 상수로 빼면 안 된다 — 모듈 임포트 시점 값이 굳어
     # test client의 monkeypatch(_SCENE_ASSETS_DIR)를 안 따라간다. 매번 여기서 계산한다.
@@ -2338,7 +2367,9 @@ def api_scene_split(request: Request, body: dict):
     out_dir.mkdir(parents=True, exist_ok=True)
     try:
         with tempfile.TemporaryDirectory() as td:
-            src = frame_extract.download_video(src_url, td)
+            # 도서관 소스는 이미 디스크에 있다 — 받지 않는다. td 밖에 있으므로
+            # 이 블록이 끝나며 청소돼도 원본은 안 지워진다.
+            src = str(wiki_src) if wiki_src else frame_extract.download_video(src_url, td)
             fps = scene_cut.video_fps(src)
             total = scene_cut.video_frame_count(src)
             cuts = scene_cut.detect_cuts(src)
@@ -2373,13 +2404,18 @@ def api_scene_split_poster(token: str, i: int):
 @app.post("/api/scene/save/prepare")
 def api_scene_save_prepare(request: Request, body: dict):
     """구간컷 + Gemini 다축 태그 초안 → 모달 프리필용. 아직 DB 저장 안 함.
-    body: {source_kind, source_ref, src_url, start, end, category?, caption?, script?}"""
+    body: {source_kind, source_ref, src_url|wiki_shortcode, start, end, category?, caption?, script?}"""
+    wiki_src, wiki_err = _scene_wiki_source(body)
+    if wiki_err:
+        return wiki_err
     src_url = (body.get("src_url") or "").strip()
-    if not src_url:
-        return JSONResponse(status_code=422, content={"ok": False, "error": "src_url 필요"})
-    ssrf_err = _reject_ssrf(src_url)  # SSRF 1차 방어 — 내부망·169.254.169.254 등 차단
-    if ssrf_err:
-        return JSONResponse(status_code=422, content={"ok": False, "error": ssrf_err})
+    if not wiki_src:
+        if not src_url:
+            return JSONResponse(status_code=422,
+                                content={"ok": False, "error": "src_url 또는 wiki_shortcode 필요"})
+        ssrf_err = _reject_ssrf(src_url)  # SSRF 1차 방어 — 내부망·169.254.169.254 등 차단
+        if ssrf_err:
+            return JSONResponse(status_code=422, content={"ok": False, "error": ssrf_err})
     try:
         start, end = float(body.get("start") or 0), float(body.get("end") or 0)
     except (TypeError, ValueError):
@@ -2393,7 +2429,8 @@ def api_scene_save_prepare(request: Request, body: dict):
     src_start_frame = None
     try:
         with tempfile.TemporaryDirectory() as td:
-            src = frame_extract.download_video(src_url, td)
+            # 도서관 소스는 이미 디스크에 있다(td 밖) — 받지도, 청소로 지우지도 않는다.
+            src = str(wiki_src) if wiki_src else frame_extract.download_video(src_url, td)
             # ★소스의 fps로 — 클립은 -r 30으로 통일되므로 클립 fps를 쓰면 원본이
             # 30fps가 아닐 때 틀린 프레임 번호가 저장된다. 소스는 이 블록이 끝나면
             # (TemporaryDirectory 청소로) 지워지므로 fps는 반드시 블록 안에서 구한다.

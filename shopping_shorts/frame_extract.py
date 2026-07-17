@@ -33,7 +33,8 @@ def extract_frames(video_path, dest_dir, max_frames=6):
         "-vsync", "vfr", "-frames:v", str(max_frames),
         str(pattern),
     ]
-    result = subprocess.run(cmd, capture_output=True, check=False)
+    result = subprocess.run(cmd, capture_output=True, check=False,
+                            stdin=subprocess.DEVNULL)   # 위 extract_frame_at과 같은 이유
     if result.returncode != 0:
         raise RuntimeError(f"ffmpeg 프레임 추출 실패: {result.stderr}")
     return sorted(dest_dir.glob("frame_*.jpg"))
@@ -55,7 +56,11 @@ def extract_frame_at(video_path, dest_dir, timestamp_sec, filename="frame_hint.j
         "ffmpeg", "-y", "-ss", str(max(0, timestamp_sec)), "-i", str(video_path),
         "-frames:v", "1", str(out_path),
     ]
-    result = subprocess.run(cmd, capture_output=True, check=False)
+    # stdin=DEVNULL — ffmpeg는 stdin을 붙잡는데, 물려줄 콘솔이 없는 자리(웹 요청
+    # 처리 스레드)에서 부르면 윈도우가 OSError WinError 6(잘못된 핸들)로 죽는다.
+    # 리눅스 서버에선 안 터져 여태 안 드러났다(scene_cut은 처음부터 붙여놨다).
+    result = subprocess.run(cmd, capture_output=True, check=False,
+                            stdin=subprocess.DEVNULL)
     if result.returncode != 0 or not out_path.exists():
         return None
     return out_path
