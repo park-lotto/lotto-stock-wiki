@@ -164,3 +164,87 @@ drawThumb(ctx, {width:1080, height:1920}, [L('A'), L('B'), L('C')], 1080, 1920);
 console.log(n);
 """
     assert int(_run_node(script).strip()) == 3
+
+
+def test_draw_scales_box_padding_with_canvas():
+    """박스 padding도 좌표·폰트와 같은 배율(s)을 타야 한다 —
+    안 타면 270px 프리뷰의 박스 여백이 1080px 결과와 다른 비율로 보인다."""
+    script = _slice_source() + """
+function padAt(W){
+  const calls = [];
+  const ctx = new Proxy({}, {
+    get(t, k){
+      if (k === 'measureText') return () => ({width: 100});
+      if (k === 'fillRect') return (...a) => calls.push(a);
+      if (['save','restore','rotate','translate','drawImage','strokeText','fillText','beginPath'].includes(k))
+        return () => {};
+      return undefined;
+    }, set(){ return true; }
+  });
+  // size:0 → fillRect의 4번째 인자(height)는 pad*1.2만 남는다 (pad를 순수 격리)
+  drawThumb(ctx, {width:W, height:W*16/9}, [{text:'A', font:'BMJUA.ttf', size:0,
+    color:'#fff', outline:null, box:{color:'#000', pad:16, opacity:80}, rot:0, x:0.5, y:0.25}], W, W*16/9);
+  const height = calls[0][3];
+  return height / 1.2;
+}
+console.log(JSON.stringify({big: padAt(1080), small: padAt(270)}));
+"""
+    out = json.loads(_run_node(script))
+    assert out["small"] == pytest.approx(out["big"] / 4)
+
+
+def test_draw_scales_outline_width_with_canvas():
+    """외곽선 두께(lineWidth)도 배율(s)을 타야 한다 —
+    안 타면 270px 프리뷰는 얇은 테두리, 1080px 결과는 두꺼운 테두리로 다르게 보인다."""
+    script = _slice_source() + """
+function lineWidthAt(W){
+  let seen = null;
+  const ctx = new Proxy({}, {
+    get(t, k){
+      if (k === 'measureText') return () => ({width: 100});
+      if (['save','restore','rotate','translate','drawImage','strokeText','fillText','fillRect','beginPath'].includes(k))
+        return () => {};
+      return undefined;
+    },
+    set(t, k, v){ if (k === 'lineWidth') seen = v; return true; }
+  });
+  drawThumb(ctx, {width:W, height:W*16/9}, [{text:'A', font:'BMJUA.ttf', size:100,
+    color:'#fff', outline:{color:'#000', w:9}, box:null, rot:0, x:0.5, y:0.25}], W, W*16/9);
+  return seen;
+}
+console.log(JSON.stringify({big: lineWidthAt(1080), small: lineWidthAt(270)}));
+"""
+    out = json.loads(_run_node(script))
+    assert out["small"] == pytest.approx(out["big"] / 4)
+
+
+def test_draw_restores_rotation_between_layers():
+    """save/restore가 1:1로 맞아야 한다 — 하나라도 빠지면 앞 레이어의 회전이
+    다음 레이어로 새어나간다. rot:90 레이어 다음 rot:0 레이어의 실효 회전은 0이어야 한다.
+
+    기존 Proxy mock은 상태가 없어 이 누수를 관측 못 한다 — 여기선 회전 스택을
+    실제로 들고 있는 가짜 ctx로 save=push/restore=pop을 흉내낸다."""
+    script = _slice_source() + """
+class FakeCtx {
+  constructor(){ this._rot = 0; this._stack = []; this.log = []; }
+  save(){ this._stack.push(this._rot); }
+  restore(){ if (this._stack.length) this._rot = this._stack.pop(); }
+  rotate(a){ this._rot += a; }
+  translate(){}
+  measureText(){ return {width: 100}; }
+  drawImage(){}
+  strokeText(){}
+  fillRect(){}
+  beginPath(){}
+  fillText(){ this.log.push(this._rot); }
+}
+const ctx = new FakeCtx();
+const L = (rot) => ({text:'A', font:'BMJUA.ttf', size:100, color:'#fff', outline:null,
+                     box:null, rot, x:0.5, y:0.25});
+drawThumb(ctx, {width:1080, height:1920}, [L(90), L(0)], 1080, 1920);
+console.log(JSON.stringify(ctx.log));
+"""
+    log = json.loads(_run_node(script))
+    assert log[0] == pytest.approx(3.14159265 / 2, rel=1e-4)
+    assert log[1] == pytest.approx(0, abs=1e-6), \
+        "회전이 앞 레이어에서 새어나왔다 — save/restore 짝이 안 맞는다"
