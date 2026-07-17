@@ -770,6 +770,13 @@ let SCENE_QUEUE = null;   // {idxs:[cut인덱스...], pos:0, total:N, saved:0}
 // 저장·건너뛰기 버튼 자체가 DOM에 없다(레이스가 구조적으로 불가능). commitScene·skipQueueItem·
 // tagPicked·mergePicked·runScenePrepare가 모두 이 플래그를 존중한다.
 let SCENE_BUSY = false;
+// 리뷰: 출처 오귀속 방지용 세대 카드. openSceneCut(모달을 새로 열 때)마다 1씩 오른다.
+// prepare를 쏘는 순간(prepareOne/runScenePrepare/runSceneSplit) 그 시점의 세대를 캡처해두고,
+// 응답이 돌아왔을 때 캡처값 ≠ 지금 세대면 그 응답은 "딴 영상 모달이 열린 뒤에 늦게 온 것"이라
+// 통째로 버린다(초안 렌더 금지·SCENE_CTX.token 덮어쓰기 금지·큐 진행 금지·알럿도 없음 —
+// 사용자는 이미 다른 영상을 보고 있다). A영상 담기→prepare 발사→✕로 닫고 B영상 담기→A의 늦은
+// 응답이 SCENE_CTX.token을 A걸로 덮어 B의 source_ref로 커밋되는 사고를 여기서 끊는다.
+let SCENE_GEN = 0;
 
 function sceneTab(name){
   document.getElementById('tabSplit').classList.toggle('on', name==='split');
@@ -785,6 +792,7 @@ function sceneTab(name){
 
 function openSceneCut(sc, url, category){
   if(!url){ alert('이 영상은 원본 다운로드 URL이 없어 장면 담기를 지원하지 않습니다(현재 인스타그램만 지원).'); return; }
+  SCENE_GEN++;   // 새 모달 = 새 세대. 이전 세대에서 쏜 prepare/split 응답은 이제부터 전부 무효.
   SCENE_CTX = {sc:sc, url:url, category:category, start:null, end:null, token:null};
   SCENE_DRAFT = null;
   SCENE_QUEUE = null;
@@ -822,11 +830,15 @@ async function runSceneSplit(){
   SCENE_DRAFT = null;
   document.getElementById('sceneStep2').style.display = 'none';
   document.getElementById('sceneStep2').innerHTML = '';
+  const gen = SCENE_GEN;   // 세대 캡처 — 응답이 늦게 오면(모달이 딴 영상으로 넘어간 뒤) 버린다.
   try{
     const r = await fetch('/api/scene/split', {method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({src_url: SCENE_CTX.url})});
     const d = await r.json();
+    // 늦은 분할 응답이 딴 영상 모달의 splitList를 A영상 컷으로 덮는 것을 막는다 — 고르면
+    // prepareOne이 "B의 url + A의 타임스탬프"로 엉뚱한 구간을 잘라버리는 씨앗이라 여기서 끊는다.
+    if(gen !== SCENE_GEN) return;
     // 리뷰 M-1: 서버가 이미 "분할 실패: {e}"로 접두를 붙여 보낸다(app.py:2079). 여기서 또
     // '분할 실패: '를 붙이면 "분할 실패: 분할 실패: ffmpeg"로 이중접두된다(실측). d.error를
     // 가공 없이 그대로 보여주고, 없을 때만 기본 문구를 쓴다.
@@ -850,7 +862,7 @@ async function runSceneSplit(){
       cb.addEventListener('change', ()=> pickCut(parseInt(cb.dataset.i,10), cb.checked));
     });
     syncSplitButtons();
-  }catch(e){ listEl.innerHTML=''; alert('네트워크 오류'); }
+  }catch(e){ if(gen === SCENE_GEN){ listEl.innerHTML=''; alert('네트워크 오류'); } }
   finally{ btn.disabled = false; }
 }
 
@@ -922,6 +934,7 @@ async function mergePicked(){
 // 그대로 남아있지 않는다(C-2 뿌리). queueInfo가 있을 때만 이 초안이 "큐 소속"으로 표시된다
 // (showSceneDraft의 d._queue) — commitScene은 전역 SCENE_QUEUE의 존재가 아니라 이 표식으로 분기한다.
 async function prepareOne(start, end, startFrame, queueInfo){
+  const gen = SCENE_GEN;   // 세대 캡처(mergePicked도 이 함수를 거치므로 여기 하나로 두 경로를 다 덮는다).
   lockSceneStep2(queueInfo
     ? `⏳ ${queueInfo.pos}/${queueInfo.total}번째 컷(${queueInfo.cutNo}번) 준비 중…`
     : '⏳ 자르는 중…');
@@ -932,6 +945,10 @@ async function prepareOne(start, end, startFrame, queueInfo){
         source_kind:'reference', source_ref:SCENE_CTX.sc,
         category:SCENE_CTX.category})});
     const d = await r.json();
+    // ★출처 오귀속 방지: 이 prepare가 나간 뒤 모달이 딴 영상으로 넘어갔으면(SCENE_GEN이
+    // 올랐으면) 응답을 통째로 버린다 — 초안도 안 그리고 SCENE_CTX.token도 안 덮는다.
+    // 안 그러면 A영상 응답이 B의 토큰을 A걸로 덮어써 저장 시 A클립이 B의 출처로 들어간다.
+    if(gen !== SCENE_GEN) return;
     // 리뷰 M-1과 동일 패턴 — 서버가 이미 "구간컷 실패: {e}"를 붙인다(app.py:2125).
     if(!d.ok){ handlePrepareFail(d.error || '구간컷 실패', queueInfo); return; }
     SCENE_CTX.token = d.token;   // commitScene이 이 토큰으로 커밋한다(runScenePrepare와 동일 배선)
@@ -939,7 +956,7 @@ async function prepareOne(start, end, startFrame, queueInfo){
     // 여기서 끝 — parseFloat·toFixed 등 산술을 스치지 않는다(스치면 프레임 번호가 사라진다).
     d._start_frame = (d.start_frame != null) ? d.start_frame : startFrame;
     showSceneDraft(d, queueInfo);
-  }catch(e){ handlePrepareFail('네트워크 오류', queueInfo); }
+  }catch(e){ if(gen === SCENE_GEN) handlePrepareFail('네트워크 오류', queueInfo); }
 }
 
 // prepare 나가는 순간 sceneStep2를 로딩 문구로 갈아치운다 — 낡은 초안의 버튼이 화면에
@@ -994,16 +1011,18 @@ async function runScenePrepare(){
   // 리뷰 C-2: 화면에 다른(예: 큐) 초안이 떠 있어도 수동 자르기를 시작하는 순간 무효화한다 —
   // 낡은 초안의 저장/건너뛰기 버튼이 남은 채로 새 요청이 도는 걸 막는다.
   lockSceneStep2('⏳ 자르는 중…');
+  const gen = SCENE_GEN;   // 세대 캡처 — prepareOne과 동일한 오귀속 방지(수동 컷 경로).
   try{
     const d = await (await fetch('/api/scene/save/prepare',{method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({source_kind:'reference', source_ref:SCENE_CTX.sc,
         src_url:SCENE_CTX.url, start:SCENE_CTX.start, end:SCENE_CTX.end,
         category:SCENE_CTX.category})})).json();
+    if(gen !== SCENE_GEN) return;   // 모달이 이미 딴 영상으로 넘어감 — 이 응답은 버린다.
     if(!d.ok){ handlePrepareFail(d.error||'구간컷 실패', null); return; }
     SCENE_CTX.token = d.token;
     showSceneDraft(d);   // queueInfo 없음 → d._queue=false, 큐와 무관한 단독 초안
-  }catch(e){ handlePrepareFail('네트워크 오류', null); }
+  }catch(e){ if(gen === SCENE_GEN) handlePrepareFail('네트워크 오류', null); }
   finally{ btn.disabled = false; btn.textContent = '✂ 자르고 AI 태그 뽑기'; }
 }
 
