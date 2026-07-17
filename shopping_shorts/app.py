@@ -20,7 +20,8 @@ from shopping_shorts.service import collect, generate_missing_drafts, next_draft
 from shopping_shorts.outreach import build_queue
 from shopping_shorts.store import Store
 from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
-from shopping_shorts.frame_extract import download_video, extract_frames, extract_frame_at
+from shopping_shorts.frame_extract import (download_video, extract_frames,
+                                           extract_frame_at, extract_grid_frames)
 from shopping_shorts.script_extract import extract_script
 from shopping_shorts.structure_analyze import analyze_structure
 from shopping_shorts.categorize import categorize, KEYWORDS as CATEGORY_KEYWORDS
@@ -479,6 +480,7 @@ _FIND_TMP_DIR = Path(__file__).parent / "data" / "find_frames"
 _MIX_WORK_DIR = Path(__file__).parent / "data" / "mix_jobs"
 _WIKI_MEDIA_DIR = Path(__file__).parent / "data" / "wiki_media"   # 도서관 원본 영구보관
 _SCENE_ASSETS_DIR = Path(__file__).parent / "data" / "scene_assets"  # 장면 라이브러리 자산 영구보관
+_THUMB_DIR = Path(__file__).parent / "data" / "thumbs"   # 5단계 썸네일 프레임·산출물
 
 
 @app.post("/api/extract_script")
@@ -1655,6 +1657,162 @@ def api_mix_video(job_id: str):
     if not job or not job.get("video_path") or not Path(job["video_path"]).exists():
         return JSONResponse(status_code=404, content={"ok": False})
     return FileResponse(job["video_path"])
+
+
+def _thumb_dir(job_id: str):
+    """job_id 검증 후 그 job의 썸네일 폴더. 경로순회를 여기서 한 번에 막는다.
+    부적합하면 None — 호출부가 400으로 돌려준다(이 파일은 HTTPException을 안 쓴다)."""
+    safe = os.path.basename(job_id)
+    if not safe or safe != job_id or safe in (".", ".."):
+        return None
+    return _THUMB_DIR / safe
+
+
+@app.post("/api/produce/thumb/frames")
+def api_thumb_frames(body: dict):
+    """5단계 썸네일 — 믹스 결과 영상을 등분해 후보 프레임 10장.
+
+    자막이 박히지 않은 2단계 결과(video_path)에서 뽑는다(설계 Q1) — 썸네일 텍스트는
+    위에 새로 얹으므로 배경 자막은 방해다. 이미 뽑아뒀으면 재추출하지 않는다.
+    """
+    job_id = str(body.get("job_id") or "")
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    video = job.get("video_path")
+    if not video or not Path(video).exists():
+        return JSONResponse(status_code=404, content={"ok": False, "error": "믹스 영상 없음"})
+
+    out_dir = _thumb_dir(job_id)
+    if out_dir is None:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "bad job_id"})
+
+    # 재렌더 감지(리뷰 픽스1): mix_pipeline은 job_id로 결정적인 경로(work/job_id/final.mp4)에
+    # 렌더하므로 재렌더는 "같은 파일"을 덮어쓴다 — video_path 문자열도 안 바뀐다.
+    # n=10 고정이라 "개수가 같은가"만으로는 옛 프레임인지 절대 구분 못 한다.
+    # 그래서 추출 시점 영상의 mtime_ns+size를 서명으로 같이 저장해두고 비교한다.
+    # (해시는 과하다 — 영상이 수십 MB.)
+    vstat = Path(video).stat()
+    video_sig = f"{vstat.st_mtime_ns}:{vstat.st_size}"
+
+    thumb = job.get("thumbnail") or {}
+    existing = sorted(out_dir.glob("grid_*.jpg")) if out_dir.exists() else []
+    if existing and thumb.get("video_sig") == video_sig:
+        meta = thumb.get("frames") or []
+        if len(meta) == len(existing):
+            return {"ok": True, "frames": meta}
+
+    # 재추출(재재조사 픽스1·2, 2026-07-17): 여기서 rmtree(out_dir)를 돌리면 안 된다.
+    # 같은 out_dir을 T4(썸네일 저장, task-4-brief.md)가 써서 사용자가 고른
+    # thumb_N.png를 저장한다 — rmtree는 그것까지 통째로 지워 재렌더 한 번에
+    # "고른 썸네일이 증발 + DB는 죽은 파일명을 계속 가리킴(깨진 이미지)"이 났다(실측).
+    # 게다가 grid_{i:02d}.jpg는 n=10 고정의 결정적 파일명이라 애초에 지울 필요가
+    # 없다 — 재추출이 그냥 덮어쓴다. rmtree를 추출 *전에* 돌리는 것도 문제였다:
+    # 추출이 RuntimeError로 실패하면(ffmpeg 일시 오류 등) 폴더는 이미 비었는데 DB의
+    # frames는 죽은 URL 10개를 그대로 들고 있어 "실패하면 이전보다 나빠짐"이 됐다.
+    try:
+        pairs = extract_grid_frames(video, out_dir, n=10)
+    except RuntimeError as e:
+        return JSONResponse(status_code=502, content={"ok": False, "error": str(e)})
+
+    # 추출 *성공 후에만*, 우리 소유 파일(grid_*.jpg)만, 개별로 고아를 정리한다.
+    # 부분 실패(extract_frame_at은 실패 시 조용히 None -- 기존 계약)로 새 결과에
+    # 없는 옛 grid_*.jpg가 남으면 existing(glob) vs meta(frames) 개수가 영영 안
+    # 맞아 매 요청마다 재추출이 돈다. thumb_*.png(T4 소유, 사용자가 고른 썸네일)는
+    # 이 정리 대상에 절대 넣지 않는다 — 우리가 만든 게 아니다.
+    new_names = {p.name for p, _ in pairs}
+    for old in out_dir.glob("grid_*.jpg"):
+        if old.name not in new_names:
+            old.unlink(missing_ok=True)
+
+    frames = [{"url": f"/api/produce/thumb/file/{job_id}/{p.name}", "ts": round(ts, 2)}
+              for p, ts in pairs]
+    thumb["frames"] = frames
+    thumb["video_sig"] = video_sig
+    Store(DB_PATH).update_mix_job(job_id, thumbnail=thumb)
+    return {"ok": True, "frames": frames}
+
+
+@app.get("/api/produce/thumb/file/{job_id}/{name}")
+def api_thumb_file(job_id: str, name: str):
+    """프레임·썸네일 파일 서빙. 파일명은 basename으로 강제한다."""
+    safe_name = os.path.basename(name)
+    d = _thumb_dir(job_id)
+    # safe_name in (".",".."): os.path.basename("..") == ".." 라 위 등가검사만으론
+    # 안 걸린다(2026-07-17 실측) — job_id 쪽 _thumb_dir과 동일하게 명시 차단.
+    if d is None or not safe_name or safe_name != name or safe_name in (".", ".."):
+        return JSONResponse(status_code=400, content={"ok": False, "error": "bad path"})
+    path = d / safe_name
+    # exists()가 아니라 is_file()이어야 한다(리뷰 픽스2, 2026-07-17 실측): name=" "이면
+    # 윈도우가 경로 끝 공백을 잘라내 path가 d 자신이 되어 exists()는 True를 내지만
+    # 파일이 아니라 디렉터리라 FileResponse가 RuntimeError를 던져 잡히지 않고 500이 나간다.
+    if not path.is_file():
+        return JSONResponse(status_code=404, content={"ok": False})
+    return FileResponse(str(path))
+
+
+@app.post("/api/produce/thumb/save")
+async def api_thumb_save(job_id: str = Form(...), meta: str = Form(...),
+                         file: UploadFile = File(...)):
+    """브라우저 canvas가 합성한 PNG를 받아 저장한다(설계 Q3 — 서버는 합성하지 않는다).
+
+    ★파일명은 서버가 부여한다. 클라이언트가 준 file.filename은 쓰지 않는다
+    (경로순회 재료). meta(레이어·프레임)는 같은 thumbnail_json에 함께 보존한다.
+    """
+    import json as _json          # app.py 관례(:1448·:1482) — 최상위 import 아님
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+
+    data = await file.read()
+    if not data.startswith(b"\x89PNG\r\n\x1a\n"):     # PNG 시그니처
+        return JSONResponse(status_code=400, content={"ok": False, "error": "PNG가 아님"})
+    try:
+        meta_obj = _json.loads(meta)
+    except (ValueError, TypeError):
+        return JSONResponse(status_code=400, content={"ok": False, "error": "meta 파싱 실패"})
+    if not isinstance(meta_obj, dict):
+        return JSONResponse(status_code=400, content={"ok": False, "error": "meta는 dict여야 합니다"})
+
+    out_dir = _thumb_dir(job_id)
+    if out_dir is None:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "bad job_id"})
+    out_dir.mkdir(parents=True, exist_ok=True)
+    thumb = job.get("thumbnail") or {}
+    results = list(thumb.get("results") or [])
+    name = f"thumb_{len(results) + 1}.png"
+    while (out_dir / name).exists():               # 갤러리 삭제 이력이 있어도 안 덮어쓴다
+        name = f"thumb_{len(results) + 1}_{uuid.uuid4().hex[:4]}.png"
+    (out_dir / name).write_bytes(data)
+
+    results.append(name)
+    # ★meta를 통째로 합치지 않는다. frames(Task 3이 만든 후보목록)·results·selected는
+    #  서버 소유라 클라이언트가 덮으면 안 된다 — 편집 상태만 화이트리스트로 받는다.
+    for k in ("frame_ts", "frame_url", "layers"):
+        if k in meta_obj:
+            thumb[k] = meta_obj[k]
+    thumb["results"] = results
+    store.update_mix_job(job_id, thumbnail=thumb)
+    return {"ok": True, "name": name,
+            "url": f"/api/produce/thumb/file/{job_id}/{name}"}
+
+
+@app.post("/api/produce/thumb/select")
+def api_thumb_select(body: dict):
+    """최종 썸네일 1장 지정. results에 있는 이름만 허용한다."""
+    job_id = str(body.get("job_id") or "")
+    name = str(body.get("name") or "")
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    thumb = job.get("thumbnail") or {}
+    if name not in (thumb.get("results") or []):
+        return JSONResponse(status_code=400, content={"ok": False, "error": "없는 썸네일"})
+    thumb["selected"] = name
+    store.update_mix_job(job_id, thumbnail=thumb)
+    return {"ok": True}
 
 
 def _reject_cdn_proxy(url: str, allowed_hosts) -> bool:

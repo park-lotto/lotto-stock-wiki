@@ -443,6 +443,9 @@ class Store:
                 ("preview_status", "TEXT"),  # null|rendering|ready|failed
                 ("preview_path", "TEXT"),
                 ("preview_error", "TEXT"),
+                # 5단계 썸네일(2026-07-17). 프레임 선택·텍스트 레이어·생성결과 갤러리를
+                # job 하나에 딸린 부속물로 본다(설계 Q4) — headcopy_json과 같은 패턴.
+                ("thumbnail_json", "TEXT"),
             ):
                 try:
                     c.execute(f"ALTER TABLE mix_jobs ADD COLUMN {col} {ddl}")
@@ -1276,7 +1279,7 @@ class Store:
                 "subtitle_removal, clean_video_path, given_script, headcopy_json, "
                 "caption_style_json, voice_json, deco_json, script_structure_json, "
                 "fx_plan, fx_status, fx_path, "
-                "preview_status, preview_path, preview_error "
+                "preview_status, preview_path, preview_error, thumbnail_json "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -1297,6 +1300,7 @@ class Store:
             "fx_plan": json.loads(row[19]) if row[19] else None,
             "fx_status": row[20], "fx_path": row[21],
             "preview_status": row[22], "preview_path": row[23], "preview_error": row[24],
+            "thumbnail": json.loads(row[25]) if row[25] else None,
         }
 
     def update_mix_job(self, job_id, **fields):
@@ -1323,6 +1327,10 @@ class Store:
         if "deco" in fields:
             cols.append("deco_json=?")
             vals.append(json.dumps(fields["deco"], ensure_ascii=False) if fields["deco"] else None)
+        if "thumbnail" in fields:
+            cols.append("thumbnail_json=?")
+            vals.append(json.dumps(fields["thumbnail"], ensure_ascii=False)
+                        if fields["thumbnail"] else None)
         if "voice" in fields:
             cols.append("voice_json=?")
             vals.append(json.dumps(fields["voice"], ensure_ascii=False) if fields["voice"] else None)

@@ -1,0 +1,1 @@
+{"ts": "11:58", "fired_events": [], "models": ["opus"], "noise_flag": false, "verdict": {"tone": "🔴 초토화", "line": "외인·기관의 무차별 동반 투매로 코스피 6%대 폭락, 프로그램 매도세에 지지선 완전 붕괴", "ts": "11:58"}, "outputs": {"opus": {"verdict": {"tone": "🔴 초토화", "line": "외인·기관의 무차별 동반 투매로 코스피 6%대 폭락, 프로그램 매도세에 지지선 완전 붕괴"}, "latency_ms": 20694, "model": "gemini"}}}
