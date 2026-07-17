@@ -24,6 +24,16 @@ def client(tmp_path, monkeypatch):
     return TestClient(app_module.app)
 
 
+@pytest.fixture
+def client_no_exception(tmp_path, monkeypatch):
+    """서버 예외를 테스트할 때용 — 프레임워크가 기본값으로 예외를 raise한다."""
+    monkeypatch.setattr(app_module, "DB_PATH", tmp_path / "t.db")
+    monkeypatch.setattr(app_module, "_THUMB_DIR", tmp_path / "thumbs")
+    s = Store(tmp_path / "t.db")
+    s.create_mix_job("j1", ["https://x/1"], 30, "template")
+    return TestClient(app_module.app, raise_server_exceptions=False)
+
+
 _META = json.dumps({"frame_ts": 4.7, "layers": [{"text": "강남언니", "x": 0.5, "y": 0.18}]})
 
 
@@ -105,3 +115,22 @@ def test_save_meta_cannot_clobber_server_fields(client, tmp_path):
     assert thumb["frames"] == [{"url": "/real/0.jpg", "ts": 1.0}]   # 후보목록 보존
     assert thumb["results"] == ["thumb_1.png"]                      # 서버가 매긴 것만
     assert thumb["selected"] is None                                # 고른 적 없다
+
+
+@pytest.mark.parametrize("meta_json", [
+    "42",                           # int — subscript에서 TypeError
+    '"frame_ts"',                   # str — subscript에서 TypeError (문자열 in 문자열은 True지만 subscript 불가)
+    "null",                         # null — in 연산이 TypeError
+    "[1,2,3]",                      # list — in 연산은 True 하지만 dict가 아님
+])
+def test_save_rejects_non_dict_meta(client_no_exception, meta_json):
+    """meta가 유효한 JSON이어도 dict가 아니면 400을 반환한다.
+
+    이전엔 dict가 아닌 유효 JSON은 1790~1792줄 for 루프에서 TypeError를 일으켜
+    500이 클라이언트까지 갔다. (실측: meta="42", '"frame_ts"', "null"은 500)
+    """
+    r = client_no_exception.post("/api/produce/thumb/save",
+                                data={"job_id": "j1", "meta": meta_json},
+                                files={"file": ("x.png", b"\x89PNG\r\n\x1a\n" + b"\x00" * 100, "image/png")})
+    assert r.status_code == 400, f"meta={meta_json}에서 {r.status_code} 받음 (400 예상)"
+    assert not r.json().get("ok", True), "에러 응답이어야 함"

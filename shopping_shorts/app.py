@@ -1772,6 +1772,8 @@ async def api_thumb_save(job_id: str = Form(...), meta: str = Form(...),
         meta_obj = _json.loads(meta)
     except (ValueError, TypeError):
         return JSONResponse(status_code=400, content={"ok": False, "error": "meta 파싱 실패"})
+    if not isinstance(meta_obj, dict):
+        return JSONResponse(status_code=400, content={"ok": False, "error": "meta는 dict여야 합니다"})
 
     out_dir = _thumb_dir(job_id)
     if out_dir is None:
