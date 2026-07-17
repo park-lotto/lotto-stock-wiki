@@ -18,7 +18,7 @@ function _el(tag){
   const o = { tagName:tag, children:[], _html:'', style:{}, textContent:'',
               classList:{ _s:new Set(), add(c){this._s.add(c);}, remove(c){this._s.delete(c);},
                           contains(c){return this._s.has(c);} },
-              appendChild(c){ this.children.push(c); return c; },
+              appendChild(c){ this.children.push(c); this._html += (c._html || ''); return c; },
               insertBefore(c, ref){ const i = ref ? this.children.indexOf(ref) : -1;
                 if (i < 0) { this.children.push(c); } else { this.children.splice(i, 0, c); } return c; },
               querySelector(){ return null; }, addEventListener(){} };
@@ -118,3 +118,22 @@ def test_fetch_failure_does_not_break_nav():
     out = _run("console.log(_nav.innerHTML.indexOf('영상 제작소') !== -1 ? 'nav-ok' : 'nav-broken');",
                harness_override="WORKS_RESPONSE = 'throw';")
     assert out == "nav-ok"
+
+
+def test_quoted_script_title_does_not_break_markup():
+    """★따옴표로 시작하는 대본은 쇼핑 숏폼의 관습이다 — 그것 하나로 사이드바가 깨지면 안 된다.
+    esc()는 작은따옴표만 JS-이스케이프하는 함수라 title=" 속성과 텍스트 자리엔 부적합했다."""
+    out = _run("console.log(_nav.innerHTML);",
+               harness_override='''WORKS_RESPONSE = {ok:true, works:[
+                 {work_id:'w1', title:'"이거 실화냐?" 협탁이', step:0, job_id:null, updated_at:'2026-07-17T01:00:00+00:00'}]};''')
+    assert 'title=""' not in out, "title 속성이 따옴표에서 끊겼다"
+    assert "&quot;" in out or "&#34;" in out, "큰따옴표가 이스케이프되지 않았다"
+
+
+def test_angle_brackets_in_title_do_not_become_tags():
+    """대본에 <>가 있으면 진짜 DOM 태그로 살아나면 안 된다."""
+    out = _run("console.log(_nav.innerHTML);",
+               harness_override='''WORKS_RESPONSE = {ok:true, works:[
+                 {work_id:'w1', title:'감자 레시피 <꿀팁>', step:0, job_id:null, updated_at:'2026-07-17T01:00:00+00:00'}]};''')
+    assert "<꿀팁>" not in out, "꺾쇠가 그대로 나가 태그가 된다"
+    assert "&lt;" in out

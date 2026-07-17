@@ -49,6 +49,16 @@
   document.head.appendChild(style);
 
   function esc(s) { return String(s).replace(/'/g, "\\'"); }
+  // esc()는 작은따옴표만 JS-문자열 이스케이프한다 — onclick="location.href='...'"처럼
+  // 작은따옴표로 감싼 JS 문자열 안에 넣을 값(it.href·w.work_id, 코드가 만든 불투명 값) 전용이다.
+  // title="..." 속성(큰따옴표로 감쌈)이나 텍스트 콘텐츠 자리엔 부적합 — 그건 HTML 엔티티
+  // 이스케이프가 필요하다(index.html:420·library.html:183과 동일 관례). 사용자가 타이핑한
+  // 대본 앞 20자(store.py의 title)처럼 신뢰 못 할 값은 반드시 이걸로.
+  function escHtml(s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
   var html = "<h1>🛍️ 쇼핑쇼츠</h1>";
   NAV.forEach(function (g) {
     html += '<div class="ss-group"><div class="ss-label">' + g.label + "</div>";
@@ -85,13 +95,21 @@
       var h = "";
       d.works.forEach(function (w) {
         var cur = open && w.work_id === open;
-        var name = (w.title || "(제목 없음)");
+        var name = escHtml(w.title || "(제목 없음)");
         h += '<div class="ss-work' + (cur ? " ss-work-current" : "") + '"' +
              " onclick=\"location.href='/produce?work=" + esc(w.work_id) + "'\"" +
-             ' title="' + esc(name) + '">· ' + esc(name) + " · " + (w.step + 1) + "단계</div>";
+             ' title="' + name + '">· ' + name + " · " + (w.step + 1) + "단계</div>";
       });
       h += '<div class="ss-work" onclick="location.href=\'/produce\'">+ 새 작업</div>';
-      nav.innerHTML = nav.innerHTML + h;
+      // nav.innerHTML = nav.innerHTML + h (통째 재할당) 금지 — nav의 기존 자식 전체를 파괴하고
+      // 문자열에서 재파싱한다. 이 함수는 fetch().then() 안에서 비동기로 돈다 — nav가 이미
+      // 라이브 DOM에 들어간 뒤에 재파싱되면, 모바일(@media max-width:760px, .ss-nav는
+      // overflow-x:auto로 가로스크롤)에서 사용자가 nav를 옆으로 스크롤해둔 상태의
+      // scrollLeft가 0으로 리셋된다. 컨테이너 하나만 만들어 appendChild하면 기존 자식·스크롤
+      // 위치를 안 건드리고 노드 하나만 끝에 붙는다.
+      var wrap = document.createElement("div");
+      wrap.innerHTML = h;
+      nav.appendChild(wrap);
     }).catch(function () {});   // 서버가 죽어도 네비게이션은 살아 있어야 한다
   }
 
