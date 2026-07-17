@@ -197,10 +197,9 @@
           <div id="speedBtns" style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px"></div>
           <div style="font-size:12px;color:var(--sub)">무음 삭제</div>
           <div id="silenceBtns" style="display:flex;gap:6px;margin:4px 0 10px"></div>
-          <div id="whisperRoleControls" style="display:none">
-            <div style="font-size:12px;color:var(--sub)">이 영상은 속삭임을 어디에 적용할까요?</div>
-            <div id="whisperRoleBtns" style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px"></div>
-          </div>
+          <!-- whisper role 선택(#whisperRoleControls)은 여기 없다 — 2026-07-17 결함① 수정으로
+               renderPresetCards()가 선택된 whisper 카드 "안"에 직접 그린다. 예전엔 여기(카드
+               14개 전부 밑)에 있어 화면 밖으로 밀려났었다. -->
           <details style="margin:8px 0">
             <summary style="cursor:pointer;font-size:13px;color:var(--sub)">고급 ▾</summary>
             <div style="padding:8px 0;display:flex;flex-direction:column;gap:8px">
@@ -1150,7 +1149,13 @@ function setScriptMode(mode){
 document.querySelectorAll('#scriptTabs .tab').forEach(t=> t.onclick=()=>setScriptMode(t.dataset.mode));
 
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function lenText(t){ t=t||''; const c=t.replace(/\s/g,'').length; return `${t.length}자 · 약 ${Math.round(c/6.5)}초`; }
+// SYLLABLES_PER_SEC=5.7 — 2026-07-17 성우 14명을 서버에서 실합성해 측정한 값(음절÷발화초,
+// 한글 1글자≈1음절). 파이썬 쪽 진실은 shopping_shorts/edit_plan.py의 _SYLLABLES_PER_SEC —
+// JS는 그 상수를 못 읽으므로(서버가 값을 내려주지 않음, 이 태스크 범위 밖) 여기 숫자로 나란히
+// 박아둔다. ⚠️ 둘 중 하나만 고치면 화면 "N자·약 N초" 표시와 편집계획(target_seconds)이
+// 갈라진다 — speed 재튜닝으로 실측치가 바뀌면 두 파일을 같이 고칠 것.
+const SYLLABLES_PER_SEC = 5.7;
+function lenText(t){ t=t||''; const c=t.replace(/\s/g,'').length; return `${t.length}자 · 약 ${Math.round(c/SYLLABLES_PER_SEC)}초`; }
 function onScriptInput(){ const ta=document.getElementById('scriptText'); STATE.script=ta.value; document.getElementById('lenHint').textContent=lenText(STATE.script); refreshFinalPeek(); if(HANDOFF.length) saveWork(); }
 function updateLen(){ onScriptInput(); }
 
@@ -1840,6 +1845,19 @@ function renderPresetCards(){
     const tabs=['stable','natural','expressive','whisper'].filter(k=>g.variants[k]).map(k=>
       `<button type="button" class="tab${variant===k?' active':''}" style="flex:0 0 auto;min-width:auto;padding:3px 9px;font-size:11px"
         onclick="event.stopPropagation();pickVariant('${g.group_id}','${k}')">${VARIANT_LABELS[k]}</button>`).join('');
+    // 속삭임 role 선택 — "선택된(active) 이 카드"가 지금 whisper 톤일 때만, 그 카드 안에 뜬다.
+    // [2026-07-17 결함① 수정] 예전엔 presetCards(성우 카드 14개) 전부의 밑, voiceControls 안
+    // 별도 div(#whisperRoleControls, display:none 토글)에 있었다 — 카드 top 293px vs 그 div
+    // top 1561px, 화면 한 장(1012px)에 같이 안 보여 "속삭임 눌러도 반응 없다"는 오인을 낳았다
+    // (사장님이 브라우저로 실측). 카드 렌더 루프 안에서 조건부로만 그려 항상 같이 보이게 한다
+    // — display:none 토글이 아니라 "다른 카드/다른 톤이면 이 블록 자체가 안 그려진다"로 해결.
+    // 태그는 켜지거나 꺼질 뿐이라(설계 §6) range 입력은 없다 — "속삭임 강도" 슬라이더 금지.
+    const whisperPicker=(active && variant==='whisper')?`
+        <div id="whisperRoleControls" style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)">
+          <div style="font-size:11px;color:var(--sub);margin-bottom:4px">이 영상은 속삭임을 어디에 적용할까요?</div>
+          <div id="whisperRoleBtns" style="display:flex;gap:6px;flex-wrap:wrap">${WHISPER_ROLE_PRESETS.map(w=>
+            `<button type="button" onclick="event.stopPropagation();setWhisperPreset('${w.key}')" class="tab${WHISPER_PICK===w.key?' active':''}" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:13px">${w.label}</button>`).join('')}</div>
+        </div>` : '';
     return `
       <div onclick="pickPreset('${g.group_id}')"
         style="border:1px solid ${active?'var(--accent2)':'var(--line)'};border-radius:9px;padding:9px;margin-bottom:6px;cursor:pointer;background:#0d1420">
@@ -1848,6 +1866,7 @@ function renderPresetCards(){
           ${tabs}
           ${v&&v.sample_url?`<audio controls src="${esc(v.sample_url)}" style="height:26px;vertical-align:middle;margin-left:4px"></audio>`:''}
         </div>
+        ${whisperPicker}
       </div>`;
   }).join('');
   document.getElementById('presetCards').innerHTML=cards||'<div class="hint">프리셋이 없습니다.</div>';
@@ -1869,8 +1888,7 @@ function pickPreset(gid){
          silence_trim:v.default_silence_trim, group_id:gid, variant};
   document.getElementById('voiceControls').style.display='block';
   pickHighlight();
-  renderWhisperRoleBtns();
-  renderPresetCards();
+  renderPresetCards();  // whisper role 선택도 이 안에서 카드와 같이 그려진다(결함① 수정, 별도 호출 불필요)
   const vs=VOICE.settings||{};
   const g2=id=>document.getElementById(id);
   g2('advStability').value=(vs.stability!=null?vs.stability:0.5);
@@ -1882,15 +1900,10 @@ function pickPreset(gid){
 }
 function setSpeed(s){ VOICE.speed=s; pickHighlight(); }
 function setSil(v){ VOICE.silence_trim=v; pickHighlight(); }
-function setWhisperPreset(key){ WHISPER_PICK=key; renderWhisperRoleBtns(); }
-function renderWhisperRoleBtns(){
-  const wrap=document.getElementById('whisperRoleControls');
-  if(!wrap) return;
-  if(VOICE.variant!=='whisper'){ wrap.style.display='none'; return; }
-  wrap.style.display='block';
-  document.getElementById('whisperRoleBtns').innerHTML=WHISPER_ROLE_PRESETS.map(w=>
-    `<button type="button" onclick="setWhisperPreset('${w.key}')" class="tab${WHISPER_PICK===w.key?' active':''}" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:13px">${w.label}</button>`).join('');
-}
+// 카드 안 role 버튼을 고르면 카드 전체를 다시 그린다(WHISPER_PICK은 renderPresetCards()가 읽는다) —
+// 예전엔 #whisperRoleControls 하나만 갱신하는 renderWhisperRoleBtns()가 따로 있었지만, 그 div가
+// 이제 카드 마크업 안에서만 존재하므로(결함① 수정) 카드 재렌더가 곧 role 버튼 재렌더다.
+function setWhisperPreset(key){ WHISPER_PICK=key; renderPresetCards(); }
 function _whisperRolesForBody(){
   // whisper 톤이 아니면 오버라이드를 안 보낸다 — 다른 톤 프리셋 원래 프로파일을 그대로 쓴다.
   if(VOICE.variant!=='whisper') return null;

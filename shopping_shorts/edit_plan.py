@@ -39,6 +39,13 @@ VIDEO_TYPES = {
 }
 _DEFAULT_TYPE = "product_reveal"
 
+# 한글 1글자 ≈ 1음절이므로 "글자수 ÷ 이 값"이 실제 발화 시간(초)이다.
+# 2026-07-17 성우 14명을 서버에서 실합성해 측정한 값(음절÷발화초). 성우별 speed는 이 값에
+# 닿도록 역산해 박았다(voice_presets.json). 속도를 다시 튜닝하면 이 상수도 같이 움직여야 한다.
+# ⚠️ produce.html의 lenText()(화면 "N자 · 약 N초" 표시)가 이 값을 JS로 못 읽으므로 별도
+# 상수(SYLLABLES_PER_SEC)로 나란히 유지한다 — 둘 중 하나만 바꾸면 화면과 계획이 어긋난다.
+_SYLLABLES_PER_SEC = 5.7
+
 
 def _build_inventory(source_scripts):
     """소스 대본들 → (seg_map, prompt_block).
@@ -348,7 +355,7 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
             video_type = _DEFAULT_TYPE
         prompt = _PROMPT.format(
             target_seconds=target_seconds, inventory=inventory, n_alternates=n_alternates,
-            char_target=int(target_seconds * 4.5),
+            char_target=int(target_seconds * _SYLLABLES_PER_SEC),
             structure_instruction=(_TEMPLATE_INSTR if structure == "template" else _FREE_INSTR),
             type_strategy=VIDEO_TYPES[video_type]["strategy"],
         )
@@ -361,10 +368,10 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
     raw.setdefault("structure", structure)
     grounded = _validate_and_ground(raw, seg_map, n_alternates)
     # 각 비트 target_seconds는 나레이션 글자수 기준으로 재계산(실제 렌더 길이 =
-    # 나레이션 읽는 시간 ≈ 글자수÷4.5초). UI 표시 초와 실제 길이가 어긋나지 않게.
+    # 나레이션 읽는 시간 ≈ 글자수÷_SYLLABLES_PER_SEC초). UI 표시 초와 실제 길이가 어긋나지 않게.
     for _b in grounded["beats"]:
         _n = len((_b.get("narration") or "").strip())
-        _b["target_seconds"] = round(max(1.5, _n / 4.5), 1)
+        _b["target_seconds"] = round(max(1.5, _n / _SYLLABLES_PER_SEC), 1)
     grounded["structure"] = structure
     grounded["detected_type"] = video_type
     grounded["affiliate_target"] = raw.get("affiliate_target", "")

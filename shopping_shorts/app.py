@@ -2716,11 +2716,20 @@ def _fx_render_job(job_id, plan, cid):
     store = Store(DB_PATH)
     try:
         job = store.get_mix_job(job_id) or {}
+        # 고급효과는 꾸미기(4단계)에서 건다 — video_path(최종 조립본)는 맨 마지막 단계에서야
+        # 채워지므로 이 시점엔 대개 None이다. 배경은 그 단계에 실제로 존재하는 것부터:
+        # 최종본 > 자막제거본 > 조립 프리뷰 순.
+        bg = job.get("video_path") or job.get("clean_video_path") or job.get("preview_path")
+        if not bg:
+            raise RuntimeError("배경 영상 없음(video_path·clean_video_path·preview_path 모두 비어있음)")
         out = str(_MIX_WORK_DIR / job_id / "fx.mp4")
         Path(out).parent.mkdir(parents=True, exist_ok=True)
-        remotion_render.render(plan, job.get("video_path"), out)
+        remotion_render.render(plan, bg, out)
         store.update_mix_job(job_id, fx_status="done", fx_path=out)
     except Exception:
+        # 조용한 except가 실패 원인을 통째로 삼켜 진단을 막았다 — stderr(systemd 저널)로 남긴다.
+        import traceback
+        traceback.print_exc()
         points.refund(store, cid, FX_RENDER_COST)
         store.update_mix_job(job_id, fx_status="failed")
 
