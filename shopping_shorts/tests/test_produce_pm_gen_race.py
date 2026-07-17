@@ -146,8 +146,12 @@ def _run(scenario: str, tmp_path) -> subprocess.CompletedProcess:
     f.write_text(src, encoding="utf-8")
     # encoding="utf-8", errors="replace": 기본(cp949) 캡처는 실패메시지의 한글 console.error를
     # 못 읽어 리더 스레드에서 죽는다(stderr=None으로 보임) — M-2와 동일 이유로 처음부터 적용.
+    # stdin=DEVNULL: Windows에서 여러 node 하위프로세스가 같은 세션에서 잇달아 뜨면 부모
+    # stdin 핸들 복제 경합으로 간헐적 OSError([WinError 50])가 난다(test_produce_category_race.py
+    # 기존 조치와 동일 원인·동일 처방 — 2026-07-17, 보이스 트랙 회귀런에서 실측).
     return subprocess.run([NODE, str(f)], capture_output=True, text=True,
-                           encoding="utf-8", errors="replace", timeout=30)
+                           encoding="utf-8", errors="replace", timeout=30,
+                           stdin=subprocess.DEVNULL)
 
 
 @pytest.mark.skipif(NODE is None, reason="node 없음 — JS 하네스 스킵")
