@@ -38,6 +38,9 @@ DEFAULT_PROFILE = {
     # 훅만인 이유: 반전은 속삭이고 CTA는 [excited]가 이미 띄운다 — 거기에 느낌표까지
     # 붙이면 과해진다. 이 노브를 비우면(=[]) 옛 동작(부사 앞 쉼표만)으로 돌아간다.
     "intonation":    {"on": True, "intensity": 0.2, "emphasis_roles": ["훅"]},
+    # 결론어 강조(2026-07-17 사장님 지시): "실용부분에서 끝이에요를 끝!이에요 이런식으로".
+    # roles=["실용"]인 이유: 착지점을 때리는 건 방법을 보여주고 끝맺는 자리의 문법이다.
+    "conclusion":    {"on": True, "roles": ["실용"], "words": ["끝", "완성"]},
     # max_fillers_per_text=1(구값)은 n = min(cap, _take_count(...))에서 cap이 항상
     # 병목이 돼 강도가 뭘 하든 결과가 늘 1개로 고정됐다(2026-07-15 컨트롤러 재현,
     # Task4 리뷰 Critical1 — "슬라이더를 돌렸는데 출력이 똑같다"는 이 재설계 전체의
@@ -1112,11 +1115,60 @@ def _whisper(text, cfg, ctx):
     return out
 
 
+# 결론어 = 그 문장의 착지점. 뒤에 오는 서술어(이에요/입니다)와 붙어 흘러가면 안 들린다.
+# `(?<![!])`로 이미 붙은 느낌표를 배제해 멱등성을 지킨다(두 번 태워도 "끝!!이에요"가 안 된다) —
+# 다만 실측(구현 검증 단계)해보면 이 lookbehind는 현재 구조에서 **불필요**하다: "!"를
+# 단어와 tail 사이에 끼워 넣는 순간 `(w)(tail)`의 직접 인접 자체가 깨지므로("끝!이에요"에서
+# "끝" 바로 뒤는 "이에요"가 아니라 "!"), 멱등성은 인접 요구 하나만으로 이미 보장된다.
+# lookbehind를 지워도 `test_is_idempotent`가 안 죽는다는 걸 뮤테이션으로 직접 확인했다
+# (보고서 참조) — 남기는 이유는 무해한 이중 방어이지 이게 실제 방어선이라서가 아니다.
+_CONCLUSION_TAIL = r"(?:이에요|이예요|입니다|이야|이죠|예요)"
+
+
+def _conclusion(text, cfg, ctx):
+    """실용 비트의 결론어를 "끝!이에요" 꼴로 강조(2026-07-17 사장님 지시).
+
+    단어 **중간**에 느낌표를 꽂는 유일한 규칙이라 별도 스테이지다 — `_intonation`은
+    어절 앞 쉼표, `_endings`는 문장 끝이라 둘 다 자리가 안 맞는다.
+
+    `(?<![가-힣])` 경계 가드(구현 검토 단계에서 추가, 브리프 원안 정규식엔 없었다) —
+    브리프의 리터럴 `(w)(tail)`은 "끝"/"완성"이 **더 큰 단어의 뒷부분**일 때도 그대로
+    걸린다: "손끝이에요"(손+끝+이에요, 손가락 끝), "발끝이에요", "칼끝이에요",
+    "붓끝이에요", "혀끝이에요" — 전부 "이건 (무언가의) 끝(=결론)이다"가 아니라
+    "이건 N의 끝(=신체·도구의 첨단)이다"라는 별개 명사고, 강조하면 "손끝!이에요"처럼
+    합성어 한가운데 느낌표가 박혀 부자연스럽게 들린다. "완성"도 대칭 사고가 있다 —
+    "미완성이에요"(未完成, "아직 안 끝났다"는 **정반대** 의미)의 뒷부분과 표면이
+    겹친다: "완성" 앞에 "미"가 붙었을 뿐인데 리터럴 매치는 그 사실을 모른다.
+    두 사고 모두 Task3가 이미 겪은 클래스(국민가요/끝나요/하나요 — "리터럴 하나가
+    더 큰 단어에 삼켜진다")와 동일 구조다. `(?<![가-힣])`는 "끝"/"완성" 바로 앞이
+    한글 음절이 아닐 것(문장 시작·공백·문장부호만 허용)을 요구해 이 결합을
+    원천 차단한다 — 한국어 맞춤법상 독립 명사는 앞에서 반드시 띄어 쓰고 합성어·
+    접두사 결합은 붙여 쓰므로, 이 판별자는 근사가 아니라 정확한 경계 조건이다.
+    """
+    canon = ctx.get("role_canon")
+    if canon is None or canon not in (cfg.get("roles") or []):
+        return text
+    words = cfg.get("words") or []
+    if not words:
+        return text
+    n = 0
+    for w in words:
+        # (?<![가-힣]) — 합성어 뒷부분(손끝·미완성류) 배제(위 문서화 참조).
+        # (?<![!]) — 이미 강조된 것 재적용 금지(위 문서화 참조, 실질은 인접 요구가 보장).
+        # 결론어 바로 뒤에 서술어가 붙은 경우만 잡는다: "끝나면"의 '끝'은 안 걸린다.
+        pat = re.compile(r"(?<![가-힣])(" + re.escape(w) + r")(?<![!])(" + _CONCLUSION_TAIL + r")")
+        text, k = pat.subn(r"\1!\2", text)
+        n += k
+    if n:
+        _bump(ctx, "conclusion", n)
+    return text
+
+
 _STAGES = [("normalize", _normalize), ("spoken_style", _spoken_style),
            ("pronunciation", _pronunciation), ("phrasing", _phrasing),
            ("endings", _endings), ("fillers", _fillers),
            ("emotion_arc", _emotion_arc), ("whisper", _whisper),
-           ("intonation", _intonation)]
+           ("conclusion", _conclusion), ("intonation", _intonation)]
 
 
 def _enforce_total_tag_cap(text, cap):
