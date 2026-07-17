@@ -1,4 +1,140 @@
+import pytest
+
 from shopping_shorts import seo_probe
+from shopping_shorts.store import Store
+
+
+@pytest.fixture
+def store(tmp_path):
+    return Store(str(tmp_path / "p.db"))
+
+
+class _FakeResp:
+    def __init__(self, payload, status=200):
+        self._p, self.status_code = payload, status
+
+    def json(self):
+        return self._p
+
+
+def _search_payload(titles):
+    return {"items": [
+        {"id": {"videoId": f"v{i}"},
+         "snippet": {"channelId": f"c{i}", "channelTitle": f"ch{i}", "title": t,
+                     "description": "", "thumbnails": {}, "publishedAt": "2026-07-01T00:00:00Z"}}
+        for i, t in enumerate(titles)]}
+
+
+def _videos_payload(n, views):
+    return {"items": [{"id": f"v{i}", "statistics": {"viewCount": str(views)}} for i in range(n)]}
+
+
+def _channels_payload(n, subs):
+    return {"items": [{"id": f"c{i}", "statistics": {"subscriberCount": str(subs)}} for i in range(n)]}
+
+
+def _fake_get(search, videos, channels, calls=None):
+    """URL로 어느 API인지 갈라 가짜 응답을 준다."""
+    def _get(url, params=None, timeout=None):
+        if calls is not None:
+            calls.append(url)
+        if "search" in url:
+            return _FakeResp(search)
+        if "videos" in url:
+            return _FakeResp(videos)
+        return _FakeResp(channels)
+    return _get
+
+
+def test_probe_keywords_measures(monkeypatch, store):
+    monkeypatch.setattr(seo_probe, "YOUTUBE_API_KEYS", ["k1"])
+    titles = ["한글제목1", "한글제목2", "한글제목3", "한글제목4"]
+    monkeypatch.setattr(seo_probe.requests, "get", _fake_get(
+        _search_payload(titles), _videos_payload(4, 500_000), _channels_payload(4, 500)))
+    got = seo_probe.probe_keywords(["빨대텀블러"], store)
+    assert len(got) == 1
+    assert got[0]["keyword"] == "빨대텀블러"
+    assert got[0]["views_median"] == 500_000
+    assert got[0]["small_ratio"] == 1.0
+    assert got[0]["verdict"] == "blue"
+
+
+def test_probe_keywords_caps_at_max_probe(monkeypatch, store):
+    """쿼터 상한 — 6개를 넘겨도 6개만 잰다."""
+    monkeypatch.setattr(seo_probe, "YOUTUBE_API_KEYS", ["k1"])
+    calls = []
+    monkeypatch.setattr(seo_probe.requests, "get", _fake_get(
+        _search_payload(["한글1", "한글2", "한글3"]),
+        _videos_payload(3, 500_000), _channels_payload(3, 500), calls))
+    got = seo_probe.probe_keywords([f"키워드{i}" for i in range(20)], store)
+    assert len(got) == seo_probe._MAX_PROBE
+    assert sum(1 for u in calls if "search" in u) == seo_probe._MAX_PROBE
+
+
+def test_probe_keywords_uses_cache(monkeypatch, store):
+    """캐시가 있으면 API를 아예 안 부른다 — 100유닛짜리다."""
+    store.put_keyword_stats({"keyword": "캐시된", "region": "KR", "views_median": 7,
+                             "small_ratio": 0.5, "sample_n": 20,
+                             "top_titles": ["x"], "verdict": "blue"})
+
+    def _boom(*a, **k):
+        raise AssertionError("캐시 적중인데 API를 불렀다")
+
+    monkeypatch.setattr(seo_probe, "YOUTUBE_API_KEYS", ["k1"])
+    monkeypatch.setattr(seo_probe.requests, "get", _boom)
+    got = seo_probe.probe_keywords(["캐시된"], store)
+    assert got[0]["views_median"] == 7
+
+
+def test_probe_keywords_writes_cache(monkeypatch, store):
+    monkeypatch.setattr(seo_probe, "YOUTUBE_API_KEYS", ["k1"])
+    monkeypatch.setattr(seo_probe.requests, "get", _fake_get(
+        _search_payload(["한글1", "한글2", "한글3"]),
+        _videos_payload(3, 500_000), _channels_payload(3, 500)))
+    seo_probe.probe_keywords(["새키워드"], store)
+    assert store.get_keyword_stats("새키워드") is not None
+
+
+def test_probe_keywords_no_keys_is_unknown(monkeypatch, store):
+    """키가 없어도 예외를 던지지 않는다 — SEO 문구 생성이 측정보다 우선이다."""
+    monkeypatch.setattr(seo_probe, "YOUTUBE_API_KEYS", [])
+    got = seo_probe.probe_keywords(["아무거나"], store)
+    assert got[0]["verdict"] == "unknown"
+
+
+def test_probe_keywords_403_rotates_then_unknown(monkeypatch, store):
+    """모든 키가 403이면 unknown — 우아하게 꺼진다."""
+    monkeypatch.setattr(seo_probe, "YOUTUBE_API_KEYS", ["k1", "k2"])
+    calls = []
+
+    def _get(url, params=None, timeout=None):
+        calls.append(params.get("key"))
+        return _FakeResp({}, status=403)
+
+    monkeypatch.setattr(seo_probe.requests, "get", _get)
+    got = seo_probe.probe_keywords(["소진"], store)
+    assert got[0]["verdict"] == "unknown"
+    assert "k1" in calls and "k2" in calls      # 로테이션은 했다
+
+
+def test_probe_keywords_403_not_cached(monkeypatch, store):
+    """실패를 캐시하면 7일간 unknown에 갇힌다."""
+    monkeypatch.setattr(seo_probe, "YOUTUBE_API_KEYS", ["k1"])
+    monkeypatch.setattr(seo_probe.requests, "get",
+                        lambda url, params=None, timeout=None: _FakeResp({}, status=403))
+    seo_probe.probe_keywords(["소진"], store)
+    assert store.get_keyword_stats("소진") is None
+
+
+def test_probe_keywords_filters_foreign_titles(monkeypatch, store):
+    """한국어 필터 — 외국 영상이 섞이면 측정이 틀어진다."""
+    monkeypatch.setattr(seo_probe, "YOUTUBE_API_KEYS", ["k1"])
+    monkeypatch.setattr(seo_probe.requests, "get", _fake_get(
+        _search_payload(["한글제목", "English Only Title", "another english"]),
+        _videos_payload(3, 500_000), _channels_payload(3, 500)))
+    got = seo_probe.probe_keywords(["섞임"], store)
+    assert got[0]["sample_n"] == 1          # 한글 1건만 남는다
+    assert got[0]["verdict"] == "unknown"   # 표본 부족
 
 
 def _items(n, views, subs):
@@ -70,3 +206,13 @@ def test_summarize_missing_subs_counts_as_large():
     got = seo_probe.summarize(items)
     assert got["small_ratio"] == 0.0
     assert got["verdict"] == "red"
+
+
+def test_summarize_median_even_sample():
+    """짝수 샘플 → 가운데 두 값의 평균(정수 나눗셈). 이 분기는 T3에서 미검증이었다."""
+    items = [{"title": "a", "views": 100, "subs": 1},
+             {"title": "b", "views": 200, "subs": 1},
+             {"title": "c", "views": 300, "subs": 1},
+             {"title": "d", "views": 500, "subs": 1}]
+    got = seo_probe.summarize(items)
+    assert got["views_median"] == 250       # (200+300)//2
