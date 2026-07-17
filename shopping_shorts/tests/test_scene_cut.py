@@ -145,3 +145,48 @@ def test_detect_cuts_never_exceeds_video_frames(tmp_path):
     total = scene_cut.video_frame_count(f)
     for _, b in scene_cut.detect_cuts(f, min_seconds=0.1):
         assert b <= total
+
+
+def _make_vfr_video(path):
+    """10fps 1초 + 30fps 1초 + 30fps 0.1초를 concat -c copy로 이어붙인다.
+
+    ★r_frame_rate가 실제 프레임 타이밍과 어긋나는 VFR 컨테이너를 만든다.
+    실측(2026-07-17, 이 환경): 결과 r_frame_rate=20/1(video_fps가 읽는 값)인데
+    실제 총 프레임(nb_read_frames)은 43개뿐이다. black→white→black이라
+    scene 경계는 pts_time:3(=색이 두 번째로 바뀌는 지점) 근처에서 검출되고,
+    round(3 * 20) = 60으로 total(43)을 넘는다 — 가드가 없으면 이 60이
+    그대로 end로 반환된다."""
+    parts = []
+    for color, fps, secs in (("black", 10, 1.0), ("white", 30, 1.0), ("black", 30, 0.1)):
+        p = path.parent / f"_vfr_{color}_{fps}.mp4"
+        subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi",
+                        "-i", f"color=c={color}:size=320x568:rate={fps}:duration={secs}",
+                        "-c:v", "libx264", "-pix_fmt", "yuv420p", str(p)],
+                       check=True, capture_output=True, stdin=subprocess.DEVNULL)
+        parts.append(p)
+    lst = path.parent / "_vfr_list.txt"
+    lst.write_text("".join(f"file '{p}'\n" for p in parts), encoding="utf-8")
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0",
+                    "-i", str(lst), "-c", "copy", str(path)],
+                   check=True, capture_output=True, stdin=subprocess.DEVNULL)
+    return path
+
+
+def test_detect_cuts_clamps_boundaries_beyond_total_on_vfr(tmp_path):
+    """★r_frame_rate가 실제 프레임 타이밍과 어긋나는 VFR 컨테이너에서
+    round(pts*fps)가 총 프레임 수를 넘을 수 있다. 가드(0 < f < total)가 그걸 막는다.
+
+    리뷰어 실측 재현: 10fps 1초 + 30fps 1초 + 30fps 0.1초를 concat하면
+    r_frame_rate=20/1로 보고되는데 실제 프레임은 43개다. 경계 pts_time:3이
+    round(3*20)=60이 되어 total(43)을 넘는다. 가드가 없으면 (30,60)이
+    end=60 > total=43인 채로 반환되고, make_clip이 없는 프레임을 요구하게 된다."""
+    f = _make_vfr_video(tmp_path / "vfr.mp4")
+    total = scene_cut.video_frame_count(f)
+    fps = scene_cut.video_fps(f)
+    assert fps == 20.0                # ★재현 전제: r_frame_rate가 20/1로 보고됨
+    assert total == 43                # ★재현 전제: 실제 프레임은 43개뿐(20fps 기준 2.15초분)
+
+    cuts = scene_cut.detect_cuts(f, min_seconds=0.05)
+    assert cuts
+    for _, b in cuts:
+        assert b <= total             # ★가드가 하는 일: end가 total을 넘지 않는다
