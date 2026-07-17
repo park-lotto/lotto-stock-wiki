@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "삼성SDI",
+      "signal": "bull",
+      "reason": "정부 ESS 사업 수주 및 25조원 규모의 대규모 투자 단행",
+      "ts": "2026-07-13",
+      "quote": "정부 ESS도 잡았다…삼성SDI, 25조 투자 '승부수'",
+      "sector": "2차전지"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "삼성SDI, 정부 ESS 사업 수주 및 25조원 투자 발표",
+      "ts": "2026-07-13",
+      "quote": "정부 ESS도 잡았다…삼성SDI, 25조 투자 '승부수'"
+    }
+  ],
+  "quote": "정부 ESS도 잡았다…삼성SDI, 25조 투자 '승부수'"
+}

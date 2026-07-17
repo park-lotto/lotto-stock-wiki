@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "date": "2026-06-15",
+    "broker": "미래에셋증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-16_0703_풀스텍 내재화의 우위.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "미래에셋증권",
+    "analyst": "김영건",
+    "report_date": "2026.6.15",
+    "stocks": [
+      {
+        "name": "삼성전자",
+        "code": "005930",
+        "rating": "매수",
+        "rating_changed": null,
+        "tp_new": "550,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": {
+          "2026F_revenue": "732,386 십억원",
+          "2026F_operating_profit": "394,978 십억원",
+          "2027F_revenue": "939,015 십억원",
+          "2027F_operating_profit": "528,833 십억원"
+        },
+        "estimate_revision": null,
+        "next_catalyst": "풀스택 메모리 제조 내재화 역량에 대한 프리미엄 부여",
+        "thesis": [
+          "풀스택 제조 내재화 역량을 내재화했으나 가장 싸다",
+          "HBM4부터 베이스다이에 기존 DRAM 공정이 아닌 파운드리 공정 적용이 불가피해짐",
+          "동사는 파운드리사업부의 4nm FinFET 공정을 적용해 베이스다이 내재화를 완료함"
+        ],
+        "valuation_basis": "동사의 26F P/B 및 P/E 배수는 각각 2.9배, 6.6배, 목표가를 환산한 26F P/B 및 P/E 배수도 각각 4.9배, 11.3배로 업종 평균(각각 7.6배, 12.4배)에 미치지 못함",
+        "risk": null,
+        "supply_comment": "HBM4, HBM5로 고도화될수록 베이스다이의 조달 중요성은 더욱 커질 전망이며, HBM4에서의 베이스다이 원가 비중은 약 15% 내외로 추정됨",
+        "quote": "동사에 대한 투자의견 '매수' 및 목표주가를 550,000원으로 유지한다."
+      }
+    ],
+    "sector": "반도체"
+  }
+}

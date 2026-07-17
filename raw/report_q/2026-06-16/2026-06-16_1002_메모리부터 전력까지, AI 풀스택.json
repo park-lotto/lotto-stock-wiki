@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-16",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-16_1002_메모리부터 전력까지, AI 풀스택.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "이경연, 이채리 RA",
+    "report_date": "26.06.15",
+    "stocks": [
+      {
+        "name": "SK",
+        "code": "034730",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": 880000,
+        "tp_prev": 880000,
+        "tp_direction": "flat",
+        "earnings_outlook": "SK에코플랜트 1분기 어닝 서프라이즈(매출 4조 8,997억, 영업이익 9,310억원)는 반도체 가격 상승에 따른 에센코어 실적이 견인. 수주잔액 내 Hi-Tech(반도체 Fab, AI 데이터 센터) 비중 약 25%로 2026년 연간 고마진 실적 개선 전망.",
+        "estimate_revision": null,
+        "next_catalyst": "6월 내 협상 마무리 예상",
+        "thesis": [
+          "SK에코플랜트 FI 환매 종결 → 지분율 71.2%로 상승",
+          "실적 개선 본격화 시점에 비상장 자회사 가치의 온전한 귀속",
+          "상장 자회사 지분가치 상승 여력 유효"
+        ],
+        "valuation_basis": "현재 NAV 대비 할인율은 53.26%이며, PBR 1.5배로 밸류에이션 매력 충분.",
+        "risk": "SK실트론 매각 무산 가능성 제기(단, 저자는 전략적 가치 상승에 기인한 최종 SPA 체결 지연으로 판단)",
+        "supply_comment": null,
+        "quote": "SK에 대한 투자의견 매수, 목표주가 88만원을 유지."
+      }
+    ]
+  }
+}

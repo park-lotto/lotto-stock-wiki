@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "date": "2026-06-15",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-16_0706_호르무즈 개방은 매수의 근거.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "윤재성, 김형준",
+    "report_date": "2026.06.15",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "WTI 84.9$(-6%)",
+      "Dubai 83.2$ (-9%)",
+      "정제마진 29.3$(WoW +3.2$)",
+      "유럽 디젤 선물 WoW -9%"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "에너지/화학",
+        "stance": "Overweight",
+        "reason": "호르무즈 개방 및 원유 시장 구조적 변화, 2026년 하반기~2028년까지 Up-Cycle 전망"
+      },
+      {
+        "sector": "신재생",
+        "stance": "Overweight",
+        "reason": "PTC/ITC의 ‘5% Safe Harbor’ 복원 및 Section 232 기대감"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026년 6월 말 이전",
+        "event": "Section 232 조사 결과 발표 예상"
+      }
+    ],
+    "top_picks": [
+      "OCI홀딩스",
+      "금호석유화학",
+      "효성티앤씨",
+      "대한유화",
+      "S-Oil",
+      "한화솔루션",
+      "KCC"
+    ],
+    "risk": "전쟁 장기화에 따른 매크로 리스크 및 종전 시 역래깅 효과",
+    "quote": "호르무즈 사태를 계기로 이미 아시아 업체들은 중동산을 축소하고 비중동산 원유 도입을 확대한 상태. 이러한 다변화 움직임은 단기 뿐만 아니라, 중장기적으로도 거세질 수 밖에 없을 것으로 판단."
+  }
+}
