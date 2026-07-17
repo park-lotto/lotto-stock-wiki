@@ -1446,7 +1446,14 @@ def api_voice_preset_sample(preset_id: str):
     f = voice_presets.SAMPLES_DIR / p["sample_file"]
     if not f.exists():
         return JSONResponse(status_code=404, content={"ok": False})
-    return FileResponse(str(f), media_type="audio/mpeg")
+    # no-cache = "캐시는 해도 되지만 쓰기 전에 반드시 서버에 물어봐라".
+    # 샘플은 성우를 재튜닝할 때마다 **파일 내용이 바뀌는데 이름은 그대로**라, 헤더가 없으면
+    # 브라우저가 옛것을 무기한 들려준다 — 2026-07-17 실사고: 47개를 새 속도로 재생성·배포한
+    # 뒤에도 사장님 화면에선 옛 소리가 났다(미나 속삭임 브라우저 3.2초 vs 서버 7.1초).
+    # FileResponse가 etag·last-modified를 붙이므로 안 바뀌었으면 304로 싸게 끝난다
+    # (no-store가 아니다 — 매번 통째로 다시 받게 하면 그건 그것대로 낭비다).
+    return FileResponse(str(f), media_type="audio/mpeg",
+                        headers={"Cache-Control": "no-cache"})
 
 
 _TUNE_CORPUS = Path(__file__).parent / "assets" / "tune_corpus.json"
