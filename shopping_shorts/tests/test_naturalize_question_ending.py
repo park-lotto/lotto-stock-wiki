@@ -198,12 +198,19 @@ def test_strict_raiser_narrower_than_loose_guard_direct():
     뮤턴트: `_QUESTION_GUARD_PAT`을 `_QUESTION_TAIL_PAT`과 동일하게(가드=올리개)
     되돌리면 마지막 두 단언(가드만 매치)이 죽는다. `_QUESTION_GUARD_ALTS`에서
     `_QUESTION_TAIL_ALTS`와의 합집합을 빼고 바레 `가요|까요|나요`만 남기면(Finding2
-    수정 전 상태로 되돌리면) `않으세요`/`없으세요` 표면형에서 죽는다."""
+    수정 전 상태로 되돌리면) `않으세요`/`없으세요` 표면형에서 죽는다.
+
+    재리뷰 Finding1(까요 판별자) 정정, 2026-07-17 — "까요"만 앞에 공백 없이 한글
+    음절이 붙어있을 때만 올리개가 매치하도록 바뀌었다(까다 평서형과의 충돌 방지).
+    그래서 이 루프의 "이거 {alt}." 구성(모든 alt 앞에 공백)은 "까요"에는 더 이상
+    안 맞는다 — "까요"만 공백 없이 붙여 구성한다(다른 alt는 판별자가 없어 위치와
+    무관하게 안전하므로 그대로 공백 유지)."""
     from shopping_shorts.narration_naturalize import (
         _question_tail_match, _QUESTION_GUARD_PAT, _QUESTION_TAIL_ALTS,
     )
     for alt in _QUESTION_TAIL_ALTS:
-        t = f"이거 {alt}."
+        sep = "" if alt == "까요" else " "
+        t = f"이거{sep}{alt}."
         assert _question_tail_match(t) is not None, f"올리개가 안 걸림: {t!r}"
         assert _QUESTION_GUARD_PAT.search(t) is not None, f"가드가 안 걸림(상위집합 위반): {t!r}"
     assert _question_tail_match("이건 최신 가요.") is None, "올리개가 명사 '가요'에 걸리면 안 된다"
@@ -260,3 +267,95 @@ def test_guard_covers_seyo_forms_endings_off(text, label):
     out = _run(text, "훅", {"endings": {"intensity": 0}, "fillers": {"on": False}})
     assert "!" not in out, f"{label}: 의문형인데 훅 꼬리 강조(느낌표)가 붙었다: {out!r}"
     assert not out.rstrip().endswith(","), f"{label}: 의문형 끝에 쉼표가 남았다: {out!r}"
+
+
+# ── 재리뷰 지적 Finding1(Critical) — 까요 바레 리터럴이 까다(peel) 평서문을 뒤집는 사고 ──
+# 위 나요/가요/하나요 감사에서 던졌던 질문("이 표면형이 명사/평서형과 겹치는가")을
+# "까요" 자신에는 안 던졌던 게 재발 원인이었다(이 트랙에서 같은 사고 클래스 4번째).
+
+@pytest.mark.parametrize("text", [
+    "귤은 손으로 까요.",
+    "마늘은 이렇게 까요.",
+    "밤을 하나하나 손으로 까요.",
+])
+def test_bare_kkayo_declarative_not_flipped(text):
+    """`까요`가 이전처럼 위치 무관 바레 리터럴로 남아 있으면 "까다"(껍질을 벗기다,
+    쇼핑 콘텐츠 도메인에서 실사용 빈도가 높은 손질 동사)의 해요체 평서형을
+    물음표로 뒤집는다(opus 재리뷰 Critical, 이 정정의 근거).
+    뮤턴트: `_strict_alt_pattern`이 "까요"에 앵커를 안 걸고 리터럴 그대로 반환하게
+    되돌리면(Finding1 수정 전 상태) 3종 전부 `endswith('?')`로 죽는다."""
+    out = _run(text, "페인포인트")
+    assert not out.rstrip().endswith("?"), f"평서문이 물음표로 뒤집혔다: {out!r}"
+
+
+@pytest.mark.parametrize("text", [
+    "왜 다들 이걸 살까요.",
+    "이게 될까요.",
+    "몇 번을 씨름하셨을까요.",
+    "이거 하나 사야 할까요.",
+    "무거워서 들 수 있을까요.",
+    "내일 여기 갈까요.",
+])
+def test_kkayo_raiser_still_covers_attached_forms(text):
+    """`까요` 판별자(앞 음절에 공백 없이 붙어있을 때만 매치)를 추가해도 진짜
+    의문형(-ㄹ까요/을까요류) 회수는 그대로 유지돼야 한다 — 전부 어간에 융합된
+    형태(연음)라 판별자가 안 막는다.
+    뮤턴트: 판별자를 반대로(예: `(?<=\\s)까요`) 뒤집으면 전부 `endswith('?')`
+    실패로 죽는다."""
+    out = _run(text, "페인포인트")
+    assert out.rstrip().endswith("?"), f"끝음이 안 올라간다: {out!r}"
+    assert "…" not in out[-3:], f"말줄임이 남아 끝음이 처진다: {out!r}"
+
+
+def test_kkayo_declarative_guard_still_suppresses_hook_tail():
+    """가드(느슨)는 까다 평서문에도 계속 걸려야 한다 — Finding1은 올리개(엄격)만
+    좁혔지 가드는 의도적으로 그대로 넓게 둔다(비대칭, 대가는 훅 꼬리 강조 하나뿐).
+    `_HOOK_TAIL_PAT`은 이 문장 모양(...손으로 까요.)에 구조적으로 매치하므로,
+    가드가 "까요"를 못 잡으면 느낌표가 실제로 붙는다(아래에서 직접 확인).
+    뮤턴트: 가드 쪽 "까요"도 올리개처럼 앵커를 걸면(비대칭 무너뜨리기) 이
+    테스트가 죽는다."""
+    out = _run("장 볼 때마다 밤을 손으로 까요.", "훅")
+    assert "!" not in out, f"까다 평서문 훅에 훅 꼬리 강조(느낌표)가 붙었다: {out!r}"
+
+
+# ── 재리뷰 지적 Finding2(Important) — 않으세요/없으세요 정책 변경: 올리개에서 제거 ──
+# 존댓말 평서·의문은 표기가 원천적으로 동일해 판별자가 없다 — "세요"를 애초에
+# 뺀 이유와 같은 클래스. 브랜드스토리 내레이션(장인/사장님 화법)이 실제 코퍼스
+# 형태라 감수할 수 없는 사고로 판단, 올리개에서만 뺀다(가드는 유지).
+
+@pytest.mark.parametrize("text,label", [
+    ("장인은 기계를 쓰지 않으세요.", "않으세요"),
+    ("사장님은 주말에도 쉬는 날이 없으세요.", "없으세요"),
+])
+def test_seyo_declaratives_not_flipped_by_default(text, label):
+    """존댓말 평서형(브랜드스토리 내레이션)이 물음표로 뒤집히면 안 된다.
+    뮤턴트: `_QUESTION_TAIL_ALTS`에 `않으세요`/`없으세요`를 다시 넣으면(Finding2
+    수정 전 상태) 둘 다 `endswith('?')`로 죽는다."""
+    out = _run(text, "페인포인트")
+    assert not out.rstrip().endswith("?"), f"{label}: 평서문이 물음표로 뒤집혔다: {out!r}"
+
+
+def test_annayo_phrasing_still_raises_as_painpoint_substitute():
+    """같은 아픈 곳 질문이 `않나요` 표기(브리프 원 코퍼스가 실제로 쓰는 형태)로는
+    그대로 살아있다는 걸 봉인한다 — Finding2가 뺀 건 `않으세요` 표기 하나뿐,
+    `않나요` 커버리지는 무관해야 한다."""
+    out = _run("닦기도 귀찮지 않나요.", "페인포인트")
+    assert out.rstrip().endswith("?"), f"끝음이 안 올라간다: {out!r}"
+
+
+# ── 재리뷰 지적 Finding3(Minor) — 가드 정렬 결정성(위생, 행동엔 영향 없음) ──
+
+def test_guard_alts_ordering_is_fully_deterministic():
+    """`_QUESTION_GUARD_ALTS`는 길이 내림차순 + 동길이는 문자열 자체로 완전
+    결정적이어야 한다(`key=lambda s: (-len(s), s)`) — 옛 `key=len`은 동길이
+    타이를 set 반복순서(PYTHONHASHSEED 의존)에 맡겨 실행마다 컴파일된 패턴
+    문자열이 달라질 수 있었다(행동상 무해함은 재리뷰가 576케이스×5시드로 실측
+    확인, 이 테스트는 표기 위생만 본다).
+    뮤턴트: 소스의 정렬 키를 `key=len, reverse=True`(타이브레이크 없음)로
+    되돌리면, 이 테스트가 독립적으로 재계산하는 `(-len(s), s)` 기준 정답과
+    비교하므로 실행 프로세스의 set 반복순서가 알파벳 순서와 어긋나는 즉시 죽는다."""
+    from shopping_shorts.narration_naturalize import _QUESTION_GUARD_ALTS
+    expected = tuple(sorted(set(_QUESTION_GUARD_ALTS), key=lambda s: (-len(s), s)))
+    assert _QUESTION_GUARD_ALTS == expected, (
+        f"가드 정렬이 (-len, s) 완전결정적 키와 어긋난다: {_QUESTION_GUARD_ALTS!r}"
+    )
