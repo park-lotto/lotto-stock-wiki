@@ -137,3 +137,15 @@ def test_unknown_work_id_is_revived_not_dropped(store):
     same = store.upsert_produce_work("옛날id", {"script": "되살아남"})
     assert same == "옛날id"
     assert store.get_produce_work("옛날id")["state"]["script"] == "되살아남"
+
+
+def test_upsert_does_not_overwrite_someone_elses_work(store):
+    """★남의 work_id를 알아도 덮어쓸 수 없다. get/delete는 막는데 upsert만 뚫려 있었다
+    (T2 재리뷰). 소유는 그대로인데 내용만 남의 것이 되던 자리."""
+    wid = store.upsert_produce_work(None, {"script": "고객1의 대본"},
+                                    job_id="job-1", step=3, customer_id=1)
+    assert store.upsert_produce_work(wid, {"script": "고객2가 덮어씀"},
+                                     job_id="job-EVIL", step=99, customer_id=2) is None
+    got = store.get_produce_work(wid, customer_id=1)
+    assert got["state"]["script"] == "고객1의 대본", "남이 내용을 덮어썼다"
+    assert got["job_id"] == "job-1" and got["step"] == 3

@@ -1325,12 +1325,22 @@ class Store:
         대본을 고쳤을 때 목록 이름과 어긋난다(스펙 §4.6).
         job_id/step: UPDATE 경로에서는 update_mix_job과 같은 관례 — 넘어온 필드만 갱신한다.
         안 넘기면(_UNSET) 기존 값 보존, job_id=None/step=0을 명시적으로 넘기면 그 값으로 덮어쓴다
-        (부분 저장이 job_id·step을 조용히 리셋하던 버그 수정, 2026-07-17)."""
+        (부분 저장이 job_id·step을 조용히 리셋하던 버그 수정, 2026-07-17).
+        남의 work_id로 넘어오면(다른 customer_id 소유) **아무것도 안 하고 None을 반환한다** —
+        get_produce_work/delete_produce_work와 같은 결(예외를 던지지 않는다). UPDATE를
+        `WHERE work_id=? AND customer_id=?`로 바꾸지 않는 이유: 매치 0건이면 아래 "되살리기"
+        INSERT 폴백으로 떨어지는데, work_id는 전역 PRIMARY KEY라 남의 id로 INSERT하면
+        IntegrityError(500)가 난다 — 그래서 UPDATE 전에 소유자를 먼저 물어본다(2026-07-17 재리뷰)."""
         now = datetime.now(timezone.utc).isoformat()
         title = (state.get("script") or "")[:20] if isinstance(state, dict) else ""
         payload = json.dumps(state, ensure_ascii=False)
         with self._conn() as c:
             if work_id:
+                owner = c.execute(
+                    "SELECT customer_id FROM produce_works WHERE work_id=?", (work_id,),
+                ).fetchone()
+                if owner and owner[0] != customer_id:
+                    return None  # 남의 작업 — 건드리지 않는다(get/delete와 같은 결)
                 cols, vals = ["title=?", "state_json=?"], [title, payload]
                 if job_id is not _UNSET:
                     cols.append("job_id=?"); vals.append(job_id)

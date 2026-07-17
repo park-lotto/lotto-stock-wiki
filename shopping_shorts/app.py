@@ -1938,6 +1938,9 @@ def api_produce_works_save(request: Request, body: dict):
             kw["step"] = step
     wid = Store(DB_PATH).upsert_produce_work(body.get("work_id") or None, state,
                                              customer_id=_cid(request), **kw)
+    if not wid:
+        # 남의 work_id — get/delete와 같은 404(스토어는 예외를 안 던진다, 2026-07-17 재리뷰)
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
     return {"ok": True, "work_id": wid}
 
 

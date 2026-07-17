@@ -160,6 +160,29 @@ def test_step_bool_true_is_preserved_not_saved_as_one(client):
     assert d["step"] == 5, "step=True가 bool 서브클래스 함정으로 1로 저장됐다"
 
 
+def test_isolation_upsert_of_someone_elses_work_id_is_404(client, monkeypatch):
+    """★남의 work_id를 알아도 POST로 덮어쓸 수 없다 — get/delete는 404인데 upsert만 뚫려
+    있었다(T2 재리뷰). 고객1의 내용·job_id·step은 그대로 남아야 한다."""
+    from shopping_shorts import app as app_mod
+
+    monkeypatch.setattr(app_mod, "_cid", lambda request: 1)
+    wid = client.post("/api/produce/works",
+                      json={"state": {"script": "고객1 작업"}, "job_id": "job-1", "step": 3}
+                      ).json()["work_id"]
+
+    monkeypatch.setattr(app_mod, "_cid", lambda request: 2)
+    r = client.post("/api/produce/works",
+                    json={"work_id": wid, "state": {"script": "고객2가 덮어씀"},
+                          "job_id": "job-EVIL", "step": 99})
+    assert r.status_code == 404
+    assert r.json()["ok"] is False
+
+    monkeypatch.setattr(app_mod, "_cid", lambda request: 1)
+    d = client.get(f"/api/produce/works/{wid}").json()
+    assert d["state"]["script"] == "고객1 작업", "남이 내용을 덮어썼다"
+    assert d["job_id"] == "job-1" and d["step"] == 3
+
+
 def test_step_explicit_zero_still_rewinds(client):
     """step=0(진짜 정수 0)은 여전히 0으로 저장된다 — T1의
     test_explicit_zero_step_really_rewinds와 대칭. 복원이 게이트에 막혀 1단계로
