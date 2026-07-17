@@ -1,4 +1,5 @@
 import re
+import subprocess
 from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
@@ -568,3 +569,43 @@ def test_upload_overlay_poster_path_never_equals_media_path_i3(client, monkeypat
     assert seen["media"] != seen["poster"]
     assert seen["media"].suffix == ".jpg"
     assert seen["poster"].name != seen["media"].name
+
+
+# ── Task5: /api/scene/split — 자동 컷 분할(DB 미기록, 사장님이 고르는 A안) ──
+
+def test_split_returns_frame_pairs_and_posters(client, monkeypatch, tmp_path):
+    src = tmp_path / "s.mp4"
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi",
+                    "-i", "testsrc=size=320x568:rate=30:duration=3",
+                    "-c:v", "libx264", "-pix_fmt", "yuv420p", str(src)],
+                   check=True, capture_output=True, stdin=subprocess.DEVNULL)
+    # cdn.example.com의 실 DNS 해석에 테스트를 의존시키지 않는다(다른 prepare 테스트와 동일한 이유).
+    monkeypatch.setattr(app_mod.socket, "gethostbyname", lambda h: "93.184.216.34")
+    monkeypatch.setattr(app_mod.frame_extract, "download_video",
+                        lambda url, td: str(src))
+
+    r = client.post("/api/scene/split", json={"src_url": "https://cdn.example.com/a.mp4"})
+
+    assert r.status_code == 200
+    d = r.json()
+    assert d["ok"] is True
+    assert d["fps"] == 30.0
+    assert d["total_frames"] == 90
+    assert len(d["cuts"]) >= 1
+    c0 = d["cuts"][0]
+    assert isinstance(c0["start_frame"], int) and isinstance(c0["end_frame"], int)
+    assert c0["poster_url"].startswith("/api/scene/split/")
+
+    # 포스터가 실제로 서빙되는지도 확인(라우트만 200이고 파일이 없으면 리그레션을 놓친다)
+    poster_r = client.get(c0["poster_url"])
+    assert poster_r.status_code == 200
+    assert poster_r.headers["content-type"] == "image/jpeg"
+
+
+def test_split_rejects_internal_url(client):
+    r = client.post("/api/scene/split", json={"src_url": "http://169.254.169.254/latest/meta-data/"})
+    assert r.status_code == 422
+
+
+def test_split_requires_src_url(client):
+    assert client.post("/api/scene/split", json={}).status_code == 422

@@ -62,6 +62,20 @@ def _boundary_frames(path, threshold, fps):
     return {round(float(m) * fps) for m in _PTS_RE.findall(r.stderr)}
 
 
+def extract_poster(path, frame_no, fps, out_path):
+    """frame_no번째 프레임을 180px 폭 썸네일로 뽑는다(분할 미리보기용).
+
+    실패해도 예외를 던지지 않는다 — 포스터 없이도 컷 목록은 떠야 한다
+    (scene_assets.make_poster와 같은 관례). stdin=DEVNULL은 이 모듈의 다른
+    subprocess 호출과 같은 이유(pytest 기본 캡처가 fd 0을 무효화하는 것 방지)."""
+    out_path = Path(out_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    cmd = ["ffmpeg", "-y", "-v", "error", "-ss", f"{max(0, frame_no) / fps:.6f}",
+           "-i", str(path), "-frames:v", "1", "-vf", "scale=180:-1", str(out_path)]
+    subprocess.run(cmd, capture_output=True, check=False, stdin=subprocess.DEVNULL)
+    return out_path if out_path.exists() else None
+
+
 def detect_cuts(path, threshold=DEFAULT_THRESHOLD, min_seconds=MIN_SECONDS):
     """컷 경계를 프레임 번호로. 반환 (start_frame, end_frame) — end는 미포함.
 

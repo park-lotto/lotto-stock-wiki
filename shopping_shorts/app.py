@@ -39,7 +39,7 @@ from shopping_shorts import voice_presets, audio_post
 from shopping_shorts.tts import synthesize_tts
 from shopping_shorts import tts, asr_check
 from shopping_shorts.narration_naturalize import naturalize as _naturalize
-from shopping_shorts import frame_extract, scene_assets
+from shopping_shorts import frame_extract, scene_assets, scene_cut
 import uuid
 
 app = FastAPI(title="쇼핑쇼츠 레퍼런스 랭킹")
@@ -2012,6 +2012,65 @@ def _reject_ssrf(url):
     if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved or ip.is_multicast:
         return "내부망/예약 IP는 접근할 수 없음"
     return None
+
+
+@app.post("/api/scene/split")
+def api_scene_split(request: Request, body: dict):
+    """소스 영상 → 컷 목록 + 컷별 포스터. **DB에 아무것도 안 쓴다.**
+
+    사장님이 보고 고르는 게 A안이다(설계 §4.1) — AI가 거르지 않는다. AI의
+    '짤로 쓸 만한가' 판단은 검증된 적이 없다(실측: 짜집기/촬영원본 판정 3편
+    전부 '촬영원본/확신 높음' 상수 출력). 저장은 기존 prepare→commit이 한다.
+
+    ffmpeg 지식(fps·프레임·컷 경계·포스터)은 이 라우트가 아니라 scene_cut에
+    있다 — app.py는 라우팅만, ffmpeg 호출은 scene_cut/scene_assets가 진다는
+    이 파일의 기존 배선(prepare가 scene_assets.make_clip/make_poster를 쓰는
+    것과 동일한 이유)을 그대로 따른 것. 그래서 app.py에 subprocess import가
+    추가로 필요 없다."""
+    src_url = (body.get("src_url") or "").strip()
+    if not src_url:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "src_url 필요"})
+    ssrf_err = _reject_ssrf(src_url)  # SSRF 1차 방어 — 내부망·169.254.169.254 등 차단
+    if ssrf_err:
+        return JSONResponse(status_code=422, content={"ok": False, "error": ssrf_err})
+    token = uuid.uuid4().hex
+    # ★_SCENE_SPLIT_DIR를 모듈 상수로 빼면 안 된다 — 모듈 임포트 시점 값이 굳어
+    # test client의 monkeypatch(_SCENE_ASSETS_DIR)를 안 따라간다. 매번 여기서 계산한다.
+    split_dir = _SCENE_ASSETS_DIR / "_split"
+    out_dir = split_dir / token
+    out_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            src = frame_extract.download_video(src_url, td)
+            fps = scene_cut.video_fps(src)
+            total = scene_cut.video_frame_count(src)
+            cuts = scene_cut.detect_cuts(src)
+            out = []
+            for i, (a, b) in enumerate(cuts):
+                poster = out_dir / f"{i}.jpg"
+                # 컷 대표 프레임 = 시작에서 3프레임 뒤(전환 잔상 회피)
+                scene_cut.extract_poster(src, a + 3, fps, poster)
+                out.append({
+                    "i": i, "start_frame": a, "end_frame": b,
+                    "start": round(a / fps, 3), "end": round(b / fps, 3),
+                    "duration": round((b - a) / fps, 3),
+                    "poster_url": f"/api/scene/split/{token}/{i}/poster",
+                })
+    except Exception as e:  # noqa: BLE001 — 다운로드/ffmpeg 실패는 그대로 알림
+        return JSONResponse(status_code=502, content={"ok": False, "error": f"분할 실패: {e}"})
+    return {"ok": True, "token": token, "fps": fps, "total_frames": total, "cuts": out}
+
+
+@app.get("/api/scene/split/{token}/{i}/poster")
+def api_scene_split_poster(token: str, i: int):
+    """분할 미리보기 썸네일. 토큰은 hex 검증 — 경로조작 차단."""
+    if not re.fullmatch(r"[0-9a-f]{32}", token or ""):
+        return Response(status_code=404, content=b"")
+    split_dir = _SCENE_ASSETS_DIR / "_split"  # ★여기도 함수 안에서 계산(위와 같은 이유)
+    p = split_dir / token / f"{i}.jpg"
+    if not p.exists():
+        return Response(status_code=404, content=b"")
+    return FileResponse(str(p), media_type="image/jpeg")
 
 
 @app.post("/api/scene/save/prepare")
