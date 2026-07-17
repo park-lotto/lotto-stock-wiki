@@ -305,6 +305,20 @@
                   <option value="">모션 끄기</option>
                 </select>
               </div>
+              <!-- ✨ 고급효과(리모션) — 선택·프리미엄, 렌더 시 포인트 차감 -->
+              <div id="fxAdvBox" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
+                <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;cursor:pointer">
+                  <input id="fxAdvOn" type="checkbox" onchange="toggleFxAdv()"> ✨ 고급효과 <span class="hint">(포인트 차감 · 대본에 맞춰 리모션 효과 자동 배치)</span>
+                </label>
+                <div id="fxWizard" style="display:none;margin-top:10px;font-size:12px">
+                  <div style="color:var(--sub);margin-bottom:8px">1 · 대본 비트 → 2 · 효과 추천 → 3 · 확인 → 4 · 렌더</div>
+                  <button type="button" class="tab" onclick="fxSuggest()" style="min-width:auto;padding:6px 12px">효과 추천</button>
+                  <span id="fxSuggestMsg" class="hint"></span>
+                  <div id="fxPlanBox" style="margin-top:8px"></div>
+                  <button type="button" id="fxRenderBtn" onclick="fxRender()" style="display:none;margin-top:8px;background:#2E7D8A;color:#fff;border:none;border-radius:8px;padding:7px 14px;cursor:pointer">고급 렌더 (10P)</button>
+                  <div id="fxRenderMsg" class="hint" style="margin-top:6px"></div>
+                </div>
+              </div>
               <!-- 자막 스타일(나레이션 자막 자체 디자인) -->
               <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px">
                 <div style="font-size:14px;font-weight:700;margin-bottom:2px">💬 자막 스타일</div>
@@ -490,6 +504,52 @@ function pickMotionPack(id){
   STATE.deco.motion = STATE.deco.motion || {};
   if(id) STATE.deco.motion.pack_id = id; else delete STATE.deco.motion.pack_id;
   saveHeadcopy();
+}
+// ── ✨ 고급효과(리모션) 위저드 ──────────────
+let FX_PLAN=null, FX_POLL=null;
+function fxPlanSummary(plan){ return {theme: plan.themeName, count: (plan.fx||[]).length}; }
+function toggleFxAdv(){
+  const on=document.getElementById('fxAdvOn').checked;
+  document.getElementById('fxWizard').style.display = on ? 'block' : 'none';
+}
+async function fxSuggest(){
+  if(!MIX_JOB){ alert('2단계에서 영상 매칭을 먼저 실행하세요'); return; }
+  const msg=document.getElementById('fxSuggestMsg'); msg.textContent='추천 중…';
+  try{
+    const r=await fetch('/api/produce/fx/suggest',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({job_id:MIX_JOB, category:(typeof PM_CATEGORY!=='undefined'?PM_CATEGORY:'')})});
+    const d=await r.json(); FX_PLAN=d.plan||null;
+    if(!FX_PLAN){ msg.textContent='추천 실패'; return; }
+    const s=fxPlanSummary(FX_PLAN);
+    document.getElementById('fxPlanBox').innerHTML =
+      '<div>테마: <b>'+s.theme+'</b> · 효과 <b>'+s.count+'</b>개</div>'+
+      (FX_PLAN.fx||[]).map(function(f){return '<div class="hint">· '+f.comp+' @ '+(Number(f.s)||0).toFixed(1)+'s</div>';}).join('');
+    document.getElementById('fxRenderBtn').style.display='inline-block';
+    msg.textContent='';
+  }catch(e){ msg.textContent='오류: '+e; }
+}
+async function fxRender(){
+  if(!MIX_JOB || !FX_PLAN) return;
+  const msg=document.getElementById('fxRenderMsg'); msg.textContent='렌더 예약 중…';
+  try{
+    const r=await fetch('/api/produce/fx/render',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({job_id:MIX_JOB, plan:FX_PLAN})});
+    if(r.status===402){ msg.textContent='포인트가 부족합니다'; return; }
+    await r.json(); msg.textContent='렌더 중… (백그라운드)';
+    if(FX_POLL) clearInterval(FX_POLL);
+    FX_POLL=setInterval(fxPoll, 3000);
+  }catch(e){ msg.textContent='오류: '+e; }
+}
+async function fxPoll(){
+  if(!MIX_JOB) return;
+  try{
+    const r=await fetch('/api/produce/fx/status/'+MIX_JOB); const d=await r.json();
+    const msg=document.getElementById('fxRenderMsg');
+    if(d.fx_status==='done'){ clearInterval(FX_POLL); FX_POLL=null;
+      msg.innerHTML='완료! <a href="'+d.fx_url+'" download>다운로드</a>'; }
+    else if(d.fx_status==='failed'){ clearInterval(FX_POLL); FX_POLL=null;
+      msg.textContent='렌더 실패 (포인트 환불됨)'; }
+  }catch(e){}
 }
 // ── 자막 스타일(나레이션 자막) ──────────────
 let CAP_EFFECT='none';
