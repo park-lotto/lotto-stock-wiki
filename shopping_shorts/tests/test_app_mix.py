@@ -2,6 +2,12 @@ from fastapi.testclient import TestClient
 from shopping_shorts import app as app_module
 from shopping_shorts.store import Store
 
+# 라우트에 넘기는 URL은 실제 형태여야 한다 — SSRF 가드(P0-3)가 스킴·호스트를 검사하므로
+# "u0" 같은 자리표시자는 실사용에서 존재할 수 없는 입력이고 422로 막힌다.
+# (store에 직접 넣는 픽스처는 라우트를 안 거치므로 자리표시자 그대로 둔다.)
+_U0 = "https://www.instagram.com/reel/AAA111/"
+_U1 = "https://www.instagram.com/reel/BBB222/"
+
 
 def _client(monkeypatch, tmp_path):
     db = tmp_path / "t.db"
@@ -15,7 +21,7 @@ def _client(monkeypatch, tmp_path):
 
 def test_mix_start_creates_job(monkeypatch, tmp_path):
     client, store = _client(monkeypatch, tmp_path)
-    r = client.post("/api/mix/start", json={"urls": ["u0", "u1"], "target_seconds": 20, "structure": "free"})
+    r = client.post("/api/mix/start", json={"urls": [_U0, _U1], "target_seconds": 20, "structure": "free"})
     assert r.status_code == 200
     jid = r.json()["job_id"]
     assert store.get_mix_job(jid)["status"] == "downloading"
@@ -112,10 +118,10 @@ def test_produce_mix_start_accepts_single_url(monkeypatch, tmp_path):
     — 그 영상 안에서 구간 순서편집. 예전엔 '2개 이상' 검증에 막혔다."""
     client, store = _client(monkeypatch, tmp_path)
     r = client.post("/api/produce/mix/start",
-                    json={"script": "테스트 대본", "urls": ["u0"], "target_seconds": 20})
+                    json={"script": "테스트 대본", "urls": [_U0], "target_seconds": 20})
     assert r.status_code == 200
     jid = r.json()["job_id"]
-    assert store.get_mix_job(jid)["urls"] == ["u0"]
+    assert store.get_mix_job(jid)["urls"] == [_U0]
 
 
 def test_produce_mix_start_rejects_empty_urls(monkeypatch, tmp_path):
@@ -128,7 +134,7 @@ def test_produce_mix_start_rejects_empty_urls(monkeypatch, tmp_path):
 def test_produce_mix_start_rejects_empty_script(monkeypatch, tmp_path):
     client, store = _client(monkeypatch, tmp_path)
     r = client.post("/api/produce/mix/start",
-                    json={"script": "", "urls": ["u0", "u1"], "target_seconds": 20})
+                    json={"script": "", "urls": [_U0, _U1], "target_seconds": 20})
     assert r.status_code == 422
 
 
