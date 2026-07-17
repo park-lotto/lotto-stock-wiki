@@ -101,6 +101,45 @@ def test_tune_corpus_lines_are_all_single_sentence():
         assert _sentence_starts(line["text"]) == [0], line
 
 
+def test_tune_corpus_covers_every_required_role_and_role_gated_rule():
+    """whole-branch 최종 리뷰 Finding3(Important) — 워크벤치 코퍼스가 실렌더 role
+    (`edit_plan._REQUIRED_ROLES` = 훅·페인포인트·반전·실용·CTA)과 어긋나 있었다
+    (옛 코퍼스는 hook/body/build/cta — body·build는 별칭표에 없어 '미지 role'
+    경고를 내며 위치기반으로 폴백했다). 이 테스트는 두 가지를 고정한다:
+      ① 코퍼스에 등장하는 role 전부가 정본 5개로 정규화된다(미지 role 없음).
+      ② role-게이트 규칙(fillers→훅, endings.question_roles→페인포인트/훅,
+         whisper→반전, conclusion→실용) 각각이 코퍼스 안에서 최소 1줄은 실제로
+         발동한다 — "role 표기는 맞는데 그 role의 규칙을 보여줄 문장이 없다"는
+         절반짜리 수정을 막는다.
+    뮤턴트: 코퍼스에서 실용/반전 줄을 없애거나 role을 다시 영문 소문자(body/build)로
+    되돌리면 이 테스트가 죽는다."""
+    from shopping_shorts.narration_naturalize import (
+        merge_profile, naturalize_detail, normalize_role,
+    )
+    lines = json.loads(_CORPUS_PATH.read_text(encoding="utf-8"))
+    canon_roles = {normalize_role(l["role"]) for l in lines}
+    assert None not in canon_roles, f"미지 role이 섞여 있다: {[l['role'] for l in lines if normalize_role(l['role']) is None]}"
+    assert canon_roles == {"훅", "페인포인트", "반전", "실용", "CTA"}, \
+        f"정본 5개 role을 다 안 덮는다: {canon_roles}"
+
+    prof = merge_profile({})
+    exercised = {"fillers": False, "whisper": False, "conclusion": False,
+                 "endings_raise": False}
+    for i, line in enumerate(lines):
+        r = naturalize_detail(line["text"], prof, beat_role=line["role"],
+                               beat_index=i, beat_total=len(lines))
+        assert not r["warnings"], f"{line['id']}: 예상 못한 경고 {r['warnings']!r}"
+        if r["applied"].get("fillers"):
+            exercised["fillers"] = True
+        if r["applied"].get("whisper"):
+            exercised["whisper"] = True
+        if r["applied"].get("conclusion"):
+            exercised["conclusion"] = True
+        if normalize_role(line["role"]) == "페인포인트" and r["text"].rstrip().endswith("?"):
+            exercised["endings_raise"] = True
+    assert all(exercised.values()), f"코퍼스가 실제로 발동 못 시키는 규칙: {exercised}"
+
+
 def test_tune_corpus_lines_still_scale_with_intensity_via_beat_gate():
     """코퍼스 줄은 문장 비례는 못 보여줘도(위 테스트), 비트 빈도 게이트(I1)를 통한
     강도 비례는 여전히 관측 가능하다는 걸 확인한다 — 강도를 올리면 10줄 전체에서

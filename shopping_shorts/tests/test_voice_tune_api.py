@@ -8,7 +8,11 @@ def test_corpus_returns_lines():
     r = client.get("/api/voice-tune/corpus")
     assert r.status_code == 200
     lines = r.json()["lines"]
-    assert any(l["role"] == "hook" for l in lines)
+    # whole-branch 최종 리뷰 Finding3(Important, 2026-07-17) — 코퍼스 role을
+    # 실렌더 정본(edit_plan._REQUIRED_ROLES: 훅·페인포인트·반전·실용·CTA)으로
+    # 정렬했다. 옛 영문 소문자 "hook"은 더 이상 코퍼스에 없다(별칭표에는 여전히
+    # 있으므로 API 자체가 깨진 건 아니다 — 코퍼스 데이터가 바뀐 것뿐).
+    assert any(l["role"] == "훅" for l in lines)
 
 
 def test_preview_transforms_text_no_synth():

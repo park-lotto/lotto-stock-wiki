@@ -47,11 +47,15 @@ def test_practical_conclusion_emphasised():
     assert "끝!이에요" in _run_all()["실용"]["text"]
 
 
-def test_no_beat_exceeds_tag_cap():
-    """새 규칙이 태그를 밀어내지 않는지 — 캡 경쟁 봉인."""
-    for role, out in _run_all().items():
-        assert len(re.findall(r"\[[^\]]+\]", out["text"])) <= 2, \
-            f"{role}: 태그 초과 {out['text']!r}"
+# `test_no_beat_exceeds_tag_cap`(캡 경쟁 봉인) 삭제됨(whole-branch 최종 리뷰
+# Finding2, Important, 2026-07-17) — 상한(`<= 2`)만 재는 단언은 태그가 밀려나서
+# **줄어드는** 방향의 결함을 절대 못 잡는다(밀려나면 카운트가 작아지니 `<=2`는
+# 오히려 더 잘 통과한다). 실측: 이 파일 docstring(`:3-5`)이 존재 이유로 지목한
+# 그 실사고(2026-07-17, 손으로 박은 감정태그가 캡을 먹어 whisper가 안 속삭인
+# 사고)를 두 가지로 재현해봐도 `<=2`는 둘 다 True로 통과했다(`tags=2`인 채로
+# whisper가 빠진 상태). 대신 `test_tag_count_per_beat_and_total`(아래)가 비트별
+# **정확한** 태그 개수를 고정하므로 이 테스트를 완전히 포함한다(상한 위반은
+# 물론, "밀려나서 줄어듦"까지 잡는다) — 못 죽는 테스트를 남겨두는 대신 삭제.
 
 
 def test_no_doubled_punctuation_anywhere():

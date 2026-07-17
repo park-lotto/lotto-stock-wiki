@@ -414,3 +414,47 @@ def test_guard_alts_ordering_is_fully_deterministic():
     assert _QUESTION_GUARD_ALTS == expected, (
         f"가드 정렬이 (-len, s) 완전결정적 키와 어긋난다: {_QUESTION_GUARD_ALTS!r}"
     )
+
+
+# ── whole-branch 최종 리뷰 Finding1(Critical) — 있으세요·셨어요 클래스 종결 ──
+# 않으세요/없으세요를 "표면형 두 개"로만 닫아놓고 그 표면형이 속한 클래스엔 묻지
+# 않았던 게 재발 원인이다(이 트랙 4번째 인스턴스-vs-클래스 사고). 있으세요(존재사
+# 어간, 없으세요의 직접 반의어)와 셨어요(과거 존댓말, 명령형이 시제상 불가능한
+# 클래스 전체)를 가드에 추가한다.
+
+@pytest.mark.parametrize("text,label", [
+    ("혹시 이런 적 있으세요.", "있으세요"),
+    ("이거 보셨어요.", "보셨어요"),
+])
+def test_guard_covers_isseyo_and_syeosseoyo_endings_off(text, label):
+    """가드는 `_endings`가 꺼져 있어도(유일한 방어선) `있으세요`/`셨어요`를 억제해야
+    한다 — Finding1 수정 전엔 이 표면형이 가드 리터럴에 없어서 `endings.on=False`에서
+    훅 꼬리 강조가 그대로 느낌표+쉼표를 덮어썼다.
+    뮤턴트: `_QUESTION_GUARD_ALTS`에서 `있으세요`/`셨어요`를 빼면(Finding1 수정 전
+    상태) 두 케이스 다 `'!' in out`으로 죽는다."""
+    out = _run(text, "훅", {"endings": {"intensity": 0}, "fillers": {"on": False}})
+    assert "!" not in out, f"{label}: 의문형인데 훅 꼬리 강조(느낌표)가 붙었다: {out!r}"
+    assert not out.rstrip().endswith(","), f"{label}: 의문형 끝에 쉼표가 남았다: {out!r}"
+
+
+def test_guard_does_not_swallow_bare_seyo_imperative():
+    """가드는 바레 `세요`(현재, 동작동사 명령형)까지 넓히지 않는다 — 워크벤치
+    코퍼스 0번줄(`끝까지 보세요.`)의 명령형 강조가 그대로 살아있어야 한다.
+    뮤턴트: 가드 리터럴에 바레 `세요`를 추가하면(과잉교정) 이 테스트가 죽는다."""
+    out = _run("끝까지 보세요.", "훅")
+    assert "!" in out, f"명령형 강조가 죽었다: {out!r}"
+    assert ", 보세요!" in out, f"명령형 꼬리 강조 형태가 깨졌다: {out!r}"
+
+
+def test_isseyo_syeosseoyo_are_guard_only_not_raiser():
+    """있으세요/셨어요는 **가드 전용** 추가다 — 올리개(`_QUESTION_TAIL_ALTS`)는
+    건드리지 않는다(존댓말 평서/의문 표기가 원천적으로 동일해 판별자가 없으므로
+    올리개는 이 클래스 전체에서 계속 안전하게 기권한다). 페인포인트에서 물음표로
+    뒤집히면 안 된다.
+    뮤턴트: `_QUESTION_TAIL_ALTS`에 `있으세요`/`셨어요`를 넣으면(올리개까지 확장,
+    범위 초과) 두 케이스 다 `endswith('?')`로 죽는다."""
+    for text, label in [("혹시 이런 적 있으세요.", "있으세요"),
+                         ("이거 보셨어요.", "보셨어요")]:
+        out = _run(text, "페인포인트")
+        assert not out.rstrip().endswith("?"), \
+            f"{label}: 올리개 범위를 넘어 물음표로 뒤집혔다: {out!r}"
