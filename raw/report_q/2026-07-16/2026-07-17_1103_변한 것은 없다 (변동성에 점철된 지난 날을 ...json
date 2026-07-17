@@ -1,0 +1,99 @@
+{
+  "meta": {
+    "date": "2026-07-16",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-17_1103_변한 것은 없다 (변동성에 점철된 지난 날을 ...md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": "이상수",
+    "report_date": "2026.07",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "현대차",
+        "code": "005380",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "650,000원",
+        "tp_prev": "340,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "현대차 26.2Q 매출액 48.0억원 (-0.5% YoY), 영업이익 2.8조원 (-20.1% YoY, 6.0% OPM) 전망.",
+        "estimate_revision": null,
+        "next_catalyst": "26.2H 출시 예정된 볼륨 모델 신차 효과와 함께 올해의 성장 동인이 될 것으로 전망",
+        "thesis": [
+          "본업 가치는 여전히 견고함",
+          "SDV/자율주행 경쟁력 확보",
+          "Boston Dynamics의 미래 사업 로드맵 견조"
+        ],
+        "valuation_basis": "본업의 경쟁력을 넘어 신사업의 가치가 반영",
+        "risk": "원자재 가격 상승 영향 및 미국 인센티브 상승 압박",
+        "supply_comment": "엔진 밸브 공급 업체 생산 공장 화재에 따른 생산 차질",
+        "quote": "현대차 기업가치는 1) 본업, 2) SDV/자율주행 경쟁력, 3) Boston Dynamics 등 세가지 요소로 구성되고, 이 중 Boston Dynamics의 비중이 높다는 점은 분명."
+      },
+      {
+        "name": "기아",
+        "code": "000270",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "240,000원",
+        "tp_prev": "150,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "기아 26.2Q 매출액 32.4조원 (+10.4% YoY), 영업이익 2.7조원 (-2.7% YoY, 8.3% OPM) 전망.",
+        "estimate_revision": null,
+        "next_catalyst": "현대차그룹 차원의 미래 사업 성과가 구체화되는 26.2H부터 관련 낙수효과",
+        "thesis": [
+          "우수한 인센티브 관리 역량",
+          "중소형 EV 중심 산업 수요 대응 및 EV2 신차 출시 효과",
+          "현대차그룹 차원의 미래 사업 성과 공유"
+        ],
+        "valuation_basis": "현대차그룹 차원의 미래 사업 성과가 구체화되는 26.2H부터 관련 낙수효과가 기아에게도 향할 것",
+        "risk": "중국 업체와의 경쟁 심화에 따른 인센티브 부담",
+        "supply_comment": "안전공업 화재 관련 생산 차질 영향이 소형 차량에 집중",
+        "quote": "상대적으로 우수한 본업 경쟁력에 근거한 동사 비중 확대 논리가 시장에 대두되었으나 크게 설득력을 가지지 못함. 이에 당사는 현대차그룹 차원의 미래 사업 성과가 구체화되는 26.2H부터 관련 낙수효과가 기아에게도 향할 것이라는 의견과 목표주가 240,000원 유지."
+      },
+      {
+        "name": "현대모비스",
+        "code": "012330",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "580,000원",
+        "tp_prev": "370,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "현대모비스 26.2Q 매출액 15.8조원 (-0.3% YoY), 영업이익 8,580억원 (-1.4% YoY) 전망.",
+        "estimate_revision": null,
+        "next_catalyst": "2028년 연 3만대 CAPA 공장 건설 계획 및 액츄에이터 사업 진출",
+        "thesis": [
+          "액츄에이터 사업의 잠재 가치",
+          "Boston Dynamics라는 캡티브 매출처 확보",
+          "경쟁 글로벌 Tier 1 업체 대비 액츄에이터 사업 진출 의지 높음"
+        ],
+        "valuation_basis": "경쟁 글로벌 Tier 1 업체 대비 액츄에이터 사업 진출 의지가 높고, Boston Dynamics라는 캡티브 매출처를 확보했다는 점에 근거",
+        "risk": "안전 공업 화재에 따른 국내 완성차 출하량 감소",
+        "supply_comment": "안전 공업 화재에 따른 26.2Q 국내 완성차 출하량 감소 영향 존재",
+        "quote": "현대모비스 목표주가 580,000원으로 유지. 이는 1) 경쟁 글로벌 Tier 1 업체 대비 액츄에이터 사업 진출 의지가 높고, 2) 그 중에서도 Boston Dynamics라는 캡티브 매출처를 확보했다는 점에 근거해 산출한 Target Multiple의 논리는 CES 2026 이후 줄곧 견조했다는 점에서 근거함."
+      },
+      {
+        "name": "HL만도",
+        "code": "204320",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "80,000원",
+        "tp_prev": "50,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "HL만도 26.2Q 매출액 2.4조원 (+3.3% YoY), 영업이익 950억원 (-8.0% YoY) 전망.",
+        "estimate_revision": null,
+        "next_catalyst": "26.2H부터 글로벌 휴머노이드 업체들의 양산 일정 및 액츄에이터 수주 모멘텀",
+        "thesis": [
+          "글로벌 휴머노이드 업체향 액츄에이터 사업 본격화",
+          "핵심 부품 조달과 관련한 수주 모멘텀 기대",
+          "경쟁 업체 대비 휴머노이드 사업 의지 및 개발 상황 앞섬"
+        ],
+        "valuation_basis": "경쟁 업체 대비 휴머노이드 사업 의지가 강함은 물론 개발 상황이 앞서 있고, 글로벌 휴머노이드 업체향 수주가 가능하다는 점",
+        "risk": "반도체 및 원자재 가격 상승",
+        "supply_comment": "현대차그룹 부품사 인도 공장 화재에 따른 대체 공급 수혜",
+        "quote": "당사가 26.04 당시 1) 경쟁 업체 대비 휴머노이드 사업 의지가 강함은 물론 개발 상황이 앞서 있고, 2) 글로벌 휴머노이드 업체향 수주가 가능하다는 점에 근거해 설정한 Target Multiple 논리는 견조하고, 시장 변동성 외 이를 훼손할 리스크 요인은 없음."
+      }
+    ]
+  }
+}

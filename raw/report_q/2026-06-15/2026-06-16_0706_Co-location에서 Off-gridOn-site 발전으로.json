@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "date": "2026-06-15",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-16_0706_Co-location에서 Off-gridOn-site 발전으로.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김현수, 홍지원",
+    "report_date": "2026.6.15",
+    "target_kind": "market",
+    "market_direction": "Overweight",
+    "macro_vars": [
+      "미국 연방 에너지규제위원회(FERC) 하이퍼스케일러 발전소 Co-location 제한",
+      "미국 정부 납세자보호서약(Taxpayer Protection Pledge)",
+      "유럽 주요 3국 전력 가격 평균 92.7유로/MWh",
+      "인도네시아 니켈 생산량 감축",
+      "리튬, 니켈 등 2차전지 원재료 가격 등락"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "2차전지",
+        "stance": "Overweight",
+        "reason": "데이터센터용 전력 인프라 구축 및 전력 조달 방식 변화로 인한 ESS 수주 증가 및 배터리 섹터 가격 메리트 확대"
+      }
+    ],
+    "style": "공격적 비중 확대",
+    "event_calendar": [
+      {
+        "date": "2026.6.15",
+        "event": "2차전지 Weekly ⚡ 이배속"
+      }
+    ],
+    "top_picks": [
+      "에코프로비엠",
+      "포스코퓨처엠",
+      "LG에너지솔루션",
+      "Fluence Energy"
+    ],
+    "risk": "배터리 섹터 주가 상승 이후 매수 가능한 가격대 기업 제한적",
+    "quote": "On-site ESS 수주 본격화되는 과정에서 셀 메이커 위주 매수와 정책 관련 수혜주 매수를 권고한다."
+  }
+}

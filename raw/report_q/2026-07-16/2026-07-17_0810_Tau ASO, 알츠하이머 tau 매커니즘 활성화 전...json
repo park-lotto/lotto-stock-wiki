@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "date": "2026-07-16",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-17_0810_Tau ASO, 알츠하이머 tau 매커니즘 활성화 전...md"
+  },
+  "questionnaire": {
+    "broker": "DS투자증권",
+    "analyst": "김민정",
+    "report_date": "2026.07.16",
+    "target_kind": "sector",
+    "sector_name": "바이오",
+    "sector_view": null,
+    "thesis": [
+      "Diranersen(tau ASO) 임상 2상 CELIA 결과, tau tangle 감소와 인지기능 개선 효과 확인",
+      "Tau 기전의 치료제는 ARIA 부작용에서 자유롭고 APOE4 동형접합 환자에서도 균일한 효능 기대",
+      "Biogen의 Diranersen 인지기능 개선 성공으로 알츠하이머 치료제 개발에서 tau 매커니즘 접근법 활성화 전망"
+    ],
+    "timeline": [
+      "올해 말 CELIA 2년 추적관찰 데이터 확보 및 발표 예정"
+    ],
+    "top_picks": [
+      {
+        "name": "Biogen",
+        "reason": "tau ASO Diranersen 임상 2상 결과 발표 및 3상 진입 예정",
+        "tp": null
+      }
+    ],
+    "risk": "임상 2상 primary endpoint(용량 증가에 따른 유효성 증가 패턴) 충족 실패",
+    "quote": "당사는 Biogen의 Diranersen 인지기능개선 성공으로 인하여 알츠하이머 치료제 개발에서 tau 매커니즘 접근법이 활성화 될 것으로 전망한다."
+  }
+}

@@ -1,0 +1,18 @@
+<!doctype html><meta charset=utf-8><title>③ 실속도 1.6 검증</title>
+<style>body{background:#0d0d0f;color:#eee;font-family:'Malgun Gothic',sans-serif;max-width:800px;margin:0 auto;padding:32px 20px 80px}
+h1{font-size:22px;margin:0 0 8px} .sub{color:#8a8a92;font-size:13px;margin:0 0 22px;line-height:1.7}
+.box{background:#17171b;border-left:3px solid #d9534f;border-radius:6px;padding:12px 14px;margin:0 0 24px;font-size:13px;line-height:1.75;color:#c9c9d1}
+.box b{color:#e8a07a} code{background:#000;padding:1px 5px;border-radius:3px;color:#e8c37a;font-size:12px}
+.c{background:#17171b;border:1px solid #26262b;border-radius:9px;padding:12px 14px;margin-bottom:10px}
+.n{font-size:14px;font-weight:700;color:#fff;margin-bottom:4px}
+.t{font-size:13px;color:#9a9aa2;margin-bottom:5px;font-family:Consolas,monospace} .t b{color:#e8c37a}
+.why{font-size:11.5px;color:#70707a;margin-bottom:9px} audio{width:100%;height:32px}</style>
+<h1>③ 쉼표+느낌표 — <span style="color:#e8c37a">실제 라이브 속도 1.6</span>에서도 살아있나</h1>
+<p class=sub>미나 프리셋 그대로 · <b>synthesize_line</b> 라이브 경로 · API 1.2 + atempo 1.33 = 1.6<br>
+앞서 들으신 7종은 <b>1.2</b>였습니다. 쉼표가 만드는 ‘사이’가 atempo로 25% 줄어드는데 강조가 버티는지가 관건입니다.</p>
+<div class=box>
+⚠️ <b>엔진이 대본을 덮어씁니다.</b> 제가 넣은 <code>와, …</code> 앞에 <code>[curious] 음,</code>을 또 붙여
+<b>“음, 와,”</b>가 됐고, <code>이거.</code>는 <code>이거…</code>로 바뀌었습니다.<br>
+아래 음성엔 그 <b>“음,”이 그대로 들어있습니다</b> — 뺄 것은 규칙 구현 때 뺍니다. 지금은 <b>‘이거!’ 부분만</b> 들어주세요.
+</div>
+<div class=c><div class=n>① 민짜</div><div class=t>…들려있는 <b>이거.</b> → 엔진이 <b>이거…</b>로 바꿔버림</div><div class=why>길이 3.71초</div><audio controls preload=none src="S1_민짜_1.6.mp3"></audio></div><div class=c><div class=n>② 느낌표만</div><div class=t>…들려있는 <b>이거!</b></div><div class=why>길이 3.40초</div><audio controls preload=none src="S2_느낌표만_1.6.mp3"></audio></div><div class=c><div class=n>③ 쉼표 + 느낌표 ★사장님 선택</div><div class=t>…들려있는<b>, 이거!</b></div><div class=why>길이 3.71초</div><audio controls preload=none src="S3_쉼표느낌표_1.6.mp3"></audio></div>

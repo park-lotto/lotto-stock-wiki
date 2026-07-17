@@ -94,3 +94,21 @@ def test_sfx_has_null_render_mode(store):
     got = store.get_scene_asset(aid)
     assert got["render_mode"] is None
     assert got["poster_path"] is None
+
+
+def test_add_scene_asset_stores_source_start_frame_and_origin(store):
+    aid = store.add_scene_asset(_asset(source_start_frame=124, source_origin="짜집기"))
+
+    got = [a for a in store.list_scene_assets() if a["id"] == aid][0]
+    assert got["source_start_frame"] == 124
+    assert got["source_origin"] == "짜집기"
+
+
+def test_add_scene_asset_defaults_origin_to_모름(store):
+    """★기본값은 '모름'이다. 라우트가 '모름'을 막는다(설계 §7.2) —
+    남의 촬영분이 라이브에 들어가는 쪽이 짤 하나 잃는 것보다 훨씬 나쁘다."""
+    aid = store.add_scene_asset(_asset(title="t2"))
+
+    got = [a for a in store.list_scene_assets() if a["id"] == aid][0]
+    assert got["source_origin"] == "모름"
+    assert got["source_start_frame"] is None

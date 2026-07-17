@@ -16,7 +16,13 @@
 
 
 
+
+
+
+
 - **카테고리**: 산업분석
+
+
 
 
 
@@ -34,7 +40,11 @@
 
 
 
+
+
 - **날짜**: 26.07.16
+
+
 
 
 
@@ -52,7 +62,13 @@
 
 
 
+
+
 - **PDF**: [다운로드](https://stock.pstatic.net/stock-research/industry/66/20260716_industry_428042000.pdf)
+
+
+
+
 
 
 
@@ -88,6 +104,10 @@
 
 
 
+
+
+
+
 <think>
 
 
@@ -97,7 +117,13 @@
 
 
 
+
+
 Okay, let's see. I need to summarize this Korean investment report for pharmaceutical and biotechnology sectors, focusing on the TrumpRx platform and the CVS-Cigna settlement regarding deductible calculations.
+
+
+
+
 
 
 
@@ -133,7 +159,15 @@ First, the core summary. The report mentions that TrumpRx was launched in Februa
 
 
 
+
+
+
+
 Key points for investors: 1. The agreement allows cheaper TrumpRx purchases to count toward deductibles, improving access to GLP-1 drugs. 2. Lower out-of-pocket costs could increase patient adherence and sales for these medications. 
+
+
+
+
 
 
 
@@ -169,7 +203,15 @@ I need to check for the target price and investment recommendation, but the prov
 
 
 
+
+
+
+
 So the core summary would be: The report concludes that the agreement between CVS and FTC will integrate TrumpRx purchases into deductible calculations, making GLP-1 treatments more accessible and affordable for patients. This is seen as a positive development for the biopharma sector. Investment points: 1. Improved access to GLP-1 drugs through deductible inclusion. 2. Lower out-of-pocket costs increasing adherence and sales. 
+
+
+
+
 
 
 
@@ -205,7 +247,15 @@ Check for strict adherence to Korean and no foreign terms. The example uses Engl
 
 
 
+
+
+
+
 Therefore, in the summary, terms like DTC (Direct-to-Consumer) would be kept as DTC in the Korean text, and GLP-1 as well. But the user's instruction says to avoid foreign words. This is a bit conflicting. Let me check the user's example again. In their example, they have "DTC" and "GLP-1" used as part of the summary. So perhaps in the context of a Korean financial report summary, it's acceptable to use these terms as they are part of the industry terminology. The main rule is to use Korean only, but these are foreign terms specific to the industry and needed for clarity. So perhaps they can be included. Alternatively, find a Korean translation. For example, DTC could be "소비자 직판" and GLP-1 as "글립티드". However, if the original report uses the foreign terms, the summary should follow unless the user specifies otherwise. The user's instruction says "외국어 단어 금지", so the assistant should avoid using them. Therefore, replace DTC with its Korean meaning where possible. Let me adjust:
+
+
+
+
 
 
 
@@ -232,7 +282,13 @@ Therefore, in the summary, terms like DTC (Direct-to-Consumer) would be kept as 
 
 
 
+
+
 - "GLP-1" should be translated as "글립티드" or describe what it is. But the original report mentions it's 비만 치료제 (weight loss treatments), so perhaps rephrase that part to say "소요비용이 높은 비만 치료제" or something like that. However, GLP-1 is a specific class of drugs, so using the term might be necessary. Given the instruction to avoid foreign words, perhaps it's acceptable to use GLP-1 in the summary, as it's a common term even in Korean financial contexts, but maybe add a brief explanation.
+
+
+
+
 
 
 
@@ -268,7 +324,15 @@ But given the example the user provided includes these terms, maybe it's accepta
 
 
 
+
+
+
+
 Another point: the user's example includes "목표주가" and "투자의견". The current report doesn't have those, so the first part should just state the analyst's core conclusion. The example used "투자의견: BUY / 목표주가: 150,000원" but here, since those are not provided, the core summary needs to just present the conclusion without those. So the core summary is about
+
+
+
+
 
 
 

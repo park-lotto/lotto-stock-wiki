@@ -214,10 +214,9 @@
           <div id="speedBtns" style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px"></div>
           <div style="font-size:12px;color:var(--sub)">무음 삭제</div>
           <div id="silenceBtns" style="display:flex;gap:6px;margin:4px 0 10px"></div>
-          <div id="whisperRoleControls" style="display:none">
-            <div style="font-size:12px;color:var(--sub)">이 영상은 속삭임을 어디에 적용할까요?</div>
-            <div id="whisperRoleBtns" style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px"></div>
-          </div>
+          <!-- whisper role 선택(#whisperRoleControls)은 여기 없다 — 2026-07-17 결함① 수정으로
+               renderPresetCards()가 선택된 whisper 카드 "안"에 직접 그린다. 예전엔 여기(카드
+               14개 전부 밑)에 있어 화면 밖으로 밀려났었다. -->
           <details style="margin:8px 0">
             <summary style="cursor:pointer;font-size:13px;color:var(--sub)">고급 ▾</summary>
             <div style="padding:8px 0;display:flex;flex-direction:column;gap:8px">
@@ -267,19 +266,30 @@
             <div id="highlightRuleList" style="margin-top:6px"></div>
             <button class="tab" onclick="addHighlightRule()" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:12px;margin-top:4px">+ 강조 단어 추가</button>
           </div>
+          <!-- ✨ 고급효과(리모션) — 항상 보이는 자리·선택·프리미엄. 켜면 자동 추천 → 렌더 -->
+          <div id="fxAdvBox" style="background:linear-gradient(135deg,#1c1436,#0d1420);border:1px solid #6b4fa0;border-radius:10px;padding:10px 12px;margin-bottom:12px">
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;cursor:pointer">
+              <input id="fxAdvOn" type="checkbox" onchange="toggleFxAdv()">
+              ✨ 고급효과 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 대본에 맞춰 움직이는 효과 자동 배치 · 렌더당 10P</span>
+            </label>
+            <div id="fxWizard" style="display:none;margin-top:10px;font-size:12px">
+              <button type="button" class="tab" onclick="fxSuggest()" style="min-width:auto;padding:7px 16px;font-size:12px;background:linear-gradient(90deg,#3a2b6b,#241a45);border-color:#6b4fa0">✨ 효과 자동 추천</button>
+              <span id="fxSuggestMsg" class="hint" style="margin-left:6px"></span>
+              <div id="fxPlanBox" style="margin-top:8px"></div>
+              <button type="button" id="fxRenderBtn" onclick="fxRender()" style="display:none;margin-top:8px;background:#2E7D8A;color:#fff;border:none;border-radius:8px;padding:8px 18px;cursor:pointer;font-weight:700">고급 렌더 (10P)</button>
+              <div id="fxRenderMsg" class="hint" style="margin-top:6px"></div>
+              <div id="fxResult" style="display:none;margin-top:10px"></div>
+            </div>
+          </div>
           <details id="advDetails" style="margin-bottom:4px">
             <summary style="cursor:pointer;font-size:13px;color:var(--accent2);font-weight:700;padding:6px 0">✏️ 직접 다듬기 — 폰트·크기·위치·자막·내 프리셋 ▾</summary>
             <div id="advBody" style="margin-top:10px">
-              <!-- ⭐ 내 프리셋 -->
-              <div style="border-top:1px dashed var(--line);padding-top:10px">
-                <div style="font-size:12px;color:var(--sub);margin-bottom:6px">⭐ 내 프리셋 <span style="font-size:11px">— 지금 스타일을 저장해 나만의 딸깍 샘플로</span></div>
-                <div id="myPresets" style="display:flex;flex-wrap:wrap;align-items:center;margin-bottom:8px"></div>
-                <div style="display:flex;gap:6px;flex-wrap:wrap">
-                  <input id="myPresetName" type="text" placeholder="예: 내 채널 기본형" style="flex:1;min-width:160px;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 10px;font-size:13px">
-                  <button class="tab" onclick="saveMyPreset()" style="flex:0 0 auto;min-width:auto;padding:7px 16px;font-size:13px;white-space:nowrap;background:linear-gradient(90deg,#153a6b,#0d2340);border-color:var(--accent)">💾 현재 스타일 저장</button>
-                </div>
-              </div>
-              <div style="font-size:12px;color:var(--sub);margin-bottom:4px;margin-top:14px">🎨 헤드카피 프리셋(헤드카피만)</div>
+              <div class="sub" style="margin-bottom:8px;font-size:11px">필요한 것만 펼쳐 손보세요. 대부분은 위 <b>완성 스타일</b>만 눌러도 됩니다.</div>
+
+              <!-- ── 🎨 헤드카피(상단 큰 글씨) ── -->
+              <details style="border-top:1px dashed var(--line);margin-top:2px">
+                <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">🎨 헤드카피(상단 큰 글씨) 꾸미기</summary>
+                <div style="padding:2px 0 12px">
               <div id="hcPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"></div>
               <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
                 <span style="font-size:12px;color:var(--sub)">폰트
@@ -319,30 +329,13 @@
                 <span style="color:var(--sub)">여백 <input id="hcBoxPad" type="range" min="0" max="40" value="16" oninput="updateHC()"></span>
                 <span style="color:var(--sub)">투명도 <input id="hcBoxOpacity" type="range" min="20" max="100" value="80" oninput="updateHC()"></span>
               </label>
-              <div style="margin-top:10px">
-                <label style="font-size:12px;opacity:.8">모션 팩</label>
-                <select id="motionPack" onchange="pickMotionPack(this.value)"
-                        style="width:100%;padding:6px;border-radius:6px">
-                  <option value="">모션 끄기</option>
-                </select>
-              </div>
-              <!-- ✨ 고급효과(리모션) — 선택·프리미엄, 렌더 시 포인트 차감 -->
-              <div id="fxAdvBox" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
-                <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;cursor:pointer">
-                  <input id="fxAdvOn" type="checkbox" onchange="toggleFxAdv()"> ✨ 고급효과 <span class="hint">(포인트 차감 · 대본에 맞춰 리모션 효과 자동 배치)</span>
-                </label>
-                <div id="fxWizard" style="display:none;margin-top:10px;font-size:12px">
-                  <div style="color:var(--sub);margin-bottom:8px">1 · 대본 비트 → 2 · 효과 추천 → 3 · 확인 → 4 · 렌더</div>
-                  <button type="button" class="tab" onclick="fxSuggest()" style="min-width:auto;padding:6px 12px">효과 추천</button>
-                  <span id="fxSuggestMsg" class="hint"></span>
-                  <div id="fxPlanBox" style="margin-top:8px"></div>
-                  <button type="button" id="fxRenderBtn" onclick="fxRender()" style="display:none;margin-top:8px;background:#2E7D8A;color:#fff;border:none;border-radius:8px;padding:7px 14px;cursor:pointer">고급 렌더 (10P)</button>
-                  <div id="fxRenderMsg" class="hint" style="margin-top:6px"></div>
                 </div>
-              </div>
-              <!-- 자막 스타일(나레이션 자막 자체 디자인) -->
-              <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px">
-                <div style="font-size:14px;font-weight:700;margin-bottom:2px">💬 자막 스타일</div>
+              </details>
+
+              <!-- ── 💬 자막(하단 나레이션) ── -->
+              <details style="border-top:1px dashed var(--line)">
+                <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">💬 자막(하단 나레이션) 꾸미기</summary>
+                <div style="padding:2px 0 12px">
                 <div class="sub" style="margin-bottom:10px">나레이션 자막(문구는 대본에서 자동)의 폰트·색·박스·효과. 미리보기 하단에 <b>샘플</b>로 표시됩니다.</div>
                 <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
                   <label style="font-size:12px;color:var(--sub)">폰트
@@ -372,9 +365,22 @@
                   <button type="button" class="capEff tab" data-eff="pop" onclick="setCapEffect('pop')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">팝</button>
                 </div>
               </div>
-              <!-- 🏷 워터마크 · 추가 텍스트 -->
-              <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px">
-                <div style="font-size:14px;font-weight:700;margin-bottom:8px">🏷 워터마크 · 추가 텍스트</div>
+              </details>
+
+              <!-- ── 🎬 모션 팩 ── -->
+              <details style="border-top:1px dashed var(--line)">
+                <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">🎬 모션 팩</summary>
+                <div style="padding:2px 0 12px">
+                  <select id="motionPack" onchange="pickMotionPack(this.value)" style="width:100%;padding:6px;border-radius:6px">
+                    <option value="">모션 끄기</option>
+                  </select>
+                </div>
+              </details>
+
+              <!-- ── 🏷 워터마크·추가텍스트·BGM·이미지 ── -->
+              <details style="border-top:1px dashed var(--line)">
+                <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">🏷 워터마크 · 추가 텍스트 · BGM · 이미지</summary>
+                <div style="padding:2px 0 12px">
                 <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
                   <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
                     <input id="wmOn" type="checkbox" onchange="updateDeco()"> 워터마크 닉네임</label>
@@ -408,7 +414,21 @@
                   <button onclick="clearOverlay()" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:12px">제거</button>
                   <span class="hint">미리보기에서 <b>드래그</b>로 이동</span>
                 </div>
-              </div>
+                </div>
+              </details>
+
+              <!-- ── ⭐ 내 프리셋 저장 ── -->
+              <details style="border-top:1px dashed var(--line)">
+                <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">⭐ 내 프리셋 저장 · 불러오기</summary>
+                <div style="padding:2px 0 12px">
+                  <div style="font-size:11px;color:var(--sub);margin-bottom:6px">지금 스타일을 저장해 나만의 딸깍 샘플로</div>
+                  <div id="myPresets" style="display:flex;flex-wrap:wrap;align-items:center;margin-bottom:8px"></div>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap">
+                    <input id="myPresetName" type="text" placeholder="예: 내 채널 기본형" style="flex:1;min-width:160px;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 10px;font-size:13px">
+                    <button class="tab" onclick="saveMyPreset()" style="flex:0 0 auto;min-width:auto;padding:7px 16px;font-size:13px;white-space:nowrap;background:linear-gradient(90deg,#153a6b,#0d2340);border-color:var(--accent)">💾 현재 스타일 저장</button>
+                  </div>
+                </div>
+              </details>
             </div>
           </details>
         </div>
@@ -713,12 +733,27 @@ async function fxSuggest(){
       body:JSON.stringify({job_id:MIX_JOB, category:(typeof PM_CATEGORY!=='undefined'?PM_CATEGORY:'')})});
     const d=await r.json(); FX_PLAN=d.plan||null;
     if(!FX_PLAN){ msg.textContent='추천 실패'; return; }
-    const s=fxPlanSummary(FX_PLAN);
+    const themeKr={warm:'웜톤(따뜻)',tech:'테크(세련)',berry:'베리',honey:'허니',fresh:'프레시'}[FX_PLAN.themeName]||FX_PLAN.themeName;
+    const label=function(f){var p=f.props||{};
+      if(f.comp==='count') return '숫자 카운트업 「'+(p.value!=null?p.value:'')+(p.suffix||'')+'」';
+      if(f.comp==='impact') return '강조 슬램 「'+(p.word||'')+'」';
+      if(f.comp==='callout') return '아이콘 카드 「'+(p.name||'')+'」';
+      if(f.comp==='list') return '리스트';
+      return f.comp; };
     document.getElementById('fxPlanBox').innerHTML =
-      '<div>테마: <b>'+s.theme+'</b> · 효과 <b>'+s.count+'</b>개</div>'+
-      (FX_PLAN.fx||[]).map(function(f){return '<div class="hint">· '+f.comp+' @ '+(Number(f.s)||0).toFixed(1)+'s</div>';}).join('');
-    document.getElementById('fxRenderBtn').style.display='inline-block';
-    msg.textContent='';
+      '<div style="margin-bottom:4px">🎨 <b>'+themeKr+'</b> 테마 · 움직이는 효과 <b>'+(FX_PLAN.fx||[]).length+'</b>개 자동 배치</div>'+
+      ((FX_PLAN.fx||[]).length? (FX_PLAN.fx||[]).map(function(f){return '<div class="hint">· '+(Number(f.s)||0).toFixed(1)+'초 — '+label(f)+'</div>';}).join('')
+        : '<div class="hint">추천된 효과가 없어요(대본에 숫자·강조어가 없으면 비어요)</div>');
+    const bal=(typeof d.points==='number')?d.points:null, cost=d.cost||10;
+    const btn=document.getElementById('fxRenderBtn');
+    btn.style.display='inline-block';
+    if(bal!=null && bal<cost){
+      btn.disabled=true; btn.style.opacity='0.5'; btn.style.cursor='not-allowed';
+      msg.innerHTML='<span style="color:#f27">보유 '+bal+'P — 렌더에 '+cost+'P 필요 (부족)</span>';
+    } else {
+      btn.disabled=false; btn.style.opacity='1'; btn.style.cursor='pointer';
+      msg.textContent = (bal!=null? '보유 '+bal+'P' : '');
+    }
   }catch(e){ msg.textContent='오류: '+e; }
 }
 async function fxRender(){
@@ -728,7 +763,8 @@ async function fxRender(){
     const r=await fetch('/api/produce/fx/render',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({job_id:MIX_JOB, plan:FX_PLAN})});
     if(r.status===402){ msg.textContent='포인트가 부족합니다'; return; }
-    await r.json(); msg.textContent='렌더 중… (백그라운드)';
+    await r.json(); msg.textContent='렌더 중… (30초~1분 걸려요)';
+    const box=document.getElementById('fxResult'); if(box){ box.style.display='none'; box.innerHTML=''; }
     if(FX_POLL) clearInterval(FX_POLL);
     FX_POLL=setInterval(fxPoll, 3000);
   }catch(e){ msg.textContent='오류: '+e; }
@@ -739,9 +775,14 @@ async function fxPoll(){
     const r=await fetch('/api/produce/fx/status/'+MIX_JOB); const d=await r.json();
     const msg=document.getElementById('fxRenderMsg');
     if(d.fx_status==='done'){ clearInterval(FX_POLL); FX_POLL=null;
-      msg.innerHTML='완료! <a href="'+d.fx_url+'" download>다운로드</a>'; }
+      msg.textContent='완료! ✨';
+      const box=document.getElementById('fxResult');
+      if(box){ box.style.display='block';
+        box.innerHTML='<video src="'+d.fx_url+'" controls autoplay muted playsinline '+
+          'style="width:100%;max-width:280px;border-radius:10px;display:block;background:#000"></video>'+
+          '<a href="'+d.fx_url+'" download style="display:inline-block;margin-top:6px;font-size:12px;color:var(--accent2)">⬇ 영상 다운로드</a>'; } }
     else if(d.fx_status==='failed'){ clearInterval(FX_POLL); FX_POLL=null;
-      msg.textContent='렌더 실패 (포인트 환불됨)'; }
+      msg.textContent='렌더 실패 (포인트는 환불됨) — 다시 시도해 주세요'; }
   }catch(e){}
 }
 // ── 자막 스타일(나레이션 자막) ──────────────
@@ -1338,8 +1379,18 @@ function setScriptMode(mode){
 document.querySelectorAll('#scriptTabs .tab').forEach(t=> t.onclick=()=>setScriptMode(t.dataset.mode));
 
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function lenText(t){ t=t||''; const c=t.replace(/\s/g,'').length; return `${t.length}자 · 약 ${Math.round(c/6.5)}초`; }
-function onScriptInput(){ const ta=document.getElementById('scriptText'); STATE.script=ta.value; document.getElementById('lenHint').textContent=lenText(STATE.script); refreshFinalPeek(); if(HANDOFF.length) saveWork(); }
+// SYLLABLES_PER_SEC=5.7 — 2026-07-17 성우 14명을 서버에서 실합성해 측정한 값(음절÷발화초,
+// 한글 1글자≈1음절). 파이썬 쪽 진실은 shopping_shorts/edit_plan.py의 _SYLLABLES_PER_SEC —
+// JS는 그 상수를 못 읽으므로(서버가 값을 내려주지 않음, 이 태스크 범위 밖) 여기 숫자로 나란히
+// 박아둔다. ⚠️ 둘 중 하나만 고치면 화면 "N자·약 N초" 표시와 편집계획(target_seconds)이
+// 갈라진다 — speed 재튜닝으로 실측치가 바뀌면 두 파일을 같이 고칠 것.
+const SYLLABLES_PER_SEC = 5.7;
+function lenText(t){ t=t||''; const c=t.replace(/\s/g,'').length; return `${t.length}자 · 약 ${Math.round(c/SYLLABLES_PER_SEC)}초`; }
+// ★2026-07-17 병합 해결: 보이스 트랙의 SYLLABLES_PER_SEC(위)와 작업파일 T3의 가드 제거(아래)를
+// 둘 다 살린다. main 쪽은 saveWork() 앞에 HANDOFF 길이 가드가 붙어 있는데, 그걸 그대로 받으면
+// 영상 없이 대본만 확정한 작업이 다시 저장되지 않는다 — 그게 사장님이 잃어버린 구간이다.
+// 가드는 이제 saveWork() 안에 있다(대본만 있어도 저장).
+function onScriptInput(){ const ta=document.getElementById('scriptText'); STATE.script=ta.value; document.getElementById('lenHint').textContent=lenText(STATE.script); refreshFinalPeek(); saveWork(); }
 function updateLen(){ onScriptInput(); }
 
 // 초안 렌더(제미니·믹스 공유)
@@ -1359,7 +1410,7 @@ function useDraft(i){
   STATE.script_from_wiki='mix';   // 조합 초안 = 위키 대본 여러 개에서 나옴. 원본을 하나로 특정할 수 없다.
   setScriptMode('manual');   // 편집 가능한 직접작성 창으로 이동(내용 채움)
   refreshFinalPeek();
-  if(HANDOFF.length) saveWork();
+  saveWork();
 }
 async function postDrafts(url, payload, boxId){
   const box=document.getElementById(boxId);
@@ -1470,10 +1521,93 @@ function addMixUrl(){
 let HANDOFF = [];   // [{url,shortcode,name,thumbnail,caption,pickScript,useFootage}]
 // 작업 상태 저장/복원 — 다른 페이지 갔다 오면 받은 영상·상태·대본이 사라지던 것 방지
 // (2026-07-14). sessionStorage에 상시 보관, 매 변경 시 갱신, 로드 시 복원.
+let WORK_ID = null;      // 서버 작업파일 id. 첫 저장 응답으로 채워진다.
+let _workTimer = null;   // 서버 POST 디바운스(입력마다 두들기지 않는다)
+function _workState(){
+  // ★sessionStorage.produce_work의 스키마 **그대로** + step + work_id. 새 형식을 발명하지 않는다 —
+  // _consumeProduceHandoff가 이미 이 모양을 읽는다(스펙 §4.2).
+  // work_id를 같이 넣는 이유(구멍 1): _consumeProduceHandoff가 끝에서 saveWork()를 무조건 부르는데
+  // WORK_ID를 되살리지 않으면 **제작소를 열 때마다 같은 작업이 새 작업으로 복제된다**.
+  return {handoff:HANDOFF, script:STATE.script||'', script_src_idx:STATE.script_src_idx,
+          script_from_wiki:STATE.script_from_wiki, step:cur, work_id:WORK_ID};
+}
+async function _pushWork(){
+  // 디바운스가 끝난 시점의 **최신** 상태를 보낸다(예약 시점의 스냅샷이 아니다).
+  const st = _workState();
+  if(!HANDOFF.length && !st.script) return;
+  try{
+    const r = await fetch('/api/produce/works', {method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({work_id: WORK_ID, state: st, job_id: MIX_JOB, step: cur})});
+    const d = await r.json();
+    if(d && d.ok && d.work_id){
+      WORK_ID = d.work_id;   // 다음 저장이 같은 작업을 갱신하도록
+      // ★sessionStorage도 다시 쓴다(구멍 2, 2026-07-17 라이브 실사고: 제작소를 열 때마다 작업이
+      // 복제됨). saveWork()가 이미 위에서 WORK_ID=null인 채로 sessionStorage를 써버렸다 — 여기서
+      // 갱신 안 하면 새로고침 시 _consumeProduceHandoff가 work_id=null을 읽어 다음 저장이 새
+      // 작업을 만든다. "중복 아닌가?" 하고 지우지 말 것 — saveWork()의 즉시쓰기와 이건 서로 다른
+      // 시점(POST 전 vs POST 응답 후)을 담당한다.
+      try{ sessionStorage.setItem('produce_work', JSON.stringify(_workState())); }catch(e){}
+    }
+  }catch(e){}   // 서버가 죽어도 sessionStorage 복원은 살아 있다 — 저장 실패로 작업을 막지 않는다
+}
 function saveWork(){
-  try{ sessionStorage.setItem('produce_work', JSON.stringify({handoff:HANDOFF, script:STATE.script||'', script_src_idx:STATE.script_src_idx, script_from_wiki:STATE.script_from_wiki})); }catch(e){}
+  // ★가드가 **여기 안**에 있다(2026-07-17). 예전엔 호출부 5곳마다 각각 HANDOFF 길이를 검사한 뒤에만
+  // 저장을 불렀다 — 영상을 안 담고 대본만 확정한 작업은 저장 자체가 안 됐다. 사장님이 잃어버린 게 그 구간이다.
+  // 조건도 넓혔다: 영상이 없어도 **대본이 있으면 작업이다**.
+  const st = _workState();
+  if(!HANDOFF.length && !st.script) return;
+  try{ sessionStorage.setItem('produce_work', JSON.stringify(st)); }catch(e){}   // 로컬은 즉시
+  clearTimeout(_workTimer);
+  _workTimer = setTimeout(_pushWork, 1000);                                      // 서버는 디바운스
 }
 function clearWork(){ try{ sessionStorage.removeItem('produce_work'); }catch(e){} }
+// 서버 작업파일 복원(2026-07-17) — /produce?work=<id>로 들어왔을 때.
+// sessionStorage 복원(_consumeProduceHandoff)은 그대로 둔다. 이건 **추가 계층**이다.
+async function _restoreWork(workId){
+  let d = null;
+  try{ d = await (await fetch('/api/produce/works/'+encodeURIComponent(workId))).json(); }catch(e){}
+  // 지워진 작업 링크를 눌러도 빈 화면이 되면 안 된다 — 기존 경로로 떨어진다.
+  if(!d || !d.ok){ _consumeProduceHandoff(); return; }
+  const w = d.state || {};
+  WORK_ID = workId;
+  HANDOFF = w.handoff || [];
+  STATE.script = w.script || '';
+  STATE.script_src_idx = (typeof w.script_src_idx === 'number') ? w.script_src_idx : null;
+  STATE.script_from_wiki = (typeof w.script_from_wiki !== 'undefined') ? w.script_from_wiki : null;
+  if(STATE.script) setScriptMode('manual');
+  renderPool(); syncFootageToMixUrls(); refreshFinalPeek();
+  MIX_JOB = d.job_id || null;
+
+  // ★렌더설정 복원(C-2). 이걸 비워두면 renderFinal이 `await saveHeadcopy()`로 **빈 STATE를
+  // 그대로 job에 POST해** 어제 해둔 헤드카피·자막스타일·꾸미기를 전부 null로 덮는다.
+  // 게다가 subtitle_removal은 job에 남아(mix_pipeline이 job에서 읽는다) **유료 VMake가 그대로
+  // 도는데** UI는 STATE.subtitleRemoval=false라 "꺼짐"이라 표시한다 — 몰래 과금.
+  // 서버가 job에서 읽어 내려준 값이다(작업파일에 복제하지 않는다 = 진실의 원천은 job 하나).
+  const sg = d.settings || {};
+  STATE.headcopy = sg.headcopy || null;
+  STATE.captionStyle = sg.caption_style || null;
+  // deco는 null이 아니라 **모양**이 있어야 한다 — 5단계가 STATE.deco.extra_texts에서 터진다.
+  STATE.deco = sg.deco || { extra_texts: [], motion: null };
+  STATE.subtitleRemoval = !!sg.subtitle_removal;
+
+  // ★게이트 재동기(스펙 §4.5). 아래 `cur` 대입은 jump()/go()를 **안 거치므로** 게이트 검사를
+  // 건너뛴다. 서버에서 미리보기 상태를 다시 읽어 맞추지 않으면 "1단계 미리보기를 한 번도 안
+  // 봤는데 2단계로 복원된" 상태가 되어 유료 자막제거(VMake)로 그냥 넘어간다.
+  // 이 트랙은 같은 종류의 구멍에 이미 두 번 데었다(C-1: go만 막고 jump 놓침 / C-3: 재매칭의
+  // 끝만 봉인하고 시작 놓침). 세 번째는 없다.
+  PREVIEW_STATUS = null;
+  if(MIX_JOB){
+    try{
+      const s = await (await fetch('/api/mix/status/'+encodeURIComponent(MIX_JOB))).json();
+      if(s && s.ok) PREVIEW_STATUS = s.preview_status || null;
+    }catch(e){}   // 못 읽으면 null로 둔다 = 잠긴 채. 모르면 안전한 쪽.
+  }
+  const st = d.step;
+  cur = (typeof st === 'number' && st >= 0 && st < STEPS.length) ? st : 0;
+  if(cur > 0 && MIX_JOB && !canGoNext()) cur = 0;   // 미리보기 미확인이면 1단계로 되돌린다
+  renderSteps(); showPanel(); refreshNextBtn();
+}
 function _consumeProduceHandoff(){
   // 1순위: 즐겨찾기에서 방금 넘어온 신규 핸드오프. 2순위: 이전 작업상태 복원.
   let items, restored=false, savedScript='';
@@ -1488,22 +1622,26 @@ function _consumeProduceHandoff(){
     } else {
       // 넘어온 게 없으면 이전 작업상태 복원
       let w; try{ w=JSON.parse(sessionStorage.getItem('produce_work')||'null'); }catch(e){ w=null; }
-      if(w && w.handoff && w.handoff.length){
-        HANDOFF=w.handoff; savedScript=w.script||''; restored=true;
+      if(w && ((w.handoff && w.handoff.length) || w.script)){
+        HANDOFF=w.handoff||[]; savedScript=w.script||''; restored=true;
         STATE.script_src_idx = (typeof w.script_src_idx === 'number') ? w.script_src_idx : null;
         STATE.script_from_wiki = (typeof w.script_from_wiki !== 'undefined') ? w.script_from_wiki : null;   // 구페이로드 호환: 없으면 null(뽑기 유래 취급=안전 기본값, 버튼 보임)
+        // ★WORK_ID를 되살린다(구멍 1). 없으면 아래 saveWork()가 매 로드마다 새 작업을 만든다.
+        WORK_ID = w.work_id || null;
       }
     }
   }
   sessionStorage.removeItem('produce_handoff');
   sessionStorage.removeItem('produce_mix_urls');
-  if(!HANDOFF.length){ renderPool(); return; }   // 받은 것도 복원할 것도 없음
+  if(!HANDOFF.length && !savedScript){ renderPool(); return; }   // 받은 것도 복원할 것도 없음
   if(restored && savedScript){ STATE.script = savedScript; setScriptMode('manual'); }
   const b=document.getElementById('handoffBanner');
   if(b){
     b.style.display='block';
     b.innerHTML = restored
-      ? `↩️ 이어서 작업 중 — 받은 <b>영상 ${HANDOFF.length}개</b>와 상태·대본을 유지했어요.`
+      ? (HANDOFF.length
+          ? `↩️ 이어서 작업 중 — 받은 <b>영상 ${HANDOFF.length}개</b>와 상태·대본을 유지했어요.`
+          : `↩️ 이어서 작업 중 — <b>확정한 대본</b>을 유지했어요. 영상은 아직 담지 않았습니다.`)
       : `⭐ 즐겨찾기에서 <b>영상 ${HANDOFF.length}개</b>를 받았어요 — 각 영상에서 📝뽑기(대본)·🎬담기(화면)를 골라주세요. 같은 영상을 둘 다로 써도 됩니다.`;
   }
   renderPool();
@@ -1594,7 +1732,7 @@ async function openScriptModal(i){
     pmPrefillSubject(PM_SHORTCODE);     // shortcode 없으면(직행 URL) 손입력만 열어둔다
   }catch(e){ if(PM_GEN===myGen) document.getElementById('pmResults').innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; }
 }
-function pmUseRaw(){ STATE.script=PM_BASE_SCRIPT; STATE.script_src_idx=PM_IDX; STATE.script_from_wiki=PM_FROM_WIKI; pmClose(); setScriptMode('manual'); refreshFinalPeek(); setFinalCategoryValue(PM_CATEGORY); if(HANDOFF.length) saveWork(); }
+function pmUseRaw(){ STATE.script=PM_BASE_SCRIPT; STATE.script_src_idx=PM_IDX; STATE.script_from_wiki=PM_FROM_WIKI; pmClose(); setScriptMode('manual'); refreshFinalPeek(); setFinalCategoryValue(PM_CATEGORY); saveWork(); }
 function pmClose(){ document.getElementById('pmModal').classList.remove('open'); }
 function pmToggleTopic(){
   const mode=document.querySelector('input[name=pmmode]:checked').value;
@@ -1673,7 +1811,7 @@ function pmUseDraft(btn){
   STATE.script_src_idx=PM_IDX;
   STATE.script_from_wiki=PM_FROM_WIKI;   // mix 유래면 shortcode, 뽑기 유래면 null
   pmClose(); setScriptMode('manual'); refreshFinalPeek(); setFinalCategoryValue(PM_CATEGORY);
-  if(HANDOFF.length) saveWork();
+  saveWork();
 }
 async function pmOnDraftEdit(textarea){
   const card=textarea.closest('.draft');
@@ -1787,7 +1925,7 @@ function onFinalCategoryChange(sel){
   if(!STATE.script_from_wiki){      // refreshFinalPeek과 같은 판단 — 위키 유래면 담을 원본이 없다
     const src=_currentSrcItem();
     if(src) src.category=cat;
-    if(HANDOFF.length) saveWork();
+    saveWork();
     const shortcode=src&&src.shortcode;
     if(shortcode && cat){
       fetch('/api/produce/category', {method:'POST', headers:{'Content-Type':'application/json'},
@@ -2028,6 +2166,19 @@ function renderPresetCards(){
     const tabs=['stable','natural','expressive','whisper'].filter(k=>g.variants[k]).map(k=>
       `<button type="button" class="tab${variant===k?' active':''}" style="flex:0 0 auto;min-width:auto;padding:3px 9px;font-size:11px"
         onclick="event.stopPropagation();pickVariant('${g.group_id}','${k}')">${VARIANT_LABELS[k]}</button>`).join('');
+    // 속삭임 role 선택 — "선택된(active) 이 카드"가 지금 whisper 톤일 때만, 그 카드 안에 뜬다.
+    // [2026-07-17 결함① 수정] 예전엔 presetCards(성우 카드 14개) 전부의 밑, voiceControls 안
+    // 별도 div(#whisperRoleControls, display:none 토글)에 있었다 — 카드 top 293px vs 그 div
+    // top 1561px, 화면 한 장(1012px)에 같이 안 보여 "속삭임 눌러도 반응 없다"는 오인을 낳았다
+    // (사장님이 브라우저로 실측). 카드 렌더 루프 안에서 조건부로만 그려 항상 같이 보이게 한다
+    // — display:none 토글이 아니라 "다른 카드/다른 톤이면 이 블록 자체가 안 그려진다"로 해결.
+    // 태그는 켜지거나 꺼질 뿐이라(설계 §6) range 입력은 없다 — "속삭임 강도" 슬라이더 금지.
+    const whisperPicker=(active && variant==='whisper')?`
+        <div id="whisperRoleControls" style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)">
+          <div style="font-size:11px;color:var(--sub);margin-bottom:4px">이 영상은 속삭임을 어디에 적용할까요?</div>
+          <div id="whisperRoleBtns" style="display:flex;gap:6px;flex-wrap:wrap">${WHISPER_ROLE_PRESETS.map(w=>
+            `<button type="button" onclick="event.stopPropagation();setWhisperPreset('${w.key}')" class="tab${WHISPER_PICK===w.key?' active':''}" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:13px">${w.label}</button>`).join('')}</div>
+        </div>` : '';
     return `
       <div onclick="pickPreset('${g.group_id}')"
         style="border:1px solid ${active?'var(--accent2)':'var(--line)'};border-radius:9px;padding:9px;margin-bottom:6px;cursor:pointer;background:#0d1420">
@@ -2036,6 +2187,7 @@ function renderPresetCards(){
           ${tabs}
           ${v&&v.sample_url?`<audio controls src="${esc(v.sample_url)}" style="height:26px;vertical-align:middle;margin-left:4px"></audio>`:''}
         </div>
+        ${whisperPicker}
       </div>`;
   }).join('');
   document.getElementById('presetCards').innerHTML=cards||'<div class="hint">프리셋이 없습니다.</div>';
@@ -2057,8 +2209,7 @@ function pickPreset(gid){
          silence_trim:v.default_silence_trim, group_id:gid, variant};
   document.getElementById('voiceControls').style.display='block';
   pickHighlight();
-  renderWhisperRoleBtns();
-  renderPresetCards();
+  renderPresetCards();  // whisper role 선택도 이 안에서 카드와 같이 그려진다(결함① 수정, 별도 호출 불필요)
   const vs=VOICE.settings||{};
   const g2=id=>document.getElementById(id);
   g2('advStability').value=(vs.stability!=null?vs.stability:0.5);
@@ -2070,15 +2221,10 @@ function pickPreset(gid){
 }
 function setSpeed(s){ VOICE.speed=s; pickHighlight(); }
 function setSil(v){ VOICE.silence_trim=v; pickHighlight(); }
-function setWhisperPreset(key){ WHISPER_PICK=key; renderWhisperRoleBtns(); }
-function renderWhisperRoleBtns(){
-  const wrap=document.getElementById('whisperRoleControls');
-  if(!wrap) return;
-  if(VOICE.variant!=='whisper'){ wrap.style.display='none'; return; }
-  wrap.style.display='block';
-  document.getElementById('whisperRoleBtns').innerHTML=WHISPER_ROLE_PRESETS.map(w=>
-    `<button type="button" onclick="setWhisperPreset('${w.key}')" class="tab${WHISPER_PICK===w.key?' active':''}" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:13px">${w.label}</button>`).join('');
-}
+// 카드 안 role 버튼을 고르면 카드 전체를 다시 그린다(WHISPER_PICK은 renderPresetCards()가 읽는다) —
+// 예전엔 #whisperRoleControls 하나만 갱신하는 renderWhisperRoleBtns()가 따로 있었지만, 그 div가
+// 이제 카드 마크업 안에서만 존재하므로(결함① 수정) 카드 재렌더가 곧 role 버튼 재렌더다.
+function setWhisperPreset(key){ WHISPER_PICK=key; renderPresetCards(); }
 function _whisperRolesForBody(){
   // whisper 톤이 아니면 오버라이드를 안 보낸다 — 다른 톤 프리셋 원래 프로파일을 그대로 쓴다.
   if(VOICE.variant!=='whisper') return null;
@@ -2223,7 +2369,25 @@ async function pollFinal(){
   }catch(e){}
 }
 
-renderSteps(); showPanel(); setScriptMode('manual'); _consumeProduceHandoff(); refreshFinalPeek();
+renderSteps(); showPanel(); setScriptMode('manual');
+// ?work=<id>로 들어왔으면 서버 작업파일에서, 아니면 기존대로 sessionStorage에서 복원.
+function _bootRestore(){
+  const sp = new URLSearchParams(location.search);
+  // ★"+ 새 작업"은 새로고침과 **똑같은 /produce**로 온다 — 신호가 없으면 구분할 방법이 없다.
+  // 아래 _consumeProduceHandoff가 sessionStorage에서 직전 작업의 WORK_ID까지 되살리므로(구멍 1
+  // 수정의 대가), 신호 없이 오면 "+ 새 작업"이 **직전 작업을 열고 이후 저장이 그걸 덮어쓴다**.
+  // 사장님이 제보한 "작업물이 지워진다"가 정확히 그 형태다(최종 whole-branch 리뷰 C-1).
+  if(sp.get('new')){
+    clearWork();
+    // ★URL에서 new를 지운다. 안 지우면 이 화면에서 새로고침할 때마다 또 새 작업이 생겨
+    // cad0e7b0이 막은 "매 로드마다 작업 복제"가 반대 방향으로 되살아난다.
+    try{ history.replaceState({}, '', '/produce'); }catch(e){}
+  }
+  const wid = sp.get('work');
+  if(wid){ _restoreWork(wid); } else { _consumeProduceHandoff(); }
+}
+_bootRestore();
+refreshFinalPeek();
 </script>
 <script src="/sidebar.js?v=2"></script>
 </body>

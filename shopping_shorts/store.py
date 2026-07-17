@@ -3,6 +3,7 @@ import hashlib
 import json
 import secrets
 import sqlite3
+import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -10,6 +11,13 @@ from pathlib import Path
 # 이전) 데이터가 귀속되는 고객 ID(2026-07-13, 멀티테넌시). 기존 단일 관리자
 # 계정의 데이터를 그대로 보존하기 위한 값 — 신규 고객은 1부터 발급.
 LEGACY_CUSTOMER_ID = 0
+
+# upsert_produce_work의 job_id/step 부분 업데이트 센티널(2026-07-17).
+# 파이썬 기본 인자값(None/0)은 "미지정"과 구별이 안 돼서, 부분 저장(재전송 안 한 필드)이
+# 그대로 UPDATE에 박혀 기존 job_id·step을 조용히 지웠다(리뷰 재현). 규칙:
+#   인자를 아예 안 넘기면(=_UNSET) → 기존 값 보존
+#   job_id=None / step=0을 명시적으로 넘기면 → 정말로 그 값으로 덮어씀(재매칭 무효화 등)
+_UNSET = object()
 
 
 class Store:
@@ -208,6 +216,20 @@ class Store:
                       "ON scene_assets(customer_id, asset_type)")
             c.execute("CREATE INDEX IF NOT EXISTS idx_scene_assets_cat "
                       "ON scene_assets(customer_id, category)")
+            # 짜집기 대응(2026-07-17, 설계 §7.1):
+            #  · source_start_frame — 원본에서의 시작 **프레임**. 초로 저장하면
+            #    '원본 순서대로 이어졌나' 판정에 반올림 오차가 낀다. 원본처럼 보이게
+            #    만드는 건 '같은 소스'가 아니라 '원본 순서'다.
+            #  · source_origin — 짜집기|촬영원본|모름. 사람이 고른다(AI 판정은
+            #    실측 탈락 — 정답 아는 시험지에서 3편 전부 '촬영원본/확신 높음').
+            for col, ddl in (
+                ("source_start_frame", "INTEGER"),
+                ("source_origin", "TEXT NOT NULL DEFAULT '모름'"),
+            ):
+                try:
+                    c.execute(f"ALTER TABLE scene_assets ADD COLUMN {col} {ddl}")
+                except sqlite3.OperationalError:
+                    pass  # 이미 존재
             # 썸네일 URL 보관(2026-07-15) — 우리믹스 대본선택 리스트가 <video> 첫 프레임에
             # 의존해 검은칸으로 보이던 문제. 저장 시점 URL을 남겨 <img>로 즉시 그린다.
             try:
@@ -292,6 +314,26 @@ class Store:
                 c.execute("ALTER TABLE seo_keyword_stats ADD COLUMN views_top INTEGER")
             except sqlite3.OperationalError:
                 pass  # 이미 존재
+            # 제작소 작업파일(2026-07-17) — 사장님 제보 "뒤로가기 하니까 작업물이 지워진다".
+            # ★mix_jobs를 재활용하지 않는다: urls_json·structure가 NOT NULL이라 **매칭 전
+            # 작업**(대본만 확정한 상태)을 못 담는다. 실측으로 서버 job 21건 중 매칭 전은 0건 —
+            # 사장님이 잃어버린 게 정확히 그 구간이다. 억지로 빈 값을 넣으면 "매칭 안 된 job"이
+            # 유령으로 남아 run_mix_job·pollMix가 실제 job으로 오인한다.
+            # job_id는 **다리일 뿐**(작업 → job 방향) — 작업이 job보다 먼저 존재한다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS produce_works (
+                    work_id TEXT PRIMARY KEY,
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    title TEXT,
+                    state_json TEXT NOT NULL,
+                    job_id TEXT,
+                    step INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_produce_works_customer "
+                      "ON produce_works(customer_id, updated_at DESC)")
             # 보이스 프리셋(2026-07-14, 영상제작 4단계) — 큐레이션된 목소리 카드.
             c.execute("""
                 CREATE TABLE IF NOT EXISTS voice_presets (
@@ -1061,7 +1103,8 @@ class Store:
     # ── 장면 라이브러리(재사용 짤 뱅크) — customer_id별로 독립(2026-07-15) ──
     _SCENE_COLS = ("id, asset_type, render_mode, media_path, poster_path, duration, "
                    "keep_original_audio, title, scene_desc, role, category, subject, "
-                   "tone, keywords, source_kind, source_ref, created_at")
+                   "tone, keywords, source_kind, source_ref, source_start_frame, "
+                   "source_origin, created_at")
 
     # 태그 편집으로 바꿀 수 있는 필드만. media_path/customer_id/id는 제외 —
     # 클라이언트가 준 값이 파일 경로가 되면 traversal이 열린다.
@@ -1074,7 +1117,8 @@ class Store:
                 "title": r[7], "scene_desc": r[8], "role": r[9], "category": r[10],
                 "subject": r[11], "tone": r[12],
                 "keywords": [k for k in (r[13] or "").split(",") if k],
-                "source_kind": r[14], "source_ref": r[15], "created_at": r[16]}
+                "source_kind": r[14], "source_ref": r[15], "source_start_frame": r[16],
+                "source_origin": r[17], "created_at": r[18]}
 
     @staticmethod
     def _scene_keywords(v):
@@ -1089,15 +1133,18 @@ class Store:
             cur = c.execute(
                 "INSERT INTO scene_assets(customer_id, asset_type, render_mode, media_path, "
                 "poster_path, duration, keep_original_audio, title, scene_desc, role, category, "
-                "subject, tone, keywords, source_kind, source_ref, created_at) "
-                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now'))",
+                "subject, tone, keywords, source_kind, source_ref, source_start_frame, "
+                "source_origin, created_at) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now'))",
                 (customer_id, asset.get("asset_type"), asset.get("render_mode"),
                  asset.get("media_path"), asset.get("poster_path"),
                  float(asset.get("duration") or 0.0), int(asset.get("keep_original_audio") or 0),
                  asset.get("title"), asset.get("scene_desc"), asset.get("role"),
                  asset.get("category"), asset.get("subject"), asset.get("tone"),
                  self._scene_keywords(asset.get("keywords")),
-                 asset.get("source_kind"), asset.get("source_ref")),
+                 asset.get("source_kind"), asset.get("source_ref"),
+                 asset.get("source_start_frame"),
+                 asset.get("source_origin") or "모름"),
             )
             return cur.lastrowid
 
@@ -1359,6 +1406,86 @@ class Store:
             "top_titles": json.loads(row[3]) if row[3] else [],
             "verdict": row[4], "checked_at": row[5],
         }
+
+    # ── 제작소 작업파일(2026-07-17) ──────────────────────────
+    def upsert_produce_work(self, work_id, state, job_id=_UNSET, step=_UNSET,
+                            customer_id=LEGACY_CUSTOMER_ID):
+        """작업 저장. work_id가 None이면 새로 만들어 반환한다.
+        state: 클라이언트 작업상태 dict(sessionStorage.produce_work 스키마 + step).
+        ★title은 서버가 state['script'] 앞 20자에서 뽑는다 — 클라이언트가 매번 보내면
+        대본을 고쳤을 때 목록 이름과 어긋난다(스펙 §4.6).
+        job_id/step: UPDATE 경로에서는 update_mix_job과 같은 관례 — 넘어온 필드만 갱신한다.
+        안 넘기면(_UNSET) 기존 값 보존, job_id=None/step=0을 명시적으로 넘기면 그 값으로 덮어쓴다
+        (부분 저장이 job_id·step을 조용히 리셋하던 버그 수정, 2026-07-17).
+        남의 work_id로 넘어오면(다른 customer_id 소유) **아무것도 안 하고 None을 반환한다** —
+        get_produce_work/delete_produce_work와 같은 결(예외를 던지지 않는다). UPDATE를
+        `WHERE work_id=? AND customer_id=?`로 바꾸지 않는 이유: 매치 0건이면 아래 "되살리기"
+        INSERT 폴백으로 떨어지는데, work_id는 전역 PRIMARY KEY라 남의 id로 INSERT하면
+        IntegrityError(500)가 난다 — 그래서 UPDATE 전에 소유자를 먼저 물어본다(2026-07-17 재리뷰)."""
+        now = datetime.now(timezone.utc).isoformat()
+        title = (state.get("script") or "")[:20] if isinstance(state, dict) else ""
+        payload = json.dumps(state, ensure_ascii=False)
+        with self._conn() as c:
+            if work_id:
+                owner = c.execute(
+                    "SELECT customer_id FROM produce_works WHERE work_id=?", (work_id,),
+                ).fetchone()
+                if owner and owner[0] != customer_id:
+                    return None  # 남의 작업 — 건드리지 않는다(get/delete와 같은 결)
+                cols, vals = ["title=?", "state_json=?"], [title, payload]
+                if job_id is not _UNSET:
+                    cols.append("job_id=?"); vals.append(job_id)
+                if step is not _UNSET:
+                    cols.append("step=?"); vals.append(step)
+                cols.append("updated_at=?"); vals.append(now)
+                vals.append(work_id)
+                n = c.execute(
+                    f"UPDATE produce_works SET {', '.join(cols)} WHERE work_id=?",
+                    tuple(vals),
+                ).rowcount
+                if n:
+                    return work_id
+                # 서버 DB가 갈아엎였는데 브라우저가 옛 work_id를 들고 있는 경우 —
+                # 조용히 버리지 말고 그 id로 되살린다(사장님 작업이 사라지는 것보다 낫다).
+            wid = work_id or uuid.uuid4().hex[:12]
+            ins_job_id = None if job_id is _UNSET else job_id
+            ins_step = 0 if step is _UNSET else step
+            c.execute(
+                "INSERT INTO produce_works(work_id, customer_id, title, state_json, "
+                "job_id, step, created_at, updated_at) VALUES(?,?,?,?,?,?,?,?)",
+                (wid, customer_id, title, payload, ins_job_id, ins_step, now, now),
+            )
+            return wid
+
+    def get_produce_work(self, work_id, customer_id=LEGACY_CUSTOMER_ID):
+        """작업 1건 → dict(state는 파싱됨). 없거나 남의 것이면 None
+        (scene_assets의 get_scene_asset과 같은 관례, 2026-07-17 리뷰 반영)."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT work_id, title, state_json, job_id, step, created_at, updated_at "
+                "FROM produce_works WHERE work_id=? AND customer_id=?", (work_id, customer_id),
+            ).fetchone()
+        if not row:
+            return None
+        return {"work_id": row[0], "title": row[1], "state": json.loads(row[2]),
+                "job_id": row[3], "step": row[4], "created_at": row[5], "updated_at": row[6]}
+
+    def list_produce_works(self, customer_id=LEGACY_CUSTOMER_ID, limit=20):
+        """최근 작업 목록(updated_at DESC). state_json은 싣지 않는다 — 목록은 가벼워야 한다."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT work_id, title, step, job_id, updated_at FROM produce_works "
+                "WHERE customer_id=? ORDER BY updated_at DESC, rowid DESC LIMIT ?",
+                (customer_id, limit),
+            ).fetchall()
+        return [{"work_id": r[0], "title": r[1], "step": r[2], "job_id": r[3],
+                 "updated_at": r[4]} for r in rows]
+
+    def delete_produce_work(self, work_id, customer_id=LEGACY_CUSTOMER_ID):
+        """지운다. 실제로 지워졌으면(내 것이었으면) True — 남의 것은 지워지지 않는다."""
+        with self._conn() as c:
+            return c.execute("DELETE FROM produce_works WHERE work_id=? AND customer_id=?",
+                             (work_id, customer_id)).rowcount > 0
 
     # ── 보이스 프리셋(2026-07-14, 영상제작 4단계) ──
     def upsert_voice_preset(self, p):

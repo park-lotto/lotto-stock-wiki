@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-16",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-16_1002_NAV의 절반은 전자BG다.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "이경연, 이채리 RA",
+    "report_date": "2026.06.15",
+    "stocks": [
+      {
+        "name": "두산",
+        "code": "000150",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": 2220000,
+        "tp_prev": 1920000,
+        "tp_direction": "up",
+        "earnings_outlook": "2026년 1분기 두산의 연결 기준 매출액은 4조 7,110억 원을 기록한 가운데, 자체사업 내 전자BG의 분기 매출액은 5,280억 원으로 전년 동기 대비 약 31%의 괄목할 만한 외형 성장을 달성했다. 전자BG OPM은 ’26년 1분기 30.1%를 달성했다.",
+        "estimate_revision": "목표주가 상향은 자체사업 가치와 지분가치 상승에 기인.",
+        "next_catalyst": "반도체 밸류체인 수직계열화(두산테스나(후공정 테스트)-세미파이브(ASIC 설계)) 및 자회사의 원전 수주 랠리.",
+        "thesis": [
+          "AI CCL 사이클 국면, 전자BG 영업가치 상승",
+          "하이엔드 믹스 개선으로 ASP 38.5% 상승",
+          "자체사업 NAV 비중 51.7%, 사업지주 재평가 및 할인율 축소"
+        ],
+        "valuation_basis": "NAV(순자산가치)에 목표 할인율 38%를 적용. 영업가치는 2026F EBITDA 8,270억 원에 글로벌 피어(EMC, TUC, ITEQ) 평균 EV/EBITDA 28.6배 적용.",
+        "risk": null,
+        "supply_comment": "글로벌 AI 인프라 투자 확대로 핵심 소재인 High-End CCL 수요 강세, 태국 신공장 증설로 중장기 외형 성장 여력 확보.",
+        "quote": "목표주가 상향은 자체사업 가치와 지분가치 상승에 기인. 전자BG 영업가치에 글로벌 피어 3사(EMC, TUC, ITEQ)의 평균 EV/EVITDA 멀티플 28.6배를 상향 적용하여 산출."
+      }
+    ]
+  }
+}

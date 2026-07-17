@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "date": "2026-06-16",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-16_1007_BTM 발전의 중장기 과제와 그 해결책이 될 SM...md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": "전유진",
+    "report_date": "2026.06.16",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "SK이노베이션",
+        "code": "096770",
+        "rating": "Buy",
+        "rating_changed": "Maintain",
+        "tp_new": "190,000원",
+        "tp_prev": "190,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 매출액 102,300십억원, 영업이익 3,865십억원으로 전망",
+        "estimate_revision": null,
+        "next_catalyst": "SMR Natrium 프로젝트 O&M 파트너사 참여 및 국내/동남아 SMR 프로젝트 개발",
+        "thesis": [
+          "원유와 천연가스, 재생에너지, 원전 등 석탄을 제외한 에너지 포트폴리오 구축으로 완전한 에너지 회사로 포지셔닝",
+          "Natrium 프로젝트 참여를 통한 SMR 운영 경험 확보 및 차세대 에너지원으로의 포트폴리오 확장",
+          "AI 데이터센터 전력 구축의 핵심인 ESS를 통한 미국 내 신규 성장동력 확보 가능성"
+        ],
+        "valuation_basis": "SMR 상용화 및 2030년 초반대형원전과 유사한 수준의 건설비 도달 기대",
+        "risk": "EV 업황 부진으로 인한 SK-On 대규모 영업적자와 재무구조 악화",
+        "supply_comment": null,
+        "quote": "동사는 Natrium 프로젝트의 O&M 파트너사로 참여해 운영 경험을 확보한 뒤에, 중장기로는 국내와 동남아시아 시장에서 SMR 프로젝트 개발 및 운영하는 사업자로서의 역할을 맡겠다는 계획이다."
+      },
+      {
+        "name": "NuScale Power",
+        "code": null,
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 매출액 47.0백만USD, 영업이익 -272백만USD 전망",
+        "estimate_revision": null,
+        "next_catalyst": "Part 53 체제 도입에 따른 인허가 절차 간소화 및 TVA 6GW 발전소 계약 이행",
+        "thesis": [
+          "미국 내 SMR 업체 중 유일하게 NRC 설계인증을 획득한 기술적 우위",
+          "Part 53 체제를 통한 인허가 기간 단축으로 상업화 속도 가속화",
+          "ENTRA1 파트너십을 통한 TVA와의 6GW 발전소 구축 계약 확보"
+        ],
+        "valuation_basis": null,
+        "risk": "공사비 급증으로 인한 경제성 악화 및 프로젝트 철회 리스크 경험",
+        "supply_comment": null,
+        "quote": "오히려 PWR 기반 3.5세대 모델로 이미 기술검증을 완료했다는 점에서 향후 Part 53 체계는 동사의 상업화 속도를 올리면서 미국 SMR 점유율을 빠르게 확보해가는 계기로 작용할 수 있다."
+      },
+      {
+        "name": "Oklo",
+        "code": null,
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 매출액 2.0백만USD, 영업이익 -190백만USD 전망",
+        "estimate_revision": null,
+        "next_catalyst": "Part 57 인허가 체제 도입 및 NRC 조기 승인",
+        "thesis": [
+          "연료제조, 사용후핵연료 재활용, 전력판매까지 수직계열화된 사업 모델",
+          "Part 57 마이크로리액터 인허가 체계 도입 시 직접적인 수혜 예상",
+          "Meta와의 1.2GW 발전소 구축 계획 등 파이프라인 확보"
+        ],
+        "valuation_basis": null,
+        "risk": "현재 이익 창출원 부재 및 높은 밸류에이션",
+        "supply_comment": null,
+        "quote": "Part 57 체계는 동사와 같은 마이크로리액터에 특화된 인허가 체계인 만큼 해당 체계 도입은 NuScale, TerraPower, GE Hitachi 등 대형 SMR 업체들 대비 동사에 보다 직접적인 수혜 기회로 작용할 수 있다."
+      }
+    ]
+  }
+}

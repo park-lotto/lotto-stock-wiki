@@ -1,0 +1,19 @@
+{
+  "target_kind": "market",
+  "market_direction": "bullish_rebound_with_caution",
+  "macro_events": [
+    {
+      "fact": "한국은행 금리 발표",
+      "ts": null,
+      "quote": "현재 시장 상황은 한국은행의 금리 발표 등 거시경제 지표에 따라 흔들릴 수 있는 기술적 반등으로 해석하며"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "반도체",
+      "stance": "bullish",
+      "comment": "코스피 6850p 이하 구간에서 삼성전자와 SK하이닉스 1차 매수 진행"
+    }
+  ],
+  "quote": "단기적으로 Kospi 7,500p와 8,000p 구간에서는 차익 실현을 준비하고, 추가 하락 시 더 큰 매수 기회를 잡아야 한다"
+}

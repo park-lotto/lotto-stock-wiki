@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date": "2026-06-15",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-16_0707_의심이 필요 없는 메모리 투자 전략.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김록호",
+    "report_date": "2026.6.15",
+    "target_kind": "market",
+    "market_direction": "비중확대",
+    "macro_vars": [
+      "매크로 불확실성 완화",
+      "메모리 반도체 수출 금액 증가",
+      "메모리 가격 상승세",
+      "글로벌 장비 업체 CAPEX 상향"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "비중확대",
+        "reason": "메모리 업황의 견조한 상승세와 글로벌 반도체 서플라이체인의 실적 상향 여력이 상존하며, 글로벌 장비 업체의 CAPEX 상향 기조가 지속됨"
+      }
+    ],
+    "style": "비중확대",
+    "event_calendar": [
+      {
+        "date": "7월 초",
+        "event": "잠정 실적 발표"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스"
+    ],
+    "risk": "HBM4 수율 관련 불확실성",
+    "quote": "메모리 업체들의 실적 상향 여력이 남아 있는 만큼 지속적인 비중확대 전략을 추천한다."
+  }
+}

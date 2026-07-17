@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "date": "2026-06-15",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-16_0702_외국인과 내국인 매출 호조의 양 날개로 난다.md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": "유정현, 홍성원 RA",
+    "report_date": "2026.06.15",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "신세계",
+        "code": "004170",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "1,000,000",
+        "tp_prev": "600,000",
+        "tp_direction": "up",
+        "earnings_outlook": {
+          "2Q26": "순매출액 1,725십억원(YoY 1.8%, QoQ -6.6%), 영업이익 161십억원(YoY 114.1%, QoQ -18.5%)",
+          "3Q26": "순매출액 1,707십억원(YoY 4.3%, QoQ -1.1%), 영업이익 185십억원(YoY 85.8%, QoQ 14.9%)"
+        },
+        "estimate_revision": "영업이익 및 지배지분순이익 전망 상향",
+        "next_catalyst": "외국인 인바운드 매출 증가에 따른 백화점 성장 및 신세계 DF 흑자 전환",
+        "thesis": [
+          "백화점 국내 및 인바운드 매출 호조로 2분기 기존점 매출 26% 성장 전망",
+          "면세점도 큰 폭의 흑자 전환 지속 전망",
+          "외국인 인바운드 증가에 가장 수혜가 큰 대표 유통기업"
+        ],
+        "valuation_basis": "12개월 FWD 예상 P/E 18배 적용",
+        "risk": "달러 대비 위안화 환율, 중국 소비자 심리 지수",
+        "supply_comment": "소비내수",
+        "quote": "투자의견 BUY를 유지하며 목표주가를 1,000,000원(12개월 FWD 예상 P/E 18배)으로 상향"
+      }
+    ]
+  }
+}

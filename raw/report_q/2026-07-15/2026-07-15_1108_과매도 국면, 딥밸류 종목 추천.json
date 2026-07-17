@@ -1,0 +1,123 @@
+{
+  "meta": {
+    "date": "2026-07-15",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-15_1108_과매도 국면, 딥밸류 종목 추천.md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": [
+      "박혜진",
+      "권용수RA"
+    ],
+    "report_date": "2026.07.15",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "키움증권",
+        "code": "039490",
+        "rating": "Buy",
+        "rating_changed": null,
+        "tp_new": 540000,
+        "tp_prev": 540000,
+        "tp_direction": "flat",
+        "earnings_outlook": "2분기 순이익 컨센서스 소폭 상회 전망. 브로커리지 M/S 하락에도 거래대금 증가를 바탕으로 호실적 기록 전망. ECM, DCM 부진에도 견조한 M&A와 PF를 중심으로 IB 수익 견조. 트레이딩은 1) 주식시장 호조에 따른 평가이익 반영, 2) ETF 거래량 증가에 따른 ETF LP 수익 호조로 1분기에 이어 호실적 기록 전망",
+        "estimate_revision": null,
+        "next_catalyst": "브로커리지 M/S 회복",
+        "thesis": [
+          "브로커리지 점유율 하락에도 거래대금 증가에 따른 호실적",
+          "견조한 M&A와 PF를 중심으로 한 IB 수익",
+          "주식시장 호조 및 ETF LP 수익 호조"
+        ],
+        "valuation_basis": "PBR 1배 내외",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "키움증권은 하락한 브로커리지 점유율이 유의미한 회복세로 접어 들어야 주가 상승 가능할 전망이다."
+      },
+      {
+        "name": "한국금융지주",
+        "code": "071050",
+        "rating": "Buy",
+        "rating_changed": null,
+        "tp_new": 335000,
+        "tp_prev": 335000,
+        "tp_direction": "flat",
+        "earnings_outlook": "순이익 컨센서스 상회하나 1분기 대비 감소 불가피. 다만, 대규모 평가익 없이 순수 체급으로 국내 증권사 중 가장 높은 이익 레벨 시현",
+        "estimate_revision": null,
+        "next_catalyst": "외국인 대상 DMA 서비스에 따른 브로커리지 점유율 상승",
+        "thesis": [
+          "대규모 평가익 없이 순수 체급으로 국내 증권사 중 가장 높은 이익 레벨",
+          "외국인 대상 DMA 서비스로 인한 브로커리지 점유율 상승",
+          "업종 내 최선호주"
+        ],
+        "valuation_basis": "26E PBR 0.96x",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "동사는 최근 5년간 브로커리지 점유율이 상승한 유일한 대형사인데, ‘21년 6월 9.3%에서 ‘26년 3월 13.3% 로 4%p 상승. 이는 외국인 대상 DMA(Direct Market Access) 서비스 덕분인데, 이 서비스를 제공하는 증권사가 한국투자증권과 신한증권이 유일하기 때문."
+      },
+      {
+        "name": "NH투자증권",
+        "code": "005940",
+        "rating": "Buy",
+        "rating_changed": null,
+        "tp_new": 45000,
+        "tp_prev": 45000,
+        "tp_direction": "flat",
+        "earnings_outlook": "2분기 순이익 컨센서스 20% 상회 전망. 브로커리지 사상 최대 경신, 랩과 펀드 등 투자형 상품 판매 호조로 자산관리 부문도 견조. 채권금리가 3월부터 꾸준히 상승해 상품운용손익이 관건. 전 분기 대비 감소하나 선제적 포지션 대응으로 흑자 유지",
+        "estimate_revision": null,
+        "next_catalyst": "배당수익률 상승 및 견조한 자산관리 부문 실적",
+        "thesis": [
+          "브로커리지 수수료수익 사상 최대 경신 전망",
+          "랩, 펀드 등 자산관리 부문 견조",
+          "배당수익률 5.9% 예상으로 변동성 장세에서 안전한 대안"
+        ],
+        "valuation_basis": "26E PBR 1배",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "특히 NH투자증권은 최근 하락한 주가로 배당수익률이 5.9% 이상 예상되어 변동성 심한 장세에서 안전한 대안이 될 수 있음."
+      },
+      {
+        "name": "미래에셋증권",
+        "code": "006800",
+        "rating": "Buy",
+        "rating_changed": "Marketperform에서 상향",
+        "tp_new": 62000,
+        "tp_prev": 62000,
+        "tp_direction": "flat",
+        "earnings_outlook": "2분기 순이익 컨센서스 5.8% 상회 전망. Space X 주가, 6월말 기준 공모가 상회해 평가이익 1.47조원 반영. 2분기 일평균 거래대금 90조원으로 전분기 대비 35.5% 증가. 브로커리지 점유율 1위인 동사의 관련 수익은 7,000억원 육박할 전망",
+        "estimate_revision": null,
+        "next_catalyst": "Space X 평가이익 반영에 따른 실적 개선",
+        "thesis": [
+          "Space X 주가 상승에 따른 평가이익 1.47조원 반영",
+          "브로커리지 점유율 1위 증권사",
+          "거래대금 증가 및 실적호조 지속"
+        ],
+        "valuation_basis": "26E PBR 1.36x, 적정 PBR 2.3x로 추정",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "2분기 순이익은 컨센서스 1.15조원을 5.8% 상회할 전망. 2분기 실적의 Key는 단연 Space X 평가익인데, 6월말 종가 170달러 기준 상장가 150달러보다 13.3% 상승하여 관련 평가이익 1.47조원 반영될 전망."
+      },
+      {
+        "name": "삼성증권",
+        "code": "016360",
+        "rating": "Buy",
+        "rating_changed": "Marketperform에서 상향",
+        "tp_new": 148000,
+        "tp_prev": 148000,
+        "tp_direction": "flat",
+        "earnings_outlook": "2분기 순이익 컨센서스 소폭 상회 전망. 브로커리지 부문이 거래대금 증가에 IBKR 효과가 더해지며 실적 개선 견인. IB 수익은 중복 상장 이슈, 금리 변동성으로 인한 업황 부진으로 평년 수준 하회",
+        "estimate_revision": null,
+        "next_catalyst": "브로커리지 실적 개선 및 가상자산 사업 확대",
+        "thesis": [
+          "거래대금 증가 및 IBKR 효과에 따른 실적 견인",
+          "주가 하락에 따른 괴리율 확대로 투자의견 상향",
+          "두나무 지분 취득을 통한 가상자산 사업 확대 추진"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "삼성증권은 주가하락으로 괴리율 확대되어 투자의견을 Marketperform에서 Buy로 상향 조정한다."
+      }
+    ]
+  }
+}
