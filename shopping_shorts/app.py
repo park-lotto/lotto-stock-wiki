@@ -19,7 +19,8 @@ from shopping_shorts.service import collect, generate_missing_drafts, next_draft
 from shopping_shorts.outreach import build_queue
 from shopping_shorts.store import Store
 from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
-from shopping_shorts.frame_extract import download_video, extract_frames, extract_frame_at
+from shopping_shorts.frame_extract import (download_video, extract_frames,
+                                           extract_frame_at, extract_grid_frames)
 from shopping_shorts.script_extract import extract_script
 from shopping_shorts.structure_analyze import analyze_structure
 from shopping_shorts.categorize import categorize, KEYWORDS as CATEGORY_KEYWORDS
@@ -478,6 +479,7 @@ _FIND_TMP_DIR = Path(__file__).parent / "data" / "find_frames"
 _MIX_WORK_DIR = Path(__file__).parent / "data" / "mix_jobs"
 _WIKI_MEDIA_DIR = Path(__file__).parent / "data" / "wiki_media"   # 도서관 원본 영구보관
 _SCENE_ASSETS_DIR = Path(__file__).parent / "data" / "scene_assets"  # 장면 라이브러리 자산 영구보관
+_THUMB_DIR = Path(__file__).parent / "data" / "thumbs"   # 5단계 썸네일 프레임·산출물
 
 
 @app.post("/api/extract_script")
@@ -1626,6 +1628,69 @@ def api_mix_video(job_id: str):
     if not job or not job.get("video_path") or not Path(job["video_path"]).exists():
         return JSONResponse(status_code=404, content={"ok": False})
     return FileResponse(job["video_path"])
+
+
+def _thumb_dir(job_id: str):
+    """job_id 검증 후 그 job의 썸네일 폴더. 경로순회를 여기서 한 번에 막는다.
+    부적합하면 None — 호출부가 400으로 돌려준다(이 파일은 HTTPException을 안 쓴다)."""
+    safe = os.path.basename(job_id)
+    if not safe or safe != job_id or safe in (".", ".."):
+        return None
+    return _THUMB_DIR / safe
+
+
+@app.post("/api/produce/thumb/frames")
+def api_thumb_frames(body: dict):
+    """5단계 썸네일 — 믹스 결과 영상을 등분해 후보 프레임 10장.
+
+    자막이 박히지 않은 2단계 결과(video_path)에서 뽑는다(설계 Q1) — 썸네일 텍스트는
+    위에 새로 얹으므로 배경 자막은 방해다. 이미 뽑아뒀으면 재추출하지 않는다.
+    """
+    job_id = str(body.get("job_id") or "")
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    video = job.get("video_path")
+    if not video or not Path(video).exists():
+        return JSONResponse(status_code=404, content={"ok": False, "error": "믹스 영상 없음"})
+
+    out_dir = _thumb_dir(job_id)
+    if out_dir is None:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "bad job_id"})
+    existing = sorted(out_dir.glob("grid_*.jpg")) if out_dir.exists() else []
+    if existing:
+        meta = (job.get("thumbnail") or {}).get("frames") or []
+        if len(meta) == len(existing):
+            return {"ok": True, "frames": meta}
+
+    try:
+        pairs = extract_grid_frames(video, out_dir, n=10)
+    except RuntimeError as e:
+        return JSONResponse(status_code=502, content={"ok": False, "error": str(e)})
+
+    frames = [{"url": f"/api/produce/thumb/file/{job_id}/{p.name}", "ts": round(ts, 2)}
+              for p, ts in pairs]
+    thumb = job.get("thumbnail") or {}
+    thumb["frames"] = frames
+    Store(DB_PATH).update_mix_job(job_id, thumbnail=thumb)
+    return {"ok": True, "frames": frames}
+
+
+@app.get("/api/produce/thumb/file/{job_id}/{name}")
+def api_thumb_file(job_id: str, name: str):
+    """프레임·썸네일 파일 서빙. 파일명은 basename으로 강제한다."""
+    safe_name = os.path.basename(name)
+    d = _thumb_dir(job_id)
+    # safe_name in (".",".."): os.path.basename("..") == ".." 라 위 등가검사만으론
+    # 안 걸린다(브리프 원안 갭, 2026-07-17 실측) — job_id 쪽 _thumb_dir과 동일하게 명시 차단.
+    # safe_name in (".",".."): os.path.basename("..") == ".." 라 위 등가검사만으론
+    # 안 걸린다(브리프 원안 갭, 2026-07-17 실측) — job_id 쪽 _thumb_dir과 동일하게 명시 차단.
+    if d is None or not safe_name or safe_name != name or safe_name in (".", ".."):
+        return JSONResponse(status_code=400, content={"ok": False, "error": "bad path"})
+    path = d / safe_name
+    if not path.exists():
+        return JSONResponse(status_code=404, content={"ok": False})
+    return FileResponse(str(path))
 
 
 @app.get("/api/thumb")
