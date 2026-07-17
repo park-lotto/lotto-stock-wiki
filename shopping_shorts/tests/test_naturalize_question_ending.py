@@ -112,11 +112,17 @@ def test_question_conversion_counts_once_not_twice():
 
 
 def test_is_interrogative_detector_direct():
-    """공유 감지기 자체의 판정(문서화 겸 회귀 봉인)."""
+    """공유 감지기 자체의 판정(문서화 겸 회귀 봉인).
+
+    `한번 열어보세요.`는 정책 반전(whole-branch 재재리뷰 Finding1 instance #5,
+    2026-07-17)으로 True가 됐다 — 가드가 세요$ 전체를 무예외로 잡으므로 동작동사
+    명령형도 예외가 아니다(`_is_interrogative`는 "진짜 의문문인가"가 아니라
+    "훅 꼬리 강조를 억제할 자리인가"를 묻는 함수이고, 그 판정은 이제 세요$
+    전체에서 그렇다로 통일된다)."""
     assert _is_interrogative("살까요.") is True
     assert _is_interrogative("이미 있어요?") is True
     assert _is_interrogative("좋아요.") is False
-    assert _is_interrogative("한번 열어보세요.") is False   # 세요=명령형, 의문형 아님
+    assert _is_interrogative("한번 열어보세요.") is True   # 세요$ 무예외 가드(정책 반전)
 
 
 # ── amendment3: ㄴ가요·ㄹ까요·을까요 죽은 분기를 빼도 실제 커버리지는 그대로 ──
@@ -437,13 +443,22 @@ def test_guard_covers_isseyo_and_syeosseoyo_endings_off(text, label):
     assert not out.rstrip().endswith(","), f"{label}: 의문형 끝에 쉼표가 남았다: {out!r}"
 
 
-def test_guard_does_not_swallow_bare_seyo_imperative():
-    """가드는 바레 `세요`(현재, 동작동사 명령형)까지 넓히지 않는다 — 워크벤치
-    코퍼스 0번줄(`끝까지 보세요.`)의 명령형 강조가 그대로 살아있어야 한다.
-    뮤턴트: 가드 리터럴에 바레 `세요`를 추가하면(과잉교정) 이 테스트가 죽는다."""
-    out = _run("끝까지 보세요.", "훅")
-    assert "!" in out, f"명령형 강조가 죽었다: {out!r}"
-    assert ", 보세요!" in out, f"명령형 꼬리 강조 형태가 깨졌다: {out!r}"
+@pytest.mark.parametrize("text", [
+    "끝까지 보세요.",
+    "한번 눌러보세요.",
+    "여기를 누르세요.",
+])
+def test_guard_now_swallows_bare_seyo_imperative(text):
+    """정책 반전(whole-branch 재재리뷰 Finding1, Critical, instance #5, 2026-07-17) —
+    가드는 이제 바레 `세요`(현재, 동작동사 명령형 포함)까지 무예외로 닫는다.
+    워크벤치 코퍼스 0번줄(`끝까지 보세요.`)이 예전엔 `, 보세요!`로 명령형 강조를
+    받는 게 "정상"이었지만, 그 예외 하나가 이 트랙의 다섯 번째 사고
+    (있다/없다/않다 세 어간만 닫고 상태 서술어 클래스 전체를 안 닫음)를 낳았다.
+    이제 이 문장들은 훅 꼬리 강조를 못 받고 평이하게 읽힌다 — 손실은 의도된
+    것이고(사장님 확인 대상, handoff 기록), 사고 방지가 더 크다.
+    뮤턴트: 가드 리터럴에서 바레 `세요`를 빼면(구정책 복귀) 이 테스트가 죽는다."""
+    out = _run(text, "훅")
+    assert "!" not in out, f"명령형 세요$에 훅 꼬리 강조(느낌표)가 여전히 붙는다: {out!r}"
 
 
 def test_isseyo_syeosseoyo_are_guard_only_not_raiser():

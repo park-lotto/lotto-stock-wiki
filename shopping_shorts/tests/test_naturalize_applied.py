@@ -75,6 +75,43 @@ def test_emotion_arc_tag_survives_total_cap_when_input_has_existing_tag():
     assert d["applied"]["emotion_arc"] == 1
 
 
+def test_applied_whisper_does_not_lie_when_total_tag_cap_removes_it():
+    """whole-branch 최종 리뷰 Finding2(Minor, 2026-07-17) 재현 — `_enforce_total_tag_cap`이
+    `max_tags_total`로 whisper 태그를 사후에 지워도 applied는 'whisper: 1'로
+    거짓 계상됐다(`ca92f9c8` 계약 "실제 효과만 센다" 위반). `_emotion_arc`(항상
+    태그 목록 0번째)는 이 캡에 절대 안 걸리지만(자기 게이트가 `max_tags_total<=0`을
+    미리 본다), `_whisper`(항상 1번째)는 자신의 게이트(`max_tags_per_beat`)와
+    이 캡(`max_tags_total`)이 서로 다른 노브라 못 막는다 — 실측(`max_tags_total=1`,
+    `max_tags_per_beat` 기본값 2): 텍스트='[curious]진짜, 대박이에요!'인데
+    applied=={'whisper': 1}.
+    뮤턴트: `naturalize_detail`의 사후 보정(`ctx["applied"].pop("whisper", ...)`)을
+    지우면 태그가 안 남았는데 applied["whisper"]==1로 죽는다."""
+    p = {"normalize": {"on": False}, "spoken_style": {"on": False},
+         "pronunciation": {"on": False}, "phrasing": {"on": False},
+         "endings": {"on": False}, "fillers": {"on": False},
+         "emotion_arc": {"on": True, "intensity": 1.0},
+         "whisper": {"on": True, "roles": ["반전"]},
+         "intonation": {"on": False},
+         "caps": {"max_tags_total": 1, "max_tags_per_beat": 2}}
+    d = naturalize_detail("지금 확인해보세요.", p,
+                          beat_role="반전", beat_index=0, beat_total=1)
+    assert "[whispers]" not in d["text"], f"캡이 못 지웠다(테스트 전제 확인 실패): {d['text']!r}"
+    assert "[satisfied]" in d["text"]
+    assert "whisper" not in d["applied"], f"태그가 지워졌는데 applied가 거짓말: {d['applied']!r}"
+    assert d["applied"]["emotion_arc"] == 1
+
+
+def test_total_tag_cap_strip_inserts_missing_space():
+    """whole-branch 최종 리뷰 Finding2 부수 사고 — `_enforce_total_tag_cap`이 뒤쪽
+    태그를 지우면, 태그끼리는 원래 공백이 없어서(`_whisper`가 `[감정][whispers] 본문`
+    형태로 붙인다) 살아남은 태그가 본문에 바로 붙어버린다
+    ('[curious]진짜, 대박이에요!'처럼 — 실측). 잘라낸 자리에 공백 하나를 보충한다.
+    뮤턴트: 공백 보충 분기(`kept += " "`)를 지우면 태그-본문 경계 공백이 사라져 죽는다."""
+    from shopping_shorts.narration_naturalize import _enforce_total_tag_cap
+    out = _enforce_total_tag_cap("[curious][whispers] 진짜, 대박이에요!", 1)
+    assert out == "[curious] 진짜, 대박이에요!", f"태그-본문 경계 공백이 안 채워졌다: {out!r}"
+
+
 def test_applied_spoken_style_counts_exact_conversions():
     """배선된 4개 중 하나였던 spoken_style — 정확한 개수를 검증(Important2)."""
     p = {"spoken_style": {"on": True, "intensity": 1.0},
