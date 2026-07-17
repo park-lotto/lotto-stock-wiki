@@ -27,7 +27,10 @@ DEFAULT_PROFILE = {
     # 기본값이 ["반전"]인 이유: 일반 톤 영상에서 반전 비트 하나만 속삭이는 게 강조 도구의
     # 기본 쓸모다. 강도(intensity)가 없는 것은 설계다 — 태그는 켜지거나 꺼질 뿐 중간이 없다.
     "whisper":       {"on": True, "roles": ["반전"]},
-    "intonation":    {"on": True, "intensity": 0.2},
+    # emphasis_roles: 마지막 어절을 "쉼표+느낌표"로 강조할 비트(2026-07-17 사장님 청취 판정 ③).
+    # 훅만인 이유: 반전은 속삭이고 CTA는 [excited]가 이미 띄운다 — 거기에 느낌표까지
+    # 붙이면 과해진다. 이 노브를 비우면(=[]) 옛 동작(부사 앞 쉼표만)으로 돌아간다.
+    "intonation":    {"on": True, "intensity": 0.2, "emphasis_roles": ["훅"]},
     # max_fillers_per_text=1(구값)은 n = min(cap, _take_count(...))에서 cap이 항상
     # 병목이 돼 강도가 뭘 하든 결과가 늘 1개로 고정됐다(2026-07-15 컨트롤러 재현,
     # Task4 리뷰 Critical1 — "슬라이더를 돌렸는데 출력이 똑같다"는 이 재설계 전체의
@@ -683,11 +686,27 @@ _EMPHASIS_PAT = re.compile(
     r"(?<=[^\s,.!?…\]])(\s+)(?:" + "|".join(_EMPHASIS_WORDS) + r")(?=[\s,.!?…]|$)"
 )
 
+# 훅 마지막 어절 = 강조 대상. `_EMPHASIS_WORDS`(부사)로는 못 잡는다 — 사장님 예시
+# "이거!"는 문장 끝 지시어라 이 목록에 없다. 훅의 마지막 어절을 잡는 별도 규칙이 필요하다.
+# ⚠️ `(?<=[가-힣])` 가드 필수 — 한글 음절이 앞에 있어야만 매치(단어 1개뿐인 문장 "이거."는 제외).
+# 뒤쪽 문장부호는 통째로 삼켜 "!" 하나로 교체한다 — "이거….!" 같은 겹침 방지.
+_HOOK_TAIL_PAT = re.compile(r"(?<=[가-힣])(\s*,)?\s+([가-힣]{1,5})\s*([.…!?]*)\s*$")
+
 
 def _intonation(text, cfg, ctx):
     intensity = cfg.get("intensity", 0.2)
     if intensity <= 0:
         return text
+    # ── 훅 꼬리 강조 (사장님 판정 ③: 쉼표로 앞글자 띄우고 느낌표로 뒤 받치기) ──
+    # 부사 강조(_EMPHASIS_PAT)보다 **먼저** 돌린다: 꼬리 치환이 문자열 끝을 바꾸는데,
+    # 부사 후보 좌표는 그 앞쪽이라 영향받지 않는다(역순 적용 원칙과 같은 이유).
+    if (ctx.get("role_canon") in (cfg.get("emphasis_roles") or [])):
+        m = _HOOK_TAIL_PAT.search(text)
+        if m:
+            before = text
+            text = f"{text[:m.start()]}, {m.group(2)}!"
+            if text != before:
+                _bump(ctx, "intonation", 1)
     cands = [m.start(1) for m in _EMPHASIS_PAT.finditer(text)]
     take = _take_count(len(cands), intensity)
     if take <= 0:
