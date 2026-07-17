@@ -92,7 +92,17 @@ def test_file_serves_frame(client, tmp_path, monkeypatch):
 
 
 def test_file_blocks_path_traversal(client, tmp_path):
-    """../../ 로 남의 파일을 못 읽는다."""
+    """../../ 로 남의 파일을 못 읽는다.
+
+    ⚠️ **이 테스트는 우리 가드의 자물쇠가 아니다**(2026-07-17 실측). 우리 가드를 통째로
+    지워도 초록으로 남는다 — Starlette 라우팅이 경로 세그먼트의 %2F를 먼저 거부하고,
+    httpx가 보내기도 전에 RFC 3986 정규화로 `..`를 지워버리기 때문이다
+    (`httpx.Request('GET', '…/file/j1/../../secret.txt').url.path` == `/api/produce/thumb/secret.txt`).
+    즉 여기서 초록인 것은 **프레임워크가 막아준다**는 뜻이지 우리 코드가 막는다는 뜻이 아니다.
+    우리 가드의 진짜 자물쇠는 아래 `test_guard_functions_direct_traversal`이다(뮤테이션으로 확인됨).
+    이 테스트는 그래도 남긴다 — 스택 전체(프레임워크+우리 코드)가 이 요청에 비밀을 안 흘린다는
+    회귀 방어로는 유효하다. 다만 **이게 초록이라고 순회가 막혔다고 믿지 마라.**
+    """
     secret = tmp_path / "secret.txt"
     secret.write_bytes(b"TOPSECRET")
     (tmp_path / "thumbs" / "j1").mkdir(parents=True)
@@ -102,6 +112,7 @@ def test_file_blocks_path_traversal(client, tmp_path):
 
 
 def test_file_blocks_traversal_in_job_id(client, tmp_path):
+    """job_id 자리로 순회 시도. ⚠️ 위와 같은 이유로 **우리 가드의 자물쇠가 아니다** — 참고만."""
     secret = tmp_path / "secret.txt"
     secret.write_bytes(b"TOPSECRET")
     r = client.get("/api/produce/thumb/file/..%2F..%2F/secret.txt")

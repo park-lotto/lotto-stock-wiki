@@ -1682,9 +1682,7 @@ def api_thumb_file(job_id: str, name: str):
     safe_name = os.path.basename(name)
     d = _thumb_dir(job_id)
     # safe_name in (".",".."): os.path.basename("..") == ".." 라 위 등가검사만으론
-    # 안 걸린다(브리프 원안 갭, 2026-07-17 실측) — job_id 쪽 _thumb_dir과 동일하게 명시 차단.
-    # safe_name in (".",".."): os.path.basename("..") == ".." 라 위 등가검사만으론
-    # 안 걸린다(브리프 원안 갭, 2026-07-17 실측) — job_id 쪽 _thumb_dir과 동일하게 명시 차단.
+    # 안 걸린다(2026-07-17 실측) — job_id 쪽 _thumb_dir과 동일하게 명시 차단.
     if d is None or not safe_name or safe_name != name or safe_name in (".", ".."):
         return JSONResponse(status_code=400, content={"ok": False, "error": "bad path"})
     path = d / safe_name
