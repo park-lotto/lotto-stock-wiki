@@ -29,7 +29,9 @@ def test_mix_start_passes_subtitle_removal(tmp_path, monkeypatch):
         captured["sr"] = subtitle_removal
     monkeypatch.setattr(appmod.Store, "create_mix_job", spy)
     monkeypatch.setattr(appmod, "run_mix_job", lambda *a, **k: None)
-    r = c.post("/api/mix/start", json={"urls": ["u1", "u2"], "target_seconds": 30,
+    r = c.post("/api/mix/start", json={"urls": ["https://www.instagram.com/reel/AAA111/",
+                                       "https://www.instagram.com/reel/BBB222/"],
+                                       "target_seconds": 30,
                                        "structure": "template", "subtitle_removal": True})
     assert r.status_code == 200
     assert captured["sr"] is True
