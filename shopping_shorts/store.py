@@ -266,7 +266,10 @@ class Store:
                     subtitle_removal INTEGER NOT NULL DEFAULT 0,
                     clean_video_path TEXT,
                     given_script TEXT,
-                    headcopy_json TEXT
+                    headcopy_json TEXT,
+                    fx_plan TEXT,
+                    fx_status TEXT,
+                    fx_path TEXT
                 )
             """)
             # 보이스 프리셋(2026-07-14, 영상제작 4단계) — 큐레이션된 목소리 카드.
@@ -368,6 +371,16 @@ class Store:
                 )
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_topic_groups_group ON topic_groups(group_id)")
+            # 렌더 포인트 원장(2026-07-17, 자동매칭 고급효과 엔진 Task1) — 잔액을 컬럼에
+            # 저장하지 않고 delta 누적합으로 계산(원장 방식). customer_id별 독립.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS points_ledger (
+                    customer_id INTEGER NOT NULL,
+                    delta INTEGER NOT NULL,
+                    reason TEXT,
+                    created_at TEXT DEFAULT (datetime('now'))
+                )
+            """)
             # 기존 DB용 마이그레이션 — mix_jobs 자막제거 필드(2026-07-13).
             # 새 DB는 위 CREATE에 이미 있어 여기선 "이미 존재" 예외를 조용히 넘긴다.
             for col, ddl in (
@@ -380,6 +393,9 @@ class Store:
                 ("voice_json", "TEXT"),     # 영상제작 4단계 보이스 프리셋 선택 스냅샷(2026-07-14)
                 ("script_structure_json", "TEXT"),  # 도서관→제작소 다리: 대본 구조분석 스냅샷(2026-07-15).
                                                     # ⚠️ 위 structure 컬럼과 다른 것 — 그건 template/free 모드 플래그.
+                ("fx_plan", "TEXT"),        # 자동매칭 고급효과 엔진 Task5: 확정된 효과 배치 플랜(FullReel props).
+                ("fx_status", "TEXT"),      # queued/done/failed — 렌더 진행 상태.
+                ("fx_path", "TEXT"),        # 완성된 효과영상 경로.
                 # 1단계 미리보기(2026-07-17). status(downloading→…→done)는 한 줄기라 여기에
                 # 미리보기를 끼우면 최종 렌더 폴링과 서로를 오인한다 → 별도 컬럼으로 둔다.
                 ("preview_status", "TEXT"),  # null|rendering|ready|failed
@@ -1215,6 +1231,7 @@ class Store:
                 "extract_json, edit_plan_json, video_path, created_at, updated_at, "
                 "subtitle_removal, clean_video_path, given_script, headcopy_json, "
                 "caption_style_json, voice_json, deco_json, script_structure_json, "
+                "fx_plan, fx_status, fx_path, "
                 "preview_status, preview_path, preview_error, thumbnail_json "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
@@ -1233,14 +1250,17 @@ class Store:
             "voice": json.loads(row[16]) if row[16] else None,
             "deco": json.loads(row[17]) if row[17] else None,
             "script_structure": json.loads(row[18]) if row[18] else None,
-            "preview_status": row[19], "preview_path": row[20], "preview_error": row[21],
-            "thumbnail": json.loads(row[22]) if row[22] else None,
+            "fx_plan": json.loads(row[19]) if row[19] else None,
+            "fx_status": row[20], "fx_path": row[21],
+            "preview_status": row[22], "preview_path": row[23], "preview_error": row[24],
+            "thumbnail": json.loads(row[25]) if row[25] else None,
         }
 
     def update_mix_job(self, job_id, **fields):
         """status/error/extract/edit_plan/video_path 갱신(+updated_at). 객체는 JSON 직렬화."""
         cols, vals = [], []
         for k in ("status", "error", "video_path", "clean_video_path",
+                  "fx_status", "fx_path",
                   # 1단계 미리보기(2026-07-17) — 여기 없으면 update_mix_job(preview_status=...)이
                   # 에러도 없이 조용히 무시된다(이 화이트리스트가 이 배선의 함정).
                   "preview_status", "preview_path", "preview_error"):
@@ -1248,6 +1268,9 @@ class Store:
                 cols.append(f"{k}=?"); vals.append(fields[k])
         if "subtitle_removal" in fields:
             cols.append("subtitle_removal=?"); vals.append(1 if fields["subtitle_removal"] else 0)
+        if "fx_plan" in fields:
+            cols.append("fx_plan=?")
+            vals.append(json.dumps(fields["fx_plan"], ensure_ascii=False) if fields["fx_plan"] else None)
         if "headcopy" in fields:
             cols.append("headcopy_json=?")
             vals.append(json.dumps(fields["headcopy"], ensure_ascii=False) if fields["headcopy"] else None)
@@ -1506,3 +1529,23 @@ class Store:
                 (row[0], platform, shortcode),
             ).fetchall()
         return [{"platform": r[0], "shortcode": r[1]} for r in rows]
+
+    # ── 렌더 포인트 원장(2026-07-17, 자동매칭 고급효과 엔진 Task1) ──
+    # 잔액 컬럼을 따로 두지 않고 delta 누적합으로 계산하는 원장(ledger) 방식.
+    # points.py가 이 두 메서드만 통해 테이블에 접근한다(SQL은 store.py에 캡슐화).
+    def points_balance(self, customer_id):
+        """이 고객의 현재 포인트 잔액(delta 합)."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT COALESCE(SUM(delta),0) FROM points_ledger WHERE customer_id=?",
+                (customer_id,),
+            ).fetchone()
+        return int(row[0])
+
+    def points_add(self, customer_id, delta, reason=""):
+        """원장에 한 줄 추가(양수=적립, 음수=차감). 잔액 컬럼이 없어 트랜잭션 충돌 없이 append-only."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO points_ledger(customer_id, delta, reason) VALUES(?,?,?)",
+                (customer_id, delta, reason),
+            )

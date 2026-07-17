@@ -41,6 +41,8 @@ from shopping_shorts.tts import synthesize_tts
 from shopping_shorts import tts, asr_check
 from shopping_shorts.narration_naturalize import naturalize as _naturalize
 from shopping_shorts import frame_extract, scene_assets
+from shopping_shorts import effect_match, remotion_render, points
+from shopping_shorts import video_assemble
 import uuid
 
 app = FastAPI(title="쇼핑쇼츠 레퍼런스 랭킹")
@@ -1538,16 +1540,30 @@ def _voice_snapshot(store, body):
     **naturalize_profile·model_id는 반드시 프리셋에서 조회해 넣어야 한다.** 이게 빠지면
     튜닝 작업대에서 동결한 프로파일이 렌더에 도달하지 못하고, 에러 없이 기본값으로 조용히
     합성돼 "동결했는데 소리가 그대로"가 된다(2026-07-15 whole-branch 리뷰 S1).
-    미리듣기(/api/mix/voice/preview)도 같은 스냅샷을 써야 미리듣기=렌더가 보장된다(S8)."""
+    미리듣기(/api/mix/voice/preview)도 같은 스냅샷을 써야 미리듣기=렌더가 보장된다(S8).
+
+    body.whisper_roles: 영상별 "이 영상은 속삭임을 훅에만" 오버라이드(2026-07-17). 설계문서
+    §6은 "영상별 비트 토글은 새 저장층이 필요하다"고 적었지만 틀렸다 — 이 함수가 만드는
+    voice 스냅샷이 이미 job(영상)마다 저장된다(app.py의 store.update_mix_job(job_id, voice=...)).
+    그래서 새 테이블 없이 body 값을 naturalize_profile.whisper.roles에만 얹는다.
+    없으면(None/누락) 프리셋의 원래 프로파일을 그대로 쓴다(하위호환 — 기존 호출부가 안 깨짐).
+    프리셋 dict는 store가 매번 새로 만들어 주지만(json.loads), 혹시 캐싱하는 구현으로 바뀌어도
+    안전하도록 **제자리 수정 없이** 얕은 복사 위에서만 whisper 키를 교체한다."""
     preset_id = body.get("preset_id")
     p = store.get_voice_preset(preset_id) if preset_id else None
+    naturalize_profile = (p or {}).get("naturalize_profile")
+    whisper_roles = body.get("whisper_roles")
+    if whisper_roles is not None:
+        naturalize_profile = dict(naturalize_profile) if naturalize_profile else {}
+        naturalize_profile["whisper"] = dict(naturalize_profile.get("whisper") or {})
+        naturalize_profile["whisper"]["roles"] = whisper_roles
     return {
         "preset_id": preset_id,
         "voice_id": body.get("voice_id") or (p or {}).get("base_voice_id"),
         "settings": body.get("settings") or (p or {}).get("voice_settings"),
         "speed": body.get("speed", 1.0),
         "silence_trim": body.get("silence_trim", "off"),
-        "naturalize_profile": (p or {}).get("naturalize_profile"),
+        "naturalize_profile": naturalize_profile,
         "model_id": (p or {}).get("model_id") or "eleven_v3",
     }
 
@@ -2355,6 +2371,119 @@ def api_scene_poster(request: Request, asset_id: int):
     if not a or not a.get("poster_path") or not Path(a["poster_path"]).exists():
         return Response(status_code=404, content=b"")
     return FileResponse(a["poster_path"], media_type="image/jpeg")
+
+
+# ── 자동매칭 고급효과 엔진(2026-07-17, Task5) — suggest/render/status ────────
+# ⚠️ mix_jobs는 beats/dur_frames/category를 직접 안 준다(브리프 가정과 실측이 다름).
+# 실제로는 job["edit_plan"]["beats"](역할·나레이션·target_seconds 계획값, 렌더 후엔
+# tts_path도 채워짐)와 job["script_structure"]["product_category"]에서 뽑아 쓴다 —
+# 아래 두 어댑터가 그 변환을 맡는다.
+FX_RENDER_COST = 10
+
+
+def _fx_timeline_from_job(job):
+    """job["edit_plan"]["beats"] → effect_match.suggest용 [{s,e,text}] 리스트.
+
+    타이밍 우선순위: 모든 비트에 tts_path가 있으면(=이미 한 번 렌더돼 TTS mp3가 work
+    폴더에 있음) video_assemble._beat_timeline으로 ffprobe 실측 길이를 쓴다(실제 조립본과
+    정확히 일치). 하나라도 없으면(아직 렌더 전, 또는 work 폴더 정리로 mp3가 사라진 경우)
+    target_seconds(EDL 계획값) 누적으로 폴백한다 — 계획값은 실제 TTS 길이와 미세
+    드리프트가 있을 수 있다(v1 수용 — 자막·모션 싱크가 아니라 효과 배치 미리보기라
+    실용상 허용오차 안, Task5 보고 참고)."""
+    plan = job.get("edit_plan") or {}
+    beats = plan.get("beats") or []
+    if not beats:
+        return []
+    tts_paths = {b["beat_idx"]: b["tts_path"] for b in beats if b.get("tts_path")}
+    if len(tts_paths) == len(beats):
+        try:
+            timeline = video_assemble._beat_timeline(plan, tts_paths)
+            return [{"s": t["t0"], "e": t["t0"] + t["dur"], "text": t["narration"]} for t in timeline]
+        except Exception:
+            pass  # ffprobe 실패 등 — 아래 target_seconds 폴백으로 이어간다
+    t0 = 0.0
+    out = []
+    for b in beats:
+        dur = float(b.get("target_seconds") or 0.0)
+        out.append({"s": t0, "e": t0 + dur, "text": b.get("narration", "")})
+        t0 += dur
+    return out
+
+
+def _fx_dur_frames(job, timeline, fps=30):
+    """전체 프레임 수. video_path를 ffprobe로 실측(가장 정확) → 실패 시 타임라인
+    끝값으로 폴백(video_path 없음/ffprobe 미설치 등)."""
+    vp = job.get("video_path")
+    if vp:
+        try:
+            return round(video_assemble._probe_duration(vp) * fps)
+        except Exception:
+            pass
+    if timeline:
+        return round(timeline[-1]["e"] * fps)
+    return 0
+
+
+@app.post("/api/produce/fx/suggest")
+def api_fx_suggest(body: dict):
+    """믹스 job의 비트+카테고리로 효과 배치 플랜을 미리 만든다. DB에 기록하지
+    않는다(무과금 미리보기 — 확정은 /render에서 포인트를 내고 한다)."""
+    job = Store(DB_PATH).get_mix_job(body.get("job_id") or "") or {}
+    timeline = _fx_timeline_from_job(job)
+    category = body.get("category") or (job.get("script_structure") or {}).get("product_category") or ""
+    dur_frames = _fx_dur_frames(job, timeline)
+    plan = effect_match.suggest(timeline, category, job.get("video_path", ""), dur_frames, client=None)
+    return {"plan": plan}
+
+
+def _fx_render_job(job_id, plan, cid):
+    """백그라운드 최종 렌더. 실패하면 차감된 포인트를 환불하고 fx_status=failed로
+    남긴다 — 실패했는데 포인트만 날아가면 신뢰가 깨진다."""
+    store = Store(DB_PATH)
+    try:
+        job = store.get_mix_job(job_id) or {}
+        out = str(_MIX_WORK_DIR / job_id / "fx.mp4")
+        Path(out).parent.mkdir(parents=True, exist_ok=True)
+        remotion_render.render(plan, job.get("video_path"), out)
+        store.update_mix_job(job_id, fx_status="done", fx_path=out)
+    except Exception:
+        points.refund(store, cid, FX_RENDER_COST)
+        store.update_mix_job(job_id, fx_status="failed")
+
+
+@app.post("/api/produce/fx/render")
+def api_fx_render(request: Request, body: dict, background_tasks: BackgroundTasks):
+    """확정된 플랜으로 렌더당 정액(FX_RENDER_COST) 차감 후 백그라운드 렌더 예약.
+    잔액 부족이면 402(차감 자체를 안 함 — 아무 상태도 안 건드림)."""
+    job_id = body.get("job_id")
+    if not job_id:
+        return JSONResponse(status_code=422, content={"error": "job_id 필요"})
+    cid = _cid(request)
+    store = Store(DB_PATH)
+    if not points.deduct(store, cid, FX_RENDER_COST):
+        return JSONResponse(status_code=402, content={"error": "포인트 부족"})
+    plan = body.get("plan") or {}
+    store.update_mix_job(job_id, fx_status="queued", fx_plan=plan)
+    background_tasks.add_task(_fx_render_job, job_id, plan, cid)
+    return {"status": "queued"}
+
+
+@app.get("/api/produce/fx/status/{job_id}")
+def api_fx_status(job_id: str):
+    job = Store(DB_PATH).get_mix_job(job_id) or {}
+    out = {"fx_status": job.get("fx_status")}
+    if job.get("fx_status") == "done":
+        out["fx_url"] = f"/api/produce/fx/file/{job_id}"
+    return out
+
+
+@app.get("/api/produce/fx/file/{job_id}")
+def api_fx_file(job_id: str):
+    """완성된 효과영상 서빙(status가 준 fx_url이 가리키는 곳)."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("fx_path") or not Path(job["fx_path"]).exists():
+        return JSONResponse(status_code=404, content={"ok": False})
+    return FileResponse(job["fx_path"])
 
 
 # 정적 프론트 (마운트는 맨 마지막)
