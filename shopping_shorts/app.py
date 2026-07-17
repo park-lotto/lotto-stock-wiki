@@ -2064,10 +2064,27 @@ def api_produce_works_list(request: Request):
 
 @app.get("/api/produce/works/{work_id}")
 def api_produce_works_get(request: Request, work_id: str):
-    w = Store(DB_PATH).get_produce_work(work_id, customer_id=_cid(request))
+    st = Store(DB_PATH)
+    w = st.get_produce_work(work_id, customer_id=_cid(request))
     if not w:
         return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
-    return {"ok": True, "state": w["state"], "job_id": w["job_id"], "step": w["step"]}
+    # ★렌더설정(꾸미기·자막제거)의 주인은 작업파일이 아니라 **job**이다 — 작업파일에 복제하면
+    # 진실의 원천이 둘이 되어 새 불일치를 만든다. 그래서 여기서 job을 읽어 같이 내려준다.
+    # 이게 없으면 복원이 STATE를 빈 채로 두고, renderFinal 직전 saveHeadcopy()가 그 빈 STATE를
+    # 그대로 job에 POST해 **서버의 꾸미기를 null로 덮는다**. 게다가 subtitle_removal은 job에
+    # 남아 유료 VMake가 도는데 화면은 "꺼짐"이라 표시한다(최종 whole-branch 리뷰 C-2).
+    # 이 라우트는 _cid로 소유자를 이미 확인했으므로 여기 얹는 게 안전하다 —
+    # /api/mix/status는 인증이 없어(job_id만 알면 열림) 거기 실으면 남의 창작물이 샌다.
+    settings = None
+    if w["job_id"]:
+        job = st.get_mix_job(w["job_id"])
+        if job:
+            settings = {"headcopy": job.get("headcopy"),
+                        "caption_style": job.get("caption_style"),
+                        "deco": job.get("deco"),
+                        "subtitle_removal": job.get("subtitle_removal")}
+    return {"ok": True, "state": w["state"], "job_id": w["job_id"], "step": w["step"],
+            "settings": settings}
 
 
 @app.post("/api/produce/works/{work_id}/delete")

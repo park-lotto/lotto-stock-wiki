@@ -100,7 +100,8 @@
              " onclick=\"location.href='/produce?work=" + esc(w.work_id) + "'\"" +
              ' title="' + name + '">· ' + name + " · " + (w.step + 1) + "단계</div>";
       });
-      h += '<div class="ss-work" onclick="location.href=\'/produce\'">+ 새 작업</div>';
+      // ★?new=1이 없으면 produce.html이 이걸 새로고침과 구분 못 해 직전 작업을 덮어쓴다(C-1).
+      h += '<div class="ss-work" onclick="location.href=\'/produce?new=1\'">+ 새 작업</div>';
       // nav.innerHTML = nav.innerHTML + h (통째 재할당) 금지 — nav의 기존 자식 전체를 파괴하고
       // 문자열에서 재파싱한다. 이 함수는 fetch().then() 안에서 비동기로 돈다 — nav가 이미
       // 라이브 DOM에 들어간 뒤에 재파싱되면, 모바일(@media max-width:760px, .ss-nav는
