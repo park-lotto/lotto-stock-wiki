@@ -526,12 +526,27 @@ async function fxSuggest(){
       body:JSON.stringify({job_id:MIX_JOB, category:(typeof PM_CATEGORY!=='undefined'?PM_CATEGORY:'')})});
     const d=await r.json(); FX_PLAN=d.plan||null;
     if(!FX_PLAN){ msg.textContent='추천 실패'; return; }
-    const s=fxPlanSummary(FX_PLAN);
+    const themeKr={warm:'웜톤(따뜻)',tech:'테크(세련)',berry:'베리',honey:'허니',fresh:'프레시'}[FX_PLAN.themeName]||FX_PLAN.themeName;
+    const label=function(f){var p=f.props||{};
+      if(f.comp==='count') return '숫자 카운트업 「'+(p.value!=null?p.value:'')+(p.suffix||'')+'」';
+      if(f.comp==='impact') return '강조 슬램 「'+(p.word||'')+'」';
+      if(f.comp==='callout') return '아이콘 카드 「'+(p.name||'')+'」';
+      if(f.comp==='list') return '리스트';
+      return f.comp; };
     document.getElementById('fxPlanBox').innerHTML =
-      '<div>테마: <b>'+s.theme+'</b> · 효과 <b>'+s.count+'</b>개</div>'+
-      (FX_PLAN.fx||[]).map(function(f){return '<div class="hint">· '+f.comp+' @ '+(Number(f.s)||0).toFixed(1)+'s</div>';}).join('');
-    document.getElementById('fxRenderBtn').style.display='inline-block';
-    msg.textContent='';
+      '<div style="margin-bottom:4px">🎨 <b>'+themeKr+'</b> 테마 · 움직이는 효과 <b>'+(FX_PLAN.fx||[]).length+'</b>개 자동 배치</div>'+
+      ((FX_PLAN.fx||[]).length? (FX_PLAN.fx||[]).map(function(f){return '<div class="hint">· '+(Number(f.s)||0).toFixed(1)+'초 — '+label(f)+'</div>';}).join('')
+        : '<div class="hint">추천된 효과가 없어요(대본에 숫자·강조어가 없으면 비어요)</div>');
+    const bal=(typeof d.points==='number')?d.points:null, cost=d.cost||10;
+    const btn=document.getElementById('fxRenderBtn');
+    btn.style.display='inline-block';
+    if(bal!=null && bal<cost){
+      btn.disabled=true; btn.style.opacity='0.5'; btn.style.cursor='not-allowed';
+      msg.innerHTML='<span style="color:#f27">보유 '+bal+'P — 렌더에 '+cost+'P 필요 (부족)</span>';
+    } else {
+      btn.disabled=false; btn.style.opacity='1'; btn.style.cursor='pointer';
+      msg.textContent = (bal!=null? '보유 '+bal+'P' : '');
+    }
   }catch(e){ msg.textContent='오류: '+e; }
 }
 async function fxRender(){
