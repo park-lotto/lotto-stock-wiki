@@ -11,6 +11,21 @@ def test_unavailable_raises(monkeypatch):
         rr.render({"videoSrc": "x.mp4"}, "x.mp4", "o.mp4")
 
 
+@pytest.mark.skipif(not HAS_NODE, reason="node/remotion 미설치 환경에선 True 단언 불가")
+def test_motion_ready_true_in_env():
+    assert rr._motion_ready() is True          # node 있는 이 환경
+
+
+def test_motion_ready_false_without_node(monkeypatch):
+    monkeypatch.setattr(rr.shutil, "which", lambda _: None)
+    assert rr._motion_ready() is False          # node 부재 감지
+
+
+def test_motion_ready_false_without_modules(monkeypatch, tmp_path):
+    monkeypatch.setattr(rr, "MOTION", str(tmp_path))  # node_modules 없음
+    assert rr._motion_ready() is False
+
+
 @pytest.mark.skipif(not HAS_NODE, reason="node/remotion 미설치")
 def test_real_render_makes_nonempty_mp4(tmp_path):
     src = os.path.join(MOTION, "public", "full.mp4")  # 이전 세션 산출물이 있으면 사용

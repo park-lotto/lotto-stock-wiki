@@ -18,6 +18,7 @@ def _motion_ready():
 def render(plan, video_path, out_path):
     if not _motion_ready():
         raise RemotionUnavailable("node/remotion 미설치")
+    out_path = os.path.abspath(out_path)
     pub = os.path.join(MOTION, "public")
     os.makedirs(pub, exist_ok=True)
     name = plan.get("videoSrc") or "job_src.mp4"
