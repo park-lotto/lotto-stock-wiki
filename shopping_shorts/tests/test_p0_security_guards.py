@@ -99,6 +99,36 @@ def test_video_route_rejects_metadata_url(monkeypatch, tmp_path):
     assert r.status_code == 400
 
 
+# ── P0-3. 다운로드 라우트 SSRF 가드 확산 ────────────────────────────
+
+_INTERNAL = "http://169.254.169.254/latest/meta-data/"
+
+
+@pytest.mark.parametrize("path,payload", [
+    ("/api/mix/start",
+     {"urls": [_INTERNAL, "http://127.0.0.1/x.mp4"], "target_seconds": 20, "structure": "free"}),
+    ("/api/produce/mix/start",
+     {"script": "대본", "urls": [_INTERNAL], "target_seconds": 20}),
+    ("/api/produce/extract_from_url", {"url": _INTERNAL}),
+    ("/api/produce/save_to_wiki", {"url": _INTERNAL}),
+])
+def test_download_routes_reject_internal_urls(monkeypatch, tmp_path, path, payload):
+    """이 라우트들은 받은 URL을 download_any/download_video로 그대로 fetch한다.
+    _reject_ssrf가 scene/save/prepare 한 곳에만 걸려 있어 전부 무방비였다(P0-3)."""
+    monkeypatch.setattr(app_module, "DB_PATH", tmp_path / "t.db")
+    monkeypatch.setattr(app_module, "run_mix_job", lambda *a, **k: None)
+    r = TestClient(app_module.app).post(path, json=payload)
+    assert r.status_code == 422, f"{path} 가 내부망 URL을 통과시켰다"
+
+
+def test_save_to_wiki_checks_video_url_too(monkeypatch, tmp_path):
+    """download_any는 video_url이 오면 그걸 우선 쓴다 — url만 검사하면 우회된다."""
+    monkeypatch.setattr(app_module, "DB_PATH", tmp_path / "t.db")
+    r = TestClient(app_module.app).post("/api/produce/save_to_wiki", json={
+        "url": "https://www.instagram.com/reel/AAA111/", "video_url": _INTERNAL})
+    assert r.status_code == 422
+
+
 # ── P0-5. 최종 렌더 중복예약 ────────────────────────────────────────
 
 def _mix_client(monkeypatch, tmp_path):

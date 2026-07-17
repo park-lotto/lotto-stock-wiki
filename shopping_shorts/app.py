@@ -504,6 +504,10 @@ def api_extract_script(shortcode: str):
     video_url = item.get("video_url")
     if not video_url:
         return JSONResponse(status_code=422, content={"ok": False, "error": "video_url 없음 — 재수집 필요"})
+    # DB(수집분) 유래라 직접 입력은 아니지만, 오염된 수집물이 내부망을 찌르지 않게 같이 막는다.
+    blocked = _ssrf_guard(video_url)
+    if blocked:
+        return blocked
 
     work_dir = _FIND_TMP_DIR / hashlib.sha1(code.encode()).hexdigest()[:16]
     try:
@@ -634,6 +638,9 @@ def api_produce_extract_from_url(body: dict, background_tasks: BackgroundTasks):
     url = (body.get("url") or "").strip()
     if not url:
         return JSONResponse(status_code=422, content={"ok": False, "error": "url 필요"})
+    blocked = _ssrf_guard(url)        # download_any가 이 URL을 그대로 받는다
+    if blocked:
+        return blocked
     code = (body.get("shortcode") or "").strip() or hashlib.sha1(url.encode()).hexdigest()[:12]
     body_category = (body.get("category") or "").strip() or None
     name = body.get("name") or ""
@@ -770,6 +777,10 @@ def api_produce_save_to_wiki(request: Request, body: dict, background_tasks: Bac
     url = (body.get("url") or "").strip()
     if not url:
         return JSONResponse(status_code=422, content={"ok": False, "error": "url 필요"})
+    # video_url이 오면 download_any가 그걸 우선 쓴다 — 둘 다 검사해야 한다.
+    blocked = _ssrf_guard(*[u for u in (url, body.get("video_url")) if u])
+    if blocked:
+        return blocked
     code = (body.get("shortcode") or "").strip() or hashlib.sha1(url.encode()).hexdigest()[:12]
     body_category = (body.get("category") or "").strip() or None  # 빈문자열→None (NULL/빈문자열 혼재 방지)
     store = Store(DB_PATH)
@@ -1228,6 +1239,9 @@ def api_mix_start(background_tasks: BackgroundTasks, body: dict):
     urls = [u for u in (body.get("urls") or []) if u]
     if len(urls) < 2:
         return JSONResponse(status_code=422, content={"ok": False, "error": "레퍼런스 URL 2개 이상 필요"})
+    blocked = _ssrf_guard(*urls)      # 이 URL들은 run_mix_job이 그대로 다운로드한다
+    if blocked:
+        return blocked
     target = int(body.get("target_seconds") or 30)
     structure = body.get("structure") if body.get("structure") in ("template", "free") else "template"
     subtitle_removal = bool(body.get("subtitle_removal", False))
@@ -1648,6 +1662,21 @@ def _reject_cdn_proxy(url: str, allowed_hosts) -> bool:
     return not any(host == h or host.endswith("." + h) for h in allowed_hosts)
 
 
+def _ssrf_guard(*urls):
+    """URL을 받아 다운로드하는 라우트의 공통 전처리. 문제 있으면 422 응답, 없으면 None.
+
+    P0-3: _reject_ssrf가 /api/scene/save/prepare 한 곳에만 걸려 있어서, 임의 URL을
+    download_any/download_video로 그대로 fetch하는 나머지 라우트(mix/start·
+    extract_from_url·save_to_wiki·wiki/save)는 전부 무방비였다. 가드가 "어떤 라우트엔
+    있고 어떤 라우트엔 없는" 상태 자체가 결함이라, 호출부를 하나로 모은다.
+    """
+    for u in urls:
+        err = _reject_ssrf(u)
+        if err:
+            return JSONResponse(status_code=422, content={"ok": False, "error": err})
+    return None
+
+
 # 허용 CDN 도메인만 프록시 (SSRF 방지 — 임의 URL 프록시 금지).
 # 인스타 + 유튜브(ytimg) + 틱톡(tiktokcdn) 썸네일 호스트.
 _ALLOWED_THUMB_HOSTS = ("cdninstagram.com", "fbcdn.net", "ytimg.com",
@@ -1997,6 +2026,9 @@ def api_produce_mix_start(background_tasks: BackgroundTasks, body: dict):
         return JSONResponse(status_code=422, content={"ok": False, "error": "확정 대본이 비어 있습니다(1단계)"})
     if len(urls) < 1:
         return JSONResponse(status_code=422, content={"ok": False, "error": "소스 영상 URL이 필요합니다"})
+    blocked = _ssrf_guard(*urls)      # /api/mix/start와 같은 경로로 다운로드된다
+    if blocked:
+        return blocked
     # 1개면 그 영상 안에서 구간 순서편집(재배치), 2개 이상이면 여러 영상을 섞는
     # 믹스 — build_edit_plan(edit_plan.py)의 세그먼트 인벤토리 매칭이 소스 개수와
     # 무관하게 동작해서 이 유효성검사만 완화하면 별도 분기 없이 그대로 지원된다(2026-07-14).
