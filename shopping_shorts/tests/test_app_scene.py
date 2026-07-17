@@ -609,3 +609,23 @@ def test_split_rejects_internal_url(client):
 
 def test_split_requires_src_url(client):
     assert client.post("/api/scene/split", json={}).status_code == 422
+
+
+def test_split_never_writes_to_db(client, monkeypatch, tmp_path):
+    """리뷰 Important — split의 계약은 '컷 목록 + 포스터만 반환, DB는 안 건드림'이다
+    (app.py의 함수 docstring). 이 테스트가 없으면 누가 라우트 안에
+    Store(...).add_scene_asset(...)을 심어도 기존 42건이 전부 통과했다."""
+    src = tmp_path / "s2.mp4"
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi",
+                    "-i", "testsrc=size=320x568:rate=30:duration=3",
+                    "-c:v", "libx264", "-pix_fmt", "yuv420p", str(src)],
+                   check=True, capture_output=True, stdin=subprocess.DEVNULL)
+    monkeypatch.setattr(app_mod.socket, "gethostbyname", lambda h: "93.184.216.34")
+    monkeypatch.setattr(app_mod.frame_extract, "download_video",
+                        lambda url, td: str(src))
+
+    r = client.post("/api/scene/split", json={"src_url": "https://cdn.example.com/b.mp4"})
+
+    assert r.status_code == 200
+    assert r.json()["ok"] is True
+    assert Store(app_mod.DB_PATH).list_scene_assets() == []
