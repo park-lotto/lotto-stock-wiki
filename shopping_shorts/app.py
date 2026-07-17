@@ -1410,6 +1410,15 @@ def api_voice_presets(lang: str = "KR"):
     rows = Store(DB_PATH).list_voice_presets(lang=lang)
     groups = {}
     for p in rows:
+        # 튜닝 작업대가 만든 임시 프리셋(origin="tuned", :1526)은 카드에서 뺀다.
+        # prune_voice_presets가 그 행을 **의도적으로** 안 지우므로(작업대엔 필요, 리뷰 S2)
+        # 거르지 않으면 이름·설명·샘플이 다 빈 껍데기가 성우 카드로 뜬다 — 2026-07-17
+        # 라이브 화면에서 kr-test·kr-snap이 실제로 그렇게 보였다(사장님이 화면을 보라고
+        # 해서 브라우저로 직접 열어보고 발견). DB에 남는 건 맞고 카드에 나오는 게 틀렸다.
+        # ⚠️ origin이 없는 옛 행은 **보이는 쪽으로** 실패시킨다 — 안 보이는 실패는
+        # 아무도 못 잡고, 성우가 통째로 사라지는 쪽이 훨씬 나쁘다.
+        if p.get("origin") == "tuned":
+            continue
         gid = p["group_id"]
         g = groups.setdefault(gid, {
             "group_id": gid, "name": p["name"], "one_liner": p["one_liner"],
@@ -1437,7 +1446,14 @@ def api_voice_preset_sample(preset_id: str):
     f = voice_presets.SAMPLES_DIR / p["sample_file"]
     if not f.exists():
         return JSONResponse(status_code=404, content={"ok": False})
-    return FileResponse(str(f), media_type="audio/mpeg")
+    # no-cache = "캐시는 해도 되지만 쓰기 전에 반드시 서버에 물어봐라".
+    # 샘플은 성우를 재튜닝할 때마다 **파일 내용이 바뀌는데 이름은 그대로**라, 헤더가 없으면
+    # 브라우저가 옛것을 무기한 들려준다 — 2026-07-17 실사고: 47개를 새 속도로 재생성·배포한
+    # 뒤에도 사장님 화면에선 옛 소리가 났다(미나 속삭임 브라우저 3.2초 vs 서버 7.1초).
+    # FileResponse가 etag·last-modified를 붙이므로 안 바뀌었으면 304로 싸게 끝난다
+    # (no-store가 아니다 — 매번 통째로 다시 받게 하면 그건 그것대로 낭비다).
+    return FileResponse(str(f), media_type="audio/mpeg",
+                        headers={"Cache-Control": "no-cache"})
 
 
 _TUNE_CORPUS = Path(__file__).parent / "assets" / "tune_corpus.json"
