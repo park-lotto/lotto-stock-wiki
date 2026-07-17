@@ -38,7 +38,10 @@ def test_frames_extracts_and_returns_ts(client, tmp_path, monkeypatch):
         for i in range(n):
             p = dest / f"grid_{i:02d}.jpg"
             p.write_bytes(b"img")
-            out.append((p, i * 2.35 + 1.17))
+            # 소수점 3자리 이상 섞어서 round(ts, 2)가 실제로 값을 바꾸게 한다.
+            # round를 지워도 frames[0]만 보면(1.17→반올림해도 그대로) 안 죽는다는
+            # 뮤테이션 실측(픽스3) 때문에 전체 프레임을 검사한다.
+            out.append((p, i * 2.3456789 + 1.1734567))
         return out
 
     monkeypatch.setattr(app_module, "extract_grid_frames", fake_grid)
@@ -46,7 +49,12 @@ def test_frames_extracts_and_returns_ts(client, tmp_path, monkeypatch):
     assert r.status_code == 200
     frames = r.json()["frames"]
     assert len(frames) == 10
-    assert frames[0]["ts"] == pytest.approx(1.17)
+    for i, f in enumerate(frames):
+        expected = round(i * 2.3456789 + 1.1734567, 2)
+        assert f["ts"] == pytest.approx(expected)
+        # round(ts, 2)가 없으면 원본 소수점 자리(예: 1.1734567)가 그대로 나와
+        # expected(반올림된 값)와 달라 이 단언이 죽는다.
+        assert len(str(f["ts"]).split(".")[-1]) <= 2
     assert frames[0]["url"].startswith("/api/produce/thumb/file/j1/")
 
 
@@ -65,6 +73,62 @@ def test_frames_reuses_existing(client, tmp_path, monkeypatch):
         return out
 
     monkeypatch.setattr(app_module, "extract_grid_frames", counting)
+    client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
+    client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
+    assert calls["n"] == 1
+
+
+def test_frames_re_extracts_after_rerender(client, tmp_path, monkeypatch):
+    """재렌더(=같은 job_id, 같은 final.mp4 경로, 내용만 교체)면 옛 프레임을 버리고 재추출한다.
+
+    픽스1: mix_pipeline이 job_id로 결정적인 경로(work/job_id/final.mp4)에 렌더하므로
+    재렌더는 파일을 덮어쓴다. len(meta)==len(existing)만 보던 낡은 재사용 검사는
+    n=10 고정이라 이 경우를 절대 못 잡는다 — 영상 서명(mtime_ns+size)을 같이 저장해
+    비교해야 한다.
+    """
+    _job_with_video(tmp_path)
+    calls = {"n": 0}
+
+    def counting(video_path, dest_dir, n=10):
+        calls["n"] += 1
+        dest = Path(dest_dir); dest.mkdir(parents=True, exist_ok=True)
+        out = []
+        for i in range(n):
+            p = dest / f"grid_{i:02d}.jpg"; p.write_bytes(f"img{calls['n']}".encode())
+            out.append((p, float(i) + calls["n"]))  # 회차마다 ts가 달라짐 = 새 영상 흔적
+        return out
+
+    monkeypatch.setattr(app_module, "extract_grid_frames", counting)
+    r1 = client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
+    assert r1.json()["frames"][0]["ts"] == pytest.approx(1.0)
+
+    # 재렌더: 같은 경로(v.mp4)를 다른 내용으로 덮어쓴다 -> mtime/size가 바뀐다.
+    video = tmp_path / "v.mp4"
+    import time
+    time.sleep(0.01)
+    video.write_bytes(b"fake-but-longer-content-after-rerender")
+
+    r2 = client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
+    assert calls["n"] == 2, "영상이 바뀌었으면 재추출이 실제로 돌아야 한다"
+    assert r2.json()["frames"][0]["ts"] == pytest.approx(2.0)
+
+
+def test_frames_no_reextract_when_video_unchanged(client, tmp_path, monkeypatch):
+    """영상이 그대로면(서명 동일) 여전히 재사용한다 -- 기존 회귀 방지의 연장."""
+    _job_with_video(tmp_path)
+    calls = {"n": 0}
+
+    def counting(video_path, dest_dir, n=10):
+        calls["n"] += 1
+        dest = Path(dest_dir); dest.mkdir(parents=True, exist_ok=True)
+        out = []
+        for i in range(n):
+            p = dest / f"grid_{i:02d}.jpg"; p.write_bytes(b"img")
+            out.append((p, float(i)))
+        return out
+
+    monkeypatch.setattr(app_module, "extract_grid_frames", counting)
+    client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
     client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
     client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
     assert calls["n"] == 1
@@ -123,6 +187,32 @@ def test_file_blocks_traversal_in_job_id(client, tmp_path):
 def test_file_404_missing(client, tmp_path):
     (tmp_path / "thumbs" / "j1").mkdir(parents=True)
     assert client.get("/api/produce/thumb/file/j1/nope.jpg").status_code == 404
+
+
+def test_file_blank_name_not_500(client, tmp_path):
+    """픽스2: name=" "(URL %20)은 윈도우에서 path.exists()가 True를 낸다
+    (경로 끝 공백을 잘라내 디렉터리 자신과 같아짐) -- 하지만 is_file()은 False다.
+    .exists()만 보면 FileResponse가 '경로가 파일이 아니다' RuntimeError를 던져
+    아무도 안 잡는 500이 나간다(실측). 400/404여야 한다."""
+    d = tmp_path / "thumbs" / "j1"
+    d.mkdir(parents=True)
+    r = client.get("/api/produce/thumb/file/j1/%20")
+    assert r.status_code in (400, 404)
+
+
+def test_guard_file_blank_name_direct_not_500(tmp_path):
+    """HTTP 레벨은 서버·클라이언트 정규화가 섞여 신뢰 못하므로 함수를 직접 불러
+    실제로 우리 가드(is_file 체크)가 막는지 확인한다."""
+    d = tmp_path / "thumbs" / "j1"
+    d.mkdir(parents=True)
+    import shopping_shorts.app as app_module
+    orig = app_module._THUMB_DIR
+    app_module._THUMB_DIR = tmp_path / "thumbs"
+    try:
+        r = app_module.api_thumb_file("j1", " ")
+        assert r.status_code in (400, 404)
+    finally:
+        app_module._THUMB_DIR = orig
 
 
 def test_guard_functions_direct_traversal(client, tmp_path):

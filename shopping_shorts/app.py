@@ -1657,11 +1657,25 @@ def api_thumb_frames(body: dict):
     out_dir = _thumb_dir(job_id)
     if out_dir is None:
         return JSONResponse(status_code=400, content={"ok": False, "error": "bad job_id"})
+
+    # 재렌더 감지(리뷰 픽스1): mix_pipeline은 job_id로 결정적인 경로(work/job_id/final.mp4)에
+    # 렌더하므로 재렌더는 "같은 파일"을 덮어쓴다 — video_path 문자열도 안 바뀐다.
+    # n=10 고정이라 "개수가 같은가"만으로는 옛 프레임인지 절대 구분 못 한다.
+    # 그래서 추출 시점 영상의 mtime_ns+size를 서명으로 같이 저장해두고 비교한다.
+    # (해시는 과하다 — 영상이 수십 MB.)
+    vstat = Path(video).stat()
+    video_sig = f"{vstat.st_mtime_ns}:{vstat.st_size}"
+
+    thumb = job.get("thumbnail") or {}
     existing = sorted(out_dir.glob("grid_*.jpg")) if out_dir.exists() else []
-    if existing:
-        meta = (job.get("thumbnail") or {}).get("frames") or []
+    if existing and thumb.get("video_sig") == video_sig:
+        meta = thumb.get("frames") or []
         if len(meta) == len(existing):
             return {"ok": True, "frames": meta}
+
+    # 서명이 다르거나(재렌더) 프레임 수가 안 맞으면 옛 프레임을 지우고 새로 뽑는다.
+    if out_dir.exists():
+        shutil.rmtree(out_dir)
 
     try:
         pairs = extract_grid_frames(video, out_dir, n=10)
@@ -1670,8 +1684,8 @@ def api_thumb_frames(body: dict):
 
     frames = [{"url": f"/api/produce/thumb/file/{job_id}/{p.name}", "ts": round(ts, 2)}
               for p, ts in pairs]
-    thumb = job.get("thumbnail") or {}
     thumb["frames"] = frames
+    thumb["video_sig"] = video_sig
     Store(DB_PATH).update_mix_job(job_id, thumbnail=thumb)
     return {"ok": True, "frames": frames}
 
@@ -1686,7 +1700,10 @@ def api_thumb_file(job_id: str, name: str):
     if d is None or not safe_name or safe_name != name or safe_name in (".", ".."):
         return JSONResponse(status_code=400, content={"ok": False, "error": "bad path"})
     path = d / safe_name
-    if not path.exists():
+    # exists()가 아니라 is_file()이어야 한다(리뷰 픽스2, 2026-07-17 실측): name=" "이면
+    # 윈도우가 경로 끝 공백을 잘라내 path가 d 자신이 되어 exists()는 True를 내지만
+    # 파일이 아니라 디렉터리라 FileResponse가 RuntimeError를 던져 잡히지 않고 500이 나간다.
+    if not path.is_file():
         return JSONResponse(status_code=404, content={"ok": False})
     return FileResponse(str(path))
 
