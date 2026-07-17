@@ -51,7 +51,7 @@ def test_is_idempotent():
     """두 번 태워도 '끝!!이에요'가 되면 안 된다."""
     once = _run("돌리면 끝이에요.", "실용")
     twice = naturalize_detail(once, merge_profile({}), beat_role="실용",
-                              beat_index=0, beat_total=5)
+                              beat_index=0, beat_total=5)["text"]
     assert "!!" not in twice, f"느낌표가 겹쳤다: {twice!r}"
 
 
