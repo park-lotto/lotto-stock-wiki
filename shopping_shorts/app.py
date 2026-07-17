@@ -1749,6 +1749,70 @@ def api_thumb_file(job_id: str, name: str):
     if not path.is_file():
         return JSONResponse(status_code=404, content={"ok": False})
     return FileResponse(str(path))
+
+
+@app.post("/api/produce/thumb/save")
+async def api_thumb_save(job_id: str = Form(...), meta: str = Form(...),
+                         file: UploadFile = File(...)):
+    """브라우저 canvas가 합성한 PNG를 받아 저장한다(설계 Q3 — 서버는 합성하지 않는다).
+
+    ★파일명은 서버가 부여한다. 클라이언트가 준 file.filename은 쓰지 않는다
+    (경로순회 재료). meta(레이어·프레임)는 같은 thumbnail_json에 함께 보존한다.
+    """
+    import json as _json          # app.py 관례(:1448·:1482) — 최상위 import 아님
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+
+    data = await file.read()
+    if not data.startswith(b"\x89PNG\r\n\x1a\n"):     # PNG 시그니처
+        return JSONResponse(status_code=400, content={"ok": False, "error": "PNG가 아님"})
+    try:
+        meta_obj = _json.loads(meta)
+    except (ValueError, TypeError):
+        return JSONResponse(status_code=400, content={"ok": False, "error": "meta 파싱 실패"})
+
+    out_dir = _thumb_dir(job_id)
+    if out_dir is None:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "bad job_id"})
+    out_dir.mkdir(parents=True, exist_ok=True)
+    thumb = job.get("thumbnail") or {}
+    results = list(thumb.get("results") or [])
+    name = f"thumb_{len(results) + 1}.png"
+    while (out_dir / name).exists():               # 갤러리 삭제 이력이 있어도 안 덮어쓴다
+        name = f"thumb_{len(results) + 1}_{uuid.uuid4().hex[:4]}.png"
+    (out_dir / name).write_bytes(data)
+
+    results.append(name)
+    # ★meta를 통째로 합치지 않는다. frames(Task 3이 만든 후보목록)·results·selected는
+    #  서버 소유라 클라이언트가 덮으면 안 된다 — 편집 상태만 화이트리스트로 받는다.
+    for k in ("frame_ts", "frame_url", "layers"):
+        if k in meta_obj:
+            thumb[k] = meta_obj[k]
+    thumb["results"] = results
+    store.update_mix_job(job_id, thumbnail=thumb)
+    return {"ok": True, "name": name,
+            "url": f"/api/produce/thumb/file/{job_id}/{name}"}
+
+
+@app.post("/api/produce/thumb/select")
+def api_thumb_select(body: dict):
+    """최종 썸네일 1장 지정. results에 있는 이름만 허용한다."""
+    job_id = str(body.get("job_id") or "")
+    name = str(body.get("name") or "")
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    thumb = job.get("thumbnail") or {}
+    if name not in (thumb.get("results") or []):
+        return JSONResponse(status_code=400, content={"ok": False, "error": "없는 썸네일"})
+    thumb["selected"] = name
+    store.update_mix_job(job_id, thumbnail=thumb)
+    return {"ok": True}
+
+
 def _reject_cdn_proxy(url: str, allowed_hosts) -> bool:
     """CDN 프록시(/api/thumb·/api/video)에 들어온 url이 거부 대상인가.
 
