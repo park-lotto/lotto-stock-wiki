@@ -28,7 +28,7 @@ def test_extract_frames_calls_ffmpeg_and_returns_existing_files(monkeypatch, tmp
     video_path.write_bytes(b"fake")
 
     calls = []
-    def fake_run(cmd, capture_output=True, check=False):
+    def fake_run(cmd, capture_output=True, check=False, **kw):
         calls.append(cmd)
         # ffmpeg가 만들었을 프레임 파일들을 테스트가 직접 생성해 시뮬레이션
         for i in range(3):
@@ -51,7 +51,7 @@ def test_extract_frames_raises_on_ffmpeg_failure(monkeypatch, tmp_path):
     video_path = tmp_path / "in.mp4"
     video_path.write_bytes(b"fake")
 
-    def fake_run(cmd, capture_output=True, check=False):
+    def fake_run(cmd, capture_output=True, check=False, **kw):
         class FakeResult:
             returncode = 1
             stderr = b"ffmpeg: error decoding"
@@ -67,8 +67,10 @@ def test_extract_frame_at_returns_path_on_success(monkeypatch, tmp_path):
     video_path.write_bytes(b"fake")
 
     calls = []
-    def fake_run(cmd, capture_output=True, check=False):
+    kwargs = []
+    def fake_run(cmd, capture_output=True, check=False, **kw):
         calls.append(cmd)
+        kwargs.append(kw)
         (tmp_path / "frame_hint.jpg").write_bytes(b"jpg")
         class FakeResult:
             returncode = 0
@@ -81,13 +83,18 @@ def test_extract_frame_at_returns_path_on_success(monkeypatch, tmp_path):
     assert result == tmp_path / "frame_hint.jpg"
     assert result.exists()
     assert "12.5" in calls[0]
+    # ★stdin을 끊어서 부른다. 안 끊으면 물려줄 콘솔이 없는 자리(웹 요청 처리
+    # 스레드)에서 윈도우가 OSError WinError 6(잘못된 핸들)로 죽는다 — 리눅스
+    # 서버에선 안 터져서 로컬 개발에서만 드러난다. 실제로 도서관 다리를 붙이며
+    # 여기서 죽었다(2026-07-17).
+    assert kwargs[0].get("stdin") is subprocess.DEVNULL
 
 
 def test_extract_frame_at_returns_none_on_ffmpeg_failure(monkeypatch, tmp_path):
     video_path = tmp_path / "in.mp4"
     video_path.write_bytes(b"fake")
 
-    def fake_run(cmd, capture_output=True, check=False):
+    def fake_run(cmd, capture_output=True, check=False, **kw):
         class FakeResult:
             returncode = 1
             stderr = b"ffmpeg: error"

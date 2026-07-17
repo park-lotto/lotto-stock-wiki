@@ -1,3 +1,4 @@
+import hashlib
 import re
 import subprocess
 from pathlib import Path
@@ -800,3 +801,94 @@ def test_update_still_allows_render_mode_none_on_sfx_i2(client, tmp_path):
     got = Store(app_mod.DB_PATH).get_scene_asset(aid)
     assert got["render_mode"] is None
     assert got["title"] == "새 이름"
+
+
+# ── 도서관 다리: 영구보관 릴스에서 바로 담기 (wiki_shortcode) ──
+#
+# 왜 필요한가: 랭킹 다리는 구조적으로 임시다. 인스타 CDN 주소(video_url)는 DB에
+# 저장되지 않고 요청 때마다 새로 받아오며 만료된다(app.py:506 "재수집 필요").
+# 즉 랭킹에 떠 있는 동안에만 담을 수 있다. 도서관은 mp4를 영구보관하므로
+# 언제든 담을 수 있다 — 짤 창고의 본래 소스는 도서관이다.
+#
+# 계약: wiki_shortcode를 주면 서버 디스크에서 직접 읽는다. 다운로드도, SSRF
+# 검사도 타지 않는다(애초에 URL이 아니다).
+
+def _archive_reel(tmp_path, monkeypatch, shortcode="DaqqSdPz7YT", duration=3):
+    """도서관 영구보관 mp4를 실제로 만들어 둔다. 경로 해시는 app이 계산한다
+    (app.py:860과 같은 규칙 — 테스트가 규칙을 베끼면 규칙이 바뀔 때 안 깨져서
+    가짜 자물쇠가 된다. 여기선 파일만 놓고 라우트가 찾아내게 한다)."""
+    d = tmp_path / "wiki_media"
+    d.mkdir(parents=True, exist_ok=True)
+    f = d / f"{hashlib.sha1(shortcode.encode()).hexdigest()[:16]}.mp4"
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi",
+                    "-i", f"testsrc=size=320x568:rate=30:duration={duration}",
+                    "-c:v", "libx264", "-pix_fmt", "yuv420p", str(f)],
+                   check=True, capture_output=True, stdin=subprocess.DEVNULL)
+    monkeypatch.setattr(app_mod, "_WIKI_MEDIA_DIR", d)
+    return shortcode, f
+
+
+def test_split_reads_library_reel_without_downloading(client, tmp_path, monkeypatch):
+    sc, _ = _archive_reel(tmp_path, monkeypatch)
+    # 도서관 소스가 다운로드를 타면 안 된다. 타면 여기서 터진다 — 자기 서버를
+    # HTTP로 다시 부르는 순간 SSRF 방어(루프백 차단)에 스스로 막힌다.
+    def _boom(*a, **k):
+        raise AssertionError("도서관 소스는 다운로드하면 안 된다")
+    monkeypatch.setattr(app_mod.frame_extract, "download_video", _boom)
+
+    r = client.post("/api/scene/split", json={"wiki_shortcode": sc})
+
+    assert r.status_code == 200
+    d = r.json()
+    assert d["ok"] is True
+    assert d["fps"] == 30.0
+    assert len(d["cuts"]) >= 1
+    assert client.get(d["cuts"][0]["poster_url"]).status_code == 200
+
+
+def test_prepare_cuts_clip_from_library_reel(client, tmp_path, monkeypatch):
+    sc, _ = _archive_reel(tmp_path, monkeypatch)
+    def _boom(*a, **k):
+        raise AssertionError("도서관 소스는 다운로드하면 안 된다")
+    monkeypatch.setattr(app_mod.frame_extract, "download_video", _boom)
+    monkeypatch.setattr(app_mod.scene_assets, "autotag",
+                        lambda frames, ctx: {"scene_desc": "화면이 바뀐다", "role": "훅",
+                                             "subject": "테스트 패턴", "tone": "중립",
+                                             "keywords": ["패턴"]})
+
+    r = client.post("/api/scene/save/prepare", json={
+        "source_kind": "wiki", "source_ref": sc,
+        "wiki_shortcode": sc, "start": 0.5, "end": 2.0, "category": "레시피"})
+
+    assert r.status_code == 200
+    d = r.json()
+    assert d["ok"] is True
+    # 소스가 30fps이므로 0.5초 = 15프레임. 원본 fps 기준으로 재야 맞다.
+    assert d["start_frame"] == 15
+    assert d["duration"] == pytest.approx(1.5, abs=0.2)
+    assert (tmp_path / "scene_assets" / f"{d['token']}.mp4").exists()
+
+
+def test_library_source_404_when_not_archived(client, tmp_path, monkeypatch):
+    _archive_reel(tmp_path, monkeypatch)   # 다른 릴스만 보관돼 있다
+
+    r = client.post("/api/scene/split", json={"wiki_shortcode": "NEVERARCHIVED"})
+
+    assert r.status_code == 404
+    assert r.json()["ok"] is False
+
+
+def test_library_shortcode_cannot_escape_media_dir(client, tmp_path, monkeypatch):
+    """경로조작 방어. shortcode는 파일명이 아니라 sha1 해시로 바뀌므로 구조적으로
+    탈출이 불가능하다 — 그 성질이 사고로 사라지지 않게 못을 박는다."""
+    _archive_reel(tmp_path, monkeypatch)
+
+    r = client.post("/api/scene/split", json={"wiki_shortcode": "../../../../etc/passwd"})
+
+    assert r.status_code == 404
+
+
+def test_prepare_still_requires_a_source(client):
+    """src_url도 wiki_shortcode도 없으면 422."""
+    assert client.post("/api/scene/save/prepare", json={"start": 0, "end": 1}).status_code == 422
+    assert client.post("/api/scene/split", json={}).status_code == 422
