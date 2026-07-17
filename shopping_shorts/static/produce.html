@@ -267,16 +267,12 @@
           <details id="advDetails" style="margin-bottom:4px">
             <summary style="cursor:pointer;font-size:13px;color:var(--accent2);font-weight:700;padding:6px 0">✏️ 직접 다듬기 — 폰트·크기·위치·자막·내 프리셋 ▾</summary>
             <div id="advBody" style="margin-top:10px">
-              <!-- ⭐ 내 프리셋 -->
-              <div style="border-top:1px dashed var(--line);padding-top:10px">
-                <div style="font-size:12px;color:var(--sub);margin-bottom:6px">⭐ 내 프리셋 <span style="font-size:11px">— 지금 스타일을 저장해 나만의 딸깍 샘플로</span></div>
-                <div id="myPresets" style="display:flex;flex-wrap:wrap;align-items:center;margin-bottom:8px"></div>
-                <div style="display:flex;gap:6px;flex-wrap:wrap">
-                  <input id="myPresetName" type="text" placeholder="예: 내 채널 기본형" style="flex:1;min-width:160px;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 10px;font-size:13px">
-                  <button class="tab" onclick="saveMyPreset()" style="flex:0 0 auto;min-width:auto;padding:7px 16px;font-size:13px;white-space:nowrap;background:linear-gradient(90deg,#153a6b,#0d2340);border-color:var(--accent)">💾 현재 스타일 저장</button>
-                </div>
-              </div>
-              <div style="font-size:12px;color:var(--sub);margin-bottom:4px;margin-top:14px">🎨 헤드카피 프리셋(헤드카피만)</div>
+              <div class="sub" style="margin-bottom:8px;font-size:11px">필요한 것만 펼쳐 손보세요. 대부분은 위 <b>완성 스타일</b>만 눌러도 됩니다.</div>
+
+              <!-- ── 🎨 헤드카피(상단 큰 글씨) ── -->
+              <details style="border-top:1px dashed var(--line);margin-top:2px">
+                <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">🎨 헤드카피(상단 큰 글씨) 꾸미기</summary>
+                <div style="padding:2px 0 12px">
               <div id="hcPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"></div>
               <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
                 <span style="font-size:12px;color:var(--sub)">폰트
@@ -316,17 +312,13 @@
                 <span style="color:var(--sub)">여백 <input id="hcBoxPad" type="range" min="0" max="40" value="16" oninput="updateHC()"></span>
                 <span style="color:var(--sub)">투명도 <input id="hcBoxOpacity" type="range" min="20" max="100" value="80" oninput="updateHC()"></span>
               </label>
-              <div style="margin-top:10px">
-                <label style="font-size:12px;opacity:.8">모션 팩</label>
-                <select id="motionPack" onchange="pickMotionPack(this.value)"
-                        style="width:100%;padding:6px;border-radius:6px">
-                  <option value="">모션 끄기</option>
-                </select>
-              </div>
-              <!-- 고급효과는 강조 단어 아래(항상 보이는 자리)로 이동함 -->
-              <!-- 자막 스타일(나레이션 자막 자체 디자인) -->
-              <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px">
-                <div style="font-size:14px;font-weight:700;margin-bottom:2px">💬 자막 스타일</div>
+                </div>
+              </details>
+
+              <!-- ── 💬 자막(하단 나레이션) ── -->
+              <details style="border-top:1px dashed var(--line)">
+                <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">💬 자막(하단 나레이션) 꾸미기</summary>
+                <div style="padding:2px 0 12px">
                 <div class="sub" style="margin-bottom:10px">나레이션 자막(문구는 대본에서 자동)의 폰트·색·박스·효과. 미리보기 하단에 <b>샘플</b>로 표시됩니다.</div>
                 <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
                   <label style="font-size:12px;color:var(--sub)">폰트
@@ -356,9 +348,22 @@
                   <button type="button" class="capEff tab" data-eff="pop" onclick="setCapEffect('pop')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">팝</button>
                 </div>
               </div>
-              <!-- 🏷 워터마크 · 추가 텍스트 -->
-              <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px">
-                <div style="font-size:14px;font-weight:700;margin-bottom:8px">🏷 워터마크 · 추가 텍스트</div>
+              </details>
+
+              <!-- ── 🎬 모션 팩 ── -->
+              <details style="border-top:1px dashed var(--line)">
+                <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">🎬 모션 팩</summary>
+                <div style="padding:2px 0 12px">
+                  <select id="motionPack" onchange="pickMotionPack(this.value)" style="width:100%;padding:6px;border-radius:6px">
+                    <option value="">모션 끄기</option>
+                  </select>
+                </div>
+              </details>
+
+              <!-- ── 🏷 워터마크·추가텍스트·BGM·이미지 ── -->
+              <details style="border-top:1px dashed var(--line)">
+                <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">🏷 워터마크 · 추가 텍스트 · BGM · 이미지</summary>
+                <div style="padding:2px 0 12px">
                 <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
                   <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
                     <input id="wmOn" type="checkbox" onchange="updateDeco()"> 워터마크 닉네임</label>
@@ -392,7 +397,21 @@
                   <button onclick="clearOverlay()" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:12px">제거</button>
                   <span class="hint">미리보기에서 <b>드래그</b>로 이동</span>
                 </div>
-              </div>
+                </div>
+              </details>
+
+              <!-- ── ⭐ 내 프리셋 저장 ── -->
+              <details style="border-top:1px dashed var(--line)">
+                <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">⭐ 내 프리셋 저장 · 불러오기</summary>
+                <div style="padding:2px 0 12px">
+                  <div style="font-size:11px;color:var(--sub);margin-bottom:6px">지금 스타일을 저장해 나만의 딸깍 샘플로</div>
+                  <div id="myPresets" style="display:flex;flex-wrap:wrap;align-items:center;margin-bottom:8px"></div>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap">
+                    <input id="myPresetName" type="text" placeholder="예: 내 채널 기본형" style="flex:1;min-width:160px;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 10px;font-size:13px">
+                    <button class="tab" onclick="saveMyPreset()" style="flex:0 0 auto;min-width:auto;padding:7px 16px;font-size:13px;white-space:nowrap;background:linear-gradient(90deg,#153a6b,#0d2340);border-color:var(--accent)">💾 현재 스타일 저장</button>
+                  </div>
+                </div>
+              </details>
             </div>
           </details>
         </div>
