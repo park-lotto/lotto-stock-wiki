@@ -34,6 +34,9 @@ def test_prepare_cuts_clip_and_returns_draft(client, tmp_path, monkeypatch):
     monkeypatch.setattr(app_mod.frame_extract, "download_video",
                         lambda url, dest: tmp_path / "src.mp4")
     (tmp_path / "src.mp4").write_bytes(b"src")
+    # Task6 — prepare가 소스 fps를 재려고 실제 ffprobe를 태우는데 위 파일은 가짜
+    # 바이트라 ffprobe가 실패한다. fps 자체는 이 테스트의 관심사가 아니므로 스텁한다.
+    monkeypatch.setattr(app_mod.scene_cut, "video_fps", lambda p: 30.0)
     monkeypatch.setattr(app_mod.scene_assets, "make_clip",
                         lambda src, s, e, out: (out.parent.mkdir(parents=True, exist_ok=True),
                                                 out.write_bytes(b"clip"), out)[-1])
@@ -76,8 +79,8 @@ def test_commit_rejects_client_supplied_media_path(client, tmp_path):
     (d / f"{token}.mp4").write_bytes(b"clip")
 
     r = client.post("/api/scene/save/commit", json={
-        "token": token, "asset_type": "clip", "title": "t",
-        "media_path": "/etc/passwd"})
+        "token": token, "asset_type": "clip", "title": "t", "render_mode": "cutaway",
+        "source_origin": "짜집기", "media_path": "/etc/passwd"})
 
     assert r.status_code == 200
     got = Store(app_mod.DB_PATH).get_scene_asset(r.json()["id"])
@@ -104,7 +107,7 @@ def test_commit_saves_and_list_returns_it(client, tmp_path):
         "keep_original_audio": 1, "title": "가루 한스푼", "scene_desc": "가루를 뜬다",
         "role": "비법공개", "category": "레시피", "subject": "가루(밀가루·설탕류)",
         "tone": "궁금", "keywords": ["숟가락", "가루"],
-        "source_kind": "reference", "source_ref": "ABC"})
+        "source_kind": "reference", "source_ref": "ABC", "source_origin": "짜집기"})
 
     assert r.status_code == 200 and r.json()["ok"] is True
     items = client.get("/api/scene/list").json()["items"]
@@ -128,7 +131,8 @@ def test_commit_as_sfx_extracts_audio_from_clip(client, tmp_path, monkeypatch):
     monkeypatch.setattr(app_mod.scene_assets, "extract_audio", fake_extract)
 
     r = client.post("/api/scene/save/commit", json={
-        "token": token, "asset_type": "sfx", "title": "띠용", "render_mode": "cutaway"})
+        "token": token, "asset_type": "sfx", "title": "띠용", "render_mode": "cutaway",
+        "source_origin": "짜집기"})
 
     assert r.status_code == 200
     # C-1 수정으로 commit이 원본 토큰파일을 먼저 소비용 이름으로 rename하므로 extract_audio에
@@ -304,8 +308,8 @@ def test_commit_rejects_bogus_keep_original_audio(client, tmp_path):
     (d / f"{token}.mp4").write_bytes(b"clip")
 
     r = client.post("/api/scene/save/commit", json={
-        "token": token, "asset_type": "clip", "title": "t",
-        "keep_original_audio": "yes"})
+        "token": token, "asset_type": "clip", "title": "t", "render_mode": "cutaway",
+        "source_origin": "짜집기", "keep_original_audio": "yes"})
 
     assert r.status_code == 422
     assert r.json()["ok"] is False
@@ -320,7 +324,7 @@ def test_commit_rejects_bogus_render_mode(client, tmp_path):
 
     r = client.post("/api/scene/save/commit", json={
         "token": token, "asset_type": "clip", "title": "t",
-        "render_mode": "DROP TABLE"})
+        "source_origin": "짜집기", "render_mode": "DROP TABLE"})
 
     assert r.status_code == 422
     assert r.json()["ok"] is False
@@ -334,7 +338,7 @@ def test_commit_rejects_bogus_asset_type(client, tmp_path):
     for bad, token in (("x'),alert(1),('", "2" * 32), ("banana", "3" * 32)):
         (d / f"{token}.mp4").write_bytes(b"clip")
         r = client.post("/api/scene/save/commit", json={
-            "token": token, "asset_type": bad, "title": "t"})
+            "token": token, "asset_type": bad, "title": "t", "source_origin": "짜집기"})
         assert r.status_code == 422, f"asset_type={bad!r}가 통과됨"
         assert r.json()["ok"] is False
 
@@ -351,7 +355,8 @@ def test_commit_accepts_valid_asset_types(client, tmp_path, monkeypatch):
         token = f"{i}" * 32
         (d / f"{token}.mp4").write_bytes(b"clip")
         r = client.post("/api/scene/save/commit", json={
-            "token": token, "asset_type": at, "title": f"t-{at}"})
+            "token": token, "asset_type": at, "title": f"t-{at}",
+            "source_origin": "짜집기", "render_mode": "cutaway"})
         assert r.status_code == 200, f"asset_type={at}가 막힘: {r.text}"
         assert r.json()["ok"] is True
 
@@ -415,6 +420,8 @@ def test_prepare_allows_public_host(client, tmp_path, monkeypatch):
     monkeypatch.setattr(app_mod.frame_extract, "download_video",
                         lambda url, dest: tmp_path / "src2.mp4")
     (tmp_path / "src2.mp4").write_bytes(b"src")
+    # Task6 — 위와 동일한 이유(가짜 바이트라 실제 ffprobe fps 측정이 실패한다).
+    monkeypatch.setattr(app_mod.scene_cut, "video_fps", lambda p: 30.0)
     monkeypatch.setattr(app_mod.scene_assets, "make_clip",
                         lambda src, s, e, out: (out.parent.mkdir(parents=True, exist_ok=True),
                                                 out.write_bytes(b"clip"), out)[-1])
@@ -440,11 +447,13 @@ def test_commit_token_reuse_is_blocked_c1(client, tmp_path):
     (d / f"{token}.mp4").write_bytes(b"clip-bytes")
 
     r1 = client.post("/api/scene/save/commit", json={
-        "token": token, "asset_type": "clip", "title": "첫번째"})
+        "token": token, "asset_type": "clip", "title": "첫번째",
+        "render_mode": "cutaway", "source_origin": "짜집기"})
     assert r1.status_code == 200 and r1.json()["ok"] is True
 
     r2 = client.post("/api/scene/save/commit", json={
-        "token": token, "asset_type": "clip", "title": "두번째(재사용 시도)"})
+        "token": token, "asset_type": "clip", "title": "두번째(재사용 시도)",
+        "render_mode": "cutaway", "source_origin": "짜집기"})
     assert r2.status_code == 404
 
     # 중복 카드가 생기지 않는다 — 자산은 정확히 1개.
@@ -462,9 +471,11 @@ def test_commit_distinct_assets_never_share_media_path_c1(client, tmp_path):
     (d / f"{tok_b}.mp4").write_bytes(b"clip-b")
 
     id_a = client.post("/api/scene/save/commit", json={
-        "token": tok_a, "asset_type": "clip", "title": "A"}).json()["id"]
+        "token": tok_a, "asset_type": "clip", "title": "A",
+        "render_mode": "cutaway", "source_origin": "짜집기"}).json()["id"]
     id_b = client.post("/api/scene/save/commit", json={
-        "token": tok_b, "asset_type": "clip", "title": "B"}).json()["id"]
+        "token": tok_b, "asset_type": "clip", "title": "B",
+        "render_mode": "cutaway", "source_origin": "짜집기"}).json()["id"]
 
     media_a = Store(app_mod.DB_PATH).get_scene_asset(id_a)["media_path"]
     media_b = Store(app_mod.DB_PATH).get_scene_asset(id_b)["media_path"]
@@ -481,9 +492,11 @@ def test_commit_token_reuse_delete_one_survive_other_c1(client, tmp_path):
     (d / f"{tok_b}.mp4").write_bytes(b"clip-b")
 
     id_a = client.post("/api/scene/save/commit", json={
-        "token": tok_a, "asset_type": "clip", "title": "A"}).json()["id"]
+        "token": tok_a, "asset_type": "clip", "title": "A",
+        "render_mode": "cutaway", "source_origin": "짜집기"}).json()["id"]
     id_b = client.post("/api/scene/save/commit", json={
-        "token": tok_b, "asset_type": "clip", "title": "B"}).json()["id"]
+        "token": tok_b, "asset_type": "clip", "title": "B",
+        "render_mode": "cutaway", "source_origin": "짜집기"}).json()["id"]
 
     assert client.post(f"/api/scene/{id_a}/delete").json()["ok"] is True
     r = client.get(f"/api/scene/{id_b}/media")
@@ -609,6 +622,93 @@ def test_split_rejects_internal_url(client):
 
 def test_split_requires_src_url(client):
     assert client.post("/api/scene/split", json={}).status_code == 422
+
+
+# ── Task6: commit이 source_origin·render_mode를 강제 ──
+
+def test_commit_rejects_unknown_origin(client, tmp_path):
+    """★'모름'이면 막는다(설계 §7.2). 손해가 비대칭이다 — 짤 하나 잃는 것보다
+    남의 촬영분이 라이브에 들어가는 게 훨씬 나쁘다."""
+    d = tmp_path / "scene_assets"
+    d.mkdir(parents=True, exist_ok=True)
+    token = "a1" * 16
+    (d / f"{token}.mp4").write_bytes(b"clip")
+
+    r = client.post("/api/scene/save/commit", json={
+        "token": token, "title": "t", "asset_type": "clip",
+        "render_mode": "cutaway", "source_origin": "모름"})
+
+    assert r.status_code == 422
+    assert "출처" in r.json()["error"] or "origin" in r.json()["error"]
+
+
+def test_commit_rejects_missing_origin(client, tmp_path):
+    d = tmp_path / "scene_assets"
+    d.mkdir(parents=True, exist_ok=True)
+    token = "a2" * 16
+    (d / f"{token}.mp4").write_bytes(b"clip")
+
+    r = client.post("/api/scene/save/commit", json={
+        "token": token, "title": "t", "asset_type": "clip",
+        "render_mode": "cutaway"})
+
+    assert r.status_code == 422
+
+
+def test_commit_rejects_clip_without_render_mode(client, tmp_path):
+    """페이즈1 리뷰 잔여: render_mode 없이 저장되면 배지가 NULL을 '컷어웨이'로
+    거짓 표기한다(설계 §8)."""
+    d = tmp_path / "scene_assets"
+    d.mkdir(parents=True, exist_ok=True)
+    token = "a3" * 16
+    (d / f"{token}.mp4").write_bytes(b"clip")
+
+    r = client.post("/api/scene/save/commit", json={
+        "token": token, "title": "t", "asset_type": "clip",
+        "source_origin": "짜집기"})
+
+    assert r.status_code == 422
+
+
+def test_commit_stores_origin_and_start_frame(client, tmp_path):
+    d = tmp_path / "scene_assets"
+    d.mkdir(parents=True, exist_ok=True)
+    token = "a4" * 16
+    (d / f"{token}.mp4").write_bytes(b"clip")
+
+    r = client.post("/api/scene/save/commit", json={
+        "token": token, "title": "t", "asset_type": "clip",
+        "render_mode": "cutaway", "source_origin": "짜집기",
+        "source_start_frame": 124})
+
+    assert r.status_code == 200
+    got = Store(app_mod.DB_PATH).list_scene_assets()[-1]
+    assert got["source_origin"] == "짜집기"
+    assert got["source_start_frame"] == 124
+
+
+def test_prepare_returns_source_start_frame(client, monkeypatch, tmp_path):
+    """★소스 fps 기준이어야 한다. 클립은 30fps로 통일되므로 클립 fps로 재면
+    원본이 24fps일 때 틀린 번호가 저장된다."""
+    src = tmp_path / "s24.mp4"
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi",
+                    "-i", "testsrc=size=320x568:rate=24:duration=4",
+                    "-c:v", "libx264", "-pix_fmt", "yuv420p", str(src)],
+                   check=True, capture_output=True, stdin=subprocess.DEVNULL)
+    monkeypatch.setattr(app_mod.socket, "gethostbyname", lambda h: "93.184.216.34")
+    monkeypatch.setattr(app_mod.frame_extract, "download_video",
+                        lambda url, td: str(src))
+    # make_poster → frame_extract.extract_frame_at는 이 관문의 관심사가 아니고(포스터
+    # 생성은 fps/start_frame 계산과 무관), 그 안의 subprocess.run에 stdin=DEVNULL이
+    # 빠져 있어 pytest 기본 캡처 아래서 별개의 OSError[WinError 50]로 죽는 게 실측됨
+    # (다른 prepare 테스트들도 전부 make_poster를 스텁한다 — 같은 이유로 따라간다).
+    monkeypatch.setattr(app_mod.scene_assets, "make_poster", lambda m, o: o)
+
+    r = client.post("/api/scene/save/prepare", json={
+        "src_url": "https://cdn.example.com/a.mp4", "start": 1.0, "end": 2.0})
+
+    assert r.status_code == 200
+    assert r.json()["start_frame"] == 24        # 30이 나오면 클립 fps로 잰 것
 
 
 def test_split_never_writes_to_db(client, monkeypatch, tmp_path):
