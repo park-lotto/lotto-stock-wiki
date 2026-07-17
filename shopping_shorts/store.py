@@ -266,7 +266,10 @@ class Store:
                     subtitle_removal INTEGER NOT NULL DEFAULT 0,
                     clean_video_path TEXT,
                     given_script TEXT,
-                    headcopy_json TEXT
+                    headcopy_json TEXT,
+                    fx_plan TEXT,
+                    fx_status TEXT,
+                    fx_path TEXT
                 )
             """)
             # 보이스 프리셋(2026-07-14, 영상제작 4단계) — 큐레이션된 목소리 카드.
@@ -386,6 +389,9 @@ class Store:
                 ("voice_json", "TEXT"),     # 영상제작 4단계 보이스 프리셋 선택 스냅샷(2026-07-14)
                 ("script_structure_json", "TEXT"),  # 도서관→제작소 다리: 대본 구조분석 스냅샷(2026-07-15).
                                                     # ⚠️ 위 structure 컬럼과 다른 것 — 그건 template/free 모드 플래그.
+                ("fx_plan", "TEXT"),        # 자동매칭 고급효과 엔진 Task5: 확정된 효과 배치 플랜(FullReel props).
+                ("fx_status", "TEXT"),      # queued/done/failed — 렌더 진행 상태.
+                ("fx_path", "TEXT"),        # 완성된 효과영상 경로.
             ):
                 try:
                     c.execute(f"ALTER TABLE mix_jobs ADD COLUMN {col} {ddl}")
@@ -1212,7 +1218,8 @@ class Store:
                 "SELECT job_id, urls_json, target_seconds, structure, status, error, "
                 "extract_json, edit_plan_json, video_path, created_at, updated_at, "
                 "subtitle_removal, clean_video_path, given_script, headcopy_json, "
-                "caption_style_json, voice_json, deco_json, script_structure_json "
+                "caption_style_json, voice_json, deco_json, script_structure_json, "
+                "fx_plan, fx_status, fx_path "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -1230,16 +1237,21 @@ class Store:
             "voice": json.loads(row[16]) if row[16] else None,
             "deco": json.loads(row[17]) if row[17] else None,
             "script_structure": json.loads(row[18]) if row[18] else None,
+            "fx_plan": json.loads(row[19]) if row[19] else None,
+            "fx_status": row[20], "fx_path": row[21],
         }
 
     def update_mix_job(self, job_id, **fields):
         """status/error/extract/edit_plan/video_path 갱신(+updated_at). 객체는 JSON 직렬화."""
         cols, vals = [], []
-        for k in ("status", "error", "video_path", "clean_video_path"):
+        for k in ("status", "error", "video_path", "clean_video_path", "fx_status", "fx_path"):
             if k in fields:
                 cols.append(f"{k}=?"); vals.append(fields[k])
         if "subtitle_removal" in fields:
             cols.append("subtitle_removal=?"); vals.append(1 if fields["subtitle_removal"] else 0)
+        if "fx_plan" in fields:
+            cols.append("fx_plan=?")
+            vals.append(json.dumps(fields["fx_plan"], ensure_ascii=False) if fields["fx_plan"] else None)
         if "headcopy" in fields:
             cols.append("headcopy_json=?")
             vals.append(json.dumps(fields["headcopy"], ensure_ascii=False) if fields["headcopy"] else None)
