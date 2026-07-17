@@ -27,9 +27,13 @@ def test_sentence_starts_finds_each_sentence():
 
 
 def test_filler_count_scales_with_intensity():
-    """강도가 오르면 추임새가 실제로 늘어난다(옛 임계형은 항상 1개였다)."""
-    low = naturalize_detail(TWO, _p(0.3), beat_index=0, beat_total=1)
-    high = naturalize_detail(TWO, _p(1.0), beat_index=0, beat_total=1)
+    """강도가 오르면 추임새가 실제로 늘어난다(옛 임계형은 항상 1개였다).
+
+    beat_role="훅" 추가(2026-07-17 Task1) — fillers가 이제 역할 게이트를 타므로
+    (기본 roles=["훅"]), 훅이 아니면 애초에 발동하지 않는다. 이 테스트의 의도는
+    강도 비례이지 역할 게이트가 아니므로 훅으로 고정해 그 의도만 본다."""
+    low = naturalize_detail(TWO, _p(0.3), beat_role="훅", beat_index=0, beat_total=1)
+    high = naturalize_detail(TWO, _p(1.0), beat_role="훅", beat_index=0, beat_total=1)
     assert low["applied"]["fillers"] == 1
     assert high["applied"]["fillers"] == 2
     assert low["text"] != high["text"]
@@ -44,7 +48,8 @@ def test_low_intensity_skips_some_beats():
     옛 역수 양자화 결함은 0.4~1.0 구간의 평지에서 드러났으므로(아래
     test_beat_gate_has_no_plateau_after_fix), 이 테스트는 그대로 회귀 보호로 둔다."""
     p = _p(0.25)   # 새 게이트: floor(bi*0.25) != floor((bi-1)*0.25)
-    got = [naturalize_detail(TWO, p, beat_index=i, beat_total=8)["applied"].get("fillers", 0)
+    # beat_role="훅" 추가(2026-07-17 Task1) — 역할 게이트(기본 roles=["훅"]) 통과용.
+    got = [naturalize_detail(TWO, p, beat_role="훅", beat_index=i, beat_total=8)["applied"].get("fillers", 0)
            for i in range(8)]
     assert got == [1, 0, 0, 0, 1, 0, 0, 0]
 
@@ -56,7 +61,8 @@ def test_cap_can_limit_below_intensity_derived_count():
     작아질 수 있다"는 정상적인 상한 동작이지, "강도가 살아있다"는 뜻이 아니다.
     강도가 실제로 살아있는지는 test_default_profile_lets_intensity_show_up(C1
     exit proof, cap 미덮어쓰기)이 검증한다."""
-    capped = naturalize_detail(TWO, _p(1.0, cap=1), beat_index=0, beat_total=1)
+    # beat_role="훅" 추가(2026-07-17 Task1) — 역할 게이트(기본 roles=["훅"]) 통과용.
+    capped = naturalize_detail(TWO, _p(1.0, cap=1), beat_role="훅", beat_index=0, beat_total=1)
     assert capped["applied"]["fillers"] == 1
 
 
@@ -73,8 +79,9 @@ def test_default_profile_lets_intensity_show_up():
     real_line = "감자 찌지 마세요. 집에 있는 이것 하나면 역대급 간식이 탄생합니다."
     p_low = merge_profile({"fillers": {"intensity": 0.3}})
     p_high = merge_profile({"fillers": {"intensity": 1.0}})
-    low = naturalize_detail(real_line, p_low, beat_index=0, beat_total=1)
-    high = naturalize_detail(real_line, p_high, beat_index=0, beat_total=1)
+    # beat_role="훅" 추가(2026-07-17 Task1) — 역할 게이트(기본 roles=["훅"]) 통과용.
+    low = naturalize_detail(real_line, p_low, beat_role="훅", beat_index=0, beat_total=1)
+    high = naturalize_detail(real_line, p_high, beat_role="훅", beat_index=0, beat_total=1)
     assert low["applied"]["fillers"] == 1
     assert high["applied"]["fillers"] == 2
     assert low["text"] != high["text"]
@@ -101,11 +108,12 @@ def test_tune_corpus_lines_still_scale_with_intensity_via_beat_gate():
     lines = json.loads(_CORPUS_PATH.read_text(encoding="utf-8"))
     p_low = merge_profile({"fillers": {"intensity": 0.15}})
     p_high = merge_profile({"fillers": {"intensity": 0.9}})
+    # beat_role="훅" 추가(2026-07-17 Task1) — 역할 게이트(기본 roles=["훅"]) 통과용.
     low_hits = sum(
-        naturalize_detail(l["text"], p_low, beat_index=i, beat_total=len(lines))["applied"].get("fillers", 0)
+        naturalize_detail(l["text"], p_low, beat_role="훅", beat_index=i, beat_total=len(lines))["applied"].get("fillers", 0)
         for i, l in enumerate(lines))
     high_hits = sum(
-        naturalize_detail(l["text"], p_high, beat_index=i, beat_total=len(lines))["applied"].get("fillers", 0)
+        naturalize_detail(l["text"], p_high, beat_role="훅", beat_index=i, beat_total=len(lines))["applied"].get("fillers", 0)
         for i, l in enumerate(lines))
     assert high_hits > low_hits
 
@@ -155,8 +163,9 @@ def test_bank_cycles_at_default_intensity_not_stuck_on_first_entry():
     인덱싱해 서로 다른 추임새가 나온다."""
     p = merge_profile({})  # 진짜 기본 프로파일(fillers.intensity=0.2, bank 5종)
     seen = []
+    # beat_role="훅" 추가(2026-07-17 Task1) — 역할 게이트(기본 roles=["훅"]) 통과용.
     for bi in range(10):
-        d = naturalize_detail("좋아요", p, beat_index=bi, beat_total=10)
+        d = naturalize_detail("좋아요", p, beat_role="훅", beat_index=bi, beat_total=10)
         if d["applied"].get("fillers"):
             seen.append(d["text"].split(",")[0])
     assert len(seen) >= 2                 # 최소 2번은 발동(0.2*10=2)
@@ -176,11 +185,14 @@ def test_fillers_exact_output_two_sentences_order_and_bank_rotation():
          "caps": {"max_fillers_per_text": 2, "max_tags_per_beat": 1, "max_tags_total": 3},
          "spoken_style": {"on": False}, "emotion_arc": {"on": False},
          "endings": {"on": False}, "intonation": {"on": False}, "phrasing": {"on": False}}
-    d0 = naturalize_detail(TWO, p, beat_index=0, beat_total=1)
+    # beat_role="훅" 추가(2026-07-17 Task1) — 역할 게이트(기본 roles=["훅"]) 통과용.
+    # bank는 이 테스트가 직접 ["음","아","그"]로 지정하므로 Task1의 뱅크 교체(감탄사화)
+    # 와는 무관하다 — 여기서 검증하려는 건 순번(sel_idx) 순환 수식이지 뱅크 내용이 아니다.
+    d0 = naturalize_detail(TWO, p, beat_role="훅", beat_index=0, beat_total=1)
     assert d0["text"] == "음, 감자 찌지 마세요. 아, 이거 하나면 끝이에요."
     assert d0["applied"]["fillers"] == 2
     # 비트가 바뀌면(sel_idx 이동) 같은 문장 구조에서도 뱅크 시작점이 옆으로 밀린다.
-    d1 = naturalize_detail(TWO, p, beat_index=1, beat_total=1)
+    d1 = naturalize_detail(TWO, p, beat_role="훅", beat_index=1, beat_total=1)
     assert d1["text"] == "아, 감자 찌지 마세요. 그, 이거 하나면 끝이에요."
 
 

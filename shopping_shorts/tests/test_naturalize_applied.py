@@ -41,14 +41,16 @@ def test_applied_does_not_lie_when_total_tag_cap_removes_our_tag():
     d = naturalize_detail("지금 확인해보세요.", {"caps": {"max_tags_total": 0}},
                           beat_role="CTA", beat_index=0, beat_total=1)
     assert "[excited]" not in d["text"]
-    # N-4: `applied == {}`는 과잉 단언이다 — 같은 케이스에서 fillers가 이미
-    # 텍스트를 바꾸는데("음, " 삽입), Task 4에서 fillers의 _bump가 배선되면
-    # applied=={'fillers': 1}이 되어 emotion_arc와 무관한 이유로 이 단언이 깨진다.
-    # 이 테스트가 실제로 보장하려는 건 "emotion_arc가 거짓 카운트를 안 남긴다"뿐이다.
+    # N-4(갱신 2026-07-17 Task1): 원래 이 자리엔 "fillers가 이미 텍스트를 바꾼다
+    # ('음, ' 삽입)"는 주석이 있었으나 지금은 틀린 서술이다 — Task1이 fillers에
+    # 역할 게이트를 추가했고(기본 roles=["훅"]) 이 테스트의 beat_role은 "CTA"라
+    # 애초에 fillers가 발동하지 않는다(뱅크도 "음"에서 감탄사류로 교체됨). 그래도
+    # 이 assert 자체의 취지("emotion_arc가 거짓 카운트를 안 남긴다")는 그대로 유효하다.
     assert "emotion_arc" not in d["applied"]    # emotion_arc 키 자체가 없어야 함(계약: 0=기록없음)
     # Task 3: endings가 기본 강도(0.3)에서도 마침표 1개를 …로 바꾸도록 배선됐다
     # (이전엔 내림 계산이라 후보 1개면 0.3에서 무발동인 죽은 스테이지였다).
-    assert d["text"] == "음, 지금 확인해보세요…"   # 태그만 빠지고 나머지 스테이지는 그대로(endings 적용됨)
+    # 필러 접두사가 사라진 이유는 위 N-4 갱신 설명 참조(역할 게이트, CTA≠훅).
+    assert d["text"] == "지금 확인해보세요…"   # 태그·필러 다 빠지고 endings만 적용됨
 
 
 def test_emotion_arc_tag_survives_total_cap_when_input_has_existing_tag():

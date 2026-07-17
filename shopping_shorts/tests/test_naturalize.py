@@ -107,7 +107,10 @@ def test_fillers_prepends_one_and_caps():
     p = _only("fillers")
     p["fillers"]["intensity"] = 1.0
     p["fillers"]["bank"] = ["음"]
-    out = naturalize("이거 진짜 좋아요", p)
+    # beat_role="훅" 추가(2026-07-17 Task1) — fillers가 역할 게이트를 타므로
+    # (기본 roles=["훅"]) 훅이 아니면 애초에 발동하지 않는다. bank는 이 테스트가
+    # 직접 ["음"]으로 지정하므로 Task1의 뱅크 교체(감탄사화)와는 무관하다.
+    out = naturalize("이거 진짜 좋아요", p, beat_role="훅")
     assert out.startswith("음, ")                 # 앞에 추임새 1개
     # 하드캡: intensity=1이어도 max_fillers_per_text(기본1) 초과 안 함
     assert out.count("음,") == 1
@@ -119,10 +122,12 @@ def test_fillers_off_noop():
 def test_fillers_bank_selection_deterministic_by_beat():
     p = _only("fillers"); p["fillers"]["intensity"] = 1.0
     p["fillers"]["bank"] = ["음", "아", "그"]
-    a = naturalize("좋아요", p, beat_index=0, beat_total=3)
-    b = naturalize("좋아요", p, beat_index=1, beat_total=3)
+    # beat_role="훅" 추가(2026-07-17 Task1) — fillers가 역할 게이트를 타므로
+    # (기본 roles=["훅"]) 훅이 아니면 애초에 발동하지 않는다.
+    a = naturalize("좋아요", p, beat_role="훅", beat_index=0, beat_total=3)
+    b = naturalize("좋아요", p, beat_role="훅", beat_index=1, beat_total=3)
     assert a != b            # 비트마다 다른 필러(결정적 순환)
-    assert a == naturalize("좋아요", p, beat_index=0, beat_total=3)
+    assert a == naturalize("좋아요", p, beat_role="훅", beat_index=0, beat_total=3)
 
 def test_emotion_arc_tags_by_role():
     p = _only("emotion_arc"); p["emotion_arc"]["intensity"] = 1.0

@@ -13,7 +13,13 @@ DEFAULT_PROFILE = {
     "pronunciation": {"on": True, "dict": {}},
     "phrasing":      {"on": True, "intensity": 0.3},
     "endings":       {"on": True, "intensity": 0.3},
-    "fillers":       {"on": True, "intensity": 0.2, "bank": ["음", "아", "그", "뭐", "자"]},
+    # 뱅크가 감탄·놀람인 이유(2026-07-17 사장님 지시): 옛 뱅크 ["음","아","그","뭐","자"]는
+    # 전부 **머뭇거림**이었다 — "저런건 의미없어". 릴스 훅은 말을 더듬는 자리가 아니라
+    # 놀라는 자리다. roles=["훅"]인 이유: 감탄사가 반전·실용에 붙으면
+    # "헐, 근데 이건…"처럼 톤이 무너진다. 추임새는 문을 여는 도구지 문장을 여는 도구가 아니다.
+    "fillers":       {"on": True, "intensity": 0.2,
+                      "bank": ["와", "오", "우와", "헐", "이야"],
+                      "roles": ["훅"]},
     "emotion_arc":   {"on": True, "intensity": 0.3},
     # 속삭임 — 노브 하나(roles)의 두 설정값이다(설계 2026-07-16 §3): 전체 role을 주면
     # 5비트 다 속삭이는 ASMR 영상, 일부만 주면 그 비트만 속삭이는 강조 도구. 목소리를
@@ -423,6 +429,24 @@ def _fillers(text, cfg, ctx):
     cap = ctx["caps"].get("max_fillers_per_text", 1)
     if not text or not text.strip():   # M4: 대상 자체가 없는 빈/공백 텍스트는 손대지 않는다
         return text
+    # 역할 게이트 — `_whisper`와 같은 구조(설계 통일). roles가 **없으면** 전 비트에
+    # 적용한다(옛 프리셋 호환): 저장된 프리셋엔 이 키가 없고, 없는 걸 "아무 비트도
+    # 아님"으로 읽으면 기존 프리셋의 추임새가 조용히 통째로 사라진다.
+    roles = cfg.get("roles")
+    if roles is not None:
+        canon = ctx.get("role_canon")
+        if canon is None or canon not in roles:
+            return text
+
+    # 멱등 가드 — 대본에 이미 추임새가 있으면 손대지 않는다.
+    # ★2026-07-17 실사고: 대본 "와, 요새…"에 엔진이 "[curious] 음,"을 덧붙여
+    # "음, 와, 요새…"가 나왔다. 사장님의 "억양이 부자연스럽다"가 이것이었다.
+    # 태그 묶음은 emotion_arc가 앞에 붙이므로 벗겨내고 본문 첫 어절만 본다.
+    _m = _LEADING_TAGS_PAT.match(text)
+    _body = text[_m.end():] if _m else text
+    _lead = _LEADING_INTERJECTION_PAT.match(_body)
+    if _lead and _lead.group(1) in _INTERJECTIONS:
+        return text
     if intensity <= 0 or cap <= 0:
         return text
     bi = ctx.get("beat_index") or 0
@@ -688,6 +712,13 @@ def _intonation(text, cfg, ctx):
 # 속삭임 태그를 그 **뒤**에 꽂아 설계가 고정한 `[감정][whispers]` 순서를 만든다.
 _LEADING_TAGS_PAT = re.compile(r"^((?:\[[^\]]+\])+)\s*")
 _WHISPER_TAG = "[whispers]"
+
+# 대본이 이미 데리고 온 추임새 — 여기에 걸리면 `_fillers`는 손을 뗀다.
+# 옛 뱅크(음/아/그/뭐/자)도 포함한다: 사장님이 옛 대본을 그대로 붙여넣을 수 있고,
+# 그때 "음, 와," 같은 겹침이 나면 안 된다(2026-07-17 실측 사고).
+_INTERJECTIONS = {"와", "오", "우와", "헐", "이야", "음", "아", "그", "뭐", "자", "어", "어머"}
+# 문두 추임새 = 한글 1~2자 + 쉼표. 태그 묶음은 미리 벗겨내고 본다.
+_LEADING_INTERJECTION_PAT = re.compile(r"^\s*([가-힣]{1,2})\s*,")
 
 
 def _whisper(text, cfg, ctx):
