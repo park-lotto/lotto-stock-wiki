@@ -80,6 +80,18 @@ def test_fx_suggest_no_edit_plan_returns_empty_plan(tmp_path, monkeypatch):
     assert r.json()["plan"]["beats"] == []
 
 
+def test_fx_suggest_returns_balance_and_cost(tmp_path, monkeypatch):
+    """추천 응답이 보유 포인트·렌더비를 함께 준다 — 프런트가 렌더 전에 잔액을 보여줘
+    포인트 부족(402)을 클릭 전에 막는다."""
+    client, store = _client(tmp_path, monkeypatch)
+    store.create_mix_job("jb", ["u0"], 20, "free")
+    points.add(store, 0, 25)  # 로그인 폴백 cid=0
+    r = client.post("/api/produce/fx/suggest", json={"job_id": "jb"})
+    assert r.status_code == 200
+    assert r.json()["points"] == 25
+    assert r.json()["cost"] == app_module.FX_RENDER_COST
+
+
 # ── /api/produce/fx/render — 포인트 차감·402·백그라운드 큐잉 ──────────
 
 def test_render_deducts_points_and_queues(tmp_path, monkeypatch):

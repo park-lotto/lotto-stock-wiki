@@ -2700,15 +2700,17 @@ def _fx_dur_frames(job, timeline, fps=30):
 
 
 @app.post("/api/produce/fx/suggest")
-def api_fx_suggest(body: dict):
+def api_fx_suggest(request: Request, body: dict):
     """믹스 job의 비트+카테고리로 효과 배치 플랜을 미리 만든다. DB에 기록하지
-    않는다(무과금 미리보기 — 확정은 /render에서 포인트를 내고 한다)."""
-    job = Store(DB_PATH).get_mix_job(body.get("job_id") or "") or {}
+    않는다(무과금 미리보기 — 확정은 /render에서 포인트를 내고 한다).
+    보유 포인트도 함께 반환한다 — 프런트가 렌더 전에 잔액을 보여줘 402를 미리 막는다."""
+    store = Store(DB_PATH)
+    job = store.get_mix_job(body.get("job_id") or "") or {}
     timeline = _fx_timeline_from_job(job)
     category = body.get("category") or (job.get("script_structure") or {}).get("product_category") or ""
     dur_frames = _fx_dur_frames(job, timeline)
     plan = effect_match.suggest(timeline, category, job.get("video_path", ""), dur_frames, client=None)
-    return {"plan": plan}
+    return {"plan": plan, "points": points.balance(store, _cid(request)), "cost": FX_RENDER_COST}
 
 
 def _fx_render_job(job_id, plan, cid):
