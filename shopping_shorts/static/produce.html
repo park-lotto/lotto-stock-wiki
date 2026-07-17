@@ -197,6 +197,10 @@
           <div id="speedBtns" style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px"></div>
           <div style="font-size:12px;color:var(--sub)">무음 삭제</div>
           <div id="silenceBtns" style="display:flex;gap:6px;margin:4px 0 10px"></div>
+          <div id="whisperRoleControls" style="display:none">
+            <div style="font-size:12px;color:var(--sub)">이 영상은 속삭임을 어디에 적용할까요?</div>
+            <div id="whisperRoleBtns" style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px"></div>
+          </div>
           <details style="margin:8px 0">
             <summary style="cursor:pointer;font-size:13px;color:var(--sub)">고급 ▾</summary>
             <div style="padding:8px 0;display:flex;flex-direction:column;gap:8px">
@@ -457,6 +461,7 @@ function showPanel(){
   document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('show', +p.dataset.step===cur));
   document.getElementById('btnPrev').disabled = cur===0;
   document.getElementById('btnNext').textContent = cur===STEPS.length-1 ? '완료' : '다음 →';
+  refreshNextBtn();   // 1단계 미리보기 게이트(2026-07-17) — 단계 이동·초기 렌더마다 상태를 맞춘다
   if(cur===1) refreshSub();
   if(cur===2) loadTtsBeats();
   if(cur===3) initHeadcopy();
@@ -1093,8 +1098,21 @@ async function saveHeadcopy(){
   try{ await fetch('/api/produce/mix/settings',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({job_id:MIX_JOB, headcopy:STATE.headcopy, caption_style:STATE.captionStyle, deco:STATE.deco})}); }catch(e){}
 }
-function jump(i){ cur=i; renderSteps(); showPanel(); }
-function go(d){ const n=cur+d; if(n<0||n>=STEPS.length) return; cur=n; renderSteps(); showPanel(); }
+function jump(i){
+  // ★1단계 미리보기 게이트(2026-07-17). renderSteps()가 **모든 스텝 칩**에 onclick="jump(i)"를
+  // 박아 상단에 항상 렌더한다 — 여기 가드가 없으면 "자막제거" 칩 한 번 클릭으로 게이트가 통째로
+  // 우회되고, 그 뒤 refreshNextBtn()은 cur=1이라 게이트를 안 걸어 버튼까지 도로 열어준다
+  // (우회 흔적도 안 남는다). go()의 "방어 두 겹"은 실은 같은 문에 두 겹이었다.
+  // 뒤로 가는 건 막지 않는다 — 앞으로 가는 것만.
+  if(i > cur && cur === 0 && MIX_JOB && !canGoNext()) return;
+  cur=i; renderSteps(); showPanel();
+}
+function go(d){
+  // 1단계 미리보기 게이트(2026-07-17). btnNext의 disabled만으론 부족하다 — go(1)이 다른
+  // 경로로도 불릴 수 있어 방어를 두 겹으로 둔다. 유료 자막제거로 못 본 채 넘어가는 걸 막는다.
+  if(d > 0 && cur === 0 && MIX_JOB && !canGoNext()) return;
+  const n=cur+d; if(n<0||n>=STEPS.length) return; cur=n; renderSteps(); showPanel();
+}
 
 // ── 1단계 대본: 3모드 ──────────────────────────────
 const STATE = { script: "", script_src_idx: null, script_from_wiki: null, subtitleRemoval: false, headcopy: null, captionStyle: null, deco: { extra_texts: [], motion: null } };   // 확정 대본 + 렌더 설정
@@ -1235,6 +1253,7 @@ function openGenFromWiki(){
   PM_BASE_STRUCT=null;                          // 백엔드가 위키에서 읽는다
   PM_BASE_SCRIPT=it.full_text; PM_FROM_WIKI=it.shortcode;
   document.getElementById('pmModal').classList.add('open');
+  document.getElementById('pmRun').disabled=false;   // 뽑기가 대기 중 잠가둔 걸 푼다(1170줄 가드로 여긴 재료가 항상 있다)
   document.getElementById('pmResults').innerHTML='<div class="hint">✅ 이 위키 대본을 재료로 새 대본을 만듭니다. 아래에서 요소를 조절하고 초안을 생성하세요.</div>';
   pmToggleTopic();
   pmLoadElementOptions(PM_CATEGORY);
@@ -1356,6 +1375,10 @@ async function openScriptModal(i){
   PM_IDX=i; PM_URL=it.url; PM_SHORTCODE=it.shortcode||''; PM_CATEGORY=it.category||'';
   PM_BASE_STRUCT=null; PM_BASE_SCRIPT=''; PM_FROM_WIKI=null;   // HANDOFF 유래 — 위키담기 대상이 있다
   const modal=document.getElementById('pmModal'); modal.classList.add('open');
+  // 재료(구조·원본대본)는 아래 await가 끝나야 온다. 그 10~70초 동안 버튼을 열어두면 재료 없이
+  // 요청이 나가고, 백엔드가 위키를 못 찾아 '먼저 S급으로 저장하세요'로 답한다 — 뽑기는 위키 없이
+  // 되는 게 설계인데 정반대 안내가 사용자에게 뜬다(2026-07-16 사장님 제보, 라이브 재현).
+  document.getElementById('pmRun').disabled=true;
   document.getElementById('pmResults').innerHTML='<div class="hint">⏳ 대본 추출 중… (영상당 10~30초)</div>';
   try{
     const r=await fetch('/api/produce/extract_from_url',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -1369,6 +1392,13 @@ async function openScriptModal(i){
     it.category=d.category;  // saveScriptToWiki가 src.category로 읽어 prompt 폴백 없이 저장
     renderPool(); saveWork();
     PM_BASE_SCRIPT=d.full_text||'';
+    // 백엔드 api_wiki_generate의 폴백 조건(structure가 dict이거나 base_script가 비지 않음)과 같은 식.
+    // 여기서 어긋나면 버튼이 열렸는데 서버가 404로 답하는 그 사고가 그대로 재발한다.
+    if(!PM_BASE_STRUCT && !PM_BASE_SCRIPT.trim()){
+      document.getElementById('pmResults').innerHTML='<div class="hint" style="color:var(--fire)">추출은 됐으나 원본 대본·구조가 비어 새 대본을 만들 수 없습니다 — 뽑기를 다시 눌러주세요</div>';
+      return;
+    }
+    document.getElementById('pmRun').disabled=false;
     document.getElementById('pmResults').innerHTML=`<div class="hint">✅ 원본 대본 확보. 아래에서 요소를 조절해 새 초안을 만들거나, <button class="btn-next" style="padding:4px 10px" onclick="pmUseRaw()">원본 대본 그대로 확정 →</button></div>`;
     await pmLoadElementOptions(PM_CATEGORY);
     if(PM_GEN!==myGen) return;   // 요소옵션 로딩 중에도 가져갈 수 있다 — 그 뒤 소재프리필까지 막는다
@@ -1634,7 +1664,18 @@ async function startProduceMix(){
       body:JSON.stringify({script:STATE.script, urls, target_seconds:30})});
     const d=await r.json();
     if(!d.ok){ st.textContent='❌ '+(d.error||'실패'); return; }
+    // ★재매칭 = 새 job이다. 옛 job의 미리보기 상태를 물고 있으면 canGoNext()가 그걸 보고
+    // **한 번도 본 적 없는 새 영상으로 다음을 열어준다** — 매칭이 끝날 때까지 수십 초~수 분이나
+    // 열려 있고, 그 사이 [다음]을 누르면 유료 자막제거로 그냥 넘어간다(재리뷰 C-3).
+    // 화면이 "대본을 살짝 바꾸거나 소스 영상을 추가하세요"라고 권하는 정상 흐름이다.
+    // ⚠️ loadMixReview(재매칭의 '끝')에도 같은 초기화가 있지만 그건 **너무 늦다** —
+    //    초기화는 job이 바뀌는 바로 이 순간(재매칭의 '시작')에 걸려야 한다.
+    // 옛 폴러도 여기서 죽인다: pollPreview는 주인이 아니면 return만 하고 자기 인터벌은 안 끄므로
+    // 안 죽이면 옛 job을 2.5초마다 계속 두드린다.
+    clearInterval(PREVIEW_POLL); PREVIEW_POLL=null; ++PREVIEW_GEN;
+    PREVIEW_STATUS=null;
     MIX_JOB=d.job_id; MIX_POLL=setInterval(pollMix,2500); pollMix();
+    refreshNextBtn();   // 새 job은 아직 미리보기가 없다 — 다시 잠근다
   }catch(e){ st.textContent='❌ 네트워크 오류'; }
 }
 async function pollMix(){
@@ -1657,7 +1698,91 @@ async function loadMixReview(){
       <div style="margin:6px 0;font-size:13px">${esc(b.narration||'')}</div>
       <div class="hint">🎞 ${esc(b.primary?.video_id||'')} · ${b.primary?.start}s~${b.primary?.end}s · ${b.target_seconds}s${b.fit?` · 매칭 ${b.fit}/5`:''}</div>
       ${(b.fit&&b.fit<=2)?`<div style="color:var(--fire);font-size:12px;margin-top:3px">⚠️ 이 문장에 맞는 영상이 부족합니다 — 대본을 살짝 바꾸거나 소스 영상을 추가하세요.</div>`:''}
-    </div>`).join('')+`<div class="hint" style="margin-top:6px">✅ 매칭 완료${(d.beats||[]).some(b=>b.fit&&b.fit<=2)?' <span style="color:var(--fire)">— ⚠️ 표시된 문장은 영상이 약합니다</span>':''} — "다음"으로 자막제거·음성 확인 후 마지막에 렌더합니다.</div>`;
+    </div>`).join('')+`<div class="hint" style="margin-top:6px">✅ 매칭 완료${(d.beats||[]).some(b=>b.fit&&b.fit<=2)?' <span style="color:var(--fire)">— ⚠️ 표시된 문장은 영상이 약합니다</span>':''} — 아래에서 <b>미리보기</b>를 확인한 뒤 다음으로 넘어가세요.</div>`
+    +`<button id="btnPreview" class="btn-next" style="margin-top:8px;padding:7px 14px" onclick="startPreview()">▶ 미리보기 만들기</button>`
+    +`<div id="mixPreview" style="margin-top:8px"></div>`;
+  // 편집안을 새로 그렸다 = 새 매칭이다. 옛 미리보기 상태를 물고 있으면 사장님이 옛 영상을
+  // 본 것으로 치고 다음이 열린다 → 여기서 반드시 초기화한다.
+  // ★폴러도 같이 죽인다: 재매칭은 정상 흐름(⚠️ 매칭 약한 문장은 "대본을 살짝 바꾸세요"를 권한다)이고
+  // 그때 새 job_id가 잡히는데, 옛 폴러를 안 죽이면 그놈이 살아서 새 MIX_JOB을 폴링해 옛 렌더의
+  // 결과로 게이트를 열어버린다. ++PREVIEW_GEN은 이미 날아간 요청의 늦은 continuation까지 무효화한다.
+  clearInterval(PREVIEW_POLL); PREVIEW_POLL = null; ++PREVIEW_GEN;
+  PREVIEW_STATUS = null; refreshNextBtn();
+}
+
+// ── 1단계 미리보기(2026-07-17) ──────────────
+// 다음 단계(자막제거)가 VMake 유료 API라, 컷·대본이 틀린 채 넘어가면 그 돈이 날아간다.
+// 편집안(텍스트)만 보고는 "잘 붙었나"를 판단할 수 없으므로 여기서 공짜로(clean_fn 없이) 렌더해
+// 보여주고 OK를 받는다. 스펙 docs/superpowers/specs/2026-07-17-제작소-1단계-미리보기-design.md
+let PREVIEW_STATUS = null;   // null|'rendering'|'ready'|'failed'
+let PREVIEW_POLL = null;
+// 미리보기의 "현재 주인" 세대번호 — PM_GEN(위 openScriptModal/openGenFromWiki 경합)과 같은 패턴이다.
+// await 뒤 돌아온 continuation은 자기가 아직 주인인지 확인하고, 아니면 아무것도 건드리지 않는다.
+let PREVIEW_GEN = 0;
+
+function canGoNext(){
+  // 'failed'도 통과시킨다 — 렌더가 고장 났을 때의 탈출구(스펙 §7.1).
+  // ffmpeg 문제 하나로 사장님이 영영 갇히면 안 된다. 정상 경로에선 안 뜬다.
+  return PREVIEW_STATUS === 'ready' || PREVIEW_STATUS === 'failed';
+}
+
+function refreshNextBtn(){
+  const b = document.getElementById('btnNext'); if(!b) return;
+  const gated = (cur === 0 && MIX_JOB && !canGoNext());
+  b.disabled = gated;
+  b.title = gated ? '미리보기를 먼저 확인하세요' : '';
+}
+
+async function startPreview(){
+  const box = document.getElementById('mixPreview');
+  const btn = document.getElementById('btnPreview');
+  // ★기존 폴러를 반드시 죽이고 시작한다. 안 죽이고 PREVIEW_POLL을 덮으면 옛 핸들을 잃어
+  // 옛 폴러가 **고아**로 살아남는다(서버는 중복예약을 막지만 클라이언트 타이머는 별개다).
+  // 그 뒤 렌더가 끝나면 고아가 먼저 tick해 clearInterval(PREVIEW_POLL)로 **새 폴러를** 죽이고
+  // 자기는 살아남아, 2.5초마다 box.innerHTML에 <video>를 다시 써 노드를 파괴·재생성한다
+  // → 재생이 계속 0초로 리셋되고 5MB mp4를 2.5초마다 재다운로드한다. 사장님이 **못 본다** =
+  // 이 기능의 존재이유가 무너진다.
+  clearInterval(PREVIEW_POLL); PREVIEW_POLL = null;
+  const myGen = ++PREVIEW_GEN;     // 이 시점부터 내가 주인 — 늦게 돌아오는 옛 continuation은 무효
+  const myJob = MIX_JOB;           // 재매칭으로 MIX_JOB이 바뀌어도 내 응답은 내 job 것이다
+  if(btn) btn.disabled = true;     // 렌더는 20초+ 걸린다 — 그 사이 재클릭을 막는다
+  box.innerHTML = '<div class="hint">⏳ 미리보기 만드는 중… (자막제거·꾸미기 없이 렌더합니다)</div>';
+  PREVIEW_STATUS = 'rendering'; refreshNextBtn();
+  try{
+    const d = await (await fetch('/api/produce/mix/preview',{method:'POST',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify({job_id: myJob})})).json();
+    if(PREVIEW_GEN !== myGen) return;   // 그 사이 재클릭·재매칭이 주인을 가져갔다 — 손대지 않는다
+    if(!d.ok){ PREVIEW_STATUS='failed'; box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(d.error||'미리보기 실패')+'</div>'; if(btn) btn.disabled=false; refreshNextBtn(); return; }
+    PREVIEW_POLL = setInterval(()=>pollPreview(myGen, myJob), 2500); pollPreview(myGen, myJob);
+  }catch(e){
+    if(PREVIEW_GEN !== myGen) return;
+    PREVIEW_STATUS='failed'; box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; if(btn) btn.disabled=false; refreshNextBtn();
+  }
+}
+
+async function pollPreview(gen, job){
+  const box = document.getElementById('mixPreview');
+  try{
+    const d = await (await fetch('/api/mix/status/'+job)).json();
+    // ★await 뒤 주인 확인(PM_GEN과 같은 패턴). 재클릭·재매칭이 주인을 가져갔으면 이 응답은
+    // 남의 화면에 쓰는 것이 된다 — 전역도 box도 건드리지 않고 조용히 빠진다.
+    if(PREVIEW_GEN !== gen || MIX_JOB !== job) return;
+    if(d.preview_status === 'ready'){
+      clearInterval(PREVIEW_POLL); PREVIEW_POLL = null; PREVIEW_STATUS='ready';
+      // ?t= 캐시버스터 필수: 대본을 고쳐 재매칭하면 같은 URL에 다른 영상이 온다.
+      box.innerHTML = '<video controls muted playsinline style="width:260px;border-radius:10px;background:#000"'
+        + ' src="/api/produce/mix/preview/'+encodeURIComponent(job)+'?t='+Date.now()+'"></video>'
+        + '<div class="hint">원본 자막이 남아 있는 건 정상입니다 — 다음 단계에서 지웁니다.</div>';
+      const btn = document.getElementById('btnPreview'); if(btn) btn.disabled = false;
+      refreshNextBtn();
+    } else if(d.preview_status === 'failed'){
+      clearInterval(PREVIEW_POLL); PREVIEW_POLL = null; PREVIEW_STATUS='failed';
+      box.innerHTML = '<div class="hint" style="color:var(--fire)">⚠️ 미리보기 렌더 실패 — '
+        + esc(d.preview_error||'') + '<br>미리보기 없이 진행할 수 있지만, 확인하지 못한 채 유료 자막제거로 넘어갑니다.</div>';
+      const btn = document.getElementById('btnPreview'); if(btn) btn.disabled = false;
+      refreshNextBtn();
+    }
+  }catch(e){ /* 폴링 실패는 다음 tick에 재시도 */ }
 }
 
 // ── 3단계 자막제거 ──────────────
@@ -1680,10 +1805,20 @@ async function onSubToggle(){
 // ── 4단계 보이스 프리셋 ──────────────
 let VOICE = { preset_id:null, voice_id:null, settings:null, speed:1.0, silence_trim:'off', group_id:null, variant:null };
 let VOICE_GROUPS = [];
-let SEL_VARIANT = {}; // group_id -> 'stable'|'natural'|'expressive' (기본 노출은 stable, 나머지는 버튼으로 전환)
-const VARIANT_LABELS = {stable:'안정', natural:'자연', expressive:'표현'};
+let SEL_VARIANT = {}; // group_id -> 'stable'|'natural'|'expressive'|'whisper' (기본 노출은 stable, 나머지는 버튼으로 전환)
+const VARIANT_LABELS = {stable:'안정', natural:'자연', expressive:'표현', whisper:'속삭임'};
 const SPEEDS=[0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5];
 const SIL=[['off','OFF'],['weak','약'],['mid','중'],['strong','강']];
+// 영상별 "이 영상은 속삭임을 훅에만" 선택(2026-07-17). 새 저장층 없음 — /api/mix/voice의
+// body.whisper_roles가 job voice 스냅샷의 naturalize_profile.whisper.roles에만 얹힌다
+// (app.py _voice_snapshot). 속삭임(whisper) variant를 고른 성우일 때만 의미가 있다.
+// 태그는 켜지거나 꺼질 뿐 중간이 없다 — 강도 슬라이더 금지(설계 §6).
+const WHISPER_ROLE_PRESETS=[
+  {key:'all', label:'전체(ASMR)', roles:['훅','페인포인트','반전','실용','CTA']},
+  {key:'hook', label:'훅에만', roles:['훅']},
+  {key:'reversal', label:'반전에만', roles:['반전']},
+];
+let WHISPER_PICK='reversal'; // 기본값 — 엔진 기본 프로파일(whisper.roles=['반전'])과 동일
 
 async function loadTtsBeats(){
   // 프리셋 카드는 job(영상매칭) 없이도 항상 표시 — 둘러보기·샘플 미리듣기 가능
@@ -1700,13 +1835,15 @@ function renderPresetCards(){
     const variant=SEL_VARIANT[g.group_id]||g.default_variant||'stable';
     const v=g.variants[variant]||g.variants[g.default_variant]||Object.values(g.variants)[0];
     const active=VOICE.group_id===g.group_id;
-    const tabs=['stable','natural','expressive'].filter(k=>g.variants[k]).map(k=>
+    // whisper는 베스트 5명에게만 프리셋이 있다(사장님 청취 판정 2026-07-16). filter가
+    // 존재하는 variant만 그리므로 나머지 9명은 탭이 자동으로 안 뜬다 — 숨김 분기 불필요.
+    const tabs=['stable','natural','expressive','whisper'].filter(k=>g.variants[k]).map(k=>
       `<button type="button" class="tab${variant===k?' active':''}" style="flex:0 0 auto;min-width:auto;padding:3px 9px;font-size:11px"
         onclick="event.stopPropagation();pickVariant('${g.group_id}','${k}')">${VARIANT_LABELS[k]}</button>`).join('');
     return `
       <div onclick="pickPreset('${g.group_id}')"
         style="border:1px solid ${active?'var(--accent2)':'var(--line)'};border-radius:9px;padding:9px;margin-bottom:6px;cursor:pointer;background:#0d1420">
-        <b>${esc(g.name)}</b> — ${esc(g.one_liner||'')}
+        <b>${esc(g.name)}</b>${g.best?' <span title="사장님 청취 판정 베스트" style="color:var(--accent2)">⭐</span>':''} — ${esc(g.one_liner||'')}
         <div style="display:flex;gap:4px;align-items:center;margin-top:6px;flex-wrap:wrap">
           ${tabs}
           ${v&&v.sample_url?`<audio controls src="${esc(v.sample_url)}" style="height:26px;vertical-align:middle;margin-left:4px"></audio>`:''}
@@ -1732,6 +1869,7 @@ function pickPreset(gid){
          silence_trim:v.default_silence_trim, group_id:gid, variant};
   document.getElementById('voiceControls').style.display='block';
   pickHighlight();
+  renderWhisperRoleBtns();
   renderPresetCards();
   const vs=VOICE.settings||{};
   const g2=id=>document.getElementById(id);
@@ -1744,6 +1882,21 @@ function pickPreset(gid){
 }
 function setSpeed(s){ VOICE.speed=s; pickHighlight(); }
 function setSil(v){ VOICE.silence_trim=v; pickHighlight(); }
+function setWhisperPreset(key){ WHISPER_PICK=key; renderWhisperRoleBtns(); }
+function renderWhisperRoleBtns(){
+  const wrap=document.getElementById('whisperRoleControls');
+  if(!wrap) return;
+  if(VOICE.variant!=='whisper'){ wrap.style.display='none'; return; }
+  wrap.style.display='block';
+  document.getElementById('whisperRoleBtns').innerHTML=WHISPER_ROLE_PRESETS.map(w=>
+    `<button type="button" onclick="setWhisperPreset('${w.key}')" class="tab${WHISPER_PICK===w.key?' active':''}" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:13px">${w.label}</button>`).join('');
+}
+function _whisperRolesForBody(){
+  // whisper 톤이 아니면 오버라이드를 안 보낸다 — 다른 톤 프리셋 원래 프로파일을 그대로 쓴다.
+  if(VOICE.variant!=='whisper') return null;
+  const w=WHISPER_ROLE_PRESETS.find(x=>x.key===WHISPER_PICK);
+  return w ? w.roles : null;
+}
 function pickHighlight(){
   document.getElementById('speedBtns').innerHTML=SPEEDS.map(s=>`<button onclick="setSpeed(${s})" class="tab${VOICE.speed===s?' active':''}" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:13px">${s}x</button>`).join('');
   document.getElementById('silenceBtns').innerHTML=SIL.map(([v,l])=>`<button onclick="setSil('${v}')" class="tab${VOICE.silence_trim===v?' active':''}" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:13px">${l}</button>`).join('');
@@ -1771,7 +1924,7 @@ async function previewVoice(){
   el.textContent='⏳ 생성 중…';
   try{
     const r=await fetch('/api/mix/voice/preview',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({job_id:MIX_JOB, voice_id:VOICE.voice_id, settings:VOICE.settings, speed:VOICE.speed, silence_trim:VOICE.silence_trim})});
+      body:JSON.stringify({job_id:MIX_JOB, preset_id:VOICE.preset_id, voice_id:VOICE.voice_id, settings:VOICE.settings, speed:VOICE.speed, silence_trim:VOICE.silence_trim, whisper_roles:_whisperRolesForBody()})});
     if(!r.ok){ el.textContent='❌ 실패'; return; }
     const b=await r.blob();
     el.innerHTML=`<audio controls autoplay src="${URL.createObjectURL(b)}" style="height:30px"></audio>`;
@@ -1783,7 +1936,7 @@ async function applyVoice(){
   el.textContent='⏳ 전체 음성 생성 중…';
   try{
     await fetch('/api/mix/voice',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({job_id:MIX_JOB, preset_id:VOICE.preset_id, voice_id:VOICE.voice_id, settings:VOICE.settings, speed:VOICE.speed, silence_trim:VOICE.silence_trim})});
+      body:JSON.stringify({job_id:MIX_JOB, preset_id:VOICE.preset_id, voice_id:VOICE.voice_id, settings:VOICE.settings, speed:VOICE.speed, silence_trim:VOICE.silence_trim, whisper_roles:_whisperRolesForBody()})});
   }catch(e){ el.textContent='❌ 요청 실패'; return; }
   const poll=setInterval(async()=>{
     try{

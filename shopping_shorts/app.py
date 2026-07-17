@@ -31,7 +31,8 @@ from shopping_shorts.video_analysis import analyze_video, translate_keyword
 from shopping_shorts.product_identify import fetch_lens_lines, identify_product_from_lines
 from shopping_shorts.search_links import build_search_links, lens_search_url
 from shopping_shorts import mix_pipeline
-from shopping_shorts.mix_pipeline import run_mix_job, run_render, retype_mix_job, _source_video_id, resynth_tts_job
+from shopping_shorts.mix_pipeline import (run_mix_job, run_render, run_preview, retype_mix_job,
+                                          _source_video_id, resynth_tts_job)
 from shopping_shorts.lens_discover import search_similar_videos, upload_frame
 from shopping_shorts.media_download import resolve_media_url, download_any
 from shopping_shorts import edit_plan as _edit_plan
@@ -1253,7 +1254,11 @@ def api_mix_status(job_id: str):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
-    return {"ok": True, "status": job["status"], "error": job["error"]}
+    return {"ok": True, "status": job["status"], "error": job["error"],
+            # 1단계 미리보기(2026-07-17): 폴러를 둘로 만들지 않으려고 기존 응답에 얹는다(스펙 §6.3).
+            # preview_path는 서버 내부 경로라 안 내보낸다 — 파일은 전용 라우트로만 서빙.
+            "preview_status": job.get("preview_status"),
+            "preview_error": job.get("preview_error")}
 
 
 @app.get("/api/mix/result/{job_id}")
@@ -1326,6 +1331,63 @@ def api_mix_render(background_tasks: BackgroundTasks, body: dict):
     return {"ok": True}
 
 
+_PREVIEW_STALE_SEC = 600   # 10분 — 이보다 오래 'rendering'이면 죽은 렌더의 잔해로 본다.
+
+
+def _preview_render_is_stale(job) -> bool:
+    """preview_status='rendering'이 **죽은 렌더의 잔해**인가.
+
+    preview_status는 DB 영속 상태인데 TTL·하트비트가 없다. 미리보기 렌더 중 서버가 재시작되면
+    (auto_deploy 크론 3분 — shopping_shorts 변경 시 systemd 재시작이라 자주 일어난다)
+    BackgroundTask가 죽어 except가 못 돌고 DB엔 'rendering'이 **영원히** 남는다. 그러면 다시
+    눌러도 위 중복예약 가드에 걸려 무한 ⏳이고, 'failed'가 안 오니 스펙 §7.1 탈출구도 안 열려
+    **다음 버튼이 영구 잠긴다**(복구는 재매칭뿐인데 화면에 힌트가 없다).
+    → updated_at 기준 타임아웃으로 재예약을 허용해 탈출구를 연다.
+    """
+    ts = job.get("updated_at")
+    if not ts:
+        return True                      # 알 수 없으면 갇히는 쪽보다 재시도 쪽으로
+    try:
+        dt = datetime.fromisoformat(ts)
+    except (TypeError, ValueError):
+        return True
+    if dt.tzinfo is None:                # 옛 행이 naive면 UTC로 본다(store는 UTC로 쓴다)
+        dt = dt.replace(tzinfo=timezone.utc)
+    return (datetime.now(timezone.utc) - dt).total_seconds() > _PREVIEW_STALE_SEC
+
+
+@app.post("/api/produce/mix/preview")
+def api_produce_mix_preview(background_tasks: BackgroundTasks, body: dict):
+    """1단계 미리보기 렌더 예약 — 유료 자막제거 없이(0원). 스펙 §6.3.
+
+    다음 단계(자막제거)가 VMake 유료 API라, 컷·대본이 틀린 채 넘어가면 그 돈이 날아간다.
+    그래서 여기서 먼저 공짜로 보여주고 OK를 받는다."""
+    job_id = body.get("job_id")
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "매칭 먼저 실행하세요"})
+    if job.get("preview_status") == "rendering" and not _preview_render_is_stale(job):
+        return {"ok": True, "status": "rendering"}   # 더블클릭 — ffmpeg를 두 번 돌리지 않는다
+    # ★'rendering'을 여기서 **동기적으로** 쓴다. run_preview 안에서 쓰면 그건 응답을 보낸 뒤에
+    # 도는지라, 수십 ms 간격의 POST 2건이 둘 다 위 가드를 통과해(둘 다 아직 None을 본다)
+    # run_preview가 두 번 예약되고 ffmpeg 두 개가 같은 work/preview.mp4에 쓴다 —
+    # 잘린 mp4가 'ready'로 게이트를 통과할 수 있다(TOCTOU).
+    store.update_mix_job(job_id, preview_status="rendering", preview_error=None)
+    background_tasks.add_task(run_preview, job_id, DB_PATH, _MIX_WORK_DIR)
+    return {"ok": True, "status": "rendering"}
+
+
+@app.get("/api/produce/mix/preview/{job_id}")
+def api_produce_mix_preview_file(job_id: str):
+    """1단계 미리보기 mp4 서빙(/api/produce/mix/poster와 같은 성격 — job의 미디어 파일)."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    path = (job or {}).get("preview_path")
+    if not job or job.get("preview_status") != "ready" or not path or not Path(path).exists():
+        return JSONResponse(status_code=404, content={"ok": False, "error": "미리보기 없음"})
+    return FileResponse(path, media_type="video/mp4")
+
+
 @app.get("/api/mix/tts/{job_id}/{beat_idx}")
 def api_mix_tts(job_id: str, beat_idx: int):
     job = Store(DB_PATH).get_mix_job(job_id)
@@ -1340,7 +1402,11 @@ def api_mix_tts(job_id: str, beat_idx: int):
 @app.get("/api/voice-presets")
 def api_voice_presets(lang: str = "KR"):
     """성우별 그룹 목록(유저 노출용 — source_ref는 내부 전용이라 제외).
-    성우 1명당 stable(기본 노출)/natural/expressive 3톤을 variants에 묶어서 반환."""
+
+    성우 1명당 stable(기본 노출)/natural/expressive를 variants에 묶어 반환하고,
+    베스트 5명은 whisper까지 4톤이다(2026-07-16 청취 판정). best=베스트 성우 플래그로,
+    프론트가 ⭐ 배지에 쓴다. **순서는 여기서 정하지 않는다** — Store.list_voice_presets의
+    ORDER BY best DESC, created_at이 정본이고 이 함수는 그 순서를 보존만 한다."""
     rows = Store(DB_PATH).list_voice_presets(lang=lang)
     groups = {}
     for p in rows:
@@ -1348,6 +1414,10 @@ def api_voice_presets(lang: str = "KR"):
         g = groups.setdefault(gid, {
             "group_id": gid, "name": p["name"], "one_liner": p["one_liner"],
             "lang": p["lang"], "archetype": p["archetype"],
+            # best는 성우(그룹)의 성질이라 첫 행에서 한 번만 집는다 — 같은 성우의
+            # 3~4개 variant 행은 모두 같은 값이다. 순서는 Store가 이미 정해서
+            # 줬고(ORDER BY best DESC), dict가 삽입 순서를 보존하므로 여기선 보존만 한다.
+            "best": bool(p.get("best", False)),
             "default_variant": "stable", "variants": {},
         })
         g["variants"][p["variant"]] = {
@@ -1470,16 +1540,30 @@ def _voice_snapshot(store, body):
     **naturalize_profile·model_id는 반드시 프리셋에서 조회해 넣어야 한다.** 이게 빠지면
     튜닝 작업대에서 동결한 프로파일이 렌더에 도달하지 못하고, 에러 없이 기본값으로 조용히
     합성돼 "동결했는데 소리가 그대로"가 된다(2026-07-15 whole-branch 리뷰 S1).
-    미리듣기(/api/mix/voice/preview)도 같은 스냅샷을 써야 미리듣기=렌더가 보장된다(S8)."""
+    미리듣기(/api/mix/voice/preview)도 같은 스냅샷을 써야 미리듣기=렌더가 보장된다(S8).
+
+    body.whisper_roles: 영상별 "이 영상은 속삭임을 훅에만" 오버라이드(2026-07-17). 설계문서
+    §6은 "영상별 비트 토글은 새 저장층이 필요하다"고 적었지만 틀렸다 — 이 함수가 만드는
+    voice 스냅샷이 이미 job(영상)마다 저장된다(app.py의 store.update_mix_job(job_id, voice=...)).
+    그래서 새 테이블 없이 body 값을 naturalize_profile.whisper.roles에만 얹는다.
+    없으면(None/누락) 프리셋의 원래 프로파일을 그대로 쓴다(하위호환 — 기존 호출부가 안 깨짐).
+    프리셋 dict는 store가 매번 새로 만들어 주지만(json.loads), 혹시 캐싱하는 구현으로 바뀌어도
+    안전하도록 **제자리 수정 없이** 얕은 복사 위에서만 whisper 키를 교체한다."""
     preset_id = body.get("preset_id")
     p = store.get_voice_preset(preset_id) if preset_id else None
+    naturalize_profile = (p or {}).get("naturalize_profile")
+    whisper_roles = body.get("whisper_roles")
+    if whisper_roles is not None:
+        naturalize_profile = dict(naturalize_profile) if naturalize_profile else {}
+        naturalize_profile["whisper"] = dict(naturalize_profile.get("whisper") or {})
+        naturalize_profile["whisper"]["roles"] = whisper_roles
     return {
         "preset_id": preset_id,
         "voice_id": body.get("voice_id") or (p or {}).get("base_voice_id"),
         "settings": body.get("settings") or (p or {}).get("voice_settings"),
         "speed": body.get("speed", 1.0),
         "silence_trim": body.get("silence_trim", "off"),
-        "naturalize_profile": (p or {}).get("naturalize_profile"),
+        "naturalize_profile": naturalize_profile,
         "model_id": (p or {}).get("model_id") or "eleven_v3",
     }
 

@@ -7,9 +7,14 @@ ROLES = ["훅", "페인포인트", "반전", "실용", "CTA"]
 
 
 def _p(intensity):
+    # whisper off(2026-07-16, Task1 회귀수정): 이 파일은 emotion_arc 하나만 격리해서
+    # 보려고 다른 스테이지를 전부 끈다. whisper가 새로 생기며 기본값이 roles=["반전"]이라
+    # "반전" role을 쓰는 test_low_intensity_tags_hook_only가 whisper 태그까지 섞여 나와
+    # 이 파일의 격리 취지가 깨졌다(whisper는 감정 예산과 무관하게 항상 붙으므로).
     return {"emotion_arc": {"on": True, "intensity": intensity},
             "fillers": {"on": False}, "spoken_style": {"on": False},
-            "endings": {"on": False}, "intonation": {"on": False}, "phrasing": {"on": False}}
+            "endings": {"on": False}, "intonation": {"on": False}, "phrasing": {"on": False},
+            "whisper": {"on": False}}
 
 
 def test_tag_priority_puts_hook_and_cta_first():
