@@ -72,7 +72,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
   gtag('config', 'G-C8B2QNTM16');
 </script>
 
-		<form method="post" action="./summaryexcel.aspx?cn=&amp;fmt=1&amp;ee=20260713&amp;sortCol=&amp;sortTyp=" id="Form1">
+		<form method="post" action="./summaryexcel.aspx?cn=&amp;fmt=1&amp;ee=20260720&amp;sortCol=&amp;sortTyp=" id="Form1">
 <div class="aspNetHidden">
 <input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwULLTE5ODc1MjczMzhkZK1uVmb2cGLVvIQ+lHb37TlJRESJ" />
 </div>
@@ -118,7 +118,7 @@ function __doPostBack(eventTarget, eventArgument) {
 					 <col style='mso-width-source:userset;width:200px'>
                      <col style='mso-width-source:userset;width:440px'>
  				    <tr>
-					    <td colspan="9" height="30" align="center" class="title">기업리포트 요약(2026.07.13)</td>
+					    <td colspan="9" height="30" align="center" class="title">기업리포트 요약(2026.07.20)</td>
 				    </tr>
                     <tr>
                         <td class="hd" style="mso-width-source:userset;width:110px;">기관명/작성자</td>
@@ -136,51 +136,35 @@ function __doPostBack(eventTarget, eventArgument) {
                     </tr>
                     
                     <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">DB증권</font><br/>나민욱</td>
-                        <td class="cmp"><font color="rgb(53,91,157)">삼성증권</font><br/>[016360]</td>
-                        
-                            <td class="img0">&nbsp;</td>
-                            <td class="strdeg"></td>
+                        <td class="brk"><font color="rgb(53,91,157)">한국투자증권</font><br/>강경태,황현정</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">에스엔시스</font><br/>[0008Z0]</td>
                         
                             <td class="img2">=</td>
-                            <td class="strprc">163,000</td>
+                            <td class="strdeg">매수</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strprc">43,000</td>
                         
                         
-                        <td class="close_prc">112,000</td>
-						<td class="rpt_title">더할 나위 없는 실적</td>
-                        <td class="comment"><span class="comment_text">▶</span> 2Q26E Preview - 기대치 상회<br/><span class="comment_text">▶</span> WM 명가의 힘이 발휘된 분기</td>
+                        <td class="close_prc">21,800</td>
+						<td class="rpt_title">2Q26 Preview: 호실적 달성, 핵심 제품 응용처 확장기 진입</td>
+                        <td class="comment"><span class="comment_text">▶</span> 2분기 수익성 대폭 개선, 고수익 MRO 비롯해 전 사업부 매출 호조<br/><span class="comment_text">▶</span> 수주잔고 고점 경신, 연간 매출액 기준 2.2년치이며 더 증가할 것<br/><span class="comment_text">▶</span> ABB와의 협업 구도 아래 핵심 제품 응용처가 점차 확대될 것</td>
                     </tr>
                     
                     <tr style="mso-height-source:auto;">
                         <td class="brk"><font color="rgb(53,91,157)">상상인증권</font><br/>하태기</td>
-                        <td class="cmp"><font color="rgb(53,91,157)">한스바이오메드</font><br/>[042520]</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">씨어스</font><br/>[458870]</td>
                         
                             <td class="img2">=</td>
                             <td class="strdeg">BUY</td>
                         
                             <td class="img2">=</td>
-                            <td class="strprc">55,000</td>
+                            <td class="strprc">70,000</td>
                         
                         
-                        <td class="close_prc">25,100</td>
-						<td class="rpt_title">안정적인 영업실적 성장 지속될 전망</td>
-                        <td class="comment"><span class="comment_text">▶</span> 2026년 3분기 (2026년 4~6월, 9월 결산법인) 영업실적 순항 중<br/><span class="comment_text">▶</span> 셀르디엠 자체 매출 성장과 하반기 휴젤 판매 효과에 대한 기대가 크다</td>
-                    </tr>
-                    
-                    <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">IBK투자증권</font><br/>남성현</td>
-                        <td class="cmp"><font color="rgb(53,91,157)">CJ프레시웨이</font><br/>[051500]</td>
-                        
-                            <td class="img2">=</td>
-                            <td class="strdeg">매수</td>
-                        
-                            <td class="img3">▼</td>
-                            <td class="strprc"><font color='#3366CC'>46,000</span></td>
-                        
-                        
-                        <td class="close_prc">22,650</td>
-						<td class="rpt_title">온라인 생태계 구축 과정</td>
-                        <td class="comment"><span class="comment_text">▶</span> 2분기 실적 Preview: 전방산업 부진과 온라인 비용 부담<br/><span class="comment_text">▶</span> 생태계 구축 과정: 손익보다 더 중요한 거래대금 및 회원수 증가</td>
+                        <td class="close_prc">30,050</td>
+						<td class="rpt_title">국내외 시장에서 성장 잠재력 확대</td>
+                        <td class="comment"><span class="comment_text">▶</span> 2026년 2분기 영업실적은 1분기 연장 수준으로 추정<br/><span class="comment_text">▶</span> 모비케어 미국 FDA 승인으로 씽크(thynC™) 해외 진출 잠재력 커졌다</td>
                     </tr>
                     
                     <!--tr style="height:5px; border:0px;">
