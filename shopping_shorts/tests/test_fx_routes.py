@@ -125,6 +125,40 @@ def test_render_failure_refunds_points(tmp_path, monkeypatch):
     assert store.get_mix_job("j6")["fx_status"] == "failed"
 
 
+def test_render_falls_back_to_preview_when_no_video_path(tmp_path, monkeypatch):
+    """고급효과는 꾸미기(4단계)에서 건다 — video_path(최종 조립본)는 맨 마지막에야
+    채워지므로 이 시점엔 None이다. 배경은 preview_path(조립 프리뷰)로 폴백해야 한다.
+    이 폴백이 없으면 render(plan, None, out)이 되어 항상 실패한다(실사고 2026-07-17)."""
+    client, store = _client(tmp_path, monkeypatch)
+    store.create_mix_job("j8", ["u0"], 20, "free")
+    # 꾸미기 단계의 실제 상태: video_path·clean_video_path는 아직 None, preview_path만 있다.
+    store.update_mix_job("j8", preview_path="/data/j8/preview.mp4")
+    points.add(store, 0, 100)
+    called = {}
+    monkeypatch.setattr(app_module.remotion_render, "render",
+                        lambda plan, vp, out: called.setdefault("bg", vp) or out)
+    r = client.post("/api/produce/fx/render", json={"job_id": "j8", "plan": {"fx": []}})
+    assert r.status_code == 200
+    assert called["bg"] == "/data/j8/preview.mp4"   # None이 아니라 프리뷰가 배경으로 감
+    assert store.get_mix_job("j8")["fx_status"] == "done"
+
+
+def test_render_no_background_fails_and_refunds(tmp_path, monkeypatch):
+    """세 영상 필드가 전부 비어 있으면 배경이 없으니 렌더를 시도하지 말고
+    깨끗이 실패+환불한다(render를 None으로 부르지 않는다)."""
+    client, store = _client(tmp_path, monkeypatch)
+    store.create_mix_job("j9", ["u0"], 20, "free")  # 어떤 path도 없음
+    points.add(store, 0, 100)
+    called = {}
+    monkeypatch.setattr(app_module.remotion_render, "render",
+                        lambda plan, vp, out: called.setdefault("hit", True) or out)
+    r = client.post("/api/produce/fx/render", json={"job_id": "j9", "plan": {"fx": []}})
+    assert r.status_code == 200
+    assert "hit" not in called  # 배경 없음 → render 자체를 안 부른다
+    assert points.balance(store, 0) == 100  # 환불
+    assert store.get_mix_job("j9")["fx_status"] == "failed"
+
+
 # ── /api/produce/fx/status ──────────────────────────────────────────
 
 def test_fx_status_reports_queued_then_done_with_url(tmp_path, monkeypatch):
