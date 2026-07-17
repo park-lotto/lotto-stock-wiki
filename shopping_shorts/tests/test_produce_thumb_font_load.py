@@ -118,7 +118,7 @@ def test_generate_thumb_uses_loaded_font_on_first_call(live_server):
         page.goto(f"{live_server}/produce.html")
         result = page.evaluate("""async () => {
             %s
-            STATE.job_id = 'no-such-job';   // 저장 API가 404를 내도 상관없다 — toBlob 타이밍만 본다
+            MIX_JOB = 'no-such-job';   // 저장 API가 404를 내도 상관없다 — toBlob 타이밍만 본다
             const cv = document.getElementById('thumbCanvas');
             const origToBlob = cv.toBlob.bind(cv);
             let loadedAtToBlobTime = null;

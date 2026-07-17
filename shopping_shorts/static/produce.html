@@ -2139,12 +2139,25 @@ function drawThumb(ctx, img, layers, W, H){
 const THUMB_STATE = {frames: [], frame_ts: null, frame_url: null, img: null,
                      layers: [], sel: 0, results: [], selected: null};
 
+// 추출은 수 초 걸린다. THUMB_STATE.frames는 '응답이 와야' 채워지므로 그것만 보고 가드하면
+// 대기 중 단계를 오갈 때마다 요청이 겹쳐 ffmpeg가 같은 폴더에 동시에 쓴다(실측: 3벌).
+// ★finally로 반드시 푼다 — 실패한 채 잠기면 재시도가 영영 막혀 지금보다 나빠진다.
+let THUMB_LOADING = false;
 async function loadThumbFrames(){
+  if (THUMB_LOADING) return;
+  THUMB_LOADING = true;
+  try {
+    await _loadThumbFrames();
+  } finally {
+    THUMB_LOADING = false;
+  }
+}
+async function _loadThumbFrames(){
   const r = await fetch('/api/produce/thumb/frames', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({job_id: STATE.job_id}),
+    body: JSON.stringify({job_id: MIX_JOB}),
   });
-  const d = await r.json();
+  const d = await r.json().catch(() => ({ok: false}));
   if (!d.ok){ document.getElementById('thumbFramesHint').textContent = d.error || '프레임 추출 실패'; return; }
   THUMB_STATE.frames = d.frames;
   document.getElementById('thumbFrameCount').textContent = `(${d.frames.length}개)`;
@@ -2208,7 +2221,10 @@ function addThumbLayer(){
 function selectThumbLayer(i){ THUMB_STATE.sel = i; renderThumbLayers(); }
 function removeThumbLayer(i){
   THUMB_STATE.layers.splice(i, 1);
-  THUMB_STATE.sel = Math.max(0, THUMB_STATE.sel - 1);
+  // 삭제 위치와 무관하게 줄이면, 안 지운 레이어를 고르고 있어도 편집창이 말없이 딴 레이어로 바뀐다
+  // (A·B·C에서 B를 고른 채 C를 지우면 A로 튀었다). 앞이 빠진 경우에만 같은 레이어를 계속 가리킨다.
+  if (i < THUMB_STATE.sel) THUMB_STATE.sel--;
+  THUMB_STATE.sel = Math.max(0, Math.min(THUMB_STATE.sel, THUMB_STATE.layers.length - 1));
   renderThumbLayers(); renderThumbCanvas();
 }
 
@@ -2217,7 +2233,9 @@ function applyThumbPreset(i){
   const cur = THUMB_STATE.layers[THUMB_STATE.sel]; if (!cur) return;
   const styled = thumbPresetToLayer(p);
   styled.text = cur.text;          // 스타일만 바꾼다 — 문구·위치는 사장님 것
-  styled.x = cur.x; styled.rot = cur.rot;
+  // y를 빼먹으면 드래그로 잡은 세로 위치가 프리셋의 기본값(상단 12%)으로 튄다.
+  // x만 살아남아 "왜 위아래만 튀지"가 된다 — 위 주석이 선언한 계약을 지키려면 셋 다 필요하다.
+  styled.x = cur.x; styled.y = cur.y; styled.rot = cur.rot;
   THUMB_STATE.layers[THUMB_STATE.sel] = styled;
   renderThumbLayers(); renderThumbCanvas();
 }
@@ -2237,7 +2255,7 @@ function renderThumbLayers(){
     <div onclick="selectThumbLayer(${i})" style="display:flex;justify-content:space-between;
          align-items:center;padding:6px 9px;border-radius:6px;cursor:pointer;
          background:${i === THUMB_STATE.sel ? 'var(--accent)' : '#2a2a3a'}">
-      <span style="font-size:12px">${L.text || '(빈 문구)'}</span>
+      <span style="font-size:12px">${esc(L.text) || '(빈 문구)'}</span>
       <span onclick="event.stopPropagation();removeThumbLayer(${i})" style="cursor:pointer">✕</span>
     </div>`).join('');
   document.getElementById('thumbPresets').innerHTML =
@@ -2286,25 +2304,42 @@ function initThumbDrag(){
   });
 }
 
+// 재진입 금지: 더블클릭하면 서버가 results를 read-modify-write 하므로 둘 다 같은 이름을 계산해
+// 한쪽이 덮이고 갤러리에 같은 URL이 두 번 뜬다. ★finally로 반드시 푼다.
+let THUMB_SAVING = false;
 async function generateThumb(){
+  if (THUMB_SAVING) return;
+  THUMB_SAVING = true;
   const st = document.getElementById('thumbSaveStatus');
-  st.textContent = '생성 중…';
-  await renderThumbCanvas();   // 폰트 로드 완료까지 기다린 후 그려야 첫 생성부터 맞는 폰트로 나간다
-  const cv = document.getElementById('thumbCanvas');
-  const blob = await new Promise(res => cv.toBlob(res, 'image/png'));
-  const fd = new FormData();
-  fd.append('job_id', STATE.job_id);
-  fd.append('meta', JSON.stringify({frame_ts: THUMB_STATE.frame_ts,
-                                    frame_url: THUMB_STATE.frame_url,
-                                    layers: THUMB_STATE.layers}));
-  fd.append('file', blob, 'thumb.png');   // 이 이름은 서버가 무시한다(경로순회 방지)
-  const r = await fetch('/api/produce/thumb/save', {method: 'POST', body: fd});
-  const d = await r.json();
-  if (!d.ok){ st.textContent = d.error || '저장 실패'; return; }
-  st.textContent = '';
-  THUMB_STATE.results.push({name: d.name, url: d.url});
-  renderThumbGallery();
-  selectThumbResult(d.name);
+  if (st) st.textContent = '생성 중…';
+  try {
+    await renderThumbCanvas();   // 폰트 로드 완료까지 기다린 후 그려야 첫 생성부터 맞는 폰트로 나간다
+    const cv = document.getElementById('thumbCanvas');
+    const blob = await new Promise(res => cv.toBlob(res, 'image/png'));
+    const fd = new FormData();
+    fd.append('job_id', MIX_JOB);
+    fd.append('meta', JSON.stringify({frame_ts: THUMB_STATE.frame_ts,
+                                      frame_url: THUMB_STATE.frame_url,
+                                      layers: THUMB_STATE.layers}));
+    fd.append('file', blob, 'thumb.png');   // 이 이름은 서버가 무시한다(경로순회 방지)
+    const r = await fetch('/api/produce/thumb/save', {method: 'POST', body: fd});
+    const d = await r.json().catch(() => ({ok: false}));
+    if (!r.ok || !d.ok){
+      if (st) st.textContent = r.status === 401
+        ? '로그인이 풀렸습니다 — 새로고침 후 다시 시도하세요'
+        : (d.error || '저장 실패');
+      return;
+    }
+    if (st) st.textContent = '';
+    THUMB_STATE.results.push({name: d.name, url: d.url});
+    renderThumbGallery();
+    await selectThumbResult(d.name);
+  } catch(e){
+    // 안 잡으면 '생성 중…'이 영구 고착돼 사장님은 계속 기다린다.
+    if (st) st.textContent = '썸네일 생성 실패 — 연결을 확인하세요';
+  } finally {
+    THUMB_SAVING = false;
+  }
 }
 
 function renderThumbGallery(){
@@ -2316,13 +2351,34 @@ function renderThumbGallery(){
     </div>`).join('');
 }
 
+// 최종 썸네일을 정하는 유일한 조작이다 — 조용히 실패하면 화면은 '골랐다'인데 DB는 아니다
+// (세션 만료 시 이 라우트는 401을 준다). 그래서 응답을 반드시 읽고, 거절당하면 되돌린다.
 async function selectThumbResult(name){
+  const prev = THUMB_STATE.selected;
+  const st = document.getElementById('thumbSaveStatus');
   THUMB_STATE.selected = name;
-  renderThumbGallery();
-  await fetch('/api/produce/thumb/select', {
-    method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({job_id: STATE.job_id, name}),
-  });
+  renderThumbGallery();               // 즉시 반응은 유지 — 거절당하면 아래에서 원복한다
+  try {
+    const r = await fetch('/api/produce/thumb/select', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({job_id: MIX_JOB, name}),
+    });
+    const d = await r.json().catch(() => ({ok: false}));
+    if (!r.ok || !d.ok){
+      // 원복이 없으면 테두리만 남아 지금보다 나빠진다 — 화면이 거짓말을 하게 된다.
+      THUMB_STATE.selected = prev; renderThumbGallery();
+      if (st) st.textContent = r.status === 401
+        ? '로그인이 풀렸습니다 — 새로고침 후 다시 고르세요'
+        : (d.error || '썸네일 선택 실패');
+      return false;
+    }
+    if (st) st.textContent = '';
+    return true;
+  } catch(e){
+    THUMB_STATE.selected = prev; renderThumbGallery();
+    if (st) st.textContent = '썸네일 선택 실패 — 연결을 확인하세요';
+    return false;
+  }
 }
 
 let THUMB_INITED = false;
