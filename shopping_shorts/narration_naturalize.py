@@ -66,22 +66,61 @@ _UNIT_MAP = {"kg": "킬로그램", "g": "그램", "cm": "센티미터", "mm": "�
 _SYMBOL_MAP = {"%": "퍼센트", "&": "앤드", "+": "플러스"}
 
 
+def _int_to_sino_4digit(n):
+    """0~9999 전용 사이노 변환(그룹 단위 재사용 알맹이).
+
+    한국어 숫자는 4자리씩 끊어 읽으므로(만/억/조), 이 함수가 각 그룹의 "자리별
+    읽기" 알맹이를 담당하고 `_int_to_sino`가 그룹을 조립한다."""
+    if n == 0:
+        return ""
+    pad = str(n).rjust(4, "0")
+    out = ""
+    for i, ch in enumerate(pad):
+        d = int(ch)
+        if d == 0:
+            continue
+        unit = ["천", "백", "십", ""][i]
+        out += ("" if d == 1 and unit else _SINO[d]) + unit
+    return out
+
+
+# 4자리 그룹 단위(만/억/조). 그룹은 오른쪽(1의 자리)부터 4자리씩 끊는다 — 그룹0=일의
+# 자리 그룹(단위 없음), 그룹1=만, 그룹2=억, 그룹3=조.
+_GROUP_UNITS = ["", "만", "억", "조"]
+
+
 def _int_to_sino(n):
-    """정수 → 사이노 한국어 읽기(간이). 0~9999 지원(그 이상은 자리 붙여 읽기 근사)."""
+    """정수 → 사이노 한국어 읽기. 만·억·조까지 지원(2026-07-17 확장).
+
+    한국어는 4자리씩 끊어 읽는다(예: 12,345,678 → "천이백삼십사만 오천육백칠십팔").
+    그룹마다 0이면 통째로 건너뛰고, 그룹 사이는 공백 하나로 구분한다(TTS가 끊어
+    읽기 좋게).
+
+    ⚠️ 만/억 비대칭은 의도적이다 — "만" 그룹이 1이면 "일만"이 아니라 "만"이라고만
+    읽는다(10000원="만원"이 한국어 관용, "일만원"은 부자연스럽다). 반대로 "억"
+    그룹이 1이면 "일억"이 자연스럽다(100000000="일억", "억"만 쓰면 어색하다).
+    다음 사람이 "일관성 없다"며 이 비대칭을 고치면 오히려 어색해진다 — 고치지
+    말 것(지시 원문 그대로 유지).
+    """
     if n == 0:
         return "영"
-    s = str(n)
-    if len(s) <= 4:
-        pad = s.rjust(4, "0")
-        out = ""
-        for i, ch in enumerate(pad):
-            d = int(ch)
-            if d == 0:
-                continue
-            unit = ["천", "백", "십", ""][i]
-            out += ("" if d == 1 and unit else _SINO[d]) + unit
-        return out or "영"
-    return " ".join(_SINO[int(c)] for c in s)  # 큰 수는 자리별 근사
+    groups = []
+    while n > 0:
+        groups.append(n % 10000)
+        n //= 10000
+    parts = []
+    for gi in range(len(groups) - 1, -1, -1):
+        g = groups[gi]
+        if g == 0:
+            continue
+        word = _int_to_sino_4digit(g)
+        unit = _GROUP_UNITS[gi] if gi < len(_GROUP_UNITS) else ""
+        if gi == 1 and g == 1:
+            # "만" 그룹만 1일 때 "일" 생략(한국어 관용) — 억 이상은 생략하지 않는다.
+            parts.append(unit)
+        else:
+            parts.append(word + unit)
+    return " ".join(parts)
 
 
 def _num_to_words(whole):
@@ -119,12 +158,18 @@ def normalize_reading(text):
     맞추지 않으면 성우가 제대로 읽었는데도 전부 오독으로 뜬다(2026-07-15 실측).
     """
     def num_repl(m):
-        return _num_to_words(m.group(0))
+        return _num_to_words(m.group(0).replace(",", ""))
     def numunit(m):
-        return f"{_num_to_words(m.group(1))} {_UNIT_MAP[m.group(2)]}"
-    unit_pat = r"(\d+(?:\.\d+)?)(" + "|".join(sorted(_UNIT_MAP, key=len, reverse=True)) + r")"
+        return f"{_num_to_words(m.group(1).replace(',', ''))} {_UNIT_MAP[m.group(2)]}"
+    # 천단위 쉼표(예: "2,847", "12,345,678")를 숫자의 일부로 인식한다 — 반드시
+    # `\d{1,3}(?:,\d{3})+` 형태(3자리씩 끊긴 쉼표)만 묶는다. 일반 문장부호 쉼표
+    # ("안녕, 1개")나 3자리가 아닌 쉼표("1,2")는 이 패턴에 안 걸려 그대로 남는다
+    # (2026-07-17 결함 수정 — 옛 패턴은 쉼표를 아예 몰라 "2,847"을 "2"와 "847"로
+    # 따로 잡고 쉼표를 그대로 흘렸다).
+    num_pat = r"\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?"
+    unit_pat = r"(" + num_pat + r")(" + "|".join(sorted(_UNIT_MAP, key=len, reverse=True)) + r")"
     text, n1 = re.subn(unit_pat, numunit, text)
-    text, n2 = re.subn(r"\d+(?:\.\d+)?", num_repl, text)
+    text, n2 = re.subn(num_pat, num_repl, text)
     n3 = 0
     for sym, word in _SYMBOL_MAP.items():
         n3 += text.count(sym)
