@@ -41,14 +41,16 @@ def test_applied_does_not_lie_when_total_tag_cap_removes_our_tag():
     d = naturalize_detail("지금 확인해보세요.", {"caps": {"max_tags_total": 0}},
                           beat_role="CTA", beat_index=0, beat_total=1)
     assert "[excited]" not in d["text"]
-    # N-4: `applied == {}`는 과잉 단언이다 — 같은 케이스에서 fillers가 이미
-    # 텍스트를 바꾸는데("음, " 삽입), Task 4에서 fillers의 _bump가 배선되면
-    # applied=={'fillers': 1}이 되어 emotion_arc와 무관한 이유로 이 단언이 깨진다.
-    # 이 테스트가 실제로 보장하려는 건 "emotion_arc가 거짓 카운트를 안 남긴다"뿐이다.
+    # N-4(갱신 2026-07-17 Task1): 원래 이 자리엔 "fillers가 이미 텍스트를 바꾼다
+    # ('음, ' 삽입)"는 주석이 있었으나 지금은 틀린 서술이다 — Task1이 fillers에
+    # 역할 게이트를 추가했고(기본 roles=["훅"]) 이 테스트의 beat_role은 "CTA"라
+    # 애초에 fillers가 발동하지 않는다(뱅크도 "음"에서 감탄사류로 교체됨). 그래도
+    # 이 assert 자체의 취지("emotion_arc가 거짓 카운트를 안 남긴다")는 그대로 유효하다.
     assert "emotion_arc" not in d["applied"]    # emotion_arc 키 자체가 없어야 함(계약: 0=기록없음)
     # Task 3: endings가 기본 강도(0.3)에서도 마침표 1개를 …로 바꾸도록 배선됐다
     # (이전엔 내림 계산이라 후보 1개면 0.3에서 무발동인 죽은 스테이지였다).
-    assert d["text"] == "음, 지금 확인해보세요…"   # 태그만 빠지고 나머지 스테이지는 그대로(endings 적용됨)
+    # 필러 접두사가 사라진 이유는 위 N-4 갱신 설명 참조(역할 게이트, CTA≠훅).
+    assert d["text"] == "지금 확인해보세요…"   # 태그·필러 다 빠지고 endings만 적용됨
 
 
 def test_emotion_arc_tag_survives_total_cap_when_input_has_existing_tag():
@@ -71,6 +73,43 @@ def test_emotion_arc_tag_survives_total_cap_when_input_has_existing_tag():
                           beat_role="CTA", beat_index=0, beat_total=1)
     assert "[excited]" in d["text"]
     assert d["applied"]["emotion_arc"] == 1
+
+
+def test_applied_whisper_does_not_lie_when_total_tag_cap_removes_it():
+    """whole-branch 최종 리뷰 Finding2(Minor, 2026-07-17) 재현 — `_enforce_total_tag_cap`이
+    `max_tags_total`로 whisper 태그를 사후에 지워도 applied는 'whisper: 1'로
+    거짓 계상됐다(`ca92f9c8` 계약 "실제 효과만 센다" 위반). `_emotion_arc`(항상
+    태그 목록 0번째)는 이 캡에 절대 안 걸리지만(자기 게이트가 `max_tags_total<=0`을
+    미리 본다), `_whisper`(항상 1번째)는 자신의 게이트(`max_tags_per_beat`)와
+    이 캡(`max_tags_total`)이 서로 다른 노브라 못 막는다 — 실측(`max_tags_total=1`,
+    `max_tags_per_beat` 기본값 2): 텍스트='[curious]진짜, 대박이에요!'인데
+    applied=={'whisper': 1}.
+    뮤턴트: `naturalize_detail`의 사후 보정(`ctx["applied"].pop("whisper", ...)`)을
+    지우면 태그가 안 남았는데 applied["whisper"]==1로 죽는다."""
+    p = {"normalize": {"on": False}, "spoken_style": {"on": False},
+         "pronunciation": {"on": False}, "phrasing": {"on": False},
+         "endings": {"on": False}, "fillers": {"on": False},
+         "emotion_arc": {"on": True, "intensity": 1.0},
+         "whisper": {"on": True, "roles": ["반전"]},
+         "intonation": {"on": False},
+         "caps": {"max_tags_total": 1, "max_tags_per_beat": 2}}
+    d = naturalize_detail("지금 확인해보세요.", p,
+                          beat_role="반전", beat_index=0, beat_total=1)
+    assert "[whispers]" not in d["text"], f"캡이 못 지웠다(테스트 전제 확인 실패): {d['text']!r}"
+    assert "[satisfied]" in d["text"]
+    assert "whisper" not in d["applied"], f"태그가 지워졌는데 applied가 거짓말: {d['applied']!r}"
+    assert d["applied"]["emotion_arc"] == 1
+
+
+def test_total_tag_cap_strip_inserts_missing_space():
+    """whole-branch 최종 리뷰 Finding2 부수 사고 — `_enforce_total_tag_cap`이 뒤쪽
+    태그를 지우면, 태그끼리는 원래 공백이 없어서(`_whisper`가 `[감정][whispers] 본문`
+    형태로 붙인다) 살아남은 태그가 본문에 바로 붙어버린다
+    ('[curious]진짜, 대박이에요!'처럼 — 실측). 잘라낸 자리에 공백 하나를 보충한다.
+    뮤턴트: 공백 보충 분기(`kept += " "`)를 지우면 태그-본문 경계 공백이 사라져 죽는다."""
+    from shopping_shorts.narration_naturalize import _enforce_total_tag_cap
+    out = _enforce_total_tag_cap("[curious][whispers] 진짜, 대박이에요!", 1)
+    assert out == "[curious] 진짜, 대박이에요!", f"태그-본문 경계 공백이 안 채워졌다: {out!r}"
 
 
 def test_applied_spoken_style_counts_exact_conversions():
