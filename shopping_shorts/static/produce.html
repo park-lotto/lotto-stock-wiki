@@ -1315,6 +1315,40 @@ function saveWork(){
   _workTimer = setTimeout(_pushWork, 1000);                                      // 서버는 디바운스
 }
 function clearWork(){ try{ sessionStorage.removeItem('produce_work'); }catch(e){} }
+// 서버 작업파일 복원(2026-07-17) — /produce?work=<id>로 들어왔을 때.
+// sessionStorage 복원(_consumeProduceHandoff)은 그대로 둔다. 이건 **추가 계층**이다.
+async function _restoreWork(workId){
+  let d = null;
+  try{ d = await (await fetch('/api/produce/works/'+encodeURIComponent(workId))).json(); }catch(e){}
+  // 지워진 작업 링크를 눌러도 빈 화면이 되면 안 된다 — 기존 경로로 떨어진다.
+  if(!d || !d.ok){ _consumeProduceHandoff(); return; }
+  const w = d.state || {};
+  WORK_ID = workId;
+  HANDOFF = w.handoff || [];
+  STATE.script = w.script || '';
+  STATE.script_src_idx = (typeof w.script_src_idx === 'number') ? w.script_src_idx : null;
+  STATE.script_from_wiki = (typeof w.script_from_wiki !== 'undefined') ? w.script_from_wiki : null;
+  if(STATE.script) setScriptMode('manual');
+  renderPool(); syncFootageToMixUrls(); refreshFinalPeek();
+  MIX_JOB = d.job_id || null;
+
+  // ★게이트 재동기(스펙 §4.5). 아래 `cur` 대입은 jump()/go()를 **안 거치므로** 게이트 검사를
+  // 건너뛴다. 서버에서 미리보기 상태를 다시 읽어 맞추지 않으면 "1단계 미리보기를 한 번도 안
+  // 봤는데 2단계로 복원된" 상태가 되어 유료 자막제거(VMake)로 그냥 넘어간다.
+  // 이 트랙은 같은 종류의 구멍에 이미 두 번 데었다(C-1: go만 막고 jump 놓침 / C-3: 재매칭의
+  // 끝만 봉인하고 시작 놓침). 세 번째는 없다.
+  PREVIEW_STATUS = null;
+  if(MIX_JOB){
+    try{
+      const s = await (await fetch('/api/mix/status/'+encodeURIComponent(MIX_JOB))).json();
+      if(s && s.ok) PREVIEW_STATUS = s.preview_status || null;
+    }catch(e){}   // 못 읽으면 null로 둔다 = 잠긴 채. 모르면 안전한 쪽.
+  }
+  const st = d.step;
+  cur = (typeof st === 'number' && st >= 0 && st < STEPS.length) ? st : 0;
+  if(cur > 0 && MIX_JOB && !canGoNext()) cur = 0;   // 미리보기 미확인이면 1단계로 되돌린다
+  renderSteps(); showPanel(); refreshNextBtn();
+}
 function _consumeProduceHandoff(){
   // 1순위: 즐겨찾기에서 방금 넘어온 신규 핸드오프. 2순위: 이전 작업상태 복원.
   let items, restored=false, savedScript='';
@@ -2068,7 +2102,11 @@ async function pollFinal(){
   }catch(e){}
 }
 
-renderSteps(); showPanel(); setScriptMode('manual'); _consumeProduceHandoff(); refreshFinalPeek();
+renderSteps(); showPanel(); setScriptMode('manual');
+// ?work=<id>로 들어왔으면 서버 작업파일에서, 아니면 기존대로 sessionStorage에서 복원.
+const _wid = new URLSearchParams(location.search).get('work');
+if(_wid){ _restoreWork(_wid); } else { _consumeProduceHandoff(); }
+refreshFinalPeek();
 </script>
 <script src="/sidebar.js?v=2"></script>
 </body>
