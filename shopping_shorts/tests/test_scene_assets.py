@@ -344,6 +344,20 @@ def test_autotag_handles_non_dict_from_vault_call(monkeypatch, tmp_path):
         assert got == {"scene_desc": "", "role": "", "subject": "", "tone": "", "keywords": []}
 
 
+def test_autotag_prompt_separates_evidence_for_desc_and_role():
+    p = scene_assets._AUTOTAG_PROMPT
+    assert "자막" in p                      # role의 근거가 자막임을 명시
+    assert "나쁜 예" in p                   # scene_desc의 추측 금지는 유지
+    assert "한 스푼" in p                   # subject 모호금지 규칙 유지(적대적 검증 통과분)
+    assert "자막이 없으면" in p             # 자막 없으면 role 공란
+
+
+def test_autotag_prompt_keeps_controlled_roles():
+    p = scene_assets._AUTOTAG_PROMPT.format(
+        category="레시피", caption="c", script="s", roles="|".join(scene_assets._ROLES))
+    assert "비법공개" in p and "CTA" in p
+
+
 def _count_frames(p):
     import subprocess
     r = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0",
