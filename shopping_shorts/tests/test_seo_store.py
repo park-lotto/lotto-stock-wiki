@@ -58,3 +58,60 @@ def test_seo_korean_not_escaped(store):
     with store._conn() as c:
         raw = c.execute("SELECT seo_json FROM mix_jobs WHERE job_id=?", (job_id,)).fetchone()[0]
     assert "한글제목" in raw
+
+
+from datetime import datetime, timedelta, timezone
+
+
+_STAT = {"keyword": "빨대텀블러", "region": "KR", "views_median": 320000,
+         "small_ratio": 0.4, "sample_n": 20,
+         "top_titles": ["a", "b", "c"], "verdict": "blue"}
+
+
+def test_keyword_stats_roundtrip(store):
+    store.put_keyword_stats(_STAT)
+    got = store.get_keyword_stats("빨대텀블러")
+    assert got["views_median"] == 320000
+    assert got["small_ratio"] == 0.4
+    assert got["top_titles"] == ["a", "b", "c"]
+    assert got["verdict"] == "blue"
+
+
+def test_keyword_stats_miss_returns_none(store):
+    assert store.get_keyword_stats("없는키워드") is None
+
+
+def test_keyword_stats_upsert(store):
+    """같은 키워드를 다시 재면 덮어쓴다(행이 늘지 않는다)."""
+    store.put_keyword_stats(_STAT)
+    store.put_keyword_stats({**_STAT, "views_median": 999})
+    assert store.get_keyword_stats("빨대텀블러")["views_median"] == 999
+    with store._conn() as c:
+        n = c.execute("SELECT COUNT(*) FROM seo_keyword_stats").fetchone()[0]
+    assert n == 1
+
+
+def test_keyword_stats_ttl_expired(store):
+    """TTL 지난 건 없는 것으로 친다 — 낡은 측정치로 근거를 만들면 안 된다."""
+    store.put_keyword_stats(_STAT)
+    old = (datetime.now(timezone.utc) - timedelta(days=8)).isoformat()
+    with store._conn() as c:
+        c.execute("UPDATE seo_keyword_stats SET checked_at=?", (old,))
+    assert store.get_keyword_stats("빨대텀블러", ttl_days=7) is None
+
+
+def test_keyword_stats_ttl_boundary_fresh(store):
+    """6일된 건 아직 유효(경계 off-by-one 방지)."""
+    store.put_keyword_stats(_STAT)
+    recent = (datetime.now(timezone.utc) - timedelta(days=6)).isoformat()
+    with store._conn() as c:
+        c.execute("UPDATE seo_keyword_stats SET checked_at=?", (recent,))
+    assert store.get_keyword_stats("빨대텀블러", ttl_days=7) is not None
+
+
+def test_keyword_stats_region_separate(store):
+    """같은 키워드라도 지역이 다르면 다른 행."""
+    store.put_keyword_stats(_STAT)
+    store.put_keyword_stats({**_STAT, "region": "US", "views_median": 111})
+    assert store.get_keyword_stats("빨대텀블러", region="KR")["views_median"] == 320000
+    assert store.get_keyword_stats("빨대텀블러", region="US")["views_median"] == 111

@@ -3,7 +3,7 @@ import hashlib
 import json
 import secrets
 import sqlite3
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 # 개인 행동 테이블(saved/mix_basket/commented/script_wiki)의 레거시(마이그레이션
@@ -270,6 +270,19 @@ class Store:
                     fx_plan TEXT,
                     fx_status TEXT,
                     fx_path TEXT
+                )
+            """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS seo_keyword_stats (
+                    keyword TEXT NOT NULL,
+                    region TEXT NOT NULL DEFAULT 'KR',
+                    views_median INTEGER,
+                    small_ratio REAL,
+                    sample_n INTEGER,
+                    top_titles_json TEXT,
+                    verdict TEXT,
+                    checked_at TEXT NOT NULL,
+                    PRIMARY KEY (keyword, region)
                 )
             """)
             # 보이스 프리셋(2026-07-14, 영상제작 4단계) — 큐레이션된 목소리 카드.
@@ -1296,6 +1309,47 @@ class Store:
         vals.append(job_id)
         with self._conn() as c:
             c.execute(f"UPDATE mix_jobs SET {', '.join(cols)} WHERE job_id=?", tuple(vals))
+
+    # ── 6단계 SEO 키워드 측정 캐시(2026-07-17) ──
+    # job이 아니라 전역이다 — 키워드 측정치는 어느 영상이 쟀든 같은 값이고,
+    # search.list가 100유닛인데 발굴과 키풀을 나눠 쓰므로 재측정은 순손실이다.
+    def put_keyword_stats(self, stat):
+        """키워드 측정치 upsert(keyword+region 충돌 시 덮어씀)."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT OR REPLACE INTO seo_keyword_stats "
+                "(keyword, region, views_median, small_ratio, sample_n, "
+                " top_titles_json, verdict, checked_at) VALUES (?,?,?,?,?,?,?,?)",
+                (stat["keyword"], stat.get("region") or "KR",
+                 stat.get("views_median"), stat.get("small_ratio"), stat.get("sample_n"),
+                 json.dumps(stat.get("top_titles") or [], ensure_ascii=False),
+                 stat.get("verdict"),
+                 datetime.now(timezone.utc).isoformat()),
+            )
+
+    def get_keyword_stats(self, keyword, region="KR", ttl_days=7):
+        """TTL 안이면 측정치 dict, 없거나 낡았으면 None.
+        낡은 측정치로 근거를 만들면 안 되므로 만료는 '없음'과 같이 다룬다."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT views_median, small_ratio, sample_n, top_titles_json, "
+                "verdict, checked_at FROM seo_keyword_stats "
+                "WHERE keyword=? AND region=?", (keyword, region),
+            ).fetchone()
+        if not row:
+            return None
+        try:
+            checked = datetime.fromisoformat(row[5])
+        except (TypeError, ValueError):
+            return None
+        if datetime.now(timezone.utc) - checked > timedelta(days=ttl_days):
+            return None
+        return {
+            "keyword": keyword, "region": region,
+            "views_median": row[0], "small_ratio": row[1], "sample_n": row[2],
+            "top_titles": json.loads(row[3]) if row[3] else [],
+            "verdict": row[4], "checked_at": row[5],
+        }
 
     # ── 보이스 프리셋(2026-07-14, 영상제작 4단계) ──
     def upsert_voice_preset(self, p):
