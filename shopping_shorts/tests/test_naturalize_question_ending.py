@@ -200,17 +200,19 @@ def test_strict_raiser_narrower_than_loose_guard_direct():
     `_QUESTION_TAIL_ALTS`와의 합집합을 빼고 바레 `가요|까요|나요`만 남기면(Finding2
     수정 전 상태로 되돌리면) `않으세요`/`없으세요` 표면형에서 죽는다.
 
-    재리뷰 Finding1(까요 판별자) 정정, 2026-07-17 — "까요"만 앞에 공백 없이 한글
-    음절이 붙어있을 때만 올리개가 매치하도록 바뀌었다(까다 평서형과의 충돌 방지).
-    그래서 이 루프의 "이거 {alt}." 구성(모든 alt 앞에 공백)은 "까요"에는 더 이상
-    안 맞는다 — "까요"만 공백 없이 붙여 구성한다(다른 alt는 판별자가 없어 위치와
-    무관하게 안전하므로 그대로 공백 유지)."""
+    재재리뷰 Finding A(까요 ㄹ받침 판별자) 정정, 2026-07-17 — 공백 lookbehind에서
+    ㄹ받침 판별자로 강화되면서 "까요" 앞 음절은 공백만 없으면 되는 게 아니라
+    **ㄹ받침**이어야 한다("이거까요."의 "거"는 ㄹ받침이 아니라 더 이상 안 걸린다).
+    그래서 "까요"만 ㄹ받침으로 끝나는 실제 어간("될")에 융합한 형태로 구성한다 —
+    "이거 될까요."는 "이 상품이 (내 쓰임에) 맞을까요"라는 실제 의문형이라
+    "올리개가 매치하는 모든 표면형을 빠짐없이 돈다"는 이 테스트의 취지(하드코딩
+    재발 방지)를 그대로 유지한다(다른 alt는 판별자가 없어 위치와 무관하게
+    안전하므로 그대로 공백 유지)."""
     from shopping_shorts.narration_naturalize import (
         _question_tail_match, _QUESTION_GUARD_PAT, _QUESTION_TAIL_ALTS,
     )
     for alt in _QUESTION_TAIL_ALTS:
-        sep = "" if alt == "까요" else " "
-        t = f"이거{sep}{alt}."
+        t = "이거 될까요." if alt == "까요" else f"이거 {alt}."
         assert _question_tail_match(t) is not None, f"올리개가 안 걸림: {t!r}"
         assert _QUESTION_GUARD_PAT.search(t) is not None, f"가드가 안 걸림(상위집합 위반): {t!r}"
     assert _question_tail_match("이건 최신 가요.") is None, "올리개가 명사 '가요'에 걸리면 안 된다"
@@ -282,8 +284,8 @@ def test_bare_kkayo_declarative_not_flipped(text):
     """`까요`가 이전처럼 위치 무관 바레 리터럴로 남아 있으면 "까다"(껍질을 벗기다,
     쇼핑 콘텐츠 도메인에서 실사용 빈도가 높은 손질 동사)의 해요체 평서형을
     물음표로 뒤집는다(opus 재리뷰 Critical, 이 정정의 근거).
-    뮤턴트: `_strict_alt_pattern`이 "까요"에 앵커를 안 걸고 리터럴 그대로 반환하게
-    되돌리면(Finding1 수정 전 상태) 3종 전부 `endswith('?')`로 죽는다."""
+    뮤턴트: `_question_tail_match`의 "까요" 사후검증 블록(ㄹ받침 판별)을 제거하면
+    3종 전부 `endswith('?')`로 죽는다."""
     out = _run(text, "페인포인트")
     assert not out.rstrip().endswith("?"), f"평서문이 물음표로 뒤집혔다: {out!r}"
 
@@ -316,6 +318,59 @@ def test_kkayo_declarative_guard_still_suppresses_hook_tail():
     테스트가 죽는다."""
     out = _run("장 볼 때마다 밤을 손으로 까요.", "훅")
     assert "!" not in out, f"까다 평서문 훅에 훅 꼬리 강조(느낌표)가 붙었다: {out!r}"
+
+
+# ── 재재리뷰 지적 Finding A(Critical) — 까요 lookbehind가 명사/부사+'요' 충돌의
+# 절반만 닫았던 사고. `까다` 어간 충돌(위 Finding1)은 막았지만, 공백 없이 앞
+# 음절에 붙는 명사("까까"=과자)·부사("아까")·의성어("톡")는 lookbehind의
+# "공백만 없으면 통과" 조건을 그대로 만족해 여전히 뒤집혔다. ㄹ받침 판별자로
+# 클래스 전체를 닫는다.
+
+@pytest.mark.parametrize("text", [
+    "이건 그냥 까까요.",
+    "우리 애가 좋아하는 까까요.",
+    "제가 이거 받은 게 아까요.",
+    "껍질을 톡까요.",
+])
+def test_bare_kkayo_noun_adverb_collision_not_flipped(text):
+    """`까요` 앞 음절이 ㄹ받침이 아닌 명사(까까=과자)·부사(아까)·의성어(톡)는
+    lookbehind(공백 유무만 확인)만으로는 못 걸러진다 — 전부 공백 없이 한글
+    음절이 바로 붙어있어 옛 판별자를 그대로 통과했다(재재리뷰 Finding A 실측).
+    뮤턴트: `_question_tail_match`의 ㄹ받침 사후검증을 `(?<=[가-힣])까요` 방식의
+    공백-only lookbehind로 되돌리면(1차 정정 상태) 4종 전부 `endswith('?')`로
+    죽는다."""
+    out = _run(text, "페인포인트")
+    assert not out.rstrip().endswith("?"), f"평서문이 물음표로 뒤집혔다: {out!r}"
+
+
+def test_has_rieul_batchim_predicate_direct():
+    """ㄹ받침 판별자 자체의 정확성(문서화 겸 회귀 봉인) — 진짜 의문형 어간의
+    마지막 음절은 전부 ㄹ받침(True), 명사·부사·의성어 어근은 전부 ㄹ받침이
+    아니다(False). 잔여 'ㄹ'(살살까요의 '살')은 알려진 감수 대상이라 이 직접
+    테스트에는 넣지 않는다(위 노출은 end-to-end 케이스로 별도 커버).
+    뮤턴트: `% 28 == 8`을 다른 종성 인덱스로 바꾸면(예: `== 4`, ㄴ받침) 아래
+    True/False 쌍 전체가 뒤집혀 죽는다."""
+    from shopping_shorts.narration_naturalize import _has_rieul_batchim
+    for ch in ["살", "될", "할", "갈", "을", "볼", "줄", "팔", "들", "걸"]:
+        assert _has_rieul_batchim(ch) is True, f"ㄹ받침인데 False: {ch!r}"
+    for ch in ["까", "아", "톡", "만", "쓱", " ", "가"]:
+        assert _has_rieul_batchim(ch) is False, f"ㄹ받침 아닌데 True: {ch!r}"
+
+
+def test_kkayo_raiser_rejects_at_string_start():
+    """`까요`가 텍스트 맨 앞이라 앞 음절 자체가 없으면(idx < 0) 판별자가 안전하게
+    무효화해야 한다 — 정직한 표기(위생 실측): `idx < 0` 가드를 빼는 뮤턴트를
+    직접 심어봤지만 이 테스트를 못 죽인다 — `_QUESTION_TAIL_PAT`이 `$`에
+    앵커돼 있어 idx==-1이 나오려면 "까요"가 텍스트 전체의 시작(`m.start(1)==0`)
+    이어야 하고, 그 경우 파이썬 음수 인덱싱(`text[-1]`)은 항상 "요"(마지막 음절
+    자신, ㄹ받침 아님) 또는 뒷꼬리 그룹(`.`/`…`/공백, 전부 비한글)에만 떨어져
+    구조적으로 절대 ㄹ받침에 걸릴 수 없다(=이 가드 제거는 이 파이프라인에서
+    등가 뮤턴트다, equivalent mutant). 그래도 가드는 남긴다 — Python 음수
+    인덱싱의 우연한 안전성에 기대는 것보다 명시적 방어가 더 읽기 쉽고,
+    `_QUESTION_TAIL_PAT`의 앵커 방식이 나중에 바뀌면(예: 다른 위치에서
+    `_question_tail_match`를 재사용) 이 불변식이 깨질 수 있다."""
+    out = _run("까요.", "페인포인트")
+    assert not out.rstrip().endswith("?"), f"문두 '까요'가 물음표로 뒤집혔다: {out!r}"
 
 
 # ── 재리뷰 지적 Finding2(Important) — 않으세요/없으세요 정책 변경: 올리개에서 제거 ──
