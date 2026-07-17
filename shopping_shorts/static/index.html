@@ -97,6 +97,14 @@
   .sm-seg .scene{font-size:11px;color:var(--sub);margin-top:2px}
   .sm-loading{text-align:center;padding:40px;color:var(--sub);font-size:14px}
   .sm-err{padding:24px;color:#ff9b9b;font-size:14px;text-align:center}
+  /* 장면 담기 — 자동분할/직접자르기 탭 */
+  .scene-tabs{display:flex;gap:4px;margin:10px 0 6px;border-bottom:1px solid var(--line)}
+  .scene-tabs button{background:none;border:none;color:var(--sub);font-size:13px;padding:8px 14px;cursor:pointer;border-bottom:2px solid transparent}
+  .scene-tabs button.on{color:var(--txt);border-bottom-color:var(--accent)}
+  .cut-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;margin:10px 0;max-height:280px;overflow-y:auto}
+  .cut-grid label.cut{display:flex;flex-direction:column;gap:3px;cursor:pointer;font-size:10px;color:var(--sub)}
+  .cut-grid label.cut img{width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:6px;background:#000;border:2px solid transparent}
+  .cut-grid label.cut input:checked ~ img{border-color:var(--accent)}
   @media (max-width: 768px){
     body{flex-direction:column;min-height:100vh}
     .sidebar{width:100%;border-right:none;border-bottom:1px solid var(--line);padding:10px 12px;
@@ -184,14 +192,28 @@
       </div>
       <div style="padding:16px 18px" id="sceneBody">
         <video id="sceneVid" controls playsinline style="width:100%;max-height:46vh;background:#000;border-radius:8px"></video>
-        <div style="display:flex;gap:8px;align-items:center;margin:12px 0;font-size:13px">
-          <button onclick="markScene('start')">⏱ 시작 찍기</button>
-          <span id="sceneRange" style="color:#8b98a9">시작 — · 끝 —</span>
-          <button onclick="markScene('end')">⏱ 끝 찍기</button>
+        <div class="scene-tabs">
+          <button id="tabSplit" class="on" onclick="sceneTab('split')">자동 분할</button>
+          <button id="tabManual" onclick="sceneTab('manual')">직접 자르기</button>
         </div>
-        <div id="sceneStep1">
-          <button style="background:#2f81f7;border:none;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="runScenePrepare()">✂ 자르고 AI 태그 뽑기</button>
-          <div style="font-size:12px;color:#8b98a9;margin-top:6px">자른 뒤 태그 초안이 나옵니다. 확인·수정 후 저장하세요.</div>
+        <div id="paneSplit">
+          <button onclick="runSceneSplit()">✂ 컷 나누기</button>
+          <div id="splitList"></div>
+          <div style="display:flex;gap:8px">
+            <button id="btnMergePick" style="display:none" onclick="mergePicked()">↔ 이어서 하나로 담기</button>
+            <button id="btnTagPicked" style="display:none;background:#2f81f7;border:none;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="tagPicked()">자르고 AI 태그 뽑기</button>
+          </div>
+        </div>
+        <div id="paneManual" style="display:none">
+          <div style="display:flex;gap:8px;align-items:center;margin:12px 0;font-size:13px">
+            <button onclick="markScene('start')">⏱ 시작 찍기</button>
+            <span id="sceneRange" style="color:#8b98a9">시작 — · 끝 —</span>
+            <button onclick="markScene('end')">⏱ 끝 찍기</button>
+          </div>
+          <div id="sceneStep1">
+            <button style="background:#2f81f7;border:none;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="runScenePrepare()">✂ 자르고 AI 태그 뽑기</button>
+            <div style="font-size:12px;color:#8b98a9;margin-top:6px">자른 뒤 태그 초안이 나옵니다. 확인·수정 후 저장하세요.</div>
+          </div>
         </div>
         <div id="sceneStep2" style="display:none;margin-top:12px;flex-direction:column;gap:10px"></div>
       </div>
@@ -731,10 +753,55 @@ async function markSavedButtons(){
 // 있고(ranking.py) 유튜브/틱톡은 빈 문자열이라(믹스 다운로드 시점에만 해석) 이 두 플랫폼은
 // 아직 지원 대상 밖 — 기존 📝 대본추출 버튼도 같은 한계(app.py:500-502, video_url 없음→422).
 var SCENE_CTX = {sc:'', url:'', category:'', start:null, end:null, token:null};
+// 태그 초안 폼이 마지막으로 그린 prepare 응답 전체(commitScene이 source_start_frame을
+// 여기서 그대로 읽는다 — 절대 산술 스치지 않는다. str(124.0)="124.0"은 서버 isdigit()을
+// 못 통과해 조용히 None이 되므로, 정수 그대로 되돌리는 게 유일하게 안전하다).
+let SCENE_DRAFT = null;
+// 자동분할 상태 — 컷 목록·체크된 컷 인덱스. 병합은 사람이 인접한 것만 골랐을 때만
+// 버튼이 뜬다(syncSplitButtons) — 기계가 자동으로 합치지 않는다(설계 §3.2, 표절회피).
+let SPLIT = { token:null, fps:30, cuts:[], picked:new Set() };
+// 여러 컷을 골라 '자르고 AI 태그 뽑기'를 눌렀을 때 쓰는 순차 담기 큐(리뷰 I-2).
+// prepare는 큐의 "지금 차례"인 컷 하나만 부른다 — 나머지는 그 컷을 저장(또는 건너뛰기)한
+// 뒤에야 다음 컷을 prepare한다. 예전엔 고른 컷 전부를 한꺼번에 prepare(=Gemini autotag
+// N회+클립 N개 생성)해놓고 화면엔 마지막 1개 초안만 남아 나머지가 조용히 버려졌다.
+let SCENE_QUEUE = null;   // {idxs:[cut인덱스...], pos:0, total:N, saved:0}
+// 리뷰 fix2(C-2·I-1·I-2 공통 뿌리): "화면의 초안이 큐 상태와 따로 논다"를 막는 잠금 플래그.
+// prepare가 도는 동안(성공/실패 응답이 오기 전) true — 이 사이엔 sceneStep2가 로딩 문구뿐이라
+// 저장·건너뛰기 버튼 자체가 DOM에 없다(레이스가 구조적으로 불가능). commitScene·skipQueueItem·
+// tagPicked·mergePicked·runScenePrepare가 모두 이 플래그를 존중한다.
+let SCENE_BUSY = false;
+// 리뷰: 출처 오귀속 방지용 세대 카드. openSceneCut(모달을 새로 열 때)마다 1씩 오른다.
+// prepare를 쏘는 순간(prepareOne/runScenePrepare/runSceneSplit) 그 시점의 세대를 캡처해두고,
+// 응답이 돌아왔을 때 캡처값 ≠ 지금 세대면 그 응답은 "딴 영상 모달이 열린 뒤에 늦게 온 것"이라
+// 통째로 버린다(초안 렌더 금지·SCENE_CTX.token 덮어쓰기 금지·큐 진행 금지·알럿도 없음 —
+// 사용자는 이미 다른 영상을 보고 있다). A영상 담기→prepare 발사→✕로 닫고 B영상 담기→A의 늦은
+// 응답이 SCENE_CTX.token을 A걸로 덮어 B의 source_ref로 커밋되는 사고를 여기서 끊는다.
+let SCENE_GEN = 0;
+
+function sceneTab(name){
+  document.getElementById('tabSplit').classList.toggle('on', name==='split');
+  document.getElementById('tabManual').classList.toggle('on', name==='manual');
+  document.getElementById('paneSplit').style.display = name==='split' ? '' : 'none';
+  document.getElementById('paneManual').style.display = name==='manual' ? '' : 'none';
+  // 리뷰 C-1: showSceneDraft()가 sceneStep1(수동 자르기 버튼)을 꺼놓으면 복원하는 곳이
+  // 모달 재오픈(openSceneCut)뿐이었다 — 자동분할로 초안을 본 뒤 '직접 자르기' 탭으로 오면
+  // 시작·끝 찍기는 보이는데 자를 버튼이 안 보여 반쪽 죽었다(실측, display:"none"인 채 방치).
+  // 탭을 열 때마다 그 탭이 쓸 상태를 스스로 세운다 — 끄는 곳(showSceneDraft)과 켜는 곳을 짝 맞춘다.
+  if(name==='manual') document.getElementById('sceneStep1').style.display = '';
+}
 
 function openSceneCut(sc, url, category){
   if(!url){ alert('이 영상은 원본 다운로드 URL이 없어 장면 담기를 지원하지 않습니다(현재 인스타그램만 지원).'); return; }
+  SCENE_GEN++;   // 새 모달 = 새 세대. 이전 세대에서 쏜 prepare/split 응답은 이제부터 전부 무효.
   SCENE_CTX = {sc:sc, url:url, category:category, start:null, end:null, token:null};
+  SCENE_DRAFT = null;
+  SCENE_QUEUE = null;
+  SCENE_BUSY = false;
+  SPLIT = { token:null, fps:30, cuts:[], picked:new Set() };
+  document.getElementById('splitList').innerHTML = '';
+  document.getElementById('btnMergePick').style.display = 'none';
+  document.getElementById('btnTagPicked').style.display = 'none';
+  sceneTab('split');
   // /api/video는 shortcode가 아니라 원본 url을 받아 프록시한다(인스타 CDN 핫링크 우회,
   // cdninstagram.com/fbcdn.net 호스트만 허용 — app.py:1406-1424). 카드 썸네일 인라인재생과
   // 동일 패턴(data-vurl 구성부, index.html render() 참고).
@@ -743,6 +810,189 @@ function openSceneCut(sc, url, category){
   document.getElementById('sceneStep1').style.display = '';
   document.getElementById('sceneStep2').style.display = 'none';
   document.getElementById('sceneModal').style.display = 'flex';
+}
+
+// ── 자동 분할(컷 나누기) ── 전 컷을 사람에게 보여준다(설계 §3.1) — AI가 고르지 않는다.
+async function runSceneSplit(){
+  // 리뷰 I-1: commitScene·runScenePrepare·tagPicked·mergePicked엔 이미 더블서밋 가드가
+  // 있는데 이 함수에만 빠져 있었다(가장 비싼 작업인데도) — 두 번 눌리면 영상 다운로드+ffmpeg가
+  // 통째로 두 번 돈다(실측: split 요청 2회). 같은 관례(event.target 잠금)를 그대로 따른다.
+  if(SCENE_BUSY) return;
+  const btn = event.target;
+  if(btn.disabled) return;
+  btn.disabled = true;
+  const listEl = document.getElementById('splitList');
+  listEl.innerHTML = '<div style="color:#8b98a9;font-size:12px;padding:8px 0">⏳ 컷 분할 중… (영상 길이에 따라 수십 초)</div>';
+  document.getElementById('btnMergePick').style.display = 'none';
+  document.getElementById('btnTagPicked').style.display = 'none';
+  SCENE_QUEUE = null;   // 재분할하면 이전 담기 큐는 무효
+  // 재분할하면 기존 초안(있었다면)도 함께 무효화 — 낡은 초안 버튼이 새 분할 결과 옆에 남지 않는다.
+  SCENE_DRAFT = null;
+  document.getElementById('sceneStep2').style.display = 'none';
+  document.getElementById('sceneStep2').innerHTML = '';
+  const gen = SCENE_GEN;   // 세대 캡처 — 응답이 늦게 오면(모달이 딴 영상으로 넘어간 뒤) 버린다.
+  try{
+    const r = await fetch('/api/scene/split', {method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({src_url: SCENE_CTX.url})});
+    const d = await r.json();
+    // 늦은 분할 응답이 딴 영상 모달의 splitList를 A영상 컷으로 덮는 것을 막는다 — 고르면
+    // prepareOne이 "B의 url + A의 타임스탬프"로 엉뚱한 구간을 잘라버리는 씨앗이라 여기서 끊는다.
+    if(gen !== SCENE_GEN) return;
+    // 리뷰 M-1: 서버가 이미 "분할 실패: {e}"로 접두를 붙여 보낸다(app.py:2079). 여기서 또
+    // '분할 실패: '를 붙이면 "분할 실패: 분할 실패: ffmpeg"로 이중접두된다(실측). d.error를
+    // 가공 없이 그대로 보여주고, 없을 때만 기본 문구를 쓴다.
+    if(!d.ok){ listEl.innerHTML=''; alert(d.error || '분할 실패'); return; }
+    SPLIT = {token:d.token, fps:d.fps, cuts:d.cuts||[], picked:new Set()};
+    // 리뷰 I-3: 컷 0개면 innerText=""로 그냥 백지였다 — 수십 초 기다린 끝에 "아무 일도
+    // 안 일어남"과 구분이 안 갔다(실측). 안내 문구를 넣는다.
+    if(!SPLIT.cuts.length){
+      listEl.innerHTML = '<div style="color:#8b98a9;font-size:12px;padding:8px 0">컷이 검출되지 않았습니다. 「직접 자르기」 탭에서 수동으로 잘라주세요.</div>';
+      return;
+    }
+    // XSS 회피: onclick 문자열보간 대신 data-* + addEventListener — esc()는 작은따옴표를
+    // 안 막는다(index.html:442, 이 파일 실측). onclick="fn('${esc(x)}')" 패턴은 여기서 금지.
+    listEl.innerHTML = '<div class="cut-grid">' + SPLIT.cuts.map(c => `
+      <label class="cut">
+        <input type="checkbox" data-i="${c.i}">
+        <img src="${esc(c.poster_url)}" loading="lazy">
+        <span>${c.i+1} · ${c.duration.toFixed(2)}s</span>
+      </label>`).join('') + '</div>';
+    listEl.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+      cb.addEventListener('change', ()=> pickCut(parseInt(cb.dataset.i,10), cb.checked));
+    });
+    syncSplitButtons();
+  }catch(e){ if(gen === SCENE_GEN){ listEl.innerHTML=''; alert('네트워크 오류'); } }
+  finally{ btn.disabled = false; }
+}
+
+function pickCut(i, on){ on ? SPLIT.picked.add(i) : SPLIT.picked.delete(i); syncSplitButtons(); }
+
+function syncSplitButtons(){
+  const n = SPLIT.picked.size;
+  document.getElementById('btnTagPicked').style.display = n ? '' : 'none';
+  // ★인접한 것을 2개 이상 골랐을 때만 병합 버튼 노출 — 기계가 아니라 사람이 정한다(설계 §3.2).
+  // 코드가 자동으로 병합하면 안 된다 — 병합은 '편집 결정'이라 표절회피와 충돌한다.
+  const s = [...SPLIT.picked].sort((a,b)=>a-b);
+  const adjacent = s.length >= 2 && s.every((v,k)=> k===0 || v === s[k-1]+1);
+  document.getElementById('btnMergePick').style.display = adjacent ? '' : 'none';
+}
+
+// 리뷰 I-2: 여러 컷을 고르고 '자르고 AI 태그 뽑기'를 누르면 예전엔 prepare를 N번 다 부르고
+// (Gemini autotag N회+클립 N개 낭비) 마지막 응답만 화면에 남아 나머지 N-1개가 조용히
+// 버려졌다(저장하면 alert도 "담았습니다" 단수로 떠서 N개 다 담긴 줄 알았다). 큐를 세우고
+// "지금 차례" 컷 하나만 prepare한다 — 저장(또는 건너뛰기) 후에야 다음 컷으로 넘어간다.
+async function tagPicked(){
+  if(SCENE_BUSY) return;   // 다른 prepare가 도는 중이면 새 큐를 시작하지 않는다
+  const btn = event.target; btn.disabled = true;
+  try{
+    const idxs = [...SPLIT.picked].sort((a,b)=>a-b);
+    if(!idxs.length) return;
+    SCENE_QUEUE = { idxs, pos:0, total: idxs.length, saved:0 };
+    await advanceQueue();
+  } finally { btn.disabled = false; }
+}
+
+// 큐의 "지금 차례" 컷 하나만 prepare해서 초안을 보여준다. 큐가 끝나면 몇 개 중 몇 개가
+// 담겼는지 요약하고 모달을 닫는다 — "고른 개수 ≠ 담긴 개수"가 조용히 벌어지지 않게 한다.
+async function advanceQueue(){
+  if(!SCENE_QUEUE) return;
+  if(SCENE_QUEUE.pos >= SCENE_QUEUE.idxs.length){
+    const total = SCENE_QUEUE.total, saved = SCENE_QUEUE.saved;
+    SCENE_QUEUE = null;
+    alert(`${total}개 중 ${saved}개를 장면 라이브러리에 담았습니다.`);
+    document.getElementById('sceneModal').style.display='none';
+    return;
+  }
+  const i = SCENE_QUEUE.idxs[SCENE_QUEUE.pos];
+  const c = SPLIT.cuts[i];
+  await prepareOne(c.start, c.end, c.start_frame,
+    {cutNo:c.i+1, pos:SCENE_QUEUE.pos+1, total:SCENE_QUEUE.total});
+}
+
+// 지금 초안은 저장하지 않고 다음 컷으로 넘어간다(담기 큐 전용 — 일반 흐름엔 없음).
+// 리뷰 I-1: SCENE_BUSY가 서 있으면(저장 처리 중이거나 이미 다음 prepare가 도는 중) 무시한다 —
+// "건너뛰기 연타"·"저장 도중 건너뛰기"로 prepare가 동시에 여러 번 나가는 걸 막는다.
+function skipQueueItem(){
+  if(SCENE_BUSY || !SCENE_QUEUE) return;
+  SCENE_QUEUE.pos++;
+  advanceQueue();
+}
+
+async function mergePicked(){
+  if(SCENE_BUSY) return;
+  const s = [...SPLIT.picked].sort((a,b)=>a-b);
+  if(s.length < 2) return;
+  const a = SPLIT.cuts[s[0]], b = SPLIT.cuts[s[s.length-1]];
+  const btn = event.target; btn.disabled = true;
+  try{ await prepareOne(a.start, b.end, a.start_frame); }   // 이어붙인 하나로(큐 소속 아님 — queueInfo 없음)
+  finally { btn.disabled = false; }
+}
+
+// 리뷰 fix2: prepare가 나가는 순간 화면의 낡은 초안을 무조건 무효화한다(lockSceneStep2) —
+// 큐 도중 「직접 자르기」/「이어서 하나로 담기」로 넘어와도 이전 초안의 저장·건너뛰기 버튼이
+// 그대로 남아있지 않는다(C-2 뿌리). queueInfo가 있을 때만 이 초안이 "큐 소속"으로 표시된다
+// (showSceneDraft의 d._queue) — commitScene은 전역 SCENE_QUEUE의 존재가 아니라 이 표식으로 분기한다.
+async function prepareOne(start, end, startFrame, queueInfo){
+  const gen = SCENE_GEN;   // 세대 캡처(mergePicked도 이 함수를 거치므로 여기 하나로 두 경로를 다 덮는다).
+  lockSceneStep2(queueInfo
+    ? `⏳ ${queueInfo.pos}/${queueInfo.total}번째 컷(${queueInfo.cutNo}번) 준비 중…`
+    : '⏳ 자르는 중…');
+  try{
+    const r = await fetch('/api/scene/save/prepare', {method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({src_url:SCENE_CTX.url, start, end,
+        source_kind:'reference', source_ref:SCENE_CTX.sc,
+        category:SCENE_CTX.category})});
+    const d = await r.json();
+    // ★출처 오귀속 방지: 이 prepare가 나간 뒤 모달이 딴 영상으로 넘어갔으면(SCENE_GEN이
+    // 올랐으면) 응답을 통째로 버린다 — 초안도 안 그리고 SCENE_CTX.token도 안 덮는다.
+    // 안 그러면 A영상 응답이 B의 토큰을 A걸로 덮어써 저장 시 A클립이 B의 출처로 들어간다.
+    if(gen !== SCENE_GEN) return;
+    // 리뷰 M-1과 동일 패턴 — 서버가 이미 "구간컷 실패: {e}"를 붙인다(app.py:2125).
+    if(!d.ok){ handlePrepareFail(d.error || '구간컷 실패', queueInfo); return; }
+    SCENE_CTX.token = d.token;   // commitScene이 이 토큰으로 커밋한다(runScenePrepare와 동일 배선)
+    // 서버가 준 start_frame(정수)을 우선하고, 없을 때만 분할 응답의 원래 프레임으로 폴백.
+    // 여기서 끝 — parseFloat·toFixed 등 산술을 스치지 않는다(스치면 프레임 번호가 사라진다).
+    d._start_frame = (d.start_frame != null) ? d.start_frame : startFrame;
+    showSceneDraft(d, queueInfo);
+  }catch(e){ if(gen === SCENE_GEN) handlePrepareFail('네트워크 오류', queueInfo); }
+}
+
+// prepare 나가는 순간 sceneStep2를 로딩 문구로 갈아치운다 — 낡은 초안의 버튼이 화면에
+// 그대로 남는 걸 원천 차단(C-2·I-1의 공통 뿌리). SCENE_DRAFT도 같이 비워 "화면에 없는
+// 초안"이 commitScene에 잘못 커밋되는 경로를 막는다.
+function lockSceneStep2(msg){
+  SCENE_BUSY = true;
+  SCENE_DRAFT = null;
+  const box = document.getElementById('sceneStep2');
+  box.style.display = 'flex';
+  box.innerHTML = `<div style="font-size:13px;color:#8b98a9;padding:8px 0">${msg}</div>`;
+}
+
+// 리뷰 I-2: prepare 실패(502 등) 시 배지가 거짓말하지 않게 — 낡은 초안을 되살리지 않고,
+// 큐 도중이면 정확한 pos/total과 함께 재시도·건너뛰기 탈출구를 준다. 큐가 아니면(수동/이어붙이기)
+// 되돌아갈 수 있게 자르기 버튼을 복원한다.
+function handlePrepareFail(msg, queueInfo){
+  alert(msg);
+  SCENE_BUSY = false;
+  const box = document.getElementById('sceneStep2');
+  if(queueInfo && SCENE_QUEUE){
+    box.innerHTML = `
+      <div style="font-size:12px;color:#ff9b9b">⚠️ ${queueInfo.pos}/${queueInfo.total}번째 컷(${queueInfo.cutNo}번) 준비 실패 — 지금까지 담음 ${SCENE_QUEUE.saved}개</div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button style="background:#0d131c;border:1px solid #1e2735;color:#8b98a9;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="retryQueueItem()">🔁 다시 시도</button>
+        <button style="background:#0d131c;border:1px solid #1e2735;color:#8b98a9;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="skipQueueItem()">⏭ 이 컷 건너뛰고 다음으로</button>
+      </div>`;
+  } else {
+    box.style.display = 'none';
+    box.innerHTML = '';
+    document.getElementById('sceneStep1').style.display = '';
+  }
+}
+function retryQueueItem(){
+  if(SCENE_BUSY || !SCENE_QUEUE) return;
+  advanceQueue();
 }
 
 function markScene(which){
@@ -754,29 +1004,47 @@ function markScene(which){
 }
 
 async function runScenePrepare(){
+  if(SCENE_BUSY) return;
   if(SCENE_CTX.start==null || SCENE_CTX.end==null){ alert('시작과 끝을 찍어주세요.'); return; }
   if(SCENE_CTX.end - SCENE_CTX.start <= 0){ alert('끝이 시작보다 뒤여야 합니다.'); return; }
   const btn = event.target; btn.disabled = true; btn.textContent = '자르는 중…';
+  // 리뷰 C-2: 화면에 다른(예: 큐) 초안이 떠 있어도 수동 자르기를 시작하는 순간 무효화한다 —
+  // 낡은 초안의 저장/건너뛰기 버튼이 남은 채로 새 요청이 도는 걸 막는다.
+  lockSceneStep2('⏳ 자르는 중…');
+  const gen = SCENE_GEN;   // 세대 캡처 — prepareOne과 동일한 오귀속 방지(수동 컷 경로).
   try{
     const d = await (await fetch('/api/scene/save/prepare',{method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({source_kind:'reference', source_ref:SCENE_CTX.sc,
         src_url:SCENE_CTX.url, start:SCENE_CTX.start, end:SCENE_CTX.end,
         category:SCENE_CTX.category})})).json();
-    if(!d.ok){ alert(d.error||'구간컷 실패'); return; }
+    if(gen !== SCENE_GEN) return;   // 모달이 이미 딴 영상으로 넘어감 — 이 응답은 버린다.
+    if(!d.ok){ handlePrepareFail(d.error||'구간컷 실패', null); return; }
     SCENE_CTX.token = d.token;
-    showSceneDraft(d);
-  }catch(e){ alert('네트워크 오류'); }
+    showSceneDraft(d);   // queueInfo 없음 → d._queue=false, 큐와 무관한 단독 초안
+  }catch(e){ if(gen === SCENE_GEN) handlePrepareFail('네트워크 오류', null); }
   finally{ btn.disabled = false; btn.textContent = '✂ 자르고 AI 태그 뽑기'; }
 }
 
-function showSceneDraft(d){
+function showSceneDraft(d, queueInfo){
+  SCENE_BUSY = false;   // 폼이 다시 인터랙티브해진다 — prepare 완료
+  // 리뷰 C-2: 큐 소속을 전역 SCENE_QUEUE의 truthy가 아니라 "이 초안 자체"에 표시한다.
+  // commitScene은 이 표식만 보고 분기한다 — 직접 자르기/이어붙이기로 만든 초안은
+  // queueInfo가 없어 여기서 false로 굳어지므로, 화면에 큐가 떠 있던 적이 있어도 안 섞인다.
+  d._queue = !!queueInfo;
+  SCENE_DRAFT = d;   // commitScene이 source_start_frame을 여기서 그대로 읽는다(손대지 않음)
   const t = d.draft||{};
   const opt = (list, v) => list.map(x=>`<option ${x===v?'selected':''}>${x}</option>`).join('');
   document.getElementById('sceneStep1').style.display = 'none';
   const box = document.getElementById('sceneStep2');
   box.style.display = 'flex';
+  // 리뷰 I-2: 큐로 들어온 초안이면 "몇 번 컷 · 몇 개 중 몇 번째 · 지금까지 몇 개 담음"을
+  // 보여준다 — 사장님이 지금 몇 번 컷의 초안을 보는지, 몇 개 중 몇 개가 담겼는지 알아야 한다.
+  const queueBadge = queueInfo
+    ? `<div style="font-size:12px;color:#7db4ff">📦 ${queueInfo.cutNo}번 컷 — ${queueInfo.pos}/${queueInfo.total}개째 (담음 ${SCENE_QUEUE?SCENE_QUEUE.saved:0}개)</div>`
+    : '';
   box.innerHTML = `
+    ${queueBadge}
     <div style="font-size:12px;color:#ffd76b">✂ ${d.duration?d.duration.toFixed(1):'?'}초 잘렸습니다. AI 태그 초안을 확인·수정하세요.</div>
     <input id="scTitle" placeholder="이름 (예: 가루 한스푼)" style="background:#0d1420;color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">
     <textarea id="scDesc" rows="2" placeholder="화면 설명" style="background:#0d1420;color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">${(t.scene_desc||'').replace(/</g,'&lt;')}</textarea>
@@ -790,10 +1058,21 @@ function showSceneDraft(d){
       <option value="cutaway">컷어웨이(삽입)</option><option value="replace">화면교체</option>
     </select>
     <label style="font-size:12px;color:#8b98a9"><input type="checkbox" id="scAudio" checked> 원본 소리 살리기</label>
-    <button style="background:#2f81f7;border:none;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="commitScene()">💾 라이브러리에 저장</button>`;
+    <label style="font-size:12px;color:#ffd76b">출처(필수) — 안 고르면 저장이 막힙니다
+      <select id="fOrigin" style="display:block;margin-top:4px;background:#0d1420;color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px;width:100%">
+        <option value="">— 고르세요 —</option>
+        <option value="짜집기">짜집기(떠도는 조각)</option>
+        <option value="촬영원본">촬영원본(그 사람이 찍은 것)</option>
+      </select>
+    </label>
+    <div style="display:flex;gap:8px">
+      <button style="background:#2f81f7;border:none;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="commitScene()">💾 라이브러리에 저장</button>
+      ${queueInfo ? `<button style="background:#0d131c;border:1px solid #1e2735;color:#8b98a9;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="skipQueueItem()">⏭ 건너뛰기</button>` : ''}
+    </div>`;
 }
 
 async function commitScene(){
+  if(SCENE_BUSY) return;   // prepare가 도는 중이면(이론상 버튼도 없지만 방어적으로) 저장 금지
   const title = document.getElementById('scTitle').value.trim();
   if(!title){ alert('이름은 필수입니다.'); return; }
   // 더블서밋 가드(리뷰 Critical C-1) — runScenePrepare()와 동일 패턴. 이게 없으면 느린
@@ -802,6 +1081,13 @@ async function commitScene(){
   const btn = event.target;
   if(btn.disabled) return;
   btn.disabled = true; btn.textContent = '저장 중…';
+  SCENE_BUSY = true;
+  // 리뷰 I-1: 저장이 도는 동안 sceneStep2의 다른 버튼(건너뛰기)도 잠근다 — 저장 응답을
+  // 기다리는 사이 건너뛰기가 동시에 나가 SCENE_DRAFT/큐 포지션이 밑에서 바뀌는 레이스 차단.
+  document.querySelectorAll('#sceneStep2 button').forEach(b=>{ if(b!==btn) b.disabled = true; });
+  // 리뷰 C-2: 큐 소속은 "지금 화면에 있던" 초안 자체의 표식으로 지금 이 순간 굳혀둔다 —
+  // 전역 SCENE_QUEUE가 나중에(예: 응답을 기다리는 사이) 바뀌어도 엉뚱한 큐를 건드리지 않는다.
+  const wasQueueDraft = !!(SCENE_DRAFT && SCENE_DRAFT._queue) && !!SCENE_QUEUE;
   const body = {
     token: SCENE_CTX.token, asset_type:'clip',
     render_mode: document.getElementById('scMode').value,
@@ -814,14 +1100,37 @@ async function commitScene(){
     keywords: document.getElementById('scKw').value.split(',').map(s=>s.trim()).filter(Boolean),
     category: SCENE_CTX.category,
     source_kind:'reference', source_ref: SCENE_CTX.sc,
+    source_origin: document.getElementById('fOrigin').value,
+    // ★정수 그대로 되돌린다 — 산술(parseFloat 등)을 한 번도 스치지 않는다. 스치면
+    // str(124.0)="124.0"이 서버 isdigit()을 못 통과해 조용히 None이 된다(brief 실측).
+    source_start_frame: SCENE_DRAFT ? (SCENE_DRAFT._start_frame != null ? SCENE_DRAFT._start_frame : SCENE_DRAFT.start_frame) : null,
   };
   try{
     const d = await (await fetch('/api/scene/save/commit',{method:'POST',
       headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)})).json();
-    if(!d.ok){ alert(d.error||'저장 실패'); return; }
-    document.getElementById('sceneModal').style.display='none';
-    alert('장면 라이브러리에 담았습니다.');
-  }catch(e){ alert('네트워크 오류'); }
+    if(!d.ok){
+      alert(d.error||'저장 실패');
+      SCENE_BUSY = false;
+      document.querySelectorAll('#sceneStep2 button').forEach(b=> b.disabled=false);
+      return;
+    }
+    // 리뷰 C-2: "지금 화면 초안이 큐 것이었나"(wasQueueDraft)로만 분기한다 — 전역 SCENE_QUEUE가
+    // 살아있다는 것만으로는 안 잡는다. 큐가 아니면(수동 자르기·이어붙이기 1건) 큐 카운터를
+    // 절대 건드리지 않고 기존처럼 닫고 알린다 — 큐의 다른 컷을 "담긴 걸로" 잘못 세지 않는다.
+    if(wasQueueDraft){
+      SCENE_QUEUE.saved++;
+      SCENE_QUEUE.pos++;
+      await advanceQueue();   // lockSceneStep2가 SCENE_BUSY를 다시 세우거나, 성공/실패 핸들러가 푼다
+    } else {
+      SCENE_BUSY = false;
+      document.getElementById('sceneModal').style.display='none';
+      alert('장면 라이브러리에 담았습니다.');
+    }
+  }catch(e){
+    alert('네트워크 오류');
+    SCENE_BUSY = false;
+    document.querySelectorAll('#sceneStep2 button').forEach(b=> b.disabled=false);
+  }
   finally{ btn.disabled = false; btn.textContent = '💾 라이브러리에 저장'; }
 }
 

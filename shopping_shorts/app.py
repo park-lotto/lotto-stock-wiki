@@ -41,7 +41,7 @@ from shopping_shorts import voice_presets, audio_post
 from shopping_shorts.tts import synthesize_tts
 from shopping_shorts import tts, asr_check
 from shopping_shorts.narration_naturalize import naturalize as _naturalize
-from shopping_shorts import frame_extract, scene_assets
+from shopping_shorts import frame_extract, scene_assets, scene_cut
 from shopping_shorts import effect_match, remotion_render, points
 from shopping_shorts import video_assemble
 import uuid
@@ -2246,6 +2246,25 @@ def _validate_keep_original_audio(koa):
     return None, "keep_original_audio는 0/1/불리언만"
 
 
+# SQLite INTEGER 상한 — 부호있는 64비트. 이보다 큰 값은 파이썬 int()는 받아줘도
+# sqlite3 바인딩에서 OverflowError가 난다.
+_SQLITE_INT_MAX = 2 ** 63 - 1
+
+
+def _normalize_source_start_frame(raw):
+    """source_start_frame 정규화 — commit 전용. 편집 편의용 부가 메타라 없어도 안전하다
+    (설계 의도) — 그래서 -5·12.5·"abc" 같은 쓰레기 값은 거부하지 않고 조용히 None으로
+    흘린다(손해가 대칭이라 저장을 막는 게 더 나쁘다). 문제는 10**19처럼 SQLite INTEGER
+    상한을 넘는 값 — str().isdigit()도 int()도 통과해 store.py의 INSERT에서
+    OverflowError→500이 났다(리뷰 I-1, 실증됨). 상한 밖이면 다른 쓰레기 값과 같은
+    대접(None)을 받는 게 이 픽스다 — 별도로 거부하지 않는다."""
+    s = str(raw if raw is not None else "").strip()
+    if not s.isdigit():
+        return None
+    n = int(s)
+    return n if n <= _SQLITE_INT_MAX else None
+
+
 def _reject_ssrf(url):
     """내부망·클라우드 메타데이터(169.254.169.254 등, 이 서버는 AWS Lightsail) 접근 차단.
     문제 없으면 None, 문제 있으면 에러 메시지 문자열.
@@ -2275,6 +2294,65 @@ def _reject_ssrf(url):
     return None
 
 
+@app.post("/api/scene/split")
+def api_scene_split(request: Request, body: dict):
+    """소스 영상 → 컷 목록 + 컷별 포스터. **DB에 아무것도 안 쓴다.**
+
+    사장님이 보고 고르는 게 A안이다(설계 §4.1) — AI가 거르지 않는다. AI의
+    '짤로 쓸 만한가' 판단은 검증된 적이 없다(실측: 짜집기/촬영원본 판정 3편
+    전부 '촬영원본/확신 높음' 상수 출력). 저장은 기존 prepare→commit이 한다.
+
+    ffmpeg 지식(fps·프레임·컷 경계·포스터)은 이 라우트가 아니라 scene_cut에
+    있다 — app.py는 라우팅만, ffmpeg 호출은 scene_cut/scene_assets가 진다는
+    이 파일의 기존 배선(prepare가 scene_assets.make_clip/make_poster를 쓰는
+    것과 동일한 이유)을 그대로 따른 것. 그래서 app.py에 subprocess import가
+    추가로 필요 없다."""
+    src_url = (body.get("src_url") or "").strip()
+    if not src_url:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "src_url 필요"})
+    ssrf_err = _reject_ssrf(src_url)  # SSRF 1차 방어 — 내부망·169.254.169.254 등 차단
+    if ssrf_err:
+        return JSONResponse(status_code=422, content={"ok": False, "error": ssrf_err})
+    token = uuid.uuid4().hex
+    # ★_SCENE_SPLIT_DIR를 모듈 상수로 빼면 안 된다 — 모듈 임포트 시점 값이 굳어
+    # test client의 monkeypatch(_SCENE_ASSETS_DIR)를 안 따라간다. 매번 여기서 계산한다.
+    split_dir = _SCENE_ASSETS_DIR / "_split"
+    out_dir = split_dir / token
+    out_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            src = frame_extract.download_video(src_url, td)
+            fps = scene_cut.video_fps(src)
+            total = scene_cut.video_frame_count(src)
+            cuts = scene_cut.detect_cuts(src)
+            out = []
+            for i, (a, b) in enumerate(cuts):
+                poster = out_dir / f"{i}.jpg"
+                # 컷 대표 프레임 = 시작에서 3프레임 뒤(전환 잔상 회피)
+                scene_cut.extract_poster(src, a + 3, fps, poster)
+                out.append({
+                    "i": i, "start_frame": a, "end_frame": b,
+                    "start": round(a / fps, 3), "end": round(b / fps, 3),
+                    "duration": round((b - a) / fps, 3),
+                    "poster_url": f"/api/scene/split/{token}/{i}/poster",
+                })
+    except Exception as e:  # noqa: BLE001 — 다운로드/ffmpeg 실패는 그대로 알림
+        return JSONResponse(status_code=502, content={"ok": False, "error": f"분할 실패: {e}"})
+    return {"ok": True, "token": token, "fps": fps, "total_frames": total, "cuts": out}
+
+
+@app.get("/api/scene/split/{token}/{i}/poster")
+def api_scene_split_poster(token: str, i: int):
+    """분할 미리보기 썸네일. 토큰은 hex 검증 — 경로조작 차단."""
+    if not re.fullmatch(r"[0-9a-f]{32}", token or ""):
+        return Response(status_code=404, content=b"")
+    split_dir = _SCENE_ASSETS_DIR / "_split"  # ★여기도 함수 안에서 계산(위와 같은 이유)
+    p = split_dir / token / f"{i}.jpg"
+    if not p.exists():
+        return Response(status_code=404, content=b"")
+    return FileResponse(str(p), media_type="image/jpeg")
+
+
 @app.post("/api/scene/save/prepare")
 def api_scene_save_prepare(request: Request, body: dict):
     """구간컷 + Gemini 다축 태그 초안 → 모달 프리필용. 아직 DB 저장 안 함.
@@ -2295,9 +2373,14 @@ def api_scene_save_prepare(request: Request, body: dict):
     _SCENE_ASSETS_DIR.mkdir(parents=True, exist_ok=True)
     clip = _SCENE_ASSETS_DIR / f"{token}.mp4"
     poster = _SCENE_ASSETS_DIR / f"{token}.jpg"
+    src_start_frame = None
     try:
         with tempfile.TemporaryDirectory() as td:
             src = frame_extract.download_video(src_url, td)
+            # ★소스의 fps로 — 클립은 -r 30으로 통일되므로 클립 fps를 쓰면 원본이
+            # 30fps가 아닐 때 틀린 프레임 번호가 저장된다. 소스는 이 블록이 끝나면
+            # (TemporaryDirectory 청소로) 지워지므로 fps는 반드시 블록 안에서 구한다.
+            src_start_frame = round(start * scene_cut.video_fps(src))
             scene_assets.make_clip(src, start, end, clip)
     except Exception as e:  # noqa: BLE001 — 다운로드/ffmpeg 실패는 사용자에게 그대로 알림
         return JSONResponse(status_code=502, content={"ok": False, "error": f"구간컷 실패: {e}"})
@@ -2306,7 +2389,8 @@ def api_scene_save_prepare(request: Request, body: dict):
         "category": body.get("category"), "caption": body.get("caption"),
         "script": body.get("script"),
     })
-    return {"ok": True, "token": token, "duration": scene_assets.probe_duration(clip),
+    return {"ok": True, "token": token, "start_frame": src_start_frame,
+            "duration": scene_assets.probe_duration(clip),
             "poster_url": f"/api/scene/prepared/{token}/poster", "draft": draft}
 
 
@@ -2331,6 +2415,17 @@ def api_scene_save_commit(request: Request, body: dict):
     title = (body.get("title") or "").strip()
     if not title:
         return JSONResponse(status_code=422, content={"ok": False, "error": "title 필요"})
+
+    # ★'모름'과 미지정을 모두 막는다(설계 §7.2). AI 판정은 실측 탈락했고
+    # (정답 아는 시험지에서 3편 전부 '촬영원본/확신 높음'), 사람만 안다. 스토어엔
+    # 값 검증이 전혀 없으므로(실측: source_start_frame=-5.7도 그대로 저장됨) 여기가
+    # 유일한 방어선이다 — 손해가 비대칭이다(짤 하나 잃는 것보다 남의 촬영분이 라이브에
+    # 들어가는 게 훨씬 나쁘다).
+    origin = (body.get("source_origin") or "").strip()
+    if origin not in ("짜집기", "촬영원본"):
+        return JSONResponse(status_code=422, content={
+            "ok": False, "error": "출처를 골라야 저장됩니다(짜집기/촬영원본)"})
+
     asset_type = body.get("asset_type") or "clip"
     # 검증 없이 asset_type을 받으면 임의 문자열이 DB에 그대로 저장되고, 이게 프론트 HTML
     # 속성 컨텍스트(onclick='...')로 그대로 흘러 XSS 체인이 닫힌다(리뷰 실증) — 화이트리스트로 막는다.
@@ -2344,6 +2439,11 @@ def api_scene_save_commit(request: Request, body: dict):
     # 새로 거부하면 sfx에 render_mode를 실어보내는 기존 클라이언트 호출이 깨진다.)
     render_mode = body.get("render_mode")
     if asset_type == "clip":
+        # 페이즈1 리뷰 잔여 — render_mode 없이 저장되면 배지가 NULL을 '컷어웨이'로
+        # 거짓 표기한다(설계 §8). clip은 반드시 골라야 한다.
+        if not render_mode:
+            return JSONResponse(status_code=422,
+                                content={"ok": False, "error": "clip은 render_mode가 필요합니다"})
         err = _validate_render_mode(asset_type, render_mode)
         if err:
             return JSONResponse(status_code=422, content={"ok": False, "error": err})
@@ -2392,6 +2492,8 @@ def api_scene_save_commit(request: Request, body: dict):
         "category": body.get("category"), "subject": body.get("subject"),
         "tone": body.get("tone"), "keywords": body.get("keywords"),
         "source_kind": body.get("source_kind"), "source_ref": body.get("source_ref"),
+        "source_origin": origin,
+        "source_start_frame": _normalize_source_start_frame(body.get("source_start_frame")),
     }, customer_id=_cid(request))
     return {"ok": True, "id": aid}
 
@@ -2478,6 +2580,14 @@ def api_scene_update(request: Request, asset_id: int, body: dict):
         asset = store.get_scene_asset(asset_id, customer_id=cid)
         if not asset:
             return JSONResponse(status_code=404, content={"ok": False, "error": "자산 없음"})
+        # commit은 clip에 render_mode를 필수로 강제한다(설계 §8, 페이즈1 리뷰 잔여) —
+        # update가 같은 자산을 render_mode=None으로 되돌리면 그 불변식이 뒷문으로 풀린다
+        # (리뷰 I-2, 실증됨: 200으로 통과하고 배지가 NULL을 '컷어웨이'로 거짓 표기).
+        # commit과 동일하게 clip에서만 None을 거부 — sfx/overlay는 원래 render_mode가
+        # 없는 게 정상(스펙 §4)이라 계속 허용해야 한다.
+        if asset["asset_type"] == "clip" and not body.get("render_mode"):
+            return JSONResponse(status_code=422,
+                                content={"ok": False, "error": "clip은 render_mode가 필요합니다"})
         err = _validate_render_mode(asset["asset_type"], body.get("render_mode"))
         if err:
             return JSONResponse(status_code=422, content={"ok": False, "error": err})
