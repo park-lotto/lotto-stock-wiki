@@ -72,7 +72,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
   gtag('config', 'G-C8B2QNTM16');
 </script>
 
-		<form method="post" action="./summaryexcel.aspx?cn=&amp;fmt=2&amp;ee=20260713&amp;sortCol=&amp;sortTyp=" id="Form1">
+		<form method="post" action="./summaryexcel.aspx?cn=&amp;fmt=2&amp;ee=20260720&amp;sortCol=&amp;sortTyp=" id="Form1">
 <div class="aspNetHidden">
 <input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwULLTE5ODc1MjczMzhkZK1uVmb2cGLVvIQ+lHb37TlJRESJ" />
 </div>
@@ -114,7 +114,7 @@ function __doPostBack(eventTarget, eventArgument) {
 					<col style='mso-width-source:userset;width:275px'>
                      <col style='mso-width-source:userset;width:450px'>
 				    <tr>
-					    <td colspan="7" height="30" align="center" class="title">산업리포트 요약(2026.07.13)</td>
+					    <td colspan="7" height="30" align="center" class="title">산업리포트 요약(2026.07.20)</td>
 				    </tr>
                     <tr>
                         <td class="hd">기관명/작성자</td>
@@ -129,15 +129,15 @@ function __doPostBack(eventTarget, eventArgument) {
                     </tr>
                     
                     <tr style="mso-height-source:auto;">
-                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>유재선</td>
-                        <td class="ind"><font color="rgb(53,91,157)">복합유틸리티</font></td>                        
+                        <td class="brk"><font color="rgb(53,91,157)">IBK투자증권</font><br/>이승훈</td>
+                        <td class="ind"><font color="rgb(53,91,157)">양방향미디어와서비스</font></td>                        
                         
-                            <td class="img2">=</td>
-                            <td class="recomm">Neutral</td>
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
                         
-                        <td class="pre_recomm">Neutral</td>
-						<td class="rpt_title">5월 전력통계월보: 산업용 수요 및 판가 약세 지속</td>
-                        <td class="comment2"><span class="comment_text">▶</span> 5월 전력판매량 YoY -0.7%, 전력판매금액 YoY -1.8%<br/><span class="comment_text">▶</span> 원자력과 유연탄 발전소 이용률 전월대비 개선<br/><span class="comment_text">▶</span> 2분기까지 특이사항 없음. 하반기는 일시적으로 비용 확대 예상</td>
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">AI 컴퓨팅 판매업자들: 네오클라우드</td>
+                        <td class="comment2"><span class="comment_text">▶</span> GPU 컴퓨팅을 판매하는 네오클라우드<br/><span class="comment_text">▶</span> GPU 서버, 네트워크, AI 운영 도구로 집중 구축<br/><span class="comment_text">▶</span> GPU 간 동기화 효율</td>
                     </tr>
                     
                     <!--tr style="height:5px; border:0px;">
