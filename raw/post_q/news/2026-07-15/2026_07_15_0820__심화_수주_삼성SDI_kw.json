@@ -1,0 +1,31 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "삼성SDI",
+      "signal": "bull",
+      "reason": "정부 주도 AI 배전망 ESS 사업 66% 수주 및 하반기 실적 턴어라운드 기대",
+      "ts": "2026-07-10",
+      "quote": "삼성SDI, 정부 첫 'AI 배전망 ESS 구축 사업'서 ESS배터리 전체의 66% 수주",
+      "sector": "2차전지"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "삼성SDI, 정부 AI 배전망 ESS 사업 66% 수주",
+      "ts": "2026-07-10",
+      "quote": "삼성SDI, 정부 첫 'AI 배전망 ESS 구축 사업'서 ESS배터리 전체의 66% 수주"
+    },
+    {
+      "fact": "삼성SDI 하반기 흑자전환 기대감으로 주가 급등",
+      "ts": "2026-07-13",
+      "quote": "삼성SDI, 9%대 급등⋯AI 배전망 ESS 수주에 하반기 흑자전환 기대↑"
+    },
+    {
+      "fact": "글로벌 A사 BBU/UPS 공급 협상 진행",
+      "ts": "2026-04-28",
+      "quote": "삼성SDI, 글로벌 A사 ‘배터리 수주’ 눈앞…수천억 규모 ‘BBU·UPS’ 공급 협상 막바지"
+    }
+  ],
+  "quote": "삼성SDI, 정부 첫 'AI 배전망 ESS 구축 사업'서 ESS배터리 전체의 66% 수주"
+}

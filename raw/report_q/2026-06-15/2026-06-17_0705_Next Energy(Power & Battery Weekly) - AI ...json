@@ -1,0 +1,52 @@
+{
+  "meta": {
+    "date": "2026-06-15",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-17_0705_Next Energy(Power & Battery Weekly) - AI ...md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "황성현",
+    "report_date": "2026.06.15.",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "GPU 선물 가격",
+      "전력 및 탄소 가격",
+      "원전 가동률 및 정비일수",
+      "EV 판매량",
+      "원자재 가격(니켈, 코발트, 망간, 리튬, 알루미늄, 구리)",
+      "국제 에너지 가격(국제유가, 천연가스)",
+      "환율"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2027년",
+        "event": "원전 상시검사 전면 도입"
+      },
+      {
+        "date": "2030년대 초",
+        "event": "체코 자국내 SMR 3기 착공 목표"
+      }
+    ],
+    "top_picks": [
+      "Fluence",
+      "삼성SDI",
+      "포스코퓨처엠",
+      "SK이노베이션",
+      "Nuscale",
+      "Centrus",
+      "Cameco",
+      "두산에너빌리티",
+      "LG에너지솔루션",
+      "LG화학",
+      "Tesla",
+      "CATL",
+      "BYD"
+    ],
+    "risk": "선물 시장은 위험을 분산하는 동시에 증폭시킬 수 있고, 현물 시장이 미성숙한 상태에서 지수 신뢰성 검증에는 시간이 필요하다.",
+    "quote": "단기적으로는 가격 지표 확인용, 중기적으로는 빅테크·데이터센터의 위험 관리 수단, 장기적으로는 컴퓨팅 파워를 자산으로 보는 계기가 될 전망이다. 원유·구리·전력·해운처럼 본격적으로 가격이 매겨지고 거래되는 시대가 시작될 수 있다."
+  }
+}

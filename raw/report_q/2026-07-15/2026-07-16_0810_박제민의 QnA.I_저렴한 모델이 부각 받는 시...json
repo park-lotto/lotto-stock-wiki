@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "date": "2026-07-15",
+    "broker": "SK증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-16_0810_박제민의 QnA.I_저렴한 모델이 부각 받는 시...md"
+  },
+  "questionnaire": {
+    "broker": "SK증권",
+    "analyst": "박제민",
+    "report_date": "2026-07-15",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "시가총액",
+      "12MF PER",
+      "금리",
+      "신용등급"
+    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026-07-14",
+        "event": "인스타그램 부서 헤드 Adam이 내부적으로 엔지니어별 토큰 예산 캡 언급"
+      },
+      {
+        "date": "2026-07-06",
+        "event": "GPT-5.6 정상 배포"
+      },
+      {
+        "date": "2026-06-30",
+        "event": "Fable, Mythos 수출 통제 해제하고 차일 글로벌 복귀"
+      },
+      {
+        "date": "2026-06-26",
+        "event": "OpenAI GPT 5.6 프리뷰 정부 승인 ~20개 trusted partners에게만 배포"
+      },
+      {
+        "date": "2026-06-12",
+        "event": "미국 정부 Fable, Mythos 전세계 수출 통제 명령"
+      },
+      {
+        "date": "2026-06-09",
+        "event": "Fable 5 공개"
+      }
+    ],
+    "top_picks": [
+      "엔비디아",
+      "알파벳",
+      "애플",
+      "마이크로소프트",
+      "아마존",
+      "메타 플랫폼스",
+      "오라클",
+      "코어위브"
+    ],
+    "risk": [
+      "기업들의 토큰 가격 부담 증가",
+      "오픈소스 모델 성능 향상에 따른 Frontier 모델 규제 및 수출 지연 리스크",
+      "국채 금리 상승에 따른 신용등급 강등 및 변동 금리 조달 기업의 이자 부담 증가"
+    ],
+    "quote": "저렴한 모델이 부각 받는 시대: 무게추는 다시 유통사에게?"
+  }
+}

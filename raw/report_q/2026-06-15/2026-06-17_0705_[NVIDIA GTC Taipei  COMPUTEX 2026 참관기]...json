@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "date": "2026-06-15",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-17_0705_[NVIDIA GTC Taipei  COMPUTEX 2026 참관기]...md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "김운호",
+    "report_date": "2026.06.15",
+    "target_kind": "sector",
+    "sector_name": "반도체",
+    "sector_view": null,
+    "thesis": [
+      "Agent AI 시대 도래로 인한 Computing 개선 및 Token 수요 폭발",
+      "Agent AI 워크로드에 따른 Memory/Storage 시장의 성장 동력 확보 및 Full Stacking 현상",
+      "GPU/XPU뿐만 아니라 CPU, Edge 기기, 통신 인프라(광 연결)로의 AI 시장 확산"
+    ],
+    "timeline": [
+      "2026년 6월 초: Computex 2026 개최 및 Agent AI 확산 확인",
+      "2025년~: NVIDIA GTC 대만 개최 및 AI 관련 생태계 강화",
+      "2030년: x86 기반 서버 점유율 및 Agent AI 토큰 수요 증가 예상"
+    ],
+    "top_picks": [
+      {
+        "name": "NVIDIA",
+        "reason": "Agent AI 플랫폼 선도 및 시스템/플랫폼 회사로의 진화",
+        "tp": null
+      },
+      {
+        "name": "Intel",
+        "reason": "Agent AI용 CPU(Core Ultra Series 3) 및 하이브리드 추론 솔루션 제시",
+        "tp": null
+      },
+      {
+        "name": "Qualcomm",
+        "reason": "Snapdragon X series를 통한 PC용 Agent AI 생태계 주도",
+        "tp": null
+      },
+      {
+        "name": "Marvell",
+        "reason": "데이터 전송 병목 해소를 위한 광 연결(CPO) 기술 제시",
+        "tp": null
+      },
+      {
+        "name": "Solidigm",
+        "reason": "Agent AI 시대의 SSD 역할 확대 및 KV cache 솔루션 제시",
+        "tp": null
+      },
+      {
+        "name": "KIOXIA",
+        "reason": "Context Memory Storage를 활용한 AI Inference 가속",
+        "tp": null
+      },
+      {
+        "name": "삼성중공업",
+        "reason": "Floating Data center를 통한 전력 및 부지 문제 해결 솔루션 제시",
+        "tp": null
+      }
+    ],
+    "risk": "데이터 전송 병목(Copper Wall 현상), Storage 선택에 따른 경제성 문제, Floating Data center 운용 시의 외부 환경(염분, 파도 등) 리스크",
+    "quote": "대한민국은 Agent AI 시대에 NVIDIA와 동반 성장할 최적의 생태계(Ecosytem)를 보유하고 있음을 확인하는 순간입니다."
+  }
+}

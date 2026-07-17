@@ -1,0 +1,63 @@
+{
+  "meta": {
+    "date": "2026-07-14",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-14_1106_유안타 2Q26 Preview 컨센 상회 부합 하회 ...md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "고선영, 이안나, 황규원, 김용민, 백종민, 이승웅, 이창영, 하현수, 손현정, 우도형",
+    "report_date": "2026-06-14",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "환율",
+      "금리"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "전기전자",
+        "stance": "Overweight",
+        "reason": "대형주 중심 이익 기준 어닝 서프라이즈 광범위 확인, 서버 응용처 확대 및 AI 인프라 투자 사이클"
+      },
+      {
+        "sector": "2차전지",
+        "stance": "Overweight",
+        "reason": "미국 AIDC향 ESS 수요 증가 및 병목 예상"
+      },
+      {
+        "sector": "전력기기",
+        "stance": "Overweight",
+        "reason": "북미 AI 데이터센터 및 전력망 투자 확대에 따른 수주 호조"
+      },
+      {
+        "sector": "방산/우주",
+        "stance": "Overweight",
+        "reason": "지정학적 리스크 지속 및 국방 예산 확대"
+      },
+      {
+        "sector": "통신/지주",
+        "stance": "Overweight",
+        "reason": "AIDC를 중장기 핵심 성장동력으로 제시"
+      },
+      {
+        "sector": "제약/바이오",
+        "stance": "Neutral",
+        "reason": "수출 비중이 클수록 유리, 고환율 수혜"
+      }
+    ],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": [
+      "삼성전기",
+      "한중엔시에스",
+      "S-Oil",
+      "코오롱인더",
+      "LIG디펜스앤에어로스페이스",
+      "한화에어로스페이스",
+      "한화시스템"
+    ],
+    "risk": "금리 상승, 환율 변동성, 전쟁 휴전 이후 수급 변화, 원자재 가격 급등락",
+    "quote": "2Q26 Preview의 핵심 메시지는 두 가지. ① 대형주 중심 이익 기준 어닝 서프라이즈가 광범위하게 확인된다는 점. 단순 일회성 요인이 아닌 사업 구조의 질적 개선이 서프라이즈 달성 배경에 있다는 점이 중요."
+  }
+}

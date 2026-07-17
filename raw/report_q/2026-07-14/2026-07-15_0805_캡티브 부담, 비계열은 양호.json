@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-14",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-15_0805_캡티브 부담, 비계열은 양호.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "김회재",
+    "report_date": "2026.07.14",
+    "stocks": [
+      {
+        "name": "제일기획",
+        "code": "030000",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "27,000",
+        "tp_prev": "27,000",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 GP 5천억원(+3% yoy), OP 940억원(+2% yoy) 전망",
+        "estimate_revision": "26E 매출총이익 1,919십억원(-2.0%), 영업이익 343십억원(-2.4%)으로 수정",
+        "next_catalyst": "주주환원 정책 및 자사주 단계적 소각",
+        "thesis": [
+          "주요 광고주의 마케팅 예산 축소에도 불구하고 비계열 성장은 양호",
+          "지난 5년간 진행된 자회사 영업권 손상 마무리에 따른 순이익 성장",
+          "배당성향 60%의 고배당 정책 및 자사주 소각 등 주주환원 매력도 높음"
+        ],
+        "valuation_basis": "12M FWD EPS 2,020원에 PER 13배(최근 5년, 21~25년 평균) 적용",
+        "risk": "주요 광고주의 원가 인상에 따른 마케팅 예산 축소 부담",
+        "supply_comment": null,
+        "quote": "주요 광고주의 마케팅 예산 축소는 실적에 부담. 비계열 성장은 양호"
+      }
+    ]
+  }
+}

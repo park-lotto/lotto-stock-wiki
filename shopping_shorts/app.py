@@ -4,6 +4,7 @@ import hashlib
 import ipaddress
 import os
 import re
+import secrets
 import shutil
 import socket
 import tempfile
@@ -31,7 +32,8 @@ from shopping_shorts.video_analysis import analyze_video, translate_keyword
 from shopping_shorts.product_identify import fetch_lens_lines, identify_product_from_lines
 from shopping_shorts.search_links import build_search_links, lens_search_url
 from shopping_shorts import mix_pipeline
-from shopping_shorts.mix_pipeline import run_mix_job, run_render, retype_mix_job, _source_video_id, resynth_tts_job
+from shopping_shorts.mix_pipeline import (run_mix_job, run_render, run_preview, retype_mix_job,
+                                          _source_video_id, resynth_tts_job)
 from shopping_shorts.lens_discover import search_similar_videos, upload_frame
 from shopping_shorts.media_download import resolve_media_url, download_any
 from shopping_shorts import edit_plan as _edit_plan
@@ -40,6 +42,8 @@ from shopping_shorts.tts import synthesize_tts
 from shopping_shorts import tts, asr_check
 from shopping_shorts.narration_naturalize import naturalize as _naturalize
 from shopping_shorts import frame_extract, scene_assets, scene_cut
+from shopping_shorts import effect_match, remotion_render, points
+from shopping_shorts import video_assemble
 import uuid
 
 app = FastAPI(title="쇼핑쇼츠 레퍼런스 랭킹")
@@ -500,6 +504,10 @@ def api_extract_script(shortcode: str):
     video_url = item.get("video_url")
     if not video_url:
         return JSONResponse(status_code=422, content={"ok": False, "error": "video_url 없음 — 재수집 필요"})
+    # DB(수집분) 유래라 직접 입력은 아니지만, 오염된 수집물이 내부망을 찌르지 않게 같이 막는다.
+    blocked = _ssrf_guard(video_url)
+    if blocked:
+        return blocked
 
     work_dir = _FIND_TMP_DIR / hashlib.sha1(code.encode()).hexdigest()[:16]
     try:
@@ -541,8 +549,27 @@ def _backfill_extract_structure(db_path, shortcode, full_text):
         structure = None
     if structure:
         store.save_extract_structure(shortcode, structure)
+        _promote_category_from_structure(store, shortcode, structure)
     else:
         store.mark_structure_attempted(shortcode)
+
+
+def _promote_category_from_structure(store, shortcode, structure):
+    """구조분석이 함께 뽑아온 product_category로 키워드 추측을 승격한다(2026-07-16).
+
+    왜: categorize()의 키워드 추측은 실측 정확도 54%(13건 중 7)인데 학습 코퍼스의
+    다수를 차지해 통계를 오염시킨다. 같은 13건을 Gemini는 77%(10건) 맞혔고, 구조분석이
+    어차피 같은 full_text를 보내므로 추가 비용은 사실상 0이다.
+
+    우선순위 user > gemini > keyword — 사용자가 고른 값은 절대 덮지 않는다(덮으면
+    교정 경로 자체가 무의미해진다). 통제 어휘 밖 값은 버린다(고아 학습 버킷 방지)."""
+    cat = (structure or {}).get("product_category")
+    if not cat or cat not in CATEGORY_KEYWORDS:
+        return  # "기타"·미상·어휘 밖 → 손대지 않는다(기존 값 유지)
+    cached = store.get_extract(shortcode)
+    if cached and cached.get("category_source") == "user":
+        return
+    store.update_extract_category(shortcode, cat, source="gemini")
 
 
 @app.get("/api/wiki/categories")
@@ -611,6 +638,9 @@ def api_produce_extract_from_url(body: dict, background_tasks: BackgroundTasks):
     url = (body.get("url") or "").strip()
     if not url:
         return JSONResponse(status_code=422, content={"ok": False, "error": "url 필요"})
+    blocked = _ssrf_guard(url)        # download_any가 이 URL을 그대로 받는다
+    if blocked:
+        return blocked
     code = (body.get("shortcode") or "").strip() or hashlib.sha1(url.encode()).hexdigest()[:12]
     body_category = (body.get("category") or "").strip() or None
     name = body.get("name") or ""
@@ -619,8 +649,13 @@ def api_produce_extract_from_url(body: dict, background_tasks: BackgroundTasks):
     if cached:
         caption_for_infer = body.get("caption") or cached.get("full_text", "")
         category = body_category or cached.get("category") or categorize(name, caption_for_infer) or None
-        if not cached.get("category") and category:
-            store.update_extract_category(code, category)  # 다음 클릭부터 안정(C-1: script_json은 안 건드림)
+        # [2026-07-16] 출처를 남긴다: 사용자가 고른 값(body_category)은 user — 이후
+        # Gemini 승격이 이걸 덮지 않는다. 자동 추측은 keyword로 남겨 승격 대상이 된다.
+        if body_category:
+            store.update_extract_category(code, body_category, source="user")
+        elif not cached.get("category") and category:
+            # 다음 클릭부터 안정(C-1: script_json은 안 건드림)
+            store.update_extract_category(code, category, source="keyword")
         structure = cached.get("structure")
         # [2026-07-16 I-2 잔여] 한 번 시도해서 못 얻은 영상은 다시 예약하지 않는다 —
         # 안 그러면 클릭마다 Gemini를 또 부른다. 재시도는 daily_batch가 맡는다.
@@ -742,6 +777,10 @@ def api_produce_save_to_wiki(request: Request, body: dict, background_tasks: Bac
     url = (body.get("url") or "").strip()
     if not url:
         return JSONResponse(status_code=422, content={"ok": False, "error": "url 필요"})
+    # video_url이 오면 download_any가 그걸 우선 쓴다 — 둘 다 검사해야 한다.
+    blocked = _ssrf_guard(*[u for u in (url, body.get("video_url")) if u])
+    if blocked:
+        return blocked
     code = (body.get("shortcode") or "").strip() or hashlib.sha1(url.encode()).hexdigest()[:12]
     body_category = (body.get("category") or "").strip() or None  # 빈문자열→None (NULL/빈문자열 혼재 방지)
     store = Store(DB_PATH)
@@ -1200,6 +1239,9 @@ def api_mix_start(background_tasks: BackgroundTasks, body: dict):
     urls = [u for u in (body.get("urls") or []) if u]
     if len(urls) < 2:
         return JSONResponse(status_code=422, content={"ok": False, "error": "레퍼런스 URL 2개 이상 필요"})
+    blocked = _ssrf_guard(*urls)      # 이 URL들은 run_mix_job이 그대로 다운로드한다
+    if blocked:
+        return blocked
     target = int(body.get("target_seconds") or 30)
     structure = body.get("structure") if body.get("structure") in ("template", "free") else "template"
     subtitle_removal = bool(body.get("subtitle_removal", False))
@@ -1227,7 +1269,11 @@ def api_mix_status(job_id: str):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
-    return {"ok": True, "status": job["status"], "error": job["error"]}
+    return {"ok": True, "status": job["status"], "error": job["error"],
+            # 1단계 미리보기(2026-07-17): 폴러를 둘로 만들지 않으려고 기존 응답에 얹는다(스펙 §6.3).
+            # preview_path는 서버 내부 경로라 안 내보낸다 — 파일은 전용 라우트로만 서빙.
+            "preview_status": job.get("preview_status"),
+            "preview_error": job.get("preview_error")}
 
 
 @app.get("/api/mix/result/{job_id}")
@@ -1292,12 +1338,83 @@ def api_mix_adjust(body: dict):
 
 @app.post("/api/mix/render")
 def api_mix_render(background_tasks: BackgroundTasks, body: dict):
+    """최종 렌더 예약. 미리보기(/api/produce/mix/preview)와 같은 중복예약 가드를 건다 —
+    이쪽이 오히려 **돈이 나가는** 경로다(subtitle_removal이 켜져 있으면 VMake 유료 호출).
+
+    가드가 없으면 더블클릭·폴링 재시도로 run_render가 2개 예약돼 같은 work/final.mp4에
+    ffmpeg 둘이 동시에 쓰고(잘린 mp4가 status='done'으로 통과) VMake 유료 호출도 2회 나간다.
+    run_render 안의 status='rendering'은 응답을 보낸 뒤에야 돌기 때문에 가드가 못 된다 —
+    수십 ms 간격의 POST 2건이 둘 다 아직 이전 status를 보고 통과한다(TOCTOU).
+    → 여기서 **동기적으로** 선기록한다.
+    """
     job_id = body.get("job_id")
-    job = Store(DB_PATH).get_mix_job(job_id)
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "렌더할 job 없음"})
+    # removing_subtitles = VMake 유료 단계 진행 중. 여기서 재예약되면 그 돈이 두 번 나간다.
+    if job.get("status") in ("rendering", "removing_subtitles") and not _render_is_stale(job):
+        return {"ok": True, "status": job["status"]}
+    store.update_mix_job(job_id, status="rendering", error=None)
     background_tasks.add_task(run_render, job_id, DB_PATH, _MIX_WORK_DIR)
-    return {"ok": True}
+    return {"ok": True, "status": "rendering"}
+
+
+_PREVIEW_STALE_SEC = 600   # 10분 — 이보다 오래 'rendering'이면 죽은 렌더의 잔해로 본다.
+
+
+def _render_is_stale(job) -> bool:
+    """'rendering' 상태가 **죽은 렌더의 잔해**인가 (미리보기·최종렌더 공용).
+
+    status/preview_status는 DB 영속 상태인데 TTL·하트비트가 없다. 렌더 중 서버가 재시작되면
+    (auto_deploy 크론 3분 — shopping_shorts 변경 시 systemd 재시작이라 자주 일어난다)
+    BackgroundTask가 죽어 except가 못 돌고 DB엔 'rendering'이 **영원히** 남는다. 그러면 다시
+    눌러도 위 중복예약 가드에 걸려 무한 ⏳이고, 'failed'가 안 오니 스펙 §7.1 탈출구도 안 열려
+    **다음 버튼이 영구 잠긴다**(복구는 재매칭뿐인데 화면에 힌트가 없다).
+    → updated_at 기준 타임아웃으로 재예약을 허용해 탈출구를 연다.
+    """
+    ts = job.get("updated_at")
+    if not ts:
+        return True                      # 알 수 없으면 갇히는 쪽보다 재시도 쪽으로
+    try:
+        dt = datetime.fromisoformat(ts)
+    except (TypeError, ValueError):
+        return True
+    if dt.tzinfo is None:                # 옛 행이 naive면 UTC로 본다(store는 UTC로 쓴다)
+        dt = dt.replace(tzinfo=timezone.utc)
+    return (datetime.now(timezone.utc) - dt).total_seconds() > _PREVIEW_STALE_SEC
+
+
+@app.post("/api/produce/mix/preview")
+def api_produce_mix_preview(background_tasks: BackgroundTasks, body: dict):
+    """1단계 미리보기 렌더 예약 — 유료 자막제거 없이(0원). 스펙 §6.3.
+
+    다음 단계(자막제거)가 VMake 유료 API라, 컷·대본이 틀린 채 넘어가면 그 돈이 날아간다.
+    그래서 여기서 먼저 공짜로 보여주고 OK를 받는다."""
+    job_id = body.get("job_id")
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "매칭 먼저 실행하세요"})
+    if job.get("preview_status") == "rendering" and not _render_is_stale(job):
+        return {"ok": True, "status": "rendering"}   # 더블클릭 — ffmpeg를 두 번 돌리지 않는다
+    # ★'rendering'을 여기서 **동기적으로** 쓴다. run_preview 안에서 쓰면 그건 응답을 보낸 뒤에
+    # 도는지라, 수십 ms 간격의 POST 2건이 둘 다 위 가드를 통과해(둘 다 아직 None을 본다)
+    # run_preview가 두 번 예약되고 ffmpeg 두 개가 같은 work/preview.mp4에 쓴다 —
+    # 잘린 mp4가 'ready'로 게이트를 통과할 수 있다(TOCTOU).
+    store.update_mix_job(job_id, preview_status="rendering", preview_error=None)
+    background_tasks.add_task(run_preview, job_id, DB_PATH, _MIX_WORK_DIR)
+    return {"ok": True, "status": "rendering"}
+
+
+@app.get("/api/produce/mix/preview/{job_id}")
+def api_produce_mix_preview_file(job_id: str):
+    """1단계 미리보기 mp4 서빙(/api/produce/mix/poster와 같은 성격 — job의 미디어 파일)."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    path = (job or {}).get("preview_path")
+    if not job or job.get("preview_status") != "ready" or not path or not Path(path).exists():
+        return JSONResponse(status_code=404, content={"ok": False, "error": "미리보기 없음"})
+    return FileResponse(path, media_type="video/mp4")
 
 
 @app.get("/api/mix/tts/{job_id}/{beat_idx}")
@@ -1314,14 +1431,31 @@ def api_mix_tts(job_id: str, beat_idx: int):
 @app.get("/api/voice-presets")
 def api_voice_presets(lang: str = "KR"):
     """성우별 그룹 목록(유저 노출용 — source_ref는 내부 전용이라 제외).
-    성우 1명당 stable(기본 노출)/natural/expressive 3톤을 variants에 묶어서 반환."""
+
+    성우 1명당 stable(기본 노출)/natural/expressive를 variants에 묶어 반환하고,
+    베스트 5명은 whisper까지 4톤이다(2026-07-16 청취 판정). best=베스트 성우 플래그로,
+    프론트가 ⭐ 배지에 쓴다. **순서는 여기서 정하지 않는다** — Store.list_voice_presets의
+    ORDER BY best DESC, created_at이 정본이고 이 함수는 그 순서를 보존만 한다."""
     rows = Store(DB_PATH).list_voice_presets(lang=lang)
     groups = {}
     for p in rows:
+        # 튜닝 작업대가 만든 임시 프리셋(origin="tuned", :1526)은 카드에서 뺀다.
+        # prune_voice_presets가 그 행을 **의도적으로** 안 지우므로(작업대엔 필요, 리뷰 S2)
+        # 거르지 않으면 이름·설명·샘플이 다 빈 껍데기가 성우 카드로 뜬다 — 2026-07-17
+        # 라이브 화면에서 kr-test·kr-snap이 실제로 그렇게 보였다(사장님이 화면을 보라고
+        # 해서 브라우저로 직접 열어보고 발견). DB에 남는 건 맞고 카드에 나오는 게 틀렸다.
+        # ⚠️ origin이 없는 옛 행은 **보이는 쪽으로** 실패시킨다 — 안 보이는 실패는
+        # 아무도 못 잡고, 성우가 통째로 사라지는 쪽이 훨씬 나쁘다.
+        if p.get("origin") == "tuned":
+            continue
         gid = p["group_id"]
         g = groups.setdefault(gid, {
             "group_id": gid, "name": p["name"], "one_liner": p["one_liner"],
             "lang": p["lang"], "archetype": p["archetype"],
+            # best는 성우(그룹)의 성질이라 첫 행에서 한 번만 집는다 — 같은 성우의
+            # 3~4개 variant 행은 모두 같은 값이다. 순서는 Store가 이미 정해서
+            # 줬고(ORDER BY best DESC), dict가 삽입 순서를 보존하므로 여기선 보존만 한다.
+            "best": bool(p.get("best", False)),
             "default_variant": "stable", "variants": {},
         })
         g["variants"][p["variant"]] = {
@@ -1341,7 +1475,14 @@ def api_voice_preset_sample(preset_id: str):
     f = voice_presets.SAMPLES_DIR / p["sample_file"]
     if not f.exists():
         return JSONResponse(status_code=404, content={"ok": False})
-    return FileResponse(str(f), media_type="audio/mpeg")
+    # no-cache = "캐시는 해도 되지만 쓰기 전에 반드시 서버에 물어봐라".
+    # 샘플은 성우를 재튜닝할 때마다 **파일 내용이 바뀌는데 이름은 그대로**라, 헤더가 없으면
+    # 브라우저가 옛것을 무기한 들려준다 — 2026-07-17 실사고: 47개를 새 속도로 재생성·배포한
+    # 뒤에도 사장님 화면에선 옛 소리가 났다(미나 속삭임 브라우저 3.2초 vs 서버 7.1초).
+    # FileResponse가 etag·last-modified를 붙이므로 안 바뀌었으면 304로 싸게 끝난다
+    # (no-store가 아니다 — 매번 통째로 다시 받게 하면 그건 그것대로 낭비다).
+    return FileResponse(str(f), media_type="audio/mpeg",
+                        headers={"Cache-Control": "no-cache"})
 
 
 _TUNE_CORPUS = Path(__file__).parent / "assets" / "tune_corpus.json"
@@ -1444,16 +1585,30 @@ def _voice_snapshot(store, body):
     **naturalize_profile·model_id는 반드시 프리셋에서 조회해 넣어야 한다.** 이게 빠지면
     튜닝 작업대에서 동결한 프로파일이 렌더에 도달하지 못하고, 에러 없이 기본값으로 조용히
     합성돼 "동결했는데 소리가 그대로"가 된다(2026-07-15 whole-branch 리뷰 S1).
-    미리듣기(/api/mix/voice/preview)도 같은 스냅샷을 써야 미리듣기=렌더가 보장된다(S8)."""
+    미리듣기(/api/mix/voice/preview)도 같은 스냅샷을 써야 미리듣기=렌더가 보장된다(S8).
+
+    body.whisper_roles: 영상별 "이 영상은 속삭임을 훅에만" 오버라이드(2026-07-17). 설계문서
+    §6은 "영상별 비트 토글은 새 저장층이 필요하다"고 적었지만 틀렸다 — 이 함수가 만드는
+    voice 스냅샷이 이미 job(영상)마다 저장된다(app.py의 store.update_mix_job(job_id, voice=...)).
+    그래서 새 테이블 없이 body 값을 naturalize_profile.whisper.roles에만 얹는다.
+    없으면(None/누락) 프리셋의 원래 프로파일을 그대로 쓴다(하위호환 — 기존 호출부가 안 깨짐).
+    프리셋 dict는 store가 매번 새로 만들어 주지만(json.loads), 혹시 캐싱하는 구현으로 바뀌어도
+    안전하도록 **제자리 수정 없이** 얕은 복사 위에서만 whisper 키를 교체한다."""
     preset_id = body.get("preset_id")
     p = store.get_voice_preset(preset_id) if preset_id else None
+    naturalize_profile = (p or {}).get("naturalize_profile")
+    whisper_roles = body.get("whisper_roles")
+    if whisper_roles is not None:
+        naturalize_profile = dict(naturalize_profile) if naturalize_profile else {}
+        naturalize_profile["whisper"] = dict(naturalize_profile.get("whisper") or {})
+        naturalize_profile["whisper"]["roles"] = whisper_roles
     return {
         "preset_id": preset_id,
         "voice_id": body.get("voice_id") or (p or {}).get("base_voice_id"),
         "settings": body.get("settings") or (p or {}).get("voice_settings"),
         "speed": body.get("speed", 1.0),
         "silence_trim": body.get("silence_trim", "off"),
-        "naturalize_profile": (p or {}).get("naturalize_profile"),
+        "naturalize_profile": naturalize_profile,
         "model_id": (p or {}).get("model_id") or "eleven_v3",
     }
 
@@ -1502,16 +1657,55 @@ def api_mix_video(job_id: str):
     return FileResponse(job["video_path"])
 
 
+def _reject_cdn_proxy(url: str, allowed_hosts) -> bool:
+    """CDN 프록시(/api/thumb·/api/video)에 들어온 url이 거부 대상인가.
+
+    ★부분문자열 검사(`h in url`)를 쓰면 안 된다. 그건 URL 문자열 아무 데나 허용호스트
+    이름이 들어있기만 하면 통과시키므로
+        http://169.254.169.254/latest/meta-data/...?x=cdninstagram.com
+    이 화이트리스트를 뚫고, 서버가 AWS 메타데이터에 GET을 보내 응답 본문을 그대로
+    돌려준다(이 서버는 Lightsail — IAM 크리덴셜 직결). 반드시 파싱한 hostname으로
+    정확일치/서브도메인 일치만 허용하고, 내부망 차단(_reject_ssrf)도 함께 건다.
+    """
+    if _reject_ssrf(url) is not None:
+        return True
+    try:
+        host = (urllib.parse.urlparse(url).hostname or "").lower()
+    except ValueError:
+        return True
+    if not host:
+        return True
+    return not any(host == h or host.endswith("." + h) for h in allowed_hosts)
+
+
+def _ssrf_guard(*urls):
+    """URL을 받아 다운로드하는 라우트의 공통 전처리. 문제 있으면 422 응답, 없으면 None.
+
+    P0-3: _reject_ssrf가 /api/scene/save/prepare 한 곳에만 걸려 있어서, 임의 URL을
+    download_any/download_video로 그대로 fetch하는 나머지 라우트(mix/start·
+    extract_from_url·save_to_wiki·wiki/save)는 전부 무방비였다. 가드가 "어떤 라우트엔
+    있고 어떤 라우트엔 없는" 상태 자체가 결함이라, 호출부를 하나로 모은다.
+    """
+    for u in urls:
+        err = _reject_ssrf(u)
+        if err:
+            return JSONResponse(status_code=422, content={"ok": False, "error": err})
+    return None
+
+
+# 허용 CDN 도메인만 프록시 (SSRF 방지 — 임의 URL 프록시 금지).
+# 인스타 + 유튜브(ytimg) + 틱톡(tiktokcdn) 썸네일 호스트.
+_ALLOWED_THUMB_HOSTS = ("cdninstagram.com", "fbcdn.net", "ytimg.com",
+                        "ggpht.com", "tiktokcdn.com", "tiktokcdn-us.com")
+_ALLOWED_VIDEO_HOSTS = ("cdninstagram.com", "fbcdn.net")
+
+
 @app.get("/api/thumb")
 def api_thumb(url: str):
     """인스타 CDN 썸네일 프록시 (핫링크 차단 우회). url=원본 이미지 주소."""
     import requests
     from fastapi.responses import Response
-    # 허용 CDN 도메인만 프록시 (SSRF 방지 — 임의 URL 프록시 금지).
-    # 인스타 + 유튜브(ytimg) + 틱톡(tiktokcdn) 썸네일 호스트.
-    _ALLOWED_THUMB_HOSTS = ("cdninstagram.com", "fbcdn.net", "ytimg.com",
-                            "ggpht.com", "tiktokcdn.com", "tiktokcdn-us.com")
-    if not any(h in url for h in _ALLOWED_THUMB_HOSTS):
+    if _reject_cdn_proxy(url, _ALLOWED_THUMB_HOSTS):
         return Response(status_code=400, content=b"invalid host")
     try:
         r = requests.get(url, timeout=15, headers={
@@ -1532,7 +1726,7 @@ def api_video(url: str):
     /api/thumb와 동일 패턴(Referer 헤더). 릴스는 수 MB라 통째로 프록시."""
     import requests
     from fastapi.responses import Response
-    if not any(h in url for h in ("cdninstagram.com", "fbcdn.net")):
+    if _reject_cdn_proxy(url, _ALLOWED_VIDEO_HOSTS):
         return Response(status_code=400, content=b"invalid host")
     try:
         r = requests.get(url, timeout=30, headers={
@@ -1596,7 +1790,36 @@ def api_healthz():
 # 로그인되게 하위호환(기존 작업물 보존). 신규 고객은 customers 테이블(회원가입) 계정.
 DASH_USER = os.environ.get("DASH_USER", "admin")
 DASH_PASS = os.environ.get("DASH_PASS", "")  # 비어있으면 인증 OFF(로컬 개발)
-DASH_SECRET = os.environ.get("DASH_SECRET", "shopping-shorts-local-secret")
+def _load_dash_secret() -> str:
+    """세션쿠키 HMAC 서명키. env가 최우선, 없으면 data/ 밑에 랜덤 생성해 영속화.
+
+    ★소스에 기본값을 박지 않는다. 예전엔 "shopping-shorts-local-secret"이 기본값이라
+    운영에서 DASH_PASS만 넣고 DASH_SECRET env 한 줄을 빠뜨리면, 소스에 공개된 그 값으로
+    누구나 `customer_id:expiry:sig` 쿠키를 위조해 관리자(cid=0) 포함 임의 고객을 사칭할 수
+    있었다. _AUTH_ON은 DASH_PASS 유무만 보므로 시크릿 누락을 감지조차 못한다.
+    기본값을 없애면 그 실수 자체가 성립하지 않는다.
+    """
+    env = os.environ.get("DASH_SECRET", "").strip()
+    if env:
+        return env
+    path = Path(DB_PATH).parent / ".session_secret"
+    try:
+        existing = path.read_text(encoding="utf-8").strip()
+        if existing:
+            return existing
+    except OSError:
+        pass
+    generated = secrets.token_hex(32)
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(generated, encoding="utf-8")
+        os.chmod(path, 0o600)
+    except OSError:
+        pass  # 영속화 실패해도 이번 프로세스는 랜덤키로 뜬다(재기동 시 재로그인될 뿐).
+    return generated
+
+
+DASH_SECRET = _load_dash_secret()
 _AUTH_ON = bool(DASH_PASS)
 _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico", "/healthz",
                "/insta_fill_comment.user.js",
@@ -1767,20 +1990,6 @@ def _serve_userscript():
 
 
 # ── 영상제작 위저드(produce) ─────────────────────────────────
-@app.post("/api/produce/script/gemini")
-def api_produce_script_gemini(body: dict):
-    """1단계 대본 · 제미니 자동 — 주제/제품으로 처음부터 대본 초안 N개 생성."""
-    topic = (body.get("topic") or "").strip()
-    if not topic:
-        return JSONResponse(status_code=422, content={"ok": False, "error": "주제/제품을 입력하세요"})
-    drafts = script_generate.generate_from_topic(
-        topic, target_seconds=body.get("target_seconds") or 20, n=body.get("n") or 3)
-    if not drafts:
-        return JSONResponse(status_code=502,
-                            content={"ok": False, "error": "생성 실패(키 소진 또는 응답 오류)"})
-    return {"ok": True, "drafts": drafts}
-
-
 @app.post("/api/produce/script/mix")
 def api_produce_script_mix(request: Request, body: dict):
     """1단계 대본 · 우리믹스(Feature B) — 선택한 도서관 S급 대본들 강점 조합 → 새 대본."""
@@ -1819,6 +2028,55 @@ def api_produce_picks(request: Request):
     return {"ok": True, "items": items, "shortcodes": sorted(picks)}
 
 
+# ── 제작소 작업파일(2026-07-17) ──────────────────────────
+# 사장님 제보: "뒤로가기 하니까 작업물이 지워진다 ... 내일 다시 들어와도 이어서."
+# 작업상태(state)는 클라이언트 스키마 그대로 오간다 — 서버가 모양을 해석하지 않는다.
+@app.post("/api/produce/works")
+def api_produce_works_save(request: Request, body: dict):
+    state = body.get("state")
+    if not isinstance(state, dict):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "state 없음"})
+    # ★body에 있는 필드만 넘긴다. 스토어는 **안 넘어온 필드를 보존**하는데(update_mix_job과
+    # 같은 관례), 여기서 기본값을 채워 넣으면 그 보존이 통째로 무의미해진다 —
+    # 대본만 고쳐 저장했을 때 job_id가 날아가고 step이 0으로 되감긴다(T1 리뷰 Important).
+    kw = {}
+    if "job_id" in body:
+        kw["job_id"] = body.get("job_id") or None
+    if "step" in body:
+        # ★int가 아니면(bool 포함 — isinstance(True, int)는 True다) kw에 아예 넣지 않는다.
+        # 예전엔 0으로 되감았는데, step="3" 같은 오타 하나로 진행 단계를 파괴했다(T2 리뷰).
+        # 안 넣으면 위 job_id와 같은 "보존" 경로를 타 기존 값이 유지된다.
+        step = body.get("step")
+        if isinstance(step, int) and not isinstance(step, bool):
+            kw["step"] = step
+    wid = Store(DB_PATH).upsert_produce_work(body.get("work_id") or None, state,
+                                             customer_id=_cid(request), **kw)
+    if not wid:
+        # 남의 work_id — get/delete와 같은 404(스토어는 예외를 안 던진다, 2026-07-17 재리뷰)
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    return {"ok": True, "work_id": wid}
+
+
+@app.get("/api/produce/works")
+def api_produce_works_list(request: Request):
+    return {"ok": True, "works": Store(DB_PATH).list_produce_works(customer_id=_cid(request))}
+
+
+@app.get("/api/produce/works/{work_id}")
+def api_produce_works_get(request: Request, work_id: str):
+    w = Store(DB_PATH).get_produce_work(work_id, customer_id=_cid(request))
+    if not w:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    return {"ok": True, "state": w["state"], "job_id": w["job_id"], "step": w["step"]}
+
+
+@app.post("/api/produce/works/{work_id}/delete")
+def api_produce_works_delete(request: Request, work_id: str):
+    if not Store(DB_PATH).delete_produce_work(work_id, customer_id=_cid(request)):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    return {"ok": True}
+
+
 @app.post("/api/produce/mix/start")
 def api_produce_mix_start(background_tasks: BackgroundTasks, body: dict):
     """2단계 영상믹스 — 확정 대본(given_script)을 소스영상 장면에 매칭하는 job 시작.
@@ -1833,6 +2091,9 @@ def api_produce_mix_start(background_tasks: BackgroundTasks, body: dict):
         return JSONResponse(status_code=422, content={"ok": False, "error": "확정 대본이 비어 있습니다(1단계)"})
     if len(urls) < 1:
         return JSONResponse(status_code=422, content={"ok": False, "error": "소스 영상 URL이 필요합니다"})
+    blocked = _ssrf_guard(*urls)      # /api/mix/start와 같은 경로로 다운로드된다
+    if blocked:
+        return blocked
     # 1개면 그 영상 안에서 구간 순서편집(재배치), 2개 이상이면 여러 영상을 섞는
     # 믹스 — build_edit_plan(edit_plan.py)의 세그먼트 인벤토리 매칭이 소스 개수와
     # 무관하게 동작해서 이 유효성검사만 완화하면 별도 분기 없이 그대로 지원된다(2026-07-14).
@@ -2385,6 +2646,128 @@ def api_scene_poster(request: Request, asset_id: int):
     if not a or not a.get("poster_path") or not Path(a["poster_path"]).exists():
         return Response(status_code=404, content=b"")
     return FileResponse(a["poster_path"], media_type="image/jpeg")
+
+
+# ── 자동매칭 고급효과 엔진(2026-07-17, Task5) — suggest/render/status ────────
+# ⚠️ mix_jobs는 beats/dur_frames/category를 직접 안 준다(브리프 가정과 실측이 다름).
+# 실제로는 job["edit_plan"]["beats"](역할·나레이션·target_seconds 계획값, 렌더 후엔
+# tts_path도 채워짐)와 job["script_structure"]["product_category"]에서 뽑아 쓴다 —
+# 아래 두 어댑터가 그 변환을 맡는다.
+FX_RENDER_COST = 10
+
+
+def _fx_timeline_from_job(job):
+    """job["edit_plan"]["beats"] → effect_match.suggest용 [{s,e,text}] 리스트.
+
+    타이밍 우선순위: 모든 비트에 tts_path가 있으면(=이미 한 번 렌더돼 TTS mp3가 work
+    폴더에 있음) video_assemble._beat_timeline으로 ffprobe 실측 길이를 쓴다(실제 조립본과
+    정확히 일치). 하나라도 없으면(아직 렌더 전, 또는 work 폴더 정리로 mp3가 사라진 경우)
+    target_seconds(EDL 계획값) 누적으로 폴백한다 — 계획값은 실제 TTS 길이와 미세
+    드리프트가 있을 수 있다(v1 수용 — 자막·모션 싱크가 아니라 효과 배치 미리보기라
+    실용상 허용오차 안, Task5 보고 참고)."""
+    plan = job.get("edit_plan") or {}
+    beats = plan.get("beats") or []
+    if not beats:
+        return []
+    tts_paths = {b["beat_idx"]: b["tts_path"] for b in beats if b.get("tts_path")}
+    if len(tts_paths) == len(beats):
+        try:
+            timeline = video_assemble._beat_timeline(plan, tts_paths)
+            return [{"s": t["t0"], "e": t["t0"] + t["dur"], "text": t["narration"]} for t in timeline]
+        except Exception:
+            pass  # ffprobe 실패 등 — 아래 target_seconds 폴백으로 이어간다
+    t0 = 0.0
+    out = []
+    for b in beats:
+        dur = float(b.get("target_seconds") or 0.0)
+        out.append({"s": t0, "e": t0 + dur, "text": b.get("narration", "")})
+        t0 += dur
+    return out
+
+
+def _fx_dur_frames(job, timeline, fps=30):
+    """전체 프레임 수. video_path를 ffprobe로 실측(가장 정확) → 실패 시 타임라인
+    끝값으로 폴백(video_path 없음/ffprobe 미설치 등)."""
+    vp = job.get("video_path")
+    if vp:
+        try:
+            return round(video_assemble._probe_duration(vp) * fps)
+        except Exception:
+            pass
+    if timeline:
+        return round(timeline[-1]["e"] * fps)
+    return 0
+
+
+@app.post("/api/produce/fx/suggest")
+def api_fx_suggest(body: dict):
+    """믹스 job의 비트+카테고리로 효과 배치 플랜을 미리 만든다. DB에 기록하지
+    않는다(무과금 미리보기 — 확정은 /render에서 포인트를 내고 한다)."""
+    job = Store(DB_PATH).get_mix_job(body.get("job_id") or "") or {}
+    timeline = _fx_timeline_from_job(job)
+    category = body.get("category") or (job.get("script_structure") or {}).get("product_category") or ""
+    dur_frames = _fx_dur_frames(job, timeline)
+    plan = effect_match.suggest(timeline, category, job.get("video_path", ""), dur_frames, client=None)
+    return {"plan": plan}
+
+
+def _fx_render_job(job_id, plan, cid):
+    """백그라운드 최종 렌더. 실패하면 차감된 포인트를 환불하고 fx_status=failed로
+    남긴다 — 실패했는데 포인트만 날아가면 신뢰가 깨진다."""
+    store = Store(DB_PATH)
+    try:
+        job = store.get_mix_job(job_id) or {}
+        # 고급효과는 꾸미기(4단계)에서 건다 — video_path(최종 조립본)는 맨 마지막 단계에서야
+        # 채워지므로 이 시점엔 대개 None이다. 배경은 그 단계에 실제로 존재하는 것부터:
+        # 최종본 > 자막제거본 > 조립 프리뷰 순.
+        bg = job.get("video_path") or job.get("clean_video_path") or job.get("preview_path")
+        if not bg:
+            raise RuntimeError("배경 영상 없음(video_path·clean_video_path·preview_path 모두 비어있음)")
+        out = str(_MIX_WORK_DIR / job_id / "fx.mp4")
+        Path(out).parent.mkdir(parents=True, exist_ok=True)
+        remotion_render.render(plan, bg, out)
+        store.update_mix_job(job_id, fx_status="done", fx_path=out)
+    except Exception:
+        # 조용한 except가 실패 원인을 통째로 삼켜 진단을 막았다 — stderr(systemd 저널)로 남긴다.
+        import traceback
+        traceback.print_exc()
+        points.refund(store, cid, FX_RENDER_COST)
+        store.update_mix_job(job_id, fx_status="failed")
+
+
+@app.post("/api/produce/fx/render")
+def api_fx_render(request: Request, body: dict, background_tasks: BackgroundTasks):
+    """확정된 플랜으로 렌더당 정액(FX_RENDER_COST) 차감 후 백그라운드 렌더 예약.
+    잔액 부족이면 402(차감 자체를 안 함 — 아무 상태도 안 건드림)."""
+    job_id = body.get("job_id")
+    if not job_id:
+        return JSONResponse(status_code=422, content={"error": "job_id 필요"})
+    cid = _cid(request)
+    store = Store(DB_PATH)
+    if not points.deduct(store, cid, FX_RENDER_COST):
+        return JSONResponse(status_code=402, content={"error": "포인트 부족"})
+    plan = body.get("plan") or {}
+    store.update_mix_job(job_id, fx_status="queued", fx_plan=plan)
+    background_tasks.add_task(_fx_render_job, job_id, plan, cid)
+    return {"status": "queued"}
+
+
+@app.get("/api/produce/fx/status/{job_id}")
+def api_fx_status(job_id: str):
+    job = Store(DB_PATH).get_mix_job(job_id) or {}
+    out = {"fx_status": job.get("fx_status")}
+    if job.get("fx_status") == "done":
+        out["fx_url"] = f"/api/produce/fx/file/{job_id}"
+    return out
+
+
+@app.get("/api/produce/fx/file/{job_id}")
+def api_fx_file(job_id: str):
+    """완성된 효과영상 서빙(status가 준 fx_url이 가리키는 곳)."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("fx_path") or not Path(job["fx_path"]).exists():
+        return JSONResponse(status_code=404, content={"ok": False})
+    return FileResponse(job["fx_path"])
 
 
 # 정적 프론트 (마운트는 맨 마지막)

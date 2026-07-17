@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "date": "2026-06-17",
+    "broker": "메리츠증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-18_0700_특별한 협력 · 새로운 가치.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "메리츠증권",
+    "analyst": "김준성",
+    "report_date": "2026. 6. 2",
+    "stocks": [
+      {
+        "name": "현대모비스",
+        "code": "012330",
+        "rating": "Buy",
+        "rating_changed": null,
+        "tp_new": "900,000원",
+        "tp_prev": "500,000원",
+        "tp_direction": "up",
+        "earnings_outlook": {
+          "2026E_revenue": "63,745.3십억원",
+          "2026E_operating_profit": "3,647.1십억원",
+          "2027E_revenue": "67,272.2십억원",
+          "2026E_quarterly_estimates": {
+            "1Q26": "매출액 15,560.5십억원, OP 802.6십억원",
+            "2Q26E": "매출액 16,197.3십억원, OP 897.9십억원",
+            "3Q26E": "매출액 15,820.6십억원, OP 944.4십억원",
+            "4Q26E": "매출액 16,166.9십억원, OP 1,002.1십억원"
+          }
+        },
+        "estimate_revision": null,
+        "next_catalyst": "2028년 이후의 공급 물량 구체화와 Actuator를 넘어 센서, 제어기로의 사업 영역 확장",
+        "thesis": [
+          "BD Actuator 기술, 공동 개발 및 Atlas 양산 활용 계약 확정",
+          "BD, Google Deepmind를 시작으로 미국 세일즈 로드쇼 개시",
+          "기술 협력 및 대량 양산을 통한 고마진 구조 확보와 새로운 가치 부여"
+        ],
+        "valuation_basis": "기존 차량 부품 사업 가치 52.6조원 (2026년 EBITDA에 Peer 그룹 밸류에이션 +50% 할증)과 새로운 휴머노이드 액츄에이터 사업 가치 24.9조원 (2028년 EV 예상치를 WACC 8.7%로 할인)을 합산",
+        "risk": null,
+        "supply_comment": "현대모비스가 Boston Dynamics와 해당 Body Actuator 기술을 공동 개발 중이다. 이제 현대모비스는 미국 현지 대량 양산 거점을 설립한다.",
+        "quote": "현대모비스 적정주가 900,000원 (시가총액 82조원)을 제시한다."
+      }
+    ]
+  }
+}

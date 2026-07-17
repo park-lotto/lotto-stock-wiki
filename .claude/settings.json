@@ -96,8 +96,8 @@
           },
           {
             "type": "command",
-            "command": "py",
-            "args": ["tools/session_title.py"],
+            "command": "python.exe",
+            "args": ["-c", "import os,runpy\ntry:\n d=os.getcwd()\n p=None\n while True:\n  c=os.path.join(d,'tools','session_title.py')\n  if os.path.isfile(c):\n   p=c; break\n  n=os.path.dirname(d)\n  if n==d: break\n  d=n\n if p: runpy.run_path(p,run_name='__main__')\nexcept SystemExit: pass\nexcept Exception: pass"],
             "timeout": 10,
             "statusMessage": "탭 제목을 트랙명으로..."
           }
@@ -109,8 +109,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "py",
-            "args": ["tools/session_title.py"],
+            "command": "python.exe",
+            "args": ["-c", "import os,runpy\ntry:\n d=os.getcwd()\n p=None\n while True:\n  c=os.path.join(d,'tools','session_title.py')\n  if os.path.isfile(c):\n   p=c; break\n  n=os.path.dirname(d)\n  if n==d: break\n  d=n\n if p: runpy.run_path(p,run_name='__main__')\nexcept SystemExit: pass\nexcept Exception: pass"],
             "timeout": 10
           }
         ]
@@ -121,8 +121,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "py",
-            "args": ["tools/session_title.py"],
+            "command": "python.exe",
+            "args": ["-c", "import os,runpy\ntry:\n d=os.getcwd()\n p=None\n while True:\n  c=os.path.join(d,'tools','session_title.py')\n  if os.path.isfile(c):\n   p=c; break\n  n=os.path.dirname(d)\n  if n==d: break\n  d=n\n if p: runpy.run_path(p,run_name='__main__')\nexcept SystemExit: pass\nexcept Exception: pass"],
             "timeout": 10
           }
         ]

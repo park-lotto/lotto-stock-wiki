@@ -1,0 +1,70 @@
+{
+  "meta": {
+    "date": "2026-06-17",
+    "broker": "Eugene Investment & Securities",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-17_1008_안녕하세요 데일리에요(로봇방산조선).md"
+  },
+  "questionnaire": {
+    "broker": "Eugene Investment & Securities",
+    "analyst": "양승윤",
+    "report_date": "06/16",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "국방·안보",
+      "에너지",
+      "핵심 광물"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "로봇",
+        "stance": null,
+        "reason": "삼성전자, 보스턴다이내믹스 지분 투자 가능성 검토 보도 및 엔비알 휴머노이드 표준 베어링 R&D, 큐렉소 혁신의료기술 임상, 해외 로봇 매장 개업 등"
+      },
+      {
+        "sector": "방산",
+        "stance": null,
+        "reason": "한화그룹 KAI 지분 확보, 현대로템 구난전차 개발 협력, K2PL KAPS 탑재, KF-21 형식인증 획득 등"
+      },
+      {
+        "sector": "조선",
+        "stance": null,
+        "reason": "HD현대 선체 관리 통합 솔루션 개발, 벤처글로벌 CP2 확장 사업 승인 추진, 中 LNG운반선 건조 등"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "06/16",
+        "event": "로봇 주요 뉴스"
+      },
+      {
+        "date": "06/16",
+        "event": "방산 주요 뉴스"
+      },
+      {
+        "date": "06/16",
+        "event": "조선 주요 뉴스"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "보스턴다이내믹스",
+      "엔비알",
+      "큐렉소",
+      "서브 로보틱스",
+      "애지봇",
+      "한화",
+      "KAI",
+      "현대로템",
+      "FFG",
+      "K2PL",
+      "KF-21",
+      "KNDS",
+      "HD현대",
+      "벤처글로벌"
+    ],
+    "risk": "삼성전자의 경우 보스턴다이내믹스 지분 투자 가능성 관련 사실무근 대응 및 실제 투자 가능성 낮음 판단",
+    "quote": "현대차의 BD지분 매각 가능성이 극히 낮은 만큼, 소프트뱅크의 풋옵션 물량을 삼성이 가져가는 그림이 제시됨. 자체 휴머노이드 개발을 추진 중인 삼성의 실제 투자 가능성은 낮다는 판단."
+  }
+}

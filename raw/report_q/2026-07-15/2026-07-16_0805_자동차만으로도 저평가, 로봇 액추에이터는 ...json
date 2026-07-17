@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-15",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-16_0805_자동차만으로도 저평가, 로봇 액추에이터는 ...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "송선재",
+    "report_date": "2026년 7월 15일",
+    "stocks": [
+      {
+        "name": "HL만도",
+        "code": "204320",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "69,000원",
+        "tp_prev": null,
+        "tp_direction": "flat",
+        "earnings_outlook": "HL만도의 2분기 매출액/영업이익은 각각 +1%/-3% (YoY) 변동한 2.43조원/1,010억원(영업이익률 4.2%, -0.1%p (YoY))으로 시장 기대치에 부합할 것으로 예상한다.",
+        "estimate_revision": null,
+        "next_catalyst": "로봇 액추에이터 사업의 진전 및 수주 가시화",
+        "thesis": [
+          "다변화된 고객 포트폴리오와 믹스 개선 등을 통해 시장 기대치 부합하는 실적 전망",
+          "글로벌EV 및 신흥국 로컬OE 등 고성장 고객군 확대와 by-Wire 제품을 통한 믹스 개선으로 수익성 유지 예상",
+          "로봇 액추에이터 마스터 모델의 하반기 완성 및 시범 생산라인 가동을 통한 수주 가시화"
+        ],
+        "valuation_basis": null,
+        "risk": "전방 산업수요의 둔화와 주요 고객사의 생산차질, 반도체 등 원자재 가격 상승과 인건비/연구개발비 등 고정비 증가",
+        "supply_comment": null,
+        "quote": "하반기에는 반도체 등 원자재 가격 상승이 있지만, 주력 고객들의 생산차질 해소와 신차 출시, 글로벌EV 및 신흥국 로컬OE 등 고성장 고객군의 확대, SbW/EMB/EPB 등 by-Wire 제품을 통한 믹스 개선, 그리고 고객사 비용 보전 등으로 수익성을 유지할 것으로 예상한다."
+      }
+    ]
+  }
+}

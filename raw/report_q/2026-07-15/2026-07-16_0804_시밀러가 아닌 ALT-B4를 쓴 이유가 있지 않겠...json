@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-15",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-16_0804_시밀러가 아닌 ALT-B4를 쓴 이유가 있지 않겠...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김선아",
+    "report_date": "2026년 7월 15일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "알테오젠",
+        "code": "196170",
+        "sector": "바이오",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "580,000원",
+        "tp_prev": "640,000원",
+        "tp_direction": "down",
+        "earnings_outlook": "2026F 매출액 470.3십억원, 영업이익 246.1십억원, 2027F 매출액 1,052.5십억원, 영업이익 608.7십억원",
+        "estimate_revision": null,
+        "next_catalyst": "MSD 2Q26 실적 발표 및 Qlex 매출 상승 확인",
+        "thesis": [
+          "Enhanze 시밀러 이슈와 무관하게 ALT-B4의 기술적 우수성으로 제품 차별화 요소 확보",
+          "Qlex의 높은 키트루다 전환율 및 매출 성장세 확인",
+          "하반기 BS 개발 목적의 파트너십 성과 공개 기대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "Enhanze의 바이오시밀러가 출시될 것임을 모를 리 없는 빅파마들이 지금까지 왜 알테오젠과 기술이전 계약을 체결한 이유에 대해 다시 되짚어 보자."
+      }
+    ]
+  }
+}

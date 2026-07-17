@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-17",
+    "broker": "DS INVESTMENT & SECURITIES",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-17_1001_네이버 기관투자자 NDR 후기.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "DS INVESTMENT & SECURITIES",
+    "analyst": "최승호",
+    "report_date": "2026.06.16",
+    "stocks": [
+      {
+        "name": "네이버",
+        "code": "035420",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "1GW 기준 연매출 잠재력은 시장·VC 진영에서 수백억 달러대(약 $20B 이상) 수준까지도 거론되고 있다.",
+        "estimate_revision": null,
+        "next_catalyst": "대규모 신규 사업 진출에 따른 정보 공유 및 자본시장과의 소통",
+        "thesis": [
+          "자산 소유와 운영을 분리하는 구조 검토를 통한 재무 부담 완화 및 대규모 유상증자 가능성 제한적",
+          "단순 GPU CAPA 재판매가 아닌 소프트웨어 스택을 결합한 차별화 전략 및 하이퍼클로바X를 활용한 소프트웨어 비즈니스",
+          "엔비디아와의 협력을 통한 플랫폼 운영 효율 우위 확보 및 신뢰 가능한 파트너로서의 위치"
+        ],
+        "valuation_basis": null,
+        "risk": "세종 그린필드 전력 수급 여건으로 인한 완공 지연 및 초기 리스 방식 운영",
+        "supply_comment": "초기 200MW 규모 확장 플랜·스케줄은 파트너사 측과 공유·협의가 상당 부분 진행돼, 일정상 큰 무리는 없을 것으로 판단.",
+        "quote": "동사는 단순 GPU CAPA 재판매에 머물지 않고 소프트웨어 스택을 결합한 차별화 전략을 병행할 예정이다."
+      }
+    ]
+  }
+}

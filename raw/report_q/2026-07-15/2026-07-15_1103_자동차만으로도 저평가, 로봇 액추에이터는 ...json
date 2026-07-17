@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-15",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-15_1103_자동차만으로도 저평가, 로봇 액추에이터는 ...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "송선재, 박태웅",
+    "report_date": "2026년 7월 15일",
+    "stocks": [
+      {
+        "name": "HL만도",
+        "code": "204320",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "69,000원",
+        "tp_prev": null,
+        "tp_direction": "flat",
+        "earnings_outlook": "HL만도의 2분기 매출액/영업이익은 각각 +1%/-3% (YoY) 변동한 2.43조원/1,010억원(영업이익률 4.2%, -0.1%p (YoY))으로 시장 기대치에 부합할 것으로 예상한다.",
+        "estimate_revision": null,
+        "next_catalyst": "로봇 액추에이터 사업의 진전 및 하반기 본격적인 수주 활동",
+        "thesis": [
+          "하반기 로봇 액추에이터 사업 본격화",
+          "다변화된 고객 포트폴리오와 믹스 개선",
+          "미국 생산기지 보유 및 시장 진입 유리"
+        ],
+        "valuation_basis": null,
+        "risk": "전방 산업수요의 둔화와 주요 고객사의 생산차질, 반도체 등 원자재 가격 상승 및 인건비/연구개발비 등 고정비 증가",
+        "supply_comment": null,
+        "quote": "HL만도에 대한 투자의견 BUY와 목표주가를 6.9만원을 유지한다."
+      }
+    ]
+  }
+}

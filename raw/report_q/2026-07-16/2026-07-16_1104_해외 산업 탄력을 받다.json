@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-16",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-16_1104_해외 산업 탄력을 받다.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "박종대",
+    "report_date": "2026년 07월 16일",
+    "stocks": [
+      {
+        "name": "동국제약",
+        "code": "086450",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 연결 매출과 영업이익은 각각 전년 동기대비 12%, 19% 성장한 2,605억원과 264억원 수준이 가능할 전망이다.",
+        "estimate_revision": null,
+        "next_catalyst": "미국 얼타뷰티 매장 SKU 확대, 메이저 리테일러 C사 입점, 일본 오프라인 매장 순차 입점",
+        "thesis": [
+          "화장품 해외 사업의 빠른 확장",
+          "ETC 및 헬스케어 부문의 견조한 성장",
+          "국내 OTC 및 화장품 ODM 사업의 실적 개선"
+        ],
+        "valuation_basis": "현재 주가 12MF PER 8.7배, 현저한 저평가",
+        "risk": "동국생명과학 매출이 진단장비 판매 부진으로 YoY 28% 감소",
+        "supply_comment": null,
+        "quote": "글로벌 네임밸류 상승에 따른 온오프라인 확장에 속도가 붙으면서 3분기 QoQ 성장을 지속할 전망이다."
+      }
+    ],
+    "sector": "바이오"
+  }
+}

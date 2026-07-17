@@ -15,6 +15,12 @@ DEFAULT_PROFILE = {
     "endings":       {"on": True, "intensity": 0.3},
     "fillers":       {"on": True, "intensity": 0.2, "bank": ["음", "아", "그", "뭐", "자"]},
     "emotion_arc":   {"on": True, "intensity": 0.3},
+    # 속삭임 — 노브 하나(roles)의 두 설정값이다(설계 2026-07-16 §3): 전체 role을 주면
+    # 5비트 다 속삭이는 ASMR 영상, 일부만 주면 그 비트만 속삭이는 강조 도구. 목소리를
+    # 낮추면 오히려 귀가 쏠린다는 게 근거다(사장님 프로브 청취: "집중력이 확 쏠린다").
+    # 기본값이 ["반전"]인 이유: 일반 톤 영상에서 반전 비트 하나만 속삭이는 게 강조 도구의
+    # 기본 쓸모다. 강도(intensity)가 없는 것은 설계다 — 태그는 켜지거나 꺼질 뿐 중간이 없다.
+    "whisper":       {"on": True, "roles": ["반전"]},
     "intonation":    {"on": True, "intensity": 0.2},
     # max_fillers_per_text=1(구값)은 n = min(cap, _take_count(...))에서 cap이 항상
     # 병목이 돼 강도가 뭘 하든 결과가 늘 1개로 고정됐다(2026-07-15 컨트롤러 재현,
@@ -23,7 +29,18 @@ DEFAULT_PROFILE = {
     # 문장이 보통이라 cap=2면 비례가 실제로 드러나고, 문장 수 자체를 넘는 추임새는
     # 어차피 `_take_count`가 막는다. 도배 방지는 캡이 아니라 `_beat_selected`(비트
     # 빈도 게이트)가 담당한다.
-    "caps": {"max_tags_total": 3, "max_tags_per_beat": 1, "max_fillers_per_text": 2},
+    # max_tags_per_beat=2(2026-07-16): [감정][whispers] 두 개를 허용한다. 사장님 청취
+    # 판정 "4번이 좋다"(=[curious][whispers])가 근거 — 다만 그 조합은 **기본
+    # 프로파일에선 도달 불가**라는 점을 정확히 적는다(리뷰 실측 정정, 이전 주석은
+    # "기본값에서 이래서 2가 필요하다"처럼 읽혀 근거를 과장했다). 실제 기본값 실측:
+    # ① 훅은 기본 `whisper.roles=["반전"]`에 없고 ② 반전은 기본 emotion_arc
+    # intensity 0.3에서 `_role_tag_rank`(rank=2) >= n_tagged(2)라 애초에 감정태그를
+    # 못 받는다 → 기본 출력은 `'[whispers] 이건, 진짜 물건이에요…'`뿐, 어떤 비트도
+    # 태그 2개 조합이 안 된다. 2가 실제로 필요해지는 자리는 whisper.roles에
+    # 훅/CTA가 들어간 프리셋(예: ASMR 톤 프리셋)에서 `[감정][whispers]`가 실제로
+    # 만들어질 때다. 값 2 자체는 그대로 맞다 — **3 이상으로 올리지 않는다**(2가
+    # 필요한 최대치라는 결론은 유지, 근거만 "기본값"이 아니라 "프리셋"으로 정정).
+    "caps": {"max_tags_total": 3, "max_tags_per_beat": 2, "max_fillers_per_text": 2},
     "seed": 42,
     "n_best": 1,
 }
@@ -49,22 +66,61 @@ _UNIT_MAP = {"kg": "킬로그램", "g": "그램", "cm": "센티미터", "mm": "�
 _SYMBOL_MAP = {"%": "퍼센트", "&": "앤드", "+": "플러스"}
 
 
+def _int_to_sino_4digit(n):
+    """0~9999 전용 사이노 변환(그룹 단위 재사용 알맹이).
+
+    한국어 숫자는 4자리씩 끊어 읽으므로(만/억/조), 이 함수가 각 그룹의 "자리별
+    읽기" 알맹이를 담당하고 `_int_to_sino`가 그룹을 조립한다."""
+    if n == 0:
+        return ""
+    pad = str(n).rjust(4, "0")
+    out = ""
+    for i, ch in enumerate(pad):
+        d = int(ch)
+        if d == 0:
+            continue
+        unit = ["천", "백", "십", ""][i]
+        out += ("" if d == 1 and unit else _SINO[d]) + unit
+    return out
+
+
+# 4자리 그룹 단위(만/억/조). 그룹은 오른쪽(1의 자리)부터 4자리씩 끊는다 — 그룹0=일의
+# 자리 그룹(단위 없음), 그룹1=만, 그룹2=억, 그룹3=조.
+_GROUP_UNITS = ["", "만", "억", "조"]
+
+
 def _int_to_sino(n):
-    """정수 → 사이노 한국어 읽기(간이). 0~9999 지원(그 이상은 자리 붙여 읽기 근사)."""
+    """정수 → 사이노 한국어 읽기. 만·억·조까지 지원(2026-07-17 확장).
+
+    한국어는 4자리씩 끊어 읽는다(예: 12,345,678 → "천이백삼십사만 오천육백칠십팔").
+    그룹마다 0이면 통째로 건너뛰고, 그룹 사이는 공백 하나로 구분한다(TTS가 끊어
+    읽기 좋게).
+
+    ⚠️ 만/억 비대칭은 의도적이다 — "만" 그룹이 1이면 "일만"이 아니라 "만"이라고만
+    읽는다(10000원="만원"이 한국어 관용, "일만원"은 부자연스럽다). 반대로 "억"
+    그룹이 1이면 "일억"이 자연스럽다(100000000="일억", "억"만 쓰면 어색하다).
+    다음 사람이 "일관성 없다"며 이 비대칭을 고치면 오히려 어색해진다 — 고치지
+    말 것(지시 원문 그대로 유지).
+    """
     if n == 0:
         return "영"
-    s = str(n)
-    if len(s) <= 4:
-        pad = s.rjust(4, "0")
-        out = ""
-        for i, ch in enumerate(pad):
-            d = int(ch)
-            if d == 0:
-                continue
-            unit = ["천", "백", "십", ""][i]
-            out += ("" if d == 1 and unit else _SINO[d]) + unit
-        return out or "영"
-    return " ".join(_SINO[int(c)] for c in s)  # 큰 수는 자리별 근사
+    groups = []
+    while n > 0:
+        groups.append(n % 10000)
+        n //= 10000
+    parts = []
+    for gi in range(len(groups) - 1, -1, -1):
+        g = groups[gi]
+        if g == 0:
+            continue
+        word = _int_to_sino_4digit(g)
+        unit = _GROUP_UNITS[gi] if gi < len(_GROUP_UNITS) else ""
+        if gi == 1 and g == 1:
+            # "만" 그룹만 1일 때 "일" 생략(한국어 관용) — 억 이상은 생략하지 않는다.
+            parts.append(unit)
+        else:
+            parts.append(word + unit)
+    return " ".join(parts)
 
 
 def _num_to_words(whole):
@@ -102,12 +158,18 @@ def normalize_reading(text):
     맞추지 않으면 성우가 제대로 읽었는데도 전부 오독으로 뜬다(2026-07-15 실측).
     """
     def num_repl(m):
-        return _num_to_words(m.group(0))
+        return _num_to_words(m.group(0).replace(",", ""))
     def numunit(m):
-        return f"{_num_to_words(m.group(1))} {_UNIT_MAP[m.group(2)]}"
-    unit_pat = r"(\d+(?:\.\d+)?)(" + "|".join(sorted(_UNIT_MAP, key=len, reverse=True)) + r")"
+        return f"{_num_to_words(m.group(1).replace(',', ''))} {_UNIT_MAP[m.group(2)]}"
+    # 천단위 쉼표(예: "2,847", "12,345,678")를 숫자의 일부로 인식한다 — 반드시
+    # `\d{1,3}(?:,\d{3})+` 형태(3자리씩 끊긴 쉼표)만 묶는다. 일반 문장부호 쉼표
+    # ("안녕, 1개")나 3자리가 아닌 쉼표("1,2")는 이 패턴에 안 걸려 그대로 남는다
+    # (2026-07-17 결함 수정 — 옛 패턴은 쉼표를 아예 몰라 "2,847"을 "2"와 "847"로
+    # 따로 잡고 쉼표를 그대로 흘렸다).
+    num_pat = r"\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?"
+    unit_pat = r"(" + num_pat + r")(" + "|".join(sorted(_UNIT_MAP, key=len, reverse=True)) + r")"
     text, n1 = re.subn(unit_pat, numunit, text)
-    text, n2 = re.subn(r"\d+(?:\.\d+)?", num_repl, text)
+    text, n2 = re.subn(num_pat, num_repl, text)
     n3 = 0
     for sym, word in _SYMBOL_MAP.items():
         n3 += text.count(sym)
@@ -622,10 +684,60 @@ def _intonation(text, cfg, ctx):
     return text
 
 
+# 이미 문자열 맨 앞에 붙어 있는 v3 태그 묶음(emotion_arc가 붙인 `[curious] ` 등).
+# 속삭임 태그를 그 **뒤**에 꽂아 설계가 고정한 `[감정][whispers]` 순서를 만든다.
+_LEADING_TAGS_PAT = re.compile(r"^((?:\[[^\]]+\])+)\s*")
+_WHISPER_TAG = "[whispers]"
+
+
+def _whisper(text, cfg, ctx):
+    """roles에 든 role의 비트에 `[whispers]`를 붙인다(설계 2026-07-16 §3).
+
+    **감정 예산과 별개 축이다(§3.1)** — `_emotion_arc`의 intensity·role 우선순위를 전혀
+    보지 않는다. 얹었다면 ASMR 톤인데 예산이 모자라 중간 비트가 안 속삭이는 일이 생긴다.
+    보는 캡은 `max_tags_per_beat` 하나뿐이고, 그건 "한 비트에 태그 몇 개까지"라는 별개 사실이다.
+
+    **미지 role은 속삭이지 않는다** — `_emotion_arc`와 달리 위치기반 폴백을 하지 않는다.
+    속삭임은 비트 역할이 확정될 때만 켜는 게 맞다(모르면 안 켠다). 작업대 옛 코퍼스의
+    `body`/`build`가 실제로 이 경로를 탄다.
+    """
+    canon = ctx.get("role_canon")
+    if canon is None or canon not in (cfg.get("roles") or []):
+        return text
+    # 멱등성 가드(리뷰 지적) — 이미 [whispers]가 있으면 그대로 반환한다. 캡
+    # 검사(`max_tags_per_beat`)만으로는 못 막는다: 태그 1개짜리 입력은
+    # `len(existing)+1 <= cap`(예: 1+1=2<=2)이 참이라 캡을 통과해버려서
+    # "2개 이상 있어야 막는" 캡의 경계를 정확히 피해간다 — 캡은 총량 상한이지
+    # 중복 방지가 아니다. `_bump`를 부르지 않는다 — 아무것도 안 붙였는데
+    # "속삭임 1건"으로 계상하면 T6에서 이미 고친 거짓말 패턴의 재발이다.
+    # 멱등성 가드(리뷰 지적) — 이미 [whispers]가 있으면 그대로 반환한다. 캡
+    # 검사(`max_tags_per_beat`)만으로는 못 막는다: 태그 1개짜리 입력은
+    # `len(existing)+1 <= cap`(예: 1+1=2<=2)이 참이라 캡을 통과해버려서
+    # "2개 이상 있어야 막는" 캡의 경계를 정확히 피해간다 — 캡은 총량 상한이지
+    # 중복 방지가 아니다. `_bump`를 부르지 않는다 — 아무것도 안 붙였는데
+    # "속삭임 1건"으로 계상하면 T6에서 이미 고친 거짓말 패턴의 재발이다.
+    if _WHISPER_TAG in text:
+        return text
+    # 이 비트에 이미 붙은 태그 수 + 우리 1개가 캡을 넘으면 붙이지 않는다. 붙였다가
+    # `_enforce_total_tag_cap`이 사후에 지우면 applied에 "속삭임 1건"이라고 적어놓고
+    # 실제로는 없는 거짓말이 된다(T6에서 같은 비대칭을 이미 한 번 고쳤다).
+    cap = ctx["caps"].get("max_tags_per_beat", 2)
+    if len(re.findall(r"\[[^\]]+\]", text)) + 1 > cap:
+        return text
+    m = _LEADING_TAGS_PAT.match(text)
+    if m:
+        out = f"{m.group(1)}{_WHISPER_TAG} {text[m.end():]}"
+    else:
+        out = f"{_WHISPER_TAG} {text}"
+    _bump(ctx, "whisper", 1)
+    return out
+
+
 _STAGES = [("normalize", _normalize), ("spoken_style", _spoken_style),
            ("pronunciation", _pronunciation), ("phrasing", _phrasing),
            ("endings", _endings), ("fillers", _fillers),
-           ("emotion_arc", _emotion_arc), ("intonation", _intonation)]
+           ("emotion_arc", _emotion_arc), ("whisper", _whisper),
+           ("intonation", _intonation)]
 
 
 def _enforce_total_tag_cap(text, cap):

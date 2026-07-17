@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-15",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-16_0800_단기 기대치는 하향, 증익 기대감은 유지.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "김성래, 김예인",
+    "report_date": "2026년 07월 15일",
+    "stocks": [
+      {
+        "name": "현대위아",
+        "code": "011210",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "100,000원",
+        "tp_prev": "120,000원",
+        "tp_direction": "down",
+        "earnings_outlook": "2Q26 매출액 2.2조원(+1.4% 이하 YoY)으로 전년 대비 소폭 증가 전망하나, 영업이익은 437억원(-22.7%)으로 큰 폭의 하락 예상.",
+        "estimate_revision": "엔진 매출/손익 기대치 하향 조정",
+        "next_catalyst": "하반기 물량 증가와 '27년 열관리 매출 확대, 그룹사 eM 플랫폼 수주",
+        "thesis": [
+          "2Q26 매출액 2.2조원(+1.4% YoY) 전망이나, 영업이익 437억원(-22.7% YoY)으로 큰 폭의 하락 예상",
+          "하반기 멕시코 HEV 물량 증가에 따른 매출 증가(+1,500~1,800억원) 기대",
+          "'27년 열관리 매출 본격화 및 eM 플랫폼 수주에 따른 중장기 체질 개선 기대"
+        ],
+        "valuation_basis": "글로벌 주요 자동차 부품사 중 열관리 및 전동화 시스템 영위 업체 Multiple 평균 적용",
+        "risk": "협력사 화재 및 러시아 물량 감소에 따른 엔진 및 구동/등속 물량 차질",
+        "supply_comment": null,
+        "quote": "단기 기대치는 하향, 증익 기대감은 유지, 목표주가 100,000원 제시"
+      }
+    ],
+    "sector": "자동차"
+  }
+}

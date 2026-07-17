@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "date": "2026-06-17",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-18_0704_2026년 2분기, 실적 서프라이즈 기대된다!.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유안타증권",
+    "analyst": "황규원",
+    "report_date": "2026.06.17",
+    "stocks": [
+      {
+        "name": "TKG휴켐스",
+        "code": "069260",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "30,000원",
+        "tp_prev": "28,000원",
+        "tp_direction": "up",
+        "earnings_outlook": {
+          "2Q26E_revenue": "3,505억원",
+          "2Q26E_operating_profit": "333억원",
+          "2Q26E_operating_profit_consensus": "177억원",
+          "2026_forecast": "매출액 1.3조원, 영업이익 972억원, 지배주주 순이익 821억원"
+        },
+        "estimate_revision": "실적 서프라이즈 속에 탄소배출권 가치 개선을 추가로 반영해, 2026년 적정주가를 3.0만원(기존 2.8만원)으로 높인다.",
+        "next_catalyst": "이란 전쟁에 따른 수혜(중동 우레탄 소재 공급부족, 암모니아 가격 상승) 및 탄소배출권 가치 개선",
+        "thesis": [
+          "이란 전쟁 영향으로 TDI 글로벌 캐파의 6%가 가동을 멈추며 휴켐스 DNT 가동률이 71%에서 90%로 상승",
+          "암모니아 가격 상승분(2025년 379$ → 2026년 6월 820$)의 제품가격 100% 전가에 따른 매출 증대",
+          "한국의 4차 탄소배출권 거래제도 시행에 따른 탄소배출권 가격 상승 효과(2025년 9,700원 → 2026년 6월 23,000원/톤)"
+        ],
+        "valuation_basis": "사업부문별 정상 EBITDA와 업황 판단 EV/EBITDA 배율 적용 및 탄소배출권 가치 현재가치 환산 합산",
+        "risk": null,
+        "supply_comment": "글로벌 TDI 캐파 350만톤 중 중동 설비 25만톤(SABIC 20만톤, Karoon 5만톤) 가동 중단 수혜",
+        "quote": "2026년 이란 전쟁에 따른 2가지 수혜(① 중동 우레탄 소재 공급부족, ② 암모니아 가격 상승)가 강하기 때문이다."
+      }
+    ]
+  }
+}

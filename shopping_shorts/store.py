@@ -3,6 +3,7 @@ import hashlib
 import json
 import secrets
 import sqlite3
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -10,6 +11,13 @@ from pathlib import Path
 # 이전) 데이터가 귀속되는 고객 ID(2026-07-13, 멀티테넌시). 기존 단일 관리자
 # 계정의 데이터를 그대로 보존하기 위한 값 — 신규 고객은 1부터 발급.
 LEGACY_CUSTOMER_ID = 0
+
+# upsert_produce_work의 job_id/step 부분 업데이트 센티널(2026-07-17).
+# 파이썬 기본 인자값(None/0)은 "미지정"과 구별이 안 돼서, 부분 저장(재전송 안 한 필드)이
+# 그대로 UPDATE에 박혀 기존 job_id·step을 조용히 지웠다(리뷰 재현). 규칙:
+#   인자를 아예 안 넘기면(=_UNSET) → 기존 값 보존
+#   job_id=None / step=0을 명시적으로 넘기면 → 정말로 그 값으로 덮어씀(재매칭 무효화 등)
+_UNSET = object()
 
 
 class Store:
@@ -106,12 +114,31 @@ class Store:
             """)
             # 학습소재 통계용 확장(2026-07-13) — 위키 저장 여부와 무관하게 대본추출된
             # 모든 항목에 구조분석을 백필하기 위한 컬럼.
+            # category_source(2026-07-16): 카테고리가 어디서 왔나 — user|gemini|keyword.
+            # 키워드 추측 정확도가 실측 54%(13건 중 7건)인데 학습 코퍼스의 다수를
+            # 차지해(생활용품 79%·인테리어 80%가 추측) 통계가 오염된다. 출처를 남겨야
+            # ①사용자 교정을 AI가 덮지 않고 ②나중에 추측만 골라 재분류·가중치 조정이 된다.
             for col, ddl in (("category", "TEXT"), ("structure_json", "TEXT"),
-                              ("structure_analyzed_at", "TEXT")):
+                              ("structure_analyzed_at", "TEXT"), ("category_source", "TEXT")):
                 try:
                     c.execute(f"ALTER TABLE script_extracts ADD COLUMN {col} {ddl}")
                 except sqlite3.OperationalError:
                     pass  # 이미 있으면(기존 DB) 무시
+            # 옛 어휘 → 홈템 이관(2026-07-16). 코드만 바꾸면 DB의 옛 라벨이 통제 어휘
+            # 밖으로 떨어져 나가(고아 버킷) 학습에서 조용히 빠진다. 되돌릴 수 없는
+            # 병합이라 실행 전 서버 백업을 떴다(/tmp/hometem_backup/pre_merge.json).
+            # element_category_stats는 배치가 재계산해 덮으므로 옛 버킷만 지운다.
+            for table, col in (("script_extracts", "category"), ("script_wiki", "category")):
+                try:
+                    c.execute(f"UPDATE {table} SET {col}='홈템' "
+                              f"WHERE {col} IN ('인테리어', '생활용품')")
+                except sqlite3.OperationalError:
+                    pass  # 아직 테이블·컬럼이 없는 신규 DB
+            try:
+                c.execute("DELETE FROM element_category_stats "
+                          "WHERE product_category IN ('인테리어', '생활용품')")
+            except sqlite3.OperationalError:
+                pass
             # 학습소재 카테고리 통계 캐시(2026-07-13) — 매일 새벽 배치가 재계산해 덮어씀.
             c.execute("""
                 CREATE TABLE IF NOT EXISTS element_category_stats (
@@ -261,9 +288,32 @@ class Store:
                     subtitle_removal INTEGER NOT NULL DEFAULT 0,
                     clean_video_path TEXT,
                     given_script TEXT,
-                    headcopy_json TEXT
+                    headcopy_json TEXT,
+                    fx_plan TEXT,
+                    fx_status TEXT,
+                    fx_path TEXT
                 )
             """)
+            # 제작소 작업파일(2026-07-17) — 사장님 제보 "뒤로가기 하니까 작업물이 지워진다".
+            # ★mix_jobs를 재활용하지 않는다: urls_json·structure가 NOT NULL이라 **매칭 전
+            # 작업**(대본만 확정한 상태)을 못 담는다. 실측으로 서버 job 21건 중 매칭 전은 0건 —
+            # 사장님이 잃어버린 게 정확히 그 구간이다. 억지로 빈 값을 넣으면 "매칭 안 된 job"이
+            # 유령으로 남아 run_mix_job·pollMix가 실제 job으로 오인한다.
+            # job_id는 **다리일 뿐**(작업 → job 방향) — 작업이 job보다 먼저 존재한다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS produce_works (
+                    work_id TEXT PRIMARY KEY,
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    title TEXT,
+                    state_json TEXT NOT NULL,
+                    job_id TEXT,
+                    step INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_produce_works_customer "
+                      "ON produce_works(customer_id, updated_at DESC)")
             # 보이스 프리셋(2026-07-14, 영상제작 4단계) — 큐레이션된 목소리 카드.
             c.execute("""
                 CREATE TABLE IF NOT EXISTS voice_presets (
@@ -287,8 +337,12 @@ class Store:
             """)
             # 성우 1명당 stable/natural/expressive 3톤(2026-07-14) — 기존 DB 백필.
             # naturalize_profile_json(2026-07-15): 튜닝 작업대에서 동결한 자연화 프로파일.
+            # best(2026-07-16): 사장님 청취 판정으로 뽑은 베스트 성우. 이 한 필드가 두 일을
+            # 한다 — 카드 정렬(ORDER BY best DESC)과 ⭐ 배지. 둘로 나누면(sort_order +
+            # recommended) "베스트인데 순서는 뒤"라는 모순 상태가 표현 가능해진다(설계 §4.1).
             for col, ddl in (("group_id", "TEXT"), ("variant", "TEXT NOT NULL DEFAULT 'stable'"),
-                             ("naturalize_profile_json", "TEXT")):
+                             ("naturalize_profile_json", "TEXT"),
+                             ("best", "INTEGER NOT NULL DEFAULT 0")):
                 try:
                     c.execute(f"ALTER TABLE voice_presets ADD COLUMN {col} {ddl}")
                 except sqlite3.OperationalError:
@@ -359,6 +413,16 @@ class Store:
                 )
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_topic_groups_group ON topic_groups(group_id)")
+            # 렌더 포인트 원장(2026-07-17, 자동매칭 고급효과 엔진 Task1) — 잔액을 컬럼에
+            # 저장하지 않고 delta 누적합으로 계산(원장 방식). customer_id별 독립.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS points_ledger (
+                    customer_id INTEGER NOT NULL,
+                    delta INTEGER NOT NULL,
+                    reason TEXT,
+                    created_at TEXT DEFAULT (datetime('now'))
+                )
+            """)
             # 기존 DB용 마이그레이션 — mix_jobs 자막제거 필드(2026-07-13).
             # 새 DB는 위 CREATE에 이미 있어 여기선 "이미 존재" 예외를 조용히 넘긴다.
             for col, ddl in (
@@ -371,6 +435,14 @@ class Store:
                 ("voice_json", "TEXT"),     # 영상제작 4단계 보이스 프리셋 선택 스냅샷(2026-07-14)
                 ("script_structure_json", "TEXT"),  # 도서관→제작소 다리: 대본 구조분석 스냅샷(2026-07-15).
                                                     # ⚠️ 위 structure 컬럼과 다른 것 — 그건 template/free 모드 플래그.
+                ("fx_plan", "TEXT"),        # 자동매칭 고급효과 엔진 Task5: 확정된 효과 배치 플랜(FullReel props).
+                ("fx_status", "TEXT"),      # queued/done/failed — 렌더 진행 상태.
+                ("fx_path", "TEXT"),        # 완성된 효과영상 경로.
+                # 1단계 미리보기(2026-07-17). status(downloading→…→done)는 한 줄기라 여기에
+                # 미리보기를 끼우면 최종 렌더 폴링과 서로를 오인한다 → 별도 컬럼으로 둔다.
+                ("preview_status", "TEXT"),  # null|rendering|ready|failed
+                ("preview_path", "TEXT"),
+                ("preview_error", "TEXT"),
             ):
                 try:
                     c.execute(f"ALTER TABLE mix_jobs ADD COLUMN {col} {ddl}")
@@ -725,21 +797,27 @@ class Store:
                     (shortcode, json.dumps(script, ensure_ascii=False)),
                 )
 
-    def update_extract_category(self, shortcode, category):
+    def update_extract_category(self, shortcode, category, source=None):
         """category만 UPDATE — script_json은 절대 안 건드린다(2026-07-15, C-1 재발방지).
         원본 텍스트를 다시 쓰지 않고 카테고리 추론·교정만 반영할 때 이걸 쓸 것
-        (save_script(code, cached, category=...)로 원본을 통째로 재기록하는 패턴 금지)."""
+        (save_script(code, cached, category=...)로 원본을 통째로 재기록하는 패턴 금지).
+
+        source(2026-07-16): user|gemini|keyword — 어디서 온 값인지. 안 주면 종전대로
+        category만 바꾸고 출처는 건드리지 않는다(기존 호출부 호환)."""
         with self._conn() as c:
-            c.execute(
-                "UPDATE script_extracts SET category=? WHERE shortcode=?",
-                (category, shortcode),
-            )
+            if source is None:
+                c.execute("UPDATE script_extracts SET category=? WHERE shortcode=?",
+                          (category, shortcode))
+            else:
+                c.execute("UPDATE script_extracts SET category=?, category_source=? "
+                          "WHERE shortcode=?", (category, source, shortcode))
 
     def get_extract(self, shortcode):
         """대본추출 결과 + category + 구조분석(있으면). 없으면 None."""
         with self._conn() as c:
             row = c.execute(
-                "SELECT script_json, extracted_at, category, structure_json, structure_analyzed_at "
+                "SELECT script_json, extracted_at, category, structure_json, "
+                "structure_analyzed_at, category_source "
                 "FROM script_extracts WHERE shortcode=?",
                 (shortcode,),
             ).fetchone()
@@ -750,6 +828,7 @@ class Store:
         data["category"] = row[2]
         data["structure"] = json.loads(row[3]) if row[3] else None
         data["structure_analyzed_at"] = row[4]
+        data["category_source"] = row[5]
         return data
 
     def save_extract_structure(self, shortcode, structure):
@@ -1195,7 +1274,9 @@ class Store:
                 "SELECT job_id, urls_json, target_seconds, structure, status, error, "
                 "extract_json, edit_plan_json, video_path, created_at, updated_at, "
                 "subtitle_removal, clean_video_path, given_script, headcopy_json, "
-                "caption_style_json, voice_json, deco_json, script_structure_json "
+                "caption_style_json, voice_json, deco_json, script_structure_json, "
+                "fx_plan, fx_status, fx_path, "
+                "preview_status, preview_path, preview_error "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -1213,16 +1294,26 @@ class Store:
             "voice": json.loads(row[16]) if row[16] else None,
             "deco": json.loads(row[17]) if row[17] else None,
             "script_structure": json.loads(row[18]) if row[18] else None,
+            "fx_plan": json.loads(row[19]) if row[19] else None,
+            "fx_status": row[20], "fx_path": row[21],
+            "preview_status": row[22], "preview_path": row[23], "preview_error": row[24],
         }
 
     def update_mix_job(self, job_id, **fields):
         """status/error/extract/edit_plan/video_path 갱신(+updated_at). 객체는 JSON 직렬화."""
         cols, vals = [], []
-        for k in ("status", "error", "video_path", "clean_video_path"):
+        for k in ("status", "error", "video_path", "clean_video_path",
+                  "fx_status", "fx_path",
+                  # 1단계 미리보기(2026-07-17) — 여기 없으면 update_mix_job(preview_status=...)이
+                  # 에러도 없이 조용히 무시된다(이 화이트리스트가 이 배선의 함정).
+                  "preview_status", "preview_path", "preview_error"):
             if k in fields:
                 cols.append(f"{k}=?"); vals.append(fields[k])
         if "subtitle_removal" in fields:
             cols.append("subtitle_removal=?"); vals.append(1 if fields["subtitle_removal"] else 0)
+        if "fx_plan" in fields:
+            cols.append("fx_plan=?")
+            vals.append(json.dumps(fields["fx_plan"], ensure_ascii=False) if fields["fx_plan"] else None)
         if "headcopy" in fields:
             cols.append("headcopy_json=?")
             vals.append(json.dumps(fields["headcopy"], ensure_ascii=False) if fields["headcopy"] else None)
@@ -1244,6 +1335,86 @@ class Store:
         with self._conn() as c:
             c.execute(f"UPDATE mix_jobs SET {', '.join(cols)} WHERE job_id=?", tuple(vals))
 
+    # ── 제작소 작업파일(2026-07-17) ──────────────────────────
+    def upsert_produce_work(self, work_id, state, job_id=_UNSET, step=_UNSET,
+                            customer_id=LEGACY_CUSTOMER_ID):
+        """작업 저장. work_id가 None이면 새로 만들어 반환한다.
+        state: 클라이언트 작업상태 dict(sessionStorage.produce_work 스키마 + step).
+        ★title은 서버가 state['script'] 앞 20자에서 뽑는다 — 클라이언트가 매번 보내면
+        대본을 고쳤을 때 목록 이름과 어긋난다(스펙 §4.6).
+        job_id/step: UPDATE 경로에서는 update_mix_job과 같은 관례 — 넘어온 필드만 갱신한다.
+        안 넘기면(_UNSET) 기존 값 보존, job_id=None/step=0을 명시적으로 넘기면 그 값으로 덮어쓴다
+        (부분 저장이 job_id·step을 조용히 리셋하던 버그 수정, 2026-07-17).
+        남의 work_id로 넘어오면(다른 customer_id 소유) **아무것도 안 하고 None을 반환한다** —
+        get_produce_work/delete_produce_work와 같은 결(예외를 던지지 않는다). UPDATE를
+        `WHERE work_id=? AND customer_id=?`로 바꾸지 않는 이유: 매치 0건이면 아래 "되살리기"
+        INSERT 폴백으로 떨어지는데, work_id는 전역 PRIMARY KEY라 남의 id로 INSERT하면
+        IntegrityError(500)가 난다 — 그래서 UPDATE 전에 소유자를 먼저 물어본다(2026-07-17 재리뷰)."""
+        now = datetime.now(timezone.utc).isoformat()
+        title = (state.get("script") or "")[:20] if isinstance(state, dict) else ""
+        payload = json.dumps(state, ensure_ascii=False)
+        with self._conn() as c:
+            if work_id:
+                owner = c.execute(
+                    "SELECT customer_id FROM produce_works WHERE work_id=?", (work_id,),
+                ).fetchone()
+                if owner and owner[0] != customer_id:
+                    return None  # 남의 작업 — 건드리지 않는다(get/delete와 같은 결)
+                cols, vals = ["title=?", "state_json=?"], [title, payload]
+                if job_id is not _UNSET:
+                    cols.append("job_id=?"); vals.append(job_id)
+                if step is not _UNSET:
+                    cols.append("step=?"); vals.append(step)
+                cols.append("updated_at=?"); vals.append(now)
+                vals.append(work_id)
+                n = c.execute(
+                    f"UPDATE produce_works SET {', '.join(cols)} WHERE work_id=?",
+                    tuple(vals),
+                ).rowcount
+                if n:
+                    return work_id
+                # 서버 DB가 갈아엎였는데 브라우저가 옛 work_id를 들고 있는 경우 —
+                # 조용히 버리지 말고 그 id로 되살린다(사장님 작업이 사라지는 것보다 낫다).
+            wid = work_id or uuid.uuid4().hex[:12]
+            ins_job_id = None if job_id is _UNSET else job_id
+            ins_step = 0 if step is _UNSET else step
+            c.execute(
+                "INSERT INTO produce_works(work_id, customer_id, title, state_json, "
+                "job_id, step, created_at, updated_at) VALUES(?,?,?,?,?,?,?,?)",
+                (wid, customer_id, title, payload, ins_job_id, ins_step, now, now),
+            )
+            return wid
+
+    def get_produce_work(self, work_id, customer_id=LEGACY_CUSTOMER_ID):
+        """작업 1건 → dict(state는 파싱됨). 없거나 남의 것이면 None
+        (scene_assets의 get_scene_asset과 같은 관례, 2026-07-17 리뷰 반영)."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT work_id, title, state_json, job_id, step, created_at, updated_at "
+                "FROM produce_works WHERE work_id=? AND customer_id=?", (work_id, customer_id),
+            ).fetchone()
+        if not row:
+            return None
+        return {"work_id": row[0], "title": row[1], "state": json.loads(row[2]),
+                "job_id": row[3], "step": row[4], "created_at": row[5], "updated_at": row[6]}
+
+    def list_produce_works(self, customer_id=LEGACY_CUSTOMER_ID, limit=20):
+        """최근 작업 목록(updated_at DESC). state_json은 싣지 않는다 — 목록은 가벼워야 한다."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT work_id, title, step, job_id, updated_at FROM produce_works "
+                "WHERE customer_id=? ORDER BY updated_at DESC, rowid DESC LIMIT ?",
+                (customer_id, limit),
+            ).fetchall()
+        return [{"work_id": r[0], "title": r[1], "step": r[2], "job_id": r[3],
+                 "updated_at": r[4]} for r in rows]
+
+    def delete_produce_work(self, work_id, customer_id=LEGACY_CUSTOMER_ID):
+        """지운다. 실제로 지워졌으면(내 것이었으면) True — 남의 것은 지워지지 않는다."""
+        with self._conn() as c:
+            return c.execute("DELETE FROM produce_works WHERE work_id=? AND customer_id=?",
+                             (work_id, customer_id)).rowcount > 0
+
     # ── 보이스 프리셋(2026-07-14, 영상제작 4단계) ──
     def upsert_voice_preset(self, p):
         """보이스 프리셋 1건 upsert(preset_id 충돌 시 덮어씀).
@@ -1259,8 +1430,8 @@ class Store:
                 INSERT INTO voice_presets(preset_id, name, one_liner, lang, archetype,
                     base_voice_id, model_id, voice_settings_json, default_speed,
                     default_silence_trim, sample_file, source_ref, origin, created_at,
-                    group_id, variant, naturalize_profile_json)
-                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                    group_id, variant, naturalize_profile_json, best)
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 ON CONFLICT(preset_id) DO UPDATE SET
                     name=excluded.name, one_liner=excluded.one_liner, lang=excluded.lang,
                     archetype=excluded.archetype, base_voice_id=excluded.base_voice_id,
@@ -1269,6 +1440,7 @@ class Store:
                     default_silence_trim=excluded.default_silence_trim,
                     sample_file=excluded.sample_file, source_ref=excluded.source_ref,
                     origin=excluded.origin, group_id=excluded.group_id, variant=excluded.variant,
+                    best=excluded.best,
                     -- 동결 프로파일만은 COALESCE로 보존한다. 다른 컬럼과 달리 이 값의 소스오브
                     -- 트루스는 JSON 파일이 아니라 튜닝 작업대(DB)다. excluded로 덮으면 startup
                     -- seed_presets가 매 재기동마다 NULL로 지워버린다(2026-07-15 리뷰 S2).
@@ -1282,6 +1454,7 @@ class Store:
                 p.get("default_speed", 1.0), p.get("default_silence_trim", "off"),
                 p.get("sample_file"), p.get("source_ref"), p.get("origin", "curated"), now,
                 p.get("group_id") or p["preset_id"], p.get("variant", "stable"), prof_json,
+                int(bool(p.get("best", False))),
             ))
 
     def _row_to_preset(self, r):
@@ -1293,6 +1466,7 @@ class Store:
             "sample_file": r[10], "source_ref": r[11], "origin": r[12], "created_at": r[13],
             "group_id": r[14] or r[0], "variant": r[15] or "stable",
             "naturalize_profile": json.loads(r[16]) if len(r) > 16 and r[16] else None,
+            "best": bool(r[17]) if len(r) > 17 else False,
         }
 
     def get_voice_preset(self, preset_id):
@@ -1300,18 +1474,21 @@ class Store:
             r = c.execute("SELECT preset_id,name,one_liner,lang,archetype,base_voice_id,"
                           "model_id,voice_settings_json,default_speed,default_silence_trim,"
                           "sample_file,source_ref,origin,created_at,group_id,variant,"
-                          "naturalize_profile_json FROM voice_presets "
+                          "naturalize_profile_json,best FROM voice_presets "
                           "WHERE preset_id=?", (preset_id,)).fetchone()
         return self._row_to_preset(r) if r else None
 
     def list_voice_presets(self, lang=None):
         q = ("SELECT preset_id,name,one_liner,lang,archetype,base_voice_id,model_id,"
              "voice_settings_json,default_speed,default_silence_trim,sample_file,"
-             "source_ref,origin,created_at,group_id,variant,naturalize_profile_json FROM voice_presets")
+             "source_ref,origin,created_at,group_id,variant,naturalize_profile_json,"
+             "best FROM voice_presets")
         args = ()
         if lang:
             q += " WHERE lang=?"; args = (lang,)
-        q += " ORDER BY created_at"
+        # 베스트가 앞, 그 안에선 기존 순서(삽입 시각) 유지. ★순서의 소스오브트루스는
+        # 여기다 — assets/voice_presets.json의 배열 순서가 아니다(설계 §4.1의 실측).
+        q += " ORDER BY best DESC, created_at"
         with self._conn() as c:
             return [self._row_to_preset(r) for r in c.execute(q, args).fetchall()]
 
@@ -1471,3 +1648,23 @@ class Store:
                 (row[0], platform, shortcode),
             ).fetchall()
         return [{"platform": r[0], "shortcode": r[1]} for r in rows]
+
+    # ── 렌더 포인트 원장(2026-07-17, 자동매칭 고급효과 엔진 Task1) ──
+    # 잔액 컬럼을 따로 두지 않고 delta 누적합으로 계산하는 원장(ledger) 방식.
+    # points.py가 이 두 메서드만 통해 테이블에 접근한다(SQL은 store.py에 캡슐화).
+    def points_balance(self, customer_id):
+        """이 고객의 현재 포인트 잔액(delta 합)."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT COALESCE(SUM(delta),0) FROM points_ledger WHERE customer_id=?",
+                (customer_id,),
+            ).fetchone()
+        return int(row[0])
+
+    def points_add(self, customer_id, delta, reason=""):
+        """원장에 한 줄 추가(양수=적립, 음수=차감). 잔액 컬럼이 없어 트랜잭션 충돌 없이 append-only."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO points_ledger(customer_id, delta, reason) VALUES(?,?,?)",
+                (customer_id, delta, reason),
+            )

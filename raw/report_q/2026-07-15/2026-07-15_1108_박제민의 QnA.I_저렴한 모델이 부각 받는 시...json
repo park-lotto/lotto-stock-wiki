@@ -1,0 +1,55 @@
+{
+  "meta": {
+    "date": "2026-07-15",
+    "broker": "SK securities",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-15_1108_박제민의 QnA.I_저렴한 모델이 부각 받는 시...md"
+  },
+  "questionnaire": {
+    "broker": "SK securities",
+    "analyst": "박제민",
+    "report_date": "2026-07-15",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "OpenAI 해자 약화",
+      "GPU 기술력 및 LPU 주문 추이",
+      "최신 AI 모델 출시 및 가격 경쟁",
+      "기업의 토큰 소비량 상한(Token Optimizing)",
+      "금리 상승에 따른 신용등급 강등 및 금융 리스크"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "AI 모델 최적화 흐름 속에서 유통망을 쥐고 있는 빅테크들의 해자 강화 전망"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026-07-08",
+        "event": "SpaceXAI Grok 4.5 출시"
+      },
+      {
+        "date": "2026-07-09",
+        "event": "OpenAI GPT-5.6 출시"
+      },
+      {
+        "date": "2026-07-09",
+        "event": "Meta Muse Spark 1.1 출시"
+      }
+    ],
+    "top_picks": [
+      "엔비디아",
+      "알파벳",
+      "애플",
+      "마이크로소프트",
+      "아마존",
+      "메타 플랫폼스",
+      "오라클",
+      "코어위브"
+    ],
+    "risk": "최선단 모델 규제 리스크, 출시 지연, 수출 지연 리스크 및 일부 하이일드 기업들의 금융 비용 부담 증가",
+    "quote": "AI Model의 최적화(Optimizing) 흐름은 생태계 내에서 유통망을 쥐고 있는 빅테크들의 해자를 강화한다고 판단"
+  }
+}

@@ -17,6 +17,25 @@
   .main{flex:1;padding:28px 36px;overflow:auto}
   .head h2{font-size:24px}
   .desc{color:var(--sub);font-size:13px;margin:6px 0 20px;line-height:1.6}
+  .addurl{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:20px}
+  .addurl-row{display:flex;gap:8px}
+  .addurl-row input{flex:1;background:#0d131c;border:1px solid var(--line);border-radius:8px;
+    padding:9px 12px;color:var(--txt);font-size:13px;font-family:inherit}
+  .addurl-row input:focus{outline:none;border-color:var(--accent)}
+  .addurl-row button{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:9px 18px;
+    font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+  .addurl-row button:disabled{opacity:.5;cursor:default}
+  .addurl-msg{font-size:12px;color:var(--sub);margin-top:8px;line-height:1.5}
+  .addurl-msg.err{color:#ff7b72}
+  .addurl-confirm{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;
+    padding-top:10px;border-top:1px solid var(--line);font-size:13px}
+  .addurl-confirm select{background:#0d131c;border:1px solid var(--line);border-radius:6px;
+    padding:6px 10px;color:var(--txt);font-size:13px;font-family:inherit}
+  .addurl-confirm button{border:0;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:700;
+    cursor:pointer;font-family:inherit}
+  .addurl-confirm button.ok{background:var(--gold);color:#1a1200}
+  .addurl-confirm button.cancel{background:transparent;color:var(--sub);border:1px solid var(--line)}
+  .addurl-hint{flex-basis:100%;font-size:11px;color:var(--sub)}
   .cards{display:flex;flex-direction:column;gap:18px}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:14px}
   .toprow{display:flex;gap:18px;align-items:stretch}
@@ -111,7 +130,24 @@
 <body>
   <main class="main">
     <div class="head"><h2>📚 대본 즐겨찾기</h2></div>
-    <div class="desc" id="desc">S급 대본을 <b>원본 영상 + 구조 분석</b>을 나란히 보며 학습합니다. 랭킹에서 <b>📝 대본 추출 → ⭐ S급 위키 저장</b>으로 담으세요.</div>
+    <div class="desc" id="desc">S급 대본을 <b>원본 영상 + 구조 분석</b>을 나란히 보며 학습합니다. 랭킹에서 <b>📝 대본 추출 → ⭐ S급 위키 저장</b>으로 담거나, 아래에 <b>링크를 직접</b> 넣으세요.</div>
+    <!-- 링크 직접 등록(2026-07-16): 랭킹에 안 뜬 영상도 창고에 넣는다. 백엔드 신규 없음 —
+         ①extract_from_url(추출+카테고리 자동추론) → ②통제 어휘 드롭다운에 띄워 교정 →
+         ③save_to_wiki(캐시 히트라 즉시)로 기존 엔드포인트 둘을 잇는다. -->
+    <div class="addurl" id="addUrl">
+      <div class="addurl-row">
+        <input id="addUrlInput" placeholder="인스타/유튜브/틱톡 URL을 붙여넣으세요" autocomplete="off">
+        <button id="addUrlBtn" onclick="addByUrl()">+ 등록</button>
+      </div>
+      <div class="addurl-msg" id="addUrlMsg"></div>
+      <div class="addurl-confirm" id="addUrlConfirm" style="display:none">
+        <span>감지된 카테고리:</span>
+        <select id="addUrlCat"></select>
+        <button class="ok" id="addUrlSave" onclick="addByUrlSave()">등록</button>
+        <button class="cancel" onclick="addByUrlReset()">취소</button>
+        <div class="addurl-hint">틀리면 바로 고치세요 — 이 값이 학습 코퍼스 버킷을 가릅니다.</div>
+      </div>
+    </div>
     <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
   </main>
   <div class="gen-bg" id="genModal">
@@ -151,6 +187,68 @@ function videoFallback(v){
   div.append('원본 영상 없음 (저장 당시 URL 만료)', document.createElement('br'), a);
   v.replaceWith(div);
 }
+// ── 링크 직접 등록(2026-07-16) ──────────────────────────────────────────────
+// 백엔드 신규 없음. ①/api/produce/extract_from_url 이 추출·카테고리 자동추론·구조분석을
+// 하고 캐시에 넣는다 → ②사장님이 통제 어휘(/api/wiki/categories, I-4) 드롭다운으로 교정
+// → ③/api/produce/save_to_wiki 가 캐시 히트로 즉시 저장(원본만 저장 — C-1 재발 없음).
+let _addUrlPending = null;   // ①이 끝난 뒤 ③에 넘길 것 {url, shortcode}
+
+function _addUrlMsg(html, isErr){
+  const m=document.getElementById('addUrlMsg');
+  m.className='addurl-msg'+(isErr?' err':''); m.innerHTML=html;
+}
+function addByUrlReset(){
+  _addUrlPending=null;
+  document.getElementById('addUrlConfirm').style.display='none';
+  document.getElementById('addUrlBtn').disabled=false;
+  document.getElementById('addUrlInput').value='';
+  _addUrlMsg('');
+}
+async function addByUrl(){
+  const url=document.getElementById('addUrlInput').value.trim();
+  if(!url){ _addUrlMsg('URL을 넣어주세요.', true); return; }
+  if(!/^https?:\/\//i.test(url)){ _addUrlMsg('http(s):// 로 시작하는 링크여야 합니다.', true); return; }
+  document.getElementById('addUrlBtn').disabled=true;
+  document.getElementById('addUrlConfirm').style.display='none';
+  _addUrlMsg('⏳ 추출·구조분석 중… (10~70초, 처음 보는 영상이면 더 걸립니다)');
+  try{
+    const d=await (await fetch('/api/produce/extract_from_url',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({url})})).json();
+    if(!d.ok){ _addUrlMsg('⚠️ '+esc(d.error||'추출 실패'), true); document.getElementById('addUrlBtn').disabled=false; return; }
+    // 추출은 됐는데 대본이 비면 담아도 학습 재료가 없다 — 여기서 끊는다.
+    if(!(d.full_text||'').trim()){
+      _addUrlMsg('⚠️ 대본이 비어 담을 수 없습니다 — 자막·음성이 없는 영상일 수 있습니다.', true);
+      document.getElementById('addUrlBtn').disabled=false; return;
+    }
+    _addUrlPending={url, shortcode:d.shortcode||''};
+    await _fillCatSelect(d.category||'');
+    _addUrlMsg('✅ 추출 완료 — "'+esc((d.full_text||'').slice(0,40))+'…"');
+    document.getElementById('addUrlConfirm').style.display='flex';
+  }catch(e){ _addUrlMsg('네트워크 오류 — 다시 시도해주세요.', true); document.getElementById('addUrlBtn').disabled=false; }
+}
+async function _fillCatSelect(detected){
+  const sel=document.getElementById('addUrlCat');
+  let cats=[];
+  try{ const c=await (await fetch('/api/wiki/categories')).json(); cats=c.categories||[]; }catch(e){}
+  if(detected && cats.indexOf(detected)===-1) cats=[detected].concat(cats);   // 추론값이 어휘에 없으면 그것도 고를 수 있게
+  sel.innerHTML=cats.map(c=>`<option value="${esc(c)}"${c===detected?' selected':''}>${esc(c)}</option>`).join('');
+  if(!detected) sel.selectedIndex=0;
+}
+async function addByUrlSave(){
+  if(!_addUrlPending) return;
+  const btn=document.getElementById('addUrlSave'); btn.disabled=true;
+  const category=document.getElementById('addUrlCat').value;
+  _addUrlMsg('⭐ 창고에 담는 중…');
+  try{
+    const d=await (await fetch('/api/produce/save_to_wiki',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({url:_addUrlPending.url, shortcode:_addUrlPending.shortcode, category})})).json();
+    if(!d.ok){ _addUrlMsg('⚠️ '+esc(d.error||'등록 실패'), true); btn.disabled=false; return; }
+    addByUrlReset(); btn.disabled=false;
+    location.reload();   // 새 카드가 목록에 뜨도록
+  }catch(e){ _addUrlMsg('네트워크 오류 — 다시 시도해주세요.', true); btn.disabled=false; }
+}
+
 async function load(){
   const el=document.getElementById('cards');
   try{

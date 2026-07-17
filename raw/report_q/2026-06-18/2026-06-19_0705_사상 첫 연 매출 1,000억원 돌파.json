@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-18",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-19_0705_사상 첫 연 매출 1,000억원 돌파.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "김진형",
+    "report_date": "2026.06.18",
+    "stocks": [
+      {
+        "name": "엑시콘",
+        "code": "092870",
+        "rating": "N/R",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026F 매출액 1,321억원(+100% YoY)과 영업이익 160억원(+19,936% YoY).",
+        "estimate_revision": null,
+        "next_catalyst": "2025년 출시한 CLT의 수요 지속 및 PCIe 6.0 지원에 따른 Gen 6 SSD와 CXL 테스터 등 수혜",
+        "thesis": [
+          "2025년 출시한 CLT의 공급 대수 확대('25년 10대 -> '26년 15~20대)에 따른 고성장",
+          "PCIe 6.0 지원 CPU 출시에 따른 Gen 6 SSD 및 CXL 관련 테스터 수요 발생",
+          "상저하고 흐름 속 2026년 연 매출 1,000억원 돌파 전망"
+        ],
+        "valuation_basis": "현재 주가는 '26년 예상 당기순이익 기준 P/E 17배 수준으로, 글로벌 Peer들의 평균 44배 대비 상대적으로 저렴한 구간.",
+        "risk": "경쟁사의 CLT 시장 진입 여부",
+        "supply_comment": "상반기까지의 CLT 관련 신규 수주액(420억원으로 추정)을 감안하면 연간 실적에 대한 가시성은 충분.",
+        "quote": "2026F 매출액 1,321억원(+100% YoY)과 영업이익 160억원(+19,936% YoY). 메모리 업황 호조와 타이트한 후공정 CAPA로 후공정 테스트 장비 업체에게 우호적인 환경 지속될 것으로 예상."
+      }
+    ]
+  }
+}

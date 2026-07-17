@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-17",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-18_0704_숨은 가치의 재발견 DN솔루션즈, 이제 온전...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "송선재",
+    "report_date": "2026년 06월 17일",
+    "stocks": [
+      {
+        "name": "DN오토모티브",
+        "code": "007340",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "60,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 매출액 4,431.1십억원, 영업이익 544.3십억원, 순이익 324.1십억원 / 2027년 매출액 4,673.1십억원, 영업이익 665.1십억원, 순이익 409.8십억원",
+        "estimate_revision": null,
+        "next_catalyst": "DN솔루션즈의 중복상장 가능성 낮아짐, Heller와의 시너지 효과 및 턴어라운드, 본업인 방진부품 및 축전지 사업의 수주 회복 및 증설",
+        "thesis": [
+          "핵심 자회사 DN솔루션즈의 전방 수요 개선 및 인수사 Heller와의 시너지 기대",
+          "DN솔루션즈 중복상장 가능성 축소에 따른 기업가치 온전한 반영",
+          "본업인 방진부품, 튜브, 축전지 사업의 안정적 현금흐름 및 생산능력 증설을 통한 성장"
+        ],
+        "valuation_basis": "SOTP(Sum-of-the-Parts) 방식을 사용함. 자동차 부문과 공작기계 부문에 글로벌 Peers 대비 평균 30% 할인된 P/E Multiple을 적용하여 영업가치를 산출하고 순차입금을 차감함.",
+        "risk": "Heller의 실적 턴어라운드 지연 및 단기적인 연결 마진 희석 가능성, 공작기계 업황 하락 사이클 전환",
+        "supply_comment": "방진부품은 신규 수주가 21% 늘며 2026년 매출액 5% 증가 전망, 축전지는 2026년 울산 증설 및 2030년 부산 신공장 가동 예정",
+        "quote": "DN오토모티브에 대해 투자의견 BUY와 목표주가 6.0만원(목표 P/E 10.5배)을 제시한다."
+      }
+    ]
+  }
+}

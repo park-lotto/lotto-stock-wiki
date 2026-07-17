@@ -13,8 +13,29 @@ from shopping_shorts.config import APIFY_TOKENS, APIFY_ACTOR, RESULTS_PER_CHANNE
 # 비동기로 걸고 완료까지 폴링하는 방식으로 전환 — 서버측 시간 제한이 없다.
 _RUNS_URL = "https://api.apify.com/v2/acts/{actor}/runs"
 _RUN_STATUS_URL = "https://api.apify.com/v2/actor-runs/{run_id}"
+_RUN_ABORT_URL = "https://api.apify.com/v2/actor-runs/{run_id}/abort"
 _DATASET_ITEMS_URL = "https://api.apify.com/v2/datasets/{dataset_id}/items"
 _TERMINAL_STATUSES = {"SUCCEEDED", "FAILED", "ABORTED", "TIMED-OUT"}
+
+
+class ApifyRunFailed(RuntimeError):
+    """run이 시작에는 성공했으나 실행 도중 실패(FAILED/ABORTED/TIMED-OUT).
+
+    ★이 실패는 원인이 두 가지로 갈리는데 run status만으로는 구별이 안 된다:
+      (a) 실행 도중 계정 소진 → **다음 토큰으로 재시도하면 성공한다**
+          (2026-07-09 실사고 — 이것 때문에 로테이션을 넣었다)
+      (b) 액터 스키마 변경·잘못된 입력 → 토큰을 바꿔도 똑같이 실패한다
+    (b)인데 전 토큰(최대 30개)을 다 돌면 **유료 run이 30번 청구**된다(fetch_reels의
+    15워커 병렬과 곱해진다). 그렇다고 (a)를 포기하면 위 실사고가 재발한다.
+    → 절충: run 실패로 인한 로테이션만 _MAX_RUN_FAILURE_ROTATIONS로 **횟수를 제한**한다.
+      (a)는 다음 토큰에서 곧바로 살아나므로 1회면 충분하고, (b)의 피해는 30run → 2run으로 준다.
+    소진이 시작 시점에 드러나는 경우(401/402/429)는 run이 아예 안 뜨므로 공짜다 —
+    그건 종전대로 전 토큰을 돈다."""
+
+
+# run이 도중에 실패했을 때 "다른 토큰이면 될지도" 재시도를 몇 번까지 허용할지.
+# 각 재시도는 유료 run 1개다. 1 = 원 사고(계정 소진) 복구엔 충분하고 낭비는 최대 1건.
+_MAX_RUN_FAILURE_ROTATIONS = 1
 
 # 계정 하나가 사용량 소진(402)되면 다음 계정으로 자동 로테이션(2026-07-09).
 # 마지막으로 성공한 토큰의 인덱스를 저장해 다음 호출부터 그 지점에서 시작
@@ -49,15 +70,27 @@ def _start_run(token, payload, actor=APIFY_ACTOR):
     return headers, run.json()["data"]
 
 
+def _abort_run(headers, run_id) -> None:
+    """진행 중인 run을 중단시킨다. 타임아웃으로 손을 떼기 전 반드시 부른다 —
+    안 부르면 그 run은 Apify에서 계속 돌며 과금되는데(우리만 안 볼 뿐) 그 위에
+    다음 토큰으로 새 run을 또 띄우므로 **이중 과금**이 된다."""
+    try:
+        requests.post(_RUN_ABORT_URL.format(run_id=run_id), headers=headers, timeout=30)
+    except requests.RequestException:
+        pass  # abort 실패로 본 작업을 막을 순 없다. 로테이션은 계속한다.
+
+
 def _run_to_completion(headers, run_data, timeout, poll_interval):
     """폴링으로 run 완료까지 대기 → 데이터셋 아이템 반환.
-    실행 도중 실패(FAILED/ABORTED/TIMED-OUT)도 사용량 소진과 동일하게 취급해
-    호출부가 다음 토큰으로 전체 재시도할 수 있게 RuntimeError를 던진다."""
+    실행 도중 실패(FAILED/ABORTED/TIMED-OUT)는 토큰과 무관한 원인이므로 ApifyRunFailed로
+    던져 **로테이션 없이 즉시 포기**시킨다(유료 run 반복 청구 방지).
+    타임아웃은 로테이션 대상이지만, 넘기기 전에 기존 run을 abort한다."""
     run_id = run_data["id"]
     deadline = time.monotonic() + timeout
     status = run_data["status"]
     while status not in _TERMINAL_STATUSES:
         if time.monotonic() >= deadline:
+            _abort_run(headers, run_id)
             raise TimeoutError(f"Apify run {run_id} 시간초과({timeout}s, 마지막 상태={status})")
         time.sleep(poll_interval)
         poll = requests.get(_RUN_STATUS_URL.format(run_id=run_id), headers=headers, timeout=30)
@@ -66,7 +99,7 @@ def _run_to_completion(headers, run_data, timeout, poll_interval):
         status = run_data["status"]
 
     if status != "SUCCEEDED":
-        raise RuntimeError(f"Apify run {run_id} 실패(status={status})")
+        raise ApifyRunFailed(f"Apify run {run_id} 실패(status={status})")
 
     dataset_id = run_data["defaultDatasetId"]
     items = requests.get(
@@ -89,9 +122,14 @@ def _run_with_rotation(payload, tokens, timeout, poll_interval, actor=APIFY_ACTO
     fetch_reels(채널 목록)와 fetch_single_reel(단일 URL) 둘 다 이 공통
     로테이션 루프를 재사용한다(2026-07-09). actor를 다르게 지정하면 인스타
     외 다른 플랫폼 스크래퍼(예: tiktok_search.py)도 같은 토큰 풀·로테이션
-    로직을 그대로 재사용할 수 있다."""
+    로직을 그대로 재사용할 수 있다.
+
+    ★로테이션 정책(ApifyRunFailed 참고): 시작 거부(401/402/429·공짜)는 전 토큰을 돌지만,
+    run이 도중에 실패한 경우(유료)는 _MAX_RUN_FAILURE_ROTATIONS번까지만 재시도한다.
+    400 입력오류는 토큰 무관이므로 즉시 포기."""
     start = _load_key_index() % len(tokens)
     last_err = None
+    run_failures = 0
     for offset in range(len(tokens)):
         idx = (start + offset) % len(tokens)
         current_token = tokens[idx]
@@ -107,8 +145,20 @@ def _run_with_rotation(payload, tokens, timeout, poll_interval, actor=APIFY_ACTO
             if idx != start:
                 _save_key_index(idx)
             return items
-        except (requests.RequestException, RuntimeError, TimeoutError) as e:
+        except ApifyRunFailed as e:
+            run_failures += 1
             last_err = e
+            if run_failures > _MAX_RUN_FAILURE_ROTATIONS:
+                raise                   # 토큰 문제가 아니었다 — 더 돌면 유료 run만 쌓인다
+            continue                    # 도중 소진이었을 수 있다 — 다음 토큰으로 한 번만
+        except requests.HTTPError as e:
+            resp = getattr(e, "response", None)
+            if resp is not None and resp.status_code not in _EXHAUSTED_STATUSES:
+                raise                   # 400 입력오류 등 — 토큰 바꿔도 같다
+            last_err = e
+            continue
+        except (requests.RequestException, TimeoutError) as e:
+            last_err = e                # 네트워크 오류·타임아웃(run은 abort됨) — 로테이션
             continue
     raise RuntimeError(f"apify 토큰 {len(tokens)}개 전부 실패(마지막 오류: {last_err})")
 
