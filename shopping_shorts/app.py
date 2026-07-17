@@ -1702,14 +1702,28 @@ def api_thumb_frames(body: dict):
         if len(meta) == len(existing):
             return {"ok": True, "frames": meta}
 
-    # 서명이 다르거나(재렌더) 프레임 수가 안 맞으면 옛 프레임을 지우고 새로 뽑는다.
-    if out_dir.exists():
-        shutil.rmtree(out_dir)
-
+    # 재추출(재재조사 픽스1·2, 2026-07-17): 여기서 rmtree(out_dir)를 돌리면 안 된다.
+    # 같은 out_dir을 T4(썸네일 저장, task-4-brief.md)가 써서 사용자가 고른
+    # thumb_N.png를 저장한다 — rmtree는 그것까지 통째로 지워 재렌더 한 번에
+    # "고른 썸네일이 증발 + DB는 죽은 파일명을 계속 가리킴(깨진 이미지)"이 났다(실측).
+    # 게다가 grid_{i:02d}.jpg는 n=10 고정의 결정적 파일명이라 애초에 지울 필요가
+    # 없다 — 재추출이 그냥 덮어쓴다. rmtree를 추출 *전에* 돌리는 것도 문제였다:
+    # 추출이 RuntimeError로 실패하면(ffmpeg 일시 오류 등) 폴더는 이미 비었는데 DB의
+    # frames는 죽은 URL 10개를 그대로 들고 있어 "실패하면 이전보다 나빠짐"이 됐다.
     try:
         pairs = extract_grid_frames(video, out_dir, n=10)
     except RuntimeError as e:
         return JSONResponse(status_code=502, content={"ok": False, "error": str(e)})
+
+    # 추출 *성공 후에만*, 우리 소유 파일(grid_*.jpg)만, 개별로 고아를 정리한다.
+    # 부분 실패(extract_frame_at은 실패 시 조용히 None -- 기존 계약)로 새 결과에
+    # 없는 옛 grid_*.jpg가 남으면 existing(glob) vs meta(frames) 개수가 영영 안
+    # 맞아 매 요청마다 재추출이 돈다. thumb_*.png(T4 소유, 사용자가 고른 썸네일)는
+    # 이 정리 대상에 절대 넣지 않는다 — 우리가 만든 게 아니다.
+    new_names = {p.name for p, _ in pairs}
+    for old in out_dir.glob("grid_*.jpg"):
+        if old.name not in new_names:
+            old.unlink(missing_ok=True)
 
     frames = [{"url": f"/api/produce/thumb/file/{job_id}/{p.name}", "ts": round(ts, 2)}
               for p, ts in pairs]

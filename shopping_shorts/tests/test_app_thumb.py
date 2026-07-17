@@ -134,6 +134,172 @@ def test_frames_no_reextract_when_video_unchanged(client, tmp_path, monkeypatch)
     assert calls["n"] == 1
 
 
+def test_rerender_preserves_user_thumbnail(client, tmp_path, monkeypatch):
+    """재재조사 픽스1: 재렌더가 T4(썸네일 저장)가 만든 thumb_*.png(사용자 썸네일)를
+    지우면 안 된다. 예전 코드는 rmtree(out_dir)로 폴더 전체를 지워 T4 산출물까지
+    파괴했다(실측: BEFORE True -> AFTER False, DB는 옛 파일명을 그대로 가리켜 깨진
+    이미지가 남았다). grid_*.jpg(우리 소유)만 정리 대상이어야 한다."""
+    _job_with_video(tmp_path)
+
+    def fake_grid(video_path, dest_dir, n=10):
+        dest = Path(dest_dir); dest.mkdir(parents=True, exist_ok=True)
+        out = []
+        for i in range(n):
+            p = dest / f"grid_{i:02d}.jpg"; p.write_bytes(b"img")
+            out.append((p, float(i)))
+        return out
+
+    monkeypatch.setattr(app_module, "extract_grid_frames", fake_grid)
+    client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
+
+    # T4가 만든 사용자 썸네일을 시뮬레이션한다(같은 out_dir에 저장됨).
+    out_dir = tmp_path / "thumbs" / "j1"
+    user_thumb = out_dir / "thumb_1.png"
+    user_thumb.write_bytes(b"user-made-thumbnail")
+    s = Store(tmp_path / "t.db")
+    job = s.get_mix_job("j1")
+    thumb = job["thumbnail"]
+    thumb["results"] = ["thumb_1.png"]
+    thumb["selected"] = "thumb_1.png"
+    s.update_mix_job("j1", thumbnail=thumb)
+    assert user_thumb.exists()
+
+    # 재렌더: 같은 경로를 다른 내용/크기로 덮어쓴다.
+    video = tmp_path / "v.mp4"
+    import time
+    time.sleep(0.01)
+    video.write_bytes(b"fake-but-longer-content-after-rerender")
+
+    r2 = client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
+    assert r2.status_code == 200
+    assert user_thumb.exists(), "재렌더가 사용자 썸네일을 지우면 안 된다"
+
+    job2 = s.get_mix_job("j1")
+    assert job2["thumbnail"]["results"] == ["thumb_1.png"]
+    assert job2["thumbnail"]["selected"] == "thumb_1.png"
+
+
+def test_rerender_extract_failure_keeps_old_frames(client, tmp_path, monkeypatch):
+    """리뷰 픽스2: 재렌더 감지 후 추출이 RuntimeError면 502이면서 기존 grid_*.jpg가
+    그대로 남아야 한다('실패하면 이전보다 나빠짐' 금지). 예전 코드는 추출 시도
+    *전에* rmtree를 돌려, 실패 시 화면에 뜨던 후보 프레임 10장이 이미 사라지고
+    DB의 frames는 죽은 URL을 그대로 들고 있었다(클릭하면 전부 404)."""
+    _job_with_video(tmp_path)
+
+    def fake_grid_ok(video_path, dest_dir, n=10):
+        dest = Path(dest_dir); dest.mkdir(parents=True, exist_ok=True)
+        out = []
+        for i in range(n):
+            p = dest / f"grid_{i:02d}.jpg"; p.write_bytes(b"img")
+            out.append((p, float(i)))
+        return out
+
+    monkeypatch.setattr(app_module, "extract_grid_frames", fake_grid_ok)
+    r1 = client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
+    assert r1.status_code == 200
+    out_dir = tmp_path / "thumbs" / "j1"
+    old_files = sorted(p.name for p in out_dir.glob("grid_*.jpg"))
+    assert len(old_files) == 10
+
+    def fake_grid_fail(video_path, dest_dir, n=10):
+        raise RuntimeError("ffmpeg 일시 오류")
+
+    monkeypatch.setattr(app_module, "extract_grid_frames", fake_grid_fail)
+    video = tmp_path / "v.mp4"
+    import time
+    time.sleep(0.01)
+    video.write_bytes(b"fake-but-longer-content-after-rerender")
+
+    r2 = client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
+    assert r2.status_code == 502
+    remaining = sorted(p.name for p in out_dir.glob("grid_*.jpg"))
+    assert remaining == old_files, "추출 실패 시 기존 프레임이 그대로 남아야 한다"
+
+
+def test_partial_extraction_cleans_orphan_and_no_reextract(client, tmp_path, monkeypatch):
+    """부분 실패(9장만 추출)면 옛 grid_09.jpg 고아를 정리하고, 다음 요청은 재추출을
+    또 돌리지 않는다(existing(glob) vs meta(frames) 개수가 영영 안 맞으면 매 요청마다
+    재추출이 도는 문제를 막는다)."""
+    _job_with_video(tmp_path)
+    calls = {"n": 0}
+
+    def full_grid(video_path, dest_dir, n=10):
+        calls["n"] += 1
+        dest = Path(dest_dir); dest.mkdir(parents=True, exist_ok=True)
+        out = []
+        for i in range(n):
+            p = dest / f"grid_{i:02d}.jpg"; p.write_bytes(f"img{calls['n']}".encode())
+            out.append((p, float(i) + calls["n"]))
+        return out
+
+    monkeypatch.setattr(app_module, "extract_grid_frames", full_grid)
+    r1 = client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
+    assert r1.status_code == 200
+    out_dir = tmp_path / "thumbs" / "j1"
+    assert (out_dir / "grid_09.jpg").exists()
+
+    def partial_grid(video_path, dest_dir, n=10):
+        calls["n"] += 1
+        dest = Path(dest_dir); dest.mkdir(parents=True, exist_ok=True)
+        out = []
+        for i in range(n - 1):  # 9장만(마지막 1장 추출 실패 시뮬레이션)
+            p = dest / f"grid_{i:02d}.jpg"; p.write_bytes(f"img{calls['n']}".encode())
+            out.append((p, float(i) + calls["n"]))
+        return out
+
+    monkeypatch.setattr(app_module, "extract_grid_frames", partial_grid)
+    video = tmp_path / "v.mp4"
+    import time
+    time.sleep(0.01)
+    video.write_bytes(b"fake-but-longer-content-after-rerender")
+
+    r2 = client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
+    assert r2.status_code == 200
+    assert len(r2.json()["frames"]) == 9
+    assert not (out_dir / "grid_09.jpg").exists(), "옛 고아 grid_09.jpg가 정리돼야 한다"
+
+    # 다음 요청은 재추출 없이 재사용해야 한다(existing(9) == meta(9)).
+    r3 = client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
+    assert r3.status_code == 200
+    assert calls["n"] == 2, "부분추출 후에도 매번 재추출이 돌면 안 된다"
+
+
+def test_rerender_same_size_different_content_detected(client, tmp_path, monkeypatch):
+    """리뷰 픽스3: 크기가 같고 내용만 다른 재렌더도 감지해야 한다(video_sig의 mtime_ns
+    성분을 잠근다). 기존 스위트는 재렌더 픽스처가 항상 길이가 다른 바이트열을 써서
+    size만으로도 우연히 재렌더가 감지됐다 -- video_sig에서 mtime_ns를 빼도(size만) 그
+    테스트들은 계속 초록이었다(리뷰어·실측 확인). 여기서는 크기를 고정해 mtime
+    성분이 실제로 기여하는지 잠근다."""
+    _job_with_video(tmp_path)
+    calls = {"n": 0}
+
+    def counting(video_path, dest_dir, n=10):
+        calls["n"] += 1
+        dest = Path(dest_dir); dest.mkdir(parents=True, exist_ok=True)
+        out = []
+        for i in range(n):
+            p = dest / f"grid_{i:02d}.jpg"; p.write_bytes(f"img{calls['n']}".encode())
+            out.append((p, float(i) + calls["n"]))
+        return out
+
+    monkeypatch.setattr(app_module, "extract_grid_frames", counting)
+    r1 = client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
+    assert r1.json()["frames"][0]["ts"] == pytest.approx(1.0)
+
+    video = tmp_path / "v.mp4"
+    original_size = video.stat().st_size
+    import time
+    time.sleep(0.01)
+    # 크기는 원본(b"fake"=4바이트)과 똑같이 맞추고 내용만 바꾼다.
+    same_size_new_content = b"X" * original_size
+    video.write_bytes(same_size_new_content)
+    assert video.stat().st_size == original_size
+
+    r2 = client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
+    assert calls["n"] == 2, "크기가 같아도 내용(mtime)이 바뀌면 재추출해야 한다"
+    assert r2.json()["frames"][0]["ts"] == pytest.approx(2.0)
+
+
 def test_frames_404_when_no_video(client, tmp_path):
     s = Store(tmp_path / "t.db")
     s.create_mix_job("j2", ["https://x/1"], 30, "template")  # video_path 없음
