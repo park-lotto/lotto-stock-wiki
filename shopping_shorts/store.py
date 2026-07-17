@@ -401,6 +401,10 @@ class Store:
                 ("preview_status", "TEXT"),  # null|rendering|ready|failed
                 ("preview_path", "TEXT"),
                 ("preview_error", "TEXT"),
+                # 6단계 SEO(2026-07-17) — 제목·설명·태그·해시태그·CTA + 키워드 실측치 일습.
+                # 산출물이 한 덩어리로만 의미가 있어(제목만 바꿔도 태그·CTA와 어울려야 한다)
+                # 필드를 쪼개지 않고 JSON 한 칸에 둔다.
+                ("seo_json", "TEXT"),
             ):
                 try:
                     c.execute(f"ALTER TABLE mix_jobs ADD COLUMN {col} {ddl}")
@@ -1229,7 +1233,8 @@ class Store:
                 "subtitle_removal, clean_video_path, given_script, headcopy_json, "
                 "caption_style_json, voice_json, deco_json, script_structure_json, "
                 "fx_plan, fx_status, fx_path, "
-                "preview_status, preview_path, preview_error "
+                "preview_status, preview_path, preview_error, "
+                "seo_json "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -1250,6 +1255,7 @@ class Store:
             "fx_plan": json.loads(row[19]) if row[19] else None,
             "fx_status": row[20], "fx_path": row[21],
             "preview_status": row[22], "preview_path": row[23], "preview_error": row[24],
+            "seo": json.loads(row[25]) if row[25] else None,
         }
 
     def update_mix_job(self, job_id, **fields):
@@ -1279,6 +1285,9 @@ class Store:
         if "voice" in fields:
             cols.append("voice_json=?")
             vals.append(json.dumps(fields["voice"], ensure_ascii=False) if fields["voice"] else None)
+        if "seo" in fields:
+            cols.append("seo_json=?")
+            vals.append(json.dumps(fields["seo"], ensure_ascii=False) if fields["seo"] else None)
         for k, col in (("extract", "extract_json"), ("edit_plan", "edit_plan_json")):
             if k in fields:
                 cols.append(f"{col}=?")
