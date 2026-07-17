@@ -2028,6 +2028,55 @@ def api_produce_picks(request: Request):
     return {"ok": True, "items": items, "shortcodes": sorted(picks)}
 
 
+# ── 제작소 작업파일(2026-07-17) ──────────────────────────
+# 사장님 제보: "뒤로가기 하니까 작업물이 지워진다 ... 내일 다시 들어와도 이어서."
+# 작업상태(state)는 클라이언트 스키마 그대로 오간다 — 서버가 모양을 해석하지 않는다.
+@app.post("/api/produce/works")
+def api_produce_works_save(request: Request, body: dict):
+    state = body.get("state")
+    if not isinstance(state, dict):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "state 없음"})
+    # ★body에 있는 필드만 넘긴다. 스토어는 **안 넘어온 필드를 보존**하는데(update_mix_job과
+    # 같은 관례), 여기서 기본값을 채워 넣으면 그 보존이 통째로 무의미해진다 —
+    # 대본만 고쳐 저장했을 때 job_id가 날아가고 step이 0으로 되감긴다(T1 리뷰 Important).
+    kw = {}
+    if "job_id" in body:
+        kw["job_id"] = body.get("job_id") or None
+    if "step" in body:
+        # ★int가 아니면(bool 포함 — isinstance(True, int)는 True다) kw에 아예 넣지 않는다.
+        # 예전엔 0으로 되감았는데, step="3" 같은 오타 하나로 진행 단계를 파괴했다(T2 리뷰).
+        # 안 넣으면 위 job_id와 같은 "보존" 경로를 타 기존 값이 유지된다.
+        step = body.get("step")
+        if isinstance(step, int) and not isinstance(step, bool):
+            kw["step"] = step
+    wid = Store(DB_PATH).upsert_produce_work(body.get("work_id") or None, state,
+                                             customer_id=_cid(request), **kw)
+    if not wid:
+        # 남의 work_id — get/delete와 같은 404(스토어는 예외를 안 던진다, 2026-07-17 재리뷰)
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    return {"ok": True, "work_id": wid}
+
+
+@app.get("/api/produce/works")
+def api_produce_works_list(request: Request):
+    return {"ok": True, "works": Store(DB_PATH).list_produce_works(customer_id=_cid(request))}
+
+
+@app.get("/api/produce/works/{work_id}")
+def api_produce_works_get(request: Request, work_id: str):
+    w = Store(DB_PATH).get_produce_work(work_id, customer_id=_cid(request))
+    if not w:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    return {"ok": True, "state": w["state"], "job_id": w["job_id"], "step": w["step"]}
+
+
+@app.post("/api/produce/works/{work_id}/delete")
+def api_produce_works_delete(request: Request, work_id: str):
+    if not Store(DB_PATH).delete_produce_work(work_id, customer_id=_cid(request)):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    return {"ok": True}
+
+
 @app.post("/api/produce/mix/start")
 def api_produce_mix_start(background_tasks: BackgroundTasks, body: dict):
     """2단계 영상믹스 — 확정 대본(given_script)을 소스영상 장면에 매칭하는 job 시작.

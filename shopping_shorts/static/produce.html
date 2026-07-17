@@ -1156,7 +1156,11 @@ function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').repla
 // 갈라진다 — speed 재튜닝으로 실측치가 바뀌면 두 파일을 같이 고칠 것.
 const SYLLABLES_PER_SEC = 5.7;
 function lenText(t){ t=t||''; const c=t.replace(/\s/g,'').length; return `${t.length}자 · 약 ${Math.round(c/SYLLABLES_PER_SEC)}초`; }
-function onScriptInput(){ const ta=document.getElementById('scriptText'); STATE.script=ta.value; document.getElementById('lenHint').textContent=lenText(STATE.script); refreshFinalPeek(); if(HANDOFF.length) saveWork(); }
+// ★2026-07-17 병합 해결: 보이스 트랙의 SYLLABLES_PER_SEC(위)와 작업파일 T3의 가드 제거(아래)를
+// 둘 다 살린다. main 쪽은 saveWork() 앞에 HANDOFF 길이 가드가 붙어 있는데, 그걸 그대로 받으면
+// 영상 없이 대본만 확정한 작업이 다시 저장되지 않는다 — 그게 사장님이 잃어버린 구간이다.
+// 가드는 이제 saveWork() 안에 있다(대본만 있어도 저장).
+function onScriptInput(){ const ta=document.getElementById('scriptText'); STATE.script=ta.value; document.getElementById('lenHint').textContent=lenText(STATE.script); refreshFinalPeek(); saveWork(); }
 function updateLen(){ onScriptInput(); }
 
 // 초안 렌더(제미니·믹스 공유)
@@ -1176,7 +1180,7 @@ function useDraft(i){
   STATE.script_from_wiki='mix';   // 조합 초안 = 위키 대본 여러 개에서 나옴. 원본을 하나로 특정할 수 없다.
   setScriptMode('manual');   // 편집 가능한 직접작성 창으로 이동(내용 채움)
   refreshFinalPeek();
-  if(HANDOFF.length) saveWork();
+  saveWork();
 }
 async function postDrafts(url, payload, boxId){
   const box=document.getElementById(boxId);
@@ -1287,10 +1291,73 @@ function addMixUrl(){
 let HANDOFF = [];   // [{url,shortcode,name,thumbnail,caption,pickScript,useFootage}]
 // 작업 상태 저장/복원 — 다른 페이지 갔다 오면 받은 영상·상태·대본이 사라지던 것 방지
 // (2026-07-14). sessionStorage에 상시 보관, 매 변경 시 갱신, 로드 시 복원.
+let WORK_ID = null;      // 서버 작업파일 id. 첫 저장 응답으로 채워진다.
+let _workTimer = null;   // 서버 POST 디바운스(입력마다 두들기지 않는다)
+function _workState(){
+  // ★sessionStorage.produce_work의 스키마 **그대로** + step + work_id. 새 형식을 발명하지 않는다 —
+  // _consumeProduceHandoff가 이미 이 모양을 읽는다(스펙 §4.2).
+  // work_id를 같이 넣는 이유(구멍 1): _consumeProduceHandoff가 끝에서 saveWork()를 무조건 부르는데
+  // WORK_ID를 되살리지 않으면 **제작소를 열 때마다 같은 작업이 새 작업으로 복제된다**.
+  return {handoff:HANDOFF, script:STATE.script||'', script_src_idx:STATE.script_src_idx,
+          script_from_wiki:STATE.script_from_wiki, step:cur, work_id:WORK_ID};
+}
+async function _pushWork(){
+  // 디바운스가 끝난 시점의 **최신** 상태를 보낸다(예약 시점의 스냅샷이 아니다).
+  const st = _workState();
+  if(!HANDOFF.length && !st.script) return;
+  try{
+    const r = await fetch('/api/produce/works', {method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({work_id: WORK_ID, state: st, job_id: MIX_JOB, step: cur})});
+    const d = await r.json();
+    if(d && d.ok && d.work_id) WORK_ID = d.work_id;   // 다음 저장이 같은 작업을 갱신하도록
+  }catch(e){}   // 서버가 죽어도 sessionStorage 복원은 살아 있다 — 저장 실패로 작업을 막지 않는다
+}
 function saveWork(){
-  try{ sessionStorage.setItem('produce_work', JSON.stringify({handoff:HANDOFF, script:STATE.script||'', script_src_idx:STATE.script_src_idx, script_from_wiki:STATE.script_from_wiki})); }catch(e){}
+  // ★가드가 **여기 안**에 있다(2026-07-17). 예전엔 호출부 5곳마다 각각 HANDOFF 길이를 검사한 뒤에만
+  // 저장을 불렀다 — 영상을 안 담고 대본만 확정한 작업은 저장 자체가 안 됐다. 사장님이 잃어버린 게 그 구간이다.
+  // 조건도 넓혔다: 영상이 없어도 **대본이 있으면 작업이다**.
+  const st = _workState();
+  if(!HANDOFF.length && !st.script) return;
+  try{ sessionStorage.setItem('produce_work', JSON.stringify(st)); }catch(e){}   // 로컬은 즉시
+  clearTimeout(_workTimer);
+  _workTimer = setTimeout(_pushWork, 1000);                                      // 서버는 디바운스
 }
 function clearWork(){ try{ sessionStorage.removeItem('produce_work'); }catch(e){} }
+// 서버 작업파일 복원(2026-07-17) — /produce?work=<id>로 들어왔을 때.
+// sessionStorage 복원(_consumeProduceHandoff)은 그대로 둔다. 이건 **추가 계층**이다.
+async function _restoreWork(workId){
+  let d = null;
+  try{ d = await (await fetch('/api/produce/works/'+encodeURIComponent(workId))).json(); }catch(e){}
+  // 지워진 작업 링크를 눌러도 빈 화면이 되면 안 된다 — 기존 경로로 떨어진다.
+  if(!d || !d.ok){ _consumeProduceHandoff(); return; }
+  const w = d.state || {};
+  WORK_ID = workId;
+  HANDOFF = w.handoff || [];
+  STATE.script = w.script || '';
+  STATE.script_src_idx = (typeof w.script_src_idx === 'number') ? w.script_src_idx : null;
+  STATE.script_from_wiki = (typeof w.script_from_wiki !== 'undefined') ? w.script_from_wiki : null;
+  if(STATE.script) setScriptMode('manual');
+  renderPool(); syncFootageToMixUrls(); refreshFinalPeek();
+  MIX_JOB = d.job_id || null;
+
+  // ★게이트 재동기(스펙 §4.5). 아래 `cur` 대입은 jump()/go()를 **안 거치므로** 게이트 검사를
+  // 건너뛴다. 서버에서 미리보기 상태를 다시 읽어 맞추지 않으면 "1단계 미리보기를 한 번도 안
+  // 봤는데 2단계로 복원된" 상태가 되어 유료 자막제거(VMake)로 그냥 넘어간다.
+  // 이 트랙은 같은 종류의 구멍에 이미 두 번 데었다(C-1: go만 막고 jump 놓침 / C-3: 재매칭의
+  // 끝만 봉인하고 시작 놓침). 세 번째는 없다.
+  PREVIEW_STATUS = null;
+  if(MIX_JOB){
+    try{
+      const s = await (await fetch('/api/mix/status/'+encodeURIComponent(MIX_JOB))).json();
+      if(s && s.ok) PREVIEW_STATUS = s.preview_status || null;
+    }catch(e){}   // 못 읽으면 null로 둔다 = 잠긴 채. 모르면 안전한 쪽.
+  }
+  const st = d.step;
+  cur = (typeof st === 'number' && st >= 0 && st < STEPS.length) ? st : 0;
+  if(cur > 0 && MIX_JOB && !canGoNext()) cur = 0;   // 미리보기 미확인이면 1단계로 되돌린다
+  renderSteps(); showPanel(); refreshNextBtn();
+}
 function _consumeProduceHandoff(){
   // 1순위: 즐겨찾기에서 방금 넘어온 신규 핸드오프. 2순위: 이전 작업상태 복원.
   let items, restored=false, savedScript='';
@@ -1305,22 +1372,26 @@ function _consumeProduceHandoff(){
     } else {
       // 넘어온 게 없으면 이전 작업상태 복원
       let w; try{ w=JSON.parse(sessionStorage.getItem('produce_work')||'null'); }catch(e){ w=null; }
-      if(w && w.handoff && w.handoff.length){
-        HANDOFF=w.handoff; savedScript=w.script||''; restored=true;
+      if(w && ((w.handoff && w.handoff.length) || w.script)){
+        HANDOFF=w.handoff||[]; savedScript=w.script||''; restored=true;
         STATE.script_src_idx = (typeof w.script_src_idx === 'number') ? w.script_src_idx : null;
         STATE.script_from_wiki = (typeof w.script_from_wiki !== 'undefined') ? w.script_from_wiki : null;   // 구페이로드 호환: 없으면 null(뽑기 유래 취급=안전 기본값, 버튼 보임)
+        // ★WORK_ID를 되살린다(구멍 1). 없으면 아래 saveWork()가 매 로드마다 새 작업을 만든다.
+        WORK_ID = w.work_id || null;
       }
     }
   }
   sessionStorage.removeItem('produce_handoff');
   sessionStorage.removeItem('produce_mix_urls');
-  if(!HANDOFF.length){ renderPool(); return; }   // 받은 것도 복원할 것도 없음
+  if(!HANDOFF.length && !savedScript){ renderPool(); return; }   // 받은 것도 복원할 것도 없음
   if(restored && savedScript){ STATE.script = savedScript; setScriptMode('manual'); }
   const b=document.getElementById('handoffBanner');
   if(b){
     b.style.display='block';
     b.innerHTML = restored
-      ? `↩️ 이어서 작업 중 — 받은 <b>영상 ${HANDOFF.length}개</b>와 상태·대본을 유지했어요.`
+      ? (HANDOFF.length
+          ? `↩️ 이어서 작업 중 — 받은 <b>영상 ${HANDOFF.length}개</b>와 상태·대본을 유지했어요.`
+          : `↩️ 이어서 작업 중 — <b>확정한 대본</b>을 유지했어요. 영상은 아직 담지 않았습니다.`)
       : `⭐ 즐겨찾기에서 <b>영상 ${HANDOFF.length}개</b>를 받았어요 — 각 영상에서 📝뽑기(대본)·🎬담기(화면)를 골라주세요. 같은 영상을 둘 다로 써도 됩니다.`;
   }
   renderPool();
@@ -1411,7 +1482,7 @@ async function openScriptModal(i){
     pmPrefillSubject(PM_SHORTCODE);     // shortcode 없으면(직행 URL) 손입력만 열어둔다
   }catch(e){ if(PM_GEN===myGen) document.getElementById('pmResults').innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; }
 }
-function pmUseRaw(){ STATE.script=PM_BASE_SCRIPT; STATE.script_src_idx=PM_IDX; STATE.script_from_wiki=PM_FROM_WIKI; pmClose(); setScriptMode('manual'); refreshFinalPeek(); setFinalCategoryValue(PM_CATEGORY); if(HANDOFF.length) saveWork(); }
+function pmUseRaw(){ STATE.script=PM_BASE_SCRIPT; STATE.script_src_idx=PM_IDX; STATE.script_from_wiki=PM_FROM_WIKI; pmClose(); setScriptMode('manual'); refreshFinalPeek(); setFinalCategoryValue(PM_CATEGORY); saveWork(); }
 function pmClose(){ document.getElementById('pmModal').classList.remove('open'); }
 function pmToggleTopic(){
   const mode=document.querySelector('input[name=pmmode]:checked').value;
@@ -1490,7 +1561,7 @@ function pmUseDraft(btn){
   STATE.script_src_idx=PM_IDX;
   STATE.script_from_wiki=PM_FROM_WIKI;   // mix 유래면 shortcode, 뽑기 유래면 null
   pmClose(); setScriptMode('manual'); refreshFinalPeek(); setFinalCategoryValue(PM_CATEGORY);
-  if(HANDOFF.length) saveWork();
+  saveWork();
 }
 async function pmOnDraftEdit(textarea){
   const card=textarea.closest('.draft');
@@ -1604,7 +1675,7 @@ function onFinalCategoryChange(sel){
   if(!STATE.script_from_wiki){      // refreshFinalPeek과 같은 판단 — 위키 유래면 담을 원본이 없다
     const src=_currentSrcItem();
     if(src) src.category=cat;
-    if(HANDOFF.length) saveWork();
+    saveWork();
     const shortcode=src&&src.shortcode;
     if(shortcode && cat){
       fetch('/api/produce/category', {method:'POST', headers:{'Content-Type':'application/json'},
@@ -2048,7 +2119,11 @@ async function pollFinal(){
   }catch(e){}
 }
 
-renderSteps(); showPanel(); setScriptMode('manual'); _consumeProduceHandoff(); refreshFinalPeek();
+renderSteps(); showPanel(); setScriptMode('manual');
+// ?work=<id>로 들어왔으면 서버 작업파일에서, 아니면 기존대로 sessionStorage에서 복원.
+const _wid = new URLSearchParams(location.search).get('work');
+if(_wid){ _restoreWork(_wid); } else { _consumeProduceHandoff(); }
+refreshFinalPeek();
 </script>
 <script src="/sidebar.js?v=2"></script>
 </body>

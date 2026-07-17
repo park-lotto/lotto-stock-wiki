@@ -257,7 +257,9 @@ def test_pm_use_raw_actually_sets_flag(tmp_path):
 # script_src_idx로 무관한 HANDOFF 영상이 담기는 버그가 되살아났다.
 # ============================================================================
 
-_RESTORE_START = "function saveWork(){"
+# 2026-07-17(대본믹스통합 T3): WORK_ID/_workState/_pushWork가 saveWork() **앞**에 선언되도록
+# 소스가 바뀌었다 — 앵커를 saveWork()로 잡으면 그 선언부를 놓쳐 ReferenceError가 난다.
+_RESTORE_START = "let WORK_ID = null;"
 _RESTORE_END = "function renderPool(){"
 
 _RESTORE_HARNESS_PREFIX = r"""
@@ -276,6 +278,8 @@ function renderPool(){}
 function syncFootageToMixUrls(){}
 function setScriptMode(){}
 let HANDOFF = [];
+let cur = 0;      // saveWork()가 저장하는 step (2026-07-17 T3)
+let MIX_JOB = null;
 const STATE = { script:'', script_src_idx:null, script_from_wiki:null };
 
 const _store = {};
