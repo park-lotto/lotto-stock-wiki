@@ -4,7 +4,7 @@
 한글엔 음절 단위 강세 지정 수단이 없어(대문자가 없다) 억양구 구조를 쓴다 —
 쉼표로 끊으면 '이거'가 새 억양구의 첫 음절이 돼 피치가 오른다.
 """
-from shopping_shorts.narration_naturalize import merge_profile, naturalize_detail
+from shopping_shorts.narration_naturalize import merge_profile, naturalize_detail, _LEADING_TAGS_PAT
 
 
 def _run(text, role, profile=None):
@@ -34,15 +34,47 @@ def test_hook_emphasis_is_idempotent():
 
 
 def test_non_hook_roles_untouched_by_tail_emphasis():
-    """반전·실용 문장 끝을 느낌표로 바꾸면 톤이 무너진다(속삭임 반전이 '다르더라고요!')."""
-    out = _run("근데 이건 완전 다르더라고요.", "반전")
+    """반전·실용 문장 끝을 느낌표로 바꾸면 톤이 무너진다(속삭임 반전이 '다르더라고요!').
+
+    ⚠️ 데이터 수정(컨트롤러 지적, 2026-07-17): 원래 문장은 "근데 이건 완전
+    다르더라고요."였다. `다르더라고요`는 **6음절**인데 `_HOOK_TAIL_PAT`의
+    캡처군은 `[가-힣]{1,5}`(1~5음절)까지만 매치한다 — 즉 이 문장은 role 게이트를
+    걷어내도(`emphasis_roles`에 "반전"을 넣어도) 정규식 자체가 매치하지 않아
+    애초에 규칙이 발동할 수 없다. 그래서 이 테스트는 게이트가 있어도 없어도 항상
+    통과하는 죽은 프로브였다(뮤테이션1을 심어도 안 죽는 것으로 실측 확인).
+    "달라요"(3음절)로 바꿔 실제로 패턴이 매치하는 문장으로 교체한다 — 게이트가
+    없으면 `'…완전, 달라요!'`가 되어 이 assert가 진짜로 죽는다(뮤테이션1로 검증).
+    """
+    out = _run("근데 이건 완전 달라요.", "반전")
     assert not out.rstrip().endswith("!"), f"훅 아닌 비트에 느낌표가 붙었다: {out!r}"
 
 
 def test_hook_single_word_sentence_is_left_alone():
-    """어절이 하나뿐이면 앞에 끊을 자리가 없다 — ', 이거!'로 시작하면 안 된다."""
-    out = _run("이거.", "훅")
-    assert not out.lstrip().startswith(","), f"문두에 쉼표가 붙었다: {out!r}"
+    """어절이 하나뿐이면 앞에 끊을 자리가 없다 — 태그를 걷어낸 본문이 쉼표로 시작하면 안 된다.
+
+    ⚠️ 검증 보강(컨트롤러 지적 Finding3 재검증 중 추가 발견, 2026-07-17): 원래는
+    `_run("이거.", "훅")`(기본 프로파일 그대로) + `out.lstrip().startswith(",")`였다.
+    두 가지가 겹쳐 뮤테이션3(`_HOOK_TAIL_PAT`의 `(?<=[가-힣])` 제거)을 심어도 죽지
+    않는 죽은 프로브였다(실측 확인):
+      ① 기본 프로파일은 `fillers.roles=["훅"]`라 beat_index=0에서 항상 발동해
+         "이거."가 `_intonation`에 도달하기 전에 이미 "와, 이거."로 바뀐다 —
+         "와"가 앞말이 돼 `(?<=[가-힣])` 가드를 (뮤턴트 없이도) 통과시켜버려서
+         가드 자체가 시험되지 않는다.
+      ② 설령 fillers를 꺼도, `emotion_arc`가 `[curious] ` 태그를 앞에 붙이는데
+         `out.lstrip()`은 대괄호를 공백으로 안 쳐서 유령 쉼표가 태그 바로 뒤에
+         박혀도(`"[curious], 이거!"`) 문자열은 여전히 "["로 시작해 assert가
+         못 잡는다(실측: 뮤턴트 적용 시 `fillers off` 조합에서도 이 assert는
+         통과해버림).
+      ③ "이거."엔 애초에 공백이 하나도 없어 `\\s+` 자체가 이미 매치를 막는다 —
+         가드가 지키는 진짜 자리는 "공백은 있지만 그 앞이 한글이 아닌 자리"
+         (태그 바로 뒤)이지 "공백조차 없는 한 단어"가 아니다.
+    fillers를 끄고, 태그를 걷어낸 **본문** 기준으로 쉼표 유무를 봐야 가드가 막는
+    자리(태그 직후)를 실제로 시험한다(뮤테이션3으로 재검증 완료 — 아래 사용).
+    """
+    out = _run("이거.", "훅", {"fillers": {"on": False}})
+    m = _LEADING_TAGS_PAT.match(out)
+    body = out[m.end():] if m else out
+    assert not body.lstrip().startswith(","), f"태그 뒤에 유령 쉼표가 붙었다: {out!r}"
 
 
 def test_existing_adverb_emphasis_still_works():
