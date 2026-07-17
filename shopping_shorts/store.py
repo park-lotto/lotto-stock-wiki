@@ -3,6 +3,7 @@ import hashlib
 import json
 import secrets
 import sqlite3
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -269,6 +270,26 @@ class Store:
                     headcopy_json TEXT
                 )
             """)
+            # 제작소 작업파일(2026-07-17) — 사장님 제보 "뒤로가기 하니까 작업물이 지워진다".
+            # ★mix_jobs를 재활용하지 않는다: urls_json·structure가 NOT NULL이라 **매칭 전
+            # 작업**(대본만 확정한 상태)을 못 담는다. 실측으로 서버 job 21건 중 매칭 전은 0건 —
+            # 사장님이 잃어버린 게 정확히 그 구간이다. 억지로 빈 값을 넣으면 "매칭 안 된 job"이
+            # 유령으로 남아 run_mix_job·pollMix가 실제 job으로 오인한다.
+            # job_id는 **다리일 뿐**(작업 → job 방향) — 작업이 job보다 먼저 존재한다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS produce_works (
+                    work_id TEXT PRIMARY KEY,
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    title TEXT,
+                    state_json TEXT NOT NULL,
+                    job_id TEXT,
+                    step INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_produce_works_customer "
+                      "ON produce_works(customer_id, updated_at DESC)")
             # 보이스 프리셋(2026-07-14, 영상제작 4단계) — 큐레이션된 목소리 카드.
             c.execute("""
                 CREATE TABLE IF NOT EXISTS voice_presets (
@@ -1264,6 +1285,64 @@ class Store:
         vals.append(job_id)
         with self._conn() as c:
             c.execute(f"UPDATE mix_jobs SET {', '.join(cols)} WHERE job_id=?", tuple(vals))
+
+    # ── 제작소 작업파일(2026-07-17) ──────────────────────────
+    def upsert_produce_work(self, work_id, state, job_id=None, step=0,
+                            customer_id=LEGACY_CUSTOMER_ID):
+        """작업 저장. work_id가 None이면 새로 만들어 반환한다.
+        state: 클라이언트 작업상태 dict(sessionStorage.produce_work 스키마 + step).
+        ★title은 서버가 state['script'] 앞 20자에서 뽑는다 — 클라이언트가 매번 보내면
+        대본을 고쳤을 때 목록 이름과 어긋난다(스펙 §4.6)."""
+        now = datetime.now(timezone.utc).isoformat()
+        title = (state.get("script") or "")[:20] if isinstance(state, dict) else ""
+        payload = json.dumps(state, ensure_ascii=False)
+        with self._conn() as c:
+            if work_id:
+                n = c.execute(
+                    "UPDATE produce_works SET title=?, state_json=?, job_id=?, step=?, "
+                    "updated_at=? WHERE work_id=?",
+                    (title, payload, job_id, step, now, work_id),
+                ).rowcount
+                if n:
+                    return work_id
+                # 서버 DB가 갈아엎였는데 브라우저가 옛 work_id를 들고 있는 경우 —
+                # 조용히 버리지 말고 그 id로 되살린다(사장님 작업이 사라지는 것보다 낫다).
+            wid = work_id or uuid.uuid4().hex[:12]
+            c.execute(
+                "INSERT INTO produce_works(work_id, customer_id, title, state_json, "
+                "job_id, step, created_at, updated_at) VALUES(?,?,?,?,?,?,?,?)",
+                (wid, customer_id, title, payload, job_id, step, now, now),
+            )
+            return wid
+
+    def get_produce_work(self, work_id):
+        """작업 1건 → dict(state는 파싱됨). 없으면 None."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT work_id, title, state_json, job_id, step, created_at, updated_at "
+                "FROM produce_works WHERE work_id=?", (work_id,),
+            ).fetchone()
+        if not row:
+            return None
+        return {"work_id": row[0], "title": row[1], "state": json.loads(row[2]),
+                "job_id": row[3], "step": row[4], "created_at": row[5], "updated_at": row[6]}
+
+    def list_produce_works(self, customer_id=LEGACY_CUSTOMER_ID, limit=20):
+        """최근 작업 목록(updated_at DESC). state_json은 싣지 않는다 — 목록은 가벼워야 한다."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT work_id, title, step, job_id, updated_at FROM produce_works "
+                "WHERE customer_id=? ORDER BY updated_at DESC, rowid DESC LIMIT ?",
+                (customer_id, limit),
+            ).fetchall()
+        return [{"work_id": r[0], "title": r[1], "step": r[2], "job_id": r[3],
+                 "updated_at": r[4]} for r in rows]
+
+    def delete_produce_work(self, work_id):
+        """지운다. 실제로 지워졌으면 True."""
+        with self._conn() as c:
+            return c.execute("DELETE FROM produce_works WHERE work_id=?",
+                             (work_id,)).rowcount > 0
 
     # ── 보이스 프리셋(2026-07-14, 영상제작 4단계) ──
     def upsert_voice_preset(self, p):
