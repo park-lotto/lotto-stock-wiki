@@ -1410,6 +1410,15 @@ def api_voice_presets(lang: str = "KR"):
     rows = Store(DB_PATH).list_voice_presets(lang=lang)
     groups = {}
     for p in rows:
+        # 튜닝 작업대가 만든 임시 프리셋(origin="tuned", :1526)은 카드에서 뺀다.
+        # prune_voice_presets가 그 행을 **의도적으로** 안 지우므로(작업대엔 필요, 리뷰 S2)
+        # 거르지 않으면 이름·설명·샘플이 다 빈 껍데기가 성우 카드로 뜬다 — 2026-07-17
+        # 라이브 화면에서 kr-test·kr-snap이 실제로 그렇게 보였다(사장님이 화면을 보라고
+        # 해서 브라우저로 직접 열어보고 발견). DB에 남는 건 맞고 카드에 나오는 게 틀렸다.
+        # ⚠️ origin이 없는 옛 행은 **보이는 쪽으로** 실패시킨다 — 안 보이는 실패는
+        # 아무도 못 잡고, 성우가 통째로 사라지는 쪽이 훨씬 나쁘다.
+        if p.get("origin") == "tuned":
+            continue
         gid = p["group_id"]
         g = groups.setdefault(gid, {
             "group_id": gid, "name": p["name"], "one_liner": p["one_liner"],
