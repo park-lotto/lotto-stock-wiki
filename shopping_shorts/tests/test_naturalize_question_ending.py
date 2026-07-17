@@ -129,3 +129,71 @@ def test_kkayo_suffix_covers_fused_and_eul_forms(text):
     out = _run(text, "페인포인트")
     assert out.rstrip().endswith("?"), f"끝음이 안 올라간다: {out!r}"
     assert "…" not in out[-3:], f"말줄임이 남아 끝음이 처진다: {out!r}"
+
+
+# ── 컨트롤러 오류 정정(2026-07-17): amendment3 "은가요/는가요가 나머지를
+# 커버한다"는 결론이 틀렸다 — `건가요`는 `건`으로 시작해 둘 다 못 잡는다.
+# Finding 1(가드·올리개 문턱 분리) + Finding 2(ㄴ가요 융합형 표면형 추가) 정정.
+
+@pytest.mark.parametrize("text,label", [
+    ("다들 이러고 사는 건가요.", "건가요"),
+    ("이거 뭔지 아는 분 계신가요.", "계신가요"),
+    ("이거 신상인가요.", "인가요"),
+    ("이거 많이 큰가요.", "큰가요"),
+])
+def test_fused_ngayo_raiser_converts_to_question_mark(text, label):
+    """ㄴ가요 융합형(Finding2) — 페인포인트에서 물음표로 올라가야 한다.
+    뮤턴트: `_QUESTION_TAIL_PAT`을 옛 목록(4개 신규 표면형 제거)으로 되돌리면
+    죽는다 — raiser가 안 걸려 "."가 dot 후보로 남아 "…"가 된다."""
+    out = _run(text, "페인포인트")
+    assert out.rstrip().endswith("?"), f"{label} 끝음이 안 올라간다: {out!r}"
+    assert "…" not in out[-3:], f"{label} 말줄임이 남아 끝음이 처진다: {out!r}"
+
+
+@pytest.mark.parametrize("text,label", [
+    ("다들 이러고 사는 건가요.", "건가요"),
+    ("이거 뭔지 아는 분 계신가요.", "계신가요"),
+])
+def test_fused_ngayo_hook_not_exclaimed(text, label):
+    """사장님이 직접 지적한 원 사고 재현 봉인 — ㄴ가요 융합형 훅이 느낌표로
+    덮어써지면 안 된다. 두 문턱(guard/raiser) 정정 전체를 한 번에 봉인한다."""
+    out = _run(text, "훅")
+    assert "!" not in out, f"{label} 훅에 느낌표가 붙었다: {out!r}"
+
+
+def test_guard_looser_than_raiser_on_plain_gayo_noun():
+    """가드(Finding1)는 올리개보다 의도적으로 넓다 — '가요'(歌謠, 명사)로 끝나는
+    평서문도 훅 꼬리 억제는 걸리지만(가드가 넓어서), 물음표로는 안 뒤집힌다
+    (올리개는 이 자리에 안 걸린다). 뮤턴트: `_is_interrogative`가 `_QUESTION_GUARD_PAT`
+    대신 `_question_tail_match`(엄격)를 쓰게 되돌리면 훅 쪽이 죽는다(가드가 더는
+    이 자리를 못 잡아 "!" 가 붙는다)."""
+    hook_out = _run("이건 최신 가요.", "훅")
+    assert "!" not in hook_out, f"명사 '가요'에 훅 꼬리 느낌표가 붙었다: {hook_out!r}"
+    pain_out = _run("이건 최신 가요.", "페인포인트")
+    assert not pain_out.rstrip().endswith("?"), f"명사 '가요'가 물음표로 뒤집혔다: {pain_out!r}"
+
+
+def test_gugmingayo_declarative_not_raised_to_question():
+    """Finding2 안전성 실측(사장님 지시 원문의 '국민가요' 검토) — 종성산술(b안)이면
+    '민'(종성 ㄴ)+'가요' 조합이 물음표로 뒤집힐 위험이 있었다. 명시적 표면형(a안)
+    채택으로 이 문장은 걸리지 않는다. 뮤턴트: `_QUESTION_TAIL_PAT`에 b안 스타일
+    일반 패턴 `[가-힣]가요$`를 추가하면(=b안을 실제로 심으면) 이 테스트가 죽는다
+    (양쪽 role 다 물음표로 뒤집힘) — a안이 구조적으로 안전함을 증명한다."""
+    for role in ("훅", "페인포인트"):
+        out = _run("이건 국민가요.", role)
+        assert not out.rstrip().endswith("?"), \
+            f"{role}: 평서문 '국민가요'가 물음표로 뒤집혔다: {out!r}"
+
+
+def test_strict_raiser_narrower_than_loose_guard_direct():
+    """감지기 자체 직접 비교(문서화 겸 회귀 봉인) — 가드는 올리개의 상위집합이어야
+    한다: 올리개가 매치하면 가드도 반드시 매치. 역은 성립하지 않는다(가드가 더 넓다).
+    뮤턴트: `_QUESTION_GUARD_PAT`을 `_QUESTION_TAIL_PAT`과 동일하게(가드=올리개)
+    되돌리면 마지막 두 단언(가드만 매치)이 죽는다."""
+    from shopping_shorts.narration_naturalize import _question_tail_match, _QUESTION_GUARD_PAT
+    for t in ["살까요.", "다들 이러고 사는 건가요.", "안에 계신가요.", "이거 신상인가요."]:
+        assert _question_tail_match(t) is not None, f"올리개가 안 걸림: {t!r}"
+        assert _QUESTION_GUARD_PAT.search(t) is not None, f"가드가 안 걸림(상위집합 위반): {t!r}"
+    assert _question_tail_match("이건 최신 가요.") is None, "올리개가 명사 '가요'에 걸리면 안 된다"
+    assert _QUESTION_GUARD_PAT.search("이건 최신 가요.") is not None, \
+        "가드는 명사 '가요'에도 걸려야 한다(느슨함이 핵심)"
