@@ -51,8 +51,12 @@ global.fetch = async (url, opt) => {
 
 
 def _run(script):
+    # ★encoding 명시 필수 — Windows 콘솔 기본(cp949)로 두면 Node의 UTF-8 stdout에
+    # 한글이 섞였을 때 리더 스레드가 디코드 에러로 죽는다(발견: test_preset_applies_to_selected_layer,
+    # '유지될 문구' 로그에서 실측). 베이스라인 결함 — 이 파일이 이번 작업 대상이라 여기서 같이 고친다.
     r = subprocess.run([NODE, "--input-type=module", "-e", script],
-                       capture_output=True, text=True, stdin=subprocess.DEVNULL, timeout=30)
+                       capture_output=True, text=True, encoding="utf-8",
+                       stdin=subprocess.DEVNULL, timeout=30)
     assert r.returncode == 0, r.stderr
     return r.stdout
 

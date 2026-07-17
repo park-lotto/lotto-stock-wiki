@@ -2171,8 +2171,28 @@ function pickThumbFrame(i){
   img.src = f.url;
 }
 
-function renderThumbCanvas(){
+// ★결함(2026-07-17 실브라우저 실측): ctx.font = '900 96px HCTmon'는 로딩을 트리거하지 않는다.
+// @font-face는 22개 선언돼 있지만 DOM에서 실제로 쓰는 요소가 없어(캔버스뿐) 영영 로드가 안 됐고,
+// 브라우저는 미로드 폰트를 에러 없이 기본 고딕으로 조용히 대체해 그렸다 — 폰트 22종이 전부 죽어 있었다.
+// document.fonts.load()로 DOM 사용을 흉내내 강제로 로드시킨다. family당 한 번만(Set 캐시),
+// 이미 로드된 family는 즉시 resolve라 매 렌더 호출 비용은 무시할 만하다.
+const THUMB_LOADED_FONTS = new Set();
+async function ensureThumbFontsLoaded(layers){
+  if (typeof document === 'undefined' || !document.fonts) return;  // Node 슬라이스 테스트엔 폰트 로더가 없다
+  const families = new Set((layers || []).filter(L => L.text).map(L => thumbFontCss(L.font)));
+  await Promise.all(Array.from(families).filter(f => !THUMB_LOADED_FONTS.has(f)).map(async f => {
+    try { await document.fonts.load(`900 100px ${f}`); THUMB_LOADED_FONTS.add(f); } catch(e){ /* 로드 실패 시 다음 렌더에서 재시도 */ }
+  }));
+}
+
+// 폰트 로드를 기다리는 동안 더 최신 렌더 요청이 들어올 수 있다(드래그 중 mousemove 등) —
+// 세대 번호로 오래된 요청의 그리기가 최신 상태를 덮어쓰지 않게 막는다.
+let THUMB_RENDER_GEN = 0;
+async function renderThumbCanvas(){
   const cv = document.getElementById('thumbCanvas'); if (!cv) return;
+  const gen = ++THUMB_RENDER_GEN;
+  await ensureThumbFontsLoaded(THUMB_STATE.layers);
+  if (gen !== THUMB_RENDER_GEN) return;   // 기다리는 사이 새 렌더가 예약됐다 — 이번 건 버린다
   const ctx = cv.getContext('2d');
   drawThumb(ctx, THUMB_STATE.img, THUMB_STATE.layers, THUMB_W, THUMB_H);
 }
@@ -2269,7 +2289,7 @@ function initThumbDrag(){
 async function generateThumb(){
   const st = document.getElementById('thumbSaveStatus');
   st.textContent = '생성 중…';
-  renderThumbCanvas();
+  await renderThumbCanvas();   // 폰트 로드 완료까지 기다린 후 그려야 첫 생성부터 맞는 폰트로 나간다
   const cv = document.getElementById('thumbCanvas');
   const blob = await new Promise(res => cv.toBlob(res, 'image/png'));
   const fd = new FormData();
