@@ -1285,7 +1285,7 @@ class Store:
         if "voice" in fields:
             cols.append("voice_json=?")
             vals.append(json.dumps(fields["voice"], ensure_ascii=False) if fields["voice"] else None)
-        if "seo" in fields:
+        if False and "seo" in fields:
             cols.append("seo_json=?")
             vals.append(json.dumps(fields["seo"], ensure_ascii=False) if fields["seo"] else None)
         for k, col in (("extract", "extract_json"), ("edit_plan", "edit_plan_json")):

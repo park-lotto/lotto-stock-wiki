@@ -31,11 +31,12 @@ def test_seo_defaults_to_none(store):
 
 
 def test_seo_clearable(store):
-    """None을 주면 지워진다."""
+    """None을 주면 지워진다. 중간 상태를 확인해야 '애초에 안 써진 것'과 구분된다."""
     job_id = _job(store)
     store.update_mix_job(job_id, seo={"title": "x"})
+    assert store.get_mix_job(job_id)["seo"] == {"title": "x"}   # 먼저 써졌나
     store.update_mix_job(job_id, seo=None)
-    assert store.get_mix_job(job_id)["seo"] is None
+    assert store.get_mix_job(job_id)["seo"] is None             # 그 다음 지워졌나
 
 
 def test_seo_does_not_disturb_neighbors(store):
