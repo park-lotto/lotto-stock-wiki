@@ -117,6 +117,20 @@ def test_explicit_none_clears_job(store):
     assert store.get_produce_work(wid)["step"] == 3   # step은 안 건드렸으니 그대로
 
 
+def test_explicit_zero_step_really_rewinds(store):
+    """★step=0을 **명시적으로** 넘기면 진짜 0이 된다 — 센티널과 falsy 0을 헷갈리면 안 된다.
+
+    test_explicit_none_clears_job의 step쪽 대칭. 이게 없으면 `if step is not _UNSET`을
+    `if step is not _UNSET and step`으로 '단순화'해도 스위트가 통째로 통과한다
+    (재리뷰가 뮤테이션으로 실증: 그 뮤턴트가 14건을 다 뚫었다).
+    실제로 필요한 순간: 복원이 게이트에 막혀 1단계로 되돌려질 때 step 0을 써야 한다."""
+    wid = store.upsert_produce_work(None, {"script": "s"}, job_id="job-9", step=3)
+    store.upsert_produce_work(wid, {"script": "s"}, step=0)
+    got = store.get_produce_work(wid)
+    assert got["step"] == 0, "명시적 step=0이 무시됐다 — 센티널이 falsy 0을 미지정으로 오인한다"
+    assert got["job_id"] == "job-9"   # job_id는 안 보냈으니 그대로
+
+
 def test_unknown_work_id_is_revived_not_dropped(store):
     """서버 DB가 갈아엎였는데 브라우저가 옛 work_id를 들고 있으면 그 id로 되살린다.
     조용히 버리면 사장님 작업이 사라진다."""
