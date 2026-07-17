@@ -21,13 +21,16 @@ def render(plan, video_path, out_path):
     out_path = os.path.abspath(out_path)
     pub = os.path.join(MOTION, "public")
     os.makedirs(pub, exist_ok=True)
-    name = plan.get("videoSrc") or "job_src.mp4"
+    name = os.path.basename(plan.get("videoSrc") or "job_src.mp4")
+    if name in ("", ".", ".."):
+        name = "job_src.mp4"
+    safe_plan = {**plan, "videoSrc": name}
     dest = os.path.join(pub, name)
     if os.path.abspath(dest) != os.path.abspath(video_path):
         shutil.copy(video_path, dest)
     noaudio = out_path + ".noaudio.mp4"
     r = subprocess.run(
-        ["node", "src/render-scene.mjs", "FullReel", json.dumps(plan, ensure_ascii=False), noaudio],
+        ["node", "src/render-scene.mjs", "FullReel", json.dumps(safe_plan, ensure_ascii=False), noaudio],
         cwd=MOTION, capture_output=True, text=True, encoding="utf-8", errors="replace",
         stdin=subprocess.DEVNULL)
     if r.returncode != 0 or not os.path.isfile(noaudio):
