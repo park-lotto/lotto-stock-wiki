@@ -188,12 +188,75 @@ def test_gugmingayo_declarative_not_raised_to_question():
 def test_strict_raiser_narrower_than_loose_guard_direct():
     """감지기 자체 직접 비교(문서화 겸 회귀 봉인) — 가드는 올리개의 상위집합이어야
     한다: 올리개가 매치하면 가드도 반드시 매치. 역은 성립하지 않는다(가드가 더 넓다).
+
+    리뷰 지적 Finding3 정정(2026-07-17): 옛 코퍼스는 `가요`/`까요` 계열로만 채워져
+    있어 "상위집합"이라는 이름을 달고도 그 성질을 실제로 시험하지 않았다 —
+    `않으세요`/`없으세요`(올리개엔 있지만 옛 가드 리터럴 `가요|까요|나요`엔 없던
+    표면형, Finding2가 잡은 실사고: `건가요!`류와 같은 클래스)가 코퍼스에 빠져
+    있었다. `_QUESTION_TAIL_ALTS`에서 코퍼스를 직접 끌어와(하드코딩 재발 방지)
+    "올리개가 매치하는 모든 표면형"을 빠짐없이 돈다.
     뮤턴트: `_QUESTION_GUARD_PAT`을 `_QUESTION_TAIL_PAT`과 동일하게(가드=올리개)
-    되돌리면 마지막 두 단언(가드만 매치)이 죽는다."""
-    from shopping_shorts.narration_naturalize import _question_tail_match, _QUESTION_GUARD_PAT
-    for t in ["살까요.", "다들 이러고 사는 건가요.", "안에 계신가요.", "이거 신상인가요."]:
+    되돌리면 마지막 두 단언(가드만 매치)이 죽는다. `_QUESTION_GUARD_ALTS`에서
+    `_QUESTION_TAIL_ALTS`와의 합집합을 빼고 바레 `가요|까요|나요`만 남기면(Finding2
+    수정 전 상태로 되돌리면) `않으세요`/`없으세요` 표면형에서 죽는다."""
+    from shopping_shorts.narration_naturalize import (
+        _question_tail_match, _QUESTION_GUARD_PAT, _QUESTION_TAIL_ALTS,
+    )
+    for alt in _QUESTION_TAIL_ALTS:
+        t = f"이거 {alt}."
         assert _question_tail_match(t) is not None, f"올리개가 안 걸림: {t!r}"
         assert _QUESTION_GUARD_PAT.search(t) is not None, f"가드가 안 걸림(상위집합 위반): {t!r}"
     assert _question_tail_match("이건 최신 가요.") is None, "올리개가 명사 '가요'에 걸리면 안 된다"
     assert _QUESTION_GUARD_PAT.search("이건 최신 가요.") is not None, \
         "가드는 명사 '가요'에도 걸려야 한다(느슨함이 핵심)"
+
+
+# ── 리뷰 지적 Finding1 — 나요 바레 리터럴이 평서문을 뒤집는 사고 ──
+
+@pytest.mark.parametrize("text", [
+    "이 세일 곧 끝나요.",
+    "쓸수록 용량이 늘어나요.",
+    "내일 여기서 만나요.",
+    "아침마다 일찍 일어나요.",
+])
+def test_bare_nayo_declarative_not_flipped(text):
+    """`나요`가 판별 음절 없는 바레 리터럴로 올리개에 남아 있으면 "나"로 끝나는
+    어간의 평서형(끝나다·늘어나다·만나다·일어나다 — 쇼핑 내레이션 핵심 어휘)을
+    물음표로 뒤집는다(사장님이 직접 지적, 이 정정의 근거).
+    뮤턴트: `_QUESTION_TAIL_ALTS`에 바레 `"나요"`를 다시 넣으면(Finding1 수정 전
+    상태) 4종 전부 `endswith('?')`로 죽는다."""
+    out = _run(text, "페인포인트")
+    assert not out.rstrip().endswith("?"), f"평서문이 물음표로 뒤집혔다: {out!r}"
+
+
+@pytest.mark.parametrize("text", [
+    "이거 써보셨나요.",
+    "혹시 이런 적 있나요.",
+    "이런 거 없나요.",
+    "이게 맞나요.",
+    "이걸로 되나요.",
+])
+def test_explicit_nayo_forms_still_raise(text):
+    """`나요`를 바레 리터럴에서 명시적 표면형(았/었/였/셨나요·있나요·없나요·되나요·
+    맞나요)으로 좁혀도 실제 의문형 커버리지는 유지돼야 한다.
+    뮤턴트: `_QUESTION_TAIL_ALTS`에서 이 명시적 표면형들을 빼면(과잉교정) 죽는다."""
+    out = _run(text, "페인포인트")
+    assert out.rstrip().endswith("?"), f"끝음이 안 올라간다: {out!r}"
+
+
+# ── 리뷰 지적 Finding2 — 가드가 올리개의 진짜 상위집합이 아니었던 사고 ──
+
+@pytest.mark.parametrize("text,label", [
+    ("닦기도 귀찮지 않으세요.", "않으세요"),
+    ("이런 거 없으세요.", "없으세요"),
+])
+def test_guard_covers_seyo_forms_endings_off(text, label):
+    """가드는 `_endings`가 꺼져 있어도(유일한 방어선) `않으세요`/`없으세요`를
+    억제해야 한다 — 옛 가드 리터럴(`가요|까요|나요`)엔 이 표면형이 없어서
+    `endings.on=False`에서 훅 꼬리 강조가 그대로 느낌표+쉼표를 덮어썼다
+    (`[curious] 닦기도 귀찮지, 않으세요!`).
+    뮤턴트: `_QUESTION_GUARD_ALTS`를 옛 바레 리터럴(`가요|까요|나요`)만으로
+    되돌리면 두 케이스 다 `'!' in out`으로 죽는다."""
+    out = _run(text, "훅", {"endings": {"intensity": 0}, "fillers": {"on": False}})
+    assert "!" not in out, f"{label}: 의문형인데 훅 꼬리 강조(느낌표)가 붙었다: {out!r}"
+    assert not out.rstrip().endswith(","), f"{label}: 의문형 끝에 쉼표가 남았다: {out!r}"
