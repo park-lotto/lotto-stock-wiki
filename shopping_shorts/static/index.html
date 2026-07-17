@@ -97,6 +97,14 @@
   .sm-seg .scene{font-size:11px;color:var(--sub);margin-top:2px}
   .sm-loading{text-align:center;padding:40px;color:var(--sub);font-size:14px}
   .sm-err{padding:24px;color:#ff9b9b;font-size:14px;text-align:center}
+  /* 장면 담기 — 자동분할/직접자르기 탭 */
+  .scene-tabs{display:flex;gap:4px;margin:10px 0 6px;border-bottom:1px solid var(--line)}
+  .scene-tabs button{background:none;border:none;color:var(--sub);font-size:13px;padding:8px 14px;cursor:pointer;border-bottom:2px solid transparent}
+  .scene-tabs button.on{color:var(--txt);border-bottom-color:var(--accent)}
+  .cut-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;margin:10px 0;max-height:280px;overflow-y:auto}
+  .cut-grid label.cut{display:flex;flex-direction:column;gap:3px;cursor:pointer;font-size:10px;color:var(--sub)}
+  .cut-grid label.cut img{width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:6px;background:#000;border:2px solid transparent}
+  .cut-grid label.cut input:checked ~ img{border-color:var(--accent)}
   @media (max-width: 768px){
     body{flex-direction:column;min-height:100vh}
     .sidebar{width:100%;border-right:none;border-bottom:1px solid var(--line);padding:10px 12px;
@@ -184,14 +192,28 @@
       </div>
       <div style="padding:16px 18px" id="sceneBody">
         <video id="sceneVid" controls playsinline style="width:100%;max-height:46vh;background:#000;border-radius:8px"></video>
-        <div style="display:flex;gap:8px;align-items:center;margin:12px 0;font-size:13px">
-          <button onclick="markScene('start')">⏱ 시작 찍기</button>
-          <span id="sceneRange" style="color:#8b98a9">시작 — · 끝 —</span>
-          <button onclick="markScene('end')">⏱ 끝 찍기</button>
+        <div class="scene-tabs">
+          <button id="tabSplit" class="on" onclick="sceneTab('split')">자동 분할</button>
+          <button id="tabManual" onclick="sceneTab('manual')">직접 자르기</button>
         </div>
-        <div id="sceneStep1">
-          <button style="background:#2f81f7;border:none;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="runScenePrepare()">✂ 자르고 AI 태그 뽑기</button>
-          <div style="font-size:12px;color:#8b98a9;margin-top:6px">자른 뒤 태그 초안이 나옵니다. 확인·수정 후 저장하세요.</div>
+        <div id="paneSplit">
+          <button onclick="runSceneSplit()">✂ 컷 나누기</button>
+          <div id="splitList"></div>
+          <div style="display:flex;gap:8px">
+            <button id="btnMergePick" style="display:none" onclick="mergePicked()">↔ 이어서 하나로 담기</button>
+            <button id="btnTagPicked" style="display:none;background:#2f81f7;border:none;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="tagPicked()">자르고 AI 태그 뽑기</button>
+          </div>
+        </div>
+        <div id="paneManual" style="display:none">
+          <div style="display:flex;gap:8px;align-items:center;margin:12px 0;font-size:13px">
+            <button onclick="markScene('start')">⏱ 시작 찍기</button>
+            <span id="sceneRange" style="color:#8b98a9">시작 — · 끝 —</span>
+            <button onclick="markScene('end')">⏱ 끝 찍기</button>
+          </div>
+          <div id="sceneStep1">
+            <button style="background:#2f81f7;border:none;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="runScenePrepare()">✂ 자르고 AI 태그 뽑기</button>
+            <div style="font-size:12px;color:#8b98a9;margin-top:6px">자른 뒤 태그 초안이 나옵니다. 확인·수정 후 저장하세요.</div>
+          </div>
         </div>
         <div id="sceneStep2" style="display:none;margin-top:12px;flex-direction:column;gap:10px"></div>
       </div>
@@ -731,10 +753,30 @@ async function markSavedButtons(){
 // 있고(ranking.py) 유튜브/틱톡은 빈 문자열이라(믹스 다운로드 시점에만 해석) 이 두 플랫폼은
 // 아직 지원 대상 밖 — 기존 📝 대본추출 버튼도 같은 한계(app.py:500-502, video_url 없음→422).
 var SCENE_CTX = {sc:'', url:'', category:'', start:null, end:null, token:null};
+// 태그 초안 폼이 마지막으로 그린 prepare 응답 전체(commitScene이 source_start_frame을
+// 여기서 그대로 읽는다 — 절대 산술 스치지 않는다. str(124.0)="124.0"은 서버 isdigit()을
+// 못 통과해 조용히 None이 되므로, 정수 그대로 되돌리는 게 유일하게 안전하다).
+let SCENE_DRAFT = null;
+// 자동분할 상태 — 컷 목록·체크된 컷 인덱스. 병합은 사람이 인접한 것만 골랐을 때만
+// 버튼이 뜬다(syncSplitButtons) — 기계가 자동으로 합치지 않는다(설계 §3.2, 표절회피).
+let SPLIT = { token:null, fps:30, cuts:[], picked:new Set() };
+
+function sceneTab(name){
+  document.getElementById('tabSplit').classList.toggle('on', name==='split');
+  document.getElementById('tabManual').classList.toggle('on', name==='manual');
+  document.getElementById('paneSplit').style.display = name==='split' ? '' : 'none';
+  document.getElementById('paneManual').style.display = name==='manual' ? '' : 'none';
+}
 
 function openSceneCut(sc, url, category){
   if(!url){ alert('이 영상은 원본 다운로드 URL이 없어 장면 담기를 지원하지 않습니다(현재 인스타그램만 지원).'); return; }
   SCENE_CTX = {sc:sc, url:url, category:category, start:null, end:null, token:null};
+  SCENE_DRAFT = null;
+  SPLIT = { token:null, fps:30, cuts:[], picked:new Set() };
+  document.getElementById('splitList').innerHTML = '';
+  document.getElementById('btnMergePick').style.display = 'none';
+  document.getElementById('btnTagPicked').style.display = 'none';
+  sceneTab('split');
   // /api/video는 shortcode가 아니라 원본 url을 받아 프록시한다(인스타 CDN 핫링크 우회,
   // cdninstagram.com/fbcdn.net 호스트만 허용 — app.py:1406-1424). 카드 썸네일 인라인재생과
   // 동일 패턴(data-vurl 구성부, index.html render() 참고).
@@ -743,6 +785,82 @@ function openSceneCut(sc, url, category){
   document.getElementById('sceneStep1').style.display = '';
   document.getElementById('sceneStep2').style.display = 'none';
   document.getElementById('sceneModal').style.display = 'flex';
+}
+
+// ── 자동 분할(컷 나누기) ── 전 컷을 사람에게 보여준다(설계 §3.1) — AI가 고르지 않는다.
+async function runSceneSplit(){
+  const listEl = document.getElementById('splitList');
+  listEl.innerHTML = '<div style="color:#8b98a9;font-size:12px;padding:8px 0">⏳ 컷 분할 중… (영상 길이에 따라 수십 초)</div>';
+  document.getElementById('btnMergePick').style.display = 'none';
+  document.getElementById('btnTagPicked').style.display = 'none';
+  try{
+    const r = await fetch('/api/scene/split', {method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({src_url: SCENE_CTX.url})});
+    const d = await r.json();
+    if(!d.ok){ listEl.innerHTML=''; alert('분할 실패: ' + (d.error||'')); return; }
+    SPLIT = {token:d.token, fps:d.fps, cuts:d.cuts, picked:new Set()};
+    // XSS 회피: onclick 문자열보간 대신 data-* + addEventListener — esc()는 작은따옴표를
+    // 안 막는다(index.html:420, 이 파일 실측). onclick="fn('${esc(x)}')" 패턴은 여기서 금지.
+    listEl.innerHTML = '<div class="cut-grid">' + d.cuts.map(c => `
+      <label class="cut">
+        <input type="checkbox" data-i="${c.i}">
+        <img src="${esc(c.poster_url)}" loading="lazy">
+        <span>${c.i+1} · ${c.duration.toFixed(2)}s</span>
+      </label>`).join('') + '</div>';
+    listEl.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+      cb.addEventListener('change', ()=> pickCut(parseInt(cb.dataset.i,10), cb.checked));
+    });
+    syncSplitButtons();
+  }catch(e){ listEl.innerHTML=''; alert('네트워크 오류'); }
+}
+
+function pickCut(i, on){ on ? SPLIT.picked.add(i) : SPLIT.picked.delete(i); syncSplitButtons(); }
+
+function syncSplitButtons(){
+  const n = SPLIT.picked.size;
+  document.getElementById('btnTagPicked').style.display = n ? '' : 'none';
+  // ★인접한 것을 2개 이상 골랐을 때만 병합 버튼 노출 — 기계가 아니라 사람이 정한다(설계 §3.2).
+  // 코드가 자동으로 병합하면 안 된다 — 병합은 '편집 결정'이라 표절회피와 충돌한다.
+  const s = [...SPLIT.picked].sort((a,b)=>a-b);
+  const adjacent = s.length >= 2 && s.every((v,k)=> k===0 || v === s[k-1]+1);
+  document.getElementById('btnMergePick').style.display = adjacent ? '' : 'none';
+}
+
+async function tagPicked(){
+  const btn = event.target; btn.disabled = true;
+  try{
+    for(const i of [...SPLIT.picked].sort((a,b)=>a-b)){
+      const c = SPLIT.cuts[i];
+      await prepareOne(c.start, c.end, c.start_frame);
+    }
+  } finally { btn.disabled = false; }
+}
+
+async function mergePicked(){
+  const s = [...SPLIT.picked].sort((a,b)=>a-b);
+  if(s.length < 2) return;
+  const a = SPLIT.cuts[s[0]], b = SPLIT.cuts[s[s.length-1]];
+  const btn = event.target; btn.disabled = true;
+  try{ await prepareOne(a.start, b.end, a.start_frame); }   // 이어붙인 하나로
+  finally { btn.disabled = false; }
+}
+
+async function prepareOne(start, end, startFrame){
+  try{
+    const r = await fetch('/api/scene/save/prepare', {method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({src_url:SCENE_CTX.url, start, end,
+        source_kind:'reference', source_ref:SCENE_CTX.sc,
+        category:SCENE_CTX.category})});
+    const d = await r.json();
+    if(!d.ok){ alert('구간컷 실패: ' + (d.error||'')); return; }
+    SCENE_CTX.token = d.token;   // commitScene이 이 토큰으로 커밋한다(runScenePrepare와 동일 배선)
+    // 서버가 준 start_frame(정수)을 우선하고, 없을 때만 분할 응답의 원래 프레임으로 폴백.
+    // 여기서 끝 — parseFloat·toFixed 등 산술을 스치지 않는다(스치면 프레임 번호가 사라진다).
+    d._start_frame = (d.start_frame != null) ? d.start_frame : startFrame;
+    showSceneDraft(d);
+  }catch(e){ alert('네트워크 오류'); }
 }
 
 function markScene(which){
@@ -771,6 +889,7 @@ async function runScenePrepare(){
 }
 
 function showSceneDraft(d){
+  SCENE_DRAFT = d;   // commitScene이 source_start_frame을 여기서 그대로 읽는다(손대지 않음)
   const t = d.draft||{};
   const opt = (list, v) => list.map(x=>`<option ${x===v?'selected':''}>${x}</option>`).join('');
   document.getElementById('sceneStep1').style.display = 'none';
@@ -790,6 +909,13 @@ function showSceneDraft(d){
       <option value="cutaway">컷어웨이(삽입)</option><option value="replace">화면교체</option>
     </select>
     <label style="font-size:12px;color:#8b98a9"><input type="checkbox" id="scAudio" checked> 원본 소리 살리기</label>
+    <label style="font-size:12px;color:#ffd76b">출처(필수) — 안 고르면 저장이 막힙니다
+      <select id="fOrigin" style="display:block;margin-top:4px;background:#0d1420;color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px;width:100%">
+        <option value="">— 고르세요 —</option>
+        <option value="짜집기">짜집기(떠도는 조각)</option>
+        <option value="촬영원본">촬영원본(그 사람이 찍은 것)</option>
+      </select>
+    </label>
     <button style="background:#2f81f7;border:none;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="commitScene()">💾 라이브러리에 저장</button>`;
 }
 
@@ -814,6 +940,10 @@ async function commitScene(){
     keywords: document.getElementById('scKw').value.split(',').map(s=>s.trim()).filter(Boolean),
     category: SCENE_CTX.category,
     source_kind:'reference', source_ref: SCENE_CTX.sc,
+    source_origin: document.getElementById('fOrigin').value,
+    // ★정수 그대로 되돌린다 — 산술(parseFloat 등)을 한 번도 스치지 않는다. 스치면
+    // str(124.0)="124.0"이 서버 isdigit()을 못 통과해 조용히 None이 된다(brief 실측).
+    source_start_frame: SCENE_DRAFT ? (SCENE_DRAFT._start_frame != null ? SCENE_DRAFT._start_frame : SCENE_DRAFT.start_frame) : null,
   };
   try{
     const d = await (await fetch('/api/scene/save/commit',{method:'POST',
