@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-16",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-17_0701_미국 전력망용 ESS 배터리 모듈팩 사업 진출.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "송선재",
+    "report_date": "2026년 6월 16일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "세방전지",
+        "code": "004490",
+        "rating": "Not Rated",
+        "rating_changed": false,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "회사는 중기적으로 북미 ESS 사업을 통해 연간 약 8천억원의 매출과 한 자릿수 초~중반(Low~Mid Single) 수준의 수익성을 기대하고 있다.",
+        "estimate_revision": null,
+        "next_catalyst": "2026년 3분기 내 파일럿 생산 및 고객사 테스트 생산, 4분기 중 최초 양산",
+        "thesis": [
+          "자회사 세방리튬배터리에 921억원 출자하여 북미 전력망용 ESS 배터리 모듈/팩 사업 진출",
+          "이미 북미 전력망용 ESS 고객사와 수주 물량이 확정된 상태",
+          "강화된 주주환원정책(배당성향 25%)으로 인한 높은 기대 배당수익률"
+        ],
+        "valuation_basis": "주가는 1분기 실적 부진의 여파로 P/E 6배 수준의 Valuation까지 이미 하락해 있음",
+        "risk": null,
+        "supply_comment": "미국 오하이오주에 법인을 설립한 상태이고, 2026년 8월까지 설비 발주와 인력 확보, 인증 등을 거쳐 3분기 내 파일럿 생산 예정",
+        "quote": "세방리튬배터리가 북미 ESS 배터리 모듈/팩 사업에 투자하는 총 Capex 규모는 1,500억원이다.",
+        "sector": "2차전지"
+      }
+    ]
+  }
+}

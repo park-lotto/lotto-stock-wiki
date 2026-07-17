@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-16",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-16_1004_증명된 주택 수익성, 선점한 SMR 성장성.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "이혜진",
+    "report_date": "2026.06.15",
+    "stocks": [
+      {
+        "name": "DL이앤씨",
+        "code": "375500",
+        "rating": "BUY",
+        "rating_changed": "신규",
+        "tp_new": "106,000",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 연결 기준 매출액 7조 692억 원(-4.5%, YoY), 영업이익 5,176억 원(+33.8%, YoY, OPM 7.3%) 예상",
+        "estimate_revision": null,
+        "next_catalyst": "2026년 3월 X-Energy와 SMR 표준화 설계(CI) 계약 체결하며 글로벌 SMR 밸류체인 편입",
+        "thesis": [
+          "피어 대비 우수한 주택 수익성(원가율 79.9%) 기반 실적 안정성 확보",
+          "X-Energy 협력을 통한 글로벌 SMR 밸류체인 편입 및 성장 모멘텀 확보",
+          "현재 PBR 0.5배 수준으로 밸류에이션 부담 제한적"
+        ],
+        "valuation_basis": "12개월 선행 BPS에 Target PBR 0.79배를 적용",
+        "risk": null,
+        "supply_comment": "건설업(원전 포함)",
+        "quote": "DL이앤씨 투자의견 매수, 목표주가 106,000원 제시. 목표주가는 12개월 선행 BPS에 Target PBR 0.79배를 적용"
+      }
+    ]
+  }
+}

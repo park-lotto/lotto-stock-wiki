@@ -1,0 +1,48 @@
+{
+  "meta": {
+    "date": "2026-06-16",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-16_1004_뭘 고를지 몰라 다 준비해봤어.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "이혜진",
+    "report_date": "2026.06.15",
+    "stocks": [
+      {
+        "name": "삼성E&A",
+        "code": "028050",
+        "sector": "기타",
+        "rating": "BUY",
+        "rating_changed": "신규",
+        "tp_new": "73,000",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": {
+          "2026F": {
+            "매출액": "10조 2,689억",
+            "영업이익": "9,100억",
+            "YoY": "+13.7%, +14.9%",
+            "OPM": "8.9%"
+          }
+        },
+        "estimate_revision": null,
+        "next_catalyst": [
+          "중동 재건",
+          "뉴에너지",
+          "관계사 CAPEX 확대"
+        ],
+        "thesis": [
+          "중동 EPC 수행 경험 기반 재건 사업 참여 가능성 보유 및 고유가 기반 재정 여력 확대에 따른 GCC 국가들의 플랜트, 인프라 투자 가속화 수혜 기대",
+          "글로벌 에너지 전환 트렌드에 맞춰 에너지 EPC 기업으로 리포지셔닝 중이며 LNG, 그린수소, 암모니아, SAF, CCUS, 청정메탄올 등 뉴에너지 밸류체인 전반에서 수주 모멘텀 강화 기대",
+          "반도체 슈퍼사이클에 따른 관계사 CAPEX 확대 기대 및 관계사 물량의 높은 수주 가시성과 빠른 매출 인식으로 안정적인 탑라인 성장 기여"
+        ],
+        "valuation_basis": "12개월 선행 BPS에 Target PBR 2.56배를 적용. Target PBR은 글로벌 EPC Peer 기업 평균 PBR에 20% 할인율 적용",
+        "risk": null,
+        "supply_comment": "2026년 연간 수주 가이던스는 12조 원으로 제시한 바 있으나, 추가 상향 조정 가능성도 존재",
+        "quote": "삼성E&A를 건설업종 최선호주로, 투자의견 매수, 목표주가 73,000원 제시."
+      }
+    ]
+  }
+}

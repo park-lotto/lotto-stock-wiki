@@ -216,6 +216,20 @@ class Store:
                       "ON scene_assets(customer_id, asset_type)")
             c.execute("CREATE INDEX IF NOT EXISTS idx_scene_assets_cat "
                       "ON scene_assets(customer_id, category)")
+            # 짜집기 대응(2026-07-17, 설계 §7.1):
+            #  · source_start_frame — 원본에서의 시작 **프레임**. 초로 저장하면
+            #    '원본 순서대로 이어졌나' 판정에 반올림 오차가 낀다. 원본처럼 보이게
+            #    만드는 건 '같은 소스'가 아니라 '원본 순서'다.
+            #  · source_origin — 짜집기|촬영원본|모름. 사람이 고른다(AI 판정은
+            #    실측 탈락 — 정답 아는 시험지에서 3편 전부 '촬영원본/확신 높음').
+            for col, ddl in (
+                ("source_start_frame", "INTEGER"),
+                ("source_origin", "TEXT NOT NULL DEFAULT '모름'"),
+            ):
+                try:
+                    c.execute(f"ALTER TABLE scene_assets ADD COLUMN {col} {ddl}")
+                except sqlite3.OperationalError:
+                    pass  # 이미 존재
             # 썸네일 URL 보관(2026-07-15) — 우리믹스 대본선택 리스트가 <video> 첫 프레임에
             # 의존해 검은칸으로 보이던 문제. 저장 시점 URL을 남겨 <img>로 즉시 그린다.
             try:
@@ -1065,7 +1079,8 @@ class Store:
     # ── 장면 라이브러리(재사용 짤 뱅크) — customer_id별로 독립(2026-07-15) ──
     _SCENE_COLS = ("id, asset_type, render_mode, media_path, poster_path, duration, "
                    "keep_original_audio, title, scene_desc, role, category, subject, "
-                   "tone, keywords, source_kind, source_ref, created_at")
+                   "tone, keywords, source_kind, source_ref, source_start_frame, "
+                   "source_origin, created_at")
 
     # 태그 편집으로 바꿀 수 있는 필드만. media_path/customer_id/id는 제외 —
     # 클라이언트가 준 값이 파일 경로가 되면 traversal이 열린다.
@@ -1078,7 +1093,8 @@ class Store:
                 "title": r[7], "scene_desc": r[8], "role": r[9], "category": r[10],
                 "subject": r[11], "tone": r[12],
                 "keywords": [k for k in (r[13] or "").split(",") if k],
-                "source_kind": r[14], "source_ref": r[15], "created_at": r[16]}
+                "source_kind": r[14], "source_ref": r[15], "source_start_frame": r[16],
+                "source_origin": r[17], "created_at": r[18]}
 
     @staticmethod
     def _scene_keywords(v):
@@ -1093,15 +1109,18 @@ class Store:
             cur = c.execute(
                 "INSERT INTO scene_assets(customer_id, asset_type, render_mode, media_path, "
                 "poster_path, duration, keep_original_audio, title, scene_desc, role, category, "
-                "subject, tone, keywords, source_kind, source_ref, created_at) "
-                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now'))",
+                "subject, tone, keywords, source_kind, source_ref, source_start_frame, "
+                "source_origin, created_at) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now'))",
                 (customer_id, asset.get("asset_type"), asset.get("render_mode"),
                  asset.get("media_path"), asset.get("poster_path"),
                  float(asset.get("duration") or 0.0), int(asset.get("keep_original_audio") or 0),
                  asset.get("title"), asset.get("scene_desc"), asset.get("role"),
                  asset.get("category"), asset.get("subject"), asset.get("tone"),
                  self._scene_keywords(asset.get("keywords")),
-                 asset.get("source_kind"), asset.get("source_ref")),
+                 asset.get("source_kind"), asset.get("source_ref"),
+                 asset.get("source_start_frame"),
+                 asset.get("source_origin") or "모름"),
             )
             return cur.lastrowid
 

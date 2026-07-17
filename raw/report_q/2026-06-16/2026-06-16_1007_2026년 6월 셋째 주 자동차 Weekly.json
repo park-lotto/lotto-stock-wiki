@@ -1,0 +1,59 @@
+{
+  "meta": {
+    "date": "2026-06-16",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-16_1007_2026년 6월 셋째 주 자동차 Weekly.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "김광식, 최보영",
+    "report_date": "2026/06/16",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "EU 'Made in Europe' 완화",
+      "유럽 OEM 보조금",
+      "미국 전기차 판매량",
+      "전기차 평균 거래 가격",
+      "원자재 가격(니켈, 리튬, 코발트, 망간, 알루미늄, 구리)"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "자동차",
+        "stance": null,
+        "reason": "현대차그룹 미국 시장 점유율 12% 눈앞, 하이브리드 힘입어 포드 추격"
+      },
+      {
+        "sector": "2차전지",
+        "stance": null,
+        "reason": "EU 배터리 부스터 프로그램 신설 및 ESS 시장 진출 확대"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026/06/14",
+        "event": "현대차그룹 미국 시장 점유율 12% 눈앞"
+      },
+      {
+        "date": "2026/06/14",
+        "event": "중국 전동화 대형 트럭 전환 및 2030년 신차 40% 목표"
+      },
+      {
+        "date": "2026/06/11",
+        "event": "5월 미국 내 전기차 판매량 8.5만대 기록"
+      }
+    ],
+    "top_picks": [
+      "현대차",
+      "기아",
+      "테슬라",
+      "포드",
+      "GM",
+      "LG에너지솔루션",
+      "삼성SDI"
+    ],
+    "risk": "니켈 가격 하락세, 리튬 가격 약세 지속, 코발트 공급 불확실성",
+    "quote": "EU에 'Made in Europe' 완화 등 요구, 수락시 보조금 기반 유럽 OEM 비용 우위 달성 가능성"
+  }
+}

@@ -1,0 +1,165 @@
+{
+  "meta": {
+    "date": "2026-06-15",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-16_0705_지주회사 기본서 Holding Company 101.md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": [
+      "이경연",
+      "이채리"
+    ],
+    "report_date": "2025.04.02",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "CJ",
+        "code": "001040",
+        "rating": "Buy",
+        "rating_changed": "신규",
+        "tp_new": "260,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 연결 기준 매출액은 46.2조 원, 영업이익은 2.8조 원으로 추정된다.",
+        "estimate_revision": null,
+        "next_catal_st": "올리브영 실질 지분율 상승 효과와 미발표 밸류업 카드가 핵심 촉매다.",
+        "thesis": [
+          "중복상장 규제 강화로 CJ올리브영의 존속법인 귀속 가치 상승",
+          "올리브영에 대한 ㈜CJ의 의결권 기준 실질 지분율 상승",
+          "미발표된 「기업가치 제고 계획」 등 밸류업 잠재력 보유"
+        ],
+        "valuation_basis": "SOTP 밸류에이션을 통해 산출한 목표주가 260,000원과 투자의견 ‘매수(BUY)’를 제시한다. 타겟 할인율은 55%를 적용했다.",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "SOTP 밸류에이션을 통해 산출한 목표주가 260,000원과 투자의견 ‘매수(BUY)’를 제시한다."
+      },
+      {
+        "name": "SK",
+        "code": "034730",
+        "rating": "Buy",
+        "rating_changed": "신규",
+        "tp_new": "390,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 연결 기준 매출액은 122조 원, 영업이익은 4.8조 원으로 추정된다.",
+        "estimate_revision": null,
+        "next_catal_st": "3월 주주총회에 상정된 기보유 자사주 전량 소각 안건 통과는 밸류업의 핵심 촉매다.",
+        "thesis": [
+          "SK하이닉스 시총 636조 대비 ㈜SK 시총 23조",
+          "증손회사 가치가 지주회사에 반영되는 과정이 핵심 투자 포인트",
+          "고배당기업 과세 특례 요건 충족+자사주 전량 소각=주주환원 모범생"
+        ],
+        "valuation_basis": "SOTP 밸류에이션을 통해 산출한 목표주가 390,000원과 투자의견 ‘매수(BUY)’를 제시한다. 타겟 할인율은 상법 개정이 공식화된 날부터 1차 상법 개정이 통과된 날까지의 할인율 최저값인 55%를 적용했다.",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "SOTP 밸류에이션을 통해 산출한 목표주가 390,000원과 투자의견 ‘매수(BUY)’를 제시한다."
+      },
+      {
+        "name": "HD현대",
+        "code": "267250",
+        "rating": "Buy",
+        "rating_changed": "신규",
+        "tp_new": "300,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 연결 기준 매출액은 78조 원, 영업이익은 7.5조 원으로 추정된다.",
+        "estimate_revision": null,
+        "next_catal_st": "기보유 자사주(10.5%)에 대한 구체적인 소각 계획 등 추가적인 기업가치 제고 방안이 발표될 경우, 주가 재평가 촉매로 작용할 것으로 판단한다.",
+        "thesis": [
+          "중복상장 규제로 HD현대로보틱스 IPO 중단",
+          "로봇산업 가치가 지주사에 귀속되며 그간 할인되었던 가치 재발견 가능",
+          "분기배당 정착 및 자사주(10.5%) 활용을 통한 추가 모멘텀 잠재"
+        ],
+        "valuation_basis": "SOTP 밸류에이션을 통해 산출한 목표주가 300,000원과 투자의견 ‘매수(BUY)’를 제시한다. 타겟 할인율은 25%를 적용했다.",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "SOTP 밸류에이션을 통해 산출한 목표주가 300,000원과 투자의견 ‘매수(BUY)’를 제시한다."
+      },
+      {
+        "name": "두산",
+        "code": "000150",
+        "rating": "Buy",
+        "rating_changed": "신규",
+        "tp_new": "1,370,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 연결 기준 매출액은 20.9조 원, 영업이익은 1.5조 원으로 추정된다.",
+        "estimate_revision": null,
+        "next_catal_st": "보유 자사주 15.4% 중 임직원 보상 목적(RSU)를 제외한 12.2% 전량을 2026년 연내 소각하기로 결의했다는 것이다.",
+        "thesis": [
+          "두산에너빌리티(NAV 비중 64.1%) 가치 부각",
+          "AI•반도체 호조로 전자BG 매출 2.3조 원 돌파",
+          "자사주 연내 소각 및 결산배당 상향 등 주주환원 모범 답안 제시"
+        ],
+        "valuation_basis": "SOTP 밸류에이션을 통해 산출한 목표주가 1,370,000원과 투자의견 ‘매수(BUY)’를 제시한다. 타겟 할인율은 38%를 적용했다.",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "SOTP 밸류에이션을 통해 산출한 목표주가 1,370,000원과 투자의견 ‘매수(BUY)’를 제시한다."
+      },
+      {
+        "name": "LG",
+        "code": "003550",
+        "rating": "Buy",
+        "rating_changed": "신규",
+        "tp_new": "110,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 연결 기준 매출액은 8.1조 원, 영업이익은 1.3조 원으로 추정된다.",
+        "estimate_revision": null,
+        "next_catal_st": "자사주 소각 의무화 이전부터 선제적으로 전량 소각을 선언했으며, 2026년 상반기 내 소각 완료할 예정이다.",
+        "thesis": [
+          "커버리지 중 유일한 별도 순현금 보유→주주환원 여력 차별화",
+          "상법 개정 이전 기보유 자사주 전량 소각 선언, ’26년 상반기 완료",
+          "커버리지 최저 PBR 0.5배→PBR 개혁 압력 수혜 기대"
+        ],
+        "valuation_basis": "SOTP 밸류에이션을 통해 산출한 목표주가 110,000원과 투자의견 ‘매수(BUY)’를 제시한다. 타겟 할인율은 상법 개정이 공식화된 날부터 1차 개정이 통과된 날까지의 할인율 최저값인 40%를 적용했다.",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "SOTP 밸류에이션을 통해 산출한 목표주가 110,000원과 투자의견 ‘매수(BUY)’를 제시한다."
+      },
+      {
+        "name": "한화",
+        "code": "000880",
+        "rating": "Buy",
+        "rating_changed": "신규",
+        "tp_new": "130,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 연결 기준 매출액은 80조 원, 영업이익은 5.8조 원으로 추정된다.",
+        "estimate_revision": null,
+        "next_catal_st": "임직원 보상 재원으로 활용한 자사주 외 약 445만 주를 전량 소각하고, 기보유 자사주 약 113만 주는 임직원 보상 재원으로 활용하는 등 총 558만여 주에 대한 명확한 처분 계획을 가결했다.",
+        "thesis": [
+          "한화에에로스페이스 주가 상승에 따른 NAV 증가",
+          "2026년 영업이익 5.76조 원 전망 및 예측가능한 배당 명문화",
+          "기보유 자사주 소각 계획 확정으로 주당가치 제고 기대"
+        ],
+        "valuation_basis": "SOTP 밸류에이션을 통해 산출한 목표주가 130,000원과 투자의견 ‘매수(BUY)’를 제시한다. 타겟 할인율은 67%를 적용했다.",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "SOTP 밸류에이션을 통해 산출한 목표주가 130,000원과 투자의견 ‘매수(BUY)’를 제시한다."
+      },
+      {
+        "name": "효성",
+        "code": "004800",
+        "rating": "Buy",
+        "rating_changed": "신규",
+        "tp_new": "180,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 연결 기준 매출액은 2.5조 원, 영업이익은 4,230억 원으로 추정된다.",
+        "estimate_revision": null,
+        "next_catal_st": "향후 주주가치 제고를 위해 신규 자사주 매입 및 소각 프로그램이 도입될 경우 시장에 미치는 신호 효과가 클 수 있음을 시사한다.",
+        "thesis": [
+          "효성중공업 주가 급등으로 할인율은 역사적 최고치 근접",
+          "DPS 67% 상향으로 고배당기업 과세 특례 요건 충족",
+          "자사주 사실상 전무→신규 매입•소각 프로그램 도입 시 신호 효과 극대화"
+        ],
+        "valuation_basis": "SOTP 밸류에이션을 통해 산출한 목표주가 180,000원과 투자의견 ‘매수(BUY)’를 제시한다. 타겟 할인율은 현재 시장이 반영한 최대 디스카운트 수준을 보수적으로 적용해 72%를 산정했다.",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "SOTP 밸류에이션을 통해 산출한 목표주가 180,000원과 투자의견 ‘매수(BUY)’를 제시한다."
+      }
+    ]
+  }
+}

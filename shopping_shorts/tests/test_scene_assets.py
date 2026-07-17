@@ -1,12 +1,20 @@
+import subprocess
+
 import pytest
-from shopping_shorts import scene_assets
+from shopping_shorts import scene_assets, scene_cut
 
 
 def _fake_run_ok(created=None):
-    """ffmpeg 성공 시뮬 — 실제로 만들었을 파일을 테스트가 대신 생성."""
+    """ffmpeg 성공 시뮬 — 실제로 만들었을 파일을 테스트가 대신 생성.
+
+    **kwargs로 받는 이유: scene_assets.subprocess와 scene_cut.subprocess는 같은
+    subprocess 모듈 객체를 가리키므로(둘 다 import subprocess), 여기서
+    monkeypatch.setattr(scene_assets.subprocess, "run", ...)를 하면 scene_cut의
+    _ffprobe(text=True, stdin=...)도 이 fake를 탄다. 위치/제한 키워드만 받으면
+    TypeError로 죽는다."""
     calls = []
 
-    def run(cmd, capture_output=True, check=False):
+    def run(cmd, capture_output=True, check=False, **kwargs):
         calls.append(cmd)
         if created:
             created.write_bytes(b"out")
@@ -14,15 +22,17 @@ def _fake_run_ok(created=None):
         class R:
             returncode = 0
             stderr = b""
+            stdout = ""
         return R()
     run.calls = calls
     return run
 
 
-def _fake_run_fail(cmd, capture_output=True, check=False):
+def _fake_run_fail(cmd, capture_output=True, check=False, **kwargs):
     class R:
         returncode = 1
         stderr = b"ffmpeg: error"
+        stdout = ""
     return R()
 
 
@@ -31,6 +41,11 @@ def test_make_clip_cuts_segment_and_normalizes_spec(monkeypatch, tmp_path):
     src.write_bytes(b"fake")
     out = tmp_path / "clip.mp4"
     run = _fake_run_ok(created=out)
+    # video_fps는 scene_cut을 통해 진짜 subprocess.run(text=/stdin= 사용)을 부르므로
+    # 이 파일의 단순 fake run(위치/제한된 키워드 인자만 받음)으로는 흉내낼 수 없다 —
+    # ffprobe 왕복 자체를 건너뛰도록 fps를 직접 고정한다(30.0, 3.0/5.5초가 정확히
+    # 프레임 경계라 -ss/프레임수 계산이 옛 값과 동일하게 떨어진다).
+    monkeypatch.setattr(scene_assets.scene_cut, "video_fps", lambda p: 30.0)
     monkeypatch.setattr(scene_assets.subprocess, "run", run)
 
     result = scene_assets.make_clip(src, 3.0, 5.5, out)
@@ -38,8 +53,11 @@ def test_make_clip_cuts_segment_and_normalizes_spec(monkeypatch, tmp_path):
     assert result == out and out.exists()
     cmd = run.calls[0]
     joined = " ".join(str(x) for x in cmd)
-    assert "-ss" in cmd and "3.000" in joined          # 시작점
-    assert "-t" in cmd and "2.500" in joined           # 길이 = end - start
+    assert "-ss" in cmd and "3.000000" in joined       # 시작점(프레임 정렬, 90/30)
+    # ★프레임 절단 — 초 길이(-t)가 아니라 프레임 수(-frames:v)로 자른다(설계 §3.4).
+    # 90프레임(3.0s)~165프레임(5.5s) 직전 = 75프레임.
+    assert "-frames:v" in cmd and "75" in joined
+    assert "-t" not in cmd
     # 페이즈2 concat이 -c copy라 규격이 다르면 안 붙는다 — 720x1280/30fps/libx264/aac 고정
     assert "scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280" in joined
     assert "-r" in cmd and "30" in cmd
@@ -49,6 +67,8 @@ def test_make_clip_cuts_segment_and_normalizes_spec(monkeypatch, tmp_path):
 def test_make_clip_raises_on_ffmpeg_failure(monkeypatch, tmp_path):
     src = tmp_path / "src.mp4"
     src.write_bytes(b"fake")
+    # 위와 같은 이유로 fps 조회는 고정하고, 실제 컷 단계에서만 ffmpeg 실패를 흉내낸다.
+    monkeypatch.setattr(scene_assets.scene_cut, "video_fps", lambda p: 30.0)
     monkeypatch.setattr(scene_assets.subprocess, "run", _fake_run_fail)
 
     with pytest.raises(RuntimeError, match="ffmpeg"):
@@ -322,3 +342,41 @@ def test_autotag_handles_non_dict_from_vault_call(monkeypatch, tmp_path):
         got = scene_assets.autotag([f1], {"category": "테스트"})
         # 어떤 비-dict가 와도 항상 형태가 온전한 빈 값
         assert got == {"scene_desc": "", "role": "", "subject": "", "tone": "", "keywords": []}
+
+
+def test_autotag_prompt_separates_evidence_for_desc_and_role():
+    p = scene_assets._AUTOTAG_PROMPT
+    assert "자막" in p                      # role의 근거가 자막임을 명시
+    assert "나쁜 예" in p                   # scene_desc의 추측 금지는 유지
+    assert "한 스푼" in p                   # subject 모호금지 규칙 유지(적대적 검증 통과분)
+    assert "자막이 없으면" in p             # 자막 없으면 role 공란
+
+
+def test_autotag_prompt_keeps_controlled_roles():
+    p = scene_assets._AUTOTAG_PROMPT.format(
+        category="레시피", caption="c", script="s", roles="|".join(scene_assets._ROLES))
+    assert "비법공개" in p and "CTA" in p
+
+
+def _count_frames(p):
+    import subprocess
+    r = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0",
+                        "-count_frames", "-show_entries", "stream=nb_read_frames",
+                        "-of", "csv=p=0", str(p)], capture_output=True, text=True, check=True,
+                       stdin=subprocess.DEVNULL)
+    return int(r.stdout.strip())
+
+
+def test_make_clip_cuts_exact_frame_count_on_unaligned_start(tmp_path):
+    """★4.13초처럼 프레임 경계가 아닌 시각을 줘도 프레임이 새지 않아야 한다.
+    실측 결함: -ss 4.13 → ffmpeg가 4.1333에 붙고 -t 1.47을 더해 5.6033이 되어
+    5.600의 다음 컷 첫 프레임이 1장 딸려 들어왔다(설계 §3.4)."""
+    src = tmp_path / "src.mp4"
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi",
+                    "-i", "testsrc=size=320x568:rate=30:duration=8",
+                    "-c:v", "libx264", "-pix_fmt", "yuv420p", str(src)],
+                   check=True, capture_output=True, stdin=subprocess.DEVNULL)
+    out = tmp_path / "clip.mp4"
+    scene_assets.make_clip(src, 4.13, 5.60, out)
+    # 프레임 124(=round(4.1333*30))부터 168(=round(5.60*30)) 직전까지 = 44프레임
+    assert _count_frames(out) == 44
