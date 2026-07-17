@@ -75,3 +75,9 @@ def test_settings_saves_seo(client):
 def test_settings_404_on_missing_job(client):
     r = client.post("/api/produce/mix/settings", json={"job_id": "nope", "seo": _SEO})
     assert r.status_code == 404
+
+
+def test_seo_get_returns_saved(client):
+    client.post("/api/produce/mix/settings", json={"job_id": "job1", "seo": _SEO})
+    r = client.get("/api/produce/seo/get?job_id=job1")
+    assert r.json()["seo"]["title"] == "제목"

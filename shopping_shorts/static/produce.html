@@ -114,6 +114,23 @@
     .subject-row #pmSubject{width:70%;background:#0d131c;border:1px solid var(--line);
       color:var(--txt);border-radius:6px;padding:7px 9px;font-size:13px}
     .subject-row .subj-hint{color:var(--sub);font-size:11.5px;margin-top:5px}
+    .seoBar{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+    .seoMsg{opacity:.75;font-size:13px}
+    .seoBody{display:flex;flex-direction:column;gap:12px}
+    .seoCard{border:1px solid #8884;border-radius:8px;padding:12px}
+    .seoCardHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .seoCard input,.seoCard textarea{width:100%;box-sizing:border-box}
+    .seoCard .cnt{text-align:right;font-size:12px;opacity:.6}
+    .seoCard .cands{margin:4px 0 0;padding-left:20px}
+    .seoCard .cands li{cursor:pointer;padding:6px;border-radius:6px}
+    .seoCard .cands li:hover{background:#8882}
+    .seoCard .cands .cw{font-size:12px;opacity:.7}
+    .chips{display:flex;flex-wrap:wrap;gap:6px}
+    .chip{border:1px solid #8886;border-radius:12px;padding:2px 8px;font-size:12px}
+    .kwBadge{font-size:11px;border-radius:10px;padding:1px 6px;border:1px solid #8886}
+    .kwBadge.blue{border-color:#4a90d9}
+    .kwBadge.red{border-color:#d94a4a}
+    .mini{font-size:12px;padding:2px 6px}
   </style>
 </head>
 <body>
@@ -398,7 +415,16 @@
       </div>
     </section>
     <section class="panel" data-step="4"><h3>5 · 썸네일</h3><div class="sub">프레임 선택 + 텍스트.</div><div class="stub">Phase 4 예정</div></section>
-    <section class="panel" data-step="5"><h3>6 · SEO</h3><div class="sub">제목·설명·태그 AI 생성.</div><div class="stub">Phase 4 예정</div></section>
+    <section class="panel" data-step="5">
+      <h3>6 · SEO</h3>
+      <div class="sub">제목·설명·태그를 만들고, 키워드를 유튜브에서 실제로 재서 근거를 붙입니다.</div>
+      <div class="seoBar">
+        <button class="btn primary" id="seoGenAll" onclick="seoGenerate()">AI로 전체 생성</button>
+        <button class="btn" onclick="seoCopyYoutube()">유튜브 전체 복사</button>
+        <span class="seoMsg" id="seoMsg"></span>
+      </div>
+      <div id="seoBody" class="seoBody"></div>
+    </section>
     <section class="panel" data-step="6">
       <h3>7 · 최종검수 · 렌더</h3>
       <div class="sub">확정 대본·장면매칭·음성·자막제거 설정을 최종 영상으로 렌더합니다.</div>
@@ -465,7 +491,167 @@ function showPanel(){
   if(cur===1) refreshSub();
   if(cur===2) loadTtsBeats();
   if(cur===3) initHeadcopy();
+  if(cur===5) initSeo();
   if(cur===6) refreshFinal();
+}
+
+// ── 6단계 SEO(2026-07-17) ──────────────
+// 산출물은 서버 mix_jobs.seo_json이 유일한 진실이다. STATE에만 두면
+// saveWork()가 seo를 안 실어서 새로고침에 날아간다.
+let SEO = null;
+
+const SEO_VERDICT = {
+  blue: {icon:'🟦', label:'뚫린다'},
+  red:  {icon:'🟥', label:'레드오션'},
+  dead: {icon:'⬜', label:'수요 낮음'},
+  unknown: {icon:'–', label:'미측정'},
+};
+
+function seoEsc(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, c=>(
+    {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function initSeo(){
+  if(!MIX_JOB){ document.getElementById('seoBody').innerHTML =
+    '<div class="stub">1단계에서 대본을 먼저 확정하세요.</div>'; return; }
+  if(SEO){ renderSeo(); return; }
+  try{
+    const r = await fetch('/api/produce/seo/get?job_id='+encodeURIComponent(MIX_JOB));
+    const d = await r.json();
+    SEO = (d && d.seo) || null;
+  }catch(e){ SEO = null; }
+  renderSeo();
+}
+
+async function seoGenerate(only){
+  if(!MIX_JOB){ alert('1단계에서 대본을 먼저 확정하세요'); return; }
+  const msg = document.getElementById('seoMsg');
+  const btn = document.getElementById('seoGenAll');
+  msg.textContent = only ? '다시 쓰는 중…' : '생성 중… (키워드 실측까지 20초쯤 걸립니다)';
+  if(btn) btn.disabled = true;                 // 더블서밋 차단 — 제일 비싼 작업이다
+  try{
+    const body = {
+      job_id: MIX_JOB,
+      captions: (typeof HANDOFF!=='undefined' ? HANDOFF : []).map(h=>h && h.caption).filter(Boolean),
+    };
+    if(only){
+      body.only = only;
+      body.locked = (SEO && SEO.locked) || {};
+      body.keyword_stats = (SEO && SEO.keyword_stats) || [];   // 실측치 되먹임
+    }
+    const r = await fetch('/api/produce/seo/generate', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+    const d = await r.json();
+    if(!r.ok || !d.seo){ msg.textContent = '실패: ' + ((d && d.error) || r.status); return; }
+    const locked = (SEO && SEO.locked) || {};
+    if(only){
+      // 부분 재생성 — 요청한 카드만 갈아끼우고 나머지는 손으로 다듬은 걸 지킨다
+      const keep = Object.assign({}, SEO);
+      const map = {title:['title','title_candidates'], description:['description'],
+                   tags:['tags'], hashtags:['hashtags'],
+                   hook:['hook_line','comment_bait'], cta:['cta']};
+      (map[only]||[]).forEach(k=>{ keep[k] = d.seo[k]; });
+      SEO = keep;
+    }else{
+      SEO = d.seo;
+    }
+    SEO.locked = locked;
+    renderSeo();
+    await seoSave();
+    msg.textContent = '완료';
+  }catch(e){ msg.textContent = '오류: ' + e; }
+  finally{ if(btn) btn.disabled = false; }
+}
+
+async function seoSave(){
+  if(!MIX_JOB || !SEO) return;
+  try{
+    await fetch('/api/produce/mix/settings', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({job_id: MIX_JOB, seo: SEO})});
+  }catch(e){ /* 저장 실패는 화면을 막지 않는다 */ }
+}
+
+function seoLock(card){
+  if(!SEO) return;
+  SEO.locked = SEO.locked || {};
+  SEO.locked[card] = !SEO.locked[card];
+  renderSeo(); seoSave();
+}
+
+function seoStatBadge(kw){
+  const st = ((SEO && SEO.keyword_stats) || []).find(s=>s.keyword===kw);
+  if(!st) return `<span class="kwBadge">${seoEsc(kw)}</span>`;
+  const v = SEO_VERDICT[st.verdict] || SEO_VERDICT.unknown;
+  const tip = (st.top_titles||[]).join(' / ');
+  const detail = st.verdict==='unknown' ? '' :
+    ` · 상위 조회수 ${Number(st.views_median||0).toLocaleString()}` +
+    ` · 소형채널 ${Math.round((st.small_ratio||0)*100)}%`;
+  return `<span class="kwBadge ${seoEsc(st.verdict)}" title="${seoEsc(tip)}">`
+       + `${v.icon} ${seoEsc(kw)} — ${v.label}${detail}</span>`;
+}
+
+function seoCard(id, title, inner){
+  const on = !!((SEO && SEO.locked) || {})[id];
+  return `<div class="seoCard">
+    <div class="seoCardHead">
+      <b>${seoEsc(title)}</b>
+      <span>
+        <button class="mini" onclick="seoLock('${id}')">${on?'🔒':'🔓'}</button>
+        <button class="mini" onclick="seoGenerate('${id}')" ${on?'disabled':''}>↻</button>
+      </span>
+    </div>${inner}</div>`;
+}
+
+function renderSeo(){
+  const el = document.getElementById('seoBody');
+  if(!SEO){ el.innerHTML = '<div class="stub">「AI로 전체 생성」을 누르세요.</div>'; return; }
+  const cands = (SEO.title_candidates||[]).map((c,i)=>`
+    <li onclick="seoPickTitle(${i})">
+      <div class="ct">${seoEsc(c.text)}</div>
+      <div class="cw">${seoEsc(c.why)}</div>
+      <div class="ck">${(c.keywords||[]).map(seoStatBadge).join(' ')}</div>
+    </li>`).join('');
+  const tags = (SEO.tags||[]).map(t=>`<span class="chip">${seoEsc(t)}</span>`).join('');
+  const hs = SEO.hashtags||{};
+  const cta = SEO.cta||{};
+  const plat = [['youtube','유튜브'],['tiktok','틱톡'],['threads','쓰레드']];
+  el.innerHTML =
+    seoCard('title','영상 제목',
+      `<input id="seoTitle" maxlength="100" value="${seoEsc(SEO.title)}"
+              oninput="SEO.title=this.value; seoSave()">
+       <div class="cnt">${(SEO.title||'').length}/100</div>
+       <div class="sub">추천 제목 (클릭하면 선택)</div><ol class="cands">${cands}</ol>`) +
+    seoCard('description','영상 설명',
+      `<textarea id="seoDesc" rows="6"
+                 oninput="SEO.description=this.value; seoSave()">${seoEsc(SEO.description)}</textarea>`) +
+    seoCard('tags',`태그 (${(SEO.tags||[]).length})`, `<div class="chips">${tags}</div>`) +
+    seoCard('hashtags','해시태그',
+      plat.map(([k,l])=>`<div class="sub">${l}</div><div class="chips">`
+        + (hs[k]||[]).map(t=>`<span class="chip">${seoEsc(t)}</span>`).join('') + '</div>').join('')) +
+    seoCard('hook','후킹 · 댓글 유도',
+      `<input value="${seoEsc(SEO.hook_line)}" oninput="SEO.hook_line=this.value; seoSave()">
+       <input value="${seoEsc(SEO.comment_bait)}" oninput="SEO.comment_bait=this.value; seoSave()">`) +
+    seoCard('cta','플랫폼별 CTA',
+      plat.map(([k,l])=>`<div class="sub">${l}</div>`
+        + `<textarea rows="4" oninput="SEO.cta['${k}']=this.value; seoSave()">`
+        + seoEsc(cta[k]||'') + '</textarea>').join(''));
+}
+
+function seoPickTitle(i){
+  const c = (SEO.title_candidates||[])[i];
+  if(!c) return;
+  SEO.title = c.text; renderSeo(); seoSave();
+}
+
+function seoCopyYoutube(){
+  if(!SEO){ alert('먼저 생성하세요'); return; }
+  const txt = [SEO.title, '', SEO.description, '',
+               (SEO.hashtags && SEO.hashtags.youtube || []).join(' '), '',
+               '[태그]', (SEO.tags||[]).join(', ')].join('\n');
+  navigator.clipboard.writeText(txt);
+  document.getElementById('seoMsg').textContent = '유튜브용 복사 완료';
 }
 
 // ── 5단계 꾸미기(헤드카피 디자인) ──────────────

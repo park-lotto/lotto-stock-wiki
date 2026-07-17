@@ -2478,6 +2478,13 @@ def api_seo_generate(body: dict):
     return {"seo": seo}
 
 
+@app.get("/api/produce/seo/get")
+def api_seo_get(job_id: str = ""):
+    """저장된 SEO 복원용(6단계 재진입·새로고침). 없으면 seo: null."""
+    job = Store(DB_PATH).get_mix_job((job_id or "").strip()) or {}
+    return {"seo": job.get("seo")}
+
+
 @app.post("/api/produce/fx/suggest")
 def api_fx_suggest(body: dict):
     """믹스 job의 비트+카테고리로 효과 배치 플랜을 미리 만든다. DB에 기록하지
