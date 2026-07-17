@@ -2787,4 +2787,37 @@ for _pg in ("discover", "find", "library", "mix", "outreach", "produce", "collec
         include_in_schema=False,
     )
 
-app.mount("/", StaticFiles(directory=str(_STATIC), html=True), name="static")
+# ★C-1(2026-07-16 라이브 실증): 위 _NOCACHE는 /produce 등 "클린 URL" 라우트에만 붙는다.
+# /sidebar.js 같은 정적 JS/CSS/HTML은 아래 StaticFiles 마운트가 헤더 없이 그대로 서빙해서
+# 브라우저가 무기한 캐시했다 — 실측: 서버는 새 sidebar.js(mountWorks 포함, 5957바이트)를
+# 주는데 performance 엔트리는 transferSize:0/cached:true, 화면엔 .ss-work가 0개.
+# Ctrl+Shift+R로는 바로 떴다 = 캐시 문제, 배포 문제가 아니었다.
+#
+# 방식: StaticFiles 서브클래스로 file_response()를 오버라이드(미들웨어 대신 이걸 고른 이유:
+# 전역 미들웨어는 /api/* JSON 응답까지 건드리게 되거나, 이 마운트 하나만 골라내려면 결국
+# 경로 접두사를 다시 검사해야 해서 오히려 이 마운트 안에서 바로 처리하는 게 범위가 좁고 명확
+# 하다). js/css/html에만 no-cache를 씌운다 — 폰트(otf/ttf)는 내용이 안 바뀌므로 그대로 영구
+# 캐시(빠지면 사장님 화면이 매번 폰트를 다시 받는다).
+#
+# Starlette 1.3.1의 StaticFiles.file_response()를 그대로 재현하되 응답 생성 직후·
+# is_not_modified() 판정 전에 헤더를 얹는다 — super() 뒤에 붙이면 이미 304
+# NotModifiedResponse로 바뀐 뒤라 늦는다(NotModifiedResponse는 원본 응답 헤더 중
+# cache-control만 골라 옮기므로, 원본에 미리 있어야 304에도 살아남는다).
+_NOCACHE_STATIC_EXTS = (".js", ".css", ".html")
+
+
+class _NoCacheStaticFiles(StaticFiles):
+    def file_response(self, full_path, stat_result, scope, status_code=200):
+        from starlette.datastructures import Headers
+        from starlette.staticfiles import NotModifiedResponse
+
+        request_headers = Headers(scope=scope)
+        response = FileResponse(full_path, status_code=status_code, stat_result=stat_result)
+        if str(full_path).endswith(_NOCACHE_STATIC_EXTS):
+            response.headers["Cache-Control"] = "no-cache, must-revalidate"
+        if self.is_not_modified(response.headers, request_headers):
+            return NotModifiedResponse(response.headers)
+        return response
+
+
+app.mount("/", _NoCacheStaticFiles(directory=str(_STATIC), html=True), name="static")

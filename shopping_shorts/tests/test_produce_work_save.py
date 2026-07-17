@@ -238,6 +238,56 @@ def test_reopening_does_not_duplicate_the_work(js_consume):
     assert "w-기존" in out, "WORK_ID를 안 되살렸다 — 제작소를 열 때마다 작업이 복제된다"
 
 
+def test_first_save_then_reload_reuses_server_work_id(js_consume):
+    """★T6 라이브 실증 C-2: 제작소를 열 때마다 작업이 복제됐다(4번 새로고침 → 같은 제목 4건).
+
+    구멍: `_pushWork`가 `d.work_id`를 받아 전역 `WORK_ID`는 갱신하지만 sessionStorage는
+    다시 안 썼다. `saveWork()`가 이미 그 앞에서 WORK_ID=null인 채로 sessionStorage를 써버렸으니,
+    새로고침 시 `_consumeProduceHandoff`가 `w.work_id || null` = null을 읽어 다음 저장이
+    새 작업을 만들었다.
+
+    ★기존 `test_reopening_does_not_duplicate_the_work`처럼 sessionStorage에 work_id를
+    미리 심어놓고 시작하지 않는다 — 그러면 이 구멍(POST 응답 → sessionStorage 재기록 누락)을
+    한 번도 안 밟는다. 여기선 진짜 순서를 그대로 밟는다:
+    1) WORK_ID=null 상태에서 saveWork() (진짜 첫 저장)
+    2) tick → 디바운스 발동 → POST → 응답 work_id 수신
+    3) 그 시점에 sessionStorage.produce_work.work_id가 서버값인지 확인(수정 전엔 null)
+    4) (새 페이지 로드 흉내) 그 sessionStorage로 _consumeProduceHandoff → WORK_ID 복원
+    5) 다시 저장 → 두 번째 POST가 같은 work_id를 싣는지(=새 작업이 안 생긴다)
+    """
+    out = _run(js_consume, """
+      // 1. 진짜 첫 저장 — WORK_ID는 아직 null
+      STATE.script = '첫 작업';
+      saveWork();
+      // 2. 디바운스 발동 → POST 나감 → 응답 {work_id:'w-server-1'}
+      await tick(1500);
+      // 3. 그 시점에 sessionStorage가 서버 work_id로 다시 써졌는가
+      const afterFirstSave = JSON.parse(sessionStorage.getItem('produce_work'));
+      // 4. (새 페이지 로드 흉내) 전역을 리셋하고 그 sessionStorage로 복원
+      _store['produce_work'] = JSON.stringify(afterFirstSave);
+      HANDOFF = []; STATE.script = ''; WORK_ID = null;
+      _consumeProduceHandoff();
+      await tick(1500);
+      const restoredWid = WORK_ID;
+      // 5. 다시 저장 — 새 작업이 생기면 안 된다
+      STATE.script = '이어서 작업';
+      saveWork();
+      await tick(1500);
+      console.log(JSON.stringify({
+        afterFirstSaveWid: afterFirstSave.work_id,
+        restoredWid: restoredWid,
+        lastPostWid: POSTS[POSTS.length-1].body.work_id,
+        postCount: POSTS.length,
+      }));
+    """)
+    d = eval(out.replace("null", "None").replace("true", "True").replace("false", "False"))
+    assert d["afterFirstSaveWid"] == "w-server-1", (
+        f"POST 응답의 work_id가 sessionStorage에 다시 안 써졌다: {d}")
+    assert d["restoredWid"] == "w-server-1", f"새로고침 후 WORK_ID가 안 살아났다: {d}"
+    assert d["lastPostWid"] == "w-server-1", (
+        f"새로고침 후 저장이 새 작업을 만들었다(제작소를 열 때마다 작업 복제): {d}")
+
+
 def test_script_only_work_is_restored_locally(js_consume):
     """★영상 없이 대본만 있는 작업도 화면에 돌아온다 — 사장님이 잃어버린 바로 그 구간이다.
     저장(saveWork)만 넓히고 복원을 안 넓히면 '저장은 되는데 안 돌아오는' 비대칭이 된다."""
