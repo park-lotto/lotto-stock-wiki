@@ -36,7 +36,7 @@ _SCHEMA = {
             },
         },
         "description": {"type": "string"},
-        "tags": {"type": "array", "items": {"type": "string"}},
+        "tags": {"type": "array", "items": {"type": "string"}, "minItems": 20, "maxItems": 20},
         "hashtags": {
             "type": "object",
             "properties": {p: {"type": "array", "items": {"type": "string"}} for p in _PLATFORMS},

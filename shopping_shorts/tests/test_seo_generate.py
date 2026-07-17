@@ -110,22 +110,35 @@ def test_prompt_includes_captions(monkeypatch):
     assert "#텀블러 이거 대박" in log[0]
 
 
-def test_prompt_includes_keyword_stats_when_given(monkeypatch):
-    """되먹임 — 실측치가 프롬프트에 들어가야 Pass 3가 의미 있다."""
+def test_prompt_keyword_stats_note_differs_by_verdict(monkeypatch):
+    """되먹임 — verdict별로 지시 문구가 실제로 달라야 Pass 3가 의미 있다.
+    raw verdict 값("red")만 찍고 note 분기가 통째로 지워져도 안 잡히던 가짜 신호를 대체한다."""
     log = []
     _patch(monkeypatch, ["k1"], _FakeClient(_OUT, log=log))
-    seo_generate.generate(_JOB, only="title", keyword_stats=[
-        {"keyword": "빨대텀블러", "verdict": "red", "views_median": 1_800_000, "small_ratio": 0.05}])
+
+    def _prompt_for(verdict):
+        log.clear()
+        seo_generate.generate(_JOB, only="title", keyword_stats=[
+            {"keyword": "빨대텀블러", "verdict": verdict, "views_median": 1_800_000, "small_ratio": 0.05}])
+        return log[0]
+
+    assert "밀어라" in _prompt_for("blue")
+    assert "메인으로 쓰지 마라" in _prompt_for("red")
+    assert "빼라" in _prompt_for("dead")
+    assert "미측정" in _prompt_for("unknown")
+
+
+def test_prompt_locked_fields_reflect_dict_contents(monkeypatch):
+    """locked dict 내용이 실제로 필드명 단위로 반영되는지 — 헤더 문구("확정"/"잠")만
+    확인하면 locked 내용을 통째로 무시해도 통과하던 가짜 신호를 대체한다.
+    field는 comment_bait/cta로 골랐다 — "title"은 _BASE_PROMPT의 "title_candidates"
+    문구에, "hook_line"은 _JOB.script_structure의 키에 항상 부분일치돼 위양성이 난다."""
+    log = []
+    _patch(monkeypatch, ["k1"], _FakeClient(_OUT, log=log))
+    seo_generate.generate(_JOB, locked={"comment_bait": True, "cta": False}, only="description")
     p = log[0]
-    assert "빨대텀블러" in p
-    assert "red" in p or "레드" in p
-
-
-def test_prompt_marks_locked_fields(monkeypatch):
-    log = []
-    _patch(monkeypatch, ["k1"], _FakeClient(_OUT, log=log))
-    seo_generate.generate(_JOB, locked={"title": True}, only="tags")
-    assert "잠" in log[0] or "확정" in log[0]
+    assert "comment_bait" in p
+    assert "cta" not in p
 
 
 def test_seed_keywords_dedups_preserving_order():
@@ -135,3 +148,11 @@ def test_seed_keywords_dedups_preserving_order():
 
 def test_seed_keywords_empty_on_missing():
     assert seo_generate.seed_keywords({}) == []
+
+
+def test_schema_forces_exactly_20_tags():
+    """response_schema로 개수를 강제 — 프롬프트 텍스트("정확히 20개")에만 의존하지 않는다.
+    video_analysis.py:37의 minItems/maxItems 패턴과 동일."""
+    tags_schema = seo_generate._SCHEMA["properties"]["tags"]
+    assert tags_schema["minItems"] == 20
+    assert tags_schema["maxItems"] == 20
