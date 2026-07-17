@@ -249,6 +249,21 @@
             <div id="highlightRuleList" style="margin-top:6px"></div>
             <button class="tab" onclick="addHighlightRule()" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:12px;margin-top:4px">+ 강조 단어 추가</button>
           </div>
+          <!-- ✨ 고급효과(리모션) — 항상 보이는 자리·선택·프리미엄. 켜면 자동 추천 → 렌더 -->
+          <div id="fxAdvBox" style="background:linear-gradient(135deg,#1c1436,#0d1420);border:1px solid #6b4fa0;border-radius:10px;padding:10px 12px;margin-bottom:12px">
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;cursor:pointer">
+              <input id="fxAdvOn" type="checkbox" onchange="toggleFxAdv()">
+              ✨ 고급효과 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 대본에 맞춰 움직이는 효과 자동 배치 · 렌더당 10P</span>
+            </label>
+            <div id="fxWizard" style="display:none;margin-top:10px;font-size:12px">
+              <button type="button" class="tab" onclick="fxSuggest()" style="min-width:auto;padding:7px 16px;font-size:12px;background:linear-gradient(90deg,#3a2b6b,#241a45);border-color:#6b4fa0">✨ 효과 자동 추천</button>
+              <span id="fxSuggestMsg" class="hint" style="margin-left:6px"></span>
+              <div id="fxPlanBox" style="margin-top:8px"></div>
+              <button type="button" id="fxRenderBtn" onclick="fxRender()" style="display:none;margin-top:8px;background:#2E7D8A;color:#fff;border:none;border-radius:8px;padding:8px 18px;cursor:pointer;font-weight:700">고급 렌더 (10P)</button>
+              <div id="fxRenderMsg" class="hint" style="margin-top:6px"></div>
+              <div id="fxResult" style="display:none;margin-top:10px"></div>
+            </div>
+          </div>
           <details id="advDetails" style="margin-bottom:4px">
             <summary style="cursor:pointer;font-size:13px;color:var(--accent2);font-weight:700;padding:6px 0">✏️ 직접 다듬기 — 폰트·크기·위치·자막·내 프리셋 ▾</summary>
             <div id="advBody" style="margin-top:10px">
@@ -308,20 +323,7 @@
                   <option value="">모션 끄기</option>
                 </select>
               </div>
-              <!-- ✨ 고급효과(리모션) — 선택·프리미엄, 렌더 시 포인트 차감 -->
-              <div id="fxAdvBox" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
-                <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;cursor:pointer">
-                  <input id="fxAdvOn" type="checkbox" onchange="toggleFxAdv()"> ✨ 고급효과 <span class="hint">(포인트 차감 · 대본에 맞춰 리모션 효과 자동 배치)</span>
-                </label>
-                <div id="fxWizard" style="display:none;margin-top:10px;font-size:12px">
-                  <div style="color:var(--sub);margin-bottom:8px">1 · 대본 비트 → 2 · 효과 추천 → 3 · 확인 → 4 · 렌더</div>
-                  <button type="button" class="tab" onclick="fxSuggest()" style="min-width:auto;padding:6px 12px">효과 추천</button>
-                  <span id="fxSuggestMsg" class="hint"></span>
-                  <div id="fxPlanBox" style="margin-top:8px"></div>
-                  <button type="button" id="fxRenderBtn" onclick="fxRender()" style="display:none;margin-top:8px;background:#2E7D8A;color:#fff;border:none;border-radius:8px;padding:7px 14px;cursor:pointer">고급 렌더 (10P)</button>
-                  <div id="fxRenderMsg" class="hint" style="margin-top:6px"></div>
-                </div>
-              </div>
+              <!-- 고급효과는 강조 단어 아래(항상 보이는 자리)로 이동함 -->
               <!-- 자막 스타일(나레이션 자막 자체 디자인) -->
               <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px">
                 <div style="font-size:14px;font-weight:700;margin-bottom:2px">💬 자막 스타일</div>
@@ -539,7 +541,8 @@ async function fxRender(){
     const r=await fetch('/api/produce/fx/render',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({job_id:MIX_JOB, plan:FX_PLAN})});
     if(r.status===402){ msg.textContent='포인트가 부족합니다'; return; }
-    await r.json(); msg.textContent='렌더 중… (백그라운드)';
+    await r.json(); msg.textContent='렌더 중… (30초~1분 걸려요)';
+    const box=document.getElementById('fxResult'); if(box){ box.style.display='none'; box.innerHTML=''; }
     if(FX_POLL) clearInterval(FX_POLL);
     FX_POLL=setInterval(fxPoll, 3000);
   }catch(e){ msg.textContent='오류: '+e; }
@@ -550,9 +553,14 @@ async function fxPoll(){
     const r=await fetch('/api/produce/fx/status/'+MIX_JOB); const d=await r.json();
     const msg=document.getElementById('fxRenderMsg');
     if(d.fx_status==='done'){ clearInterval(FX_POLL); FX_POLL=null;
-      msg.innerHTML='완료! <a href="'+d.fx_url+'" download>다운로드</a>'; }
+      msg.textContent='완료! ✨';
+      const box=document.getElementById('fxResult');
+      if(box){ box.style.display='block';
+        box.innerHTML='<video src="'+d.fx_url+'" controls autoplay muted playsinline '+
+          'style="width:100%;max-width:280px;border-radius:10px;display:block;background:#000"></video>'+
+          '<a href="'+d.fx_url+'" download style="display:inline-block;margin-top:6px;font-size:12px;color:var(--accent2)">⬇ 영상 다운로드</a>'; } }
     else if(d.fx_status==='failed'){ clearInterval(FX_POLL); FX_POLL=null;
-      msg.textContent='렌더 실패 (포인트 환불됨)'; }
+      msg.textContent='렌더 실패 (포인트는 환불됨) — 다시 시도해 주세요'; }
   }catch(e){}
 }
 // ── 자막 스타일(나레이션 자막) ──────────────
