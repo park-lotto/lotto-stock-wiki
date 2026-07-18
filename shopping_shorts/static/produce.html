@@ -127,6 +127,10 @@
     .seoCard .cands .cw{font-size:12px;opacity:.7}
     .chips{display:flex;flex-wrap:wrap;gap:6px}
     .chip{border:1px solid #8886;border-radius:12px;padding:2px 8px;font-size:12px}
+    .chipX{margin-left:5px;cursor:pointer;opacity:.55;font-weight:700}
+    .chipX:hover{opacity:1;color:#ff5a5a}
+    .tagAdd{display:flex;gap:6px;margin-top:8px}
+    .tagAdd input{flex:1;min-width:0}
     .kwBadge{font-size:11px;border-radius:10px;padding:1px 6px;border:1px solid #8886}
     .kwBadge.blue{border-color:#4a90d9}
     .kwBadge.red{border-color:#d94a4a}
@@ -654,7 +658,8 @@ function renderSeo(){
       <div class="cw">${seoEsc(c.why)}</div>
       <div class="ck">${(c.keywords||[]).map(seoStatBadge).join(' ')}</div>
     </li>`).join('');
-  const tags = (SEO.tags||[]).map(t=>`<span class="chip">${seoEsc(t)}</span>`).join('');
+  const tags = (SEO.tags||[]).map((t,i)=>
+    `<span class="chip">${seoEsc(t)}<b class="chipX" onclick="seoTagDel(${i})">×</b></span>`).join('');
   const hs = SEO.hashtags||{};
   const cta = SEO.cta||{};
   const plat = [['youtube','유튜브'],['tiktok','틱톡'],['threads','쓰레드']];
@@ -667,7 +672,13 @@ function renderSeo(){
     seoCard('description','영상 설명',
       `<textarea id="seoDesc" rows="6"
                  oninput="SEO.description=this.value; seoSave()">${seoEsc(SEO.description)}</textarea>`) +
-    seoCard('tags',`태그 (${(SEO.tags||[]).length})`, `<div class="chips">${tags}</div>`) +
+    seoCard('tags',`태그 (${(SEO.tags||[]).length})`,
+      `<div class="chips">${tags}</div>
+       <div class="tagAdd">
+         <input id="seoTagNew" placeholder="태그 추가 후 Enter"
+                onkeydown="if(event.key==='Enter'){seoTagAdd();event.preventDefault();}">
+         <button class="mini" onclick="seoTagAdd()">추가</button>
+       </div>`) +
     seoCard('hashtags','해시태그',
       plat.map(([k,l])=>`<div class="sub">${l}</div><div class="chips">`
         + (hs[k]||[]).map(t=>`<span class="chip">${seoEsc(t)}</span>`).join('') + '</div>').join('')) +
@@ -684,6 +695,26 @@ function seoPickTitle(i){
   const c = (SEO.title_candidates||[])[i];
   if(!c) return;
   SEO.title = c.text; renderSeo(); seoSave();
+}
+
+function seoTagDel(i){
+  if(!SEO || !Array.isArray(SEO.tags)) return;
+  SEO.tags.splice(i, 1);
+  renderSeo(); seoSave();
+}
+
+function seoTagAdd(){
+  if(!SEO) return;
+  const inp = document.getElementById('seoTagNew');
+  const v = (inp && inp.value || '').trim().replace(/^#/, '');   // 앞의 # 은 태그에 안 넣는다
+  if(!v) return;
+  SEO.tags = SEO.tags || [];
+  if(SEO.tags.includes(v)){ inp.value = ''; return; }            // 중복은 조용히 무시
+  SEO.tags.push(v);
+  renderSeo(); seoSave();
+  // renderSeo가 새로 그리므로 다시 찾아 포커스 — 연속 입력이 자연스럽게
+  const again = document.getElementById('seoTagNew');
+  if(again) again.focus();
 }
 
 function seoCopyYoutube(){
