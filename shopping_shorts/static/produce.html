@@ -1539,9 +1539,14 @@ const SCRIPT_MODE_HTML = {
       <button class="mini" onclick="picksDeleteSel()">선택삭제</button>
     </div>
     <div id="mixWiki" style="margin:10px 0">불러오는 중…</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       <button class="btn-next" style="padding:10px 16px;background:linear-gradient(90deg,#1c5a2e,#0d3a1c)" onclick="openGenFromWiki()">♻️ 선택 1개로 새 대본 생성</button>
       <button class="btn-next" style="padding:10px 16px" onclick="genMix()">🧬 선택 2개+ 조합 생성</button>
+      <label class="hint" style="display:flex;align-items:center;gap:4px">길이
+        <select id="mixSeconds" style="background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:6px">
+          <option value="15">15초</option><option value="20" selected>20초</option>
+          <option value="30">30초</option><option value="45">45초</option>
+        </select></label>
     </div>
     <div class="hint" style="margin-top:6px">1개 = 그 대본의 구조를 빌려 새로 씁니다(요소별로 유지·교체 선택). 여러 대본의 강점을 섞으려면 2개+.</div>
     <div id="mixDrafts" style="margin-top:12px"></div>`,
@@ -1725,7 +1730,15 @@ function genMix(){
   const picks=[...document.querySelectorAll('.mixPick:checked')].map(c=>c.value);
   const box=document.getElementById('mixDrafts');
   if(picks.length<2){ box.innerHTML='<div class="hint" style="color:var(--fire)">2개 이상 선택하세요</div>'; return; }
-  postDrafts('/api/produce/script/mix', {shortcodes:picks, target_seconds:20, n:3}, 'mixDrafts');
+  // 선택한 대본을 본문째 보낸다 — 임시 대본(위키에 없음)도 조합되게(2026-07-18).
+  const byCode = new Map((window._mixItems||[]).map(w=>[w.shortcode, w]));
+  const sources = picks.map(sc=>byCode.get(sc)).filter(Boolean)
+    .map(w=>({shortcode:w.shortcode, name:w.name||'', category:w.category||'', full_text:w.full_text||''}))
+    .filter(s=>s.full_text.trim());
+  if(sources.length<2){ box.innerHTML='<div class="hint" style="color:var(--fire)">선택한 대본에 본문이 없습니다</div>'; return; }
+  const sel=document.getElementById('mixSeconds');
+  const sec = sel ? (parseInt(sel.value,10)||20) : 20;
+  postDrafts('/api/produce/script/mix', {sources, target_seconds:sec, n:3}, 'mixDrafts');
 }
 
 // ── 1단계 제작소: 영상믹스(given_script 매칭) ──────────────
