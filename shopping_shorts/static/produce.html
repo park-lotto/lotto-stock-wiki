@@ -1590,6 +1590,21 @@ function mixThumbFallback(img, shortcode){
   img.dataset.fellback='1';
   img.src=poster;
 }
+// 담긴 대본 = 서버 picks(위키 S급) + 랭킹에서 임시로 보낸 대본(HANDOFF). 합쳐 보여준다.
+// 임시 대본은 위키를 안 거치므로(사장님: '임시로 담기') HANDOFF의 script를 그대로 쓴다.
+// shortcode가 겹치면 서버(S급 영속본) 우선.
+function mergePicks(serverItems, handoff){
+  const out = (serverItems||[]).slice();
+  const seen = new Set(out.map(w=>w.shortcode));
+  (handoff||[]).forEach(h=>{
+    if(!h.pickScript || !h.script || seen.has(h.shortcode)) return;
+    seen.add(h.shortcode);
+    out.push({shortcode:h.shortcode, name:h.name||h.shortcode, category:h.category||'',
+              thumbnail:h.thumbnail||'', full_text:h.script});
+  });
+  return out;
+}
+// ── 임시 대본 끝 ──
 async function loadWikiForMix(){
   const el=document.getElementById('mixWiki');
   const bp=document.getElementById('mixSrcPicks'), ba=document.getElementById('mixSrcAll');
@@ -1598,7 +1613,8 @@ async function loadWikiForMix(){
   const url = MIX_SRC==='all' ? '/api/wiki/list' : '/api/produce/picks';
   try{
     const d=await (await fetch(url)).json();
-    const items=d.items||[];
+    let items=d.items||[];
+    if(MIX_SRC==='picks') items = mergePicks(items, HANDOFF);   // 임시 대본 합침
     window._mixItems=items;
     if(!items.length){
       el.innerHTML = MIX_SRC==='all'
@@ -1768,7 +1784,9 @@ function _consumeProduceHandoff(){
   let items, restored=false, savedScript='';
   try{ items=JSON.parse(sessionStorage.getItem('produce_handoff')||'null'); }catch(e){ items=null; }
   if(items && items.length){
-    HANDOFF = items.map(it=>({...it, pickScript:false, useFootage:false}));
+    // ★들어온 플래그를 보존한다. 기본값을 먼저 깔고 spread로 덮어써서, 랭킹에서 보낸
+    // useFootage/pickScript/script가 살아남는다(예전엔 무조건 false로 지워 영상풀·담긴대본이 비었다).
+    HANDOFF = items.map(it=>({pickScript:false, useFootage:false, ...it}));
   } else {
     // 구버전 호환(urls만)
     let urls; try{ urls=JSON.parse(sessionStorage.getItem('produce_mix_urls')||'null'); }catch(e){ urls=null; }
