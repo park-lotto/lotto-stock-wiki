@@ -2307,12 +2307,27 @@ async function loadThumbFrames(){
   }
 }
 async function _loadThumbFrames(){
+  const hintEl = document.getElementById('thumbFramesHint');
+  // ★믹스 영상이 없으면 뽑을 프레임이 없다. 예전엔 서버가 준 "job 없음"만 떠서 사장님이 왜 막혔는지
+  // 몰랐다(실측: 영상 매칭 안 한 작업을 열어 5단계로 오면 이 상태). 무엇을 해야 하는지 알려준다.
+  if (!MIX_JOB){
+    hintEl.innerHTML = '🎬 먼저 <b>1단계</b>에서 <b>영상 매칭</b>을 해야 썸네일에 쓸 프레임이 나와요. '
+      + '<a href="#" onclick="jump(0);return false" style="color:var(--accent2);font-weight:700">1단계로 가기 →</a>';
+    document.getElementById('thumbFrameCount').textContent = '';
+    document.getElementById('thumbFrames').innerHTML = '';
+    return;
+  }
   const r = await fetch('/api/produce/thumb/frames', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({job_id: MIX_JOB}),
   });
   const d = await r.json().catch(() => ({ok: false}));
-  if (!d.ok){ document.getElementById('thumbFramesHint').textContent = d.error || '프레임 추출 실패'; return; }
+  if (!d.ok){
+    // job은 있는데 서버가 거절(영상 미완성 등) — 원문 에러에 갈 곳까지 얹는다.
+    hintEl.innerHTML = (d.error || '프레임 추출 실패')
+      + ' — <a href="#" onclick="jump(0);return false" style="color:var(--accent2);font-weight:700">1단계에서 영상 매칭 확인 →</a>';
+    return;
+  }
   THUMB_STATE.frames = d.frames;
   document.getElementById('thumbFrameCount').textContent = `(${d.frames.length}개)`;
   document.getElementById('thumbFramesHint').textContent = '';
@@ -2440,20 +2455,39 @@ function renderThumbLayers(){
 }
 
 // 드래그 = 비율 좌표를 바꾼다(픽셀이 아니라) — 그래야 1080 결과가 같은 자리에 찍힌다.
+// ★글자를 '집어서' 끈다(2026-07-18 라이브 실측 수정). 예전엔 hit-test가 없어 캔버스 아무 데나
+// 누르면 선택된 글자가 그 지점으로 순간이동했다(빈 좌상단을 끌자 중앙 0.5,0.5 글자가 0.245,0.156으로
+// 튀는 걸 실측). 이제 (1) 누른 지점에서 가장 가까운 글자를 잡고 (2) 잡은 지점과 글자의 간격을
+// 유지한 채 끈 만큼만 옮긴다(순간이동 아님). (3) 어느 글자와도 먼 빈 곳이면 아무것도 안 잡는다.
+const THUMB_GRAB_R2 = 0.28 * 0.28;   // 잡히는 반경(정규화 거리²) — 시니어 타깃이라 넉넉하게
 function initThumbDrag(){
   const cv = document.getElementById('thumbCanvas'); if (!cv || !cv.addEventListener) return;
-  let on = false;
+  let grabbed = -1, offX = 0, offY = 0;
   const to = e => {
     const r = cv.getBoundingClientRect();
     return {x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height};
   };
-  cv.addEventListener('mousedown', () => { on = true; });
-  window.addEventListener('mouseup', () => { on = false; });
-  cv.addEventListener('mousemove', e => {
-    if (!on) return;
-    const L = THUMB_STATE.layers[THUMB_STATE.sel]; if (!L) return;
+  cv.addEventListener('mousedown', e => {
     const p = to(e);
-    L.x = Math.min(1, Math.max(0, p.x)); L.y = Math.min(1, Math.max(0, p.y));
+    let best = -1, bestD = Infinity;
+    (THUMB_STATE.layers || []).forEach((L, i) => {
+      const d = (L.x - p.x) ** 2 + (L.y - p.y) ** 2;
+      if (d < bestD){ bestD = d; best = i; }
+    });
+    if (best < 0 || bestD > THUMB_GRAB_R2) return;   // 빈 곳 → 안 잡는다(순간이동 방지)
+    grabbed = best;
+    THUMB_STATE.sel = best;                            // 잡은 글자를 선택으로
+    const L = THUMB_STATE.layers[best];
+    offX = L.x - p.x; offY = L.y - p.y;                // 잡은 지점과의 간격 유지 = 상대이동
+    renderThumbLayers();
+  });
+  window.addEventListener('mouseup', () => { grabbed = -1; });
+  cv.addEventListener('mousemove', e => {
+    if (grabbed < 0) return;
+    const L = THUMB_STATE.layers[grabbed]; if (!L) return;
+    const p = to(e);
+    L.x = Math.min(1, Math.max(0, p.x + offX));
+    L.y = Math.min(1, Math.max(0, p.y + offY));
     renderThumbCanvas();
   });
 }
