@@ -246,6 +246,20 @@ def _apply_motion_pack(deco, caption_style, timeline, packs):
     return deco, caption_style
 
 
+def _resolve_cutaway_paths(store, plan, customer_id):
+    """비트에 붙은 cutaway asset_id → media_path. 저장위치(match가 쓴 beat['cutaway'])
+    = 읽기위치(여기). run_render와 run_preview 둘 다 이걸 써서 미리보기와 최종본이
+    같은 컷어웨이를 보여준다(안 그러면 사장님이 유료 렌더 전에 확인 못 함)."""
+    out = {}
+    for beat in plan["beats"]:
+        cut = beat.get("cutaway")
+        if cut:
+            asset = store.get_scene_asset(cut["asset_id"], customer_id=customer_id)
+            if asset and asset.get("media_path"):
+                out[beat["beat_idx"]] = asset["media_path"]
+    return out
+
+
 def run_preview(job_id, db_path, work_root):
     """1단계 미리보기: 유료 자막제거(VMake)·꾸미기 없이 믹스+음성+기본자막만 렌더.
 
@@ -282,7 +296,8 @@ def run_preview(job_id, db_path, work_root):
         # 굽힌다(라이브 관측: caption_style=None인 job으로 렌더해 자막 정상 확인).
         assemble(plan, tts_paths, source_video_paths, str(out_path),
                  clean_fn=None,                      # ← 유료 VMake 건너뜀. 이게 핵심이다.
-                 deco={})                            # ← 꾸미기 없음(4단계 소관)
+                 deco={},                             # ← 꾸미기 없음(4단계 소관)
+                 cutaway_paths=_resolve_cutaway_paths(store, plan, job.get("customer_id", 0)))
         store.update_mix_job(job_id, preview_status="ready", preview_path=str(out_path))
     except Exception as e:  # noqa: BLE001 — BackgroundTasks라 밖에서 아무도 안 받는다
         traceback.print_exc(file=sys.stderr)
@@ -343,13 +358,7 @@ def run_render(job_id, db_path, work_root):
             deco = {**deco, "motion": {**motion, "layers": resolved}}
         # 컷어웨이: 비트에 붙은 asset_id를 media_path로 해석해 assemble에 넘긴다.
         # 저장위치(match_scene_assets가 쓴 beat["cutaway"]) = 읽기위치(여기) — seam 일치.
-        cutaway_paths = {}
-        for beat in plan["beats"]:
-            cut = beat.get("cutaway")
-            if cut:
-                asset = store.get_scene_asset(cut["asset_id"], customer_id=job.get("customer_id", 0))
-                if asset and asset.get("media_path"):
-                    cutaway_paths[beat["beat_idx"]] = asset["media_path"]
+        cutaway_paths = _resolve_cutaway_paths(store, plan, job.get("customer_id", 0))
         assemble(plan, tts_paths, source_video_paths, str(out_path), clean_fn=clean_fn,
                  headcopy=job.get("headcopy"), caption_style=caption_style,
                  deco=deco, cutaway_paths=cutaway_paths)
