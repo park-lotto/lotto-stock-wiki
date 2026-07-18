@@ -437,3 +437,21 @@ def test_plan_never_overflows_segment_end():
     for c, s in zip(clips, segs):
         assert c["start"] + c["src_dur"] <= s["end"] + 1e-9
     assert abs(_total_out(clips) - 6.0) < 0.05
+
+
+def test_plan_absorbs_short_leading_segment():
+    # 선두 구간이 0.8초 미만(0.3s)이고 통째 소비돼도 독립 클립으로 안 남는다.
+    segs = [_seg("A", 0.0, 0.3), _seg("B", 0.0, 5.0)]
+    clips = va._plan_beat_clips(segs, tts_dur=5.3)
+    assert all(c["out_dur"] >= 0.8 - 1e-9 for c in clips)   # 깜빡임 없음
+    assert abs(_total_out(clips) - 5.3) < 0.05
+    for c, s in [(c, s) for c in clips for s in segs if s["video_id"] == c["video_id"]]:
+        assert c["start"] + c["src_dur"] <= s["end"] + 1e-9   # 유출 0 유지
+
+
+def test_plan_absorbs_short_middle_segment():
+    # 중간 구간이 짧아도(0.3s) 최종에 0.8초 미만 독립 클립이 남지 않는다.
+    segs = [_seg("A", 0.0, 5.0), _seg("B", 0.0, 0.3), _seg("C", 0.0, 5.0)]
+    clips = va._plan_beat_clips(segs, tts_dur=5.3)
+    assert all(c["out_dur"] >= 0.8 - 1e-9 for c in clips)
+    assert abs(_total_out(clips) - 5.3) < 0.05

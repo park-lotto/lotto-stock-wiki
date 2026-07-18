@@ -175,10 +175,16 @@ def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP):
     if shortfall > eps:
         # 구간을 다 써도 모자람 → 마지막 클립을 슬로모로 늘려 채운다.
         clips[-1]["out_dur"] += shortfall
-    elif len(clips) >= 2 and clips[-1]["out_dur"] < min_clip - eps:
-        # 마지막 조각이 너무 짧다(자투리) → 새 클립 대신 직전 클립을 슬로모로 늘려 흡수.
-        tiny = clips.pop()
-        clips[-1]["out_dur"] += tiny["out_dur"]
+
+    # 0.8초 미만 독립 클립 제거: 그런 클립을 이웃에 흡수(이웃이 슬로모로 그 시간을 떠안는다).
+    # 앞 클립이 있으면 앞으로, 없으면(첫 클립) 뒤로 합친다. 합계(sum out_dur)는 보존된다.
+    while len(clips) > 1:
+        idx = next((k for k, c in enumerate(clips) if c["out_dur"] < min_clip - eps), None)
+        if idx is None:
+            break
+        nb = idx - 1 if idx > 0 else idx + 1
+        clips[nb]["out_dur"] += clips[idx]["out_dur"]
+        clips.pop(idx)
     return clips
 
 
