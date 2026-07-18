@@ -135,8 +135,12 @@ def _probe_duration(path):
 
 
 def _run_ffmpeg(cmd, cwd=None):
-    """ffmpeg 실행. 실패 시 stderr를 예외에 담아 원인을 삼키지 않는다."""
-    r = subprocess.run(cmd, cwd=cwd, **_FF_TEXT)
+    """ffmpeg 실행. 실패 시 stderr를 예외에 담아 원인을 삼키지 않는다.
+    stdin=DEVNULL 필수(Windows): pytest 캡처 중에는 부모 stdin 핸들이 유효하지
+    않아, 명시 안 하면 subprocess가 그 핸들을 상속하려다 OSError([WinError 6]
+    핸들이 잘못되었습니다)로 죽는다(2026-07-18 Task2 grounding 테스트 실측 — 이미
+    _probe_duration은 이 패턴을 쓰고 있었다, 여기만 누락돼 있었다)."""
+    r = subprocess.run(cmd, cwd=cwd, stdin=subprocess.DEVNULL, **_FF_TEXT)
     if r.returncode != 0:
         raise RuntimeError(f"ffmpeg 실패(exit {r.returncode}): {(r.stderr or '')[-1000:]}")
     return r
@@ -186,25 +190,6 @@ def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP):
         clips[nb]["out_dur"] += clips[idx]["out_dur"]
         clips.pop(idx)
     return clips
-
-
-def _pick_segment(beat, tts_dur, source_video_paths):
-    """primary→alternates 중 나레이션(tts_dur)을 1배속으로 담을 수 있는
-    (구간길이 >= tts_dur) 첫 후보를 고른다. 아무도 못 담으면 가장 긴 후보를
-    반환하고, 부족분은 assemble에서 소스 루프로 채운다. 반환: ref(dict).
-    더 이상 배속 보정을 하지 않으므로 setpts rate는 반환하지 않는다."""
-    candidates = [beat["primary"]] + list(beat.get("alternates", []))
-    best = None
-    best_len = -1.0
-    for ref in candidates:
-        if ref["video_id"] not in source_video_paths:
-            continue
-        seg_len = ref["end"] - ref["start"]
-        if seg_len >= tts_dur:
-            return ref  # 1배속으로 나레이션 전체를 담을 수 있는 첫 후보
-        if seg_len > best_len:
-            best, best_len = ref, seg_len
-    return best if best else beat["primary"]
 
 
 def _strip_punct(w):
@@ -394,28 +379,40 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work):
         if not tts:
             continue
         tts_dur = _probe_duration(tts)
-        ref = _pick_segment(beat, tts_dur, source_video_paths)
-        src = source_video_paths[ref["video_id"]]
-        src_dur = _probe_duration(src)
-        clip = work / f"beat_{idx}.mp4"
+        # 순서 구간 리스트 = [primary] + alternates. 소스에 실재하는 것만.
+        segs = [s for s in ([beat["primary"]] + list(beat.get("alternates", [])))
+                if s and s.get("video_id") in source_video_paths]
+        if not segs:
+            continue
+        plan = _plan_beat_clips(segs, tts_dur)
         vf = _kenburns_vf(tts_dur) if idx in important else _base_zoom_vf()
-        # 나레이션 길이(tts_dur)만큼 소스를 ref["start"]부터 **이어서(연속)** 1배속
-        # 재생. 시작점부터 tts_dur가 원본 끝을 넘으면 시작을 앞으로 당겨 연속 footage
-        # 를 확보한다. 원본 전체가 나레이션보다 짧을 때만 루프한다.
-        start = ref["start"]
-        if start + tts_dur > src_dur:
-            start = max(0.0, src_dur - tts_dur)
-        loop = ["-stream_loop", "-1"] if src_dur + 0.05 < tts_dur else []
-        cmd = [
-            "ffmpeg", "-y",
-            *loop, "-ss", f"{start:.3f}", "-i", str(src),
-            "-i", str(tts),
-            "-vf", vf, "-r", "30",
-            "-map", "0:v:0", "-map", "1:a:0",
-            "-t", str(tts_dur),
-            "-c:v", "libx264", "-c:a", "aac", "-pix_fmt", "yuv420p", str(clip),
-        ]
-        _run_ffmpeg(cmd)
+        sub_paths = []
+        for j, c in enumerate(plan):
+            src = source_video_paths[c["video_id"]]
+            sub = work / f"beat_{idx}_{j}.mp4"
+            # setpts로 슬로모: 소스 src_dur초를 출력 out_dur초로 늘린다(1배속이면 factor=1).
+            factor = c["out_dur"] / c["src_dur"] if c["src_dur"] > 1e-6 else 1.0
+            vf_full = f"{vf},setpts={factor:.6f}*PTS" if factor > 1.0 + 1e-6 else vf
+            # -ss(입력 시크) start부터, 출력 out_dur초. 오디오 없음(비트 오디오는 아래서 합침).
+            _run_ffmpeg([
+                "ffmpeg", "-y", "-ss", f"{c['start']:.3f}", "-i", str(src),
+                "-vf", vf_full, "-r", "30", "-an", "-t", f"{c['out_dur']:.3f}",
+                "-c:v", "libx264", "-pix_fmt", "yuv420p", str(sub),
+            ])
+            sub_paths.append(sub)
+        # 비트의 클립들(동일 규격)을 concat → 비트 무음 영상
+        beat_video = work / f"beat_{idx}_v.mp4"
+        cat = work / f"beat_{idx}_list.txt"
+        cat.write_text("".join(f"file '{p.as_posix()}'\n" for p in sub_paths), encoding="utf-8")
+        _run_ffmpeg(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(cat),
+                     "-c", "copy", str(beat_video)])
+        # 비트 나레이션(tts) 오디오를 얹고 길이를 tts_dur로 맞춘다.
+        clip = work / f"beat_{idx}.mp4"
+        _run_ffmpeg([
+            "ffmpeg", "-y", "-i", str(beat_video), "-i", str(tts),
+            "-map", "0:v:0", "-map", "1:a:0", "-t", f"{tts_dur:.3f}",
+            "-c:v", "copy", "-c:a", "aac", str(clip),
+        ])
         beat_clips.append(clip)
     if not beat_clips:
         raise RuntimeError("video_assemble: 렌더할 비트가 없습니다")

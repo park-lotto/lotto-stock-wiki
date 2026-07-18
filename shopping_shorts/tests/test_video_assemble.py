@@ -32,43 +32,6 @@ def test_wrap_preserves_explicit_newline_via_segmented():
     assert lines == ["짧은줄", ""]
 
 
-def test_pick_segment_primary_covers_narration():
-    # primary 구간 3초, tts 2.4초 → primary가 1배속으로 담을 수 있으므로 primary 선택
-    beat = {"primary": {"video_id": "A", "seg_id": "A-0", "start": 0.0, "end": 3.0}, "alternates": []}
-    ref = va._pick_segment(beat, tts_dur=2.4, source_video_paths={"A": "a.mp4"})
-    assert ref["seg_id"] == "A-0"
-
-
-def test_pick_segment_prefers_alternate_that_covers_when_primary_too_short():
-    # primary 1초로 tts 2.4초를 못 담음 → 2.4초를 담을 수 있는 alternate(3초) 선택
-    beat = {
-        "primary": {"video_id": "A", "seg_id": "A-0", "start": 0.0, "end": 1.0},
-        "alternates": [{"video_id": "B", "seg_id": "B-0", "start": 0.0, "end": 3.0}],
-    }
-    ref = va._pick_segment(beat, tts_dur=2.4, source_video_paths={"A": "a.mp4", "B": "b.mp4"})
-    assert ref["seg_id"] == "B-0"
-
-
-def test_pick_segment_picks_longest_when_none_cover():
-    # 아무 후보도 tts를 못 담으면 가장 긴 후보 선택(부족분은 루프로 채움)
-    beat = {
-        "primary": {"video_id": "A", "seg_id": "A-0", "start": 0.0, "end": 1.0},
-        "alternates": [{"video_id": "B", "seg_id": "B-0", "start": 0.0, "end": 2.0}],
-    }
-    ref = va._pick_segment(beat, tts_dur=5.0, source_video_paths={"A": "a.mp4", "B": "b.mp4"})
-    assert ref["seg_id"] == "B-0"  # 2초 > 1초
-
-
-def test_pick_segment_skips_missing_source():
-    # primary 소스가 없으면 존재하는 alternate로
-    beat = {
-        "primary": {"video_id": "A", "seg_id": "A-0", "start": 0.0, "end": 5.0},
-        "alternates": [{"video_id": "B", "seg_id": "B-0", "start": 0.0, "end": 3.0}],
-    }
-    ref = va._pick_segment(beat, tts_dur=2.0, source_video_paths={"B": "b.mp4"})
-    assert ref["seg_id"] == "B-0"
-
-
 # ── 자막 구절 분할 ──────────────────────────────────────────────
 
 def test_caption_segments_empty():
@@ -455,3 +418,107 @@ def test_plan_absorbs_short_middle_segment():
     clips = va._plan_beat_clips(segs, tts_dur=5.3)
     assert all(c["out_dur"] >= 0.8 - 1e-9 for c in clips)
     assert abs(_total_out(clips) - 5.3) < 0.05
+
+
+# ── _render_mix 실렌더 grounding (유출 0 + 길이 일치) ──────────────
+
+import re
+import shutil
+import subprocess
+import pytest
+
+_HAS_FF = shutil.which("ffmpeg") and shutil.which("ffprobe")
+
+
+# stdin=DEVNULL 필수(Windows): pytest 캡처 중 부모 stdin 핸들이 무효라 명시 안 하면
+# subprocess가 상속하려다 OSError([WinError 6] 핸들이 잘못되었습니다)로 죽는다
+# (2026-07-18 실측 — video_assemble._run_ffmpeg에도 동일 원인으로 동일하게 추가함).
+def _make_color_source(path, colors, seconds_each=1.0, fps=30):
+    """colors=['red','green',...] 각 색을 seconds_each초씩 이어붙인 720x1280 소스."""
+    parts = []
+    for i, col in enumerate(colors):
+        seg = path.parent / f"src_seg_{i}.mp4"
+        subprocess.run(["ffmpeg", "-y", "-f", "lavfi", "-i",
+                        f"color=c={col}:s=720x1280:d={seconds_each}:r={fps}",
+                        "-pix_fmt", "yuv420p", str(seg)], check=True, stdin=subprocess.DEVNULL,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        parts.append(seg)
+    lst = path.parent / "src_list.txt"
+    lst.write_text("".join(f"file '{p.as_posix()}'\n" for p in parts), encoding="utf-8")
+    subprocess.run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(lst),
+                    "-c", "copy", str(path)], check=True, stdin=subprocess.DEVNULL,
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def _make_silence(path, dur):
+    subprocess.run(["ffmpeg", "-y", "-f", "lavfi", "-i",
+                    f"anullsrc=r=44100:cl=stereo", "-t", str(dur),
+                    "-c:a", "aac", str(path)], check=True, stdin=subprocess.DEVNULL,
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def _avg_color(video, at_sec):
+    """video의 at_sec 지점 1프레임을 뽑아 평균 YUV(signalstats) 텍스트를 반환한다.
+    ⚠️ 브리프 원안은 nested `movie=` 필터 + seek_point였으나 이 환경(Windows)에서
+    실측 2건 모두 실패해 -ss(입력시크)+실디코드 방식으로 교체했다(2026-07-18):
+    ①경로의 드라이브 콜론('C:\\...')이 movie= 필터 자신의 옵션 구분자 콜론과 충돌해
+    항상 빈 출력(ffprobe: "Failed to avformat_open_input 'C'")이 났다. `C\\:/...`처럼
+    콜론을 이스케이프하면 파싱 에러는 없어지지만, ②그 상태에서도 seek_point가 항상
+    frame:0(pts_time≈0.02)만 반환해(재인코딩된 mix_raw.mp4처럼 키프레임이 드문 짧은
+    클립에서 seek_point가 forward-decode를 안 함) at_sec와 무관하게 같은 프레임이
+    나왔다(실측: t=0.2~1.8 전부 VAVG=240 동일). 반면 `-ss <t> -i <video>`(입력 옵션
+    시크)는 ffmpeg가 자동으로 accurate seek(키프레임에서 목표시각까지 디코드)를 하므로
+    같은 소스에서 t=0.2/0.7→VAVG=240(red), t=1.2/1.5/1.8→VAVG=81(green)로 실제
+    시간에 따라 값이 달라짐을 확인했다(구버전 코드의 유출 재현). 이 방식으로 교체."""
+    r = subprocess.run(["ffmpeg", "-v", "error", "-ss", str(at_sec), "-i", str(video),
+                        "-frames:v", "1", "-vf", "signalstats,metadata=print:file=-",
+                        "-f", "null", "-"], stdin=subprocess.DEVNULL,
+                       capture_output=True, text=True)
+    return r.stdout
+
+
+def _vavg(stats):
+    """_avg_color가 반환한 metadata=print 텍스트에서 첫 VAVG 값을 뽑는다(없으면 None)."""
+    m = re.search(r"VAVG=(-?\d+)", stats)
+    return int(m.group(1)) if m else None
+
+
+@pytest.mark.skipif(not _HAS_FF, reason="ffmpeg/ffprobe 없음")
+def test_render_mix_no_overflow_and_exact_length(tmp_path):
+    # 소스 A: 0~1s=red, 1~2s=green, 2~3s=blue. 매칭 구간은 [0,1](red)뿐인데 나레이션은 2초.
+    # 옛 코드면 1s 이후 green이 샜다(유출). 새 코드는 red를 슬로모로 2초 채운다.
+    src = tmp_path / "A.mp4"
+    _make_color_source(src, ["red", "green", "blue"])
+    tts = tmp_path / "tts0.wav"
+    _make_silence(tts, 2.0)
+    edit_plan = {"beats": [{
+        "beat_idx": 0, "role": "hook", "narration": "x",
+        "primary": {"video_id": "A", "seg_id": "A-0", "start": 0.0, "end": 1.0},
+        "alternates": [],
+    }]}
+    out = va._render_mix(edit_plan, {0: str(tts)}, {"A": str(src)}, tmp_path)
+
+    assert abs(va._probe_duration(out) - 2.0) < 0.15   # 길이 == 나레이션
+    # 유출 0: 1.5초 지점(옛 코드면 green이 나올 자리)이 red 계열이어야 한다.
+    # signalstats YUV: red는 V(빨강) 크고(실측 240), green은 낮다(실측 81). 150을 경계로
+    # red/green을 가른다(blue=110도 150 미만이라 같이 걸러지지만 이 테스트 소스엔 안 나옴).
+    stats = _avg_color(out, 1.5)
+    vavg = _vavg(stats)
+    assert vavg is not None  # 프레임을 실제로 뽑았다(빈 출력 아님)
+    assert vavg > 150, f"1.5초 지점이 red가 아님(VAVG={vavg}) — 유출 의심"
+
+
+@pytest.mark.skipif(not _HAS_FF, reason="ffmpeg/ffprobe 없음")
+def test_render_mix_chains_two_segments(tmp_path):
+    # 소스 A: red,green,blue 각 2초(6초). 구간 [0,2](red)+[2,4](green) 이어붙여 나레이션 3.5초.
+    src = tmp_path / "A.mp4"
+    _make_color_source(src, ["red", "green", "blue"], seconds_each=2.0)
+    tts = tmp_path / "tts0.wav"
+    _make_silence(tts, 3.5)
+    edit_plan = {"beats": [{
+        "beat_idx": 0, "role": "hook", "narration": "x",
+        "primary": {"video_id": "A", "seg_id": "A-0", "start": 0.0, "end": 2.0},
+        "alternates": [{"video_id": "A", "seg_id": "A-1", "start": 2.0, "end": 4.0}],
+    }]}
+    out = va._render_mix(edit_plan, {0: str(tts)}, {"A": str(src)}, tmp_path)
+    assert abs(va._probe_duration(out) - 3.5) < 0.2
