@@ -601,6 +601,11 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
             if base_style.get("outline"):
                 seg_parts.append(f"borderw={max(1, int(base_style.get('outline_w') or 6))}")
                 seg_parts.append(f"bordercolor={_hex_to_ff(base_style.get('outline_color'), '0x000000')}")
+            if base_style.get("shadow"):
+                # 은은한 드롭 그림자(레퍼런스 자막룩) — 두꺼운 테두리 대신 부드러운 가독성.
+                sc = _hex_to_ff(base_style.get("shadow_color"), "0x000000")
+                sd = max(1, int(base_style.get("shadow_d") or 3))
+                seg_parts += [f"shadowcolor={sc}@0.55", f"shadowx={sd}", f"shadowy={sd}"]
             if seg_box:
                 bc = _hex_to_ff(seg_box_color, "0x000000")
                 seg_parts += ["box=1", f"boxcolor={bc}@0.90", "boxborderw=8"]
