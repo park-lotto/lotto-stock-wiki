@@ -1512,6 +1512,11 @@ const SCRIPT_MODE_HTML = {
       <button class="tab" id="mixSrcPicks" style="flex:0 0 auto;min-width:auto;padding:7px 14px" onclick="switchMixSource('picks')">📥 담긴 대본</button>
       <button class="tab" id="mixSrcAll" style="flex:0 0 auto;min-width:auto;padding:7px 14px" onclick="switchMixSource('all')">📚 위키 전체 영상대본</button>
     </div>
+    <div class="picksBulk" style="display:flex;gap:6px;margin:6px 0">
+      <button class="mini" onclick="picksSelectAll(true)">전체선택</button>
+      <button class="mini" onclick="picksClearSel()">해제</button>
+      <button class="mini" onclick="picksDeleteSel()">선택삭제</button>
+    </div>
     <div id="mixWiki" style="margin:10px 0">불러오는 중…</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn-next" style="padding:10px 16px;background:linear-gradient(90deg,#1c5a2e,#0d3a1c)" onclick="openGenFromWiki()">♻️ 선택 1개로 새 대본 생성</button>
@@ -1605,6 +1610,27 @@ function mergePicks(serverItems, handoff){
   return out;
 }
 // ── 임시 대본 끝 ──
+// 담긴 대본 관리(2026-07-18) — 전체선택/해제/선택삭제.
+function picksSelectAll(on){
+  document.querySelectorAll('.mixPick').forEach(c=>{ c.checked = !!on; });
+}
+function picksClearSel(){ picksSelectAll(false); }
+async function picksDeleteSel(){
+  const sel = [...document.querySelectorAll('.mixPick')].filter(c=>c.checked).map(c=>c.value);
+  if(!sel.length) return;
+  for(const sc of sel){
+    const h = (HANDOFF||[]).find(x=>x.shortcode===sc);
+    if(h && h.pickScript && h.script){
+      h.pickScript = false;          // 임시 대본 — 담긴대본에서만 뺀다(영상풀 useFootage는 유지)
+    }else{
+      // S급 위키 pick — 서버에서 뺀다
+      try{ await fetch('/api/produce/picks/toggle', {method:'POST',
+        headers:{'Content-Type':'application/json'}, body:JSON.stringify({shortcode:sc})}); }catch(e){}
+    }
+  }
+  loadWikiForMix();                  // 목록 다시 그림
+}
+// ── 담긴대본 관리 끝 ──
 async function loadWikiForMix(){
   const el=document.getElementById('mixWiki');
   const bp=document.getElementById('mixSrcPicks'), ba=document.getElementById('mixSrcAll');
