@@ -733,6 +733,15 @@ const FULL_PRESETS=[
     hc:{font:'SUIT-Bold.otf',color:'#FFFFFF',weight:900,size:58,x:50,y:16,outline:true,outline_color:'#00D9E8',outline_w:8},
     cap:{font:'SUIT-Bold.otf',color:'#FFFFFF',size:48,y:84,outline:true,outline_color:'#00D9E8',outline_w:6,box:false,effect:'pop'}},
 ];
+// 스타일별 용도 태그(잘 어울리는 콘텐츠) — 정직한 큐레이션. 실 영상 지표는 v2 발굴연동.
+const STYLE_USE={
+  '모던 화이트':'홈템·정보', '임팩트 옐로':'레시피·강한 훅', '민트 클린':'뷰티·생활',
+  '레드 강조':'경고·꿀팁', '블랙박스 시크':'정보·리뷰', '큐트 핑크':'뷰티·감성',
+  '네이비 신뢰':'정보·금융', '푸드 그린':'레시피·건강', '뉴스 자막형':'정보·뉴스',
+  '핸드메이드 감성':'DIY·감성', '하이엔드 세리프':'럭셔리·리뷰', '오렌지 팝':'레시피·활기',
+  '파스텔 소프트':'육아·감성', '정보전달 블루':'정보·튜토리얼', '옐로 2톤 A':'리뷰·강조',
+  '옐로 2톤 B(좌측)':'리뷰·좌측', '네온 글로우 화이트':'트렌드·뷰티', '네온 글로우 센터':'트렌드·감성'
+};
 // 대표 완성 스타일(피팅 카드 우선 노출). 나머지는 더보기.
 let STYLE_TOUCHED=false;
 const FEATURED = ['모던 화이트','임팩트 옐로','옐로 2톤 A','네온 글로우 화이트','레드 강조'];
@@ -762,11 +771,16 @@ function styleCardHTML(p, idx, selIdx){
     const esh = extra.outline ? `text-shadow:${eow}px ${eow}px 0 ${eoc},-${eow}px -${eow}px 0 ${eoc},${eow}px -${eow}px 0 ${eoc},-${eow}px ${eow}px 0 ${eoc};` : '';
     line2 = `<div style="color:${extra.color||'#FFE100'};font-family:'${fontCss(extra.font)}',sans-serif;font-weight:900;font-size:${Math.max(10,(extra.size||64)*es)}px;${esh}line-height:1.1;margin-top:2px">${esc(sample)}</div>`; }
   const selBorder = idx===selIdx ? 'outline:2px solid var(--accent2);outline-offset:1px;' : 'border:1px solid var(--line);';
-  return `<button type="button" onclick="pickStyleCard(${idx})" title="${esc(p.name)}"
-    style="flex:0 0 auto;position:relative;width:92px;aspect-ratio:9/16;border-radius:9px;overflow:hidden;cursor:pointer;padding:0;${bg}${selBorder}background-clip:padding-box">
+  const isDefault = p.name===DEFAULT_STYLE_NAME;
+  const use = STYLE_USE[p.name]||'';
+  const badge = isDefault ? `<div style="position:absolute;top:3px;left:3px;z-index:4;background:var(--accent2);color:#fff;font-size:8px;font-weight:800;padding:1px 5px;border-radius:8px;white-space:nowrap">⭐기본</div>` : '';
+  const label = esc(p.name) + (use ? ` · ${esc(use)}` : '');
+  return `<button type="button" onclick="pickStyleCard(${idx})" title="${esc(p.name)} (${esc(use)})"
+    style="flex:0 0 auto;position:relative;width:100px;aspect-ratio:9/16;border-radius:9px;overflow:hidden;cursor:pointer;padding:0;${bg}${selBorder}background-clip:padding-box">
     ${bgImg}
+    ${badge}
     <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px;text-align:center;z-index:2">${line1}${line2}</div>
-    <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.55);color:#fff;font-size:9px;padding:2px 0;z-index:3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.name)}</div>
+    <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.6);color:#fff;font-size:9px;padding:3px 2px;z-index:3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${label}</div>
   </button>`;
 }
 function selectedStyleIdx(){
