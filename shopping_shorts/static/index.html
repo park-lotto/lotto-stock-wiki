@@ -599,23 +599,26 @@ async function lensSearch(btn, shortcode){
     const d=await r.json();
     if(!d.ok){ body.innerHTML='<div style="padding:10px;color:#e0623d">❌ 렌즈 검색 실패</div>'; return; }
     const items=(d.items||[]);
-    // 캡션도 없고 렌즈 결과도 0이면 더 볼 게 없다(중국플랫폼 자동합류는 캡션이 있어야 함).
-    if(!items.length && !caption){ body.innerHTML='<div style="padding:10px;color:var(--sub)">유사 동영상을 찾지 못했습니다.<br><small>다른 장면(제품·요리가 크게 보이는 순간)에서 다시 시도해보세요.</small></div>'; return; }
     // 렌즈 결과는 우리 DB shortcode가 없어 담기 바구니 키를 URL기반으로 합성한다
     // (플랫폼 프리픽스+url 해시 — 같은 URL 재검색해도 같은 키라 담김상태가 유지됨).
     items.forEach(i=>{ i.savesc='lens_'+i.platform+'_'+_lensHash(i.url); });
     let saved=new Set();
     try{ saved=new Set((await (await fetch('/api/mix/basket')).json()).shortcodes||[]); }catch(e){}
+    // 프레임이 있으면 항상 샤오홍슈·도우인을 덧댄다(비전이 화면 글자로 제품을 특정하므로
+    // 캡션이 없어도 됨). cnLoading=true로 두고 renderLens가 '불러오는 중'을 보여준다.
     LENS_STATE[shortcode]={items, on:new Set(LENS_PLATFORMS.map(p=>p.k)), saved,
-                           sel:new Set(), shortsOnly:false, cnLoading:!!caption, caption};
+                           sel:new Set(), shortsOnly:false, cnLoading:true, caption};
     renderLens(shortcode);
-    if(caption) fetchLensCn(shortcode, caption);   // 📕📶 샤오홍슈·도우인 자동 합류(비동기)
+    fetchLensCn(shortcode, caption, blob);   // 📕📶 프레임+캡션으로 자동 합류(비동기)
   }catch(e){ document.getElementById('scriptBody').innerHTML='<div style="padding:10px;color:#e0623d">❌ '+e.message+'</div>'; }
 }
-// 캡션 키워드로 샤오홍슈+도우인을 Apify 검색해 렌즈 결과에 덧붙인다(느리고 유료라 비동기).
-async function fetchLensCn(shortcode, caption){
+// 프레임(비전)+캡션으로 샤오홍슈+도우인을 검색해 렌즈 결과에 덧붙인다(느리고 유료라 비동기).
+async function fetchLensCn(shortcode, caption, blob){
   try{
-    const fd=new FormData(); fd.append('source_caption', caption);
+    const fd=new FormData();
+    if(blob) fd.append('frame', blob, 'f.jpg');   // 장치1: 화면 글자·제품 비전 추출용
+    if(caption) fd.append('source_caption', caption);
+    fd.append('max_results', '40');   // 웹검색 대비 개수 확보(플랫폼당 최대 40, 지연 거의 동일)
     const d=await (await fetch('/api/lens/cn',{method:'POST',body:fd})).json();
     const st=LENS_STATE[shortcode]; if(!st) return;   // 사용자가 닫았을 수 있음
     const add=(d.items||[]);
@@ -713,7 +716,7 @@ function renderLens(shortcode){
   const cards=shown.map(i=>{
     const plabel=LENS_PLATFORMS.find(p=>p.k===i.platform)?.label||'';
     const isSaved=st.saved.has(i.savesc), isSel=st.sel.has(i.savesc);
-    const stat=(i.views!=null)?('👁 '+_fmtCount(i.views)):((i.likes!=null)?('❤ '+_fmtCount(i.likes)):'');
+    const stat=(i.views)?('👁 '+_fmtCount(i.views)):((i.likes!=null)?('❤ '+_fmtCount(i.likes)):'');   // 도우인 playCount=0 잦음 → 0이면 좋아요로
     const meta=[i.channel?('👤 '+esc(i.channel)):'', stat, (i.duration!=null)?('⏱ '+_fmtDur(i.duration)):''].filter(Boolean).join('  ·  ');
     return `
     <div class="card" style="${isSel?'outline:2px solid var(--accent)':''}">
@@ -721,7 +724,8 @@ function renderLens(shortcode){
         <input type="checkbox" ${isSel?'checked':''} onclick="event.stopPropagation();toggleLensSelect('${shortcode}','${i.savesc}')" style="position:absolute;top:6px;left:6px;z-index:2;width:18px;height:18px;cursor:pointer">
         <img src="${i.thumbnail||''}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'" onclick="lensPreview('${shortcode}','${i.savesc}')" style="cursor:pointer">
         <span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;padding:2px 8px;border-radius:10px">${plabel}</span>
-        ${i.match===false?'<span title="원본 캡션 키워드와 제목이 안 겹침 — 다른 주제일 수 있음" style="position:absolute;bottom:6px;right:6px;background:#e0623d;color:#fff;font-size:10px;padding:2px 7px;border-radius:10px">⚠️다른주제?</span>':''}
+        ${i.sim==='same'?'<span title="AI 유사도 판정: 같은 제품" style="position:absolute;bottom:6px;left:6px;background:#1f9d55;color:#fff;font-size:10px;padding:2px 7px;border-radius:10px">✅같은제품</span>':''}
+        ${i.match===false?'<span title="AI 유사도 판정: 무관 — 다른 제품일 수 있음" style="position:absolute;bottom:6px;right:6px;background:#e0623d;color:#fff;font-size:10px;padding:2px 7px;border-radius:10px">⚠️다른주제?</span>':''}
       </div>
       <div class="body">
         <div class="rank" style="white-space:normal;line-height:1.4;min-height:2.8em">${esc((i.title||'').slice(0,70))}</div>
@@ -759,7 +763,9 @@ function lensPreview(shortcode, savesc){
   if(yid){
     inner=`<iframe width="100%" height="460" src="https://www.youtube.com/embed/${yid}" frameborder="0" allow="encrypted-media" allowfullscreen style="border-radius:8px"></iframe>`;
   }else if(it.play_url){
-    inner=`<video src="${it.play_url}" controls autoplay playsinline style="max-width:100%;max-height:68vh;border-radius:8px"></video>
+    // 샤오홍슈/도우인 직접 mp4. 썸네일 이미지가 no-referrer로 로드되듯 영상도 같은 방식으로
+    // 시도(핫링크 referer 차단 우회). CDN 만료토큰 등으로 실패하면 아래 원본 링크로.
+    inner=`<video src="${it.play_url}" controls autoplay playsinline referrerpolicy="no-referrer" style="max-width:100%;max-height:68vh;border-radius:8px"></video>
       <div style="color:var(--sub);font-size:12px;margin-top:6px">재생이 안 되면(플랫폼 차단) 아래 원본에서 확인하세요.</div>`;
   }else{
     inner=`<img src="${it.thumbnail||''}" referrerpolicy="no-referrer" style="max-width:100%;max-height:60vh;border-radius:8px">

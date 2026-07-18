@@ -245,8 +245,8 @@
       <div class="sub">아래 <b>완성 스타일</b>을 고르면 바로 완성돼요. 실제 장면 위에서 미리보고, 더 손보고 싶으면 <b>직접 다듬기</b>를 펼치세요.</div>
       <!-- 🪞 피팅룸: 좌(큰 미러) + 우(문구·스타일카드·강조·고급) -->
       <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;margin-top:12px">
-        <!-- 좌: 큰 피팅 미러 -->
-        <div style="flex:0 0 auto">
+        <!-- 좌: 큰 피팅 미러 (다듬기 스크롤 시 따라오도록 sticky) -->
+        <div style="flex:0 0 auto;position:sticky;top:12px;align-self:flex-start;z-index:7">
           <div class="hint" style="margin-bottom:4px">🪞 실시간 미리보기 (9:16) — 글자를 <b>드래그</b>해 위치 이동
             <label style="cursor:pointer;margin-left:6px;color:var(--txt)"><input type="checkbox" id="sceneBg" onchange="toggleSceneBg()"> 실장면 배경</label></div>
           <div id="hcPreview" style="position:relative;width:380px;aspect-ratio:9/16;background:#ffffff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.4)">
@@ -257,12 +257,14 @@
             <img id="ovPreview" style="position:absolute;transform:translate(-50%,-50%);cursor:move;user-select:none;z-index:5;display:none" alt="">
             <div id="wmPreview" style="position:absolute;transform:translate(-50%,-50%);white-space:nowrap;z-index:6;pointer-events:none;display:none"></div>
           </div>
-          <div id="beatStepper" style="display:none;align-items:center;justify-content:center;gap:16px;margin-top:10px">
-            <button type="button" class="tab" onclick="stepBeat(-1)" style="min-width:auto;padding:8px 14px;font-size:16px">◀</button>
-            <span id="beatCount" style="font-size:13px;color:var(--sub);min-width:76px;text-align:center">1 / 1 장면</span>
-            <button type="button" class="tab" onclick="stepBeat(1)" style="min-width:auto;padding:8px 14px;font-size:16px">▶</button>
+          <div id="beatStepper" style="display:none;margin-top:10px">
+            <div style="display:flex;align-items:center;justify-content:center;gap:16px">
+              <button type="button" class="tab" onclick="stepBeat(-1)" style="min-width:auto;padding:8px 14px;font-size:16px">◀</button>
+              <span id="beatCount" style="font-size:13px;color:var(--sub);min-width:76px;text-align:center">1 / 1 장면</span>
+              <button type="button" class="tab" onclick="stepBeat(1)" style="min-width:auto;padding:8px 14px;font-size:16px">▶</button>
+            </div>
+            <div class="hint" style="margin-top:6px;text-align:center">◀ ▶ 로 장면을 넘겨가며 자막이 어떻게 나오는지 확인</div>
           </div>
-          <div class="hint" style="margin-top:6px">◀ ▶ 로 장면을 넘겨가며 자막이 어떻게 나오는지 확인</div>
         </div>
         <!-- 우: 컨트롤 -->
         <div style="flex:1;min-width:300px">
@@ -605,6 +607,7 @@ async function seoGenerate(only){
   const btn = document.getElementById('seoGenAll');
   msg.textContent = only ? '다시 쓰는 중…' : '생성 중… (키워드 실측까지 20초쯤 걸립니다)';
   if(btn) btn.disabled = true;                 // 더블서밋 차단 — 제일 비싼 작업이다
+  try{ logPick('S8', {picked: only ? ('regen:'+only) : 'generate_all', locked: (SEO && SEO.locked) || {}, job_id: MIX_JOB}); }catch(e){}
   try{
     const body = {
       job_id: MIX_JOB,
@@ -904,7 +907,7 @@ async function loadBeatsPreview(){
     const d=await r.json(); BEATS_PREVIEW=d.beats||[];
   }catch(e){ BEATS_PREVIEW=[]; }
   if(!BEATS_PREVIEW.length){ if(st) st.style.display='none'; return; }
-  if(st) st.style.display='flex';
+  if(st) st.style.display='block';
   BEAT_IDX=Math.min(BEAT_IDX, BEATS_PREVIEW.length-1);
   showBeat(BEAT_IDX);
 }
@@ -962,6 +965,13 @@ function updateCaption(){
 }
 // ── 🎯 완성 스타일 프리셋(원클릭: 헤드카피+자막+효과 한 번에) — 빅채널 레퍼런스 기반 ──
 const FULL_PRESETS=[
+  {name:'심플 화이트', chip:'#F2F2F2', motion:'minimal_chic',
+    hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:56,x:50,y:12,outline:true,outline_color:'#000000',outline_w:3},
+    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:50,y:37,outline:true,outline_color:'#000000',outline_w:3,box:false,effect:'fade'}},
+  {name:'화이트+민트 투톤', chip:'#3BE6C6', motion:'dynamic_pop',
+    hc:{font:'BMDOHYEON.ttf',color:'#FFFFFF',weight:900,size:40,x:50,y:9,outline:true,outline_color:'#0B2A24',outline_w:6},
+    extra:[{text:'',font:'BMDOHYEON.ttf',color:'#3BE6C6',size:66,x:50,y:19,outline:true,outline_color:'#0B2A24',outline_w:8}],
+    cap:{font:'SUIT-Bold.otf',color:'#FFFFFF',size:50,y:84,outline:true,outline_color:'#000000',outline_w:5,box:false,effect:'slide'}},
   {name:'모던 화이트', chip:'#FFFFFF', motion:'minimal_chic',
     hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:66,x:50,y:12,outline:true,outline_color:'#000000',outline_w:7},
     cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:52,y:84,outline:false,box:true,box_color:'#000000',box_pad:14,box_opacity:68,effect:'fade'}},
@@ -1019,6 +1029,16 @@ const FULL_PRESETS=[
     hc:{font:'SUIT-Bold.otf',color:'#FFFFFF',weight:900,size:58,x:50,y:16,outline:true,outline_color:'#00D9E8',outline_w:8},
     cap:{font:'SUIT-Bold.otf',color:'#FFFFFF',size:48,y:84,outline:true,outline_color:'#00D9E8',outline_w:6,box:false,effect:'pop'}},
 ];
+// 스타일별 용도 태그(잘 어울리는 콘텐츠) — 정직한 큐레이션. 실 영상 지표는 v2 발굴연동.
+const STYLE_USE={
+  '심플 화이트':'홈·정보·깔끔', '화이트+민트 투톤':'홈템·리뷰',
+  '모던 화이트':'홈템·정보', '임팩트 옐로':'레시피·강한 훅', '민트 클린':'뷰티·생활',
+  '레드 강조':'경고·꿀팁', '블랙박스 시크':'정보·리뷰', '큐트 핑크':'뷰티·감성',
+  '네이비 신뢰':'정보·금융', '푸드 그린':'레시피·건강', '뉴스 자막형':'정보·뉴스',
+  '핸드메이드 감성':'DIY·감성', '하이엔드 세리프':'럭셔리·리뷰', '오렌지 팝':'레시피·활기',
+  '파스텔 소프트':'육아·감성', '정보전달 블루':'정보·튜토리얼', '옐로 2톤 A':'리뷰·강조',
+  '옐로 2톤 B(좌측)':'리뷰·좌측', '네온 글로우 화이트':'트렌드·뷰티', '네온 글로우 센터':'트렌드·감성'
+};
 // 대표 완성 스타일(피팅 카드 우선 노출). 나머지는 더보기.
 let STYLE_TOUCHED=false;
 // ★꾸미기 패널은 DOM 입력칸을 진실의 원천으로 읽는다(updateHC/updateCaption이 DOM→STATE) +
@@ -1026,7 +1046,7 @@ let STYLE_TOUCHED=false;
 // 채우면 스타일·꾸미기가 전부 기본값으로 덮인다(C-2 잔여, 라이브 실측 확인). 복원 시 이 플래그를
 // 세워, initHeadcopy가 applyConfig로 복원값을 DOM에 밀어넣고 STYLE_TOUCHED로 자동적용을 막는다.
 let PENDING_STYLE_RESTORE=false;
-const FEATURED = ['모던 화이트','임팩트 옐로','옐로 2톤 A','네온 글로우 화이트','레드 강조'];
+const FEATURED = ['심플 화이트','화이트+민트 투톤','모던 화이트','임팩트 옐로','옐로 2톤 A'];
 let MORE_OPEN = false;
 let POSTER_URL_CACHE = null;
 let PICKED_STYLE_IDX = -1;
@@ -1053,11 +1073,16 @@ function styleCardHTML(p, idx, selIdx){
     const esh = extra.outline ? `text-shadow:${eow}px ${eow}px 0 ${eoc},-${eow}px -${eow}px 0 ${eoc},${eow}px -${eow}px 0 ${eoc},-${eow}px ${eow}px 0 ${eoc};` : '';
     line2 = `<div style="color:${extra.color||'#FFE100'};font-family:'${fontCss(extra.font)}',sans-serif;font-weight:900;font-size:${Math.max(10,(extra.size||64)*es)}px;${esh}line-height:1.1;margin-top:2px">${esc(sample)}</div>`; }
   const selBorder = idx===selIdx ? 'outline:2px solid var(--accent2);outline-offset:1px;' : 'border:1px solid var(--line);';
-  return `<button type="button" onclick="pickStyleCard(${idx})" title="${esc(p.name)}"
-    style="flex:0 0 auto;position:relative;width:92px;aspect-ratio:9/16;border-radius:9px;overflow:hidden;cursor:pointer;padding:0;${bg}${selBorder}background-clip:padding-box">
+  const isDefault = p.name===DEFAULT_STYLE_NAME;
+  const use = STYLE_USE[p.name]||'';
+  const badge = isDefault ? `<div style="position:absolute;top:3px;left:3px;z-index:4;background:var(--accent2);color:#fff;font-size:8px;font-weight:800;padding:1px 5px;border-radius:8px;white-space:nowrap">⭐기본</div>` : '';
+  const label = esc(p.name) + (use ? ` · ${esc(use)}` : '');
+  return `<button type="button" onclick="pickStyleCard(${idx})" title="${esc(p.name)} (${esc(use)})"
+    style="flex:0 0 auto;position:relative;width:100px;aspect-ratio:9/16;border-radius:9px;overflow:hidden;cursor:pointer;padding:0;${bg}${selBorder}background-clip:padding-box">
     ${bgImg}
+    ${badge}
     <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px;text-align:center;z-index:2">${line1}${line2}</div>
-    <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.55);color:#fff;font-size:9px;padding:2px 0;z-index:3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.name)}</div>
+    <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.6);color:#fff;font-size:9px;padding:3px 2px;z-index:3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${label}</div>
   </button>`;
 }
 function selectedStyleIdx(){
@@ -1077,7 +1102,18 @@ function renderStyleCards(){
   const mb=document.getElementById('moreStylesBtn'); if(mb) mb.textContent = MORE_OPEN ? '− 접기' : '+ 더보기';
 }
 function toggleMoreStyles(){ MORE_OPEN=!MORE_OPEN; renderStyleCards(); }
-function pickStyleCard(i){ PICKED_STYLE_IDX=i; STYLE_TOUCHED=true; applyFullPreset(i); renderStyleCards(); }
+// 픽로그(트랙1) — 사장님이 무엇을 고르고 버렸는지 조용히 남긴다. 트랙7 취향학습·B전환 지표용.
+// ★부가 기능이라 절대 흐름을 막지 않는다: fire-and-forget, 예외·거절 모두 삼킨다.
+function logPick(stage, payload){
+  try{
+    fetch('/api/pick_log', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(Object.assign({stage: stage}, payload || {}))
+    }).catch(function(){});
+  }catch(e){ /* 흐름 보호 */ }
+}
+// ==END logPick==
+function pickStyleCard(i){ PICKED_STYLE_IDX=i; STYLE_TOUCHED=true; applyFullPreset(i); renderStyleCards(); try{ logPick('S6', {picked: (FULL_PRESETS[i] && FULL_PRESETS[i].name) || i, idx: i}); }catch(e){} }
 // renderFullPresets 이름을 참조하는 기존 호출부 호환용 별칭
 function renderFullPresets(){ renderStyleCards(); }
 function applyConfig(h, c){
@@ -1117,7 +1153,7 @@ function applyFullPreset(i){
   document.querySelectorAll('.fullPreset').forEach((b,idx)=>b.style.outline = idx===i?'2px solid var(--accent2)':'none');
 }
 // ── 🪄 진입 자동완성: step5(꾸미기) 첫 진입 시 기본 스타일+실장면 배경 자동 적용(딸깍) ──
-const DEFAULT_STYLE_NAME='임팩트 옐로';
+const DEFAULT_STYLE_NAME='심플 화이트';
 let DEFAULT_APPLIED=false;
 function applyDefaultStyleOnEntry(){
   // step5 진입 1회: 사용자가 아직 스타일을 안 건드렸으면 기본 스타일 자동 적용 + 실장면 배경 자동 ON.
@@ -1557,6 +1593,7 @@ function useDraft(i){
   setScriptMode('manual');   // 편집 가능한 직접작성 창으로 이동(내용 채움)
   refreshFinalPeek();
   saveWork();
+  try{ logPick('S2', {picked: i, source: 'mix', candidates: (window._drafts||[]).map(function(d){ return d && d.hook; })}); }catch(e){}
 }
 async function postDrafts(url, payload, boxId){
   const box=document.getElementById(boxId);
@@ -1999,6 +2036,7 @@ function pmUseDraft(btn){
   STATE.script_from_wiki=PM_FROM_WIKI;   // mix 유래면 shortcode, 뽑기 유래면 null
   pmClose(); setScriptMode('manual'); refreshFinalPeek(); setFinalCategoryValue(PM_CATEGORY);
   saveWork();
+  try{ logPick('S2', {picked: PM_IDX, source: (PM_FROM_WIKI ? 'wiki' : 'gemini')}); }catch(e){}
 }
 async function pmOnDraftEdit(textarea){
   const card=textarea.closest('.draft');
@@ -2170,6 +2208,7 @@ async function startProduceMix(){
   if(!STATE.script){ alert('1단계에서 대본을 먼저 확정하세요'); return; }
   const urls=collectMixUrls();   // 영상풀 담긴 것 + 입력칸에 남은 것(중복 제거)
   if(urls.length<1){ alert('소스 영상 URL을 1개 이상 입력하세요(확정 또는 🎬담기)'); return; }
+  try{ logPick('S3', {picked: 'mix_start', sources: urls, source_n: urls.length}); }catch(e){}
   const st=document.getElementById('mixStatus'); st.textContent='⏳ 시작 중…';
   document.getElementById('mixReview').innerHTML='';
   try{
@@ -2205,12 +2244,14 @@ async function loadMixReview(){
   const d=await (await fetch('/api/mix/result/'+MIX_JOB)).json();
   const el=document.getElementById('mixReview');
   if(!d.ok){ el.innerHTML=`<div class="hint" style="color:var(--fire)">편집안 로드 실패 ${esc(d.error||'')}</div>`; return; }
-  el.innerHTML='<h3 style="font-size:15px">편집안(장면 매칭)</h3>'+(d.beats||[]).map(b=>`
+  MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
+  el.innerHTML='<h3 style="font-size:15px">편집안(장면 매칭)</h3>'+(d.beats||[]).map((b,i)=>`
     <div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;background:#0d1420">
       <span style="font-size:11px;background:var(--accent2);padding:2px 8px;border-radius:10px">${esc(b.role||'')}</span>
       <div style="margin:6px 0;font-size:13px">${esc(b.narration||'')}</div>
       <div class="hint">🎞 ${esc(b.primary?.video_id||'')} · ${b.primary?.start}s~${b.primary?.end}s · ${b.target_seconds}s${b.fit?` · 매칭 ${b.fit}/5`:''}</div>
       ${(b.fit&&b.fit<=2)?`<div style="color:var(--fire);font-size:12px;margin-top:3px">⚠️ 이 문장에 맞는 영상이 부족합니다 — 대본을 살짝 바꾸거나 소스 영상을 추가하세요.</div>`:''}
+      <div class="scene-cutaway" id="sceneCutaway${i}">${renderSceneCutaway(b, i)}</div>
     </div>`).join('')+`<div class="hint" style="margin-top:6px">✅ 매칭 완료${(d.beats||[]).some(b=>b.fit&&b.fit<=2)?' <span style="color:var(--fire)">— ⚠️ 표시된 문장은 영상이 약합니다</span>':''} — 아래에서 <b>미리보기</b>를 확인한 뒤 다음으로 넘어가세요.</div>`
     +`<button id="btnPreview" class="btn-next" style="margin-top:8px;padding:7px 14px" onclick="startPreview()">▶ 미리보기 만들기</button>`
     +`<div id="mixPreview" style="margin-top:8px"></div>`;
@@ -2221,6 +2262,47 @@ async function loadMixReview(){
   // 결과로 게이트를 열어버린다. ++PREVIEW_GEN은 이미 날아간 요청의 늦은 continuation까지 무효화한다.
   clearInterval(PREVIEW_POLL); PREVIEW_POLL = null; ++PREVIEW_GEN;
   PREVIEW_STATUS = null; refreshNextBtn();
+}
+
+// ── 장면 라이브러리 검수(Task4, 2026-07-18) ──────────────
+// 자동배치(beat.cutaway)를 보여주고 빼거나, 미채택 제안(asset_suggestions)을 붙이는
+// 최소 블록. 공용 프리뷰(mixPreview/hcPreview 등) 미건드림 — 이 컨테이너(scene-cutaway)
+// 안에서만 갱신한다.
+let MIX_REVIEW_SUGGESTIONS = [];
+
+function renderSceneCutaway(beat, idx){
+  const cw = beat.cutaway;
+  const sugg = MIX_REVIEW_SUGGESTIONS.filter(s=>s.beat_idx===beat.beat_idx);
+  let html = '';
+  if(cw){
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-top:6px;padding:6px;border:1px solid var(--line);border-radius:8px;background:#0a1018">`
+      + `<img src="/api/scene/${cw.asset_id}/poster" style="width:44px;height:78px;object-fit:cover;border-radius:4px;background:#000" alt="">`
+      + `<div style="flex:1;font-size:12px" class="hint">🖼 컷어웨이 자산 #${cw.asset_id}${cw.score?` · 적합도 ${cw.score.toFixed(2)}`:''}</div>`
+      + `<button class="btn-prev" style="padding:4px 8px;font-size:12px" onclick="toggleCutaway(${idx},null)">이 짤 빼기</button>`
+      + `</div>`;
+  }
+  if(!cw && sugg.length){
+    html += sugg.map(s=>`<div style="margin-top:6px"><a href="#" onclick="toggleCutaway(${idx},${s.asset_id});return false;" class="hint">＋ 이 짤 넣기 (자산 #${s.asset_id}${s.score?` · 적합도 ${s.score.toFixed(2)}`:''})</a></div>`).join('');
+  }
+  return html;
+}
+
+async function toggleCutaway(idx, assetId){
+  if(!MIX_JOB) return;
+  const box = document.getElementById('sceneCutaway'+idx);
+  if(box) box.innerHTML = '<div class="hint">⏳ 반영 중…</div>';
+  try{
+    const r = await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/cutaway',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({beat_idx: idx, asset_id: assetId})})).json();
+    if(!r.ok){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</div>'; return; }
+  }catch(e){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; return; }
+  // 그 비트 행만 다시 그린다 — 편집안 전체(loadMixReview)를 다시 그리지 않는다.
+  const d = await (await fetch('/api/mix/result/'+MIX_JOB)).json();
+  if(!d.ok) return;
+  MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
+  const beat = (d.beats||[])[idx];
+  if(beat && box) box.innerHTML = renderSceneCutaway(beat, idx);
 }
 
 // ── 1단계 미리보기(2026-07-17) ──────────────
@@ -2581,6 +2663,10 @@ function thumbFontCss(file){
 
 function drawThumb(ctx, img, layers, W, H){
   const s = W / THUMB_W;                    // 캔버스 배율 — 프리뷰든 실측이든 같은 식
+  // ★매 렌더마다 먼저 지운다(2026-07-18 라이브 실측). 배경 이미지가 있으면 그게 이전 프레임을
+  // 덮지만, job이 없어 img가 없으면(영상 매칭 전) 아무것도 안 지워져 드래그 경로마다 글자가
+  // 겹겹이 쌓였다(사장님 화면: 레이어는 1개인데 '문구를 입력하세요'가 수십 겹). clearRect로 봉인.
+  ctx.clearRect(0, 0, W, H);
   if (img) ctx.drawImage(img, 0, 0, W, H);
   (layers || []).forEach(L => {
     if (!L.text) return;
@@ -2664,6 +2750,7 @@ async function _loadThumbFrames(){
 function pickThumbFrame(i){
   const f = THUMB_STATE.frames[i]; if (!f) return;
   THUMB_STATE.frame_ts = f.ts; THUMB_STATE.frame_url = f.url;
+  try{ logPick('S7', {picked: i, ts: f.ts, candidate_n: (THUMB_STATE.frames || []).length}); }catch(e){}
   const box = document.getElementById('thumbFrames');
   Array.from(box.children || []).forEach((el, k) => {
     if (el.style) el.style.border = `2px solid ${k === i ? 'var(--accent2)' : 'transparent'}`;

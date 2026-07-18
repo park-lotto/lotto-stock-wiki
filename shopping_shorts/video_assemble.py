@@ -366,7 +366,7 @@ def _caption_vf(narration, dur, has_font, work, idx):
     return ",".join([base] + draws)
 
 
-def _render_mix(edit_plan, tts_paths, source_video_paths, work):
+def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=None):
     """각 비트를 [소스영상+TTS]로 렌더(우리 자막 없음) → concat → mix_raw.mp4 경로.
     자막을 굽지 않으므로 이후 VMake 자막제거가 우리 자막을 지우지 않는다.
     -vf는 우리 자막 vf가 아니라 규격 통일용 base(scale/crop)만 쓴다.
@@ -386,6 +386,8 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work):
             continue
         plan = _plan_beat_clips(segs, tts_dur)
         vf = _kenburns_vf(tts_dur) if idx in important else _base_zoom_vf()
+        # 비트당 다중 클립: 각 구간을 [start, start+src_dur]만큼만 잘라(유출 0) 이어붙이고,
+        # 부족분은 마지막 클립을 슬로모(setpts)로 늘려 대사 길이에 맞춘다.
         sub_paths = []
         for j, c in enumerate(plan):
             src = source_video_paths[c["video_id"]]
@@ -400,19 +402,42 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work):
                 "-c:v", "libx264", "-pix_fmt", "yuv420p", str(sub),
             ])
             sub_paths.append(sub)
-        # 비트의 클립들(동일 규격)을 concat → 비트 무음 영상
+        # 비트의 클립들(동일 규격)을 concat → 비트 무음 영상(길이 ≈ tts_dur)
         beat_video = work / f"beat_{idx}_v.mp4"
         cat = work / f"beat_{idx}_list.txt"
         cat.write_text("".join(f"file '{p.as_posix()}'\n" for p in sub_paths), encoding="utf-8")
         _run_ffmpeg(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(cat),
                      "-c", "copy", str(beat_video)])
-        # 비트 나레이션(tts) 오디오를 얹고 길이를 tts_dur로 맞춘다.
+        # 컷어웨이(장면라이브러리 페이즈2-B): 라이브러리 자산을 비트 영상 위에 풀프레임
+        # 오버레이. 창=[0, min(자산길이, tts_dur)]. 비트 길이·TTS 오디오 불변 → 자막 t0 싱크
+        # 불변. beat_video는 이미 규격(720x1280)·vf 적용 → 재-vf 없이 오버레이만 얹는다.
         clip = work / f"beat_{idx}.mp4"
-        _run_ffmpeg([
-            "ffmpeg", "-y", "-i", str(beat_video), "-i", str(tts),
-            "-map", "0:v:0", "-map", "1:a:0", "-t", f"{tts_dur:.3f}",
-            "-c:v", "copy", "-c:a", "aac", str(clip),
-        ])
+        cutaway = (cutaway_paths or {}).get(idx)
+        if cutaway:
+            asset_dur = _probe_duration(cutaway)
+            win = min(asset_dur, tts_dur)
+            fc = (
+                f"[1:v]scale=720:1280:force_original_aspect_ratio=increase,"
+                f"crop=720:1280,setpts=PTS-STARTPTS[ov];"
+                f"[0:v][ov]overlay=0:0:enable='between(t,0,{win:.3f})'[vout]"
+            )
+            _run_ffmpeg([
+                "ffmpeg", "-y",
+                "-i", str(beat_video),   # 0: 내 다중클립 비트영상(이미 vf 적용)
+                "-i", str(cutaway),      # 1: 컷어웨이 자산(오디오 버림 = b-roll)
+                "-i", str(tts),          # 2: 나레이션
+                "-filter_complex", fc, "-r", "30",
+                "-map", "[vout]", "-map", "2:a:0",
+                "-t", f"{tts_dur:.3f}",
+                "-c:v", "libx264", "-c:a", "aac", "-pix_fmt", "yuv420p", str(clip),
+            ])
+        else:
+            # 비트 나레이션(tts) 오디오를 얹고 길이를 tts_dur로 맞춘다.
+            _run_ffmpeg([
+                "ffmpeg", "-y", "-i", str(beat_video), "-i", str(tts),
+                "-map", "0:v:0", "-map", "1:a:0", "-t", f"{tts_dur:.3f}",
+                "-c:v", "copy", "-c:a", "aac", str(clip),
+            ])
         beat_clips.append(clip)
     if not beat_clips:
         raise RuntimeError("video_assemble: 렌더할 비트가 없습니다")
@@ -825,13 +850,13 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     return str(out_path)
 
 
-def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, headcopy=None, caption_style=None, deco=None):
+def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, headcopy=None, caption_style=None, deco=None, cutaway_paths=None):
     """EDL → 최종 mp4. 1)믹스(자막X) 2)clean_fn(있으면 자막제거) 3)우리 자막.
     clean_fn(mix_raw_path)->clean_path 를 주면 그 사이에 VMake 자막제거가 끼워진다
     (없으면 생략). 자막제거는 우리 자막을 굽기 전 깨끗한 믹스에 돌려야 우리 자막이
     함께 지워지지 않는다."""
     work = Path(out_path).parent / f"asm_{uuid.uuid4().hex[:8]}"
     work.mkdir(parents=True, exist_ok=True)
-    mix_raw = _render_mix(edit_plan, tts_paths, source_video_paths, work)
+    mix_raw = _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=cutaway_paths)
     base_video = clean_fn(mix_raw) if clean_fn else mix_raw
     return _burn_captions(base_video, edit_plan, tts_paths, out_path, work, headcopy, caption_style, deco)

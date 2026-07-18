@@ -400,3 +400,44 @@ def test_guard_functions_direct_traversal(client, tmp_path):
     assert r.status_code == 400
     r2 = app_module.api_thumb_file("j1", "sub/../../secret.txt")
     assert r2.status_code == 400
+
+
+def test_frames_falls_back_to_preview_when_no_final_video(client, tmp_path, monkeypatch):
+    """★렌더(7단계) 전에도 썸네일을 만들 수 있어야 한다(2026-07-18 사장님 실측).
+
+    매칭을 끝낸(ready_for_review) 작업은 video_path가 아직 없다 — 그건 최종 렌더 산출물이다.
+    하지만 자막 없는 미리보기(preview_path)는 있다. 예전엔 video_path만 봐서 '믹스 영상 없음'으로
+    막혔다. 최종 렌더(app.py 3164행)와 같은 우선순위로 preview_path까지 폴백해 프레임을 뽑는다.
+    """
+    s = Store(tmp_path / "t.db")
+    s.create_mix_job("j1", ["https://x/1"], 30, "template")
+    preview = tmp_path / "preview.mp4"
+    preview.write_bytes(b"fake-preview")
+    s.update_mix_job("j1", preview_path=str(preview))   # video_path는 일부러 안 준다
+
+    seen = {}
+
+    def fake_grid(video_path, dest_dir, n=10):
+        seen["path"] = video_path                        # 어느 영상으로 뽑았나 기록
+        dest = Path(dest_dir); dest.mkdir(parents=True, exist_ok=True)
+        out = []
+        for i in range(n):
+            p = dest / f"grid_{i:02d}.jpg"; p.write_bytes(b"img")
+            out.append((p, float(i)))
+        return out
+
+    monkeypatch.setattr(app_module, "extract_grid_frames", fake_grid)
+    r = client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
+    assert r.status_code == 200, r.text
+    assert len(r.json()["frames"]) == 10
+    assert seen["path"] == str(preview)                  # preview로 뽑았다(video_path 아님)
+
+
+def test_frames_still_404_when_no_video_at_all(client, tmp_path):
+    """세 경로(video_path·clean_video_path·preview_path) 다 없으면 여전히 '믹스 영상 없음'.
+    폴백을 넓히다 '아무 영상도 없는데 통과'로 무너지지 않았음을 잠근다."""
+    s = Store(tmp_path / "t.db")
+    s.create_mix_job("j1", ["https://x/1"], 30, "template")   # 어떤 영상 경로도 안 준다
+    r = client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
+    assert r.status_code == 404
+    assert r.json()["error"] == "믹스 영상 없음"

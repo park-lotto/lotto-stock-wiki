@@ -29,7 +29,8 @@ from shopping_shorts import script_generate
 from shopping_shorts.apify_client import fetch_single_reel, fetch_reels, fetch_profiles
 from shopping_shorts import discovery, instagram_search
 from shopping_shorts.channels import load_channels
-from shopping_shorts.video_analysis import analyze_video, translate_keyword
+from shopping_shorts.video_analysis import (analyze_video, translate_keyword, cn_search_keyword,
+                                            cn_search_keyword_vision, judge_same_product)
 from shopping_shorts.product_identify import fetch_lens_lines, identify_product_from_lines
 from shopping_shorts.search_links import build_search_links, lens_search_url
 from shopping_shorts import mix_pipeline
@@ -1312,6 +1313,9 @@ def api_mix_result(job_id: str):
         "detected_type_label": _edit_plan.VIDEO_TYPES.get(detected, {}).get("label", detected),
         "affiliate_target": plan.get("affiliate_target", ""),
         "video_types": [{"key": k, "label": v["label"]} for k, v in _edit_plan.VIDEO_TYPES.items()],
+        # 검수판(Task4) — scene_match.py가 채운 미채택 제안(threshold 미달)을 그대로 넘긴다.
+        # {beat_idx, asset_id, score}[]. 자동배치(cutaway)는 이미 beats[].cutaway에 있다.
+        "asset_suggestions": plan.get("asset_suggestions") or [],
     }
 
 
@@ -1695,8 +1699,18 @@ def api_thumb_frames(body: dict):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
-    video = job.get("video_path")
-    if not video or not Path(video).exists():
+    # ★배경 영상 우선순위 — 최종 렌더(3164행)와 동일하게: 최종 → 자막제거본 → 미리보기.
+    # 예전엔 video_path만 봤다. 그런데 video_path는 7단계 최종 렌더 후에야 생기고,
+    # 5단계 썸네일은 그 전 단계다. 매칭을 끝낸(ready_for_review) 작업이라도 최종 영상이 없어
+    # "믹스 영상 없음"으로 막혔다(사장님 실측: 수박 작업 job=10dc0c4e30c5, mix_video 404지만
+    # preview 200). 자막 없는 미리보기(preview_path)가 있으면 그걸로 프레임을 뽑는다 —
+    # 렌더 전에도 썸네일을 만들 수 있어야 한다(설계 Q1의 "자막 없는 배경" 조건도 preview가 만족).
+    video = None
+    for cand in (job.get("video_path"), job.get("clean_video_path"), job.get("preview_path")):
+        if cand and Path(cand).exists():
+            video = cand
+            break
+    if not video:
         return JSONResponse(status_code=404, content={"ok": False, "error": "믹스 영상 없음"})
 
     out_dir = _thumb_dir(job_id)
@@ -1964,26 +1978,54 @@ _CN_TOKEN_RE = re.compile(r"[0-9A-Za-z가-힣]{2,}")
 
 
 def _cn_keyword(caption):
-    """캡션 → 샤오홍슈/도우인 검색어(앞쪽 의미토큰 2개). 없으면 ''."""
+    """캡션 → 검색어(앞쪽 의미토큰 3개). 없으면 ''."""
     if not caption:
         return ""
     toks = [t for t in _CN_TOKEN_RE.findall(caption) if t.lower() not in _CN_STOP]
-    return " ".join(toks[:2])
+    return " ".join(toks[:3])
 
 
 @app.post("/api/lens/cn")
-async def api_lens_cn(request: Request, source_caption: str = Form(""),
-                       max_results: int = Form(8)):
-    """캡션 키워드로 샤오홍슈+도우인을 Apify 병렬 검색 → 렌즈 결과에 합류할 항목.
-    렌즈(구글렌즈)는 중국 플랫폼을 거의 못 잡아, 두 전용 액터를 자동으로 덧댄다(2026-07-18).
-    Apify는 느리고(수십초~) 유료라 렌즈 결과가 뜬 뒤 프론트가 비동기로 이 API를 호출해
-    합친다. 토큰 없음·검색어 없음·액터 오류는 각각 조용히 빈 결과로 처리(렌즈 흐름 안 깨짐)."""
-    keyword = _cn_keyword(source_caption)
-    if not keyword:
-        return {"ok": True, "items": [], "count": 0, "note": "캡션에서 검색어를 뽑지 못했습니다"}
+async def api_lens_cn(request: Request, frame: UploadFile = File(None),
+                       source_caption: str = Form(""), max_results: int = Form(8)):
+    """프레임+캡션으로 샤오홍슈+도우인을 검색 → 렌즈 결과에 합류할 항목. 두 '장치'로 정확도를 높인다:
+
+    ★장치1(비전 추출): 렌즈가 캡처한 프레임(썸네일)을 Gemini 비전이 보고 화면 글자(제품명
+      'LED 물총')·생김새+캡션을 종합해 '바로 그 제품'을 특정하고 중국어 검색어를 만든다
+      (서버 실측: 리모와 캐리어→日默瓦, 청소용 퍼미스 스톤→浮石清洁块). 프레임 없음/실패 시
+      캡션 소재 키워드(cn_search_keyword) → 앞토큰 직역 순으로 폴백.
+    ★장치2(유사도 판정): 검색 결과 제목들을 추출 제품과 대조해 Gemini가 same/similar/no로
+      판정(오탐 많던 2그램 대체) → same을 위로 정렬, no엔 프론트 ⚠️배지.
+
+    Apify·Gemini가 느리고 유료라 렌즈 결과가 뜬 뒤 프론트가 비동기로 이 API를 호출해 합친다."""
+    if not (source_caption or "").strip() and frame is None:
+        return {"ok": True, "items": [], "count": 0, "note": "프레임·캡션이 없어 검색어를 만들 수 없습니다"}
     if not APIFY_TOKENS:
         return {"ok": True, "items": [], "count": 0, "note": "APIFY 토큰 없음"}
-    n = max(1, min(int(max_results or 8), 20))
+    product, keyword = "", ""
+    if frame is not None:                              # 장치1: 프레임 비전 추출
+        try:
+            raw = await frame.read()
+            v = cn_search_keyword_vision(raw, source_caption)
+            product, keyword = v.get("product", ""), v.get("zh", "")
+        except Exception:
+            product, keyword = "", ""
+    if not keyword:                                    # 폴백: 캡션 소재 키워드 → 앞토큰 직역
+        try:
+            keyword = cn_search_keyword(source_caption)
+        except Exception:
+            keyword = ""
+    if not keyword:
+        ko = _cn_keyword(source_caption)
+        try:
+            keyword = (translate_keyword(ko).get("zh") or "").strip() or ko
+        except Exception:
+            keyword = ko
+    if not keyword:
+        return {"ok": True, "items": [], "count": 0, "note": "검색어를 만들지 못했습니다"}
+    # 실측(2026-07-18): 액터는 maxResults=40도 raw=video=40을 ~14초에 준다(8과 지연 차 거의 없음).
+    # 웹검색 대비 개수 부족 제보로 상한을 60까지 열어둔다(프론트 기본 40). 결과당 과금이라 비용은 비례.
+    n = max(1, min(int(max_results or 8), 60))
 
     def _run(platform, mod):
         try:
@@ -1992,14 +2034,28 @@ async def api_lens_cn(request: Request, source_caption: str = Form(""),
             return []
         for r in rows:
             r["platform"] = platform
-            r["match"] = None   # 키워드 검색이라 제목-캡션 재매칭은 생략
+            r["match"] = None
         return rows
 
     with ThreadPoolExecutor(max_workers=2) as ex:
         fx = ex.submit(_run, "xiaohongshu", xiaohongshu_search)
         fd = ex.submit(_run, "douyin", douyin_search)
         items = fx.result() + fd.result()
-    return {"ok": True, "items": items, "count": len(items), "keyword": keyword}
+
+    # 장치2: 유사도 판정 + same 우선 정렬
+    if product and items:
+        try:
+            verdicts = judge_same_product(product, [i.get("title", "") for i in items])
+        except Exception:
+            verdicts = []
+        if len(verdicts) == len(items):
+            for i, vd in zip(items, verdicts):
+                i["sim"] = vd
+                i["match"] = True if vd == "same" else (False if vd == "no" else None)
+            rank = {"same": 0, "similar": 1, "no": 2}
+            items.sort(key=lambda i: rank.get(i.get("sim"), 1))
+    return {"ok": True, "items": items, "count": len(items),
+            "keyword": keyword, "product": product}
 
 
 @app.get("/healthz")
@@ -2279,6 +2335,24 @@ def api_produce_works_save(request: Request, body: dict):
     return {"ok": True, "work_id": wid}
 
 
+@app.post("/api/pick_log")
+def api_pick_log(request: Request, body: dict):
+    # 픽로그(트랙1) — 사장님이 고른 것/버린 것을 남긴다. 부가 기능이라 stage만 필수.
+    stage = body.get("stage")
+    if not stage:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "stage 없음"})
+    eid = Store(DB_PATH).log_pick_event(
+        stage,
+        picked=body.get("picked"),
+        rejected=body.get("rejected"),
+        candidates=body.get("candidates"),
+        edit_diff=body.get("edit_diff"),
+        job_id=body.get("job_id") or None,
+        customer_id=_cid(request),
+    )
+    return {"ok": True, "id": eid}
+
+
 @app.get("/api/produce/works")
 def api_produce_works_list(request: Request):
     return {"ok": True, "works": Store(DB_PATH).list_produce_works(customer_id=_cid(request))}
@@ -2402,6 +2476,38 @@ async def api_produce_mix_overlay(job_id: str = Form(...), file: UploadFile = Fi
     name = "overlay" + ext
     (d / name).write_bytes(await file.read())
     return {"ok": True, "file": name}
+
+
+@app.post("/api/produce/mix/{job_id}/cutaway")
+def api_produce_mix_cutaway(job_id: str, request: Request, body: dict):
+    """검수판에서 비트의 컷어웨이를 설정(asset_id) 또는 제거(null). plan에 되쓴다.
+
+    ⚠️ mix_jobs에는 customer_id 컬럼이 없다(다른 /api/produce/mix/... 라우트와 동일하게
+    job 존재 여부만 본다) — 진짜 소유권 경계는 scene_assets 쪽 customer_id 격리다.
+    남의 asset_id를 붙이려 하면 get_scene_asset이 못 찾아 422로 막는다."""
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    plan = job.get("edit_plan") or {}
+    beats = plan.get("beats") or []
+    try:
+        bi = int(body.get("beat_idx"))
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 필요"})
+    hit = next((b for b in beats if b.get("beat_idx") == bi), None)
+    if hit is None:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 범위 밖"})
+    aid = body.get("asset_id")
+    if aid is None:
+        hit.pop("cutaway", None)
+    else:
+        asset = store.get_scene_asset(int(aid), customer_id=_cid(request))
+        if not asset:
+            return JSONResponse(status_code=422, content={"ok": False, "error": "자산 없음"})
+        hit["cutaway"] = {"asset_id": int(aid), "score": hit.get("cutaway", {}).get("score", 1.0)}
+    store.update_mix_job(job_id, edit_plan=plan)
+    return {"ok": True}
 
 
 @app.get("/api/produce/mix/poster/{job_id}")

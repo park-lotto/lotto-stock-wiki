@@ -57,7 +57,7 @@ const ctx = new Proxy({}, {
   get(t, k){
     if (k === 'measureText') return () => ({width: 100});
     if (k === 'save' || k === 'restore' || k === 'translate' || k === 'rotate' ||
-        k === 'drawImage' || k === 'strokeText' || k === 'fillRect' || k === 'beginPath')
+        k === 'drawImage' || k === 'strokeText' || k === 'fillRect' || k === 'beginPath' || k === 'clearRect')
       return (...a) => calls.push([k, ...a]);
     if (k === 'fillText') return (...a) => calls.push(['fillText', ...a]);
     return undefined;
@@ -84,7 +84,7 @@ function trace(W, H){
     get(t, k){
       if (k === 'measureText') return () => ({width: 100});
       if (k === 'translate') return (...a) => calls.push(a);
-      if (['save','restore','rotate','drawImage','strokeText','fillText','fillRect','beginPath'].includes(k))
+      if (['save','restore','rotate','drawImage','strokeText','fillText','fillRect','beginPath','clearRect'].includes(k))
         return () => {};
       return undefined;
     }, set(){ return true; }
@@ -108,7 +108,7 @@ function fontAt(W){
   const ctx = new Proxy({}, {
     get(t, k){
       if (k === 'measureText') return () => ({width: 100});
-      if (['save','restore','rotate','translate','drawImage','strokeText','fillText','fillRect','beginPath'].includes(k))
+      if (['save','restore','rotate','translate','drawImage','strokeText','fillText','fillRect','beginPath','clearRect'].includes(k))
         return () => {};
       return undefined;
     },
@@ -132,7 +132,7 @@ const ctx = new Proxy({}, {
   get(t, k){
     if (k === 'measureText') return () => ({width: 100});
     if (k === 'rotate') return (...a) => calls.push(a);
-    if (['save','restore','translate','drawImage','strokeText','fillText','fillRect','beginPath'].includes(k))
+    if (['save','restore','translate','drawImage','strokeText','fillText','fillRect','beginPath','clearRect'].includes(k))
       return () => {};
     return undefined;
   }, set(){ return true; }
@@ -153,7 +153,7 @@ const ctx = new Proxy({}, {
   get(t, k){
     if (k === 'measureText') return () => ({width: 100});
     if (k === 'fillText') return () => { n++; };
-    if (['save','restore','rotate','translate','drawImage','strokeText','fillRect','beginPath'].includes(k))
+    if (['save','restore','rotate','translate','drawImage','strokeText','fillRect','beginPath','clearRect'].includes(k))
       return () => {};
     return undefined;
   }, set(){ return true; }
@@ -176,7 +176,7 @@ function padAt(W){
     get(t, k){
       if (k === 'measureText') return () => ({width: 100});
       if (k === 'fillRect') return (...a) => calls.push(a);
-      if (['save','restore','rotate','translate','drawImage','strokeText','fillText','beginPath'].includes(k))
+      if (['save','restore','rotate','translate','drawImage','strokeText','fillText','beginPath','clearRect'].includes(k))
         return () => {};
       return undefined;
     }, set(){ return true; }
@@ -202,7 +202,7 @@ function lineWidthAt(W){
   const ctx = new Proxy({}, {
     get(t, k){
       if (k === 'measureText') return () => ({width: 100});
-      if (['save','restore','rotate','translate','drawImage','strokeText','fillText','fillRect','beginPath'].includes(k))
+      if (['save','restore','rotate','translate','drawImage','strokeText','fillText','fillRect','beginPath','clearRect'].includes(k))
         return () => {};
       return undefined;
     },
@@ -232,6 +232,7 @@ class FakeCtx {
   rotate(a){ this._rot += a; }
   translate(){}
   measureText(){ return {width: 100}; }
+  clearRect(){}
   drawImage(){}
   strokeText(){}
   fillRect(){}
