@@ -41,7 +41,7 @@ from shopping_shorts.mix_pipeline import (run_mix_job, run_render, run_preview, 
 from shopping_shorts.lens_discover import search_similar_videos, upload_frame
 from shopping_shorts import douyin_search, xiaohongshu_search
 from shopping_shorts.config import APIFY_TOKENS
-from shopping_shorts.media_download import resolve_media_url, download_any
+from shopping_shorts.media_download import resolve_media_url, download_any, probe_grab_meta
 from shopping_shorts import edit_plan as _edit_plan
 from shopping_shorts import voice_presets, audio_post
 from shopping_shorts.tts import synthesize_tts
@@ -2356,10 +2356,24 @@ def _grab_popup_html(ok, msg, sub=""):
 <script>setTimeout(function(){{window.close();}}, {delay});</script></body>""")
 
 
+def _enrich_grab(url, sc, cid):
+    """백그라운드: yt-dlp/oEmbed로 썸네일·제목·조회수·좋아요·댓글·길이·채널을 보강해 저장.
+    틱톡 썸네일 빔·정보 없음 제보 대응(2026-07-18). 실패해도 담긴 항목엔 지장 없음."""
+    meta = probe_grab_meta(url)
+    if not meta:
+        return
+    Store(DB_PATH).mix_basket_set_meta(
+        sc, customer_id=cid,
+        thumbnail=meta.get("thumbnail"), name=meta.get("title"),
+        meta={k: meta[k] for k in ("views", "likes", "comments", "duration", "channel") if k in meta})
+
+
 @app.get("/api/grab", include_in_schema=False)
-def api_grab(request: Request, url: str = "", thumbnail: str = "", title: str = ""):
+def api_grab(request: Request, background_tasks: BackgroundTasks,
+             url: str = "", thumbnail: str = "", title: str = ""):
     """북마클릿/유저스크립트가 여는 팝업 대상. 세션쿠키로 고객을 직접 식별(_AUTH_ALLOW라
-    미들웨어가 customer_id를 안 채우므로 여기서 검증). 모음집(mix_basket)에 멱등 추가."""
+    미들웨어가 customer_id를 안 채우므로 여기서 검증). 영상 즐겨찾기(mix_basket)에 멱등 추가하고
+    백그라운드로 메타(썸네일·조회수 등)를 보강한다(팝업은 즉시 반환)."""
     cid = _verify_session(request.cookies.get("dash_auth")) if _AUTH_ON else 0
     if cid is None:
         return _grab_popup_html(False, "로그인이 필요해요",
@@ -2371,8 +2385,9 @@ def api_grab(request: Request, url: str = "", thumbnail: str = "", title: str = 
     added = Store(DB_PATH).mix_basket_add(
         sc, url=url, thumbnail=thumbnail or "", name=(title or "")[:120],
         caption=(title or "")[:200], customer_id=cid)
-    return _grab_popup_html(True, "모음집에 담겼어요!" if added else "이미 담겨 있어요",
-                            f"{platform} · 모음집에서 확인")
+    background_tasks.add_task(_enrich_grab, url, sc, cid)   # 썸네일·조회수 등 보강
+    return _grab_popup_html(True, "영상 즐겨찾기에 담겼어요!" if added else "이미 담겨 있어요",
+                            f"{platform} · 왼쪽 ⭐영상 즐겨찾기에서 확인")
 
 
 # 북마클릿 본문(플랫폼 페이지에서 실행) — 따옴표 충돌을 피해 base64로 실어 페이지에서 atob.
