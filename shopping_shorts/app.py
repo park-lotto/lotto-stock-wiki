@@ -318,8 +318,18 @@ def api_mix_basket_toggle(request: Request, body: dict, background_tasks: Backgr
         caption=body.get("caption") or "",
         customer_id=cid,
     )
-    if in_basket and url and _grab_platform(url):
-        background_tasks.add_task(_enrich_grab, url, sc, cid)
+    if in_basket:
+        # 렌즈가 검색에서 이미 받은 메타를 즉시 저장(merge) — yt-dlp 재수집(유튜브 봇차단·
+        # 샤오홍슈 무oEmbed로 자주 빈값)보다 신뢰도 높다. 재수집은 백그라운드 보조.
+        meta = body.get("meta")
+        if isinstance(meta, dict):
+            clean = {k: meta[k] for k in ("views", "likes", "comments", "shares",
+                                          "duration", "channel", "followers", "ts")
+                     if meta.get(k) not in (None, "")}
+            if clean:
+                store.mix_basket_set_meta(sc, customer_id=cid, meta=clean)
+        if url and _grab_platform(url):
+            background_tasks.add_task(_enrich_grab, url, sc, cid)
     return {"ok": True, "in": in_basket, "count": len(store.mix_basket_shortcodes(customer_id=cid))}
 
 

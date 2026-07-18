@@ -656,7 +656,7 @@ async function lensBulkSave(shortcode){
   for(const it of targets){
     try{
       const d=await (await fetch('/api/mix/basket/toggle',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({shortcode:it.savesc, url:it.url||'', thumbnail:it.thumbnail||'', name:it.title||'', caption:it.title||''})})).json();
+        body:JSON.stringify({shortcode:it.savesc, url:it.url||'', thumbnail:it.thumbnail||'', name:it.title||'', caption:it.title||'', meta:_lensMeta(it)})})).json();
       if(d.in) st.saved.add(it.savesc);
     }catch(e){}
   }
@@ -741,13 +741,22 @@ function renderLens(shortcode){
   box.innerHTML=`<div id="lensRoot" data-sc="${shortcode}">${bar}<div class="cards">${cards}</div></div>`;
   box._lensCurSC=shortcode;
 }
+// 렌즈가 검색에서 이미 받은 메타(조회수·좋아요·채널·길이)를 담을 때 함께 넘긴다. 서버가
+// yt-dlp로 재수집(유튜브 봇차단·샤오홍슈 무oEmbed로 자주 빈값)하기 전에 이 값이 먼저 저장돼
+// 즐겨찾기에서 랭킹처럼 정보가 뜬다(2026-07-18). null/빈값은 빼서 기존값을 안 덮게.
+function _lensMeta(it){
+  const m={}; for(const k of ['views','likes','comments','shares','duration','channel','followers']){
+    if(it[k]!=null && it[k]!=='') m[k]=it[k];
+  }
+  return m;
+}
 // 렌즈 결과 카드 담기 — 우리 DB에 없는 항목이라 mix_basket에 합성 shortcode로 저장(savesc로 특정).
 async function toggleLensSave(shortcode, savesc, btn){
   const st=LENS_STATE[shortcode]; if(!st) return;
   const it=st.items.find(i=>i.savesc===savesc); if(!it) return;
   try{
     const d=await (await fetch('/api/mix/basket/toggle',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({shortcode:savesc, url:it.url||'', thumbnail:it.thumbnail||'', name:it.title||'', caption:it.title||''})})).json();
+      body:JSON.stringify({shortcode:savesc, url:it.url||'', thumbnail:it.thumbnail||'', name:it.title||'', caption:it.title||'', meta:_lensMeta(it)})})).json();
     d.in?st.saved.add(savesc):st.saved.delete(savesc);
     if(btn){ btn.textContent=d.in?'🎬 담김✓':'📥 담기'; btn.classList.toggle('saved', !!d.in); }
     if(d.in) showToast('✅ 담았음 <a href="/collection" style="color:#7db4ff;margin-left:6px">모음집 보기 →</a>');
