@@ -1518,6 +1518,11 @@ const SCRIPT_MODE_HTML = {
       <button class="tab" id="mixSrcPicks" style="flex:0 0 auto;min-width:auto;padding:7px 14px" onclick="switchMixSource('picks')">📥 담긴 대본</button>
       <button class="tab" id="mixSrcAll" style="flex:0 0 auto;min-width:auto;padding:7px 14px" onclick="switchMixSource('all')">📚 위키 전체 영상대본</button>
     </div>
+    <div class="picksBulk" id="picksBulk" style="display:flex;gap:6px;margin:6px 0">
+      <button class="mini" onclick="picksSelectAll(true)">전체선택</button>
+      <button class="mini" onclick="picksClearSel()">해제</button>
+      <button class="mini" onclick="picksDeleteSel()">선택삭제</button>
+    </div>
     <div id="mixWiki" style="margin:10px 0">불러오는 중…</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn-next" style="padding:10px 16px;background:linear-gradient(90deg,#1c5a2e,#0d3a1c)" onclick="openGenFromWiki()">♻️ 선택 1개로 새 대본 생성</button>
@@ -1596,15 +1601,62 @@ function mixThumbFallback(img, shortcode){
   img.dataset.fellback='1';
   img.src=poster;
 }
+// 담긴 대본 = 서버 picks(위키 S급) + 랭킹에서 임시로 보낸 대본(HANDOFF). 합쳐 보여준다.
+// 임시 대본은 위키를 안 거치므로(사장님: '임시로 담기') HANDOFF의 script를 그대로 쓴다.
+// shortcode가 겹치면 서버(S급 영속본) 우선.
+function mergePicks(serverItems, handoff){
+  const out = (serverItems||[]).slice();
+  const seen = new Set(out.map(w=>w.shortcode));
+  (handoff||[]).forEach(h=>{
+    if(!h.pickScript || !h.script || seen.has(h.shortcode)) return;
+    seen.add(h.shortcode);
+    out.push({shortcode:h.shortcode, name:h.name||h.shortcode, category:h.category||'',
+              thumbnail:h.thumbnail||'', full_text:h.script});
+  });
+  return out;
+}
+// ── 임시 대본 끝 ──
+// 담긴 대본 관리(2026-07-18) — 전체선택/해제/선택삭제.
+function picksSelectAll(on){
+  document.querySelectorAll('.mixPick').forEach(c=>{ c.checked = !!on; });
+}
+function picksClearSel(){ picksSelectAll(false); }
+async function picksDeleteSel(){
+  const sel = [...document.querySelectorAll('.mixPick')].filter(c=>c.checked).map(c=>c.value);
+  if(!sel.length) return;
+  for(const sc of sel){
+    // 임시(HANDOFF)와 서버(S급 pick)는 서로 배타적이지 않다 — shortcode가 겹치면 둘 다에서 빼야
+    // mergePicks가 재로드 시 서버 항목을 되살려 "삭제가 무효"로 보이는 걸 막는다(2026-07-18 리뷰).
+    const h = (HANDOFF||[]).find(x=>x.shortcode===sc);
+    if(h && h.pickScript && h.script){
+      h.pickScript = false;          // 임시 대본 — 담긴대본에서만 뺀다(영상풀 useFootage는 유지)
+    }
+    if((window._serverPickCodes||new Set()).has(sc)){
+      // S급 위키 pick — 서버에서도 뺀다
+      try{ await fetch('/api/produce/picks/toggle', {method:'POST',
+        headers:{'Content-Type':'application/json'}, body:JSON.stringify({shortcode:sc})}); }catch(e){}
+    }
+  }
+  loadWikiForMix();                  // 목록 다시 그림
+}
+// ── 담긴대본 관리 끝 ──
 async function loadWikiForMix(){
   const el=document.getElementById('mixWiki');
   const bp=document.getElementById('mixSrcPicks'), ba=document.getElementById('mixSrcAll');
   if(bp) bp.classList.toggle('active', MIX_SRC==='picks');
   if(ba) ba.classList.toggle('active', MIX_SRC==='all');
+  // 전체선택/해제/선택삭제 줄은 담긴대본(picks) 탭 전용 — "위키 전체" 탭은 진짜 토글 API를
+  // 쓰므로 여기서 같이 보이면 "선택삭제"가 아직 안 담긴 항목을 오히려 담아버린다(2026-07-18 리뷰).
+  const pb=document.getElementById('picksBulk');
+  if(pb) pb.style.display = (MIX_SRC==='picks') ? 'flex' : 'none';   // flex 유지(gap 6px)
   const url = MIX_SRC==='all' ? '/api/wiki/list' : '/api/produce/picks';
   try{
     const d=await (await fetch(url)).json();
-    const items=d.items||[];
+    let items=d.items||[];
+    // 삭제 시 "서버 pick이기도 한가"를 판단하려면 mergePicks로 임시가 섞이기 전의
+    // 순수 서버 목록이 필요하다(2026-07-18 리뷰 #2).
+    window._serverPickCodes = new Set((MIX_SRC==='picks') ? items.map(w=>w.shortcode) : []);
+    if(MIX_SRC==='picks') items = mergePicks(items, HANDOFF);   // 임시 대본 합침
     window._mixItems=items;
     if(!items.length){
       el.innerHTML = MIX_SRC==='all'
@@ -1775,7 +1827,9 @@ function _consumeProduceHandoff(){
   let items, restored=false, savedScript='';
   try{ items=JSON.parse(sessionStorage.getItem('produce_handoff')||'null'); }catch(e){ items=null; }
   if(items && items.length){
-    HANDOFF = items.map(it=>({...it, pickScript:false, useFootage:false}));
+    // ★들어온 플래그를 보존한다. 기본값을 먼저 깔고 spread로 덮어써서, 랭킹에서 보낸
+    // useFootage/pickScript/script가 살아남는다(예전엔 무조건 false로 지워 영상풀·담긴대본이 비었다).
+    HANDOFF = items.map(it=>({pickScript:false, useFootage:false, ...it}));
   } else {
     // 구버전 호환(urls만)
     let urls; try{ urls=JSON.parse(sessionStorage.getItem('produce_mix_urls')||'null'); }catch(e){ urls=null; }
