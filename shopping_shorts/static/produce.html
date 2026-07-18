@@ -159,8 +159,15 @@
       <h3>1 · 제작소</h3>
       <div class="sub">넘어온 영상에서 대본을 뽑고(📝), 화면에 쓸 영상을 담아(🎬) 대본에 맞춰 영상을 만듭니다.</div>
       <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
-        <!-- ◀ 왼쪽: 영상 풀 -->
-        <div style="flex:1 1 300px;min-width:280px">
+        <!-- ◀ 왼쪽: 미리보기(장면 매칭 후) + 영상 풀 -->
+        <div style="flex:1 1 300px;min-width:280px;align-self:stretch">
+          <!-- 🪞 1단계 미리보기 — 편집안이 뜨면(loadMixReview) 이 좌측 공간이 프리뷰 자리가 된다.
+               우측 편집안을 읽으며 스크롤해도 따라오도록 sticky. 오른쪽 [▶ 미리보기 만들기]가
+               여기(#mixPreview)로 렌더한다(2026-07-19 사장님 요청 — 우측 인라인→좌측 프리뷰). -->
+          <div id="mixPreviewPanel" style="display:none;position:sticky;top:12px;z-index:6;margin-bottom:16px">
+            <div class="hint" style="margin-bottom:6px">🪞 미리보기 (9:16)</div>
+            <div id="mixPreview"></div>
+          </div>
           <div style="font-size:12px;color:var(--sub);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">◀ 넘어온 영상 (재료)</div>
           <div id="poolList" style="display:flex;flex-direction:column;gap:10px"></div>
           <div id="poolEmpty" class="hint" style="display:none;margin-top:6px">즐겨찾기에서 영상을 보내거나, 아래에 URL을 직접 넣으세요.</div>
@@ -2323,7 +2330,12 @@ async function loadMixReview(){
       <div class="scene-cutaway" id="sceneCutaway${i}">${renderSceneCutaway(b, i)}</div>
     </div>`).join('')+`<div class="hint" style="margin-top:6px">✅ 매칭 완료${(d.beats||[]).some(b=>b.fit&&b.fit<=2)?' <span style="color:var(--fire)">— ⚠️ 표시된 문장은 영상이 약합니다</span>':''} — 아래에서 <b>미리보기</b>를 확인한 뒤 다음으로 넘어가세요.</div>`
     +`<button id="btnPreview" class="btn-next" style="margin-top:8px;padding:7px 14px" onclick="startPreview()">▶ 미리보기 만들기</button>`
-    +`<div id="mixPreview" style="margin-top:8px"></div>`;
+    +`<div class="hint" style="margin-top:6px">미리보기는 <b>왼쪽 화면</b>에 표시됩니다 🪞</div>`;
+  // 미리보기 렌더 타깃(#mixPreview)은 좌측 프리뷰 패널로 옮겼다 — 여기선 위치 안내만.
+  // 편집안이 떴으니 좌측 프리뷰 공간을 열고, 아직 안 만들었다는 안내를 넣는다.
+  const _pvPanel=document.getElementById('mixPreviewPanel'), _pvBox=document.getElementById('mixPreview');
+  if(_pvPanel) _pvPanel.style.display='';
+  if(_pvBox) _pvBox.innerHTML='<div class="hint" style="padding:14px;border:1px dashed var(--line);border-radius:12px;text-align:center">오른쪽 <b>▶ 미리보기 만들기</b>를 누르면<br>여기에 미리보기 영상이 표시됩니다.</div>';
   // 편집안을 새로 그렸다 = 새 매칭이다. 옛 미리보기 상태를 물고 있으면 사장님이 옛 영상을
   // 본 것으로 치고 다음이 열린다 → 여기서 반드시 초기화한다.
   // ★폴러도 같이 죽인다: 재매칭은 정상 흐름(⚠️ 매칭 약한 문장은 "대본을 살짝 바꾸세요"를 권한다)이고
@@ -2413,7 +2425,8 @@ async function startPreview(){
   const myGen = ++PREVIEW_GEN;     // 이 시점부터 내가 주인 — 늦게 돌아오는 옛 continuation은 무효
   const myJob = MIX_JOB;           // 재매칭으로 MIX_JOB이 바뀌어도 내 응답은 내 job 것이다
   if(btn) btn.disabled = true;     // 렌더는 20초+ 걸린다 — 그 사이 재클릭을 막는다
-  box.innerHTML = '<div class="hint">⏳ 미리보기 만드는 중… (자막제거·꾸미기 없이 렌더합니다)</div>';
+  const pvPanel=document.getElementById('mixPreviewPanel'); if(pvPanel) pvPanel.style.display='';  // 좌측 프리뷰 자리 확보
+  box.innerHTML = '<div class="hint" style="padding:14px;border:1px solid var(--line);border-radius:12px">⏳ 미리보기 만드는 중… (자막제거·꾸미기 없이 렌더합니다)</div>';
   PREVIEW_STATUS = 'rendering'; refreshNextBtn();
   try{
     const d = await (await fetch('/api/produce/mix/preview',{method:'POST',
@@ -2437,9 +2450,9 @@ async function pollPreview(gen, job){
     if(d.preview_status === 'ready'){
       clearInterval(PREVIEW_POLL); PREVIEW_POLL = null; PREVIEW_STATUS='ready';
       // ?t= 캐시버스터 필수: 대본을 고쳐 재매칭하면 같은 URL에 다른 영상이 온다.
-      box.innerHTML = '<video controls muted playsinline style="width:260px;border-radius:10px;background:#000"'
+      box.innerHTML = '<video controls muted playsinline autoplay style="width:100%;max-width:320px;border-radius:12px;background:#000;box-shadow:0 8px 30px rgba(0,0,0,.4)"'
         + ' src="/api/produce/mix/preview/'+encodeURIComponent(job)+'?t='+Date.now()+'"></video>'
-        + '<div class="hint">원본 자막이 남아 있는 건 정상입니다 — 다음 단계에서 지웁니다.</div>';
+        + '<div class="hint" style="margin-top:6px">원본 자막이 남아 있는 건 정상입니다 — 다음 단계에서 지웁니다.</div>';
       const btn = document.getElementById('btnPreview'); if(btn) btn.disabled = false;
       refreshNextBtn();
     } else if(d.preview_status === 'failed'){
