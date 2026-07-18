@@ -383,6 +383,7 @@ function render(){
         <button class="script-btn" onclick="showRelated('${i.shortcode}')">🔗 같은 주제</button>
         <button class="script-btn" onclick="lensSearch(this,'${i.shortcode}')">🔍 렌즈 유사영상</button>
         <button class="script-btn" onclick="openSceneCut('${i.shortcode}', '${esc(i.video_url||'')}', '${esc(i.category||'')}')">🎞 장면 담기</button>
+        <button class="script-btn" onclick="sendToProduce('${i.shortcode}')" id="send_${i.shortcode}">🎬 제작소로 보내기</button>
         ${i.inpock?`<div style="margin-top:6px"><a href="${i.inpock}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🛒 판매채널</a></div>`:''}
       </div>
     </div>`).join("");
@@ -788,6 +789,27 @@ function _openLensOverlay(html){
   o.style.display='flex';
 }
 function _closeLensOverlay(){ const o=document.getElementById('lensOverlay'); if(o){ o.innerHTML=''; o.style.display='none'; } }
+// 레퍼런스 랭킹 → 제작소로 한 번에(2026-07-18). 영상은 화면소재(영상풀 카드)로,
+// 대본은 담긴 대본으로 둘 다 보낸다. 제작소에서 필요한 쪽만 쓴다.
+// collection.html이 쓰는 sessionStorage.produce_handoff 통로 그대로.
+async function sendToProduce(shortcode){
+  const it = (STATE.items||[]).find(x=>x.shortcode===shortcode) || {};
+  const btn = document.getElementById('send_'+shortcode);
+  if(btn){ btn.disabled=true; btn.textContent='⏳ 대본 추출 중… (10~30초)'; }
+  let script = '';
+  try{
+    const r = await fetch('/api/extract_script?shortcode='+encodeURIComponent(shortcode), {method:'POST'});
+    const d = await r.json();
+    script = (d && d.ok) ? (d.full_text||'') : '';   // 추출 실패해도 영상은 보낸다
+  }catch(e){ script=''; }
+  const item = {
+    url: it.url||'', shortcode: shortcode, name: it.name||it.username||'',
+    thumbnail: it.thumbnail||'', caption: it.caption||'', category: it.category||'',
+    useFootage: true, pickScript: !!script, script: script,
+  };
+  try{ sessionStorage.setItem('produce_handoff', JSON.stringify([item])); }catch(e){}
+  location.href = '/produce';
+}
 async function extractScript(shortcode){
   window._curSC = shortcode;
   openScript('<div class="sm-loading">⏳ 대본 추출 중… 다운로드 + AI 분석 (10~30초)<br><small>한번 뽑으면 다음부턴 즉시 열립니다</small></div>');
