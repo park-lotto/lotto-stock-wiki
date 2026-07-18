@@ -51,7 +51,7 @@ def test_burn_captions_t0가_caption_drawtexts로_그대로_전달된다(tmp_pat
 
     captured_t0 = []
 
-    def fake_drawtexts(narration, dur, work, idx, t0=0.0, style=None):
+    def fake_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=None):
         captured_t0.append(t0)
         return []
 

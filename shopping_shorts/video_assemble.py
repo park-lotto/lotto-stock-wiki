@@ -651,10 +651,14 @@ def _merge_highlight_rules(headcopy, caption_style, deco):
 
 
 def _beat_timeline(edit_plan, tts_paths):
-    """비트별 전체 타임라인 [{beat_idx, t0, dur, narration, role}, ...].
+    """비트별 전체 타임라인 [{beat_idx, t0, dur, narration, role, cap_durs}, ...].
 
     자막(_burn_captions)과 모션(motion_packs)이 **같은 경계**를 쓰도록 하는 단일 출처.
     여기서 중복 계산하면 전환이 자막과 어긋난다. tts 없는 비트는 건너뛴다(기존 동작).
+
+    cap_durs: _synthesize_beats가 저장한 ASR 기반 구절 표시시간(list[float]|None).
+    여기서 새 dict를 만들며 원본 beat를 복사하지 않으므로, 이 필드를 안 실어보내면
+    저장위치(_synthesize_beats)≠읽기위치(_burn_captions)가 되어 seam이 끊긴다.
     """
     timeline = []
     t0 = 0.0
@@ -670,6 +674,7 @@ def _beat_timeline(edit_plan, tts_paths):
             "dur": dur,
             "narration": beat.get("narration", ""),
             "role": beat.get("role", ""),
+            "cap_durs": beat.get("cap_durs"),
         })
         t0 += dur
     return timeline
@@ -701,7 +706,7 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     timeline = _beat_timeline(edit_plan, tts_paths)
     for b in timeline:
         filters.extend(_caption_drawtexts(b["narration"], b["dur"], work, b["beat_idx"],
-                                          b["t0"], caption_style))
+                                          b["t0"], caption_style, real_durs=b.get("cap_durs")))
     if headcopy and (headcopy.get("text") or "").strip():
         # enable 없으면 전체 표시(기존). 팩이 hook_only면 렌더 파생값 _headcopy_enable이 온다.
         hc_enable = ((deco or {}).get("motion") or {}).get("_headcopy_enable")
