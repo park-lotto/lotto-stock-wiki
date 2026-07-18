@@ -20,6 +20,7 @@ _ROLE_FALLBACK = {
     "hook": ("훅", "반응"),                       # 시선 잡기: 귀여운 리액션·만족짤
     "problem": ("반전",),                          # 페인포인트: 눈물 양파·요리 실패
     "problem_solution": ("반전",),
+    "info": ("비법공개", "전환"),                  # 레시피 본문(how-to): 만족 과정짤 (실 대본 grounding에서 추가)
     "easy_process": ("비법공개", "전환"),          # "이렇게 쉽게": 만족 슬라이스
     "process_step1": ("비법공개", "전환"),
     "process_step2": ("비법공개", "전환"),
