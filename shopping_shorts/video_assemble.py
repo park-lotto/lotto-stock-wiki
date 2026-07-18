@@ -291,7 +291,7 @@ def _caption_durations(segs, dur, real_durs=None):
     return floored
 
 
-def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=None, cap_offset=0.0):
+def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=None, cap_offset=0.0, tail=0.5):
     """나레이션 한 비트의 자막(하단 바 + 순차 drawtext)을 필터 문자열 리스트로 반환한다.
     _segmented_drawtext 기반: highlight_rules가 있으면 단어별 강조, 없으면 세그먼트 1개
     (기존과 동일 산출물). 각 구절 enable 구간은 t0(전체 타임라인 오프셋)만큼 밀린다.
@@ -321,13 +321,13 @@ def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=
         _bs = max(0.0, t0 + cap_offset)
         parts.append(
             f"drawbox=x=0:y=ih-{_BAR_H}:w=iw:h={_BAR_H}:color=black@0.82:t=fill:"
-            f"enable='between(t,{_bs:.2f},{t0 + dur + 0.5 + cap_offset:.2f})'"
+            f"enable='between(t,{_bs:.2f},{t0 + dur + tail + cap_offset:.2f})'"
         )
     t = 0.0
     for i, (seg, d) in enumerate(zip(segs, durs)):
         start = max(0.0, t + t0 + cap_offset)
         t += d
-        end = (dur + 0.5 if i == len(segs) - 1 else t) + t0 + cap_offset
+        end = (dur + tail if i == len(segs) - 1 else t) + t0 + cap_offset
         seg_parts = _segmented_drawtext(
             seg, style, work, f"cap_{idx}_{i}", 50, ypct,
             highlight_rules=style.get("highlight_rules"), default_color="0xFFFFFF",
@@ -787,9 +787,12 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         filters.append(_color_filter.strip())
     timeline = _beat_timeline(edit_plan, tts_paths)
     for b in timeline:
+        # 마지막 비트만 0.5초 여운(영상 끝에서 자막이 툭 사라지지 않게). 중간 비트는 tail=0 —
+        # 여운을 주면 그 자막이 다음 비트로 0.5초 넘어가 다음 자막과 겹쳐 뭉갠다(전환 겹침, 실측).
+        _tail = 0.5 if b is timeline[-1] else 0.0
         filters.extend(_caption_drawtexts(b["narration"], b["dur"], work, b["beat_idx"],
                                           b["t0"], caption_style, real_durs=b.get("cap_durs"),
-                                          cap_offset=b.get("cap_offset", 0.0)))
+                                          cap_offset=b.get("cap_offset", 0.0), tail=_tail))
     if headcopy and (headcopy.get("text") or "").strip():
         # enable 없으면 전체 표시(기존). 팩이 hook_only면 렌더 파생값 _headcopy_enable이 온다.
         hc_enable = ((deco or {}).get("motion") or {}).get("_headcopy_enable")
