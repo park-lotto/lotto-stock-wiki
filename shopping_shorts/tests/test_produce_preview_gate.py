@@ -65,6 +65,16 @@ function renderSteps(){}
 function showPanel(){ refreshNextBtn(); }
 function alert(){}
 function pollMix(){}                        // 슬라이스 밖 — 이 테스트는 미리보기 게이트만 본다
+// startProduceMix가 소스 URL을 collectMixUrls()로 읽는다(2026-07-18 개편). 슬라이스 밖 심볼이라
+// 여기서 준다 — 실제 로직과 동일(영상풀 담긴 것 + 입력칸, 중복 제거). HANDOFF는 이 테스트에선 빈다.
+var HANDOFF = [];
+function collectMixUrls(){
+  const fromPool = HANDOFF.filter(h=>h.useFootage).map(h=>h.url).filter(Boolean);
+  const typed = [...document.querySelectorAll('.mixUrl')].map(i=>i.value.trim()).filter(Boolean);
+  const seen = new Set(), out = [];
+  for (const u of [...fromPool, ...typed]) if (!seen.has(u)) { seen.add(u); out.push(u); }
+  return out;
+}
 
 // ── 가짜 시계: setInterval을 진짜로 등록하고 수동으로 tick한다 ──
 let _timerSeq = 0;
