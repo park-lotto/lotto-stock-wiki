@@ -372,17 +372,16 @@ def run_render(job_id, db_path, work_root):
         source_video_paths = _resolve_sources(job, work)
         out_path = work / "final.mp4"
 
-        clean_fn = None
+        # 자막제거: 소스 원본을 미리(2단계) 또는 여기서(버튼 미사용 시) 청소해 그 소스로 조립한다.
+        # mix_raw 위 clean_fn(구방식)은 폐기 — 소스단위여야 TTS/컷과 무관하게 캐시가 성립한다.
         if job.get("subtitle_removal"):
             key = _vmake_key(store)
             if not key:
                 raise RuntimeError("자막 제거가 켜져 있으나 VMake 개인키가 등록되지 않았습니다")
-            def clean_fn(mix_raw):                        # noqa: E306
-                store.update_mix_job(job_id, status="removing_subtitles")
-                clean_path = str(work / "clean.mp4")
-                out = remove_subtitles(mix_raw, key, out_path=clean_path)
-                store.update_mix_job(job_id, clean_video_path=out)
-                return out
+            clean_map = _ensure_clean_sources(store, job, job_id, work, key)
+            store.update_mix_job(job_id, clean_status="ready", clean_error=None)
+            source_video_paths = {vid: clean_map.get(vid, p)
+                                  for vid, p in source_video_paths.items()}
 
         # deco의 BGM 파일(업로드 시 work/{file}에 저장)을 절대경로로 해석해 넘긴다.
         deco = job.get("deco") or {}
@@ -411,7 +410,7 @@ def run_render(job_id, db_path, work_root):
         # 컷어웨이: 비트에 붙은 asset_id를 media_path로 해석해 assemble에 넘긴다.
         # 저장위치(match_scene_assets가 쓴 beat["cutaway"]) = 읽기위치(여기) — seam 일치.
         cutaway_paths = _resolve_cutaway_paths(store, plan, job.get("customer_id", 0))
-        assemble(plan, tts_paths, source_video_paths, str(out_path), clean_fn=clean_fn,
+        assemble(plan, tts_paths, source_video_paths, str(out_path), clean_fn=None,
                  headcopy=job.get("headcopy"), caption_style=caption_style,
                  deco=deco, cutaway_paths=cutaway_paths)
         store.update_mix_job(job_id, status="done", video_path=str(out_path))
