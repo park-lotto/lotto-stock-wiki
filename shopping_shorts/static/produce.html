@@ -1838,29 +1838,40 @@ async function _restoreWork(workId){
   renderSteps(); showPanel(); refreshNextBtn();
 }
 function _consumeProduceHandoff(){
-  // 1순위: 즐겨찾기에서 방금 넘어온 신규 핸드오프. 2순위: 이전 작업상태 복원.
+  // 신규 핸드오프(즐겨찾기·랭킹에서 방금 넘어온 것)를 **진행 중 작업에 누적**한다.
+  // ★예전엔 신규가 있으면 진행 중 작업을 무시하고 통째 대체해서, 랭킹에서 영상을 두 번
+  //   보내면 두 번째가 첫 번째를 지웠다(2026-07-18 라이브 버그). 그래서 작업을 먼저
+  //   복원(base)하고 신규를 거기에 이어 붙인다(같은 영상은 중복으로 안 쌓는다).
   let items, restored=false, savedScript='';
   try{ items=JSON.parse(sessionStorage.getItem('produce_handoff')||'null'); }catch(e){ items=null; }
-  if(items && items.length){
-    // ★들어온 플래그를 보존한다. 기본값을 먼저 깔고 spread로 덮어써서, 랭킹에서 보낸
-    // useFootage/pickScript/script가 살아남는다(예전엔 무조건 false로 지워 영상풀·담긴대본이 비었다).
-    HANDOFF = items.map(it=>({pickScript:false, useFootage:false, ...it}));
-  } else {
-    // 구버전 호환(urls만)
+  if(!(items && items.length)){
+    // 구버전 호환(urls만) — 신규 handoff가 없을 때만
     let urls; try{ urls=JSON.parse(sessionStorage.getItem('produce_mix_urls')||'null'); }catch(e){ urls=null; }
     if(urls && urls.length){
-      HANDOFF = urls.map(u=>({url:u, shortcode:'', name:'', thumbnail:'', caption:'', pickScript:false, useFootage:false}));
-    } else {
-      // 넘어온 게 없으면 이전 작업상태 복원
-      let w; try{ w=JSON.parse(sessionStorage.getItem('produce_work')||'null'); }catch(e){ w=null; }
-      if(w && ((w.handoff && w.handoff.length) || w.script)){
-        HANDOFF=w.handoff||[]; savedScript=w.script||''; restored=true;
-        STATE.script_src_idx = (typeof w.script_src_idx === 'number') ? w.script_src_idx : null;
-        STATE.script_from_wiki = (typeof w.script_from_wiki !== 'undefined') ? w.script_from_wiki : null;   // 구페이로드 호환: 없으면 null(뽑기 유래 취급=안전 기본값, 버튼 보임)
-        // ★WORK_ID를 되살린다(구멍 1). 없으면 아래 saveWork()가 매 로드마다 새 작업을 만든다.
-        WORK_ID = w.work_id || null;
-      }
+      items = urls.map(u=>({url:u, shortcode:'', name:'', thumbnail:'', caption:'', pickScript:false, useFootage:false}));
     }
+  }
+  // 1) 진행 중 작업을 base로 복원(있으면). 신규는 여기에 누적된다.
+  let w; try{ w=JSON.parse(sessionStorage.getItem('produce_work')||'null'); }catch(e){ w=null; }
+  if(w && ((w.handoff && w.handoff.length) || w.script)){
+    HANDOFF=w.handoff||[]; savedScript=w.script||''; restored=true;
+    STATE.script_src_idx = (typeof w.script_src_idx === 'number') ? w.script_src_idx : null;
+    STATE.script_from_wiki = (typeof w.script_from_wiki !== 'undefined') ? w.script_from_wiki : null;   // 구페이로드 호환: 없으면 null(뽑기 유래 취급=안전 기본값, 버튼 보임)
+    // ★WORK_ID를 되살린다. 없으면 아래 saveWork()가 매 로드마다 새 작업을 만든다.
+    WORK_ID = w.work_id || null;
+  }
+  // 2) 신규 핸드오프를 누적(중복 제거: shortcode 우선, 없으면 url). 플래그·대본 보존.
+  let arrived=0;
+  if(items && items.length){
+    const keyOf = it => it.shortcode || it.url || '';
+    const seen = new Set(HANDOFF.map(keyOf).filter(Boolean));
+    items.forEach(it=>{
+      const k = keyOf(it);
+      if(k && seen.has(k)) return;               // 이미 있는 영상은 안 겹쳐 넣는다
+      if(k) seen.add(k);
+      HANDOFF.push({pickScript:false, useFootage:false, ...it});   // 기본값 먼저, spread로 덮어써 useFootage/pickScript/script 보존
+      arrived++;
+    });
   }
   sessionStorage.removeItem('produce_handoff');
   sessionStorage.removeItem('produce_mix_urls');
@@ -1869,11 +1880,13 @@ function _consumeProduceHandoff(){
   const b=document.getElementById('handoffBanner');
   if(b){
     b.style.display='block';
-    b.innerHTML = restored
-      ? (HANDOFF.length
-          ? `↩️ 이어서 작업 중 — 받은 <b>영상 ${HANDOFF.length}개</b>와 상태·대본을 유지했어요.`
-          : `↩️ 이어서 작업 중 — <b>확정한 대본</b>을 유지했어요. 영상은 아직 담지 않았습니다.`)
-      : `⭐ 즐겨찾기에서 <b>영상 ${HANDOFF.length}개</b>를 받았어요 — 각 영상에서 📝뽑기(대본)·🎬담기(화면)를 골라주세요. 같은 영상을 둘 다로 써도 됩니다.`;
+    b.innerHTML = arrived
+      ? `⭐ 레퍼런스에서 <b>영상 ${arrived}개</b>를 받았어요 (영상풀 총 ${HANDOFF.length}개) — 각 영상에서 📝뽑기(대본)·🎬담기(화면)를 골라주세요.`
+      : (restored
+          ? (HANDOFF.length
+              ? `↩️ 이어서 작업 중 — 받은 <b>영상 ${HANDOFF.length}개</b>와 상태·대본을 유지했어요.`
+              : `↩️ 이어서 작업 중 — <b>확정한 대본</b>을 유지했어요. 영상은 아직 담지 않았습니다.`)
+          : `⭐ 즐겨찾기에서 <b>영상 ${HANDOFF.length}개</b>를 받았어요 — 각 영상에서 📝뽑기(대본)·🎬담기(화면)를 골라주세요. 같은 영상을 둘 다로 써도 됩니다.`);
   }
   renderPool();
   syncFootageToMixUrls();
