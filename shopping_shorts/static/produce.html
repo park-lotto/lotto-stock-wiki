@@ -236,9 +236,9 @@
         </div>
         <!-- 우: 컨트롤 -->
         <div style="flex:1;min-width:300px">
-          <div style="font-size:13px;margin-bottom:4px">헤드카피 문구</div>
-          <input id="hcText" type="text" placeholder="예: 써보면 놀라는 이것" oninput="updateHC()"
-            style="width:100%;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px;margin-bottom:12px">
+          <div style="font-size:13px;margin-bottom:4px">헤드카피 문구 <span class="hint" style="font-size:11px">— Enter로 줄바꿈, 길면 자동으로 줄이 나뉘어요</span></div>
+          <textarea id="hcText" rows="2" placeholder="예: 써보면 놀라는 이것" oninput="updateHC()"
+            style="width:100%;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px;margin-bottom:12px;resize:vertical;font-family:inherit;font-size:14px;line-height:1.4"></textarea>
           <!-- 🎯 완성 스타일 카드(Task2가 renderStyleCards로 채움) -->
           <div style="font-size:13px;font-weight:800;margin-bottom:6px">🎯 완성 스타일 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 그대로 완성</span></div>
           <div id="fullPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"></div>
@@ -1038,14 +1038,15 @@ function updateHC(){
   const el=g('hcPreviewText');
   const scale=PREVIEW_W/VIDEO_W;
   const rules = (STATE.deco && STATE.deco.highlight_rules) || [];
+  el.style.whiteSpace='pre-wrap';   // \n 줄바꿈 표시 + 긴 줄은 폭 넘으면 자동 줄바꿈
   if(rules.length && hc.text){
     const esc2 = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
-    el.innerHTML = hc.text.split(' ').map(w=>{
+    el.innerHTML = hc.text.split('\n').map(line=>line.split(' ').map(w=>{
       const r = rules.find(x=>x.keyword && x.keyword===w);
       if(!r) return esc2(w);
       const bg = r.box ? `background:${r.box_color};padding:0 4px;border-radius:4px;` : '';
       return `<span style="color:${r.color};${bg}">${esc2(w)}</span>`;
-    }).join(' ');
+    }).join(' ')).join('\n');
   } else {
     el.textContent = hc.text;
   }

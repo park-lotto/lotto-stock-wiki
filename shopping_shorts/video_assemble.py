@@ -468,6 +468,50 @@ def _build_segments(line, base_color, highlight_rules):
     return segs
 
 
+def _char_split(word, font, max_w):
+    """공백 없는 한 단어를 폭 안에 들어가게 글자 단위로 쪼갠다(한글은 띄어쓰기가 적어
+    단어 자체가 폭을 넘는 일이 흔하다)."""
+    out, cur = [], ""
+    for ch in word:
+        if cur and font.getlength(cur + ch) > max_w:
+            out.append(cur)
+            cur = ch
+        else:
+            cur += ch
+    out.append(cur)
+    return out
+
+
+def _wrap_to_width(line, font, max_w):
+    """한 줄을 폭(max_w) 안에 들어가게 나눈다 — 단어(공백) 단위 그리디, 한 단어가 폭을
+    넘으면 글자 단위로 쪼갠다. 빈 줄은 빈 줄로 보존. 미리보기의 자동 줄바꿈(CSS pre-wrap)과
+    최종 렌더를 맞춰, 긴 헤드카피가 화면 밖으로 넘치지 않고 사용자가 본 그대로 나오게 한다."""
+    if not line:
+        return [""]
+    out, cur = [], ""
+    for w in line.split(" "):
+        trial = w if not cur else cur + " " + w
+        if not cur:
+            if font.getlength(w) <= max_w:
+                cur = w
+            else:
+                pieces = _char_split(w, font, max_w)
+                out.extend(pieces[:-1])
+                cur = pieces[-1]
+        elif font.getlength(trial) <= max_w:
+            cur = trial
+        else:
+            out.append(cur)
+            if font.getlength(w) <= max_w:
+                cur = w
+            else:
+                pieces = _char_split(w, font, max_w)
+                out.extend(pieces[:-1])
+                cur = pieces[-1]
+    out.append(cur)
+    return out
+
+
 def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
                           highlight_rules=None, default_color="0xFFFFFF"):
     """헤드카피/자막 한 블록을 줄 단위로 나누고, highlight_rules에 매칭되는 단어만
@@ -484,6 +528,8 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
         pil_font = ImageFont.truetype(font_disk_path, size)
     except OSError:
         pil_font = ImageFont.load_default()
+    # 폭 초과 줄 자동 줄바꿈 — 미리보기(pre-wrap)와 맞춰 최종 영상도 화면 밖으로 안 넘게.
+    lines = [seg for ln in lines for seg in _wrap_to_width(ln, pil_font, 0.92 * _OUT_W)]
     base_color_raw = base_style.get("color")  # 원시 #hex(또는 None) — _hex_to_ff는 drawtext 빌드에서 1회만 적용(이중변환 방지)
     x_center = x_pct / 100.0 * _OUT_W
     y_top = y_pct / 100.0 * _OUT_H
