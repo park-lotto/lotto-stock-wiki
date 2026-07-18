@@ -30,7 +30,7 @@ from shopping_shorts.categorize import categorize, KEYWORDS as CATEGORY_KEYWORDS
 from shopping_shorts import script_generate
 from shopping_shorts.apify_client import fetch_single_reel, fetch_reels, fetch_profiles
 from shopping_shorts import discovery, instagram_search
-from shopping_shorts.channels import load_channels
+from shopping_shorts.channels import load_channels, username_from_url
 from shopping_shorts.video_analysis import (analyze_video, translate_keyword, cn_search_keyword,
                                             cn_search_keyword_vision, judge_same_product)
 from shopping_shorts.product_identify import fetch_lens_lines, identify_product_from_lines
@@ -453,6 +453,26 @@ def api_discover_add(username: str, name: str = ""):
 def api_discover_added():
     """발굴로 추가한 채널 목록."""
     return {"ok": True, "items": Store(DB_PATH).discovered_channels()}
+
+
+@app.post("/api/reference/register")
+def api_reference_register(url: str):
+    """레퍼런스 채널을 URL 붙여넣기로 직접 등록(2026-07-18). 인스타 채널/릴스
+    URL에서 username을 뽑아 discovered_channels에 소프트 추가 — 엑셀 원본은
+    안 건드리고 다음 수집부터 랭킹에 포함(비용 0, 프로필 조회 안 함).
+    이미 엑셀·발굴목록에 있으면 already=True로 알려주고 중복 추가하지 않는다."""
+    username = username_from_url(url)
+    if not username:
+        return JSONResponse(status_code=422, content={
+            "ok": False,
+            "error": "인스타 채널 URL이 아닙니다 (instagram.com/아이디 형태)"})
+    store = Store(DB_PATH)
+    key = username.strip().lstrip("@").lower()
+    known = {u.strip().lstrip("@").lower() for u in _known_usernames(store)}
+    if key in known:
+        return {"ok": True, "username": username, "already": True}
+    store.add_discovered(username)
+    return {"ok": True, "username": username, "already": False}
 
 
 @app.get("/api/prune/scan")

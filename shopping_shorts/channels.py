@@ -49,6 +49,28 @@ def cap_channels(channels, max_channels=MAX_CHANNELS):
     return sorted(channels, key=lambda c: c.get("followers", 0), reverse=True)[:max_channels]
 
 
+def _norm(c):
+    return c["username"].strip().lstrip("@").lower()
+
+
+def merge_tracked(excel_channels, discovered, removed=None, max_channels=MAX_CHANNELS):
+    """엑셀 채널 + 발굴/등록 채널을 union하고 제외(removed) 채널을 뺀 최종 추적 목록.
+
+    손으로 등록/발굴한 채널(discovered)을 union 앞쪽에 둔다(2026-07-18). 엑셀은
+    이미 MAX_CHANNELS(팔로워 상위)로 꽉 차 있어서, 발굴채널을 뒤에 붙이고 cap을
+    자르면 등록해도 전부 잘려나가(수집 안 됨) 버그였다. 앞에 두면 cap에서 엑셀의
+    팔로워 최저 채널부터 밀려나고 사장님이 고른 채널은 살아남는다 — 수집 총량
+    (=수집비 상한)은 그대로. 엑셀에 이미 있는 발굴채널은 중복 제외한다.
+
+    discovered: [{username, ...}] 최신 추가순. removed: 소문자 정규화된 username set."""
+    known = {_norm(c) for c in excel_channels}
+    fresh = [d for d in discovered if _norm(d) not in known]
+    merged = fresh + list(excel_channels)
+    if removed:
+        merged = [c for c in merged if _norm(c) not in removed]
+    return merged[:max_channels]
+
+
 def load_channels(excel_path=EXCEL_PATH):
     """엑셀 파일 열어 채널 리스트 반환(MAX_CHANNELS 상한 적용)."""
     wb = load_workbook(excel_path, data_only=True, read_only=True)
