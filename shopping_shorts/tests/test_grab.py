@@ -51,3 +51,22 @@ def test_grab_setup_page_bookmarklet_points_to_api(tmp_path, monkeypatch):
     m = re.search(r'atob\("([^"]+)"\)', r.text)
     decoded = base64.b64decode(m.group(1)).decode()
     assert decoded.startswith("javascript:") and "/api/grab?url=" in decoded
+
+
+def test_mix_basket_meta_roundtrip(tmp_path):
+    s = Store(str(tmp_path / "t.db"))
+    s.mix_basket_add("grab_yt_1", url="u", customer_id=0)
+    s.mix_basket_set_meta("grab_yt_1", customer_id=0, thumbnail="cover.jpg", name="제목",
+                          meta={"views": 12000, "likes": 340, "duration": 45, "channel": "채널A"})
+    item = [i for i in s.mix_basket_list(customer_id=0) if i["shortcode"] == "grab_yt_1"][0]
+    assert item["thumbnail"] == "cover.jpg" and item["name"] == "제목"
+    assert item["meta"]["views"] == 12000 and item["meta"]["channel"] == "채널A"
+
+
+def test_set_meta_does_not_overwrite_existing_name(tmp_path):
+    """유저스크립트가 이미 준 name/thumbnail은 보강이 덮지 않는다."""
+    s = Store(str(tmp_path / "t.db"))
+    s.mix_basket_add("grab_yt_2", url="u", thumbnail="orig.jpg", name="원제목", customer_id=0)
+    s.mix_basket_set_meta("grab_yt_2", customer_id=0, thumbnail="new.jpg", name="새제목")
+    item = [i for i in s.mix_basket_list(customer_id=0) if i["shortcode"] == "grab_yt_2"][0]
+    assert item["thumbnail"] == "orig.jpg" and item["name"] == "원제목"

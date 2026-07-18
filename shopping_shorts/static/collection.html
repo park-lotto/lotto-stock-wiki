@@ -55,7 +55,7 @@ const SELECTED=new Set();
 async function loadItems(){
   try{
     const d=await (await fetch('/api/mix/basket')).json();
-    ITEMS=d.items||[];
+    ITEMS=(d.items||[]).slice().reverse();   // 최근에 담은 게 맨 위로
   }catch(e){ ITEMS=[]; }
   render();
 }
@@ -89,6 +89,40 @@ function thumbSrc(u){
   if(!u) return '';
   return u.includes('gstatic.com') ? u : '/api/thumb?url='+encodeURIComponent(u);
 }
+function _fmtCount(n){
+  if(n==null||isNaN(n)) return '';
+  n=Number(n);
+  if(n>=100000000) return (n/100000000).toFixed(1).replace(/\.0$/,'')+'억';
+  if(n>=10000) return (n/10000).toFixed(1).replace(/\.0$/,'')+'만';
+  if(n>=1000) return (n/1000).toFixed(1).replace(/\.0$/,'')+'천';
+  return String(n);
+}
+function _fmtDur(s){
+  if(s==null||isNaN(s)) return '';
+  s=Math.round(Number(s)); const m=Math.floor(s/60);
+  return m+':'+String(s%60).padStart(2,'0');
+}
+// 레퍼런스 랭킹처럼 영상정보 한 줄(조회수·좋아요·댓글·길이·채널) — 원클릭 담기 보강메타(m).
+function metaLine(m){
+  if(!m) return '';
+  const parts=[
+    m.channel?('👤 '+esc(String(m.channel).slice(0,18))):'',
+    (m.views!=null)?('👁 '+_fmtCount(m.views)):'',
+    (m.likes!=null)?('❤ '+_fmtCount(m.likes)):'',
+    (m.comments!=null)?('💬 '+_fmtCount(m.comments)):'',
+    (m.duration!=null)?('⏱ '+_fmtDur(m.duration)):''
+  ].filter(Boolean);
+  return parts.length?`<div style="font-size:11px;color:var(--sub);margin:2px 0 4px">${parts.join('  ·  ')}</div>`:'';
+}
+// 이 영상 하나만 바로 제작소로 (선택 안 해도 카드에서 바로).
+function sendOneToProduce(sc){
+  const i=ITEMS.find(x=>x.shortcode===sc); if(!i) return;
+  const picks=[{url:i.url||'', shortcode:i.shortcode||'', name:i.name||'',
+                thumbnail:i.thumbnail||'', caption:i.caption||''}];
+  sessionStorage.setItem('produce_handoff', JSON.stringify(picks));
+  sessionStorage.setItem('produce_mix_urls', JSON.stringify(picks.map(p=>p.url).filter(Boolean)));
+  location.href='/produce';
+}
 function render(){
   const el=document.getElementById('cards');
   document.getElementById('selCount').textContent = SELECTED.size ? `${SELECTED.size}개 선택` : '';
@@ -106,10 +140,12 @@ function render(){
       </div>
       <div class="body">
         <div class="rank" style="white-space:normal;line-height:1.4;min-height:2.6em">${esc((i.name||i.caption||'').slice(0,60))}</div>
+        ${metaLine(i.meta)}
         <div class="btns">
           <button class="view" onclick="window.open('${esc(i.url||'#')}','_blank')">👁 보기</button>
           <button onclick="removeItem('${i.shortcode}')">🗑 빼기</button>
         </div>
+        <button onclick="sendOneToProduce('${i.shortcode}')" style="width:100%;margin-top:6px;padding:8px;background:#1f6feb;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">🎬 제작소로 보내기</button>
       </div>
     </div>`;
   }).join('');

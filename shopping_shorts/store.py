@@ -236,6 +236,12 @@ class Store:
                 c.execute("ALTER TABLE script_wiki ADD COLUMN thumbnail TEXT")
             except sqlite3.OperationalError:
                 pass  # 이미 있으면(기존 DB) 무시
+            # 원클릭 담기 영상의 메타(조회수·좋아요·댓글·길이·채널) 보관(2026-07-18).
+            # yt-dlp/oEmbed로 백그라운드 보강한 값을 JSON으로 넣어 모음집이 레퍼런스 랭킹처럼 표시.
+            try:
+                c.execute("ALTER TABLE mix_basket ADD COLUMN meta_json TEXT")
+            except sqlite3.OperationalError:
+                pass
             # 고객 계정(2026-07-13 멀티테넌시). 비밀번호는 pbkdf2-sha256(솔트별도)로만
             # 저장 — 평문 저장 금지.
             c.execute("""
@@ -778,17 +784,44 @@ class Store:
                       (customer_id, shortcode))
 
     def mix_basket_list(self, customer_id=LEGACY_CUSTOMER_ID):
-        """이 고객이 담은 순서(added_at)대로 항목 dict 리스트."""
+        """이 고객이 담은 순서(added_at)대로 항목 dict 리스트. meta_json은 풀어서 병합."""
         with self._conn() as c:
             rows = c.execute(
-                "SELECT shortcode, url, thumbnail, name, caption FROM mix_basket "
+                "SELECT shortcode, url, thumbnail, name, caption, meta_json FROM mix_basket "
                 "WHERE customer_id=? ORDER BY added_at ASC, rowid ASC",
                 (customer_id,),
             ).fetchall()
-        return [
-            {"shortcode": r[0], "url": r[1], "thumbnail": r[2], "name": r[3], "caption": r[4]}
-            for r in rows
-        ]
+        out = []
+        for r in rows:
+            item = {"shortcode": r[0], "url": r[1], "thumbnail": r[2], "name": r[3], "caption": r[4]}
+            if r[5]:
+                try:
+                    item["meta"] = json.loads(r[5])
+                except (ValueError, TypeError):
+                    pass
+            out.append(item)
+        return out
+
+    def mix_basket_set_meta(self, shortcode, customer_id=LEGACY_CUSTOMER_ID,
+                            thumbnail=None, name=None, meta=None):
+        """원클릭 담기 항목의 보강값 갱신(백그라운드 enrich용). None인 필드는 안 건드린다.
+        thumbnail/name은 기존 값이 빈 경우에만 채운다(사용자·유저스크립트가 준 값 우선).
+        meta=dict면 JSON으로 직렬화해 meta_json에 저장."""
+        sets, args = [], []
+        if thumbnail:
+            sets.append("thumbnail=COALESCE(NULLIF(thumbnail,''), ?)")
+            args.append(thumbnail)
+        if name:
+            sets.append("name=COALESCE(NULLIF(name,''), ?)")
+            args.append(name)
+        if meta:
+            sets.append("meta_json=?")
+            args.append(json.dumps(meta, ensure_ascii=False))
+        if not sets:
+            return
+        args += [customer_id, shortcode]
+        with self._conn() as c:
+            c.execute(f"UPDATE mix_basket SET {', '.join(sets)} WHERE customer_id=? AND shortcode=?", args)
 
     def mix_basket_shortcodes(self, customer_id=LEGACY_CUSTOMER_ID):
         """이 고객의 바구니에 담긴 shortcode 집합(버튼 상태 표시용)."""
