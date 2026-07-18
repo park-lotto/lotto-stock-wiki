@@ -449,6 +449,23 @@ class Store:
                     created_at TEXT DEFAULT (datetime('now'))
                 )
             """)
+            # 픽로그(2026-07-18, 트랙1) — 사장님이 고른 것/버린 것을 append-only로 남긴다.
+            # 트랙7 LLM 심사의 취향 예시 + B전환 승인률 지표의 원천. 수정·삭제 없음.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS pick_events (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    job_id TEXT,
+                    stage TEXT NOT NULL,
+                    candidates_json TEXT,
+                    picked TEXT,
+                    rejected TEXT,
+                    edit_diff TEXT,
+                    ts TEXT NOT NULL
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_pick_events "
+                      "ON pick_events(customer_id, id DESC)")
             # 기존 DB용 마이그레이션 — mix_jobs 자막제거 필드(2026-07-13).
             # 새 DB는 위 CREATE에 이미 있어 여기선 "이미 존재" 예외를 조용히 넘긴다.
             for col, ddl in (
@@ -1280,6 +1297,61 @@ class Store:
             """).fetchall()
         return [{"origin_shortcode": r[0], "platform": r[1], "url": r[2], "title": r[3],
                  "thumbnail": r[4], "similarity_score": r[5], "saved_at": r[6]} for r in rows]
+
+    @staticmethod
+    def _pe_enc(v):
+        """픽로그 값 저장 인코딩: str/None은 그대로, 그 외(dict·list·int)는 JSON."""
+        if v is None or isinstance(v, str):
+            return v
+        return json.dumps(v, ensure_ascii=False)
+
+    @staticmethod
+    def _pe_dec(v):
+        """저장 값 복원: JSON이면 파싱, 아니면(순수 문자열) 그대로."""
+        if v is None:
+            return None
+        try:
+            return json.loads(v)
+        except (ValueError, TypeError):
+            return v
+
+    def log_pick_event(self, stage, *, picked=None, rejected=None, candidates=None,
+                       edit_diff=None, job_id=None, customer_id=LEGACY_CUSTOMER_ID):
+        """픽/반려 한 건 append. 새 row id 반환. 부가 기능이라 최대한 관대하게 저장한다."""
+        ts = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            cur = c.execute(
+                "INSERT INTO pick_events(customer_id, job_id, stage, candidates_json, "
+                "picked, rejected, edit_diff, ts) VALUES(?,?,?,?,?,?,?,?)",
+                (customer_id, job_id or None, stage,
+                 json.dumps(candidates, ensure_ascii=False) if candidates is not None else None,
+                 self._pe_enc(picked), self._pe_enc(rejected), self._pe_enc(edit_diff), ts),
+            )
+            return cur.lastrowid
+
+    def list_pick_events(self, *, customer_id=None, stage=None, limit=100):
+        """최근(id 내림차순)부터. customer_id/stage 필터 선택. JSON 필드는 파싱해서 준다."""
+        q = ("SELECT id, customer_id, job_id, stage, candidates_json, picked, "
+             "rejected, edit_diff, ts FROM pick_events")
+        conds, args = [], []
+        if customer_id is not None:
+            conds.append("customer_id=?")
+            args.append(customer_id)
+        if stage is not None:
+            conds.append("stage=?")
+            args.append(stage)
+        if conds:
+            q += " WHERE " + " AND ".join(conds)
+        q += " ORDER BY id DESC LIMIT ?"
+        args.append(limit)
+        with self._conn() as c:
+            rows = c.execute(q, args).fetchall()
+        return [
+            {"id": r[0], "customer_id": r[1], "job_id": r[2], "stage": r[3],
+             "candidates": self._pe_dec(r[4]), "picked": self._pe_dec(r[5]),
+             "rejected": self._pe_dec(r[6]), "edit_diff": self._pe_dec(r[7]), "ts": r[8]}
+            for r in rows
+        ]
 
     def create_mix_job(self, job_id, urls, target_seconds, structure,
                        subtitle_removal=False, given_script=None, script_structure=None):

@@ -46,12 +46,27 @@ def _first(item, *paths):
 
 
 def _duration_secs(item, video):
-    """영상 길이(초). 초 또는 밀리초로 올 수 있어 큰 값이면 ms로 보고 환산."""
-    n = _num(_first(video, "duration") or _first(item, "duration",
-                                                 ("video", "duration"), "videoDuration"))
+    """영상 길이(초). rednote는 video.duration_seconds(초). 혹시 ms면 큰 값을 환산."""
+    n = _num(_first(video, "duration_seconds", "duration") or _first(item, "duration"))
     if n is None:
         return None
     return n // 1000 if n > 6000 else n
+
+
+def _cover(item, video):
+    """노트 커버 이미지. ★video.thumbnail은 스크러빙 스프라이트(격자 몽타주)라 쓰면 안 된다
+    (2026-07-18 라이브 실측). images[cover_image_index].url 이 진짜 커버. 없으면 순차 폴백."""
+    imgs = item.get("images") or []
+    idx = item.get("cover_image_index")
+    if isinstance(idx, int) and 0 <= idx < len(imgs):
+        u = (imgs[idx] or {}).get("url")
+        if u:
+            return u
+    if imgs:
+        u = (imgs[0] or {}).get("url")
+        if u:
+            return u
+    return video.get("first_frame") or video.get("thumbnail") or ""
 
 
 def search(keyword, max_results=10, token=None, timeout=180, poll_interval=5):
@@ -76,14 +91,13 @@ def search(keyword, max_results=10, token=None, timeout=180, poll_interval=5):
         out.append({
             "url": url,
             "title": item.get("title") or item.get("desc", ""),
-            "thumbnail": video.get("thumbnail", ""),
+            "thumbnail": _cover(item, video),        # ★images 커버(스프라이트 아님)
             "play_url": video.get("url_720p", ""),   # 인라인 미리보기용 직접 mp4
-            "channel": _first(item, ("user", "nickname"), ("user", "name"),
-                              ("author", "nickname"), ("author", "name"), "nickname") or "",
-            "likes": _num(_first(item, ("interactInfo", "likedCount"),
-                                 "likedCount", "likes", "likeCount")),
-            "views": _num(_first(item, ("interactInfo", "viewCount"),
-                                 "viewCount", "views", "playCount")),
+            "channel": _first(item, ("author", "nickname"), ("author", "name")) or "",
+            "likes": _num(_first(item, ("engagement", "liked_count"),
+                                 ("engagement", "likedCount"))),
+            "views": _num(_first(item, ("engagement", "view_count"),
+                                 ("engagement", "viewed_count"))),
             "duration": dur,
             "is_short": dur is None or dur <= _SHORT_MAX_SECS,
         })
