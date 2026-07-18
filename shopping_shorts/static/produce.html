@@ -2536,7 +2536,7 @@ function _updateVoiceLen(n, vidLen){
 // ▶ 프리뷰 — 재생 중인 비트의 9:16 프레임을 vpFrame에, 자막을 vpCap에 서버 cap_segments/cap_durs(+cap_offset) 타이밍으로 표시(가라오케식)
 function _vpShowFrame(i){
   const f=document.getElementById('vpFrame');
-  if(f && typeof MIX_JOB!=='undefined' && MIX_JOB){ f.style.display='block'; f.src='/api/mix/beatframe/'+MIX_JOB+'/'+i; }
+  if(f && typeof MIX_JOB!=='undefined' && MIX_JOB){ f.style.display='block'; f.src='/api/produce/mix/beatframe/'+MIX_JOB+'/'+i; }
 }
 function _vpCapDurs(b){
   const segs=b.cap_segments||[]; if(!segs.length) return [];
