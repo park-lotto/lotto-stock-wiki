@@ -45,3 +45,13 @@ def test_no_fabricated_stats_on_cards():
     # 허위 지표(조회/참여 숫자)를 카드에 박지 않는다 — 정직성 잠금
     assert "조회 21만" not in HTML
     assert "참여 5.6%" not in HTML
+
+
+def test_my_preset_library_surfaced():
+    # 내 프리셋 라이브러리가 '직접 다듬기' 접힘 밖으로 나와 항상 보인다(60대 접근성)
+    assert "⭐ 내 프리셋 <span" in HTML          # 갤러리 밑 항상 노출되는 라벨
+    assert "💾 지금 스타일 저장" in HTML
+    assert 'onclick="saveMyPreset()"' in HTML
+    assert 'onclick="applyMyPreset(' in HTML     # 클릭 즉시 적용
+    # 접혀있던 옛 블록 문구는 제거됨(중복 방지)
+    assert "⭐ 내 프리셋 저장 · 불러오기" not in HTML
