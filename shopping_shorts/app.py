@@ -20,6 +20,7 @@ from fastapi.staticfiles import StaticFiles
 from shopping_shorts.service import collect, generate_missing_drafts, next_draft_targets
 from shopping_shorts.outreach import build_queue
 from shopping_shorts.store import Store
+from shopping_shorts.auto_run import run_auto_job, default_stages
 from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
 from shopping_shorts.frame_extract import (download_video, extract_frames,
                                            extract_frame_at, extract_grid_frames)
@@ -36,7 +37,7 @@ from shopping_shorts.product_identify import fetch_lens_lines, identify_product_
 from shopping_shorts.search_links import build_search_links, lens_search_url
 from shopping_shorts import mix_pipeline
 from shopping_shorts.mix_pipeline import (run_mix_job, run_render, run_preview, retype_mix_job,
-                                          _source_video_id, resynth_tts_job)
+                                          _source_video_id, resynth_tts_job, resynth_one_beat)
 from shopping_shorts.lens_discover import search_similar_videos, upload_frame
 from shopping_shorts import douyin_search, xiaohongshu_search
 from shopping_shorts.config import APIFY_TOKENS
@@ -1306,7 +1307,8 @@ def api_mix_result(job_id: str):
     beats = []
     for b in plan["beats"]:
         beats.append({**b, "plagiarism_flag": b["beat_idx"] in flags,
-                      "tts_preview_url": f"/api/mix/tts/{job_id}/{b['beat_idx']}"})
+                      "tts_preview_url": f"/api/mix/tts/{job_id}/{b['beat_idx']}",
+                      "cap_segments": video_assemble._caption_segments(b.get("narration", ""))})
     detected = plan.get("detected_type") or _edit_plan._DEFAULT_TYPE
     return {
         "ok": True, "structure": plan["structure"], "beats": beats,
@@ -1449,6 +1451,46 @@ def api_mix_tts(job_id: str, beat_idx: int):
         if b["beat_idx"] == beat_idx and b.get("tts_path") and Path(b["tts_path"]).exists():
             return FileResponse(b["tts_path"])
     return JSONResponse(status_code=404, content={"ok": False})
+
+
+@app.post("/api/mix/tts/{job_id}/{beat_idx}/regen")
+def api_mix_tts_regen(job_id: str, beat_idx: int, body: dict, background_tasks: BackgroundTasks):
+    """비트 하나만 톤/성우 바꿔 재생성(+자막 재동기). 렌더 중이면 거부(P1-9 방지).
+    status 코드는 mix_pipeline.run_render가 실제로 쓰는 값으로 확인함(grep, 2026-07-18):
+    "rendering"(302행) → "removing_subtitles"(314행, vmake 자막제거 단계)."""
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    if job.get("status") in ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409, content={"ok": False, "error": "렌더 중에는 재생성할 수 없어요"})
+    # job의 voice 스냅샷(model_id·silence_trim·naturalize_profile 등) 위에 UI가 보낸
+    # 톤/성우 키만 덮어쓴다 — 통째로 새 dict를 만들면 _voice_params가 나머지를 기본값으로
+    # 채워 재생성 비트만 소리가 달라진다("작업대 소리 ≠ 렌더 소리", mix_pipeline._voice_params
+    # 문서 참고, 2026-07-18 리뷰).
+    override = dict(job.get("voice") or {})
+    for k in ("voice_id", "settings", "speed"):
+        if body.get(k) is not None:
+            override[k] = body.get(k)
+    background_tasks.add_task(resynth_one_beat, job_id, beat_idx, override, DB_PATH, _MIX_WORK_DIR)
+    return {"ok": True}
+
+
+@app.post("/api/mix/caption_offset/{job_id}/{beat_idx}")
+def api_mix_caption_offset(job_id: str, beat_idx: int, body: dict):
+    """비트 자막의 수동 시각 보정값(초)을 저장. 최종 _burn_captions가 읽어 반영."""
+    offset = max(-2.0, min(2.0, float(body.get("offset") or 0.0)))
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    plan = job["edit_plan"]
+    beat = next((b for b in plan["beats"] if b["beat_idx"] == beat_idx), None)
+    if beat is None:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "비트 없음"})
+    beat["cap_offset"] = offset
+    store.update_mix_job(job_id, edit_plan=plan)
+    return {"ok": True, "offset": offset}
 
 
 @app.get("/api/voice-presets")
@@ -2462,6 +2504,26 @@ def api_pick_log(request: Request, body: dict):
         customer_id=_cid(request),
     )
     return {"ok": True, "id": eid}
+
+
+@app.post("/api/auto/start")
+def api_auto_start(request: Request, body: dict, background: BackgroundTasks):
+    # 러너 트리거(트랙4) — auto_job 생성 후 백그라운드로 S1~S3 관통. 동시 1 job 가정.
+    import uuid as _uuid
+    store = Store(DB_PATH)
+    job_id = _uuid.uuid4().hex[:12]
+    store.create_auto_job(job_id, customer_id=_cid(request))
+    stages = default_stages(DB_PATH, _MIX_WORK_DIR)
+    background.add_task(run_auto_job, job_id, store, stages=stages)
+    return {"ok": True, "job_id": job_id}
+
+
+@app.get("/api/auto/{job_id}")
+def api_auto_status(job_id: str):
+    job = Store(DB_PATH).get_auto_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "없음"})
+    return job
 
 
 @app.get("/api/produce/works")

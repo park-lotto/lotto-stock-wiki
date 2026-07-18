@@ -218,6 +218,8 @@ _FREE_INSTR = "[구조: 자유 모드] 비트 수와 구조(role 라벨)를 네�
 
 # given_script 모드(영상제작 위저드 2단계) — 나레이션을 새로 쓰지 않고 확정 대본을
 # 비트로 쪼개 각 비트에 소스 영상 구간만 매칭한다.
+_SCRIPTED_N_ALT = 6   # scripted 모드: 비트당 이어붙일 구간을 넉넉히 받는다(대사 길이 채우기).
+
 _SCRIPTED_PROMPT = """너는 숏폼 쇼핑 영상 편집 감독이다. **나레이션 대본은 이미 확정**돼 있다.
 아래 확정 대본을 자연스러운 비트(문장/구절) 단위로 나누고, 각 비트에 어울리는 소스
 영상 구간(seg_id)을 골라 편집안(EDL)을 만들어라.
@@ -231,8 +233,11 @@ _SCRIPTED_PROMPT = """너는 숏폼 쇼핑 영상 편집 감독이다. **나레�
 규칙(반드시 지켜라):
 - 확정 대본을 순서대로 비트로 쪼개라. 각 비트의 narration은 **확정 대본의 실제 구절
   그대로**(표현·어미 바꾸지 말 것). 대본 전체가 빠짐없이 비트로 커버되게 해라.
-- 각 비트마다 그 말에 어울리는 소스 구간(primary는 seg_id로 지목) + 대체 후보
-  (alternates, seg_id로 {n_alternates}개까지) + 효과(effect, 기본 "cut").
+- 각 비트마다 그 대사에 어울리는 소스 구간을, **화면에 이어서 재생할 순서대로** 골라라.
+  primary가 가장 잘 맞는 첫 구간, alternates는 그 뒤로 **이어붙일 추가 구간들**(대안이 아니라
+  연속 재생용)이다. **비트 대사를 읽는 시간(target_seconds)만큼 화면을 채우도록** 구간 길이 합이
+  target_seconds 이상 되게 seg_id를 {n_alternates}개까지 순서대로 담아라. 서로 다른 소스 영상에
+  걸쳐도 좋다(관련성 우선). 전부 대사 내용과 화면(scene_desc)이 어울려야 한다.
 - **[여러 영상 모두 사용] primary 구간을 한 영상에만 몰지 마라. 소스가 여러 개면 고르게 섞어라.**
 - 나레이션과 primary 구간의 화면(scene_desc)이 실제로 어울리게 골라라.
 - **소스 구간은 반드시 인벤토리의 seg_id로만 지목**해라. 없는 seg_id 지어내지 마라.
@@ -346,6 +351,7 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
     scripted = bool(given_script and given_script.strip())
     if scripted:
         video_type = video_type if video_type in VIDEO_TYPES else _DEFAULT_TYPE
+        n_alternates = _SCRIPTED_N_ALT
         prompt = _SCRIPTED_PROMPT.format(
             given_script=given_script.strip()[:4000], inventory=inventory, n_alternates=n_alternates)
     else:

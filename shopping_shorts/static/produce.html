@@ -244,6 +244,7 @@
         </div>
       </div>
       <div id="ttsBeats" style="margin-top:14px"></div>
+      <button class="btn-next" style="margin-top:12px;padding:8px 16px" onclick="vpGateNext()">다음 단계 (꾸미기) →</button>
     </section>
     <section class="panel" data-step="3">
       <h3>4 · 꾸미기</h3>
@@ -901,6 +902,7 @@ async function fxPoll(){
 }
 // ── 자막 스타일(나레이션 자막) ──────────────
 let CAP_EFFECT='none';
+let CAP_SHADOW=false;   // 은은한 드롭 그림자(레퍼런스 자막룩). 프리셋이 켬. 두꺼운 테두리 대안.
 let PREVIEW_CAP_TEXT='이렇게 자막이 나와요';   // 스텝퍼가 비트별 자막으로 교체
 // ── 🎞 공용 장면 프리뷰 스텝퍼 — 비트마다 프레임+자막 넘겨보기(TTS·검수판 트랙도 재사용) ──
 let BEATS_PREVIEW=[];   // [{i,total,caption}]
@@ -948,7 +950,7 @@ function updateCaption(){
   const cs={ font:g('capFont').value||'NanumGothic-Bold.ttf', color:g('capColor').value, size:+g('capSize').value,
     y_pct:+g('capY').value, outline:g('capOutline').checked, outline_color:g('capOutColor').value, outline_w:+g('capOutW').value,
     box:g('capBox').checked, box_color:g('capBoxColor').value, box_pad:+g('capBoxPad').value, box_opacity:+g('capBoxOpacity').value,
-    bar:!g('capBox').checked, effect:CAP_EFFECT };
+    bar:!g('capBox').checked, effect:CAP_EFFECT, shadow:CAP_SHADOW, shadow_color:'#000000', shadow_d:3 };
   STATE.captionStyle=cs;
   g('capSizeV').textContent=cs.size; g('capYV').textContent=cs.y_pct;
   const el=g('capPreviewText'); if(!el) return;
@@ -960,7 +962,10 @@ function updateCaption(){
   el.style.fontSize=Math.max(9, cs.size*scale)+'px';
   el.style.maxWidth=(PREVIEW_W-16)+'px';
   const oc=cs.outline_color, ow=(cs.outline_w*scale).toFixed(1);
-  el.style.textShadow = cs.outline ? `${ow}px ${ow}px 0 ${oc}, -${ow}px -${ow}px 0 ${oc}, ${ow}px -${ow}px 0 ${oc}, -${ow}px ${ow}px 0 ${oc}` : 'none';
+  const sd=Math.max(1,(cs.shadow_d||3)*scale).toFixed(1);
+  el.style.textShadow = cs.outline
+    ? `${ow}px ${ow}px 0 ${oc}, -${ow}px -${ow}px 0 ${oc}, ${ow}px -${ow}px 0 ${oc}, -${ow}px ${ow}px 0 ${oc}`
+    : (cs.shadow ? `0 ${sd}px ${(sd*2)}px rgba(0,0,0,.55), 0 0 ${sd}px rgba(0,0,0,.4)` : 'none');
   if(cs.box){ el.style.background=hexA(cs.box_color, cs.box_opacity/100); el.style.padding=`${Math.round(cs.box_pad*scale)}px ${Math.round(cs.box_pad*1.5*scale)}px`; el.style.borderRadius='6px'; }
   else { el.style.background='none'; el.style.padding='2px 6px'; el.style.borderRadius='0'; }
   // 효과 프리뷰: 선택 효과를 미리보기에서 반복 재생(fade/slide/pop/sparkle). 없음이면 정지.
@@ -990,21 +995,21 @@ function renderSparkles(on, ypct){
 }
 function cs_spark_size(){ const g=document.getElementById('capSize'); return g ? Math.max(10,(+g.value||50)*(PREVIEW_W/VIDEO_W)*0.5) : 16; }
 // ── 🎯 완성 스타일 프리셋(원클릭: 헤드카피+자막+효과 한 번에) — 빅채널 레퍼런스 기반 ──
-// 레퍼런스(HOMEDIRECTOR)와 동일한 깔끔한 흰색 자막 스타일만 — 위치만 다른 3개.
+// 레퍼런스(HOMEDIRECTOR)와 동일: 흰 자막·화면 중상단(y37, 3개 동일)·은은한 그림자(테두리X). 크기만 차이.
 const FULL_PRESETS=[
   {name:'심플 화이트', chip:'#F2F2F2', motion:'minimal_chic',
-    hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:56,x:50,y:12,outline:true,outline_color:'#000000',outline_w:3},
-    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:50,y:37,outline:true,outline_color:'#000000',outline_w:3,box:false,effect:'fade'}},
-  {name:'심플 화이트(하단)', chip:'#E8E8E8', motion:'minimal_chic',
-    hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:56,x:50,y:12,outline:true,outline_color:'#000000',outline_w:3},
-    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:50,y:82,outline:true,outline_color:'#000000',outline_w:3,box:false,effect:'fade'}},
+    hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:54,x:50,y:12,outline:true,outline_color:'#000000',outline_w:2},
+    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:50,y:37,outline:false,shadow:true,box:false,effect:'fade'}},
   {name:'심플 화이트(크게)', chip:'#FFFFFF', motion:'minimal_chic',
-    hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:60,x:50,y:12,outline:true,outline_color:'#000000',outline_w:3},
-    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:58,y:37,outline:true,outline_color:'#000000',outline_w:4,box:false,effect:'fade'}},
+    hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:58,x:50,y:12,outline:true,outline_color:'#000000',outline_w:2},
+    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:58,y:37,outline:false,shadow:true,box:false,effect:'fade'}},
+  {name:'심플 화이트(작게)', chip:'#EDEDED', motion:'minimal_chic',
+    hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:50,x:50,y:12,outline:true,outline_color:'#000000',outline_w:2},
+    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:44,y:37,outline:false,shadow:true,box:false,effect:'fade'}},
 ];
 // 스타일별 용도 태그(잘 어울리는 콘텐츠) — 정직한 큐레이션.
 const STYLE_USE={
-  '심플 화이트':'자막 가운데·깔끔', '심플 화이트(하단)':'자막 아래', '심플 화이트(크게)':'강조·큰 자막'
+  '심플 화이트':'자막 중상단·깔끔', '심플 화이트(크게)':'강조·큰 자막', '심플 화이트(작게)':'자막 많을 때'
 };
 // 대표 완성 스타일(피팅 카드 우선 노출). 나머지는 더보기.
 let STYLE_TOUCHED=false;
@@ -1013,7 +1018,7 @@ let STYLE_TOUCHED=false;
 // 채우면 스타일·꾸미기가 전부 기본값으로 덮인다(C-2 잔여, 라이브 실측 확인). 복원 시 이 플래그를
 // 세워, initHeadcopy가 applyConfig로 복원값을 DOM에 밀어넣고 STYLE_TOUCHED로 자동적용을 막는다.
 let PENDING_STYLE_RESTORE=false;
-const FEATURED = ['심플 화이트','심플 화이트(하단)','심플 화이트(크게)'];
+const FEATURED = ['심플 화이트','심플 화이트(크게)','심플 화이트(작게)'];
 let MORE_OPEN = false;
 let POSTER_URL_CACHE = null;
 let PICKED_STYLE_IDX = -1;
@@ -1098,6 +1103,7 @@ function applyConfig(h, c){
     g('capY').value=(c.y!=null?c.y:(c.y_pct!=null?c.y_pct:84));
     g('capOutline').checked=!!c.outline; g('capOutColor').value=c.outline_color||'#000000'; g('capOutW').value=c.outline_w||0;
     g('capBox').checked=!!c.box; g('capBoxColor').value=c.box_color||'#000000'; g('capBoxPad').value=(c.box_pad!=null?c.box_pad:12); g('capBoxOpacity').value=(c.box_opacity!=null?c.box_opacity:80);
+    CAP_SHADOW=!!c.shadow;   // 은은한 그림자 프리셋 반영
     setCapEffect(c.effect||'none');   // updateCaption 내부호출됨
   }
 }
@@ -1709,6 +1715,7 @@ function genMix(){
 
 // ── 1단계 제작소: 영상믹스(given_script 매칭) ──────────────
 let MIX_JOB=null, MIX_POLL=null;
+let VP_BEATS=[]; let _vpHeard=new Set();
 const MIX_LABEL={downloading:'영상 다운로드 중…',extracting:'대본 분석 중…',planning:'장면 매칭 중…',tts:'음성 생성 중…',ready_for_review:'매칭 완료',rendering:'최종 렌더 중…',done:'완료',failed:'실패'};
 function addMixUrl(){
   const wrap=document.getElementById('mixUrls');
@@ -2581,20 +2588,43 @@ async function renderTtsBeats(){
     if(!d.ok || !(d.beats||[]).length){ el.innerHTML=''; return; }
     const beats=d.beats;
     const vidLen=beats.reduce((s,b)=>s+(+b.target_seconds||0),0);
-    const rows=beats.map((b,i)=>`
-      <div id="beatRow${i}" style="border:1px solid var(--line);border-radius:9px;padding:9px;margin-bottom:6px;background:#0d1420;transition:background .15s">
-        <div style="font-size:13px;margin-bottom:4px"><b>${i+1}.</b> ${esc(b.narration||'')}</div>
-        ${b.tts_preview_url?`<audio id="beatAudio${i}" controls preload="metadata" src="${esc(b.tts_preview_url)}?t=${Date.now()}" style="height:26px"></audio>`:'<span class="hint">음성 없음</span>'}
-      </div>`).join('');
+    const rows=beats.map((b,i)=>{
+      const synced = Array.isArray(b.cap_durs) && b.cap_durs.length;
+      const badge = synced ? '🟢' : '🟡';
+      const badgeTip = synced ? '자막 자동맞춤 됨' : '자막 자동맞춤 불확실 — 들어보세요';
+      return `
+      <div id="beatRow${i}" data-idx="${i}" style="border:1px solid var(--line);border-radius:9px;padding:9px;margin-bottom:6px;background:#0d1420;transition:background .15s">
+        <div style="font-size:13px;margin-bottom:4px"><span title="${badgeTip}">${badge}</span> <b>${i+1}.</b> ${esc(b.narration||'')}</div>
+        ${b.tts_preview_url?`<audio id="beatAudio${i}" preload="metadata" src="${esc(b.tts_preview_url)}?t=${Date.now()}" style="display:none"></audio><button class="btn-prev" style="padding:4px 10px" onclick="vpPlayBeat(${i})">▶ 이 장면</button>
+        <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          <button class="btn-prev" style="padding:3px 8px" onclick="vpNudge(${i},-1)">◀ 자막 당기기</button>
+          <button class="btn-prev" style="padding:3px 8px" onclick="vpNudge(${i},1)">자막 밀기 ▶</button>
+          <button class="btn-prev" style="padding:3px 8px" onclick="vpResetOffset(${i})">↩︎ 되돌리기</button>
+          <select id="vpTone${i}" style="padding:3px"><option value="stable">안정</option><option value="natural">자연</option><option value="expressive">표현</option><option value="whisper">속삭임</option></select>
+          <button class="btn-prev" style="padding:3px 8px" onclick="vpRegenTone(${i})">🔁 톤 바꿔 다시</button>
+          <span id="vpMsg${i}" class="hint"></span>
+        </div>`:'<span class="hint">음성 없음</span>'}
+      </div>`;
+    }).join('');
     // 영상길이(비트 목표시간 합) vs 음성길이(오디오 실측 합) — 맞춤 힌트로 편집 편의성↑
+    VP_BEATS = beats;                 // 전역: 재생기가 cap_segments/cap_durs/cap_offset 읽음
+    _vpHeard = _vpHeard || new Set();
     el.innerHTML=`
-      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;border:1px solid var(--line);border-radius:9px;padding:10px 12px;margin-bottom:10px;background:#0d1420">
-        <div><span class="hint">영상 길이</span> <b style="color:var(--accent2)">${vidLen.toFixed(1)}초</b></div>
-        <div><span class="hint">음성 길이</span> <b id="voiceLen" style="color:var(--ok)">…</b></div>
-        <div id="fitMsg" class="hint">음성 길이 측정 중…</div>
-        <button onclick="playAllBeats()" class="btn-prev" style="padding:6px 12px;margin-left:auto">▶ 전체 재생</button>
-      </div>
-      <div style="font-size:12px;color:var(--sub);margin-bottom:4px">비트별 음성</div>${rows}`;
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">
+        <div style="position:relative;width:180px;aspect-ratio:9/16;background:#000;border-radius:10px;overflow:hidden;flex:0 0 auto">
+          <img id="vpFrame" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">
+          <div id="vpCap" style="position:absolute;left:0;right:0;bottom:8%;text-align:center;color:#fff;font-weight:700;font-size:13px;text-shadow:0 2px 4px #000;padding:0 6px"></div>
+        </div>
+        <div style="flex:1;min-width:220px">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">
+            <div><span class="hint">영상 길이</span> <b style="color:var(--accent2)">${vidLen.toFixed(1)}초</b></div>
+            <div><span class="hint">음성 길이</span> <b id="voiceLen" style="color:var(--ok)">…</b></div>
+            <div id="fitMsg" class="hint">음성 길이 측정 중…</div>
+            <button onclick="playAllBeats()" class="btn-prev" style="padding:6px 12px;margin-left:auto">▶ 전체 재생</button>
+          </div>
+          ${rows}
+        </div>
+      </div>`;
     _updateVoiceLen(beats.length, vidLen);
   }catch(e){ el.innerHTML='<div class="hint" style="color:var(--fire)">로드 실패</div>'; }
 }
@@ -2614,21 +2644,92 @@ function _updateVoiceLen(n, vidLen){
   };
   auds.forEach(a=>{ if(a.readyState>=1) recompute(); else a.addEventListener('loadedmetadata', recompute, {once:true}); });
 }
-// ▶ 전체 재생 — 비트 음성을 순서대로 이어 재생하며 현재 비트 줄을 하이라이트(가라오케식)
+// ▶ 프리뷰 — 재생 중인 비트의 9:16 프레임을 vpFrame에, 자막을 vpCap에 서버 cap_segments/cap_durs(+cap_offset) 타이밍으로 표시(가라오케식)
+function _vpShowFrame(i){
+  const f=document.getElementById('vpFrame');
+  if(f && typeof MIX_JOB!=='undefined' && MIX_JOB){ f.style.display='block'; f.src='/api/produce/mix/beatframe/'+MIX_JOB+'/'+i; }
+}
+function _vpCapDurs(b){
+  const segs=b.cap_segments||[]; if(!segs.length) return [];
+  if(Array.isArray(b.cap_durs) && b.cap_durs.length===segs.length) return b.cap_durs.slice();
+  const w=segs.map(s=>Math.max(1,(s||'').replace(/\s/g,'').length)); const tw=w.reduce((a,c)=>a+c,0);
+  return w.map(x=>x/tw);   // 표시용 근사(합=1, 오디오 길이에 맞춰 스케일) — 최종 렌더는 서버 cap_durs가 정확히 함
+}
+// 오디오 currentTime에 맞춰 그 비트 자막 구절을 순차 표시(cap_offset 반영). 자막 구절 자체는 항상 서버 cap_segments — 여기서 재구현하지 않는다.
+function _vpDriveCaption(aud, b){
+  const cap=document.getElementById('vpCap'); if(!cap) return;
+  const segs=b.cap_segments||[]; const rel=_vpCapDurs(b);
+  const off=(+b.cap_offset||0);
+  const upd=()=>{
+    const dur=aud.duration||rel.reduce((a,c)=>a+c,0)||1;
+    const durs=rel.map(r=> (Array.isArray(b.cap_durs)&&b.cap_durs.length)? r : r*dur);
+    let t=aud.currentTime-off, acc=0, cur=segs[0]||'';
+    for(let k=0;k<segs.length;k++){ if(t>=acc){ cur=segs[k]; } acc+=durs[k]; }
+    cap.textContent=cur;
+  };
+  aud.ontimeupdate=upd; upd();
+}
+function vpPlayBeat(i){
+  const b=VP_BEATS[i]; if(!b) return;
+  const a=document.getElementById('beatAudio'+i); if(!a) return;
+  // 다른 오디오 정지
+  let k=0; while(document.getElementById('beatAudio'+k)){ const o=document.getElementById('beatAudio'+k); if(o!==a){o.pause();} k++; }
+  _vpShowFrame(i); _vpDriveCaption(a,b); _vpHeard.add(i);
+  const r=document.getElementById('beatRow'+i);
+  document.querySelectorAll('[id^=beatRow]').forEach(x=>x.style.background='#0d1420');
+  if(r) r.style.background='#1a2740';
+  a.currentTime=0; a.play().catch(()=>{});
+}
+// ── 고치기: 자막 당기기/밀기·되돌리기·톤 재생성·부드러운 다음-단계 게이트 ──
+async function vpNudge(i,dir){
+  const b=VP_BEATS[i]; if(!b) return;
+  b.cap_offset=Math.max(-2,Math.min(2, (+b.cap_offset||0) + dir*0.1));
+  const a=document.getElementById('beatAudio'+i); if(a) _vpDriveCaption(a,b);   // 즉시 미리보기 반영
+  const m=document.getElementById('vpMsg'+i); if(m) m.textContent='자막 '+(b.cap_offset>=0?'+':'')+b.cap_offset.toFixed(1)+'초';
+  try{ await fetch('/api/mix/caption_offset/'+MIX_JOB+'/'+b.beat_idx,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({offset:b.cap_offset})}); }catch(e){}
+}
+async function vpResetOffset(i){
+  const b=VP_BEATS[i]; if(!b) return; b.cap_offset=0;
+  const a=document.getElementById('beatAudio'+i); if(a) _vpDriveCaption(a,b);
+  const m=document.getElementById('vpMsg'+i); if(m) m.textContent='자동값으로 되돌림';
+  try{ await fetch('/api/mix/caption_offset/'+MIX_JOB+'/'+b.beat_idx,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({offset:0})}); }catch(e){}
+}
+// 현재 성우(VOICE.group_id)의 그 톤 variant → {voice_id,settings,speed}. 못 찾으면 null(버튼이 '그 톤 없어요' 표시).
+// 실제 상태 변수(2026-07-17 확인): VOICE_GROUPS=[{group_id,variants:{stable|natural|expressive|whisper:{voice_id,voice_settings,default_speed,...}}}], VOICE={group_id,...}
+function _voiceForTone(tone){
+  const g=(typeof VOICE_GROUPS!=='undefined'?VOICE_GROUPS:[]).find(x=>x.group_id===(VOICE&&VOICE.group_id));
+  const v=g && g.variants && g.variants[tone];
+  if(!v) return null;
+  return {voice_id:v.voice_id, settings:Object.assign({}, v.voice_settings), speed:v.default_speed};
+}
+async function vpRegenTone(i){
+  const b=VP_BEATS[i]; if(!b) return;
+  const tone=document.getElementById('vpTone'+i).value;
+  const v=_voiceForTone(tone);   // 현재 성우의 그 톤 variant → {voice_id,settings,speed}
+  const m=document.getElementById('vpMsg'+i);
+  if(!v){ if(m) m.textContent='이 성우는 그 톤이 없어요'; return; }
+  if(m) m.textContent='🔁 다시 만드는 중…';
+  try{
+    await fetch('/api/mix/tts/'+MIX_JOB+'/'+b.beat_idx+'/regen',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(v)});
+    setTimeout(()=>{ renderTtsBeats(); }, 4000);   // 재생성+재동기 후 새로고침
+  }catch(e){ if(m) m.textContent='❌ 실패'; }
+}
+function vpGateNext(){
+  const yellow=(VP_BEATS||[]).map((b,i)=>i).filter(i=>!(Array.isArray(VP_BEATS[i].cap_durs)&&VP_BEATS[i].cap_durs.length));
+  const unheard=yellow.filter(i=>!_vpHeard.has(i));
+  if(unheard.length && !confirm('🟡 '+unheard.length+'개 장면을 아직 안 들어봤어요. 그냥 다음으로 갈까요?')) return;
+  jump(3);   // 꾸미기(4단계, index 3)로 — 기존 스텝 내비게이션 재사용, go()/jump() 자체는 건드리지 않는다
+}
+// ▶ 전체 재생 — 비트 음성을 순서대로 이어 재생하며 현재 비트의 프레임+자막을 갱신(가라오케식)
 function playAllBeats(){
   const auds=[]; let i=0; while(document.getElementById('beatAudio'+i)){ auds.push(document.getElementById('beatAudio'+i)); i++; }
   if(!auds.length) return;
-  const clear=()=>auds.forEach((a,idx)=>{ const r=document.getElementById('beatRow'+idx); if(r) r.style.background='#0d1420'; });
   auds.forEach(a=>{ a.pause(); a.currentTime=0; a.onended=null; });
-  clear();
   let cur=0;
   const playOne=()=>{
-    if(cur>=auds.length){ clear(); return; }
-    clear();
-    const r=document.getElementById('beatRow'+cur); if(r) r.style.background='#1a2740';
-    const a=auds[cur];
-    a.onended=()=>{ cur++; playOne(); };
-    a.play().catch(()=>{ cur++; playOne(); });
+    if(cur>=auds.length){ document.querySelectorAll('[id^=beatRow]').forEach(x=>x.style.background='#0d1420'); return; }
+    vpPlayBeat(cur);
+    auds[cur].onended=()=>{ cur++; playOne(); };
   };
   playOne();
 }
