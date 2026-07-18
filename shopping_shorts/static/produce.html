@@ -1885,12 +1885,14 @@ async function loadMixReview(){
   const d=await (await fetch('/api/mix/result/'+MIX_JOB)).json();
   const el=document.getElementById('mixReview');
   if(!d.ok){ el.innerHTML=`<div class="hint" style="color:var(--fire)">편집안 로드 실패 ${esc(d.error||'')}</div>`; return; }
-  el.innerHTML='<h3 style="font-size:15px">편집안(장면 매칭)</h3>'+(d.beats||[]).map(b=>`
+  MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
+  el.innerHTML='<h3 style="font-size:15px">편집안(장면 매칭)</h3>'+(d.beats||[]).map((b,i)=>`
     <div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;background:#0d1420">
       <span style="font-size:11px;background:var(--accent2);padding:2px 8px;border-radius:10px">${esc(b.role||'')}</span>
       <div style="margin:6px 0;font-size:13px">${esc(b.narration||'')}</div>
       <div class="hint">🎞 ${esc(b.primary?.video_id||'')} · ${b.primary?.start}s~${b.primary?.end}s · ${b.target_seconds}s${b.fit?` · 매칭 ${b.fit}/5`:''}</div>
       ${(b.fit&&b.fit<=2)?`<div style="color:var(--fire);font-size:12px;margin-top:3px">⚠️ 이 문장에 맞는 영상이 부족합니다 — 대본을 살짝 바꾸거나 소스 영상을 추가하세요.</div>`:''}
+      <div class="scene-cutaway" id="sceneCutaway${i}">${renderSceneCutaway(b, i)}</div>
     </div>`).join('')+`<div class="hint" style="margin-top:6px">✅ 매칭 완료${(d.beats||[]).some(b=>b.fit&&b.fit<=2)?' <span style="color:var(--fire)">— ⚠️ 표시된 문장은 영상이 약합니다</span>':''} — 아래에서 <b>미리보기</b>를 확인한 뒤 다음으로 넘어가세요.</div>`
     +`<button id="btnPreview" class="btn-next" style="margin-top:8px;padding:7px 14px" onclick="startPreview()">▶ 미리보기 만들기</button>`
     +`<div id="mixPreview" style="margin-top:8px"></div>`;
@@ -1901,6 +1903,47 @@ async function loadMixReview(){
   // 결과로 게이트를 열어버린다. ++PREVIEW_GEN은 이미 날아간 요청의 늦은 continuation까지 무효화한다.
   clearInterval(PREVIEW_POLL); PREVIEW_POLL = null; ++PREVIEW_GEN;
   PREVIEW_STATUS = null; refreshNextBtn();
+}
+
+// ── 장면 라이브러리 검수(Task4, 2026-07-18) ──────────────
+// 자동배치(beat.cutaway)를 보여주고 빼거나, 미채택 제안(asset_suggestions)을 붙이는
+// 최소 블록. 공용 프리뷰(mixPreview/hcPreview 등) 미건드림 — 이 컨테이너(scene-cutaway)
+// 안에서만 갱신한다.
+let MIX_REVIEW_SUGGESTIONS = [];
+
+function renderSceneCutaway(beat, idx){
+  const cw = beat.cutaway;
+  const sugg = MIX_REVIEW_SUGGESTIONS.filter(s=>s.beat_idx===beat.beat_idx);
+  let html = '';
+  if(cw){
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-top:6px;padding:6px;border:1px solid var(--line);border-radius:8px;background:#0a1018">`
+      + `<img src="/api/scene/${cw.asset_id}/poster" style="width:44px;height:78px;object-fit:cover;border-radius:4px;background:#000" alt="">`
+      + `<div style="flex:1;font-size:12px" class="hint">🖼 컷어웨이 자산 #${cw.asset_id}${cw.score?` · 적합도 ${cw.score.toFixed(2)}`:''}</div>`
+      + `<button class="btn-prev" style="padding:4px 8px;font-size:12px" onclick="toggleCutaway(${idx},null)">이 짤 빼기</button>`
+      + `</div>`;
+  }
+  if(!cw && sugg.length){
+    html += sugg.map(s=>`<div style="margin-top:6px"><a href="#" onclick="toggleCutaway(${idx},${s.asset_id});return false;" class="hint">＋ 이 짤 넣기 (자산 #${s.asset_id}${s.score?` · 적합도 ${s.score.toFixed(2)}`:''})</a></div>`).join('');
+  }
+  return html;
+}
+
+async function toggleCutaway(idx, assetId){
+  if(!MIX_JOB) return;
+  const box = document.getElementById('sceneCutaway'+idx);
+  if(box) box.innerHTML = '<div class="hint">⏳ 반영 중…</div>';
+  try{
+    const r = await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/cutaway',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({beat_idx: idx, asset_id: assetId})})).json();
+    if(!r.ok){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</div>'; return; }
+  }catch(e){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; return; }
+  // 그 비트 행만 다시 그린다 — 편집안 전체(loadMixReview)를 다시 그리지 않는다.
+  const d = await (await fetch('/api/mix/result/'+MIX_JOB)).json();
+  if(!d.ok) return;
+  MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
+  const beat = (d.beats||[])[idx];
+  if(beat && box) box.innerHTML = renderSceneCutaway(beat, idx);
 }
 
 // ── 1단계 미리보기(2026-07-17) ──────────────

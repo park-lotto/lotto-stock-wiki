@@ -1296,6 +1296,9 @@ def api_mix_result(job_id: str):
         "detected_type_label": _edit_plan.VIDEO_TYPES.get(detected, {}).get("label", detected),
         "affiliate_target": plan.get("affiliate_target", ""),
         "video_types": [{"key": k, "label": v["label"]} for k, v in _edit_plan.VIDEO_TYPES.items()],
+        # 검수판(Task4) — scene_match.py가 채운 미채택 제안(threshold 미달)을 그대로 넘긴다.
+        # {beat_idx, asset_id, score}[]. 자동배치(cutaway)는 이미 beats[].cutaway에 있다.
+        "asset_suggestions": plan.get("asset_suggestions") or [],
     }
 
 
@@ -2336,6 +2339,38 @@ async def api_produce_mix_overlay(job_id: str = Form(...), file: UploadFile = Fi
     name = "overlay" + ext
     (d / name).write_bytes(await file.read())
     return {"ok": True, "file": name}
+
+
+@app.post("/api/produce/mix/{job_id}/cutaway")
+def api_produce_mix_cutaway(job_id: str, request: Request, body: dict):
+    """검수판에서 비트의 컷어웨이를 설정(asset_id) 또는 제거(null). plan에 되쓴다.
+
+    ⚠️ mix_jobs에는 customer_id 컬럼이 없다(다른 /api/produce/mix/... 라우트와 동일하게
+    job 존재 여부만 본다) — 진짜 소유권 경계는 scene_assets 쪽 customer_id 격리다.
+    남의 asset_id를 붙이려 하면 get_scene_asset이 못 찾아 422로 막는다."""
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    plan = job.get("edit_plan") or {}
+    beats = plan.get("beats") or []
+    try:
+        bi = int(body.get("beat_idx"))
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 필요"})
+    hit = next((b for b in beats if b.get("beat_idx") == bi), None)
+    if hit is None:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 범위 밖"})
+    aid = body.get("asset_id")
+    if aid is None:
+        hit.pop("cutaway", None)
+    else:
+        asset = store.get_scene_asset(int(aid), customer_id=_cid(request))
+        if not asset:
+            return JSONResponse(status_code=422, content={"ok": False, "error": "자산 없음"})
+        hit["cutaway"] = {"asset_id": int(aid), "score": hit.get("cutaway", {}).get("score", 1.0)}
+    store.update_mix_job(job_id, edit_plan=plan)
+    return {"ok": True}
 
 
 @app.get("/api/produce/mix/poster/{job_id}")
