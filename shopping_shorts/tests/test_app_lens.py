@@ -1,4 +1,5 @@
 import base64
+import types
 from fastapi.testclient import TestClient
 from shopping_shorts import app as appmod
 from shopping_shorts.store import Store
@@ -201,3 +202,41 @@ def test_lens_cn_vision_extract_and_similarity_sort(tmp_path, monkeypatch):
     byurl = {i["url"]: i for i in d["items"]}
     assert byurl["https://xhs/2"]["match"] is False          # no → ⚠️
     assert byurl["https://dy/1"]["sim"] == "similar" and byurl["https://dy/1"]["match"] is None
+
+
+def test_lens_yt_returns_youtube_items(tmp_path, monkeypatch):
+    import shopping_shorts.app as appmod
+    import types
+    db = str(tmp_path / "t.db")
+    monkeypatch.setattr(appmod, "DB_PATH", db)
+    monkeypatch.setattr(appmod, "PUBLIC_BASE_URL", "https://example.test")
+    monkeypatch.setattr(appmod, "cn_search_keyword_vision",
+                        lambda raw, cap: {"product": "물총", "zh": "水枪"})
+    fake = [{"url": f"https://youtu.be/v{i}", "title": f"물총 리뷰 {i}",
+             "thumbnail": f"https://img/{i}.jpg"} for i in range(3)]
+    monkeypatch.setattr(appmod, "youtube_search",
+                        types.SimpleNamespace(search=lambda kw, max_results=40: fake))
+    from fastapi.testclient import TestClient
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/yt",
+               data={"source_caption": "물총 여름 필수템"},
+               files={"frame": ("f.jpg", b"\xff\xd8\xff", "image/jpeg")})
+    assert r.status_code == 200
+    d = r.json()
+    assert d["ok"] is True
+    assert d["count"] == 3
+    assert all(i["platform"] == "youtube" for i in d["items"])
+    assert all(i["match"] is None for i in d["items"])
+    assert d["keyword"] == "물총"
+
+
+def test_lens_yt_empty_keyword_returns_empty(tmp_path, monkeypatch):
+    import shopping_shorts.app as appmod
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    monkeypatch.setattr(appmod, "PUBLIC_BASE_URL", "https://example.test")
+    from fastapi.testclient import TestClient
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/yt", data={"source_caption": ""})
+    assert r.status_code == 200
+    d = r.json()
+    assert d["ok"] is True and d["count"] == 0

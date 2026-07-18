@@ -40,6 +40,7 @@ from shopping_shorts.mix_pipeline import (run_mix_job, run_render, run_preview, 
                                           _source_video_id, resynth_tts_job, resynth_one_beat)
 from shopping_shorts.lens_discover import search_similar_videos, upload_frame
 from shopping_shorts import douyin_search, xiaohongshu_search
+from shopping_shorts import youtube_search
 from shopping_shorts.config import APIFY_TOKENS
 from shopping_shorts.media_download import resolve_media_url, download_any, probe_grab_meta
 from shopping_shorts import edit_plan as _edit_plan
@@ -2043,6 +2044,8 @@ def _cn_keyword(caption):
     return " ".join(toks[:3])
 
 
+# ⚠️ 2026-07-18: 프론트가 더 이상 호출하지 않음(Apify 과금 회피). 나머지 4개 플랫폼은
+# 바로가기+담기로 대체. 엔드포인트·테스트는 유지(완전 삭제는 별도 정리 태스크).
 @app.post("/api/lens/cn")
 async def api_lens_cn(request: Request, frame: UploadFile = File(None),
                        source_caption: str = Form(""), max_results: int = Form(8)):
@@ -2114,6 +2117,35 @@ async def api_lens_cn(request: Request, frame: UploadFile = File(None),
             items.sort(key=lambda i: rank.get(i.get("sim"), 1))
     return {"ok": True, "items": items, "count": len(items),
             "keyword": keyword, "product": product}
+
+
+@app.post("/api/lens/yt")
+async def api_lens_yt(request: Request, frame: UploadFile = File(None),
+                       source_caption: str = Form(""), max_results: int = Form(40)):
+    """프레임+캡션으로 유튜브를 키워드 검색해 렌즈 결과에 합류할 항목. YouTube Data API라
+    무료(쿼터 내) → 월 호출가드 없음. 검색어는 cn_search_keyword_vision의 product
+    (프롬프트가 '한국어 제품명'을 명시) → 캡션 앞토큰(_cn_keyword) 폴백."""
+    keyword = ""
+    if frame is not None:
+        try:
+            raw = await frame.read()
+            v = cn_search_keyword_vision(raw, source_caption)
+            keyword = (v.get("product") or "").strip()
+        except Exception:
+            keyword = ""
+    if not keyword:
+        keyword = _cn_keyword(source_caption)
+    if not keyword:
+        return {"ok": True, "items": [], "count": 0, "note": "검색어를 만들지 못했습니다"}
+    n = max(1, min(int(max_results or 40), 60))
+    try:
+        rows = youtube_search.search(keyword, max_results=n)
+    except Exception:
+        rows = []
+    for r in rows:
+        r["platform"] = "youtube"
+        r["match"] = None
+    return {"ok": True, "items": rows, "count": len(rows), "keyword": keyword}
 
 
 @app.get("/healthz")
