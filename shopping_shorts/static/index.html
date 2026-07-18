@@ -414,6 +414,10 @@ function matchesSearch(it, q){
 // 수량 세는 말 앞에 붙는 한정사 — "여러 가지"·"몇 가지"·"두 가지"는 채소 가지가 아니다.
 var _COUNTER_QUALIFIERS = ['여러','몇','몇몇','각','온갖','수','한','두','세','네',
   '다섯','여섯','일곱','여덟','아홉','열'];
+// 검색어 바로 뒤에 이 글자가 붙으면 명사가 아니라 동사·부사다 — 가지'고'(가지다 동사)·
+// 가지'런'히(부사). 조사(는·를·가·도·의·에…)나 합성명사(가지'볶'음)는 여기 없으므로
+// 진짜 가지(가지볶음·가지는·가지를)는 안 걸린다. 예: 신발영상 "하나 가지고 계세요" 배제.
+var _NONNOUN_TAILS = ['고','러','런','며','게','셔','죠','자','니'];
 function _isHangul(ch){ return ch >= '가' && ch <= '힣'; }
 function _koreanWordHit(text, needle){
   if(!needle) return false;
@@ -433,6 +437,10 @@ function _koreanWordHit(text, needle){
     }
     const prevTok = (text.slice(0, at).trim().split(/\s+/).pop()) || '';
     if(_COUNTER_QUALIFIERS.includes(prevTok)) {    // 한정사+수량: 여러 '가지'
+      from = at + 1; continue;
+    }
+    const after = text[at + needle.length] || '';
+    if(_NONNOUN_TAILS.includes(after)) {           // 동사·부사: 가지'고', 가지'런'히
       from = at + 1; continue;
     }
     return true;                                   // 단어 시작 위치의 진짜 일치
