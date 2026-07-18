@@ -492,6 +492,13 @@ function initHeadcopy(){
   renderExtraTexts();
   renderExtraPreview();
   renderOverlayPreview();
+  // ★복원된 스타일 밀어넣기(C-2 잔여). 폰트 <select>가 위에서 채워진 뒤라야 applyConfig의
+  // g('hcFont').value=... 가 먹는다. STYLE_TOUCHED로 아래 자동적용을 막아 복원값을 지킨다.
+  if(PENDING_STYLE_RESTORE){
+    PENDING_STYLE_RESTORE = false;
+    STYLE_TOUCHED = true;
+    applyConfig(STATE.headcopy, STATE.captionStyle);   // DOM 입력칸 채움 + updateHC/updateCaption
+  }
   applyDefaultStyleOnEntry();   // step5 진입 시 1회: 미터치 상태면 기본 스타일+실장면 배경 자동 적용
   syncMotionPicker();
 }
@@ -674,6 +681,11 @@ const FULL_PRESETS=[
 ];
 // 대표 완성 스타일(피팅 카드 우선 노출). 나머지는 더보기.
 let STYLE_TOUCHED=false;
+// ★꾸미기 패널은 DOM 입력칸을 진실의 원천으로 읽는다(updateHC/updateCaption이 DOM→STATE) +
+// 진입 시 applyDefaultStyleOnEntry가 기본 프리셋을 자동 적용한다. 그래서 작업 복원이 STATE만
+// 채우면 스타일·꾸미기가 전부 기본값으로 덮인다(C-2 잔여, 라이브 실측 확인). 복원 시 이 플래그를
+// 세워, initHeadcopy가 applyConfig로 복원값을 DOM에 밀어넣고 STYLE_TOUCHED로 자동적용을 막는다.
+let PENDING_STYLE_RESTORE=false;
 const FEATURED = ['모던 화이트','임팩트 옐로','옐로 2톤 A','네온 글로우 화이트','레드 강조'];
 let MORE_OPEN = false;
 let POSTER_URL_CACHE = null;
@@ -1383,6 +1395,10 @@ async function _restoreWork(workId){
   // deco는 null이 아니라 **모양**이 있어야 한다 — 5단계가 STATE.deco.extra_texts에서 터진다.
   STATE.deco = sg.deco || { extra_texts: [], motion: null };
   STATE.subtitleRemoval = !!sg.subtitle_removal;
+  // ★복원된 스타일이 하나라도 있으면 꾸미기 패널이 그걸 덮지 않게 표시한다(위 선언 참조).
+  // headcopy/caption STYLE(색·폰트·크기)은 DOM 입력칸에서 되읽히므로 STATE만으로는 안 남는다 —
+  // initHeadcopy가 이 플래그를 보고 applyConfig로 DOM을 채운다.
+  PENDING_STYLE_RESTORE = !!(sg.headcopy || sg.caption_style || sg.deco);
 
   // ★게이트 재동기(스펙 §4.5). 아래 `cur` 대입은 jump()/go()를 **안 거치므로** 게이트 검사를
   // 건너뛴다. 서버에서 미리보기 상태를 다시 읽어 맞추지 않으면 "1단계 미리보기를 한 번도 안
