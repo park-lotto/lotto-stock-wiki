@@ -466,6 +466,24 @@ class Store:
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_pick_events "
                       "ON pick_events(customer_id, id DESC)")
+            # 러너(2026-07-18, 트랙4) — 오케스트레이터 상태·원가·재개 스냅샷.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS auto_jobs (
+                    id TEXT PRIMARY KEY,
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    mode TEXT NOT NULL DEFAULT 'C',
+                    current_stage TEXT,
+                    status TEXT NOT NULL,
+                    stage_results_json TEXT,
+                    cost_krw REAL NOT NULL DEFAULT 0,
+                    mix_job_id TEXT,
+                    unsure_reason TEXT,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_auto_jobs "
+                      "ON auto_jobs(customer_id, created_at DESC)")
             # 기존 DB용 마이그레이션 — mix_jobs 자막제거 필드(2026-07-13).
             # 새 DB는 위 CREATE에 이미 있어 여기선 "이미 존재" 예외를 조용히 넘긴다.
             for col, ddl in (
@@ -1370,6 +1388,64 @@ class Store:
              "rejected": self._pe_dec(r[6]), "edit_diff": self._pe_dec(r[7]), "ts": r[8]}
             for r in rows
         ]
+
+    _AUTO_SCALAR = ("current_stage", "status", "cost_krw", "mix_job_id", "unsure_reason")
+
+    def create_auto_job(self, job_id, *, mode="C", customer_id=LEGACY_CUSTOMER_ID):
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO auto_jobs(id, customer_id, mode, current_stage, status, "
+                "stage_results_json, cost_krw, mix_job_id, unsure_reason, created_at, updated_at) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+                (job_id, customer_id, mode, None, "running",
+                 json.dumps({}), 0, None, None, now, now),
+            )
+        return job_id
+
+    def get_auto_job(self, job_id):
+        with self._conn() as c:
+            r = c.execute(
+                "SELECT id, customer_id, mode, current_stage, status, stage_results_json, "
+                "cost_krw, mix_job_id, unsure_reason, created_at, updated_at "
+                "FROM auto_jobs WHERE id=?", (job_id,)).fetchone()
+        if not r:
+            return None
+        return {"id": r[0], "customer_id": r[1], "mode": r[2], "current_stage": r[3],
+                "status": r[4], "stage_results": json.loads(r[5]) if r[5] else {},
+                "cost_krw": r[6], "mix_job_id": r[7], "unsure_reason": r[8],
+                "created_at": r[9], "updated_at": r[10]}
+
+    def update_auto_job(self, job_id, **fields):
+        sets, args = ["updated_at=?"], [datetime.now(timezone.utc).isoformat()]
+        for k in self._AUTO_SCALAR:
+            if k in fields:
+                sets.append(f"{k}=?")
+                args.append(fields[k])
+        if "stage_results" in fields:
+            sets.append("stage_results_json=?")
+            args.append(json.dumps(fields["stage_results"], ensure_ascii=False))
+        args.append(job_id)
+        with self._conn() as c:
+            c.execute(f"UPDATE auto_jobs SET {', '.join(sets)} WHERE id=?", args)
+
+    def list_auto_jobs(self, *, customer_id=None, limit=50):
+        q = ("SELECT id, customer_id, mode, current_stage, status, stage_results_json, "
+             "cost_krw, mix_job_id, unsure_reason, created_at, updated_at FROM auto_jobs")
+        conds, args = [], []
+        if customer_id is not None:
+            conds.append("customer_id=?")
+            args.append(customer_id)
+        if conds:
+            q += " WHERE " + " AND ".join(conds)
+        q += " ORDER BY created_at DESC, rowid DESC LIMIT ?"
+        args.append(limit)
+        with self._conn() as c:
+            rows = c.execute(q, args).fetchall()
+        return [{"id": r[0], "customer_id": r[1], "mode": r[2], "current_stage": r[3],
+                 "status": r[4], "stage_results": json.loads(r[5]) if r[5] else {},
+                 "cost_krw": r[6], "mix_job_id": r[7], "unsure_reason": r[8],
+                 "created_at": r[9], "updated_at": r[10]} for r in rows]
 
     def create_mix_job(self, job_id, urls, target_seconds, structure,
                        subtitle_removal=False, given_script=None, script_structure=None):
