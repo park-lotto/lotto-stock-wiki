@@ -45,6 +45,13 @@ _DRIVER = r"""
     fpVerbGo: matchesSearch({caption:'가지러 가는 길'}, '가지'),
     fpAdverb: matchesSearch({caption:'가지런히 정리된 신발장'}, '가지'),
     realTopic: matchesSearch({caption:'가지는 이렇게 드셔보세요'}, '가지'),
+    // 상위어 확장(2026-07-18): 빵→베이글, 야채→가지, 가구→소파
+    expandBread: matchesSearch({caption:'겉바속촉 베이글 만들기'}, '빵'),
+    expandVeg: matchesSearch({caption:'가지볶음 초간단'}, '야채'),
+    expandFurniture: matchesSearch({caption:'거실 소파 배치 팁'}, '가구'),
+    expandFruit: matchesSearch({caption:'제철 딸기 고르는 법'}, '과일'),
+    childStaysNarrow: matchesSearch({caption:'거실 소파 배치'}, '베이글'),
+    expandNoParentWord: matchesSearch({caption:'식빵 3종 리뷰'}, '빵'),
   }));
 })();
 """
@@ -90,3 +97,15 @@ def test_korean_word_boundary(tmp_path):
     assert got["fpVerbGo"] is False      # '가지'러(가지다) → 거짓양성 제거
     assert got["fpAdverb"] is False      # '가지'런히(부사) → 거짓양성 제거
     assert got["realTopic"] is True      # '가지'는(조사) → 진짜 가지 보존
+
+
+@pytest.mark.skipif(not NODE, reason="node 없음")
+def test_taxonomy_expansion(tmp_path):
+    """상위어를 치면 하위 종류까지 잡힌다(2026-07-18). 하위어는 확장 안 함."""
+    got = _run(tmp_path)
+    assert got["expandBread"] is True        # 빵 → 베이글 캡션 잡힘
+    assert got["expandVeg"] is True          # 야채 → 가지 캡션 잡힘
+    assert got["expandFurniture"] is True    # 가구 → 소파 캡션 잡힘
+    assert got["expandFruit"] is True        # 과일 → 딸기 캡션 잡힘
+    assert got["childStaysNarrow"] is False  # 베이글 검색은 소파 캡션에 안 걸림(확장X)
+    assert got["expandNoParentWord"] is True # 빵 → 식빵도 잡힘
