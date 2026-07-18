@@ -74,6 +74,20 @@ def test_toggle_bad_job_404(client):
     assert r.status_code == 404
 
 
+def test_manual_add_uses_match_type_not_fake_score(client):
+    """검수판에서 사람이 직접 골라 붙인 컷어웨이는 적합도 점수가 없다 —
+    기존 코드는 score를 1.0으로 꾸며내 마치 자동매칭인 것처럼 보였음(버그)."""
+    c, store = client
+    jid = _job_with_beat(store)
+    asset_id = _asset(store, customer_id=0)
+    r = c.post(f"/api/produce/mix/{jid}/cutaway", json={"beat_idx": 0, "asset_id": asset_id})
+    assert r.status_code == 200
+    cw = store.get_mix_job(jid)["edit_plan"]["beats"][0]["cutaway"]
+    assert cw["asset_id"] == asset_id
+    assert cw.get("match_type") == "manual"
+    assert cw.get("score") in (None,)      # 가짜 1.00 안 씀
+
+
 def test_toggle_cross_customer_asset_rejected(client):
     """다른 고객(customer_id=1) 소유의 asset은 못 붙인다 — get_scene_asset의 customer_id
     격리가 이 시스템에서 실제로 존재하는 소유권 경계(job 자체엔 customer_id 컬럼이 없다)."""

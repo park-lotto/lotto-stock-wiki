@@ -2505,7 +2505,7 @@ def api_produce_mix_cutaway(job_id: str, request: Request, body: dict):
         asset = store.get_scene_asset(int(aid), customer_id=_cid(request))
         if not asset:
             return JSONResponse(status_code=422, content={"ok": False, "error": "자산 없음"})
-        hit["cutaway"] = {"asset_id": int(aid), "score": hit.get("cutaway", {}).get("score", 1.0)}
+        hit["cutaway"] = {"asset_id": int(aid), "match_type": "manual"}
     store.update_mix_job(job_id, edit_plan=plan)
     return {"ok": True}
 
