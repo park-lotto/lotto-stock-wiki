@@ -901,6 +901,7 @@ async function fxPoll(){
 }
 // ── 자막 스타일(나레이션 자막) ──────────────
 let CAP_EFFECT='none';
+let CAP_SHADOW=false;   // 은은한 드롭 그림자(레퍼런스 자막룩). 프리셋이 켬. 두꺼운 테두리 대안.
 let PREVIEW_CAP_TEXT='이렇게 자막이 나와요';   // 스텝퍼가 비트별 자막으로 교체
 // ── 🎞 공용 장면 프리뷰 스텝퍼 — 비트마다 프레임+자막 넘겨보기(TTS·검수판 트랙도 재사용) ──
 let BEATS_PREVIEW=[];   // [{i,total,caption}]
@@ -948,7 +949,7 @@ function updateCaption(){
   const cs={ font:g('capFont').value||'NanumGothic-Bold.ttf', color:g('capColor').value, size:+g('capSize').value,
     y_pct:+g('capY').value, outline:g('capOutline').checked, outline_color:g('capOutColor').value, outline_w:+g('capOutW').value,
     box:g('capBox').checked, box_color:g('capBoxColor').value, box_pad:+g('capBoxPad').value, box_opacity:+g('capBoxOpacity').value,
-    bar:!g('capBox').checked, effect:CAP_EFFECT };
+    bar:!g('capBox').checked, effect:CAP_EFFECT, shadow:CAP_SHADOW, shadow_color:'#000000', shadow_d:3 };
   STATE.captionStyle=cs;
   g('capSizeV').textContent=cs.size; g('capYV').textContent=cs.y_pct;
   const el=g('capPreviewText'); if(!el) return;
@@ -960,7 +961,10 @@ function updateCaption(){
   el.style.fontSize=Math.max(9, cs.size*scale)+'px';
   el.style.maxWidth=(PREVIEW_W-16)+'px';
   const oc=cs.outline_color, ow=(cs.outline_w*scale).toFixed(1);
-  el.style.textShadow = cs.outline ? `${ow}px ${ow}px 0 ${oc}, -${ow}px -${ow}px 0 ${oc}, ${ow}px -${ow}px 0 ${oc}, -${ow}px ${ow}px 0 ${oc}` : 'none';
+  const sd=Math.max(1,(cs.shadow_d||3)*scale).toFixed(1);
+  el.style.textShadow = cs.outline
+    ? `${ow}px ${ow}px 0 ${oc}, -${ow}px -${ow}px 0 ${oc}, ${ow}px -${ow}px 0 ${oc}, -${ow}px ${ow}px 0 ${oc}`
+    : (cs.shadow ? `0 ${sd}px ${(sd*2)}px rgba(0,0,0,.55), 0 0 ${sd}px rgba(0,0,0,.4)` : 'none');
   if(cs.box){ el.style.background=hexA(cs.box_color, cs.box_opacity/100); el.style.padding=`${Math.round(cs.box_pad*scale)}px ${Math.round(cs.box_pad*1.5*scale)}px`; el.style.borderRadius='6px'; }
   else { el.style.background='none'; el.style.padding='2px 6px'; el.style.borderRadius='0'; }
   // 효과 프리뷰: 선택 효과를 미리보기에서 반복 재생(fade/slide/pop/sparkle). 없음이면 정지.
@@ -990,21 +994,21 @@ function renderSparkles(on, ypct){
 }
 function cs_spark_size(){ const g=document.getElementById('capSize'); return g ? Math.max(10,(+g.value||50)*(PREVIEW_W/VIDEO_W)*0.5) : 16; }
 // ── 🎯 완성 스타일 프리셋(원클릭: 헤드카피+자막+효과 한 번에) — 빅채널 레퍼런스 기반 ──
-// 레퍼런스(HOMEDIRECTOR)와 동일한 깔끔한 흰색 자막 스타일만 — 위치만 다른 3개.
+// 레퍼런스(HOMEDIRECTOR)와 동일: 흰 자막·화면 중상단(y37, 3개 동일)·은은한 그림자(테두리X). 크기만 차이.
 const FULL_PRESETS=[
   {name:'심플 화이트', chip:'#F2F2F2', motion:'minimal_chic',
-    hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:56,x:50,y:12,outline:true,outline_color:'#000000',outline_w:3},
-    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:50,y:37,outline:true,outline_color:'#000000',outline_w:3,box:false,effect:'fade'}},
-  {name:'심플 화이트(하단)', chip:'#E8E8E8', motion:'minimal_chic',
-    hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:56,x:50,y:12,outline:true,outline_color:'#000000',outline_w:3},
-    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:50,y:82,outline:true,outline_color:'#000000',outline_w:3,box:false,effect:'fade'}},
+    hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:54,x:50,y:12,outline:true,outline_color:'#000000',outline_w:2},
+    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:50,y:37,outline:false,shadow:true,box:false,effect:'fade'}},
   {name:'심플 화이트(크게)', chip:'#FFFFFF', motion:'minimal_chic',
-    hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:60,x:50,y:12,outline:true,outline_color:'#000000',outline_w:3},
-    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:58,y:37,outline:true,outline_color:'#000000',outline_w:4,box:false,effect:'fade'}},
+    hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:58,x:50,y:12,outline:true,outline_color:'#000000',outline_w:2},
+    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:58,y:37,outline:false,shadow:true,box:false,effect:'fade'}},
+  {name:'심플 화이트(작게)', chip:'#EDEDED', motion:'minimal_chic',
+    hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:50,x:50,y:12,outline:true,outline_color:'#000000',outline_w:2},
+    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:44,y:37,outline:false,shadow:true,box:false,effect:'fade'}},
 ];
 // 스타일별 용도 태그(잘 어울리는 콘텐츠) — 정직한 큐레이션.
 const STYLE_USE={
-  '심플 화이트':'자막 가운데·깔끔', '심플 화이트(하단)':'자막 아래', '심플 화이트(크게)':'강조·큰 자막'
+  '심플 화이트':'자막 중상단·깔끔', '심플 화이트(크게)':'강조·큰 자막', '심플 화이트(작게)':'자막 많을 때'
 };
 // 대표 완성 스타일(피팅 카드 우선 노출). 나머지는 더보기.
 let STYLE_TOUCHED=false;
@@ -1013,7 +1017,7 @@ let STYLE_TOUCHED=false;
 // 채우면 스타일·꾸미기가 전부 기본값으로 덮인다(C-2 잔여, 라이브 실측 확인). 복원 시 이 플래그를
 // 세워, initHeadcopy가 applyConfig로 복원값을 DOM에 밀어넣고 STYLE_TOUCHED로 자동적용을 막는다.
 let PENDING_STYLE_RESTORE=false;
-const FEATURED = ['심플 화이트','심플 화이트(하단)','심플 화이트(크게)'];
+const FEATURED = ['심플 화이트','심플 화이트(크게)','심플 화이트(작게)'];
 let MORE_OPEN = false;
 let POSTER_URL_CACHE = null;
 let PICKED_STYLE_IDX = -1;
@@ -1098,6 +1102,7 @@ function applyConfig(h, c){
     g('capY').value=(c.y!=null?c.y:(c.y_pct!=null?c.y_pct:84));
     g('capOutline').checked=!!c.outline; g('capOutColor').value=c.outline_color||'#000000'; g('capOutW').value=c.outline_w||0;
     g('capBox').checked=!!c.box; g('capBoxColor').value=c.box_color||'#000000'; g('capBoxPad').value=(c.box_pad!=null?c.box_pad:12); g('capBoxOpacity').value=(c.box_opacity!=null?c.box_opacity:80);
+    CAP_SHADOW=!!c.shadow;   // 은은한 그림자 프리셋 반영
     setCapEffect(c.effect||'none');   // updateCaption 내부호출됨
   }
 }

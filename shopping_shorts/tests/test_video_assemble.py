@@ -386,3 +386,12 @@ def test_non_sparkle_effect_has_no_flash(tmp_path):
     style = {"effect": "pop", "size": 50, "y_pct": 84, "box": False, "bar": False}
     draws = va._caption_drawtexts("팝 테스트 자막", 2.0, tmp_path, 0, style=style)
     assert "abs(sin" not in ",".join(draws)
+
+
+def test_shadow_emits_soft_drop_shadow(tmp_path):
+    # 은은한 그림자 스타일: borderw(두꺼운 테두리) 대신 shadowx/shadowy를 쓴다.
+    style = {"shadow": True, "outline": False, "size": 50, "y_pct": 37, "box": False, "bar": False}
+    draws = va._caption_drawtexts("그림자 자막", 2.0, tmp_path, 0, style=style)
+    joined = ",".join(draws)
+    assert "shadowx=" in joined and "shadowy=" in joined
+    assert "borderw=" not in joined  # 두꺼운 테두리 아님
