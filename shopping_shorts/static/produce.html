@@ -2640,6 +2640,10 @@ function thumbFontCss(file){
 
 function drawThumb(ctx, img, layers, W, H){
   const s = W / THUMB_W;                    // 캔버스 배율 — 프리뷰든 실측이든 같은 식
+  // ★매 렌더마다 먼저 지운다(2026-07-18 라이브 실측). 배경 이미지가 있으면 그게 이전 프레임을
+  // 덮지만, job이 없어 img가 없으면(영상 매칭 전) 아무것도 안 지워져 드래그 경로마다 글자가
+  // 겹겹이 쌓였다(사장님 화면: 레이어는 1개인데 '문구를 입력하세요'가 수십 겹). clearRect로 봉인.
+  ctx.clearRect(0, 0, W, H);
   if (img) ctx.drawImage(img, 0, 0, W, H);
   (layers || []).forEach(L => {
     if (!L.text) return;
