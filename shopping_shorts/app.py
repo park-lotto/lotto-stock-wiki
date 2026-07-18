@@ -34,7 +34,7 @@ from shopping_shorts.product_identify import fetch_lens_lines, identify_product_
 from shopping_shorts.search_links import build_search_links, lens_search_url
 from shopping_shorts import mix_pipeline
 from shopping_shorts.mix_pipeline import (run_mix_job, run_render, run_preview, retype_mix_job,
-                                          _source_video_id, resynth_tts_job)
+                                          _source_video_id, resynth_tts_job, resynth_one_beat)
 from shopping_shorts.lens_discover import search_similar_videos, upload_frame
 from shopping_shorts import douyin_search, xiaohongshu_search
 from shopping_shorts.config import APIFY_TOKENS
@@ -1432,6 +1432,23 @@ def api_mix_tts(job_id: str, beat_idx: int):
         if b["beat_idx"] == beat_idx and b.get("tts_path") and Path(b["tts_path"]).exists():
             return FileResponse(b["tts_path"])
     return JSONResponse(status_code=404, content={"ok": False})
+
+
+@app.post("/api/mix/tts/{job_id}/{beat_idx}/regen")
+def api_mix_tts_regen(job_id: str, beat_idx: int, body: dict, background_tasks: BackgroundTasks):
+    """비트 하나만 톤/성우 바꿔 재생성(+자막 재동기). 렌더 중이면 거부(P1-9 방지).
+    status 코드는 mix_pipeline.run_render가 실제로 쓰는 값으로 확인함(grep, 2026-07-18):
+    "rendering"(302행) → "removing_subtitles"(314행, vmake 자막제거 단계)."""
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    if job.get("status") in ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409, content={"ok": False, "error": "렌더 중에는 재생성할 수 없어요"})
+    override = {"voice_id": body.get("voice_id"), "settings": body.get("settings"),
+               "speed": body.get("speed")}
+    background_tasks.add_task(resynth_one_beat, job_id, beat_idx, override, DB_PATH, _MIX_WORK_DIR)
+    return {"ok": True}
 
 
 @app.post("/api/mix/caption_offset/{job_id}/{beat_idx}")
