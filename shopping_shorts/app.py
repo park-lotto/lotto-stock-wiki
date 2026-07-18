@@ -2301,6 +2301,24 @@ def api_produce_works_save(request: Request, body: dict):
     return {"ok": True, "work_id": wid}
 
 
+@app.post("/api/pick_log")
+def api_pick_log(request: Request, body: dict):
+    # 픽로그(트랙1) — 사장님이 고른 것/버린 것을 남긴다. 부가 기능이라 stage만 필수.
+    stage = body.get("stage")
+    if not stage:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "stage 없음"})
+    eid = Store(DB_PATH).log_pick_event(
+        stage,
+        picked=body.get("picked"),
+        rejected=body.get("rejected"),
+        candidates=body.get("candidates"),
+        edit_diff=body.get("edit_diff"),
+        job_id=body.get("job_id") or None,
+        customer_id=_cid(request),
+    )
+    return {"ok": True, "id": eid}
+
+
 @app.get("/api/produce/works")
 def api_produce_works_list(request: Request):
     return {"ok": True, "works": Store(DB_PATH).list_produce_works(customer_id=_cid(request))}
