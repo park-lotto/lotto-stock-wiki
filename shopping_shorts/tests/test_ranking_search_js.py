@@ -40,6 +40,11 @@ _DRIVER = r"""
     realCompound: matchesSearch({caption:'가지볶음 초간단 레시피'}, '가지'),
     realWithJosa: matchesSearch({caption:'오늘은 가지를 볶아봤어요'}, '가지'),
     realCucumber: matchesSearch({caption:'초간단 오이무침'}, '오이'),
+    // 동사/부사 연결어미(2026-07-18) — 신발영상이 '가지'에 걸리던 진짜 원인
+    fpVerbHave: matchesSearch({caption:'이 신발 하나 가지고 계세요'}, '가지'),
+    fpVerbGo: matchesSearch({caption:'가지러 가는 길'}, '가지'),
+    fpAdverb: matchesSearch({caption:'가지런히 정리된 신발장'}, '가지'),
+    realTopic: matchesSearch({caption:'가지는 이렇게 드셔보세요'}, '가지'),
   }));
 })();
 """
@@ -81,3 +86,7 @@ def test_korean_word_boundary(tmp_path):
     assert got["realCompound"] is True   # '가지'볶음 → 진짜 가지
     assert got["realWithJosa"] is True   # '가지'를 → 진짜 가지(조사 붙어도)
     assert got["realCucumber"] is True   # '오이'무침 → 진짜 오이
+    assert got["fpVerbHave"] is False    # '가지'고(가지다) → 신발영상 거짓양성 제거
+    assert got["fpVerbGo"] is False      # '가지'러(가지다) → 거짓양성 제거
+    assert got["fpAdverb"] is False      # '가지'런히(부사) → 거짓양성 제거
+    assert got["realTopic"] is True      # '가지'는(조사) → 진짜 가지 보존
