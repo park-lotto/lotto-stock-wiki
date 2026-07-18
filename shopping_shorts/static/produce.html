@@ -2242,9 +2242,12 @@ function renderSceneCutaway(beat, idx){
   const sugg = MIX_REVIEW_SUGGESTIONS.filter(s=>s.beat_idx===beat.beat_idx);
   let html = '';
   if(cw){
+    const label = cw.match_type === 'role' ? '역할 매칭'
+                : cw.match_type === 'manual' ? '직접 넣음'
+                : (cw.score != null ? `소재 매칭 ${cw.score.toFixed(2)}` : '소재 매칭');
     html += `<div style="display:flex;align-items:center;gap:8px;margin-top:6px;padding:6px;border:1px solid var(--line);border-radius:8px;background:#0a1018">`
       + `<img src="/api/scene/${cw.asset_id}/poster" style="width:44px;height:78px;object-fit:cover;border-radius:4px;background:#000" alt="">`
-      + `<div style="flex:1;font-size:12px" class="hint">🖼 컷어웨이 자산 #${cw.asset_id}${cw.score?` · 적합도 ${cw.score.toFixed(2)}`:''}</div>`
+      + `<div style="flex:1;font-size:12px" class="hint">🎬 자산 #${cw.asset_id} · ${label}</div>`
       + `<button class="btn-prev" style="padding:4px 8px;font-size:12px" onclick="toggleCutaway(${idx},null)">이 짤 빼기</button>`
       + `</div>`;
   }
