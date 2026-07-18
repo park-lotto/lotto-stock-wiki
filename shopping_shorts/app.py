@@ -2744,8 +2744,19 @@ def api_produce_mix_beats_preview(job_id: str):
     job = Store(DB_PATH).get_mix_job(job_id)
     beats = ((job or {}).get("edit_plan") or {}).get("beats") or []
     total = len(beats)
-    out = [{"i": idx, "total": total, "caption": b.get("narration", "")}
-           for idx, b in enumerate(beats)]
+    # ★자막 미리보기가 실제 영상과 어긋나던 것 수정(2026-07-18 사장님 실측): 예전엔 narration
+    # 문장 전체를 caption으로 줘서 미리보기가 통째로 떴는데, 실제 영상은 _caption_segments로
+    # 2~3어절씩 쪼갠다. 그래서 "미리보기는 안 끊기는데 실제론 끊긴다"였다. 이제 실제 렌더와
+    # 같은 구절 분할(segs)과, 있으면 실제 표시시간(cap_durs)을 함께 내려 미리보기가 순차 재생한다.
+    out = []
+    for idx, b in enumerate(beats):
+        narr = b.get("narration", "")
+        out.append({
+            "i": idx, "total": total,
+            "caption": narr,                                        # 폴백·호환용(통째)
+            "segs": video_assemble._caption_segments(narr),         # 실제 렌더와 같은 구절 분할
+            "durs": b.get("cap_durs"),                              # 구절별 실제 표시시간(없으면 None)
+        })
     return {"beats": out}
 
 

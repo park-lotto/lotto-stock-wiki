@@ -929,11 +929,28 @@ function showBeat(i){
     bg.src='/api/produce/mix/beatframe/'+MIX_JOB+'/'+BEAT_IDX;
     bg.style.display='block';
   }
-  // 자막 = 그 비트 대본, 헤드카피는 비트 공통이라 그대로
-  PREVIEW_CAP_TEXT=b.caption||'';
-  if(typeof updateCaption==='function') updateCaption();
+  // 자막 = 그 비트 대본. ★실제 영상은 2~3어절씩 순차로 바뀐다(서버 segs=_caption_segments).
+  // 미리보기도 그대로 순차 재생해 "보는 것=나오는 것"을 맞춘다(2026-07-18 사장님 A안).
+  // 미리보기라 한 장면 안에서 계속 반복한다. 장면을 넘기면 아래 재생을 새로 건다.
+  _playBeatCaptions(b);
   const cnt=document.getElementById('beatCount');
   if(cnt) cnt.textContent=(BEAT_IDX+1)+' / '+BEATS_PREVIEW.length+' 장면';
+}
+let CAP_SEQ_TIMER=null;
+function _playBeatCaptions(b){
+  if(CAP_SEQ_TIMER){ clearTimeout(CAP_SEQ_TIMER); CAP_SEQ_TIMER=null; }
+  const segs=(b && b.segs && b.segs.length) ? b.segs : [ (b&&b.caption)||'' ];
+  const durs=(b && b.durs) || null;   // 구절별 실제 표시시간(초). 없으면 균등.
+  let si=0;
+  const play=()=>{
+    PREVIEW_CAP_TEXT=segs[si]||'';
+    if(typeof updateCaption==='function') updateCaption();
+    // 실제 타이밍이 있으면 그걸로, 없으면 1.1초. 너무 짧거나 길지 않게 가둔다.
+    const d=(durs && durs[si]>0) ? durs[si]*1000 : 1100;
+    si=(si+1)%segs.length;
+    CAP_SEQ_TIMER=setTimeout(play, Math.max(450, Math.min(2600, d)));
+  };
+  play();
 }
 function stepBeat(d){ if(BEATS_PREVIEW.length) showBeat(BEAT_IDX+d); }
 function renderCapFontSelect(){
