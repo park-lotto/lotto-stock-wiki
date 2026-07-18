@@ -1018,14 +1018,17 @@ function renderSparkles(on, ypct){
 function cs_spark_size(){ const g=document.getElementById('capSize'); return g ? Math.max(10,(+g.value||50)*(PREVIEW_W/VIDEO_W)*0.5) : 16; }
 // ── 🎯 완성 스타일 프리셋(원클릭: 헤드카피+자막+효과 한 번에) — 빅채널 레퍼런스 기반 ──
 // 레퍼런스(HOMEDIRECTOR)와 동일: 흰 자막·화면 중상단(y37, 3개 동일)·은은한 그림자(테두리X). 크기만 차이.
+// motion(모션팩)을 프리셋에 물리지 않는다(2026-07-19) — minimal_chic가 swipe_left
+// 전환(우→좌 세로 광선)을 첫·마지막 비트경계에 얹어 "미리보기엔 없는데 최종에만
+// 광선이 지나간다"는 사장님 제보. 전환은 아래 '🎬 모션 팩' 드롭다운에서 원할 때만 켠다.
 const FULL_PRESETS=[
-  {name:'심플 화이트', chip:'#F2F2F2', motion:'minimal_chic',
+  {name:'심플 화이트', chip:'#F2F2F2',
     hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:54,x:50,y:12,outline:true,outline_color:'#000000',outline_w:2},
     cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:50,y:37,outline:false,shadow:true,box:false,effect:'fade'}},
-  {name:'심플 화이트(크게)', chip:'#FFFFFF', motion:'minimal_chic',
+  {name:'심플 화이트(크게)', chip:'#FFFFFF',
     hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:58,x:50,y:12,outline:true,outline_color:'#000000',outline_w:2},
     cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:58,y:37,outline:false,shadow:true,box:false,effect:'fade'}},
-  {name:'심플 화이트(작게)', chip:'#EDEDED', motion:'minimal_chic',
+  {name:'심플 화이트(작게)', chip:'#EDEDED',
     hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:50,x:50,y:12,outline:true,outline_color:'#000000',outline_w:2},
     cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:44,y:37,outline:false,shadow:true,box:false,effect:'fade'}},
 ];

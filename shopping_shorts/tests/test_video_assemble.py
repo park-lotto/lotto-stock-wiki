@@ -294,9 +294,18 @@ def test_headcopy_drawtext_no_highlight_matches_single_block(tmp_path):
     assert "bordercolor=0x000000" in dt
 
 
-def test_caption_drawtexts_no_style_still_renders_bar_and_text(tmp_path):
+def test_caption_drawtexts_no_bar_by_default(tmp_path):
+    # 2026-07-19: 하단 검정바 기본 OFF. 스타일 없이 부르면 바(drawbox) 없이 텍스트만.
     parts = va._caption_drawtexts("여러분 안녕하세요 반갑습니다", 2.0, tmp_path, 0)
-    assert any("drawbox" in p for p in parts)  # 하단 바 유지
+    assert parts, "자막 텍스트는 그려져야 한다"
+    assert not any("drawbox" in p for p in parts)  # 하단 바 없음
+
+
+def test_caption_drawtexts_bar_opt_in(tmp_path):
+    # bar=True로 명시하면 하단 바를 그린다(원본 소각자막 가리기용 옵트인).
+    parts = va._caption_drawtexts("여러분 안녕하세요 반갑습니다", 2.0, tmp_path, 0,
+                                  style={"bar": True})
+    assert any("drawbox" in p for p in parts)
 
 
 # ── Critical 버그 픽스: deco.highlight_rules → headcopy/caption_style 병합 ──
