@@ -233,12 +233,14 @@
             <img id="ovPreview" style="position:absolute;transform:translate(-50%,-50%);cursor:move;user-select:none;z-index:5;display:none" alt="">
             <div id="wmPreview" style="position:absolute;transform:translate(-50%,-50%);white-space:nowrap;z-index:6;pointer-events:none;display:none"></div>
           </div>
-          <div id="beatStepper" style="display:none;align-items:center;justify-content:center;gap:16px;margin-top:10px">
-            <button type="button" class="tab" onclick="stepBeat(-1)" style="min-width:auto;padding:8px 14px;font-size:16px">◀</button>
-            <span id="beatCount" style="font-size:13px;color:var(--sub);min-width:76px;text-align:center">1 / 1 장면</span>
-            <button type="button" class="tab" onclick="stepBeat(1)" style="min-width:auto;padding:8px 14px;font-size:16px">▶</button>
+          <div id="beatStepper" style="display:none;margin-top:10px">
+            <div style="display:flex;align-items:center;justify-content:center;gap:16px">
+              <button type="button" class="tab" onclick="stepBeat(-1)" style="min-width:auto;padding:8px 14px;font-size:16px">◀</button>
+              <span id="beatCount" style="font-size:13px;color:var(--sub);min-width:76px;text-align:center">1 / 1 장면</span>
+              <button type="button" class="tab" onclick="stepBeat(1)" style="min-width:auto;padding:8px 14px;font-size:16px">▶</button>
+            </div>
+            <div class="hint" style="margin-top:6px;text-align:center">◀ ▶ 로 장면을 넘겨가며 자막이 어떻게 나오는지 확인</div>
           </div>
-          <div class="hint" style="margin-top:6px">◀ ▶ 로 장면을 넘겨가며 자막이 어떻게 나오는지 확인</div>
         </div>
         <!-- 우: 컨트롤 -->
         <div style="flex:1;min-width:300px">
@@ -618,7 +620,7 @@ async function loadBeatsPreview(){
     const d=await r.json(); BEATS_PREVIEW=d.beats||[];
   }catch(e){ BEATS_PREVIEW=[]; }
   if(!BEATS_PREVIEW.length){ if(st) st.style.display='none'; return; }
-  if(st) st.style.display='flex';
+  if(st) st.style.display='block';
   BEAT_IDX=Math.min(BEAT_IDX, BEATS_PREVIEW.length-1);
   showBeat(BEAT_IDX);
 }
