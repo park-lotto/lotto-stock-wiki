@@ -34,3 +34,23 @@ def test_status_exposes_clean_fields(tmp_path, monkeypatch):
     d = c.get("/api/mix/status/j").json()
     assert d["clean_status"] == "ready"
     assert "clean_error" in d
+
+
+def test_clean_thumb_clean_404_before_ready(tmp_path, monkeypatch):
+    c = _client(tmp_path, monkeypatch)
+    _job_with_plan(c, monkeypatch)                    # clean_status 미설정
+    r = c.get("/api/produce/mix/clean_thumb/j?kind=clean")
+    assert r.status_code == 404
+
+
+def test_clean_thumb_original_serves(tmp_path, monkeypatch):
+    c = _client(tmp_path, monkeypatch)
+    _job_with_plan(c, monkeypatch)
+    monkeypatch.setattr(appmod, "_resolve_sources", lambda job, work: {"s0": "/orig/s0.mp4"})
+    monkeypatch.setattr(appmod.frame_extract, "_probe_duration", lambda p: 4.0)
+    img = tmp_path / "original.jpg"; img.write_bytes(b"\xff\xd8jpg")
+    monkeypatch.setattr(appmod.frame_extract, "extract_frame_at",
+                        lambda src, d, ts, filename="f.jpg": img)
+    r = c.get("/api/produce/mix/clean_thumb/j?kind=original")
+    assert r.status_code == 200
+    assert r.headers["content-type"].startswith("image/")

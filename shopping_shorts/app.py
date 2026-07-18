@@ -1497,6 +1497,32 @@ def api_produce_mix_clean(background_tasks: BackgroundTasks, body: dict):
     return {"ok": True, "status": "cleaning"}
 
 
+@app.get("/api/produce/mix/clean_thumb/{job_id}")
+def api_produce_mix_clean_thumb(job_id: str, kind: str = "original"):
+    """대표 소스(첫 소스)의 중간지점 프레임 PNG. kind=original|clean.
+    clean은 clean_status=ready + 클린파일 존재일 때만(아니면 404). 양쪽 같은 t로 정렬."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    work = _MIX_WORK_DIR / job_id
+    vid = _source_video_id(0)
+    if kind == "clean":
+        src = (job.get("clean_sources") or {}).get(vid)
+        if job.get("clean_status") != "ready" or not src or not Path(src).exists():
+            return JSONResponse(status_code=404, content={"ok": False, "error": "클린 소스 없음"})
+    else:
+        try:
+            src = _resolve_sources(job, work)[vid]
+        except Exception:
+            return JSONResponse(status_code=404, content={"ok": False, "error": "소스 없음"})
+    dur = frame_extract._probe_duration(src) or 2.0
+    frame = frame_extract.extract_frame_at(src, work / "clean_thumb", dur / 2,
+                                           filename=f"{kind}.jpg")
+    if not frame:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "프레임 추출 실패"})
+    return FileResponse(str(frame), media_type="image/jpeg")
+
+
 @app.get("/api/mix/tts/{job_id}/{beat_idx}")
 def api_mix_tts(job_id: str, beat_idx: int):
     job = Store(DB_PATH).get_mix_job(job_id)
