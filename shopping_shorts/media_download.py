@@ -37,7 +37,10 @@ def download_any(url, dest_dir):
     u = (url or "").lower()
     if "instagram.com" in u:
         return _download_instagram(url, dest_dir)
-    if "youtube.com" in u or "youtu.be" in u or "tiktok.com" in u:
+    # 유튜브·틱톡·샤오홍슈는 yt-dlp 무료(2026-07-18 샤오홍슈 실증). 도우인은 쿠키가 필요해
+    # 실패할 수 있으나 그때는 yt-dlp가 명확한 에러를 낸다(원클릭 담기 후 제작소 다운로드용).
+    if any(s in u for s in ("youtube.com", "youtu.be", "tiktok.com",
+                             "xiaohongshu.com", "xhslink.com", "douyin.com", "iesdouyin.com")):
         return _download_ytdlp(url, dest_dir)
     raise RuntimeError(f"지원하지 않는 URL: {url}")
 

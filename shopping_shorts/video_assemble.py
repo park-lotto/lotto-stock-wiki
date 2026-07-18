@@ -344,6 +344,13 @@ def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=
             elif effect in ("fade", "pop"):
                 spd = 0.18 if effect == "fade" else 0.12
                 sp = sp + f":alpha='min(1,max(0,(t-{start:.2f})/{spd}))'"
+            elif effect == "sparkle":
+                # 반짝(CTA/훅): 등장 0.7초 동안 알파가 여러 번 깜빡여 시선을 끈 뒤 고정.
+                # abs(sin)로 0↔1 진동(약 3회) → 이후 1로 유지. 단일 quote 안이라 콤마 이스케이프 불필요.
+                sp = sp + (
+                    f":alpha='if(lt(t,{start:.2f}+0.7),"
+                    f"0.30+0.70*abs(sin(2*PI*3*(t-{start:.2f}))),1)'"
+                )
             parts.append(sp + ":" + enable_clause)
     return parts
 

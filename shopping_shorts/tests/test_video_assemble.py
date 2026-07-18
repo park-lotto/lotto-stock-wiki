@@ -522,3 +522,19 @@ def test_render_mix_chains_two_segments(tmp_path):
     }]}
     out = va._render_mix(edit_plan, {0: str(tts)}, {"A": str(src)}, tmp_path)
     assert abs(va._probe_duration(out) - 3.5) < 0.2
+
+
+def test_sparkle_effect_emits_flashing_alpha(tmp_path):
+    # 반짝(CTA) 효과: 등장 구간 알파가 abs(sin)로 깜빡이는 표현식이 최종 필터에 실제로 들어간다.
+    style = {"effect": "sparkle", "size": 50, "y_pct": 37, "box": False, "bar": False}
+    draws = va._caption_drawtexts("반짝 테스트 자막", 2.0, tmp_path, 0, style=style)
+    joined = ",".join(draws)
+    assert "abs(sin(2*PI*3*(t-" in joined, "sparkle 알파 깜빡임 표현식이 없다"
+    assert "alpha='if(lt(t," in joined
+
+
+def test_non_sparkle_effect_has_no_flash(tmp_path):
+    # pop 효과는 깜빡임(abs(sin)) 표현식을 쓰지 않는다(회귀 가드).
+    style = {"effect": "pop", "size": 50, "y_pct": 84, "box": False, "bar": False}
+    draws = va._caption_drawtexts("팝 테스트 자막", 2.0, tmp_path, 0, style=style)
+    assert "abs(sin" not in ",".join(draws)
