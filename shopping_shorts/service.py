@@ -5,7 +5,7 @@ from datetime import datetime, timezone, timedelta
 from concurrent.futures import ThreadPoolExecutor
 from shopping_shorts.config import (DB_PATH, WINDOW_HOURS, DRAFT_BATCH_SIZE, MAX_CHANNELS,
                                     YOUTUBE_WINDOW_HOURS, YOUTUBE_MAX_PER_KW)
-from shopping_shorts.channels import load_channels
+from shopping_shorts.channels import load_channels, merge_tracked
 from shopping_shorts.apify_client import fetch_reels
 from shopping_shorts.ranking import build_items, build_youtube_items, build_tiktok_items, apply_grades
 from shopping_shorts.store import Store
@@ -175,24 +175,12 @@ def collect(platform="instagram", limit_channels=None):
 
     channels = load_channels()
 
-    # 발굴로 추가한 채널을 엑셀 목록과 union하고, 죽은(추적제외) 채널은 뺀다
-    # (2026-07-12). 엑셀 원본은 안 건드리는 소프트 관리 — 제외/추가 모두 DB에서만.
+    # 발굴/등록 채널을 엑셀 목록과 union하고 죽은(추적제외) 채널은 뺀다. 손으로
+    # 등록/발굴한 채널이 cap(수집비 상한)에서 엑셀 꼬리보다 우선 살아남는다
+    # (2026-07-18). 엑셀 원본은 안 건드리는 소프트 관리 — 제외/추가 모두 DB에서만.
     _store = Store(DB_PATH)
-    known = {c["username"].strip().lstrip("@").lower() for c in channels}
-    for d in _store.discovered_channels():
-        if d["username"].strip().lstrip("@").lower() not in known:
-            channels.append(d)
-    removed = _store.removed_usernames()
-    if removed:
-        channels = [c for c in channels
-                    if c["username"].strip().lstrip("@").lower() not in removed]
-
-    # 엑셀(load_channels에서 이미 MAX_CHANNELS 캡됨)+발굴채널 union 후 다시 캡
-    # (2026-07-13) — union으로 발굴채널이 계속 늘면 엑셀 캡을 우회해 무한정
-    # 커지던 구멍. 순서(엑셀 먼저, 발굴채널은 최신 추가순)를 유지한 채 자르므로
-    # 엑셀은 그대로 유지되고 오래된 발굴채널부터 자연스럽게 빠진다.
-    if len(channels) > MAX_CHANNELS:
-        channels = channels[:MAX_CHANNELS]
+    channels = merge_tracked(channels, _store.discovered_channels(),
+                             _store.removed_usernames())
 
     if limit_channels:
         channels = channels[:limit_channels]
