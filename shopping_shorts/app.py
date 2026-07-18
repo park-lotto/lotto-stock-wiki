@@ -2365,7 +2365,9 @@ def _enrich_grab(url, sc, cid):
     Store(DB_PATH).mix_basket_set_meta(
         sc, customer_id=cid,
         thumbnail=meta.get("thumbnail"), name=meta.get("title"),
-        meta={k: meta[k] for k in ("views", "likes", "comments", "duration", "channel") if k in meta})
+        meta={k: meta[k] for k in
+              ("views", "likes", "comments", "shares", "duration", "channel", "followers", "ts")
+              if k in meta})
 
 
 @app.get("/api/grab", include_in_schema=False)
