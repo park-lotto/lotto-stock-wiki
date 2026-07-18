@@ -1698,8 +1698,18 @@ def api_thumb_frames(body: dict):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
-    video = job.get("video_path")
-    if not video or not Path(video).exists():
+    # ★배경 영상 우선순위 — 최종 렌더(3164행)와 동일하게: 최종 → 자막제거본 → 미리보기.
+    # 예전엔 video_path만 봤다. 그런데 video_path는 7단계 최종 렌더 후에야 생기고,
+    # 5단계 썸네일은 그 전 단계다. 매칭을 끝낸(ready_for_review) 작업이라도 최종 영상이 없어
+    # "믹스 영상 없음"으로 막혔다(사장님 실측: 수박 작업 job=10dc0c4e30c5, mix_video 404지만
+    # preview 200). 자막 없는 미리보기(preview_path)가 있으면 그걸로 프레임을 뽑는다 —
+    # 렌더 전에도 썸네일을 만들 수 있어야 한다(설계 Q1의 "자막 없는 배경" 조건도 preview가 만족).
+    video = None
+    for cand in (job.get("video_path"), job.get("clean_video_path"), job.get("preview_path")):
+        if cand and Path(cand).exists():
+            video = cand
+            break
+    if not video:
         return JSONResponse(status_code=404, content={"ok": False, "error": "믹스 영상 없음"})
 
     out_dir = _thumb_dir(job_id)
