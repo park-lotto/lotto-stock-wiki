@@ -36,7 +36,7 @@ from shopping_shorts.product_identify import fetch_lens_lines, identify_product_
 from shopping_shorts.search_links import build_search_links, lens_search_url
 from shopping_shorts import mix_pipeline
 from shopping_shorts.mix_pipeline import (run_mix_job, run_render, run_preview, retype_mix_job,
-                                          _source_video_id, resynth_tts_job)
+                                          _source_video_id, resynth_tts_job, resynth_one_beat)
 from shopping_shorts.lens_discover import search_similar_videos, upload_frame
 from shopping_shorts import douyin_search, xiaohongshu_search
 from shopping_shorts.config import APIFY_TOKENS
@@ -1306,7 +1306,8 @@ def api_mix_result(job_id: str):
     beats = []
     for b in plan["beats"]:
         beats.append({**b, "plagiarism_flag": b["beat_idx"] in flags,
-                      "tts_preview_url": f"/api/mix/tts/{job_id}/{b['beat_idx']}"})
+                      "tts_preview_url": f"/api/mix/tts/{job_id}/{b['beat_idx']}",
+                      "cap_segments": video_assemble._caption_segments(b.get("narration", ""))})
     detected = plan.get("detected_type") or _edit_plan._DEFAULT_TYPE
     return {
         "ok": True, "structure": plan["structure"], "beats": beats,
@@ -1449,6 +1450,46 @@ def api_mix_tts(job_id: str, beat_idx: int):
         if b["beat_idx"] == beat_idx and b.get("tts_path") and Path(b["tts_path"]).exists():
             return FileResponse(b["tts_path"])
     return JSONResponse(status_code=404, content={"ok": False})
+
+
+@app.post("/api/mix/tts/{job_id}/{beat_idx}/regen")
+def api_mix_tts_regen(job_id: str, beat_idx: int, body: dict, background_tasks: BackgroundTasks):
+    """비트 하나만 톤/성우 바꿔 재생성(+자막 재동기). 렌더 중이면 거부(P1-9 방지).
+    status 코드는 mix_pipeline.run_render가 실제로 쓰는 값으로 확인함(grep, 2026-07-18):
+    "rendering"(302행) → "removing_subtitles"(314행, vmake 자막제거 단계)."""
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    if job.get("status") in ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409, content={"ok": False, "error": "렌더 중에는 재생성할 수 없어요"})
+    # job의 voice 스냅샷(model_id·silence_trim·naturalize_profile 등) 위에 UI가 보낸
+    # 톤/성우 키만 덮어쓴다 — 통째로 새 dict를 만들면 _voice_params가 나머지를 기본값으로
+    # 채워 재생성 비트만 소리가 달라진다("작업대 소리 ≠ 렌더 소리", mix_pipeline._voice_params
+    # 문서 참고, 2026-07-18 리뷰).
+    override = dict(job.get("voice") or {})
+    for k in ("voice_id", "settings", "speed"):
+        if body.get(k) is not None:
+            override[k] = body.get(k)
+    background_tasks.add_task(resynth_one_beat, job_id, beat_idx, override, DB_PATH, _MIX_WORK_DIR)
+    return {"ok": True}
+
+
+@app.post("/api/mix/caption_offset/{job_id}/{beat_idx}")
+def api_mix_caption_offset(job_id: str, beat_idx: int, body: dict):
+    """비트 자막의 수동 시각 보정값(초)을 저장. 최종 _burn_captions가 읽어 반영."""
+    offset = max(-2.0, min(2.0, float(body.get("offset") or 0.0)))
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    plan = job["edit_plan"]
+    beat = next((b for b in plan["beats"] if b["beat_idx"] == beat_idx), None)
+    if beat is None:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "비트 없음"})
+    beat["cap_offset"] = offset
+    store.update_mix_job(job_id, edit_plan=plan)
+    return {"ok": True, "offset": offset}
 
 
 @app.get("/api/voice-presets")
@@ -2272,6 +2313,14 @@ def _serve_userscript():
     return FileResponse(p, media_type="text/javascript; charset=utf-8")
 
 
+@app.get("/grab.user.js", include_in_schema=False)
+def _serve_grab_userscript():
+    """원클릭 담기 유저스크립트 — Tampermonkey가 이 URL로 설치·자동업데이트.
+    드래그 없이 플랫폼 영상 페이지에 '📥 담기' 버튼을 띄운다."""
+    p = Path(__file__).parent / "userscript" / "grab.user.js"
+    return FileResponse(p, media_type="text/javascript; charset=utf-8")
+
+
 # ── 원클릭 담기: 네이티브 플랫폼(유튜브·틱톡·샤오홍슈·도우인) 영상 → 모음집 즉시 담기 ──
 # (2026-07-18) 렌즈 Apify 검색은 유료·개수제한, 네이티브 검색은 무료·무제한이지만 담을 때
 # 번거롭다는 제보. 해결=플랫폼 영상 페이지에서 북마클릿(무설치) 또는 유저스크립트(카드버튼)로
@@ -2338,9 +2387,23 @@ def grab_setup(request: Request):
     bm64 = base64.b64encode(_GRAB_BOOKMARKLET.replace("__BASE__", base).encode()).decode()
     return HTMLResponse(f"""<!doctype html><meta charset="utf-8"><title>원클릭 담기 설치</title>
 <body style="font-family:system-ui,sans-serif;max-width:640px;margin:36px auto;padding:0 18px;line-height:1.7;color:#222">
-<h2>📥 원클릭 담기 <span style="font-size:14px;color:#1f9d55">설치 필요 없음</span></h2>
-<p>네이티브 검색(무료·무제한)으로 보다가, 마음에 드는 영상을 <b>클릭 한 번</b>으로 모음집에 담는 기능입니다.</p>
-<div style="background:#fff7e6;border:1px solid #f0c36d;border-radius:12px;padding:18px;margin:16px 0">
+<h2>📥 원클릭 담기</h2>
+<p>네이티브 검색(무료·무제한)으로 보다가, 마음에 드는 영상을 <b>클릭 한 번</b>으로 모음집에 담는 기능입니다. 두 가지 방법 중 편한 걸 고르세요.</p>
+
+<div style="background:#eafaf0;border:2px solid #1f9d55;border-radius:12px;padding:18px;margin:16px 0">
+  <div style="font-weight:800;color:#1f7a44;font-size:16px;margin-bottom:6px">✅ 방법 1 (추천·제일 쉬움) — 버튼이 영상 위에 저절로 떠요</div>
+  <div style="font-size:14px;color:#555;margin-bottom:10px">Tampermonkey에 설치하면, 유튜브·틱톡·샤오홍슈·도우인 영상을 볼 때 오른쪽 아래에 <b>📥 담기</b> 버튼이 자동으로 떠요. 드래그도, 북마크도 필요 없이 <b>그 버튼만 누르면 끝</b>입니다.</div>
+  <ol style="margin:0 0 6px 18px;color:#444;font-size:14px">
+    <li>크롬에 <b>Tampermonkey</b> 확장이 없으면 먼저 설치(웹스토어에서 "Tampermonkey").</li>
+    <li>아래 링크를 누르면 Tampermonkey 설치창이 떠요 → <b>설치</b> 클릭.<br>
+        <a href="/grab.user.js" style="display:inline-block;margin-top:6px;padding:10px 18px;background:#1f9d55;color:#fff;border-radius:9px;text-decoration:none;font-weight:800">📥 담기 버튼 설치하기</a></li>
+    <li>이제 틱톡·샤오홍슈에서 영상을 열면 오른쪽 아래 <b>📥 담기</b> 버튼을 누르기만 하면 담김.</li>
+  </ol>
+</div>
+
+<details style="margin:12px 0">
+<summary style="cursor:pointer;color:#666;font-weight:700">방법 2 — 설치 없이 북마클릿으로 (조금 번거로움)</summary>
+<div style="background:#fff7e6;border:1px solid #f0c36d;border-radius:12px;padding:18px;margin:10px 0">
   <div style="font-weight:800;margin-bottom:4px;color:#a86">① 아래 파란 버튼을 <span style="color:#c0392b">누르지 말고</span>, 마우스로 <u>북마크바에 끌어다(드래그)</u> 놓으세요</div>
   <div style="font-size:13px;color:#888;margin-bottom:10px">북마크바가 안 보이면 <b>Ctrl+Shift+B</b>로 켜세요. 드래그 = 버튼을 마우스로 꾹 눌러 위쪽 북마크바까지 끌고 가서 놓기.</div>
   <a id="bm" draggable="true" href="#" title="이 버튼을 위쪽 북마크바로 드래그하세요"
@@ -2348,7 +2411,9 @@ def grab_setup(request: Request):
   <span style="color:#888;font-size:13px;margin-left:8px">↖ 이걸 <b>끌어서</b> 북마크바에 놓기</span>
 </div>
 <div style="font-weight:700">② 유튜브·틱톡·샤오홍슈·도우인에서 <u>영상을 열고</u>(검색결과 그리드 말고 영상 클릭해 들어간 뒤), 방금 만든 북마크를 누르면 끝</div>
-<p style="color:#666">담긴 영상은 <a href="/collection">🎬 모음집</a>에서 확인 · 실제 다운로드는 제작소에서 자동(무료).</p>
+</div>
+</details>
+<p style="color:#666;margin-top:14px">담긴 영상은 <a href="/collection">🎬 모음집</a>에서 확인 · 실제 다운로드는 제작소에서 자동(무료).</p>
 <p style="color:#999;font-size:13px">※ 검색 결과 <b>그리드</b>가 아니라 <b>영상 상세 페이지</b>에서 눌러야 그 영상이 담깁니다. · shoppingshorts에 로그인된 상태여야 해요.</p>
 <script>document.getElementById("bm").setAttribute("href", atob("{bm64}"));</script>
 </body>""")
@@ -2592,7 +2657,7 @@ def api_produce_mix_cutaway(job_id: str, request: Request, body: dict):
         asset = store.get_scene_asset(int(aid), customer_id=_cid(request))
         if not asset:
             return JSONResponse(status_code=422, content={"ok": False, "error": "자산 없음"})
-        hit["cutaway"] = {"asset_id": int(aid), "score": hit.get("cutaway", {}).get("score", 1.0)}
+        hit["cutaway"] = {"asset_id": int(aid), "match_type": "manual"}
     store.update_mix_job(job_id, edit_plan=plan)
     return {"ok": True}
 
