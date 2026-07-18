@@ -1642,7 +1642,7 @@ async function loadWikiForMix(){
   // 전체선택/해제/선택삭제 줄은 담긴대본(picks) 탭 전용 — "위키 전체" 탭은 진짜 토글 API를
   // 쓰므로 여기서 같이 보이면 "선택삭제"가 아직 안 담긴 항목을 오히려 담아버린다(2026-07-18 리뷰).
   const pb=document.getElementById('picksBulk');
-  if(pb) pb.style.display = (MIX_SRC==='picks') ? '' : 'none';
+  if(pb) pb.style.display = (MIX_SRC==='picks') ? 'flex' : 'none';   // flex 유지(gap 6px)
   const url = MIX_SRC==='all' ? '/api/wiki/list' : '/api/produce/picks';
   try{
     const d=await (await fetch(url)).json();
