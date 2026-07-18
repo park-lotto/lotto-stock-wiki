@@ -376,6 +376,42 @@ def run_render(job_id, db_path, work_root):
         store.update_mix_job(job_id, status="failed", error=str(e))
 
 
+def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root):
+    """비트 하나만 voice_override로 재합성해 같은 mp3에 덮어쓰고 자막을 재동기한다.
+    최종 렌더는 재합성 없이 이 mp3(beat['tts_path'])를 재사용하므로 교정이 그대로 남는다."""
+    store = Store(db_path)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return
+    plan = job["edit_plan"]
+    beat = next((b for b in plan["beats"] if b["beat_idx"] == beat_idx), None)
+    if beat is None:
+        return
+    total = len(plan["beats"])
+    i = next(k for k, b in enumerate(plan["beats"]) if b["beat_idx"] == beat_idx)
+    work = Path(work_root) / job_id
+    tts_dir = work / "tts"
+    tts_dir.mkdir(parents=True, exist_ok=True)
+    out = tts_dir / f"beat_{beat_idx}.mp3"
+    try:
+        synthesize_line(
+            beat["narration"], out, voice=voice_override, beat_role=beat.get("role"),
+            beat_index=i, beat_total=total,
+            previous_text=plan["beats"][i - 1]["narration"] if i > 0 else None,
+            next_text=plan["beats"][i + 1]["narration"] if i < total - 1 else None,
+        )
+        beat["tts_path"] = str(out)
+        beat["voice_override"] = voice_override
+        beat["cap_durs"] = None
+        words = asr_check.transcribe_words(str(out))
+        if words:
+            beat["cap_durs"] = caption_sync.phrase_durs_from_words(
+                beat["narration"], words, _probe_duration(str(out)))
+        store.update_mix_job(job_id, edit_plan=plan)
+    except Exception as e:
+        traceback.print_exc(file=sys.stderr)
+
+
 def resynth_tts_job(job_id, db_path, work_root):
     """기존 edit_plan은 그대로 두고, job의 voice 설정으로 비트별 TTS만 다시 생성한다
     (영상제작 4단계 '이 대본으로 다시 듣기'·프리셋 변경). 재다운로드·재매칭 없음."""
