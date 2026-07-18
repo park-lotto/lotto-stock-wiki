@@ -1434,6 +1434,23 @@ def api_mix_tts(job_id: str, beat_idx: int):
     return JSONResponse(status_code=404, content={"ok": False})
 
 
+@app.post("/api/mix/caption_offset/{job_id}/{beat_idx}")
+def api_mix_caption_offset(job_id: str, beat_idx: int, body: dict):
+    """비트 자막의 수동 시각 보정값(초)을 저장. 최종 _burn_captions가 읽어 반영."""
+    offset = max(-2.0, min(2.0, float(body.get("offset") or 0.0)))
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    plan = job["edit_plan"]
+    beat = next((b for b in plan["beats"] if b["beat_idx"] == beat_idx), None)
+    if beat is None:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "비트 없음"})
+    beat["cap_offset"] = offset
+    store.update_mix_job(job_id, edit_plan=plan)
+    return {"ok": True, "offset": offset}
+
+
 @app.get("/api/voice-presets")
 def api_voice_presets(lang: str = "KR"):
     """성우별 그룹 목록(유저 노출용 — source_ref는 내부 전용이라 제외).
