@@ -2423,12 +2423,21 @@ def grab_setup(request: Request):
 # ── 영상제작 위저드(produce) ─────────────────────────────────
 @app.post("/api/produce/script/mix")
 def api_produce_script_mix(request: Request, body: dict):
-    """1단계 대본 · 우리믹스(Feature B) — 선택한 도서관 S급 대본들 강점 조합 → 새 대본."""
-    shortcodes = body.get("shortcodes") or []
-    if len(shortcodes) < 2:
-        return JSONResponse(status_code=422, content={"ok": False, "error": "도서관 대본 2개 이상 선택"})
-    wiki = {w["shortcode"]: w for w in Store(DB_PATH).wiki_list(customer_id=_cid(request))}
-    sources = [wiki[sc] for sc in shortcodes if sc in wiki]
+    """1단계 대본 · 우리믹스(Feature B) — 선택한 도서관 S급 대본들 강점 조합 → 새 대본.
+
+    body에 `sources`(인라인 대본 리스트, {shortcode?, name?, category?, full_text})가 오면
+    위키 조회 없이 그대로 쓴다 — 레퍼런스랭킹에서 담은 임시 대본(위키 미등록)도 조합 가능하게.
+    없으면 기존 shortcode→위키 경로(하위호환).
+    """
+    inline = body.get("sources") or []
+    if inline:
+        sources = [s for s in inline if (s.get("full_text") or "").strip()]
+    else:
+        shortcodes = body.get("shortcodes") or []
+        if len(shortcodes) < 2:
+            return JSONResponse(status_code=422, content={"ok": False, "error": "도서관 대본 2개 이상 선택"})
+        wiki = {w["shortcode"]: w for w in Store(DB_PATH).wiki_list(customer_id=_cid(request))}
+        sources = [wiki[sc] for sc in shortcodes if sc in wiki]
     if len(sources) < 2:
         return JSONResponse(status_code=422, content={"ok": False, "error": "선택한 대본을 찾을 수 없음"})
     drafts = script_generate.generate_mix(
