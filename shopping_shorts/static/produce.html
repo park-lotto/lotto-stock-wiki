@@ -49,9 +49,14 @@
     @keyframes capFade{0%{opacity:0}30%{opacity:1}100%{opacity:1}}
     @keyframes capSlide{0%{opacity:0;transform:translate(-50%,calc(-50% + 22px))}35%{opacity:1;transform:translate(-50%,-50%)}100%{opacity:1;transform:translate(-50%,-50%)}}
     @keyframes capPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}45%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}65%{transform:translate(-50%,-50%) scale(.97)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+    /* 반짝: 등장할 때 여러 번 깜빡이며 시선을 끄는 집중 효과(CTA·훅) */
+    @keyframes capSparkle{0%{opacity:0;transform:translate(-50%,-50%) scale(.85)}10%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}18%{opacity:.35}26%{opacity:1}34%{opacity:.5}42%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+    @keyframes twinkle{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:1;transform:scale(1)}}
     .eff-fade{animation:capFade 2.2s ease-in-out infinite}
     .eff-slide{animation:capSlide 2.2s ease-in-out infinite}
     .eff-pop{animation:capPop 2.2s ease-in-out infinite}
+    .eff-sparkle{animation:capSparkle 2.6s ease-in-out infinite}
+    .cap-spark{position:absolute;font-size:.5em;color:#fff;pointer-events:none;text-shadow:0 0 4px #fff;animation:twinkle 1.3s ease-in-out infinite}
     /* 헤드카피 번들 폰트 22종(브라우저 미리보기 = 실제 렌더 일치, ttf/otf만) */
     @font-face{font-family:'HCTmon';src:url('/fonts/TmonMonsori.ttf')}
     @font-face{font-family:'HCJua';src:url('/fonts/BMJUA.ttf')}
@@ -378,6 +383,7 @@
                   <button type="button" class="capEff tab" data-eff="fade" onclick="setCapEffect('fade')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">페이드</button>
                   <button type="button" class="capEff tab" data-eff="slide" onclick="setCapEffect('slide')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">슬라이드</button>
                   <button type="button" class="capEff tab" data-eff="pop" onclick="setCapEffect('pop')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">팝</button>
+                  <button type="button" class="capEff tab" data-eff="sparkle" onclick="setCapEffect('sparkle')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">✦ 반짝(CTA)</button>
                 </div>
               </div>
               </details>
@@ -957,87 +963,48 @@ function updateCaption(){
   el.style.textShadow = cs.outline ? `${ow}px ${ow}px 0 ${oc}, -${ow}px -${ow}px 0 ${oc}, ${ow}px -${ow}px 0 ${oc}, -${ow}px ${ow}px 0 ${oc}` : 'none';
   if(cs.box){ el.style.background=hexA(cs.box_color, cs.box_opacity/100); el.style.padding=`${Math.round(cs.box_pad*scale)}px ${Math.round(cs.box_pad*1.5*scale)}px`; el.style.borderRadius='6px'; }
   else { el.style.background='none'; el.style.padding='2px 6px'; el.style.borderRadius='0'; }
-  // 효과 프리뷰: 선택 효과를 미리보기에서 반복 재생(fade/slide/pop). 없음이면 정지.
-  el.classList.remove('eff-fade','eff-slide','eff-pop');
+  // 효과 프리뷰: 선택 효과를 미리보기에서 반복 재생(fade/slide/pop/sparkle). 없음이면 정지.
+  el.classList.remove('eff-fade','eff-slide','eff-pop','eff-sparkle');
   if(cs.effect==='fade') el.classList.add('eff-fade');
   else if(cs.effect==='slide') el.classList.add('eff-slide');
   else if(cs.effect==='pop') el.classList.add('eff-pop');
+  else if(cs.effect==='sparkle') el.classList.add('eff-sparkle');
+  renderSparkles(cs.effect==='sparkle', cs.y_pct);
 }
+// 반짝 효과: 자막 주위에 ✨ 입자를 뿌려 깜빡이게(미리보기 연출). 최종 영상은 서버가 알파 깜빡임으로 렌더.
+function renderSparkles(on, ypct){
+  const pv=document.getElementById('hcPreview'); if(!pv) return;
+  pv.querySelectorAll('.cap-spark').forEach(s=>s.remove());
+  if(!on) return;
+  const cy = (ypct!=null?ypct:37);
+  // 자막 중심(50%, cy%) 주위 4곳에 별. 시간차를 둬 반짝임이 겹치지 않게.
+  const spots=[[34,-8,0],[66,-6,.4],[28,7,.8],[72,9,.2]];
+  spots.forEach(([x,dy,delay])=>{
+    const s=document.createElement('div');
+    s.className='cap-spark'; s.textContent='✦';
+    s.style.left=x+'%'; s.style.top=(cy+dy)+'%';
+    s.style.fontSize=Math.max(10, (cs_spark_size()))+'px';
+    s.style.animationDelay=delay+'s';
+    pv.appendChild(s);
+  });
+}
+function cs_spark_size(){ const g=document.getElementById('capSize'); return g ? Math.max(10,(+g.value||50)*(PREVIEW_W/VIDEO_W)*0.5) : 16; }
 // ── 🎯 완성 스타일 프리셋(원클릭: 헤드카피+자막+효과 한 번에) — 빅채널 레퍼런스 기반 ──
+// 레퍼런스(HOMEDIRECTOR)와 동일한 깔끔한 흰색 자막 스타일만 — 위치만 다른 3개.
 const FULL_PRESETS=[
   {name:'심플 화이트', chip:'#F2F2F2', motion:'minimal_chic',
     hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:56,x:50,y:12,outline:true,outline_color:'#000000',outline_w:3},
     cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:50,y:37,outline:true,outline_color:'#000000',outline_w:3,box:false,effect:'fade'}},
-  {name:'화이트+민트 투톤', chip:'#3BE6C6', motion:'dynamic_pop',
-    hc:{font:'BMDOHYEON.ttf',color:'#FFFFFF',weight:900,size:40,x:50,y:9,outline:true,outline_color:'#0B2A24',outline_w:6},
-    extra:[{text:'',font:'BMDOHYEON.ttf',color:'#3BE6C6',size:66,x:50,y:19,outline:true,outline_color:'#0B2A24',outline_w:8}],
-    cap:{font:'SUIT-Bold.otf',color:'#FFFFFF',size:50,y:84,outline:true,outline_color:'#000000',outline_w:5,box:false,effect:'slide'}},
-  {name:'모던 화이트', chip:'#FFFFFF', motion:'minimal_chic',
-    hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:66,x:50,y:12,outline:true,outline_color:'#000000',outline_w:7},
-    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:52,y:84,outline:false,box:true,box_color:'#000000',box_pad:14,box_opacity:68,effect:'fade'}},
-  {name:'임팩트 옐로', chip:'#FFE100', motion:'dynamic_pop',
-    hc:{font:'TmonMonsori.ttf',color:'#FFE100',weight:900,size:76,x:50,y:12,outline:true,outline_color:'#000000',outline_w:9},
-    cap:{font:'BMJUA.ttf',color:'#FFFFFF',size:56,y:84,outline:true,outline_color:'#000000',outline_w:6,box:false,effect:'pop'}},
-  {name:'민트 클린', chip:'#00E5C0', motion:'minimal_chic',
-    hc:{font:'BMDOHYEON.ttf',color:'#00E5C0',weight:900,size:72,x:50,y:12,outline:true,outline_color:'#06231F',outline_w:8},
-    cap:{font:'SUIT-Bold.otf',color:'#FFFFFF',size:52,y:84,outline:true,outline_color:'#000000',outline_w:6,box:false,effect:'slide'}},
-  {name:'레드 강조', chip:'#FF2D2D', motion:'dynamic_pop',
-    hc:{font:'BMDOHYEON.ttf',color:'#FF2D2D',weight:900,size:72,x:50,y:12,outline:true,outline_color:'#FFFFFF',outline_w:7},
-    cap:{font:'GmarketSansBold.otf',color:'#FFFFFF',size:52,y:84,outline:false,box:true,box_color:'#000000',box_pad:14,box_opacity:80,effect:'fade'}},
-  {name:'블랙박스 시크', chip:'#111111', motion:'minimal_chic',
-    hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:62,x:50,y:14,outline:false,box:true,box_color:'#000000',box_pad:18,box_opacity:85},
-    cap:{font:'SUIT-Bold.otf',color:'#FFFFFF',size:50,y:84,outline:false,box:true,box_color:'#000000',box_pad:14,box_opacity:85,effect:'fade'}},
-  {name:'큐트 핑크', chip:'#FF4D8D', motion:'dynamic_pop',
-    hc:{font:'Binggrae-Bold.otf',color:'#FF4D8D',weight:900,size:72,x:50,y:12,outline:true,outline_color:'#FFFFFF',outline_w:8},
-    cap:{font:'BMJUA.ttf',color:'#FFFFFF',size:54,y:84,outline:true,outline_color:'#FF4D8D',outline_w:6,box:false,effect:'pop'}},
-  {name:'네이비 신뢰', chip:'#13234E', motion:'minimal_chic',
-    hc:{font:'GmarketSansBold.otf',color:'#13234E',weight:900,size:66,x:50,y:12,outline:true,outline_color:'#FFFFFF',outline_w:7},
-    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:52,y:84,outline:false,box:true,box_color:'#13234E',box_pad:14,box_opacity:88,effect:'slide'}},
-  {name:'푸드 그린', chip:'#12B24A', motion:'dynamic_pop',
-    hc:{font:'BMDOHYEON.ttf',color:'#12B24A',weight:900,size:72,x:50,y:12,outline:true,outline_color:'#000000',outline_w:7},
-    cap:{font:'BMJUA.ttf',color:'#FFFFFF',size:54,y:84,outline:true,outline_color:'#000000',outline_w:6,box:false,effect:'pop'}},
-  {name:'뉴스 자막형', chip:'#FFFFFF', motion:'minimal_chic',
-    hc:{font:'GmarketSansBold.otf',color:'#111111',weight:900,size:56,x:50,y:10,outline:false,box:true,box_color:'#FFE100',box_pad:14,box_opacity:100},
-    cap:{font:'NanumGothic-Bold.ttf',color:'#FFFFFF',size:50,y:86,outline:true,outline_color:'#000000',outline_w:5,box:true,box_color:'#000000',box_pad:12,box_opacity:60,effect:'none'}},
-  {name:'핸드메이드 감성', chip:'#FF7A00', motion:'dynamic_pop',
-    hc:{font:'Kkubulim.ttf',color:'#FF7A00',weight:900,size:74,x:50,y:12,outline:true,outline_color:'#FFFFFF',outline_w:8},
-    cap:{font:'Kkubulim.ttf',color:'#FFFFFF',size:56,y:84,outline:true,outline_color:'#000000',outline_w:6,box:false,effect:'fade'}},
-  {name:'하이엔드 세리프', chip:'#C9A24B', motion:'minimal_chic',
-    hc:{font:'RIDIBatang.otf',color:'#FFFFFF',weight:700,size:60,x:50,y:12,outline:true,outline_color:'#000000',outline_w:5},
-    cap:{font:'GowunBatang.ttf',color:'#FFFFFF',size:48,y:85,outline:false,box:true,box_color:'#000000',box_pad:14,box_opacity:60,effect:'fade'}},
-  {name:'오렌지 팝', chip:'#FF7A00', motion:'dynamic_pop',
-    hc:{font:'TmonMonsori.ttf',color:'#FF7A00',weight:900,size:78,x:50,y:12,outline:true,outline_color:'#000000',outline_w:9},
-    cap:{font:'TmonMonsori.ttf',color:'#111111',size:52,y:84,outline:false,box:true,box_color:'#FFE100',box_pad:14,box_opacity:100,effect:'pop'}},
-  {name:'파스텔 소프트', chip:'#8FD3FF', motion:'minimal_chic',
-    hc:{font:'SUIT-Bold.otf',color:'#FFFFFF',weight:900,size:64,x:50,y:12,outline:true,outline_color:'#3A6EA5',outline_w:6},
-    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:50,y:84,outline:false,box:true,box_color:'#3A6EA5',box_pad:14,box_opacity:55,effect:'slide'}},
-  {name:'정보전달 블루', chip:'#1E5AA8', motion:'minimal_chic',
-    hc:{font:'Pretendard-ExtraBold.otf',color:'#1E5AA8',weight:900,size:64,x:50,y:12,outline:true,outline_color:'#FFFFFF',outline_w:7},
-    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:52,y:84,outline:false,box:true,box_color:'#1E5AA8',box_pad:14,box_opacity:88,effect:'fade'}},
-  {name:'옐로 2톤 A', chip:'#FFE100', motion:'dynamic_pop',
-    hc:{font:'GmarketSansBold.otf',color:'#FFFFFF',weight:900,size:38,x:50,y:8,outline:true,outline_color:'#000000',outline_w:6},
-    extra:[{text:'',font:'GmarketSansBold.otf',color:'#FFE100',size:68,x:50,y:19,outline:true,outline_color:'#000000',outline_w:8}],
-    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:52,y:84,outline:true,outline_color:'#000000',outline_w:6,box:false,effect:'fade'}},
-  {name:'옐로 2톤 B(좌측)', chip:'#FFE100', motion:'dynamic_pop',
-    hc:{font:'BMDOHYEON.ttf',color:'#FFFFFF',weight:900,size:36,x:32,y:9,outline:true,outline_color:'#000000',outline_w:6},
-    extra:[{text:'',font:'BMDOHYEON.ttf',color:'#FFE100',size:64,x:32,y:19,outline:true,outline_color:'#000000',outline_w:7}],
-    cap:{font:'SUIT-Bold.otf',color:'#FFFFFF',size:50,y:84,outline:true,outline_color:'#000000',outline_w:6,box:false,effect:'slide'}},
-  {name:'네온 글로우 화이트', chip:'#00E5FF', motion:'dynamic_pop',
-    hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:60,x:50,y:14,outline:true,outline_color:'#00E5FF',outline_w:9},
-    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:50,y:84,outline:true,outline_color:'#00E5FF',outline_w:7,box:false,effect:'fade'}},
-  {name:'네온 글로우 센터', chip:'#00E5FF', motion:'dynamic_pop',
-    hc:{font:'SUIT-Bold.otf',color:'#FFFFFF',weight:900,size:58,x:50,y:16,outline:true,outline_color:'#00D9E8',outline_w:8},
-    cap:{font:'SUIT-Bold.otf',color:'#FFFFFF',size:48,y:84,outline:true,outline_color:'#00D9E8',outline_w:6,box:false,effect:'pop'}},
+  {name:'심플 화이트(하단)', chip:'#E8E8E8', motion:'minimal_chic',
+    hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:56,x:50,y:12,outline:true,outline_color:'#000000',outline_w:3},
+    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:50,y:82,outline:true,outline_color:'#000000',outline_w:3,box:false,effect:'fade'}},
+  {name:'심플 화이트(크게)', chip:'#FFFFFF', motion:'minimal_chic',
+    hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:60,x:50,y:12,outline:true,outline_color:'#000000',outline_w:3},
+    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:58,y:37,outline:true,outline_color:'#000000',outline_w:4,box:false,effect:'fade'}},
 ];
-// 스타일별 용도 태그(잘 어울리는 콘텐츠) — 정직한 큐레이션. 실 영상 지표는 v2 발굴연동.
+// 스타일별 용도 태그(잘 어울리는 콘텐츠) — 정직한 큐레이션.
 const STYLE_USE={
-  '심플 화이트':'홈·정보·깔끔', '화이트+민트 투톤':'홈템·리뷰',
-  '모던 화이트':'홈템·정보', '임팩트 옐로':'레시피·강한 훅', '민트 클린':'뷰티·생활',
-  '레드 강조':'경고·꿀팁', '블랙박스 시크':'정보·리뷰', '큐트 핑크':'뷰티·감성',
-  '네이비 신뢰':'정보·금융', '푸드 그린':'레시피·건강', '뉴스 자막형':'정보·뉴스',
-  '핸드메이드 감성':'DIY·감성', '하이엔드 세리프':'럭셔리·리뷰', '오렌지 팝':'레시피·활기',
-  '파스텔 소프트':'육아·감성', '정보전달 블루':'정보·튜토리얼', '옐로 2톤 A':'리뷰·강조',
-  '옐로 2톤 B(좌측)':'리뷰·좌측', '네온 글로우 화이트':'트렌드·뷰티', '네온 글로우 센터':'트렌드·감성'
+  '심플 화이트':'자막 가운데·깔끔', '심플 화이트(하단)':'자막 아래', '심플 화이트(크게)':'강조·큰 자막'
 };
 // 대표 완성 스타일(피팅 카드 우선 노출). 나머지는 더보기.
 let STYLE_TOUCHED=false;
@@ -1046,7 +1013,7 @@ let STYLE_TOUCHED=false;
 // 채우면 스타일·꾸미기가 전부 기본값으로 덮인다(C-2 잔여, 라이브 실측 확인). 복원 시 이 플래그를
 // 세워, initHeadcopy가 applyConfig로 복원값을 DOM에 밀어넣고 STYLE_TOUCHED로 자동적용을 막는다.
 let PENDING_STYLE_RESTORE=false;
-const FEATURED = ['심플 화이트','화이트+민트 투톤','모던 화이트','임팩트 옐로','옐로 2톤 A'];
+const FEATURED = ['심플 화이트','심플 화이트(하단)','심플 화이트(크게)'];
 let MORE_OPEN = false;
 let POSTER_URL_CACHE = null;
 let PICKED_STYLE_IDX = -1;
@@ -1099,7 +1066,7 @@ function renderStyleCards(){
   const restIdx = FULL_PRESETS.map((_,i)=>i).filter(i=>!featIdx.includes(i));
   const show = MORE_OPEN ? featIdx.concat(restIdx) : featIdx;
   box.innerHTML = show.map(i=>styleCardHTML(FULL_PRESETS[i], i, selIdx)).join('');
-  const mb=document.getElementById('moreStylesBtn'); if(mb) mb.textContent = MORE_OPEN ? '− 접기' : '+ 더보기';
+  const mb=document.getElementById('moreStylesBtn'); if(mb){ mb.style.display = restIdx.length ? 'inline-block' : 'none'; mb.textContent = MORE_OPEN ? '− 접기' : '+ 더보기'; }
 }
 function toggleMoreStyles(){ MORE_OPEN=!MORE_OPEN; renderStyleCards(); }
 // 픽로그(트랙1) — 사장님이 무엇을 고르고 버렸는지 조용히 남긴다. 트랙7 취향학습·B전환 지표용.
@@ -2275,9 +2242,12 @@ function renderSceneCutaway(beat, idx){
   const sugg = MIX_REVIEW_SUGGESTIONS.filter(s=>s.beat_idx===beat.beat_idx);
   let html = '';
   if(cw){
+    const label = cw.match_type === 'role' ? '역할 매칭'
+                : cw.match_type === 'manual' ? '직접 넣음'
+                : (cw.score != null ? `소재 매칭 ${cw.score.toFixed(2)}` : '소재 매칭');
     html += `<div style="display:flex;align-items:center;gap:8px;margin-top:6px;padding:6px;border:1px solid var(--line);border-radius:8px;background:#0a1018">`
       + `<img src="/api/scene/${cw.asset_id}/poster" style="width:44px;height:78px;object-fit:cover;border-radius:4px;background:#000" alt="">`
-      + `<div style="flex:1;font-size:12px" class="hint">🖼 컷어웨이 자산 #${cw.asset_id}${cw.score?` · 적합도 ${cw.score.toFixed(2)}`:''}</div>`
+      + `<div style="flex:1;font-size:12px" class="hint">🎬 자산 #${cw.asset_id} · ${label}</div>`
       + `<button class="btn-prev" style="padding:4px 8px;font-size:12px" onclick="toggleCutaway(${idx},null)">이 짤 빼기</button>`
       + `</div>`;
   }

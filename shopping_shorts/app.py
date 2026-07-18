@@ -1,4 +1,5 @@
 """FastAPI: 수집 API + 정적 프론트 서빙."""
+import base64
 import hmac
 import hashlib
 import ipaddress
@@ -2103,7 +2104,11 @@ _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico",
                "/insta_fill_comment.user.js",
                # 유저스크립트(insta_fill_comment)가 인스타 탭에서 전송 감지 시 GM_xmlhttpRequest로
                # 완료기록을 POST한다. 인증쿠키 없이 오므로 허용. 마킹은 저위험(되돌리기 가능).
-               "/api/comment/done")
+               "/api/comment/done",
+               # 원클릭 담기: /grab(북마클릿 설치안내)는 공개, /api/grab(팝업)은 자체적으로
+               # 세션쿠키를 검증해 고객을 식별한다(_cid 폴백이 legacy라 여기선 직접 검증). 미들웨어
+               # 401을 피해 친절한 팝업 응답을 주려고 allowlist에 둔다.
+               "/grab", "/api/grab", "/grab.user.js")
 _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 
 
@@ -2265,6 +2270,112 @@ def _serve_userscript():
     (인증 없이 접근 가능하도록 _AUTH_ALLOW에 등록됨)"""
     p = Path(__file__).parent / "userscript" / "insta_fill_comment.user.js"
     return FileResponse(p, media_type="text/javascript; charset=utf-8")
+
+
+@app.get("/grab.user.js", include_in_schema=False)
+def _serve_grab_userscript():
+    """원클릭 담기 유저스크립트 — Tampermonkey가 이 URL로 설치·자동업데이트.
+    드래그 없이 플랫폼 영상 페이지에 '📥 담기' 버튼을 띄운다."""
+    p = Path(__file__).parent / "userscript" / "grab.user.js"
+    return FileResponse(p, media_type="text/javascript; charset=utf-8")
+
+
+# ── 원클릭 담기: 네이티브 플랫폼(유튜브·틱톡·샤오홍슈·도우인) 영상 → 모음집 즉시 담기 ──
+# (2026-07-18) 렌즈 Apify 검색은 유료·개수제한, 네이티브 검색은 무료·무제한이지만 담을 때
+# 번거롭다는 제보. 해결=플랫폼 영상 페이지에서 북마클릿(무설치) 또는 유저스크립트(카드버튼)로
+# 한 번 눌러 URL·썸네일·제목을 우리 서버로 보내 담는다. 다운로드는 제작소에서 yt-dlp(무료).
+_GRAB_DOMAINS = [
+    ("youtube", ("youtube.com", "youtu.be")),
+    ("tiktok", ("tiktok.com",)),
+    ("instagram", ("instagram.com",)),
+    ("xiaohongshu", ("xiaohongshu.com", "xhslink.com")),
+    ("douyin", ("douyin.com", "iesdouyin.com")),
+]
+
+
+def _grab_platform(url):
+    host = (urllib.parse.urlparse(url or "").hostname or "").lower()
+    for name, doms in _GRAB_DOMAINS:
+        if any(host == d or host.endswith("." + d) for d in doms):
+            return name
+    return ""
+
+
+def _grab_popup_html(ok, msg, sub=""):
+    """팝업창에 뜨는 결과 화면 — 성공 시 잠깐 뒤 자동으로 닫힌다."""
+    icon = "✅" if ok else "⚠️"
+    color = "#1f9d55" if ok else "#e0623d"
+    delay = 1200 if ok else 3000
+    return HTMLResponse(f"""<!doctype html><meta charset="utf-8"><title>담기</title>
+<body style="margin:0;font-family:system-ui,sans-serif;background:#111;color:#eee;text-align:center;padding:28px 16px">
+<div style="font-size:44px">{icon}</div>
+<div style="font-size:17px;margin-top:6px;color:{color};font-weight:700">{msg}</div>
+<div style="font-size:13px;color:#999;margin-top:8px">{sub}</div>
+<script>setTimeout(function(){{window.close();}}, {delay});</script></body>""")
+
+
+@app.get("/api/grab", include_in_schema=False)
+def api_grab(request: Request, url: str = "", thumbnail: str = "", title: str = ""):
+    """북마클릿/유저스크립트가 여는 팝업 대상. 세션쿠키로 고객을 직접 식별(_AUTH_ALLOW라
+    미들웨어가 customer_id를 안 채우므로 여기서 검증). 모음집(mix_basket)에 멱등 추가."""
+    cid = _verify_session(request.cookies.get("dash_auth")) if _AUTH_ON else 0
+    if cid is None:
+        return _grab_popup_html(False, "로그인이 필요해요",
+                                "shoppingshorts.duckdns.org에 먼저 로그인하세요")
+    platform = _grab_platform(url)
+    if not platform:
+        return _grab_popup_html(False, "담을 수 없는 링크예요", "유튜브·틱톡·샤오홍슈·도우인 영상 페이지에서 눌러주세요")
+    sc = "grab_" + platform + "_" + hashlib.sha1(url.encode("utf-8", "ignore")).hexdigest()[:12]
+    added = Store(DB_PATH).mix_basket_add(
+        sc, url=url, thumbnail=thumbnail or "", name=(title or "")[:120],
+        caption=(title or "")[:200], customer_id=cid)
+    return _grab_popup_html(True, "모음집에 담겼어요!" if added else "이미 담겨 있어요",
+                            f"{platform} · 모음집에서 확인")
+
+
+# 북마클릿 본문(플랫폼 페이지에서 실행) — 따옴표 충돌을 피해 base64로 실어 페이지에서 atob.
+# ★설치페이지(우리 도메인)에서 '클릭'하면 자기 URL을 담으려다 실패해 헷갈린다 → 우리 도메인
+# 에서 실행되면 담지 말고 '드래그하세요' 안내만 띄운다(사장님 첫 사용 혼동, 2026-07-18).
+_GRAB_BOOKMARKLET = r'''javascript:(function(){var h=location.host||"";if(/shoppingshorts|localhost|127\.0\.0\.1/.test(h)){alert("❗ 이 버튼은 '눌러서' 쓰는 게 아니라, 마우스로 북마크바에 끌어다(드래그) 저장하는 거예요.\n\n저장한 뒤, 유튜브·틱톡·샤오홍슈·도우인에서 영상을 열고 그 북마크를 누르세요.");return;}var q=function(s){var e=document.querySelector(s);return e?e.content:"";};var th=q('meta[property="og:image"]');var ti=q('meta[property="og:title"]')||document.title||"";window.open("__BASE__/api/grab?url="+encodeURIComponent(location.href)+"&thumbnail="+encodeURIComponent(th)+"&title="+encodeURIComponent(ti.slice(0,120)),"ss_grab","width=380,height=220");})();'''
+
+
+@app.get("/grab", include_in_schema=False)
+def grab_setup(request: Request):
+    """원클릭 담기 설치 안내(공개). '📥 담기' 버튼을 북마크바로 드래그하면 끝(확장 설치 불필요)."""
+    base = (PUBLIC_BASE_URL or "").rstrip("/")
+    bm64 = base64.b64encode(_GRAB_BOOKMARKLET.replace("__BASE__", base).encode()).decode()
+    return HTMLResponse(f"""<!doctype html><meta charset="utf-8"><title>원클릭 담기 설치</title>
+<body style="font-family:system-ui,sans-serif;max-width:640px;margin:36px auto;padding:0 18px;line-height:1.7;color:#222">
+<h2>📥 원클릭 담기</h2>
+<p>네이티브 검색(무료·무제한)으로 보다가, 마음에 드는 영상을 <b>클릭 한 번</b>으로 모음집에 담는 기능입니다. 두 가지 방법 중 편한 걸 고르세요.</p>
+
+<div style="background:#eafaf0;border:2px solid #1f9d55;border-radius:12px;padding:18px;margin:16px 0">
+  <div style="font-weight:800;color:#1f7a44;font-size:16px;margin-bottom:6px">✅ 방법 1 (추천·제일 쉬움) — 버튼이 영상 위에 저절로 떠요</div>
+  <div style="font-size:14px;color:#555;margin-bottom:10px">Tampermonkey에 설치하면, 유튜브·틱톡·샤오홍슈·도우인 영상을 볼 때 오른쪽 아래에 <b>📥 담기</b> 버튼이 자동으로 떠요. 드래그도, 북마크도 필요 없이 <b>그 버튼만 누르면 끝</b>입니다.</div>
+  <ol style="margin:0 0 6px 18px;color:#444;font-size:14px">
+    <li>크롬에 <b>Tampermonkey</b> 확장이 없으면 먼저 설치(웹스토어에서 "Tampermonkey").</li>
+    <li>아래 링크를 누르면 Tampermonkey 설치창이 떠요 → <b>설치</b> 클릭.<br>
+        <a href="/grab.user.js" style="display:inline-block;margin-top:6px;padding:10px 18px;background:#1f9d55;color:#fff;border-radius:9px;text-decoration:none;font-weight:800">📥 담기 버튼 설치하기</a></li>
+    <li>이제 틱톡·샤오홍슈에서 영상을 열면 오른쪽 아래 <b>📥 담기</b> 버튼을 누르기만 하면 담김.</li>
+  </ol>
+</div>
+
+<details style="margin:12px 0">
+<summary style="cursor:pointer;color:#666;font-weight:700">방법 2 — 설치 없이 북마클릿으로 (조금 번거로움)</summary>
+<div style="background:#fff7e6;border:1px solid #f0c36d;border-radius:12px;padding:18px;margin:10px 0">
+  <div style="font-weight:800;margin-bottom:4px;color:#a86">① 아래 파란 버튼을 <span style="color:#c0392b">누르지 말고</span>, 마우스로 <u>북마크바에 끌어다(드래그)</u> 놓으세요</div>
+  <div style="font-size:13px;color:#888;margin-bottom:10px">북마크바가 안 보이면 <b>Ctrl+Shift+B</b>로 켜세요. 드래그 = 버튼을 마우스로 꾹 눌러 위쪽 북마크바까지 끌고 가서 놓기.</div>
+  <a id="bm" draggable="true" href="#" title="이 버튼을 위쪽 북마크바로 드래그하세요"
+     style="display:inline-block;padding:12px 22px;background:#1f6feb;color:#fff;border-radius:10px;text-decoration:none;font-weight:800;cursor:grab;font-size:16px">📥 담기</a>
+  <span style="color:#888;font-size:13px;margin-left:8px">↖ 이걸 <b>끌어서</b> 북마크바에 놓기</span>
+</div>
+<div style="font-weight:700">② 유튜브·틱톡·샤오홍슈·도우인에서 <u>영상을 열고</u>(검색결과 그리드 말고 영상 클릭해 들어간 뒤), 방금 만든 북마크를 누르면 끝</div>
+</div>
+</details>
+<p style="color:#666;margin-top:14px">담긴 영상은 <a href="/collection">🎬 모음집</a>에서 확인 · 실제 다운로드는 제작소에서 자동(무료).</p>
+<p style="color:#999;font-size:13px">※ 검색 결과 <b>그리드</b>가 아니라 <b>영상 상세 페이지</b>에서 눌러야 그 영상이 담깁니다. · shoppingshorts에 로그인된 상태여야 해요.</p>
+<script>document.getElementById("bm").setAttribute("href", atob("{bm64}"));</script>
+</body>""")
 
 
 # ── 영상제작 위저드(produce) ─────────────────────────────────
@@ -2505,7 +2616,7 @@ def api_produce_mix_cutaway(job_id: str, request: Request, body: dict):
         asset = store.get_scene_asset(int(aid), customer_id=_cid(request))
         if not asset:
             return JSONResponse(status_code=422, content={"ok": False, "error": "자산 없음"})
-        hit["cutaway"] = {"asset_id": int(aid), "score": hit.get("cutaway", {}).get("score", 1.0)}
+        hit["cutaway"] = {"asset_id": int(aid), "match_type": "manual"}
     store.update_mix_job(job_id, edit_plan=plan)
     return {"ok": True}
 
