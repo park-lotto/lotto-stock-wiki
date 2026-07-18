@@ -166,16 +166,19 @@
       <button id="collectBtn" onclick="doCollect()">⚡ 지금 수집</button>
       <span id="status" style="color:var(--sub);font-size:12px"></span>
     </div>
-    <div id="refRegister" style="margin:4px 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#0d131c">
-      <div style="font-size:12px;color:var(--sub);margin-bottom:6px">➕ 레퍼런스 채널 등록 <span style="font-size:11px">— 인스타 채널·릴스 URL을 붙여넣으면 다음 수집부터 랭킹에 포함(엑셀 원본은 안 건드림)</span></div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <input id="refUrl" type="text" placeholder="https://www.instagram.com/아이디" onkeydown="if(event.key==='Enter')registerRef()"
-               style="flex:1;min-width:220px;padding:8px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)">
-        <button onclick="registerRef()">등록</button>
+    <details id="refRegister" style="margin:4px 0 12px;border:1px solid var(--line);border-radius:8px;background:#0d131c">
+      <summary id="refSummary" style="padding:9px 12px;cursor:pointer;font-size:12px;color:var(--sub)">➕ 레퍼런스 채널 등록</summary>
+      <div style="padding:0 12px 10px">
+        <div style="font-size:11px;color:var(--sub);margin-bottom:6px">인스타 <b>채널(프로필) 주소</b>를 붙여넣으면 다음 수집부터 랭킹에 포함 — 엑셀 원본은 안 건드립니다. (릴스·게시물 링크 말고 채널 주소)</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <input id="refUrl" type="text" placeholder="https://www.instagram.com/아이디" onkeydown="if(event.key==='Enter')registerRef()"
+                 style="flex:1;min-width:220px;padding:8px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)">
+          <button onclick="registerRef()">등록</button>
+        </div>
+        <div id="refMsg" style="font-size:11px;color:var(--sub);margin-top:6px"></div>
+        <div id="refAdded" style="font-size:12px;color:var(--sub);margin-top:8px"></div>
       </div>
-      <div id="refMsg" style="font-size:11px;color:var(--sub);margin-top:6px"></div>
-      <div id="refAdded" style="font-size:12px;color:var(--sub);margin-top:8px"></div>
-    </div>
+    </details>
     <div class="tabs" id="tabs">
       <div class="tab active" data-tab="comments" title="댓글 수 그대로 정렬">📊 전체</div>
       <div class="tab" data-tab="speed" title="댓글수 ÷ 경과시간(시간) — 시간당 댓글이 얼마나 빨리 쌓이는지">⚡ 속도</div>
@@ -278,6 +281,8 @@ async function loadRefAdded(){
   try{
     const d=await (await fetch('/api/discover/added')).json();
     const items=d.items||[];
+    const sm=document.getElementById('refSummary');
+    if(sm) sm.innerHTML='➕ 레퍼런스 채널 등록'+(items.length?' <span style="color:var(--txt)">('+items.length+')</span>':'');
     if(!items.length){ el.innerHTML=''; return; }
     el.innerHTML='<b>내가 등록한 채널 ('+items.length+')</b> '+items.map(c=>
       '<span style="display:inline-block;margin:3px 4px 0 0;padding:3px 8px;border:1px solid var(--line);border-radius:12px">@'

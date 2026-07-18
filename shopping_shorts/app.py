@@ -463,9 +463,13 @@ def api_reference_register(url: str):
     이미 엑셀·발굴목록에 있으면 already=True로 알려주고 중복 추가하지 않는다."""
     username = username_from_url(url)
     if not username:
-        return JSONResponse(status_code=422, content={
-            "ok": False,
-            "error": "인스타 채널 URL이 아닙니다 (instagram.com/아이디 형태)"})
+        low = (url or "").lower()
+        if any(x in low for x in ("/reel/", "/reels/", "/p/", "/tv/", "/share/")):
+            # 릴스·게시물 공유링크엔 채널 아이디가 없다(예약경로) — 프로필 주소 안내
+            err = "릴스·게시물 주소엔 채널 아이디가 없어요 — 채널(프로필) 주소를 넣어주세요 (예: instagram.com/아이디)"
+        else:
+            err = "인스타 채널 URL이 아닙니다 (instagram.com/아이디 형태)"
+        return JSONResponse(status_code=422, content={"ok": False, "error": err})
     store = Store(DB_PATH)
     key = username.strip().lstrip("@").lower()
     known = {u.strip().lstrip("@").lower() for u in _known_usernames(store)}
