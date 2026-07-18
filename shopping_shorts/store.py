@@ -753,6 +753,24 @@ class Store:
             )
             return True
 
+    def mix_basket_add(self, shortcode, url="", thumbnail="", name="", caption="",
+                       customer_id=LEGACY_CUSTOMER_ID):
+        """있으면 그대로 두고(멱등), 없으면 추가. 새로 담겼으면 True.
+        원클릭 담기(북마클릿·유저스크립트)용 — 토글과 달리 중복 클릭해도 안 빠진다."""
+        with self._conn() as c:
+            exists = c.execute(
+                "SELECT 1 FROM mix_basket WHERE customer_id=? AND shortcode=?",
+                (customer_id, shortcode),
+            ).fetchone()
+            if exists:
+                return False
+            c.execute(
+                "INSERT INTO mix_basket(customer_id, shortcode, url, thumbnail, name, caption, added_at) "
+                "VALUES(?,?,?,?,?,?, datetime('now'))",
+                (customer_id, shortcode, url, thumbnail, name, caption),
+            )
+            return True
+
     def mix_basket_remove(self, shortcode, customer_id=LEGACY_CUSTOMER_ID):
         """바구니에서 제거."""
         with self._conn() as c:
