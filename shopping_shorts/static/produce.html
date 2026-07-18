@@ -221,8 +221,8 @@
       <div class="sub">아래 <b>완성 스타일</b>을 고르면 바로 완성돼요. 실제 장면 위에서 미리보고, 더 손보고 싶으면 <b>직접 다듬기</b>를 펼치세요.</div>
       <!-- 🪞 피팅룸: 좌(큰 미러) + 우(문구·스타일카드·강조·고급) -->
       <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;margin-top:12px">
-        <!-- 좌: 큰 피팅 미러 -->
-        <div style="flex:0 0 auto">
+        <!-- 좌: 큰 피팅 미러 (다듬기 스크롤 시 따라오도록 sticky) -->
+        <div style="flex:0 0 auto;position:sticky;top:12px;align-self:flex-start;z-index:7">
           <div class="hint" style="margin-bottom:4px">🪞 실시간 미리보기 (9:16) — 글자를 <b>드래그</b>해 위치 이동
             <label style="cursor:pointer;margin-left:6px;color:var(--txt)"><input type="checkbox" id="sceneBg" onchange="toggleSceneBg()"> 실장면 배경</label></div>
           <div id="hcPreview" style="position:relative;width:380px;aspect-ratio:9/16;background:#ffffff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.4)">
@@ -678,6 +678,13 @@ function updateCaption(){
 }
 // ── 🎯 완성 스타일 프리셋(원클릭: 헤드카피+자막+효과 한 번에) — 빅채널 레퍼런스 기반 ──
 const FULL_PRESETS=[
+  {name:'심플 화이트', chip:'#F2F2F2', motion:'minimal_chic',
+    hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:60,x:50,y:12,outline:true,outline_color:'#000000',outline_w:5},
+    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:52,y:84,outline:true,outline_color:'#000000',outline_w:4,box:false,effect:'fade'}},
+  {name:'화이트+민트 투톤', chip:'#3BE6C6', motion:'dynamic_pop',
+    hc:{font:'BMDOHYEON.ttf',color:'#FFFFFF',weight:900,size:40,x:50,y:9,outline:true,outline_color:'#0B2A24',outline_w:6},
+    extra:[{text:'',font:'BMDOHYEON.ttf',color:'#3BE6C6',size:66,x:50,y:19,outline:true,outline_color:'#0B2A24',outline_w:8}],
+    cap:{font:'SUIT-Bold.otf',color:'#FFFFFF',size:50,y:84,outline:true,outline_color:'#000000',outline_w:5,box:false,effect:'slide'}},
   {name:'모던 화이트', chip:'#FFFFFF', motion:'minimal_chic',
     hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:66,x:50,y:12,outline:true,outline_color:'#000000',outline_w:7},
     cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:52,y:84,outline:false,box:true,box_color:'#000000',box_pad:14,box_opacity:68,effect:'fade'}},
@@ -737,6 +744,7 @@ const FULL_PRESETS=[
 ];
 // 스타일별 용도 태그(잘 어울리는 콘텐츠) — 정직한 큐레이션. 실 영상 지표는 v2 발굴연동.
 const STYLE_USE={
+  '심플 화이트':'홈·정보·깔끔', '화이트+민트 투톤':'홈템·리뷰',
   '모던 화이트':'홈템·정보', '임팩트 옐로':'레시피·강한 훅', '민트 클린':'뷰티·생활',
   '레드 강조':'경고·꿀팁', '블랙박스 시크':'정보·리뷰', '큐트 핑크':'뷰티·감성',
   '네이비 신뢰':'정보·금융', '푸드 그린':'레시피·건강', '뉴스 자막형':'정보·뉴스',
@@ -746,7 +754,7 @@ const STYLE_USE={
 };
 // 대표 완성 스타일(피팅 카드 우선 노출). 나머지는 더보기.
 let STYLE_TOUCHED=false;
-const FEATURED = ['모던 화이트','임팩트 옐로','옐로 2톤 A','네온 글로우 화이트','레드 강조'];
+const FEATURED = ['심플 화이트','화이트+민트 투톤','모던 화이트','임팩트 옐로','옐로 2톤 A'];
 let MORE_OPEN = false;
 let POSTER_URL_CACHE = null;
 let PICKED_STYLE_IDX = -1;
@@ -842,7 +850,7 @@ function applyFullPreset(i){
   document.querySelectorAll('.fullPreset').forEach((b,idx)=>b.style.outline = idx===i?'2px solid var(--accent2)':'none');
 }
 // ── 🪄 진입 자동완성: step5(꾸미기) 첫 진입 시 기본 스타일+실장면 배경 자동 적용(딸깍) ──
-const DEFAULT_STYLE_NAME='임팩트 옐로';
+const DEFAULT_STYLE_NAME='심플 화이트';
 let DEFAULT_APPLIED=false;
 function applyDefaultStyleOnEntry(){
   // step5 진입 1회: 사용자가 아직 스타일을 안 건드렸으면 기본 스타일 자동 적용 + 실장면 배경 자동 ON.
