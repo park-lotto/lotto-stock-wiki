@@ -205,8 +205,6 @@ def test_lens_cn_vision_extract_and_similarity_sort(tmp_path, monkeypatch):
 
 
 def test_lens_yt_returns_youtube_items(tmp_path, monkeypatch):
-    import shopping_shorts.app as appmod
-    import types
     db = str(tmp_path / "t.db")
     monkeypatch.setattr(appmod, "DB_PATH", db)
     monkeypatch.setattr(appmod, "PUBLIC_BASE_URL", "https://example.test")
@@ -216,7 +214,6 @@ def test_lens_yt_returns_youtube_items(tmp_path, monkeypatch):
              "thumbnail": f"https://img/{i}.jpg"} for i in range(3)]
     monkeypatch.setattr(appmod, "youtube_search",
                         types.SimpleNamespace(search=lambda kw, max_results=40: fake))
-    from fastapi.testclient import TestClient
     c = TestClient(appmod.app)
     r = c.post("/api/lens/yt",
                data={"source_caption": "물총 여름 필수템"},
@@ -231,12 +228,29 @@ def test_lens_yt_returns_youtube_items(tmp_path, monkeypatch):
 
 
 def test_lens_yt_empty_keyword_returns_empty(tmp_path, monkeypatch):
-    import shopping_shorts.app as appmod
     monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
     monkeypatch.setattr(appmod, "PUBLIC_BASE_URL", "https://example.test")
-    from fastapi.testclient import TestClient
     c = TestClient(appmod.app)
     r = c.post("/api/lens/yt", data={"source_caption": ""})
+    assert r.status_code == 200
+    d = r.json()
+    assert d["ok"] is True and d["count"] == 0
+
+
+def test_lens_yt_search_failure_returns_empty(tmp_path, monkeypatch):
+    db = str(tmp_path / "t.db")
+    monkeypatch.setattr(appmod, "DB_PATH", db)
+    monkeypatch.setattr(appmod, "PUBLIC_BASE_URL", "https://example.test")
+    monkeypatch.setattr(appmod, "cn_search_keyword_vision",
+                        lambda raw, cap: {"product": "물총", "zh": "水枪"})
+    def boom(kw, max_results=40):
+        raise RuntimeError("quota exhausted")
+    monkeypatch.setattr(appmod, "youtube_search",
+                        types.SimpleNamespace(search=boom))
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/yt",
+               data={"source_caption": "물총"},
+               files={"frame": ("f.jpg", b"\xff\xd8\xff", "image/jpeg")})
     assert r.status_code == 200
     d = r.json()
     assert d["ok"] is True and d["count"] == 0
