@@ -70,3 +70,13 @@ def test_set_meta_does_not_overwrite_existing_name(tmp_path):
     s.mix_basket_set_meta("grab_yt_2", customer_id=0, thumbnail="new.jpg", name="새제목")
     item = [i for i in s.mix_basket_list(customer_id=0) if i["shortcode"] == "grab_yt_2"][0]
     assert item["thumbnail"] == "orig.jpg" and item["name"] == "원제목"
+
+
+def test_set_meta_merges_not_overwrites(tmp_path):
+    """재보강이 간헐 실패로 일부 필드만 와도 기존 값을 안 잃고 병합한다."""
+    s = Store(str(tmp_path / "t.db"))
+    s.mix_basket_add("grab_tk_1", url="u", customer_id=0)
+    s.mix_basket_set_meta("grab_tk_1", customer_id=0, meta={"views": 676000, "comments": 715})
+    s.mix_basket_set_meta("grab_tk_1", customer_id=0, meta={"channel": "오늘식탁"})  # views 없이 옴
+    m = [i for i in s.mix_basket_list(customer_id=0) if i["shortcode"] == "grab_tk_1"][0]["meta"]
+    assert m["views"] == 676000 and m["comments"] == 715 and m["channel"] == "오늘식탁"

@@ -825,20 +825,31 @@ class Store:
         """원클릭 담기 항목의 보강값 갱신(백그라운드 enrich용). None인 필드는 안 건드린다.
         thumbnail/name은 기존 값이 빈 경우에만 채운다(사용자·유저스크립트가 준 값 우선).
         meta=dict면 JSON으로 직렬화해 meta_json에 저장."""
-        sets, args = [], []
-        if thumbnail:
-            sets.append("thumbnail=COALESCE(NULLIF(thumbnail,''), ?)")
-            args.append(thumbnail)
-        if name:
-            sets.append("name=COALESCE(NULLIF(name,''), ?)")
-            args.append(name)
-        if meta:
-            sets.append("meta_json=?")
-            args.append(json.dumps(meta, ensure_ascii=False))
-        if not sets:
-            return
-        args += [customer_id, shortcode]
         with self._conn() as c:
+            sets, args = [], []
+            if thumbnail:
+                sets.append("thumbnail=COALESCE(NULLIF(thumbnail,''), ?)")
+                args.append(thumbnail)
+            if name:
+                sets.append("name=COALESCE(NULLIF(name,''), ?)")
+                args.append(name)
+            if meta:
+                # ★기존 meta_json에 병합 — yt-dlp 추출이 간헐 실패(틱톡 rehydration 등)해도
+                # 이전에 채운 조회수·댓글 등을 잃지 않게. 새 값만 덮어쓴다.
+                row = c.execute("SELECT meta_json FROM mix_basket WHERE customer_id=? AND shortcode=?",
+                                (customer_id, shortcode)).fetchone()
+                merged = {}
+                if row and row[0]:
+                    try:
+                        merged = json.loads(row[0])
+                    except (ValueError, TypeError):
+                        merged = {}
+                merged.update(meta)
+                sets.append("meta_json=?")
+                args.append(json.dumps(merged, ensure_ascii=False))
+            if not sets:
+                return
+            args += [customer_id, shortcode]
             c.execute(f"UPDATE mix_basket SET {', '.join(sets)} WHERE customer_id=? AND shortcode=?", args)
 
     def mix_basket_shortcodes(self, customer_id=LEGACY_CUSTOMER_ID):
