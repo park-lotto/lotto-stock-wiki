@@ -141,9 +141,12 @@
           <div style="margin-top:12px">
             <div style="font-size:12px;margin-bottom:4px">URL 직접 추가</div>
             <div id="mixUrls">
-              <div class="row" style="margin-bottom:6px"><input class="mixUrl" type="text" placeholder="인스타/유튜브/틱톡 URL" style="width:100%;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px"></div>
+              <div class="row" style="margin-bottom:6px;display:flex;gap:6px;align-items:center"><input class="mixUrl" type="text" placeholder="인스타/유튜브/틱톡 URL" style="flex:1;min-width:0;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px"><button class="urlDel" title="이 칸 지우기" onclick="removeMixUrlRow(this)" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:16px;padding:0 4px">✕</button></div>
             </div>
-            <button class="btn-prev" style="padding:8px 14px" onclick="addMixUrl()">+ URL 추가</button>
+            <div style="display:flex;gap:8px;margin-top:2px">
+              <button class="btn-prev" style="padding:8px 14px" onclick="addMixUrl()">+ URL 추가</button>
+              <button class="btn-next" style="padding:8px 14px" onclick="confirmMixUrls()">✔ 확정(영상풀에 담기)</button>
+            </div>
           </div>
         </div>
         <!-- 결과 ▶ -->
@@ -1375,7 +1378,8 @@ function addMixUrl(){
   const wrap=document.getElementById('mixUrls');
   if(wrap.querySelectorAll('.mixUrl').length>=5) return;
   const d=document.createElement('div'); d.className='row'; d.style.marginBottom='6px';
-  d.innerHTML='<input class="mixUrl" type="text" placeholder="인스타/유튜브/틱톡 URL" style="width:100%;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px">';
+  d.style.display='flex'; d.style.gap='6px'; d.style.alignItems='center';
+  d.innerHTML='<input class="mixUrl" type="text" placeholder="인스타/유튜브/틱톡 URL" style="flex:1;min-width:0;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px"><button class="urlDel" title="이 칸 지우기" onclick="removeMixUrlRow(this)" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:16px;padding:0 4px">✕</button>';
   wrap.appendChild(d);
 }
 // 레퍼런스 모음집(/collection)에서 "🎬 영상제작으로 보내기"로 넘어온 영상들. 역할을 미리
@@ -1531,24 +1535,60 @@ function renderPool(){
       </div>
       <button class="btn-prev" style="padding:6px 10px;font-size:12px" onclick="openScriptModal(${i})">📝 뽑기${it.pickScript?' ✓':''}</button>
       <button class="btn-prev" style="padding:6px 10px;font-size:12px;${it.useFootage?'border-color:var(--ok);color:var(--ok)':''}" onclick="toggleFootage(${i})">🎬 담기${it.useFootage?' ✓':''}</button>
+      <button class="poolDel" title="영상풀에서 빼기" onclick="removeFootage(${i})" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:16px;padding:0 2px">✕</button>
     </div>`).join('');
+}
+// 영상풀(HANDOFF)에서 항목 제거 — 삭제 기능(2026-07-18 사장님 요청).
+function removeFootage(i){
+  if(!HANDOFF[i]) return;
+  HANDOFF.splice(i,1);
+  renderPool(); syncFootageToMixUrls(); refreshFinalPeek(); saveWork();
+}
+// URL 입력칸에 넣은 URL들을 영상풀 카드로 올린다(2026-07-18 사장님 요청 — 카드로 잘 보이게).
+// 확정 = "이 영상들을 화면에 쓰겠다"이므로 useFootage:true로 담아 바로 믹스 가능하게 한다.
+function confirmMixUrls(){
+  const wrap=document.getElementById('mixUrls'); if(!wrap) return;
+  const typed=Array.from(wrap.querySelectorAll('.mixUrl')).map(i=>i.value.trim()).filter(Boolean);
+  const have=new Set(HANDOFF.map(h=>h.url));
+  let added=0;
+  for(const u of typed){
+    if(have.has(u)) continue;   // 이미 풀에 있으면 중복 추가 안 함
+    have.add(u);
+    HANDOFF.push({url:u, shortcode:'', name:'', thumbnail:'', caption:'', pickScript:false, useFootage:true});
+    added++;
+  }
+  // 입력칸은 다음 URL 입력을 위해 빈 칸 하나로 되돌린다(확정한 URL은 위 카드로 올라갔다).
+  wrap.innerHTML='<div class="row" style="margin-bottom:6px;display:flex;gap:6px;align-items:center"><input class="mixUrl" type="text" placeholder="인스타/유튜브/틱톡 URL" style="flex:1;min-width:0;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px"><button class="urlDel" title="이 칸 지우기" onclick="removeMixUrlRow(this)" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:16px;padding:0 4px">✕</button></div>';
+  renderPool(); syncFootageToMixUrls(); refreshFinalPeek(); saveWork();
+  if(!added && typed.length===0){ const st=document.getElementById('mixStatus'); if(st) st.textContent='먼저 URL을 입력하세요.'; }
+}
+// URL 입력칸 한 줄 지우기 — 최소 한 칸은 남긴다.
+function removeMixUrlRow(btn){
+  const wrap=document.getElementById('mixUrls'); if(!wrap) return;
+  const rows=wrap.querySelectorAll('.row');
+  if(rows.length<=1){ const inp=wrap.querySelector('.mixUrl'); if(inp) inp.value=''; return; }
+  btn.closest('.row').remove();
 }
 function toggleFootage(i){
   if(!HANDOFF[i]) return;
   HANDOFF[i].useFootage=!HANDOFF[i].useFootage;
   syncFootageToMixUrls(); renderPool(); saveWork();
 }
-// 🎬 담긴 영상들을 기존 MIX 실행이 읽는 #mixUrls 입력칸에 반영(startProduceMix 재사용).
+// 담긴 영상 개수만 표시한다(2026-07-18 개편). 예전엔 담긴 URL을 #mixUrls 입력칸에 **복사**해
+// 넣어 카드와 입력칸에 같은 URL이 이중으로 보였다. 이제 카드가 진실의 원천이고 #mixUrls는
+// '새 URL 타이핑' 전용이다 — startProduceMix가 collectMixUrls()로 카드+입력칸을 합쳐 읽는다.
 function syncFootageToMixUrls(){
-  const urls=HANDOFF.filter(h=>h.useFootage).map(h=>h.url).filter(Boolean);
-  const wrap=document.getElementById('mixUrls'); if(!wrap) return;
-  const extra=Array.from(wrap.querySelectorAll('.mixUrl')).map(i=>i.value.trim())
-    .filter(v=>v && !urls.includes(v));  // 사용자가 손으로 넣은 URL 보존
-  const all=[...urls, ...extra];
-  wrap.innerHTML=(all.length?all:['']).map(v=>
-    `<div class="row" style="margin-bottom:6px"><input class="mixUrl" type="text" placeholder="인스타/유튜브/틱톡 URL" value="${esc(v)}" style="width:100%;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px"></div>`).join('');
+  const n=HANDOFF.filter(h=>h.useFootage).length;
   const fl=document.getElementById('footageList');
-  if(fl) fl.textContent=urls.length?`🎬 화면 ${urls.length}개 담김 (${urls.length===1?'순서편집':'믹스'})`:'🎬 담기로 화면에 쓸 영상을 고르세요. (1개=순서편집 · 2개+=믹스)';
+  if(fl) fl.textContent=n?`🎬 화면 ${n}개 담김 (${n===1?'순서편집':'믹스'})`:'🎬 담기로 화면에 쓸 영상을 고르세요. (1개=순서편집 · 2개+=믹스)';
+}
+// 믹스에 쓸 URL = 영상풀에서 🎬담긴 것 + 아직 확정 안 하고 입력칸에 남은 것(중복 제거).
+function collectMixUrls(){
+  const fromPool=HANDOFF.filter(h=>h.useFootage).map(h=>h.url).filter(Boolean);
+  const typed=[...document.querySelectorAll('.mixUrl')].map(i=>i.value.trim()).filter(Boolean);
+  const seen=new Set(), out=[];
+  for(const u of [...fromPool, ...typed]){ if(!seen.has(u)){ seen.add(u); out.push(u); } }
+  return out;
 }
 // 📝뽑기: 영상 i의 대본을 확보(캐시/추출)한 뒤 구조분석해 도서관식 생성 모달을 연다.
 // (도서관 library.html의 openGen/runGen/refineDraft/history를 pm 접두로 이식, 2026-07-15)
@@ -1848,8 +1888,8 @@ async function saveScriptToWiki(btn){
 }
 async function startProduceMix(){
   if(!STATE.script){ alert('1단계에서 대본을 먼저 확정하세요'); return; }
-  const urls=[...document.querySelectorAll('.mixUrl')].map(i=>i.value.trim()).filter(Boolean);
-  if(urls.length<1){ alert('소스 영상 URL을 1개 이상 입력하세요'); return; }
+  const urls=collectMixUrls();   // 영상풀 담긴 것 + 입력칸에 남은 것(중복 제거)
+  if(urls.length<1){ alert('소스 영상 URL을 1개 이상 입력하세요(확정 또는 🎬담기)'); return; }
   const st=document.getElementById('mixStatus'); st.textContent='⏳ 시작 중…';
   document.getElementById('mixReview').innerHTML='';
   try{
