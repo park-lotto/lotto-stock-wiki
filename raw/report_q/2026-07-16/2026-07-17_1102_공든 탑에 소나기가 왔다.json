@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "date": "2026-07-16",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-17_1102_공든 탑에 소나기가 왔다.md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "이현지",
+    "report_date": "2026.07.17",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "롯데관광개발",
+        "code": "032350",
+        "rating": "BUY",
+        "rating_changed": "null",
+        "tp_new": "26,000원",
+        "tp_prev": "null",
+        "tp_direction": "down",
+        "earnings_outlook": "2분기 매출액은 1,964 억원(+24.6%yoy), 영업이익은 510 억원(+53.9%yoy)으로 시장 컨센서스 부합 전망. 2분기 영업이익은 롯데관광개발이 510억원(+121.0%yoy)으로 시장 컨센서스에 부합",
+        "estimate_revision": "다만, 업종 전반적으로 밸류에이션 하향됨에 따라 적용 멀티플을 하향하며 목표주가를 26,000 원으로 9.4% 하향 조정함.",
+        "next_catalyst": "계절적으로 3분기 성수기를 맞이해 롯데관광개발과 파라다이스는 최대 실적 기록할 것으로 전망",
+        "thesis": [
+          "월간 신규 멤버십 순증 꾸준히 높아지며 고객 데이터 확대",
+          "지난 4월부터 롤링 테이블 확대를 통한 하이롤러 대상 마케팅 강화",
+          "향후 리파이낸싱을 통한 이자비용 축소로 수익성 개선 기대"
+        ],
+        "valuation_basis": "적용 PER(배) 17",
+        "risk": "문체부의 국내 외국인 전용 카지노의 관광진흥개발기금 부담률 인상 추진",
+        "supply_comment": "null",
+        "quote": "다만, 업종 전반적으로 밸류에이션 하향됨에 따라 적용 멀티플을 하향하며 목표주가를 26,000 원으로 9.4% 하향 조정함."
+      },
+      {
+        "name": "파라다이스",
+        "code": "034230",
+        "rating": "BUY",
+        "rating_changed": "null",
+        "tp_new": "20,000원",
+        "tp_prev": "null",
+        "tp_direction": "down",
+        "earnings_outlook": "2분기 매출액은 3,162억원(+11.2%yoy), 영업이익은 458억원(+6.9%yoy)으로 시장 컨센서스 소폭 하회 전망.",
+        "estimate_revision": "적용 멀티플을 하향하며 목표주가를 20,000 원으로 13.0% 하향 조정.",
+        "next_catalyst": "하반기 성수기를 맞이해 다양한 프로모션을 통한 콤프 확대 전략으로 실적 기여 높아질 것으로 기대",
+        "thesis": [
+          "2분기 드랍액 2.1조원 돌파로 역대 최대 수준 기록",
+          "기타 VIP 및 Mass 성장이 전체 드랍액 성장을 견인",
+          "P-Mass, Mass 중심 가파른 성장 기대"
+        ],
+        "valuation_basis": "적용 PER(배) 18",
+        "risk": "문체부의 국내 외국인 전용 카지노의 관광진흥개발기금 부담률 인상 추진",
+        "supply_comment": "null",
+        "quote": "적용 멀티플을 하향하며 목표주가를 20,000 원으로 13.0% 하향 조정."
+      },
+      {
+        "name": "GKL",
+        "code": "114090",
+        "rating": "BUY",
+        "rating_changed": "null",
+        "tp_new": "16,000원",
+        "tp_prev": "null",
+        "tp_direction": "flat",
+        "earnings_outlook": "2분기 매출액은 1,195 억원(+18.4%yoy), 영업이익은 247 억원(+54.6%yoy)으로 시장 컨센서스 상회 전망.",
+        "estimate_revision": "null",
+        "next_catalyst": "팬데믹 이전 수준 회복 및 중국 VIP 중심의 빠른 회복",
+        "thesis": [
+          "중국과 기타 VIP가 두자릿수 성장을 기록하며 전체 드랍액 성장 견인",
+          "다양한 마케팅 노력들로 중국 VIP 중심 빠르게 회복",
+          "안정적 성장 지속"
+        ],
+        "valuation_basis": "적용 PER(배) 16",
+        "risk": "문체부의 국내 외국인 전용 카지노의 관광진흥개발기금 부담률 인상 추진",
+        "supply_comment": "null",
+        "quote": "GKL(BUY, TP 16,000 원(유지))"
+      }
+    ]
+  }
+}

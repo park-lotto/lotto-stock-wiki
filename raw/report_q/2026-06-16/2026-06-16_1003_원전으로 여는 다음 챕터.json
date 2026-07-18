@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-16",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-16_1003_원전으로 여는 다음 챕터.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "이혜진",
+    "report_date": "26.06.15",
+    "stocks": [
+      {
+        "name": "대우건설",
+        "code": "047040",
+        "rating": "BUY",
+        "rating_changed": "신규",
+        "tp_new": "28,000",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 연결 기준 매출액 8조 590억 원(+0.1%, YoY), 영업이익 6,825억 원(흑전, YoY, OPM 8.5%) 예상",
+        "estimate_revision": null,
+        "next_catalyst": "체코 원전 EPC 본계약 체결과 후속 원전 파이프라인 확대",
+        "thesis": [
+          "팀코리아 체코 원전 수주로 첫 해외 원전 레퍼런스 확보",
+          "최근 조정으로 밸류에이션 부담 완화",
+          "글로벌 원전 플레이어로 재평가 기대"
+        ],
+        "valuation_basis": "12개월 선행 BPS에 Target PBR 2.88배를 적용. Target PBR은 과거 중동 플랜트 사이클 당시 고점(2007년 하반기) 평균 PBR 적용",
+        "risk": null,
+        "supply_comment": "체코 두코바니 원전 수주를 통한 해외 원전 시공 역량 입증 및 팀코리아 내 역할 확대 기대",
+        "quote": "투자의견 매수, 목표주가 28,000원으로 커버리지 개시. 팀코리아 체코 원전 수주로 첫 해외 원전 레퍼런스 확보. 최근 조정으로 밸류에이션 부담 완화, 글로벌 원전 플레이어로 재평가 기대"
+      }
+    ]
+  }
+}

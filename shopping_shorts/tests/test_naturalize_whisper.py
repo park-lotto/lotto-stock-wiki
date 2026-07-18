@@ -100,6 +100,30 @@ def test_per_beat_cap_blocks_second_tag():
     assert "[whispers]" not in out
 
 
+def test_per_beat_cap_block_warns_not_silent():
+    """whole-branch 최종 리뷰 Finding6 — 캡이 속삭임을 막으면 경고를 남긴다.
+
+    2026-07-17 실사고("탭 이름이 거짓말이 됐다")가 관측 안 됐던 이유가
+    정확히 이거였다 — `_whisper`가 캡에 밀리면 아무 신호 없이 조용히 return했다.
+    뮤턴트: `ctx["warnings"].append(...)` 호출을 지우면(캡 억제를 다시 조용하게
+    만들면) 이 테스트가 죽는다."""
+    p = {"whisper": {"on": True, "roles": ["훅"]},
+         "caps": {"max_tags_total": 3, "max_tags_per_beat": 1, "max_fillers_per_text": 2}}
+    d = _d("진짜 대박이에요", "훅", 1, p)
+    assert "[whispers]" not in d["text"]
+    assert any("whisper" in w and "캡" in w for w in d["warnings"]), \
+        f"캡 억제가 조용히 사라졌다(경고 없음): {d['warnings']!r}"
+    assert not d["applied"].get("whisper"), "억제됐는데 applied에 찍히면 거짓말이다"
+
+
+def test_cap_not_blocking_whisper_has_no_cap_warning():
+    """대조군 — 캡이 실제로 막지 않은 정상 케이스에서는 이 경고가 안 뜬다."""
+    p = {"whisper": {"on": True, "roles": ["반전"]}}
+    d = _d("이건 진짜 물건이에요", "반전", 2, p)
+    assert "[whispers]" in d["text"]
+    assert not any("whisper" in w and "캡" in w for w in d["warnings"]), d["warnings"]
+
+
 def test_whisper_runs_right_after_emotion_arc():
     """스테이지 순서 봉인 — _STAGES 튜플에서 whisper가 emotion_arc 바로 뒤다.
 

@@ -13,14 +13,16 @@ from shopping_shorts.store import Store
 from shopping_shorts.media_download import download_any
 from shopping_shorts.script_extract import extract_script
 from shopping_shorts.edit_plan import build_edit_plan
+from shopping_shorts.scene_match import match_scene_assets
 from shopping_shorts import tts
 from shopping_shorts import audio_post
-from shopping_shorts.video_assemble import assemble, _beat_timeline
+from shopping_shorts.video_assemble import assemble, _beat_timeline, _probe_duration
 from shopping_shorts.motion_assets import resolve_layers, DEFAULT_ASSETS_DIR
 from shopping_shorts.motion_packs import build_plan, load_packs
 from shopping_shorts.vmake_client import remove_subtitles
 from shopping_shorts.narration_naturalize import naturalize, merge_profile
 from shopping_shorts import asr_check
+from shopping_shorts import caption_sync
 
 # 모션 자산 폴더(테스트가 monkeypatch로 교체 가능하도록 모듈 상수로 노출)
 MOTION_ASSETS_DIR = DEFAULT_ASSETS_DIR
@@ -92,6 +94,13 @@ def _synthesize_beats(beats, tts_dir, *, voice):
             next_text=beats[i + 1]["narration"] if i < total - 1 else None,
         )
         beat["tts_path"] = str(out)
+        # 자막 타이밍용: 실제 말한 워드 시각으로 구절 표시시간 계산(실패/키없음 → 미설정=폴백).
+        beat["cap_durs"] = None
+        words = asr_check.transcribe_words(str(out))
+        if words:
+            dur = _probe_duration(str(out))
+            beat["cap_durs"] = caption_sync.phrase_durs_from_words(
+                beat["narration"], words, dur)   # None일 수 있음 → 폴백
 
 
 def _prepare_sources(urls, work):
@@ -145,14 +154,14 @@ def run_mix_job(job_id, db_path, work_root):
         source_scripts = list(extracts.values())
         _plan_and_tts(store, job_id, source_scripts, job["target_seconds"],
                       job["structure"], None, work, given_script=job.get("given_script"),
-                      voice=job.get("voice"))
+                      voice=job.get("voice"), customer_id=job.get("customer_id", 0))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=str(e))
 
 
 def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, video_type, work,
-                  given_script=None, voice=None):
+                  given_script=None, voice=None, customer_id=0):
     """EDL 생성(3) + 비트별 TTS(4) → edit_plan 저장 + ready_for_review.
     run_mix_job(자동판별, video_type=None)과 retype_mix_job(사용자 선택 유형)이 공유.
     given_script: 있으면 확정 대본을 그대로 비트로 쪼개 영상만 매칭(영상제작 2단계).
@@ -166,6 +175,13 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # (2026-07-12 최종 전체리뷰 Important).
     if not plan["beats"]:
         raise RuntimeError("EDL 비어있음 — 대본 추출 실패 또는 Gemini 키 소진으로 편집안을 만들지 못함")
+
+    # 3.5) 장면 라이브러리 매칭 — 자산이 있을 때만(없으면 plan 무변경). match_scene_assets가
+    # beat["cutaway"]={"asset_id":..,"score":..}를 심고, run_render이 같은 키를 읽어
+    # asset_id→media_path로 해석한다(저장위치=읽기위치, seam은 mix_pipeline 배선 참고).
+    assets = store.list_scene_assets(customer_id=customer_id, asset_type="clip")
+    if assets:
+        plan = match_scene_assets(plan, assets)
 
     # 4) 비트별 TTS (naturalize + N-best + 연속성 + 프리셋 후처리)
     store.update_mix_job(job_id, status="tts")
@@ -186,7 +202,7 @@ def retype_mix_job(job_id, video_type, db_path, work_root):
         source_scripts = list(job["extract"].values())
         _plan_and_tts(store, job_id, source_scripts, job["target_seconds"],
                       job["structure"], video_type, work, given_script=job.get("given_script"),
-                      voice=job.get("voice"))
+                      voice=job.get("voice"), customer_id=job.get("customer_id", 0))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=str(e))
@@ -238,6 +254,20 @@ def _apply_motion_pack(deco, caption_style, timeline, packs):
     return deco, caption_style
 
 
+def _resolve_cutaway_paths(store, plan, customer_id):
+    """비트에 붙은 cutaway asset_id → media_path. 저장위치(match가 쓴 beat['cutaway'])
+    = 읽기위치(여기). run_render와 run_preview 둘 다 이걸 써서 미리보기와 최종본이
+    같은 컷어웨이를 보여준다(안 그러면 사장님이 유료 렌더 전에 확인 못 함)."""
+    out = {}
+    for beat in plan["beats"]:
+        cut = beat.get("cutaway")
+        if cut:
+            asset = store.get_scene_asset(cut["asset_id"], customer_id=customer_id)
+            if asset and asset.get("media_path"):
+                out[beat["beat_idx"]] = asset["media_path"]
+    return out
+
+
 def run_preview(job_id, db_path, work_root):
     """1단계 미리보기: 유료 자막제거(VMake)·꾸미기 없이 믹스+음성+기본자막만 렌더.
 
@@ -274,7 +304,8 @@ def run_preview(job_id, db_path, work_root):
         # 굽힌다(라이브 관측: caption_style=None인 job으로 렌더해 자막 정상 확인).
         assemble(plan, tts_paths, source_video_paths, str(out_path),
                  clean_fn=None,                      # ← 유료 VMake 건너뜀. 이게 핵심이다.
-                 deco={})                            # ← 꾸미기 없음(4단계 소관)
+                 deco={},                             # ← 꾸미기 없음(4단계 소관)
+                 cutaway_paths=_resolve_cutaway_paths(store, plan, job.get("customer_id", 0)))
         store.update_mix_job(job_id, preview_status="ready", preview_path=str(out_path))
     except Exception as e:  # noqa: BLE001 — BackgroundTasks라 밖에서 아무도 안 받는다
         traceback.print_exc(file=sys.stderr)
@@ -333,9 +364,12 @@ def run_render(job_id, db_path, work_root):
         if motion.get("layers"):
             resolved = resolve_layers(motion["layers"], MOTION_ASSETS_DIR)
             deco = {**deco, "motion": {**motion, "layers": resolved}}
+        # 컷어웨이: 비트에 붙은 asset_id를 media_path로 해석해 assemble에 넘긴다.
+        # 저장위치(match_scene_assets가 쓴 beat["cutaway"]) = 읽기위치(여기) — seam 일치.
+        cutaway_paths = _resolve_cutaway_paths(store, plan, job.get("customer_id", 0))
         assemble(plan, tts_paths, source_video_paths, str(out_path), clean_fn=clean_fn,
                  headcopy=job.get("headcopy"), caption_style=caption_style,
-                 deco=deco)
+                 deco=deco, cutaway_paths=cutaway_paths)
         store.update_mix_job(job_id, status="done", video_path=str(out_path))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)

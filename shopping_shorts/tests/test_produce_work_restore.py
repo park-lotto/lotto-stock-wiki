@@ -1,0 +1,188 @@
+"""작업 복원 — 단계까지 그대로, 단 **게이트는 우회하지 않는다**(스펙 §4.5·§6).
+
+★이 파일의 존재 이유: 복원의 `cur = d.step`이 jump()/go()를 안 거쳐 미리보기 게이트를
+건너뛴다. 그러면 미리보기를 한 번도 안 본 채 유료 자막제거(VMake)로 넘어간다 — 게이트를
+만든 이유가 통째로 무효가 된다. C-1/C-3와 같은 종류의 구멍이 될 자리다.
+"""
+import pathlib
+import shutil
+import subprocess
+
+import pytest
+
+PRODUCE_HTML = pathlib.Path(__file__).resolve().parents[1] / "static" / "produce.html"
+NODE = shutil.which("node")
+
+_RESTORE_START = "async function _restoreWork(workId){"
+_RESTORE_END = "function _consumeProduceHandoff(){"
+
+_HARNESS = r"""
+'use strict';
+let HANDOFF = [];
+const STATE = { script:'', script_src_idx:null, script_from_wiki:null };
+const STEPS = ['대본','자막제거','TTS','꾸미기','최종'];
+let cur = 0, MIX_JOB = null, WORK_ID = null, PREVIEW_STATUS = null;
+let STYLE_TOUCHED = false, PENDING_STYLE_RESTORE = false;   // 꾸미기 스타일 복원 플래그(C-2 잔여)
+function canGoNext(){ return PREVIEW_STATUS === 'ready' || PREVIEW_STATUS === 'failed'; }
+let NEXT_DISABLED = null;
+// !!(...): 실제 코드의 `b.disabled = gated`는 DOM boolean IDL 프로퍼티라 대입 시 ToBoolean으로
+// 강제변환된다(null → false). 이 스텁은 DOM이 아닌 평범한 변수라 그 강제변환을 흉내낸다 —
+// 안 하면 MIX_JOB이 null일 때 단락평가로 NEXT_DISABLED가 null이 되어 실제 브라우저 동작과 어긋난다.
+function refreshNextBtn(){ NEXT_DISABLED = !!(cur === 0 && MIX_JOB && !canGoNext()); }
+let _refreshCalls = 0;
+const _realRefresh = refreshNextBtn;
+refreshNextBtn = function(){ _refreshCalls++; _realRefresh(); };
+function renderSteps(){}
+function showPanel(){}
+function renderPool(){}
+function syncFootageToMixUrls(){}
+function refreshFinalPeek(){}
+function setScriptMode(){}
+let _consumeCalls = 0;
+function _consumeProduceHandoff(){ _consumeCalls++; }
+const _store = {};
+const sessionStorage = { setItem(k,v){_store[k]=v;}, getItem(k){return _store[k]||null;},
+                         removeItem(k){delete _store[k];} };
+// 서버 응답은 테스트마다 갈아끼운다.
+let RESPONSES = {};
+async function fetch(url){
+  for (const k of Object.keys(RESPONSES)) if (url.indexOf(k) !== -1) {
+    const r = RESPONSES[k];
+    if (r === 'throw') throw new Error('네트워크');
+    return { json: async () => r };
+  }
+  throw new Error('스텁 없음: ' + url);
+}
+"""
+
+
+def _slice(src, start, end):
+    i = src.index(start)
+    j = src.index(end, i)
+    return src[i:j]
+
+
+@pytest.fixture(scope="module")
+def js():
+    src = PRODUCE_HTML.read_text(encoding="utf-8")
+    return _HARNESS + _slice(src, _RESTORE_START, _RESTORE_END)
+
+
+def _run(js, body):
+    # encoding="utf-8", errors="replace": 기본(cp949) 캡처는 한글 console.log를 못 읽어 죽는다
+    # (test_produce_preview_gate.py와 같은 저장소 전역 함정, 336번 줄 참고).
+    r = subprocess.run([NODE, "-e", js + "\n(async()=>{\n" + body + "\n})();"],
+                       capture_output=True, text=True, timeout=30,
+                       encoding="utf-8", errors="replace",
+                       stdin=subprocess.DEVNULL)
+    assert r.returncode == 0, r.stderr
+    return r.stdout.strip()
+
+
+pytestmark = pytest.mark.skipif(NODE is None, reason="node 없음")
+
+
+def test_restores_script_and_handoff(js):
+    out = _run(js, """
+      RESPONSES = {'/api/produce/works/': {ok:true, step:0, job_id:null,
+        state:{handoff:[{url:'https://x/1'}], script:'복원된 대본', script_src_idx:2,
+               script_from_wiki:'ABC'}}};
+      await _restoreWork('w-1');
+      console.log(JSON.stringify({script:STATE.script, n:HANDOFF.length,
+                                  idx:STATE.script_src_idx, wiki:STATE.script_from_wiki,
+                                  wid:WORK_ID}));
+    """)
+    assert "복원된 대본" in out and '"n": 1' in out.replace('"n":1', '"n": 1')
+    assert '"idx": 2' in out.replace('"idx":2', '"idx": 2')
+    assert "ABC" in out and "w-1" in out
+
+
+def test_restores_step_when_preview_was_seen(js):
+    """미리보기를 봤던 작업(preview_status=ready)은 그 단계로 돌아간다 — '단계까지 그대로'."""
+    out = _run(js, """
+      RESPONSES = {'/api/produce/works/': {ok:true, step:2, job_id:'job-9', state:{script:'대본'}},
+                   '/api/mix/status/': {ok:true, preview_status:'ready'}};
+      await _restoreWork('w-1');
+      console.log(JSON.stringify({cur, preview:PREVIEW_STATUS, job:MIX_JOB}));
+    """)
+    assert '"cur": 2' in out.replace('"cur":2', '"cur": 2')
+    assert "ready" in out and "job-9" in out
+
+
+def test_restore_does_not_bypass_the_gate(js):
+    """★핵심. 미리보기를 안 본 작업이 2단계로 저장돼 있어도 1단계로 되돌린다.
+
+    안 그러면 미리보기를 한 번도 안 본 채 유료 자막제거(VMake)로 넘어간다."""
+    out = _run(js, """
+      RESPONSES = {'/api/produce/works/': {ok:true, step:2, job_id:'job-9', state:{script:'대본'}},
+                   '/api/mix/status/': {ok:true, preview_status:null}};
+      await _restoreWork('w-1');
+      console.log(JSON.stringify({cur, disabled:NEXT_DISABLED, refreshed:_refreshCalls>0}));
+    """)
+    assert '"cur": 0' in out.replace('"cur":0', '"cur": 0'), "게이트를 우회해 2단계로 복원됐다"
+    assert '"disabled": true' in out.replace('"disabled":true', '"disabled": true'), \
+        "다음 버튼이 안 잠겼다"
+    assert "true" in out
+
+
+def test_failed_preview_still_lets_you_through(js):
+    """렌더가 고장난 작업까지 가둘 순 없다 — 'failed'는 탈출구다(1단계 미리보기 스펙 §7.1)."""
+    out = _run(js, """
+      RESPONSES = {'/api/produce/works/': {ok:true, step:2, job_id:'job-9', state:{script:'대본'}},
+                   '/api/mix/status/': {ok:true, preview_status:'failed'}};
+      await _restoreWork('w-1');
+      console.log(JSON.stringify({cur}));
+    """)
+    assert '"cur": 2' in out.replace('"cur":2', '"cur": 2')
+
+
+def test_no_job_means_no_gate(js):
+    """매칭 전 작업(job 없음)은 게이트 대상이 아니다 — 미리보기할 게 애초에 없다."""
+    out = _run(js, """
+      RESPONSES = {'/api/produce/works/': {ok:true, step:0, job_id:null, state:{script:'대본'}}};
+      await _restoreWork('w-1');
+      console.log(JSON.stringify({cur, job:MIX_JOB, disabled:NEXT_DISABLED}));
+    """)
+    assert '"cur": 0' in out.replace('"cur":0', '"cur": 0')
+    assert '"disabled": false' in out.replace('"disabled":false', '"disabled": false')
+
+
+def test_bogus_step_does_not_escape_the_wizard(js):
+    """서버가 이상한 step을 줘도 STEPS 범위를 벗어나면 안 된다 — showPanel이 죽는다."""
+    out = _run(js, """
+      RESPONSES = {'/api/produce/works/': {ok:true, step:99, job_id:null, state:{script:'대본'}}};
+      await _restoreWork('w-1');
+      console.log(JSON.stringify({cur}));
+    """)
+    assert '"cur": 0' in out.replace('"cur":0', '"cur": 0')
+
+
+def test_missing_work_falls_back_to_old_path(js):
+    """지워진 작업의 링크를 눌러도 빈 화면이 되면 안 된다 — 기존 복원 경로로 떨어진다."""
+    out = _run(js, """
+      RESPONSES = {'/api/produce/works/': {ok:false, error:'작업 없음'}};
+      await _restoreWork('없는id');
+      console.log(String(_consumeCalls));
+    """)
+    assert out == "1"
+
+
+def test_network_error_falls_back_too(js):
+    out = _run(js, """
+      RESPONSES = {'/api/produce/works/': 'throw'};
+      await _restoreWork('w-1');
+      console.log(String(_consumeCalls));
+    """)
+    assert out == "1"
+
+
+def test_status_error_does_not_open_the_gate(js):
+    """미리보기 상태를 못 읽으면 **잠근 채로** 둔다 — 모르면 안전한 쪽이다."""
+    out = _run(js, """
+      RESPONSES = {'/api/produce/works/': {ok:true, step:2, job_id:'job-9', state:{script:'대본'}},
+                   '/api/mix/status/': 'throw'};
+      await _restoreWork('w-1');
+      console.log(JSON.stringify({cur, preview:PREVIEW_STATUS}));
+    """)
+    assert '"cur": 0' in out.replace('"cur":0', '"cur": 0'), "상태를 못 읽었는데 게이트가 열렸다"
+    assert '"preview": null' in out.replace('"preview":null', '"preview": null')

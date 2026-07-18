@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-15",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-16_0702_CET 1 비율 상승은 RWA 재배분을 통해 ROE와 ...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "최정욱, 정소영",
+    "report_date": "2026년 6월 15일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "신한지주",
+        "code": "055550",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "135,000원",
+        "tp_prev": "null",
+        "tp_direction": "up",
+        "earnings_outlook": "2분기 추정 순익은 약 1.72조원으로 YoY 11.0% 증가해 컨센서스 상회 예상",
+        "estimate_revision": "목표가 상향 이유는 기대치를 상회할 2분기 순익 전망과 향후 이익추정치 상향 등으로 지속가능ROE를 소폭 상향적용했기 때문",
+        "next_catalyst": "운영리스크 적용기간 축소에 따른 RWA 배제 영향 및 비은행업권에 대한 RWA 재배분을 통한 그룹 ROE 개선",
+        "thesis": [
+          "2분기 추정 순익 1.72조원으로 컨센서스 상회 예상",
+          "2분기 CET 1 비율 13.4% 기대. 손실사건 RWA 배제 승인시 13.5%를 웃돌 전망",
+          "수급 우려 약화로 이제 주가는 펀더멘털을 온전히 반영 예상. 비은행 수익력 개선 기대"
+        ],
+        "valuation_basis": "향후 이익추정치 상향 등으로 지속가능ROE를 소폭 상향적용",
+        "risk": "운영리스크 적용기간 축소 영향의 반영 시기 불확실성",
+        "supply_comment": "작년 하반기부터 올해 2월말까지 끊임없이 출회되던 기타법인 매도세가 어느정도 일단락된 모습",
+        "quote": "신한지주에 대한 투자의견 매수를 유지하고, 목표주가를 135,000원으로 상향."
+      }
+    ]
+  }
+}

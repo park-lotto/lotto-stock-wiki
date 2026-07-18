@@ -1,0 +1,56 @@
+{
+  "meta": {
+    "date": "2026-07-16",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-17_1104_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이승은",
+    "report_date": "2026.07.16",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "코스피(7,284)",
+      "코스닥(829)",
+      "DOW(52,659)",
+      "NASDAQ(26,269)"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "네이버가 스테이블코인 결제 인프라 기업 '레인(Rain)'의 2억5,000만 달러 규모 시리즈C 투자 라운드에 참여"
+      },
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "네이버 AI탭이 정식 출시 18일 만에 이용자 1,000만명을 돌파하며 일평균 질의 수 및 사용자 1인당 질의 수 증가"
+      }
+    ],
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "NAVER",
+      "카카오",
+      "삼성에스디에스",
+      "현대오토에버",
+      "한글과컴퓨터",
+      "롯데이노베이트",
+      "크래프톤",
+      "NC",
+      "넷마블",
+      "시프트업",
+      "펄어비스",
+      "카카오게임즈",
+      "더블유게임즈",
+      "웹젠",
+      "NHN",
+      "컴투스",
+      "네오위즈",
+      "데브시스터즈"
+    ],
+    "risk": null,
+    "quote": "네이버가 스테이블코인 결제 인프라 기업 '레인(Rain)'의 2억5,000만 달러 규모 시리즈C 투자 라운드에 참여한 것으로 확인됨, 네이버 AI탭이 정식 출시 18일 만에 이용자 1,000만명을 돌파했으며, 일평균 질의 수는 베타 서비스 대비 7배, 사용자 1인당 질의 수는 1.7배 증가함"
+  }
+}

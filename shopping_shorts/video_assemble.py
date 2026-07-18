@@ -227,19 +227,27 @@ def _caption_segments(narration):
     return segs or [narr]
 
 
-def _caption_durations(segs, dur):
+def _caption_durations(segs, dur, real_durs=None):
     """각 구절의 표시 시간(초) 리스트를 반환. 기본은 글자수 비례(균등분할 X)지만,
     아주 짧은 구절(2~3자)이 순식간에 지나가지 않도록 _CAP_MIN_DUR 하한을 준다.
     하한을 채우고 남은 시간을 나머지 구절에 글자수 비례로 재분배해, 총합은 항상
-    dur를 넘지 않는다(하한들의 합이 dur를 초과하면 균등분할로 폴백)."""
+    dur를 넘지 않는다(하한들의 합이 dur를 초과하면 균등분할로 폴백).
+
+    real_durs가 주어지고(ASR 실측) len(real_durs)==len(segs)이며 합이 0을 넘으면
+    글자수 비례 대신 그 값을 base로 쓴다(총합을 dur로 정규화). 그 외(None/길이
+    불일치/합0)에는 기존 글자수 비례 경로와 바이트 동일하게 폴백한다."""
     n = len(segs)
     if n == 0:
         return []
     if _CAP_MIN_DUR * n >= dur:      # 하한조차 못 채우면 균등분할
         return [dur / n] * n
-    weights = [max(1, len(s.replace("\n", ""))) for s in segs]
-    total_w = sum(weights)
-    raw = [dur * w / total_w for w in weights]
+    if real_durs is not None and len(real_durs) == len(segs) and sum(real_durs) > 0:
+        s = sum(real_durs)
+        raw = [dur * d / s for d in real_durs]
+    else:
+        weights = [max(1, len(s.replace("\n", ""))) for s in segs]
+        total_w = sum(weights)
+        raw = [dur * w / total_w for w in weights]
     # 하한 미달인 구절은 하한으로 올리고, 그만큼을 하한 이상인 구절에서 비례로 회수.
     floored = [max(_CAP_MIN_DUR, r) for r in raw]
     over = sum(floored) - dur
@@ -252,15 +260,16 @@ def _caption_durations(segs, dur):
     return floored
 
 
-def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None):
+def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=None):
     """나레이션 한 비트의 자막(하단 바 + 순차 drawtext)을 필터 문자열 리스트로 반환한다.
     _segmented_drawtext 기반: highlight_rules가 있으면 단어별 강조, 없으면 세그먼트 1개
-    (기존과 동일 산출물). 각 구절 enable 구간은 t0(전체 타임라인 오프셋)만큼 밀린다."""
+    (기존과 동일 산출물). 각 구절 enable 구간은 t0(전체 타임라인 오프셋)만큼 밀린다.
+    real_durs가 주어지면 _caption_durations에 그대로 전달해 ASR 실측 타이밍을 쓴다."""
     segs = _caption_segments(narration)
     if not segs:
         return []
     style = style or {}
-    durs = _caption_durations(segs, dur)
+    durs = _caption_durations(segs, dur, real_durs=real_durs)
     size = max(10, int(style.get("size") or _CAP_FONTSIZE))
     ypct = style.get("y_pct")
     if ypct is None:
@@ -326,7 +335,7 @@ def _caption_vf(narration, dur, has_font, work, idx):
     return ",".join([base] + draws)
 
 
-def _render_mix(edit_plan, tts_paths, source_video_paths, work):
+def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=None):
     """각 비트를 [소스영상+TTS]로 렌더(우리 자막 없음) → concat → mix_raw.mp4 경로.
     자막을 굽지 않으므로 이후 VMake 자막제거가 우리 자막을 지우지 않는다.
     -vf는 우리 자막 vf가 아니라 규격 통일용 base(scale/crop)만 쓴다.
@@ -351,15 +360,39 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work):
         if start + tts_dur > src_dur:
             start = max(0.0, src_dur - tts_dur)
         loop = ["-stream_loop", "-1"] if src_dur + 0.05 < tts_dur else []
-        cmd = [
-            "ffmpeg", "-y",
-            *loop, "-ss", f"{start:.3f}", "-i", str(src),
-            "-i", str(tts),
-            "-vf", vf, "-r", "30",
-            "-map", "0:v:0", "-map", "1:a:0",
-            "-t", str(tts_dur),
-            "-c:v", "libx264", "-c:a", "aac", "-pix_fmt", "yuv420p", str(clip),
-        ]
+        cutaway = (cutaway_paths or {}).get(idx)
+        if cutaway:
+            # 컷어웨이: 원본 위에 자산을 풀프레임 오버레이. 창=[0, min(자산길이, tts_dur)].
+            # 비트 길이(tts_dur)·TTS 오디오는 그대로 → 자막 t0 싱크 불변(설계 §4.1).
+            # 자산 오디오는 버린다(나레이션이 계속 흐름 = b-roll).
+            asset_dur = _probe_duration(cutaway)
+            win = min(asset_dur, tts_dur)
+            fc = (
+                f"[0:v]{vf}[base];"
+                f"[2:v]scale=720:1280:force_original_aspect_ratio=increase,"
+                f"crop=720:1280,setpts=PTS-STARTPTS[ov];"
+                f"[base][ov]overlay=0:0:enable='between(t,0,{win:.3f})'[vout]"
+            )
+            cmd = [
+                "ffmpeg", "-y",
+                *loop, "-ss", f"{start:.3f}", "-i", str(src),
+                "-i", str(tts),
+                "-i", str(cutaway),
+                "-filter_complex", fc, "-r", "30",
+                "-map", "[vout]", "-map", "1:a:0",
+                "-t", str(tts_dur),
+                "-c:v", "libx264", "-c:a", "aac", "-pix_fmt", "yuv420p", str(clip),
+            ]
+        else:
+            cmd = [
+                "ffmpeg", "-y",
+                *loop, "-ss", f"{start:.3f}", "-i", str(src),
+                "-i", str(tts),
+                "-vf", vf, "-r", "30",
+                "-map", "0:v:0", "-map", "1:a:0",
+                "-t", str(tts_dur),
+                "-c:v", "libx264", "-c:a", "aac", "-pix_fmt", "yuv420p", str(clip),
+            ]
         _run_ffmpeg(cmd)
         beat_clips.append(clip)
     if not beat_clips:
@@ -642,10 +675,14 @@ def _merge_highlight_rules(headcopy, caption_style, deco):
 
 
 def _beat_timeline(edit_plan, tts_paths):
-    """비트별 전체 타임라인 [{beat_idx, t0, dur, narration, role}, ...].
+    """비트별 전체 타임라인 [{beat_idx, t0, dur, narration, role, cap_durs}, ...].
 
     자막(_burn_captions)과 모션(motion_packs)이 **같은 경계**를 쓰도록 하는 단일 출처.
     여기서 중복 계산하면 전환이 자막과 어긋난다. tts 없는 비트는 건너뛴다(기존 동작).
+
+    cap_durs: _synthesize_beats가 저장한 ASR 기반 구절 표시시간(list[float]|None).
+    여기서 새 dict를 만들며 원본 beat를 복사하지 않으므로, 이 필드를 안 실어보내면
+    저장위치(_synthesize_beats)≠읽기위치(_burn_captions)가 되어 seam이 끊긴다.
     """
     timeline = []
     t0 = 0.0
@@ -661,6 +698,7 @@ def _beat_timeline(edit_plan, tts_paths):
             "dur": dur,
             "narration": beat.get("narration", ""),
             "role": beat.get("role", ""),
+            "cap_durs": beat.get("cap_durs"),
         })
         t0 += dur
     return timeline
@@ -692,7 +730,7 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     timeline = _beat_timeline(edit_plan, tts_paths)
     for b in timeline:
         filters.extend(_caption_drawtexts(b["narration"], b["dur"], work, b["beat_idx"],
-                                          b["t0"], caption_style))
+                                          b["t0"], caption_style, real_durs=b.get("cap_durs")))
     if headcopy and (headcopy.get("text") or "").strip():
         # enable 없으면 전체 표시(기존). 팩이 hook_only면 렌더 파생값 _headcopy_enable이 온다.
         hc_enable = ((deco or {}).get("motion") or {}).get("_headcopy_enable")
@@ -768,13 +806,13 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     return str(out_path)
 
 
-def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, headcopy=None, caption_style=None, deco=None):
+def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, headcopy=None, caption_style=None, deco=None, cutaway_paths=None):
     """EDL → 최종 mp4. 1)믹스(자막X) 2)clean_fn(있으면 자막제거) 3)우리 자막.
     clean_fn(mix_raw_path)->clean_path 를 주면 그 사이에 VMake 자막제거가 끼워진다
     (없으면 생략). 자막제거는 우리 자막을 굽기 전 깨끗한 믹스에 돌려야 우리 자막이
     함께 지워지지 않는다."""
     work = Path(out_path).parent / f"asm_{uuid.uuid4().hex[:8]}"
     work.mkdir(parents=True, exist_ok=True)
-    mix_raw = _render_mix(edit_plan, tts_paths, source_video_paths, work)
+    mix_raw = _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=cutaway_paths)
     base_video = clean_fn(mix_raw) if clean_fn else mix_raw
     return _burn_captions(base_video, edit_plan, tts_paths, out_path, work, headcopy, caption_style, deco)

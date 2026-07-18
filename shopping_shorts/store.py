@@ -3,13 +3,21 @@ import hashlib
 import json
 import secrets
 import sqlite3
-from datetime import datetime, timezone
+import uuid
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 # 개인 행동 테이블(saved/mix_basket/commented/script_wiki)의 레거시(마이그레이션
 # 이전) 데이터가 귀속되는 고객 ID(2026-07-13, 멀티테넌시). 기존 단일 관리자
 # 계정의 데이터를 그대로 보존하기 위한 값 — 신규 고객은 1부터 발급.
 LEGACY_CUSTOMER_ID = 0
+
+# upsert_produce_work의 job_id/step 부분 업데이트 센티널(2026-07-17).
+# 파이썬 기본 인자값(None/0)은 "미지정"과 구별이 안 돼서, 부분 저장(재전송 안 한 필드)이
+# 그대로 UPDATE에 박혀 기존 job_id·step을 조용히 지웠다(리뷰 재현). 규칙:
+#   인자를 아예 안 넘기면(=_UNSET) → 기존 값 보존
+#   job_id=None / step=0을 명시적으로 넘기면 → 정말로 그 값으로 덮어씀(재매칭 무효화 등)
+_UNSET = object()
 
 
 class Store:
@@ -208,6 +216,20 @@ class Store:
                       "ON scene_assets(customer_id, asset_type)")
             c.execute("CREATE INDEX IF NOT EXISTS idx_scene_assets_cat "
                       "ON scene_assets(customer_id, category)")
+            # 짜집기 대응(2026-07-17, 설계 §7.1):
+            #  · source_start_frame — 원본에서의 시작 **프레임**. 초로 저장하면
+            #    '원본 순서대로 이어졌나' 판정에 반올림 오차가 낀다. 원본처럼 보이게
+            #    만드는 건 '같은 소스'가 아니라 '원본 순서'다.
+            #  · source_origin — 짜집기|촬영원본|모름. 사람이 고른다(AI 판정은
+            #    실측 탈락 — 정답 아는 시험지에서 3편 전부 '촬영원본/확신 높음').
+            for col, ddl in (
+                ("source_start_frame", "INTEGER"),
+                ("source_origin", "TEXT NOT NULL DEFAULT '모름'"),
+            ):
+                try:
+                    c.execute(f"ALTER TABLE scene_assets ADD COLUMN {col} {ddl}")
+                except sqlite3.OperationalError:
+                    pass  # 이미 존재
             # 썸네일 URL 보관(2026-07-15) — 우리믹스 대본선택 리스트가 <video> 첫 프레임에
             # 의존해 검은칸으로 보이던 문제. 저장 시점 URL을 남겨 <img>로 즉시 그린다.
             try:
@@ -272,6 +294,52 @@ class Store:
                     fx_path TEXT
                 )
             """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS seo_keyword_stats (
+                    keyword TEXT NOT NULL,
+                    region TEXT NOT NULL DEFAULT 'KR',
+                    views_top INTEGER,
+                    views_median INTEGER,
+                    small_ratio REAL,
+                    small_hits INTEGER,
+                    hit_n INTEGER,
+                    sample_n INTEGER,
+                    top_titles_json TEXT,
+                    verdict TEXT,
+                    checked_at TEXT NOT NULL,
+                    PRIMARY KEY (keyword, region)
+                )
+            """)
+            # views_top은 T8 실측 뒤에, small_hits·hit_n은 그 뒤 리뷰 지적으로 붙었다
+            # (2026-07-17) — 그 전에 테이블을 만든 로컬 DB가 있으므로 없으면 채워 넣는다.
+            # 서버엔 아직 이 테이블 자체가 없다.
+            for _col, _ddl in (("views_top", "INTEGER"),
+                               ("small_hits", "INTEGER"),
+                               ("hit_n", "INTEGER")):
+                try:
+                    c.execute(f"ALTER TABLE seo_keyword_stats ADD COLUMN {_col} {_ddl}")
+                except sqlite3.OperationalError:
+                    pass  # 이미 존재
+            # 제작소 작업파일(2026-07-17) — 사장님 제보 "뒤로가기 하니까 작업물이 지워진다".
+            # ★mix_jobs를 재활용하지 않는다: urls_json·structure가 NOT NULL이라 **매칭 전
+            # 작업**(대본만 확정한 상태)을 못 담는다. 실측으로 서버 job 21건 중 매칭 전은 0건 —
+            # 사장님이 잃어버린 게 정확히 그 구간이다. 억지로 빈 값을 넣으면 "매칭 안 된 job"이
+            # 유령으로 남아 run_mix_job·pollMix가 실제 job으로 오인한다.
+            # job_id는 **다리일 뿐**(작업 → job 방향) — 작업이 job보다 먼저 존재한다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS produce_works (
+                    work_id TEXT PRIMARY KEY,
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    title TEXT,
+                    state_json TEXT NOT NULL,
+                    job_id TEXT,
+                    step INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_produce_works_customer "
+                      "ON produce_works(customer_id, updated_at DESC)")
             # 보이스 프리셋(2026-07-14, 영상제작 4단계) — 큐레이션된 목소리 카드.
             c.execute("""
                 CREATE TABLE IF NOT EXISTS voice_presets (
@@ -381,6 +449,23 @@ class Store:
                     created_at TEXT DEFAULT (datetime('now'))
                 )
             """)
+            # 픽로그(2026-07-18, 트랙1) — 사장님이 고른 것/버린 것을 append-only로 남긴다.
+            # 트랙7 LLM 심사의 취향 예시 + B전환 승인률 지표의 원천. 수정·삭제 없음.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS pick_events (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    job_id TEXT,
+                    stage TEXT NOT NULL,
+                    candidates_json TEXT,
+                    picked TEXT,
+                    rejected TEXT,
+                    edit_diff TEXT,
+                    ts TEXT NOT NULL
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_pick_events "
+                      "ON pick_events(customer_id, id DESC)")
             # 기존 DB용 마이그레이션 — mix_jobs 자막제거 필드(2026-07-13).
             # 새 DB는 위 CREATE에 이미 있어 여기선 "이미 존재" 예외를 조용히 넘긴다.
             for col, ddl in (
@@ -401,6 +486,13 @@ class Store:
                 ("preview_status", "TEXT"),  # null|rendering|ready|failed
                 ("preview_path", "TEXT"),
                 ("preview_error", "TEXT"),
+                # 5단계 썸네일(2026-07-17). 프레임 선택·텍스트 레이어·생성결과 갤러리를
+                # job 하나에 딸린 부속물로 본다(설계 Q4) — headcopy_json과 같은 패턴.
+                ("thumbnail_json", "TEXT"),
+                # 6단계 SEO(2026-07-17) — 제목·설명·태그·해시태그·CTA + 키워드 실측치 일습.
+                # 산출물이 한 덩어리로만 의미가 있어(제목만 바꿔도 태그·CTA와 어울려야 한다)
+                # 필드를 쪼개지 않고 JSON 한 칸에 둔다.
+                ("seo_json", "TEXT"),
             ):
                 try:
                     c.execute(f"ALTER TABLE mix_jobs ADD COLUMN {col} {ddl}")
@@ -1037,7 +1129,8 @@ class Store:
     # ── 장면 라이브러리(재사용 짤 뱅크) — customer_id별로 독립(2026-07-15) ──
     _SCENE_COLS = ("id, asset_type, render_mode, media_path, poster_path, duration, "
                    "keep_original_audio, title, scene_desc, role, category, subject, "
-                   "tone, keywords, source_kind, source_ref, created_at")
+                   "tone, keywords, source_kind, source_ref, source_start_frame, "
+                   "source_origin, created_at")
 
     # 태그 편집으로 바꿀 수 있는 필드만. media_path/customer_id/id는 제외 —
     # 클라이언트가 준 값이 파일 경로가 되면 traversal이 열린다.
@@ -1050,7 +1143,8 @@ class Store:
                 "title": r[7], "scene_desc": r[8], "role": r[9], "category": r[10],
                 "subject": r[11], "tone": r[12],
                 "keywords": [k for k in (r[13] or "").split(",") if k],
-                "source_kind": r[14], "source_ref": r[15], "created_at": r[16]}
+                "source_kind": r[14], "source_ref": r[15], "source_start_frame": r[16],
+                "source_origin": r[17], "created_at": r[18]}
 
     @staticmethod
     def _scene_keywords(v):
@@ -1065,15 +1159,18 @@ class Store:
             cur = c.execute(
                 "INSERT INTO scene_assets(customer_id, asset_type, render_mode, media_path, "
                 "poster_path, duration, keep_original_audio, title, scene_desc, role, category, "
-                "subject, tone, keywords, source_kind, source_ref, created_at) "
-                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now'))",
+                "subject, tone, keywords, source_kind, source_ref, source_start_frame, "
+                "source_origin, created_at) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now'))",
                 (customer_id, asset.get("asset_type"), asset.get("render_mode"),
                  asset.get("media_path"), asset.get("poster_path"),
                  float(asset.get("duration") or 0.0), int(asset.get("keep_original_audio") or 0),
                  asset.get("title"), asset.get("scene_desc"), asset.get("role"),
                  asset.get("category"), asset.get("subject"), asset.get("tone"),
                  self._scene_keywords(asset.get("keywords")),
-                 asset.get("source_kind"), asset.get("source_ref")),
+                 asset.get("source_kind"), asset.get("source_ref"),
+                 asset.get("source_start_frame"),
+                 asset.get("source_origin") or "모름"),
             )
             return cur.lastrowid
 
@@ -1201,6 +1298,61 @@ class Store:
         return [{"origin_shortcode": r[0], "platform": r[1], "url": r[2], "title": r[3],
                  "thumbnail": r[4], "similarity_score": r[5], "saved_at": r[6]} for r in rows]
 
+    @staticmethod
+    def _pe_enc(v):
+        """픽로그 값 저장 인코딩: str/None은 그대로, 그 외(dict·list·int)는 JSON."""
+        if v is None or isinstance(v, str):
+            return v
+        return json.dumps(v, ensure_ascii=False)
+
+    @staticmethod
+    def _pe_dec(v):
+        """저장 값 복원: JSON이면 파싱, 아니면(순수 문자열) 그대로."""
+        if v is None:
+            return None
+        try:
+            return json.loads(v)
+        except (ValueError, TypeError):
+            return v
+
+    def log_pick_event(self, stage, *, picked=None, rejected=None, candidates=None,
+                       edit_diff=None, job_id=None, customer_id=LEGACY_CUSTOMER_ID):
+        """픽/반려 한 건 append. 새 row id 반환. 부가 기능이라 최대한 관대하게 저장한다."""
+        ts = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            cur = c.execute(
+                "INSERT INTO pick_events(customer_id, job_id, stage, candidates_json, "
+                "picked, rejected, edit_diff, ts) VALUES(?,?,?,?,?,?,?,?)",
+                (customer_id, job_id or None, stage,
+                 json.dumps(candidates, ensure_ascii=False) if candidates is not None else None,
+                 self._pe_enc(picked), self._pe_enc(rejected), self._pe_enc(edit_diff), ts),
+            )
+            return cur.lastrowid
+
+    def list_pick_events(self, *, customer_id=None, stage=None, limit=100):
+        """최근(id 내림차순)부터. customer_id/stage 필터 선택. JSON 필드는 파싱해서 준다."""
+        q = ("SELECT id, customer_id, job_id, stage, candidates_json, picked, "
+             "rejected, edit_diff, ts FROM pick_events")
+        conds, args = [], []
+        if customer_id is not None:
+            conds.append("customer_id=?")
+            args.append(customer_id)
+        if stage is not None:
+            conds.append("stage=?")
+            args.append(stage)
+        if conds:
+            q += " WHERE " + " AND ".join(conds)
+        q += " ORDER BY id DESC LIMIT ?"
+        args.append(limit)
+        with self._conn() as c:
+            rows = c.execute(q, args).fetchall()
+        return [
+            {"id": r[0], "customer_id": r[1], "job_id": r[2], "stage": r[3],
+             "candidates": self._pe_dec(r[4]), "picked": self._pe_dec(r[5]),
+             "rejected": self._pe_dec(r[6]), "edit_diff": self._pe_dec(r[7]), "ts": r[8]}
+            for r in rows
+        ]
+
     def create_mix_job(self, job_id, urls, target_seconds, structure,
                        subtitle_removal=False, given_script=None, script_structure=None):
         """새 믹스 job 생성. 초기 status='downloading'.
@@ -1229,7 +1381,8 @@ class Store:
                 "subtitle_removal, clean_video_path, given_script, headcopy_json, "
                 "caption_style_json, voice_json, deco_json, script_structure_json, "
                 "fx_plan, fx_status, fx_path, "
-                "preview_status, preview_path, preview_error "
+                "preview_status, preview_path, preview_error, "
+                "thumbnail_json, seo_json "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -1250,6 +1403,8 @@ class Store:
             "fx_plan": json.loads(row[19]) if row[19] else None,
             "fx_status": row[20], "fx_path": row[21],
             "preview_status": row[22], "preview_path": row[23], "preview_error": row[24],
+            "thumbnail": json.loads(row[25]) if row[25] else None,
+            "seo": json.loads(row[26]) if row[26] else None,
         }
 
     def update_mix_job(self, job_id, **fields):
@@ -1276,9 +1431,16 @@ class Store:
         if "deco" in fields:
             cols.append("deco_json=?")
             vals.append(json.dumps(fields["deco"], ensure_ascii=False) if fields["deco"] else None)
+        if "thumbnail" in fields:
+            cols.append("thumbnail_json=?")
+            vals.append(json.dumps(fields["thumbnail"], ensure_ascii=False)
+                        if fields["thumbnail"] else None)
         if "voice" in fields:
             cols.append("voice_json=?")
             vals.append(json.dumps(fields["voice"], ensure_ascii=False) if fields["voice"] else None)
+        if "seo" in fields:
+            cols.append("seo_json=?")
+            vals.append(json.dumps(fields["seo"], ensure_ascii=False) if fields["seo"] else None)
         for k, col in (("extract", "extract_json"), ("edit_plan", "edit_plan_json")):
             if k in fields:
                 cols.append(f"{col}=?")
@@ -1287,6 +1449,132 @@ class Store:
         vals.append(job_id)
         with self._conn() as c:
             c.execute(f"UPDATE mix_jobs SET {', '.join(cols)} WHERE job_id=?", tuple(vals))
+
+    # ── 6단계 SEO 키워드 측정 캐시(2026-07-17) ──
+    # job이 아니라 전역이다 — 키워드 측정치는 어느 영상이 쟀든 같은 값이고,
+    # search.list가 100유닛인데 발굴과 키풀을 나눠 쓰므로 재측정은 순손실이다.
+    def put_keyword_stats(self, stat):
+        """키워드 측정치 upsert(keyword+region 충돌 시 덮어씀)."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT OR REPLACE INTO seo_keyword_stats "
+                "(keyword, region, views_top, views_median, small_ratio, small_hits, "
+                " hit_n, sample_n, top_titles_json, verdict, checked_at) "
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                (stat["keyword"], stat.get("region") or "KR",
+                 stat.get("views_top"),
+                 stat.get("views_median"), stat.get("small_ratio"),
+                 stat.get("small_hits"), stat.get("hit_n"), stat.get("sample_n"),
+                 json.dumps(stat.get("top_titles") or [], ensure_ascii=False),
+                 stat.get("verdict"),
+                 datetime.now(timezone.utc).isoformat()),
+            )
+
+    def get_keyword_stats(self, keyword, region="KR", ttl_days=7):
+        """TTL 안이면 측정치 dict, 없거나 낡았으면 None.
+        낡은 측정치로 근거를 만들면 안 되므로 만료는 '없음'과 같이 다룬다."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT views_median, small_ratio, sample_n, top_titles_json, "
+                "verdict, checked_at, views_top, small_hits, hit_n "
+                "FROM seo_keyword_stats "
+                "WHERE keyword=? AND region=?", (keyword, region),
+            ).fetchone()
+        if not row:
+            return None
+        try:
+            checked = datetime.fromisoformat(row[5])
+        except (TypeError, ValueError):
+            return None
+        if datetime.now(timezone.utc) - checked > timedelta(days=ttl_days):
+            return None
+        return {
+            "keyword": keyword, "region": region,
+            "views_top": row[6], "small_hits": row[7], "hit_n": row[8],
+            "views_median": row[0], "small_ratio": row[1], "sample_n": row[2],
+            "top_titles": json.loads(row[3]) if row[3] else [],
+            "verdict": row[4], "checked_at": row[5],
+        }
+
+    # ── 제작소 작업파일(2026-07-17) ──────────────────────────
+    def upsert_produce_work(self, work_id, state, job_id=_UNSET, step=_UNSET,
+                            customer_id=LEGACY_CUSTOMER_ID):
+        """작업 저장. work_id가 None이면 새로 만들어 반환한다.
+        state: 클라이언트 작업상태 dict(sessionStorage.produce_work 스키마 + step).
+        ★title은 서버가 state['script'] 앞 20자에서 뽑는다 — 클라이언트가 매번 보내면
+        대본을 고쳤을 때 목록 이름과 어긋난다(스펙 §4.6).
+        job_id/step: UPDATE 경로에서는 update_mix_job과 같은 관례 — 넘어온 필드만 갱신한다.
+        안 넘기면(_UNSET) 기존 값 보존, job_id=None/step=0을 명시적으로 넘기면 그 값으로 덮어쓴다
+        (부분 저장이 job_id·step을 조용히 리셋하던 버그 수정, 2026-07-17).
+        남의 work_id로 넘어오면(다른 customer_id 소유) **아무것도 안 하고 None을 반환한다** —
+        get_produce_work/delete_produce_work와 같은 결(예외를 던지지 않는다). UPDATE를
+        `WHERE work_id=? AND customer_id=?`로 바꾸지 않는 이유: 매치 0건이면 아래 "되살리기"
+        INSERT 폴백으로 떨어지는데, work_id는 전역 PRIMARY KEY라 남의 id로 INSERT하면
+        IntegrityError(500)가 난다 — 그래서 UPDATE 전에 소유자를 먼저 물어본다(2026-07-17 재리뷰)."""
+        now = datetime.now(timezone.utc).isoformat()
+        title = (state.get("script") or "")[:20] if isinstance(state, dict) else ""
+        payload = json.dumps(state, ensure_ascii=False)
+        with self._conn() as c:
+            if work_id:
+                owner = c.execute(
+                    "SELECT customer_id FROM produce_works WHERE work_id=?", (work_id,),
+                ).fetchone()
+                if owner and owner[0] != customer_id:
+                    return None  # 남의 작업 — 건드리지 않는다(get/delete와 같은 결)
+                cols, vals = ["title=?", "state_json=?"], [title, payload]
+                if job_id is not _UNSET:
+                    cols.append("job_id=?"); vals.append(job_id)
+                if step is not _UNSET:
+                    cols.append("step=?"); vals.append(step)
+                cols.append("updated_at=?"); vals.append(now)
+                vals.append(work_id)
+                n = c.execute(
+                    f"UPDATE produce_works SET {', '.join(cols)} WHERE work_id=?",
+                    tuple(vals),
+                ).rowcount
+                if n:
+                    return work_id
+                # 서버 DB가 갈아엎였는데 브라우저가 옛 work_id를 들고 있는 경우 —
+                # 조용히 버리지 말고 그 id로 되살린다(사장님 작업이 사라지는 것보다 낫다).
+            wid = work_id or uuid.uuid4().hex[:12]
+            ins_job_id = None if job_id is _UNSET else job_id
+            ins_step = 0 if step is _UNSET else step
+            c.execute(
+                "INSERT INTO produce_works(work_id, customer_id, title, state_json, "
+                "job_id, step, created_at, updated_at) VALUES(?,?,?,?,?,?,?,?)",
+                (wid, customer_id, title, payload, ins_job_id, ins_step, now, now),
+            )
+            return wid
+
+    def get_produce_work(self, work_id, customer_id=LEGACY_CUSTOMER_ID):
+        """작업 1건 → dict(state는 파싱됨). 없거나 남의 것이면 None
+        (scene_assets의 get_scene_asset과 같은 관례, 2026-07-17 리뷰 반영)."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT work_id, title, state_json, job_id, step, created_at, updated_at "
+                "FROM produce_works WHERE work_id=? AND customer_id=?", (work_id, customer_id),
+            ).fetchone()
+        if not row:
+            return None
+        return {"work_id": row[0], "title": row[1], "state": json.loads(row[2]),
+                "job_id": row[3], "step": row[4], "created_at": row[5], "updated_at": row[6]}
+
+    def list_produce_works(self, customer_id=LEGACY_CUSTOMER_ID, limit=20):
+        """최근 작업 목록(updated_at DESC). state_json은 싣지 않는다 — 목록은 가벼워야 한다."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT work_id, title, step, job_id, updated_at FROM produce_works "
+                "WHERE customer_id=? ORDER BY updated_at DESC, rowid DESC LIMIT ?",
+                (customer_id, limit),
+            ).fetchall()
+        return [{"work_id": r[0], "title": r[1], "step": r[2], "job_id": r[3],
+                 "updated_at": r[4]} for r in rows]
+
+    def delete_produce_work(self, work_id, customer_id=LEGACY_CUSTOMER_ID):
+        """지운다. 실제로 지워졌으면(내 것이었으면) True — 남의 것은 지워지지 않는다."""
+        with self._conn() as c:
+            return c.execute("DELETE FROM produce_works WHERE work_id=? AND customer_id=?",
+                             (work_id, customer_id)).rowcount > 0
 
     # ── 보이스 프리셋(2026-07-14, 영상제작 4단계) ──
     def upsert_voice_preset(self, p):

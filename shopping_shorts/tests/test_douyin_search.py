@@ -24,6 +24,12 @@ def test_search_returns_normalized_candidates(monkeypatch):
         "url": "https://www.douyin.com/video/123",
         "title": "iPhone 17 리뷰",
         "thumbnail": "https://p3-sign.douyinpic.com/thumb.jpg",
+        "play_url": "",
+        "channel": "",
+        "likes": None,
+        "views": None,
+        "duration": None,
+        "is_short": True,
     }]
     assert captured["payload"]["keywords"] == ["iphone"]
     assert captured["payload"]["maxResultsPerQuery"] == 10
@@ -57,6 +63,29 @@ def test_search_skips_non_video_items(monkeypatch):
 
     assert len(results) == 1
     assert results[0]["url"] == "https://www.douyin.com/video/vid"
+
+
+def test_search_extracts_channel_stats_and_duration(monkeypatch):
+    """메타 추출 계약 — 2026-07-18 서버 실측 스키마(authorMeta.nickName·statistics.diggCount/
+    playCount·videoMeta.duration(ms)·videoMeta.playUrl)를 고정한다."""
+    monkeypatch.setattr(douyin_search, "APIFY_TOKENS", ["fake-key"])
+
+    def fake_run_with_rotation(payload, tokens, timeout, poll_interval, actor=None):
+        return [{
+            "url": "https://www.douyin.com/video/meta", "type": "video",
+            "itemTitle": "청소기", "authorMeta": {"nickName": "小王", "name": "wang"},
+            "statistics": {"diggCount": 5000, "playCount": 120000, "commentCount": 22},
+            "videoMeta": {"cover": "t.jpg", "duration": 30000, "playUrl": "p.mp4"},
+        }]
+    monkeypatch.setattr(douyin_search, "_run_with_rotation", fake_run_with_rotation)
+
+    r = douyin_search.search("청소기")[0]
+    assert r["channel"] == "小王"
+    assert r["likes"] == 5000
+    assert r["views"] == 120000
+    assert r["duration"] == 30   # 30000ms → 30s
+    assert r["is_short"] is True
+    assert r["play_url"] == "p.mp4"
 
 
 def test_search_no_tokens_raises(monkeypatch):

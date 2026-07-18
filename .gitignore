@@ -133,3 +133,9 @@ test_final.json
 shopping_shorts/motion/public/
 shopping_shorts/motion/*.mp4
 shopping_shorts/motion/.render_tmp/
+
+# 시황 브리핑 엔진의 런타임 보정 로그 — 서버가 30초 틱으로 하루 종일 append한다.
+# 추적하면 배포(auto_deploy.sh의 reset --hard)가 그날 쌓인 걸 커밋본으로 되돌린다.
+# 2026-07-17 실사고: 썸네일 트랙이 add -A로 1줄짜리를 커밋 -> 배포 순간 서버 로그가 1줄로 덮임.
+# 서버에서 _weather_calib_append가 파일을 알아서 다시 만든다(makedirs+append).
+/output/weather_calib/

@@ -1,0 +1,24 @@
+{
+  "target_kind": "market",
+  "market_direction": "neutral",
+  "macro_events": [
+    {
+      "fact": "ASML 실적 발표",
+      "ts": "2026-07-15",
+      "quote": "15일 ASML 16일 TSMC 실적 '주목'"
+    },
+    {
+      "fact": "TSMC 실적 발표",
+      "ts": "2026-07-16",
+      "quote": "15일 ASML 16일 TSMC 실적 '주목'"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "반도체",
+      "stance": "neutral",
+      "comment": "반도체 피크아웃 우려와 AI 슈퍼사이클 지속 여부를 확인하는 시험대가 될 전망"
+    }
+  ],
+  "quote": "반도체 피크아웃(하락 전환) 우려가 좀처럼 가시지 않으면서 세계 최대 반도체 장비업체 ASML과 파운드리 1위 TSMC의 실적 발표에 이목이 집중되고 있다."
+}

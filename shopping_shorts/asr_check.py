@@ -62,3 +62,33 @@ def transcribe(mp3_path):
         return r.json().get("text", "")
     except Exception:
         return None
+
+
+def transcribe_words(mp3_path):
+    """GROQ Whisper verbose_json으로 워드 타임스탬프 재전사.
+    성공 → [{"word","start","end"}, …](발화 순서). 키 없음·실패·워드 없음 → None.
+    (transcribe와 같은 graceful 계약: 예외를 삼켜 None. 호출부가 폴백한다.)"""
+    if not config.GROQ_API_KEY:
+        return None
+    try:
+        with open(mp3_path, "rb") as f:
+            r = requests.post(
+                _GROQ_URL,
+                headers={"Authorization": f"Bearer {config.GROQ_API_KEY}"},
+                files={"file": (mp3_path, f, "audio/mpeg")},
+                data={"model": _MODEL, "language": "ko",
+                      "response_format": "verbose_json",
+                      "timestamp_granularities[]": "word"},
+                timeout=60)
+        r.raise_for_status()
+        raw = r.json().get("words")
+        if not raw:
+            return None
+        out = []
+        for w in raw:
+            if "word" in w and "start" in w and "end" in w:
+                out.append({"word": w["word"], "start": float(w["start"]),
+                            "end": float(w["end"])})
+        return out or None
+    except Exception:
+        return None

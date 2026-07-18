@@ -20,7 +20,8 @@ from shopping_shorts.service import collect, generate_missing_drafts, next_draft
 from shopping_shorts.outreach import build_queue
 from shopping_shorts.store import Store
 from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
-from shopping_shorts.frame_extract import download_video, extract_frames, extract_frame_at
+from shopping_shorts.frame_extract import (download_video, extract_frames,
+                                           extract_frame_at, extract_grid_frames)
 from shopping_shorts.script_extract import extract_script
 from shopping_shorts.structure_analyze import analyze_structure
 from shopping_shorts.categorize import categorize, KEYWORDS as CATEGORY_KEYWORDS
@@ -28,22 +29,26 @@ from shopping_shorts import script_generate
 from shopping_shorts.apify_client import fetch_single_reel, fetch_reels, fetch_profiles
 from shopping_shorts import discovery, instagram_search
 from shopping_shorts.channels import load_channels
-from shopping_shorts.video_analysis import analyze_video, translate_keyword
+from shopping_shorts.video_analysis import (analyze_video, translate_keyword, cn_search_keyword,
+                                            cn_search_keyword_vision, judge_same_product)
 from shopping_shorts.product_identify import fetch_lens_lines, identify_product_from_lines
 from shopping_shorts.search_links import build_search_links, lens_search_url
 from shopping_shorts import mix_pipeline
 from shopping_shorts.mix_pipeline import (run_mix_job, run_render, run_preview, retype_mix_job,
                                           _source_video_id, resynth_tts_job)
 from shopping_shorts.lens_discover import search_similar_videos, upload_frame
+from shopping_shorts import douyin_search, xiaohongshu_search
+from shopping_shorts.config import APIFY_TOKENS
 from shopping_shorts.media_download import resolve_media_url, download_any
 from shopping_shorts import edit_plan as _edit_plan
 from shopping_shorts import voice_presets, audio_post
 from shopping_shorts.tts import synthesize_tts
 from shopping_shorts import tts, asr_check
 from shopping_shorts.narration_naturalize import naturalize as _naturalize
-from shopping_shorts import frame_extract, scene_assets
+from shopping_shorts import frame_extract, scene_assets, scene_cut
 from shopping_shorts import effect_match, remotion_render, points
 from shopping_shorts import video_assemble
+from shopping_shorts import seo_generate, seo_probe
 import uuid
 
 app = FastAPI(title="쇼핑쇼츠 레퍼런스 랭킹")
@@ -479,6 +484,7 @@ _FIND_TMP_DIR = Path(__file__).parent / "data" / "find_frames"
 _MIX_WORK_DIR = Path(__file__).parent / "data" / "mix_jobs"
 _WIKI_MEDIA_DIR = Path(__file__).parent / "data" / "wiki_media"   # 도서관 원본 영구보관
 _SCENE_ASSETS_DIR = Path(__file__).parent / "data" / "scene_assets"  # 장면 라이브러리 자산 영구보관
+_THUMB_DIR = Path(__file__).parent / "data" / "thumbs"   # 5단계 썸네일 프레임·산출물
 
 
 @app.post("/api/extract_script")
@@ -1264,12 +1270,25 @@ def api_get_vmake_key():
     return {"ok": True, "configured": bool(key)}      # 원문은 노출하지 않음
 
 
+# 매칭 파이프라인의 '진행 중' 단계들(run_mix_job: downloading→extracting→planning→tts).
+# 각 단계가 update_mix_job으로 updated_at을 갱신하므로, 여기 오래 멈춰 있으면 죽은 잔해다.
+_MIX_ACTIVE_STAGES = ("downloading", "extracting", "planning", "tts")
+
+
 @app.get("/api/mix/status/{job_id}")
 def api_mix_status(job_id: str):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
-    return {"ok": True, "status": job["status"], "error": job["error"],
+    status, error = job["status"], job["error"]
+    # ★매칭 단계 staleness 가드(2026-07-18 실사고). 사장님이 '영상 매칭 시작' 후 다운로드 도중
+    # 배포 재시작으로 BackgroundTask가 죽으면 except가 못 돌아 DB엔 이 상태가 **영원히** 남고,
+    # 프론트는 10분째 무한 ⏳(렌더 단계엔 _render_is_stale가 있었으나 매칭 단계엔 없었다).
+    # GET이라 DB는 안 건드리고 응답에서만 failed로 알린다 — 재실행(새 job)이 유일한 복구다.
+    if status in _MIX_ACTIVE_STAGES and _render_is_stale(job):
+        status = "failed"
+        error = "서버 재시작 등으로 중단되었습니다. 다시 시도해 주세요."
+    return {"ok": True, "status": status, "error": error,
             # 1단계 미리보기(2026-07-17): 폴러를 둘로 만들지 않으려고 기존 응답에 얹는다(스펙 §6.3).
             # preview_path는 서버 내부 경로라 안 내보낸다 — 파일은 전용 라우트로만 서빙.
             "preview_status": job.get("preview_status"),
@@ -1294,6 +1313,9 @@ def api_mix_result(job_id: str):
         "detected_type_label": _edit_plan.VIDEO_TYPES.get(detected, {}).get("label", detected),
         "affiliate_target": plan.get("affiliate_target", ""),
         "video_types": [{"key": k, "label": v["label"]} for k, v in _edit_plan.VIDEO_TYPES.items()],
+        # 검수판(Task4) — scene_match.py가 채운 미채택 제안(threshold 미달)을 그대로 넘긴다.
+        # {beat_idx, asset_id, score}[]. 자동배치(cutaway)는 이미 beats[].cutaway에 있다.
+        "asset_suggestions": plan.get("asset_suggestions") or [],
     }
 
 
@@ -1657,6 +1679,172 @@ def api_mix_video(job_id: str):
     return FileResponse(job["video_path"])
 
 
+def _thumb_dir(job_id: str):
+    """job_id 검증 후 그 job의 썸네일 폴더. 경로순회를 여기서 한 번에 막는다.
+    부적합하면 None — 호출부가 400으로 돌려준다(이 파일은 HTTPException을 안 쓴다)."""
+    safe = os.path.basename(job_id)
+    if not safe or safe != job_id or safe in (".", ".."):
+        return None
+    return _THUMB_DIR / safe
+
+
+@app.post("/api/produce/thumb/frames")
+def api_thumb_frames(body: dict):
+    """5단계 썸네일 — 믹스 결과 영상을 등분해 후보 프레임 10장.
+
+    자막이 박히지 않은 2단계 결과(video_path)에서 뽑는다(설계 Q1) — 썸네일 텍스트는
+    위에 새로 얹으므로 배경 자막은 방해다. 이미 뽑아뒀으면 재추출하지 않는다.
+    """
+    job_id = str(body.get("job_id") or "")
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    # ★배경 영상 우선순위 — 최종 렌더(3164행)와 동일하게: 최종 → 자막제거본 → 미리보기.
+    # 예전엔 video_path만 봤다. 그런데 video_path는 7단계 최종 렌더 후에야 생기고,
+    # 5단계 썸네일은 그 전 단계다. 매칭을 끝낸(ready_for_review) 작업이라도 최종 영상이 없어
+    # "믹스 영상 없음"으로 막혔다(사장님 실측: 수박 작업 job=10dc0c4e30c5, mix_video 404지만
+    # preview 200). 자막 없는 미리보기(preview_path)가 있으면 그걸로 프레임을 뽑는다 —
+    # 렌더 전에도 썸네일을 만들 수 있어야 한다(설계 Q1의 "자막 없는 배경" 조건도 preview가 만족).
+    video = None
+    for cand in (job.get("video_path"), job.get("clean_video_path"), job.get("preview_path")):
+        if cand and Path(cand).exists():
+            video = cand
+            break
+    if not video:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "믹스 영상 없음"})
+
+    out_dir = _thumb_dir(job_id)
+    if out_dir is None:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "bad job_id"})
+
+    # 재렌더 감지(리뷰 픽스1): mix_pipeline은 job_id로 결정적인 경로(work/job_id/final.mp4)에
+    # 렌더하므로 재렌더는 "같은 파일"을 덮어쓴다 — video_path 문자열도 안 바뀐다.
+    # n=10 고정이라 "개수가 같은가"만으로는 옛 프레임인지 절대 구분 못 한다.
+    # 그래서 추출 시점 영상의 mtime_ns+size를 서명으로 같이 저장해두고 비교한다.
+    # (해시는 과하다 — 영상이 수십 MB.)
+    vstat = Path(video).stat()
+    video_sig = f"{vstat.st_mtime_ns}:{vstat.st_size}"
+
+    thumb = job.get("thumbnail") or {}
+    existing = sorted(out_dir.glob("grid_*.jpg")) if out_dir.exists() else []
+    if existing and thumb.get("video_sig") == video_sig:
+        meta = thumb.get("frames") or []
+        if len(meta) == len(existing):
+            return {"ok": True, "frames": meta}
+
+    # 재추출(재재조사 픽스1·2, 2026-07-17): 여기서 rmtree(out_dir)를 돌리면 안 된다.
+    # 같은 out_dir을 T4(썸네일 저장, task-4-brief.md)가 써서 사용자가 고른
+    # thumb_N.png를 저장한다 — rmtree는 그것까지 통째로 지워 재렌더 한 번에
+    # "고른 썸네일이 증발 + DB는 죽은 파일명을 계속 가리킴(깨진 이미지)"이 났다(실측).
+    # 게다가 grid_{i:02d}.jpg는 n=10 고정의 결정적 파일명이라 애초에 지울 필요가
+    # 없다 — 재추출이 그냥 덮어쓴다. rmtree를 추출 *전에* 돌리는 것도 문제였다:
+    # 추출이 RuntimeError로 실패하면(ffmpeg 일시 오류 등) 폴더는 이미 비었는데 DB의
+    # frames는 죽은 URL 10개를 그대로 들고 있어 "실패하면 이전보다 나빠짐"이 됐다.
+    try:
+        pairs = extract_grid_frames(video, out_dir, n=10)
+    except RuntimeError as e:
+        return JSONResponse(status_code=502, content={"ok": False, "error": str(e)})
+
+    # 추출 *성공 후에만*, 우리 소유 파일(grid_*.jpg)만, 개별로 고아를 정리한다.
+    # 부분 실패(extract_frame_at은 실패 시 조용히 None -- 기존 계약)로 새 결과에
+    # 없는 옛 grid_*.jpg가 남으면 existing(glob) vs meta(frames) 개수가 영영 안
+    # 맞아 매 요청마다 재추출이 돈다. thumb_*.png(T4 소유, 사용자가 고른 썸네일)는
+    # 이 정리 대상에 절대 넣지 않는다 — 우리가 만든 게 아니다.
+    new_names = {p.name for p, _ in pairs}
+    for old in out_dir.glob("grid_*.jpg"):
+        if old.name not in new_names:
+            old.unlink(missing_ok=True)
+
+    frames = [{"url": f"/api/produce/thumb/file/{job_id}/{p.name}", "ts": round(ts, 2)}
+              for p, ts in pairs]
+    thumb["frames"] = frames
+    thumb["video_sig"] = video_sig
+    Store(DB_PATH).update_mix_job(job_id, thumbnail=thumb)
+    return {"ok": True, "frames": frames}
+
+
+@app.get("/api/produce/thumb/file/{job_id}/{name}")
+def api_thumb_file(job_id: str, name: str):
+    """프레임·썸네일 파일 서빙. 파일명은 basename으로 강제한다."""
+    safe_name = os.path.basename(name)
+    d = _thumb_dir(job_id)
+    # safe_name in (".",".."): os.path.basename("..") == ".." 라 위 등가검사만으론
+    # 안 걸린다(2026-07-17 실측) — job_id 쪽 _thumb_dir과 동일하게 명시 차단.
+    if d is None or not safe_name or safe_name != name or safe_name in (".", ".."):
+        return JSONResponse(status_code=400, content={"ok": False, "error": "bad path"})
+    path = d / safe_name
+    # exists()가 아니라 is_file()이어야 한다(리뷰 픽스2, 2026-07-17 실측): name=" "이면
+    # 윈도우가 경로 끝 공백을 잘라내 path가 d 자신이 되어 exists()는 True를 내지만
+    # 파일이 아니라 디렉터리라 FileResponse가 RuntimeError를 던져 잡히지 않고 500이 나간다.
+    if not path.is_file():
+        return JSONResponse(status_code=404, content={"ok": False})
+    return FileResponse(str(path))
+
+
+@app.post("/api/produce/thumb/save")
+async def api_thumb_save(job_id: str = Form(...), meta: str = Form(...),
+                         file: UploadFile = File(...)):
+    """브라우저 canvas가 합성한 PNG를 받아 저장한다(설계 Q3 — 서버는 합성하지 않는다).
+
+    ★파일명은 서버가 부여한다. 클라이언트가 준 file.filename은 쓰지 않는다
+    (경로순회 재료). meta(레이어·프레임)는 같은 thumbnail_json에 함께 보존한다.
+    """
+    import json as _json          # app.py 관례(:1448·:1482) — 최상위 import 아님
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+
+    data = await file.read()
+    if not data.startswith(b"\x89PNG\r\n\x1a\n"):     # PNG 시그니처
+        return JSONResponse(status_code=400, content={"ok": False, "error": "PNG가 아님"})
+    try:
+        meta_obj = _json.loads(meta)
+    except (ValueError, TypeError):
+        return JSONResponse(status_code=400, content={"ok": False, "error": "meta 파싱 실패"})
+    if not isinstance(meta_obj, dict):
+        return JSONResponse(status_code=400, content={"ok": False, "error": "meta는 dict여야 합니다"})
+
+    out_dir = _thumb_dir(job_id)
+    if out_dir is None:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "bad job_id"})
+    out_dir.mkdir(parents=True, exist_ok=True)
+    thumb = job.get("thumbnail") or {}
+    results = list(thumb.get("results") or [])
+    name = f"thumb_{len(results) + 1}.png"
+    while (out_dir / name).exists():               # 갤러리 삭제 이력이 있어도 안 덮어쓴다
+        name = f"thumb_{len(results) + 1}_{uuid.uuid4().hex[:4]}.png"
+    (out_dir / name).write_bytes(data)
+
+    results.append(name)
+    # ★meta를 통째로 합치지 않는다. frames(Task 3이 만든 후보목록)·results·selected는
+    #  서버 소유라 클라이언트가 덮으면 안 된다 — 편집 상태만 화이트리스트로 받는다.
+    for k in ("frame_ts", "frame_url", "layers"):
+        if k in meta_obj:
+            thumb[k] = meta_obj[k]
+    thumb["results"] = results
+    store.update_mix_job(job_id, thumbnail=thumb)
+    return {"ok": True, "name": name,
+            "url": f"/api/produce/thumb/file/{job_id}/{name}"}
+
+
+@app.post("/api/produce/thumb/select")
+def api_thumb_select(body: dict):
+    """최종 썸네일 1장 지정. results에 있는 이름만 허용한다."""
+    job_id = str(body.get("job_id") or "")
+    name = str(body.get("name") or "")
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    thumb = job.get("thumbnail") or {}
+    if name not in (thumb.get("results") or []):
+        return JSONResponse(status_code=400, content={"ok": False, "error": "없는 썸네일"})
+    thumb["selected"] = name
+    store.update_mix_job(job_id, thumbnail=thumb)
+    return {"ok": True}
+
+
 def _reject_cdn_proxy(url: str, allowed_hosts) -> bool:
     """CDN 프록시(/api/thumb·/api/video)에 들어온 url이 거부 대상인가.
 
@@ -1778,6 +1966,96 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...),
     items = search_similar_videos(image_url, source_caption=source_caption)
     store.bump_lens(month)
     return {"ok": True, "items": items, "count": len(items)}
+
+
+# 캡션 → 중국 플랫폼 검색어. 구글렌즈는 시각검색이라 키워드가 없지만 샤오홍슈/도우인은
+# 키워드 검색이라 캡션에서 핵심어를 뽑아야 한다. 앞쪽 의미토큰 2개를 붙여 쓴다(제품명이
+# 보통 캡션 앞에 온다). 불용어·해시태그 기호는 제거.
+_CN_STOP = {"그리고", "진짜", "완전", "오늘", "이거", "저거", "제가", "너무", "정말",
+            "이번", "우리", "해서", "하는", "있는", "같은", "위한", "shorts", "reels",
+            "the", "and", "for", "with", "this", "that", "from"}
+_CN_TOKEN_RE = re.compile(r"[0-9A-Za-z가-힣]{2,}")
+
+
+def _cn_keyword(caption):
+    """캡션 → 검색어(앞쪽 의미토큰 3개). 없으면 ''."""
+    if not caption:
+        return ""
+    toks = [t for t in _CN_TOKEN_RE.findall(caption) if t.lower() not in _CN_STOP]
+    return " ".join(toks[:3])
+
+
+@app.post("/api/lens/cn")
+async def api_lens_cn(request: Request, frame: UploadFile = File(None),
+                       source_caption: str = Form(""), max_results: int = Form(8)):
+    """프레임+캡션으로 샤오홍슈+도우인을 검색 → 렌즈 결과에 합류할 항목. 두 '장치'로 정확도를 높인다:
+
+    ★장치1(비전 추출): 렌즈가 캡처한 프레임(썸네일)을 Gemini 비전이 보고 화면 글자(제품명
+      'LED 물총')·생김새+캡션을 종합해 '바로 그 제품'을 특정하고 중국어 검색어를 만든다
+      (서버 실측: 리모와 캐리어→日默瓦, 청소용 퍼미스 스톤→浮石清洁块). 프레임 없음/실패 시
+      캡션 소재 키워드(cn_search_keyword) → 앞토큰 직역 순으로 폴백.
+    ★장치2(유사도 판정): 검색 결과 제목들을 추출 제품과 대조해 Gemini가 same/similar/no로
+      판정(오탐 많던 2그램 대체) → same을 위로 정렬, no엔 프론트 ⚠️배지.
+
+    Apify·Gemini가 느리고 유료라 렌즈 결과가 뜬 뒤 프론트가 비동기로 이 API를 호출해 합친다."""
+    if not (source_caption or "").strip() and frame is None:
+        return {"ok": True, "items": [], "count": 0, "note": "프레임·캡션이 없어 검색어를 만들 수 없습니다"}
+    if not APIFY_TOKENS:
+        return {"ok": True, "items": [], "count": 0, "note": "APIFY 토큰 없음"}
+    product, keyword = "", ""
+    if frame is not None:                              # 장치1: 프레임 비전 추출
+        try:
+            raw = await frame.read()
+            v = cn_search_keyword_vision(raw, source_caption)
+            product, keyword = v.get("product", ""), v.get("zh", "")
+        except Exception:
+            product, keyword = "", ""
+    if not keyword:                                    # 폴백: 캡션 소재 키워드 → 앞토큰 직역
+        try:
+            keyword = cn_search_keyword(source_caption)
+        except Exception:
+            keyword = ""
+    if not keyword:
+        ko = _cn_keyword(source_caption)
+        try:
+            keyword = (translate_keyword(ko).get("zh") or "").strip() or ko
+        except Exception:
+            keyword = ko
+    if not keyword:
+        return {"ok": True, "items": [], "count": 0, "note": "검색어를 만들지 못했습니다"}
+    # 실측(2026-07-18): 액터는 maxResults=40도 raw=video=40을 ~14초에 준다(8과 지연 차 거의 없음).
+    # 웹검색 대비 개수 부족 제보로 상한을 60까지 열어둔다(프론트 기본 40). 결과당 과금이라 비용은 비례.
+    n = max(1, min(int(max_results or 8), 60))
+
+    def _run(platform, mod):
+        try:
+            rows = mod.search(keyword, max_results=n)
+        except Exception:
+            return []
+        for r in rows:
+            r["platform"] = platform
+            r["match"] = None
+        return rows
+
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        fx = ex.submit(_run, "xiaohongshu", xiaohongshu_search)
+        fd = ex.submit(_run, "douyin", douyin_search)
+        items = fx.result() + fd.result()
+
+    # 장치2: 유사도 판정 + same 우선 정렬
+    if product and items:
+        try:
+            verdicts = judge_same_product(product, [i.get("title", "") for i in items])
+        except Exception:
+            verdicts = []
+        if len(verdicts) == len(items):
+            for i, vd in zip(items, verdicts):
+                i["sim"] = vd
+                i["match"] = True if vd == "same" else (False if vd == "no" else None)
+            rank = {"same": 0, "similar": 1, "no": 2}
+            items.sort(key=lambda i: rank.get(i.get("sim"), 1))
+    return {"ok": True, "items": items, "count": len(items),
+            "keyword": keyword, "product": product}
 
 
 @app.get("/healthz")
@@ -2028,6 +2306,90 @@ def api_produce_picks(request: Request):
     return {"ok": True, "items": items, "shortcodes": sorted(picks)}
 
 
+# ── 제작소 작업파일(2026-07-17) ──────────────────────────
+# 사장님 제보: "뒤로가기 하니까 작업물이 지워진다 ... 내일 다시 들어와도 이어서."
+# 작업상태(state)는 클라이언트 스키마 그대로 오간다 — 서버가 모양을 해석하지 않는다.
+@app.post("/api/produce/works")
+def api_produce_works_save(request: Request, body: dict):
+    state = body.get("state")
+    if not isinstance(state, dict):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "state 없음"})
+    # ★body에 있는 필드만 넘긴다. 스토어는 **안 넘어온 필드를 보존**하는데(update_mix_job과
+    # 같은 관례), 여기서 기본값을 채워 넣으면 그 보존이 통째로 무의미해진다 —
+    # 대본만 고쳐 저장했을 때 job_id가 날아가고 step이 0으로 되감긴다(T1 리뷰 Important).
+    kw = {}
+    if "job_id" in body:
+        kw["job_id"] = body.get("job_id") or None
+    if "step" in body:
+        # ★int가 아니면(bool 포함 — isinstance(True, int)는 True다) kw에 아예 넣지 않는다.
+        # 예전엔 0으로 되감았는데, step="3" 같은 오타 하나로 진행 단계를 파괴했다(T2 리뷰).
+        # 안 넣으면 위 job_id와 같은 "보존" 경로를 타 기존 값이 유지된다.
+        step = body.get("step")
+        if isinstance(step, int) and not isinstance(step, bool):
+            kw["step"] = step
+    wid = Store(DB_PATH).upsert_produce_work(body.get("work_id") or None, state,
+                                             customer_id=_cid(request), **kw)
+    if not wid:
+        # 남의 work_id — get/delete와 같은 404(스토어는 예외를 안 던진다, 2026-07-17 재리뷰)
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    return {"ok": True, "work_id": wid}
+
+
+@app.post("/api/pick_log")
+def api_pick_log(request: Request, body: dict):
+    # 픽로그(트랙1) — 사장님이 고른 것/버린 것을 남긴다. 부가 기능이라 stage만 필수.
+    stage = body.get("stage")
+    if not stage:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "stage 없음"})
+    eid = Store(DB_PATH).log_pick_event(
+        stage,
+        picked=body.get("picked"),
+        rejected=body.get("rejected"),
+        candidates=body.get("candidates"),
+        edit_diff=body.get("edit_diff"),
+        job_id=body.get("job_id") or None,
+        customer_id=_cid(request),
+    )
+    return {"ok": True, "id": eid}
+
+
+@app.get("/api/produce/works")
+def api_produce_works_list(request: Request):
+    return {"ok": True, "works": Store(DB_PATH).list_produce_works(customer_id=_cid(request))}
+
+
+@app.get("/api/produce/works/{work_id}")
+def api_produce_works_get(request: Request, work_id: str):
+    st = Store(DB_PATH)
+    w = st.get_produce_work(work_id, customer_id=_cid(request))
+    if not w:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    # ★렌더설정(꾸미기·자막제거)의 주인은 작업파일이 아니라 **job**이다 — 작업파일에 복제하면
+    # 진실의 원천이 둘이 되어 새 불일치를 만든다. 그래서 여기서 job을 읽어 같이 내려준다.
+    # 이게 없으면 복원이 STATE를 빈 채로 두고, renderFinal 직전 saveHeadcopy()가 그 빈 STATE를
+    # 그대로 job에 POST해 **서버의 꾸미기를 null로 덮는다**. 게다가 subtitle_removal은 job에
+    # 남아 유료 VMake가 도는데 화면은 "꺼짐"이라 표시한다(최종 whole-branch 리뷰 C-2).
+    # 이 라우트는 _cid로 소유자를 이미 확인했으므로 여기 얹는 게 안전하다 —
+    # /api/mix/status는 인증이 없어(job_id만 알면 열림) 거기 실으면 남의 창작물이 샌다.
+    settings = None
+    if w["job_id"]:
+        job = st.get_mix_job(w["job_id"])
+        if job:
+            settings = {"headcopy": job.get("headcopy"),
+                        "caption_style": job.get("caption_style"),
+                        "deco": job.get("deco"),
+                        "subtitle_removal": job.get("subtitle_removal")}
+    return {"ok": True, "state": w["state"], "job_id": w["job_id"], "step": w["step"],
+            "settings": settings}
+
+
+@app.post("/api/produce/works/{work_id}/delete")
+def api_produce_works_delete(request: Request, work_id: str):
+    if not Store(DB_PATH).delete_produce_work(work_id, customer_id=_cid(request)):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    return {"ok": True}
+
+
 @app.post("/api/produce/mix/start")
 def api_produce_mix_start(background_tasks: BackgroundTasks, body: dict):
     """2단계 영상믹스 — 확정 대본(given_script)을 소스영상 장면에 매칭하는 job 시작.
@@ -2077,6 +2439,8 @@ def api_produce_mix_settings(body: dict):
         fields["caption_style"] = body.get("caption_style")  # dict or None
     if "deco" in body:
         fields["deco"] = body.get("deco")  # 워터마크·추가텍스트·오버레이·BGM dict or None
+    if "seo" in body:
+        fields["seo"] = body.get("seo")  # 6단계 SEO 일습 dict or None
     if fields:
         store.update_mix_job(job_id, **fields)
     return {"ok": True}
@@ -2112,6 +2476,38 @@ async def api_produce_mix_overlay(job_id: str = Form(...), file: UploadFile = Fi
     name = "overlay" + ext
     (d / name).write_bytes(await file.read())
     return {"ok": True, "file": name}
+
+
+@app.post("/api/produce/mix/{job_id}/cutaway")
+def api_produce_mix_cutaway(job_id: str, request: Request, body: dict):
+    """검수판에서 비트의 컷어웨이를 설정(asset_id) 또는 제거(null). plan에 되쓴다.
+
+    ⚠️ mix_jobs에는 customer_id 컬럼이 없다(다른 /api/produce/mix/... 라우트와 동일하게
+    job 존재 여부만 본다) — 진짜 소유권 경계는 scene_assets 쪽 customer_id 격리다.
+    남의 asset_id를 붙이려 하면 get_scene_asset이 못 찾아 422로 막는다."""
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    plan = job.get("edit_plan") or {}
+    beats = plan.get("beats") or []
+    try:
+        bi = int(body.get("beat_idx"))
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 필요"})
+    hit = next((b for b in beats if b.get("beat_idx") == bi), None)
+    if hit is None:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 범위 밖"})
+    aid = body.get("asset_id")
+    if aid is None:
+        hit.pop("cutaway", None)
+    else:
+        asset = store.get_scene_asset(int(aid), customer_id=_cid(request))
+        if not asset:
+            return JSONResponse(status_code=422, content={"ok": False, "error": "자산 없음"})
+        hit["cutaway"] = {"asset_id": int(aid), "score": hit.get("cutaway", {}).get("score", 1.0)}
+    store.update_mix_job(job_id, edit_plan=plan)
+    return {"ok": True}
 
 
 @app.get("/api/produce/mix/poster/{job_id}")
@@ -2248,6 +2644,25 @@ def _validate_keep_original_audio(koa):
     return None, "keep_original_audio는 0/1/불리언만"
 
 
+# SQLite INTEGER 상한 — 부호있는 64비트. 이보다 큰 값은 파이썬 int()는 받아줘도
+# sqlite3 바인딩에서 OverflowError가 난다.
+_SQLITE_INT_MAX = 2 ** 63 - 1
+
+
+def _normalize_source_start_frame(raw):
+    """source_start_frame 정규화 — commit 전용. 편집 편의용 부가 메타라 없어도 안전하다
+    (설계 의도) — 그래서 -5·12.5·"abc" 같은 쓰레기 값은 거부하지 않고 조용히 None으로
+    흘린다(손해가 대칭이라 저장을 막는 게 더 나쁘다). 문제는 10**19처럼 SQLite INTEGER
+    상한을 넘는 값 — str().isdigit()도 int()도 통과해 store.py의 INSERT에서
+    OverflowError→500이 났다(리뷰 I-1, 실증됨). 상한 밖이면 다른 쓰레기 값과 같은
+    대접(None)을 받는 게 이 픽스다 — 별도로 거부하지 않는다."""
+    s = str(raw if raw is not None else "").strip()
+    if not s.isdigit():
+        return None
+    n = int(s)
+    return n if n <= _SQLITE_INT_MAX else None
+
+
 def _reject_ssrf(url):
     """내부망·클라우드 메타데이터(169.254.169.254 등, 이 서버는 AWS Lightsail) 접근 차단.
     문제 없으면 None, 문제 있으면 에러 메시지 문자열.
@@ -2277,16 +2692,111 @@ def _reject_ssrf(url):
     return None
 
 
+def _scene_wiki_source(body: dict):
+    """도서관 영구보관 릴스를 장면 소스로 쓸 때의 **로컬 경로**. (경로, 에러응답) 반환.
+
+    왜 URL이 아니라 로컬 경로인가: 서버가 자기 자신을 HTTP로 다시 부르면 SSRF
+    방어(루프백 차단)에 스스로 막힌다. 애초에 같은 디스크에 있는 파일이라
+    네트워크를 탈 이유가 없다.
+
+    왜 이 다리가 필요한가: 랭킹 다리는 구조적으로 임시다 — 인스타 CDN 주소는
+    DB에 저장되지 않고(source_pool 0행) 요청 때마다 새로 받아오며 만료된다.
+    도서관은 mp4를 영구보관하므로 언제든 담을 수 있다.
+
+    경로조작은 구조적으로 불가능하다 — shortcode를 파일명에 쓰지 않고 sha1
+    해시로 바꾼다(/api/wiki/video와 같은 규칙). 그래서 별도 검증이 없다.
+    """
+    sc = (body.get("wiki_shortcode") or "").strip()
+    if not sc:
+        return None, None
+    f = _WIKI_MEDIA_DIR / f"{hashlib.sha1(sc.encode()).hexdigest()[:16]}.mp4"
+    if not f.exists():
+        return None, JSONResponse(status_code=404, content={
+            "ok": False, "error": "도서관에 보관된 영상이 없다 — 먼저 도서관에 저장할 것"})
+    return f, None
+
+
+@app.post("/api/scene/split")
+def api_scene_split(request: Request, body: dict):
+    """소스 영상 → 컷 목록 + 컷별 포스터. **DB에 아무것도 안 쓴다.**
+
+    사장님이 보고 고르는 게 A안이다(설계 §4.1) — AI가 거르지 않는다. AI의
+    '짤로 쓸 만한가' 판단은 검증된 적이 없다(실측: 짜집기/촬영원본 판정 3편
+    전부 '촬영원본/확신 높음' 상수 출력). 저장은 기존 prepare→commit이 한다.
+
+    ffmpeg 지식(fps·프레임·컷 경계·포스터)은 이 라우트가 아니라 scene_cut에
+    있다 — app.py는 라우팅만, ffmpeg 호출은 scene_cut/scene_assets가 진다는
+    이 파일의 기존 배선(prepare가 scene_assets.make_clip/make_poster를 쓰는
+    것과 동일한 이유)을 그대로 따른 것. 그래서 app.py에 subprocess import가
+    추가로 필요 없다."""
+    wiki_src, wiki_err = _scene_wiki_source(body)
+    if wiki_err:
+        return wiki_err
+    src_url = (body.get("src_url") or "").strip()
+    if not wiki_src:
+        if not src_url:
+            return JSONResponse(status_code=422,
+                                content={"ok": False, "error": "src_url 또는 wiki_shortcode 필요"})
+        ssrf_err = _reject_ssrf(src_url)  # SSRF 1차 방어 — 내부망·169.254.169.254 등 차단
+        if ssrf_err:
+            return JSONResponse(status_code=422, content={"ok": False, "error": ssrf_err})
+    token = uuid.uuid4().hex
+    # ★_SCENE_SPLIT_DIR를 모듈 상수로 빼면 안 된다 — 모듈 임포트 시점 값이 굳어
+    # test client의 monkeypatch(_SCENE_ASSETS_DIR)를 안 따라간다. 매번 여기서 계산한다.
+    split_dir = _SCENE_ASSETS_DIR / "_split"
+    out_dir = split_dir / token
+    out_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            # 도서관 소스는 이미 디스크에 있다 — 받지 않는다. td 밖에 있으므로
+            # 이 블록이 끝나며 청소돼도 원본은 안 지워진다.
+            src = str(wiki_src) if wiki_src else frame_extract.download_video(src_url, td)
+            fps = scene_cut.video_fps(src)
+            total = scene_cut.video_frame_count(src)
+            cuts = scene_cut.detect_cuts(src)
+            out = []
+            for i, (a, b) in enumerate(cuts):
+                poster = out_dir / f"{i}.jpg"
+                # 컷 대표 프레임 = 시작에서 3프레임 뒤(전환 잔상 회피)
+                scene_cut.extract_poster(src, a + 3, fps, poster)
+                out.append({
+                    "i": i, "start_frame": a, "end_frame": b,
+                    "start": round(a / fps, 3), "end": round(b / fps, 3),
+                    "duration": round((b - a) / fps, 3),
+                    "poster_url": f"/api/scene/split/{token}/{i}/poster",
+                })
+    except Exception as e:  # noqa: BLE001 — 다운로드/ffmpeg 실패는 그대로 알림
+        return JSONResponse(status_code=502, content={"ok": False, "error": f"분할 실패: {e}"})
+    return {"ok": True, "token": token, "fps": fps, "total_frames": total, "cuts": out}
+
+
+@app.get("/api/scene/split/{token}/{i}/poster")
+def api_scene_split_poster(token: str, i: int):
+    """분할 미리보기 썸네일. 토큰은 hex 검증 — 경로조작 차단."""
+    if not re.fullmatch(r"[0-9a-f]{32}", token or ""):
+        return Response(status_code=404, content=b"")
+    split_dir = _SCENE_ASSETS_DIR / "_split"  # ★여기도 함수 안에서 계산(위와 같은 이유)
+    p = split_dir / token / f"{i}.jpg"
+    if not p.exists():
+        return Response(status_code=404, content=b"")
+    return FileResponse(str(p), media_type="image/jpeg")
+
+
 @app.post("/api/scene/save/prepare")
 def api_scene_save_prepare(request: Request, body: dict):
     """구간컷 + Gemini 다축 태그 초안 → 모달 프리필용. 아직 DB 저장 안 함.
-    body: {source_kind, source_ref, src_url, start, end, category?, caption?, script?}"""
+    body: {source_kind, source_ref, src_url|wiki_shortcode, start, end, category?, caption?, script?}"""
+    wiki_src, wiki_err = _scene_wiki_source(body)
+    if wiki_err:
+        return wiki_err
     src_url = (body.get("src_url") or "").strip()
-    if not src_url:
-        return JSONResponse(status_code=422, content={"ok": False, "error": "src_url 필요"})
-    ssrf_err = _reject_ssrf(src_url)  # SSRF 1차 방어 — 내부망·169.254.169.254 등 차단
-    if ssrf_err:
-        return JSONResponse(status_code=422, content={"ok": False, "error": ssrf_err})
+    if not wiki_src:
+        if not src_url:
+            return JSONResponse(status_code=422,
+                                content={"ok": False, "error": "src_url 또는 wiki_shortcode 필요"})
+        ssrf_err = _reject_ssrf(src_url)  # SSRF 1차 방어 — 내부망·169.254.169.254 등 차단
+        if ssrf_err:
+            return JSONResponse(status_code=422, content={"ok": False, "error": ssrf_err})
     try:
         start, end = float(body.get("start") or 0), float(body.get("end") or 0)
     except (TypeError, ValueError):
@@ -2297,9 +2807,15 @@ def api_scene_save_prepare(request: Request, body: dict):
     _SCENE_ASSETS_DIR.mkdir(parents=True, exist_ok=True)
     clip = _SCENE_ASSETS_DIR / f"{token}.mp4"
     poster = _SCENE_ASSETS_DIR / f"{token}.jpg"
+    src_start_frame = None
     try:
         with tempfile.TemporaryDirectory() as td:
-            src = frame_extract.download_video(src_url, td)
+            # 도서관 소스는 이미 디스크에 있다(td 밖) — 받지도, 청소로 지우지도 않는다.
+            src = str(wiki_src) if wiki_src else frame_extract.download_video(src_url, td)
+            # ★소스의 fps로 — 클립은 -r 30으로 통일되므로 클립 fps를 쓰면 원본이
+            # 30fps가 아닐 때 틀린 프레임 번호가 저장된다. 소스는 이 블록이 끝나면
+            # (TemporaryDirectory 청소로) 지워지므로 fps는 반드시 블록 안에서 구한다.
+            src_start_frame = round(start * scene_cut.video_fps(src))
             scene_assets.make_clip(src, start, end, clip)
     except Exception as e:  # noqa: BLE001 — 다운로드/ffmpeg 실패는 사용자에게 그대로 알림
         return JSONResponse(status_code=502, content={"ok": False, "error": f"구간컷 실패: {e}"})
@@ -2308,7 +2824,8 @@ def api_scene_save_prepare(request: Request, body: dict):
         "category": body.get("category"), "caption": body.get("caption"),
         "script": body.get("script"),
     })
-    return {"ok": True, "token": token, "duration": scene_assets.probe_duration(clip),
+    return {"ok": True, "token": token, "start_frame": src_start_frame,
+            "duration": scene_assets.probe_duration(clip),
             "poster_url": f"/api/scene/prepared/{token}/poster", "draft": draft}
 
 
@@ -2333,6 +2850,17 @@ def api_scene_save_commit(request: Request, body: dict):
     title = (body.get("title") or "").strip()
     if not title:
         return JSONResponse(status_code=422, content={"ok": False, "error": "title 필요"})
+
+    # ★'모름'과 미지정을 모두 막는다(설계 §7.2). AI 판정은 실측 탈락했고
+    # (정답 아는 시험지에서 3편 전부 '촬영원본/확신 높음'), 사람만 안다. 스토어엔
+    # 값 검증이 전혀 없으므로(실측: source_start_frame=-5.7도 그대로 저장됨) 여기가
+    # 유일한 방어선이다 — 손해가 비대칭이다(짤 하나 잃는 것보다 남의 촬영분이 라이브에
+    # 들어가는 게 훨씬 나쁘다).
+    origin = (body.get("source_origin") or "").strip()
+    if origin not in ("짜집기", "촬영원본"):
+        return JSONResponse(status_code=422, content={
+            "ok": False, "error": "출처를 골라야 저장됩니다(짜집기/촬영원본)"})
+
     asset_type = body.get("asset_type") or "clip"
     # 검증 없이 asset_type을 받으면 임의 문자열이 DB에 그대로 저장되고, 이게 프론트 HTML
     # 속성 컨텍스트(onclick='...')로 그대로 흘러 XSS 체인이 닫힌다(리뷰 실증) — 화이트리스트로 막는다.
@@ -2346,6 +2874,11 @@ def api_scene_save_commit(request: Request, body: dict):
     # 새로 거부하면 sfx에 render_mode를 실어보내는 기존 클라이언트 호출이 깨진다.)
     render_mode = body.get("render_mode")
     if asset_type == "clip":
+        # 페이즈1 리뷰 잔여 — render_mode 없이 저장되면 배지가 NULL을 '컷어웨이'로
+        # 거짓 표기한다(설계 §8). clip은 반드시 골라야 한다.
+        if not render_mode:
+            return JSONResponse(status_code=422,
+                                content={"ok": False, "error": "clip은 render_mode가 필요합니다"})
         err = _validate_render_mode(asset_type, render_mode)
         if err:
             return JSONResponse(status_code=422, content={"ok": False, "error": err})
@@ -2394,6 +2927,8 @@ def api_scene_save_commit(request: Request, body: dict):
         "category": body.get("category"), "subject": body.get("subject"),
         "tone": body.get("tone"), "keywords": body.get("keywords"),
         "source_kind": body.get("source_kind"), "source_ref": body.get("source_ref"),
+        "source_origin": origin,
+        "source_start_frame": _normalize_source_start_frame(body.get("source_start_frame")),
     }, customer_id=_cid(request))
     return {"ok": True, "id": aid}
 
@@ -2480,6 +3015,14 @@ def api_scene_update(request: Request, asset_id: int, body: dict):
         asset = store.get_scene_asset(asset_id, customer_id=cid)
         if not asset:
             return JSONResponse(status_code=404, content={"ok": False, "error": "자산 없음"})
+        # commit은 clip에 render_mode를 필수로 강제한다(설계 §8, 페이즈1 리뷰 잔여) —
+        # update가 같은 자산을 render_mode=None으로 되돌리면 그 불변식이 뒷문으로 풀린다
+        # (리뷰 I-2, 실증됨: 200으로 통과하고 배지가 NULL을 '컷어웨이'로 거짓 표기).
+        # commit과 동일하게 clip에서만 None을 거부 — sfx/overlay는 원래 render_mode가
+        # 없는 게 정상(스펙 §4)이라 계속 허용해야 한다.
+        if asset["asset_type"] == "clip" and not body.get("render_mode"):
+            return JSONResponse(status_code=422,
+                                content={"ok": False, "error": "clip은 render_mode가 필요합니다"})
         err = _validate_render_mode(asset["asset_type"], body.get("render_mode"))
         if err:
             return JSONResponse(status_code=422, content={"ok": False, "error": err})
@@ -2591,6 +3134,48 @@ def _fx_dur_frames(job, timeline, fps=30):
     return 0
 
 
+@app.post("/api/produce/seo/generate")
+def api_seo_generate(body: dict):
+    """확정 대본으로 SEO 일습 생성 + 키워드 유튜브 실측.
+
+    DB에 기록하지 않는다(무과금 미리보기 — fx/suggest와 같은 규약). 사장님이
+    화면에서 다듬고 /mix/settings로 확정 저장한다. 생성할 때마다 덮어쓰면
+    손으로 고친 걸 날린다.
+
+    only가 있으면 부분 재생성 — 측정(100유닛/키워드)을 다시 하지 않고
+    호출부가 준 keyword_stats를 프롬프트에 되먹인다.
+    """
+    job_id = (body.get("job_id") or "").strip()
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id) if job_id else None
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+
+    only = body.get("only") or None
+    locked = body.get("locked") or {}
+    captions = body.get("captions") or []
+    stats = body.get("keyword_stats") or []
+
+    seo = seo_generate.generate(job, captions=captions, only=only,
+                                locked=locked, keyword_stats=stats)
+    if not seo:
+        return JSONResponse(status_code=502, content={"ok": False, "error": "생성 실패"})
+
+    if not only:
+        # 전체 생성일 때만 측정한다 — search.list가 100유닛이고 발굴과 키풀을 나눠 쓴다.
+        stats = seo_probe.probe_keywords(seo_generate.seed_keywords(seo), store)
+    seo["keyword_stats"] = stats
+    seo["generated_at"] = datetime.now(timezone.utc).isoformat()
+    return {"seo": seo}
+
+
+@app.get("/api/produce/seo/get")
+def api_seo_get(job_id: str = ""):
+    """저장된 SEO 복원용(6단계 재진입·새로고침). 없으면 seo: null."""
+    job = Store(DB_PATH).get_mix_job((job_id or "").strip()) or {}
+    return {"seo": job.get("seo")}
+
+
 @app.post("/api/produce/fx/suggest")
 def api_fx_suggest(request: Request, body: dict):
     """믹스 job의 비트+카테고리로 효과 배치 플랜을 미리 만든다. DB에 기록하지
@@ -2681,4 +3266,37 @@ for _pg in ("discover", "find", "library", "mix", "outreach", "produce", "collec
         include_in_schema=False,
     )
 
-app.mount("/", StaticFiles(directory=str(_STATIC), html=True), name="static")
+# ★C-1(2026-07-16 라이브 실증): 위 _NOCACHE는 /produce 등 "클린 URL" 라우트에만 붙는다.
+# /sidebar.js 같은 정적 JS/CSS/HTML은 아래 StaticFiles 마운트가 헤더 없이 그대로 서빙해서
+# 브라우저가 무기한 캐시했다 — 실측: 서버는 새 sidebar.js(mountWorks 포함, 5957바이트)를
+# 주는데 performance 엔트리는 transferSize:0/cached:true, 화면엔 .ss-work가 0개.
+# Ctrl+Shift+R로는 바로 떴다 = 캐시 문제, 배포 문제가 아니었다.
+#
+# 방식: StaticFiles 서브클래스로 file_response()를 오버라이드(미들웨어 대신 이걸 고른 이유:
+# 전역 미들웨어는 /api/* JSON 응답까지 건드리게 되거나, 이 마운트 하나만 골라내려면 결국
+# 경로 접두사를 다시 검사해야 해서 오히려 이 마운트 안에서 바로 처리하는 게 범위가 좁고 명확
+# 하다). js/css/html에만 no-cache를 씌운다 — 폰트(otf/ttf)는 내용이 안 바뀌므로 그대로 영구
+# 캐시(빠지면 사장님 화면이 매번 폰트를 다시 받는다).
+#
+# Starlette 1.3.1의 StaticFiles.file_response()를 그대로 재현하되 응답 생성 직후·
+# is_not_modified() 판정 전에 헤더를 얹는다 — super() 뒤에 붙이면 이미 304
+# NotModifiedResponse로 바뀐 뒤라 늦는다(NotModifiedResponse는 원본 응답 헤더 중
+# cache-control만 골라 옮기므로, 원본에 미리 있어야 304에도 살아남는다).
+_NOCACHE_STATIC_EXTS = (".js", ".css", ".html")
+
+
+class _NoCacheStaticFiles(StaticFiles):
+    def file_response(self, full_path, stat_result, scope, status_code=200):
+        from starlette.datastructures import Headers
+        from starlette.staticfiles import NotModifiedResponse
+
+        request_headers = Headers(scope=scope)
+        response = FileResponse(full_path, status_code=status_code, stat_result=stat_result)
+        if str(full_path).endswith(_NOCACHE_STATIC_EXTS):
+            response.headers["Cache-Control"] = "no-cache, must-revalidate"
+        if self.is_not_modified(response.headers, request_headers):
+            return NotModifiedResponse(response.headers)
+        return response
+
+
+app.mount("/", _NoCacheStaticFiles(directory=str(_STATIC), html=True), name="static")
