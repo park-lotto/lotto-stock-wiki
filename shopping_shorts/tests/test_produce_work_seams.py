@@ -100,41 +100,27 @@ def test_new_work_does_not_hijack_the_previous_work(js_boot):
     assert '"stored":null' in out, f"sessionStorage에 직전 작업이 남아 있다 — 다음 로드가 또 되살린다: {out}"
 
 
-def test_new_work_strips_the_flag_so_refresh_does_not_keep_spawning(js_boot):
-    """★?new=1을 URL에 남겨두면 이 화면에서 새로고침할 때마다 새 작업이 또 생긴다.
+def test_new_work_strips_flag_reload_resumes_worklink_restores(js_boot):
+    """C-1의 나머지 3시나리오를 **한 node 프로세스**에서(윈도우 subprocess 핸들 고갈 회피 —
+    격리 통과인데 전체 실행에서 WinError로 무더기 실패하던 것):
 
-    그러면 cad0e7b0이 막은 "매 로드마다 작업 복제"가 반대 방향으로 되살아난다.
+    ① ?new=1은 URL에서 new를 지운다 — 안 지우면 새로고침마다 새 작업이 또 생긴다.
+    ② 그냥 새로고침(?new 없음)은 **여전히 같은 작업을 이어야** 한다(cad0e7b0 복제방지 보존).
+    ③ ?work=<id>는 서버 복원을 탄다(회귀).
     """
     out = _run(js_boot, """
-      location = { search: '?new=1' };
-      _bootRestore();
-      console.log(JSON.stringify({to: _replacedTo}));
+      function reset(){ WORK_ID=null; _cleared=0; _restoredWith=null; _consumed=0; _replacedTo=null;
+        _store.produce_work = JSON.stringify({script:'작업 A의 대본', work_id:'w-직전작업'}); }
+      const r = {};
+      reset(); location={search:'?new=1'}; _bootRestore(); r.strip = _replacedTo;
+      reset(); location={search:''}; _bootRestore(); r.reloadWid = WORK_ID; r.reloadCleared = _cleared;
+      reset(); location={search:'?work=w-77'}; _bootRestore(); r.linkRestored = _restoredWith;
+      console.log(JSON.stringify(r));
     """)
-    assert '"to":"/produce"' in out, f"URL에서 new를 안 지웠다 — 새로고침마다 새 작업이 생긴다: {out}"
-
-
-def test_plain_reload_still_resumes_the_same_work(js_boot):
-    """★C-1 수정의 반대편: 그냥 새로고침(?new 없음)은 **여전히 같은 작업을 이어야** 한다.
-
-    이걸 같이 잠그지 않으면 C-1을 고치다 cad0e7b0(복제 방지)을 되돌리게 된다.
-    """
-    out = _run(js_boot, """
-      location = { search: '' };
-      _bootRestore();
-      console.log(JSON.stringify({wid: WORK_ID, cleared: _cleared, consumed: _consumed}));
-    """)
-    assert '"wid":"w-직전작업"' in out, f"새로고침이 작업을 이어받지 못했다 — 열 때마다 복제된다: {out}"
-    assert '"cleared":0' in out, f"새로고침인데 작업을 지웠다: {out}"
-
-
-def test_work_link_still_restores_from_server(js_boot):
-    """?work=<id>는 그대로 서버 복원을 탄다(회귀)."""
-    out = _run(js_boot, """
-      location = { search: '?work=w-77' };
-      _bootRestore();
-      console.log(JSON.stringify({restored: _restoredWith}));
-    """)
-    assert '"restored":"w-77"' in out, out
+    assert '"strip":"/produce"' in out, f"①URL에서 new를 안 지웠다 — 새로고침마다 새 작업: {out}"
+    assert '"reloadWid":"w-직전작업"' in out, f"②새로고침이 작업을 이어받지 못했다 — 복제된다: {out}"
+    assert '"reloadCleared":0' in out, f"②새로고침인데 작업을 지웠다: {out}"
+    assert '"linkRestored":"w-77"' in out, f"③?work= 서버복원이 안 됐다: {out}"
 
 
 def test_sidebar_new_work_signals_a_new_work():
@@ -163,6 +149,10 @@ const STATE = { script:'', script_src_idx:null, script_from_wiki:null,
                 deco:{ extra_texts:[], motion:null } };
 const STEPS = ['대본','자막제거','TTS','꾸미기','최종'];
 let cur = 0, MIX_JOB = null, WORK_ID = null, PREVIEW_STATUS = null;
+// ★꾸미기 패널은 DOM을 진실의 원천으로 읽는다 — 복원이 STATE만 채우면 initHeadcopy가
+// DOM/기본값에서 스타일을 재구성해 덮는다. 그래서 복원 시 이 플래그를 세워, 패널 진입 때
+// applyConfig로 DOM 입력칸을 채우고 STYLE_TOUCHED로 기본프리셋 자동적용을 막는다(C-2 잔여).
+let STYLE_TOUCHED = false, PENDING_STYLE_RESTORE = false;
 function canGoNext(){ return PREVIEW_STATUS === 'ready' || PREVIEW_STATUS === 'failed'; }
 function refreshNextBtn(){}
 function renderSteps(){}
@@ -190,45 +180,48 @@ def js_restore():
     return _RESTORE_HARNESS + _slice(src, _RESTORE_START, _RESTORE_END)
 
 
-def test_restore_brings_back_render_settings_from_the_job(js_restore):
-    """★C-2 본체: 복원이 렌더설정을 안 되살리면 [렌더]가 서버 꾸미기를 null로 덮는다.
+def test_restore_render_settings_present_vs_absent(js_restore):
+    """★C-2: 복원이 렌더설정을 되살리는가 — 두 시나리오를 **한 node 프로세스**에서(윈도우
+    subprocess 핸들 고갈 회피).
 
-    renderFinal이 `await saveHeadcopy()`로 STATE를 그대로 job에 POST하기 때문이다.
+    ① 설정 있음(job 딸린 작업): headcopy·caption·deco·subtitleRemoval 전부 STATE로 복원 +
+       PENDING_STYLE_RESTORE=true(꾸미기 패널이 DOM/기본값으로 덮지 않게 — 브라우저 실측 확인).
+       특히 subtitleRemoval=true를 안 되살리면 job은 True라 유료 VMake가 도는데 화면은 "꺼짐"
+       이라 표시한다(몰래 과금).
+    ② 설정 없음(대본만 있는 작업): 안전한 기본값. deco는 null 아니라 **모양**이 있어야 하고
+       (없으면 꾸미기가 STATE.deco.extra_texts에서 터진다) 플래그는 false여야 한다(false면 새
+       작업의 기본프리셋 자동적용을 막지 않는다).
     """
     out = _run(js_restore, """
-      RESPONSES = {
-        '/api/produce/works/': {ok:true, step:0, job_id:'job-9',
+      function reset(){ STATE.headcopy=null; STATE.captionStyle=null;
+        STATE.deco={extra_texts:[],motion:null}; STATE.subtitleRemoval=false; STATE.script='';
+        PENDING_STYLE_RESTORE=false; STYLE_TOUCHED=false; }
+      const r = {};
+      reset();
+      RESPONSES = { '/api/produce/works/': {ok:true, step:3, job_id:'job-9',
           state:{handoff:[], script:'대본'},
           settings:{headcopy:{text:'충격! 이 제품'}, caption_style:{preset:'bold-yellow'},
-                    deco:{extra_texts:[{text:'한정특가'}], motion:{pack_id:'zoom'}},
-                    subtitle_removal:true}},
-        '/api/mix/status/': {ok:true, preview_status:'ready'}};
+                    deco:{extra_texts:[{text:'한정특가'}], motion:{pack_id:'zoom'}}, subtitle_removal:true}},
+        '/api/mix/status/': {ok:true, preview_status:'ready'} };
       await _restoreWork('w-1');
-      console.log(JSON.stringify({hc:STATE.headcopy, cap:STATE.captionStyle,
-                                  deco:STATE.deco, sub:STATE.subtitleRemoval}));
-    """)
-    assert '"충격! 이 제품"' in out, f"headcopy를 안 되살렸다 — 렌더가 서버 값을 null로 덮는다: {out}"
-    assert '"bold-yellow"' in out, f"caption_style을 안 되살렸다: {out}"
-    assert '"한정특가"' in out, f"deco를 안 되살렸다 — 꾸미기가 통째로 날아간다: {out}"
-    assert '"sub":true' in out, (
-        f"subtitleRemoval을 안 되살렸다 — job은 True라 유료 VMake가 도는데 화면은 '꺼짐'이라 "
-        f"표시한다(몰래 과금): {out}")
-
-
-def test_restore_without_settings_leaves_safe_defaults(js_restore):
-    """settings가 없으면(job 없는 작업) 안전한 기본값 — deco는 **모양이 있어야** 한다.
-
-    deco를 null로 두면 5단계 꾸미기가 `STATE.deco.extra_texts`에서 터진다.
-    """
-    out = _run(js_restore, """
-      RESPONSES = {'/api/produce/works/': {ok:true, step:0, job_id:null,
-        state:{handoff:[], script:'대본'}}};
+      r.on = {hc:STATE.headcopy, cap:STATE.captionStyle, deco:STATE.deco,
+              sub:STATE.subtitleRemoval, pending:PENDING_STYLE_RESTORE};
+      reset();
+      RESPONSES = { '/api/produce/works/': {ok:true, step:0, job_id:null, state:{handoff:[], script:'대본'}} };
       await _restoreWork('w-2');
-      console.log(JSON.stringify({hc:STATE.headcopy, deco:STATE.deco, sub:STATE.subtitleRemoval}));
+      r.off = {hc:STATE.headcopy, deco:STATE.deco, sub:STATE.subtitleRemoval, pending:PENDING_STYLE_RESTORE};
+      console.log(JSON.stringify(r));
     """)
-    assert '"hc":null' in out, out
-    assert '"extra_texts":[]' in out, f"deco 기본 모양이 깨졌다 — 꾸미기 단계가 터진다: {out}"
-    assert '"sub":false' in out, out
+    # ① 설정 있음
+    assert '"충격! 이 제품"' in out, f"①headcopy를 안 되살렸다 — 렌더가 서버 값을 null로 덮는다: {out}"
+    assert '"bold-yellow"' in out, f"①caption_style을 안 되살렸다: {out}"
+    assert '"한정특가"' in out, f"①deco를 안 되살렸다 — 꾸미기가 통째로 날아간다: {out}"
+    assert '"sub":true' in out, f"①subtitleRemoval을 안 되살렸다 — 몰래 과금(job True, 화면 꺼짐): {out}"
+    assert '"pending":true' in out, f"①복원인데 PENDING_STYLE_RESTORE 미설정 — 꾸미기 패널이 기본값으로 덮는다: {out}"
+    # ② 설정 없음
+    assert '"hc":null' in out, f"②설정 없는데 headcopy가 채워졌다: {out}"
+    assert '"extra_texts":[]' in out, f"②deco 기본 모양이 깨졌다 — 꾸미기 단계가 터진다: {out}"
+    assert '"pending":false' in out, f"②설정 없는데 플래그를 세웠다 — 새 작업 기본프리셋 자동적용이 막힌다: {out}"
 
 
 # ── 서버: 렌더설정은 job에서 읽어 내려준다 ──────────────────────

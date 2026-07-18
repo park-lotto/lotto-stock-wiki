@@ -236,9 +236,9 @@
         </div>
         <!-- 우: 컨트롤 -->
         <div style="flex:1;min-width:300px">
-          <div style="font-size:13px;margin-bottom:4px">헤드카피 문구</div>
-          <input id="hcText" type="text" placeholder="예: 써보면 놀라는 이것" oninput="updateHC()"
-            style="width:100%;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px;margin-bottom:12px">
+          <div style="font-size:13px;margin-bottom:4px">헤드카피 문구 <span class="hint" style="font-size:11px">— Enter로 줄바꿈, 길면 자동으로 줄이 나뉘어요</span></div>
+          <textarea id="hcText" rows="2" placeholder="예: 써보면 놀라는 이것" oninput="updateHC()"
+            style="width:100%;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px;margin-bottom:12px;resize:vertical;font-family:inherit;font-size:14px;line-height:1.4"></textarea>
           <!-- 🎯 완성 스타일 카드(Task2가 renderStyleCards로 채움) -->
           <div style="font-size:13px;font-weight:800;margin-bottom:6px">🎯 완성 스타일 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 그대로 완성</span></div>
           <div id="fullPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"></div>
@@ -538,6 +538,17 @@ function initHeadcopy(){
   renderMyPresets();
   renderHighlightRules();
   bindHCDrag();
+  // ★복원된 스타일 밀어넣기(C-2 잔여) — 반드시 아래 updateHC/updateCaption **앞**이다.
+  // 그것들이 먼저 돌면 빈 DOM 입력칸을 읽어 STATE.headcopy/captionStyle을 기본값으로 덮는다
+  // (라이브 실측: 색이 #ffe100→#ff8800으로 죽었다). 여기서 pristine한 STATE로 DOM을 먼저 채우면
+  // 뒤의 updateHC/updateCaption이 그 채워진 값을 되읽어 복원값이 유지된다. STYLE_TOUCHED로
+  // applyDefaultStyleOnEntry의 기본프리셋 자동적용도 막는다.
+  if(PENDING_STYLE_RESTORE){
+    PENDING_STYLE_RESTORE = false;
+    STYLE_TOUCHED = true;
+    renderCapFontSelect();   // capFont 옵션을 먼저 채워야 applyConfig의 capFont value가 먹는다
+    applyConfig(STATE.headcopy, STATE.captionStyle);   // DOM 입력칸 채움(+updateHC/updateCaption 내부호출)
+  }
   updateHC();
   renderCapFontSelect();
   updateCaption();
@@ -727,6 +738,11 @@ const FULL_PRESETS=[
 ];
 // 대표 완성 스타일(피팅 카드 우선 노출). 나머지는 더보기.
 let STYLE_TOUCHED=false;
+// ★꾸미기 패널은 DOM 입력칸을 진실의 원천으로 읽는다(updateHC/updateCaption이 DOM→STATE) +
+// 진입 시 applyDefaultStyleOnEntry가 기본 프리셋을 자동 적용한다. 그래서 작업 복원이 STATE만
+// 채우면 스타일·꾸미기가 전부 기본값으로 덮인다(C-2 잔여, 라이브 실측 확인). 복원 시 이 플래그를
+// 세워, initHeadcopy가 applyConfig로 복원값을 DOM에 밀어넣고 STYLE_TOUCHED로 자동적용을 막는다.
+let PENDING_STYLE_RESTORE=false;
 const FEATURED = ['모던 화이트','임팩트 옐로','옐로 2톤 A','네온 글로우 화이트','레드 강조'];
 let MORE_OPEN = false;
 let POSTER_URL_CACHE = null;
@@ -1072,14 +1088,15 @@ function updateHC(){
   const el=g('hcPreviewText');
   const scale=PREVIEW_W/VIDEO_W;
   const rules = (STATE.deco && STATE.deco.highlight_rules) || [];
+  el.style.whiteSpace='pre-wrap';   // \n 줄바꿈 표시 + 긴 줄은 폭 넘으면 자동 줄바꿈
   if(rules.length && hc.text){
     const esc2 = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
-    el.innerHTML = hc.text.split(' ').map(w=>{
+    el.innerHTML = hc.text.split('\n').map(line=>line.split(' ').map(w=>{
       const r = rules.find(x=>x.keyword && x.keyword===w);
       if(!r) return esc2(w);
       const bg = r.box ? `background:${r.box_color};padding:0 4px;border-radius:4px;` : '';
       return `<span style="color:${r.color};${bg}">${esc2(w)}</span>`;
-    }).join(' ');
+    }).join(' ')).join('\n');
   } else {
     el.textContent = hc.text;
   }
@@ -1436,6 +1453,10 @@ async function _restoreWork(workId){
   // deco는 null이 아니라 **모양**이 있어야 한다 — 5단계가 STATE.deco.extra_texts에서 터진다.
   STATE.deco = sg.deco || { extra_texts: [], motion: null };
   STATE.subtitleRemoval = !!sg.subtitle_removal;
+  // ★복원된 스타일이 하나라도 있으면 꾸미기 패널이 그걸 덮지 않게 표시한다(위 선언 참조).
+  // headcopy/caption STYLE(색·폰트·크기)은 DOM 입력칸에서 되읽히므로 STATE만으로는 안 남는다 —
+  // initHeadcopy가 이 플래그를 보고 applyConfig로 DOM을 채운다.
+  PENDING_STYLE_RESTORE = !!(sg.headcopy || sg.caption_style || sg.deco);
 
   // ★게이트 재동기(스펙 §4.5). 아래 `cur` 대입은 jump()/go()를 **안 거치므로** 게이트 검사를
   // 건너뛴다. 서버에서 미리보기 상태를 다시 읽어 맞추지 않으면 "1단계 미리보기를 한 번도 안
