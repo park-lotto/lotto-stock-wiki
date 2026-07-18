@@ -2326,7 +2326,9 @@ def api_grab(request: Request, url: str = "", thumbnail: str = "", title: str = 
 
 
 # 북마클릿 본문(플랫폼 페이지에서 실행) — 따옴표 충돌을 피해 base64로 실어 페이지에서 atob.
-_GRAB_BOOKMARKLET = r'''javascript:(function(){var u=location.href;var q=function(s){var e=document.querySelector(s);return e?e.content:"";};var th=q('meta[property="og:image"]');var ti=q('meta[property="og:title"]')||document.title||"";window.open("__BASE__/api/grab?url="+encodeURIComponent(u)+"&thumbnail="+encodeURIComponent(th)+"&title="+encodeURIComponent(ti.slice(0,120)),"ss_grab","width=380,height=220");})();'''
+# ★설치페이지(우리 도메인)에서 '클릭'하면 자기 URL을 담으려다 실패해 헷갈린다 → 우리 도메인
+# 에서 실행되면 담지 말고 '드래그하세요' 안내만 띄운다(사장님 첫 사용 혼동, 2026-07-18).
+_GRAB_BOOKMARKLET = r'''javascript:(function(){var h=location.host||"";if(/shoppingshorts|localhost|127\.0\.0\.1/.test(h)){alert("❗ 이 버튼은 '눌러서' 쓰는 게 아니라, 마우스로 북마크바에 끌어다(드래그) 저장하는 거예요.\n\n저장한 뒤, 유튜브·틱톡·샤오홍슈·도우인에서 영상을 열고 그 북마크를 누르세요.");return;}var q=function(s){var e=document.querySelector(s);return e?e.content:"";};var th=q('meta[property="og:image"]');var ti=q('meta[property="og:title"]')||document.title||"";window.open("__BASE__/api/grab?url="+encodeURIComponent(location.href)+"&thumbnail="+encodeURIComponent(th)+"&title="+encodeURIComponent(ti.slice(0,120)),"ss_grab","width=380,height=220");})();'''
 
 
 @app.get("/grab", include_in_schema=False)
@@ -2338,12 +2340,14 @@ def grab_setup(request: Request):
 <body style="font-family:system-ui,sans-serif;max-width:640px;margin:36px auto;padding:0 18px;line-height:1.7;color:#222">
 <h2>📥 원클릭 담기 <span style="font-size:14px;color:#1f9d55">설치 필요 없음</span></h2>
 <p>네이티브 검색(무료·무제한)으로 보다가, 마음에 드는 영상을 <b>클릭 한 번</b>으로 모음집에 담는 기능입니다.</p>
-<div style="background:#f4f6f8;border:1px solid #dde;border-radius:12px;padding:18px;margin:16px 0">
-  <div style="font-weight:700;margin-bottom:8px">① 아래 버튼을 <u>북마크바로 드래그</u> (딱 한 번)</div>
-  <a id="bm" href="#" style="display:inline-block;padding:11px 20px;background:#1f6feb;color:#fff;border-radius:10px;text-decoration:none;font-weight:800;cursor:grab">📥 담기</a>
-  <span style="color:#888;font-size:13px;margin-left:8px">← 이걸 끌어다 북마크바에 놓기 (북마크바 없으면 Ctrl+Shift+B)</span>
+<div style="background:#fff7e6;border:1px solid #f0c36d;border-radius:12px;padding:18px;margin:16px 0">
+  <div style="font-weight:800;margin-bottom:4px;color:#a86">① 아래 파란 버튼을 <span style="color:#c0392b">누르지 말고</span>, 마우스로 <u>북마크바에 끌어다(드래그)</u> 놓으세요</div>
+  <div style="font-size:13px;color:#888;margin-bottom:10px">북마크바가 안 보이면 <b>Ctrl+Shift+B</b>로 켜세요. 드래그 = 버튼을 마우스로 꾹 눌러 위쪽 북마크바까지 끌고 가서 놓기.</div>
+  <a id="bm" draggable="true" href="#" title="이 버튼을 위쪽 북마크바로 드래그하세요"
+     style="display:inline-block;padding:12px 22px;background:#1f6feb;color:#fff;border-radius:10px;text-decoration:none;font-weight:800;cursor:grab;font-size:16px">📥 담기</a>
+  <span style="color:#888;font-size:13px;margin-left:8px">↖ 이걸 <b>끌어서</b> 북마크바에 놓기</span>
 </div>
-<div style="font-weight:700">② 유튜브·틱톡·샤오홍슈·도우인에서 <u>영상을 열고</u> 그 북마크를 누르면 끝</div>
+<div style="font-weight:700">② 유튜브·틱톡·샤오홍슈·도우인에서 <u>영상을 열고</u>(검색결과 그리드 말고 영상 클릭해 들어간 뒤), 방금 만든 북마크를 누르면 끝</div>
 <p style="color:#666">담긴 영상은 <a href="/collection">🎬 모음집</a>에서 확인 · 실제 다운로드는 제작소에서 자동(무료).</p>
 <p style="color:#999;font-size:13px">※ 검색 결과 <b>그리드</b>가 아니라 <b>영상 상세 페이지</b>에서 눌러야 그 영상이 담깁니다. · shoppingshorts에 로그인된 상태여야 해요.</p>
 <script>document.getElementById("bm").setAttribute("href", atob("{bm64}"));</script>
