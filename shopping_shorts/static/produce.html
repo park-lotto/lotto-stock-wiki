@@ -162,9 +162,12 @@
           <div style="margin-top:12px">
             <div style="font-size:12px;margin-bottom:4px">URL 직접 추가</div>
             <div id="mixUrls">
-              <div class="row" style="margin-bottom:6px"><input class="mixUrl" type="text" placeholder="인스타/유튜브/틱톡 URL" style="width:100%;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px"></div>
+              <div class="row" style="margin-bottom:6px;display:flex;gap:6px;align-items:center"><input class="mixUrl" type="text" placeholder="인스타/유튜브/틱톡 URL" style="flex:1;min-width:0;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px"><button class="urlDel" title="이 칸 지우기" onclick="removeMixUrlRow(this)" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:16px;padding:0 4px">✕</button></div>
             </div>
-            <button class="btn-prev" style="padding:8px 14px" onclick="addMixUrl()">+ URL 추가</button>
+            <div style="display:flex;gap:8px;margin-top:2px">
+              <button class="btn-prev" style="padding:8px 14px" onclick="addMixUrl()">+ URL 추가</button>
+              <button class="btn-next" style="padding:8px 14px" onclick="confirmMixUrls()">✔ 확정(영상풀에 담기)</button>
+            </div>
           </div>
         </div>
         <!-- 결과 ▶ -->
@@ -257,9 +260,9 @@
         </div>
         <!-- 우: 컨트롤 -->
         <div style="flex:1;min-width:300px">
-          <div style="font-size:13px;margin-bottom:4px">헤드카피 문구</div>
-          <input id="hcText" type="text" placeholder="예: 써보면 놀라는 이것" oninput="updateHC()"
-            style="width:100%;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px;margin-bottom:12px">
+          <div style="font-size:13px;margin-bottom:4px">헤드카피 문구 <span class="hint" style="font-size:11px">— Enter로 줄바꿈, 길면 자동으로 줄이 나뉘어요</span></div>
+          <textarea id="hcText" rows="2" placeholder="예: 써보면 놀라는 이것" oninput="updateHC()"
+            style="width:100%;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px;margin-bottom:12px;resize:vertical;font-family:inherit;font-size:14px;line-height:1.4"></textarea>
           <!-- 🎯 완성 스타일 카드(Task2가 renderStyleCards로 채움) -->
           <div style="font-size:13px;font-weight:800;margin-bottom:6px">🎯 완성 스타일 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 그대로 완성</span></div>
           <div id="fullPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"></div>
@@ -438,7 +441,40 @@
         </div>
       </div>
     </section>
-    <section class="panel" data-step="4"><h3>5 · 썸네일</h3><div class="sub">프레임 선택 + 텍스트.</div><div class="stub">Phase 4 예정</div></section>
+    <section class="panel" data-step="4">
+      <h3>5 · 썸네일</h3>
+      <div class="sub">영상에서 프레임을 고르고 텍스트를 올려 썸네일을 만드세요.</div>
+
+      <div style="font-size:12px;color:var(--sub);margin:10px 0 6px">배경 프레임 선택 <span id="thumbFrameCount"></span></div>
+      <div id="thumbFrames" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px"></div>
+      <div id="thumbFramesHint" class="hint" style="margin-top:6px">프레임을 불러오는 중…</div>
+
+      <div style="display:flex;gap:14px;margin-top:14px;flex-wrap:wrap">
+        <div style="flex:1 1 380px;min-width:320px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span style="font-size:12px;color:var(--sub)">텍스트 레이어</span>
+            <button class="tab" style="min-width:auto;padding:4px 10px" onclick="addThumbLayer()">+ 추가</button>
+          </div>
+          <div id="thumbLayers" style="display:flex;flex-direction:column;gap:4px"></div>
+
+          <div style="font-size:12px;color:var(--sub);margin:10px 0 4px">🖼 프리셋 — 한 번에 스타일 적용</div>
+          <div id="thumbPresets" style="display:flex;gap:7px;flex-wrap:wrap"></div>
+
+          <div id="thumbEdit" style="margin-top:10px"></div>
+        </div>
+
+        <div style="flex:0 0 300px">
+          <div class="hint" style="margin-bottom:4px">텍스트를 드래그하여 위치 이동</div>
+          <canvas id="thumbCanvas" width="1080" height="1920"
+                  style="width:270px;height:480px;border-radius:8px;cursor:move;background:#111"></canvas>
+          <button class="btn-next" style="width:270px;margin-top:8px" onclick="generateThumb()">썸네일 생성</button>
+          <div id="thumbSaveStatus" class="hint" style="margin-top:6px"></div>
+        </div>
+      </div>
+
+      <div style="font-size:12px;color:var(--sub);margin:14px 0 6px">생성 결과 — 클릭하여 선택</div>
+      <div id="thumbGallery" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px"></div>
+    </section>
     <section class="panel" data-step="5">
       <h3>6 · SEO</h3>
       <div class="sub">제목·설명·태그를 만들고, 키워드를 유튜브에서 실제로 재서 근거를 붙입니다.</div>
@@ -515,6 +551,7 @@ function showPanel(){
   if(cur===1) refreshSub();
   if(cur===2) loadTtsBeats();
   if(cur===3) initHeadcopy();
+  if(cur===4) initThumb();
   if(cur===5) initSeo();
   if(cur===6) refreshFinal();
 }
@@ -742,6 +779,17 @@ function initHeadcopy(){
   renderMyPresets();
   renderHighlightRules();
   bindHCDrag();
+  // ★복원된 스타일 밀어넣기(C-2 잔여) — 반드시 아래 updateHC/updateCaption **앞**이다.
+  // 그것들이 먼저 돌면 빈 DOM 입력칸을 읽어 STATE.headcopy/captionStyle을 기본값으로 덮는다
+  // (라이브 실측: 색이 #ffe100→#ff8800으로 죽었다). 여기서 pristine한 STATE로 DOM을 먼저 채우면
+  // 뒤의 updateHC/updateCaption이 그 채워진 값을 되읽어 복원값이 유지된다. STYLE_TOUCHED로
+  // applyDefaultStyleOnEntry의 기본프리셋 자동적용도 막는다.
+  if(PENDING_STYLE_RESTORE){
+    PENDING_STYLE_RESTORE = false;
+    STYLE_TOUCHED = true;
+    renderCapFontSelect();   // capFont 옵션을 먼저 채워야 applyConfig의 capFont value가 먹는다
+    applyConfig(STATE.headcopy, STATE.captionStyle);   // DOM 입력칸 채움(+updateHC/updateCaption 내부호출)
+  }
   updateHC();
   renderCapFontSelect();
   updateCaption();
@@ -931,6 +979,11 @@ const FULL_PRESETS=[
 ];
 // 대표 완성 스타일(피팅 카드 우선 노출). 나머지는 더보기.
 let STYLE_TOUCHED=false;
+// ★꾸미기 패널은 DOM 입력칸을 진실의 원천으로 읽는다(updateHC/updateCaption이 DOM→STATE) +
+// 진입 시 applyDefaultStyleOnEntry가 기본 프리셋을 자동 적용한다. 그래서 작업 복원이 STATE만
+// 채우면 스타일·꾸미기가 전부 기본값으로 덮인다(C-2 잔여, 라이브 실측 확인). 복원 시 이 플래그를
+// 세워, initHeadcopy가 applyConfig로 복원값을 DOM에 밀어넣고 STYLE_TOUCHED로 자동적용을 막는다.
+let PENDING_STYLE_RESTORE=false;
 const FEATURED = ['모던 화이트','임팩트 옐로','옐로 2톤 A','네온 글로우 화이트','레드 강조'];
 let MORE_OPEN = false;
 let POSTER_URL_CACHE = null;
@@ -1276,14 +1329,15 @@ function updateHC(){
   const el=g('hcPreviewText');
   const scale=PREVIEW_W/VIDEO_W;
   const rules = (STATE.deco && STATE.deco.highlight_rules) || [];
+  el.style.whiteSpace='pre-wrap';   // \n 줄바꿈 표시 + 긴 줄은 폭 넘으면 자동 줄바꿈
   if(rules.length && hc.text){
     const esc2 = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
-    el.innerHTML = hc.text.split(' ').map(w=>{
+    el.innerHTML = hc.text.split('\n').map(line=>line.split(' ').map(w=>{
       const r = rules.find(x=>x.keyword && x.keyword===w);
       if(!r) return esc2(w);
       const bg = r.box ? `background:${r.box_color};padding:0 4px;border-radius:4px;` : '';
       return `<span style="color:${r.color};${bg}">${esc2(w)}</span>`;
-    }).join(' ');
+    }).join(' ')).join('\n');
   } else {
     el.textContent = hc.text;
   }
@@ -1562,7 +1616,8 @@ function addMixUrl(){
   const wrap=document.getElementById('mixUrls');
   if(wrap.querySelectorAll('.mixUrl').length>=5) return;
   const d=document.createElement('div'); d.className='row'; d.style.marginBottom='6px';
-  d.innerHTML='<input class="mixUrl" type="text" placeholder="인스타/유튜브/틱톡 URL" style="width:100%;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px">';
+  d.style.display='flex'; d.style.gap='6px'; d.style.alignItems='center';
+  d.innerHTML='<input class="mixUrl" type="text" placeholder="인스타/유튜브/틱톡 URL" style="flex:1;min-width:0;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px"><button class="urlDel" title="이 칸 지우기" onclick="removeMixUrlRow(this)" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:16px;padding:0 4px">✕</button>';
   wrap.appendChild(d);
 }
 // 레퍼런스 모음집(/collection)에서 "🎬 영상제작으로 보내기"로 넘어온 영상들. 역할을 미리
@@ -1640,6 +1695,10 @@ async function _restoreWork(workId){
   // deco는 null이 아니라 **모양**이 있어야 한다 — 5단계가 STATE.deco.extra_texts에서 터진다.
   STATE.deco = sg.deco || { extra_texts: [], motion: null };
   STATE.subtitleRemoval = !!sg.subtitle_removal;
+  // ★복원된 스타일이 하나라도 있으면 꾸미기 패널이 그걸 덮지 않게 표시한다(위 선언 참조).
+  // headcopy/caption STYLE(색·폰트·크기)은 DOM 입력칸에서 되읽히므로 STATE만으로는 안 남는다 —
+  // initHeadcopy가 이 플래그를 보고 applyConfig로 DOM을 채운다.
+  PENDING_STYLE_RESTORE = !!(sg.headcopy || sg.caption_style || sg.deco);
 
   // ★게이트 재동기(스펙 §4.5). 아래 `cur` 대입은 jump()/go()를 **안 거치므로** 게이트 검사를
   // 건너뛴다. 서버에서 미리보기 상태를 다시 읽어 맞추지 않으면 "1단계 미리보기를 한 번도 안
@@ -1714,24 +1773,60 @@ function renderPool(){
       </div>
       <button class="btn-prev" style="padding:6px 10px;font-size:12px" onclick="openScriptModal(${i})">📝 뽑기${it.pickScript?' ✓':''}</button>
       <button class="btn-prev" style="padding:6px 10px;font-size:12px;${it.useFootage?'border-color:var(--ok);color:var(--ok)':''}" onclick="toggleFootage(${i})">🎬 담기${it.useFootage?' ✓':''}</button>
+      <button class="poolDel" title="영상풀에서 빼기" onclick="removeFootage(${i})" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:16px;padding:0 2px">✕</button>
     </div>`).join('');
+}
+// 영상풀(HANDOFF)에서 항목 제거 — 삭제 기능(2026-07-18 사장님 요청).
+function removeFootage(i){
+  if(!HANDOFF[i]) return;
+  HANDOFF.splice(i,1);
+  renderPool(); syncFootageToMixUrls(); refreshFinalPeek(); saveWork();
+}
+// URL 입력칸에 넣은 URL들을 영상풀 카드로 올린다(2026-07-18 사장님 요청 — 카드로 잘 보이게).
+// 확정 = "이 영상들을 화면에 쓰겠다"이므로 useFootage:true로 담아 바로 믹스 가능하게 한다.
+function confirmMixUrls(){
+  const wrap=document.getElementById('mixUrls'); if(!wrap) return;
+  const typed=Array.from(wrap.querySelectorAll('.mixUrl')).map(i=>i.value.trim()).filter(Boolean);
+  const have=new Set(HANDOFF.map(h=>h.url));
+  let added=0;
+  for(const u of typed){
+    if(have.has(u)) continue;   // 이미 풀에 있으면 중복 추가 안 함
+    have.add(u);
+    HANDOFF.push({url:u, shortcode:'', name:'', thumbnail:'', caption:'', pickScript:false, useFootage:true});
+    added++;
+  }
+  // 입력칸은 다음 URL 입력을 위해 빈 칸 하나로 되돌린다(확정한 URL은 위 카드로 올라갔다).
+  wrap.innerHTML='<div class="row" style="margin-bottom:6px;display:flex;gap:6px;align-items:center"><input class="mixUrl" type="text" placeholder="인스타/유튜브/틱톡 URL" style="flex:1;min-width:0;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px"><button class="urlDel" title="이 칸 지우기" onclick="removeMixUrlRow(this)" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:16px;padding:0 4px">✕</button></div>';
+  renderPool(); syncFootageToMixUrls(); refreshFinalPeek(); saveWork();
+  if(!added && typed.length===0){ const st=document.getElementById('mixStatus'); if(st) st.textContent='먼저 URL을 입력하세요.'; }
+}
+// URL 입력칸 한 줄 지우기 — 최소 한 칸은 남긴다.
+function removeMixUrlRow(btn){
+  const wrap=document.getElementById('mixUrls'); if(!wrap) return;
+  const rows=wrap.querySelectorAll('.row');
+  if(rows.length<=1){ const inp=wrap.querySelector('.mixUrl'); if(inp) inp.value=''; return; }
+  btn.closest('.row').remove();
 }
 function toggleFootage(i){
   if(!HANDOFF[i]) return;
   HANDOFF[i].useFootage=!HANDOFF[i].useFootage;
   syncFootageToMixUrls(); renderPool(); saveWork();
 }
-// 🎬 담긴 영상들을 기존 MIX 실행이 읽는 #mixUrls 입력칸에 반영(startProduceMix 재사용).
+// 담긴 영상 개수만 표시한다(2026-07-18 개편). 예전엔 담긴 URL을 #mixUrls 입력칸에 **복사**해
+// 넣어 카드와 입력칸에 같은 URL이 이중으로 보였다. 이제 카드가 진실의 원천이고 #mixUrls는
+// '새 URL 타이핑' 전용이다 — startProduceMix가 collectMixUrls()로 카드+입력칸을 합쳐 읽는다.
 function syncFootageToMixUrls(){
-  const urls=HANDOFF.filter(h=>h.useFootage).map(h=>h.url).filter(Boolean);
-  const wrap=document.getElementById('mixUrls'); if(!wrap) return;
-  const extra=Array.from(wrap.querySelectorAll('.mixUrl')).map(i=>i.value.trim())
-    .filter(v=>v && !urls.includes(v));  // 사용자가 손으로 넣은 URL 보존
-  const all=[...urls, ...extra];
-  wrap.innerHTML=(all.length?all:['']).map(v=>
-    `<div class="row" style="margin-bottom:6px"><input class="mixUrl" type="text" placeholder="인스타/유튜브/틱톡 URL" value="${esc(v)}" style="width:100%;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px"></div>`).join('');
+  const n=HANDOFF.filter(h=>h.useFootage).length;
   const fl=document.getElementById('footageList');
-  if(fl) fl.textContent=urls.length?`🎬 화면 ${urls.length}개 담김 (${urls.length===1?'순서편집':'믹스'})`:'🎬 담기로 화면에 쓸 영상을 고르세요. (1개=순서편집 · 2개+=믹스)';
+  if(fl) fl.textContent=n?`🎬 화면 ${n}개 담김 (${n===1?'순서편집':'믹스'})`:'🎬 담기로 화면에 쓸 영상을 고르세요. (1개=순서편집 · 2개+=믹스)';
+}
+// 믹스에 쓸 URL = 영상풀에서 🎬담긴 것 + 아직 확정 안 하고 입력칸에 남은 것(중복 제거).
+function collectMixUrls(){
+  const fromPool=HANDOFF.filter(h=>h.useFootage).map(h=>h.url).filter(Boolean);
+  const typed=[...document.querySelectorAll('.mixUrl')].map(i=>i.value.trim()).filter(Boolean);
+  const seen=new Set(), out=[];
+  for(const u of [...fromPool, ...typed]){ if(!seen.has(u)){ seen.add(u); out.push(u); } }
+  return out;
 }
 // 📝뽑기: 영상 i의 대본을 확보(캐시/추출)한 뒤 구조분석해 도서관식 생성 모달을 연다.
 // (도서관 library.html의 openGen/runGen/refineDraft/history를 pm 접두로 이식, 2026-07-15)
@@ -2031,8 +2126,8 @@ async function saveScriptToWiki(btn){
 }
 async function startProduceMix(){
   if(!STATE.script){ alert('1단계에서 대본을 먼저 확정하세요'); return; }
-  const urls=[...document.querySelectorAll('.mixUrl')].map(i=>i.value.trim()).filter(Boolean);
-  if(urls.length<1){ alert('소스 영상 URL을 1개 이상 입력하세요'); return; }
+  const urls=collectMixUrls();   // 영상풀 담긴 것 + 입력칸에 남은 것(중복 제거)
+  if(urls.length<1){ alert('소스 영상 URL을 1개 이상 입력하세요(확정 또는 🎬담기)'); return; }
   const st=document.getElementById('mixStatus'); st.textContent='⏳ 시작 중…';
   document.getElementById('mixReview').innerHTML='';
   try{
@@ -2420,6 +2515,312 @@ async function pollFinal(){
 }
 
 renderSteps(); showPanel(); setScriptMode('manual');
+
+// ── 6단계 썸네일 (2026-07-17) ──────────────────────────────────
+// 합성은 전적으로 여기(canvas)서 한다. 서버는 완성된 PNG를 받아 저장만 한다(설계 Q3).
+// 프리뷰 캔버스와 업로드 캔버스가 **같은 하나**라서 "보이는 그대로"가 구조적으로 보장된다.
+// 좌표(x·y)는 0~1 비율, size는 1080 기준 px — 그래야 270px 프리뷰와 1080px 결과가 일치한다.
+const THUMB_W = 1080, THUMB_H = 1920;
+
+function thumbPresetToLayer(p){
+  return {
+    text: '', font: p.font, size: p.size, color: p.color,
+    outline: p.outline ? {color: p.outline_color || '#000000', w: p.outline_w || 0} : null,
+    box: p.box ? {color: p.box_color || '#000000', pad: p.box_pad != null ? p.box_pad : 16,
+                  opacity: p.box_opacity != null ? p.box_opacity : 80} : null,
+    rot: 0, x: 0.5, y: (p.y != null ? p.y : 12) / 100,
+  };
+}
+
+function thumbFontCss(file){
+  const f = (typeof HC_FONTS !== 'undefined' ? HC_FONTS : []).find(x => x.file === file);
+  return f ? f.css : 'sans-serif';
+}
+
+function drawThumb(ctx, img, layers, W, H){
+  const s = W / THUMB_W;                    // 캔버스 배율 — 프리뷰든 실측이든 같은 식
+  if (img) ctx.drawImage(img, 0, 0, W, H);
+  (layers || []).forEach(L => {
+    if (!L.text) return;
+    const size = L.size * s;
+    ctx.save();
+    ctx.translate(L.x * W, L.y * H);
+    if (L.rot) ctx.rotate(L.rot * Math.PI / 180);
+    ctx.font = `900 ${size}px ${thumbFontCss(L.font)}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    if (L.box){
+      const w = ctx.measureText(L.text).width, pad = L.box.pad * s;
+      ctx.globalAlpha = (L.box.opacity != null ? L.box.opacity : 80) / 100;
+      ctx.fillStyle = L.box.color;
+      ctx.fillRect(-w/2 - pad, -size/2 - pad*0.6, w + pad*2, size + pad*1.2);
+      ctx.globalAlpha = 1;
+    }
+    if (L.outline && L.outline.w){
+      ctx.lineWidth = L.outline.w * s;
+      ctx.strokeStyle = L.outline.color;
+      ctx.lineJoin = 'round';
+      ctx.strokeText(L.text, 0, 0);
+    }
+    ctx.fillStyle = L.color;
+    ctx.fillText(L.text, 0, 0);
+    ctx.restore();
+  });
+}
+
+const THUMB_STATE = {frames: [], frame_ts: null, frame_url: null, img: null,
+                     layers: [], sel: 0, results: [], selected: null};
+
+// 추출은 수 초 걸린다. THUMB_STATE.frames는 '응답이 와야' 채워지므로 그것만 보고 가드하면
+// 대기 중 단계를 오갈 때마다 요청이 겹쳐 ffmpeg가 같은 폴더에 동시에 쓴다(실측: 3벌).
+// ★finally로 반드시 푼다 — 실패한 채 잠기면 재시도가 영영 막혀 지금보다 나빠진다.
+let THUMB_LOADING = false;
+async function loadThumbFrames(){
+  if (THUMB_LOADING) return;
+  THUMB_LOADING = true;
+  try {
+    await _loadThumbFrames();
+  } finally {
+    THUMB_LOADING = false;
+  }
+}
+async function _loadThumbFrames(){
+  const r = await fetch('/api/produce/thumb/frames', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({job_id: MIX_JOB}),
+  });
+  const d = await r.json().catch(() => ({ok: false}));
+  if (!d.ok){ document.getElementById('thumbFramesHint').textContent = d.error || '프레임 추출 실패'; return; }
+  THUMB_STATE.frames = d.frames;
+  document.getElementById('thumbFrameCount').textContent = `(${d.frames.length}개)`;
+  document.getElementById('thumbFramesHint').textContent = '';
+  document.getElementById('thumbFrames').innerHTML = d.frames.map((f, i) => `
+    <div onclick="pickThumbFrame(${i})" style="position:relative;cursor:pointer;border-radius:6px;
+         overflow:hidden;border:2px solid ${i === 0 ? 'var(--accent2)' : 'transparent'}" data-fi="${i}">
+      <img src="${f.url}" style="width:100%;display:block">
+      <span style="position:absolute;right:4px;bottom:4px;background:#000c;color:#fff;
+            font-size:10px;padding:1px 4px;border-radius:3px">${f.ts}s</span>
+    </div>`).join('');
+  if (d.frames.length) pickThumbFrame(0);
+}
+
+function pickThumbFrame(i){
+  const f = THUMB_STATE.frames[i]; if (!f) return;
+  THUMB_STATE.frame_ts = f.ts; THUMB_STATE.frame_url = f.url;
+  const box = document.getElementById('thumbFrames');
+  Array.from(box.children || []).forEach((el, k) => {
+    if (el.style) el.style.border = `2px solid ${k === i ? 'var(--accent2)' : 'transparent'}`;
+  });
+  const img = new Image();
+  img.onload = () => { THUMB_STATE.img = img; renderThumbCanvas(); };
+  img.src = f.url;
+}
+
+// ★결함(2026-07-17 실브라우저 실측): ctx.font = '900 96px HCTmon'는 로딩을 트리거하지 않는다.
+// @font-face는 22개 선언돼 있지만 DOM에서 실제로 쓰는 요소가 없어(캔버스뿐) 영영 로드가 안 됐고,
+// 브라우저는 미로드 폰트를 에러 없이 기본 고딕으로 조용히 대체해 그렸다 — 폰트 22종이 전부 죽어 있었다.
+// document.fonts.load()로 DOM 사용을 흉내내 강제로 로드시킨다. family당 한 번만(Set 캐시),
+// 이미 로드된 family는 즉시 resolve라 매 렌더 호출 비용은 무시할 만하다.
+const THUMB_LOADED_FONTS = new Set();
+async function ensureThumbFontsLoaded(layers){
+  if (typeof document === 'undefined' || !document.fonts) return;  // Node 슬라이스 테스트엔 폰트 로더가 없다
+  const families = new Set((layers || []).filter(L => L.text).map(L => thumbFontCss(L.font)));
+  await Promise.all(Array.from(families).filter(f => !THUMB_LOADED_FONTS.has(f)).map(async f => {
+    try { await document.fonts.load(`900 100px ${f}`); THUMB_LOADED_FONTS.add(f); } catch(e){ /* 로드 실패 시 다음 렌더에서 재시도 */ }
+  }));
+}
+
+// 폰트 로드를 기다리는 동안 더 최신 렌더 요청이 들어올 수 있다(드래그 중 mousemove 등) —
+// 세대 번호로 오래된 요청의 그리기가 최신 상태를 덮어쓰지 않게 막는다.
+let THUMB_RENDER_GEN = 0;
+async function renderThumbCanvas(){
+  const cv = document.getElementById('thumbCanvas'); if (!cv) return;
+  const gen = ++THUMB_RENDER_GEN;
+  await ensureThumbFontsLoaded(THUMB_STATE.layers);
+  if (gen !== THUMB_RENDER_GEN) return;   // 기다리는 사이 새 렌더가 예약됐다 — 이번 건 버린다
+  const ctx = cv.getContext('2d');
+  drawThumb(ctx, THUMB_STATE.img, THUMB_STATE.layers, THUMB_W, THUMB_H);
+}
+
+function addThumbLayer(){
+  const base = thumbPresetToLayer(HC_PRESETS.find(p => p.cat === '썸네일') || {y: 12});
+  base.text = '문구를 입력하세요';
+  THUMB_STATE.layers.push(base);
+  THUMB_STATE.sel = THUMB_STATE.layers.length - 1;
+  renderThumbLayers(); renderThumbCanvas();
+}
+
+function selectThumbLayer(i){ THUMB_STATE.sel = i; renderThumbLayers(); }
+function removeThumbLayer(i){
+  THUMB_STATE.layers.splice(i, 1);
+  // 삭제 위치와 무관하게 줄이면, 안 지운 레이어를 고르고 있어도 편집창이 말없이 딴 레이어로 바뀐다
+  // (A·B·C에서 B를 고른 채 C를 지우면 A로 튀었다). 앞이 빠진 경우에만 같은 레이어를 계속 가리킨다.
+  if (i < THUMB_STATE.sel) THUMB_STATE.sel--;
+  THUMB_STATE.sel = Math.max(0, Math.min(THUMB_STATE.sel, THUMB_STATE.layers.length - 1));
+  renderThumbLayers(); renderThumbCanvas();
+}
+
+function applyThumbPreset(i){
+  const p = HC_PRESETS.filter(x => x.cat === '썸네일')[i]; if (!p) return;
+  const cur = THUMB_STATE.layers[THUMB_STATE.sel]; if (!cur) return;
+  const styled = thumbPresetToLayer(p);
+  styled.text = cur.text;          // 스타일만 바꾼다 — 문구·위치는 사장님 것
+  // y를 빼먹으면 드래그로 잡은 세로 위치가 프리셋의 기본값(상단 12%)으로 튄다.
+  // x만 살아남아 "왜 위아래만 튀지"가 된다 — 위 주석이 선언한 계약을 지키려면 셋 다 필요하다.
+  styled.x = cur.x; styled.y = cur.y; styled.rot = cur.rot;
+  THUMB_STATE.layers[THUMB_STATE.sel] = styled;
+  renderThumbLayers(); renderThumbCanvas();
+}
+
+function setThumbField(key, val){
+  const L = THUMB_STATE.layers[THUMB_STATE.sel]; if (!L) return;
+  if (key === 'outline_w'){ L.outline = L.outline || {color: '#000000', w: 0}; L.outline.w = +val; }
+  else if (key === 'outline_color'){ L.outline = L.outline || {color: '#000000', w: 4}; L.outline.color = val; }
+  else if (key === 'box'){ L.box = val ? {color: '#000000', pad: 16, opacity: 80} : null; }
+  else if (key === 'size' || key === 'rot'){ L[key] = +val; }
+  else L[key] = val;
+  renderThumbCanvas();
+}
+
+function renderThumbLayers(){
+  document.getElementById('thumbLayers').innerHTML = THUMB_STATE.layers.map((L, i) => `
+    <div onclick="selectThumbLayer(${i})" style="display:flex;justify-content:space-between;
+         align-items:center;padding:6px 9px;border-radius:6px;cursor:pointer;
+         background:${i === THUMB_STATE.sel ? 'var(--accent)' : '#2a2a3a'}">
+      <span style="font-size:12px">${esc(L.text) || '(빈 문구)'}</span>
+      <span onclick="event.stopPropagation();removeThumbLayer(${i})" style="cursor:pointer">✕</span>
+    </div>`).join('');
+  document.getElementById('thumbPresets').innerHTML =
+    HC_PRESETS.filter(p => p.cat === '썸네일').map((p, i) =>
+      `<button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 11px;font-size:12px;
+        border-left:10px solid ${p.box ? p.box_color : p.color}"
+        onclick="applyThumbPreset(${i})">${p.name}</button>`).join('');
+  const L = THUMB_STATE.layers[THUMB_STATE.sel];
+  document.getElementById('thumbEdit').innerHTML = !L ? '' : `
+    <input value="${(L.text || '').replace(/"/g, '&quot;')}" oninput="setThumbField('text', this.value)"
+           style="width:100%;padding:8px;margin-bottom:6px" placeholder="문구">
+    <select onchange="setThumbField('font', this.value)" style="width:100%;padding:6px;margin-bottom:6px">
+      ${HC_FONTS.map(f => `<option value="${f.file}" ${f.file === L.font ? 'selected' : ''}>${f.name}</option>`).join('')}
+    </select>
+    <label style="font-size:11px;color:var(--sub)">크기 ${L.size}px</label>
+    <input type="range" min="30" max="200" value="${L.size}" oninput="setThumbField('size', this.value)" style="width:100%">
+    <label style="font-size:11px;color:var(--sub)">회전 ${L.rot}°</label>
+    <input type="range" min="-45" max="45" value="${L.rot}" oninput="setThumbField('rot', this.value)" style="width:100%">
+    <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+      <input type="color" value="${L.color}" oninput="setThumbField('color', this.value)">
+      <input type="color" value="${L.outline ? L.outline.color : '#000000'}" oninput="setThumbField('outline_color', this.value)">
+      <label style="font-size:11px;color:var(--sub)"><input type="checkbox" ${L.box ? 'checked' : ''}
+        onchange="setThumbField('box', this.checked)"> 배경</label>
+    </div>
+    <label style="font-size:11px;color:var(--sub)">외곽선 ${L.outline ? L.outline.w : 0}px</label>
+    <input type="range" min="0" max="20" value="${L.outline ? L.outline.w : 0}"
+           oninput="setThumbField('outline_w', this.value)" style="width:100%">`;
+}
+
+// 드래그 = 비율 좌표를 바꾼다(픽셀이 아니라) — 그래야 1080 결과가 같은 자리에 찍힌다.
+function initThumbDrag(){
+  const cv = document.getElementById('thumbCanvas'); if (!cv || !cv.addEventListener) return;
+  let on = false;
+  const to = e => {
+    const r = cv.getBoundingClientRect();
+    return {x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height};
+  };
+  cv.addEventListener('mousedown', () => { on = true; });
+  window.addEventListener('mouseup', () => { on = false; });
+  cv.addEventListener('mousemove', e => {
+    if (!on) return;
+    const L = THUMB_STATE.layers[THUMB_STATE.sel]; if (!L) return;
+    const p = to(e);
+    L.x = Math.min(1, Math.max(0, p.x)); L.y = Math.min(1, Math.max(0, p.y));
+    renderThumbCanvas();
+  });
+}
+
+// 재진입 금지: 더블클릭하면 서버가 results를 read-modify-write 하므로 둘 다 같은 이름을 계산해
+// 한쪽이 덮이고 갤러리에 같은 URL이 두 번 뜬다. ★finally로 반드시 푼다.
+let THUMB_SAVING = false;
+async function generateThumb(){
+  if (THUMB_SAVING) return;
+  THUMB_SAVING = true;
+  const st = document.getElementById('thumbSaveStatus');
+  if (st) st.textContent = '생성 중…';
+  try {
+    await renderThumbCanvas();   // 폰트 로드 완료까지 기다린 후 그려야 첫 생성부터 맞는 폰트로 나간다
+    const cv = document.getElementById('thumbCanvas');
+    const blob = await new Promise(res => cv.toBlob(res, 'image/png'));
+    const fd = new FormData();
+    fd.append('job_id', MIX_JOB);
+    fd.append('meta', JSON.stringify({frame_ts: THUMB_STATE.frame_ts,
+                                      frame_url: THUMB_STATE.frame_url,
+                                      layers: THUMB_STATE.layers}));
+    fd.append('file', blob, 'thumb.png');   // 이 이름은 서버가 무시한다(경로순회 방지)
+    const r = await fetch('/api/produce/thumb/save', {method: 'POST', body: fd});
+    const d = await r.json().catch(() => ({ok: false}));
+    if (!r.ok || !d.ok){
+      if (st) st.textContent = r.status === 401
+        ? '로그인이 풀렸습니다 — 새로고침 후 다시 시도하세요'
+        : (d.error || '저장 실패');
+      return;
+    }
+    if (st) st.textContent = '';
+    THUMB_STATE.results.push({name: d.name, url: d.url});
+    renderThumbGallery();
+    await selectThumbResult(d.name);
+  } catch(e){
+    // 안 잡으면 '생성 중…'이 영구 고착돼 사장님은 계속 기다린다.
+    if (st) st.textContent = '썸네일 생성 실패 — 연결을 확인하세요';
+  } finally {
+    THUMB_SAVING = false;
+  }
+}
+
+function renderThumbGallery(){
+  document.getElementById('thumbGallery').innerHTML = THUMB_STATE.results.map(r => `
+    <div onclick="selectThumbResult('${r.name}')" data-name="${r.name}"
+         style="cursor:pointer;border-radius:6px;overflow:hidden;border:2px solid
+         ${THUMB_STATE.selected === r.name ? 'var(--accent2)' : 'transparent'}">
+      <img src="${r.url}" style="width:100%;display:block">
+    </div>`).join('');
+}
+
+// 최종 썸네일을 정하는 유일한 조작이다 — 조용히 실패하면 화면은 '골랐다'인데 DB는 아니다
+// (세션 만료 시 이 라우트는 401을 준다). 그래서 응답을 반드시 읽고, 거절당하면 되돌린다.
+async function selectThumbResult(name){
+  const prev = THUMB_STATE.selected;
+  const st = document.getElementById('thumbSaveStatus');
+  THUMB_STATE.selected = name;
+  renderThumbGallery();               // 즉시 반응은 유지 — 거절당하면 아래에서 원복한다
+  try {
+    const r = await fetch('/api/produce/thumb/select', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({job_id: MIX_JOB, name}),
+    });
+    const d = await r.json().catch(() => ({ok: false}));
+    if (!r.ok || !d.ok){
+      // 원복이 없으면 테두리만 남아 지금보다 나빠진다 — 화면이 거짓말을 하게 된다.
+      THUMB_STATE.selected = prev; renderThumbGallery();
+      if (st) st.textContent = r.status === 401
+        ? '로그인이 풀렸습니다 — 새로고침 후 다시 고르세요'
+        : (d.error || '썸네일 선택 실패');
+      return false;
+    }
+    if (st) st.textContent = '';
+    return true;
+  } catch(e){
+    THUMB_STATE.selected = prev; renderThumbGallery();
+    if (st) st.textContent = '썸네일 선택 실패 — 연결을 확인하세요';
+    return false;
+  }
+}
+
+let THUMB_INITED = false;
+function initThumb(){
+  if (!THUMB_INITED){ initThumbDrag(); THUMB_INITED = true; }  // 리스너는 한 번만
+  if (!THUMB_STATE.frames.length) loadThumbFrames();           // 프레임은 이미 있으면 재요청 안 함
+  renderThumbLayers();
+}
+// ── 썸네일 끝 ────────────────────────────────────────────────
+
 // ?work=<id>로 들어왔으면 서버 작업파일에서, 아니면 기존대로 sessionStorage에서 복원.
 function _bootRestore(){
   const sp = new URLSearchParams(location.search);

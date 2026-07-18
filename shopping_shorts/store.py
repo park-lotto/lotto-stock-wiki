@@ -469,6 +469,9 @@ class Store:
                 ("preview_status", "TEXT"),  # null|rendering|ready|failed
                 ("preview_path", "TEXT"),
                 ("preview_error", "TEXT"),
+                # 5단계 썸네일(2026-07-17). 프레임 선택·텍스트 레이어·생성결과 갤러리를
+                # job 하나에 딸린 부속물로 본다(설계 Q4) — headcopy_json과 같은 패턴.
+                ("thumbnail_json", "TEXT"),
                 # 6단계 SEO(2026-07-17) — 제목·설명·태그·해시태그·CTA + 키워드 실측치 일습.
                 # 산출물이 한 덩어리로만 의미가 있어(제목만 바꿔도 태그·CTA와 어울려야 한다)
                 # 필드를 쪼개지 않고 JSON 한 칸에 둔다.
@@ -1307,7 +1310,7 @@ class Store:
                 "caption_style_json, voice_json, deco_json, script_structure_json, "
                 "fx_plan, fx_status, fx_path, "
                 "preview_status, preview_path, preview_error, "
-                "seo_json "
+                "thumbnail_json, seo_json "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -1328,7 +1331,8 @@ class Store:
             "fx_plan": json.loads(row[19]) if row[19] else None,
             "fx_status": row[20], "fx_path": row[21],
             "preview_status": row[22], "preview_path": row[23], "preview_error": row[24],
-            "seo": json.loads(row[25]) if row[25] else None,
+            "thumbnail": json.loads(row[25]) if row[25] else None,
+            "seo": json.loads(row[26]) if row[26] else None,
         }
 
     def update_mix_job(self, job_id, **fields):
@@ -1355,6 +1359,10 @@ class Store:
         if "deco" in fields:
             cols.append("deco_json=?")
             vals.append(json.dumps(fields["deco"], ensure_ascii=False) if fields["deco"] else None)
+        if "thumbnail" in fields:
+            cols.append("thumbnail_json=?")
+            vals.append(json.dumps(fields["thumbnail"], ensure_ascii=False)
+                        if fields["thumbnail"] else None)
         if "voice" in fields:
             cols.append("voice_json=?")
             vals.append(json.dumps(fields["voice"], ensure_ascii=False) if fields["voice"] else None)

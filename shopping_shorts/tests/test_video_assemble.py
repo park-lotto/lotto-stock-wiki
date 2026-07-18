@@ -1,6 +1,37 @@
 from shopping_shorts import video_assemble as va
 
 
+class _FakeFont:
+    """글자당 10px 고정 — 폰트 무관하게 줄바꿈 경계를 결정적으로 검증."""
+    def getlength(self, s):
+        return 10 * len(s)
+
+
+def test_wrap_keeps_short_line_and_empty():
+    f = _FakeFont()
+    assert va._wrap_to_width("hi", f, 100) == ["hi"]
+    assert va._wrap_to_width("", f, 100) == [""]
+
+
+def test_wrap_breaks_at_word_boundary():
+    f = _FakeFont()
+    # "ab cd ef" (per-char 10): max_w=55 → "ab cd"(50) 들어가고 " ef"에서 넘침
+    assert va._wrap_to_width("ab cd ef", f, 55) == ["ab cd", "ef"]
+
+
+def test_wrap_char_splits_long_spaceless_word():
+    f = _FakeFont()
+    # 공백 없는 한글 같은 긴 단어: max_w=45 → 4글자(40)씩
+    assert va._wrap_to_width("abcdef", f, 45) == ["abcd", "ef"]
+
+
+def test_wrap_preserves_explicit_newline_via_segmented():
+    # 수동 줄바꿈(\n)은 각 줄로 유지되고, 긴 줄만 추가로 자동 줄바꿈된다.
+    f = _FakeFont()
+    lines = [seg for ln in "짧은줄\n".split("\n") for seg in va._wrap_to_width(ln, f, 100)]
+    assert lines == ["짧은줄", ""]
+
+
 def test_pick_segment_primary_covers_narration():
     # primary 구간 3초, tts 2.4초 → primary가 1배속으로 담을 수 있으므로 primary 선택
     beat = {"primary": {"video_id": "A", "seg_id": "A-0", "start": 0.0, "end": 3.0}, "alternates": []}
