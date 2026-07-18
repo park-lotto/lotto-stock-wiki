@@ -229,3 +229,46 @@ def translate_keyword(keyword, max_retries=3, quota_sleep=8):
                 continue
             return result
     return result
+
+
+_CN_KEYWORD_PROMPT = """다음은 한국어 쇼츠 영상 캡션이다. 이 영상과 '같은 소재'의 영상을 \
+중국 SNS(샤오홍슈/도우인)에서 찾기 위한 가장 좋은 중국어 검색어 하나만 출력해라.
+- 소재(요리명/제품/주제)에 집중, 수식어·감탄사·브랜드·가격·해시태그 기호 제외
+- 2~8자, 검색에 잘 걸리는 일반적 중국어 표현
+- JSON만: {{"zh": "검색어"}}
+캡션: {caption}"""
+
+
+def cn_search_keyword(caption, max_retries=3, quota_sleep=8):
+    """한국어 캡션 → 중국 SNS 검색용 중국어 소재 키워드(zh). 실패 시 ''.
+
+    렌즈 유사영상의 샤오홍슈/도우인 자동합류용. 캡션 앞 토큰을 기계적으로 잘라 직역하면
+    수식어·감탄사가 섞여 엉뚱한 검색이 됐다(라이브 실측: 무관한 영상 대량). Gemini에게
+    '소재'만 뽑게 하면 정확하다(서버 실측: '작물로 만든 장아찌…'→'小菜制作'→凉菜/拌菜,
+    '좁은 현관에 이거…'→'玄关收纳'→신발장 정리)."""
+    if not caption or not SHORTS_GEMINI_KEYS:
+        return ""
+    prompt = _CN_KEYWORD_PROMPT.format(caption=caption[:400])
+    for attempt in range(max_retries):
+        key, idx = comment_gen._current_key_and_idx()
+        if key is None:
+            return ""
+        try:
+            client = _client_for_key(key)
+            resp = client.models.generate_content(
+                model=_TRANSLATE_MODEL, contents=prompt,
+                config=types.GenerateContentConfig(response_mime_type="application/json"),
+            )
+            return (json.loads(resp.text).get("zh") or "").strip()
+        except Exception as e:
+            if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
+                comment_gen._mark_key_exhausted(idx)
+                continue
+            if key_vault.is_quota_error(e):
+                time.sleep(quota_sleep)
+                continue
+            if attempt < max_retries - 1 and any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded")):
+                time.sleep((attempt + 1) * 5)
+                continue
+            return ""
+    return ""

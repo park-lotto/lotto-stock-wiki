@@ -29,7 +29,7 @@ from shopping_shorts import script_generate
 from shopping_shorts.apify_client import fetch_single_reel, fetch_reels, fetch_profiles
 from shopping_shorts import discovery, instagram_search
 from shopping_shorts.channels import load_channels
-from shopping_shorts.video_analysis import analyze_video, translate_keyword
+from shopping_shorts.video_analysis import analyze_video, translate_keyword, cn_search_keyword
 from shopping_shorts.product_identify import fetch_lens_lines, identify_product_from_lines
 from shopping_shorts.search_links import build_search_links, lens_search_url
 from shopping_shorts import mix_pipeline
@@ -1974,37 +1974,34 @@ def _cn_keyword(caption):
     return " ".join(toks[:3])
 
 
-def _zh_relevant(keyword_zh, title):
-    """중국어 검색어와 결과 제목의 관련도. 검색어의 2글자 조각이 제목에 하나라도 있으면 True.
-    중국어는 공백 구분이 없어 2-그램 겹침으로 본다. 검색어 없으면(2글자 미만) 판정불가 None."""
-    kw = re.sub(r"\s", "", keyword_zh or "")
-    if len(kw) < 2:
-        return None
-    grams = {kw[i:i + 2] for i in range(len(kw) - 1)}
-    t = title or ""
-    return any(g in t for g in grams)
-
-
 @app.post("/api/lens/cn")
 async def api_lens_cn(request: Request, source_caption: str = Form(""),
                        max_results: int = Form(8)):
-    """캡션 키워드로 샤오홍슈+도우인을 Apify 병렬 검색 → 렌즈 결과에 합류할 항목.
+    """캡션으로 샤오홍슈+도우인을 Apify 병렬 검색 → 렌즈 결과에 합류할 항목.
     렌즈(구글렌즈)는 중국 플랫폼을 거의 못 잡아, 두 전용 액터를 자동으로 덧댄다(2026-07-18).
-    ★한국어 캡션 키워드로 중국 플랫폼을 검색하면 매칭이 안 돼 엉뚱한 영상이 나온다
-    (라이브 실측: '玄关鞋柜收纳技巧'로 번역해 검색하니 전부 신발장 정리 영상). Gemini로
-    중국어 번역해 검색하고, 제목-검색어 관련도(match)로 표시(안 맞으면 프론트 ⚠️배지).
-    Apify는 느리고 유료라 렌즈 결과가 뜬 뒤 프론트가 비동기로 호출해 합친다."""
-    ko = _cn_keyword(source_caption)
-    if not ko:
-        return {"ok": True, "items": [], "count": 0, "note": "캡션에서 검색어를 뽑지 못했습니다"}
+
+    ★검색어=Gemini가 캡션에서 뽑은 '소재' 중국어(cn_search_keyword). 앞 토큰을 기계적으로
+    잘라 직역하면 수식어가 섞여 엉뚱한 영상이 나왔다(라이브 실측). 소재만 뽑으면 정확하다
+    (서버 실측: '작물로 만든 장아찌…'→'小菜制作'→凉菜/拌菜, '좁은 현관에…'→'玄关收纳'→신발장).
+    Gemini 실패 시 앞토큰+직역으로 폴백. Apify는 느리고 유료라 프론트가 비동기로 호출해 합친다."""
+    if not (source_caption or "").strip():
+        return {"ok": True, "items": [], "count": 0, "note": "캡션이 없어 검색어를 만들 수 없습니다"}
     if not APIFY_TOKENS:
         return {"ok": True, "items": [], "count": 0, "note": "APIFY 토큰 없음"}
-    n = max(1, min(int(max_results or 8), 20))
+    keyword = ""
     try:
-        zh = (translate_keyword(ko).get("zh") or "").strip()
+        keyword = cn_search_keyword(source_caption)   # 소재 기반 중국어 키워드(Gemini)
     except Exception:
-        zh = ""
-    keyword = zh or ko   # 번역 실패 시 한국어 폴백(관련도 판정은 생략)
+        keyword = ""
+    if not keyword:                                    # 폴백: 앞토큰 직역 → 한국어
+        ko = _cn_keyword(source_caption)
+        try:
+            keyword = (translate_keyword(ko).get("zh") or "").strip() or ko
+        except Exception:
+            keyword = ko
+    if not keyword:
+        return {"ok": True, "items": [], "count": 0, "note": "검색어를 만들지 못했습니다"}
+    n = max(1, min(int(max_results or 8), 20))
 
     def _run(platform, mod):
         try:
@@ -2013,15 +2010,14 @@ async def api_lens_cn(request: Request, source_caption: str = Form(""),
             return []
         for r in rows:
             r["platform"] = platform
-            r["match"] = _zh_relevant(zh, r.get("title", "")) if zh else None
+            r["match"] = None   # 소재 검색이라 관련도 재판정 생략(2그램은 오탐이 많았음)
         return rows
 
     with ThreadPoolExecutor(max_workers=2) as ex:
         fx = ex.submit(_run, "xiaohongshu", xiaohongshu_search)
         fd = ex.submit(_run, "douyin", douyin_search)
         items = fx.result() + fd.result()
-    return {"ok": True, "items": items, "count": len(items),
-            "keyword": keyword, "keyword_ko": ko}
+    return {"ok": True, "items": items, "count": len(items), "keyword": keyword}
 
 
 @app.get("/healthz")
