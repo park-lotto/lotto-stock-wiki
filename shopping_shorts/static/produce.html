@@ -538,6 +538,17 @@ function initHeadcopy(){
   renderMyPresets();
   renderHighlightRules();
   bindHCDrag();
+  // ★복원된 스타일 밀어넣기(C-2 잔여) — 반드시 아래 updateHC/updateCaption **앞**이다.
+  // 그것들이 먼저 돌면 빈 DOM 입력칸을 읽어 STATE.headcopy/captionStyle을 기본값으로 덮는다
+  // (라이브 실측: 색이 #ffe100→#ff8800으로 죽었다). 여기서 pristine한 STATE로 DOM을 먼저 채우면
+  // 뒤의 updateHC/updateCaption이 그 채워진 값을 되읽어 복원값이 유지된다. STYLE_TOUCHED로
+  // applyDefaultStyleOnEntry의 기본프리셋 자동적용도 막는다.
+  if(PENDING_STYLE_RESTORE){
+    PENDING_STYLE_RESTORE = false;
+    STYLE_TOUCHED = true;
+    renderCapFontSelect();   // capFont 옵션을 먼저 채워야 applyConfig의 capFont value가 먹는다
+    applyConfig(STATE.headcopy, STATE.captionStyle);   // DOM 입력칸 채움(+updateHC/updateCaption 내부호출)
+  }
   updateHC();
   renderCapFontSelect();
   updateCaption();
@@ -545,13 +556,6 @@ function initHeadcopy(){
   renderExtraTexts();
   renderExtraPreview();
   renderOverlayPreview();
-  // ★복원된 스타일 밀어넣기(C-2 잔여). 폰트 <select>가 위에서 채워진 뒤라야 applyConfig의
-  // g('hcFont').value=... 가 먹는다. STYLE_TOUCHED로 아래 자동적용을 막아 복원값을 지킨다.
-  if(PENDING_STYLE_RESTORE){
-    PENDING_STYLE_RESTORE = false;
-    STYLE_TOUCHED = true;
-    applyConfig(STATE.headcopy, STATE.captionStyle);   // DOM 입력칸 채움 + updateHC/updateCaption
-  }
   applyDefaultStyleOnEntry();   // step5 진입 시 1회: 미터치 상태면 기본 스타일+실장면 배경 자동 적용
   syncMotionPicker();
 }
