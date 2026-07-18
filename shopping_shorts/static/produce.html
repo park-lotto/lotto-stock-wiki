@@ -1653,6 +1653,7 @@ function genMix(){
 
 // ── 1단계 제작소: 영상믹스(given_script 매칭) ──────────────
 let MIX_JOB=null, MIX_POLL=null;
+let VP_BEATS=[]; let _vpHeard=new Set();
 const MIX_LABEL={downloading:'영상 다운로드 중…',extracting:'대본 분석 중…',planning:'장면 매칭 중…',tts:'음성 생성 중…',ready_for_review:'매칭 완료',rendering:'최종 렌더 중…',done:'완료',failed:'실패'};
 function addMixUrl(){
   const wrap=document.getElementById('mixUrls');
@@ -2475,20 +2476,35 @@ async function renderTtsBeats(){
     if(!d.ok || !(d.beats||[]).length){ el.innerHTML=''; return; }
     const beats=d.beats;
     const vidLen=beats.reduce((s,b)=>s+(+b.target_seconds||0),0);
-    const rows=beats.map((b,i)=>`
-      <div id="beatRow${i}" style="border:1px solid var(--line);border-radius:9px;padding:9px;margin-bottom:6px;background:#0d1420;transition:background .15s">
-        <div style="font-size:13px;margin-bottom:4px"><b>${i+1}.</b> ${esc(b.narration||'')}</div>
-        ${b.tts_preview_url?`<audio id="beatAudio${i}" controls preload="metadata" src="${esc(b.tts_preview_url)}?t=${Date.now()}" style="height:26px"></audio>`:'<span class="hint">음성 없음</span>'}
-      </div>`).join('');
+    const rows=beats.map((b,i)=>{
+      const synced = Array.isArray(b.cap_durs) && b.cap_durs.length;
+      const badge = synced ? '🟢' : '🟡';
+      const badgeTip = synced ? '자막 자동맞춤 됨' : '자막 자동맞춤 불확실 — 들어보세요';
+      return `
+      <div id="beatRow${i}" data-idx="${i}" style="border:1px solid var(--line);border-radius:9px;padding:9px;margin-bottom:6px;background:#0d1420;transition:background .15s">
+        <div style="font-size:13px;margin-bottom:4px"><span title="${badgeTip}">${badge}</span> <b>${i+1}.</b> ${esc(b.narration||'')}</div>
+        ${b.tts_preview_url?`<audio id="beatAudio${i}" preload="metadata" src="${esc(b.tts_preview_url)}?t=${Date.now()}" style="display:none"></audio><button class="btn-prev" style="padding:4px 10px" onclick="vpPlayBeat(${i})">▶ 이 장면</button>`:'<span class="hint">음성 없음</span>'}
+      </div>`;
+    }).join('');
     // 영상길이(비트 목표시간 합) vs 음성길이(오디오 실측 합) — 맞춤 힌트로 편집 편의성↑
+    VP_BEATS = beats;                 // 전역: 재생기가 cap_segments/cap_durs/cap_offset 읽음
+    _vpHeard = _vpHeard || new Set();
     el.innerHTML=`
-      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;border:1px solid var(--line);border-radius:9px;padding:10px 12px;margin-bottom:10px;background:#0d1420">
-        <div><span class="hint">영상 길이</span> <b style="color:var(--accent2)">${vidLen.toFixed(1)}초</b></div>
-        <div><span class="hint">음성 길이</span> <b id="voiceLen" style="color:var(--ok)">…</b></div>
-        <div id="fitMsg" class="hint">음성 길이 측정 중…</div>
-        <button onclick="playAllBeats()" class="btn-prev" style="padding:6px 12px;margin-left:auto">▶ 전체 재생</button>
-      </div>
-      <div style="font-size:12px;color:var(--sub);margin-bottom:4px">비트별 음성</div>${rows}`;
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">
+        <div style="position:relative;width:180px;aspect-ratio:9/16;background:#000;border-radius:10px;overflow:hidden;flex:0 0 auto">
+          <img id="vpFrame" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">
+          <div id="vpCap" style="position:absolute;left:0;right:0;bottom:8%;text-align:center;color:#fff;font-weight:700;font-size:13px;text-shadow:0 2px 4px #000;padding:0 6px"></div>
+        </div>
+        <div style="flex:1;min-width:220px">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">
+            <div><span class="hint">영상 길이</span> <b style="color:var(--accent2)">${vidLen.toFixed(1)}초</b></div>
+            <div><span class="hint">음성 길이</span> <b id="voiceLen" style="color:var(--ok)">…</b></div>
+            <div id="fitMsg" class="hint">음성 길이 측정 중…</div>
+            <button onclick="playAllBeats()" class="btn-prev" style="padding:6px 12px;margin-left:auto">▶ 전체 재생</button>
+          </div>
+          ${rows}
+        </div>
+      </div>`;
     _updateVoiceLen(beats.length, vidLen);
   }catch(e){ el.innerHTML='<div class="hint" style="color:var(--fire)">로드 실패</div>'; }
 }
@@ -2508,21 +2524,52 @@ function _updateVoiceLen(n, vidLen){
   };
   auds.forEach(a=>{ if(a.readyState>=1) recompute(); else a.addEventListener('loadedmetadata', recompute, {once:true}); });
 }
-// ▶ 전체 재생 — 비트 음성을 순서대로 이어 재생하며 현재 비트 줄을 하이라이트(가라오케식)
+// ▶ 프리뷰 — 재생 중인 비트의 9:16 프레임을 vpFrame에, 자막을 vpCap에 서버 cap_segments/cap_durs(+cap_offset) 타이밍으로 표시(가라오케식)
+function _vpShowFrame(i){
+  const f=document.getElementById('vpFrame');
+  if(f && typeof MIX_JOB!=='undefined' && MIX_JOB){ f.style.display='block'; f.src='/api/mix/beatframe/'+MIX_JOB+'/'+i; }
+}
+function _vpCapDurs(b){
+  const segs=b.cap_segments||[]; if(!segs.length) return [];
+  if(Array.isArray(b.cap_durs) && b.cap_durs.length===segs.length) return b.cap_durs.slice();
+  const w=segs.map(s=>Math.max(1,(s||'').replace(/\s/g,'').length)); const tw=w.reduce((a,c)=>a+c,0);
+  return w.map(x=>x/tw);   // 표시용 근사(합=1, 오디오 길이에 맞춰 스케일) — 최종 렌더는 서버 cap_durs가 정확히 함
+}
+// 오디오 currentTime에 맞춰 그 비트 자막 구절을 순차 표시(cap_offset 반영). 자막 구절 자체는 항상 서버 cap_segments — 여기서 재구현하지 않는다.
+function _vpDriveCaption(aud, b){
+  const cap=document.getElementById('vpCap'); if(!cap) return;
+  const segs=b.cap_segments||[]; const rel=_vpCapDurs(b);
+  const off=(+b.cap_offset||0);
+  const upd=()=>{
+    const dur=aud.duration||rel.reduce((a,c)=>a+c,0)||1;
+    const durs=rel.map(r=> (Array.isArray(b.cap_durs)&&b.cap_durs.length)? r : r*dur);
+    let t=aud.currentTime-off, acc=0, cur=segs[0]||'';
+    for(let k=0;k<segs.length;k++){ if(t>=acc){ cur=segs[k]; } acc+=durs[k]; }
+    cap.textContent=cur;
+  };
+  aud.ontimeupdate=upd; upd();
+}
+function vpPlayBeat(i){
+  const b=VP_BEATS[i]; if(!b) return;
+  const a=document.getElementById('beatAudio'+i); if(!a) return;
+  // 다른 오디오 정지
+  let k=0; while(document.getElementById('beatAudio'+k)){ const o=document.getElementById('beatAudio'+k); if(o!==a){o.pause();} k++; }
+  _vpShowFrame(i); _vpDriveCaption(a,b); _vpHeard.add(i);
+  const r=document.getElementById('beatRow'+i);
+  document.querySelectorAll('[id^=beatRow]').forEach(x=>x.style.background='#0d1420');
+  if(r) r.style.background='#1a2740';
+  a.currentTime=0; a.play().catch(()=>{});
+}
+// ▶ 전체 재생 — 비트 음성을 순서대로 이어 재생하며 현재 비트의 프레임+자막을 갱신(가라오케식)
 function playAllBeats(){
   const auds=[]; let i=0; while(document.getElementById('beatAudio'+i)){ auds.push(document.getElementById('beatAudio'+i)); i++; }
   if(!auds.length) return;
-  const clear=()=>auds.forEach((a,idx)=>{ const r=document.getElementById('beatRow'+idx); if(r) r.style.background='#0d1420'; });
   auds.forEach(a=>{ a.pause(); a.currentTime=0; a.onended=null; });
-  clear();
   let cur=0;
   const playOne=()=>{
-    if(cur>=auds.length){ clear(); return; }
-    clear();
-    const r=document.getElementById('beatRow'+cur); if(r) r.style.background='#1a2740';
-    const a=auds[cur];
-    a.onended=()=>{ cur++; playOne(); };
-    a.play().catch(()=>{ cur++; playOne(); });
+    if(cur>=auds.length){ document.querySelectorAll('[id^=beatRow]').forEach(x=>x.style.background='#0d1420'); return; }
+    vpPlayBeat(cur);
+    auds[cur].onended=()=>{ cur++; playOne(); };
   };
   playOne();
 }
