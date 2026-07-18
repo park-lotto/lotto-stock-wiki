@@ -14,6 +14,21 @@ from . import edit_plan
 
 _ALLOWED_ORIGIN = ("짜집기", "촬영원본")
 
+# 비트 역할 → 호환 자산 역할(순위). 결정적 — Gemini 안 씀(과배치 원천차단).
+# 자산 역할 통제어휘: 훅·반전·CTA·비법공개·반응·전환·본문(scene_assets._ROLES).
+_ROLE_FALLBACK = {
+    "hook": ("훅", "반응"),                       # 시선 잡기: 귀여운 리액션·만족짤
+    "problem": ("반전",),                          # 페인포인트: 눈물 양파·요리 실패
+    "problem_solution": ("반전",),
+    "easy_process": ("비법공개", "전환"),          # "이렇게 쉽게": 만족 슬라이스
+    "process_step1": ("비법공개", "전환"),
+    "process_step2": ("비법공개", "전환"),
+    "process": ("비법공개", "전환"),
+    "result_wow": ("반응", "본문"),                # 와우 모먼트: ASMR 먹방
+    "benefit": ("반응", "본문"),
+    "cta": ("CTA",),
+}
+
 _MATCH_SCHEMA = {
     "type": "object",
     "properties": {
@@ -68,8 +83,40 @@ def match_scene_assets(plan, assets, *, threshold=0.9, vault_call=None):
             if aid not in by_id:
                 continue  # 모델이 후보 밖 id를 뱉음 → 방어
             if score >= threshold:
-                beat["cutaway"] = {"asset_id": aid, "score": score}
+                beat["cutaway"] = {"asset_id": aid, "score": score, "match_type": "subject"}
             else:
                 suggestions.append({"beat_idx": beat["beat_idx"], "asset_id": aid, "score": score})
+    _role_pass(plan, cands)
     plan["asset_suggestions"] = suggestions
     return plan
+
+
+def _role_pass(plan, cands):
+    """소재 패스가 못 채운 빈 비트에, 비트 역할에 맞는 요소짤을 결정적으로 배치한다.
+    Gemini 안 씀 — 역할 호환표로만. plan을 제자리 수정. 한 영상 내 반복 금지."""
+    used = {b["cutaway"]["asset_id"] for b in plan["beats"] if b.get("cutaway")}
+    by_role = {}
+    for a in cands:
+        by_role.setdefault(a.get("role") or "", []).append(a)
+    for beat in plan["beats"]:
+        if beat.get("cutaway"):
+            continue  # 소재 패스가 이미 배치 — 안 건드림
+        compatible = _ROLE_FALLBACK.get(beat.get("role") or "")
+        if not compatible:
+            continue  # 이 비트 역할은 요소짤 자리가 아님 → 빈 채로
+        pool = [a for role in compatible for a in by_role.get(role, [])
+                if a["id"] not in used]
+        if not pool:
+            continue
+        chosen = _pick_role_asset(pool, beat.get("narration") or "")
+        beat["cutaway"] = {"asset_id": chosen["id"], "match_type": "role"}
+        used.add(chosen["id"])
+
+
+def _pick_role_asset(pool, narration):
+    """역할 호환 후보 중 1개. 나레이션과 keyword/subject 겹치면 우선(Gemini 없음),
+    없으면 결정적 순서(최근 담은 것 = id 큰 것 우선)."""
+    def overlap(a):
+        text = (a.get("subject") or "") + " " + " ".join(a.get("keywords") or [])
+        return sum(1 for w in text.split() if w and w in narration)
+    return sorted(pool, key=lambda a: (-overlap(a), -a["id"]))[0]

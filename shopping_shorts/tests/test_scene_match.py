@@ -24,7 +24,8 @@ def test_high_score_autoplaces_cutaway():
     # 스텁: 비트0 → 자산5 점수 0.9
     fake = lambda prompt, schema, **k: {"best_asset_id": 5, "score": 0.9}
     out = scene_match.match_scene_assets(plan, assets, threshold=0.6, vault_call=fake)
-    assert out["beats"][0]["cutaway"] == {"asset_id": 5, "score": 0.9}
+    cw = out["beats"][0]["cutaway"]
+    assert cw["asset_id"] == 5 and cw["score"] == 0.9  # match_type 키 추가는 회귀 아님(phase2-B)
     assert out.get("asset_suggestions", []) == []
 
 
