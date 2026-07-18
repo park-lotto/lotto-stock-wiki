@@ -618,6 +618,7 @@ async function fetchLensCn(shortcode, caption, blob){
     const fd=new FormData();
     if(blob) fd.append('frame', blob, 'f.jpg');   // 장치1: 화면 글자·제품 비전 추출용
     if(caption) fd.append('source_caption', caption);
+    fd.append('max_results', '40');   // 웹검색 대비 개수 확보(플랫폼당 최대 40, 지연 거의 동일)
     const d=await (await fetch('/api/lens/cn',{method:'POST',body:fd})).json();
     const st=LENS_STATE[shortcode]; if(!st) return;   // 사용자가 닫았을 수 있음
     const add=(d.items||[]);

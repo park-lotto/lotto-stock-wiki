@@ -2023,7 +2023,9 @@ async def api_lens_cn(request: Request, frame: UploadFile = File(None),
             keyword = ko
     if not keyword:
         return {"ok": True, "items": [], "count": 0, "note": "검색어를 만들지 못했습니다"}
-    n = max(1, min(int(max_results or 8), 20))
+    # 실측(2026-07-18): 액터는 maxResults=40도 raw=video=40을 ~14초에 준다(8과 지연 차 거의 없음).
+    # 웹검색 대비 개수 부족 제보로 상한을 60까지 열어둔다(프론트 기본 40). 결과당 과금이라 비용은 비례.
+    n = max(1, min(int(max_results or 8), 60))
 
     def _run(platform, mod):
         try:
