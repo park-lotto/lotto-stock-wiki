@@ -29,7 +29,8 @@ from shopping_shorts import script_generate
 from shopping_shorts.apify_client import fetch_single_reel, fetch_reels, fetch_profiles
 from shopping_shorts import discovery, instagram_search
 from shopping_shorts.channels import load_channels
-from shopping_shorts.video_analysis import analyze_video, translate_keyword, cn_search_keyword
+from shopping_shorts.video_analysis import (analyze_video, translate_keyword, cn_search_keyword,
+                                            cn_search_keyword_vision, judge_same_product)
 from shopping_shorts.product_identify import fetch_lens_lines, identify_product_from_lines
 from shopping_shorts.search_links import build_search_links, lens_search_url
 from shopping_shorts import mix_pipeline
@@ -1985,25 +1986,36 @@ def _cn_keyword(caption):
 
 
 @app.post("/api/lens/cn")
-async def api_lens_cn(request: Request, source_caption: str = Form(""),
-                       max_results: int = Form(8)):
-    """캡션으로 샤오홍슈+도우인을 Apify 병렬 검색 → 렌즈 결과에 합류할 항목.
-    렌즈(구글렌즈)는 중국 플랫폼을 거의 못 잡아, 두 전용 액터를 자동으로 덧댄다(2026-07-18).
+async def api_lens_cn(request: Request, frame: UploadFile = File(None),
+                       source_caption: str = Form(""), max_results: int = Form(8)):
+    """프레임+캡션으로 샤오홍슈+도우인을 검색 → 렌즈 결과에 합류할 항목. 두 '장치'로 정확도를 높인다:
 
-    ★검색어=Gemini가 캡션에서 뽑은 '소재' 중국어(cn_search_keyword). 앞 토큰을 기계적으로
-    잘라 직역하면 수식어가 섞여 엉뚱한 영상이 나왔다(라이브 실측). 소재만 뽑으면 정확하다
-    (서버 실측: '작물로 만든 장아찌…'→'小菜制作'→凉菜/拌菜, '좁은 현관에…'→'玄关收纳'→신발장).
-    Gemini 실패 시 앞토큰+직역으로 폴백. Apify는 느리고 유료라 프론트가 비동기로 호출해 합친다."""
-    if not (source_caption or "").strip():
-        return {"ok": True, "items": [], "count": 0, "note": "캡션이 없어 검색어를 만들 수 없습니다"}
+    ★장치1(비전 추출): 렌즈가 캡처한 프레임(썸네일)을 Gemini 비전이 보고 화면 글자(제품명
+      'LED 물총')·생김새+캡션을 종합해 '바로 그 제품'을 특정하고 중국어 검색어를 만든다
+      (서버 실측: 리모와 캐리어→日默瓦, 청소용 퍼미스 스톤→浮石清洁块). 프레임 없음/실패 시
+      캡션 소재 키워드(cn_search_keyword) → 앞토큰 직역 순으로 폴백.
+    ★장치2(유사도 판정): 검색 결과 제목들을 추출 제품과 대조해 Gemini가 same/similar/no로
+      판정(오탐 많던 2그램 대체) → same을 위로 정렬, no엔 프론트 ⚠️배지.
+
+    Apify·Gemini가 느리고 유료라 렌즈 결과가 뜬 뒤 프론트가 비동기로 이 API를 호출해 합친다."""
+    if not (source_caption or "").strip() and frame is None:
+        return {"ok": True, "items": [], "count": 0, "note": "프레임·캡션이 없어 검색어를 만들 수 없습니다"}
     if not APIFY_TOKENS:
         return {"ok": True, "items": [], "count": 0, "note": "APIFY 토큰 없음"}
-    keyword = ""
-    try:
-        keyword = cn_search_keyword(source_caption)   # 소재 기반 중국어 키워드(Gemini)
-    except Exception:
-        keyword = ""
-    if not keyword:                                    # 폴백: 앞토큰 직역 → 한국어
+    product, keyword = "", ""
+    if frame is not None:                              # 장치1: 프레임 비전 추출
+        try:
+            raw = await frame.read()
+            v = cn_search_keyword_vision(raw, source_caption)
+            product, keyword = v.get("product", ""), v.get("zh", "")
+        except Exception:
+            product, keyword = "", ""
+    if not keyword:                                    # 폴백: 캡션 소재 키워드 → 앞토큰 직역
+        try:
+            keyword = cn_search_keyword(source_caption)
+        except Exception:
+            keyword = ""
+    if not keyword:
         ko = _cn_keyword(source_caption)
         try:
             keyword = (translate_keyword(ko).get("zh") or "").strip() or ko
@@ -2020,14 +2032,28 @@ async def api_lens_cn(request: Request, source_caption: str = Form(""),
             return []
         for r in rows:
             r["platform"] = platform
-            r["match"] = None   # 소재 검색이라 관련도 재판정 생략(2그램은 오탐이 많았음)
+            r["match"] = None
         return rows
 
     with ThreadPoolExecutor(max_workers=2) as ex:
         fx = ex.submit(_run, "xiaohongshu", xiaohongshu_search)
         fd = ex.submit(_run, "douyin", douyin_search)
         items = fx.result() + fd.result()
-    return {"ok": True, "items": items, "count": len(items), "keyword": keyword}
+
+    # 장치2: 유사도 판정 + same 우선 정렬
+    if product and items:
+        try:
+            verdicts = judge_same_product(product, [i.get("title", "") for i in items])
+        except Exception:
+            verdicts = []
+        if len(verdicts) == len(items):
+            for i, vd in zip(items, verdicts):
+                i["sim"] = vd
+                i["match"] = True if vd == "same" else (False if vd == "no" else None)
+            rank = {"same": 0, "similar": 1, "no": 2}
+            items.sort(key=lambda i: rank.get(i.get("sim"), 1))
+    return {"ok": True, "items": items, "count": len(items),
+            "keyword": keyword, "product": product}
 
 
 @app.get("/healthz")

@@ -177,3 +177,27 @@ def test_lens_cn_survives_one_actor_error(tmp_path, monkeypatch):
     r = c.post("/api/lens/cn", data={"source_caption": "청소기 리뷰"})
     d = r.json()
     assert d["count"] == 1 and d["items"][0]["platform"] == "douyin"
+
+
+def test_lens_cn_vision_extract_and_similarity_sort(tmp_path, monkeypatch):
+    """장치1(프레임 비전 제품추출)+장치2(유사도 same/similar/no 판정·same 우선 정렬)."""
+    monkeypatch.setattr(appmod, "APIFY_TOKENS", ["tok"])
+    monkeypatch.setattr(appmod, "cn_search_keyword_vision",
+                        lambda img, cap: {"product": "리모와 캐리어", "zh": "日默瓦"})
+    monkeypatch.setattr(appmod.xiaohongshu_search, "search",
+                        lambda kw, max_results=8: [{"url": "https://xhs/1", "title": "RIMOWA 개봉"},
+                                                   {"url": "https://xhs/2", "title": "哪吒电影"}])
+    monkeypatch.setattr(appmod.douyin_search, "search",
+                        lambda kw, max_results=8: [{"url": "https://dy/1", "title": "日默瓦维修"}])
+    monkeypatch.setattr(appmod, "judge_same_product",
+                        lambda prod, titles: ["same", "no", "similar"])   # items 순서와 정렬
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/cn", files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
+               data={"source_caption": "여행 캐리어"})
+    d = r.json()
+    assert d["product"] == "리모와 캐리어" and d["keyword"] == "日默瓦"
+    assert d["items"][0]["url"] == "https://xhs/1"          # same 우선 정렬
+    assert d["items"][0]["sim"] == "same" and d["items"][0]["match"] is True
+    byurl = {i["url"]: i for i in d["items"]}
+    assert byurl["https://xhs/2"]["match"] is False          # no → ⚠️
+    assert byurl["https://dy/1"]["sim"] == "similar" and byurl["https://dy/1"]["match"] is None
