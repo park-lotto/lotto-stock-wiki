@@ -751,30 +751,30 @@ async function lensSearch(btn, shortcode){
     items.forEach(i=>{ i.savesc='lens_'+i.platform+'_'+_lensHash(i.url); });
     let saved=new Set();
     try{ saved=new Set((await (await fetch('/api/mix/basket')).json()).shortcodes||[]); }catch(e){}
-    // 프레임이 있으면 항상 샤오홍슈·도우인을 덧댄다(비전이 화면 글자로 제품을 특정하므로
-    // 캡션이 없어도 됨). cnLoading=true로 두고 renderLens가 '불러오는 중'을 보여준다.
+    // 프레임이 있으면 항상 유튜브를 키워드로 덧댄다(비전이 화면 글자로 제품을 특정하므로
+    // 캡션이 없어도 됨). ytLoading=true로 두고 renderLens가 '불러오는 중'을 보여준다.
     LENS_STATE[shortcode]={items, on:new Set(LENS_PLATFORMS.map(p=>p.k)), saved,
-                           sel:new Set(), shortsOnly:false, cnLoading:true, caption};
+                           sel:new Set(), shortsOnly:false, ytLoading:true, keyword:'', caption};
     renderLens(shortcode);
-    fetchLensCn(shortcode, caption, blob);   // 📕📶 프레임+캡션으로 자동 합류(비동기)
+    fetchLensYt(shortcode, caption, blob);   // ▶️ 유튜브 무료 키워드 자동합류(비동기)
   }catch(e){ document.getElementById('scriptBody').innerHTML='<div style="padding:10px;color:#e0623d">❌ '+e.message+'</div>'; }
 }
-// 프레임(비전)+캡션으로 샤오홍슈+도우인을 검색해 렌즈 결과에 덧붙인다(느리고 유료라 비동기).
-async function fetchLensCn(shortcode, caption, blob){
+// 프레임(비전)+캡션으로 유튜브를 키워드 검색해 렌즈 결과에 덧붙인다(무료, 비동기).
+async function fetchLensYt(shortcode, caption, blob){
   try{
     const fd=new FormData();
-    if(blob) fd.append('frame', blob, 'f.jpg');   // 장치1: 화면 글자·제품 비전 추출용
+    if(blob) fd.append('frame', blob, 'f.jpg');   // 비전으로 화면 제품명 추출
     if(caption) fd.append('source_caption', caption);
-    fd.append('max_results', '40');   // 웹검색 대비 개수 확보(플랫폼당 최대 40, 지연 거의 동일)
-    const d=await (await fetch('/api/lens/cn',{method:'POST',body:fd})).json();
+    fd.append('max_results', '40');
+    const d=await (await fetch('/api/lens/yt',{method:'POST',body:fd})).json();
     const st=LENS_STATE[shortcode]; if(!st) return;   // 사용자가 닫았을 수 있음
+    st.keyword=d.keyword||'';
     const add=(d.items||[]);
     add.forEach(i=>{ i.savesc='lens_'+i.platform+'_'+_lensHash(i.url); });
     const have=new Set(st.items.map(i=>i.savesc));
     st.items.push(...add.filter(i=>!have.has(i.savesc)));   // 중복 savesc 제외
-    st.cnLoading=false;
-  }catch(e){ const st=LENS_STATE[shortcode]; if(st) st.cnLoading=false; }
-  // 모달이 아직 이 렌즈 결과를 보여주는 중일 때만 다시 그림(대본 등 다른 뷰로 넘어갔으면 무시)
+    st.ytLoading=false;
+  }catch(e){ const st=LENS_STATE[shortcode]; if(st) st.ytLoading=false; }
   const root=document.getElementById('lensRoot');
   if(root && root.dataset.sc===shortcode) renderLens(shortcode);
 }
@@ -835,14 +835,25 @@ function _fmtDur(s){
   s=Math.round(Number(s)); const m=Math.floor(s/60), ss=s%60;
   return m+':'+String(ss).padStart(2,'0');
 }
+// 플랫폼별 검색 페이지 URL(search_links.py의 _URL_BUILDERS와 동일). 바로가기+담기용.
+function _lensSearchUrl(platform, kw){
+  const q=encodeURIComponent(kw||'');
+  const B={
+    tiktok:`https://www.tiktok.com/search?q=${q}`,
+    instagram:`https://www.instagram.com/explore/search/keyword/?q=${q}`,
+    xiaohongshu:`https://www.xiaohongshu.com/search_result?keyword=${q}`,
+    douyin:`https://www.douyin.com/search/${q}`,
+  };
+  return B[platform]||'#';
+}
 function renderLens(shortcode){
   const box=document.getElementById('scriptBody');   // 모달 body에 렌더(인라인 X → UI 안 망가짐)
   const st=LENS_STATE[shortcode]; if(!st || !box) return;
   const chips=LENS_PLATFORMS.map(p=>{
     const active=st.on.has(p.k);
-    const cnBusy=st.cnLoading && (p.k==='xiaohongshu'||p.k==='douyin');
+    const ytBusy=st.ytLoading && p.k==='youtube';
     const n=st.items.filter(i=>i.platform===p.k).length;
-    return `<span onclick="toggleLensPlatform('${shortcode}','${p.k}')" style="cursor:pointer;display:inline-block;padding:3px 10px;margin:2px;border-radius:12px;font-size:11px;border:1px solid var(--line);background:${active?'#1f6feb33':'transparent'};opacity:${active?1:0.4}">${p.label} ${cnBusy?'…':n}</span>`;
+    return `<span onclick="toggleLensPlatform('${shortcode}','${p.k}')" style="cursor:pointer;display:inline-block;padding:3px 10px;margin:2px;border-radius:12px;font-size:11px;border:1px solid var(--line);background:${active?'#1f6feb33':'transparent'};opacity:${active?1:0.4}">${p.label} ${ytBusy?'…':n}</span>`;
   }).join('');
   // 필터: 켠 플랫폼 + (숏폼만이면) is_short!==false. 길이불명(null/undefined)은 남긴다.
   let shown=st.items.filter(i=>st.on.has(i.platform));
@@ -858,8 +869,15 @@ function renderLens(shortcode){
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="영상 길이 90초 이하(또는 길이 불명)만 표시"><input type="checkbox" ${st.shortsOnly?'checked':''} onclick="toggleLensShorts('${shortcode}')"> 숏폼만</label>
       <button onclick="lensBulkSave('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">📥 선택 담기(${selCount})</button>
       <button onclick="lensBulkDelete('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">🗑 선택 삭제(${selCount})</button>
-      ${st.cnLoading?'<span style="color:var(--sub)">📕 샤오홍슈·도우인 불러오는 중…</span>':''}
-    </div></div>`;
+      ${st.ytLoading?'<span style="color:var(--sub)">▶️ 유튜브 불러오는 중…</span>':''}
+    </div>
+    ${st.keyword?`<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px;font-size:11px">
+      <span style="color:var(--sub)">🔗 다른 플랫폼에서 찾아 담기:</span>
+      ${[['tiktok','🎵 틱톡'],['instagram','📷 인스타'],['xiaohongshu','📕 샤오홍슈'],['douyin','🎬 도우인']].map(([k,lbl])=>
+        `<a href="${_lensSearchUrl(k, st.keyword)}" target="_blank" rel="noopener" style="text-decoration:none;padding:3px 9px;border-radius:10px;border:1px solid var(--line);color:var(--accent)">${lbl}</a>`
+      ).join('')}
+    </div>`:''}
+  </div>`;
   const cards=shown.map(i=>{
     const plabel=LENS_PLATFORMS.find(p=>p.k===i.platform)?.label||'';
     const isSaved=st.saved.has(i.savesc), isSel=st.sel.has(i.savesc);
@@ -884,7 +902,7 @@ function renderLens(shortcode){
         <div style="margin-top:4px"><a href="${i.url}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🔗 원본 열기</a></div>
       </div>
     </div>`;
-  }).join('') || (st.cnLoading?'<div style="font-size:12px;color:var(--sub);padding:10px">불러오는 중…</div>':'<div style="font-size:12px;color:var(--sub);padding:10px">켠 플랫폼 결과 없음</div>');
+  }).join('') || (st.ytLoading?'<div style="font-size:12px;color:var(--sub);padding:10px">불러오는 중…</div>':'<div style="font-size:12px;color:var(--sub);padding:10px">켠 플랫폼 결과 없음 — 위 🔗 바로가기로 찾아 담으세요</div>');
   box.innerHTML=`<div id="lensRoot" data-sc="${shortcode}">${bar}<div class="cards">${cards}</div></div>`;
   box._lensCurSC=shortcode;
 }
