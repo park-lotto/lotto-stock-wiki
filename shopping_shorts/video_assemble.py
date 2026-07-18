@@ -227,19 +227,27 @@ def _caption_segments(narration):
     return segs or [narr]
 
 
-def _caption_durations(segs, dur):
+def _caption_durations(segs, dur, real_durs=None):
     """각 구절의 표시 시간(초) 리스트를 반환. 기본은 글자수 비례(균등분할 X)지만,
     아주 짧은 구절(2~3자)이 순식간에 지나가지 않도록 _CAP_MIN_DUR 하한을 준다.
     하한을 채우고 남은 시간을 나머지 구절에 글자수 비례로 재분배해, 총합은 항상
-    dur를 넘지 않는다(하한들의 합이 dur를 초과하면 균등분할로 폴백)."""
+    dur를 넘지 않는다(하한들의 합이 dur를 초과하면 균등분할로 폴백).
+
+    real_durs가 주어지고(ASR 실측) len(real_durs)==len(segs)이며 합이 0을 넘으면
+    글자수 비례 대신 그 값을 base로 쓴다(총합을 dur로 정규화). 그 외(None/길이
+    불일치/합0)에는 기존 글자수 비례 경로와 바이트 동일하게 폴백한다."""
     n = len(segs)
     if n == 0:
         return []
     if _CAP_MIN_DUR * n >= dur:      # 하한조차 못 채우면 균등분할
         return [dur / n] * n
-    weights = [max(1, len(s.replace("\n", ""))) for s in segs]
-    total_w = sum(weights)
-    raw = [dur * w / total_w for w in weights]
+    if real_durs is not None and len(real_durs) == len(segs) and sum(real_durs) > 0:
+        s = sum(real_durs)
+        raw = [dur * d / s for d in real_durs]
+    else:
+        weights = [max(1, len(s.replace("\n", ""))) for s in segs]
+        total_w = sum(weights)
+        raw = [dur * w / total_w for w in weights]
     # 하한 미달인 구절은 하한으로 올리고, 그만큼을 하한 이상인 구절에서 비례로 회수.
     floored = [max(_CAP_MIN_DUR, r) for r in raw]
     over = sum(floored) - dur
@@ -252,15 +260,16 @@ def _caption_durations(segs, dur):
     return floored
 
 
-def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None):
+def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=None):
     """나레이션 한 비트의 자막(하단 바 + 순차 drawtext)을 필터 문자열 리스트로 반환한다.
     _segmented_drawtext 기반: highlight_rules가 있으면 단어별 강조, 없으면 세그먼트 1개
-    (기존과 동일 산출물). 각 구절 enable 구간은 t0(전체 타임라인 오프셋)만큼 밀린다."""
+    (기존과 동일 산출물). 각 구절 enable 구간은 t0(전체 타임라인 오프셋)만큼 밀린다.
+    real_durs가 주어지면 _caption_durations에 그대로 전달해 ASR 실측 타이밍을 쓴다."""
     segs = _caption_segments(narration)
     if not segs:
         return []
     style = style or {}
-    durs = _caption_durations(segs, dur)
+    durs = _caption_durations(segs, dur, real_durs=real_durs)
     size = max(10, int(style.get("size") or _CAP_FONTSIZE))
     ypct = style.get("y_pct")
     if ypct is None:
