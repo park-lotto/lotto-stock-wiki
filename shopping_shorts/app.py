@@ -47,6 +47,7 @@ from shopping_shorts.narration_naturalize import naturalize as _naturalize
 from shopping_shorts import frame_extract, scene_assets, scene_cut
 from shopping_shorts import effect_match, remotion_render, points
 from shopping_shorts import video_assemble
+from shopping_shorts import seo_generate, seo_probe
 import uuid
 
 app = FastAPI(title="쇼핑쇼츠 레퍼런스 랭킹")
@@ -2351,6 +2352,8 @@ def api_produce_mix_settings(body: dict):
         fields["caption_style"] = body.get("caption_style")  # dict or None
     if "deco" in body:
         fields["deco"] = body.get("deco")  # 워터마크·추가텍스트·오버레이·BGM dict or None
+    if "seo" in body:
+        fields["seo"] = body.get("seo")  # 6단계 SEO 일습 dict or None
     if fields:
         store.update_mix_job(job_id, **fields)
     return {"ok": True}
@@ -2959,6 +2962,48 @@ def _fx_dur_frames(job, timeline, fps=30):
     if timeline:
         return round(timeline[-1]["e"] * fps)
     return 0
+
+
+@app.post("/api/produce/seo/generate")
+def api_seo_generate(body: dict):
+    """확정 대본으로 SEO 일습 생성 + 키워드 유튜브 실측.
+
+    DB에 기록하지 않는다(무과금 미리보기 — fx/suggest와 같은 규약). 사장님이
+    화면에서 다듬고 /mix/settings로 확정 저장한다. 생성할 때마다 덮어쓰면
+    손으로 고친 걸 날린다.
+
+    only가 있으면 부분 재생성 — 측정(100유닛/키워드)을 다시 하지 않고
+    호출부가 준 keyword_stats를 프롬프트에 되먹인다.
+    """
+    job_id = (body.get("job_id") or "").strip()
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id) if job_id else None
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+
+    only = body.get("only") or None
+    locked = body.get("locked") or {}
+    captions = body.get("captions") or []
+    stats = body.get("keyword_stats") or []
+
+    seo = seo_generate.generate(job, captions=captions, only=only,
+                                locked=locked, keyword_stats=stats)
+    if not seo:
+        return JSONResponse(status_code=502, content={"ok": False, "error": "생성 실패"})
+
+    if not only:
+        # 전체 생성일 때만 측정한다 — search.list가 100유닛이고 발굴과 키풀을 나눠 쓴다.
+        stats = seo_probe.probe_keywords(seo_generate.seed_keywords(seo), store)
+    seo["keyword_stats"] = stats
+    seo["generated_at"] = datetime.now(timezone.utc).isoformat()
+    return {"seo": seo}
+
+
+@app.get("/api/produce/seo/get")
+def api_seo_get(job_id: str = ""):
+    """저장된 SEO 복원용(6단계 재진입·새로고침). 없으면 seo: null."""
+    job = Store(DB_PATH).get_mix_job((job_id or "").strip()) or {}
+    return {"seo": job.get("seo")}
 
 
 @app.post("/api/produce/fx/suggest")

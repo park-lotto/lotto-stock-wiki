@@ -4,7 +4,7 @@ import json
 import secrets
 import sqlite3
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 # 개인 행동 테이블(saved/mix_basket/commented/script_wiki)의 레거시(마이그레이션
@@ -294,6 +294,32 @@ class Store:
                     fx_path TEXT
                 )
             """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS seo_keyword_stats (
+                    keyword TEXT NOT NULL,
+                    region TEXT NOT NULL DEFAULT 'KR',
+                    views_top INTEGER,
+                    views_median INTEGER,
+                    small_ratio REAL,
+                    small_hits INTEGER,
+                    hit_n INTEGER,
+                    sample_n INTEGER,
+                    top_titles_json TEXT,
+                    verdict TEXT,
+                    checked_at TEXT NOT NULL,
+                    PRIMARY KEY (keyword, region)
+                )
+            """)
+            # views_top은 T8 실측 뒤에, small_hits·hit_n은 그 뒤 리뷰 지적으로 붙었다
+            # (2026-07-17) — 그 전에 테이블을 만든 로컬 DB가 있으므로 없으면 채워 넣는다.
+            # 서버엔 아직 이 테이블 자체가 없다.
+            for _col, _ddl in (("views_top", "INTEGER"),
+                               ("small_hits", "INTEGER"),
+                               ("hit_n", "INTEGER")):
+                try:
+                    c.execute(f"ALTER TABLE seo_keyword_stats ADD COLUMN {_col} {_ddl}")
+                except sqlite3.OperationalError:
+                    pass  # 이미 존재
             # 제작소 작업파일(2026-07-17) — 사장님 제보 "뒤로가기 하니까 작업물이 지워진다".
             # ★mix_jobs를 재활용하지 않는다: urls_json·structure가 NOT NULL이라 **매칭 전
             # 작업**(대본만 확정한 상태)을 못 담는다. 실측으로 서버 job 21건 중 매칭 전은 0건 —
@@ -446,6 +472,10 @@ class Store:
                 # 5단계 썸네일(2026-07-17). 프레임 선택·텍스트 레이어·생성결과 갤러리를
                 # job 하나에 딸린 부속물로 본다(설계 Q4) — headcopy_json과 같은 패턴.
                 ("thumbnail_json", "TEXT"),
+                # 6단계 SEO(2026-07-17) — 제목·설명·태그·해시태그·CTA + 키워드 실측치 일습.
+                # 산출물이 한 덩어리로만 의미가 있어(제목만 바꿔도 태그·CTA와 어울려야 한다)
+                # 필드를 쪼개지 않고 JSON 한 칸에 둔다.
+                ("seo_json", "TEXT"),
             ):
                 try:
                     c.execute(f"ALTER TABLE mix_jobs ADD COLUMN {col} {ddl}")
@@ -1279,7 +1309,8 @@ class Store:
                 "subtitle_removal, clean_video_path, given_script, headcopy_json, "
                 "caption_style_json, voice_json, deco_json, script_structure_json, "
                 "fx_plan, fx_status, fx_path, "
-                "preview_status, preview_path, preview_error, thumbnail_json "
+                "preview_status, preview_path, preview_error, "
+                "thumbnail_json, seo_json "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -1301,6 +1332,7 @@ class Store:
             "fx_status": row[20], "fx_path": row[21],
             "preview_status": row[22], "preview_path": row[23], "preview_error": row[24],
             "thumbnail": json.loads(row[25]) if row[25] else None,
+            "seo": json.loads(row[26]) if row[26] else None,
         }
 
     def update_mix_job(self, job_id, **fields):
@@ -1334,6 +1366,9 @@ class Store:
         if "voice" in fields:
             cols.append("voice_json=?")
             vals.append(json.dumps(fields["voice"], ensure_ascii=False) if fields["voice"] else None)
+        if "seo" in fields:
+            cols.append("seo_json=?")
+            vals.append(json.dumps(fields["seo"], ensure_ascii=False) if fields["seo"] else None)
         for k, col in (("extract", "extract_json"), ("edit_plan", "edit_plan_json")):
             if k in fields:
                 cols.append(f"{col}=?")
@@ -1342,6 +1377,52 @@ class Store:
         vals.append(job_id)
         with self._conn() as c:
             c.execute(f"UPDATE mix_jobs SET {', '.join(cols)} WHERE job_id=?", tuple(vals))
+
+    # ── 6단계 SEO 키워드 측정 캐시(2026-07-17) ──
+    # job이 아니라 전역이다 — 키워드 측정치는 어느 영상이 쟀든 같은 값이고,
+    # search.list가 100유닛인데 발굴과 키풀을 나눠 쓰므로 재측정은 순손실이다.
+    def put_keyword_stats(self, stat):
+        """키워드 측정치 upsert(keyword+region 충돌 시 덮어씀)."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT OR REPLACE INTO seo_keyword_stats "
+                "(keyword, region, views_top, views_median, small_ratio, small_hits, "
+                " hit_n, sample_n, top_titles_json, verdict, checked_at) "
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                (stat["keyword"], stat.get("region") or "KR",
+                 stat.get("views_top"),
+                 stat.get("views_median"), stat.get("small_ratio"),
+                 stat.get("small_hits"), stat.get("hit_n"), stat.get("sample_n"),
+                 json.dumps(stat.get("top_titles") or [], ensure_ascii=False),
+                 stat.get("verdict"),
+                 datetime.now(timezone.utc).isoformat()),
+            )
+
+    def get_keyword_stats(self, keyword, region="KR", ttl_days=7):
+        """TTL 안이면 측정치 dict, 없거나 낡았으면 None.
+        낡은 측정치로 근거를 만들면 안 되므로 만료는 '없음'과 같이 다룬다."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT views_median, small_ratio, sample_n, top_titles_json, "
+                "verdict, checked_at, views_top, small_hits, hit_n "
+                "FROM seo_keyword_stats "
+                "WHERE keyword=? AND region=?", (keyword, region),
+            ).fetchone()
+        if not row:
+            return None
+        try:
+            checked = datetime.fromisoformat(row[5])
+        except (TypeError, ValueError):
+            return None
+        if datetime.now(timezone.utc) - checked > timedelta(days=ttl_days):
+            return None
+        return {
+            "keyword": keyword, "region": region,
+            "views_top": row[6], "small_hits": row[7], "hit_n": row[8],
+            "views_median": row[0], "small_ratio": row[1], "sample_n": row[2],
+            "top_titles": json.loads(row[3]) if row[3] else [],
+            "verdict": row[4], "checked_at": row[5],
+        }
 
     # ── 제작소 작업파일(2026-07-17) ──────────────────────────
     def upsert_produce_work(self, work_id, state, job_id=_UNSET, step=_UNSET,
