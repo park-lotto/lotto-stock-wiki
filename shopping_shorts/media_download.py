@@ -40,7 +40,8 @@ def probe_grab_meta(url, timeout=40):
             for key, src in (("thumbnail", "thumbnail"), ("title", "title"),
                              ("channel", "uploader"), ("views", "view_count"),
                              ("likes", "like_count"), ("comments", "comment_count"),
-                             ("duration", "duration")):
+                             ("shares", "repost_count"), ("duration", "duration"),
+                             ("followers", "channel_follower_count"), ("ts", "timestamp")):
                 v = d.get(src)
                 if v not in (None, ""):
                     out[key] = v

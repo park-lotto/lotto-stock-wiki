@@ -87,7 +87,11 @@ function sendToProduce(){
 // 핫링크 차단이 있어 프록시 경유해야 뜬다(2026-07-14 버그수정).
 function thumbSrc(u){
   if(!u) return '';
-  return u.includes('gstatic.com') ? u : '/api/thumb?url='+encodeURIComponent(u);
+  // gstatic(구글렌즈)·중국 CDN(샤오홍슈 xhscdn·도우인 douyinpic)은 핫링크 제한이 없어
+  // no-referrer로 직접 로드한다. /api/thumb 프록시는 인스타 referer를 붙여 중국 CDN에서
+  // 오히려 400/검게 나오므로 프록시를 태우지 않는다(2026-07-18 모음집 검은썸네일 수정).
+  if(/gstatic\.com|xhscdn\.com|douyinpic\.com|xhslink\.com/.test(u)) return u;
+  return '/api/thumb?url='+encodeURIComponent(u);
 }
 function _fmtCount(n){
   if(n==null||isNaN(n)) return '';
@@ -102,17 +106,31 @@ function _fmtDur(s){
   s=Math.round(Number(s)); const m=Math.floor(s/60);
   return m+':'+String(s%60).padStart(2,'0');
 }
-// 레퍼런스 랭킹처럼 영상정보 한 줄(조회수·좋아요·댓글·길이·채널) — 원클릭 담기 보강메타(m).
+// 속도(시간당) = 댓글수 ÷ 업로드 후 경과시간(시간). ts(업로드 unixtime) 있어야 계산.
+function _speed(comments, ts){
+  if(comments==null || !ts) return null;
+  const hrs=(Date.now()/1000 - Number(ts))/3600;
+  return hrs>0 ? comments/hrs : null;
+}
+// 레퍼런스 랭킹처럼 영상정보 블록(조회수·좋아요·댓글·팔로워·속도·참여밀도·길이) — 담기 보강메타(m).
+// ※가속은 시계열 2회 스냅샷이 필요해 일회성 담기론 불가. 팔로워·참여밀도는 플랫폼이 팔로워를
+//   줄 때만(틱톡은 안 줌). 조회수·댓글·좋아요·속도·길이는 대부분 나온다.
 function metaLine(m){
   if(!m) return '';
-  const parts=[
-    m.channel?('👤 '+esc(String(m.channel).slice(0,18))):'',
-    (m.views!=null)?('👁 '+_fmtCount(m.views)):'',
-    (m.likes!=null)?('❤ '+_fmtCount(m.likes)):'',
-    (m.comments!=null)?('💬 '+_fmtCount(m.comments)):'',
-    (m.duration!=null)?('⏱ '+_fmtDur(m.duration)):''
-  ].filter(Boolean);
-  return parts.length?`<div style="font-size:11px;color:var(--sub);margin:2px 0 4px">${parts.join('  ·  ')}</div>`:'';
+  const row=(label,val)=> (val!=null&&val!=='')
+    ? `<div style="display:flex;justify-content:space-between;gap:8px"><span style="color:var(--sub)">${label}</span><b>${val}</b></div>` : '';
+  const sp=_speed(m.comments, m.ts);
+  const body=[
+    m.channel?`<div style="opacity:.85;margin-bottom:2px">👤 ${esc(String(m.channel).slice(0,22))}</div>`:'',
+    m.followers?row('팔로워', Number(m.followers).toLocaleString()):'',
+    row('조회수', m.views!=null?Number(m.views).toLocaleString():''),
+    row('좋아요', m.likes!=null?Number(m.likes).toLocaleString():''),
+    row('댓글', m.comments!=null?Number(m.comments).toLocaleString():''),
+    sp!=null?row('속도(시간당)', sp.toFixed(1)):'',
+    (m.followers&&m.comments!=null)?row('참여밀도', (m.comments/m.followers*100).toFixed(2)+'%'):'',
+    m.duration!=null?row('길이', _fmtDur(m.duration)):''
+  ].filter(Boolean).join('');
+  return body?`<div style="font-size:11px;margin:2px 0 6px;display:flex;flex-direction:column;gap:1px">${body}</div>`:'';
 }
 // 이 영상 하나만 바로 제작소로 (선택 안 해도 카드에서 바로).
 function sendOneToProduce(sc){
