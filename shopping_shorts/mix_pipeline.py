@@ -15,12 +15,13 @@ from shopping_shorts.script_extract import extract_script
 from shopping_shorts.edit_plan import build_edit_plan
 from shopping_shorts import tts
 from shopping_shorts import audio_post
-from shopping_shorts.video_assemble import assemble, _beat_timeline
+from shopping_shorts.video_assemble import assemble, _beat_timeline, _probe_duration
 from shopping_shorts.motion_assets import resolve_layers, DEFAULT_ASSETS_DIR
 from shopping_shorts.motion_packs import build_plan, load_packs
 from shopping_shorts.vmake_client import remove_subtitles
 from shopping_shorts.narration_naturalize import naturalize, merge_profile
 from shopping_shorts import asr_check
+from shopping_shorts import caption_sync
 
 # 모션 자산 폴더(테스트가 monkeypatch로 교체 가능하도록 모듈 상수로 노출)
 MOTION_ASSETS_DIR = DEFAULT_ASSETS_DIR
@@ -92,6 +93,13 @@ def _synthesize_beats(beats, tts_dir, *, voice):
             next_text=beats[i + 1]["narration"] if i < total - 1 else None,
         )
         beat["tts_path"] = str(out)
+        # 자막 타이밍용: 실제 말한 워드 시각으로 구절 표시시간 계산(실패/키없음 → 미설정=폴백).
+        beat["cap_durs"] = None
+        words = asr_check.transcribe_words(str(out))
+        if words:
+            dur = _probe_duration(str(out))
+            beat["cap_durs"] = caption_sync.phrase_durs_from_words(
+                beat["narration"], words, dur)   # None일 수 있음 → 폴백
 
 
 def _prepare_sources(urls, work):
