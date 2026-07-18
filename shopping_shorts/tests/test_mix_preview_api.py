@@ -54,6 +54,42 @@ def test_preview_schedules_render(client, monkeypatch):
     assert called, "run_preview가 예약되지 않았다"
 
 
+# ── 매칭 단계(downloading~tts) staleness 가드 (2026-07-18 실사고) ──────────────
+# 사장님이 '영상 매칭 시작' 후 다운로드 도중 배포 재시작으로 BackgroundTask가 죽어, DB엔
+# status='downloading'이 영원히 남고 프론트가 10분째 무한 ⏳. 렌더 단계엔 _render_is_stale
+# 가드가 있었으나 매칭 단계엔 없었다 → 매칭 단계도 stale이면 응답에서 failed로 알린다(DB 불변).
+@pytest.mark.parametrize("stage", ["downloading", "extracting", "planning", "tts"])
+def test_stale_matching_stage_reported_as_failed(client, stage):
+    store = Store(app_module.DB_PATH)
+    store.create_mix_job("JS", ["https://x/1"], 20, "template")
+    store.update_mix_job("JS", status=stage)
+    _backdate(app_module.DB_PATH, "JS", minutes=11)   # 10분 초과 = 죽은 잔해
+
+    d = client.get("/api/mix/status/JS").json()
+    assert d["status"] == "failed", f"{stage} 11분 stale인데 failed로 안 바뀜 — 무한 스피너 재발: {d}"
+    assert "다시" in (d.get("error") or ""), f"재시도 안내가 없다: {d}"
+
+    # ★DB는 그대로여야 한다(GET이 쓰면 안 된다). 재실행은 새 job이 유일 복구.
+    assert store.get_mix_job("JS")["status"] == stage, "GET이 DB status를 바꿨다"
+
+
+def test_fresh_matching_stage_not_falsely_failed(client):
+    """방금 시작한 다운로드(updated_at=now)는 failed로 오판하면 안 된다 — 정상 진행 중."""
+    store = Store(app_module.DB_PATH)
+    store.create_mix_job("JF", ["https://x/1"], 20, "template")
+    store.update_mix_job("JF", status="downloading")   # updated_at = now
+    d = client.get("/api/mix/status/JF").json()
+    assert d["status"] == "downloading", f"정상 진행 중인데 failed로 오판: {d}"
+
+
+def test_stale_does_not_touch_terminal_states(client):
+    """이미 끝난(ready_for_review) 오래된 job은 건드리지 않는다 — 매칭 단계만 대상."""
+    _job_with_plan("JT")
+    _backdate(app_module.DB_PATH, "JT", minutes=30)
+    d = client.get("/api/mix/status/JT").json()
+    assert d["status"] == "ready_for_review", f"끝난 job을 failed로 바꿨다: {d}"
+
+
 def test_preview_does_not_double_schedule_while_rendering(client, monkeypatch):
     """★더블클릭 방어 — 이미 렌더 중이면 또 걸지 않는다(ffmpeg 두 번 = CPU 두 배)."""
     store = _job_with_plan()

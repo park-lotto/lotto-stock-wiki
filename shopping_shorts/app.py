@@ -1269,12 +1269,25 @@ def api_get_vmake_key():
     return {"ok": True, "configured": bool(key)}      # 원문은 노출하지 않음
 
 
+# 매칭 파이프라인의 '진행 중' 단계들(run_mix_job: downloading→extracting→planning→tts).
+# 각 단계가 update_mix_job으로 updated_at을 갱신하므로, 여기 오래 멈춰 있으면 죽은 잔해다.
+_MIX_ACTIVE_STAGES = ("downloading", "extracting", "planning", "tts")
+
+
 @app.get("/api/mix/status/{job_id}")
 def api_mix_status(job_id: str):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
-    return {"ok": True, "status": job["status"], "error": job["error"],
+    status, error = job["status"], job["error"]
+    # ★매칭 단계 staleness 가드(2026-07-18 실사고). 사장님이 '영상 매칭 시작' 후 다운로드 도중
+    # 배포 재시작으로 BackgroundTask가 죽으면 except가 못 돌아 DB엔 이 상태가 **영원히** 남고,
+    # 프론트는 10분째 무한 ⏳(렌더 단계엔 _render_is_stale가 있었으나 매칭 단계엔 없었다).
+    # GET이라 DB는 안 건드리고 응답에서만 failed로 알린다 — 재실행(새 job)이 유일한 복구다.
+    if status in _MIX_ACTIVE_STAGES and _render_is_stale(job):
+        status = "failed"
+        error = "서버 재시작 등으로 중단되었습니다. 다시 시도해 주세요."
+    return {"ok": True, "status": status, "error": error,
             # 1단계 미리보기(2026-07-17): 폴러를 둘로 만들지 않으려고 기존 응답에 얹는다(스펙 §6.3).
             # preview_path는 서버 내부 경로라 안 내보낸다 — 파일은 전용 라우트로만 서빙.
             "preview_status": job.get("preview_status"),
