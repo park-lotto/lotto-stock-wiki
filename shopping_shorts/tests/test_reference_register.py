@@ -30,6 +30,16 @@ def test_register_rejects_reel_url(monkeypatch, tmp_path):
                     params={"url": "https://www.instagram.com/reel/ABC123/"})
     assert r.status_code == 422
     assert not r.json()["ok"]
+    assert "채널" in r.json()["error"]  # 프로필 주소를 넣으라는 안내
+
+
+def test_register_accepts_full_profile_url_with_query(monkeypatch, tmp_path):
+    # 전체 URL(www·트레일링 슬래시·쿼리스트링) 그대로 붙여넣어도 아이디만 뽑는다
+    client, store = _client(monkeypatch, tmp_path)
+    r = client.post("/api/reference/register",
+                    params={"url": "https://www.instagram.com/home.director_/?hl=ko&igsh=abc"})
+    assert r.status_code == 200
+    assert r.json()["username"] == "home.director_"
 
 
 def test_register_rejects_non_instagram(monkeypatch, tmp_path):
