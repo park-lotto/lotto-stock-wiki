@@ -218,7 +218,12 @@ def test_strict_raiser_narrower_than_loose_guard_direct():
         _question_tail_match, _QUESTION_GUARD_PAT, _QUESTION_TAIL_ALTS,
     )
     for alt in _QUESTION_TAIL_ALTS:
-        t = "이거 될까요." if alt == "까요" else f"이거 {alt}."
+        if alt == "까요":
+            t = "이거 될까요."
+        elif alt == "니까":
+            t = "이거 합니까."
+        else:
+            t = f"이거 {alt}."
         assert _question_tail_match(t) is not None, f"올리개가 안 걸림: {t!r}"
         assert _QUESTION_GUARD_PAT.search(t) is not None, f"가드가 안 걸림(상위집합 위반): {t!r}"
     assert _question_tail_match("이건 최신 가요.") is None, "올리개가 명사 '가요'에 걸리면 안 된다"
@@ -473,3 +478,99 @@ def test_isseyo_syeosseoyo_are_guard_only_not_raiser():
         out = _run(text, "페인포인트")
         assert not out.rstrip().endswith("?"), \
             f"{label}: 올리개 범위를 넘어 물음표로 뒤집혔다: {out!r}"
+
+
+# ── 합쇼체 의문형 (-습니까/-ㅂ니까) — Task3 v2 follow-on, 2026-07-18 ──
+# 실측(사장님 지시서 재현, `merge_profile({})`, role=훅) — 합쇼체 의문형이 훅
+# 꼬리 강조 규칙에 그대로 느낌표로 덮어써졌다: '아직도 손으로 하십니까.' →
+# '[curious] 아직도 손으로, 하십니까!'. 이 클래스는 "까요"와 달리 판별자가
+# 있다: 합쇼체 평서형은 반드시 "니다"로 끝나고("습니다"/"합니다"), 의문형만
+# "니까"로 끝난다 — 그래서 "니까" 자체는 올리개 문턱에 안전하게 못 들어간다
+# (연결어미 "-(으)니까"와 표면이 겹친다, 아래 함정 참조). 진짜 판별자는
+# "니까" 바로 앞 음절의 받침이 ㅂ인가다("-습니까"의 "습", "-ㅂ니까"가 어간에
+# 융합돼 만드는 "갑"/"봅"/"옵"/"십" 등) — 연결어미 "-(으)니까"는 자음어간 뒤
+# "으"가 항상 끼어들어("좋으니까"/"없으니까") "니까" 바로 앞이 ㅂ받침일 수
+# 구조적으로 없다(ㄹ까요의 ㄹ받침 판별자와 동형 논증, `_has_rieul_batchim`
+# 참조). 명사+"-이니까" 계열도 마찬가지로 "이"가 끼어들어("사람이니까")
+# 안전하다.
+
+@pytest.mark.parametrize("text", [
+    "아직도 손으로 하십니까.",
+    "이게 맞습니까.",
+    "어디 가십니까.",
+    "이거 보셨습니까.",
+    "지금 가십니까.",
+])
+def test_hapsyoche_interrogative_raises_to_question_mark(text):
+    """합쇼체 의문형(-습니까/-ㅂ니까)은 훅에서 물음표로 올라가야 하고, 훅 꼬리
+    강조(느낌표)를 받으면 안 된다. 쉼표는 여기서 안 본다 — 기본 프로파일은
+    `_fillers`가 훅 맨 앞에 "와," 같은 추임새를 독립적으로 붙이므로(기존
+    `까요`/`나요` 훅 raiser 케이스도 동일하게 겪는, 이 기능과 무관한 현상,
+    `test_hook_question_tail_becomes_question_mark` 참조 — 그쪽도 쉼표는 안 본다),
+    쉼표 유무만으로는 훅 꼬리 강조가 발동했는지 못 가른다. 훅 꼬리 강조 자체의
+    쉼표+느낌표 억제는 아래 `test_hapsyoche_guard_independent_of_endings_stage`가
+    `fillers`를 꺼서 격리 검증한다.
+    뮤턴트: `_QUESTION_TAIL_ALTS`에 "니까"를 안 넣으면(또는 사후검증 없이 바레로만
+    넣으면 아래 함정 테스트가 죽는다) 5종 전부 `'!' in out`으로 죽는다."""
+    out = _run(text, "훅")
+    assert out.rstrip().endswith("?"), f"합쇼체 의문형 끝음이 안 올라간다: {out!r}"
+    assert "!" not in out, f"훅 꼬리 강조(느낌표)가 합쇼체 의문형에 잘못 붙었다: {out!r}"
+
+
+@pytest.mark.parametrize("text", [
+    "이게 좋으니까.",
+    "비가 오니까.",
+    "그러니까.",
+    "사람이니까.",
+])
+def test_bare_niga_connective_not_flipped(text):
+    """★함정 테스트 — 연결어미 "-(으)니까"(때문에)는 의문형이 아니다. "니까"를
+    사후검증 없이 바레로 올리개에 넣으면 이 4종이 전부 물음표로 뒤집힌다(연결어미와
+    합쇼체 의문형이 표면 "니까"를 공유하는 게 함정의 정체 — "까요" 클래스와 동형).
+    뮤턴트: `_question_tail_match`의 "니까" 사후검증(ㅂ받침) 블록을 제거하면
+    4종 전부 `endswith('?')`로 죽는다."""
+    out = _run(text, "훅")
+    assert not out.rstrip().endswith("?"), f"연결어미 평서문이 물음표로 뒤집혔다: {out!r}"
+
+
+def test_hapsyoche_guard_independent_of_endings_stage():
+    """`_intonation`의 가드는 `_endings`가 꺼져 있어도(intensity 0) 독립적으로
+    합쇼체 의문형의 훅 꼬리 강조(쉼표+느낌표)를 억제해야 한다 — 가드는
+    `_QUESTION_TAIL_ALTS`의 상위집합(`_QUESTION_GUARD_ALTS`)에서 자동 도출되므로
+    "니까"를 올리개에 추가하면 가드도 자동으로 따라와야 한다. `fillers`도 꺼서
+    (`test_guard_covers_seyo_forms_endings_off` 선례와 동일 격리) 무관한 추임새
+    쉼표가 섞여 훅 꼬리 강조 쉼표와 혼동되지 않게 한다.
+    뮤턴트: `_QUESTION_GUARD_ALTS`가 `_QUESTION_TAIL_ALTS`와의 합집합에서
+    "니까"를 빠뜨리면(구조적 상위집합이 깨지면) 이 테스트가 죽는다."""
+    out = _run("아직도 손으로 하십니까.", "훅",
+               {"endings": {"intensity": 0}, "fillers": {"on": False}})
+    assert "!" not in out, f"의문형인데 훅 꼬리 강조(느낌표)가 붙었다: {out!r}"
+    assert not out.rstrip().endswith(","), f"의문형 끝에 쉼표가 남았다: {out!r}"
+
+
+def test_has_bieup_batchim_predicate_direct():
+    """ㅂ받침 판별자 자체의 정확성(문서화 겸 회귀 봉인, `_has_rieul_batchim`
+    정밀 검증 선례를 동형으로 따른다) — 합쇼체 의문형이 만드는 "니까" 직전
+    음절(습·십·갑·봅·옵 등)은 전부 ㅂ받침(True), 연결어미·지정사가 만드는
+    직전 음절(좋·오·크·이·러 등)은 전부 ㅂ받침이 아니다(False).
+    뮤턴트: `% 28 == 17`을 다른 종성 인덱스로 바꾸면(예: `== 8`, ㄹ받침) 아래
+    True/False 쌍 전체가 뒤집혀 죽는다."""
+    from shopping_shorts.narration_naturalize import _has_bieup_batchim
+    for ch in ["습", "십", "갑", "봅", "옵", "합"]:
+        assert _has_bieup_batchim(ch) is True, f"ㅂ받침인데 False: {ch!r}"
+    for ch in ["좋", "오", "크", "이", "러", " ", "가"]:
+        assert _has_bieup_batchim(ch) is False, f"ㅂ받침 아닌데 True: {ch!r}"
+
+
+def test_niga_raiser_rejects_at_string_start():
+    """"니까"가 텍스트 맨 앞이라 앞 음절 자체가 없으면(idx < 0) 판별자가 안전하게
+    무효화해야 한다 — `_question_tail_match`의 "까요" idx<0 가드와 동형 방어.
+    정직한 표기(뮤턴트 실측, Task3 v2 follow-on): `idx < 0` 가드를 빼는 뮤턴트를
+    직접 심어봤지만 이 테스트를 못 죽인다 — "니까."에서 idx==-1이면 파이썬 음수
+    인덱싱(`text[-1]`)이 항상 뒷꼬리 그룹(".")에 떨어져 한글 음절 범위 밖이라
+    `_has_bieup_batchim`이 구조적으로 False를 반환한다("까요" 선례와 동일한
+    등가 뮤턴트, `test_kkayo_raiser_rejects_at_string_start` 참조). 그래도 가드는
+    남긴다 — 우연한 안전성보다 명시적 방어가 더 읽기 쉽고, `_QUESTION_TAIL_PAT`의
+    앵커 방식이 나중에 바뀌면 이 불변식이 깨질 수 있다."""
+    out = _run("니까.", "훅")
+    assert not out.rstrip().endswith("?"), f"문두 '니까'가 물음표로 뒤집혔다: {out!r}"
