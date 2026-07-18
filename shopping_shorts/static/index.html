@@ -759,7 +759,9 @@ function lensPreview(shortcode, savesc){
   if(yid){
     inner=`<iframe width="100%" height="460" src="https://www.youtube.com/embed/${yid}" frameborder="0" allow="encrypted-media" allowfullscreen style="border-radius:8px"></iframe>`;
   }else if(it.play_url){
-    inner=`<video src="${it.play_url}" controls autoplay playsinline style="max-width:100%;max-height:68vh;border-radius:8px"></video>
+    // 샤오홍슈/도우인 직접 mp4. 썸네일 이미지가 no-referrer로 로드되듯 영상도 같은 방식으로
+    // 시도(핫링크 referer 차단 우회). CDN 만료토큰 등으로 실패하면 아래 원본 링크로.
+    inner=`<video src="${it.play_url}" controls autoplay playsinline referrerpolicy="no-referrer" style="max-width:100%;max-height:68vh;border-radius:8px"></video>
       <div style="color:var(--sub);font-size:12px;margin-top:6px">재생이 안 되면(플랫폼 차단) 아래 원본에서 확인하세요.</div>`;
   }else{
     inner=`<img src="${it.thumbnail||''}" referrerpolicy="no-referrer" style="max-width:100%;max-height:60vh;border-radius:8px">
