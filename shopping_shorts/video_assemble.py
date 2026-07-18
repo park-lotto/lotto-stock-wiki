@@ -307,7 +307,10 @@ def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=
         # 기존 폴백 "h-text_h-100"의 근사치를 %로 환산(문자 높이는 size*1.2로 근사)
         ypct = max(0.0, min(100.0, (_OUT_H - 100 - size * 0.6) / _OUT_H * 100.0))
     use_box = bool(style.get("box"))
-    show_bar = style.get("bar", True) and not use_box
+    # 하단 자막 바 기본 OFF(2026-07-19) — 300px·black@0.82 바가 화면 하단 23%를
+    # 덮어 "검정바"로 보인다는 제보. 그림자 자막만으로 가독성 확보. 원본 소각자막을
+    # 덮어야 하는 경우엔 style.bar=True로 명시적으로 켠다(자막제거 ON이면 불필요).
+    show_bar = style.get("bar", False) and not use_box
     effect = style.get("effect") or "none"
     parts = []
     if show_bar:
