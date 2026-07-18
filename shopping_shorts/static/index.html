@@ -713,7 +713,7 @@ function renderLens(shortcode){
   const cards=shown.map(i=>{
     const plabel=LENS_PLATFORMS.find(p=>p.k===i.platform)?.label||'';
     const isSaved=st.saved.has(i.savesc), isSel=st.sel.has(i.savesc);
-    const stat=(i.views!=null)?('👁 '+_fmtCount(i.views)):((i.likes!=null)?('❤ '+_fmtCount(i.likes)):'');
+    const stat=(i.views)?('👁 '+_fmtCount(i.views)):((i.likes!=null)?('❤ '+_fmtCount(i.likes)):'');   // 도우인 playCount=0 잦음 → 0이면 좋아요로
     const meta=[i.channel?('👤 '+esc(i.channel)):'', stat, (i.duration!=null)?('⏱ '+_fmtDur(i.duration)):''].filter(Boolean).join('  ·  ');
     return `
     <div class="card" style="${isSel?'outline:2px solid var(--accent)':''}">
