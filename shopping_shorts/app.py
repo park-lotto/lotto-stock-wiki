@@ -1291,7 +1291,8 @@ def api_mix_result(job_id: str):
     beats = []
     for b in plan["beats"]:
         beats.append({**b, "plagiarism_flag": b["beat_idx"] in flags,
-                      "tts_preview_url": f"/api/mix/tts/{job_id}/{b['beat_idx']}"})
+                      "tts_preview_url": f"/api/mix/tts/{job_id}/{b['beat_idx']}",
+                      "cap_segments": video_assemble._caption_segments(b.get("narration", ""))})
     detected = plan.get("detected_type") or _edit_plan._DEFAULT_TYPE
     return {
         "ok": True, "structure": plan["structure"], "beats": beats,
