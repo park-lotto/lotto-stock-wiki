@@ -100,6 +100,7 @@ def test_media_url_not_found_returns_ok_false(tmp_path, monkeypatch):
 # ── /api/lens/cn : 캡션 키워드 → 샤오홍슈+도우인 병렬 검색 (2026-07-18) ──
 def test_lens_cn_merges_and_tags_platforms(tmp_path, monkeypatch):
     monkeypatch.setattr(appmod, "APIFY_TOKENS", ["tok"])
+    monkeypatch.setattr(appmod, "translate_keyword", lambda kw: {"zh": ""})   # 번역 폴백=한국어
     monkeypatch.setattr(appmod.xiaohongshu_search, "search",
                         lambda kw, max_results=8: [{"url": "https://xhs/1", "title": "x", "duration": 20, "is_short": True}])
     monkeypatch.setattr(appmod.douyin_search, "search",
@@ -111,7 +112,29 @@ def test_lens_cn_merges_and_tags_platforms(tmp_path, monkeypatch):
     assert d["ok"] and d["count"] == 2
     plats = {i["platform"] for i in d["items"]}
     assert plats == {"xiaohongshu", "douyin"}
-    assert d["keyword"] == "무선 청소기"   # 앞쪽 의미토큰 2개
+    assert d["keyword"] == "무선 청소기 리뷰"   # 번역 실패 시 한국어(앞쪽 토큰 3개) 폴백
+    assert all(i["match"] is None for i in d["items"])   # zh 없으면 관련도 판정 생략
+
+
+def test_lens_cn_translates_to_chinese_and_marks_relevance(tmp_path, monkeypatch):
+    """한국어 캡션→중국어 번역으로 검색, 제목-검색어 2그램 겹침으로 관련도 표시."""
+    monkeypatch.setattr(appmod, "APIFY_TOKENS", ["tok"])
+    monkeypatch.setattr(appmod, "translate_keyword", lambda kw: {"zh": "玄关鞋柜收纳"})
+    seen = {}
+    def xhs(kw, max_results=8):
+        seen["kw"] = kw
+        return [{"url": "https://xhs/1", "title": "玄关鞋柜这样收纳"},   # 관련(겹침)
+                {"url": "https://xhs/2", "title": "哪吒大电影"}]          # 무관
+    monkeypatch.setattr(appmod.xiaohongshu_search, "search", xhs)
+    monkeypatch.setattr(appmod.douyin_search, "search", lambda kw, max_results=8: [])
+    c = TestClient(appmod.app)
+    d = c.post("/api/lens/cn", data={"source_caption": "좁은 현관 신발장 정리"}).json()
+    assert seen["kw"] == "玄关鞋柜收纳"          # 중국어로 검색함
+    assert d["keyword"] == "玄关鞋柜收纳"
+    assert d["keyword_ko"] == "좁은 현관 신발장"   # 앞쪽 토큰 3개
+    by_url = {i["url"]: i for i in d["items"]}
+    assert by_url["https://xhs/1"]["match"] is True    # 玄关/鞋柜 겹침
+    assert by_url["https://xhs/2"]["match"] is False   # 무관 → ⚠️배지
 
 
 def test_lens_cn_empty_when_no_caption(tmp_path, monkeypatch):
@@ -131,6 +154,7 @@ def test_lens_cn_empty_when_no_tokens(tmp_path, monkeypatch):
 def test_lens_cn_survives_one_actor_error(tmp_path, monkeypatch):
     """한 플랫폼 액터가 죽어도 다른 쪽 결과는 살아야 한다."""
     monkeypatch.setattr(appmod, "APIFY_TOKENS", ["tok"])
+    monkeypatch.setattr(appmod, "translate_keyword", lambda kw: {"zh": ""})
     def boom(kw, max_results=8):
         raise RuntimeError("actor down")
     monkeypatch.setattr(appmod.xiaohongshu_search, "search", boom)

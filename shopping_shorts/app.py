@@ -1967,11 +1967,22 @@ _CN_TOKEN_RE = re.compile(r"[0-9A-Za-z가-힣]{2,}")
 
 
 def _cn_keyword(caption):
-    """캡션 → 샤오홍슈/도우인 검색어(앞쪽 의미토큰 2개). 없으면 ''."""
+    """캡션 → 검색어(앞쪽 의미토큰 3개). 없으면 ''."""
     if not caption:
         return ""
     toks = [t for t in _CN_TOKEN_RE.findall(caption) if t.lower() not in _CN_STOP]
-    return " ".join(toks[:2])
+    return " ".join(toks[:3])
+
+
+def _zh_relevant(keyword_zh, title):
+    """중국어 검색어와 결과 제목의 관련도. 검색어의 2글자 조각이 제목에 하나라도 있으면 True.
+    중국어는 공백 구분이 없어 2-그램 겹침으로 본다. 검색어 없으면(2글자 미만) 판정불가 None."""
+    kw = re.sub(r"\s", "", keyword_zh or "")
+    if len(kw) < 2:
+        return None
+    grams = {kw[i:i + 2] for i in range(len(kw) - 1)}
+    t = title or ""
+    return any(g in t for g in grams)
 
 
 @app.post("/api/lens/cn")
@@ -1979,14 +1990,21 @@ async def api_lens_cn(request: Request, source_caption: str = Form(""),
                        max_results: int = Form(8)):
     """캡션 키워드로 샤오홍슈+도우인을 Apify 병렬 검색 → 렌즈 결과에 합류할 항목.
     렌즈(구글렌즈)는 중국 플랫폼을 거의 못 잡아, 두 전용 액터를 자동으로 덧댄다(2026-07-18).
-    Apify는 느리고(수십초~) 유료라 렌즈 결과가 뜬 뒤 프론트가 비동기로 이 API를 호출해
-    합친다. 토큰 없음·검색어 없음·액터 오류는 각각 조용히 빈 결과로 처리(렌즈 흐름 안 깨짐)."""
-    keyword = _cn_keyword(source_caption)
-    if not keyword:
+    ★한국어 캡션 키워드로 중국 플랫폼을 검색하면 매칭이 안 돼 엉뚱한 영상이 나온다
+    (라이브 실측: '玄关鞋柜收纳技巧'로 번역해 검색하니 전부 신발장 정리 영상). Gemini로
+    중국어 번역해 검색하고, 제목-검색어 관련도(match)로 표시(안 맞으면 프론트 ⚠️배지).
+    Apify는 느리고 유료라 렌즈 결과가 뜬 뒤 프론트가 비동기로 호출해 합친다."""
+    ko = _cn_keyword(source_caption)
+    if not ko:
         return {"ok": True, "items": [], "count": 0, "note": "캡션에서 검색어를 뽑지 못했습니다"}
     if not APIFY_TOKENS:
         return {"ok": True, "items": [], "count": 0, "note": "APIFY 토큰 없음"}
     n = max(1, min(int(max_results or 8), 20))
+    try:
+        zh = (translate_keyword(ko).get("zh") or "").strip()
+    except Exception:
+        zh = ""
+    keyword = zh or ko   # 번역 실패 시 한국어 폴백(관련도 판정은 생략)
 
     def _run(platform, mod):
         try:
@@ -1995,14 +2013,15 @@ async def api_lens_cn(request: Request, source_caption: str = Form(""),
             return []
         for r in rows:
             r["platform"] = platform
-            r["match"] = None   # 키워드 검색이라 제목-캡션 재매칭은 생략
+            r["match"] = _zh_relevant(zh, r.get("title", "")) if zh else None
         return rows
 
     with ThreadPoolExecutor(max_workers=2) as ex:
         fx = ex.submit(_run, "xiaohongshu", xiaohongshu_search)
         fd = ex.submit(_run, "douyin", douyin_search)
         items = fx.result() + fd.result()
-    return {"ok": True, "items": items, "count": len(items), "keyword": keyword}
+    return {"ok": True, "items": items, "count": len(items),
+            "keyword": keyword, "keyword_ko": ko}
 
 
 @app.get("/healthz")
