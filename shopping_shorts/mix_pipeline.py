@@ -13,6 +13,7 @@ from shopping_shorts.store import Store
 from shopping_shorts.media_download import download_any
 from shopping_shorts.script_extract import extract_script
 from shopping_shorts.edit_plan import build_edit_plan
+from shopping_shorts.scene_match import match_scene_assets
 from shopping_shorts import tts
 from shopping_shorts import audio_post
 from shopping_shorts.video_assemble import assemble, _beat_timeline
@@ -145,14 +146,14 @@ def run_mix_job(job_id, db_path, work_root):
         source_scripts = list(extracts.values())
         _plan_and_tts(store, job_id, source_scripts, job["target_seconds"],
                       job["structure"], None, work, given_script=job.get("given_script"),
-                      voice=job.get("voice"))
+                      voice=job.get("voice"), customer_id=job.get("customer_id", 0))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=str(e))
 
 
 def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, video_type, work,
-                  given_script=None, voice=None):
+                  given_script=None, voice=None, customer_id=0):
     """EDL 생성(3) + 비트별 TTS(4) → edit_plan 저장 + ready_for_review.
     run_mix_job(자동판별, video_type=None)과 retype_mix_job(사용자 선택 유형)이 공유.
     given_script: 있으면 확정 대본을 그대로 비트로 쪼개 영상만 매칭(영상제작 2단계).
@@ -166,6 +167,13 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # (2026-07-12 최종 전체리뷰 Important).
     if not plan["beats"]:
         raise RuntimeError("EDL 비어있음 — 대본 추출 실패 또는 Gemini 키 소진으로 편집안을 만들지 못함")
+
+    # 3.5) 장면 라이브러리 매칭 — 자산이 있을 때만(없으면 plan 무변경). match_scene_assets가
+    # beat["cutaway"]={"asset_id":..,"score":..}를 심고, run_render이 같은 키를 읽어
+    # asset_id→media_path로 해석한다(저장위치=읽기위치, seam은 mix_pipeline 배선 참고).
+    assets = store.list_scene_assets(customer_id=customer_id, asset_type="clip")
+    if assets:
+        plan = match_scene_assets(plan, assets)
 
     # 4) 비트별 TTS (naturalize + N-best + 연속성 + 프리셋 후처리)
     store.update_mix_job(job_id, status="tts")
@@ -186,7 +194,7 @@ def retype_mix_job(job_id, video_type, db_path, work_root):
         source_scripts = list(job["extract"].values())
         _plan_and_tts(store, job_id, source_scripts, job["target_seconds"],
                       job["structure"], video_type, work, given_script=job.get("given_script"),
-                      voice=job.get("voice"))
+                      voice=job.get("voice"), customer_id=job.get("customer_id", 0))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=str(e))
@@ -333,9 +341,18 @@ def run_render(job_id, db_path, work_root):
         if motion.get("layers"):
             resolved = resolve_layers(motion["layers"], MOTION_ASSETS_DIR)
             deco = {**deco, "motion": {**motion, "layers": resolved}}
+        # 컷어웨이: 비트에 붙은 asset_id를 media_path로 해석해 assemble에 넘긴다.
+        # 저장위치(match_scene_assets가 쓴 beat["cutaway"]) = 읽기위치(여기) — seam 일치.
+        cutaway_paths = {}
+        for beat in plan["beats"]:
+            cut = beat.get("cutaway")
+            if cut:
+                asset = store.get_scene_asset(cut["asset_id"], customer_id=job.get("customer_id", 0))
+                if asset and asset.get("media_path"):
+                    cutaway_paths[beat["beat_idx"]] = asset["media_path"]
         assemble(plan, tts_paths, source_video_paths, str(out_path), clean_fn=clean_fn,
                  headcopy=job.get("headcopy"), caption_style=caption_style,
-                 deco=deco)
+                 deco=deco, cutaway_paths=cutaway_paths)
         store.update_mix_job(job_id, status="done", video_path=str(out_path))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
