@@ -599,6 +599,7 @@ async function seoGenerate(only){
   const btn = document.getElementById('seoGenAll');
   msg.textContent = only ? '다시 쓰는 중…' : '생성 중… (키워드 실측까지 20초쯤 걸립니다)';
   if(btn) btn.disabled = true;                 // 더블서밋 차단 — 제일 비싼 작업이다
+  try{ logPick('S8', {picked: only ? ('regen:'+only) : 'generate_all', locked: (SEO && SEO.locked) || {}, job_id: MIX_JOB}); }catch(e){}
   try{
     const body = {
       job_id: MIX_JOB,
@@ -1035,7 +1036,18 @@ function renderStyleCards(){
   const mb=document.getElementById('moreStylesBtn'); if(mb) mb.textContent = MORE_OPEN ? '− 접기' : '+ 더보기';
 }
 function toggleMoreStyles(){ MORE_OPEN=!MORE_OPEN; renderStyleCards(); }
-function pickStyleCard(i){ PICKED_STYLE_IDX=i; STYLE_TOUCHED=true; applyFullPreset(i); renderStyleCards(); }
+// 픽로그(트랙1) — 사장님이 무엇을 고르고 버렸는지 조용히 남긴다. 트랙7 취향학습·B전환 지표용.
+// ★부가 기능이라 절대 흐름을 막지 않는다: fire-and-forget, 예외·거절 모두 삼킨다.
+function logPick(stage, payload){
+  try{
+    fetch('/api/pick_log', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(Object.assign({stage: stage}, payload || {}))
+    }).catch(function(){});
+  }catch(e){ /* 흐름 보호 */ }
+}
+// ==END logPick==
+function pickStyleCard(i){ PICKED_STYLE_IDX=i; STYLE_TOUCHED=true; applyFullPreset(i); renderStyleCards(); try{ logPick('S6', {picked: (FULL_PRESETS[i] && FULL_PRESETS[i].name) || i, idx: i}); }catch(e){} }
 // renderFullPresets 이름을 참조하는 기존 호출부 호환용 별칭
 function renderFullPresets(){ renderStyleCards(); }
 function applyConfig(h, c){
@@ -1515,6 +1527,7 @@ function useDraft(i){
   setScriptMode('manual');   // 편집 가능한 직접작성 창으로 이동(내용 채움)
   refreshFinalPeek();
   saveWork();
+  try{ logPick('S2', {picked: i, source: 'mix', candidates: (window._drafts||[]).map(function(d){ return d && d.hook; })}); }catch(e){}
 }
 async function postDrafts(url, payload, boxId){
   const box=document.getElementById(boxId);
@@ -1957,6 +1970,7 @@ function pmUseDraft(btn){
   STATE.script_from_wiki=PM_FROM_WIKI;   // mix 유래면 shortcode, 뽑기 유래면 null
   pmClose(); setScriptMode('manual'); refreshFinalPeek(); setFinalCategoryValue(PM_CATEGORY);
   saveWork();
+  try{ logPick('S2', {picked: PM_IDX, source: (PM_FROM_WIKI ? 'wiki' : 'gemini')}); }catch(e){}
 }
 async function pmOnDraftEdit(textarea){
   const card=textarea.closest('.draft');
@@ -2128,6 +2142,7 @@ async function startProduceMix(){
   if(!STATE.script){ alert('1단계에서 대본을 먼저 확정하세요'); return; }
   const urls=collectMixUrls();   // 영상풀 담긴 것 + 입력칸에 남은 것(중복 제거)
   if(urls.length<1){ alert('소스 영상 URL을 1개 이상 입력하세요(확정 또는 🎬담기)'); return; }
+  try{ logPick('S3', {picked: 'mix_start', sources: urls, source_n: urls.length}); }catch(e){}
   const st=document.getElementById('mixStatus'); st.textContent='⏳ 시작 중…';
   document.getElementById('mixReview').innerHTML='';
   try{
@@ -2607,6 +2622,7 @@ async function _loadThumbFrames(){
 function pickThumbFrame(i){
   const f = THUMB_STATE.frames[i]; if (!f) return;
   THUMB_STATE.frame_ts = f.ts; THUMB_STATE.frame_url = f.url;
+  try{ logPick('S7', {picked: i, ts: f.ts, candidate_n: (THUMB_STATE.frames || []).length}); }catch(e){}
   const box = document.getElementById('thumbFrames');
   Array.from(box.children || []).forEach((el, k) => {
     if (el.style) el.style.border = `2px solid ${k === i ? 'var(--accent2)' : 'transparent'}`;
