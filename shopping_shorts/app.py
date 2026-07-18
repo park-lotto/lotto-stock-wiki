@@ -20,6 +20,7 @@ from fastapi.staticfiles import StaticFiles
 from shopping_shorts.service import collect, generate_missing_drafts, next_draft_targets
 from shopping_shorts.outreach import build_queue
 from shopping_shorts.store import Store
+from shopping_shorts.auto_run import run_auto_job, default_stages
 from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
 from shopping_shorts.frame_extract import (download_video, extract_frames,
                                            extract_frame_at, extract_grid_frames)
@@ -2438,6 +2439,26 @@ def api_pick_log(request: Request, body: dict):
         customer_id=_cid(request),
     )
     return {"ok": True, "id": eid}
+
+
+@app.post("/api/auto/start")
+def api_auto_start(request: Request, body: dict, background: BackgroundTasks):
+    # 러너 트리거(트랙4) — auto_job 생성 후 백그라운드로 S1~S3 관통. 동시 1 job 가정.
+    import uuid as _uuid
+    store = Store(DB_PATH)
+    job_id = _uuid.uuid4().hex[:12]
+    store.create_auto_job(job_id, customer_id=_cid(request))
+    stages = default_stages(DB_PATH, _MIX_WORK_DIR)
+    background.add_task(run_auto_job, job_id, store, stages=stages)
+    return {"ok": True, "job_id": job_id}
+
+
+@app.get("/api/auto/{job_id}")
+def api_auto_status(job_id: str):
+    job = Store(DB_PATH).get_auto_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "없음"})
+    return job
 
 
 @app.get("/api/produce/works")
