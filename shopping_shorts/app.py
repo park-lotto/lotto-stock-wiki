@@ -36,6 +36,8 @@ from shopping_shorts import mix_pipeline
 from shopping_shorts.mix_pipeline import (run_mix_job, run_render, run_preview, retype_mix_job,
                                           _source_video_id, resynth_tts_job)
 from shopping_shorts.lens_discover import search_similar_videos, upload_frame
+from shopping_shorts import douyin_search, xiaohongshu_search
+from shopping_shorts.config import APIFY_TOKENS
 from shopping_shorts.media_download import resolve_media_url, download_any
 from shopping_shorts import edit_plan as _edit_plan
 from shopping_shorts import voice_presets, audio_post
@@ -1936,6 +1938,54 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...),
     items = search_similar_videos(image_url, source_caption=source_caption)
     store.bump_lens(month)
     return {"ok": True, "items": items, "count": len(items)}
+
+
+# 캡션 → 중국 플랫폼 검색어. 구글렌즈는 시각검색이라 키워드가 없지만 샤오홍슈/도우인은
+# 키워드 검색이라 캡션에서 핵심어를 뽑아야 한다. 앞쪽 의미토큰 2개를 붙여 쓴다(제품명이
+# 보통 캡션 앞에 온다). 불용어·해시태그 기호는 제거.
+_CN_STOP = {"그리고", "진짜", "완전", "오늘", "이거", "저거", "제가", "너무", "정말",
+            "이번", "우리", "해서", "하는", "있는", "같은", "위한", "shorts", "reels",
+            "the", "and", "for", "with", "this", "that", "from"}
+_CN_TOKEN_RE = re.compile(r"[0-9A-Za-z가-힣]{2,}")
+
+
+def _cn_keyword(caption):
+    """캡션 → 샤오홍슈/도우인 검색어(앞쪽 의미토큰 2개). 없으면 ''."""
+    if not caption:
+        return ""
+    toks = [t for t in _CN_TOKEN_RE.findall(caption) if t.lower() not in _CN_STOP]
+    return " ".join(toks[:2])
+
+
+@app.post("/api/lens/cn")
+async def api_lens_cn(request: Request, source_caption: str = Form(""),
+                       max_results: int = Form(8)):
+    """캡션 키워드로 샤오홍슈+도우인을 Apify 병렬 검색 → 렌즈 결과에 합류할 항목.
+    렌즈(구글렌즈)는 중국 플랫폼을 거의 못 잡아, 두 전용 액터를 자동으로 덧댄다(2026-07-18).
+    Apify는 느리고(수십초~) 유료라 렌즈 결과가 뜬 뒤 프론트가 비동기로 이 API를 호출해
+    합친다. 토큰 없음·검색어 없음·액터 오류는 각각 조용히 빈 결과로 처리(렌즈 흐름 안 깨짐)."""
+    keyword = _cn_keyword(source_caption)
+    if not keyword:
+        return {"ok": True, "items": [], "count": 0, "note": "캡션에서 검색어를 뽑지 못했습니다"}
+    if not APIFY_TOKENS:
+        return {"ok": True, "items": [], "count": 0, "note": "APIFY 토큰 없음"}
+    n = max(1, min(int(max_results or 8), 20))
+
+    def _run(platform, mod):
+        try:
+            rows = mod.search(keyword, max_results=n)
+        except Exception:
+            return []
+        for r in rows:
+            r["platform"] = platform
+            r["match"] = None   # 키워드 검색이라 제목-캡션 재매칭은 생략
+        return rows
+
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        fx = ex.submit(_run, "xiaohongshu", xiaohongshu_search)
+        fd = ex.submit(_run, "douyin", douyin_search)
+        items = fx.result() + fd.result()
+    return {"ok": True, "items": items, "count": len(items), "keyword": keyword}
 
 
 @app.get("/healthz")

@@ -95,3 +95,48 @@ def test_media_url_not_found_returns_ok_false(tmp_path, monkeypatch):
     r = c.get("/api/media?platform=tiktok&id=x")
     assert r.status_code == 200
     assert r.json()["ok"] is False
+
+
+# ── /api/lens/cn : 캡션 키워드 → 샤오홍슈+도우인 병렬 검색 (2026-07-18) ──
+def test_lens_cn_merges_and_tags_platforms(tmp_path, monkeypatch):
+    monkeypatch.setattr(appmod, "APIFY_TOKENS", ["tok"])
+    monkeypatch.setattr(appmod.xiaohongshu_search, "search",
+                        lambda kw, max_results=8: [{"url": "https://xhs/1", "title": "x", "duration": 20, "is_short": True}])
+    monkeypatch.setattr(appmod.douyin_search, "search",
+                        lambda kw, max_results=8: [{"url": "https://dy/1", "title": "d", "duration": 300, "is_short": False}])
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/cn", data={"source_caption": "무선 청소기 리뷰"})
+    assert r.status_code == 200
+    d = r.json()
+    assert d["ok"] and d["count"] == 2
+    plats = {i["platform"] for i in d["items"]}
+    assert plats == {"xiaohongshu", "douyin"}
+    assert d["keyword"] == "무선 청소기"   # 앞쪽 의미토큰 2개
+
+
+def test_lens_cn_empty_when_no_caption(tmp_path, monkeypatch):
+    monkeypatch.setattr(appmod, "APIFY_TOKENS", ["tok"])
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/cn", data={"source_caption": ""})
+    assert r.json()["items"] == [] and r.json()["count"] == 0
+
+
+def test_lens_cn_empty_when_no_tokens(tmp_path, monkeypatch):
+    monkeypatch.setattr(appmod, "APIFY_TOKENS", [])
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/cn", data={"source_caption": "청소기"})
+    assert r.json()["items"] == []
+
+
+def test_lens_cn_survives_one_actor_error(tmp_path, monkeypatch):
+    """한 플랫폼 액터가 죽어도 다른 쪽 결과는 살아야 한다."""
+    monkeypatch.setattr(appmod, "APIFY_TOKENS", ["tok"])
+    def boom(kw, max_results=8):
+        raise RuntimeError("actor down")
+    monkeypatch.setattr(appmod.xiaohongshu_search, "search", boom)
+    monkeypatch.setattr(appmod.douyin_search, "search",
+                        lambda kw, max_results=8: [{"url": "https://dy/2", "title": "d"}])
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/cn", data={"source_caption": "청소기 리뷰"})
+    d = r.json()
+    assert d["count"] == 1 and d["items"][0]["platform"] == "douyin"
