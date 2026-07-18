@@ -268,6 +268,50 @@ def _resolve_cutaway_paths(store, plan, customer_id):
     return out
 
 
+def _clean_one(item, key, work):
+    """소스 하나를 VMake로 청소 → (video_id, 클린경로). ThreadPool 워커용(DB 미접근)."""
+    vid, src = item
+    out = str(Path(work) / f"clean_src_{vid}.mp4")
+    return vid, remove_subtitles(src, key, out_path=out)
+
+
+def _ensure_clean_sources(store, job, job_id, work, key):
+    """clean_sources 맵을 채워 반환. 이미 있고 파일이 존재하면 스킵(재과금 0).
+    각 스레드는 remove_subtitles만 하고 경로를 반환 → DB 저장은 취합 후 메인에서 1회(경합 없음)."""
+    source_map = _resolve_sources(job, Path(work))
+    cached = dict(job.get("clean_sources") or {})
+    todo = [(vid, src) for vid, src in source_map.items()
+            if not (cached.get(vid) and Path(cached[vid]).exists())]
+    if todo:
+        with ThreadPoolExecutor(max_workers=len(todo)) as ex:
+            for vid, out in ex.map(lambda t: _clean_one(t, key, work), todo):
+                cached[vid] = out
+        store.update_mix_job(job_id, clean_sources=cached)
+    return cached
+
+
+def run_clean_sources(job_id, db_path, work_root):
+    """2단계: 각 소스 원본을 VMake로 자막제거해 clean_sources에 캐시.
+    BackgroundTasks로 불리므로 예외를 밖으로 안 던진다(clean_status로만 알린다)."""
+    store = Store(db_path)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return
+    try:
+        work = Path(work_root) / job_id
+        work.mkdir(parents=True, exist_ok=True)
+        key = _vmake_key(store)
+        if not key:
+            store.update_mix_job(job_id, clean_status="failed",
+                                 clean_error="VMake 개인키가 등록되지 않았습니다")
+            return
+        _ensure_clean_sources(store, job, job_id, work, key)
+        store.update_mix_job(job_id, clean_status="ready", clean_error=None)
+    except Exception as e:  # noqa: BLE001 — BackgroundTasks라 밖에서 아무도 안 받는다
+        traceback.print_exc(file=sys.stderr)
+        store.update_mix_job(job_id, clean_status="failed", clean_error=str(e))
+
+
 def run_preview(job_id, db_path, work_root):
     """1단계 미리보기: 유료 자막제거(VMake)·꾸미기 없이 믹스+음성+기본자막만 렌더.
 
