@@ -142,6 +142,46 @@ def _run_ffmpeg(cmd, cwd=None):
     return r
 
 
+_MIN_CLIP = 0.8   # 초. 이보다 짧은 독립 클립은 만들지 않는다(깜빡임 방지).
+
+
+def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP):
+    """비트의 순서 구간 리스트 → 나레이션 길이(tts_dur)에 맞춘 클립 계획.
+    각 클립은 자기 구간 [start,end]를 절대 넘지 않는다(유출 0). 부족분은 마지막 클립을
+    슬로모(out_dur>src_dur)로 늘려 채우고, 0.8초 미만 자투리는 직전 클립에 흡수한다.
+    반환: [{"video_id","start","src_dur","out_dur"}, ...]"""
+    eps = 1e-3
+    clips = []
+    filled = 0.0
+    for seg in segments:
+        remaining = tts_dur - filled
+        if remaining <= eps:
+            break
+        seg_len = seg["end"] - seg["start"]
+        if seg_len <= eps:
+            continue
+        take = min(seg_len, remaining)   # 1배속으로 이만큼 재생(구간 이내)
+        clips.append({"video_id": seg["video_id"], "start": seg["start"],
+                      "src_dur": take, "out_dur": take})
+        filled += take
+
+    if not clips:
+        # 구간이 하나도 못 쓰였다(모두 길이 0). 첫 구간을 tts_dur로 슬로모(방어적 폴백).
+        seg = segments[0]
+        return [{"video_id": seg["video_id"], "start": seg["start"],
+                 "src_dur": max(seg["end"] - seg["start"], eps), "out_dur": tts_dur}]
+
+    shortfall = tts_dur - filled
+    if shortfall > eps:
+        # 구간을 다 써도 모자람 → 마지막 클립을 슬로모로 늘려 채운다.
+        clips[-1]["out_dur"] += shortfall
+    elif len(clips) >= 2 and clips[-1]["out_dur"] < min_clip - eps:
+        # 마지막 조각이 너무 짧다(자투리) → 새 클립 대신 직전 클립을 슬로모로 늘려 흡수.
+        tiny = clips.pop()
+        clips[-1]["out_dur"] += tiny["out_dur"]
+    return clips
+
+
 def _pick_segment(beat, tts_dur, source_video_paths):
     """primary→alternates 중 나레이션(tts_dur)을 1배속으로 담을 수 있는
     (구간길이 >= tts_dur) 첫 후보를 고른다. 아무도 못 담으면 가장 긴 후보를

@@ -370,3 +370,70 @@ def test_merge_highlight_rules_reaches_headcopy_drawtext(tmp_path):
     joined = " ".join(parts)
     assert "fontcolor=0xFF2D2D" in joined            # 강조 단어 규칙색이 실제 필터에 나온다
     assert any("drawtext=fontfile=" in p for p in parts)
+
+
+# ── 비트당 다중 클립 계획(_plan_beat_clips) ────────────────────────
+def _seg(v, s, e):
+    return {"video_id": v, "start": s, "end": e}
+
+
+def _total_out(clips):
+    return sum(c["out_dur"] for c in clips)
+
+
+def test_plan_single_long_segment_no_slowmo():
+    # 구간(0~10, 길이10)이 나레이션(4)보다 길다 → 앞 4초만 1배속, 유출·슬로모 없음.
+    clips = va._plan_beat_clips([_seg("A", 0.0, 10.0)], tts_dur=4.0)
+    assert len(clips) == 1
+    c = clips[0]
+    assert c["video_id"] == "A" and c["start"] == 0.0
+    assert abs(c["src_dur"] - 4.0) < 1e-6 and abs(c["out_dur"] - 4.0) < 1e-6
+    assert c["start"] + c["src_dur"] <= 10.0  # 유출 0
+
+
+def test_plan_chains_multiple_segments_to_fill():
+    # 2.2 + 2.2 = 4.4 ≥ 4.0 → 첫 구간 통째(2.2) + 둘째 구간 앞 1.8초. 슬로모 없음.
+    segs = [_seg("A", 0.0, 2.2), _seg("B", 5.0, 7.2)]
+    clips = va._plan_beat_clips(segs, tts_dur=4.0)
+    assert len(clips) == 2
+    assert abs(clips[0]["out_dur"] - 2.2) < 1e-6
+    assert abs(clips[1]["out_dur"] - 1.8) < 1e-6
+    # 각 클립 구간 밖으로 안 나감
+    for c, s in zip(clips, segs):
+        assert c["start"] + c["src_dur"] <= s["end"] + 1e-9
+    assert abs(_total_out(clips) - 4.0) < 0.05
+    # 소스 충분 → 슬로모 0
+    assert all(abs(c["out_dur"] - c["src_dur"]) < 1e-6 for c in clips)
+
+
+def test_plan_slows_last_clip_when_short():
+    # 2.2 + 2.2 = 4.4 < 4.9 → 부족분 0.5는 마지막 클립을 슬로모로 늘림.
+    segs = [_seg("A", 0.0, 2.2), _seg("B", 5.0, 7.2)]
+    clips = va._plan_beat_clips(segs, tts_dur=4.9)
+    assert abs(_total_out(clips) - 4.9) < 0.05
+    # 마지막 클립만 슬로모(out_dur > src_dur), 나머진 1배속
+    assert clips[-1]["out_dur"] > clips[-1]["src_dur"] + 1e-6
+    assert all(abs(c["out_dur"] - c["src_dur"]) < 1e-6 for c in clips[:-1])
+    # 유출 0: src_dur는 구간 길이 이내
+    for c, s in zip(clips, segs):
+        assert c["src_dur"] <= (s["end"] - s["start"]) + 1e-9
+
+
+def test_plan_absorbs_tiny_remainder_into_previous():
+    # 2.0 + 2.0, tts 4.3 → 앞 2.0 + 뒤 2.0 = 4.0, 남은 0.3(<0.8)은 새 클립 안 만들고
+    # 직전(마지막) 클립을 슬로모로 늘려 흡수. 0.8초 미만 독립 클립 없음.
+    segs = [_seg("A", 0.0, 2.0), _seg("B", 0.0, 2.0)]
+    clips = va._plan_beat_clips(segs, tts_dur=4.3)
+    assert abs(_total_out(clips) - 4.3) < 0.05
+    assert all(c["out_dur"] >= 0.8 - 1e-9 for c in clips)
+    # 마지막 클립이 0.3만큼 슬로모로 늘어남(src 2.0 → out 2.3)
+    assert clips[-1]["out_dur"] > clips[-1]["src_dur"] + 1e-6
+
+
+def test_plan_never_overflows_segment_end():
+    # 어떤 조합이든 start+src_dur는 end를 안 넘는다(유출 0의 직접 검증).
+    segs = [_seg("A", 3.0, 4.0), _seg("B", 10.0, 10.5)]
+    clips = va._plan_beat_clips(segs, tts_dur=6.0)  # 합계 1.5 << 6.0
+    for c, s in zip(clips, segs):
+        assert c["start"] + c["src_dur"] <= s["end"] + 1e-9
+    assert abs(_total_out(clips) - 6.0) < 0.05
