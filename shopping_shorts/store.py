@@ -517,6 +517,11 @@ class Store:
                 # 산출물이 한 덩어리로만 의미가 있어(제목만 바꿔도 태그·CTA와 어울려야 한다)
                 # 필드를 쪼개지 않고 JSON 한 칸에 둔다.
                 ("seo_json", "TEXT"),
+                # 자막제거 소스단위 청소 캐시(2026-07-19). clean_sources_json={video_id: 클린경로}.
+                # status/preview_status와 섞지 않는다 — 최종렌더 폴링과 오인 방지(선례 §6.1).
+                ("clean_sources_json", "TEXT"),
+                ("clean_status", "TEXT"),   # null|cleaning|ready|failed
+                ("clean_error", "TEXT"),
             ):
                 try:
                     c.execute(f"ALTER TABLE mix_jobs ADD COLUMN {col} {ddl}")
@@ -1520,7 +1525,8 @@ class Store:
                 "caption_style_json, voice_json, deco_json, script_structure_json, "
                 "fx_plan, fx_status, fx_path, "
                 "preview_status, preview_path, preview_error, "
-                "thumbnail_json, seo_json "
+                "thumbnail_json, seo_json, "
+                "clean_sources_json, clean_status, clean_error "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -1543,6 +1549,8 @@ class Store:
             "preview_status": row[22], "preview_path": row[23], "preview_error": row[24],
             "thumbnail": json.loads(row[25]) if row[25] else None,
             "seo": json.loads(row[26]) if row[26] else None,
+            "clean_sources": json.loads(row[27]) if row[27] else None,
+            "clean_status": row[28], "clean_error": row[29],
         }
 
     def update_mix_job(self, job_id, **fields):
@@ -1552,7 +1560,8 @@ class Store:
                   "fx_status", "fx_path",
                   # 1단계 미리보기(2026-07-17) — 여기 없으면 update_mix_job(preview_status=...)이
                   # 에러도 없이 조용히 무시된다(이 화이트리스트가 이 배선의 함정).
-                  "preview_status", "preview_path", "preview_error"):
+                  "preview_status", "preview_path", "preview_error",
+                  "clean_status", "clean_error"):
             if k in fields:
                 cols.append(f"{k}=?"); vals.append(fields[k])
         if "subtitle_removal" in fields:
@@ -1579,6 +1588,10 @@ class Store:
         if "seo" in fields:
             cols.append("seo_json=?")
             vals.append(json.dumps(fields["seo"], ensure_ascii=False) if fields["seo"] else None)
+        if "clean_sources" in fields:
+            cols.append("clean_sources_json=?")
+            vals.append(json.dumps(fields["clean_sources"], ensure_ascii=False)
+                        if fields["clean_sources"] else None)
         for k, col in (("extract", "extract_json"), ("edit_plan", "edit_plan_json")):
             if k in fields:
                 cols.append(f"{col}=?")
