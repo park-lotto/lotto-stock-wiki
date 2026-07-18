@@ -33,6 +33,13 @@ _DRIVER = r"""
     miss: matchesSearch(it, '이케아'),
     emptyIsAll: matchesSearch(it, ''),
     missingFields: matchesSearch({category:'요리'}, '요리'),
+    // 한국어 단어경계(2026-07-18): "가지" 거짓양성 제거
+    fpVerb: matchesSearch({caption:'물 한방울도 들어가지 않은 100% 과일즙'}, '가지'),
+    fpCounter: matchesSearch({caption:'2가지 재료로 스콘 완성!'}, '가지'),
+    fpQualifier: matchesSearch({caption:'여러 가지 재료를 넣어요'}, '가지'),
+    realCompound: matchesSearch({caption:'가지볶음 초간단 레시피'}, '가지'),
+    realWithJosa: matchesSearch({caption:'오늘은 가지를 볶아봤어요'}, '가지'),
+    realCucumber: matchesSearch({caption:'초간단 오이무침'}, '오이'),
   }));
 })();
 """
@@ -62,3 +69,15 @@ def test_match_rules(tmp_path):
     assert got["miss"] is False               # 없는 단어는 안 맞는다
     assert got["emptyIsAll"] is True          # 빈 검색어는 전체 통과
     assert got["missingFields"] is True       # 캡션 없는 항목도 카테고리로 맞는다
+
+
+@pytest.mark.skipif(not NODE, reason="node 없음")
+def test_korean_word_boundary(tmp_path):
+    """'가지' 검색이 동사·수량사에 안 걸리고 진짜 가지영상만 잡는다(2026-07-18)."""
+    got = _run(tmp_path)
+    assert got["fpVerb"] is False        # 들어'가지' 않은 → 거짓양성 제거
+    assert got["fpCounter"] is False     # 2'가지' 재료 → 거짓양성 제거
+    assert got["fpQualifier"] is False   # 여러 '가지' → 거짓양성 제거
+    assert got["realCompound"] is True   # '가지'볶음 → 진짜 가지
+    assert got["realWithJosa"] is True   # '가지'를 → 진짜 가지(조사 붙어도)
+    assert got["realCucumber"] is True   # '오이'무침 → 진짜 오이
