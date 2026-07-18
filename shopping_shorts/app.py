@@ -301,21 +301,26 @@ def api_saved(request: Request):
 
 
 @app.post("/api/mix/basket/toggle")
-def api_mix_basket_toggle(request: Request, body: dict):
-    """영상 믹싱 바구니 담기/담기취소 토글. body: {shortcode, url, thumbnail, name, caption}."""
+def api_mix_basket_toggle(request: Request, body: dict, background_tasks: BackgroundTasks):
+    """영상 믹싱 바구니 담기/담기취소 토글. body: {shortcode, url, thumbnail, name, caption}.
+    담길 때(in=True)는 원클릭 담기와 같이 백그라운드로 메타(조회수·댓글 등)를 보강한다 —
+    렌즈 유사영상에서 담은 항목도 즐겨찾기에서 랭킹처럼 정보가 뜨게(2026-07-18)."""
     sc = (body.get("shortcode") or "").strip()
     if not sc:
         return JSONResponse(status_code=422, content={"ok": False, "error": "shortcode 필요"})
     store = Store(DB_PATH)
     cid = _cid(request)
+    url = body.get("url") or ""
     in_basket = store.mix_basket_toggle(
         sc,
-        url=body.get("url") or "",
+        url=url,
         thumbnail=body.get("thumbnail") or "",
         name=body.get("name") or "",
         caption=body.get("caption") or "",
         customer_id=cid,
     )
+    if in_basket and url and _grab_platform(url):
+        background_tasks.add_task(_enrich_grab, url, sc, cid)
     return {"ok": True, "in": in_basket, "count": len(store.mix_basket_shortcodes(customer_id=cid))}
 
 
