@@ -173,6 +173,9 @@
       <div class="tab" data-tab="density" title="댓글수 ÷ 팔로워수 — 팔로워 규모 대비 반응이 얼마나 뜨거운지(작은 채널도 상위권 가능)">💥 참여밀도</div>
     </div>
     <div class="ctypes" id="ctypes"></div>
+    <input id="rankSearch" type="text" placeholder="🔍 랭킹 검색 (피자·물총·이케아…)"
+           oninput="setSearch(this.value)"
+           style="width:100%;max-width:360px;margin:8px 0;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:#0d131c;color:var(--txt)">
     <div class="cats" id="cats"></div>
     <div class="cards" id="cards">
       <div class="empty">「지금 수집」을 눌러 시작하세요.</div>
@@ -228,7 +231,7 @@ const CTYPES = [
   {key:"혼합형", label:"💄 뷰티(혼합)",  topics:["뷰티"]},
 ];
 const TOPIC_CTYPE = {인테리어:"비법형",레시피:"비법형",생활용품:"제품형",가전:"제품형",뷰티:"혼합형",기타:"기타"};
-let STATE = {items:[], tab:"comments", ctype:"전체", cat:"전체"};
+let STATE = {items:[], tab:"comments", ctype:"전체", cat:"전체", q:""};
 let PLATFORM='instagram';
 function ttMode(){ const r=document.querySelector('input[name="ttmode"]:checked'); return r?r.value:'keyword'; }
 function switchPlatform(p, el){
@@ -352,10 +355,22 @@ document.querySelectorAll('.tab').forEach(x=> x.onclick=()=>setTab(x.dataset.tab
 function sortKey(i){
   return {comments:i.comments, speed:i.speed, accel:(i.accel??-1), density:i.density}[STATE.tab] || 0;
 }
+// 랭킹 검색(2026-07-18) — 카테고리+이름+캡션 부분일치, 공백·대소문자 무시.
+// 캡션이 없는 항목(크롤 소스에 따라)도 카테고리·이름으로 맞는다.
+function matchesSearch(it, q){
+  const needle = (q||'').trim().toLowerCase();
+  if(!needle) return true;                       // 빈 검색어 = 전체
+  const hay = [(it.category||''), (it.name||''), (it.username||''), (it.caption||'')]
+    .join(' ').toLowerCase();
+  return hay.includes(needle);
+}
+function setSearch(q){ STATE.q = q; render(); }
+// ── 검색 끝 ──
 function render(){
   let items = STATE.items.slice();
   if(STATE.ctype!=="전체") items = items.filter(i=> TOPIC_CTYPE[i.category]===STATE.ctype);
   if(STATE.cat!=="전체")   items = items.filter(i=> i.category===STATE.cat);
+  if(STATE.q)              items = items.filter(i=> matchesSearch(i, STATE.q));
   items.sort((a,b)=> sortKey(b)-sortKey(a));
   const el = document.getElementById("cards");
   if(!items.length){ el.innerHTML='<div class="empty">결과 없음.</div>'; return; }
