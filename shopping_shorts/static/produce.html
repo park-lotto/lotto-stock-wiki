@@ -257,6 +257,12 @@
             <img id="ovPreview" style="position:absolute;transform:translate(-50%,-50%);cursor:move;user-select:none;z-index:5;display:none" alt="">
             <div id="wmPreview" style="position:absolute;transform:translate(-50%,-50%);white-space:nowrap;z-index:6;pointer-events:none;display:none"></div>
           </div>
+          <div id="beatStepper" style="display:none;align-items:center;justify-content:center;gap:16px;margin-top:10px">
+            <button type="button" class="tab" onclick="stepBeat(-1)" style="min-width:auto;padding:8px 14px;font-size:16px">◀</button>
+            <span id="beatCount" style="font-size:13px;color:var(--sub);min-width:76px;text-align:center">1 / 1 장면</span>
+            <button type="button" class="tab" onclick="stepBeat(1)" style="min-width:auto;padding:8px 14px;font-size:16px">▶</button>
+          </div>
+          <div class="hint" style="margin-top:6px">◀ ▶ 로 장면을 넘겨가며 자막이 어떻게 나오는지 확인</div>
         </div>
         <!-- 우: 컨트롤 -->
         <div style="flex:1;min-width:300px">
@@ -798,6 +804,7 @@ function initHeadcopy(){
   renderExtraPreview();
   renderOverlayPreview();
   applyDefaultStyleOnEntry();   // step5 진입 시 1회: 미터치 상태면 기본 스타일+실장면 배경 자동 적용
+  loadBeatsPreview();
   syncMotionPicker();
 }
 // 모션 팩 목록(서버 packs.json과 id가 일치해야 함 — Task7에서 확정)
@@ -885,6 +892,41 @@ async function fxPoll(){
 }
 // ── 자막 스타일(나레이션 자막) ──────────────
 let CAP_EFFECT='none';
+let PREVIEW_CAP_TEXT='이렇게 자막이 나와요';   // 스텝퍼가 비트별 자막으로 교체
+// ── 🎞 공용 장면 프리뷰 스텝퍼 — 비트마다 프레임+자막 넘겨보기(TTS·검수판 트랙도 재사용) ──
+let BEATS_PREVIEW=[];   // [{i,total,caption}]
+let BEAT_IDX=0;
+async function loadBeatsPreview(){
+  const st=document.getElementById('beatStepper');
+  if(typeof MIX_JOB==='undefined' || !MIX_JOB){ if(st) st.style.display='none'; return; }
+  try{
+    const r=await fetch('/api/produce/mix/beats_preview/'+MIX_JOB);
+    const d=await r.json(); BEATS_PREVIEW=d.beats||[];
+  }catch(e){ BEATS_PREVIEW=[]; }
+  if(!BEATS_PREVIEW.length){ if(st) st.style.display='none'; return; }
+  if(st) st.style.display='flex';
+  BEAT_IDX=Math.min(BEAT_IDX, BEATS_PREVIEW.length-1);
+  showBeat(BEAT_IDX);
+}
+function showBeat(i){
+  if(!BEATS_PREVIEW.length) return;
+  BEAT_IDX=(i+BEATS_PREVIEW.length)%BEATS_PREVIEW.length;
+  const b=BEATS_PREVIEW[BEAT_IDX];
+  // 배경 = 그 비트 프레임(실장면 배경 켜져 있을 때만; 로드 실패는 흰 배경 폴백)
+  const bg=document.getElementById('hcPreviewBg');
+  const sb=document.getElementById('sceneBg');
+  if(bg && sb && sb.checked){
+    bg.onerror=()=>{ bg.style.display='none'; };
+    bg.src='/api/produce/mix/beatframe/'+MIX_JOB+'/'+BEAT_IDX;
+    bg.style.display='block';
+  }
+  // 자막 = 그 비트 대본, 헤드카피는 비트 공통이라 그대로
+  PREVIEW_CAP_TEXT=b.caption||'';
+  if(typeof updateCaption==='function') updateCaption();
+  const cnt=document.getElementById('beatCount');
+  if(cnt) cnt.textContent=(BEAT_IDX+1)+' / '+BEATS_PREVIEW.length+' 장면';
+}
+function stepBeat(d){ if(BEATS_PREVIEW.length) showBeat(BEAT_IDX+d); }
 function renderCapFontSelect(){
   const s=document.getElementById('capFont');
   if(s && !s.options.length) s.innerHTML=HC_FONTS.map(f=>`<option value="${f.file}"${f.file==='NanumGothic-Bold.ttf'?' selected':''}>${f.name}</option>`).join('');
@@ -902,7 +944,7 @@ function updateCaption(){
   g('capSizeV').textContent=cs.size; g('capYV').textContent=cs.y_pct;
   const el=g('capPreviewText'); if(!el) return;
   const scale=PREVIEW_W/VIDEO_W;
-  el.textContent='이렇게 자막이 나와요';
+  el.textContent=PREVIEW_CAP_TEXT;
   el.style.fontFamily=`'${fontCss(cs.font)}',sans-serif`;
   el.style.top=cs.y_pct+'%'; el.style.transform='translate(-50%,-50%)';
   el.style.color=cs.color; el.style.fontWeight=900;

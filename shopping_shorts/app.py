@@ -2422,6 +2422,57 @@ def api_produce_mix_poster(job_id: str):
     return FileResponse(str(poster), media_type="image/jpeg")
 
 
+def _extract_beat_frame(work, beat, out_path):
+    """beat.primary 클립의 start 시각 프레임 1장을 9:16(1080x1920)로 out_path에 저장.
+    소스 영상이 없으면 False(파일 안 만듦). 프로덕션 poster 로직을 비트 단위로 일반화."""
+    import subprocess
+    pr = beat.get("primary") or {}
+    vid = pr.get("video_id")
+    ss = float(pr.get("start") or 0)
+    src = None
+    if vid:
+        src = next((work / vid).glob("*.mp4"), None)
+    if src is None:
+        src = next(work.glob("final.mp4"), None) or next(work.glob("mix_raw.mp4"), None)
+    if src is None:
+        return False
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(
+        ["ffmpeg", "-y", "-ss", str(ss), "-i", str(src),
+         "-vf", "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920",
+         "-frames:v", "1", str(out_path)],
+        capture_output=True, stdin=subprocess.DEVNULL)
+    return out_path.exists()
+
+
+@app.get("/api/produce/mix/beats_preview/{job_id}")
+def api_produce_mix_beats_preview(job_id: str):
+    """꾸미기 프리뷰용 — 비트별 자막(narration)과 개수. 프레임은 beatframe 라우트가 따로 서빙.
+    매칭(edit_plan) 전이면 빈 목록."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    beats = ((job or {}).get("edit_plan") or {}).get("beats") or []
+    total = len(beats)
+    out = [{"i": idx, "total": total, "caption": b.get("narration", "")}
+           for idx, b in enumerate(beats)]
+    return {"beats": out}
+
+
+@app.get("/api/produce/mix/beatframe/{job_id}/{i}")
+def api_produce_mix_beatframe(job_id: str, i: int):
+    """i번째 비트의 영상 프레임 1장(캐시). 없으면 404 → 프론트는 흰 배경 폴백."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    beats = ((job or {}).get("edit_plan") or {}).get("beats") or []
+    if i < 0 or i >= len(beats):
+        return JSONResponse(status_code=404, content={"ok": False})
+    work = _MIX_WORK_DIR / job_id
+    out = work / "beatframes" / f"{i}.jpg"
+    if not out.exists():
+        _extract_beat_frame(work, beats[i], out)
+    if not out.exists():
+        return JSONResponse(status_code=404, content={"ok": False})
+    return FileResponse(str(out), media_type="image/jpeg")
+
+
 # ── 장면 라이브러리(재사용 짤 뱅크, 2026-07-15) ──
 # 저장은 2스텝: prepare(구간컷+Gemini 태그초안) → 사람 확인 → commit(DB 확정).
 # 재추출이 없고, 확인 없이 저장되지 않는다.
