@@ -2272,6 +2272,14 @@ def _serve_userscript():
     return FileResponse(p, media_type="text/javascript; charset=utf-8")
 
 
+@app.get("/grab.user.js", include_in_schema=False)
+def _serve_grab_userscript():
+    """원클릭 담기 유저스크립트 — Tampermonkey가 이 URL로 설치·자동업데이트.
+    드래그 없이 플랫폼 영상 페이지에 '📥 담기' 버튼을 띄운다."""
+    p = Path(__file__).parent / "userscript" / "grab.user.js"
+    return FileResponse(p, media_type="text/javascript; charset=utf-8")
+
+
 # ── 원클릭 담기: 네이티브 플랫폼(유튜브·틱톡·샤오홍슈·도우인) 영상 → 모음집 즉시 담기 ──
 # (2026-07-18) 렌즈 Apify 검색은 유료·개수제한, 네이티브 검색은 무료·무제한이지만 담을 때
 # 번거롭다는 제보. 해결=플랫폼 영상 페이지에서 북마클릿(무설치) 또는 유저스크립트(카드버튼)로
@@ -2338,9 +2346,23 @@ def grab_setup(request: Request):
     bm64 = base64.b64encode(_GRAB_BOOKMARKLET.replace("__BASE__", base).encode()).decode()
     return HTMLResponse(f"""<!doctype html><meta charset="utf-8"><title>원클릭 담기 설치</title>
 <body style="font-family:system-ui,sans-serif;max-width:640px;margin:36px auto;padding:0 18px;line-height:1.7;color:#222">
-<h2>📥 원클릭 담기 <span style="font-size:14px;color:#1f9d55">설치 필요 없음</span></h2>
-<p>네이티브 검색(무료·무제한)으로 보다가, 마음에 드는 영상을 <b>클릭 한 번</b>으로 모음집에 담는 기능입니다.</p>
-<div style="background:#fff7e6;border:1px solid #f0c36d;border-radius:12px;padding:18px;margin:16px 0">
+<h2>📥 원클릭 담기</h2>
+<p>네이티브 검색(무료·무제한)으로 보다가, 마음에 드는 영상을 <b>클릭 한 번</b>으로 모음집에 담는 기능입니다. 두 가지 방법 중 편한 걸 고르세요.</p>
+
+<div style="background:#eafaf0;border:2px solid #1f9d55;border-radius:12px;padding:18px;margin:16px 0">
+  <div style="font-weight:800;color:#1f7a44;font-size:16px;margin-bottom:6px">✅ 방법 1 (추천·제일 쉬움) — 버튼이 영상 위에 저절로 떠요</div>
+  <div style="font-size:14px;color:#555;margin-bottom:10px">Tampermonkey에 설치하면, 유튜브·틱톡·샤오홍슈·도우인 영상을 볼 때 오른쪽 아래에 <b>📥 담기</b> 버튼이 자동으로 떠요. 드래그도, 북마크도 필요 없이 <b>그 버튼만 누르면 끝</b>입니다.</div>
+  <ol style="margin:0 0 6px 18px;color:#444;font-size:14px">
+    <li>크롬에 <b>Tampermonkey</b> 확장이 없으면 먼저 설치(웹스토어에서 "Tampermonkey").</li>
+    <li>아래 링크를 누르면 Tampermonkey 설치창이 떠요 → <b>설치</b> 클릭.<br>
+        <a href="/grab.user.js" style="display:inline-block;margin-top:6px;padding:10px 18px;background:#1f9d55;color:#fff;border-radius:9px;text-decoration:none;font-weight:800">📥 담기 버튼 설치하기</a></li>
+    <li>이제 틱톡·샤오홍슈에서 영상을 열면 오른쪽 아래 <b>📥 담기</b> 버튼을 누르기만 하면 담김.</li>
+  </ol>
+</div>
+
+<details style="margin:12px 0">
+<summary style="cursor:pointer;color:#666;font-weight:700">방법 2 — 설치 없이 북마클릿으로 (조금 번거로움)</summary>
+<div style="background:#fff7e6;border:1px solid #f0c36d;border-radius:12px;padding:18px;margin:10px 0">
   <div style="font-weight:800;margin-bottom:4px;color:#a86">① 아래 파란 버튼을 <span style="color:#c0392b">누르지 말고</span>, 마우스로 <u>북마크바에 끌어다(드래그)</u> 놓으세요</div>
   <div style="font-size:13px;color:#888;margin-bottom:10px">북마크바가 안 보이면 <b>Ctrl+Shift+B</b>로 켜세요. 드래그 = 버튼을 마우스로 꾹 눌러 위쪽 북마크바까지 끌고 가서 놓기.</div>
   <a id="bm" draggable="true" href="#" title="이 버튼을 위쪽 북마크바로 드래그하세요"
@@ -2348,7 +2370,9 @@ def grab_setup(request: Request):
   <span style="color:#888;font-size:13px;margin-left:8px">↖ 이걸 <b>끌어서</b> 북마크바에 놓기</span>
 </div>
 <div style="font-weight:700">② 유튜브·틱톡·샤오홍슈·도우인에서 <u>영상을 열고</u>(검색결과 그리드 말고 영상 클릭해 들어간 뒤), 방금 만든 북마크를 누르면 끝</div>
-<p style="color:#666">담긴 영상은 <a href="/collection">🎬 모음집</a>에서 확인 · 실제 다운로드는 제작소에서 자동(무료).</p>
+</div>
+</details>
+<p style="color:#666;margin-top:14px">담긴 영상은 <a href="/collection">🎬 모음집</a>에서 확인 · 실제 다운로드는 제작소에서 자동(무료).</p>
 <p style="color:#999;font-size:13px">※ 검색 결과 <b>그리드</b>가 아니라 <b>영상 상세 페이지</b>에서 눌러야 그 영상이 담깁니다. · shoppingshorts에 로그인된 상태여야 해요.</p>
 <script>document.getElementById("bm").setAttribute("href", atob("{bm64}"));</script>
 </body>""")
