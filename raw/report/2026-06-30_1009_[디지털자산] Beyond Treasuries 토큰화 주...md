@@ -1,19 +1,19 @@
-# [디지털자산] Beyond Treasuries: 토큰화 주..
-
-- **카테고리**: 산업분석
-- **증권사**: [디지털자산] Beyond Treasuries: 토큰화 주..
-- **날짜**: 26.06.30
-- **링크**: [원문 보기](https://finance.naver.com/research/industry_read.naver?nid=45134&page=1)
-- **PDF**: [다운로드](https://stock.pstatic.net/stock-research/industry/-/20260630_industry_464336000.pdf)
-
-## 📊 AI 요약
-
-[핵심 요약]  
-- 토큰화 주식시장은 실물자산(RWA) 분야에서 전망되는 최대 성장 기회로, 2025년 xStocks 출시를 시작으로 성장세 확대  
-- 투자자 보호와 주주권 보장 강화 필요  
-- 연계증권형 모델이 시장을 주도하고 있으나 기술 및 규제 완비를 선결 과제로 제시  
-
-[투자 포인트]  
-1. 글로벌 시장에서 토큰화 주식의 성장 동력은 xStocks 플랫폼의 확산과 글로벌 투자자 수요 증가  
-2. 국내에서는 2027년 제도 시행 전 미리 기반 인프라 구축에 참여할 기회가 투자자에게 제공됨
-
+# [디지털자산] Beyond Treasuries: 토큰화 주..
+
+- **카테고리**: 산업분석
+- **증권사**: [디지털자산] Beyond Treasuries: 토큰화 주..
+- **날짜**: 26.06.30
+- **링크**: [원문 보기](https://finance.naver.com/research/industry_read.naver?nid=45134&page=1)
+- **PDF**: [다운로드](https://stock.pstatic.net/stock-research/industry/-/20260630_industry_464336000.pdf)
+
+## 📊 AI 요약
+
+[핵심 요약]  
+- 토큰화 주식시장은 실물자산(RWA) 분야에서 전망되는 최대 성장 기회로, 2025년 xStocks 출시를 시작으로 성장세 확대  
+- 투자자 보호와 주주권 보장 강화 필요  
+- 연계증권형 모델이 시장을 주도하고 있으나 기술 및 규제 완비를 선결 과제로 제시  
+
+[투자 포인트]  
+1. 글로벌 시장에서 토큰화 주식의 성장 동력은 xStocks 플랫폼의 확산과 글로벌 투자자 수요 증가  
+2. 국내에서는 2027년 제도 시행 전 미리 기반 인프라 구축에 참여할 기회가 투자자에게 제공됨
+

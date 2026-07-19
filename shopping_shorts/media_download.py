@@ -1,8 +1,63 @@
 """소스 URL을 플랫폼별로 다운로드 — instagram=Apify, youtube/tiktok=yt-dlp(무료)."""
+import json
 import subprocess
 import sys
+import urllib.parse
+import urllib.request
 import uuid
 from pathlib import Path
+
+
+def _oembed(url):
+    """틱톡·유튜브 oEmbed → {thumbnail_url,title,author_name} (무료·무인증). 실패 시 {}.
+    yt-dlp가 틱톡에서 자주 깨져(rehydration) 썸네일·작성자를 이걸로 보강한다(2026-07-18 실측)."""
+    u = (url or "").lower()
+    if "tiktok.com" in u:
+        base = "https://www.tiktok.com/oembed?url="
+    elif "youtube.com" in u or "youtu.be" in u:
+        base = "https://www.youtube.com/oembed?format=json&url="
+    else:
+        return {}
+    try:
+        req = urllib.request.Request(base + urllib.parse.quote(url, safe=""),
+                                     headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=15) as r:
+            return json.load(r)
+    except Exception:
+        return {}
+
+
+def probe_grab_meta(url, timeout=40):
+    """원클릭 담기 URL → {thumbnail,title,channel,views,likes,comments,duration}(있는 것만).
+    yt-dlp -j(유튜브·샤오홍슈 등은 통계까지 무료) 우선, 실패·썸네일없음 시 oEmbed(틱톡·유튜브)
+    폴백. 전부 실패하면 {}. 백그라운드 보강용이라 조용히 실패."""
+    out = {}
+    try:
+        r = subprocess.run([sys.executable, "-m", "yt_dlp", "-j", "--no-warnings", url],
+                           capture_output=True, text=True, timeout=timeout)
+        if r.returncode == 0 and r.stdout.strip():
+            d = json.loads(r.stdout)
+            for key, src in (("thumbnail", "thumbnail"), ("title", "title"),
+                             ("channel", "uploader"), ("views", "view_count"),
+                             ("likes", "like_count"), ("comments", "comment_count"),
+                             ("shares", "repost_count"), ("duration", "duration"),
+                             ("followers", "channel_follower_count"), ("ts", "timestamp")):
+                v = d.get(src)
+                if v not in (None, ""):
+                    out[key] = v
+            if not out.get("channel") and d.get("channel"):
+                out["channel"] = d["channel"]
+    except Exception:
+        pass
+    if not out.get("thumbnail"):
+        oe = _oembed(url)
+        if oe.get("thumbnail_url"):
+            out.setdefault("thumbnail", oe["thumbnail_url"])
+        if oe.get("title"):
+            out.setdefault("title", oe["title"])
+        if oe.get("author_name"):
+            out.setdefault("channel", oe["author_name"])
+    return {k: v for k, v in out.items() if v not in (None, "")}
 
 
 def _download_instagram(url, dest_dir):
@@ -37,7 +92,10 @@ def download_any(url, dest_dir):
     u = (url or "").lower()
     if "instagram.com" in u:
         return _download_instagram(url, dest_dir)
-    if "youtube.com" in u or "youtu.be" in u or "tiktok.com" in u:
+    # 유튜브·틱톡·샤오홍슈는 yt-dlp 무료(2026-07-18 샤오홍슈 실증). 도우인은 쿠키가 필요해
+    # 실패할 수 있으나 그때는 yt-dlp가 명확한 에러를 낸다(원클릭 담기 후 제작소 다운로드용).
+    if any(s in u for s in ("youtube.com", "youtu.be", "tiktok.com",
+                             "xiaohongshu.com", "xhslink.com", "douyin.com", "iesdouyin.com")):
         return _download_ytdlp(url, dest_dir)
     raise RuntimeError(f"지원하지 않는 URL: {url}")
 

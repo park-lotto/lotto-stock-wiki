@@ -1,4 +1,5 @@
 """FastAPI: 수집 API + 정적 프론트 서빙."""
+import base64
 import hmac
 import hashlib
 import ipaddress
@@ -19,6 +20,7 @@ from fastapi.staticfiles import StaticFiles
 from shopping_shorts.service import collect, generate_missing_drafts, next_draft_targets
 from shopping_shorts.outreach import build_queue
 from shopping_shorts.store import Store
+from shopping_shorts.auto_run import run_auto_job, default_stages
 from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
 from shopping_shorts.frame_extract import (download_video, extract_frames,
                                            extract_frame_at, extract_grid_frames)
@@ -28,17 +30,20 @@ from shopping_shorts.categorize import categorize, KEYWORDS as CATEGORY_KEYWORDS
 from shopping_shorts import script_generate
 from shopping_shorts.apify_client import fetch_single_reel, fetch_reels, fetch_profiles
 from shopping_shorts import discovery, instagram_search
-from shopping_shorts.channels import load_channels
-from shopping_shorts.video_analysis import analyze_video, translate_keyword
+from shopping_shorts.channels import load_channels, username_from_url
+from shopping_shorts.video_analysis import (analyze_video, translate_keyword, cn_search_keyword,
+                                            cn_search_keyword_vision, judge_same_product)
 from shopping_shorts.product_identify import fetch_lens_lines, identify_product_from_lines
 from shopping_shorts.search_links import build_search_links, lens_search_url
 from shopping_shorts import mix_pipeline
 from shopping_shorts.mix_pipeline import (run_mix_job, run_render, run_preview, retype_mix_job,
-                                          _source_video_id, resynth_tts_job)
+                                          _source_video_id, resynth_tts_job, resynth_one_beat,
+                                          run_clean_sources, _resolve_sources)
 from shopping_shorts.lens_discover import search_similar_videos, upload_frame
 from shopping_shorts import douyin_search, xiaohongshu_search
+from shopping_shorts import youtube_search
 from shopping_shorts.config import APIFY_TOKENS
-from shopping_shorts.media_download import resolve_media_url, download_any
+from shopping_shorts.media_download import resolve_media_url, download_any, probe_grab_meta
 from shopping_shorts import edit_plan as _edit_plan
 from shopping_shorts import voice_presets, audio_post
 from shopping_shorts.tts import synthesize_tts
@@ -144,12 +149,53 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
         store = Store(DB_PATH)
         store.save_last_run(items, collected_at)
         background_tasks.add_task(generate_missing_drafts, next_draft_targets(items, store))
+        background_tasks.add_task(_tag_new_items, items)   # 신규 썸네일 비전 태깅(백그라운드)
+        _attach_vision_tags(items, store)                  # 이미 태깅된 것(재수집)은 즉시 실어 보냄
         return {"ok": True, "count": len(items), "items": items,
                 "collected_at": collected_at}
     except Exception as e:
         import re
         msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
         return JSONResponse(status_code=500, content={"ok": False, "error": msg})
+
+
+_VISION_TAG_CAP = 60  # 1회 수집당 새 태깅 상한(비용 가드). 초과분은 다음 수집 때.
+
+
+def _tag_new_items(items):
+    """신규(태그 없는) 아이템 썸네일을 Gemini 비전 태깅해 vision_tags에 저장.
+    shortcode로 캐시하므로 재수집 땐 재호출 안 함. 상한 초과분은 다음 수집으로 미룬다.
+    실패(키 없음·썸네일 다운로드 실패)는 그냥 건너뜀 — 그 아이템은 캡션 백업으로 검색된다."""
+    try:
+        from shopping_shorts import video_analysis
+    except Exception:
+        return
+    store = Store(DB_PATH)
+    have = store.vision_tags_map([it.get("shortcode") for it in items])
+    todo = [it for it in items if it.get("shortcode") and it.get("shortcode") not in have
+            and it.get("thumbnail")]
+    capped = todo[:_VISION_TAG_CAP]
+    for it in capped:
+        img = video_analysis.fetch_thumb_bytes(it.get("thumbnail"))
+        if not img:
+            continue
+        tags = video_analysis.subject_tags_vision(img, it.get("caption", ""))
+        if tags and (tags.get("subject") or tags.get("keywords")):
+            store.save_vision_tags(it["shortcode"], tags.get("subject", ""), tags.get("keywords", []))
+    if len(todo) > len(capped):
+        print(f"[vision_tags] {len(todo) - len(capped)}건 다음 수집으로 미룸(상한 {_VISION_TAG_CAP})")
+
+
+def _attach_vision_tags(items, store=None):
+    """아이템에 저장된 vision_subject·vision_keywords를 실어 반환(있는 것만). 검색이 이걸 우선 매칭."""
+    store = store or Store(DB_PATH)
+    tmap = store.vision_tags_map([it.get("shortcode") for it in items])
+    for it in items:
+        t = tmap.get(it.get("shortcode"))
+        if t:
+            it["vision_subject"] = t.get("subject", "")
+            it["vision_keywords"] = t.get("keywords", [])
+    return items
 
 
 @app.get("/api/tiktok/settings")
@@ -200,10 +246,12 @@ def api_generate_drafts(background_tasks: BackgroundTasks):
 @app.get("/api/reference")
 def api_reference(platform: str = "instagram"):
     """마지막 수집 결과 반환 (프론트 초기 로드용). platform=플랫폼(기본 인스타)."""
+    store = Store(DB_PATH)
     if platform == "instagram":
-        items, collected_at = Store(DB_PATH).load_last_run()
+        items, collected_at = store.load_last_run()
     else:
-        items, collected_at = Store(DB_PATH).load_last_run_platform(platform)
+        items, collected_at = store.load_last_run_platform(platform)
+    _attach_vision_tags(items, store)   # 백그라운드로 채워진 주제태그를 실어 보냄(검색 정확도 승격)
     return {"ok": True, "items": items, "collected_at": collected_at}
 
 
@@ -298,21 +346,36 @@ def api_saved(request: Request):
 
 
 @app.post("/api/mix/basket/toggle")
-def api_mix_basket_toggle(request: Request, body: dict):
-    """영상 믹싱 바구니 담기/담기취소 토글. body: {shortcode, url, thumbnail, name, caption}."""
+def api_mix_basket_toggle(request: Request, body: dict, background_tasks: BackgroundTasks):
+    """영상 믹싱 바구니 담기/담기취소 토글. body: {shortcode, url, thumbnail, name, caption}.
+    담길 때(in=True)는 원클릭 담기와 같이 백그라운드로 메타(조회수·댓글 등)를 보강한다 —
+    렌즈 유사영상에서 담은 항목도 즐겨찾기에서 랭킹처럼 정보가 뜨게(2026-07-18)."""
     sc = (body.get("shortcode") or "").strip()
     if not sc:
         return JSONResponse(status_code=422, content={"ok": False, "error": "shortcode 필요"})
     store = Store(DB_PATH)
     cid = _cid(request)
+    url = body.get("url") or ""
     in_basket = store.mix_basket_toggle(
         sc,
-        url=body.get("url") or "",
+        url=url,
         thumbnail=body.get("thumbnail") or "",
         name=body.get("name") or "",
         caption=body.get("caption") or "",
         customer_id=cid,
     )
+    if in_basket:
+        # 렌즈가 검색에서 이미 받은 메타를 즉시 저장(merge) — yt-dlp 재수집(유튜브 봇차단·
+        # 샤오홍슈 무oEmbed로 자주 빈값)보다 신뢰도 높다. 재수집은 백그라운드 보조.
+        meta = body.get("meta")
+        if isinstance(meta, dict):
+            clean = {k: meta[k] for k in ("views", "likes", "comments", "shares",
+                                          "duration", "channel", "followers", "ts")
+                     if meta.get(k) not in (None, "")}
+            if clean:
+                store.mix_basket_set_meta(sc, customer_id=cid, meta=clean)
+        if url and _grab_platform(url):
+            background_tasks.add_task(_enrich_grab, url, sc, cid)
     return {"ok": True, "in": in_basket, "count": len(store.mix_basket_shortcodes(customer_id=cid))}
 
 
@@ -435,6 +498,30 @@ def api_discover_add(username: str, name: str = ""):
 def api_discover_added():
     """발굴로 추가한 채널 목록."""
     return {"ok": True, "items": Store(DB_PATH).discovered_channels()}
+
+
+@app.post("/api/reference/register")
+def api_reference_register(url: str):
+    """레퍼런스 채널을 URL 붙여넣기로 직접 등록(2026-07-18). 인스타 채널/릴스
+    URL에서 username을 뽑아 discovered_channels에 소프트 추가 — 엑셀 원본은
+    안 건드리고 다음 수집부터 랭킹에 포함(비용 0, 프로필 조회 안 함).
+    이미 엑셀·발굴목록에 있으면 already=True로 알려주고 중복 추가하지 않는다."""
+    username = username_from_url(url)
+    if not username:
+        low = (url or "").lower()
+        if any(x in low for x in ("/reel/", "/reels/", "/p/", "/tv/", "/share/")):
+            # 릴스·게시물 공유링크엔 채널 아이디가 없다(예약경로) — 프로필 주소 안내
+            err = "릴스·게시물 주소엔 채널 아이디가 없어요 — 채널(프로필) 주소를 넣어주세요 (예: instagram.com/아이디)"
+        else:
+            err = "인스타 채널 URL이 아닙니다 (instagram.com/아이디 형태)"
+        return JSONResponse(status_code=422, content={"ok": False, "error": err})
+    store = Store(DB_PATH)
+    key = username.strip().lstrip("@").lower()
+    known = {u.strip().lstrip("@").lower() for u in _known_usernames(store)}
+    if key in known:
+        return {"ok": True, "username": username, "already": True}
+    store.add_discovered(username)
+    return {"ok": True, "username": username, "already": False}
 
 
 @app.get("/api/prune/scan")
@@ -1291,7 +1378,9 @@ def api_mix_status(job_id: str):
             # 1단계 미리보기(2026-07-17): 폴러를 둘로 만들지 않으려고 기존 응답에 얹는다(스펙 §6.3).
             # preview_path는 서버 내부 경로라 안 내보낸다 — 파일은 전용 라우트로만 서빙.
             "preview_status": job.get("preview_status"),
-            "preview_error": job.get("preview_error")}
+            "preview_error": job.get("preview_error"),
+            "clean_status": job.get("clean_status"),
+            "clean_error": job.get("clean_error")}
 
 
 @app.get("/api/mix/result/{job_id}")
@@ -1304,7 +1393,8 @@ def api_mix_result(job_id: str):
     beats = []
     for b in plan["beats"]:
         beats.append({**b, "plagiarism_flag": b["beat_idx"] in flags,
-                      "tts_preview_url": f"/api/mix/tts/{job_id}/{b['beat_idx']}"})
+                      "tts_preview_url": f"/api/mix/tts/{job_id}/{b['beat_idx']}",
+                      "cap_segments": video_assemble._caption_segments(b.get("narration", ""))})
     detected = plan.get("detected_type") or _edit_plan._DEFAULT_TYPE
     return {
         "ok": True, "structure": plan["structure"], "beats": beats,
@@ -1312,6 +1402,9 @@ def api_mix_result(job_id: str):
         "detected_type_label": _edit_plan.VIDEO_TYPES.get(detected, {}).get("label", detected),
         "affiliate_target": plan.get("affiliate_target", ""),
         "video_types": [{"key": k, "label": v["label"]} for k, v in _edit_plan.VIDEO_TYPES.items()],
+        # 검수판(Task4) — scene_match.py가 채운 미채택 제안(threshold 미달)을 그대로 넘긴다.
+        # {beat_idx, asset_id, score}[]. 자동배치(cutaway)는 이미 beats[].cutaway에 있다.
+        "asset_suggestions": plan.get("asset_suggestions") or [],
     }
 
 
@@ -1435,6 +1528,49 @@ def api_produce_mix_preview_file(job_id: str):
     return FileResponse(path, media_type="video/mp4")
 
 
+@app.post("/api/produce/mix/clean")
+def api_produce_mix_clean(background_tasks: BackgroundTasks, body: dict):
+    """2단계 자막제거 미리보기 — 각 소스 원본을 VMake로 청소해 캐시(유료).
+    preview 라우트와 같은 중복예약 가드·동기 상태기록 패턴을 쓴다."""
+    job_id = body.get("job_id")
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "매칭 먼저 실행하세요"})
+    if job.get("clean_status") == "cleaning" and not _render_is_stale(job):
+        return {"ok": True, "status": "cleaning"}       # 더블클릭 — VMake를 두 번 안 돌린다
+    # 'cleaning'을 여기서 동기 기록(응답 전) — run 안에서 쓰면 이중예약된다(preview 라우트 주석 참조)
+    store.update_mix_job(job_id, clean_status="cleaning", clean_error=None)
+    background_tasks.add_task(run_clean_sources, job_id, DB_PATH, _MIX_WORK_DIR)
+    return {"ok": True, "status": "cleaning"}
+
+
+@app.get("/api/produce/mix/clean_thumb/{job_id}")
+def api_produce_mix_clean_thumb(job_id: str, kind: str = "original"):
+    """대표 소스(첫 소스)의 중간지점 프레임 PNG. kind=original|clean.
+    clean은 clean_status=ready + 클린파일 존재일 때만(아니면 404). 양쪽 같은 t로 정렬."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    work = _MIX_WORK_DIR / job_id
+    vid = _source_video_id(0)
+    if kind == "clean":
+        src = (job.get("clean_sources") or {}).get(vid)
+        if job.get("clean_status") != "ready" or not src or not Path(src).exists():
+            return JSONResponse(status_code=404, content={"ok": False, "error": "클린 소스 없음"})
+    else:
+        try:
+            src = _resolve_sources(job, work)[vid]
+        except Exception:
+            return JSONResponse(status_code=404, content={"ok": False, "error": "소스 없음"})
+    dur = frame_extract._probe_duration(src) or 2.0
+    frame = frame_extract.extract_frame_at(src, work / "clean_thumb", dur / 2,
+                                           filename=f"{kind}.jpg")
+    if not frame:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "프레임 추출 실패"})
+    return FileResponse(str(frame), media_type="image/jpeg")
+
+
 @app.get("/api/mix/tts/{job_id}/{beat_idx}")
 def api_mix_tts(job_id: str, beat_idx: int):
     job = Store(DB_PATH).get_mix_job(job_id)
@@ -1444,6 +1580,46 @@ def api_mix_tts(job_id: str, beat_idx: int):
         if b["beat_idx"] == beat_idx and b.get("tts_path") and Path(b["tts_path"]).exists():
             return FileResponse(b["tts_path"])
     return JSONResponse(status_code=404, content={"ok": False})
+
+
+@app.post("/api/mix/tts/{job_id}/{beat_idx}/regen")
+def api_mix_tts_regen(job_id: str, beat_idx: int, body: dict, background_tasks: BackgroundTasks):
+    """비트 하나만 톤/성우 바꿔 재생성(+자막 재동기). 렌더 중이면 거부(P1-9 방지).
+    status 코드는 mix_pipeline.run_render가 실제로 쓰는 값으로 확인함(grep, 2026-07-18):
+    "rendering"(302행) → "removing_subtitles"(314행, vmake 자막제거 단계)."""
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    if job.get("status") in ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409, content={"ok": False, "error": "렌더 중에는 재생성할 수 없어요"})
+    # job의 voice 스냅샷(model_id·silence_trim·naturalize_profile 등) 위에 UI가 보낸
+    # 톤/성우 키만 덮어쓴다 — 통째로 새 dict를 만들면 _voice_params가 나머지를 기본값으로
+    # 채워 재생성 비트만 소리가 달라진다("작업대 소리 ≠ 렌더 소리", mix_pipeline._voice_params
+    # 문서 참고, 2026-07-18 리뷰).
+    override = dict(job.get("voice") or {})
+    for k in ("voice_id", "settings", "speed"):
+        if body.get(k) is not None:
+            override[k] = body.get(k)
+    background_tasks.add_task(resynth_one_beat, job_id, beat_idx, override, DB_PATH, _MIX_WORK_DIR)
+    return {"ok": True}
+
+
+@app.post("/api/mix/caption_offset/{job_id}/{beat_idx}")
+def api_mix_caption_offset(job_id: str, beat_idx: int, body: dict):
+    """비트 자막의 수동 시각 보정값(초)을 저장. 최종 _burn_captions가 읽어 반영."""
+    offset = max(-2.0, min(2.0, float(body.get("offset") or 0.0)))
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    plan = job["edit_plan"]
+    beat = next((b for b in plan["beats"] if b["beat_idx"] == beat_idx), None)
+    if beat is None:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "비트 없음"})
+    beat["cap_offset"] = offset
+    store.update_mix_job(job_id, edit_plan=plan)
+    return {"ok": True, "offset": offset}
 
 
 @app.get("/api/voice-presets")
@@ -1695,8 +1871,18 @@ def api_thumb_frames(body: dict):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
-    video = job.get("video_path")
-    if not video or not Path(video).exists():
+    # ★배경 영상 우선순위 — 최종 렌더(3164행)와 동일하게: 최종 → 자막제거본 → 미리보기.
+    # 예전엔 video_path만 봤다. 그런데 video_path는 7단계 최종 렌더 후에야 생기고,
+    # 5단계 썸네일은 그 전 단계다. 매칭을 끝낸(ready_for_review) 작업이라도 최종 영상이 없어
+    # "믹스 영상 없음"으로 막혔다(사장님 실측: 수박 작업 job=10dc0c4e30c5, mix_video 404지만
+    # preview 200). 자막 없는 미리보기(preview_path)가 있으면 그걸로 프레임을 뽑는다 —
+    # 렌더 전에도 썸네일을 만들 수 있어야 한다(설계 Q1의 "자막 없는 배경" 조건도 preview가 만족).
+    video = None
+    for cand in (job.get("video_path"), job.get("clean_video_path"), job.get("preview_path")):
+        if cand and Path(cand).exists():
+            video = cand
+            break
+    if not video:
         return JSONResponse(status_code=404, content={"ok": False, "error": "믹스 영상 없음"})
 
     out_dir = _thumb_dir(job_id)
@@ -1964,26 +2150,56 @@ _CN_TOKEN_RE = re.compile(r"[0-9A-Za-z가-힣]{2,}")
 
 
 def _cn_keyword(caption):
-    """캡션 → 샤오홍슈/도우인 검색어(앞쪽 의미토큰 2개). 없으면 ''."""
+    """캡션 → 검색어(앞쪽 의미토큰 3개). 없으면 ''."""
     if not caption:
         return ""
     toks = [t for t in _CN_TOKEN_RE.findall(caption) if t.lower() not in _CN_STOP]
-    return " ".join(toks[:2])
+    return " ".join(toks[:3])
 
 
+# ⚠️ 2026-07-18: 프론트가 더 이상 호출하지 않음(Apify 과금 회피). 나머지 4개 플랫폼은
+# 바로가기+담기로 대체. 엔드포인트·테스트는 유지(완전 삭제는 별도 정리 태스크).
 @app.post("/api/lens/cn")
-async def api_lens_cn(request: Request, source_caption: str = Form(""),
-                       max_results: int = Form(8)):
-    """캡션 키워드로 샤오홍슈+도우인을 Apify 병렬 검색 → 렌즈 결과에 합류할 항목.
-    렌즈(구글렌즈)는 중국 플랫폼을 거의 못 잡아, 두 전용 액터를 자동으로 덧댄다(2026-07-18).
-    Apify는 느리고(수십초~) 유료라 렌즈 결과가 뜬 뒤 프론트가 비동기로 이 API를 호출해
-    합친다. 토큰 없음·검색어 없음·액터 오류는 각각 조용히 빈 결과로 처리(렌즈 흐름 안 깨짐)."""
-    keyword = _cn_keyword(source_caption)
-    if not keyword:
-        return {"ok": True, "items": [], "count": 0, "note": "캡션에서 검색어를 뽑지 못했습니다"}
+async def api_lens_cn(request: Request, frame: UploadFile = File(None),
+                       source_caption: str = Form(""), max_results: int = Form(8)):
+    """프레임+캡션으로 샤오홍슈+도우인을 검색 → 렌즈 결과에 합류할 항목. 두 '장치'로 정확도를 높인다:
+
+    ★장치1(비전 추출): 렌즈가 캡처한 프레임(썸네일)을 Gemini 비전이 보고 화면 글자(제품명
+      'LED 물총')·생김새+캡션을 종합해 '바로 그 제품'을 특정하고 중국어 검색어를 만든다
+      (서버 실측: 리모와 캐리어→日默瓦, 청소용 퍼미스 스톤→浮石清洁块). 프레임 없음/실패 시
+      캡션 소재 키워드(cn_search_keyword) → 앞토큰 직역 순으로 폴백.
+    ★장치2(유사도 판정): 검색 결과 제목들을 추출 제품과 대조해 Gemini가 same/similar/no로
+      판정(오탐 많던 2그램 대체) → same을 위로 정렬, no엔 프론트 ⚠️배지.
+
+    Apify·Gemini가 느리고 유료라 렌즈 결과가 뜬 뒤 프론트가 비동기로 이 API를 호출해 합친다."""
+    if not (source_caption or "").strip() and frame is None:
+        return {"ok": True, "items": [], "count": 0, "note": "프레임·캡션이 없어 검색어를 만들 수 없습니다"}
     if not APIFY_TOKENS:
         return {"ok": True, "items": [], "count": 0, "note": "APIFY 토큰 없음"}
-    n = max(1, min(int(max_results or 8), 20))
+    product, keyword = "", ""
+    if frame is not None:                              # 장치1: 프레임 비전 추출
+        try:
+            raw = await frame.read()
+            v = cn_search_keyword_vision(raw, source_caption)
+            product, keyword = v.get("product", ""), v.get("zh", "")
+        except Exception:
+            product, keyword = "", ""
+    if not keyword:                                    # 폴백: 캡션 소재 키워드 → 앞토큰 직역
+        try:
+            keyword = cn_search_keyword(source_caption)
+        except Exception:
+            keyword = ""
+    if not keyword:
+        ko = _cn_keyword(source_caption)
+        try:
+            keyword = (translate_keyword(ko).get("zh") or "").strip() or ko
+        except Exception:
+            keyword = ko
+    if not keyword:
+        return {"ok": True, "items": [], "count": 0, "note": "검색어를 만들지 못했습니다"}
+    # 실측(2026-07-18): 액터는 maxResults=40도 raw=video=40을 ~14초에 준다(8과 지연 차 거의 없음).
+    # 웹검색 대비 개수 부족 제보로 상한을 60까지 열어둔다(프론트 기본 40). 결과당 과금이라 비용은 비례.
+    n = max(1, min(int(max_results or 8), 60))
 
     def _run(platform, mod):
         try:
@@ -1992,14 +2208,57 @@ async def api_lens_cn(request: Request, source_caption: str = Form(""),
             return []
         for r in rows:
             r["platform"] = platform
-            r["match"] = None   # 키워드 검색이라 제목-캡션 재매칭은 생략
+            r["match"] = None
         return rows
 
     with ThreadPoolExecutor(max_workers=2) as ex:
         fx = ex.submit(_run, "xiaohongshu", xiaohongshu_search)
         fd = ex.submit(_run, "douyin", douyin_search)
         items = fx.result() + fd.result()
-    return {"ok": True, "items": items, "count": len(items), "keyword": keyword}
+
+    # 장치2: 유사도 판정 + same 우선 정렬
+    if product and items:
+        try:
+            verdicts = judge_same_product(product, [i.get("title", "") for i in items])
+        except Exception:
+            verdicts = []
+        if len(verdicts) == len(items):
+            for i, vd in zip(items, verdicts):
+                i["sim"] = vd
+                i["match"] = True if vd == "same" else (False if vd == "no" else None)
+            rank = {"same": 0, "similar": 1, "no": 2}
+            items.sort(key=lambda i: rank.get(i.get("sim"), 1))
+    return {"ok": True, "items": items, "count": len(items),
+            "keyword": keyword, "product": product}
+
+
+@app.post("/api/lens/yt")
+async def api_lens_yt(request: Request, frame: UploadFile = File(None),
+                       source_caption: str = Form(""), max_results: int = Form(40)):
+    """프레임+캡션으로 유튜브를 키워드 검색해 렌즈 결과에 합류할 항목. YouTube Data API라
+    무료(쿼터 내) → 월 호출가드 없음. 검색어는 cn_search_keyword_vision의 product
+    (프롬프트가 '한국어 제품명'을 명시) → 캡션 앞토큰(_cn_keyword) 폴백."""
+    keyword = ""
+    if frame is not None:
+        try:
+            raw = await frame.read()
+            v = cn_search_keyword_vision(raw, source_caption)
+            keyword = (v.get("product") or "").strip()
+        except Exception:
+            keyword = ""
+    if not keyword:
+        keyword = _cn_keyword(source_caption)
+    if not keyword:
+        return {"ok": True, "items": [], "count": 0, "note": "검색어를 만들지 못했습니다"}
+    n = max(1, min(int(max_results or 40), 60))
+    try:
+        rows = youtube_search.search(keyword, max_results=n)
+    except Exception:
+        rows = []
+    for r in rows:
+        r["platform"] = "youtube"
+        r["match"] = None
+    return {"ok": True, "items": rows, "count": len(rows), "keyword": keyword}
 
 
 @app.get("/healthz")
@@ -2047,7 +2306,11 @@ _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico",
                "/insta_fill_comment.user.js",
                # 유저스크립트(insta_fill_comment)가 인스타 탭에서 전송 감지 시 GM_xmlhttpRequest로
                # 완료기록을 POST한다. 인증쿠키 없이 오므로 허용. 마킹은 저위험(되돌리기 가능).
-               "/api/comment/done")
+               "/api/comment/done",
+               # 원클릭 담기: /grab(북마클릿 설치안내)는 공개, /api/grab(팝업)은 자체적으로
+               # 세션쿠키를 검증해 고객을 식별한다(_cid 폴백이 legacy라 여기선 직접 검증). 미들웨어
+               # 401을 피해 친절한 팝업 응답을 주려고 allowlist에 둔다.
+               "/grab", "/api/grab", "/grab.user.js")
 _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 
 
@@ -2211,15 +2474,147 @@ def _serve_userscript():
     return FileResponse(p, media_type="text/javascript; charset=utf-8")
 
 
+@app.get("/grab.user.js", include_in_schema=False)
+def _serve_grab_userscript():
+    """원클릭 담기 유저스크립트 — Tampermonkey가 이 URL로 설치·자동업데이트.
+    드래그 없이 플랫폼 영상 페이지에 '📥 담기' 버튼을 띄운다."""
+    p = Path(__file__).parent / "userscript" / "grab.user.js"
+    return FileResponse(p, media_type="text/javascript; charset=utf-8")
+
+
+# ── 원클릭 담기: 네이티브 플랫폼(유튜브·틱톡·샤오홍슈·도우인) 영상 → 모음집 즉시 담기 ──
+# (2026-07-18) 렌즈 Apify 검색은 유료·개수제한, 네이티브 검색은 무료·무제한이지만 담을 때
+# 번거롭다는 제보. 해결=플랫폼 영상 페이지에서 북마클릿(무설치) 또는 유저스크립트(카드버튼)로
+# 한 번 눌러 URL·썸네일·제목을 우리 서버로 보내 담는다. 다운로드는 제작소에서 yt-dlp(무료).
+_GRAB_DOMAINS = [
+    ("youtube", ("youtube.com", "youtu.be")),
+    ("tiktok", ("tiktok.com",)),
+    ("instagram", ("instagram.com",)),
+    ("xiaohongshu", ("xiaohongshu.com", "xhslink.com")),
+    ("douyin", ("douyin.com", "iesdouyin.com")),
+]
+
+
+def _grab_platform(url):
+    host = (urllib.parse.urlparse(url or "").hostname or "").lower()
+    for name, doms in _GRAB_DOMAINS:
+        if any(host == d or host.endswith("." + d) for d in doms):
+            return name
+    return ""
+
+
+def _grab_popup_html(ok, msg, sub=""):
+    """팝업창에 뜨는 결과 화면 — 성공 시 잠깐 뒤 자동으로 닫힌다."""
+    icon = "✅" if ok else "⚠️"
+    color = "#1f9d55" if ok else "#e0623d"
+    delay = 1200 if ok else 3000
+    return HTMLResponse(f"""<!doctype html><meta charset="utf-8"><title>담기</title>
+<body style="margin:0;font-family:system-ui,sans-serif;background:#111;color:#eee;text-align:center;padding:28px 16px">
+<div style="font-size:44px">{icon}</div>
+<div style="font-size:17px;margin-top:6px;color:{color};font-weight:700">{msg}</div>
+<div style="font-size:13px;color:#999;margin-top:8px">{sub}</div>
+<script>setTimeout(function(){{window.close();}}, {delay});</script></body>""")
+
+
+def _enrich_grab(url, sc, cid):
+    """백그라운드: yt-dlp/oEmbed로 썸네일·제목·조회수·좋아요·댓글·길이·채널을 보강해 저장.
+    틱톡 썸네일 빔·정보 없음 제보 대응(2026-07-18). 실패해도 담긴 항목엔 지장 없음."""
+    meta = probe_grab_meta(url)
+    if not meta:
+        return
+    Store(DB_PATH).mix_basket_set_meta(
+        sc, customer_id=cid,
+        thumbnail=meta.get("thumbnail"), name=meta.get("title"),
+        meta={k: meta[k] for k in
+              ("views", "likes", "comments", "shares", "duration", "channel", "followers", "ts")
+              if k in meta})
+
+
+@app.get("/api/grab", include_in_schema=False)
+def api_grab(request: Request, background_tasks: BackgroundTasks,
+             url: str = "", thumbnail: str = "", title: str = ""):
+    """북마클릿/유저스크립트가 여는 팝업 대상. 세션쿠키로 고객을 직접 식별(_AUTH_ALLOW라
+    미들웨어가 customer_id를 안 채우므로 여기서 검증). 영상 즐겨찾기(mix_basket)에 멱등 추가하고
+    백그라운드로 메타(썸네일·조회수 등)를 보강한다(팝업은 즉시 반환)."""
+    cid = _verify_session(request.cookies.get("dash_auth")) if _AUTH_ON else 0
+    if cid is None:
+        return _grab_popup_html(False, "로그인이 필요해요",
+                                "shoppingshorts.duckdns.org에 먼저 로그인하세요")
+    platform = _grab_platform(url)
+    if not platform:
+        return _grab_popup_html(False, "담을 수 없는 링크예요", "유튜브·틱톡·샤오홍슈·도우인 영상 페이지에서 눌러주세요")
+    sc = "grab_" + platform + "_" + hashlib.sha1(url.encode("utf-8", "ignore")).hexdigest()[:12]
+    added = Store(DB_PATH).mix_basket_add(
+        sc, url=url, thumbnail=thumbnail or "", name=(title or "")[:120],
+        caption=(title or "")[:200], customer_id=cid)
+    background_tasks.add_task(_enrich_grab, url, sc, cid)   # 썸네일·조회수 등 보강
+    return _grab_popup_html(True, "영상 즐겨찾기에 담겼어요!" if added else "이미 담겨 있어요",
+                            f"{platform} · 왼쪽 ⭐영상 즐겨찾기에서 확인")
+
+
+# 북마클릿 본문(플랫폼 페이지에서 실행) — 따옴표 충돌을 피해 base64로 실어 페이지에서 atob.
+# ★설치페이지(우리 도메인)에서 '클릭'하면 자기 URL을 담으려다 실패해 헷갈린다 → 우리 도메인
+# 에서 실행되면 담지 말고 '드래그하세요' 안내만 띄운다(사장님 첫 사용 혼동, 2026-07-18).
+_GRAB_BOOKMARKLET = r'''javascript:(function(){var h=location.host||"";if(/shoppingshorts|localhost|127\.0\.0\.1/.test(h)){alert("❗ 이 버튼은 '눌러서' 쓰는 게 아니라, 마우스로 북마크바에 끌어다(드래그) 저장하는 거예요.\n\n저장한 뒤, 유튜브·틱톡·샤오홍슈·도우인에서 영상을 열고 그 북마크를 누르세요.");return;}var q=function(s){var e=document.querySelector(s);return e?e.content:"";};var th=q('meta[property="og:image"]');var ti=q('meta[property="og:title"]')||document.title||"";window.open("__BASE__/api/grab?url="+encodeURIComponent(location.href)+"&thumbnail="+encodeURIComponent(th)+"&title="+encodeURIComponent(ti.slice(0,120)),"ss_grab","width=380,height=220");})();'''
+
+
+@app.get("/grab", include_in_schema=False)
+def grab_setup(request: Request):
+    """원클릭 담기 설치 안내(공개). '📥 담기' 버튼을 북마크바로 드래그하면 끝(확장 설치 불필요)."""
+    base = (PUBLIC_BASE_URL or "").rstrip("/")
+    bm64 = base64.b64encode(_GRAB_BOOKMARKLET.replace("__BASE__", base).encode()).decode()
+    return HTMLResponse(f"""<!doctype html><meta charset="utf-8"><title>원클릭 담기 설치</title>
+<body style="font-family:system-ui,sans-serif;max-width:640px;margin:36px auto;padding:0 18px;line-height:1.7;color:#222">
+<h2>📥 원클릭 담기</h2>
+<p>네이티브 검색(무료·무제한)으로 보다가, 마음에 드는 영상을 <b>클릭 한 번</b>으로 모음집에 담는 기능입니다. 두 가지 방법 중 편한 걸 고르세요.</p>
+
+<div style="background:#eafaf0;border:2px solid #1f9d55;border-radius:12px;padding:18px;margin:16px 0">
+  <div style="font-weight:800;color:#1f7a44;font-size:16px;margin-bottom:6px">✅ 방법 1 (추천·제일 쉬움) — 버튼이 영상 위에 저절로 떠요</div>
+  <div style="font-size:14px;color:#555;margin-bottom:10px">Tampermonkey에 설치하면, 유튜브·틱톡·샤오홍슈·도우인 영상을 볼 때 오른쪽 아래에 <b>📥 담기</b> 버튼이 자동으로 떠요. 드래그도, 북마크도 필요 없이 <b>그 버튼만 누르면 끝</b>입니다.</div>
+  <ol style="margin:0 0 6px 18px;color:#444;font-size:14px">
+    <li>크롬에 <b>Tampermonkey</b> 확장이 없으면 먼저 설치(웹스토어에서 "Tampermonkey").</li>
+    <li>아래 링크를 누르면 Tampermonkey 설치창이 떠요 → <b>설치</b> 클릭.<br>
+        <a href="/grab.user.js" style="display:inline-block;margin-top:6px;padding:10px 18px;background:#1f9d55;color:#fff;border-radius:9px;text-decoration:none;font-weight:800">📥 담기 버튼 설치하기</a></li>
+    <li>이제 틱톡·샤오홍슈에서 영상을 열면 오른쪽 아래 <b>📥 담기</b> 버튼을 누르기만 하면 담김.</li>
+  </ol>
+</div>
+
+<details style="margin:12px 0">
+<summary style="cursor:pointer;color:#666;font-weight:700">방법 2 — 설치 없이 북마클릿으로 (조금 번거로움)</summary>
+<div style="background:#fff7e6;border:1px solid #f0c36d;border-radius:12px;padding:18px;margin:10px 0">
+  <div style="font-weight:800;margin-bottom:4px;color:#a86">① 아래 파란 버튼을 <span style="color:#c0392b">누르지 말고</span>, 마우스로 <u>북마크바에 끌어다(드래그)</u> 놓으세요</div>
+  <div style="font-size:13px;color:#888;margin-bottom:10px">북마크바가 안 보이면 <b>Ctrl+Shift+B</b>로 켜세요. 드래그 = 버튼을 마우스로 꾹 눌러 위쪽 북마크바까지 끌고 가서 놓기.</div>
+  <a id="bm" draggable="true" href="#" title="이 버튼을 위쪽 북마크바로 드래그하세요"
+     style="display:inline-block;padding:12px 22px;background:#1f6feb;color:#fff;border-radius:10px;text-decoration:none;font-weight:800;cursor:grab;font-size:16px">📥 담기</a>
+  <span style="color:#888;font-size:13px;margin-left:8px">↖ 이걸 <b>끌어서</b> 북마크바에 놓기</span>
+</div>
+<div style="font-weight:700">② 유튜브·틱톡·샤오홍슈·도우인에서 <u>영상을 열고</u>(검색결과 그리드 말고 영상 클릭해 들어간 뒤), 방금 만든 북마크를 누르면 끝</div>
+</div>
+</details>
+<p style="color:#666;margin-top:14px">담긴 영상은 <a href="/collection">🎬 모음집</a>에서 확인 · 실제 다운로드는 제작소에서 자동(무료).</p>
+<p style="color:#999;font-size:13px">※ 검색 결과 <b>그리드</b>가 아니라 <b>영상 상세 페이지</b>에서 눌러야 그 영상이 담깁니다. · shoppingshorts에 로그인된 상태여야 해요.</p>
+<script>document.getElementById("bm").setAttribute("href", atob("{bm64}"));</script>
+</body>""")
+
+
 # ── 영상제작 위저드(produce) ─────────────────────────────────
 @app.post("/api/produce/script/mix")
 def api_produce_script_mix(request: Request, body: dict):
-    """1단계 대본 · 우리믹스(Feature B) — 선택한 도서관 S급 대본들 강점 조합 → 새 대본."""
-    shortcodes = body.get("shortcodes") or []
-    if len(shortcodes) < 2:
-        return JSONResponse(status_code=422, content={"ok": False, "error": "도서관 대본 2개 이상 선택"})
-    wiki = {w["shortcode"]: w for w in Store(DB_PATH).wiki_list(customer_id=_cid(request))}
-    sources = [wiki[sc] for sc in shortcodes if sc in wiki]
+    """1단계 대본 · 우리믹스(Feature B) — 선택한 도서관 S급 대본들 강점 조합 → 새 대본.
+
+    body에 `sources`(인라인 대본 리스트, {shortcode?, name?, category?, full_text})가 오면
+    위키 조회 없이 그대로 쓴다 — 레퍼런스랭킹에서 담은 임시 대본(위키 미등록)도 조합 가능하게.
+    없으면 기존 shortcode→위키 경로(하위호환).
+    """
+    inline = body.get("sources") or []
+    if inline:
+        sources = [s for s in inline if (s.get("full_text") or "").strip()]
+    else:
+        shortcodes = body.get("shortcodes") or []
+        if len(shortcodes) < 2:
+            return JSONResponse(status_code=422, content={"ok": False, "error": "도서관 대본 2개 이상 선택"})
+        wiki = {w["shortcode"]: w for w in Store(DB_PATH).wiki_list(customer_id=_cid(request))}
+        sources = [wiki[sc] for sc in shortcodes if sc in wiki]
     if len(sources) < 2:
         return JSONResponse(status_code=422, content={"ok": False, "error": "선택한 대본을 찾을 수 없음"})
     drafts = script_generate.generate_mix(
@@ -2277,6 +2672,44 @@ def api_produce_works_save(request: Request, body: dict):
         # 남의 work_id — get/delete와 같은 404(스토어는 예외를 안 던진다, 2026-07-17 재리뷰)
         return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
     return {"ok": True, "work_id": wid}
+
+
+@app.post("/api/pick_log")
+def api_pick_log(request: Request, body: dict):
+    # 픽로그(트랙1) — 사장님이 고른 것/버린 것을 남긴다. 부가 기능이라 stage만 필수.
+    stage = body.get("stage")
+    if not stage:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "stage 없음"})
+    eid = Store(DB_PATH).log_pick_event(
+        stage,
+        picked=body.get("picked"),
+        rejected=body.get("rejected"),
+        candidates=body.get("candidates"),
+        edit_diff=body.get("edit_diff"),
+        job_id=body.get("job_id") or None,
+        customer_id=_cid(request),
+    )
+    return {"ok": True, "id": eid}
+
+
+@app.post("/api/auto/start")
+def api_auto_start(request: Request, body: dict, background: BackgroundTasks):
+    # 러너 트리거(트랙4) — auto_job 생성 후 백그라운드로 S1~S3 관통. 동시 1 job 가정.
+    import uuid as _uuid
+    store = Store(DB_PATH)
+    job_id = _uuid.uuid4().hex[:12]
+    store.create_auto_job(job_id, customer_id=_cid(request))
+    stages = default_stages(DB_PATH, _MIX_WORK_DIR)
+    background.add_task(run_auto_job, job_id, store, stages=stages)
+    return {"ok": True, "job_id": job_id}
+
+
+@app.get("/api/auto/{job_id}")
+def api_auto_status(job_id: str):
+    job = Store(DB_PATH).get_auto_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "없음"})
+    return job
 
 
 @app.get("/api/produce/works")
@@ -2404,6 +2837,38 @@ async def api_produce_mix_overlay(job_id: str = Form(...), file: UploadFile = Fi
     return {"ok": True, "file": name}
 
 
+@app.post("/api/produce/mix/{job_id}/cutaway")
+def api_produce_mix_cutaway(job_id: str, request: Request, body: dict):
+    """검수판에서 비트의 컷어웨이를 설정(asset_id) 또는 제거(null). plan에 되쓴다.
+
+    ⚠️ mix_jobs에는 customer_id 컬럼이 없다(다른 /api/produce/mix/... 라우트와 동일하게
+    job 존재 여부만 본다) — 진짜 소유권 경계는 scene_assets 쪽 customer_id 격리다.
+    남의 asset_id를 붙이려 하면 get_scene_asset이 못 찾아 422로 막는다."""
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    plan = job.get("edit_plan") or {}
+    beats = plan.get("beats") or []
+    try:
+        bi = int(body.get("beat_idx"))
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 필요"})
+    hit = next((b for b in beats if b.get("beat_idx") == bi), None)
+    if hit is None:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 범위 밖"})
+    aid = body.get("asset_id")
+    if aid is None:
+        hit.pop("cutaway", None)
+    else:
+        asset = store.get_scene_asset(int(aid), customer_id=_cid(request))
+        if not asset:
+            return JSONResponse(status_code=422, content={"ok": False, "error": "자산 없음"})
+        hit["cutaway"] = {"asset_id": int(aid), "match_type": "manual"}
+    store.update_mix_job(job_id, edit_plan=plan)
+    return {"ok": True}
+
+
 @app.get("/api/produce/mix/poster/{job_id}")
 def api_produce_mix_poster(job_id: str):
     """미리보기 실장면 배경용 — 매칭된 첫 소스 영상의 한 프레임을 9:16으로 잘라 JPG 서빙(캐시)."""
@@ -2465,8 +2930,19 @@ def api_produce_mix_beats_preview(job_id: str):
     job = Store(DB_PATH).get_mix_job(job_id)
     beats = ((job or {}).get("edit_plan") or {}).get("beats") or []
     total = len(beats)
-    out = [{"i": idx, "total": total, "caption": b.get("narration", "")}
-           for idx, b in enumerate(beats)]
+    # ★자막 미리보기가 실제 영상과 어긋나던 것 수정(2026-07-18 사장님 실측): 예전엔 narration
+    # 문장 전체를 caption으로 줘서 미리보기가 통째로 떴는데, 실제 영상은 _caption_segments로
+    # 2~3어절씩 쪼갠다. 그래서 "미리보기는 안 끊기는데 실제론 끊긴다"였다. 이제 실제 렌더와
+    # 같은 구절 분할(segs)과, 있으면 실제 표시시간(cap_durs)을 함께 내려 미리보기가 순차 재생한다.
+    out = []
+    for idx, b in enumerate(beats):
+        narr = b.get("narration", "")
+        out.append({
+            "i": idx, "total": total,
+            "caption": narr,                                        # 폴백·호환용(통째)
+            "segs": video_assemble._caption_segments(narr),         # 실제 렌더와 같은 구절 분할
+            "durs": b.get("cap_durs"),                              # 구절별 실제 표시시간(없으면 None)
+        })
     return {"beats": out}
 
 

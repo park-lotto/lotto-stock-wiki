@@ -49,9 +49,14 @@
     @keyframes capFade{0%{opacity:0}30%{opacity:1}100%{opacity:1}}
     @keyframes capSlide{0%{opacity:0;transform:translate(-50%,calc(-50% + 22px))}35%{opacity:1;transform:translate(-50%,-50%)}100%{opacity:1;transform:translate(-50%,-50%)}}
     @keyframes capPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}45%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}65%{transform:translate(-50%,-50%) scale(.97)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+    /* 반짝: 등장할 때 여러 번 깜빡이며 시선을 끄는 집중 효과(CTA·훅) */
+    @keyframes capSparkle{0%{opacity:0;transform:translate(-50%,-50%) scale(.85)}10%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}18%{opacity:.35}26%{opacity:1}34%{opacity:.5}42%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+    @keyframes twinkle{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:1;transform:scale(1)}}
     .eff-fade{animation:capFade 2.2s ease-in-out infinite}
     .eff-slide{animation:capSlide 2.2s ease-in-out infinite}
     .eff-pop{animation:capPop 2.2s ease-in-out infinite}
+    .eff-sparkle{animation:capSparkle 2.6s ease-in-out infinite}
+    .cap-spark{position:absolute;font-size:.5em;color:#fff;pointer-events:none;text-shadow:0 0 4px #fff;animation:twinkle 1.3s ease-in-out infinite}
     /* 헤드카피 번들 폰트 22종(브라우저 미리보기 = 실제 렌더 일치, ttf/otf만) */
     @font-face{font-family:'HCTmon';src:url('/fonts/TmonMonsori.ttf')}
     @font-face{font-family:'HCJua';src:url('/fonts/BMJUA.ttf')}
@@ -154,8 +159,15 @@
       <h3>1 · 제작소</h3>
       <div class="sub">넘어온 영상에서 대본을 뽑고(📝), 화면에 쓸 영상을 담아(🎬) 대본에 맞춰 영상을 만듭니다.</div>
       <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
-        <!-- ◀ 왼쪽: 영상 풀 -->
-        <div style="flex:1 1 300px;min-width:280px">
+        <!-- ◀ 왼쪽: 미리보기(장면 매칭 후) + 영상 풀 -->
+        <div style="flex:1 1 300px;min-width:280px;align-self:stretch">
+          <!-- 🪞 1단계 미리보기 — 편집안이 뜨면(loadMixReview) 이 좌측 공간이 프리뷰 자리가 된다.
+               우측 편집안을 읽으며 스크롤해도 따라오도록 sticky. 오른쪽 [▶ 미리보기 만들기]가
+               여기(#mixPreview)로 렌더한다(2026-07-19 사장님 요청 — 우측 인라인→좌측 프리뷰). -->
+          <div id="mixPreviewPanel" style="display:none;position:sticky;top:12px;z-index:6;margin-bottom:16px">
+            <div class="hint" style="margin-bottom:6px">🪞 미리보기 (9:16)</div>
+            <div id="mixPreview"></div>
+          </div>
           <div style="font-size:12px;color:var(--sub);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">◀ 넘어온 영상 (재료)</div>
           <div id="poolList" style="display:flex;flex-direction:column;gap:10px"></div>
           <div id="poolEmpty" class="hint" style="display:none;margin-top:6px">즐겨찾기에서 영상을 보내거나, 아래에 URL을 직접 넣으세요.</div>
@@ -206,6 +218,10 @@
         <span><b>원본 자막 제거 (VMake)</b><div class="hint">끄면 원본 영상 그대로 사용. 켜면 렌더 시 VMake로 자막 제거 후 우리 자막을 굽습니다.</div></span>
       </label>
       <div id="subState" class="hint" style="margin-top:8px"></div>
+      <div id="cleanPreviewWrap" style="margin-top:12px">
+        <button id="btnCleanPreview" class="btn" onclick="startCleanPreview()" disabled>자막제거 미리보기</button>
+        <div id="cleanPreview" class="hint" style="margin-top:10px"></div>
+      </div>
     </section>
     <section class="panel" data-step="2">
       <h3>3 · TTS 음성</h3>
@@ -239,14 +255,15 @@
         </div>
       </div>
       <div id="ttsBeats" style="margin-top:14px"></div>
+      <button class="btn-next" style="margin-top:12px;padding:8px 16px" onclick="vpGateNext()">다음 단계 (꾸미기) →</button>
     </section>
     <section class="panel" data-step="3">
       <h3>4 · 꾸미기</h3>
       <div class="sub">아래 <b>완성 스타일</b>을 고르면 바로 완성돼요. 실제 장면 위에서 미리보고, 더 손보고 싶으면 <b>직접 다듬기</b>를 펼치세요.</div>
       <!-- 🪞 피팅룸: 좌(큰 미러) + 우(문구·스타일카드·강조·고급) -->
       <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;margin-top:12px">
-        <!-- 좌: 큰 피팅 미러 -->
-        <div style="flex:0 0 auto">
+        <!-- 좌: 큰 피팅 미러 (다듬기 스크롤 시 따라오도록 sticky) -->
+        <div style="flex:0 0 auto;position:sticky;top:12px;align-self:flex-start;z-index:7">
           <div class="hint" style="margin-bottom:4px">🪞 실시간 미리보기 (9:16) — 글자를 <b>드래그</b>해 위치 이동
             <label style="cursor:pointer;margin-left:6px;color:var(--txt)"><input type="checkbox" id="sceneBg" onchange="toggleSceneBg()"> 실장면 배경</label></div>
           <div id="hcPreview" style="position:relative;width:380px;aspect-ratio:9/16;background:#ffffff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.4)">
@@ -275,6 +292,16 @@
           <div style="font-size:13px;font-weight:800;margin-bottom:6px">🎯 완성 스타일 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 그대로 완성</span></div>
           <div id="fullPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"></div>
           <button type="button" id="moreStylesBtn" onclick="toggleMoreStyles()" class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;margin-bottom:14px">+ 더보기</button>
+          <!-- ⭐ 내 프리셋 라이브러리(항상 노출) — 내가 저장한 스타일을 딸깍 적용 -->
+          <div style="background:#0d1420;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
+            <div style="font-size:13px;font-weight:800;margin-bottom:2px">⭐ 내 프리셋 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 바로 적용</span></div>
+            <div style="font-size:11px;color:var(--sub);margin-bottom:8px">지금 화면 스타일이 마음에 들면 저장해 두고, 다음엔 딸깍 한 번으로 그대로 불러와요.</div>
+            <div id="myPresets" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px"></div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <input id="myPresetName" type="text" placeholder="예: 내 채널 기본형" style="flex:1;min-width:150px;background:#0a1017;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:8px 10px;font-size:13px">
+              <button class="tab" onclick="saveMyPreset()" style="flex:0 0 auto;min-width:auto;padding:8px 16px;font-size:13px;white-space:nowrap;background:linear-gradient(90deg,#153a6b,#0d2340);border-color:var(--accent)">💾 지금 스타일 저장</button>
+            </div>
+          </div>
           <!-- 강조 단어(노출 유지) -->
           <div style="background:#0d1420;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
             <div style="font-size:13px;font-weight:700;margin-bottom:2px">🎯 강조 단어 <span style="font-size:11px;color:var(--sub);font-weight:400">— 헤드카피 + 자막 공통(키워드 일치 시 자동 강조)</span></div>
@@ -378,6 +405,7 @@
                   <button type="button" class="capEff tab" data-eff="fade" onclick="setCapEffect('fade')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">페이드</button>
                   <button type="button" class="capEff tab" data-eff="slide" onclick="setCapEffect('slide')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">슬라이드</button>
                   <button type="button" class="capEff tab" data-eff="pop" onclick="setCapEffect('pop')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">팝</button>
+                  <button type="button" class="capEff tab" data-eff="sparkle" onclick="setCapEffect('sparkle')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">✦ 반짝(CTA)</button>
                 </div>
               </div>
               </details>
@@ -432,18 +460,6 @@
                 </div>
               </details>
 
-              <!-- ── ⭐ 내 프리셋 저장 ── -->
-              <details style="border-top:1px dashed var(--line)">
-                <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">⭐ 내 프리셋 저장 · 불러오기</summary>
-                <div style="padding:2px 0 12px">
-                  <div style="font-size:11px;color:var(--sub);margin-bottom:6px">지금 스타일을 저장해 나만의 딸깍 샘플로</div>
-                  <div id="myPresets" style="display:flex;flex-wrap:wrap;align-items:center;margin-bottom:8px"></div>
-                  <div style="display:flex;gap:6px;flex-wrap:wrap">
-                    <input id="myPresetName" type="text" placeholder="예: 내 채널 기본형" style="flex:1;min-width:160px;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 10px;font-size:13px">
-                    <button class="tab" onclick="saveMyPreset()" style="flex:0 0 auto;min-width:auto;padding:7px 16px;font-size:13px;white-space:nowrap;background:linear-gradient(90deg,#153a6b,#0d2340);border-color:var(--accent)">💾 현재 스타일 저장</button>
-                  </div>
-                </div>
-              </details>
             </div>
           </details>
         </div>
@@ -607,6 +623,7 @@ async function seoGenerate(only){
   const btn = document.getElementById('seoGenAll');
   msg.textContent = only ? '다시 쓰는 중…' : '생성 중… (키워드 실측까지 20초쯤 걸립니다)';
   if(btn) btn.disabled = true;                 // 더블서밋 차단 — 제일 비싼 작업이다
+  try{ logPick('S8', {picked: only ? ('regen:'+only) : 'generate_all', locked: (SEO && SEO.locked) || {}, job_id: MIX_JOB}); }catch(e){}
   try{
     const body = {
       job_id: MIX_JOB,
@@ -894,6 +911,7 @@ async function fxPoll(){
 }
 // ── 자막 스타일(나레이션 자막) ──────────────
 let CAP_EFFECT='none';
+let CAP_SHADOW=false;   // 은은한 드롭 그림자(레퍼런스 자막룩). 프리셋이 켬. 두꺼운 테두리 대안.
 let PREVIEW_CAP_TEXT='이렇게 자막이 나와요';   // 스텝퍼가 비트별 자막으로 교체
 // ── 🎞 공용 장면 프리뷰 스텝퍼 — 비트마다 프레임+자막 넘겨보기(TTS·검수판 트랙도 재사용) ──
 let BEATS_PREVIEW=[];   // [{i,total,caption}]
@@ -922,11 +940,28 @@ function showBeat(i){
     bg.src='/api/produce/mix/beatframe/'+MIX_JOB+'/'+BEAT_IDX;
     bg.style.display='block';
   }
-  // 자막 = 그 비트 대본, 헤드카피는 비트 공통이라 그대로
-  PREVIEW_CAP_TEXT=b.caption||'';
-  if(typeof updateCaption==='function') updateCaption();
+  // 자막 = 그 비트 대본. ★실제 영상은 2~3어절씩 순차로 바뀐다(서버 segs=_caption_segments).
+  // 미리보기도 그대로 순차 재생해 "보는 것=나오는 것"을 맞춘다(2026-07-18 사장님 A안).
+  // 미리보기라 한 장면 안에서 계속 반복한다. 장면을 넘기면 아래 재생을 새로 건다.
+  _playBeatCaptions(b);
   const cnt=document.getElementById('beatCount');
   if(cnt) cnt.textContent=(BEAT_IDX+1)+' / '+BEATS_PREVIEW.length+' 장면';
+}
+let CAP_SEQ_TIMER=null;
+function _playBeatCaptions(b){
+  if(CAP_SEQ_TIMER){ clearTimeout(CAP_SEQ_TIMER); CAP_SEQ_TIMER=null; }
+  const segs=(b && b.segs && b.segs.length) ? b.segs : [ (b&&b.caption)||'' ];
+  const durs=(b && b.durs) || null;   // 구절별 실제 표시시간(초). 없으면 균등.
+  let si=0;
+  const play=()=>{
+    PREVIEW_CAP_TEXT=segs[si]||'';
+    if(typeof updateCaption==='function') updateCaption();
+    // 실제 타이밍이 있으면 그걸로, 없으면 1.1초. 너무 짧거나 길지 않게 가둔다.
+    const d=(durs && durs[si]>0) ? durs[si]*1000 : 1100;
+    si=(si+1)%segs.length;
+    CAP_SEQ_TIMER=setTimeout(play, Math.max(450, Math.min(2600, d)));
+  };
+  play();
 }
 function stepBeat(d){ if(BEATS_PREVIEW.length) showBeat(BEAT_IDX+d); }
 function renderCapFontSelect(){
@@ -941,7 +976,7 @@ function updateCaption(){
   const cs={ font:g('capFont').value||'NanumGothic-Bold.ttf', color:g('capColor').value, size:+g('capSize').value,
     y_pct:+g('capY').value, outline:g('capOutline').checked, outline_color:g('capOutColor').value, outline_w:+g('capOutW').value,
     box:g('capBox').checked, box_color:g('capBoxColor').value, box_pad:+g('capBoxPad').value, box_opacity:+g('capBoxOpacity').value,
-    bar:!g('capBox').checked, effect:CAP_EFFECT };
+    bar:!g('capBox').checked, effect:CAP_EFFECT, shadow:CAP_SHADOW, shadow_color:'#000000', shadow_d:3 };
   STATE.captionStyle=cs;
   g('capSizeV').textContent=cs.size; g('capYV').textContent=cs.y_pct;
   const el=g('capPreviewText'); if(!el) return;
@@ -953,74 +988,55 @@ function updateCaption(){
   el.style.fontSize=Math.max(9, cs.size*scale)+'px';
   el.style.maxWidth=(PREVIEW_W-16)+'px';
   const oc=cs.outline_color, ow=(cs.outline_w*scale).toFixed(1);
-  el.style.textShadow = cs.outline ? `${ow}px ${ow}px 0 ${oc}, -${ow}px -${ow}px 0 ${oc}, ${ow}px -${ow}px 0 ${oc}, -${ow}px ${ow}px 0 ${oc}` : 'none';
+  const sd=Math.max(1,(cs.shadow_d||3)*scale).toFixed(1);
+  el.style.textShadow = cs.outline
+    ? `${ow}px ${ow}px 0 ${oc}, -${ow}px -${ow}px 0 ${oc}, ${ow}px -${ow}px 0 ${oc}, -${ow}px ${ow}px 0 ${oc}`
+    : (cs.shadow ? `0 ${sd}px ${(sd*2)}px rgba(0,0,0,.55), 0 0 ${sd}px rgba(0,0,0,.4)` : 'none');
   if(cs.box){ el.style.background=hexA(cs.box_color, cs.box_opacity/100); el.style.padding=`${Math.round(cs.box_pad*scale)}px ${Math.round(cs.box_pad*1.5*scale)}px`; el.style.borderRadius='6px'; }
   else { el.style.background='none'; el.style.padding='2px 6px'; el.style.borderRadius='0'; }
-  // 효과 프리뷰: 선택 효과를 미리보기에서 반복 재생(fade/slide/pop). 없음이면 정지.
-  el.classList.remove('eff-fade','eff-slide','eff-pop');
+  // 효과 프리뷰: 선택 효과를 미리보기에서 반복 재생(fade/slide/pop/sparkle). 없음이면 정지.
+  el.classList.remove('eff-fade','eff-slide','eff-pop','eff-sparkle');
   if(cs.effect==='fade') el.classList.add('eff-fade');
   else if(cs.effect==='slide') el.classList.add('eff-slide');
   else if(cs.effect==='pop') el.classList.add('eff-pop');
+  else if(cs.effect==='sparkle') el.classList.add('eff-sparkle');
+  renderSparkles(cs.effect==='sparkle', cs.y_pct);
 }
+// 반짝 효과: 자막 주위에 ✨ 입자를 뿌려 깜빡이게(미리보기 연출). 최종 영상은 서버가 알파 깜빡임으로 렌더.
+function renderSparkles(on, ypct){
+  const pv=document.getElementById('hcPreview'); if(!pv) return;
+  pv.querySelectorAll('.cap-spark').forEach(s=>s.remove());
+  if(!on) return;
+  const cy = (ypct!=null?ypct:37);
+  // 자막 중심(50%, cy%) 주위 4곳에 별. 시간차를 둬 반짝임이 겹치지 않게.
+  const spots=[[34,-8,0],[66,-6,.4],[28,7,.8],[72,9,.2]];
+  spots.forEach(([x,dy,delay])=>{
+    const s=document.createElement('div');
+    s.className='cap-spark'; s.textContent='✦';
+    s.style.left=x+'%'; s.style.top=(cy+dy)+'%';
+    s.style.fontSize=Math.max(10, (cs_spark_size()))+'px';
+    s.style.animationDelay=delay+'s';
+    pv.appendChild(s);
+  });
+}
+function cs_spark_size(){ const g=document.getElementById('capSize'); return g ? Math.max(10,(+g.value||50)*(PREVIEW_W/VIDEO_W)*0.5) : 16; }
 // ── 🎯 완성 스타일 프리셋(원클릭: 헤드카피+자막+효과 한 번에) — 빅채널 레퍼런스 기반 ──
+// 레퍼런스(HOMEDIRECTOR)와 동일: 흰 자막·화면 중상단(y37, 3개 동일)·은은한 그림자(테두리X). 크기만 차이.
+// motion(모션팩)을 프리셋에 물리지 않는다(2026-07-19) — minimal_chic가 swipe_left
+// 전환(우→좌 세로 광선)을 첫·마지막 비트경계에 얹어 "미리보기엔 없는데 최종에만
+// 광선이 지나간다"는 사장님 제보. 전환은 아래 '🎬 모션 팩' 드롭다운에서 원할 때만 켠다.
 const FULL_PRESETS=[
-  {name:'모던 화이트', chip:'#FFFFFF', motion:'minimal_chic',
-    hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:66,x:50,y:12,outline:true,outline_color:'#000000',outline_w:7},
-    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:52,y:84,outline:false,box:true,box_color:'#000000',box_pad:14,box_opacity:68,effect:'fade'}},
-  {name:'임팩트 옐로', chip:'#FFE100', motion:'dynamic_pop',
-    hc:{font:'TmonMonsori.ttf',color:'#FFE100',weight:900,size:76,x:50,y:12,outline:true,outline_color:'#000000',outline_w:9},
-    cap:{font:'BMJUA.ttf',color:'#FFFFFF',size:56,y:84,outline:true,outline_color:'#000000',outline_w:6,box:false,effect:'pop'}},
-  {name:'민트 클린', chip:'#00E5C0', motion:'minimal_chic',
-    hc:{font:'BMDOHYEON.ttf',color:'#00E5C0',weight:900,size:72,x:50,y:12,outline:true,outline_color:'#06231F',outline_w:8},
-    cap:{font:'SUIT-Bold.otf',color:'#FFFFFF',size:52,y:84,outline:true,outline_color:'#000000',outline_w:6,box:false,effect:'slide'}},
-  {name:'레드 강조', chip:'#FF2D2D', motion:'dynamic_pop',
-    hc:{font:'BMDOHYEON.ttf',color:'#FF2D2D',weight:900,size:72,x:50,y:12,outline:true,outline_color:'#FFFFFF',outline_w:7},
-    cap:{font:'GmarketSansBold.otf',color:'#FFFFFF',size:52,y:84,outline:false,box:true,box_color:'#000000',box_pad:14,box_opacity:80,effect:'fade'}},
-  {name:'블랙박스 시크', chip:'#111111', motion:'minimal_chic',
-    hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:62,x:50,y:14,outline:false,box:true,box_color:'#000000',box_pad:18,box_opacity:85},
-    cap:{font:'SUIT-Bold.otf',color:'#FFFFFF',size:50,y:84,outline:false,box:true,box_color:'#000000',box_pad:14,box_opacity:85,effect:'fade'}},
-  {name:'큐트 핑크', chip:'#FF4D8D', motion:'dynamic_pop',
-    hc:{font:'Binggrae-Bold.otf',color:'#FF4D8D',weight:900,size:72,x:50,y:12,outline:true,outline_color:'#FFFFFF',outline_w:8},
-    cap:{font:'BMJUA.ttf',color:'#FFFFFF',size:54,y:84,outline:true,outline_color:'#FF4D8D',outline_w:6,box:false,effect:'pop'}},
-  {name:'네이비 신뢰', chip:'#13234E', motion:'minimal_chic',
-    hc:{font:'GmarketSansBold.otf',color:'#13234E',weight:900,size:66,x:50,y:12,outline:true,outline_color:'#FFFFFF',outline_w:7},
-    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:52,y:84,outline:false,box:true,box_color:'#13234E',box_pad:14,box_opacity:88,effect:'slide'}},
-  {name:'푸드 그린', chip:'#12B24A', motion:'dynamic_pop',
-    hc:{font:'BMDOHYEON.ttf',color:'#12B24A',weight:900,size:72,x:50,y:12,outline:true,outline_color:'#000000',outline_w:7},
-    cap:{font:'BMJUA.ttf',color:'#FFFFFF',size:54,y:84,outline:true,outline_color:'#000000',outline_w:6,box:false,effect:'pop'}},
-  {name:'뉴스 자막형', chip:'#FFFFFF', motion:'minimal_chic',
-    hc:{font:'GmarketSansBold.otf',color:'#111111',weight:900,size:56,x:50,y:10,outline:false,box:true,box_color:'#FFE100',box_pad:14,box_opacity:100},
-    cap:{font:'NanumGothic-Bold.ttf',color:'#FFFFFF',size:50,y:86,outline:true,outline_color:'#000000',outline_w:5,box:true,box_color:'#000000',box_pad:12,box_opacity:60,effect:'none'}},
-  {name:'핸드메이드 감성', chip:'#FF7A00', motion:'dynamic_pop',
-    hc:{font:'Kkubulim.ttf',color:'#FF7A00',weight:900,size:74,x:50,y:12,outline:true,outline_color:'#FFFFFF',outline_w:8},
-    cap:{font:'Kkubulim.ttf',color:'#FFFFFF',size:56,y:84,outline:true,outline_color:'#000000',outline_w:6,box:false,effect:'fade'}},
-  {name:'하이엔드 세리프', chip:'#C9A24B', motion:'minimal_chic',
-    hc:{font:'RIDIBatang.otf',color:'#FFFFFF',weight:700,size:60,x:50,y:12,outline:true,outline_color:'#000000',outline_w:5},
-    cap:{font:'GowunBatang.ttf',color:'#FFFFFF',size:48,y:85,outline:false,box:true,box_color:'#000000',box_pad:14,box_opacity:60,effect:'fade'}},
-  {name:'오렌지 팝', chip:'#FF7A00', motion:'dynamic_pop',
-    hc:{font:'TmonMonsori.ttf',color:'#FF7A00',weight:900,size:78,x:50,y:12,outline:true,outline_color:'#000000',outline_w:9},
-    cap:{font:'TmonMonsori.ttf',color:'#111111',size:52,y:84,outline:false,box:true,box_color:'#FFE100',box_pad:14,box_opacity:100,effect:'pop'}},
-  {name:'파스텔 소프트', chip:'#8FD3FF', motion:'minimal_chic',
-    hc:{font:'SUIT-Bold.otf',color:'#FFFFFF',weight:900,size:64,x:50,y:12,outline:true,outline_color:'#3A6EA5',outline_w:6},
-    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:50,y:84,outline:false,box:true,box_color:'#3A6EA5',box_pad:14,box_opacity:55,effect:'slide'}},
-  {name:'정보전달 블루', chip:'#1E5AA8', motion:'minimal_chic',
-    hc:{font:'Pretendard-ExtraBold.otf',color:'#1E5AA8',weight:900,size:64,x:50,y:12,outline:true,outline_color:'#FFFFFF',outline_w:7},
-    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:52,y:84,outline:false,box:true,box_color:'#1E5AA8',box_pad:14,box_opacity:88,effect:'fade'}},
-  {name:'옐로 2톤 A', chip:'#FFE100', motion:'dynamic_pop',
-    hc:{font:'GmarketSansBold.otf',color:'#FFFFFF',weight:900,size:38,x:50,y:8,outline:true,outline_color:'#000000',outline_w:6},
-    extra:[{text:'',font:'GmarketSansBold.otf',color:'#FFE100',size:68,x:50,y:19,outline:true,outline_color:'#000000',outline_w:8}],
-    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:52,y:84,outline:true,outline_color:'#000000',outline_w:6,box:false,effect:'fade'}},
-  {name:'옐로 2톤 B(좌측)', chip:'#FFE100', motion:'dynamic_pop',
-    hc:{font:'BMDOHYEON.ttf',color:'#FFFFFF',weight:900,size:36,x:32,y:9,outline:true,outline_color:'#000000',outline_w:6},
-    extra:[{text:'',font:'BMDOHYEON.ttf',color:'#FFE100',size:64,x:32,y:19,outline:true,outline_color:'#000000',outline_w:7}],
-    cap:{font:'SUIT-Bold.otf',color:'#FFFFFF',size:50,y:84,outline:true,outline_color:'#000000',outline_w:6,box:false,effect:'slide'}},
-  {name:'네온 글로우 화이트', chip:'#00E5FF', motion:'dynamic_pop',
-    hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:60,x:50,y:14,outline:true,outline_color:'#00E5FF',outline_w:9},
-    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:50,y:84,outline:true,outline_color:'#00E5FF',outline_w:7,box:false,effect:'fade'}},
-  {name:'네온 글로우 센터', chip:'#00E5FF', motion:'dynamic_pop',
-    hc:{font:'SUIT-Bold.otf',color:'#FFFFFF',weight:900,size:58,x:50,y:16,outline:true,outline_color:'#00D9E8',outline_w:8},
-    cap:{font:'SUIT-Bold.otf',color:'#FFFFFF',size:48,y:84,outline:true,outline_color:'#00D9E8',outline_w:6,box:false,effect:'pop'}},
+  {name:'심플 화이트', chip:'#F2F2F2',
+    hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:54,x:50,y:12,outline:true,outline_color:'#000000',outline_w:2},
+    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:50,y:37,outline:false,shadow:true,box:false,effect:'fade'}},
+  {name:'심플 화이트(크게)', chip:'#FFFFFF',
+    hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:58,x:50,y:12,outline:true,outline_color:'#000000',outline_w:2},
+    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:58,y:37,outline:false,shadow:true,box:false,effect:'fade'}},
+  {name:'심플 화이트(작게)', chip:'#EDEDED',
+    hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:50,x:50,y:12,outline:true,outline_color:'#000000',outline_w:2},
+    cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:44,y:37,outline:false,shadow:true,box:false,effect:'fade'}},
 ];
+<<<<<<< HEAD
 // 스타일별 용도 태그(잘 어울리는 콘텐츠) — 정직한 큐레이션. 실 영상 지표는 v2 발굴연동.
 const STYLE_USE={
   '모던 화이트':'홈템·정보', '임팩트 옐로':'레시피·강한 훅', '민트 클린':'뷰티·생활',
@@ -1029,6 +1045,11 @@ const STYLE_USE={
   '핸드메이드 감성':'DIY·감성', '하이엔드 세리프':'럭셔리·리뷰', '오렌지 팝':'레시피·활기',
   '파스텔 소프트':'육아·감성', '정보전달 블루':'정보·튜토리얼', '옐로 2톤 A':'리뷰·강조',
   '옐로 2톤 B(좌측)':'리뷰·좌측', '네온 글로우 화이트':'트렌드·뷰티', '네온 글로우 센터':'트렌드·감성'
+=======
+// 스타일별 용도 태그(잘 어울리는 콘텐츠) — 정직한 큐레이션.
+const STYLE_USE={
+  '심플 화이트':'자막 중상단·깔끔', '심플 화이트(크게)':'강조·큰 자막', '심플 화이트(작게)':'자막 많을 때'
+>>>>>>> 76d5b4fe62827fc23ff6b65ecbb40b44d18340dd
 };
 // 대표 완성 스타일(피팅 카드 우선 노출). 나머지는 더보기.
 let STYLE_TOUCHED=false;
@@ -1037,7 +1058,7 @@ let STYLE_TOUCHED=false;
 // 채우면 스타일·꾸미기가 전부 기본값으로 덮인다(C-2 잔여, 라이브 실측 확인). 복원 시 이 플래그를
 // 세워, initHeadcopy가 applyConfig로 복원값을 DOM에 밀어넣고 STYLE_TOUCHED로 자동적용을 막는다.
 let PENDING_STYLE_RESTORE=false;
-const FEATURED = ['모던 화이트','임팩트 옐로','옐로 2톤 A','네온 글로우 화이트','레드 강조'];
+const FEATURED = ['심플 화이트','심플 화이트(크게)','심플 화이트(작게)'];
 let MORE_OPEN = false;
 let POSTER_URL_CACHE = null;
 let PICKED_STYLE_IDX = -1;
@@ -1090,10 +1111,21 @@ function renderStyleCards(){
   const restIdx = FULL_PRESETS.map((_,i)=>i).filter(i=>!featIdx.includes(i));
   const show = MORE_OPEN ? featIdx.concat(restIdx) : featIdx;
   box.innerHTML = show.map(i=>styleCardHTML(FULL_PRESETS[i], i, selIdx)).join('');
-  const mb=document.getElementById('moreStylesBtn'); if(mb) mb.textContent = MORE_OPEN ? '− 접기' : '+ 더보기';
+  const mb=document.getElementById('moreStylesBtn'); if(mb){ mb.style.display = restIdx.length ? 'inline-block' : 'none'; mb.textContent = MORE_OPEN ? '− 접기' : '+ 더보기'; }
 }
 function toggleMoreStyles(){ MORE_OPEN=!MORE_OPEN; renderStyleCards(); }
-function pickStyleCard(i){ PICKED_STYLE_IDX=i; STYLE_TOUCHED=true; applyFullPreset(i); renderStyleCards(); }
+// 픽로그(트랙1) — 사장님이 무엇을 고르고 버렸는지 조용히 남긴다. 트랙7 취향학습·B전환 지표용.
+// ★부가 기능이라 절대 흐름을 막지 않는다: fire-and-forget, 예외·거절 모두 삼킨다.
+function logPick(stage, payload){
+  try{
+    fetch('/api/pick_log', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(Object.assign({stage: stage}, payload || {}))
+    }).catch(function(){});
+  }catch(e){ /* 흐름 보호 */ }
+}
+// ==END logPick==
+function pickStyleCard(i){ PICKED_STYLE_IDX=i; STYLE_TOUCHED=true; applyFullPreset(i); renderStyleCards(); try{ logPick('S6', {picked: (FULL_PRESETS[i] && FULL_PRESETS[i].name) || i, idx: i}); }catch(e){} }
 // renderFullPresets 이름을 참조하는 기존 호출부 호환용 별칭
 function renderFullPresets(){ renderStyleCards(); }
 function applyConfig(h, c){
@@ -1111,6 +1143,7 @@ function applyConfig(h, c){
     g('capY').value=(c.y!=null?c.y:(c.y_pct!=null?c.y_pct:84));
     g('capOutline').checked=!!c.outline; g('capOutColor').value=c.outline_color||'#000000'; g('capOutW').value=c.outline_w||0;
     g('capBox').checked=!!c.box; g('capBoxColor').value=c.box_color||'#000000'; g('capBoxPad').value=(c.box_pad!=null?c.box_pad:12); g('capBoxOpacity').value=(c.box_opacity!=null?c.box_opacity:80);
+    CAP_SHADOW=!!c.shadow;   // 은은한 그림자 프리셋 반영
     setCapEffect(c.effect||'none');   // updateCaption 내부호출됨
   }
 }
@@ -1133,7 +1166,7 @@ function applyFullPreset(i){
   document.querySelectorAll('.fullPreset').forEach((b,idx)=>b.style.outline = idx===i?'2px solid var(--accent2)':'none');
 }
 // ── 🪄 진입 자동완성: step5(꾸미기) 첫 진입 시 기본 스타일+실장면 배경 자동 적용(딸깍) ──
-const DEFAULT_STYLE_NAME='임팩트 옐로';
+const DEFAULT_STYLE_NAME='심플 화이트';
 let DEFAULT_APPLIED=false;
 function applyDefaultStyleOnEntry(){
   // step5 진입 1회: 사용자가 아직 스타일을 안 건드렸으면 기본 스타일 자동 적용 + 실장면 배경 자동 ON.
@@ -1311,7 +1344,7 @@ function renderMyPresets(){
   box.innerHTML = list.length ? list.map((p,i)=>`<span style="display:inline-flex;align-items:center;gap:4px;background:#0d1420;border:1px solid var(--line);border-radius:9px;padding:2px 4px 2px 0;margin:0 6px 6px 0">
     <button class="tab" onclick="applyMyPreset(${i})" style="flex:0 0 auto;min-width:auto;padding:5px 11px;font-size:12px;white-space:nowrap;border:none;background:none">⭐ ${p.name}</button>
     <button onclick="deleteMyPreset(${i})" title="삭제" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:14px">✕</button></span>`).join('')
-    : '<span class="hint">저장된 내 프리셋이 없습니다. 아래 조정 후 “현재 스타일 저장”을 눌러 만드세요.</span>';
+    : '<span class="hint">아직 저장한 프리셋이 없어요. 완성 스타일을 고르거나 직접 다듬은 뒤, 아래 “💾 지금 스타일 저장”을 누르면 여기 쌓여요.</span>';
 }
 // 번들 폰트 22종(ttf/otf만 — 미리보기=실제 렌더 일치). ⭐=쇼츠 헤드카피 추천 베스트5
 const HC_FONTS=[
@@ -1525,10 +1558,20 @@ const SCRIPT_MODE_HTML = {
       <button class="tab" id="mixSrcPicks" style="flex:0 0 auto;min-width:auto;padding:7px 14px" onclick="switchMixSource('picks')">📥 담긴 대본</button>
       <button class="tab" id="mixSrcAll" style="flex:0 0 auto;min-width:auto;padding:7px 14px" onclick="switchMixSource('all')">📚 위키 전체 영상대본</button>
     </div>
+    <div class="picksBulk" id="picksBulk" style="display:flex;gap:6px;margin:6px 0">
+      <button class="mini" onclick="picksSelectAll(true)">전체선택</button>
+      <button class="mini" onclick="picksClearSel()">해제</button>
+      <button class="mini" onclick="picksDeleteSel()">선택삭제</button>
+    </div>
     <div id="mixWiki" style="margin:10px 0">불러오는 중…</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       <button class="btn-next" style="padding:10px 16px;background:linear-gradient(90deg,#1c5a2e,#0d3a1c)" onclick="openGenFromWiki()">♻️ 선택 1개로 새 대본 생성</button>
       <button class="btn-next" style="padding:10px 16px" onclick="genMix()">🧬 선택 2개+ 조합 생성</button>
+      <label class="hint" style="display:flex;align-items:center;gap:4px">길이
+        <select id="mixSeconds" style="background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:6px">
+          <option value="15">15초</option><option value="20" selected>20초</option>
+          <option value="30">30초</option><option value="45">45초</option>
+        </select></label>
     </div>
     <div class="hint" style="margin-top:6px">1개 = 그 대본의 구조를 빌려 새로 씁니다(요소별로 유지·교체 선택). 여러 대본의 강점을 섞으려면 2개+.</div>
     <div id="mixDrafts" style="margin-top:12px"></div>`,
@@ -1573,6 +1616,7 @@ function useDraft(i){
   setScriptMode('manual');   // 편집 가능한 직접작성 창으로 이동(내용 채움)
   refreshFinalPeek();
   saveWork();
+  try{ logPick('S2', {picked: i, source: 'mix', candidates: (window._drafts||[]).map(function(d){ return d && d.hook; })}); }catch(e){}
 }
 async function postDrafts(url, payload, boxId){
   const box=document.getElementById(boxId);
@@ -1602,15 +1646,62 @@ function mixThumbFallback(img, shortcode){
   img.dataset.fellback='1';
   img.src=poster;
 }
+// 담긴 대본 = 서버 picks(위키 S급) + 랭킹에서 임시로 보낸 대본(HANDOFF). 합쳐 보여준다.
+// 임시 대본은 위키를 안 거치므로(사장님: '임시로 담기') HANDOFF의 script를 그대로 쓴다.
+// shortcode가 겹치면 서버(S급 영속본) 우선.
+function mergePicks(serverItems, handoff){
+  const out = (serverItems||[]).slice();
+  const seen = new Set(out.map(w=>w.shortcode));
+  (handoff||[]).forEach(h=>{
+    if(!h.pickScript || !h.script || seen.has(h.shortcode)) return;
+    seen.add(h.shortcode);
+    out.push({shortcode:h.shortcode, name:h.name||h.shortcode, category:h.category||'',
+              thumbnail:h.thumbnail||'', full_text:h.script});
+  });
+  return out;
+}
+// ── 임시 대본 끝 ──
+// 담긴 대본 관리(2026-07-18) — 전체선택/해제/선택삭제.
+function picksSelectAll(on){
+  document.querySelectorAll('.mixPick').forEach(c=>{ c.checked = !!on; });
+}
+function picksClearSel(){ picksSelectAll(false); }
+async function picksDeleteSel(){
+  const sel = [...document.querySelectorAll('.mixPick')].filter(c=>c.checked).map(c=>c.value);
+  if(!sel.length) return;
+  for(const sc of sel){
+    // 임시(HANDOFF)와 서버(S급 pick)는 서로 배타적이지 않다 — shortcode가 겹치면 둘 다에서 빼야
+    // mergePicks가 재로드 시 서버 항목을 되살려 "삭제가 무효"로 보이는 걸 막는다(2026-07-18 리뷰).
+    const h = (HANDOFF||[]).find(x=>x.shortcode===sc);
+    if(h && h.pickScript && h.script){
+      h.pickScript = false;          // 임시 대본 — 담긴대본에서만 뺀다(영상풀 useFootage는 유지)
+    }
+    if((window._serverPickCodes||new Set()).has(sc)){
+      // S급 위키 pick — 서버에서도 뺀다
+      try{ await fetch('/api/produce/picks/toggle', {method:'POST',
+        headers:{'Content-Type':'application/json'}, body:JSON.stringify({shortcode:sc})}); }catch(e){}
+    }
+  }
+  loadWikiForMix();                  // 목록 다시 그림
+}
+// ── 담긴대본 관리 끝 ──
 async function loadWikiForMix(){
   const el=document.getElementById('mixWiki');
   const bp=document.getElementById('mixSrcPicks'), ba=document.getElementById('mixSrcAll');
   if(bp) bp.classList.toggle('active', MIX_SRC==='picks');
   if(ba) ba.classList.toggle('active', MIX_SRC==='all');
+  // 전체선택/해제/선택삭제 줄은 담긴대본(picks) 탭 전용 — "위키 전체" 탭은 진짜 토글 API를
+  // 쓰므로 여기서 같이 보이면 "선택삭제"가 아직 안 담긴 항목을 오히려 담아버린다(2026-07-18 리뷰).
+  const pb=document.getElementById('picksBulk');
+  if(pb) pb.style.display = (MIX_SRC==='picks') ? 'flex' : 'none';   // flex 유지(gap 6px)
   const url = MIX_SRC==='all' ? '/api/wiki/list' : '/api/produce/picks';
   try{
     const d=await (await fetch(url)).json();
-    const items=d.items||[];
+    let items=d.items||[];
+    // 삭제 시 "서버 pick이기도 한가"를 판단하려면 mergePicks로 임시가 섞이기 전의
+    // 순수 서버 목록이 필요하다(2026-07-18 리뷰 #2).
+    window._serverPickCodes = new Set((MIX_SRC==='picks') ? items.map(w=>w.shortcode) : []);
+    if(MIX_SRC==='picks') items = mergePicks(items, HANDOFF);   // 임시 대본 합침
     window._mixItems=items;
     if(!items.length){
       el.innerHTML = MIX_SRC==='all'
@@ -1664,11 +1755,20 @@ function genMix(){
   const picks=[...document.querySelectorAll('.mixPick:checked')].map(c=>c.value);
   const box=document.getElementById('mixDrafts');
   if(picks.length<2){ box.innerHTML='<div class="hint" style="color:var(--fire)">2개 이상 선택하세요</div>'; return; }
-  postDrafts('/api/produce/script/mix', {shortcodes:picks, target_seconds:20, n:3}, 'mixDrafts');
+  // 선택한 대본을 본문째 보낸다 — 임시 대본(위키에 없음)도 조합되게(2026-07-18).
+  const byCode = new Map((window._mixItems||[]).map(w=>[w.shortcode, w]));
+  const sources = picks.map(sc=>byCode.get(sc)).filter(Boolean)
+    .map(w=>({shortcode:w.shortcode, name:w.name||'', category:w.category||'', full_text:w.full_text||''}))
+    .filter(s=>s.full_text.trim());
+  if(sources.length<2){ box.innerHTML='<div class="hint" style="color:var(--fire)">선택한 대본에 본문이 없습니다</div>'; return; }
+  const sel=document.getElementById('mixSeconds');
+  const sec = sel ? (parseInt(sel.value,10)||20) : 20;
+  postDrafts('/api/produce/script/mix', {sources, target_seconds:sec, n:3}, 'mixDrafts');
 }
 
 // ── 1단계 제작소: 영상믹스(given_script 매칭) ──────────────
 let MIX_JOB=null, MIX_POLL=null;
+let VP_BEATS=[]; let _vpHeard=new Set();
 const MIX_LABEL={downloading:'영상 다운로드 중…',extracting:'대본 분석 중…',planning:'장면 매칭 중…',tts:'음성 생성 중…',ready_for_review:'매칭 완료',rendering:'최종 렌더 중…',done:'완료',failed:'실패'};
 function addMixUrl(){
   const wrap=document.getElementById('mixUrls');
@@ -1776,27 +1876,40 @@ async function _restoreWork(workId){
   renderSteps(); showPanel(); refreshNextBtn();
 }
 function _consumeProduceHandoff(){
-  // 1순위: 즐겨찾기에서 방금 넘어온 신규 핸드오프. 2순위: 이전 작업상태 복원.
+  // 신규 핸드오프(즐겨찾기·랭킹에서 방금 넘어온 것)를 **진행 중 작업에 누적**한다.
+  // ★예전엔 신규가 있으면 진행 중 작업을 무시하고 통째 대체해서, 랭킹에서 영상을 두 번
+  //   보내면 두 번째가 첫 번째를 지웠다(2026-07-18 라이브 버그). 그래서 작업을 먼저
+  //   복원(base)하고 신규를 거기에 이어 붙인다(같은 영상은 중복으로 안 쌓는다).
   let items, restored=false, savedScript='';
   try{ items=JSON.parse(sessionStorage.getItem('produce_handoff')||'null'); }catch(e){ items=null; }
-  if(items && items.length){
-    HANDOFF = items.map(it=>({...it, pickScript:false, useFootage:false}));
-  } else {
-    // 구버전 호환(urls만)
+  if(!(items && items.length)){
+    // 구버전 호환(urls만) — 신규 handoff가 없을 때만
     let urls; try{ urls=JSON.parse(sessionStorage.getItem('produce_mix_urls')||'null'); }catch(e){ urls=null; }
     if(urls && urls.length){
-      HANDOFF = urls.map(u=>({url:u, shortcode:'', name:'', thumbnail:'', caption:'', pickScript:false, useFootage:false}));
-    } else {
-      // 넘어온 게 없으면 이전 작업상태 복원
-      let w; try{ w=JSON.parse(sessionStorage.getItem('produce_work')||'null'); }catch(e){ w=null; }
-      if(w && ((w.handoff && w.handoff.length) || w.script)){
-        HANDOFF=w.handoff||[]; savedScript=w.script||''; restored=true;
-        STATE.script_src_idx = (typeof w.script_src_idx === 'number') ? w.script_src_idx : null;
-        STATE.script_from_wiki = (typeof w.script_from_wiki !== 'undefined') ? w.script_from_wiki : null;   // 구페이로드 호환: 없으면 null(뽑기 유래 취급=안전 기본값, 버튼 보임)
-        // ★WORK_ID를 되살린다(구멍 1). 없으면 아래 saveWork()가 매 로드마다 새 작업을 만든다.
-        WORK_ID = w.work_id || null;
-      }
+      items = urls.map(u=>({url:u, shortcode:'', name:'', thumbnail:'', caption:'', pickScript:false, useFootage:false}));
     }
+  }
+  // 1) 진행 중 작업을 base로 복원(있으면). 신규는 여기에 누적된다.
+  let w; try{ w=JSON.parse(sessionStorage.getItem('produce_work')||'null'); }catch(e){ w=null; }
+  if(w && ((w.handoff && w.handoff.length) || w.script)){
+    HANDOFF=w.handoff||[]; savedScript=w.script||''; restored=true;
+    STATE.script_src_idx = (typeof w.script_src_idx === 'number') ? w.script_src_idx : null;
+    STATE.script_from_wiki = (typeof w.script_from_wiki !== 'undefined') ? w.script_from_wiki : null;   // 구페이로드 호환: 없으면 null(뽑기 유래 취급=안전 기본값, 버튼 보임)
+    // ★WORK_ID를 되살린다. 없으면 아래 saveWork()가 매 로드마다 새 작업을 만든다.
+    WORK_ID = w.work_id || null;
+  }
+  // 2) 신규 핸드오프를 누적(중복 제거: shortcode 우선, 없으면 url). 플래그·대본 보존.
+  let arrived=0;
+  if(items && items.length){
+    const keyOf = it => it.shortcode || it.url || '';
+    const seen = new Set(HANDOFF.map(keyOf).filter(Boolean));
+    items.forEach(it=>{
+      const k = keyOf(it);
+      if(k && seen.has(k)) return;               // 이미 있는 영상은 안 겹쳐 넣는다
+      if(k) seen.add(k);
+      HANDOFF.push({pickScript:false, useFootage:false, ...it});   // 기본값 먼저, spread로 덮어써 useFootage/pickScript/script 보존
+      arrived++;
+    });
   }
   sessionStorage.removeItem('produce_handoff');
   sessionStorage.removeItem('produce_mix_urls');
@@ -1805,11 +1918,13 @@ function _consumeProduceHandoff(){
   const b=document.getElementById('handoffBanner');
   if(b){
     b.style.display='block';
-    b.innerHTML = restored
-      ? (HANDOFF.length
-          ? `↩️ 이어서 작업 중 — 받은 <b>영상 ${HANDOFF.length}개</b>와 상태·대본을 유지했어요.`
-          : `↩️ 이어서 작업 중 — <b>확정한 대본</b>을 유지했어요. 영상은 아직 담지 않았습니다.`)
-      : `⭐ 즐겨찾기에서 <b>영상 ${HANDOFF.length}개</b>를 받았어요 — 각 영상에서 📝뽑기(대본)·🎬담기(화면)를 골라주세요. 같은 영상을 둘 다로 써도 됩니다.`;
+    b.innerHTML = arrived
+      ? `⭐ 레퍼런스에서 <b>영상 ${arrived}개</b>를 받았어요 (영상풀 총 ${HANDOFF.length}개) — 각 영상에서 📝뽑기(대본)·🎬담기(화면)를 골라주세요.`
+      : (restored
+          ? (HANDOFF.length
+              ? `↩️ 이어서 작업 중 — 받은 <b>영상 ${HANDOFF.length}개</b>와 상태·대본을 유지했어요.`
+              : `↩️ 이어서 작업 중 — <b>확정한 대본</b>을 유지했어요. 영상은 아직 담지 않았습니다.`)
+          : `⭐ 즐겨찾기에서 <b>영상 ${HANDOFF.length}개</b>를 받았어요 — 각 영상에서 📝뽑기(대본)·🎬담기(화면)를 골라주세요. 같은 영상을 둘 다로 써도 됩니다.`);
   }
   renderPool();
   syncFootageToMixUrls();
@@ -2015,6 +2130,7 @@ function pmUseDraft(btn){
   STATE.script_from_wiki=PM_FROM_WIKI;   // mix 유래면 shortcode, 뽑기 유래면 null
   pmClose(); setScriptMode('manual'); refreshFinalPeek(); setFinalCategoryValue(PM_CATEGORY);
   saveWork();
+  try{ logPick('S2', {picked: PM_IDX, source: (PM_FROM_WIKI ? 'wiki' : 'gemini')}); }catch(e){}
 }
 async function pmOnDraftEdit(textarea){
   const card=textarea.closest('.draft');
@@ -2186,6 +2302,7 @@ async function startProduceMix(){
   if(!STATE.script){ alert('1단계에서 대본을 먼저 확정하세요'); return; }
   const urls=collectMixUrls();   // 영상풀 담긴 것 + 입력칸에 남은 것(중복 제거)
   if(urls.length<1){ alert('소스 영상 URL을 1개 이상 입력하세요(확정 또는 🎬담기)'); return; }
+  try{ logPick('S3', {picked: 'mix_start', sources: urls, source_n: urls.length}); }catch(e){}
   const st=document.getElementById('mixStatus'); st.textContent='⏳ 시작 중…';
   document.getElementById('mixReview').innerHTML='';
   try{
@@ -2221,15 +2338,22 @@ async function loadMixReview(){
   const d=await (await fetch('/api/mix/result/'+MIX_JOB)).json();
   const el=document.getElementById('mixReview');
   if(!d.ok){ el.innerHTML=`<div class="hint" style="color:var(--fire)">편집안 로드 실패 ${esc(d.error||'')}</div>`; return; }
-  el.innerHTML='<h3 style="font-size:15px">편집안(장면 매칭)</h3>'+(d.beats||[]).map(b=>`
+  MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
+  el.innerHTML='<h3 style="font-size:15px">편집안(장면 매칭)</h3>'+(d.beats||[]).map((b,i)=>`
     <div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;background:#0d1420">
       <span style="font-size:11px;background:var(--accent2);padding:2px 8px;border-radius:10px">${esc(b.role||'')}</span>
       <div style="margin:6px 0;font-size:13px">${esc(b.narration||'')}</div>
       <div class="hint">🎞 ${esc(b.primary?.video_id||'')} · ${b.primary?.start}s~${b.primary?.end}s · ${b.target_seconds}s${b.fit?` · 매칭 ${b.fit}/5`:''}</div>
       ${(b.fit&&b.fit<=2)?`<div style="color:var(--fire);font-size:12px;margin-top:3px">⚠️ 이 문장에 맞는 영상이 부족합니다 — 대본을 살짝 바꾸거나 소스 영상을 추가하세요.</div>`:''}
+      <div class="scene-cutaway" id="sceneCutaway${i}">${renderSceneCutaway(b, i)}</div>
     </div>`).join('')+`<div class="hint" style="margin-top:6px">✅ 매칭 완료${(d.beats||[]).some(b=>b.fit&&b.fit<=2)?' <span style="color:var(--fire)">— ⚠️ 표시된 문장은 영상이 약합니다</span>':''} — 아래에서 <b>미리보기</b>를 확인한 뒤 다음으로 넘어가세요.</div>`
     +`<button id="btnPreview" class="btn-next" style="margin-top:8px;padding:7px 14px" onclick="startPreview()">▶ 미리보기 만들기</button>`
-    +`<div id="mixPreview" style="margin-top:8px"></div>`;
+    +`<div class="hint" style="margin-top:6px">미리보기는 <b>왼쪽 화면</b>에 표시됩니다 🪞</div>`;
+  // 미리보기 렌더 타깃(#mixPreview)은 좌측 프리뷰 패널로 옮겼다 — 여기선 위치 안내만.
+  // 편집안이 떴으니 좌측 프리뷰 공간을 열고, 아직 안 만들었다는 안내를 넣는다.
+  const _pvPanel=document.getElementById('mixPreviewPanel'), _pvBox=document.getElementById('mixPreview');
+  if(_pvPanel) _pvPanel.style.display='';
+  if(_pvBox) _pvBox.innerHTML='<div class="hint" style="padding:14px;border:1px dashed var(--line);border-radius:12px;text-align:center">오른쪽 <b>▶ 미리보기 만들기</b>를 누르면<br>여기에 미리보기 영상이 표시됩니다.</div>';
   // 편집안을 새로 그렸다 = 새 매칭이다. 옛 미리보기 상태를 물고 있으면 사장님이 옛 영상을
   // 본 것으로 치고 다음이 열린다 → 여기서 반드시 초기화한다.
   // ★폴러도 같이 죽인다: 재매칭은 정상 흐름(⚠️ 매칭 약한 문장은 "대본을 살짝 바꾸세요"를 권한다)이고
@@ -2237,6 +2361,50 @@ async function loadMixReview(){
   // 결과로 게이트를 열어버린다. ++PREVIEW_GEN은 이미 날아간 요청의 늦은 continuation까지 무효화한다.
   clearInterval(PREVIEW_POLL); PREVIEW_POLL = null; ++PREVIEW_GEN;
   PREVIEW_STATUS = null; refreshNextBtn();
+}
+
+// ── 장면 라이브러리 검수(Task4, 2026-07-18) ──────────────
+// 자동배치(beat.cutaway)를 보여주고 빼거나, 미채택 제안(asset_suggestions)을 붙이는
+// 최소 블록. 공용 프리뷰(mixPreview/hcPreview 등) 미건드림 — 이 컨테이너(scene-cutaway)
+// 안에서만 갱신한다.
+let MIX_REVIEW_SUGGESTIONS = [];
+
+function renderSceneCutaway(beat, idx){
+  const cw = beat.cutaway;
+  const sugg = MIX_REVIEW_SUGGESTIONS.filter(s=>s.beat_idx===beat.beat_idx);
+  let html = '';
+  if(cw){
+    const label = cw.match_type === 'role' ? '역할 매칭'
+                : cw.match_type === 'manual' ? '직접 넣음'
+                : (cw.score != null ? `소재 매칭 ${cw.score.toFixed(2)}` : '소재 매칭');
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-top:6px;padding:6px;border:1px solid var(--line);border-radius:8px;background:#0a1018">`
+      + `<img src="/api/scene/${cw.asset_id}/poster" style="width:44px;height:78px;object-fit:cover;border-radius:4px;background:#000" alt="">`
+      + `<div style="flex:1;font-size:12px" class="hint">🎬 자산 #${cw.asset_id} · ${label}</div>`
+      + `<button class="btn-prev" style="padding:4px 8px;font-size:12px" onclick="toggleCutaway(${idx},null)">이 짤 빼기</button>`
+      + `</div>`;
+  }
+  if(!cw && sugg.length){
+    html += sugg.map(s=>`<div style="margin-top:6px"><a href="#" onclick="toggleCutaway(${idx},${s.asset_id});return false;" class="hint">＋ 이 짤 넣기 (자산 #${s.asset_id}${s.score?` · 적합도 ${s.score.toFixed(2)}`:''})</a></div>`).join('');
+  }
+  return html;
+}
+
+async function toggleCutaway(idx, assetId){
+  if(!MIX_JOB) return;
+  const box = document.getElementById('sceneCutaway'+idx);
+  if(box) box.innerHTML = '<div class="hint">⏳ 반영 중…</div>';
+  try{
+    const r = await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/cutaway',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({beat_idx: idx, asset_id: assetId})})).json();
+    if(!r.ok){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</div>'; return; }
+  }catch(e){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; return; }
+  // 그 비트 행만 다시 그린다 — 편집안 전체(loadMixReview)를 다시 그리지 않는다.
+  const d = await (await fetch('/api/mix/result/'+MIX_JOB)).json();
+  if(!d.ok) return;
+  MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
+  const beat = (d.beats||[])[idx];
+  if(beat && box) box.innerHTML = renderSceneCutaway(beat, idx);
 }
 
 // ── 1단계 미리보기(2026-07-17) ──────────────
@@ -2275,7 +2443,8 @@ async function startPreview(){
   const myGen = ++PREVIEW_GEN;     // 이 시점부터 내가 주인 — 늦게 돌아오는 옛 continuation은 무효
   const myJob = MIX_JOB;           // 재매칭으로 MIX_JOB이 바뀌어도 내 응답은 내 job 것이다
   if(btn) btn.disabled = true;     // 렌더는 20초+ 걸린다 — 그 사이 재클릭을 막는다
-  box.innerHTML = '<div class="hint">⏳ 미리보기 만드는 중… (자막제거·꾸미기 없이 렌더합니다)</div>';
+  const pvPanel=document.getElementById('mixPreviewPanel'); if(pvPanel) pvPanel.style.display='';  // 좌측 프리뷰 자리 확보
+  box.innerHTML = '<div class="hint" style="padding:14px;border:1px solid var(--line);border-radius:12px">⏳ 미리보기 만드는 중… (자막제거·꾸미기 없이 렌더합니다)</div>';
   PREVIEW_STATUS = 'rendering'; refreshNextBtn();
   try{
     const d = await (await fetch('/api/produce/mix/preview',{method:'POST',
@@ -2299,9 +2468,9 @@ async function pollPreview(gen, job){
     if(d.preview_status === 'ready'){
       clearInterval(PREVIEW_POLL); PREVIEW_POLL = null; PREVIEW_STATUS='ready';
       // ?t= 캐시버스터 필수: 대본을 고쳐 재매칭하면 같은 URL에 다른 영상이 온다.
-      box.innerHTML = '<video controls muted playsinline style="width:260px;border-radius:10px;background:#000"'
+      box.innerHTML = '<video controls muted playsinline autoplay style="width:100%;max-width:320px;border-radius:12px;background:#000;box-shadow:0 8px 30px rgba(0,0,0,.4)"'
         + ' src="/api/produce/mix/preview/'+encodeURIComponent(job)+'?t='+Date.now()+'"></video>'
-        + '<div class="hint">원본 자막이 남아 있는 건 정상입니다 — 다음 단계에서 지웁니다.</div>';
+        + '<div class="hint" style="margin-top:6px">원본 자막이 남아 있는 건 정상입니다 — 다음 단계에서 지웁니다.</div>';
       const btn = document.getElementById('btnPreview'); if(btn) btn.disabled = false;
       refreshNextBtn();
     } else if(d.preview_status === 'failed'){
@@ -2314,14 +2483,58 @@ async function pollPreview(gen, job){
   }catch(e){ /* 폴링 실패는 다음 tick에 재시도 */ }
 }
 
+// ── 2단계 자막제거 미리보기(소스 원본 청소) ──────────────
+let CLEAN_POLL=null, CLEAN_GEN=0;
+async function startCleanPreview(){
+  const box=document.getElementById('cleanPreview');
+  const btn=document.getElementById('btnCleanPreview');
+  if(!MIX_JOB){ box.textContent='⚠️ 2단계에서 영상 매칭을 먼저 실행하세요.'; return; }
+  clearInterval(CLEAN_POLL); CLEAN_POLL=null;
+  const myGen=++CLEAN_GEN, myJob=MIX_JOB;
+  if(btn) btn.disabled=true;
+  box.innerHTML='<div class="hint">⏳ 자막 제거 중… VMake AI (최대 ~1시간)</div>';
+  try{
+    const d=await (await fetch('/api/produce/mix/clean',{method:'POST',
+      headers:{'Content-Type':'application/json'}, body:JSON.stringify({job_id:myJob})})).json();
+    if(CLEAN_GEN!==myGen) return;
+    if(!d.ok){ box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(d.error||'청소 실패')+'</div>'; if(btn) btn.disabled=false; return; }
+    CLEAN_POLL=setInterval(()=>pollClean(myGen,myJob),3000); pollClean(myGen,myJob);
+  }catch(e){ if(CLEAN_GEN!==myGen) return; box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; if(btn) btn.disabled=false; }
+}
+async function pollClean(gen,job){
+  const box=document.getElementById('cleanPreview');
+  const btn=document.getElementById('btnCleanPreview');
+  try{
+    const d=await (await fetch('/api/mix/status/'+job)).json();
+    if(CLEAN_GEN!==gen || MIX_JOB!==job) return;
+    if(d.clean_status==='ready'){
+      clearInterval(CLEAN_POLL); CLEAN_POLL=null;
+      const t=Date.now(), u='/api/produce/mix/clean_thumb/'+encodeURIComponent(job);
+      box.innerHTML='<div style="display:flex;gap:10px;align-items:flex-start">'
+        +'<figure style="margin:0"><img src="'+u+'?kind=original&t='+t+'" style="width:150px;border-radius:8px;background:#000"><figcaption class="hint" style="text-align:center">원본(자막 있음)</figcaption></figure>'
+        +'<figure style="margin:0"><img src="'+u+'?kind=clean&t='+t+'" style="width:150px;border-radius:8px;background:#000"><figcaption class="hint" style="text-align:center">자막 제거됨</figcaption></figure>'
+        +'</div>';
+      if(btn) btn.disabled=false;
+    } else if(d.clean_status==='failed'){
+      clearInterval(CLEAN_POLL); CLEAN_POLL=null;
+      box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ 자막제거 실패 — '+esc(d.clean_error||'')+'</div>';
+      if(btn) btn.disabled=false;
+    }
+  }catch(e){ /* 다음 tick 재시도 */ }
+}
+
 // ── 3단계 자막제거 ──────────────
 function refreshSub(){
   const cb=document.getElementById('subToggle'); if(cb) cb.checked=STATE.subtitleRemoval;
   const s=document.getElementById('subState');
   if(s) s.textContent = MIX_JOB ? '' : '⚠️ 2단계에서 영상 매칭을 먼저 실행하세요.';
+  const btn=document.getElementById('btnCleanPreview');
+  if(btn) btn.disabled = !(STATE.subtitleRemoval && MIX_JOB);   // 켜짐+매칭됨일 때만
 }
 async function onSubToggle(){
   STATE.subtitleRemoval = document.getElementById('subToggle').checked;
+  const cbtn=document.getElementById('btnCleanPreview');
+  if(cbtn) cbtn.disabled = !(STATE.subtitleRemoval && MIX_JOB);
   const s=document.getElementById('subState');
   if(!MIX_JOB){ if(s) s.textContent='⚠️ 2단계 매칭 후 적용됩니다(설정은 기억됨).'; return; }
   try{
@@ -2491,20 +2704,43 @@ async function renderTtsBeats(){
     if(!d.ok || !(d.beats||[]).length){ el.innerHTML=''; return; }
     const beats=d.beats;
     const vidLen=beats.reduce((s,b)=>s+(+b.target_seconds||0),0);
-    const rows=beats.map((b,i)=>`
-      <div id="beatRow${i}" style="border:1px solid var(--line);border-radius:9px;padding:9px;margin-bottom:6px;background:#0d1420;transition:background .15s">
-        <div style="font-size:13px;margin-bottom:4px"><b>${i+1}.</b> ${esc(b.narration||'')}</div>
-        ${b.tts_preview_url?`<audio id="beatAudio${i}" controls preload="metadata" src="${esc(b.tts_preview_url)}?t=${Date.now()}" style="height:26px"></audio>`:'<span class="hint">음성 없음</span>'}
-      </div>`).join('');
+    const rows=beats.map((b,i)=>{
+      const synced = Array.isArray(b.cap_durs) && b.cap_durs.length;
+      const badge = synced ? '🟢' : '🟡';
+      const badgeTip = synced ? '자막 자동맞춤 됨' : '자막 자동맞춤 불확실 — 들어보세요';
+      return `
+      <div id="beatRow${i}" data-idx="${i}" style="border:1px solid var(--line);border-radius:9px;padding:9px;margin-bottom:6px;background:#0d1420;transition:background .15s">
+        <div style="font-size:13px;margin-bottom:4px"><span title="${badgeTip}">${badge}</span> <b>${i+1}.</b> ${esc(b.narration||'')}</div>
+        ${b.tts_preview_url?`<audio id="beatAudio${i}" preload="metadata" src="${esc(b.tts_preview_url)}?t=${Date.now()}" style="display:none"></audio><button class="btn-prev" style="padding:4px 10px" onclick="vpPlayBeat(${i})">▶ 이 장면</button>
+        <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          <button class="btn-prev" style="padding:3px 8px" onclick="vpNudge(${i},-1)">◀ 자막 당기기</button>
+          <button class="btn-prev" style="padding:3px 8px" onclick="vpNudge(${i},1)">자막 밀기 ▶</button>
+          <button class="btn-prev" style="padding:3px 8px" onclick="vpResetOffset(${i})">↩︎ 되돌리기</button>
+          <select id="vpTone${i}" style="padding:3px"><option value="stable">안정</option><option value="natural">자연</option><option value="expressive">표현</option><option value="whisper">속삭임</option></select>
+          <button class="btn-prev" style="padding:3px 8px" onclick="vpRegenTone(${i})">🔁 톤 바꿔 다시</button>
+          <span id="vpMsg${i}" class="hint"></span>
+        </div>`:'<span class="hint">음성 없음</span>'}
+      </div>`;
+    }).join('');
     // 영상길이(비트 목표시간 합) vs 음성길이(오디오 실측 합) — 맞춤 힌트로 편집 편의성↑
+    VP_BEATS = beats;                 // 전역: 재생기가 cap_segments/cap_durs/cap_offset 읽음
+    _vpHeard = _vpHeard || new Set();
     el.innerHTML=`
-      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;border:1px solid var(--line);border-radius:9px;padding:10px 12px;margin-bottom:10px;background:#0d1420">
-        <div><span class="hint">영상 길이</span> <b style="color:var(--accent2)">${vidLen.toFixed(1)}초</b></div>
-        <div><span class="hint">음성 길이</span> <b id="voiceLen" style="color:var(--ok)">…</b></div>
-        <div id="fitMsg" class="hint">음성 길이 측정 중…</div>
-        <button onclick="playAllBeats()" class="btn-prev" style="padding:6px 12px;margin-left:auto">▶ 전체 재생</button>
-      </div>
-      <div style="font-size:12px;color:var(--sub);margin-bottom:4px">비트별 음성</div>${rows}`;
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">
+        <div style="position:relative;width:180px;aspect-ratio:9/16;background:#000;border-radius:10px;overflow:hidden;flex:0 0 auto">
+          <img id="vpFrame" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">
+          <div id="vpCap" style="position:absolute;left:0;right:0;bottom:8%;text-align:center;color:#fff;font-weight:700;font-size:13px;text-shadow:0 2px 4px #000;padding:0 6px"></div>
+        </div>
+        <div style="flex:1;min-width:220px">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">
+            <div><span class="hint">영상 길이</span> <b style="color:var(--accent2)">${vidLen.toFixed(1)}초</b></div>
+            <div><span class="hint">음성 길이</span> <b id="voiceLen" style="color:var(--ok)">…</b></div>
+            <div id="fitMsg" class="hint">음성 길이 측정 중…</div>
+            <button onclick="playAllBeats()" class="btn-prev" style="padding:6px 12px;margin-left:auto">▶ 전체 재생</button>
+          </div>
+          ${rows}
+        </div>
+      </div>`;
     _updateVoiceLen(beats.length, vidLen);
   }catch(e){ el.innerHTML='<div class="hint" style="color:var(--fire)">로드 실패</div>'; }
 }
@@ -2524,21 +2760,92 @@ function _updateVoiceLen(n, vidLen){
   };
   auds.forEach(a=>{ if(a.readyState>=1) recompute(); else a.addEventListener('loadedmetadata', recompute, {once:true}); });
 }
-// ▶ 전체 재생 — 비트 음성을 순서대로 이어 재생하며 현재 비트 줄을 하이라이트(가라오케식)
+// ▶ 프리뷰 — 재생 중인 비트의 9:16 프레임을 vpFrame에, 자막을 vpCap에 서버 cap_segments/cap_durs(+cap_offset) 타이밍으로 표시(가라오케식)
+function _vpShowFrame(i){
+  const f=document.getElementById('vpFrame');
+  if(f && typeof MIX_JOB!=='undefined' && MIX_JOB){ f.style.display='block'; f.src='/api/produce/mix/beatframe/'+MIX_JOB+'/'+i; }
+}
+function _vpCapDurs(b){
+  const segs=b.cap_segments||[]; if(!segs.length) return [];
+  if(Array.isArray(b.cap_durs) && b.cap_durs.length===segs.length) return b.cap_durs.slice();
+  const w=segs.map(s=>Math.max(1,(s||'').replace(/\s/g,'').length)); const tw=w.reduce((a,c)=>a+c,0);
+  return w.map(x=>x/tw);   // 표시용 근사(합=1, 오디오 길이에 맞춰 스케일) — 최종 렌더는 서버 cap_durs가 정확히 함
+}
+// 오디오 currentTime에 맞춰 그 비트 자막 구절을 순차 표시(cap_offset 반영). 자막 구절 자체는 항상 서버 cap_segments — 여기서 재구현하지 않는다.
+function _vpDriveCaption(aud, b){
+  const cap=document.getElementById('vpCap'); if(!cap) return;
+  const segs=b.cap_segments||[]; const rel=_vpCapDurs(b);
+  const off=(+b.cap_offset||0);
+  const upd=()=>{
+    const dur=aud.duration||rel.reduce((a,c)=>a+c,0)||1;
+    const durs=rel.map(r=> (Array.isArray(b.cap_durs)&&b.cap_durs.length)? r : r*dur);
+    let t=aud.currentTime-off, acc=0, cur=segs[0]||'';
+    for(let k=0;k<segs.length;k++){ if(t>=acc){ cur=segs[k]; } acc+=durs[k]; }
+    cap.textContent=cur;
+  };
+  aud.ontimeupdate=upd; upd();
+}
+function vpPlayBeat(i){
+  const b=VP_BEATS[i]; if(!b) return;
+  const a=document.getElementById('beatAudio'+i); if(!a) return;
+  // 다른 오디오 정지
+  let k=0; while(document.getElementById('beatAudio'+k)){ const o=document.getElementById('beatAudio'+k); if(o!==a){o.pause();} k++; }
+  _vpShowFrame(i); _vpDriveCaption(a,b); _vpHeard.add(i);
+  const r=document.getElementById('beatRow'+i);
+  document.querySelectorAll('[id^=beatRow]').forEach(x=>x.style.background='#0d1420');
+  if(r) r.style.background='#1a2740';
+  a.currentTime=0; a.play().catch(()=>{});
+}
+// ── 고치기: 자막 당기기/밀기·되돌리기·톤 재생성·부드러운 다음-단계 게이트 ──
+async function vpNudge(i,dir){
+  const b=VP_BEATS[i]; if(!b) return;
+  b.cap_offset=Math.max(-2,Math.min(2, (+b.cap_offset||0) + dir*0.1));
+  const a=document.getElementById('beatAudio'+i); if(a) _vpDriveCaption(a,b);   // 즉시 미리보기 반영
+  const m=document.getElementById('vpMsg'+i); if(m) m.textContent='자막 '+(b.cap_offset>=0?'+':'')+b.cap_offset.toFixed(1)+'초';
+  try{ await fetch('/api/mix/caption_offset/'+MIX_JOB+'/'+b.beat_idx,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({offset:b.cap_offset})}); }catch(e){}
+}
+async function vpResetOffset(i){
+  const b=VP_BEATS[i]; if(!b) return; b.cap_offset=0;
+  const a=document.getElementById('beatAudio'+i); if(a) _vpDriveCaption(a,b);
+  const m=document.getElementById('vpMsg'+i); if(m) m.textContent='자동값으로 되돌림';
+  try{ await fetch('/api/mix/caption_offset/'+MIX_JOB+'/'+b.beat_idx,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({offset:0})}); }catch(e){}
+}
+// 현재 성우(VOICE.group_id)의 그 톤 variant → {voice_id,settings,speed}. 못 찾으면 null(버튼이 '그 톤 없어요' 표시).
+// 실제 상태 변수(2026-07-17 확인): VOICE_GROUPS=[{group_id,variants:{stable|natural|expressive|whisper:{voice_id,voice_settings,default_speed,...}}}], VOICE={group_id,...}
+function _voiceForTone(tone){
+  const g=(typeof VOICE_GROUPS!=='undefined'?VOICE_GROUPS:[]).find(x=>x.group_id===(VOICE&&VOICE.group_id));
+  const v=g && g.variants && g.variants[tone];
+  if(!v) return null;
+  return {voice_id:v.voice_id, settings:Object.assign({}, v.voice_settings), speed:v.default_speed};
+}
+async function vpRegenTone(i){
+  const b=VP_BEATS[i]; if(!b) return;
+  const tone=document.getElementById('vpTone'+i).value;
+  const v=_voiceForTone(tone);   // 현재 성우의 그 톤 variant → {voice_id,settings,speed}
+  const m=document.getElementById('vpMsg'+i);
+  if(!v){ if(m) m.textContent='이 성우는 그 톤이 없어요'; return; }
+  if(m) m.textContent='🔁 다시 만드는 중…';
+  try{
+    await fetch('/api/mix/tts/'+MIX_JOB+'/'+b.beat_idx+'/regen',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(v)});
+    setTimeout(()=>{ renderTtsBeats(); }, 4000);   // 재생성+재동기 후 새로고침
+  }catch(e){ if(m) m.textContent='❌ 실패'; }
+}
+function vpGateNext(){
+  const yellow=(VP_BEATS||[]).map((b,i)=>i).filter(i=>!(Array.isArray(VP_BEATS[i].cap_durs)&&VP_BEATS[i].cap_durs.length));
+  const unheard=yellow.filter(i=>!_vpHeard.has(i));
+  if(unheard.length && !confirm('🟡 '+unheard.length+'개 장면을 아직 안 들어봤어요. 그냥 다음으로 갈까요?')) return;
+  jump(3);   // 꾸미기(4단계, index 3)로 — 기존 스텝 내비게이션 재사용, go()/jump() 자체는 건드리지 않는다
+}
+// ▶ 전체 재생 — 비트 음성을 순서대로 이어 재생하며 현재 비트의 프레임+자막을 갱신(가라오케식)
 function playAllBeats(){
   const auds=[]; let i=0; while(document.getElementById('beatAudio'+i)){ auds.push(document.getElementById('beatAudio'+i)); i++; }
   if(!auds.length) return;
-  const clear=()=>auds.forEach((a,idx)=>{ const r=document.getElementById('beatRow'+idx); if(r) r.style.background='#0d1420'; });
   auds.forEach(a=>{ a.pause(); a.currentTime=0; a.onended=null; });
-  clear();
   let cur=0;
   const playOne=()=>{
-    if(cur>=auds.length){ clear(); return; }
-    clear();
-    const r=document.getElementById('beatRow'+cur); if(r) r.style.background='#1a2740';
-    const a=auds[cur];
-    a.onended=()=>{ cur++; playOne(); };
-    a.play().catch(()=>{ cur++; playOne(); });
+    if(cur>=auds.length){ document.querySelectorAll('[id^=beatRow]').forEach(x=>x.style.background='#0d1420'); return; }
+    vpPlayBeat(cur);
+    auds[cur].onended=()=>{ cur++; playOne(); };
   };
   playOne();
 }
@@ -2597,6 +2904,10 @@ function thumbFontCss(file){
 
 function drawThumb(ctx, img, layers, W, H){
   const s = W / THUMB_W;                    // 캔버스 배율 — 프리뷰든 실측이든 같은 식
+  // ★매 렌더마다 먼저 지운다(2026-07-18 라이브 실측). 배경 이미지가 있으면 그게 이전 프레임을
+  // 덮지만, job이 없어 img가 없으면(영상 매칭 전) 아무것도 안 지워져 드래그 경로마다 글자가
+  // 겹겹이 쌓였다(사장님 화면: 레이어는 1개인데 '문구를 입력하세요'가 수십 겹). clearRect로 봉인.
+  ctx.clearRect(0, 0, W, H);
   if (img) ctx.drawImage(img, 0, 0, W, H);
   (layers || []).forEach(L => {
     if (!L.text) return;
@@ -2680,6 +2991,7 @@ async function _loadThumbFrames(){
 function pickThumbFrame(i){
   const f = THUMB_STATE.frames[i]; if (!f) return;
   THUMB_STATE.frame_ts = f.ts; THUMB_STATE.frame_url = f.url;
+  try{ logPick('S7', {picked: i, ts: f.ts, candidate_n: (THUMB_STATE.frames || []).length}); }catch(e){}
   const box = document.getElementById('thumbFrames');
   Array.from(box.children || []).forEach((el, k) => {
     if (el.style) el.style.border = `2px solid ${k === i ? 'var(--accent2)' : 'transparent'}`;

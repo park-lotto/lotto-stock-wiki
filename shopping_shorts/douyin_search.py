@@ -69,14 +69,13 @@ def search(keyword, max_results=10, token=None, timeout=180, poll_interval=5):
         dur = _duration_secs(item)
         out.append({
             "url": url,
-            "title": item.get("itemTitle") or item.get("text", ""),
+            "title": item.get("itemTitle") or item.get("previewTitle") or item.get("text", ""),
             "thumbnail": video_meta.get("cover", ""),
-            "play_url": _first(item, "videoUrl", ("videoMeta", "downloadAddr"),
-                               ("video", "playAddr")) or "",   # 미리보기용(있으면)
-            "channel": _first(item, ("authorMeta", "nickName"), ("authorMeta", "name"),
-                              ("author", "nickname"), "authorName") or "",
-            "likes": _num(_first(item, "diggCount", ("stats", "diggCount"), "likeCount")),
-            "views": _num(_first(item, "playCount", ("stats", "playCount"), "viewCount")),
+            "play_url": _first(item, ("videoMeta", "playUrl"),
+                               ("videoMeta", "downloadUrl")) or "",   # 미리보기용 직접 mp4
+            "channel": _first(item, ("authorMeta", "nickName"), ("authorMeta", "name")) or "",
+            "likes": _num(_first(item, ("statistics", "diggCount"))),
+            "views": _num(_first(item, ("statistics", "playCount"))),
             "duration": dur,
             "is_short": dur is None or dur <= _SHORT_MAX_SECS,
         })

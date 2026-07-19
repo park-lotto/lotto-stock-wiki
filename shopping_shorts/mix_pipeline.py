@@ -13,6 +13,7 @@ from shopping_shorts.store import Store
 from shopping_shorts.media_download import download_any
 from shopping_shorts.script_extract import extract_script
 from shopping_shorts.edit_plan import build_edit_plan
+from shopping_shorts.scene_match import match_scene_assets
 from shopping_shorts import tts
 from shopping_shorts import audio_post
 from shopping_shorts.video_assemble import assemble, _beat_timeline, _probe_duration
@@ -153,14 +154,14 @@ def run_mix_job(job_id, db_path, work_root):
         source_scripts = list(extracts.values())
         _plan_and_tts(store, job_id, source_scripts, job["target_seconds"],
                       job["structure"], None, work, given_script=job.get("given_script"),
-                      voice=job.get("voice"))
+                      voice=job.get("voice"), customer_id=job.get("customer_id", 0))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=str(e))
 
 
 def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, video_type, work,
-                  given_script=None, voice=None):
+                  given_script=None, voice=None, customer_id=0):
     """EDL 생성(3) + 비트별 TTS(4) → edit_plan 저장 + ready_for_review.
     run_mix_job(자동판별, video_type=None)과 retype_mix_job(사용자 선택 유형)이 공유.
     given_script: 있으면 확정 대본을 그대로 비트로 쪼개 영상만 매칭(영상제작 2단계).
@@ -174,6 +175,13 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # (2026-07-12 최종 전체리뷰 Important).
     if not plan["beats"]:
         raise RuntimeError("EDL 비어있음 — 대본 추출 실패 또는 Gemini 키 소진으로 편집안을 만들지 못함")
+
+    # 3.5) 장면 라이브러리 매칭 — 자산이 있을 때만(없으면 plan 무변경). match_scene_assets가
+    # beat["cutaway"]={"asset_id":..,"score":..}를 심고, run_render이 같은 키를 읽어
+    # asset_id→media_path로 해석한다(저장위치=읽기위치, seam은 mix_pipeline 배선 참고).
+    assets = store.list_scene_assets(customer_id=customer_id, asset_type="clip")
+    if assets:
+        plan = match_scene_assets(plan, assets)
 
     # 4) 비트별 TTS (naturalize + N-best + 연속성 + 프리셋 후처리)
     store.update_mix_job(job_id, status="tts")
@@ -194,7 +202,7 @@ def retype_mix_job(job_id, video_type, db_path, work_root):
         source_scripts = list(job["extract"].values())
         _plan_and_tts(store, job_id, source_scripts, job["target_seconds"],
                       job["structure"], video_type, work, given_script=job.get("given_script"),
-                      voice=job.get("voice"))
+                      voice=job.get("voice"), customer_id=job.get("customer_id", 0))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=str(e))
@@ -246,6 +254,64 @@ def _apply_motion_pack(deco, caption_style, timeline, packs):
     return deco, caption_style
 
 
+def _resolve_cutaway_paths(store, plan, customer_id):
+    """비트에 붙은 cutaway asset_id → media_path. 저장위치(match가 쓴 beat['cutaway'])
+    = 읽기위치(여기). run_render와 run_preview 둘 다 이걸 써서 미리보기와 최종본이
+    같은 컷어웨이를 보여준다(안 그러면 사장님이 유료 렌더 전에 확인 못 함)."""
+    out = {}
+    for beat in plan["beats"]:
+        cut = beat.get("cutaway")
+        if cut:
+            asset = store.get_scene_asset(cut["asset_id"], customer_id=customer_id)
+            if asset and asset.get("media_path"):
+                out[beat["beat_idx"]] = asset["media_path"]
+    return out
+
+
+def _clean_one(item, key, work):
+    """소스 하나를 VMake로 청소 → (video_id, 클린경로). ThreadPool 워커용(DB 미접근)."""
+    vid, src = item
+    out = str(Path(work) / f"clean_src_{vid}.mp4")
+    return vid, remove_subtitles(src, key, out_path=out)
+
+
+def _ensure_clean_sources(store, job, job_id, work, key):
+    """clean_sources 맵을 채워 반환. 이미 있고 파일이 존재하면 스킵(재과금 0).
+    각 스레드는 remove_subtitles만 하고 경로를 반환 → DB 저장은 취합 후 메인에서 1회(경합 없음)."""
+    source_map = _resolve_sources(job, Path(work))
+    cached = dict(job.get("clean_sources") or {})
+    todo = [(vid, src) for vid, src in source_map.items()
+            if not (cached.get(vid) and Path(cached[vid]).exists())]
+    if todo:
+        with ThreadPoolExecutor(max_workers=len(todo)) as ex:
+            for vid, out in ex.map(lambda t: _clean_one(t, key, work), todo):
+                cached[vid] = out
+        store.update_mix_job(job_id, clean_sources=cached)
+    return cached
+
+
+def run_clean_sources(job_id, db_path, work_root):
+    """2단계: 각 소스 원본을 VMake로 자막제거해 clean_sources에 캐시.
+    BackgroundTasks로 불리므로 예외를 밖으로 안 던진다(clean_status로만 알린다)."""
+    store = Store(db_path)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return
+    try:
+        work = Path(work_root) / job_id
+        work.mkdir(parents=True, exist_ok=True)
+        key = _vmake_key(store)
+        if not key:
+            store.update_mix_job(job_id, clean_status="failed",
+                                 clean_error="VMake 개인키가 등록되지 않았습니다")
+            return
+        _ensure_clean_sources(store, job, job_id, work, key)
+        store.update_mix_job(job_id, clean_status="ready", clean_error=None)
+    except Exception as e:  # noqa: BLE001 — BackgroundTasks라 밖에서 아무도 안 받는다
+        traceback.print_exc(file=sys.stderr)
+        store.update_mix_job(job_id, clean_status="failed", clean_error=str(e))
+
+
 def run_preview(job_id, db_path, work_root):
     """1단계 미리보기: 유료 자막제거(VMake)·꾸미기 없이 믹스+음성+기본자막만 렌더.
 
@@ -282,7 +348,8 @@ def run_preview(job_id, db_path, work_root):
         # 굽힌다(라이브 관측: caption_style=None인 job으로 렌더해 자막 정상 확인).
         assemble(plan, tts_paths, source_video_paths, str(out_path),
                  clean_fn=None,                      # ← 유료 VMake 건너뜀. 이게 핵심이다.
-                 deco={})                            # ← 꾸미기 없음(4단계 소관)
+                 deco={},                             # ← 꾸미기 없음(4단계 소관)
+                 cutaway_paths=_resolve_cutaway_paths(store, plan, job.get("customer_id", 0)))
         store.update_mix_job(job_id, preview_status="ready", preview_path=str(out_path))
     except Exception as e:  # noqa: BLE001 — BackgroundTasks라 밖에서 아무도 안 받는다
         traceback.print_exc(file=sys.stderr)
@@ -305,17 +372,16 @@ def run_render(job_id, db_path, work_root):
         source_video_paths = _resolve_sources(job, work)
         out_path = work / "final.mp4"
 
-        clean_fn = None
+        # 자막제거: 소스 원본을 미리(2단계) 또는 여기서(버튼 미사용 시) 청소해 그 소스로 조립한다.
+        # mix_raw 위 clean_fn(구방식)은 폐기 — 소스단위여야 TTS/컷과 무관하게 캐시가 성립한다.
         if job.get("subtitle_removal"):
             key = _vmake_key(store)
             if not key:
                 raise RuntimeError("자막 제거가 켜져 있으나 VMake 개인키가 등록되지 않았습니다")
-            def clean_fn(mix_raw):                        # noqa: E306
-                store.update_mix_job(job_id, status="removing_subtitles")
-                clean_path = str(work / "clean.mp4")
-                out = remove_subtitles(mix_raw, key, out_path=clean_path)
-                store.update_mix_job(job_id, clean_video_path=out)
-                return out
+            clean_map = _ensure_clean_sources(store, job, job_id, work, key)
+            store.update_mix_job(job_id, clean_status="ready", clean_error=None)
+            source_video_paths = {vid: clean_map.get(vid, p)
+                                  for vid, p in source_video_paths.items()}
 
         # deco의 BGM 파일(업로드 시 work/{file}에 저장)을 절대경로로 해석해 넘긴다.
         deco = job.get("deco") or {}
@@ -341,13 +407,52 @@ def run_render(job_id, db_path, work_root):
         if motion.get("layers"):
             resolved = resolve_layers(motion["layers"], MOTION_ASSETS_DIR)
             deco = {**deco, "motion": {**motion, "layers": resolved}}
-        assemble(plan, tts_paths, source_video_paths, str(out_path), clean_fn=clean_fn,
+        # 컷어웨이: 비트에 붙은 asset_id를 media_path로 해석해 assemble에 넘긴다.
+        # 저장위치(match_scene_assets가 쓴 beat["cutaway"]) = 읽기위치(여기) — seam 일치.
+        cutaway_paths = _resolve_cutaway_paths(store, plan, job.get("customer_id", 0))
+        assemble(plan, tts_paths, source_video_paths, str(out_path), clean_fn=None,
                  headcopy=job.get("headcopy"), caption_style=caption_style,
-                 deco=deco)
+                 deco=deco, cutaway_paths=cutaway_paths)
         store.update_mix_job(job_id, status="done", video_path=str(out_path))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=str(e))
+
+
+def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root):
+    """비트 하나만 voice_override로 재합성해 같은 mp3에 덮어쓰고 자막을 재동기한다.
+    최종 렌더는 재합성 없이 이 mp3(beat['tts_path'])를 재사용하므로 교정이 그대로 남는다."""
+    store = Store(db_path)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return
+    plan = job["edit_plan"]
+    beat = next((b for b in plan["beats"] if b["beat_idx"] == beat_idx), None)
+    if beat is None:
+        return
+    total = len(plan["beats"])
+    i = next(k for k, b in enumerate(plan["beats"]) if b["beat_idx"] == beat_idx)
+    work = Path(work_root) / job_id
+    tts_dir = work / "tts"
+    tts_dir.mkdir(parents=True, exist_ok=True)
+    out = tts_dir / f"beat_{beat_idx}.mp3"
+    try:
+        synthesize_line(
+            beat["narration"], out, voice=voice_override, beat_role=beat.get("role"),
+            beat_index=i, beat_total=total,
+            previous_text=plan["beats"][i - 1]["narration"] if i > 0 else None,
+            next_text=plan["beats"][i + 1]["narration"] if i < total - 1 else None,
+        )
+        beat["tts_path"] = str(out)
+        beat["voice_override"] = voice_override
+        beat["cap_durs"] = None
+        words = asr_check.transcribe_words(str(out))
+        if words:
+            beat["cap_durs"] = caption_sync.phrase_durs_from_words(
+                beat["narration"], words, _probe_duration(str(out)))
+        store.update_mix_job(job_id, edit_plan=plan)
+    except Exception as e:
+        traceback.print_exc(file=sys.stderr)
 
 
 def resynth_tts_job(job_id, db_path, work_root):

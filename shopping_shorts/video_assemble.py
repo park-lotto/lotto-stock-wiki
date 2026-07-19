@@ -135,30 +135,61 @@ def _probe_duration(path):
 
 
 def _run_ffmpeg(cmd, cwd=None):
-    """ffmpeg 실행. 실패 시 stderr를 예외에 담아 원인을 삼키지 않는다."""
-    r = subprocess.run(cmd, cwd=cwd, **_FF_TEXT)
+    """ffmpeg 실행. 실패 시 stderr를 예외에 담아 원인을 삼키지 않는다.
+    stdin=DEVNULL 필수(Windows): pytest 캡처 중에는 부모 stdin 핸들이 유효하지
+    않아, 명시 안 하면 subprocess가 그 핸들을 상속하려다 OSError([WinError 6]
+    핸들이 잘못되었습니다)로 죽는다(2026-07-18 Task2 grounding 테스트 실측 — 이미
+    _probe_duration은 이 패턴을 쓰고 있었다, 여기만 누락돼 있었다)."""
+    r = subprocess.run(cmd, cwd=cwd, stdin=subprocess.DEVNULL, **_FF_TEXT)
     if r.returncode != 0:
         raise RuntimeError(f"ffmpeg 실패(exit {r.returncode}): {(r.stderr or '')[-1000:]}")
     return r
 
 
-def _pick_segment(beat, tts_dur, source_video_paths):
-    """primary→alternates 중 나레이션(tts_dur)을 1배속으로 담을 수 있는
-    (구간길이 >= tts_dur) 첫 후보를 고른다. 아무도 못 담으면 가장 긴 후보를
-    반환하고, 부족분은 assemble에서 소스 루프로 채운다. 반환: ref(dict).
-    더 이상 배속 보정을 하지 않으므로 setpts rate는 반환하지 않는다."""
-    candidates = [beat["primary"]] + list(beat.get("alternates", []))
-    best = None
-    best_len = -1.0
-    for ref in candidates:
-        if ref["video_id"] not in source_video_paths:
+_MIN_CLIP = 0.8   # 초. 이보다 짧은 독립 클립은 만들지 않는다(깜빡임 방지).
+
+
+def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP):
+    """비트의 순서 구간 리스트 → 나레이션 길이(tts_dur)에 맞춘 클립 계획.
+    각 클립은 자기 구간 [start,end]를 절대 넘지 않는다(유출 0). 부족분은 마지막 클립을
+    슬로모(out_dur>src_dur)로 늘려 채우고, 0.8초 미만 자투리는 직전 클립에 흡수한다.
+    반환: [{"video_id","start","src_dur","out_dur"}, ...]"""
+    eps = 1e-3
+    clips = []
+    filled = 0.0
+    for seg in segments:
+        remaining = tts_dur - filled
+        if remaining <= eps:
+            break
+        seg_len = seg["end"] - seg["start"]
+        if seg_len <= eps:
             continue
-        seg_len = ref["end"] - ref["start"]
-        if seg_len >= tts_dur:
-            return ref  # 1배속으로 나레이션 전체를 담을 수 있는 첫 후보
-        if seg_len > best_len:
-            best, best_len = ref, seg_len
-    return best if best else beat["primary"]
+        take = min(seg_len, remaining)   # 1배속으로 이만큼 재생(구간 이내)
+        clips.append({"video_id": seg["video_id"], "start": seg["start"],
+                      "src_dur": take, "out_dur": take})
+        filled += take
+
+    if not clips:
+        # 구간이 하나도 못 쓰였다(모두 길이 0). 첫 구간을 tts_dur로 슬로모(방어적 폴백).
+        seg = segments[0]
+        return [{"video_id": seg["video_id"], "start": seg["start"],
+                 "src_dur": max(seg["end"] - seg["start"], eps), "out_dur": tts_dur}]
+
+    shortfall = tts_dur - filled
+    if shortfall > eps:
+        # 구간을 다 써도 모자람 → 마지막 클립을 슬로모로 늘려 채운다.
+        clips[-1]["out_dur"] += shortfall
+
+    # 0.8초 미만 독립 클립 제거: 그런 클립을 이웃에 흡수(이웃이 슬로모로 그 시간을 떠안는다).
+    # 앞 클립이 있으면 앞으로, 없으면(첫 클립) 뒤로 합친다. 합계(sum out_dur)는 보존된다.
+    while len(clips) > 1:
+        idx = next((k for k, c in enumerate(clips) if c["out_dur"] < min_clip - eps), None)
+        if idx is None:
+            break
+        nb = idx - 1 if idx > 0 else idx + 1
+        clips[nb]["out_dur"] += clips[idx]["out_dur"]
+        clips.pop(idx)
+    return clips
 
 
 def _strip_punct(w):
@@ -260,7 +291,7 @@ def _caption_durations(segs, dur, real_durs=None):
     return floored
 
 
-def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=None):
+def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=None, cap_offset=0.0, tail=0.5):
     """나레이션 한 비트의 자막(하단 바 + 순차 drawtext)을 필터 문자열 리스트로 반환한다.
     _segmented_drawtext 기반: highlight_rules가 있으면 단어별 강조, 없으면 세그먼트 1개
     (기존과 동일 산출물). 각 구절 enable 구간은 t0(전체 타임라인 오프셋)만큼 밀린다.
@@ -276,7 +307,10 @@ def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=
         # 기존 폴백 "h-text_h-100"의 근사치를 %로 환산(문자 높이는 size*1.2로 근사)
         ypct = max(0.0, min(100.0, (_OUT_H - 100 - size * 0.6) / _OUT_H * 100.0))
     use_box = bool(style.get("box"))
-    show_bar = style.get("bar", True) and not use_box
+    # 하단 자막 바 기본 OFF(2026-07-19) — 300px·black@0.82 바가 화면 하단 23%를
+    # 덮어 "검정바"로 보인다는 제보. 그림자 자막만으로 가독성 확보. 원본 소각자막을
+    # 덮어야 하는 경우엔 style.bar=True로 명시적으로 켠다(자막제거 ON이면 불필요).
+    show_bar = style.get("bar", False) and not use_box
     effect = style.get("effect") or "none"
     parts = []
     if show_bar:
@@ -287,15 +321,16 @@ def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=
         # 실측 밝기 9/255). 이 비트의 자막 표시 구간(t0 ~ 마지막 세그먼트 종료시각인
         # t0+dur+0.5, 아래 end 계산과 동일)에만 바를 그려 자막 텍스트의 enable 창과
         # 정확히 맞춘다.
+        _bs = max(0.0, t0 + cap_offset)
         parts.append(
             f"drawbox=x=0:y=ih-{_BAR_H}:w=iw:h={_BAR_H}:color=black@0.82:t=fill:"
-            f"enable='between(t,{t0:.2f},{t0 + dur + 0.5:.2f})'"
+            f"enable='between(t,{_bs:.2f},{t0 + dur + tail + cap_offset:.2f})'"
         )
     t = 0.0
     for i, (seg, d) in enumerate(zip(segs, durs)):
-        start = t + t0
+        start = max(0.0, t + t0 + cap_offset)
         t += d
-        end = (dur + 0.5 if i == len(segs) - 1 else t) + t0
+        end = (dur + tail if i == len(segs) - 1 else t) + t0 + cap_offset
         seg_parts = _segmented_drawtext(
             seg, style, work, f"cap_{idx}_{i}", 50, ypct,
             highlight_rules=style.get("highlight_rules"), default_color="0xFFFFFF",
@@ -313,6 +348,13 @@ def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=
             elif effect in ("fade", "pop"):
                 spd = 0.18 if effect == "fade" else 0.12
                 sp = sp + f":alpha='min(1,max(0,(t-{start:.2f})/{spd}))'"
+            elif effect == "sparkle":
+                # 반짝(CTA/훅): 등장 0.7초 동안 알파가 여러 번 깜빡여 시선을 끈 뒤 고정.
+                # abs(sin)로 0↔1 진동(약 3회) → 이후 1로 유지. 단일 quote 안이라 콤마 이스케이프 불필요.
+                sp = sp + (
+                    f":alpha='if(lt(t,{start:.2f}+0.7),"
+                    f"0.30+0.70*abs(sin(2*PI*3*(t-{start:.2f}))),1)'"
+                )
             parts.append(sp + ":" + enable_clause)
     return parts
 
@@ -335,7 +377,7 @@ def _caption_vf(narration, dur, has_font, work, idx):
     return ",".join([base] + draws)
 
 
-def _render_mix(edit_plan, tts_paths, source_video_paths, work):
+def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=None):
     """각 비트를 [소스영상+TTS]로 렌더(우리 자막 없음) → concat → mix_raw.mp4 경로.
     자막을 굽지 않으므로 이후 VMake 자막제거가 우리 자막을 지우지 않는다.
     -vf는 우리 자막 vf가 아니라 규격 통일용 base(scale/crop)만 쓴다.
@@ -348,28 +390,65 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work):
         if not tts:
             continue
         tts_dur = _probe_duration(tts)
-        ref = _pick_segment(beat, tts_dur, source_video_paths)
-        src = source_video_paths[ref["video_id"]]
-        src_dur = _probe_duration(src)
-        clip = work / f"beat_{idx}.mp4"
+        # 순서 구간 리스트 = [primary] + alternates. 소스에 실재하는 것만.
+        segs = [s for s in ([beat["primary"]] + list(beat.get("alternates", [])))
+                if s and s.get("video_id") in source_video_paths]
+        if not segs:
+            continue
+        plan = _plan_beat_clips(segs, tts_dur)
         vf = _kenburns_vf(tts_dur) if idx in important else _base_zoom_vf()
-        # 나레이션 길이(tts_dur)만큼 소스를 ref["start"]부터 **이어서(연속)** 1배속
-        # 재생. 시작점부터 tts_dur가 원본 끝을 넘으면 시작을 앞으로 당겨 연속 footage
-        # 를 확보한다. 원본 전체가 나레이션보다 짧을 때만 루프한다.
-        start = ref["start"]
-        if start + tts_dur > src_dur:
-            start = max(0.0, src_dur - tts_dur)
-        loop = ["-stream_loop", "-1"] if src_dur + 0.05 < tts_dur else []
-        cmd = [
-            "ffmpeg", "-y",
-            *loop, "-ss", f"{start:.3f}", "-i", str(src),
-            "-i", str(tts),
-            "-vf", vf, "-r", "30",
-            "-map", "0:v:0", "-map", "1:a:0",
-            "-t", str(tts_dur),
-            "-c:v", "libx264", "-c:a", "aac", "-pix_fmt", "yuv420p", str(clip),
-        ]
-        _run_ffmpeg(cmd)
+        # 비트당 다중 클립: 각 구간을 [start, start+src_dur]만큼만 잘라(유출 0) 이어붙이고,
+        # 부족분은 마지막 클립을 슬로모(setpts)로 늘려 대사 길이에 맞춘다.
+        sub_paths = []
+        for j, c in enumerate(plan):
+            src = source_video_paths[c["video_id"]]
+            sub = work / f"beat_{idx}_{j}.mp4"
+            # setpts로 슬로모: 소스 src_dur초를 출력 out_dur초로 늘린다(1배속이면 factor=1).
+            factor = c["out_dur"] / c["src_dur"] if c["src_dur"] > 1e-6 else 1.0
+            vf_full = f"{vf},setpts={factor:.6f}*PTS" if factor > 1.0 + 1e-6 else vf
+            # -ss(입력 시크) start부터, 출력 out_dur초. 오디오 없음(비트 오디오는 아래서 합침).
+            _run_ffmpeg([
+                "ffmpeg", "-y", "-ss", f"{c['start']:.3f}", "-i", str(src),
+                "-vf", vf_full, "-r", "30", "-an", "-t", f"{c['out_dur']:.3f}",
+                "-c:v", "libx264", "-pix_fmt", "yuv420p", str(sub),
+            ])
+            sub_paths.append(sub)
+        # 비트의 클립들(동일 규격)을 concat → 비트 무음 영상(길이 ≈ tts_dur)
+        beat_video = work / f"beat_{idx}_v.mp4"
+        cat = work / f"beat_{idx}_list.txt"
+        cat.write_text("".join(f"file '{p.as_posix()}'\n" for p in sub_paths), encoding="utf-8")
+        _run_ffmpeg(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(cat),
+                     "-c", "copy", str(beat_video)])
+        # 컷어웨이(장면라이브러리 페이즈2-B): 라이브러리 자산을 비트 영상 위에 풀프레임
+        # 오버레이. 창=[0, min(자산길이, tts_dur)]. 비트 길이·TTS 오디오 불변 → 자막 t0 싱크
+        # 불변. beat_video는 이미 규격(720x1280)·vf 적용 → 재-vf 없이 오버레이만 얹는다.
+        clip = work / f"beat_{idx}.mp4"
+        cutaway = (cutaway_paths or {}).get(idx)
+        if cutaway:
+            asset_dur = _probe_duration(cutaway)
+            win = min(asset_dur, tts_dur)
+            fc = (
+                f"[1:v]scale=720:1280:force_original_aspect_ratio=increase,"
+                f"crop=720:1280,setpts=PTS-STARTPTS[ov];"
+                f"[0:v][ov]overlay=0:0:enable='between(t,0,{win:.3f})'[vout]"
+            )
+            _run_ffmpeg([
+                "ffmpeg", "-y",
+                "-i", str(beat_video),   # 0: 내 다중클립 비트영상(이미 vf 적용)
+                "-i", str(cutaway),      # 1: 컷어웨이 자산(오디오 버림 = b-roll)
+                "-i", str(tts),          # 2: 나레이션
+                "-filter_complex", fc, "-r", "30",
+                "-map", "[vout]", "-map", "2:a:0",
+                "-t", f"{tts_dur:.3f}",
+                "-c:v", "libx264", "-c:a", "aac", "-pix_fmt", "yuv420p", str(clip),
+            ])
+        else:
+            # 비트 나레이션(tts) 오디오를 얹고 길이를 tts_dur로 맞춘다.
+            _run_ffmpeg([
+                "ffmpeg", "-y", "-i", str(beat_video), "-i", str(tts),
+                "-map", "0:v:0", "-map", "1:a:0", "-t", f"{tts_dur:.3f}",
+                "-c:v", "copy", "-c:a", "aac", str(clip),
+            ])
         beat_clips.append(clip)
     if not beat_clips:
         raise RuntimeError("video_assemble: 렌더할 비트가 없습니다")
@@ -569,6 +648,11 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
             if base_style.get("outline"):
                 seg_parts.append(f"borderw={max(1, int(base_style.get('outline_w') or 6))}")
                 seg_parts.append(f"bordercolor={_hex_to_ff(base_style.get('outline_color'), '0x000000')}")
+            if base_style.get("shadow"):
+                # 은은한 드롭 그림자(레퍼런스 자막룩) — 두꺼운 테두리 대신 부드러운 가독성.
+                sc = _hex_to_ff(base_style.get("shadow_color"), "0x000000")
+                sd = max(1, int(base_style.get("shadow_d") or 3))
+                seg_parts += [f"shadowcolor={sc}@0.55", f"shadowx={sd}", f"shadowy={sd}"]
             if seg_box:
                 bc = _hex_to_ff(seg_box_color, "0x000000")
                 seg_parts += ["box=1", f"boxcolor={bc}@0.90", "boxborderw=8"]
@@ -675,6 +759,7 @@ def _beat_timeline(edit_plan, tts_paths):
             "narration": beat.get("narration", ""),
             "role": beat.get("role", ""),
             "cap_durs": beat.get("cap_durs"),
+            "cap_offset": beat.get("cap_offset", 0.0),
         })
         t0 += dur
     return timeline
@@ -705,8 +790,12 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         filters.append(_color_filter.strip())
     timeline = _beat_timeline(edit_plan, tts_paths)
     for b in timeline:
+        # 마지막 비트만 0.5초 여운(영상 끝에서 자막이 툭 사라지지 않게). 중간 비트는 tail=0 —
+        # 여운을 주면 그 자막이 다음 비트로 0.5초 넘어가 다음 자막과 겹쳐 뭉갠다(전환 겹침, 실측).
+        _tail = 0.5 if b is timeline[-1] else 0.0
         filters.extend(_caption_drawtexts(b["narration"], b["dur"], work, b["beat_idx"],
-                                          b["t0"], caption_style, real_durs=b.get("cap_durs")))
+                                          b["t0"], caption_style, real_durs=b.get("cap_durs"),
+                                          cap_offset=b.get("cap_offset", 0.0), tail=_tail))
     if headcopy and (headcopy.get("text") or "").strip():
         # enable 없으면 전체 표시(기존). 팩이 hook_only면 렌더 파생값 _headcopy_enable이 온다.
         hc_enable = ((deco or {}).get("motion") or {}).get("_headcopy_enable")
@@ -782,13 +871,13 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     return str(out_path)
 
 
-def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, headcopy=None, caption_style=None, deco=None):
+def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, headcopy=None, caption_style=None, deco=None, cutaway_paths=None):
     """EDL → 최종 mp4. 1)믹스(자막X) 2)clean_fn(있으면 자막제거) 3)우리 자막.
     clean_fn(mix_raw_path)->clean_path 를 주면 그 사이에 VMake 자막제거가 끼워진다
     (없으면 생략). 자막제거는 우리 자막을 굽기 전 깨끗한 믹스에 돌려야 우리 자막이
     함께 지워지지 않는다."""
     work = Path(out_path).parent / f"asm_{uuid.uuid4().hex[:8]}"
     work.mkdir(parents=True, exist_ok=True)
-    mix_raw = _render_mix(edit_plan, tts_paths, source_video_paths, work)
+    mix_raw = _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=cutaway_paths)
     base_video = clean_fn(mix_raw) if clean_fn else mix_raw
     return _burn_captions(base_video, edit_plan, tts_paths, out_path, work, headcopy, caption_style, deco)

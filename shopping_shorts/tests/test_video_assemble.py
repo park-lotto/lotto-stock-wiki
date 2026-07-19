@@ -32,43 +32,6 @@ def test_wrap_preserves_explicit_newline_via_segmented():
     assert lines == ["짧은줄", ""]
 
 
-def test_pick_segment_primary_covers_narration():
-    # primary 구간 3초, tts 2.4초 → primary가 1배속으로 담을 수 있으므로 primary 선택
-    beat = {"primary": {"video_id": "A", "seg_id": "A-0", "start": 0.0, "end": 3.0}, "alternates": []}
-    ref = va._pick_segment(beat, tts_dur=2.4, source_video_paths={"A": "a.mp4"})
-    assert ref["seg_id"] == "A-0"
-
-
-def test_pick_segment_prefers_alternate_that_covers_when_primary_too_short():
-    # primary 1초로 tts 2.4초를 못 담음 → 2.4초를 담을 수 있는 alternate(3초) 선택
-    beat = {
-        "primary": {"video_id": "A", "seg_id": "A-0", "start": 0.0, "end": 1.0},
-        "alternates": [{"video_id": "B", "seg_id": "B-0", "start": 0.0, "end": 3.0}],
-    }
-    ref = va._pick_segment(beat, tts_dur=2.4, source_video_paths={"A": "a.mp4", "B": "b.mp4"})
-    assert ref["seg_id"] == "B-0"
-
-
-def test_pick_segment_picks_longest_when_none_cover():
-    # 아무 후보도 tts를 못 담으면 가장 긴 후보 선택(부족분은 루프로 채움)
-    beat = {
-        "primary": {"video_id": "A", "seg_id": "A-0", "start": 0.0, "end": 1.0},
-        "alternates": [{"video_id": "B", "seg_id": "B-0", "start": 0.0, "end": 2.0}],
-    }
-    ref = va._pick_segment(beat, tts_dur=5.0, source_video_paths={"A": "a.mp4", "B": "b.mp4"})
-    assert ref["seg_id"] == "B-0"  # 2초 > 1초
-
-
-def test_pick_segment_skips_missing_source():
-    # primary 소스가 없으면 존재하는 alternate로
-    beat = {
-        "primary": {"video_id": "A", "seg_id": "A-0", "start": 0.0, "end": 5.0},
-        "alternates": [{"video_id": "B", "seg_id": "B-0", "start": 0.0, "end": 3.0}],
-    }
-    ref = va._pick_segment(beat, tts_dur=2.0, source_video_paths={"B": "b.mp4"})
-    assert ref["seg_id"] == "B-0"
-
-
 # ── 자막 구절 분할 ──────────────────────────────────────────────
 
 def test_caption_segments_empty():
@@ -331,9 +294,18 @@ def test_headcopy_drawtext_no_highlight_matches_single_block(tmp_path):
     assert "bordercolor=0x000000" in dt
 
 
-def test_caption_drawtexts_no_style_still_renders_bar_and_text(tmp_path):
+def test_caption_drawtexts_no_bar_by_default(tmp_path):
+    # 2026-07-19: 하단 검정바 기본 OFF. 스타일 없이 부르면 바(drawbox) 없이 텍스트만.
     parts = va._caption_drawtexts("여러분 안녕하세요 반갑습니다", 2.0, tmp_path, 0)
-    assert any("drawbox" in p for p in parts)  # 하단 바 유지
+    assert parts, "자막 텍스트는 그려져야 한다"
+    assert not any("drawbox" in p for p in parts)  # 하단 바 없음
+
+
+def test_caption_drawtexts_bar_opt_in(tmp_path):
+    # bar=True로 명시하면 하단 바를 그린다(원본 소각자막 가리기용 옵트인).
+    parts = va._caption_drawtexts("여러분 안녕하세요 반갑습니다", 2.0, tmp_path, 0,
+                                  style={"bar": True})
+    assert any("drawbox" in p for p in parts)
 
 
 # ── Critical 버그 픽스: deco.highlight_rules → headcopy/caption_style 병합 ──
@@ -370,3 +342,217 @@ def test_merge_highlight_rules_reaches_headcopy_drawtext(tmp_path):
     joined = " ".join(parts)
     assert "fontcolor=0xFF2D2D" in joined            # 강조 단어 규칙색이 실제 필터에 나온다
     assert any("drawtext=fontfile=" in p for p in parts)
+
+
+# ── 비트당 다중 클립 계획(_plan_beat_clips) ────────────────────────
+def _seg(v, s, e):
+    return {"video_id": v, "start": s, "end": e}
+
+
+def _total_out(clips):
+    return sum(c["out_dur"] for c in clips)
+
+
+def test_plan_single_long_segment_no_slowmo():
+    # 구간(0~10, 길이10)이 나레이션(4)보다 길다 → 앞 4초만 1배속, 유출·슬로모 없음.
+    clips = va._plan_beat_clips([_seg("A", 0.0, 10.0)], tts_dur=4.0)
+    assert len(clips) == 1
+    c = clips[0]
+    assert c["video_id"] == "A" and c["start"] == 0.0
+    assert abs(c["src_dur"] - 4.0) < 1e-6 and abs(c["out_dur"] - 4.0) < 1e-6
+    assert c["start"] + c["src_dur"] <= 10.0  # 유출 0
+
+
+def test_plan_chains_multiple_segments_to_fill():
+    # 2.2 + 2.2 = 4.4 ≥ 4.0 → 첫 구간 통째(2.2) + 둘째 구간 앞 1.8초. 슬로모 없음.
+    segs = [_seg("A", 0.0, 2.2), _seg("B", 5.0, 7.2)]
+    clips = va._plan_beat_clips(segs, tts_dur=4.0)
+    assert len(clips) == 2
+    assert abs(clips[0]["out_dur"] - 2.2) < 1e-6
+    assert abs(clips[1]["out_dur"] - 1.8) < 1e-6
+    # 각 클립 구간 밖으로 안 나감
+    for c, s in zip(clips, segs):
+        assert c["start"] + c["src_dur"] <= s["end"] + 1e-9
+    assert abs(_total_out(clips) - 4.0) < 0.05
+    # 소스 충분 → 슬로모 0
+    assert all(abs(c["out_dur"] - c["src_dur"]) < 1e-6 for c in clips)
+
+
+def test_plan_slows_last_clip_when_short():
+    # 2.2 + 2.2 = 4.4 < 4.9 → 부족분 0.5는 마지막 클립을 슬로모로 늘림.
+    segs = [_seg("A", 0.0, 2.2), _seg("B", 5.0, 7.2)]
+    clips = va._plan_beat_clips(segs, tts_dur=4.9)
+    assert abs(_total_out(clips) - 4.9) < 0.05
+    # 마지막 클립만 슬로모(out_dur > src_dur), 나머진 1배속
+    assert clips[-1]["out_dur"] > clips[-1]["src_dur"] + 1e-6
+    assert all(abs(c["out_dur"] - c["src_dur"]) < 1e-6 for c in clips[:-1])
+    # 유출 0: src_dur는 구간 길이 이내
+    for c, s in zip(clips, segs):
+        assert c["src_dur"] <= (s["end"] - s["start"]) + 1e-9
+
+
+def test_plan_absorbs_tiny_remainder_into_previous():
+    # 2.0 + 2.0, tts 4.3 → 앞 2.0 + 뒤 2.0 = 4.0, 남은 0.3(<0.8)은 새 클립 안 만들고
+    # 직전(마지막) 클립을 슬로모로 늘려 흡수. 0.8초 미만 독립 클립 없음.
+    segs = [_seg("A", 0.0, 2.0), _seg("B", 0.0, 2.0)]
+    clips = va._plan_beat_clips(segs, tts_dur=4.3)
+    assert abs(_total_out(clips) - 4.3) < 0.05
+    assert all(c["out_dur"] >= 0.8 - 1e-9 for c in clips)
+    # 마지막 클립이 0.3만큼 슬로모로 늘어남(src 2.0 → out 2.3)
+    assert clips[-1]["out_dur"] > clips[-1]["src_dur"] + 1e-6
+
+
+def test_plan_never_overflows_segment_end():
+    # 어떤 조합이든 start+src_dur는 end를 안 넘는다(유출 0의 직접 검증).
+    segs = [_seg("A", 3.0, 4.0), _seg("B", 10.0, 10.5)]
+    clips = va._plan_beat_clips(segs, tts_dur=6.0)  # 합계 1.5 << 6.0
+    for c, s in zip(clips, segs):
+        assert c["start"] + c["src_dur"] <= s["end"] + 1e-9
+    assert abs(_total_out(clips) - 6.0) < 0.05
+
+
+def test_plan_absorbs_short_leading_segment():
+    # 선두 구간이 0.8초 미만(0.3s)이고 통째 소비돼도 독립 클립으로 안 남는다.
+    segs = [_seg("A", 0.0, 0.3), _seg("B", 0.0, 5.0)]
+    clips = va._plan_beat_clips(segs, tts_dur=5.3)
+    assert all(c["out_dur"] >= 0.8 - 1e-9 for c in clips)   # 깜빡임 없음
+    assert abs(_total_out(clips) - 5.3) < 0.05
+    for c, s in [(c, s) for c in clips for s in segs if s["video_id"] == c["video_id"]]:
+        assert c["start"] + c["src_dur"] <= s["end"] + 1e-9   # 유출 0 유지
+
+
+def test_plan_absorbs_short_middle_segment():
+    # 중간 구간이 짧아도(0.3s) 최종에 0.8초 미만 독립 클립이 남지 않는다.
+    segs = [_seg("A", 0.0, 5.0), _seg("B", 0.0, 0.3), _seg("C", 0.0, 5.0)]
+    clips = va._plan_beat_clips(segs, tts_dur=5.3)
+    assert all(c["out_dur"] >= 0.8 - 1e-9 for c in clips)
+    assert abs(_total_out(clips) - 5.3) < 0.05
+
+
+# ── _render_mix 실렌더 grounding (유출 0 + 길이 일치) ──────────────
+
+import re
+import shutil
+import subprocess
+import pytest
+
+_HAS_FF = shutil.which("ffmpeg") and shutil.which("ffprobe")
+
+
+# stdin=DEVNULL 필수(Windows): pytest 캡처 중 부모 stdin 핸들이 무효라 명시 안 하면
+# subprocess가 상속하려다 OSError([WinError 6] 핸들이 잘못되었습니다)로 죽는다
+# (2026-07-18 실측 — video_assemble._run_ffmpeg에도 동일 원인으로 동일하게 추가함).
+def _make_color_source(path, colors, seconds_each=1.0, fps=30):
+    """colors=['red','green',...] 각 색을 seconds_each초씩 이어붙인 720x1280 소스."""
+    parts = []
+    for i, col in enumerate(colors):
+        seg = path.parent / f"src_seg_{i}.mp4"
+        subprocess.run(["ffmpeg", "-y", "-f", "lavfi", "-i",
+                        f"color=c={col}:s=720x1280:d={seconds_each}:r={fps}",
+                        "-pix_fmt", "yuv420p", str(seg)], check=True, stdin=subprocess.DEVNULL,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        parts.append(seg)
+    lst = path.parent / "src_list.txt"
+    lst.write_text("".join(f"file '{p.as_posix()}'\n" for p in parts), encoding="utf-8")
+    subprocess.run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(lst),
+                    "-c", "copy", str(path)], check=True, stdin=subprocess.DEVNULL,
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def _make_silence(path, dur):
+    subprocess.run(["ffmpeg", "-y", "-f", "lavfi", "-i",
+                    f"anullsrc=r=44100:cl=stereo", "-t", str(dur),
+                    "-c:a", "aac", str(path)], check=True, stdin=subprocess.DEVNULL,
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def _avg_color(video, at_sec):
+    """video의 at_sec 지점 1프레임을 뽑아 평균 YUV(signalstats) 텍스트를 반환한다.
+    ⚠️ 브리프 원안은 nested `movie=` 필터 + seek_point였으나 이 환경(Windows)에서
+    실측 2건 모두 실패해 -ss(입력시크)+실디코드 방식으로 교체했다(2026-07-18):
+    ①경로의 드라이브 콜론('C:\\...')이 movie= 필터 자신의 옵션 구분자 콜론과 충돌해
+    항상 빈 출력(ffprobe: "Failed to avformat_open_input 'C'")이 났다. `C\\:/...`처럼
+    콜론을 이스케이프하면 파싱 에러는 없어지지만, ②그 상태에서도 seek_point가 항상
+    frame:0(pts_time≈0.02)만 반환해(재인코딩된 mix_raw.mp4처럼 키프레임이 드문 짧은
+    클립에서 seek_point가 forward-decode를 안 함) at_sec와 무관하게 같은 프레임이
+    나왔다(실측: t=0.2~1.8 전부 VAVG=240 동일). 반면 `-ss <t> -i <video>`(입력 옵션
+    시크)는 ffmpeg가 자동으로 accurate seek(키프레임에서 목표시각까지 디코드)를 하므로
+    같은 소스에서 t=0.2/0.7→VAVG=240(red), t=1.2/1.5/1.8→VAVG=81(green)로 실제
+    시간에 따라 값이 달라짐을 확인했다(구버전 코드의 유출 재현). 이 방식으로 교체."""
+    r = subprocess.run(["ffmpeg", "-v", "error", "-ss", str(at_sec), "-i", str(video),
+                        "-frames:v", "1", "-vf", "signalstats,metadata=print:file=-",
+                        "-f", "null", "-"], stdin=subprocess.DEVNULL,
+                       capture_output=True, text=True)
+    return r.stdout
+
+
+def _vavg(stats):
+    """_avg_color가 반환한 metadata=print 텍스트에서 첫 VAVG 값을 뽑는다(없으면 None)."""
+    m = re.search(r"VAVG=(-?\d+)", stats)
+    return int(m.group(1)) if m else None
+
+
+@pytest.mark.skipif(not _HAS_FF, reason="ffmpeg/ffprobe 없음")
+def test_render_mix_no_overflow_and_exact_length(tmp_path):
+    # 소스 A: 0~1s=red, 1~2s=green, 2~3s=blue. 매칭 구간은 [0,1](red)뿐인데 나레이션은 2초.
+    # 옛 코드면 1s 이후 green이 샜다(유출). 새 코드는 red를 슬로모로 2초 채운다.
+    src = tmp_path / "A.mp4"
+    _make_color_source(src, ["red", "green", "blue"])
+    tts = tmp_path / "tts0.wav"
+    _make_silence(tts, 2.0)
+    edit_plan = {"beats": [{
+        "beat_idx": 0, "role": "hook", "narration": "x",
+        "primary": {"video_id": "A", "seg_id": "A-0", "start": 0.0, "end": 1.0},
+        "alternates": [],
+    }]}
+    out = va._render_mix(edit_plan, {0: str(tts)}, {"A": str(src)}, tmp_path)
+
+    assert abs(va._probe_duration(out) - 2.0) < 0.15   # 길이 == 나레이션
+    # 유출 0: 1.5초 지점(옛 코드면 green이 나올 자리)이 red 계열이어야 한다.
+    # signalstats YUV: red는 V(빨강) 크고(실측 240), green은 낮다(실측 81). 150을 경계로
+    # red/green을 가른다(blue=110도 150 미만이라 같이 걸러지지만 이 테스트 소스엔 안 나옴).
+    stats = _avg_color(out, 1.5)
+    vavg = _vavg(stats)
+    assert vavg is not None  # 프레임을 실제로 뽑았다(빈 출력 아님)
+    assert vavg > 150, f"1.5초 지점이 red가 아님(VAVG={vavg}) — 유출 의심"
+
+
+@pytest.mark.skipif(not _HAS_FF, reason="ffmpeg/ffprobe 없음")
+def test_render_mix_chains_two_segments(tmp_path):
+    # 소스 A: red,green,blue 각 2초(6초). 구간 [0,2](red)+[2,4](green) 이어붙여 나레이션 3.5초.
+    src = tmp_path / "A.mp4"
+    _make_color_source(src, ["red", "green", "blue"], seconds_each=2.0)
+    tts = tmp_path / "tts0.wav"
+    _make_silence(tts, 3.5)
+    edit_plan = {"beats": [{
+        "beat_idx": 0, "role": "hook", "narration": "x",
+        "primary": {"video_id": "A", "seg_id": "A-0", "start": 0.0, "end": 2.0},
+        "alternates": [{"video_id": "A", "seg_id": "A-1", "start": 2.0, "end": 4.0}],
+    }]}
+    out = va._render_mix(edit_plan, {0: str(tts)}, {"A": str(src)}, tmp_path)
+    assert abs(va._probe_duration(out) - 3.5) < 0.2
+
+
+def test_sparkle_effect_emits_flashing_alpha(tmp_path):
+    # 반짝(CTA) 효과: 등장 구간 알파가 abs(sin)로 깜빡이는 표현식이 최종 필터에 실제로 들어간다.
+    style = {"effect": "sparkle", "size": 50, "y_pct": 37, "box": False, "bar": False}
+    draws = va._caption_drawtexts("반짝 테스트 자막", 2.0, tmp_path, 0, style=style)
+    joined = ",".join(draws)
+    assert "abs(sin(2*PI*3*(t-" in joined, "sparkle 알파 깜빡임 표현식이 없다"
+    assert "alpha='if(lt(t," in joined
+
+
+def test_non_sparkle_effect_has_no_flash(tmp_path):
+    # pop 효과는 깜빡임(abs(sin)) 표현식을 쓰지 않는다(회귀 가드).
+    style = {"effect": "pop", "size": 50, "y_pct": 84, "box": False, "bar": False}
+    draws = va._caption_drawtexts("팝 테스트 자막", 2.0, tmp_path, 0, style=style)
+    assert "abs(sin" not in ",".join(draws)
+
+
+def test_shadow_emits_soft_drop_shadow(tmp_path):
+    # 은은한 그림자 스타일: borderw(두꺼운 테두리) 대신 shadowx/shadowy를 쓴다.
+    style = {"shadow": True, "outline": False, "size": 50, "y_pct": 37, "box": False, "bar": False}
+    draws = va._caption_drawtexts("그림자 자막", 2.0, tmp_path, 0, style=style)
+    joined = ",".join(draws)
+    assert "shadowx=" in joined and "shadowy=" in joined
+    assert "borderw=" not in joined  # 두꺼운 테두리 아님

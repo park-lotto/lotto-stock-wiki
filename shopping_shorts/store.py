@@ -112,6 +112,15 @@ class Store:
                     extracted_at TEXT
                 )
             """)
+            # 랭킹 검색용 썸네일 비전 주제태그(2026-07-19) — shortcode당 1행, 있으면 재호출 안 함(무과금).
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS vision_tags (
+                    shortcode TEXT PRIMARY KEY,
+                    subject TEXT,
+                    keywords_json TEXT,
+                    created_at TEXT
+                )
+            """)
             # 학습소재 통계용 확장(2026-07-13) — 위키 저장 여부와 무관하게 대본추출된
             # 모든 항목에 구조분석을 백필하기 위한 컬럼.
             # category_source(2026-07-16): 카테고리가 어디서 왔나 — user|gemini|keyword.
@@ -236,6 +245,12 @@ class Store:
                 c.execute("ALTER TABLE script_wiki ADD COLUMN thumbnail TEXT")
             except sqlite3.OperationalError:
                 pass  # 이미 있으면(기존 DB) 무시
+            # 원클릭 담기 영상의 메타(조회수·좋아요·댓글·길이·채널) 보관(2026-07-18).
+            # yt-dlp/oEmbed로 백그라운드 보강한 값을 JSON으로 넣어 모음집이 레퍼런스 랭킹처럼 표시.
+            try:
+                c.execute("ALTER TABLE mix_basket ADD COLUMN meta_json TEXT")
+            except sqlite3.OperationalError:
+                pass
             # 고객 계정(2026-07-13 멀티테넌시). 비밀번호는 pbkdf2-sha256(솔트별도)로만
             # 저장 — 평문 저장 금지.
             c.execute("""
@@ -449,6 +464,41 @@ class Store:
                     created_at TEXT DEFAULT (datetime('now'))
                 )
             """)
+            # 픽로그(2026-07-18, 트랙1) — 사장님이 고른 것/버린 것을 append-only로 남긴다.
+            # 트랙7 LLM 심사의 취향 예시 + B전환 승인률 지표의 원천. 수정·삭제 없음.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS pick_events (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    job_id TEXT,
+                    stage TEXT NOT NULL,
+                    candidates_json TEXT,
+                    picked TEXT,
+                    rejected TEXT,
+                    edit_diff TEXT,
+                    ts TEXT NOT NULL
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_pick_events "
+                      "ON pick_events(customer_id, id DESC)")
+            # 러너(2026-07-18, 트랙4) — 오케스트레이터 상태·원가·재개 스냅샷.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS auto_jobs (
+                    id TEXT PRIMARY KEY,
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    mode TEXT NOT NULL DEFAULT 'C',
+                    current_stage TEXT,
+                    status TEXT NOT NULL,
+                    stage_results_json TEXT,
+                    cost_krw REAL NOT NULL DEFAULT 0,
+                    mix_job_id TEXT,
+                    unsure_reason TEXT,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_auto_jobs "
+                      "ON auto_jobs(customer_id, created_at DESC)")
             # 기존 DB용 마이그레이션 — mix_jobs 자막제거 필드(2026-07-13).
             # 새 DB는 위 CREATE에 이미 있어 여기선 "이미 존재" 예외를 조용히 넘긴다.
             for col, ddl in (
@@ -476,6 +526,11 @@ class Store:
                 # 산출물이 한 덩어리로만 의미가 있어(제목만 바꿔도 태그·CTA와 어울려야 한다)
                 # 필드를 쪼개지 않고 JSON 한 칸에 둔다.
                 ("seo_json", "TEXT"),
+                # 자막제거 소스단위 청소 캐시(2026-07-19). clean_sources_json={video_id: 클린경로}.
+                # status/preview_status와 섞지 않는다 — 최종렌더 폴링과 오인 방지(선례 §6.1).
+                ("clean_sources_json", "TEXT"),
+                ("clean_status", "TEXT"),   # null|cleaning|ready|failed
+                ("clean_error", "TEXT"),
             ):
                 try:
                     c.execute(f"ALTER TABLE mix_jobs ADD COLUMN {col} {ddl}")
@@ -736,6 +791,24 @@ class Store:
             )
             return True
 
+    def mix_basket_add(self, shortcode, url="", thumbnail="", name="", caption="",
+                       customer_id=LEGACY_CUSTOMER_ID):
+        """있으면 그대로 두고(멱등), 없으면 추가. 새로 담겼으면 True.
+        원클릭 담기(북마클릿·유저스크립트)용 — 토글과 달리 중복 클릭해도 안 빠진다."""
+        with self._conn() as c:
+            exists = c.execute(
+                "SELECT 1 FROM mix_basket WHERE customer_id=? AND shortcode=?",
+                (customer_id, shortcode),
+            ).fetchone()
+            if exists:
+                return False
+            c.execute(
+                "INSERT INTO mix_basket(customer_id, shortcode, url, thumbnail, name, caption, added_at) "
+                "VALUES(?,?,?,?,?,?, datetime('now'))",
+                (customer_id, shortcode, url, thumbnail, name, caption),
+            )
+            return True
+
     def mix_basket_remove(self, shortcode, customer_id=LEGACY_CUSTOMER_ID):
         """바구니에서 제거."""
         with self._conn() as c:
@@ -743,17 +816,55 @@ class Store:
                       (customer_id, shortcode))
 
     def mix_basket_list(self, customer_id=LEGACY_CUSTOMER_ID):
-        """이 고객이 담은 순서(added_at)대로 항목 dict 리스트."""
+        """이 고객이 담은 순서(added_at)대로 항목 dict 리스트. meta_json은 풀어서 병합."""
         with self._conn() as c:
             rows = c.execute(
-                "SELECT shortcode, url, thumbnail, name, caption FROM mix_basket "
+                "SELECT shortcode, url, thumbnail, name, caption, meta_json FROM mix_basket "
                 "WHERE customer_id=? ORDER BY added_at ASC, rowid ASC",
                 (customer_id,),
             ).fetchall()
-        return [
-            {"shortcode": r[0], "url": r[1], "thumbnail": r[2], "name": r[3], "caption": r[4]}
-            for r in rows
-        ]
+        out = []
+        for r in rows:
+            item = {"shortcode": r[0], "url": r[1], "thumbnail": r[2], "name": r[3], "caption": r[4]}
+            if r[5]:
+                try:
+                    item["meta"] = json.loads(r[5])
+                except (ValueError, TypeError):
+                    pass
+            out.append(item)
+        return out
+
+    def mix_basket_set_meta(self, shortcode, customer_id=LEGACY_CUSTOMER_ID,
+                            thumbnail=None, name=None, meta=None):
+        """원클릭 담기 항목의 보강값 갱신(백그라운드 enrich용). None인 필드는 안 건드린다.
+        thumbnail/name은 기존 값이 빈 경우에만 채운다(사용자·유저스크립트가 준 값 우선).
+        meta=dict면 JSON으로 직렬화해 meta_json에 저장."""
+        with self._conn() as c:
+            sets, args = [], []
+            if thumbnail:
+                sets.append("thumbnail=COALESCE(NULLIF(thumbnail,''), ?)")
+                args.append(thumbnail)
+            if name:
+                sets.append("name=COALESCE(NULLIF(name,''), ?)")
+                args.append(name)
+            if meta:
+                # ★기존 meta_json에 병합 — yt-dlp 추출이 간헐 실패(틱톡 rehydration 등)해도
+                # 이전에 채운 조회수·댓글 등을 잃지 않게. 새 값만 덮어쓴다.
+                row = c.execute("SELECT meta_json FROM mix_basket WHERE customer_id=? AND shortcode=?",
+                                (customer_id, shortcode)).fetchone()
+                merged = {}
+                if row and row[0]:
+                    try:
+                        merged = json.loads(row[0])
+                    except (ValueError, TypeError):
+                        merged = {}
+                merged.update(meta)
+                sets.append("meta_json=?")
+                args.append(json.dumps(merged, ensure_ascii=False))
+            if not sets:
+                return
+            args += [customer_id, shortcode]
+            c.execute(f"UPDATE mix_basket SET {', '.join(sets)} WHERE customer_id=? AND shortcode=?", args)
 
     def mix_basket_shortcodes(self, customer_id=LEGACY_CUSTOMER_ID):
         """이 고객의 바구니에 담긴 shortcode 집합(버튼 상태 표시용)."""
@@ -1228,6 +1339,42 @@ class Store:
             return None
         return {"keywords": json.loads(row[0]), "frame_paths": json.loads(row[1]), "analyzed_at": row[2]}
 
+    def save_vision_tags(self, shortcode, subject, keywords):
+        """썸네일 비전 주제태그 저장(덮어쓰기). keywords: [str]."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO vision_tags(shortcode, subject, keywords_json, created_at) "
+                "VALUES(?,?,?,datetime('now')) ON CONFLICT(shortcode) DO UPDATE SET "
+                "subject=excluded.subject, keywords_json=excluded.keywords_json, created_at=excluded.created_at",
+                (shortcode, subject or "", json.dumps(keywords or [], ensure_ascii=False)),
+            )
+
+    def get_vision_tags(self, shortcode):
+        """저장된 주제태그 {subject, keywords}. 없으면 None."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT subject, keywords_json FROM vision_tags WHERE shortcode=?", (shortcode,)
+            ).fetchone()
+        if not row:
+            return None
+        return {"subject": row[0] or "", "keywords": json.loads(row[1] or "[]")}
+
+    def vision_tags_map(self, shortcodes):
+        """여러 shortcode → {shortcode: {subject, keywords}} (있는 것만). 읽기 결합용."""
+        codes = [s for s in (shortcodes or []) if s]
+        if not codes:
+            return {}
+        out = {}
+        with self._conn() as c:
+            # sqlite 변수 상한(999) 회피 — 청크로 조회.
+            for i in range(0, len(codes), 400):
+                chunk = codes[i:i + 400]
+                q = "SELECT shortcode, subject, keywords_json FROM vision_tags WHERE shortcode IN (%s)" % \
+                    ",".join("?" * len(chunk))
+                for sc, subj, kj in c.execute(q, chunk).fetchall():
+                    out[sc] = {"subject": subj or "", "keywords": json.loads(kj or "[]")}
+        return out
+
     def save_candidates(self, shortcode, platform, candidates):
         """플랫폼 검색 후보 저장. candidates: [{url,title,thumbnail,source_lang?}].
         source_lang: 어떤 검색 언어로 찾았는지(ko/en/zh/ja/ru) — 해외 원본 영상을
@@ -1281,6 +1428,119 @@ class Store:
         return [{"origin_shortcode": r[0], "platform": r[1], "url": r[2], "title": r[3],
                  "thumbnail": r[4], "similarity_score": r[5], "saved_at": r[6]} for r in rows]
 
+    @staticmethod
+    def _pe_enc(v):
+        """픽로그 값 저장 인코딩: str/None은 그대로, 그 외(dict·list·int)는 JSON."""
+        if v is None or isinstance(v, str):
+            return v
+        return json.dumps(v, ensure_ascii=False)
+
+    @staticmethod
+    def _pe_dec(v):
+        """저장 값 복원: JSON이면 파싱, 아니면(순수 문자열) 그대로."""
+        if v is None:
+            return None
+        try:
+            return json.loads(v)
+        except (ValueError, TypeError):
+            return v
+
+    def log_pick_event(self, stage, *, picked=None, rejected=None, candidates=None,
+                       edit_diff=None, job_id=None, customer_id=LEGACY_CUSTOMER_ID):
+        """픽/반려 한 건 append. 새 row id 반환. 부가 기능이라 최대한 관대하게 저장한다."""
+        ts = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            cur = c.execute(
+                "INSERT INTO pick_events(customer_id, job_id, stage, candidates_json, "
+                "picked, rejected, edit_diff, ts) VALUES(?,?,?,?,?,?,?,?)",
+                (customer_id, job_id or None, stage,
+                 json.dumps(candidates, ensure_ascii=False) if candidates is not None else None,
+                 self._pe_enc(picked), self._pe_enc(rejected), self._pe_enc(edit_diff), ts),
+            )
+            return cur.lastrowid
+
+    def list_pick_events(self, *, customer_id=None, stage=None, limit=100):
+        """최근(id 내림차순)부터. customer_id/stage 필터 선택. JSON 필드는 파싱해서 준다."""
+        q = ("SELECT id, customer_id, job_id, stage, candidates_json, picked, "
+             "rejected, edit_diff, ts FROM pick_events")
+        conds, args = [], []
+        if customer_id is not None:
+            conds.append("customer_id=?")
+            args.append(customer_id)
+        if stage is not None:
+            conds.append("stage=?")
+            args.append(stage)
+        if conds:
+            q += " WHERE " + " AND ".join(conds)
+        q += " ORDER BY id DESC LIMIT ?"
+        args.append(limit)
+        with self._conn() as c:
+            rows = c.execute(q, args).fetchall()
+        return [
+            {"id": r[0], "customer_id": r[1], "job_id": r[2], "stage": r[3],
+             "candidates": self._pe_dec(r[4]), "picked": self._pe_dec(r[5]),
+             "rejected": self._pe_dec(r[6]), "edit_diff": self._pe_dec(r[7]), "ts": r[8]}
+            for r in rows
+        ]
+
+    _AUTO_SCALAR = ("current_stage", "status", "cost_krw", "mix_job_id", "unsure_reason")
+
+    def create_auto_job(self, job_id, *, mode="C", customer_id=LEGACY_CUSTOMER_ID):
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO auto_jobs(id, customer_id, mode, current_stage, status, "
+                "stage_results_json, cost_krw, mix_job_id, unsure_reason, created_at, updated_at) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+                (job_id, customer_id, mode, None, "running",
+                 json.dumps({}), 0, None, None, now, now),
+            )
+        return job_id
+
+    def get_auto_job(self, job_id):
+        with self._conn() as c:
+            r = c.execute(
+                "SELECT id, customer_id, mode, current_stage, status, stage_results_json, "
+                "cost_krw, mix_job_id, unsure_reason, created_at, updated_at "
+                "FROM auto_jobs WHERE id=?", (job_id,)).fetchone()
+        if not r:
+            return None
+        return {"id": r[0], "customer_id": r[1], "mode": r[2], "current_stage": r[3],
+                "status": r[4], "stage_results": json.loads(r[5]) if r[5] else {},
+                "cost_krw": r[6], "mix_job_id": r[7], "unsure_reason": r[8],
+                "created_at": r[9], "updated_at": r[10]}
+
+    def update_auto_job(self, job_id, **fields):
+        sets, args = ["updated_at=?"], [datetime.now(timezone.utc).isoformat()]
+        for k in self._AUTO_SCALAR:
+            if k in fields:
+                sets.append(f"{k}=?")
+                args.append(fields[k])
+        if "stage_results" in fields:
+            sets.append("stage_results_json=?")
+            args.append(json.dumps(fields["stage_results"], ensure_ascii=False))
+        args.append(job_id)
+        with self._conn() as c:
+            c.execute(f"UPDATE auto_jobs SET {', '.join(sets)} WHERE id=?", args)
+
+    def list_auto_jobs(self, *, customer_id=None, limit=50):
+        q = ("SELECT id, customer_id, mode, current_stage, status, stage_results_json, "
+             "cost_krw, mix_job_id, unsure_reason, created_at, updated_at FROM auto_jobs")
+        conds, args = [], []
+        if customer_id is not None:
+            conds.append("customer_id=?")
+            args.append(customer_id)
+        if conds:
+            q += " WHERE " + " AND ".join(conds)
+        q += " ORDER BY created_at DESC, rowid DESC LIMIT ?"
+        args.append(limit)
+        with self._conn() as c:
+            rows = c.execute(q, args).fetchall()
+        return [{"id": r[0], "customer_id": r[1], "mode": r[2], "current_stage": r[3],
+                 "status": r[4], "stage_results": json.loads(r[5]) if r[5] else {},
+                 "cost_krw": r[6], "mix_job_id": r[7], "unsure_reason": r[8],
+                 "created_at": r[9], "updated_at": r[10]} for r in rows]
+
     def create_mix_job(self, job_id, urls, target_seconds, structure,
                        subtitle_removal=False, given_script=None, script_structure=None):
         """새 믹스 job 생성. 초기 status='downloading'.
@@ -1310,7 +1570,8 @@ class Store:
                 "caption_style_json, voice_json, deco_json, script_structure_json, "
                 "fx_plan, fx_status, fx_path, "
                 "preview_status, preview_path, preview_error, "
-                "thumbnail_json, seo_json "
+                "thumbnail_json, seo_json, "
+                "clean_sources_json, clean_status, clean_error "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -1333,6 +1594,8 @@ class Store:
             "preview_status": row[22], "preview_path": row[23], "preview_error": row[24],
             "thumbnail": json.loads(row[25]) if row[25] else None,
             "seo": json.loads(row[26]) if row[26] else None,
+            "clean_sources": json.loads(row[27]) if row[27] else None,
+            "clean_status": row[28], "clean_error": row[29],
         }
 
     def update_mix_job(self, job_id, **fields):
@@ -1342,7 +1605,8 @@ class Store:
                   "fx_status", "fx_path",
                   # 1단계 미리보기(2026-07-17) — 여기 없으면 update_mix_job(preview_status=...)이
                   # 에러도 없이 조용히 무시된다(이 화이트리스트가 이 배선의 함정).
-                  "preview_status", "preview_path", "preview_error"):
+                  "preview_status", "preview_path", "preview_error",
+                  "clean_status", "clean_error"):
             if k in fields:
                 cols.append(f"{k}=?"); vals.append(fields[k])
         if "subtitle_removal" in fields:
@@ -1369,6 +1633,10 @@ class Store:
         if "seo" in fields:
             cols.append("seo_json=?")
             vals.append(json.dumps(fields["seo"], ensure_ascii=False) if fields["seo"] else None)
+        if "clean_sources" in fields:
+            cols.append("clean_sources_json=?")
+            vals.append(json.dumps(fields["clean_sources"], ensure_ascii=False)
+                        if fields["clean_sources"] else None)
         for k, col in (("extract", "extract_json"), ("edit_plan", "edit_plan_json")):
             if k in fields:
                 cols.append(f"{col}=?")
