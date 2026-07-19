@@ -3,16 +3,6 @@ from pathlib import Path
 HTML = (Path(__file__).resolve().parents[1] / "static" / "produce.html").read_text(encoding="utf-8")
 
 
-<<<<<<< HEAD
-def test_style_use_map_and_default_badge():
-    # 용도 태그 맵 존재 + 기본/대표 스타일이 매핑돼 있다
-    assert "const STYLE_USE=" in HTML
-    assert "'임팩트 옐로':'레시피·강한 훅'" in HTML
-    # 카드에 ⭐기본 배지와 용도 라벨을 그린다
-    assert "⭐기본" in HTML
-    assert "const use = STYLE_USE[p.name]" in HTML
-    assert "p.name===DEFAULT_STYLE_NAME" in HTML
-=======
 def test_only_clean_reference_presets():
     # 레퍼런스(HOMEDIRECTOR)와 동일한 깔끔한 흰색 프리셋 3개만 — 크기만 다름, 위치는 동일
     assert "name:'심플 화이트'" in HTML
@@ -49,15 +39,12 @@ def test_default_badge_and_use_map():
     assert "const use = STYLE_USE[p.name]" in HTML
     assert "p.name===DEFAULT_STYLE_NAME" in HTML
     assert "'심플 화이트':'자막 중상단·깔끔'" in HTML
->>>>>>> 76d5b4fe62827fc23ff6b65ecbb40b44d18340dd
 
 
 def test_no_fabricated_stats_on_cards():
     # 허위 지표(조회/참여 숫자)를 카드에 박지 않는다 — 정직성 잠금
     assert "조회 21만" not in HTML
     assert "참여 5.6%" not in HTML
-<<<<<<< HEAD
-=======
 
 
 def test_my_preset_library_surfaced():
@@ -68,4 +55,3 @@ def test_my_preset_library_surfaced():
     assert 'onclick="applyMyPreset(' in HTML     # 클릭 즉시 적용
     # 접혀있던 옛 블록 문구는 제거됨(중복 방지)
     assert "⭐ 내 프리셋 저장 · 불러오기" not in HTML
->>>>>>> 76d5b4fe62827fc23ff6b65ecbb40b44d18340dd

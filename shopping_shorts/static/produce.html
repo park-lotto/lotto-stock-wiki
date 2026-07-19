@@ -789,15 +789,12 @@ function seoCopyYoutube(){
 }
 
 // ── 5단계 꾸미기(헤드카피 디자인) ──────────────
-const PREVIEW_W=380, VIDEO_W=1080;   // 미리보기↔실영상 스케일
+const PREVIEW_W=380, VIDEO_W=720;   // 미리보기↔실영상 스케일 (서버 _OUT_W=720과 일치 — 안 맞으면 렌더 글자가 프리뷰보다 커진다)
 function initHeadcopy(){
   const t=document.getElementById('hcText');
+  // 헤드카피는 빈칸으로 시작한다. 내가 입력한 값(STATE.headcopy.text)만 복원하고,
+  // 대본 첫 문장으로 자동 채우지 않는다 — 지우고 뒤로갔다 와도 다시 채워지던 버그 차단.
   if(t && !t.value && STATE.headcopy) t.value=STATE.headcopy.text||'';
-  if(t && !t.value){
-    // 대본 첫 문장을 기본 헤드카피 후보로
-    const first=(STATE.script||'').split(/[.!?\n]/)[0].trim().slice(0,20);
-    t.value=first;
-  }
   renderFontSelect();
   renderPresets();
   renderFullPresets();
@@ -986,7 +983,7 @@ function updateCaption(){
   el.style.top=cs.y_pct+'%'; el.style.transform='translate(-50%,-50%)';
   el.style.color=cs.color; el.style.fontWeight=900;
   el.style.fontSize=Math.max(9, cs.size*scale)+'px';
-  el.style.maxWidth=(PREVIEW_W-16)+'px';
+  el.style.maxWidth=Math.round(PREVIEW_W*0.92)+'px';   // 서버 _wrap_to_width(0.92*_OUT_W)와 동일 비율 — 줄바꿈 지점 일치
   const oc=cs.outline_color, ow=(cs.outline_w*scale).toFixed(1);
   const sd=Math.max(1,(cs.shadow_d||3)*scale).toFixed(1);
   el.style.textShadow = cs.outline
@@ -1036,20 +1033,11 @@ const FULL_PRESETS=[
     hc:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',weight:900,size:50,x:50,y:12,outline:true,outline_color:'#000000',outline_w:2},
     cap:{font:'Pretendard-ExtraBold.otf',color:'#FFFFFF',size:44,y:37,outline:false,shadow:true,box:false,effect:'fade'}},
 ];
-<<<<<<< HEAD
-// 스타일별 용도 태그(잘 어울리는 콘텐츠) — 정직한 큐레이션. 실 영상 지표는 v2 발굴연동.
-const STYLE_USE={
-  '모던 화이트':'홈템·정보', '임팩트 옐로':'레시피·강한 훅', '민트 클린':'뷰티·생활',
-  '레드 강조':'경고·꿀팁', '블랙박스 시크':'정보·리뷰', '큐트 핑크':'뷰티·감성',
-  '네이비 신뢰':'정보·금융', '푸드 그린':'레시피·건강', '뉴스 자막형':'정보·뉴스',
-  '핸드메이드 감성':'DIY·감성', '하이엔드 세리프':'럭셔리·리뷰', '오렌지 팝':'레시피·활기',
-  '파스텔 소프트':'육아·감성', '정보전달 블루':'정보·튜토리얼', '옐로 2톤 A':'리뷰·강조',
-  '옐로 2톤 B(좌측)':'리뷰·좌측', '네온 글로우 화이트':'트렌드·뷰티', '네온 글로우 센터':'트렌드·감성'
-=======
 // 스타일별 용도 태그(잘 어울리는 콘텐츠) — 정직한 큐레이션.
+// ⚠️ 2026-07-19: 커밋된 merge 충돌마커(auto 커밋이 미해결 병합을 그대로 add)로 이 <script> 전체가
+//    SyntaxError였다. FULL_PRESETS·FEATURED가 '심플 화이트' 3종만 쓰므로 그에 맞는 쪽으로 해소.
 const STYLE_USE={
   '심플 화이트':'자막 중상단·깔끔', '심플 화이트(크게)':'강조·큰 자막', '심플 화이트(작게)':'자막 많을 때'
->>>>>>> 76d5b4fe62827fc23ff6b65ecbb40b44d18340dd
 };
 // 대표 완성 스타일(피팅 카드 우선 노출). 나머지는 더보기.
 let STYLE_TOUCHED=false;
@@ -1075,13 +1063,13 @@ function styleCardHTML(p, idx, selIdx){
   const poster = currentPosterUrl();
   const bg = poster ? `background:#000;` : `background:linear-gradient(160deg,${p.chip||'#333'},#0d1420);`;
   const bgImg = poster ? `<img src="${poster}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.9" alt="" onerror="this.style.display='none'">` : '';
-  // 카드 스케일: 카드폭 92px 기준으로 hc.size(1080기준)를 축소
-  const sc = 92/1080;
+  // 카드 스케일: 카드폭 92px 기준으로 hc.size(영상 720폭 기준)를 축소 — 메인 프리뷰·렌더와 동일 비율
+  const sc = 92/720;
   const oc = hc.outline_color||'#000', ow = Math.max(1,Math.round((hc.outline_w||6)*sc));
   const shadow = hc.outline ? `text-shadow:${ow}px ${ow}px 0 ${oc},-${ow}px -${ow}px 0 ${oc},${ow}px -${ow}px 0 ${oc},-${ow}px ${ow}px 0 ${oc};` : '';
   const line1 = `<div style="color:${hc.color||'#fff'};font-family:'${fontCss(hc.font)}',sans-serif;font-weight:900;font-size:${Math.max(10,(hc.size||64)*sc)}px;${shadow}line-height:1.1">${esc(sample)}</div>`;
   let line2 = '';
-  if(extra){ const es=92/1080; const eoc=extra.outline_color||'#000', eow=Math.max(1,Math.round((extra.outline_w||6)*es));
+  if(extra){ const es=92/720; const eoc=extra.outline_color||'#000', eow=Math.max(1,Math.round((extra.outline_w||6)*es));
     const esh = extra.outline ? `text-shadow:${eow}px ${eow}px 0 ${eoc},-${eow}px -${eow}px 0 ${eoc},${eow}px -${eow}px 0 ${eoc},-${eow}px ${eow}px 0 ${eoc};` : '';
     line2 = `<div style="color:${extra.color||'#FFE100'};font-family:'${fontCss(extra.font)}',sans-serif;font-weight:900;font-size:${Math.max(10,(extra.size||64)*es)}px;${esh}line-height:1.1;margin-top:2px">${esc(sample)}</div>`; }
   const selBorder = idx===selIdx ? 'outline:2px solid var(--accent2);outline-offset:1px;' : 'border:1px solid var(--line);';
@@ -1436,7 +1424,7 @@ function updateHC(){
   el.style.left=hc.x+'%'; el.style.top=hc.y+'%';
   el.style.color=hc.color; el.style.fontWeight=hc.weight;
   el.style.fontSize=Math.max(9, hc.size*scale)+'px';
-  el.style.maxWidth=(PREVIEW_W-12)+'px';
+  el.style.maxWidth=Math.round(PREVIEW_W*0.92)+'px';   // 서버 _wrap_to_width(0.92*_OUT_W)와 동일 비율 — 줄바꿈 지점 일치
   const oc=hc.outline_color, ow=(hc.outline_w*scale).toFixed(1);
   el.style.textShadow = hc.outline
     ? `${ow}px ${ow}px 0 ${oc}, -${ow}px -${ow}px 0 ${oc}, ${ow}px -${ow}px 0 ${oc}, -${ow}px ${ow}px 0 ${oc}, -1px -1px 0 ${oc}, 1px -1px 0 ${oc}, -1px 1px 0 ${oc}, 1px 1px 0 ${oc}`
