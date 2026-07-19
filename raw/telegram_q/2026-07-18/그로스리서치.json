@@ -6,7 +6,7 @@
       "rating": null,
       "tp": null,
       "ts": "20:46",
-      "quote": "향후 3년간 매출이 거의 3배 성장할 것으로 전망됨.",
+      "quote": "Marvell(MRVL)은 커스텀 실리콘(컴퓨트)과 스위칭·전광변환·고속 커넥티비티(데이터 이동)까지 AI 인프라 양쪽 모두에 걸쳐 있는 몇 안 되는 기업으로, 향후 3년간 매출이 거의 3배 성장할 것으로 전망됨.",
       "sector": "반도체"
     },
     {
@@ -20,7 +20,7 @@
     },
     {
       "broker": "그로스리서치",
-      "stock": "null",
+      "stock": "해당없음",
       "rating": null,
       "tp": null,
       "ts": "22:10",
@@ -29,21 +29,21 @@
     },
     {
       "broker": "그로스리서치",
-      "stock": "null",
+      "stock": "해당없음",
       "rating": null,
       "tp": null,
       "ts": "22:58",
       "quote": "AI 서버의 전력 소모가 증가하면서 랙당 전력반도체 탑재 가치도 빠르게 확대",
-      "sector": "전력"
+      "sector": "반도체"
     },
     {
       "broker": "모건스탠리",
-      "stock": "Lumentum, Coherent, Corning, Broadcom, Marvell, Astera Labs, Keysight",
+      "stock": "Lumentum",
       "rating": null,
       "tp": null,
       "ts": "12:32",
-      "quote": "CPO 채택률은 2028년 한 자릿수에 그친 뒤 2029년 본격 확대 예상",
-      "sector": "통신"
+      "quote": "Scale-out CPO는 Lumentum에 가장 긍정적, Coherent는 트랜시버 감소와 상쇄 가능",
+      "sector": "반도체"
     },
     {
       "broker": "그로스리서치",
@@ -51,30 +51,30 @@
       "rating": null,
       "tp": null,
       "ts": "13:25",
-      "quote": "GSK는 임상 3상 부진으로 만성기침 개발을 전면 중단",
+      "quote": "GSK는 2023년 Bellus Health를 20억달러에 인수, 핵심 자산은 P2X3 길항제 camlipixant, 임상 3상 부진으로 만성기침 개발을 전면 중단",
       "sector": "바이오"
     },
     {
       "broker": "그로스리서치",
-      "stock": "코오롱티슈진, 지투지바이오, 에스티팜, 온코닉테라퓨틱스, 알테오젠",
+      "stock": "알테오젠",
       "rating": null,
       "tp": null,
       "ts": "14:31",
-      "quote": "이번 주 포커스: ‘병원에서 집으로’…IV→SC 전환 경쟁과 알테오젠의 확장성",
+      "quote": "알테오젠의 확장 전략 — 키트루다 SC를 넘어 엔허투·듀피젠트 등으로 포트폴리오 확대",
       "sector": "바이오"
     },
     {
       "broker": "그로스리서치",
-      "stock": "와이엠티, 와이씨켐, 씨앤지하이테크",
+      "stock": "와이엠티",
       "rating": null,
       "tp": null,
       "ts": "16:41",
-      "quote": "2028~2040년 유리기판 시장 연평균 성장률은 67.2%로 제시됨.",
+      "quote": "유리기판이 왜 게임체인저인가... 기존 플라스틱·실리콘 기판을 유리로 대체한 차세대 소재.",
       "sector": "반도체"
     },
     {
       "broker": "그로스리서치",
-      "stock": "null",
+      "stock": "해당없음",
       "rating": null,
       "tp": null,
       "ts": "23:20",
