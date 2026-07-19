@@ -28,6 +28,17 @@ def test_grab_adds_xiaohongshu_to_basket(tmp_path, monkeypatch):
     assert any(x.startswith("grab_xiaohongshu_") for x in scs)
 
 
+def test_grab_accepts_rednote_search_result(tmp_path, monkeypatch):
+    """카드별 담기(v1.2.0)가 보내는 rednote.com/search_result URL을 담아야 한다.
+    한국 로그인 도메인이 rednote.com이라 www.xiaohongshu.com은 게스트벽이고 카드는 rednote에서 뜬다."""
+    c = _client(tmp_path, monkeypatch)
+    r = c.get("/api/grab", params={"url": "https://www.rednote.com/search_result/6884d27e0000000012",
+                                   "title": "香蕉鸡蛋饼", "thumbnail": "t.jpg"})
+    assert r.status_code == 200 and "담겼어요" in r.text
+    scs = Store(str(tmp_path / "t.db")).mix_basket_shortcodes(customer_id=0)
+    assert any(x.startswith("grab_xiaohongshu_") for x in scs)   # rednote=샤오홍슈 플랫폼
+
+
 def test_grab_rejects_unknown_platform(tmp_path, monkeypatch):
     c = _client(tmp_path, monkeypatch)
     r = c.get("/api/grab", params={"url": "https://example.com/whatever"})
