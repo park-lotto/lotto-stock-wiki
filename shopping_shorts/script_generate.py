@@ -55,6 +55,7 @@ ELEM_LABELS = {
     "appeal": "어필포인트",
     "tone": "말투/어미",
     "devices": "설득장치",
+    "cta": "마무리/CTA",
 }
 ELEM_KEYS = list(ELEM_LABELS)
 
