@@ -1457,12 +1457,12 @@ function updateHC(){
 const HC_PRESETS=[
   // ── 썸네일형(상단 헤드라인, 큼직·2줄 기준) ── 바이럴 쇼츠 썸네일 6종 샘플(2026-07-19 사장님 레퍼런스 반영).
   // color2가 있으면 1줄=color, 2줄부터=color2(흰→노랑 등 2색 룩). size는 '최대'—2줄이 넘치면 자동 축소.
-  {cat:'썸네일', name:'옐로 임팩트',    font:'TmonMonsori.ttf',          color:'#FFE100', weight:900, size:90, y:14, outline:true, outline_color:'#000000', outline_w:11},
-  {cat:'썸네일', name:'흰→노랑',        font:'BMJUA.ttf',                color:'#FFFFFF', color2:'#FFE100', weight:900, size:88, y:14, outline:true, outline_color:'#000000', outline_w:10},
-  {cat:'썸네일', name:'흰→빨강',        font:'BMDOHYEON.ttf',            color:'#FFFFFF', color2:'#FF2D2D', weight:900, size:86, y:14, outline:true, outline_color:'#000000', outline_w:10},
-  {cat:'썸네일', name:'레드 경고',       font:'BMDOHYEON.ttf',            color:'#FF2D2D', weight:900, size:86, y:14, outline:true, outline_color:'#FFFFFF', outline_w:9},
-  {cat:'썸네일', name:'블랙박스 화이트', font:'Pretendard-ExtraBold.otf', color:'#FFFFFF', weight:900, size:78, y:14, outline:false, outline_color:'#000000', outline_w:0, box:true, box_color:'#000000', box_pad:18, box_opacity:82},
-  {cat:'썸네일', name:'옐로박스 블랙',   font:'GmarketSansBold.otf',      color:'#111111', weight:900, size:74, y:14, outline:false, outline_color:'#000000', outline_w:0, box:true, box_color:'#FFE100', box_pad:16, box_opacity:100},
+  {cat:'썸네일', name:'옐로 임팩트',    font:'TmonMonsori.ttf',          color:'#FFD400', weight:900, size:92, y:14, outline:true, outline_color:'#000000', outline_w:12},
+  {cat:'썸네일', name:'흰→노랑',        font:'TmonMonsori.ttf',          color:'#FFFFFF', color2:'#FFD400', weight:900, size:92, y:14, outline:true, outline_color:'#000000', outline_w:12},
+  {cat:'썸네일', name:'흰→빨강',        font:'TmonMonsori.ttf',          color:'#FFFFFF', color2:'#FF3B30', weight:900, size:92, y:14, outline:true, outline_color:'#000000', outline_w:12},
+  {cat:'썸네일', name:'레드 임팩트',     font:'BMDOHYEON.ttf',            color:'#FF3B30', weight:900, size:90, y:14, outline:true, outline_color:'#FFFFFF', outline_w:10},
+  {cat:'썸네일', name:'블랙박스 화이트', font:'Pretendard-ExtraBold.otf', color:'#FFFFFF', weight:900, size:80, y:14, outline:false, outline_color:'#000000', outline_w:0, box:true, box_color:'#000000', box_pad:18, box_opacity:82},
+  {cat:'썸네일', name:'옐로박스 블랙',   font:'GmarketSansBold.otf',      color:'#111111', weight:900, size:78, y:14, outline:false, outline_color:'#000000', outline_w:0, box:true, box_color:'#FFD400', box_pad:16, box_opacity:100},
   // ── 내용형(하단/중하단 강조 자막) ──
   {cat:'내용', name:'하단 화이트바',     font:'Pretendard-ExtraBold.otf', color:'#FFFFFF', weight:900, size:56, y:84, outline:true, outline_color:'#000000', outline_w:6, box:true, box_color:'#000000', box_pad:14, box_opacity:55},
   {cat:'내용', name:'하단 옐로강조',     font:'BMJUA.ttf',                color:'#FFE100', weight:900, size:58, y:84, outline:true, outline_color:'#000000', outline_w:7},
@@ -2968,65 +2968,47 @@ function thumbFontCss(file){
   return f ? f.css : 'sans-serif';
 }
 
-// 자동 줄바꿈: 안전 가로폭(maxW) 안에 들어가게 문구를 여러 줄로 쪼갠다.
-// 먼저 사장님이 직접 넣은 줄바꿈(\n)을 존중하고, 각 줄이 폭을 넘으면 어절 단위로,
-// 어절 하나가 폭보다 길면(띄어쓰기 없는 긴 한글 등) 글자 단위로 다시 나눈다.
-function thumbWrapLines(ctx, text, family, size, maxW){
-  ctx.font = `900 ${size}px ${family}`;
-  const out = [];
-  String(text == null ? '' : text).split('\n').forEach(para => {
-    if (para === ''){ out.push(''); return; }
-    let cur = '';
-    para.split(' ').forEach(word => {
-      if (ctx.measureText(word).width > maxW){
-        if (cur){ out.push(cur); cur = ''; }
-        let seg = '';
-        for (const ch of word){
-          if (seg && ctx.measureText(seg + ch).width > maxW){ out.push(seg); seg = ch; }
-          else seg += ch;
-        }
-        cur = seg;
-      } else {
-        const test = cur ? cur + ' ' + word : word;
-        if (cur && ctx.measureText(test).width > maxW){ out.push(cur); cur = word; }
-        else cur = test;
-      }
-    });
-    out.push(cur);
-  });
-  return out;
+// 자동 2줄: 사장님이 \n으로 직접 나눴으면 존중. 아니면 길면 공백 중 중앙 근처에서 2줄로 쪼갠다
+// (바이럴 썸네일은 보통 2줄). 짧거나 공백 없으면 1줄.
+function thumbAutoLines(text){
+  const paras = String(text == null ? '' : text).split('\n');
+  if (paras.length > 1) return paras;
+  const t = paras[0];
+  if (t.length <= 6 || t.indexOf(' ') < 0) return [t];
+  const mid = t.length / 2; let best = -1, bestD = 1e9;
+  for (let i = 0; i < t.length; i++){
+    if (t[i] === ' '){ const d = Math.abs(i - mid); if (d < bestD){ bestD = d; best = i; } }
+  }
+  return best < 0 ? [t] : [t.slice(0, best), t.slice(best + 1)];
 }
 
-// 자동 크기맞춤: 줄바꿈해도 여전히 넘치거나(가로) 너무 많은 줄로 세로를 넘으면 폰트를 줄여 다시 배치.
-// → 시니어가 크기 슬라이더·위치를 안 만져도 제목이 항상 안 넘치고 안 잘린 채 꽉 찬다.
-function thumbFit(ctx, L, W, H, s){
+// grow-to-fill: 제목이 폭(92%)을 꽉 채우게 폰트를 키우거나 줄인다 — 짧아도 큼직(바이럴 썸네일 룩,
+// 2026-07-19 사장님 레퍼런스 실측 반영). 예전엔 줄이기만 해서 짧은 제목이 작게 남았다.
+// 슬라이더(L.size)는 미세조정(90=꽉 채움). 높이 상한(44%)으로 2줄이 화면을 안 넘게.
+// ★크기가 캔버스 폭에 비례하므로 270 프리뷰와 1080 결과가 같은 비율(계약 유지).
+function thumbFit(ctx, L, W, H){
   const family = thumbFontCss(L.font);
-  const maxW = W * 0.88, maxH = H * 0.92;
-  let size = L.size * s;
-  const minSize = Math.max(12 * s, 1);
-  let lines = thumbWrapLines(ctx, L.text, family, size, maxW);
-  for (let guard = 0; guard < 200; guard++){
-    ctx.font = `900 ${size}px ${family}`;
-    const tooWide = lines.some(l => ctx.measureText(l).width > maxW);
-    const tooTall = lines.length * size * 1.18 > maxH;
-    if ((!tooWide && !tooTall) || size <= minSize) break;
-    size = Math.max(minSize, size - 2 * s);
-    lines = thumbWrapLines(ctx, L.text, family, size, maxW);
-  }
+  const maxW = W * 0.92, maxH = H * 0.44;
+  const scale = Math.max(0.35, (L.size || 90) / 90);
+  const lines = thumbAutoLines(L.text);
+  if (!lines.some(l => (l || '').trim())) return {lines: [''], size: W * 0.06, family};
+  ctx.font = `900 100px ${family}`;
+  const widest = Math.max(1, ...lines.map(l => ctx.measureText(l).width));
+  let size = 100 * (maxW / widest) * scale;                       // 폭 꽉 채우기 × 미세조정
+  if (lines.length * size * 1.16 > maxH) size *= maxH / (lines.length * size * 1.16);  // 높이 상한
+  size = Math.max(W * 0.02, Math.min(size, H * 0.22));            // 안전 하한·상한
   return {lines, size, family};
 }
 
 function drawThumb(ctx, img, layers, W, H){
-  const s = W / THUMB_W;                    // 캔버스 배율 — 프리뷰든 실측이든 같은 식
-  // ★매 렌더마다 먼저 지운다(2026-07-18 라이브 실측). 배경 이미지가 있으면 그게 이전 프레임을
-  // 덮지만, job이 없어 img가 없으면(영상 매칭 전) 아무것도 안 지워져 드래그 경로마다 글자가
-  // 겹겹이 쌓였다(사장님 화면: 레이어는 1개인데 '문구를 입력하세요'가 수십 겹). clearRect로 봉인.
+  const s = W / THUMB_W;                    // 캔버스 배율 — 외곽선·박스 여백용
+  // ★매 렌더마다 먼저 지운다(2026-07-18 라이브 실측) — job 없을 때 드래그 잔상이 쌓이던 것 봉인.
   ctx.clearRect(0, 0, W, H);
   if (img) ctx.drawImage(img, 0, 0, W, H);
   (layers || []).forEach(L => {
     if (!L.text) return;
-    const {lines, size, family} = thumbFit(ctx, L, W, H, s);   // 자동 줄바꿈+크기맞춤
-    const lh = size * 1.18;                                     // 줄 간격
+    const {lines, size, family} = thumbFit(ctx, L, W, H);      // 자동 2줄 + grow-to-fill
+    const lh = size * 1.16;                                     // 줄 간격
     ctx.save();
     ctx.translate(L.x * W, L.y * H);                            // 앵커 = 여러 줄 블록의 세로 중앙
     if (L.rot) ctx.rotate(L.rot * Math.PI / 180);
@@ -3043,11 +3025,16 @@ function drawThumb(ctx, img, layers, W, H){
         ctx.fillRect(-w/2 - pad, y - size/2 - pad*0.6, w + pad*2, size + pad*1.2);
         ctx.globalAlpha = 1;
       }
+      // 레퍼런스 룩: 은은한 그림자 + 폰트 크기에 비례한 두꺼운 외곽선(작아도 커도 비율 유지).
+      // fixed px(외곽선 슬라이더)보다 얇아지지 않게 max로 바닥을 깐다 — 큰 글자에 얇은 테두리 방지.
       if (L.outline && L.outline.w){
-        ctx.lineWidth = L.outline.w * s;
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = size * 0.05; ctx.shadowOffsetY = size * 0.02;
+        ctx.lineWidth = Math.max(L.outline.w * s, size * 0.085);
         ctx.strokeStyle = L.outline.color;
         ctx.lineJoin = 'round';
         ctx.strokeText(line, 0, y);
+        ctx.restore();
       }
       ctx.fillStyle = (li > 0 && L.color2) ? L.color2 : L.color;   // 1줄=color, 2줄부터=color2(2색 룩)
       ctx.fillText(line, 0, y);
@@ -3271,7 +3258,7 @@ function renderThumbLayers(){
       <button class="tab" style="flex:1;min-width:auto;padding:8px 0" onclick="setThumbPos('mid')">⏺ 가운데</button>
       <button class="tab" style="flex:1;min-width:auto;padding:8px 0" onclick="setThumbPos('bot')">⬇ 아래</button>
     </div>
-    <label style="font-size:11px;color:var(--sub)">글자 크기 ${L.size}px <span style="color:var(--sub);opacity:.7">(길면 자동으로 줄어듦)</span></label>
+    <label style="font-size:11px;color:var(--sub)">크기 미세조정 <span style="color:var(--sub);opacity:.7">(자동으로 화면 폭을 꽉 채워요 · 필요하면 조절)</span></label>
     <input type="range" min="30" max="200" value="${L.size}" oninput="setThumbField('size', this.value)" style="width:100%">
     <label style="font-size:11px;color:var(--sub)">회전 ${L.rot}°</label>
     <input type="range" min="-45" max="45" value="${L.rot}" oninput="setThumbField('rot', this.value)" style="width:100%">
