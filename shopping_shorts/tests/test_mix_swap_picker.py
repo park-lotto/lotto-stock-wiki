@@ -40,3 +40,36 @@ def test_segments_404_when_no_extract(monkeypatch, tmp_path):
     client, store = _client(monkeypatch, tmp_path)
     store.create_mix_job("js2", ["u0"], 20, "free")
     assert client.get("/api/mix/segments/js2").status_code == 404
+
+
+def test_seg_thumb_extracts_midpoint_and_caches(monkeypatch, tmp_path):
+    client, store = _client(monkeypatch, tmp_path)
+    store.create_mix_job("jt", ["u0"], 20, "free")
+    store.update_mix_job("jt", extract=_EXTRACT)
+    monkeypatch.setattr(app_module, "_MIX_WORK_DIR", tmp_path / "mix")
+    monkeypatch.setattr(app_module, "_resolve_sources",
+                        lambda job, work: {"s0": str(tmp_path / "s0.mp4")})
+    (tmp_path / "s0.mp4").write_bytes(b"fake")
+    calls = []
+
+    def _fake_extract(video_path, dest_dir, ts, filename="f.jpg"):
+        calls.append(ts)
+        out = Path(dest_dir) / filename
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_bytes(b"\xff\xd8jpeg")
+        return out
+
+    monkeypatch.setattr(app_module, "extract_frame_at", _fake_extract)
+    r = client.get("/api/mix/seg_thumb/jt/s0-1")
+    assert r.status_code == 200 and r.content == b"\xff\xd8jpeg"
+    assert calls == [3.0]                       # (2.0+4.0)/2 중간지점
+    r2 = client.get("/api/mix/seg_thumb/jt/s0-1")
+    assert r2.status_code == 200
+    assert len(calls) == 1                       # 캐시 히트 — 재추출 없음
+
+
+def test_seg_thumb_404_on_unknown_seg(monkeypatch, tmp_path):
+    client, store = _client(monkeypatch, tmp_path)
+    store.create_mix_job("jt2", ["u0"], 20, "free")
+    store.update_mix_job("jt2", extract=_EXTRACT)
+    assert client.get("/api/mix/seg_thumb/jt2/NOPE").status_code == 404

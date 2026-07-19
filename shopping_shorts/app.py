@@ -1471,6 +1471,31 @@ def api_mix_segments(job_id: str):
     return {"ok": True, "segments": segs}
 
 
+@app.get("/api/mix/seg_thumb/{job_id}/{seg_id}")
+def api_mix_seg_thumb(job_id: str, seg_id: str):
+    """[다른 화면으로] 피커용 seg 썸네일(중간지점 프레임 jpg, 캐시).
+    seg_id는 인벤토리 검증 후에만 파일명에 쓴다(경로 방어)."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("extract"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "데이터 없음"})
+    seg_map, _ = _edit_plan._build_inventory(list(job["extract"].values()))
+    seg = seg_map.get(seg_id)
+    if not seg:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "없는 seg_id"})
+    work = _MIX_WORK_DIR / job_id
+    cached = work / "seg_thumbs" / f"{seg_id}.jpg"
+    if not cached.exists():
+        try:
+            src = _resolve_sources(job, work)[seg["video_id"]]
+        except Exception:
+            return JSONResponse(status_code=404, content={"ok": False, "error": "소스 없음"})
+        mid = (seg["start"] + seg["end"]) / 2
+        frame = extract_frame_at(src, work / "seg_thumbs", mid, filename=f"{seg_id}.jpg")
+        if not frame:
+            return JSONResponse(status_code=404, content={"ok": False, "error": "프레임 추출 실패"})
+    return FileResponse(str(cached), media_type="image/jpeg")
+
+
 @app.post("/api/mix/render")
 def api_mix_render(background_tasks: BackgroundTasks, body: dict):
     """최종 렌더 예약. 미리보기(/api/produce/mix/preview)와 같은 중복예약 가드를 건다 —
