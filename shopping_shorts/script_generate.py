@@ -329,6 +329,96 @@ def refine_draft_partial(script_text, selected_text, instruction, max_key_tries=
         max_key_tries)
 
 
+# ---- P5 자기검증 루프: 초안 3축 판정(인과·훅→끝·CTA) 후 미달만 1회 자동 보정 ----
+
+_JUDGE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "verdicts": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "idx": {"type": "integer"},
+                    "causality_ok": {"type": "boolean"},
+                    "hook_to_end_ok": {"type": "boolean"},
+                    "cta_ok": {"type": "boolean"},
+                    "fix_instruction": {"type": "string"},
+                },
+                "required": ["idx", "causality_ok", "hook_to_end_ok", "cta_ok",
+                             "fix_instruction"],
+            },
+        }
+    },
+    "required": ["verdicts"],
+}
+
+_JUDGE_PROMPT = """너는 한국 쇼핑 숏폼 대본 품질 검수자다. 아래 초안들을 초안별로
+3가지 축으로 엄격히 판정하라.
+
+[초안들]
+{drafts}
+
+판정 축:
+1. causality_ok — 인과·상관관계가 말이 되나? 각 문장이 앞 문장에서 자연스럽게
+   이어지나. 근거 없는 효능 비약, 뜬금없는 소재 점프가 있으면 실패.
+2. hook_to_end_ok — 훅에서 던진 궁금증/문제/이야기가 끝까지 끊기지 않고 이어져
+   해소되나. 훅 따로 본문 따로면 실패. 인물이나 사건이 중간에 바뀌면 실패.
+3. cta_ok — 마지막이 행동유도(CTA) 문장으로 끝나고, 그 CTA가 본문 이야기와
+   인과로 이어지나. 댓글 키워드형이면 'OO 남겨주세요'의 키워드가 실제로 명시돼
+   있어야 통과.
+
+하나라도 실패면 fix_instruction에 무엇을 어떻게 고칠지 구체적 수정 지시를
+한국어 1~2문장으로 써라. 전부 통과면 fix_instruction은 빈 문자열.
+idx는 초안 번호(0부터). JSON만 출력."""
+
+_FIX_SCHEMA = {
+    "type": "object",
+    "properties": {"hook": {"type": "string"}, "script": {"type": "string"}},
+    "required": ["hook", "script"],
+}
+
+_FIX_PROMPT = """너는 한국 쇼핑 숏폼 대본 작가다. 아래 대본이 검수에서 지적받았다.
+지적을 고쳐 통째로 다시 써라. 구어체 나레이션, 원래 분량(약 {words}단어) 유지.
+
+[대본]
+{script}
+
+[검수 지적]
+{instruction}
+
+규칙:
+""" + _STORY_RULES_CORE + """
+다음 JSON으로만 출력: {{"hook": "첫 훅 한 줄", "script": "다시 쓴 전체 대본"}}"""
+
+
+def _verify_and_fix(drafts, seconds=20):
+    """초안들을 3축(인과·훅→끝·CTA) 판정하고 미달 초안만 1회 재작성.
+    판정 1콜 + 미달 수 만큼 수정 콜. 판정 실패 시 원본 그대로(fail-open) —
+    검증 루프가 생성 기능을 죽이면 안 된다."""
+    if not drafts:
+        return drafts
+    words = max(15, round(seconds * 2.3))
+    block = "\n\n".join(f"[초안 {i}]\n{d.get('script', '')}" for i, d in enumerate(drafts))
+    verdicts = _call_json(_JUDGE_PROMPT.format(drafts=block), _JUDGE_SCHEMA).get("verdicts", [])
+    for v in verdicts:
+        i = v.get("idx")
+        if not isinstance(i, int) or not (0 <= i < len(drafts)):
+            continue
+        if v.get("causality_ok") and v.get("hook_to_end_ok") and v.get("cta_ok"):
+            continue
+        instruction = ((v.get("fix_instruction") or "").strip()
+                       or "인과가 끊긴 부분을 잇고 마지막을 본문과 이어지는 CTA로 끝내라.")
+        fixed = _call_json(
+            _FIX_PROMPT.format(script=drafts[i].get("script", ""),
+                               instruction=instruction, words=words), _FIX_SCHEMA)
+        if (fixed.get("script") or "").strip():
+            drafts[i]["script"] = fixed["script"].strip()
+            drafts[i]["hook"] = (fixed.get("hook") or drafts[i].get("hook") or "").strip()
+            drafts[i]["applied"] = ((drafts[i].get("applied") or "") + " · 검수 후 자동 보정").strip(" ·")
+    return drafts
+
+
 _SUBJECT_SCHEMA = {
     "type": "object",
     "properties": {"subject": {"type": "string"}},

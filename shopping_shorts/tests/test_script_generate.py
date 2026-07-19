@@ -209,3 +209,56 @@ def test_mix_prompt_single_story_rule():
     assert "인물 1명" in script_generate._MIX_PROMPT
     assert "섞지 마라" in script_generate._MIX_PROMPT
     assert "인과 사슬" in script_generate._MIX_PROMPT
+
+
+# ---- P5: 자기검증 루프 (2026-07-19) ----
+
+def _seq_call_json(mp, responses):
+    """script_generate._call_json을 '호출 순서대로 응답'하는 가짜로 교체.
+    기록된 (prompt, schema) 리스트를 돌려줘 프롬프트 내용 검증에 쓴다."""
+    calls = []
+    def fake(prompt, schema):
+        calls.append((prompt, schema))
+        return responses[min(len(calls) - 1, len(responses) - 1)]
+    mp.setattr(script_generate, "_call_json", fake)
+    return calls
+
+
+def test_verify_fixes_failing_draft(monkeypatch):
+    drafts = [{"hook": "h0", "script": "인과 붕괴 대본", "applied": "a"}]
+    calls = _seq_call_json(monkeypatch, [
+        {"verdicts": [{"idx": 0, "causality_ok": False, "hook_to_end_ok": True,
+                       "cta_ok": False, "fix_instruction": "마지막을 댓글 CTA로 끝내라"}]},
+        {"hook": "h1", "script": "고쳐진 대본. 궁금하면 댓글에 '비법' 남겨주세요"},
+    ])
+    out = script_generate._verify_and_fix(drafts, seconds=20)
+    assert out[0]["script"].startswith("고쳐진 대본")
+    assert out[0]["hook"] == "h1"
+    assert "자동 보정" in out[0]["applied"]
+    assert "마지막을 댓글 CTA로 끝내라" in calls[1][0]  # 판정 지적이 수정 프롬프트에 들어감
+
+
+def test_verify_keeps_passing_drafts(monkeypatch):
+    drafts = [{"hook": "h", "script": "멀쩡한 대본", "applied": "a"}]
+    _seq_call_json(monkeypatch, [
+        {"verdicts": [{"idx": 0, "causality_ok": True, "hook_to_end_ok": True,
+                       "cta_ok": True, "fix_instruction": ""}]},
+    ])
+    out = script_generate._verify_and_fix(drafts)
+    assert out[0]["script"] == "멀쩡한 대본"  # 통과 초안은 손대지 않는다
+
+
+def test_verify_fail_open_when_judge_dies(monkeypatch):
+    # 판정 콜 실패(키 소진 등) → 초안 생성 자체는 절대 죽으면 안 된다
+    drafts = [{"hook": "h", "script": "s", "applied": "a"}]
+    _seq_call_json(monkeypatch, [{}])
+    assert script_generate._verify_and_fix(drafts)[0]["script"] == "s"
+
+
+def test_verify_bad_idx_ignored(monkeypatch):
+    drafts = [{"hook": "h", "script": "s", "applied": "a"}]
+    _seq_call_json(monkeypatch, [
+        {"verdicts": [{"idx": 7, "causality_ok": False, "hook_to_end_ok": False,
+                       "cta_ok": False, "fix_instruction": "x"}]},
+    ])
+    assert script_generate._verify_and_fix(drafts)[0]["script"] == "s"
