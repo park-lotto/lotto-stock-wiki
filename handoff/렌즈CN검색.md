@@ -1,6 +1,25 @@
 > **소유 트랙**: 렌즈CN검색 — 이 파일은 이 트랙 세션만 수정한다. 다른 트랙은 읽기만.
 > 트리거: "렌즈CN검색 이어서" / "샤오홍슈 후보검색 이어서"
 
+## 도우인 카드담기 완결 — 2026-07-19 밤 (4플랫폼 전부 라이브)
+
+**샤오홍슈·틱톡·인스타·도우인 카드별 📥담기 전부 작동.** grab_logic.js v-f, origin/main `8618e4710`, 서버 force-pull·재시작 완료.
+
+- **로더 모델(재설치 불필요)**: `grab.user.js`(v2.0.0)는 얇은 로더 — 매 새로고침에 서버 `/grab_logic.js`를
+  GM_xmlhttpRequest로 불러 eval. **로직 고쳐도 사용자는 새로고침만.** 60대 재설치 문제 해결.
+- **도우인만 특수**: 카드에 `<a href>`·data-id 없음, 영상ID가 React `__reactFiber$` props에만 있음.
+  근데 유저스크립트 **sandbox는 페이지 fiber를 못 읽음**(첫 카드만 간헐 성공 = 사장님이 본 "맨앞 하나만").
+  → **도우인만 페이지 메인월드에 자립 스크립트 주입**(도우인 CSP 인라인 미차단, 실측). 메인월드는 fiber
+  다 보임. 클릭 시 sandbox 안 거치고 `BASE/api/grab` 직접 오픈.
+- **두 번째 버그(box)**: 주입 됐는데 box-walk가 `box=img`(150~440px)를 골라 **img(void)에 appendChild →
+  안 보임**(19/20 0×0). `img.parentElement`부터 컨테이너 찾게 수정 + `data-aid`로 aweme_id 중복제거.
+- **실측(라이브 v-f, 오염 없이)**: 카드 20개=고유ID 20 / 상단 10/10 보이고 클릭가능(elementFromPoint) /
+  클릭→`/api/grab`+그 영상ID로 담김·도우인 이동 차단(`didNavigateAway:false`) 확인.
+- ⚠️ **교훈**: `buttonsCreated===20`·`distinctBoxes===20`만 보고 "됐다"고 두 번 오판했다. 진짜 검증은
+  **elementFromPoint(보이나·클릭 위에 있나)** + 배포 후 **리로드해 실 유저스크립트로** 측정(내 수동 eval은
+  메인월드라 sandbox 한계를 못 재현했다). [[project_lens_cn_search]]
+- 커밋: `d31ce1885`(메인월드 주입) `657e66e5a`(box 수정). 병합 `905c4261c`·`8618e4710`.
+
 ## 렌즈 CN 후보검색 — 60대용 인앱 클릭검색 — 2026-07-19 (SDD 완료·라이브)
 
 **전부 커밋·병합·라이브 배포 완료.** origin/main merge `61a9151d`. 서버 3분 크론이 shopping-shorts 재시작.
