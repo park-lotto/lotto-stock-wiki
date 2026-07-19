@@ -42,6 +42,10 @@
       50%{box-shadow:0 0 0 11px rgba(55,224,189,0),0 8px 26px -8px rgba(55,224,189,.5)}}
     @media(prefers-reduced-motion:reduce){.step.active .dot{animation:none}}
     .step.active .lbl{color:var(--txt);font-weight:700}
+    /* T7: 미완 단계 = 잠금(회색+🔒). 색이 아니라 형태로도 구분 */
+    .step.locked{cursor:not-allowed}
+    .step.locked .dot{background:var(--panel);border-color:var(--line);color:var(--sub);opacity:.45;box-shadow:none;animation:none}
+    .step.locked .lbl{color:var(--sub);opacity:.6}
 
     /* 스텝 패널 */
     .panel{display:none;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;max-width:1120px}
@@ -588,11 +592,15 @@ let cur = 0;
 
 function renderSteps(){
   const el = document.getElementById('steps');
-  el.innerHTML = STEPS.map((s,i)=>`
-    <div class="step ${i<cur?'done':''} ${i===cur?'active':''}" onclick="jump(${i})">
-      <div class="dot">${i<cur?'✓':(i+1)}</div>
+  if(!el) return;
+  el.innerHTML = STEPS.map((s,i)=>{
+    const lk = stepLocked(i);
+    return `
+    <div class="step ${i<cur?'done':''} ${i===cur?'active':''} ${lk?'locked':''}" onclick="jump(${i})">
+      <div class="dot">${i<cur?'✓':(lk?'🔒':(i+1))}</div>
       <div class="lbl">${s}</div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 function showPanel(){
   document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('show', +p.dataset.step===cur));
@@ -1557,19 +1565,20 @@ async function saveHeadcopy(){
     body:JSON.stringify({job_id:MIX_JOB, headcopy:STATE.headcopy, caption_style:STATE.captionStyle, deco:STATE.deco})}); }catch(e){}
 }
 function jump(i){
-  // ★1단계 미리보기 게이트(2026-07-17). renderSteps()가 **모든 스텝 칩**에 onclick="jump(i)"를
-  // 박아 상단에 항상 렌더한다 — 여기 가드가 없으면 "자막제거" 칩 한 번 클릭으로 게이트가 통째로
-  // 우회되고, 그 뒤 refreshNextBtn()은 cur=1이라 게이트를 안 걸어 버튼까지 도로 열어준다
-  // (우회 흔적도 안 남는다). go()의 "방어 두 겹"은 실은 같은 문에 두 겹이었다.
-  // 뒤로 가는 건 막지 않는다 — 앞으로 가는 것만.
-  if(i > cur && cur === 0 && MIX_JOB && !canGoNext()) return;
+  if(i === cur) return;
+  // T7(§4-3): 잠긴 단계(회색+🔒)로는 못 간다. stepLocked가 기존 0→1 미리보기 게이트를 흡수해
+  // **모든 dot**에 일관 적용한다 — 예전엔 renderSteps가 모든 칩에 onclick="jump(i)"를 박아
+  // "자막제거" 칩 한 번 클릭으로 게이트가 통째로 우회됐다. 뒤로(완료 단계)는 자유 — 잠긴 단계는
+  // 항상 미완 프런티어 위쪽이라 뒤는 애초에 안 잠긴다.
+  if(stepLocked(i)){ toast(stepLockMsg()); return; }
   cur=i; renderSteps(); showPanel();
 }
 function go(d){
-  // 1단계 미리보기 게이트(2026-07-17). btnNext의 disabled만으론 부족하다 — go(1)이 다른
-  // 경로로도 불릴 수 있어 방어를 두 겹으로 둔다. 유료 자막제거로 못 본 채 넘어가는 걸 막는다.
-  if(d > 0 && cur === 0 && MIX_JOB && !canGoNext()) return;
-  const n=cur+d; if(n<0||n>=STEPS.length) return; cur=n; renderSteps(); showPanel();
+  const n=cur+d; if(n<0||n>=STEPS.length) return;
+  // T7: 잠긴 앞단계로는 못 넘어간다(stepLocked = 미리보기 게이트 흡수, 유료 자막제거 우회 방지).
+  // 뒤로는 자유. btnNext는 refreshNextBtn이 이미 잠가두지만 go()가 다른 경로로도 불려 두 겹 방어.
+  if(stepLocked(n)){ toast(stepLockMsg()); return; }
+  cur=n; renderSteps(); showPanel();
 }
 
 // ── 1단계 대본: 3모드 ──────────────────────────────
@@ -2662,11 +2671,45 @@ function canGoNext(){
   return PREVIEW_STATUS === 'ready' || PREVIEW_STATUS === 'failed';
 }
 
+// T7: 게이트 판정 단일화(§4-3). 어느 단계가 지금 잠겨 있나 — jump·go·refreshNextBtn·renderSteps가
+// 전부 이 하나를 본다. 0단계(제작소)는 허브라 항상 열림. 1~6단계는 '영상 매칭(MIX_JOB) +
+// 미리보기 확인(canGoNext)'이 끝나야 열린다 = 기존 0→1 미리보기 게이트(유료 자막제거 우회 방지)를
+// 모든 dot에 일관 적용. canGoNext는 'failed'도 통과시키는 탈출구가 있어 렌더가 고장나도 안 갇힌다.
+function stepLocked(i){
+  // 0단계(허브)는 항상 열림. 1~6단계는 '매칭(MIX_JOB) 후 · 미리보기 확인 전'에만 잠근다 —
+  // 기존 0→1 미리보기 게이트(유료 자막제거 우회 방지)를 dot에 그대로 반영한다. 매칭 전(MIX_JOB
+  // 없음)엔 안 잠근다(기존 설계 유지: 그땐 자유 이동, 빈 단계는 T7a 잠금 카드가 받는다).
+  return i >= 1 && !!MIX_JOB && !canGoNext();
+}
+function stepLockMsg(){
+  return !MIX_JOB ? '먼저 1단계에서 영상을 매칭하세요' : '먼저 1단계에서 미리보기를 확인하세요';
+}
+// 잠긴 단계 클릭 등 짧은 안내(60대 어포던스). 기존 alert 남발 대신 조용한 토스트.
+function toast(msg){
+  let t = document.getElementById('ssToast');
+  if(!t){
+    t = document.createElement('div'); t.id = 'ssToast';
+    t.style.cssText = 'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:99999;'
+      + 'background:var(--panel);color:var(--txt);border:1px solid var(--accent);border-radius:10px;'
+      + 'padding:11px 18px;font-size:14px;box-shadow:0 8px 30px rgba(0,0,0,.4);opacity:0;transition:opacity .2s';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg; t.style.opacity = '1';
+  clearTimeout(t._h); t._h = setTimeout(function(){ t.style.opacity = '0'; }, 2200);
+}
+
 function refreshNextBtn(){
-  const b = document.getElementById('btnNext'); if(!b) return;
+  const b = document.getElementById('btnNext');
+  // ★dot 잠금도 여기서 같이 동기화한다 — PREVIEW_STATUS/MIX_JOB이 바뀌는 모든 지점이
+  //   refreshNextBtn을 부르므로, 미리보기가 ready/failed 되는 즉시 🔒이 자동으로 풀린다.
+  //   (renderSteps는 아무 함수도 안 불러서 재귀는 없다.)
+  renderSteps();
+  if(!b) return;
+  // btnNext는 기존과 동일하게 **0→1 전이만** 게이트한다 — 다른 단계에선 안 끼어든다.
+  // dot 잠금(stepLocked)이 나머지 시각 표현을 맡는다.
   const gated = (cur === 0 && MIX_JOB && !canGoNext());
   b.disabled = gated;
-  b.title = gated ? '미리보기를 먼저 확인하세요' : '';
+  b.title = gated ? stepLockMsg() : '';
 }
 
 async function startPreview(){
