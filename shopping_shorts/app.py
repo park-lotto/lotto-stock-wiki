@@ -1449,6 +1449,28 @@ def api_mix_adjust(body: dict):
     return {"ok": True}
 
 
+@app.get("/api/mix/segments/{job_id}")
+def api_mix_segments(job_id: str):
+    """[다른 화면으로] 피커용 — 이 잡의 모든 소스 세그먼트.
+    used=이미 어느 비트 primary로 쓰인 seg_id(피커에서 흐리게)."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("extract"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "데이터 없음"})
+    seg_map, _ = _edit_plan._build_inventory(list(job["extract"].values()))
+    used = {b["primary"]["seg_id"]
+            for b in (job.get("edit_plan") or {}).get("beats", [])
+            if b.get("primary")}
+    segs = [{
+        "seg_id": sid, "video_id": seg["video_id"],
+        "start": seg["start"], "end": seg["end"],
+        "dur": round(seg["end"] - seg["start"], 1),
+        "scene_desc": seg.get("scene_desc", ""), "text": seg.get("text", ""),
+        "thumb_url": f"/api/mix/seg_thumb/{job_id}/{sid}",
+        "used": sid in used,
+    } for sid, seg in seg_map.items()]
+    return {"ok": True, "segments": segs}
+
+
 @app.post("/api/mix/render")
 def api_mix_render(background_tasks: BackgroundTasks, body: dict):
     """최종 렌더 예약. 미리보기(/api/produce/mix/preview)와 같은 중복예약 가드를 건다 —
