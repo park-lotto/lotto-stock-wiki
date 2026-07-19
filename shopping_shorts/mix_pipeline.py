@@ -104,19 +104,35 @@ def _synthesize_beats(beats, tts_dir, *, voice):
 
 
 def _prepare_sources(urls, work):
-    """소스 URL들을 플랫폼 무관하게 다운로드 → ({video_id: mp4경로}, {video_id: caption}).
+    """소스 URL들을 플랫폼 무관하게 다운로드 → ({video_id: mp4경로}, {video_id: caption}, skipped).
     caption은 인스타 소스만 채워짐(download_any가 (path, caption) 튜플 반환) — 유튜브/틱톡은
-    빈 문자열이라 extract_script가 영상 재전사로 채운다."""
+    빈 문자열이라 extract_script가 영상 재전사로 채운다.
+
+    ★소스별 예외격리(2026-07-19 실사고): 한 URL이 다운로드 안 되면 그 소스만 건너뛰고
+    나머지로 계속한다 — 불량 URL 하나(렌즈 즐겨찾기로 샌 instagram.com/popular/{슬러그} 등)가
+    배치 전체를 죽이던 걸 막는다. 근본차단은 lens_discover._is_watchable(입구), 여기는 백스톱.
+    video_id는 인덱스 기준(s{i})이라 중간이 빠져도 나머지 매칭에 영향 없다(갭 허용).
+    전부 실패(0개 생존)하면 RuntimeError. skipped=[(url, err), ...]."""
     video_paths = {}
     captions = {}
+    skipped = []
     for i, url in enumerate(urls):
         vid = _source_video_id(i)
         d = Path(work) / vid
         d.mkdir(parents=True, exist_ok=True)
-        path, caption = download_any(url, str(d))
+        try:
+            path, caption = download_any(url, str(d))
+        except Exception as e:  # noqa: BLE001 — 소스별 격리가 목적
+            skipped.append((url, str(e)))
+            print(f"_prepare_sources: 소스 스킵 — {url}: {e}", file=sys.stderr)
+            continue
         video_paths[vid] = path
         captions[vid] = caption
-    return video_paths, captions
+    if not video_paths:
+        raise RuntimeError(
+            "소스 영상을 하나도 못 받았습니다 — 모든 URL 다운로드 실패:\n"
+            + "\n".join(f"· {u}: {e}" for u, e in skipped))
+    return video_paths, captions, skipped
 
 
 def run_mix_job(job_id, db_path, work_root):
@@ -136,7 +152,11 @@ def run_mix_job(job_id, db_path, work_root):
         store.update_mix_job(job_id, status="downloading")
         # video_id -> mp4 path, video_id -> caption(인스타만 채워짐, 유튜브/틱톡은 "").
         # extract_script가 caption을 힌트로 쓰고 없어도 영상 재전사로 동작 — .get(vid, "")로 안전 기본값.
-        video_paths, captions = _prepare_sources(job["urls"], work)
+        # 소스별 예외격리: 불량 URL은 스킵되고 최소 1개만 살면 계속(2026-07-19).
+        video_paths, captions, skipped = _prepare_sources(job["urls"], work)
+        if skipped:
+            print(f"run_mix_job[{job_id}]: {len(skipped)}개 소스 스킵 "
+                  f"(불량 URL) — {[u for u, _ in skipped]}", file=sys.stderr)
 
         # 2) 대본 추출(병렬)
         store.update_mix_job(job_id, status="extracting")

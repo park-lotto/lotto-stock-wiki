@@ -23,28 +23,31 @@ _MODEL = comment_gen._MODEL
 _GEN_GROUP = "general"
 
 
-def _generate_drafts(prompt):
-    """key_vault 캐스케이드 키풀로 대본 초안 리스트 생성. 소진키는 마킹하고 다음 키로.
-    무키·전부실패면 []."""
+def _call_json(prompt, schema):
+    """key_vault 캐스케이드 키풀로 JSON 1콜. 소진키는 마킹하고 다음 키로.
+    무키·전부실패면 {} (호출부는 반드시 빈 dict 허용 — fail-open)."""
     keys = key_vault.get_live_keys_cascade(_GEN_GROUP)
-    if not keys:
-        return []
     for key in keys:
         try:
             resp = key_vault.get_client_for_key(key).models.generate_content(
                 model=_MODEL, contents=prompt,
                 config=types.GenerateContentConfig(
-                    response_mime_type="application/json", response_schema=_SCHEMA),
+                    response_mime_type="application/json", response_schema=schema),
             )
-            return json.loads(resp.text).get("drafts", [])
+            return json.loads(resp.text)
         except Exception as e:  # noqa: BLE001 — 생성 실패는 치명적 아님
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
                 key_vault.mark_exhausted(key_vault._owner_group(key) or _GEN_GROUP, key)
                 continue
             if key_vault.is_quota_error(e):
                 continue  # 순간 rate limit — 다음 키로
-            return []
-    return []
+            return {}
+    return {}
+
+
+def _generate_drafts(prompt):
+    """key_vault 캐스케이드 키풀로 대본 초안 리스트 생성. 무키·전부실패면 []."""
+    return _call_json(prompt, _SCHEMA).get("drafts", [])
 
 # 유지/변형 토글 대상 요소(키 → 표시 라벨). 프론트·엔드포인트가 공유.
 ELEM_LABELS = {
@@ -70,13 +73,39 @@ _SCHEMA = {
                     "hook": {"type": "string"},
                     "script": {"type": "string"},
                     "applied": {"type": "string"},
+                    "story_person": {"type": "string"},
+                    "story_event": {"type": "string"},
+                    "story_resolution": {"type": "string"},
+                    "cta_line": {"type": "string"},
+                    "cta_keyword": {"type": "string"},
                 },
-                "required": ["hook", "script", "applied"],
+                "required": ["hook", "script", "applied", "story_person", "story_event",
+                             "story_resolution", "cta_line", "cta_keyword"],
             },
         }
     },
     "required": ["drafts"],
 }
+
+# 스토리 헌장 — _GEN_PROMPT·_MIX_PROMPT 공통 주입(모듈 레벨 문자열 연결).
+# 사장님 요구(2026-07-19): 인과·상관관계가 말이 되고, 훅이 끝까지 이어지고,
+# 레시피류의 정석 CTA("비법 궁금하면 댓글에 'OO'")가 스토리 흐름 안에서 나와야 한다.
+# CTA는 하드코딩 1문구가 아니라 소재 적합형 선택 — "레시피라고 다 같지 않다".
+# ★헌장 텍스트에 { } 금지 — _GEN_PROMPT/_MIX_PROMPT가 .format()을 쓴다(깨진다).
+_STORY_RULES_CORE = """- ★한 스토리 원칙: 대본 전체가 인물 1명·사건 1개·결말 1개의 '하나의 이야기'다.
+  훅에서 던진 궁금증/문제가 전개에서 원인→전환점으로 풀리고 결말에서 해소돼야 한다.
+  각 문장은 앞 문장의 결과나 이유여야 한다(인과 사슬). 뜬금없는 소재 점프,
+  근거 없는 효능 비약, 훅 따로 본문 따로 전개 금지.
+- ★CTA 원칙: 마지막 문장은 반드시 행동유도(CTA)로 끝난다. 핵심 비법 하나는 본문에서
+  다 밝히지 말고 아껴서, CTA가 그 아낀 비법과 자연스럽게 이어지게 하라.
+  · 소재가 레시피/비법/방법형이면 반드시 댓글 키워드형: "…궁금하면 댓글에 'OO' 남겨주세요"
+    (OO = 소재에서 뽑은 2~6자 키워드. 예: 바나나 간식 영상이면 '바나나').
+  · 그 외 소재면 저장유도·팔로우유도·궁금증남기기 중 소재에 가장 어울리는 것 하나."""
+
+_STORY_DECLARE = """- 각 초안에 반드시 채워라: story_person(주인공 1명), story_event(사건 한 줄),
+  story_resolution(결말 한 줄), cta_line(마지막 CTA 문장 그대로),
+  cta_keyword(댓글 유도 키워드 — 댓글형 CTA가 아니면 빈 문자열)."""
+
 
 _GEN_PROMPT = """너는 한국 쇼핑 숏폼(살림·요리·인테리어) 대본 작가다. 아래 'S급 원본 대본'의
 검증된 구조를 빌려, 20초 분량(약 45~70단어)의 새 대본 초안 {n}개를 만들어라.
@@ -97,23 +126,27 @@ _GEN_PROMPT = """너는 한국 쇼핑 숏폼(살림·요리·인테리어) 대�
 - 주변인물을 쓸 땐 오버하지 말고 자연스럽게(예: "농원 하는 언니가", "김밥집 사장님이",
   "병원 하는 지인이"). 억지 설정·과장 금지.
 - 초안끼리 서로 다르게(훅·전개를 다양하게 시도).
+""" + _STORY_RULES_CORE + "\n" + _STORY_DECLARE + """
 각 초안: hook(첫 훅 한 줄), script(전체 나레이션 대본), applied(무엇을 유지/변형했는지 한 줄).
 JSON만 출력."""
 
 
 _MIX_PROMPT = """너는 한국 쇼핑 숏폼 대본 작가다. 아래 여러 개의 검증된 S급 대본이 있다.
-각 대본의 **강점**(훅·전개방식·주변인물 활용·말투)을 뽑아 하나로 **조합**한, 약 {seconds}초
-분량(대략 {words}단어)의 새 대본 초안 {n}개를 만들어라.
+약 {seconds}초 분량(대략 {words}단어)의 새 대본 초안 {n}개를 만들어라.
 
 [재료 대본들]
 {sources}
 
 규칙:
-- 특정 대본을 통째로 베끼지 말고, 각 대본의 좋은 부분을 골라 자연스럽게 녹여 새로 써라.
-- 훅은 가장 강한 대본의 훅 방식을 살리고, 전개·주변인물·말투도 좋은 걸 조합해라.
+- ★초안마다 먼저 '인물 1명·사건 1개·결말 1개'를 정하라. 다른 대본에서는 훅 방식·표현·
+  말투·전개 리듬만 빌리고, 인물과 사건은 절대 섞지 마라(대본 A의 인물이 대본 B의
+  사건을 겪으면 안 된다).
+- 특정 대본을 통째로 베끼지 말고, 좋은 부분만 골라 하나의 이야기로 녹여 새로 써라.
 - 실제로 읽을 구어체 나레이션(0초 훅 → … → 끝 CTA). 억지 설정·과장 금지.
-- 초안끼리 서로 다르게 조합을 시도해라.
-각 초안: hook(첫 훅 한 줄), script(전체 나레이션 대본), applied(어느 대본의 무엇을 조합했는지 한 줄).
+- 초안끼리 서로 다르게(정한 인물·사건·훅을 다양하게).
+""" + _STORY_RULES_CORE + "\n" + _STORY_DECLARE + """
+각 초안: hook(첫 훅 한 줄), script(전체 나레이션 대본), applied(어느 대본에서 무엇을 빌렸고
+어떤 한 스토리로 유지했는지 한 줄).
 JSON만 출력."""
 
 
@@ -142,7 +175,7 @@ def generate_mix(sources, target_seconds=20, n=3, max_key_tries=3):
     seconds = max(5, min(int(target_seconds or 20), 90))
     words = max(15, round(seconds * 2.3))
     prompt = _MIX_PROMPT.format(sources=_mix_source_block(sources[:3]), seconds=seconds, words=words, n=n)
-    return _generate_drafts(prompt)
+    return _verify_and_fix(_generate_drafts(prompt), seconds)
 
 
 def _elem_lines(structure, elem_modes, category_lookup):
@@ -219,7 +252,7 @@ def generate_variations(structure, full_text, elem_modes, category_lookup, mode=
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json", response_schema=_SCHEMA),
             )
-            return json.loads(resp.text).get("drafts", [])
+            return _verify_and_fix(json.loads(resp.text).get("drafts", []))
         except Exception as e:  # noqa: BLE001 — 생성 실패는 치명적 아님(빈 리스트)
             if (comment_gen.key_vault.is_daily_exhausted_error(e)
                     or comment_gen.key_vault.is_account_disabled_error(e)):
@@ -294,6 +327,96 @@ def refine_draft_partial(script_text, selected_text, instruction, max_key_tries=
     return _refine(
         _PARTIAL_PROMPT.format(script=script_text, selected=selected_text, instruction=instruction),
         max_key_tries)
+
+
+# ---- P5 자기검증 루프: 초안 3축 판정(인과·훅→끝·CTA) 후 미달만 1회 자동 보정 ----
+
+_JUDGE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "verdicts": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "idx": {"type": "integer"},
+                    "causality_ok": {"type": "boolean"},
+                    "hook_to_end_ok": {"type": "boolean"},
+                    "cta_ok": {"type": "boolean"},
+                    "fix_instruction": {"type": "string"},
+                },
+                "required": ["idx", "causality_ok", "hook_to_end_ok", "cta_ok",
+                             "fix_instruction"],
+            },
+        }
+    },
+    "required": ["verdicts"],
+}
+
+_JUDGE_PROMPT = """너는 한국 쇼핑 숏폼 대본 품질 검수자다. 아래 초안들을 초안별로
+3가지 축으로 엄격히 판정하라.
+
+[초안들]
+{drafts}
+
+판정 축:
+1. causality_ok — 인과·상관관계가 말이 되나? 각 문장이 앞 문장에서 자연스럽게
+   이어지나. 근거 없는 효능 비약, 뜬금없는 소재 점프가 있으면 실패.
+2. hook_to_end_ok — 훅에서 던진 궁금증/문제/이야기가 끝까지 끊기지 않고 이어져
+   해소되나. 훅 따로 본문 따로면 실패. 인물이나 사건이 중간에 바뀌면 실패.
+3. cta_ok — 마지막이 행동유도(CTA) 문장으로 끝나고, 그 CTA가 본문 이야기와
+   인과로 이어지나. 댓글 키워드형이면 'OO 남겨주세요'의 키워드가 실제로 명시돼
+   있어야 통과.
+
+하나라도 실패면 fix_instruction에 무엇을 어떻게 고칠지 구체적 수정 지시를
+한국어 1~2문장으로 써라. 전부 통과면 fix_instruction은 빈 문자열.
+idx는 초안 번호(0부터). JSON만 출력."""
+
+_FIX_SCHEMA = {
+    "type": "object",
+    "properties": {"hook": {"type": "string"}, "script": {"type": "string"}},
+    "required": ["hook", "script"],
+}
+
+_FIX_PROMPT = """너는 한국 쇼핑 숏폼 대본 작가다. 아래 대본이 검수에서 지적받았다.
+지적을 고쳐 통째로 다시 써라. 구어체 나레이션, 원래 분량(약 {words}단어) 유지.
+
+[대본]
+{script}
+
+[검수 지적]
+{instruction}
+
+규칙:
+""" + _STORY_RULES_CORE + """
+다음 JSON으로만 출력: {{"hook": "첫 훅 한 줄", "script": "다시 쓴 전체 대본"}}"""
+
+
+def _verify_and_fix(drafts, seconds=20):
+    """초안들을 3축(인과·훅→끝·CTA) 판정하고 미달 초안만 1회 재작성.
+    판정 1콜 + 미달 수 만큼 수정 콜. 판정 실패 시 원본 그대로(fail-open) —
+    검증 루프가 생성 기능을 죽이면 안 된다."""
+    if not drafts:
+        return drafts
+    words = max(15, round(seconds * 2.3))
+    block = "\n\n".join(f"[초안 {i}]\n{d.get('script', '')}" for i, d in enumerate(drafts))
+    verdicts = _call_json(_JUDGE_PROMPT.format(drafts=block), _JUDGE_SCHEMA).get("verdicts", [])
+    for v in verdicts:
+        i = v.get("idx")
+        if not isinstance(i, int) or not (0 <= i < len(drafts)):
+            continue
+        if v.get("causality_ok") and v.get("hook_to_end_ok") and v.get("cta_ok"):
+            continue
+        instruction = ((v.get("fix_instruction") or "").strip()
+                       or "인과가 끊긴 부분을 잇고 마지막을 본문과 이어지는 CTA로 끝내라.")
+        fixed = _call_json(
+            _FIX_PROMPT.format(script=drafts[i].get("script", ""),
+                               instruction=instruction, words=words), _FIX_SCHEMA)
+        if (fixed.get("script") or "").strip():
+            drafts[i]["script"] = fixed["script"].strip()
+            drafts[i]["hook"] = (fixed.get("hook") or drafts[i].get("hook") or "").strip()
+            drafts[i]["applied"] = ((drafts[i].get("applied") or "") + " · 검수 후 자동 보정").strip(" ·")
+    return drafts
 
 
 _SUBJECT_SCHEMA = {

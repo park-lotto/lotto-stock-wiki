@@ -8,6 +8,7 @@ _STRUCT = {"characters": [{"who": "농원 언니", "role": "정보원"}], "twist
 
 
 def _wire(mp, text):
+    mp.setattr(script_generate.key_vault, "get_live_keys_cascade", lambda group: [])
     mp.setattr(comment_gen, "SHORTS_GEMINI_KEYS", ["k"])
     mp.setattr(comment_gen, "_current_key_and_idx", lambda: ("k", 0))
     def gen(model, contents, config):
@@ -140,6 +141,7 @@ def test_detect_subject_strips_whitespace(monkeypatch):
 
 def _capture_prompt(mp, holder):
     """generate_content에 들어간 prompt를 holder['p']에 담고 정상 JSON 반환하도록 배선."""
+    mp.setattr(script_generate.key_vault, "get_live_keys_cascade", lambda group: [])
     mp.setattr(comment_gen, "SHORTS_GEMINI_KEYS", ["k"])
     mp.setattr(comment_gen, "_current_key_and_idx", lambda: ("k", 0))
     def gen(model, contents, config):
@@ -187,3 +189,99 @@ def test_remake_without_subject_still_locks_original(monkeypatch):
     script_generate.generate_variations(_STRUCT, "원본 대본 원문", {}, {}, mode="remake", subject="")
     assert "중복 회피" in h["p"]
     assert "소재(고정):" not in h["p"]  # 빈 소재면 명시줄 생략, full_text로만 잠금
+
+
+# ---- P5: 스토리 헌장 + 스키마 강제 (2026-07-19) ----
+
+def test_schema_requires_story_declaration_fields():
+    # 모델이 대본을 쓰기 전에 스토리(인물·사건·결말)와 CTA를 '선언'하게 스키마로 강제
+    req = script_generate._SCHEMA["properties"]["drafts"]["items"]["required"]
+    for f in ("story_person", "story_event", "story_resolution", "cta_line", "cta_keyword"):
+        assert f in req
+
+
+def test_gen_prompt_has_story_contract():
+    # 사장님 스크린샷 통증 경로(_GEN_PROMPT 단일 리메이크)에도 헌장이 들어가야 한다
+    for kw in ("한 스토리", "인과 사슬", "CTA", "남겨주세요"):
+        assert kw in script_generate._GEN_PROMPT
+
+
+def test_mix_prompt_single_story_rule():
+    # P5: 인물1·사건1·결말1 — 조합이라도 인물·사건은 절대 섞지 않는다
+    assert "인물 1명" in script_generate._MIX_PROMPT
+    assert "섞지 마라" in script_generate._MIX_PROMPT
+    assert "인과 사슬" in script_generate._MIX_PROMPT
+
+
+# ---- P5: 자기검증 루프 (2026-07-19) ----
+
+def _seq_call_json(mp, responses):
+    """script_generate._call_json을 '호출 순서대로 응답'하는 가짜로 교체.
+    기록된 (prompt, schema) 리스트를 돌려줘 프롬프트 내용 검증에 쓴다."""
+    calls = []
+    def fake(prompt, schema):
+        calls.append((prompt, schema))
+        return responses[min(len(calls) - 1, len(responses) - 1)]
+    mp.setattr(script_generate, "_call_json", fake)
+    return calls
+
+
+def test_verify_fixes_failing_draft(monkeypatch):
+    drafts = [{"hook": "h0", "script": "인과 붕괴 대본", "applied": "a"}]
+    calls = _seq_call_json(monkeypatch, [
+        {"verdicts": [{"idx": 0, "causality_ok": False, "hook_to_end_ok": True,
+                       "cta_ok": False, "fix_instruction": "마지막을 댓글 CTA로 끝내라"}]},
+        {"hook": "h1", "script": "고쳐진 대본. 궁금하면 댓글에 '비법' 남겨주세요"},
+    ])
+    out = script_generate._verify_and_fix(drafts, seconds=20)
+    assert out[0]["script"].startswith("고쳐진 대본")
+    assert out[0]["hook"] == "h1"
+    assert "자동 보정" in out[0]["applied"]
+    assert "마지막을 댓글 CTA로 끝내라" in calls[1][0]  # 판정 지적이 수정 프롬프트에 들어감
+
+
+def test_verify_keeps_passing_drafts(monkeypatch):
+    drafts = [{"hook": "h", "script": "멀쩡한 대본", "applied": "a"}]
+    _seq_call_json(monkeypatch, [
+        {"verdicts": [{"idx": 0, "causality_ok": True, "hook_to_end_ok": True,
+                       "cta_ok": True, "fix_instruction": ""}]},
+    ])
+    out = script_generate._verify_and_fix(drafts)
+    assert out[0]["script"] == "멀쩡한 대본"  # 통과 초안은 손대지 않는다
+
+
+def test_verify_fail_open_when_judge_dies(monkeypatch):
+    # 판정 콜 실패(키 소진 등) → 초안 생성 자체는 절대 죽으면 안 된다
+    drafts = [{"hook": "h", "script": "s", "applied": "a"}]
+    _seq_call_json(monkeypatch, [{}])
+    assert script_generate._verify_and_fix(drafts)[0]["script"] == "s"
+
+
+def test_verify_bad_idx_ignored(monkeypatch):
+    drafts = [{"hook": "h", "script": "s", "applied": "a"}]
+    _seq_call_json(monkeypatch, [
+        {"verdicts": [{"idx": 7, "causality_ok": False, "hook_to_end_ok": False,
+                       "cta_ok": False, "fix_instruction": "x"}]},
+    ])
+    assert script_generate._verify_and_fix(drafts)[0]["script"] == "s"
+
+
+def test_generate_variations_runs_verify(monkeypatch):
+    h = {}
+    _capture_prompt(monkeypatch, h)
+    monkeypatch.setattr(script_generate, "_verify_and_fix",
+                        lambda drafts, seconds=20: [dict(d, applied="verified") for d in drafts])
+    out = script_generate.generate_variations(_STRUCT, "원본", {}, {}, mode="remake")
+    assert out[0]["applied"] == "verified"
+
+
+def test_generate_mix_runs_verify(monkeypatch):
+    monkeypatch.setattr(comment_gen, "SHORTS_GEMINI_KEYS", ["k"])
+    monkeypatch.setattr(script_generate, "_generate_drafts",
+                        lambda p: [{"hook": "h", "script": "s", "applied": "a"}])
+    monkeypatch.setattr(script_generate, "_verify_and_fix",
+                        lambda drafts, seconds=20: [dict(d, applied="verified") for d in drafts])
+    srcs = [{"name": "a", "full_text": "t1", "structure": {}},
+            {"name": "b", "full_text": "t2", "structure": {}}]
+    out = script_generate.generate_mix(srcs)
+    assert out[0]["applied"] == "verified"

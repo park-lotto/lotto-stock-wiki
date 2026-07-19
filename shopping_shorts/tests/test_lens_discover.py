@@ -57,6 +57,25 @@ def test_excludes_tiktok_discover_search_pages(monkeypatch):
     assert out[0]["url"].endswith("/video/7564364411620625685")
 
 
+def test_excludes_instagram_non_permalink_pages(monkeypatch):
+    """렌즈는 개별 릴이 아닌 인스타 SEO·모음 페이지(/popular/{제목슬러그}·/explore·프로필)를
+    섞어 반환한다(2026-07-19 실사고: 렌즈 즐겨찾기로 담긴 instagram.com/popular/바나나-아침-식사/
+    가 매칭 단계에서 'Apify 해석 실패'로 배치 전체를 죽임). /p·/reel·/reels·/tv + 코드의
+    개별 permalink만 통과시킨다."""
+    matches = [
+        {"link": "https://www.instagram.com/popular/바나나-아침-식사/", "title": "p", "thumbnail": "t", "source": "Instagram"},
+        {"link": "https://www.instagram.com/reel/DkAbc123/", "title": "r", "thumbnail": "t", "source": "Instagram"},
+        {"link": "https://www.instagram.com/explore/tags/breakfast/", "title": "e", "thumbnail": "t", "source": "Instagram"},
+        {"link": "https://www.instagram.com/some_user/", "title": "prof", "thumbnail": "t", "source": "Instagram"},
+        {"link": "https://www.instagram.com/p/CyXyZ00/", "title": "post", "thumbnail": "t", "source": "Instagram"},
+    ]
+    monkeypatch.setattr(lens_discover, "SERPAPI_KEY", "fake")
+    monkeypatch.setattr(lens_discover.requests, "get", lambda *a, **k: _fake_response(matches))
+    out = lens_discover.search_similar_videos("https://ex.com/f.jpg")
+    urls = [i["url"] for i in out]
+    assert urls == ["https://www.instagram.com/reel/DkAbc123/", "https://www.instagram.com/p/CyXyZ00/"]
+
+
 def test_requests_type_visual_matches(monkeypatch):
     """google_lens는 요리·제품 프레임 같은 이미지엔 ai_overview만 주고 visual_matches를
     생략한다(2026-07-14 라이브 실측: type 없으면 0개, type=visual_matches면 60개).
