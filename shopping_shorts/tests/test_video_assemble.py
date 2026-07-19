@@ -553,6 +553,46 @@ def test_render_mix_chains_two_segments(tmp_path):
     assert abs(va._probe_duration(out) - 3.5) < 0.2
 
 
+@pytest.mark.skipif(not _HAS_FF, reason="ffmpeg/ffprobe 없음")
+def test_render_mix_survives_match_beyond_source_length(tmp_path):
+    # ★약한 매칭이 소스 길이 '밖'을 잡아도 미리보기가 죽지 않는다(2026-07-19 실사고).
+    # 3초 소스인데 매칭 구간이 155~226초 → 옛 코드는 -ss 155가 끝을 넘어 0프레임 →
+    # beat concat "Output file does not contain any stream" → _render_mix 전체가 크래시.
+    # 새 코드는 start를 소스 안으로 당겨 정상 렌더한다.
+    src = tmp_path / "A.mp4"
+    _make_color_source(src, ["red", "green", "blue"])       # 총 3초
+    tts = tmp_path / "tts0.wav"
+    _make_silence(tts, 2.0)
+    edit_plan = {"beats": [{
+        "beat_idx": 0, "role": "hook", "narration": "x",
+        "primary": {"video_id": "A", "seg_id": "A-x", "start": 155.0, "end": 226.0},
+        "alternates": [],
+    }]}
+    out = va._render_mix(edit_plan, {0: str(tts)}, {"A": str(src)}, tmp_path)   # 옛 코드면 여기서 예외
+    assert va._probe_duration(out) > 0.5, "미리보기가 빈 영상으로 나왔다"
+
+
+@pytest.mark.skipif(not _HAS_FF, reason="ffmpeg/ffprobe 없음")
+def test_render_mix_skips_dead_beat_instead_of_crashing(tmp_path):
+    # 두 비트 중 하나가 손상 소스(길이 0)라도 나머지 비트로 미리보기가 나온다 —
+    # 하나의 죽은 매칭이 전체를 무너뜨리지 않는다.
+    good = tmp_path / "good.mp4"
+    _make_color_source(good, ["red", "green"])              # 총 2초
+    dead = tmp_path / "dead.mp4"
+    dead.write_bytes(b"not a video")                        # 디코드 불가 → _probe_duration 0
+    tts0 = tmp_path / "tts0.wav"; _make_silence(tts0, 1.5)
+    tts1 = tmp_path / "tts1.wav"; _make_silence(tts1, 1.5)
+    edit_plan = {"beats": [
+        {"beat_idx": 0, "role": "hook", "narration": "x",
+         "primary": {"video_id": "G", "seg_id": "G-0", "start": 0.0, "end": 2.0}, "alternates": []},
+        {"beat_idx": 1, "role": "cta", "narration": "y",
+         "primary": {"video_id": "D", "seg_id": "D-0", "start": 0.0, "end": 2.0}, "alternates": []},
+    ]}
+    out = va._render_mix(edit_plan, {0: str(tts0), 1: str(tts1)},
+                         {"G": str(good), "D": str(dead)}, tmp_path)
+    assert va._probe_duration(out) > 0.5, "성한 비트까지 통째로 날아갔다"
+
+
 def test_sparkle_effect_emits_flashing_alpha(tmp_path):
     # 반짝(CTA) 효과: 등장 구간 알파가 abs(sin)로 깜빡이는 표현식이 최종 필터에 실제로 들어간다.
     style = {"effect": "sparkle", "size": 50, "y_pct": 37, "box": False, "bar": False}
