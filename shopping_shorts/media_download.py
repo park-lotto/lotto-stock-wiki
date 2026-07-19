@@ -1,5 +1,6 @@
 """소스 URL을 플랫폼별로 다운로드 — instagram=Apify, youtube/tiktok=yt-dlp(무료)."""
 import json
+import re
 import subprocess
 import sys
 import urllib.parse
@@ -101,6 +102,13 @@ def _is_direct_video(u):
 def download_any(url, dest_dir):
     """소스 URL 다운로드 → (mp4경로, caption) 튜플. caption은 인스타에서만 채워짐."""
     u = (url or "").lower()
+    # ★yt-dlp는 rednote.com 도메인을 모른다(Unsupported URL) — 같은 사이트인 xiaohongshu.com으로
+    # 정규화해야 추출기가 인식한다. 렌즈가 로그인벽 우회용으로 '원본 열기'를 rednote로 바꾼 URL이
+    # 믹스 소스로 그대로 넘어와 다운로드가 통째로 막혔다(2026-07-19 라이브 실측: explore+xsec_token
+    # 노트를 xiaohongshu.com으로만 바꿔주면 yt-dlp가 정상 다운로드). 토큰·경로는 그대로 보존된다.
+    if "rednote.com" in u:
+        url = re.sub(r"://(www\.)?rednote\.com", "://www.xiaohongshu.com", url, flags=re.I)
+        u = url.lower()
     if "instagram.com" in u:
         return _download_instagram(url, dest_dir)
     # 직접 mp4(예: 샤오홍슈 url_720p) — 담긴 샤오홍슈 url은 rednote.com/search_result 검색결과

@@ -100,10 +100,11 @@ console.log(JSON.stringify({big: trace(1080,1920), small: trace(270,480)}));
     assert out["small"][1] == pytest.approx(out["big"][1] / 4)
 
 
-def test_draw_scales_font_size_with_canvas():
-    """size는 1080 기준 px — 270px 캔버스에선 1/4로 줄어야 한다."""
-    script = _slice_source() + """
-function fontAt(W){
+def test_draw_font_size_scales_with_canvas_ratio():
+    """grow-to-fill: 크기는 절대 px이 아니라 캔버스 폭에 비례한다 — 270px 캔버스는 1080px의 1/4.
+    (프리뷰 270 == 결과 1080이 같은 비율이라는 핵심 계약. 절대값이 아니라 4배 관계를 잠근다.)"""
+    script = _slice_source() + r"""
+function fontPxAt(W){
   let seen = null;
   const ctx = new Proxy({}, {
     get(t, k){
@@ -116,13 +117,13 @@ function fontAt(W){
   });
   drawThumb(ctx, {width:W, height:W*16/9}, [{text:'A', font:'BMJUA.ttf', size:100,
     color:'#fff', outline:null, box:null, rot:0, x:0.5, y:0.25}], W, W*16/9);
-  return seen;
+  return parseFloat(/(\d+(?:\.\d+)?)px/.exec(seen)[1]);
 }
-console.log(JSON.stringify({big: fontAt(1080), small: fontAt(270)}));
+console.log(JSON.stringify({big: fontPxAt(1080), small: fontPxAt(270)}));
 """
     out = json.loads(_run_node(script))
-    assert "100px" in out["big"]
-    assert "25px" in out["small"]
+    assert out["big"] > 0 and out["small"] > 0
+    assert out["small"] == pytest.approx(out["big"] / 4, rel=1e-3)
 
 
 def test_draw_applies_rotation():
@@ -166,11 +167,11 @@ console.log(n);
     assert int(_run_node(script).strip()) == 3
 
 
-def test_draw_scales_box_padding_with_canvas():
-    """박스 padding도 좌표·폰트와 같은 배율(s)을 타야 한다 —
-    안 타면 270px 프리뷰의 박스 여백이 1080px 결과와 다른 비율로 보인다."""
+def test_draw_scales_box_with_canvas_ratio():
+    """박스(fillRect)도 좌표·폰트와 같은 캔버스 배율을 타야 한다 — 270px 프리뷰의 박스가
+    1080px 결과와 같은 비율이어야 한다. 크기·여백 모두 폭에 비례하므로 박스 높이는 정확히 1/4."""
     script = _slice_source() + """
-function padAt(W){
+function boxHeightAt(W){
   const calls = [];
   const ctx = new Proxy({}, {
     get(t, k){
@@ -181,16 +182,15 @@ function padAt(W){
       return undefined;
     }, set(){ return true; }
   });
-  // size:0 → fillRect의 4번째 인자(height)는 pad*1.2만 남는다 (pad를 순수 격리)
-  drawThumb(ctx, {width:W, height:W*16/9}, [{text:'A', font:'BMJUA.ttf', size:0,
+  drawThumb(ctx, {width:W, height:W*16/9}, [{text:'A', font:'BMJUA.ttf', size:90,
     color:'#fff', outline:null, box:{color:'#000', pad:16, opacity:80}, rot:0, x:0.5, y:0.25}], W, W*16/9);
-  const height = calls[0][3];
-  return height / 1.2;
+  return calls[0][3];   // fillRect height (size + pad*1.2), 둘 다 폭에 비례
 }
-console.log(JSON.stringify({big: padAt(1080), small: padAt(270)}));
+console.log(JSON.stringify({big: boxHeightAt(1080), small: boxHeightAt(270)}));
 """
     out = json.loads(_run_node(script))
-    assert out["small"] == pytest.approx(out["big"] / 4)
+    assert out["big"] > 0 and out["small"] > 0
+    assert out["small"] == pytest.approx(out["big"] / 4, rel=1e-3)
 
 
 def test_draw_scales_outline_width_with_canvas():
