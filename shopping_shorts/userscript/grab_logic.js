@@ -1,6 +1,6 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-07-19-e  (도우인 메인월드 주입 — sandbox의 fiber 접근 한계를 우회)
+// 로직 버전: 2026-07-19-f  (도우인 메인월드 주입 + img→부모 box 수정 + aweme_id 중복제거)
 (function () {
   "use strict";
   if (window.__ssGrabLoaded) return;   // 로더가 중복 실행돼도 한 번만
@@ -160,12 +160,16 @@
         var img = imgs[j], ir = img.getBoundingClientRect();
         if (ir.width < 150 || ir.height < 150) continue;
         var id0 = findId(img); if (!id0) continue;
-        var box = img;
+        // 같은 aweme_id에 이미 버튼이 있으면 건너뜀(도우인이 숨은 단열 레이아웃을 중복 렌더해도 1개만).
+        if (document.querySelector('.ss-card-grab[data-aid="' + id0 + '"]')) continue;
+        // ★box는 img의 '부모'부터 찾는다 — img는 void 요소라 appendChild해도 렌더가 안 돼(0×0)
+        //   19/20 카드가 안 보였던 원인. 부모 컨테이너(썸네일 래퍼)에 붙여야 카드 위에 뜬다.
+        var box = img.parentElement;
         while (box && box !== document.body) { var r = box.getBoundingClientRect(); if (r.width >= 150 && r.width < 440 && r.height >= 180) break; box = box.parentElement; }
         if (!box || box === document.body || box.querySelector(".ss-card-grab")) continue;
         if (getComputedStyle(box).position === "static") box.style.position = "relative";
         var b = document.createElement("button");
-        b.className = "ss-card-grab"; b.textContent = "📥"; b.title = "이 영상 담기";
+        b.className = "ss-card-grab"; b.setAttribute("data-aid", id0); b.textContent = "📥"; b.title = "이 영상 담기";
         b.style.cssText = "position:absolute;top:8px;right:8px;z-index:99999;background:#1f6feb;color:#fff;border:none;border-radius:16px;width:34px;height:34px;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,.4);cursor:pointer";
         (function (img) {
           b.addEventListener("click", function (e) {
