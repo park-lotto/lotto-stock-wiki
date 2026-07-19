@@ -1834,9 +1834,9 @@ function genMix(){
 let MIX_JOB=null, MIX_POLL=null;
 let VP_BEATS=[]; let _vpHeard=new Set();
 const MIX_LABEL={downloading:'영상 다운로드 중…',extracting:'대본 분석 중…',planning:'장면 매칭 중…',tts:'음성 생성 중…',ready_for_review:'매칭 완료',rendering:'최종 렌더 중…',done:'완료',failed:'실패'};
-// 동적 로딩 파이프라인(loader.js). 영상매칭이 다운로드→분석→매칭→음성→완료 단계를 거치는 걸
-// 밋밋한 텍스트 대신 살아있는 단계바로 보여준다. loader.js 없으면 null→기존 텍스트로 폴백.
-let MIX_PIPE=null;
+// 동적 로딩 파이프라인(loader.js) 단계 순서. 파이프라인 컨트롤러 자체는 최상위 변수로 두지 않고
+// #mixStatus 엘리먼트 속성(_sblPipe)에 담는다 — startProduceMix만 잘라 도는 테스트 하네스에서
+// 미선언 최상위 변수 대입이 예외를 던져 게이트 재잠금을 건너뛰던 회귀를 막기 위함(2026-07-19).
 const MIX_STAGE_ORDER=['downloading','extracting','planning','tts'];
 function addMixUrl(){
   const wrap=document.getElementById('mixUrls');
@@ -2428,11 +2428,17 @@ async function startProduceMix(){
     clearInterval(PREVIEW_POLL); PREVIEW_POLL=null; ++PREVIEW_GEN;
     PREVIEW_STATUS=null;
     MIX_JOB=d.job_id;
-    // 동적 단계바 시작(loader.js 있을 때만). 다운로드 단계부터 표시.
-    MIX_PIPE = window.SBLoader ? SBLoader.pipeline(st, [
-      {label:'다운로드'},{label:'분석'},{label:'매칭'},{label:'음성'},{label:'완료'}
-    ]) : null;
-    if(MIX_PIPE) MIX_PIPE.set(0, '영상 다운로드 중… <b>1/4</b>');
+    // 동적 단계바 시작(loader.js 있을 때만). 컨트롤러는 #mixStatus 속성에 담는다(최상위 변수 X).
+    // ★로딩 UI는 부가기능 — 절대 매칭 흐름(폴링·게이트 재잠금)을 막으면 안 된다. try/catch로 감싼다.
+    st._sblPipe = null;
+    try{
+      if (typeof window!=='undefined' && window.SBLoader){
+        st._sblPipe = SBLoader.pipeline(st, [
+          {label:'다운로드'},{label:'분석'},{label:'매칭'},{label:'음성'},{label:'완료'}
+        ]);
+        st._sblPipe.set(0, '영상 다운로드 중… <b>1/4</b>');
+      }
+    }catch(_){ st._sblPipe = null; }
     MIX_POLL=setInterval(pollMix,2500); pollMix();
     refreshNextBtn();   // 새 job은 아직 미리보기가 없다 — 다시 잠근다
   }catch(e){ st.textContent='❌ 네트워크 오류'; }
@@ -2441,18 +2447,19 @@ async function pollMix(){
   try{
     const d=await (await fetch('/api/mix/status/'+MIX_JOB)).json();
     const st=document.getElementById('mixStatus');
-    if(!d.ok){ MIX_PIPE=null; st.textContent='상태 조회 실패'+(d.error?' — '+d.error:''); clearInterval(MIX_POLL); return; }
-    if(MIX_PIPE && d.status!=='failed'){
+    if(!d.ok){ if(st) st._sblPipe=null; st.textContent='상태 조회 실패'+(d.error?' — '+d.error:''); clearInterval(MIX_POLL); return; }
+    const _pipe = st ? st._sblPipe : null;
+    if(_pipe && d.status!=='failed'){
       // 단계바 진행. ready_for_review=전부 완료, 그 외는 해당 단계로.
       const idx=MIX_STAGE_ORDER.indexOf(d.status);
-      if(d.status==='ready_for_review') MIX_PIPE.set(4, '매칭 완료!');
-      else if(idx>=0) MIX_PIPE.set(idx, (MIX_LABEL[d.status]||d.status)+' <b>'+(idx+1)+'/4</b>');
+      if(d.status==='ready_for_review') _pipe.set(4, '매칭 완료!');
+      else if(idx>=0) _pipe.set(idx, (MIX_LABEL[d.status]||d.status)+' <b>'+(idx+1)+'/4</b>');
       else st.textContent='상태: '+(MIX_LABEL[d.status]||d.status);   // rendering 등
     } else if(d.status!=='failed'){
       st.textContent='상태: '+(MIX_LABEL[d.status]||d.status)+(d.error?' — '+d.error:'');   // loader.js 폴백
     }
     if(d.status==='ready_for_review'){ clearInterval(MIX_POLL); loadMixReview(); }
-    if(d.status==='failed'){ MIX_PIPE=null; st.textContent='❌ 매칭 실패'+(d.error?' — '+d.error:''); clearInterval(MIX_POLL); }
+    if(d.status==='failed'){ if(st) st._sblPipe=null; st.textContent='❌ 매칭 실패'+(d.error?' — '+d.error:''); clearInterval(MIX_POLL); }
   }catch(e){}
 }
 async function loadMixReview(){
