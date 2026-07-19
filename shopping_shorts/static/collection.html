@@ -75,7 +75,7 @@ function sendToProduce(){
   // thumbnail·caption도 넘겨야 한다(대본 추출은 shortcode로). 최대 5개(2단계 입력 상한).
   const picks=ITEMS.filter(i=>SELECTED.has(i.shortcode)).slice(0,5).map(i=>({
     url:i.url||'', shortcode:i.shortcode||'', name:i.name||'',
-    thumbnail:i.thumbnail||'', caption:i.caption||''}));
+    thumbnail:i.thumbnail||'', caption:i.caption||'', play_url:i.play_url||''}));
   if(!picks.length){ alert('보낼 항목을 먼저 선택하세요'); return; }
   // 신규 형식(items)과 구버전 호환(urls) 둘 다 저장.
   sessionStorage.setItem('produce_handoff', JSON.stringify(picks));
@@ -158,7 +158,7 @@ function _closeOverlay(){ const o=document.getElementById('collOverlay'); if(o){
 function sendOneToProduce(sc){
   const i=ITEMS.find(x=>x.shortcode===sc); if(!i) return;
   const picks=[{url:i.url||'', shortcode:i.shortcode||'', name:i.name||'',
-                thumbnail:i.thumbnail||'', caption:i.caption||''}];
+                thumbnail:i.thumbnail||'', caption:i.caption||'', play_url:i.play_url||''}];
   sessionStorage.setItem('produce_handoff', JSON.stringify(picks));
   sessionStorage.setItem('produce_mix_urls', JSON.stringify(picks.map(p=>p.url).filter(Boolean)));
   location.href='/produce';

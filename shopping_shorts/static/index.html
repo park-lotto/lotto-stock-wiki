@@ -1059,6 +1059,7 @@ async function sendToProduce(shortcode){
   const item = {
     url: it.url||'', shortcode: shortcode, name: it.name||it.username||'',
     thumbnail: it.thumbnail||'', caption: it.caption||'', category: it.category||'',
+    play_url: it.play_url||'',   // 제작소 재료 미리보기 인라인 재생용(있을 때만)
     useFootage: true, pickScript: !!script, script: script,
   };
   // ★덮어쓰지 말고 이어붙인다(2026-07-19). sendToProduce는 대본추출을 await(10~30초)라
