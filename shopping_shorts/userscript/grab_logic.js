@@ -1,6 +1,6 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-07-19-c  (도우인 카드별 담기 추가 — React fiber ID추출)
+// 로직 버전: 2026-07-19-d  (도우인 unsafeWindow로 fiber접근 + 전체 try/catch)
 (function () {
   "use strict";
   if (window.__ssGrabLoaded) return;   // 로더가 중복 실행돼도 한 번만
@@ -133,17 +133,30 @@
     try { for (var k2 in o) { if (k2 === "return" || k2 === "_owner" || k2 === "stateNode" || k2 === "child" || k2 === "sibling") continue; var r = _deepFindId(o[k2], d + 1); if (r) return r; } } catch (e) {}
     return null;
   }
+  // ★유저스크립트는 격리(sandbox)에서 돌아 페이지가 DOM에 박은 React 내부(__reactFiber$)가
+  //   안 보인다(2026-07-19 도우인만 실패한 원인). unsafeWindow(페이지 실제 window)로 접근한다.
+  //   그래도 못 읽으면 버튼을 안 붙이고 플로팅으로 폴백한다.
+  var _W = (typeof unsafeWindow !== "undefined" && unsafeWindow) ? unsafeWindow : window;
+  function _fiberKey(el) {
+    var k = Object.keys(el).find(function (x) { return x.indexOf("__reactFiber$") === 0; });
+    if (k) return k;
+    for (var kk in el) { if (kk.indexOf("__reactFiber$") === 0) return kk; }   // sandbox에선 for-in이 잡기도
+    return null;
+  }
   function _douyinId(el) {
     for (var d = 0; d < 9 && el; d++, el = el.parentElement) {
-      var fk = Object.keys(el).find(function (k) { return k.indexOf("__reactFiber$") === 0; });
-      if (fk) { var f = el[fk]; for (var i = 0; i < 12 && f; i++, f = f.return) { var id = _deepFindId(f.memoizedProps, 0); if (id) return id; } }
+      try {
+        var fk = _fiberKey(el);
+        if (fk) { var f = el[fk]; for (var i = 0; i < 12 && f; i++, f = f.return) { var id = _deepFindId(f.memoizedProps, 0); if (id) return id; } }
+      } catch (e) {}
     }
     return null;
   }
   function addDouyinCardBtns() {
     if (!isGridPage()) return;
     if (location.host.indexOf("douyin") < 0) return;
-    var imgs = document.querySelectorAll("img");
+    var imgs;
+    try { imgs = _W.document.querySelectorAll("img"); } catch (e) { imgs = document.querySelectorAll("img"); }
     for (var j = 0; j < imgs.length; j++) {
       var img = imgs[j], ir = img.getBoundingClientRect();
       if (ir.width < 150 || ir.height < 150) continue;
@@ -170,7 +183,7 @@
     }
   }
 
-  function tick() { addFloatBtn(); addCardBtns(); addAnchorCardBtns(); addDouyinCardBtns(); syncFloat(); }
+  function tick() { try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{syncFloat();}catch(e){} }
   tick();
   // SPA라 스크롤·재검색으로 카드가 갈아끼워져도 버튼을 계속 유지한다.
   setInterval(tick, 2000);
