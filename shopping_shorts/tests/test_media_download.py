@@ -59,3 +59,33 @@ def test_download_instagram_missing_caption_defaults_empty(monkeypatch, tmp_path
 
     path, caption = md._download_instagram("https://www.instagram.com/reel/ABC/", str(tmp_path))
     assert caption == ""
+
+
+def test_direct_mp4_downloaded_without_ytdlp(monkeypatch, tmp_path):
+    # 샤오홍슈 play_url(직접 mp4/xhscdn)은 yt-dlp 안 거치고 그대로 HTTP 다운로드(비용 0).
+    import shopping_shorts.frame_extract as frame_extract
+    monkeypatch.setattr(frame_extract, "download_video", lambda video_url, dest: tmp_path / "xhs.mp4")
+
+    def _boom(*a, **k):
+        raise AssertionError("yt-dlp를 타면 안 된다(직접 mp4)")
+    monkeypatch.setattr(md, "_download_ytdlp", _boom)
+
+    path, caption = md.download_any("https://sns-video-hw.xhscdn.com/stream/1/abc.mp4?token=x", str(tmp_path))
+    assert path.endswith("xhs.mp4")
+    assert caption == ""
+
+
+def test_is_direct_video_page_vs_file():
+    assert md._is_direct_video("https://sns-video-hw.xhscdn.com/a.mp4?t=1")
+    assert md._is_direct_video("https://v.zjcdn.com/abc")
+    # 페이지 URL은 직접영상 아님 → yt-dlp 경로로 가야 한다
+    assert not md._is_direct_video("https://www.rednote.com/search_result/689ea3ac")
+    assert not md._is_direct_video("https://www.xiaohongshu.com/discovery/item/abc?xsec_token=y")
+
+
+def test_rednote_page_routed_to_ytdlp(monkeypatch, tmp_path):
+    # rednote.com 페이지는 지원목록에 들어가 yt-dlp로 라우팅(더는 '지원하지 않는 URL' 아님).
+    called = {}
+    monkeypatch.setattr(md, "_download_ytdlp", lambda url, d: (called.setdefault("u", url), "x.mp4")[1:] and (url, ""))
+    path, caption = md.download_any("https://www.rednote.com/explore/abc", str(tmp_path))
+    assert "rednote.com" in called["u"]
