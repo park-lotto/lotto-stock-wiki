@@ -1,6 +1,6 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-07-19-f  (도우인 메인월드 주입 + img→부모 box 수정 + aweme_id 중복제거)
+// 로직 버전: 2026-07-19-g  (샤오홍슈 카드링크 xsec_token 앵커 우선 — 토큰없는 래퍼 오집 수정)
 (function () {
   "use strict";
   if (window.__ssGrabLoaded) return;   // 로더가 중복 실행돼도 한 번만
@@ -55,13 +55,27 @@
 
   // ── 카드별 버튼: 샤오홍슈/도우인(rednote) 검색·탐색 그리드의 영상 카드마다 ──
   // 카드=section.note-item, 커버 링크=a.cover(→/search_result/{id} 또는 /explore/{id}).
+  // ★카드 링크는 반드시 xsec_token이 붙은 앵커를 고른다(2026-07-19 실측 사고):
+  //   카드 맨 앞에 클래스 없는 래퍼 <a href="/search_result/{id}">(토큰 없음)가 있어서
+  //   querySelector 콤마목록(문서순서 첫 매칭)이 그걸 집었다 → 토큰 없는 URL이 저장돼
+  //   다운로드가 전부 실패했다. a.cover/a.title엔 토큰이 있다 — 토큰 있는 놈 우선.
+  function xhsCardLink(card) {
+    var as = card.querySelectorAll('a[href*="/search_result/"], a[href*="/explore/"], a.cover[href]');
+    var fallback = null;
+    for (var i = 0; i < as.length; i++) {
+      var h = as[i].getAttribute("href") || "";
+      if (h.indexOf("xsec_token") >= 0) return as[i];
+      if (!fallback) fallback = as[i];
+    }
+    return fallback;
+  }
   function addCardBtns() {
     if (!isGridPage()) return;
     var cards = document.querySelectorAll("section.note-item");
     for (var i = 0; i < cards.length; i++) {
       var card = cards[i];
       if (card.querySelector(".ss-card-grab")) continue;   // 중복 방지
-      var cover = card.querySelector('a.cover[href], a[href*="/search_result/"], a[href*="/explore/"]');
+      var cover = xhsCardLink(card);
       if (!cover) continue;   // 광고·라이브 등 링크 없는 카드는 건너뜀
       if (getComputedStyle(card).position === "static") card.style.position = "relative";
       var b = document.createElement("button");
@@ -77,7 +91,7 @@
           // 클릭 시점에 카드에서 URL·썸네일·제목을 읽는다(SPA가 노드를 재사용해도 항상 현재 내용).
           e.preventDefault();
           e.stopPropagation();
-          var cv = card.querySelector('a.cover[href], a[href*="/search_result/"], a[href*="/explore/"]');
+          var cv = xhsCardLink(card);   // 토큰 있는 앵커 우선(위 주석 참조)
           var im = card.querySelector("a.cover img, img");
           var tt = card.querySelector("a.title, .footer .title");
           if (cv) openGrab(cv.href, im ? im.src : "", tt ? tt.textContent.trim() : "");
