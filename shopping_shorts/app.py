@@ -22,6 +22,7 @@ from shopping_shorts.outreach import build_queue
 from shopping_shorts.store import Store
 from shopping_shorts.auto_run import run_auto_job, default_stages
 from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
+from shopping_shorts.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI
 from shopping_shorts.frame_extract import (download_video, extract_frames,
                                            extract_frame_at, extract_grid_frames)
 from shopping_shorts.script_extract import extract_script
@@ -2457,7 +2458,8 @@ def _load_dash_secret() -> str:
 
 
 DASH_SECRET = _load_dash_secret()
-_AUTH_ON = bool(DASH_PASS)
+# 인증은 비번(DASH_PASS) 또는 구글 OAuth 둘 중 하나라도 설정되면 ON(게이트 작동).
+_AUTH_ON = bool(DASH_PASS) or bool(GOOGLE_CLIENT_ID)
 if not _AUTH_ON:
     # ★fail-open 경고: DASH_PASS가 비면 인증·유료게이트가 통째로 꺼져 전원이 admin(full)로 열린다.
     #   로컬 개발은 의도지만, 운영 배포에서 env가 빠지면 유료기능·관리기능이 공개된다.
@@ -2472,7 +2474,9 @@ _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico",
                # 원클릭 담기: /grab(북마클릿 설치안내)는 공개, /api/grab(팝업)은 자체적으로
                # 세션쿠키를 검증해 고객을 식별한다(_cid 폴백이 legacy라 여기선 직접 검증). 미들웨어
                # 401을 피해 친절한 팝업 응답을 주려고 allowlist에 둔다.
-               "/grab", "/api/grab", "/grab.user.js", "/grab_logic.js")
+               "/grab", "/api/grab", "/grab.user.js", "/grab_logic.js",
+               # 구글 OAuth: 로그인 전(세션 없음)에 접근해야 하는 공개 경로.
+               "/auth/google/login", "/auth/google/callback")
 _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 
 # ── 유료게이트 deny-by-default (2026-07-19) ──
@@ -2536,25 +2540,43 @@ def _set_session_cookie(response, customer_id: int):
 
 _LOGIN_HTML = """<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>쇼핑쇼츠 로그인</title>
-<style>body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;
-background:#0b0b0e;font-family:system-ui,'Noto Sans KR',sans-serif}
-.box{background:#16161c;border:1px solid #2a2a30;border-radius:14px;padding:32px 28px;width:280px}
-h1{color:#4f9dfa;font-size:18px;margin:0 0 18px;text-align:center;letter-spacing:1px}
-input{width:100%;box-sizing:border-box;margin:6px 0;padding:11px 12px;background:#0e0e12;
-border:1px solid #333;border-radius:8px;color:#eee;font-size:14px}
-button{width:100%;margin-top:12px;padding:11px;background:#4f9dfa;color:#111;border:0;
-border-radius:8px;font-weight:700;font-size:14px;cursor:pointer}
-a{color:#7db4ff;font-size:12px;text-decoration:none}
-.err{color:#e74c3c;font-size:12px;text-align:center;margin-top:10px;min-height:14px}
-.foot{text-align:center;margin-top:14px}</style></head>
-<body><form class=box method=post action=/api/login>
-<h1>🛍️ 쇼핑쇼츠</h1>
-<input name=user placeholder=아이디 autocomplete=username autofocus>
-<input name=pass type=password placeholder=비밀번호 autocomplete=current-password>
-<button>로그인</button>
+<style>*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+background:#0a0a0d;font-family:'Malgun Gothic',system-ui,'Noto Sans KR',sans-serif;color:#e8e8ea}
+.box{width:340px;padding:36px 30px;text-align:center}
+.logo{display:flex;align-items:center;justify-content:center;gap:10px;font-size:20px;font-weight:800;margin-bottom:34px}
+.logo .ic{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#ff8a4c,#ff5e62);
+display:flex;align-items:center;justify-content:center;font-size:18px}
+h1{font-size:22px;margin:0 0 8px}
+.sub{color:#ff9a6b;font-size:13px;margin-bottom:26px;line-height:1.6}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;
+background:#15151b;border:1px solid #2c2c34;border-radius:10px;color:#e8e8ea;font-size:15px;
+font-weight:700;cursor:pointer;text-decoration:none}
+.gbtn:hover{background:#1c1c24;border-color:#3a3a44}
+.gbtn svg{width:18px;height:18px}
+.err{color:#e0623d;font-size:12px;margin-top:16px;min-height:14px;line-height:1.6}
+.home{display:block;color:#6a6a76;font-size:12px;margin-top:22px;text-decoration:none}
+.atoggle{color:#45454f;font-size:11px;margin-top:30px;cursor:pointer;background:none;border:0}
+.aform{display:none;margin-top:14px}.aform.show{display:block}
+.aform input{width:100%;margin:5px 0;padding:10px;background:#0e0e12;border:1px solid #2c2c34;
+border-radius:8px;color:#eee;font-size:13px}
+.aform button{width:100%;margin-top:8px;padding:10px;background:#2a2a34;color:#cfcfd6;border:0;
+border-radius:8px;font-weight:700;font-size:13px;cursor:pointer}</style></head>
+<body><div class=box>
+<div class=logo><span class=ic>🛍️</span> 쇼핑쇼츠</div>
+<h1>로그인</h1>
+<div class=sub>구글 계정으로 로그인하세요<br>처음이면 <b>무료 체험</b>이 바로 시작돼요</div>
+<a class=gbtn href="/auth/google/login">
+<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.8-6.8C35.6 2.4 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.3 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9.1h12.4c-.5 2.9-2.1 5.4-4.6 7l7.1 5.5c4.2-3.9 6.6-9.6 6.6-16z"/><path fill="#FBBC05" d="M10.5 28.3c-.5-1.4-.8-2.9-.8-4.3s.3-2.9.8-4.3l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.6 10.4l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.1-5.5c-2 1.3-4.6 2.1-8.1 2.1-6.3 0-11.6-3.8-13.5-9.1l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>
+Google 계정으로 로그인</a>
 <div class=err>__ERR__</div>
-<div class=foot><a href=/signup>계정이 없으신가요? 가입하기</a></div>
-</form></body></html>"""
+<a class=home href="/">← 홈으로 돌아가기</a>
+<button class=atoggle onclick="document.getElementById('af').classList.toggle('show')">운영자 로그인</button>
+<form class=aform id=af method=post action=/api/login>
+<input name=user placeholder=아이디 autocomplete=username>
+<input name=pass type=password placeholder=비밀번호 autocomplete=current-password>
+<button>운영자 로그인</button></form>
+</div></body></html>"""
 
 _SIGNUP_HTML = """<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>쇼핑쇼츠 가입</title>
@@ -2581,7 +2603,13 @@ a{color:#7db4ff;font-size:12px;text-decoration:none}
 
 @app.get("/login", response_class=HTMLResponse)
 def _login_page(e: str = ""):
-    return _LOGIN_HTML.replace("__ERR__", "아이디 또는 비밀번호가 틀렸습니다" if e else "")
+    if e == "1":
+        msg = "아이디 또는 비밀번호가 틀렸습니다"
+    elif e:   # 구글 콜백 등에서 온 안내 — XSS 방지 이스케이프
+        msg = e.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+    else:
+        msg = ""
+    return _LOGIN_HTML.replace("__ERR__", msg)
 
 
 @app.get("/signup", response_class=HTMLResponse)
@@ -2625,6 +2653,77 @@ async def _api_signup(req: Request):
         return RedirectResponse("/signup?e=" + urllib.parse.quote("이미 존재하는 아이디입니다"), status_code=303)
     r = RedirectResponse("/", status_code=303)
     _set_session_cookie(r, customer_id)
+    return r
+
+
+# ── 구글 OAuth (유료게이트 고객 로그인, 2026-07-19) ──
+# 라이브러리 없이: authorize 리다이렉트 → code → token 교환 → userinfo(sub,email).
+# id_token JWT 서명검증 대신 Google token 엔드포인트(TLS)로 받은 access_token으로 userinfo를
+# 직접 조회한다(서명검증 불필요·동등 안전). state 쿠키로 CSRF 방어.
+_GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
+_GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
+_GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
+
+
+def _google_configured():
+    return bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
+
+
+def _google_authorize_url(state):
+    q = urllib.parse.urlencode({
+        "client_id": GOOGLE_CLIENT_ID, "redirect_uri": GOOGLE_REDIRECT_URI,
+        "response_type": "code", "scope": "openid email profile",
+        "state": state, "access_type": "online", "prompt": "select_account"})
+    return _GOOGLE_AUTH_URL + "?" + q
+
+
+def _google_fetch_identity(code, _requests=None):
+    """code → {sub, email} 또는 None. 네트워크는 _requests 주입으로 테스트 가능."""
+    rq = _requests or requests
+    tok = rq.post(_GOOGLE_TOKEN_URL, data={
+        "code": code, "client_id": GOOGLE_CLIENT_ID, "client_secret": GOOGLE_CLIENT_SECRET,
+        "redirect_uri": GOOGLE_REDIRECT_URI, "grant_type": "authorization_code"}, timeout=10)
+    if tok.status_code != 200:
+        return None
+    access = tok.json().get("access_token")
+    if not access:
+        return None
+    ui = rq.get(_GOOGLE_USERINFO_URL, headers={"Authorization": "Bearer " + access}, timeout=10)
+    if ui.status_code != 200:
+        return None
+    d = ui.json()
+    if not d.get("sub"):
+        return None
+    return {"sub": d["sub"], "email": d.get("email")}
+
+
+@app.get("/auth/google/login")
+def _google_login(request: Request):
+    if not _google_configured():
+        return HTMLResponse("<h3 style='font-family:sans-serif'>구글 로그인이 아직 설정되지 않았어요.</h3>",
+                            status_code=503)
+    state = secrets.token_urlsafe(24)
+    r = RedirectResponse(_google_authorize_url(state), status_code=303)
+    r.set_cookie("g_state", state, max_age=600, httponly=True, samesite="lax")
+    return r
+
+
+@app.get("/auth/google/callback")
+def _google_callback(request: Request, code: str = "", state: str = "", error: str = ""):
+    if error or not code:
+        return RedirectResponse("/login?e=" + urllib.parse.quote("구글 로그인이 취소됐어요"), status_code=303)
+    cookie_state = request.cookies.get("g_state")
+    if not cookie_state or not hmac.compare_digest(cookie_state, state):
+        return RedirectResponse("/login?e=" + urllib.parse.quote("보안 검증 실패 — 다시 시도해주세요"), status_code=303)
+    ident = _google_fetch_identity(code)
+    if not ident:
+        return RedirectResponse("/login?e=" + urllib.parse.quote("구글 인증에 실패했어요"), status_code=303)
+    cid = Store(DB_PATH).get_or_create_by_google(ident["sub"], ident.get("email"))
+    if cid is None:
+        return RedirectResponse("/login?e=" + urllib.parse.quote("계정 생성 실패"), status_code=303)
+    r = RedirectResponse("/", status_code=303)
+    _set_session_cookie(r, cid)
+    r.delete_cookie("g_state")
     return r
 
 

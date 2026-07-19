@@ -26,6 +26,13 @@ DB_PATH = Path(__file__).parent / "data" / "reference.db"
 # 로컬 개발 시엔 기본값(localhost)이라 Lens 링크가 실제로는 안 열리는 게 정상(배포 후 확인).
 PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "http://127.0.0.1:8848")
 
+# 구글 OAuth(유료게이트 고객 로그인, 2026-07-19). 콘솔에서 발급한 값을 .env에 넣는다.
+# redirect는 콘솔 등록값과 정확히 일치해야 한다: https://shoppingshorts.duckdns.org/auth/google/callback
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+GOOGLE_REDIRECT_URI = os.environ.get(
+    "GOOGLE_REDIRECT_URI", "https://shoppingshorts.duckdns.org/auth/google/callback")
+
 # Apify
 APIFY_TOKEN = os.environ.get("APIFY_TOKEN", "")
 # 계정 하나가 사용량 소진(월 한도 등)되면 다음 계정으로 자동 로테이션(2026-07-09).

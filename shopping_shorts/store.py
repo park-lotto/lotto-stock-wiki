@@ -2008,6 +2008,21 @@ class Store:
                 raise ValueError(f"이미 존재하는 아이디: {username}")
         return cur.lastrowid
 
+    def get_or_create_by_google(self, google_sub, email=None):
+        """구글 sub로 고객 조회, 없으면 신규 생성(가입시 체험 자동시작). customer_id 반환."""
+        with self._conn() as c:
+            row = c.execute("SELECT id FROM customers WHERE google_sub=?", (google_sub,)).fetchone()
+        if row:
+            return row[0]
+        username = "g_" + str(google_sub)[:40]         # username 유니크 제약 충족용
+        try:
+            return self.create_customer(username, secrets.token_hex(16),
+                                        email=email, google_sub=google_sub)
+        except ValueError:
+            with self._conn() as c:                     # 경합으로 방금 생성됐으면 재조회
+                row = c.execute("SELECT id FROM customers WHERE google_sub=?", (google_sub,)).fetchone()
+            return row[0] if row else None
+
     def verify_customer(self, username, password):
         """username/password 검증 → 성공 시 customer_id, 실패 시 None.
         타이밍 공격 방지를 위해 hmac.compare_digest로 해시 비교."""
