@@ -1110,6 +1110,37 @@ def api_draft_refine(request: Request, body: dict):
     return {"ok": True, "draft_id": new_id, "script_text": new_text}
 
 
+@app.post("/api/wiki/draft/upgrade")
+def api_draft_upgrade(request: Request, body: dict):
+    """초안을 '요소 단위'로 업그레이드 — 고른 요소만 변형, 나머지 유지해 재생성.
+
+    body: {draft_id, elements: [element_key, ...]}. element_key는 ELEM_KEYS 중 하나.
+    초안을 analyze_structure로 요소 분해 → 고른 요소만 free(변형) → generate_variations(n=1)
+    → 새 버전으로 저장(parent=draft_id, mode="upgrade")."""
+    store = Store(DB_PATH)
+    draft_id = body.get("draft_id", "")
+    elements = [e for e in (body.get("elements") or []) if e in script_generate.ELEM_KEYS]
+    cur = store.get_draft(draft_id)
+    if not cur:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "해당 초안 없음"})
+    if not elements:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "바꿀 요소를 하나 이상 고르세요"})
+    base = cur.get("script_text") or ""
+    structure = analyze_structure(base) or {}
+    category_lookup = store.get_element_options(structure.get("product_category") or "")
+    elem_modes = {e: "free" for e in elements}
+    drafts = script_generate.generate_variations(
+        structure, base, elem_modes, category_lookup, mode="remake", subject="", n=1)
+    if not drafts:
+        return JSONResponse(status_code=502, content={"ok": False, "error": "재생성 실패(Gemini 키 소진 또는 오류) — 잠시 후 재시도"})
+    dr = drafts[0]
+    new_id = uuid.uuid4().hex[:12]
+    labels = ", ".join(script_generate.ELEM_LABELS[e] for e in elements)
+    store.save_draft(new_id, _cid(request), cur.get("source_shortcode"), draft_id,
+                      dr.get("hook", ""), dr.get("script", ""), "요소변형: " + labels, "upgrade")
+    return {"ok": True, "draft_id": new_id, "script_text": dr.get("script", ""), "hook": dr.get("hook", "")}
+
+
 @app.post("/api/wiki/draft/edit")
 def api_draft_edit(request: Request, body: dict):
     """텍스트박스에서 직접 고친 내용을 AI 호출 없이 새 버전으로 저장.
