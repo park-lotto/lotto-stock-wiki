@@ -2343,6 +2343,7 @@ async function loadMixReview(){
       <div style="margin:6px 0;font-size:13px">${esc(b.narration||'')}</div>
       <div class="hint">🎞 ${esc(b.primary?.video_id||'')} · ${b.primary?.start}s~${b.primary?.end}s · ${b.target_seconds}s${b.fit?` · 매칭 ${b.fit}/5`:''}</div>
       ${(b.fit&&b.fit<=2)?`<div style="color:var(--fire);font-size:12px;margin-top:3px">⚠️ 이 문장에 맞는 영상이 부족합니다 — 대본을 살짝 바꾸거나 소스 영상을 추가하세요.</div>`:''}
+      <div class="scene-swap" id="sceneSwap${i}">${renderSwapButton(b, i)}</div>
       <div class="scene-cutaway" id="sceneCutaway${i}">${renderSceneCutaway(b, i)}</div>
     </div>`).join('')+`<div class="hint" style="margin-top:6px">✅ 매칭 완료${(d.beats||[]).some(b=>b.fit&&b.fit<=2)?' <span style="color:var(--fire)">— ⚠️ 표시된 문장은 영상이 약합니다</span>':''} — 아래에서 <b>미리보기</b>를 확인한 뒤 다음으로 넘어가세요.</div>`
     +`<button id="btnPreview" class="btn-next" style="margin-top:8px;padding:7px 14px" onclick="startPreview()">▶ 미리보기 만들기</button>`
@@ -2404,6 +2405,49 @@ async function toggleCutaway(idx, assetId){
   const beat = (d.beats||[])[idx];
   if(beat && box) box.innerHTML = renderSceneCutaway(beat, idx);
 }
+
+// ── [다른 화면으로] 스왑 피커(2026-07-19) ─── SWAP-START
+function renderSwapButton(beat, idx){
+  const weak = beat.fit && beat.fit <= 2;
+  const style = weak
+    ? 'padding:8px 14px;font-size:14px;border:2px solid var(--fire);border-radius:8px;background:#1a0d0d;color:#fff;margin-top:6px'
+    : 'padding:6px 12px;font-size:12px;border:1px solid var(--line);border-radius:8px;background:#0a1018;margin-top:6px';
+  return `<button style="${style}" onclick="openSwapPicker(${idx})">🎞 다른 화면으로 바꾸기</button>`;
+}
+
+async function openSwapPicker(idx){
+  if(!MIX_JOB) return;
+  const box = document.getElementById('sceneSwap'+idx);
+  if(box) box.innerHTML = '<div class="hint">⏳ 화면 목록 불러오는 중…</div>';
+  let d;
+  try{ d = await (await fetch('/api/mix/segments/'+encodeURIComponent(MIX_JOB))).json(); }
+  catch(e){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; return; }
+  if(!d.ok){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">목록 실패</div>'; return; }
+  const cards = (d.segments||[]).map(s=>`
+    <div onclick="doSwap(${idx},'${esc(s.seg_id)}')" style="flex:0 0 96px;cursor:pointer;opacity:${s.used?0.4:1}">
+      <img src="${esc(s.thumb_url)}" style="width:96px;height:170px;object-fit:cover;border-radius:6px;background:#000" alt="" onerror="this.style.visibility='hidden'">
+      <div class="hint" style="font-size:11px;margin-top:2px">${esc((s.scene_desc||'').slice(0,18))}</div>
+      <div class="hint" style="font-size:10px">${s.dur}s${s.used?' · 사용중':''}</div>
+    </div>`).join('');
+  if(box) box.innerHTML =
+    `<div class="hint" style="margin:4px 0">아래 화면 중 하나를 <b>누르면</b> 이 문장에 그 화면이 들어갑니다.</div>`
+    + `<div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px">${cards}</div>`
+    + `<button class="btn-prev" style="padding:4px 10px;font-size:12px;margin-top:4px" onclick="openSwapPicker(${idx});this.parentNode.querySelector('div').scrollIntoView();">↻ 새로고침</button>`;
+}
+
+async function doSwap(idx, segId){
+  if(!MIX_JOB) return;
+  const box = document.getElementById('sceneSwap'+idx);
+  if(box) box.innerHTML = '<div class="hint">⏳ 화면 바꾸는 중…</div>';
+  try{
+    const r = await (await fetch('/api/mix/adjust',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({job_id: MIX_JOB, beat_idx: idx, seg_id: segId})})).json();
+    if(!r.ok){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</div>'; return; }
+  }catch(e){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; return; }
+  loadMixReview();   // 화면이 바뀜=옛 미리보기 무효 → 전체 재로드가 프리뷰까지 정리(2360 규율)
+}
+// ─── SWAP-END
 
 // ── 1단계 미리보기(2026-07-17) ──────────────
 // 다음 단계(자막제거)가 VMake 유료 API라, 컷·대본이 틀린 채 넘어가면 그 돈이 날아간다.
