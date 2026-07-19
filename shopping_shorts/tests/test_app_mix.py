@@ -104,6 +104,23 @@ def test_mix_adjust_invalid_beat_idx_returns_404(monkeypatch, tmp_path):
     assert plan["beats"][0]["primary"] == {"video_id": "s0", "seg_id": "s0-0", "start": 0.0, "end": 2.0}
 
 
+def test_mix_adjust_clears_stale_fit(monkeypatch, tmp_path):
+    client, store = _client(monkeypatch, tmp_path)
+    store.create_mix_job("j2f", ["u0"], 20, "free")
+    store.update_mix_job("j2f", extract={"s0": {"video_id": "s0", "full_text": "x", "segments": [
+        {"seg_id": "s0-0", "start": 0.0, "end": 2.0, "text": "a", "scene_desc": "c"},
+        {"seg_id": "s0-1", "start": 2.0, "end": 4.0, "text": "b", "scene_desc": "d"},
+    ]}}, edit_plan={"structure": "free", "beats": [
+        {"beat_idx": 0, "role": "훅", "narration": "n", "target_seconds": 2, "fit": 2,
+         "primary": {"video_id": "s0", "seg_id": "s0-0", "start": 0.0, "end": 2.0},
+         "alternates": [], "effect": "cut"}], "plagiarism_flags": []}, status="ready_for_review")
+    r = client.post("/api/mix/adjust", json={"job_id": "j2f", "beat_idx": 0, "seg_id": "s0-1"})
+    assert r.status_code == 200
+    beat = store.get_mix_job("j2f")["edit_plan"]["beats"][0]
+    assert beat["primary"]["seg_id"] == "s0-1"
+    assert beat.get("fit") in (None, 0)          # 낡은 fit 제거됨
+
+
 def test_mix_render_sets_background(monkeypatch, tmp_path):
     client, store = _client(monkeypatch, tmp_path)
     store.create_mix_job("j3", ["u0"], 20, "free")

@@ -1441,6 +1441,7 @@ def api_mix_adjust(body: dict):
     for b in plan["beats"]:
         if b["beat_idx"] == beat_idx:
             b["primary"] = grounded
+            b["fit"] = None   # 화면이 바뀌었으니 옛 매칭점수 무효(사람이 눈으로 고름)
             matched = True
             break
     if not matched:
