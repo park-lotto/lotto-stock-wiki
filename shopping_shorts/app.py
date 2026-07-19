@@ -53,6 +53,7 @@ from shopping_shorts import frame_extract, scene_assets, scene_cut
 from shopping_shorts import effect_match, remotion_render, points
 from shopping_shorts import video_assemble
 from shopping_shorts import seo_generate, seo_probe
+from shopping_shorts import thumb_title
 import uuid
 
 app = FastAPI(title="쇼핑쇼츠 레퍼런스 랭킹")
@@ -3537,6 +3538,21 @@ def api_seo_generate(body: dict):
     seo["keyword_stats"] = stats
     seo["generated_at"] = datetime.now(timezone.utc).isoformat()
     return {"seo": seo}
+
+
+@app.post("/api/produce/thumb/titles")
+def api_thumb_titles(body: dict):
+    """확정 대본으로 썸네일에 얹을 짧은 제목 후보를 뽑는다. DB 기록 안 함(무과금 미리보기 —
+    seo/generate·fx/suggest와 같은 규약). 사장님이 후보를 눌러 레이어에 얹고 다듬는다."""
+    job_id = (body.get("job_id") or "").strip()
+    job = Store(DB_PATH).get_mix_job(job_id) if job_id else None
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    titles = thumb_title.generate(job)
+    if titles is None:
+        return JSONResponse(status_code=502,
+                            content={"ok": False, "error": "제목 생성 실패 — 잠시 후 다시 눌러보세요"})
+    return {"ok": True, "titles": titles}
 
 
 @app.get("/api/produce/seo/get")

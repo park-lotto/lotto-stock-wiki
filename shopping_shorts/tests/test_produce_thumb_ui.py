@@ -218,6 +218,30 @@ console.log(JSON.stringify({big: lineWidthAt(1080), small: lineWidthAt(270)}));
     assert out["small"] == pytest.approx(out["big"] / 4)
 
 
+def test_apply_title_sets_selected_layer_text():
+    """AI 추천 제목을 누르면(applyThumbTitle) 선택된 레이어의 text가 그 문구로 바뀐다 —
+    줄바꿈(\\n)까지 그대로. renderThumbLayers/Canvas가 화면 갱신을 하도록 외부 의존은 스텁."""
+    script = _slice_source() + r"""
+globalThis.HC_PRESETS = []; globalThis.HC_FONTS = []; globalThis.esc = s => s;
+globalThis.window = {};
+globalThis.document = { getElementById: (id) =>
+  id === 'thumbCanvas' ? null : { set innerHTML(v){}, get innerHTML(){ return ''; } } };
+THUMB_STATE.layers = [{text:'옛문구', font:'X.ttf', size:78, color:'#fff',
+                       outline:null, box:null, rot:0, x:0.5, y:0.16}];
+THUMB_STATE.sel = 0;
+const WANT = '밥솥 빵\n미쳤다';
+THUMB_STATE.title_cands = [{text: WANT, why:'반전'}];
+applyThumbTitle(0);
+const got = THUMB_STATE.layers[0].text;
+// stdout은 ASCII만(Windows cp949 디코딩 회피) — 비교는 node 안에서 끝낸다
+console.log(JSON.stringify({match: got === WANT, hasNewline: got.includes('\n'), len: got.length}));
+"""
+    out = json.loads(_run_node(script))
+    assert out["match"], "추천 제목이 레이어 text로 안 들어갔다"
+    assert out["hasNewline"], "줄바꿈(\\n)이 보존되지 않았다"
+    assert out["len"] == 8   # 밥·솥·공백·빵·\n·미·쳤·다 = 8자
+
+
 def test_draw_restores_rotation_between_layers():
     """save/restore가 1:1로 맞아야 한다 — 하나라도 빠지면 앞 레이어의 회전이
     다음 레이어로 새어나간다. rot:90 레이어 다음 rot:0 레이어의 실효 회전은 0이어야 한다.
