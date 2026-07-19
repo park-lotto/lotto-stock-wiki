@@ -4,7 +4,7 @@
 (function () {
   var NAV = [
     { label: "리서치", items: [
-      { icon: "📊", text: "레퍼런스 랭킹",   href: "/" },
+      { icon: "📊", text: "레퍼런스 랭킹",   href: "/", free: true },
       { icon: "⭐", text: "영상 즐겨찾기",   href: "/collection" },
       { icon: "📚", text: "대본 즐겨찾기",   href: "/library" },
       { icon: "🔎", text: "신규채널 픽업",   href: "/discover" },
@@ -77,7 +77,8 @@
       var active = !!it.href && (it.href === path || (it.href === "/" && path === "/"));
       var cls = "ss-item" + (active ? " active" : "") + (it.href ? "" : " ss-disabled");
       var onclick = it.href && !active ? ' onclick="location.href=\'' + esc(it.href) + "'\"" : "";
-      html += '<div class="' + cls + '"' + onclick + ">" + it.icon + " " + it.text + "</div>";
+      var payAttr = (it.href ? ' data-ss-href="' + esc(it.href) + '"' : "") + (it.free ? ' data-ss-free="1"' : "");
+      html += '<div class="' + cls + '"' + payAttr + onclick + ">" + it.icon + " " + it.text + "</div>";
     });
     html += "</div>";
   });
@@ -168,13 +169,71 @@
     }).catch(function () {});   // 서버가 죽어도 네비게이션은 살아 있어야 한다
   }
 
+  // ── 유료게이트(2026-07-19): /api/me 등급으로 UI를 잠근다. sidebar.js는 6개 페이지 공유라
+  //    여기 한 곳이면 전 페이지에 체험배너·🔒메뉴·만료안내가 걸린다. ──
+  var _pw = { level: "full", contact: {} };
+  function _pwModal() {
+    var ex = document.getElementById("ss-pw-modal");
+    if (ex) { ex.style.display = "flex"; return; }
+    var k = _pw.contact.kakao || "", ph = _pw.contact.phone || "";
+    var m = document.createElement("div");
+    m.id = "ss-pw-modal";
+    m.style.cssText = "position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;font-family:'Malgun Gothic',system-ui,sans-serif";
+    m.innerHTML = '<div style="background:#16161c;border:1px solid #2a2a30;border-radius:16px;padding:28px 26px;max-width:340px;text-align:center;color:#e8e8ea">' +
+      '<div style="font-size:40px">🔒</div>' +
+      '<div style="font-size:18px;font-weight:800;margin:10px 0 6px">무료 체험이 끝났어요</div>' +
+      '<div style="font-size:14px;color:#b8b8c0;line-height:1.6">이 기능은 결제하시면 계속 쓸 수 있어요.<br>담아둔 영상·자료는 <b>그대로 보존</b>돼요.</div>' +
+      (k || ph ? '<div style="margin-top:14px;font-size:14px;color:#7db4ff">' + (k ? "카톡: " + escHtml(k) + "<br>" : "") + (ph ? "전화: " + escHtml(ph) : "") + "</div>" : "") +
+      '<div style="margin-top:18px"><button id="ss-pw-close" style="background:#4f9dfa;color:#111;border:0;border-radius:8px;padding:10px 22px;font-weight:800;font-size:14px;cursor:pointer">닫기</button></div>' +
+      "</div>";
+    document.body.appendChild(m);
+    document.getElementById("ss-pw-close").onclick = function () { m.style.display = "none"; };
+  }
+  window.__ssShowPaywall = _pwModal;
+  function _pwBanner(daysLeft) {
+    if (document.getElementById("ss-pw-banner")) return;
+    var b = document.createElement("div");
+    b.id = "ss-pw-banner";
+    b.style.cssText = "position:sticky;top:0;z-index:9999;background:linear-gradient(90deg,#153a6b,#0d2340);color:#cfe4ff;padding:8px 14px;font-size:13px;text-align:center;font-family:system-ui,sans-serif";
+    b.innerHTML = "🎁 무료 체험 <b style='font-size:15px'>D-" + daysLeft + "</b> · 결제하면 계속 쓸 수 있어요";
+    var nav = document.querySelector(".ss-nav");
+    if (nav && nav.nextSibling) document.body.insertBefore(b, nav.nextSibling);
+    else document.body.appendChild(b);
+  }
+  function _pwLockSidebar() {
+    document.querySelectorAll(".ss-item[data-ss-href]:not([data-ss-free])").forEach(function (el) {
+      if (el.querySelector(".ss-lock")) return;
+      el.setAttribute("onclick", "window.__ssShowPaywall()");
+      el.style.opacity = ".6";
+      el.innerHTML = el.innerHTML + ' <span class="ss-lock">🔒</span>';
+    });
+  }
+  function initPaywall() {
+    fetch("/api/me").then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+      if (!d) return;
+      _pw.level = d.level; _pw.contact = d.contact || {};
+      if (d.level === "ranking_only") _pwLockSidebar();
+      else if (typeof d.days_left === "number" && d.days_left >= 0 && d.plan !== "pro") _pwBanner(d.days_left);
+    }).catch(function () {});
+  }
+  // 유료 API가 402(등급부족)를 주면 만료 안내 모달 — 페이지 내 어떤 유료버튼이든 공통 처리.
+  var _origFetch = window.fetch;
+  window.fetch = function () {
+    return _origFetch.apply(this, arguments).then(function (resp) {
+      if (resp && resp.status === 402) { try { _pwModal(); } catch (e) {} }
+      return resp;
+    });
+  };
+
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", mount);
     document.addEventListener("DOMContentLoaded", __ssPaintTheme);
     document.addEventListener("DOMContentLoaded", mountWorks);
+    document.addEventListener("DOMContentLoaded", initPaywall);
   } else {
     mount();
     __ssPaintTheme();
     mountWorks();
+    initPaywall();
   }
 })();

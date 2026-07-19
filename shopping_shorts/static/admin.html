@@ -1,0 +1,78 @@
+<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>유료게이트 관리자</title>
+<style>
+body{margin:0;background:#0b0b0e;color:#e8e8ea;font-family:system-ui,'Noto Sans KR',sans-serif;padding:20px}
+h1{color:#4f9dfa;font-size:20px;margin:0 0 4px}.sub{color:#8a8a92;font-size:13px;margin-bottom:18px}
+.card{background:#16161c;border:1px solid #2a2a30;border-radius:12px;padding:16px;margin-bottom:16px}
+h2{font-size:15px;margin:0 0 12px;color:#cfd2d6}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid #23232a}
+th{color:#8a8a92;font-weight:600}
+.badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700}
+.pro{background:#1c3d1f;color:#7ee787}.free{background:#3d1c1c;color:#ff9a8a}.trial{background:#1c2f3d;color:#7db4ff}
+button{border:0;border-radius:7px;padding:6px 12px;font-weight:700;font-size:12px;cursor:pointer;margin-right:4px}
+.bpro{background:#2ea043;color:#fff}.bfree{background:#6e2020;color:#fff}
+input{background:#0e0e12;border:1px solid #333;border-radius:7px;color:#eee;padding:8px 10px;font-size:13px;width:90px}
+label{display:inline-block;min-width:120px;color:#a8a8b0;font-size:13px;margin:5px 0}
+.save{background:#4f9dfa;color:#111;padding:8px 16px;margin-top:10px}
+.msg{color:#7ee787;font-size:12px;margin-left:8px}
+.err{color:#ff9a8a}
+</style></head><body>
+<h1>🔐 유료게이트 관리자</h1>
+<div class=sub>결제 확인된 계정을 <b>pro</b>로 승격 / 체험·크레딧 설정 조정</div>
+
+<div class=card>
+  <h2>설정 <span id=setMsg class=msg></span></h2>
+  <div id=settings></div>
+  <button class=save onclick=saveSettings()>설정 저장</button>
+</div>
+
+<div class=card>
+  <h2>고객 (<span id=cnt>0</span>명) <span id=cMsg class=msg></span></h2>
+  <table><thead><tr><th>ID</th><th>이메일/아이디</th><th>등급</th><th>상태</th><th>체험만료</th><th>오늘 사용(렌즈/렌더/대본)</th><th>조작</th></tr></thead>
+  <tbody id=rows></tbody></table>
+</div>
+
+<script>
+const SETTING_FIELDS=[
+  ['trial_days','체험 기간(일)'],['limit_lens','무료 렌즈/일'],['limit_render','무료 렌더/일'],
+  ['limit_script','무료 대본/일'],['limit_lens_pro','pro 렌즈/일'],['limit_render_pro','pro 렌더/일'],
+  ['global_cap_lens','전역 렌즈/일'],['contact_kakao','카톡 안내'],['contact_phone','전화 안내']];
+let CURRENT={};
+async function load(){
+  const r=await fetch('/api/admin/customers');
+  if(r.status===403){document.body.innerHTML='<h2>관리자 전용입니다</h2>';return;}
+  const d=await r.json(); CURRENT=d.settings||{};
+  // 설정 폼
+  document.getElementById('settings').innerHTML=SETTING_FIELDS.map(([k,label])=>
+    `<div><label>${label}</label><input id=set_${k} value="${(CURRENT[k]??'').toString().replace(/"/g,'&quot;')}"></div>`).join('');
+  // 고객표
+  document.getElementById('cnt').textContent=d.customers.length;
+  document.getElementById('rows').innerHTML=d.customers.map(c=>{
+    const lvl=c.level==='full'?(c.plan==='pro'?'<span class="badge pro">pro</span>':'<span class="badge trial">체험중</span>')
+              :'<span class="badge free">무료</span>';
+    const exp=c.full_access_until? new Date(c.full_access_until*1000).toLocaleString('ko-KR'):'-';
+    const u=c.usage||{};
+    return `<tr><td>${c.id}</td><td>${c.email||c.username||''}</td><td>${c.plan}</td><td>${lvl}</td>
+      <td style="font-size:12px;color:#8a8a92">${exp}</td>
+      <td style="font-size:12px">${u.lens||0}/${u.render||0}/${u.script||0}</td>
+      <td><button class=bpro onclick="setPlan(${c.id},'pro')">pro 승격</button>
+          <button class=bfree onclick="setPlan(${c.id},'free')">무료로</button></td></tr>`;
+  }).join('');
+}
+async function setPlan(cid,plan){
+  const r=await fetch('/api/admin/set_plan',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({customer_id:cid,plan})});
+  const m=document.getElementById('cMsg');
+  if(r.ok){m.textContent='✅ 변경됨';m.className='msg';load();}else{m.textContent='❌ 실패';m.className='msg err';}
+  setTimeout(()=>m.textContent='',2000);
+}
+async function saveSettings(){
+  const body={}; SETTING_FIELDS.forEach(([k])=>{const v=document.getElementById('set_'+k).value.trim(); if(v!=='')body[k]=v;});
+  const r=await fetch('/api/admin/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const m=document.getElementById('setMsg');
+  if(r.ok){m.textContent='✅ 저장됨';m.className='msg';}else{m.textContent='❌ 실패';m.className='msg err';}
+  setTimeout(()=>m.textContent='',2000);
+}
+load();
+</script></body></html>
