@@ -404,6 +404,75 @@ def cn_search_keyword_vision(image_bytes, caption, max_retries=3, quota_sleep=8)
     return {}
 
 
+_CN_CANDIDATES_PROMPT = """이 이미지는 한국어 쇼츠 영상의 한 장면(썸네일)이다. 화면에 박힌 글자\
+(제품명·주제어)와 물건의 생김새를 아래 캡션과 종합해 '이 영상이 소개하는 바로 그 제품/소재'를 \
+특정하라. 그 제품과 같은 영상을 중국 SNS(샤오홍슈/도우인)에서 찾을 **중국어 검색어 후보 3~4개**를 만들라.
+- 넓은 제품+방식(예: 에어프라이어 감자칩→空气炸锅土豆片) → 좁은 제품명(예: 气泡土豆) 순으로 다양하게.
+- 화면 글자에 제품명이 있으면 최우선 반영. 서로 다른 각도의 검색어(재료·조리법·모양)를 섞어라.
+- 각 후보에 한국어 뜻(ko)을 짧게 달라(사용자가 뭘 누르는지 알게).
+- JSON만: {{"product": "한국어 제품명(짧게)", \
+"candidates": [{{"ko": "한국어 뜻", "zh": "중국어 검색어"}}, ...]}}
+캡션: {caption}"""
+
+_CN_CANDIDATES_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "product": {"type": "string"},
+        "candidates": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {"ko": {"type": "string"}, "zh": {"type": "string"}},
+                "required": ["ko", "zh"],
+            },
+            "minItems": 1, "maxItems": 4,
+        },
+    },
+    "required": ["product", "candidates"],
+}
+
+
+def cn_search_candidates(image_bytes, caption, max_retries=3, quota_sleep=8):
+    """프레임(+캡션) → {"product": str, "candidates": [{"ko","zh"}]}. 실패/키없음 시 빈 리스트."""
+    empty = {"product": "", "candidates": []}
+    if not image_bytes or not SHORTS_GEMINI_KEYS:
+        return empty
+    prompt = _CN_CANDIDATES_PROMPT.format(caption=(caption or "(캡션 없음)")[:400])
+    for attempt in range(max_retries):
+        key, idx = comment_gen._current_key_and_idx()
+        if key is None:
+            return empty
+        try:
+            client = _client_for_key(key)
+            resp = client.models.generate_content(
+                model=_MODEL,
+                contents=[prompt, types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")],
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=_CN_CANDIDATES_SCHEMA,
+                ),
+            )
+            data = json.loads(resp.text)
+            cands = []
+            for c in (data.get("candidates") or []):
+                ko, zh = (c.get("ko") or "").strip(), (c.get("zh") or "").strip()
+                if zh:
+                    cands.append({"ko": ko, "zh": zh})
+            return {"product": (data.get("product") or "").strip(), "candidates": cands}
+        except Exception as e:
+            if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
+                comment_gen._mark_key_exhausted(idx)
+                continue
+            if key_vault.is_quota_error(e):
+                time.sleep(quota_sleep)
+                continue
+            if attempt < max_retries - 1 and any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded")):
+                time.sleep((attempt + 1) * 5)
+                continue
+            return empty
+    return empty
+
+
 _CN_JUDGE_PROMPT = """기준 제품: {product}
 아래는 검색 결과 영상 제목들(주로 중국어)이다. 각 제목이 '기준 제품과 같은(또는 거의 같은) 제품'을 \
 다루는지 판정하라.
