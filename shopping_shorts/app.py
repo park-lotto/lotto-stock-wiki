@@ -1865,21 +1865,22 @@ def _thumb_dir(job_id: str):
 def api_thumb_frames(body: dict):
     """5단계 썸네일 — 믹스 결과 영상을 등분해 후보 프레임 10장.
 
-    자막이 박히지 않은 2단계 결과(video_path)에서 뽑는다(설계 Q1) — 썸네일 텍스트는
+    자막이 박히지 않은 배경(자막제거본·미리보기)에서 뽑는다(설계 Q1) — 썸네일 텍스트는
     위에 새로 얹으므로 배경 자막은 방해다. 이미 뽑아뒀으면 재추출하지 않는다.
     """
     job_id = str(body.get("job_id") or "")
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
-    # ★배경 영상 우선순위 — 최종 렌더(3164행)와 동일하게: 최종 → 자막제거본 → 미리보기.
-    # 예전엔 video_path만 봤다. 그런데 video_path는 7단계 최종 렌더 후에야 생기고,
-    # 5단계 썸네일은 그 전 단계다. 매칭을 끝낸(ready_for_review) 작업이라도 최종 영상이 없어
-    # "믹스 영상 없음"으로 막혔다(사장님 실측: 수박 작업 job=10dc0c4e30c5, mix_video 404지만
-    # preview 200). 자막 없는 미리보기(preview_path)가 있으면 그걸로 프레임을 뽑는다 —
-    # 렌더 전에도 썸네일을 만들 수 있어야 한다(설계 Q1의 "자막 없는 배경" 조건도 preview가 만족).
+    # ★배경 영상 우선순위 — 썸네일 배경은 **자막이 없어야 한다**(설계 Q1: 제목을 위에 새로
+    # 얹으니 배경 자막은 방해). 그래서 자막제거본(clean_video_path)·자막 없는 미리보기
+    # (preview_path)를 먼저 쓰고, 최종 렌더(video_path)는 **최후 폴백**이다 — 최종은 우리
+    # 나레이션 자막이 박혀 있어(사장님 제보 2026-07-19: "썸네일에 자막 필요없음") 배경으로 부적합했다.
+    # 예전엔 video_path를 먼저 봐서 자막 박힌 프레임이 나왔다.
+    # 셋 다 검사하므로 렌더 전(video_path 없음)에도 preview로 프레임을 뽑을 수 있다
+    # (매칭 끝낸 작업이라도 최종 영상이 없어 "믹스 영상 없음"으로 막히던 것도 그대로 해소).
     video = None
-    for cand in (job.get("video_path"), job.get("clean_video_path"), job.get("preview_path")):
+    for cand in (job.get("clean_video_path"), job.get("preview_path"), job.get("video_path")):
         if cand and Path(cand).exists():
             video = cand
             break
