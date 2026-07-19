@@ -100,3 +100,15 @@ def test_rednote_domain_rewritten_to_xiaohongshu_for_ytdlp(monkeypatch, tmp_path
     assert "rednote.com" not in seen["url"]
     assert "explore/67765717000000000b0146fe" in seen["url"]   # 경로 보존
     assert "xsec_token=ABC=" in seen["url"]                     # 토큰 보존
+
+
+def test_search_result_path_rewritten_to_explore(monkeypatch, tmp_path):
+    # yt-dlp XiaoHongShuIE는 /explore/{id}·/discovery/item/{id}만 매칭(서버 실측) —
+    # 검색그리드 노트(/search_result/{id}?xsec_token=…)는 경로만 /explore/로 바꾼다(토큰 보존).
+    seen = {}
+    monkeypatch.setattr(md, "_download_ytdlp", lambda url, d: (seen.setdefault("url", url), ("x.mp4", ""))[1])
+    md.download_any("https://www.rednote.com/search_result/69932477000000001a0279d6?xsec_token=TOK=&xsec_source=pc_search", str(tmp_path))
+    assert "/explore/69932477000000001a0279d6" in seen["url"]
+    assert "/search_result/" not in seen["url"]
+    assert "xsec_token=TOK=" in seen["url"]          # 토큰 보존
+    assert "xiaohongshu.com" in seen["url"]           # 도메인 정규화도 함께
