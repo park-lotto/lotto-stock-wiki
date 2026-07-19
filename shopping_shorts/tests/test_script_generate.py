@@ -187,3 +187,25 @@ def test_remake_without_subject_still_locks_original(monkeypatch):
     script_generate.generate_variations(_STRUCT, "원본 대본 원문", {}, {}, mode="remake", subject="")
     assert "중복 회피" in h["p"]
     assert "소재(고정):" not in h["p"]  # 빈 소재면 명시줄 생략, full_text로만 잠금
+
+
+# ---- P5: 스토리 헌장 + 스키마 강제 (2026-07-19) ----
+
+def test_schema_requires_story_declaration_fields():
+    # 모델이 대본을 쓰기 전에 스토리(인물·사건·결말)와 CTA를 '선언'하게 스키마로 강제
+    req = script_generate._SCHEMA["properties"]["drafts"]["items"]["required"]
+    for f in ("story_person", "story_event", "story_resolution", "cta_line", "cta_keyword"):
+        assert f in req
+
+
+def test_gen_prompt_has_story_contract():
+    # 사장님 스크린샷 통증 경로(_GEN_PROMPT 단일 리메이크)에도 헌장이 들어가야 한다
+    for kw in ("한 스토리", "인과 사슬", "CTA", "남겨주세요"):
+        assert kw in script_generate._GEN_PROMPT
+
+
+def test_mix_prompt_single_story_rule():
+    # P5: 인물1·사건1·결말1 — 조합이라도 인물·사건은 절대 섞지 않는다
+    assert "인물 1명" in script_generate._MIX_PROMPT
+    assert "섞지 마라" in script_generate._MIX_PROMPT
+    assert "인과 사슬" in script_generate._MIX_PROMPT
