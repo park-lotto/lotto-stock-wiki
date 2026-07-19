@@ -25,6 +25,9 @@ class Store:
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_schema()
+        # 주: access_level이 요청마다 Store를 만들어 _init_schema(멱등)를 재실행하는 비용은
+        #     Opus 리뷰 P1 지적사항이나, 경로별 1회 가드는 마이그레이션 의존 테스트를 깨서 보류.
+        #     소규모(지인 판매) 스케일에선 허용. 필요 시 요청스코프 캐시로 별도 최적화.
 
     def _conn(self):
         return sqlite3.connect(self.db_path)
@@ -259,7 +262,11 @@ class Store:
                     username TEXT NOT NULL UNIQUE,
                     password_hash TEXT NOT NULL,
                     salt TEXT NOT NULL,
-                    created_at TEXT
+                    created_at TEXT,
+                    plan TEXT NOT NULL DEFAULT 'free',
+                    full_access_until INTEGER NOT NULL DEFAULT 0,
+                    google_sub TEXT,
+                    email TEXT
                 )
             """)
             c.execute("""
@@ -537,6 +544,52 @@ class Store:
                 except sqlite3.OperationalError:
                     pass  # 이미 존재
             self._migrate_personal_tables(c)
+            self._ensure_paywall_schema(c)
+
+    def _ensure_paywall_schema(self, c):
+        """유료게이트(2026-07-19): customers에 plan/full_access_until/google_sub/email 없으면 추가,
+        settings·usage 테이블 생성. 기존 라이브 DB 파괴 없이 ALTER로 이관(멱등)."""
+        fresh_full_access = False
+        for col, ddl in (
+            ("plan", "TEXT NOT NULL DEFAULT 'free'"),
+            ("full_access_until", "INTEGER NOT NULL DEFAULT 0"),
+            ("google_sub", "TEXT"),
+            ("email", "TEXT"),
+        ):
+            try:
+                c.execute(f"ALTER TABLE customers ADD COLUMN {col} {ddl}")
+                if col == "full_access_until":
+                    fresh_full_access = True   # 이번에 처음 추가됨(=페이월 도입 마이그레이션)
+            except sqlite3.OperationalError:
+                pass  # 이미 존재
+        if fresh_full_access:
+            # ★페이월 도입 전부터 있던 기존 고객(cid≠0)은 full_access_until=0으로 백필돼
+            #   즉시 ranking_only로 강등된다 → 무통보 차단 방지 위해 유예 체험 1회 부여.
+            #   (같은 커서 c로 설정 읽기 — 중첩 커넥션 락 회피)
+            row = c.execute("SELECT value FROM settings WHERE key='trial_days'").fetchone()
+            try:
+                trial_days = int(row[0]) if row else 7
+            except (TypeError, ValueError):
+                trial_days = 7
+            grandfather_until = int(datetime.now(timezone.utc).timestamp()) + trial_days * 86400
+            c.execute("UPDATE customers SET full_access_until=? WHERE id != 0 AND full_access_until=0",
+                      (grandfather_until,))
+        # settings 테이블은 _init_schema(line 396)가 이미 만든다 — 여기선 usage만.
+        # google_sub 중복 계정 방지(부분 유니크 — NULL 제외). 데이터 무결성(Opus 리뷰).
+        c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_google_sub ON customers(google_sub) "
+                  "WHERE google_sub IS NOT NULL")
+        c.execute("""CREATE TABLE IF NOT EXISTS usage (
+                        customer_id INTEGER NOT NULL,
+                        op TEXT NOT NULL,
+                        day TEXT NOT NULL,
+                        count INTEGER NOT NULL DEFAULT 0,
+                        PRIMARY KEY (customer_id, op, day)
+                    )""")
+
+    def ensure_paywall_schema(self):
+        """공개 래퍼(테스트·호출부용). __init__에서도 자동 실행되므로 보통 부를 필요 없다."""
+        with self._conn() as c:
+            self._ensure_paywall_schema(c)
 
     def _migrate_personal_tables(self, c):
         """기존 DB(customer_id 없는 구버전 saved/mix_basket/commented/script_wiki)를
@@ -1936,20 +1989,42 @@ class Store:
             "sha256", password.encode("utf-8"), bytes.fromhex(salt), Store._PBKDF2_ITERATIONS
         ).hex()
 
-    def create_customer(self, username, password):
-        """신규 고객 계정 생성. username 중복이면 ValueError. 성공 시 customer_id 반환."""
+    def create_customer(self, username, password, email=None, google_sub=None):
+        """신규 고객 계정 생성. username 중복이면 ValueError. 성공 시 customer_id 반환.
+        가입 즉시 무료 체험 시작: full_access_until = now + trial_days(설정, 기본7)*86400."""
         salt = secrets.token_hex(16)
         pw_hash = self._hash_password(password, salt)
+        try:
+            trial_days = int(self.get_setting("trial_days", 7))
+        except (TypeError, ValueError):
+            trial_days = 7
+        full_access_until = int(datetime.now(timezone.utc).timestamp()) + trial_days * 86400
         with self._conn() as c:
             try:
                 cur = c.execute(
-                    "INSERT INTO customers(username, password_hash, salt, created_at) "
-                    "VALUES(?,?,?,datetime('now'))",
-                    (username, pw_hash, salt),
+                    "INSERT INTO customers(username, password_hash, salt, created_at, "
+                    "plan, full_access_until, email, google_sub) "
+                    "VALUES(?,?,?,datetime('now'),'free',?,?,?)",
+                    (username, pw_hash, salt, full_access_until, email, google_sub),
                 )
             except sqlite3.IntegrityError:
                 raise ValueError(f"이미 존재하는 아이디: {username}")
         return cur.lastrowid
+
+    def get_or_create_by_google(self, google_sub, email=None):
+        """구글 sub로 고객 조회, 없으면 신규 생성(가입시 체험 자동시작). customer_id 반환."""
+        with self._conn() as c:
+            row = c.execute("SELECT id FROM customers WHERE google_sub=?", (google_sub,)).fetchone()
+        if row:
+            return row[0]
+        username = "g_" + str(google_sub)               # username 유니크 제약 충족용(절단X — sub 전체가 dedup 키)
+        try:
+            return self.create_customer(username, secrets.token_hex(16),
+                                        email=email, google_sub=google_sub)
+        except ValueError:
+            with self._conn() as c:                     # 경합으로 방금 생성됐으면 재조회
+                row = c.execute("SELECT id FROM customers WHERE google_sub=?", (google_sub,)).fetchone()
+            return row[0] if row else None
 
     def verify_customer(self, username, password):
         """username/password 검증 → 성공 시 customer_id, 실패 시 None.
@@ -1967,12 +2042,58 @@ class Store:
         return None
 
     def get_customer(self, customer_id):
-        """customer_id → {id, username, created_at} 또는 None."""
+        """customer_id → {id, username, created_at, plan, full_access_until, google_sub, email} 또는 None."""
         with self._conn() as c:
             row = c.execute(
-                "SELECT id, username, created_at FROM customers WHERE id=?", (customer_id,)
+                "SELECT id, username, created_at, plan, full_access_until, google_sub, email "
+                "FROM customers WHERE id=?", (customer_id,)
             ).fetchone()
-        return {"id": row[0], "username": row[1], "created_at": row[2]} if row else None
+        if not row:
+            return None
+        return {"id": row[0], "username": row[1], "created_at": row[2],
+                "plan": row[3] or "free", "full_access_until": row[4] or 0,
+                "google_sub": row[5], "email": row[6]}
+
+    def set_plan(self, customer_id, plan, full_access_until=None):
+        """등급 변경. plan='pro'|'free'. full_access_until(epoch초)를 주면 함께 설정(체험창)."""
+        with self._conn() as c:
+            if full_access_until is None:
+                c.execute("UPDATE customers SET plan=? WHERE id=?", (plan, customer_id))
+            else:
+                c.execute("UPDATE customers SET plan=?, full_access_until=? WHERE id=?",
+                          (plan, int(full_access_until), customer_id))
+
+    def all_settings(self):
+        with self._conn() as c:
+            rows = c.execute("SELECT key, value FROM settings").fetchall()
+        return {k: v for k, v in rows}
+
+    def list_customers(self):
+        """관리자용 전체 고객 목록(사장님 cid0 제외). 최근 가입 먼저."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT id, username, email, plan, full_access_until, created_at "
+                "FROM customers WHERE id != 0 ORDER BY id DESC"
+            ).fetchall()
+        return [{"id": r[0], "username": r[1], "email": r[2], "plan": r[3] or "free",
+                 "full_access_until": r[4] or 0, "created_at": r[5]} for r in rows]
+
+    # ── 유료게이트 일일 사용량(크레딧) ──
+    def usage_incr(self, customer_id, op, day):
+        """(customer_id, op, day) 카운트 +1, 증가 후 값 반환. customer_id=-1은 전역 집계."""
+        with self._conn() as c:
+            c.execute("INSERT INTO usage(customer_id,op,day,count) VALUES(?,?,?,1) "
+                      "ON CONFLICT(customer_id,op,day) DO UPDATE SET count=count+1",
+                      (customer_id, op, day))
+            row = c.execute("SELECT count FROM usage WHERE customer_id=? AND op=? AND day=?",
+                            (customer_id, op, day)).fetchone()
+        return row[0] if row else 0
+
+    def usage_get(self, customer_id, op, day):
+        with self._conn() as c:
+            row = c.execute("SELECT count FROM usage WHERE customer_id=? AND op=? AND day=?",
+                            (customer_id, op, day)).fetchone()
+        return row[0] if row else 0
 
     # ── 같은 주제 모아보기(2026-07-13) ──
     def save_topic_groups(self, mapping, platform="instagram"):

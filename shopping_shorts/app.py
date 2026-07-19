@@ -22,6 +22,7 @@ from shopping_shorts.outreach import build_queue
 from shopping_shorts.store import Store
 from shopping_shorts.auto_run import run_auto_job, default_stages
 from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
+from shopping_shorts.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI
 from shopping_shorts.frame_extract import (download_video, extract_frames,
                                            extract_frame_at, extract_grid_frames)
 from shopping_shorts.script_extract import extract_script
@@ -1359,11 +1360,18 @@ def api_find_frame(work_id: str, filename: str):
 
 
 @app.post("/api/mix/start")
-def api_mix_start(background_tasks: BackgroundTasks, body: dict):
+def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dict):
     """믹스 job 시작. body: {urls, target_seconds, structure, subtitle_removal}."""
     urls = [u for u in (body.get("urls") or []) if u]
     if len(urls) < 2:
         return JSONResponse(status_code=422, content={"ok": False, "error": "레퍼런스 URL 2개 이상 필요"})
+    # 유료게이트: 렌더는 최고비용(VMake 크레딧). 계정별 일일 상한으로 캡.
+    cid = getattr(request.state, "customer_id", 0)
+    if not check_and_count(cid, "render"):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "daily_limit",
+            "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
+    global_incr_and_alert("render")
     blocked = _ssrf_guard(*urls)      # 이 URL들은 run_mix_job이 그대로 다운로드한다
     if blocked:
         return blocked
@@ -2216,6 +2224,13 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...),
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "lens_limit",
             "error": f"이번 달 렌즈 검색 한도({limit}회)를 다 썼습니다"})
+    # 유료게이트: 계정별 일일 상한(비용 방어 — 체험/다계정이 SerpApi를 태우는 것 캡).
+    cid = getattr(request.state, "customer_id", 0)
+    if not check_and_count(cid, "lens"):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "daily_limit",
+            "error": "오늘 렌즈 검색 횟수를 다 썼어요. 결제하면 더 쓸 수 있어요."})
+    global_incr_and_alert("lens")
     raw = await frame.read()
     # Google Lens는 갓 호스팅된 우리서버 이미지를 인덱싱 전이라 못 읽어 0개를 준다(실측).
     # imgbb·imgur은 Google이 상시 크롤링하는 도메인이라 즉시 매칭 → imgbb(전용키) 1순위,
@@ -2521,7 +2536,14 @@ def _load_dash_secret() -> str:
 
 
 DASH_SECRET = _load_dash_secret()
-_AUTH_ON = bool(DASH_PASS)
+# 인증은 비번(DASH_PASS) 또는 구글 OAuth 둘 중 하나라도 설정되면 ON(게이트 작동).
+_AUTH_ON = bool(DASH_PASS) or bool(GOOGLE_CLIENT_ID)
+if not _AUTH_ON:
+    # ★fail-open 경고: DASH_PASS가 비면 인증·유료게이트가 통째로 꺼져 전원이 admin(full)로 열린다.
+    #   로컬 개발은 의도지만, 운영 배포에서 env가 빠지면 유료기능·관리기능이 공개된다.
+    import sys as _sys
+    print("⚠️ [보안] DASH_PASS 미설정 → 인증·유료게이트 OFF(전원 full/admin). "
+          "운영이면 DASH_PASS를 반드시 설정하세요.", file=_sys.stderr)
 _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico", "/healthz",
                "/insta_fill_comment.user.js",
                # 유저스크립트(insta_fill_comment)가 인스타 탭에서 전송 감지 시 GM_xmlhttpRequest로
@@ -2530,8 +2552,36 @@ _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico",
                # 원클릭 담기: /grab(북마클릿 설치안내)는 공개, /api/grab(팝업)은 자체적으로
                # 세션쿠키를 검증해 고객을 식별한다(_cid 폴백이 legacy라 여기선 직접 검증). 미들웨어
                # 401을 피해 친절한 팝업 응답을 주려고 allowlist에 둔다.
-               "/grab", "/api/grab", "/grab.user.js", "/grab_logic.js")
+               "/grab", "/api/grab", "/grab.user.js", "/grab_logic.js",
+               # 구글 OAuth: 로그인 전(세션 없음)에 접근해야 하는 공개 경로.
+               "/auth/google/login", "/auth/google/callback")
 _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
+
+# ── 유료게이트 deny-by-default (2026-07-19) ──
+# ranking_only(무료/체험만료) 등급도 접근 가능한 경로 = 레퍼런스 랭킹 '조회' + 계정/정적.
+# 나머지는 전부 402. 새 유료 엔드포인트를 추가해도 자동 차단(allowlist 방식이라 깜빡해도 안전).
+# ⚠️ /api/reference는 '조회(GET)'만 무료 — /api/reference/register(등록·데이터변경)는 exact 매칭이라 제외.
+#    /api/collect(수집=크롤 비용)도 제외 → 무료 등급은 마지막 수집 랭킹만 본다.
+# 메서드 무관 무료(로그인 폼 POST 등) — 전부 정확 경로.
+_FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout"}
+# GET만 무료(레퍼런스 랭킹 '조회') — POST/PUT 등 데이터변경은 같은 경로여도 차단.
+_FREE_EXACT_GET = {"/", "/api/me", "/api/reference", "/api/thumb", "/api/video"}
+# 경계있는 prefix만(과다매칭 방지 — 트레일링 슬래시).
+_FREE_PREFIX = ("/static/", "/auth/google/")
+
+
+def _ranking_only_blocked(path: str, method: str = "GET") -> bool:
+    """ranking_only 등급에게 이 경로를 막아야 하나. FREE 목록 외 전부 True(차단).
+    GET 무료 경로는 POST 등으로 오면 막는다(method-aware)."""
+    if path in _FREE_EXACT_ANY:
+        return False
+    if method == "GET" and path in _FREE_EXACT_GET:
+        return False
+    if any(path.startswith(p) for p in _FREE_PREFIX):
+        return False
+    if path in _AUTH_ALLOW or path.startswith("/api/find/frame/"):
+        return False   # 유저스크립트 담기·favicon 등 기존 공개 경로(단 /api/grab은 핸들러서 등급확인)
+    return True
 
 
 def _sign_session(customer_id: int, expiry: int) -> str:
@@ -2568,25 +2618,43 @@ def _set_session_cookie(response, customer_id: int):
 
 _LOGIN_HTML = """<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>쇼핑쇼츠 로그인</title>
-<style>body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;
-background:#0b0b0e;font-family:system-ui,'Noto Sans KR',sans-serif}
-.box{background:#16161c;border:1px solid #2a2a30;border-radius:14px;padding:32px 28px;width:280px}
-h1{color:#4f9dfa;font-size:18px;margin:0 0 18px;text-align:center;letter-spacing:1px}
-input{width:100%;box-sizing:border-box;margin:6px 0;padding:11px 12px;background:#0e0e12;
-border:1px solid #333;border-radius:8px;color:#eee;font-size:14px}
-button{width:100%;margin-top:12px;padding:11px;background:#4f9dfa;color:#111;border:0;
-border-radius:8px;font-weight:700;font-size:14px;cursor:pointer}
-a{color:#7db4ff;font-size:12px;text-decoration:none}
-.err{color:#e74c3c;font-size:12px;text-align:center;margin-top:10px;min-height:14px}
-.foot{text-align:center;margin-top:14px}</style></head>
-<body><form class=box method=post action=/api/login>
-<h1>🛍️ 쇼핑쇼츠</h1>
-<input name=user placeholder=아이디 autocomplete=username autofocus>
-<input name=pass type=password placeholder=비밀번호 autocomplete=current-password>
-<button>로그인</button>
+<style>*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+background:#0a0a0d;font-family:'Malgun Gothic',system-ui,'Noto Sans KR',sans-serif;color:#e8e8ea}
+.box{width:340px;padding:36px 30px;text-align:center}
+.logo{display:flex;align-items:center;justify-content:center;gap:10px;font-size:20px;font-weight:800;margin-bottom:34px}
+.logo .ic{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#ff8a4c,#ff5e62);
+display:flex;align-items:center;justify-content:center;font-size:18px}
+h1{font-size:22px;margin:0 0 8px}
+.sub{color:#ff9a6b;font-size:13px;margin-bottom:26px;line-height:1.6}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;
+background:#15151b;border:1px solid #2c2c34;border-radius:10px;color:#e8e8ea;font-size:15px;
+font-weight:700;cursor:pointer;text-decoration:none}
+.gbtn:hover{background:#1c1c24;border-color:#3a3a44}
+.gbtn svg{width:18px;height:18px}
+.err{color:#e0623d;font-size:12px;margin-top:16px;min-height:14px;line-height:1.6}
+.home{display:block;color:#6a6a76;font-size:12px;margin-top:22px;text-decoration:none}
+.atoggle{color:#45454f;font-size:11px;margin-top:30px;cursor:pointer;background:none;border:0}
+.aform{display:none;margin-top:14px}.aform.show{display:block}
+.aform input{width:100%;margin:5px 0;padding:10px;background:#0e0e12;border:1px solid #2c2c34;
+border-radius:8px;color:#eee;font-size:13px}
+.aform button{width:100%;margin-top:8px;padding:10px;background:#2a2a34;color:#cfcfd6;border:0;
+border-radius:8px;font-weight:700;font-size:13px;cursor:pointer}</style></head>
+<body><div class=box>
+<div class=logo><span class=ic>🛍️</span> 쇼핑쇼츠</div>
+<h1>로그인</h1>
+<div class=sub>구글 계정으로 로그인하세요<br>처음이면 <b>무료 체험</b>이 바로 시작돼요</div>
+<a class=gbtn href="/auth/google/login">
+<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.8-6.8C35.6 2.4 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.3 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9.1h12.4c-.5 2.9-2.1 5.4-4.6 7l7.1 5.5c4.2-3.9 6.6-9.6 6.6-16z"/><path fill="#FBBC05" d="M10.5 28.3c-.5-1.4-.8-2.9-.8-4.3s.3-2.9.8-4.3l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.6 10.4l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.1-5.5c-2 1.3-4.6 2.1-8.1 2.1-6.3 0-11.6-3.8-13.5-9.1l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>
+Google 계정으로 로그인</a>
 <div class=err>__ERR__</div>
-<div class=foot><a href=/signup>계정이 없으신가요? 가입하기</a></div>
-</form></body></html>"""
+<a class=home href="/">← 홈으로 돌아가기</a>
+<button class=atoggle onclick="document.getElementById('af').classList.toggle('show')">운영자 로그인</button>
+<form class=aform id=af method=post action=/api/login>
+<input name=user placeholder=아이디 autocomplete=username>
+<input name=pass type=password placeholder=비밀번호 autocomplete=current-password>
+<button>운영자 로그인</button></form>
+</div></body></html>"""
 
 _SIGNUP_HTML = """<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>쇼핑쇼츠 가입</title>
@@ -2613,7 +2681,13 @@ a{color:#7db4ff;font-size:12px;text-decoration:none}
 
 @app.get("/login", response_class=HTMLResponse)
 def _login_page(e: str = ""):
-    return _LOGIN_HTML.replace("__ERR__", "아이디 또는 비밀번호가 틀렸습니다" if e else "")
+    if e == "1":
+        msg = "아이디 또는 비밀번호가 틀렸습니다"
+    elif e:   # 구글 콜백 등에서 온 안내 — XSS 방지 이스케이프
+        msg = e.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+    else:
+        msg = ""
+    return _LOGIN_HTML.replace("__ERR__", msg)
 
 
 @app.get("/signup", response_class=HTMLResponse)
@@ -2630,7 +2704,9 @@ async def _api_login(req: Request):
     if not _AUTH_ON:
         return RedirectResponse("/", status_code=303)
     # 기존 단일 관리자 계정(env) — 하위호환, LEGACY_CUSTOMER_ID(0)로 로그인.
-    if hmac.compare_digest(u, DASH_USER) and hmac.compare_digest(p, DASH_PASS):
+    # ★DASH_PASS가 비었으면 이 분기를 절대 타면 안 된다: 안 그러면 구글만 켠 배포(DASH_PASS 빈값)에서
+    #   user=admin·pass=빈값이 admin/빈값과 compare_digest True가 돼 누구나 사장님 세션을 얻는다(백도어).
+    if DASH_PASS and hmac.compare_digest(u, DASH_USER) and hmac.compare_digest(p, DASH_PASS):
         r = RedirectResponse("/", status_code=303)
         _set_session_cookie(r, 0)
         return r
@@ -2660,6 +2736,83 @@ async def _api_signup(req: Request):
     return r
 
 
+# ── 구글 OAuth (유료게이트 고객 로그인, 2026-07-19) ──
+# 라이브러리 없이: authorize 리다이렉트 → code → token 교환 → userinfo(sub,email).
+# id_token JWT 서명검증 대신 Google token 엔드포인트(TLS)로 받은 access_token으로 userinfo를
+# 직접 조회한다(서명검증 불필요·동등 안전). state 쿠키로 CSRF 방어.
+_GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
+_GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
+_GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
+
+
+def _google_configured():
+    return bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
+
+
+def _google_authorize_url(state):
+    q = urllib.parse.urlencode({
+        "client_id": GOOGLE_CLIENT_ID, "redirect_uri": GOOGLE_REDIRECT_URI,
+        "response_type": "code", "scope": "openid email profile",
+        "state": state, "access_type": "online", "prompt": "select_account"})
+    return _GOOGLE_AUTH_URL + "?" + q
+
+
+def _google_fetch_identity(code, _requests=None):
+    """code → {sub, email} 또는 None. 네트워크는 _requests 주입으로 테스트 가능."""
+    rq = _requests or requests
+    tok = rq.post(_GOOGLE_TOKEN_URL, data={
+        "code": code, "client_id": GOOGLE_CLIENT_ID, "client_secret": GOOGLE_CLIENT_SECRET,
+        "redirect_uri": GOOGLE_REDIRECT_URI, "grant_type": "authorization_code"}, timeout=10)
+    if tok.status_code != 200:
+        return None
+    access = tok.json().get("access_token")
+    if not access:
+        return None
+    ui = rq.get(_GOOGLE_USERINFO_URL, headers={"Authorization": "Bearer " + access}, timeout=10)
+    if ui.status_code != 200:
+        return None
+    d = ui.json()
+    if not d.get("sub"):
+        return None
+    # 미인증 이메일은 신뢰하지 않는다(매칭은 sub로 하므로 로그인엔 지장 없음, 저장만 안 함).
+    email = d.get("email") if d.get("email_verified") is True else None
+    return {"sub": d["sub"], "email": email}
+
+
+@app.get("/auth/google/login")
+def _google_login(request: Request):
+    if not _google_configured():
+        return HTMLResponse("<h3 style='font-family:sans-serif'>구글 로그인이 아직 설정되지 않았어요.</h3>",
+                            status_code=503)
+    state = secrets.token_urlsafe(24)
+    r = RedirectResponse(_google_authorize_url(state), status_code=303)
+    r.set_cookie("g_state", state, max_age=600, httponly=True, samesite="lax")
+    return r
+
+
+@app.get("/auth/google/callback")
+def _google_callback(request: Request, code: str = "", state: str = "", error: str = ""):
+    if error or not code:
+        return RedirectResponse("/login?e=" + urllib.parse.quote("구글 로그인이 취소됐어요"), status_code=303)
+    cookie_state = request.cookies.get("g_state")
+    try:
+        state_ok = bool(cookie_state) and hmac.compare_digest(cookie_state, state)
+    except (TypeError, ValueError):
+        state_ok = False       # 비-ASCII state 주입 등 → fail-closed
+    if not state_ok:
+        return RedirectResponse("/login?e=" + urllib.parse.quote("보안 검증 실패 — 다시 시도해주세요"), status_code=303)
+    ident = _google_fetch_identity(code)
+    if not ident:
+        return RedirectResponse("/login?e=" + urllib.parse.quote("구글 인증에 실패했어요"), status_code=303)
+    cid = Store(DB_PATH).get_or_create_by_google(ident["sub"], ident.get("email"))
+    if cid is None:
+        return RedirectResponse("/login?e=" + urllib.parse.quote("계정 생성 실패"), status_code=303)
+    r = RedirectResponse("/", status_code=303)
+    _set_session_cookie(r, cid)
+    r.delete_cookie("g_state")
+    return r
+
+
 @app.middleware("http")
 async def _auth_guard(request: Request, call_next):
     if not _AUTH_ON:
@@ -2680,10 +2833,183 @@ async def _auth_guard(request: Request, call_next):
     customer_id = _verify_session(request.cookies.get("dash_auth"))
     if customer_id is not None:
         request.state.customer_id = customer_id
+        # 유료게이트: 로그인은 됐으나 등급이 ranking_only(무료/체험만료)면 유료 경로 차단.
+        # 사장님(0)·pro·체험중은 access_level=full이라 안 걸린다. deny-by-default.
+        if access_level(customer_id) == "ranking_only" and _ranking_only_blocked(path, request.method):
+            return JSONResponse(
+                {"error": "유료 기능이에요. 결제하면 열려요.", "level": "ranking_only"},
+                status_code=402)
         return await call_next(request)
     if path.startswith("/api/"):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
     return RedirectResponse("/login")
+
+
+# ── 유료게이트 접근권한 판정 (단일 진실원. API게이트·화면·크레딧 모두 이 함수만 본다) ──
+def access_level(customer_id, now=None):
+    """customer_id → "full"(전기능) | "ranking_only"(레퍼런스 랭킹만).
+    규칙: 사장님(0)=full / plan=pro=full / 체험중(now<full_access_until)=full / 그 외 ranking_only."""
+    if customer_id == 0:
+        return "full"                       # 사장님 = 영구 pro+admin
+    cust = Store(DB_PATH).get_customer(customer_id)
+    if not cust:
+        return "ranking_only"
+    if cust.get("plan") == "pro":
+        return "full"
+    if now is None:
+        now = int(datetime.now(timezone.utc).timestamp())
+    if now < (cust.get("full_access_until") or 0):
+        return "full"                       # 무료 체험 창
+    return "ranking_only"
+
+
+# ── 유료게이트 비용 방어: 계정별 일일 크레딧 + 전역 상한 ──
+_CREDIT_DEFAULTS = {"lens": 5, "render": 2, "script": 10}
+_CREDIT_PRO_DEFAULTS = {"lens": 100, "render": 50, "script": 200}
+_GLOBAL_CAP_DEFAULTS = {"lens": 200, "render": 100, "script": 400}
+
+
+def _today_utc():
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+
+def check_and_count(customer_id, op):
+    """유료 op(lens/render/script) 실행 전 호출. 일일 상한 초과면 False(막기),
+    아니면 카운트+1 후 True. 사장님(0)·pro는 높은 상한(limit_{op}_pro)."""
+    st = Store(DB_PATH)
+    is_paid = (customer_id == 0) or (st.get_customer(customer_id) or {}).get("plan") == "pro"
+    if is_paid:
+        key, dflt = f"limit_{op}_pro", _CREDIT_PRO_DEFAULTS.get(op, 100)
+    else:
+        key, dflt = f"limit_{op}", _CREDIT_DEFAULTS.get(op, 5)
+    try:
+        limit = int(st.get_setting(key, dflt))
+    except (TypeError, ValueError):
+        limit = dflt
+    day = _today_utc()
+    if st.usage_get(customer_id, op, day) >= limit:
+        return False
+    st.usage_incr(customer_id, op, day)
+    return True
+
+
+def global_incr_and_alert(op):
+    """전역 일일 사용량(customer_id=-1) 증가. 90% 도달 시 텔레그램 1회 알림(best-effort)."""
+    st = Store(DB_PATH)
+    n = st.usage_incr(-1, op, _today_utc())
+    try:
+        cap = int(st.get_setting(f"global_cap_{op}", _GLOBAL_CAP_DEFAULTS.get(op, 200)))
+    except (TypeError, ValueError):
+        cap = _GLOBAL_CAP_DEFAULTS.get(op, 200)
+    if cap > 0 and n == max(1, int(cap * 0.9)):   # 90% 첫 도달 1회만
+        try:
+            from shopping_shorts import notify
+            notify.send_telegram(f"⚠️ [유료게이트] {op} 전역 일일 사용 {n}/{cap} (90% 도달)")
+        except Exception:
+            pass
+    return n
+
+
+@app.get("/api/me")
+def _api_me(request: Request):
+    """프론트가 부팅 시 호출 — 등급·체험 남은날·크레딧 상한."""
+    cid = getattr(request.state, "customer_id", 0)
+    st = Store(DB_PATH)
+    cust = st.get_customer(cid) if cid else None
+    now = int(datetime.now(timezone.utc).timestamp())
+    plan = "pro" if cid == 0 else (cust or {}).get("plan", "free")
+    fau = (cust or {}).get("full_access_until", 0) if cust else 0
+    if plan == "pro" or cid == 0:
+        days_left = None
+    else:
+        days_left = max(0, (fau - now + 86399) // 86400) if fau else 0
+    def _lim(k, d):
+        try:
+            return int(st.get_setting(k, d))
+        except (TypeError, ValueError):
+            return d
+    return {"customer_id": cid, "level": access_level(cid, now), "plan": plan,
+            "days_left": days_left,
+            "limits": {"lens": _lim("limit_lens", 5), "render": _lim("limit_render", 2),
+                       "script": _lim("limit_script", 10)},
+            "contact": {"kakao": st.get_setting("contact_kakao", ""),
+                        "phone": st.get_setting("contact_phone", "")}}
+
+
+# ── 유료게이트 관리자(사장님 cid0 전용) — 결제 승격·설정 조정 ──
+def _require_admin(request):
+    if getattr(request.state, "customer_id", None) != 0:
+        return JSONResponse({"error": "관리자 전용"}, status_code=403)
+    return None
+
+
+_ADMIN_SETTING_KEYS = {"trial_days", "limit_lens", "limit_render", "limit_script",
+                       "limit_lens_pro", "limit_render_pro", "limit_script_pro",
+                       "global_cap_lens", "global_cap_render", "global_cap_script",
+                       "contact_kakao", "contact_phone"}
+
+
+@app.get("/api/admin/customers")
+def _admin_customers(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    st = Store(DB_PATH)
+    day = _today_utc()
+    out = []
+    for cu in st.list_customers():
+        cu["level"] = access_level(cu["id"])
+        cu["usage"] = {op: st.usage_get(cu["id"], op, day) for op in ("lens", "render", "script")}
+        out.append(cu)
+    return {"ok": True, "customers": out, "settings": st.all_settings()}
+
+
+@app.post("/api/admin/set_plan")
+async def _admin_set_plan(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    try:
+        cid = int(body.get("customer_id"))
+    except (TypeError, ValueError):
+        return JSONResponse({"error": "customer_id 필요"}, status_code=422)
+    plan = body.get("plan")
+    if plan not in ("free", "pro"):
+        return JSONResponse({"error": "plan=free|pro"}, status_code=422)
+    days = body.get("days")
+    st = Store(DB_PATH)
+    if plan == "pro":
+        st.set_plan(cid, "pro")                         # 결제 승격 = 전기능 무기한
+    elif days:
+        until = int(datetime.now(timezone.utc).timestamp()) + int(days) * 86400
+        st.set_plan(cid, "free", full_access_until=until)   # 체험 창 재부여
+    else:
+        st.set_plan(cid, "free", full_access_until=0)   # 즉시 무료(랭킹만)로 내림
+    import sys as _s
+    print(f"[admin] set_plan cid={cid} plan={plan} days={days}", file=_s.stderr)  # 변경 로그
+    return {"ok": True}
+
+
+@app.post("/api/admin/settings")
+async def _admin_settings(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    st = Store(DB_PATH)
+    for k, v in (body or {}).items():
+        if k in _ADMIN_SETTING_KEYS:
+            st.set_setting(k, v)
+    return {"ok": True, "settings": st.all_settings()}
+
+
+@app.get("/admin", response_class=HTMLResponse)
+def _admin_page(request: Request):
+    if getattr(request.state, "customer_id", None) != 0:
+        return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>", status_code=403)
+    return FileResponse(Path(__file__).parent / "static" / "admin.html",
+                        media_type="text/html; charset=utf-8")
 
 
 @app.get("/insta_fill_comment.user.js", include_in_schema=False)
@@ -2769,6 +3095,11 @@ def api_grab(request: Request, background_tasks: BackgroundTasks,
     if cid is None:
         return _grab_popup_html(False, "로그인이 필요해요",
                                 "shoppingshorts.duckdns.org에 먼저 로그인하세요")
+    # 유료게이트: /api/grab은 _AUTH_ALLOW라 미들웨어 게이트를 우회한다 → 여기서 직접 등급 확인.
+    # 담기(+백그라운드 메타 크롤 비용)는 유료 기능이므로 ranking_only(무료/체험만료)는 차단.
+    if access_level(cid) == "ranking_only":
+        return _grab_popup_html(False, "유료 기능이에요",
+                                "무료 체험이 끝났어요. 결제하면 담기를 계속 쓸 수 있어요")
     platform = _grab_platform(url)
     if not platform:
         return _grab_popup_html(False, "담을 수 없는 링크예요", "유튜브·틱톡·샤오홍슈·도우인 영상 페이지에서 눌러주세요")

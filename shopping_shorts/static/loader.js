@@ -104,7 +104,11 @@
       (opts.bar ? '<div class="sbl-bar"><i></i></div>' : '') + '</div>';
     var sp = [].slice.call(el.querySelectorAll('.sbl-rot span')), i = 0, timer = null;
     if (sp.length > 1){
-      timer = setInterval(function(){ sp[i].classList.remove('on'); i=(i+1)%sp.length; sp[i].classList.add('on'); }, opts.interval || 1600);
+      timer = setInterval(function(){
+        // 컨테이너가 화면에서 빠졌으면(결과로 교체됨) 스스로 멈춘다 — 인터벌 누수 방지.
+        if (!document.body || !document.body.contains(sp[0])) { clearInterval(timer); return; }
+        sp[i].classList.remove('on'); i=(i+1)%sp.length; sp[i].classList.add('on');
+      }, opts.interval || 1600);
     }
     return { stop: function(){ if (timer) clearInterval(timer); }, el: el };
   }

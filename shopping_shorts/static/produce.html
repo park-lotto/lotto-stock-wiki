@@ -18,30 +18,37 @@
       --inset:#eef7f3;--sel-bg:linear-gradient(90deg,#d8f2ea,#eafaf5);--sel-fg:#0a7d66;
       --grad:linear-gradient(135deg,#19c9ab,#0a8f79);--hover:#eef7f3;color-scheme:light;}
     *{box-sizing:border-box}
-    body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic',system-ui,sans-serif;margin:0;min-height:100vh}
+    /* 시니어 타이포: 본문 12~13 지배 → 15px 기준 상향(인라인 12px 지정은 그대로, 미지정 텍스트가 커진다) */
+    body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic',system-ui,sans-serif;margin:0;min-height:100vh;font-size:15px}
     .main{flex:1;padding:24px 32px;overflow:auto}
     .head{margin-bottom:8px}
     .head h2{margin:0;font-size:22px}
     .head .desc{color:var(--sub);font-size:13px;margin-top:4px}
 
-    /* 진행바 */
-    .steps{display:flex;align-items:flex-start;gap:0;margin:22px 0 24px;max-width:1000px}
+    /* 진행바 — 크게(60대 최우선). 완료=채운 민트+체크, 현재=링+숨쉬기(색이 아니라 형태로도 구분) */
+    .steps{display:flex;align-items:flex-start;gap:0;margin:26px 0 30px;max-width:1120px}
     .step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative;cursor:pointer}
-    .step .dot{width:34px;height:34px;border-radius:50%;background:var(--panel);border:1px solid var(--line);
-      display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--sub);z-index:1;transition:.2s}
-    .step .lbl{font-size:12px;color:var(--sub);margin-top:6px;white-space:nowrap;transition:.2s}
-    .step:not(:last-child)::after{content:"";position:absolute;top:17px;left:50%;width:100%;height:2px;background:var(--line);z-index:0}
-    .step.done .dot{background:var(--ok);border-color:var(--ok);color:#fff}
-    .step.done::after{background:var(--ok)}
-    .step.active .dot{background:var(--accent2);border-color:var(--accent2);color:#fff;box-shadow:0 0 0 4px rgba(109,59,239,.2)}
-    .step.active .lbl{color:var(--txt);font-weight:600}
+    .step .dot{width:52px;height:52px;border-radius:50%;background:var(--panel);border:2px solid var(--line);
+      display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--sub);z-index:1;
+      transition:.35s cubic-bezier(.4,0,.2,1)}
+    .step .lbl{font-size:15px;color:var(--sub);margin-top:9px;white-space:nowrap;transition:.3s}
+    .step:not(:last-child)::after{content:"";position:absolute;top:26px;left:50%;width:100%;height:3px;background:var(--line);z-index:0;border-radius:3px}
+    .step.done .dot{background:var(--ok);border-color:var(--ok);color:#04201b}
+    .step.done::after{background:var(--grad)}
+    .step.active .dot{background:var(--grad);border-color:transparent;color:#04201b;
+      box-shadow:0 0 0 6px rgba(55,224,189,.28),0 8px 26px -8px rgba(55,224,189,.5);
+      animation:stepBreathe 2.4s ease-in-out infinite}
+    @keyframes stepBreathe{0%,100%{box-shadow:0 0 0 6px rgba(55,224,189,.28),0 8px 26px -8px rgba(55,224,189,.5)}
+      50%{box-shadow:0 0 0 11px rgba(55,224,189,0),0 8px 26px -8px rgba(55,224,189,.5)}}
+    @media(prefers-reduced-motion:reduce){.step.active .dot{animation:none}}
+    .step.active .lbl{color:var(--txt);font-weight:700}
 
     /* 스텝 패널 */
     .panel{display:none;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;max-width:1000px}
     .panel.show{display:block}
-    .panel h3{margin:0 0 4px;font-size:17px}
-    .panel .sub{color:var(--sub);font-size:13px;margin-bottom:16px}
-    .stub{color:var(--sub);font-size:14px;padding:40px;text-align:center;border:1px dashed var(--line);border-radius:10px}
+    .panel h3{margin:0 0 4px;font-size:18px}
+    .panel .sub{color:var(--sub);font-size:14px;margin-bottom:16px}
+    .stub{color:var(--sub);font-size:15px;padding:40px;text-align:center;border:1px dashed var(--line);border-radius:10px}
 
     /* 하단 네비 */
     .nav{display:flex;justify-content:space-between;margin:18px 0 40px;max-width:1000px}
@@ -2511,7 +2518,8 @@ async function loadMixReview(){
   // 편집안이 떴으니 좌측 프리뷰 공간을 열고, 아직 안 만들었다는 안내를 넣는다.
   const _pvPanel=document.getElementById('mixPreviewPanel'), _pvBox=document.getElementById('mixPreview');
   if(_pvPanel) _pvPanel.style.display='';
-  if(_pvBox) _pvBox.innerHTML='<div class="hint" style="padding:14px;border:1px dashed var(--line);border-radius:12px;text-align:center">오른쪽 <b>▶ 미리보기 만들기</b>를 누르면<br>여기에 미리보기 영상이 표시됩니다.</div>';
+  // 미리보기 자리를 9:16 프레임으로 미리 잡아둔다(빈 공간이 아니라 "여기서 만들어진다"가 보이게).
+  if(_pvBox) _pvBox.innerHTML='<div style="aspect-ratio:9/16;width:min(300px,100%);margin:0 auto;border:2px dashed var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--sub);text-align:center;padding:18px"><div style="font-size:34px">🪞</div><div style="font-size:14px;line-height:1.5">오른쪽 <b style="color:var(--accent)">▶ 미리보기 만들기</b>를<br>누르면 <b>여기에서</b> 영상이<br>만들어지는 걸 보실 수 있어요</div></div>';
   // 편집안을 새로 그렸다 = 새 매칭이다. 옛 미리보기 상태를 물고 있으면 사장님이 옛 영상을
   // 본 것으로 치고 다음이 열린다 → 여기서 반드시 초기화한다.
   // ★폴러도 같이 죽인다: 재매칭은 정상 흐름(⚠️ 매칭 약한 문장은 "대본을 살짝 바꾸세요"를 권한다)이고
@@ -2664,7 +2672,13 @@ async function startPreview(){
   const myJob = MIX_JOB;           // 재매칭으로 MIX_JOB이 바뀌어도 내 응답은 내 job 것이다
   if(btn) btn.disabled = true;     // 렌더는 20초+ 걸린다 — 그 사이 재클릭을 막는다
   const pvPanel=document.getElementById('mixPreviewPanel'); if(pvPanel) pvPanel.style.display='';  // 좌측 프리뷰 자리 확보
-  box.innerHTML = '<div class="hint" style="padding:14px;border:1px solid var(--line);border-radius:12px">⏳ 미리보기 만드는 중… (자막제거·꾸미기 없이 렌더합니다)</div>';
+  // 같은 9:16 자리에서 민트 로더가 돌게 한다(loader.js). 없으면 텍스트로 폴백.
+  box.innerHTML = '<div id="pvLoadFrame" style="aspect-ratio:9/16;width:min(300px,100%);margin:0 auto;border:1px solid var(--line);border-radius:16px;background:var(--inset);display:flex;align-items:center;justify-content:center;overflow:hidden"></div>';
+  try{
+    var _pvf=document.getElementById('pvLoadFrame');
+    if(window.SBLoader && _pvf) SBLoader.spinner(_pvf, {messages:['미리보기 만드는 중…','장면을 이어붙이는 중…','자막·음성 얹는 중…','거의 다 됐어요…'], bar:true});
+    else if(_pvf) _pvf.innerHTML='<div class="hint" style="padding:14px">⏳ 미리보기 만드는 중…</div>';
+  }catch(_){ }
   PREVIEW_STATUS = 'rendering'; refreshNextBtn();
   try{
     const d = await (await fetch('/api/produce/mix/preview',{method:'POST',
