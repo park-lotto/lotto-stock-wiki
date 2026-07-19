@@ -1596,24 +1596,71 @@ function lenText(t){ t=t||''; const c=t.replace(/\s/g,'').length; return `${t.le
 function onScriptInput(){ const ta=document.getElementById('scriptText'); STATE.script=ta.value; document.getElementById('lenHint').textContent=lenText(STATE.script); refreshFinalPeek(); saveWork(); }
 function updateLen(){ onScriptInput(); }
 
-// 초안 렌더(제미니·믹스 공유)
+// 요소 버튼 목록 — 키는 백엔드 ELEM_KEYS와 일치, 순서만 사용성순.
+const MIX_ELEMS=[['hook','훅'],['development','전개방식'],['twist','발상전환'],['characters','주변인물'],['appeal','어필포인트'],['tone','말투'],['devices','설득장치'],['cta','마무리/CTA']];
+// 초안 렌더(조합 경로). 카드마다 편집 textarea + 요소 버튼 + 업그레이드/자유입력.
 function renderDrafts(drafts, boxId){
   window._drafts = drafts;
-  document.getElementById(boxId).innerHTML = drafts.map((dr,i)=>`
-    <div style="border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:8px;background:#0d1420">
+  const eb='padding:5px 9px;margin:2px;border:1px solid var(--line);border-radius:14px;background:#0d1420;color:var(--txt);cursor:pointer;font-size:12px';
+  document.getElementById(boxId).innerHTML = (drafts||[]).map((dr,i)=>`
+    <div class="mixdraft" data-draft-id="${dr.draft_id||''}" data-idx="${i}" style="border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:8px;background:#0d1420">
       <div style="font-weight:600;color:#9dc4ff;margin-bottom:4px">초안 ${i+1} · ${esc(dr.hook||'')}</div>
-      <div style="font-size:13px;color:var(--txt);line-height:1.5">${esc(dr.script||'')}</div>
-      <div class="hint" style="margin:6px 0">${esc(dr.applied||'')} · ${lenText(dr.script||'')}</div>
-      <button class="btn-next" style="padding:8px 14px" onclick="useDraft(${i})">이 대본 사용 →</button>
+      <textarea class="mixtext" style="width:100%;min-height:90px;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:8px;font-size:13px;line-height:1.5" onblur="mixOnEdit(this)">${esc(dr.script||'')}</textarea>
+      <div class="hint" style="margin:6px 0">${esc(dr.applied||'')} · <span class="mixlen">${lenText(dr.script||'')}</span></div>
+      <div class="hint" style="margin:6px 0 4px">✨ 손볼 요소를 고르고 [업그레이드] — 여러 개 고르면 전부 새로 씁니다(나머지는 유지)</div>
+      <div class="mixelems">${MIX_ELEMS.map(([k,l])=>`<button type="button" class="mixelem" data-key="${k}" data-on="" style="${eb}" onclick="mixToggleElem(this)">${l}</button>`).join('')}</div>
+      <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+        <input type="text" class="mixinst" placeholder="추가 지시(선택): 예) 마지막을 궁금하게" style="flex:1;min-width:120px;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:8px">
+        <button type="button" class="btn-next" style="padding:8px 14px" onclick="mixUpgrade(this)">🔄 업그레이드</button>
+      </div>
+      <button class="btn-next" style="padding:8px 14px;margin-top:8px;background:linear-gradient(90deg,#1c5a2e,#0d3a1c)" onclick="useDraft(${i})">이 대본 사용 →</button>
     </div>`).join('');
 }
+function mixToggleElem(btn){
+  const on=btn.dataset.on==='1'; btn.dataset.on=on?'':'1';
+  btn.style.background=on?'#0d1420':'var(--accent2,#3a6df0)'; btn.style.color=on?'var(--txt)':'#fff';
+}
+function mixOnEdit(ta){
+  const card=ta.closest('.mixdraft'); const i=+card.dataset.idx;
+  if(window._drafts&&window._drafts[i]) window._drafts[i].script=ta.value;
+  const lp=card.querySelector('.mixlen'); if(lp) lp.textContent=lenText(ta.value);
+  const did=card.dataset.draftId;
+  if(did){ fetch('/api/wiki/draft/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({draft_id:did,script_text:ta.value})}).then(r=>r.json()).then(d=>{ if(d.ok) card.dataset.draftId=d.draft_id; }).catch(()=>{}); }
+}
+async function mixUpgrade(btn){
+  const card=btn.closest('.mixdraft'); const did=card.dataset.draftId;
+  if(!did){ alert('이 초안은 서버에 저장된 버전이 없어 업그레이드를 지원하지 않습니다. 직접 편집하거나 확정하세요.'); return; }
+  const elements=[...card.querySelectorAll('.mixelem[data-on="1"]')].map(b=>b.dataset.key);
+  const inst=(card.querySelector('.mixinst').value||'').trim();
+  if(!elements.length && !inst){ alert('손볼 요소를 고르거나 지시문을 입력하세요.'); return; }
+  const ta=card.querySelector('.mixtext');
+  btn.disabled=true; const o=btn.textContent; btn.textContent='⏳ 생성 중…';
+  try{
+    let d;
+    if(elements.length){
+      d=await (await fetch('/api/wiki/draft/upgrade',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({draft_id:did,elements})})).json();
+    }else{
+      d=await (await fetch('/api/wiki/draft/refine',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({draft_id:did,mode:'rewrite',instruction:inst})})).json();
+    }
+    if(!d.ok){ alert(d.error||'업그레이드 실패'); return; }
+    ta.value=d.script_text; card.dataset.draftId=d.draft_id;
+    const i=+card.dataset.idx; if(window._drafts&&window._drafts[i]) window._drafts[i].script=d.script_text;
+    const lp=card.querySelector('.mixlen'); if(lp) lp.textContent=lenText(d.script_text);
+    card.querySelectorAll('.mixelem[data-on="1"]').forEach(b=>{ b.dataset.on=''; b.style.background='#0d1420'; b.style.color='var(--txt)'; });
+    card.querySelector('.mixinst').value='';
+  }catch(e){ alert('네트워크 오류'); }
+  finally{ btn.disabled=false; btn.textContent=o; }
+}
+// ★이름·시그니처 유지(테스트 3개가 이 선언 앵커를 슬라이스). 본문만 강화 —
+// 카드가 실제 DOM에 있으면 편집/업그레이드된 textarea를 우선, 없으면(테스트 하네스) 초안 원본.
 function useDraft(i){
   const dr=(window._drafts||[])[i]; if(!dr) return;
-  STATE.script=dr.script||'';
+  let card=null;
+  if(typeof document!=='undefined' && document.querySelector) card=document.querySelector('.mixdraft[data-idx="'+i+'"]');
+  const ta=card?card.querySelector('.mixtext'):null;
+  STATE.script=(ta?ta.value:'')||dr.script||'';
   STATE.script_from_wiki='mix';   // 조합 초안 = 위키 대본 여러 개에서 나옴. 원본을 하나로 특정할 수 없다.
-  setScriptMode('manual');   // 편집 가능한 직접작성 창으로 이동(내용 채움)
-  refreshFinalPeek();
-  saveWork();
+  setScriptMode('manual'); refreshFinalPeek(); saveWork();
   try{ logPick('S2', {picked: i, source: 'mix', candidates: (window._drafts||[]).map(function(d){ return d && d.hook; })}); }catch(e){}
 }
 async function postDrafts(url, payload, boxId){
