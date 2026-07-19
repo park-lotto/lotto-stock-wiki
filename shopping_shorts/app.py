@@ -2232,6 +2232,50 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...),
     return {"ok": True, "items": items, "count": len(items)}
 
 
+@app.post("/api/lens/trace_url")
+def api_lens_trace_url(body: dict):
+    """영상 URL 붙여넣기 → 대표(중간) 프레임 → 구글렌즈 → 원본/유사 레퍼런스 영상.
+    /api/lens/search와 같은 월 호출가드·같은 결과형태(ok/items/count)를 쓴다 — 입력만
+    '프레임 업로드'가 아니라 'URL'이다. download_any가 유튜브·틱톡·인스타·샤오홍슈를
+    받으므로 해외 재해설 쇼츠의 원본을 역추적하는 용도. SerpApi 100회/월 절약을 위해
+    URL당 프레임 1장(중간지점)·1검색만 쓴다."""
+    url = (body.get("url") or "").strip()
+    if not url:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "url 필요"})
+    blocked = _ssrf_guard(url)   # download_any가 이 URL을 그대로 받는다
+    if blocked:
+        return blocked
+    store = Store(DB_PATH)
+    month = datetime.now(timezone.utc).strftime("%Y-%m")
+    limit = int(store.get_setting("lens_month_limit", _LENS_MONTH_LIMIT_DEFAULT))
+    if store.lens_month_count(month) >= limit:
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "lens_limit",
+            "error": f"이번 달 렌즈 검색 한도({limit}회)를 다 썼습니다"})
+    work_dir = _FIND_TMP_DIR / "lens_trace"
+    work_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        video_path, caption = download_any(url, str(work_dir))
+    except Exception as e:  # noqa: BLE001 — 다운로드 실패는 사용자 입력(만료·미지원 URL) 탓
+        return JSONResponse(status_code=502, content={"ok": False, "error": f"영상 다운로드 실패: {e}"})
+    dur = frame_extract._probe_duration(video_path) or 2.0
+    name = uuid.uuid4().hex + ".jpg"
+    frame = extract_frame_at(video_path, work_dir, dur / 2, filename=name)
+    if not frame:
+        return JSONResponse(status_code=502, content={"ok": False, "error": "프레임 추출 실패"})
+    raw = Path(frame).read_bytes()
+    # /api/lens/search와 동일: imgbb/imgur 우선(구글이 상시 크롤링), 실패 시 서버 URL 폴백.
+    image_url = upload_frame(raw)
+    if not image_url:
+        lens_dir = _FIND_TMP_DIR / "lens"
+        lens_dir.mkdir(parents=True, exist_ok=True)
+        (lens_dir / name).write_bytes(raw)
+        image_url = f"{PUBLIC_BASE_URL}/api/find/frame/lens/{name}"
+    items = search_similar_videos(image_url, source_caption=caption)
+    store.bump_lens(month)
+    return {"ok": True, "items": items, "count": len(items), "source_url": url}
+
+
 # 캡션 → 중국 플랫폼 검색어. 구글렌즈는 시각검색이라 키워드가 없지만 샤오홍슈/도우인은
 # 키워드 검색이라 캡션에서 핵심어를 뽑아야 한다. 앞쪽 의미토큰 2개를 붙여 쓴다(제품명이
 # 보통 캡션 앞에 온다). 불용어·해시태그 기호는 제거.
