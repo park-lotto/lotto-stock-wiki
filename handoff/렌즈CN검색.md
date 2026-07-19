@@ -54,3 +54,10 @@ Apify 인앱 자동검색(샤오홍슈/도우인 그리드)은 **유료**라 폐
 
 ### 🆕 CN 카드별 담기 (2026-07-19 오후, grab.user.js v1.2.0)
 "영상마다 담기가 있어야지" → 검색 그리드 카드마다 📥 버튼. **rednote.com 로그인상태 브라우저 실측으로 셀렉터 확정**(추측금지): 카드=`section.note-item`, 커버=`a.cover[href]`(→`/search_result/{id}`·`/explore/{id}`). 클릭시점에 URL·썸네일·제목 추출(SPA 노드재사용 안전). 그리드선 플로팅 숨김(단일영상 페이지에만 플로팅). **라이브 페이지 주입테스트로 16버튼·grab페이로드 실증**. 커밋 9aae60ed. ⚠️xiaohongshu.com은 게스트 로그인벽('登录后查看')이라 rednote.com에서만 카드 뜸(둘 다 같은 클래스). 도우인 카드별은 미착수(구조 다름, 별도 그라운딩 필요)—도우인은 플로팅 폴백.
+
+### 🆕 4플랫폼 바로가기 + 인스타 담기 + 도우인 결론 (2026-07-19 오후 2차)
+- **rednote 담기 거부 버그**: 서버 `_GRAB_DOMAINS` xiaohongshu 튜플에 `rednote.com` 추가(app.py:2546)=카드별 담기가 보내는 rednote/search_result URL 담김. 회귀테스트+main 병합.
+- **후보 바로가기 4플랫폼화**: 후보 행에 🎵틱톡·📷인스타 추가. 샤오홍슈/도우인=중국어(c.zh), 틱톡/인스타=한국어(c.ko). node로 4URL·언어 실측검증.
+- **인스타 담기**: grab.user.js @match에 instagram 추가(v1.3.0)=인스타 영상페이지서 플로팅 담기. (인스타 전용 스크립트 insta_fill_comment.user.js는 댓글용, 별개)
+- **도우인 카드별 = 불가 확정**: 브라우저 실측—도우인 검색카드는 href·data-id 없는 div+JS, React fiber props까지 뒤져도 aweme_id 없음(URL이 클릭해야 생성). 추측코드 안 짬. **도우인 최선=영상 클릭후 플로팅 담기**.
+- 커밋: 184b54ab(rednote) 13fff95b(틱톡·인스타·grab v1.3.0).

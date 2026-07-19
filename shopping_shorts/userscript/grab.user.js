@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         로또 · 원클릭 담기
 // @namespace    lotto.shopping_shorts
-// @version      1.2.0
-// @description  유튜브·틱톡·샤오홍슈·도우인 영상에 '📥 담기' 버튼을 띄운다. 검색 그리드에선 영상 카드마다, 단일 영상 페이지에선 화면 우하단에.
+// @version      1.3.0
+// @description  유튜브·틱톡·인스타·샤오홍슈·도우인 영상에 '📥 담기' 버튼을 띄운다. 샤오홍슈/rednote 검색 그리드에선 영상 카드마다, 그 외 단일 영상 페이지에선 화면 우하단에.
 // @match        https://www.youtube.com/*
 // @match        https://www.tiktok.com/*
+// @match        https://*.instagram.com/*
 // @match        https://*.xiaohongshu.com/*
 // @match        https://*.rednote.com/*
 // @match        https://*.douyin.com/*

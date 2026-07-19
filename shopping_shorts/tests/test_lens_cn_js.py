@@ -20,6 +20,8 @@ def test_cn_candidate_site_links():
     console.log(JSON.stringify({
       xhs: _lensSearchUrl('xiaohongshu', '空气炸锅土豆片'),
       dy:  _lensSearchUrl('douyin', '气泡土豆'),
+      tk:  _lensSearchUrl('tiktok', '공기튀김 감자칩'),
+      ig:  _lensSearchUrl('instagram', '공기튀김 감자칩'),
     }));
     """
     # stdin=DEVNULL: pytest가 stdin 핸들을 캡처/교체한 상태에서 node -e 가 그 핸들을
@@ -33,3 +35,7 @@ def test_cn_candidate_site_links():
         + "%E7%A9%BA%E6%B0%94%E7%82%B8%E9%94%85%E5%9C%9F%E8%B1%86%E7%89%87"
     assert r["dy"].startswith("https://www.douyin.com/search/")
     assert "%E6%B0%94%E6%B3%A1%E5%9C%9F%E8%B1%86" in r["dy"]   # 气泡土豆 인코딩
+    # 틱톡/인스타는 한국어(c.ko)로 검색 — 중국앱은 중국어, 글로벌앱은 한국어(플랫폼별 언어)
+    assert r["tk"].startswith("https://www.tiktok.com/search?q=")
+    assert r["ig"].startswith("https://www.instagram.com/explore/search/keyword/?q=")
+    assert "%EA%B3%B5%EA%B8%B0" in r["tk"]   # '공기...' 한국어 인코딩
