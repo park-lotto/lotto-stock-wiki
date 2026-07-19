@@ -527,7 +527,10 @@ def test_render_mix_no_overflow_and_exact_length(tmp_path):
     }]}
     out = va._render_mix(edit_plan, {0: str(tts)}, {"A": str(src)}, tmp_path)
 
-    assert abs(va._probe_duration(out) - 2.0) < 0.15   # 길이 == 나레이션
+    # 길이 == 나레이션 + 마지막 비트 여운(_LAST_RUNOUT, 2026-07-20 콘폼루프 T4).
+    # 이 비트가 유일=마지막이라 여운이 붙는다. 매칭 구간 [0,1]에 여유가 없으므로(slack 0)
+    # 여운은 실프레임이 아니라 홀드로 채워진다 — 유출 0 불변식(green 안 나옴)은 그대로다.
+    assert abs(va._probe_duration(out) - (2.0 + va._LAST_RUNOUT)) < 0.15
     # 유출 0: 1.5초 지점(옛 코드면 green이 나올 자리)이 red 계열이어야 한다.
     # signalstats YUV: red는 V(빨강) 크고(실측 240), green은 낮다(실측 81). 150을 경계로
     # red/green을 가른다(blue=110도 150 미만이라 같이 걸러지지만 이 테스트 소스엔 안 나옴).
@@ -550,7 +553,9 @@ def test_render_mix_chains_two_segments(tmp_path):
         "alternates": [{"video_id": "A", "seg_id": "A-1", "start": 2.0, "end": 4.0}],
     }]}
     out = va._render_mix(edit_plan, {0: str(tts)}, {"A": str(src)}, tmp_path)
-    assert abs(va._probe_duration(out) - 3.5) < 0.2
+    # 3.5(나레이션) + 여운 1s(T4). 여기선 구간 [2,4]에 0.5s 여유가 있어 여운의 절반은
+    # 실프레임(green, 매칭 구간 안이라 유출 아님), 나머지는 홀드로 채워진다.
+    assert abs(va._probe_duration(out) - (3.5 + va._LAST_RUNOUT)) < 0.2
 
 
 @pytest.mark.skipif(not _HAS_FF, reason="ffmpeg/ffprobe 없음")

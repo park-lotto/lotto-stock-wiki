@@ -12,11 +12,11 @@ from pathlib import Path
 from shopping_shorts.store import Store
 from shopping_shorts.media_download import download_any
 from shopping_shorts.script_extract import extract_script
-from shopping_shorts.edit_plan import build_edit_plan
+from shopping_shorts.edit_plan import _SYLLABLES_PER_SEC, build_edit_plan, conform_narration
 from shopping_shorts.scene_match import match_scene_assets
 from shopping_shorts import tts
 from shopping_shorts import audio_post
-from shopping_shorts.video_assemble import assemble, _beat_timeline, _probe_duration
+from shopping_shorts.video_assemble import assemble, _beat_timeline, _probe_duration, _MAX_SLOWMO
 from shopping_shorts.motion_assets import resolve_layers, DEFAULT_ASSETS_DIR
 from shopping_shorts.motion_packs import build_plan, load_packs
 from shopping_shorts.vmake_client import remove_subtitles
@@ -103,6 +103,67 @@ def _synthesize_beats(beats, tts_dir, *, voice):
                 beat["narration"], words, dur)   # None일 수 있음 → 폴백
 
 
+# 콘폼 트리거 임계(초). 이하의 초과분은 켄번즈 홀드(≤0.8s)로 자연 흡수되는 수준이라
+# 제미니 리라이트+재TTS 비용을 쓰지 않는다(설계 §1, 2026-07-20).
+_CONFORM_MIN_GAP = 0.8
+
+
+def _conform_beats(beats, tts_dir, *, voice):
+    """싱크 콘폼 패스(2026-07-20 설계 T3) — 대사가 영상 예산을 넘는 비트만 표면 재단.
+
+    예산 = Σ(primary+alternates 구간 길이) × _MAX_SLOWMO. _plan_beat_clips가 세그먼트를
+    전부 소진한 뒤에만 얼리므로 이 예산이 "영상으로 채울 수 있는 최대"다(코드 검증) —
+    즉 초과분은 영상으로 못 채우고, 남은 유일한 레버는 대본 길이다.
+
+    비트당 리라이트 1회. 실패(키 소진·게이트 불통과·TTS 예외)는 조용히 통과 —
+    원문+freeze 폴백이 렌더 실패보다 낫다. sync_gap은 성공/실패 무관하게 남겨
+    편집안 화면이 근거를 보여준다(**b 스프레드로 자동 전달).
+
+    ⚠️ narration 교체는 재TTS **성공 후에만** — 실패 시 문장/음성 불일치를 만들지 않는다."""
+    total = len(beats)
+    for i, beat in enumerate(beats):
+        tp = beat.get("tts_path")
+        if not tp:
+            continue
+        segs = [beat.get("primary")] + list(beat.get("alternates") or [])
+        budget = sum(max(0.0, float(s["end"]) - float(s["start"])) for s in segs if s) * _MAX_SLOWMO
+        if budget <= 0:
+            continue
+        try:
+            tts_dur = _probe_duration(tp)
+        except Exception:
+            continue
+        gap = tts_dur - budget
+        beat["sync_gap"] = round(max(0.0, gap), 2)
+        if gap <= _CONFORM_MIN_GAP:
+            continue
+        new_n = conform_narration(beat["narration"], budget)
+        if not new_n:
+            continue   # 리라이트 실패 → 원문 유지, freeze 폴백(sync_gap 플래그 잔존)
+        out = Path(tts_dir) / f"beat_{beat['beat_idx']}.mp3"
+        try:
+            synthesize_line(
+                new_n, out, voice=voice, beat_role=beat.get("role"),
+                beat_index=i, beat_total=total,
+                previous_text=beats[i - 1]["narration"] if i > 0 else None,
+                next_text=beats[i + 1]["narration"] if i < total - 1 else None,
+            )
+        except Exception:
+            traceback.print_exc(file=sys.stderr)
+            continue   # 재TTS 실패 → narration 미교체(문장/음성 일치 유지)
+        beat["narration"] = new_n
+        beat["conformed"] = True
+        beat["tts_path"] = str(out)
+        # UI 표시 초 재계산(edit_plan과 같은 식) — 안 하면 화면 초와 실길이가 갈라진다.
+        beat["target_seconds"] = round(max(1.5, len(new_n.strip()) / _SYLLABLES_PER_SEC), 1)
+        beat["cap_durs"] = None
+        new_dur = _probe_duration(str(out))
+        words = asr_check.transcribe_words(str(out))
+        if words:
+            beat["cap_durs"] = caption_sync.phrase_durs_from_words(new_n, words, new_dur)
+        beat["sync_gap"] = round(max(0.0, new_dur - budget), 2)
+
+
 def _prepare_sources(urls, work):
     """소스 URL들을 플랫폼 무관하게 다운로드 → ({video_id: mp4경로}, {video_id: caption}).
     caption은 인스타 소스만 채워짐(download_any가 (path, caption) 튜플 반환) — 유튜브/틱톡은
@@ -186,6 +247,13 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # 4) 비트별 TTS (naturalize + N-best + 연속성 + 프리셋 후처리)
     store.update_mix_job(job_id, status="tts")
     _synthesize_beats(plan["beats"], work / "tts", voice=voice)
+
+    # 4.5) 싱크 콘폼(2026-07-20) — 대사가 영상 예산을 넘는 비트만 압축 리라이트 + 그 비트 재TTS.
+    # 저장(아래) 전에 돌므로 preview·final 렌더 모두 자동 적용. 실패해도 job을 죽이지 않는다.
+    try:
+        _conform_beats(plan["beats"], work / "tts", voice=voice)
+    except Exception:
+        traceback.print_exc(file=sys.stderr)
 
     store.update_mix_job(job_id, edit_plan=plan, status="ready_for_review")
 

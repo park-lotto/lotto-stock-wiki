@@ -307,6 +307,51 @@ def _vault_call(prompt, schema, max_tries=4):
     return None
 
 
+_CONFORM_SCHEMA = {
+    "type": "object",
+    "properties": {"narration": {"type": "string"}},
+    "required": ["narration"],
+}
+
+_CONFORM_PROMPT = """너는 숏폼 나레이션 카피 에디터다. 아래 문장을 **약 {char_target}자(공백 제외)**로
+압축해라. 발화 시간을 영상 클립 길이에 맞추는 작업이다.
+
+규칙:
+- 뜻·핵심 정보·역할(훅/전개/CTA)·말투를 유지한다. 정보를 새로 지어내지 않는다.
+- 압축만 한다 — 군더더기·중복·부사를 덜어낸다. 문장을 재창작하지 않는다.
+- 한 문장 또는 자연스러운 짧은 문장들로.
+
+[원문]
+{narration}
+
+스키마 JSON으로 narration 하나만 출력해라."""
+
+
+def conform_narration(narration, target_seconds, max_tries=4):
+    """문장을 target_seconds 발화 길이에 맞게 압축(콘폼) — 성공 시 새 문장, 실패 시 None.
+
+    싱크 콘폼루프(2026-07-20 설계)의 T2. 영상 예산(클립 실길이×슬로모 상한)을 초과한
+    비트의 나레이션만 표면 재단한다 — 서사는 대본이, 시간은 영상이 주인이다.
+    게이트: 결과의 추정 발화초(공백제외 글자수÷_SYLLABLES_PER_SEC)가 목표의 0.8~1.2배
+    아니면 None(뜻 훼손 없는 안전 폴백 = 호출부가 원문 유지 + freeze 잔존 플래그)."""
+    narration = (narration or "").strip()
+    if not narration or target_seconds <= 0:
+        return None
+    char_target = max(6, int(round(target_seconds * _SYLLABLES_PER_SEC)))
+    raw = _vault_call(
+        _CONFORM_PROMPT.format(char_target=char_target, narration=narration[:1000]),
+        _CONFORM_SCHEMA, max_tries=max_tries)
+    if not raw:
+        return None
+    new = (raw.get("narration") or "").strip()
+    if not new:
+        return None
+    est = len("".join(new.split())) / _SYLLABLES_PER_SEC
+    if not (0.8 * target_seconds <= est <= 1.2 * target_seconds):
+        return None
+    return new
+
+
 _TYPE_SCHEMA = {
     "type": "object",
     "properties": {"video_type": {"type": "string"}},
