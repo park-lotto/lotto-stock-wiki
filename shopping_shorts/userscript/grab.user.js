@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name         로또 · 원클릭 담기
 // @namespace    lotto.shopping_shorts
-// @version      1.0.0
+// @version      1.1.0
 // @description  유튜브·틱톡·샤오홍슈·도우인 영상 페이지에 '📥 담기' 버튼을 띄운다. 누르면 모음집에 담김(드래그·북마크 불필요).
 // @match        https://www.youtube.com/*
 // @match        https://www.tiktok.com/*
-// @match        https://www.xiaohongshu.com/*
-// @match        https://www.douyin.com/*
-// @match        https://www.iesdouyin.com/*
+// @match        https://*.xiaohongshu.com/*
+// @match        https://*.rednote.com/*
+// @match        https://*.douyin.com/*
+// @match        https://*.iesdouyin.com/*
 // @run-at       document-idle
 // @downloadURL  https://shoppingshorts.duckdns.org/grab.user.js
 // @updateURL    https://shoppingshorts.duckdns.org/grab.user.js
