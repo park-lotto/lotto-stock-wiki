@@ -2742,6 +2742,12 @@ def api_produce_script_mix(request: Request, body: dict):
     if not drafts:
         return JSONResponse(status_code=502,
                             content={"ok": False, "error": "생성 실패(키 소진 또는 응답 오류)"})
+    store = Store(DB_PATH)
+    cid = _cid(request)
+    for dr in drafts:
+        did = uuid.uuid4().hex[:12]
+        store.save_draft(did, cid, None, None, dr.get("hook", ""), dr.get("script", ""), None, "mix")
+        dr["draft_id"] = did
     return {"ok": True, "drafts": drafts}
 
 
