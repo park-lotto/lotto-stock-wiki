@@ -2411,7 +2411,7 @@ _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico",
                # 원클릭 담기: /grab(북마클릿 설치안내)는 공개, /api/grab(팝업)은 자체적으로
                # 세션쿠키를 검증해 고객을 식별한다(_cid 폴백이 legacy라 여기선 직접 검증). 미들웨어
                # 401을 피해 친절한 팝업 응답을 주려고 allowlist에 둔다.
-               "/grab", "/api/grab", "/grab.user.js")
+               "/grab", "/api/grab", "/grab.user.js", "/grab_logic.js")
 _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 
 
@@ -2581,6 +2581,15 @@ def _serve_grab_userscript():
     드래그 없이 플랫폼 영상 페이지에 '📥 담기' 버튼을 띄운다."""
     p = Path(__file__).parent / "userscript" / "grab.user.js"
     return FileResponse(p, media_type="text/javascript; charset=utf-8")
+
+
+@app.get("/grab_logic.js", include_in_schema=False)
+def _serve_grab_logic():
+    """원클릭 담기 '로직' — grab.user.js(로더)가 GM_xmlhttpRequest로 매번 불러와 실행한다.
+    이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영(재설치 불필요)."""
+    p = Path(__file__).parent / "userscript" / "grab_logic.js"
+    return FileResponse(p, media_type="text/javascript; charset=utf-8",
+                        headers={"Cache-Control": "public, max-age=60"})
 
 
 # ── 원클릭 담기: 네이티브 플랫폼(유튜브·틱톡·샤오홍슈·도우인) 영상 → 모음집 즉시 담기 ──
