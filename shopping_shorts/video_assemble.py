@@ -388,15 +388,28 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
     반중복탐지 회피(항상 자동): 훅·반전 비트는 켄번즈 줌, 나머지는 기본 크롭+줌."""
     important = _important_beat_indices(edit_plan["beats"])
     beat_clips = []
+    # 소스 실제 길이 캐시(2026-07-19). 약한 매칭이 소스 밖 구간(예: 60초 릴에 155초)을 잡으면
+    # -ss가 끝을 넘어 0프레임 서브클립 → concat "no stream" → 미리보기 전체가 죽었다. 소스별 길이를
+    # 한 번만 재서(ffprobe) start를 소스 안으로 당긴다.
+    _src_dur_cache = {}
+    def _src_dur(vid):
+        if vid not in _src_dur_cache:
+            try:
+                _src_dur_cache[vid] = _probe_duration(source_video_paths[vid])
+            except Exception:
+                _src_dur_cache[vid] = 0.0
+        return _src_dur_cache[vid]
     for beat in edit_plan["beats"]:
         idx = beat["beat_idx"]
         tts = tts_paths.get(idx)
         if not tts:
             continue
         tts_dur = _probe_duration(tts)
-        # 순서 구간 리스트 = [primary] + alternates. 소스에 실재하는 것만.
+        # 순서 구간 리스트 = [primary] + alternates. 소스에 실재하고 + 디코드 가능한 것만.
+        # 손상/빈 소스(_src_dur=0)는 여기서 걸러야 아래 -ss 렌더가 예외로 죽지 않는다(2026-07-19).
         segs = [s for s in ([beat["primary"]] + list(beat.get("alternates", [])))
-                if s and s.get("video_id") in source_video_paths]
+                if s and s.get("video_id") in source_video_paths
+                and _src_dur(s["video_id"]) > 0.05]
         if not segs:
             continue
         plan = _plan_beat_clips(segs, tts_dur)
@@ -410,13 +423,27 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
             # setpts로 슬로모: 소스 src_dur초를 출력 out_dur초로 늘린다(1배속이면 factor=1).
             factor = c["out_dur"] / c["src_dur"] if c["src_dur"] > 1e-6 else 1.0
             vf_full = f"{vf},setpts={factor:.6f}*PTS" if factor > 1.0 + 1e-6 else vf
+            # ★start를 소스 안으로 당긴다(2026-07-19). 약한 매칭이 소스 밖을 잡으면 -ss가 끝을
+            #   넘어 0프레임이 나와 concat이 죽는다. [start, start+src_dur]가 소스 안에 들어오게
+            #   당기되, 소스가 src_dur보다 짧으면 0에서 시작해 있는 만큼 읽는다.
+            sdur = _src_dur(c["video_id"])
+            start = c["start"]
+            if sdur > 0:
+                start = max(0.0, min(start, sdur - min(c["src_dur"], sdur)))
             # -ss(입력 시크) start부터, 출력 out_dur초. 오디오 없음(비트 오디오는 아래서 합침).
             _run_ffmpeg([
-                "ffmpeg", "-y", "-ss", f"{c['start']:.3f}", "-i", str(src),
+                "ffmpeg", "-y", "-ss", f"{start:.3f}", "-i", str(src),
                 "-vf", vf_full, "-r", "30", "-an", "-t", f"{c['out_dur']:.3f}",
                 "-c:v", "libx264", "-pix_fmt", "yuv420p", str(sub),
             ])
+            # 그래도 비면(소스 손상 등) 이 클립만 버린다 — 하나가 미리보기 전체를 죽이지 않게.
+            if not sub.exists() or _probe_duration(sub) <= 0.05:
+                continue
             sub_paths.append(sub)
+        if not sub_paths:
+            # 이 비트는 쓸 클립이 하나도 없다(모든 소스 손상/범위밖). 비트를 건너뛴다 —
+            # 미리보기가 통째로 죽는 것보다 이 비트만 빠지는 게 낫다.
+            continue
         # 비트의 클립들(동일 규격)을 concat → 비트 무음 영상(길이 ≈ tts_dur)
         beat_video = work / f"beat_{idx}_v.mp4"
         cat = work / f"beat_{idx}_list.txt"
