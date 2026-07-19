@@ -158,6 +158,18 @@ def run_mix_job(job_id, db_path, work_root):
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=str(e))
+        # 유료게이트: 렌더 실패 → 예약한 'render' 크레딧 환불(계정+전역). 실패했는데 크레딧만
+        # 날아가면 시니어에겐 '고장'으로 읽힌다(하루 2회뿐). points 실패환불(_fx_render_job)과 대칭.
+        # ★render_charge_day가 있는 job만(=/api/mix/start가 실제 과금한 것) 환불하고, 딱 그 날짜로
+        #   되돌린다. produce 2단계·auto_run·retype는 과금 안 해 이 값이 없다 → 오환불로 전역
+        #   카운터를 갉아 다른 유저 과금을 상쇄하는 일을 막는다(리뷰 B/F).
+        day = job.get("render_charge_day")
+        if day:
+            try:
+                store.usage_decr(job.get("customer_id", 0), "render", day)
+                store.usage_decr(-1, "render", day)
+            except Exception:
+                traceback.print_exc(file=sys.stderr)
 
 
 def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, video_type, work,
