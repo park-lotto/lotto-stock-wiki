@@ -926,7 +926,10 @@ function renderLens(shortcode){
       <div style="font-size:12px;color:var(--sub);margin-bottom:5px">📕🎬 중국 앱에서 무료로 찾기 — 눌러서 열고, 마음에 들면 📥담기</div>
       <div style="display:flex;flex-direction:column;gap:6px">
         ${st.cnCands.map(c=>{
-          const xhs=_lensSearchUrl('xiaohongshu', c.zh), dy=_lensSearchUrl('douyin', c.zh);
+          // 샤오훙슈 검색은 로그아웃 방문자를 로그인으로 막는다(登录后查看搜索结果). 해외판
+          // rednote.com 검색은 같은 결과를 로그인 벽 없이 보여준다(2026-07-19 실측). 빌더·백엔드는
+          // 그대로 두고 '여는 링크'만 _openUrl로 rednote 치환. 도우인은 해외판 없어 그대로.
+          const xhs=_openUrl(_lensSearchUrl('xiaohongshu', c.zh)), dy=_lensSearchUrl('douyin', c.zh);
           const lnk='text-decoration:none;padding:5px 11px;border-radius:10px;border:1px solid var(--line);color:var(--accent);font-size:12px;white-space:nowrap';
           return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <div style="min-width:120px"><div style="font-size:14px;font-weight:600">${c.ko||c.zh}</div>

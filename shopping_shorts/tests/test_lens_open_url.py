@@ -25,6 +25,8 @@ def test_open_url_rewrites_only_xiaohongshu():
       item:   _openUrl("https://www.xiaohongshu.com/discovery/item/abc?xsec_token=T=&xsec_source=app_share"),
       // www 없는 형태도 치환
       nowww:  _openUrl("https://xiaohongshu.com/discovery/item/x"),
+      // 후보 검색 링크(로그인벽)도 rednote로 — 쿼리 보존
+      search: _openUrl("https://www.xiaohongshu.com/search_result?keyword=%E5%8F%91%E5%85%89"),
       // 다른 플랫폼은 그대로
       douyin: _openUrl("https://www.douyin.com/video/123"),
       // 이미 rednote면 그대로
@@ -42,6 +44,7 @@ def test_open_url_rewrites_only_xiaohongshu():
     r = json.loads(out.stdout)
     assert r["item"] == "https://www.rednote.com/discovery/item/abc?xsec_token=T=&xsec_source=app_share"
     assert r["nowww"] == "https://www.rednote.com/discovery/item/x"
+    assert r["search"] == "https://www.rednote.com/search_result?keyword=%E5%8F%91%E5%85%89"
     assert r["douyin"] == "https://www.douyin.com/video/123"
     assert r["already"] == "https://www.rednote.com/explore/xyz"
     assert r["empty"] == ""
