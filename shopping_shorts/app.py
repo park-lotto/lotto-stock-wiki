@@ -37,7 +37,8 @@ from shopping_shorts.product_identify import fetch_lens_lines, identify_product_
 from shopping_shorts.search_links import build_search_links, lens_search_url
 from shopping_shorts import mix_pipeline
 from shopping_shorts.mix_pipeline import (run_mix_job, run_render, run_preview, retype_mix_job,
-                                          _source_video_id, resynth_tts_job, resynth_one_beat)
+                                          _source_video_id, resynth_tts_job, resynth_one_beat,
+                                          run_clean_sources, _resolve_sources)
 from shopping_shorts.lens_discover import search_similar_videos, upload_frame
 from shopping_shorts import douyin_search, xiaohongshu_search
 from shopping_shorts import youtube_search
@@ -1377,7 +1378,9 @@ def api_mix_status(job_id: str):
             # 1단계 미리보기(2026-07-17): 폴러를 둘로 만들지 않으려고 기존 응답에 얹는다(스펙 §6.3).
             # preview_path는 서버 내부 경로라 안 내보낸다 — 파일은 전용 라우트로만 서빙.
             "preview_status": job.get("preview_status"),
-            "preview_error": job.get("preview_error")}
+            "preview_error": job.get("preview_error"),
+            "clean_status": job.get("clean_status"),
+            "clean_error": job.get("clean_error")}
 
 
 @app.get("/api/mix/result/{job_id}")
@@ -1523,6 +1526,49 @@ def api_produce_mix_preview_file(job_id: str):
     if not job or job.get("preview_status") != "ready" or not path or not Path(path).exists():
         return JSONResponse(status_code=404, content={"ok": False, "error": "미리보기 없음"})
     return FileResponse(path, media_type="video/mp4")
+
+
+@app.post("/api/produce/mix/clean")
+def api_produce_mix_clean(background_tasks: BackgroundTasks, body: dict):
+    """2단계 자막제거 미리보기 — 각 소스 원본을 VMake로 청소해 캐시(유료).
+    preview 라우트와 같은 중복예약 가드·동기 상태기록 패턴을 쓴다."""
+    job_id = body.get("job_id")
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "매칭 먼저 실행하세요"})
+    if job.get("clean_status") == "cleaning" and not _render_is_stale(job):
+        return {"ok": True, "status": "cleaning"}       # 더블클릭 — VMake를 두 번 안 돌린다
+    # 'cleaning'을 여기서 동기 기록(응답 전) — run 안에서 쓰면 이중예약된다(preview 라우트 주석 참조)
+    store.update_mix_job(job_id, clean_status="cleaning", clean_error=None)
+    background_tasks.add_task(run_clean_sources, job_id, DB_PATH, _MIX_WORK_DIR)
+    return {"ok": True, "status": "cleaning"}
+
+
+@app.get("/api/produce/mix/clean_thumb/{job_id}")
+def api_produce_mix_clean_thumb(job_id: str, kind: str = "original"):
+    """대표 소스(첫 소스)의 중간지점 프레임 PNG. kind=original|clean.
+    clean은 clean_status=ready + 클린파일 존재일 때만(아니면 404). 양쪽 같은 t로 정렬."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    work = _MIX_WORK_DIR / job_id
+    vid = _source_video_id(0)
+    if kind == "clean":
+        src = (job.get("clean_sources") or {}).get(vid)
+        if job.get("clean_status") != "ready" or not src or not Path(src).exists():
+            return JSONResponse(status_code=404, content={"ok": False, "error": "클린 소스 없음"})
+    else:
+        try:
+            src = _resolve_sources(job, work)[vid]
+        except Exception:
+            return JSONResponse(status_code=404, content={"ok": False, "error": "소스 없음"})
+    dur = frame_extract._probe_duration(src) or 2.0
+    frame = frame_extract.extract_frame_at(src, work / "clean_thumb", dur / 2,
+                                           filename=f"{kind}.jpg")
+    if not frame:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "프레임 추출 실패"})
+    return FileResponse(str(frame), media_type="image/jpeg")
 
 
 @app.get("/api/mix/tts/{job_id}/{beat_idx}")

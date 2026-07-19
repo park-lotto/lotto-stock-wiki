@@ -218,6 +218,10 @@
         <span><b>원본 자막 제거 (VMake)</b><div class="hint">끄면 원본 영상 그대로 사용. 켜면 렌더 시 VMake로 자막 제거 후 우리 자막을 굽습니다.</div></span>
       </label>
       <div id="subState" class="hint" style="margin-top:8px"></div>
+      <div id="cleanPreviewWrap" style="margin-top:12px">
+        <button id="btnCleanPreview" class="btn" onclick="startCleanPreview()" disabled>자막제거 미리보기</button>
+        <div id="cleanPreview" class="hint" style="margin-top:10px"></div>
+      </div>
     </section>
     <section class="panel" data-step="2">
       <h3>3 · TTS 음성</h3>
@@ -2468,14 +2472,58 @@ async function pollPreview(gen, job){
   }catch(e){ /* 폴링 실패는 다음 tick에 재시도 */ }
 }
 
+// ── 2단계 자막제거 미리보기(소스 원본 청소) ──────────────
+let CLEAN_POLL=null, CLEAN_GEN=0;
+async function startCleanPreview(){
+  const box=document.getElementById('cleanPreview');
+  const btn=document.getElementById('btnCleanPreview');
+  if(!MIX_JOB){ box.textContent='⚠️ 2단계에서 영상 매칭을 먼저 실행하세요.'; return; }
+  clearInterval(CLEAN_POLL); CLEAN_POLL=null;
+  const myGen=++CLEAN_GEN, myJob=MIX_JOB;
+  if(btn) btn.disabled=true;
+  box.innerHTML='<div class="hint">⏳ 자막 제거 중… VMake AI (최대 ~1시간)</div>';
+  try{
+    const d=await (await fetch('/api/produce/mix/clean',{method:'POST',
+      headers:{'Content-Type':'application/json'}, body:JSON.stringify({job_id:myJob})})).json();
+    if(CLEAN_GEN!==myGen) return;
+    if(!d.ok){ box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(d.error||'청소 실패')+'</div>'; if(btn) btn.disabled=false; return; }
+    CLEAN_POLL=setInterval(()=>pollClean(myGen,myJob),3000); pollClean(myGen,myJob);
+  }catch(e){ if(CLEAN_GEN!==myGen) return; box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; if(btn) btn.disabled=false; }
+}
+async function pollClean(gen,job){
+  const box=document.getElementById('cleanPreview');
+  const btn=document.getElementById('btnCleanPreview');
+  try{
+    const d=await (await fetch('/api/mix/status/'+job)).json();
+    if(CLEAN_GEN!==gen || MIX_JOB!==job) return;
+    if(d.clean_status==='ready'){
+      clearInterval(CLEAN_POLL); CLEAN_POLL=null;
+      const t=Date.now(), u='/api/produce/mix/clean_thumb/'+encodeURIComponent(job);
+      box.innerHTML='<div style="display:flex;gap:10px;align-items:flex-start">'
+        +'<figure style="margin:0"><img src="'+u+'?kind=original&t='+t+'" style="width:150px;border-radius:8px;background:#000"><figcaption class="hint" style="text-align:center">원본(자막 있음)</figcaption></figure>'
+        +'<figure style="margin:0"><img src="'+u+'?kind=clean&t='+t+'" style="width:150px;border-radius:8px;background:#000"><figcaption class="hint" style="text-align:center">자막 제거됨</figcaption></figure>'
+        +'</div>';
+      if(btn) btn.disabled=false;
+    } else if(d.clean_status==='failed'){
+      clearInterval(CLEAN_POLL); CLEAN_POLL=null;
+      box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ 자막제거 실패 — '+esc(d.clean_error||'')+'</div>';
+      if(btn) btn.disabled=false;
+    }
+  }catch(e){ /* 다음 tick 재시도 */ }
+}
+
 // ── 3단계 자막제거 ──────────────
 function refreshSub(){
   const cb=document.getElementById('subToggle'); if(cb) cb.checked=STATE.subtitleRemoval;
   const s=document.getElementById('subState');
   if(s) s.textContent = MIX_JOB ? '' : '⚠️ 2단계에서 영상 매칭을 먼저 실행하세요.';
+  const btn=document.getElementById('btnCleanPreview');
+  if(btn) btn.disabled = !(STATE.subtitleRemoval && MIX_JOB);   // 켜짐+매칭됨일 때만
 }
 async function onSubToggle(){
   STATE.subtitleRemoval = document.getElementById('subToggle').checked;
+  const cbtn=document.getElementById('btnCleanPreview');
+  if(cbtn) cbtn.disabled = !(STATE.subtitleRemoval && MIX_JOB);
   const s=document.getElementById('subState');
   if(!MIX_JOB){ if(s) s.textContent='⚠️ 2단계 매칭 후 적용됩니다(설정은 기억됨).'; return; }
   try{
