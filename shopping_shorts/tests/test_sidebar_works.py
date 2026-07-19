@@ -130,6 +130,39 @@ def test_quoted_script_title_does_not_break_markup():
     assert "&quot;" in out or "&#34;" in out, "큰따옴표가 이스케이프되지 않았다"
 
 
+def test_work_has_delete_button():
+    """각 작업에 삭제(✕) 버튼이 있어야 지울 수 있다(2026-07-19 사장님 요청)."""
+    out = _run("console.log(JSON.stringify({"
+               "del: _nav.innerHTML.indexOf('ss-work-del') !== -1,"
+               "fn: _nav.innerHTML.indexOf('__ssDelWork') !== -1,"
+               "wid: _nav.innerHTML.indexOf('data-wid=\"w1\"') !== -1}));")
+    assert '"del":true' in out and '"fn":true' in out and '"wid":true' in out, out
+
+
+def test_delete_calls_backend_and_removes_row():
+    """✕ 클릭 → 삭제 API 호출. confirm=true 가정."""
+    out = _run("""
+      window.confirm = function(){ return true; };
+      window.alert = function(){};
+      const before = FETCHED.length;
+      window.__ssDelWork({stopPropagation:function(){}}, 'w1');
+      await new Promise(r=>setTimeout(r,20));
+      console.log(FETCHED.filter(u=>u.indexOf('/api/produce/works/w1/delete')!==-1).length ? 'called' : 'no');
+    """)
+    assert out == "called", f"삭제 API가 안 불렸다: {out}"
+
+
+def test_delete_aborts_when_not_confirmed():
+    """confirm=false면 아무것도 안 한다 — 실수 삭제 방지."""
+    out = _run("""
+      window.confirm = function(){ return false; };
+      window.__ssDelWork({stopPropagation:function(){}}, 'w1');
+      await new Promise(r=>setTimeout(r,20));
+      console.log(FETCHED.filter(u=>u.indexOf('/delete')!==-1).length ? 'called' : 'aborted');
+    """)
+    assert out == "aborted", f"확인 취소했는데 삭제됐다: {out}"
+
+
 def test_angle_brackets_in_title_do_not_become_tags():
     """대본에 <>가 있으면 진짜 DOM 태그로 살아나면 안 된다."""
     out = _run("console.log(_nav.innerHTML);",

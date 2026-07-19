@@ -66,6 +66,14 @@ async function fetch(url, opt){
 function setScriptMode(){}
 function refreshFinalPeek(){}
 const window = globalThis;   // useDraft가 window._drafts를 읽는다(브라우저 전역)
+// _pushWork가 저장 성공 후 URL에 ?work=<id>를 박는다(2026-07-19). 새로고침이 서버 복원 경로를
+// 타게 하는 배선 — location/history를 스텁해 그 replaceState 호출을 관찰한다.
+const _replaced = [];
+const location = { search:'', pathname:'/produce', href:'/produce' };
+const history = { replaceState(s, t, url){
+  _replaced.push(url);
+  location.search = url.indexOf('?') >= 0 ? url.slice(url.indexOf('?')) : '';
+} };
 """
 
 _SHIMS = r"""
@@ -213,6 +221,29 @@ def test_step_and_job_ride_along(js):
     """)
     assert '"step": 1' in out or '"step":1' in out
     assert "job-77" in out
+
+
+def test_saved_work_pins_work_id_into_url(js):
+    """★새로고침이 서버 복원 경로를 타게 URL에 ?work=<id>를 박는다(2026-07-19 사장님 제보:
+    상위 단계에서 새로고침하면 1단계로 돌아옴). sessionStorage 경로는 MIX_JOB·단계를 복원하지
+    않으니, WORK_ID가 서버에서 확정되는 순간 URL에 박아 refresh가 _restoreWork를 타게 한다."""
+    out = _run(js, """
+      location.search = '';
+      STATE.script = '대본'; saveWork(); await tick(1500);
+      console.log(JSON.stringify({replaced:_replaced, search:location.search}));
+    """)
+    assert "?work=w-server-1" in out, f"저장 후 URL에 ?work=가 안 박혔다: {out}"
+
+
+def test_url_not_replaced_when_already_on_that_work(js):
+    """이미 ?work=<그 id>면 다시 replaceState하지 않는다 — 히스토리를 더럽히지 않는다."""
+    out = _run(js, """
+      location.search = '?work=w-server-1';
+      STATE.script = '대본'; saveWork(); await tick(1500);
+      console.log(JSON.stringify({replaced:_replaced}));
+    """)
+    assert '"replaced": []' in out or '"replaced":[]' in out, (
+        f"같은 작업인데 URL을 또 갈아끼웠다: {out}")
 
 
 def test_no_guard_left_at_call_sites():

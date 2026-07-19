@@ -1880,6 +1880,17 @@ async function _pushWork(){
       // 작업을 만든다. "중복 아닌가?" 하고 지우지 말 것 — saveWork()의 즉시쓰기와 이건 서로 다른
       // 시점(POST 전 vs POST 응답 후)을 담당한다.
       try{ sessionStorage.setItem('produce_work', JSON.stringify(_workState())); }catch(e){}
+      // ★URL에 ?work=<id>를 박아 새로고침이 서버 복원 경로(_restoreWork)를 타게 한다(2026-07-19).
+      //   sessionStorage 경로(_consumeProduceHandoff)는 MIX_JOB·단계(cur)를 복원하지 않아,
+      //   상위 단계에서 새로고침하면 1단계로 떨어졌다(사장님 제보). 서버엔 job_id·step·렌더설정이
+      //   다 있으니 ?work=면 refresh가 통째로 되살린다. "+ 새 작업"은 ?new=1로 clearWork하므로
+      //   이 URL을 덮어써 안전하다(직전 작업 오염 없음).
+      try{
+        const _sp = new URLSearchParams(location.search);
+        if(_sp.get('work') !== WORK_ID){
+          history.replaceState({}, '', '/produce?work=' + encodeURIComponent(WORK_ID));
+        }
+      }catch(e){}
     }
   }catch(e){}   // 서버가 죽어도 sessionStorage 복원은 살아 있다 — 저장 실패로 작업을 막지 않는다
 }
