@@ -343,8 +343,11 @@ def _run(scenario, tmp_path):
     f = tmp_path / "probe_preview_gate.js"
     f.write_text(_HARNESS + _src() + scenario, encoding="utf-8")
     # encoding="utf-8", errors="replace": 기본(cp949) 캡처는 한글 console.error를 못 읽어 죽는다.
+    # stdin=DEVNULL: pytest가 stdin 핸들을 캡처한 상태에서 node가 그 핸들을 건드려 Windows
+    # WinError 6(invalid handle)로 간헐 실패하던 것을 막는다(2026-07-19 실측, 렌즈CN검색 동일 패턴).
     return subprocess.run([NODE, str(f)], capture_output=True, text=True,
-                          encoding="utf-8", errors="replace", timeout=30)
+                          encoding="utf-8", errors="replace",
+                          stdin=subprocess.DEVNULL, timeout=30)
 
 
 @pytest.mark.skipif(NODE is None, reason="node 없음 — JS 하네스 스킵")
