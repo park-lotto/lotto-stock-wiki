@@ -4,8 +4,19 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>영상 제작소 · 쇼핑쇼츠</title>
+  <!-- FOUC 방지: 저장된 테마를 렌더 전에 즉시 반영(sidebar.js는 body 주입이라 늦음) -->
+  <script>(function(){try{var t=localStorage.getItem('ssTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   <style>
-    :root{--bg:#0a0e14;--panel:#111722;--line:#1e2735;--txt:#e6edf3;--sub:#8b98a9;--accent:#2f81f7;--accent2:#6d3bef;--fire:#ff6b35;--ok:#2ea043;}
+    /* 스탁브레인 민트-블랙 투톤(다크 기본). 토큰 이름은 유지 — var(--) 참조가 자동으로 따라온다.
+       퍼플/블루/틸 accent를 민트 하나로 수렴. 신규 토큰: --inset(인셋배경)·--sel-bg/--sel-fg(선택표면)·--grad·--hover */
+    :root{--bg:#0a0f0d;--panel:#101815;--line:#1e2b26;--txt:#eaf3f0;--sub:#8fa1a0;
+      --accent:#37e0bd;--accent2:#1f9e7a;--fire:#ff6b6b;--ok:#37e0bd;--gold:#f0c453;
+      --inset:#0c1412;--sel-bg:linear-gradient(90deg,#123a30,#0c221c);--sel-fg:#6ff0d6;
+      --grad:linear-gradient(135deg,#6ff0d6,#1f9e7a);--hover:#131d19;color-scheme:dark;}
+    :root[data-theme="light"]{--bg:#f4faf7;--panel:#ffffff;--line:#d5e6df;--txt:#0f1a16;--sub:#5c726d;
+      --accent:#12b886;--accent2:#0ca678;--fire:#e0524a;--ok:#12b886;--gold:#b8860b;
+      --inset:#eef7f3;--sel-bg:linear-gradient(90deg,#d8f2ea,#eafaf5);--sel-fg:#0a7d66;
+      --grad:linear-gradient(135deg,#19c9ab,#0a8f79);--hover:#eef7f3;color-scheme:light;}
     *{box-sizing:border-box}
     body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic',system-ui,sans-serif;margin:0;min-height:100vh}
     .main{flex:1;padding:24px 32px;overflow:auto}
@@ -36,14 +47,14 @@
     .nav{display:flex;justify-content:space-between;margin:18px 0 40px;max-width:1000px}
     button{font-family:inherit;border:0;border-radius:9px;padding:11px 20px;cursor:pointer;font-size:14px}
     .btn-prev{background:var(--panel);border:1px solid var(--line);color:var(--txt)}
-    .btn-next{background:linear-gradient(90deg,var(--accent2),#8b5cf6);color:#fff}
+    .btn-next{background:var(--grad);color:#fff}
     button:disabled{opacity:.4;cursor:default}
 
     /* 탭(대본 3모드 등 공용) */
     .tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-    .tab{background:#0d1420;border:1px solid var(--line);color:var(--txt);padding:12px 18px;border-radius:9px;cursor:pointer;font-size:14px;flex:1;min-width:150px;text-align:center}
-    .tab.active{background:linear-gradient(90deg,#153a6b,#0d2340);border-color:var(--accent);color:#9dc4ff}
-    textarea{width:100%;min-height:160px;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:12px;font-size:14px;resize:vertical;font-family:inherit}
+    .tab{background:var(--inset);border:1px solid var(--line);color:var(--txt);padding:12px 18px;border-radius:9px;cursor:pointer;font-size:14px;flex:1;min-width:150px;text-align:center}
+    .tab.active{background:var(--sel-bg);border-color:var(--accent);color:var(--sel-fg)}
+    textarea{width:100%;min-height:160px;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:12px;font-size:14px;resize:vertical;font-family:inherit}
     .hint{color:var(--sub);font-size:12px;margin-top:6px}
     /* 자막 효과 프리뷰 애니메이션(실제 렌더 효과를 미리보기에서 반복 재생) */
     @keyframes capFade{0%{opacity:0}30%{opacity:1}100%{opacity:1}}
@@ -92,22 +103,22 @@
     .gen-sec{font-size:12px;color:var(--sub);margin:12px 0 8px;text-transform:uppercase}
     .toggles{display:flex;flex-wrap:wrap;gap:8px}
     .elem-row{display:flex;align-items:center;gap:6px}
-    .elem-mode{background:#0d131c;border:1px solid var(--line);border-radius:6px;color:var(--txt);font-size:12px;padding:4px 6px}
-    .toggles label{display:flex;align-items:center;gap:6px;font-size:13px;background:#0d131c;border:1px solid var(--line);border-radius:8px;padding:7px 11px;cursor:pointer}
+    .elem-mode{background:var(--inset);border:1px solid var(--line);border-radius:6px;color:var(--txt);font-size:12px;padding:4px 6px}
+    .toggles label{display:flex;align-items:center;gap:6px;font-size:13px;background:var(--inset);border:1px solid var(--line);border-radius:8px;padding:7px 11px;cursor:pointer}
     .toggles input{accent-color:var(--accent)}
     .modes{display:flex;flex-direction:column;gap:6px;font-size:13px}
     .modes label{display:flex;align-items:center;gap:6px;cursor:pointer}
-    #pmTopic{width:100%;margin-top:8px;background:#0d131c;border:1px solid var(--line);border-radius:8px;padding:9px 12px;color:var(--txt);font-size:13px}
-    .gen-run{margin-top:16px;width:100%;background:linear-gradient(90deg,#153a6b,#0d2340);border:1px solid var(--accent);color:#7db4ff;font-weight:600;font-size:14px;padding:11px;border-radius:9px;cursor:pointer}
+    #pmTopic{width:100%;margin-top:8px;background:var(--inset);border:1px solid var(--line);border-radius:8px;padding:9px 12px;color:var(--txt);font-size:13px}
+    .gen-run{margin-top:16px;width:100%;background:var(--sel-bg);border:1px solid var(--accent);color:var(--sel-fg);font-weight:600;font-size:14px;padding:11px;border-radius:9px;cursor:pointer}
     .gen-run:disabled{opacity:.6;cursor:wait}
     .gen-results{margin-top:8px}
-    .draft{background:#0d131c;border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:12px}
+    .draft{background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:12px}
     .draft .dh{font-size:14px;font-weight:700;color:var(--gold,#ffd76b);margin-bottom:6px}
     .draft .da{font-size:11px;color:var(--sub);margin-top:8px;border-top:1px solid var(--line);padding-top:6px}
     .draft .dtext{width:100%;min-height:90px;background:#0a0e14;border:1px solid var(--line);border-radius:8px;
                   color:var(--txt);font-size:13.5px;line-height:1.7;padding:10px;font-family:inherit;resize:vertical}
     .draft .refine-row{display:flex;gap:6px;margin-top:8px}
-    .draft .refine-row input{flex:1;background:#0d131c;border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:7px 10px;font-size:12.5px}
+    .draft .refine-row input{flex:1;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:7px 10px;font-size:12.5px}
     .draft .refine-row button{font-size:12px;color:var(--accent);background:none;border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer;white-space:nowrap}
     .draft .hist{margin-top:8px;font-size:11.5px;color:var(--sub);cursor:pointer}
     .draft .hist-list{display:none;margin-top:6px;background:#0a0e14;border:1px solid var(--line);border-radius:6px;padding:6px}
@@ -116,7 +127,7 @@
     .draft .hist-item:hover{background:#161d2b}
     .subject-row{margin:6px 0 10px 20px;font-size:13px}
     .subject-row .subj-label{color:var(--sub);margin-right:6px}
-    .subject-row #pmSubject{width:70%;background:#0d131c;border:1px solid var(--line);
+    .subject-row #pmSubject{width:70%;background:var(--inset);border:1px solid var(--line);
       color:var(--txt);border-radius:6px;padding:7px 9px;font-size:13px}
     .subject-row .subj-hint{color:var(--sub);font-size:11.5px;margin-top:5px}
     .seoBar{display:flex;gap:8px;align-items:center;margin-bottom:12px}
@@ -150,7 +161,7 @@
     </div>
 
     <!-- 즐겨찾기에서 "영상제작으로 보내기"로 넘어왔을 때 표시(핸드오프 확인 배너) -->
-    <div id="handoffBanner" style="display:none;background:linear-gradient(90deg,#153a6b,#0d2340);border:1px solid var(--accent);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#9dc4ff"></div>
+    <div id="handoffBanner" style="display:none;background:var(--sel-bg);border:1px solid var(--accent);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--sel-fg)"></div>
 
     <div class="steps" id="steps"></div>
 
@@ -174,7 +185,7 @@
           <div style="margin-top:12px">
             <div style="font-size:12px;margin-bottom:4px">URL 직접 추가</div>
             <div id="mixUrls">
-              <div class="row" style="margin-bottom:6px;display:flex;gap:6px;align-items:center"><input class="mixUrl" type="text" placeholder="인스타/유튜브/틱톡 URL" style="flex:1;min-width:0;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px"><button class="urlDel" title="이 칸 지우기" onclick="removeMixUrlRow(this)" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:16px;padding:0 4px">✕</button></div>
+              <div class="row" style="margin-bottom:6px;display:flex;gap:6px;align-items:center"><input class="mixUrl" type="text" placeholder="인스타/유튜브/틱톡 URL" style="flex:1;min-width:0;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px"><button class="urlDel" title="이 칸 지우기" onclick="removeMixUrlRow(this)" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:16px;padding:0 4px">✕</button></div>
             </div>
             <div style="display:flex;gap:8px;margin-top:2px">
               <button class="btn-prev" style="padding:8px 14px" onclick="addMixUrl()">+ URL 추가</button>
@@ -186,7 +197,7 @@
         <div style="flex:1 1 300px;min-width:280px">
           <div style="font-size:12px;color:var(--sub);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">결과 ▶</div>
           <!-- 확정 대본 -->
-          <div style="background:#0d1420;border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px">
+          <div style="background:var(--inset);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px">
             <b style="font-size:13px">✅ 확정 대본</b>
             <div id="finalScriptPeek" class="hint" style="margin:6px 0"></div>
             <div class="tabs" id="scriptTabs" style="margin-top:6px">
@@ -195,12 +206,12 @@
             </div>
             <div id="scriptModeBody"></div>
             <div style="display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap">
-              <select id="finalCategory" onchange="onFinalCategoryChange(this)" style="display:none;background:#0d1420;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:12px" title="학습 그룹핑 카테고리 — 추론이 틀렸으면 여기서 고치세요"></select>
+              <select id="finalCategory" onchange="onFinalCategoryChange(this)" style="display:none;background:var(--inset);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:12px" title="학습 그룹핑 카테고리 — 추론이 틀렸으면 여기서 고치세요"></select>
               <button id="saveWikiBtn" class="btn-prev" style="padding:8px 14px;display:none" onclick="saveScriptToWiki(this)" title="내 리메이크가 아니라, 이 원본 영상 자체를 도서관에 담아 학습 재료로 씁니다.">⭐ 이 원본 영상 위키에 담기(학습 반영)</button>
             </div>
           </div>
           <!-- 화면 담김 -->
-          <div style="background:#0d1420;border:1px solid var(--line);border-radius:12px;padding:14px">
+          <div style="background:var(--inset);border:1px solid var(--line);border-radius:12px;padding:14px">
             <b style="font-size:13px">🎬 화면 담김</b>
             <div id="footageList" class="hint" style="margin:6px 0">🎬 담기로 화면에 쓸 영상을 고르세요. (1개=순서편집 · 2개+=믹스)</div>
             <button class="btn-next" style="padding:8px 16px" onclick="startProduceMix()">🎬 영상 매칭 시작</button>
@@ -213,7 +224,7 @@
     <section class="panel" data-step="1">
       <h3>2 · 자막제거</h3>
       <div class="sub">소스 영상에 박힌 원본 자막(하드섭)을 VMake AI로 제거합니다. 우리 자막을 새로 입히려면 켜세요.</div>
-      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:14px;border:1px solid var(--line);border-radius:10px;background:#0d1420">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--inset)">
         <input type="checkbox" id="subToggle" onchange="onSubToggle()" style="width:18px;height:18px">
         <span><b>원본 자막 제거 (VMake)</b><div class="hint">끄면 원본 영상 그대로 사용. 켜면 렌더 시 VMake로 자막 제거 후 우리 자막을 굽습니다.</div></span>
       </label>
@@ -287,29 +298,29 @@
         <div style="flex:1;min-width:300px">
           <div style="font-size:13px;margin-bottom:4px">헤드카피 문구 <span class="hint" style="font-size:11px">— Enter로 줄바꿈, 길면 자동으로 줄이 나뉘어요</span></div>
           <textarea id="hcText" rows="2" placeholder="예: 써보면 놀라는 이것" oninput="updateHC()"
-            style="width:100%;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px;margin-bottom:12px;resize:vertical;font-family:inherit;font-size:14px;line-height:1.4"></textarea>
+            style="width:100%;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px;margin-bottom:12px;resize:vertical;font-family:inherit;font-size:14px;line-height:1.4"></textarea>
           <!-- 🎯 완성 스타일 카드(Task2가 renderStyleCards로 채움) -->
           <div style="font-size:13px;font-weight:800;margin-bottom:6px">🎯 완성 스타일 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 그대로 완성</span></div>
           <div id="fullPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"></div>
           <button type="button" id="moreStylesBtn" onclick="toggleMoreStyles()" class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;margin-bottom:14px">+ 더보기</button>
           <!-- ⭐ 내 프리셋 라이브러리(항상 노출) — 내가 저장한 스타일을 딸깍 적용 -->
-          <div style="background:#0d1420;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
+          <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
             <div style="font-size:13px;font-weight:800;margin-bottom:2px">⭐ 내 프리셋 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 바로 적용</span></div>
             <div style="font-size:11px;color:var(--sub);margin-bottom:8px">지금 화면 스타일이 마음에 들면 저장해 두고, 다음엔 딸깍 한 번으로 그대로 불러와요.</div>
             <div id="myPresets" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px"></div>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
               <input id="myPresetName" type="text" placeholder="예: 내 채널 기본형" style="flex:1;min-width:150px;background:#0a1017;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:8px 10px;font-size:13px">
-              <button class="tab" onclick="saveMyPreset()" style="flex:0 0 auto;min-width:auto;padding:8px 16px;font-size:13px;white-space:nowrap;background:linear-gradient(90deg,#153a6b,#0d2340);border-color:var(--accent)">💾 지금 스타일 저장</button>
+              <button class="tab" onclick="saveMyPreset()" style="flex:0 0 auto;min-width:auto;padding:8px 16px;font-size:13px;white-space:nowrap;background:var(--sel-bg);border-color:var(--accent)">💾 지금 스타일 저장</button>
             </div>
           </div>
           <!-- 강조 단어(노출 유지) -->
-          <div style="background:#0d1420;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
+          <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
             <div style="font-size:13px;font-weight:700;margin-bottom:2px">🎯 강조 단어 <span style="font-size:11px;color:var(--sub);font-weight:400">— 헤드카피 + 자막 공통(키워드 일치 시 자동 강조)</span></div>
             <div id="highlightRuleList" style="margin-top:6px"></div>
             <button class="tab" onclick="addHighlightRule()" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:12px;margin-top:4px">+ 강조 단어 추가</button>
           </div>
           <!-- ✨ 고급효과(리모션) — 항상 보이는 자리·선택·프리미엄. 켜면 자동 추천 → 렌더 -->
-          <div id="fxAdvBox" style="background:linear-gradient(135deg,#1c1436,#0d1420);border:1px solid #6b4fa0;border-radius:10px;padding:10px 12px;margin-bottom:12px">
+          <div id="fxAdvBox" style="background:linear-gradient(135deg,#1c1436,var(--inset));border:1px solid #6b4fa0;border-radius:10px;padding:10px 12px;margin-bottom:12px">
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;cursor:pointer">
               <input id="fxAdvOn" type="checkbox" onchange="toggleFxAdv()">
               ✨ 고급효과 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 대본에 맞춰 움직이는 효과 자동 배치 · 렌더당 10P</span>
@@ -318,7 +329,7 @@
               <button type="button" class="tab" onclick="fxSuggest()" style="min-width:auto;padding:7px 16px;font-size:12px;background:linear-gradient(90deg,#3a2b6b,#241a45);border-color:#6b4fa0">✨ 효과 자동 추천</button>
               <span id="fxSuggestMsg" class="hint" style="margin-left:6px"></span>
               <div id="fxPlanBox" style="margin-top:8px"></div>
-              <button type="button" id="fxRenderBtn" onclick="fxRender()" style="display:none;margin-top:8px;background:#2E7D8A;color:#fff;border:none;border-radius:8px;padding:8px 18px;cursor:pointer;font-weight:700">고급 렌더 (10P)</button>
+              <button type="button" id="fxRenderBtn" onclick="fxRender()" style="display:none;margin-top:8px;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:8px 18px;cursor:pointer;font-weight:700">고급 렌더 (10P)</button>
               <div id="fxRenderMsg" class="hint" style="margin-top:6px"></div>
               <div id="fxResult" style="display:none;margin-top:10px"></div>
             </div>
@@ -337,13 +348,13 @@
                 <span style="font-size:12px;color:var(--sub)">폰트
                   <span id="hcFontPicker" style="position:relative;display:inline-block;vertical-align:middle">
                     <button type="button" id="hcFontBtn" onclick="toggleFontMenu(event)"
-                      style="background:#0d1420;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 10px;cursor:pointer;min-width:130px;text-align:left;font-size:13px">폰트 선택 ▾</button>
-                    <div id="hcFontMenu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:60;background:#0d1420;border:1px solid var(--line);border-radius:8px;max-height:340px;overflow:auto;box-shadow:0 12px 34px rgba(0,0,0,.55);min-width:190px"></div>
+                      style="background:var(--inset);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 10px;cursor:pointer;min-width:130px;text-align:left;font-size:13px">폰트 선택 ▾</button>
+                    <div id="hcFontMenu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:60;background:var(--inset);border:1px solid var(--line);border-radius:8px;max-height:340px;overflow:auto;box-shadow:0 12px 34px rgba(0,0,0,.55);min-width:190px"></div>
                   </span>
                   <select id="hcFont" onchange="updateHC()" style="display:none"></select></span>
                 <label style="font-size:12px;color:var(--sub)">색상 <input id="hcColor" type="color" value="#FF8800" oninput="updateHC()"></label>
                 <label style="font-size:12px;color:var(--sub)">굵기
-                  <select id="hcWeight" onchange="updateHC()" style="background:#0d1420;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px">
+                  <select id="hcWeight" onchange="updateHC()" style="background:var(--inset);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px">
                     <option value="700">굵게</option><option value="900" selected>아주 굵게</option><option value="400">보통</option>
                   </select></label>
               </div>
@@ -381,7 +392,7 @@
                 <div class="sub" style="margin-bottom:10px">나레이션 자막(문구는 대본에서 자동)의 폰트·색·박스·효과. 미리보기 하단에 <b>샘플</b>로 표시됩니다.</div>
                 <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
                   <label style="font-size:12px;color:var(--sub)">폰트
-                    <select id="capFont" onchange="updateCaption()" style="background:#0d1420;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px"></select></label>
+                    <select id="capFont" onchange="updateCaption()" style="background:var(--inset);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px"></select></label>
                   <label style="font-size:12px;color:var(--sub)">색상 <input id="capColor" type="color" value="#FFFFFF" oninput="updateCaption()"></label>
                 </div>
                 <div style="margin-top:8px;font-size:12px;color:var(--sub)">글씨 크기 <span id="capSizeV">54</span>px
@@ -427,10 +438,10 @@
                 <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
                   <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
                     <input id="wmOn" type="checkbox" onchange="updateDeco()"> 워터마크 닉네임</label>
-                  <input id="wmText" type="text" placeholder="@내채널" oninput="updateDeco()" style="width:150px;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 9px;font-size:13px">
+                  <input id="wmText" type="text" placeholder="@내채널" oninput="updateDeco()" style="width:150px;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 9px;font-size:13px">
                   <input id="wmColor" type="color" value="#FFFFFF" oninput="updateDeco()">
                   <label style="font-size:12px;color:var(--sub)">위치
-                    <select id="wmPos" onchange="updateDeco()" style="background:#0d1420;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px">
+                    <select id="wmPos" onchange="updateDeco()" style="background:var(--inset);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px">
                       <option value="bc" selected>하단중앙</option><option value="br">우하단</option><option value="bl">좌하단</option><option value="tr">우상단</option><option value="tl">좌상단</option>
                     </select></label>
                   <label style="font-size:12px;color:var(--sub)">투명도 <input id="wmAlpha" type="range" min="20" max="100" value="60" oninput="updateDeco()"></label>
@@ -1075,7 +1086,7 @@ function styleCardHTML(p, idx, selIdx){
   const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
   const hc = p.hc||{}, extra = (p.extra&&p.extra[0])||null;
   const poster = currentPosterUrl();
-  const bg = poster ? `background:#000;` : `background:linear-gradient(160deg,${p.chip||'#333'},#0d1420);`;
+  const bg = poster ? `background:#000;` : `background:linear-gradient(160deg,${p.chip||'#333'},var(--inset));`;
   const bgImg = poster ? `<img src="${poster}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.9" alt="" onerror="this.style.display='none'">` : '';
   // 카드 스케일: 카드폭 92px 기준으로 hc.size(영상 720폭 기준)를 축소 — 메인 프리뷰·렌더와 동일 비율
   const sc = 92/720;
@@ -1241,7 +1252,7 @@ function renderHighlightRules(){
   const list=(STATE.deco && STATE.deco.highlight_rules)||[];
   box.innerHTML=list.map((r,i)=>`<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:6px;background:#0b1018;border:1px solid var(--line);border-radius:8px;padding:6px 8px">
     <input type="text" placeholder="단어(예: 쿠팡)" value="${(r.keyword||'').replace(/"/g,'&quot;')}"
-      oninput="updateHighlightRule(${i},'keyword',this.value)" style="flex:1;min-width:100px;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:5px 8px;font-size:13px">
+      oninput="updateHighlightRule(${i},'keyword',this.value)" style="flex:1;min-width:100px;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:5px 8px;font-size:13px">
     <label style="font-size:11px;color:var(--sub)">글자색 <input type="color" value="${r.color}" oninput="updateHighlightRule(${i},'color',this.value)"></label>
     <label style="font-size:11px;color:var(--sub)"><input type="checkbox" ${r.box?'checked':''} onchange="updateHighlightRule(${i},'box',this.checked)"> 배지</label>
     <input type="color" value="${r.box_color||'#FF2D2D'}" oninput="updateHighlightRule(${i},'box_color',this.value)" style="${r.box?'':'display:none'}">
@@ -1251,7 +1262,7 @@ function renderHighlightRules(){
 function renderExtraTexts(){
   const box=document.getElementById('extraTextList'); if(!box) return;
   const list=(STATE.deco&&STATE.deco.extra_texts)||[];
-  box.innerHTML=list.map((t,i)=>`<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:6px;background:#0d1420;border:1px solid var(--line);border-radius:8px;padding:6px 8px">
+  box.innerHTML=list.map((t,i)=>`<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:6px;background:var(--inset);border:1px solid var(--line);border-radius:8px;padding:6px 8px">
     <input type="text" value="${(t.text||'').replace(/"/g,'&quot;')}" oninput="updateExtraField(${i},'text',this.value)" style="flex:1;min-width:120px;background:#0b1018;border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:5px 8px;font-size:13px">
     <input type="color" value="${t.color}" oninput="updateExtraField(${i},'color',this.value)">
     <span style="font-size:11px;color:var(--sub)">크기<input type="range" min="20" max="90" value="${t.size}" oninput="updateExtraField(${i},'size',this.value)" style="width:66px;vertical-align:middle"></span>
@@ -1343,7 +1354,7 @@ function bindOverlayDrag(){
 function renderMyPresets(){
   const box=document.getElementById('myPresets'); if(!box) return;
   const list=myPresets();
-  box.innerHTML = list.length ? list.map((p,i)=>`<span style="display:inline-flex;align-items:center;gap:4px;background:#0d1420;border:1px solid var(--line);border-radius:9px;padding:2px 4px 2px 0;margin:0 6px 6px 0">
+  box.innerHTML = list.length ? list.map((p,i)=>`<span style="display:inline-flex;align-items:center;gap:4px;background:var(--inset);border:1px solid var(--line);border-radius:9px;padding:2px 4px 2px 0;margin:0 6px 6px 0">
     <button class="tab" onclick="applyMyPreset(${i})" style="flex:0 0 auto;min-width:auto;padding:5px 11px;font-size:12px;white-space:nowrap;border:none;background:none">⭐ ${p.name}</button>
     <button onclick="deleteMyPreset(${i})" title="삭제" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:14px">✕</button></span>`).join('')
     : '<span class="hint">아직 저장한 프리셋이 없어요. 완성 스타일을 고르거나 직접 다듬은 뒤, 아래 “💾 지금 스타일 저장”을 누르면 여기 쌓여요.</span>';
@@ -1573,7 +1584,7 @@ const SCRIPT_MODE_HTML = {
       <button class="btn-next" style="padding:10px 16px;background:linear-gradient(90deg,#1c5a2e,#0d3a1c)" onclick="openGenFromWiki()">♻️ 선택 1개로 새 대본 생성</button>
       <button class="btn-next" style="padding:10px 16px" onclick="genMix()">🧬 선택 2개+ 조합 생성</button>
       <label class="hint" style="display:flex;align-items:center;gap:4px">길이
-        <select id="mixSeconds" style="background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:6px">
+        <select id="mixSeconds" style="background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:6px">
           <option value="15">15초</option><option value="20" selected>20초</option>
           <option value="30">30초</option><option value="45">45초</option>
         </select></label>
@@ -1608,16 +1619,16 @@ const MIX_ELEMS=[['hook','훅'],['development','전개방식'],['twist','발상�
 // 초안 렌더(조합 경로). 카드마다 편집 textarea + 요소 버튼 + 업그레이드/자유입력.
 function renderDrafts(drafts, boxId){
   window._drafts = drafts;
-  const eb='padding:5px 9px;margin:2px;border:1px solid var(--line);border-radius:14px;background:#0d1420;color:var(--txt);cursor:pointer;font-size:12px';
+  const eb='padding:5px 9px;margin:2px;border:1px solid var(--line);border-radius:14px;background:var(--inset);color:var(--txt);cursor:pointer;font-size:12px';
   document.getElementById(boxId).innerHTML = (drafts||[]).map((dr,i)=>`
-    <div class="mixdraft" data-draft-id="${dr.draft_id||''}" data-idx="${i}" style="border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:8px;background:#0d1420">
-      <div style="font-weight:600;color:#9dc4ff;margin-bottom:4px">초안 ${i+1} · ${esc(dr.hook||'')}</div>
-      <textarea class="mixtext" style="width:100%;min-height:90px;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:8px;font-size:13px;line-height:1.5" oninput="this.closest('.mixdraft').dataset.dirty='1'" onblur="mixOnEdit(this)">${esc(dr.script||'')}</textarea>
+    <div class="mixdraft" data-draft-id="${dr.draft_id||''}" data-idx="${i}" style="border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:8px;background:var(--inset)">
+      <div style="font-weight:600;color:var(--sel-fg);margin-bottom:4px">초안 ${i+1} · ${esc(dr.hook||'')}</div>
+      <textarea class="mixtext" style="width:100%;min-height:90px;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:8px;font-size:13px;line-height:1.5" oninput="this.closest('.mixdraft').dataset.dirty='1'" onblur="mixOnEdit(this)">${esc(dr.script||'')}</textarea>
       <div class="hint" style="margin:6px 0">${esc(dr.applied||'')} · <span class="mixlen">${lenText(dr.script||'')}</span></div>
       <div class="hint" style="margin:6px 0 4px">✨ 손볼 요소를 고르고 [업그레이드] — 여러 개 고르면 전부 새로 씁니다(나머지는 유지)</div>
       <div class="mixelems">${MIX_ELEMS.map(([k,l])=>`<button type="button" class="mixelem" data-key="${k}" data-on="" style="${eb}" onclick="mixToggleElem(this)">${l}</button>`).join('')}</div>
       <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
-        <input type="text" class="mixinst" placeholder="추가 지시(선택): 예) 마지막을 궁금하게" style="flex:1;min-width:120px;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:8px">
+        <input type="text" class="mixinst" placeholder="추가 지시(선택): 예) 마지막을 궁금하게" style="flex:1;min-width:120px;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:8px">
         <button type="button" class="btn-next" style="padding:8px 14px" onclick="mixUpgrade(this)">🔄 업그레이드</button>
       </div>
       <button class="btn-next" style="padding:8px 14px;margin-top:8px;background:linear-gradient(90deg,#1c5a2e,#0d3a1c)" onclick="useDraft(${i})">이 대본 사용 →</button>
@@ -1625,7 +1636,7 @@ function renderDrafts(drafts, boxId){
 }
 function mixToggleElem(btn){
   const on=btn.dataset.on==='1'; btn.dataset.on=on?'':'1';
-  btn.style.background=on?'#0d1420':'var(--accent2,#3a6df0)'; btn.style.color=on?'var(--txt)':'#fff';
+  btn.style.background=on?'var(--inset)':'var(--accent2,#3a6df0)'; btn.style.color=on?'var(--txt)':'#fff';
 }
 function mixOnEdit(ta){
   // LOCAL-ONLY (2026-07-19 하드닝): 서버 fetch 제거. blur(mixOnEdit)의 비동기 fetch가
@@ -1672,7 +1683,7 @@ async function mixUpgrade(btn){
     ta.value=d.script_text; card.dataset.draftId=d.draft_id; card.dataset.dirty='';
     const i=+card.dataset.idx; if(window._drafts&&window._drafts[i]) window._drafts[i].script=d.script_text;
     const lp=card.querySelector('.mixlen'); if(lp) lp.textContent=lenText(d.script_text);
-    card.querySelectorAll('.mixelem[data-on="1"]').forEach(b=>{ b.dataset.on=''; b.style.background='#0d1420'; b.style.color='var(--txt)'; });
+    card.querySelectorAll('.mixelem[data-on="1"]').forEach(b=>{ b.dataset.on=''; b.style.background='var(--inset)'; b.style.color='var(--txt)'; });
     if(!elements.length) card.querySelector('.mixinst').value='';
   }catch(e){ alert('네트워크 오류'); }
   finally{ btn.disabled=false; btn.textContent=o; }
@@ -1781,7 +1792,7 @@ async function loadWikiForMix(){
       return;
     }
     el.innerHTML=items.map(w=>`
-      <label style="display:flex;gap:10px;align-items:flex-start;padding:9px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;cursor:pointer;background:#0d1420">
+      <label style="display:flex;gap:10px;align-items:flex-start;padding:9px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;cursor:pointer;background:var(--inset)">
         <input type="checkbox" class="mixPick" value="${esc(w.shortcode)}" style="margin-top:3px;flex-shrink:0">
         <!-- loading=lazy 금지: 이 목록은 숨겨진 패널에 innerHTML로 그린 뒤 나중에 보여줘서
              크롬이 lazy 이미지를 재평가하지 않는다(뷰포트 안인데도 영영 미로드 — 2026-07-15
@@ -1850,7 +1861,7 @@ function addMixUrl(){
   if(wrap.querySelectorAll('.mixUrl').length>=5) return;
   const d=document.createElement('div'); d.className='row'; d.style.marginBottom='6px';
   d.style.display='flex'; d.style.gap='6px'; d.style.alignItems='center';
-  d.innerHTML='<input class="mixUrl" type="text" placeholder="인스타/유튜브/틱톡 URL" style="flex:1;min-width:0;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px"><button class="urlDel" title="이 칸 지우기" onclick="removeMixUrlRow(this)" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:16px;padding:0 4px">✕</button>';
+  d.innerHTML='<input class="mixUrl" type="text" placeholder="인스타/유튜브/틱톡 URL" style="flex:1;min-width:0;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px"><button class="urlDel" title="이 칸 지우기" onclick="removeMixUrlRow(this)" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:16px;padding:0 4px">✕</button>';
   wrap.appendChild(d);
 }
 // 레퍼런스 모음집(/collection)에서 "🎬 영상제작으로 보내기"로 넘어온 영상들. 역할을 미리
@@ -2025,7 +2036,7 @@ function renderPool(){
   if(!HANDOFF.length){ box.innerHTML=''; if(empty) empty.style.display='block'; return; }
   if(empty) empty.style.display='none';
   box.innerHTML=HANDOFF.map((it,i)=>`
-    <div style="background:#0d1420;border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;gap:10px;align-items:center">
+    <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;gap:10px;align-items:center">
       <div onclick="previewMaterial(${i})" title="미리보기" style="position:relative;flex-shrink:0;width:72px;height:96px;border-radius:6px;background:#000;cursor:pointer;overflow:hidden">
         ${it.thumbnail?`<img src="${it.thumbnail.includes('gstatic.com')?it.thumbnail:('/api/thumb?url='+encodeURIComponent(it.thumbnail))}" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover" onerror="this.style.visibility='hidden'">`:''}
         <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;text-shadow:0 1px 4px #000;pointer-events:none">▶</span>
@@ -2063,7 +2074,7 @@ function _openMaterialOverlay(html){
     o.onclick=(e)=>{ if(e.target===o) _closeMaterialOverlay(); };
     document.body.appendChild(o);
   }
-  o.innerHTML=`<div style="background:#0d1420;border:1px solid var(--line);border-radius:12px;padding:18px 18px 14px;max-width:520px;width:100%;position:relative">
+  o.innerHTML=`<div style="background:var(--inset);border:1px solid var(--line);border-radius:12px;padding:18px 18px 14px;max-width:520px;width:100%;position:relative">
       <button onclick="_closeMaterialOverlay()" title="닫기" style="position:absolute;top:6px;right:10px;background:none;border:none;color:var(--sub);font-size:20px;cursor:pointer">✕</button>${html}</div>`;
   o.style.display='flex';
 }
@@ -2088,7 +2099,7 @@ function confirmMixUrls(){
     added++;
   }
   // 입력칸은 다음 URL 입력을 위해 빈 칸 하나로 되돌린다(확정한 URL은 위 카드로 올라갔다).
-  wrap.innerHTML='<div class="row" style="margin-bottom:6px;display:flex;gap:6px;align-items:center"><input class="mixUrl" type="text" placeholder="인스타/유튜브/틱톡 URL" style="flex:1;min-width:0;background:#0d1420;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px"><button class="urlDel" title="이 칸 지우기" onclick="removeMixUrlRow(this)" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:16px;padding:0 4px">✕</button></div>';
+  wrap.innerHTML='<div class="row" style="margin-bottom:6px;display:flex;gap:6px;align-items:center"><input class="mixUrl" type="text" placeholder="인스타/유튜브/틱톡 URL" style="flex:1;min-width:0;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px"><button class="urlDel" title="이 칸 지우기" onclick="removeMixUrlRow(this)" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:16px;padding:0 4px">✕</button></div>';
   renderPool(); syncFootageToMixUrls(); refreshFinalPeek(); saveWork();
   if(!added && typed.length===0){ const st=document.getElementById('mixStatus'); if(st) st.textContent='먼저 URL을 입력하세요.'; }
 }
@@ -2486,7 +2497,7 @@ async function loadMixReview(){
   if(!d.ok){ el.innerHTML=`<div class="hint" style="color:var(--fire)">편집안 로드 실패 ${esc(d.error||'')}</div>`; return; }
   MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
   el.innerHTML='<h3 style="font-size:15px">편집안(장면 매칭)</h3>'+renderCoverageSignal(d.beats||[])+(d.beats||[]).map((b,i)=>`
-    <div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;background:#0d1420">
+    <div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;background:var(--inset)">
       <span style="font-size:11px;background:var(--accent2);padding:2px 8px;border-radius:10px">${esc(b.role||'')}</span>
       <div style="margin:6px 0;font-size:13px">${esc(b.narration||'')}</div>
       <div class="hint">🎞 ${esc(b.primary?.video_id||'')} · ${b.primary?.start}s~${b.primary?.end}s · ${b.target_seconds}s${b.fit?` · 매칭 ${b.fit}/5`:''}</div>
@@ -2811,7 +2822,7 @@ function renderPresetCards(){
         </div>` : '';
     return `
       <div onclick="pickPreset('${g.group_id}')"
-        style="border:1px solid ${active?'var(--accent2)':'var(--line)'};border-radius:9px;padding:9px;margin-bottom:6px;cursor:pointer;background:#0d1420">
+        style="border:1px solid ${active?'var(--accent2)':'var(--line)'};border-radius:9px;padding:9px;margin-bottom:6px;cursor:pointer;background:var(--inset)">
         <b>${esc(g.name)}</b>${g.best?' <span title="사장님 청취 판정 베스트" style="color:var(--accent2)">⭐</span>':''} — ${esc(g.one_liner||'')}
         <div style="display:flex;gap:4px;align-items:center;margin-top:6px;flex-wrap:wrap">
           ${tabs}
@@ -2923,7 +2934,7 @@ async function renderTtsBeats(){
       const badge = synced ? '🟢' : '🟡';
       const badgeTip = synced ? '자막 자동맞춤 됨' : '자막 자동맞춤 불확실 — 들어보세요';
       return `
-      <div id="beatRow${i}" data-idx="${i}" style="border:1px solid var(--line);border-radius:9px;padding:9px;margin-bottom:6px;background:#0d1420;transition:background .15s">
+      <div id="beatRow${i}" data-idx="${i}" style="border:1px solid var(--line);border-radius:9px;padding:9px;margin-bottom:6px;background:var(--inset);transition:background .15s">
         <div style="font-size:13px;margin-bottom:4px"><span title="${badgeTip}">${badge}</span> <b>${i+1}.</b> ${esc(b.narration||'')}</div>
         ${b.tts_preview_url?`<audio id="beatAudio${i}" preload="metadata" src="${esc(b.tts_preview_url)}?t=${Date.now()}" style="display:none"></audio><button class="btn-prev" style="padding:4px 10px" onclick="vpPlayBeat(${i})">▶ 이 장면</button>
         <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
@@ -3006,7 +3017,7 @@ function vpPlayBeat(i){
   let k=0; while(document.getElementById('beatAudio'+k)){ const o=document.getElementById('beatAudio'+k); if(o!==a){o.pause();} k++; }
   _vpShowFrame(i); _vpDriveCaption(a,b); _vpHeard.add(i);
   const r=document.getElementById('beatRow'+i);
-  document.querySelectorAll('[id^=beatRow]').forEach(x=>x.style.background='#0d1420');
+  document.querySelectorAll('[id^=beatRow]').forEach(x=>x.style.background='var(--inset)');
   if(r) r.style.background='#1a2740';
   a.currentTime=0; a.play().catch(()=>{});
 }
@@ -3057,7 +3068,7 @@ function playAllBeats(){
   auds.forEach(a=>{ a.pause(); a.currentTime=0; a.onended=null; });
   let cur=0;
   const playOne=()=>{
-    if(cur>=auds.length){ document.querySelectorAll('[id^=beatRow]').forEach(x=>x.style.background='#0d1420'); return; }
+    if(cur>=auds.length){ document.querySelectorAll('[id^=beatRow]').forEach(x=>x.style.background='var(--inset)'); return; }
     vpPlayBeat(cur);
     auds[cur].onended=()=>{ cur++; playOne(); };
   };

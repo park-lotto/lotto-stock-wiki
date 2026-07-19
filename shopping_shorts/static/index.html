@@ -4,8 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>쇼핑쇼츠 레퍼런스 랭킹</title>
+<script>(function(){try{var t=localStorage.getItem('ssTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <style>
-  :root{--bg:#0a0e14;--panel:#111722;--line:#1e2735;--txt:#e6edf3;--sub:#8b98a9;--accent:#2f81f7;--fire:#ff6b35;}
+  /* 스탁브레인 민트-블랙 투톤(다크 기본). produce.html과 동일 토큰. */
+  :root{--bg:#0a0f0d;--panel:#101815;--line:#1e2b26;--txt:#eaf3f0;--sub:#8fa1a0;
+    --accent:#37e0bd;--accent2:#1f9e7a;--fire:#ff6b6b;--ok:#37e0bd;--gold:#f0c453;
+    --inset:#0c1412;--sel-bg:linear-gradient(90deg,#123a30,#0c221c);--sel-fg:#6ff0d6;
+    --grad:linear-gradient(135deg,#6ff0d6,#1f9e7a);--hover:#131d19;color-scheme:dark;}
+  :root[data-theme="light"]{--bg:#f4faf7;--panel:#ffffff;--line:#d5e6df;--txt:#0f1a16;--sub:#5c726d;
+    --accent:#12b886;--accent2:#0ca678;--fire:#e0524a;--ok:#12b886;--gold:#b8860b;
+    --inset:#eef7f3;--sel-bg:linear-gradient(90deg,#d8f2ea,#eafaf5);--sel-fg:#0a7d66;
+    --grad:linear-gradient(135deg,#19c9ab,#0a8f79);--hover:#eef7f3;color-scheme:light;}
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic',system-ui,sans-serif;display:flex;min-height:100vh}
   .sidebar{width:230px;background:var(--panel);border-right:1px solid var(--line);padding:16px;flex-shrink:0}
@@ -13,7 +22,7 @@
   .menu-group{margin-bottom:18px}
   .menu-group .label{font-size:11px;color:var(--sub);text-transform:uppercase;margin-bottom:8px}
   .menu-item{padding:8px 12px;border-radius:8px;font-size:13px;color:var(--txt);cursor:default;margin-bottom:2px}
-  .menu-item.active{background:linear-gradient(90deg,#153a6b,#0d2340);color:#7db4ff}
+  .menu-item.active{background:var(--sel-bg);color:var(--sel-fg)}
   .main{flex:1;padding:28px 36px;overflow:auto}
   .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
   .head h2{font-size:24px}
@@ -25,9 +34,9 @@
   .tab{padding:10px 16px;font-size:13px;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent}
   .tab.active{color:var(--txt);border-bottom-color:var(--accent)}
   .ctypes{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-  .ctype{padding:9px 16px;border:1px solid var(--line);border-radius:10px;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer;background:#0d131c}
-  .ctype:hover{border-color:var(--accent);color:#7db4ff}
-  .ctype.active{background:linear-gradient(90deg,#153a6b,#0d2340);color:#7db4ff;border-color:var(--accent)}
+  .ctype{padding:9px 16px;border:1px solid var(--line);border-radius:10px;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer;background:var(--inset)}
+  .ctype:hover{border-color:var(--accent);color:var(--sel-fg)}
+  .ctype.active{background:var(--sel-bg);color:var(--sel-fg);border-color:var(--accent)}
   .cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;min-height:0}
   .cats:empty{margin-bottom:0}
   .cat{padding:6px 12px;border:1px solid var(--line);border-radius:20px;font-size:12px;color:var(--sub);cursor:pointer}
@@ -45,8 +54,8 @@
   .card .rank{font-size:12px;color:var(--sub)}
   .card .ch{font-weight:600;font-size:14px;margin:4px 0;display:flex;align-items:center;justify-content:space-between;gap:6px}
   .card .ch .chname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .copy{flex-shrink:0;background:#0d131c;border:1px solid var(--line);color:var(--sub);font-size:12px;padding:4px 7px;border-radius:6px;cursor:pointer;line-height:1}
-  .copy:hover{color:#7db4ff;border-color:#2f81f7}
+  .copy{flex-shrink:0;background:var(--inset);border:1px solid var(--line);color:var(--sub);font-size:12px;padding:4px 7px;border-radius:6px;cursor:pointer;line-height:1}
+  .copy:hover{color:var(--sel-fg);border-color:var(--accent)}
   .copy.copied{background:#2ea043;border-color:#2ea043;color:#fff}
   .stat{display:flex;justify-content:space-between;font-size:12px;color:var(--sub);margin-top:4px}
   .stat b{color:var(--txt)}
@@ -57,8 +66,8 @@
   .empty{color:var(--sub);text-align:center;padding:60px;grid-column:1/-1}
   .actions{margin-top:auto}   /* 버튼 묶음을 카드 바닥에 고정 → 통계 줄수 달라도 카드마다 버튼 높이 일치 */
   .btns{display:flex;gap:6px;padding-top:10px}
-  .btns button{flex:1;font-size:11px;padding:7px 4px;border-radius:7px;border:1px solid var(--line);background:#0d131c;color:var(--txt);cursor:pointer}
-  .btns button.view{border-color:#2f81f7;color:#7db4ff}
+  .btns button{flex:1;font-size:11px;padding:7px 4px;border-radius:7px;border:1px solid var(--line);background:var(--inset);color:var(--txt);cursor:pointer}
+  .btns button.view{border-color:var(--accent);color:var(--sel-fg)}
   .btns button.comment{background:linear-gradient(90deg,#7b2ff7,#c22ed0);border:none;color:#fff}
   .btns button.save.saved{background:#2ea043;border-color:#2ea043;color:#fff}
   .script-btn{width:100%;margin-top:6px;padding:8px;border-radius:7px;border:1px solid #b8860b;
@@ -79,13 +88,13 @@
   .modal-head b{font-size:15px}
   .modal-head .x{background:none;border:none;color:var(--sub);font-size:20px;cursor:pointer;padding:0 4px}
   .modal-body{padding:16px 18px;overflow:auto}
-  .sm-full{background:#0d131c;border:1px solid var(--line);border-radius:8px;padding:12px;
+  .sm-full{background:var(--inset);border:1px solid var(--line);border-radius:8px;padding:12px;
            font-size:14px;line-height:1.7;white-space:pre-wrap;color:var(--txt)}
   .sm-sec{display:flex;align-items:center;justify-content:space-between;margin:18px 0 8px}
   .sm-sec b{font-size:13px;color:var(--sub)}
-  .sm-copy{background:#0d131c;border:1px solid var(--line);color:var(--sub);font-size:12px;
+  .sm-copy{background:var(--inset);border:1px solid var(--line);color:var(--sub);font-size:12px;
            padding:5px 10px;border-radius:6px;cursor:pointer}
-  .sm-copy:hover{color:#7db4ff;border-color:var(--accent)}
+  .sm-copy:hover{color:var(--sel-fg);border-color:var(--accent)}
   .sm-copy.done{background:#2ea043;border-color:#2ea043;color:#fff}
   .wiki-save{background:linear-gradient(90deg,#3a2f0d,#2a2408);border:1px solid #b8860b;color:#ffd76b;
              font-size:12px;padding:5px 12px;border-radius:6px;cursor:pointer;white-space:nowrap}
@@ -146,19 +155,19 @@
         <label style="font-size:12px;color:var(--sub);cursor:pointer"><input type="radio" name="ttmode" value="keyword" checked onclick="ttModeChange()"> 🔎 키워드 검색발굴</label>
         <label style="font-size:12px;color:var(--sub);cursor:pointer;margin-left:12px"><input type="radio" name="ttmode" value="account" onclick="ttModeChange()"> 🎵 계정 시드</label>
       </div>
-      <input id="seedInput" type="text" placeholder="검색 키워드 (예: 살림꿀팁)" style="padding:8px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)">
-      <select id="seedLang" title="검색 언어(지역) — 한국어면 국내영상, 다른 언어면 그 나라 영상 발굴" style="padding:8px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)">
+      <input id="seedInput" type="text" placeholder="검색 키워드 (예: 살림꿀팁)" style="padding:8px;border-radius:6px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
+      <select id="seedLang" title="검색 언어(지역) — 한국어면 국내영상, 다른 언어면 그 나라 영상 발굴" style="padding:8px;border-radius:6px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
         <option value="ko">🇰🇷 한국어</option><option value="en">🇺🇸 영어</option>
         <option value="ja">🇯🇵 일본어</option><option value="zh">🇹🇼 중국어</option><option value="ru">🇷🇺 러시아어</option>
       </select>
       <button onclick="addSeed()">+ 키워드</button>
       <span id="seedHint" style="font-size:11px;color:var(--sub)">한국어 외 언어 선택 시 자동 번역해 등록</span>
       <div id="seedList" style="margin-top:6px;font-size:12px;color:var(--sub)"></div>
-      <div id="ttPanel" style="display:none;margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:8px;background:#0d131c">
+      <div id="ttPanel" style="display:none;margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--inset)">
         <div style="font-size:12px;color:var(--sub);margin-bottom:8px">⚙️ 틱톡 키워드검색 설정 <span style="font-size:11px">— Apify 유료($1.70/1,000건). 선택 언어로 검색, 부족하면 다른 언어로 확장</span></div>
-        <label style="font-size:12px;color:var(--sub)">언어당 개수 <input id="ttCount" type="number" min="10" max="200" style="width:64px;padding:4px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)"></label>
-        <label style="font-size:12px;color:var(--sub);margin-left:10px">하루 수집횟수 <input id="ttDaily" type="number" min="1" max="100" style="width:56px;padding:4px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)"></label>
-        <label style="font-size:12px;color:var(--sub);margin-left:10px">월 예산($) <input id="ttBudget" type="number" min="0" step="0.5" style="width:64px;padding:4px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)"></label>
+        <label style="font-size:12px;color:var(--sub)">언어당 개수 <input id="ttCount" type="number" min="10" max="200" style="width:64px;padding:4px;border-radius:6px;border:1px solid var(--line);background:var(--inset);color:var(--txt)"></label>
+        <label style="font-size:12px;color:var(--sub);margin-left:10px">하루 수집횟수 <input id="ttDaily" type="number" min="1" max="100" style="width:56px;padding:4px;border-radius:6px;border:1px solid var(--line);background:var(--inset);color:var(--txt)"></label>
+        <label style="font-size:12px;color:var(--sub);margin-left:10px">월 예산($) <input id="ttBudget" type="number" min="0" step="0.5" style="width:64px;padding:4px;border-radius:6px;border:1px solid var(--line);background:var(--inset);color:var(--txt)"></label>
         <button onclick="saveTtSettings()" style="margin-left:8px">저장</button>
         <div id="ttStatus" style="margin-top:6px;font-size:11px;color:var(--sub)"></div>
       </div>
@@ -167,13 +176,13 @@
       <button id="collectBtn" onclick="doCollect()">⚡ 지금 수집</button>
       <span id="status" style="color:var(--sub);font-size:12px"></span>
     </div>
-    <details id="refRegister" style="margin:4px 0 12px;border:1px solid var(--line);border-radius:8px;background:#0d131c">
+    <details id="refRegister" style="margin:4px 0 12px;border:1px solid var(--line);border-radius:8px;background:var(--inset)">
       <summary id="refSummary" style="padding:9px 12px;cursor:pointer;font-size:12px;color:var(--sub)">➕ 레퍼런스 채널 등록</summary>
       <div style="padding:0 12px 10px">
         <div style="font-size:11px;color:var(--sub);margin-bottom:6px">인스타 <b>채널(프로필) 주소</b>를 붙여넣으면 다음 수집부터 랭킹에 포함 — 엑셀 원본은 안 건드립니다. (릴스·게시물 링크 말고 채널 주소)</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <input id="refUrl" type="text" placeholder="https://www.instagram.com/아이디" onkeydown="if(event.key==='Enter')registerRef()"
-                 style="flex:1;min-width:220px;padding:8px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)">
+                 style="flex:1;min-width:220px;padding:8px;border-radius:6px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
           <button onclick="registerRef()">등록</button>
         </div>
         <div id="refMsg" style="font-size:11px;color:var(--sub);margin-top:6px"></div>
@@ -200,7 +209,7 @@
     <div class="ctypes" id="ctypes"></div>
     <input id="rankSearch" type="text" placeholder="🔍 랭킹 검색 (피자·물총·이케아…)"
            oninput="setSearch(this.value)"
-           style="width:100%;max-width:360px;margin:8px 0;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:#0d131c;color:var(--txt)">
+           style="width:100%;max-width:360px;margin:8px 0;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
     <div class="cats" id="cats"></div>
     <div class="cards" id="cards">
       <div class="empty">「지금 수집」을 눌러 시작하세요.</div>
@@ -229,7 +238,7 @@
           <div id="splitList"></div>
           <div style="display:flex;gap:8px">
             <button id="btnMergePick" style="display:none" onclick="mergePicked()">↔ 이어서 하나로 담기</button>
-            <button id="btnTagPicked" style="display:none;background:#2f81f7;border:none;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="tagPicked()">자르고 AI 태그 뽑기</button>
+            <button id="btnTagPicked" style="display:none;background:var(--accent);border:none;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="tagPicked()">자르고 AI 태그 뽑기</button>
           </div>
         </div>
         <div id="paneManual" style="display:none">
@@ -239,7 +248,7 @@
             <button onclick="markScene('end')">⏱ 끝 찍기</button>
           </div>
           <div id="sceneStep1">
-            <button style="background:#2f81f7;border:none;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="runScenePrepare()">✂ 자르고 AI 태그 뽑기</button>
+            <button style="background:var(--accent);border:none;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="runScenePrepare()">✂ 자르고 AI 태그 뽑기</button>
             <div style="font-size:12px;color:#8b98a9;margin-top:6px">자른 뒤 태그 초안이 나옵니다. 확인·수정 후 저장하세요.</div>
           </div>
         </div>
@@ -870,7 +879,7 @@ async function lensBulkSave(shortcode){
       if(d.in) st.saved.add(it.savesc);
     }catch(e){}
   }
-  if(targets.length) showToast(`✅ ${targets.length}개 담았음 <a href="/collection" style="color:#7db4ff;margin-left:6px">모음집 보기 →</a>`);
+  if(targets.length) showToast(`✅ ${targets.length}개 담았음 <a href="/collection" style="color:var(--sel-fg);margin-left:6px">모음집 보기 →</a>`);
   renderLens(shortcode);
 }
 async function lensBulkDelete(shortcode){
@@ -1009,7 +1018,7 @@ async function toggleLensSave(shortcode, savesc, btn){
       body:JSON.stringify({shortcode:savesc, url:it.url||'', thumbnail:it.thumbnail||'', name:it.title||'', caption:it.title||'', meta:_lensMeta(it)})})).json();
     d.in?st.saved.add(savesc):st.saved.delete(savesc);
     if(btn){ btn.textContent=d.in?'🎬 담김✓':'📥 담기'; btn.classList.toggle('saved', !!d.in); }
-    if(d.in) showToast('✅ 담았음 <a href="/collection" style="color:#7db4ff;margin-left:6px">모음집 보기 →</a>');
+    if(d.in) showToast('✅ 담았음 <a href="/collection" style="color:var(--sel-fg);margin-left:6px">모음집 보기 →</a>');
   }catch(e){ /* 무시 */ }
 }
 // 샤오훙슈 글 링크는 한국(로그아웃) 방문자를 /login으로 튕긴다(저장 url은 깨끗한데 샤오훙슈 서버가
@@ -1158,7 +1167,7 @@ async function toggleMix(sc, btn){
     setMixBtn(btn, d.in);
     const st = document.getElementById("status");
     if(st) st.textContent = d.in ? `🎬 영상 믹싱에 담김 (총 ${d.count}개)` : `담기취소됨 (총 ${d.count}개)`;
-    if(d.in) showToast('✅ 담았음 <a href="/collection" style="color:#7db4ff;margin-left:6px">모음집 보기 →</a>');
+    if(d.in) showToast('✅ 담았음 <a href="/collection" style="color:var(--sel-fg);margin-left:6px">모음집 보기 →</a>');
   }catch(e){ /* 무시 */ }
 }
 function setMixBtn(btn, inBasket){
@@ -1409,8 +1418,8 @@ function handlePrepareFail(msg, queueInfo){
     box.innerHTML = `
       <div style="font-size:12px;color:#ff9b9b">⚠️ ${queueInfo.pos}/${queueInfo.total}번째 컷(${queueInfo.cutNo}번) 준비 실패 — 지금까지 담음 ${SCENE_QUEUE.saved}개</div>
       <div style="display:flex;gap:8px;margin-top:8px">
-        <button style="background:#0d131c;border:1px solid #1e2735;color:#8b98a9;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="retryQueueItem()">🔁 다시 시도</button>
-        <button style="background:#0d131c;border:1px solid #1e2735;color:#8b98a9;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="skipQueueItem()">⏭ 이 컷 건너뛰고 다음으로</button>
+        <button style="background:var(--inset);border:1px solid #1e2735;color:#8b98a9;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="retryQueueItem()">🔁 다시 시도</button>
+        <button style="background:var(--inset);border:1px solid #1e2735;color:#8b98a9;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="skipQueueItem()">⏭ 이 컷 건너뛰고 다음으로</button>
       </div>`;
   } else {
     box.style.display = 'none';
@@ -1469,33 +1478,33 @@ function showSceneDraft(d, queueInfo){
   // 리뷰 I-2: 큐로 들어온 초안이면 "몇 번 컷 · 몇 개 중 몇 번째 · 지금까지 몇 개 담음"을
   // 보여준다 — 사장님이 지금 몇 번 컷의 초안을 보는지, 몇 개 중 몇 개가 담겼는지 알아야 한다.
   const queueBadge = queueInfo
-    ? `<div style="font-size:12px;color:#7db4ff">📦 ${queueInfo.cutNo}번 컷 — ${queueInfo.pos}/${queueInfo.total}개째 (담음 ${SCENE_QUEUE?SCENE_QUEUE.saved:0}개)</div>`
+    ? `<div style="font-size:12px;color:var(--sel-fg)">📦 ${queueInfo.cutNo}번 컷 — ${queueInfo.pos}/${queueInfo.total}개째 (담음 ${SCENE_QUEUE?SCENE_QUEUE.saved:0}개)</div>`
     : '';
   box.innerHTML = `
     ${queueBadge}
     <div style="font-size:12px;color:#ffd76b">✂ ${d.duration?d.duration.toFixed(1):'?'}초 잘렸습니다. AI 태그 초안을 확인·수정하세요.</div>
-    <input id="scTitle" placeholder="이름 (예: 가루 한스푼)" style="background:#0d1420;color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">
-    <textarea id="scDesc" rows="2" placeholder="화면 설명" style="background:#0d1420;color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">${(t.scene_desc||'').replace(/</g,'&lt;')}</textarea>
-    <input id="scSubject" placeholder="소재(구체적으로!)" value="${(t.subject||'').replace(/"/g,'&quot;')}" style="background:#0d1420;color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">
-    <select id="scRole" style="background:#0d1420;color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">
+    <input id="scTitle" placeholder="이름 (예: 가루 한스푼)" style="background:var(--inset);color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">
+    <textarea id="scDesc" rows="2" placeholder="화면 설명" style="background:var(--inset);color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">${(t.scene_desc||'').replace(/</g,'&lt;')}</textarea>
+    <input id="scSubject" placeholder="소재(구체적으로!)" value="${(t.subject||'').replace(/"/g,'&quot;')}" style="background:var(--inset);color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">
+    <select id="scRole" style="background:var(--inset);color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">
       <option value="">(역할 없음)</option>${opt(['훅','반전','CTA','비법공개','반응','전환','본문'], t.role)}
     </select>
-    <input id="scTone" placeholder="분위기" value="${(t.tone||'').replace(/"/g,'&quot;')}" style="background:#0d1420;color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">
-    <input id="scKw" placeholder="키워드(콤마)" value="${(t.keywords||[]).join(', ').replace(/"/g,'&quot;')}" style="background:#0d1420;color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">
-    <select id="scMode" style="background:#0d1420;color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">
+    <input id="scTone" placeholder="분위기" value="${(t.tone||'').replace(/"/g,'&quot;')}" style="background:var(--inset);color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">
+    <input id="scKw" placeholder="키워드(콤마)" value="${(t.keywords||[]).join(', ').replace(/"/g,'&quot;')}" style="background:var(--inset);color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">
+    <select id="scMode" style="background:var(--inset);color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">
       <option value="cutaway">컷어웨이(삽입)</option><option value="replace">화면교체</option>
     </select>
     <label style="font-size:12px;color:#8b98a9"><input type="checkbox" id="scAudio" checked> 원본 소리 살리기</label>
     <label style="font-size:12px;color:#ffd76b">출처(필수) — 안 고르면 저장이 막힙니다
-      <select id="fOrigin" style="display:block;margin-top:4px;background:#0d1420;color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px;width:100%">
+      <select id="fOrigin" style="display:block;margin-top:4px;background:var(--inset);color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px;width:100%">
         <option value="">— 고르세요 —</option>
         <option value="짜집기">짜집기(떠도는 조각)</option>
         <option value="촬영원본">촬영원본(그 사람이 찍은 것)</option>
       </select>
     </label>
     <div style="display:flex;gap:8px">
-      <button style="background:#2f81f7;border:none;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="commitScene()">💾 라이브러리에 저장</button>
-      ${queueInfo ? `<button style="background:#0d131c;border:1px solid #1e2735;color:#8b98a9;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="skipQueueItem()">⏭ 건너뛰기</button>` : ''}
+      <button style="background:var(--accent);border:none;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="commitScene()">💾 라이브러리에 저장</button>
+      ${queueInfo ? `<button style="background:var(--inset);border:1px solid #1e2735;color:#8b98a9;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="skipQueueItem()">⏭ 건너뛰기</button>` : ''}
     </div>`;
 }
 

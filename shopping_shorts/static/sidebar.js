@@ -32,11 +32,18 @@
     ".ss-label{font-size:11px;color:var(--sub,#8b98a9);text-transform:uppercase;margin-bottom:8px}" +
     ".ss-item{padding:8px 12px;border-radius:8px;font-size:13px;color:var(--txt,#e6edf3);cursor:pointer;margin-bottom:2px}" +
     ".ss-item.ss-disabled{cursor:default;opacity:.45}" +
-    ".ss-item.active{background:linear-gradient(90deg,#153a6b,#0d2340);color:#7db4ff}" +
+    // 선택/활성 표면 = 민트 토큰(--sel-bg/--sel-fg). 아직 토큰이 없는 페이지도 폴백으로 민트가 뜬다.
+    ".ss-item.active{background:var(--sel-bg,linear-gradient(90deg,#123a30,#0c221c));color:var(--sel-fg,#6ff0d6)}" +
+    ".ss-item:not(.active):not(.ss-disabled):hover{background:var(--hover,#131d19)}" +
     ".ss-work{padding:5px 8px 5px 30px;border-radius:6px;font-size:12px;color:var(--sub,#8b98a9);" +
       "cursor:pointer;margin-bottom:1px;display:flex;align-items:center;gap:4px}" +
     ".ss-work:hover{color:var(--txt,#e6edf3)}" +
-    ".ss-work.ss-work-current{color:#7db4ff;background:rgba(21,58,107,.35)}" +
+    ".ss-work.ss-work-current{color:var(--sel-fg,#6ff0d6);background:var(--sel-bg,linear-gradient(90deg,#123a30,#0c221c))}" +
+    ".ss-toggle{margin-top:18px;padding-top:14px;border-top:1px solid var(--line,#1e2735)}" +
+    ".ss-toggle-btn{width:100%;padding:9px 12px;border-radius:9px;border:1px solid var(--line,#1e2735);" +
+      "background:var(--inset,#0c1412);color:var(--txt,#e6edf3);font-size:13px;cursor:pointer;" +
+      "display:flex;align-items:center;justify-content:center;gap:7px;font-family:inherit}" +
+    ".ss-toggle-btn:hover{border-color:var(--accent,#37e0bd)}" +
     ".ss-work-open{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}" +
     ".ss-work-del{flex-shrink:0;cursor:pointer;color:var(--sub,#8b98a9);opacity:0;padding:0 4px;font-size:13px}" +
     ".ss-work:hover .ss-work-del{opacity:.65}" +
@@ -74,6 +81,26 @@
     });
     html += "</div>";
   });
+
+  // 테마 토글(민트-블랙 ↔ 화이트-민트). data-theme + localStorage로 전 페이지 공유.
+  // 최종 FOUC 방지는 각 페이지 <head> 인라인 스니펫이 하고(렌더 전 실행), 여기선 라벨 동기화만.
+  html += '<div class="ss-toggle"><button class="ss-toggle-btn" onclick="window.__ssToggleTheme()" aria-label="화면 테마 전환">' +
+          '<span id="ssThemeIco">🌙</span><span id="ssThemeTxt">민트·블랙</span></button></div>';
+  window.__ssToggleTheme = function () {
+    var root = document.documentElement;
+    if (!root) return;
+    var next = root.getAttribute("data-theme") === "light" ? "dark" : "light";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("ssTheme", next); } catch (e) {}
+    __ssPaintTheme();
+  };
+  function __ssPaintTheme() {
+    var root = document.documentElement;   // 하네스 mock document엔 없을 수 있다 — 가드
+    var light = !!root && root.getAttribute("data-theme") === "light";
+    var ico = document.getElementById("ssThemeIco"), txt = document.getElementById("ssThemeTxt");
+    if (ico) ico.textContent = light ? "☀️" : "🌙";
+    if (txt) txt.textContent = light ? "화이트·민트" : "민트·블랙";
+  }
 
   function mount() {
     // 페이지에 하드코딩된 옛 사이드바가 있으면 제거(중복 방지)
@@ -143,9 +170,11 @@
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", mount);
+    document.addEventListener("DOMContentLoaded", __ssPaintTheme);
     document.addEventListener("DOMContentLoaded", mountWorks);
   } else {
     mount();
+    __ssPaintTheme();
     mountWorks();
   }
 })();
