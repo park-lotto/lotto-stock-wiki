@@ -33,7 +33,12 @@ def test_inline_sources_used_without_wiki_lookup(client, monkeypatch):
     })
     assert r.status_code == 200
     assert r.json()["ok"] is True
-    assert r.json()["drafts"] == [{"text": "믹스 결과"}]
+    # 조합 초안도 이제 save_draft로 draft_id를 부여받는다(요소 업그레이드 전제, 2026-07-19).
+    # 그래서 응답 초안은 원본 필드 + draft_id — 정확일치 대신 text 유지 + draft_id 부여를 본다.
+    drafts = r.json()["drafts"]
+    assert len(drafts) == 1
+    assert drafts[0]["text"] == "믹스 결과"
+    assert drafts[0].get("draft_id")
     assert captured["sources"] == inline_sources
     assert captured["target_seconds"] == 30
     assert captured["n"] == 2
