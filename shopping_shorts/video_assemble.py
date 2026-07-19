@@ -148,6 +148,27 @@ def _run_ffmpeg(cmd, cwd=None):
 
 _MIN_CLIP = 0.8   # 초. 이보다 짧은 독립 클립은 만들지 않는다(깜빡임 방지).
 
+# 슬로우모션 상한. 소스가 나레이션보다 짧을 때 무제한으로 늘리면(옛 동작) 부자연스러운
+# 슬로우크롤이 됐다(사장님 실측, 2026-07-19). 재생은 최대 이 배율까지만 늘리고, 그 이상
+# 필요한 시간은 마지막 프레임 정지(freeze)로 떠안는다 → 요리 동작은 자연 속도, 남는 시간만 홀드.
+_MAX_SLOWMO = 1.15
+
+
+def _speed_and_freeze(src_dur, out_dur, max_slowmo=_MAX_SLOWMO):
+    """소스 구간 src_dur초를 출력 out_dur초로 채울 때, (움직이는 재생 길이, 정지프레임 길이).
+
+    - out_dur ≤ src_dur: 늘릴 필요 없음 → (out_dur, 0).
+    - 필요한 배율이 상한 이내: 그대로 완만한 슬로우 → (out_dur, 0).
+    - 상한 초과: 재생은 src_dur*max_slowmo까지만, 나머지는 freeze로 → (capped, out_dur-capped).
+
+    항상 play_out + freeze == out_dur (총 길이·오디오/자막 싱크 보존)."""
+    if src_dur <= 1e-9 or out_dur <= src_dur:
+        return (out_dur, 0.0)
+    capped = src_dur * max_slowmo
+    if out_dur <= capped + 1e-9:
+        return (out_dur, 0.0)
+    return (capped, out_dur - capped)
+
 
 def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP):
     """비트의 순서 구간 리스트 → 나레이션 길이(tts_dur)에 맞춘 클립 계획.
@@ -407,16 +428,35 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
         for j, c in enumerate(plan):
             src = source_video_paths[c["video_id"]]
             sub = work / f"beat_{idx}_{j}.mp4"
-            # setpts로 슬로모: 소스 src_dur초를 출력 out_dur초로 늘린다(1배속이면 factor=1).
-            factor = c["out_dur"] / c["src_dur"] if c["src_dur"] > 1e-6 else 1.0
+            # 슬로우 상한(1.15배)+정지프레임(2026-07-19): 무제한 슬로우크롤 제거.
+            # 재생은 최대 _MAX_SLOWMO배까지만 늘리고, 남는 시간은 마지막 프레임 정지(freeze).
+            # play_out+freeze == out_dur → 총 길이·오디오/자막 싱크 불변.
+            play_out, freeze = _speed_and_freeze(c["src_dur"], c["out_dur"])
+            factor = play_out / c["src_dur"] if c["src_dur"] > 1e-6 else 1.0
             vf_full = f"{vf},setpts={factor:.6f}*PTS" if factor > 1.0 + 1e-6 else vf
-            # -ss(입력 시크) start부터, 출력 out_dur초. 오디오 없음(비트 오디오는 아래서 합침).
+            # 1단계 — 움직임: 입력을 [start, start+src_dur]만 읽어(-ss+입력측 -t) 유출 차단.
+            #   입력 제한이 핵심 — 상한 배율이 out_dur/src_dur보다 작으면 setpts가 다음 구간까지
+            #   끌어와 유출된다(다색 소스 실측). 잘라두면 이 구간만 play_out으로 늘어난다.
+            sub = work / f"beat_{idx}_{j}.mp4"
             _run_ffmpeg([
-                "ffmpeg", "-y", "-ss", f"{c['start']:.3f}", "-i", str(src),
-                "-vf", vf_full, "-r", "30", "-an", "-t", f"{c['out_dur']:.3f}",
+                "ffmpeg", "-y", "-ss", f"{c['start']:.3f}", "-t", f"{c['src_dur']:.3f}",
+                "-i", str(src),
+                "-vf", vf_full, "-r", "30", "-an", "-t", f"{play_out:.3f}",
                 "-c:v", "libx264", "-pix_fmt", "yuv420p", str(sub),
             ])
-            sub_paths.append(sub)
+            # 2단계 — 정지프레임: zoompan(켄번즈)은 tpad와 한 체인에서 안 된다(출력이 잘림, 실측
+            #   2026-07-19). 완성된 클립에 별도 패스로 tpad를 얹어 마지막 프레임을 freeze초 홀드.
+            if freeze > 1e-3:
+                frozen = work / f"beat_{idx}_{j}f.mp4"
+                _run_ffmpeg([
+                    "ffmpeg", "-y", "-i", str(sub),
+                    "-vf", f"tpad=stop_mode=clone:stop_duration={freeze:.3f}",
+                    "-r", "30", "-an", "-t", f"{play_out + freeze:.3f}",
+                    "-c:v", "libx264", "-pix_fmt", "yuv420p", str(frozen),
+                ])
+                sub_paths.append(frozen)
+            else:
+                sub_paths.append(sub)
         # 비트의 클립들(동일 규격)을 concat → 비트 무음 영상(길이 ≈ tts_dur)
         beat_video = work / f"beat_{idx}_v.mp4"
         cat = work / f"beat_{idx}_list.txt"
