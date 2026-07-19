@@ -2455,6 +2455,25 @@ _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico",
                "/grab", "/api/grab", "/grab.user.js", "/grab_logic.js")
 _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 
+# ── 유료게이트 deny-by-default (2026-07-19) ──
+# ranking_only(무료/체험만료) 등급도 접근 가능한 경로 = 레퍼런스 랭킹 '조회' + 계정/정적.
+# 나머지는 전부 402. 새 유료 엔드포인트를 추가해도 자동 차단(allowlist 방식이라 깜빡해도 안전).
+# ⚠️ /api/reference는 '조회(GET)'만 무료 — /api/reference/register(등록·데이터변경)는 exact 매칭이라 제외.
+#    /api/collect(수집=크롤 비용)도 제외 → 무료 등급은 마지막 수집 랭킹만 본다.
+_FREE_EXACT = {"/", "/api/me", "/api/reference", "/api/thumb", "/api/video", "/logout"}
+_FREE_PREFIX = ("/static", "/auth/google", "/login", "/signup", "/api/login", "/api/signup")
+
+
+def _ranking_only_blocked(path: str) -> bool:
+    """ranking_only 등급에게 이 경로를 막아야 하나. FREE 목록 외 전부 True(차단)."""
+    if path in _FREE_EXACT:
+        return False
+    if any(path.startswith(p) for p in _FREE_PREFIX):
+        return False
+    if path in _AUTH_ALLOW or path.startswith("/api/find/frame/"):
+        return False   # 유저스크립트 담기·favicon 등 기존 공개 경로
+    return True
+
 
 def _sign_session(customer_id: int, expiry: int) -> str:
     payload = f"{customer_id}:{expiry}"
@@ -2602,6 +2621,12 @@ async def _auth_guard(request: Request, call_next):
     customer_id = _verify_session(request.cookies.get("dash_auth"))
     if customer_id is not None:
         request.state.customer_id = customer_id
+        # 유료게이트: 로그인은 됐으나 등급이 ranking_only(무료/체험만료)면 유료 경로 차단.
+        # 사장님(0)·pro·체험중은 access_level=full이라 안 걸린다. deny-by-default.
+        if access_level(customer_id) == "ranking_only" and _ranking_only_blocked(path):
+            return JSONResponse(
+                {"error": "유료 기능이에요. 결제하면 열려요.", "level": "ranking_only"},
+                status_code=402)
         return await call_next(request)
     if path.startswith("/api/"):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
