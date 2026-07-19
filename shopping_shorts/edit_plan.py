@@ -82,9 +82,40 @@ def _ground_ref(ref, seg_map):
     return {"video_id": seg["video_id"], "seg_id": sid, "start": seg["start"], "end": seg["end"]}
 
 
-def _validate_and_ground(raw_plan, seg_map, n_alternates):
+def _chronological_respine(beats):
+    """비트의 시각 세그먼트([primary]+alternates)를 소스 시간순으로 재배치한다(2트랙 모델,
+    2026-07-19). 나레이션·비트 순서는 그대로 — 화면만 요리 시간순(재료→조리→완성→시식)으로
+    흐르게 해 완성↔붓기 핑퐁을 없앤다. 비트당 세그먼트 개수는 보존(길이 커버리지 유지).
+
+    의미 매칭(문장↔화면)을 일부러 포기한 배치이므로, 오탐 빨간불을 막기 위해 fit=4(정상)로
+    표시한다 — 이 값은 '시간순 스파인 배치'라는 뜻이지 '문장과 화면이 맞다'는 뜻이 아니다.
+    정렬 키는 (video_id, start): 한 소스는 시간순으로 이어 쓰고, 소스끼리는 묶어서 쓴다."""
+    if not beats:
+        return beats
+    flat, counts = [], []
+    for b in beats:
+        segs = [b["primary"]] + list(b.get("alternates") or [])
+        counts.append(len(segs))
+        flat.extend(segs)
+    ordered = sorted(flat, key=lambda s: (s.get("video_id", ""), s.get("start", 0.0)))
+    out, i = [], 0
+    for b, n in zip(beats, counts):
+        chunk = ordered[i:i + n]
+        i += n
+        nb = dict(b)
+        nb["primary"] = chunk[0]
+        nb["alternates"] = chunk[1:]
+        nb["fit"] = 4
+        out.append(nb)
+    return out
+
+
+def _validate_and_ground(raw_plan, seg_map, n_alternates, respine=True):
     """모델 EDL의 primary/alternates를 grounding. primary 무효 beat는 드롭,
-    alternates 무효 항목은 제거하고 n_alternates개까지만."""
+    alternates 무효 항목은 제거하고 n_alternates개까지만.
+
+    respine=True(기본): grounding 후 시각 세그먼트를 소스 시간순으로 재배치(2트랙 모델).
+    화면이 요리 순서대로 흐르게 해 완성↔붓기 핑퐁을 없앤다. 나레이션 순서는 불변."""
     beats_out = []
     for beat in raw_plan.get("beats", []):
         primary = _ground_ref(beat.get("primary"), seg_map)
@@ -107,6 +138,8 @@ def _validate_and_ground(raw_plan, seg_map, n_alternates):
             "effect": beat.get("effect", "cut"),
             "fit": int(beat.get("fit") or 0),
         })
+    if respine:
+        beats_out = _chronological_respine(beats_out)
     return {"structure": raw_plan.get("structure", ""), "beats": beats_out}
 
 
