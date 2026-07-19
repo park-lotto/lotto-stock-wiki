@@ -2543,7 +2543,7 @@ _GRAB_DOMAINS = [
     ("youtube", ("youtube.com", "youtu.be")),
     ("tiktok", ("tiktok.com",)),
     ("instagram", ("instagram.com",)),
-    ("xiaohongshu", ("xiaohongshu.com", "xhslink.com")),
+    ("xiaohongshu", ("xiaohongshu.com", "xhslink.com", "rednote.com")),
     ("douyin", ("douyin.com", "iesdouyin.com")),
 ]
 
