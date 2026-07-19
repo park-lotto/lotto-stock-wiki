@@ -23,28 +23,31 @@ _MODEL = comment_gen._MODEL
 _GEN_GROUP = "general"
 
 
-def _generate_drafts(prompt):
-    """key_vault 캐스케이드 키풀로 대본 초안 리스트 생성. 소진키는 마킹하고 다음 키로.
-    무키·전부실패면 []."""
+def _call_json(prompt, schema):
+    """key_vault 캐스케이드 키풀로 JSON 1콜. 소진키는 마킹하고 다음 키로.
+    무키·전부실패면 {} (호출부는 반드시 빈 dict 허용 — fail-open)."""
     keys = key_vault.get_live_keys_cascade(_GEN_GROUP)
-    if not keys:
-        return []
     for key in keys:
         try:
             resp = key_vault.get_client_for_key(key).models.generate_content(
                 model=_MODEL, contents=prompt,
                 config=types.GenerateContentConfig(
-                    response_mime_type="application/json", response_schema=_SCHEMA),
+                    response_mime_type="application/json", response_schema=schema),
             )
-            return json.loads(resp.text).get("drafts", [])
+            return json.loads(resp.text)
         except Exception as e:  # noqa: BLE001 — 생성 실패는 치명적 아님
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
                 key_vault.mark_exhausted(key_vault._owner_group(key) or _GEN_GROUP, key)
                 continue
             if key_vault.is_quota_error(e):
                 continue  # 순간 rate limit — 다음 키로
-            return []
-    return []
+            return {}
+    return {}
+
+
+def _generate_drafts(prompt):
+    """key_vault 캐스케이드 키풀로 대본 초안 리스트 생성. 무키·전부실패면 []."""
+    return _call_json(prompt, _SCHEMA).get("drafts", [])
 
 # 유지/변형 토글 대상 요소(키 → 표시 라벨). 프론트·엔드포인트가 공유.
 ELEM_LABELS = {
