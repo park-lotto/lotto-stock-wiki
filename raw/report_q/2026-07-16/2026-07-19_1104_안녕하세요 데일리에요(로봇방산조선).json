@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "date": "2026-07-16",
+    "broker": "eugenefn",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-19_1104_안녕하세요 데일리에요(로봇방산조선).md"
+  },
+  "questionnaire": {
+    "broker": "eugenefn",
+    "analyst": "양승윤",
+    "report_date": "07/15",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "2027년 최저임금 시간당 1만700원"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "로봇",
+        "stance": null,
+        "reason": "내년도 최저임금 3.7% 인상으로 인한 인건비 부담과 자영업·중소기업의 비용 부담 증가"
+      },
+      {
+        "sector": "방산",
+        "stance": null,
+        "reason": "스페인 K-9 사업의 SAPA 변속기 탑재 요구로 인한 비용·일정·성능검증 부담 확대 가능성"
+      },
+      {
+        "sector": "조선",
+        "stance": null,
+        "reason": "미 해군력 증강 필요성에 따른 한국 조선사와의 협력 가능성 및 미국 외 지역 선박 구매 가능성 언급"
+      }
+    ],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": null,
+    "risk": "인건비 상승, 부품 변경에 따른 재설계 부담, 지정학적 산업 정책 변화",
+    "quote": "2027년 최저임금은 시간당 1만700원으로 결정. 2026년 1만320원 대비 380원, 3.7% 인상된 수준. 인상률이 3%대 중반으로 결정되며 급격한 인건비 충격은 제한적이나, 자영업·중소기업·노동집약 업종에는 비용 부담이 이어질 수 있음."
+  }
+}

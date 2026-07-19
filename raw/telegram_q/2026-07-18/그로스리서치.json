@@ -1,26 +1,26 @@
 {
   "reports": [
     {
-      "broker": "그로쓰리서치",
+      "broker": "그로스리서치",
       "stock": "Marvell",
       "rating": null,
       "tp": null,
       "ts": "20:46",
-      "quote": "FY27(E) 115.3억달러 → FY28(E) 167.2억달러 → FY29(E) 232.6억달러로, LTM(87.2억달러) 대비 3년 내 약 2.7배 성장 전망.",
+      "quote": "향후 3년간 매출이 거의 3배 성장할 것으로 전망됨.",
       "sector": "반도체"
     },
     {
-      "broker": "그로쓰리서치",
+      "broker": "그로스리서치",
       "stock": "CXMT",
       "rating": null,
       "tp": null,
       "ts": "20:46",
-      "quote": "시장점유율은 2025년 약 11%에서 2028년 15%까지 확대 전망(SemiAnalysis 집계).",
+      "quote": "중국 창신메모리(CXMT)에 PC 브랜드들의 주문이 몰리며 출하 예약이 2027년 말까지 꽉 찬 것으로 전해짐.",
       "sector": "반도체"
     },
     {
-      "broker": "그로쓰리서치",
-      "stock": null,
+      "broker": "그로스리서치",
+      "stock": "null",
       "rating": null,
       "tp": null,
       "ts": "22:10",
@@ -28,8 +28,8 @@
       "sector": "중국"
     },
     {
-      "broker": "그로쓰리서치",
-      "stock": null,
+      "broker": "그로스리서치",
+      "stock": "null",
       "rating": null,
       "tp": null,
       "ts": "22:58",
@@ -38,48 +38,48 @@
     },
     {
       "broker": "모건스탠리",
-      "stock": "Lumentum",
+      "stock": "Lumentum, Coherent, Corning, Broadcom, Marvell, Astera Labs, Keysight",
       "rating": null,
       "tp": null,
       "ts": "12:32",
-      "quote": "AI·데이터센터 매출 비중을 감안한 수혜 순위는 Lumentum 1위, Coherent·Corning 2위권",
+      "quote": "CPO 채택률은 2028년 한 자릿수에 그친 뒤 2029년 본격 확대 예상",
       "sector": "통신"
     },
     {
-      "broker": "그로쓰리서치",
+      "broker": "그로스리서치",
       "stock": "GSK",
       "rating": null,
       "tp": null,
       "ts": "13:25",
-      "quote": "GSK는 최대 매출 25억파운드 이상을 전망했던 자산 / 시장에서는 2026년 핵심 주가 촉매로 평가 / 실패로 2031년 매출 400억파운드 목표 부담 확대",
+      "quote": "GSK는 임상 3상 부진으로 만성기침 개발을 전면 중단",
       "sector": "바이오"
     },
     {
-      "broker": "그로쓰리서치",
-      "stock": "와이엠티",
+      "broker": "그로스리서치",
+      "stock": "코오롱티슈진, 지투지바이오, 에스티팜, 온코닉테라퓨틱스, 알테오젠",
+      "rating": null,
+      "tp": null,
+      "ts": "14:31",
+      "quote": "이번 주 포커스: ‘병원에서 집으로’…IV→SC 전환 경쟁과 알테오젠의 확장성",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로스리서치",
+      "stock": "와이엠티, 와이씨켐, 씨앤지하이테크",
       "rating": null,
       "tp": null,
       "ts": "16:41",
-      "quote": "자회사 와이피티와 2024년부터 유리기판 연구. / 플라스틱 기판 도금 역량을 유리기판으로 이식 중. / 현재 샘플 납품 단계, 올해 하반기~내년 성장 가시화 기대.",
+      "quote": "2028~2040년 유리기판 시장 연평균 성장률은 67.2%로 제시됨.",
       "sector": "반도체"
     },
     {
-      "broker": "그로쓰리서치",
-      "stock": "와이씨켐",
+      "broker": "그로스리서치",
+      "stock": "null",
       "rating": null,
       "tp": null,
-      "ts": "16:41",
-      "quote": "유리기판 제조용 감광액·박리액·현상액 3종 이미 고객사 납품. / '유리·구리 접착력 개선 코팅제' 자체 개발, 현재 시제품 고객사 평가 진행 중.",
-      "sector": "반도체"
-    },
-    {
-      "broker": "그로쓰리서치",
-      "stock": "씨앤지하이테크",
-      "rating": null,
-      "tp": null,
-      "ts": "16:41",
-      "quote": "플라즈마 이온빔으로 유리 표면 특성을 바꿔 유리·구리 접착력 향상. / 시제품 고객사 평가 중, 늦어도 2028년 상용화 목표.",
-      "sector": "반도체"
+      "ts": "23:20",
+      "quote": "호르무즈 해협 봉쇄에 이어 홍해까지 차질이 발생하면 공급 충격이 확대될 가능성",
+      "sector": "기타"
     }
   ]
 }
