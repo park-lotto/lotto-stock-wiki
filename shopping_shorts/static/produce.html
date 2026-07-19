@@ -977,7 +977,11 @@ function updateCaption(){
   const cs={ font:g('capFont').value||'NanumGothic-Bold.ttf', color:g('capColor').value, size:+g('capSize').value,
     y_pct:+g('capY').value, outline:g('capOutline').checked, outline_color:g('capOutColor').value, outline_w:+g('capOutW').value,
     box:g('capBox').checked, box_color:g('capBoxColor').value, box_pad:+g('capBoxPad').value, box_opacity:+g('capBoxOpacity').value,
-    bar:!g('capBox').checked, effect:CAP_EFFECT, shadow:CAP_SHADOW, shadow_color:'#000000', shadow_d:3 };
+    // bar는 항상 false — 예전엔 !box로 자동 ON이라 박스 안 쓰면 최종렌더에만 300px
+    // 검정바(black@0.82)가 깔렸다(2026-07-19 실사고: job 66d120a5897e caption_style.bar=true).
+    // 백엔드 기본값을 OFF로 고쳐도 여기서 명시적 true를 보내니 무력했다. 바가 정말
+    // 필요한 경우(자막제거 없이 원본 소각자막 덮기)는 별도 UI가 생길 때 다시 노출한다.
+    bar:false, effect:CAP_EFFECT, shadow:CAP_SHADOW, shadow_color:'#000000', shadow_d:3 };
   STATE.captionStyle=cs;
   g('capSizeV').textContent=cs.size; g('capYV').textContent=cs.y_pct;
   const el=g('capPreviewText'); if(!el) return;
