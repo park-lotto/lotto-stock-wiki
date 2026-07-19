@@ -2243,7 +2243,17 @@ def _lens_image_for_url(url, work_dir):
     유튜브=썸네일 직행(봇차단 회피). 비유튜브=download_any 중간 프레임, 실패 시 oEmbed 썸네일 폴백."""
     m = _YT_ID_RE.search(url)
     if m:
-        return f"https://i.ytimg.com/vi/{m.group(1)}/hqdefault.jpg", ""
+        vid = m.group(1)
+        # maxres(풀 9:16 프레임)가 있으면 그걸 쓴다 — hqdefault는 480x360에 검은 레터박스가
+        # 껴서 구글렌즈 매칭이 자주 0건이다(2026-07-19 실측). maxres 없으면 hqdefault 폴백.
+        for q in ("maxresdefault", "hqdefault"):
+            u = f"https://i.ytimg.com/vi/{vid}/{q}.jpg"
+            try:
+                if requests.head(u, timeout=6).status_code == 200:
+                    return u, ""
+            except Exception:  # noqa: BLE001
+                pass
+        return f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg", ""
     try:
         video_path, caption = download_any(url, str(work_dir))
         dur = frame_extract._probe_duration(video_path) or 2.0
