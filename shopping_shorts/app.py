@@ -148,12 +148,53 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
         store = Store(DB_PATH)
         store.save_last_run(items, collected_at)
         background_tasks.add_task(generate_missing_drafts, next_draft_targets(items, store))
+        background_tasks.add_task(_tag_new_items, items)   # 신규 썸네일 비전 태깅(백그라운드)
+        _attach_vision_tags(items, store)                  # 이미 태깅된 것(재수집)은 즉시 실어 보냄
         return {"ok": True, "count": len(items), "items": items,
                 "collected_at": collected_at}
     except Exception as e:
         import re
         msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
         return JSONResponse(status_code=500, content={"ok": False, "error": msg})
+
+
+_VISION_TAG_CAP = 60  # 1회 수집당 새 태깅 상한(비용 가드). 초과분은 다음 수집 때.
+
+
+def _tag_new_items(items):
+    """신규(태그 없는) 아이템 썸네일을 Gemini 비전 태깅해 vision_tags에 저장.
+    shortcode로 캐시하므로 재수집 땐 재호출 안 함. 상한 초과분은 다음 수집으로 미룬다.
+    실패(키 없음·썸네일 다운로드 실패)는 그냥 건너뜀 — 그 아이템은 캡션 백업으로 검색된다."""
+    try:
+        from shopping_shorts import video_analysis
+    except Exception:
+        return
+    store = Store(DB_PATH)
+    have = store.vision_tags_map([it.get("shortcode") for it in items])
+    todo = [it for it in items if it.get("shortcode") and it.get("shortcode") not in have
+            and it.get("thumbnail")]
+    capped = todo[:_VISION_TAG_CAP]
+    for it in capped:
+        img = video_analysis.fetch_thumb_bytes(it.get("thumbnail"))
+        if not img:
+            continue
+        tags = video_analysis.subject_tags_vision(img, it.get("caption", ""))
+        if tags and (tags.get("subject") or tags.get("keywords")):
+            store.save_vision_tags(it["shortcode"], tags.get("subject", ""), tags.get("keywords", []))
+    if len(todo) > len(capped):
+        print(f"[vision_tags] {len(todo) - len(capped)}건 다음 수집으로 미룸(상한 {_VISION_TAG_CAP})")
+
+
+def _attach_vision_tags(items, store=None):
+    """아이템에 저장된 vision_subject·vision_keywords를 실어 반환(있는 것만). 검색이 이걸 우선 매칭."""
+    store = store or Store(DB_PATH)
+    tmap = store.vision_tags_map([it.get("shortcode") for it in items])
+    for it in items:
+        t = tmap.get(it.get("shortcode"))
+        if t:
+            it["vision_subject"] = t.get("subject", "")
+            it["vision_keywords"] = t.get("keywords", [])
+    return items
 
 
 @app.get("/api/tiktok/settings")
@@ -204,10 +245,12 @@ def api_generate_drafts(background_tasks: BackgroundTasks):
 @app.get("/api/reference")
 def api_reference(platform: str = "instagram"):
     """마지막 수집 결과 반환 (프론트 초기 로드용). platform=플랫폼(기본 인스타)."""
+    store = Store(DB_PATH)
     if platform == "instagram":
-        items, collected_at = Store(DB_PATH).load_last_run()
+        items, collected_at = store.load_last_run()
     else:
-        items, collected_at = Store(DB_PATH).load_last_run_platform(platform)
+        items, collected_at = store.load_last_run_platform(platform)
+    _attach_vision_tags(items, store)   # 백그라운드로 채워진 주제태그를 실어 보냄(검색 정확도 승격)
     return {"ok": True, "items": items, "collected_at": collected_at}
 
 

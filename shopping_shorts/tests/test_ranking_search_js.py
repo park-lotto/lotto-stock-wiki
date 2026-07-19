@@ -52,6 +52,11 @@ _DRIVER = r"""
     expandFruit: matchesSearch({caption:'제철 딸기 고르는 법'}, '과일'),
     childStaysNarrow: matchesSearch({caption:'거실 소파 배치'}, '베이글'),
     expandNoParentWord: matchesSearch({caption:'식빵 3종 리뷰'}, '빵'),
+    // 비전 태그 위주 + 캡션 보조(2026-07-19)
+    tagWins: matchesSearch({caption:'빵빵한 사운드 스피커', vision_subject:'블루투스 스피커', vision_keywords:['스피커','조명']}, '빵'),
+    tagFinds: matchesSearch({caption:'여름 다이어트 반찬', vision_subject:'오이무침', vision_keywords:['오이','다이어트반찬']}, '오이'),
+    noTagFallback: matchesSearch({caption:'초간단 오이무침', vision_keywords:[]}, '오이'),
+    tagTaxonomy: matchesSearch({caption:'', vision_subject:'베이글', vision_keywords:['베이글','브런치']}, '빵'),
   }));
 })();
 """
@@ -109,3 +114,13 @@ def test_taxonomy_expansion(tmp_path):
     assert got["expandFruit"] is True        # 과일 → 딸기 캡션 잡힘
     assert got["childStaysNarrow"] is False  # 베이글 검색은 소파 캡션에 안 걸림(확장X)
     assert got["expandNoParentWord"] is True # 빵 → 식빵도 잡힘
+
+
+@pytest.mark.skipif(not NODE, reason="node 없음")
+def test_vision_tags_primary(tmp_path):
+    """태그 있으면 태그로 매칭(캡션 무시), 없으면 캡션 백업(2026-07-19)."""
+    got = _run(tmp_path)
+    assert got["tagWins"] is False       # 캡션 '빵빵'이어도 주제=스피커라 '빵' 안 걸림
+    assert got["tagFinds"] is True       # 캡션에 '오이' 없어도 태그로 잡힘
+    assert got["noTagFallback"] is True  # 태그 없으면 캡션 백업으로 오이무침 잡힘
+    assert got["tagTaxonomy"] is True    # 빵→베이글 taxonomy가 태그에도 적용

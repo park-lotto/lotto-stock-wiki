@@ -288,6 +288,82 @@ _CN_VISION_PROMPT = """이 이미지는 한국어 쇼츠 영상의 한 장면(�
 캡션: {caption}"""
 
 
+_SUBJECT_TAGS_PROMPT = """이 이미지는 한국어 쇼츠 영상의 썸네일이다. 화면에 박힌 글자(제목·주제어)\
+와 물건의 생김새를, 아래 캡션과 종합해 이 영상이 다루는 '주제'를 특정하라. 랭킹 검색에서
+"오이"·"빵" 같은 검색어로 이 영상이 잡히게 만드는 게 목적이다.
+- 화면 글자에 주제어가 있으면 그것을 최우선 반영(캡션엔 없고 자막에만 있는 경우가 많다).
+- subject: 이 영상의 주제 명사 1개(짧게. 예: 오이무침, 블루투스 스피커, 베이글, 소파).
+- keywords: 검색에 쓸 3~6개(주제 명사·핵심 재료·용도·상위 분류. 예: ["오이","다이어트반찬","여름반찬"]).
+  ⚠️ 캡션에 우연히 들어간 말이 아니라 '영상이 실제로 다루는 것'만.
+- JSON만: {{"subject": "...", "keywords": ["...", ...]}}
+캡션: {caption}"""
+
+_SUBJECT_TAGS_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "subject": {"type": "string"},
+        "keywords": {"type": "array", "items": {"type": "string"}, "minItems": 1, "maxItems": 8},
+    },
+    "required": ["subject", "keywords"],
+}
+
+
+def subject_tags_vision(image_bytes, caption, max_retries=3, quota_sleep=8):
+    """썸네일 이미지(+캡션) → {"subject": str, "keywords": [str]}. 랭킹 검색용 주제태그.
+    화면 자막·물건 생김새를 읽어 캡션에 없는 주제어도 뽑는다. 키 없음/실패 시 {} (→ 캡션 백업 검색)."""
+    if not image_bytes or not SHORTS_GEMINI_KEYS:
+        return {}
+    prompt = _SUBJECT_TAGS_PROMPT.format(caption=(caption or "(캡션 없음)")[:400])
+    for attempt in range(max_retries):
+        key, idx = comment_gen._current_key_and_idx()
+        if key is None:
+            return {}
+        try:
+            client = _client_for_key(key)
+            resp = client.models.generate_content(
+                model=_TRANSLATE_MODEL,  # flash-lite — 썸네일 1장이라 가벼운 모델로 충분
+                contents=[prompt, types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")],
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=_SUBJECT_TAGS_SCHEMA,
+                ),
+            )
+            data = json.loads(resp.text)
+            subject = (data.get("subject") or "").strip()
+            keywords = [k.strip() for k in (data.get("keywords") or []) if k and k.strip()]
+            if not subject and not keywords:
+                return {}
+            return {"subject": subject, "keywords": keywords}
+        except Exception as e:
+            if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
+                comment_gen._mark_key_exhausted(idx)
+                continue
+            if key_vault.is_quota_error(e):
+                time.sleep(quota_sleep)
+                continue
+            if attempt < max_retries - 1 and any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded")):
+                time.sleep((attempt + 1) * 5)
+                continue
+            return {}
+    return {}
+
+
+def fetch_thumb_bytes(url, timeout=15):
+    """썸네일 URL → 이미지 bytes. 인스타 CDN 핫링크 차단 우회 헤더 포함. 실패 시 None."""
+    if not url:
+        return None
+    try:
+        import requests
+        r = requests.get(url, timeout=timeout, headers={
+            "User-Agent": "Mozilla/5.0",
+            "Referer": "https://www.instagram.com/",
+        })
+        r.raise_for_status()
+        return r.content
+    except Exception:
+        return None
+
+
 def cn_search_keyword_vision(image_bytes, caption, max_retries=3, quota_sleep=8):
     """프레임 이미지(+캡션) → {"product","zh"}. 화면 글자·제품 생김새까지 반영. 실패 시 {}."""
     if not image_bytes or not SHORTS_GEMINI_KEYS:
