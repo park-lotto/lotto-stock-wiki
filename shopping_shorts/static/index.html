@@ -833,6 +833,7 @@ async function fetchLensCnKeywords(shortcode, caption, blob){
 // 후보 검색어 하나로 샤오홍슈+도우인 검색 → CN 결과만 교체(유튜브 등은 유지).
 async function doLensCnSearch(shortcode, zh){
   const st=LENS_STATE[shortcode]; if(!st) return;
+  if(st.cnLoading) return;              // 진행 중이면 무시(중복검색 방지)
   if(_lensCnCapReached(st)){ showToast('이번 검색은 여기까지예요 🙏'); return; }
   st.cnActive=zh; st.cnClicks=(st.cnClicks||0)+1; st.cnLoading=true; renderLens(shortcode);
   try{
@@ -948,7 +949,8 @@ function renderLens(shortcode){
         ${st.cnCands.map(c=>{
           const on=st.cnActive===c.zh;
           const busy=on && st.cnLoading;
-          return `<button onclick="doLensCnSearch('${shortcode}', ${JSON.stringify(c.zh)})"
+          const zhArg=JSON.stringify(c.zh).replace(/"/g, '&quot;');
+          return `<button onclick="doLensCnSearch('${shortcode}', ${zhArg})"
             style="cursor:pointer;padding:8px 14px;border-radius:12px;border:2px solid ${on?'var(--accent)':'var(--line)'};
             background:${on?'#1f6feb22':'transparent'};color:var(--fg,inherit);text-align:center;line-height:1.25">
             <div style="font-size:14px;font-weight:600">${c.ko||c.zh}${busy?' …':''}</div>
