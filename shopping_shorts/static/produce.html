@@ -2468,7 +2468,12 @@ async function pollPreview(gen, job){
     if(d.preview_status === 'ready'){
       clearInterval(PREVIEW_POLL); PREVIEW_POLL = null; PREVIEW_STATUS='ready';
       // ?t= 캐시버스터 필수: 대본을 고쳐 재매칭하면 같은 URL에 다른 영상이 온다.
-      box.innerHTML = '<video controls muted playsinline autoplay style="width:100%;max-width:320px;border-radius:12px;background:#000;box-shadow:0 8px 30px rgba(0,0,0,.4)"'
+      // display:block 필수 — <video>는 기본 inline이라 텍스트 baseline 위에 앉아 아래에
+      // descender 여백(수 px)이 생기고, background:#000 + 어두운 좌측 프리뷰 패널이 그
+      // 여백으로 비쳐 "하단 검정라인"으로 보인다(파일엔 없다: preview.mp4 하단행 luma가
+      // 위 행과 동일 실측). 최종렌더 <video>는 어두운 배경이 없어 이 여백이 안 보였다.
+      // fx 프리뷰(위)도 같은 이유로 display:block을 쓴다.
+      box.innerHTML = '<video controls muted playsinline autoplay style="display:block;width:100%;max-width:320px;border-radius:12px;background:#000;box-shadow:0 8px 30px rgba(0,0,0,.4)"'
         + ' src="/api/produce/mix/preview/'+encodeURIComponent(job)+'?t='+Date.now()+'"></video>'
         + '<div class="hint" style="margin-top:6px">원본 자막이 남아 있는 건 정상입니다 — 다음 단계에서 지웁니다.</div>';
       const btn = document.getElementById('btnPreview'); if(btn) btn.disabled = false;
