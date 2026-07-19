@@ -2746,7 +2746,9 @@ def _api_me(request: Request):
     return {"customer_id": cid, "level": access_level(cid, now), "plan": plan,
             "days_left": days_left,
             "limits": {"lens": _lim("limit_lens", 5), "render": _lim("limit_render", 2),
-                       "script": _lim("limit_script", 10)}}
+                       "script": _lim("limit_script", 10)},
+            "contact": {"kakao": st.get_setting("contact_kakao", ""),
+                        "phone": st.get_setting("contact_phone", "")}}
 
 
 # ── 유료게이트 관리자(사장님 cid0 전용) — 결제 승격·설정 조정 ──
