@@ -334,6 +334,7 @@ def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=
         seg_parts = _segmented_drawtext(
             seg, style, work, f"cap_{idx}_{i}", 50, ypct,
             highlight_rules=style.get("highlight_rules"), default_color="0xFFFFFF",
+            single_line=True,   # 자막은 무조건 한 줄(폭 넘으면 폰트 자동축소)
         )
         enable_clause = f"enable='between(t,{start:.2f},{end:.2f})'"
         for sp in seg_parts:
@@ -601,11 +602,13 @@ def _wrap_to_width(line, font, max_w):
 
 
 def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
-                          highlight_rules=None, default_color="0xFFFFFF"):
+                          highlight_rules=None, default_color="0xFFFFFF", single_line=False):
     """헤드카피/자막 한 블록을 줄 단위로 나누고, highlight_rules에 매칭되는 단어만
     별도 색·배지로 세그먼트를 쪼개 나란히 이어붙인 drawtext 필터 리스트를 반환한다.
     규칙이 없거나 매칭 0건이면 줄마다 세그먼트 1개 = 기존 _fixed_drawtext/_caption_drawtexts와
-    동일한 산출물(하위호환). 폭 측정은 Pillow로 실제 폰트파일 기준 수행."""
+    동일한 산출물(하위호환). 폭 측정은 Pillow로 실제 폰트파일 기준 수행.
+    single_line=True(자막): 절대 줄바꿈하지 않고 **한 줄**로 두되, 폭을 넘으면 폰트를
+    자동 축소해 한 줄에 맞춘다(사장님: 자막은 무조건 한 줄). 미리보기도 동일 비율로 축소."""
     base_style = base_style or {}
     lines = (text or "").split("\n")
     if not any(l.strip() for l in lines):
@@ -616,8 +619,21 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
         pil_font = ImageFont.truetype(font_disk_path, size)
     except OSError:
         pil_font = ImageFont.load_default()
-    # 폭 초과 줄 자동 줄바꿈 — 미리보기(pre-wrap)와 맞춰 최종 영상도 화면 밖으로 안 넘게.
-    lines = [seg for ln in lines for seg in _wrap_to_width(ln, pil_font, 0.92 * _OUT_W)]
+    max_w = 0.92 * _OUT_W
+    if single_line:
+        # 자막: 개행·연속공백을 한 칸으로 접어 한 줄로. 폭 초과 시 폰트 축소(줄바꿈 금지).
+        one = " ".join(" ".join(lines).split())
+        w = pil_font.getlength(one) if one else 0
+        if w > max_w:
+            size = max(8, int(size * max_w / w))
+            try:
+                pil_font = ImageFont.truetype(font_disk_path, size)
+            except OSError:
+                pass
+        lines = [one]
+    else:
+        # 폭 초과 줄 자동 줄바꿈 — 미리보기(pre-wrap)와 맞춰 최종 영상도 화면 밖으로 안 넘게.
+        lines = [seg for ln in lines for seg in _wrap_to_width(ln, pil_font, max_w)]
     base_color_raw = base_style.get("color")  # 원시 #hex(또는 None) — _hex_to_ff는 drawtext 빌드에서 1회만 적용(이중변환 방지)
     x_center = x_pct / 100.0 * _OUT_W
     y_top = y_pct / 100.0 * _OUT_H
