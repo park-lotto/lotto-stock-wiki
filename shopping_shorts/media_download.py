@@ -87,15 +87,34 @@ def _download_ytdlp(url, dest_dir):
     return str(files[0]), ""
 
 
+def _is_direct_video(u):
+    """페이지가 아니라 **직접 재생 mp4/CDN 영상 파일** URL인지. 쿼리스트링은 떼고 판단.
+    샤오홍슈 검색이 주는 url_720p(직접 mp4, xhscdn 계열)를 믹스가 그대로 받게 하려는 용도.
+    ⚠️ xiaohongshu.com/rednote.com 같은 '페이지' 호스트는 여기 안 걸리고 아래 yt-dlp로 간다."""
+    path = u.split("?", 1)[0]
+    if path.endswith((".mp4", ".m4v", ".mov", ".webm")):
+        return True
+    # 알려진 영상 CDN 호스트(샤오홍슈=xhscdn, 도우인=zjcdn/douyinvod). 페이지 도메인은 제외.
+    return any(h in u for h in ("xhscdn.com", "sns-video", "zjcdn.com", "douyinvod.com"))
+
+
 def download_any(url, dest_dir):
     """소스 URL 다운로드 → (mp4경로, caption) 튜플. caption은 인스타에서만 채워짐."""
     u = (url or "").lower()
     if "instagram.com" in u:
         return _download_instagram(url, dest_dir)
+    # 직접 mp4(예: 샤오홍슈 url_720p) — 담긴 샤오홍슈 url은 rednote.com/search_result 검색결과
+    # '페이지'라 yt-dlp로 못 받는다. 프론트가 이미 확보한 직접 mp4(play_url)를 넘기면 이 경로로
+    # 그대로 HTTP 다운로드한다(Apify 재호출 없음 = 추가 비용 0). CDN URL은 만료될 수 있어
+    # 담은 지 오래면 실패할 수 있다(인스타 CDN과 동일 특성) — 그땐 다시 담으면 된다.
+    if _is_direct_video(u):
+        from shopping_shorts.frame_extract import download_video
+        return str(download_video(url, Path(dest_dir))), ""
     # 유튜브·틱톡·샤오홍슈는 yt-dlp 무료(2026-07-18 샤오홍슈 실증). 도우인은 쿠키가 필요해
     # 실패할 수 있으나 그때는 yt-dlp가 명확한 에러를 낸다(원클릭 담기 후 제작소 다운로드용).
     if any(s in u for s in ("youtube.com", "youtu.be", "tiktok.com",
-                             "xiaohongshu.com", "xhslink.com", "douyin.com", "iesdouyin.com")):
+                             "xiaohongshu.com", "xhslink.com", "douyin.com",
+                             "iesdouyin.com", "rednote.com")):
         return _download_ytdlp(url, dest_dir)
     raise RuntimeError(f"지원하지 않는 URL: {url}")
 

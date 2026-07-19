@@ -2026,7 +2026,13 @@ function syncFootageToMixUrls(){
 }
 // 믹스에 쓸 URL = 영상풀에서 🎬담긴 것 + 아직 확정 안 하고 입력칸에 남은 것(중복 제거).
 function collectMixUrls(){
-  const fromPool=HANDOFF.filter(h=>h.useFootage).map(h=>h.url).filter(Boolean);
+  // 샤오홍슈(rednote)는 담긴 url이 검색결과 '페이지'라 다운로드 불가 → 이미 확보한 직접 mp4
+  // (play_url=url_720p)를 대신 넘긴다. 다른 플랫폼(인스타=캡션 Apify 재조회 필요 등)은 url 유지.
+  const fromPool=HANDOFF.filter(h=>h.useFootage).map(h=>{
+    const u=h.url||'';
+    if(h.play_url && /rednote\.com|xiaohongshu\.com|xhslink\.com/.test(u)) return h.play_url;
+    return h.url;
+  }).filter(Boolean);
   const typed=[...document.querySelectorAll('.mixUrl')].map(i=>i.value.trim()).filter(Boolean);
   const seen=new Set(), out=[];
   for(const u of [...fromPool, ...typed]){ if(!seen.has(u)){ seen.add(u); out.push(u); } }
