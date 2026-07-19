@@ -982,8 +982,14 @@ function updateCaption(){
   el.style.fontFamily=`'${fontCss(cs.font)}',sans-serif`;
   el.style.top=cs.y_pct+'%'; el.style.transform='translate(-50%,-50%)';
   el.style.color=cs.color; el.style.fontWeight=900;
-  el.style.fontSize=Math.max(9, cs.size*scale)+'px';
-  el.style.maxWidth=Math.round(PREVIEW_W*0.92)+'px';   // 서버 _wrap_to_width(0.92*_OUT_W)와 동일 비율 — 줄바꿈 지점 일치
+  // 자막은 무조건 한 줄 — 줄바꿈 금지(nowrap). 폭(0.92) 넘으면 폰트 자동축소로 한 줄에 맞춘다.
+  // 서버 _segmented_drawtext(single_line=True)와 동일 비율: shrink = maxW / textW.
+  el.style.whiteSpace='nowrap'; el.style.wordBreak='normal'; el.style.maxWidth='none';
+  const capAvail=PREVIEW_W*0.92;
+  let capFs=Math.max(9, cs.size*scale);
+  el.style.fontSize=capFs+'px';
+  const capW=el.scrollWidth;
+  if(capW>capAvail){ capFs=Math.max(6, capFs*capAvail/capW); el.style.fontSize=capFs+'px'; }
   const oc=cs.outline_color, ow=(cs.outline_w*scale).toFixed(1);
   const sd=Math.max(1,(cs.shadow_d||3)*scale).toFixed(1);
   el.style.textShadow = cs.outline

@@ -32,6 +32,26 @@ def test_wrap_preserves_explicit_newline_via_segmented():
     assert lines == ["짧은줄", ""]
 
 
+def test_caption_single_line_shrinks_headcopy_wraps(tmp_path):
+    # 사장님 규칙: 자막(single_line=True)은 무조건 한 줄 — 폭 넘으면 폰트 축소, 줄바꿈 금지.
+    # 헤드카피(single_line=False)는 기존대로 여러 줄로 줄바꿈.
+    import re
+    long_txt = "훨씬 맛있더라고요 정말 첨가물 걱정도 전혀 없으니까 매일 먹어요"
+    style = {"size": 54, "color": "#FFFFFF", "font": "NanumGothic-Bold.ttf"}
+
+    def y_lines(parts):
+        return {m.group(1) for p in parts if (m := re.search(r":y=(-?\d+)", p))}
+
+    def sizes(parts):
+        return {int(m.group(1)) for p in parts if (m := re.search(r"fontsize=(\d+)", p))}
+
+    cap = va._segmented_drawtext(long_txt, style, tmp_path, "cap", 50, 37, single_line=True)
+    hc = va._segmented_drawtext(long_txt, style, tmp_path, "hc", 50, 12, single_line=False)
+    assert len(y_lines(cap)) == 1               # 자막은 한 줄뿐
+    assert all(s < 54 for s in sizes(cap))      # 한 줄에 맞추려 폰트가 줄었다
+    assert len(y_lines(hc)) > 1                 # 헤드카피는 여러 줄로 줄바꿈
+
+
 # ── 자막 구절 분할 ──────────────────────────────────────────────
 
 def test_caption_segments_empty():
