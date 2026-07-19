@@ -825,7 +825,10 @@ async function fetchLensCnKeywords(shortcode, caption, blob){
     const d=await (await fetch('/api/lens/cn/keywords',{method:'POST',body:fd})).json();
     const st=LENS_STATE[shortcode]; if(!st) return;
     st.cnCands=(d.candidates||[]).filter(c=>c && c.zh);
-    renderLens(shortcode);
+    // 비전 5~15초 사이 사용자가 다른 카드 렌즈를 열었으면 이 모달은 남의 것 → 재렌더 금지
+    // (형제 fetchLensYt와 동일 가드. 안 하면 늦은 응답이 현재 모달을 덮어씀)
+    const root=document.getElementById('lensRoot');
+    if(root && root.dataset.sc===shortcode) renderLens(shortcode);
     if(st.cnCands.length) doLensCnSearch(shortcode, st.cnCands[0].zh);   // 첫 후보 자동
   }catch(e){ /* 후보 실패해도 렌즈 나머지는 정상 */ }
 }
@@ -835,7 +838,9 @@ async function doLensCnSearch(shortcode, zh){
   const st=LENS_STATE[shortcode]; if(!st) return;
   if(st.cnLoading) return;              // 진행 중이면 무시(중복검색 방지)
   if(_lensCnCapReached(st)){ showToast('이번 검색은 여기까지예요 🙏'); return; }
-  st.cnActive=zh; st.cnClicks=(st.cnClicks||0)+1; st.cnLoading=true; renderLens(shortcode);
+  st.cnActive=zh; st.cnClicks=(st.cnClicks||0)+1; st.cnLoading=true;
+  { const root=document.getElementById('lensRoot');   // 모달 주인일 때만 재렌더(자동 첫검색은 비전 await 뒤라 남의 모달일 수 있음)
+    if(root && root.dataset.sc===shortcode) renderLens(shortcode); }
   try{
     const fd=new FormData(); fd.append('keyword', zh); fd.append('max_results','12');
     const d=await (await fetch('/api/lens/cn/search',{method:'POST',body:fd})).json();
@@ -848,7 +853,8 @@ async function doLensCnSearch(shortcode, zh){
     st2.items.push(...add.filter(i=>!have.has(i.savesc)));
     st2.cnLoading=false;
   }catch(e){ const s=LENS_STATE[shortcode]; if(s) s.cnLoading=false; }
-  renderLens(shortcode);
+  const root=document.getElementById('lensRoot');   // 검색 await 사이 다른 카드로 넘어갔으면 재렌더 금지
+  if(root && root.dataset.sc===shortcode) renderLens(shortcode);
 }
 function toggleLensPlatform(shortcode, k){
   const st=LENS_STATE[shortcode]; if(!st) return;
