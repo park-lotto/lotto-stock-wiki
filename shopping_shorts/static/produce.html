@@ -2341,7 +2341,7 @@ async function loadMixReview(){
   const el=document.getElementById('mixReview');
   if(!d.ok){ el.innerHTML=`<div class="hint" style="color:var(--fire)">편집안 로드 실패 ${esc(d.error||'')}</div>`; return; }
   MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
-  el.innerHTML='<h3 style="font-size:15px">편집안(장면 매칭)</h3>'+(d.beats||[]).map((b,i)=>`
+  el.innerHTML='<h3 style="font-size:15px">편집안(장면 매칭)</h3>'+renderCoverageSignal(d.beats||[])+(d.beats||[]).map((b,i)=>`
     <div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;background:#0d1420">
       <span style="font-size:11px;background:var(--accent2);padding:2px 8px;border-radius:10px">${esc(b.role||'')}</span>
       <div style="margin:6px 0;font-size:13px">${esc(b.narration||'')}</div>
@@ -2411,6 +2411,25 @@ async function toggleCutaway(idx, assetId){
 }
 
 // ── [다른 화면으로] 스왑 피커(2026-07-19) ─── SWAP-START
+// ── 완성도 신호등(2026-07-19) ─── SIGNAL-START
+// 편집안 맨 위 한 줄: 비트를 fit로 🟢🟡🔴 집계해 60대에게 "지금 어디까지 됐나"를 한눈에.
+// fit 기준은 per-beat ⚠️(fit<=2)와 동일 — 스왑되면 fit=null → 🟢(사람이 눈으로 골랐으니 신뢰).
+function renderCoverageSignal(beats){
+  let green=0, yellow=0, red=0;
+  for(const b of (beats||[])){
+    if(b.fit && b.fit<=2) red++;
+    else if(b.fit===3) yellow++;
+    else green++;                 // fit>=4 또는 fit 없음(스왑=사람이 고름)
+  }
+  if(!beats || !beats.length) return '';
+  const counts = `🟢 ${green} · 🟡 ${yellow} · 🔴 ${red}`;
+  const msg = red>0
+    ? `<b style="color:var(--fire)">빨간 ${red}칸</b>만 아래에서 [다른 화면으로] 바꾸면 완성돼요`
+    : `다 좋아요 — 그냥 <b>미리보기</b>로 넘어가세요`;
+  const bg = red>0 ? '#1a0d0d' : '#0a1810';
+  return `<div style="margin:2px 0 10px;padding:8px 12px;border-radius:8px;background:${bg};font-size:13px">${counts} &nbsp; ${msg}</div>`;
+}
+// ─── SIGNAL-END
 function renderSwapButton(beat, idx){
   const weak = beat.fit && beat.fit <= 2;
   const style = weak
