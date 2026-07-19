@@ -183,7 +183,11 @@
       '<div style="font-size:40px">🔒</div>' +
       '<div style="font-size:18px;font-weight:800;margin:10px 0 6px">무료 체험이 끝났어요</div>' +
       '<div style="font-size:14px;color:#b8b8c0;line-height:1.6">이 기능은 결제하시면 계속 쓸 수 있어요.<br>담아둔 영상·자료는 <b>그대로 보존</b>돼요.</div>' +
-      (k || ph ? '<div style="margin-top:14px;font-size:14px;color:#7db4ff">' + (k ? "카톡: " + escHtml(k) + "<br>" : "") + (ph ? "전화: " + escHtml(ph) : "") + "</div>" : "") +
+      '<div style="margin-top:14px;font-size:14px;color:#7db4ff">' +
+        (k ? "카톡: " + escHtml(k) + "<br>" : "") +
+        (ph ? "전화: " + escHtml(ph) : "") +
+        (!k && !ph ? "결제를 원하시면 안내받으신 판매 채널로 문의해 주세요." : "") +
+      "</div>" +
       '<div style="margin-top:18px"><button id="ss-pw-close" style="background:#4f9dfa;color:#111;border:0;border-radius:8px;padding:10px 22px;font-weight:800;font-size:14px;cursor:pointer">닫기</button></div>' +
       "</div>";
     document.body.appendChild(m);

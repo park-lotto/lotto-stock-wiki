@@ -53,3 +53,40 @@ def test_global_incr_and_alert_counts(tmp_path, monkeypatch):
     s.set_setting("global_cap_lens", 1000)
     assert appmod.global_incr_and_alert("lens") == 1
     assert appmod.global_incr_and_alert("lens") == 2
+
+
+def test_usage_decr_floors_at_zero(tmp_path):
+    s = Store(str(tmp_path / "t.db"))
+    day = "2026-07-19"
+    assert s.usage_decr(1, "lens", day) == 0        # 없던 값도 음수로 안 감
+    s.usage_incr(1, "lens", day)                     # 1
+    s.usage_incr(1, "lens", day)                     # 2
+    assert s.usage_decr(1, "lens", day) == 1
+    assert s.usage_decr(1, "lens", day) == 0
+    assert s.usage_decr(1, "lens", day) == 0         # 0에서 더 내려도 0
+
+
+def test_global_over_cap_blocks(tmp_path, monkeypatch):
+    s = _s(tmp_path, monkeypatch)
+    s.set_setting("global_cap_lens", 2)
+    assert appmod._global_over_cap("lens") is False   # 0/2
+    appmod.global_incr_and_alert("lens")              # 1/2
+    assert appmod._global_over_cap("lens") is False
+    appmod.global_incr_and_alert("lens")              # 2/2 → 도달
+    assert appmod._global_over_cap("lens") is True
+    s.set_setting("global_cap_lens", 0)               # 0=무제한
+    assert appmod._global_over_cap("lens") is False
+
+
+def test_refund_credit_restores_account_and_global(tmp_path, monkeypatch):
+    s = _s(tmp_path, monkeypatch)
+    cid = s.create_customer("f", "pw12")
+    s.set_plan(cid, "free", full_access_until=0)
+    assert appmod.check_and_count(cid, "lens") is True   # 계정 1
+    appmod.global_incr_and_alert("lens")                 # 전역 1
+    day = appmod._today_utc()
+    assert s.usage_get(cid, "lens", day) == 1
+    assert s.usage_get(-1, "lens", day) == 1
+    appmod.refund_credit(cid, "lens")                    # 실패 → 예약 되돌림
+    assert s.usage_get(cid, "lens", day) == 0
+    assert s.usage_get(-1, "lens", day) == 0

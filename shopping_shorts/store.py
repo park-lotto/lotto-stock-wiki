@@ -538,6 +538,12 @@ class Store:
                 ("clean_sources_json", "TEXT"),
                 ("clean_status", "TEXT"),   # null|cleaning|ready|failed
                 ("clean_error", "TEXT"),
+                # 유료게이트(2026-07-19): 이 job의 렌더 크레딧을 낸 고객 — 실패 시 환불 귀속.
+                ("customer_id", "INTEGER NOT NULL DEFAULT 0"),
+                # render 크레딧을 과금한 날(YYYY-MM-DD, UTC). 비어있으면 '과금 안 함'.
+                # run_mix_job이 실패 환불할 때 ①과금된 job인지 ②어느 날짜로 되돌릴지를 판단한다.
+                # /api/mix/start만 채운다 — produce 2단계·auto_run 경로는 과금 안 해 비운다(오환불 방지).
+                ("render_charge_day", "TEXT"),
             ):
                 try:
                     c.execute(f"ALTER TABLE mix_jobs ADD COLUMN {col} {ddl}")
@@ -1595,22 +1601,26 @@ class Store:
                  "created_at": r[9], "updated_at": r[10]} for r in rows]
 
     def create_mix_job(self, job_id, urls, target_seconds, structure,
-                       subtitle_removal=False, given_script=None, script_structure=None):
+                       subtitle_removal=False, given_script=None, script_structure=None,
+                       customer_id=LEGACY_CUSTOMER_ID, render_charge_day=None):
         """새 믹스 job 생성. 초기 status='downloading'.
         given_script: 영상제작 2단계 — 확정 대본을 그대로 쓸 때(나레이션 자동생성 대신).
         script_structure: 도서관에서 딸려온 대본 구조분석 dict(2026-07-15). 뒷단계가 꺼내 쓸
-            스냅샷으로 보관만 한다. ⚠️ 인자 structure(template/free 모드 플래그)와 다른 것."""
+            스냅샷으로 보관만 한다. ⚠️ 인자 structure(template/free 모드 플래그)와 다른 것.
+        customer_id: 유료게이트 렌더 크레딧 귀속(2026-07-19). run_mix_job이 실패하면 이 cid로
+            'render' 크레딧을 환불한다 — 실패했는데 크레딧만 날아가면 신뢰가 깨진다."""
         now = datetime.now(timezone.utc).isoformat()
         with self._conn() as c:
             c.execute(
                 "INSERT INTO mix_jobs(job_id, urls_json, target_seconds, structure, "
                 "status, created_at, updated_at, subtitle_removal, given_script, "
-                "script_structure_json) "
-                "VALUES(?,?,?,?,?,?,?,?,?,?)",
+                "script_structure_json, customer_id, render_charge_day) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
                 (job_id, json.dumps(urls, ensure_ascii=False), target_seconds,
                  structure, "downloading", now, now, 1 if subtitle_removal else 0,
                  given_script or None,
-                 json.dumps(script_structure, ensure_ascii=False) if script_structure else None),
+                 json.dumps(script_structure, ensure_ascii=False) if script_structure else None,
+                 customer_id, render_charge_day),
             )
 
     def get_mix_job(self, job_id):
@@ -1624,7 +1634,7 @@ class Store:
                 "fx_plan, fx_status, fx_path, "
                 "preview_status, preview_path, preview_error, "
                 "thumbnail_json, seo_json, "
-                "clean_sources_json, clean_status, clean_error "
+                "clean_sources_json, clean_status, clean_error, customer_id, render_charge_day "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -1649,6 +1659,8 @@ class Store:
             "seo": json.loads(row[26]) if row[26] else None,
             "clean_sources": json.loads(row[27]) if row[27] else None,
             "clean_status": row[28], "clean_error": row[29],
+            "customer_id": row[30] if row[30] is not None else 0,
+            "render_charge_day": row[31],
         }
 
     def update_mix_job(self, job_id, **fields):
@@ -2094,6 +2106,23 @@ class Store:
             row = c.execute("SELECT count FROM usage WHERE customer_id=? AND op=? AND day=?",
                             (customer_id, op, day)).fetchone()
         return row[0] if row else 0
+
+    def usage_decr(self, customer_id, op, day):
+        """(customer_id, op, day) 카운트 -1(0 밑으로 안 감), 감소 후 값 반환. 실패 환불용.
+        예약(usage_incr)했다가 작업이 실패하면 이걸로 되돌린다 — points.refund와 대칭."""
+        with self._conn() as c:
+            c.execute("UPDATE usage SET count=MAX(0, count-1) "
+                      "WHERE customer_id=? AND op=? AND day=?", (customer_id, op, day))
+            row = c.execute("SELECT count FROM usage WHERE customer_id=? AND op=? AND day=?",
+                            (customer_id, op, day)).fetchone()
+        return row[0] if row else 0
+
+    def refund_daily_credit(self, customer_id, op):
+        """유료게이트 실패 환불: 예약했던 op 크레딧을 계정+전역에서 오늘자로 되돌린다.
+        points.refund 대칭. 배경잡(run_mix_job)이 app import 없이 부를 수 있게 Store에 둔다."""
+        day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        self.usage_decr(customer_id, op, day)
+        self.usage_decr(-1, op, day)
 
     # ── 같은 주제 모아보기(2026-07-13) ──
     def save_topic_groups(self, mapping, platform="instagram"):
