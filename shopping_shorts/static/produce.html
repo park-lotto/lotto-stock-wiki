@@ -1468,12 +1468,19 @@ function updateHC(){
 const HC_PRESETS=[
   // ── 썸네일형(상단 헤드라인, 큼직·2줄 기준) ── 바이럴 쇼츠 썸네일 6종 샘플(2026-07-19 사장님 레퍼런스 반영).
   // color2가 있으면 1줄=color, 2줄부터=color2(흰→노랑 등 2색 룩). size는 '최대'—2줄이 넘치면 자동 축소.
-  {cat:'썸네일', name:'옐로 임팩트',    font:'TmonMonsori.ttf',          color:'#FFD400', weight:900, size:92, y:14, outline:true, outline_color:'#000000', outline_w:12},
-  {cat:'썸네일', name:'흰→노랑',        font:'TmonMonsori.ttf',          color:'#FFFFFF', color2:'#FFD400', weight:900, size:92, y:14, outline:true, outline_color:'#000000', outline_w:12},
-  {cat:'썸네일', name:'흰→빨강',        font:'TmonMonsori.ttf',          color:'#FFFFFF', color2:'#FF3B30', weight:900, size:92, y:14, outline:true, outline_color:'#000000', outline_w:12},
-  {cat:'썸네일', name:'레드 임팩트',     font:'BMDOHYEON.ttf',            color:'#FF3B30', weight:900, size:90, y:14, outline:true, outline_color:'#FFFFFF', outline_w:10},
-  {cat:'썸네일', name:'블랙박스 화이트', font:'Pretendard-ExtraBold.otf', color:'#FFFFFF', weight:900, size:80, y:14, outline:false, outline_color:'#000000', outline_w:0, box:true, box_color:'#000000', box_pad:18, box_opacity:82},
-  {cat:'썸네일', name:'옐로박스 블랙',   font:'GmarketSansBold.otf',      color:'#111111', weight:900, size:78, y:14, outline:false, outline_color:'#000000', outline_w:0, box:true, box_color:'#FFD400', box_pad:16, box_opacity:100},
+  // 샘플 11종 — 예쁜 색 팔레트(흰→색 투톤) + 폰트 대안 + 박스(2026-07-19 사장님 요청: 여러개 만들어 최종선택·민트/파랑 등 예쁜색).
+  // 전부 레퍼런스 스타일(폭 꽉채움·투톤·두꺼운 외곽선+그림자). 실측(크롬 렌더)으로 색 가독성 확인.
+  {cat:'썸네일', name:'흰→노랑',   font:'BMDOHYEON.ttf',       color:'#FFFFFF', color2:'#FFD400', weight:900, size:92, y:14, outline:true, outline_color:'#000000', outline_w:12},
+  {cat:'썸네일', name:'흰→민트',   font:'BMDOHYEON.ttf',       color:'#FFFFFF', color2:'#2EE6C5', weight:900, size:92, y:14, outline:true, outline_color:'#000000', outline_w:12},
+  {cat:'썸네일', name:'흰→파랑',   font:'BMDOHYEON.ttf',       color:'#FFFFFF', color2:'#35C3FF', weight:900, size:92, y:14, outline:true, outline_color:'#000000', outline_w:12},
+  {cat:'썸네일', name:'흰→핑크',   font:'BMDOHYEON.ttf',       color:'#FFFFFF', color2:'#FF5FA2', weight:900, size:92, y:14, outline:true, outline_color:'#000000', outline_w:12},
+  {cat:'썸네일', name:'흰→그린',   font:'BMDOHYEON.ttf',       color:'#FFFFFF', color2:'#2FD873', weight:900, size:92, y:14, outline:true, outline_color:'#000000', outline_w:12},
+  {cat:'썸네일', name:'흰→빨강',   font:'BMDOHYEON.ttf',       color:'#FFFFFF', color2:'#FF3B30', weight:900, size:92, y:14, outline:true, outline_color:'#000000', outline_w:12},
+  {cat:'썸네일', name:'흰→오렌지', font:'BMDOHYEON.ttf',       color:'#FFFFFF', color2:'#FF8A00', weight:900, size:92, y:14, outline:true, outline_color:'#000000', outline_w:12},
+  {cat:'썸네일', name:'흰→보라',   font:'BMDOHYEON.ttf',       color:'#FFFFFF', color2:'#B072FF', weight:900, size:92, y:14, outline:true, outline_color:'#000000', outline_w:12},
+  {cat:'썸네일', name:'티몬·흰노랑', font:'TmonMonsori.ttf',   color:'#FFFFFF', color2:'#FFD400', weight:900, size:92, y:14, outline:true, outline_color:'#000000', outline_w:12},
+  {cat:'썸네일', name:'주아·흰민트', font:'BMJUA.ttf',         color:'#FFFFFF', color2:'#2EE6C5', weight:900, size:92, y:14, outline:true, outline_color:'#000000', outline_w:12},
+  {cat:'썸네일', name:'옐로박스',   font:'GmarketSansBold.otf', color:'#111111', weight:900, size:80, y:14, outline:false, outline_color:'#000000', outline_w:0, box:true, box_color:'#FFD400', box_pad:16, box_opacity:100},
   // ── 내용형(하단/중하단 강조 자막) ──
   {cat:'내용', name:'하단 화이트바',     font:'Pretendard-ExtraBold.otf', color:'#FFFFFF', weight:900, size:56, y:84, outline:true, outline_color:'#000000', outline_w:6, box:true, box_color:'#000000', box_pad:14, box_opacity:55},
   {cat:'내용', name:'하단 옐로강조',     font:'BMJUA.ttf',                color:'#FFE100', weight:900, size:58, y:84, outline:true, outline_color:'#000000', outline_w:7},
@@ -3394,7 +3401,7 @@ function renderThumbLayers(){
   document.getElementById('thumbPresets').innerHTML =
     HC_PRESETS.filter(p => p.cat === '썸네일').map((p, i) =>
       `<button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 11px;font-size:12px;
-        border-left:10px solid ${p.box ? p.box_color : p.color}"
+        border-left:10px solid ${p.box ? p.box_color : (p.color2 || p.color)}"
         onclick="applyThumbPreset(${i})">${p.name}</button>`).join('');
   const L = THUMB_STATE.layers[THUMB_STATE.sel];
   document.getElementById('thumbEdit').innerHTML = !L ? '' : `

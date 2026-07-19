@@ -189,6 +189,17 @@
         <div id="refAdded" style="font-size:12px;color:var(--sub);margin-top:8px"></div>
       </div>
     </details>
+    <details id="refTrace" style="margin:4px 0 12px;border:1px solid var(--line);border-radius:8px;background:#0d131c">
+      <summary style="padding:9px 12px;cursor:pointer;font-size:12px;color:var(--sub)">🔗 URL로 레퍼런스 추적 (원본·유사 영상 찾기)</summary>
+      <div style="padding:0 12px 10px">
+        <div style="font-size:11px;color:var(--sub);margin-bottom:6px">해외 영상(유튜브·틱톡·인스타·샤오홍슈) <b>링크</b>를 붙여넣으면, 그 장면으로 <b>구글렌즈</b>가 원본/비슷한 영상을 찾아줍니다 — 채널 등록·수집 없이 바로. 결과는 <b>담기</b>로 소스에 넣을 수 있어요. (SerpApi 월 100회)</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <input id="traceUrl" type="text" placeholder="https://youtube.com/shorts/... 또는 틱톡·인스타 링크" onkeydown="if(event.key==='Enter')traceByUrl()"
+                 style="flex:1;min-width:220px;padding:8px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)">
+          <button onclick="traceByUrl()">🔍 추적</button>
+        </div>
+      </div>
+    </details>
     <div class="tabs" id="tabs">
       <div class="tab active" data-tab="comments" title="댓글 수 그대로 정렬">📊 전체</div>
       <div class="tab" data-tab="speed" title="댓글수 ÷ 경과시간(시간) — 시간당 댓글이 얼마나 빨리 쌓이는지">⚡ 속도</div>
@@ -778,6 +789,31 @@ async function lensSearch(btn, shortcode){
     fetchLensCnKeywords(shortcode, caption, blob);   // 📕🎬 중국앱 후보 검색어 자동합류(비동기)
   }catch(e){ document.getElementById('scriptBody').innerHTML='<div style="padding:10px;color:#e0623d">❌ '+e.message+'</div>'; }
 }
+// ── URL 붙여넣기 → 구글렌즈 원본/유사 역추적(2026-07-19) ─── TRACE-START
+// 프레임 캡처 대신 서버가 URL을 받아 중간 프레임을 뽑는다(/api/lens/trace_url). 결과 형태는
+// lensSearch와 동일 → renderLens를 합성 shortcode '__trace__'로 그대로 재활용(담기·필터 공짜).
+async function traceByUrl(){
+  const inp=document.getElementById('traceUrl');
+  const url=(inp && inp.value||'').trim();
+  if(!url){ if(inp) inp.focus(); return; }
+  openScript('<div class="sm-loading">🔗 원본·유사 영상 추적 중… (10~20초)</div>','🔗 레퍼런스 추적',true);
+  try{
+    const r=await fetch('/api/lens/trace_url',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
+    const body=document.getElementById('scriptBody');
+    if(r.status===429){ const d=await r.json(); if(body) body.innerHTML='<div style="padding:10px;color:#e0623d">💰 '+(d.error||'이번 달 렌즈 한도 초과')+'</div>'; return; }
+    const d=await r.json();
+    if(!d.ok){ if(body) body.innerHTML='<div style="padding:10px;color:#e0623d">❌ '+(d.error||'추적 실패')+'</div>'; return; }
+    const items=(d.items||[]);
+    items.forEach(i=>{ i.savesc='lens_'+i.platform+'_'+_lensHash(i.url); });
+    if(!items.length){ if(body) body.innerHTML='<div style="padding:10px;color:var(--sub)">비슷한 영상을 못 찾았어요. 다른 장면이 담긴 링크로 시도해 보세요.</div>'; return; }
+    let saved=new Set();
+    try{ saved=new Set((await (await fetch('/api/mix/basket')).json()).shortcodes||[]); }catch(e){}
+    LENS_STATE['__trace__']={items, on:new Set(LENS_PLATFORMS.map(p=>p.k)), saved,
+                             sel:new Set(), shortsOnly:false, ytLoading:false, keyword:'', caption:'', cnCands:[]};
+    renderLens('__trace__');
+  }catch(e){ const body=document.getElementById('scriptBody'); if(body) body.innerHTML='<div style="padding:10px;color:#e0623d">❌ '+e.message+'</div>'; }
+}
+// ─── TRACE-END
 // 프레임(비전)+캡션으로 유튜브를 키워드 검색해 렌즈 결과에 덧붙인다(무료, 비동기).
 async function fetchLensYt(shortcode, caption, blob){
   try{
