@@ -39,6 +39,22 @@ def test_grab_accepts_rednote_search_result(tmp_path, monkeypatch):
     assert any(x.startswith("grab_xiaohongshu_") for x in scs)   # rednote=샤오홍슈 플랫폼
 
 
+def test_grab_userscript_is_thin_loader(tmp_path, monkeypatch):
+    """grab.user.js는 로직을 서버에서 불러오는 '로더'여야 한다(재설치 없이 업데이트되게)."""
+    c = _client(tmp_path, monkeypatch)
+    r = c.get("/grab.user.js")
+    assert r.status_code == 200
+    assert "GM_xmlhttpRequest" in r.text and "/grab_logic.js" in r.text
+
+
+def test_grab_logic_served_with_card_logic(tmp_path, monkeypatch):
+    """/grab_logic.js는 실제 담기 로직(카드별 버튼 포함)을 서빙한다."""
+    c = _client(tmp_path, monkeypatch)
+    r = c.get("/grab_logic.js")
+    assert r.status_code == 200
+    assert "addCardBtns" in r.text and "section.note-item" in r.text
+
+
 def test_grab_rejects_unknown_platform(tmp_path, monkeypatch):
     c = _client(tmp_path, monkeypatch)
     r = c.get("/api/grab", params={"url": "https://example.com/whatever"})
