@@ -2232,6 +2232,43 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...),
     return {"ok": True, "items": items, "count": len(items)}
 
 
+# 유튜브는 서버(데이터센터 IP)에서 yt-dlp가 봇차단(쿠키 요구)이라 영상 다운로드가 막힌다
+# (2026-07-19 실측). 렌즈는 이미지 1장이면 되므로 공개 썸네일(i.ytimg.com — 구글 CDN이라
+# 렌즈가 즉시 읽음)을 다운로드 없이 쓴다.
+_YT_ID_RE = re.compile(r"(?:youtube\.com/(?:shorts/|watch\?v=|live/|embed/)|youtu\.be/)([A-Za-z0-9_-]{6,})")
+
+
+def _lens_image_for_url(url, work_dir):
+    """URL → (구글렌즈에 넣을 공개 이미지 URL, 캡션). 실패 시 (None, '').
+    유튜브=썸네일 직행(봇차단 회피). 비유튜브=download_any 중간 프레임, 실패 시 oEmbed 썸네일 폴백."""
+    m = _YT_ID_RE.search(url)
+    if m:
+        return f"https://i.ytimg.com/vi/{m.group(1)}/hqdefault.jpg", ""
+    try:
+        video_path, caption = download_any(url, str(work_dir))
+        dur = frame_extract._probe_duration(video_path) or 2.0
+        name = uuid.uuid4().hex + ".jpg"
+        frame = extract_frame_at(video_path, work_dir, dur / 2, filename=name)
+        if frame:
+            raw = Path(frame).read_bytes()
+            image_url = upload_frame(raw)   # imgbb/imgur 우선(구글 상시 크롤)
+            if not image_url:
+                lens_dir = _FIND_TMP_DIR / "lens"
+                lens_dir.mkdir(parents=True, exist_ok=True)
+                (lens_dir / name).write_bytes(raw)
+                image_url = f"{PUBLIC_BASE_URL}/api/find/frame/lens/{name}"
+            return image_url, caption
+    except Exception as e:  # noqa: BLE001 — 다운로드 실패(봇차단·만료) → 썸네일 폴백
+        print(f"lens trace_url download 실패, 썸네일 폴백: {e!r}")
+    try:
+        meta = probe_grab_meta(url) or {}
+        if meta.get("thumbnail"):
+            return meta["thumbnail"], meta.get("title") or ""
+    except Exception:  # noqa: BLE001
+        pass
+    return None, ""
+
+
 @app.post("/api/lens/trace_url")
 def api_lens_trace_url(body: dict):
     """영상 URL 붙여넣기 → 대표(중간) 프레임 → 구글렌즈 → 원본/유사 레퍼런스 영상.
@@ -2254,23 +2291,10 @@ def api_lens_trace_url(body: dict):
             "error": f"이번 달 렌즈 검색 한도({limit}회)를 다 썼습니다"})
     work_dir = _FIND_TMP_DIR / "lens_trace"
     work_dir.mkdir(parents=True, exist_ok=True)
-    try:
-        video_path, caption = download_any(url, str(work_dir))
-    except Exception as e:  # noqa: BLE001 — 다운로드 실패는 사용자 입력(만료·미지원 URL) 탓
-        return JSONResponse(status_code=502, content={"ok": False, "error": f"영상 다운로드 실패: {e}"})
-    dur = frame_extract._probe_duration(video_path) or 2.0
-    name = uuid.uuid4().hex + ".jpg"
-    frame = extract_frame_at(video_path, work_dir, dur / 2, filename=name)
-    if not frame:
-        return JSONResponse(status_code=502, content={"ok": False, "error": "프레임 추출 실패"})
-    raw = Path(frame).read_bytes()
-    # /api/lens/search와 동일: imgbb/imgur 우선(구글이 상시 크롤링), 실패 시 서버 URL 폴백.
-    image_url = upload_frame(raw)
+    image_url, caption = _lens_image_for_url(url, work_dir)
     if not image_url:
-        lens_dir = _FIND_TMP_DIR / "lens"
-        lens_dir.mkdir(parents=True, exist_ok=True)
-        (lens_dir / name).write_bytes(raw)
-        image_url = f"{PUBLIC_BASE_URL}/api/find/frame/lens/{name}"
+        return JSONResponse(status_code=502, content={
+            "ok": False, "error": "영상/썸네일을 가져오지 못했습니다(봇차단·만료·미지원 URL)"})
     items = search_similar_videos(image_url, source_caption=caption)
     store.bump_lens(month)
     return {"ok": True, "items": items, "count": len(items), "source_url": url}
