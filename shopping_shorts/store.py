@@ -2050,6 +2050,16 @@ class Store:
             rows = c.execute("SELECT key, value FROM settings").fetchall()
         return {k: v for k, v in rows}
 
+    def list_customers(self):
+        """관리자용 전체 고객 목록(사장님 cid0 제외). 최근 가입 먼저."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT id, username, email, plan, full_access_until, created_at "
+                "FROM customers WHERE id != 0 ORDER BY id DESC"
+            ).fetchall()
+        return [{"id": r[0], "username": r[1], "email": r[2], "plan": r[3] or "free",
+                 "full_access_until": r[4] or 0, "created_at": r[5]} for r in rows]
+
     # ── 유료게이트 일일 사용량(크레딧) ──
     def usage_incr(self, customer_id, op, day):
         """(customer_id, op, day) 카운트 +1, 증가 후 값 반환. customer_id=-1은 전역 집계."""

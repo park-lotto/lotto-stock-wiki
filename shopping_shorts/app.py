@@ -2749,6 +2749,82 @@ def _api_me(request: Request):
                        "script": _lim("limit_script", 10)}}
 
 
+# ── 유료게이트 관리자(사장님 cid0 전용) — 결제 승격·설정 조정 ──
+def _require_admin(request):
+    if getattr(request.state, "customer_id", None) != 0:
+        return JSONResponse({"error": "관리자 전용"}, status_code=403)
+    return None
+
+
+_ADMIN_SETTING_KEYS = {"trial_days", "limit_lens", "limit_render", "limit_script",
+                       "limit_lens_pro", "limit_render_pro", "limit_script_pro",
+                       "global_cap_lens", "global_cap_render", "global_cap_script",
+                       "contact_kakao", "contact_phone"}
+
+
+@app.get("/api/admin/customers")
+def _admin_customers(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    st = Store(DB_PATH)
+    day = _today_utc()
+    out = []
+    for cu in st.list_customers():
+        cu["level"] = access_level(cu["id"])
+        cu["usage"] = {op: st.usage_get(cu["id"], op, day) for op in ("lens", "render", "script")}
+        out.append(cu)
+    return {"ok": True, "customers": out, "settings": st.all_settings()}
+
+
+@app.post("/api/admin/set_plan")
+async def _admin_set_plan(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    try:
+        cid = int(body.get("customer_id"))
+    except (TypeError, ValueError):
+        return JSONResponse({"error": "customer_id 필요"}, status_code=422)
+    plan = body.get("plan")
+    if plan not in ("free", "pro"):
+        return JSONResponse({"error": "plan=free|pro"}, status_code=422)
+    days = body.get("days")
+    st = Store(DB_PATH)
+    if plan == "pro":
+        st.set_plan(cid, "pro")                         # 결제 승격 = 전기능 무기한
+    elif days:
+        until = int(datetime.now(timezone.utc).timestamp()) + int(days) * 86400
+        st.set_plan(cid, "free", full_access_until=until)   # 체험 창 재부여
+    else:
+        st.set_plan(cid, "free", full_access_until=0)   # 즉시 무료(랭킹만)로 내림
+    import sys as _s
+    print(f"[admin] set_plan cid={cid} plan={plan} days={days}", file=_s.stderr)  # 변경 로그
+    return {"ok": True}
+
+
+@app.post("/api/admin/settings")
+async def _admin_settings(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    st = Store(DB_PATH)
+    for k, v in (body or {}).items():
+        if k in _ADMIN_SETTING_KEYS:
+            st.set_setting(k, v)
+    return {"ok": True, "settings": st.all_settings()}
+
+
+@app.get("/admin", response_class=HTMLResponse)
+def _admin_page(request: Request):
+    if getattr(request.state, "customer_id", None) != 0:
+        return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>", status_code=403)
+    return FileResponse(Path(__file__).parent / "static" / "admin.html",
+                        media_type="text/html; charset=utf-8")
+
+
 @app.get("/insta_fill_comment.user.js", include_in_schema=False)
 def _serve_userscript():
     """댓글 자동채우기 유저스크립트 — Tampermonkey가 이 URL로 설치·자동업데이트한다.
