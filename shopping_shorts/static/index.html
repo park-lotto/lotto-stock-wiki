@@ -786,9 +786,11 @@ async function lensSearch(btn, shortcode){
     // 프레임이 있으면 항상 유튜브를 키워드로 덧댄다(비전이 화면 글자로 제품을 특정하므로
     // 캡션이 없어도 됨). ytLoading=true로 두고 renderLens가 '불러오는 중'을 보여준다.
     LENS_STATE[shortcode]={items, on:new Set(LENS_PLATFORMS.map(p=>p.k)), saved,
-                           sel:new Set(), shortsOnly:false, ytLoading:true, keyword:'', caption};
+                           sel:new Set(), shortsOnly:false, ytLoading:true, keyword:'', caption,
+                           cnCands:[], cnActive:'', cnClicks:0, cnLoading:false};
     renderLens(shortcode);
     fetchLensYt(shortcode, caption, blob);   // ▶️ 유튜브 무료 키워드 자동합류(비동기)
+    fetchLensCnKeywords(shortcode, caption, blob);   // 📕🎬 중국앱 후보 검색어 자동합류(비동기)
   }catch(e){ document.getElementById('scriptBody').innerHTML='<div style="padding:10px;color:#e0623d">❌ '+e.message+'</div>'; }
 }
 // 프레임(비전)+캡션으로 유튜브를 키워드 검색해 렌즈 결과에 덧붙인다(무료, 비동기).
@@ -809,6 +811,43 @@ async function fetchLensYt(shortcode, caption, blob){
   }catch(e){ const st=LENS_STATE[shortcode]; if(st) st.ytLoading=false; }
   const root=document.getElementById('lensRoot');
   if(root && root.dataset.sc===shortcode) renderLens(shortcode);
+}
+// 순수 헬퍼: CN 검색 클릭 상한(비용 가드). 렌즈 1회당 6번까지.
+function _lensCnCapReached(st){ return (st.cnClicks||0) >= 6; }
+// ── CN후보 끝 ──
+
+// 프레임(비전)으로 중국어 후보 검색어를 받아 버튼으로 그린다. 첫 후보는 자동검색.
+async function fetchLensCnKeywords(shortcode, caption, blob){
+  try{
+    const fd=new FormData();
+    if(blob) fd.append('frame', blob, 'f.jpg');
+    if(caption) fd.append('source_caption', caption);
+    const d=await (await fetch('/api/lens/cn/keywords',{method:'POST',body:fd})).json();
+    const st=LENS_STATE[shortcode]; if(!st) return;
+    st.cnCands=(d.candidates||[]).filter(c=>c && c.zh);
+    renderLens(shortcode);
+    if(st.cnCands.length) doLensCnSearch(shortcode, st.cnCands[0].zh);   // 첫 후보 자동
+  }catch(e){ /* 후보 실패해도 렌즈 나머지는 정상 */ }
+}
+
+// 후보 검색어 하나로 샤오홍슈+도우인 검색 → CN 결과만 교체(유튜브 등은 유지).
+async function doLensCnSearch(shortcode, zh){
+  const st=LENS_STATE[shortcode]; if(!st) return;
+  if(_lensCnCapReached(st)){ showToast('이번 검색은 여기까지예요 🙏'); return; }
+  st.cnActive=zh; st.cnClicks=(st.cnClicks||0)+1; st.cnLoading=true; renderLens(shortcode);
+  try{
+    const fd=new FormData(); fd.append('keyword', zh); fd.append('max_results','12');
+    const d=await (await fetch('/api/lens/cn/search',{method:'POST',body:fd})).json();
+    const st2=LENS_STATE[shortcode]; if(!st2) return;
+    // 기존 CN 결과 제거 후 새 결과로 교체
+    st2.items=st2.items.filter(i=>i.platform!=='xiaohongshu' && i.platform!=='douyin');
+    const add=(d.items||[]);
+    add.forEach(i=>{ i.savesc='lens_'+i.platform+'_'+_lensHash(i.url); });
+    const have=new Set(st2.items.map(i=>i.savesc));
+    st2.items.push(...add.filter(i=>!have.has(i.savesc)));
+    st2.cnLoading=false;
+  }catch(e){ const s=LENS_STATE[shortcode]; if(s) s.cnLoading=false; }
+  renderLens(shortcode);
 }
 function toggleLensPlatform(shortcode, k){
   const st=LENS_STATE[shortcode]; if(!st) return;
@@ -903,6 +942,20 @@ function renderLens(shortcode){
       <button onclick="lensBulkDelete('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">🗑 선택 삭제(${selCount})</button>
       ${st.ytLoading?'<span style="color:var(--sub)">▶️ 유튜브 불러오는 중…</span>':''}
     </div>
+    ${st.cnCands && st.cnCands.length ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--line)">
+      <div style="font-size:12px;color:var(--sub);margin-bottom:5px">📕🎬 중국 앱에서 찾기 — 눌러보세요</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${st.cnCands.map(c=>{
+          const on=st.cnActive===c.zh;
+          const busy=on && st.cnLoading;
+          return `<button onclick="doLensCnSearch('${shortcode}', ${JSON.stringify(c.zh)})"
+            style="cursor:pointer;padding:8px 14px;border-radius:12px;border:2px solid ${on?'var(--accent)':'var(--line)'};
+            background:${on?'#1f6feb22':'transparent'};color:var(--fg,inherit);text-align:center;line-height:1.25">
+            <div style="font-size:14px;font-weight:600">${c.ko||c.zh}${busy?' …':''}</div>
+            <div style="font-size:11px;color:var(--sub)">${c.zh}</div></button>`;
+        }).join('')}
+      </div>
+    </div>` : ''}
     ${st.keyword?`<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px;font-size:11px">
       <span style="color:var(--sub)">🔗 다른 플랫폼에서 찾아 담기:</span>
       ${[['tiktok','🎵 틱톡'],['instagram','📷 인스타'],['xiaohongshu','📕 샤오홍슈'],['douyin','🎬 도우인']].map(([k,lbl])=>
