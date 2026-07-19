@@ -481,6 +481,10 @@
           </div>
           <div id="thumbLayers" style="display:flex;flex-direction:column;gap:4px"></div>
 
+          <button class="btn-next" style="width:100%;margin:10px 0 4px;padding:10px;font-size:14px"
+                  onclick="suggestThumbTitles()">🪄 원본 영상 보고 제목 추천받기</button>
+          <div id="thumbTitleSuggest" style="display:flex;flex-direction:column;gap:5px"></div>
+
           <div style="font-size:12px;color:var(--sub);margin:10px 0 4px">🖼 프리셋 — 한 번에 스타일 적용</div>
           <div id="thumbPresets" style="display:flex;gap:7px;flex-wrap:wrap"></div>
 
@@ -2996,7 +3000,7 @@ function drawThumb(ctx, img, layers, W, H){
 }
 
 const THUMB_STATE = {frames: [], frame_ts: null, frame_url: null, img: null,
-                     layers: [], sel: 0, results: [], selected: null};
+                     layers: [], sel: 0, results: [], selected: null, title_cands: []};
 
 // 추출은 수 초 걸린다. THUMB_STATE.frames는 '응답이 와야' 채워지므로 그것만 보고 가드하면
 // 대기 중 단계를 오갈 때마다 요청이 겹쳐 ffmpeg가 같은 폴더에 동시에 쓴다(실측: 3벌).
@@ -3132,6 +3136,54 @@ function setThumbPos(where){
   L.x = 0.5;
   L.y = where === 'top' ? 0.16 : where === 'bot' ? 0.84 : 0.5;
   renderThumbCanvas();
+}
+
+// 🪄 원본 영상 대본을 AI에게 보내 짧은 썸네일 제목 후보를 받아 클릭 얹기용으로 보여준다.
+// 60대가 제목을 못 떠올려도 "추천 버튼 → 마음에 드는 것 클릭"이면 끝. 과금 없음(미리보기).
+let THUMB_TITLES_LOADING = false;
+async function suggestThumbTitles(){
+  const box = document.getElementById('thumbTitleSuggest'); if (!box) return;
+  if (!MIX_JOB){
+    box.innerHTML = '<div class="hint">🎬 먼저 <b>1단계</b>에서 <b>영상 매칭</b>을 해야 원본을 보고 제목을 지어요.</div>';
+    return;
+  }
+  if (THUMB_TITLES_LOADING) return;
+  THUMB_TITLES_LOADING = true;
+  box.innerHTML = '<div class="hint">원본 영상 대본을 보고 제목을 짓는 중… (몇 초 걸려요)</div>';
+  try {
+    const r = await fetch('/api/produce/thumb/titles', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({job_id: MIX_JOB}),
+    });
+    const d = await r.json().catch(() => ({ok: false}));
+    if (!r.ok || !d.ok || !(d.titles || []).length){
+      box.innerHTML = '<div class="hint">' + (d.error || '제목을 못 만들었어요 — 다시 눌러보세요') + '</div>';
+      return;
+    }
+    THUMB_STATE.title_cands = d.titles;
+    box.innerHTML = '<div class="hint" style="margin-bottom:2px">마음에 드는 제목을 누르면 바로 얹어져요 ↓</div>' +
+      d.titles.map((t, i) => {
+        const shown = esc(t.text || '').replace(/\n/g, ' / ');   // 줄바꿈은 ' / '로 표시
+        return `<button class="tab" onclick="applyThumbTitle(${i})"
+          style="text-align:left;min-width:auto;padding:9px 11px;white-space:normal;line-height:1.35;height:auto">
+          <b style="font-size:14px">${shown}</b>
+          <span class="hint" style="display:block;font-size:10px;opacity:.7;margin-top:2px">${esc(t.why || '')}</span>
+        </button>`;
+      }).join('');
+  } catch(e){
+    box.innerHTML = '<div class="hint">연결 오류 — 다시 눌러보세요</div>';
+  } finally {
+    THUMB_TITLES_LOADING = false;
+  }
+}
+
+function applyThumbTitle(i){
+  const t = (THUMB_STATE.title_cands || [])[i]; if (!t) return;
+  if (!THUMB_STATE.layers.length) addThumbLayer();   // 레이어가 없으면 하나 만들어 얹는다
+  const L = THUMB_STATE.layers[THUMB_STATE.sel]; if (!L) return;
+  L.text = t.text || '';
+  renderThumbLayers();    // 입력칸(textarea)·레이어 목록 갱신
+  renderThumbCanvas();    // 미리보기에 즉시 반영(자동 줄바꿈·크기맞춤은 drawThumb이 처리)
 }
 
 function renderThumbLayers(){
