@@ -311,7 +311,10 @@ def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=
     # 덮어 "검정바"로 보인다는 제보. 그림자 자막만으로 가독성 확보. 원본 소각자막을
     # 덮어야 하는 경우엔 style.bar=True로 명시적으로 켠다(자막제거 ON이면 불필요).
     show_bar = style.get("bar", False) and not use_box
-    effect = style.get("effect") or "none"
+    # 자막 등장효과 기본값 = fade(2026-07-19). 예전 기본 "none"은 자막이 하드
+    # 온/오프로 뚝뚝 끊겨 "딱딱하다"는 제보의 원인이었다. 미지정 시 은은한 페이드로
+    # 등장시킨다. 끄려면 effect="none"을 명시(문자열이라 truthy → 아래 폴백 안 탐).
+    effect = style.get("effect") or "fade"
     parts = []
     if show_bar:
         # ⚠️ enable= 없이는 이 바가 영상 전체 시간대에 걸쳐 그려진다. _burn_captions가

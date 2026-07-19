@@ -576,3 +576,20 @@ def test_shadow_emits_soft_drop_shadow(tmp_path):
     joined = ",".join(draws)
     assert "shadowx=" in joined and "shadowy=" in joined
     assert "borderw=" not in joined  # 두꺼운 테두리 아님
+
+
+def test_caption_fades_in_by_default(tmp_path):
+    # effect 미지정(기본) 자막도 하드 온/오프가 아니라 부드럽게 등장해야 한다.
+    # fade의 알파 램프(min(1,max(0,(t-start)/spd)))가 최종 필터에 들어간다.
+    # 딱딱하게 넘어간다는 제보(2026-07-19)의 실수정 — 등장 애니메이션 기본 ON.
+    draws = va._caption_drawtexts("부드럽게 뜨는 자막", 2.0, tmp_path, 0)
+    joined = ",".join(draws)
+    assert "alpha='min(1,max(0,(t-" in joined, "기본 자막에 fade 알파 램프가 없다"
+
+
+def test_explicit_effect_none_stays_hard_cut(tmp_path):
+    # 명시적으로 effect='none'을 준 경우엔 여전히 하드 온/오프(알파 램프 없음).
+    # 기본값만 fade로 바뀌었을 뿐, 끄고 싶으면 끌 수 있다는 보장.
+    style = {"effect": "none", "size": 50, "y_pct": 84, "box": False, "bar": False}
+    draws = va._caption_drawtexts("하드 컷 자막", 2.0, tmp_path, 0, style=style)
+    assert "alpha=" not in ",".join(draws)
