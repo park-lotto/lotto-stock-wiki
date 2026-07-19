@@ -1621,27 +1621,32 @@ function mixToggleElem(btn){
   btn.style.background=on?'#0d1420':'var(--accent2,#3a6df0)'; btn.style.color=on?'var(--txt)':'#fff';
 }
 function mixOnEdit(ta){
+  // LOCAL-ONLY (2026-07-19 하드닝): 서버 fetch 제거. blur(mixOnEdit)의 비동기 fetch가
+  // click(mixUpgrade)이 await하는 mixSyncEdit의 fetch와 경합해 응답 순서에 따라 서로를
+  // 덮어썼다(잔여 이슈#2). 이제 로컬 상태(창·길이표시·dirty)만 갱신하고, 서버 반영은
+  // mixSyncEdit 하나로 일원화한다.
   const card=ta.closest('.mixdraft'); const i=+card.dataset.idx;
   if(window._drafts&&window._drafts[i]) window._drafts[i].script=ta.value;
   const lp=card.querySelector('.mixlen'); if(lp) lp.textContent=lenText(ta.value);
-  const did=card.dataset.draftId;
-  if(did){ fetch('/api/wiki/draft/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({draft_id:did,script_text:ta.value})}).then(r=>r.json()).then(d=>{ if(d.ok){ card.dataset.draftId=d.draft_id; card.dataset.dirty=''; } }).catch(()=>{}); }
+  card.dataset.dirty='1';
 }
-// 업그레이드 직전 편집중인 텍스트를 서버에 먼저 반영 — blur(mixOnEdit) 비동기와
-// click(mixUpgrade) 동기 읽기 사이의 레이스를 없앤다. dirty 아니면 아무 것도 안 함.
+// 업그레이드 직전 편집중인 텍스트를 서버에 유일하게 반영하는 지점(mixOnEdit는 로컬만).
+// 성공/실패를 명확히 알려준다(true=동기화됨 또는 동기화 불필요, false=실패 — dirty 유지).
 async function mixSyncEdit(card){
-  if(card.dataset.dirty!=='1') return;
-  const did=card.dataset.draftId; if(!did) return;
+  if(card.dataset.dirty!=='1') return true;
+  const did=card.dataset.draftId; if(!did) return true;
   const ta=card.querySelector('.mixtext');
   try{
     const r=await fetch('/api/wiki/draft/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({draft_id:did,script_text:ta.value})});
     const d=await r.json();
-    if(d.ok){ card.dataset.draftId=d.draft_id; card.dataset.dirty=''; }
-  }catch(e){}
+    if(d.ok){ card.dataset.draftId=d.draft_id; card.dataset.dirty=''; return true; }
+    return false;
+  }catch(e){ return false; }
 }
 async function mixUpgrade(btn){
   const card=btn.closest('.mixdraft');
-  await mixSyncEdit(card);
+  const synced=await mixSyncEdit(card);
+  if(!synced){ alert('편집 내용 저장에 실패했어요. 잠시 후 다시 시도해 주세요.'); return; }
   const did=card.dataset.draftId;
   if(!did){ alert('이 초안은 서버에 저장된 버전이 없어 업그레이드를 지원하지 않습니다. 직접 편집하거나 확정하세요.'); return; }
   const elements=[...card.querySelectorAll('.mixelem[data-on="1"]')].map(b=>b.dataset.key);
