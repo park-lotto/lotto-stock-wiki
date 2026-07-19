@@ -580,7 +580,7 @@
           <label><input type="radio" name="pmmode" value="B" onchange="pmToggleTopic()"> 🔀 내 제품으로 이식 (구조만 빌림)</label>
           <input id="pmTopic" placeholder="예: 무선 가습기 / 여름 결로 방지 커튼" style="display:none">
         </div>
-        <button class="gen-run" id="pmRun" onclick="pmRunGen()">✨ 초안 생성 (10~20초)</button>
+        <button class="gen-run" id="pmRun" onclick="pmRunGen()">✨ 초안 생성 (15~40초)</button>
         <div class="gen-results" id="pmResults"></div>
       </div>
     </div>
@@ -2261,7 +2261,7 @@ async function pmRunGen(){
   const subjEl=document.getElementById('pmSubject');
   const subject = mode==='A' ? ((subjEl&&subjEl.value)||'').trim() : '';   // 이식(B)엔 소재 안 보냄
   if(mode==='B'&&!topic){ res.innerHTML='<div class="hint" style="color:var(--fire)">내 주제/제품을 입력하세요.</div>'; return; }
-  btn.disabled=true; res.innerHTML='<div class="hint">✨ 초안 만드는 중… (10~20초)</div>';
+  btn.disabled=true; res.innerHTML='<div class="hint">✨ 초안 만드는 중… (15~40초)</div>';
   try{
     const body={mode, my_topic:topic, subject, n:3, elem_modes:elemModes, structure:PM_BASE_STRUCT, base_script:PM_BASE_SCRIPT, category:PM_CATEGORY};
     const d=await (await fetch('/api/wiki/generate?shortcode='+encodeURIComponent(PM_SHORTCODE||PM_URL),

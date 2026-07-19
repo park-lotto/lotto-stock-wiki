@@ -115,14 +115,24 @@ def _title_matches(keywords, title):
     return any(k in title_l for k in keywords)
 
 
+_IG_PERMALINK_RE = re.compile(r"/(?:p|reel|reels|tv)/[A-Za-z0-9_-]+")
+
+
 def _is_watchable(platform, link):
-    """개별 재생 가능한 영상 URL만 True. 틱톡은 discover/tag/search/music 등 검색·모음
-    페이지(개별영상 X)를 렌즈가 섞어 반환해(2026-07-14 실측) 이를 걸러낸다 —
-    /video/숫자 또는 /@user/video/숫자 형태만 통과."""
+    """개별 재생 가능한 영상 URL만 True. 렌즈(Google Lens)는 개별 영상이 아닌 검색·모음·
+    SEO 페이지를 섞어 반환한다 — 틱톡 discover/tag/search/music(2026-07-14 실측),
+    인스타 /popular/{제목슬러그}·/explore·프로필(2026-07-19 실사고: 이런 URL이 렌즈 즐겨찾기로
+    담겨 매칭 단계에서 'Apify 해석 실패'로 배치 전체를 죽였다). 다운로드 가능한 permalink만
+    받게 입구에서 거른다.
+    - 틱톡: /video/숫자
+    - 인스타: /p·/reel·/reels·/tv + 코드(개별 게시물). 그 외(/popular·/explore·프로필)는 배제.
+    - 나머지(유튜브·중국플랫폼)는 그대로(대부분 개별 콘텐츠)."""
     path = urlparse(link or "").path.lower()
     if platform == "tiktok":
         return "/video/" in path
-    return True   # 유튜브·인스타·중국플랫폼은 그대로(대부분 개별 콘텐츠)
+    if platform == "instagram":
+        return bool(_IG_PERMALINK_RE.search(path))
+    return True   # 유튜브·중국플랫폼은 그대로(대부분 개별 콘텐츠)
 
 
 def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=None):
