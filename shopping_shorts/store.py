@@ -25,6 +25,9 @@ class Store:
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_schema()
+        # 주: access_level이 요청마다 Store를 만들어 _init_schema(멱등)를 재실행하는 비용은
+        #     Opus 리뷰 P1 지적사항이나, 경로별 1회 가드는 마이그레이션 의존 테스트를 깨서 보류.
+        #     소규모(지인 판매) 스케일에선 허용. 필요 시 요청스코프 캐시로 별도 최적화.
 
     def _conn(self):
         return sqlite3.connect(self.db_path)
@@ -546,6 +549,7 @@ class Store:
     def _ensure_paywall_schema(self, c):
         """유료게이트(2026-07-19): customers에 plan/full_access_until/google_sub/email 없으면 추가,
         settings·usage 테이블 생성. 기존 라이브 DB 파괴 없이 ALTER로 이관(멱등)."""
+        fresh_full_access = False
         for col, ddl in (
             ("plan", "TEXT NOT NULL DEFAULT 'free'"),
             ("full_access_until", "INTEGER NOT NULL DEFAULT 0"),
@@ -554,9 +558,23 @@ class Store:
         ):
             try:
                 c.execute(f"ALTER TABLE customers ADD COLUMN {col} {ddl}")
+                if col == "full_access_until":
+                    fresh_full_access = True   # 이번에 처음 추가됨(=페이월 도입 마이그레이션)
             except sqlite3.OperationalError:
                 pass  # 이미 존재
-        c.execute("CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)")
+        if fresh_full_access:
+            # ★페이월 도입 전부터 있던 기존 고객(cid≠0)은 full_access_until=0으로 백필돼
+            #   즉시 ranking_only로 강등된다 → 무통보 차단 방지 위해 유예 체험 1회 부여.
+            #   (같은 커서 c로 설정 읽기 — 중첩 커넥션 락 회피)
+            row = c.execute("SELECT value FROM settings WHERE key='trial_days'").fetchone()
+            try:
+                trial_days = int(row[0]) if row else 7
+            except (TypeError, ValueError):
+                trial_days = 7
+            grandfather_until = int(datetime.now(timezone.utc).timestamp()) + trial_days * 86400
+            c.execute("UPDATE customers SET full_access_until=? WHERE id != 0 AND full_access_until=0",
+                      (grandfather_until,))
+        # settings 테이블은 _init_schema(line 396)가 이미 만든다 — 여기선 usage만.
         c.execute("""CREATE TABLE IF NOT EXISTS usage (
                         customer_id INTEGER NOT NULL,
                         op TEXT NOT NULL,
@@ -2027,20 +2045,27 @@ class Store:
                 c.execute("UPDATE customers SET plan=?, full_access_until=? WHERE id=?",
                           (plan, int(full_access_until), customer_id))
 
-    def get_setting(self, key, default=None):
-        with self._conn() as c:
-            row = c.execute("SELECT value FROM settings WHERE key=?", (key,)).fetchone()
-        return row[0] if row else default
-
-    def set_setting(self, key, value):
-        with self._conn() as c:
-            c.execute("INSERT INTO settings(key,value) VALUES(?,?) "
-                      "ON CONFLICT(key) DO UPDATE SET value=excluded.value", (key, str(value)))
-
     def all_settings(self):
         with self._conn() as c:
             rows = c.execute("SELECT key, value FROM settings").fetchall()
         return {k: v for k, v in rows}
+
+    # ── 유료게이트 일일 사용량(크레딧) ──
+    def usage_incr(self, customer_id, op, day):
+        """(customer_id, op, day) 카운트 +1, 증가 후 값 반환. customer_id=-1은 전역 집계."""
+        with self._conn() as c:
+            c.execute("INSERT INTO usage(customer_id,op,day,count) VALUES(?,?,?,1) "
+                      "ON CONFLICT(customer_id,op,day) DO UPDATE SET count=count+1",
+                      (customer_id, op, day))
+            row = c.execute("SELECT count FROM usage WHERE customer_id=? AND op=? AND day=?",
+                            (customer_id, op, day)).fetchone()
+        return row[0] if row else 0
+
+    def usage_get(self, customer_id, op, day):
+        with self._conn() as c:
+            row = c.execute("SELECT count FROM usage WHERE customer_id=? AND op=? AND day=?",
+                            (customer_id, op, day)).fetchone()
+        return row[0] if row else 0
 
     # ── 같은 주제 모아보기(2026-07-13) ──
     def save_topic_groups(self, mapping, platform="instagram"):

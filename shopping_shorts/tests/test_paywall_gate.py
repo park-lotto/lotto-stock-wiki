@@ -20,14 +20,18 @@ def _setup(tmp_path, monkeypatch):
 
 
 def test_ranking_only_blocked_helper():
-    assert appmod._ranking_only_blocked("/api/reference") is False   # 조회 무료
-    assert appmod._ranking_only_blocked("/") is False
-    assert appmod._ranking_only_blocked("/api/me") is False
-    assert appmod._ranking_only_blocked("/api/thumb") is False
-    assert appmod._ranking_only_blocked("/api/reference/register") is True   # 등록=차단
-    assert appmod._ranking_only_blocked("/api/collect") is True              # 수집=차단
-    assert appmod._ranking_only_blocked("/api/lens/search") is True
-    assert appmod._ranking_only_blocked("/api/mix/basket") is True
+    assert appmod._ranking_only_blocked("/api/reference", "GET") is False   # 조회 무료
+    assert appmod._ranking_only_blocked("/", "GET") is False
+    assert appmod._ranking_only_blocked("/api/me", "GET") is False
+    assert appmod._ranking_only_blocked("/api/thumb", "GET") is False
+    assert appmod._ranking_only_blocked("/static/app.js", "GET") is False
+    assert appmod._ranking_only_blocked("/api/login", "POST") is False      # 로그인 폼=무료
+    # 차단돼야 하는 것들
+    assert appmod._ranking_only_blocked("/api/reference", "POST") is True    # 같은 경로여도 POST=차단
+    assert appmod._ranking_only_blocked("/api/reference/register", "GET") is True  # 등록=차단
+    assert appmod._ranking_only_blocked("/api/collect", "POST") is True      # 수집=차단
+    assert appmod._ranking_only_blocked("/api/lens/search", "POST") is True
+    assert appmod._ranking_only_blocked("/api/mix/basket", "GET") is True
 
 
 def test_free_user_blocked_from_paid_but_ranking_ok(tmp_path, monkeypatch):

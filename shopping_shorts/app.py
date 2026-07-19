@@ -1359,11 +1359,18 @@ def api_find_frame(work_id: str, filename: str):
 
 
 @app.post("/api/mix/start")
-def api_mix_start(background_tasks: BackgroundTasks, body: dict):
+def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dict):
     """믹스 job 시작. body: {urls, target_seconds, structure, subtitle_removal}."""
     urls = [u for u in (body.get("urls") or []) if u]
     if len(urls) < 2:
         return JSONResponse(status_code=422, content={"ok": False, "error": "레퍼런스 URL 2개 이상 필요"})
+    # 유료게이트: 렌더는 최고비용(VMake 크레딧). 계정별 일일 상한으로 캡.
+    cid = getattr(request.state, "customer_id", 0)
+    if not check_and_count(cid, "render"):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "daily_limit",
+            "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
+    global_incr_and_alert("render")
     blocked = _ssrf_guard(*urls)      # 이 URL들은 run_mix_job이 그대로 다운로드한다
     if blocked:
         return blocked
@@ -2216,6 +2223,13 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...),
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "lens_limit",
             "error": f"이번 달 렌즈 검색 한도({limit}회)를 다 썼습니다"})
+    # 유료게이트: 계정별 일일 상한(비용 방어 — 체험/다계정이 SerpApi를 태우는 것 캡).
+    cid = getattr(request.state, "customer_id", 0)
+    if not check_and_count(cid, "lens"):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "daily_limit",
+            "error": "오늘 렌즈 검색 횟수를 다 썼어요. 결제하면 더 쓸 수 있어요."})
+    global_incr_and_alert("lens")
     raw = await frame.read()
     # Google Lens는 갓 호스팅된 우리서버 이미지를 인덱싱 전이라 못 읽어 0개를 준다(실측).
     # imgbb·imgur은 Google이 상시 크롤링하는 도메인이라 즉시 매칭 → imgbb(전용키) 1순위,
@@ -2444,6 +2458,12 @@ def _load_dash_secret() -> str:
 
 DASH_SECRET = _load_dash_secret()
 _AUTH_ON = bool(DASH_PASS)
+if not _AUTH_ON:
+    # ★fail-open 경고: DASH_PASS가 비면 인증·유료게이트가 통째로 꺼져 전원이 admin(full)로 열린다.
+    #   로컬 개발은 의도지만, 운영 배포에서 env가 빠지면 유료기능·관리기능이 공개된다.
+    import sys as _sys
+    print("⚠️ [보안] DASH_PASS 미설정 → 인증·유료게이트 OFF(전원 full/admin). "
+          "운영이면 DASH_PASS를 반드시 설정하세요.", file=_sys.stderr)
 _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico", "/healthz",
                "/insta_fill_comment.user.js",
                # 유저스크립트(insta_fill_comment)가 인스타 탭에서 전송 감지 시 GM_xmlhttpRequest로
@@ -2460,18 +2480,25 @@ _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 # 나머지는 전부 402. 새 유료 엔드포인트를 추가해도 자동 차단(allowlist 방식이라 깜빡해도 안전).
 # ⚠️ /api/reference는 '조회(GET)'만 무료 — /api/reference/register(등록·데이터변경)는 exact 매칭이라 제외.
 #    /api/collect(수집=크롤 비용)도 제외 → 무료 등급은 마지막 수집 랭킹만 본다.
-_FREE_EXACT = {"/", "/api/me", "/api/reference", "/api/thumb", "/api/video", "/logout"}
-_FREE_PREFIX = ("/static", "/auth/google", "/login", "/signup", "/api/login", "/api/signup")
+# 메서드 무관 무료(로그인 폼 POST 등) — 전부 정확 경로.
+_FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout"}
+# GET만 무료(레퍼런스 랭킹 '조회') — POST/PUT 등 데이터변경은 같은 경로여도 차단.
+_FREE_EXACT_GET = {"/", "/api/me", "/api/reference", "/api/thumb", "/api/video"}
+# 경계있는 prefix만(과다매칭 방지 — 트레일링 슬래시).
+_FREE_PREFIX = ("/static/", "/auth/google/")
 
 
-def _ranking_only_blocked(path: str) -> bool:
-    """ranking_only 등급에게 이 경로를 막아야 하나. FREE 목록 외 전부 True(차단)."""
-    if path in _FREE_EXACT:
+def _ranking_only_blocked(path: str, method: str = "GET") -> bool:
+    """ranking_only 등급에게 이 경로를 막아야 하나. FREE 목록 외 전부 True(차단).
+    GET 무료 경로는 POST 등으로 오면 막는다(method-aware)."""
+    if path in _FREE_EXACT_ANY:
+        return False
+    if method == "GET" and path in _FREE_EXACT_GET:
         return False
     if any(path.startswith(p) for p in _FREE_PREFIX):
         return False
     if path in _AUTH_ALLOW or path.startswith("/api/find/frame/"):
-        return False   # 유저스크립트 담기·favicon 등 기존 공개 경로
+        return False   # 유저스크립트 담기·favicon 등 기존 공개 경로(단 /api/grab은 핸들러서 등급확인)
     return True
 
 
@@ -2623,7 +2650,7 @@ async def _auth_guard(request: Request, call_next):
         request.state.customer_id = customer_id
         # 유료게이트: 로그인은 됐으나 등급이 ranking_only(무료/체험만료)면 유료 경로 차단.
         # 사장님(0)·pro·체험중은 access_level=full이라 안 걸린다. deny-by-default.
-        if access_level(customer_id) == "ranking_only" and _ranking_only_blocked(path):
+        if access_level(customer_id) == "ranking_only" and _ranking_only_blocked(path, request.method):
             return JSONResponse(
                 {"error": "유료 기능이에요. 결제하면 열려요.", "level": "ranking_only"},
                 status_code=402)
@@ -2649,6 +2676,53 @@ def access_level(customer_id, now=None):
     if now < (cust.get("full_access_until") or 0):
         return "full"                       # 무료 체험 창
     return "ranking_only"
+
+
+# ── 유료게이트 비용 방어: 계정별 일일 크레딧 + 전역 상한 ──
+_CREDIT_DEFAULTS = {"lens": 5, "render": 2, "script": 10}
+_CREDIT_PRO_DEFAULTS = {"lens": 100, "render": 50, "script": 200}
+_GLOBAL_CAP_DEFAULTS = {"lens": 200, "render": 100, "script": 400}
+
+
+def _today_utc():
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+
+def check_and_count(customer_id, op):
+    """유료 op(lens/render/script) 실행 전 호출. 일일 상한 초과면 False(막기),
+    아니면 카운트+1 후 True. 사장님(0)·pro는 높은 상한(limit_{op}_pro)."""
+    st = Store(DB_PATH)
+    is_paid = (customer_id == 0) or (st.get_customer(customer_id) or {}).get("plan") == "pro"
+    if is_paid:
+        key, dflt = f"limit_{op}_pro", _CREDIT_PRO_DEFAULTS.get(op, 100)
+    else:
+        key, dflt = f"limit_{op}", _CREDIT_DEFAULTS.get(op, 5)
+    try:
+        limit = int(st.get_setting(key, dflt))
+    except (TypeError, ValueError):
+        limit = dflt
+    day = _today_utc()
+    if st.usage_get(customer_id, op, day) >= limit:
+        return False
+    st.usage_incr(customer_id, op, day)
+    return True
+
+
+def global_incr_and_alert(op):
+    """전역 일일 사용량(customer_id=-1) 증가. 90% 도달 시 텔레그램 1회 알림(best-effort)."""
+    st = Store(DB_PATH)
+    n = st.usage_incr(-1, op, _today_utc())
+    try:
+        cap = int(st.get_setting(f"global_cap_{op}", _GLOBAL_CAP_DEFAULTS.get(op, 200)))
+    except (TypeError, ValueError):
+        cap = _GLOBAL_CAP_DEFAULTS.get(op, 200)
+    if cap > 0 and n == max(1, int(cap * 0.9)):   # 90% 첫 도달 1회만
+        try:
+            from shopping_shorts import notify
+            notify.send_telegram(f"⚠️ [유료게이트] {op} 전역 일일 사용 {n}/{cap} (90% 도달)")
+        except Exception:
+            pass
+    return n
 
 
 @app.get("/api/me")
@@ -2758,6 +2832,11 @@ def api_grab(request: Request, background_tasks: BackgroundTasks,
     if cid is None:
         return _grab_popup_html(False, "로그인이 필요해요",
                                 "shoppingshorts.duckdns.org에 먼저 로그인하세요")
+    # 유료게이트: /api/grab은 _AUTH_ALLOW라 미들웨어 게이트를 우회한다 → 여기서 직접 등급 확인.
+    # 담기(+백그라운드 메타 크롤 비용)는 유료 기능이므로 ranking_only(무료/체험만료)는 차단.
+    if access_level(cid) == "ranking_only":
+        return _grab_popup_html(False, "유료 기능이에요",
+                                "무료 체험이 끝났어요. 결제하면 담기를 계속 쓸 수 있어요")
     platform = _grab_platform(url)
     if not platform:
         return _grab_popup_html(False, "담을 수 없는 링크예요", "유튜브·틱톡·샤오홍슈·도우인 영상 페이지에서 눌러주세요")

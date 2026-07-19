@@ -38,8 +38,25 @@ def test_settings_roundtrip(tmp_path):
     s = Store(str(tmp_path / "t.db"))
     s.set_setting("trial_days", 7)
     s.set_setting("trial_days", 10)         # 덮어쓰기
-    assert s.get_setting("trial_days") == "10"
+    assert int(s.get_setting("trial_days")) == 10   # 저장타입 무관 int로 비교
     assert s.get_setting("nope", "d") == "d"
+
+
+def test_grandfather_existing_customers(tmp_path):
+    """페이월 이전 DB(full_access_until 컬럼 없음)의 기존 고객은 마이그레이션 시 유예 체험을 받아
+    즉시 ranking_only로 강등되지 않는다. cid≠0만."""
+    import sqlite3
+    db = str(tmp_path / "old.db")
+    con = sqlite3.connect(db)
+    con.execute("CREATE TABLE customers (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                "username TEXT NOT NULL UNIQUE, password_hash TEXT, salt TEXT, created_at TEXT)")
+    con.execute("CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT)")
+    con.execute("INSERT INTO customers(username,password_hash,salt) VALUES('old','h','s')")
+    con.commit(); con.close()
+    s = Store(db)                       # __init__ 마이그레이션 → full_access_until 추가 + 유예
+    cust = s.get_customer(1)
+    assert cust["plan"] == "free"
+    assert cust["full_access_until"] > _now()      # 유예 체험 부여됨(미래 시각)
 
 
 def test_api_me_auth_off_is_admin(tmp_path, monkeypatch):
