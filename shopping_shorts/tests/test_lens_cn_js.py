@@ -22,7 +22,10 @@ def test_cn_click_cap():
       zero:  _lensCnCapReached({cnClicks:0}),
     }));
     """
-    out = subprocess.run([NODE, "-e", driver], capture_output=True, text=True, timeout=20)
+    # stdin=DEVNULL: pytest가 stdin 핸들을 캡처/교체한 상태에서 node -e 가 그 핸들을
+    # 건드려 Windows WinError 6(invalid handle)로 간헐 실패하던 것을 막는다(2026-07-19 실측).
+    out = subprocess.run([NODE, "-e", driver], capture_output=True, text=True,
+                         stdin=subprocess.DEVNULL, timeout=20)
     assert out.returncode == 0, out.stderr
     r = json.loads(out.stdout)
     assert r == {"under": False, "at": True, "over": True, "zero": False}
