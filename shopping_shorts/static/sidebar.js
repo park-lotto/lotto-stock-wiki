@@ -87,14 +87,16 @@
   html += '<div class="ss-toggle"><button class="ss-toggle-btn" onclick="window.__ssToggleTheme()" aria-label="화면 테마 전환">' +
           '<span id="ssThemeIco">🌙</span><span id="ssThemeTxt">민트·블랙</span></button></div>';
   window.__ssToggleTheme = function () {
-    var cur = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
-    var next = cur === "light" ? "dark" : "light";
-    document.documentElement.setAttribute("data-theme", next);
+    var root = document.documentElement;
+    if (!root) return;
+    var next = root.getAttribute("data-theme") === "light" ? "dark" : "light";
+    root.setAttribute("data-theme", next);
     try { localStorage.setItem("ssTheme", next); } catch (e) {}
     __ssPaintTheme();
   };
   function __ssPaintTheme() {
-    var light = document.documentElement.getAttribute("data-theme") === "light";
+    var root = document.documentElement;   // 하네스 mock document엔 없을 수 있다 — 가드
+    var light = !!root && root.getAttribute("data-theme") === "light";
     var ico = document.getElementById("ssThemeIco"), txt = document.getElementById("ssThemeTxt");
     if (ico) ico.textContent = light ? "☀️" : "🌙";
     if (txt) txt.textContent = light ? "화이트·민트" : "민트·블랙";
