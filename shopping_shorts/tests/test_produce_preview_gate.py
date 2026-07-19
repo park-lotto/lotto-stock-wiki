@@ -32,6 +32,11 @@ _PREVIEW_END = "// ── 3단계 자막제거"
 # 재리뷰 C-3: 이게 슬라이스에 없어서 34건이 다 green인데도 "재매칭 중 게이트가 열려 있다"가 살아 있었다.
 _MIX_START = "async function startProduceMix(){"
 _MIX_END = "async function pollMix(){"
+# ★미리보기 <video>·편집안 렌더 헬퍼(2026-07-19 상태유지 수정). pollPreview·loadMixReview가 여기로
+# 위임하도록 뽑았다 — 슬라이스에 없으면 _renderPreviewVideo/_renderMixReviewBody가 미정의가 돼
+# 렌더가 안 돌고 버튼이 잠긴 채 남는다. 실제 소스를 그대로 넣어 _videoWrites 계수가 진짜로 유지된다.
+_HELPERS_START = "function _renderPreviewVideo(job){"
+_HELPERS_END = "function _consumeProduceHandoff(){"
 
 _HARNESS = r"""
 'use strict';
@@ -63,6 +68,7 @@ var STATE = { script: '확정된 대본' };     // startProduceMix가 없으면 
 var STEPS = ["제작소","자막제거","TTS","꾸미기","썸네일","SEO","최종검수"];
 function renderSteps(){}
 function showPanel(){ refreshNextBtn(); }
+function saveWork(){}   // 상태유지(2026-07-19): jump/go/startProduceMix가 단계·job을 서버에 남긴다 — 슬라이스 밖 심볼
 function alert(){}
 function pollMix(){}                        // 슬라이스 밖 — 이 테스트는 미리보기 게이트만 본다
 // startProduceMix가 소스 URL을 collectMixUrls()로 읽는다(2026-07-18 개편). 슬라이스 밖 심볼이라
@@ -336,6 +342,7 @@ def _src():
 
     return (_span(_JUMP_START, _JUMP_END) + "\n"
             + _span(_MIX_START, _MIX_END) + "\n"
+            + _span(_HELPERS_START, _HELPERS_END) + "\n"
             + _span(_PREVIEW_START, _PREVIEW_END))
 
 
