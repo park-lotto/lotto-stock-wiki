@@ -992,7 +992,7 @@ function renderLens(shortcode){
           <button class="view" onclick="lensPreview('${shortcode}','${i.savesc}')">▶ 미리보기</button>
           <button class="save${isSaved?' saved':''}" onclick="toggleLensSave('${shortcode}','${i.savesc}',this)">${isSaved?'🎬 담김✓':'📥 담기'}</button>
         </div>
-        <div style="margin-top:4px"><a href="${i.url}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🔗 원본 열기</a></div>
+        <div style="margin-top:4px"><a href="${_openUrl(i.url)}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🔗 원본 열기</a></div>
       </div>
     </div>`;
   }).join('') || (st.ytLoading?'<div style="font-size:12px;color:var(--sub);padding:10px">불러오는 중…</div>':'<div style="font-size:12px;color:var(--sub);padding:10px">켠 플랫폼 결과 없음 — 위 🔗 바로가기로 찾아 담으세요</div>');
@@ -1020,6 +1020,11 @@ async function toggleLensSave(shortcode, savesc, btn){
     if(d.in) showToast('✅ 담았음 <a href="/collection" style="color:#7db4ff;margin-left:6px">모음집 보기 →</a>');
   }catch(e){ /* 무시 */ }
 }
+// 샤오훙슈 글 링크는 한국(로그아웃) 방문자를 /login으로 튕긴다(저장 url은 깨끗한데 샤오훙슈 서버가
+// 튕기는 것 — 2026-07-19 서버DB·브라우저 실측). 해외판 도메인 rednote.com은 같은 xsec_token으로
+// 로그인 벽 없이 열린다. 그래서 '고객이 여는 원본 열기'만 rednote로 바꾼다. 저장·담기·다운로드용
+// url은 원본(xiaohongshu.com) 그대로 둬야 한다(프레임추출·미디어다운로드가 그 도메인 기대).
+function _openUrl(u){ return String(u||'').replace(/:\/\/(www\.)?xiaohongshu\.com/i,'://www.rednote.com'); }
 // 미리보기 오버레이 — 유튜브는 임베드 재생, 직접 mp4(샤오홍슈 등) 있으면 <video>, 없으면 썸네일+원본안내.
 function _ytId(url){ const m=String(url||'').match(/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/); return m?m[1]:''; }
 function lensPreview(shortcode, savesc){
@@ -1039,7 +1044,7 @@ function lensPreview(shortcode, savesc){
       <div style="color:var(--sub);font-size:12px;margin-top:6px">이 플랫폼은 인앱 미리보기가 지원되지 않아요 — 원본에서 확인하세요.</div>`;
   }
   const head=`<div style="margin-bottom:10px;font-size:13px">${LENS_PLATFORMS.find(p=>p.k===it.platform)?.label||''} · ${esc((it.title||'').slice(0,90))}</div>`;
-  const foot=`<div style="margin-top:12px"><a href="${it.url}" target="_blank" style="color:var(--accent)">🔗 원본 열기</a></div>`;
+  const foot=`<div style="margin-top:12px"><a href="${_openUrl(it.url)}" target="_blank" style="color:var(--accent)">🔗 원본 열기</a></div>`;
   _openLensOverlay(head+inner+foot);
 }
 function _openLensOverlay(html){
