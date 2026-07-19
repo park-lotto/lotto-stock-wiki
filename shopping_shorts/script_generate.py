@@ -175,7 +175,7 @@ def generate_mix(sources, target_seconds=20, n=3, max_key_tries=3):
     seconds = max(5, min(int(target_seconds or 20), 90))
     words = max(15, round(seconds * 2.3))
     prompt = _MIX_PROMPT.format(sources=_mix_source_block(sources[:3]), seconds=seconds, words=words, n=n)
-    return _generate_drafts(prompt)
+    return _verify_and_fix(_generate_drafts(prompt), seconds)
 
 
 def _elem_lines(structure, elem_modes, category_lookup):
@@ -252,7 +252,7 @@ def generate_variations(structure, full_text, elem_modes, category_lookup, mode=
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json", response_schema=_SCHEMA),
             )
-            return json.loads(resp.text).get("drafts", [])
+            return _verify_and_fix(json.loads(resp.text).get("drafts", []))
         except Exception as e:  # noqa: BLE001 — 생성 실패는 치명적 아님(빈 리스트)
             if (comment_gen.key_vault.is_daily_exhausted_error(e)
                     or comment_gen.key_vault.is_account_disabled_error(e)):

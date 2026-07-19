@@ -8,6 +8,7 @@ _STRUCT = {"characters": [{"who": "농원 언니", "role": "정보원"}], "twist
 
 
 def _wire(mp, text):
+    mp.setattr(script_generate.key_vault, "get_live_keys_cascade", lambda group: [])
     mp.setattr(comment_gen, "SHORTS_GEMINI_KEYS", ["k"])
     mp.setattr(comment_gen, "_current_key_and_idx", lambda: ("k", 0))
     def gen(model, contents, config):
@@ -140,6 +141,7 @@ def test_detect_subject_strips_whitespace(monkeypatch):
 
 def _capture_prompt(mp, holder):
     """generate_content에 들어간 prompt를 holder['p']에 담고 정상 JSON 반환하도록 배선."""
+    mp.setattr(script_generate.key_vault, "get_live_keys_cascade", lambda group: [])
     mp.setattr(comment_gen, "SHORTS_GEMINI_KEYS", ["k"])
     mp.setattr(comment_gen, "_current_key_and_idx", lambda: ("k", 0))
     def gen(model, contents, config):
@@ -262,3 +264,24 @@ def test_verify_bad_idx_ignored(monkeypatch):
                        "cta_ok": False, "fix_instruction": "x"}]},
     ])
     assert script_generate._verify_and_fix(drafts)[0]["script"] == "s"
+
+
+def test_generate_variations_runs_verify(monkeypatch):
+    h = {}
+    _capture_prompt(monkeypatch, h)
+    monkeypatch.setattr(script_generate, "_verify_and_fix",
+                        lambda drafts, seconds=20: [dict(d, applied="verified") for d in drafts])
+    out = script_generate.generate_variations(_STRUCT, "원본", {}, {}, mode="remake")
+    assert out[0]["applied"] == "verified"
+
+
+def test_generate_mix_runs_verify(monkeypatch):
+    monkeypatch.setattr(comment_gen, "SHORTS_GEMINI_KEYS", ["k"])
+    monkeypatch.setattr(script_generate, "_generate_drafts",
+                        lambda p: [{"hook": "h", "script": "s", "applied": "a"}])
+    monkeypatch.setattr(script_generate, "_verify_and_fix",
+                        lambda drafts, seconds=20: [dict(d, applied="verified") for d in drafts])
+    srcs = [{"name": "a", "full_text": "t1", "structure": {}},
+            {"name": "b", "full_text": "t2", "structure": {}}]
+    out = script_generate.generate_mix(srcs)
+    assert out[0]["applied"] == "verified"
