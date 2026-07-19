@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-16",
+    "broker": "미래에셋증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-19_0802_마진 확대 여력 충분.md"
+  },
+  "questionnaire": {
+    "broker": "미래에셋증권",
+    "analyst": "김태형",
+    "report_date": "2026.7.15",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "LS ELECTRIC",
+        "code": "010120",
+        "rating": "매수",
+        "rating_changed": null,
+        "tp_new": "230,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "동사의 2026F 연결 실적은 매출액 6조 2,992억원(YoY +26.9%), 영업이익 6,957억원(YoY +63.0%, OPM 11.0%)을 전망한다.",
+        "estimate_revision": "2026F 영업이익 696십억원 (Consensus 660십억원)",
+        "next_catalyst": "데이터센터향 배전기기 발주 및 증설 효과 본격화",
+        "thesis": [
+          "전방위적인 증설 계획을 통한 매출 Capa 확보",
+          "배전기기 중심의 사업 구조로 인한 안정적인 수익성",
+          "미국향 수출 물량의 관세 체계 개편에 따른 마진 개선"
+        ],
+        "valuation_basis": "28F EPS에 타겟 PER 35.4배를 적용해 산출했으며, 타겟 멀티플은 GEV, ABB 등 경쟁사들의 28F PER을 평균해 산출함.",
+        "risk": "밸류에이션 부담이 일부 존재하는 구간임",
+        "supply_comment": "FTM 및 BTM 부문의 전방위적인 증설 진행 중. 2024년 LS파워솔루션 인수, 부산 공장 증설, 유타주 MCM Engineering II 증설 등을 통해 생산 여력 확대 중.",
+        "quote": "LS일렉트릭에 대해 투자의견 ‘매수’와 목표주가 23만원으로 커버리지를 개시한다."
+      }
+    ],
+    "sector": "전력"
+  }
+}

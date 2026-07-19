@@ -1,0 +1,49 @@
+{
+  "meta": {
+    "date": "2026-06-11",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-12_0705_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "박상준",
+    "report_date": "2026.06.11",
+    "target_kind": "sector",
+    "sector_name": "인터넷/SW/게임",
+    "sector_view": null,
+    "thesis": [
+      "게임 ‘NK구도’ 정착, 넷마블·엔씨 추격…'PC·콘솔·글로벌' 중심 재편",
+      "네이버, 엔비디아와 협력으로 '아시아판 코어위브' 꿈꾼다"
+    ],
+    "timeline": [],
+    "top_picks": [
+      {
+        "name": "넥슨",
+        "reason": "분기 매출 1조원을 넘기며 'NK 2강' 체제를 굳힘",
+        "tp": null
+      },
+      {
+        "name": "크래프톤",
+        "reason": "분기 매출 1조원을 넘기며 'NK 2강' 체제를 굳힘",
+        "tp": null
+      },
+      {
+        "name": "넷마블",
+        "reason": "넥슨·크래프톤을 추격",
+        "tp": null
+      },
+      {
+        "name": "엔씨",
+        "reason": "넥슨·크래프톤을 추격",
+        "tp": null
+      },
+      {
+        "name": "네이버",
+        "reason": "엔비디아와의 파트너십을 계기로 기존 클라우드를 넘어 'AI 클라우드' 사업자로 아시아 시장 진출을 본격화하며, 장기적으로 1GW급 AI 팩토리 구축을 목표로 하고 있음",
+        "tp": null
+      }
+    ],
+    "risk": "대규모 고정비 부담과 수익성 리스크",
+    "quote": "게임 ‘NK구도’ 정착, 넷마블·엔씨 추격…'PC·콘솔·글로벌' 중심 재편 네이버, 엔비디아와 협력으로 '아시아판 코어위브' 꿈꾼다"
+  }
+}

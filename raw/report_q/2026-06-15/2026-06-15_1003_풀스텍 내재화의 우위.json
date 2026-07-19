@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "date": "2026-06-15",
+    "broker": "미래에셋증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-15_1003_풀스텍 내재화의 우위.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "미래에셋증권",
+    "analyst": "김영건",
+    "report_date": "2026.6.15",
+    "stocks": [
+      {
+        "name": "삼성전자",
+        "code": "005930",
+        "sector": "반도체",
+        "rating": "매수",
+        "rating_changed": null,
+        "tp_new": "550,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": {
+          "quote": "동사의 2Q26F/26F/27F 영업이익은 각각 98조원/395조원/529조원으로 추정되며, 24~26년 FCF 50% 주주환원 이행시 26년 배당수익률은 보통주 3.6~6.4%, 우선주 5.7~9.9%로 예상된다."
+        },
+        "estimate_revision": null,
+        "next_catalyst": "중장기적으로는 풀 스텍 메모리 제조 내재화 역량에 대한 프리미엄 부여까지도 고민해 볼 시기다.",
+        "thesis": [
+          "풀 스텍 제조 내재화 역량을 내재화했으나 가장 싸다",
+          "DRAM 공급이 타이트한 업황 속에 서 SSD 모듈을 들여오는 DRAM의 안정적 조달 필요성이 커진 데 대응으로 보임",
+          "파운드리사업부의 4nm FinFET 공정을 적용해 베이스다이 내재화를 완료함"
+        ],
+        "valuation_basis": "동사의 26F P/B 및 P/E 배수는 각각 2.9배, 6.6배, 목표가를 환산한 26F P/B 및 P/E 배수도 각각 4.9배, 11.3배로 업종 평균(각각 7.6배, 12.4배)에 미치지 못하는 수준",
+        "risk": null,
+        "supply_comment": "동사는 파운드리사업부의 4nm FinFET 공정을 적용해 베이스다이 내재화를 완료했으며, HBM4E, HBM5로 고도화될수록 베이스다이의 조달 중요성은 더욱 커질 전망",
+        "quote": "동사에 대한 투자의견 '매수' 및 목표주가를 55만원으로 유지한다."
+      }
+    ]
+  }
+}

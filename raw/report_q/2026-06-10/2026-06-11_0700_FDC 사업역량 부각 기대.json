@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "미래에셋증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-11_0700_FDC 사업역량 부각 기대.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "미래에셋증권",
+    "analyst": "김주희",
+    "report_date": "2026.6.10",
+    "stocks": [
+      {
+        "name": "HD현대마린솔루션",
+        "code": "443060",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "26F 영업이익 컨센서스 없음, 25년 매출액 1,983십억원, 영업이익 350십억원",
+        "estimate_revision": null,
+        "next_catalyst": "AM: 총수의 야심작, 하반기 실적 모멘텀 가동",
+        "thesis": [
+          "AM사업부의 높은 수익성과 고단가 DF추진선 비중 확대",
+          "육상엔진(4행정) AM서비스의 글로벌 설치 2,200대(6GW) 기반 안정적 매출",
+          "플로팅 데이터센터 등 선박 개조역량 부각 및 하이퍼스케일러의 수요 포착"
+        ],
+        "valuation_basis": "글로벌 MRO업체 대비 비교 및 MSCI 편출 등 오버행 이슈 해소",
+        "risk": "상장 직후 오버행 이슈 및 수급 부담",
+        "supply_comment": "회사에 따르면 실제 기술력 허들은 높지 않다고 전해진다. 1년 이내의 빠른 납기, HD현대의 글로벌 어드 활용력도 강점이다.",
+        "quote": "주가의 핵심은 AM사업부이고 뛰어난 사업구조로 명성이 자자하다. OP개선의 변곡점은 1) 고단가 DF추진선(ASP +50%) 비중확대로 21년부터 인도된 선박들이 하반기 1차 오버홀 진입, Q/P 동시 개선요인이다."
+      }
+    ]
+  }
+}

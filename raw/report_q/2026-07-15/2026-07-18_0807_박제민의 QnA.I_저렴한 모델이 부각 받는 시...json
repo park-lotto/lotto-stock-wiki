@@ -1,0 +1,47 @@
+{
+  "meta": {
+    "date": "2026-07-15",
+    "broker": "SK securities",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-18_0807_박제민의 QnA.I_저렴한 모델이 부각 받는 시...md"
+  },
+  "questionnaire": {
+    "broker": "SK securities",
+    "analyst": "박제민",
+    "report_date": "2026-07-15",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "OpenRouter 토큰 사용량",
+      "GPU 렌탈 가격",
+      "LLM 평균 지출 단가",
+      "AI Labs ARR",
+      "AI Labs 기업가치"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": "중립",
+        "reason": "AI 모델의 최적화(Optimizing) 흐름은 생태계 내에서 유통망을 쥐고 있는 빅테크들의 해자를 강화한다고 판단"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026-07-14",
+        "event": "인스타그램 부서 헤드 Adam이 엔지니어별 토큰 예산 캡 언급"
+      }
+    ],
+    "top_picks": [
+      "엔비디아",
+      "알파벳",
+      "애플",
+      "마이크로소프트",
+      "아마존",
+      "메타 플랫폼스",
+      "오라클",
+      "코어위브"
+    ],
+    "risk": "기업들의 토큰 가격 부담 증가와 저렴한 모델로의 수요 이동에 따른 AI Labs의 지배력 변화 및 빅테크 간 유통 경쟁 심화, 그리고 AI 인프라 기업들의 금리 상승 및 부채 부담 리스크.",
+    "quote": "기업들의 Token Maximizing → Token Optimizing 추세 전환. 해당 트랜드가 Anthropic의 지배력(엔터프라이즈 코딩 54%, 엔터프라이즈 LLM 지출 40%)에 어떤 영향을 미칠지 주목 필요"
+  }
+}

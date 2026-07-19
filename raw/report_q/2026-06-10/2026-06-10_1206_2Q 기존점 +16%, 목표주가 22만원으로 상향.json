@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1206_2Q 기존점 +16%, 목표주가 22만원으로 상향.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "키움증권",
+    "analyst": "박상준, CFA",
+    "report_date": "2026. 6. 10",
+    "stocks": [
+      {
+        "name": "현대백화점",
+        "code": "069960",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "220,000원",
+        "tp_prev": null,
+        "tp_direction": "up",
+        "earnings_outlook": "현대백화점의 2분기 연결기준 영업이익 전망치를 914억원(+5% YoY)으로 상향 조정한다. 26년 연간 영업이익 전망치를 4,313억원(+14% YoY)으로 상향 조정한다.",
+        "estimate_revision": "현대백화점의 2분기 영업이익과 26년 연간 영업이익 전망치를 각각 914억원, 4,313억원으로 상향 조정한다.",
+        "next_catalyst": "인천공항 면세점 사업 권역 확대",
+        "thesis": [
+          "국내 주식시장 강세에 따른 자산효과와 외국인 매출 증가",
+          "더현대서울(여의도)와 판교점을 중심으로 매출 성장세가 강화",
+          "원화 약세와 한일령 영향으로 외국인 관광객 증가 및 외국인 매출 비중 구조적 상승"
+        ],
+        "valuation_basis": "일본 백화점 3 社(Isetan Mitsukoshi, Takashimaya, J Front Retailing) 평균 PER 에 20% 할인 적용",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "현대백화점의 2분기 영업이익과 26년 연간 영업이익 전망치를 각각 914억원, 4,313억원으로 상향 조정한다."
+      }
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "LG에너지솔루션",
+      "signal": "bull",
+      "reason": "ESS용 LFP 배터리 양산 시작 및 구글 최대 ESS 프로젝트 공급 확보",
+      "ts": "2026-07-18",
+      "quote": "LG엔솔-GM, 美 합작공장 ESS용 LFP 배터리 양산 시작",
+      "sector": "2차전지"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "LG엔솔-GM, 美 합작공장 ESS용 LFP 배터리 양산 시작",
+      "ts": "2026-07-08",
+      "quote": "LG엔솔-GM, 美 합작공장 ESS용 LFP 배터리 양산 시작"
+    },
+    {
+      "fact": "LG엔솔 배터리, 구글 최대 ESS 프로젝트 합류",
+      "ts": "2026-07-15",
+      "quote": "LG엔솔 배터리, 구글 최대 ESS 프로젝트 합류"
+    }
+  ],
+  "quote": "LG엔솔-GM, 美 합작공장 ESS용 LFP 배터리 양산 시작 및 구글 최대 ESS 프로젝트 합류"
+}

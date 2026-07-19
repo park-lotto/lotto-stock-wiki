@@ -1,0 +1,49 @@
+{
+  "meta": {
+    "date": "2026-06-12",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-15_0703_AI RAN 관련주에 집중할 시점.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "하나증권",
+    "analyst": "김홍식",
+    "report_date": "2026.6.12",
+    "market_direction": null,
+    "macro_vars": [
+      "금리 인상 가능성"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "통신",
+        "stance": "비중확대",
+        "reason": "AI RAN 사업 본격화와 국책 AI 사업자 선정 가능성"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026-06-11",
+        "event": "엔비디아, 6G 안테나 전용 GPU 개발 추진"
+      },
+      {
+        "date": "2026-06-10",
+        "event": "통신학회 “AI 시대 첨단 통신 인프라 구축과 주파수 할당 필요”"
+      },
+      {
+        "date": "2025-06-08",
+        "event": "SKT, 엔비디아와 AI 데이터센터 판 키운다"
+      }
+    ],
+    "top_picks": [
+      "KMW",
+      "RFHIC",
+      "HFR",
+      "SKT",
+      "LGU+",
+      "KT"
+    ],
+    "risk": "금리 인상 가능성 부각에 따른 기술주 하락, 반도체 대형주 위주로의 매수세 쏠림",
+    "quote": "통신장비 업종에선 AI RAN 관련주에 집중 투자할 것을 권한다. KMW, RFHIC, HFR 매수를 추천한다."
+  }
+}

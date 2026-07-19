@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "date": "2026-07-16",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-19_0804_AI RAN이 HFR의 위상을 송두리째 바꿀 것 입...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "김홍식, 이상훈",
+    "report_date": "2026년 07월 16일",
+    "stocks": [
+      {
+        "name": "에치에프알",
+        "code": "230240",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "50,000원",
+        "tp_prev": "50,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "2Q26F": "매출액 29.2십억원, 영업이익 (5.2)십억원",
+          "3Q26F": "매출액 34.8십억원, 영업이익 (3.7)십억원",
+          "4Q26F": "매출액 54.0십억원, 영업이익 0.0십억원"
+        },
+        "estimate_revision": null,
+        "next_catalyst": "7/22일 미국 어퍼 C밴드 경매 일정 확정 후 빠르면 연말연초부터 미국향 프론트홀 수주 발생",
+        "thesis": [
+          "과기부 주관 AI RAN 실증사업에 글로벌 SI와 같은 자격의 주 수행기관으로 참여하여 AI RAN 선도업체로 인정",
+          "AI RAN 구축을 명분으로 무선장비 내수 매출이 조기 회복될 것으로 기대",
+          "미국 어퍼 C밴드 경매 일정 확정 후 빠르면 연말연초부터 미국향 프론트홀 수주가 발생할 전망"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "HFR이 삼성전자나 노키아의 협력업체로서 실증사업에 참여하는 것이 아니라 독립적인 수행기관으로 선정되어 국내 통신사는 물론 향후 해외 통신사에도 글로벌 SI를 거치지 않고 직납할 가능성 증가",
+        "quote": "HFR에 대한 투자의견 매수, 목표주가 50,000원을 유지한다.",
+        "sector": "통신"
+      }
+    ]
+  }
+}

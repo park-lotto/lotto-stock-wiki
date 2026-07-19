@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "date": "2026-06-11",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-12_0704_밀려드는 선박 발주 본업은 배신하지 않는다.md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": "변용진",
+    "report_date": "2026.06.11",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "HD현대중공업",
+        "code": "329180",
+        "rating": "Buy",
+        "rating_changed": "Maintain",
+        "tp_new": "860,000원",
+        "tp_prev": "860,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 매출액 23,869십억원, 영업이익 3,507십억원",
+        "estimate_revision": null,
+        "next_catalyst": "데이터센터향 엔진 수주 및 SMR 주기기 제작/공급",
+        "thesis": [
+          "조선사 중 가장 안정적인 펀더멘털 보유",
+          "조선3사 중 가장 빠른 실적 상승세",
+          "데이터센터향 엔진 수주 등 성장성 확보"
+        ],
+        "valuation_basis": "조선업종 Top Pick, 안정성과 성장성 확보",
+        "risk": null,
+        "supply_comment": "26년 누적 수주는 127.6억 달러로 조선사 중 가장 먼저 28년 슬롯을 채웠음",
+        "quote": "업종 투자의견 Overweight를 유지하고, 최선호주로는 HD현대중공업을 제시. 가장 탄탄한 본업 수주잔고를 보유하고 가장 우수한 실적 퍼포먼스를 보여주고 있으며, 데이터센터/특수선 등 호재성 이벤트에도 충분한 노출도를 보유하고 있어 안정과 성장 두 마리 토끼를 확실히 잡고 있는 기업."
+      },
+      {
+        "name": "한화오션",
+        "code": "042660",
+        "rating": "Buy",
+        "rating_changed": "Maintain",
+        "tp_new": "167,000원",
+        "tp_prev": "167,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 매출액 13,647십억원, 영업이익 1,991십억원",
+        "estimate_revision": null,
+        "next_catalyst": "캐나다 CPSP 잠수함 사업 결과 발표",
+        "thesis": [
+          "2026년 1분기 상선사업 이익률 18% 기록",
+          "핵추진잠수함 사업 주도적 역할 기대",
+          "특수선 건조 분야 강점"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "2029년 슬롯은 23척으로 캐파의 절반 정도를 채움",
+        "quote": "기다리던 캐나다 CPSP 잠수함 사업의 결과가 6월 말경 발표될 예정. 박빙의 경쟁이지만 최근 현지 기류는 한화오션/HD현대중공업과 대한민국을 전략적 파트너로 인식해야 한다는 주장이 힘을 얻으면서 수주 가능성에 긍정적 전망을 보탬."
+      },
+      {
+        "name": "삼성중공업",
+        "code": "010140",
+        "rating": "Buy",
+        "rating_changed": "Maintain",
+        "tp_new": "35,000원",
+        "tp_prev": "35,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 매출액 12,690십억원, 영업이익 1,343십억원",
+        "estimate_revision": null,
+        "next_catalyst": "부유식 데이터센터(FDC) 시장 선점",
+        "thesis": [
+          "해양 공사 2건 수주로 목표 초과 달성 확실시",
+          "세계 최고 FLNG 명가 확인",
+          "Floating Data Center 시장 선점 노력"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "전세계에서 가장 많은 LNG운반선 수주잔고(63척) 보유",
+        "quote": "삼성중공업의 누적 수주액은 96억 달러로 목표치(139억 달러)의 69.1%를 이미 달성했으며 특히 이중 상선 수주는 52억 달러로 목표치(57억 달러)의 91.2% 달성."
+      }
+    ]
+  }
+}

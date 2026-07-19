@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-12",
+    "broker": "나이스평가정보㈜",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-15_0702_조선·산업기계·발전 플랜트를 잇는 대형 주...md"
+  },
+  "questionnaire": {
+    "broker": "나이스평가정보㈜",
+    "analyst": "류치선 연구원",
+    "report_date": "2026.06.11.",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "한국주강",
+        "code": "025890",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "동사의 2026년 매출은 부문 합산 기준 541억 원이 전망된다.",
+        "estimate_revision": null,
+        "next_catalyst": "조선 발주 회복 효과의 2026~2027년 본격 반영 및 압축분철 라인 증설",
+        "thesis": [
+          "30여 년 주강 기술로 구축한 국내 대형 주강 과점 업체",
+          "주강과 압축분철을 양 축으로 하는 이원화 사업 구조",
+          "친환경·방산·에너지 인프라 성장으로 수혜 기대"
+        ],
+        "valuation_basis": null,
+        "risk": "글로벌 발주 감소 및 철스크랩 가격 변동성의 이중 원가·수요 리스크",
+        "supply_comment": null,
+        "quote": "한국주강은 조선 호황 수주 모멘텀의 후행 수혜, NORSOK 특수강 인증 추진, 압축분철 증설 검토까지, 동사는 대형 주강 과점 플레이어로서 복수의 성장 동력이 동시에 가동되는 국면에 진입하고 있는 것으로 판단된다.",
+        "sector": "조선"
+      }
+    ]
+  }
+}

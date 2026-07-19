@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1210_부담스러운 금리, 하지만 무시할 수 없는 주...md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": "배세호",
+    "report_date": "2026.06.10",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "현대건설",
+        "code": "000720",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "190,000원",
+        "tp_prev": "210,000원",
+        "tp_direction": "down",
+        "earnings_outlook": "건축/주택 매출액은 2027년부터 본격적으로 반등할 것(+16% YoY), GPM도 완만한 상승 예상(8.3%, +1.0%p YoY)",
+        "estimate_revision": "금리 상승에 따른 부동산 경기 악화 반영하여 Target P/B 2.5배에서 2.2배로 하향",
+        "next_catalyst": "하반기 텍사스 Matador(대형원전 4기), 불가리아 코즐루두이 7, 8호기 등 본계약 기대",
+        "thesis": [
+          "정비 사업과 준자체사업, 캡티브향 물량 확보로 외형 유지",
+          "대형 원전, SMR 가시적인 성과 기대",
+          "미국의 원전 확대 노력에 따른 파이프라인 확대"
+        ],
+        "valuation_basis": "12개월 선행 기준 Target P/E 38.1배, P/B 2.22배 적용",
+        "risk": "금리 상승에 따른 부동산 경기 악화",
+        "supply_comment": null,
+        "quote": "하반기 구체적인 원전 성과와 장기적으로 미국 원전 파이프라인 추가 가능성 감안 시 충분히 매수 가능한 구간"
+      },
+      {
+        "name": "삼성E&A",
+        "code": "028050",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "67,000원",
+        "tp_prev": "67,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년, 2027년 매출액 성장률은 각각 +22% YoY, + 25% YoY",
+        "estimate_revision": null,
+        "next_catalyst": "인도네시아 Abadi LNG FEED 수행 중(2026년말 EPC 계약 기대), 2026년 6월 4일 멕시코 LNG FEED 및 EPC 프레임워크 계약(총 사업비 3.4조원)",
+        "thesis": [
+          "본업에서의 영업이익 개선과 내러티브 모두 유효",
+          "삼성전자 P4, P5 공사 재개와 P5 Fab 2 착공 수혜",
+          "LNG 부문에서의 성과 가시화"
+        ],
+        "valuation_basis": "12개월 선행 기준 Target P/E 16.3배, P/B 2.3배 적용",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "본업에서의 영업이익 개선과 내러티브 모두 유효, 삼성전자향 매출 증가와 대형 화공 현장(Fadhili) 기여도 확대로 2027년까지 안정적인 실적 증가 예상"
+      },
+      {
+        "name": "DL이앤씨",
+        "code": "375500",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "120,000원",
+        "tp_prev": "145,000원",
+        "tp_direction": "down",
+        "earnings_outlook": "2027년에는 17.3%의 GPM 예상",
+        "estimate_revision": "최근 금리 상승 구간에 따라 주택주 투자 심리 둔화, 그리고 경쟁사 주가 조정 감안하여 Target P/B를 기존 1.0배에서 0.8배로 하향",
+        "next_catalyst": "X-energy의 워싱턴 SMR 프로젝트 EPC 입찰 참여 예상",
+        "thesis": [
+          "주택/건축 부문에서의 경쟁사 대비 압도적인 이익 개선세",
+          "가시적인 플랜트 수주 증가",
+          "미국 X-energy 핵심 파트너사로 향후 SMR EPC 사업 참여 기대"
+        ],
+        "valuation_basis": "12개월 선행 기준 Target P/E 11.9x, P/B 0.80배 적용",
+        "risk": "최근 금리 상승 구간에 따른 주택주 투자 심리 둔화",
+        "supply_comment": null,
+        "quote": "주택/건축 부문에서의 경쟁사 대비 압도적인 이익 개선세 보여주고 있음, 가시적인 플랜트 수주까지 더해진다면 장기적인 이익 추정치도 크게 상향될 수 있음"
+      }
+    ]
+  }
+}

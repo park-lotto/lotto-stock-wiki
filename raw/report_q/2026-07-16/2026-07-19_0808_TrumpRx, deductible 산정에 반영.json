@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "date": "2026-07-16",
+    "broker": "DS INVESTMENT & SECURITIES",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-19_0808_TrumpRx, deductible 산정에 반영.md"
+  },
+  "questionnaire": {
+    "target_kind": "sector",
+    "broker": "DS INVESTMENT & SECURITIES",
+    "analyst": "김민정",
+    "report_date": "2026.07.16",
+    "sector_name": "바이오",
+    "sector_view": null,
+    "thesis": [
+      "7월 14일 CVS Health 산하 Caremark는 FTC와 ‘소비자가 TrumpRx를 통해 의약품을 구매한 금액을 건강보험 deductible 산정에 포함한다’는 내용의 합의를 최종 확정하였다.",
+      "기존에는 보험을 통해 고가로 구매했던 의약품만 deductible로 반영했던 구조에서 TrumpRx를 통해 저렴하게 구매한 약물도 deductible로 인정받게 됨.",
+      "환자의 경제적 부담이 완화되며 비만치료제 접근성 역시 개선될 것으로 기대된다."
+    ],
+    "timeline": [
+      "2026년 2월, DTC 플랫폼 TrumpRx 출범",
+      "7월 14일, CVS Health 산하 Caremark와 FTC 간 합의 확정"
+    ],
+    "top_picks": [
+      {
+        "name": "CVS Health",
+        "reason": "Caremark가 FTC와 ‘소비자가 TrumpRx를 통해 의약품을 구매한 금액을 건강보험 deductible 산정에 포함한다’는 내용의 합의를 최종 확정",
+        "tp": null
+      },
+      {
+        "name": "Cigna",
+        "reason": "TrumpRx로 지불한 금액도 deductible에 반영하는 합의 완료",
+        "tp": null
+      }
+    ],
+    "risk": null,
+    "quote": "7월 14일 CVS Health 산하 Caremark는 FTC와 ‘소비자가 TrumpRx를 통해 의약품을 구매한 금액을 건강보험 deductible 산정에 포함한다’는 내용의 합의를 최종 확정하였다."
+  }
+}

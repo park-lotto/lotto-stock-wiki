@@ -1,21 +1,4 @@
 {
-  "2026-06-27": {
-    "atoms": {
-      "news": 68,
-      "telegram": 4
-    },
-    "queue_new": 0,
-    "pytest_ok": false
-  },
-  "2026-06-28": {
-    "atoms": {
-      "blog": 6,
-      "news": 36,
-      "telegram": 10
-    },
-    "queue_new": 0,
-    "pytest_ok": false
-  },
   "2026-06-29": {
     "atoms": {
       "news": 67,
@@ -97,6 +80,16 @@
     "pytest_ok": false
   },
   "2026-07-17": {
+    "atoms": {},
+    "queue_new": 0,
+    "pytest_ok": false
+  },
+  "2026-07-18": {
+    "atoms": {},
+    "queue_new": 0,
+    "pytest_ok": false
+  },
+  "2026-07-19": {
     "atoms": {},
     "queue_new": 0,
     "pytest_ok": false

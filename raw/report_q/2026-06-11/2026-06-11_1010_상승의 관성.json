@@ -1,0 +1,144 @@
+{
+  "meta": {
+    "date": "2026-06-11",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-11_1010_상승의 관성.md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": [
+      "김귀연",
+      "박서영"
+    ],
+    "report_date": "2026.05.20",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "현대차",
+        "code": "005380",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "770,000원",
+        "tp_prev": "660,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2026년 지배순익 11조원 추정",
+        "estimate_revision": "SOTP 밸류에이션 변경에 따라 목표주가 상향조정",
+        "next_catalyst": "3Q26 RMAC 개소/SDV 페이스카 출시/제네시스 신차 Lv2+ 옵션 적용/테슬라 옵티머스 Gen3 공개/미국 로봇 정책 모멘텀",
+        "thesis": [
+          "목표 밸류 157조원은 본업가치에 로봇 45조/SDV 6조 기업가치 반영",
+          "2H26 RMAC 개소/SDV 페이스카출시/테슬라발 로봇 모멘텀 재개 예상",
+          "그룹 내 Physical AI 사업 주도함으로써 업종 주도도 역할 지속할 것"
+        ],
+        "valuation_basis": "SOTP 밸류에이션 (본업 106조 + 로봇 45조 + SDV 6조)",
+        "risk": "시장 불확실성",
+        "supply_comment": "Physical AI 사업 주도",
+        "quote": "TP 77만원/기업가치 157조원은 자동차 본업 밸류 106조원에 로봇 45조/SDV 6조원 기업가치 합산한 SOTP 밸류체이션 방식으로 산출."
+      },
+      {
+        "name": "기아",
+        "code": "000270",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "260,000원",
+        "tp_prev": "240,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2026년 지배순익 8조원 추정",
+        "estimate_revision": "SOTP 밸류에이션 변경에 따라 목표주가 상향조정",
+        "next_catalyst": "3Q26 RMAC 개소 비롯한 테슬라 옵티머스발 로봇 모멘텀",
+        "thesis": [
+          "목표 기업가치 103조원 = 자동차 80조 + 로봇 19조 + SDV 3조원",
+          "현대차 대비 밸류 할인율 52%로 로봇사업 주도권 차이 감안해도 과도",
+          "현대차 밸류 프리미엄 구간 진입한 상황에서 키맞추기 지속해나갈 것"
+        ],
+        "valuation_basis": "SOTP 밸류에이션 (본업 80조 + 로봇 19조 + SDV 3조)",
+        "risk": "현대차 대비 소외",
+        "supply_comment": "로봇 지분가치 30% 할인 적용",
+        "quote": "TP 26만원/기업가치 103조원은 자동차 본업 밸류 80조원에 로봇 19조/SDV 3조원 기업가치 합산한 SOTP 밸류체이션 방식으로 산출."
+      },
+      {
+        "name": "현대모비스",
+        "code": "012330",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "730,000원",
+        "tp_prev": "600,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2030년 Atlas향 액츄에이터 매출 2.2조원 추정",
+        "estimate_revision": "SOTP 밸류에이션 적용",
+        "next_catalyst": "BD향 액츄에이터 공급/Atlas향 액츄에이터 초도 양산 예정",
+        "thesis": [
+          "목표 기업가치 65조원 = 본업 47조원 + 로봇 18조원 가치 반영",
+          "BD향 액츄에이터 직접 공급 통해 가장 직접적인 성장 수혜 예상",
+          "2030년 Atlas향 액츄에이터 매출 2.2조원 추정"
+        ],
+        "valuation_basis": "본업 가치 47조원(2026년 지배순익 4,328억원 x Target PER 11배) + 로봇 가치 18조원",
+        "risk": "차량부품 실적 완성차 수요 제한 및 원자재 부담",
+        "supply_comment": "BD의 핵심 부품 공급사 포지셔닝",
+        "quote": "TP 73만원(기업가치 65조원)은 본업 가치 47조원에 로봇 가치 18조원 반영하여 산출."
+      },
+      {
+        "name": "HL만도",
+        "code": "204320",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "100,000원",
+        "tp_prev": "87,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2026년 매출 9.9조원, OP 4,148억원, OPM 4.2% 전망",
+        "estimate_revision": "2026년 EPS 적용 변경",
+        "next_catalyst": "3Q26 북미 T사 로봇 신제품 공개",
+        "thesis": [
+          "3Q26 북미 T사 로봇 신제품 공개에 따른 관련 밸류체인에 주목",
+          "현대차 → 현대모비스에 이어 자동차 섹터의 새로운 주도주가 될 것",
+          "2H26 로봇향 액츄에이터 수주 여부 및 SDV 모멘텀에 주목"
+        ],
+        "valuation_basis": "2026년 EPS 5,428원에 Target PER 18배 적용",
+        "risk": "2H25 이후 지속된 반도체 가격 상승",
+        "supply_comment": "로봇향 액츄에이터 수주 가능성",
+        "quote": "TP 10만원은 2026년 EPS 5,428원에 Target PER 18배(SDV 성장 모멘텀 반영됐던 2021년 밸류에 20% 할인) 적용."
+      },
+      {
+        "name": "에스엘",
+        "code": "005850",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "86,000원",
+        "tp_prev": "62,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "1Q26 매출 1.4조, OP 1,438억, OPM 10%",
+        "estimate_revision": "현대기아 SUV 신차 효과 반영",
+        "next_catalyst": "현대기아 신차 효과",
+        "thesis": [
+          "1Q26 고객 보상금 및 국내/미주/유럽 판매 호조로 실적 서프라이즈 시현",
+          "2Q26 운임상승에도 성수기/현대기아 신차효과로 OP 1,300억 달성 전망",
+          "2026년 배당성향 가이던스 40%로 DPS 3,000원 달성 전망"
+        ],
+        "valuation_basis": "2026년 EPS 7,688원에 Target PER 11.2배 적용",
+        "risk": "운임 상승",
+        "supply_comment": "현대기아향 라이다/모빌리티 로봇 플랫폼 위탁생산",
+        "quote": "TP 8.6만원은 2026년 EPS 7,688원에 Target PER 11.2배(성장성 부각됐던 2020~21년 밸류) 적용해 산출."
+      },
+      {
+        "name": "현대오토에버",
+        "code": "307950",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "720,000원",
+        "tp_prev": "370,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2025년 현대차그룹 상장 계열사 연 인건비 SI 매출화 추정",
+        "estimate_revision": "EPS 적용기간 변경",
+        "next_catalyst": "3Q RMAC 개소",
+        "thesis": [
+          "밸류 부담에도 현대차그룹 Physical AI 투자에 따른 수혜 방향성은 명확",
+          "3Q RMAC 개소에 따라 실제 로봇 관제 프로젝트 현실화될 것으로 판단",
+          "시대에 순행하는 주식으로 밸류 부담에도 관심 지속해야한다는 판단"
+        ],
+        "valuation_basis": "2028년 EPS 13,528원에 Target PER 53배 적용",
+        "risk": "가시적인 실적 숫자 제한",
+        "supply_comment": "BD 로봇의 SI 영역 담당 및 로봇 관제 프로젝트",
+        "quote": "TP 72만원은 2028년 EPS 13,528원에 목표배수 53배 적용. TP 상향은 EPS 적용기간 변경에 따름."
+      }
+    ]
+  }
+}

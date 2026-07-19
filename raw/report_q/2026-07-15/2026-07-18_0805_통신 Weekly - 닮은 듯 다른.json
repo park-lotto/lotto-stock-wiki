@@ -1,0 +1,61 @@
+{
+  "meta": {
+    "date": "2026-07-15",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-18_0805_통신 Weekly - 닮은 듯 다른.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "이승웅",
+    "report_date": "2026.07.15",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "통신업종 수익률",
+      "시장 차익 실현",
+      "마케팅비",
+      "번호이동 규모"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "통신",
+        "stance": "시장 수익률 상회",
+        "reason": "증시 차익 실현 상황 속 통신 업종은 사각지대 업종으로 작용"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "26.07.08",
+        "event": "KT, 4년 연속 정보보호에 1,000억 규모 투자"
+      },
+      {
+        "date": "26.07.09",
+        "event": "리벨리온, 내년 상반기 코스피 상장 추진, 미 ADR도 검토"
+      },
+      {
+        "date": "26.07.09",
+        "event": "LGU+, IT투자액 7.7% 보안 투자"
+      },
+      {
+        "date": "26.07.10",
+        "event": "KT클라우드, 여의도 데이터센터 증설"
+      },
+      {
+        "date": "26.07.13",
+        "event": "LGU+, 600억원 규모 버스 공공 와이파이 사업 수주"
+      },
+      {
+        "date": "26.07.13",
+        "event": "KT 7월, 챗GPT 등 '생성AI 6종' 구독료 최대 반값 할인"
+      }
+    ],
+    "top_picks": [
+      "SK텔레콤",
+      "KT",
+      "LG유플러스"
+    ],
+    "risk": null,
+    "quote": "지난 한주간 통신업종은 -4.0%(vs KOSPI -9.7%)로 시장 수익률을 상회. 증시 차익 실현 상황 속 통신 업종은 사각지대 업종으로 작용하며 시장 수익률 상회."
+  }
+}

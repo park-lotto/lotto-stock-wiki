@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-12",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-12_1002_망막에서 신장까지, 주목할 업사이드.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "정이수",
+    "report_date": "2026. 6. 12",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "큐라클",
+        "code": "365270",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2025년 영업이익 -165억원, 당기순이익 -181억원으로 전망됨.",
+        "estimate_revision": null,
+        "next_catalyst": "향후 투자 참여 기관 공개, 신장질환 치료제 MT-101과 당뇨병성 신증 치료제 CU01의 신규 계약 체결",
+        "thesis": [
+          "미국 메멘토와 망막질환 치료제 후보물질 MT-103 최대 1.6조 원 규모 기술이전 계약 체결",
+          "MT-103은 VEGF 억제, Ang-2-Tie2 결합 차단, Tie2 활성화를 동시에 구현하는 차세대 이중항체로 혈관 안정화 효과 확인",
+          "MT-101의 글로벌 기술이전과 CU01의 국내 판권 계약 체결 기대"
+        ],
+        "valuation_basis": null,
+        "risk": "계약 체결 이후 메멘토에 대한 제한적인 정보가 불확실성으로 작용",
+        "supply_comment": null,
+        "quote": "MT-103은 VEGF 억제, Ang-2-Tie2 결합 차단, Tie2 활성화를 동시에 구현하는 차세대 이중항체다."
+      }
+    ],
+    "sector": "바이오"
+  }
+}

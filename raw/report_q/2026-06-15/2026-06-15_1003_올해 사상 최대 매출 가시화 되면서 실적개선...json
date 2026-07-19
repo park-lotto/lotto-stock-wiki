@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-15",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-15_1003_올해 사상 최대 매출 가시화 되면서 실적개선...md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": "이상헌, 장호",
+    "report_date": "2026.06.15",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "디오",
+        "code": "039840",
+        "rating": "NR",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "올해 동사 K-IFRS 연결기준 실적의 경우 매출액 1,963억원(+19.6% YoY), 영업이익 275억원(+172.3% YoY)으로 예상",
+        "estimate_revision": null,
+        "next_catalyst": "디지털 임플란트 솔루션 디오나비(DIOnavi)를 통해 확보한 20만건 이상의 수술 데이터와 30만건 이상의 환자 영상 데이터 등을 기반으로 향후 디오AX 플랫폼 구축",
+        "thesis": [
+          "일회성 비용 등이 일단락 되는 환경하에서 올해 사상 최대 매출 가시화로 레버리지 효과 본격화",
+          "중국을 비롯하여 튀르키예, 멕시코, 인도, 포르투갈, 러시아 등 전략법인을 중심으로 매출 성장세 본격화",
+          "디오AX 플랫폼 구축 등으로 AI 플랫폼 사업이 가시화 되면서 성장성 부각"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "올해 동사 K-IFRS 연결기준 실적의 경우 매출액 1,963억원(+19.6% YoY), 영업이익 275억원(+172.3% YoY)으로 예상되면서 수익성이 대폭 개선될 것으로 전망된다.",
+        "sector": "바이오"
+      }
+    ]
+  }
+}

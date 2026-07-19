@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "미래에셋증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1210_보릿고개 끝자락, 수확이 다가오는 시기.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "미래에셋증권",
+    "analyst": "박준서",
+    "report_date": "2026.6.9",
+    "stocks": [
+      {
+        "name": "필에너지",
+        "code": "378340",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "1Q26 실적은 매출액 17억원(+81% YoY), 영업적자 39억원으로 아직 적자 구간에 머물렀다. 다만 전년 동기 영업적자 60억원 대비 손실 규모가 축소됐고 향후 수주 매출 인식에 따른 실적 개선이 기대된다.",
+        "estimate_revision": null,
+        "next_catalyst": "인도 대형 고객사 향 장비 공급",
+        "thesis": [
+          "이차전지 조립 공정 핵심 설비인 레이저 노칭 및 스태킹 장비를 주력으로 공급",
+          "인도 대형 고객사향 수주를 통해 향후 매출 인식 가시성 확보",
+          "차세대 공정 장비 개발을 지속하며 신규 성장동력 확보"
+        ],
+        "valuation_basis": null,
+        "risk": "신규 수주의 매출 인식 속도와 차세대 장비의 양산 레퍼런스 확대 여부",
+        "supply_comment": "동사는 인도 대형 기업의 배터리 자회사에 2028년까지 노칭, 슬리팅 일체형 신제품 장비를 공급한다.",
+        "quote": "보릿고개 끝자락, 수확이 다가오는 시기"
+      }
+    ],
+    "sector": "2차전지"
+  }
+}

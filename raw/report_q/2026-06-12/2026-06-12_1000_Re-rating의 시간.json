@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-12",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-12_1000_Re-rating의 시간.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "박종대",
+    "report_date": "2026년 06월 12일",
+    "stocks": [
+      {
+        "name": "신세계",
+        "code": "004170",
+        "rating": "Not Rated",
+        "rating_changed": false,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "1분기 총매출 YoY 13%에 이어 2분기 YoY 15%에 이를 전망이다.",
+        "estimate_revision": "2분기 연결 영업이익은 시장 기대치(OP 1,370억원)를 충분히 넘어설 것으로 보인다.",
+        "next_catalyst": "외국인 인바운드 이코노미 확산 및 명품 매출 비중 확대",
+        "thesis": [
+          "백화점 본점 리뉴얼 효과 및 명품 중심의 매출 비중으로 실적 모멘텀 확대",
+          "인천공항 DF2 영업 중단 등 면세점 사업 구조 불확실성 완화",
+          "외국인 소비 패턴 변화(개별여행/명품 중심)에 따른 리레이팅 기대"
+        ],
+        "valuation_basis": "12MF PER 10배 초반 수준으로 주가 상승 여력 보유",
+        "risk": "유통채널 패권 이동에 따른 온라인 경쟁 심화",
+        "supply_comment": "백화점부문/소비내수",
+        "quote": "2014~24년까지 유통채널 패권이 오프라인에서 온라인으로 이동하면서 백화점이 De rating되는 시기였다면, 2025년부터는 외국인 인바운드 이코노미로 백화점 업체들의 Re rating을 기대할 수 있는 시간이다."
+      }
+    ]
+  }
+}

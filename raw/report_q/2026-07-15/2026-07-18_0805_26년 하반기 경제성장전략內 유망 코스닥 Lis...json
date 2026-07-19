@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "date": "2026-07-15",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-18_0805_26년 하반기 경제성장전략內 유망 코스닥 Lis...md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "유안타증권",
+    "analyst": "권명준",
+    "report_date": "2026.07.15",
+    "market_direction": null,
+    "macro_vars": [
+      "2026년 하반기 경제성장전략"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "수혜",
+        "reason": "글로벌 초격차 성장동력 육성 및 3대 메가프로젝트(반도체, AI데이터센터, 피지컬 AI) 추진, 화합물 반도체 및 첨단 패키징 R&D 지원 확대"
+      },
+      {
+        "sector": "로봇",
+        "stance": "수혜",
+        "reason": "AI 로봇 글로벌 3강 도약을 위해 10대 산업특화 AI로봇 개발 및 액추에이터, 로봇손 전용 R&D 지원"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.07.14",
+        "event": "관계부처 합동 2026년 하반기 경제성장전략 제시"
+      }
+    ],
+    "top_picks": [
+      "신성이엔지",
+      "에스티아이",
+      "유니셈",
+      "테스",
+      "오킨스전자",
+      "로보티즈",
+      "대성하이텍",
+      "뉴로메카",
+      "에스비비테크",
+      "에스피지"
+    ],
+    "risk": null,
+    "quote": "전일(7/14일) 관계부처 합동으로 2026년 하반기 경제성장전략을 제시했다. 코스닥 관점에서 관련기업들을 정리해보았다."
+  }
+}

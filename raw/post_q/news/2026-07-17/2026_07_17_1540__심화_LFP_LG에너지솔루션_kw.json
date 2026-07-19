@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "LG에너지솔루션",
+      "signal": "bull",
+      "reason": "美 테네시 공장에서 ESS용 LFP 배터리 생산을 시작하며 제품 포트폴리오 다각화",
+      "ts": "2026-07-08",
+      "quote": "LG엔솔-GM 합작 얼티엄셀즈, 美 테네시서 ESS용 LFP 생산 돌입",
+      "sector": "2차전지"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "LG에너지솔루션과 GM의 합작법인인 얼티엄셀즈가 미국 테네시 공장에서 ESS용 LFP 배터리 생산을 시작함",
+      "ts": "2026-07-08",
+      "quote": "LG엔솔-GM 합작 얼티엄셀즈, 美 테네시서 ESS용 LFP 생산 돌입"
+    }
+  ],
+  "quote": "LG엔솔-GM 합작 얼티엄셀즈, 美 테네시서 ESS용 LFP 생산 돌입"
+}

@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "SK하이닉스",
+      "signal": "bull",
+      "reason": "모바일 AI 시대 대응을 위한 차세대 D램 LPDDR6 개발",
+      "ts": null,
+      "quote": "모바일 AI 시대 겨냥한 SK하이닉스…LPDDR6 개발",
+      "sector": "반도체"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "SK하이닉스, 모바일 AI 시장 공략을 위해 LPDDR6 개발 중",
+      "ts": "2026-07-17",
+      "quote": "모바일 AI 시대 겨냥한 SK하이닉스…LPDDR6 개발"
+    }
+  ],
+  "quote": "모바일 AI 시대 겨냥한 SK하이닉스…LPDDR6 개발"
+}

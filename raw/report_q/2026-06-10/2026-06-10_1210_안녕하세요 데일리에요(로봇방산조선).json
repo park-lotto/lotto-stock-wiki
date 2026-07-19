@@ -1,0 +1,61 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "Eugene Investment & Securities",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1210_안녕하세요 데일리에요(로봇방산조선).md"
+  },
+  "questionnaire": {
+    "broker": "Eugene Investment & Securities",
+    "analyst": "양승윤",
+    "report_date": "06/09",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "일본 5월 공작기계 수주액",
+      "미국-이란 종전 협상",
+      "한화엔진 사업 재편"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "로봇",
+        "stance": "상승/수요 증가",
+        "reason": "5월 일본 공작기계 수주액 전년비 37% 증가 및 AI 관련 수요 증가"
+      },
+      {
+        "sector": "방산",
+        "stance": "재편/기능 강화",
+        "reason": "한화엔진 방산 기능 강화 등 사업 재편 검토"
+      },
+      {
+        "sector": "조선",
+        "stance": "수주 증가",
+        "reason": "韓 조선, 지난달 전세계 선박 44% 수주"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2~3일 내",
+        "event": "트럼프 대통령 이란 종전 협상 가시적 성과 기대"
+      }
+    ],
+    "top_picks": [
+      "티로보틱스",
+      "두산로보틱스",
+      "씨메스로보틱스",
+      "스탠다드봇",
+      "피규어 AI",
+      "유비테크",
+      "한화",
+      "빅텍",
+      "KNDS",
+      "HD현대중공업",
+      "한화엔진",
+      "TKMS",
+      "CMA CGM",
+      "헝리 중공업"
+    ],
+    "risk": "종전 협상 파행 위기 및 방산 관련 규제 리스크",
+    "quote": "5월은 통상 비수기이나, 해외에서 AI 관련 수요가 크게 증가한 것으로 파악됨. 일본 츠가미는 중국발 휴머노이드 부품 향 수요도 견조했다고 밝힘."
+  }
+}

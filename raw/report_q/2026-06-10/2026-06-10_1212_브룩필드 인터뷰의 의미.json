@@ -1,0 +1,26 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1212_브룩필드 인터뷰의 의미.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "남성현",
+    "report_date": "2026. 06. 10.",
+    "target_kind": "sector",
+    "sector_name": "유통·식자재/지주",
+    "sector_view": null,
+    "thesis": [
+      "브룩필드 코리아의 한국 부동산 시장에 대한 공격적 투자 및 AUM 확대",
+      "국내 부동산 개발 사업이 분양이 아닌 운영 중심의 구조로 전환되는 시그널",
+      "복합개발 시장 확대에 따른 리테일 업체들의 역할 강화 전망"
+    ],
+    "timeline": [
+      "2030년까지 브룩필드의 국내 운용자산(AUM) 30조 원 수준으로 확대 제시"
+    ],
+    "top_picks": null,
+    "risk": null,
+    "quote": "브룩필드의 투자 확대는 국내 부동산 개발 사업이 분양이 아닌 운영으로 전환된다는 의미로 보는 것이 합리적."
+  }
+}
