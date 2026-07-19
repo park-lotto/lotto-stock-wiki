@@ -61,3 +61,10 @@ Apify 인앱 자동검색(샤오홍슈/도우인 그리드)은 **유료**라 폐
 - **인스타 담기**: grab.user.js @match에 instagram 추가(v1.3.0)=인스타 영상페이지서 플로팅 담기. (인스타 전용 스크립트 insta_fill_comment.user.js는 댓글용, 별개)
 - **도우인 카드별 = 불가 확정**: 브라우저 실측—도우인 검색카드는 href·data-id 없는 div+JS, React fiber props까지 뒤져도 aweme_id 없음(URL이 클릭해야 생성). 추측코드 안 짬. **도우인 최선=영상 클릭후 플로팅 담기**.
 - 커밋: 184b54ab(rednote) 13fff95b(틱톡·인스타·grab v1.3.0).
+
+### 🆕 틱톡·인스타 카드별 담기 + 로더 방식 (2026-07-19 저녁)
+- **로더 방식 v2.0.0**: grab.user.js를 얇은 로더로 전환(GM_xmlhttpRequest로 /grab_logic.js 받아 eval). 로직은 서버파일만 고치면 자동반영=재설치 불필요. 사장님은 이번 1회만 v2.0.0 설치(GM 권한 허용).
+- **틱톡·인스타 카드별**: grab_logic.js에 addAnchorCardBtns 추가. 틱톡=`a[href*=/video/]`, 인스타=`a[href*=/p/,/reel/]`. 앵커 안 버튼+preventDefault/stopImmediate로 이동차단. isGridPage 가드로 그리드에서만(단일영상 플로팅 안 가림). **라이브 실측: 틱톡 12·인스타 3 버튼, navigated:false, URL·썸네일 정상.**
+- **도우인**: div+JS라 URL이 DOM에 없음(React까지 확인)=카드별 영영 불가. 플로팅만.
+- 셀렉터 실측: 틱톡 div[data-e2e=search_top-item]>a, 인스타 a[href*=/p/](320²), rednote section.note-item>a.cover.
+- 커밋: 로더 379d4cd7 이전 + 틱톡인스타 379d4cd7.
