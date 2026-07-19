@@ -1,6 +1,6 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-07-19-b  (틱톡·인스타 카드별 담기 추가)
+// 로직 버전: 2026-07-19-c  (도우인 카드별 담기 추가 — React fiber ID추출)
 (function () {
   "use strict";
   if (window.__ssGrabLoaded) return;   // 로더가 중복 실행돼도 한 번만
@@ -122,7 +122,55 @@
     }
   }
 
-  function tick() { addFloatBtn(); addCardBtns(); addAnchorCardBtns(); syncFloat(); }
+  // ── 카드별 버튼(도우인): 도우인 검색 카드는 <a href>·data-id가 없고(스크래핑 방지)
+  //   영상 ID가 React 내부 props에만 있다. fiber를 훑어 aweme_id(19자리)를 찾아 URL을 만든다.
+  //   (2026-07-19 실측: 20/20 카드에서 ID 추출·이동차단 확인). 못 찾으면 버튼을 안 붙인다(폴백=플로팅).
+  function _deepFindId(o, d) {
+    if (!o || d > 4) return null;
+    if (typeof o === "string") { var m = o.match(/\/video\/(\d{15,})/); if (m) return m[1]; return /^\d{18,20}$/.test(o) ? o : null; }
+    if (typeof o !== "object") return null;
+    for (var k in o) { if (/aweme.?id|awemeId/i.test(k)) { var v = String(o[k]); if (/^\d{15,}$/.test(v)) return v; } }
+    try { for (var k2 in o) { if (k2 === "return" || k2 === "_owner" || k2 === "stateNode" || k2 === "child" || k2 === "sibling") continue; var r = _deepFindId(o[k2], d + 1); if (r) return r; } } catch (e) {}
+    return null;
+  }
+  function _douyinId(el) {
+    for (var d = 0; d < 9 && el; d++, el = el.parentElement) {
+      var fk = Object.keys(el).find(function (k) { return k.indexOf("__reactFiber$") === 0; });
+      if (fk) { var f = el[fk]; for (var i = 0; i < 12 && f; i++, f = f.return) { var id = _deepFindId(f.memoizedProps, 0); if (id) return id; } }
+    }
+    return null;
+  }
+  function addDouyinCardBtns() {
+    if (!isGridPage()) return;
+    if (location.host.indexOf("douyin") < 0) return;
+    var imgs = document.querySelectorAll("img");
+    for (var j = 0; j < imgs.length; j++) {
+      var img = imgs[j], ir = img.getBoundingClientRect();
+      if (ir.width < 150 || ir.height < 150) continue;
+      var id0 = _douyinId(img);
+      if (!id0) continue;   // ID 못 찾으면 버튼 안 붙임(죽은 버튼 방지 → 플로팅 폴백)
+      var box = img;
+      while (box && box !== document.body) { var r = box.getBoundingClientRect(); if (r.width >= 150 && r.width < 440 && r.height >= 180) break; box = box.parentElement; }
+      if (!box || box === document.body || box.querySelector(".ss-card-grab")) continue;
+      if (getComputedStyle(box).position === "static") box.style.position = "relative";
+      var b = document.createElement("button");
+      b.className = "ss-card-grab"; b.textContent = "📥"; b.title = "이 영상 담기";
+      b.style.cssText =
+        "position:absolute;top:8px;right:8px;z-index:99999;background:#1f6feb;color:#fff;" +
+        "border:none;border-radius:16px;width:34px;height:34px;font-size:16px;" +
+        "box-shadow:0 2px 8px rgba(0,0,0,.4);cursor:pointer";
+      (function (img) {
+        b.addEventListener("click", function (e) {
+          e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+          var id = _douyinId(img);
+          if (id) openGrab("https://www.douyin.com/video/" + id, img.src || "", img.alt || "");
+        }, true);
+      })(img);
+      box.appendChild(b);
+    }
+  }
+
+  function tick() { addFloatBtn(); addCardBtns(); addAnchorCardBtns(); addDouyinCardBtns(); syncFloat(); }
   tick();
   // SPA라 스크롤·재검색으로 카드가 갈아끼워져도 버튼을 계속 유지한다.
   setInterval(tick, 2000);
