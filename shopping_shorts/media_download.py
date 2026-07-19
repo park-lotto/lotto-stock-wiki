@@ -109,6 +109,12 @@ def download_any(url, dest_dir):
     if "rednote.com" in u:
         url = re.sub(r"://(www\.)?rednote\.com", "://www.xiaohongshu.com", url, flags=re.I)
         u = url.lower()
+    # ★yt-dlp XiaoHongShuIE의 _VALID_URL은 /explore/{id}·/discovery/item/{id}만 허용(서버 실측).
+    # 검색 그리드에서 담은 노트는 /search_result/{id}?xsec_token=… 모양이라 같은 노트인데도
+    # Unsupported URL로 떨어졌다 → 경로만 /explore/로 바꾼다(쿼리의 xsec_token은 그대로 보존).
+    if "xiaohongshu.com" in u and "/search_result/" in u:
+        url = url.replace("/search_result/", "/explore/")
+        u = url.lower()
     if "instagram.com" in u:
         return _download_instagram(url, dest_dir)
     # 직접 mp4(예: 샤오홍슈 url_720p) — 담긴 샤오홍슈 url은 rednote.com/search_result 검색결과
