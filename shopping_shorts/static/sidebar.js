@@ -33,10 +33,14 @@
     ".ss-item{padding:8px 12px;border-radius:8px;font-size:13px;color:var(--txt,#e6edf3);cursor:pointer;margin-bottom:2px}" +
     ".ss-item.ss-disabled{cursor:default;opacity:.45}" +
     ".ss-item.active{background:linear-gradient(90deg,#153a6b,#0d2340);color:#7db4ff}" +
-    ".ss-work{padding:5px 12px 5px 30px;border-radius:6px;font-size:12px;color:var(--sub,#8b98a9);" +
-      "cursor:pointer;margin-bottom:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}" +
+    ".ss-work{padding:5px 8px 5px 30px;border-radius:6px;font-size:12px;color:var(--sub,#8b98a9);" +
+      "cursor:pointer;margin-bottom:1px;display:flex;align-items:center;gap:4px}" +
     ".ss-work:hover{color:var(--txt,#e6edf3)}" +
     ".ss-work.ss-work-current{color:#7db4ff;background:rgba(21,58,107,.35)}" +
+    ".ss-work-open{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}" +
+    ".ss-work-del{flex-shrink:0;cursor:pointer;color:var(--sub,#8b98a9);opacity:0;padding:0 4px;font-size:13px}" +
+    ".ss-work:hover .ss-work-del{opacity:.65}" +
+    ".ss-work-del:hover{opacity:1;color:#ff6b6b}" +
     "@media(max-width:760px){body{flex-direction:column}" +
       ".ss-nav{width:100%;border-right:none;border-bottom:1px solid var(--line,#1e2735);display:flex;gap:6px;" +
         "overflow-x:auto;align-items:center;white-space:nowrap;padding:10px 12px}" +
@@ -81,6 +85,23 @@
     aside.innerHTML = html;
     document.body.insertBefore(aside, document.body.firstChild);
   }
+  // 작업 삭제(2026-07-19) — 사이드바 ✕. 백엔드 /api/produce/works/{id}/delete는 이미 있다.
+  // 현재 열린 작업을 지우면 화면이 그 작업을 붙들고 있으니 새 작업으로 보낸다. 아니면 행만 제거.
+  window.__ssDelWork = function (ev, wid) {
+    if (ev && ev.stopPropagation) ev.stopPropagation();
+    if (!window.confirm("이 작업을 삭제할까요? 되돌릴 수 없습니다.")) return;
+    fetch("/api/produce/works/" + encodeURIComponent(wid) + "/delete", { method: "POST" })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d || !d.ok) { window.alert("삭제 실패"); return; }
+        var open = null;
+        try { open = new URLSearchParams(location.search).get("work"); } catch (e) {}
+        if (open === wid) { location.href = "/produce?new=1"; return; }
+        var node = document.querySelector('.ss-work[data-wid="' + wid + '"]');
+        if (node) node.remove();
+      })
+      .catch(function () { window.alert("삭제 실패"); });
+  };
   // 제작소 작업파일 목록(2026-07-17) — 사장님 제보 "내일 다시 들어와도 기록남고 그대로".
   // NAV는 로드 시 동기로 그려지는 정적 배열이라 하위 항목 개념이 없다 → 마운트 뒤에 주입한다.
   // NAV 구조 자체는 안 건드린다 — 페이지 6개가 이 파일을 공유한다.
@@ -96,9 +117,15 @@
       d.works.forEach(function (w) {
         var cur = open && w.work_id === open;
         var name = escHtml(w.title || "(제목 없음)");
-        h += '<div class="ss-work' + (cur ? " ss-work-current" : "") + '"' +
+        // 열기(제목)와 삭제(✕)를 각각 클릭 가능하게 분리한다. ✕는 행 onclick으로 전파되면
+        // 삭제 직후 그 작업을 또 열어버리므로 __ssDelWork가 stopPropagation한다.
+        h += '<div class="ss-work' + (cur ? " ss-work-current" : "") + '" data-wid="' + escHtml(w.work_id) + '">' +
+             '<span class="ss-work-open"' +
              " onclick=\"location.href='/produce?work=" + esc(w.work_id) + "'\"" +
-             ' title="' + name + '">· ' + name + " · " + (w.step + 1) + "단계</div>";
+             ' title="' + name + '">· ' + name + " · " + (w.step + 1) + "단계</span>" +
+             '<span class="ss-work-del" title="이 작업 삭제"' +
+             " onclick=\"window.__ssDelWork(event,'" + esc(w.work_id) + "')\">✕</span>" +
+             "</div>";
       });
       // ★?new=1이 없으면 produce.html이 이걸 새로고침과 구분 못 해 직전 작업을 덮어쓴다(C-1).
       h += '<div class="ss-work" onclick="location.href=\'/produce?new=1\'">+ 새 작업</div>';
