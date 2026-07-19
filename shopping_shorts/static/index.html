@@ -55,7 +55,8 @@
   .links{display:flex;gap:8px;margin-top:10px}
   .links a{font-size:12px;color:var(--accent);text-decoration:none}
   .empty{color:var(--sub);text-align:center;padding:60px;grid-column:1/-1}
-  .btns{display:flex;gap:6px;margin-top:auto;padding-top:10px}
+  .actions{margin-top:auto}   /* 버튼 묶음을 카드 바닥에 고정 → 통계 줄수 달라도 카드마다 버튼 높이 일치 */
+  .btns{display:flex;gap:6px;padding-top:10px}
   .btns button{flex:1;font-size:11px;padding:7px 4px;border-radius:7px;border:1px solid var(--line);background:#0d131c;color:var(--txt);cursor:pointer}
   .btns button.view{border-color:#2f81f7;color:#7db4ff}
   .btns button.comment{background:linear-gradient(90deg,#7b2ff7,#c22ed0);border:none;color:#fff}
@@ -525,16 +526,18 @@ function render(){
         <div class="stat" title="댓글수 ÷ 경과시간(시간)"><span>속도(시간당)</span><b>${i.speed.toFixed(1)}</b></div>
         <div class="stat" title="이번 수집 Δ − 직전 수집 Δ (증가세가 빨라지는 중인지)"><span>가속</span><b>${i.accel==null?'—':(i.accel>0?'+':'')+i.accel}</b></div>
         <div class="stat" title="댓글수 ÷ 팔로워수 (팔로워 대비 반응 비율)"><span>참여밀도</span><b>${(i.density*100).toFixed(2)}%</b></div>
-        <div class="btns">
-          <button class="view" onclick="window.open('${i.url}','_blank')">👁 보기</button>
-          <button class="comment" onclick="goComment('${i.shortcode}')">💬 댓글</button>
-          <button class="save" id="save_${i.shortcode}" onclick="toggleMix('${i.shortcode}', this)">📥 담기</button>
-        </div>
-        <button class="script-btn" onclick="extractScript('${i.shortcode}')">📝 대본 추출</button>
-        <button class="script-btn" onclick="lensSearch(this,'${i.shortcode}')">🔍 렌즈 유사영상</button>
-        <button class="script-btn" onclick="openSceneCut('${i.shortcode}', '${esc(i.video_url||'')}', '${esc(i.category||'')}')">🎞 장면 담기</button>
-        <button class="script-btn" onclick="sendToProduce('${i.shortcode}')" id="send_${i.shortcode}">🎬 제작소로 보내기</button>
         ${i.inpock?`<div style="margin-top:6px"><a href="${i.inpock}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🛒 판매채널</a></div>`:''}
+        <div class="actions">
+          <div class="btns">
+            <button class="view" onclick="window.open('${i.url}','_blank')">👁 보기</button>
+            <button class="comment" onclick="goComment('${i.shortcode}')">💬 댓글</button>
+            <button class="save" id="save_${i.shortcode}" onclick="toggleMix('${i.shortcode}', this)">📥 담기</button>
+          </div>
+          <button class="script-btn" onclick="extractScript('${i.shortcode}')">📝 대본 추출</button>
+          <button class="script-btn" onclick="lensSearch(this,'${i.shortcode}')">🔍 렌즈 유사영상</button>
+          <button class="script-btn" onclick="openSceneCut('${i.shortcode}', '${esc(i.video_url||'')}', '${esc(i.category||'')}')">🎞 장면 담기</button>
+          <button class="script-btn" onclick="sendToProduce('${i.shortcode}')" id="send_${i.shortcode}">🎬 제작소로 보내기</button>
+        </div>
       </div>
     </div>`).join("");
   markSavedButtons();
