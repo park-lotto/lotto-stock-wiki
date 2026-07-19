@@ -2254,6 +2254,35 @@ async def api_lens_cn_keywords(request: Request, frame: UploadFile = File(None),
             "candidates": v.get("candidates", [])}
 
 
+@app.post("/api/lens/cn/search")
+async def api_lens_cn_search(request: Request, keyword: str = Form(""),
+                              max_results: int = Form(8)):
+    """중국어 검색어 1개 → 샤오홍슈+도우인 병렬 검색. Gemini 안 부름(후보는 사람이 고름).
+    프론트가 후보 버튼 클릭 시 호출한다(2026-07-19)."""
+    kw = (keyword or "").strip()
+    if not kw:
+        return {"ok": True, "items": [], "count": 0, "keyword": ""}
+    if not APIFY_TOKENS:
+        return {"ok": True, "items": [], "count": 0, "keyword": kw, "note": "APIFY 토큰 없음"}
+    n = max(1, min(int(max_results or 8), 60))
+
+    def _run(platform, mod):
+        try:
+            rows = mod.search(kw, max_results=n)
+        except Exception:
+            return []
+        for r in rows:
+            r["platform"] = platform
+            r["match"] = None
+        return rows
+
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        fx = ex.submit(_run, "xiaohongshu", xiaohongshu_search)
+        fd = ex.submit(_run, "douyin", douyin_search)
+        items = fx.result() + fd.result()
+    return {"ok": True, "items": items, "count": len(items), "keyword": kw}
+
+
 @app.post("/api/lens/yt")
 async def api_lens_yt(request: Request, frame: UploadFile = File(None),
                        source_caption: str = Form(""), max_results: int = Form(40)):

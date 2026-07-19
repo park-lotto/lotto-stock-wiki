@@ -275,3 +275,47 @@ def test_lens_cn_keywords_empty_without_frame_or_caption(tmp_path, monkeypatch):
     r = c.post("/api/lens/cn/keywords", data={"source_caption": ""})
     d = r.json()
     assert d["ok"] and d["candidates"] == []
+
+
+# ── /api/lens/cn/search : 검색어 1개 → 샤오홍슈+도우인 (2026-07-19) ──
+def test_lens_cn_search_merges_platforms(tmp_path, monkeypatch):
+    monkeypatch.setattr(appmod, "APIFY_TOKENS", ["tok"])
+    seen = {}
+    def xhs(kw, max_results=8):
+        seen["kw"] = kw
+        return [{"url": "https://xhs/1", "title": "空气炸锅土豆片"}]
+    monkeypatch.setattr(appmod.xiaohongshu_search, "search", xhs)
+    monkeypatch.setattr(appmod.douyin_search, "search",
+                        lambda kw, max_results=8: [{"url": "https://dy/1", "title": "土豆片"}])
+    c = TestClient(appmod.app)
+    d = c.post("/api/lens/cn/search", data={"keyword": "空气炸锅土豆片"}).json()
+    assert seen["kw"] == "空气炸锅土豆片"
+    assert d["ok"] and d["count"] == 2 and d["keyword"] == "空气炸锅土豆片"
+    assert {i["platform"] for i in d["items"]} == {"xiaohongshu", "douyin"}
+    assert all(i["match"] is None for i in d["items"])
+
+
+def test_lens_cn_search_empty_keyword(tmp_path, monkeypatch):
+    monkeypatch.setattr(appmod, "APIFY_TOKENS", ["tok"])
+    c = TestClient(appmod.app)
+    d = c.post("/api/lens/cn/search", data={"keyword": "  "}).json()
+    assert d["items"] == [] and d["count"] == 0
+
+
+def test_lens_cn_search_no_tokens(tmp_path, monkeypatch):
+    monkeypatch.setattr(appmod, "APIFY_TOKENS", [])
+    c = TestClient(appmod.app)
+    d = c.post("/api/lens/cn/search", data={"keyword": "土豆片"}).json()
+    assert d["items"] == []
+
+
+def test_lens_cn_search_survives_one_actor_error(tmp_path, monkeypatch):
+    monkeypatch.setattr(appmod, "APIFY_TOKENS", ["tok"])
+    def boom(kw, max_results=8):
+        raise RuntimeError("actor down")
+    monkeypatch.setattr(appmod.xiaohongshu_search, "search", boom)
+    monkeypatch.setattr(appmod.douyin_search, "search",
+                        lambda kw, max_results=8: [{"url": "https://dy/2", "title": "d"}])
+    c = TestClient(appmod.app)
+    d = c.post("/api/lens/cn/search", data={"keyword": "土豆片"}).json()
+    assert d["count"] == 1 and d["items"][0]["platform"] == "douyin"
