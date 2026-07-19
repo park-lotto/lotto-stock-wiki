@@ -32,7 +32,8 @@ from shopping_shorts.apify_client import fetch_single_reel, fetch_reels, fetch_p
 from shopping_shorts import discovery, instagram_search
 from shopping_shorts.channels import load_channels, username_from_url
 from shopping_shorts.video_analysis import (analyze_video, translate_keyword, cn_search_keyword,
-                                            cn_search_keyword_vision, judge_same_product)
+                                            cn_search_keyword_vision, judge_same_product,
+                                            cn_search_candidates)
 from shopping_shorts.product_identify import fetch_lens_lines, identify_product_from_lines
 from shopping_shorts.search_links import build_search_links, lens_search_url
 from shopping_shorts import mix_pipeline
@@ -2230,6 +2231,27 @@ async def api_lens_cn(request: Request, frame: UploadFile = File(None),
             items.sort(key=lambda i: rank.get(i.get("sim"), 1))
     return {"ok": True, "items": items, "count": len(items),
             "keyword": keyword, "product": product}
+
+
+@app.post("/api/lens/cn/keywords")
+async def api_lens_cn_keywords(request: Request, frame: UploadFile = File(None),
+                                source_caption: str = Form("")):
+    """프레임(+캡션) → 중국어 후보 검색어 리스트. Gemini 비전 1회, Apify 안 부름.
+    프론트가 렌즈 열 때 호출해 후보 버튼을 그린다(2026-07-19)."""
+    if frame is None and not (source_caption or "").strip():
+        return {"ok": True, "product": "", "candidates": []}
+    raw = None
+    if frame is not None:
+        try:
+            raw = await frame.read()
+        except Exception:
+            raw = None
+    try:
+        v = cn_search_candidates(raw, source_caption)
+    except Exception:
+        v = {}
+    return {"ok": True, "product": v.get("product", ""),
+            "candidates": v.get("candidates", [])}
 
 
 @app.post("/api/lens/yt")

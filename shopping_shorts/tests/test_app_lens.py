@@ -254,3 +254,24 @@ def test_lens_yt_search_failure_returns_empty(tmp_path, monkeypatch):
     assert r.status_code == 200
     d = r.json()
     assert d["ok"] is True and d["count"] == 0
+
+
+# ── /api/lens/cn/keywords : 프레임 → 중국어 후보 검색어 (2026-07-19) ──
+def test_lens_cn_keywords_returns_candidates(tmp_path, monkeypatch):
+    monkeypatch.setattr(appmod, "cn_search_candidates",
+                        lambda raw, cap: {"product": "감자칩",
+                                          "candidates": [{"ko": "공기튀김 감자칩", "zh": "空气炸锅土豆片"}]})
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/cn/keywords",
+               files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
+               data={"source_caption": "풍선감자"})
+    d = r.json()
+    assert d["ok"] and d["product"] == "감자칩"
+    assert d["candidates"][0]["zh"] == "空气炸锅土豆片"
+
+
+def test_lens_cn_keywords_empty_without_frame_or_caption(tmp_path, monkeypatch):
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/cn/keywords", data={"source_caption": ""})
+    d = r.json()
+    assert d["ok"] and d["candidates"] == []
