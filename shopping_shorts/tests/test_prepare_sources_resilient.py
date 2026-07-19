@@ -33,3 +33,23 @@ def test_prepare_sources_raises_when_all_fail(tmp_path, monkeypatch):
 
     with pytest.raises(RuntimeError):
         mix_pipeline._prepare_sources(["https://x/1", "https://x/2"], tmp_path)
+
+
+def test_resolve_sources_skips_missing(tmp_path):
+    """스킵 일관성(2026-07-20): _prepare_sources가 스킵한 소스(다운로드 안 됨)를 _resolve_sources도
+    건너뛴다 — 미리보기/렌더가 스킵된 s1을 찾다 '소스 영상 없음: s1'으로 죽던 실사고. s0·s2만
+    받아졌으면 그 둘만 반환(s1 예외 없이)."""
+    job = {"urls": ["u0", "u1", "u2"]}   # u1(s1)은 다운로드 스킵됨
+    for vid in ("s0", "s2"):
+        d = tmp_path / vid
+        d.mkdir()
+        (d / "v.mp4").write_bytes(b"x")
+    got = mix_pipeline._resolve_sources(job, tmp_path)
+    assert set(got) == {"s0", "s2"}
+
+
+def test_resolve_sources_raises_when_all_missing(tmp_path):
+    # 전부 다운로드 실패(0개)면 진짜 에러.
+    job = {"urls": ["u0", "u1"]}
+    with pytest.raises(RuntimeError):
+        mix_pipeline._resolve_sources(job, tmp_path)
