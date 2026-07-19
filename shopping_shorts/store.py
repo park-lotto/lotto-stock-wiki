@@ -112,6 +112,15 @@ class Store:
                     extracted_at TEXT
                 )
             """)
+            # 랭킹 검색용 썸네일 비전 주제태그(2026-07-19) — shortcode당 1행, 있으면 재호출 안 함(무과금).
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS vision_tags (
+                    shortcode TEXT PRIMARY KEY,
+                    subject TEXT,
+                    keywords_json TEXT,
+                    created_at TEXT
+                )
+            """)
             # 학습소재 통계용 확장(2026-07-13) — 위키 저장 여부와 무관하게 대본추출된
             # 모든 항목에 구조분석을 백필하기 위한 컬럼.
             # category_source(2026-07-16): 카테고리가 어디서 왔나 — user|gemini|keyword.
@@ -1324,6 +1333,42 @@ class Store:
         if not row:
             return None
         return {"keywords": json.loads(row[0]), "frame_paths": json.loads(row[1]), "analyzed_at": row[2]}
+
+    def save_vision_tags(self, shortcode, subject, keywords):
+        """썸네일 비전 주제태그 저장(덮어쓰기). keywords: [str]."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO vision_tags(shortcode, subject, keywords_json, created_at) "
+                "VALUES(?,?,?,datetime('now')) ON CONFLICT(shortcode) DO UPDATE SET "
+                "subject=excluded.subject, keywords_json=excluded.keywords_json, created_at=excluded.created_at",
+                (shortcode, subject or "", json.dumps(keywords or [], ensure_ascii=False)),
+            )
+
+    def get_vision_tags(self, shortcode):
+        """저장된 주제태그 {subject, keywords}. 없으면 None."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT subject, keywords_json FROM vision_tags WHERE shortcode=?", (shortcode,)
+            ).fetchone()
+        if not row:
+            return None
+        return {"subject": row[0] or "", "keywords": json.loads(row[1] or "[]")}
+
+    def vision_tags_map(self, shortcodes):
+        """여러 shortcode → {shortcode: {subject, keywords}} (있는 것만). 읽기 결합용."""
+        codes = [s for s in (shortcodes or []) if s]
+        if not codes:
+            return {}
+        out = {}
+        with self._conn() as c:
+            # sqlite 변수 상한(999) 회피 — 청크로 조회.
+            for i in range(0, len(codes), 400):
+                chunk = codes[i:i + 400]
+                q = "SELECT shortcode, subject, keywords_json FROM vision_tags WHERE shortcode IN (%s)" % \
+                    ",".join("?" * len(chunk))
+                for sc, subj, kj in c.execute(q, chunk).fetchall():
+                    out[sc] = {"subject": subj or "", "keywords": json.loads(kj or "[]")}
+        return out
 
     def save_candidates(self, shortcode, platform, candidates):
         """플랫폼 검색 후보 저장. candidates: [{url,title,thumbnail,source_lang?}].

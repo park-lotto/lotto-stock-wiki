@@ -412,8 +412,13 @@ function sortKey(i){
 function matchesSearch(it, q){
   const needle = (q||'').trim().toLowerCase();
   if(!needle) return true;                       // 빈 검색어 = 전체
-  const hay = [(it.category||''), (it.name||''), (it.username||''), (it.caption||'')]
-    .join(' ').toLowerCase();
+  // 비전 주제태그가 있으면 그걸 우선 매칭(캡션 무시) — 캡션에 우연히 든 말('빵빵한 사운드')이
+  // '빵'에 걸리던 오검을 없앤다(2026-07-19). 태그 없으면(백그라운드 태깅 전) 캡션 백업.
+  const hasTags = (it.vision_subject && it.vision_subject.trim())
+    || (Array.isArray(it.vision_keywords) && it.vision_keywords.length);
+  const hay = hasTags
+    ? [(it.vision_subject||''), ...(it.vision_keywords||[])].join(' ').toLowerCase()
+    : [(it.category||''), (it.name||''), (it.username||''), (it.caption||'')].join(' ').toLowerCase();
   // 상위어면 하위 종류까지 넓혀 찾는다: "빵"→베이글·식빵, "야채"→가지·오이 (2026-07-18).
   // 하위어(베이글) 검색은 그대로 좁게. 확장어도 각각 단어경계 매칭을 거친다.
   return _expandQuery(needle).some(t => _koreanWordHit(hay, t));
@@ -568,8 +573,35 @@ async function doCollect(){
     STATE.items = d.items; st.textContent=`✅ ${d.count}건 수집 (${fmtTime(d.collected_at)})`;
     render();
     if(PLATFORM==='tiktok') loadTtSettings();   // 하루 남은 횟수·지출 갱신
+    else _pollVisionTags(5);                    // 백그라운드 태깅이 채워지는 대로 병합(검색 정확도 승격)
   }catch(e){ st.textContent="❌ "+e.message; }
   finally{ btn.disabled=false; }
+}
+// 수집 후 백그라운드 비전 태깅이 완료되는 대로 /api/reference를 몇 번 다시 읽어
+// STATE.items에 vision_subject·vision_keywords를 병합한다 → 검색이 자동으로 더 정확해진다.
+function _pollVisionTags(times){
+  if(PLATFORM!=='instagram' || times<=0) return;
+  const delays=[15000,20000,25000,30000,40000];
+  const wait = delays[delays.length-times] || 30000;
+  setTimeout(async ()=>{
+    try{
+      const d = await (await fetch("/api/reference?platform="+PLATFORM)).json();
+      if(d.items && d.items.length){
+        const bySc={}; d.items.forEach(x=> bySc[x.shortcode]=x);
+        let filled=0;
+        STATE.items.forEach(it=>{
+          const fresh=bySc[it.shortcode];
+          if(fresh && (fresh.vision_subject || (fresh.vision_keywords&&fresh.vision_keywords.length))){
+            it.vision_subject=fresh.vision_subject; it.vision_keywords=fresh.vision_keywords;
+          }
+          if(it.vision_subject || (it.vision_keywords&&it.vision_keywords.length)) filled++;
+        });
+        render();
+        if(filled>=STATE.items.length) return;   // 다 채워졌으면 멈춤
+      }
+    }catch(e){}
+    _pollVisionTags(times-1);
+  }, wait);
 }
 async function loadLast(){
   const d = await (await fetch("/api/reference?platform="+PLATFORM)).json();
