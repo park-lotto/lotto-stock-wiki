@@ -2608,6 +2608,48 @@ async def _auth_guard(request: Request, call_next):
     return RedirectResponse("/login")
 
 
+# ── 유료게이트 접근권한 판정 (단일 진실원. API게이트·화면·크레딧 모두 이 함수만 본다) ──
+def access_level(customer_id, now=None):
+    """customer_id → "full"(전기능) | "ranking_only"(레퍼런스 랭킹만).
+    규칙: 사장님(0)=full / plan=pro=full / 체험중(now<full_access_until)=full / 그 외 ranking_only."""
+    if customer_id == 0:
+        return "full"                       # 사장님 = 영구 pro+admin
+    cust = Store(DB_PATH).get_customer(customer_id)
+    if not cust:
+        return "ranking_only"
+    if cust.get("plan") == "pro":
+        return "full"
+    if now is None:
+        now = int(datetime.now(timezone.utc).timestamp())
+    if now < (cust.get("full_access_until") or 0):
+        return "full"                       # 무료 체험 창
+    return "ranking_only"
+
+
+@app.get("/api/me")
+def _api_me(request: Request):
+    """프론트가 부팅 시 호출 — 등급·체험 남은날·크레딧 상한."""
+    cid = getattr(request.state, "customer_id", 0)
+    st = Store(DB_PATH)
+    cust = st.get_customer(cid) if cid else None
+    now = int(datetime.now(timezone.utc).timestamp())
+    plan = "pro" if cid == 0 else (cust or {}).get("plan", "free")
+    fau = (cust or {}).get("full_access_until", 0) if cust else 0
+    if plan == "pro" or cid == 0:
+        days_left = None
+    else:
+        days_left = max(0, (fau - now + 86399) // 86400) if fau else 0
+    def _lim(k, d):
+        try:
+            return int(st.get_setting(k, d))
+        except (TypeError, ValueError):
+            return d
+    return {"customer_id": cid, "level": access_level(cid, now), "plan": plan,
+            "days_left": days_left,
+            "limits": {"lens": _lim("limit_lens", 5), "render": _lim("limit_render", 2),
+                       "script": _lim("limit_script", 10)}}
+
+
 @app.get("/insta_fill_comment.user.js", include_in_schema=False)
 def _serve_userscript():
     """댓글 자동채우기 유저스크립트 — Tampermonkey가 이 URL로 설치·자동업데이트한다.
