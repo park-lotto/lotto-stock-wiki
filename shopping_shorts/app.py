@@ -1441,12 +1441,60 @@ def api_mix_adjust(body: dict):
     for b in plan["beats"]:
         if b["beat_idx"] == beat_idx:
             b["primary"] = grounded
+            b["fit"] = None   # 화면이 바뀌었으니 옛 매칭점수 무효(사람이 눈으로 고름)
             matched = True
             break
     if not matched:
         return JSONResponse(status_code=404, content={"ok": False, "error": "beat_idx 없음"})
     store.update_mix_job(job_id, edit_plan=plan)
     return {"ok": True}
+
+
+@app.get("/api/mix/segments/{job_id}")
+def api_mix_segments(job_id: str):
+    """[다른 화면으로] 피커용 — 이 잡의 모든 소스 세그먼트.
+    used=이미 어느 비트 primary로 쓰인 seg_id(피커에서 흐리게)."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("extract"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "데이터 없음"})
+    seg_map, _ = _edit_plan._build_inventory(list(job["extract"].values()))
+    used = {b["primary"]["seg_id"]
+            for b in (job.get("edit_plan") or {}).get("beats", [])
+            if b.get("primary")}
+    segs = [{
+        "seg_id": sid, "video_id": seg["video_id"],
+        "start": seg["start"], "end": seg["end"],
+        "dur": round(seg["end"] - seg["start"], 1),
+        "scene_desc": seg.get("scene_desc", ""), "text": seg.get("text", ""),
+        "thumb_url": f"/api/mix/seg_thumb/{job_id}/{sid}",
+        "used": sid in used,
+    } for sid, seg in seg_map.items()]
+    return {"ok": True, "segments": segs}
+
+
+@app.get("/api/mix/seg_thumb/{job_id}/{seg_id}")
+def api_mix_seg_thumb(job_id: str, seg_id: str):
+    """[다른 화면으로] 피커용 seg 썸네일(중간지점 프레임 jpg, 캐시).
+    seg_id는 인벤토리 검증 후에만 파일명에 쓴다(경로 방어)."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("extract"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "데이터 없음"})
+    seg_map, _ = _edit_plan._build_inventory(list(job["extract"].values()))
+    seg = seg_map.get(seg_id)
+    if not seg:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "없는 seg_id"})
+    work = _MIX_WORK_DIR / job_id
+    cached = work / "seg_thumbs" / f"{seg_id}.jpg"
+    if not cached.exists():
+        try:
+            src = _resolve_sources(job, work)[seg["video_id"]]
+        except Exception:
+            return JSONResponse(status_code=404, content={"ok": False, "error": "소스 없음"})
+        mid = (seg["start"] + seg["end"]) / 2
+        frame = extract_frame_at(src, work / "seg_thumbs", mid, filename=f"{seg_id}.jpg")
+        if not frame:
+            return JSONResponse(status_code=404, content={"ok": False, "error": "프레임 추출 실패"})
+    return FileResponse(str(cached), media_type="image/jpeg")
 
 
 @app.post("/api/mix/render")
