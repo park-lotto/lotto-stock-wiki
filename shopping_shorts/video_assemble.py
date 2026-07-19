@@ -148,6 +148,27 @@ def _run_ffmpeg(cmd, cwd=None):
 
 _MIN_CLIP = 0.8   # 초. 이보다 짧은 독립 클립은 만들지 않는다(깜빡임 방지).
 
+# 슬로우모션 상한. 소스가 나레이션보다 짧을 때 무제한으로 늘리면(옛 동작) 부자연스러운
+# 슬로우크롤이 됐다(사장님 실측, 2026-07-19). 재생은 최대 이 배율까지만 늘리고, 그 이상
+# 필요한 시간은 마지막 프레임 정지(freeze)로 떠안는다 → 요리 동작은 자연 속도, 남는 시간만 홀드.
+_MAX_SLOWMO = 1.15
+
+
+def _speed_and_freeze(src_dur, out_dur, max_slowmo=_MAX_SLOWMO):
+    """소스 구간 src_dur초를 출력 out_dur초로 채울 때, (움직이는 재생 길이, 정지프레임 길이).
+
+    - out_dur ≤ src_dur: 늘릴 필요 없음 → (out_dur, 0).
+    - 필요한 배율이 상한 이내: 그대로 완만한 슬로우 → (out_dur, 0).
+    - 상한 초과: 재생은 src_dur*max_slowmo까지만, 나머지는 freeze로 → (capped, out_dur-capped).
+
+    항상 play_out + freeze == out_dur (총 길이·오디오/자막 싱크 보존)."""
+    if src_dur <= 1e-9 or out_dur <= src_dur:
+        return (out_dur, 0.0)
+    capped = src_dur * max_slowmo
+    if out_dur <= capped + 1e-9:
+        return (out_dur, 0.0)
+    return (capped, out_dur - capped)
+
 
 def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP):
     """비트의 순서 구간 리스트 → 나레이션 길이(tts_dur)에 맞춘 클립 계획.
@@ -420,26 +441,45 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
         for j, c in enumerate(plan):
             src = source_video_paths[c["video_id"]]
             sub = work / f"beat_{idx}_{j}.mp4"
-            # setpts로 슬로모: 소스 src_dur초를 출력 out_dur초로 늘린다(1배속이면 factor=1).
-            factor = c["out_dur"] / c["src_dur"] if c["src_dur"] > 1e-6 else 1.0
+            # 슬로우 상한(1.15배)+정지프레임(2026-07-19): 무제한 슬로우크롤 제거.
+            # 재생은 최대 _MAX_SLOWMO배까지만 늘리고, 남는 시간은 마지막 프레임 정지(freeze).
+            # play_out+freeze == out_dur → 총 길이·오디오/자막 싱크 불변.
+            play_out, freeze = _speed_and_freeze(c["src_dur"], c["out_dur"])
+            factor = play_out / c["src_dur"] if c["src_dur"] > 1e-6 else 1.0
             vf_full = f"{vf},setpts={factor:.6f}*PTS" if factor > 1.0 + 1e-6 else vf
-            # ★start를 소스 안으로 당긴다(2026-07-19). 약한 매칭이 소스 밖을 잡으면 -ss가 끝을
-            #   넘어 0프레임이 나와 concat이 죽는다. [start, start+src_dur]가 소스 안에 들어오게
-            #   당기되, 소스가 src_dur보다 짧으면 0에서 시작해 있는 만큼 읽는다.
+            # start를 소스 안으로 당긴다(타트랙 병합, 2026-07-19). 약한 매칭이 소스 밖을 잡으면
+            #   -ss가 끝을 넘어 0프레임이 나와 concat이 죽는다. [start, start+src_dur]가 소스
+            #   안에 들어오게 당기되, 소스가 src_dur보다 짧으면 0에서 있는 만큼 읽는다.
             sdur = _src_dur(c["video_id"])
             start = c["start"]
             if sdur > 0:
                 start = max(0.0, min(start, sdur - min(c["src_dur"], sdur)))
-            # -ss(입력 시크) start부터, 출력 out_dur초. 오디오 없음(비트 오디오는 아래서 합침).
+            # 1단계 — 움직임: 입력을 [start, start+src_dur]만 읽어(-ss+입력측 -t) 유출 차단.
+            #   입력 제한이 핵심(P1) — 상한 배율이 out_dur/src_dur보다 작으면 setpts가 다음
+            #   구간까지 끌어와 유출된다(다색 소스 실측). 잘라두면 이 구간만 play_out으로 늘어난다.
+            sub = work / f"beat_{idx}_{j}.mp4"
             _run_ffmpeg([
-                "ffmpeg", "-y", "-ss", f"{start:.3f}", "-i", str(src),
-                "-vf", vf_full, "-r", "30", "-an", "-t", f"{c['out_dur']:.3f}",
+                "ffmpeg", "-y", "-ss", f"{start:.3f}", "-t", f"{c['src_dur']:.3f}",
+                "-i", str(src),
+                "-vf", vf_full, "-r", "30", "-an", "-t", f"{play_out:.3f}",
                 "-c:v", "libx264", "-pix_fmt", "yuv420p", str(sub),
             ])
-            # 그래도 비면(소스 손상 등) 이 클립만 버린다 — 하나가 미리보기 전체를 죽이지 않게.
+            # 그래도 비면(소스 손상/범위밖) 이 클립만 버린다 — 하나가 미리보기 전체를 죽이지 않게.
             if not sub.exists() or _probe_duration(sub) <= 0.05:
                 continue
-            sub_paths.append(sub)
+            # 2단계 — 정지프레임(P1): zoompan(켄번즈)은 tpad와 한 체인에서 안 된다(출력 잘림,
+            #   실측 2026-07-19). 완성된 클립에 별도 패스로 tpad를 얹어 마지막 프레임을 freeze초 홀드.
+            if freeze > 1e-3:
+                frozen = work / f"beat_{idx}_{j}f.mp4"
+                _run_ffmpeg([
+                    "ffmpeg", "-y", "-i", str(sub),
+                    "-vf", f"tpad=stop_mode=clone:stop_duration={freeze:.3f}",
+                    "-r", "30", "-an", "-t", f"{play_out + freeze:.3f}",
+                    "-c:v", "libx264", "-pix_fmt", "yuv420p", str(frozen),
+                ])
+                sub_paths.append(frozen)
+            else:
+                sub_paths.append(sub)
         if not sub_paths:
             # 이 비트는 쓸 클립이 하나도 없다(모든 소스 손상/범위밖). 비트를 건너뛴다 —
             # 미리보기가 통째로 죽는 것보다 이 비트만 빠지는 게 낫다.
