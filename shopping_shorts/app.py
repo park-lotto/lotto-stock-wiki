@@ -2626,7 +2626,9 @@ async def _api_login(req: Request):
     if not _AUTH_ON:
         return RedirectResponse("/", status_code=303)
     # 기존 단일 관리자 계정(env) — 하위호환, LEGACY_CUSTOMER_ID(0)로 로그인.
-    if hmac.compare_digest(u, DASH_USER) and hmac.compare_digest(p, DASH_PASS):
+    # ★DASH_PASS가 비었으면 이 분기를 절대 타면 안 된다: 안 그러면 구글만 켠 배포(DASH_PASS 빈값)에서
+    #   user=admin·pass=빈값이 admin/빈값과 compare_digest True가 돼 누구나 사장님 세션을 얻는다(백도어).
+    if DASH_PASS and hmac.compare_digest(u, DASH_USER) and hmac.compare_digest(p, DASH_PASS):
         r = RedirectResponse("/", status_code=303)
         _set_session_cookie(r, 0)
         return r
@@ -2694,7 +2696,9 @@ def _google_fetch_identity(code, _requests=None):
     d = ui.json()
     if not d.get("sub"):
         return None
-    return {"sub": d["sub"], "email": d.get("email")}
+    # 미인증 이메일은 신뢰하지 않는다(매칭은 sub로 하므로 로그인엔 지장 없음, 저장만 안 함).
+    email = d.get("email") if d.get("email_verified") is True else None
+    return {"sub": d["sub"], "email": email}
 
 
 @app.get("/auth/google/login")
@@ -2713,7 +2717,11 @@ def _google_callback(request: Request, code: str = "", state: str = "", error: s
     if error or not code:
         return RedirectResponse("/login?e=" + urllib.parse.quote("구글 로그인이 취소됐어요"), status_code=303)
     cookie_state = request.cookies.get("g_state")
-    if not cookie_state or not hmac.compare_digest(cookie_state, state):
+    try:
+        state_ok = bool(cookie_state) and hmac.compare_digest(cookie_state, state)
+    except (TypeError, ValueError):
+        state_ok = False       # 비-ASCII state 주입 등 → fail-closed
+    if not state_ok:
         return RedirectResponse("/login?e=" + urllib.parse.quote("보안 검증 실패 — 다시 시도해주세요"), status_code=303)
     ident = _google_fetch_identity(code)
     if not ident:

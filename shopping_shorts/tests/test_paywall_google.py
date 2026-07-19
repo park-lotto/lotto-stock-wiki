@@ -63,3 +63,51 @@ def test_login_page_has_google_button(tmp_path, monkeypatch):
     c = TestClient(appmod.app)
     html = c.get("/login").text
     assert "/auth/google/login" in html and "Google" in html
+
+
+def test_empty_dash_pass_blocks_admin_backdoor(tmp_path, monkeypatch):
+    """★CRITICAL: 구글만 켠 배포(DASH_PASS 빈값)에서 admin/빈비번으로 사장님 세션을 얻으면 안 된다."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    monkeypatch.setattr(appmod, "_AUTH_ON", True)
+    monkeypatch.setattr(appmod, "DASH_PASS", "")
+    monkeypatch.setattr(appmod, "DASH_SECRET", "sec")
+    Store(str(tmp_path / "t.db")).ensure_paywall_schema()
+    c = TestClient(appmod.app, follow_redirects=False)
+    r = c.post("/api/login", data={"user": "admin", "pass": ""})
+    assert "dash_auth" not in r.headers.get("set-cookie", "")   # 세션 안 생김
+    assert "/login?e=1" in r.headers.get("location", "")
+
+
+def test_admin_login_still_works_with_dash_pass(tmp_path, monkeypatch):
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    monkeypatch.setattr(appmod, "_AUTH_ON", True)
+    monkeypatch.setattr(appmod, "DASH_PASS", "secretpw")
+    monkeypatch.setattr(appmod, "DASH_USER", "admin")
+    monkeypatch.setattr(appmod, "DASH_SECRET", "sec")
+    Store(str(tmp_path / "t.db")).ensure_paywall_schema()
+    c = TestClient(appmod.app, follow_redirects=False)
+    r = c.post("/api/login", data={"user": "admin", "pass": "secretpw"})
+    assert "dash_auth" in r.headers.get("set-cookie", "")       # 정상 admin 로그인
+
+
+class _FakeResp:
+    def __init__(self, code, data):
+        self.status_code = code; self._d = data
+    def json(self):
+        return self._d
+
+
+def test_unverified_email_stored_as_none():
+    class FakeReq:
+        def post(self, *a, **k): return _FakeResp(200, {"access_token": "AT"})
+        def get(self, *a, **k): return _FakeResp(200, {"sub": "s1", "email": "e@x.com", "email_verified": False})
+    ident = appmod._google_fetch_identity("code", _requests=FakeReq())
+    assert ident["sub"] == "s1" and ident["email"] is None       # 미인증 이메일=신뢰 안 함
+
+
+def test_verified_email_kept():
+    class FakeReq:
+        def post(self, *a, **k): return _FakeResp(200, {"access_token": "AT"})
+        def get(self, *a, **k): return _FakeResp(200, {"sub": "s2", "email": "ok@x.com", "email_verified": True})
+    ident = appmod._google_fetch_identity("code", _requests=FakeReq())
+    assert ident["email"] == "ok@x.com"

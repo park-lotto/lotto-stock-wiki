@@ -575,6 +575,9 @@ class Store:
             c.execute("UPDATE customers SET full_access_until=? WHERE id != 0 AND full_access_until=0",
                       (grandfather_until,))
         # settings 테이블은 _init_schema(line 396)가 이미 만든다 — 여기선 usage만.
+        # google_sub 중복 계정 방지(부분 유니크 — NULL 제외). 데이터 무결성(Opus 리뷰).
+        c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_google_sub ON customers(google_sub) "
+                  "WHERE google_sub IS NOT NULL")
         c.execute("""CREATE TABLE IF NOT EXISTS usage (
                         customer_id INTEGER NOT NULL,
                         op TEXT NOT NULL,
@@ -2014,7 +2017,7 @@ class Store:
             row = c.execute("SELECT id FROM customers WHERE google_sub=?", (google_sub,)).fetchone()
         if row:
             return row[0]
-        username = "g_" + str(google_sub)[:40]         # username 유니크 제약 충족용
+        username = "g_" + str(google_sub)               # username 유니크 제약 충족용(절단X — sub 전체가 dedup 키)
         try:
             return self.create_customer(username, secrets.token_hex(16),
                                         email=email, google_sub=google_sub)
