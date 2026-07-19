@@ -531,7 +531,6 @@ function render(){
           <button class="save" id="save_${i.shortcode}" onclick="toggleMix('${i.shortcode}', this)">📥 담기</button>
         </div>
         <button class="script-btn" onclick="extractScript('${i.shortcode}')">📝 대본 추출</button>
-        <button class="script-btn" onclick="showRelated('${i.shortcode}')">🔗 같은 주제</button>
         <button class="script-btn" onclick="lensSearch(this,'${i.shortcode}')">🔍 렌즈 유사영상</button>
         <button class="script-btn" onclick="openSceneCut('${i.shortcode}', '${esc(i.video_url||'')}', '${esc(i.category||'')}')">🎞 장면 담기</button>
         <button class="script-btn" onclick="sendToProduce('${i.shortcode}')" id="send_${i.shortcode}">🎬 제작소로 보내기</button>
@@ -697,32 +696,6 @@ function _embedTiktok(el, videoId){
 }
 function playYoutube(img, videoId){ _playViaMedia(img, videoId, 'youtube', _embedYoutube); }
 function playTiktok(img, videoId){ _playViaMedia(img, videoId, 'tiktok', _embedTiktok); }
-// ── 같은 주제 모아보기(2026-07-13) ──────────────────────
-async function showRelated(shortcode){
-  openScript('<div class="sm-loading">⏳ 같은 주제 영상 찾는 중…</div>', '🔗 같은 주제 영상');
-  try{
-    const r = await fetch('/api/related?shortcode='+encodeURIComponent(shortcode));
-    const d = await r.json();
-    if(!d.ok){ document.getElementById('scriptBody').innerHTML='<div class="sm-err">⚠️ 조회 실패</div>'; return; }
-    if(!d.items.length){
-      document.getElementById('scriptBody').innerHTML='<div class="sm-loading">같은 주제로 묶인 다른 영상이 없습니다.<br><small>AI 그룹핑은 수집 시 자동 실행되며, 배치(48시간 창) 안에서만 묶입니다.</small></div>';
-      return;
-    }
-    const PLATFORM_BADGE = {instagram:'📷', youtube:'▶️', tiktok:'🎵'};
-    const h = d.items.map(i=>`
-      <div class="sm-seg" style="display:flex;gap:10px;align-items:flex-start">
-        ${i.thumbnail?`<img src="/api/thumb?url=${encodeURIComponent(i.thumbnail)}" loading="lazy"
-             style="width:64px;height:64px;object-fit:cover;border-radius:6px;flex-shrink:0;background:#000"
-             onerror="this.style.visibility='hidden'">`:''}
-        <div style="min-width:0;flex:1">
-          <div class="t">${PLATFORM_BADGE[i.platform]||''} ${esc(i.name||i.username||'')}</div>
-          <div class="txt">${esc((i.caption||'').slice(0,80))}</div>
-          <button class="view" onclick="window.open('${i.url}','_blank')">👁 보기</button>
-        </div>
-      </div>`).join('');
-    document.getElementById('scriptBody').innerHTML = h;
-  }catch(err){ document.getElementById('scriptBody').innerHTML='<div class="sm-err">⚠️ 네트워크 오류 — 잠시 후 재시도</div>'; }
-}
 // ── 렌즈 유사영상 발굴(2026-07-14) ──────────────────────
 // 재생중/멈춘 <video>의 현재 프레임을 canvas 캡처 → 구글렌즈 → 5플랫폼 유사영상.
 const LENS_PLATFORMS=[
