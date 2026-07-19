@@ -218,6 +218,25 @@ console.log(JSON.stringify({big: lineWidthAt(1080), small: lineWidthAt(270)}));
     assert out["small"] == pytest.approx(out["big"] / 4)
 
 
+def test_draw_uses_color2_for_second_line():
+    """2색 룩: color2가 있으면 1줄=color, 2줄부터=color2로 그린다(레퍼런스 흰→노랑)."""
+    script = _slice_source() + r"""
+const log = [];
+const ctx = {
+  fillStyle: '', font: '',
+  measureText(){ return {width: 100}; },
+  save(){}, restore(){}, translate(){}, rotate(){}, drawImage(){},
+  clearRect(){}, fillRect(){}, beginPath(){}, strokeText(){},
+  fillText(t){ log.push(this.fillStyle); },
+};
+drawThumb(ctx, {width:1080, height:1920}, [{text:'A\nB', font:'X.ttf', size:80,
+  color:'#ffffff', color2:'#ffe100', outline:null, box:null, rot:0, x:0.5, y:0.14}], 1080, 1920);
+console.log(JSON.stringify(log));
+"""
+    out = json.loads(_run_node(script))
+    assert out == ["#ffffff", "#ffe100"], "1줄은 color, 2줄은 color2여야 한다"
+
+
 def test_apply_title_sets_selected_layer_text():
     """AI 추천 제목을 누르면(applyThumbTitle) 선택된 레이어의 text가 그 문구로 바뀐다 —
     줄바꿈(\\n)까지 그대로. renderThumbLayers/Canvas가 화면 갱신을 하도록 외부 의존은 스텁."""
