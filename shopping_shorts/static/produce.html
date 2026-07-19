@@ -1552,13 +1552,13 @@ function jump(i){
   // (우회 흔적도 안 남는다). go()의 "방어 두 겹"은 실은 같은 문에 두 겹이었다.
   // 뒤로 가는 건 막지 않는다 — 앞으로 가는 것만.
   if(i > cur && cur === 0 && MIX_JOB && !canGoNext()) return;
-  cur=i; renderSteps(); showPanel();
+  cur=i; renderSteps(); showPanel(); saveWork();   // ★단계를 서버에 남긴다(2026-07-19) — 안 남기면 새로고침이 1단계로 되돌린다
 }
 function go(d){
   // 1단계 미리보기 게이트(2026-07-17). btnNext의 disabled만으론 부족하다 — go(1)이 다른
   // 경로로도 불릴 수 있어 방어를 두 겹으로 둔다. 유료 자막제거로 못 본 채 넘어가는 걸 막는다.
   if(d > 0 && cur === 0 && MIX_JOB && !canGoNext()) return;
-  const n=cur+d; if(n<0||n>=STEPS.length) return; cur=n; renderSteps(); showPanel();
+  const n=cur+d; if(n<0||n>=STEPS.length) return; cur=n; renderSteps(); showPanel(); saveWork();   // ★단계 이동을 저장(새로고침 복원용)
 }
 
 // ── 1단계 대본: 3모드 ──────────────────────────────
@@ -2464,6 +2464,10 @@ async function startProduceMix(){
     clearInterval(PREVIEW_POLL); PREVIEW_POLL=null; ++PREVIEW_GEN;
     PREVIEW_STATUS=null;
     MIX_JOB=d.job_id;
+    // ★새 job을 서버 작업파일에 즉시 남긴다(2026-07-19). 안 남기면 새로고침 시 _restoreWork가
+    //   job_id=null을 읽어 미리보기·편집안이 통째로 사라진다(사장님 제보). 게이트는 복원 후에도
+    //   서버 preview_status를 다시 읽어 canGoNext()로 잠그므로 미리보기 우회 위험은 없다.
+    saveWork();
     // 동적 단계바 시작(loader.js 있을 때만). 컨트롤러는 #mixStatus 속성에 담는다(최상위 변수 X).
     // ★로딩 UI는 부가기능 — 절대 매칭 흐름(폴링·게이트 재잠금)을 막으면 안 된다. try/catch로 감싼다.
     st._sblPipe = null;
