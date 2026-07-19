@@ -2107,7 +2107,10 @@ def _ssrf_guard(*urls):
 # 허용 CDN 도메인만 프록시 (SSRF 방지 — 임의 URL 프록시 금지).
 # 인스타 + 유튜브(ytimg) + 틱톡(tiktokcdn) 썸네일 호스트.
 _ALLOWED_THUMB_HOSTS = ("cdninstagram.com", "fbcdn.net", "ytimg.com",
-                        "ggpht.com", "tiktokcdn.com", "tiktokcdn-us.com")
+                        "ggpht.com", "tiktokcdn.com", "tiktokcdn-us.com",
+                        # 샤오훙슈(rednote) 커버 CDN — lens/grab로 담은 영상 썸네일.
+                        # 없으면 /api/thumb가 400→제작소 재료 카드에서 샤오훙슈 썸네일만 안 뜸(실측 2026-07-19).
+                        "xhscdn.com")
 _ALLOWED_VIDEO_HOSTS = ("cdninstagram.com", "fbcdn.net")
 
 
@@ -2118,10 +2121,17 @@ def api_thumb(url: str):
     from fastapi.responses import Response
     if _reject_cdn_proxy(url, _ALLOWED_THUMB_HOSTS):
         return Response(status_code=400, content=b"invalid host")
+    # 호스트에 맞는 Referer로 핫링크 차단을 우회한다. xhscdn은 인스타 referer로도 200이
+    # 오지만(실측), 만료토큰형 URL 대비 정확한 출처를 보낸다. tiktok도 자기 도메인으로.
+    ref = "https://www.instagram.com/"
+    if "xhscdn.com" in url:
+        ref = "https://www.xiaohongshu.com/"
+    elif "tiktokcdn" in url:
+        ref = "https://www.tiktok.com/"
     try:
         r = requests.get(url, timeout=15, headers={
             "User-Agent": "Mozilla/5.0",
-            "Referer": "https://www.instagram.com/",
+            "Referer": ref,
         })
         r.raise_for_status()
         ctype = r.headers.get("Content-Type", "image/jpeg")
