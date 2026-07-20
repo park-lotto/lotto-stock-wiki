@@ -568,6 +568,7 @@
       <button class="btn-next" style="padding:12px 22px" onclick="renderFinal()">🎬 최종 렌더</button>
       <div id="finalStatus" class="hint" style="margin-top:10px"></div>
       <div id="finalVideo" style="margin-top:10px"></div>
+      <div id="exportBox" style="margin-top:14px"></div>
     </section>
 
     <div class="nav">
@@ -3264,6 +3265,27 @@ function refreshFinal(){
   s.innerHTML = MIX_JOB
     ? `대본 ${lenText(STATE.script)} · 자막제거 ${STATE.subtitleRemoval?'ON':'OFF'} · job ${esc(MIX_JOB)}`
     : '⚠️ 2단계에서 영상 매칭을 먼저 실행하세요.';
+  renderExport({rendered:false});   // 내보내기(ZIP·개별)는 렌더 전에도 가능 — 완성 MP4 버튼만 렌더 후 붙는다
+}
+// ── 내보내기(다운로드 + 캡컷 편집용) — 설계 2026-07-20 T1 ──
+// 웹앱이라 캡컷 자동실행은 불가 → 캡컷 편집용 ZIP(장면영상·음성·SRT·대본)을 내려받아 캡컷에 올린다.
+function renderExport(opts){
+  const box=document.getElementById('exportBox'); if(!box) return;
+  if(!MIX_JOB){ box.innerHTML=''; return; }
+  const j=encodeURIComponent(MIX_JOB), rendered=!!(opts&&opts.rendered);
+  const big='display:inline-block;padding:9px 16px;margin:0 6px 8px 0;text-decoration:none';
+  const small='display:inline-block;padding:7px 12px;margin:0 6px 6px 0;text-decoration:none;font-size:12px';
+  box.innerHTML =
+    '<div style="border-top:1px solid var(--line);padding-top:12px">'
+    + '<div style="font-size:14px;font-weight:600;margin-bottom:4px">📤 내보내기</div>'
+    + '<div class="hint" style="margin-bottom:8px">캡컷에서 이어 편집하려면 아래 ZIP을 받으세요 — 장면 영상·음성·자막(SRT)·대본이 들어 있습니다.</div>'
+    + (rendered?`<a class="btn-next" style="${big}" href="/api/mix/video/${j}?dl=1" download>⬇ 완성 영상(MP4)</a>`:'')
+    + `<a class="btn-next" style="${big}" href="/api/mix/export/${j}" download>📦 캡컷용 내보내기 (ZIP)</a>`
+    + '<div class="hint" style="margin:6px 0 4px">개별 다운로드</div>'
+    + `<a class="btn-prev" style="${small}" href="/api/mix/export/${j}?part=sources" download>🎬 소스 영상</a>`
+    + `<a class="btn-prev" style="${small}" href="/api/mix/export/${j}?part=srt" download>📝 SRT 자막</a>`
+    + `<a class="btn-prev" style="${small}" href="/api/mix/export/${j}?part=script" download>📄 스크립트</a>`
+    + '</div>';
 }
 async function renderFinal(){
   if(!MIX_JOB){ alert('2단계에서 영상 매칭을 먼저 실행하세요'); return; }
@@ -3281,7 +3303,8 @@ async function pollFinal(){
     const st=document.getElementById('finalStatus');
     st.textContent='상태: '+(MIX_LABEL[d.status]||d.status)+(d.error?' — '+d.error:'');
     if(d.status==='done'){ clearInterval(MIX_POLL);
-      document.getElementById('finalVideo').innerHTML=`<video controls src="/api/mix/video/${esc(MIX_JOB)}" style="max-width:360px;border-radius:10px"></video>`; }
+      document.getElementById('finalVideo').innerHTML=`<video controls src="/api/mix/video/${esc(MIX_JOB)}" style="max-width:360px;border-radius:10px"></video>`;
+      renderExport({rendered:true}); }   // 렌더 완료 → 완성 MP4 다운로드 버튼까지
     if(d.status==='failed'){ clearInterval(MIX_POLL); }
   }catch(e){}
 }

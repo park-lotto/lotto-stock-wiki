@@ -50,6 +50,8 @@ from shopping_shorts import edit_plan as _edit_plan
 from shopping_shorts import voice_presets, audio_post
 from shopping_shorts.tts import synthesize_tts
 from shopping_shorts import tts, asr_check
+from shopping_shorts import export_bundle
+from shopping_shorts.video_assemble import _beat_timeline
 from shopping_shorts.narration_naturalize import naturalize as _naturalize
 from shopping_shorts import frame_extract, scene_assets, scene_cut
 from shopping_shorts import effect_match, remotion_render, points
@@ -1998,11 +2000,46 @@ def api_mix_voice_preview(body: dict):
 
 
 @app.get("/api/mix/video/{job_id}")
-def api_mix_video(job_id: str):
+def api_mix_video(job_id: str, dl: int = 0):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job or not job.get("video_path") or not Path(job["video_path"]).exists():
         return JSONResponse(status_code=404, content={"ok": False})
+    if dl:   # ?dl=1 → 첨부 다운로드(Content-Disposition attachment). 없으면 인라인 재생(기존).
+        return FileResponse(job["video_path"], media_type="video/mp4",
+                            filename=export_bundle.safe_name(job_id) + ".mp4")
     return FileResponse(job["video_path"])
+
+
+@app.get("/api/mix/export/{job_id}")
+def api_mix_export(job_id: str, part: str = ""):
+    """캡컷 편집용 내보내기 ZIP(설계 2026-07-20 §2, T1). part=sources|srt|script면 그것만(개별
+    다운로드), 없으면 전체(final·sources·tts·srt·script·seo·README). 유료게이트 deny-by-default가
+    이 경로를 자동 차단하므로(FREE 목록에 없음) full 등급만 받는다. 없는 재료는 건너뛴다(500 금지)."""
+    safe = os.path.basename(job_id)
+    if not safe or safe != job_id:
+        return JSONResponse(status_code=400, content={"ok": False})
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "편집안이 아직 없습니다"})
+    plan = job["edit_plan"]
+    work = _MIX_WORK_DIR / job_id
+    work.mkdir(parents=True, exist_ok=True)
+    tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan.get("beats", []) if b.get("tts_path")}
+    try:
+        source_video_paths = _resolve_sources(job, work)
+    except Exception:
+        source_video_paths = {}   # 소스 전멸이어도 srt/script/seo는 준다(설계 §6, 500 금지)
+    timeline = _beat_timeline(plan, tts_paths)
+    parts = {"sources": ["sources"], "srt": ["srt"], "script": ["script"]}.get(
+        part, export_bundle.ALL_PARTS)
+    final = job.get("video_path") if (job.get("video_path")
+                                      and Path(job["video_path"]).exists()) else None
+    out = work / f"export_{part or 'all'}.zip"
+    export_bundle.build_export_zip(
+        out, plan=plan, timeline=timeline, source_video_paths=source_video_paths,
+        tts_paths=tts_paths, final_video=final, seo=job.get("seo"), parts=parts)
+    fname = export_bundle.safe_name(job_id) + (f"_{part}" if part else "_capcut") + ".zip"
+    return FileResponse(str(out), media_type="application/zip", filename=fname)
 
 
 def _thumb_dir(job_id: str):
