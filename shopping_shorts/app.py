@@ -2738,7 +2738,7 @@ _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 # 메서드 무관 무료(로그인 폼 POST 등) — 전부 정확 경로.
 _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout"}
 # GET만 무료(레퍼런스 랭킹 '조회') — POST/PUT 등 데이터변경은 같은 경로여도 차단.
-_FREE_EXACT_GET = {"/", "/pricing", "/api/me", "/api/reference", "/api/thumb", "/api/video"}
+_FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/api/thumb", "/api/video"}
 # 경계있는 prefix만(과다매칭 방지 — 트레일링 슬래시).
 _FREE_PREFIX = ("/static/", "/auth/google/")
 
@@ -3200,9 +3200,86 @@ a{text-decoration:none;color:inherit}
 <div class=foot>© __NAME__ · 요금·이용권 안내</div>
 </div></body></html>"""
 
+# ── 내 계정(유저 자기 설정) — 로그인 전용. /api/me로 플랜·한도·연락처를 채운다. ──
+_ACCOUNT_TMPL = """<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>__NAME__ — 내 계정</title>
+<link rel=preconnect href="https://fonts.googleapis.com">
+<link rel=preconnect href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel=stylesheet>
+<style>*{box-sizing:border-box;margin:0;padding:0}
+:root{--mint:#6ff0d6;--grad:linear-gradient(135deg,#6ff0d6,#1f9e7a);--gold:#ffcf6f;--gold-grad:linear-gradient(135deg,#ffe1a1,#f0a93a);
+--ink:#0b0f14;--panel:#111722;--line:#1e2735;--txt:#e8f0ee;--muted:#8aa0a0;--faint:#5f7373}
+body{background:radial-gradient(1000px 560px at 82% -12%,rgba(111,240,214,.09),transparent 60%),var(--ink);
+color:var(--txt);font-family:'Noto Sans KR',system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;word-break:keep-all;min-height:100vh}
+a{text-decoration:none;color:inherit}
+.wrap{max-width:520px;margin:0 auto;padding:0 22px}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .sym{width:32px;height:32px;flex:none}
+.brand .nm{font-family:'Black Han Sans',sans-serif;font-size:20px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.nav .back{color:var(--muted);font-size:14px;font-weight:600}.nav .back:hover{color:var(--mint)}
+h1{font-family:'Black Han Sans',sans-serif;font-size:30px;margin:16px 0 22px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:16px}
+.card h3{font-size:13px;letter-spacing:.03em;color:var(--faint);font-weight:700;margin-bottom:12px}
+.plan{display:flex;align-items:center;gap:12px}
+.plan .badge{font-family:'Black Han Sans',sans-serif;font-size:15px;padding:6px 14px;border-radius:999px}
+.badge.trial{background:rgba(111,240,214,.14);color:var(--mint)}
+.badge.free{background:#1a2028;color:var(--muted)}
+.badge.pro{background:var(--gold-grad);color:#3a2600}
+.plan .sub{color:var(--muted);font-size:14px}
+.lims{display:flex;gap:10px;flex-wrap:wrap}
+.lim{flex:1;min-width:90px;background:#0d131c;border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center}
+.lim .n{font-family:'Black Han Sans',sans-serif;font-size:24px;color:var(--mint)}
+.lim .l{color:var(--muted);font-size:12px;margin-top:2px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;border:0}
+.btn.kko{background:var(--gold-grad);color:#3a2600}
+.btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line);font-weight:600}
+.up p{color:var(--muted);font-size:13.5px;margin-bottom:14px}
+.foot{text-align:center;color:var(--faint);font-size:12px;padding:16px 0 40px}
+.hide{display:none!important}
+</style></head><body><div class=wrap>
+<div class=nav>
+<a class=brand href="/">__LOGO_SVG__<span class=nm>__NAME__</span></a>
+<a class=back href="/">← 앱으로</a></div>
+<h1>내 계정</h1>
+<div class=card>
+<h3>현재 플랜</h3>
+<div class=plan><span id=planBadge class="badge free">…</span><span id=planSub class=sub></span></div></div>
+<div class=card>
+<h3>하루 이용 한도</h3>
+<div class=lims>
+<div class=lim><div class=n id=limRender>–</div><div class=l>제작</div></div>
+<div class=lim><div class=n id=limLens>–</div><div class=l>렌즈</div></div>
+<div class=lim><div class=n id=limScript>–</div><div class=l>대본</div></div></div></div>
+<div class="card up" id=upCard>
+<h3>이용권</h3>
+<p id=upText>더 쓰고 싶으면 이용권으로 계속 쓸 수 있어요. 결제·문의는 카톡으로 안내해 드립니다.</p>
+<a class="btn kko" id=kkoBtn href="/pricing">카톡으로 문의</a></div>
+<a class="btn ghost" href="/logout">로그아웃</a>
+<div class=foot>© __NAME__</div>
+</div>
+<script>(function(){
+function t(id,v){var e=document.getElementById(id);if(e)e.textContent=v;}
+fetch("/api/me").then(function(r){return r.ok?r.json():null;}).then(function(d){
+if(!d)return;
+var L=d.limits||{};t("limRender",L.render);t("limLens",L.lens);t("limScript",L.script);
+var b=document.getElementById("planBadge");
+if(d.plan==="pro"){b.className="badge pro";t("planBadge","Pro 이용권");t("planSub","전 기능 무제한");document.getElementById("upCard").classList.add("hide");}
+else if(typeof d.days_left==="number"&&d.days_left>0){b.className="badge trial";t("planBadge","무료 체험");t("planSub","D-"+d.days_left+" 남음");}
+else{b.className="badge free";t("planBadge","무료");t("planSub","레퍼런스 랭킹 열람");}
+var kko=(d.contact&&d.contact.kakao)||"";
+var btn=document.getElementById("kkoBtn");
+if(/^https?:\\/\\//.test(kko)){btn.href=kko;btn.target="_blank";btn.rel="noopener";}
+else{btn.href="/pricing";}
+}).catch(function(){});
+})();</script>
+</body></html>"""
+
 _LANDING_HTML = _fill_brand(_LANDING_TMPL)
 _LOGIN_HTML = _fill_brand(_LOGIN_TMPL)
 _PRICING_HTML = _fill_brand(_PRICING_TMPL)
+_ACCOUNT_HTML = _fill_brand(_ACCOUNT_TMPL)
 
 _SIGNUP_HTML = """<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>쇼핑쇼츠 가입</title>
@@ -3241,6 +3318,11 @@ def _login_page(e: str = ""):
 @app.get("/pricing", response_class=HTMLResponse)
 def _pricing_page():
     return _PRICING_HTML   # 공개 요금·이용권 페이지(비로그인 방문자 포함)
+
+
+@app.get("/account", response_class=HTMLResponse)
+def _account_page():
+    return _ACCOUNT_HTML   # 로그인 유저 자기 계정(플랜·한도·문의). 데이터는 JS가 /api/me로 채움
 
 
 @app.get("/signup", response_class=HTMLResponse)
