@@ -25,6 +25,20 @@
     .head h2{margin:0;font-size:22px}
     .head .desc{color:var(--sub);font-size:13px;margin-top:4px}
 
+    /* T8: 저장 상태 + 되돌리기 — "지금 저장됐다"를 상시 보여 60대 신뢰감 */
+    .saveBar{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin:0 0 4px;min-height:24px;font-size:13px}
+    #saveStatus{color:var(--sub);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+    #saveStatus.ok{color:var(--ok);font-weight:700}
+    #saveStatus.ok .savedTick{display:inline-block;animation:savedPop .32s ease-out}
+    @keyframes savedPop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.18)}100%{transform:scale(1);opacity:1}}
+    @media(prefers-reduced-motion:reduce){#saveStatus.ok .savedTick{animation:none}}
+    #revertBtn{background:var(--panel);border:1px solid var(--line);color:var(--sub);border-radius:8px;
+      padding:5px 12px;font-size:13px;cursor:pointer;transition:.15s}
+    #revertBtn:not(:disabled):hover{border-color:var(--accent);color:var(--txt)}
+    #revertBtn:disabled{opacity:.4;cursor:default}
+    /* T8: 미리보기 위치 통일 — 0단계·4단계 미러가 같은 좌측 슬롯 규약(sticky·상단고정)을 공유 */
+    .previewSlot{position:sticky;top:12px;align-self:flex-start;z-index:7}
+
     /* 진행바 — 크게(60대 최우선). 완료=채운 민트+체크, 현재=링+숨쉬기(색이 아니라 형태로도 구분) */
     .steps{display:flex;align-items:flex-start;gap:0;margin:26px 0 30px;max-width:1120px}
     .step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative;cursor:pointer}
@@ -179,6 +193,13 @@
     <!-- 즐겨찾기에서 "영상제작으로 보내기"로 넘어왔을 때 표시(핸드오프 확인 배너) -->
     <div id="handoffBanner" style="display:none;background:var(--sel-bg);border:1px solid var(--accent);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--sel-fg)"></div>
 
+    <!-- T8: 저장 상태 상시 표시 + 되돌리기(직전 저장 스냅샷 복원) -->
+    <div class="saveBar">
+      <span id="saveStatus" aria-live="polite"></span>
+      <button id="revertBtn" onclick="revertWork()" disabled
+        title="방금 전 저장 상태(대본·영상풀·단계)로 되돌립니다.">↩ 되돌리기</button>
+    </div>
+
     <div class="steps" id="steps"></div>
 
     <!-- 1) 제작소: 좌(영상 풀) · 우(결과 — 확정대본/화면담김) -->
@@ -191,7 +212,7 @@
           <!-- 🪞 1단계 미리보기 — 편집안이 뜨면(loadMixReview) 이 좌측 공간이 프리뷰 자리가 된다.
                우측 편집안을 읽으며 스크롤해도 따라오도록 sticky. 오른쪽 [▶ 미리보기 만들기]가
                여기(#mixPreview)로 렌더한다(2026-07-19 사장님 요청 — 우측 인라인→좌측 프리뷰). -->
-          <div id="mixPreviewPanel" style="display:none;position:sticky;top:12px;z-index:6;margin-bottom:16px">
+          <div id="mixPreviewPanel" class="previewSlot" style="display:none;margin-bottom:16px">
             <div class="hint" style="margin-bottom:6px">🪞 미리보기 (9:16)</div>
             <div id="mixPreview"></div>
           </div>
@@ -289,8 +310,8 @@
       <div class="sub">아래 <b>완성 스타일</b>을 고르면 바로 완성돼요. 실제 장면 위에서 미리보고, 더 손보고 싶으면 <b>직접 다듬기</b>를 펼치세요.</div>
       <!-- 🪞 피팅룸: 좌(큰 미러) + 우(문구·스타일카드·강조·고급) -->
       <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;margin-top:12px">
-        <!-- 좌: 큰 피팅 미러 (다듬기 스크롤 시 따라오도록 sticky) -->
-        <div style="flex:0 0 auto;position:sticky;top:12px;align-self:flex-start;z-index:7">
+        <!-- 좌: 큰 피팅 미러 (다듬기 스크롤 시 따라오도록 sticky) — T8: 좌측 슬롯 규약(.previewSlot) 공유 -->
+        <div class="previewSlot" style="flex:0 0 auto">
           <div class="hint" style="margin-bottom:4px">🪞 실시간 미리보기 (9:16) — 글자를 <b>드래그</b>해 위치 이동
             <label style="cursor:pointer;margin-left:6px;color:var(--txt)"><input type="checkbox" id="sceneBg" onchange="toggleSceneBg()"> 실장면 배경</label></div>
           <div id="hcPreview" style="position:relative;width:380px;aspect-ratio:9/16;background:#ffffff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.4)">
@@ -1900,6 +1921,21 @@ let HANDOFF = [];   // [{url,shortcode,name,thumbnail,caption,pickScript,useFoot
 // (2026-07-14). sessionStorage에 상시 보관, 매 변경 시 갱신, 로드 시 복원.
 let WORK_ID = null;      // 서버 작업파일 id. 첫 저장 응답으로 채워진다.
 let _workTimer = null;   // 서버 POST 디바운스(입력마다 두들기지 않는다)
+// T8: 저장 상태 표시 + 되돌리기.
+// _lastCommitted = 서버에 마지막으로 확정 저장된 스냅샷(_workState JSON), _prevCommitted = 그 직전.
+// 서버 push는 1초 디바운스라 연타 입력은 하나로 뭉친다 → _prevCommitted는 "직전 저장 지점"이 된다.
+let _lastCommitted = null, _prevCommitted = null;
+function _setSaveStatus(text, cls){
+  const el = document.getElementById('saveStatus'); if(!el) return;
+  el.className = cls || '';
+  el.innerHTML = text;
+}
+function _markSaving(){ _setSaveStatus('저장 중…'); }
+function _markSaved(){ _setSaveStatus('<span class="savedTick">✓</span> 저장됨', 'ok'); }
+function _markLocalOnly(){ _setSaveStatus('이 기기에 임시 저장됨'); }   // 서버 실패 — 로컬은 살아있음(정직하게)
+function _refreshRevertBtn(){
+  const b = document.getElementById('revertBtn'); if(b) b.disabled = !_prevCommitted;
+}
 function _workState(){
   // ★sessionStorage.produce_work의 스키마 **그대로** + step + work_id. 새 형식을 발명하지 않는다 —
   // _consumeProduceHandoff가 이미 이 모양을 읽는다(스펙 §4.2).
@@ -1919,6 +1955,10 @@ async function _pushWork(){
     const d = await r.json();
     if(d && d.ok && d.work_id){
       WORK_ID = d.work_id;   // 다음 저장이 같은 작업을 갱신하도록
+      // T8: 확정 저장 성공 — 스냅샷 체인 전진(직전 지점 보존) + "저장됨 ✓" 표시.
+      const _snap = JSON.stringify(st);
+      if(_snap !== _lastCommitted){ if(_lastCommitted) _prevCommitted = _lastCommitted; _lastCommitted = _snap; }
+      _markSaved(); _refreshRevertBtn();
       // ★sessionStorage도 다시 쓴다(구멍 2, 2026-07-17 라이브 실사고: 제작소를 열 때마다 작업이
       // 복제됨). saveWork()가 이미 위에서 WORK_ID=null인 채로 sessionStorage를 써버렸다 — 여기서
       // 갱신 안 하면 새로고침 시 _consumeProduceHandoff가 work_id=null을 읽어 다음 저장이 새
@@ -1937,7 +1977,7 @@ async function _pushWork(){
         }
       }catch(e){}
     }
-  }catch(e){}   // 서버가 죽어도 sessionStorage 복원은 살아 있다 — 저장 실패로 작업을 막지 않는다
+  }catch(e){ _markLocalOnly(); }   // 서버가 죽어도 sessionStorage 복원은 살아 있다 — 저장 실패로 작업을 막지 않는다
 }
 function saveWork(){
   // ★가드가 **여기 안**에 있다(2026-07-17). 예전엔 호출부 5곳마다 각각 HANDOFF 길이를 검사한 뒤에만
@@ -1946,10 +1986,28 @@ function saveWork(){
   const st = _workState();
   if(!HANDOFF.length && !st.script) return;
   try{ sessionStorage.setItem('produce_work', JSON.stringify(st)); }catch(e){}   // 로컬은 즉시
+  _markSaving();                                                                 // T8: 편집됨 → 곧 저장
   clearTimeout(_workTimer);
   _workTimer = setTimeout(_pushWork, 1000);                                      // 서버는 디바운스
 }
 function clearWork(){ try{ sessionStorage.removeItem('produce_work'); }catch(e){} }
+// T8: 직전 저장 스냅샷으로 되돌린다. 복원 범위 = 스냅샷이 담는 것(대본·영상풀·단계).
+// 새 저장 형식을 발명하지 않는다 — 검증된 _restoreWork의 하이드레이션을 그대로 미러링한다(§_workState 주석).
+function revertWork(){
+  if(!_prevCommitted) return;
+  let w; try{ w = JSON.parse(_prevCommitted); }catch(e){ return; }
+  HANDOFF = w.handoff || [];
+  STATE.script = w.script || '';
+  STATE.script_src_idx = (typeof w.script_src_idx === 'number') ? w.script_src_idx : null;
+  STATE.script_from_wiki = (typeof w.script_from_wiki !== 'undefined') ? w.script_from_wiki : null;
+  if(STATE.script) setScriptMode('manual');
+  renderPool(); syncFootageToMixUrls(); refreshFinalPeek();
+  const st = w.step;
+  cur = (typeof st === 'number' && st >= 0 && st < STEPS.length) ? st : cur;
+  if(cur > 0 && MIX_JOB && !canGoNext()) cur = 0;   // 미리보기 미확인이면 1단계로(게이트 규약 유지)
+  renderSteps(); showPanel(); refreshNextBtn();
+  saveWork();   // 되돌린 상태를 새 현재로 저장(_pushWork가 스냅샷 체인을 전진 → 다시 누르면 원상복귀)
+}
 // 서버 작업파일 복원(2026-07-17) — /produce?work=<id>로 들어왔을 때.
 // sessionStorage 복원(_consumeProduceHandoff)은 그대로 둔다. 이건 **추가 계층**이다.
 async function _restoreWork(workId){
@@ -1999,6 +2057,8 @@ async function _restoreWork(workId){
   cur = (typeof st === 'number' && st >= 0 && st < STEPS.length) ? st : 0;
   if(cur > 0 && MIX_JOB && !canGoNext()) cur = 0;   // 미리보기 미확인이면 1단계로 되돌린다
   renderSteps(); showPanel(); refreshNextBtn();
+  // T8: 복원된 상태를 저장 기준선으로 삼는다 → 복원 직후의 첫 편집도 되돌릴 수 있다.
+  _lastCommitted = JSON.stringify(_workState()); _markSaved(); _refreshRevertBtn();
 }
 function _consumeProduceHandoff(){
   // 신규 핸드오프(즐겨찾기·랭킹에서 방금 넘어온 것)를 **진행 중 작업에 누적**한다.
@@ -2054,6 +2114,8 @@ function _consumeProduceHandoff(){
   renderPool();
   syncFootageToMixUrls();
   refreshFinalPeek();
+  // T8: 이어붙인 상태를 저장 기준선으로(첫 편집 되돌리기 가능). saveWork가 곧 서버에도 확정.
+  _lastCommitted = JSON.stringify(_workState()); _refreshRevertBtn();
   saveWork();
 }
 // 왼쪽 영상 풀 렌더 — 각 영상에 📝뽑기 / 🎬담기(토글). 역할 미리배정 없음, 겸용 허용.
