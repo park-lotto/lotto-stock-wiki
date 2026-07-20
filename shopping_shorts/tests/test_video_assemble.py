@@ -131,6 +131,22 @@ def test_caption_segments_han_modifier_stays_with_noun():
     assert any("한 달넘게" in s for s in segs)
 
 
+def test_caption_segments_time_adverb_opener_breaks_first():
+    # 사장님 제보(2026-07-20): "아침마다 빵 달라는 아이, …"에서 "아이"가 앞 구절에서
+    # 떨어져 "아이, 아무 식빵이나"로 붙던 문제. 시간/빈도 도입어(…마다)는 자기 뒤에서
+    # 끊겨 한 박자를 열고, 뒤 '수식어+명사'가 온전히 묶여야 한다("빵 달라는 아이").
+    segs = va._caption_segments("아침마다 빵 달라는 아이, 아무 식빵이나 좋아하는 우리 아이")
+    assert segs == ["아침마다", "빵 달라는 아이,", "아무 식빵이나", "좋아하는 우리 아이"], segs
+    assert not any(s.startswith("아이") for s in segs)   # 아이가 다음 구절 머리로 안 떨어짐
+
+
+def test_caption_segments_short_mada_opener_breaks():
+    # 짧은 도입어(날마다=3자)도 자기 뒤에서 끊긴다.
+    segs = va._caption_segments("날마다 우유 달라는 아이")
+    assert segs[0] == "날마다"
+    assert any("우유 달라는 아이" in s for s in segs)
+
+
 def test_caption_segments_breaks_after_sentence_end():
     # 문장부호(? .)로 끝난 뒤엔 문장 경계에서 끊는다(다음 문장이 앞에 안 붙음).
     segs = va._caption_segments("오이 사서 냉장고에 넣으셨나요? 그럼 지금 바로 버리셔야 합니다.")
@@ -449,6 +465,37 @@ def test_plan_absorbs_short_middle_segment():
     assert abs(_total_out(clips) - 5.3) < 0.05
 
 
+def test_plan_extends_into_source_instead_of_freeze():
+    # ★멈추지 말고(2026-07-20 사장님): 배정 구간(0~2.2)이 짧아도 소스 릴이 30초면 마지막
+    #   클립을 소스 실프레임으로 더 재생(1배속) → freeze/억지슬로우 없음.
+    segs = [_seg("A", 0.0, 2.2)]
+    clips = va._plan_beat_clips(segs, tts_dur=4.0, src_durs={"A": 30.0})
+    assert abs(_total_out(clips) - 4.0) < 0.05
+    assert all(abs(c["out_dur"] - c["src_dur"]) < 1e-6 for c in clips)  # 슬로모 0(전부 1배속)
+    assert clips[-1]["src_dur"] > 2.2 - 1e-6                            # 배정 구간보다 더 읽음
+    assert clips[-1]["start"] + clips[-1]["src_dur"] <= 30.0 + 1e-9     # 소스 밖 유출 0
+
+
+def test_plan_loops_real_footage_no_slowmo_when_source_short():
+    # ★멈춤·슬로우 없음(2026-07-20 사장님 확정): 소스 릴이 짧아(2.5초) 실프레임을 다 써도
+    #   슬로모로 늘리지 않고 '한 장면 더 붙여'(1배속 실영상 루프) 채운다.
+    segs = [_seg("A", 0.0, 2.2)]
+    clips = va._plan_beat_clips(segs, tts_dur=4.0, src_durs={"A": 2.5})
+    assert abs(_total_out(clips) - 4.0) < 0.05
+    assert all(abs(c["out_dur"] - c["src_dur"]) < 1e-6 for c in clips)  # 전부 1배속(슬로모 0)
+    assert len(clips) >= 2                                              # 장면을 더 이어붙였다
+    for c in clips:
+        assert c["start"] + c["src_dur"] <= 2.5 + 1e-9                  # 소스 밖 유출 0
+
+
+def test_plan_loops_real_footage_even_without_src_durs():
+    # src_durs 미제공(하위호환)이어도 슬로모가 아니라 실영상 루프로 채운다.
+    segs = [_seg("A", 0.0, 2.2)]
+    clips = va._plan_beat_clips(segs, tts_dur=4.0)
+    assert abs(_total_out(clips) - 4.0) < 0.05
+    assert all(abs(c["out_dur"] - c["src_dur"]) < 1e-6 for c in clips)  # 슬로모 없음
+
+
 # ── _render_mix 실렌더 grounding (유출 0 + 길이 일치) ──────────────
 
 import re
@@ -513,9 +560,11 @@ def _vavg(stats):
 
 
 @pytest.mark.skipif(not _HAS_FF, reason="ffmpeg/ffprobe 없음")
-def test_render_mix_no_overflow_and_exact_length(tmp_path):
-    # 소스 A: 0~1s=red, 1~2s=green, 2~3s=blue. 매칭 구간은 [0,1](red)뿐인데 나레이션은 2초.
-    # 옛 코드면 1s 이후 green이 샜다(유출). 새 코드는 red를 슬로모로 2초 채운다.
+def test_render_mix_extends_into_source_no_freeze(tmp_path):
+    # ★멈추지 말고 진짜 영상으로(2026-07-20 사장님): 소스 A는 0~1=red,1~2=green,2~3=blue(총3초).
+    # 매칭 구간은 [0,1](red)뿐인데 나레이션은 2초. 옛 코드는 red를 freeze/슬로모로 홀드했다
+    # (멈춤). 새 코드는 소스 릴에 남은 실프레임([1,2]=green)을 1배속으로 더 재생해 채운다 →
+    # 화면이 멈추지 않고 진짜 영상이 이어진다. 단 소스 끝(3초) '밖'은 절대 안 읽는다(0프레임 방지).
     src = tmp_path / "A.mp4"
     _make_color_source(src, ["red", "green", "blue"])
     tts = tmp_path / "tts0.wav"
@@ -527,17 +576,15 @@ def test_render_mix_no_overflow_and_exact_length(tmp_path):
     }]}
     out = va._render_mix(edit_plan, {0: str(tts)}, {"A": str(src)}, tmp_path)
 
-    # 길이 == 나레이션 + 마지막 비트 여운(_LAST_RUNOUT, 2026-07-20 콘폼루프 T4).
-    # 이 비트가 유일=마지막이라 여운이 붙는다. 매칭 구간 [0,1]에 여유가 없으므로(slack 0)
-    # 여운은 실프레임이 아니라 홀드로 채워진다 — 유출 0 불변식(green 안 나옴)은 그대로다.
-    assert abs(va._probe_duration(out) - (2.0 + va._LAST_RUNOUT)) < 0.15
-    # 유출 0: 1.5초 지점(옛 코드면 green이 나올 자리)이 red 계열이어야 한다.
-    # signalstats YUV: red는 V(빨강) 크고(실측 240), green은 낮다(실측 81). 150을 경계로
-    # red/green을 가른다(blue=110도 150 미만이라 같이 걸러지지만 이 테스트 소스엔 안 나옴).
+    # 길이 == 나레이션 + 마지막 비트 여운(_LAST_RUNOUT). 여운은 소스 실프레임이 아니라
+    # 홀드로 채워질 수 있어 여유를 둔다.
+    assert abs(va._probe_duration(out) - (2.0 + va._LAST_RUNOUT)) < 0.2
+    # 1.5초 지점은 freeze로 red를 홀드하지 않고 소스 실프레임을 이어 재생(green)해야 한다.
+    # signalstats YUV: red는 V 큼(실측 240), green은 낮음(실측 81) → 150 경계로 가른다.
     stats = _avg_color(out, 1.5)
     vavg = _vavg(stats)
     assert vavg is not None  # 프레임을 실제로 뽑았다(빈 출력 아님)
-    assert vavg > 150, f"1.5초 지점이 red가 아님(VAVG={vavg}) — 유출 의심"
+    assert vavg < 150, f"1.5초가 여전히 red 홀드(VAVG={vavg}) — 멈춤 제거 안 됨(소스 이어읽기 실패)"
 
 
 @pytest.mark.skipif(not _HAS_FF, reason="ffmpeg/ffprobe 없음")

@@ -87,6 +87,10 @@ _CAP_LEAD = {"여러분", "여러분,", "자"}
 # 끊기는 앞 절이 충분히 길 때(_CAP_LEAD_MINCHARS↑)만 적용해 "밭에서"(짧음)는 안 끊는다.
 _CAP_LEAD_SUFFIX = ("면", "면서", "니까", "는데", "지만", "거든", "잖아")
 _CAP_LEAD_MINCHARS = 4  # 연결어미 끊기 최소 글자수(공백 제외). 이보다 짧으면 이어붙임.
+# 시간/빈도 도입 부사(아침마다·날마다·집집마다)는 자기 뒤에서 끊어 한 박자를 연다 →
+# 뒤에 오는 '수식어+명사'가 3어절 하드캡에 밀려 쪼개지지 않는다("빵 달라는 아이"가 온전히
+# 묶임, 2026-07-20 사장님 제보). "마다"는 항상 부사/보조사라 뒤에서 끊어도 안전(글자수 무관).
+_CAP_OPENER_SUFFIX = ("마다",)
 _CAP_HEAD_MINCHARS = 4  # 머리 단어 앞에서 끊는 최소(앞 구절) 글자수. 짧으면 이어붙임
                         # ("이것 한" 파편 방지, "…일쑤였는데 | 이" 는 앞이 길어 끊김).
 _CAP_WRAP = 13          # 아주 긴 단일 어절 방어용(한 줄 최대 글자수, 720px 안)
@@ -197,11 +201,16 @@ def _extend_last_clip_for_runout(plan, segs, runout=_LAST_RUNOUT):
     return plan
 
 
-def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP):
+def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP, src_durs=None):
     """비트의 순서 구간 리스트 → 나레이션 길이(tts_dur)에 맞춘 클립 계획.
-    각 클립은 자기 구간 [start,end]를 절대 넘지 않는다(유출 0). 부족분은 마지막 클립을
-    슬로모(out_dur>src_dur)로 늘려 채우고, 0.8초 미만 자투리는 직전 클립에 흡수한다.
-    반환: [{"video_id","start","src_dur","out_dur"}, ...]"""
+    각 클립은 자기 구간 [start,end]를 절대 넘지 않는다(유출 0). 부족분은 아래 정책으로 채운다.
+    반환: [{"video_id","start","src_dur","out_dur"}, ...]
+
+    ★멈추지 말고 진짜 영상으로(2026-07-20 사장님): 배정 구간을 다 써도 모자라면, 소스 릴은
+    보통 구간보다 훨씬 길어(구간 2초 vs 릴 30초) 뒤에 실프레임이 남아있다. `src_durs`
+    ({video_id: 소스총길이})가 주어지면 마지막 클립의 읽기 창을 소스에 남은 만큼 더 늘려
+    **1배속 실영상**으로 채운다 → freeze/억지슬로우 없음. 소스까지 소진돼야만 슬로모 폴백.
+    src_durs 미제공(하위호환)이면 예전처럼 마지막 클립을 슬로모로 늘린다."""
     eps = 1e-3
     clips = []
     filled = 0.0
@@ -225,8 +234,39 @@ def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP):
 
     shortfall = tts_dur - filled
     if shortfall > eps:
-        # 구간을 다 써도 모자람 → 마지막 클립을 슬로모로 늘려 채운다.
-        clips[-1]["out_dur"] += shortfall
+        # 1순위: 마지막 클립을 그 소스에 남은 실프레임으로 연장(1배속) — 릴이 배정 구간보다 길다.
+        if src_durs:
+            last = clips[-1]
+            sdur = src_durs.get(last["video_id"], 0.0)
+            avail = max(0.0, sdur - (last["start"] + last["src_dur"]))
+            real_ext = min(shortfall, avail)
+            if real_ext > eps:
+                last["src_dur"] += real_ext
+                last["out_dur"] += real_ext
+                shortfall -= real_ext
+        # 2순위(★멈춤·슬로우 없음, 2026-07-20 사장님 확정): 그래도 모자라면 실영상을 '한 장면
+        #   더 붙여' 채운다. 비트 세그먼트를 순환하며 새 클립(1배속)으로 이어붙인다 — 릴을
+        #   앞에서부터 다시 재생(루프)해서라도 화면은 진짜로 움직인다. 슬로모/정지프레임 금지.
+        guard = 0
+        while shortfall > eps and guard < 500:
+            guard += 1
+            progressed = False
+            for seg in segments:
+                if shortfall <= eps:
+                    break
+                seg_len = seg["end"] - seg["start"]
+                if seg_len <= eps:
+                    continue
+                take = min(seg_len, shortfall)
+                clips.append({"video_id": seg["video_id"], "start": seg["start"],
+                              "src_dur": take, "out_dur": take})
+                shortfall -= take
+                progressed = True
+            if not progressed:
+                break
+        # 3순위(극단 방어 — 쓸 실영상이 아예 0인 비정상 경로에서만): 최소한만 홀드.
+        if shortfall > eps:
+            clips[-1]["out_dur"] += shortfall
 
     # 0.8초 미만 독립 클립 제거: 그런 클립을 이웃에 흡수(이웃이 슬로모로 그 시간을 떠안는다).
     # 앞 클립이 있으면 앞으로, 없으면(첫 클립) 뒤로 합친다. 합계(sum out_dur)는 보존된다.
@@ -285,7 +325,8 @@ def _caption_segments(narration):
         # (b) 현재 구절이 도입어/연결어미로 끝나면 여기서 끊어 한 박자를 준다. 단
         #     연결어미 끊기는 앞 절이 충분히 길 때만("밭에서" 같은 짧은 부사구는 이어붙임).
         lead_break = prev in _CAP_LEAD or (
-            prev.endswith(_CAP_LEAD_SUFFIX) and cur_chars >= _CAP_LEAD_MINCHARS)
+            prev.endswith(_CAP_LEAD_SUFFIX) and cur_chars >= _CAP_LEAD_MINCHARS
+        ) or prev.endswith(_CAP_OPENER_SUFFIX)   # 도입 부사(…마다)는 글자수 무관 뒤에서 끊음
         # (c) 앞 어절이 문장부호로 끝났으면 문장 경계에서 끊는다.
         sent_break = cur[-1].endswith((".", "?", "!", "…"))
         if not prev_pulls and (head_break or lead_break or sent_break
@@ -484,7 +525,9 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
                 and _src_dur(s["video_id"]) > 0.05]
         if not segs:
             continue
-        plan = _plan_beat_clips(segs, tts_dur)
+        # 소스별 총길이를 넘겨 '멈춤 대신 소스 실프레임 더 재생'을 켠다(2026-07-20).
+        beat_src_durs = {s["video_id"]: _src_dur(s["video_id"]) for s in segs}
+        plan = _plan_beat_clips(segs, tts_dur, src_durs=beat_src_durs)
         # 마지막 비트 여운: 실프레임 여유는 1배속으로, 부족분은 아래 slowmo/freeze 기계가 흡수.
         runout = _LAST_RUNOUT if idx == _runout_idx else 0.0
         if runout > 0:

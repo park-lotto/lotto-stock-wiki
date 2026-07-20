@@ -159,6 +159,17 @@ def test_gen_and_mix_prompts_carry_story_charter():
     assert "가장 중요한 건 스토리라인" in script_generate._MIX_PROMPT
 
 
+def test_story_charter_recipe_curiosity_hides_the_kick():
+    # 사장님 지적(2026-07-20): 레시피는 '어떻게 만드는지' 궁금하게 = 비법 숨김+킥 한스푼.
+    # 방법을 다 까발리면 CTA가 죽는다 — 헌장에 킥 숨김 원칙이 있어야.
+    core = script_generate._STORY_RULES_CORE
+    assert "킥" in core and "레시피/비법 궁금증" in core
+    assert "다 밝히지" in core or "까발리면" in core   # 방법 전부 공개 금지
+    # 믹스·생성·리파인 전 경로에 주입되는지
+    assert "킥" in script_generate._MIX_PROMPT
+    assert "킥" in script_generate._REWRITE_PROMPT
+
+
 def test_refine_rewrite_injects_story_charter(monkeypatch):
     # ★재작성 경로 구멍 메움: 예전엔 리파인에 스토리 헌장이 안 걸려 대본이 빈약해졌다.
     h = {}
