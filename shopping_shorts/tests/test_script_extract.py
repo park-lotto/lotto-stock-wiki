@@ -62,3 +62,20 @@ def test_extract_script_exhausted_pool_returns_empty(monkeypatch):
     monkeypatch.setattr(script_extract.comment_gen, "_current_key_and_idx", lambda: (None, None))
     out = script_extract.extract_script("/fake.mp4", "vidX")
     assert out == {"segments": [], "full_text": ""}
+
+
+def test_boundary_hint_formats_seconds(monkeypatch):
+    from shopping_shorts import script_extract
+    # detect_cuts가 프레임(30fps 가정) 튜플을 주면 초 경계 문자열로 변환.
+    monkeypatch.setattr(script_extract.scene_cut, "video_fps", lambda p: 30.0)
+    monkeypatch.setattr(script_extract.scene_cut, "detect_cuts",
+                        lambda p, threshold=0.3: [(0, 108), (108, 255), (255, 363)])
+    hint = script_extract._boundary_hint("dummy.mp4")
+    assert "3.6" in hint and "8.5" in hint   # 108/30=3.6, 255/30=8.5
+
+
+def test_boundary_hint_fail_open(monkeypatch):
+    from shopping_shorts import script_extract
+    def boom(*a, **k): raise RuntimeError("ffmpeg 없음")
+    monkeypatch.setattr(script_extract.scene_cut, "detect_cuts", boom)
+    assert script_extract._boundary_hint("dummy.mp4") == ""   # 실패=빈 문자열
