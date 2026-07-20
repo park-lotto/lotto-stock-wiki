@@ -87,6 +87,10 @@ _CAP_LEAD = {"여러분", "여러분,", "자"}
 # 끊기는 앞 절이 충분히 길 때(_CAP_LEAD_MINCHARS↑)만 적용해 "밭에서"(짧음)는 안 끊는다.
 _CAP_LEAD_SUFFIX = ("면", "면서", "니까", "는데", "지만", "거든", "잖아")
 _CAP_LEAD_MINCHARS = 4  # 연결어미 끊기 최소 글자수(공백 제외). 이보다 짧으면 이어붙임.
+# 시간/빈도 도입 부사(아침마다·날마다·집집마다)는 자기 뒤에서 끊어 한 박자를 연다 →
+# 뒤에 오는 '수식어+명사'가 3어절 하드캡에 밀려 쪼개지지 않는다("빵 달라는 아이"가 온전히
+# 묶임, 2026-07-20 사장님 제보). "마다"는 항상 부사/보조사라 뒤에서 끊어도 안전(글자수 무관).
+_CAP_OPENER_SUFFIX = ("마다",)
 _CAP_HEAD_MINCHARS = 4  # 머리 단어 앞에서 끊는 최소(앞 구절) 글자수. 짧으면 이어붙임
                         # ("이것 한" 파편 방지, "…일쑤였는데 | 이" 는 앞이 길어 끊김).
 _CAP_WRAP = 13          # 아주 긴 단일 어절 방어용(한 줄 최대 글자수, 720px 안)
@@ -285,7 +289,8 @@ def _caption_segments(narration):
         # (b) 현재 구절이 도입어/연결어미로 끝나면 여기서 끊어 한 박자를 준다. 단
         #     연결어미 끊기는 앞 절이 충분히 길 때만("밭에서" 같은 짧은 부사구는 이어붙임).
         lead_break = prev in _CAP_LEAD or (
-            prev.endswith(_CAP_LEAD_SUFFIX) and cur_chars >= _CAP_LEAD_MINCHARS)
+            prev.endswith(_CAP_LEAD_SUFFIX) and cur_chars >= _CAP_LEAD_MINCHARS
+        ) or prev.endswith(_CAP_OPENER_SUFFIX)   # 도입 부사(…마다)는 글자수 무관 뒤에서 끊음
         # (c) 앞 어절이 문장부호로 끝났으면 문장 경계에서 끊는다.
         sent_break = cur[-1].endswith((".", "?", "!", "…"))
         if not prev_pulls and (head_break or lead_break or sent_break

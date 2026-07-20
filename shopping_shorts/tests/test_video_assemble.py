@@ -131,6 +131,22 @@ def test_caption_segments_han_modifier_stays_with_noun():
     assert any("한 달넘게" in s for s in segs)
 
 
+def test_caption_segments_time_adverb_opener_breaks_first():
+    # 사장님 제보(2026-07-20): "아침마다 빵 달라는 아이, …"에서 "아이"가 앞 구절에서
+    # 떨어져 "아이, 아무 식빵이나"로 붙던 문제. 시간/빈도 도입어(…마다)는 자기 뒤에서
+    # 끊겨 한 박자를 열고, 뒤 '수식어+명사'가 온전히 묶여야 한다("빵 달라는 아이").
+    segs = va._caption_segments("아침마다 빵 달라는 아이, 아무 식빵이나 좋아하는 우리 아이")
+    assert segs == ["아침마다", "빵 달라는 아이,", "아무 식빵이나", "좋아하는 우리 아이"], segs
+    assert not any(s.startswith("아이") for s in segs)   # 아이가 다음 구절 머리로 안 떨어짐
+
+
+def test_caption_segments_short_mada_opener_breaks():
+    # 짧은 도입어(날마다=3자)도 자기 뒤에서 끊긴다.
+    segs = va._caption_segments("날마다 우유 달라는 아이")
+    assert segs[0] == "날마다"
+    assert any("우유 달라는 아이" in s for s in segs)
+
+
 def test_caption_segments_breaks_after_sentence_end():
     # 문장부호(? .)로 끝난 뒤엔 문장 경계에서 끊는다(다음 문장이 앞에 안 붙음).
     segs = va._caption_segments("오이 사서 냉장고에 넣으셨나요? 그럼 지금 바로 버리셔야 합니다.")
