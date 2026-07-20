@@ -2697,17 +2697,120 @@ def _set_session_cookie(response, customer_id: int):
                          max_age=_COOKIE_MAX_AGE, httponly=True, samesite="lax")
 
 
-_LOGIN_HTML = """<!doctype html><html lang=ko><head><meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1"><title>쇼핑쇼츠 로그인</title>
+# ── 브랜드 토큰 (한 곳에 몰아둔다 — 이름 확정 시 여기 1곳만 교체) ──
+# 이름 5안(ShortsFactory/Reelery/ShopReel/ShortsForge/Vidory) 중 사용자 확정 대기.
+# 지금은 추천안 Reelery 플레이스홀더. 팔레트(민트×블랙)는 sidebar.js 계승·고정.
+_BRAND = {
+    "name": "Reelery",
+    "glyph": "🎬",
+    "tagline": "레퍼런스 링크 하나로, 팔리는 쇼츠가 나옵니다",
+}
+# 구글 로고 SVG(로그인 버튼용) — 브랜드색과 무관한 구글 공식 4색.
+_GOOGLE_SVG = ('<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.8-6.8'
+               'C35.6 2.4 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.3 17.7 9.5 24 9.5z"/>'
+               '<path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9.1h12.4c-.5 2.9-2.1 5.4-4.6 7'
+               'l7.1 5.5c4.2-3.9 6.6-9.6 6.6-16z"/><path fill="#FBBC05" d="M10.5 28.3c-.5-1.4-.8-2.9-.8-4.3'
+               's.3-2.9.8-4.3l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.6 10.4l7.9-6.1z"/>'
+               '<path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.1-5.5c-2 1.3-4.6 2.1-8.1 2.1'
+               '-6.3 0-11.6-3.8-13.5-9.1l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>')
+
+
+def _fill_brand(s: str) -> str:
+    """대문·로그인 템플릿의 브랜드 플레이스홀더를 _BRAND로 채운다(모듈 로드 시 1회)."""
+    return (s.replace("__NAME__", _BRAND["name"])
+             .replace("__GLYPH__", _BRAND["glyph"])
+             .replace("__TAGLINE__", _BRAND["tagline"])
+             .replace("__GOOGLE_SVG__", _GOOGLE_SVG))
+
+
+# ── 공개 대문(랜딩) — 비로그인 방문자용. 민트×블랙, 한 페이지(B). ──
+_LANDING_TMPL = """<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>__NAME__ — 레퍼런스 링크로 팔리는 쇼츠 자동 제작</title>
+<style>*{box-sizing:border-box;margin:0;padding:0}
+:root{--mint:#6ff0d6;--grad:linear-gradient(135deg,#6ff0d6,#1f9e7a);--panel:#111722;--bg:#0a0a0d;--ink:#e8e8ea;--dim:#8a92a0;--line:#1b2432}
+body{background:var(--bg);color:var(--ink);font-family:'Malgun Gothic',system-ui,'Noto Sans KR',sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
+.brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:19px}
+.brand .g{width:32px;height:32px;border-radius:9px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:17px}
+.brand .nm{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.nav .login{color:var(--dim);font-size:14px;font-weight:600}
+.nav .login:hover{color:var(--mint)}
+.hero{text-align:center;padding:66px 0 44px}
+.badge{display:inline-block;font-size:12.5px;color:var(--mint);border:1px solid rgba(111,240,214,.3);border-radius:999px;padding:5px 14px;margin-bottom:24px;background:rgba(111,240,214,.06)}
+.hero h1{font-size:44px;line-height:1.24;font-weight:800;letter-spacing:-.5px}
+.hero h1 .hl{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--dim);font-size:17px;margin:18px auto 30px;max-width:560px}
+.row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.cta{display:inline-flex;align-items:center;gap:9px;background:var(--grad);color:#04120d;font-weight:800;font-size:16px;padding:15px 30px;border-radius:12px;border:0;cursor:pointer;box-shadow:0 8px 30px rgba(111,240,214,.18)}
+.cta:hover{filter:brightness(1.06)}
+.cta.ghost{background:transparent;color:var(--ink);border:1px solid #2c333f;box-shadow:none;font-weight:700}
+.trust{color:#5c6472;font-size:13px;margin-top:18px}
+.sec{padding:54px 0}
+.sec h2{text-align:center;font-size:27px;font-weight:800;margin-bottom:8px}
+.sec .lead{text-align:center;color:var(--dim);margin-bottom:38px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.step{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px}
+.step .n{width:34px;height:34px;border-radius:10px;background:rgba(111,240,214,.1);color:var(--mint);font-weight:800;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.step h3{font-size:16px;margin-bottom:6px}.step p{color:var(--dim);font-size:14px}
+.feat{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px;display:flex;gap:16px}
+.card .ic{font-size:24px;flex:none;line-height:1.2}
+.card h3{font-size:16px;margin-bottom:5px}.card p{color:var(--dim);font-size:14px}
+.band{text-align:center;background:linear-gradient(180deg,rgba(111,240,214,.05),transparent);border:1px solid var(--line);border-radius:24px;padding:54px 24px;margin:44px 0 60px}
+.band h2{font-size:28px;font-weight:800;margin-bottom:10px}.band p{color:var(--dim);margin-bottom:26px}
+.foot{text-align:center;color:#4a515e;font-size:12.5px;padding:0 0 42px}
+@media(max-width:760px){.hero h1{font-size:32px}.steps,.feat{grid-template-columns:1fr}}
+</style></head><body><div class=wrap>
+<div class=nav>
+<a class=brand href="/"><span class=g>__GLYPH__</span><span class=nm>__NAME__</span></a>
+<a class=login href="/login">로그인</a></div>
+<div class=hero>
+<span class=badge>레퍼런스 링크 → 팔리는 쇼츠</span>
+<h1>레퍼런스 링크 하나로,<br><span class=hl>팔리는 쇼츠</span>가 나옵니다</h1>
+<p>잘 팔리는 영상을 넣으면 AI가 분석·재구성해 내 상품 쇼츠로 완성합니다. 편집을 몰라도, 딸깍 한 번이면 됩니다.</p>
+<div class=row>
+<a class=cta href="/login">무료로 시작하기 →</a>
+<a class="cta ghost" href="/login">로그인</a></div>
+<div class=trust>구글 계정으로 3초 시작 · 카드 없이 무료 체험</div></div>
+<div class=sec>
+<h2>이렇게 작동합니다</h2>
+<div class=lead>레퍼런스 → 완성까지 세 단계</div>
+<div class=steps>
+<div class=step><div class=n>1</div><h3>레퍼런스 링크를 넣는다</h3><p>잘 팔리는 쇼츠·릴스 링크를 붙여넣기만 하면 됩니다.</p></div>
+<div class=step><div class=n>2</div><h3>AI가 분석·재구성</h3><p>렌즈로 장면을 찾고, 대본을 추출·리메이크하고, 장면을 시간순으로 엮습니다.</p></div>
+<div class=step><div class=n>3</div><h3>내 상품 쇼츠 완성</h3><p>보이스·자막까지 입혀 바로 올릴 수 있는 세로 쇼츠가 나옵니다.</p></div></div></div>
+<div class=sec>
+<h2>무엇이 들어있나</h2>
+<div class=lead>발굴부터 완성까지, 파는 사람에게 필요한 것만</div>
+<div class=feat>
+<div class=card><span class=ic>🔥</span><div><h3>레퍼런스 랭킹</h3><p>지금 터지는 영상을 배수·참여율로 발굴해 무엇을 벤치마크할지 알려줍니다.</p></div></div>
+<div class=card><span class=ic>🔎</span><div><h3>렌즈 · 유사영상</h3><p>한 장면에서 비슷한 소스 영상을 찾아 짜맞출 재료를 모읍니다.</p></div></div>
+<div class=card><span class=ic>✍️</span><div><h3>대본 추출 · 리메이크</h3><p>레퍼런스 대본을 뽑아 내 상품 이야기로 다시 씁니다.</p></div></div>
+<div class=card><span class=ic>🎬</span><div><h3>제작소 · 보이스</h3><p>장면·자막·나레이션을 원클릭으로 붙여 완성합니다. 캡컷 없이.</p></div></div></div></div>
+<div class=band>
+<h2>지금 바로 무료로 시작하세요</h2>
+<p>구글 계정이면 3초. 카드 없이 무료 체험이 바로 시작됩니다.</p>
+<a class=cta href="/login">무료로 시작하기 →</a></div>
+<div class=foot>© __NAME__ · 파는 사람을 위한 AI 쇼츠 제작</div>
+</div></body></html>"""
+
+
+# ── 로그인 페이지 — 민트×블랙(구조는 기존 유지: 구글버튼+운영자 접이식). ──
+_LOGIN_TMPL = """<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>__NAME__ 로그인</title>
 <style>*{box-sizing:border-box}
 body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
 background:#0a0a0d;font-family:'Malgun Gothic',system-ui,'Noto Sans KR',sans-serif;color:#e8e8ea}
 .box{width:340px;padding:36px 30px;text-align:center}
-.logo{display:flex;align-items:center;justify-content:center;gap:10px;font-size:20px;font-weight:800;margin-bottom:34px}
-.logo .ic{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#ff8a4c,#ff5e62);
+.logo{display:flex;align-items:center;justify-content:center;gap:10px;font-size:20px;font-weight:800;margin-bottom:8px}
+.logo .ic{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#6ff0d6,#1f9e7a);
 display:flex;align-items:center;justify-content:center;font-size:18px}
-h1{font-size:22px;margin:0 0 8px}
-.sub{color:#ff9a6b;font-size:13px;margin-bottom:26px;line-height:1.6}
+.logo .nm{background:linear-gradient(135deg,#6ff0d6,#1f9e7a);-webkit-background-clip:text;background-clip:text;color:transparent}
+h1{font-size:22px;margin:26px 0 8px}
+.sub{color:#6ff0d6;font-size:13px;margin-bottom:26px;line-height:1.6}
 .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;
 background:#15151b;border:1px solid #2c2c34;border-radius:10px;color:#e8e8ea;font-size:15px;
 font-weight:700;cursor:pointer;text-decoration:none}
@@ -2715,18 +2818,19 @@ font-weight:700;cursor:pointer;text-decoration:none}
 .gbtn svg{width:18px;height:18px}
 .err{color:#e0623d;font-size:12px;margin-top:16px;min-height:14px;line-height:1.6}
 .home{display:block;color:#6a6a76;font-size:12px;margin-top:22px;text-decoration:none}
+.home:hover{color:#6ff0d6}
 .atoggle{color:#45454f;font-size:11px;margin-top:30px;cursor:pointer;background:none;border:0}
 .aform{display:none;margin-top:14px}.aform.show{display:block}
 .aform input{width:100%;margin:5px 0;padding:10px;background:#0e0e12;border:1px solid #2c2c34;
 border-radius:8px;color:#eee;font-size:13px}
-.aform button{width:100%;margin-top:8px;padding:10px;background:#2a2a34;color:#cfcfd6;border:0;
+.aform button{width:100%;margin-top:8px;padding:10px;background:#1a2530;color:#6ff0d6;border:1px solid #244;
 border-radius:8px;font-weight:700;font-size:13px;cursor:pointer}</style></head>
 <body><div class=box>
-<div class=logo><span class=ic>🛍️</span> 쇼핑쇼츠</div>
+<div class=logo><span class=ic>__GLYPH__</span><span class=nm>__NAME__</span></div>
 <h1>로그인</h1>
 <div class=sub>구글 계정으로 로그인하세요<br>처음이면 <b>무료 체험</b>이 바로 시작돼요</div>
 <a class=gbtn href="/auth/google/login">
-<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.8-6.8C35.6 2.4 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.3 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9.1h12.4c-.5 2.9-2.1 5.4-4.6 7l7.1 5.5c4.2-3.9 6.6-9.6 6.6-16z"/><path fill="#FBBC05" d="M10.5 28.3c-.5-1.4-.8-2.9-.8-4.3s.3-2.9.8-4.3l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.6 10.4l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.1-5.5c-2 1.3-4.6 2.1-8.1 2.1-6.3 0-11.6-3.8-13.5-9.1l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>
+__GOOGLE_SVG__
 Google 계정으로 로그인</a>
 <div class=err>__ERR__</div>
 <a class=home href="/">← 홈으로 돌아가기</a>
@@ -2736,6 +2840,9 @@ Google 계정으로 로그인</a>
 <input name=pass type=password placeholder=비밀번호 autocomplete=current-password>
 <button>운영자 로그인</button></form>
 </div></body></html>"""
+
+_LANDING_HTML = _fill_brand(_LANDING_TMPL)
+_LOGIN_HTML = _fill_brand(_LOGIN_TMPL)
 
 _SIGNUP_HTML = """<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>쇼핑쇼츠 가입</title>
@@ -2923,6 +3030,8 @@ async def _auth_guard(request: Request, call_next):
         return await call_next(request)
     if path.startswith("/api/"):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
+    if path in ("/", "/index.html"):
+        return HTMLResponse(_LANDING_HTML)   # 비로그인 방문자 → 공개 대문(랜딩)
     return RedirectResponse("/login")
 
 
