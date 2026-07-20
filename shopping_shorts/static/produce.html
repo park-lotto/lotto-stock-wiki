@@ -3691,11 +3691,20 @@ async function generateThumb(){
 }
 
 function renderThumbGallery(){
+  // ⬇ 다운로드 아이콘: 릴스/쇼츠 업로드 시 커버로 쓰려면 PNG를 직접 받아야 하는데 예전엔
+  // 다운로드 수단이 없어 이미지 우클릭-저장으로 우회해야 했다(2026-07-20 사장님 요청).
+  // download 속성이 있는 <a>는 같은 출처(same-origin) 파일이면 새 탭으로 안 새고 바로
+  // 저장 대화상자를 띄운다(우리 서버가 서빙하는 /api/produce/thumb/file/... 이라 문제없음).
+  // stopPropagation으로 카드의 onclick(선택)과 분리 — 다운로드가 선택 상태를 안 건드린다.
   document.getElementById('thumbGallery').innerHTML = THUMB_STATE.results.map(r => `
     <div onclick="selectThumbResult('${r.name}')" data-name="${r.name}"
-         style="cursor:pointer;border-radius:6px;overflow:hidden;border:2px solid
+         style="position:relative;cursor:pointer;border-radius:6px;overflow:hidden;border:2px solid
          ${THUMB_STATE.selected === r.name ? 'var(--accent2)' : 'transparent'}">
       <img src="${r.url}" style="width:100%;display:block">
+      <a href="${r.url}" download="${r.name}" onclick="event.stopPropagation()" title="다운로드"
+         style="position:absolute;right:4px;bottom:4px;width:24px;height:24px;border-radius:50%;
+         background:rgba(0,0,0,.6);color:#fff;display:flex;align-items:center;justify-content:center;
+         font-size:13px;line-height:1;text-decoration:none">⬇</a>
     </div>`).join('');
 }
 
