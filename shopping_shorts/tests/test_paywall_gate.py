@@ -57,3 +57,21 @@ def test_trial_user_not_blocked(tmp_path, monkeypatch):
     cid = s.create_customer("trial1", "pw12")   # 가입시 체험 자동시작 → full
     c = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)})
     assert c.get("/api/mix/basket").status_code != 402
+
+def test_anonymous_root_serves_landing(tmp_path, monkeypatch):
+    """비로그인 방문자의 GET / 는 로그인 리다이렉트가 아니라 공개 대문(랜딩)을 200으로 준다."""
+    _setup(tmp_path, monkeypatch)
+    c = TestClient(appmod.app)  # 쿠키 없음 = 비로그인
+    r = c.get("/")
+    assert r.status_code == 200
+    assert appmod._BRAND["name"] in r.text
+    assert "무료로 시작하기" in r.text and "/login" in r.text
+
+
+def test_anonymous_protected_page_still_redirects_to_login(tmp_path, monkeypatch):
+    """대문은 오직 / 만 — 다른 비로그인 HTML 경로는 여전히 /login 으로 보낸다."""
+    _setup(tmp_path, monkeypatch)
+    c = TestClient(appmod.app, follow_redirects=False)
+    r = c.get("/produce.html")
+    assert r.status_code in (302, 303, 307)
+    assert "/login" in r.headers.get("location", "")

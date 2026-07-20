@@ -2739,36 +2739,259 @@ def _set_session_cookie(response, customer_id: int):
                          max_age=_COOKIE_MAX_AGE, httponly=True, samesite="lax")
 
 
-_LOGIN_HTML = """<!doctype html><html lang=ko><head><meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1"><title>쇼핑쇼츠 로그인</title>
+# ── 브랜드 토큰 (한 곳에 몰아둔다 — 이름 확정 시 여기 1곳만 교체) ──
+# 이름 5안(ShortsFactory/Reelery/ShopReel/ShortsForge/Vidory) 중 사용자 확정 대기.
+# 지금은 추천안 Reelery 플레이스홀더. 팔레트(민트×블랙)는 sidebar.js 계승·고정.
+_BRAND = {
+    "name": "숏템박스",          # 확정(2026-07-20). 한글 주 + 영문 보조 락업.
+    "name_en": "SHOTEMBOX",     # 영문 CI(보조). 로고에 한글 밑 소문자 스페이싱으로.
+    "glyph": "📦",
+    "tagline": "폰으로 5분, 편집 몰라도 팔리는 쇼츠가 완성됩니다",
+}
+# 구글 로고 SVG(로그인 버튼용) — 브랜드색과 무관한 구글 공식 4색.
+_GOOGLE_SVG = ('<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.8-6.8'
+               'C35.6 2.4 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.3 17.7 9.5 24 9.5z"/>'
+               '<path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9.1h12.4c-.5 2.9-2.1 5.4-4.6 7'
+               'l7.1 5.5c4.2-3.9 6.6-9.6 6.6-16z"/><path fill="#FBBC05" d="M10.5 28.3c-.5-1.4-.8-2.9-.8-4.3'
+               's.3-2.9.8-4.3l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.6 10.4l7.9-6.1z"/>'
+               '<path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.1-5.5c-2 1.3-4.6 2.1-8.1 2.1'
+               '-6.3 0-11.6-3.8-13.5-9.1l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>')
+
+
+# 시그니처 심볼(브랜딩 보드 v1, out/브랜딩_CI_숏템탑스.html) — 박스(제작소)에서 랭킹된
+# 아이템이 쌓여 올라오고 맨 위 한 칸만 골드=TOP 인기템. 박스·대량생산·인기를 한 심볼에.
+_LOGO_SVG = (
+    '<svg class="sym" viewBox="0 0 64 64" fill="none" role="img" aria-label="숏템박스">'
+    '<defs><linearGradient id="lmg" x1="0" y1="0" x2="1" y2="1">'
+    '<stop offset="0" stop-color="#6ff0d6"/><stop offset="1" stop-color="#1f9e7a"/></linearGradient>'
+    '<linearGradient id="lgg" x1="0" y1="0" x2="1" y2="1">'
+    '<stop offset="0" stop-color="#ffe1a1"/><stop offset="1" stop-color="#f0a93a"/></linearGradient></defs>'
+    '<rect x="4" y="4" width="56" height="56" rx="16" stroke="url(#lmg)" stroke-width="3"/>'
+    '<rect x="16" y="40" width="32" height="8" rx="3" fill="#1f9e7a" opacity=".55"/>'
+    '<rect x="20" y="29" width="24" height="8" rx="3" fill="#6ff0d6" opacity=".9"/>'
+    '<rect x="24" y="18" width="16" height="8" rx="3" fill="url(#lgg)"/>'
+    '<path d="M32 11.5l3 4.5h-6l3-4.5z" fill="url(#lgg)"/></svg>')
+
+
+def _fill_brand(s: str) -> str:
+    """대문·로그인 템플릿의 브랜드 플레이스홀더를 _BRAND로 채운다(모듈 로드 시 1회)."""
+    return (s.replace("__NAME__", _BRAND["name"])
+             .replace("__NAME_EN__", _BRAND["name_en"])
+             .replace("__GLYPH__", _BRAND["glyph"])
+             .replace("__TAGLINE__", _BRAND["tagline"])
+             .replace("__LOGO_SVG__", _LOGO_SVG)
+             .replace("__GOOGLE_SVG__", _GOOGLE_SVG))
+
+
+# ── 공개 대문(랜딩) — 비로그인 방문자용. 민트×블랙, 한 페이지(B). ──
+_LANDING_TMPL = """<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>__NAME__ — 폰으로 5분, 편집 몰라도 파는 쇼츠 완성</title>
+<link rel=preconnect href="https://fonts.googleapis.com">
+<link rel=preconnect href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel=stylesheet>
+<style>*{box-sizing:border-box;margin:0;padding:0}
+:root{--mint:#6ff0d6;--grad:linear-gradient(135deg,#6ff0d6,#1f9e7a);--gold:#ffcf6f;--gold-grad:linear-gradient(135deg,#ffe1a1,#f0a93a);
+--ink:#0b0f14;--panel:#111722;--line:#1e2735;--txt:#e8f0ee;--muted:#8aa0a0;--faint:#5f7373}
+body{background:radial-gradient(1100px 600px at 82% -12%,rgba(111,240,214,.10),transparent 60%),radial-gradient(900px 500px at 0% 112%,rgba(255,207,111,.06),transparent 55%),var(--ink);
+color:var(--txt);font-family:'Noto Sans KR',system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;word-break:keep-all}
+a{text-decoration:none;color:inherit}
+.display{font-family:'Black Han Sans',sans-serif;font-weight:400;letter-spacing:.01em}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .sym{width:34px;height:34px;flex:none;animation:floaty 4s ease-in-out infinite}
+.brand .wm{display:flex;flex-direction:column;line-height:1}
+.brand .nm{font-family:'Black Han Sans',sans-serif;font-size:22px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand .en{font-family:ui-monospace,monospace;font-size:9px;letter-spacing:2.4px;color:var(--faint);margin-top:2px}
+.nav .login{color:var(--muted);font-size:14px;font-weight:600}
+.nav .login:hover{color:var(--mint)}
+/* HERO — 가운데 정렬 */
+.hero{text-align:center;max-width:760px;margin:0 auto;padding:60px 0 40px}
+.badge{display:inline-block;font-size:12.5px;color:var(--mint);border:1px solid rgba(111,240,214,.3);border-radius:999px;padding:6px 15px;margin-bottom:22px;background:rgba(111,240,214,.06)}
+.hero h1{font-size:clamp(34px,5.2vw,54px);line-height:1.14;letter-spacing:.01em}
+.hero h1 .hl{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .sub{color:var(--muted);font-size:17px;margin:20px auto 30px;max-width:46ch}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:center}
+.cta{display:inline-flex;align-items:center;gap:8px;background:var(--grad);color:#062018;font-weight:700;font-size:16px;padding:15px 30px;border-radius:12px;border:0;cursor:pointer;box-shadow:0 8px 30px rgba(111,240,214,.18)}
+.cta:hover{filter:brightness(1.06)}
+.cta:not(.ghost){animation:ctaPulse 2.6s ease-in-out infinite}
+.cta.ghost{background:transparent;color:var(--txt);border:1px solid var(--line);box-shadow:none;font-weight:600;animation:none}
+.trust{color:var(--faint);font-size:12.5px;margin-top:16px}
+.stats{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:30px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px 22px;min-width:120px}
+.stat .num{font-family:'Black Han Sans',sans-serif;font-size:25px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat .lbl{color:var(--muted);font-size:12px;margin-top:2px}
+.sec{padding:50px 0}
+.sec h2{text-align:center;font-size:clamp(24px,3.4vw,30px);font-weight:900;margin-bottom:8px}
+.sec .lead{text-align:center;color:var(--muted);margin-bottom:36px}
+/* PAIN — 기존 3~5시간 vs 숏템박스 5분 */
+.vs{display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:stretch;max-width:860px;margin:0 auto}
+.vs .col{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px 24px}
+.vs .col.new{border-color:rgba(111,240,214,.35);box-shadow:0 0 0 1px rgba(111,240,214,.12) inset}
+.vs .tag{font-size:12px;font-weight:700;letter-spacing:.04em;margin-bottom:16px}
+.vs .old .tag{color:var(--muted)}.vs .new .tag{color:var(--mint)}
+.vs ul{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:18px}
+.vs li{font-size:14px;display:flex;gap:9px;align-items:flex-start}
+.vs .old li{color:var(--muted)}.vs .old li .m{color:#e0623d;flex:none}
+.vs .new li{color:var(--txt)}.vs .new li .m{color:var(--mint);flex:none}
+.vs .time{font-family:'Black Han Sans',sans-serif;font-size:32px;line-height:1}
+.vs .old .time{color:#d68b6f}.vs .new .time{background:var(--grad);-webkit-background-clip:text;color:transparent}
+.vs .tl{font-size:12px;color:var(--faint);margin-top:5px}
+.vs .arrow{display:flex;align-items:center;justify-content:center;color:var(--faint);font-size:26px}
+/* MONEY — 수치화 */
+.money{text-align:center;background:linear-gradient(180deg,rgba(255,207,111,.06),transparent);border:1px solid var(--line);border-radius:24px;padding:50px 24px}
+.money .k{font-size:13px;letter-spacing:.04em;color:var(--gold);font-weight:700;margin-bottom:8px}
+.money h2{font-size:clamp(23px,3.2vw,29px);font-weight:900;margin-bottom:30px}
+.money .big{display:flex;gap:26px;justify-content:center;flex-wrap:wrap}
+.money .m{min-width:150px}
+.money .m .n{font-family:'Black Han Sans',sans-serif;font-size:52px;line-height:1;background:var(--gold-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.money .m .n .u{font-size:24px}
+.money .m .l{color:var(--muted);font-size:13.5px;margin-top:8px}
+.money .note{color:var(--faint);font-size:13px;margin-top:26px;max-width:44ch;margin-left:auto;margin-right:auto}
+.money .note b{color:var(--txt)}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.step{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px}
+.step .n{width:34px;height:34px;border-radius:10px;background:rgba(111,240,214,.1);color:var(--mint);font-family:'Black Han Sans',sans-serif;font-size:17px;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.step h3{font-size:16px;font-weight:700;margin-bottom:6px}.step p{color:var(--muted);font-size:14px}
+.feat{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px;display:flex;gap:16px}
+.card .ic{font-size:24px;flex:none;line-height:1.2}
+.card h3{font-size:16px;font-weight:700;margin-bottom:5px}.card p{color:var(--muted);font-size:14px}
+.band{text-align:center;background:linear-gradient(180deg,rgba(111,240,214,.05),transparent);border:1px solid var(--line);border-radius:24px;padding:54px 24px;margin:44px 0 58px}
+.band h2{font-size:clamp(24px,3.4vw,30px);font-weight:900;margin-bottom:10px}.band p{color:var(--muted);margin-bottom:26px}
+.foot{text-align:center;color:var(--faint);font-size:12.5px;padding:0 0 42px}
+/* 애니메이션 */
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+.reveal.in{opacity:1;transform:none}
+.d1{transition-delay:.06s}.d2{transition-delay:.14s}.d3{transition-delay:.22s}.d4{transition-delay:.3s}
+/* 히어로(위쪽) 온로드 등장 — JS 없이 확실히 순차 재생 */
+.rise{opacity:0;animation:riseIn .82s cubic-bezier(.2,.75,.2,1) both}
+@keyframes riseIn{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+.r1{animation-delay:.08s}.r2{animation-delay:.2s}.r3{animation-delay:.34s}.r4{animation-delay:.48s}.r5{animation-delay:.6s}
+.hero h1 .hl{background-size:220% auto;animation:sheen 3.2s linear infinite}
+@keyframes sheen{to{background-position:220% center}}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes ctaPulse{0%,100%{box-shadow:0 8px 30px rgba(111,240,214,.18)}50%{box-shadow:0 10px 44px rgba(111,240,214,.44)}}
+@media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}.rise{opacity:1;animation:none}.brand .sym,.cta,.hero h1 .hl{animation:none}}
+@media(max-width:760px){.vs{grid-template-columns:1fr}.vs .arrow{transform:rotate(90deg);padding:2px 0}.steps,.feat{grid-template-columns:1fr}.money .big{gap:18px}}
+</style></head><body><div class=wrap>
+<div class=nav>
+<a class=brand href="/">__LOGO_SVG__<span class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></span></a>
+<a class=login href="/login">로그인</a></div>
+<div class=hero>
+<span class="badge rise r1">생각 0 · 편집 0 · 딱 5분</span>
+<h1 class="display rise r2">머리 쓸 필요 없어요.<br>시키는 대로 <span class=hl>딸깍</span>, 5분이면 끝.</h1>
+<p class="sub rise r3">쇼츠 하나 만들려고 3~5시간씩 붙잡고 계셨죠? 이제 뭘 팔지 고민할 것도 없어요. 지금 제일 잘 팔리는 걸 짚어주면 딸깍 — 대본·영상·목소리·자막까지 AI가 알아서. 60대도, 컴맹도 그대로 됩니다.</p>
+<div class="row rise r4">
+<a class=cta href="/login">무료로 시작하기 →</a>
+<a class="cta ghost" href="/login">로그인</a></div>
+<div class="trust rise r4">구글 계정으로 3초 시작 · 카드 없이 무료 체험</div>
+<div class="stats rise r5">
+<div class=stat><div class=num><span data-to=5>0</span>분</div><div class=lbl>하나 만드는 시간</div></div>
+<div class=stat><div class=num>폰 하나</div><div class=lbl>필요한 장비 전부</div></div>
+<div class=stat><div class=num>0</div><div class=lbl>배워야 할 편집기술</div></div></div></div>
+<div class=sec>
+<h2 class=reveal>쇼츠 하나에, 아직도 이 고생 하시나요?</h2>
+<div class="lead reveal">남들이 반나절 붙잡고 있을 때, 사장님은 딸깍 한 번이면 됩니다</div>
+<div class=vs>
+<div class="col old reveal"><div class=tag>기존 방식</div>
+<ul>
+<li><span class=m>✕</span> 뭘 만들지 기획부터 고민</li>
+<li><span class=m>✕</span> 잘 팔리는 소스 영상 찾아 헤매기</li>
+<li><span class=m>✕</span> AI 툴 이것저것 켜서 대본·이미지</li>
+<li><span class=m>✕</span> 캡컷으로 자르고 붙이고 자막 달기</li>
+<li><span class=m>✕</span> 겨우 하나 올리면 진이 빠짐</li></ul>
+<div class=time>3~5시간</div><div class=tl>영상 하나에 반나절, 머리는 지끈</div></div>
+<div class=arrow>→</div>
+<div class="col new reveal d1"><div class=tag>숏템박스</div>
+<ul>
+<li><span class=m>✓</span> 지금 제일 잘 팔리는 걸 짚어줌 (고민 0)</li>
+<li><span class=m>✓</span> 딸깍 — 대본·장면·목소리·자막 자동</li>
+<li><span class=m>✓</span> 마음에 안 들면 다시 딸깍</li>
+<li><span class=m>✓</span> 바로 올릴 세로 쇼츠 완성</li>
+<li><span class=m>✓</span> 생각도, 손도 안 씀</li></ul>
+<div class=time>5분</div><div class=tl>고르고 딸깍, 그게 전부</div></div></div></div>
+<div class=sec><div class="money reveal">
+<div class=k>이 시간이면, 몇 개나?</div>
+<h2>같은 반나절에 60개.<br>나 대신 팔러 나갑니다.</h2>
+<div class=big>
+<div class=m><div class=n><span data-to=60>0</span><span class=u>배</span></div><div class=lbl>기존보다 빠르게<br>(3~5시간 → 5분)</div></div>
+<div class=m><div class=n><span data-to=10>0</span><span class=u>개</span></div><div class=lbl>하루 30분이면<br>손 안 대고</div></div>
+<div class=m><div class=n><span data-to=300>0</span><span class=u>개</span></div><div class=lbl>한 달이면<br>자동으로 쌓임</div></div></div>
+<div class=note>영상 하나에 <b>내 판매·제휴 링크</b>가 붙습니다. 자는 동안에도 쇼츠가 대신 팔아주는 구조 — 많이 찍어낼수록 유리합니다.</div></div></div>
+<div class=sec>
+<h2 class=reveal>딱 세 번이면 끝나요</h2>
+<div class="lead reveal">기획도 편집도 없이, 완성까지 5분</div>
+<div class=steps>
+<div class="step reveal"><div class=n>1</div><h3>고민은 안 해요</h3><p>지금 실시간 제일 잘 팔리는 걸 짚어줍니다. 검증된 1등을 그대로 벤치마킹 — 뭘 팔지 정할 필요도 없어요.</p></div>
+<div class="step reveal d1"><div class=n>2</div><h3>딸깍 한 번</h3><p>대본·장면·목소리·자막을 AI가 알아서 붙입니다. 손댈 게 없어요.</p></div>
+<div class="step reveal d2"><div class=n>3</div><h3>5분 뒤 완성</h3><p>바로 올릴 수 있는 세로 쇼츠가 나옵니다. 마음에 안 들면 다시 딸깍.</p></div></div></div>
+<div class=sec>
+<h2 class=reveal>왜 __NAME__인가</h2>
+<div class="lead reveal">파는 사람이 진짜 필요한 것만</div>
+<div class=feat>
+<div class="card reveal"><span class=ic>⏱️</span><div><h3>5분이면 완성</h3><p>기획·촬영·편집으로 반나절 쓰던 걸, 고르고 딸깍하면 5분 만에 끝냅니다.</p></div></div>
+<div class="card reveal d1"><span class=ic>📱</span><div><h3>폰으로도 된다</h3><p>PC도 프로그램 설치도 필요 없어요. 손 안의 폰에서 손가락 몇 번이면 됩니다.</p></div></div>
+<div class="card reveal"><span class=ic>👆</span><div><h3>딸깍 하나면 자동</h3><p>대본·장면·목소리·자막을 전부 AI가. 컴맹이어도, 60대여도 첫날부터 바로 완성합니다.</p></div></div>
+<div class="card reveal d1"><span class=ic>🔥</span><div><h3>지금 뜨는 걸 짚어줌</h3><p>뭘 만들지 고민할 필요 없어요. 실시간 제일 잘 팔리는 걸 골라줘서 검증된 1등만 벤치마킹합니다.</p></div></div></div></div>
+<div class="band reveal">
+<h2>손자한테 안 물어봐도 됩니다</h2>
+<p>지금 5분, 무료로 하나 만들어보세요. 구글 계정이면 3초 · 카드 없이 시작.</p>
+<a class=cta href="/login">무료로 시작하기 →</a></div>
+<div class=foot>© __NAME__ · 폰으로 5분, 파는 사람을 위한 AI 쇼츠 제작</div>
+</div>
+<script>(function(){var rm=matchMedia('(prefers-reduced-motion:reduce)').matches;
+var rev=document.querySelectorAll('.reveal');
+if(rm){rev.forEach(function(e){e.classList.add('in')});document.querySelectorAll('[data-to]').forEach(function(e){e.textContent=e.dataset.to});return;}
+var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.14});
+rev.forEach(function(e){io.observe(e);});
+function cu(el){var t=+el.dataset.to,s=null,d=1100;function f(ts){if(!s)s=ts;var p=Math.min((ts-s)/d,1);el.textContent=Math.round(t*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(f);}requestAnimationFrame(f);}
+var m=document.querySelector('.money');
+if(m){var mo=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.querySelectorAll('[data-to]').forEach(cu);mo.unobserve(e.target);}});},{threshold:.35});mo.observe(m);}
+setTimeout(function(){document.querySelectorAll('.hero [data-to]').forEach(cu);},520);
+})();</script>
+</body></html>"""
+
+
+# ── 로그인 페이지 — 민트×블랙(구조는 기존 유지: 구글버튼+운영자 접이식). ──
+_LOGIN_TMPL = """<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>__NAME__ 로그인</title>
+<link rel=preconnect href="https://fonts.googleapis.com">
+<link rel=preconnect href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel=stylesheet>
 <style>*{box-sizing:border-box}
-body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
-background:#0a0a0d;font-family:'Malgun Gothic',system-ui,'Noto Sans KR',sans-serif;color:#e8e8ea}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;word-break:keep-all;
+background:radial-gradient(900px 500px at 80% -10%,rgba(111,240,214,.10),transparent 60%),#0b0f14;
+font-family:'Noto Sans KR',system-ui,sans-serif;color:#e8f0ee}
 .box{width:340px;padding:36px 30px;text-align:center}
-.logo{display:flex;align-items:center;justify-content:center;gap:10px;font-size:20px;font-weight:800;margin-bottom:34px}
-.logo .ic{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#ff8a4c,#ff5e62);
-display:flex;align-items:center;justify-content:center;font-size:18px}
-h1{font-size:22px;margin:0 0 8px}
-.sub{color:#ff9a6b;font-size:13px;margin-bottom:26px;line-height:1.6}
+.logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px}
+.logo .sym{width:34px;height:34px;flex:none}
+.logo .wm{display:flex;flex-direction:column;line-height:1;text-align:left}
+.logo .nm{font-family:'Black Han Sans',sans-serif;font-size:22px;background:linear-gradient(135deg,#6ff0d6,#1f9e7a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.logo .en{font-family:ui-monospace,monospace;font-size:9px;letter-spacing:2.4px;color:#5f7373;margin-top:2px}
+h1{font-size:22px;margin:26px 0 8px;font-weight:700}
+.sub{color:#6ff0d6;font-size:13px;margin-bottom:26px;line-height:1.6}
 .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;
-background:#15151b;border:1px solid #2c2c34;border-radius:10px;color:#e8e8ea;font-size:15px;
+background:#111722;border:1px solid #1e2735;border-radius:10px;color:#e8f0ee;font-size:15px;
 font-weight:700;cursor:pointer;text-decoration:none}
-.gbtn:hover{background:#1c1c24;border-color:#3a3a44}
+.gbtn:hover{background:#16202e;border-color:#2a3647}
 .gbtn svg{width:18px;height:18px}
 .err{color:#e0623d;font-size:12px;margin-top:16px;min-height:14px;line-height:1.6}
-.home{display:block;color:#6a6a76;font-size:12px;margin-top:22px;text-decoration:none}
-.atoggle{color:#45454f;font-size:11px;margin-top:30px;cursor:pointer;background:none;border:0}
+.home{display:block;color:#5f7373;font-size:12px;margin-top:22px;text-decoration:none}
+.home:hover{color:#6ff0d6}
+.atoggle{color:#3f5050;font-size:11px;margin-top:30px;cursor:pointer;background:none;border:0}
 .aform{display:none;margin-top:14px}.aform.show{display:block}
-.aform input{width:100%;margin:5px 0;padding:10px;background:#0e0e12;border:1px solid #2c2c34;
+.aform input{width:100%;margin:5px 0;padding:10px;background:#0a0f16;border:1px solid #1e2735;
 border-radius:8px;color:#eee;font-size:13px}
-.aform button{width:100%;margin-top:8px;padding:10px;background:#2a2a34;color:#cfcfd6;border:0;
+.aform button{width:100%;margin-top:8px;padding:10px;background:#16202e;color:#6ff0d6;border:1px solid #2a3647;
 border-radius:8px;font-weight:700;font-size:13px;cursor:pointer}</style></head>
 <body><div class=box>
-<div class=logo><span class=ic>🛍️</span> 쇼핑쇼츠</div>
+<div class=logo>__LOGO_SVG__<span class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></span></div>
 <h1>로그인</h1>
 <div class=sub>구글 계정으로 로그인하세요<br>처음이면 <b>무료 체험</b>이 바로 시작돼요</div>
 <a class=gbtn href="/auth/google/login">
-<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.8-6.8C35.6 2.4 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.3 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9.1h12.4c-.5 2.9-2.1 5.4-4.6 7l7.1 5.5c4.2-3.9 6.6-9.6 6.6-16z"/><path fill="#FBBC05" d="M10.5 28.3c-.5-1.4-.8-2.9-.8-4.3s.3-2.9.8-4.3l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.6 10.4l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.1-5.5c-2 1.3-4.6 2.1-8.1 2.1-6.3 0-11.6-3.8-13.5-9.1l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>
+__GOOGLE_SVG__
 Google 계정으로 로그인</a>
 <div class=err>__ERR__</div>
 <a class=home href="/">← 홈으로 돌아가기</a>
@@ -2778,6 +3001,9 @@ Google 계정으로 로그인</a>
 <input name=pass type=password placeholder=비밀번호 autocomplete=current-password>
 <button>운영자 로그인</button></form>
 </div></body></html>"""
+
+_LANDING_HTML = _fill_brand(_LANDING_TMPL)
+_LOGIN_HTML = _fill_brand(_LOGIN_TMPL)
 
 _SIGNUP_HTML = """<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>쇼핑쇼츠 가입</title>
@@ -2965,6 +3191,8 @@ async def _auth_guard(request: Request, call_next):
         return await call_next(request)
     if path.startswith("/api/"):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
+    if path in ("/", "/index.html"):
+        return HTMLResponse(_LANDING_HTML)   # 비로그인 방문자 → 공개 대문(랜딩)
     return RedirectResponse("/login")
 
 
