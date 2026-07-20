@@ -79,7 +79,8 @@ def _ground_ref(ref, seg_map):
     seg = seg_map.get(sid)
     if not seg:
         return None
-    return {"video_id": seg["video_id"], "seg_id": sid, "start": seg["start"], "end": seg["end"]}
+    return {"video_id": seg["video_id"], "seg_id": sid, "start": seg["start"], "end": seg["end"],
+            "scene_desc": seg.get("scene_desc", "")}
 
 
 _FACE_TOKENS = ("얼굴", "정면", "셀카", "자기소개", "말하는 사람", "脸", "人物", "正面", "自拍")
@@ -131,35 +132,45 @@ def _chronological_respine(beats):
     의미 매칭(문장↔화면)을 일부러 포기한 배치이므로, 오탐 빨간불을 막기 위해 respined
     플래그로 구분한다 — fit은 조작하지 않는다(④ fit 정직화, 2026-07-20). 프런트는 respined
     비트를 중립(초록) 처리하고, fit은 모델이 매긴 원래 값을 그대로 노출한다.
-    정렬 키는 (video_id, start): 한 소스는 시간순으로 이어 쓰고, 소스끼리는 묶어서 쓴다."""
+    정렬 키는 (video_id, start): 한 소스는 시간순으로 이어 쓰고, 소스끼리는 묶어서 쓴다.
+
+    ① visual_verb 앵커(2026-07-20): 나레이션이 화면의 구체적 시각행위(찢다·붓다·완성 등)를
+    지목하는 비트는 그 화면이 반드시 맞아야 하므로 꼬리처럼 앵커로 고정한다 — 모델이 고른
+    원 세그먼트·원 fit 그대로, respined 플래그 없음. 나머지 movable body 비트만 flat 풀에
+    모아 시간순 재배치한다. visual_verb 키가 없으면 .get()이 False → movable(기존 계약)."""
     if not beats:
         return beats
     # 꼬리 비트는 respine 대상에서 제외(앵커) — 모델이 고른 화면 그대로.
     body, tail = beats[:-1], beats[-1]
+    # visual_verb=True 비트도 앵커. 나머지 movable body만 flat 풀 → dedup → 시간순 재배치.
+    movable_idx = [j for j, b in enumerate(body) if not b.get("visual_verb")]
     flat, counts = [], []
-    for b in body:
-        segs = [b["primary"]] + list(b.get("alternates") or [])
+    for j in movable_idx:
+        segs = [body[j]["primary"]] + list(body[j].get("alternates") or [])
         counts.append(len(segs))
-        flat.extend(segs)
+        # 스냅샷 복사: _dedup_and_fill의 서브슬라이스가 제자리 mutation(longest["end"]=mid)하므로
+        # 참조로 넣으면 원본 비트의 primary/alternates까지 오염된다(이월 Minor 픽스 1).
+        flat.extend([dict(s) for s in segs])
     flat = _dedup_and_fill(flat, need=sum(counts))
     # 정렬: (video_id,start) 우선, 동시각이면 얼굴 세그먼트를 뒤로(대체 있을 때 후순위).
     ordered = sorted(flat, key=lambda s: (s.get("video_id", ""), s.get("start", 0.0),
                                           _is_face_seg(s.get("scene_desc", ""))))
-    out, i = [], 0
-    for b, n in zip(body, counts):
+    moved, i = {}, 0
+    for j, n in zip(movable_idx, counts):
         chunk = ordered[i:i + n]
         i += n
         if not chunk:
             # fill이 need를 못 채운 극단 케이스(잔여 세그 전부 1초 미만) — 이 비트로 돌아올
-            # 세그먼트가 바닥났다. 크래시 대신 원래(재배치 전) 화면을 그대로 보존한다.
+            # 세그먼트가 바닥났다. 크래시 대신 원래 화면을 보존한다(아래 루프가 원본 append).
             # 실제로 재배치되지 않았으니 respined 플래그도 달지 않는다.
-            out.append(dict(b))
             continue
-        nb = dict(b)
+        nb = dict(body[j])
         nb["primary"] = chunk[0]
         nb["alternates"] = chunk[1:]
         nb["respined"] = True   # 시간순 스파인 배치 = b-roll by design(빨간불 대상 아님)
-        out.append(nb)          # ④ fit 덮어쓰기 삭제 — 모델 fit 그대로 보존
+        moved[j] = nb           # ④ fit 덮어쓰기 삭제 — 모델 fit 그대로 보존
+    # movable은 재배치본, 앵커(visual_verb·빈chunk)는 원본 그대로.
+    out = [moved[j] if j in moved else dict(b) for j, b in enumerate(body)]
     # 꼬리: 앵커 — 세그먼트·fit 모두 모델이 고른 그대로(respined 아님).
     out.append(dict(tail))
     return out
@@ -192,6 +203,7 @@ def _validate_and_ground(raw_plan, seg_map, n_alternates, respine=True):
             "alternates": alts,
             "effect": beat.get("effect", "cut"),
             "fit": int(beat.get("fit") or 0),
+            "visual_verb": bool(beat.get("visual_verb", False)),
         })
     if respine:
         beats_out = _chronological_respine(beats_out)
@@ -253,6 +265,7 @@ _RESPONSE_SCHEMA = {
                     },
                     "effect": {"type": "string"},
                     "fit": {"type": "integer"},
+                    "visual_verb": {"type": "boolean"},
                 },
                 "required": ["role", "narration", "target_seconds", "primary"],
             },
@@ -297,6 +310,8 @@ _PROMPT = """너는 숏폼 쇼핑 영상 편집 감독이다. 아래 여러 소�
 - 화면이 튀지 않게: 같은 소스 안에서는 되도록 시간 순서가 크게 뒤바뀌지 않는,
   자연스럽게 이어지는 구간을 골라라.
 - **소스 구간은 반드시 위 인벤토리의 seg_id로만 지목**해라. 없는 seg_id를 지어내지 마라.
+- **visual_verb: 이 비트의 나레이션이 화면에서 눈으로 보이는 구체적 동작·상태(찢다·붓다·완성·꺼내다·바르다 등)를
+  지목하면 true, 감정·설명·도입부처럼 특정 화면을 요구하지 않으면 false로 표시해라.**
 - **표절 금지:** 소스 원문 문장·구절을 그대로 베끼지 마라. 후킹 방식·구조·핵심
   셀링포인트만 계승해서 완전히 새 표현으로 써라.
 - 출력은 스키마 JSON만."""
@@ -336,6 +351,8 @@ _SCRIPTED_PROMPT = """너는 숏폼 쇼핑 영상 편집 감독이다. **나레�
 - **소스 구간은 반드시 인벤토리의 seg_id로만 지목**해라. 없는 seg_id 지어내지 마라.
 - **fit: 이 비트의 나레이션과 primary 화면이 얼마나 잘 맞는지 1~5로 솔직하게 매겨라
   (5=딱 맞음, 3=무난, 1~2=마땅한 영상이 없어 억지로 붙임). 억지로 붙였으면 낮게 줘라.**
+- **visual_verb: 이 비트의 나레이션이 화면에서 눈으로 보이는 구체적 동작·상태(찢다·붓다·완성·꺼내다·바르다 등)를
+  지목하면 true, 감정·설명·도입부처럼 특정 화면을 요구하지 않으면 false로 표시해라.**
 - affiliate_target: 이 영상이 팔거나 연결할 핵심 제품/재료 하나를 정확한 이름으로.
 - 출력은 스키마 JSON만."""
 
