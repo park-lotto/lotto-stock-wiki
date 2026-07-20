@@ -2758,35 +2758,56 @@ a{text-decoration:none;color:inherit}
 .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
 .nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
 .brand{display:flex;align-items:center;gap:10px}
-.brand .sym{width:34px;height:34px;flex:none}
+.brand .sym{width:34px;height:34px;flex:none;animation:floaty 4s ease-in-out infinite}
 .brand .wm{display:flex;flex-direction:column;line-height:1}
 .brand .nm{font-family:'Black Han Sans',sans-serif;font-size:22px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
 .brand .en{font-family:ui-monospace,monospace;font-size:9px;letter-spacing:2.4px;color:var(--faint);margin-top:2px}
 .nav .login{color:var(--muted);font-size:14px;font-weight:600}
 .nav .login:hover{color:var(--mint)}
-.hero{display:grid;grid-template-columns:1.12fr .88fr;gap:38px;align-items:center;padding:52px 0 40px}
-.badge{display:inline-block;font-size:12.5px;color:var(--mint);border:1px solid rgba(111,240,214,.3);border-radius:999px;padding:5px 14px;margin-bottom:22px;background:rgba(111,240,214,.06)}
-.hero h1{font-size:clamp(34px,4.8vw,50px);line-height:1.12;letter-spacing:.01em}
+/* HERO — 가운데 정렬 */
+.hero{text-align:center;max-width:760px;margin:0 auto;padding:60px 0 40px}
+.badge{display:inline-block;font-size:12.5px;color:var(--mint);border:1px solid rgba(111,240,214,.3);border-radius:999px;padding:6px 15px;margin-bottom:22px;background:rgba(111,240,214,.06)}
+.hero h1{font-size:clamp(34px,5.2vw,54px);line-height:1.14;letter-spacing:.01em}
 .hero h1 .hl{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
-.hero .sub{color:var(--muted);font-size:17px;margin:18px 0 28px;max-width:38ch}
-.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-.cta{display:inline-flex;align-items:center;gap:8px;background:var(--grad);color:#062018;font-weight:700;font-size:16px;padding:15px 28px;border-radius:12px;border:0;cursor:pointer;box-shadow:0 8px 30px rgba(111,240,214,.18)}
+.hero .sub{color:var(--muted);font-size:17px;margin:20px auto 30px;max-width:46ch}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:center}
+.cta{display:inline-flex;align-items:center;gap:8px;background:var(--grad);color:#062018;font-weight:700;font-size:16px;padding:15px 30px;border-radius:12px;border:0;cursor:pointer;box-shadow:0 8px 30px rgba(111,240,214,.18)}
 .cta:hover{filter:brightness(1.06)}
-.cta.ghost{background:transparent;color:var(--txt);border:1px solid var(--line);box-shadow:none;font-weight:600}
+.cta:not(.ghost){animation:ctaPulse 2.6s ease-in-out infinite}
+.cta.ghost{background:transparent;color:var(--txt);border:1px solid var(--line);box-shadow:none;font-weight:600;animation:none}
 .trust{color:var(--faint);font-size:12.5px;margin-top:16px}
-.stats{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}
-.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px 20px;min-width:118px}
+.stats{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:30px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px 22px;min-width:120px}
 .stat .num{font-family:'Black Han Sans',sans-serif;font-size:25px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
 .stat .lbl{color:var(--muted);font-size:12px;margin-top:2px}
-.phone{justify-self:center}
-.frame{width:186px;aspect-ratio:9/16;border-radius:24px;border:1px solid var(--line);background:#0a0f16;position:relative;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.5)}
-.frame .prod{position:absolute;inset:14px 14px 64px;border-radius:14px;background:linear-gradient(160deg,#16324a,#0d2035);display:flex;align-items:center;justify-content:center;font-size:40px}
-.frame .rank{position:absolute;top:18px;left:18px;background:var(--gold-grad);color:#3a2600;font-family:'Black Han Sans',sans-serif;font-size:12px;padding:4px 9px;border-radius:8px}
-.frame .capbar{position:absolute;left:12px;right:12px;bottom:14px;min-height:38px;border-radius:10px;background:rgba(9,14,20,.92);border:1px solid var(--line);display:flex;align-items:center;padding:8px 11px;font-size:11px;line-height:1.35}
-.frame .capbar .kw{color:var(--gold);font-weight:700}
-.sec{padding:52px 0}
-.sec h2{text-align:center;font-size:27px;font-weight:900;margin-bottom:8px}
+.sec{padding:50px 0}
+.sec h2{text-align:center;font-size:clamp(24px,3.4vw,30px);font-weight:900;margin-bottom:8px}
 .sec .lead{text-align:center;color:var(--muted);margin-bottom:36px}
+/* PAIN — 기존 3~5시간 vs 숏템박스 5분 */
+.vs{display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:stretch;max-width:860px;margin:0 auto}
+.vs .col{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px 24px}
+.vs .col.new{border-color:rgba(111,240,214,.35);box-shadow:0 0 0 1px rgba(111,240,214,.12) inset}
+.vs .tag{font-size:12px;font-weight:700;letter-spacing:.04em;margin-bottom:16px}
+.vs .old .tag{color:var(--muted)}.vs .new .tag{color:var(--mint)}
+.vs ul{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:18px}
+.vs li{font-size:14px;display:flex;gap:9px;align-items:flex-start}
+.vs .old li{color:var(--muted)}.vs .old li .m{color:#e0623d;flex:none}
+.vs .new li{color:var(--txt)}.vs .new li .m{color:var(--mint);flex:none}
+.vs .time{font-family:'Black Han Sans',sans-serif;font-size:32px;line-height:1}
+.vs .old .time{color:#d68b6f}.vs .new .time{background:var(--grad);-webkit-background-clip:text;color:transparent}
+.vs .tl{font-size:12px;color:var(--faint);margin-top:5px}
+.vs .arrow{display:flex;align-items:center;justify-content:center;color:var(--faint);font-size:26px}
+/* MONEY — 수치화 */
+.money{text-align:center;background:linear-gradient(180deg,rgba(255,207,111,.06),transparent);border:1px solid var(--line);border-radius:24px;padding:50px 24px}
+.money .k{font-size:13px;letter-spacing:.04em;color:var(--gold);font-weight:700;margin-bottom:8px}
+.money h2{font-size:clamp(23px,3.2vw,29px);font-weight:900;margin-bottom:30px}
+.money .big{display:flex;gap:26px;justify-content:center;flex-wrap:wrap}
+.money .m{min-width:150px}
+.money .m .n{font-family:'Black Han Sans',sans-serif;font-size:52px;line-height:1;background:var(--gold-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.money .m .n .u{font-size:24px}
+.money .m .l{color:var(--muted);font-size:13.5px;margin-top:8px}
+.money .note{color:var(--faint);font-size:13px;margin-top:26px;max-width:44ch;margin-left:auto;margin-right:auto}
+.money .note b{color:var(--txt)}
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
 .step{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px}
 .step .n{width:34px;height:34px;border-radius:10px;background:rgba(111,240,214,.1);color:var(--mint);font-family:'Black Han Sans',sans-serif;font-size:17px;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
@@ -2796,51 +2817,92 @@ a{text-decoration:none;color:inherit}
 .card .ic{font-size:24px;flex:none;line-height:1.2}
 .card h3{font-size:16px;font-weight:700;margin-bottom:5px}.card p{color:var(--muted);font-size:14px}
 .band{text-align:center;background:linear-gradient(180deg,rgba(111,240,214,.05),transparent);border:1px solid var(--line);border-radius:24px;padding:54px 24px;margin:44px 0 58px}
-.band h2{font-size:28px;font-weight:900;margin-bottom:10px}.band p{color:var(--muted);margin-bottom:26px}
+.band h2{font-size:clamp(24px,3.4vw,30px);font-weight:900;margin-bottom:10px}.band p{color:var(--muted);margin-bottom:26px}
 .foot{text-align:center;color:var(--faint);font-size:12.5px;padding:0 0 42px}
-@media(max-width:760px){.hero{grid-template-columns:1fr;text-align:center;padding-top:34px}.hero .sub{max-width:none}.row,.stats{justify-content:center}.phone{margin-top:6px}.steps,.feat{grid-template-columns:1fr}}
+/* 애니메이션 */
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+.reveal.in{opacity:1;transform:none}
+.d1{transition-delay:.06s}.d2{transition-delay:.14s}.d3{transition-delay:.22s}.d4{transition-delay:.3s}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes ctaPulse{0%,100%{box-shadow:0 8px 30px rgba(111,240,214,.18)}50%{box-shadow:0 10px 44px rgba(111,240,214,.44)}}
+@media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}.brand .sym,.cta{animation:none}}
+@media(max-width:760px){.vs{grid-template-columns:1fr}.vs .arrow{transform:rotate(90deg);padding:2px 0}.steps,.feat{grid-template-columns:1fr}.money .big{gap:18px}}
 </style></head><body><div class=wrap>
 <div class=nav>
 <a class=brand href="/">__LOGO_SVG__<span class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></span></a>
 <a class=login href="/login">로그인</a></div>
 <div class=hero>
-<div class=copy>
-<span class=badge>컴맹도 · 60대도 · 5분이면</span>
-<h1 class=display>컴퓨터 몰라도,<br>60대도 <span class=hl>5분</span>이면 만듭니다</h1>
-<p class=sub>캡컷도 프리미어도 필요 없어요. 폰으로 상품만 고르면 대본·영상·목소리·자막까지 AI가 딸깍. 손자보다 빨리 쇼츠 하나가 나옵니다.</p>
-<div class=row>
+<span class="badge reveal">생각 0 · 편집 0 · 딱 5분</span>
+<h1 class="display reveal d1">머리 쓸 필요 없어요.<br>시키는 대로 <span class=hl>딸깍</span>, 5분이면 끝.</h1>
+<p class="sub reveal d2">쇼츠 하나 만들려고 3~5시간씩 붙잡고 계셨죠? 이제 상품만 고르고 딸깍하면 대본·영상·목소리·자막까지 AI가 알아서. 60대도, 컴맹도 그대로 됩니다.</p>
+<div class="row reveal d2">
 <a class=cta href="/login">무료로 시작하기 →</a>
 <a class="cta ghost" href="/login">로그인</a></div>
-<div class=trust>구글 계정으로 3초 시작 · 카드 없이 무료 체험</div>
-<div class=stats>
+<div class="trust reveal d3">구글 계정으로 3초 시작 · 카드 없이 무료 체험</div>
+<div class="stats reveal d3">
 <div class=stat><div class=num>5분</div><div class=lbl>하나 만드는 시간</div></div>
 <div class=stat><div class=num>폰 하나</div><div class=lbl>필요한 장비 전부</div></div>
 <div class=stat><div class=num>0</div><div class=lbl>배워야 할 편집기술</div></div></div></div>
-<div class=phone><div class=frame>
-<span class=rank>TOP 1</span>
-<div class=prod>🧴</div>
-<div class=capbar>비법 궁금하면 댓글에 <span class=kw>'꿀템'</span></div></div></div></div>
 <div class=sec>
-<h2>딱 세 번이면 끝나요</h2>
-<div class=lead>기획도 편집도 없이, 완성까지 5분</div>
+<h2 class=reveal>쇼츠 하나에, 아직도 이 고생 하시나요?</h2>
+<div class="lead reveal">남들이 반나절 붙잡고 있을 때, 사장님은 딸깍 한 번이면 됩니다</div>
+<div class=vs>
+<div class="col old reveal"><div class=tag>기존 방식</div>
+<ul>
+<li><span class=m>✕</span> 뭘 만들지 기획부터 고민</li>
+<li><span class=m>✕</span> 잘 팔리는 소스 영상 찾아 헤매기</li>
+<li><span class=m>✕</span> AI 툴 이것저것 켜서 대본·이미지</li>
+<li><span class=m>✕</span> 캡컷으로 자르고 붙이고 자막 달기</li>
+<li><span class=m>✕</span> 겨우 하나 올리면 진이 빠짐</li></ul>
+<div class=time>3~5시간</div><div class=tl>영상 하나에 반나절, 머리는 지끈</div></div>
+<div class=arrow>→</div>
+<div class="col new reveal d1"><div class=tag>숏템박스</div>
+<ul>
+<li><span class=m>✓</span> 팔 상품만 고른다</li>
+<li><span class=m>✓</span> 딸깍 — 대본·장면·목소리·자막 자동</li>
+<li><span class=m>✓</span> 마음에 안 들면 다시 딸깍</li>
+<li><span class=m>✓</span> 바로 올릴 세로 쇼츠 완성</li>
+<li><span class=m>✓</span> 생각도, 손도 안 씀</li></ul>
+<div class=time>5분</div><div class=tl>고르고 딸깍, 그게 전부</div></div></div></div>
+<div class=sec><div class="money reveal">
+<div class=k>이 시간이면, 몇 개나?</div>
+<h2>같은 반나절에 60개.<br>나 대신 팔러 나갑니다.</h2>
+<div class=big>
+<div class=m><div class=n><span data-to=60>0</span><span class=u>배</span></div><div class=lbl>기존보다 빠르게<br>(3~5시간 → 5분)</div></div>
+<div class=m><div class=n><span data-to=10>0</span><span class=u>개</span></div><div class=lbl>하루 30분이면<br>손 안 대고</div></div>
+<div class=m><div class=n><span data-to=300>0</span><span class=u>개</span></div><div class=lbl>한 달이면<br>자동으로 쌓임</div></div></div>
+<div class=note>영상 하나에 <b>내 판매·제휴 링크</b>가 붙습니다. 자는 동안에도 쇼츠가 대신 팔아주는 구조 — 많이 찍어낼수록 유리합니다.</div></div></div>
+<div class=sec>
+<h2 class=reveal>딱 세 번이면 끝나요</h2>
+<div class="lead reveal">기획도 편집도 없이, 완성까지 5분</div>
 <div class=steps>
-<div class=step><div class=n>1</div><h3>만들 걸 고른다</h3><p>팔 상품이나 주제만 정하면 돼요. 대본·기획은 신경 쓸 필요 없습니다.</p></div>
-<div class=step><div class=n>2</div><h3>딸깍 한 번</h3><p>대본·장면·목소리·자막을 AI가 알아서 붙입니다. 손댈 게 없어요.</p></div>
-<div class=step><div class=n>3</div><h3>5분 뒤 완성</h3><p>바로 올릴 수 있는 세로 쇼츠가 나옵니다. 마음에 안 들면 다시 딸깍.</p></div></div></div>
+<div class="step reveal"><div class=n>1</div><h3>만들 걸 고른다</h3><p>팔 상품이나 주제만 정하면 돼요. 대본·기획은 신경 쓸 필요 없습니다.</p></div>
+<div class="step reveal d1"><div class=n>2</div><h3>딸깍 한 번</h3><p>대본·장면·목소리·자막을 AI가 알아서 붙입니다. 손댈 게 없어요.</p></div>
+<div class="step reveal d2"><div class=n>3</div><h3>5분 뒤 완성</h3><p>바로 올릴 수 있는 세로 쇼츠가 나옵니다. 마음에 안 들면 다시 딸깍.</p></div></div></div>
 <div class=sec>
-<h2>왜 __NAME__인가</h2>
-<div class=lead>파는 사람이 진짜 필요한 것만</div>
+<h2 class=reveal>왜 __NAME__인가</h2>
+<div class="lead reveal">파는 사람이 진짜 필요한 것만</div>
 <div class=feat>
-<div class=card><span class=ic>⏱️</span><div><h3>5분이면 완성</h3><p>기획·촬영·편집으로 반나절 쓰던 걸, 고르고 딸깍하면 5분 만에 끝냅니다.</p></div></div>
-<div class=card><span class=ic>📱</span><div><h3>폰으로도 된다</h3><p>PC도 프로그램 설치도 필요 없어요. 손 안의 폰에서 손가락 몇 번이면 됩니다.</p></div></div>
-<div class=card><span class=ic>👆</span><div><h3>딸깍 하나면 자동</h3><p>대본·장면·목소리·자막을 전부 AI가. 컴맹이어도, 60대여도 첫날부터 바로 완성합니다.</p></div></div>
-<div class=card><span class=ic>🔥</span><div><h3>파는 사람 특화</h3><p>그냥 조회수용이 아니라, 상품이 팔리게 설계된 쇼츠가 나옵니다.</p></div></div></div></div>
-<div class=band>
+<div class="card reveal"><span class=ic>⏱️</span><div><h3>5분이면 완성</h3><p>기획·촬영·편집으로 반나절 쓰던 걸, 고르고 딸깍하면 5분 만에 끝냅니다.</p></div></div>
+<div class="card reveal d1"><span class=ic>📱</span><div><h3>폰으로도 된다</h3><p>PC도 프로그램 설치도 필요 없어요. 손 안의 폰에서 손가락 몇 번이면 됩니다.</p></div></div>
+<div class="card reveal"><span class=ic>👆</span><div><h3>딸깍 하나면 자동</h3><p>대본·장면·목소리·자막을 전부 AI가. 컴맹이어도, 60대여도 첫날부터 바로 완성합니다.</p></div></div>
+<div class="card reveal d1"><span class=ic>🔥</span><div><h3>파는 사람 특화</h3><p>그냥 조회수용이 아니라, 상품이 팔리게 설계된 쇼츠가 나옵니다.</p></div></div></div></div>
+<div class="band reveal">
 <h2>손자한테 안 물어봐도 됩니다</h2>
 <p>지금 5분, 무료로 하나 만들어보세요. 구글 계정이면 3초 · 카드 없이 시작.</p>
 <a class=cta href="/login">무료로 시작하기 →</a></div>
 <div class=foot>© __NAME__ · 폰으로 5분, 파는 사람을 위한 AI 쇼츠 제작</div>
-</div></body></html>"""
+</div>
+<script>(function(){var rm=matchMedia('(prefers-reduced-motion:reduce)').matches;
+var rev=document.querySelectorAll('.reveal');
+if(rm){rev.forEach(function(e){e.classList.add('in')});document.querySelectorAll('[data-to]').forEach(function(e){e.textContent=e.dataset.to});return;}
+var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.14});
+rev.forEach(function(e){io.observe(e);});
+function cu(el){var t=+el.dataset.to,s=null,d=1100;function f(ts){if(!s)s=ts;var p=Math.min((ts-s)/d,1);el.textContent=Math.round(t*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(f);}requestAnimationFrame(f);}
+var m=document.querySelector('.money');
+if(m){var mo=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.querySelectorAll('[data-to]').forEach(cu);mo.unobserve(e.target);}});},{threshold:.35});mo.observe(m);}
+})();</script>
+</body></html>"""
 
 
 # ── 로그인 페이지 — 민트×블랙(구조는 기존 유지: 구글버튼+운영자 접이식). ──
