@@ -3318,8 +3318,9 @@ function renderExport(opts){
     // ★1순위: 캡컷으로 바로 보내기(원클릭). 60대 북극성 — 클릭 한 번이면 캡컷에 프로젝트가 생긴다.
     + (capcutOk
         ? `<button class="btn-next" style="${big};border:0;cursor:pointer;font-size:15px" onclick="sendToCapCut()">🎬 캡컷으로 보내기</button>`
+          + `<a class="btn-prev" style="${small}" href="/static/capcut_setup.bat" download>⚙ 캡컷 자동설정(최초 1회)</a>`
           + `<button class="btn-prev" style="${small};border:0;cursor:pointer" onclick="resetCapCutFolder()">폴더 다시 지정</button>`
-          + '<div class="hint" style="margin:4px 0 10px">캡컷이 깔려 있으면 클릭 한 번으로 프로젝트가 만들어집니다(처음 한 번만 폴더 지정). Chrome·Edge 전용.</div>'
+          + '<div class="hint" style="margin:4px 0 10px">캡컷이 깔려 있으면 클릭 한 번으로 프로젝트가 만들어집니다. <b>처음 쓰실 때만</b>: 위 <b>⚙자동설정</b> 파일을 받아 한 번 더블클릭(캡컷은 꺼둔 채) → 캡컷 켜기 → 폴더 한 번 지정. Chrome·Edge 전용.</div>'
         : '<div class="hint" style="margin-bottom:10px">💡 캡컷으로 바로 보내기는 <b>Chrome·Edge</b>에서만 됩니다. 지금 브라우저에선 아래 ZIP을 받아 캡컷에 올리세요.</div>')
     + (rendered?`<a class="btn-next" style="${big}" href="/api/mix/video/${j}?dl=1" download>⬇ 완성 영상(MP4)</a>`:'')
     + `<a class="btn-prev" style="${small}" href="/api/mix/export/${j}" download>📦 캡컷용 ZIP(수동)</a>`
@@ -3361,14 +3362,10 @@ async function sendToCapCut(){
       firstTime = true;
     }
     if(!(await _ccPerm(_ccHandle))){ alert('폴더 접근 권한이 필요합니다. 다시 시도해 주세요.'); _ccHandle=null; return; }
-    // 경로 확인은 picker '뒤'에서(제스처 필요 없음). draft가 에셋을 절대경로로 참조하므로 방금 고른
-    // 폴더의 실제 경로가 필요하다 — 브라우저는 경로를 안 알려줘서 사용자에게 한 번만 확인받는다.
-    let path = localStorage.getItem('capcut_path');
-    if(!path || firstTime){
-      path = (prompt('방금 고른 캡컷 폴더의 전체 경로를 확인해 주세요 (보통 그대로 두면 됩니다):',
-                     path||CAPCUT_DEFAULT_PATH)||path||CAPCUT_DEFAULT_PATH).trim();
-      localStorage.setItem('capcut_path', path);
-    }
+    // 경로는 자동설정(.bat)이 C:\capcutproject\CapCut Drafts로 표준화하므로 기본값을 쓴다(prompt 없음).
+    // draft가 에셋을 절대경로로 참조하는데 브라우저는 고른 폴더의 경로를 안 알려주므로 이 표준 경로에 의존.
+    // 비표준 위치를 쓰는 사용자는 localStorage.capcut_path로 바꿀 수 있다('폴더 다시 지정' 후 재설정).
+    const path = localStorage.getItem('capcut_path') || CAPCUT_DEFAULT_PATH;
     const m=await (await fetch('/api/mix/capcut/'+encodeURIComponent(MIX_JOB)+'?base='+encodeURIComponent(path))).json();
     if(!m.ok){ alert('캡컷 프로젝트 생성 실패: '+(m.error||'')); return; }
     const proj=await _ccHandle.getDirectoryHandle(m.project,{create:true});

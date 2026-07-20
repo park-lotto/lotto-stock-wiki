@@ -4007,7 +4007,7 @@ def api_produce_works_delete(request: Request, work_id: str):
 
 
 @app.post("/api/produce/mix/start")
-def api_produce_mix_start(background_tasks: BackgroundTasks, body: dict):
+def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, body: dict):
     """2단계 영상믹스 — 확정 대본(given_script)을 소스영상 장면에 매칭하는 job 시작.
     리뷰·렌더는 기존 /api/mix/{status,result,adjust,render,video}를 그대로 쓴다.
     body: {script, urls, target_seconds, subtitle_removal, script_structure}.
@@ -4031,6 +4031,20 @@ def api_produce_mix_start(background_tasks: BackgroundTasks, body: dict):
     script_structure = body.get("script_structure") or None
     if not isinstance(script_structure, dict):
         script_structure = None   # 잘못된 형식은 조용히 버린다(보관 전용이라 무해)
+    # 유료게이트(2026-07-20 E): 제작소 2단계도 결국 run_mix_job→렌더로 돈이 나간다. /api/mix/start와
+    # 동일하게 render 과금+글로벌캡을 건다 — 안 걸면 제작소 흐름으로 하루 상한·전역 상한을 통째로
+    # 우회할 수 있다(1단계 script 과금은 별개 자원이라 render 과금을 대체하지 못한다). 검증(위 ssrf·
+    # 파싱)을 먼저 통과시킨 뒤 과금(리뷰 G1). render_charge_day를 채워 run_mix_job 실패 시 자동 환불된다.
+    cid = getattr(request.state, "customer_id", 0)
+    if _global_over_cap("render"):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "global_limit",
+            "error": "지금 영상 만들기 이용이 많아요. 잠시 후 다시 시도해 주세요."})
+    if not check_and_count(cid, "render"):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "daily_limit",
+            "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
+    global_incr_and_alert("render")
     # 장면 우선 대본 모드(2026-07-20, Task7): produce.html "우리 시스템으로 믹스"는 항상 이 값을
     # true로 보낸다. mix_pipeline._plan_and_tts가 build_scene_first_plan으로 후보 n개를 만들고
     # 추천 후보를 자동 세팅한다(candidates=[]이면 기존 build_edit_plan으로 조용히 폴백).
@@ -4038,7 +4052,8 @@ def api_produce_mix_start(background_tasks: BackgroundTasks, body: dict):
     job_id = uuid.uuid4().hex[:12]
     Store(DB_PATH).create_mix_job(job_id, urls, target, "free",
                                   subtitle_removal=subtitle_removal, given_script=script,
-                                  script_structure=script_structure, scene_first=scene_first)
+                                  script_structure=script_structure, scene_first=scene_first,
+                                  customer_id=cid, render_charge_day=_today_utc())
     background_tasks.add_task(run_mix_job, job_id, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True, "job_id": job_id}
 
