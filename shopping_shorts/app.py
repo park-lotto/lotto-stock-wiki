@@ -2701,9 +2701,10 @@ def _set_session_cookie(response, customer_id: int):
 # 이름 5안(ShortsFactory/Reelery/ShopReel/ShortsForge/Vidory) 중 사용자 확정 대기.
 # 지금은 추천안 Reelery 플레이스홀더. 팔레트(민트×블랙)는 sidebar.js 계승·고정.
 _BRAND = {
-    "name": "Reelery",
-    "glyph": "🎬",
-    "tagline": "레퍼런스 링크 하나로, 팔리는 쇼츠가 나옵니다",
+    "name": "숏템박스",          # 확정(2026-07-20). 한글 주 + 영문 보조 락업.
+    "name_en": "SHOTEMBOX",     # 영문 CI(보조). 로고에 한글 밑 소문자 스페이싱으로.
+    "glyph": "📦",
+    "tagline": "폰으로 5분, 편집 몰라도 팔리는 쇼츠가 완성됩니다",
 }
 # 구글 로고 SVG(로그인 버튼용) — 브랜드색과 무관한 구글 공식 4색.
 _GOOGLE_SVG = ('<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.8-6.8'
@@ -2718,6 +2719,7 @@ _GOOGLE_SVG = ('<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6
 def _fill_brand(s: str) -> str:
     """대문·로그인 템플릿의 브랜드 플레이스홀더를 _BRAND로 채운다(모듈 로드 시 1회)."""
     return (s.replace("__NAME__", _BRAND["name"])
+             .replace("__NAME_EN__", _BRAND["name_en"])
              .replace("__GLYPH__", _BRAND["glyph"])
              .replace("__TAGLINE__", _BRAND["tagline"])
              .replace("__GOOGLE_SVG__", _GOOGLE_SVG))
@@ -2726,7 +2728,7 @@ def _fill_brand(s: str) -> str:
 # ── 공개 대문(랜딩) — 비로그인 방문자용. 민트×블랙, 한 페이지(B). ──
 _LANDING_TMPL = """<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
-<title>__NAME__ — 레퍼런스 링크로 팔리는 쇼츠 자동 제작</title>
+<title>__NAME__ — 폰으로 5분, 편집 몰라도 파는 쇼츠 완성</title>
 <style>*{box-sizing:border-box;margin:0;padding:0}
 :root{--mint:#6ff0d6;--grad:linear-gradient(135deg,#6ff0d6,#1f9e7a);--panel:#111722;--bg:#0a0a0d;--ink:#e8e8ea;--dim:#8a92a0;--line:#1b2432}
 body{background:var(--bg);color:var(--ink);font-family:'Malgun Gothic',system-ui,'Noto Sans KR',sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
@@ -2735,7 +2737,9 @@ a{text-decoration:none;color:inherit}
 .nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
 .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:19px}
 .brand .g{width:32px;height:32px;border-radius:9px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:17px}
+.brand .wm{display:flex;flex-direction:column;line-height:1.05}
 .brand .nm{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand .en{font-size:9px;letter-spacing:1.8px;color:var(--dim);font-weight:700;margin-top:1px}
 .nav .login{color:var(--dim);font-size:14px;font-weight:600}
 .nav .login:hover{color:var(--mint)}
 .hero{text-align:center;padding:66px 0 44px}
@@ -2748,6 +2752,10 @@ a{text-decoration:none;color:inherit}
 .cta:hover{filter:brightness(1.06)}
 .cta.ghost{background:transparent;color:var(--ink);border:1px solid #2c333f;box-shadow:none;font-weight:700}
 .trust{color:#5c6472;font-size:13px;margin-top:18px}
+.stats{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:36px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 26px;min-width:150px}
+.stat .num{font-size:28px;font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat .lbl{color:var(--dim);font-size:13px;margin-top:2px}
 .sec{padding:54px 0}
 .sec h2{text-align:center;font-size:27px;font-weight:800;margin-bottom:8px}
 .sec .lead{text-align:center;color:var(--dim);margin-bottom:38px}
@@ -2765,36 +2773,40 @@ a{text-decoration:none;color:inherit}
 @media(max-width:760px){.hero h1{font-size:32px}.steps,.feat{grid-template-columns:1fr}}
 </style></head><body><div class=wrap>
 <div class=nav>
-<a class=brand href="/"><span class=g>__GLYPH__</span><span class=nm>__NAME__</span></a>
+<a class=brand href="/"><span class=g>__GLYPH__</span><span class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></span></a>
 <a class=login href="/login">로그인</a></div>
 <div class=hero>
-<span class=badge>레퍼런스 링크 → 팔리는 쇼츠</span>
-<h1>레퍼런스 링크 하나로,<br><span class=hl>팔리는 쇼츠</span>가 나옵니다</h1>
-<p>잘 팔리는 영상을 넣으면 AI가 분석·재구성해 내 상품 쇼츠로 완성합니다. 편집을 몰라도, 딸깍 한 번이면 됩니다.</p>
+<span class=badge>컴맹도 · 60대도 · 5분이면</span>
+<h1>컴퓨터 몰라도,<br>60대도 <span class=hl>5분</span>이면 만듭니다</h1>
+<p>캡컷도 프리미어도 필요 없어요. 폰으로 상품만 고르면 대본·영상·목소리·자막까지 AI가 딸깍. 손자보다 빨리 쇼츠 하나가 나옵니다.</p>
 <div class=row>
 <a class=cta href="/login">무료로 시작하기 →</a>
 <a class="cta ghost" href="/login">로그인</a></div>
-<div class=trust>구글 계정으로 3초 시작 · 카드 없이 무료 체험</div></div>
+<div class=trust>구글 계정으로 3초 시작 · 카드 없이 무료 체험</div>
+<div class=stats>
+<div class=stat><div class=num>5분</div><div class=lbl>하나 만드는 시간</div></div>
+<div class=stat><div class=num>폰 하나</div><div class=lbl>필요한 장비 전부</div></div>
+<div class=stat><div class=num>0</div><div class=lbl>배워야 할 편집기술</div></div></div></div>
 <div class=sec>
-<h2>이렇게 작동합니다</h2>
-<div class=lead>레퍼런스 → 완성까지 세 단계</div>
+<h2>딱 세 번이면 끝나요</h2>
+<div class=lead>기획도 편집도 없이, 완성까지 5분</div>
 <div class=steps>
-<div class=step><div class=n>1</div><h3>레퍼런스 링크를 넣는다</h3><p>잘 팔리는 쇼츠·릴스 링크를 붙여넣기만 하면 됩니다.</p></div>
-<div class=step><div class=n>2</div><h3>AI가 분석·재구성</h3><p>렌즈로 장면을 찾고, 대본을 추출·리메이크하고, 장면을 시간순으로 엮습니다.</p></div>
-<div class=step><div class=n>3</div><h3>내 상품 쇼츠 완성</h3><p>보이스·자막까지 입혀 바로 올릴 수 있는 세로 쇼츠가 나옵니다.</p></div></div></div>
+<div class=step><div class=n>1</div><h3>만들 걸 고른다</h3><p>팔 상품이나 주제만 정하면 돼요. 대본·기획은 신경 쓸 필요 없습니다.</p></div>
+<div class=step><div class=n>2</div><h3>딸깍 한 번</h3><p>대본·장면·목소리·자막을 AI가 알아서 붙입니다. 손댈 게 없어요.</p></div>
+<div class=step><div class=n>3</div><h3>5분 뒤 완성</h3><p>바로 올릴 수 있는 세로 쇼츠가 나옵니다. 마음에 안 들면 다시 딸깍.</p></div></div></div>
 <div class=sec>
-<h2>무엇이 들어있나</h2>
-<div class=lead>발굴부터 완성까지, 파는 사람에게 필요한 것만</div>
+<h2>왜 __NAME__인가</h2>
+<div class=lead>파는 사람이 진짜 필요한 것만</div>
 <div class=feat>
-<div class=card><span class=ic>🔥</span><div><h3>레퍼런스 랭킹</h3><p>지금 터지는 영상을 배수·참여율로 발굴해 무엇을 벤치마크할지 알려줍니다.</p></div></div>
-<div class=card><span class=ic>🔎</span><div><h3>렌즈 · 유사영상</h3><p>한 장면에서 비슷한 소스 영상을 찾아 짜맞출 재료를 모읍니다.</p></div></div>
-<div class=card><span class=ic>✍️</span><div><h3>대본 추출 · 리메이크</h3><p>레퍼런스 대본을 뽑아 내 상품 이야기로 다시 씁니다.</p></div></div>
-<div class=card><span class=ic>🎬</span><div><h3>제작소 · 보이스</h3><p>장면·자막·나레이션을 원클릭으로 붙여 완성합니다. 캡컷 없이.</p></div></div></div></div>
+<div class=card><span class=ic>⏱️</span><div><h3>5분이면 완성</h3><p>기획·촬영·편집으로 반나절 쓰던 걸, 고르고 딸깍하면 5분 만에 끝냅니다.</p></div></div>
+<div class=card><span class=ic>📱</span><div><h3>폰으로도 된다</h3><p>PC도 프로그램 설치도 필요 없어요. 손 안의 폰에서 손가락 몇 번이면 됩니다.</p></div></div>
+<div class=card><span class=ic>👆</span><div><h3>딸깍 하나면 자동</h3><p>대본·장면·목소리·자막을 전부 AI가. 컴맹이어도, 60대여도 첫날부터 바로 완성합니다.</p></div></div>
+<div class=card><span class=ic>🛒</span><div><h3>파는 사람 특화</h3><p>그냥 조회수용이 아니라, 상품이 팔리게 설계된 쇼츠가 나옵니다.</p></div></div></div></div>
 <div class=band>
-<h2>지금 바로 무료로 시작하세요</h2>
-<p>구글 계정이면 3초. 카드 없이 무료 체험이 바로 시작됩니다.</p>
+<h2>손자한테 안 물어봐도 됩니다</h2>
+<p>지금 5분, 무료로 하나 만들어보세요. 구글 계정이면 3초 · 카드 없이 시작.</p>
 <a class=cta href="/login">무료로 시작하기 →</a></div>
-<div class=foot>© __NAME__ · 파는 사람을 위한 AI 쇼츠 제작</div>
+<div class=foot>© __NAME__ · 폰으로 5분, 파는 사람을 위한 AI 쇼츠 제작</div>
 </div></body></html>"""
 
 
@@ -2808,7 +2820,9 @@ background:#0a0a0d;font-family:'Malgun Gothic',system-ui,'Noto Sans KR',sans-ser
 .logo{display:flex;align-items:center;justify-content:center;gap:10px;font-size:20px;font-weight:800;margin-bottom:8px}
 .logo .ic{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#6ff0d6,#1f9e7a);
 display:flex;align-items:center;justify-content:center;font-size:18px}
+.logo .wm{display:flex;flex-direction:column;line-height:1.05;text-align:left}
 .logo .nm{background:linear-gradient(135deg,#6ff0d6,#1f9e7a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.logo .en{font-size:9px;letter-spacing:1.8px;color:#6a6a76;font-weight:700;margin-top:1px}
 h1{font-size:22px;margin:26px 0 8px}
 .sub{color:#6ff0d6;font-size:13px;margin-bottom:26px;line-height:1.6}
 .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;
@@ -2826,7 +2840,7 @@ border-radius:8px;color:#eee;font-size:13px}
 .aform button{width:100%;margin-top:8px;padding:10px;background:#1a2530;color:#6ff0d6;border:1px solid #244;
 border-radius:8px;font-weight:700;font-size:13px;cursor:pointer}</style></head>
 <body><div class=box>
-<div class=logo><span class=ic>__GLYPH__</span><span class=nm>__NAME__</span></div>
+<div class=logo><span class=ic>__GLYPH__</span><span class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></span></div>
 <h1>로그인</h1>
 <div class=sub>구글 계정으로 로그인하세요<br>처음이면 <b>무료 체험</b>이 바로 시작돼요</div>
 <a class=gbtn href="/auth/google/login">
