@@ -77,16 +77,25 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
     return natural
 
 
-def _synthesize_beats(beats, tts_dir, *, voice):
+def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False):
     """비트별로 synthesize_line 호출. beat['tts_path']를 채운다.
     연속성(previous_text/next_text)은 인접 비트의 '원문'(naturalize 전) narration을 쓴다
     — naturalize된 텍스트(오디오 태그·추임새 포함)를 연속성으로 넘기면 ElevenLabs가
-    태그를 발화 텍스트로 오인할 수 있어서다."""
+    태그를 발화 텍스트로 오인할 수 있어서다.
+
+    skip_existing=True: 이미 tts_path가 있는 비트는 재합성하지 않는다. 렌더 경로
+    (run_preview/run_render)가 조립 직전 TTS를 '보장'하는 방어심층용 — 추천 후보(합성 완료,
+    tts_path 있음)는 0원, 갈아끼운 후보(tts_path 키 자체가 없음)만 그 자리에서 합성한다.
+    ★파일 실재가 아니라 tts_path '존재'로 판단한다 — 하류 tts_paths도 truthiness로만 보므로
+    존재하되 파일이 없는 경우의 처리(별개 관심사)를 이 버그 수정이 바꾸지 않게 한다.
+    """
     tts_dir = Path(tts_dir)
     tts_dir.mkdir(parents=True, exist_ok=True)
     total = len(beats)
     for i, beat in enumerate(beats):
         out = tts_dir / f"beat_{beat['beat_idx']}.mp3"
+        if skip_existing and beat.get("tts_path"):
+            continue
         synthesize_line(
             beat["narration"], out, voice=voice, beat_role=beat.get("role"),
             beat_index=i, beat_total=total,
@@ -483,6 +492,12 @@ def run_preview(job_id, db_path, work_root):
         work.mkdir(parents=True, exist_ok=True)
         store.update_mix_job(job_id, preview_status="rendering", preview_error=None)
         plan = job["edit_plan"]
+        # ★TTS 보장(2026-07-21 실사고): 후보 선택(/api/mix/candidate)이 TTS 없는 후보 plan을
+        #   edit_plan에 꽂으면 tts_paths가 비어 video_assemble이 "렌더할 비트가 없습니다"로 죽었다.
+        #   조립 직전 스스로 낫는다 — 이미 있는 비트는 skip(재과금 0), 빠진 비트만 합성.
+        #   합성 결과(tts_path)를 edit_plan에 되박아 최종 렌더가 재합성 없이 재사용하게 한다.
+        _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"), skip_existing=True)
+        store.update_mix_job(job_id, edit_plan=plan)
         tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
         source_video_paths = _resolve_sources(job, work)
         out_path = work / "preview.mp4"
@@ -512,6 +527,10 @@ def run_render(job_id, db_path, work_root):
     try:
         store.update_mix_job(job_id, status="rendering")
         plan = job["edit_plan"]
+        # ★TTS 보장(2026-07-21) — run_preview와 같은 방어심층. 미리보기를 건너뛰고 바로 렌더에
+        #   와도(또는 TTS 없는 후보가 edit_plan에 있어도) 조립 직전 스스로 낫는다. 이미 있으면 skip.
+        _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"), skip_existing=True)
+        store.update_mix_job(job_id, edit_plan=plan)
         tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
         source_video_paths = _resolve_sources(job, work)
         out_path = work / "final.mp4"
