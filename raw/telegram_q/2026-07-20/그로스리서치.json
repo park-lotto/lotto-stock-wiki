@@ -1,0 +1,85 @@
+{
+  "reports": [
+    {
+      "broker": "모건스탠리",
+      "stock": "DRAM",
+      "rating": null,
+      "tp": null,
+      "ts": "07:24",
+      "quote": "Vera CPU 도입이 2025년 대비 전체 DRAM 비트 수요를 끌어올릴 것으로 전망",
+      "sector": "반도체"
+    },
+    {
+      "broker": "도이치뱅크",
+      "stock": "AI 반도체",
+      "rating": null,
+      "tp": null,
+      "ts": "07:50",
+      "quote": "2nm 이하 AI 가속기·CPU·스마트폰 칩은 2027년까지 공급이 수요를 크게 밑돌 것으로 전망",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "코스메카코리아",
+      "rating": null,
+      "tp": null,
+      "ts": "08:01",
+      "quote": "코스메카코리아: OTC 선케어 경쟁력과 고객사 다변화, 오창 신공장 증설을 통한 성장 모멘텀 기대.",
+      "sector": "화장품미용"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "한국콜마",
+      "rating": null,
+      "tp": null,
+      "ts": "08:01",
+      "quote": "한국콜마: 글로벌 인디 브랜드 선케어 수주 확대와 용기까지 아우르는 턴키 ODM 경쟁력 보유.",
+      "sector": "화장품미용"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "스피어",
+      "rating": null,
+      "tp": null,
+      "ts": "13:06",
+      "quote": "스페이스X에 특수합금 공급망 관리 서비스를 제공하며 초기 개발부터 참여",
+      "sector": "기타"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "바이오솔루션",
+      "rating": null,
+      "tp": null,
+      "ts": "09:20",
+      "quote": "바이오솔루션의 주사형 골관절염 세포치료제 '스페로큐어'가 임상 개발 단계에 진입",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "로킷헬스케어",
+      "rating": null,
+      "tp": null,
+      "ts": "09:11",
+      "quote": "미국의사협회가 첨단재생의료 전주기 과정을 CPT Category III 코드에 반영",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "지슨",
+      "rating": null,
+      "tp": null,
+      "ts": "09:11",
+      "quote": "지슨은 AI 기반 상시 무선백도어 탐지 시스템 'Alpha-H'를 대안으로 제시",
+      "sector": "양자보안"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "코오롱티슈진",
+      "rating": null,
+      "tp": null,
+      "ts": "17:02",
+      "quote": "코오롱티슈진, TG-C 무릎 골관절염 美 임상 3상 탑라인 — 1차 유효성 평가변수 미충족",
+      "sector": "바이오"
+    }
+  ]
+}

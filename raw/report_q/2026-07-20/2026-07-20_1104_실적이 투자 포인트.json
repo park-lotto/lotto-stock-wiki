@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "date": "2026-07-20",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-20_1104_실적이 투자 포인트.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유진투자증권",
+    "analyst": "류태환",
+    "report_date": "2026.07.20",
+    "stocks": [
+      {
+        "name": "IPARK 현대산업개발",
+        "code": "294870",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": 30000,
+        "tp_prev": 30000,
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "quote": "[2Q26 Preview] 매출액 9,766억원(-16.0%yoy), 영업이익 1,426억원(+77.6%yoy, OPM 14.6%)으로 매출액은 컨센서스에 부합, 영업이익은 컨센서스를 상회할 전망."
+        },
+        "estimate_revision": {
+          "quote": "2026년 실적은 매출 4조 72억원, 영업이익 5,888억원 전망(가이던스 매출 4조 2,336억원)."
+        },
+        "next_catalyst": {
+          "quote": "자체사업 매출 확대에 따른 이익 성장의 가시성이 높은 점에 주목할 필요."
+        },
+        "thesis": [
+          "서울원 아이파크 등 공정 본격화 및 청주 가경, 천안 아이파크시티 등 자체주택 매출 기여 지속",
+          "자체주택 매출 비중 확대 및 공릉역세권 사업의 자체 분양사업 전환을 통한 수익성 강화",
+          "주택경기 회복과 정비사업 활성화에 따른 실적 개선 및 분양가 상승에 따른 수익성 개선 효과"
+        ],
+        "valuation_basis": {
+          "quote": "목표주가는 12M Fwd BPS 54,884원에 Target PBR 0.55배를 적용해 산정(Target Multiple은 국내 peer 대비 할인율 적용)."
+        },
+        "risk": null,
+        "supply_comment": null,
+        "quote": "주택 중심의 사업 포트폴리오로 상반기 건설업종 주가 상승을 견인했던 원전, 재건 등의 모멘텀에서는 다소 소외된 측면이 존재."
+      }
+    ]
+  }
+}
