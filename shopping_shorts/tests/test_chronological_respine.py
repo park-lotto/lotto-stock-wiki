@@ -52,11 +52,16 @@ def test_multi_video_body_grouped_by_video_then_time():
     assert keys == [("A", 2.0), ("A", 9.0), ("B", 5.0), ("A", 1.0)]
 
 
-def test_fit_marked_intentional_not_red():
-    beats = [_beat("a", 3), _beat("b", 1)]
+def test_respined_body_flagged_fit_preserved():
+    # ④ fit 정직화: respine은 fit을 덮어쓰지 않고 respined 플래그만 단다.
+    beats = [_beat("a", 3), _beat("b", 1), _beat("cta", 5)]  # fit=1로 생성됨(_beat)
     out = _chronological_respine(beats)
-    # 시간순 배치는 의도된 정상 — 오탐 빨간불(fit 낮음) 방지
-    assert all(b["fit"] >= 3 for b in out)
+    # body(a,b)는 시간순 재배치됨 → respined 표시, fit은 모델값(1) 보존
+    assert out[0]["respined"] is True and out[1]["respined"] is True
+    assert out[0]["fit"] == 1 and out[1]["fit"] == 1
+    # 꼬리(cta)는 앵커 — respined 아님, fit 보존
+    assert out[-1].get("respined") is not True
+    assert out[-1]["fit"] == 1
 
 
 def test_tail_beat_anchor_preserved():

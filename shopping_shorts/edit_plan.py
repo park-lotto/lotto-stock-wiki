@@ -93,8 +93,9 @@ def _chronological_respine(beats):
     바나나 등)일 수 있어, CTA 나레이션("완성! 댓글")이 엉뚱한 릴 위에 얹혔다. CTA/엔딩 비트는
     모델이 고른 완성/시식 컷을 그대로 두고, 그 앞 body 비트들만 시간순으로 흐르게 한다.
 
-    의미 매칭(문장↔화면)을 일부러 포기한 배치이므로, 오탐 빨간불을 막기 위해 fit=4(정상)로
-    표시한다 — 이 값은 '시간순 스파인 배치'라는 뜻이지 '문장과 화면이 맞다'는 뜻이 아니다.
+    의미 매칭(문장↔화면)을 일부러 포기한 배치이므로, 오탐 빨간불을 막기 위해 respined
+    플래그로 구분한다 — fit은 조작하지 않는다(④ fit 정직화, 2026-07-20). 프런트는 respined
+    비트를 중립(초록) 처리하고, fit은 모델이 매긴 원래 값을 그대로 노출한다.
     정렬 키는 (video_id, start): 한 소스는 시간순으로 이어 쓰고, 소스끼리는 묶어서 쓴다."""
     if not beats:
         return beats
@@ -113,12 +114,10 @@ def _chronological_respine(beats):
         nb = dict(b)
         nb["primary"] = chunk[0]
         nb["alternates"] = chunk[1:]
-        nb["fit"] = 4
-        out.append(nb)
-    # 꼬리: 세그먼트는 원래 것 유지, fit만 스파인 계약(4)에 맞춘다(오탐 빨간불 방지 동일).
-    nb_tail = dict(tail)
-    nb_tail["fit"] = 4
-    out.append(nb_tail)
+        nb["respined"] = True   # 시간순 스파인 배치 = b-roll by design(빨간불 대상 아님)
+        out.append(nb)          # ④ fit 덮어쓰기 삭제 — 모델 fit 그대로 보존
+    # 꼬리: 앵커 — 세그먼트·fit 모두 모델이 고른 그대로(respined 아님).
+    out.append(dict(tail))
     return out
 
 

@@ -2089,11 +2089,11 @@ function _renderMixReviewBody(d){
       <span style="font-size:11px;background:var(--accent2);padding:2px 8px;border-radius:10px">${esc(b.role||'')}</span>
       <div style="margin:6px 0;font-size:13px">${esc(b.narration||'')}</div>
       <div class="hint">🎞 ${esc(b.primary?.video_id||'')} · ${b.primary?.start}s~${b.primary?.end}s · ${b.target_seconds}s${b.fit?` · 매칭 ${b.fit}/5`:''}${b.conformed?` · <span style="color:var(--accent)">⏱ 길이 맞춤</span>`:''}</div>
-      ${(b.fit&&b.fit<=2)?`<div style="color:var(--fire);font-size:12px;margin-top:3px">⚠️ 이 문장에 맞는 영상이 부족합니다 — 대본을 살짝 바꾸거나 소스 영상을 추가하세요.</div>`:''}
+      ${(b.fit&&b.fit<=2&&!b.respined)?`<div style="color:var(--fire);font-size:12px;margin-top:3px">⚠️ 이 문장에 맞는 영상이 부족합니다 — 대본을 살짝 바꾸거나 소스 영상을 추가하세요.</div>`:''}
       ${(b.sync_gap&&b.sync_gap>0.8)?`<div style="color:var(--fire);font-size:12px;margin-top:3px">⏱ 대사가 영상보다 ${b.sync_gap}초 깁니다 — 끝부분이 잠시 머물 수 있어요. 대본을 살짝 줄이면 자연스러워집니다.</div>`:''}
       <div class="scene-swap" id="sceneSwap${i}">${renderSwapButton(b, i)}</div>
       <div class="scene-cutaway" id="sceneCutaway${i}">${renderSceneCutaway(b, i)}</div>
-    </div>`).join('')+`<div class="hint" style="margin-top:6px">✅ 매칭 완료${(d.beats||[]).some(b=>b.fit&&b.fit<=2)?' <span style="color:var(--fire)">— ⚠️ 표시된 문장은 영상이 약합니다</span>':''} — 아래에서 <b>미리보기</b>를 확인한 뒤 다음으로 넘어가세요.</div>`
+    </div>`).join('')+`<div class="hint" style="margin-top:6px">✅ 매칭 완료${(d.beats||[]).some(b=>!b.respined&&b.fit&&b.fit<=2)?' <span style="color:var(--fire)">— ⚠️ 표시된 문장은 영상이 약합니다</span>':''} — 아래에서 <b>미리보기</b>를 확인한 뒤 다음으로 넘어가세요.</div>`
     +`<button id="btnPreview" class="btn-next" style="margin-top:8px;padding:7px 14px" onclick="startPreview()">▶ 미리보기 만들기</button>`
     +`<button class="btn" style="margin-top:8px;margin-left:8px;padding:7px 14px;background:var(--inset);border:1px solid var(--line);color:var(--sub)" onclick="cancelMixReview()" title="이 매칭을 취소하고 소스·대본을 고쳐 처음부터 다시 매칭합니다">✕ 취소하고 다시 매칭</button>`
     +`<div class="hint" style="margin-top:6px">미리보기는 <b>왼쪽 화면</b>에 표시됩니다 🪞 · 장면이 안 맞으면 각 문장의 <b>🎞 다른 화면으로 바꾸기</b>로 고치거나, 위 <b>✕ 취소하고 다시 매칭</b>으로 다시 하세요.</div>`;
@@ -2719,7 +2719,8 @@ async function toggleCutaway(idx, assetId){
 function renderCoverageSignal(beats){
   let green=0, yellow=0, red=0;
   for(const b of (beats||[])){
-    if(b.fit && b.fit<=2) red++;
+    if(b.respined) green++;            // 시간순 스파인 = 사람이 신경 안 쓰는 b-roll → 중립
+    else if(b.fit && b.fit<=2) red++;
     else if(b.fit===3) yellow++;
     else green++;                 // fit>=4 또는 fit 없음(스왑=사람이 고름)
   }
@@ -2733,7 +2734,7 @@ function renderCoverageSignal(beats){
 }
 // ─── SIGNAL-END
 function renderSwapButton(beat, idx){
-  const weak = beat.fit && beat.fit <= 2;
+  const weak = !beat.respined && beat.fit && beat.fit <= 2;
   const style = weak
     ? 'padding:8px 14px;font-size:14px;border:2px solid var(--fire);border-radius:8px;background:#1a0d0d;color:#fff;margin-top:6px'
     : 'padding:6px 12px;font-size:12px;border:1px solid var(--line);border-radius:8px;background:#0a1018;margin-top:6px';
