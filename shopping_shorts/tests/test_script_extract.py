@@ -79,3 +79,9 @@ def test_boundary_hint_fail_open(monkeypatch):
     def boom(*a, **k): raise RuntimeError("ffmpeg 없음")
     monkeypatch.setattr(script_extract.scene_cut, "detect_cuts", boom)
     assert script_extract._boundary_hint("dummy.mp4") == ""   # 실패=빈 문자열
+
+
+def test_prompt_scene_desc_accuracy_guard():
+    from shopping_shorts import script_extract
+    p = script_extract._PROMPT
+    assert "주 대상" in p and "정확" in p
