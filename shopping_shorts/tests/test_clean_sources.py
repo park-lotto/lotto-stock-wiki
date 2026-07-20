@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from shopping_shorts.store import Store
 from shopping_shorts import mix_pipeline as mp
 
@@ -77,3 +79,64 @@ def test_ensure_clean_sources_skips_cached(monkeypatch, tmp_path):
     out = mp._ensure_clean_sources(store, job, "j", tmp_path, "appkey:secret")
     assert calls == []
     assert out == {"s0": str(existing)}
+
+
+# ── 2026-07-20 사장님 제보: 2단계 자막제거 후 5단계 썸네일에 지우기 전 문구가 그대로 나옴.
+# 원인: clean_sources(소스별 청소본)만 캐시되고 조립본(clean_video_path)은 아무도 안 만들어
+# thumb/frames(app.py)가 clean_video_path→preview_path→video_path 순으로 보는데, preview_path는
+# run_preview가 clean_fn=None으로 늘 원본 자막째 렌더한다 — 항상 자막 있는 화면으로 떨어졌다.
+
+
+def _plan_with_beats():
+    return {"beats": [{"beat_idx": 0, "tts_path": "/tts/0.mp3"},
+                       {"beat_idx": 1, "tts_path": "/tts/1.mp3"}]}
+
+
+def test_run_clean_sources_builds_clean_video_when_edit_plan_present(monkeypatch, tmp_path):
+    job = {"job_id": "j", "urls": ["u"], "customer_id": 0, "edit_plan": _plan_with_beats()}
+    store = _FakeStore(job)
+    monkeypatch.setattr(mp, "Store", lambda p: store)
+    _patch_clean(monkeypatch, [])
+    seen = {}
+    def fake_assemble(plan, tts_paths, source_video_paths, out_path, **kw):
+        seen["source_video_paths"] = source_video_paths
+        seen["clean_fn"] = kw.get("clean_fn")
+        open(out_path, "w").write("clean-preview")
+        return out_path
+    monkeypatch.setattr(mp, "assemble", fake_assemble)
+    mp.run_clean_sources("j", "db", str(tmp_path))
+    assert job["clean_status"] == "ready"
+    assert job["clean_video_path"] == str(Path(tmp_path) / "j" / "clean_preview.mp4")
+    assert Path(job["clean_video_path"]).exists()
+    # 재조립은 이미 청소된 소스로만 — VMake(clean_fn)를 또 태우면 안 된다(과금 중복).
+    assert seen["clean_fn"] is None
+    assert seen["source_video_paths"] == job["clean_sources"]
+
+
+def test_run_clean_sources_no_edit_plan_skips_assembly(monkeypatch, tmp_path):
+    """edit_plan이 아직 없으면(믹스 전 단계 등) 조립을 시도하지 않는다 — clean_status는 그대로 ready."""
+    job = {"job_id": "j", "urls": ["u"]}
+    store = _FakeStore(job)
+    monkeypatch.setattr(mp, "Store", lambda p: store)
+    _patch_clean(monkeypatch, [])
+    monkeypatch.setattr(mp, "assemble", lambda *a, **k: (_ for _ in ()).throw(
+        AssertionError("edit_plan 없이 assemble이 불렸다")))
+    mp.run_clean_sources("j", "db", str(tmp_path))
+    assert job["clean_status"] == "ready"
+    assert "clean_video_path" not in job
+
+
+def test_run_clean_sources_assembly_failure_keeps_clean_status_ready(monkeypatch, tmp_path):
+    """조립(무료 재렌더)이 실패해도 소스청소(유료 VMake)는 이미 끝났다 — clean_status를
+    failed로 뒤집으면 사용자가 '실패했다'고 오인해 재시도하게 만들 뿐(재과금은 없지만 혼란)."""
+    job = {"job_id": "j", "urls": ["u"], "customer_id": 0, "edit_plan": _plan_with_beats()}
+    store = _FakeStore(job)
+    monkeypatch.setattr(mp, "Store", lambda p: store)
+    _patch_clean(monkeypatch, [])
+    def boom(*a, **k):
+        raise RuntimeError("ffmpeg 오류")
+    monkeypatch.setattr(mp, "assemble", boom)
+    mp.run_clean_sources("j", "db", str(tmp_path))
+    assert job["clean_status"] == "ready"
+    assert job["clean_error"] is None
+    assert "clean_video_path" not in job

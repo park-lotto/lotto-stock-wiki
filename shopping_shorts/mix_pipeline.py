@@ -411,11 +411,29 @@ def run_clean_sources(job_id, db_path, work_root):
             store.update_mix_job(job_id, clean_status="failed",
                                  clean_error="VMake 개인키가 등록되지 않았습니다")
             return
-        _ensure_clean_sources(store, job, job_id, work, key)
+        clean_map = _ensure_clean_sources(store, job, job_id, work, key)
         store.update_mix_job(job_id, clean_status="ready", clean_error=None)
     except Exception as e:  # noqa: BLE001 — BackgroundTasks라 밖에서 아무도 안 받는다
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, clean_status="failed", clean_error=str(e))
+        return
+    # ★썸네일(5단계) 배경은 자막 없는 조립본이 있어야 한다(app.py thumb/frames 우선순위 1번=
+    # clean_video_path). 여기까진 소스 각각만 청소됐지 조립본이 없어, clean_video_path가 영원히
+    # None이라 폴백이 preview_path(1단계 미리보기 — clean_fn=None으로 항상 원본 자막 그대로)로
+    # 떨어졌다(2026-07-20 사장님 제보: 자막제거 후 썸네일에 지우기 전 문구가 그대로 나옴).
+    # VMake는 위에서 이미 탔으니 여기선 clean_fn 없이 청소된 소스로 재조립만 한다(추가과금 0).
+    # 실패해도 clean_status는 되돌리지 않는다 — 소스청소(유료)는 이미 성공했다, 조립만 실패했다고
+    # "실패"로 보이면 사용자가 재시도해 혼란만 커진다(재시도 자체는 무해 — 캐시라 재과금 없음).
+    try:
+        plan = job.get("edit_plan")
+        if plan:
+            tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
+            out_path = work / "clean_preview.mp4"
+            assemble(plan, tts_paths, clean_map, str(out_path), clean_fn=None, deco={},
+                     cutaway_paths=_resolve_cutaway_paths(store, plan, job.get("customer_id", 0)))
+            store.update_mix_job(job_id, clean_video_path=str(out_path))
+    except Exception:
+        traceback.print_exc(file=sys.stderr)
 
 
 def run_preview(job_id, db_path, work_root):

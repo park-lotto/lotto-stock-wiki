@@ -2026,10 +2026,15 @@ def api_thumb_frames(body: dict):
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
     # ★배경 영상 우선순위 — 썸네일 배경은 **자막이 없어야 한다**(설계 Q1: 제목을 위에 새로
-    # 얹으니 배경 자막은 방해). 그래서 자막제거본(clean_video_path)·자막 없는 미리보기
-    # (preview_path)를 먼저 쓰고, 최종 렌더(video_path)는 **최후 폴백**이다 — 최종은 우리
-    # 나레이션 자막이 박혀 있어(사장님 제보 2026-07-19: "썸네일에 자막 필요없음") 배경으로 부적합했다.
-    # 예전엔 video_path를 먼저 봐서 자막 박힌 프레임이 나왔다.
+    # 얹으니 배경 자막은 방해). clean_video_path(2단계 자막제거 완료 시 mix_pipeline.
+    # run_clean_sources가 채운다, 2026-07-20)를 먼저 쓰고, preview_path(1단계 무료 미리보기)는
+    # 그 다음, 최종 렌더(video_path)는 최후 폴백이다.
+    # ⚠️preview_path는 자막이 없는 게 아니다 — run_preview가 clean_fn=None으로 늘 원본
+    # 자막째 렌더한다(무료 미리보기니까). 2단계를 아직 안 밟았으면(clean_video_path 없음) 이
+    # preview_path가 걸려 자막 있는 배경이 나온다 — 그건 "2단계 전"이라 맞는 동작이고, 2단계를
+    # 밟았는데도 이게 걸리면 버그다(2026-07-20 사장님 제보가 정확히 이 케이스: clean_video_path가
+    # 그때까지 아무도 안 채워서 늘 여기로 떨어졌었다).
+    # 최종 렌더(video_path)는 우리 나레이션 자막이 박혀 있어(사장님 제보 2026-07-19) 배경 부적합.
     # 셋 다 검사하므로 렌더 전(video_path 없음)에도 preview로 프레임을 뽑을 수 있다
     # (매칭 끝낸 작업이라도 최종 영상이 없어 "믹스 영상 없음"으로 막히던 것도 그대로 해소).
     video = None
