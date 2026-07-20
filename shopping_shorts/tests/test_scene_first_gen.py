@@ -57,3 +57,25 @@ def test_score_prefers_high_fit_low_forced():
                      {"fit": 2, "forced": True, "primary": {"seg_id": "a"}, "alternates": []}]}
     assert edit_plan._score_candidate(good) > edit_plan._score_candidate(bad)
     assert edit_plan._score_candidate({"beats": []}) == 0.0
+
+
+def test_build_scene_first_plan_recommends_best(monkeypatch):
+    src = [{"video_id": "s0", "full_text": "원본", "segments": [
+        {"seg_id": "s0-1", "start": 1.0, "end": 2.0, "text": "", "scene_desc": "곰팡이"},
+        {"seg_id": "s0-2", "start": 2.0, "end": 3.0, "text": "", "scene_desc": "단면"},
+        {"seg_id": "s0-3", "start": 3.0, "end": 5.0, "text": "", "scene_desc": "통풍"}]}]
+
+    def fake_call(prompt, schema, **kw):
+        return {"candidates": [
+            {"hook": "A", "cta_keyword": "k", "beats": [
+                {"role": "훅", "narration": "곰팡이 보셨죠", "seg_ids": ["s0-1", "s0-2"], "fit": 5, "forced": False},
+                {"role": "cta", "narration": "댓글 남겨요", "seg_ids": ["s0-3"], "fit": 5, "forced": False}]},
+            {"hook": "B", "cta_keyword": "k", "beats": [
+                {"role": "훅", "narration": "음", "seg_ids": ["s0-1"], "fit": 2, "forced": True},
+                {"role": "cta", "narration": "음", "seg_ids": ["s0-1"], "fit": 2, "forced": True}]}]}
+
+    out = edit_plan.build_scene_first_plan(src, "원본대본", 20, n_candidates=2, call=fake_call)
+    assert len(out["candidates"]) == 2
+    rec = [c for c in out["candidates"] if c["recommended"]]
+    assert len(rec) == 1 and rec[0]["story"]["hook"] == "A"        # 고fit 후보 추천
+    assert rec[0]["plan"]["beats"][0]["primary"]["seg_id"] == "s0-1"

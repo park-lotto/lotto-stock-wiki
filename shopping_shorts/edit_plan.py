@@ -671,3 +671,32 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
                                     else _plagiarism_flags(grounded["beats"],
                                                            [s.get("full_text", "") for s in source_scripts]))
     return grounded
+
+
+def build_scene_first_plan(source_scripts, reference_text, target_seconds,
+                           n_candidates=3, video_type=None, call=None):
+    """장면 우선 대본 모드: 팔레트+헌장으로 후보 n개 생성 → 각 EDL grounding·채점 →
+    최고 score에 recommended=True. 각 candidate.plan은 build_edit_plan 반환형(하류 렌더 호환).
+    후보 0개면 candidates=[](호출부가 기존 build_edit_plan로 폴백)."""
+    seg_map, inventory = _build_inventory(source_scripts)
+    detected = video_type or (detect_video_type(source_scripts) if source_scripts else _DEFAULT_TYPE)
+    if not seg_map:
+        return {"candidates": [], "detected_type": detected}
+    _call = call or _vault_call
+    raws = _scene_first_candidates(inventory, reference_text, target_seconds, n=n_candidates, call=_call)
+    src_texts = [s.get("full_text", "") for s in source_scripts]
+    cands = []
+    for r in raws:
+        plan = _ground_candidate(r, seg_map)
+        if plan is None:
+            continue
+        plan["detected_type"] = detected
+        plan["affiliate_target"] = r.get("story_event", "") or ""
+        plan["plagiarism_flags"] = _plagiarism_flags(plan["beats"], src_texts)
+        story = {k: r.get(k, "") for k in
+                 ("hook", "story_person", "story_event", "story_resolution", "cta_line", "cta_keyword")}
+        cands.append({"plan": plan, "story": story, "score": _score_candidate(plan), "recommended": False})
+    if cands:
+        best = max(range(len(cands)), key=lambda i: cands[i]["score"])
+        cands[best]["recommended"] = True
+    return {"candidates": cands, "detected_type": detected}
