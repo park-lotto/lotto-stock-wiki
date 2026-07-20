@@ -90,6 +90,10 @@
     html += "</div>";
   });
 
+  // 내 계정(유저 자기 설정) — 무료 등급도 접근(data-ss-free). 페이월 잠금 제외.
+  html += '<div class="ss-group"><div class="ss-item" data-ss-href="/account" data-ss-free="1"' +
+          ' onclick="location.href=\'/account\'">👤 내 계정</div></div>';
+
   // 테마 토글(민트-블랙 ↔ 화이트-민트). data-theme + localStorage로 전 페이지 공유.
   // 최종 FOUC 방지는 각 페이지 <head> 인라인 스니펫이 하고(렌더 전 실행), 여기선 라벨 동기화만.
   html += '<div class="ss-toggle"><button class="ss-toggle-btn" onclick="window.__ssToggleTheme()" aria-label="화면 테마 전환">' +

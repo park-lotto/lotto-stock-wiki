@@ -23,6 +23,8 @@ def test_ranking_only_blocked_helper():
     assert appmod._ranking_only_blocked("/api/reference", "GET") is False   # 조회 무료
     assert appmod._ranking_only_blocked("/", "GET") is False
     assert appmod._ranking_only_blocked("/api/me", "GET") is False
+    assert appmod._ranking_only_blocked("/account", "GET") is False   # 무료 등급도 자기 계정 열람
+    assert appmod._ranking_only_blocked("/pricing", "GET") is False   # 요금 페이지 공개
     assert appmod._ranking_only_blocked("/api/thumb", "GET") is False
     assert appmod._ranking_only_blocked("/static/app.js", "GET") is False
     assert appmod._ranking_only_blocked("/api/login", "POST") is False      # 로그인 폼=무료

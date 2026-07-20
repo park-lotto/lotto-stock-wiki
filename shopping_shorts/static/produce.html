@@ -3305,28 +3305,38 @@ function _ccIdb(){ return new Promise((res,rej)=>{ const r=indexedDB.open('ss_ca
 function _ccGet(k){ return _ccIdb().then(db=>new Promise(res=>{ const t=db.transaction('h','readonly').objectStore('h').get(k); t.onsuccess=()=>res(t.result); t.onerror=()=>res(null); })); }
 function _ccSet(k,v){ return _ccIdb().then(db=>new Promise(res=>{ const t=db.transaction('h','readwrite').objectStore('h').put(v,k); t.onsuccess=()=>res(); t.onerror=()=>res(); })); }
 function _ccDel(k){ return _ccIdb().then(db=>new Promise(res=>{ const t=db.transaction('h','readwrite').objectStore('h').delete(k); t.onsuccess=()=>res(); t.onerror=()=>res(); })); }
+// ★핸들을 페이지 로드 때 미리 읽어 전역에 둔다 — 그래야 클릭 핸들러에서 showDirectoryPicker 앞에
+//   await(IndexedDB)가 안 붙어 '사용자 제스처' 안에서 picker를 바로 띄울 수 있다(2026-07-20 버그).
+let _ccHandle = null;
+try{ _ccGet('dir').then(h=>{ _ccHandle = h||null; }).catch(()=>{}); }catch(e){}
 async function _ccPerm(h){ const opt={mode:'readwrite'};
   if((await h.queryPermission(opt))==='granted') return true;
   return (await h.requestPermission(opt))==='granted'; }
-async function resetCapCutFolder(){ localStorage.removeItem('capcut_path'); await _ccDel('dir').catch(()=>{});
+async function resetCapCutFolder(){ localStorage.removeItem('capcut_path'); _ccHandle=null; await _ccDel('dir').catch(()=>{});
   alert('캡컷 폴더를 초기화했어요. 다음에 보낼 때 다시 지정합니다.'); }
 async function sendToCapCut(){
   if(!('showDirectoryPicker' in window)){ alert('캡컷으로 바로 보내기는 Chrome 또는 Edge에서만 됩니다.\n지금은 「📦 캡컷용 ZIP(수동)」을 받아 캡컷에 올려 주세요.'); return; }
   if(!MIX_JOB){ alert('먼저 영상을 만들어 주세요'); return; }
-  let handle=null; try{ handle=await _ccGet('dir'); }catch(e){}
-  let path=localStorage.getItem('capcut_path')||CAPCUT_DEFAULT_PATH;
+  let firstTime = false;
   try{
-    if(!handle){
-      path=(prompt('캡컷 프로젝트 폴더 경로를 확인하세요 (보통 그대로 두면 됩니다):', path)||path).trim();
-      localStorage.setItem('capcut_path', path);
-      alert('다음 창에서 위 경로의 폴더('+path+')를 선택하고 「폴더 선택 허용」을 눌러 주세요.');
-      handle=await window.showDirectoryPicker({mode:'readwrite'});
-      await _ccSet('dir', handle);
+    // ★picker를 제스처 안에서 '맨 처음' 호출 — 앞에 어떤 await/prompt/alert도 두지 않는다.
+    if(!_ccHandle){
+      _ccHandle = await window.showDirectoryPicker({mode:'readwrite'});
+      _ccSet('dir', _ccHandle);   // 저장은 기다리지 않는다(제스처 이미 소비됨, 무해)
+      firstTime = true;
     }
-    if(!(await _ccPerm(handle))){ alert('폴더 접근 권한이 필요합니다. 다시 시도해 주세요.'); return; }
+    if(!(await _ccPerm(_ccHandle))){ alert('폴더 접근 권한이 필요합니다. 다시 시도해 주세요.'); _ccHandle=null; return; }
+    // 경로 확인은 picker '뒤'에서(제스처 필요 없음). draft가 에셋을 절대경로로 참조하므로 방금 고른
+    // 폴더의 실제 경로가 필요하다 — 브라우저는 경로를 안 알려줘서 사용자에게 한 번만 확인받는다.
+    let path = localStorage.getItem('capcut_path');
+    if(!path || firstTime){
+      path = (prompt('방금 고른 캡컷 폴더의 전체 경로를 확인해 주세요 (보통 그대로 두면 됩니다):',
+                     path||CAPCUT_DEFAULT_PATH)||path||CAPCUT_DEFAULT_PATH).trim();
+      localStorage.setItem('capcut_path', path);
+    }
     const m=await (await fetch('/api/mix/capcut/'+encodeURIComponent(MIX_JOB)+'?base='+encodeURIComponent(path))).json();
     if(!m.ok){ alert('캡컷 프로젝트 생성 실패: '+(m.error||'')); return; }
-    const proj=await handle.getDirectoryHandle(m.project,{create:true});
+    const proj=await _ccHandle.getDirectoryHandle(m.project,{create:true});
     for(const name of Object.keys(m.texts)){
       const fh=await proj.getFileHandle(name,{create:true}); const w=await fh.createWritable(); await w.write(m.texts[name]); await w.close();
     }
