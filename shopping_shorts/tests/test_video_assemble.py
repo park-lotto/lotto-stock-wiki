@@ -147,6 +147,30 @@ def test_caption_segments_short_mada_opener_breaks():
     assert any("우유 달라는 아이" in s for s in segs)
 
 
+def test_caption_segments_no_orphan_tail_fragment():
+    # 사장님 제보(2026-07-20): "…식단 때문?"이 "아이, 범인은 식단" | "때문?"으로 쪼개져
+    # "때문?"이 홀로 자막이 되던 문제. 짧은 1어절 꼬리(의존명사 "때문" 등)는 앞 구절에 붙는다.
+    segs = va._caption_segments("아침 수업 조는 아이, 범인은 식단 때문?")
+    assert "때문?" not in segs                       # 고아 파편이 홀로 안 남음
+    assert any("식단 때문?" in s for s in segs)       # "때문"이 앞말에 붙음
+
+
+def test_caption_segments_manner_adverb_leads_verb():
+    # 사장님 제보(2026-07-20): "…치솟았다가 뚝 | 떨어지거든요"에서 양태부사 "뚝"이 앞말에
+    # 붙어 끊기던 문제. 뚝/확/쭉 같은 부사는 뒤 서술어의 머리로 붙는다("뚝 떨어지거든요").
+    segs = va._caption_segments("혈당이 급격히 치솟았다가 뚝 떨어지거든요.")
+    for s in segs:
+        assert s.split()[-1] != "뚝"                # 뚝이 구절 끝에 홀로 안 남음
+    assert any("뚝 떨어지거든요" in s for s in segs)
+
+
+def test_caption_segments_keeps_meaningful_single_word_tail():
+    # 방어: 뜻 있는 긴 1어절 꼬리(서술어)는 병합하지 않는다("떨어지거든요." 유지).
+    segs = va._caption_segments("혈당이 급격히 치솟았다가 뚝 떨어지거든요.")
+    assert any(s.endswith("떨어지거든요.") for s in segs)
+    assert "때" not in [va._strip_punct(s) for s in segs]  # 짧은 파편 없음
+
+
 def test_caption_segments_breaks_after_sentence_end():
     # 문장부호(? .)로 끝난 뒤엔 문장 경계에서 끊는다(다음 문장이 앞에 안 붙음).
     segs = va._caption_segments("오이 사서 냉장고에 넣으셨나요? 그럼 지금 바로 버리셔야 합니다.")
