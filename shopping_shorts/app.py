@@ -2688,7 +2688,7 @@ _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 # 메서드 무관 무료(로그인 폼 POST 등) — 전부 정확 경로.
 _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout"}
 # GET만 무료(레퍼런스 랭킹 '조회') — POST/PUT 등 데이터변경은 같은 경로여도 차단.
-_FREE_EXACT_GET = {"/", "/api/me", "/api/reference", "/api/thumb", "/api/video"}
+_FREE_EXACT_GET = {"/", "/pricing", "/api/me", "/api/reference", "/api/thumb", "/api/video"}
 # 경계있는 prefix만(과다매칭 방지 — 트레일링 슬래시).
 _FREE_PREFIX = ("/static/", "/auth/google/")
 
@@ -2747,6 +2747,8 @@ _BRAND = {
     "name_en": "SHOTEMBOX",     # 영문 CI(보조). 로고에 한글 밑 소문자 스페이싱으로.
     "glyph": "📦",
     "tagline": "폰으로 5분, 편집 몰라도 팔리는 쇼츠가 완성됩니다",
+    # 공개 페이지의 '카톡 문의' 링크(오픈채팅/채널 URL). 비면 /login으로 폴백 — 값만 넣으면 연결.
+    "kakao": "",
 }
 # 구글 로고 SVG(로그인 버튼용) — 브랜드색과 무관한 구글 공식 4색.
 _GOOGLE_SVG = ('<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.8-6.8'
@@ -2779,6 +2781,7 @@ def _fill_brand(s: str) -> str:
              .replace("__NAME_EN__", _BRAND["name_en"])
              .replace("__GLYPH__", _BRAND["glyph"])
              .replace("__TAGLINE__", _BRAND["tagline"])
+             .replace("__KAKAO__", _BRAND.get("kakao") or "/login")
              .replace("__LOGO_SVG__", _LOGO_SVG)
              .replace("__GOOGLE_SVG__", _GOOGLE_SVG))
 
@@ -2878,7 +2881,7 @@ a{text-decoration:none;color:inherit}
 </style></head><body><div class=wrap>
 <div class=nav>
 <a class=brand href="/">__LOGO_SVG__<span class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></span></a>
-<a class=login href="/login">로그인</a></div>
+<span style="display:flex;gap:18px;align-items:center"><a class=login href="/pricing">요금</a><a class=login href="/login">로그인</a></span></div>
 <div class=hero>
 <span class="badge rise r1">생각 0 · 편집 0 · 딱 5분</span>
 <h1 class="display rise r2">머리 쓸 필요 없어요.<br>시키는 대로 <span class=hl>딸깍</span>, 5분이면 끝.</h1>
@@ -3002,8 +3005,136 @@ Google 계정으로 로그인</a>
 <button>운영자 로그인</button></form>
 </div></body></html>"""
 
+# ── 요금·이용권(상품 상세) — 공개 페이지. 구성·가격은 플레이스홀더(확정 시 값만 교체). ──
+_PRICING_TMPL = """<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>__NAME__ — 요금 · 이용권</title>
+<link rel=preconnect href="https://fonts.googleapis.com">
+<link rel=preconnect href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel=stylesheet>
+<style>*{box-sizing:border-box;margin:0;padding:0}
+:root{--mint:#6ff0d6;--grad:linear-gradient(135deg,#6ff0d6,#1f9e7a);--gold:#ffcf6f;--gold-grad:linear-gradient(135deg,#ffe1a1,#f0a93a);
+--ink:#0b0f14;--panel:#111722;--line:#1e2735;--txt:#e8f0ee;--muted:#8aa0a0;--faint:#5f7373}
+body{background:radial-gradient(1100px 600px at 82% -12%,rgba(111,240,214,.10),transparent 60%),radial-gradient(900px 500px at 0% 112%,rgba(255,207,111,.06),transparent 55%),var(--ink);
+color:var(--txt);font-family:'Noto Sans KR',system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;word-break:keep-all}
+a{text-decoration:none;color:inherit}
+.display{font-family:'Black Han Sans',sans-serif;font-weight:400}
+.wrap{max-width:1000px;margin:0 auto;padding:0 24px}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .sym{width:34px;height:34px;flex:none}
+.brand .wm{display:flex;flex-direction:column;line-height:1}
+.brand .nm{font-family:'Black Han Sans',sans-serif;font-size:22px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand .en{font-family:ui-monospace,monospace;font-size:9px;letter-spacing:2.4px;color:var(--faint);margin-top:2px}
+.nav a.top{color:var(--muted);font-size:14px;font-weight:600}.nav a.top:hover{color:var(--mint)}
+.hero{text-align:center;max-width:700px;margin:0 auto;padding:52px 0 36px}
+.eyebrow{font-size:12px;letter-spacing:.2em;color:var(--mint);font-weight:700;margin-bottom:14px}
+.hero h1{font-size:clamp(30px,4.4vw,46px);line-height:1.18}
+.hero p{color:var(--muted);font-size:16px;margin:16px auto 26px;max-width:44ch}
+.row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:15px;padding:14px 26px;border-radius:12px;cursor:pointer;border:0}
+.btn.pri{background:var(--grad);color:#062018;box-shadow:0 8px 30px rgba(111,240,214,.18)}
+.btn.pri:hover{filter:brightness(1.06)}
+.btn.kko{background:var(--gold-grad);color:#3a2600}
+.btn.kko:hover{filter:brightness(1.05)}
+.btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line);font-weight:600}
+.plans{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:760px;margin:20px auto 0}
+.plan{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:30px 26px;position:relative}
+.plan.pro{border-color:rgba(255,207,111,.4);box-shadow:0 0 0 1px rgba(255,207,111,.14) inset}
+.plan .rec{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--gold-grad);color:#3a2600;font-family:'Black Han Sans',sans-serif;font-size:12px;padding:4px 12px;border-radius:999px}
+.plan .pt{font-size:15px;font-weight:700;color:var(--muted)}
+.plan .pro-t{color:var(--gold)}
+.plan .price{font-family:'Black Han Sans',sans-serif;font-size:38px;margin:10px 0 4px}
+.plan.pro .price{background:var(--gold-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.plan .price small{font-size:15px;color:var(--muted);font-family:'Noto Sans KR'}
+.plan .pd{color:var(--faint);font-size:13px;margin-bottom:18px}
+.plan ul{list-style:none;display:flex;flex-direction:column;gap:9px;margin-bottom:22px}
+.plan li{font-size:14px;color:var(--txt);display:flex;gap:9px}.plan li .c{color:var(--mint);flex:none}
+.plan .btn{width:100%;justify-content:center}
+.sec{padding:48px 0}
+.sec h2{text-align:center;font-size:clamp(22px,3vw,28px);font-weight:900;margin-bottom:8px}
+.sec .lead{text-align:center;color:var(--muted);margin-bottom:32px}
+.incl{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:820px;margin:0 auto}
+.incl .i{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;font-size:14px}
+.incl .i b{display:block;margin-bottom:3px}.incl .i span{color:var(--muted);font-size:13px}
+.revs{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:820px;margin:0 auto}
+.rev{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px}
+.rev p{font-size:14px;margin-bottom:10px}.rev .who{color:var(--faint);font-size:12.5px}
+.faq{max-width:720px;margin:0 auto}
+.qa{border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:12px;background:var(--panel)}
+.qa .q{font-weight:700;font-size:15px;margin-bottom:6px}.qa .a{color:var(--muted);font-size:14px}
+.band{text-align:center;background:linear-gradient(180deg,rgba(255,207,111,.05),transparent);border:1px solid var(--line);border-radius:24px;padding:50px 24px;margin:40px 0 58px}
+.band h2{font-size:clamp(23px,3.2vw,29px);font-weight:900;margin-bottom:10px}.band p{color:var(--muted);margin-bottom:24px}
+.tbd{color:var(--faint);font-size:12px;margin-top:14px}
+.foot{text-align:center;color:var(--faint);font-size:12.5px;padding:0 0 42px}
+@media(max-width:760px){.plans,.incl,.revs{grid-template-columns:1fr}}
+</style></head><body><div class=wrap>
+<div class=nav>
+<a class=brand href="/">__LOGO_SVG__<span class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></span></a>
+<a class="top" href="/login">로그인</a></div>
+<div class=hero>
+<div class=eyebrow>요금 · 이용권</div>
+<h1 class=display>필요한 만큼만,<br>부담 없이 시작하세요</h1>
+<p>먼저 무료로 만들어보고, 마음에 들면 이용권으로 계속. 결제·문의는 카톡으로 간편하게 안내해 드립니다.</p>
+<div class=row>
+<a class="btn pri" href="/login">무료로 시작하기 →</a>
+<a class="btn kko" href="__KAKAO__" target="_blank" rel="noopener">카톡으로 문의하기</a></div></div>
+<div class=plans>
+<div class=plan>
+<div class=pt>무료 체험</div>
+<div class=price>0<small>원</small></div>
+<div class=pd>가입하면 바로 시작 · 카드 없이</div>
+<ul>
+<li><span class=c>✓</span> 가입 후 일정 기간 전 기능 체험</li>
+<li><span class=c>✓</span> 레퍼런스 랭킹 열람</li>
+<li><span class=c>✓</span> 쇼츠 제작 체험</li></ul>
+<a class="btn pri" href="/login">무료로 시작</a></div>
+<div class="plan pro">
+<div class=rec>추천</div>
+<div class="pt pro-t">Pro 이용권</div>
+<div class=price>가격 문의<small></small></div>
+<div class=pd>기간·구성은 카톡으로 안내 (준비 중)</div>
+<ul>
+<li><span class=c>✓</span> 전 기능 무제한</li>
+<li><span class=c>✓</span> 쇼츠 무제한 제작</li>
+<li><span class=c>✓</span> 렌즈·대본·보이스 전부</li>
+<li><span class=c>✓</span> 우선 문의·운영 노하우</li></ul>
+<a class="btn kko" href="__KAKAO__" target="_blank" rel="noopener">카톡으로 문의</a></div></div>
+<div class=tbd style="text-align:center">※ 가격·이용권 기간은 확정 후 표기됩니다(현재 플레이스홀더).</div>
+<div class=sec>
+<h2>이용권에 들어있는 것</h2>
+<div class=lead>파는 사람이 처음부터 끝까지 쓰는 도구</div>
+<div class=incl>
+<div class=i><b>🔥 레퍼런스 랭킹</b><span>지금 제일 잘 팔리는 걸 짚어줌</span></div>
+<div class=i><b>🔎 렌즈 · 유사영상</b><span>짜맞출 소스 자동 수집</span></div>
+<div class=i><b>✍️ 대본 추출·리메이크</b><span>내 상품 이야기로 다시 씀</span></div>
+<div class=i><b>🎬 제작소</b><span>장면·자막 원클릭 조립</span></div>
+<div class=i><b>🎙️ AI 보이스</b><span>자연스러운 나레이션 자동</span></div>
+<div class=i><b>♾️ 무제한 제작</b><span>많이 찍어낼수록 유리</span></div></div></div>
+<div class=sec>
+<h2>먼저 써본 분들</h2>
+<div class=lead>(후기 자리 — 실제 후기로 교체 예정)</div>
+<div class=revs>
+<div class=rev><p>"편집 하나도 몰랐는데 하루에 몇 개씩 만들어요. 이게 5분이면 된다는 게 신기합니다."</p><div class=who>— 준비 중</div></div>
+<div class=rev><p>"뭘 만들지 고민이 제일 힘들었는데, 잘 팔리는 걸 짚어주니 그냥 딸깍만 하면 돼요."</p><div class=who>— 준비 중</div></div></div></div>
+<div class=sec>
+<h2>자주 묻는 질문</h2>
+<div class=faq>
+<div class=qa><div class=q>결제는 어떻게 하나요?</div><div class=a>카톡으로 문의하시면 안내해 드립니다. 확인 후 바로 이용권이 열립니다.</div></div>
+<div class=qa><div class=q>무료 체험만 써도 되나요?</div><div class=a>네. 체험 기간엔 전 기능을 그대로 쓰실 수 있고, 이후엔 레퍼런스 랭킹은 계속 보실 수 있어요.</div></div>
+<div class=qa><div class=q>환불되나요?</div><div class=a>환불 정책은 확정 후 안내드립니다(준비 중).</div></div></div></div>
+<div class=band>
+<h2>일단 무료로 하나 만들어보세요</h2>
+<p>구글 계정이면 3초 · 카드 없이 시작. 궁금한 건 카톡으로.</p>
+<div class=row>
+<a class="btn pri" href="/login">무료로 시작하기 →</a>
+<a class="btn kko" href="__KAKAO__" target="_blank" rel="noopener">카톡으로 문의</a></div></div>
+<div class=foot>© __NAME__ · 요금·이용권 안내</div>
+</div></body></html>"""
+
 _LANDING_HTML = _fill_brand(_LANDING_TMPL)
 _LOGIN_HTML = _fill_brand(_LOGIN_TMPL)
+_PRICING_HTML = _fill_brand(_PRICING_TMPL)
 
 _SIGNUP_HTML = """<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>쇼핑쇼츠 가입</title>
@@ -3037,6 +3168,11 @@ def _login_page(e: str = ""):
     else:
         msg = ""
     return _LOGIN_HTML.replace("__ERR__", msg)
+
+
+@app.get("/pricing", response_class=HTMLResponse)
+def _pricing_page():
+    return _PRICING_HTML   # 공개 요금·이용권 페이지(비로그인 방문자 포함)
 
 
 @app.get("/signup", response_class=HTMLResponse)
@@ -3193,6 +3329,8 @@ async def _auth_guard(request: Request, call_next):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
     if path in ("/", "/index.html"):
         return HTMLResponse(_LANDING_HTML)   # 비로그인 방문자 → 공개 대문(랜딩)
+    if request.method == "GET" and path == "/pricing":
+        return await call_next(request)      # 요금·이용권은 비로그인도 열람
     return RedirectResponse("/login")
 
 
