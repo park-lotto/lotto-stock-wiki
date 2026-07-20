@@ -112,7 +112,9 @@ def _dedup_and_fill(flat, need):
         half["start"] = mid
         longest["end"] = mid  # 원본은 앞 절반으로 줄임(제자리 수정)
         uniq.append(half)
-    return uniq[:max(need, len(uniq))]
+    # need 미만으로 끝날 수 있다(잔여가 전부 1초 미만이면 위 break) — 호출부(_chronological_respine)가
+    # 그 경우를 가드한다. 여기서 truncate는 불필요: while이 len(uniq)>=need에서 멈추므로 넘치지 않는다.
+    return uniq
 
 
 def _chronological_respine(beats):
@@ -147,6 +149,12 @@ def _chronological_respine(beats):
     for b, n in zip(body, counts):
         chunk = ordered[i:i + n]
         i += n
+        if not chunk:
+            # fill이 need를 못 채운 극단 케이스(잔여 세그 전부 1초 미만) — 이 비트로 돌아올
+            # 세그먼트가 바닥났다. 크래시 대신 원래(재배치 전) 화면을 그대로 보존한다.
+            # 실제로 재배치되지 않았으니 respined 플래그도 달지 않는다.
+            out.append(dict(b))
+            continue
         nb = dict(b)
         nb["primary"] = chunk[0]
         nb["alternates"] = chunk[1:]
