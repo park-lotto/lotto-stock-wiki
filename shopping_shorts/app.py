@@ -58,6 +58,7 @@ from shopping_shorts import frame_extract, scene_assets, scene_cut
 from shopping_shorts import effect_match, remotion_render, points
 from shopping_shorts import video_assemble
 from shopping_shorts import seo_generate, seo_probe
+from shopping_shorts import pattern_bank
 from shopping_shorts import thumb_title
 import uuid
 
@@ -4910,6 +4911,86 @@ def api_fx_file(job_id: str):
     return FileResponse(job["fx_path"])
 
 
+# ── 부품은행(Pattern Bank) 큐레이션 API — Phase 0 (2026-07-21) ──────────────
+# 대본을 8버킷 부품으로 분해·큐레이션한다. 백엔드 로직은 store.py·pattern_bank.py에
+# 완성돼 있고 여기선 얇은 HTTP 래퍼만 얹는다(기존 흐름 무편집).
+
+@app.post("/api/pattern/ingest")
+def api_pattern_ingest(body: dict):
+    """대본 1건을 분해해 부품은행에 담는다. body: {full_text, product_category?}.
+    실 호출은 키풀(Gemini)을 쓴다 — 키가 없거나 추출 실패면 added=0으로도 200을 준다."""
+    full_text = (body.get("full_text") or "").strip()
+    if not full_text:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "full_text 필요"})
+    product_category = (body.get("product_category") or "").strip() or None
+    res = pattern_bank.ingest_script(
+        Store(DB_PATH), full_text, product_category=product_category)
+    return {"ok": True, **res}
+
+
+@app.get("/api/pattern/items")
+def api_pattern_items(bucket: str = None, status: str = None,
+                      order: str = "perf", is_negative: int = None):
+    """부품 목록. bucket/status로 필터, order=perf|freq|recent, is_negative(0/1)."""
+    items = Store(DB_PATH).list_pattern_items(
+        bucket=bucket or None, status=status or None,
+        is_negative=is_negative, order_by=order or "perf")
+    return {"ok": True, "items": items}
+
+
+@app.post("/api/pattern/item/status")
+def api_pattern_item_status(body: dict):
+    """부품 상태 변경(approve/reject/pending). body: {id, status}."""
+    item_id = body.get("id")
+    status = (body.get("status") or "").strip()
+    if item_id is None or not status:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "id·status 필요"})
+    Store(DB_PATH).set_pattern_item_status(item_id, status)
+    return {"ok": True}
+
+
+@app.post("/api/pattern/item/edit")
+def api_pattern_item_edit(body: dict):
+    """부품 문구·태그·메모 교정. body: {id, text?, tags?, note?}. None인 필드는 유지."""
+    item_id = body.get("id")
+    if item_id is None:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "id 필요"})
+    Store(DB_PATH).edit_pattern_item(
+        item_id, text=body.get("text"), tags=body.get("tags"), note=body.get("note"))
+    return {"ok": True}
+
+
+@app.get("/api/pattern/buckets")
+def api_pattern_buckets():
+    """{bucket: {pending, approved, rejected}} 카운트(is_negative=0만)."""
+    return {"ok": True, "counts": Store(DB_PATH).pattern_bucket_counts()}
+
+
+@app.get("/api/pattern/spines")
+def api_pattern_spines(status: str = None):
+    """매크로 스파인 목록. status로 필터."""
+    return {"ok": True, "spines": Store(DB_PATH).list_spines(status=status or None)}
+
+
+@app.post("/api/pattern/spine")
+def api_pattern_spine_add(body: dict):
+    """매크로 스파인 수동 시드. body: {name, situation_type?, character_roles?,
+    beat_chain?, emotion_arc?, appeal?, fit_categories?, status?}."""
+    name = (body.get("name") or "").strip()
+    if not name:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "name 필요"})
+    sid = Store(DB_PATH).add_spine(
+        name,
+        situation_type=body.get("situation_type"),
+        character_roles=body.get("character_roles"),
+        beat_chain=body.get("beat_chain"),
+        emotion_arc=body.get("emotion_arc"),
+        appeal=body.get("appeal"),
+        fit_categories=body.get("fit_categories"),
+        status=(body.get("status") or "pending"))
+    return {"ok": True, "id": sid}
+
+
 # 정적 프론트 (마운트는 맨 마지막)
 _STATIC = Path(__file__).parent / "static"
 
@@ -4919,7 +5000,7 @@ _STATIC = Path(__file__).parent / "static"
 # 반복됨(2026-07-14 역할배정·사이드바 등 실사고) → 매 요청 서버 재검증 강제.
 _NOCACHE = {"Cache-Control": "no-cache, must-revalidate"}
 for _pg in ("discover", "find", "library", "mix", "outreach", "produce", "collection",
-            "scene_library"):
+            "scene_library", "pattern_bank"):
     app.add_api_route(
         f"/{_pg}",
         (lambda n=_pg: FileResponse(_STATIC / f"{n}.html", media_type="text/html",
