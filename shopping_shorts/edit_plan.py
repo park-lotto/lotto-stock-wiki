@@ -490,6 +490,43 @@ def detect_video_type(source_scripts, max_retries=3, quota_sleep=8):
     return _DEFAULT_TYPE
 
 
+_RECONCILE_SCHEMA = {
+    "type": "object",
+    "properties": {"rewrites": {"type": "array", "items": {
+        "type": "object",
+        "properties": {"beat_idx": {"type": "integer"}, "narration": {"type": "string"}},
+        "required": ["beat_idx", "narration"]}}},
+    "required": ["rewrites"],
+}
+
+
+def _reconcile_weak_beats(beats, call=_vault_call):
+    """앵커(respined 아님)이면서 fit<=3인 비트의 나레이션만 화면(scene_desc)에 맞게
+    1회 Gemini 호출로 미세수정. 대상 0개면 호출 없이 그대로. 실패 시 원문 유지(fail-open)."""
+    weak = [b for b in beats if not b.get("respined") and 0 < int(b.get("fit") or 0) <= 3]
+    if not weak:
+        return beats
+    lines = "\n".join(
+        f"[{b['beat_idx']}] 화면:{(b.get('primary') or {}).get('scene_desc','')} | 현재대사:{b.get('narration','')}"
+        for b in weak)
+    prompt = (
+        "아래 비트들은 대사와 화면이 어긋난다. 각 비트의 대사를 **뜻과 정보는 유지**하되 "
+        "화면(scene_desc)에 어울리도록 표현만 자연스럽게 고쳐라. 화면에 없는 사실을 지어내지 마라.\n"
+        f"{lines}\n출력은 rewrites 배열의 JSON만.")
+    raw = call(prompt, _RECONCILE_SCHEMA)
+    if not raw or not isinstance(raw, dict):
+        return beats
+    fixes = {int(r["beat_idx"]): r["narration"]
+             for r in raw.get("rewrites", []) if r.get("narration")}
+    out = []
+    for b in beats:
+        nb = dict(b)
+        if b["beat_idx"] in fixes:
+            nb["narration"] = fixes[b["beat_idx"]]
+        out.append(nb)
+    return out
+
+
 def build_edit_plan(source_scripts, target_seconds, structure="template", video_type=None,
                     n_alternates=2, max_retries=4, quota_sleep=8, given_script=None):
     """소스 대본들 → 그라운딩·표절검사된 EDL(설계 §3-2). 실패 시 빈 EDL.
@@ -528,6 +565,7 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
         return empty
     raw.setdefault("structure", structure)
     grounded = _validate_and_ground(raw, seg_map, n_alternates)
+    grounded["beats"] = _reconcile_weak_beats(grounded["beats"])
     # 각 비트 target_seconds는 나레이션 글자수 기준으로 재계산(실제 렌더 길이 =
     # 나레이션 읽는 시간 ≈ 글자수÷_SYLLABLES_PER_SEC초). UI 표시 초와 실제 길이가 어긋나지 않게.
     for _b in grounded["beats"]:
