@@ -45,6 +45,11 @@ _NAV_HARNESS = r"""
 let cur = 0, MIX_JOB = null, PREVIEW_STATUS = null, _saves = 0;
 const STEPS = ['대본','자막제거','TTS','꾸미기','썸네일','SEO','최종'];
 function canGoNext(){ return PREVIEW_STATUS === 'ready' || PREVIEW_STATUS === 'failed'; }
+// T7 게이트(origin/main 병합, 2026-07-20): 0→1 미리보기 게이트를 stepLocked 단일화로 흡수.
+// jump/go가 canGoNext 대신 stepLocked를 보므로 소스와 동일 구현을 스텁한다(1단계+ 매칭후·미리보기전 잠금).
+function stepLocked(i){ return i >= 1 && !!MIX_JOB && !canGoNext(); }
+function stepLockMsg(){ return !MIX_JOB ? '먼저 1단계에서 영상을 매칭하세요' : '먼저 1단계에서 미리보기를 확인하세요'; }
+function toast(){}
 function renderSteps(){}
 function showPanel(){}
 function saveWork(){ _saves++; }
