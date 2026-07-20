@@ -51,6 +51,7 @@ from shopping_shorts import voice_presets, audio_post
 from shopping_shorts.tts import synthesize_tts
 from shopping_shorts import tts, asr_check
 from shopping_shorts import export_bundle
+from shopping_shorts import capcut_draft
 from shopping_shorts.video_assemble import _beat_timeline
 from shopping_shorts.narration_naturalize import naturalize as _naturalize
 from shopping_shorts import frame_extract, scene_assets, scene_cut
@@ -2040,6 +2041,55 @@ def api_mix_export(job_id: str, part: str = ""):
         tts_paths=tts_paths, final_video=final, seo=job.get("seo"), parts=parts)
     fname = export_bundle.safe_name(job_id) + (f"_{part}" if part else "_capcut") + ".zip"
     return FileResponse(str(out), media_type="application/zip", filename=fname)
+
+
+@app.get("/api/mix/capcut/{job_id}")
+def api_mix_capcut(job_id: str, base: str = ""):
+    """CapCut draft 매니페스트(설계 부록A, T2). base=캡컷이 draft를 볼 절대경로(프론트가 지정한
+    캡컷 Drafts 폴더). 서버가 work/<job>/capcut/<project>/에 draft+에셋을 조립하고, draft_content.json·
+    meta는 텍스트로 인라인, mp4/mp3는 asset URL로 돌려준다. 프론트가 File System Access API로
+    사용자 캡컷 폴더에 <project>/를 만들고 이 파일들을 쓴다. deny-by-default 자동보호."""
+    safe = os.path.basename(job_id)
+    if not safe or safe != job_id:
+        return JSONResponse(status_code=400, content={"ok": False})
+    if not base.strip():
+        return JSONResponse(status_code=400, content={"ok": False, "error": "캡컷 폴더 경로가 필요합니다"})
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "편집안이 아직 없습니다"})
+    plan = job["edit_plan"]
+    work = _MIX_WORK_DIR / job_id
+    tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan.get("beats", []) if b.get("tts_path")}
+    try:
+        source_video_paths = _resolve_sources(job, work)
+    except Exception:
+        source_video_paths = {}
+    timeline = _beat_timeline(plan, tts_paths)
+    out_root = work / "capcut"
+    out_root.mkdir(parents=True, exist_ok=True)
+    proj, project, files = capcut_draft.assemble_draft_folder(
+        out_root, base, plan=plan, timeline=timeline, source_video_paths=source_video_paths,
+        tts_paths=tts_paths, project_name=f"쇼핑쇼츠_{job_id[:8]}")
+    texts, assets = {}, []
+    for name in files:
+        if name.endswith(".json"):
+            texts[name] = (proj / name).read_text(encoding="utf-8")
+        else:
+            assets.append({"name": name, "url": f"/api/mix/capcut_asset/{job_id}/{name}"})
+    return {"ok": True, "project": project, "texts": texts, "assets": assets}
+
+
+@app.get("/api/mix/capcut_asset/{job_id}/{name}")
+def api_mix_capcut_asset(job_id: str, name: str):
+    """capcut 조립 폴더의 에셋(mp4/mp3) 서빙. 경로순회 차단 후 work/<job>/capcut/*/<name>."""
+    safe_j, safe_n = os.path.basename(job_id), os.path.basename(name)
+    if safe_j != job_id or safe_n != name:
+        return JSONResponse(status_code=400, content={"ok": False})
+    capdir = _MIX_WORK_DIR / job_id / "capcut"
+    hits = list(capdir.glob(f"*/{safe_n}")) if capdir.exists() else []
+    if not hits:
+        return JSONResponse(status_code=404, content={"ok": False})
+    return FileResponse(str(hits[0]))
 
 
 def _thumb_dir(job_id: str):

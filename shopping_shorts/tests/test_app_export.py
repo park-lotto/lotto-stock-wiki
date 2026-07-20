@@ -84,6 +84,31 @@ def test_export_404_when_no_plan(monkeypatch, tmp_path):
     assert client.get("/api/mix/export/empty").status_code == 404
 
 
+def test_capcut_manifest_and_asset(monkeypatch, tmp_path):
+    client = _seed(monkeypatch, tmp_path)
+    r = client.get("/api/mix/capcut/j1", params={"base": "C:/capcutproject/CapCut Drafts"})
+    assert r.status_code == 200, r.text
+    d = r.json()
+    assert d["ok"] and d["project"].startswith("쇼핑쇼츠")
+    # draft_content.json·meta는 텍스트 인라인
+    assert "draft_content.json" in d["texts"] and "draft_meta_info.json" in d["texts"]
+    draft = __import__("json").loads(d["texts"]["draft_content.json"])
+    # 3트랙(영상/음성/자막) + 에셋이 base 절대경로 참조
+    assert {t["type"] for t in draft["tracks"]} == {"video", "audio", "text"}
+    assert draft["materials"]["videos"][0]["path"].startswith("C:/capcutproject/CapCut Drafts/")
+    # 에셋 URL이 실제로 파일을 준다
+    names = {a["name"] for a in d["assets"]}
+    assert any(n.endswith(".mp4") for n in names) and any(n.endswith(".mp3") for n in names)
+    a = d["assets"][0]
+    ra = client.get(a["url"])
+    assert ra.status_code == 200 and len(ra.content) > 0
+
+
+def test_capcut_needs_base(monkeypatch, tmp_path):
+    client = _seed(monkeypatch, tmp_path)
+    assert client.get("/api/mix/capcut/j1").status_code == 400   # base 없음
+
+
 def test_video_download_attachment(monkeypatch, tmp_path):
     client = _seed(monkeypatch, tmp_path)
     r = client.get("/api/mix/video/j1?dl=1")

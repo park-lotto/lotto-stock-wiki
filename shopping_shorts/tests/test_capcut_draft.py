@@ -1,0 +1,136 @@
+"""CapCut draft 생성기 구조 검증 (설계 부록A). 실제 열림 여부는 캡컷 육안(자동 불가)."""
+import json
+import subprocess
+from pathlib import Path
+
+from shopping_shorts import capcut_draft as cd
+
+
+_PLAN = {"beats": [
+    {"beat_idx": 0, "role": "훅", "narration": "첫 장면",
+     "primary": {"video_id": "s0", "start": 0.0, "end": 2.0}},
+    {"beat_idx": 1, "role": "본문", "narration": "둘째 장면",
+     "primary": {"video_id": "s0", "start": 2.0, "end": 3.5}}]}
+_TIMELINE = [
+    {"beat_idx": 0, "t0": 0.0, "dur": 2.0, "narration": "첫 장면", "role": "훅"},
+    {"beat_idx": 1, "t0": 2.0, "dur": 1.5, "narration": "둘째 장면", "role": "본문"}]
+_SRC = {"s0": r"C:\real\src.mp4"}
+_TTS = {0: r"C:\real\b0.mp3", 1: r"C:\real\b1.mp3"}
+_ASSET = {r"C:\real\src.mp4": r"C:\cap\p\src.mp4",
+          r"C:\real\b0.mp3": r"C:\cap\p\b0.mp3", r"C:\real\b1.mp3": r"C:\cap\p\b1.mp3"}
+
+
+def _build():
+    return cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                          tts_paths=_TTS, asset_paths=_ASSET, project_name="테스트")
+
+
+def test_us_conversion():
+    assert cd._us(1) == 1_000_000
+    assert cd._us(2.5) == 2_500_000
+    assert cd._us(-1) == 0
+
+
+def test_three_tracks_with_segments():
+    draft, _ = _build()
+    types = {t["type"]: len(t["segments"]) for t in draft["tracks"]}
+    assert types == {"video": 2, "audio": 2, "text": 2}
+
+
+def test_timeline_microseconds():
+    draft, _ = _build()
+    txt = next(t for t in draft["tracks"] if t["type"] == "text")
+    # 둘째 자막은 t0=2.0s → 2_000_000μs 에서 시작, 길이 1.5s
+    seg1 = txt["segments"][1]
+    assert seg1["target_timerange"] == {"start": 2_000_000, "duration": 1_500_000}
+    assert seg1["source_timerange"] is None   # 텍스트는 source 없음
+    assert draft["duration"] == 3_500_000     # 전체 = 마지막 끝
+
+
+def test_extra_material_refs_resolve():
+    """세그먼트가 참조하는 동반 material이 실제로 materials에 있어야 캡컷이 연다."""
+    draft, _ = _build()
+    ids = set()
+    for arr in draft["materials"].values():
+        for m in arr:
+            ids.add(m["id"])
+    for tr in draft["tracks"]:
+        for seg in tr["segments"]:
+            assert seg["material_id"] in ids, f"material_id 미해결: {seg['material_id']}"
+            for ref in seg["extra_material_refs"]:
+                assert ref in ids, f"extra_material_ref 미해결: {ref}"
+
+
+def test_audio_has_five_companions_text_one():
+    draft, _ = _build()
+    aud = next(t for t in draft["tracks"] if t["type"] == "audio")
+    txt = next(t for t in draft["tracks"] if t["type"] == "text")
+    assert len(aud["segments"][0]["extra_material_refs"]) == 5   # 실측: speed·ph·beat·scm·vs
+    assert len(txt["segments"][0]["extra_material_refs"]) == 1   # material_animation
+
+
+def test_assets_to_copy_listed():
+    _, assets = _build()
+    reals = {r for r, _ in assets}
+    assert reals == {r"C:\real\src.mp4", r"C:\real\b0.mp3", r"C:\real\b1.mp3"}
+
+
+def test_text_content_is_json_string_with_text():
+    draft, _ = _build()
+    tm = draft["materials"]["texts"][0]
+    assert isinstance(tm["content"], str) and '"text": "첫 장면"' in tm["content"]
+
+
+def test_canvas_vertical_default():
+    draft, _ = _build()
+    assert draft["canvas_config"]["width"] == 1080 and draft["canvas_config"]["height"] == 1920
+
+
+def test_safe_project_name_keeps_korean():
+    assert cd.safe_project_name("쇼핑쇼츠_0720") == "쇼핑쇼츠_0720"
+    assert cd.safe_project_name("a/b:c*") == "abc"
+    assert cd.safe_project_name("") == "쇼핑쇼츠"
+
+
+def _mk_video(p, dur=4):
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi",
+                    "-i", f"color=c=red:s=1080x1920:r=30:d={dur}", "-c:v", "libx264",
+                    "-pix_fmt", "yuv420p", str(p)], check=True, capture_output=True,
+                   stdin=subprocess.DEVNULL)
+
+
+def _mk_audio(p, dur=2.0):
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi",
+                    "-i", f"sine=frequency=440:duration={dur}", "-c:a", "libmp3lame", str(p)],
+                   check=True, capture_output=True, stdin=subprocess.DEVNULL)
+
+
+def test_assemble_folder_copies_assets_and_writes_draft(tmp_path):
+    src = tmp_path / "src.mp4"; _mk_video(src, 4)
+    b0 = tmp_path / "b0.mp3"; _mk_audio(b0, 2.0)
+    b1 = tmp_path / "b1.mp3"; _mk_audio(b1, 1.5)
+    out = tmp_path / "drafts"
+    proj, name, files = cd.assemble_draft_folder(
+        out, "C:/cap/CapCut Drafts", plan=_PLAN, timeline=_TIMELINE,
+        source_video_paths={"s0": str(src)}, tts_paths={0: str(b0), 1: str(b1)},
+        project_name="쇼핑쇼츠_j1")
+    # 파일이 실제로 복사됐나
+    assert "draft_content.json" in files and "draft_meta_info.json" in files
+    assert "src_s0.mp4" in files and "beat_00.mp3" in files and "beat_01.mp3" in files
+    # draft가 base 절대경로로 에셋을 참조하나(캡컷이 찾을 수 있게)
+    draft = json.loads((proj / "draft_content.json").read_text(encoding="utf-8"))
+    vpath = draft["materials"]["videos"][0]["path"]
+    assert vpath == "C:/cap/CapCut Drafts/쇼핑쇼츠_j1/src_s0.mp4"
+    # 비디오 material 길이가 실제 소스(4s≈4_000_000μs) 반영(placeholder 아님)
+    assert abs(draft["materials"]["videos"][0]["duration"] - 4_000_000) < 200_000
+
+
+def test_missing_source_skips_video_but_keeps_audio_text():
+    plan = {"beats": [{"beat_idx": 0, "role": "훅", "narration": "장면",
+                       "primary": {"video_id": "gone", "start": 0.0, "end": 2.0}}]}
+    draft, _ = cd.build_draft(plan=plan, timeline=[{"beat_idx": 0, "t0": 0.0, "dur": 2.0,
+                              "narration": "장면", "role": "훅"}],
+                              source_video_paths={}, tts_paths=_TTS, asset_paths=_ASSET,
+                              project_name="x")
+    types = {t["type"] for t in draft["tracks"]}
+    assert "video" not in types and "audio" in types and "text" in types
