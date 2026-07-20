@@ -431,6 +431,35 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
     return raw.get("candidates", []) or []
 
 
+def _ground_candidate(cand, seg_map, structure="free"):
+    """후보 비트(narration + seg_ids 다중컷)를 build_edit_plan 반환형 EDL로 grounding.
+    seg_ids[0]=primary, 나머지=alternates(연속재생). start/end/scene_desc는 코드가 되붙인다.
+    primary 무효 비트는 드롭. 유효 비트 0개면 None."""
+    beats_out = []
+    for beat in cand.get("beats", []):
+        segs = beat.get("seg_ids") or []
+        primary = _ground_ref({"seg_id": segs[0]}, seg_map) if segs else None
+        if primary is None:
+            continue
+        alts, seen = [], {primary["seg_id"]}
+        for sid in segs[1:]:
+            g = _ground_ref({"seg_id": sid}, seg_map)
+            if g and g["seg_id"] not in seen:
+                alts.append(g)
+                seen.add(g["seg_id"])
+        narration = beat.get("narration", "")
+        beats_out.append({
+            "beat_idx": len(beats_out), "role": beat.get("role", ""),
+            "narration": narration,
+            "target_seconds": round(max(1.5, len(narration.strip()) / _SYLLABLES_PER_SEC), 1),
+            "primary": primary, "alternates": alts, "effect": "cut",
+            "fit": int(beat.get("fit") or 0), "forced": bool(beat.get("forced", False)),
+        })
+    if not beats_out:
+        return None
+    return {"structure": structure, "beats": beats_out}
+
+
 _CONFORM_SCHEMA = {
     "type": "object",
     "properties": {"narration": {"type": "string"}},
