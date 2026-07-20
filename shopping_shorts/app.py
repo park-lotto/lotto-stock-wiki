@@ -2846,7 +2846,7 @@ a{text-decoration:none;color:inherit}
 <a class="cta ghost" href="/login">로그인</a></div>
 <div class="trust rise r4">구글 계정으로 3초 시작 · 카드 없이 무료 체험</div>
 <div class="stats rise r5">
-<div class=stat><div class=num>5분</div><div class=lbl>하나 만드는 시간</div></div>
+<div class=stat><div class=num><span data-to=5>0</span>분</div><div class=lbl>하나 만드는 시간</div></div>
 <div class=stat><div class=num>폰 하나</div><div class=lbl>필요한 장비 전부</div></div>
 <div class=stat><div class=num>0</div><div class=lbl>배워야 할 편집기술</div></div></div></div>
 <div class=sec>
@@ -2907,6 +2907,7 @@ rev.forEach(function(e){io.observe(e);});
 function cu(el){var t=+el.dataset.to,s=null,d=1100;function f(ts){if(!s)s=ts;var p=Math.min((ts-s)/d,1);el.textContent=Math.round(t*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(f);}requestAnimationFrame(f);}
 var m=document.querySelector('.money');
 if(m){var mo=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.querySelectorAll('[data-to]').forEach(cu);mo.unobserve(e.target);}});},{threshold:.35});mo.observe(m);}
+setTimeout(function(){document.querySelectorAll('.hero [data-to]').forEach(cu);},520);
 })();</script>
 </body></html>"""
 
