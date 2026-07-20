@@ -1592,14 +1592,14 @@ function jump(i){
   // "자막제거" 칩 한 번 클릭으로 게이트가 통째로 우회됐다. 뒤로(완료 단계)는 자유 — 잠긴 단계는
   // 항상 미완 프런티어 위쪽이라 뒤는 애초에 안 잠긴다.
   if(stepLocked(i)){ toast(stepLockMsg()); return; }
-  cur=i; renderSteps(); showPanel();
+  cur=i; renderSteps(); showPanel(); saveWork();   // ★단계를 서버에 남긴다(2026-07-19) — 안 남기면 새로고침이 1단계로 되돌린다
 }
 function go(d){
   const n=cur+d; if(n<0||n>=STEPS.length) return;
   // T7: 잠긴 앞단계로는 못 넘어간다(stepLocked = 미리보기 게이트 흡수, 유료 자막제거 우회 방지).
   // 뒤로는 자유. btnNext는 refreshNextBtn이 이미 잠가두지만 go()가 다른 경로로도 불려 두 겹 방어.
   if(stepLocked(n)){ toast(stepLockMsg()); return; }
-  cur=n; renderSteps(); showPanel();
+  cur=n; renderSteps(); showPanel(); saveWork();   // ★단계 이동을 저장(새로고침 복원용)
 }
 
 // ── 1단계 대본: 3모드 ──────────────────────────────
@@ -2062,6 +2062,52 @@ async function _restoreWork(workId){
   cur = (typeof st === 'number' && st >= 0 && st < STEPS.length) ? st : 0;
   if(cur > 0 && MIX_JOB && !canGoNext()) cur = 0;   // 미리보기 미확인이면 1단계로 되돌린다
   renderSteps(); showPanel(); refreshNextBtn();
+  // ★편집안(#mixReview)·미리보기 <video>를 되살린다(2026-07-19). 게이트 재동기(위)가 PREVIEW_STATUS를
+  //   서버 job에서 이미 읽어 맞췄다 — _restoreMixContext는 그 값을 안 건드리고 화면만 다시 그린다.
+  //   이게 없으면 저장은 살아도 새로고침 화면엔 미리보기가 안 뜬다(사장님 제보의 "프리뷰가 없어졌다").
+  if(MIX_JOB) await _restoreMixContext();
+}
+// ── 새로고침 복원 렌더 헬퍼(2026-07-19) ─────────────────────────
+// 미리보기 <video>는 pollPreview(막 만든 직후)와 _restoreMixContext(새로고침) 둘 다 여기서 그린다.
+// ★단일 출처: 이 markup을 두 곳에 복제하면 위 "하단 검정라인(display:block)" 수정이 한쪽만 반영돼 재발한다.
+function _renderPreviewVideo(job){
+  const box=document.getElementById('mixPreview'); if(!box) return;
+  const pvPanel=document.getElementById('mixPreviewPanel'); if(pvPanel) pvPanel.style.display='';
+  box.innerHTML = '<video controls muted playsinline autoplay style="display:block;width:100%;border-radius:12px;background:#000;box-shadow:0 8px 30px rgba(0,0,0,.4)"'
+    + ' src="/api/produce/mix/preview/'+encodeURIComponent(job)+'?t='+Date.now()+'"></video>'
+    + '<div class="hint" style="margin-top:6px">원본 자막이 남아 있는 건 정상입니다 — 다음 단계에서 지웁니다.</div>';
+  const btn = document.getElementById('btnPreview'); if(btn) btn.disabled = false;
+}
+// 편집안(#mixReview) 렌더 본체 — loadMixReview(새 매칭)와 _restoreMixContext(복원)가 공유한다.
+// ★loadMixReview와 달리 PREVIEW_STATUS를 리셋하지 않는다: 리셋은 "새 매칭이라 미리보기 다시 봐야 함"의
+//   의미인데, 복원은 이미 확인한 미리보기를 되살리는 것이라 게이트를 다시 잠그면 안 된다.
+function _renderMixReviewBody(d){
+  MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
+  const el=document.getElementById('mixReview');
+  el.innerHTML='<h3 style="font-size:15px">편집안(장면 매칭)</h3>'+renderCoverageSignal(d.beats||[])+(d.beats||[]).map((b,i)=>`
+    <div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;background:var(--inset)">
+      <span style="font-size:11px;background:var(--accent2);padding:2px 8px;border-radius:10px">${esc(b.role||'')}</span>
+      <div style="margin:6px 0;font-size:13px">${esc(b.narration||'')}</div>
+      <div class="hint">🎞 ${esc(b.primary?.video_id||'')} · ${b.primary?.start}s~${b.primary?.end}s · ${b.target_seconds}s${b.fit?` · 매칭 ${b.fit}/5`:''}${b.conformed?` · <span style="color:var(--accent)">⏱ 길이 맞춤</span>`:''}</div>
+      ${(b.fit&&b.fit<=2)?`<div style="color:var(--fire);font-size:12px;margin-top:3px">⚠️ 이 문장에 맞는 영상이 부족합니다 — 대본을 살짝 바꾸거나 소스 영상을 추가하세요.</div>`:''}
+      ${(b.sync_gap&&b.sync_gap>0.8)?`<div style="color:var(--fire);font-size:12px;margin-top:3px">⏱ 대사가 영상보다 ${b.sync_gap}초 깁니다 — 끝부분이 잠시 머물 수 있어요. 대본을 살짝 줄이면 자연스러워집니다.</div>`:''}
+      <div class="scene-swap" id="sceneSwap${i}">${renderSwapButton(b, i)}</div>
+      <div class="scene-cutaway" id="sceneCutaway${i}">${renderSceneCutaway(b, i)}</div>
+    </div>`).join('')+`<div class="hint" style="margin-top:6px">✅ 매칭 완료${(d.beats||[]).some(b=>b.fit&&b.fit<=2)?' <span style="color:var(--fire)">— ⚠️ 표시된 문장은 영상이 약합니다</span>':''} — 아래에서 <b>미리보기</b>를 확인한 뒤 다음으로 넘어가세요.</div>`
+    +`<button id="btnPreview" class="btn-next" style="margin-top:8px;padding:7px 14px" onclick="startPreview()">▶ 미리보기 만들기</button>`
+    +`<div class="hint" style="margin-top:6px">미리보기는 <b>왼쪽 화면</b>에 표시됩니다 🪞</div>`;
+  const _pvPanel=document.getElementById('mixPreviewPanel'), _pvBox=document.getElementById('mixPreview');
+  if(_pvPanel) _pvPanel.style.display='';
+  if(_pvBox) _pvBox.innerHTML='<div style="aspect-ratio:9/16;width:100%;border:2px dashed var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--sub);text-align:center;padding:18px"><div style="font-size:34px">🪞</div><div style="font-size:14px;line-height:1.5">오른쪽 <b style="color:var(--accent)">▶ 미리보기 만들기</b>를<br>누르면 <b>여기에서</b> 영상이<br>만들어지는 걸 보실 수 있어요</div></div>';
+}
+// 새로고침 복원: 편집안+미리보기를 다시 그린다. 매칭 결과가 없으면(만들다 만 job) 조용히 빠진다 —
+// 저장된 단계/게이트는 위에서 이미 맞춰졌다.
+async function _restoreMixContext(){
+  let d=null;
+  try{ d = await (await fetch('/api/mix/result/'+encodeURIComponent(MIX_JOB))).json(); }catch(e){}
+  if(!d || !d.ok) return;
+  _renderMixReviewBody(d);
+  if(PREVIEW_STATUS === 'ready') _renderPreviewVideo(MIX_JOB);
 }
 function _consumeProduceHandoff(){
   // 신규 핸드오프(즐겨찾기·랭킹에서 방금 넘어온 것)를 **진행 중 작업에 누적**한다.
@@ -2547,6 +2593,10 @@ async function startProduceMix(){
     clearInterval(PREVIEW_POLL); PREVIEW_POLL=null; ++PREVIEW_GEN;
     PREVIEW_STATUS=null;
     MIX_JOB=d.job_id;
+    // ★새 job을 서버 작업파일에 즉시 남긴다(2026-07-19). 안 남기면 새로고침 시 _restoreWork가
+    //   job_id=null을 읽어 미리보기·편집안이 통째로 사라진다(사장님 제보). 게이트는 복원 후에도
+    //   서버 preview_status를 다시 읽어 canGoNext()로 잠그므로 미리보기 우회 위험은 없다.
+    saveWork();
     // 동적 단계바 시작(loader.js 있을 때만). 컨트롤러는 #mixStatus 속성에 담는다(최상위 변수 X).
     // ★로딩 UI는 부가기능 — 절대 매칭 흐름(폴링·게이트 재잠금)을 막으면 안 된다. try/catch로 감싼다.
     st._sblPipe = null;
@@ -2585,24 +2635,11 @@ async function loadMixReview(){
   const d=await (await fetch('/api/mix/result/'+MIX_JOB)).json();
   const el=document.getElementById('mixReview');
   if(!d.ok){ el.innerHTML=`<div class="hint" style="color:var(--fire)">편집안 로드 실패 ${esc(d.error||'')}</div>`; return; }
-  MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
-  el.innerHTML='<h3 style="font-size:15px">편집안(장면 매칭)</h3>'+renderCoverageSignal(d.beats||[])+(d.beats||[]).map((b,i)=>`
-    <div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;background:var(--inset)">
-      <span style="font-size:11px;background:var(--accent2);padding:2px 8px;border-radius:10px">${esc(b.role||'')}</span>
-      <div style="margin:6px 0;font-size:13px">${esc(b.narration||'')}</div>
-      <div class="hint">🎞 ${esc(b.primary?.video_id||'')} · ${b.primary?.start}s~${b.primary?.end}s · ${b.target_seconds}s${b.fit?` · 매칭 ${b.fit}/5`:''}</div>
-      ${(b.fit&&b.fit<=2)?`<div style="color:var(--fire);font-size:12px;margin-top:3px">⚠️ 이 문장에 맞는 영상이 부족합니다 — 대본을 살짝 바꾸거나 소스 영상을 추가하세요.</div>`:''}
-      <div class="scene-swap" id="sceneSwap${i}">${renderSwapButton(b, i)}</div>
-      <div class="scene-cutaway" id="sceneCutaway${i}">${renderSceneCutaway(b, i)}</div>
-    </div>`).join('')+`<div class="hint" style="margin-top:6px">✅ 매칭 완료${(d.beats||[]).some(b=>b.fit&&b.fit<=2)?' <span style="color:var(--fire)">— ⚠️ 표시된 문장은 영상이 약합니다</span>':''} — 아래에서 <b>미리보기</b>를 확인한 뒤 다음으로 넘어가세요.</div>`
-    +`<button id="btnPreview" class="btn-next" style="margin-top:8px;padding:7px 14px" onclick="startPreview()">▶ 미리보기 만들기</button>`
-    +`<div class="hint" style="margin-top:6px">미리보기는 <b>왼쪽 화면</b>에 표시됩니다 🪞</div>`;
-  // 미리보기 렌더 타깃(#mixPreview)은 좌측 프리뷰 패널로 옮겼다 — 여기선 위치 안내만.
-  // 편집안이 떴으니 좌측 프리뷰 공간을 열고, 아직 안 만들었다는 안내를 넣는다.
-  const _pvPanel=document.getElementById('mixPreviewPanel'), _pvBox=document.getElementById('mixPreview');
-  if(_pvPanel) _pvPanel.style.display='';
-  // 미리보기 자리를 9:16 프레임으로 미리 잡아둔다(빈 공간이 아니라 "여기서 만들어진다"가 보이게).
-  if(_pvBox) _pvBox.innerHTML='<div style="aspect-ratio:9/16;width:100%;border:2px dashed var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--sub);text-align:center;padding:18px"><div style="font-size:34px">🪞</div><div style="font-size:14px;line-height:1.5">오른쪽 <b style="color:var(--accent)">▶ 미리보기 만들기</b>를<br>누르면 <b>여기에서</b> 영상이<br>만들어지는 걸 보실 수 있어요</div></div>';
+  // ★렌더 본체는 _renderMixReviewBody로 뽑았다(2026-07-19) — 새로고침 복원(_restoreMixContext)이
+  //   같은 화면을 그려야 하는데 markup을 복제하면 갈라진다. 아래 초기화(게이트 재잠금)는 여기 남는다:
+  //   loadMixReview는 "새 매칭"이라 미리보기를 다시 봐야 하고, 복원은 이미 본 것이라 안 잠근다.
+  //   _renderMixReviewBody는 커버리지 신호등·스왑버튼(어긋남구제)에 콘폼 배지·sync_gap 경고까지 포함한다.
+  _renderMixReviewBody(d);
   // 편집안을 새로 그렸다 = 새 매칭이다. 옛 미리보기 상태를 물고 있으면 사장님이 옛 영상을
   // 본 것으로 치고 다음이 열린다 → 여기서 반드시 초기화한다.
   // ★폴러도 같이 죽인다: 재매칭은 정상 흐름(⚠️ 매칭 약한 문장은 "대본을 살짝 바꾸세요"를 권한다)이고
@@ -2818,16 +2855,9 @@ async function pollPreview(gen, job){
     if(PREVIEW_GEN !== gen || MIX_JOB !== job) return;
     if(d.preview_status === 'ready'){
       clearInterval(PREVIEW_POLL); PREVIEW_POLL = null; PREVIEW_STATUS='ready';
-      // ?t= 캐시버스터 필수: 대본을 고쳐 재매칭하면 같은 URL에 다른 영상이 온다.
-      // display:block 필수 — <video>는 기본 inline이라 텍스트 baseline 위에 앉아 아래에
-      // descender 여백(수 px)이 생기고, background:#000 + 어두운 좌측 프리뷰 패널이 그
-      // 여백으로 비쳐 "하단 검정라인"으로 보인다(파일엔 없다: preview.mp4 하단행 luma가
-      // 위 행과 동일 실측). 최종렌더 <video>는 어두운 배경이 없어 이 여백이 안 보였다.
-      // fx 프리뷰(위)도 같은 이유로 display:block을 쓴다.
-      box.innerHTML = '<video controls muted playsinline autoplay style="display:block;width:100%;border-radius:12px;background:#000;box-shadow:0 8px 30px rgba(0,0,0,.4)"'
-        + ' src="/api/produce/mix/preview/'+encodeURIComponent(job)+'?t='+Date.now()+'"></video>'
-        + '<div class="hint" style="margin-top:6px">원본 자막이 남아 있는 건 정상입니다 — 다음 단계에서 지웁니다.</div>';
-      const btn = document.getElementById('btnPreview'); if(btn) btn.disabled = false;
+      // <video> 렌더는 _renderPreviewVideo로 뽑았다(2026-07-19) — 새로고침 복원과 단일 출처.
+      // (?t= 캐시버스터·display:block 하단검정라인 주의는 그 함수 주석 참조.)
+      _renderPreviewVideo(job);
       refreshNextBtn();
     } else if(d.preview_status === 'failed'){
       clearInterval(PREVIEW_POLL); PREVIEW_POLL = null; PREVIEW_STATUS='failed';

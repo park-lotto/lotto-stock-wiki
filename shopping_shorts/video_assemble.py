@@ -153,6 +153,10 @@ _MIN_CLIP = 0.8   # 초. 이보다 짧은 독립 클립은 만들지 않는다(�
 # 필요한 시간은 마지막 프레임 정지(freeze)로 떠안는다 → 요리 동작은 자연 속도, 남는 시간만 홀드.
 _MAX_SLOWMO = 1.15
 
+# 마지막 비트 '여운'(초) — 대사가 끝나도 화면을 이만큼 더 살려둔다(2026-07-20 콘폼루프 T4,
+# 사장님 육안 피드백 "붙이면 바로 자르지 말고 대사 끝나고 1초 정도 더 냅두면").
+_LAST_RUNOUT = 1.0
+
 
 def _speed_and_freeze(src_dur, out_dur, max_slowmo=_MAX_SLOWMO):
     """소스 구간 src_dur초를 출력 out_dur초로 채울 때, (움직이는 재생 길이, 정지프레임 길이).
@@ -168,6 +172,29 @@ def _speed_and_freeze(src_dur, out_dur, max_slowmo=_MAX_SLOWMO):
     if out_dur <= capped + 1e-9:
         return (out_dur, 0.0)
     return (capped, out_dur - capped)
+
+
+def _extend_last_clip_for_runout(plan, segs, runout=_LAST_RUNOUT):
+    """마지막 비트 계획의 끝에 여운 runout초를 붙인다(plan 제자리 수정, 반환 동일 객체).
+
+    소스 구간 [start,end]에 실프레임 여유(slack)가 남았으면 그만큼 **1배속 실영상**으로
+    연장하고, 부족분은 out_dur만 늘려 기존 _speed_and_freeze 기계(완만 슬로모→켄번즈 홀드)가
+    흡수한다. 오디오는 tts 그대로라 마지막 1초는 자연스러운 무성 여운이 된다 —
+    mux의 -t가 이 여운만큼 같이 늘어나야 화면에 실린다(assemble 쪽 runout 참조)."""
+    if not plan or runout <= 0:
+        return plan
+    c = plan[-1]
+    seg = next((s for s in segs
+                if s.get("video_id") == c.get("video_id")
+                and float(s.get("start", 0.0)) <= float(c.get("start", 0.0)) < float(s.get("end", 0.0))),
+               None)
+    slack = 0.0
+    if seg:
+        slack = max(0.0, float(seg["end"]) - (float(c["start"]) + float(c["src_dur"])))
+    real_ext = min(runout, slack)
+    c["src_dur"] += real_ext
+    c["out_dur"] += runout
+    return plan
 
 
 def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP):
@@ -440,6 +467,10 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
             except Exception:
                 _src_dur_cache[vid] = 0.0
         return _src_dur_cache[vid]
+    # 여운 대상 = TTS가 있는 마지막 비트(2026-07-20 T4). 그 비트만 대사 끝+_LAST_RUNOUT초를
+    # 화면에 더 싣는다(-t 연장 포함). 세그먼트 전멸로 스킵되면 여운도 조용히 사라진다(치명 아님).
+    _runout_idx = max((b["beat_idx"] for b in edit_plan["beats"]
+                       if tts_paths.get(b["beat_idx"])), default=None)
     for beat in edit_plan["beats"]:
         idx = beat["beat_idx"]
         tts = tts_paths.get(idx)
@@ -454,6 +485,10 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
         if not segs:
             continue
         plan = _plan_beat_clips(segs, tts_dur)
+        # 마지막 비트 여운: 실프레임 여유는 1배속으로, 부족분은 아래 slowmo/freeze 기계가 흡수.
+        runout = _LAST_RUNOUT if idx == _runout_idx else 0.0
+        if runout > 0:
+            _extend_last_clip_for_runout(plan, segs, runout)
         vf = _kenburns_vf(tts_dur) if idx in important else _base_zoom_vf()
         # 비트당 다중 클립: 각 구간을 [start, start+src_dur]만큼만 잘라(유출 0) 이어붙이고,
         # 부족분은 마지막 클립을 슬로모(setpts)로 늘려 대사 길이에 맞춘다.
@@ -530,14 +565,16 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
                 "-i", str(tts),          # 2: 나레이션
                 "-filter_complex", fc, "-r", "30",
                 "-map", "[vout]", "-map", "2:a:0",
-                "-t", f"{tts_dur:.3f}",
+                # 여운(runout): 마지막 비트만 대사 뒤 화면이 더 산다 — 오디오는 tts 길이에서
+                # 자연 종료(무성 여운). 컷어웨이 창(win)은 tts_dur 기준 그대로(여운을 덮지 않음).
+                "-t", f"{tts_dur + runout:.3f}",
                 "-c:v", "libx264", "-c:a", "aac", "-pix_fmt", "yuv420p", str(clip),
             ])
         else:
-            # 비트 나레이션(tts) 오디오를 얹고 길이를 tts_dur로 맞춘다.
+            # 비트 나레이션(tts) 오디오를 얹고 길이를 tts_dur(+마지막 비트는 여운)로 맞춘다.
             _run_ffmpeg([
                 "ffmpeg", "-y", "-i", str(beat_video), "-i", str(tts),
-                "-map", "0:v:0", "-map", "1:a:0", "-t", f"{tts_dur:.3f}",
+                "-map", "0:v:0", "-map", "1:a:0", "-t", f"{tts_dur + runout:.3f}",
                 "-c:v", "copy", "-c:a", "aac", str(clip),
             ])
         beat_clips.append(clip)
