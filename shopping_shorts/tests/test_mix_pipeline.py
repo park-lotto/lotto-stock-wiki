@@ -180,9 +180,10 @@ def test_mix_accepts_youtube_url(monkeypatch, tmp_path):
     monkeypatch.setattr(mp, "download_any", lambda url, d: got.setdefault("urls", []).append(url) or (str(tmp_path / "x.mp4"), ""))
     # _prepare_sources 만 단위 검증(전체 잡 아님): youtube URL도 통과해야 함
     urls = ["https://www.youtube.com/watch?v=a", "https://www.tiktok.com/@u/video/1"]
-    paths, captions = mp._prepare_sources(urls, tmp_path)
+    paths, captions, skipped = mp._prepare_sources(urls, tmp_path)
     assert len(paths) == 2 and got["urls"] == urls
     assert captions == {"s0": "", "s1": ""}
+    assert skipped == []
 
 
 def test_prepare_sources_carries_instagram_caption(monkeypatch, tmp_path):
@@ -197,7 +198,7 @@ def test_prepare_sources_carries_instagram_caption(monkeypatch, tmp_path):
     monkeypatch.setattr(mp, "download_any", fake_download)
 
     urls = ["https://www.instagram.com/reel/AAA/", "https://www.youtube.com/watch?v=a"]
-    paths, captions = mp._prepare_sources(urls, tmp_path)
+    paths, captions, skipped = mp._prepare_sources(urls, tmp_path)
     assert captions["s0"] == "인스타 원본 캡션"
     assert captions["s1"] == ""
 

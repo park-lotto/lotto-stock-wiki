@@ -1,0 +1,143 @@
+<title>브랜드 이름 후보 — 쇼핑쇼츠 SaaS</title>
+<style>
+  :root{
+    --bg:#f2f7f5; --panel:#ffffff; --tile:#0c1210; --tile2:#0f1815;
+    --ink:#0d1613; --sub:#5c6b65; --line:#dbe6e1;
+    --mint1:#5fe8cf; --mint2:#12a37e; --mint-ink:#0f8f6c;
+    --tile-ink:#eaf4ef; --tile-sub:#8b9c95; --tile-line:#20302b;
+    --chip:#e7f2ee; --chip-ink:#0f8f6c;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#080b0a; --panel:#0e1513; --tile:#0b110f; --tile2:#0f1714;
+      --ink:#e9f2ee; --sub:#84948d; --line:#1c2823;
+      --mint-ink:#6ff0d6; --chip:#12211c; --chip-ink:#6ff0d6;
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#f2f7f5; --panel:#ffffff; --ink:#0d1613; --sub:#5c6b65; --line:#dbe6e1;
+    --mint-ink:#0f8f6c; --chip:#e7f2ee; --chip-ink:#0f8f6c;
+  }
+  :root[data-theme="dark"]{
+    --bg:#080b0a; --panel:#0e1513; --ink:#e9f2ee; --sub:#84948d; --line:#1c2823;
+    --mint-ink:#6ff0d6; --chip:#12211c; --chip-ink:#6ff0d6;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:'Malgun Gothic',system-ui,-apple-system,'Noto Sans KR',sans-serif;
+    line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:56px 24px 80px}
+  .eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--mint-ink);font-weight:800;margin:0 0 12px}
+  h1{font-size:clamp(26px,4vw,40px);font-weight:900;letter-spacing:-.02em;margin:0 0 14px;text-wrap:balance}
+  .lede{font-size:16px;color:var(--sub);max-width:60ch;margin:0 0 40px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;
+    display:flex;flex-direction:column;transition:transform .18s ease,border-color .18s ease}
+  .card:hover{transform:translateY(-3px);border-color:var(--mint-ink)}
+  .tile{background:radial-gradient(120% 120% at 30% 0%,var(--tile2),var(--tile));
+    padding:38px 26px 30px;text-align:center;border-bottom:1px solid var(--tile-line);position:relative}
+  .num{position:absolute;top:14px;left:16px;font-size:12px;font-weight:800;color:var(--tile-sub);letter-spacing:.1em}
+  .rec{position:absolute;top:12px;right:12px;font-size:11px;font-weight:800;letter-spacing:.04em;
+    color:#08130f;background:linear-gradient(135deg,var(--mint1),var(--mint2));padding:4px 9px;border-radius:999px}
+  .mark{font-size:34px;font-weight:900;letter-spacing:-.03em;color:var(--tile-ink);margin:6px 0 6px;line-height:1.05}
+  .mark .g{background:linear-gradient(135deg,var(--mint1),var(--mint2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+  .read{font-size:13px;color:var(--tile-sub);letter-spacing:.04em}
+  .body{padding:20px 22px 24px;display:flex;flex-direction:column;gap:12px;flex:1}
+  .chip{align-self:flex-start;font-size:11px;font-weight:800;letter-spacing:.03em;color:var(--chip-ink);
+    background:var(--chip);border-radius:999px;padding:4px 11px}
+  .mean{font-size:14px;color:var(--ink);margin:0}
+  .mean b{color:var(--mint-ink)}
+  .tag{font-size:15px;font-weight:800;color:var(--ink);margin:0;letter-spacing:-.01em}
+  .note{font-size:13px;color:var(--sub);margin:0;padding-top:4px;border-top:1px dashed var(--line)}
+  .foot{margin-top:38px;padding:22px 24px;background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    font-size:14px;color:var(--sub)}
+  .foot b{color:var(--ink)}
+  /* 각 워드마크의 개성 — CSS로 조각 */
+  .m-factory{font-weight:800}
+  .m-reelery{font-weight:900;letter-spacing:-.04em}
+  .m-shopreel{font-weight:900;letter-spacing:-.02em}
+  .m-forge{font-weight:800;letter-spacing:.02em;text-transform:uppercase;font-size:29px}
+  .m-vidory{font-weight:900;font-style:italic;letter-spacing:-.03em}
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Brand naming · 5안</p>
+  <h1>파는 사람을 위한 AI 쇼츠 제작 — 이름부터 정합니다</h1>
+  <p class="lede">레퍼런스 링크를 넣으면 팔리는 쇼츠가 나오는 서비스. 아래는 방향이 서로 다른 5개 후보예요.
+    각 카드는 실제 <b style="color:var(--mint-ink)">다크 로그인 화면에 얹었을 때 느낌</b>으로 보여드립니다.
+    끌리는 번호를 고르거나 "2번 이름 + 3번 톤"처럼 섞으셔도 됩니다.</p>
+
+  <div class="grid">
+
+    <div class="card">
+      <div class="tile"><span class="num">01</span>
+        <div class="mark m-factory">Shorts<span class="g">Factory</span></div>
+        <div class="read">숏츠팩토리</div>
+      </div>
+      <div class="body">
+        <span class="chip">직관 · 대량생산</span>
+        <p class="mean"><b>공장처럼 찍어낸다.</b> shorts + factory — 뭐 하는 곳인지 1초에 이해.</p>
+        <p class="tag">"붙여넣으면, 쇼츠가 쏟아진다."</p>
+        <p class="note">가장 안전·명확. 단, 레퍼런스(Shopping Factory)와 결이 비슷해 차별성은 약함.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tile"><span class="num">02</span><span class="rec">추천</span>
+        <div class="mark m-reelery"><span class="g">Reel</span>ery</div>
+        <div class="read">릴러리</div>
+      </div>
+      <div class="body">
+        <span class="chip">프리미엄 · 고유</span>
+        <p class="mean"><b>릴을 빚는 곳.</b> reel + -ery(winery·bakery의 그 '제작소'). 만들어낸 단어라 검색하면 유일.</p>
+        <p class="tag">"당신의 상품을, 팔리는 릴로."</p>
+        <p class="note">상표·도메인 확보 쉽고 브랜드로 크기 좋음. 대신 '무슨 뜻?'을 태그라인이 받쳐줘야 함.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tile"><span class="num">03</span>
+        <div class="mark m-shopreel">Shop<span class="g">Reel</span></div>
+        <div class="read">샵릴</div>
+      </div>
+      <div class="body">
+        <span class="chip">커머스 · 직결</span>
+        <p class="mean"><b>쇼핑 릴, 한 단어.</b> shop + reel — 판매용이라는 정체성이 이름에 박혀 있음.</p>
+        <p class="tag">"상품 링크 하나로, 완성된 쇼핑 릴."</p>
+        <p class="note">짧고 부르기 쉬움·검색 친화. 다만 'reel'이 흔해 유사 이름과 헷갈릴 수 있음.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tile"><span class="num">04</span>
+        <div class="mark m-forge">Shorts<span class="g">Forge</span></div>
+        <div class="read">숏츠포지</div>
+      </div>
+      <div class="body">
+        <span class="chip">테크 · 강함</span>
+        <p class="mean"><b>쇼츠를 벼려낸다.</b> forge(대장간·벼리다) — 레퍼런스를 녹여 새 걸 만든다는 은유.</p>
+        <p class="tag">"레퍼런스를 녹여, 새 쇼츠로 벼린다."</p>
+        <p class="note">프로·테크 느낌이 강해 고급 티어와 잘 맞음. 톤이 다소 무거워 시니어엔 딱딱할 수 있음.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tile"><span class="num">05</span>
+        <div class="mark m-vidory">Vid<span class="g">ory</span></div>
+        <div class="read">비도리 (coined)</div>
+      </div>
+      <div class="body">
+        <span class="chip">경쾌 · 기억성</span>
+        <p class="mean"><b>video + factory/victory.</b> 만들 때마다 '이기는' 영상이라는 뉘앙스의 조어.</p>
+        <p class="tag">"만들 때마다, 이기는 영상."</p>
+        <p class="note">짧고 튀어 기억에 남음. 한글 표기(비도리)가 다소 낯설어 호불호 갈릴 수 있음.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="foot">
+    <b>다음 단계</b> — 고른 이름(또는 섞은 방향)으로 ① <b>대문(랜딩) 페이지</b>와 ② <b>로그인 페이지</b>를
+    같은 톤으로 디자인합니다. 마음에 드는 게 없으면 직접 이름을 던져주셔도 되고, 이 5개를 재료로 더 뽑아드릴게요.
+  </div>
+</div>

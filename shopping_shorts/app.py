@@ -69,6 +69,26 @@ def _seed_voice_presets():
     except Exception:
         pass  # seed 실패가 앱 기동을 막지 않게
 
+
+@app.on_event("startup")
+def _warn_missing_contact():
+    """유료게이트가 켜졌는데(_AUTH_ON) 연락처가 비어 있으면 기동 경고.
+    수동 승격 모델에선 '무료 체험 끝' 모달이 결제 유입 경로의 전부다 — 연락처가 비면
+    만료된 시니어가 '결제 문의 수단 없는 막다른 모달'을 본다. DASH_PASS 미설정(fail-open)
+    경고와 같은 계열의 '배포하다 한 줄 빠뜨림' 방어(설계 재검토 2026-07-19)."""
+    if not _AUTH_ON:
+        return
+    try:
+        st = Store(DB_PATH)
+        k = (st.get_setting("contact_kakao", "") or "").strip()
+        p = (st.get_setting("contact_phone", "") or "").strip()
+    except Exception:
+        return
+    if not k and not p:
+        import sys as _sys
+        print("⚠️ [유료게이트] contact_kakao·contact_phone 둘 다 비었습니다 → 체험 만료 고객이 "
+              "결제 문의 수단 없는 모달을 봅니다. /admin에서 연락처를 설정하세요.", file=_sys.stderr)
+
 # ── 틱톡 키워드검색 노브 기본값 + 비용 상수 (2026-07-14) ──
 # clockworks/tiktok-scraper = $1.70/1,000건 → 1건 $0.0017 (조사확정).
 _TIKTOK_SEARCH_COUNT_DEFAULT = 50      # 언어당 fetch 개수
@@ -577,12 +597,15 @@ _THUMB_DIR = Path(__file__).parent / "data" / "thumbs"   # 5단계 썸네일 프
 
 
 @app.post("/api/extract_script")
-def api_extract_script(shortcode: str):
+def api_extract_script(request: Request, shortcode: str):
     """카드 영상 1개 → 대본(세그먼트+전체텍스트) 온디맨드 추출. 캐시 우선.
 
     수집 때 전체를 뽑지 않고, 버튼 클릭한 영상만 다운로드→Gemini 추출→저장한다.
     한번 추출하면 캐시되어 재클릭은 즉시 반환. 인스타 CDN URL 만료 시 다운로드가
-    실패할 수 있어(오래된 항목) 통째로 감싸 502로 안내한다."""
+    실패할 수 있어(오래된 항목) 통째로 감싸 502로 안내한다.
+
+    유료게이트(2026-07-19): Gemini 추출은 실제 비용 → 캐시미스에만 'script' 크레딧을 건다.
+    캐시히트는 무료. 다운로드·추출이 실패하면 예약한 크레딧을 환불한다(성공 저장만 과금)."""
     store = Store(DB_PATH)
     items, _ = store.load_last_run()
     target_code = _media_code(shortcode)
@@ -594,37 +617,54 @@ def api_extract_script(shortcode: str):
 
     cached = store.get_script(code)
     if cached:
-        return {"ok": True, "cached": True, **cached}
+        return {"ok": True, "cached": True, **cached}     # 캐시히트 = 무료
 
-    video_url = item.get("video_url")
-    if not video_url:
-        return JSONResponse(status_code=422, content={"ok": False, "error": "video_url 없음 — 재수집 필요"})
-    # DB(수집분) 유래라 직접 입력은 아니지만, 오염된 수집물이 내부망을 찌르지 않게 같이 막는다.
-    blocked = _ssrf_guard(video_url)
-    if blocked:
-        return blocked
-
-    work_dir = _FIND_TMP_DIR / hashlib.sha1(code.encode()).hexdigest()[:16]
+    # ── 여기부터 실제 Gemini 비용 → 'script' 크레딧(캐시미스에만). ──
+    cid = getattr(request.state, "customer_id", 0)
+    if _global_over_cap("script"):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "global_limit",
+            "error": "지금 대본 추출 이용이 많아요. 잠시 후 다시 시도해 주세요."})
+    if not check_and_count(cid, "script"):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "daily_limit",
+            "error": "오늘 대본 추출 횟수를 다 썼어요. 결제하면 더 쓸 수 있어요."})
+    global_incr_and_alert("script")
+    ok = False
     try:
-        video_path = download_video(video_url, work_dir)
-    except (requests.RequestException, RuntimeError) as e:
-        msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
-        return JSONResponse(status_code=502, content={"ok": False, "error": f"영상 다운로드 실패(URL 만료 가능) — 재수집 필요: {msg}"})
-    except Exception as e:
-        msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
-        return JSONResponse(status_code=500, content={"ok": False, "error": msg})
+        video_url = item.get("video_url")
+        if not video_url:
+            return JSONResponse(status_code=422, content={"ok": False, "error": "video_url 없음 — 재수집 필요"})
+        # DB(수집분) 유래라 직접 입력은 아니지만, 오염된 수집물이 내부망을 찌르지 않게 같이 막는다.
+        blocked = _ssrf_guard(video_url)
+        if blocked:
+            return blocked
 
-    try:
-        result = extract_script(video_path, code, caption=item.get("caption", ""))
-    except Exception as e:
-        msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
-        return JSONResponse(status_code=500, content={"ok": False, "error": msg})
+        work_dir = _FIND_TMP_DIR / hashlib.sha1(code.encode()).hexdigest()[:16]
+        try:
+            video_path = download_video(video_url, work_dir)
+        except (requests.RequestException, RuntimeError) as e:
+            msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
+            return JSONResponse(status_code=502, content={"ok": False, "error": f"영상 다운로드 실패(URL 만료 가능) — 재수집 필요: {msg}"})
+        except Exception as e:
+            msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
+            return JSONResponse(status_code=500, content={"ok": False, "error": msg})
 
-    if not result.get("full_text") and not result.get("segments"):
-        return JSONResponse(status_code=502, content={"ok": False, "error": "대본 추출 실패(Gemini 키 소진 또는 영상 인식 실패) — 잠시 후 재시도"})
+        try:
+            result = extract_script(video_path, code, caption=item.get("caption", ""))
+        except Exception as e:
+            msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
+            return JSONResponse(status_code=500, content={"ok": False, "error": msg})
 
-    store.save_script(code, result, category=item.get("category"))
-    return {"ok": True, "cached": False, **result}
+        if not result.get("full_text") and not result.get("segments"):
+            return JSONResponse(status_code=502, content={"ok": False, "error": "대본 추출 실패(Gemini 키 소진 또는 영상 인식 실패) — 잠시 후 재시도"})
+
+        store.save_script(code, result, category=item.get("category"))
+        ok = True
+        return {"ok": True, "cached": False, **result}
+    finally:
+        if not ok:
+            refund_credit(cid, "script")   # 실패·미달 → 크레딧 되돌림(전역 하드캡이 재시도 남용을 캡)
 
 
 def _backfill_extract_structure(db_path, shortcode, full_text):
@@ -709,7 +749,7 @@ def api_produce_category(body: dict):
 
 
 @app.post("/api/produce/extract_from_url")
-def api_produce_extract_from_url(body: dict, background_tasks: BackgroundTasks):
+def api_produce_extract_from_url(request: Request, body: dict, background_tasks: BackgroundTasks):
     """영상 URL로 직접 대본 추출(영상제작소 역할배정 '대본용'). body: {url, caption?, shortcode?, category?, name?}.
 
     /api/extract_script는 현재 레퍼런스 랭킹 run(last_run)에서만 shortcode를 찾아,
@@ -757,31 +797,48 @@ def api_produce_extract_from_url(body: dict, background_tasks: BackgroundTasks):
         if not structure and not cached.get("structure_analyzed_at"):
             background_tasks.add_task(_backfill_extract_structure, DB_PATH, code, cached.get("full_text", ""))
         return {"ok": True, "cached": True, **cached, "category": category, "structure": structure}
-    work_dir = _FIND_TMP_DIR / hashlib.sha1(code.encode()).hexdigest()[:16]
+    # ── 캐시미스 → 실제 Gemini 비용 → 'script' 크레딧. 실패 시 환불(성공 저장만 과금). ──
+    cid = getattr(request.state, "customer_id", 0)
+    if _global_over_cap("script"):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "global_limit",
+            "error": "지금 대본 추출 이용이 많아요. 잠시 후 다시 시도해 주세요."})
+    if not check_and_count(cid, "script"):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "daily_limit",
+            "error": "오늘 대본 추출 횟수를 다 썼어요. 결제하면 더 쓸 수 있어요."})
+    global_incr_and_alert("script")
+    ok = False
     try:
-        video_path, dl_caption = download_any(url, str(work_dir))
-    except Exception as e:  # noqa: BLE001 — 다운로드 실패는 사용자에게 안내(치명 아님)
-        msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
-        return JSONResponse(status_code=502, content={
-            "ok": False, "error": f"영상 다운로드 실패(URL 만료·비공개·프로필주소 가능): {msg}"})
-    caption = (body.get("caption") or dl_caption or "")
-    try:
-        result = extract_script(video_path, code, caption=caption)
-    except Exception as e:  # noqa: BLE001
-        msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
-        return JSONResponse(status_code=500, content={"ok": False, "error": msg})
-    if not result.get("full_text") and not result.get("segments"):
-        return JSONResponse(status_code=502, content={"ok": False, "error": "대본 추출 실패 — 잠시 후 재시도"})
-    category = body_category or categorize(name, caption) or None
-    store.save_script(code, result, category=category)
-    structure = None
-    try:
-        structure = analyze_structure(result.get("full_text", "")) or None
-    except Exception:  # noqa: BLE001 — 구조분석 실패해도 대본 응답은 성공시킨다
+        work_dir = _FIND_TMP_DIR / hashlib.sha1(code.encode()).hexdigest()[:16]
+        try:
+            video_path, dl_caption = download_any(url, str(work_dir))
+        except Exception as e:  # noqa: BLE001 — 다운로드 실패는 사용자에게 안내(치명 아님)
+            msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
+            return JSONResponse(status_code=502, content={
+                "ok": False, "error": f"영상 다운로드 실패(URL 만료·비공개·프로필주소 가능): {msg}"})
+        caption = (body.get("caption") or dl_caption or "")
+        try:
+            result = extract_script(video_path, code, caption=caption)
+        except Exception as e:  # noqa: BLE001
+            msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
+            return JSONResponse(status_code=500, content={"ok": False, "error": msg})
+        if not result.get("full_text") and not result.get("segments"):
+            return JSONResponse(status_code=502, content={"ok": False, "error": "대본 추출 실패 — 잠시 후 재시도"})
+        category = body_category or categorize(name, caption) or None
+        store.save_script(code, result, category=category)
+        ok = True    # 저장 성공 = 과금 확정. 아래 구조분석은 실패해도 응답·과금엔 영향 없음.
         structure = None
-    if structure:
-        store.save_extract_structure(code, structure)
-    return {"ok": True, "cached": False, **result, "category": category, "structure": structure}
+        try:
+            structure = analyze_structure(result.get("full_text", "")) or None
+        except Exception:  # noqa: BLE001 — 구조분석 실패해도 대본 응답은 성공시킨다
+            structure = None
+        if structure:
+            store.save_extract_structure(code, structure)
+        return {"ok": True, "cached": False, **result, "category": category, "structure": structure}
+    finally:
+        if not ok:
+            refund_credit(cid, "script")
 
 
 def _relearn_category(db_path, category):
@@ -1365,21 +1422,29 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
     urls = [u for u in (body.get("urls") or []) if u]
     if len(urls) < 2:
         return JSONResponse(status_code=422, content={"ok": False, "error": "레퍼런스 URL 2개 이상 필요"})
-    # 유료게이트: 렌더는 최고비용(VMake 크레딧). 계정별 일일 상한으로 캡.
-    cid = getattr(request.state, "customer_id", 0)
-    if not check_and_count(cid, "render"):
-        return JSONResponse(status_code=429, content={
-            "ok": False, "error_code": "daily_limit",
-            "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
-    global_incr_and_alert("render")
+    # 유료게이트: 렌더는 최고비용(VMake 크레딧). ★검증(SSRF·파싱)을 먼저 통과시킨 뒤 과금한다 —
+    # 잘못된 요청에 크레딧을 태우면 무료 유저의 하루 2회가 헛되이 날아가고 환불 경로도 없다(리뷰 G1).
     blocked = _ssrf_guard(*urls)      # 이 URL들은 run_mix_job이 그대로 다운로드한다
     if blocked:
         return blocked
     target = int(body.get("target_seconds") or 30)
     structure = body.get("structure") if body.get("structure") in ("template", "free") else "template"
     subtitle_removal = bool(body.get("subtitle_removal", False))
+    cid = getattr(request.state, "customer_id", 0)
+    if _global_over_cap("render"):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "global_limit",
+            "error": "지금 영상 만들기 이용이 많아요. 잠시 후 다시 시도해 주세요."})
+    if not check_and_count(cid, "render"):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "daily_limit",
+            "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
+    global_incr_and_alert("render")
     job_id = uuid.uuid4().hex[:12]
-    Store(DB_PATH).create_mix_job(job_id, urls, target, structure, subtitle_removal=subtitle_removal)
+    # render_charge_day: '오늘 render를 과금했다'는 표식(+환불할 날짜). run_mix_job이 실패하면 딱
+    # 이 날짜로 환불한다. 과금 안 하는 다른 create_mix_job 경로는 이 값을 비워 오환불을 막는다(리뷰 B).
+    Store(DB_PATH).create_mix_job(job_id, urls, target, structure, subtitle_removal=subtitle_removal,
+                                  customer_id=cid, render_charge_day=_today_utc())
     background_tasks.add_task(run_mix_job, job_id, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True, "job_id": job_id}
 
@@ -2224,27 +2289,35 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...),
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "lens_limit",
             "error": f"이번 달 렌즈 검색 한도({limit}회)를 다 썼습니다"})
-    # 유료게이트: 계정별 일일 상한(비용 방어 — 체험/다계정이 SerpApi를 태우는 것 캡).
+    # 유료게이트: 전역 상한(다계정이 SerpApi를 태우는 것 실차단) → 계정별 일일 상한.
     cid = getattr(request.state, "customer_id", 0)
+    if _global_over_cap("lens"):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "global_limit",
+            "error": "지금 이용이 많아 렌즈 검색이 잠시 막혔어요. 잠시 후 다시 시도해 주세요."})
     if not check_and_count(cid, "lens"):
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 렌즈 검색 횟수를 다 썼어요. 결제하면 더 쓸 수 있어요."})
     global_incr_and_alert("lens")
-    raw = await frame.read()
-    # Google Lens는 갓 호스팅된 우리서버 이미지를 인덱싱 전이라 못 읽어 0개를 준다(실측).
-    # imgbb·imgur은 Google이 상시 크롤링하는 도메인이라 즉시 매칭 → imgbb(전용키) 1순위,
-    # imgur(공유 공개ID) 2순위로 업로드, 실패 시에만 우리서버 URL 폴백(2026-07-14).
-    image_url = upload_frame(raw)
-    if not image_url:
-        work_dir = _FIND_TMP_DIR / "lens"
-        work_dir.mkdir(parents=True, exist_ok=True)
-        name = uuid.uuid4().hex + ".jpg"
-        (work_dir / name).write_bytes(raw)
-        image_url = f"{PUBLIC_BASE_URL}/api/find/frame/lens/{name}"
-    items = search_similar_videos(image_url, source_caption=source_caption)
-    store.bump_lens(month)
-    return {"ok": True, "items": items, "count": len(items)}
+    try:
+        raw = await frame.read()
+        # Google Lens는 갓 호스팅된 우리서버 이미지를 인덱싱 전이라 못 읽어 0개를 준다(실측).
+        # imgbb·imgur은 Google이 상시 크롤링하는 도메인이라 즉시 매칭 → imgbb(전용키) 1순위,
+        # imgur(공유 공개ID) 2순위로 업로드, 실패 시에만 우리서버 URL 폴백(2026-07-14).
+        image_url = upload_frame(raw)
+        if not image_url:
+            work_dir = _FIND_TMP_DIR / "lens"
+            work_dir.mkdir(parents=True, exist_ok=True)
+            name = uuid.uuid4().hex + ".jpg"
+            (work_dir / name).write_bytes(raw)
+            image_url = f"{PUBLIC_BASE_URL}/api/find/frame/lens/{name}"
+        items = search_similar_videos(image_url, source_caption=source_caption)
+        store.bump_lens(month)
+        return {"ok": True, "items": items, "count": len(items)}
+    except Exception:
+        refund_credit(cid, "lens")   # 업로드·검색 실패 → 예약한 크레딧 되돌림(성공한 검색만 과금)
+        raise
 
 
 # 유튜브는 서버(데이터센터 IP)에서 yt-dlp가 봇차단(쿠키 요구)이라 영상 다운로드가 막힌다
@@ -2285,7 +2358,7 @@ def _lens_image_for_url(url, work_dir):
 
 
 @app.post("/api/lens/trace_url")
-def api_lens_trace_url(body: dict):
+def api_lens_trace_url(request: Request, body: dict):
     """영상 URL 붙여넣기 → 대표(중간) 프레임 → 구글렌즈 → 원본/유사 레퍼런스 영상.
     /api/lens/search와 같은 월 호출가드·같은 결과형태(ok/items/count)를 쓴다 — 입력만
     '프레임 업로드'가 아니라 'URL'이다. download_any가 유튜브·틱톡·인스타·샤오홍슈를
@@ -2304,15 +2377,33 @@ def api_lens_trace_url(body: dict):
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "lens_limit",
             "error": f"이번 달 렌즈 검색 한도({limit}회)를 다 썼습니다"})
-    work_dir = _FIND_TMP_DIR / "lens_trace"
-    work_dir.mkdir(parents=True, exist_ok=True)
-    image_url, caption = _lens_image_for_url(url, work_dir)
-    if not image_url:
-        return JSONResponse(status_code=502, content={
-            "ok": False, "error": "영상/썸네일을 가져오지 못했습니다(봇차단·만료·미지원 URL)"})
-    items = search_similar_videos(image_url, source_caption=caption)
-    store.bump_lens(month)
-    return {"ok": True, "items": items, "count": len(items), "source_url": url}
+    # 유료게이트: trace_url도 /api/lens/search와 같은 SerpApi 비용 → 같은 lens 크레딧을 건다
+    # (전역 실차단 → 계정 일일). 여기가 비어 있으면 lens 일일상한을 우회하는 구멍이 된다.
+    cid = getattr(request.state, "customer_id", 0)
+    if _global_over_cap("lens"):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "global_limit",
+            "error": "지금 이용이 많아 렌즈 검색이 잠시 막혔어요. 잠시 후 다시 시도해 주세요."})
+    if not check_and_count(cid, "lens"):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "daily_limit",
+            "error": "오늘 렌즈 검색 횟수를 다 썼어요. 결제하면 더 쓸 수 있어요."})
+    global_incr_and_alert("lens")
+    ok = False
+    try:
+        work_dir = _FIND_TMP_DIR / "lens_trace"
+        work_dir.mkdir(parents=True, exist_ok=True)
+        image_url, caption = _lens_image_for_url(url, work_dir)
+        if not image_url:
+            return JSONResponse(status_code=502, content={
+                "ok": False, "error": "영상/썸네일을 가져오지 못했습니다(봇차단·만료·미지원 URL)"})
+        items = search_similar_videos(image_url, source_caption=caption)
+        store.bump_lens(month)
+        ok = True
+        return {"ok": True, "items": items, "count": len(items), "source_url": url}
+    finally:
+        if not ok:
+            refund_credit(cid, "lens")
 
 
 # 캡션 → 중국 플랫폼 검색어. 구글렌즈는 시각검색이라 키워드가 없지만 샤오홍슈/도우인은
@@ -2898,6 +2989,34 @@ def global_incr_and_alert(op):
         except Exception:
             pass
     return n
+
+
+def _global_over_cap(op):
+    """전역 일일 사용량이 상한 이상이면 True(차단). cap<=0이면 무제한(False).
+    ⚠️ global_incr_and_alert는 알림만 하고 안 막았다 — 다계정이 SerpApi·렌더를 태워도
+    사장님이 텔레 핑만 받을 뿐 비용은 계속 나갔다. 설계 §1(비용 게이트 최우선)이 의지한
+    '전역 상한'이 실제로 막도록, 유료 op 실행 전에 이걸로 선체크한다."""
+    st = Store(DB_PATH)
+    try:
+        cap = int(st.get_setting(f"global_cap_{op}", _GLOBAL_CAP_DEFAULTS.get(op, 200)))
+    except (TypeError, ValueError):
+        cap = _GLOBAL_CAP_DEFAULTS.get(op, 200)
+    if cap <= 0:
+        return False
+    return st.usage_get(-1, op, _today_utc()) >= cap
+
+
+def refund_credit(customer_id, op):
+    """예약(check_and_count + global_incr_and_alert)했던 크레딧을 실패 시 되돌린다 —
+    계정·전역 둘 다. points.refund와 대칭. 실 로직은 Store.refund_daily_credit.
+    ★핸들러의 finally에서 불리므로 자체 예외를 삼킨다 — 환불 중 DB 락 등이 나도 원래
+    응답/예외(502·500)를 가리면 안 된다(리뷰 G2)."""
+    try:
+        Store(DB_PATH).refund_daily_credit(customer_id, op)
+    except Exception:
+        import sys as _s
+        import traceback
+        traceback.print_exc(file=_s.stderr)
 
 
 @app.get("/api/me")

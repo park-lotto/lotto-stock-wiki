@@ -27,16 +27,18 @@
     "body{display:flex;min-height:100vh;margin:0}" +
     ".ss-nav{width:230px;background:var(--panel,#111722);border-right:1px solid var(--line,#1e2735);" +
       "padding:16px;flex-shrink:0;box-sizing:border-box;font-family:'Malgun Gothic',system-ui,sans-serif}" +
-    ".ss-nav h1{font-size:14px;color:var(--sub,#8b98a9);margin:0 0 16px}" +
+    ".ss-nav h1{font-size:16px;font-weight:800;margin:0 0 16px}" +
+    // 브랜드 텍스트만 민트 그라디언트(이모지는 제외 — text-fill:transparent가 이모지 글리프까지 비운다)
+    ".ss-brand{background:var(--grad,linear-gradient(135deg,#6ff0d6,#1f9e7a));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}" +
     ".ss-group{margin-bottom:18px}" +
-    ".ss-label{font-size:11px;color:var(--sub,#8b98a9);text-transform:uppercase;margin-bottom:8px}" +
-    ".ss-item{padding:8px 12px;border-radius:8px;font-size:13px;color:var(--txt,#e6edf3);cursor:pointer;margin-bottom:2px}" +
+    ".ss-label{font-size:11px;color:var(--sel-fg,#6ff0d6);text-transform:uppercase;margin-bottom:8px}" +
+    ".ss-item{padding:10px 12px;border-radius:8px;font-size:14px;color:var(--txt,#e6edf3);cursor:pointer;margin-bottom:2px}" +
     ".ss-item.ss-disabled{cursor:default;opacity:.45}" +
     // 선택/활성 표면 = 민트 토큰(--sel-bg/--sel-fg). 아직 토큰이 없는 페이지도 폴백으로 민트가 뜬다.
     ".ss-item.active{background:var(--sel-bg,linear-gradient(90deg,#123a30,#0c221c));color:var(--sel-fg,#6ff0d6)}" +
     ".ss-item:not(.active):not(.ss-disabled):hover{background:var(--hover,#131d19)}" +
-    ".ss-work{padding:5px 8px 5px 30px;border-radius:6px;font-size:12px;color:var(--sub,#8b98a9);" +
-      "cursor:pointer;margin-bottom:1px;display:flex;align-items:center;gap:4px}" +
+    ".ss-work{padding:6px 10px;border-radius:6px;font-size:13px;color:var(--sub,#8b98a9);" +
+      "cursor:pointer;margin-bottom:2px;display:flex;align-items:flex-start;gap:4px}" +
     ".ss-work:hover{color:var(--txt,#e6edf3)}" +
     ".ss-work.ss-work-current{color:var(--sel-fg,#6ff0d6);background:var(--sel-bg,linear-gradient(90deg,#123a30,#0c221c))}" +
     ".ss-toggle{margin-top:18px;padding-top:14px;border-top:1px solid var(--line,#1e2735)}" +
@@ -44,8 +46,13 @@
       "background:var(--inset,#0c1412);color:var(--txt,#e6edf3);font-size:13px;cursor:pointer;" +
       "display:flex;align-items:center;justify-content:center;gap:7px;font-family:inherit}" +
     ".ss-toggle-btn:hover{border-color:var(--accent,#37e0bd)}" +
-    ".ss-work-open{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}" +
-    ".ss-work-del{flex-shrink:0;cursor:pointer;color:var(--sub,#8b98a9);opacity:0;padding:0 4px;font-size:13px}" +
+    ".ss-work-open{flex:1;min-width:0;cursor:pointer;display:block}" +
+    ".ss-work-name{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}" +
+    // 단계 미니 진행바 — 숫자 'N단계' 대신 7칸 중 채운 칸으로 진척을 형태로 보인다
+    ".ss-work-bar{display:flex;gap:2px;margin-top:5px}" +
+    ".ss-work-seg{flex:1;height:3px;border-radius:2px;background:var(--line,#1e2735)}" +
+    ".ss-work-seg.on{background:var(--accent,#37e0bd)}" +
+    ".ss-work-del{flex-shrink:0;cursor:pointer;color:var(--sub,#8b98a9);opacity:0;padding:2px 4px;font-size:13px}" +
     ".ss-work:hover .ss-work-del{opacity:.65}" +
     ".ss-work-del:hover{opacity:1;color:#ff6b6b}" +
     "@media(max-width:760px){body{flex-direction:column}" +
@@ -70,7 +77,7 @@
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
     });
   }
-  var html = "<h1>🛍️ 쇼핑쇼츠</h1>";
+  var html = "<h1>🛍️ <span class=\"ss-brand\">쇼핑쇼츠</span></h1>";
   NAV.forEach(function (g) {
     html += '<div class="ss-group"><div class="ss-label">' + g.label + "</div>";
     g.items.forEach(function (it) {
@@ -131,26 +138,33 @@
       .catch(function () { window.alert("삭제 실패"); });
   };
   // 제작소 작업파일 목록(2026-07-17) — 사장님 제보 "내일 다시 들어와도 기록남고 그대로".
+  // T6(2026-07-19): /produce 전용 가드 제거 → 전 페이지 노출. 어느 화면에서도 진행 중 작업으로
+  //   바로 복귀. 숫자 'N단계'는 7칸 미니 진행바로 바꿔 진척을 형태로 보인다.
   // NAV는 로드 시 동기로 그려지는 정적 배열이라 하위 항목 개념이 없다 → 마운트 뒤에 주입한다.
   // NAV 구조 자체는 안 건드린다 — 페이지 6개가 이 파일을 공유한다.
+  var WORK_STEPS = 7;   // produce 7단계 — 미니바 칸 수
   function mountWorks() {
-    if (path !== "/produce") return;   // 다른 페이지에서 제작소 작업을 부를 이유가 없다
     var nav = document.querySelector(".ss-nav");
     if (!nav) return;
     var open = null;
     try { open = new URLSearchParams(location.search).get("work"); } catch (e) {}
     fetch("/api/produce/works").then(function (r) { return r.json(); }).then(function (d) {
       if (!d || !d.ok || !d.works) return;
-      var h = "";
+      var h = '<div class="ss-label">내 작업</div>';
       d.works.forEach(function (w) {
         var cur = open && w.work_id === open;
         var name = escHtml(w.title || "(제목 없음)");
-        // 열기(제목)와 삭제(✕)를 각각 클릭 가능하게 분리한다. ✕는 행 onclick으로 전파되면
+        var done = Math.max(0, Math.min(WORK_STEPS, (w.step || 0) + 1));
+        var bar = "";
+        for (var i = 0; i < WORK_STEPS; i++) bar += '<span class="ss-work-seg' + (i < done ? " on" : "") + '"></span>';
+        // 열기(제목+진행바)와 삭제(✕)를 각각 클릭 가능하게 분리한다. ✕는 행 onclick으로 전파되면
         // 삭제 직후 그 작업을 또 열어버리므로 __ssDelWork가 stopPropagation한다.
         h += '<div class="ss-work' + (cur ? " ss-work-current" : "") + '" data-wid="' + escHtml(w.work_id) + '">' +
              '<span class="ss-work-open"' +
              " onclick=\"location.href='/produce?work=" + esc(w.work_id) + "'\"" +
-             ' title="' + name + '">· ' + name + " · " + (w.step + 1) + "단계</span>" +
+             ' title="' + name + '">' +
+             '<span class="ss-work-name">· ' + name + '</span>' +
+             '<span class="ss-work-bar">' + bar + '</span></span>' +
              '<span class="ss-work-del" title="이 작업 삭제"' +
              " onclick=\"window.__ssDelWork(event,'" + esc(w.work_id) + "')\">✕</span>" +
              "</div>";
@@ -161,11 +175,13 @@
       // 문자열에서 재파싱한다. 이 함수는 fetch().then() 안에서 비동기로 돈다 — nav가 이미
       // 라이브 DOM에 들어간 뒤에 재파싱되면, 모바일(@media max-width:760px, .ss-nav는
       // overflow-x:auto로 가로스크롤)에서 사용자가 nav를 옆으로 스크롤해둔 상태의
-      // scrollLeft가 0으로 리셋된다. 컨테이너 하나만 만들어 appendChild하면 기존 자식·스크롤
-      // 위치를 안 건드리고 노드 하나만 끝에 붙는다.
+      // scrollLeft가 0으로 리셋된다. 컨테이너 하나만 만들어 삽입하면 기존 자식·스크롤 위치를
+      // 안 건드린다. 테마 토글(.ss-toggle)은 최하단이어야 하므로 그 앞에 끼운다.
       var wrap = document.createElement("div");
+      wrap.className = "ss-group ss-works";
       wrap.innerHTML = h;
-      nav.appendChild(wrap);
+      var toggle = nav.querySelector(".ss-toggle");
+      if (toggle) nav.insertBefore(wrap, toggle); else nav.appendChild(wrap);
     }).catch(function () {});   // 서버가 죽어도 네비게이션은 살아 있어야 한다
   }
 
@@ -183,7 +199,11 @@
       '<div style="font-size:40px">🔒</div>' +
       '<div style="font-size:18px;font-weight:800;margin:10px 0 6px">무료 체험이 끝났어요</div>' +
       '<div style="font-size:14px;color:#b8b8c0;line-height:1.6">이 기능은 결제하시면 계속 쓸 수 있어요.<br>담아둔 영상·자료는 <b>그대로 보존</b>돼요.</div>' +
-      (k || ph ? '<div style="margin-top:14px;font-size:14px;color:#7db4ff">' + (k ? "카톡: " + escHtml(k) + "<br>" : "") + (ph ? "전화: " + escHtml(ph) : "") + "</div>" : "") +
+      '<div style="margin-top:14px;font-size:14px;color:#7db4ff">' +
+        (k ? "카톡: " + escHtml(k) + "<br>" : "") +
+        (ph ? "전화: " + escHtml(ph) : "") +
+        (!k && !ph ? "결제를 원하시면 안내받으신 판매 채널로 문의해 주세요." : "") +
+      "</div>" +
       '<div style="margin-top:18px"><button id="ss-pw-close" style="background:#4f9dfa;color:#111;border:0;border-radius:8px;padding:10px 22px;font-weight:800;font-size:14px;cursor:pointer">닫기</button></div>' +
       "</div>";
     document.body.appendChild(m);
