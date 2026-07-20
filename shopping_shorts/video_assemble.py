@@ -234,9 +234,9 @@ def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP, src_durs=None):
 
     shortfall = tts_dur - filled
     if shortfall > eps:
-        last = clips[-1]
-        # 1순위: 소스에 남은 실프레임을 더 읽어 1배속 실영상으로 채운다(멈춤 없음).
+        # 1순위: 마지막 클립을 그 소스에 남은 실프레임으로 연장(1배속) — 릴이 배정 구간보다 길다.
         if src_durs:
+            last = clips[-1]
             sdur = src_durs.get(last["video_id"], 0.0)
             avail = max(0.0, sdur - (last["start"] + last["src_dur"]))
             real_ext = min(shortfall, avail)
@@ -244,9 +244,29 @@ def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP, src_durs=None):
                 last["src_dur"] += real_ext
                 last["out_dur"] += real_ext
                 shortfall -= real_ext
-        # 소스까지 소진되면(극히 드묾) 남는 만큼만 슬로모로 늘린다.
+        # 2순위(★멈춤·슬로우 없음, 2026-07-20 사장님 확정): 그래도 모자라면 실영상을 '한 장면
+        #   더 붙여' 채운다. 비트 세그먼트를 순환하며 새 클립(1배속)으로 이어붙인다 — 릴을
+        #   앞에서부터 다시 재생(루프)해서라도 화면은 진짜로 움직인다. 슬로모/정지프레임 금지.
+        guard = 0
+        while shortfall > eps and guard < 500:
+            guard += 1
+            progressed = False
+            for seg in segments:
+                if shortfall <= eps:
+                    break
+                seg_len = seg["end"] - seg["start"]
+                if seg_len <= eps:
+                    continue
+                take = min(seg_len, shortfall)
+                clips.append({"video_id": seg["video_id"], "start": seg["start"],
+                              "src_dur": take, "out_dur": take})
+                shortfall -= take
+                progressed = True
+            if not progressed:
+                break
+        # 3순위(극단 방어 — 쓸 실영상이 아예 0인 비정상 경로에서만): 최소한만 홀드.
         if shortfall > eps:
-            last["out_dur"] += shortfall
+            clips[-1]["out_dur"] += shortfall
 
     # 0.8초 미만 독립 클립 제거: 그런 클립을 이웃에 흡수(이웃이 슬로모로 그 시간을 떠안는다).
     # 앞 클립이 있으면 앞으로, 없으면(첫 클립) 뒤로 합친다. 합계(sum out_dur)는 보존된다.

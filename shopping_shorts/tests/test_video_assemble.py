@@ -476,20 +476,24 @@ def test_plan_extends_into_source_instead_of_freeze():
     assert clips[-1]["start"] + clips[-1]["src_dur"] <= 30.0 + 1e-9     # 소스 밖 유출 0
 
 
-def test_plan_falls_back_to_slowmo_when_source_also_exhausted():
-    # 소스 릴 자체가 짧으면(2.5초) 실프레임 소진 후 남는 만큼만 슬로모(freeze 최소화).
+def test_plan_loops_real_footage_no_slowmo_when_source_short():
+    # ★멈춤·슬로우 없음(2026-07-20 사장님 확정): 소스 릴이 짧아(2.5초) 실프레임을 다 써도
+    #   슬로모로 늘리지 않고 '한 장면 더 붙여'(1배속 실영상 루프) 채운다.
     segs = [_seg("A", 0.0, 2.2)]
     clips = va._plan_beat_clips(segs, tts_dur=4.0, src_durs={"A": 2.5})
     assert abs(_total_out(clips) - 4.0) < 0.05
-    assert clips[-1]["src_dur"] <= 2.5 + 1e-9                           # 소스 전체까지만 실재생
-    assert clips[-1]["out_dur"] > clips[-1]["src_dur"] + 1e-6           # 남는 만큼만 슬로모
+    assert all(abs(c["out_dur"] - c["src_dur"]) < 1e-6 for c in clips)  # 전부 1배속(슬로모 0)
+    assert len(clips) >= 2                                              # 장면을 더 이어붙였다
+    for c in clips:
+        assert c["start"] + c["src_dur"] <= 2.5 + 1e-9                  # 소스 밖 유출 0
 
 
-def test_plan_without_src_durs_keeps_old_slowmo():
-    # src_durs 미제공(하위호환): 기존 슬로모 폴백 그대로.
+def test_plan_loops_real_footage_even_without_src_durs():
+    # src_durs 미제공(하위호환)이어도 슬로모가 아니라 실영상 루프로 채운다.
     segs = [_seg("A", 0.0, 2.2)]
     clips = va._plan_beat_clips(segs, tts_dur=4.0)
-    assert clips[-1]["out_dur"] > clips[-1]["src_dur"] + 1e-6
+    assert abs(_total_out(clips) - 4.0) < 0.05
+    assert all(abs(c["out_dur"] - c["src_dur"]) < 1e-6 for c in clips)  # 슬로모 없음
 
 
 # ── _render_mix 실렌더 grounding (유출 0 + 길이 일치) ──────────────
