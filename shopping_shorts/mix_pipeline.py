@@ -165,19 +165,35 @@ def _conform_beats(beats, tts_dir, *, voice):
 
 
 def _prepare_sources(urls, work):
-    """소스 URL들을 플랫폼 무관하게 다운로드 → ({video_id: mp4경로}, {video_id: caption}).
+    """소스 URL들을 플랫폼 무관하게 다운로드 → ({video_id: mp4경로}, {video_id: caption}, skipped).
     caption은 인스타 소스만 채워짐(download_any가 (path, caption) 튜플 반환) — 유튜브/틱톡은
-    빈 문자열이라 extract_script가 영상 재전사로 채운다."""
+    빈 문자열이라 extract_script가 영상 재전사로 채운다.
+
+    ★소스별 예외격리(2026-07-19 실사고): 한 URL이 다운로드 안 되면 그 소스만 건너뛰고
+    나머지로 계속한다 — 불량 URL 하나(렌즈 즐겨찾기로 샌 instagram.com/popular/{슬러그} 등)가
+    배치 전체를 죽이던 걸 막는다. 근본차단은 lens_discover._is_watchable(입구), 여기는 백스톱.
+    video_id는 인덱스 기준(s{i})이라 중간이 빠져도 나머지 매칭에 영향 없다(갭 허용).
+    전부 실패(0개 생존)하면 RuntimeError. skipped=[(url, err), ...]."""
     video_paths = {}
     captions = {}
+    skipped = []
     for i, url in enumerate(urls):
         vid = _source_video_id(i)
         d = Path(work) / vid
         d.mkdir(parents=True, exist_ok=True)
-        path, caption = download_any(url, str(d))
+        try:
+            path, caption = download_any(url, str(d))
+        except Exception as e:  # noqa: BLE001 — 소스별 격리가 목적
+            skipped.append((url, str(e)))
+            print(f"_prepare_sources: 소스 스킵 — {url}: {e}", file=sys.stderr)
+            continue
         video_paths[vid] = path
         captions[vid] = caption
-    return video_paths, captions
+    if not video_paths:
+        raise RuntimeError(
+            "소스 영상을 하나도 못 받았습니다 — 모든 URL 다운로드 실패:\n"
+            + "\n".join(f"· {u}: {e}" for u, e in skipped))
+    return video_paths, captions, skipped
 
 
 def run_mix_job(job_id, db_path, work_root):
@@ -197,7 +213,11 @@ def run_mix_job(job_id, db_path, work_root):
         store.update_mix_job(job_id, status="downloading")
         # video_id -> mp4 path, video_id -> caption(인스타만 채워짐, 유튜브/틱톡은 "").
         # extract_script가 caption을 힌트로 쓰고 없어도 영상 재전사로 동작 — .get(vid, "")로 안전 기본값.
-        video_paths, captions = _prepare_sources(job["urls"], work)
+        # 소스별 예외격리: 불량 URL은 스킵되고 최소 1개만 살면 계속(2026-07-19).
+        video_paths, captions, skipped = _prepare_sources(job["urls"], work)
+        if skipped:
+            print(f"run_mix_job[{job_id}]: {len(skipped)}개 소스 스킵 "
+                  f"(불량 URL) — {[u for u, _ in skipped]}", file=sys.stderr)
 
         # 2) 대본 추출(병렬)
         store.update_mix_job(job_id, status="extracting")
@@ -219,6 +239,18 @@ def run_mix_job(job_id, db_path, work_root):
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=str(e))
+        # 유료게이트: 렌더 실패 → 예약한 'render' 크레딧 환불(계정+전역). 실패했는데 크레딧만
+        # 날아가면 시니어에겐 '고장'으로 읽힌다(하루 2회뿐). points 실패환불(_fx_render_job)과 대칭.
+        # ★render_charge_day가 있는 job만(=/api/mix/start가 실제 과금한 것) 환불하고, 딱 그 날짜로
+        #   되돌린다. produce 2단계·auto_run·retype는 과금 안 해 이 값이 없다 → 오환불로 전역
+        #   카운터를 갉아 다른 유저 과금을 상쇄하는 일을 막는다(리뷰 B/F).
+        day = job.get("render_charge_day")
+        if day:
+            try:
+                store.usage_decr(job.get("customer_id", 0), "render", day)
+                store.usage_decr(-1, "render", day)
+            except Exception:
+                traceback.print_exc(file=sys.stderr)
 
 
 def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, video_type, work,
@@ -277,14 +309,20 @@ def retype_mix_job(job_id, video_type, db_path, work_root):
 
 
 def _resolve_sources(job, work):
-    """다운로드된 소스 mp4 경로 맵 {video_id: path}. 없으면 예외."""
+    """다운로드된 소스 mp4 경로 맵 {video_id: path}.
+
+    ★스킵 일관성(2026-07-20 실사고): _prepare_sources가 불량 URL 소스를 건너뛰므로(다운로드
+    안 됨), 여기서도 mp4 없는 video_id는 건너뛴다 — 미리보기/렌더 경로가 스킵된 소스를 찾다
+    '소스 영상 없음: s1'으로 죽던 문제. edit_plan은 다운로드된 소스만 참조하고, video_assemble도
+    source_video_paths에 없는 video_id는 걸러낸다(관용적). 단 하나도 없으면(전부 실패) 예외."""
     source_video_paths = {}
     for i in range(len(job["urls"])):
         vid = _source_video_id(i)
         mp4 = next((work / vid).glob("*.mp4"), None)
-        if mp4 is None:
-            raise RuntimeError(f"소스 영상 없음: {vid} (다운로드 디렉터리에 mp4 없음)")
-        source_video_paths[vid] = str(mp4)
+        if mp4 is not None:
+            source_video_paths[vid] = str(mp4)
+    if not source_video_paths:
+        raise RuntimeError("소스 영상을 하나도 찾지 못했습니다 (다운로드 디렉터리에 mp4 없음)")
     return source_video_paths
 
 

@@ -100,11 +100,13 @@ def test_current_work_is_marked():
     assert out == "missing", "아무 작업도 안 열었는데 현재 표시가 붙었다"
 
 
-def test_no_fetch_on_other_pages():
-    """다른 페이지에서 제작소 작업 목록을 부를 이유가 없다 — 6개 페이지가 이 파일을 공유한다."""
+def test_works_fetched_on_all_pages():
+    """T6(2026-07-19): 작업 목록을 /produce 전용 → 전 페이지 노출로 바꿨다(설계서 §3-3).
+    어느 화면에서도 진행 중 작업으로 바로 복귀 — 그래서 /library 같은 다른 페이지에서도 fetch한다.
+    (옛 test_no_fetch_on_other_pages를 뒤집은 것: 그땐 /produce에서만 불렀다.)"""
     out = _run("console.log(FETCHED.filter(u=>u.indexOf('/api/produce/works')!==-1).length ? 'fetched' : 'no');",
                harness_override="location.pathname='/library';")
-    assert out == "no"
+    assert out == "fetched"
 
 
 def test_empty_list_does_not_break_nav():

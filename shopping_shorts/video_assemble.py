@@ -429,6 +429,26 @@ def _caption_vf(narration, dur, has_font, work, idx):
     return ",".join([base] + draws)
 
 
+def _extend_with_frozen_motion(sub_path, play_out, freeze, out_path):
+    """움직이는 클립(sub) 뒤에 freeze초 정지 구간을 붙이되, '죽은 정지'가 아니라 완만한
+    켄번즈 줌을 전체(play+freeze)에 얹어 정지 구간에도 화면이 살아있게 한다(2026-07-19,
+    P1 후속). 사장님 육안 피드백 — tpad clone 단독 홀드는 마지막 프레임이 픽셀까지 동일해
+    뚝 멈춰 어색하다.
+
+    한 체인에서 tpad→zoompan 순서로 건다. 예전 주석의 'zoompan은 tpad와 한 체인에서
+    안 된다(출력 잘림)'는 반대 순서(zoompan→tpad)의 문제였다 — tpad를 먼저 두면 출력이
+    정상 길이로 나온다(실측 2026-07-19). zoompan은 출력 프레임번호 'on'으로 확대하므로
+    tpad가 만든 정지 프레임에서도 줌이 계속 진행돼 움직임이 유지된다."""
+    total = play_out + freeze
+    _run_ffmpeg([
+        "ffmpeg", "-y", "-i", str(sub_path),
+        "-vf", f"tpad=stop_mode=clone:stop_duration={freeze:.3f},{_kenburns_vf(total)}",
+        "-r", "30", "-an", "-t", f"{total:.3f}",
+        "-c:v", "libx264", "-pix_fmt", "yuv420p", str(out_path),
+    ])
+    return out_path
+
+
 def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=None):
     """각 비트를 [소스영상+TTS]로 렌더(우리 자막 없음) → concat → mix_raw.mp4 경로.
     자막을 굽지 않으므로 이후 VMake 자막제거가 우리 자막을 지우지 않는다.
@@ -480,8 +500,12 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
             # 재생은 최대 _MAX_SLOWMO배까지만 늘리고, 남는 시간은 마지막 프레임 정지(freeze).
             # play_out+freeze == out_dur → 총 길이·오디오/자막 싱크 불변.
             play_out, freeze = _speed_and_freeze(c["src_dur"], c["out_dur"])
+            # freeze 클립은 움직이는 부분을 정적 베이스줌으로 두고, 켄번즈 모션은 freeze
+            # 패스에서 전체(play+freeze)에 한 번만 건다(정지 구간도 살아있게, 2026-07-19).
+            # 안 그러면 pass1 줌 + freeze 켄번즈가 겹쳐 줌이 두 번 쌓인다.
+            clip_vf = _base_zoom_vf() if freeze > 1e-3 else vf
             factor = play_out / c["src_dur"] if c["src_dur"] > 1e-6 else 1.0
-            vf_full = f"{vf},setpts={factor:.6f}*PTS" if factor > 1.0 + 1e-6 else vf
+            vf_full = f"{clip_vf},setpts={factor:.6f}*PTS" if factor > 1.0 + 1e-6 else clip_vf
             # start를 소스 안으로 당긴다(타트랙 병합, 2026-07-19). 약한 매칭이 소스 밖을 잡으면
             #   -ss가 끝을 넘어 0프레임이 나와 concat이 죽는다. [start, start+src_dur]가 소스
             #   안에 들어오게 당기되, 소스가 src_dur보다 짧으면 0에서 있는 만큼 읽는다.
@@ -502,16 +526,12 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
             # 그래도 비면(소스 손상/범위밖) 이 클립만 버린다 — 하나가 미리보기 전체를 죽이지 않게.
             if not sub.exists() or _probe_duration(sub) <= 0.05:
                 continue
-            # 2단계 — 정지프레임(P1): zoompan(켄번즈)은 tpad와 한 체인에서 안 된다(출력 잘림,
-            #   실측 2026-07-19). 완성된 클립에 별도 패스로 tpad를 얹어 마지막 프레임을 freeze초 홀드.
+            # 2단계 — 정지프레임(P1 후속, 2026-07-19): 마지막 프레임을 freeze초 홀드하되
+            #   전체에 켄번즈를 얹어 '죽은 정지'가 아니라 움직이는 홀드로 만든다. tpad→zoompan
+            #   순서면 한 체인에서 정상 동작(_extend_with_frozen_motion 주석 참조).
             if freeze > 1e-3:
                 frozen = work / f"beat_{idx}_{j}f.mp4"
-                _run_ffmpeg([
-                    "ffmpeg", "-y", "-i", str(sub),
-                    "-vf", f"tpad=stop_mode=clone:stop_duration={freeze:.3f}",
-                    "-r", "30", "-an", "-t", f"{play_out + freeze:.3f}",
-                    "-c:v", "libx264", "-pix_fmt", "yuv420p", str(frozen),
-                ])
+                _extend_with_frozen_motion(sub, play_out, freeze, frozen)
                 sub_paths.append(frozen)
             else:
                 sub_paths.append(sub)

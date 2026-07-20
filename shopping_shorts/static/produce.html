@@ -25,6 +25,20 @@
     .head h2{margin:0;font-size:22px}
     .head .desc{color:var(--sub);font-size:13px;margin-top:4px}
 
+    /* T8: 저장 상태 + 되돌리기 — "지금 저장됐다"를 상시 보여 60대 신뢰감 */
+    .saveBar{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin:0 0 4px;min-height:24px;font-size:13px}
+    #saveStatus{color:var(--sub);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+    #saveStatus.ok{color:var(--ok);font-weight:700}
+    #saveStatus.ok .savedTick{display:inline-block;animation:savedPop .32s ease-out}
+    @keyframes savedPop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.18)}100%{transform:scale(1);opacity:1}}
+    @media(prefers-reduced-motion:reduce){#saveStatus.ok .savedTick{animation:none}}
+    #revertBtn{background:var(--panel);border:1px solid var(--line);color:var(--sub);border-radius:8px;
+      padding:5px 12px;font-size:13px;cursor:pointer;transition:.15s}
+    #revertBtn:not(:disabled):hover{border-color:var(--accent);color:var(--txt)}
+    #revertBtn:disabled{opacity:.4;cursor:default}
+    /* T8: 미리보기 위치 통일 — 0단계·4단계 미러가 같은 좌측 슬롯 규약(sticky·상단고정)을 공유 */
+    .previewSlot{position:sticky;top:12px;align-self:flex-start;z-index:7}
+
     /* 진행바 — 크게(60대 최우선). 완료=채운 민트+체크, 현재=링+숨쉬기(색이 아니라 형태로도 구분) */
     .steps{display:flex;align-items:flex-start;gap:0;margin:26px 0 30px;max-width:1120px}
     .step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative;cursor:pointer}
@@ -42,6 +56,10 @@
       50%{box-shadow:0 0 0 11px rgba(55,224,189,0),0 8px 26px -8px rgba(55,224,189,.5)}}
     @media(prefers-reduced-motion:reduce){.step.active .dot{animation:none}}
     .step.active .lbl{color:var(--txt);font-weight:700}
+    /* T7: 미완 단계 = 잠금(회색+🔒). 색이 아니라 형태로도 구분 */
+    .step.locked{cursor:not-allowed}
+    .step.locked .dot{background:var(--panel);border-color:var(--line);color:var(--sub);opacity:.45;box-shadow:none;animation:none}
+    .step.locked .lbl{color:var(--sub);opacity:.6}
 
     /* 스텝 패널 */
     .panel{display:none;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;max-width:1120px}
@@ -49,6 +67,11 @@
     .panel h3{margin:0 0 4px;font-size:18px}
     .panel .sub{color:var(--sub);font-size:14px;margin-bottom:16px}
     .stub{color:var(--sub);font-size:15px;padding:40px;text-align:center;border:1px dashed var(--line);border-radius:10px}
+    /* T7: 못 쓰는 단계 = stub 대신 잠금 카드(🔒 + 다음 행동 1줄). 60대 어포던스 */
+    .lockcard{padding:36px 24px;text-align:center;border:1px dashed var(--line);border-radius:12px;background:var(--inset)}
+    .lockcard .lc-ic{font-size:34px}
+    .lockcard .lc-t{font-size:15px;font-weight:700;margin-top:8px;color:var(--txt)}
+    .lockcard .lc-h{font-size:14px;color:var(--sub);margin-top:6px;line-height:1.5}
 
     /* 하단 네비 */
     .nav{display:flex;justify-content:space-between;margin:18px 0 40px;max-width:1120px}
@@ -170,6 +193,13 @@
     <!-- 즐겨찾기에서 "영상제작으로 보내기"로 넘어왔을 때 표시(핸드오프 확인 배너) -->
     <div id="handoffBanner" style="display:none;background:var(--sel-bg);border:1px solid var(--accent);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--sel-fg)"></div>
 
+    <!-- T8: 저장 상태 상시 표시 + 되돌리기(직전 저장 스냅샷 복원) -->
+    <div class="saveBar">
+      <span id="saveStatus" aria-live="polite"></span>
+      <button id="revertBtn" onclick="revertWork()" disabled
+        title="방금 전 저장 상태(대본·영상풀·단계)로 되돌립니다.">↩ 되돌리기</button>
+    </div>
+
     <div class="steps" id="steps"></div>
 
     <!-- 1) 제작소: 좌(영상 풀) · 우(결과 — 확정대본/화면담김) -->
@@ -182,7 +212,7 @@
           <!-- 🪞 1단계 미리보기 — 편집안이 뜨면(loadMixReview) 이 좌측 공간이 프리뷰 자리가 된다.
                우측 편집안을 읽으며 스크롤해도 따라오도록 sticky. 오른쪽 [▶ 미리보기 만들기]가
                여기(#mixPreview)로 렌더한다(2026-07-19 사장님 요청 — 우측 인라인→좌측 프리뷰). -->
-          <div id="mixPreviewPanel" style="display:none;position:sticky;top:12px;z-index:6;margin-bottom:16px">
+          <div id="mixPreviewPanel" class="previewSlot" style="display:none;margin-bottom:16px">
             <div class="hint" style="margin-bottom:6px">🪞 미리보기 (9:16)</div>
             <div id="mixPreview"></div>
           </div>
@@ -236,8 +266,8 @@
         <span><b>원본 자막 제거 (VMake)</b><div class="hint">끄면 원본 영상 그대로 사용. 켜면 렌더 시 VMake로 자막 제거 후 우리 자막을 굽습니다.</div></span>
       </label>
       <div id="subState" class="hint" style="margin-top:8px"></div>
-      <div id="cleanPreviewWrap" style="margin-top:12px">
-        <button id="btnCleanPreview" class="btn" onclick="startCleanPreview()" disabled>자막제거 미리보기</button>
+      <div id="cleanPreviewWrap" style="margin-top:12px;display:none">
+        <button id="btnCleanPreview" class="btn" onclick="startCleanPreview()">자막제거 미리보기</button>
         <div id="cleanPreview" class="hint" style="margin-top:10px"></div>
       </div>
     </section>
@@ -280,8 +310,8 @@
       <div class="sub">아래 <b>완성 스타일</b>을 고르면 바로 완성돼요. 실제 장면 위에서 미리보고, 더 손보고 싶으면 <b>직접 다듬기</b>를 펼치세요.</div>
       <!-- 🪞 피팅룸: 좌(큰 미러) + 우(문구·스타일카드·강조·고급) -->
       <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;margin-top:12px">
-        <!-- 좌: 큰 피팅 미러 (다듬기 스크롤 시 따라오도록 sticky) -->
-        <div style="flex:0 0 auto;position:sticky;top:12px;align-self:flex-start;z-index:7">
+        <!-- 좌: 큰 피팅 미러 (다듬기 스크롤 시 따라오도록 sticky) — T8: 좌측 슬롯 규약(.previewSlot) 공유 -->
+        <div class="previewSlot" style="flex:0 0 auto">
           <div class="hint" style="margin-bottom:4px">🪞 실시간 미리보기 (9:16) — 글자를 <b>드래그</b>해 위치 이동
             <label style="cursor:pointer;margin-left:6px;color:var(--txt)"><input type="checkbox" id="sceneBg" onchange="toggleSceneBg()"> 실장면 배경</label></div>
           <div id="hcPreview" style="position:relative;width:380px;aspect-ratio:9/16;background:#ffffff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.4)">
@@ -571,7 +601,7 @@
           <label><input type="radio" name="pmmode" value="B" onchange="pmToggleTopic()"> 🔀 내 제품으로 이식 (구조만 빌림)</label>
           <input id="pmTopic" placeholder="예: 무선 가습기 / 여름 결로 방지 커튼" style="display:none">
         </div>
-        <button class="gen-run" id="pmRun" onclick="pmRunGen()">✨ 초안 생성 (10~20초)</button>
+        <button class="gen-run" id="pmRun" onclick="pmRunGen()">✨ 초안 생성 (15~40초)</button>
         <div class="gen-results" id="pmResults"></div>
       </div>
     </div>
@@ -583,11 +613,15 @@ let cur = 0;
 
 function renderSteps(){
   const el = document.getElementById('steps');
-  el.innerHTML = STEPS.map((s,i)=>`
-    <div class="step ${i<cur?'done':''} ${i===cur?'active':''}" onclick="jump(${i})">
-      <div class="dot">${i<cur?'✓':(i+1)}</div>
+  if(!el) return;
+  el.innerHTML = STEPS.map((s,i)=>{
+    const lk = stepLocked(i);
+    return `
+    <div class="step ${i<cur?'done':''} ${i===cur?'active':''} ${lk?'locked':''}" onclick="jump(${i})">
+      <div class="dot">${i<cur?'✓':(lk?'🔒':(i+1))}</div>
       <div class="lbl">${s}</div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 function showPanel(){
   document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('show', +p.dataset.step===cur));
@@ -627,9 +661,15 @@ function seoEsc(s){
     {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+// T7: 못 쓰는 단계는 stub 대신 잠금 카드 + 다음 행동 1줄 안내(60대 어포던스).
+function lockCard(hint){
+  return '<div class="lockcard"><div class="lc-ic">🔒</div>'
+       + '<div class="lc-t">아직 잠겨 있어요</div>'
+       + '<div class="lc-h">'+hint+'</div></div>';
+}
 async function initSeo(){
   if(!MIX_JOB){ document.getElementById('seoBody').innerHTML =
-    '<div class="stub">1단계에서 대본을 먼저 확정하세요.</div>'; return; }
+    lockCard('① 제작소에서 대본을 확정하면 열립니다'); return; }
   if(SEO){ renderSeo(); return; }
   try{
     const r = await fetch('/api/produce/seo/get?job_id='+encodeURIComponent(MIX_JOB));
@@ -1546,19 +1586,20 @@ async function saveHeadcopy(){
     body:JSON.stringify({job_id:MIX_JOB, headcopy:STATE.headcopy, caption_style:STATE.captionStyle, deco:STATE.deco})}); }catch(e){}
 }
 function jump(i){
-  // ★1단계 미리보기 게이트(2026-07-17). renderSteps()가 **모든 스텝 칩**에 onclick="jump(i)"를
-  // 박아 상단에 항상 렌더한다 — 여기 가드가 없으면 "자막제거" 칩 한 번 클릭으로 게이트가 통째로
-  // 우회되고, 그 뒤 refreshNextBtn()은 cur=1이라 게이트를 안 걸어 버튼까지 도로 열어준다
-  // (우회 흔적도 안 남는다). go()의 "방어 두 겹"은 실은 같은 문에 두 겹이었다.
-  // 뒤로 가는 건 막지 않는다 — 앞으로 가는 것만.
-  if(i > cur && cur === 0 && MIX_JOB && !canGoNext()) return;
+  if(i === cur) return;
+  // T7(§4-3): 잠긴 단계(회색+🔒)로는 못 간다. stepLocked가 기존 0→1 미리보기 게이트를 흡수해
+  // **모든 dot**에 일관 적용한다 — 예전엔 renderSteps가 모든 칩에 onclick="jump(i)"를 박아
+  // "자막제거" 칩 한 번 클릭으로 게이트가 통째로 우회됐다. 뒤로(완료 단계)는 자유 — 잠긴 단계는
+  // 항상 미완 프런티어 위쪽이라 뒤는 애초에 안 잠긴다.
+  if(stepLocked(i)){ toast(stepLockMsg()); return; }
   cur=i; renderSteps(); showPanel(); saveWork();   // ★단계를 서버에 남긴다(2026-07-19) — 안 남기면 새로고침이 1단계로 되돌린다
 }
 function go(d){
-  // 1단계 미리보기 게이트(2026-07-17). btnNext의 disabled만으론 부족하다 — go(1)이 다른
-  // 경로로도 불릴 수 있어 방어를 두 겹으로 둔다. 유료 자막제거로 못 본 채 넘어가는 걸 막는다.
-  if(d > 0 && cur === 0 && MIX_JOB && !canGoNext()) return;
-  const n=cur+d; if(n<0||n>=STEPS.length) return; cur=n; renderSteps(); showPanel(); saveWork();   // ★단계 이동을 저장(새로고침 복원용)
+  const n=cur+d; if(n<0||n>=STEPS.length) return;
+  // T7: 잠긴 앞단계로는 못 넘어간다(stepLocked = 미리보기 게이트 흡수, 유료 자막제거 우회 방지).
+  // 뒤로는 자유. btnNext는 refreshNextBtn이 이미 잠가두지만 go()가 다른 경로로도 불려 두 겹 방어.
+  if(stepLocked(n)){ toast(stepLockMsg()); return; }
+  cur=n; renderSteps(); showPanel(); saveWork();   // ★단계 이동을 저장(새로고침 복원용)
 }
 
 // ── 1단계 대본: 3모드 ──────────────────────────────
@@ -1880,6 +1921,26 @@ let HANDOFF = [];   // [{url,shortcode,name,thumbnail,caption,pickScript,useFoot
 // (2026-07-14). sessionStorage에 상시 보관, 매 변경 시 갱신, 로드 시 복원.
 let WORK_ID = null;      // 서버 작업파일 id. 첫 저장 응답으로 채워진다.
 let _workTimer = null;   // 서버 POST 디바운스(입력마다 두들기지 않는다)
+// T8: 저장 상태 표시 + 되돌리기.
+// _lastCommitted = 서버에 마지막으로 확정 저장된 스냅샷(_workState JSON), _prevCommitted = 그 직전.
+// 서버 push는 1초 디바운스라 연타 입력은 하나로 뭉친다 → _prevCommitted는 "직전 저장 지점"이 된다.
+let _lastCommitted = null, _prevCommitted = null;
+function _setSaveStatus(text, cls){
+  if(typeof document === 'undefined') return;   // DOM 없는 환경(노드 슬라이스 테스트)에선 무해히 지나간다
+  const el = document.getElementById('saveStatus'); if(!el) return;
+  el.className = cls || '';
+  el.innerHTML = text;
+}
+function _markSaving(){ _setSaveStatus('저장 중…'); }
+function _markSaved(){ _setSaveStatus('<span class="savedTick">✓</span> 저장됨', 'ok'); }
+function _markLocalOnly(){ _setSaveStatus('이 기기에 임시 저장됨'); }   // 서버 실패 — 로컬은 살아있음(정직하게)
+function _refreshRevertBtn(){
+  if(typeof document === 'undefined') return;
+  const b = document.getElementById('revertBtn'); if(b) b.disabled = !_prevCommitted;
+}
+// 서버 복원 직후 호출 — 복원 상태를 저장 기준선으로 삼아 "✓ 저장됨" 표시 + 첫 편집 되돌리기 가능.
+// (save 슬라이스에 둬서 _lastCommitted·_workState와 한 스코프. _bootRestore는 존재할 때만 부른다.)
+function _seedSaveBaseline(){ _lastCommitted = JSON.stringify(_workState()); _markSaved(); _refreshRevertBtn(); }
 function _workState(){
   // ★sessionStorage.produce_work의 스키마 **그대로** + step + work_id. 새 형식을 발명하지 않는다 —
   // _consumeProduceHandoff가 이미 이 모양을 읽는다(스펙 §4.2).
@@ -1899,6 +1960,10 @@ async function _pushWork(){
     const d = await r.json();
     if(d && d.ok && d.work_id){
       WORK_ID = d.work_id;   // 다음 저장이 같은 작업을 갱신하도록
+      // T8: 확정 저장 성공 — 스냅샷 체인 전진(직전 지점 보존) + "저장됨 ✓" 표시.
+      const _snap = JSON.stringify(st);
+      if(_snap !== _lastCommitted){ if(_lastCommitted) _prevCommitted = _lastCommitted; _lastCommitted = _snap; }
+      _markSaved(); _refreshRevertBtn();
       // ★sessionStorage도 다시 쓴다(구멍 2, 2026-07-17 라이브 실사고: 제작소를 열 때마다 작업이
       // 복제됨). saveWork()가 이미 위에서 WORK_ID=null인 채로 sessionStorage를 써버렸다 — 여기서
       // 갱신 안 하면 새로고침 시 _consumeProduceHandoff가 work_id=null을 읽어 다음 저장이 새
@@ -1917,7 +1982,7 @@ async function _pushWork(){
         }
       }catch(e){}
     }
-  }catch(e){}   // 서버가 죽어도 sessionStorage 복원은 살아 있다 — 저장 실패로 작업을 막지 않는다
+  }catch(e){ _markLocalOnly(); }   // 서버가 죽어도 sessionStorage 복원은 살아 있다 — 저장 실패로 작업을 막지 않는다
 }
 function saveWork(){
   // ★가드가 **여기 안**에 있다(2026-07-17). 예전엔 호출부 5곳마다 각각 HANDOFF 길이를 검사한 뒤에만
@@ -1926,10 +1991,28 @@ function saveWork(){
   const st = _workState();
   if(!HANDOFF.length && !st.script) return;
   try{ sessionStorage.setItem('produce_work', JSON.stringify(st)); }catch(e){}   // 로컬은 즉시
+  _markSaving();                                                                 // T8: 편집됨 → 곧 저장
   clearTimeout(_workTimer);
   _workTimer = setTimeout(_pushWork, 1000);                                      // 서버는 디바운스
 }
 function clearWork(){ try{ sessionStorage.removeItem('produce_work'); }catch(e){} }
+// T8: 직전 저장 스냅샷으로 되돌린다. 복원 범위 = 스냅샷이 담는 것(대본·영상풀·단계).
+// 새 저장 형식을 발명하지 않는다 — 검증된 _restoreWork의 하이드레이션을 그대로 미러링한다(§_workState 주석).
+function revertWork(){
+  if(!_prevCommitted) return;
+  let w; try{ w = JSON.parse(_prevCommitted); }catch(e){ return; }
+  HANDOFF = w.handoff || [];
+  STATE.script = w.script || '';
+  STATE.script_src_idx = (typeof w.script_src_idx === 'number') ? w.script_src_idx : null;
+  STATE.script_from_wiki = (typeof w.script_from_wiki !== 'undefined') ? w.script_from_wiki : null;
+  if(STATE.script) setScriptMode('manual');
+  renderPool(); syncFootageToMixUrls(); refreshFinalPeek();
+  const st = w.step;
+  cur = (typeof st === 'number' && st >= 0 && st < STEPS.length) ? st : cur;
+  if(cur > 0 && MIX_JOB && !canGoNext()) cur = 0;   // 미리보기 미확인이면 1단계로(게이트 규약 유지)
+  renderSteps(); showPanel(); refreshNextBtn();
+  saveWork();   // 되돌린 상태를 새 현재로 저장(_pushWork가 스냅샷 체인을 전진 → 다시 누르면 원상복귀)
+}
 // 서버 작업파일 복원(2026-07-17) — /produce?work=<id>로 들어왔을 때.
 // sessionStorage 복원(_consumeProduceHandoff)은 그대로 둔다. 이건 **추가 계층**이다.
 async function _restoreWork(workId){
@@ -2287,7 +2370,7 @@ async function pmRunGen(){
   const subjEl=document.getElementById('pmSubject');
   const subject = mode==='A' ? ((subjEl&&subjEl.value)||'').trim() : '';   // 이식(B)엔 소재 안 보냄
   if(mode==='B'&&!topic){ res.innerHTML='<div class="hint" style="color:var(--fire)">내 주제/제품을 입력하세요.</div>'; return; }
-  btn.disabled=true; res.innerHTML='<div class="hint">✨ 초안 만드는 중… (10~20초)</div>';
+  btn.disabled=true; res.innerHTML='<div class="hint">✨ 초안 만드는 중… (15~40초)</div>';
   try{
     const body={mode, my_topic:topic, subject, n:3, elem_modes:elemModes, structure:PM_BASE_STRUCT, base_script:PM_BASE_SCRIPT, category:PM_CATEGORY};
     const d=await (await fetch('/api/wiki/generate?shortcode='+encodeURIComponent(PM_SHORTCODE||PM_URL),
@@ -2555,6 +2638,7 @@ async function loadMixReview(){
   // ★렌더 본체는 _renderMixReviewBody로 뽑았다(2026-07-19) — 새로고침 복원(_restoreMixContext)이
   //   같은 화면을 그려야 하는데 markup을 복제하면 갈라진다. 아래 초기화(게이트 재잠금)는 여기 남는다:
   //   loadMixReview는 "새 매칭"이라 미리보기를 다시 봐야 하고, 복원은 이미 본 것이라 안 잠근다.
+  //   _renderMixReviewBody는 커버리지 신호등·스왑버튼(어긋남구제)에 콘폼 배지·sync_gap 경고까지 포함한다.
   _renderMixReviewBody(d);
   // 편집안을 새로 그렸다 = 새 매칭이다. 옛 미리보기 상태를 물고 있으면 사장님이 옛 영상을
   // 본 것으로 치고 다음이 열린다 → 여기서 반드시 초기화한다.
@@ -2687,11 +2771,45 @@ function canGoNext(){
   return PREVIEW_STATUS === 'ready' || PREVIEW_STATUS === 'failed';
 }
 
+// T7: 게이트 판정 단일화(§4-3). 어느 단계가 지금 잠겨 있나 — jump·go·refreshNextBtn·renderSteps가
+// 전부 이 하나를 본다. 0단계(제작소)는 허브라 항상 열림. 1~6단계는 '영상 매칭(MIX_JOB) +
+// 미리보기 확인(canGoNext)'이 끝나야 열린다 = 기존 0→1 미리보기 게이트(유료 자막제거 우회 방지)를
+// 모든 dot에 일관 적용. canGoNext는 'failed'도 통과시키는 탈출구가 있어 렌더가 고장나도 안 갇힌다.
+function stepLocked(i){
+  // 0단계(허브)는 항상 열림. 1~6단계는 '매칭(MIX_JOB) 후 · 미리보기 확인 전'에만 잠근다 —
+  // 기존 0→1 미리보기 게이트(유료 자막제거 우회 방지)를 dot에 그대로 반영한다. 매칭 전(MIX_JOB
+  // 없음)엔 안 잠근다(기존 설계 유지: 그땐 자유 이동, 빈 단계는 T7a 잠금 카드가 받는다).
+  return i >= 1 && !!MIX_JOB && !canGoNext();
+}
+function stepLockMsg(){
+  return !MIX_JOB ? '먼저 1단계에서 영상을 매칭하세요' : '먼저 1단계에서 미리보기를 확인하세요';
+}
+// 잠긴 단계 클릭 등 짧은 안내(60대 어포던스). 기존 alert 남발 대신 조용한 토스트.
+function toast(msg){
+  let t = document.getElementById('ssToast');
+  if(!t){
+    t = document.createElement('div'); t.id = 'ssToast';
+    t.style.cssText = 'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:99999;'
+      + 'background:var(--panel);color:var(--txt);border:1px solid var(--accent);border-radius:10px;'
+      + 'padding:11px 18px;font-size:14px;box-shadow:0 8px 30px rgba(0,0,0,.4);opacity:0;transition:opacity .2s';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg; t.style.opacity = '1';
+  clearTimeout(t._h); t._h = setTimeout(function(){ t.style.opacity = '0'; }, 2200);
+}
+
 function refreshNextBtn(){
-  const b = document.getElementById('btnNext'); if(!b) return;
+  const b = document.getElementById('btnNext');
+  // ★dot 잠금도 여기서 같이 동기화한다 — PREVIEW_STATUS/MIX_JOB이 바뀌는 모든 지점이
+  //   refreshNextBtn을 부르므로, 미리보기가 ready/failed 되는 즉시 🔒이 자동으로 풀린다.
+  //   (renderSteps는 아무 함수도 안 불러서 재귀는 없다.)
+  renderSteps();
+  if(!b) return;
+  // btnNext는 기존과 동일하게 **0→1 전이만** 게이트한다 — 다른 단계에선 안 끼어든다.
+  // dot 잠금(stepLocked)이 나머지 시각 표현을 맡는다.
   const gated = (cur === 0 && MIX_JOB && !canGoNext());
   b.disabled = gated;
-  b.title = gated ? '미리보기를 먼저 확인하세요' : '';
+  b.title = gated ? stepLockMsg() : '';
 }
 
 async function startPreview(){
@@ -2796,13 +2914,15 @@ function refreshSub(){
   const cb=document.getElementById('subToggle'); if(cb) cb.checked=STATE.subtitleRemoval;
   const s=document.getElementById('subState');
   if(s) s.textContent = MIX_JOB ? '' : '⚠️ 2단계에서 영상 매칭을 먼저 실행하세요.';
-  const btn=document.getElementById('btnCleanPreview');
-  if(btn) btn.disabled = !(STATE.subtitleRemoval && MIX_JOB);   // 켜짐+매칭됨일 때만
+  // T7: 못 쓰는 컨트롤은 비활성 노출 대신 숨긴다 — 자막제거 켜짐+매칭됨일 때만 미리보기가 등장.
+  const wrap=document.getElementById('cleanPreviewWrap');
+  if(wrap) wrap.style.display = (STATE.subtitleRemoval && MIX_JOB) ? '' : 'none';
 }
 async function onSubToggle(){
   STATE.subtitleRemoval = document.getElementById('subToggle').checked;
-  const cbtn=document.getElementById('btnCleanPreview');
-  if(cbtn) cbtn.disabled = !(STATE.subtitleRemoval && MIX_JOB);
+  // T7: disabled 노출 대신 숨김 — 자막제거 켜짐+매칭됨일 때만 미리보기 버튼이 나타난다.
+  const cwrap=document.getElementById('cleanPreviewWrap');
+  if(cwrap) cwrap.style.display = (STATE.subtitleRemoval && MIX_JOB) ? '' : 'none';
   const s=document.getElementById('subState');
   if(!MIX_JOB){ if(s) s.textContent='⚠️ 2단계 매칭 후 적용됩니다(설정은 기억됨).'; return; }
   try{
@@ -3612,7 +3732,16 @@ function _bootRestore(){
     try{ history.replaceState({}, '', '/produce'); }catch(e){}
   }
   const wid = sp.get('work');
-  if(wid){ _restoreWork(wid); } else { _consumeProduceHandoff(); }
+  if(wid){
+    // T8: 서버 복원(_restoreWork는 saveWork를 안 부른다)이 끝나면 복원 상태를 저장 기준선으로 시드해
+    //   "✓ 저장됨" 표시 + 복원 직후 첫 편집도 되돌릴 수 있게 한다. (여기서 시드 = 슬라이스 테스트 불간섭)
+    //   Promise.resolve: _restoreWork가 프라미스가 아니어도(테스트 스텁) .then이 안전. 시더는 있을 때만.
+    Promise.resolve(_restoreWork(wid)).then(()=>{ if(typeof _seedSaveBaseline==='function') _seedSaveBaseline(); });
+  } else {
+    // sessionStorage 경로(_consumeProduceHandoff)는 끝에서 saveWork()를 부른다 → _pushWork가
+    //   기준선(_lastCommitted)을 자동으로 잡는다. 별도 시드 불필요.
+    _consumeProduceHandoff();
+  }
 }
 _bootRestore();
 refreshFinalPeek();

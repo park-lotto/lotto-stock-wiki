@@ -57,7 +57,9 @@ const _els = { mixPreview: el(), btnNext: el(), mixState: el(), mixReview: el(),
                mixStatus: el() };
 const document = { getElementById(id){ return _els[id] || null; }, querySelector(){ return null; },
                    // startProduceMix가 소스 URL을 읽는다 — 1개는 있어야 진행된다.
-                   querySelectorAll(sel){ return sel === '.mixUrl' ? [{value:'https://x/1'}] : []; } };
+                   querySelectorAll(sel){ return sel === '.mixUrl' ? [{value:'https://x/1'}] : []; },
+                   // T7: 잠긴 단계 클릭 시 toast()가 안내를 그린다 — createElement/body가 없으면 죽는다.
+                   createElement(){ return el(); }, body: { appendChild(){} } };
 function esc(s){ return s; }
 // ⚠️ PREVIEW_STATUS·PREVIEW_POLL·PREVIEW_GEN은 여기서 선언하지 마라 — 아래 실제 소스가 let으로
 // 선언하므로 중복 선언이 되어 SyntaxError로 죽는다. 슬라이스 밖 심볼만 여기서 준다.
@@ -87,6 +89,8 @@ let _timerSeq = 0;
 const _timers = new Map();
 function setInterval(fn, ms){ const id = ++_timerSeq; _timers.set(id, fn); return id; }
 function clearInterval(id){ if (id !== null && id !== undefined) _timers.delete(id); }
+function setTimeout(fn, ms){ return 0; }   // T7 toast()용 — 타이머 실행은 이 게이트 테스트와 무관
+function clearTimeout(id){}
 async function _drain(){ for (let i = 0; i < 8; i++) await Promise.resolve(); }
 async function _tick(){ for (const fn of Array.from(_timers.values())) await fn(); await _drain(); }
 
@@ -399,7 +403,8 @@ def test_go_has_gate_guard():
     i = html.find("function go(d){")
     assert i != -1, "go() 못 찾음"
     body = html[i: i + 320]
-    assert "canGoNext()" in body, f"go()에 게이트 가드가 없다: {body[:180]!r}"
+    # T7: 게이트 가드가 canGoNext() 직접호출 → stepLocked()로 수렴(stepLocked 안에서 canGoNext를 본다).
+    assert "stepLocked(" in body, f"go()에 게이트 가드가 없다: {body[:180]!r}"
 
 
 def test_stale_review_hint_is_gone():
