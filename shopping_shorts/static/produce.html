@@ -2095,10 +2095,29 @@ function _renderMixReviewBody(d){
       <div class="scene-cutaway" id="sceneCutaway${i}">${renderSceneCutaway(b, i)}</div>
     </div>`).join('')+`<div class="hint" style="margin-top:6px">✅ 매칭 완료${(d.beats||[]).some(b=>b.fit&&b.fit<=2)?' <span style="color:var(--fire)">— ⚠️ 표시된 문장은 영상이 약합니다</span>':''} — 아래에서 <b>미리보기</b>를 확인한 뒤 다음으로 넘어가세요.</div>`
     +`<button id="btnPreview" class="btn-next" style="margin-top:8px;padding:7px 14px" onclick="startPreview()">▶ 미리보기 만들기</button>`
-    +`<div class="hint" style="margin-top:6px">미리보기는 <b>왼쪽 화면</b>에 표시됩니다 🪞</div>`;
+    +`<button class="btn" style="margin-top:8px;margin-left:8px;padding:7px 14px;background:var(--inset);border:1px solid var(--line);color:var(--sub)" onclick="cancelMixReview()" title="이 매칭을 취소하고 소스·대본을 고쳐 처음부터 다시 매칭합니다">✕ 취소하고 다시 매칭</button>`
+    +`<div class="hint" style="margin-top:6px">미리보기는 <b>왼쪽 화면</b>에 표시됩니다 🪞 · 장면이 안 맞으면 각 문장의 <b>🎞 다른 화면으로 바꾸기</b>로 고치거나, 위 <b>✕ 취소하고 다시 매칭</b>으로 다시 하세요.</div>`;
   const _pvPanel=document.getElementById('mixPreviewPanel'), _pvBox=document.getElementById('mixPreview');
   if(_pvPanel) _pvPanel.style.display='';
   if(_pvBox) _pvBox.innerHTML='<div style="aspect-ratio:9/16;width:100%;border:2px dashed var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--sub);text-align:center;padding:18px"><div style="font-size:34px">🪞</div><div style="font-size:14px;line-height:1.5">오른쪽 <b style="color:var(--accent)">▶ 미리보기 만들기</b>를<br>누르면 <b>여기에서</b> 영상이<br>만들어지는 걸 보실 수 있어요</div></div>';
+}
+// 매칭 결과 취소 → 처음부터 다시(2026-07-20 사장님). 장면이 대사와 안 맞거나 이상하게 나오면
+// 이 매칭 job을 버리고, 소스·대본을 고쳐 "🎬 영상 매칭 시작"을 다시 누를 수 있게 리셋한다.
+// startProduceMix의 새 job 초기화와 같은 항목들을 되돌린다(폴러·미리보기 상태·게이트).
+function cancelMixReview(){
+  if(!confirm('이 매칭 결과를 취소할까요? 편집안·미리보기가 지워지고, 소스나 대본을 고쳐 처음부터 다시 매칭할 수 있어요.')) return;
+  try{ clearInterval(MIX_POLL); }catch(_){ } MIX_POLL=null;
+  try{ clearInterval(PREVIEW_POLL); }catch(_){ } PREVIEW_POLL=null;
+  try{ ++PREVIEW_GEN; }catch(_){ }
+  PREVIEW_STATUS=null; MIX_JOB=null;
+  const el=document.getElementById('mixReview'); if(el) el.innerHTML='';
+  const st=document.getElementById('mixStatus'); if(st){ st.textContent=''; st._sblPipe=null; }
+  const _pvBox=document.getElementById('mixPreview'); if(_pvBox) _pvBox.innerHTML='';
+  const _pvPanel=document.getElementById('mixPreviewPanel'); if(_pvPanel) _pvPanel.style.display='none';
+  try{ refreshNextBtn(); }catch(_){ }   // 미리보기 사라졌으니 [다음] 다시 잠근다
+  try{ saveWork(); }catch(_){ }
+  const startBtn=document.querySelector('[onclick="startProduceMix()"]');
+  if(startBtn) startBtn.scrollIntoView({behavior:'smooth', block:'center'});
 }
 // 새로고침 복원: 편집안+미리보기를 다시 그린다. 매칭 결과가 없으면(만들다 만 job) 조용히 빠진다 —
 // 저장된 단계/게이트는 위에서 이미 맞춰졌다.
