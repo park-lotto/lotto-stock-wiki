@@ -1488,7 +1488,8 @@ _MIX_ACTIVE_STAGES = ("downloading", "extracting", "planning", "tts")
 
 @app.get("/api/mix/status/{job_id}")
 def api_mix_status(job_id: str):
-    job = Store(DB_PATH).get_mix_job(job_id)
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
     status, error = job["status"], job["error"]
@@ -1499,13 +1500,20 @@ def api_mix_status(job_id: str):
     if status in _MIX_ACTIVE_STAGES and _render_is_stale(job):
         status = "failed"
         error = "서버 재시작 등으로 중단되었습니다. 다시 시도해 주세요."
+    # 장면 우선 대본 모드(2026-07-20, Task7): 후보 요약만 내려준다 — 전체 plan(beats 등)을
+    # 실으면 남의 창작물이 새는 것과 같은 노출 문제(§3981)가 나므로 카드 렌더용 필드만 뽑는다.
+    candidates = [{"index": i, "score": c.get("score"), "recommended": bool(c.get("recommended")),
+                   "hook": (c.get("story") or {}).get("hook", ""),
+                   "story_person": (c.get("story") or {}).get("story_person", "")}
+                  for i, c in enumerate(store.get_mix_candidates(job_id))]
     return {"ok": True, "status": status, "error": error,
             # 1단계 미리보기(2026-07-17): 폴러를 둘로 만들지 않으려고 기존 응답에 얹는다(스펙 §6.3).
             # preview_path는 서버 내부 경로라 안 내보낸다 — 파일은 전용 라우트로만 서빙.
             "preview_status": job.get("preview_status"),
             "preview_error": job.get("preview_error"),
             "clean_status": job.get("clean_status"),
-            "clean_error": job.get("clean_error")}
+            "clean_error": job.get("clean_error"),
+            "candidates": candidates}
 
 
 @app.get("/api/mix/result/{job_id}")
@@ -4023,10 +4031,14 @@ def api_produce_mix_start(background_tasks: BackgroundTasks, body: dict):
     script_structure = body.get("script_structure") or None
     if not isinstance(script_structure, dict):
         script_structure = None   # 잘못된 형식은 조용히 버린다(보관 전용이라 무해)
+    # 장면 우선 대본 모드(2026-07-20, Task7): produce.html "우리 시스템으로 믹스"는 항상 이 값을
+    # true로 보낸다. mix_pipeline._plan_and_tts가 build_scene_first_plan으로 후보 n개를 만들고
+    # 추천 후보를 자동 세팅한다(candidates=[]이면 기존 build_edit_plan으로 조용히 폴백).
+    scene_first = bool(body.get("scene_first", False))
     job_id = uuid.uuid4().hex[:12]
     Store(DB_PATH).create_mix_job(job_id, urls, target, "free",
                                   subtitle_removal=subtitle_removal, given_script=script,
-                                  script_structure=script_structure)
+                                  script_structure=script_structure, scene_first=scene_first)
     background_tasks.add_task(run_mix_job, job_id, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True, "job_id": job_id}
 
