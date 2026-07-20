@@ -2716,12 +2716,28 @@ _GOOGLE_SVG = ('<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6
                '-6.3 0-11.6-3.8-13.5-9.1l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>')
 
 
+# 시그니처 심볼(브랜딩 보드 v1, out/브랜딩_CI_숏템탑스.html) — 박스(제작소)에서 랭킹된
+# 아이템이 쌓여 올라오고 맨 위 한 칸만 골드=TOP 인기템. 박스·대량생산·인기를 한 심볼에.
+_LOGO_SVG = (
+    '<svg class="sym" viewBox="0 0 64 64" fill="none" role="img" aria-label="숏템박스">'
+    '<defs><linearGradient id="lmg" x1="0" y1="0" x2="1" y2="1">'
+    '<stop offset="0" stop-color="#6ff0d6"/><stop offset="1" stop-color="#1f9e7a"/></linearGradient>'
+    '<linearGradient id="lgg" x1="0" y1="0" x2="1" y2="1">'
+    '<stop offset="0" stop-color="#ffe1a1"/><stop offset="1" stop-color="#f0a93a"/></linearGradient></defs>'
+    '<rect x="4" y="4" width="56" height="56" rx="16" stroke="url(#lmg)" stroke-width="3"/>'
+    '<rect x="16" y="40" width="32" height="8" rx="3" fill="#1f9e7a" opacity=".55"/>'
+    '<rect x="20" y="29" width="24" height="8" rx="3" fill="#6ff0d6" opacity=".9"/>'
+    '<rect x="24" y="18" width="16" height="8" rx="3" fill="url(#lgg)"/>'
+    '<path d="M32 11.5l3 4.5h-6l3-4.5z" fill="url(#lgg)"/></svg>')
+
+
 def _fill_brand(s: str) -> str:
     """대문·로그인 템플릿의 브랜드 플레이스홀더를 _BRAND로 채운다(모듈 로드 시 1회)."""
     return (s.replace("__NAME__", _BRAND["name"])
              .replace("__NAME_EN__", _BRAND["name_en"])
              .replace("__GLYPH__", _BRAND["glyph"])
              .replace("__TAGLINE__", _BRAND["tagline"])
+             .replace("__LOGO_SVG__", _LOGO_SVG)
              .replace("__GOOGLE_SVG__", _GOOGLE_SVG))
 
 
@@ -2729,56 +2745,69 @@ def _fill_brand(s: str) -> str:
 _LANDING_TMPL = """<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
 <title>__NAME__ — 폰으로 5분, 편집 몰라도 파는 쇼츠 완성</title>
+<link rel=preconnect href="https://fonts.googleapis.com">
+<link rel=preconnect href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel=stylesheet>
 <style>*{box-sizing:border-box;margin:0;padding:0}
-:root{--mint:#6ff0d6;--grad:linear-gradient(135deg,#6ff0d6,#1f9e7a);--panel:#111722;--bg:#0a0a0d;--ink:#e8e8ea;--dim:#8a92a0;--line:#1b2432}
-body{background:var(--bg);color:var(--ink);font-family:'Malgun Gothic',system-ui,'Noto Sans KR',sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+:root{--mint:#6ff0d6;--grad:linear-gradient(135deg,#6ff0d6,#1f9e7a);--gold:#ffcf6f;--gold-grad:linear-gradient(135deg,#ffe1a1,#f0a93a);
+--ink:#0b0f14;--panel:#111722;--line:#1e2735;--txt:#e8f0ee;--muted:#8aa0a0;--faint:#5f7373}
+body{background:radial-gradient(1100px 600px at 82% -12%,rgba(111,240,214,.10),transparent 60%),radial-gradient(900px 500px at 0% 112%,rgba(255,207,111,.06),transparent 55%),var(--ink);
+color:var(--txt);font-family:'Noto Sans KR',system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;word-break:keep-all}
 a{text-decoration:none;color:inherit}
+.display{font-family:'Black Han Sans',sans-serif;font-weight:400;letter-spacing:.01em}
 .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
 .nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
-.brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:19px}
-.brand .g{width:32px;height:32px;border-radius:9px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:17px}
-.brand .wm{display:flex;flex-direction:column;line-height:1.05}
-.brand .nm{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
-.brand .en{font-size:9px;letter-spacing:1.8px;color:var(--dim);font-weight:700;margin-top:1px}
-.nav .login{color:var(--dim);font-size:14px;font-weight:600}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .sym{width:34px;height:34px;flex:none}
+.brand .wm{display:flex;flex-direction:column;line-height:1}
+.brand .nm{font-family:'Black Han Sans',sans-serif;font-size:22px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand .en{font-family:ui-monospace,monospace;font-size:9px;letter-spacing:2.4px;color:var(--faint);margin-top:2px}
+.nav .login{color:var(--muted);font-size:14px;font-weight:600}
 .nav .login:hover{color:var(--mint)}
-.hero{text-align:center;padding:66px 0 44px}
-.badge{display:inline-block;font-size:12.5px;color:var(--mint);border:1px solid rgba(111,240,214,.3);border-radius:999px;padding:5px 14px;margin-bottom:24px;background:rgba(111,240,214,.06)}
-.hero h1{font-size:44px;line-height:1.24;font-weight:800;letter-spacing:-.5px}
+.hero{display:grid;grid-template-columns:1.12fr .88fr;gap:38px;align-items:center;padding:52px 0 40px}
+.badge{display:inline-block;font-size:12.5px;color:var(--mint);border:1px solid rgba(111,240,214,.3);border-radius:999px;padding:5px 14px;margin-bottom:22px;background:rgba(111,240,214,.06)}
+.hero h1{font-size:clamp(34px,4.8vw,50px);line-height:1.12;letter-spacing:.01em}
 .hero h1 .hl{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
-.hero p{color:var(--dim);font-size:17px;margin:18px auto 30px;max-width:560px}
-.row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-.cta{display:inline-flex;align-items:center;gap:9px;background:var(--grad);color:#04120d;font-weight:800;font-size:16px;padding:15px 30px;border-radius:12px;border:0;cursor:pointer;box-shadow:0 8px 30px rgba(111,240,214,.18)}
+.hero .sub{color:var(--muted);font-size:17px;margin:18px 0 28px;max-width:38ch}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.cta{display:inline-flex;align-items:center;gap:8px;background:var(--grad);color:#062018;font-weight:700;font-size:16px;padding:15px 28px;border-radius:12px;border:0;cursor:pointer;box-shadow:0 8px 30px rgba(111,240,214,.18)}
 .cta:hover{filter:brightness(1.06)}
-.cta.ghost{background:transparent;color:var(--ink);border:1px solid #2c333f;box-shadow:none;font-weight:700}
-.trust{color:#5c6472;font-size:13px;margin-top:18px}
-.stats{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:36px}
-.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 26px;min-width:150px}
-.stat .num{font-size:28px;font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
-.stat .lbl{color:var(--dim);font-size:13px;margin-top:2px}
-.sec{padding:54px 0}
-.sec h2{text-align:center;font-size:27px;font-weight:800;margin-bottom:8px}
-.sec .lead{text-align:center;color:var(--dim);margin-bottom:38px}
+.cta.ghost{background:transparent;color:var(--txt);border:1px solid var(--line);box-shadow:none;font-weight:600}
+.trust{color:var(--faint);font-size:12.5px;margin-top:16px}
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px 20px;min-width:118px}
+.stat .num{font-family:'Black Han Sans',sans-serif;font-size:25px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat .lbl{color:var(--muted);font-size:12px;margin-top:2px}
+.phone{justify-self:center}
+.frame{width:186px;aspect-ratio:9/16;border-radius:24px;border:1px solid var(--line);background:#0a0f16;position:relative;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.frame .prod{position:absolute;inset:14px 14px 64px;border-radius:14px;background:linear-gradient(160deg,#16324a,#0d2035);display:flex;align-items:center;justify-content:center;font-size:40px}
+.frame .rank{position:absolute;top:18px;left:18px;background:var(--gold-grad);color:#3a2600;font-family:'Black Han Sans',sans-serif;font-size:12px;padding:4px 9px;border-radius:8px}
+.frame .capbar{position:absolute;left:12px;right:12px;bottom:14px;min-height:38px;border-radius:10px;background:rgba(9,14,20,.92);border:1px solid var(--line);display:flex;align-items:center;padding:8px 11px;font-size:11px;line-height:1.35}
+.frame .capbar .kw{color:var(--gold);font-weight:700}
+.sec{padding:52px 0}
+.sec h2{text-align:center;font-size:27px;font-weight:900;margin-bottom:8px}
+.sec .lead{text-align:center;color:var(--muted);margin-bottom:36px}
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
 .step{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px}
-.step .n{width:34px;height:34px;border-radius:10px;background:rgba(111,240,214,.1);color:var(--mint);font-weight:800;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
-.step h3{font-size:16px;margin-bottom:6px}.step p{color:var(--dim);font-size:14px}
+.step .n{width:34px;height:34px;border-radius:10px;background:rgba(111,240,214,.1);color:var(--mint);font-family:'Black Han Sans',sans-serif;font-size:17px;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.step h3{font-size:16px;font-weight:700;margin-bottom:6px}.step p{color:var(--muted);font-size:14px}
 .feat{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px;display:flex;gap:16px}
 .card .ic{font-size:24px;flex:none;line-height:1.2}
-.card h3{font-size:16px;margin-bottom:5px}.card p{color:var(--dim);font-size:14px}
-.band{text-align:center;background:linear-gradient(180deg,rgba(111,240,214,.05),transparent);border:1px solid var(--line);border-radius:24px;padding:54px 24px;margin:44px 0 60px}
-.band h2{font-size:28px;font-weight:800;margin-bottom:10px}.band p{color:var(--dim);margin-bottom:26px}
-.foot{text-align:center;color:#4a515e;font-size:12.5px;padding:0 0 42px}
-@media(max-width:760px){.hero h1{font-size:32px}.steps,.feat{grid-template-columns:1fr}}
+.card h3{font-size:16px;font-weight:700;margin-bottom:5px}.card p{color:var(--muted);font-size:14px}
+.band{text-align:center;background:linear-gradient(180deg,rgba(111,240,214,.05),transparent);border:1px solid var(--line);border-radius:24px;padding:54px 24px;margin:44px 0 58px}
+.band h2{font-size:28px;font-weight:900;margin-bottom:10px}.band p{color:var(--muted);margin-bottom:26px}
+.foot{text-align:center;color:var(--faint);font-size:12.5px;padding:0 0 42px}
+@media(max-width:760px){.hero{grid-template-columns:1fr;text-align:center;padding-top:34px}.hero .sub{max-width:none}.row,.stats{justify-content:center}.phone{margin-top:6px}.steps,.feat{grid-template-columns:1fr}}
 </style></head><body><div class=wrap>
 <div class=nav>
-<a class=brand href="/"><span class=g>__GLYPH__</span><span class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></span></a>
+<a class=brand href="/">__LOGO_SVG__<span class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></span></a>
 <a class=login href="/login">로그인</a></div>
 <div class=hero>
+<div class=copy>
 <span class=badge>컴맹도 · 60대도 · 5분이면</span>
-<h1>컴퓨터 몰라도,<br>60대도 <span class=hl>5분</span>이면 만듭니다</h1>
-<p>캡컷도 프리미어도 필요 없어요. 폰으로 상품만 고르면 대본·영상·목소리·자막까지 AI가 딸깍. 손자보다 빨리 쇼츠 하나가 나옵니다.</p>
+<h1 class=display>컴퓨터 몰라도,<br>60대도 <span class=hl>5분</span>이면 만듭니다</h1>
+<p class=sub>캡컷도 프리미어도 필요 없어요. 폰으로 상품만 고르면 대본·영상·목소리·자막까지 AI가 딸깍. 손자보다 빨리 쇼츠 하나가 나옵니다.</p>
 <div class=row>
 <a class=cta href="/login">무료로 시작하기 →</a>
 <a class="cta ghost" href="/login">로그인</a></div>
@@ -2787,6 +2816,10 @@ a{text-decoration:none;color:inherit}
 <div class=stat><div class=num>5분</div><div class=lbl>하나 만드는 시간</div></div>
 <div class=stat><div class=num>폰 하나</div><div class=lbl>필요한 장비 전부</div></div>
 <div class=stat><div class=num>0</div><div class=lbl>배워야 할 편집기술</div></div></div></div>
+<div class=phone><div class=frame>
+<span class=rank>TOP 1</span>
+<div class=prod>🧴</div>
+<div class=capbar>비법 궁금하면 댓글에 <span class=kw>'꿀템'</span></div></div></div></div>
 <div class=sec>
 <h2>딱 세 번이면 끝나요</h2>
 <div class=lead>기획도 편집도 없이, 완성까지 5분</div>
@@ -2801,7 +2834,7 @@ a{text-decoration:none;color:inherit}
 <div class=card><span class=ic>⏱️</span><div><h3>5분이면 완성</h3><p>기획·촬영·편집으로 반나절 쓰던 걸, 고르고 딸깍하면 5분 만에 끝냅니다.</p></div></div>
 <div class=card><span class=ic>📱</span><div><h3>폰으로도 된다</h3><p>PC도 프로그램 설치도 필요 없어요. 손 안의 폰에서 손가락 몇 번이면 됩니다.</p></div></div>
 <div class=card><span class=ic>👆</span><div><h3>딸깍 하나면 자동</h3><p>대본·장면·목소리·자막을 전부 AI가. 컴맹이어도, 60대여도 첫날부터 바로 완성합니다.</p></div></div>
-<div class=card><span class=ic>🛒</span><div><h3>파는 사람 특화</h3><p>그냥 조회수용이 아니라, 상품이 팔리게 설계된 쇼츠가 나옵니다.</p></div></div></div></div>
+<div class=card><span class=ic>🔥</span><div><h3>파는 사람 특화</h3><p>그냥 조회수용이 아니라, 상품이 팔리게 설계된 쇼츠가 나옵니다.</p></div></div></div></div>
 <div class=band>
 <h2>손자한테 안 물어봐도 됩니다</h2>
 <p>지금 5분, 무료로 하나 만들어보세요. 구글 계정이면 3초 · 카드 없이 시작.</p>
@@ -2813,34 +2846,37 @@ a{text-decoration:none;color:inherit}
 # ── 로그인 페이지 — 민트×블랙(구조는 기존 유지: 구글버튼+운영자 접이식). ──
 _LOGIN_TMPL = """<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>__NAME__ 로그인</title>
+<link rel=preconnect href="https://fonts.googleapis.com">
+<link rel=preconnect href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel=stylesheet>
 <style>*{box-sizing:border-box}
-body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
-background:#0a0a0d;font-family:'Malgun Gothic',system-ui,'Noto Sans KR',sans-serif;color:#e8e8ea}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;word-break:keep-all;
+background:radial-gradient(900px 500px at 80% -10%,rgba(111,240,214,.10),transparent 60%),#0b0f14;
+font-family:'Noto Sans KR',system-ui,sans-serif;color:#e8f0ee}
 .box{width:340px;padding:36px 30px;text-align:center}
-.logo{display:flex;align-items:center;justify-content:center;gap:10px;font-size:20px;font-weight:800;margin-bottom:8px}
-.logo .ic{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#6ff0d6,#1f9e7a);
-display:flex;align-items:center;justify-content:center;font-size:18px}
-.logo .wm{display:flex;flex-direction:column;line-height:1.05;text-align:left}
-.logo .nm{background:linear-gradient(135deg,#6ff0d6,#1f9e7a);-webkit-background-clip:text;background-clip:text;color:transparent}
-.logo .en{font-size:9px;letter-spacing:1.8px;color:#6a6a76;font-weight:700;margin-top:1px}
-h1{font-size:22px;margin:26px 0 8px}
+.logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px}
+.logo .sym{width:34px;height:34px;flex:none}
+.logo .wm{display:flex;flex-direction:column;line-height:1;text-align:left}
+.logo .nm{font-family:'Black Han Sans',sans-serif;font-size:22px;background:linear-gradient(135deg,#6ff0d6,#1f9e7a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.logo .en{font-family:ui-monospace,monospace;font-size:9px;letter-spacing:2.4px;color:#5f7373;margin-top:2px}
+h1{font-size:22px;margin:26px 0 8px;font-weight:700}
 .sub{color:#6ff0d6;font-size:13px;margin-bottom:26px;line-height:1.6}
 .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;
-background:#15151b;border:1px solid #2c2c34;border-radius:10px;color:#e8e8ea;font-size:15px;
+background:#111722;border:1px solid #1e2735;border-radius:10px;color:#e8f0ee;font-size:15px;
 font-weight:700;cursor:pointer;text-decoration:none}
-.gbtn:hover{background:#1c1c24;border-color:#3a3a44}
+.gbtn:hover{background:#16202e;border-color:#2a3647}
 .gbtn svg{width:18px;height:18px}
 .err{color:#e0623d;font-size:12px;margin-top:16px;min-height:14px;line-height:1.6}
-.home{display:block;color:#6a6a76;font-size:12px;margin-top:22px;text-decoration:none}
+.home{display:block;color:#5f7373;font-size:12px;margin-top:22px;text-decoration:none}
 .home:hover{color:#6ff0d6}
-.atoggle{color:#45454f;font-size:11px;margin-top:30px;cursor:pointer;background:none;border:0}
+.atoggle{color:#3f5050;font-size:11px;margin-top:30px;cursor:pointer;background:none;border:0}
 .aform{display:none;margin-top:14px}.aform.show{display:block}
-.aform input{width:100%;margin:5px 0;padding:10px;background:#0e0e12;border:1px solid #2c2c34;
+.aform input{width:100%;margin:5px 0;padding:10px;background:#0a0f16;border:1px solid #1e2735;
 border-radius:8px;color:#eee;font-size:13px}
-.aform button{width:100%;margin-top:8px;padding:10px;background:#1a2530;color:#6ff0d6;border:1px solid #244;
+.aform button{width:100%;margin-top:8px;padding:10px;background:#16202e;color:#6ff0d6;border:1px solid #2a3647;
 border-radius:8px;font-weight:700;font-size:13px;cursor:pointer}</style></head>
 <body><div class=box>
-<div class=logo><span class=ic>__GLYPH__</span><span class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></span></div>
+<div class=logo>__LOGO_SVG__<span class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></span></div>
 <h1>로그인</h1>
 <div class=sub>구글 계정으로 로그인하세요<br>처음이면 <b>무료 체험</b>이 바로 시작돼요</div>
 <a class=gbtn href="/auth/google/login">
