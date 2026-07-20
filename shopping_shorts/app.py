@@ -2990,6 +2990,22 @@ a{text-decoration:none;color:inherit}
 <div class="card reveal d1"><span class=ic>📱</span><div><h3>폰으로도 된다</h3><p>PC도 프로그램 설치도 필요 없어요. 손 안의 폰에서 손가락 몇 번이면 됩니다.</p></div></div>
 <div class="card reveal"><span class=ic>👆</span><div><h3>딸깍 하나면 자동</h3><p>대본·장면·목소리·자막을 전부 AI가. 컴맹이어도, 60대여도 첫날부터 바로 완성합니다.</p></div></div>
 <div class="card reveal d1"><span class=ic>🔥</span><div><h3>지금 뜨는 걸 짚어줌</h3><p>뭘 만들지 고민할 필요 없어요. 실시간 제일 잘 팔리는 걸 골라줘서 검증된 1등만 벤치마킹합니다.</p></div></div></div></div>
+<div class=sec>
+<h2 class=reveal>요금은 간단해요</h2>
+<div class="lead reveal">무료로 써보고, 필요하면 이용권으로</div>
+<div class=reveal style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:640px;margin:0 auto">
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:24px;text-align:center">
+<div style="color:var(--muted);font-weight:700;font-size:14px">무료 체험</div>
+<div class=display style="font-size:34px;margin:6px 0">0<span style="font-size:15px;font-family:'Noto Sans KR';color:var(--muted)">원</span></div>
+<div style="color:var(--faint);font-size:13px;margin-bottom:16px">가입하면 바로 · 카드 없이</div>
+<a class=cta href="/login" style="width:100%;justify-content:center;font-size:14px;padding:12px">무료로 시작</a></div>
+<div style="background:var(--panel);border:1px solid rgba(255,207,111,.4);box-shadow:0 0 0 1px rgba(255,207,111,.14) inset;border-radius:18px;padding:24px;text-align:center;position:relative">
+<div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--gold-grad);color:#3a2600;font-family:'Black Han Sans',sans-serif;font-size:12px;padding:4px 12px;border-radius:999px">추천</div>
+<div style="color:var(--gold);font-weight:700;font-size:14px">Pro 이용권</div>
+<div class=display style="font-size:34px;margin:6px 0;background:var(--gold-grad);-webkit-background-clip:text;background-clip:text;color:transparent">가격 문의</div>
+<div style="color:var(--faint);font-size:13px;margin-bottom:16px">전 기능 무제한 · 무제한 제작</div>
+<a href="__KAKAO__" target=_blank rel=noopener style="display:inline-flex;width:100%;justify-content:center;background:var(--gold-grad);color:#3a2600;font-weight:700;font-size:14px;padding:12px;border-radius:12px;text-decoration:none">카톡으로 문의</a></div></div>
+<div class=reveal style="text-align:center;margin-top:20px"><a href="/pricing" style="color:var(--mint);font-weight:700;font-size:14px">요금 자세히 보기 →</a></div></div>
 <div class="band reveal">
 <h2>손자한테 안 물어봐도 됩니다</h2>
 <p>지금 5분, 무료로 하나 만들어보세요. 구글 계정이면 3초 · 카드 없이 시작.</p>
