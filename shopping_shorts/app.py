@@ -2823,23 +2823,29 @@ a{text-decoration:none;color:inherit}
 .reveal{opacity:0;transform:translateY(18px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
 .reveal.in{opacity:1;transform:none}
 .d1{transition-delay:.06s}.d2{transition-delay:.14s}.d3{transition-delay:.22s}.d4{transition-delay:.3s}
+/* 히어로(위쪽) 온로드 등장 — JS 없이 확실히 순차 재생 */
+.rise{opacity:0;animation:riseIn .82s cubic-bezier(.2,.75,.2,1) both}
+@keyframes riseIn{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+.r1{animation-delay:.08s}.r2{animation-delay:.2s}.r3{animation-delay:.34s}.r4{animation-delay:.48s}.r5{animation-delay:.6s}
+.hero h1 .hl{background-size:220% auto;animation:sheen 3.2s linear infinite}
+@keyframes sheen{to{background-position:220% center}}
 @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 @keyframes ctaPulse{0%,100%{box-shadow:0 8px 30px rgba(111,240,214,.18)}50%{box-shadow:0 10px 44px rgba(111,240,214,.44)}}
-@media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}.brand .sym,.cta{animation:none}}
+@media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}.rise{opacity:1;animation:none}.brand .sym,.cta,.hero h1 .hl{animation:none}}
 @media(max-width:760px){.vs{grid-template-columns:1fr}.vs .arrow{transform:rotate(90deg);padding:2px 0}.steps,.feat{grid-template-columns:1fr}.money .big{gap:18px}}
 </style></head><body><div class=wrap>
 <div class=nav>
 <a class=brand href="/">__LOGO_SVG__<span class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></span></a>
 <a class=login href="/login">로그인</a></div>
 <div class=hero>
-<span class="badge reveal">생각 0 · 편집 0 · 딱 5분</span>
-<h1 class="display reveal d1">머리 쓸 필요 없어요.<br>시키는 대로 <span class=hl>딸깍</span>, 5분이면 끝.</h1>
-<p class="sub reveal d2">쇼츠 하나 만들려고 3~5시간씩 붙잡고 계셨죠? 이제 상품만 고르고 딸깍하면 대본·영상·목소리·자막까지 AI가 알아서. 60대도, 컴맹도 그대로 됩니다.</p>
-<div class="row reveal d2">
+<span class="badge rise r1">생각 0 · 편집 0 · 딱 5분</span>
+<h1 class="display rise r2">머리 쓸 필요 없어요.<br>시키는 대로 <span class=hl>딸깍</span>, 5분이면 끝.</h1>
+<p class="sub rise r3">쇼츠 하나 만들려고 3~5시간씩 붙잡고 계셨죠? 이제 뭘 팔지 고민할 것도 없어요. 지금 제일 잘 팔리는 걸 짚어주면 딸깍 — 대본·영상·목소리·자막까지 AI가 알아서. 60대도, 컴맹도 그대로 됩니다.</p>
+<div class="row rise r4">
 <a class=cta href="/login">무료로 시작하기 →</a>
 <a class="cta ghost" href="/login">로그인</a></div>
-<div class="trust reveal d3">구글 계정으로 3초 시작 · 카드 없이 무료 체험</div>
-<div class="stats reveal d3">
+<div class="trust rise r4">구글 계정으로 3초 시작 · 카드 없이 무료 체험</div>
+<div class="stats rise r5">
 <div class=stat><div class=num>5분</div><div class=lbl>하나 만드는 시간</div></div>
 <div class=stat><div class=num>폰 하나</div><div class=lbl>필요한 장비 전부</div></div>
 <div class=stat><div class=num>0</div><div class=lbl>배워야 할 편집기술</div></div></div></div>
@@ -2858,7 +2864,7 @@ a{text-decoration:none;color:inherit}
 <div class=arrow>→</div>
 <div class="col new reveal d1"><div class=tag>숏템박스</div>
 <ul>
-<li><span class=m>✓</span> 팔 상품만 고른다</li>
+<li><span class=m>✓</span> 지금 제일 잘 팔리는 걸 짚어줌 (고민 0)</li>
 <li><span class=m>✓</span> 딸깍 — 대본·장면·목소리·자막 자동</li>
 <li><span class=m>✓</span> 마음에 안 들면 다시 딸깍</li>
 <li><span class=m>✓</span> 바로 올릴 세로 쇼츠 완성</li>
@@ -2876,7 +2882,7 @@ a{text-decoration:none;color:inherit}
 <h2 class=reveal>딱 세 번이면 끝나요</h2>
 <div class="lead reveal">기획도 편집도 없이, 완성까지 5분</div>
 <div class=steps>
-<div class="step reveal"><div class=n>1</div><h3>만들 걸 고른다</h3><p>팔 상품이나 주제만 정하면 돼요. 대본·기획은 신경 쓸 필요 없습니다.</p></div>
+<div class="step reveal"><div class=n>1</div><h3>고민은 안 해요</h3><p>지금 실시간 제일 잘 팔리는 걸 짚어줍니다. 검증된 1등을 그대로 벤치마킹 — 뭘 팔지 정할 필요도 없어요.</p></div>
 <div class="step reveal d1"><div class=n>2</div><h3>딸깍 한 번</h3><p>대본·장면·목소리·자막을 AI가 알아서 붙입니다. 손댈 게 없어요.</p></div>
 <div class="step reveal d2"><div class=n>3</div><h3>5분 뒤 완성</h3><p>바로 올릴 수 있는 세로 쇼츠가 나옵니다. 마음에 안 들면 다시 딸깍.</p></div></div></div>
 <div class=sec>
@@ -2886,7 +2892,7 @@ a{text-decoration:none;color:inherit}
 <div class="card reveal"><span class=ic>⏱️</span><div><h3>5분이면 완성</h3><p>기획·촬영·편집으로 반나절 쓰던 걸, 고르고 딸깍하면 5분 만에 끝냅니다.</p></div></div>
 <div class="card reveal d1"><span class=ic>📱</span><div><h3>폰으로도 된다</h3><p>PC도 프로그램 설치도 필요 없어요. 손 안의 폰에서 손가락 몇 번이면 됩니다.</p></div></div>
 <div class="card reveal"><span class=ic>👆</span><div><h3>딸깍 하나면 자동</h3><p>대본·장면·목소리·자막을 전부 AI가. 컴맹이어도, 60대여도 첫날부터 바로 완성합니다.</p></div></div>
-<div class="card reveal d1"><span class=ic>🔥</span><div><h3>파는 사람 특화</h3><p>그냥 조회수용이 아니라, 상품이 팔리게 설계된 쇼츠가 나옵니다.</p></div></div></div></div>
+<div class="card reveal d1"><span class=ic>🔥</span><div><h3>지금 뜨는 걸 짚어줌</h3><p>뭘 만들지 고민할 필요 없어요. 실시간 제일 잘 팔리는 걸 골라줘서 검증된 1등만 벤치마킹합니다.</p></div></div></div></div>
 <div class="band reveal">
 <h2>손자한테 안 물어봐도 됩니다</h2>
 <p>지금 5분, 무료로 하나 만들어보세요. 구글 계정이면 3초 · 카드 없이 시작.</p>
