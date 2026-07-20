@@ -212,13 +212,22 @@
   window.__ssShowPaywall = _pwModal;
   function _pwBanner(daysLeft) {
     if (document.getElementById("ss-pw-banner")) return;
-    var b = document.createElement("div");
-    b.id = "ss-pw-banner";
-    b.style.cssText = "position:sticky;top:0;z-index:9999;background:linear-gradient(90deg,#153a6b,#0d2340);color:#cfe4ff;padding:8px 14px;font-size:13px;text-align:center;font-family:system-ui,sans-serif";
-    b.innerHTML = "🎁 무료 체험 <b style='font-size:15px'>D-" + daysLeft + "</b> · 결제하면 계속 쓸 수 있어요";
     var nav = document.querySelector(".ss-nav");
-    if (nav && nav.nextSibling) document.body.insertBefore(b, nav.nextSibling);
-    else document.body.appendChild(b);
+    if (!nav) return;
+    // 카톡 문의로 연결(admin 연락처의 kakao가 URL이면 새 탭, 아니면 안내 모달 폴백).
+    var kakao = (_pw.contact && _pw.contact.kakao) || "";
+    var isUrl = /^https?:\/\//.test(kakao);
+    var b = document.createElement(isUrl ? "a" : "div");
+    b.id = "ss-pw-banner";
+    if (isUrl) { b.href = kakao; b.target = "_blank"; b.rel = "noopener"; }
+    // 좌측 사이드바 맨 아래 배치.
+    b.style.cssText = "display:block;margin:14px 10px 12px;padding:11px 13px;border-radius:12px;" +
+      "background:linear-gradient(135deg,#153a6b,#0d2340);border:1px solid #244a7a;color:#cfe4ff;" +
+      "font-size:12.5px;line-height:1.5;text-align:left;cursor:pointer;text-decoration:none;font-family:system-ui,sans-serif";
+    b.innerHTML = "🎁 무료 체험 <b style='font-size:14px;color:#fff'>D-" + daysLeft + "</b><br>" +
+      "<span style='color:#9fc4f0'>결제하면 계속 써요 · <b style='color:#ffd97a'>카톡 문의 →</b></span>";
+    if (!isUrl) b.onclick = function () { _pwModal(); };
+    nav.appendChild(b);   // 사이드바 콘텐츠 맨 아래
   }
   function _pwLockSidebar() {
     document.querySelectorAll(".ss-item[data-ss-href]:not([data-ss-free])").forEach(function (el) {
