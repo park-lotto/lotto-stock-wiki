@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-20",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-20_1101_탄탄한 불닭, 여전한 수요.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "권우정",
+    "report_date": "2026/7/20",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "삼양식품",
+        "code": "003230",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "1,860,000원",
+        "tp_prev": "1,860,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2분기 연결 매출액 및 영업이익은 각각 7.5천억원(YoY 37%), 1,789억원 (YoY 39%)으로 시장 기대치 부합 전망.",
+        "estimate_revision": null,
+        "next_catalyst": "내년 초 중국 신공장 본격 가동 및 CAPA 확대 모멘텀",
+        "thesis": [
+          "미국 크로거 및 타겟 채널 중심으로 물량 확대 지속",
+          "중국 신공장 가동을 통한 11.3억식 추가 CAPA 확보 및 매출 성장 기대",
+          "견조한 수출 실적 반영으로 하반기 실적 모멘텀 확대 예상"
+        ],
+        "valuation_basis": "12개월 Fwd P/E 13배 수준으로 현 주가 수준은 부담이 적음",
+        "risk": "수급 쏠림 이슈로 인한 주가 상승 제한 가능성",
+        "supply_comment": "밀양 2공장 CAPA도 1년 만에 빠르게 풀가동에 근접해 글로벌 시장 내 초과 수요가 여전히 지속되고 있음",
+        "quote": "삼양식품은 내년 초 중국 신공장 본격 가동을 앞두고 있어 CAPA 확대 모멘텀이 기대되는 상황임."
+      }
+    ]
+  }
+}

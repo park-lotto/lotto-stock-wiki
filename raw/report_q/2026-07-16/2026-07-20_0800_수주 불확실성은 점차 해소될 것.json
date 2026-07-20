@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-16",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-20_0800_수주 불확실성은 점차 해소될 것.md"
+  },
+  "questionnaire": {
+    "broker": "키움증권",
+    "analyst": "이한결",
+    "report_date": "2026.7.16",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "현대로템",
+        "code": "064350",
+        "rating": "BUY(Maintain)",
+        "rating_changed": false,
+        "tp_new": "340,000원",
+        "tp_prev": "340,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2분기 매출액 1조 7,384억원(yoy +22.6%), 영업이익 2,407억원(yoy -6.5%, OPM 13.8%)를 달성하며 시장 기대치를 하회할 것으로 전망한다.",
+        "estimate_revision": null,
+        "next_catalyst": "이라크, 페루 전차 사업 본계약 체결, 폴란드 EC3 사업 논의 시작, 루마니아 차세대 전차 사업 3분기 입찰 제안",
+        "thesis": [
+          "디펜스솔루션 부문의 성장 흐름 지속 및 하반기 수익성 개선",
+          "이라크, 페루 등 견조한 수주 파이프라인 확보",
+          "2H26~27년 수주 파이프라인 규모가 현재 수주잔고 대비 3배 이상으로 명확한 성장 방향성"
+        ],
+        "valuation_basis": null,
+        "risk": "이라크 K2 전차 사업 의사결정 지연 가능성, 폴란드 EC2 생산 초기 국면의 예비비 반영 및 수익성 개선 제한",
+        "supply_comment": "디펜스솔루션 부문 매출이 9,213억원(yoy +21.0%)을 달성하며 성장 흐름이 지속될 것으로 판단한다.",
+        "quote": "2H26~27년 수주 파이프라인 규모가 수주잔고의 3배 이상임을 감안할 때 중장기 관점에서 비중확대를 추천한다."
+      }
+    ]
+  }
+}

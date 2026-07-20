@@ -384,6 +384,98 @@ def _vault_call(prompt, schema, max_tries=4):
     return None
 
 
+_SCENE_FIRST_SCHEMA = {
+    "type": "object",
+    "properties": {"candidates": {"type": "array", "minItems": 1, "items": {
+        "type": "object",
+        "properties": {
+            "hook": {"type": "string"},
+            "story_person": {"type": "string"}, "story_event": {"type": "string"},
+            "story_resolution": {"type": "string"}, "cta_line": {"type": "string"},
+            "cta_keyword": {"type": "string"},
+            "beats": {"type": "array", "minItems": 4, "items": {
+                "type": "object",
+                "properties": {
+                    "role": {"type": "string"}, "narration": {"type": "string"},
+                    "seg_ids": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+                    "fit": {"type": "integer"}, "forced": {"type": "boolean"}},
+                "required": ["role", "narration", "seg_ids", "fit"]}}},
+        "required": ["hook", "beats"]}}},
+    "required": ["candidates"],
+}
+
+
+def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3, call=_vault_call):
+    """스토리 헌장 + 장면 팔레트 + 레퍼 구조 → 후보 n개. 각 비트는 seg_ids(2~4 다중컷)로
+    장면을 지목한다. 실패 시 []. 헌장이 품질을 담당하므로 별도 검증루프 없음(1콜)."""
+    from shopping_shorts import script_generate  # 지연 import(순환 방지)
+    char_target = int(target_seconds * _SYLLABLES_PER_SEC)
+    prompt = (
+        "너는 한국 쇼핑 숏폼(살림·요리) 대본 작가다. 아래 '스토리 헌장'을 반드시 지켜 "
+        f"탄탄한 대본 후보 {n}개를 만들어라. 단, 우리가 가진 장면으로만 말할 수 있게 쓰고, "
+        "각 비트(문장)에 그 말과 어울리는 장면 seg_id를 2~4개 시간순으로 붙여라.\n\n"
+        "[레퍼런스 — 훅·전개·설득구조만 계승(표절 금지), 다국어면 한국어로]\n"
+        f"{(reference_text or '')[:1500]}\n\n"
+        "[우리 장면 팔레트 — 이 seg_id 화면만 쓸 수 있다]\n"
+        f"{inventory_text}\n\n"
+        + script_generate._STORY_RULES_CORE + "\n" + script_generate._STORY_DECLARE + "\n"
+        "- ★위 헌장(인과사슬·훅 한방·CTA 미끼·비법 킥 감추기)을 반드시 지켜라 — 장면에 맞추느라 "
+        "스토리가 밋밋해지면 실패다. 스토리가 왕, 장면은 그 스토리를 보여줄 그림이다.\n"
+        f"- 전체 나레이션 글자수 합은 약 {char_target}자 내외. 각 비트: role·narration(구어체)·"
+        "seg_ids(2~4)·fit(1~5)·forced(그 장면이 이 말과 안 맞는데 억지로 붙였으면 true).\n"
+        "- 화면에 없는 걸 말하지 마라. 같은 seg_id를 여러 비트에서 재사용 금지.\n"
+        "출력은 스키마 JSON만.")
+    raw = call(prompt, _SCENE_FIRST_SCHEMA)
+    if not raw or not isinstance(raw, dict):
+        return []
+    return raw.get("candidates", []) or []
+
+
+def _ground_candidate(cand, seg_map, structure="free"):
+    """후보 비트(narration + seg_ids 다중컷)를 build_edit_plan 반환형 EDL로 grounding.
+    seg_ids[0]=primary, 나머지=alternates(연속재생). start/end/scene_desc는 코드가 되붙인다.
+    primary 무효 비트는 드롭. 유효 비트 0개면 None."""
+    beats_out = []
+    for beat in cand.get("beats", []):
+        segs = beat.get("seg_ids") or []
+        primary = _ground_ref({"seg_id": segs[0]}, seg_map) if segs else None
+        if primary is None:
+            continue
+        alts, seen = [], {primary["seg_id"]}
+        for sid in segs[1:]:
+            g = _ground_ref({"seg_id": sid}, seg_map)
+            if g and g["seg_id"] not in seen:
+                alts.append(g)
+                seen.add(g["seg_id"])
+        narration = beat.get("narration", "")
+        beats_out.append({
+            "beat_idx": len(beats_out), "role": beat.get("role", ""),
+            "narration": narration,
+            "target_seconds": round(max(1.5, len(narration.strip()) / _SYLLABLES_PER_SEC), 1),
+            "primary": primary, "alternates": alts, "effect": "cut",
+            "fit": int(beat.get("fit") or 0), "forced": bool(beat.get("forced", False)),
+        })
+    if not beats_out:
+        return None
+    return {"structure": structure, "beats": beats_out}
+
+
+def _score_candidate(plan):
+    """후보 추천 점수(0~1): 매칭 fit·억지없음·장면다양성. 빈 beats면 0.0."""
+    beats = plan.get("beats") or []
+    if not beats:
+        return 0.0
+    avg_fit = sum(int(b.get("fit") or 0) for b in beats) / len(beats) / 5.0
+    forced_ratio = sum(1 for b in beats if b.get("forced")) / len(beats)
+    seg_ids = []
+    for b in beats:
+        seg_ids.append((b.get("primary") or {}).get("seg_id"))
+        seg_ids += [(a or {}).get("seg_id") for a in (b.get("alternates") or [])]
+    seg_ids = [s for s in seg_ids if s]
+    diversity = (len(set(seg_ids)) / len(seg_ids)) if seg_ids else 0.0
+    return round(0.5 * avg_fit + 0.3 * (1 - forced_ratio) + 0.2 * diversity, 3)
+
+
 _CONFORM_SCHEMA = {
     "type": "object",
     "properties": {"narration": {"type": "string"}},
@@ -579,3 +671,32 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
                                     else _plagiarism_flags(grounded["beats"],
                                                            [s.get("full_text", "") for s in source_scripts]))
     return grounded
+
+
+def build_scene_first_plan(source_scripts, reference_text, target_seconds,
+                           n_candidates=3, video_type=None, call=None):
+    """장면 우선 대본 모드: 팔레트+헌장으로 후보 n개 생성 → 각 EDL grounding·채점 →
+    최고 score에 recommended=True. 각 candidate.plan은 build_edit_plan 반환형(하류 렌더 호환).
+    후보 0개면 candidates=[](호출부가 기존 build_edit_plan로 폴백)."""
+    seg_map, inventory = _build_inventory(source_scripts)
+    detected = video_type or (detect_video_type(source_scripts) if source_scripts else _DEFAULT_TYPE)
+    if not seg_map:
+        return {"candidates": [], "detected_type": detected}
+    _call = call or _vault_call
+    raws = _scene_first_candidates(inventory, reference_text, target_seconds, n=n_candidates, call=_call)
+    src_texts = [s.get("full_text", "") for s in source_scripts]
+    cands = []
+    for r in raws:
+        plan = _ground_candidate(r, seg_map)
+        if plan is None:
+            continue
+        plan["detected_type"] = detected
+        plan["affiliate_target"] = r.get("story_event", "") or ""
+        plan["plagiarism_flags"] = _plagiarism_flags(plan["beats"], src_texts)
+        story = {k: r.get(k, "") for k in
+                 ("hook", "story_person", "story_event", "story_resolution", "cta_line", "cta_keyword")}
+        cands.append({"plan": plan, "story": story, "score": _score_candidate(plan), "recommended": False})
+    if cands:
+        best = max(range(len(cands)), key=lambda i: cands[i]["score"])
+        cands[best]["recommended"] = True
+    return {"candidates": cands, "detected_type": detected}

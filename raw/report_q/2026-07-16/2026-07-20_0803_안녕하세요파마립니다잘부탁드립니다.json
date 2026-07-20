@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-16",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-20_0803_안녕하세요파마립니다잘부탁드립니다.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "키움증권",
+    "analyst": "신민수",
+    "report_date": "2026. 7. 16.",
+    "stocks": [
+      {
+        "name": "파마리서치",
+        "code": "214450",
+        "rating": "Buy(Maintain)",
+        "rating_changed": "Maintain",
+        "tp_new": "510,000원",
+        "tp_prev": "440,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2Q26 실적은 매출액 1,863억(YoY +32.5%, QoQ +27.5%; 컨센서스 +14.4% 상회), 영업이익 752억(YoY +34.6%, QoQ +31.3%, 영업이익률 40.4%; 컨센서스 +14.3% 상회)으로 추정한다.",
+        "estimate_revision": "목표주가는 기존 대비 +15.9% 상향한 51만 원을 제시합니다.",
+        "next_catalyst": "아시아와 미국에서 통하는 것이 증명되며 화장품 ‘리쥬란’ 브랜드에 대한 밸류에이션 프리미엄이 정당화될 것으로 전망한다.",
+        "thesis": [
+          "의료기기 내수 부문은 방한 외국인 관광객 러쉬와 K-뷰티 트렌드 지속으로 견조한 성장세 지속",
+          "화장품 부문은 미국 SEPHORA 진출 및 TikTok, Amazon 채널의 구조적 확장으로 수출 성장 가속화",
+          "동사를 화장품 업체로 재조명할 시 12개월 선행 PER 등 지표 고려 시 현격한 저평가 상태"
+        ],
+        "valuation_basis": "선행 4개분기 EPS 전망치 25,181원에 목표 PER 20배를 적용",
+        "risk": null,
+        "supply_comment": "파마리서치바이오 톡신 신규 CAPA 가동 시작(2H27)",
+        "quote": "2Q26 실적은 매출액 1,863억, 영업이익 752억으로 각각 시장 기대치를 +14.4%, +14.3% 상회할 것으로 추정합니다."
+      }
+    ]
+  }
+}
