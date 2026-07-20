@@ -460,6 +460,22 @@ def _ground_candidate(cand, seg_map, structure="free"):
     return {"structure": structure, "beats": beats_out}
 
 
+def _score_candidate(plan):
+    """후보 추천 점수(0~1): 매칭 fit·억지없음·장면다양성. 빈 beats면 0.0."""
+    beats = plan.get("beats") or []
+    if not beats:
+        return 0.0
+    avg_fit = sum(int(b.get("fit") or 0) for b in beats) / len(beats) / 5.0
+    forced_ratio = sum(1 for b in beats if b.get("forced")) / len(beats)
+    seg_ids = []
+    for b in beats:
+        seg_ids.append((b.get("primary") or {}).get("seg_id"))
+        seg_ids += [(a or {}).get("seg_id") for a in (b.get("alternates") or [])]
+    seg_ids = [s for s in seg_ids if s]
+    diversity = (len(set(seg_ids)) / len(seg_ids)) if seg_ids else 0.0
+    return round(0.5 * avg_fit + 0.3 * (1 - forced_ratio) + 0.2 * diversity, 3)
+
+
 _CONFORM_SCHEMA = {
     "type": "object",
     "properties": {"narration": {"type": "string"}},

@@ -48,3 +48,12 @@ def test_ground_candidate_multicut_to_edl():
 def test_ground_candidate_drops_invalid_primary():
     cand = {"beats": [{"role": "x", "narration": "n", "seg_ids": ["없는id"], "fit": 3, "forced": False}]}
     assert edit_plan._ground_candidate(cand, _seg_map()) is None   # 유효 비트 0개 → None
+
+
+def test_score_prefers_high_fit_low_forced():
+    good = {"beats": [{"fit": 5, "forced": False, "primary": {"seg_id": "a"}, "alternates": [{"seg_id": "b"}]},
+                      {"fit": 5, "forced": False, "primary": {"seg_id": "c"}, "alternates": []}]}
+    bad = {"beats": [{"fit": 2, "forced": True, "primary": {"seg_id": "a"}, "alternates": []},
+                     {"fit": 2, "forced": True, "primary": {"seg_id": "a"}, "alternates": []}]}
+    assert edit_plan._score_candidate(good) > edit_plan._score_candidate(bad)
+    assert edit_plan._score_candidate({"beats": []}) == 0.0
