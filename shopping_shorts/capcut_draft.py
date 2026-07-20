@@ -8,7 +8,10 @@
 
 ⚠️ 샘플 draft엔 device_id·mac_address가 있으나 여기선 무해 기본값으로 채운다(로드 영향은 육안 검증).
 """
+import json
+import shutil
 import uuid
+from pathlib import Path
 
 
 def _uid():
@@ -136,7 +139,7 @@ _DEFAULT_FONT = ("C:/Users/TheRose/AppData/Local/CapCut/Apps/8.9.1.3802/"
 
 
 def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
-                project_name, canvas=(1080, 1920), font_path=_DEFAULT_FONT):
+                project_name, canvas=(1080, 1920), font_path=_DEFAULT_FONT, video_durs=None):
     """편집안 → (draft_content_dict, assets_to_copy).
 
     asset_paths: {real_path: 캡컷이 볼 절대경로} — 호출부가 파일을 그 절대경로에 두고 넘긴다.
@@ -177,7 +180,8 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
                 for m, key in ((sp, "speeds"), (ca, "canvases"), (sc, "sound_channel_mappings"),
                                (ph, "placeholder_infos"), (vs, "vocal_separations")):
                     mats[key].append(m)
-                vm = _video_material(abs_path, prim.get("video_id", "clip"), _us(1e6), cw, ch)
+                vdur = _us((video_durs or {}).get(src_real, 0.0)) or (t0 + dur)
+                vm = _video_material(abs_path, prim.get("video_id", "clip"), vdur, cw, ch)
                 mats["videos"].append(vm)
                 seg = _base_segment(vm["id"], t0, dur, source_start=_us(prim["start"]),
                                     source_dur=dur, render_index=0,
@@ -257,6 +261,59 @@ def _skeleton(name, cw, ch, duration_us):
         "mutable_config": None, "cover": None, "retouch_cover": None, "extra_info": None,
         "static_cover_image_path": "", "time_marks": None, "lyrics_effects": [],
     }
+
+
+def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_paths,
+                          tts_paths, project_name, canvas=(1080, 1920), font_path=_DEFAULT_FONT,
+                          probe=None):
+    """draft 폴더를 out_root/<project>/ 에 실제로 조립한다(에셋 복사 + draft_content.json + meta).
+
+    base_abs: 캡컷이 이 draft 폴더를 볼 **절대경로**(예: C:/capcutproject/CapCut Drafts). draft가
+              에셋을 절대경로로 참조하므로, 프론트가 이 base 아래 <project>/에 파일을 쓰면 경로가 맞는다.
+    probe(path)->초: 영상 길이 프로버(없으면 video_assemble._probe_duration). 반환: (proj_dir, project, filenames)."""
+    if probe is None:
+        from shopping_shorts.video_assemble import _probe_duration as probe
+    project = safe_project_name(project_name)
+    proj = Path(out_root) / project
+    if proj.exists():
+        shutil.rmtree(proj, ignore_errors=True)
+    proj.mkdir(parents=True, exist_ok=True)
+    base_abs = base_abs.replace("\\", "/").rstrip("/")
+
+    # 소스 영상: 비트에 실제 쓰인 것만 폴더당 1회 복사. 캡컷이 볼 절대경로 매핑 구성.
+    used_vids = {(plan_beat.get("primary") or {}).get("video_id")
+                 for plan_beat in plan.get("beats", [])}
+    asset_paths, video_durs = {}, {}
+    for vid, real in source_video_paths.items():
+        if vid not in used_vids or not real or not Path(real).exists():
+            continue
+        name = f"src_{safe_project_name(str(vid))}.mp4"
+        shutil.copy(real, proj / name)
+        asset_paths[real] = f"{base_abs}/{project}/{name}"
+        try:
+            video_durs[real] = probe(real)
+        except Exception:
+            video_durs[real] = 0.0
+    # TTS: 비트별 복사
+    for idx, real in tts_paths.items():
+        if real and Path(real).exists():
+            name = f"beat_{int(idx):02d}.mp3"
+            shutil.copy(real, proj / name)
+            asset_paths[real] = f"{base_abs}/{project}/{name}"
+
+    draft, _ = build_draft(plan=plan, timeline=timeline, source_video_paths=source_video_paths,
+                           tts_paths=tts_paths, asset_paths=asset_paths, project_name=project,
+                           canvas=canvas, font_path=font_path, video_durs=video_durs)
+    meta = build_meta(project, f"{base_abs}/{project}", draft["duration"])
+    (proj / "draft_content.json").write_text(json.dumps(draft, ensure_ascii=False), encoding="utf-8")
+    (proj / "draft_meta_info.json").write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
+    return proj, project, sorted(p.name for p in proj.iterdir())
+
+
+def safe_project_name(s, default="쇼핑쇼츠"):
+    # 한글·영숫자는 isalnum()이 True(파이썬 str). 공백·_- 만 추가 허용.
+    s = "".join(c for c in (s or "") if c.isalnum() or c in " _-").strip()
+    return (s or default)[:50]
 
 
 def build_meta(project_name, draft_folder, duration_us):

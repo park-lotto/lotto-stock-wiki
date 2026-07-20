@@ -1,4 +1,8 @@
 """CapCut draft 생성기 구조 검증 (설계 부록A). 실제 열림 여부는 캡컷 육안(자동 불가)."""
+import json
+import subprocess
+from pathlib import Path
+
 from shopping_shorts import capcut_draft as cd
 
 
@@ -80,6 +84,45 @@ def test_text_content_is_json_string_with_text():
 def test_canvas_vertical_default():
     draft, _ = _build()
     assert draft["canvas_config"]["width"] == 1080 and draft["canvas_config"]["height"] == 1920
+
+
+def test_safe_project_name_keeps_korean():
+    assert cd.safe_project_name("쇼핑쇼츠_0720") == "쇼핑쇼츠_0720"
+    assert cd.safe_project_name("a/b:c*") == "abc"
+    assert cd.safe_project_name("") == "쇼핑쇼츠"
+
+
+def _mk_video(p, dur=4):
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi",
+                    "-i", f"color=c=red:s=1080x1920:r=30:d={dur}", "-c:v", "libx264",
+                    "-pix_fmt", "yuv420p", str(p)], check=True, capture_output=True,
+                   stdin=subprocess.DEVNULL)
+
+
+def _mk_audio(p, dur=2.0):
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi",
+                    "-i", f"sine=frequency=440:duration={dur}", "-c:a", "libmp3lame", str(p)],
+                   check=True, capture_output=True, stdin=subprocess.DEVNULL)
+
+
+def test_assemble_folder_copies_assets_and_writes_draft(tmp_path):
+    src = tmp_path / "src.mp4"; _mk_video(src, 4)
+    b0 = tmp_path / "b0.mp3"; _mk_audio(b0, 2.0)
+    b1 = tmp_path / "b1.mp3"; _mk_audio(b1, 1.5)
+    out = tmp_path / "drafts"
+    proj, name, files = cd.assemble_draft_folder(
+        out, "C:/cap/CapCut Drafts", plan=_PLAN, timeline=_TIMELINE,
+        source_video_paths={"s0": str(src)}, tts_paths={0: str(b0), 1: str(b1)},
+        project_name="쇼핑쇼츠_j1")
+    # 파일이 실제로 복사됐나
+    assert "draft_content.json" in files and "draft_meta_info.json" in files
+    assert "src_s0.mp4" in files and "beat_00.mp3" in files and "beat_01.mp3" in files
+    # draft가 base 절대경로로 에셋을 참조하나(캡컷이 찾을 수 있게)
+    draft = json.loads((proj / "draft_content.json").read_text(encoding="utf-8"))
+    vpath = draft["materials"]["videos"][0]["path"]
+    assert vpath == "C:/cap/CapCut Drafts/쇼핑쇼츠_j1/src_s0.mp4"
+    # 비디오 material 길이가 실제 소스(4s≈4_000_000μs) 반영(placeholder 아님)
+    assert abs(draft["materials"]["videos"][0]["duration"] - 4_000_000) < 200_000
 
 
 def test_missing_source_skips_video_but_keeps_audio_text():
