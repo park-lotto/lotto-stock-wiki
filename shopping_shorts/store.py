@@ -313,7 +313,9 @@ class Store:
                     headcopy_json TEXT,
                     fx_plan TEXT,
                     fx_status TEXT,
-                    fx_path TEXT
+                    fx_path TEXT,
+                    scene_first INTEGER NOT NULL DEFAULT 0,
+                    candidates_json TEXT
                 )
             """)
             c.execute("""
@@ -544,6 +546,9 @@ class Store:
                 # run_mix_job이 실패 환불할 때 ①과금된 job인지 ②어느 날짜로 되돌릴지를 판단한다.
                 # /api/mix/start만 채운다 — produce 2단계·auto_run 경로는 과금 안 해 비운다(오환불 방지).
                 ("render_charge_day", "TEXT"),
+                # 장면 우선 대본 모드(2026-07-20, Task6) — build_scene_first_plan 후보 저장.
+                ("scene_first", "INTEGER NOT NULL DEFAULT 0"),
+                ("candidates_json", "TEXT"),
             ):
                 try:
                     c.execute(f"ALTER TABLE mix_jobs ADD COLUMN {col} {ddl}")
@@ -1602,25 +1607,28 @@ class Store:
 
     def create_mix_job(self, job_id, urls, target_seconds, structure,
                        subtitle_removal=False, given_script=None, script_structure=None,
-                       customer_id=LEGACY_CUSTOMER_ID, render_charge_day=None):
+                       customer_id=LEGACY_CUSTOMER_ID, render_charge_day=None,
+                       scene_first=False):
         """새 믹스 job 생성. 초기 status='downloading'.
         given_script: 영상제작 2단계 — 확정 대본을 그대로 쓸 때(나레이션 자동생성 대신).
         script_structure: 도서관에서 딸려온 대본 구조분석 dict(2026-07-15). 뒷단계가 꺼내 쓸
             스냅샷으로 보관만 한다. ⚠️ 인자 structure(template/free 모드 플래그)와 다른 것.
         customer_id: 유료게이트 렌더 크레딧 귀속(2026-07-19). run_mix_job이 실패하면 이 cid로
-            'render' 크레딧을 환불한다 — 실패했는데 크레딧만 날아가면 신뢰가 깨진다."""
+            'render' 크레딧을 환불한다 — 실패했는데 크레딧만 날아가면 신뢰가 깨진다.
+        scene_first: 장면 우선 대본 모드(2026-07-20, Task6) — _plan_and_tts가 build_scene_first_plan을
+            타도록 하는 플래그. given_script을 구조계승 레퍼런스 텍스트로 재활용한다."""
         now = datetime.now(timezone.utc).isoformat()
         with self._conn() as c:
             c.execute(
                 "INSERT INTO mix_jobs(job_id, urls_json, target_seconds, structure, "
                 "status, created_at, updated_at, subtitle_removal, given_script, "
-                "script_structure_json, customer_id, render_charge_day) "
-                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
+                "script_structure_json, customer_id, render_charge_day, scene_first) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (job_id, json.dumps(urls, ensure_ascii=False), target_seconds,
                  structure, "downloading", now, now, 1 if subtitle_removal else 0,
                  given_script or None,
                  json.dumps(script_structure, ensure_ascii=False) if script_structure else None,
-                 customer_id, render_charge_day),
+                 customer_id, render_charge_day, 1 if scene_first else 0),
             )
 
     def get_mix_job(self, job_id):
@@ -1634,7 +1642,8 @@ class Store:
                 "fx_plan, fx_status, fx_path, "
                 "preview_status, preview_path, preview_error, "
                 "thumbnail_json, seo_json, "
-                "clean_sources_json, clean_status, clean_error, customer_id, render_charge_day "
+                "clean_sources_json, clean_status, clean_error, customer_id, render_charge_day, "
+                "scene_first "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -1661,6 +1670,7 @@ class Store:
             "clean_status": row[28], "clean_error": row[29],
             "customer_id": row[30] if row[30] is not None else 0,
             "render_charge_day": row[31],
+            "scene_first": bool(row[32]),
         }
 
     def update_mix_job(self, job_id, **fields):
@@ -1710,6 +1720,20 @@ class Store:
         vals.append(job_id)
         with self._conn() as c:
             c.execute(f"UPDATE mix_jobs SET {', '.join(cols)} WHERE job_id=?", tuple(vals))
+
+    def set_mix_candidates(self, job_id, candidates):
+        """장면 우선 대본 모드(2026-07-20, Task6) — build_scene_first_plan 후보 목록 저장.
+        각 candidate는 {"plan":.., "story":.., "score":.., "recommended":..} 형태(edit_plan.py)."""
+        with self._conn() as c:
+            c.execute("UPDATE mix_jobs SET candidates_json=? WHERE job_id=?",
+                     (json.dumps(candidates, ensure_ascii=False), job_id))
+
+    def get_mix_candidates(self, job_id):
+        """저장된 장면 우선 후보 목록. 없으면 []."""
+        with self._conn() as c:
+            row = c.execute("SELECT candidates_json FROM mix_jobs WHERE job_id=?",
+                            (job_id,)).fetchone()
+        return json.loads(row[0]) if row and row[0] else []
 
     # ── 6단계 SEO 키워드 측정 캐시(2026-07-17) ──
     # job이 아니라 전역이다 — 키워드 측정치는 어느 영상이 쟀든 같은 값이고,

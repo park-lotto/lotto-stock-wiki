@@ -235,7 +235,9 @@ def run_mix_job(job_id, db_path, work_root):
         source_scripts = list(extracts.values())
         _plan_and_tts(store, job_id, source_scripts, job["target_seconds"],
                       job["structure"], None, work, given_script=job.get("given_script"),
-                      voice=job.get("voice"), customer_id=job.get("customer_id", 0))
+                      voice=job.get("voice"), customer_id=job.get("customer_id", 0),
+                      scene_first=job.get("scene_first", False),
+                      reference_text=job.get("given_script") or "")
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=str(e))
@@ -254,15 +256,33 @@ def run_mix_job(job_id, db_path, work_root):
 
 
 def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, video_type, work,
-                  given_script=None, voice=None, customer_id=0):
+                  given_script=None, voice=None, customer_id=0,
+                  scene_first=False, reference_text=""):
     """EDL 생성(3) + 비트별 TTS(4) → edit_plan 저장 + ready_for_review.
     run_mix_job(자동판별, video_type=None)과 retype_mix_job(사용자 선택 유형)이 공유.
     given_script: 있으면 확정 대본을 그대로 비트로 쪼개 영상만 매칭(영상제작 2단계).
-    voice: job의 voice 스냅샷(선택된 보이스 프리셋) — 있으면 비트별 TTS에 적용."""
+    voice: job의 voice 스냅샷(선택된 보이스 프리셋) — 있으면 비트별 TTS에 적용.
+    scene_first: 장면 우선 대본 모드(2026-07-20, Task6) — build_scene_first_plan으로 후보 n개를
+        생성해 store에 저장하고, 추천(recommended) 후보의 plan을 그대로 쓴다. 후보가 하나도 없으면
+        (grounding 전멸 등) 기존 build_edit_plan으로 폴백한다.
+    reference_text: scene_first일 때 스타일·구조를 계승할 레퍼런스 대본(보통 given_script 재활용)."""
     # 3) 통합 EDL
     store.update_mix_job(job_id, status="planning")
-    plan = build_edit_plan(source_scripts, target_seconds, structure=structure,
-                           video_type=video_type, given_script=given_script)
+    if scene_first:
+        from shopping_shorts.edit_plan import build_scene_first_plan
+        sf = build_scene_first_plan(source_scripts, reference_text, target_seconds,
+                                    video_type=video_type)
+        if sf["candidates"]:
+            store.set_mix_candidates(job_id, sf["candidates"])
+            rec = next((cand for cand in sf["candidates"] if cand["recommended"]),
+                       sf["candidates"][0])
+            plan = rec["plan"]
+        else:
+            plan = build_edit_plan(source_scripts, target_seconds, structure=structure,
+                                   video_type=video_type, given_script=given_script)
+    else:
+        plan = build_edit_plan(source_scripts, target_seconds, structure=structure,
+                               video_type=video_type, given_script=given_script)
     # 빈 EDL(추출 전량 실패 또는 파이프라인 중간 전용풀 소진)을 ready_for_review로
     # 오보고하지 않는다 — 성공처럼 보이는 빈 리뷰화면 대신 즉시 실패로 정상 종료
     # (2026-07-12 최종 전체리뷰 Important).

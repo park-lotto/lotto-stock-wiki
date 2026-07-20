@@ -1433,6 +1433,7 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
     target = int(body.get("target_seconds") or 30)
     structure = body.get("structure") if body.get("structure") in ("template", "free") else "template"
     subtitle_removal = bool(body.get("subtitle_removal", False))
+    scene_first = bool(body.get("scene_first", False))
     cid = getattr(request.state, "customer_id", 0)
     if _global_over_cap("render"):
         return JSONResponse(status_code=429, content={
@@ -1447,9 +1448,24 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
     # render_charge_day: '오늘 render를 과금했다'는 표식(+환불할 날짜). run_mix_job이 실패하면 딱
     # 이 날짜로 환불한다. 과금 안 하는 다른 create_mix_job 경로는 이 값을 비워 오환불을 막는다(리뷰 B).
     Store(DB_PATH).create_mix_job(job_id, urls, target, structure, subtitle_removal=subtitle_removal,
-                                  customer_id=cid, render_charge_day=_today_utc())
+                                  customer_id=cid, render_charge_day=_today_utc(),
+                                  scene_first=scene_first)
     background_tasks.add_task(run_mix_job, job_id, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True, "job_id": job_id}
+
+
+@app.post("/api/mix/candidate")
+def api_mix_candidate(body: dict):
+    """장면 우선 대본 모드(2026-07-20, Task6): 후보 선택 — 고른 후보의 plan을 edit_plan으로
+    세팅한다(미리보기/렌더가 이걸 읽는다)."""
+    job_id = (body.get("job_id") or "").strip()
+    idx = int(body.get("index") or 0)
+    store = Store(DB_PATH)
+    cands = store.get_mix_candidates(job_id)
+    if not cands or not (0 <= idx < len(cands)):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "후보 없음"})
+    store.update_mix_job(job_id, edit_plan=cands[idx]["plan"])
+    return {"ok": True}
 
 
 @app.post("/api/settings/vmake_key")
