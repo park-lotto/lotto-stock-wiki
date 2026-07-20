@@ -82,6 +82,39 @@ def _ground_ref(ref, seg_map):
     return {"video_id": seg["video_id"], "seg_id": sid, "start": seg["start"], "end": seg["end"]}
 
 
+_FACE_TOKENS = ("얼굴", "정면", "셀카", "자기소개", "말하는 사람", "脸", "人物", "正面", "自拍")
+
+
+def _is_face_seg(scene_desc):
+    """scene_desc에 인물 정면/얼굴 신호가 있으면 True — 대체 카드가 있을 때 후순위로 민다."""
+    s = (scene_desc or "").lower()
+    return any(t.lower() in s for t in _FACE_TOKENS)
+
+
+def _dedup_and_fill(flat, need):
+    """같은 (video_id,seg_id,start) 중복 제거 후, need 미만이면 가장 긴 세그먼트를
+    시간 이등분 서브슬라이스로 분할해 need개까지 채운다. 환각 없음 — start/end는 코드 계산."""
+    seen, uniq = set(), []
+    for s in flat:
+        k = (s.get("video_id", ""), s.get("seg_id", ""), s.get("start", 0.0))
+        if k in seen:
+            continue
+        seen.add(k)
+        uniq.append(s)
+    # 부족분을 서브슬라이스로 채움 — 가장 긴 것부터 반으로 쪼갠다.
+    while len(uniq) < need:
+        longest = max(uniq, key=lambda s: s.get("end", 0.0) - s.get("start", 0.0), default=None)
+        if longest is None or (longest["end"] - longest["start"]) < 1.0:
+            break  # 더 쪼갤 게 없음 — 있는 만큼만
+        mid = round((longest["start"] + longest["end"]) / 2, 2)
+        half = dict(longest)
+        half["seg_id"] = f"{longest['seg_id']}#2"
+        half["start"] = mid
+        longest["end"] = mid  # 원본은 앞 절반으로 줄임(제자리 수정)
+        uniq.append(half)
+    return uniq[:max(need, len(uniq))]
+
+
 def _chronological_respine(beats):
     """비트의 시각 세그먼트([primary]+alternates)를 소스 시간순으로 재배치한다(2트랙 모델,
     2026-07-19). 나레이션·비트 순서는 그대로 — 화면만 요리 시간순(재료→조리→완성→시식)으로
@@ -106,7 +139,10 @@ def _chronological_respine(beats):
         segs = [b["primary"]] + list(b.get("alternates") or [])
         counts.append(len(segs))
         flat.extend(segs)
-    ordered = sorted(flat, key=lambda s: (s.get("video_id", ""), s.get("start", 0.0)))
+    flat = _dedup_and_fill(flat, need=sum(counts))
+    # 정렬: (video_id,start) 우선, 동시각이면 얼굴 세그먼트를 뒤로(대체 있을 때 후순위).
+    ordered = sorted(flat, key=lambda s: (s.get("video_id", ""), s.get("start", 0.0),
+                                          _is_face_seg(s.get("scene_desc", ""))))
     out, i = [], 0
     for b, n in zip(body, counts):
         chunk = ordered[i:i + n]
