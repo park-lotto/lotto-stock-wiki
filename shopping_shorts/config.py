@@ -101,3 +101,10 @@ GRADE_THRESHOLDS = [(0.75, "🔥🔥🔥"), (0.5, "🔥🔥"), (0.25, "🔥"), (
 
 # 카테고리 (자동 태깅 초기 6분류)
 CATEGORIES = ["인테리어", "레시피", "생활용품", "가전", "뷰티", "기타"]
+
+# yt-dlp 쿠키(2026-07-20) — 유튜브·틱톡이 비로그인 요청을 막기 시작해(봇 차단 강화)
+# 로그인 세션 없이는 다운로드가 실패한다. 사장님이 브라우저에서 직접 내보낸 쿠키파일
+# 경로(플랫폼별 별도 — 계정 다르면 쿠키도 다르다). 파일이 없으면 빈 문자열이고,
+# media_download.py는 빈 값이면 --cookies 없이(기존처럼) 시도해 회귀가 없다.
+YTDLP_COOKIES_YOUTUBE = os.environ.get("YTDLP_COOKIES_YOUTUBE", "")
+YTDLP_COOKIES_TIKTOK = os.environ.get("YTDLP_COOKIES_TIKTOK", "")
