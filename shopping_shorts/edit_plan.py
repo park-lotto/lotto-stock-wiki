@@ -384,6 +384,53 @@ def _vault_call(prompt, schema, max_tries=4):
     return None
 
 
+_SCENE_FIRST_SCHEMA = {
+    "type": "object",
+    "properties": {"candidates": {"type": "array", "minItems": 1, "items": {
+        "type": "object",
+        "properties": {
+            "hook": {"type": "string"},
+            "story_person": {"type": "string"}, "story_event": {"type": "string"},
+            "story_resolution": {"type": "string"}, "cta_line": {"type": "string"},
+            "cta_keyword": {"type": "string"},
+            "beats": {"type": "array", "minItems": 4, "items": {
+                "type": "object",
+                "properties": {
+                    "role": {"type": "string"}, "narration": {"type": "string"},
+                    "seg_ids": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+                    "fit": {"type": "integer"}, "forced": {"type": "boolean"}},
+                "required": ["role", "narration", "seg_ids", "fit"]}}},
+        "required": ["hook", "beats"]}}},
+    "required": ["candidates"],
+}
+
+
+def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3, call=_vault_call):
+    """스토리 헌장 + 장면 팔레트 + 레퍼 구조 → 후보 n개. 각 비트는 seg_ids(2~4 다중컷)로
+    장면을 지목한다. 실패 시 []. 헌장이 품질을 담당하므로 별도 검증루프 없음(1콜)."""
+    from shopping_shorts import script_generate  # 지연 import(순환 방지)
+    char_target = int(target_seconds * _SYLLABLES_PER_SEC)
+    prompt = (
+        "너는 한국 쇼핑 숏폼(살림·요리) 대본 작가다. 아래 '스토리 헌장'을 반드시 지켜 "
+        f"탄탄한 대본 후보 {n}개를 만들어라. 단, 우리가 가진 장면으로만 말할 수 있게 쓰고, "
+        "각 비트(문장)에 그 말과 어울리는 장면 seg_id를 2~4개 시간순으로 붙여라.\n\n"
+        "[레퍼런스 — 훅·전개·설득구조만 계승(표절 금지), 다국어면 한국어로]\n"
+        f"{(reference_text or '')[:1500]}\n\n"
+        "[우리 장면 팔레트 — 이 seg_id 화면만 쓸 수 있다]\n"
+        f"{inventory_text}\n\n"
+        + script_generate._STORY_RULES_CORE + "\n" + script_generate._STORY_DECLARE + "\n"
+        "- ★위 헌장(인과사슬·훅 한방·CTA 미끼·비법 킥 감추기)을 반드시 지켜라 — 장면에 맞추느라 "
+        "스토리가 밋밋해지면 실패다. 스토리가 왕, 장면은 그 스토리를 보여줄 그림이다.\n"
+        f"- 전체 나레이션 글자수 합은 약 {char_target}자 내외. 각 비트: role·narration(구어체)·"
+        "seg_ids(2~4)·fit(1~5)·forced(그 장면이 이 말과 안 맞는데 억지로 붙였으면 true).\n"
+        "- 화면에 없는 걸 말하지 마라. 같은 seg_id를 여러 비트에서 재사용 금지.\n"
+        "출력은 스키마 JSON만.")
+    raw = call(prompt, _SCENE_FIRST_SCHEMA)
+    if not raw or not isinstance(raw, dict):
+        return []
+    return raw.get("candidates", []) or []
+
+
 _CONFORM_SCHEMA = {
     "type": "object",
     "properties": {"narration": {"type": "string"}},
