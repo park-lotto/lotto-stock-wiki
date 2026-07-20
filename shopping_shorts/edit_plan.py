@@ -87,19 +87,27 @@ def _chronological_respine(beats):
     2026-07-19). 나레이션·비트 순서는 그대로 — 화면만 요리 시간순(재료→조리→완성→시식)으로
     흐르게 해 완성↔붓기 핑퐁을 없앤다. 비트당 세그먼트 개수는 보존(길이 커버리지 유지).
 
+    ★꼬리(마지막) 비트는 앵커로 고정한다(② 엔딩 딴 영상 버그, 2026-07-20). 전역정렬은
+    (video_id,start)로 소스를 뭉치므로, 재분배 시 마지막 비트엔 항상 '가장 큰 video_id
+    소스의 늦은 세그먼트'가 떨어진다 — 그게 완성/히어로 컷이라는 보장이 없고 딴 소스(에어프라이어
+    바나나 등)일 수 있어, CTA 나레이션("완성! 댓글")이 엉뚱한 릴 위에 얹혔다. CTA/엔딩 비트는
+    모델이 고른 완성/시식 컷을 그대로 두고, 그 앞 body 비트들만 시간순으로 흐르게 한다.
+
     의미 매칭(문장↔화면)을 일부러 포기한 배치이므로, 오탐 빨간불을 막기 위해 fit=4(정상)로
     표시한다 — 이 값은 '시간순 스파인 배치'라는 뜻이지 '문장과 화면이 맞다'는 뜻이 아니다.
     정렬 키는 (video_id, start): 한 소스는 시간순으로 이어 쓰고, 소스끼리는 묶어서 쓴다."""
     if not beats:
         return beats
+    # 꼬리 비트는 respine 대상에서 제외(앵커) — 모델이 고른 화면 그대로.
+    body, tail = beats[:-1], beats[-1]
     flat, counts = [], []
-    for b in beats:
+    for b in body:
         segs = [b["primary"]] + list(b.get("alternates") or [])
         counts.append(len(segs))
         flat.extend(segs)
     ordered = sorted(flat, key=lambda s: (s.get("video_id", ""), s.get("start", 0.0)))
     out, i = [], 0
-    for b, n in zip(beats, counts):
+    for b, n in zip(body, counts):
         chunk = ordered[i:i + n]
         i += n
         nb = dict(b)
@@ -107,6 +115,10 @@ def _chronological_respine(beats):
         nb["alternates"] = chunk[1:]
         nb["fit"] = 4
         out.append(nb)
+    # 꼬리: 세그먼트는 원래 것 유지, fit만 스파인 계약(4)에 맞춘다(오탐 빨간불 방지 동일).
+    nb_tail = dict(tail)
+    nb_tail["fit"] = 4
+    out.append(nb_tail)
     return out
 
 
