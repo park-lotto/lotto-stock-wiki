@@ -1926,6 +1926,7 @@ let _workTimer = null;   // 서버 POST 디바운스(입력마다 두들기지 �
 // 서버 push는 1초 디바운스라 연타 입력은 하나로 뭉친다 → _prevCommitted는 "직전 저장 지점"이 된다.
 let _lastCommitted = null, _prevCommitted = null;
 function _setSaveStatus(text, cls){
+  if(typeof document === 'undefined') return;   // DOM 없는 환경(노드 슬라이스 테스트)에선 무해히 지나간다
   const el = document.getElementById('saveStatus'); if(!el) return;
   el.className = cls || '';
   el.innerHTML = text;
@@ -1934,8 +1935,12 @@ function _markSaving(){ _setSaveStatus('저장 중…'); }
 function _markSaved(){ _setSaveStatus('<span class="savedTick">✓</span> 저장됨', 'ok'); }
 function _markLocalOnly(){ _setSaveStatus('이 기기에 임시 저장됨'); }   // 서버 실패 — 로컬은 살아있음(정직하게)
 function _refreshRevertBtn(){
+  if(typeof document === 'undefined') return;
   const b = document.getElementById('revertBtn'); if(b) b.disabled = !_prevCommitted;
 }
+// 서버 복원 직후 호출 — 복원 상태를 저장 기준선으로 삼아 "✓ 저장됨" 표시 + 첫 편집 되돌리기 가능.
+// (save 슬라이스에 둬서 _lastCommitted·_workState와 한 스코프. _bootRestore는 존재할 때만 부른다.)
+function _seedSaveBaseline(){ _lastCommitted = JSON.stringify(_workState()); _markSaved(); _refreshRevertBtn(); }
 function _workState(){
   // ★sessionStorage.produce_work의 스키마 **그대로** + step + work_id. 새 형식을 발명하지 않는다 —
   // _consumeProduceHandoff가 이미 이 모양을 읽는다(스펙 §4.2).
@@ -2057,8 +2062,6 @@ async function _restoreWork(workId){
   cur = (typeof st === 'number' && st >= 0 && st < STEPS.length) ? st : 0;
   if(cur > 0 && MIX_JOB && !canGoNext()) cur = 0;   // 미리보기 미확인이면 1단계로 되돌린다
   renderSteps(); showPanel(); refreshNextBtn();
-  // T8: 복원된 상태를 저장 기준선으로 삼는다 → 복원 직후의 첫 편집도 되돌릴 수 있다.
-  _lastCommitted = JSON.stringify(_workState()); _markSaved(); _refreshRevertBtn();
 }
 function _consumeProduceHandoff(){
   // 신규 핸드오프(즐겨찾기·랭킹에서 방금 넘어온 것)를 **진행 중 작업에 누적**한다.
@@ -2114,8 +2117,6 @@ function _consumeProduceHandoff(){
   renderPool();
   syncFootageToMixUrls();
   refreshFinalPeek();
-  // T8: 이어붙인 상태를 저장 기준선으로(첫 편집 되돌리기 가능). saveWork가 곧 서버에도 확정.
-  _lastCommitted = JSON.stringify(_workState()); _refreshRevertBtn();
   saveWork();
 }
 // 왼쪽 영상 풀 렌더 — 각 영상에 📝뽑기 / 🎬담기(토글). 역할 미리배정 없음, 겸용 허용.
@@ -3701,7 +3702,16 @@ function _bootRestore(){
     try{ history.replaceState({}, '', '/produce'); }catch(e){}
   }
   const wid = sp.get('work');
-  if(wid){ _restoreWork(wid); } else { _consumeProduceHandoff(); }
+  if(wid){
+    // T8: 서버 복원(_restoreWork는 saveWork를 안 부른다)이 끝나면 복원 상태를 저장 기준선으로 시드해
+    //   "✓ 저장됨" 표시 + 복원 직후 첫 편집도 되돌릴 수 있게 한다. (여기서 시드 = 슬라이스 테스트 불간섭)
+    //   Promise.resolve: _restoreWork가 프라미스가 아니어도(테스트 스텁) .then이 안전. 시더는 있을 때만.
+    Promise.resolve(_restoreWork(wid)).then(()=>{ if(typeof _seedSaveBaseline==='function') _seedSaveBaseline(); });
+  } else {
+    // sessionStorage 경로(_consumeProduceHandoff)는 끝에서 saveWork()를 부른다 → _pushWork가
+    //   기준선(_lastCommitted)을 자동으로 잡는다. 별도 시드 불필요.
+    _consumeProduceHandoff();
+  }
 }
 _bootRestore();
 refreshFinalPeek();
