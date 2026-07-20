@@ -75,3 +75,12 @@ def test_anonymous_protected_page_still_redirects_to_login(tmp_path, monkeypatch
     r = c.get("/produce.html")
     assert r.status_code in (302, 303, 307)
     assert "/login" in r.headers.get("location", "")
+
+
+def test_anonymous_pricing_is_public(tmp_path, monkeypatch):
+    """비로그인 방문자도 요금·이용권 페이지(/pricing)를 200으로 본다(로그인 리다이렉트 아님)."""
+    _setup(tmp_path, monkeypatch)
+    c = TestClient(appmod.app)  # 쿠키 없음 = 비로그인
+    r = c.get("/pricing")
+    assert r.status_code == 200
+    assert "이용권" in r.text
