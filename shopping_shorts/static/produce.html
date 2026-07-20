@@ -2085,8 +2085,12 @@ function _renderPreviewVideo(job){
 //   의미인데, 복원은 이미 확인한 미리보기를 되살리는 것이라 게이트를 다시 잠그면 안 된다.
 function _renderMixReviewBody(d){
   MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
+  if(typeof window!=='undefined') window._mixBeats = d.beats || [];   // 조각 전체 보기(paletteStats)가 읽는다 — 실제 쓴 컷 집계용
   const el=document.getElementById('mixReview');
-  el.innerHTML='<h3 style="font-size:15px">편집안(장면 매칭)</h3>'+renderCoverageSignal(d.beats||[])+(d.beats||[]).map((b,i)=>`
+  el.innerHTML='<h3 style="font-size:15px">편집안(장면 매칭)</h3>'+renderCoverageSignal(d.beats||[])
+    +`<button class="btn" style="margin:0 0 8px;padding:5px 12px;font-size:12px;background:var(--inset);border:1px solid var(--line);color:var(--sub)" onclick="openPaletteView()" title="소스를 몇 조각으로 나눠 이 영상에 몇 컷 썼는지 썸네일로 봅니다">🔪 조각 전체 보기</button>`
+    +`<div id="paletteBox" data-open="0" style="margin-bottom:8px"></div>`
+    +(d.beats||[]).map((b,i)=>`
     <div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;background:var(--inset)">
       <span style="font-size:11px;background:var(--accent2);padding:2px 8px;border-radius:10px">${esc(b.role||'')}</span>
       <div style="margin:6px 0;font-size:13px">${esc(b.narration||'')}</div>
@@ -2810,6 +2814,53 @@ async function doSwap(idx, segId){
   loadMixReview();   // 화면이 바뀜=옛 미리보기 무효 → 전체 재로드가 프리뷰까지 정리(2360 규율)
 }
 // ─── SWAP-END
+
+// ── 조각 전체 보기(2026-07-21 사장님: "이거 자른거 볼수있게 띄워봐") ─── PALETTE-START
+// 믹스가 소스를 몇 조각으로 나눠 이 영상에 몇 컷 썼는지 한눈에. 백엔드 변경 0 — 데이터가 이미 있다:
+//   /api/mix/segments = 팔레트 전체(썸네일·scene_desc·dur), d.beats = 실제 쓴 컷(primary+alternates,
+//   각 seg_id 보유). 조각내기는 scene_cut.detect_cuts(장면라이브러리와 같은 엔진) 위에 믹스가
+//   Gemini 세분화를 얹은 것 — 그래서 팔레트 조각 수 > 원시 컷 수.
+function paletteStats(beats){
+  // 최종 영상에 배치된 컷 = 각 비트의 primary + alternates(다중컷). 사용 seg_id 집합·총 배치수·소스수.
+  const used = new Set(); let placed = 0; const srcs = new Set();
+  for(const b of (beats||[])){
+    const refs = [b && b.primary].concat((b && b.alternates) || []);
+    for(const r of refs){
+      if(r && r.seg_id){ used.add(r.seg_id); placed++; if(r.video_id) srcs.add(r.video_id); }
+    }
+  }
+  return {usedIds: used, placed: placed, distinct: used.size, sources: srcs.size, beats: (beats||[]).length};
+}
+function paletteSummaryText(beats, totalSegs){
+  const s = paletteStats(beats);
+  const seg = (totalSegs!=null) ? `총 <b>${totalSegs}조각</b>으로 나눠 ` : '';
+  return `🔪 소스 <b>${s.sources}개</b> → ${seg}이 영상은 <b>${s.beats}문장</b>에 <b>${s.placed}컷</b> 사용 (조각 ${s.distinct}종)`;
+}
+async function openPaletteView(){
+  const box = document.getElementById('paletteBox');
+  if(!box) return;
+  if(box.dataset && box.dataset.open === '1'){ box.innerHTML=''; box.dataset.open='0'; return; }   // 토글 닫기
+  box.innerHTML = '<div class="hint">⏳ 조각 불러오는 중…</div>';
+  let d;
+  try{ d = await (await fetch('/api/mix/segments/'+encodeURIComponent(MIX_JOB))).json(); }
+  catch(e){ box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; return; }
+  if(!d.ok){ box.innerHTML='<div class="hint" style="color:var(--fire)">'+esc(d.error||'조각 불러오기 실패')+'</div>'; return; }
+  const beats = (window._mixBeats || []);
+  const st = paletteStats(beats);
+  const cards = (d.segments||[]).map(s=>{
+    const on = st.usedIds.has(s.seg_id);
+    return `<div style="flex:0 0 92px;opacity:${on?1:0.4}">
+      <img src="${esc(s.thumb_url)}" style="width:92px;height:163px;object-fit:cover;border-radius:6px;background:#000" alt="" onerror="this.style.visibility='hidden'">
+      <div class="hint" style="font-size:11px;margin-top:2px">${on?'✅ ':''}${esc((s.scene_desc||'').slice(0,16))}</div>
+      <div class="hint" style="font-size:10px">${s.dur}s${on?' · 사용':''}</div>
+    </div>`;
+  }).join('');
+  box.dataset.open = '1';
+  box.innerHTML = `<div style="margin:6px 0;font-size:13px">${paletteSummaryText(beats, (d.segments||[]).length)}</div>`
+    + `<div class="hint" style="margin-bottom:4px">밝은 게 이 영상에 <b>쓴 컷</b>(✅), 흐린 건 안 쓴 조각이에요.</div>`
+    + `<div style="display:flex;gap:8px;flex-wrap:wrap;max-height:400px;overflow-y:auto;padding-bottom:4px">${cards}</div>`;
+}
+// ─── PALETTE-END
 
 // ── 1단계 미리보기(2026-07-17) ──────────────
 // 다음 단계(자막제거)가 VMake 유료 API라, 컷·대본이 틀린 채 넘어가면 그 돈이 날아간다.
