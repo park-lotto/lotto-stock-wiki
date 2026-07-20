@@ -2857,8 +2857,10 @@ a{text-decoration:none;color:inherit}
 .brand .wm{display:flex;flex-direction:column;line-height:1}
 .brand .nm{font-family:'Black Han Sans',sans-serif;font-size:22px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
 .brand .en{font-family:ui-monospace,monospace;font-size:9px;letter-spacing:2.4px;color:var(--faint);margin-top:2px}
-.nav .login{color:var(--muted);font-size:14px;font-weight:600}
-.nav .login:hover{color:var(--mint)}
+.nav .login{color:var(--txt);font-size:15.5px;font-weight:700;padding:7px 12px;border-radius:9px}
+.nav .login:hover{color:var(--mint);background:rgba(111,240,214,.08)}
+.nav .login.go{color:#062018;background:var(--grad)}
+.nav .login.go:hover{filter:brightness(1.06);color:#062018;background:var(--grad)}
 /* HERO — 가운데 정렬 */
 .hero{text-align:center;max-width:760px;margin:0 auto;padding:60px 0 40px}
 .badge{display:inline-block;font-size:12.5px;color:var(--mint);border:1px solid rgba(111,240,214,.3);border-radius:999px;padding:6px 15px;margin-bottom:22px;background:rgba(111,240,214,.06)}
@@ -2931,7 +2933,7 @@ a{text-decoration:none;color:inherit}
 </style></head><body><div class=wrap>
 <div class=nav>
 <a class=brand href="/">__LOGO_SVG__<span class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></span></a>
-<span style="display:flex;gap:18px;align-items:center"><a class=login href="/pricing">요금</a><a class=login href="/login">로그인</a></span></div>
+<span style="display:flex;gap:10px;align-items:center"><a class=login href="/pricing">요금</a><a class="login go" href="/login">로그인</a></span></div>
 <div class=hero>
 <span class="badge rise r1">생각 0 · 편집 0 · 딱 5분</span>
 <h1 class="display rise r2">머리 쓸 필요 없어요.<br>시키는 대로 <span class=hl>딸깍</span>, 5분이면 끝.</h1>
@@ -3018,11 +3020,11 @@ body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:c
 background:radial-gradient(900px 500px at 80% -10%,rgba(111,240,214,.10),transparent 60%),#0b0f14;
 font-family:'Noto Sans KR',system-ui,sans-serif;color:#e8f0ee}
 .box{width:340px;padding:36px 30px;text-align:center}
-.logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px}
-.logo .sym{width:34px;height:34px;flex:none}
+.logo{display:flex;align-items:center;justify-content:center;gap:13px;margin-bottom:10px}
+.logo .sym{width:50px;height:50px;flex:none}
 .logo .wm{display:flex;flex-direction:column;line-height:1;text-align:left}
-.logo .nm{font-family:'Black Han Sans',sans-serif;font-size:22px;background:linear-gradient(135deg,#6ff0d6,#1f9e7a);-webkit-background-clip:text;background-clip:text;color:transparent}
-.logo .en{font-family:ui-monospace,monospace;font-size:9px;letter-spacing:2.4px;color:#5f7373;margin-top:2px}
+.logo .nm{font-family:'Black Han Sans',sans-serif;font-size:33px;background:linear-gradient(135deg,#6ff0d6,#1f9e7a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.logo .en{font-family:ui-monospace,monospace;font-size:11px;letter-spacing:3.2px;color:#7a9090;margin-top:3px}
 h1{font-size:22px;margin:26px 0 8px;font-weight:700}
 .sub{color:#6ff0d6;font-size:13px;margin-bottom:26px;line-height:1.6}
 .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;
