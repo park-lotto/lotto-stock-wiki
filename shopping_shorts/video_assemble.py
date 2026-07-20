@@ -201,11 +201,16 @@ def _extend_last_clip_for_runout(plan, segs, runout=_LAST_RUNOUT):
     return plan
 
 
-def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP):
+def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP, src_durs=None):
     """비트의 순서 구간 리스트 → 나레이션 길이(tts_dur)에 맞춘 클립 계획.
-    각 클립은 자기 구간 [start,end]를 절대 넘지 않는다(유출 0). 부족분은 마지막 클립을
-    슬로모(out_dur>src_dur)로 늘려 채우고, 0.8초 미만 자투리는 직전 클립에 흡수한다.
-    반환: [{"video_id","start","src_dur","out_dur"}, ...]"""
+    각 클립은 자기 구간 [start,end]를 절대 넘지 않는다(유출 0). 부족분은 아래 정책으로 채운다.
+    반환: [{"video_id","start","src_dur","out_dur"}, ...]
+
+    ★멈추지 말고 진짜 영상으로(2026-07-20 사장님): 배정 구간을 다 써도 모자라면, 소스 릴은
+    보통 구간보다 훨씬 길어(구간 2초 vs 릴 30초) 뒤에 실프레임이 남아있다. `src_durs`
+    ({video_id: 소스총길이})가 주어지면 마지막 클립의 읽기 창을 소스에 남은 만큼 더 늘려
+    **1배속 실영상**으로 채운다 → freeze/억지슬로우 없음. 소스까지 소진돼야만 슬로모 폴백.
+    src_durs 미제공(하위호환)이면 예전처럼 마지막 클립을 슬로모로 늘린다."""
     eps = 1e-3
     clips = []
     filled = 0.0
@@ -229,8 +234,19 @@ def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP):
 
     shortfall = tts_dur - filled
     if shortfall > eps:
-        # 구간을 다 써도 모자람 → 마지막 클립을 슬로모로 늘려 채운다.
-        clips[-1]["out_dur"] += shortfall
+        last = clips[-1]
+        # 1순위: 소스에 남은 실프레임을 더 읽어 1배속 실영상으로 채운다(멈춤 없음).
+        if src_durs:
+            sdur = src_durs.get(last["video_id"], 0.0)
+            avail = max(0.0, sdur - (last["start"] + last["src_dur"]))
+            real_ext = min(shortfall, avail)
+            if real_ext > eps:
+                last["src_dur"] += real_ext
+                last["out_dur"] += real_ext
+                shortfall -= real_ext
+        # 소스까지 소진되면(극히 드묾) 남는 만큼만 슬로모로 늘린다.
+        if shortfall > eps:
+            last["out_dur"] += shortfall
 
     # 0.8초 미만 독립 클립 제거: 그런 클립을 이웃에 흡수(이웃이 슬로모로 그 시간을 떠안는다).
     # 앞 클립이 있으면 앞으로, 없으면(첫 클립) 뒤로 합친다. 합계(sum out_dur)는 보존된다.
@@ -489,7 +505,9 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
                 and _src_dur(s["video_id"]) > 0.05]
         if not segs:
             continue
-        plan = _plan_beat_clips(segs, tts_dur)
+        # 소스별 총길이를 넘겨 '멈춤 대신 소스 실프레임 더 재생'을 켠다(2026-07-20).
+        beat_src_durs = {s["video_id"]: _src_dur(s["video_id"]) for s in segs}
+        plan = _plan_beat_clips(segs, tts_dur, src_durs=beat_src_durs)
         # 마지막 비트 여운: 실프레임 여유는 1배속으로, 부족분은 아래 slowmo/freeze 기계가 흡수.
         runout = _LAST_RUNOUT if idx == _runout_idx else 0.0
         if runout > 0:
