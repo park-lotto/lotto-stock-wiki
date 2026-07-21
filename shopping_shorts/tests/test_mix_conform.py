@@ -79,7 +79,7 @@ def test_conform_pass_rewrites_only_over_budget_beat(monkeypatch, tmp_path):
     assert b0["tts_path"] == str(tmp_path / "beat_0.mp3"), "재TTS 경로가 비트에 반영 안 됨"
     assert b0["sync_gap"] == 0.0, "재TTS(2.2s) 후 예산(2.3s) 안인데 gap이 남았다"
     assert b0["cap_durs"] == [2.2], "콘폼 후 자막 타이밍 재동기 안 됨"
-    assert b0["target_seconds"] == 1.5, "UI 표시 초 재계산 안 됨(화면 초≠실길이)"
+    assert b0["target_seconds"] == 2.2, "UI 표시 초 = 실제 발화초(2.2)여야 함(추정 1.05→1.5 아님)"
     assert len(synth_calls) == 1, "초과 비트 1개만 재TTS해야 한다"
     assert b1["narration"] == "적당한 문장" and "conformed" not in b1
     assert b1["sync_gap"] == 0.0
