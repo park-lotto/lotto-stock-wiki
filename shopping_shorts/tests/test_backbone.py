@@ -242,15 +242,38 @@ def test_pick_backbone_most_segments():
     assert backbone.pick_backbone(sources) == "B"
 
 
-def test_pick_backbone_excludes_chinese_platforms():
-    # 샤오홍슈(중국어)는 세그 많아도 백본 불가 → 서브 전용. 인스타가 백본.
+def test_pick_backbone_only_insta_youtube():
+    # 백본 = 인스타/유튜브(한글 대본)만. 샤오홍슈는 세그 많고 댓글 많아도 서브 전용.
     sources = [
         {"video_id": "s0", "segments": [_seg("s0-1")]},
-        {"video_id": "s1", "segments": [_seg(f"s1-{i}") for i in range(9)]},  # 최다지만 샤오홍슈
+        {"video_id": "s1", "segments": [_seg(f"s1-{i}") for i in range(9)]},
     ]
     meta = {"s0": {"platform": "instagram", "comments": 10},
             "s1": {"platform": "xiaohongshu", "comments": 999}}
     assert backbone.pick_backbone(sources, meta=meta) == "s0"
+    # 유튜브도 백본 가능
+    meta2 = {"s0": {"platform": "youtube", "comments": 5},
+             "s1": {"platform": "douyin", "comments": 999}}
+    assert backbone.pick_backbone(sources, meta=meta2) == "s0"
+
+
+def test_platform_of_url():
+    assert backbone.platform_of("https://www.instagram.com/reel/DaFEF/") == "instagram"
+    assert backbone.platform_of("https://youtube.com/shorts/abc") == "youtube"
+    assert backbone.platform_of("https://youtu.be/abc") == "youtube"
+    assert backbone.platform_of("https://www.xiaohongshu.com/explore/xx") == "xiaohongshu"
+    assert backbone.platform_of("https://www.douyin.com/video/xx") == "douyin"
+    assert backbone.platform_of("https://www.tiktok.com/@x/video/1") == "tiktok"
+    assert backbone.platform_of("") == ""
+
+
+def test_pick_backbone_forced_override():
+    # 사장님이 메인 지정하면 그게 무조건 우선
+    sources = [{"video_id": "s0", "segments": [_seg("s0-1")]},
+               {"video_id": "s1", "segments": [_seg("s1-1")]}]
+    meta = {"s0": {"platform": "instagram", "comments": 1},
+            "s1": {"platform": "instagram", "comments": 999}}
+    assert backbone.pick_backbone(sources, meta=meta, forced="s0") == "s0"
 
 
 def test_pick_backbone_by_comments_among_eligible():

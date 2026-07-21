@@ -236,29 +236,48 @@ def dedup_and_balance(beats, pool_sources):
     return out
 
 
-# 중국어 플랫폼 = 백본 불가(대본이 중국어). 서브 전용(화면 스왑/삽입만).
-_CHINESE_PLATFORMS = {"xiaohongshu", "douyin", "rednote"}
+# 백본 가능 플랫폼 = 한글 대본이 있는 것만(인스타·유튜브). 나머지(샤오홍슈·도우인 등)=서브 전용.
+_BACKBONE_PLATFORMS = {"instagram", "youtube"}
+
+_PLATFORM_DOMAINS = [
+    ("instagram", ("instagram.com",)),
+    ("youtube", ("youtube.com", "youtu.be")),
+    ("xiaohongshu", ("xiaohongshu.com", "xhslink.com", "rednote")),
+    ("douyin", ("douyin.com",)),
+    ("tiktok", ("tiktok.com",)),
+]
 
 
-def pick_backbone(sources, meta=None):
-    """백본 선정(사장님 규칙). meta={video_id: {platform, comments}} 있으면:
-      ①중국어 플랫폼(샤오홍슈·도우인)은 제외 = 서브 전용(대본이 중국어라 흐름 뼈대로 못 씀)
-      ②남은 것 중 댓글수 최다 → 동수면 세그먼트 최다.
-    meta 없으면 세그먼트 최다(구 휴리스틱). 소스 없거나 후보 0이면 None."""
+def platform_of(url):
+    """URL 도메인 → 플랫폼 이름. 모르면 ''."""
+    u = (url or "").lower()
+    for name, domains in _PLATFORM_DOMAINS:
+        if any(d in u for d in domains):
+            return name
+    return ""
+
+
+def pick_backbone(sources, meta=None, forced=None):
+    """백본 선정(사장님 규칙):
+      0) forced(사장님이 UI에서 지정한 메인)가 있으면 그게 무조건 우선.
+      1) 백본 = 인스타·유튜브(한글 대본)만 후보. 플랫폼 아는 소스 중 그 둘만.
+      2) 후보 중 댓글수 최다 → 동수면 세그먼트 최다.
+    meta 없으면(플랫폼 모름) 세그먼트 최다 폴백. 소스 없거나 후보 0이면 None."""
     if not sources:
         return None
+    if forced and any(s.get("video_id") == forced for s in sources):
+        return forced
     meta = meta or {}
-
-    def eligible(s):
-        vid = s.get("video_id")
-        plat = (meta.get(vid, {}).get("platform") or "").lower()
-        return plat not in _CHINESE_PLATFORMS
-
-    cands = [s for s in sources if eligible(s)] or list(sources)  # 전부 중국어면 어쩔수없이 전체
+    known = [s for s in sources if meta.get(s.get("video_id"), {}).get("platform")]
+    if known:
+        cands = [s for s in known
+                 if meta[s["video_id"]]["platform"].lower() in _BACKBONE_PLATFORMS]
+        cands = cands or [s for s in sources]   # 인스타/유튜브 하나도 없으면 전체(폴백)
+    else:
+        cands = list(sources)                   # 플랫폼 정보 없음 → 세그먼트 최다
 
     def key(s):
-        vid = s.get("video_id")
-        m = meta.get(vid, {})
+        m = meta.get(s.get("video_id"), {})
         return (m.get("comments") or 0, len(s.get("segments") or []))
 
     return max(cands, key=key).get("video_id")
