@@ -251,6 +251,10 @@
           <div style="background:var(--inset);border:1px solid var(--line);border-radius:12px;padding:14px">
             <b style="font-size:13px">🎬 화면 담김</b>
             <div id="footageList" class="hint" style="margin:6px 0">🎬 담기로 화면에 쓸 영상을 고르세요. (1개=순서편집 · 2개+=믹스)</div>
+            <label style="display:flex;align-items:center;gap:8px;margin:6px 0 10px;font-size:12px;cursor:pointer">
+              <input type="checkbox" id="smartMixToggle" onchange="setSmartMix(this.checked)">
+              <span>✨ 스마트 믹스 <span class="hint">— 부품은행 훅·말투 + 반복 회피(매번 다른 훅) + 대본↔장면 핑퐁</span></span>
+            </label>
             <button class="btn-next" style="padding:8px 16px" onclick="startProduceMix()">🎬 영상 매칭 시작</button>
             <div id="mixStatus" class="hint" style="margin-top:12px"></div>
             <div id="mixCandidates" style="margin-top:10px"></div>
@@ -2596,6 +2600,23 @@ async function saveScriptToWiki(btn){
   }catch(e){ alert('네트워크 오류'); btn.textContent=o; }
   finally{ btn.disabled=false; }
 }
+// ✨ 스마트 믹스 토글 — 부품은행 주입+반복회피(novelty)+핑퐁 마스터 스위치(전역 설정).
+// 페이지 열릴 때 현재 상태를 읽어 체크박스에 반영, 딸깍하면 서버 설정을 갱신한다.
+async function loadSmartMix(){
+  try{
+    const d = await (await fetch('/api/settings/smart_mix')).json();
+    const el = document.getElementById('smartMixToggle');
+    if(el && d && d.ok) el.checked = !!d.on;
+  }catch(e){}
+}
+async function setSmartMix(on){
+  try{
+    await fetch('/api/settings/smart_mix',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({on:!!on})});
+  }catch(e){ alert('설정 저장 실패 — 네트워크 확인'); }
+}
+loadSmartMix();
+
 async function startProduceMix(){
   if(!STATE.script){ alert('1단계에서 대본을 먼저 확정하세요'); return; }
   const urls=collectMixUrls();   // 영상풀 담긴 것 + 입력칸에 남은 것(중복 제거)
