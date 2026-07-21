@@ -2522,7 +2522,9 @@ def api_lens_trace_url(request: Request, body: dict):
         items = search_similar_videos(image_url, source_caption=caption)
         store.bump_lens(month)
         ok = True
-        return {"ok": True, "items": items, "count": len(items), "source_url": url}
+        # caption도 돌려준다 — 프론트가 이걸로 중국앱 후보 검색어(cn/keywords)를 뽑는다.
+        # 없으면 레퍼런스 추적 화면에 📕🎬 키워드검색 행이 안 뜬다(2026-07-21 사장님 제보).
+        return {"ok": True, "items": items, "count": len(items), "source_url": url, "caption": caption}
     finally:
         if not ok:
             refund_credit(cid, "lens")
