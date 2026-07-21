@@ -174,15 +174,26 @@ def cluster_and_gate_spines(store, call=None, now_iso=None):
     return {"assigned": assigned, "new_spines": new_spines}
 
 
+def harvest_hooks(store):
+    """훅 자동수확(P2): 우승작 캡션에서 훅 후보를 hook 버킷 pending으로. 실패는 삼킨다."""
+    try:
+        from shopping_shorts import hook_harvest
+        return hook_harvest.harvest_hooks_from_crawl(store)
+    except Exception as e:
+        print(f"daily_batch harvest_hooks: {e!r}", file=sys.stderr)
+        return 0
+
+
 def run(db_path):
-    """크론 엔트리포인트 — 백필→통계→자동흡수→perf재계산→스파인클러스터."""
+    """크론 엔트리포인트 — 백필→통계→자동흡수→훅수확→perf재계산→스파인클러스터."""
     store = Store(db_path)
     n1 = backfill_structures(store)
     n2 = recompute_element_stats(store)
     n3 = ingest_crawl_winners(store)
+    n6 = harvest_hooks(store)
     n4 = recompute_perf_scores(store)
     n5 = cluster_and_gate_spines(store)
-    print(f"daily_batch: 구조 {n1} · 통계 {n2} · 자동흡수 {n3} · perf {n4} · 스파인 {n5}")
+    print(f"daily_batch: 구조 {n1} · 통계 {n2} · 자동흡수 {n3} · 훅수확 {n6} · perf {n4} · 스파인 {n5}")
 
 
 if __name__ == "__main__":
